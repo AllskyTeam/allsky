@@ -101,13 +101,6 @@ if [[ -n ${COPY_TO} && ! -d ${COPY_TO} ]]; then
 	exit 2
 fi
 
-# "put" to a temp name, then move the temp name to the final name.
-# This is useful with slow uplinks where multiple lftp requests can be running at once,
-# and only one lftp can upload the file at once, otherwise we get this error:
-#	put: Access failed: 550 The process cannot access the file because it is being used by
-#		another process. (image.jpg)
-# Slow uplinks also cause problems with web servers that read the file as it's being uploaded.
-
 # To save a write to the SD card, only save output to ${LOG} on error.
 LOG="${ALLSKY_TMP}/upload_errors.txt"
 
@@ -145,41 +138,60 @@ trap "" SIGTERM
 trap "" SIGHUP
 
 if [[ ${PROTOCOL} == "s3" ]] ; then
+	DEST="s3://${S3_BUCKET}${DIRECTORY}/${DESTINATION_NAME}"
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		echo "${ME}: Uploading ${FILE_TO_UPLOAD} to aws ${S3_BUCKET}${REMOTE_DIR}/${DESTINATION_NAME}"
+		echo "${ME}: Uploading ${FILE_TO_UPLOAD} to ${DEST}"
 	fi
-	OUTPUT="$("${AWS_CLI_DIR}/aws" s3 cp "${FILE_TO_UPLOAD}" "s3://${S3_BUCKET}${REMOTE_DIR}/${DESTINATION_NAME}" --acl "${S3_ACL}" 2>&1)"
+	OUTPUT="$( "${AWS_CLI_DIR}/aws" s3 cp "${FILE_TO_UPLOAD}" "${DEST}" --acl "${S3_ACL}" 2>&1 )"
 	RET=$?
 
 
 elif [[ ${PROTOCOL} == "local" ]] ; then
+	DEST="${REMOTE_DIR}/${DESTINATION_NAME}"
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${REMOTE_DIR}/${DESTINATION_NAME}"
+		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${DEST}"
 	fi
-	OUTPUT="$(cp "${FILE_TO_UPLOAD}" "${REMOTE_DIR}/${DESTINATION_NAME}" 2>&1)"
+	OUTPUT="$( cp "${FILE_TO_UPLOAD}" "${DEST}" 2>&1 )"
 	RET=$?
 
 
 elif [[ "${PROTOCOL}" == "scp" ]] ; then
+	DEST="${REMOTE_USER}@${REMOTE_HOST}:${DIRECTORY}/${DESTINATION_NAME}"
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		# shellcheck disable=SC2153
-		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_NAME}"
+		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${DEST}"
 	fi
 	[[ -n ${REMOTE_PORT} ]] && REMOTE_PORT="-P ${REMOTE_PORT}"
 	# shellcheck disable=SC2086
-	OUTPUT="$(scp -i "${SSH_KEY_FILE}" ${REMOTE_PORT} "${FILE_TO_UPLOAD}" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/${DESTINATION_NAME}" 2>&1)"
+	OUTPUT="$( scp -i "${SSH_KEY_FILE}" ${REMOTE_PORT} "${FILE_TO_UPLOAD}" "${DEST}" 2>&1 )"
 	RET=$?
 
 
 elif [[ ${PROTOCOL} == "gcs" ]] ; then
-	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		echo "${ME}: Uploading ${FILE_TO_UPLOAD} to gcs ${GCS_BUCKET}${REMOTE_DIR}"
-	fi
-	OUTPUT="$(gsutil cp -a "${GCS_ACL}" "${FILE_TO_UPLOAD}" "gs://${GCS_BUCKET}${REMOTE_DIR}" 2>&1)"
+	type gsutil >/dev/null 2>&1
 	RET=$?
+	if [[ ${RET} -eq 0 ]]; then
+		DEST="gs://${GCS_BUCKET}${DIRECTORY}/${DESTINATION_NAME}"
+		if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+			echo "${ME}: Uploading ${FILE_TO_UPLOAD} to ${DEST}"
+		fi
+		OUTPUT="$( gsutil cp -a "${GCS_ACL}" "${FILE_TO_UPLOAD}" "${DEST}" 2>&1 )"
+		RET=$?
+	else
+		OUTPUT="${ME}: ERROR: 'gsutil' command not found; cannot upload."
+		OUTPUT="${OUTPUT}\nIt should be in one of these directories: $PATH"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${OUTPUT}"
+		OUTPUT="${RED}*** ${OUTPUT}${NC}"
+	fi
 
 
 else # sftp/ftp/ftps
+	# "put" to a temp name, then move the temp name to the final name.
+	# This is useful with slow uplinks where multiple lftp requests can be running at once,
+	# and only one lftp can upload the file at once, otherwise we get this error:
+	#	put: Access failed: 550 The process cannot access the file because it is being used by
+	#		another process. (image.jpg)
+	# Slow uplinks also cause problems with web servers that read the file as it's being uploaded.
+
 	# People sometimes have problems with ftp not working,
 	# so save the commands we use so they can run lftp manually to debug.
 
@@ -272,7 +284,7 @@ else # sftp/ftp/ftps
 		echo exit 0
 	) > "${LFTP_CMDS}"
 
-	OUTPUT="$(lftp -f "${LFTP_CMDS}" 2>&1)"
+	OUTPUT="$( lftp -f "${LFTP_CMDS}" 2>&1 )"
 	RET=$?
 	if [[ ${RET} -ne 0 ]]; then
 		HEADER="${RED}*** ${ME}: ERROR,"
@@ -312,13 +324,13 @@ if [[ -n ${OUTPUT} ]]; then
 fi
 
 # If a local directory was also specified, copy the file there.
-if [[ ${RET} -eq 0 && -n ${COPY_TO} ]]; then
+if [[ -n ${COPY_TO} ]]; then
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		# No need to specify the file being copied again since we did so above.
 		echo "${ME}: Also copying to ${COPY_TO}/${DESTINATION_NAME}"
 	fi
 	cp "${FILE_TO_UPLOAD}" "${COPY_TO}/${DESTINATION_NAME}"
-	RET=$?
+	((RET=RET + $?))
 fi
 
 rm -f "${PID_FILE}"

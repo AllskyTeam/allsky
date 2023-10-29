@@ -70,7 +70,7 @@ def getSavePath(savePath):
             pass
     except Exception:
         okToSave = False
-        s.log(0, "ERROR: path is not writeable {0} Allsky data will NOT be exported".format(savePath))
+        s.log(0, "ERROR: path is not writeable {0} so Allsky data will NOT be exported".format(savePath))
         savePath = None
 
     return savePath 
@@ -93,19 +93,24 @@ def export(params, event):
                 jsonData[var] = s.getEnvironmentVariable(var)
                 s.env[var] = jsonData[var]
 
-        extraEntries = params["extradata"].split(",")
-        for envVar in extraEntries:
-            envVar = envVar.lstrip()
-            envVar = envVar.rstrip()
-            envVarValue = s.getEnvironmentVariable(envVar)
-            if envVar:
-                if envVarValue is not None:
-                    jsonData[envVar] = envVarValue
-                    s.env[envVar] = envVarValue
+        onVar = 0
+        if len(params['extradata']) > 0 :
+            extraEntries = params["extradata"].split(",")
+            for envVar in extraEntries:
+                onVar = onVar + 1
+                envVar = envVar.lstrip()
+                envVar = envVar.rstrip()
+                if envVar:
+                    envVarValue = s.getEnvironmentVariable(envVar)
+                    if envVarValue is not None:
+                        jsonData[envVar] = envVarValue
+                        s.env[envVar] = envVarValue
+                    else:
+                        s.log(0, "ERROR: Cannot locate environment variable {0} specified in the extradata".format(envVar))
                 else:
-                    s.log(0, "ERROR: Cannot locate environment variable {0} specified in the extradata".format(envVar))
-            else:
-                s.log(0, "ERROR: Empty environment variable specified in the extradata field in {0}. Check commas!".format(savePath))
+                    s.log(0, "ERROR: Extra variable {0} is empty! Check commas!".format(onVar))
+        else:
+            s.log(4, "DEBUG: No extra data found")
 
         with open(savePath, "w") as outfile:
             json.dump(jsonData, outfile, indent=4)

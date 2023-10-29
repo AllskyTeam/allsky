@@ -23,7 +23,7 @@ chmod 755 "${ALLSKY_HOME}"								|| exit "${ALLSKY_ERROR_STOP}"
 
 cd "${ALLSKY_HOME}"  									|| exit "${ALLSKY_ERROR_STOP}"
 
-TITLE="Allsky Installer"
+TITLE="Allsky Installer - ${ALLSKY_VERSION}"
 FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 OLD_RASPAP_DIR="/etc/raspap"			# used to contain WebUI configuration files
 SETTINGS_FILE_NAME="$(basename "${SETTINGS_FILE}")"
@@ -101,9 +101,9 @@ do_initial_heading()
 	fi
 
 	if [[ ${do_initial_heading} == "true" ]]; then
-		display_header "Welcome back to the ${TITLE}!"
+		display_header "Welcome back to the ${TITLE} for ${ALLSKY_VERSION}!"
 	else
-		MSG="Welcome to the ${TITLE}!\n"
+		MSG="Welcome to the ${TITLE} for ${ALLSKY_VERSION}!\n"
 
 		if [[ -n ${PRIOR_ALLSKY} ]]; then
 			MSG="${MSG}\nYou will be asked if you want to use the images and darks (if any) from"
@@ -128,7 +128,7 @@ do_initial_heading()
 			exit_installation 1 "${STATUS_CLEAR}" ""
 		fi
 
-		display_header "Welcome to the ${TITLE}!"
+		display_header "Welcome to the ${TITLE} for ${ALLSKY_VERSION}!"
 	fi
 
 	[[ ${do_initial_heading} != "true" ]] && STATUS_VARIABLES+=("do_initial_heading='true'\n")

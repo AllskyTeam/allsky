@@ -272,12 +272,12 @@ if (file_exists($f)) {
 					</li>
 					<?php if (DHCP_ENABLED) : ?>
 						<li>
-							<a id="vpn" href="index.php?page=dhcp_conf"><i class="fa fa-lock fa-fw"></i> Configure DHCP</a>
+							<a id="vpn" href="index.php?page=dhcp_conf"><i class="fa fa-exchange fa-fw"></i> Configure DHCP</a>
 						</li>
 					<?php endif; ?>
 					<?php if (APD_ENABLED) : ?>
 						<li>
-							<a id="vpn" href="index.php?page=dhcp_conf"><i class="fa fa-lock fa-fw"></i> Configure Hotspot</a>
+							<a id="vpn" href="index.php?page=hostapd_conf"><i class="fa fa-dot-circle fa-fw"></i> Configure Hotspot</a>
 						</li>
 					<?php endif; ?>
 					<?php if (RASPI_OPENVPN_ENABLED) : ?>

@@ -229,7 +229,8 @@ elif [[ ${PROTOCOL} == "gcs" ]] ; then
 		OUTPUT="$( gsutil cp -a "${GCS_ACL}" "${FILE_TO_UPLOAD}" "${DEST}" 2>&1 )"
 		RET=$?
 	else
-		OUTPUT="${ME}: ERROR: 'gsutil' command not found; cannot upload.  Check \$PATH"
+		OUTPUT="${ME}: ERROR: 'gsutil' command not found; cannot upload."
+		OUTPUT="${OUTPUT}\nIt should be in one of these directories: $PATH"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${OUTPUT}"
 		OUTPUT="${RED}*** ${OUTPUT}${NC}"
 	fi

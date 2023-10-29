@@ -105,7 +105,7 @@ def export(params, event):
                 else:
                     s.log(0, "ERROR: Cannot locate environment variable {0} specified in the extradata".format(envVar))
             else:
-                s.log(0, "ERROR: Empty environment variable specified in the extradata field. Check commas!")
+                s.log(0, "ERROR: Empty environment variable specified in the extradata field in {0}. Check commas!".format(savePath))
 
         with open(savePath, "w") as outfile:
             json.dump(jsonData, outfile, indent=4)

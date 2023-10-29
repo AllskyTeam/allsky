@@ -150,15 +150,6 @@ fi
 
 ############## Remote Website or server
 
-
-# For uploads to a remote server, "put" to a temp name, then move the temp name to the final name.
-# This is useful with slow uplinks where multiple upload requests can be running at once,
-# and only one upload can upload the file at once.
-# For lftp we get this error:
-#	put: Access failed: 550 The process cannot access the file because it is being used by
-#		another process. (image.jpg)
-# Slow uplinks also cause problems with web servers that read the file as it's being uploaded.
-
 # Make sure only one upload of this file type happens at once.
 # Multiple concurrent uploads (which can happen if the system and/or network is slow can
 # cause errors and files left on the server.
@@ -202,13 +193,11 @@ if [[ ${PROTOCOL} == "s3" ]] ; then
 	AWS_CLI_DIR="$( settings ".${PREFIX}_AWS_CLI_DIR" "${ALLSKY_ENV}" )"
 	S3_BUCKET="$( settings ".${PREFIX}_S3_BUCKET" "${ALLSKY_ENV}" )"
 	S3_ACL="$( settings ".${PREFIX}_S3_ACL" "${ALLSKY_ENV}" )"
+	DEST="s3://${S3_BUCKET}${DIRECTORY}/${DESTINATION_NAME}"
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		MSG="${ME}: Uploading ${FILE_TO_UPLOAD} to"
-		MSG="${MSG} aws ${S3_BUCKET}${DIRECTORY}/${DESTINATION_NAME}"
-		echo "${MSG}"
+		echo "${ME}: Uploading ${FILE_TO_UPLOAD} to ${DEST}"
 	fi
-	OUTPUT="$( "${AWS_CLI_DIR}/aws" s3 cp "${FILE_TO_UPLOAD}" \
-		"s3://${S3_BUCKET}${DIRECTORY}/${DESTINATION_NAME}" --acl "${S3_ACL}" 2>&1 )"
+	OUTPUT="$( "${AWS_CLI_DIR}/aws" s3 cp "${FILE_TO_UPLOAD}" "${DEST}" --acl "${S3_ACL}" 2>&1 )"
 	RET=$?
 
 
@@ -217,29 +206,44 @@ elif [[ "${PROTOCOL}" == "scp" ]] ; then
 	REMOTE_HOST="$( settings ".${PREFIX}_HOST" "${ALLSKY_ENV}" )"
 	REMOTE_PORT="$( settings ".${PREFIX}_PORT" "${ALLSKY_ENV}" )"
 	SSH_KEY_FILE="$( settings ".${PREFIX}_SSH_KEY_FILE" "${ALLSKY_ENV}" )"
+	DEST="${REMOTE_USER}@${REMOTE_HOST}:${DIRECTORY}/${DESTINATION_NAME}"
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		MSG="${ME}: Copying ${FILE_TO_UPLOAD} to"
-		MSG="${MSG} ${REMOTE_USER}@${REMOTE_HOST}:${DIRECTORY}/${DESTINATION_NAME}"
-		echo "${MSG}"
+		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${DEST}"
 	fi
 	[[ -n ${REMOTE_PORT} ]] && REMOTE_PORT="-P ${REMOTE_PORT}"
 	# shellcheck disable=SC2086
-	OUTPUT="$( scp -i "${SSH_KEY_FILE}" ${REMOTE_PORT} "${FILE_TO_UPLOAD}" \
-		"${REMOTE_USER}@${REMOTE_HOST}:${DIRECTORY}/${DESTINATION_NAME}" 2>&1 )"
+	OUTPUT="$( scp -i "${SSH_KEY_FILE}" ${REMOTE_PORT} "${FILE_TO_UPLOAD}" "${DEST}" 2>&1 )"
 	RET=$?
 
 
 elif [[ ${PROTOCOL} == "gcs" ]] ; then
 	GCS_BUCKET="$( settings ".${PREFIX}_GCS_BUCKET" "${ALLSKY_ENV}" )"
 	GCS_ACL="$( settings ".${PREFIX}_GCS_ACL" "${ALLSKY_ENV}" )"
-	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		echo "${ME}: Uploading ${FILE_TO_UPLOAD} to gcs ${GCS_BUCKET}${DIRECTORY}"
-	fi
-	OUTPUT="$(gsutil cp -a "${GCS_ACL}" "${FILE_TO_UPLOAD}" "gs://${GCS_BUCKET}${DIRECTORY}" 2>&1)"
+	type gsutil >/dev/null 2>&1
 	RET=$?
+	if [[ ${RET} -eq 0 ]]; then
+		DEST="gs://${GCS_BUCKET}${DIRECTORY}/${DESTINATION_NAME}"
+		if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+			echo "${ME}: Uploading ${FILE_TO_UPLOAD} to ${DEST}"
+		fi
+		OUTPUT="$( gsutil cp -a "${GCS_ACL}" "${FILE_TO_UPLOAD}" "${DEST}" 2>&1 )"
+		RET=$?
+	else
+		OUTPUT="${ME}: ERROR: 'gsutil' command not found; cannot upload.  Check \$PATH"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${OUTPUT}"
+		OUTPUT="${RED}*** ${OUTPUT}${NC}"
+	fi
 
 
 else # sftp/ftp/ftps
+	# "put" to a temp name, then move the temp name to the final name.
+	# This is useful with slow uplinks where multiple upload requests can be running at once,
+	# and only one upload can upload the file at once.
+	# For lftp we get this error:
+	#	put: Access failed: 550 The process cannot access the file because it is being used by
+	#		another process. (image.jpg)
+	# Slow uplinks also cause problems with web servers that read the file as it's being uploaded.
+
 	# People sometimes have problems with ftp not working,
 	# so save the commands we use so they can run lftp manually to debug.
 
@@ -369,7 +373,7 @@ else # sftp/ftp/ftps
 		exit 1
 	fi
 
-	OUTPUT="$(lftp -f "${LFTP_CMDS}" 2>&1)"
+	OUTPUT="$( lftp -f "${LFTP_CMDS}" 2>&1 )"
 	RET=$?
 	if [[ ${RET} -ne 0 ]]; then
 		HEADER="${RED}*** ${ME}: ERROR,"

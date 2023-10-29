@@ -265,10 +265,10 @@ if [[ ${PI_OS} == "bookworm" ]]; then
    	# AG - Bookworm mod 12/10/23
    	#shellcheck disable=SC1090,SC1091
    	source "${ALLSKY_HOME}/venv/bin/activate"
-   	python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event periodic
+   	python3 "${ALLSKY_SCRIPTS}/flow-runner.py"
    	deactivate
 else
-   	python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event periodic
+   	python3 "${ALLSKY_SCRIPTS}/flow-runner.py"
 fi
 
 # The majority of the post-processing time for an image is in flow-runner.py.

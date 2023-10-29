@@ -1,7 +1,5 @@
 <?php
 
-include_once( 'includes/status_messages.php' );
-
 /**
 *
 * Manage DHCP configuration
@@ -71,26 +69,34 @@ function DisplayDHCPConfig() {
     }
   }
 
-  exec( 'cat '. RASPI_DNSMASQ_CONFIG, $return );
-  $conf = ParseConfig($return);
-  $arrRange = explode( ",", $conf['dhcp-range'] );
-  $RangeStart = $arrRange[0];
-  $RangeEnd = $arrRange[1];
-  $RangeMask = $arrRange[2];
-  preg_match( '/([0-9]*)([a-z])/i', $arrRange[3], $arrRangeLeaseTime );
+  exec( 'grep -v -E "^$|^#"' . RASPI_DNSMASQ_CONFIG, $return );
+  if ($return != null) {
+	$conf = ParseConfig($return);
+	$arrRange = explode( ",", $conf['dhcp-range'] );
+	$RangeStart = $arrRange[0];
+	$RangeEnd = $arrRange[1];
+	$RangeMask = $arrRange[2];
+	preg_match( '/([0-9]*)([a-z])/i', $arrRange[3], $arrRangeLeaseTime );
+	$RangeLeaseTime = $arrRangeLeaseTime[1];
 
-  switch( $arrRangeLeaseTime[2] ) {
-    case "h":
-      $hselected = " selected";
-    break;
-    case "m":
-      $mselected = " selected";
-    break;
-    case "d":
-      $dselected = " selected";
-    break;
+	switch( $arrRangeLeaseTime[2] ) {
+	case "h":
+		$hselected = " selected";
+		break;
+	case "m":
+		$mselected = " selected";
+		break;
+	case "d":
+		$dselected = " selected";
+		break;
+	}
+  } else {
+	$conf = null;
+	$RangeStart = "";
+	$RangeEnd = "";
+	$RangeLeaseTime = "";
+	$hselected = 0; $mselected = 0; $dselected = 0;
   }
-
   ?>
   <div class="row">
   <div class="col-lg-12">
@@ -122,7 +128,7 @@ function DisplayDHCPConfig() {
 
         foreach( $interfaces as $int ) {
           $select = '';
-          if( $int == $conf['interface'] ) {
+          if( $conf != null && $int == $conf['interface'] ) {
             $select = " selected";
           }
             echo '<option value="'.$int.'"'.$select.'>'.$int.'</option>';
@@ -148,7 +154,7 @@ function DisplayDHCPConfig() {
     <div class="row">
       <div class="form-group col-xs-2 col-sm-2">
         <label for="code">Lease Time</label>
-        <input type="text" class="form-control" name="RangeLeaseTime" value="<?php echo $arrRangeLeaseTime[1]; ?>" />
+        <input type="text" class="form-control" name="RangeLeaseTime" value="<?php echo $RangeLeaseTime; ?>" />
       </div>
       <div class="col-xs-2 col-sm-2">
         <label for="code">Interval</label>

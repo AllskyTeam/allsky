@@ -5,7 +5,6 @@ initialize_variables();		// sets some variables
 
 define('RASPI_ADMIN_DETAILS', RASPI_CONFIG . '/raspap.auth');
 
-include_once('raspap.php');
 include_once('authenticate.php');
 
 class OVERLAYUTIL

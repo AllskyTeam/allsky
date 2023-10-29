@@ -212,14 +212,17 @@ struct config {			// for configuration variables
 	bool saveCC							= false;		// Save camera controls file?
 	bool tty							= false;		// Running on a tty?
 	bool preview						= false;		// Display a preview windoe?
-	bool daytimeCapture					= false;		// Capture images during daytime?
-	bool daytimeSave					= false;		// Save images during daytime?
 	char const *timeFormat				= "%Y%m%d %H:%M:%S";
 	char const *extraArgs				= "";			// Optional extra arguments passed on
+	bool determineFocus					= false;
 
 	// To make the code cleaner, comments are only given for daytime variables.
 
 	// Settings not camera-dependent.
+	bool daytimeCapture					= true;			// Capture images during daytime?
+	bool daytimeSave					= false;		// Save images during daytime?
+	bool nighttimeCapture				= true;
+	bool nighttimeSave					= true;
 	long dayDelay_ms					= 10 * MS_IN_SEC;	// Delay between capture end and start
 	long nightDelay_ms					= 10 * MS_IN_SEC;
 	long minDelay_ms					= NOT_SET;			// Minimum delay between images
@@ -368,7 +371,7 @@ std::string exec(const char *);
 void add_variables_to_command(config, char *, timeval);
 bool checkForValidExtension(config *);
 std::string calculateDayOrNight(const char *, const char *, float);
-int calculateTimeToNightTime(const char *, const char *, float);
+int calculateTimeToNextTime(const char *, const char *, float, bool);
 void Log(int, const char *, ...);
 char const *c(char const *);
 void closeUp(int);
@@ -388,7 +391,7 @@ void displayHeader(config);
 void displayHelp(config);
 void displaySettings(config);
 char *LorF(double, char const *, char const *);
-bool daytimeSleep(bool, config);
+bool day_night_timeSleep(bool, config, bool);
 void delayBetweenImages(config, long, std::string);
 bool getCommandLineArguments(config *, int, char *[]);
 int displayNotificationImage(char const *);

@@ -32,6 +32,7 @@
 "description" : "Enable to <strong>save</strong> daytime images.",
 "label" : "Daytime Save",
 "type" : "boolean",
+"usage" : "capture",
 "booldependson" : "takedaytimeimages",
 "advanced" : true
 },
@@ -269,10 +270,11 @@
 },
 {
 "name" : "savenighttimeimages",
-"default" : false,
+"default" : true,
 "description" : "Enable to <strong>save</strong> nighttime images.",
 "label" : "Nighttime Save",
 "type" : "boolean",
+"usage" : "capture",
 "booldependson" : "takenighttimeimages",
 "advanced" : true
 },
@@ -722,6 +724,15 @@
 	{"value" : 3, "label" : "Both"}
 ],
 "action" : "reload"
+},
+{
+"name" : "determineFocus",
+"default" : false,
+"description" : "Enable to have the image focus determined and output via the 'FOCUS' variable.",
+"label" : "Focus Mode",
+"type" : "boolean",
+"usage" : "capture",
+"action" : "stop"
 },
 {
 "name" : "notificationimages",

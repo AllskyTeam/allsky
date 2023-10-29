@@ -541,8 +541,9 @@ int main(int argc, char *argv[])
 	int originalITextY		= CG.overlay.iTextY;
 	int originalFontsize	= CG.overlay.fontsize;
 	int originalLinewidth	= CG.overlay.linewidth;
-	// Have we displayed "not taking picture during day" message, if applicable?
+	// Have we displayed "not taking picture during day/night" messages, if applicable?
 	bool displayedNoDaytimeMsg = false;
+	bool displayedNoNighttimeMsg = false;
 
 	// Start taking pictures
 
@@ -605,7 +606,8 @@ int main(int argc, char *argv[])
 
 			if (! CG.daytimeCapture)
 			{
-				displayedNoDaytimeMsg = daytimeSleep(displayedNoDaytimeMsg, CG);
+				// true == for daytime
+				displayedNoDaytimeMsg = day_night_timeSleep(displayedNoDaytimeMsg, CG, true);
 
 				// No need to do any of the code below so go back to the main loop.
 				continue;
@@ -651,6 +653,15 @@ int main(int argc, char *argv[])
 				// Not too useful to check return code for commands run in the background.
 				system(bufTemp);
 				justTransitioned = false;
+			}
+
+			if (! CG.nighttimeCapture)
+			{
+				// false == for nighttime
+				displayedNoNighttimeMsg = day_night_timeSleep(displayedNoNighttimeMsg, CG, false);
+
+				// No need to do any of the code below so go back to the main loop.
+				continue;
 			}
 
 			Log(1, "==========\n=== Starting nighttime capture ===\n==========\n");
@@ -777,7 +788,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				CG.lastWBR = CG.currentWBR;
 				CG.lastWBB = CG.currentWBB;
 
-				CG.lastFocusMetric = CG.overlay.showFocus ? (int)round(get_focus_metric(pRgb)) : -1;
+				CG.lastFocusMetric = CG.determineFocus ? (int)round(get_focus_metric(pRgb)) : -1;
 
 				// If takeDarkFrames is off, add overlay text to the image
 				if (! CG.takeDarkFrames)

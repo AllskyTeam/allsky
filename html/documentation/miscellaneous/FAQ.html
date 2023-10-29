@@ -244,25 +244,36 @@ It's suggested you accept the defaults.
 
 <h2>How do I focus my allsky camera?</h2>
 <details><summary></summary>
-<blockquote>
-If you have a camera with auto-focus like the RPi Module 3,
-see the camera documentation for how to focus it.
-</blockquote>
 <p>
 Try get your camera at least roughly focused during the day.
 It'll be easier to see the focus ring on your lens,
 and exposure duration will be much shorter so you'll get more instant feedback.
 </p>
+<h4>Manual-focus cameras</h4>
 <p>
-To complete focus, enable the <span class="WebUISetting">Show Focus Metric</span>
+Turn on the <span class="WebUISetting">Focus Mode</span>
 setting in the WebUI's <span class="WebUIWebPage">Allsky Settings</span> page.
-A focus number will appear on your images - the higher the number, the better focus you have.
-Note that the number can change depending on the brightness,
+<ul class="minimalPadding">
+	<li>If you are using the <strong>module</strong> overlay method,
+		in the <span class="editorName">Overlay Editor</span> add the <strong>${FOCUS}</strong>
+		variable to the image anywhere you want.
+		Use a large font to make it easier to see.
+	<li>If you are using the <strong>legacy</strong> overlay method,
+		enable the <span class="WebUISetting">Show Focus Metric</span> setting in the WebUI.
+</ul>
+</p>
+<p>
+A focus number will appear on your images - the higher the number, the better the focus.
+The number can change depending on the brightness,
 so focus when the brightness isn't changing.
+Focusing when it's partly cloudy can give you a visual indication of the focus.
+</p>
 <p>
 When done focusing, disable the <span class="WebUISetting">Show Focus Metric</span>
 setting since it's no longer needed.
 </p>
+<h4>Auto-focus cameras</h4>
+Some cameras, such as the RPi Module 3 can automatically focus.
 </details>
 
 

@@ -248,7 +248,6 @@ fi
 # The preview mode does not work if we are started as a service or if the debian distribution has no desktop environment.
 [[ $1 == "preview" ]] && echo "preview=true" >> "${ARGS_FILE}"
 
-
 echo "version=${ALLSKY_VERSION}" >> "${ARGS_FILE}"
 echo "save_dir=${CAPTURE_SAVE_DIR}" >> "${ARGS_FILE}"
 
@@ -265,7 +264,15 @@ fi
 CAPTURE="capture_${CAMERA_TYPE}"
 
 # Clear up any flow timings
-"${ALLSKY_SCRIPTS}/flow-runner.py" --cleartimings
+if [[ ${PI_OS} == "bookworm" ]]; then
+	# AG - Bookworm mod 12/10/23
+	#shellcheck disable=SC1090,SC1091
+	source "${ALLSKY_HOME}/venv/bin/activate"
+	python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --cleartimings
+	deactivate
+else
+	"${ALLSKY_SCRIPTS}/flow-runner.py" --cleartimings
+fi
 
 # Run the main program - this is the main attraction...
 # -cmd needs to come first since the capture_RPi code checks for it first.  It's ignored

@@ -193,7 +193,6 @@ function display_msg()
 export ALLSKY_OWNER=$(id --group --name)		# The login installing Allsky
 export ALLSKY_GROUP=${ALLSKY_OWNER}
 export WEBSERVER_GROUP="www-data"
-export ALLSKY_VERSION="$(get_version "${ALLSKY_HOME}" )"
 export REPO_WEBCONFIG_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
 export OLD_WEBUI_LOCATION="/var/www/html"		# location of old-style WebUI
 export OLD_WEBSITE_LOCATION="${OLD_WEBUI_LOCATION}/allsky"

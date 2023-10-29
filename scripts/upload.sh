@@ -156,6 +156,7 @@ elif [[ ${PROTOCOL} == "local" ]] ; then
 
 
 elif [[ "${PROTOCOL}" == "scp" ]] ; then
+	#shellcheck disable=SC2153
 	DEST="${REMOTE_USER}@${REMOTE_HOST}:${DIRECTORY}/${DESTINATION_NAME}"
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${DEST}"

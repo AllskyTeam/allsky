@@ -1,7 +1,5 @@
 <?php
 
-include_once( 'includes/status_messages.php' );
-
 function DisplayHostAPDConfig(){
   global $page;
   $status = new StatusMessages();
@@ -60,7 +58,7 @@ function DisplayHostAPDConfig(){
   <div class="row">
     <div class="col-lg-12">
       <div class="panel panel-primary">
-        <div class="panel-heading"><i class="fa fa-dot-circle-o fa-fw"></i> Configure Hotspot</div>
+        <div class="panel-heading"><i class="fa fa-dot-circle fa-fw"></i> Configure Hotspot</div>
         <!-- /.panel-heading -->
         <div class="panel-body">
 	  <?php if ($status->isMessage()) echo "<p>" . $status->showMessages() . "</p>"; ?>

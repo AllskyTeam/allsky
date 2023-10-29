@@ -99,14 +99,7 @@ if ($useLogin) {
 	$csrf_token = $_SESSION['csrf_token'];
 }
 
-// Get the version of the Allsky Website on the Pi, if it exists.
-$websiteFile = ALLSKY_WEBSITE . "/version";
-if (file_exists($websiteFile)) {
-	$localWebsiteVersion = file_get_contents($websiteFile);
-} else {
-	$localWebsiteVersion = "";
-}
-// Ditto for a remote Allsky Website.
+// Get the version of the remote Allsky Website, if it exists.
 $remoteWebsiteVersion = "";
 $f = ALLSKY_WEBSITE_REMOTE_CONFIG;
 if (file_exists($f)) {
@@ -193,25 +186,19 @@ if (file_exists($f)) {
 
 	<script type="text/javascript">
 		function getImage() {
-			var newImg = new Image();
-			newImg.src = '<?php echo $image_name ?>?_ts=' + new Date().getTime();
-			newImg.id = "current";
-			newImg.class = "current";
-			newImg.decode().then(() => {
-				$("#current").attr('src', newImg.src)
-					.attr("id", "current")
-					.attr("class", "current")
-					.on('load', function () {
-						if (!this.complete || typeof this.naturalWidth == "undefined" || this.naturalWidth == 0) {
-							console.log('broken image!');
-						} else {
-							$("#live_container").empty().append(newImg);
-						}
-					});
-			}).finally(() => {
-				// Use tail recursion to trigger the next invocation after `$delay` milliseconds
-				setTimeout(function () { getImage(); }, <?php echo $delay ?>);
-			});
+			var img = $("<img />").attr('src', '<?php echo $image_name ?>?_ts=' + new Date().getTime())
+				.attr("id", "current")
+				.attr("class", "current")
+				.on('load', function () {
+					if (!this.complete || typeof this.naturalWidth == "undefined" || this.naturalWidth == 0) {
+						console.log('broken image!');
+						setTimeout(function () {
+							getImage();
+						}, 500);
+					} else {
+						$("#live_container").empty().append(img);
+					}
+				});
 		}
 
 		// Inititalize theme to light
@@ -229,7 +216,7 @@ if (file_exists($f)) {
 	<link rel="stylesheet" href="lib/codeMirror/monokai.min.css">
 	<script type="text/javascript" src="lib/codeMirror/codemirror.js"> </script>
 	<script type="text/javascript" src="lib/codeMirror/shell.js"> </script>
-<?php if ($localWebsiteVersion !== "" || $remoteWebsiteVersion !== "") { ?>
+<?php if ($remoteWebsiteVersion !== "") { ?>
 	<script type="text/javascript" src="lib/codeMirror/json.js"> </script>
 <?php } ?>
 </head>
@@ -252,12 +239,10 @@ if (file_exists($f)) {
 				<div class="version-title version-title-color">
 					<span class="nowrap">Version: <?php echo ALLSKY_VERSION; ?></span>
 					&nbsp; &nbsp;
-<?php if ($localWebsiteVersion !== "") {
-					echo "<span class='nowrap'>";
-					echo "<a class='version-title-color' href='allsky/index.php' target='_blank' title='Click to go to local Website'>";
-					echo "Local Website: $localWebsiteVersion";
-					echo " <i class='fa fa-external-link-alt fa-fw'></i></a></span>";
-} ?>
+					<span class='nowrap'>
+					<a class='version-title-color' href='allsky/index.php' target='_blank' title='Click to go to local Website'>
+					Local Website:
+					<i class='fa fa-external-link-alt fa-fw'></i></a></span>
 					&nbsp; &nbsp;
 <?php if ($remoteWebsiteVersion !== "") {
 					echo "<span class='nowrap'>";
@@ -289,7 +274,7 @@ if (file_exists($f)) {
 					</li>
 					<li>
 						<a id="module" href="index.php?page=module"><i class="fa fa-bars fa-fw"></i> Module Manager</a>
-					</li>
+					</li>						
 					<li>
 						<a id="LAN" href="index.php?page=LAN_info"><i class="fa fa-network-wired fa-fw"></i> <b>LAN</b> Dashboard</a>
 					</li>
@@ -450,7 +435,7 @@ if (file_exists($f)) {
 						break;
 					case "module":
 						DisplayModule();
-						break;
+						break;						
 
 					case "live_view":
 					default:
@@ -528,7 +513,7 @@ if ($page == "configuration") {
 			document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
 		}
 	}
-<?php
+<?php 
 	}
 ?>
 </script>

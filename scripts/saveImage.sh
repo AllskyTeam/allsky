@@ -261,7 +261,6 @@ else
 	export DATE_NAME="$(date +'%Y%m%d')"
 fi
 
-
 if [[ ${PI_OS} == "bookworm" ]]; then
    	# AG - Bookworm mod 12/10/23
    	#shellcheck disable=SC1090,SC1091

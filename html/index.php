@@ -28,51 +28,36 @@ $needToDisplayMessages = false;
 initialize_variables();		// sets some variables
 
 // Constants for configuration file paths.
-// These are typical for default RPi installs. Modify if needed.
 define('RASPI_ADMIN_DETAILS', RASPI_CONFIG . '/raspap.auth');
-define('RASPI_DNSMASQ_CONFIG', '/etc/dnsmasq.conf');
-define('RASPI_DNSMASQ_LEASES', '/var/lib/misc/dnsmasq.leases');
-define('RASPI_HOSTAPD_CONFIG', '/etc/hostapd/hostapd.conf');
+include_once('includes/authenticate.php');
 define('RASPI_WPA_SUPPLICANT_CONFIG', '/etc/wpa_supplicant/wpa_supplicant.conf');
-define('RASPI_HOSTAPD_CTRL_INTERFACE', '/var/run/hostapd');
 define('RASPI_WPA_CTRL_INTERFACE', '/var/run/wpa_supplicant');
 
 // Optional services, set to true to enable.
+define('DHCP_ENABLED', false);
+define('APD_ENABLED', false);
 define('RASPI_OPENVPN_ENABLED', false);
 define('RASPI_TORPROXY_ENABLED', false);
 
-if (RASPI_OPENVPN_ENABLED) {
+if (DHCP_ENABLED) {
+	define('RASPI_DNSMASQ_CONFIG', '/etc/dnsmasq.conf');
+	define('RASPI_DNSMASQ_LEASES', '/var/lib/misc/dnsmasq.leases');
+} else {
+	function DisplayDHCPConfig() {}
+}
+if (APD_ENABLED) {
+	define('RASPI_HOSTAPD_CONFIG', '/etc/hostapd/hostapd.conf');
+	define('RASPI_HOSTAPD_CTRL_INTERFACE', '/var/run/hostapd');
+} else {
+	function DisplayHostAPDConfig() {}
+}
+if (RASPI_OPENVPN_ENABLED || RASPI_TORPROXY_ENABLED) {
 	define('RASPI_OPENVPN_CLIENT_CONFIG', '/etc/openvpn/client.conf');
 	define('RASPI_OPENVPN_SERVER_CONFIG', '/etc/openvpn/server.conf');
-} else {
-	function DisplayOpenVPNConfig() {}
-}
-if (RASPI_TORPROXY_ENABLED) {
 	define('RASPI_TORPROXY_CONFIG', '/etc/tor/torrc');
 } else {
+	function DisplayOpenVPNConfig() {}
 	function DisplayTorProxyConfig() {}
-}
-
-include_once('includes/raspap.php');
-include_once('includes/dashboard_WLAN.php');
-include_once('includes/dashboard_LAN.php');
-include_once('includes/liveview.php');
-include_once('includes/authenticate.php');
-include_once('includes/admin.php');
-include_once('includes/dhcp.php');
-include_once('includes/hostapd.php');
-include_once('includes/system.php');
-include_once('includes/configureWiFi.php');
-include_once('includes/allskySettings.php');
-include_once('includes/days.php');
-include_once('includes/images.php');
-include_once('includes/editor.php');
-include_once('includes/overlay.php');
-include_once('includes/module.php');
-if (RASPI_OPENVPN_ENABLED || RASPI_TORPROXY_ENABLED) {
-	include_once('includes/torAndVPN.php');
-} else {
-	function SaveTORAndVPNConfig() {}
 }
 
 $output = $return = 0;
@@ -131,9 +116,10 @@ if (file_exists($f)) {
 		case "LAN_info":			$Title = "LAN Dashboard";		break;
 		case "configuration":		$Title = "Allsky Settings";		break;
 		case "wifi":				$Title = "Configure Wi-Fi";		break;
+		case "dhcp_conf":			$Title = "Configure DHCP";		break;
+		case "hostapd_conf":		$Title = "Configure Hotspot";	break;
 		case "openvpn_conf":		$Title = "Configure OpenVPN";	break;
 		case "torproxy_conf":		$Title = "Configure TOR proxy";	break;
-		case "save_hostapd_conf":	$Title = "Configure Hotspot";	break;
 		case "auth_conf":			$Title = "Change password";		break;
 		case "system":				$Title = "System";				break;
 		case "list_days":			$Title = "Images";				break;
@@ -274,7 +260,7 @@ if (file_exists($f)) {
 					</li>
 					<li>
 						<a id="module" href="index.php?page=module"><i class="fa fa-bars fa-fw"></i> Module Manager</a>
-					</li>						
+					</li>
 					<li>
 						<a id="LAN" href="index.php?page=LAN_info"><i class="fa fa-network-wired fa-fw"></i> <b>LAN</b> Dashboard</a>
 					</li>
@@ -284,6 +270,16 @@ if (file_exists($f)) {
 					<li>
 						<a id="wifi" href="index.php?page=wifi"><i class="fa fa-wifi fa-fw"></i> Configure Wifi</a>
 					</li>
+					<?php if (DHCP_ENABLED) : ?>
+						<li>
+							<a id="vpn" href="index.php?page=dhcp_conf"><i class="fa fa-exchange fa-fw"></i> Configure DHCP</a>
+						</li>
+					<?php endif; ?>
+					<?php if (APD_ENABLED) : ?>
+						<li>
+							<a id="vpn" href="index.php?page=hostapd_conf"><i class="fa fa-dot-circle fa-fw"></i> Configure Hotspot</a>
+						</li>
+					<?php endif; ?>
 					<?php if (RASPI_OPENVPN_ENABLED) : ?>
 						<li>
 							<a id="vpn" href="index.php?page=openvpn_conf"><i class="fa fa-lock fa-fw"></i> Configure OpenVPN</a>
@@ -383,36 +379,52 @@ if (file_exists($f)) {
 
 				switch ($page) {
 					case "WLAN_info":
+						include_once('includes/dashboard_WLAN.php');
 						DisplayDashboard_WLAN();
 						break;
 					case "LAN_info":
+						include_once('includes/dashboard_LAN.php');
 						DisplayDashboard_LAN("eth0");
 						break;
 					case "configuration":
+						include_once('includes/allskySettings.php');
 						DisplayAllskyConfig();
 						break;
 					case "wifi":
+						include_once('includes/configureWiFi.php');
 						DisplayWPAConfig();
 						break;
+					case "dhcp_conf":
+						include_once('includes/dhcp.php');
+						DisplayDHCPConfig();
+						break;
+					case "hostapd_conf":
+						include_once('includes/hostapd.php');
+						DisplayHostAPDConfig();
+						break;
 					case "openvpn_conf":
+						include_once('includes/torAndVPN.php');
+						DisplayTorProxyConfig();
 						DisplayOpenVPNConfig();
 						break;
 					case "torproxy_conf":
+						include_once('includes/torAndVPN.php');
 						DisplayTorProxyConfig();
 						break;
-					case "save_hostapd_conf":
-						SaveTORAndVPNConfig();
-						break;
 					case "auth_conf":
+						include_once('includes/admin.php');
 						DisplayAuthConfig($config['admin_user'], $config['admin_pass']);
 						break;
 					case "system":
+						include_once('includes/system.php');
 						DisplaySystem();
 						break;
 					case "list_days":
+						include_once('includes/days.php');
 						ListDays();
 						break;
 					case "list_images":
+						include_once('includes/images.php');
 						ListImages();
 						break;
 					case "list_videos":
@@ -428,17 +440,21 @@ if (file_exists($f)) {
 						ListFileType("startrails/", "startrails", "Startrails", "picture");
 						break;
 					case "editor":
+						include_once('includes/editor.php');
 						DisplayEditor();
 						break;
 					case "overlay":
+						include_once('includes/overlay.php');
 						DisplayOverlay($image_name);
 						break;
 					case "module":
+						include_once('includes/module.php');
 						DisplayModule();
-						break;						
+						break;
 
 					case "live_view":
 					default:
+						include_once('includes/liveview.php');
 						DisplayLiveView($image_name, $delay, $daydelay, $nightdelay, $darkframe);
 				}
 				?>

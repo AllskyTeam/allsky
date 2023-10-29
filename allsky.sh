@@ -247,7 +247,7 @@ convert_json_to_tabs "${SETTINGS_FILE}" |
 # The preview mode does not work if we are started as a service or if the debian distribution has no desktop environment.
 [[ $1 == "preview" ]] && echo "-preview=1" >> "${ARGS_FILE}"
 
-echo "-version=$( get_version )" >> "${ARGS_FILE}"
+echo "-version=${ALLSKY_VERSION}" >> "${ARGS_FILE}"
 echo "-save_dir=${CAPTURE_SAVE_DIR}" >> "${ARGS_FILE}"
 
 FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"

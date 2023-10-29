@@ -11,8 +11,15 @@ function DisplayDHCPConfig() {
   $status = new StatusMessages();
   if( isset( $_POST['savedhcpdsettings'] ) ) {
     if (CSRFValidate()) {
-      $config = 'interface='.$_POST['interface'].PHP_EOL
-        .'dhcp-range='.$_POST['RangeStart'].','.$_POST['RangeEnd'].',255.255.255.0,'.$_POST['RangeLeaseTime'].''.$_POST['RangeLeaseTimeUnits'];
+# xxx TODO: verify the $_POST[] variables are set
+      $interface = $_POST['interface'];
+      $RangeStart = $_POST['RangeStart'];
+      $RangeEnd = $_POST['RangeEnd'];
+      $RangeLeaseTime = $_POST['RangeLeaseTime'];
+      $RangeLeaseTimeUnits = $_POST['RangeLeaseTimeUnits'];
+
+      $config = "interface=$interface" . PHP_EOL;
+	  $config .= "dhcp-range=$RangeStart,$RangeEnd,255.255.255.0,$RangeLeaseTime$RangeLeaseTimeUnits";
       exec( 'echo "'.$config.'" > /tmp/dhcpddata',$temp );
       system( 'sudo cp /tmp/dhcpddata '. RASPI_DNSMASQ_CONFIG, $return );
 

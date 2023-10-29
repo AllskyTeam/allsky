@@ -29,7 +29,7 @@ PRIOR_CONFIG_DIR="${PRIOR_ALLSKY_DIR}/config"
 PRIOR_CONFIG_FILE="${PRIOR_CONFIG_DIR}/config.sh"
 PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"	# may change depending on old version
 
-TITLE="Allsky Installer"
+TITLE="Allsky Installer - ${ALLSKY_VERSION}"
 FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 OLD_RASPAP_DIR="/etc/raspap"			# used to contain WebUI configuration files
 SETTINGS_FILE_NAME="$(basename "${SETTINGS_FILE}")"

@@ -1205,7 +1205,7 @@
 {
 "name" : "cameraType",
 "default" : "",
-"description" : "The type of camera you are using.  <span class='WebUIValue'>Refresh</span> re-sets the Camera Model and is useful if you change cameras of the same <span class='WebUISetting'>Camera Type</span>.",
+"description" : "The type of camera you are using.<br>Select <span class='WebUIValue'>Refresh</span> to reset the Camera Type and Model.",
 "label" : "Camera Type",
 "type" : "select",
 "options" : [
@@ -1223,7 +1223,7 @@
 "description" : "The model of camera you are using.  Cannot be changed here.",
 "label" : "Camera Model",
 "type" : "readonly",
-"display" : 1,
+"display" : 0,
 "advanced" : 1
 },
 {

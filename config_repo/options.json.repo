@@ -1220,10 +1220,10 @@
 {
 "name" : "cameraModel",
 "default" : "",
-"description" : "The model of camera you are using.  Cannot be changed here.",
+"description" : "The model of camera you are using.<br><strong>To change it, change the <span class='WebUISetting'>Camera Type</span> above.</strong>",
 "label" : "Camera Model",
 "type" : "readonly",
-"display" : 0,
+"display" : 1,
 "advanced" : 1
 },
 {

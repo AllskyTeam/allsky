@@ -101,9 +101,9 @@ do_initial_heading()
 	fi
 
 	if [[ ${do_initial_heading} == "true" ]]; then
-		display_header "Welcome back to the ${TITLE} for ${ALLSKY_VERSION}!"
+		display_header "Welcome back to the ${TITLE}!"
 	else
-		MSG="Welcome to the ${TITLE} for ${ALLSKY_VERSION}!\n"
+		MSG="Welcome to the ${TITLE}!\n"
 
 		if [[ -n ${PRIOR_ALLSKY} ]]; then
 			MSG="${MSG}\nYou will be asked if you want to use the images and darks (if any) from"
@@ -128,7 +128,7 @@ do_initial_heading()
 			exit_installation 1 "${STATUS_CLEAR}" ""
 		fi
 
-		display_header "Welcome to the ${TITLE} for ${ALLSKY_VERSION}!"
+		display_header "Welcome to the ${TITLE}!"
 	fi
 
 	[[ ${do_initial_heading} != "true" ]] && STATUS_VARIABLES+=("do_initial_heading='true'\n")

@@ -78,9 +78,11 @@ install: createDirs $(CONFIGFILES)
 	@install -m 0644 allsky.service $(DESTDIR)$(sysconfdir)/systemd/system/
 	@rm -f allsky.service
 	@echo `date +%F\ %R:%S` Setting up home environment variable...
-	@echo -e "export ALLSKY_TMP=/tmp\nexport ALLSKY_CONFIG=$(DESTDIR)$(sysconfdir)/allsky\nexport ALLSKY_SCRIPTS=$(DESTDIR)$(libexecdir)\nexport ALLSKY_NOTIFICATION_IMAGES=$(DESTDIR)$(sharedir)\nexport ALLSKY_IMAGES=/home/allsky/images/" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh
+	@echo -e "export ALLSKY_TMP=/tmp\nexport ALLSKY_CONFIG=$(DESTDIR)$(sysconfdir)/allsky\nexport ALLSKY_SCRIPTS=$(DESTDIR)$(libexecdir)\nexport ALLSKY_NOTIFICATION_IMAGES=$(DESTDIR)$(sharedir)\nexport ALLSKY_IMAGES=/home/allsky/images/\nPATH=${PATH}:${DESTDIR}$(libexedir)" > $(DESTDIR)$(sysconfdir)/profile.d/allsy.sh
 
-else # Not in package build mode
+
+else # Not in package build mode ######################################
+
 remove_configs:
 	@echo `date +%F\ %R:%S` Removing config path and files ../config
 	@rm -rf ../config
@@ -123,7 +125,7 @@ install: createDirs $(CONFIGFILES)
 	@systemctl enable allsky
 	@systemctl enable allskyperiodic
 	@echo `date +%F\ %R:%S` Setting up home environment variable...
-	@echo "export ALLSKY_HOME=$(HOMEDIR)" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh
+	@echo -e "export ALLSKY_HOME=$(HOMEDIR)\nPATH=${PATH}:$(SCRIPTSDIR)" > $(DESTDIR)$(sysconfdir)/profile.d/allsky.sh
 .PHONY : install
 endif # Package build check
 endif # Root check

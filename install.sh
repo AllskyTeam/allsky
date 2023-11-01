@@ -2410,7 +2410,7 @@ check_if_buster()
 	[[ ${PI_OS} != "buster" ]] && return
 
 	MSG="WARNING: You are running the older Buster operating system."
-	MSG="${MSG}\nSupport for it will be dropped in a future Allsky release."
+	MSG="${MSG}\n\nSupport for it will be dropped in a future Allsky release.\n"
 	MSG="${MSG}\nWe recommend doing a fresh install of Bookworm on a clean SD card now."
 	if [[ ${PRIOR_CAMERA_TYPE} == "RPi" ]]; then
 		MSG="${MSG}\nRPi cameras have more features on newer operating systems.\n"

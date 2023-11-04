@@ -599,9 +599,9 @@ check_swap()
 	else
 		RAM_SIZE="${RAM_SIZE//total_mem=/}"
 	fi
-	local DESIRED_COMBINATION=$((1024 * 4))		# desired minimum memory + swap
+	local DESIRED_COMBINATION=$((1024 * 5))		# desired minimum memory + swap
 	local SUGGESTED_SWAP_SIZE=0
-	for i in 512 1024 2048		# 4096 and above don't need any swap
+	for i in 512 1024 2048 4096		# 8192 and above don't need any swap
 	do
 		if [[ ${RAM_SIZE} -le ${i} ]]; then
 			SUGGESTED_SWAP_SIZE=$((DESIRED_COMBINATION - i))

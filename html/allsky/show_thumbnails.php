@@ -10,13 +10,17 @@
 	}
 	$homePage = v("homePage", null, $website_settings_array);
 	$includeGoogleAnalytics = v("includeGoogleAnalyticsx", false, $homePage);
+	$favicon = v("favicon", "allsky-favicon.png", $homePage);
+	$ext = pathinfo($favicon, PATHINFO_EXTENSION); if ($ext === "jpg") $ext = "jpeg";
+	$faviconType = "image/$ext";
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
 		<meta http-equiv="Content-Type" content="text/html" />
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link rel="shortcut icon" type="image/png" href="../allsky-favicon.png">
+		<link rel="shortcut icon" type="<?php echo $faviconType ?>" href="<?php echo "../$favicon" ?>">
 		<title><?php echo $title; ?></title>
 
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>

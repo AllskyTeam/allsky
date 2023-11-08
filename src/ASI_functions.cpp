@@ -245,7 +245,6 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
 
-
 	{ // imx708*, libcamera
 		{ "Gain", "Gain", 16.0, 1.122807, NO_DEFAULT, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
 		{ "Exposure", "Exposure Time (us)", 112015553, 26, NOT_SET, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
@@ -681,11 +680,8 @@ char *getRetCode(ASI_ERROR_CODE code)
 	else if (code == ASI_ERROR_OUTOF_BOUNDARY) ret = "ASI_ERROR_OUTOF_BOUNDARY";
 	else if (code == ASI_ERROR_TIMEOUT)
 	{
-		static int errorTimeoutCntr = 0;
-		// To aid in debugging these errors, keep track of how many we see.
-		errorTimeoutCntr += 1;
-		ret = "ASI_ERROR_TIMEOUT #" + std::to_string(errorTimeoutCntr) +
-			  " (with 0.8 exposure = " + ((CG.videoOffBetweenImages)?("YES"):("NO")) + ")";
+		std::string yesno = CG.videoOffBetweenImages ? "YES" : "NO";
+		ret = "ASI_ERROR_TIMEOUT (with 0.8 exposure = " + yesno + ")";
 	}
 	else if (code == ASI_ERROR_INVALID_SEQUENCE) ret = "ASI_ERROR_INVALID_SEQUENCE";
 	else if (code == ASI_ERROR_BUFFER_TOO_SMALL) ret = "ASI_ERROR_BUFFER_TOO_SMALL";

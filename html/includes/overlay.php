@@ -549,6 +549,17 @@ function DisplayOverlay($image_name)
                                                 <p class="help-block">This is the default expiry time in seconds for the extra data files. This can be overriden for each variable in the data files, see the documentation for more details</p>
                                             </div>
                                         </div>
+
+                                        <div class="form-group">
+                                            <label for="defaultdatafileexpiry" class="control-label col-xs-4">Expiry Text</label>
+                                            <div class="col-xs-8">
+                                                <div class="input-group">
+                                                    <input id="defaultexpirytext" name="defaultexpirytext" type="text" class="form-control">
+                                                </div>
+                                                <p class="help-block">If blank then any expired fields will be removed. If non blank the value of an expired field will be replaced with this text</p>
+                                            </div>
+                                        </div>
+
                                         <div class="form-group">
                                             <label for="defaultnoradids" class="control-label col-xs-4">Norad ID's</label>
                                             <div class="col-xs-8">

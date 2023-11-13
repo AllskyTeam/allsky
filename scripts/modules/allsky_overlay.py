@@ -216,72 +216,75 @@ class ALLSKYOVERLAY:
         fileModifiedTime = int(os.path.getmtime(dataFilename))
         if fileExtension == '.json':
             if s.isFileReadable(dataFilename):
-                with open(dataFilename) as file:
-                    self._data = json.load(file)
-                    for (name, valueData) in self._data.items():
-                        x = None
-                        y = None
-                        fill = None
-                        font = None
-                        fontsize = None
-                        result = True
-                        image = None
-                        rotate = None
-                        scale = None
-                        opacity = None
-                        stroke = None
-                        strokewidth = None
-                        if type(valueData) is dict:
-                            if 'value' in valueData:
-                                value = valueData['value']
-                            else:
-                                value = 'ERR'
+                try:
+                    with open(dataFilename) as file:
+                        self._data = json.load(file)
+                        for (name, valueData) in self._data.items():
+                            x = None
+                            y = None
+                            fill = None
+                            font = None
+                            fontsize = None
+                            result = True
+                            image = None
+                            rotate = None
+                            scale = None
+                            opacity = None
+                            stroke = None
+                            strokewidth = None
+                            if type(valueData) is dict:
+                                if 'value' in valueData:
+                                    value = valueData['value']
+                                else:
+                                    value = 'ERR'
 
-                            if 'expires' in valueData:
-                                expires = valueData['expires']
+                                if 'expires' in valueData:
+                                    expires = valueData['expires']
+                                else:
+                                    expires = defaultExpiry
+
+                                if 'x' in valueData:
+                                    x = valueData['x']
+
+                                if 'y' in valueData:
+                                    y = valueData['y']
+
+                                if 'fill' in valueData:
+                                    fill = valueData['fill']
+
+                                if 'font' in valueData:
+                                    font = valueData['font']
+
+                                if 'fontsize' in valueData:
+                                    fontsize = valueData['fontsize']
+
+                                if 'image' in valueData:
+                                    image = valueData['image']
+
+                                if 'rotate' in valueData:
+                                    rotate = valueData['rotate']
+
+                                if 'scale' in valueData:
+                                    scale = valueData['scale']
+
+                                if 'opacity' in valueData:
+                                    opacity = valueData['opacity']
+
+                                if 'stroke' in valueData:
+                                    stroke = valueData['stroke']
+
+                                if 'strokewidth' in valueData:
+                                    strokewidth = valueData['strokewidth']
                             else:
+                                value = valueData
                                 expires = defaultExpiry
 
-                            if 'x' in valueData:
-                                x = valueData['x']
-
-                            if 'y' in valueData:
-                                y = valueData['y']
-
-                            if 'fill' in valueData:
-                                fill = valueData['fill']
-
-                            if 'font' in valueData:
-                                font = valueData['font']
-
-                            if 'fontsize' in valueData:
-                                fontsize = valueData['fontsize']
-
-                            if 'image' in valueData:
-                                image = valueData['image']
-
-                            if 'rotate' in valueData:
-                                rotate = valueData['rotate']
-
-                            if 'scale' in valueData:
-                                scale = valueData['scale']
-
-                            if 'opacity' in valueData:
-                                opacity = valueData['opacity']
-
-                            if 'stroke' in valueData:
-                                stroke = valueData['stroke']
-
-                            if 'strokewidth' in valueData:
-                                strokewidth = valueData['strokewidth']
-                        else:
-                            value = valueData
-                            expires = defaultExpiry
-
-                        if name[0:3] != 'AS_':
-                            name = 'AS_{}'.format(name)
-                        os.environ[name] = str(value)
-                        self._saveExtraDataField(name, fileModifiedTime, expires, x, y, fill, font, fontsize, image, rotate, scale, opacity, stroke, strokewidth)
+                            if name[0:3] != 'AS_':
+                                name = 'AS_{}'.format(name)
+                            os.environ[name] = str(value)
+                            self._saveExtraDataField(name, fileModifiedTime, expires, x, y, fill, font, fontsize, image, rotate, scale, opacity, stroke, strokewidth)
+                except:
+                    s.log(0, 'WARNING: Data File {} is invalid - IGNORING.'.format(dataFilename))
             else:
                 s.log(0, 'ERROR: Data File {} is not accessible - IGNORING.'.format(dataFilename))
                 result = False
@@ -546,7 +549,7 @@ class ALLSKYOVERLAY:
                     fieldEmpty = ''
 
             fieldValue, overrideX, overrideY, overrideFill, overrideFont, overrideFontSize, overrideRotate, overrideScale, overrideOpacity, overrideStroke, overrideStrokewidth = self._getValue(variable, variableType, fieldFormat, fieldEmpty)
-            # s.log(0, f"XXXXX: variable={variable}, fieldEmpty={fieldEmpty}, fieldValue={fieldValue}")
+            #s.log(0, f"XXXXX: variable={variable}, fieldEmpty={fieldEmpty}, fieldValue={fieldValue}")
 
             if overrideStroke is not None:
                 stroke = overrideStroke
@@ -607,7 +610,7 @@ class ALLSKYOVERLAY:
                     fill = 255
 
                 self._checkTextBounds(fieldLabel, fieldX, fieldY)
-                
+
                 if rotation == 0 and opacity == 1:
                     draw = ImageDraw.Draw(pilImage)
                     draw.text((fieldX, fieldY), fieldLabel, font = font, fill = fill, stroke_width=strokeWidth, stroke_fill=strokeFill)
@@ -775,9 +778,12 @@ class ALLSKYOVERLAY:
                     fileTimeHR = fileTime.strftime("%d.%m.%y %H:%M:%S")
                     nowTime = datetime.fromtimestamp(int(time.time()))
                     nowTimeHR = nowTime.strftime("%d.%m.%y %H:%M:%S")
-                    s.log(4, "INFO: data field {0} expired. File time {1}, now {2}. Expiry {3} Seconds. Age {4} Seconds"
+                    s.log(4, "WARNING: data field {0} expired. File time {1}, now {2}. Expiry {3} Seconds. Age {4} Seconds"
                         .format(placeHolder, fileTimeHR, nowTimeHR, self._extraData[envCheck]["expires"], age))
                     valueOk = False
+                    expiredText = self._overlayConfig["settings"]["defaultexpirytext"]
+                    if expiredText != "":
+                        value = expiredText
 
         if valueOk:
             fieldFound = False

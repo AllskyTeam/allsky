@@ -358,15 +358,21 @@ int RPicapture(config cg, cv::Mat *image)
 			if (! image->data) {
 				Log(1, "*** %s: WARNING: Error re-reading file '%s'; skipping further processing.\n",
 					cg.ME, basename(cg.fullFilename));
+				ret = 1;
 			}
+		}
+		else
+		{
+			Log(1, " >>> %s: WARNING: Unable to take picture, return code=0x%0x (%d)\n",
+				cg.ME, ret, ret >> 8);
 		}
 	}
 	else if (! WIFSIGNALED(ret))
 	{
 		Log(1, " >>> %s: WARNING: Unable to take picture, return code=0x%0x (%d)\n",
 			cg.ME, ret, ret >> 8);
-		Log(3, "     Executed: %s\n", cmd);
-	}	// don't display message if we got a signal - that's done elsewhere.
+	}
+	// else    Don't display message if we got a signal - that's done elsewhere.
 
 	return(ret);
 }

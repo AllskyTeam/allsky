@@ -47,7 +47,9 @@
 					<li>Added support for Bookworm, the Pi Operating System released
 						in October, 2023.
 						<blockquote>Support for the Buster Operating System will be removed
-						after the next major Allsky release.</blockquote>
+						after the next major Allsky release.</blockquote></li>
+					<li>Increased suggested amount of swap by 1 GB to help minimize timelapse
+						creation problems.</li>
 				</ul>
 
 				<h4>Bug Fixes</h4>
@@ -57,6 +59,19 @@
 					<li>Multiple concurrent timelapse creations now work.
 					<li>The width and height of the RPi Version 1 and IMX290 cameras was
 						reversed.
+					<li>Uploading using the "GCS" protocol now use the correct "image.jpg"
+						name rather than "image-YYYYMMDDHHMMSS.jpg" name.
+					<li>Uploading using the "GCS" prototol gives an error if it can't
+						find the <code>gsutil</code> command.
+					<li>The <span class="WebUISetting">Camera Model</span> setting is no
+						longer displayed in the WebUI since it can't be changed manually.
+						To change cameras (either of different types or different models
+						of the same type), select <span class="WebUIValue">Refresh</span>
+						in the <span class="WebUISetting">Camera Model</span> field.
+					<li>The <span class="fileName">~/allsky/scripts</span> directory
+						is now included in the PATH so you can simply type the name of
+						any of the scripts in that directory to execute them.
+						<br>A reboot may be required for this to take affect.
 				</ul>
 
 				<hr class="separator"><!-- =========================================== -->

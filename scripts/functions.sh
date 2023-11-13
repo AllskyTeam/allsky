@@ -731,16 +731,12 @@ function one_instance()
 			local AF="${ALLSKY_ABORTS_DIR}/${ABORTED_FILE}"
 			echo -e "$(date)\t${ABORTED_FIELDS}" >> "${AF}"
 			NUM=$( wc -l < "${AF}" )
-			if [[ ${NUM} -eq 3 || ${NUM} -eq 10 ]]; then
+			if [[ ${NUM} -eq 10 ]]; then
 				MSG="${NUM} ${ABORTED_MSG2} have been aborted waiting for others to finish."
 				[[ -n ${CAUSED_BY} ]] && MSG="${MSG}\n${CAUSED_BY}"
-				if [[ ${NUM} -eq 3 ]]; then
-					SEVERITY="info"
-				else
-					SEVERITY="warning"
-					MSG="${MSG}\nOnce you have resolved the cause, reset the aborted counter:"
-					MSG="${MSG}\n&nbsp; &nbsp; <code>rm -f '${AF}'</code>"
-				fi
+				SEVERITY="warning"
+				MSG="${MSG}\nOnce you have resolved the cause, reset the aborted counter:"
+				MSG="${MSG}\n&nbsp; &nbsp; <code>rm -f '${AF}'</code>"
 				"${ALLSKY_SCRIPTS}/addMessage.sh" "${SEVERITY}" "${MSG}"
 			fi
 
@@ -816,4 +812,11 @@ function convert_json_to_tabs()
 		-e 's/"[\t :]*[ "]/\t/' \
 		-e 's/",$//' -e 's/"$//' -e 's/,$//' \
 			"${JSON_FILE}"
+}
+
+
+# Indent all lines.
+function indent()
+{
+	echo -e "${1}" | sed 's/^/\t/'
 }

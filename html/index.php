@@ -193,20 +193,27 @@ if (file_exists($f)) {
 
 	<script type="text/javascript">
 		function getImage() {
-			var img = $("<img />").attr('src', '<?php echo $image_name ?>?_ts=' + new Date().getTime())
-				.attr("id", "current")
-				.attr("class", "current")
-				.css("width", "100%")
-				.on('load', function () {
-					if (!this.complete || typeof this.naturalWidth == "undefined" || this.naturalWidth == 0) {
-						console.log('broken image!');
-						setTimeout(function () {
-							getImage();
-						}, 500);
-					} else {
-						$("#live_container").empty().append(img);
-					}
-				});
+			var newImg = new Image();
+			newImg.src = '<?php echo $image_name ?>?_ts=' + new Date().getTime();
+			newImg.id = "current";
+			newImg.class = "current";
+			newImg.style = "width: 100%";
+			newImg.decode().then(() => {
+				$("#current").attr('src', newImg.src)
+					.attr("id", "current")
+					.attr("class", "current")
+					.css("width", "100%")
+					.on('load', function () {
+						if (!this.complete || typeof this.naturalWidth == "undefined" || this.naturalWidth == 0) {
+							console.log('broken image!');
+						} else {
+							$("#live_container").empty().append(newImg);
+						}
+					});
+			}).finally(() => {
+				// Use tail recursion to trigger the next invocation after `$delay` milliseconds
+				setTimeout(function () { getImage(); }, <?php echo $delay ?>);
+			});
 		}
 
 		// Inititalize theme to light
@@ -284,7 +291,7 @@ if (file_exists($f)) {
 					</li>
 					<li>
 						<a id="module" href="index.php?page=module"><i class="fa fa-bars fa-fw"></i> Module Manager</a>
-					</li>						
+					</li>
 					<li>
 						<a id="LAN" href="index.php?page=LAN_info"><i class="fa fa-network-wired fa-fw"></i> <b>LAN</b> Dashboard</a>
 					</li>
@@ -445,7 +452,7 @@ if (file_exists($f)) {
 						break;
 					case "module":
 						DisplayModule();
-						break;						
+						break;
 
 					case "live_view":
 					default:
@@ -523,7 +530,7 @@ if ($page == "configuration") {
 			document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
 		}
 	}
-<?php 
+<?php
 	}
 ?>
 </script>

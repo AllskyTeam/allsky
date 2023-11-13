@@ -186,7 +186,7 @@ if [[ ${IMG_RESIZE} == "true" ]] ; then
 		display_error_and_exit "${ERROR_MSG}" "IMG_RESIZE"
 	fi
 
-	[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && echo "*** ${ME}: Resizing '${CURRENT_IMAGE}' to ${IMG_WIDTH}x${IMG_HEIGHT}"
+	[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && echo "${ME}: Resizing '${CURRENT_IMAGE}' to ${IMG_WIDTH}x${IMG_HEIGHT}"
 	if ! convert "${CURRENT_IMAGE}" -resize "${IMG_WIDTH}x${IMG_HEIGHT}" "${CURRENT_IMAGE}" ; then
 		echo -e "${RED}*** ${ME}: ERROR: IMG_RESIZE failed; not saving${NC}"
 		exit 4
@@ -227,7 +227,7 @@ if [[ ${CROP_IMAGE} == "true" ]]; then
 
 	if [[ -z ${ERROR_MSG} ]]; then
 		if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
-			echo -e "*** ${ME} Cropping '${CURRENT_IMAGE}' to ${CROP_WIDTH}x${CROP_HEIGHT}."
+			echo -e "${ME} Cropping '${CURRENT_IMAGE}' to ${CROP_WIDTH}x${CROP_HEIGHT}."
 		fi
 		convert "${CURRENT_IMAGE}" -gravity Center -crop "${CROP_WIDTH}x${CROP_HEIGHT}+${CROP_OFFSET_X}+${CROP_OFFSET_Y}" +repage "${CURRENT_IMAGE}"
 		if [ $? -ne 0 ] ; then
@@ -243,7 +243,7 @@ fi
 # Stretch the image if required, but only at night.
 if [[ ${DAY_OR_NIGHT} == "NIGHT" && ${AUTO_STRETCH} == "true" ]]; then
 	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
-		echo "*** ${ME}: Stretching '${CURRENT_IMAGE}' by ${AUTO_STRETCH_AMOUNT}"
+		echo "${ME}: Stretching '${CURRENT_IMAGE}' by ${AUTO_STRETCH_AMOUNT}"
 	fi
  	convert "${CURRENT_IMAGE}" -sigmoidal-contrast "${AUTO_STRETCH_AMOUNT}x${AUTO_STRETCH_MID_POINT}" "${CURRENT_IMAGE}"
 	if [ $? -ne 0 ] ; then
@@ -261,10 +261,15 @@ else
 	export DATE_NAME="$(date +'%Y%m%d')"
 fi
 
-# AG - Bookworm mod 12/10/23
-source "${ALLSKY_HOME}/venv/bin/activate"
-python3 "${ALLSKY_SCRIPTS}/flow-runner.py"
-deactivate
+if [[ ${PI_OS} == "bookworm" ]]; then
+   	# AG - Bookworm mod 12/10/23
+   	#shellcheck disable=SC1090,SC1091
+   	source "${ALLSKY_HOME}/venv/bin/activate"
+   	python3 "${ALLSKY_SCRIPTS}/flow-runner.py"
+   	deactivate
+else
+   	python3 "${ALLSKY_SCRIPTS}/flow-runner.py"
+fi
 
 # The majority of the post-processing time for an image is in flow-runner.py.
 # Since only one mini-timelapse can run at once and that code is embeded in this code

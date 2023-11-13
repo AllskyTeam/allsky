@@ -108,8 +108,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	ALLSKY_FLOWTIMINGS_DAY="${ALLSKY_FLOWTIMINGS}/day-average"
 	ALLSKY_FLOWTIMINGS_NIGHT="${ALLSKY_FLOWTIMINGS}/night-average"
 
-	# Verion file.
+	# Allsky version.
 	ALLSKY_VERSION_FILE="${ALLSKY_HOME}/version"
+	ALLSKY_VERSION="$( head -1 "${ALLSKY_VERSION_FILE}" | tr -d '\n\r' )"
 
 	# Location of optional allsky-website package.
 	ALLSKY_WEBSITE="${ALLSKY_WEBUI}/allsky"
@@ -156,6 +157,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	EXIT_RESET_USB=99		# need to reset USB bus; cannot continue
 	EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
 	EXIT_NO_CAMERA=101		# cannot find camera
+
+	# Name of the Pi's OS.
+	PI_OS="$( grep CODENAME /etc/os-release | cut -d= -f2 )"
 
 	# If a user wants to define new variables or assign variables differently,
 	# then load their file if it exists.

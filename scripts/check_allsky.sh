@@ -234,7 +234,7 @@ function check_delay()
 	fi
 	if [[ ${MAX_TIME_TO_SAVE_MS} -gt ${MIN_IMAGE_TIME_MS} ]]; then
 		heading "Warnings"
-		echo "The minimum delay of ${MIN_DELAY_MS} may be too short"
+		echo "The minimum delay of ${MIN_DELAY_MS} ms may be too short"
 		echo "given the maximum expected time to save and process"
 		echo "an image (${MAX_TIME_TO_SAVE_MS} ms)."
 		echo "A new image may appear before the prior one has finished processing."
@@ -615,7 +615,7 @@ for i in IMG_UPLOAD IMG_UPLOAD_ORIGINAL_NAME IMG_RESIZE CROP_IMAGE AUTO_STRETCH 
 do
 	if [[ -n ${!i} && ${!i,,} != "true" && ${!i,,} != "false" ]]; then
 		heading "Errors"
-		echo "${i} must be either 'true' or 'false'."
+		echo "${i} must be either 'true' or 'false'; it is '${!i}'."
 	fi
 done
 

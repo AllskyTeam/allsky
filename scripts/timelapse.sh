@@ -213,7 +213,7 @@ if [[ ${KEEP_SEQUENCE} == "false" || ! -d ${SEQUENCE_DIR} ]]; then
 		# have thousands of images.
 		echo "[end]"		# signals end of the list
 	else
-		ls -rt "${INPUT_DIR}"/image-*."${EXTENSION}" 2>/dev/null
+		ls -rt "${INPUT_DIR}"/*."${EXTENSION}" 2>/dev/null
 		echo "[end]"
 	fi | while read -r IMAGE
 		do
@@ -275,17 +275,20 @@ else
 	SCALE=""
 fi
 FFLOG="$( settings ".timelapsefflog" )"
+VCODEC="$( settings ".timelapsevcodec" )"
+PIX_FMT="$( settings ".timelapsepixfmt" )"
+EXTRA="$( settings ".timelapseextraparameters" )"
 # shellcheck disable=SC2086,SC2046
 X="$(ffmpeg -y -f image2 \
 	-loglevel "${FFLOG}" \
 	-r "${FPS}" \
 	-i "${SEQUENCE_DIR}/%04d.${EXTENSION}" \
-	-vcodec "$( settings ".timelapsevcodec" )" \
-	-b:v "${TIMELAPSE_BITRATE}k" \
-	-pix_fmt "$( settings ".timelapsepixfmt" )" \
+	-vcodec "${VCODEC}" \
+	-b:v "${TIMELAPSE_BITRATE}" \
+	-pix_fmt "${PIX_FMT}" \
 	-movflags +faststart \
-	$SCALE \
-	$( settings ".timelapseextraparameters" ) \
+	${SCALE} \
+	${EXTRA} \
 	"${OUTPUT_FILE}" 2>&1)"
 RET=$?
 

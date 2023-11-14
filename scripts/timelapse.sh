@@ -213,7 +213,7 @@ if [[ ${KEEP_SEQUENCE} == "false" || ! -d ${SEQUENCE_DIR} ]]; then
 		# have thousands of images.
 		echo "[end]"		# signals end of the list
 	else
-		ls -rt "${INPUT_DIR}"/*."${EXTENSION}" 2>/dev/null
+		ls -rt "${INPUT_DIR}/${FILENAME}-"*".${EXTENSION}" 2>/dev/null
 		echo "[end]"
 	fi | while read -r IMAGE
 		do

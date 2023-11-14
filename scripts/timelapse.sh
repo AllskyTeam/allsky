@@ -185,7 +185,7 @@ if [[ ${KEEP_SEQUENCE} == "false" ]]; then
 		# have thousands of images.
 		echo "[end]"		# signals end of the list
 	else
-		ls -rt "${INPUT_DIR}"/image-*."${EXTENSION}" 2>/dev/null
+		ls -rt "${INPUT_DIR}/${FILENAME}-"*".${EXTENSION}" 2>/dev/null
 		echo "[end]"
 	fi | while read -r IMAGE
 		do
@@ -297,3 +297,4 @@ fi
 [[ -n ${PID_FILE} ]] && rm -f "${PID_FILE}"
 
 exit 0
+

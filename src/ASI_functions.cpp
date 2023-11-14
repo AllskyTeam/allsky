@@ -158,6 +158,11 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 		10, ASI_FALSE, ASI_TRUE
 	},
 
+	{ "arducam-pivariety", 0, "ArduCam IMX462", 0, 1920, 1080, ASI_TRUE,
+                BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 2.9, ASI_FALSE,
+                12, ASI_FALSE, ASI_FALSE
+    },
+
 	// FUTURE CAMERAS GO HERE...
 };
 int const ASICameraInfoArraySize =  sizeof(ASICameraInfoArray) / sizeof(ASI_CAMERA_INFO);
@@ -350,6 +355,27 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 	{ // arducam_64mp, raspistill.  Not supported.
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
+
+	{ // arducam-pivariety imx462, libcamera
+        { "Gain", "Gain", 200, 1.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
+        { "Exposure", "Exposure Time (us)", 2147483647, 14, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
+        { "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
+        { "WB_B", "White balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
+        { "Temperature", "Sensor Temperature", 80, -20, NOT_SET, NOT_SET, ASI_FALSE, ASI_FALSE, ASI_TEMPERATURE },
+        { "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
+        { "AutoExpMaxGain", "Auto exposure maximum gain value", 200, 1, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
+        { "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 200 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
+        { "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
+        { "Brightness", "Brightness", 1.0, -1.0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
+        { "Saturation", "Saturation", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
+        { "Contrast", "Contrast", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
+        { "Sharpness", "Sharpness", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
+
+        { "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
+    },
+    { // arducam-pivariety imx462, raspistill.  Not supported.
+            { "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
+    },
 
 	// FUTURE CAMERAS GO HERE...
 };

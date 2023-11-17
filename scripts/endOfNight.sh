@@ -8,14 +8,14 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 ME="$(basename "${BASH_ARGV0}")"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh"			|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit "${ALLSKY_ERROR_STOP}"
 
 if [[ $# -eq 1 ]]; then
 	if [[ ${1} = "--help" ]]; then
@@ -161,6 +161,13 @@ if [[ ${SHOW_ON_MAP} -eq 1 ]]; then
 	"${ALLSKY_SCRIPTS}/postToMap.sh" --endofnight
 fi
 
-${NICE} "${ALLSKY_SCRIPTS}/flow-runner.py" -e nightday
+if [[ ${PI_OS} == "bookworm" ]]; then
+   	#shellcheck disable=SC1090,SC1091
+   	source "${ALLSKY_HOME}/venv/bin/activate"
+   	${NICE} python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event nightday
+   	deactivate
+else
+   	${NICE} python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event nightday
+fi
 
 exit 0

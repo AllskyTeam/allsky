@@ -6,12 +6,12 @@ ME="$(basename "${BASH_ARGV0}")"
 
 [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "${ME} $*"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh" || exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh" || exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh"			|| exit "${ALLSKY_ERROR_STOP}"
 
 usage_and_exit()
 {
@@ -19,8 +19,7 @@ usage_and_exit()
 	[[ ${retcode} -ne 0 ]] && echo -ne "${RED}"
 	echo -n "Usage: ${ME} DAY|NIGHT  full_path_to_image  [variable=value [...]]"
 	[[ ${retcode} -ne 0 ]] && echo -e "${NC}"
-	# shellcheck disable=SC2086
-	exit ${retcode}
+	exit "${retcode}"
 }
 [[ $# -lt 2 ]] && usage_and_exit 1
 

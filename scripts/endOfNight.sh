@@ -157,6 +157,13 @@ if [[ ${SHOW_ON_MAP} == "true" ]]; then
 	"${ALLSKY_SCRIPTS}/postToMap.sh" --endofnight
 fi
 
-${NICE} "${ALLSKY_SCRIPTS}/flow-runner.py" -e nightday
+if [[ ${PI_OS} == "bookworm" ]]; then
+   	#shellcheck disable=SC1090,SC1091
+   	source "${ALLSKY_HOME}/venv/bin/activate"
+   	${NICE} python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event nightday
+   	deactivate
+else
+   	${NICE} python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event nightday
+fi
 
 exit 0

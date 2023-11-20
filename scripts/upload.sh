@@ -193,6 +193,7 @@ if [[ ${PROTOCOL} == "s3" ]] ; then
 	AWS_CLI_DIR="$( settings ".${PREFIX}_AWS_CLI_DIR" "${ALLSKY_ENV}" )"
 	S3_BUCKET="$( settings ".${PREFIX}_S3_BUCKET" "${ALLSKY_ENV}" )"
 	S3_ACL="$( settings ".${PREFIX}_S3_ACL" "${ALLSKY_ENV}" )"
+
 	DEST="s3://${S3_BUCKET}${DIRECTORY}/${DESTINATION_NAME}"
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "${ME}: Uploading ${FILE_TO_UPLOAD} to ${DEST}"
@@ -206,6 +207,7 @@ elif [[ "${PROTOCOL}" == "scp" ]] ; then
 	REMOTE_HOST="$( settings ".${PREFIX}_HOST" "${ALLSKY_ENV}" )"
 	REMOTE_PORT="$( settings ".${PREFIX}_PORT" "${ALLSKY_ENV}" )"
 	SSH_KEY_FILE="$( settings ".${PREFIX}_SSH_KEY_FILE" "${ALLSKY_ENV}" )"
+
 	DEST="${REMOTE_USER}@${REMOTE_HOST}:${DIRECTORY}/${DESTINATION_NAME}"
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${DEST}"
@@ -219,9 +221,8 @@ elif [[ "${PROTOCOL}" == "scp" ]] ; then
 elif [[ ${PROTOCOL} == "gcs" ]] ; then
 	GCS_BUCKET="$( settings ".${PREFIX}_GCS_BUCKET" "${ALLSKY_ENV}" )"
 	GCS_ACL="$( settings ".${PREFIX}_GCS_ACL" "${ALLSKY_ENV}" )"
-	type gsutil >/dev/null 2>&1
-	RET=$?
-	if [[ ${RET} -eq 0 ]]; then
+
+	if type gsutil >/dev/null 2>&1 ; then
 		DEST="gs://${GCS_BUCKET}${DIRECTORY}/${DESTINATION_NAME}"
 		if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 			echo "${ME}: Uploading ${FILE_TO_UPLOAD} to ${DEST}"
@@ -233,6 +234,7 @@ elif [[ ${PROTOCOL} == "gcs" ]] ; then
 		OUTPUT="${OUTPUT}\nIt should be in one of these directories: $PATH"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${OUTPUT}"
 		OUTPUT="${RED}*** ${OUTPUT}${NC}"
+		RET=1
 	fi
 
 
@@ -301,7 +303,7 @@ else # sftp/ftp/ftps
 		PW="--env-password"
 	fi
 
-	(
+	{
 		LFTP_COMMANDS="$( settings ".${PREFIX}_LFTP_COMMANDS" "${ALLSKY_ENV}" )"
 		[[ -n ${LFTP_COMMANDS} ]] && echo "${LFTP_COMMANDS}"
 
@@ -362,7 +364,7 @@ else # sftp/ftp/ftps
 			|| exit 4"
 
 		echo exit 0
-	) > "${LFTP_CMDS}"
+	} > "${LFTP_CMDS}"
 	if [[ $? -ne 0 ]]; then
 		echo -e "${RED}"
 		echo -e "*** ERROR: Unable to create '${LFTP_CMDS}'."

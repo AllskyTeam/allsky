@@ -1,6 +1,21 @@
 #!/bin/bash
 # shellcheck disable=SC2154		# referenced but not assigned
 
+
+
+echo "============================================"
+echo "============================================"
+echo "Point Release 4 is not yet ready for use."
+echo "We are working on some problems."
+echo
+echo "If you are running the Bookworm operating system"
+echo "either wait until Point Release 4 is ready, or revert to Bullseye."
+echo "============================================"
+echo "============================================"
+exit 0
+
+
+
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
 ME="$(basename "${BASH_ARGV0}")"
 

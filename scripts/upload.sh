@@ -4,17 +4,17 @@
 # This is a separate script so it can also be used manually to test uploads.
 
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}")/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh"			|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit "${ALLSKY_ERROR_STOP}"
 
 
 usage_and_exit() {
@@ -39,8 +39,7 @@ usage_and_exit() {
 	echo
 	echo "For example: ${ME}  keogram-20230710.jpg  /keograms  keogram.jpg"
 
-	# shellcheck disable=SC2086
-	exit ${RET}
+	exit "${RET}"
 }
 
 
@@ -77,7 +76,7 @@ while [[ $# -gt 0 ]]; do
 			;;
 	esac
 done
-[[ $# -lt 3 || ${RET} -ne 0 ]] && usage_and_exit ${RET}
+[[ $# -lt 3 || ${RET} -ne 0 ]] && usage_and_exit 1
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 
 FILE_TO_UPLOAD="${1}"
@@ -88,7 +87,7 @@ if [[ ! -f ${FILE_TO_UPLOAD} ]]; then
 	exit 2
 fi
 
-REMOTE_DIR="${2}"
+DIRECTORY="${2}"
 DESTINATION_NAME="${3}"
 [[ -z ${DESTINATION_NAME} ]] && DESTINATION_NAME="$(basename "${FILE_TO_UPLOAD}")"
 # When run manually, the FILE_TYPE normally won't be given.
@@ -147,7 +146,7 @@ if [[ ${PROTOCOL} == "s3" ]] ; then
 
 
 elif [[ ${PROTOCOL} == "local" ]] ; then
-	DEST="${REMOTE_DIR}/${DESTINATION_NAME}"
+	DEST="${DIRECTORY}/${DESTINATION_NAME}"
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${DEST}"
 	fi
@@ -198,11 +197,11 @@ else # sftp/ftp/ftps
 
 	TEMP_NAME="${FILE_TYPE}-${RANDOM}"
 
-	# If REMOTE_DIR isn't null (which it can be) and doesn't already have a trailing "/", append one.
-	[[ -n ${REMOTE_DIR} && ${REMOTE_DIR: -1:1} != "/" ]] && REMOTE_DIR="${REMOTE_DIR}/"
+	# If DIRECTORY isn't null (which it can be) and doesn't already have a trailing "/", append one.
+	[[ -n ${DIRECTORY} && ${DIRECTORY: -1:1} != "/" ]] && DIRECTORY="${DIRECTORY}/"
 
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		echo "${ME}: FTP '${FILE_TO_UPLOAD}' to '${REMOTE_DIR}${DESTINATION_NAME}', TEMP_NAME=${TEMP_NAME}"
+		echo "${ME}: FTP '${FILE_TO_UPLOAD}' to '${DIRECTORY}${DESTINATION_NAME}', TEMP_NAME=${TEMP_NAME}"
 	fi
 	# LFTP_CMDS needs to be unique per file type so we don't overwrite a different upload type.
 	DIR="${ALLSKY_TMP}/lftp_cmds"
@@ -248,11 +247,11 @@ else # sftp/ftp/ftps
 			echo "ls"
 			echo "debug 5"
 		fi
-		if [[ -n ${REMOTE_DIR} ]]; then
+		if [[ -n ${DIRECTORY} ]]; then
 			# lftp outputs error message so we don't have to.
-			echo "cd '${REMOTE_DIR}' || exit 1"
+			echo "cd '${DIRECTORY}' || exit 1"
 			if [[ ${DEBUG} == "true" ]]; then
-				echo "echo 'In REMOTE_DIR=${REMOTE_DIR}:'"
+				echo "echo 'In DIRECTORY=${DIRECTORY}:'"
 				echo "ls"
 			fi
 		fi
@@ -301,7 +300,7 @@ else # sftp/ftp/ftps
 				echo "FILE_TO_UPLOAD='${FILE_TO_UPLOAD}'"
 				# shellcheck disable=SC2153
 				echo "REMOTE_HOST='${REMOTE_HOST}'"
-				echo "REMOTE_DIR='${REMOTE_DIR}'"
+				echo "DIRECTORY='${DIRECTORY}'"
 				echo "TEMP_NAME='${TEMP_NAME}'"
 				echo "DESTINATION_NAME='${DESTINATION_NAME}'"
 				echo -en "${NC}"

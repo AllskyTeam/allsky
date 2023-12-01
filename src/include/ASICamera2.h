@@ -39,7 +39,7 @@ while(1)
 	#define ASICAMERA_API 
 #endif
 
-#define ASICAMERA_ID_MAX 128
+#define ASICAMERA_ID_MAX 256
 
 typedef enum ASI_BAYER_PATTERN{
 	ASI_BAYER_RG=0,
@@ -110,6 +110,11 @@ typedef enum ASI_ERROR_CODE{ //ASI ERROR CODE
 	ASI_ERROR_EXPOSURE_IN_PROGRESS,
 	ASI_ERROR_GENERAL_ERROR,//general error, eg: value is out of valid range
 	ASI_ERROR_INVALID_MODE,//the current mode is wrong
+	ASI_ERROR_GPS_NOT_SUPPORTED, //this camera do not support GPS
+	ASI_ERROR_GPS_VER_ERR, //the FPGA GPS ver is too low
+	ASI_ERROR_GPS_FPGA_ERR, //failed to read or write data to FPGA
+	ASI_ERROR_GPS_PARAM_OUT_OF_RANGE, //start line or end line out of range, should make them between 0 ~ MaxHeight - 1
+	ASI_ERROR_GPS_DATA_INVALID, //GPS has not yet found the satellite or FPGA cannot read GPS data
 	ASI_ERROR_END
 }ASI_ERROR_CODE;
 
@@ -170,7 +175,12 @@ typedef enum ASI_CONTROL_TYPE{ //Control type//
 	ASI_FAN_ON,
 	ASI_PATTERN_ADJUST,
 	ASI_ANTI_DEW_HEATER,
-
+	ASI_FAN_ADJUST,
+	ASI_PWRLED_BRIGNT,
+	ASI_GPS_SUPPORT,
+	ASI_GPS_START_LINE,
+	ASI_GPS_END_LINE,
+	ASI_ROLLING_INTERVAL,//microsecond
 }ASI_CONTROL_TYPE;
 
 typedef struct _ASI_CONTROL_CAPS
@@ -203,6 +213,27 @@ typedef ASI_ID ASI_SN;
 typedef struct _ASI_SUPPORTED_MODE{
 	ASI_CAMERA_MODE SupportedCameraMode[16];// this array will content with the support camera mode type.ASI_MODE_END is the end of supported camera mode
 }ASI_SUPPORTED_MODE;
+
+typedef struct _ASI_DATE_TIME{
+	int Year; 
+	int Month; 
+	int Day;
+	int Hour;
+	int Minute;
+	int Second;
+	int Msecond;
+	int Usecond;  //Minimum Unit 0.1us, Maximum number 9999
+	char Unused[64]; //Using the Unused field to store concatenated strings
+} ASI_DATE_TIME;
+
+typedef struct _ASI_GPS_DATA {
+	ASI_DATE_TIME Datetime;
+	double Latitude;  // +: North Latitude -: South Latitude
+	double Longitude; // +: East longitude -: West longitude
+	int Altitude;     // Minimum Unit 0.1m, Maximum number 99999
+	int SatelliteNum; // Maximum number 99
+	char Unused[64];  
+} ASI_GPS_DATA;
 
 #ifndef __cplusplus
 #define ASI_CONTROL_TYPE int
@@ -636,6 +667,38 @@ ASICAMERA_API  ASI_ERROR_CODE ASIGetVideoData(int iCameraID, unsigned char* pBuf
 
 /***************************************************************************
 Descriptions:
+get data from the video buffer.the buffer is very small 
+you need to call this API as fast as possible, otherwise frame will be discarded
+so the best way is maintain one buffer loop and call this API in a loop
+please make sure the buffer size is biger enough to hold one image
+otherwise the this API will crash
+
+
+Paras:		
+int CameraID: this is get from the camera property use the API ASIGetCameraProperty
+unsigned char* pBuffer, caller need to malloc the buffer, make sure the size is big enough
+the size in byte:
+8bit mono:width*height
+16bit mono:width*height*2
+RGB24:width*height*3
+
+int iWaitms, this API will block and wait iWaitms to get one image. the unit is ms
+-1 means wait forever. this value is recommend set to exposure*2+500ms
+
+GPS_DATA *gpsData, if camera support GPS, the GPS data will pass to incomming parameter,
+the GPS data struct is define at the top of this file.
+
+return:
+ASI_SUCCESS : Operation is successful
+ASI_ERROR_CAMERA_CLOSED : camera didn't open
+ASI_ERROR_INVALID_ID  :no camera of this ID is connected or ID value is out of boundary
+ASI_ERROR_TIMEOUT: no image get and timeout
+***************************************************************************/
+ASICAMERA_API  ASI_ERROR_CODE ASIGetVideoDataGPS(int iCameraID, unsigned char* pBuffer, long lBuffSize, int iWaitms, ASI_GPS_DATA *gpsData);
+
+
+/***************************************************************************
+Descriptions:
 PulseGuide of the ST4 port on. this function only work on the module which have ST4 port
 
 
@@ -747,6 +810,33 @@ ASI_ERROR_INVALID_ID  :no camera of this ID is connected or ID value is out of b
 ASI_ERROR_TIMEOUT: no image get and timeout
 ***************************************************************************/
 ASICAMERA_API  ASI_ERROR_CODE ASIGetDataAfterExp(int iCameraID, unsigned char* pBuffer, long lBuffSize);
+
+/***************************************************************************
+Descriptions:
+get data after exposure.
+please make sure the buffer size is biger enough to hold one image
+otherwise the this API will crash
+
+
+Paras:		
+int CameraID: this is get from the camera property use the API ASIGetCameraProperty
+unsigned char* pBuffer, caller need to malloc the buffer, make sure the size is big enough
+the size in byte:
+8bit mono:width*height
+16bit mono:width*height*2
+RGB24:width*height*3
+
+GPS_DATA *gpsData, if camera support GPS, the GPS data will pass to incomming parameter,
+the GPS data struct is define at the top of this file.
+
+
+return:
+ASI_SUCCESS : Operation is successful
+ASI_ERROR_CAMERA_CLOSED : camera didn't open
+ASI_ERROR_INVALID_ID  :no camera of this ID is connected or ID value is out of boundary
+ASI_ERROR_TIMEOUT: no image get and timeout
+***************************************************************************/
+ASICAMERA_API  ASI_ERROR_CODE ASIGetDataAfterExpGPS(int iCameraID, unsigned char* pBuffer, long lBuffSize, ASI_GPS_DATA *gpsData);
 
 /***************************************************************************
 Descriptions:
@@ -931,6 +1021,158 @@ ASI_ERROR_INVALID_ID  :no camera of this ID is connected or ID value is out of b
 ASI_ERROR_GENERAL_ERROR : the parameter is not right
 ***************************************************************************/
 ASICAMERA_API ASI_ERROR_CODE  ASIGetTriggerOutputIOConf(int iCameraID, ASI_TRIG_OUTPUT_PIN pin, ASI_BOOL *bPinHigh, long *lDelay, long *lDuration);
+
+/***************************************************************************
+Description:
+Get the GPS data
+Paras:
+int CameraID: this is get from the camera property use the API ASIGetCameraProperty.
+ASI_GPS_DATA* startLineGPSData: the GPS data of the start line. the start line number is set by ASISetControlValue(..., ASI_GPS_START_LINE,...). the default value is 0
+ASI_GPS_DATA* endLineGPSData: the GPS data of the end line. the end line number is set by ASISetControlValue(..., ASI_GPS_END_LINE,...). the default value is MaxHeight - 1
+
+return:
+ASI_SUCCESS : Operation is successful
+ASI_ERROR_CAMERA_CLOSED : camera didn't open
+ASI_ERROR_INVALID_ID  : no camera of this ID is connected or ID value is out of boundary
+ASI_ERROR_GPS_NOT_SUPPORTED : this camera do not support GPS
+ASI_ERROR_GPS_VER_ERR : the FPGA GPS ver is too low
+ASI_ERROR_GPS_FPGA_ERR : failed to read or write data to FPGA
+ASI_ERROR_GPS_DATA_INVALID : GPS has not yet found the satellite or FPGA cannot read GPS data
+***************************************************************************/
+ASICAMERA_API ASI_ERROR_CODE ASIGPSGetData(int iCameraID, ASI_GPS_DATA* startLineGPSData, ASI_GPS_DATA* endLineGPSData);
+
+
+/***************************************************************************
+Description:
+Enable the debug log output
+Paras:
+int CameraID: this is get from the camera property use the API ASIGetCameraProperty.
+ASI_BOOL bEnable: true to enable the log output and false to disable.
+
+return:
+ASI_SUCCESS : Operation is successful
+ASI_ERROR_CAMERA_CLOSED : camera didn't open
+ASI_ERROR_INVALID_ID  :no camera of this ID is connected or ID value is out of boundary
+***************************************************************************/
+ASICAMERA_API ASI_ERROR_CODE ASIEnableDebugLog(int iCameraID, ASI_BOOL bEnable);
+
+/***************************************************************************
+Description:
+Get the status that if the debug log file output is enabled
+Paras:
+int CameraID: this is get from the camera property use the API ASIGetCameraProperty.
+ASI_BOOL *bEnable: true if the log output is enabled and false if the log output is disabled.
+
+return:
+ASI_SUCCESS : Operation is successful
+ASI_ERROR_CAMERA_CLOSED : camera didn't open
+ASI_ERROR_INVALID_ID  :no camera of this ID is connected or ID value is out of boundary
+***************************************************************************/
+ASICAMERA_API ASI_ERROR_CODE ASIGetDebugLogIsEnabled(int iCameraID, ASI_BOOL *bEnable);
+
+//#define ASIPRODUCE //API for Produce. It needs to be commented out when it is released to the public
+#ifdef ASIPRODUCE
+//#define SEESTAR_PRODUCE //Only for Seestar production. If you want to release USB cameras' production SDK, please comment this Macro
+ASICAMERA_API ASI_ERROR_CODE  ASISaveHPCTable(int iCameraID, unsigned char *table, long len);
+/***************************************************************************
+Description:
+Get the number of HPC
+
+piVal: the number of HPC.
+***************************************************************************/
+ASICAMERA_API ASI_ERROR_CODE  ASIHPCNumber(int iCameraID, int* piVal);
+/***************************************************************************
+Description:
+Get the HPC table. When you malloc the table, make sure the length is max_width * max_height / 8
+
+table: the array which contains HPC table.
+len: max_width * max_height / 8
+Note: note that the HPC table you get is compressed.One byte contains 8 pixels.
+***************************************************************************/
+ASICAMERA_API ASI_ERROR_CODE  ASIGetHPCTable(int iCameraID, unsigned char* table, long len);
+ASICAMERA_API ASI_ERROR_CODE  ASIEnableHPC(int iCameraID, ASI_BOOL bVal);
+ASICAMERA_API int ASIGetIDByIndex(int iCameraIndex);
+/***************************************************************************
+Description:
+The sensor is set to output continuous gradient image to facilitate the detection of snowflake screen
+
+bEnable: ASI_ TRUE means output continuous gradient image, ASI_ FALSE indicates the actual image
+***************************************************************************/
+ASICAMERA_API ASI_ERROR_CODE  ASIEnableSnowTest(int iCameraID, ASI_BOOL bEnable);
+/***************************************************************************
+Description:
+Write sensor register directly. Used for ASIProduce only.
+
+iAddr: the address of the register
+iValue: the value to write to the register
+***************************************************************************/
+ASICAMERA_API ASI_ERROR_CODE  ASIWriteSonyReg(int iCameraID, unsigned short iAddr, unsigned char iValue);
+/***************************************************************************
+Description:
+Read FPGA register directly. Used for ASIProduce only.
+
+iAddr: the address of the register
+iValue: the value read from the register
+***************************************************************************/
+ASICAMERA_API ASI_ERROR_CODE  ASIReadFPGAReg(int iCameraID, unsigned short iAddr, unsigned char* piValue);
+
+/***************************************************************************
+Description:
+Read special register. Used for ASIProduce(Seestar) only.
+
+iCmd: the cmd, for Seestar E-compass, it's 0xE8
+iAddr: the address of the register, for Seestar E-compass, it's 0 
+iValue: the value read from the register, for Seestar E-compass, it's 0x0E48
+***************************************************************************/
+ASICAMERA_API ASI_ERROR_CODE  ASIReadSpecialReg(int iCameraID, unsigned char iCmd, unsigned short iAddr, unsigned short* piValue);
+
+ASICAMERA_API int ASIGetPID(int iCameraID);
+
+/***************************************************************************
+Description:
+Switch 2 group filter. Used for ASIProduce only.
+
+group: the group of filter
+val: left or right position
+***************************************************************************/
+ASICAMERA_API ASI_ERROR_CODE  ASIS50FilterSwitch(int iCameraID, int group, int val);
+
+/***************************************************************************
+Description:
+Enable and disable heater of S50. Used for ASIProduce only.
+
+val: enable or disable
+***************************************************************************/
+ASICAMERA_API ASI_ERROR_CODE  ASIS50Heater(int iCameraID, ASI_BOOL bEnable);
+
+/***************************************************************************
+Description:
+Get the status of RA and DEC of S50. Used for ASIProduce only.
+
+bRaEn: TRUE is block, FALSE is not block
+bDecEn: TRUE is block, FALSE is not block
+***************************************************************************/
+ASICAMERA_API ASI_ERROR_CODE  ASIS50RADECSensor(int iCameraID, ASI_BOOL* bRaEn, ASI_BOOL* bDecEn);
+
+#endif // ASIPRODUCE
+
+//#define INNER_TEST //Inner test£¬do not release to public. It must be commented before release
+//#define SMLTEST //Test by SML. It must be commented before release
+
+#ifdef INNER_TEST
+/***************************************************************************
+Description:
+Set the Cooling Temperature parameters. Used for ASIProduce only.
+
+nTempSegment: The separator temperature. When the temperature is higher than the separation point,
+adopt faster cooling speed to improve efficiency. When the temperature is lower than the separation point,
+use a slower speed to cool the camera to avoid fogging or icing.
+nHighTempDurationSec: The cooling time from current temperature to separator temperature.
+nLowTempDurationSec: The cooling time form separator temperature to target temperature.
+***************************************************************************/
+ASICAMERA_API ASI_ERROR_CODE  ASISetTempControlValue(int iCameraID, int nTempSegment, int nHighTempDurationSec, int nLowTempDurationSec);
+#endif // INNER_TEST
+
 
 #ifdef __cplusplus
 }

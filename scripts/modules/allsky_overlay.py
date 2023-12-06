@@ -10,6 +10,7 @@ import time
 import requests
 import tempfile
 import math
+import sys
 
 import allsky_shared as s
 
@@ -971,51 +972,55 @@ class ALLSKYOVERLAY:
         return result
 
     def _initialiseMoon(self):
-        """ Setup all of the data for the Moon """
-        moonEnabled = self._overlayConfig["settings"]["defaultincludemoon"]
-        if moonEnabled:
-            if self._enableSkyfield:
-                lat = radians(self._convertLatLon(self._observerLat))
-                lon = radians(self._convertLatLon(self._observerLon))
+        try:
+            """ Setup all of the data for the Moon """
+            moonEnabled = self._overlayConfig["settings"]["defaultincludemoon"]
+            if moonEnabled:
+                if self._enableSkyfield:
+                    lat = radians(self._convertLatLon(self._observerLat))
+                    lon = radians(self._convertLatLon(self._observerLon))
 
-                ts = time.time()
-                utcOffset = (datetime.fromtimestamp(ts) - datetime.utcfromtimestamp(ts)).total_seconds()
+                    ts = time.time()
+                    utcOffset = (datetime.fromtimestamp(ts) - datetime.utcfromtimestamp(ts)).total_seconds()
 
-                observer = ephem.Observer()
-                observer.lat = lat
-                observer.long = lon
-                moon = ephem.Moon()
-                observer.date = datetime.now() - timedelta(seconds=utcOffset)
-                moon.compute(observer)
+                    observer = ephem.Observer()
+                    observer.lat = lat
+                    observer.long = lon
+                    moon = ephem.Moon()
+                    observer.date = datetime.now() - timedelta(seconds=utcOffset)
+                    moon.compute(observer)
 
-                nnm = ephem.next_new_moon(observer.date)
-                pnm = ephem.previous_new_moon(observer.date)
+                    nnm = ephem.next_new_moon(observer.date)
+                    pnm = ephem.previous_new_moon(observer.date)
 
-                lunation=(observer.date-pnm)/(nnm-pnm)
-                symbol=lunation*26
-                if symbol < 0.2 or symbol > 25.8 :
-                    symbol = '1'  # new moon
+                    lunation=(observer.date-pnm)/(nnm-pnm)
+                    symbol=lunation*26
+                    if symbol < 0.2 or symbol > 25.8 :
+                        symbol = '1'  # new moon
+                    else:
+                        symbol = chr(ord('A')+int(symbol+0.5)-1)
+
+                    azTemp = str(moon.az).split(":")
+                    self._moonAzimuth = azTemp[0] + u"\N{DEGREE SIGN}"
+                    self._moonElevation = str(round(degrees(moon.alt),2)) + u"\N{DEGREE SIGN}"
+                    self._moonIllumination = str(round(moon.phase, 2))
+                    self._moonPhaseSymbol  = symbol
+                    
+                    os.environ['AS_MOON_AZIMUTH'] = self._moonAzimuth
+                    s.log(4, 'INFO: Adding Moon Azimuth {}'.format(self._moonAzimuth))
+                    os.environ['AS_MOON_ELEVATION'] = self._moonElevation
+                    s.log(4, 'INFO: Adding Moon Elevation {}'.format(self._moonElevation))
+                    os.environ['AS_MOON_ILLUMINATION'] = self._moonIllumination
+                    s.log(4, 'INFO: Adding Moon Illumination {}'.format(self._moonIllumination))
+                    os.environ['AS_MOON_SYMBOL'] = self._moonPhaseSymbol
+                    s.log(4, 'INFO: Adding Moon Symbol {}'.format(self._moonPhaseSymbol))
                 else:
-                    symbol = chr(ord('A')+int(symbol+0.5)-1)
-
-                azTemp = str(moon.az).split(":")
-                self._moonAzimuth = azTemp[0] + u"\N{DEGREE SIGN}"
-                self._moonElevation = str(round(degrees(moon.alt),2)) + u"\N{DEGREE SIGN}"
-                self._moonIllumination = str(round(moon.phase, 2))
-                self._moonPhaseSymbol  = symbol
-                
-                os.environ['AS_MOON_AZIMUTH'] = self._moonAzimuth
-                s.log(4, 'INFO: Adding Moon Azimuth {}'.format(self._moonAzimuth))
-                os.environ['AS_MOON_ELEVATION'] = self._moonElevation
-                s.log(4, 'INFO: Adding Moon Elevation {}'.format(self._moonElevation))
-                os.environ['AS_MOON_ILLUMINATION'] = self._moonIllumination
-                s.log(4, 'INFO: Adding Moon Illumination {}'.format(self._moonIllumination))
-                os.environ['AS_MOON_SYMBOL'] = self._moonPhaseSymbol
-                s.log(4, 'INFO: Adding Moon Symbol {}'.format(self._moonPhaseSymbol))
+                    s.log(4,'INFO: Moon enabled but cannot use due to prior error.')
             else:
-                s.log(4,'INFO: Moon enabled but cannot use due to prior error.')
-        else:
-            s.log(4,'INFO: Moon not enabled.')
+                s.log(4,'INFO: Moon not enabled.')
+        except Exception as e:
+            eType, eObject, eTraceback = sys.exc_info()
+            s.log(0, f'ERROR: _initialiseMoon failed on line {eTraceback.tb_lineno} - {e}')            
         return True
 
     def _fileCreatedToday(self, fileName):
@@ -1055,58 +1060,62 @@ class ALLSKYOVERLAY:
         return tz, timezone(tz)
 
     def _initialiseSun(self):
-        sunEnabled = self._overlayConfig['settings']['defaultincludesun']
-        if sunEnabled:
+        try:
+            sunEnabled = self._overlayConfig['settings']['defaultincludesun']
+            if sunEnabled:
 
-            lat = self._convertLatLon(self._observerLat)
-            lon = self._convertLatLon(self._observerLon)
+                lat = self._convertLatLon(self._observerLat)
+                lon = self._convertLatLon(self._observerLon)
 
-            tzName, tz = self._getTimeZone()                
-            location = Observer(lat, lon, 0)
-                
-            today = datetime.now(tz) 
-            tomorrow = today + timedelta(days = 1)
-            yesterday = today + timedelta(days = -1)
+                tzName, tz = self._getTimeZone()                
+                location = Observer(lat, lon, 0)
+                    
+                today = datetime.now(tz) 
+                tomorrow = today + timedelta(days = 1)
+                yesterday = today + timedelta(days = -1)
 
-            yesterdaySunData = self._getSunTimes(location, yesterday)
-            todaySunData = self._getSunTimes(location, today)
-            tomorrowSunData = self._getSunTimes(location, tomorrow)
+                yesterdaySunData = self._getSunTimes(location, yesterday)
+                todaySunData = self._getSunTimes(location, today)
+                tomorrowSunData = self._getSunTimes(location, tomorrow)
 
-            if s.TOD == 'day':
-                dawn = todaySunData["dawn"]
-                sunrise = todaySunData["sunrise"]
-                noon = todaySunData["noon"]
-                sunset = todaySunData["sunset"]
-                dusk = todaySunData["dusk"]
-            else:
-                now = datetime.now(tz)
-                if now.hour > 0 and now < todaySunData["dawn"]:
+                if s.TOD == 'day':
                     dawn = todaySunData["dawn"]
                     sunrise = todaySunData["sunrise"]
                     noon = todaySunData["noon"]
-                    sunset = yesterdaySunData["sunset"]
-                    dusk = yesterdaySunData["dusk"]
-                else:
-                    dawn = tomorrowSunData["dawn"]
-                    sunrise = tomorrowSunData["sunrise"]
-                    noon = tomorrowSunData["noon"]
                     sunset = todaySunData["sunset"]
                     dusk = todaySunData["dusk"]
+                else:
+                    now = datetime.now(tz)
+                    if now.hour > 0 and now < todaySunData["dawn"]:
+                        dawn = todaySunData["dawn"]
+                        sunrise = todaySunData["sunrise"]
+                        noon = todaySunData["noon"]
+                        sunset = yesterdaySunData["sunset"]
+                        dusk = yesterdaySunData["dusk"]
+                    else:
+                        dawn = tomorrowSunData["dawn"]
+                        sunrise = tomorrowSunData["sunrise"]
+                        noon = tomorrowSunData["noon"]
+                        sunset = todaySunData["sunset"]
+                        dusk = todaySunData["dusk"]
 
-            format = s.getSetting("timeformat")
-            os.environ["AS_SUN_DAWN"] = dawn.strftime(format)
-            os.environ["AS_SUN_SUNRISE"] = sunrise.strftime(format)
-            os.environ["AS_SUN_NOON"] = noon.strftime(format)
-            os.environ["AS_SUN_SUNSET"] = sunset.strftime(format)
-            os.environ["AS_SUN_DUSK"] = dusk.strftime(format)
+                format = s.getSetting("timeformat")
+                os.environ["AS_SUN_DAWN"] = dawn.strftime(format)
+                os.environ["AS_SUN_SUNRISE"] = sunrise.strftime(format)
+                os.environ["AS_SUN_NOON"] = noon.strftime(format)
+                os.environ["AS_SUN_SUNSET"] = sunset.strftime(format)
+                os.environ["AS_SUN_DUSK"] = dusk.strftime(format)
 
-            os.environ["AS_SUN_AZIMUTH"] = str(int(todaySunData["azimuth"]))
-            os.environ["AS_SUN_ELEVATION"] = str(int(todaySunData["elevation"]))
+                os.environ["AS_SUN_AZIMUTH"] = str(int(todaySunData["azimuth"]))
+                os.environ["AS_SUN_ELEVATION"] = str(int(todaySunData["elevation"]))
 
-            s.log(4, f'INFO: Lat = {lat}, Lon = {lon}, tz = {tzName}, Sunrise = {sunrise}, Sunset = {sunset}')
-        else:
-            s.log(4,'INFO: Sun not enabled')
-
+                s.log(4, f'INFO: Lat = {lat}, Lon = {lon}, tz = {tzName}, Sunrise = {sunrise}, Sunset = {sunset}')
+            else:
+                s.log(4,'INFO: Sun not enabled')
+        except Exception as e:
+            eType, eObject, eTraceback = sys.exc_info()
+            s.log(0, f'ERROR: _initialiseSun failed on line {eTraceback.tb_lineno} - {e}')
+            
         return True
 
     def _initialiseSunOld(self):
@@ -1188,7 +1197,6 @@ class ALLSKYOVERLAY:
         return ret
 
     def _fetchTleFromCelestrak(self, noradCatId, verify=True):
-
         s.log(4, 'INFO: Loading Satellite {}'.format(noradCatId), True)
         tleFileName = os.path.join(self._OVERLAYTLEFOLDER , noradCatId + '.tle')
 
@@ -1229,93 +1237,105 @@ class ALLSKYOVERLAY:
         return tle[0].strip(), tle[1].strip(), tle[2].strip()
 
     def _initSatellites(self):
-        satellites = self._overlayConfig["settings"]["defaultnoradids"]
-        satellites = satellites.strip()
+        
+        try:
+            satellites = self._overlayConfig["settings"]["defaultnoradids"]
+            satellites = satellites.strip()
 
-        if satellites != '':
-            if self._enableSkyfield:
-                satelliteArray = list(map(str.strip, satellites.split(',')))
-                for noradId in satelliteArray:
-                    try:
-                        tles = self._fetchTleFromCelestrak(noradId)
-                        ts = load.timescale()
-                        t = ts.now()
+            if satellites != '':
+                if self._enableSkyfield:
+                    satelliteArray = list(map(str.strip, satellites.split(',')))
+                    for noradId in satelliteArray:
+                        try:
+                            tles = self._fetchTleFromCelestrak(noradId)
+                            ts = load.timescale()
+                            t = ts.now()
 
-                        satellite = EarthSatellite(tles[1], tles[2], tles[0], ts)
-                        geocentric = satellite.at(t)
-                        sunlit = satellite.at(t).is_sunlit(self._eph)
-                        satLat, satLon = wgs84.latlon_of(geocentric)
+                            satellite = EarthSatellite(tles[1], tles[2], tles[0], ts)
+                            geocentric = satellite.at(t)
+                            sunlit = satellite.at(t).is_sunlit(self._eph)
+                            satLat, satLon = wgs84.latlon_of(geocentric)
 
-                        lat = self._convertLatLon(self._observerLat)
-                        lon = self._convertLatLon(self._observerLon)
-                        bluffton = wgs84.latlon(lat, lon)
-                        difference = satellite - bluffton
-                        topocentric = difference.at(t)
-                        alt, az, distance = topocentric.altaz()
-                        os.environ['AS_' + noradId + 'ALT'] = str(alt)
-                        os.environ['AS_' + noradId + 'AZ'] = str(az)
+                            lat = self._convertLatLon(self._observerLat)
+                            lon = self._convertLatLon(self._observerLon)
+                            bluffton = wgs84.latlon(lat, lon)
+                            difference = satellite - bluffton
+                            topocentric = difference.at(t)
+                            alt, az, distance = topocentric.altaz()
+                            os.environ['AS_' + noradId + 'ALT'] = str(alt)
+                            os.environ['AS_' + noradId + 'AZ'] = str(az)
 
-                        if alt.degrees > 5 and sunlit:
-                            os.environ['AS_' + noradId + 'VISIBLE'] = 'Yes'
-                        else:
-                            os.environ['AS_' + noradId + 'VISIBLE'] = 'No'
-                    except LookupError:
-                        s.log(0, 'ERROR: Norad ID ' + noradId + ' Not found.')
+                            if alt.degrees > 5 and sunlit:
+                                os.environ['AS_' + noradId + 'VISIBLE'] = 'Yes'
+                            else:
+                                os.environ['AS_' + noradId + 'VISIBLE'] = 'No'
+                        except LookupError:
+                            s.log(0, 'ERROR: Norad ID ' + noradId + ' Not found.')
+                else:
+                    s.log(4, 'INFO: Satellites enabled but cannot use due to prior error.')
+
             else:
-                s.log(4, 'INFO: Satellites enabled but cannot use due to prior error.')
+                s.log(4, 'INFO: Satellites not enabled.')
 
-        else:
-            s.log(4, 'INFO: Satellites not enabled.')
-
+        except Exception as e:
+            eType, eObject, eTraceback = sys.exc_info()
+            s.log(4, ' ')
+            s.log(0, f'ERROR: _initSatellites failed on line {eTraceback.tb_lineno} - {e}')
+            
         return True
 
     def _initPlanets(self):
 
-        planetsEnabled = self._overlayConfig["settings"]["defaultincludeplanets"]
+        try:
+            planetsEnabled = self._overlayConfig["settings"]["defaultincludeplanets"]
 
-        if planetsEnabled:
-            if self._enableSkyfield:
-                planets = {
-                    'MERCURY BARYCENTER',
-                    'VENUS BARYCENTER',
-                    'MARS BARYCENTER',
-                    'JUPITER BARYCENTER',
-                    'SATURN BARYCENTER',
-                    'URANUS BARYCENTER',
-                    'NEPTUNE BARYCENTER',
-                    'PLUTO BARYCENTER'
-                }
-                
-                timeNow = time.time()
-                utcOffset = (datetime.fromtimestamp(timeNow) - datetime.utcfromtimestamp(timeNow)).total_seconds()
-                
-                ts = load.timescale()
-                t = ts.now() #- timedelta(seconds=utcOffset)
-                earth = self._eph['earth']
+            if planetsEnabled:
+                if self._enableSkyfield:
+                    planets = {
+                        'MERCURY BARYCENTER',
+                        'VENUS BARYCENTER',
+                        'MARS BARYCENTER',
+                        'JUPITER BARYCENTER',
+                        'SATURN BARYCENTER',
+                        'URANUS BARYCENTER',
+                        'NEPTUNE BARYCENTER',
+                        'PLUTO BARYCENTER'
+                    }
+                    
+                    timeNow = time.time()
+                    utcOffset = (datetime.fromtimestamp(timeNow) - datetime.utcfromtimestamp(timeNow)).total_seconds()
+                    
+                    ts = load.timescale()
+                    t = ts.now() #- timedelta(seconds=utcOffset)
+                    earth = self._eph['earth']
 
-                home = earth + wgs84.latlon(self._convertLatLon(self._observerLat), self._convertLatLon(self._observerLon))
+                    home = earth + wgs84.latlon(self._convertLatLon(self._observerLat), self._convertLatLon(self._observerLon))
 
-                for planetId in planets:
-                    planet = self._eph[planetId]
-                    astrometric = home.at(t).observe(planet)
-                    alt, az, d = astrometric.apparent().altaz()
-                    ra, dec, distance = astrometric.radec()
-                    #prs.int(planetId, alt, az)
-                    os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'ALT'] = str(alt)
-                    os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'AZ'] = str(az)
+                    for planetId in planets:
+                        planet = self._eph[planetId]
+                        astrometric = home.at(t).observe(planet)
+                        alt, az, d = astrometric.apparent().altaz()
+                        ra, dec, distance = astrometric.radec()
+                        #prs.int(planetId, alt, az)
+                        os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'ALT'] = str(alt)
+                        os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'AZ'] = str(az)
 
-                    os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'RA'] = str(ra)
-                    os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'DEC'] = str(dec)
+                        os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'RA'] = str(ra)
+                        os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'DEC'] = str(dec)
 
-                    if alt.degrees > 5:
-                        os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'VISIBLE'] = 'Yes'
-                    else:
-                        os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'VISIBLE'] = 'No'
+                        if alt.degrees > 5:
+                            os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'VISIBLE'] = 'Yes'
+                        else:
+                            os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'VISIBLE'] = 'No'
+                else:
+                    s.log(4, 'INFO: Planets enabled but unable to use due to prior error.')
             else:
-                s.log(4, 'INFO: Planets enabled but unable to use due to prior error.')
-        else:
-            s.log(4, 'INFO: Planets not enabled.')
+                s.log(4, 'INFO: Planets not enabled.')
 
+        except Exception as e:
+            eType, eObject, eTraceback = sys.exc_info()
+            s.log(0, f'ERROR: _initPlanets failed on line {eTraceback.tb_lineno}- {e}')
+            
         return True
 
     def annotate(self):

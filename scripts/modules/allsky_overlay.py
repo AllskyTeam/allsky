@@ -782,7 +782,9 @@ class ALLSKYOVERLAY:
                     s.log(4, "WARNING: data field {0} expired. File time {1}, now {2}. Expiry {3} Seconds. Age {4} Seconds"
                         .format(placeHolder, fileTimeHR, nowTimeHR, self._extraData[envCheck]["expires"], age))
                     valueOk = False
-                    expiredText = self._overlayConfig["settings"]["defaultexpirytext"]
+                    expiredText = ''
+                    if 'defaultexpirytext' in self._overlayConfig["settings"]:
+                        expiredText = self._overlayConfig["settings"]["defaultexpirytext"]
                     if expiredText != "":
                         value = expiredText
 

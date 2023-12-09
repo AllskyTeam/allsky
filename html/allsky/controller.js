@@ -212,15 +212,19 @@ function convertLatitude(sc, lat) {			// sc == scope
 	var convertToString = false;
 	var len, direction;
 
+	// Allow comma or period for decimal point but virtualsky requires period.
+	lat = lat.replace(",", ".");
+
 	if (typeof lat === "string") {
 		sc.s_latitude = lat;	// string version
 
+		// Format example:  12.34N  or  12.34S  or  12.34   or  +12.34  or  -12.34
 		len = lat.length;
-		direction = lat.substr(len-1, 1).toUpperCase();
+		direction = lat.substr(-1, 1).toUpperCase();
 		if (direction == "N")
-			sc.latitude = lat.substr(0, len-2) * 1;
+			sc.latitude = lat.substr(0, len-1) * 1;
 		else if (direction == "S")
-			sc.latitude = lat.substr(0, len-2) * -1;
+			sc.latitude = lat.substr(0, len-1) * -1;
 		else {
 			// a number with quotes around it which is treated as a string
 			sc.latitude = lat * 1;
@@ -245,15 +249,18 @@ function convertLongitude(sc, lon) {
 	var convertToString = false;
 	var len, direction;
 
+	lon = lon.replace(",", ".");
+
 	if (typeof lon === "string") {
 		sc.s_longitude = lon;
 
+		// Format example:  12.34E  or  12.34W  or  12.34   or  +12.34  or  -12.34
 		len = config.longitude.length;
-		direction = lon.substr(len-1, 1).toUpperCase();
+		direction = lon.substr(-1, 1).toUpperCase();
 		if (direction == "E")
-			sc.longitude = lon.substr(0, len-2) * 1;
+			sc.longitude = lon.substr(0, len-1) * 1;
 		else if (direction == "W")
-			sc.longitude = lon.substr(0, len-2) * -1;
+			sc.longitude = lon.substr(0, len-1) * -1;
 		else {
 			// a number with quotes around it which is treated as a string
 			sc.longitude = lon * 1;

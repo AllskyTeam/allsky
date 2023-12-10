@@ -2333,7 +2333,7 @@ install_overlay()
 				check_success $? "${PKGs} install failed" "${TMP}" "${DEBUG}"
 				[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "${PKGs} install failed."
 
-				python3 -m venv "${ALLSKY_HOME}/venv"
+				python3 -m venv "${ALLSKY_HOME}/venv" --system-site-packages
 				#shellcheck disable=SC1090,SC1091
 				source "${ALLSKY_HOME}/venv/bin/activate"
 			fi

@@ -90,7 +90,7 @@ Combine the certificate and private key into one file:
 <pre>
 sudo chmod 750 /etc/letsencrypt/live
 cd /etc/letsencrypt/live/<b>myallsky.com</b>
-cat cert.pem privkey.pem | sudo tee web.pem
+cat cert.pem privkey.pem | sudo tee fullchain.pem
 </pre>
 </p>
 
@@ -107,8 +107,8 @@ server.modules += ( "mod_openssl" )
 
 $SERVER["socket"] == ":443" {
 	ssl.engine = "enable"
-	ssl.pemfile = "/etc/letsencrypt/live/<b>myallsky.com</b>/web.pem"	# Combined Certificate
-	ssl.ca-file = "/etc/letsencrypt/live/<b>myallsky.com</b>/chain.pem"	# Root CA
+	ssl.pemfile = "/etc/letsencrypt/live/<b>myallsky.com</b>/fullchain.pem"
+	ssl.ca-file = "/etc/letsencrypt/live/<b>myallsky.com</b>/privkey.pem"
 	server.name = "<b>myallsky.com</b>"
 
 	# Uncomment the next line if you want the web server to log access requests.
@@ -117,7 +117,8 @@ $SERVER["socket"] == ":443" {
 
 $HTTP["scheme"] == "http" {
 	$HTTP["host"] == "<b>myallsky.com</b>" {
-		url.redirect = ("/.*" =&gt; "https://<b>myallsky.com</b>$0")
+		url.redirect = ("" =&gt; "https://${url.authority}${url.path}${qsa}")
+		url.redirect-code = 308
 	}
 }
 </pre>
@@ -184,8 +185,6 @@ Congratulations, all renewals succeeded. The following certs have been renewed:
 Prior the the certificates expiring, run:
 <pre>
 certbot renew
-cd /etc/letsencrypt/live/<b>myallsky.com</b>
-cat cert.pem privkey.pem | sudo tee web.pem
 </pre>
 <blockquote class="morePadding">
 You can renew your Let's Encrypt certificates <strong>at most</strong>

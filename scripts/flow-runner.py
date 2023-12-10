@@ -214,7 +214,8 @@ if __name__ == "__main__":
 
         if shared.flow[shared.step]["enabled"] and method in globals():
             startTime = datetime.now()
-
+            result = False
+            
             arguments = {}
             if 'arguments' in shared.flow[shared.step]['metadata']:
                 arguments = shared.flow[shared.step]['metadata']['arguments']
@@ -222,7 +223,8 @@ if __name__ == "__main__":
             try:
                 result = globals()[method](arguments, shared.args.event)
             except Exception as e:
-                shared.log(0,"ERROR: {}".format(e))
+                eType, eObject, eTraceback = sys.exc_info()
+                shared.log(0, f"ERROR: Module {shared.flow[shared.step]['module']} failed on line {eTraceback.tb_lineno} - {e}")
 
             endTime = datetime.now()
             elapsedTime = (((endTime - startTime).total_seconds()) * 1000) / 1000

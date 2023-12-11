@@ -105,10 +105,12 @@ else
 	EXTRA_MODULES_INSTALLED="false"
 fi
 
+# TODO: check the CURRENT Allsky, or the PRIOR one?
+
 # Check if we have a venv already. If not then the install/update will create it
 # but we need to warn the user to reinstall the extra modules if they have them.
-if [[ -d "${ALLSKY_HOME}/venv" ]]; then
-    INSTALLED_VENV="false"
+if [[ -d "${ALLSKY_PYTHON_VENV}" ]]; then
+	INSTALLED_VENV="false"
 else
 	INSTALLED_VENV="true"
 fi
@@ -1967,10 +1969,8 @@ restore_prior_files()
 	if [[ -d ${PRIOR_CONFIG_DIR}/modules ]]; then
 		display_msg --log progress "${ITEM}"
 
-		if [[ ${PI_OS} == "bookworm" ]]; then
-			#shellcheck disable=SC1090,SC1091
-			source "${ALLSKY_HOME}/venv/bin/activate"
-		fi
+		activate_python_venv
+
 		# Copy the user's prior data to the new file which may contain new fields.
 		if ! python3 "${ALLSKY_SCRIPTS}"/flowupgrade.py --prior "${PRIOR_CONFIG_DIR}" --config "${ALLSKY_CONFIG}" ; then
 			display_msg --log error "Copying 'modules' directory had problems."
@@ -2333,9 +2333,8 @@ install_overlay()
 				check_success $? "${PKGs} install failed" "${TMP}" "${DEBUG}"
 				[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "${PKGs} install failed."
 
-				python3 -m venv "${ALLSKY_HOME}/venv" --system-site-packages
-				#shellcheck disable=SC1090,SC1091
-				source "${ALLSKY_HOME}/venv/bin/activate"
+				python3 -m venv "${ALLSKY_PYTHON_VENV}" --system-site-packages
+				activate_python_venv
 			fi
 
 			local TMP="${ALLSKY_INSTALLATION_LOGS}/${NAME}"
@@ -2608,8 +2607,8 @@ update_modules()
 {
 	if [[ ${EXTRA_MODULES_INSTALLED} == "true" && ${INSTALLED_VENV} == "true" ]]; then
 		MSG="You appear to have the Allsky Extra modules installed."
-		MSG="${MSG}\nPlease reinstall these using the normal instructions"
-		MSG="${MSG} at https://github.com/Alex-developer/allsky-modules"
+		MSG="${MSG}\nPlease reinstall these using the normal instructions at"
+		MSG="${MSG}  https://github.com/Alex-developer/allsky-modules"
 		MSG="${MSG}\nThe extra modules will not function until you have reinstalled them."
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 		display_msg --logonly info "Reminded user to re install the extra modules."

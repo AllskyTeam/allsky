@@ -2198,10 +2198,8 @@ restore_prior_files()
 	if [[ -d ${PRIOR_CONFIG_DIR}/modules ]]; then
 		display_msg --log progress "${ITEM}"
 
-		if [[ ${PI_OS} == "bookworm" ]]; then
-			#shellcheck disable=SC1090,SC1091
-			source "${ALLSKY_HOME}/venv/bin/activate"
-		fi
+		activate_python_venv
+
 		# Copy the user's prior data to the new file which may contain new fields.
 		if ! python3 "${ALLSKY_SCRIPTS}"/flowupgrade.py --prior "${PRIOR_CONFIG_DIR}" --config "${ALLSKY_CONFIG}" ; then
 			display_msg --log error "Copying 'modules' directory had problems."
@@ -2613,10 +2611,8 @@ install_overlay()
 				check_success $? "${PKGs} install failed" "${TMP}" "${DEBUG}"
 				[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "${PKGs} install failed."
 
-				python3 -m venv "${ALLSKY_HOME}/venv"
-				#shellcheck disable=SC1090,SC1091
-				source "${ALLSKY_HOME}/venv/bin/activate"
-			fi
+				python3 -m venv "${ALLSKY_PYTHON_VENV}" --system-site-packages
+				activate_python_venv
 
 			local TMP="${ALLSKY_INSTALLATION_LOGS}/${NAME}"
 			display_msg --log progress "Installing ${NAME}${M}:"

@@ -865,3 +865,17 @@ function indent()
 {
 	echo -e "${1}" | sed 's/^/\t/'
 }
+
+# Python virtual environment
+activate_python_venv() {
+	if [[ ${PI_OS} == "bookworm" ]]; then
+		#shellcheck disable=SC1090,SC1091
+		source "${ALLSKY_PYTHON_VENV}/bin/activate" || exit 1
+		return 0	# Successfully activated
+	fi
+	return 1
+}
+
+deactivate_python_venv() {
+	[[ ${PI_OS} == "bookworm" ]] && deactivate
+}

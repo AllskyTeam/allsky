@@ -150,6 +150,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	SETTINGS_FILE="${ALLSKY_CONFIG}/settings.json"
 	OPTIONS_FILE="${ALLSKY_CONFIG}/options.json"
 
+	# Python virtual environment
+	ALLSKY_PYTHON_VENV="${ALLSKY_HOME}/venv"
+
 	# These EXIT codes from the capture programs must match what's in src/include/allsky_common.h
 	# Anything at or above EXIT_ERROR_STOP is unrecoverable and the service must be stopped
 	EXIT_OK=0

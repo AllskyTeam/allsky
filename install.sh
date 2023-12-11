@@ -2613,6 +2613,7 @@ install_overlay()
 
 				python3 -m venv "${ALLSKY_PYTHON_VENV}" --system-site-packages
 				activate_python_venv
+			fi
 
 			local TMP="${ALLSKY_INSTALLATION_LOGS}/${NAME}"
 			display_msg --log progress "Installing ${NAME}${M}:"

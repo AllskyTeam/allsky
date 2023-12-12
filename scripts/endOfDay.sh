@@ -5,7 +5,7 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"			|| exit  "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"			|| exit "${ALLSKY_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit "${ALLSKY_ERROR_STOP}"
 
@@ -28,13 +28,8 @@ if [[ ! -d ${DATE_DIR} && ${SAVING} == "true" ]]; then
 	exit 2
 fi
 
-if [[ ${PI_OS} == "bookworm" ]]; then
-   	#shellcheck disable=SC1090,SC1091
-   	source "${ALLSKY_HOME}/venv/bin/activate"
-   	python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event daynight
-   	deactivate
-else
-   	python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event daynight
-fi
+activate_python_venv
+python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event daynight
+deactivate_python_venv
 
 exit 0

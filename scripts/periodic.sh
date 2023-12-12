@@ -15,15 +15,9 @@ cd "${ALLSKY_SCRIPTS}" || exit "${ALLSKY_ERROR_STOP}"
 
 while :
 do
-	if [[ ${PI_OS} == "bookworm" ]]; then
-    	# AG - Bookworm mod 12/10/23
-    	#shellcheck disable=SC1090,SC1091
-    	source "${ALLSKY_HOME}/venv/bin/activate"
-    	python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event periodic
-    	deactivate
-	else
-    	python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event periodic
-	fi
+	activate_python_venv
+	python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event periodic
+	deactivate_python_venv
 
     DELAY=$(jq ".periodictimer" "${ALLSKY_MODULES}/module-settings.json")
 

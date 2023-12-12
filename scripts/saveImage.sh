@@ -269,14 +269,9 @@ else
 	export DATE_NAME="$( date +'%Y%m%d' )"
 fi
 
-if [[ ${PI_OS} == "bookworm" ]]; then
-   	#shellcheck disable=SC1090,SC1091
-   	source "${ALLSKY_HOME}/venv/bin/activate"
-   	python3 "${ALLSKY_SCRIPTS}/flow-runner.py"
-   	deactivate
-else
-   	python3 "${ALLSKY_SCRIPTS}/flow-runner.py"
-fi
+activate_python_venv
+python3 "${ALLSKY_SCRIPTS}/flow-runner.py"
+deactivate_python_venv
 
 # The majority of the post-processing time for an image is in flow-runner.py.
 # Since only one mini-timelapse can run at once and that code is embeded in this code

@@ -32,13 +32,8 @@ if [[ ! -d ${DATE_DIR} && ${SAVING} -eq 1 ]]; then
 	exit 2
 fi
 
-if [[ ${PI_OS} == "bookworm" ]]; then
-   	#shellcheck disable=SC1090,SC1091
-   	source "${ALLSKY_HOME}/venv/bin/activate"
-   	python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event daynight
-   	deactivate
-else
-   	python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event daynight
-fi
+activate_python_venv
+python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event daynight
+deactivate_python_venv
 
 exit 0

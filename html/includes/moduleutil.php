@@ -74,7 +74,7 @@ class MODULEUTIL
         }
     }
 
-    private function readModuleData($moduleDirectory, $type, $event, $showexperimental) {
+    private function readModuleData($moduleDirectory, $type, $event) {
         $arrFiles = array();
         $handle = opendir($moduleDirectory);
  
@@ -115,19 +115,13 @@ class MODULEUTIL
                             } else {
                                 $experimental = false;
                             }
-                            if (!$showexperimental && $experimental) {
-                                $addModule  = false;
-                            } else {
-                                $addModule = true;
-                            }
-                            if ($addModule) {
-                                $arrFiles[$entry] = [
-                                    'module' => $entry,
-                                    'metadata' => $decoded,
-                                    'type' => $type
-                                ];
-                                $arrFiles[$entry]['metadata']->experimental = $experimental;
-                            }
+
+                            $arrFiles[$entry] = [
+                                'module' => $entry,
+                                'metadata' => $decoded,
+                                'type' => $type
+                            ];
+                            $arrFiles[$entry]['metadata']->experimental = $experimental;
                         }
                     }
                 }
@@ -230,11 +224,6 @@ class MODULEUTIL
         $rawConfigData = file_get_contents($configFileName);
         $moduleConfig = json_decode($rawConfigData);
 
-        $showexperimental = false;
-        if (isset($moduleConfig->showexperimental) && $moduleConfig->showexperimental) {
-            $showexperimental = true;
-        }
-
         $event = $_GET['event'];
         $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($event) . '.json';
         $rawConfigData = file_get_contents($configFileName);
@@ -246,8 +235,8 @@ class MODULEUTIL
             $configData = array();
         }
 
-        $coreModules = $this->readModuleData($this->allskyModules, "system", $event, $showexperimental);
-        $userModules = $this->readModuleData($this->userModules, "user", $event, $showexperimental);
+        $coreModules = $this->readModuleData($this->allskyModules, "system", $event);
+        $userModules = $this->readModuleData($this->userModules, "user", $event);
         $allModules = array_merge($coreModules, $userModules);
 
         $availableResult = [];
@@ -301,21 +290,7 @@ class MODULEUTIL
                 $moduleData['lastexecutionresult'] = '';                
             }
 
-            if (isset($data->metadata->experimental)) {
-                $experimental = strtolower($data->metadata->experimental) == "true"? true: false;
-            } else {
-                $experimental = false;
-            }
-
-            if (!$showexperimental && $experimental) {
-                $addModule  = false;
-            } else {
-                $addModule = true;
-            }
-
-            if ($addModule) {
-                $selectedResult[$selectedName] = $moduleData;
-            }
+            $selectedResult[$selectedName] = $moduleData;
         };
 
         $restore = false;

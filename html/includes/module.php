@@ -172,16 +172,6 @@ function DisplayModule() {
                             </label>
                             <p class="help-block">Auto enable modules when selected</p>
                         </div>
-                    </div> 
-                    <div class="form-group">
-                        <label for="checkbox" class="control-label col-xs-4"></label> 
-                        <div class="col-xs-8">
-                            <label class="checkbox-inline">
-                            <input type="checkbox" name="showexperimental" id="showexperimental">
-                                Show Experimental
-                            </label>
-                            <p class="help-block">Show experimental modules. NOTE: These may be unstable and cause issues</p>
-                        </div>
                     </div>                                      
                     <div class="form-group">
                         <label for="checkbox" class="control-label col-xs-4"></label> 

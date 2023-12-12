@@ -822,15 +822,17 @@ function indent()
 }
 
 # Python virtual environment
+PYTHON_VENV_ACTIVATED="false"
 activate_python_venv() {
 	if [[ ${PI_OS} == "bookworm" ]]; then
 		#shellcheck disable=SC1090,SC1091
 		source "${ALLSKY_PYTHON_VENV}/bin/activate" || exit 1
+		PYTHON_VENV_ACTIVATED="true"
 		return 0	# Successfully activated
 	fi
 	return 1
 }
 
 deactivate_python_venv() {
-	[[ ${PI_OS} == "bookworm" ]] && deactivate
+	[[ ${PYTHON_VENV_ACTIVATED} == "true" ]] && deactivate
 }

@@ -158,7 +158,7 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 		10, ASI_FALSE, ASI_TRUE
 	},
 
-	{ "argucam-pivariety", 0, "ArduCam 462", 0, 1080, 1920, ASI_TRUE,
+	{ "arducam-pivariety", 0, "ArduCam 462", 0, 1080, 1920, ASI_TRUE,
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 2.9, ASI_FALSE,
 		10, ASI_FALSE, ASI_TRUE
 	},

@@ -142,8 +142,8 @@ function add_field($f, $v, $setting) {	// field, value, name_of_setting
 		$options_str .= "$q$v$q";
 	}
 
-	// The "advanced" field comes last in a setting, so don't append a comma to it.
-	if ($f !== "advanced") $options_str .= ",";
+	// The "display" field comes last in a setting, so don't append a comma to it.
+	if ($f !== "display") $options_str .= ",";
 	$options_str .= "\n";
 }
 
@@ -315,11 +315,10 @@ if ($repo_array === null) {
 	// label			[string]
 	// type				[string - header, number, text, checkbox, select, readonly]
 	// options			[array with 1 or more entries] (only if "type" == "select")
-	// display			[0/1]
 	// checkchanges		[0/1]
 	// optional			[0/1]
 	// generic			[0/1]
-	// advanced 		[0/1]	(last, so no comma after it)
+	// display			[0/1]
 
 
 // ==================   Create options file
@@ -393,11 +392,10 @@ foreach ($repo_array as $repo) {
 		add_non_null_field($repo, "label", $name);
 		add_non_null_field($repo, "type", $name);
 		add_non_null_field($repo, "options", $name);
-		add_non_null_field($repo, "display", $name);
 		add_non_null_field($repo, "checkchanges", $name);
 		add_non_null_field($repo, "optional", $name);
 		add_non_null_field($repo, "generic", $name);
-		add_non_null_field($repo, "advanced", $name);
+		add_non_null_field($repo, "display", $name);
 	$options_str .= "},\n";
 }
 $options_str .= "]\n\n";

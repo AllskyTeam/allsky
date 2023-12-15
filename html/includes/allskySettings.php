@@ -243,7 +243,6 @@ function DisplayAllskyConfig(){
 		}
 	}
 
-	// Determine if the advanced settings should always be shown.
 	$errorMsg = "ERROR: Unable to process settings file '$settings_file'.";
 	$settings_array = get_decoded_json_file($settings_file, true, $errorMsg);
 	if ($settings_array === null) {
@@ -251,56 +250,13 @@ function DisplayAllskyConfig(){
 	}
 	$cameraType = getVariableOrDefault($settings_array, $cameraTypeName, "");
 	$cameraModel = getVariableOrDefault($settings_array, $cameraModelName, "");
-	$initial_display = $settings_array['alwaysshowadvanced'] == 1 ? "table-row" : "none";
 
 	check_if_configured($page, "settings");
 
 if ($formReadonly != "readonly") {
 	$settingsDescription = "";
-?>
-<script language="javascript">
-function toggle_advanced()
-{
-	var adv = document.getElementsByClassName("advanced");
-	var newMode = "";
-	for (var i=0; i<adv.length; i++) {
-		// Don't hide the button!
-		if (adv[i].id != "advButton") {
-			var s = adv[i].style;
-			if (s.display == "none") {
-				newMode = "table-row";
-			} else {
-				newMode = "none";
-			}
-			s.display = newMode;
-		}
-	}
-
-	var b = document.getElementById("advButton");
-	if (newMode == "none") {
-		// advanced options are now hidden, change button text
-		b.innerHTML = "Show advanced options...";
-	} else {
-		b.innerHTML = "Hide advanced options";
-	}
-
-	// Show/hide the default values.
-	var def = document.getElementsByClassName("default");
-	var newMode = "";
-	for (var i=0; i<def.length; i++) {
-		var s = def[i].style;
-		if (s.display == "none") {
-			newMode = "inline";
-		} else {
-			newMode = "none";
-		}
-		s.display = newMode;
-	}
-}
-<?php
 }
 ?>
-</script>
   <div class="row">
 	<div class="col-lg-12">
 		<div class="panel panel-primary">
@@ -327,10 +283,6 @@ if ($formReadonly != "readonly") { ?>
 		<input type="submit" class="btn btn-warning" name="reset_settings"
 			value="Reset to default values"
 			onclick="return confirm('Really RESET ALL VALUES TO DEFAULT??');">
-		<button type="button" class="btn advanced btn-advanced" id="advButton"
-			onclick="toggle_advanced();">
-			<?php if ($initial_display == "none") echo "Show advanced options"; else echo "Hide advanced options"; ?>
-		</button>
 		<div title="UNcheck to only save settings without restarting Allsky" style="line-height: 0.3em;">
 			<br>
 			<input type="checkbox" name="restart" checked> Restart Allsky after saving changes?
@@ -349,9 +301,6 @@ if ($formReadonly != "readonly") { ?>
 			$readonlyForm = "";
 		}
 
-		// Allow for "advanced" options that aren't displayed by default to avoid
-		// confusing novice users.
-		$numAdvanced = 0;
 		$numMissing = 0;
 		$numMissingHasDefault = 0;
 		$missingSettingsHasDefault = "";
@@ -387,16 +336,6 @@ if ($formReadonly != "readonly") { ?>
 
 				$minimum = getVariableOrDefault($option, 'minimum', "");
 				$maximum = getVariableOrDefault($option, 'maximum', "");
-				$advanced = getVariableOrDefault($option, 'advanced', 0);
-				if ($advanced == 1) {
-					$numAdvanced++;
-					$advClass = "advanced";
-					$advStyle = "display: $initial_display;";
-				} else {
-					$advClass = "";
-					$advStyle = "";
-				}
-
 				$label = getVariableOrDefault($option, 'label', "");
 
 				if ($type != "header") {
@@ -443,13 +382,13 @@ if ($formReadonly != "readonly") { ?>
 				if ($type == "header") {
 					// Not sure how to display the header with a background color with 10px
 					// of white above and below it using only one <tr>.
-					echo "<tr class='$advClass advanced-nocolor' style='$advStyle height: 10px;'><td colspan='3'></td></tr>";
-					echo "<tr class='$advClass advanced-nocolor rowSeparator' style='$advStyle'>";
+					echo "<tr style='height: 10px;'><td colspan='3'></td></tr>";
+					echo "<tr class='rowSeparator'>";
 						echo "<td colspan='3' class='settingsHeader' style='padding: 8px 0px;'>$description</td>";
 						echo "</tr>";
-					echo "<tr class='$advClass advanced-nocolor rowSeparator' style='$advStyle height: 10px;'><td colspan='3'></td></tr>";
+					echo "<tr class='rowSeparator' style='height: 10px;'><td colspan='3'></td></tr>";
 				} else {
-					echo "<tr class='form-group $advClass $class $warning_class' style='margin-bottom: 0px; $advStyle'>";
+					echo "<tr class='form-group $class $warning_class' style='margin-bottom: 0px;'>";
 					// Show the default in a popup
 					if ($type == "boolean") {
 						if ($default == "0") $default = "No";
@@ -544,7 +483,7 @@ if ($formReadonly != "readonly") { ?>
 
 					echo "</td>";
 					if ($type == "widetext")
-						echo "</tr><tr class='rowSeparator $advClass' style='$advStyle'><td></td>";
+						echo "</tr><tr class='rowSeparator'><td></td>";
 					echo "\n\t<td style='padding-left: 10px;'>$warning_msg$description</td>";
 				}
 				echo "</tr>";

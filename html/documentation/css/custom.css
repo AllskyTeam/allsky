@@ -363,30 +363,10 @@ table .alert-dismissable {
 	border-color: #ad5451;
 }
 
-.btn-advanced {
-	border: 2px solid #c9c46a;
-}
-.btn-advanced:hover {
-	color: black;
-	background-color: #e3e3a3;
-}
-.advanced, .btn-advanced { /* "advanced" options are highlighted in same color as button */
-	background-color: #fffcc0;
-}
-.dark .advanced, .dark .btn-advanced {
-	color: #bfbfbf;
-	border-color: #bdb173;
-	background-color: #837a2f;
-}
-.advanced-nocolor {
-	background-color: inherit;
-}
-
 .dark .btn-primary:hover,
 .dark .btn-success:hover,
 .dark .btn-warning:hover,
-.dark .btn-danger:hover,
-.dark .btn-advanced:hover
+.dark .btn-danger:hover
 {
 	color: #efefef;
 	border-color: #d6d6d6;

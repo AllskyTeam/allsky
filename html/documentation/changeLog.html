@@ -48,14 +48,17 @@
 						in October, 2023.
 						<blockquote>Support for the Buster Operating System will be removed
 						after the next major Allsky release.</blockquote></li>
+					<li>Added support for the Pi 5.</li>
 					<li>Increased suggested amount of swap by 1 GB to help minimize timelapse
 						creation problems.</li>
 					<li>New camera support:
 						<ul class="minimalPadding">
-							<li></li>Arducam IMX462 camera (inexpensive 1920x1080 camera).</li>
+							<li>Arducam IMX462 camera (inexpensive 1920x1080 camera).</li>
 							<li>All ZWO cameras as of October 19, 2023 (ZWO SDK 1.32)</li>
 						</ul>
 					</li>
+					<li>The concept of "Advanced Options" no longer exists.
+						ALL settings are always shown.
 				</ul>
 
 				<h4>Bug Fixes</h4>
@@ -78,6 +81,10 @@
 						is now included in the PATH so you can simply type the name of
 						any of the scripts in that directory to execute them.
 						<br>A reboot may be required for this to take affect.
+					<li>The documentation now specifies to set
+						<span class="shSetting">IMAGE_DIR</span> to
+						<code>${ALLSKY_WEBSITE}</code>
+						when only a local Website exists.
 				</ul>
 
 				<hr class="separator"><!-- =========================================== -->

@@ -215,12 +215,13 @@ do
 				# Create the camera capabilities file for the new camera type.
 				# Use Debug Level 3 to give the user more info on error.
 
+				CMD="capture_${NEW_VALUE}${C}${CAMERA_NUMBER}"
 				if [[ ${DEBUG} == "true" ]]; then
-					echo -e "${wDEBUG}Calling capture_${NEW_VALUE}${C}${CAMERA_NUMBER} -cc_file '${CC_FILE}'${wNC}"
+					echo -e "${wDEBUG}Calling ${CMD} -cc_file '${CC_FILE}'${wNC}"
 				fi
 
 				# shellcheck disable=SC2086
-				R="$( "${ALLSKY_BIN}/capture_${NEW_VALUE}" ${C} ${CAMERA_NUMBER} -debuglevel 3 -cc_file "${CC_FILE}" 2>&1 )"
+				R="$( "${ALLSKY_BIN}"/${CMD} -debuglevel 3 -cc_file "${CC_FILE}" 2>&1 )"
 				RET=$?
 				if [[ ${RET} -ne 0 || ! -f ${CC_FILE} ]]; then
 					# Restore prior cc file if there was one.
@@ -228,11 +229,15 @@ do
 
 					# Invoker displays error message on EXIT_NO_CAMERA.
 					if [[ ${RET} -ne "${EXIT_NO_CAMERA}" ]]; then
-						echo -en "${wERROR}ERROR: "
-						echo -en "${R}\nUnable to create cc file '${CC_FILE}'."
+						echo -en "\n${wERROR}ERROR: "
+						if [[ ${RET} -eq 139 ]]; then
+							echo -en "Segmentation fault in ${CMD}"
+						else
+							echo -en "${R}\nUnable to create cc file '${CC_FILE}'."
+						fi
 						echo -e "${wNC}"
 					fi
-					exit "${RET}"		# the actual exit code is important
+					exit ${RET}		# the actual exit code is important
 				fi
 				[[ -n ${R} ]] && echo -e "${R}"
 

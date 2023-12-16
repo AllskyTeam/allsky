@@ -1135,10 +1135,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", a);
 		fprintf(f, "\t\t\t\"MinValue\" : %s,\n", LorF(min, "%ld", "%.3f"));
 		fprintf(f, "\t\t\t\"MaxValue\" : %s,\n", LorF(max, "%ld", "%.3f"));
-		if (def == NO_DEFAULT)
-			fprintf(f, "\t\t\t\"DefaultValue\" : \"none\",\n");
-		else
-			fprintf(f, "\t\t\t\"DefaultValue\" : %s,\n", LorF(def, "%ld", "%.3f"));
+		fprintf(f, "\t\t\t\"DefaultValue\" : %s,\n", LorF(def, "%ld", "%.3f"));
 		fprintf(f, "\t\t\t\"IsAutoSupported\" : %s,\n", cc.IsAutoSupported == ASI_TRUE ? "true" : "false");
 		fprintf(f, "\t\t\t\"IsWritable\" : %s,\n", cc.IsWritable == ASI_TRUE ? "true" : "false");
 		fprintf(f, "\t\t\t\"ControlType\" : %d\n", cc.ControlType);

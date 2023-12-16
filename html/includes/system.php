@@ -9,7 +9,7 @@
 function RPiVersion()
 {
 	// Lookup table from https://www.raspberrypi.org/documentation/hardware/raspberrypi/revision-codes/README.md
-	// Last updated december 2020
+	// Last updated December 2023 with Pi 5
 	$revisions = array(
 	'0002' => 'Model B Revision 1.0',
 	'0003' => 'Model B Revision 1.0 + ECN0001',
@@ -57,7 +57,9 @@ function RPiVersion()
 	'b03114' => 'Model 4B Revision 1.4 (2 GB)',
 	'c03114' => 'Model 4B Revision 1.4 (4 GB)',
 	'd03114' => 'Model 4B Revision 1.4 (8 GB)',
-	'c03130' => 'Pi 400 Revision 1.0 (4 GB)'
+	'c03130' => 'Pi 400 Revision 1.0 (4 GB)',
+	'c04170' => 'Raspberry Pi 5 Model B Rev 1.0 (4 GB)',
+	'd04170' => 'Raspberry Pi 5 Model B Rev 1.0 (8 GB)'
 	);
 
 	$cpuinfo_array = '';

@@ -503,7 +503,7 @@ save_camera_capabilities()
 		#shellcheck disable=SC2086
 		if [[ ${RET} -eq ${EXIT_NO_CAMERA} ]]; then
 			MSG="No camera was found; one must be connected and working for the installation to succeed.\n"
-			MSG="$MSG}After connecting your camera, re-run the installation."
+			MSG="${MSG}After connecting your camera, re-run the installation."
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 			display_msg --log error "No camera detected - installation aborted."
 		elif [[ ${OPTIONSFILEONLY} == "false" ]]; then

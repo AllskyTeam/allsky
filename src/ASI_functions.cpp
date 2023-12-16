@@ -638,6 +638,12 @@ char const *argumentNames[][2] = {
 	{ "FanOn", "??" },				// correct Control name?
 	{ "PatternAdjust", "" },		// correct Control name?
 	{ "AntiDewHeater", "" },		// correct Control name?
+	{ "FanAdjust", "" },
+	{ "PwrledBright", "" },
+	{ "GPSSupport", "" },
+	{ "GPSStartLine", "" },
+	{ "GPSEndLine", "" },
+	{ "RollingInterval", "" },
 
 	{ "NEW", "" } // In case a new type is added we won't get an error
 };
@@ -1100,7 +1106,12 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	for (int i = 0; i < iNumOfCtrl; i++)
 	{
 		ASI_CONTROL_CAPS cc;
-		ASIGetControlCaps(cameraInfo.CameraID, i, &cc);
+		ASI_ERROR_CODE ret = ASIGetControlCaps(cameraInfo.CameraID, i, &cc);
+		if (ret != ASI_SUCCESS) {
+			Log(0, "%s: ASIGetControlCaps(%d, %d...) failed with %s\n",
+				CG.ME, cameraInfo.CameraID, i, getRetCode(ret));
+			continue;
+		}
 
 		// blank names means it's unsupported
 		if (cc.Name[0] == '\0')
@@ -1108,7 +1119,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 
 		// blank argument name means we don't have a command-line argument for it
 		char const *a =  argumentNames[cc.ControlType][1];
-		if (a == NULL or a[0] == '\0')
+		if (a == NULL || a[0] == '\0')
 			continue;
 
 		int div_by = 1;

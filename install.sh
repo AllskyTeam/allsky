@@ -505,6 +505,7 @@ save_camera_capabilities()
 			MSG="${MSG}After connecting your camera, re-run the installation."
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 			display_msg --log error "No camera detected - installation aborted."
+			exit_with_image 1 "${STATUS_ERROR}" "No camera detected"
 		elif [[ ${OPTIONSFILEONLY} == "false" ]]; then
 			display_msg --log error "Unable to save camera capabilities."
 		fi
@@ -2300,7 +2301,7 @@ install_overlay()
 		do
 			if [[ ${REQUIREMENTS_FILE} == "END" ]]; then
 	        	display_msg --log error "Unable to find a requirements file!"
-				exit_with_image 1 "No requirements file"
+				exit_with_image 1 "${STATUS_ERROR}" "No requirements file"
 			fi
 
 	    	if [[ -f ${REQUIREMENTS_FILE} ]]; then
@@ -2499,7 +2500,7 @@ exit_with_image()
 {
 	local RET="${1}"
 	local STATUS="${2}"
-	local MORE_STATUS="${2}"
+	local MORE_STATUS="${3}"
 	display_image "InstallationFailed"
 	exit_installation "${RET}" "${STATUS}" "${MORE_STATUS}"
 }

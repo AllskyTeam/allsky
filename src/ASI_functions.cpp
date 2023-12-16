@@ -356,6 +356,7 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
 
+
 	{ // arducam-pivariety, libcamera
 		{ "Gain", "Gain", 200.0, 1.0, 1.33, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
 // TODO: max exposure unknown
@@ -601,7 +602,6 @@ ASI_ERROR_CODE  ASIGetSerialNumber(int iCameraIndex, ASI_SN *pSN)
 
 	return(ASI_ERROR_GENERAL_ERROR);		// Not supported on RPi cameras
 }
-
 
 
 #else		////////////////////// ZWO
@@ -991,7 +991,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "daymeanthreshold");
 	fprintf(f, "\t\t\t\"MinValue\" : 0.01,\n");
 	fprintf(f, "\t\t\t\"MaxValue\" : \"1.0\",\n");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.dayMean_threshold);
+	fprintf(f, "\t\t\t\"DefaultValue\" : %.3f\n", CG.myModeMeanSetting.dayMean_threshold);
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
@@ -1007,7 +1007,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "nightmeanthreshold");
 	fprintf(f, "\t\t\t\"MinValue\" : 0.01,\n");
 	fprintf(f, "\t\t\t\"MaxValue\" : \"1.0\",\n");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.nightMean_threshold);
+	fprintf(f, "\t\t\t\"DefaultValue\" : %.3f\n", CG.myModeMeanSetting.nightMean_threshold);
 	fprintf(f, "\t\t},\n");
 
 	if (CG.isColorCamera) {
@@ -1099,13 +1099,13 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "extraargs");
 	fprintf(f, "\t\t},\n");
 
+	if (CG.ct == ctRPi && CG.isLibcamera) {
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "TuningFile");
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "tuningfile");
 		fprintf(f, "\t\t\t\"DefaultValue\" : \"\"\n");
 		fprintf(f, "\t\t},\n");
 
-	if (CG.ct == ctRPi && CG.isLibcamera) {
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "Rotation");
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "rotation");

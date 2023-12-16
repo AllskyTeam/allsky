@@ -500,7 +500,6 @@ save_camera_capabilities()
 
 	[[ -n ${MSG} ]] && display_msg "${LOG_TYPE}" info "${MSG}"
 	if [[ ${RET} -ne 0 ]]; then
-		#shellcheck disable=SC2086
 		if [[ ${RET} -eq ${EXIT_NO_CAMERA} ]]; then
 			MSG="No camera was found; one must be connected and working for the installation to succeed.\n"
 			MSG="${MSG}After connecting your camera, re-run the installation."

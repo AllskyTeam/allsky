@@ -840,8 +840,6 @@ install_webserver_et_al()
 			-e "s;XX_ALLSKY_DOCUMENTATION_XX;${ALLSKY_DOCUMENTATION};g" \
 				"${REPO_LIGHTTPD_FILE}"  >  /tmp/x
 		sudo install -m 0644 /tmp/x "${FINAL_LIGHTTPD_FILE}" && rm -f /tmp/x
-
-		STATUS_VARIABLES+=("install_webserver_et_al='true'\n")
 	fi
 
 	# Ignore output since it may already be enabled.

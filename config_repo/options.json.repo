@@ -647,6 +647,7 @@
 "options" : [
 	"type_values"
 ],
+"checkchanges" : true,
 "action" : "reload",
 "advanced" : true
 },

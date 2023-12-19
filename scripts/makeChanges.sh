@@ -123,6 +123,24 @@ if [[ -f ${SETTINGS_FILE} ]]; then
 	check_website		# invoke to set variables
 fi
 
+# Make sure RAW16 files have a .png extension.
+function check_filename_type()
+{
+	local EXTENSION="${1##*.}"		# filename is passed in - get just the extension
+	local TYPE="$2"
+	
+	if [[ ${TYPE} -eq 2 ]]; then		# 2 is RAW16 in allsky_common.h - it must match
+		if [[ ${EXTENSION,,} != "png" ]]; then
+			echo -en "${wERROR}${ERROR_PREFIX}"
+			echo -n "ERROR: RAW16 images only work with .png files"
+			echo -n "; either change the Image Type or the Filename."
+			echo -e "${wNC}"
+			return 1
+		fi
+	fi
+	return 0
+}
+
 CAMERA_NUMBER=""
 NUM_CHANGED=0
 
@@ -346,9 +364,18 @@ do
 			NEEDS_RESTART="true"
 			;;
 
-		"filename")
-			check_website && WEBSITE_CONFIG+=("config.imageName" "${LABEL}" "${NEW_VALUE}")
+		"type")
+			check_filename_type "$( settings '.filename' )" "${NEW_VALUE}" || OK="false"
 			NEEDS_RESTART="true"
+			;;
+
+		"filename")
+			if check_filename_type "${NEW_VALUE}" "$( settings '.type' )" ; then
+				check_website && WEBSITE_CONFIG+=("config.imageName" "${LABEL}" "${NEW_VALUE}")
+				NEEDS_RESTART="true"
+			else
+				OK="false"
+			fi
 			;;
 
 		"extratext")
@@ -492,6 +519,8 @@ do
 		esac
 		shift 4
 done
+
+[[ ${OK} == "false" ]] && exit 1
 
 [[ ${NUM_CHANGED} -le 0 ]] && exit 0		# Nothing changed
 

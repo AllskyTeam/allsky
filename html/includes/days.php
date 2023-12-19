@@ -27,8 +27,8 @@ function ListDays(){
 	global $page;
 	$days = array();
 
-	if (isset($_POST['delete_directory'])) {
-		$date = $_POST['delete_directory'];
+	$date = getVariableOrDefault('delete_directory', $_POST, null);
+	if ($date !== null) {
 		$msg = delete_directory(ALLSKY_IMAGES . "/$date");
 		if ($msg == "") {
 			echo "<div class='alert alert-success'>Deleted directory $date</div>";
@@ -78,7 +78,7 @@ function ListDays(){
 	  <tbody>
 		<tr>
 			<td style='font-weight:bold'>All</td>
-			<td></td>
+			<td>-</td>
 			<td><a href='index.php?page=list_videos&day=All' title='All Timelapse (CAN BE SLOW TO LOAD)'><i class='fa fa-film fa-lg fa-fw'></i></a></td>
 			<td><a href='index.php?page=list_keograms&day=All' title='All Keograms'><i class='fa fa-barcode fa-lg fa-fw'></i></a></td>
 			<td><a href='index.php?page=list_startrails&day=All' title='All Startrails'><i class='fa fa-star fa-lg fa-fw'></i></a></td>
@@ -86,14 +86,41 @@ function ListDays(){
 		</tr>
 <?php
 foreach ($days as $day) {
-	echo "
-		<tr>
-			<td style='font-weight:bold'>$day</td>
-			<td><a href='index.php?page=list_images&day=$day' title='Images'><i class='fa fa-image fa-lg fa-fw'></i></a></td>
-			<td><a href='index.php?page=list_videos&day=$day' title='Timelapse'><i class='fa fa-film fa-lg fa-fw'></i></a></td>
-			<td><a href='index.php?page=list_keograms&day=$day' title='Keogram'><i class='fa fa-barcode fa-lg fa-fw'></i></a></td></td>
-			<td><a href='index.php?page=list_startrails&day=$day' title='Startrails'><i class='fa fa-star fa-lg fa-fw'></i></a></td>
-			<td style='padding: 5px'>
+	echo "\t\t<tr>\n";
+	echo "\t\t\t<td style='font-weight:bold'>$day</td>\n";
+
+	echo "\t\t\t<td>";
+	echo "<a href='index.php?page=list_images&day=$day' title='Images'><i class='fa fa-image fa-lg fa-fw'></i></a>";
+	echo "</td>\n";
+
+	echo "\t\t\t<td>";
+	if (glob(ALLSKY_IMAGES . "/$day/*.mp4") != false) {
+		echo "<a href='index.php?page=list_videos&day=$day' title='Timelapse'><i class='fa fa-film fa-lg fa-fw'></i></a>";
+	} else {
+		echo "none";
+	}
+	echo "</td>\n";
+
+	// For keograms and startrails assume if the directory exists a file does too.
+	echo "\t\t\t<td>";
+	$d = ALLSKY_IMAGES . "/$day/keogram";
+	if (is_dir($d)) {
+		echo "<a href='index.php?page=list_keograms&day=$day' title='Keogram'><i class='fa fa-barcode fa-lg fa-fw'></i></a>";
+	} else {
+		echo "none";
+	}
+	echo "</td>\n";
+
+	echo "\t\t\t<td>";
+	$d = ALLSKY_IMAGES . "/$day/startrails";
+	if (is_dir($d)) {
+		echo "<a href='index.php?page=list_startrails&day=$day' title='Startrails'><i class='fa fa-star fa-lg fa-fw'></i></a>";
+	} else {
+		echo "none";
+	}
+	echo "</td>\n";
+
+	echo "\t\t\t<td style='padding: 5px'>
 				<button type='submit' data-toggle='confirmation'
 					class='btn btn-danger' style='text-align: center, color:white'
 					name='delete_directory' value='$day'>

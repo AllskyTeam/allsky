@@ -1,21 +1,6 @@
 #!/bin/bash
 # shellcheck disable=SC2154		# referenced but not assigned
 
-
-
-echo "============================================"
-echo "============================================"
-echo "Point Release 4 is not yet ready for use."
-echo "We are working on some problems."
-echo
-echo "If you are running the Bookworm operating system"
-echo "either wait until Point Release 4 is ready, or revert to Bullseye."
-echo "============================================"
-echo "============================================"
-exit 0
-
-
-
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
 ME="$(basename "${BASH_ARGV0}")"
 
@@ -1540,8 +1525,12 @@ update_config_sh()
 create_allsky_logs()
 {
 	display_msg --log progress "Setting permissions on ${ALLSKY_LOG} and ${ALLSKY_PERIODIC_LOG}."
+
 	TMP="${ALLSKY_INSTALLATION_LOGS}/rsyslog.log"
 	sudo apt-get --assume-yes install rsyslog > "${TMP}" 2>&1	
+	check_success $? "rsyslog installation failed" "${TMP}" "${DEBUG}"
+	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "rsyslog install failed."
+
 	sudo truncate -s 0 "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
 	sudo chmod 664 "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
 	sudo chgrp "${ALLSKY_GROUP}" "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
@@ -2100,8 +2089,6 @@ restore_prior_files()
 		fi
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}: ${MSG}"
 	fi
-	MSG="        CONFIG_SH_VERSION=${CONFIG_SH_VERSION}, PRIOR=${PRIOR_CONFIG_SH_VERSION}"
-	display_msg "${LOG_TYPE}" info "${MSG}"
 
 	# Unlike the config.sh file which was always in allsky/config,
 	# the ftp-settings.sh file used to be in allsky/scripts.
@@ -2136,8 +2123,6 @@ restore_prior_files()
 		fi
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}${MSG}"
 	fi
-	MSG="        FTP_SH_VERSION=${FTP_SH_VERSION}, PRIOR=${PRIOR_FTP_SH_VERSION}"
-	display_msg "${LOG_TYPE}" info "${MSG}"
 
 	# Done with restores, now the updates.
 

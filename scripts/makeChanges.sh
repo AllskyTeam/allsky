@@ -135,6 +135,24 @@ function check_website()
 }
 check_website		# invoke to set variables
 
+# Make sure RAW16 files have a .png extension.
+function check_filename_type()
+{
+	local EXTENSION="${1##*.}"		# filename is passed in - get just the extension
+	local TYPE="$2"
+	
+	if [[ ${TYPE} -eq 2 ]]; then		# 2 is RAW16 in allsky_common.h - it must match
+		if [[ ${EXTENSION,,} != "png" ]]; then
+			echo -en "${wERROR}${ERROR_PREFIX}"
+			echo -n "ERROR: RAW16 images only work with .png files"
+			echo -n "; either change the Image Type or the Filename."
+			echo -e "${wNC}"
+			return 1
+		fi
+	fi
+	return 0
+}
+
 CAMERA_NUMBER=""
 
 while [[ $# -gt 0 ]]
@@ -158,7 +176,6 @@ do
 	case "${K}" in
 
 		cameranumber | cameratype)
-
 			if [[ ${K} == "cameranumber" ]]; then
 				NEW_CAMERA_NUMBER="${NEW_VALUE}"
 				CAMERA_NUMBER=" -cameraNumber ${NEW_CAMERA_NUMBER}"
@@ -363,9 +380,18 @@ do
 			NEEDS_RESTART="true"
 			;;
 
-		filename)
-			check_website && WEBSITE_CONFIG+=("config.imageName" "${LABEL}" "${NEW_VALUE}")
+		type)
+			check_filename_type "$( settings '.filename' )" "${NEW_VALUE}" || OK="false"
 			NEEDS_RESTART="true"
+			;;
+
+		filename)
+			if check_filename_type "${NEW_VALUE}" "$( settings '.type' )" ; then
+				check_website && WEBSITE_CONFIG+=("config.imageName" "${LABEL}" "${NEW_VALUE}")
+				NEEDS_RESTART="true"
+			else
+				OK="false"
+			fi
 			;;
 
 		extratext)
@@ -482,6 +508,8 @@ do
 		shift 4
 done
 
+[[ ${OK} == "false" ]] && exit 1
+
 if check_website ; then
 	# Anytime a setting in settings.json changed we want to
 	# send an updated file to all Allsky Website(s).
@@ -491,7 +519,7 @@ if check_website ; then
 	[[ ${CAMERA_TYPE_CHANGED}   == "false" ]] && x="${x} --allFiles"
 
 	# shellcheck disable=SC2086
-	if RESULT="$("${ALLSKY_SCRIPTS}/postData.sh" ${x} >&2)" ; then
+	if RESULT="$( "${ALLSKY_SCRIPTS}/postData.sh" ${x} >&2 )" ; then
 		if [[ ${SHOW_POSTDATA_MESSAGE} == "true" ]]; then
 			if [[ ${TWILIGHT_DATA_CHANGED} == "true" ]]; then
 				echo -en "${wOK}"

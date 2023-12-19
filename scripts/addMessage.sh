@@ -36,14 +36,19 @@ COUNT=0
 TAB="$(echo -e "\t")"
 
 # Convert newlines to HTML breaks.
-MESSAGE="${MESSAGE//\\n/<br>}"
+MESSAGE="$( echo -n "${MESSAGE}" |
+	awk 'BEGIN { l=0; } { if (++l > 1) printf("<br>"); printf("%s", $0); }' )"
+MESSAGE="${MESSAGE//  /&nbsp;&nbsp;}"
+
 # Messages may have "/" in them so we can't use that to search in sed,
 # so use "%" instead, but because it could be in a message (although unlikely),
 # convert all "%" to the ASCII code.
-MESSAGE="${MESSAGE//%/&#37;}"
+# The pound sign in escaped only to make gvim look nicer.
+MESSAGE="${MESSAGE//%/&\#37;}"
 
 # If ${MESSAGE} contains "*" it hoses up the grep and sed regular expression, so escape it.
 ESCAPED_MESSAGE="${MESSAGE//\*/\\*}"
+
 
 if [[ -f ${ALLSKY_MESSAGES} ]] &&  M="$(grep "${TAB}${ESCAPED_MESSAGE}$" "${ALLSKY_MESSAGES}")" ; then
 	# tail -1  in case file is corrupt and has more than one line we want.

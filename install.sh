@@ -1498,6 +1498,12 @@ update_variables_sh()
 create_allsky_logs()
 {
 	display_msg --log progress "Setting permissions on ${ALLSKY_LOG} and ${ALLSKY_PERIODIC_LOG}."
+
+	TMP="${ALLSKY_INSTALLATION_LOGS}/rsyslog.log"
+	sudo apt-get --assume-yes install rsyslog > "${TMP}" 2>&1	
+	check_success $? "rsyslog installation failed" "${TMP}" "${DEBUG}"
+	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "rsyslog install failed."
+
 	sudo truncate -s 0 "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
 	sudo chmod 664 "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
 	sudo chgrp "${ALLSKY_GROUP}" "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"

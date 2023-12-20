@@ -63,7 +63,7 @@ int iNumOfCtrl					= NOT_SET;			// Number of camera control capabilities
 pthread_t threadDisplay			= 0;
 pthread_t hthdSave				= 0;
 int numExposures				= 0;				// how many valid pictures have we taken so far?
-int currentBpp					= NOT_SET;			// bytes per pixel: 8, 16, or 24
+int currentBpp					= NOT_SET;			// bytes per pixel: 1, 2, or 3
 
 // Make sure we don't try to update a non-updateable control, and check for errors.
 ASI_ERROR_CODE setControl(int camNum, ASI_CONTROL_TYPE control, long value, ASI_BOOL makeAuto)
@@ -264,20 +264,21 @@ int computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox
 	// For RGB24, data for each pixel is stored in 3 consecutive bytes: blue, green, red.
 	// For all image types, each row in the image contains one row of pixels.
 	// currentBpp doesn't apply to rows, just columns.
+//x int on = 0;
+//x static int did = 0; did++;
 	switch (cg.imageType) {
 	case IMG_RGB24:
 	case IMG_RAW8:
 	case IMG_Y8:
 		for (int y = roiY1; y < roiY2; y++) {
-			for (int x = roiX1; x < roiX2; x+=currentBpp) {
+			for (int x = roiX1; x < roiX2; x += currentBpp) {
 				int i = (cg.width * y) + x;
-				int total = 0;
-				for (int z = 0; z < currentBpp; z++)
-				{
+				int avg = buf[i];
+				if (cg.imageType == IMG_RGB24) {
 					// For RGB24 this averages the blue, green, and red pixels.
-					total += buf[i+z];
+					avg += buf[i+1] + buf[i+2];
 				}
-				int avg = total / currentBpp;
+//x if (useHistogramBox && did <=5) { printf("avg[%d]=%d\n", ++on, avg); }
 				histogram[avg]++;
 			}
 		}
@@ -288,11 +289,9 @@ int computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox
 				int i = (cg.width * y) + x;
 				int pixelValue;
 				// This assumes the image data is laid out in big endian format.
-				// We are going to grab the most significant byte
-				// and use that for the histogram value ignoring the
-				// least significant byte so we can use the 256 value histogram array.
-				// If it's acutally little endian then add a +1 to the array subscript for buf[i].
-				pixelValue = buf[i];
+				// Use the least significant byte.
+				pixelValue = buf[i+1];
+//x if (useHistogramBox && did <=5) { printf("pixel[%d]=0x%02x%02x, pixelValue=%'d\n", ++on, buf[i], buf[i+1], pixelValue); }
 				histogram[pixelValue]++;
 			}
 		}
@@ -307,6 +306,7 @@ int computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox
 	for (int i = 0; i < 256; i++) {
 		a += (i+1) * histogram[i];
 		b += histogram[i];
+//x if (useHistogramBox && histogram[i] > 0 && did <=5) { printf("histogram[%d]=%'d, a=%'d, b=%'d\n", i, histogram[i], a, b); }
 	}
 
 	if (b == 0)

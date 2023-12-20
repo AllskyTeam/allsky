@@ -711,6 +711,7 @@ check_and_mount_tmp()
 	fi
 
 	# Now mount and restore any images that were there before
+	sudo systemctl daemon-reload 2> /dev/null
 	sudo mount -a
 	if [[ -d ${TMP_DIR} ]]; then
 		mv "${TMP_DIR}"/* "${ALLSKY_TMP}"
@@ -932,14 +933,14 @@ set_permissions()
 		### TODO:  Hmmm.  We need to run "sudo" to add to the group,
 		### but we don't have "sudo" permissions yet... so this will likely fail:
 
-		sudo addgroup --quiet "${ALLSKY_OWNER}" "sudo"
+		sudo adduser --quiet "${ALLSKY_OWNER}" "sudo"
 	fi
 	# shellcheck disable=SC2076
 	if ! [[ ${G} =~ "(${WEBSERVER_GROUP})" ]]; then
 		display_msg --log progress "Adding ${ALLSKY_OWNER} to ${WEBSERVER_GROUP} group."
-		sudo addgroup --quiet "${ALLSKY_OWNER}" "${WEBSERVER_GROUP}"
+		sudo adduser --quiet "${ALLSKY_OWNER}" "${WEBSERVER_GROUP}"
 
-		# TODO: We had a case where the login shell wasn't in the group after "addgroup"
+		# TODO: We had a case where the login shell wasn't in the group after "adduser"
 		# until the user logged out and back in.
 		# And this was AFTER he ran install.sh and rebooted.
 		# Not sure what to do about this...
@@ -2856,11 +2857,6 @@ check_new_exposure_algorithm()
 	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 		display_msg --logonly info "Enabling ${FIELD}."
 		update_json_file ".${FIELD}" "true" "${SETTINGS_FILE}"
-
-		MSG="Please provide feedback on the new auto-exposure algorithm"
-		MSG="${MSG} by entering a Discussion item in GitHub."
-		MSG="${MSG}\nYou can disable it by changing 'New Exposure Algorithm' in the WebUI."
-		display_msg notice "${MSG}"
 	else
 		display_msg --logonly info "User elected NOT to use ${FIELD}."
 	fi

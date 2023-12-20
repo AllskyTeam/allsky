@@ -36,7 +36,7 @@ COUNT=0
 TAB="$(echo -e "\t")"
 
 # Convert newlines to HTML breaks.
-MESSAGE="$( echo -n "${MESSAGE}" |
+MESSAGE="$( echo -en "${MESSAGE}" |
 	awk 'BEGIN { l=0; } { if (++l > 1) printf("<br>"); printf("%s", $0); }' )"
 MESSAGE="${MESSAGE//  /&nbsp;&nbsp;}"
 

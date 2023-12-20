@@ -702,6 +702,7 @@ check_and_mount_tmp()
 	fi
 
 	# Now mount and restore any images that were there before
+	sudo systemctl daemon-reload 2> /dev/null
 	sudo mount -a
 	if [[ -d ${TMP_DIR} ]]; then
 		mv "${TMP_DIR}"/* "${ALLSKY_TMP}"

@@ -16,7 +16,6 @@ import cv2
 import json
 import numpy as np
 from math import sqrt
-from skimage import measure
 
 metaData = {
     "name": "Star Count",

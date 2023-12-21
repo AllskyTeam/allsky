@@ -82,7 +82,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	ALLSKY_TIMELAPSE_PID_FILE="${ALLSKY_TMP}/timelapse-pid.txt"
 
 	# Holds information on what the user needs to do after an installation.
-	ALLSKY_INSTALLATION_LOGS="${ALLSKY_CONFIG}/installation_logs"
+	ALLSKY_INSTALLATION_LOGS="${ALLSKY_CONFIG}/logs"
 	POST_INSTALLATION_ACTIONS="${ALLSKY_INSTALLATION_LOGS}/post-installation_actions.txt"
 
 	# Holds temporary list of aborted processes since another one was in progress.

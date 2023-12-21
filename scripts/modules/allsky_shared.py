@@ -57,22 +57,11 @@ def setLastRun(module):
     now = time.time()
     dbUpdate(dbKey, now)
 
-def convertLatLonOld(input):
+def convertLatLon(input):
     """ Converts the lat and lon from the all sky config to decimal notation i.e. 0.2E becomes -0.2"""
     multiplier = 1 if input[-1] in ['N', 'E'] else -1
     return multiplier * sum(float(x) / 60 ** n for n, x in enumerate(input[:-1].split('-')))
 
-def convertLatLon(input):
-    """ lat and lon can either be a positive or negative float, or end with N, S, E,or W. """
-    """ If in  N, S, E, W format, 0.2E becomes -0.2 """
-    nsew = 1 if input[-1] in ['N', 'S', 'E', 'W'] else 0
-    if nsew:
-        multiplier = 1 if input[-1] in ['N', 'E'] else -1
-        ret = multiplier * sum(float(x) / 60 ** n for n, x in enumerate(input[:-1].split('-')))
-    else:
-        ret = float(input)
-    return ret
-    
 def skyClear():
     skyState = "unknown"
     skyStateFlag = True
@@ -108,6 +97,7 @@ def checkAndCreateDirectory(filePath):
 
 def checkAndCreatePath(filePath):
     path = os.path.dirname(filePath)
+    print(path)
     os.makedirs(path, mode = 0o777, exist_ok = True)
 
 def convertPath(path):
@@ -311,20 +301,6 @@ def setupParams(params, metaData):
 def var_dump(variable):
     pprint.PrettyPrinter(indent=2, width=128).pprint(variable)
 
-def setEnvironmentVariable(name, value, logMessage='', logLevel=4):
-    result = True
-    
-    try:
-        os.environ[name] = value
-        
-        if log != '':
-            log(logLevel, logMessage)
-    except:
-        result = False
-        log(4, f'ERROR: Failed to set environment variable {name} to value {value}')
-        
-    return result
-    
 def getEnvironmentVariable(name, fatal=False, error=''):
     result = None
 
@@ -430,16 +406,10 @@ def int(val):
     return val
 
 def float(val):
-    localDP = locale.localeconv()['decimal_point']
-    
     if not isinstance(val, str):
         val = locale.str(val)
-    
-    # If locale uses a decimal sep other than . but the user has used a . swap it to the correct locale based decimal sep
-    if val.find(localDP) == -1:
-        val = val.replace('.',localDP)
-
     val = locale.atof(val)
+
     return val
 
 def saveExtraData(fileName, extraData):

@@ -1179,8 +1179,8 @@
 {
 "name": "timelapsebitrate",
 "minimum": 100,
-"maximum": 10000,
-"default": 2000,
+"maximum": 30000,
+"default": 5000,
 "description": "Bitrate (in K) of timelapse video. Higher values produce higher quality but larger files.",
 "label": "Timelapse Bitrate",
 "type" : "integer",
@@ -1322,8 +1322,8 @@
 {
 "name": "minitimelapsebitrate",
 "minimum": 100,
-"maximum": 10000,
-"default": 1000,
+"maximum": 30000,
+"default": 2000,
 "description": "Bitrate (in K) of mini-timelapse video. Higher values produce higher quality but larger files.",
 "label": "Mini-Timelapse Bitrate",
 "type": "integer",

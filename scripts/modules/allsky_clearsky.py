@@ -199,8 +199,8 @@ def onPublish(client, userdata, mid, properties=None):
 def clearsky(params, event):
     #ONLY AT NIGHT !
 
-    detectionThreshold = s.float(params["detectionThreshold"])
-    distanceThreshold = s.int(params["distanceThreshold"])
+    detectionThreshold = s.asfloat(params["detectionThreshold"])
+    distanceThreshold = int(params["distanceThreshold"])
     mask = params["mask"]
     annotate = params["annotate"]
     starTemplate1Size = s.int(params["template1"])

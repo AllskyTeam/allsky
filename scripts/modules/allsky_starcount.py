@@ -149,7 +149,7 @@ def starcount(params, event):
 
     if not rainFlag:
         if skyClear:        
-            detectionThreshold = s.float(params["detectionThreshold"])
+            detectionThreshold = s.asfloat(params["detectionThreshold"])
             distanceThreshold = s.int(params["distanceThreshold"])
             mask = params["mask"]
             annotate = params["annotate"]

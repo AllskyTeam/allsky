@@ -896,7 +896,7 @@ class ALLSKYOVERLAY:
             if image is not None:
                 if "scale" in imageData:
                     if imageData["scale"] is not None:
-                        scale = s.float(imageData["scale"])
+                        scale = s.asfloat(imageData["scale"])
                         image = cv2.resize(image, (0, 0), fx=scale, fy=scale)
 
                 if "rotate" in imageData:
@@ -1193,7 +1193,7 @@ class ALLSKYOVERLAY:
         nsew = 1 if input[-1] in ['N', 'S', 'E', 'W'] else 0
         if nsew:
             multiplier = 1 if input[-1] in ['N', 'E'] else -1
-            ret = multiplier * sum(s.float(x) / 60 ** n for n, x in enumerate(input[:-1].split('-')))
+            ret = multiplier * sum(s.asfloat(x) / 60 ** n for n, x in enumerate(input[:-1].split('-')))
         else:
             ret = float(input)
         return ret

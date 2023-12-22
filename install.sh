@@ -511,6 +511,9 @@ save_camera_capabilities()
 	MSG="$( /bin/ls -l "${ALLSKY_CONFIG}/settings"*.json 2>/dev/null | sed 's/^/    /' )"
 	display_msg "${LOG_TYPE}" info "Settings files:\n${MSG}"
 	CAMERA_MODEL="$( settings ".cameramodel" "${SETTINGS_FILE}" )"
+	if [[ -z ${CAMERA_MODEL} ]]; then
+		display_msg --log warning "cameramodel not found in settings file."
+	fi
 
 	STATUS_VARIABLES+=("save_camera_capabilities='true'\n")
 	return 0
@@ -1256,6 +1259,8 @@ OLD_STYLE_ALLSKY="oldStyle"
 # If not, look in the old Website location.
 PRIOR_ALLSKY_WEBSITE_STYLE=""
 PRIOR_ALLSKY_WEBSITE_DIR=""
+
+# TODO: Is .ConfigVersion still needed now that Website is in Allsky?
 NEW_WEB_CONFIG_VERSION=""
 PRIOR_WEB_CONFIG_VERSION=""
 
@@ -2297,7 +2302,7 @@ restore_prior_files()
 			display_msg --log warning "${MSG}"
 			echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 		else
-			MSG="Remote Website .ConfigVersion is current @ ${NEW_WEB_CONFIG_VERSION}"
+			MSG="${SPACE}${SPACE}Remote Website .ConfigVersion is current @ ${NEW_WEB_CONFIG_VERSION}"
 			display_msg --logonly info "${MSG}"
 		fi
 	else
@@ -2781,7 +2786,7 @@ display_image()
 		local COLOR="${2}"
 		local CUSTOM_MESSAGE="${3}"
 
-		MSG="Displaying custom notification image: ${CUSTOM_MESSAGE}"
+		MSG="Displaying custom notification image: $( echo -e "${CUSTOM_MESSAGE}" | tr '\n' ' ' )"
 		display_msg --logonly info "${MSG}"
 		"${ALLSKY_SCRIPTS}/generate_notification_images.sh" \
 			--directory "${ALLSKY_TMP}" \

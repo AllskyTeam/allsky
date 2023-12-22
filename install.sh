@@ -4,14 +4,14 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
 ME="$(basename "${BASH_ARGV0}")"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=.
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 
 # This file defines functions plus sets many variables.
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 if [[ ${EUID} -eq 0 ]]; then
 	display_msg error "This script must NOT be run as root, do NOT use 'sudo'."
@@ -21,18 +21,15 @@ fi
 # This script assumes the user already did the "git clone" into ${ALLSKY_HOME}.
 
 # Some versions of Linux default to 750 so web server can't read it
-#shellcheck disable=SC2086
-chmod 755 "${ALLSKY_HOME}"  							|| exit ${ALLSKY_ERROR_STOP}
-
-#shellcheck disable=SC2086
-cd "${ALLSKY_HOME}"  									|| exit ${ALLSKY_ERROR_STOP}
+chmod 755 "${ALLSKY_HOME}"  							|| exit "${EXIT_ERROR_STOP}"
+cd "${ALLSKY_HOME}"  									|| exit "${EXIT_ERROR_STOP}"
 
 # PRIOR_ALL_DIR is passed to us and is the location of an optional prior copy of Allsky.
 PRIOR_CONFIG_DIR="${PRIOR_ALLSKY_DIR}/config"
 PRIOR_CONFIG_FILE="${PRIOR_CONFIG_DIR}/config.sh"
 PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"	# may change depending on old version
 
-TITLE="Allsky Installer"
+TITLE="Allsky Installer - ${ALLSKY_VERSION}"
 FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 OLD_RASPAP_DIR="/etc/raspap"			# used to contain WebUI configuration files
 SETTINGS_FILE_NAME="$(basename "${SETTINGS_FILE}")"
@@ -41,7 +38,6 @@ RESTORED_PRIOR_SETTINGS_FILE="false"
 PRIOR_SETTINGS_FILE=""					# Full pathname to the prior settings file, if it exists
 RESTORED_PRIOR_CONFIG_SH="false"		# prior config.sh restored?
 RESTORED_PRIOR_FTP_SH="false"			# prior ftp-settings.sh restored?
-ALLSKY_VERSION="$( get_version )"		# version we're installing
 PRIOR_ALLSKY=""							# Set to "new" or "old" if they have a prior version
 PRIOR_ALLSKY_VERSION=""					# The version number of the prior version, if known
 SUGGESTED_NEW_HOST_NAME="allsky"		# Suggested new host name
@@ -85,19 +81,24 @@ STATUS_ERROR="Error encountered"
 STATUS_INT="Got interrupt"
 STATUS_VARIABLES=()									# Holds all the variables and values to save
 
-OS="$(grep CODENAME /etc/os-release | cut -d= -f2)"	# usually buster or bullseye
+LONG_BITS=$( getconf LONG_BIT ) # Size of a long, 32 or 64
 
-##### XXXXXXXXXXXXXXXX    TODO: TEMPORARY CHECK FOR Bookworm
-if [[ ${OS} == "bookworm" ]]; then
-	echo -e "\n=========="
-	echo "Allsky does not yet work on Bookworm, the newest Pi operating system"
-	echo "released in October, 2023."
-	echo "We are working on a release that supports Bookworm and"
-	echo "should have it available shortly."
-	echo -e "\n=========="
-	exit 0
+# Check if any extra modules are installed
+if [[ -n "$( find /opt/allsky/modules -type f -name "*.py" -print -quit 2> /dev/null )" ]]; then
+	EXTRA_MODULES_INSTALLED="true"
+else
+	EXTRA_MODULES_INSTALLED="false"
 fi
 
+# TODO: check the CURRENT Allsky, or the PRIOR one?
+
+# Check if we have a venv already. If not then the install/update will create it
+# but we need to warn the user to reinstall the extra modules if they have them.
+if [[ -d "${ALLSKY_PYTHON_VENV}" ]]; then
+	INSTALLED_VENV="false"
+else
+	INSTALLED_VENV="true"
+fi
 
 ############################################## functions
 
@@ -138,7 +139,7 @@ do_initial_heading()
 			exit_installation 1 "${STATUS_CLEAR}" ""
 		fi
 
-		display_header "Welcome to the ${TITLE}!"
+		display_header "Welcome to the ${TITLE}"
 	fi
 
 	[[ ${do_initial_heading} != "true" ]] && STATUS_VARIABLES+=("do_initial_heading='true'\n")
@@ -165,8 +166,7 @@ usage_and_exit()
 	echo
 	echo "'--function' executes the specified function and quits."
 	echo
-	#shellcheck disable=SC2086
-	exit_installation ${RET}
+	exit_installation "${RET}"
 }
 
 
@@ -382,9 +382,9 @@ check_for_raspistill()
 {
 	STATUS_VARIABLES+=("check_for_raspistill='true'\n")
 
-	if W="$( which raspistill )" && [[ ${OS} != "buster" ]]; then
-		echo display_msg --longonly info "Renaming 'raspistill' on ${OS}."
-		echo sudo mv "${W}" "${W}-OLD"
+	if W="$( which raspistill )" && [[ ${PI_OS} != "buster" ]]; then
+		display_msg --longonly info "Renaming 'raspistill' on ${PI_OS}."
+		sudo mv "${W}" "${W}-OLD"
 	fi
 }
 
@@ -485,12 +485,12 @@ save_camera_capabilities()
 
 	[[ -n ${MSG} ]] && display_msg "${LOG_TYPE}" info "${MSG}"
 	if [[ ${RET} -ne 0 ]]; then
-		#shellcheck disable=SC2086
 		if [[ ${RET} -eq ${EXIT_NO_CAMERA} ]]; then
 			MSG="No camera was found; one must be connected and working for the installation to succeed.\n"
-			MSG="$MSG}After connecting your camera, re-run the installation."
+			MSG="${MSG}After connecting your camera, re-run the installation."
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 			display_msg --log error "No camera detected - installation aborted."
+			exit_with_image 1 "${STATUS_ERROR}" "No camera detected"
 		elif [[ ${OPTIONSFILEONLY} == "false" ]]; then
 			display_msg --log error "Unable to save camera capabilities."
 		fi
@@ -501,6 +501,9 @@ save_camera_capabilities()
 	MSG="$( /bin/ls -l "${ALLSKY_CONFIG}/settings"*.json 2>/dev/null | sed 's/^/    /' )"
 	display_msg "${LOG_TYPE}" info "Settings files:\n${MSG}"
 	CAMERA_MODEL="$( settings ".cameraModel" "${SETTINGS_FILE}" )"
+	if [[ -z ${CAMERA_MODEL} ]]; then
+		display_msg --log warning "cameraModel not found in settings file."
+	fi
 
 	STATUS_VARIABLES+=("save_camera_capabilities='true'\n")
 	return 0
@@ -601,9 +604,9 @@ check_swap()
 	else
 		RAM_SIZE="${RAM_SIZE//total_mem=/}"
 	fi
-	local DESIRED_COMBINATION=$((1024 * 4))		# desired minimum memory + swap
+	local DESIRED_COMBINATION=$((1024 * 5))		# desired minimum memory + swap
 	local SUGGESTED_SWAP_SIZE=0
-	for i in 512 1024 2048		# 4096 and above don't need any swap
+	for i in 512 1024 2048 4096		# 8192 and above don't need any swap
 	do
 		if [[ ${RAM_SIZE} -le ${i} ]]; then
 			SUGGESTED_SWAP_SIZE=$((DESIRED_COMBINATION - i))
@@ -702,6 +705,7 @@ check_and_mount_tmp()
 	fi
 
 	# Now mount and restore any images that were there before
+	sudo systemctl daemon-reload 2> /dev/null
 	sudo mount -a
 	if [[ -d ${TMP_DIR} ]]; then
 		mv "${TMP_DIR}"/* "${ALLSKY_TMP}"
@@ -784,7 +788,7 @@ check_success()
 		MSG="The full log file is in ${LOG}"
 		MSG="${MSG}\nThe end of the file is:"
 		display_msg --log info "${MSG}"
-		tail -5 "${LOG}"
+		indent "$( tail "${LOG}" )"
 
 		return 1
 	fi
@@ -796,7 +800,7 @@ check_success()
 
 ####
 # Install the web server.
-install_webserver()
+install_webserver_et_al()
 {
 	sudo systemctl stop hostapd 2> /dev/null
 	sudo systemctl stop lighttpd 2> /dev/null
@@ -813,20 +817,19 @@ install_webserver()
 		if ! check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" ; then
 			exit_with_image 1 "${STATUS_ERROR}" "lighttpd installation failed"
 		fi
-		STATUS_VARIABLES+=("install_webserver_et_al='true'\n")
-	fi
 
-	FINAL_LIGHTTPD_FILE="/etc/lighttpd/lighttpd.conf"
-	sed \
-		-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};g" \
-		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};g" \
-		-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};g" \
-		-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};g" \
-		-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};g" \
-		-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};g" \
-		-e "s;XX_ALLSKY_DOCUMENTATION_XX;${ALLSKY_DOCUMENTATION};g" \
-			"${REPO_LIGHTTPD_FILE}"  >  /tmp/x
-	sudo install -m 0644 /tmp/x "${FINAL_LIGHTTPD_FILE}" && rm -f /tmp/x
+		FINAL_LIGHTTPD_FILE="/etc/lighttpd/lighttpd.conf"
+		sed \
+			-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};g" \
+			-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};g" \
+			-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};g" \
+			-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};g" \
+			-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};g" \
+			-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};g" \
+			-e "s;XX_ALLSKY_DOCUMENTATION_XX;${ALLSKY_DOCUMENTATION};g" \
+				"${REPO_LIGHTTPD_FILE}"  >  /tmp/x
+		sudo install -m 0644 /tmp/x "${FINAL_LIGHTTPD_FILE}" && rm -f /tmp/x
+	fi
 
 	# Ignore output since it may already be enabled.
 	sudo lighty-enable-mod fastcgi-php > /dev/null 2>&1
@@ -845,7 +848,7 @@ install_webserver()
 	# Starting it added an entry so truncate the file so it's 0-length
 	sleep 1; truncate -s 0 "${LIGHTTPD_LOG}"
 
-	STATUS_VARIABLES+=("install_webserver='true'\n")
+	STATUS_VARIABLES+=("install_webserver_et_al='true'\n")
 }
 
 
@@ -920,14 +923,14 @@ set_permissions()
 		### TODO:  Hmmm.  We need to run "sudo" to add to the group,
 		### but we don't have "sudo" permissions yet... so this will likely fail:
 
-		sudo addgroup --quiet "${ALLSKY_OWNER}" "sudo"
+		sudo adduser --quiet "${ALLSKY_OWNER}" "sudo"
 	fi
 
 	if ! echo "${G}" | grep --silent "(${WEBSERVER_GROUP})"; then
 		display_msg --log progress "Adding ${ALLSKY_OWNER} to ${WEBSERVER_GROUP} group."
-		sudo addgroup --quiet "${ALLSKY_OWNER}" "${WEBSERVER_GROUP}"
+		sudo adduser --quiet "${ALLSKY_OWNER}" "${WEBSERVER_GROUP}"
 
-		# TODO: We had a case where the login shell wasn't in the group after "addgroup"
+		# TODO: We had a case where the login shell wasn't in the group after "adduser"
 		# until the user logged out and back in.
 		# And this was AFTER he ran install.sh and rebooted.
 		# Not sure what to do about this...
@@ -1415,9 +1418,9 @@ does_prior_Allsky_exist()
 		[[ ! -f ${PRIOR_SETTINGS_FILE} ]] && PRIOR_SETTINGS_FILE=""
 	fi
 
-	display_msg "${LOG_TYPE}" info "PRIOR_ALLSKY_VERSION=${PRIOR_ALLSKY_VERSION}"
-	display_msg "${LOG_TYPE}" info "PRIOR_CAMERA_TYPE=${PRIOR_CAMERA_TYPE}"
-	display_msg "${LOG_TYPE}" info "PRIOR_SETTINGS_FILE=${PRIOR_SETTINGS_FILE}"
+	display_msg --logonly info "PRIOR_ALLSKY_VERSION=${PRIOR_ALLSKY_VERSION}"
+	display_msg --logonly info "PRIOR_CAMERA_TYPE=${PRIOR_CAMERA_TYPE}"
+	display_msg --logonly info "PRIOR_SETTINGS_FILE=${PRIOR_SETTINGS_FILE}"
 
 	return 0
 }
@@ -1526,6 +1529,12 @@ update_config_sh()
 create_allsky_logs()
 {
 	display_msg --log progress "Setting permissions on ${ALLSKY_LOG} and ${ALLSKY_PERIODIC_LOG}."
+
+	TMP="${ALLSKY_INSTALLATION_LOGS}/rsyslog.log"
+	sudo apt-get --assume-yes install rsyslog > "${TMP}" 2>&1	
+	check_success $? "rsyslog installation failed" "${TMP}" "${DEBUG}"
+	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "rsyslog install failed."
+
 	sudo truncate -s 0 "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
 	sudo chmod 664 "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
 	sudo chgrp "${ALLSKY_GROUP}" "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
@@ -1951,8 +1960,10 @@ restore_prior_files()
 	if [[ -d ${PRIOR_CONFIG_DIR}/modules ]]; then
 		display_msg --log progress "${ITEM}"
 
+		activate_python_venv
+
 		# Copy the user's prior data to the new file which may contain new fields.
-		if ! "${ALLSKY_SCRIPTS}"/flowupgrade.py --prior "${PRIOR_CONFIG_DIR}" --config "${ALLSKY_CONFIG}" ; then
+		if ! python3 "${ALLSKY_SCRIPTS}"/flowupgrade.py --prior "${PRIOR_CONFIG_DIR}" --config "${ALLSKY_CONFIG}" ; then
 			display_msg --log error "Copying 'modules' directory had problems."
 		fi
 	else
@@ -2015,7 +2026,6 @@ restore_prior_files()
 		# Used below to update "AllskyVersion" if needed.
 		V="$( settings .config.AllskyVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
 
-# TODO: is ConfigVersion still needed after the Website is part of Allsky?
 		# Check if this is an older Allsky Website configuration file type.
 		# The remote config file should have .ConfigVersion.
 		local OLD="false"
@@ -2040,7 +2050,7 @@ restore_prior_files()
 			display_msg --log warning "${MSG}"
 			echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 		else
-			MSG="Remote Website .ConfigVersion is current @ ${NEW_CONFIG_VERSION}"
+			MSG="${SPACE}${SPACE}Remote Website .ConfigVersion is current @ ${NEW_CONFIG_VERSION}"
 			display_msg --logonly info "${MSG}"
 		fi
 	else
@@ -2082,8 +2092,6 @@ restore_prior_files()
 		fi
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}: ${MSG}"
 	fi
-	MSG="        CONFIG_SH_VERSION=${CONFIG_SH_VERSION}, PRIOR=${PRIOR_CONFIG_SH_VERSION}"
-	display_msg "${LOG_TYPE}" info "${MSG}"
 
 	# Unlike the config.sh file which was always in allsky/config,
 	# the ftp-settings.sh file used to be in allsky/scripts.
@@ -2104,7 +2112,7 @@ restore_prior_files()
 		PRIOR_FTP_SH_VERSION="no file"
 	fi
 
-	ITEM="${SPACE}ftp-settings.sh"
+	ITEM="${SPACE}'ftp-settings.sh'"
 	if [[ ${FTP_SH_VERSION} == "${PRIOR_FTP_SH_VERSION}" ]]; then
 		display_msg --log progress "${ITEM}, as is"
 		cp "${PRIOR_FTP_FILE}" "${ALLSKY_CONFIG}" && RESTORED_PRIOR_FTP_SH="true"
@@ -2118,8 +2126,6 @@ restore_prior_files()
 		fi
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}${MSG}"
 	fi
-	MSG="        FTP_SH_VERSION=${FTP_SH_VERSION}, PRIOR=${PRIOR_FTP_SH_VERSION}"
-	display_msg "${LOG_TYPE}" info "${MSG}"
 
 	# Done with restores, now the updates.
 
@@ -2206,9 +2212,8 @@ restore_prior_files()
 # This can be needed if the user hosed something up, or there was a problem somewhere.
 do_update()
 {
-# TODO: get from settings file
-	#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-	source "${ALLSKY_CONFIG}/config.sh" || exit ${ALLSKY_ERROR_STOP}	# Get current CAMERA_TYPE
+	#shellcheck disable=SC1091		# file doesn't exist in GitHub
+	source "${ALLSKY_CONFIG}/config.sh" || exit "${ALLSKY_ERROR_STOP}"	# Get current CAMERA_TYPE
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		display_msg --log error "CAMERA_TYPE not set in config.sh."
 		exit_installation 1 "${STATUS_ERROR}" "No CAMERA_TYPE in config.sh during update."
@@ -2242,83 +2247,125 @@ do_update()
 install_overlay()
 {
 	if [[ ${installed_PHP_modules} != "true" ]]; then
-		display_msg --log progress "Installing PHP modules."
+		display_msg --log progress "Installing PHP modules and dependencies."
 		TMP="${ALLSKY_INSTALLATION_LOGS}/PHP_modules.log"
 		sudo apt-get --assume-yes install php-zip php-sqlite3 python3-pip > "${TMP}" 2>&1
 		check_success $? "PHP module installation failed" "${TMP}" "${DEBUG}"
 		[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "PHP module install failed."
 
-		display_msg --log progress "Installing other PHP dependencies."
 		TMP="${ALLSKY_INSTALLATION_LOGS}/libatlas.log"
 		sudo apt-get --assume-yes install libatlas-base-dev > "${TMP}" 2>&1
 		check_success $? "PHP dependencies failed" "${TMP}" "${DEBUG}"
 		[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "PHP dependencies failed."
+
 		STATUS_VARIABLES+=( "installed_PHP_modules='true'\n" )
 	fi
 
-	# Doing all the python dependencies at once can run /tmp out of space, so do one at a time.
-	# This also allows us to display progress messages.
-	if [[ ${OS} == "buster" ]]; then
-		M=" for Buster"
-		R="-buster"
-
-		# Force pip upgrade, without this installations on Buster fail
-		pip3 install --upgrade pip > /dev/null 2>&1
+	if [[ ${installed_python} == "true" ]]; then
+		display_msg --log info "Python and related packages already installed."
 	else
-		M=""
-		R=""
-	fi
-	local NAME="Python_dependencies"
-	local REQUIREMENTS_FILE="${ALLSKY_REPO}/requirements${R}.txt"
-	local NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
+		# Doing all the python dependencies at once can run /tmp out of space, so do one at a time.
+		# This also allows us to display progress messages.
+		M=" for ${OS^}"
+		R="-${PI_OS}"
+		if [[ ${PI_OS} == "buster" ]]; then
+			# Force pip upgrade, without this installations on Buster fail
+			pip3 install --upgrade pip > /dev/null 2>&1
+		elif [[ ${PI_OS} != "bullseye" && ${PI_OS} != "bookworm" ]]; then
+			# TODO: is this an error?  Unknown OS?
+			M=""
+			R=""
+		fi
 
-	# See how many have already been installed - if all, then skip this step.
-	local NUM_INSTALLED="$( set | grep -c "^${NAME}" )"
-	if [[ ${NUM_INSTALLED} -eq "${NUM_TO_INSTALL}" ||
-		  ${installed_Python_dependencies} == "true" ]]; then
-		display_msg --logonly info "Skipping: ${NAME} - all packages already installed"
-	else
-		local TMP="${ALLSKY_INSTALLATION_LOGS}/${NAME}"
-		display_msg --log progress "Installing ${NAME}${M}:"
-		local COUNT=0
-		rm -f "${STATUS_FILE_TEMP}"
-		while read -r package
+	    display_msg --logonly info "Attempting to locate Python dependency file"
+
+		local PREFIX="${ALLSKY_REPO}/requirements"
+		for REQUIREMENTS_FILE in "${PREFIX}${R}-${LONG_BITS}.txt" \
+			"${PREFIX}${R}.txt" \
+			"${PREFIX}-${LONG_BITS}.txt" \
+			"${PREFIX}.txt" \
+			"END"
 		do
-			((COUNT++))
-			echo "${package}" > /tmp/package
-			if [[ ${COUNT} -lt 10 ]]; then
-				C=" ${COUNT}"
+			if [[ ${REQUIREMENTS_FILE} == "END" ]]; then
+	        	display_msg --log error "Unable to find a requirements file!"
+				exit_with_image 1 "${STATUS_ERROR}" "No requirements file"
+			fi
+
+	    	if [[ -f ${REQUIREMENTS_FILE} ]]; then
+	        	display_msg --logonly info "Using '${REQUIREMENTS_FILE}'"
+				break
 			else
-				C="${COUNT}"
+	        	display_msg --logonly debug "${REQUIREMENTS_FILE} - File not found"
+			fi
+		done
+
+		local NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
+		
+		# See how many have already been installed - if all, then skip this step.
+		local NAME="Python_dependencies"
+		local NUM_INSTALLED="$( set | grep -c "^${NAME}" )"
+		if [[ ${NUM_INSTALLED} -eq "${NUM_TO_INSTALL}" ||
+				${installed_Python_dependencies} == "true" ]]; then
+			display_msg --logonly info "Skipping: ${NAME} - all packages already installed"
+		else
+			# AG - Bookworm mod 12/10/23
+			if [[ ${PI_OS} == "bookworm" ]]; then
+				local PKGs="python3-full libgfortran5 libopenblas0-pthread"
+				display_msg --log progress "Installing ${PKGs}."
+				local TMP="${ALLSKY_INSTALLATION_LOGS}/python3-full.log"
+				# shellcheck disable=SC2086
+				sudo apt-get --assume-yes install ${PKGs} > "${TMP}" 2>&1
+				check_success $? "${PKGs} install failed" "${TMP}" "${DEBUG}"
+				[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "${PKGs} install failed."
+
+				python3 -m venv "${ALLSKY_PYTHON_VENV}" --system-site-packages
+				activate_python_venv
 			fi
 
-			local PACKAGE="   === Package # ${C} of ${NUM_TO_INSTALL}: [${package}]"
-			# Need indirection since the ${STATUS_NAME} is the variable name and we want its value.
-			local STATUS_NAME="${NAME}_${COUNT}"
-			eval "STATUS_VALUE=\${${STATUS_NAME}}"
-			if [[ ${STATUS_VALUE} == "true" ]]; then
-				display_msg --log progress "${PACKAGE} - already installed."
-				continue
-			fi
-			display_msg --log progress "${PACKAGE}"
+			local TMP="${ALLSKY_INSTALLATION_LOGS}/${NAME}"
+			display_msg --log progress "Installing ${NAME}${M}:"
+			local COUNT=0
+			rm -f "${STATUS_FILE_TEMP}"
+			while read -r package
+			do
+				((COUNT++))
+				echo "${package}" > /tmp/package
+				if [[ ${COUNT} -lt 10 ]]; then
+					C=" ${COUNT}"
+				else
+					C="${COUNT}"
+				fi
 
-			L="${TMP}.${COUNT}.log"
-			local M="${NAME} [${package}] failed"
-			pip3 install --no-warn-script-location -r /tmp/package > "${L}" 2>&1
-			# These files are too big to display so pass in "0" instead of ${DEBUG}.
-			if ! check_success $? "${M}" "${L}" 0 ; then
-				rm -fr "${PIP3_BUILD}"
+				local PACKAGE="   === Package # ${C} of ${NUM_TO_INSTALL}: [${package}]"
+				# Need indirection since the ${STATUS_NAME} is the variable name and we want its value.
+				local STATUS_NAME="${NAME}_${COUNT}"
+				eval "STATUS_VALUE=\${${STATUS_NAME}}"
+				if [[ ${STATUS_VALUE} == "true" ]]; then
+					display_msg --log progress "${PACKAGE} - already installed."
+					continue
+				fi
+				display_msg --log progress "${PACKAGE}"
 
-				# Add current status
-				update_status_from_temp_file
+				L="${TMP}.${COUNT}.log"
+				local M="${NAME} [${package}] failed"
+				pip3 install --no-warn-script-location -r /tmp/package > "${L}" 2>&1
+				# These files are too big to display so pass in "0" instead of ${DEBUG}.
+				if ! check_success $? "${M}" "${L}" 0 ; then
+					rm -fr "${PIP3_BUILD}"
 
-				exit_with_image 1 "${STATUS_ERROR}" "${M}."
-			fi
-			echo "${STATUS_NAME}='true'"  >> "${STATUS_FILE_TEMP}"
-		done < "${REQUIREMENTS_FILE}"
+					# Add current status
+					update_status_from_temp_file
 
-		# Add the status back in.
-		update_status_from_temp_file
+					exit_with_image 1 "${STATUS_ERROR}" "${M}."
+				fi
+				echo "${STATUS_NAME}='true'"  >> "${STATUS_FILE_TEMP}"
+			done < "${REQUIREMENTS_FILE}"
+
+			# Add the status back in.
+			update_status_from_temp_file
+		fi
+
+		STATUS_VARIABLES+=( "installed_python='true'\n" )
 	fi
 
 	if [[ ${installing_Trutype_fonts} != "true" ]]; then
@@ -2363,21 +2410,20 @@ check_if_buster()
 {
 	STATUS_VARIABLES+=("check_if_buster='true'\n")
 
-	if [[ ${OS} == "buster" ]]; then
-		MSG="This release runs best on the Bullseye operating system"
-		MSG="${MSG} that was released in November, 2021."
-		if [[ ${PRIOR_CAMERA_TYPE} == "RPi" ]]; then
-			MSG="${MSG}\n\n>>> This is especially true for RPi cameras"
-			MSG="${MSG} which have more features on Bullseye.\n"
-		fi
-		MSG="${MSG}\nYou are running the older Buster operating system and we"
-		MSG="${MSG} recommend doing a fresh install of Bullseye on a clean SD card."
-		MSG="${MSG}\n\nDo you want to continue anyhow?"
-		if ! whiptail --title "${TITLE}" --yesno --defaultno "${MSG}" 20 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
-			display_msg --logonly info "User running Buster and elected not to continue."
-			exit_installation 0 "${STATUS_NOT_CONTINUE}" "After Buster check."
-		fi
+	[[ ${PI_OS} != "buster" ]] && return
+
+	MSG="WARNING: You are running the older Buster operating system."
+	MSG="${MSG}\n\nSupport for it will be dropped in a future Allsky release.\n"
+	MSG="${MSG}\nWe recommend doing a fresh install of Bookworm on a clean SD card now."
+	if [[ ${PRIOR_CAMERA_TYPE} == "RPi" ]]; then
+		MSG="${MSG}\nRPi cameras have more features on newer operating systems.\n"
 	fi
+	MSG="${MSG}\n\nDo you want to continue anyhow?"
+	if ! whiptail --title "${TITLE}" --yesno --defaultno "${MSG}" 20 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
+		display_msg --logonly info "User running Buster and elected not to continue."
+		exit_installation 0 "${STATUS_NOT_CONTINUE}" "After Buster check."
+	fi
+	display_msg --logonly info "User running Buster and elected to continue."
 }
 
 
@@ -2423,7 +2469,7 @@ display_image()
 		local COLOR="${2}"
 		local CUSTOM_MESSAGE="${3}"
 
-		MSG="Displaying custom notification image: ${CUSTOM_MESSAGE}"
+		MSG="Displaying custom notification image: $( echo -e "${CUSTOM_MESSAGE}" | tr '\n' ' ' )"
 		display_msg --logonly info "${MSG}"
 		"${ALLSKY_SCRIPTS}/generate_notification_images.sh" \
 			--directory "${ALLSKY_TMP}" \
@@ -2441,7 +2487,7 @@ exit_with_image()
 {
 	local RET="${1}"
 	local STATUS="${2}"
-	local MORE_STATUS="${2}"
+	local MORE_STATUS="${3}"
 	display_image "InstallationFailed"
 	exit_installation "${RET}" "${STATUS}" "${MORE_STATUS}"
 }
@@ -2498,18 +2544,13 @@ check_new_exposure_algorithm()
 	local FIELD="experimentalExposure"
 	local NEW="$( settings ".${FIELD}" )"
 	[[ ${NEW} -eq 1 ]] && return
-	
+
 	MSG="There is a new auto-exposure algorithm for nighttime images that initial testing indicates"
 	MSG="${MSG} it creates better images at night and during the day-to-night transition."
 	MSG="${MSG}\n\nDo you want to use it?"
 	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 		display_msg --logonly info "Enabling ${FIELD}."
 		update_json_file ".${FIELD}" 1 "${SETTINGS_FILE}"
-
-		MSG="Please provide feedback on the new auto-exposure algorithm"
-		MSG="${MSG} by entering a Discussion item in GitHub."
-		MSG="${MSG}\nYou can disable it by changing 'New Exposure Algorithm' in the WebUI."
-		display_msg notice "${MSG}"
 	else
 		display_msg --logonly info "User elected NOT to use ${FIELD}."
 	fi
@@ -2542,6 +2583,17 @@ remind_old_version()
 	fi
 }
 
+update_modules()
+{
+	if [[ ${EXTRA_MODULES_INSTALLED} == "true" && ${INSTALLED_VENV} == "true" ]]; then
+		MSG="You appear to have the Allsky Extra modules installed."
+		MSG="${MSG}\nPlease reinstall these using the normal instructions at"
+		MSG="${MSG}  https://github.com/Alex-developer/allsky-modules"
+		MSG="${MSG}\nThe extra modules will not function until you have reinstalled them."
+		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+		display_msg --logonly info "Reminded user to re install the extra modules."
+	fi
+}
 
 clear_status()
 {
@@ -2572,7 +2624,13 @@ exit_installation()
 		if [[ ${STATUS_CODE} == "${STATUS_CLEAR}" ]]; then
 			clear_status
 		else
-			[[ -n ${MORE_STATUS} ]] && MORE_STATUS="; MORE_STATUS='${MORE_STATUS}'"
+			if [[ -n ${MORE_STATUS} ]]; then
+				if [[ ${MORE_STATUS} == "${STATUS_CODE}" ]]; then
+					MORE_STATUS=""
+				else
+					MORE_STATUS="; MORE_STATUS='${MORE_STATUS}'"
+				fi
+			fi
 			echo -e "STATUS_INSTALLATION='${STATUS_CODE}'${MORE_STATUS}" > "${STATUS_FILE}"
 			update_status_from_temp_file
 			echo -e "${STATUS_VARIABLES[@]}" >> "${STATUS_FILE}"
@@ -2593,8 +2651,7 @@ exit_installation()
 	fi
 
 	# Don't exit for negative numbers.
-	#shellcheck disable=SC2086
-	[[ ${RET} -ge 0 ]] && exit ${RET}
+	[[ ${RET} -ge 0 ]] && exit "${RET}"
 }
 
 
@@ -2631,13 +2688,11 @@ if [[ ${IN_TESTING} == "true" ]]; then
 		MSG="${MSG}\n\nPlease set Debug Level to 3 during testing."
 		MSG="${MSG}\n"
 
-		MSG="${MSG}\nChanges from prior release:"
+		MSG="${MSG}\nChanges from prior branch:"
 
-		MSG="${MSG}\n * Support for RPi Version 1 camera"
-		MSG="${MSG}\n * Bug fixes, especially with the Overlay Editor"
-
-#		MSG="${MSG}\n"
-#		MSG="${MSG}\n * change 2"
+		MSG="${MSG}\n * Support for the newest ZWO cameras."
+		MSG="${MSG}\n * Support for a couple new RPi cameras."
+		MSG="${MSG}\n * Bug fixes in the Overlay Editor and Module manager"
 
 		MSG="${MSG}\n\nIf you agree, enter:    yes"
 		A=$(whiptail --title "*** MESSAGE FOR TESTERS ***" --inputbox "${MSG}" 26 "${WT_WIDTH}"  3>&1 1>&2 2>&3)
@@ -2745,7 +2800,7 @@ if [[ -z ${FUNCTION} && -s ${STATUS_FILE} ]]; then
 		MSG="${MSG}\n\nDo you want to continue where you left off?"
 		if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 			MSG="Continuing installation.  Steps already performed will be skipped."
-			MSG="${MSG}\nThe last status was: ${STATUS_INSTALLATION}${MORE_STATUS}"
+			MSG="${MSG}\n   The last status was: ${STATUS_INSTALLATION}${MORE_STATUS}"
 			display_msg --log progress "${MSG}"
 
 			#shellcheck disable=SC1090		# file doesn't exist in GitHub
@@ -2760,7 +2815,7 @@ if [[ -z ${FUNCTION} && -s ${STATUS_FILE} ]]; then
 				unset get_desired_locale	# forces a re-prompt
 				unset CURRENT_LOCALE		# It will get re-calculated
 			fi
-	
+
 		else
 			MSG="Do you want to restart the installation from the beginning?"
 			MSG="${MSG}\n\nSelecting <No> will exit the installation without making any changes."
@@ -2848,7 +2903,7 @@ display_msg notice "${MSG}"
 
 ##### Install web server
 # This must come BEFORE save_camera_capabilities, since it installs php.
-[[ ${install_webserver} != "true" ]] && install_webserver
+[[ ${install_webserver_et_al} != "true" ]] && install_webserver_et_al
 
 ##### Install dependencies, then compile and install Allsky software
 # This will create the "config" directory and put default files in it.
@@ -2906,6 +2961,9 @@ fi
 
 ##### Let the user know to run check_allsky.sh.
 [[ ${remind_run_check_allsky} != "true" ]] && remind_run_check_allsky
+
+##### Check if extra modules need to be reinstalled.
+update_modules
 
 ##### If needed, remind the user to remove any old Allsky version
 # Re-run every time to remind the user again.

@@ -3,8 +3,7 @@
 "name" : "daytimeSettingsHeader",
 "description" : "Daytime settings",
 "type" : "header",
-"display" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "takeDaytimeImages",
@@ -12,10 +11,9 @@
 "description" : "Activate to <strong>take</strong> daytime images.",
 "label" : "Daytime Capture",
 "type" : "boolean",
-"display" : 1,
 "checkchanges" : 1,
 "generic" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "saveDaytimeImages",
@@ -23,9 +21,8 @@
 "description" : "Activate to <strong>save</strong> daytime images.<br>Only applies if <span class='WebUISetting'>Daytime Capture</span> is enabled.",
 "label" : "Daytime Save",
 "type" : "boolean",
-"display" : 1,
 "generic" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "dayautoexposure",
@@ -33,9 +30,8 @@
 "description" : "Activate to enable daytime auto-exposure.",
 "label" : "Auto-Exposure",
 "type" : "boolean",
-"display" : 1,
 "generic" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "daymaxautoexposure",
@@ -45,8 +41,7 @@
 "description" : "Maximum daytime Auto-Exposure time in milliseconds (1000ms = 1 sec).<br>Only applies if daytime <span class='WebUISetting'>Auto-Exposure</span> is enabled.",
 "label" : "Max Auto-Exposure",
 "type" : "float",
-"display" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "dayexposure",
@@ -56,8 +51,7 @@
 "description" : "Manual exposure time in milliseconds (1000ms = 1 sec). Can be a fraction.<br>If using daytime <span class='WebUISetting'>Auto-Exposure</span>, this number is used as a starting point.",
 "label" : "Manual Exposure",
 "type" : "float",
-"display" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "daymean",
@@ -67,8 +61,7 @@
 "description" : "The target mean brightness level when <span class='WebUISetting'>Auto-Exposure</span> is on. <span class='WebUIValue'>1.0</span> is pure white.<br>Best used when <span class='WebUISetting'>Auto-Exposure</span> and <span class='WebUISetting'>Auto-Gain</span> are on.<br><span class='WebUIValue'>0</span> disables this auto-exposure mode.",
 "label" : "Mean Target",
 "type" : "float",
-"display" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "daymeanthreshold",
@@ -78,8 +71,7 @@
 "description" : "When using <b>Mean Target</b> this specifies how close to the target the brightness should be.",
 "label" : "Mean Threshold",
 "type" : "float",
-"display" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "daybrightness",
@@ -89,8 +81,7 @@
 "description" : "<strong>Deprecated</strong>.  Use <span class='WebUISettings'>Mean Target</span> instead.<br>Changes the amount of light in the image. Higher numbers are brighter.",
 "label" : "Brightness",
 "type" : "float",
-"display" : "_display",
-"advanced" : 0
+"display" : "_display"
 },
 {
 "name" : "daydelay",
@@ -100,9 +91,8 @@
 "description" : "Delay between daytime images in milliseconds (1000ms = 1 sec).",
 "label" : "Delay",
 "type" : "integer",
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "dayautogain",
@@ -110,9 +100,8 @@
 "description" : "Activate to enable dayime Auto-Gain.",
 "label" : "Auto-Gain",
 "type" : "boolean",
-"display" : 1,
 "generic" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "daymaxautogain",
@@ -122,8 +111,7 @@
 "description" : "Maximum gain when using <span class='WebUISetting'>Auto-Gain</span>.",
 "label" : "Max Auto-Gain",
 "type" : "float",
-"display" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "daygain",
@@ -133,8 +121,7 @@
 "description" : "Manually sets the light sensitivity of the camera.<br>A high number returns a brighter image but more noise too. Can normally leave at the minimum value for daytime.",
 "label" : "Gain",
 "type" : "float",
-"display" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "daybin",
@@ -145,9 +132,8 @@
 "options" : [
 	"bin_values"
 ],
-"display" : 1,
 "generic" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "dayawb",
@@ -155,9 +141,8 @@
 "description" : "Sets Auto White Balance.",
 "label" : "Auto White Balance",
 "type" : "boolean",
-"display" : "_display",
 "generic" : 1,
-"advanced" : 0
+"display" : "_display"
 },
 {
 "name" : "daywbr",
@@ -167,8 +152,7 @@
 "description" : "Red component for the white balance.<br>When using <span class='WebUISetting'>Auto White Balance</span>, this number is a starting point.",
 "label" : "Red Balance",
 "type" : "float",
-"display" : "_display",
-"advanced" : 0
+"display" : "_display"
 },
 {
 "name" : "daywbb",
@@ -178,8 +162,7 @@
 "description" : "Blue component for the white balance.<br>When using <span class='WebUISetting'>Auto White Balance</span>, this number is a starting point.",
 "label" : "Blue Balance",
 "type" : "float",
-"display" : "_display",
-"advanced" : 0
+"display" : "_display"
 },
 {
 "name" : "dayskipframes",
@@ -189,9 +172,8 @@
 "description" : "When starting Allsky during the day, skip up to this many frames while the software gets to the correct exposure.<br>Only applies if daytime <span class='WebUISetting'>Auto-Exposure</span> is on.",
 "label" : "Frames To Skip",
 "type" : "integer",
-"display" : 1,
 "generic" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "dayEnableCooler",
@@ -199,9 +181,8 @@
 "description" : "Activate to use cooling (works only on cooled cameras).",
 "label" : "Cooling",
 "type" : "boolean",
-"display" : "_display",
 "generic" : 1,
-"advanced" : 1
+"display" : "_display"
 },
 {
 "name" : "dayTargetTemp",
@@ -211,9 +192,8 @@
 "description" : "Sensor's target temperature <i>when cooler is enabled</i> (degrees Celsius).",
 "label" : "Target Temp.",
 "type" : "integer",
-"display" : "_display",
 "generic" : 1,
-"advanced" : 1
+"display" : "_display"
 },
 {
 "name" : "dayTuningFile",
@@ -221,17 +201,15 @@
 "description" : "Name of the day camera tuning file to use. Omit this option to preserve the default behavior of libcamera.<br>Please read this <b><a href='https://www.raspberrypi.com/documentation/accessories/camera.html' target='_blank' rel='noreferrer' title='Opens in new tab/window'>documentation <i class='fa fa-external-link-alt fa-fw'></i></a></b> or this <b><a href='https://datasheets.raspberrypi.com/camera/raspberry-pi-camera-guide.pdf' target='_blank' rel='noreferrer' title='Opens in new tab/window'>document <i class='fa fa-external-link-alt fa-fw'></i></a></b> if using a Raspberry camera with libcamera. For other Raspberry cameras read the camera manual for more information.",
 "label" : "Tuning File",
 "type" : "widetext",
-"display" : "_display",
 "checkchanges" : 1,
 "optional" : 1,
-"advanced" : 1
+"display" : "_display"
 },
 {
 "name" : "nighttimeSettingsHeader",
 "description" : "Nighttime settings",
 "type" : "header",
-"display" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "nightautoexposure",
@@ -239,9 +217,8 @@
 "description" : "Activate to enable nighttime auto-exposure.",
 "label" : "Auto-Exposure",
 "type" : "boolean",
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "nightmaxautoexposure",
@@ -251,8 +228,7 @@
 "description" : "Maximum nighttime Auto-Exposure time in milliseconds (1000ms = 1 sec).<br>Only applies if nighttime <span class='WebUISetting'>Auto-Exposure</span> is enabled.",
 "label" : "Max Auto-Exposure",
 "type" : "float",
-"display" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "nightexposure",
@@ -262,8 +238,7 @@
 "description" : "Manual exposure time in milliseconds (1000ms = 1 sec). Can be a fraction.<br>If using nighttime <span class='WebUISetting'>Auto-Exposure</span>, this number is used as a starting point.",
 "label" : "Manual Exposure",
 "type" : "float",
-"display" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "nightmean",
@@ -273,8 +248,7 @@
 "description" : "The target mean brightness level when <span class='WebUISetting'>Auto-Exposure</span> is on. <span class='WebUIValue'>1.0</span> is pure white.<br>Best used when <span class='WebUISetting'>Auto-Exposure</span> and <span class='WebUISetting'>Auto-Gain</span> are on.<br><span class='WebUIValue'>0</span> disables this auto-exposure mode.",
 "label" : "Mean Target",
 "type" : "float",
-"display" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "nightmeanthreshold",
@@ -284,8 +258,7 @@
 "description" : "When using <b>Mean Target</b> this specifies how close to the target the brightness should be.",
 "label" : "Mean Threshold",
 "type" : "float",
-"display" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "nightbrightness",
@@ -295,8 +268,7 @@
 "description" : "<strong>Deprecated</strong>.  Use <span class='WebUISettings'>Mean Target</span> instead.<br>Changes the amount of light in the image. Higher numbers are brighter.",
 "label" : "Brightness",
 "type" : "float",
-"display" : "_display",
-"advanced" : 0
+"display" : "_display"
 },
 {
 "name" : "nightdelay",
@@ -306,9 +278,8 @@
 "description" : "Delay between nighttime images in milliseconds (1000ms = 1 sec).",
 "label" : "Delay",
 "type" : "integer",
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "nightautogain",
@@ -316,9 +287,8 @@
 "description" : "Activate to enable nighttime Auto-Gain.",
 "label" : "Auto-Gain",
 "type" : "boolean",
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "nightmaxautogain",
@@ -328,8 +298,7 @@
 "description" : "Maximum gain when using <span class='WebUISetting'>Auto-Gain</span>.",
 "label" : "Max Auto-Gain",
 "type" : "float",
-"display" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "nightgain",
@@ -339,8 +308,7 @@
 "description" : "Manually sets the light sensitivity of the camera.<br>A high number returns a brighter image but more noise too.",
 "label" : "Gain",
 "type" : "float",
-"display" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "nightbin",
@@ -351,9 +319,8 @@
 "options" : [
 	"bin_values"
 ],
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "nightawb",
@@ -361,9 +328,8 @@
 "description" : "Activate to enable Auto White Balance (camera adjusts color).",
 "label" : "Auto White Balance",
 "type" : "boolean",
-"display" : "_display",
 "generic" : 1,
-"advanced" : 0
+"display" : "_display"
 },
 {
 "name" : "nightwbr",
@@ -373,8 +339,7 @@
 "description" : "Red component for the white balance.<br>When using <span class='WebUISetting'>Auto White Balance</span>, this number is a starting point.",
 "label" : "Red Balance",
 "type" : "float",
-"display" : "_display",
-"advanced" : 0
+"display" : "_display"
 },
 {
 "name" : "nightwbb",
@@ -384,8 +349,7 @@
 "description" : "Blue component for the white balance.<br>When using <span class='WebUISetting'>Auto White Balance</span>, this number is a starting point.",
 "label" : "Blue Balance",
 "type" : "float",
-"display" : "_display",
-"advanced" : 0
+"display" : "_display"
 },
 {
 "name" : "nightskipframes",
@@ -395,9 +359,8 @@
 "description" : "When starting Allsky at night, skip up to this many frames while the software gets to the correct exposure.<br>Only applies if nighttime <span class='WebUISetting'>Auto-Exposure</span> is on.",
 "label" : "Frames To Skip",
 "type" : "integer",
-"display" : 1,
 "generic" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "nightEnableCooler",
@@ -405,9 +368,8 @@
 "description" : "Activate to use cooling (works only on cooled cameras).",
 "label" : "Cooling",
 "type" : "boolean",
-"display" : "_display",
 "generic" : 1,
-"advanced" : 1
+"display" : "_display"
 },
 {
 "name" : "nightTargetTemp",
@@ -417,9 +379,8 @@
 "description" : "Sensor's target temperature <i>when cooler is enabled</i> (degrees Celsius).",
 "label" : "Target Temp.",
 "type" : "integer",
-"display" : "_display",
 "generic" : 1,
-"advanced" : 1
+"display" : "_display"
 },
 {
 "name" : "nightTuningFile",
@@ -427,17 +388,15 @@
 "description" : "Name of the night camera tuning file to use.",
 "label" : "Tuning File",
 "type" : "widetext",
-"display" : "_display",
 "checkchanges" : 1,
 "optional" : 1,
-"advanced" : 1
+"display" : "_display"
 },
 {
 "name" : "DayAndNightHeader",
 "description" : "Both daytime and nighttime settings",
 "type" : "header",
-"display" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "config",
@@ -445,10 +404,9 @@
 "description" : "Configuration file to use for settings.",
 "label" : "Configuration File",
 "type" : "widetext",
-"display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "extraArgs",
@@ -456,9 +414,8 @@
 "description" : "Extra arguments to pass to the capture program that Allsky doesn't support.",
 "label" : "Extra Arguments",
 "type" : "widetext",
-"display" : "_display",
 "optional" : 1,
-"advanced" : 1
+"display" : "_display"
 },
 {
 "name" : "saturation",
@@ -468,8 +425,7 @@
 "description" : "Changes the saturation level of the image.<br>The lowest level produces a black and white image.",
 "label" : "Saturation",
 "type" : "float",
-"display" : "_display",
-"advanced" : 1
+"display" : "_display"
 },
 {
 "name" : "contrast",
@@ -479,8 +435,7 @@
 "description" : "Changes the contrast of an image.",
 "label" : "Contrast",
 "type" : "float",
-"display" : "_display",
-"advanced" : 1
+"display" : "_display"
 },
 {
 "name" : "sharpness",
@@ -490,8 +445,7 @@
 "description" : "Changes the sharpness of an image.<br>Too sharp and images look unnatural.",
 "label" : "Sharpness",
 "type" : "float",
-"display" : "_display",
-"advanced" : 1
+"display" : "_display"
 },
 {
 "name" : "gamma",
@@ -501,8 +455,7 @@
 "description" : "Changes the difference between light and dark areas.<br>higher numbers increase contrast.",
 "label" : "Gamma",
 "type" : "integer",
-"display" : "_display",
-"advanced" : 1
+"display" : "_display"
 },
 {
 "name" : "offset",
@@ -512,8 +465,7 @@
 "description" : "Adds about 1/10 the specified number to every pixel to brighten everything.",
 "label" : "Offset",
 "type" : "integer",
-"display" : "_display",
-"advanced" : 1
+"display" : "_display"
 },
 {
 "name" : "aggression",
@@ -523,9 +475,8 @@
 "description" : "How much of a calculated exposure change should be made during Auto-Exposure?<br>Lower numbers smooth out changes but take longer to react to brightness changes.",
 "label" : "Aggression",
 "type" : "percent",
-"display" : "_display",
 "generic" : 1,
-"advanced" : 1
+"display" : "_display"
 },
 {
 "name" : "gaintransitiontime",
@@ -535,9 +486,8 @@
 "description" : "Number of <b>minutes</b> over which to increase or decrease the gain when switching between day and night.<br>This helps smooth brightness differences.  Only works if nighttime <span class='WebUISetting'>Auto-Gain</span> is off. <span class='WebUIValue'>0</span> disables transitions.",
 "label" : "Gain Transition Time",
 "type" : "integer",
-"display" : "_display",
 "generic" : 1,
-"advanced" : 1
+"display" : "_display"
 },
 {
 "name" : "width",
@@ -547,8 +497,7 @@
 "description" : "Image width in pixels. <span class='WebUIValue'>0</span> = max sensor width.",
 "label" : "Image Width",
 "type" : "integer",
-"display" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "height",
@@ -558,8 +507,7 @@
 "description" : "Image height in pixels. <span class='WebUIValue'>0</span> = max sensor height.",
 "label" : "Image Height",
 "type" : "integer",
-"display" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "type",
@@ -567,11 +515,11 @@
 "description" : "'auto' uses color if possible, otherwise the best mono mode supported.<br>RAW16 only works with PNG extension.",
 "label" : "Image Type",
 "type" : "select",
-"display" : 1,
 "options" : [
 	"type_values"
 ],
-"advanced" : 1
+"checkchanges" : 1,
+"display" : 1
 },
 {
 "name" : "quality",
@@ -581,9 +529,8 @@
 "description" : "JPG quality: 0-100. Higher numbers produce larger, clearer files.<br>PNG compression: 0-9. Higher numbers produce smaller files but take longer to save.",
 "label" : "Quality / Compression",
 "type" : "integer",
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "autousb",
@@ -591,8 +538,7 @@
 "description" : "Automatically set the USB bandwidth.",
 "label" : "Auto USB Bandwidth",
 "type" : "boolean",
-"display" : "_display",
-"advanced" : 1
+"display" : "_display"
 },
 {
 "name" : "usb",
@@ -602,8 +548,7 @@
 "description" : "USB bandwidth.<br>If you get ASI_ERROR_TIMEOUT errors in the log file, try changing this number.",
 "label" : "USB Bandwidth",
 "type" : "integer",
-"display" : "_display",
-"advanced" : 1
+"display" : "_display"
 },
 {
 "name" : "filename",
@@ -611,10 +556,9 @@
 "description" : "Extensions allowed: .jpg or .png.<br><b>WARNING</b>: saving a .png file can take 10 or more seconds so be sure the time between successive images is long enough.  To measure how long it takes your Pi to save a .png file, set the <span class='WebUISetting'>Debug Level</span> to 4 and look in the log file.",
 "label" : "Filename",
 "type" : "text",
-"display" : 1,
 "checkchanges" : 1,
 "generic" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "rotation",
@@ -625,8 +569,7 @@
 "options" : [
 	"rotation_values"
 ],
-"display" : "_display",
-"advanced" : 0
+"display" : "_display"
 },
 {
 "name" : "flip",
@@ -640,8 +583,7 @@
 	{"value" : 2, "label" : "Vertical"},
 	{"value" : 3, "label" : "Both"}
 ],
-"display" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "notificationimages",
@@ -649,9 +591,8 @@
 "description" : "Activate to display notification images, e.g., 'Camera is off during the day'.<br>While these messages appear in the WebUI and Allsky Website, they are not saved so don't appear in timelapse, startrails, or keograms.",
 "label" : "Notification Images",
 "type" : "boolean",
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "consistentDelays",
@@ -659,9 +600,8 @@
 "description" : "Activate to have the delays between images be a consistent length.<br>The time between the start of exposures will always be (max exposure + delay).",
 "label" : "Consistent Delays Between Images",
 "type" : "boolean",
-"display" : 1,
 "generic" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "timeformat",
@@ -669,9 +609,8 @@
 "description" : "Determines the format of the displayed time. Run 'man 3 strftime' to see the options.",
 "label" : "Time Format",
 "type" : "text",
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "latitude",
@@ -679,10 +618,9 @@
 "description" : "Camera latitude - a number with a sign (-90 to +90) or a positive number with direction (N or S), for example: <span class='WebUIValue'>60.7N</span>.",
 "label" : "Latitude",
 "type" : "text",
-"display" : 1,
 "checkchanges" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "longitude",
@@ -690,10 +628,9 @@
 "description" : "Camera longitude - a number with a sign (-180 to +180) or a positive number with a direction (E or W), for example: <span class='WebUIValue'>135.05W</span>.",
 "label" : "Longitude",
 "type" : "text",
-"display" : 1,
 "checkchanges" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "angle",
@@ -701,10 +638,9 @@
 "description" : "Altitude of the Sun in degrees relative to the horizon at which to switch between day and night.",
 "label" : "Angle",
 "type" : "float",
-"display" : 1,
 "checkchanges" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "takeDarkFrames",
@@ -712,8 +648,7 @@
 "description" : "Activate to capture dark frames, which are used to decrease noise.<br>Continues taking dark frames until Allsky is restarted.",
 "label" : "Take Dark Frames",
 "type" : "boolean",
-"display" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "useDarkFrames",
@@ -721,9 +656,8 @@
 "description" : "Enables dark frame subtraction if you have dark frames.",
 "label" : "Use Dark Frames",
 "type" : "boolean",
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "locale",
@@ -731,9 +665,8 @@
 "description" : "Your locale, used to determine what the thousands and decimal separators are.<br>Type <code>locale</code> at a command prompt to see your choices.",
 "label" : "Locale",
 "type" : "text",
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "experimentalExposure",
@@ -741,8 +674,7 @@
 "description" : "Activate to use a newer auto-exposure algorithm at night.  Initial testing indictes the images taken during the day-to-night transition as well as at night have better exposures.<br>If you use this, please add a Discussion item describing your results - good or bad.  We need the feedback.",
 "label" : "New Exposure Algorithm",
 "type" : "boolean",
-"display" : "_display",
-"advanced" : 1
+"display" : "_display"
 },
 {
 "name" : "histogrambox",
@@ -750,8 +682,7 @@
 "description" : "Size of the histogram box (X and Y in pixels) and offset from left and top (0-100 percent). Sizes must be even numbers.",
 "label" : "Histogram Box",
 "type" : "text",
-"display" : "_display",
-"advanced" : 1
+"display" : "_display"
 },
 {
 "name" : "debuglevel",
@@ -766,8 +697,7 @@
 	{"value" : 3, "label" : 3},
 	{"value" : 4, "label" : 4}
 ],
-"display" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "newexposure",
@@ -775,8 +705,7 @@
 "description" : "Activate to use the Allsky version 0.8 exposure method which decreases sensor temperature.  If you see ASI_ERROR_TIMEOUTs in the log file, deactivate this.",
 "label" : "Version 0.8 Exposure",
 "type" : "boolean",
-"display" : "_display",
-"advanced" : 1
+"display" : "_display"
 },
 {
 "name" : "useLogin",
@@ -784,26 +713,14 @@
 "description" : "Determines if you need to login to the WebUI or not.<br><b>If your Pi is accessible on the Internet, do NOT turn this off!!</b>.",
 "label" : "Require WebUI Login",
 "type" : "boolean",
-"display" : 1,
 "generic" : 1,
-"advanced" : 1
-},
-{
-"name" : "alwaysshowadvanced",
-"default" : 0,
-"description" : "Activate to always show the advanced options.",
-"label" : "Always Show Advanced",
-"type" : "boolean",
-"display" : 1,
-"generic" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "overlayHeader",
 "description" : "Image overlay settings",
 "type" : "header",
-"display" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "overlayMethod",
@@ -815,10 +732,9 @@
 	{"value" : 0, "label" : "legacy"},
 	{"value" : 1, "label" : "module"}
 ],
-"display" : 1,
 "checkchanges" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "showTime",
@@ -826,9 +742,8 @@
 "description" : "Activate to display the time an image was taken on the overlay.",
 "label" : "Show Time",
 "type" : "boolean",
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "showTemp",
@@ -836,9 +751,8 @@
 "description" : "Activate to display the camera sensor temperature on the overlay.",
 "label" : "Show Temperature",
 "type" : "boolean",
-"display" : "_display",
 "generic" : 1,
-"advanced" : 0
+"display" : "_display"
 },
 {
 "name" : "temptype",
@@ -851,9 +765,8 @@
 	{"value" : "F", "label" : "Fahrenheit"},
 	{"value" : "B", "label" : "Both"}
 ],
-"display" : 1,
 "generic" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "showExposure",
@@ -861,9 +774,8 @@
 "description" : "Activate to display the exposure length on the overlay.<br>If <span class='WebUISetting'>Auto-Exposure</span> is set, '(auto)' will appear after the exposure time.",
 "label" : "Show Exposure",
 "type" : "boolean",
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "showGain",
@@ -871,9 +783,8 @@
 "description" : "Activate to display the camera gain on the overlay.<br>If <span class='WebUISetting'>Auto-Gain</span> is set, '(auto)' will appear after the gain value.",
 "label" : "Show Gain",
 "type" : "boolean",
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "showBrightness",
@@ -881,9 +792,8 @@
 "description" : "Activate to display the <span class='WebUISetting'>Brightness</span> number you set on the overlay.",
 "label" : "Show Brightness",
 "type" : "boolean",
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "showUSB",
@@ -891,8 +801,7 @@
 "description" : "Activate to display the USB Bandwidth number on the overlay.<br>This is primarily for troubleshooting.",
 "label" : "Show USB",
 "type" : "boolean",
-"display" : "_display",
-"advanced" : 1
+"display" : "_display"
 },
 {
 "name" : "showMean",
@@ -900,9 +809,8 @@
 "description" : "Activate to display the calculated mean image brightness on the overlay.",
 "label" : "Show Mean Brightness",
 "type" : "boolean",
-"display" : 1,
 "generic" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "showhistogrambox",
@@ -910,8 +818,7 @@
 "description" : "Activate to show an outline of the histogram box, useful for determining what the 'Histogram Box' numbers should be.",
 "label" : "Show Histogram Box",
 "type" : "boolean",
-"display" : "_display",
-"advanced" : 1
+"display" : "_display"
 },
 {
 "name" : "showFocus",
@@ -919,9 +826,8 @@
 "description" : "Activate to display a focus metric to help you focus the camera.<br>This is only usefull while focusing.",
 "label" : "Show Focus Metric",
 "type" : "boolean",
-"display" : 1,
 "generic" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "text",
@@ -929,10 +835,9 @@
 "description" : "Text that appears below the optional time with the same color and size.",
 "label" : "Text Overlay",
 "type" : "widetext",
-"display" : 1,
 "optional" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "extratext",
@@ -940,11 +845,10 @@
 "description" : "Extra Text File (enter full path to the file).<br>Leave blank if NOT using an extra text file.",
 "label" : "Extra Text File",
 "type" : "widetext",
-"display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "extratextage",
@@ -954,9 +858,8 @@
 "description" : "The maximum age of the <span class='WebUISetting'>Extra Text File</span> in seconds.<br>After this time the contents of the file will no longer be displayed. Set to <span class='WebUIValue'>0</span> to always display.",
 "label" : "Max Age Of Extra",
 "type" : "integer",
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "textlineheight",
@@ -966,9 +869,8 @@
 "description" : "The line height of the text in pixels. If increasing the font size causes the text to overlap then increase this number.",
 "label" : "Line Height",
 "type" : "integer",
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "textx",
@@ -978,9 +880,8 @@
 "description" : "Text will begin this many pixels from the left.",
 "label" : "Text X",
 "type" : "integer",
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "texty",
@@ -990,9 +891,8 @@
 "description" : "Text will begin this many pixels from the top.",
 "label" : "Text Y",
 "type" : "integer",
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "fontname",
@@ -1010,9 +910,8 @@
 	{"value" : 6, "label" : "Script Simplex"},
 	{"value" : 7, "label" : "Script Complex"}
 ],
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "fontcolor",
@@ -1021,9 +920,8 @@
 "description" : "Blue, Green, and Red (BGR) values of text color.<br>NOTE: When using RAW 16 only the first two numbers are used i.e., <span class='WebUIValue'>255 128 0</span>.",
 "label" : "Font Color",
 "type" : "text",
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "smallfontcolor",
@@ -1031,9 +929,8 @@
 "description" : "BGR value of text color.<br>NOTE: When using RAW 16 only the first two numbers are used i.e., <span class='WebUIValue'>255 128 0</span>.",
 "label" : "Small Font Color",
 "type" : "text",
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "fonttype",
@@ -1046,9 +943,8 @@
 	{"value" : 1, "label" : "8 connected"},
 	{"value" : 2, "label" : "4 connected"}
 ],
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "fontsize",
@@ -1058,9 +954,8 @@
 "description" : "Text Font Size. The time, if displayed, will use this size; other text displayed will be about 20% smaller.",
 "label" : "Font Size",
 "type" : "float",
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "fontline",
@@ -1070,9 +965,8 @@
 "description" : "How thick the text line should be.",
 "label" : "Font Weight",
 "type" : "integer",
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "outlinefont",
@@ -1080,16 +974,14 @@
 "description" : "Adds a black outline to the text overlay to improve contrast.",
 "label" : "Use Outline Font",
 "type" : "boolean",
-"display" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "AllskyMapHeader",
 "description" : "Allsky Map and Website Settings",
 "type" : "header",
-"display" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "displaySettings",
@@ -1097,10 +989,9 @@
 "description" : "Activate to add a link to the Allsky Website to display the settings on this page.<br><b>Only applies if you have a local or remote Allsky Website.",
 "label" : "Display Settings",
 "type" : "boolean",
-"display" : 1,
 "checkchanges" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "showonmap",
@@ -1108,10 +999,9 @@
 "description" : "Activate to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map' target='_blank' title='Opens in new tab/window'><span class='WebUISetting'>Allsky Map <i class='fa fa-external-link-alt fa-fw'></i></span></a>.",
 "label" : "Show on Map",
 "type" : "boolean",
-"display" : 1,
 "checkchanges" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "websiteurl",
@@ -1119,11 +1009,10 @@
 "description" : "The URL of your Allsky Website, for example: https://www.thomasjacquin.com/allsky.<br>If your camera is not accessible on the Internet, leave this field empty.<br>Must begin with <b>http</b> or <b>https</b>.",
 "label" : "Website URL",
 "type" : "widetext",
-"display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "imageurl",
@@ -1131,11 +1020,10 @@
 "description" : "The URL of the image on your Allsky Website, for example: https://wwww.thomasjacquin.com/allsky/image.jpg.<br/>Right-click on the image and select <i>Copy Image Address</i>.<br>If your camera is not accessible on the Internet, leave this field empty.<br>Must begin with <b>http</b> or <b>https</b>.",
 "label" : "Image URL",
 "type" : "widetext",
-"display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "location",
@@ -1143,11 +1031,10 @@
 "description" : "The location of your camera, for example: Whitehorse, YT.<br>No need to enter country since it'll be obvious looking at the map.<br>This setting and the remaining ones also appear on the Allsky Website, if installed.",
 "label" : "Location",
 "type" : "widetext",
-"display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "owner",
@@ -1155,11 +1042,10 @@
 "description" : "The owner of the camera. It can be your name or an association or observatory, etc.",
 "label" : "Owner",
 "type" : "text",
-"display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "camera",
@@ -1167,10 +1053,9 @@
 "description" : "The type and model of your camera, for example: <span class='WebUIValue'>ZWO 224MC</span> or <span class='WebUIValue'>RPi HQ</span>.",
 "label" : "Camera",
 "type" : "widetext",
-"display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "lens",
@@ -1178,10 +1063,9 @@
 "description" : "The lens you're using on your camera, for example: <span class='WebUIValue'>Arecont 1.55</span>.",
 "label" : "Lens",
 "type" : "text",
-"display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "computer",
@@ -1189,23 +1073,21 @@
 "description" : "The computer running your allsky camera, for example: <span class='WebUIValue'>Raspberry Pi 3, 4 GB</span>.",
 "label" : "Computer",
 "type" : "widetext",
-"display" : 1,
 "checkchanges" : 1,
 "optional" : 1,
 "generic" : 1,
-"advanced" : 0
+"display" : 1
 },
 {
 "name" : "CameraHeading",
 "description" : "Camera Type",
 "type" : "header",
-"display" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "cameraType",
 "default" : "",
-"description" : "The type of camera you are using.  <span class='WebUIValue'>Refresh</span> re-sets the Camera Model and is useful if you change cameras of the same <span class='WebUISetting'>Camera Type</span>.",
+"description" : "The type of camera you are using.<br>Select <span class='WebUIValue'>Refresh</span> to reset the Camera Type and Model.",
 "label" : "Camera Type",
 "type" : "select",
 "options" : [
@@ -1213,18 +1095,16 @@
 	{"value" : "ZWO", "label" : "ZWO"},
 	{"value" : "Refresh", "label" : "Refresh"}
 ],
-"display" : 1,
 "checkchanges" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "cameraModel",
 "default" : "",
-"description" : "The model of camera you are using.  Cannot be changed here.",
+"description" : "The model of camera you are using.<br><strong>To change it, change the <span class='WebUISetting'>Camera Type</span> above.</strong>",
 "label" : "Camera Model",
 "type" : "readonly",
-"display" : 1,
-"advanced" : 1
+"display" : 1
 },
 {
 "name" : "cameraNumber",
@@ -1234,10 +1114,9 @@
 "description" : "If multiple cameras are connected to the Pi, this is the camera number (starts at 0).",
 "label" : "Camera Number",
 "type" : "integer",
-"display" : "_display",
-"display" : 0,
 "checkchanges" : 1,
-"advanced" : 1
+"displayxxx" : "_display",
+"display" : 0
 },
 {
 "name" : "XX_END_XX"

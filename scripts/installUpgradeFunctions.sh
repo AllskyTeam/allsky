@@ -156,33 +156,44 @@ function display_msg()
 	# Log messages to a file if it was specified.
 	# ${DISPLAY_MSG_LOG} <should> be set if ${LOG_IT} is true, but just in case, check.
 
-	if [[ ${LOG_IT} == "true" && -n ${DISPLAY_MSG_LOG} ]]; then
-		# Strip out all color escape sequences before adding to log file.
-		# This requires escaping the "\" (which appear at the beginning of every variable)
-		# and "[" in the variables.
-		
-		echo "${LOGMSG}${MESSAGE2}" |
-		(
-			if [[ -n ${GREEN} ]]; then
-				# In case a variable isn't define, set it to a string that won't be found
-				local Y="${YELLOW:-abcxyz}"
-				local R="${RED:-abcxyz}"
-				local D="${cDEBUG:-abcxyz}"
-				local N="${NC:-abcxyz}"
+	[[ ${LOG_IT} == "false" || -z ${DISPLAY_MSG_LOG} ]] && return
 
-				# I couldn't figure out how to replace "\n" with a new line in sed.
-				O="$( sed \
-					-e "s/\\${GREEN/\[/\\[}//g" \
-					-e "s/\\${Y/\[/\\[}//g" \
-					-e "s/\\${R/\[/\\[}//g" \
-					-e "s/\\${D/\[/\\[}//g" \
-					-e "s/\\${N/\[/\\[}//g" )"
-				echo -e "${O}"		# handles the newlines
-			else
-				cat
-			fi
-		) >>  "${DISPLAY_MSG_LOG}"
-	fi
+	# Strip out all color escape sequences before adding to log file.
+	# The message may have an actual escape character or may have the
+	# four characters "\033" which represent an escape character.
+
+	# I don't know how to replace "\n" with an
+	# actual newline in sed, and there HAS to be a better way to strip the
+	# escape sequences.
+	# I simply replace actual escape characters in the input with "033" then 
+	# replace "033[" with "033X".
+	# Feel free to improve...
+
+	# Assume if GREEN isn't defined then no colors are defined.
+	if [[ -n ${GREEN} ]]; then
+		local ESC="$( echo -en '\033' )"
+
+		# Ignore any initial "\" in the colors.
+		# In case a variable isn't defined, set it to a string that won't be found.
+		local G="${GREEN/\\/}"							; G="${G/033\[/033X}"
+		local Y="${YELLOW/\\/}"		; Y="${Y:-abcxyz}"	; Y="${Y/033\[/033X}"
+		local R="${RED/\\/}"		; R="${R:-abcxyz}"	; R="${R/033\[/033X}"
+		local D="${cDEBUG/\\/}"		; D="${D:-abcxyz}"	; D="${D/033\[/033X}"
+		local N="${NC/\\/}"			; N="${N:-abcxyz}"	; N="${N/033\[/033X}"
+
+		# Outer "echo -e" handles "\n" (2 characters) in input.
+		# No "-e" needed on inner "echo".
+		echo -e "$( echo "${LOGMSG}${MESSAGE2}" |
+			sed -e "s/${ESC}/033/g" -e "s/033\[/033X/g" \
+				-e "s/${G}//g" \
+				-e "s/${Y}//g" \
+				-e "s/${R}//g" \
+				-e "s/${D}//g" \
+				-e "s/${N}//g" \
+		)"
+	else
+		echo "${LOGMSG}${MESSAGE2}"
+	fi >>  "${DISPLAY_MSG_LOG}"
 }
 
 
@@ -193,7 +204,6 @@ function display_msg()
 export ALLSKY_OWNER=$(id --group --name)		# The login installing Allsky
 export ALLSKY_GROUP=${ALLSKY_OWNER}
 export WEBSERVER_GROUP="www-data"
-export ALLSKY_VERSION="$(get_version "${ALLSKY_HOME}" )"
 export REPO_WEBCONFIG_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
 export OLD_WEBUI_LOCATION="/var/www/html"		# location of old-style WebUI
 export OLD_WEBSITE_LOCATION="${OLD_WEBUI_LOCATION}/allsky"

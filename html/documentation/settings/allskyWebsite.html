@@ -304,10 +304,10 @@ aws configure
 <li>If you have the Allsky Website <b>only</b> on your Pi, use these settings:
 <pre>
 PROTOCOL="local"
-IMAGE_DIR=""
-VIDEOS_DIR="${ALLSKY_WEBSITE}/videos"
-KEOGRAM_DIR="${ALLSKY_WEBSITE}/keograms"
-STARTRAILS_DIR="${ALLSKY_WEBSITE}/startrails"
+IMAGE_DIR="${ALLSKY_WEBSITE}"
+VIDEOS_DIR="${$MAGE_DIR}/videos"
+KEOGRAM_DIR="${$MAGE_DIR}/keograms"
+STARTRAILS_DIR="${$MAGE_DIR}/startrails"
 </pre>
 
 <li>

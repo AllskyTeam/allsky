@@ -4,19 +4,19 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 ME="$(basename "${BASH_ARGV0}")"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"			|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=.
+source "${ALLSKY_HOME}/variables.sh"			|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit "${ALLSKY_ERROR_STOP}"
 
 # This script may be called during installation BEFORE there is a settings file.
 # config.sh looks for the file and produces an error if it doesn't exist,
 # so only include these two files if there IS a settings file.
 if [[ -f ${SETTINGS_FILE} ]]; then
-	#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-	source "${ALLSKY_CONFIG}/config.sh"			|| exit ${ALLSKY_ERROR_STOP}
-	#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-	source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit ${ALLSKY_ERROR_STOP}
+	#shellcheck disable=SC1091		# file doesn't exist in GitHub
+	source "${ALLSKY_CONFIG}/config.sh"			|| exit "${ALLSKY_ERROR_STOP}"
+	#shellcheck disable=SC1091		# file doesn't exist in GitHub
+	source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit "${ALLSKY_ERROR_STOP}"
 fi
 
 function usage_and_exit()
@@ -27,8 +27,7 @@ function usage_and_exit()
 	echo -e  "${wNC}"
 	echo "There must be a multiple of 4 key/label/old_value/new_value arguments"
 	echo "unless the --optionsOnly argument is given."
-	# shellcheck disable=SC2086
-	exit ${1}
+	exit "${1}"
 }
 
 # Check arguments
@@ -119,8 +118,7 @@ SHOW_ON_MAP=""
 # The first time we're called, set ${WEBSITES}
 function check_website()
 {
-	# shellcheck disable=SC2086
-	[[ -n ${HAS_WEBSITE_RET} ]] && return ${HAS_WEBSITE_RET}		# already checked
+	[[ -n ${HAS_WEBSITE_RET} ]] && return "${HAS_WEBSITE_RET}"		# already checked
 
 	WEBSITES="$(whatWebsites)"
 	if [[ ${WEBSITES} == "local" || ${WEBSITES} == "both" ]]; then
@@ -133,10 +131,27 @@ function check_website()
 		WEB_CONFIG_FILE=""
 		HAS_WEBSITE_RET=1
 	fi
-	# shellcheck disable=SC2086
-	return ${HAS_WEBSITE_RET}
+	return "${HAS_WEBSITE_RET}"
 }
 check_website		# invoke to set variables
+
+# Make sure RAW16 files have a .png extension.
+function check_filename_type()
+{
+	local EXTENSION="${1##*.}"		# filename is passed in - get just the extension
+	local TYPE="$2"
+	
+	if [[ ${TYPE} -eq 2 ]]; then		# 2 is RAW16 in allsky_common.h - it must match
+		if [[ ${EXTENSION,,} != "png" ]]; then
+			echo -en "${wERROR}${ERROR_PREFIX}"
+			echo -n "ERROR: RAW16 images only work with .png files"
+			echo -n "; either change the Image Type or the Filename."
+			echo -e "${wNC}"
+			return 1
+		fi
+	fi
+	return 0
+}
 
 CAMERA_NUMBER=""
 
@@ -161,7 +176,6 @@ do
 	case "${K}" in
 
 		cameranumber | cameratype)
-
 			if [[ ${K} == "cameranumber" ]]; then
 				NEW_CAMERA_NUMBER="${NEW_VALUE}"
 				CAMERA_NUMBER=" -cameraNumber ${NEW_CAMERA_NUMBER}"
@@ -179,8 +193,7 @@ do
 			if [[ ! -e "${ALLSKY_BIN}/capture_${NEW_VALUE}" ]]; then
 				MSG="Unknown Camera Type: '${NEW_VALUE}'."
 				echo -e "${wERROR}${ERROR_PREFIX}ERROR: ${MSG}${wNC}"
-				# shellcheck disable=SC2086
-				exit ${EXIT_NO_CAMERA}
+				exit "${EXIT_NO_CAMERA}"
 			fi
 
 			# This requires Allsky to be stopped so we don't
@@ -201,8 +214,7 @@ do
 					RET=$?
 					if [[ ${RET} -ne 0 ]] ; then
 						echo -e "${wERROR}${ERROR_PREFIX}ERROR: ${C}.${wNC}"
-						# shellcheck disable=SC2086
-						exit ${RET}
+						exit "${RET}"
 					fi
 					C=" -cmd ${C}"
 				else
@@ -220,21 +232,31 @@ do
 				# Create the camera capabilities file for the new camera type.
 				# Use Debug Level 3 to give the user more info on error.
 
+				CMD="capture_${NEW_VALUE}${C}${CAMERA_NUMBER}"
 				if [[ ${DEBUG} == "true" ]]; then
-					echo -e "${wDEBUG}Calling capture_${NEW_VALUE}${C}${CAMERA_NUMBER} -cc_file '${CC_FILE}'${wNC}"
+					echo -e "${wDEBUG}Calling ${CMD} -cc_file '${CC_FILE}'${wNC}"
 				fi
 
 				# shellcheck disable=SC2086
-				"${ALLSKY_BIN}/capture_${NEW_VALUE}" ${C} ${CAMERA_NUMBER} -debuglevel 3 -cc_file "${CC_FILE}"
+				R="$( "${ALLSKY_BIN}"/${CMD} -debuglevel 3 -cc_file "${CC_FILE}" 2>&1 )"
 				RET=$?
 				if [[ ${RET} -ne 0 || ! -f ${CC_FILE} ]]; then
-					echo -e "${wERROR}ERROR: Unable to create cc file '${CC_FILE}'.${wNC}"
-
 					# Restore prior cc file if there was one.
 					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
-					# shellcheck disable=SC2086
+
+					# Invoker displays error message on EXIT_NO_CAMERA.
+					if [[ ${RET} -ne "${EXIT_NO_CAMERA}" ]]; then
+						echo -en "\n${wERROR}ERROR: "
+						if [[ ${RET} -eq 139 ]]; then
+							echo -en "Segmentation fault in ${CMD}"
+						else
+							echo -en "${R}\nUnable to create cc file '${CC_FILE}'."
+						fi
+						echo -e "${wNC}"
+					fi
 					exit ${RET}		# the actual exit code is important
 				fi
+				[[ -n ${R} ]] && echo -e "${R}"
 
 				# Create a link to a file that contains the camera type and model in the name.
 				CAMERA_TYPE="${NEW_VALUE}"		# already know it
@@ -358,9 +380,18 @@ do
 			NEEDS_RESTART="true"
 			;;
 
-		filename)
-			check_website && WEBSITE_CONFIG+=("config.imageName" "${LABEL}" "${NEW_VALUE}")
+		type)
+			check_filename_type "$( settings '.filename' )" "${NEW_VALUE}" || OK="false"
 			NEEDS_RESTART="true"
+			;;
+
+		filename)
+			if check_filename_type "${NEW_VALUE}" "$( settings '.type' )" ; then
+				check_website && WEBSITE_CONFIG+=("config.imageName" "${LABEL}" "${NEW_VALUE}")
+				NEEDS_RESTART="true"
+			else
+				OK="false"
+			fi
 			;;
 
 		extratext)
@@ -477,6 +508,8 @@ do
 		shift 4
 done
 
+[[ ${OK} == "false" ]] && exit 1
+
 if check_website ; then
 	# Anytime a setting in settings.json changed we want to
 	# send an updated file to all Allsky Website(s).
@@ -486,7 +519,7 @@ if check_website ; then
 	[[ ${CAMERA_TYPE_CHANGED}   == "false" ]] && x="${x} --allFiles"
 
 	# shellcheck disable=SC2086
-	if RESULT="$("${ALLSKY_SCRIPTS}/postData.sh" ${x} >&2)" ; then
+	if RESULT="$( "${ALLSKY_SCRIPTS}/postData.sh" ${x} >&2 )" ; then
 		if [[ ${SHOW_POSTDATA_MESSAGE} == "true" ]]; then
 			if [[ ${TWILIGHT_DATA_CHANGED} == "true" ]]; then
 				echo -en "${wOK}"

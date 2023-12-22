@@ -247,7 +247,7 @@ convert_json_to_tabs "${SETTINGS_FILE}" |
 # The preview mode does not work if we are started as a service or if the debian distribution has no desktop environment.
 [[ $1 == "preview" ]] && echo "-preview=1" >> "${ARGS_FILE}"
 
-echo "-version=$( get_version )" >> "${ARGS_FILE}"
+echo "-version=${ALLSKY_VERSION}" >> "${ARGS_FILE}"
 echo "-save_dir=${CAPTURE_SAVE_DIR}" >> "${ARGS_FILE}"
 
 FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
@@ -265,7 +265,9 @@ CAPTURE="capture_${CAMERA_TYPE}"
 rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 
 # Clear up any flow timings
-"${ALLSKY_SCRIPTS}/flow-runner.py" --cleartimings
+activate_python_venv
+python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --cleartimings
+deactivate_python_venv
 
 # Run the main program - this is the main attraction...
 # -cmd needs to come first since the capture_RPi code checks for it first.  It's ignored

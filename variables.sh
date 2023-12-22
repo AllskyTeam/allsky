@@ -78,8 +78,11 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	# Holds a count of continuous "bad" images
 	ALLSKY_BAD_IMAGE_COUNT="${ALLSKY_TMP}/bad_image_count.txt"
 
+	# Holds the PID of the process that called timelapse.sh
+	ALLSKY_TIMELAPSE_PID_FILE="${ALLSKY_TMP}/timelapse-pid.txt"
+
 	# Holds information on what the user needs to do after an installation.
-	ALLSKY_INSTALLATION_LOGS="${ALLSKY_CONFIG}/installation_logs"
+	ALLSKY_INSTALLATION_LOGS="${ALLSKY_CONFIG}/logs"
 	POST_INSTALLATION_ACTIONS="${ALLSKY_INSTALLATION_LOGS}/post-installation_actions.txt"
 
 	# Holds temporary list of aborted processes since another one was in progress.
@@ -105,8 +108,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	ALLSKY_FLOWTIMINGS_DAY="${ALLSKY_FLOWTIMINGS}/day-average"
 	ALLSKY_FLOWTIMINGS_NIGHT="${ALLSKY_FLOWTIMINGS}/night-average"
 
-	# Verion file.
+	# Allsky version.
 	ALLSKY_VERSION_FILE="${ALLSKY_HOME}/version"
+	ALLSKY_VERSION="$( head -1 "${ALLSKY_VERSION_FILE}" | tr -d '\n\r' )"
 
 	# Location of optional allsky-website package.
 	ALLSKY_WEBSITE="${ALLSKY_WEBUI}/allsky"
@@ -146,6 +150,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	SETTINGS_FILE="${ALLSKY_CONFIG}/settings.json"
 	OPTIONS_FILE="${ALLSKY_CONFIG}/options.json"
 
+	# Python virtual environment
+	ALLSKY_PYTHON_VENV="${ALLSKY_HOME}/venv"
+
 	# These EXIT codes from the capture programs must match what's in src/include/allsky_common.h
 	# Anything at or above EXIT_ERROR_STOP is unrecoverable and the service must be stopped
 	EXIT_OK=0
@@ -153,6 +160,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	EXIT_RESET_USB=99		# need to reset USB bus; cannot continue
 	EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
 	EXIT_NO_CAMERA=101		# cannot find camera
+
+	# Name of the Pi's OS.
+	PI_OS="$( grep CODENAME /etc/os-release | cut -d= -f2 )"
 
 	# If a user wants to define new variables or assign variables differently,
 	# then load their file if it exists.

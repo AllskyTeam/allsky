@@ -32,6 +32,8 @@ if [[ ! -d ${DATE_DIR} && ${SAVING} -eq 1 ]]; then
 	exit 2
 fi
 
-"${ALLSKY_SCRIPTS}/flow-runner.py" -e daynight
+activate_python_venv
+python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event daynight
+deactivate_python_venv
 
 exit 0

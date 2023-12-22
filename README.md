@@ -1,4 +1,4 @@
-# Allsky Camera ![Release](https://img.shields.io/badge/Version-v2023.05.01_03-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
+# Allsky Camera ![Release](https://img.shields.io/badge/Version-v2023.05.01_04-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
 
 This is the source code for the Allsky Camera project described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/).
 &nbsp;  
@@ -21,9 +21,10 @@ You will need the following:
 
 &nbsp;  
 > **NOTES:**
->	- Only the Raspberry Pi OS is supported.  Other operating systems like Ubuntu are NOT supported.
->	- The ZWO ASI120-series cameras are not recommended due to somewhat poor quality. See [Troubleshooting --> ZWO Cameras](https://htmlpreview.github.io/?https://raw.githubusercontent.com/thomasjacquin/allsky/master/html/documentation/troubleshooting/ZWOCameras.html) for notes on the ASI120-series and related T7 / T7C cameras.
->	- The Pi Zero with its limited memory and _very_ limited CPU power (single CPU core), is not recommended.  You will likely not be able to create keograms, startrails, or timelapse videos.
+>	- Only the Raspberry Pi OS is supported (Buster, Bullseye, or Bookworm).  Other operating systems like Ubuntu are NOT supported.
+> 	- **NOTE**: support for Buster is going away so please upgrade to Bookworm.
+>	- The ZWO ASI120-series cameras are not recommended due to somewhat poor quality and tendency to produce timeout errors. See [Troubleshooting --> ZWO Cameras](https://htmlpreview.github.io/?https://raw.githubusercontent.com/thomasjacquin/allsky/master/html/documentation/troubleshooting/ZWOCameras.html) for notes on the ASI120-series and related T7 / T7C cameras.
+>	- The Pi Zero with its limited memory and _very_ limited CPU power (single CPU core), is **not** recommended.  You will most likely not be able to create keograms, startrails, or timelapse videos.
 >	- The Pi Zero 2 with its limited memory and somewhat limited CPU power, is not recommended unless cost is the only concern.  Creating keograms, startrails, and timelapse videos may or may not be possible.
 >	- The Le Potato is the only "Pi-compatible" board that we've found to actually be compatible, so buyer beware.
 ---

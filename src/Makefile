@@ -66,6 +66,10 @@ else ifeq ($(arch), arm64)
   CC = g++
   AR= ar
   ZWOSDK = -Llib/armv8 -I./include
+else ifeq ($(arch), armhf)
+  CC = arm-linux-gnueabihf-g++
+  AR= arm-linux-gnueabihf-ar
+  ZWOSDK = -Llib/armv7 -I./include
 else		# $(platform) = armv7l or $(arch) = armhf
   CC = arm-linux-gnueabihf-g++
   AR= arm-linux-gnueabihf-ar

@@ -39,6 +39,66 @@
 				<a allsky="true" external="true" href="settings/EditorColors.html">this page</a>.
 			</blockquote>
 
+			<h2>v2023.05.01_04 - Point Release # 4</h2>
+			<details>
+				<summary></summary>
+				<h4>Enhancements</h4>
+				<ul>
+					<li>Added support for Bookworm, the Pi Operating System released
+						in October, 2023.
+						<blockquote>Support for the Buster Operating System will be removed
+						after the next major Allsky release.</blockquote></li>
+					<li>Added support for the Pi 5.</li>
+					<li>Increased suggested amount of swap by 1 GB to help minimize timelapse
+						creation problems.</li>
+					<li>New camera support:
+						<ul class="minimalPadding">
+							<li>Arducam IMX462 camera (inexpensive 1920x1080 camera).</li>
+							<li>All ZWO cameras as of October 19, 2023 (ZWO SDK 1.32)</li>
+						</ul>
+					</li>
+					<li>The concept of "Advanced Options" no longer exists.
+						ALL settings are always shown.
+				</ul>
+
+				<h4>Bug Fixes</h4>
+				<ul class="minimalPadding">
+					<li>Uploads of mini-timelapse could fail if an image upload frequency
+						was used.
+					<li>Multiple concurrent timelapse creations now work.
+					<li>The width and height of the RPi Version 1 and IMX290 cameras was
+						reversed.
+					<li>Uploading using the "GCS" protocol now use the correct "image.jpg"
+						name rather than "image-YYYYMMDDHHMMSS.jpg" name.
+					<li>Uploading using the "GCS" prototol gives an error if it can't
+						find the <code>gsutil</code> command.
+					<li>The <span class="WebUISetting">Camera Model</span> setting is no
+						longer displayed in the WebUI since it can't be changed manually.
+						To change cameras (either of different types or different models
+						of the same type), select <span class="WebUIValue">Refresh</span>
+						in the <span class="WebUISetting">Camera Model</span> field.
+					<li>The <span class="fileName">~/allsky/scripts</span> directory
+						is now included in the PATH so you can simply type the name of
+						any of the scripts in that directory to execute them.
+						<br>A reboot may be required for this to take affect.
+					<li>The documentation now specifies to set
+						<span class="shSetting">IMAGE_DIR</span> to
+						<code>${ALLSKY_WEBSITE}</code>
+						when only a local Website exists.
+					<li>The WebUI's <span class="WebUIWebPage">Images</span> page
+						now only shows icons when there is at least one file
+						of the specified type.
+						For example, if there is a keogram for the current date the
+						<i class='fa fa-barcode fa-lg fa-fw'></i> icon appears,
+						otherwise "none" appears.
+					<li>The mean brightness is now calculated correctly for ZWO cameras
+						running in RAW16 mode.</li>
+				</ul>
+
+				<hr class="separator"><!-- =========================================== -->
+			</details>
+
+
 			<h2>v2023.05.01_03 - Point Release # 3</h2>
 			<details>
 				<summary></summary>
@@ -209,7 +269,7 @@
 							</li>
 							<li><span class="WebUISetting">Mean Threshold</span> can now be specified.
 							This is the same as for RPi cameras and determines how close the
-							mean brightness needs to be to the 
+							mean brightness needs to be to the
 							<span class="WebUISetting">Target Mean</span>.
 							</li>
 						</ul>

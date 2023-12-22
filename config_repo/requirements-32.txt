@@ -1,0 +1,15 @@
+numpy>=1.25.0
+opencv-python<=4.6.0.66
+Pillow
+pyephem
+skyfield
+astral
+pytz
+scipy<=1.8.1
+paho-mqtt
+photutils
+astropy
+suncalc
+Adafruit-Blinka
+vcgencmd
+requests

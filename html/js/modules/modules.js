@@ -972,7 +972,6 @@ class MODULESEDITOR {
                 }
                 $('#enablewatchdog').prop('checked', result.watchdog);
                 $('#watchdog-timeout').val(result.timeout);                
-                $('#showexperimental').prop('checked', result.showexperimental);
                 $('#autoenable').prop('checked', result.autoenable);
                 $('#debugmode').prop('checked', result.debugmode);
                 $('#periodic-timer').val(result.periodictimer);                  
@@ -991,7 +990,6 @@ class MODULESEDITOR {
 
             this.#moduleSettings.watchdog = $('#enablewatchdog').prop('checked');
             this.#moduleSettings.timeout = $('#watchdog-timeout').val() | 0;
-            this.#moduleSettings.showexperimental = $('#showexperimental').prop('checked');
             this.#moduleSettings.autoenable = $('#autoenable').prop('checked');
             this.#moduleSettings.debugmode = $('#debugmode').prop('checked');
 

@@ -829,6 +829,7 @@ class OEUIMANAGER {
             $('#defaultfontopacity').val(this.#configManager.getValue('settings.defaultfontopacity') * 100);
             $('#defaulttextrotation').val(this.#configManager.getValue('settings.defaulttextrotation'));
             $('#defaultdatafileexpiry').val(this.#configManager.getValue('settings.defaultdatafileexpiry'));
+            $('#defaultexpirytext').val(this.#configManager.getValue('settings.defaultexpirytext'));
             $('#oe-default-font-colour').val(this.#configManager.getValue('settings.defaultfontcolour'));
             $('#oe-default-stroke-colour').val(this.#configManager.getValue('settings.defaultstrokecolour'));
             $('#defaultnoradids').val(this.#configManager.getValue('settings.defaultnoradids'));
@@ -900,6 +901,7 @@ class OEUIMANAGER {
             let defaultFontOpacity = $('#defaultfontopacity').val() / 100;
             let defaultFontColour = $('#oe-default-font-colour').val();
             let defaultdatafileexpiry = $('#defaultdatafileexpiry').val();
+            let defaultexpirytext = $('#defaultexpirytext').val();            
             let defaultnoradids = $('#defaultnoradids').val();
             let defaultincludeplanets = $('#defaultincludeplanets').prop('checked');
             let defaultincludesun = $('#defaultincludesun').prop('checked');
@@ -916,6 +918,7 @@ class OEUIMANAGER {
             this.#configManager.setValue('settings.defaultfont', defaultFont);
             this.#configManager.setValue('settings.defaultfontcolour', defaultFontColour);
             this.#configManager.setValue('settings.defaultdatafileexpiry', defaultdatafileexpiry);
+            this.#configManager.setValue('settings.defaultexpirytext', defaultexpirytext);
             this.#configManager.setValue('settings.defaultnoradids', defaultnoradids);
             this.#configManager.setValue('settings.defaultincludeplanets', defaultincludeplanets);
             this.#configManager.setValue('settings.defaultincludemoon', defaultincludemoon);

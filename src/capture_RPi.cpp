@@ -54,9 +54,10 @@ int currentBpp				= NOT_SET;				// bytes per pixel: 8, 16, or 24
 int currentBitDepth			= NOT_SET;				// 8 or 16
 raspistillSetting myRaspistillSetting;
 modeMeanSetting myModeMeanSetting;
+std::string errorOutput			= "/tmp/capture_RPi_debug.txt";
 
-//-------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
 
 
 // Build capture command to capture the image from the camera.
@@ -326,18 +327,20 @@ int RPicapture(config cg, cv::Mat *image)
 	// Tried putting this in putenv() but it didn't seem to work.
 	char const *s1 = "LIBCAMERA_LOG_LEVELS=ERROR,FATAL ";
 
-	char const *s2 = "";
+	string s2 = "";
 	if (cg.isLibcamera)
 	{
-		if (cg.debugLevel >= 3)
-			s2 = " > /tmp/capture_RPi_debug.txt 2>&1";
+		// If there have been 2 consecutive errors, chances are this one will fail too,
+		// so capture the error message.
+		if (cg.debugLevel >= 3 || numErrors >= 2)
+			s2 = " > " + errorOutput + " 2>&1";
 		else
 			s2 = " 2> /dev/null";	// gets rid of a bunch of libcamera verbose messages
 	}
 
 	// Create the command we'll actually run.
 	// It needs to include the current size plus future strings s1 and s2.
-	int size = command.length() + strlen(s1) + strlen(s2) + 10;		// +10 "just in case"
+	int size = command.length() + strlen(s1) + s2.length() + 10;		// +10 "just in case"
 	char cmd[size];
 	strncpy(cmd, command.c_str(), size-1);
 	Log(2, " > Running: %s\n", cmd);
@@ -359,15 +362,21 @@ int RPicapture(config cg, cv::Mat *image)
 			if (! image->data) {
 				Log(1, "*** %s: WARNING: Error re-reading file '%s'; skipping further processing.\n",
 					cg.ME, basename(cg.fullFilename));
+				ret = 1;
 			}
+		}
+		else
+		{
+			Log(1, " >>> %s: WARNING: Unable to take picture, return code=0x%0x (%d)\n",
+				cg.ME, ret, ret >> 8);
 		}
 	}
 	else if (! WIFSIGNALED(ret))
 	{
 		Log(1, " >>> %s: WARNING: Unable to take picture, return code=0x%0x (%d)\n",
 			cg.ME, ret, ret >> 8);
-		Log(3, "     Executed: %s\n", cmd);
-	}	// don't display message if we got a signal - that's done elsewhere.
+	}
+	// else    Don't display message if we got a signal - that's done elsewhere.
 
 	return(ret);
 }
@@ -872,6 +881,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					{
 						Log(0, "*** %s: ERROR: maximum number of consecutive errors of %d reached; capture program stopped.\n", CG.ME, maxErrors);
 						Log(0, "Make sure cable between camera and Pi is all the way in.\n");
+						Log(0, "Look in '%s' for details.\n", errorOutput);
 						closeUp(EXIT_ERROR_STOP);
 					}
 				}

@@ -8,14 +8,14 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 ME="$(basename "${BASH_ARGV0}")"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh"			|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit "${ALLSKY_ERROR_STOP}"
 
 if [[ $# -eq 1 ]]; then
 	if [[ ${1} = "--help" ]]; then
@@ -54,7 +54,7 @@ fi
 
 # Generate keogram from collected images
 if [[ ${KEOGRAM} == "true" ]]; then
-	echo -e "${ME}: ===== Generating Keogram"
+	echo -e "${ME}: ===== Generating Keogram for ${DATE}"
 	#shellcheck disable=SC2086
 	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent --keogram "${DATE}"
 	RET=$?
@@ -67,7 +67,7 @@ fi
 # Generate startrails from collected images.
 # Threshold set to 0.1 by default in config.sh to avoid stacking over-exposed images.
 if [[ ${STARTRAILS} == "true" ]]; then
-	echo -e "${ME}: ===== Generating Startrails"
+	echo -e "${ME}: ===== Generating Startrails for ${DATE}"
 	#shellcheck disable=SC2086
 	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent --startrails "${DATE}"
 	RET=$?
@@ -81,7 +81,7 @@ fi
 # Use generateForDay.sh instead of putting all the commands here so users can easily
 # test the timelapse creation, which sometimes has issues.
 if [[ ${TIMELAPSE} == "true" ]]; then
-	echo -e "${ME}: ===== Generating Timelapse"
+	echo -e "${ME}: ===== Generating Timelapse for ${DATE}"
 	#shellcheck disable=SC2086
 	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent --timelapse "${DATE}"
 	RET=$?
@@ -161,6 +161,8 @@ if [[ ${SHOW_ON_MAP} -eq 1 ]]; then
 	"${ALLSKY_SCRIPTS}/postToMap.sh" --endofnight
 fi
 
-${NICE} "${ALLSKY_SCRIPTS}/flow-runner.py" -e nightday
+activate_python_venv
+${NICE} python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event nightday
+deactivate_python_venv
 
 exit 0

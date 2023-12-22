@@ -6,10 +6,10 @@ skyfield
 astral
 pytz
 scipy<=1.8.1
-scikit-image<=0.19.3
 paho-mqtt
 photutils
 astropy
 suncalc
 Adafruit-Blinka
 vcgencmd
+requests

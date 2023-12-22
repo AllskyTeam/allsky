@@ -501,6 +501,9 @@ save_camera_capabilities()
 	MSG="$( /bin/ls -l "${ALLSKY_CONFIG}/settings"*.json 2>/dev/null | sed 's/^/    /' )"
 	display_msg "${LOG_TYPE}" info "Settings files:\n${MSG}"
 	CAMERA_MODEL="$( settings ".cameraModel" "${SETTINGS_FILE}" )"
+	if [[ -z ${CAMERA_MODEL} ]]; then
+		display_msg --log warning "cameraModel not found in settings file."
+	fi
 
 	STATUS_VARIABLES+=("save_camera_capabilities='true'\n")
 	return 0
@@ -2023,7 +2026,6 @@ restore_prior_files()
 		# Used below to update "AllskyVersion" if needed.
 		V="$( settings .config.AllskyVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
 
-# TODO: is ConfigVersion still needed after the Website is part of Allsky?
 		# Check if this is an older Allsky Website configuration file type.
 		# The remote config file should have .ConfigVersion.
 		local OLD="false"
@@ -2048,7 +2050,7 @@ restore_prior_files()
 			display_msg --log warning "${MSG}"
 			echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 		else
-			MSG="Remote Website .ConfigVersion is current @ ${NEW_CONFIG_VERSION}"
+			MSG="${SPACE}${SPACE}Remote Website .ConfigVersion is current @ ${NEW_CONFIG_VERSION}"
 			display_msg --logonly info "${MSG}"
 		fi
 	else
@@ -2110,7 +2112,7 @@ restore_prior_files()
 		PRIOR_FTP_SH_VERSION="no file"
 	fi
 
-	ITEM="${SPACE}ftp-settings.sh"
+	ITEM="${SPACE}'ftp-settings.sh'"
 	if [[ ${FTP_SH_VERSION} == "${PRIOR_FTP_SH_VERSION}" ]]; then
 		display_msg --log progress "${ITEM}, as is"
 		cp "${PRIOR_FTP_FILE}" "${ALLSKY_CONFIG}" && RESTORED_PRIOR_FTP_SH="true"
@@ -2210,7 +2212,6 @@ restore_prior_files()
 # This can be needed if the user hosed something up, or there was a problem somewhere.
 do_update()
 {
-# TODO: get from settings file
 	#shellcheck disable=SC1091		# file doesn't exist in GitHub
 	source "${ALLSKY_CONFIG}/config.sh" || exit "${ALLSKY_ERROR_STOP}"	# Get current CAMERA_TYPE
 	if [[ -z ${CAMERA_TYPE} ]]; then
@@ -2468,7 +2469,7 @@ display_image()
 		local COLOR="${2}"
 		local CUSTOM_MESSAGE="${3}"
 
-		MSG="Displaying custom notification image: ${CUSTOM_MESSAGE}"
+		MSG="Displaying custom notification image: $( echo -e "${CUSTOM_MESSAGE}" | tr '\n' ' ' )"
 		display_msg --logonly info "${MSG}"
 		"${ALLSKY_SCRIPTS}/generate_notification_images.sh" \
 			--directory "${ALLSKY_TMP}" \
@@ -2687,13 +2688,11 @@ if [[ ${IN_TESTING} == "true" ]]; then
 		MSG="${MSG}\n\nPlease set Debug Level to 3 during testing."
 		MSG="${MSG}\n"
 
-		MSG="${MSG}\nChanges from prior release:"
+		MSG="${MSG}\nChanges from prior branch:"
 
-		MSG="${MSG}\n * Support for RPi Version 1 camera"
-		MSG="${MSG}\n * Bug fixes, especially with the Overlay Editor"
-
-#		MSG="${MSG}\n"
-#		MSG="${MSG}\n * change 2"
+		MSG="${MSG}\n * Support for the newest ZWO cameras."
+		MSG="${MSG}\n * Support for a couple new RPi cameras."
+		MSG="${MSG}\n * Bug fixes in the Overlay Editor and Module manager"
 
 		MSG="${MSG}\n\nIf you agree, enter:    yes"
 		A=$(whiptail --title "*** MESSAGE FOR TESTERS ***" --inputbox "${MSG}" 26 "${WT_WIDTH}"  3>&1 1>&2 2>&3)

@@ -2566,7 +2566,7 @@ check_new_exposure_algorithm()
 remind_run_check_allsky()
 {
 	MSG="After you've configured Allsky, run:"
-	MSG="${MSG}\n&nbsp; &nbsp; &nbsp; cd ~/allsky;  scripts/check_allsky.sh"
+	MSG="${MSG}\n&nbsp; &nbsp; &nbsp; check_allsky.sh"
 	MSG="${MSG}\nto check for any issues.  You can also run it whenever you make changes."
 	"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
 	display_msg --logonly info "Added message about running 'check_allsky.sh'."

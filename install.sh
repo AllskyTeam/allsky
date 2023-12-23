@@ -2325,6 +2325,15 @@ install_overlay()
 				activate_python_venv
 			fi
 
+			# AG - Temporary fix to ensure that all dependencies are available for the Allsky modules
+			# as the flow upgrader needs to load each module and if the dependencies are missing this will
+			# fail
+			if [[ -d "${ALLSKY_PYTHON_VENV}" ]]; then
+				if [[ -d "${PRIOR_ALLSKY_DIR}/venv/lib" ]]; then
+					cp -arn "${PRIOR_ALLSKY_DIR}/venv/lib" "${ALLSKY_PYTHON_VENV}/"
+				fi
+			fi
+
 			local TMP="${ALLSKY_INSTALLATION_LOGS}/${NAME}"
 			display_msg --log progress "Installing ${NAME}${M}:"
 			local COUNT=0

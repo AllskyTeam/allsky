@@ -94,14 +94,18 @@ class CONFIGMANAGER:
     
     def _updateParams(self, oldJson, currentJson):
         for module in currentJson:
-            modObject = self._loadModule(currentJson[module]["module"])
-            currentJson[module]["metadata"] = getattr(modObject,"metaData")
-            
-            if "arguments" in oldJson[module]["metadata"]:
-                for argument in oldJson[module]["metadata"]["arguments"]:
-                    if argument in currentJson[module]["metadata"]["arguments"]:
-                        currentJson[module]["metadata"]["arguments"][argument] = oldJson[module]["metadata"]["arguments"][argument]
-        
+            try:
+                modObject = self._loadModule(currentJson[module]["module"])
+                currentJson[module]["metadata"] = getattr(modObject,"metaData")
+                
+                if "arguments" in oldJson[module]["metadata"]:
+                    for argument in oldJson[module]["metadata"]["arguments"]:
+                        if argument in currentJson[module]["metadata"]["arguments"]:
+                            currentJson[module]["metadata"]["arguments"][argument] = oldJson[module]["metadata"]["arguments"][argument]
+            except Exception as e:
+                eType, eObject, eTraceback = sys.exc_info()
+                print(f"ERROR: _updateParams failed on line {eTraceback.tb_lineno} - {e}")
+                
         return currentJson
     
     def _processFile(self, file):

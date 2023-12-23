@@ -1,8 +1,8 @@
 #!/bin/bash
 # shellcheck disable=SC2154		# referenced but not assigned
 
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
+ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
 source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
@@ -1362,12 +1362,12 @@ is_reboot_needed()
 	local OLD_VERSION="${1}"
 	local OLD_BASE_VERSION="${OLD_VERSION:0:11}"	# Without point release
 	local NEW_VERSION="${2}"
-	if [[ ${NEW_VERSION:0:11} == "v2023.05.01" && ${OLD_BASE_VERSION} == "v2023.05.01" ]]; then
-		# just bug fixes between the v2023.05.01 versions.
+	if [[ ${OLD_VERSION} < "v2023.05.01_04" ]]; then
+		# v2023.05.01_04 added to $PATH and a reboot's needed to have it take effect.
+		display_msg --log progress "A reboot is needed after installation finishes."
+	else
 		REBOOT_NEEDED="false"
 		display_msg --logonly info "No reboot is needed."
-	else
-		display_msg --log progress "A reboot is needed after installation finishes."
 	fi
 }
 
@@ -1388,7 +1388,8 @@ does_prior_Allsky_exist()
 	PRIOR_ALLSKY_VERSION="$( get_version "${PRIOR_ALLSKY_DIR}/" )"
 	if [[ -n  ${PRIOR_ALLSKY_VERSION} ]]; then
 		display_msg --logonly info "Prior Allsky version ${PRIOR_ALLSKY_VERSION} found."
-		if [[ ${PRIOR_ALLSKY_VERSION} == "v2022.03.01" ]]; then		# First Allsky version with a "version" file
+		if [[ ${PRIOR_ALLSKY_VERSION} == "v2022.03.01" ]]; then
+			# First Allsky version with a "version" file.
 			# This is an old style Allsky with ${CAMERA} in config.sh.
 			# Don't do anything here; go to the "if" below.
 			:
@@ -1516,7 +1517,7 @@ update_config_sh()
 		CAMERA_TYPE="$( settings .cameraType )"
 	fi
 	sed -i \
-		-e "s;^ALLSKY_VERSION=.*$;ALLSKY_VERSION=\"${ALLSKY_VERSION}\";" \
+		-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};" \
 		-e "s;^CAMERA_TYPE=.*$;CAMERA_TYPE=\"${CAMERA_TYPE}\";" \
 		"${C}"
 

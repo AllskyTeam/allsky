@@ -360,7 +360,6 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 	{ // arducam-pivariety, libcamera
 		{ "Gain", "Gain", 200.0, 1.0, 1.33, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
 		{ "Exposure", "Exposure Time (us)", 15.5 * US_IN_SEC, 14, 10 * US_IN_SEC, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
-		{ "Exposure", "Exposure Time (us)", 200 * US_IN_SEC, 14, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
 		{ "WB_R", "White balance: Red component", 32.0, 0.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
 		{ "WB_B", "White balance: Blue component", 32.0, 0.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
 		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
@@ -645,6 +644,7 @@ char const *argumentNames[][2] = {
 
 	{ "NEW", "" } // In case a new type is added we won't get an error
 };
+int const argumentNamesSize =  sizeof(argumentNames) / sizeof(argumentNames[0]);
 
 int stopVideoCapture(int cameraID)
 {
@@ -908,7 +908,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 			fprintf(f, "\t\t{ \"value\" : 180, \"label\" : \"180 degrees\" },\n");
 			fprintf(f, "\t\t{ \"value\" : 270, \"label\" : \"270 degrees\" }\n");
 		}
-	fprintf(f, "\t],\n");;
+	fprintf(f, "\t],\n");
 #endif
 
 	fprintf(f, "\t\"supportedImageFormats\": [\n");
@@ -939,7 +939,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 				"unknown format");
 			fprintf(f, " }");
 		}
-	fprintf(f, "\t],\n");;
+	fprintf(f, "\t],\n");
 
 	// Add some other things the camera supports, or the software supports for this camera.
 	// Adding it to the "controls" array makes the code that checks what's available easier.
@@ -1108,6 +1108,13 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		if (ret != ASI_SUCCESS) {
 			Log(0, "%s: ASIGetControlCaps(%d, %d...) failed with %s\n",
 				CG.ME, cameraInfo.CameraID, i, getRetCode(ret));
+			continue;
+		}
+
+		if (cc.ControlType > argumentNamesSize) {
+			Log(0, "%s: ccControlType (%d) > argumentNamesSize (%d)\n",
+				CG.ME, cc.ControlType, argumentNamesSize);
+// TODO: should we exit ??
 			continue;
 		}
 

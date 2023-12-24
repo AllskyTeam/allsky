@@ -200,9 +200,8 @@ char const *argumentNames[][2] = {
 	{ "Contrast", "contrast" },
 	{ "Sharpness", "sharpness" },
 	{ "ExposureCompensation", "ev" },
-
-	{ "NEW", "" } // In case a new type is added we won't get an error
 };
+int const argumentNamesSize =  sizeof(argumentNames) / sizeof(argumentNames[0]);
 
 #define MAX_NUM_CONTROL_CAPS (CONTROL_TYPE_END)
 ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
@@ -641,8 +640,6 @@ char const *argumentNames[][2] = {
 	{ "GPSStartLine", "" },
 	{ "GPSEndLine", "" },
 	{ "RollingInterval", "" },
-
-	{ "NEW", "" } // In case a new type is added we won't get an error
 };
 int const argumentNamesSize =  sizeof(argumentNames) / sizeof(argumentNames[0]);
 

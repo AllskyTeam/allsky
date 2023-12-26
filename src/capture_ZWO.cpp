@@ -562,7 +562,7 @@ cg->lastMeanFull = (double)computeHistogram(imageBuffer, *cg, false);
 		Log(0, "  > %s: ERROR: Not fetching exposure data because status is %s\n", cg->ME, getRetCode(status));
 	}
 
-Log(4, "xxxxxx takeOneExposure() returning %d\n", status);
+//x Log(4, "xxxxxx takeOneExposure() returning %d\n", status);
 	return status;
 }
 
@@ -1251,7 +1251,7 @@ if (CG.HB.useExperimentalExposure) {
 		CG.myModeMeanSetting.minMean *= 255;	// our algorithm compares to 0 - 255
 		CG.myModeMeanSetting.maxMean *= 255;
 
-		Log(3, "xxxxxxxxxxxxx minMean=%.3f, maxMean=%.3f\n", CG.myModeMeanSetting.minMean, CG.myModeMeanSetting.maxMean);
+		Log(3, "minMean=%.3f, maxMean=%.3f\n", CG.myModeMeanSetting.minMean, CG.myModeMeanSetting.maxMean);
 
 
 		if (CG.myModeMeanSetting.currentMean > 0.0)
@@ -1354,7 +1354,7 @@ if (CG.HB.useExperimentalExposure) {
 		// Wait for switch day time -> night time or night time -> day time
 		while (bMain && lastDayOrNight == dayOrNight)
 		{
-Log(4, "xxx just entered outside 'while' loop\n");
+//x Log(4, "xxx just entered outside 'while' loop\n");
 			// date/time is added to many log entries to make it easier to associate them
 			// with an image (which has the date/time in the filename).
 			exposureStartDateTime = getTimeval();
@@ -1371,9 +1371,9 @@ Log(4, "xxx just entered outside 'while' loop\n");
 				sprintf(bufTime, "%s", formatTime(exposureStartDateTime, CG.timeFormat));
 			}
 
-Log(4, "xxx calling takeOneExposure() from outside 'while' loop\n");
+//x Log(4, "xxx calling takeOneExposure() from outside 'while' loop\n");
 			asiRetCode = takeOneExposure(&CG, pRgb.data);
-Log(4, "xxx >> takeOneExposure() returned %s\n", getRetCode(asiRetCode));
+//x Log(4, "xxx >> takeOneExposure() returned %s\n", getRetCode(asiRetCode));
 			if (asiRetCode == ASI_SUCCESS)
 			{
 				numErrors = 0;
@@ -1588,9 +1588,9 @@ if (saved_newExposure_us != newExposure_us)
 						priorMean = CG.lastMean;
 						priorMeanDiff = lastMeanDiff;
 
-Log(4, "xxxxxx inside 'Retry' loop, calling takeOneExposure()\n");
+//x Log(4, "xxxxxx inside 'Retry' loop, calling takeOneExposure()\n");
 						asiRetCode = takeOneExposure(&CG, pRgb.data);
-Log(4, "xxxxxx >> takeOneExposure() returned %s\n", getRetCode(asiRetCode));
+//x Log(4, "xxxxxx >> takeOneExposure() returned %s\n", getRetCode(asiRetCode));
 						if (asiRetCode == ASI_SUCCESS)
 						{
 							if (CG.lastMean < minAcceptableMean)
@@ -1754,7 +1754,6 @@ Log(4, "xxxxxx >> takeOneExposure() returned %s\n", getRetCode(asiRetCode));
 				{
 					if (CG.overlay.overlayMethod == OVERLAY_METHOD_LEGACY)
 					{
-Log(4, "xxx Doing legacy doOverlay()\n");
 						(void) doOverlay(pRgb, CG, bufTime, gainChange);
 						if (CG.overlay.showHistogramBox)
 						{
@@ -1777,7 +1776,6 @@ Log(4, "xxx Doing legacy doOverlay()\n");
 					{
 						// Determine if we need to change the gain on the next image.
 						// This must come AFTER the "showGain" above.
-Log(4, "xxx Determining gain change and calling setControl(ASI_GAIN)\n");
 						gainChange = determineGainChange(CG);
 						setControl(CG.cameraNumber, ASI_GAIN, CG.currentGain + gainChange, CG.currentAutoGain ? ASI_TRUE : ASI_FALSE);
 					}

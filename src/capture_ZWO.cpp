@@ -234,10 +234,11 @@ void *SaveImgThd(void *para)
 int computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox)
 {
 	unsigned char *buf = imageBuffer;
-	int histogram[256];
+	const int histogramEntries = 256;
+	int histogram[histogramEntries];
 
 	// Clear the histogram array.
-	for (int i = 0; i < 256; i++) {
+	for (int i = 0; i < histogramEntries; i++) {
 		histogram[i] = 0;
 	}
 
@@ -276,7 +277,9 @@ int computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox
 				int avg = buf[i];
 				if (cg.imageType == IMG_RGB24) {
 					// For RGB24 this averages the blue, green, and red pixels.
+					// avg already contains the first color from above, so just add the other 2:
 					avg += buf[i+1] + buf[i+2];
+					avg /= currentBpp;
 				}
 //x if (useHistogramBox && did <=5) { printf("avg[%d]=%d\n", ++on, avg); }
 				histogram[avg]++;
@@ -288,8 +291,8 @@ int computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox
 			for (int x = roiX1; x < roiX2; x+=currentBpp) {
 				int i = (cg.width * y) + x;
 				int pixelValue;
-				// This assumes the image data is laid out in big endian format.
 				// Use the least significant byte.
+				// This assumes the image data is laid out in big endian format.
 				pixelValue = buf[i+1];
 //x if (useHistogramBox && did <=5) { printf("pixel[%d]=0x%02x%02x, pixelValue=%'d\n", ++on, buf[i], buf[i+1], pixelValue); }
 				histogram[pixelValue]++;
@@ -303,7 +306,7 @@ int computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox
 	// Now calculate the mean.
 	int meanBin = 0;
 	int a = 0, b = 0;
-	for (int i = 0; i < 256; i++) {
+	for (int i = 0; i < histogramEntries; i++) {
 		a += (i+1) * histogram[i];
 		b += histogram[i];
 //x if (useHistogramBox && histogram[i] > 0 && did <=5) { printf("histogram[%d]=%'d, a=%'d, b=%'d\n", i, histogram[i], a, b); }
@@ -323,7 +326,7 @@ int computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox
 // Camera has internal frame buffers we need to clear.
 // The camera and/or driver will buffer frames and return the oldest one which
 // could be very old. Read out all the buffered frames so the frame we get is current.
-ASI_ERROR_CODE flushBufferedImages(config *cg, void *buf, size_t size)
+ASI_ERROR_CODE flushBufferedImages(config *cg, unsigned char *buf, long size)
 {
 	enum { NUM_IMAGE_BUFFERS = 2 };
 	ASI_ERROR_CODE status;
@@ -337,7 +340,7 @@ ASI_ERROR_CODE flushBufferedImages(config *cg, void *buf, size_t size)
 
 	for (int i = 0; i < NUM_IMAGE_BUFFERS; i++)
 	{
-		status = ASIGetVideoData(cg->cameraNumber, (unsigned char *) buf, size, 10);
+		status = ASIGetVideoData(cg->cameraNumber, buf, size, 10);
 		if (status == ASI_SUCCESS)
 		{
 			Log(3, "  > [Cleared buffer frame]: %s\n", getRetCode(status));
@@ -559,6 +562,7 @@ cg->lastMeanFull = (double)computeHistogram(imageBuffer, *cg, false);
 		Log(0, "  > %s: ERROR: Not fetching exposure data because status is %s\n", cg->ME, getRetCode(status));
 	}
 
+//x Log(4, "xxxxxx takeOneExposure() returning %d\n", status);
 	return status;
 }
 
@@ -772,6 +776,7 @@ int main(int argc, char *argv[])
 		Log(0, "*** %s: ERROR: ASIGetNumOfControls() returned: %s\n", CG.ME, getRetCode(asiRetCode));
 		exit(EXIT_ERROR_STOP);
 	}
+	Log(4, "iNumOfCtrl=%d\n", iNumOfCtrl);
 	CG.ASIversion = ASIGetSDKVersion();
 
 	// Set defaults that depend on the camera type.
@@ -1246,7 +1251,7 @@ if (CG.HB.useExperimentalExposure) {
 		CG.myModeMeanSetting.minMean *= 255;	// our algorithm compares to 0 - 255
 		CG.myModeMeanSetting.maxMean *= 255;
 
-		Log(3, "xxxxxxxxxxxxx minMean=%.3f, maxMean=%.3f\n", CG.myModeMeanSetting.minMean, CG.myModeMeanSetting.maxMean);
+		Log(3, "minMean=%.3f, maxMean=%.3f\n", CG.myModeMeanSetting.minMean, CG.myModeMeanSetting.maxMean);
 
 
 		if (CG.myModeMeanSetting.currentMean > 0.0)
@@ -1304,7 +1309,7 @@ if (CG.HB.useExperimentalExposure) {
 			CG.HB.currentHistogramBoxSizeX	= CG.HB.histogramBoxSizeX / CG.currentBin;
 			CG.HB.currentHistogramBoxSizeY	= CG.HB.histogramBoxSizeY / CG.currentBin;
 
-			bufferSize = CG.width * CG.height * currentBpp;
+			bufferSize = (long) (CG.width * CG.height * currentBpp);
 
 // TODO: if not the first time, should we free the old pRgb?
 			if (CG.imageType == IMG_RAW16)
@@ -1349,6 +1354,7 @@ if (CG.HB.useExperimentalExposure) {
 		// Wait for switch day time -> night time or night time -> day time
 		while (bMain && lastDayOrNight == dayOrNight)
 		{
+//x Log(4, "xxx just entered outside 'while' loop\n");
 			// date/time is added to many log entries to make it easier to associate them
 			// with an image (which has the date/time in the filename).
 			exposureStartDateTime = getTimeval();
@@ -1365,7 +1371,9 @@ if (CG.HB.useExperimentalExposure) {
 				sprintf(bufTime, "%s", formatTime(exposureStartDateTime, CG.timeFormat));
 			}
 
+//x Log(4, "xxx calling takeOneExposure() from outside 'while' loop\n");
 			asiRetCode = takeOneExposure(&CG, pRgb.data);
+//x Log(4, "xxx >> takeOneExposure() returned %s\n", getRetCode(asiRetCode));
 			if (asiRetCode == ASI_SUCCESS)
 			{
 				numErrors = 0;
@@ -1580,7 +1588,9 @@ if (saved_newExposure_us != newExposure_us)
 						priorMean = CG.lastMean;
 						priorMeanDiff = lastMeanDiff;
 
+//x Log(4, "xxxxxx inside 'Retry' loop, calling takeOneExposure()\n");
 						asiRetCode = takeOneExposure(&CG, pRgb.data);
+//x Log(4, "xxxxxx >> takeOneExposure() returned %s\n", getRetCode(asiRetCode));
 						if (asiRetCode == ASI_SUCCESS)
 						{
 							if (CG.lastMean < minAcceptableMean)

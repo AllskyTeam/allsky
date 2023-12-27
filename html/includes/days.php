@@ -27,7 +27,7 @@ function ListDays(){
 	global $page;
 	$days = array();
 
-	$date = getVariableOrDefault('delete_directory', $_POST, null);
+	$date = getVariableOrDefault($_POST, 'delete_directory', null);
 	if ($date !== null) {
 		$msg = delete_directory(ALLSKY_IMAGES . "/$date");
 		if ($msg == "") {

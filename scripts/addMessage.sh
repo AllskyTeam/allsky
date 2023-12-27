@@ -38,13 +38,13 @@ TAB="$(echo -e "\t")"
 # Convert newlines to HTML breaks.
 MESSAGE="$( echo -en "${MESSAGE}" |
 	awk 'BEGIN { l=0; } { if (++l > 1) printf("<br>"); printf("%s", $0); }' )"
-MESSAGE="${MESSAGE//  /&nbsp;&nbsp;}"
+MESSAGE="${MESSAGE//  /\&nbsp;\&nbsp;}"
 
 # Messages may have "/" in them so we can't use that to search in sed,
 # so use "%" instead, but because it could be in a message (although unlikely),
 # convert all "%" to the ASCII code.
 # The pound sign in escaped only to make gvim look nicer.
-MESSAGE="${MESSAGE//%/&\#37;}"
+MESSAGE="${MESSAGE//%/\&\#37;}"
 
 # If ${MESSAGE} contains "*" it hoses up the grep and sed regular expression, so escape it.
 ESCAPED_MESSAGE="${MESSAGE//\*/\\*}"

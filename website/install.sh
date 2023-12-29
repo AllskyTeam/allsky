@@ -10,10 +10,10 @@ source "${ALLSKY_SCRIPTS}/functions.sh" 				|| exit "${ALLSKY_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_ERROR_STOP}"
 
-#shellcheck # file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit_installation "${ALLSKY_ERROR_STOP}"
-#shellcheck # file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit_installation "${ALLSKY_ERROR_STOP}"
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh"						|| exit_installation "${ALLSKY_ERROR_STOP}"
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/ftp-settings.sh"				|| exit_installation "${ALLSKY_ERROR_STOP}"
 
 TITLE="Allsky Website Installer"
 

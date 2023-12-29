@@ -58,7 +58,7 @@ rm -f "${ALLSKY_MESSAGES}"					# Start out with no messages.
 # display_msg() will send "log" entries to this file.
 # DISPLAY_MSG_LOG is used in display_msg()
 # shellcheck disable=SC2034
-DISPLAY_MSG_LOG="${ALLSKY_INSTALLATION_LOGS}/install.sh.log"
+DISPLAY_MSG_LOG="${ALLSKY_LOGS}/install.sh.log"
 
 # Is a reboot needed at end of installation?
 REBOOT_NEEDED="true"
@@ -66,7 +66,7 @@ REBOOT_NEEDED="true"
 CONFIGURATION_NEEDED="true"
 
 # Holds status of installation if we need to exit and get back in.
-STATUS_FILE="${ALLSKY_INSTALLATION_LOGS}/status.txt"
+STATUS_FILE="${ALLSKY_LOGS}/status.txt"
 STATUS_FILE_TEMP="${ALLSKY_TMP}/temp_status.txt"	# holds intermediate status
 STATUS_LOCALE_REBOOT="Rebooting to change locale"	# status of rebooting due to locale change
 STATUS_FINISH_REBOOT="Rebooting to finish installation"
@@ -809,7 +809,7 @@ install_webserver_et_al()
 		display_msg --log progress "Preparing the web server."
 	else
 		display_msg --log progress "Installing the web server."
-		TMP="${ALLSKY_INSTALLATION_LOGS}/lighttpd.install.log"
+		TMP="${ALLSKY_LOGS}/lighttpd.install.log"
 		(
 			sudo apt-get update && \
 				sudo apt-get --assume-yes install lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
@@ -1482,20 +1482,20 @@ install_dependencies_etc()
 	# They also take a little while, so hide the output and let the user know.
 
 	display_msg --log progress "Installing dependencies."
-	TMP="${ALLSKY_INSTALLATION_LOGS}/make_deps.log"
+	TMP="${ALLSKY_LOGS}/make_deps.log"
 	#shellcheck disable=SC2024
 	sudo make deps > "${TMP}" 2>&1
 	check_success $? "Dependency installation failed" "${TMP}" "${DEBUG}"
 	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "dependency installation failed"
 
 	display_msg --log progress "Preparing Allsky commands."
-	TMP="${ALLSKY_INSTALLATION_LOGS}/make_all.log"
+	TMP="${ALLSKY_LOGS}/make_all.log"
 	#shellcheck disable=SC2024
 	make all > "${TMP}" 2>&1
 	check_success $? "Compile failed" "${TMP}" "${DEBUG}"
 	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "compile failed"
 
-	TMP="${ALLSKY_INSTALLATION_LOGS}/make_install.log"
+	TMP="${ALLSKY_LOGS}/make_install.log"
 	#shellcheck disable=SC2024
 	sudo make install > "${TMP}" 2>&1
 	check_success $? "make install failed" "${TMP}" "${DEBUG}"
@@ -1533,7 +1533,7 @@ create_allsky_logs()
 
 	sudo systemctl stop rsyslog 2> /dev/null
 
-	TMP="${ALLSKY_INSTALLATION_LOGS}/rsyslog.log"
+	TMP="${ALLSKY_LOGS}/rsyslog.log"
 	sudo apt-get --assume-yes install rsyslog > "${TMP}" 2>&1	
 	check_success $? "rsyslog installation failed" "${TMP}" "${DEBUG}"
 	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "rsyslog install failed."
@@ -2251,12 +2251,12 @@ install_overlay()
 {
 	if [[ ${installed_PHP_modules} != "true" ]]; then
 		display_msg --log progress "Installing PHP modules and dependencies."
-		TMP="${ALLSKY_INSTALLATION_LOGS}/PHP_modules.log"
+		TMP="${ALLSKY_LOGS}/PHP_modules.log"
 		sudo apt-get --assume-yes install php-zip php-sqlite3 python3-pip > "${TMP}" 2>&1
 		check_success $? "PHP module installation failed" "${TMP}" "${DEBUG}"
 		[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "PHP module install failed."
 
-		TMP="${ALLSKY_INSTALLATION_LOGS}/libatlas.log"
+		TMP="${ALLSKY_LOGS}/libatlas.log"
 		sudo apt-get --assume-yes install libatlas-base-dev > "${TMP}" 2>&1
 		check_success $? "PHP dependencies failed" "${TMP}" "${DEBUG}"
 		[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "PHP dependencies failed."
@@ -2315,7 +2315,7 @@ install_overlay()
 			if [[ ${PI_OS} == "bookworm" ]]; then
 				local PKGs="python3-full libgfortran5 libopenblas0-pthread"
 				display_msg --log progress "Installing ${PKGs}."
-				local TMP="${ALLSKY_INSTALLATION_LOGS}/python3-full.log"
+				local TMP="${ALLSKY_LOGS}/python3-full.log"
 				# shellcheck disable=SC2086
 				sudo apt-get --assume-yes install ${PKGs} > "${TMP}" 2>&1
 				check_success $? "${PKGs} install failed" "${TMP}" "${DEBUG}"
@@ -2334,7 +2334,7 @@ install_overlay()
 				fi
 			fi
 
-			local TMP="${ALLSKY_INSTALLATION_LOGS}/${NAME}"
+			local TMP="${ALLSKY_LOGS}/${NAME}"
 			display_msg --log progress "Installing ${NAME}${M}:"
 			local COUNT=0
 			rm -f "${STATUS_FILE_TEMP}"
@@ -2382,7 +2382,7 @@ install_overlay()
 
 	if [[ ${installing_Trutype_fonts} != "true" ]]; then
 		display_msg --log progress "Installing Trutype fonts."
-		TMP="${ALLSKY_INSTALLATION_LOGS}/msttcorefonts.log"
+		TMP="${ALLSKY_LOGS}/msttcorefonts.log"
 		local M="Trutype fonts failed"
 		sudo apt-get --assume-yes install msttcorefonts > "${TMP}" 2>&1
 		check_success $? "${M}" "${TMP}" "${DEBUG}" || exit_with_image 1 "${STATUS_ERROR}" "${M}"
@@ -2756,7 +2756,7 @@ if [[ -n ${FUNCTION} ]]; then
 	# Don't log when a single function is executed.
 	DISPLAY_MSG_LOG=""
 else
-	mkdir -p "${ALLSKY_INSTALLATION_LOGS}"
+	mkdir -p "${ALLSKY_LOGS}"
 
 	display_msg "${LOG_TYPE}" info "STARTING INSTALLATON AT $(date).\n"
 fi

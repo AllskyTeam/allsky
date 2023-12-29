@@ -4,12 +4,12 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 ME="$(basename "${BASH_ARGV0}")"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh" || exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh" || exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC1091 source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh"			|| exit "${ALLSKY_ERROR_STOP}"
 
 
 ENTERED="$*"
@@ -82,8 +82,7 @@ usage_and_exit()
 	echo "'--mini' uses the MINI_TIMELAPSE settings and the timelapse file is"
 	echo "   called 'mini-timelapse.mp4' if '--output' isn't used."
 	echo -en "${NC}"
-	# shellcheck disable=SC2086
-	exit ${RET}
+	exit "${RET}"
 }
 if [[ -n ${IMAGES_FILE} ]]; then
 	# If IMAGES_FILE is specified there should be no other arguments.

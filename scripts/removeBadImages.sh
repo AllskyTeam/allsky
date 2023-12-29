@@ -14,12 +14,12 @@
 
 ME="$(basename "${BASH_ARGV0}")"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh" 		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091				# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh" 		|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC1091 source-path=.
+source "${ALLSKY_HOME}/variables.sh" 		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck disable=SC1091				# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh" 		|| exit "${ALLSKY_ERROR_STOP}"
 
 usage()
 {
@@ -37,8 +37,7 @@ usage()
 		echo "If 'file' is specified, only that file in 'directory' will be checked,"
 		echo "otherwise all files in 'directory' will be checked."
 	) >&2
-	# shellcheck disable=SC2086
-	exit ${retcode}
+	exit "${retcode}"
 }
 [[ ${1} == "-h" || ${1} == "--help" ]] && usage 0
 if [[ ${1} == "-d" || ${1} == "--debug" ]]; then

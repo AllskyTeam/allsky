@@ -9,14 +9,14 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 ME="$(basename "${BASH_ARGV0}")"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC1091 source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh"			|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit "${ALLSKY_ERROR_STOP}"
 
 usage_and_exit()
 {
@@ -27,8 +27,7 @@ usage_and_exit()
 	[[ ${retcode} -ne 0 ]] && echo -en "${NC}"
 	echo "    where:"
 	echo "      '--allfiles' causes all 'view settings' files to be uploaded"
-	# shellcheck disable=SC2086
-	exit ${retcode}
+	exit "${retcode}"
 }
 
 HELP="false"
@@ -234,8 +233,7 @@ function upload_file()
 		fi
 	fi
 
-	# shellcheck disable=SC2086
-	return ${RETCODE}
+	return "${RETCODE}"
 }
 
 # These files go in ${VIEW_DIR} so the user can display their settings.
@@ -251,8 +249,7 @@ fi
 
 if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	upload_file "${OUTPUT_FILE}" ""		# Goes in top-level directory
-	# shellcheck disable=SC2086
-	exit $?
+	exit "$?"
 fi
 
 exit 0

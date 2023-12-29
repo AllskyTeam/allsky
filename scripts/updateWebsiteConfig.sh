@@ -7,12 +7,12 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 ME="$(basename "${BASH_ARGV0}")"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"			|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"				|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC1091 source-path=.
+source "${ALLSKY_HOME}/variables.sh"			|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh"				|| exit "${ALLSKY_ERROR_STOP}"
 
 function usage_and_exit()
 {
@@ -24,8 +24,7 @@ function usage_and_exit()
 	fi
 	echo -e "${C}Usage: ${ME} [--help] [--debug] [--verbosity silent|summary|verbose] [--local | --remote | --config file] key label new_value [...]${wNC}" >&2
 	echo "There must be a multiple of 3 arguments." >&2
-	# shellcheck disable=SC2086
-	exit ${RET}
+	exit "${RET}"
 }
 # Check arguments
 OK="true"

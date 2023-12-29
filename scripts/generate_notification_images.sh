@@ -9,8 +9,8 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 ME="$(basename "${BASH_ARGV0}")"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"	|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC1091 source-path=.
+source "${ALLSKY_HOME}/variables.sh"	|| exit "${ALLSKY_ERROR_STOP}"
 
 readonly ALL_EXTS="jpg png"		# all the image filename extensions we support
 
@@ -35,8 +35,7 @@ function usage_and_exit()
 		echo "  '--size XxY' creates images that are X by Y pixels.  Default: ${DEFAULT_IMAGE_SIZE} pixels."
 		echo
 	) >&2
-	# shellcheck disable=SC2086
-	exit ${RET}
+	exit "${RET}"
 }
 
 # Check arguments

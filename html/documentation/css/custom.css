@@ -5,6 +5,8 @@
 	--navbar-border-color-dark: #333333;
 	--WebUI-setting-color: #00009b;
 	--WebUI-setting-color-dark: #68a0ff;
+	--dark-text: #aaaaaa;
+	--dark-text-reversed: #eeeeee;
 }
 
 .page-header {
@@ -38,6 +40,9 @@
 }
 .version-title-color {
 	color: #777;
+}
+.dark .version-title-color {
+	color: var(--dark-text);
 }
 
 @media (max-width: 450px) {.version-title { font-size: 75%; }}
@@ -156,7 +161,7 @@ h2 {
 
 body.dark {
 	background-color: #222222;
-	color: #888888;
+	color: var(--dark-text);
 }
 
 .dark #page-wrapper {
@@ -169,13 +174,17 @@ body.dark {
 	border: 1px solid var(--navbar-border-color-dark);
 }
 
+.dark .navbar-brand {
+	color: var(--dark-text);
+}
+
 .dark .sidebar ul li {
 	border-bottom: 1px solid #333333;
 }
 
 .dark .sidebar ul li a,
 .dark .sidebar ul li span {
-	color: #888888;
+	color: var(--dark-text);
 }
 
 .dark .sidebar ul li a.active {
@@ -190,13 +199,14 @@ body.dark {
 	background-color: #272727;
 }
 
-.dark .panel-default {
+.dark .panel-default,
+.dark .panel-primary {
 	border-color: #333333;
 }
 
 .dark .panel-heading,
 .dark .panel-footer {
-	color: #888888;
+	color: var(--dark-text);
 	border-color: #333333;
 	background-color: #171717;
 }
@@ -260,7 +270,7 @@ table .alert-dismissable {
 .dark input[type="number"],
 .dark select {
 	background-color: #171717;
-	color: #888888;
+	color: var(--dark-text);
 	border-color: #555555;
 }
 
@@ -299,7 +309,7 @@ table .alert-dismissable {
 
 .dark .switch-field label { 
 	background-color: #171717;
-	color: #888888;
+	color: var(--dark-text);
 }
 
 .dark .switch-field input:checked + label {
@@ -361,6 +371,21 @@ table .alert-dismissable {
 	color: #bfbfbf;
 	background-color: #8d3431;
 	border-color: #ad5451;
+}
+
+.btn.focus.navbar-btn,
+.btn:focus.navbar-btn,
+.btn:hover.navbar-btn
+{
+	color: var(--dark-text);
+	border: 1px solid var(--dark-text);
+}
+.dark .btn.focus.navbar-btn,
+.dark .btn:focus.navbar-btn,
+.dark .btn:hover.navbar-btn,
+.dark .help-block
+{
+	color: var(--dark-text-reversed);
 }
 
 .dark .btn-primary:hover,
@@ -467,7 +492,7 @@ select {
 .dark .btn-white { border-color: #ffffff; }
 
 .btn-black		 { background-color: #333333; border-color: #777777; color: white; }
-.btn-black:hover { background-color: #888888; border-color: #000000; color: white; }
+.btn-black:hover { background-color: var(--dark-text); border-color: #000000; color: white; }
 .dark .btn-black { border-color: #ffffff; }
 
 /* Error messages */

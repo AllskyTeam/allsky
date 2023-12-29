@@ -82,12 +82,12 @@ done
 
 usage_and_exit()
 {
-	retcode=${1}
+	RET=${1}
 	echo
-	[[ ${retcode} -ne 0 ]] && echo -en "${RED}"
+	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
 	echo "Usage: ${ME} [--help] [--silent] [--debug] [--nice n] [--upload] \\"
 	echo "    [--thumbnail-only] [--keogram] [--startrails] [--timelapse] DATE"
-	[[ ${retcode} -ne 0 ]] && echo -en "${NC}"
+	[[ ${RET} -ne 0 ]] && echo -en "${NC}"
 	echo "    where:"
 	echo "      '--help' displays this message and exits."
 	echo "      '--debug' runs upload.sh in debug mode."
@@ -99,7 +99,7 @@ usage_and_exit()
 	echo "      '--startrails' will ${MSG1} a startrail."
 	echo "      '--timelapse' will ${MSG1} a timelapse."
 	echo "    If you don't specify --keogram, --startrails, or --timelapse, all three will be ${MSG2}."
-	exit "${retcode}"
+	exit "${RET}"
 }
 
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0

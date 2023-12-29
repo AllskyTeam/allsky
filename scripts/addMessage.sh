@@ -7,8 +7,8 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 ME="$(basename "${BASH_ARGV0}")"
 
-#shellcheck disable=SC2086 source=variables.sh
-source "${ALLSKY_HOME}/variables.sh"					|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC1091 source=variables.sh
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_ERROR_STOP}"
 
 if [ $# -ne 2 ]; then
 	# shellcheck disable=SC2154

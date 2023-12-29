@@ -6,7 +6,7 @@ ME="$(basename "${BASH_ARGV0}")"
 
 [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "${ME} $*"
 
-#shellcheck source-path=.
+#shellcheck disable=SC1091 source-path=.
 source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_ERROR_STOP}"
@@ -166,8 +166,7 @@ function display_error_and_exit()	# error message, notification string
 
 	# Don't let the service restart us because we will get the same error again.
 	sudo systemctl stop allsky
-	# shellcheck disable=SC2086
-	exit ${EXIT_ERROR_STOP}
+	exit "${EXIT_ERROR_STOP}"
 }
 
 # Resize the image if required

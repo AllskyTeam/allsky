@@ -6,12 +6,12 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 ME="$(basename "${BASH_ARGV0}")"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"	|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"		|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC1091 source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh"			|| exit "${ALLSKY_ERROR_STOP}"
 
 DO_HELP="false"
 DEBUG_ARG=""
@@ -82,12 +82,12 @@ done
 
 usage_and_exit()
 {
-	retcode=${1}
+	RET=${1}
 	echo
-	[[ ${retcode} -ne 0 ]] && echo -en "${RED}"
+	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
 	echo "Usage: ${ME} [--help] [--silent] [--debug] [--nice n] [--upload] \\"
 	echo "    [--thumbnail-only] [--keogram] [--startrails] [--timelapse] DATE"
-	[[ ${retcode} -ne 0 ]] && echo -en "${NC}"
+	[[ ${RET} -ne 0 ]] && echo -en "${NC}"
 	echo "    where:"
 	echo "      '--help' displays this message and exits."
 	echo "      '--debug' runs upload.sh in debug mode."
@@ -99,16 +99,15 @@ usage_and_exit()
 	echo "      '--startrails' will ${MSG1} a startrail."
 	echo "      '--timelapse' will ${MSG1} a timelapse."
 	echo "    If you don't specify --keogram, --startrails, or --timelapse, all three will be ${MSG2}."
-	# shellcheck disable=SC2086
-	exit ${retcode}
+	exit "${RET}"
 }
 
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ $# -eq 0 ]] && usage_and_exit 1
 
 if [[ ${TYPE} == "UPLOAD" ]]; then
-	#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-	source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit ${ALLSKY_ERROR_STOP}
+	#shellcheck disable=SC1091		# file doesn't exist in GitHub
+	source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit "${ALLSKY_ERROR_STOP}"
 fi
 
 DATE="${1}"
@@ -306,5 +305,4 @@ if [[ ${TYPE} == "GENERATE" && ${SILENT} == "false" && ${EXIT_CODE} -eq 0 ]]; th
 	echo "================"
 fi
 
-#shellcheck disable=SC2086
-exit ${EXIT_CODE}
+exit "${EXIT_CODE}"

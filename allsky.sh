@@ -59,10 +59,21 @@ ARGS_FILE="${ALLSKY_TMP}/capture_args.txt"
 
 # If a prior copy of Allsky exists, remind the user.
 if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
-	MSG="Reminder: your prior Allsky is still in '${PRIOR_ALLSKY_DIR}'."
-	MSG="${MSG}\nIf you are no longer using it, it can be removed to save disk space:"
-	MSG="${MSG}\n&nbsp; &nbsp;<code>rm -fr '${PRIOR_ALLSKY_DIR}'</code>\n"
-	"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
+	DO_MSG="true"
+	if [[ -f ${OLD_ALLSKY_REMINDER} ]]; then
+		CHECK_DATE="$( date -d '1 week ago' +'%Y%m%d%H%M.%S' )"
+		CHECK_FILE="${ALLSKY_TMP}/check_date"
+		touch -t "${CHECK_DATE}" "${CHECK_FILE}"
+		[[ ${OLD_ALLSKY_REMINDER} -nt "${CHECK_FILE}" ]] && DO_MSG="false"
+		rm -f "${CHECK_FILE}"
+	fi
+	if [[ ${DO_MSG} == "true" ]]; then
+		MSG="Reminder: your prior Allsky is still in '${PRIOR_ALLSKY_DIR}'."
+		MSG="${MSG}\nIf you are no longer using it, it can be removed to save disk space:"
+		MSG="${MSG}\n&nbsp; &nbsp;<code>rm -fr '${PRIOR_ALLSKY_DIR}'</code>\n"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
+		touch "${OLD_ALLSKY_REMINDER}"		# last time we displayed the message
+	fi
 fi
 
 # This file contains information the user needs to act upon after an installation.

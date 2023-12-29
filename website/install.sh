@@ -3,17 +3,17 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")"/..)"
 ME="$(basename "${BASH_ARGV0}")"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh" 				|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=.
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh" 				|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_ERROR_STOP}"
 
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit_installation ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit_installation ${ALLSKY_ERROR_STOP}
+#shellcheck # file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh"			|| exit_installation "${ALLSKY_ERROR_STOP}"
+#shellcheck # file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit_installation "${ALLSKY_ERROR_STOP}"
 
 TITLE="Allsky Website Installer"
 
@@ -95,8 +95,7 @@ usage_and_exit()
 	echo
 	echo "'--function' executes the specified function and quits."
 	echo
-	# shellcheck disable=SC2086
-	exit_installation ${RET}
+	exit_installation "${RET}"
 }
 
 
@@ -933,8 +932,7 @@ exit_installation()
 {
 	[[ -z ${FUNCTION} ]] && display_msg "${LOG_TYPE}" info "\nENDING INSTALLATON AT $(date).\n"
 	local E="${1}"
-	#shellcheck disable=SC2086
-	[[ ${E} -ge 0 ]] && exit ${E}
+	[[ ${E} -ge 0 ]] && exit "${E}"
 }
 
 

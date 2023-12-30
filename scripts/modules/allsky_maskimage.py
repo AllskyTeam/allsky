@@ -1,7 +1,7 @@
 """ allsky_maskimage.py
 
 Part of allsky postprocess.py modules.
-https://github.com/thomasjacquin/allsky
+https://github.com/AllskyTeam/allsky
 
 This module will apply a permenant mask to the captured image
 """

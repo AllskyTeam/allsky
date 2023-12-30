@@ -1,5 +1,5 @@
 {
-	"comment": "See https://github.com/thomasjacquin/allsky/wiki/allsky-website-Settings for a description of these settings.",
+	"comment": "See https://github.com/AllskyTeam/allsky/wiki/allsky-website-Settings for a description of these settings.",
 	"config": {
 		"comment": "These settings impact what appears in the popout and the constellation overlay",
 		"imageName": "/current/tmp/image.jpg",

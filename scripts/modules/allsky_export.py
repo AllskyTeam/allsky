@@ -1,7 +1,7 @@
 """ allsky_export.py
 
 Part of allsky postprocess.py modules.
-https://github.com/thomasjacquin/allsky
+https://github.com/AllskyTeam/allsky
 
 This module will export all of the AllSky variables to a json file. 
 The default json path is ${ALLSKY_TMP}/allskydata.json but this can be changed in the module settings

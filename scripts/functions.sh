@@ -517,17 +517,25 @@ function get_links()
 function check_settings_link()
 {
 	local FULL_FILE FILE DIRNAME SETTINGS_LINK RET MSG F E CORRECT_NAME
+	local CT="cameratype"
+	local CM="cameramodel"
+	if [[ ${1} == "--uppercase" ]]; then
+		CT="cameraType"
+		CM="cameraModel"
+		shift
+	fi
+
 	FULL_FILE="${1}"
 	if [[ -z ${FULL_FILE} ]]; then
 		echo "check_settings_link(): Settings file not specified."
 		return "${EXIT_ERROR_STOP}"
 	fi
 	if [[ -z ${CAMERA_TYPE} ]]; then
-		CAMERA_TYPE="$( settings .cameratype  "${FULL_FILE}" )"
+		CAMERA_TYPE="$( settings ".${CT}"  "${FULL_FILE}" )"
 		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
 	fi
 	if [[ -z ${CAMERA_MODEL} ]]; then
-		CAMERA_MODEL="$( settings .cameramodel  "${FULL_FILE}" )"
+		CAMERA_MODEL="$( settings ".${CM}"  "${FULL_FILE}" )"
 		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
 	fi
 
@@ -543,7 +551,7 @@ function check_settings_link()
 		MSG="The settings file '${FILE}' was not linked to '${CORRECT_NAME}'"
 		[[ ${RET} -ne "${NO_LINK_}" ]] && MSG="${MSG}\nERROR: ${SETTINGS_LINK}."
 		echo -e "${MSG}$( fix_settings_link "${FULL_FILE}" "${FULL_CORRECT_NAME}" )"
-		return 1
+		return "${EXIT_ERROR_STOP}"
 	else
 		# Make sure it's linked to the correct file.
 		if [[ ${SETTINGS_LINK} != "${FULL_CORRECT_NAME}" ]]; then
@@ -552,7 +560,7 @@ function check_settings_link()
 			MSG="${MSG}\nbut should have been linked to:"
 			MSG="${MSG}\n    ${FULL_CORRECT_NAME}"
 			echo -e "${MSG}$( fix_settings_link "${FULL_FILE}" "${FULL_CORRECT_NAME}" )"
-			return 1
+			return "${EXIT_ERROR_STOP}"
 		fi
 	fi
 

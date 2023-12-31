@@ -4,16 +4,16 @@
 ME="$(basename "${BASH_ARGV0}")"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh" 				|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh" 				|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 #shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"						|| exit_installation "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_CONFIG}/config.sh"						|| exit_installation "${EXIT_ERROR_STOP}"
 #shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh"				|| exit_installation "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_CONFIG}/ftp-settings.sh"				|| exit_installation "${EXIT_ERROR_STOP}"
 
 TITLE="Allsky Website Installer"
 

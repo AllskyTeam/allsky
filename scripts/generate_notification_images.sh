@@ -10,7 +10,7 @@
 ME="$(basename "${BASH_ARGV0}")"
 
 #shellcheck disable=SC1091 source-path=.
-source "${ALLSKY_HOME}/variables.sh"	|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 readonly ALL_EXTS="jpg png"		# all the image filename extensions we support
 

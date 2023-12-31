@@ -11,11 +11,11 @@
 ME="$(basename "${BASH_ARGV0}")"
 
 #shellcheck disable=SC1091 source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh" 				|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh" 				|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 usage_and_exit()
 {
@@ -70,9 +70,9 @@ done
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
 #shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"	 					|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_CONFIG}/config.sh"	 					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh" 				|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_CONFIG}/ftp-settings.sh" 				|| exit "${EXIT_ERROR_STOP}"
 PROTOCOL="${PROTOCOL,,}"	# set to lowercase to make comparing easier
 
 BRANCH="$( get_branch "" )"

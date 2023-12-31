@@ -293,8 +293,19 @@ if ($cc_array === null) {
 	exit(4);
 }
 $cc_controls = $cc_array["controls"];
-$cameraType = $cc_array["cameraType"];
-$cameraModel = $cc_array["cameraModel"];
+$ok = true;
+$cameraType = getVariableOrDefault($cc_array, "cameraType", "");
+if ($cameraType === "") {
+	echo "ERROR: cameraType empty in cc_array!\n";
+	$ok = false;
+}
+$cameraModel = getVariableOrDefault($cc_array, "cameraModel", "");
+if ($cameraModel === "") {
+	echo "ERROR: cameraModel empty in cc_array!\n";
+	$ok = false;
+}
+if (! $ok) exit(5);
+
 if ($debug > 0) echo "cameraType=$cameraType, cameraModel=$cameraModel\n";
 
 // Read $repo_file

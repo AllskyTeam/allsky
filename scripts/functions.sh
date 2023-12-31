@@ -455,7 +455,7 @@ function settings()
 
 	local FILE="${2:-${SETTINGS_FILE}}"
 	if j="$( jq -r "${FIELD}" "${FILE}" )" ; then
-		[[ -z ${j} && ${DO_NULL} == "false" ]] && j=""
+		[[ ${j} == "null" && ${DO_NULL} == "false" ]] && j=""
 		echo "${j}"
 		return 0
 	fi

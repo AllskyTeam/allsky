@@ -37,7 +37,7 @@ NEEDS_REBOOT="false"
 reboot_needed && NEEDS_REBOOT="true"
 
 # Make sure the settings have been configured after an installation or upgrade.
-LAST_CHANGED="$( settings ".lastChanged" )"
+LAST_CHANGED="$( settings ".lastchanged" )"
 if [[ ${LAST_CHANGED} == "" ]]; then
 	echo "*** ===== Allsky needs to be configured before it can be used.  See the WebUI."
 	if [[ ${NEEDS_REBOOT} == "true" ]]; then

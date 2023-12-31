@@ -2807,6 +2807,7 @@ if [[ -z ${FUNCTION} && -s ${STATUS_FILE} ]]; then
 		fi
 		exit_installation 0 "" ""
 	else
+ 		[[ -n ${MORE_STATUS} ]] && MORE_STATUS=" - ${MORE_STATUS}"
 		MSG="You have already begun the installation."
 		MSG="${MSG}\n\nThe last status was: ${STATUS_INSTALLATION}${MORE_STATUS}"
 		MSG="${MSG}\n\nDo you want to continue where you left off?"

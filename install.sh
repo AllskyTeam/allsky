@@ -475,12 +475,12 @@ save_camera_capabilities()
 	display_msg --log progress "Making new settings file '${SETTINGS_FILE}'."
 
 	MSG="Executing makeChanges.sh${FORCE}${OPTIONSONLY} --cameraTypeOnly"
-	MSG="${MSG}  ${DEBUG_ARG} 'cameraType' 'Camera Type' '${PRIOR_CAMERA_TYPE}' '${CAMERA_TYPE}'"
+	MSG="${MSG}  ${DEBUG_ARG} 'cameratype' 'Camera Type' '${PRIOR_CAMERA_TYPE}' '${CAMERA_TYPE}'"
 	display_msg "${LOG_TYPE}" info "${MSG}"
 
 	#shellcheck disable=SC2086
 	MSG="$( "${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} ${OPTIONSONLY} --cameraTypeOnly \
-		${DEBUG_ARG} "cameraType" "Camera Type" "${PRIOR_CAMERA_TYPE}" "${CAMERA_TYPE}" 2>&1 )"
+		${DEBUG_ARG} "cameratype" "Camera Type" "${PRIOR_CAMERA_TYPE}" "${CAMERA_TYPE}" 2>&1 )"
 	RET=$?
 
 	[[ -n ${MSG} ]] && display_msg "${LOG_TYPE}" info "${MSG}"
@@ -502,7 +502,7 @@ save_camera_capabilities()
 	display_msg "${LOG_TYPE}" info "Settings files:\n${MSG}"
 	CAMERA_MODEL="$( settings ".cameramodel" "${SETTINGS_FILE}" )"
 	if [[ -z ${CAMERA_MODEL} ]]; then
-		display_msg --log warning "cameraModel not found in settings file."
+		display_msg --log warning "cameramodel not found in settings file."
 	fi
 
 	STATUS_VARIABLES+=("save_camera_capabilities='true'\n")
@@ -1681,7 +1681,7 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 
 					# These changed names.
 					"darkframe")
-						F="takeDarkFrames"
+						F="takedarkframes"
 						;;
 					"daymaxautoexposure")
 						F="daymaxautoexposure"
@@ -1714,12 +1714,12 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 						F="night${F}"
 						;;
 					"targettemp")
-						F="TargetTemp"
+						F="targettemp"
 						update_json_file ".day${F}" "${V}" "${NEW_FILE}"
 						F="night${F}"
 						;;
 					"coolerenabled")
-						F="EnableCooler"
+						F="enablecooler"
 						update_json_file ".day${F}" "${V}" "${NEW_FILE}"
 						F="night${F}"
 						;;
@@ -1735,13 +1735,13 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 
 		# Fields whose location changed.
 		x="$( get_variable "DAYTIME_CAPTURE" "${PRIOR_CONFIG_FILE}" )"
-		update_json_file ".takeDaytimeImages" "${x}" "${NEW_FILE}"
+		update_json_file ".takedaytimeimages" "${x}" "${NEW_FILE}"
 
 		x="$( get_variable "DAYTIME_SAVE" "${PRIOR_CONFIG_FILE}" )"
-		update_json_file ".saveDaytimeImages" "${x}" "${NEW_FILE}"
+		update_json_file ".savedaytimeimages" "${x}" "${NEW_FILE}"
 
 		x="$( get_variable "DARK_FRAME_SUBTRACTION" "${PRIOR_CONFIG_FILE}" )"
-		update_json_file ".useDarkFrames" "${x}" "${NEW_FILE}"
+		update_json_file ".usedarkframes" "${x}" "${NEW_FILE}"
 	fi
 }
 

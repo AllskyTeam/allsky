@@ -256,11 +256,13 @@ convert_json_to_tabs "${SETTINGS_FILE}" |
 
 # When using a desktop environment a preview of the capture can be displayed in a separate window.
 # The preview mode does not work if we are started as a service or if the debian distribution has no desktop environment.
-[[ $1 == "preview" ]] && echo "-preview=1" >> "${ARGS_FILE}"
+{
+	[[ $1 == "preview" ]] && echo "-preview=1"
 
-echo "-version=${ALLSKY_VERSION}" >> "${ARGS_FILE}"
-echo "-save_dir=${CAPTURE_SAVE_DIR}" >> "${ARGS_FILE}"
-echo "-cameramodel=${CAMERA_MODEL}" >> "${ARGS_FILE}"
+	echo "-version=${ALLSKY_VERSION}"
+	echo "-save_dir=${CAPTURE_SAVE_DIR}"
+	echo "-cameramodel=${CAMERA_MODEL}"
+} >> "${ARGS_FILE}"
 
 FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
 # If the user wants images uploaded only every n times, save that number to a file.

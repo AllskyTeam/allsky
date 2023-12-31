@@ -2216,7 +2216,7 @@ restore_prior_files()
 do_update()
 {
 	#shellcheck disable=SC1091		# file doesn't exist in GitHub
-	source "${ALLSKY_CONFIG}/config.sh" || exit "${ALLSKY_ERROR_STOP}"	# Get current CAMERA_TYPE
+	source "${ALLSKY_CONFIG}/config.sh" || exit "${EXIT_ERROR_STOP}"	# Get current CAMERA_TYPE
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		display_msg --log error "CAMERA_TYPE not set in config.sh."
 		exit_installation 1 "${STATUS_ERROR}" "No CAMERA_TYPE in config.sh during update."

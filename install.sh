@@ -43,7 +43,7 @@ NEW_HOST_NAME=""						# User-specified host name
 BRANCH="${GITHUB_MAIN_BRANCH}"			# default branch
 
 # Allsky versions.   ${ALLSKY_VERSION} is set in variables.sh
-ALLSKY_BASE_VERSION="${ALLSKY_VERSION:0:11}"	# without point release
+##xxx TODO: uncomment:    ALLSKY_BASE_VERSION="${ALLSKY_VERSION:0:11}"	# without point release
 	# Base of first version with combined configuration files.
 	#xxxxxxx TODO: update:
 COMBINED_BASE_VERSION="v2024.xx.xx"
@@ -54,7 +54,7 @@ FIRST_CAMERA_TYPE_BASE_VERSION="v2023.05.01"
 	# It's also when ftp-settings.sh moved to ${ALLSKY_CONFIG}
 FIRST_VERSION_VERSION="v2022.03.01"
 	# Versions before ${FIRST_VERSION_VERSION} that didn't have version numbers.
-PRE_FIRST_VERSION_VERSION="old"
+##xxx TODO: uncomment:    PRE_FIRST_VERSION_VERSION="old"
 
 # Repo files
 REPO_SUDOERS_FILE="${ALLSKY_REPO}/sudoers.repo"
@@ -1389,7 +1389,7 @@ OLD_STYLE_ALLSKY="oldStyle"
 # PRIOR_ALLSKY_DIR set in variables.sh
 PRIOR_ALLSKY_STYLE=""			# Set to the style if they have a prior version
 PRIOR_ALLSKY_VERSION=""			# The version number of the prior version, if known
-PRIOR_ALLSKY_BASE_VERSION=""	# The base version number of the prior version, if known
+##xxx TODO: uncomment:    PRIOR_ALLSKY_BASE_VERSION=""	# The base version number of the prior version, if known
 PRIOR_CAMERA_TYPE=""
 PRIOR_CAMERA_MODEL=""
 

@@ -54,7 +54,7 @@ while [[ $# -gt 0 ]]; do
 			OPTIONS_FILE_ONLY="true"
 			SETTINGS_FILE=""
 			;;
-		--cameratypeonly)
+		--cameraTypeOnly)
 			CAMERA_TYPE_ONLY="true"
 			;;
 		--force)

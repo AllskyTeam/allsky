@@ -1656,43 +1656,6 @@ convert_settings()			# prior_version, prior_file, new_file
 
 	[[ ${ALLSKY_VERSION} == "${PRIOR_VERSION}" ]] && return
 
-	if [[ ${NEW_BASE_VERSION} == "xxxxxxxxxxx${FIRST_CAMERA_TYPE_BASE_VERSION}" ]]; then
-
-		# Replaced "meanthreshold" with "daymeanthreshold" and "nightmeanthreshold"
-		# if they don't already exist.
-		# They were added in v2023.05.01_02.
-		local F="meanthreshold"
-		DAYMEANTHRESHOLD="$( settings ".day${F}" "${NEW_FILE}" )"
-		NIGHTMEANTHRESHOLD="$( settings ".night${F}" "${NEW_FILE}" )"
-		if [[ -n ${DAYMEANSETTING} && -n ${NIGHTMEANSETTING} ]]; then
-			display_msg --logonly info "   day and night '${F}' already exist."
-			return
-		fi
-
-		MEANTHRESHOLD="$( settings ".${F}" "${PRIOR_FILE}" )"
-		if [[ -n ${MEANTHRESHOLD} ]]; then
-			if [[ -z ${DAYMEANTHRESHOLD} ]]; then
-				display_msg --logonly info "   Updating 'day${F}' in '${NEW_FILE}'."
-				update_json_file ".day${F}" "${MEANTHRESHOLD}" "${NEW_FILE}"
-			fi
-			if [[ -z ${NIGHTMEANTHRESHOLD} ]]; then
-				display_msg --logonly info "   Updating 'night${F}' in '${NEW_FILE}'."
-				update_json_file ".night${F}" "${MEANTHRESHOLD}" "${NEW_FILE}"
-			fi
-
-			# If ${F} exists in the new file
-			MEANTHRESHOLD="$( settings ".${F}" "${NEW_FILE}" )"
-			if [[ -n ${MEANTHRESHOLD} ]]; then
-				display_msg --logonly info "   Deleting '${F}' from '${NEW_FILE}'."
-				sed -i "/\"${F}\"/d" "${NEW_FILE}"
-			fi
-		else
-			display_msg --logonly info "   '${F}' was not in prior settings file."
-		fi
-
-		return
-	fi
-
 	if [[ ${PRIOR_BASE_VERSION} < "${COMBINED_BASE_VERSION}" ]]; then
 		# Older version had uppercase letters in settings name.
 		display_msg --logonly info "   Making all settings names lowercase."
@@ -1808,7 +1771,14 @@ restore_prior_settings_file()
 
 		MSG="Checking link for ${NEW_STYLE_ALLSKY} PRIOR_SETTINGS_FILE '${PRIOR_SETTINGS_FILE}'"
 		display_msg --logonly info "${MSG}"
-		MSG="$( check_settings_link "${PRIOR_SETTINGS_FILE}" )"
+		if [[ ${PRIOR_BASE_VERSION} < "${COMBINED_BASE_VERSION}" ]]; then
+			local CHECK_UPPER="--uppercase"
+		else
+			local CHECK_UPPER=""
+		fi
+	
+		# shellcheck disable=SC2086
+		MSG="$( check_settings_link ${CHECK_UPPER} "${PRIOR_SETTINGS_FILE}" )"
 		if [[ $? -eq "${EXIT_ERROR_STOP}" ]]; then
 			display_msg --log error "${MSG}"
 			FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"

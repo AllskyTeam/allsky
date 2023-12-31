@@ -512,7 +512,7 @@ create_website_configuration_file() {
 
 	LOCATION="$(settings ".location")"
 	OWNER="$(settings ".owner")"
-	CAMERA_MODEL="$(settings ".cameraModel")"
+	CAMERA_MODEL="$(settings ".cameramodel")"
 	CAMERA="${CAMERA_TYPE}${CAMERA_MODEL}"
 	LENS="$(settings ".lens")"
 	COMPUTER="$(sed --quiet -e 's/Raspberry Pi/RPi/' -e '/^Model/ s/.*: // p' /proc/cpuinfo)"

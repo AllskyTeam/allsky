@@ -225,7 +225,7 @@ function check_delay()
 
 	# With the legacy overlay method it might take up to a couple seconds to save an image.
 	# With the module method it can take up to 5 seconds.
-	local OVERLAY_METHOD=$(settings .overlayMethod) || echo "Problem getting .overlayMethod." >&2
+	local OVERLAY_METHOD=$(settings .overlaymethod) || echo "Problem getting .overlayMethod." >&2
 	if [[ ${OVERLAY_METHOD} -eq 1 ]]; then
 		MAX_TIME_TO_SAVE_MS=5000
 	else
@@ -246,21 +246,21 @@ function check_delay()
 #
 
 # Variables used below.
-TAKING_DARKS="$(settings .takeDarkFrames)" || echo "Problem getting .takeDarkFrames." >&2
+TAKING_DARKS="$(settings .takedarkframes)" || echo "Problem getting .takedarkframes." >&2
 # per the WebUI, width and height are usually 0
 WIDTH="$(settings .width)" || echo "Problem getting .width." >&2
 HEIGHT="$(settings .height)" || echo "Problem getting .height." >&2
 # physical sensor size
 SENSOR_WIDTH="$(settings .sensorWidth "${CC_FILE}")" || echo "Problem getting .sensorWidth." >&2
 SENSOR_HEIGHT="$(settings .sensorHeight "${CC_FILE}")" || echo "Problem getting .sensorHeight." >&2
-TAKE="$(settings .takeDaytimeImages)" || echo "Problem getting .takeDaytimeImages." >&2
-SAVE="$(settings .saveDaytimeImages)" || echo "Problem getting .saveDaytimeImages." >&2
+TAKE="$(settings .takedaytimeimages)" || echo "Problem getting .takedaytimeimages." >&2
+SAVE="$(settings .savedaytimeimages)" || echo "Problem getting .savedaytimeimages." >&2
 ANGLE="$(settings .angle)" || echo "Problem getting .angle" >&2
 LATITUDE="$(settings .latitude)" || echo "Problem getting .latitude." >&2
 LONGITUDE="$(settings .longitude)" || echo "Problem getting .longitude" >&2
 # shellcheck disable=SC2034
 LOCALE="$(settings .locale)" || echo "Problem getting .locale" >&2
-USING_DARKS="$(settings .useDarkFrames)" || echo "Problem getting .useDarkFrames" >&2
+USING_DARKS="$(settings .usedarkframes)" || echo "Problem getting .usedarkframes" >&2
 WEBSITES="$(whatWebsites)"
 
 # ======================================================================
@@ -326,7 +326,7 @@ if [[ ${CROP_IMAGE} == "true" && ${SENSOR_WIDTH} == "${CROP_WIDTH}" && ${SENSOR_
 	echo "Check CROP_IMAGE, CROP_WIDTH (${CROP_WIDTH}), and CROP_HEIGHT (${CROP_HEIGHT})."
 fi
 
-LAST_CHANGED="$( settings ".lastChanged" )" || echo "Problem getting .lastChanged" >&2
+LAST_CHANGED="$( settings ".lastchanged" )" || echo "Problem getting .lastchanged" >&2
 if [[ ${LAST_CHANGED} == "" || ${LAST_CHANGED} == "null" ]]; then
 	heading "Information"
 	echo "Allsky needs to be configured before it will run."

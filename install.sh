@@ -32,17 +32,29 @@ PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"	# may change depending on o
 TITLE="Allsky Installer - ${ALLSKY_VERSION}"
 FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 OLD_RASPAP_DIR="/etc/raspap"			# used to contain WebUI configuration files
-SETTINGS_FILE_NAME="$(basename "${SETTINGS_FILE}")"
+SETTINGS_FILE_NAME="$( basename "${SETTINGS_FILE}" )"
 FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"	# should a default settings file be created?
 RESTORED_PRIOR_SETTINGS_FILE="false"
 PRIOR_SETTINGS_FILE=""					# Full pathname to the prior settings file, if it exists
 RESTORED_PRIOR_CONFIG_SH="false"		# prior config.sh restored?
 RESTORED_PRIOR_FTP_SH="false"			# prior ftp-settings.sh restored?
-PRIOR_ALLSKY=""							# Set to "new" or "old" if they have a prior version
-PRIOR_ALLSKY_VERSION=""					# The version number of the prior version, if known
 SUGGESTED_NEW_HOST_NAME="allsky"		# Suggested new host name
 NEW_HOST_NAME=""						# User-specified host name
 BRANCH="${GITHUB_MAIN_BRANCH}"			# default branch
+
+# Allsky versions.   ${ALLSKY_VERSION} is set in variables.sh
+ALLSKY_BASE_VERSION="${ALLSKY_VERSION:0:11}"	# without point release
+	# Base of first version with combined configuration files.
+	#xxxxxxx TODO: update:
+COMBINED_BASE_VERSION="v2024.xx.xx"
+	# Base of first version with CAMERA_TYPE instead of CAMERA in config.sh and
+	# "cameratype" in the settings file.
+FIRST_CAMERA_TYPE_BASE_VERSION="v2023.05.01"
+	# First Allsky version that used the "version" file.
+	# It's also when ftp-settings.sh moved to ${ALLSKY_CONFIG}
+FIRST_VERSION_VERSION="v2022.03.01"
+	# Versions before ${FIRST_VERSION_VERSION} that didn't have version numbers.
+PRE_FIRST_VERSION_VERSION="old"
 
 # Repo files
 REPO_SUDOERS_FILE="${ALLSKY_REPO}/sudoers.repo"
@@ -116,10 +128,10 @@ do_initial_heading()
 	else
 		MSG="Welcome to the ${TITLE}!\n"
 
-		if [[ -n ${PRIOR_ALLSKY} ]]; then
+		if [[ -n ${PRIOR_ALLSKY_STYLE} ]]; then
 			MSG="${MSG}\nYou will be asked if you want to use the images and darks (if any) from"
 			MSG="${MSG} your prior version of Allsky."
-			if [[ ${PRIOR_ALLSKY} == "newStyle" ]]; then
+			if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
 				MSG="${MSG}\nIf so, its settings will be used as well."
 			else
 				MSG="${MSG}\nIf so, we will attempt to use its settings as well, but may not be"
@@ -292,45 +304,41 @@ get_connected_cameras()
 CAMERA_TYPE=""
 select_camera_type()
 {
-	if [[ -n ${PRIOR_ALLSKY} ]]; then
-		case "${PRIOR_ALLSKY_VERSION}" in
-			# New versions go here...
-			v2023.05.01*)
-				# New style Allsky using ${CAMERA_TYPE}.
-				CAMERA_TYPE="${PRIOR_CAMERA_TYPE}"
+	if [[ -n ${PRIOR_ALLSKY_STYLE} ]]; then
+		# bash doesn't have ">=" so we have to use "! ... < "
+		if [[ ! ${PRIOR_ALLSKY_VERSION} < "${FIRST_CAMERA_TYPE_BASE_VERSION}" ]]; then
+			# New style Allsky using ${CAMERA_TYPE}.
+			CAMERA_TYPE="${PRIOR_CAMERA_TYPE}"
 
-				# Don't bother with a message since this is a "similar" release.
-				if [[ -n ${CAMERA_TYPE} ]]; then
-					MSG="Using Camera Type '${CAMERA_TYPE}' from prior Allsky."
-					STATUS_VARIABLES+=("select_camera_type='true'\n")
-					STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
-					display_msg --logonly info "${MSG}"
-					return
+			if [[ -n ${CAMERA_TYPE} ]]; then
+				MSG="Using Camera Type '${CAMERA_TYPE}' from prior Allsky."
+				STATUS_VARIABLES+=("select_camera_type='true'\n")
+				STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
+				display_msg --logonly info "${MSG}"
+				return
+			else
+				MSG="Camera Type not in prior new-style settings file."
+				display_msg --log error "${MSG}"
+			fi
+		else
+			# Older style using ${CAMERA}
+			local CAMERA="$( get_variable "CAMERA" "${PRIOR_CONFIG_FILE}" )"
+			if [[ -n ${CAMERA} ]]; then
+				CAMERA_TYPE="$( CAMERA_to_CAMERA_TYPE "${CAMERA}" )"
+				STATUS_VARIABLES+=("select_camera_type='true'\n")
+				STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
+				if [[ ${CAMERA} != "${CAMERA_TYPE}" ]]; then
+					NEW=" (now called ${CAMERA_TYPE})"
 				else
-					MSG="Camera Type not in prior new-style settings file."
-					display_msg --log error "${MSG}"
+					NEW=""
 				fi
-				;;
-
-			"v2022.03.01" | "old")
-				local CAMERA="$( get_variable "CAMERA" "${PRIOR_CONFIG_FILE}" )"
-				if [[ -n ${CAMERA} ]]; then
-					CAMERA_TYPE="$( CAMERA_to_CAMERA_TYPE "${CAMERA}" )"
-					STATUS_VARIABLES+=("select_camera_type='true'\n")
-					STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
-					if [[ ${CAMERA} != "${CAMERA_TYPE}" ]]; then
-						NEW=" (now called ${CAMERA_TYPE})"
-					else
-						NEW=""
-					fi
-					display_msg --log progress "Using prior ${CAMERA} camera${NEW}."
-					return
-				else
-					MSG="CAMERA not in prior old-style config.sh."
-					display_msg --log warning "${MSG}"
-				fi
-				;;
-		esac
+				display_msg --log progress "Using prior ${CAMERA} camera${NEW}."
+				return
+			else
+				MSG="CAMERA not in prior old-style config.sh."
+				display_msg --log warning "${MSG}"
+			fi
+		fi
 	fi
 
 	local CT=()
@@ -470,7 +478,7 @@ save_camera_capabilities()
 
 	# Restore the prior settings file or camera-specific settings file(s) so
 	# the appropriate one can be used by makeChanges.sh.
-	[[ ${PRIOR_ALLSKY} != "" ]] && restore_prior_settings_file
+	[[ ${PRIOR_ALLSKY_STYLE} != "" ]] && restore_prior_settings_file
 
 	display_msg --log progress "Making new settings file '${SETTINGS_FILE}'."
 
@@ -1199,7 +1207,7 @@ get_desired_locale()
 	# let the user know.
 	# This can happen if they use the settings file from a different Pi or different OS.
 	local MSG2=""
-	if [[ -z ${DESIRED_LOCALE} && -n ${PRIOR_ALLSKY} && -n ${PRIOR_SETTINGS_FILE} ]]; then
+	if [[ -z ${DESIRED_LOCALE} && -n ${PRIOR_ALLSKY_STYLE} && -n ${PRIOR_SETTINGS_FILE} ]]; then
 		# People rarely change locale once set, so assume they still want the prior one.
 		DESIRED_LOCALE="$( settings .locale "${PRIOR_SETTINGS_FILE}" )"
 		if [[ -n ${DESIRED_LOCALE} ]]; then
@@ -1339,7 +1347,7 @@ display_msg --logonly info "Settings files now:\n${MSG}"
 # See what steps, if any, can be skipped.
 set_what_can_be_skipped()
 {
-	if [[ ${PRIOR_ALLSKY} != "" ]]; then
+	if [[ ${PRIOR_ALLSKY_STYLE} != "" ]]; then
 		local OLD_VERSION="${1}"
 		local OLD_BASE_VERSION="${OLD_VERSION:0:11}"	# Without point release
 		local NEW_VERSION="${2}"
@@ -1371,36 +1379,67 @@ is_reboot_needed()
 	fi
 }
 
+NEW_STYLE_ALLSKY="newStyle"
+OLD_STYLE_ALLSKY="oldStyle"
+
 ####
 # See if a prior Allsky exists; if so, set some variables.
+
+# Globals
+# PRIOR_ALLSKY_DIR set in variables.sh
+PRIOR_ALLSKY_STYLE=""			# Set to the style if they have a prior version
+PRIOR_ALLSKY_VERSION=""			# The version number of the prior version, if known
+PRIOR_ALLSKY_BASE_VERSION=""	# The base version number of the prior version, if known
+PRIOR_CAMERA_TYPE=""
+PRIOR_CAMERA_MODEL=""
+
 does_prior_Allsky_exist()
 {
-	PRIOR_ALLSKY=""
-	PRIOR_CAMERA_TYPE=""
-	PRIOR_CAMERA_MODEL=""
-
-	# Don't just look for the top-level directory.
+	# First just look for the top-level directory.
 	if [[ ! -d ${PRIOR_CONFIG_DIR} ]]; then
 		display_msg --logonly info "No prior Allsky found."
 		return 1
 	fi
 
-	PRIOR_ALLSKY_VERSION="$( get_version "${PRIOR_ALLSKY_DIR}/" )"
+	local MSG
+
+	display_msg --logonly info "Prior Allsky found in ${PRIOR_ALLSKY_DIR}."
+
+	# All versions back to v0.6 (never checked prior ones) have a "scripts" directory.
+	if [[ ! -d "${PRIOR_ALLSKY_DIR}/scripts" ]]; then
+		MSG="Prior Allsky directory found at '${PRIOR_ALLSKY_DIR}'"
+		MSG="${MSG} but it doesn't appear to be valid; ignoring it."
+		display_msg --log warning "${MSG}"
+		return 1
+	fi
+
+	# Determine the prior Allsky version and set some PRIOR_* locations.
+	PRIOR_ALLSKY_VERSION="$( get_version "${PRIOR_ALLSKY_DIR}/" )"	# Returns "" if no version file.
 	if [[ -n  ${PRIOR_ALLSKY_VERSION} ]]; then
 		display_msg --logonly info "Prior Allsky version ${PRIOR_ALLSKY_VERSION} found."
-		if [[ ${PRIOR_ALLSKY_VERSION} == "v2022.03.01" ]]; then
+		if [[ ${PRIOR_ALLSKY_VERSION} == "${FIRST_VERSION_VERSION}" ]]; then
 			# First Allsky version with a "version" file.
 			# This is an old style Allsky with ${CAMERA} in config.sh.
 			# Don't do anything here; go to the "if" below.
 			:
 		else
-			# Newer version.
-			# PRIOR_SETTINGS_FILE should be a link to a camera-specific settings file.
-			PRIOR_ALLSKY="newStyle"
+			PRIOR_ALLSKY_STYLE="${NEW_STYLE_ALLSKY}"
+
+			# PRIOR_SETTINGS_FILE should be a link to a camera-specific settings file
+			# and that file will have the camera type and model.
 			PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}"
 			if [[ -f ${PRIOR_SETTINGS_FILE} ]]; then
-				PRIOR_CAMERA_TYPE="$( settings ".cameratype" "${PRIOR_SETTINGS_FILE}" )"
-				PRIOR_CAMERA_MODEL="$( settings ".cameramodel" "${PRIOR_SETTINGS_FILE}" )"
+			if [[ ${PRIOR_ALLSKY_VERSION} < "${COMBINED_BASE_VERSION}" ]]; then
+				CT_=".cameraType"
+				CM_=".cameraModel"
+			else
+				CT_=".cameratype"
+				CM_=".cameramodel"
+			fi
+			PRIOR_CAMERA_TYPE="$( settings "${CT_}" "${PRIOR_SETTINGS_FILE}" )"
+			PRIOR_CAMERA_MODEL="$( settings "${CM_}" "${PRIOR_SETTINGS_FILE}" )"
+			MSG="Prior Camera Type = ${PRIOR_CAMERA_TYPE}, prior model = ${PRIOR_CAMERA_MODEL}"
+			display_msg --logonly info "${MSG}"
 			else
 				# This shouldn't happen...
 				PRIOR_SETTINGS_FILE=""
@@ -1409,8 +1448,8 @@ does_prior_Allsky_exist()
 		fi
 	fi
 
-	if [[ -z ${PRIOR_ALLSKY} ]]; then
-		PRIOR_ALLSKY="oldStyle"
+	if [[ -z ${PRIOR_ALLSKY_STYLE} ]]; then
+		PRIOR_ALLSKY_STYLE="${OLD_STYLE_ALLSKY}"
 		PRIOR_ALLSKY_VERSION="${PRIOR_ALLSKY_VERSION:-old}"
 		local CAMERA="$( get_variable "CAMERA" "${PRIOR_CONFIG_FILE}" )"
 		PRIOR_CAMERA_TYPE="$( CAMERA_to_CAMERA_TYPE "${CAMERA}" )"
@@ -1434,7 +1473,7 @@ does_prior_Allsky_exist()
 prompt_for_prior_Allsky()
 {
 
-	if [[ -n ${PRIOR_ALLSKY} ]]; then
+	if [[ -n ${PRIOR_ALLSKY_STYLE} ]]; then
 		STATUS_VARIABLES+=("prompt_for_prior_Allsky='true'\n")
 		MSG="You have a prior version of Allsky in ${PRIOR_ALLSKY_DIR}."
 		MSG="${MSG}\n\nDo you want to restore the prior images, darks, and certain settings?"
@@ -1446,7 +1485,7 @@ prompt_for_prior_Allsky()
 			return 0
 		else
 			PRIOR_ALLSKY_DIR=""
-			PRIOR_ALLSKY=""
+			PRIOR_ALLSKY_STYLE=""
 			PRIOR_ALLSKY_VERSION=""
 			CAMERA_TYPE=""
 			PRIOR_CAMERA_TYPE=""
@@ -1748,9 +1787,10 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 
 ####
 # Restore the prior settings file(s) if the user wanted to use them.
-# For newStyle we restore all prior camera-specific file(s) and let makeChanges.sh create
+# For ${NEW_STYLE_ALLSKY} we restore all prior camera-specific file(s) and let makeChanges.sh create
 # the new settings file, linking it to the appropriate camera-specific file.
-# For oldStyle (which has no camera-specific file) we update the settings file if it currently exists.
+# For ${OLD_STYLE_ALLSKY} (which has no camera-specific file)
+# we update the settings file if it currently exists.
 restore_prior_settings_file()
 {
 	[[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" ]] && return
@@ -1767,11 +1807,11 @@ restore_prior_settings_file()
 
 	local MSG NAME EXT FIRST_ONE
 
-	if [[ ${PRIOR_ALLSKY} == "newStyle" ]]; then
+	if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
 		# The prior settings file SHOULD be a link to a camera-specific file.
 		# Make sure that's true; if not, fix it.
 
-		MSG="Checking link for newStyle PRIOR_SETTINGS_FILE '${PRIOR_SETTINGS_FILE}'"
+		MSG="Checking link for ${NEW_STYLE_ALLSKY} PRIOR_SETTINGS_FILE '${PRIOR_SETTINGS_FILE}'"
 		display_msg --logonly info "${MSG}"
 		MSG="$( check_settings_link "${PRIOR_SETTINGS_FILE}" )"
 		if [[ $? -eq "${EXIT_ERROR_STOP}" ]]; then
@@ -1911,7 +1951,7 @@ restore_prior_files()
 		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	fi
 
-	if [[ -z ${PRIOR_ALLSKY} ]]; then
+	if [[ -z ${PRIOR_ALLSKY_STYLE} ]]; then
 		get_lat_long	# get them to put in new config file
 		mkdir -p "${ALLSKY_EXTRA}"		# default permissions is ok
 
@@ -2005,7 +2045,7 @@ restore_prior_files()
 	fi
 
 	local D
-	if [[ ${PRIOR_ALLSKY} == "newStyle" ]]; then
+	if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
 		D="${PRIOR_CONFIG_DIR}"
 	else
 		# raspap.auth was in a different directory in older versions.
@@ -2163,7 +2203,7 @@ restore_prior_files()
 		return 0
 	fi
 
-	if [[ ${PRIOR_ALLSKY} == "newStyle" ]]; then
+	if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
 		# The prior versions are similar to the new ones.
 		MSG=""
 		# If it has a version number it's probably close to the current version.
@@ -2587,7 +2627,7 @@ remind_run_check_allsky()
 ####
 remind_old_version()
 {
-	if [[ -n ${PRIOR_ALLSKY} ]]; then
+	if [[ -n ${PRIOR_ALLSKY_STYLE} ]]; then
 		MSG="When you are sure everything is working with the new Allsky release,"
 		MSG="${MSG} remove your old version in '${PRIOR_ALLSKY_DIR}' to save disk space."
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
@@ -2853,7 +2893,7 @@ does_prior_Allsky_exist
 [[ -z ${FUNCTION} ]] && do_initial_heading
 
 ##### See if we need to reboot at end of installation
-[[ -n ${PRIOR_ALLSKY} ]] && is_reboot_needed "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
+[[ -n ${PRIOR_ALLSKY_STYLE} ]] && is_reboot_needed "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
 
 ##### Determine what steps, if any, can be skipped.
 set_what_can_be_skipped "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"

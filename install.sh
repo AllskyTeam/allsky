@@ -1556,8 +1556,8 @@ update_config_sh()
 		CAMERA_TYPE="$( settings .cameratype )"
 	fi
 	sed -i \
-		-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};" \
 		-e "s;^CAMERA_TYPE=.*$;CAMERA_TYPE=\"${CAMERA_TYPE}\";" \
+		-e "/ALLSKY_VERSION=/ c ALLSKY_VERSION=\"${ALLSKY_VERSION}\"" \
 		"${C}"
 
 	STATUS_VARIABLES+=( "update_config_sh='true'\n" )
@@ -2183,19 +2183,6 @@ restore_prior_files()
 		fi
 	fi
 
-	if [[ ${CONFIG_SH_VERSION} == "${PRIOR_CONFIG_SH_VERSION}" ]]; then
-		# This version should be the same as the what's in the prior "version" file.
-		local PRIOR="$( get_variable "ALLSKY_VERSION" "${PRIOR_CONFIG_FILE}" )"
-		if [[ ${PRIOR} != "${ALLSKY_VERSION}" ]]; then
-			MSG="Updating ALLSKY_VERSION in 'config.sh' to '${ALLSKY_VERSION}'."
-			sed -i "/ALLSKY_VERSION=/ c ALLSKY_VERSION=\"${ALLSKY_VERSION}\"" "${PRIOR_CONFIG_FILE}"
-			display_msg --log progress "${MSG}"
-		else
-			MSG="ALLSKY_VERSION (${PRIOR}) in prior config.sh same as new version."
-			display_msg --logonly info "${MSG}"
-		fi
-	fi
-
 	STATUS_VARIABLES+=( "RESTORED_PRIOR_CONFIG_SH='${RESTORED_PRIOR_CONFIG_SH}'\n" )
 	STATUS_VARIABLES+=( "RESTORED_PRIOR_FTP_SH='${RESTORED_PRIOR_FTP_SH}'\n" )
 
@@ -2337,8 +2324,6 @@ install_overlay()
 	    	if [[ -f ${REQUIREMENTS_FILE} ]]; then
 	        	display_msg --logonly info "Using '${REQUIREMENTS_FILE}'"
 				break
-			else
-	        	display_msg --logonly debug "${REQUIREMENTS_FILE} - File not found"
 			fi
 		done
 

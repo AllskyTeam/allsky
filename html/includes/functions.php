@@ -99,15 +99,15 @@ function initialize_variables() {
 	// It's the same as ${ALLSKY_TMP} which is the physical path name on the server.
 	$img_dir = get_variable(ALLSKY_CONFIG . '/config.sh', 'IMG_DIR=', 'current/tmp');
 	$image_name = $img_dir . "/" . $settings_array['filename'];
-	$darkframe = $settings_array['takeDarkFrames'];
-	$useLogin = getVariableOrDefault($settings_array, 'useLogin', true);
+	$darkframe = $settings_array['takedarkframes'];
+	$useLogin = getVariableOrDefault($settings_array, 'uselogin', true);
 	$temptype = getVariableOrDefault($settings_array, 'temptype', "C");
 	$lastChanged = getVariableOrDefault($settings_array, $lastChangedName, "");
 	$websiteURL = getVariableOrDefault($settings_array, 'websiteurl', "");
 
 
 	////////////////// Determine delay between refreshes of the image.
-	$consistentDelays = $settings_array["consistentDelays"] == 1 ? true : false;
+	$consistentDelays = $settings_array["consistentdelays"] == 1 ? true : false;
 	$daydelay = $settings_array["daydelay"];
 	$daymaxautoexposure = $settings_array["daymaxautoexposure"];
 	$dayexposure = $settings_array["dayexposure"];

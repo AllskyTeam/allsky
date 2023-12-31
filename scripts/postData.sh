@@ -157,7 +157,7 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	FILE="data.json"
 	OUTPUT_FILE="${ALLSKY_TMP}/${FILE}"
 	(
-		if [[ $(settings ".takeDaytimeImages") -eq 1 ]]; then
+		if [[ $(settings ".takedaytimeimages") -eq 1 ]]; then
 			D="true"
 		else
 			D="false"

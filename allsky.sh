@@ -37,7 +37,7 @@ NEEDS_REBOOT="false"
 reboot_needed && NEEDS_REBOOT="true"
 
 # Make sure the settings have been configured after an installation or upgrade.
-LAST_CHANGED="$( settings ".lastChanged" )"
+LAST_CHANGED="$( settings ".lastchanged" )"
 if [[ ${LAST_CHANGED} == "" ]]; then
 	echo "*** ===== Allsky needs to be configured before it can be used.  See the WebUI."
 	if [[ ${NEEDS_REBOOT} == "true" ]]; then
@@ -239,12 +239,12 @@ fi
 LOCALE="$(settings .locale)"
 if [[ -z ${LOCALE} ]]; then
 	if [[ -n ${LC_ALL} ]]; then
-		echo "-Locale=${LC_ALL}" >> "${ARGS_FILE}"
+		echo "-locale=${LC_ALL}"
 	elif [[ -n ${LANG} ]]; then
-		echo "-lOcale=${LANG}" >> "${ARGS_FILE}"
+		echo "-locale=${LANG}"
 	elif [[ -n ${LANGUAGE} ]]; then
-		echo "-loCale=${LANGUAGE}" >> "${ARGS_FILE}"
-	fi
+		echo "-locale=${LANGUAGE}"
+	fi >> "${ARGS_FILE}"
 fi
 
 # We must pass "-config ${ARGS_FILE}" on the command line,
@@ -256,10 +256,13 @@ convert_json_to_tabs "${SETTINGS_FILE}" |
 
 # When using a desktop environment a preview of the capture can be displayed in a separate window.
 # The preview mode does not work if we are started as a service or if the debian distribution has no desktop environment.
-[[ $1 == "preview" ]] && echo "-preview=1" >> "${ARGS_FILE}"
+{
+	[[ $1 == "preview" ]] && echo "-preview=1"
 
-echo "-version=${ALLSKY_VERSION}" >> "${ARGS_FILE}"
-echo "-save_dir=${CAPTURE_SAVE_DIR}" >> "${ARGS_FILE}"
+	echo "-version=${ALLSKY_VERSION}"
+	echo "-save_dir=${CAPTURE_SAVE_DIR}"
+	echo "-cameramodel=${CAMERA_MODEL}"
+} >> "${ARGS_FILE}"
 
 FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
 # If the user wants images uploaded only every n times, save that number to a file.

@@ -6,7 +6,7 @@
 "display" : 1
 },
 {
-"name" : "takeDaytimeImages",
+"name" : "takedaytimeimages",
 "default" : 1,
 "description" : "Activate to <strong>take</strong> daytime images.",
 "label" : "Daytime Capture",
@@ -16,7 +16,7 @@
 "display" : 1
 },
 {
-"name" : "saveDaytimeImages",
+"name" : "savedaytimeimages",
 "default" : 0,
 "description" : "Activate to <strong>save</strong> daytime images.<br>Only applies if <span class='WebUISetting'>Daytime Capture</span> is enabled.",
 "label" : "Daytime Save",
@@ -176,7 +176,7 @@
 "display" : 1
 },
 {
-"name" : "dayEnableCooler",
+"name" : "dayenablecooler",
 "default" : 0,
 "description" : "Activate to use cooling (works only on cooled cameras).",
 "label" : "Cooling",
@@ -185,7 +185,7 @@
 "display" : "_display"
 },
 {
-"name" : "dayTargetTemp",
+"name" : "daytargettemp",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -196,7 +196,7 @@
 "display" : "_display"
 },
 {
-"name" : "dayTuningFile",
+"name" : "daytuningfile",
 "default" : "",
 "description" : "Name of the day camera tuning file to use. Omit this option to preserve the default behavior of libcamera.<br>Please read this <b><a href='https://www.raspberrypi.com/documentation/accessories/camera.html' target='_blank' rel='noreferrer' title='Opens in new tab/window'>documentation <i class='fa fa-external-link-alt fa-fw'></i></a></b> or this <b><a href='https://datasheets.raspberrypi.com/camera/raspberry-pi-camera-guide.pdf' target='_blank' rel='noreferrer' title='Opens in new tab/window'>document <i class='fa fa-external-link-alt fa-fw'></i></a></b> if using a Raspberry camera with libcamera. For other Raspberry cameras read the camera manual for more information.",
 "label" : "Tuning File",
@@ -363,7 +363,7 @@
 "display" : 1
 },
 {
-"name" : "nightEnableCooler",
+"name" : "nightenablecooler",
 "default" : 0,
 "description" : "Activate to use cooling (works only on cooled cameras).",
 "label" : "Cooling",
@@ -372,7 +372,7 @@
 "display" : "_display"
 },
 {
-"name" : "nightTargetTemp",
+"name" : "nighttargettemp",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -383,7 +383,7 @@
 "display" : "_display"
 },
 {
-"name" : "nightTuningFile",
+"name" : "nighttuningfile",
 "default" : "",
 "description" : "Name of the night camera tuning file to use.",
 "label" : "Tuning File",
@@ -409,7 +409,7 @@
 "display" : 1
 },
 {
-"name" : "extraArgs",
+"name" : "extraargs",
 "default" : "",
 "description" : "Extra arguments to pass to the capture program that Allsky doesn't support.",
 "label" : "Extra Arguments",
@@ -595,7 +595,7 @@
 "display" : 1
 },
 {
-"name" : "consistentDelays",
+"name" : "consistentdelays",
 "default" : 1,
 "description" : "Activate to have the delays between images be a consistent length.<br>The time between the start of exposures will always be (max exposure + delay).",
 "label" : "Consistent Delays Between Images",
@@ -643,7 +643,7 @@
 "display" : 1
 },
 {
-"name" : "takeDarkFrames",
+"name" : "takedarkdrames",
 "default" : 0,
 "description" : "Activate to capture dark frames, which are used to decrease noise.<br>Continues taking dark frames until Allsky is restarted.",
 "label" : "Take Dark Frames",
@@ -651,7 +651,7 @@
 "display" : 1
 },
 {
-"name" : "useDarkFrames",
+"name" : "usedarkdrames",
 "default" : 0,
 "description" : "Enables dark frame subtraction if you have dark frames.",
 "label" : "Use Dark Frames",
@@ -669,7 +669,7 @@
 "display" : 1
 },
 {
-"name" : "experimentalExposure",
+"name" : "experimentalexposure",
 "default" : 0,
 "description" : "Activate to use a newer auto-exposure algorithm at night.  Initial testing indictes the images taken during the day-to-night transition as well as at night have better exposures.<br>If you use this, please add a Discussion item describing your results - good or bad.  We need the feedback.",
 "label" : "New Exposure Algorithm",
@@ -708,7 +708,7 @@
 "display" : "_display"
 },
 {
-"name" : "useLogin",
+"name" : "useeogin",
 "default" : 1,
 "description" : "Determines if you need to login to the WebUI or not.<br><b>If your Pi is accessible on the Internet, do NOT turn this off!!</b>.",
 "label" : "Require WebUI Login",
@@ -723,7 +723,7 @@
 "display" : 1
 },
 {
-"name" : "overlayMethod",
+"name" : "overlayeethod",
 "default" : 0,
 "description" : "Determines how image overlays are done.<br><span class='WebUIValue'>module</span> supports a visual editor.<br><b>When set to <span class='WebUIValue'>module</span>, the overlay settings below do NOT apply.</b>",
 "label" : "Overlay Method",
@@ -737,7 +737,7 @@
 "display" : 1
 },
 {
-"name" : "showTime",
+"name" : "showeime",
 "default" : 1,
 "description" : "Activate to display the time an image was taken on the overlay.",
 "label" : "Show Time",
@@ -746,7 +746,7 @@
 "display" : 1
 },
 {
-"name" : "showTemp",
+"name" : "showeemp",
 "default" : 1,
 "description" : "Activate to display the camera sensor temperature on the overlay.",
 "label" : "Show Temperature",
@@ -769,7 +769,7 @@
 "display" : 1
 },
 {
-"name" : "showExposure",
+"name" : "showexposure",
 "default" : 1,
 "description" : "Activate to display the exposure length on the overlay.<br>If <span class='WebUISetting'>Auto-Exposure</span> is set, '(auto)' will appear after the exposure time.",
 "label" : "Show Exposure",
@@ -778,7 +778,7 @@
 "display" : 1
 },
 {
-"name" : "showGain",
+"name" : "showeain",
 "default" : 0,
 "description" : "Activate to display the camera gain on the overlay.<br>If <span class='WebUISetting'>Auto-Gain</span> is set, '(auto)' will appear after the gain value.",
 "label" : "Show Gain",
@@ -787,7 +787,7 @@
 "display" : 1
 },
 {
-"name" : "showBrightness",
+"name" : "showerightness",
 "default" : 0,
 "description" : "Activate to display the <span class='WebUISetting'>Brightness</span> number you set on the overlay.",
 "label" : "Show Brightness",
@@ -796,7 +796,7 @@
 "display" : 1
 },
 {
-"name" : "showUSB",
+"name" : "showusb",
 "default" : 0,
 "description" : "Activate to display the USB Bandwidth number on the overlay.<br>This is primarily for troubleshooting.",
 "label" : "Show USB",
@@ -804,7 +804,7 @@
 "display" : "_display"
 },
 {
-"name" : "showMean",
+"name" : "showmean",
 "default" : 0,
 "description" : "Activate to display the calculated mean image brightness on the overlay.",
 "label" : "Show Mean Brightness",
@@ -821,7 +821,7 @@
 "display" : "_display"
 },
 {
-"name" : "showFocus",
+"name" : "showfocus",
 "default" : 0,
 "description" : "Activate to display a focus metric to help you focus the camera.<br>This is only usefull while focusing.",
 "label" : "Show Focus Metric",
@@ -984,7 +984,7 @@
 "display" : 1
 },
 {
-"name" : "displaySettings",
+"name" : "displaysettings",
 "default" : 0,
 "description" : "Activate to add a link to the Allsky Website to display the settings on this page.<br><b>Only applies if you have a local or remote Allsky Website.",
 "label" : "Display Settings",
@@ -1085,7 +1085,7 @@
 "display" : 1
 },
 {
-"name" : "cameraType",
+"name" : "cameratype",
 "default" : "",
 "description" : "The type of camera you are using.<br>Select <span class='WebUIValue'>Refresh</span> to reset the Camera Type and Model.",
 "label" : "Camera Type",
@@ -1099,7 +1099,7 @@
 "display" : 1
 },
 {
-"name" : "cameraModel",
+"name" : "cameramodel",
 "default" : "",
 "description" : "The model of camera you are using.<br><strong>To change it, change the <span class='WebUISetting'>Camera Type</span> above.</strong>",
 "label" : "Camera Model",
@@ -1107,7 +1107,7 @@
 "display" : 1
 },
 {
-"name" : "cameraNumber",
+"name" : "cameranumber",
 "minimum" : 0,
 "maximum" : "none",
 "default" : 0,

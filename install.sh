@@ -500,7 +500,7 @@ save_camera_capabilities()
 	#shellcheck disable=SC2012
 	MSG="$( /bin/ls -l "${ALLSKY_CONFIG}/settings"*.json 2>/dev/null | sed 's/^/    /' )"
 	display_msg "${LOG_TYPE}" info "Settings files:\n${MSG}"
-	CAMERA_MODEL="$( settings ".cameraModel" "${SETTINGS_FILE}" )"
+	CAMERA_MODEL="$( settings ".cameramodel" "${SETTINGS_FILE}" )"
 	if [[ -z ${CAMERA_MODEL} ]]; then
 		display_msg --log warning "cameraModel not found in settings file."
 	fi
@@ -1399,8 +1399,8 @@ does_prior_Allsky_exist()
 			PRIOR_ALLSKY="newStyle"
 			PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}"
 			if [[ -f ${PRIOR_SETTINGS_FILE} ]]; then
-				PRIOR_CAMERA_TYPE="$( settings ".cameraType" "${PRIOR_SETTINGS_FILE}" )"
-				PRIOR_CAMERA_MODEL="$( settings ".cameraModel" "${PRIOR_SETTINGS_FILE}" )"
+				PRIOR_CAMERA_TYPE="$( settings ".cameratype" "${PRIOR_SETTINGS_FILE}" )"
+				PRIOR_CAMERA_MODEL="$( settings ".cameramodel" "${PRIOR_SETTINGS_FILE}" )"
 			else
 				# This shouldn't happen...
 				PRIOR_SETTINGS_FILE=""
@@ -1514,7 +1514,7 @@ update_config_sh()
 	display_msg --log progress "Updating some '${C}' variables."
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		display_msg --log error "CAMERA_TYPE is empty in update_config_sh()"
-		CAMERA_TYPE="$( settings .cameraType )"
+		CAMERA_TYPE="$( settings .cameratype )"
 	fi
 	sed -i \
 		-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};" \
@@ -1885,7 +1885,7 @@ restore_prior_settings_file()
 			esac
 
 			# Set to null to force the user to look at the settings before Allsky will run.
-			update_json_file ".lastChanged" "" "${SETTINGS_FILE}"
+			update_json_file ".lastchanged" "" "${SETTINGS_FILE}"
 
 			RESTORED_PRIOR_SETTINGS_FILE="true"
 			FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"
@@ -2553,7 +2553,7 @@ check_restored_settings()
 # See if the new ZWO exposure algorithm should be used.
 check_new_exposure_algorithm()
 {
-	local FIELD="experimentalExposure"
+	local FIELD="experimentalexposure"
 	local NEW="$( settings ".${FIELD}" )"
 	[[ ${NEW} -eq 1 ]] && return
 

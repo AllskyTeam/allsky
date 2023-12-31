@@ -4,9 +4,9 @@
 # ME="$(basename "${BASH_ARGV0}")"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"			|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"			|| exit "${EXIT_ERROR_STOP}"
 
-cd "${ALLSKY_HOME}"  							|| exit "${ALLSKY_ERROR_STOP}"
+cd "${ALLSKY_HOME}"  							|| exit "${EXIT_ERROR_STOP}"
 
 MSG="This will remove all non-config, system files from your computer.\n"
 MSG="${MSG}Note: This only removes files in their default location.\n"

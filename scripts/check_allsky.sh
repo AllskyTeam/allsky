@@ -225,7 +225,7 @@ function check_delay()
 
 	# With the legacy overlay method it might take up to a couple seconds to save an image.
 	# With the module method it can take up to 5 seconds.
-	local OVERLAY_METHOD=$(settings .overlaymethod) || echo "Problem getting .overlayMethod." >&2
+	local OVERLAY_METHOD=$(settings .overlaymethod) || echo "Problem getting .overlaymethod." >&2
 	if [[ ${OVERLAY_METHOD} -eq 1 ]]; then
 		MAX_TIME_TO_SAVE_MS=5000
 	else

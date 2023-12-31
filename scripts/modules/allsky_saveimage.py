@@ -2,7 +2,7 @@
 allsky_saveimafe.py
 
 Part of allsky postprocess.py modules.
-https://github.com/thomasjacquin/allsky
+https://github.com/AllskyTeam/allsky
 
 This module will save the final image after all modules have run
 

@@ -1,5 +1,5 @@
 // Modify URLs on the GitHub server so we can view pages there OR on a Pi.
-// Also, allow files to be included since GitHub doesn't have php.
+// Also, allow files to be included since GitHub doesn't have PHP.
 
 var debug = false;
 
@@ -21,7 +21,7 @@ var git_hostname = "htmlpreview.github.io";
 var preURL_href, preURL_src;			// What gets prepended to the desired URL.
 
 var git_preURL_href = "https://" + git_hostname + "/?";
-var git_raw = "https://raw.githubusercontent.com/thomasjacquin/allsky/";
+var git_raw = "https://raw.githubusercontent.com/AllskyTeam/allsky/";
 
 if (debug) console.log("location.hostname=" + location.hostname + ", git_hostname=" + git_hostname);
 if (location.hostname == git_hostname) {

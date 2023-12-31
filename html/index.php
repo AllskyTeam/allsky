@@ -11,7 +11,6 @@
  * @author     Thomas Jacquin <jacquin.thomas@gmail.com>
  * @license    GNU General Public License, version 3 (GPL-3.0)
  * @version    0.0.1
- * @link       https://github.com/thomasjacquin/allsky-portal
  */
 
 // Globals

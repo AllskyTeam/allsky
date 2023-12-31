@@ -2,7 +2,7 @@
 allsky_shared.py
 
 Part of allsky postprocess.py modules.
-https://github.com/thomasjacquin/allsky
+https://github.com/AllskyTeam/allsky
 
 This module is a common dumping ground for shared variables and functions.
 '''

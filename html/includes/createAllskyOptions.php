@@ -376,9 +376,9 @@ foreach ($repo_array as $repo) {
 
 	// Have to handle camera type and model differently because the defaults
 	// might not be what we want.
-	if ($name === "cameraType")
+	if ($name === "cameratype")
 			$repo["default"] = $cameraType;
-	elseif ($name === "cameraModel")
+	elseif ($name === "cameramodel")
 			$repo["default"] = $cameraModel;
 	elseif ($name === "camera")
 			$repo["default"] = "$cameraType $cameraModel";

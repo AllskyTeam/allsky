@@ -523,11 +523,11 @@ function check_settings_link()
 		return "${EXIT_ERROR_STOP}"
 	fi
 	if [[ -z ${CAMERA_TYPE} ]]; then
-		CAMERA_TYPE="$( settings .cameraType  "${FULL_FILE}" )"
+		CAMERA_TYPE="$( settings .cameratype  "${FULL_FILE}" )"
 		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
 	fi
 	if [[ -z ${CAMERA_MODEL} ]]; then
-		CAMERA_MODEL="$( settings .cameraModel  "${FULL_FILE}" )"
+		CAMERA_MODEL="$( settings .cameramodel  "${FULL_FILE}" )"
 		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
 	fi
 

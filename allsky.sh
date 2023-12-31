@@ -239,12 +239,12 @@ fi
 LOCALE="$(settings .locale)"
 if [[ -z ${LOCALE} ]]; then
 	if [[ -n ${LC_ALL} ]]; then
-		echo "-Locale=${LC_ALL}" >> "${ARGS_FILE}"
+		echo "-locale=${LC_ALL}"
 	elif [[ -n ${LANG} ]]; then
-		echo "-lOcale=${LANG}" >> "${ARGS_FILE}"
+		echo "-locale=${LANG}"
 	elif [[ -n ${LANGUAGE} ]]; then
-		echo "-loCale=${LANGUAGE}" >> "${ARGS_FILE}"
-	fi
+		echo "-locale=${LANGUAGE}"
+	fi >> "${ARGS_FILE}"
 fi
 
 # We must pass "-config ${ARGS_FILE}" on the command line,
@@ -260,6 +260,7 @@ convert_json_to_tabs "${SETTINGS_FILE}" |
 
 echo "-version=${ALLSKY_VERSION}" >> "${ARGS_FILE}"
 echo "-save_dir=${CAPTURE_SAVE_DIR}" >> "${ARGS_FILE}"
+echo "-cameramodel=${CAMERA_MODEL}" >> "${ARGS_FILE}"
 
 FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
 # If the user wants images uploaded only every n times, save that number to a file.

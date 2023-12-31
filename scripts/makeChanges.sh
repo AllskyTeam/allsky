@@ -37,11 +37,11 @@ DEBUG_ARG=""
 HELP="false"
 OPTIONS_FILE_ONLY="false"
 RESTARTING="false"			# Will the caller restart Allsky?
-CAMERA_TYPE_ONLY="false"	# Only update the cameraType ?
+CAMERA_TYPE_ONLY="false"	# Only update the cameratype ?
 FORCE=""					# Passed to createAllskyOptions.php
 
 while [[ $# -gt 0 ]]; do
-	ARG="${1,,}"					# convert to lowercase
+	ARG="${1}"
 	case "${ARG}" in
 		--debug)
 			DEBUG="true"
@@ -178,11 +178,11 @@ do
 		cameranumber | cameratype)
 			if [[ ${K} == "cameranumber" ]]; then
 				NEW_CAMERA_NUMBER="${NEW_VALUE}"
-				CAMERA_NUMBER=" -cameraNumber ${NEW_CAMERA_NUMBER}"
+				CAMERA_NUMBER=" -cameranumber ${NEW_CAMERA_NUMBER}"
 				# Set NEW_VALUE to the current Camera Type
-				NEW_VALUE="$( settings .cameraType )"
+				NEW_VALUE="$( settings .cameratype )"
 
-				MSG="Re-creating files for cameraType ${NEW_VALUE}, cameraNumber ${NEW_CAMERA_NUMBER}"
+				MSG="Re-creating files for cameratype ${NEW_VALUE}, cameranumber ${NEW_CAMERA_NUMBER}"
 				if [[ ${ON_TTY} -eq 0 ]]; then		# called from WebUI.
 					echo -e "<script>console.log('${MSG}');</script>"
 				elif [[ ${DEBUG} == "true" ]]; then
@@ -203,7 +203,7 @@ do
 			if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
 
 				# If we can't set the new camera type, it's a major problem so exit right away.
-				# NOTE: when we're changing cameraType we're not changing anything else.
+				# NOTE: when we're changing cameratype we're not changing anything else.
 
 				# The software for RPi cameras needs to know what command is being used to
 				# capture the images.
@@ -260,7 +260,7 @@ do
 
 				# Create a link to a file that contains the camera type and model in the name.
 				CAMERA_TYPE="${NEW_VALUE}"		# already know it
-				CAMERA_MODEL="$( settings .cameraModel "${CC_FILE}" )"
+				CAMERA_MODEL="$( settings .cameramodel "${CC_FILE}" )"
 				if [[ -z ${CAMERA_MODEL} ]]; then
 					echo -e "${wERROR}ERROR: 'cameraModel' not found in ${CC_FILE}.${wNC}"
 					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"

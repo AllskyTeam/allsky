@@ -8,7 +8,7 @@
 ME="$(basename "${BASH_ARGV0}")"
 
 #shellcheck disable=SC1091 source=variables.sh
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 
 if [ $# -ne 2 ]; then
 	# shellcheck disable=SC2154

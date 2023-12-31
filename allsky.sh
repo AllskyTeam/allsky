@@ -16,7 +16,7 @@ STOPPED_MSG="Allsky Stopped!"
 ERROR_MSG_PREFIX="*** ERROR ***\n${STOPPED_MSG}\n"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 if [[ -z ${ALLSKY_CONFIG} ]]; then
 	MSG="FATAL ERROR: 'source variables.sh' did not work properly."
 	echo -e "${RED}*** ${MSG}${NC}"
@@ -26,11 +26,11 @@ if [[ -z ${ALLSKY_CONFIG} ]]; then
 fi
 
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"						|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_CONFIG}/config.sh"						|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 # Make sure they rebooted if they were supposed to.
 NEEDS_REBOOT="false"

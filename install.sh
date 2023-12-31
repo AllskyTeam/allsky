@@ -43,8 +43,8 @@ NEW_HOST_NAME=""						# User-specified host name
 BRANCH="${GITHUB_MAIN_BRANCH}"			# default branch
 
 # Allsky versions.   ${ALLSKY_VERSION} is set in variables.sh
-##xxx TODO: uncomment:    ALLSKY_BASE_VERSION="${ALLSKY_VERSION:0:11}"	# without point release
-	# Base of first version with combined configuration files.
+##xxx TODO: uncomment:    ALLSKY_BASE_VERSION="$( remove_point_release "${ALLSKY_VERSION}" )"
+	# Base of first version with combined configuration files and all lowercase settings.
 	#xxxxxxx TODO: update:
 COMBINED_BASE_VERSION="v2024.xx.xx"
 	# Base of first version with CAMERA_TYPE instead of CAMERA in config.sh and
@@ -510,7 +510,8 @@ save_camera_capabilities()
 	display_msg "${LOG_TYPE}" info "Settings files:\n${MSG}"
 	CAMERA_MODEL="$( settings ".cameramodel" "${SETTINGS_FILE}" )"
 	if [[ -z ${CAMERA_MODEL} ]]; then
-		display_msg --log warning "cameramodel not found in settings file."
+		display_msg --log error "cameramodel not found in settings file."
+		return 1
 	fi
 
 	STATUS_VARIABLES+=("save_camera_capabilities='true'\n")
@@ -1349,9 +1350,10 @@ set_what_can_be_skipped()
 {
 	if [[ ${PRIOR_ALLSKY_STYLE} != "" ]]; then
 		local OLD_VERSION="${1}"
-		local OLD_BASE_VERSION="${OLD_VERSION:0:11}"	# Without point release
+		local OLD_BASE_VERSION="$( remove_point_release "${OLD_VERSION}" )"
 		local NEW_VERSION="${2}"
-		if [[ ${NEW_VERSION} == "v2023.05.01_02" && ${OLD_BASE_VERSION} == "v2023.05.01" ]]; then
+		if [[ ${NEW_VERSION} == "v2023.05.01_02" &&
+				${OLD_BASE_VERSION} == "${FIRST_CAMERA_TYPE_BASE_VERSION}" ]]; then
 			# No changes to these packages so no need to reinstall.
 			MSG="Skipping installation of: webserver et.al., PHP modules, Trutype fonts, Python"
 			display_msg --logonly info "${MSG}"
@@ -1368,7 +1370,7 @@ set_what_can_be_skipped()
 is_reboot_needed()
 {
 	local OLD_VERSION="${1}"
-	local OLD_BASE_VERSION="${OLD_VERSION:0:11}"	# Without point release
+	local OLD_BASE_VERSION="$( remove_point_release "${OLD_VERSION}" )"
 	local NEW_VERSION="${2}"
 	if [[ ${OLD_VERSION} < "v2023.05.01_04" ]]; then
 		# v2023.05.01_04 added to $PATH and a reboot's needed to have it take effect.
@@ -1644,21 +1646,17 @@ get_lat_long()
 
 
 ####
-# Convert the prior settings file to a new one,
-# then link the new one to the camera-specific name.
-convert_settings()			# prior_version, new_version, prior_file, new_file
+# Convert the prior settings file to a new one.
+convert_settings()			# prior_version, prior_file, new_file
 {
 	PRIOR_VERSION="${1}"
-	NEW_VERSION="${2}"
-		NEW_BASE_VERSION="${NEW_VERSION:0:11}"		# without point release
-	PRIOR_FILE="${3}"
-	NEW_FILE="${4}"
+		PRIOR_BASE_VERSION="$( remove_point_release "${PRIOR_VERSION}" )"
+	PRIOR_FILE="${2}"
+	NEW_FILE="${3}"
 
-	[[ ${NEW_VERSION} == "${PRIOR_VERSION}" ]] && return
+	[[ ${ALLSKY_VERSION} == "${PRIOR_VERSION}" ]] && return
 
-	# TODO: new versions go here
-
-	if [[ ${NEW_BASE_VERSION} == "v2023.05.01" ]]; then
+	if [[ ${NEW_BASE_VERSION} == "xxxxxxxxxxx${FIRST_CAMERA_TYPE_BASE_VERSION}" ]]; then
 
 		# Replaced "meanthreshold" with "daymeanthreshold" and "nightmeanthreshold"
 		# if they don't already exist.
@@ -1695,93 +1693,90 @@ convert_settings()			# prior_version, new_version, prior_file, new_file
 		return
 	fi
 
-	if [[ ${NEW_BASE_VERSION} == "v2023.05.01" && ${PRIOR_VERSION} == "v2022.03.01" ]]; then
-		local B="$( basename "${NEW_FILE}" )"
-		local NAME="${B%.*}"			# before "."
-		local EXT="${B##*.}"			# after "."
-		local SPECIFIC="${NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${EXT}"
+	if [[ ${PRIOR_BASE_VERSION} < "${COMBINED_BASE_VERSION}" ]]; then
+		# Older version had uppercase letters in settings name.
+		display_msg --logonly info "   Making all settings names lowercase."
+		# This assumes json key names only contain what's between the brackets:
+		sed -i -e 's/\("[-_a-zA-Z]*"\)/\L\1/' "${NEW_FILE}"
+	fi
 
-		# For each field in prior file, update new file with old value.
-		# Then handle new fields and fields that changed locations or names.
-		# convert_json_to_tabs outputs fields and values separated by tabs.
+	convert_json_to_tabs "${PRIOR_FILE}" |
+		while read -r F V
+		do
+			F="${F,,}"
+			case "${F}" in
+				"lastchanged")
+					V="$( date +'%Y-%m-%d %H:%M:%S' )"
+					;;
 
-		convert_json_to_tabs "${PRIOR_FILE}" |
-			while read -r F V
-			do
-				case "${F,,}" in
-					"lastchanged")
-						V="$( date +'%Y-%m-%d %H:%M:%S' )"
-						;;
+				# These don't exist anymore.
+				"autofocus"|"background")
+					continue;
+					;;
 
-					# These don't exist anymore.
-					"autofocus"|"background")
-						continue;
-						;;
+				# These changed names.
+				"darkframe")
+					F="takedarkframes"
+					;;
+				"daymaxautoexposure")
+					F="daymaxautoexposure"
+					;;
+				"daymaxgain")
+					F="daymaxautogain"
+					;;
+				"nightmaxautoexposure")
+					F="nightmaxautoexposure"
+					;;
+				"nightmaxgain")
+					F="nightmaxautogain"
+					;;
 
-					# These changed names.
-					"darkframe")
-						F="takedarkframes"
-						;;
-					"daymaxautoexposure")
-						F="daymaxautoexposure"
-						;;
-					"daymaxgain")
-						F="daymaxautogain"
-						;;
-					"nightmaxautoexposure")
-						F="nightmaxautoexposure"
-						;;
-					"nightmaxgain")
-						F="nightmaxautogain"
-						;;
+				# These now have day and night versions.
+				"brightness")
+					update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+					F="night${F}"
+					;;
+				"awb"|"autowhitebalance")
+					update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+					F="night${F}"
+					;;
+				"wbr")
+					update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+					F="night${F}"
+					;;
+				"wbb")
+					update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+					F="night${F}"
+					;;
+				"targettemp")
+					F="targettemp"
+					update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+					F="night${F}"
+					;;
+				"coolerenabled")
+					F="enablecooler"
+					update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+					F="night${F}"
+					;;
+				"meanthreshold")
+					F="meanthreshold"
+					update_json_file ".day${F}" "${V}" "${NEW_FILE}"
+					F="night${F}"
+					;;
+			esac
 
-					# These now have day and night versions.
-					"brightness")
-						update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-						F="night${F}"
-						;;
-					"awb"|"autowhitebalance")
-						update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-						F="night${F}"
-						;;
-					"wbr")
-						update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-						F="night${F}"
-						;;
-					"wbb")
-						update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-						F="night${F}"
-						;;
-					"targettemp")
-						F="targettemp"
-						update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-						F="night${F}"
-						;;
-					"coolerenabled")
-						F="enablecooler"
-						update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-						F="night${F}"
-						;;
-					"meanthreshold")
-						F="meanthreshold"
-						update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-						F="night${F}"
-						;;
-				esac
-
-				update_json_file ".${F}" "${V}" "${NEW_FILE}"
-			done
+			update_json_file ".${F}" "${V}" "${NEW_FILE}"
+		done
 
 		# Fields whose location changed.
 		x="$( get_variable "DAYTIME_CAPTURE" "${PRIOR_CONFIG_FILE}" )"
-		update_json_file ".takedaytimeimages" "${x}" "${NEW_FILE}"
+		[[ -n ${x} ]] && update_json_file ".takedaytimeimages" "${x}" "${NEW_FILE}"
 
 		x="$( get_variable "DAYTIME_SAVE" "${PRIOR_CONFIG_FILE}" )"
-		update_json_file ".savedaytimeimages" "${x}" "${NEW_FILE}"
+		[[ -n ${x} ]] && update_json_file ".savedaytimeimages" "${x}" "${NEW_FILE}"
 
 		x="$( get_variable "DARK_FRAME_SUBTRACTION" "${PRIOR_CONFIG_FILE}" )"
-		update_json_file ".usedarkframes" "${x}" "${NEW_FILE}"
-	fi
+		[[ -n ${x} ]] && update_json_file ".usedarkframes" "${x}" "${NEW_FILE}"
 }
 
 
@@ -1873,7 +1868,7 @@ restore_prior_settings_file()
 				local B="$( basename "${S}" )"
 				S="${ALLSKY_CONFIG}/${B}"
 				display_msg --log progress "Updating '${S}'"
-				convert_settings "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}" \
+				convert_settings "${PRIOR_ALLSKY_VERSION}" \
 					"${S}" "${S}"
 			done
 		fi
@@ -1884,8 +1879,8 @@ restore_prior_settings_file()
 			# Transfer prior settings to the new file.
 
 			case "${PRIOR_ALLSKY_VERSION}" in
-				"v2022.03.01")
-					convert_settings "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}" \
+				"${FIRST_VERSION_VERSION}")
+					convert_settings "${PRIOR_ALLSKY_VERSION}" \
 						"${PRIOR_SETTINGS_FILE}" "${SETTINGS_FILE}"
 
 					MSG="Your old WebUI settings were transfered to the new release,"
@@ -2129,7 +2124,7 @@ restore_prior_files()
 		if [[ -z ${PRIOR_CONFIG_SH_VERSION} ]]; then
 			MSG="no prior version specified"
 		else
-			# v2023.05.01 is hopefully the last version with config.sh so don't
+			# v2023.05.01 is the last version with config.sh so don't
 			# bother writing a function to convert from the prior version to this.
 			MSG="prior version is old (${PRIOR_CONFIG_SH_VERSION})"
 		fi
@@ -2142,7 +2137,7 @@ restore_prior_files()
 	local FTP_SH_VERSION="$( get_variable "FTP_SH_VERSION" "${ALLSKY_CONFIG}/ftp-settings.sh" )"
 	local PRIOR_FTP_SH_VERSION
 	if [[ -f ${PRIOR_FTP_FILE} ]]; then
-		# Allsky v2022.03.01 and newer.  v2022.03.01 doesn't have FTP_SH_VERSION.
+		# Allsky v2022.03.01 and newer. It doesn't have FTP_SH_VERSION.
 		PRIOR_FTP_SH_VERSION="$( get_variable "FTP_SH_VERSION" "${PRIOR_FTP_FILE}" )"
 		PRIOR_FTP_SH_VERSION="${PRIOR_FTP_SH_VERSION:-"no version"}"
 	elif [[ -f ${PRIOR_ALLSKY_DIR}/scripts/ftp-settings.sh ]]; then
@@ -2450,7 +2445,7 @@ check_if_buster()
 	[[ ${PI_OS} != "buster" ]] && return
 
 	MSG="WARNING: You are running the older Buster operating system."
-	MSG="${MSG}\n\nSupport for it will be dropped in a future Allsky release.\n"
+	MSG="${MSG}\n\nThis is the last Allsky release that will support Buster.\n"
 	MSG="${MSG}\nWe recommend doing a fresh install of Bookworm on a clean SD card now."
 	if [[ ${PRIOR_CAMERA_TYPE} == "RPi" ]]; then
 		MSG="${MSG}\nRPi cameras have more features on newer operating systems.\n"
@@ -2691,6 +2686,18 @@ exit_installation()
 	[[ ${RET} -ge 0 ]] && exit "${RET}"
 }
 
+
+####
+# Remove the point release from the version
+# Format of a version (_PP is optional point release):
+#	12345678901234
+#	vYYYY.MM.DD_PP
+
+function remove_point_release()
+{
+	# Get just the base portion.
+	echo "${1:0:11}"
+}
 
 ####
 handle_interrupts()

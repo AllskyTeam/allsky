@@ -708,7 +708,7 @@
 "display" : "_display"
 },
 {
-"name" : "useeogin",
+"name" : "uselogin",
 "default" : 1,
 "description" : "Determines if you need to login to the WebUI or not.<br><b>If your Pi is accessible on the Internet, do NOT turn this off!!</b>.",
 "label" : "Require WebUI Login",
@@ -723,7 +723,7 @@
 "display" : 1
 },
 {
-"name" : "overlayeethod",
+"name" : "overlaymethod",
 "default" : 0,
 "description" : "Determines how image overlays are done.<br><span class='WebUIValue'>module</span> supports a visual editor.<br><b>When set to <span class='WebUIValue'>module</span>, the overlay settings below do NOT apply.</b>",
 "label" : "Overlay Method",
@@ -737,7 +737,7 @@
 "display" : 1
 },
 {
-"name" : "showeime",
+"name" : "showetime",
 "default" : 1,
 "description" : "Activate to display the time an image was taken on the overlay.",
 "label" : "Show Time",
@@ -746,7 +746,7 @@
 "display" : 1
 },
 {
-"name" : "showeemp",
+"name" : "showetemp",
 "default" : 1,
 "description" : "Activate to display the camera sensor temperature on the overlay.",
 "label" : "Show Temperature",
@@ -778,7 +778,7 @@
 "display" : 1
 },
 {
-"name" : "showeain",
+"name" : "showgain",
 "default" : 0,
 "description" : "Activate to display the camera gain on the overlay.<br>If <span class='WebUISetting'>Auto-Gain</span> is set, '(auto)' will appear after the gain value.",
 "label" : "Show Gain",
@@ -787,7 +787,7 @@
 "display" : 1
 },
 {
-"name" : "showerightness",
+"name" : "showbrightness",
 "default" : 0,
 "description" : "Activate to display the <span class='WebUISetting'>Brightness</span> number you set on the overlay.",
 "label" : "Show Brightness",

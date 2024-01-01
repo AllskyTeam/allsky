@@ -3,9 +3,9 @@
 function DisplayAllskyConfig(){
 	global $formReadonly;
 
-	$cameraTypeName = "cameraType";		// json setting name
-	$cameraModelName = "cameraModel";	// json setting name
-	$cameraNumberName = "cameraNumber";	// json setting name
+	$cameraTypeName = "cameratype";		// json setting name
+	$cameraModelName = "cameramodel";	// json setting name
+	$cameraNumberName = "cameranumber";	// json setting name
 	$debugLevelName = "debuglevel";		// json setting name
 	$debugArg = "";
 

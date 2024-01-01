@@ -643,7 +643,7 @@
 "display" : 1
 },
 {
-"name" : "takedarkdrames",
+"name" : "takedarkframes",
 "default" : 0,
 "description" : "Activate to capture dark frames, which are used to decrease noise.<br>Continues taking dark frames until Allsky is restarted.",
 "label" : "Take Dark Frames",
@@ -651,7 +651,7 @@
 "display" : 1
 },
 {
-"name" : "usedarkdrames",
+"name" : "usedarkframes",
 "default" : 0,
 "description" : "Enables dark frame subtraction if you have dark frames.",
 "label" : "Use Dark Frames",

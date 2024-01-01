@@ -1006,7 +1006,7 @@
 {
 "name" : "websiteurl",
 "default" : "",
-"description" : "The URL of your Allsky Website, for example: https://www.thomasjacquin.com/allsky.<br>If your camera is not accessible on the Internet, leave this field empty.<br>Must begin with <b>http</b> or <b>https</b>.",
+"description" : "The URL of your Allsky Website, for example: https://my.allskyweb.com/allsky.<br>If your camera is not accessible on the Internet, leave this field empty.<br>Must begin with <b>http</b> or <b>https</b>.",
 "label" : "Website URL",
 "type" : "widetext",
 "checkchanges" : 1,
@@ -1017,7 +1017,7 @@
 {
 "name" : "imageurl",
 "default" : "",
-"description" : "The URL of the image on your Allsky Website, for example: https://www.thomasjacquin.com/allsky/image.jpg.<br/>Right-click on the image and select <i>Copy Image Address</i>.<br>If your camera is not accessible on the Internet, leave this field empty.<br>Must begin with <b>http</b> or <b>https</b>.",
+"description" : "The URL of the image on your Allsky Website, for example: https://my.allskyweb.com/allsky/image.jpg.<br/>Right-click on the image and select <i>Copy Image Address</i>.<br>If your camera is not accessible on the Internet, leave this field empty.<br>Must begin with <b>http</b> or <b>https</b>.",
 "label" : "Image URL",
 "type" : "widetext",
 "checkchanges" : 1,

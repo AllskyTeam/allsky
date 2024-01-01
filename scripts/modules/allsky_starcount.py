@@ -2,7 +2,7 @@
 allsky_starcount.py
 
 Part of allsky postprocess.py modules.
-https://github.com/thomasjacquin/allsky
+https://github.com/AllskyTeam/allsky
 
 This module attempts to count the number of stars in an image
 

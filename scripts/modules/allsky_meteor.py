@@ -1,7 +1,7 @@
 """ allsky_meteor.py
 
 Part of allsky postprocess.py modules.
-https://github.com/thomasjacquin/allsky
+https://github.com/AllskyTeam/allsky
 
 This module will attempt to locate meteors in captured images
 """

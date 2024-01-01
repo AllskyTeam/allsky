@@ -1,7 +1,7 @@
 """ allsky_script.py
 
 Part of allsky postprocess.py modules.
-https://github.com/thomasjacquin/allsky
+https://github.com/AllskyTeam/allsky
 
 This module will run a custom script
 """

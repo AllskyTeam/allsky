@@ -2,7 +2,7 @@
 allsky_saveintermediateimage.py
 
 Part of allsky postprocess.py modules.
-https://github.com/thomasjacquin/allsky
+https://github.com/AllskyTeam/allsky
 
 This module will save the image at any point during the module workflow
 

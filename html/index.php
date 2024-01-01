@@ -14,7 +14,7 @@
  */
 
 // Globals
-$lastChangedName = "lastChanged";	// json setting name
+$lastChangedName = "lastchanged";	// json setting name
 $formReadonly = false;				// The WebUI isn't readonly
 $ME = htmlspecialchars($_SERVER["PHP_SELF"]);
 

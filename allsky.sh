@@ -15,8 +15,8 @@ NOT_STARTED_MSG="Unable to start Allsky!"
 STOPPED_MSG="Allsky Stopped!"
 ERROR_MSG_PREFIX="*** ERROR ***\n${STOPPED_MSG}\n"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=.
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 if [[ -z ${ALLSKY_CONFIG} ]]; then
 	MSG="FATAL ERROR: 'source variables.sh' did not work properly."
 	echo -e "${RED}*** ${MSG}${NC}"
@@ -25,19 +25,19 @@ if [[ -z ${ALLSKY_CONFIG} ]]; then
 		"${NOT_STARTED_MSG}<br>${MSG}"
 fi
 
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"						|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh"						|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 # Make sure they rebooted if they were supposed to.
 NEEDS_REBOOT="false"
 reboot_needed && NEEDS_REBOOT="true"
 
 # Make sure the settings have been configured after an installation or upgrade.
-LAST_CHANGED="$( settings ".lastChanged" )"
+LAST_CHANGED="$( settings ".lastchanged" )"
 if [[ ${LAST_CHANGED} == "" ]]; then
 	echo "*** ===== Allsky needs to be configured before it can be used.  See the WebUI."
 	if [[ ${NEEDS_REBOOT} == "true" ]]; then
@@ -59,10 +59,21 @@ ARGS_FILE="${ALLSKY_TMP}/capture_args.txt"
 
 # If a prior copy of Allsky exists, remind the user.
 if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
-	MSG="Reminder: your prior Allsky is still in '${PRIOR_ALLSKY_DIR}'."
-	MSG="${MSG}\nIf you are no longer using it, it can be removed to save disk space:"
-	MSG="${MSG}\n&nbsp; &nbsp;<code>rm -fr '${PRIOR_ALLSKY_DIR}'</code>\n"
-	"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
+	DO_MSG="true"
+	if [[ -f ${OLD_ALLSKY_REMINDER} ]]; then
+		CHECK_DATE="$( date -d '1 week ago' +'%Y%m%d%H%M.%S' )"
+		CHECK_FILE="${ALLSKY_TMP}/check_date"
+		touch -t "${CHECK_DATE}" "${CHECK_FILE}"
+		[[ ${OLD_ALLSKY_REMINDER} -nt "${CHECK_FILE}" ]] && DO_MSG="false"
+		rm -f "${CHECK_FILE}"
+	fi
+	if [[ ${DO_MSG} == "true" ]]; then
+		MSG="Reminder: your prior Allsky is still in '${PRIOR_ALLSKY_DIR}'."
+		MSG="${MSG}\nIf you are no longer using it, it can be removed to save disk space:"
+		MSG="${MSG}\n&nbsp; &nbsp;<code>rm -fr '${PRIOR_ALLSKY_DIR}'</code>\n"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
+		touch "${OLD_ALLSKY_REMINDER}"		# last time we displayed the message
+	fi
 fi
 
 # This file contains information the user needs to act upon after an installation.
@@ -228,12 +239,12 @@ fi
 LOCALE="$(settings .locale)"
 if [[ -z ${LOCALE} ]]; then
 	if [[ -n ${LC_ALL} ]]; then
-		echo "-Locale=${LC_ALL}" >> "${ARGS_FILE}"
+		echo "-locale=${LC_ALL}"
 	elif [[ -n ${LANG} ]]; then
-		echo "-lOcale=${LANG}" >> "${ARGS_FILE}"
+		echo "-locale=${LANG}"
 	elif [[ -n ${LANGUAGE} ]]; then
-		echo "-loCale=${LANGUAGE}" >> "${ARGS_FILE}"
-	fi
+		echo "-locale=${LANGUAGE}"
+	fi >> "${ARGS_FILE}"
 fi
 
 # We must pass "-config ${ARGS_FILE}" on the command line,
@@ -245,10 +256,13 @@ convert_json_to_tabs "${SETTINGS_FILE}" |
 
 # When using a desktop environment a preview of the capture can be displayed in a separate window.
 # The preview mode does not work if we are started as a service or if the debian distribution has no desktop environment.
-[[ $1 == "preview" ]] && echo "-preview=1" >> "${ARGS_FILE}"
+{
+	[[ $1 == "preview" ]] && echo "-preview=1"
 
-echo "-version=${ALLSKY_VERSION}" >> "${ARGS_FILE}"
-echo "-save_dir=${CAPTURE_SAVE_DIR}" >> "${ARGS_FILE}"
+	echo "-version=${ALLSKY_VERSION}"
+	echo "-save_dir=${CAPTURE_SAVE_DIR}"
+	echo "-cameramodel=${CAMERA_MODEL}"
+} >> "${ARGS_FILE}"
 
 FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
 # If the user wants images uploaded only every n times, save that number to a file.

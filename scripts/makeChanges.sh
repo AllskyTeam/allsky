@@ -5,18 +5,18 @@
 ME="$(basename "${BASH_ARGV0}")"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"			|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"			|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit "${EXIT_ERROR_STOP}"
 
 # This script may be called during installation BEFORE there is a settings file.
 # config.sh looks for the file and produces an error if it doesn't exist,
 # so only include these two files if there IS a settings file.
 if [[ -f ${SETTINGS_FILE} ]]; then
 	#shellcheck disable=SC1091		# file doesn't exist in GitHub
-	source "${ALLSKY_CONFIG}/config.sh"			|| exit "${ALLSKY_ERROR_STOP}"
+	source "${ALLSKY_CONFIG}/config.sh"			|| exit "${EXIT_ERROR_STOP}"
 	#shellcheck disable=SC1091		# file doesn't exist in GitHub
-	source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit "${ALLSKY_ERROR_STOP}"
+	source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit "${EXIT_ERROR_STOP}"
 fi
 
 function usage_and_exit()
@@ -37,11 +37,11 @@ DEBUG_ARG=""
 HELP="false"
 OPTIONS_FILE_ONLY="false"
 RESTARTING="false"			# Will the caller restart Allsky?
-CAMERA_TYPE_ONLY="false"	# Only update the cameraType ?
+CAMERA_TYPE_ONLY="false"	# Only update the cameratype ?
 FORCE=""					# Passed to createAllskyOptions.php
 
 while [[ $# -gt 0 ]]; do
-	ARG="${1,,}"					# convert to lowercase
+	ARG="${1}"
 	case "${ARG}" in
 		--debug)
 			DEBUG="true"
@@ -54,7 +54,7 @@ while [[ $# -gt 0 ]]; do
 			OPTIONS_FILE_ONLY="true"
 			SETTINGS_FILE=""
 			;;
-		--cameratypeonly)
+		--cameraTypeOnly)
 			CAMERA_TYPE_ONLY="true"
 			;;
 		--force)
@@ -178,11 +178,11 @@ do
 		cameranumber | cameratype)
 			if [[ ${K} == "cameranumber" ]]; then
 				NEW_CAMERA_NUMBER="${NEW_VALUE}"
-				CAMERA_NUMBER=" -cameraNumber ${NEW_CAMERA_NUMBER}"
+				CAMERA_NUMBER=" -cameranumber ${NEW_CAMERA_NUMBER}"
 				# Set NEW_VALUE to the current Camera Type
-				NEW_VALUE="$( settings .cameraType )"
+				NEW_VALUE="$( settings .cameratype )"
 
-				MSG="Re-creating files for cameraType ${NEW_VALUE}, cameraNumber ${NEW_CAMERA_NUMBER}"
+				MSG="Re-creating files for cameratype ${NEW_VALUE}, cameranumber ${NEW_CAMERA_NUMBER}"
 				if [[ ${ON_TTY} -eq 0 ]]; then		# called from WebUI.
 					echo -e "<script>console.log('${MSG}');</script>"
 				elif [[ ${DEBUG} == "true" ]]; then
@@ -203,7 +203,7 @@ do
 			if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
 
 				# If we can't set the new camera type, it's a major problem so exit right away.
-				# NOTE: when we're changing cameraType we're not changing anything else.
+				# NOTE: when we're changing cameratype we're not changing anything else.
 
 				# The software for RPi cameras needs to know what command is being used to
 				# capture the images.

@@ -10,12 +10,12 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 ME="$(basename "${BASH_ARGV0}")"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh" 				|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC1091 source-path=.
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh" 				|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 usage_and_exit()
 {
@@ -32,8 +32,7 @@ usage_and_exit()
 	echo
 	echo "'--help' displays this message and exits."
 	echo
-	# shellcheck disable=SC2086
-	exit ${RET}
+	exit "${RET}"
 }
 
 # Check arguments
@@ -70,10 +69,10 @@ done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"	 					|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh" 				|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh"	 					|| exit "${EXIT_ERROR_STOP}"
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/ftp-settings.sh" 				|| exit "${EXIT_ERROR_STOP}"
 PROTOCOL="${PROTOCOL,,}"	# set to lowercase to make comparing easier
 
 BRANCH="$( get_branch "" )"
@@ -226,7 +225,7 @@ function check_delay()
 
 	# With the legacy overlay method it might take up to a couple seconds to save an image.
 	# With the module method it can take up to 5 seconds.
-	local OVERLAY_METHOD=$(settings .overlayMethod) || echo "Problem getting .overlayMethod." >&2
+	local OVERLAY_METHOD=$(settings .overlaymethod) || echo "Problem getting .overlayMethod." >&2
 	if [[ ${OVERLAY_METHOD} -eq 1 ]]; then
 		MAX_TIME_TO_SAVE_MS=5000
 	else
@@ -247,21 +246,21 @@ function check_delay()
 #
 
 # Variables used below.
-TAKING_DARKS="$(settings .takeDarkFrames)" || echo "Problem getting .takeDarkFrames." >&2
+TAKING_DARKS="$(settings .takedarkframes)" || echo "Problem getting .takeDarkFrames." >&2
 # per the WebUI, width and height are usually 0
 WIDTH="$(settings .width)" || echo "Problem getting .width." >&2
 HEIGHT="$(settings .height)" || echo "Problem getting .height." >&2
 # physical sensor size
 SENSOR_WIDTH="$(settings .sensorWidth "${CC_FILE}")" || echo "Problem getting .sensorWidth." >&2
 SENSOR_HEIGHT="$(settings .sensorHeight "${CC_FILE}")" || echo "Problem getting .sensorHeight." >&2
-TAKE="$(settings .takeDaytimeImages)" || echo "Problem getting .takeDaytimeImages." >&2
-SAVE="$(settings .saveDaytimeImages)" || echo "Problem getting .saveDaytimeImages." >&2
+TAKE="$(settings .takedaytimeimages)" || echo "Problem getting .takeDaytimeImages." >&2
+SAVE="$(settings .savedaytimeimages)" || echo "Problem getting .saveDaytimeImages." >&2
 ANGLE="$(settings .angle)" || echo "Problem getting .angle" >&2
 LATITUDE="$(settings .latitude)" || echo "Problem getting .latitude." >&2
 LONGITUDE="$(settings .longitude)" || echo "Problem getting .longitude" >&2
 # shellcheck disable=SC2034
 LOCALE="$(settings .locale)" || echo "Problem getting .locale" >&2
-USING_DARKS="$(settings .useDarkFrames)" || echo "Problem getting .useDarkFrames" >&2
+USING_DARKS="$(settings .usedarkframes)" || echo "Problem getting .useDarkFrames" >&2
 WEBSITES="$(whatWebsites)"
 
 # ======================================================================
@@ -327,7 +326,7 @@ if [[ ${CROP_IMAGE} == "true" && ${SENSOR_WIDTH} == "${CROP_WIDTH}" && ${SENSOR_
 	echo "Check CROP_IMAGE, CROP_WIDTH (${CROP_WIDTH}), and CROP_HEIGHT (${CROP_HEIGHT})."
 fi
 
-LAST_CHANGED="$( settings ".lastChanged" )" || echo "Problem getting .lastChanged" >&2
+LAST_CHANGED="$( settings ".lastchanged" )" || echo "Problem getting .lastChanged" >&2
 if [[ ${LAST_CHANGED} == "" || ${LAST_CHANGED} == "null" ]]; then
 	heading "Information"
 	echo "Allsky needs to be configured before it will run."

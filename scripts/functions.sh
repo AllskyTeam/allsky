@@ -56,8 +56,7 @@ function doExit()
 	# Don't let the service restart us because we'll likely get the same error again.
 	[[ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]] && sudo systemctl stop allsky
 
-	# shellcheck disable=SC2086
-	exit ${EXITCODE}
+	exit "${EXITCODE}"
 }
 
 
@@ -80,7 +79,7 @@ function determineCommandToUse()
 	local CMD="libcamera-still"
 	if command -v ${CMD} > /dev/null; then
 		# Found the command - see if it works.
-		"${CMD}" --timeout 1 --nopreview # > /dev/null 2>&1
+		"${CMD}" --timeout 1 --nopreview > /dev/null 2>&1
 		RET=$?
 		if [[ ${RET} -eq 137 ]]; then
 			# If another libcamera-still is running the one we execute will hang for
@@ -223,9 +222,9 @@ function get_sunrise_sunset()
 	local ANGLE="${1}"
 	local LATITUDE="${2}"
 	local LONGITUDE="${3}"
-	#shellcheck disable=SC2086 source-path=.
+	#shellcheck disable=SC1091 source-path=.
 	source "${ALLSKY_HOME}/variables.sh"	|| return 1
-	#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
+	#shellcheck disable=SC1091		# file doesn't exist in GitHub
 	source "${ALLSKY_CONFIG}/config.sh"		|| return 1
 
 	[[ -z ${ANGLE} ]] && ANGLE="$(settings ".angle")"
@@ -248,7 +247,7 @@ function get_sunrise_sunset()
 # Return which Allsky Websites exist - local, remote, both, none
 function whatWebsites()
 {
-	#shellcheck disable=SC2086 source-path=.
+	#shellcheck disable=SC1091 source-path=.
 	source "${ALLSKY_HOME}/variables.sh"	|| return 1
 
 	local HAS_LOCAL="false"
@@ -518,17 +517,25 @@ function get_links()
 function check_settings_link()
 {
 	local FULL_FILE FILE DIRNAME SETTINGS_LINK RET MSG F E CORRECT_NAME
+	local CT="cameratype"
+	local CM="cameramodel"
+	if [[ ${1} == "--uppercase" ]]; then
+		CT="cameraType"
+		CM="cameraModel"
+		shift
+	fi
+
 	FULL_FILE="${1}"
 	if [[ -z ${FULL_FILE} ]]; then
 		echo "check_settings_link(): Settings file not specified."
 		return "${EXIT_ERROR_STOP}"
 	fi
 	if [[ -z ${CAMERA_TYPE} ]]; then
-		CAMERA_TYPE="$( settings .cameraType  "${FULL_FILE}" )"
+		CAMERA_TYPE="$( settings ".${CT}"  "${FULL_FILE}" )"
 		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
 	fi
 	if [[ -z ${CAMERA_MODEL} ]]; then
-		CAMERA_MODEL="$( settings .cameraModel  "${FULL_FILE}" )"
+		CAMERA_MODEL="$( settings ".${CM}"  "${FULL_FILE}" )"
 		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
 	fi
 
@@ -544,7 +551,7 @@ function check_settings_link()
 		MSG="The settings file '${FILE}' was not linked to '${CORRECT_NAME}'"
 		[[ ${RET} -ne "${NO_LINK_}" ]] && MSG="${MSG}\nERROR: ${SETTINGS_LINK}."
 		echo -e "${MSG}$( fix_settings_link "${FULL_FILE}" "${FULL_CORRECT_NAME}" )"
-		return 1
+		return "${EXIT_ERROR_STOP}"
 	else
 		# Make sure it's linked to the correct file.
 		if [[ ${SETTINGS_LINK} != "${FULL_CORRECT_NAME}" ]]; then
@@ -553,7 +560,7 @@ function check_settings_link()
 			MSG="${MSG}\nbut should have been linked to:"
 			MSG="${MSG}\n    ${FULL_CORRECT_NAME}"
 			echo -e "${MSG}$( fix_settings_link "${FULL_FILE}" "${FULL_CORRECT_NAME}" )"
-			return 1
+			return "${EXIT_ERROR_STOP}"
 		fi
 	fi
 

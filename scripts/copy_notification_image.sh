@@ -4,14 +4,14 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 ME="$(basename "${BASH_ARGV0}")"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC1091 source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh"			|| exit "${EXIT_ERROR_STOP}"
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 function usage_and_exit
 {
@@ -25,8 +25,7 @@ function usage_and_exit
 		echo "  TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderWidth BorderColor Extensions ImageSize 'Message'"
 		[[ ${RET} -ne 0 ]] && echo -e "${NC}"
 	) >&2
-	# shellcheck disable=SC2086
-	exit ${RET}
+	exit "${RET}"
 }
 
 OK="true"
@@ -134,8 +133,8 @@ fi
 # Don't save in main image directory because we don't want the notification image in timelapses.
 # If at nighttime, save them in (possibly) yesterday's directory.
 # If during day, save in today's directory.
-if [[ $(settings ".takeDaytimeImages") == "1" && \
-	  $(settings ".saveDaytimeImages") == "1" && \
+if [[ $(settings ".takedaytimeimages") == "1" && \
+	  $(settings ".savedaytimeimages") == "1" && \
 	  ${IMG_CREATE_THUMBNAILS} == "true" ]]; then
 	DATE_DIR="${ALLSKY_IMAGES}/$(date +'%Y%m%d')"
 	# Use today's folder if it exists, otherwise yesterday's
@@ -205,8 +204,7 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 	# If we created a temporary copy, delete it.
 	[[ ${TEMP_FILE} != "" ]] && rm -f "${TEMP_FILE}"
 
-	# shellcheck disable=SC2086
-	exit ${RET}
+	exit "${RET}"
 fi
 
 exit 0

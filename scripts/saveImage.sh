@@ -6,12 +6,12 @@ ME="$(basename "${BASH_ARGV0}")"
 
 [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "${ME} $*"
 
-#shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck disable=SC1091 source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 #shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_CONFIG}/config.sh"			|| exit "${EXIT_ERROR_STOP}"
 
 usage_and_exit()
 {
@@ -133,7 +133,7 @@ if [[ -z ${AS_TEMPERATURE_C} ]]; then
 fi
 
 # If taking dark frames, save the dark frame then exit.
-if [[ $(settings ".takeDarkFrames") -eq 1 ]]; then
+if [[ $(settings ".takedarkframes") -eq 1 ]]; then
 	#shellcheck source-path=scripts
 	source "${ALLSKY_SCRIPTS}/darkCapture.sh"
 	exit 0
@@ -166,8 +166,7 @@ function display_error_and_exit()	# error message, notification string
 
 	# Don't let the service restart us because we will get the same error again.
 	sudo systemctl stop allsky
-	# shellcheck disable=SC2086
-	exit ${EXIT_ERROR_STOP}
+	exit "${EXIT_ERROR_STOP}"
 }
 
 # Resize the image if required
@@ -273,7 +272,7 @@ SAVED_FILE="${CURRENT_IMAGE}"						# The name of the file saved from the camera.
 WEBSITE_FILE="${WORKING_DIR}/${FULL_FILENAME}"		# The name of the file the websites look for
 
 # If needed, save the current image in today's directory.
-if [[ $(settings ".saveDaytimeImages") -eq 1 || ${DAY_OR_NIGHT} == "NIGHT" ]]; then
+if [[ $(settings ".savedaytimeimages") -eq 1 || ${DAY_OR_NIGHT} == "NIGHT" ]]; then
 	SAVE_IMAGE="true"
 else
 	SAVE_IMAGE="false"
@@ -402,7 +401,7 @@ fi
 
 if [[ ${IMG_UPLOAD} == "true" || (${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${SAVE_IMAGE} == "true") ]]; then
 	#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-	source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit ${ALLSKY_ERROR_STOP}
+	source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit ${EXIT_ERROR_STOP}
 fi
 
 # If upload is true, optionally create a smaller version of the image; either way, upload it

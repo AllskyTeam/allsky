@@ -14,12 +14,12 @@
 
 ME="$(basename "${BASH_ARGV0}")"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh" 		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091				# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh" 		|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC1091 source-path=.
+source "${ALLSKY_HOME}/variables.sh" 		|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+#shellcheck disable=SC1091				# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh" 		|| exit "${EXIT_ERROR_STOP}"
 
 usage()
 {
@@ -37,8 +37,7 @@ usage()
 		echo "If 'file' is specified, only that file in 'directory' will be checked,"
 		echo "otherwise all files in 'directory' will be checked."
 	) >&2
-	# shellcheck disable=SC2086
-	exit ${retcode}
+	exit "${retcode}"
 }
 [[ ${1} == "-h" || ${1} == "--help" ]] && usage 0
 if [[ ${1} == "-d" || ${1} == "--debug" ]]; then
@@ -74,7 +73,7 @@ if [[ ${FILE} != "" && ! -f ${DATE}/${FILE} ]]; then
 	exit 2
 fi
 
-if [[ $(settings ".takeDarkFrames") -eq 1 ]]; then
+if [[ $(settings ".takedarkframes") -eq 1 ]]; then
 	# Disable low brightness check since darks will have extremely low brightness.
 	# But continue with the other checks in case the dark file is corrupted.
 	REMOVE_BAD_IMAGES_THRESHOLD_LOW=0

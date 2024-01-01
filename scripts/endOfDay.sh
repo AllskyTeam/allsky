@@ -4,14 +4,14 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
 ME="$(basename "${BASH_ARGV0}")"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"			|| exit  ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"				|| exit  ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh"		|| exit  ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC1091 source-path=.
+source "${ALLSKY_HOME}/variables.sh"			|| exit  "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit "${EXIT_ERROR_STOP}"
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh"				|| exit  "${EXIT_ERROR_STOP}"
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/ftp-settings.sh"		|| exit  "${EXIT_ERROR_STOP}"
 
 if [[ $# -eq 1 ]]; then
 	if [[ ${1} == "--help" ]]; then
@@ -25,7 +25,7 @@ else
 fi
 
 # If we weren't saving daytime images the directory won't exist.
-SAVING="$( settings .saveDaytimeImages )"
+SAVING="$( settings .savedaytimeimages )"
 DATE_DIR="${ALLSKY_IMAGES}/${DATE}"
 if [[ ! -d ${DATE_DIR} && ${SAVING} -eq 1 ]]; then
 	echo -e "${ME}: ${RED}ERROR: '${DATE_DIR}' not found!${NC}"

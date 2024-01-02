@@ -26,11 +26,13 @@
 
 // NOT_SET are items that aren't set yet and will be calculated at run time.
 // NOT_CHANGED items are command-line arguments where the default is camera-dependent,
+// NO_DEFAULT items don't have a default value.
 // and we can't use NOT_SET because -1 may be a legal value.
 // IS_DEFAULT means the value is the same as the camera default, so don't pass to camera program
 // since it'll use the default anyway.
 #define NOT_SET						-1
 #define NOT_CHANGED					-999999
+#define NO_DEFAULT					-999998
 #define	IS_DEFAULT					NOT_CHANGED
 
 // Defaults
@@ -210,14 +212,17 @@ struct config {			// for configuration variables
 	bool saveCC							= false;		// Save camera controls file?
 	bool tty							= false;		// Running on a tty?
 	bool preview						= false;		// Display a preview windoe?
-	bool daytimeCapture					= false;		// Capture images during daytime?
-	bool daytimeSave					= false;		// Save images during daytime?
 	char const *timeFormat				= "%Y%m%d %H:%M:%S";
 	char const *extraArgs				= "";			// Optional extra arguments passed on
+	bool determineFocus					= false;
 
 	// To make the code cleaner, comments are only given for daytime variables.
 
 	// Settings not camera-dependent.
+	bool daytimeCapture					= true;			// Capture images during daytime?
+	bool daytimeSave					= false;		// Save images during daytime?
+	bool nighttimeCapture				= true;
+	bool nighttimeSave					= true;
 	long dayDelay_ms					= 10 * MS_IN_SEC;	// Delay between capture end and start
 	long nightDelay_ms					= 10 * MS_IN_SEC;
 	long minDelay_ms					= NOT_SET;			// Minimum delay between images
@@ -366,7 +371,7 @@ std::string exec(const char *);
 void add_variables_to_command(config, char *, timeval);
 bool checkForValidExtension(config *);
 std::string calculateDayOrNight(const char *, const char *, float);
-int calculateTimeToNightTime(const char *, const char *, float);
+int calculateTimeToNextTime(const char *, const char *, float, bool);
 void Log(int, const char *, ...);
 char const *c(char const *);
 void closeUp(int);

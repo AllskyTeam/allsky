@@ -390,7 +390,7 @@ void displayHeader(config);
 void displayHelp(config);
 void displaySettings(config);
 char *LorF(double, char const *, char const *);
-bool daytimeSleep(bool, config);
+bool day_night_timeSleep(bool, config, bool);
 void delayBetweenImages(config, long, std::string);
 bool getCommandLineArguments(config *, int, char *[]);
 int displayNotificationImage(char const *);

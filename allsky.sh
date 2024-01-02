@@ -261,7 +261,6 @@ convert_json_to_tabs "${SETTINGS_FILE}" |
 
 	echo "-version=${ALLSKY_VERSION}"
 	echo "-save_dir=${CAPTURE_SAVE_DIR}"
-	echo "-cameramodel=${CAMERA_MODEL}"
 } >> "${ARGS_FILE}"
 
 FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"

@@ -861,7 +861,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				// Unable to take picture.
 				// The child command is "/bin/sh" will will basically never get a signal
 				// even if the camera program does, so check for a signal in WEXITSTATUS() not retCode.
-				if (WIFSIGNALED(WEXITSTATUS(retCode))
+				if (WIFSIGNALED(WEXITSTATUS(retCode)))
 				{
 					Log(1, " >>> %s: WARNING: %s received signal %d, retCode=0x%x\n",
 						CG.ME, CG.cmdToUse, WTERMSIG(WEXITSTATUS(retCode)), retCode);

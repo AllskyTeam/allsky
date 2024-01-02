@@ -479,11 +479,10 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 			}
 			else
 			{
-// XXXXXXXXXXXXX set to 4 after testing
-				Log(3, "    > Time to take exposure=%'ld us, diff_us=%'ld", timeToTakeImage_us, diff_us);
+				Log(4, "    > Time to take exposure=%'ld us, diff_us=%'ld", timeToTakeImage_us, diff_us);
 				if (threshold_us > 0)
-					Log(3, ", threshold_us=%'ld", threshold_us);
-				Log(3, "\n");
+					Log(4, ", threshold_us=%'ld", threshold_us);
+				Log(4, "\n");
 			}
 
 			numErrors = 0;
@@ -500,24 +499,22 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 			char *tb = tempBuf;
 
 			cg->lastMean = (double)computeHistogram(imageBuffer, *cg, true);
-
-// xxxxxx for testing.  Get the mean of the whole image so we can compare to what removeBadImages.sh calculates.
-//	If it's the same, then the algorithms are the same and removeBadImages.sh can use MEAN.
-cg->lastMeanFull = (double)computeHistogram(imageBuffer, *cg, false);
-
 			sprintf(tb, " @ mean %d, %sgain %ld, fullMean %d",
 				(int) cg->lastMean, cg->currentAutoGain ? "(auto) " : "",
 				(long) cg->lastGain, (int) cg->lastMeanFull);
 			cg->lastExposure_us = cg->currentExposure_us;
 
-			// Per ZWO, when in manual-exposure mode, the returned exposure length should always
-			// be equal to the requested length; in fact, "there's no need to call ASIGetControlValue()".
-			// When in auto-exposure mode, the returned exposure length is what the driver thinks the
+			// Per ZWO, when in manual-exposure mode, the returned exposure length
+			// should always be equal to the requested length;
+			// in fact, "there's no need to call ASIGetControlValue()".
+			// When in auto-exposure mode the returned exposure length is what the driver thinks the
 			// next exposure should be, and will eventually converge on the correct exposure.
+
 			ret = ASIGetControlValue(cg->cameraNumber, ASI_EXPOSURE, &suggestedNextExposure_us, &wasAutoExposure);
 			if (ret != ASI_SUCCESS)
 			{
-				Log(1, "  > WARNING: ASIGetControlValue(ASI_EXPOSURE) failed: %s\n", cg->ME, getRetCode(ret));
+				Log(1, "  > WARNING: ASIGetControlValue(ASI_EXPOSURE) failed: %s\n",
+					cg->ME, getRetCode(ret));
 			}
 			Log(2, "  > GOT IMAGE%s.", tb);
 			Log(3, cg->HB.useHistogram ? " Ignoring suggested next exposure of %s." : "  Suggested next exposure: %s.",
@@ -528,7 +525,8 @@ cg->lastMeanFull = (double)computeHistogram(imageBuffer, *cg, false);
 			ret = ASIGetControlValue(cg->cameraNumber, ASI_TEMPERATURE, &temp, &bAuto);
 			if (ret != ASI_SUCCESS)
 			{
-				Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_TEMPERATURE) failed: %s\n", cg->ME, getRetCode(ret));
+				Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_TEMPERATURE) failed: %s\n",
+					cg->ME, getRetCode(ret));
 			}
 			cg->lastSensorTemp = (long) ((double)temp / cg->divideTemperatureBy);
 			if (cg->isColorCamera)
@@ -536,14 +534,16 @@ cg->lastMeanFull = (double)computeHistogram(imageBuffer, *cg, false);
 				ret = ASIGetControlValue(cg->cameraNumber, ASI_WB_R, &l, &bAuto);
 				if (ret != ASI_SUCCESS)
 				{
-					Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_WB_R) failed: %s\n", cg->ME, getRetCode(ret));
+					Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_WB_R) failed: %s\n",
+						cg->ME, getRetCode(ret));
 				}
 				cg->lastWBR = (double) l;
 
 				ret = ASIGetControlValue(cg->cameraNumber, ASI_WB_B, &l, &bAuto);
 				if (ret != ASI_SUCCESS)
 				{
-					Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_WB_B) failed: %s\n", cg->ME, getRetCode(ret));
+					Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_WB_B) failed: %s\n",
+						cg->ME, getRetCode(ret));
 				}
 				cg->lastWBB = (double) l;
 			}
@@ -562,7 +562,6 @@ cg->lastMeanFull = (double)computeHistogram(imageBuffer, *cg, false);
 		Log(0, "  > %s: ERROR: Not fetching exposure data because status is %s\n", cg->ME, getRetCode(status));
 	}
 
-//x Log(4, "xxxxxx takeOneExposure() returning %d\n", status);
 	return status;
 }
 
@@ -593,10 +592,12 @@ bool resetGainTransitionVariables(config cg)
 	// Determine the amount to adjust gain per image.
 	// Do this once per day/night or night/day transition (i.e., numGainChanges == 0).
 	// First determine how long an exposure and delay is, in seconds.
-	// The user specifies the transition period in seconds,
-	// but day exposure is in microseconds, night max is in milliseconds,
-	// and delays are in milliseconds, so convert to seconds.
+	// The transition period is in seconds, the max exposures and delays are in milliseconds,
+	// so convert to seconds to compare to transition period.
 	float totalTimeInSec;
+	totalTimeInSec = ((float) cg.currentMaxAutoExposure_us / US_IN_SEC) +
+		((float) cg.currentDelay_ms / MS_IN_SEC);
+/* xxxx
 	if (dayOrNight == "DAY")
 	{
 		totalTimeInSec = (cg.dayExposure_us / US_IN_SEC) + (cg.dayDelay_ms / MS_IN_SEC);
@@ -607,27 +608,32 @@ bool resetGainTransitionVariables(config cg)
 		// so use it instead of the exposure time.
 		totalTimeInSec = (cg.nightMaxAutoExposure_us / US_IN_SEC) + (cg.nightDelay_ms / MS_IN_SEC);
 	}
+*/
 
 	gainTransitionImages = ceil(cg.gainTransitionTime / totalTimeInSec);
+	Log(4, " gainTransitionImages=%d, gainTransitionTime=%d, totalTimeInSec=%f\n",
+		gainTransitionImages, cg.gainTransitionTime, totalTimeInSec);
 	if (gainTransitionImages == 0)
 	{
-		Log(-1, "*** INFORMATION: Not adjusting gain - your 'gaintransitiontime' (%d seconds) is less than the time to take one image plus its delay (%.1f seconds).\n", cg.gainTransitionTime, totalTimeInSec);
+		Log(-1, "*** INFORMATION: Not adjusting gain - your 'Gain Transition Time' (%d seconds) is less than the time to take one image plus its delay (%.1f seconds).\n", cg.gainTransitionTime, totalTimeInSec);
 		return(false);
 	}
 
 	totalAdjustGain = cg.nightGain - cg.dayGain;
-	perImageAdjustGain = ceil(totalAdjustGain / gainTransitionImages);	// spread evenly
+	perImageAdjustGain = ceil((float) totalAdjustGain / gainTransitionImages);	// spread evenly
 	if (perImageAdjustGain == 0)
 		perImageAdjustGain = totalAdjustGain;
 	else
 	{
-		// Since we can't adust gain by fractions, see if there's any "left over" after gainTransitionImages.
+		// Since we can't adust gain by fractions,
+		// see if there's any "left over" after gainTransitionImages.
 		// For example, if totalAdjustGain is 7 and we're adjusting by 3 each of 2 times,
 		// we need an extra transition to get the remaining 1 ((7 - (3 * 2)) == 1).
 		if (gainTransitionImages * perImageAdjustGain < totalAdjustGain)
 			gainTransitionImages++;		// this one will get the remaining amount
 	}
-	Log(4, " totalAdjustGain=%d, gainTransitionImages=%d\n", totalAdjustGain, gainTransitionImages);
+	Log(4, " totalAdjustGain=%d, gainTransitionImages=%d, perImageAdjustGain=%d\n",
+		totalAdjustGain, gainTransitionImages, perImageAdjustGain);
 
 	return(true);
 }
@@ -653,11 +659,16 @@ int determineGainChange(config cg)
 	int amt;	// amount to adjust gain on next picture
 	if (dayOrNight == "DAY")
 	{
-		// During DAY, want to start out adding the full gain adjustment minus the increment on the first image,
-		// then DECREASE by totalAdjustGain each exposure.
+		// When DAY begins the last image was at nightGain but the first day
+		// image (ignoring transition) is dayGain so we want to go down
+		// from nightGain to dayGain.
+		// Increase the first image's gain by perImageAdjustGain - totalAdjustGain (which
+		// will be a big positive number), then increase the next image less,
+		// and so on until we get to dayGain.
+
 		// This assumes night gain is > day gain.
+//x Log(4, ">> DAY: amt=%d, perImageAdjustGain=%d, numGainChanges=%d\n", amt, perImageAdjustGain, numGainChanges);
 		amt = totalAdjustGain - (perImageAdjustGain * numGainChanges);
-Log(4, ">> DAY: amt=%d, totalAdjustGain=%d, perImageAdjustGain=%d, numGainChanges=%d\n", amt, totalAdjustGain, perImageAdjustGain, numGainChanges);
 		if (amt < 0)
 		{
 			amt = 0;
@@ -666,9 +677,12 @@ Log(4, ">> DAY: amt=%d, totalAdjustGain=%d, perImageAdjustGain=%d, numGainChange
 	}
 	else	// NIGHT
 	{
-		// During NIGHT, want to start out (nightGain-perImageAdjustGain),
-		// then DECREASE by perImageAdjustGain each time, until we get to "nightGain".
-		// This last image was at dayGain and we wen't to increase each image.
+		// When NIGHT begins the last image was at dayGain but the first night
+		// image (ignoring transition) is nightGain so we want to go up
+		// from dayGain to nightGain.
+		// Decrease the first image's gain by perImageAdjustGain - totalAdjustGain (which
+		// will be a big negative number), then decrease the next image less,
+		// and so on until we get to nightGain.
 		amt = (perImageAdjustGain * numGainChanges) - totalAdjustGain;
 		if (amt > 0)
 		{
@@ -677,8 +691,10 @@ Log(4, ">> DAY: amt=%d, totalAdjustGain=%d, perImageAdjustGain=%d, numGainChange
 		}
 	}
 
-	Log(4, "Adjusting %s gain by %d on next picture to %d (currentGain=%2f); will be gain change # %d of %d.\n",
-		dayOrNight.c_str(), amt, amt+(int)cg.currentGain, cg.currentGain, numGainChanges, gainTransitionImages);
+	Log(4, "Adjusting %s gain on next image by %d to %d (currentGain=%d); will be gain change # %d of %d.\n",
+		dayOrNight.c_str(), amt, amt+(int)cg.currentGain,
+		(int) cg.currentGain, numGainChanges, gainTransitionImages);
+
 	return(amt);
 }
 
@@ -1031,9 +1047,6 @@ int main(int argc, char *argv[])
 		dayOrNight = calculateDayOrNight(CG.latitude, CG.longitude, CG.angle);
 		std::string lastDayOrNight = dayOrNight;
 
-		if (! CG.takeDarkFrames)
-			currentAdjustGain = resetGainTransitionVariables(CG);
-
 		if (CG.takeDarkFrames)
 		{
 			// We're doing dark frames so turn off autoexposure and autogain, and use
@@ -1157,6 +1170,8 @@ int main(int argc, char *argv[])
 			CG.currentBin = CG.dayBin;
 			CG.currentGain = CG.dayGain;	// must come before determineGainChange() below
 			CG.currentMaxAutoGain = CG.dayMaxAutoGain;
+			CG.currentAutoGain = CG.dayAutoGain;
+			currentAdjustGain = resetGainTransitionVariables(CG);
 			if (currentAdjustGain)
 			{
 				// we did some nightime images so adjust gain
@@ -1167,7 +1182,6 @@ int main(int argc, char *argv[])
 			{
 				gainChange = 0;
 			}
-			CG.currentAutoGain = CG.dayAutoGain;
 			CG.myModeMeanSetting.currentMean = CG.myModeMeanSetting.dayMean;
 			CG.myModeMeanSetting.currentMean_threshold = CG.myModeMeanSetting.dayMean_threshold;
 			if (CG.isCooledCamera)
@@ -1224,6 +1238,8 @@ if (CG.HB.useExperimentalExposure) {
 			CG.currentMaxAutoExposure_us = CG.nightMaxAutoExposure_us;
 			CG.currentGain = CG.nightGain;	// must come before determineGainChange() below
 			CG.currentMaxAutoGain = CG.nightMaxAutoGain;
+			CG.currentAutoGain = CG.nightAutoGain;
+			currentAdjustGain = resetGainTransitionVariables(CG);
 			if (currentAdjustGain)
 			{
 				// we did some daytime images so adjust gain
@@ -1234,7 +1250,6 @@ if (CG.HB.useExperimentalExposure) {
 			{
 				gainChange = 0;
 			}
-			CG.currentAutoGain = CG.nightAutoGain;
 			CG.myModeMeanSetting.currentMean = CG.myModeMeanSetting.nightMean;
 			CG.myModeMeanSetting.currentMean_threshold = CG.myModeMeanSetting.nightMean_threshold;
 			if (CG.isCooledCamera)

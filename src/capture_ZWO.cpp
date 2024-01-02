@@ -792,7 +792,6 @@ int main(int argc, char *argv[])
 		Log(0, "*** %s: ERROR: ASIGetNumOfControls() returned: %s\n", CG.ME, getRetCode(asiRetCode));
 		exit(EXIT_ERROR_STOP);
 	}
-	Log(4, "iNumOfCtrl=%d\n", iNumOfCtrl);
 	CG.ASIversion = ASIGetSDKVersion();
 
 	// Set defaults that depend on the camera type.
@@ -1004,9 +1003,10 @@ int main(int argc, char *argv[])
 	int originalITextY		= CG.overlay.iTextY;
 	int originalFontsize	= CG.overlay.fontsize;
 	int originalLinewidth	= CG.overlay.linewidth;
-	// Have we displayed "not taking picture during day" message, if applicable?
-	bool displayedNoDaytimeMsg	= false;
-	int gainChange				= 0;		// how much to change gain up or down
+	// Have we displayed "not taking picture during day/night" message, if applicable?
+	bool displayedNoDaytimeMsg		= false;
+	bool displayedNoNighttimeMsg	= false;
+	int gainChange					= 0;		// how much to change gain up or down
 
 	// Display one-time messages.
 
@@ -1102,7 +1102,8 @@ int main(int argc, char *argv[])
 
 			if (! CG.daytimeCapture)
 			{
-				displayedNoDaytimeMsg = daytimeSleep(displayedNoDaytimeMsg, CG);
+				// true == for daytime
+				displayedNoDaytimeMsg = day_night_timeSleep(displayedNoDaytimeMsg, CG, true);
 
 				// No need to do any of the code below so go back to the main loop.
 				continue;
@@ -1200,6 +1201,15 @@ int main(int argc, char *argv[])
 				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/scripts/endOfDay.sh &", CG.allskyHome);
 				system(bufTemp);
 				justTransitioned = false;
+			}
+
+			if (! CG.nighttimeCapture)
+			{
+				// false == for nighttime
+				displayedNoNighttimeMsg = day_night_timeSleep(displayedNoNighttimeMsg, CG, false);
+
+				// No need to do any of the code below so go back to the main loop.
+				continue;
 			}
 
 			Log(1, "==========\n=== Starting nighttime capture ===\n==========\n");
@@ -1369,7 +1379,6 @@ if (CG.HB.useExperimentalExposure) {
 		// Wait for switch day time -> night time or night time -> day time
 		while (bMain && lastDayOrNight == dayOrNight)
 		{
-//x Log(4, "xxx just entered outside 'while' loop\n");
 			// date/time is added to many log entries to make it easier to associate them
 			// with an image (which has the date/time in the filename).
 			exposureStartDateTime = getTimeval();
@@ -1386,16 +1395,14 @@ if (CG.HB.useExperimentalExposure) {
 				sprintf(bufTime, "%s", formatTime(exposureStartDateTime, CG.timeFormat));
 			}
 
-//x Log(4, "xxx calling takeOneExposure() from outside 'while' loop\n");
 			asiRetCode = takeOneExposure(&CG, pRgb.data);
-//x Log(4, "xxx >> takeOneExposure() returned %s\n", getRetCode(asiRetCode));
 			if (asiRetCode == ASI_SUCCESS)
 			{
 				numErrors = 0;
 				numExposures++;
 				bool hitMinOrMax = false;
 
-				CG.lastFocusMetric = CG.overlay.showFocus ? (int)round(get_focus_metric(pRgb)) : -1;
+				CG.lastFocusMetric = CG.determineFocus ? (int)round(get_focus_metric(pRgb)) : -1;
 
 				if (numExposures == 0 && CG.preview)
 				{
@@ -1603,9 +1610,7 @@ if (saved_newExposure_us != newExposure_us)
 						priorMean = CG.lastMean;
 						priorMeanDiff = lastMeanDiff;
 
-//x Log(4, "xxxxxx inside 'Retry' loop, calling takeOneExposure()\n");
 						asiRetCode = takeOneExposure(&CG, pRgb.data);
-//x Log(4, "xxxxxx >> takeOneExposure() returned %s\n", getRetCode(asiRetCode));
 						if (asiRetCode == ASI_SUCCESS)
 						{
 							if (CG.lastMean < minAcceptableMean)

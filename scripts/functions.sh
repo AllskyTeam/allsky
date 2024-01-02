@@ -80,7 +80,7 @@ function determineCommandToUse()
 	local CMD="libcamera-still"
 	if command -v ${CMD} > /dev/null; then
 		# Found the command - see if it works.
-		"${CMD}" --timeout 1 --nopreview # > /dev/null 2>&1
+		"${CMD}" --timeout 1 --nopreview > /dev/null 2>&1
 		RET=$?
 		if [[ ${RET} -eq 137 ]]; then
 			# If another libcamera-still is running the one we execute will hang for

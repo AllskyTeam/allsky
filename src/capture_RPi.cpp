@@ -373,7 +373,7 @@ int RPicapture(config cg, cv::Mat *image)
 	}
 	else if (! WIFSIGNALED(ret))
 	{
-		Log(1, " >>> %s: WARNING: Unable to take picture, return code=0x%0x (%d)\n",
+		Log(1, " >>> %s: WARNING: Unable to take picture, command did not return normally, return code=0x%0x (%d)\n",
 			cg.ME, ret, ret >> 8);
 	}
 	// else    Don't display message if we got a signal - that's done elsewhere.
@@ -881,7 +881,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					{
 						Log(0, "*** %s: ERROR: maximum number of consecutive errors of %d reached; capture program stopped.\n", CG.ME, maxErrors);
 						Log(0, "Make sure cable between camera and Pi is all the way in.\n");
-						Log(0, "Look in '%s' for details.\n", errorOutput);
+						Log(0, "Look in '%s' for details.\n", errorOutput.c_str());
 						closeUp(EXIT_ERROR_STOP);
 					}
 				}

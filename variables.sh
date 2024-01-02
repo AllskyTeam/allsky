@@ -135,8 +135,8 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	ALLSKY_PERIODIC_LOG="/var/log/allskyperiodic.log"
 
 	# GitHub information - package names, repository, and contents of a file.
-	GITHUB_ROOT="https://github.com/AllskyTeam/allsky"
-	GITHUB_RAW_ROOT="https://raw.githubusercontent.com/AllskyTeam/allsky"
+	GITHUB_ROOT="https://github.com/AllskyTeam"
+	GITHUB_RAW_ROOT="https://raw.githubusercontent.com/AllskyTeam"
 	GITHUB_MAIN_BRANCH="master"
 	GITHUB_ALLSKY_PACKAGE="allsky"
 	GITHUB_WEBSITE_PACKAGE="allsky-website"

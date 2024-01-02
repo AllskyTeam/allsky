@@ -353,30 +353,16 @@ int RPicapture(config cg, cv::Mat *image)
 
 	// Execute the command.
 	int ret = system(cmd);
-	if (WIFEXITED(ret))
+	if (WIFEXITED(ret) && WEXITSTATUS(ret) == 0)
 	{
-		ret = WEXITSTATUS(ret);
-		if (ret == 0)
-		{
-			*image = cv::imread(cg.fullFilename, cv::IMREAD_UNCHANGED);
-			if (! image->data) {
-				Log(1, "*** %s: WARNING: Error re-reading file '%s'; skipping further processing.\n",
-					cg.ME, basename(cg.fullFilename));
-				ret = 1;
-			}
+		*image = cv::imread(cg.fullFilename, cv::IMREAD_UNCHANGED);
+		if (! image->data) {
+			Log(1, "*** %s: WARNING: Error re-reading file '%s'; skipping further processing.\n",
+				cg.ME, basename(cg.fullFilename));
 		}
-		else
-		{
-			Log(1, " >>> %s: WARNING: Unable to take picture, return code=0x%0x (%d)\n",
-				cg.ME, ret, ret >> 8);
-		}
+		ret = 0;	// Makes it easier for caller to determine if there was an error.
 	}
-	else if (! WIFSIGNALED(ret))
-	{
-		Log(1, " >>> %s: WARNING: Unable to take picture, return code=0x%0x (%d)\n",
-			cg.ME, ret, ret >> 8);
-	}
-	// else    Don't display message if we got a signal - that's done elsewhere.
+	// else, error message is printed by caller.
 
 	return(ret);
 }
@@ -873,20 +859,36 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 			else
 			{
 				// Unable to take picture.
-				// If we got a signal a message is output elsewhere.
-				if (! WIFSIGNALED(retCode))
+				// The child command is "/bin/sh" will will basically never get a signal
+				// even if the camera program does, so check for a signal in WEXITSTATUS() not retCode.
+				if (WIFSIGNALED(WEXITSTATUS(retCode))
 				{
-					numErrors++;
-					if (numErrors >= maxErrors)
-					{
-						Log(0, "*** %s: ERROR: maximum number of consecutive errors of %d reached; capture program stopped.\n", CG.ME, maxErrors);
-						Log(0, "Make sure cable between camera and Pi is all the way in.\n");
-						Log(0, "Look in '%s' for details.\n", errorOutput);
-						closeUp(EXIT_ERROR_STOP);
-					}
+					Log(1, " >>> %s: WARNING: %s received signal %d, retCode=0x%x\n",
+						CG.ME, CG.cmdToUse, WTERMSIG(WEXITSTATUS(retCode)), retCode);
+				}
+				else if (WIFEXITED(retCode))
+				{
+					// "Normal" return but command failed.
+					Log(1, " >>> %s: WARNING: Unable to take picture, return code=0x%0x, WEXITSTATUS=0x%0x\n",
+						CG.ME, retCode, WEXITSTATUS(retCode));
+				}
+				else
+				{
+					// Not sure what this would be...
+					Log(1, " >>> %s: WARNING: Unable to take picture, command did not return normally, return code=0x%0x WEXITSTATUS=0x%0x\n",
+						CG.ME, retCode, WEXITSTATUS(retCode));
+				}
+
+				numErrors++;
+				if (numErrors >= maxErrors)
+				{
+					Log(0, "*** %s: ERROR: maximum number of consecutive errors of %d reached; capture program stopped.\n", CG.ME, maxErrors);
+					Log(0, "Make sure cable between camera and Pi is all the way in.\n");
+					Log(0, "Look in '%s' for details.\n", errorOutput.c_str());
+					closeUp(EXIT_ERROR_STOP);
 				}
 	
-				// Don't wait the full amount on error.
+				// Don't wait the full amount of time on error in case the error was a one off.
 				long timeToSleep = (float)CG.currentDelay_ms * .25;
 				Log(2, "  > Sleeping from failed exposure: %.1f seconds\n", (float)timeToSleep / MS_IN_SEC);
 				usleep(timeToSleep * US_IN_MS);

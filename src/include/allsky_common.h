@@ -384,6 +384,7 @@ char const *getFlip(int);
 void closeUp(int);
 void IntHandle(int);
 int stopVideoCapture(int);
+int closeCamera(int);
 bool validateLong(long *, long, long, char const *, bool);
 bool validateFloat(double *, double, double, char const *, bool);
 void displayHeader(config);

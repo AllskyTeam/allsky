@@ -421,44 +421,51 @@ std::string calculateDayOrNight(const char *latitude, const char *longitude, flo
 	return("");
 }
 
-// Calculate how long until nighttime.
-int calculateTimeToNightTime(const char *latitude, const char *longitude, float angle)
+// Calculate how long until daytime (forDaytime==true) or nighttime (forDaytime==false).
+int calculateTimeToNextTime(const char *latitude, const char *longitude, float angle, bool forDaytime)
 {
+	// We are sleeping UNTIL which time?
+	const char *toTime = "night";
+	if (! forDaytime) toTime = "day";
+
 	std::string t;
-	char sunwaitCommand[128];	// returns "hh:mm"
+	char sunwaitCommand[128];	// returns "hh:mm, hh:mm"  (daytime begin, nighttime begin)
 	snprintf(sunwaitCommand, sizeof(sunwaitCommand),
-		"sunwait list set angle %s %s %s",
+		"sunwait list %s angle %s %s %s",
+		forDaytime ? "rise" : "set",
 		convertCommaToPeriod(angle, "%.4f"), latitude, longitude);
 	t = exec(sunwaitCommand);
-
 	t.erase(std::remove(t.begin(), t.end(), '\n'), t.end());
 
-	int hNight=0, mNight=0, secsNight;
+	int hNext=0, mNext=0;		// hours plus minutes to the next time
 	// It's possible for sunwait to return "--:--" if the angle causes sunset to start
 	// after midnight or before noon.
-	if (sscanf(t.c_str(), "%d:%d", &hNight, &mNight) != 2)
+	if (sscanf(t.c_str(), "%d:%d", &hNext, &mNext) != 2)
 	{
-		Log(0, "*** %s: ERROR: With angle %.4f sunwait returned unknown time to nighttime: %s\n",
-			CG.ME, angle, t.c_str());
+		Log(0, "*** %s: ERROR: With angle %.4f sunwait returned unknown time to %stime: %s\n",
+			CG.ME, angle, toTime, t.c_str());
 		return(1 * S_IN_HOUR);	// 1 hour - should we exit instead?
 	}
-	secsNight = (hNight * S_IN_HOUR) + (mNight * S_IN_MIN);	// secs to nighttime from start of today
+
+	// Total seconds to nextTime from start of today.
 	// sunwait doesn't return seconds so on average the actual time will be 30 seconds
-	// after the stated time. So, add 30 seconds.
-	secsNight += 30;
+	// after the stated time, So add 30 seconds.
+	int sNext = (hNext * S_IN_HOUR) + (mNext * S_IN_MIN) + 30;
 
+	// Now get how long from NOW the next time is.
 	char *now = getTime("%H:%M:%S");
-	int hNow=0, mNow=0, sNow=0, secsNow;
+	int hNow=0, mNow=0, sNow=0;
 	sscanf(now, "%d:%d:%d", &hNow, &mNow, &sNow);
-	secsNow = (hNow*S_IN_HOUR) + (mNow*S_IN_MIN) + sNow;	// seconds to now from start of today
-	Log(4, "Now=%s, nighttime starts at %s\n", now, t.c_str());
+	// Convert to total seconds to now from start of today
+	sNow = (hNow*S_IN_HOUR) + (mNow*S_IN_MIN) + sNow;
+	Log(4, "Now=%s, %stime starts at %s\n", now, toTime, t.c_str());
 
-	// Handle the (probably rare) case where nighttime is tomorrow.
-	// We are only called during the day, so if nighttime is earlier than now, it was past midnight.
-	int diff_s = secsNight - secsNow;
+	// Handle the (probably rare) case where nighttime/daytime is tomorrow.
+	// If nighttime is earlier than now, it was past midnight.
+	int diff_s = sNext - sNow;
 	if (diff_s < 0)
 	{
-		// This assumes tomorrow's nighttime starts same as today's, which is close enough.
+		// This assumes tomorrow's nighttime/daytime starts same as today's, which is close enough.
 		return(diff_s + S_IN_DAY);	// Add one day
 	}
 	else
@@ -810,12 +817,7 @@ void closeUp(int e)
 
 	closingUp = true;
 
-	stopVideoCapture(CG.cameraNumber);
-	// Seems to hang on ASICloseCamera() if taking a picture when the signal is sent,
-	// until the exposure finishes, then it never returns so the remaining code doesn't
-	// get executed. Don't know a way around that, so don't bother closing the camera.
-	// Prior versions of allsky didn't do any cleanup, so it should be ok not to close the camera.
-	//	ASICloseCamera(CG.cameraNumber);
+	(void) stopVideoCapture(CG.cameraNumber);
 
 	// Close the optional display window.	// not used by RPi
 	if (bDisplay)
@@ -825,23 +827,27 @@ void closeUp(int e)
 		pthread_join(threadDisplay, &retval);
 	}
 
-	char const *a = "Stopping";
+	char const *a = e == EXIT_RESTARTING ? "Restarting" : "Stopping";
+
 	if (CG.notificationImages) {
 		if (e == EXIT_RESTARTING)
-		{
 			(void) displayNotificationImage("--expires 15 Restarting &");
-			a = "Restarting";
-		}
 		else
-		{
 			(void) displayNotificationImage("--expires 2 NotRunning &");
-		}
+
 		// Sleep to give it a chance to print any messages so they (hopefully) get printed
 		// before the one below. This is only so it looks nicer in the log file.
 		sleep(3);
 	}
 
 	printf("     ***** %s AllSky *****\n", a);
+
+	// ZWO seems to hang on ASICloseCamera() if taking a picture when the signal is sent,
+	// until the exposure finishes, then it never returns so the remaining code doesn't
+	// get executed. Don't know how to get around that - hopefully this works:
+	if (CG.ct == ctZWO && ! gotSignal && e != EXIT_NO_CAMERA)
+		(void) closeCamera(CG.cameraNumber);
+
 	exit(e);
 }
 
@@ -909,7 +915,7 @@ bool validateLong(long *num, long min, long max, char const *name, bool invalidI
 bool validateFloat(double *num, double min, double max, char const *name, bool invalidIsOK)
 {
 	if (*num < min) {
-		fprintf(stderr, "*** %s: '%s' (%'.1f) is less than the minimum of %'.1f",
+		fprintf(stderr, "*** %s: '%s' (%'.3f) is less than the minimum of %'.3f",
 			invalidIsOK ? "WARNING" : "ERROR", name, *num, min);
 		if (invalidIsOK == true)
 		{
@@ -920,7 +926,7 @@ bool validateFloat(double *num, double min, double max, char const *name, bool i
 		return invalidIsOK;
 
 	} else if (*num > max) {
-		fprintf(stderr, "*** %s: '%s' (%'.1f) is greater than the maximum of %'.1f",
+		fprintf(stderr, "*** %s: '%s' (%'.3f) is greater than the maximum of %'.3f",
 			invalidIsOK ? "WARNING" : "ERROR", name, *num, max);
 		if (invalidIsOK == true)
 		{
@@ -953,7 +959,7 @@ void displayHeader(config cg)
 		printf("Capture images of the sky with a Raspberry Pi and an RPi camera\n");
 	printf("%s\n", c(KNRM));
 
-	if (! cg.help) printf("%sAdd -h or --help for available options%s\n\n", c(KYEL), c(KNRM));
+	if (! cg.help) printf("%sAdd --help for available options%s\n\n", c(KYEL), c(KNRM));
 	printf("Author: Thomas Jacquin - <jacquin.thomas@gmail.com>\n\n");
 	printf("Contributors:\n");
 	printf(" -Knut Olav Klo\n");
@@ -988,6 +994,8 @@ void displayHelp(config cg)
 	printf("  %-*s   command-line arguments.  The file is read when seen on the command line [none].\n", n, "");
 
 	printf("\nDaytime settings:\n");
+	printf(" -%-*s - 1 enables capturing of daytime images [%s].\n", n, "takeDaytimeImages b", yesNo(cg.daytimeCapture));
+	printf(" -%-*s - 1 enables saving of daytime images [%s].\n", n, "saveDaytimeImages b", yesNo(cg.daytimeSave));
 	printf(" -%-*s - 1 enables daytime auto-exposure [%s].\n", n, "dayautoexposure b", yesNo(cg.dayAutoExposure));
 	printf(" -%-*s - Maximum daytime auto-exposure in ms.\n", n, "daymaxexposure n");
 	printf(" -%-*s - Daytime exposure in us [%'ld].\n", n, "dayexposure n", cg.dayExposure_us);
@@ -1013,6 +1021,8 @@ void displayHelp(config cg)
 	}
 
 	printf("\nNighttime settings:\n");
+	printf(" -%-*s - 1 enables capturing of nighttime images [%s].\n", n, "takeNighttimeImages b", yesNo(cg.nighttimeCapture));
+	printf(" -%-*s - 1 enables saving of nighttime images [%s].\n", n, "saveNighttimeImages b", yesNo(cg.nighttimeSave));
 	printf(" -%-*s - 1 enables nighttime auto-exposure [%s].\n", n, "nightautoexposure b", yesNo(cg.nightAutoExposure));
 	printf(" -%-*s - Maximum nighttime auto-exposure in ms.\n", n, "nightmaxexposure n");
 	printf(" -%-*s - Nighttime exposure in us [%'ld].\n", n, "nightexposure n", cg.nightExposure_us);
@@ -1065,6 +1075,7 @@ void displayHelp(config cg)
 			printf(" -%-*s - Amount to rotate image in degrees - 0, 90, 180, or 270 [%ld].\n", n, "rotation n", cg.rotation);
 	}
 	printf(" -%-*s - 0 = No flip, 1 = Horizontal, 2 = Vertical, 3 = Both [%ld].\n", n, "flip n", cg.flip);
+	printf(" -%-*s - 1 enables focus mode [%s].\n", n, "determineFocus b", yesNo(cg.determineFocus));
 	printf(" -%-*s - 1 enables consistent delays between images [%s].\n", n, "consistentDelays b", yesNo(cg.consistentDelays));
 	printf(" -%-*s - Format the time is displayed in [%s].\n", n, "timeformat s", cg.timeFormat);
 	printf(" -%-*s - 1 enables notification images, for example, 'Camera is off during day' [%s].\n", n, "notificationimages b", yesNo(cg.notificationImages));
@@ -1072,7 +1083,6 @@ void displayHelp(config cg)
 	printf(" -%-*s - Longitude of the camera [no default - you must set it].\n", n, "longitude s");
 	printf(" -%-*s - Angle of the sun below the horizon [%.2f].\n", n, "angle n", cg.angle);
 	printf("  %-*s   -6 = civil twilight   -12 = nautical twilight   -18 = astronomical twilight.\n", n, "");
-	printf(" -%-*s - 1 enables capturing of daytime images [%s].\n", n, "takeDaytimeImages b", yesNo(cg.daytimeCapture));
 	printf(" -%-*s - 1 takes dark frames [%s].\n", n, "takeDarkFrames b", yesNo(cg.takeDarkFrames));
 	printf(" -%-*s - Your locale - to determine thousands separator and decimal point [%s].\n", n, "locale s", "locale on Pi");
 	printf("  %-*s   Type 'locale' at a command prompt to determine yours.\n", n, "");
@@ -1178,6 +1188,9 @@ void displaySettings(config cg)
 	printf("   Configuration file: %s\n", stringORnone(cg.configFile));
 	printf("   Quality: %ld\n", cg.userQuality);
 	printf("   Daytime capture: %s\n", yesNo(cg.daytimeCapture));
+	printf("   Daytime save: %s\n", yesNo(cg.daytimeSave));
+	printf("   Nighttime capture: %s\n", yesNo(cg.nighttimeCapture));
+	printf("   Nighttime save: %s\n", yesNo(cg.nighttimeSave));
 
 	printf("   Exposure (day):   %15s, Auto: %3s", length_in_units(cg.dayExposure_us, true), yesNo(cg.dayAutoExposure));
 		if (cg.dayAutoExposure)
@@ -1261,6 +1274,7 @@ void displaySettings(config cg)
 		printf("   Video OFF Between Images: %s\n", yesNo(cg.videoOffBetweenImages));
 	}
 	printf("   Preview: %s\n", yesNo(cg.preview));
+	printf("   Focus mode: %s\n", yesNo(cg.determineFocus));
 	printf("   Taking Dark Frames: %s\n", yesNo(cg.takeDarkFrames));
 	printf("   Debug Level: %ld\n", cg.debugLevel);
 	printf("   On TTY: %s\n", yesNo(cg.tty));
@@ -1306,9 +1320,10 @@ void displaySettings(config cg)
 	printf("%s", c(KNRM));
 }
 
-// Sleep when we're not taking daytime images.
+// Sleep when we're not taking daytime or nighttime images.
 // Try to be smart about it so we don't sleep a gazillion times.
-bool daytimeSleep(bool displayedMsg, config cg)
+// "forDaytime" will be true if we're sleeping during the day, else at night.
+bool day_night_timeSleep(bool displayedMsg, config cg, bool forDaytime)
 {
 	// Only display messages once a day.
 	if (! displayedMsg)
@@ -1316,24 +1331,27 @@ bool daytimeSleep(bool displayedMsg, config cg)
 		if (cg.notificationImages) {
 			// In case another notification image is being upload, give it time to finish.
 			sleep(5);
-			(void) displayNotificationImage("--expires 0 CameraOffDuringDay &");
+			if (forDaytime)
+				(void) displayNotificationImage("--expires 0 CameraOffDuringDay &");
+			else
+				(void) displayNotificationImage("--expires 0 CameraOffDuringNight &");
 		}
-		Log(1, "It's daytime... we're not saving images.\n");
+		Log(1, "It's %stime... we're not saving images.\n", forDaytime ? "day" : "night");
 		displayedMsg = true;
 
-		// Sleep until a little before nighttime, then wake up and sleep more if needed.
-		int secsTillNight = calculateTimeToNightTime(cg.latitude, cg.longitude, cg.angle);
+		// Sleep until a little before nighttime/daytime, then wake up and sleep more if needed.
+		int secsTillNext = calculateTimeToNextTime(cg.latitude, cg.longitude, cg.angle, forDaytime);
 		timeval t;
 		t = getTimeval();
-		t.tv_sec += secsTillNight;
-		Log(2, "Sleeping until %s (%'d seconds)\n", formatTime(t, cg.timeFormat), secsTillNight);
-		sleep(secsTillNight);
+		t.tv_sec += secsTillNext;
+		Log(2, "Sleeping until %s (%'d seconds)\n", formatTime(t, cg.timeFormat), secsTillNext);
+		sleep(secsTillNext);
 	}
 	else
 	{
 		// Shouldn't need to sleep more than a few times before nighttime.
 		int s = 5;
-		Log(2, "Not quite nighttime; sleeping %'d more seconds\n", s);
+		Log(2, "Not quite %time; sleeping %'d more seconds\n", forDaytime ? "night" : "day", s);
 		sleep(s);
 	}
 
@@ -1551,7 +1569,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 				return(false);
 			}
 		}
-		else if (strcmp(a, "h") == 0 || strcmp(a, "-help") == 0)
+		else if (strcmp(a, "-help") == 0)
 		{
 			cg->help = true;
 			cg->quietExit = true;	// we display the help message and quit
@@ -1673,6 +1691,14 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 
 		// nighttime settings
+		else if (strcmp(a, "takenighttimeimages") == 0)
+		{
+			cg->nighttimeCapture = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "savenighttimeimages") == 0)
+		{
+			cg->nighttimeSave = getBoolean(argv[++i]);
+		}
 		else if (strcmp(a, "nightautoexposure") == 0)
 		{
 			cg->nightAutoExposure = getBoolean(argv[++i]);
@@ -1823,6 +1849,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		{
 			cg->flip = atol(argv[++i]);
 		}
+		else if (strcmp(a, "determinefocus") == 0)
+		{
+			cg->determineFocus = getBoolean(argv[++i]);
+		}
 		else if (strcmp(a, "notificationimages") == 0)
 		{
 			cg->notificationImages = getBoolean(argv[++i]);
@@ -1968,43 +1998,6 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else if (strcmp(a, "outlinefont") == 0)
 		{
 			cg->overlay.outlinefont = getBoolean(argv[++i]);
-		}
-
-		// Arguments that may be passed to us but we don't use.
-		else if (
-			strcmp(a, "xx_end_xx") == 0 ||
-			strcmp(a, "lastchanged") == 0 ||
-			strcmp(a, "uselocalwebsite") == 0 ||
-#define temp1 "useremote"
-			strncmp(a, temp1, sizeof(temp1)-1) == 0 ||
-#define temp2 "protocol"
-			strncmp(a, temp2, sizeof(temp2)-1) == 0 ||
-#define temp3 "imagedir"
-			strncmp(a, temp3, sizeof(temp3)-1) == 0 ||
-#define temp4 "videodestinationname"
-			strncmp(a, temp4, sizeof(temp4)-1) == 0 ||
-#define temp5 "keogramdeodestinationname"
-			strncmp(a, temp5, sizeof(temp5)-1) == 0 ||
-#define temp6 "startrailsdeodestinationname"
-			strncmp(a, temp6, sizeof(temp6)-1) == 0 ||
-			strcmp(a, "displaysettings") == 0 ||
-			strcmp(a, "showonmap") == 0 ||
-			strcmp(a, "websiteurl") == 0 ||
-			strcmp(a, "imageurl") == 0 ||
-			strcmp(a, "location") == 0 ||
-			strcmp(a, "owner") == 0 ||
-			strcmp(a, "camera") == 0 ||
-			strcmp(a, "lens") == 0 ||
-			strcmp(a, "computer") == 0 ||
-			strcmp(a, "usedarkframes") == 0 ||
-			strcmp(a, "uselogin") == 0 ||
-			strcmp(a, "cameratype") == 0 ||
-			strcmp(a, "cameramodel") == 0 ||
-			strcmp(a, "showusb") == 0 ||
-			strcmp(a, "alwaysshowadvanced") == 0
-			)
-		{
-			i++;
 		}
 
 		else

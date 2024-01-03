@@ -46,12 +46,12 @@ if [[ ${LAST_CHANGED} == "" ]]; then
 			"Allsky needs\nconfiguration\nand the Pi needs\na reboot" \
 			"Allsky needs to be configured then the Pi rebooted."
 	else
-		doExit "${EXIT_ERROR_STOP}" "ConfigurationNeeded" "" ""
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "Error" "Allsky needs to be configured."
+		doExit "${EXIT_ERROR_STOP}" "ConfigurationNeeded" "" ""
 	fi
 elif [[ ${NEEDS_REBOOT} == "true" ]]; then
-	doExit "${EXIT_ERROR_STOP}" "RebootNeeded" "" ""
 	"${ALLSKY_SCRIPTS}/addMessage.sh" "Error" "The Pi needs to be rebooted."
+	doExit "${EXIT_ERROR_STOP}" "RebootNeeded" "" ""
 fi
 
 SEE_LOG_MSG="See ${ALLSKY_LOG}"
@@ -94,7 +94,8 @@ if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 	fi
 fi
 
-USE_NOTIFICATION_IMAGES=$(settings ".notificationimages")
+USE_NOTIFICATION_IMAGES="$( settings ".notificationimages" )"		|| exit "${EXIT_ERROR_STOP}"
+LOCALE="$( settings ".locale" )"									|| exit "${EXIT_ERROR_STOP}"
 
 if [[ -z ${CAMERA_TYPE} ]]; then
 	MSG="FATAL ERROR: 'Camera Type' not set in WebUI."
@@ -109,7 +110,7 @@ pgrep "${ME}" | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
 if [[ ${CAMERA_TYPE} == "RPi" ]]; then
 	# "true" means use doExit() on error
-	RPi_COMMAND_TO_USE="$(determineCommandToUse "true" "${ERROR_MSG_PREFIX}" )"
+	RPi_COMMAND_TO_USE="$( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" )"
 
 elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 	RPi_COMMAND_TO_USE=""
@@ -147,7 +148,7 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 		"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" "${FILENAME}" \
 			"yellow" "" "85" "" "" \
 			"" "5" "yellow" "${EXTENSION}" "" "WARNING:\n\nResetting USB bus\n${REASON}.\nAttempt ${NUM_USB_RESETS}."
-		sudo "$UHUBCTL_PATH" -a cycle -l "$UHUBCTL_PORT"
+		sudo "${UHUBCTL_PATH}" -a cycle -l "${UHUBCTL_PORT}"
 		sleep 3		# give it a few seconds, plus, allow the notification images to be seen
 	}
 
@@ -201,7 +202,7 @@ fi
 # Make sure the settings file is linked to the camera-specific file.
 if ! MSG="$( check_settings_link "${SETTINGS_FILE}" )" ; then
 	"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${MSG}"
-	echo "ERROR: Settings file (${SETTINGS_FILE}) not linked correctly." >&2
+	echo "ERROR: ${MSG}" >&2
 fi
 
 # Make directories that need to exist.
@@ -227,8 +228,10 @@ mkdir "${ALLSKY_ABORTS_DIR}"
 sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_ABORTS_DIR}"
 sudo chmod 775 "${ALLSKY_ABORTS_DIR}"
 
+rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
+
 # Optionally display a notification image.
-if [[ $USE_NOTIFICATION_IMAGES -eq 1 ]]; then
+if [[ ${USE_NOTIFICATION_IMAGES} -eq 1 ]]; then
 	# Can do this in the background to speed up startup.
 	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "StartingUp" 2>&1 &
 fi
@@ -236,7 +239,6 @@ fi
 : > "${ARGS_FILE}"
 
 # If the locale isn't in the settings file, try to determine it.
-LOCALE="$(settings .locale)"
 if [[ -z ${LOCALE} ]]; then
 	if [[ -n ${LC_ALL} ]]; then
 		echo "-locale=${LC_ALL}"
@@ -249,19 +251,16 @@ fi
 
 # We must pass "-config ${ARGS_FILE}" on the command line,
 # and debuglevel we did above, so don't do them again.
-TAB="$( echo -e "\t" )"
-convert_json_to_tabs "${SETTINGS_FILE}" |
-	grep -E -i -v "^config${TAB}|^debuglevel${TAB}" |
-	sed -e 's/^/-/' -e "s/${TAB}/=/" >> "${ARGS_FILE}"
+# Only pass settings that are used by the capture program.
+"${ALLSKY_WEBUI}/includes/outputJSONwithEqual.php" --capture-only "${OPTIONS_FILE}" |
+	grep -E -i -v "^config=|^debuglevel=" >> "${ARGS_FILE}"
 
 # When using a desktop environment a preview of the capture can be displayed in a separate window.
 # The preview mode does not work if we are started as a service or if the debian distribution has no desktop environment.
-{
-	[[ $1 == "preview" ]] && echo "-preview=1"
+[[ $1 == "preview" ]] && echo "preview=1"
 
-	echo "-version=${ALLSKY_VERSION}"
-	echo "-save_dir=${CAPTURE_SAVE_DIR}"
-} >> "${ARGS_FILE}"
+echo "version=${ALLSKY_VERSION}" >> "${ARGS_FILE}"
+echo "save_dir=${CAPTURE_SAVE_DIR}" >> "${ARGS_FILE}"
 
 FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
 # If the user wants images uploaded only every n times, save that number to a file.
@@ -274,8 +273,6 @@ else
 fi
 
 CAPTURE="capture_${CAMERA_TYPE}"
-
-rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 
 # Clear up any flow timings
 activate_python_venv

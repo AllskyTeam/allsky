@@ -961,7 +961,8 @@ set_permissions()
 	# We don't know what permissions may have been on the old website, so use "sudo".
 	sudo find "${ALLSKY_WEBUI}/" -type f -exec chmod 644 '{}' \;
 	sudo find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 '{}' \;
-	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php"
+	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
+			  "${ALLSKY_WEBUI}/includes/outputJSONwithEqual.php"
 
 	if [[ -d "${ALLSKY_WEBSITE}" ]]; then
 		sudo find "${ALLSKY_WEBUI}/" -type d -name thumbnails \! -perm 775 -exec chmod 775 '{}' \;

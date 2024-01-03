@@ -587,8 +587,9 @@ ASI_ERROR_CODE ASIGetControlValue(int iCameraIndex, ASI_CONTROL_TYPE ControlType
 }
 
 
-// Empty routine so code compiles.
-int stopVideoCapture(int cameraID) { return(ASI_SUCCESS); }
+// Empty routines so code compiles.
+int stopVideoCapture(int cameraID) { return((int) ASI_SUCCESS); }
+int closeCamera(int cameraID) { return((int) ASI_SUCCESS); }
 
 // Get the camera's serial number.  RPi cameras don't support serial numbers.
 ASI_ERROR_CODE  ASIGetSerialNumber(int iCameraIndex, ASI_SN *pSN)
@@ -646,6 +647,10 @@ int const argumentNamesSize =  sizeof(argumentNames) / sizeof(argumentNames[0]);
 int stopVideoCapture(int cameraID)
 {
 	return((int) ASIStopVideoCapture(cameraID));
+}
+int closeCamera(int cameraID)
+{
+	return((int) ASICloseCamera(cameraID));
 }
 
 int getCameraNumber()
@@ -883,6 +888,9 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		}
 	fprintf(f, "\t],\n");
 
+	// RPi only supports sensor temp with libcamera.
+	if (CG.ct == ctZWO || CG.isLibcamera)
+		fprintf(f, "\t\"hasSensorTemperature\" : %s,\n", CG.supportsTemperature ? "true" : "false");
 	fprintf(f, "\t\"colorCamera\" : %s,\n", cameraInfo.IsColorCam ? "true" : "false");
 	if (cameraInfo.IsColorCam)
 		fprintf(f, "\t\"bayerPattern\" : \"%s\",\n", bayer);
@@ -942,7 +950,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	// Adding it to the "controls" array makes the code that checks what's available easier.
 	fprintf(f, "\t\"controls\": [\n");
 
-	// sensor size was also saved above, but save here with min/max/default
+	// sensor size was also saved above, but this is the size the user can change.
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"sensorWidth\",\n");
 	fprintf(f, "\t\t\t\"argumentName\" : \"width\",\n");
@@ -1013,7 +1021,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		fprintf(f, "\t\t},\n");
 	}
 	if (CG.supportsTemperature) {
-		fprintf(f, "\t\t{\n");
+		fprintf(f, "\t\t{\n");	// TODO This will go away when the legacy overlay is removed
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showTemp");
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showtemp");
 		fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showTemp ? 1 : 0);
@@ -1093,6 +1101,11 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "tuningfile");
 		fprintf(f, "\t\t\t\"DefaultValue\" : \"\"\n");
 		fprintf(f, "\t\t},\n");
+
+		fprintf(f, "\t\t{\n");
+		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "Rotation");
+		fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "rotation");
+		fprintf(f, "\t\t},\n");
 	}
 #endif
 
@@ -1138,7 +1151,10 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", a);
 		fprintf(f, "\t\t\t\"MinValue\" : %s,\n", LorF(min, "%ld", "%.3f"));
 		fprintf(f, "\t\t\t\"MaxValue\" : %s,\n", LorF(max, "%ld", "%.3f"));
-		fprintf(f, "\t\t\t\"DefaultValue\" : %s,\n", LorF(def, "%ld", "%.3f"));
+		if (def == NO_DEFAULT)
+			fprintf(f, "\t\t\t\"DefaultValue\" : \"none\",\n");
+		else
+			fprintf(f, "\t\t\t\"DefaultValue\" : %s,\n", LorF(def, "%ld", "%.3f"));
 		fprintf(f, "\t\t\t\"IsAutoSupported\" : %s,\n", cc.IsAutoSupported == ASI_TRUE ? "true" : "false");
 		fprintf(f, "\t\t\t\"IsWritable\" : %s,\n", cc.IsWritable == ASI_TRUE ? "true" : "false");
 		fprintf(f, "\t\t\t\"ControlType\" : %d\n", cc.ControlType);

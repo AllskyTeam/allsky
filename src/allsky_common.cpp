@@ -1942,6 +1942,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		{
 			cg->overlay.showFocus = getBoolean(argv[++i]);
 		}
+		else if (strcmp(a, "showusb") == 0)
+		{
+			cg->overlay.showUSB = getBoolean(argv[++i]);
+		}
 		else if (strcmp(a, "text") == 0)
 		{
 			cg->overlay.ImgText = argv[++i];

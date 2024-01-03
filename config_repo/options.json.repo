@@ -246,7 +246,8 @@
 "label" : "Nighttime Save",
 "type" : "boolean",
 "usage" : "capture",
-"booldependson" : "takenighttimeimages"
+"booldependson" : "takenighttimeimages",
+"display" : 1
 },
 {
 "name" : "nightautoexposure",
@@ -558,8 +559,8 @@
 "description" : "Image width in pixels. <span class='WebUIValue'>0</span> = max sensor width.",
 "label" : "Image Width",
 "type" : "integer",
-"display" : 1
 "usage" : "capture",
+"display" : 1
 },
 {
 "name" : "height",

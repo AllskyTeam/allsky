@@ -1,9 +1,19 @@
 [
 {
-"name" : "daytimeSettingsHeader",
+"name" : "daynighttab========================================",
+"label" : "Day/Night Settings",
+"type" : "header-tab"
+},
+{
+"name" : "daytimesettingsheader",
 "description" : "Daytime settings",
-"type" : "header",
-"display" : 1
+"type" : "header"
+},
+{
+"name" : "daynightcolumns",
+"label" : "Setting, Day Value, Description",
+"candrop" : "Description",
+"type" : "header-column"
 },
 {
 "name" : "takedaytimeimages",
@@ -13,8 +23,7 @@
 "type" : "boolean",
 "usage" : "capture",
 "checkchanges" : 1,
-"generic" : 1,
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "savedaytimeimages",
@@ -23,8 +32,7 @@
 "label" : "Daytime Save",
 "type" : "boolean",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"booldependson" : "takedaytimeimages"
 },
 {
 "name" : "dayautoexposure",
@@ -33,8 +41,8 @@
 "label" : "Auto-Exposure",
 "type" : "boolean",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"booldependson" : "takedaytimeimages",
+"action" : "reload"
 },
 {
 "name" : "daymaxautoexposure",
@@ -45,7 +53,8 @@
 "label" : "Max Auto-Exposure",
 "type" : "float",
 "usage" : "capture",
-"display" : 1
+"booldependson" : "takedaytimeimages AND daymaxautoexposure",
+"action" : "reload"
 },
 {
 "name" : "dayexposure",
@@ -56,7 +65,8 @@
 "label" : "Manual Exposure",
 "type" : "float",
 "usage" : "capture",
-"display" : 1
+"booldependson" : "takedaytimeimages",
+"action" : "reload"
 },
 {
 "name" : "daymean",
@@ -67,7 +77,8 @@
 "label" : "Mean Target",
 "type" : "float",
 "usage" : "capture",
-"display" : 1
+"booldependson" : "takedaytimeimages",
+"action" : "reload"
 },
 {
 "name" : "daymeanthreshold",
@@ -78,7 +89,8 @@
 "label" : "Mean Threshold",
 "type" : "float",
 "usage" : "capture",
-"display" : 1
+"booldependson" : "takedaytimeimages AND daymean",
+"action" : "reload"
 },
 {
 "name" : "daybrightness",
@@ -88,7 +100,8 @@
 "description" : "<strong>Deprecated</strong>.  Use <span class='WebUISettings'>Mean Target</span> instead.<br>Changes the amount of light in the image. Higher numbers are brighter.",
 "label" : "Brightness",
 "type" : "float",
-"display" : "_display"
+"usage" : "capture",
+"action" : "reload"
 },
 {
 "name" : "daydelay",
@@ -99,8 +112,8 @@
 "label" : "Delay",
 "type" : "integer",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"booldependson" : "takedaytimeimages",
+"action" : "reload"
 },
 {
 "name" : "dayautogain",
@@ -109,8 +122,8 @@
 "label" : "Auto-Gain",
 "type" : "boolean",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"booldependson" : "takedaytimeimages",
+"action" : "reload"
 },
 {
 "name" : "daymaxautogain",
@@ -120,7 +133,9 @@
 "description" : "Maximum gain when using <span class='WebUISetting'>Auto-Gain</span>.",
 "label" : "Max Auto-Gain",
 "type" : "float",
-"display" : 1
+"usage" : "capture",
+"booldependson" : "takedaytimeimages AND dayautogain",
+"action" : "reload"
 },
 {
 "name" : "daygain",
@@ -131,7 +146,8 @@
 "label" : "Gain",
 "type" : "float",
 "usage" : "capture",
-"display" : 1
+"booldependson" : "takedaytimeimages",
+"action" : "reload"
 },
 {
 "name" : "daybin",
@@ -143,8 +159,8 @@
 "options" : [
 	"bin_values"
 ],
-"generic" : 1,
-"display" : 1
+"booldependson" : "takedaytimeimages",
+"action" : "reload"
 },
 {
 "name" : "dayawb",
@@ -152,9 +168,10 @@
 "description" : "Sets Auto White Balance (camera adjusts color).",
 "label" : "Auto White Balance",
 "type" : "boolean",
-"generic" : 1,
 "usage" : "capture",
-"display" : "_display"
+"display" : "_display",
+"booldependson" : "takedaytimeimages",
+"action" : "reload"
 },
 {
 "name" : "daywbr",
@@ -165,7 +182,9 @@
 "label" : "Red Balance",
 "type" : "float",
 "usage" : "capture",
-"display" : "_display"
+"display" : "_display",
+"booldependson" : "takedaytimeimages AND dayawb",
+"action" : "reload"
 },
 {
 "name" : "daywbb",
@@ -176,7 +195,9 @@
 "label" : "Blue Balance",
 "type" : "float",
 "usage" : "capture",
-"display" : "_display"
+"display" : "_display",
+"booldependson" : "takedaytimeimages AND dayawb",
+"action" : "reload"
 },
 {
 "name" : "dayskipframes",
@@ -187,8 +208,8 @@
 "label" : "Frames To Skip",
 "type" : "integer",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"booldependson" : "takedaytimeimages AND dayautoexposure",
+"action" : "reload"
 },
 {
 "name" : "dayenablecooler",
@@ -196,9 +217,10 @@
 "description" : "Enable to use cooling (on cooled cameras only).",
 "label" : "Cooling",
 "type" : "boolean",
-"generic" : 1,
 "usage" : "capture",
-"display" : "_display"
+"display" : "_display",
+"booldependson" : "takedaytimeimages",
+"action" : "reload"
 },
 {
 "name" : "daytargettemp",
@@ -209,8 +231,9 @@
 "label" : "Target Temp.",
 "type" : "integer",
 "usage" : "capture",
-"generic" : 1,
-"display" : "_display"
+"booldependson" : "takedaytimeimages AND dayenablecooler",
+"display" : "_display",
+"action" : "reload"
 },
 {
 "name" : "daytuningfile",
@@ -221,13 +244,15 @@
 "usage" : "capture",
 "checkchanges" : 1,
 "optional" : 1,
-"display" : "_display"
+"display" : "_display",
+"booldependson" : "takedaytimeimages",
+"action" : "restart"
 },
+
 {
-"name" : "nighttimeSettingsHeader",
+"name" : "nighttimesettingsheader",
 "description" : "Nighttime settings",
-"type" : "header",
-"display" : 1
+"type" : "header"
 },
 {
 "name" : "takenighttimeimages",
@@ -237,7 +262,7 @@
 "type" : "boolean",
 "usage" : "capture",
 "checkchanges" : 1,
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "savenighttimeimages",
@@ -246,8 +271,7 @@
 "label" : "Nighttime Save",
 "type" : "boolean",
 "usage" : "capture",
-"booldependson" : "takenighttimeimages",
-"display" : 1
+"booldependson" : "takenighttimeimages"
 },
 {
 "name" : "nightautoexposure",
@@ -256,8 +280,7 @@
 "label" : "Auto-Exposure",
 "type" : "boolean",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "nightmaxautoexposure",
@@ -267,7 +290,9 @@
 "description" : "Maximum nighttime Auto-Exposure time in milliseconds (1000ms = 1 sec).",
 "label" : "Max Auto-Exposure",
 "type" : "float",
-"display" : 1
+"usage" : "capture",
+"booldependson" : "nightautoexposure",
+"action" : "reload"
 },
 {
 "name" : "nightexposure",
@@ -277,7 +302,8 @@
 "description" : "Manual exposure time in milliseconds (1000ms = 1 sec). Can be a fraction.<br>If using nighttime <span class='WebUISetting'>Auto-Exposure</span>, this number is used as a starting point.",
 "label" : "Manual Exposure",
 "type" : "float",
-"display" : 1
+"usage" : "capture",
+"action" : "reload"
 },
 {
 "name" : "nightmean",
@@ -288,7 +314,7 @@
 "label" : "Mean Target",
 "type" : "float",
 "usage" : "capture",
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "nightmeanthreshold",
@@ -299,7 +325,8 @@
 "label" : "Mean Threshold",
 "type" : "float",
 "usage" : "capture",
-"display" : 1
+"booldependson" : "nightmean",
+"action" : "reload"
 },
 {
 "name" : "nightbrightness",
@@ -309,7 +336,8 @@
 "description" : "<strong>Deprecated</strong>.  Use <span class='WebUISettings'>Mean Target</span> instead.<br>Changes the amount of light in the image. Higher numbers are brighter.",
 "label" : "Brightness",
 "type" : "float",
-"display" : "_display"
+"usage" : "capture",
+"action" : "reload"
 },
 {
 "name" : "nightdelay",
@@ -320,8 +348,7 @@
 "label" : "Delay",
 "type" : "integer",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "nightautogain",
@@ -330,8 +357,7 @@
 "label" : "Auto-Gain",
 "type" : "boolean",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "nightmaxautogain",
@@ -342,7 +368,8 @@
 "label" : "Max Auto-Gain",
 "type" : "float",
 "usage" : "capture",
-"display" : 1
+"booldependson" : "nightautogain",
+"action" : "reload"
 },
 {
 "name" : "nightgain",
@@ -353,7 +380,7 @@
 "label" : "Gain",
 "type" : "float",
 "usage" : "capture",
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "nightbin",
@@ -365,8 +392,7 @@
 "options" : [
 	"bin_values"
 ],
-"generic" : 1,
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "nightawb",
@@ -375,8 +401,8 @@
 "label" : "Auto White Balance",
 "type" : "boolean",
 "usage" : "capture",
-"generic" : 1,
-"display" : "_display"
+"display" : "_display",
+"action" : "reload"
 },
 {
 "name" : "nightwbr",
@@ -387,7 +413,9 @@
 "label" : "Red Balance",
 "type" : "float",
 "usage" : "capture",
-"display" : "_display"
+"display" : "_display",
+"booldependsoff" : "nightawb",
+"action" : "reload"
 },
 {
 "name" : "nightwbb",
@@ -398,7 +426,9 @@
 "label" : "Blue Balance",
 "type" : "float",
 "usage" : "capture",
-"display" : "_display"
+"display" : "_display",
+"booldependsoff" : "nightawb",
+"action" : "reload"
 },
 {
 "name" : "nightskipframes",
@@ -409,8 +439,7 @@
 "label" : "Frames To Skip",
 "type" : "integer",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"booldependson" : "nightautoexposure"
 },
 {
 "name" : "nightenablecooler",
@@ -419,8 +448,8 @@
 "label" : "Cooling",
 "type" : "boolean",
 "usage" : "capture",
-"generic" : 1,
-"display" : "_display"
+"display" : "_display",
+"action" : "reload"
 },
 {
 "name" : "nighttargettemp",
@@ -431,8 +460,9 @@
 "label" : "Target Temp.",
 "type" : "integer",
 "usage" : "capture",
-"generic" : 1,
-"display" : "_display"
+"display" : "_display",
+"booldependson" : "nightenablecooler",
+"action" : "reload"
 },
 {
 "name" : "nighttuningfile",
@@ -441,15 +471,21 @@
 "label" : "Tuning File",
 "type" : "widetext",
 "usage" : "capture",
+"display" : "_display",
 "checkchanges" : 1,
 "optional" : 1,
-"display" : "_display"
+"action" : "restart"
+},
+
+{
+"name" : "bothtab========================================",
+"label" : "24 Hours",
+"type" : "header-tab"
 },
 {
 "name" : "dayandnightheader",
-"label" : "Both day and night settings",
-"type" : "header",
-"display" : 1
+"description" : "Both day and night settings",
+"type" : "header"
 },
 {
 "name" : "config",
@@ -460,7 +496,7 @@
 "usage" : "capture",
 "checkchanges" : 1,
 "optional" : 1,
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "extraargs",
@@ -469,8 +505,9 @@
 "label" : "Extra Arguments",
 "type" : "widetext",
 "usage" : "capture",
+"display" : "_display",
 "optional" : 1,
-"display" : "_display"
+"action" : "reload"
 },
 {
 "name" : "saturation",
@@ -481,7 +518,8 @@
 "label" : "Saturation",
 "type" : "float",
 "usage" : "capture",
-"display" : "_display"
+"display" : "_display",
+"action" : "reload"
 },
 {
 "name" : "contrast",
@@ -492,7 +530,8 @@
 "label" : "Contrast",
 "type" : "float",
 "usage" : "capture",
-"display" : "_display"
+"display" : "_display",
+"action" : "reload"
 },
 {
 "name" : "sharpness",
@@ -503,7 +542,8 @@
 "label" : "Sharpness",
 "type" : "float",
 "usage" : "capture",
-"display" : "_display"
+"display" : "_display",
+"action" : "reload"
 },
 {
 "name" : "gamma",
@@ -514,7 +554,8 @@
 "label" : "Gamma",
 "type" : "integer",
 "usage" : "capture",
-"display" : "_display"
+"display" : "_display",
+"action" : "reload"
 },
 {
 "name" : "offset",
@@ -525,7 +566,8 @@
 "label" : "Offset",
 "type" : "integer",
 "usage" : "capture",
-"display" : "_display"
+"display" : "_display",
+"action" : "reload"
 },
 {
 "name" : "aggression",
@@ -536,8 +578,9 @@
 "label" : "Aggression",
 "type" : "percent",
 "usage" : "capture",
-"generic" : 1,
-"display" : "_display"
+"display" : "_display",
+"booldependson" : "dayautoexposure OR nightautoexposure",
+"action" : "reload"
 },
 {
 "name" : "gaintransitiontime",
@@ -548,8 +591,9 @@
 "label" : "Gain Transition Time",
 "type" : "integer",
 "usage" : "capture",
-"generic" : 1,
-"display" : "_display"
+"display" : "_display",
+"booldependsoff" : "nightautogain",
+"action" : "reload"
 },
 {
 "name" : "width",
@@ -560,7 +604,7 @@
 "label" : "Image Width",
 "type" : "integer",
 "usage" : "capture",
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "height",
@@ -571,7 +615,7 @@
 "label" : "Image Height",
 "type" : "integer",
 "usage" : "capture",
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "type",
@@ -584,7 +628,7 @@
 	"type_values"
 ],
 "checkchanges" : 1,
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "quality",
@@ -595,8 +639,7 @@
 "label" : "Quality / Compression",
 "type" : "integer",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "autousb",
@@ -605,7 +648,8 @@
 "label" : "Auto USB Bandwidth",
 "type" : "boolean",
 "usage" : "capture",
-"display" : "_display"
+"display" : "_display",
+"action" : "reload"
 },
 {
 "name" : "usb",
@@ -616,7 +660,9 @@
 "label" : "USB Bandwidth",
 "type" : "integer",
 "usage" : "capture",
-"display" : "_display"
+"display" : "_display",
+"booldependsoff" : "autousb",
+"action" : "reload"
 },
 {
 "name" : "filename",
@@ -626,8 +672,7 @@
 "type" : "text",
 "usage" : "capture",
 "checkchanges" : 1,
-"generic" : 1,
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "rotation",
@@ -639,7 +684,8 @@
 "options" : [
 	"rotation_values"
 ],
-"display" : "_display"
+"display" : "_display",
+"action" : "reload"
 },
 {
 "name" : "flip",
@@ -654,7 +700,7 @@
 	{"value" : 2, "label" : "Vertical"},
 	{"value" : 3, "label" : "Both"}
 ],
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "determineFocus",
@@ -663,7 +709,7 @@
 "label" : "Focus Mode",
 "type" : "boolean",
 "usage" : "capture",
-"display" : 1
+"action" : "stop"
 },
 {
 "name" : "notificationimages",
@@ -672,8 +718,7 @@
 "label" : "Notification Images",
 "type" : "boolean",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "consistentdelays",
@@ -681,8 +726,8 @@
 "description" : "Enable to have the delays between images be a consistent length.<br>The time between the start of exposures will always be (max exposure + delay).",
 "label" : "Consistent Delays Between Images",
 "type" : "boolean",
-"generic" : 1,
-"display" : 1
+"usage" : "capture",
+"action" : "reload"
 },
 {
 "name" : "timeformat",
@@ -690,8 +735,8 @@
 "description" : "Determines the format of the displayed time. Run 'man 3 strftime' to see the options.",
 "label" : "Time Format",
 "type" : "text",
-"generic" : 1,
-"display" : 1
+"usage" : "capture",
+"action" : "reload"
 },
 {
 "name" : "temptype",
@@ -705,7 +750,7 @@
 	{"value" : "F", "label" : "Fahrenheit"},
 	{"value" : "B", "label" : "Both"}
 ],
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "latitude",
@@ -715,8 +760,7 @@
 "type" : "text",
 "usage" : "capture",
 "checkchanges" : 1,
-"generic" : 1,
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "longitude",
@@ -726,8 +770,7 @@
 "type" : "text",
 "usage" : "capture",
 "checkchanges" : 1,
-"generic" : 1,
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "angle",
@@ -737,8 +780,7 @@
 "type" : "float",
 "usage" : "capture",
 "checkchanges" : 1,
-"generic" : 1,
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "takedarkframes",
@@ -746,16 +788,15 @@
 "description" : "Enable to capture dark frames, which are used to decrease noise.<br>Continues taking dark frames until Allsky is restarted.",
 "label" : "Take Dark Frames",
 "type" : "boolean",
-"display" : 1
+"usage" : "capture",
+"action" : "stop"
 },
 {
 "name" : "usedarkframes",
 "default" : 0,
 "description" : "Enables dark frame subtraction if you have dark frames.",
 "label" : "Use Dark Frames",
-"type" : "boolean",
-"generic" : 1,
-"display" : 1
+"type" : "boolean"
 },
 {
 "name" : "locale",
@@ -764,8 +805,7 @@
 "label" : "Locale",
 "type" : "text",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "experimentalexposure",
@@ -774,7 +814,8 @@
 "label" : "New Exposure Algorithm",
 "type" : "boolean",
 "usage" : "capture",
-"display" : "_display"
+"display" : "_display",
+"action" : "reload"
 },
 {
 "name" : "histogrambox",
@@ -783,7 +824,9 @@
 "label" : "Histogram Box",
 "type" : "text",
 "usage" : "capture",
-"display" : "_display"
+"display" : "_display",
+"booldependson" : "dayautoexposure OR nightautoexposure",
+"action" : "reload"
 },
 {
 "name" : "debuglevel",
@@ -799,7 +842,7 @@
 	{"value" : 3, "label" : 3},
 	{"value" : 4, "label" : 4}
 ],
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "newexposure",
@@ -808,7 +851,8 @@
 "label" : "Version 0.8 Exposure",
 "type" : "boolean",
 "usage" : "capture",
-"display" : "_display"
+"display" : "_display",
+"action" : "reload"
 },
 {
 "name" : "uselogin",
@@ -816,15 +860,22 @@
 "description" : "Determines if you need to login to the WebUI or not.<br><b>If your Pi is accessible on the Internet, do NOT turn this off!!</b>.",
 "label" : "Require WebUI Login",
 "type" : "boolean",
-"generic" : 1,
-"display" : 1
 },
 
 {
+"name" : "postprocessingtab========================================",
+"label" : "Post-processing",
+"type" : "header-tab"
+},
+{
+"name" : "postprocessingheader",
+"label" : "Post-processing",
+"type" : "header"
+},
+{
 "name" : "overlayHeader",
 "description" : "Image overlay settings",
-"type" : "header",
-"display" : 1
+"type" : "header"
 },
 {
 "name" : "overlaymethod",
@@ -838,8 +889,7 @@
 	{"value" : 1, "label" : "module"}
 ],
 "checkchanges" : 1,
-"generic" : 1,
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "showtime",
@@ -847,9 +897,8 @@
 "description" : "Activate to display the time an image was taken on the overlay.",
 "label" : "Show Time",
 "type" : "boolean",
-"usage" : "capture",
-"generic" : 1,
-"display" : 1
+"usage" : "capture"
+"action" : "reload"
 },
 {
 "name" : "showtemp",
@@ -858,8 +907,7 @@
 "label" : "Show Temperature",
 "type" : "boolean",
 "usage" : "capture",
-"generic" : 1,
-"display" : "_display"
+"action" : "reload"
 },
 {
 "name" : "showexposure",
@@ -868,8 +916,7 @@
 "label" : "Show Exposure",
 "type" : "boolean",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "showgain",
@@ -878,8 +925,8 @@
 "label" : "Show Gain",
 "type" : "boolean",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"booldependsoff" : "overlaymethod",
+"action" : "reload"
 },
 {
 "name" : "showbrightness",
@@ -888,8 +935,7 @@
 "label" : "Show Brightness",
 "type" : "boolean",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"action" : "reload"
 },
 {
 "name" : "showusb",
@@ -898,7 +944,9 @@
 "label" : "Show USB",
 "type" : "boolean",
 "usage" : "capture",
-"display" : "_display"
+"display" : "_display",
+"booldependsoff" : "overlaymethod",
+"action" : "reload"
 },
 {
 "name" : "showmean",
@@ -907,8 +955,8 @@
 "label" : "Show Mean Brightness",
 "type" : "boolean",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"booldependsoff" : "overlaymethod",
+"action" : "reload"
 },
 {
 "name" : "showhistogrambox",
@@ -917,7 +965,9 @@
 "label" : "Show Histogram Box",
 "type" : "boolean",
 "usage" : "capture",
-"display" : "_display"
+"display" : "_display",
+"booldependsoff" : "overlaymethod",
+"action" : "reload"
 },
 {
 "name" : "showfocus",
@@ -926,8 +976,8 @@
 "label" : "Show Focus Metric",
 "type" : "boolean",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"booldependsoff" : "overlaymethod",
+"action" : "reload"
 },
 {
 "name" : "text",
@@ -937,8 +987,8 @@
 "type" : "widetext",
 "usage" : "capture",
 "optional" : 1,
-"generic" : 1,
-"display" : 1
+"booldependsoff" : "overlaymethod",
+"action" : "reload"
 },
 {
 "name" : "extratext",
@@ -949,8 +999,8 @@
 "usage" : "capture",
 "checkchanges" : 1,
 "optional" : 1,
-"generic" : 1,
-"display" : 1
+"booldependsoff" : "overlaymethod",
+"action" : "reload"
 },
 {
 "name" : "extratextage",
@@ -961,8 +1011,9 @@
 "label" : "Max Age Of Extra",
 "type" : "integer",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"valuedependson" : "extratext=*",
+"booldependsoff" : "overlaymethod",
+"action" : "reload"
 },
 {
 "name" : "textlineheight",
@@ -973,8 +1024,8 @@
 "label" : "Line Height",
 "type" : "integer",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"booldependsoff" : "overlaymethod",
+"action" : "reload"
 },
 {
 "name" : "textx",
@@ -985,8 +1036,8 @@
 "label" : "Text X",
 "type" : "integer",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"booldependsoff" : "overlaymethod",
+"action" : "reload"
 },
 {
 "name" : "texty",
@@ -997,8 +1048,8 @@
 "label" : "Text Y",
 "type" : "integer",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"booldependsoff" : "overlaymethod",
+"action" : "reload"
 },
 {
 "name" : "fontname",
@@ -1017,8 +1068,8 @@
 	{"value" : 6, "label" : "Script Simplex"},
 	{"value" : 7, "label" : "Script Complex"}
 ],
-"generic" : 1,
-"display" : 1
+"booldependsoff" : "overlaymethod",
+"action" : "reload"
 },
 {
 "name" : "fontcolor",
@@ -1028,8 +1079,8 @@
 "label" : "Font Color",
 "type" : "text",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"booldependsoff" : "overlaymethod",
+"action" : "reload"
 },
 {
 "name" : "smallfontcolor",
@@ -1038,8 +1089,8 @@
 "label" : "Small Font Color",
 "type" : "text",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"booldependsoff" : "overlaymethod",
+"action" : "reload"
 },
 {
 "name" : "fonttype",
@@ -1053,8 +1104,8 @@
 	{"value" : 1, "label" : "8 connected"},
 	{"value" : 2, "label" : "4 connected"}
 ],
-"generic" : 1,
-"display" : 1
+"booldependsoff" : "overlaymethod",
+"action" : "reload"
 },
 {
 "name" : "fontsize",
@@ -1065,8 +1116,8 @@
 "label" : "Font Size",
 "type" : "float",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"booldependsoff" : "overlaymethod",
+"action" : "reload"
 },
 {
 "name" : "fontline",
@@ -1077,8 +1128,8 @@
 "label" : "Font Weight",
 "type" : "integer",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"booldependsoff" : "overlaymethod",
+"action" : "reload"
 },
 {
 "name" : "outlinefont",
@@ -1087,14 +1138,14 @@
 "label" : "Use Outline Font",
 "type" : "boolean",
 "usage" : "capture",
-"generic" : 1,
-"display" : 1
+"booldependsoff" : "overlaymethod",
+"action" : "reload"
 },
+
 {
 "name" : "AllskyMapHeader",
 "description" : "Allsky Map and Website Settings",
 "type" : "header",
-"display" : 1
 },
 {
 "name" : "displaysettings",
@@ -1103,8 +1154,7 @@
 "label" : "Display Settings",
 "type" : "boolean",
 "checkchanges" : 1,
-"generic" : 1,
-"display" : 1
+"booldependson" : "uselocalwebsite OR useremotewebsite OR useremoteserver"
 },
 {
 "name" : "showonmap",
@@ -1112,9 +1162,7 @@
 "description" : "Enable to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map' target='_blank' title='Opens in new tab/window'><span class='WebUISetting'>Allsky Map <i class='fa fa-external-link-alt fa-fw'></i></span></a>.",
 "label" : "Show on Map",
 "type" : "boolean",
-"checkchanges" : 1,
-"generic" : 1,
-"display" : 1
+"checkchanges" : 1
 },
 {
 "name" : "websiteurl",
@@ -1123,9 +1171,7 @@
 "label" : "Website URL",
 "type" : "widetext",
 "checkchanges" : 1,
-"optional" : 1,
-"generic" : 1,
-"display" : 1
+"optional" : 1
 },
 {
 "name" : "imageurl",
@@ -1134,9 +1180,7 @@
 "label" : "Image URL",
 "type" : "widetext",
 "checkchanges" : 1,
-"optional" : 1,
-"generic" : 1,
-"display" : 1
+"optional" : 1
 },
 {
 "name" : "location",
@@ -1146,8 +1190,7 @@
 "type" : "widetext",
 "checkchanges" : 1,
 "optional" : 1,
-"generic" : 1,
-"display" : 1
+"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 {
 "name" : "owner",
@@ -1157,8 +1200,7 @@
 "type" : "text",
 "checkchanges" : 1,
 "optional" : 1,
-"generic" : 1,
-"display" : 1
+"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 {
 "name" : "camera",
@@ -1168,7 +1210,7 @@
 "type" : "widetext",
 "checkchanges" : 1,
 "optional" : 1,
-"display" : 1
+"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 {
 "name" : "lens",
@@ -1178,7 +1220,7 @@
 "type" : "text",
 "checkchanges" : 1,
 "optional" : 1,
-"display" : 1
+"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 {
 "name" : "computer",
@@ -1188,14 +1230,12 @@
 "type" : "widetext",
 "checkchanges" : 1,
 "optional" : 1,
-"generic" : 1,
-"display" : 1
+"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 {
 "name" : "cameraheading",
 "description" : "Camera Type",
-"type" : "header",
-"display" : 1
+"type" : "header"
 },
 {
 "name" : "cameratype",
@@ -1209,7 +1249,7 @@
 	{"value" : "Refresh", "label" : "Refresh"}
 ],
 "checkchanges" : 1,
-"display" : 1
+"action" : "restart"
 },
 {
 "name" : "cameramodel",
@@ -1217,7 +1257,8 @@
 "description" : "The model of camera you are using.<br><strong>To change it, change the <span class='WebUISetting'>Camera Type</span> above.</strong>",
 "label" : "Camera Model",
 "type" : "readonly",
-"display" : 1
+"display" : true,
+"action" : "restart"
 },
 {
 "name" : "cameranumber",
@@ -1230,9 +1271,21 @@
 "usage" : "capture",
 "checkchanges" : 1,
 "xxxdisplay" : "_display",
-"display" : 0
+"display" : false,
+"optional" : true,
+"action" : "restart"
 },
 
+{
+"name" : "webuitab========================================",
+"label" : "WebUI",
+"type" : "header-tab"
+},
+{
+"name" : "webuiheading",
+"label" : "WebUI Configuration",
+"type" : "header"
+},
 {
 "name" : "XX_END_XX"
 }

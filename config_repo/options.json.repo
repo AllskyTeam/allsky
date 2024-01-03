@@ -859,7 +859,7 @@
 "default" : 1,
 "description" : "Determines if you need to login to the WebUI or not.<br><b>If your Pi is accessible on the Internet, do NOT turn this off!!</b>.",
 "label" : "Require WebUI Login",
-"type" : "boolean",
+"type" : "boolean"
 },
 
 {
@@ -897,7 +897,7 @@
 "description" : "Activate to display the time an image was taken on the overlay.",
 "label" : "Show Time",
 "type" : "boolean",
-"usage" : "capture"
+"usage" : "capture",
 "action" : "reload"
 },
 {
@@ -1145,7 +1145,7 @@
 {
 "name" : "AllskyMapHeader",
 "description" : "Allsky Map and Website Settings",
-"type" : "header",
+"type" : "header"
 },
 {
 "name" : "displaysettings",

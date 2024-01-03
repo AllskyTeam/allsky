@@ -452,7 +452,6 @@ foreach ($repo_array as $repo) {
 		add_non_null_field($repo, "booldependson", $name);
 		add_non_null_field($repo, "booldependsoff", $name);
 		add_non_null_field($repo, "action", $name);
-		add_non_null_field($repo, "advanced", $name, "boolean");
 	$options_str .= "\n},\n";
 }
 $options_str .= "]\n\n";

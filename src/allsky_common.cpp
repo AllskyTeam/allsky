@@ -1075,7 +1075,7 @@ void displayHelp(config cg)
 			printf(" -%-*s - Amount to rotate image in degrees - 0, 90, 180, or 270 [%ld].\n", n, "rotation n", cg.rotation);
 	}
 	printf(" -%-*s - 0 = No flip, 1 = Horizontal, 2 = Vertical, 3 = Both [%ld].\n", n, "flip n", cg.flip);
-	printf(" -%-*s - 1 enables focus mode [%s].\n", n, "determineFocus b", yesNo(cg.determineFocus));
+	printf(" -%-*s - 1 enables focus mode [%s].\n", n, "determinefocus b", yesNo(cg.determineFocus));
 	printf(" -%-*s - 1 enables consistent delays between images [%s].\n", n, "consistentdelays b", yesNo(cg.consistentDelays));
 	printf(" -%-*s - Format the time is displayed in [%s].\n", n, "timeformat s", cg.timeFormat);
 	printf(" -%-*s - 1 enables notification images, for example, 'Camera is off during day' [%s].\n", n, "notificationimages b", yesNo(cg.notificationImages));

@@ -54,24 +54,39 @@ function get_control($array, $setting, &$min, &$max, &$default) {
 // If a field is null that means it wasn't in the repo file,
 // so don't add it to the options string.
 // We need this because we look for all fields in a setting.
-function add_non_null_field($a, $f, $setting) {	// array, field name, name_of_setting
+function add_non_null_field($a, $f, $setting, $type=null) {	// array, field name, setting_name, type
+	global $options_str;
+	global $num_fields_this_setting;
+
 	$value = getVariableOrDefault($a, $f, null);
 	if ($value === null) return;
+
+	// Add command and newline to prior line starting with 2nd field.
+	if ($num_fields_this_setting++ > 0) {
+		$options_str .= ",\n";
+	}
 
 	if ($f === "options")
 		add_options_field($f, $value, $setting);
 	else
-		add_field($f, $value, $setting);
+		add_field($f, $value, $setting, $type);
 }
 
 // Update $options_str with $v if it's not a string, and optionally if $return_string is set.
 // Return true if we updated $options_str.
 // This is needed because we never need to look in non-string values for "_min", "_max", etc.
-function add_value($v, $return_string) {
+function add_value($v, $return_string, $type=null) {
 	global $q;
 	global $options_str;
 
-	if ($v === true || $v === false || $v === null || is_numeric($v)) {
+	if ($type == "boolean") {
+		if ($v === 0 || $v === "0" || $v === "false" || $v === false)
+			$v = 0;
+		else
+			$v = 1;
+		$options_str .= $v;
+		return true;
+	} else if (is_numeric($v)) {
 		$options_str .= $v;
 		return true;
 	} else if ($return_string) {
@@ -86,7 +101,7 @@ function add_value($v, $return_string) {
 // For the value, we first need to check if it's a placeholder value,
 // and if so, replace the placeholder with the actual value from the camera capabilities file.
 // If it's not a placeholder value we just add it.
-function add_field($f, $v, $setting) {	// field, value, name_of_setting
+function add_field($f, $v, $setting, $type=null) {	// field, value, setting_name, type
 	global $q;
 	global $debug;
 	global $cc_controls;
@@ -94,12 +109,13 @@ function add_field($f, $v, $setting) {	// field, value, name_of_setting
 	$options_str .= "$q$f$q : ";				// field name
 
 	// Do not add value if it's a string since we need to check if it needs to be replaced
-	if (! add_value($v, false)) {
+	if (! add_value($v, false, $type)) {
 		if ($debug > 1) {
 			// It's hard to read the output with really long strings.
 			if (strlen($v) > 50) $vv = substr($v, 0, 50) . "...";
 			else $vv = $v;
-			echo "    '$f', v='$vv'";
+			if ($f != "name") echo "    ";
+			echo "$f: $vv";
 		}
 
 		// Check if the value is a generic placeholder, like "_min".
@@ -139,12 +155,17 @@ function add_field($f, $v, $setting) {	// field, value, name_of_setting
 			}
 		}
 		if ($debug > 1) echo "\n";
-		$options_str .= "$q$v$q";
+//echo "<br>========== $f: $type $v";
+		if ($type == "boolean") {
+			if ($v == 0 || $v == "0" || $v == "false" || ! $v)
+				$v = 0;
+			else
+				$v = 1;
+			$options_str .= $v;
+		} else {
+			$options_str .= "$q$v$q";
+		}
 	}
-
-	// The "display" field comes last in a setting, so don't append a comma to it.
-	if ($f !== "display") $options_str .= ",";
-	$options_str .= "\n";
 }
 
 // Add the options for the specified field to the options string.
@@ -178,7 +199,7 @@ function handle_options($f) {
 			$num = count($opt);
 			foreach ($opt as $f => $v) {
 				$options_str .= "$q$f$q : ";		// must split this line from next
-				add_value($v, true);	// output if string or not
+				add_value($v, true, null);			// output if string or not
 				$num--;
 				if ($num > 0)
 					$options_str .= ", ";
@@ -211,7 +232,7 @@ function add_options_field($field, $options, $setting) {
 			$num = count($opt);
 			foreach ($opt as $f => $v) {
 				$options_str .= "$q$f$q : ";		// must split this line from next
-				add_value($v, true);	// output if string or not
+				add_value($v, true, null);			// output if string or not
 				$num--;
 				if ($num > 0)
 					$options_str .= ", ";
@@ -227,7 +248,7 @@ function add_options_field($field, $options, $setting) {
 			}
 		}
 	}
-	$options_str .= "],\n";
+	$options_str .= "]";
 }
 
 $rest_index;
@@ -250,7 +271,7 @@ $settings_file = "";
 $force = false;		// force creation of settings file even if it already exists?
 
 foreach ($options as $opt => $val) {
-	if ($debug > 1 || $opt === "debug") echo "   Argument $opt $val\n";
+	if ($debug > 1 || $opt === "debug" || $opt === "debug2") echo "   Argument $opt $val\n";
 
 	if ($opt === "debug")
 		$debug++;
@@ -324,12 +345,18 @@ if ($repo_array === null) {
 	// default			[string, but usually a number]
 	// description		[string]
 	// label			[string]
-	// type				[string - header, number, text, checkbox, select, readonly]
+	// type				[string]
+	// usage			[string]
 	// options			[array with 1 or more entries] (only if "type" == "select")
-	// checkchanges		[0/1]
-	// optional			[0/1]
-	// generic			[0/1]
+	// popup-yesno		[string]
+	// popup-yesno-value	[number or string]
 	// display			[0/1]
+	// checkchanges		[0/1]
+	// source			[string]
+	// booldependson	[string]	("name" of other setting)
+	// booldependsoff	[string]	("name" of other setting)
+	// optional			[0/1]
+	// action			[string]
 
 
 // ==================   Create options file
@@ -348,10 +375,16 @@ if ($repo_array === null) {
 // different values for day and night in the CC file, e.g., default value for day
 // and night exposure.
 
+// How many fields for this setting have we output?
+// Used to add commas to all but the last field.
+$num_fields_this_setting = 0;
+
 $options_str = "[\n";
 foreach ($repo_array as $repo) {
 	global $debug;
 	global $cc_controls;
+	global $num_fields_this_setting;
+	$num_fields_this_setting = 0;
 
 	$type = getVariableOrDefault($repo, "type", null);
 	$name = getVariableOrDefault($repo, "name", null);
@@ -371,17 +404,22 @@ foreach ($repo_array as $repo) {
 	$display = getVariableOrDefault($repo, "display", null);
 	if ($display === null || $display === 0) {
 		if ($debug > 1) echo "    display field is null or 0\n";
+		$display = true;		// default
+	} else if ($display === false) {
+		if ($debug > 1) echo "\nname: $name: 'display' is false; skipping\n";
 		continue;
 	}
+
 	if (is_generic_value($display)) {
 		// Is a placeholder - need to check if the setting is in the CC file.
 		// If not, don't output this setting.
 		if (! get_control($cc_controls, get_generic_name($name), $min, $max, $default)) {
-			if ($debug > 1) echo "     <<<<< NOT SUPPORTED >>>>>\n";
+			if ($debug > 1) {
+				echo "\n$name: <<<<< NOT SUPPORTED >>>>>\n";
+			}
 			// Not an error - just means this isn't supported.
 			continue;
 		}
-		$repo["display"] = 1;	// a control exists for it, so display the setting.
 	}
 	if ($debug > 1) echo "\n";
 
@@ -398,16 +436,24 @@ foreach ($repo_array as $repo) {
 		add_non_null_field($repo, "name", $name);
 		add_non_null_field($repo, "minimum", $name);
 		add_non_null_field($repo, "maximum", $name);
-		add_non_null_field($repo, "default", $name);
+		add_non_null_field($repo, "default", $name, $type);
 		add_non_null_field($repo, "description", $name);
 		add_non_null_field($repo, "label", $name);
 		add_non_null_field($repo, "type", $name);
+		add_non_null_field($repo, "usage", $name);
 		add_non_null_field($repo, "options", $name);
-		add_non_null_field($repo, "checkchanges", $name);
-		add_non_null_field($repo, "optional", $name);
-		add_non_null_field($repo, "generic", $name);
-		add_non_null_field($repo, "display", $name);
-	$options_str .= "},\n";
+		add_non_null_field($repo, "popup-yesno", $name);
+		add_non_null_field($repo, "popup-yesno-value", $name);
+// Only get here if display is true, which is the default.
+//x		add_non_null_field($repo, "display", $name, "boolean");
+		add_non_null_field($repo, "checkchanges", $name, "boolean");
+		add_non_null_field($repo, "optional", $name, "boolean");
+		add_non_null_field($repo, "source", $name);
+		add_non_null_field($repo, "booldependson", $name);
+		add_non_null_field($repo, "booldependsoff", $name);
+		add_non_null_field($repo, "action", $name);
+		add_non_null_field($repo, "advanced", $name, "boolean");
+	$options_str .= "\n},\n";
 }
 $options_str .= "]\n\n";
 

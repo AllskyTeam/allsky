@@ -2,6 +2,7 @@
 {
 "name" : "daynighttab========================================",
 "label" : "Day/Night Settings",
+"optional" : 1, "display":0,
 "type" : "header-tab"
 },
 {
@@ -13,6 +14,7 @@
 "name" : "daynightcolumns",
 "label" : "Setting, Day Value, Description",
 "candrop" : "Description",
+"optional" : 1, "display":0,
 "type" : "header-column"
 },
 {
@@ -480,6 +482,7 @@
 {
 "name" : "bothtab========================================",
 "label" : "24 Hours",
+"optional" : 1, "display":0,
 "type" : "header-tab"
 },
 {
@@ -865,11 +868,13 @@
 {
 "name" : "postprocessingtab========================================",
 "label" : "Post-processing",
+"optional" : 1, "display":0,
 "type" : "header-tab"
 },
 {
 "name" : "postprocessingheader",
 "label" : "Post-processing",
+"optional" : 1, "display":0,
 "type" : "header"
 },
 {
@@ -1271,14 +1276,15 @@
 "usage" : "capture",
 "checkchanges" : 1,
 "xxxdisplay" : "_display",
-"display" : false,
-"optional" : true,
+"display" : 0,
+"optional" : 1,
 "action" : "restart"
 },
 
 {
 "name" : "webuitab========================================",
 "label" : "WebUI",
+"optional" : 1, "display":0,
 "type" : "header-tab"
 },
 {

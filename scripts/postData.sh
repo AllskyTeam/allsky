@@ -6,8 +6,8 @@
 # By default we upload to both local and remote Websites if they exist.
 
 # Allow this script to be executed manually or by sudo, which requires several variables to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck disable=SC1091 source-path=.
 source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
@@ -74,7 +74,7 @@ done
 [[ ${RET} -ne 0 ]] && usage_and_exit ${RET}
 [[ ${HELP} = "true" ]] && usage_and_exit 0
 
-WEBSITES="$(whatWebsites)"
+WEBSITES="$( whatWebsites )"
 # Make sure a local or remote Allsky Website exists.
 if [[ ${WEBSITES} == "none" ]]; then
 	echo -e "${YELLOW}${ME}: WARNING: No local or remote website found.${NC}"
@@ -116,31 +116,31 @@ fi
 
 if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	OK="true"
-	if ! latitude="$(convertLatLong "$(settings ".latitude")" "latitude")" ; then
+	if ! latitude="$( convertLatLong "$( settings ".latitude" )" "latitude" )" ; then
 		OK="false"
 		echo -e "${RED}${ME}: ERROR: ${latitude}"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${latitude}"
 	fi
-	if ! longitude="$(convertLatLong "$(settings ".longitude")" "longitude")" ; then
+	if ! longitude="$( convertLatLong "$( settings ".longitude" )" "longitude" )" ; then
 		OK="false"
 		echo -e "${RED}${ME}: ERROR: ${longitude}"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${longitude}"
 	fi
 	[[ ${OK} == "false" ]] && exit 1
 
-	angle="$(settings ".angle")"
-	timezone="$(date "+%z")"
+	angle="$( settings ".angle" )"
+	timezone="$( date "+%z" )"
 
 	# If nighttime happens after midnight, sunwait returns "--:-- (Midnight sun)"
 	# If nighttime happens before noon, sunwait returns "--:-- (Polar night)"
-	sunrise="$(sunwait list rise angle "${angle}" "${latitude}" "${longitude}")"
+	sunrise="$( sunwait list rise angle "${angle}" "${latitude}" "${longitude}" )"
 	sunrise_hhmm="${sunrise:0:5}"
-	sunset="$(sunwait list set angle "${angle}" "${latitude}" "${longitude}")"
+	sunset="$( sunwait list set angle "${angle}" "${latitude}" "${longitude}" )"
 	sunset_hhmm="${sunset:0:5}"
 
 	if [[ ${sunrise_hhmm} == "--:--" || ${sunset_hhmm} == "--:--" ]]; then
 		# nighttime starts after midnight or before noon.
-		today="$(date --date='tomorrow' +%Y-%m-%d)"		# is actually tomorrow
+		today="$( date --date='tomorrow' +%Y-%m-%d )"		# is actually tomorrow
 		# TODO What SHOULD *_hhmm be?
 		sunrise_hhmm="00:00"
 		sunset_hhmm="00:00"
@@ -151,13 +151,13 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 		echo "Using tomorrow at '${sunrise_hhmm}' instead."
 		echo "***"
 	else
-		today="$(date +%Y-%m-%d)"
+		today="$( date +%Y-%m-%d )"
 	fi
 
 	FILE="data.json"
 	OUTPUT_FILE="${ALLSKY_TMP}/${FILE}"
 	(
-		if [[ $(settings ".takedaytimeimages") -eq 1 ]]; then
+		if [[ $( settings ".takedaytimeimages" ) -eq 1 ]]; then
 			D="true"
 		else
 			D="false"

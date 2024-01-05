@@ -115,22 +115,22 @@ function heading()
 	local DISPLAY_HEADER="false"
 	case "${HEADER}" in
 		Information)
-			NUM_INFOS=$((NUM_INFOS + 1))
-			if [[ $NUM_INFOS -eq 1 ]]; then
+			((NUM_INFOS++))
+			if [[ ${NUM_INFOS} -eq 1 ]]; then
 				DISPLAY_HEADER="true"
 				SUB_HEADER=" (items that will not stop any part of Allsky from running)"
 			fi
 			;;
 		Warnings)
-			NUM_WARNINGS=$((NUM_WARNINGS + 1))
-			if [[ $NUM_WARNINGS -eq 1 ]]; then
+			$((NUM_WARNINGS++))
+			if [[ ${NUM_WARNINGS} -eq 1 ]]; then
 				DISPLAY_HEADER="true"
 				SUB_HEADER=" (items that may keep parts of Allsky running)"
 			fi
 			;;
 		Errors)
-			NUM_ERRORS=$((NUM_ERRORS + 1))
-			if [[ $NUM_ERRORS -eq 1 ]]; then
+			$((NUM_ERRORS++))
+			if [[ ${NUM_ERRORS} -eq 1 ]]; then
 				DISPLAY_HEADER="true"
 				SUB_HEADER=" (items that may keep Allsky from running)"
 			fi

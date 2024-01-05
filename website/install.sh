@@ -670,11 +670,11 @@ do_remote_website() {
 	display_msg --log progress "Testing upload to remote Website."
 	display_msg info "  When done you can remove '${TEST_FILE_NAME}' from your remote server."
 	echo "This is a test file and can be removed." > "${TEST_FILE}"
-	if ! RET="$("${ALLSKY_SCRIPTS}/upload.sh" \
+	if ! RET="$( "${ALLSKY_SCRIPTS}/upload.sh" \
 			"${TEST_FILE}" \
 			"${IMAGE_DIR}" \
 			"${TEST_FILE_NAME}" \
-			"UploadTest")" ; then
+			"UploadTest" )" ; then
 		MSG="Unable to upload a test file.\n"
 		display_msg --log error "${MSG}"
 		display_msg --log info "${RET}"

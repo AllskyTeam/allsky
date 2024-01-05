@@ -3,8 +3,8 @@
 # This script allows users to manually generate or upload keograms, startrails, and timelapses.
 
 # Allow this script to be executed manually, which requires several variables to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck disable=SC1091 source-path=.
 source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
@@ -183,7 +183,7 @@ if [[ ${DO_KEOGRAM} == "true" || ${DO_STARTRAILS} == "true" ]]; then
 	# a non-empty string (eg. IMGSIZE="1280x960") will be produced and later
 	# parts of this script so startrail and keogram generation can use it
 	# to reject incorrectly-sized images.
-	IMGSIZE=$(settings 'if .width != null and .height != null and .width != "0" and .height != "0" and .width != 0 and .height != 0 then "\(.width)x\(.height)" else empty end')
+	IMGSIZE=$( settings 'if .width != null and .height != null and .width != "0" and .height != "0" and .width != 0 and .height != 0 then "\(.width)x\(.height)" else empty end' )
 	if [[ ${IMGSIZE} != "" ]]; then
 		SIZE_FILTER="-s ${IMGSIZE//\"}"
 	else

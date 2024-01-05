@@ -122,14 +122,14 @@ function heading()
 			fi
 			;;
 		Warnings)
-			$((NUM_WARNINGS++))
+			((NUM_WARNINGS++))
 			if [[ ${NUM_WARNINGS} -eq 1 ]]; then
 				DISPLAY_HEADER="true"
 				SUB_HEADER=" (items that may keep parts of Allsky running)"
 			fi
 			;;
 		Errors)
-			$((NUM_ERRORS++))
+			((NUM_ERRORS++))
 			if [[ ${NUM_ERRORS} -eq 1 ]]; then
 				DISPLAY_HEADER="true"
 				SUB_HEADER=" (items that may keep Allsky from running)"

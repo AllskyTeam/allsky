@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck disable=SC1091 source-path=.
 source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
@@ -56,7 +56,7 @@ usage_and_exit()
 {
 	RET=$1
 	XD="/some_nonstandard_path"
-	TODAY="$(date +%Y%m%d)"
+	TODAY="$( date +%Y%m%d )"
 	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
 	echo -n "Usage: ${ME} [--debug] [--help] [--lock] [--output file] [--mini] {--images file | <INPUT_DIR> }"
 	echo -e "${NC}"
@@ -242,7 +242,7 @@ elif [[ ${TIMELAPSEWIDTH} != "0" ]]; then
 	SCALE="-filter:v scale=${TIMELAPSEWIDTH}:${TIMELAPSEHEIGHT}"
 fi
 # shellcheck disable=SC2086
-X="$(ffmpeg -y -f image2 \
+X="$( ffmpeg -y -f image2 \
 	-loglevel "${FFLOG}" \
 	-r "${FPS}" \
 	-i "${SEQUENCE_DIR}/%04d.${EXTENSION}" \
@@ -252,11 +252,11 @@ X="$(ffmpeg -y -f image2 \
 	-movflags +faststart \
 	$SCALE \
 	${TIMELAPSE_EXTRA_PARAMETERS} \
-	"${OUTPUT_FILE}" 2>&1)"
+	"${OUTPUT_FILE}" 2>&1 )"
 RET=$?
 
 # The "deprecated..." message is useless and only confuses users, so hide it.
-X="$(echo "${X}" | grep -v "deprecated pixel format used")"
+X="$( echo "${X}" | grep -v "deprecated pixel format used" )"
 [ "${X}" != "" ] && echo "${X}" >> "${TMP}"		# a warning/error message
 
 if [[ ${RET} -ne -0 ]]; then

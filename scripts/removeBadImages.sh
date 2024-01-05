@@ -135,7 +135,7 @@ for f in ${IMAGE_FILES} ; do
 	if [[ ! -s ${f} ]]; then
 		BAD="'${f}' (zero length)"
 	else
-		if ! MEAN=$(${NICE} convert "${f}" -colorspace Gray -format "%[fx:image.mean]" info: 2>&1) ; then
+		if ! MEAN=$( ${NICE} convert "${f}" -colorspace Gray -format "%[fx:image.mean]" info: 2>&1 ) ; then
 			# Do NOT set BAD since this isn't necessarily a problem with the file.
 			echo -e "${RED}***${ME}: ERROR: 'convert ${f}' failed; leaving file.${NC}" >&2
 			echo -e "Message=${MEAN}" >&2

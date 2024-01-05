@@ -3,13 +3,13 @@
 function DisplayAllskyConfig(){
 	global $formReadonly;
 
-	$cameraTypeName = "cameratype";		// json setting name
-	$cameraModelName = "cameramodel";	// json setting name
-	$cameraNumberName = "cameranumber";	// json setting name
-	$debugLevelName = "debuglevel";		// json setting name
+	$cameraTypeName = "cameratype";			// json setting name
+	$cameraModelName = "cameramodel";		// json setting name
+	$cameraNumberName = "cameranumber";		// json setting name
+	$debugLevelName = "debuglevel";			// json setting name
 	$debugArg = "";
 
-	global $lastChangedName;			// name of json setting
+	global $lastChangedName;				// name of json setting
 	global $lastChanged;
 	global $page;
 	global $ME;

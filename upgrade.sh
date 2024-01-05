@@ -15,8 +15,8 @@
 ############################
 
 
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
+ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
 source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
@@ -126,7 +126,7 @@ if [[ ${FORCE_CHECK} == "true" || ${BRANCH} == "${GITHUB_MAIN_BRANCH}" ]]; then
 
 	else
 		# See if there's a newer version of this script; if so, download it and execute it.
-		BRANCH="$(getBranch)" || exit 2
+		BRANCH="$( getBranch) " || exit 2
 		NEWER_SCRIPT="/tmp/${ME}"
 		checkAndGetNewerFile --branch "${BRANCH}" "${CURRENT_SCRIPT}" "${ME}" "${NEWER_SCRIPT}"
 		RET=$?

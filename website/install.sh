@@ -1,7 +1,7 @@
 #!/bin/bash
 
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")"/..)"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )"/.. )"
+ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
 source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
@@ -472,7 +472,7 @@ create_website_configuration_file() {
 	# Get the array index for the mini-timelapse.
 	PARENT="homePage.leftSidebar"
 	FIELD="Mini-timelapse"
-	INDEX=$(getJSONarrayIndex "${WEB_CONFIG_FILE}" "${PARENT}" "${FIELD}")
+	INDEX=$( getJSONarrayIndex "${WEB_CONFIG_FILE}" "${PARENT}" "${FIELD}" )
 	if [[ ${INDEX} -ge 0 ]]; then
 		MINI_TLAPSE_DISPLAY="${PARENT}[${INDEX}].display"
 		MINI_TLAPSE_URL="${PARENT}[${INDEX}].url"
@@ -499,9 +499,9 @@ create_website_configuration_file() {
 	fi
 
 	# Convert latitude and longitude to use N, S, E, W.
-	LATITUDE="$(convertLatLong "${LATITUDE}" "latitude")"
+	LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" )"
 	[[ -z ${LATITUDE} ]] && display_msg --log warning "latitude is empty"
-	LONGITUDE="$(convertLatLong "${LONGITUDE}" "longitude")"
+	LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )"
 	[[ -z ${LONGITUDE} ]] && display_msg --log warning "longitude is empty"
 
 	if [[ ${LATITUDE:1,-1} == "S" ]]; then			# last character
@@ -510,12 +510,12 @@ create_website_configuration_file() {
 		AURORAMAP="north"
 	fi
 
-	LOCATION="$(settings ".location")"
-	OWNER="$(settings ".owner")"
-	CAMERA_MODEL="$(settings ".cameramodel")"
+	LOCATION="$( settings ".location" )"
+	OWNER="$( settings ".owner" )"
+	CAMERA_MODEL="$( settings ".cameramodel" )"
 	CAMERA="${CAMERA_TYPE}${CAMERA_MODEL}"
-	LENS="$(settings ".lens")"
-	COMPUTER="$(sed --quiet -e 's/Raspberry Pi/RPi/' -e '/^Model/ s/.*: // p' /proc/cpuinfo)"
+	LENS="$( settings ".lens" )"
+	COMPUTER="$( sed --quiet -e 's/Raspberry Pi/RPi/' -e '/^Model/ s/.*: // p' /proc/cpuinfo )"
 
 	# These appeard not to be set for one tester, so put an explicit warning in.
 	[[ -z ${ALLSKY_VERSION} ]] && display_msg --log warning "AllskyVersion is empty"
@@ -867,7 +867,7 @@ restore_prior_files() {
 
 	D="${PRIOR_WEBSITE}/videos/thumbnails"
 	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/videos"
-	count=$(find "${PRIOR_WEBSITE}/videos" -maxdepth 1 -name 'allsky-*' | wc -l)
+	count=$( find "${PRIOR_WEBSITE}/videos" -maxdepth 1 -name 'allsky-*' | wc -l )
 	if [[ ${count} -ge 1 ]]; then
 		display_msg --log progress "Restoring prior videos."
 		mv "${PRIOR_WEBSITE}"/videos/allsky-*   "${ALLSKY_WEBSITE}/videos"
@@ -877,7 +877,7 @@ restore_prior_files() {
 
 	D="${PRIOR_WEBSITE}/keograms/thumbnails"
 	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/keograms"
-	count=$(find "${PRIOR_WEBSITE}/keograms" -maxdepth 1 -name 'keogram-*' | wc -l)
+	count=$( find "${PRIOR_WEBSITE}/keograms" -maxdepth 1 -name 'keogram-*' | wc -l )
 	if [[ ${count} -ge 1 ]]; then
 		display_msg progress "Restoring prior keograms."
 		mv "${PRIOR_WEBSITE}"/keograms/keogram-*   "${ALLSKY_WEBSITE}/keograms"
@@ -887,7 +887,7 @@ restore_prior_files() {
 
 	D="${PRIOR_WEBSITE}/startrails/thumbnails"
 	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/startrails"
-	count=$(find "${PRIOR_WEBSITE}/startrails" -maxdepth 1 -name 'startrails-*' | wc -l)
+	count=$( find "${PRIOR_WEBSITE}/startrails" -maxdepth 1 -name 'startrails-*' | wc -l )
 	if [[ ${count} -ge 1 ]]; then
 		display_msg progress "Restoring prior startrails."
 		mv "${PRIOR_WEBSITE}"/startrails/startrails-*   "${ALLSKY_WEBSITE}/startrails"
@@ -897,7 +897,7 @@ restore_prior_files() {
 
 	D="${PRIOR_WEBSITE}/myImages"
 	if [[ -d ${D} ]]; then
-		count=$(find "${D}" | wc -l)
+		count=$( find "${D}" | wc -l )
 		if [[ ${count} -gt 1 ]]; then
 			display_msg --log progress "Restoring prior 'myImages' directory."
 			mv "${D}"   "${ALLSKY_WEBSITE}"
@@ -930,7 +930,7 @@ set_permissions()
 
 exit_installation()
 {
-	[[ -z ${FUNCTION} ]] && display_msg "${LOG_TYPE}" info "\nENDING INSTALLATON AT $(date).\n"
+	[[ -z ${FUNCTION} ]] && display_msg "${LOG_TYPE}" info "\nENDING INSTALLATON AT $( date ).\n"
 	local E="${1}"
 	[[ ${E} -ge 0 ]] && exit "${E}"
 }
@@ -985,7 +985,7 @@ while [[ $# -gt 0 ]]; do
 	shift
 done
 
-[[ -z ${FUNCTION} && ${UPDATE} == "false" ]] && display_msg "${LOG_TYPE}" info "STARTING INSTALLATON AT $(date).\n"
+[[ -z ${FUNCTION} && ${UPDATE} == "false" ]] && display_msg "${LOG_TYPE}" info "STARTING INSTALLATON AT $( date ).\n"
 
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
@@ -997,8 +997,8 @@ if ! json_pp < "${SETTINGS_FILE}" > /dev/null; then
 	exit_installation 1
 fi
 
-LATITUDE="$(settings ".latitude")"
-LONGITUDE="$(settings ".longitude")"
+LATITUDE="$( settings ".latitude" )"
+LONGITUDE="$( settings ".longitude" )"
 if [[ -z ${LATITUDE} || -z ${LONGITUDE} ]]; then
 	MSG="Latitude and Longitude must be set in the WebUI before the Allsky Website\ncan be installed."
 	display_msg --log error "${MSG}"

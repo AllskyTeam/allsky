@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Allow this script to be executed manually, which requires several variables to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck disable=SC1091 source-path=.
 source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
@@ -94,12 +94,12 @@ fi
 # We will APPEND to the file so we have a record of all notifications since Allsky started.
 
 if [[ ${NOTIFICATION_TYPE} != "custom" && -f ${ALLSKY_NOTIFICATION_LOG} && ${EXPIRES_IN_SECONDS} -ne 0 ]]; then
-	NOW=$(date +'%Y-%m-%d %H:%M:%S')
-	RESULTS="$(find "${ALLSKY_NOTIFICATION_LOG}" -newermt "${NOW}" -print)"
+	NOW=$( date +'%Y-%m-%d %H:%M:%S' )
+	RESULTS="$( find "${ALLSKY_NOTIFICATION_LOG}" -newermt "${NOW}" -print )"
 	if [[ -n ${RESULTS} ]]; then	# the file is in the future
 		if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
 			# File contains:	Notification_type,expires_in_seconds,expiration_time
-			RECENT_NOTIFICATION=$(tail -1 "${ALLSKY_NOTIFICATION_LOG}")
+			RECENT_NOTIFICATION=$( tail -1 "${ALLSKY_NOTIFICATION_LOG}" )
 			RECENT_TYPE=${RECENT_NOTIFICATION%%,*}
 			RECENT_TIME=${RECENT_NOTIFICATION##*,}
 			echo "${ME}: Ignoring new '${NOTIFICATION_TYPE}'; prior '${RECENT_TYPE}' posted ${RECENT_TIME}."
@@ -133,18 +133,18 @@ fi
 # Don't save in main image directory because we don't want the notification image in timelapses.
 # If at nighttime, save them in (possibly) yesterday's directory.
 # If during day, save in today's directory.
-if [[ $(settings ".takedaytimeimages") == "1" && \
-	  $(settings ".savedaytimeimages") == "1" && \
+if [[ $( settings ".takedaytimeimages" ) == "1" && \
+	  $( settings ".savedaytimeimages" ) == "1" && \
 	  ${IMG_CREATE_THUMBNAILS} == "true" ]]; then
-	DATE_DIR="${ALLSKY_IMAGES}/$(date +'%Y%m%d')"
+	DATE_DIR="${ALLSKY_IMAGES}/$( date +'%Y%m%d' )"
 	# Use today's folder if it exists, otherwise yesterday's
-	[[ ! -d ${DATE_DIR} ]] && DATE_DIR="${ALLSKY_IMAGES}/$(date -d '12 hours ago' +'%Y%m%d')"
+	[[ ! -d ${DATE_DIR} ]] && DATE_DIR="${ALLSKY_IMAGES}/$( date -d '12 hours ago' +'%Y%m%d' )"
 	THUMBNAILS_DIR="${DATE_DIR}/thumbnails"
 	# The thumbnail isn't critical so continue if we can't create it.
 	if ! mkdir -p "${THUMBNAILS_DIR}" ; then
 			echo -e "${YELLOW}*** ${ME}: WARNING: could not create '${THUMBNAILS_DIR}'; continuing.${NC}"
 	else
-		THUMB="${THUMBNAILS_DIR}/${FILENAME}-$(date +'%Y%m%d%H%M%S').${EXTENSION}"
+		THUMB="${THUMBNAILS_DIR}/${FILENAME}-$( date +'%Y%m%d%H%M%S' ).${EXTENSION}"
 
 		if ! convert "${CURRENT_IMAGE}" -resize "${THUMBNAIL_SIZE_X}x${THUMBNAIL_SIZE_Y}" "${THUMB}" ; then
 			echo -e "${YELLOW}*** ${ME}: WARNING: THUMBNAIL resize failed; continuing.${NC}"
@@ -164,7 +164,7 @@ fi
 # Keep track of last notification type and time.
 # We don't use the type (at least not yet), but save it anyhow so we can manually look at
 # it for debugging purposes.
-EXPIRE_TIME=$(date -d "${EXPIRES_IN_SECONDS} seconds" +'%Y-%m-%d %H:%M:%S')
+EXPIRE_TIME=$( date -d "${EXPIRES_IN_SECONDS} seconds" +'%Y-%m-%d %H:%M:%S' )
 echo "${NOTIFICATION_TYPE},${EXPIRES_IN_SECONDS},${EXPIRE_TIME}" >> "${ALLSKY_NOTIFICATION_LOG}"
 touch --date="${EXPIRE_TIME}" "${ALLSKY_NOTIFICATION_LOG}"
 
@@ -195,7 +195,7 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 	# We're actually uploading ${UPLOAD_FILE}, but show ${NOTIFICATION_FILE} in the message since it's more descriptive.
 	# If an existing notification is being uploaded, wait for it to finish then upload this one.
 	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
-		echo -e "${ME}: Uploading $(basename "${NOTIFICATION_FILE}")"
+		echo -e "${ME}: Uploading $( basename "${NOTIFICATION_FILE}" )"
 	fi
 	"${ALLSKY_SCRIPTS}/upload.sh" --wait --silent \
 		"${UPLOAD_FILE}" "${IMAGE_DIR}" "${FULL_FILENAME}" "NotificationImage" "${WEB_IMAGE_DIR}"

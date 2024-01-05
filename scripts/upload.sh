@@ -4,7 +4,7 @@
 # This is a separate script so it can also be used manually to test uploads.
 
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}")/.." )"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck disable=SC1091 source-path=.
@@ -49,7 +49,8 @@ SILENT="false"
 DEBUG="false"
 RET=0
 while [[ $# -gt 0 ]]; do
-	case "${1}" in
+	ARG="${1}"
+	case "${ARG}" in
 		--help)
 			HELP="true"
 			shift
@@ -67,7 +68,7 @@ while [[ $# -gt 0 ]]; do
 			shift
 			;;
 		-*)
-			echo -e "${RED}Unknown argument '${1}'.${NC}" >&2
+			echo -e "${RED}Unknown argument '${ARG}'.${NC}" >&2
 			shift
 			RET=1
 			;;

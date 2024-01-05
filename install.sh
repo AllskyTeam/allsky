@@ -369,8 +369,8 @@ select_camera_type()
 	MSG="\nThe following camera type${S} connected to the Pi.\n"
 	MSG="${MSG}Pick the one you want."
 	MSG="${MSG}\nIf it's not in the list, select <Cancel> and determine why."
-	CAMERA_TYPE=$(whiptail --title "${TITLE}" --menu "${MSG}" 15 "${WT_WIDTH}" "${NUM}" \
-		"${CT[@]}" 3>&1 1>&2 2>&3)
+	CAMERA_TYPE=$( whiptail --title "${TITLE}" --menu "${MSG}" 15 "${WT_WIDTH}" "${NUM}" \
+		"${CT[@]}" 3>&1 1>&2 2>&3 )
 	if [[ $? -ne 0 ]]; then
 		MSG="Camera selection required."
 		MSG="${MSG} Please re-run the installation and select a camera to continue."
@@ -557,7 +557,7 @@ ask_reboot()
 
 	local AT="     http://${NEW_HOST_NAME}.local\n"
 	AT="${AT}or\n"
-	AT="${AT}     http://$(hostname -I | sed -e 's/ .*$//')"
+	AT="${AT}     http://$( hostname -I | sed -e 's/ .*$//' )"
 
 	if [[ ${REBOOT_NEEDED} == "false" ]]; then
 		MSG="\nAfter reboot you can connect to the WebUI at:\n${AT}"
@@ -609,7 +609,7 @@ check_swap()
 	local RAM_SIZE="$( vcgencmd get_config total_mem )"
 	if echo "${RAM_SIZE}" | grep --silent "unknown" ; then
 		# Note: This doesn't produce exact results.  On a 4 GB Pi, it returns 3.74805.
-		RAM_SIZE=$(free --mebi | awk '{if ($1 == "Mem:") {print $2; exit 0} }')		# in MB
+		RAM_SIZE=$( free --mebi | awk '{if ($1 == "Mem:") {print $2; exit 0} }' )		# in MB
 	else
 		RAM_SIZE="${RAM_SIZE//total_mem=/}"
 	fi
@@ -625,7 +625,7 @@ check_swap()
 	display_msg --logonly info "RAM_SIZE=${RAM_SIZE}, SUGGESTED_SWAP_SIZE=${SUGGESTED_SWAP_SIZE}."
 
 	# Not sure why, but displayed swap is often 1 MB less than what's in /etc/dphys-swapfile
-	local CURRENT_SWAP=$(free --mebi | awk '{if ($1 == "Swap:") {print $2 + 1; exit 0} }')	# in MB
+	local CURRENT_SWAP=$( free --mebi | awk '{if ($1 == "Swap:") {print $2 + 1; exit 0} }' )	# in MB
 	CURRENT_SWAP=${CURRENT_SWAP:-0}
 	if [[ ${CURRENT_SWAP} -lt ${SUGGESTED_SWAP_SIZE} || ${PROMPT} == "true" ]]; then
 		local SWAP_CONFIG_FILE="/etc/dphys-swapfile"
@@ -652,8 +652,8 @@ check_swap()
 			MSG="${MSG}\n\nYou may change the amount of swap by changing the number below."
 		fi
 
-		local SWAP_SIZE=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 18 "${WT_WIDTH}" \
-			"${SUGGESTED_SWAP_SIZE}" 3>&1 1>&2 2>&3)
+		local SWAP_SIZE=$( whiptail --title "${TITLE}" --inputbox "${MSG}" 18 "${WT_WIDTH}" \
+			"${SUGGESTED_SWAP_SIZE}" 3>&1 1>&2 2>&3 )
 		# If the suggested swap was 0 and the user added a number but didn't first delete the 0,
 		# do it now so we don't have numbers like "0256".
 		[[ ${SWAP_SIZE:0:1} == "0" ]] && SWAP_SIZE="${SWAP_SIZE:1}"
@@ -669,7 +669,7 @@ check_swap()
 			sudo dphys-swapfile swapoff					# Stops the swap file
 			sudo sed -i "/CONF_SWAPSIZE/ c CONF_SWAPSIZE=${SWAP_SIZE}" "${SWAP_CONFIG_FILE}"
 
-			local CURRENT_MAX="$(get_variable "CONF_MAXSWAP" "${SWAP_CONFIG_FILE}")"
+			local CURRENT_MAX="$( get_variable "CONF_MAXSWAP" "${SWAP_CONFIG_FILE}" )"
 			# TODO: Can we determine the default max rather than hard-code it.
 			CURRENT_MAX="${CURRENT_MAX:-2048}"
 			if [[ ${CURRENT_MAX} -lt ${SWAP_SIZE} ]]; then
@@ -697,7 +697,7 @@ check_and_mount_tmp()
 	local TMP_DIR="/tmp/IMAGES"
 
 	if [[ -d "${ALLSKY_TMP}" ]]; then
-		local IMAGES="$(find "${ALLSKY_TMP}" -name '*.jpg')"
+		local IMAGES="$( find "${ALLSKY_TMP}" -name '*.jpg' )"
 		if [[ -n ${IMAGES} ]]; then
 			mkdir "${TMP_DIR}"
 			# Need to allow for files with spaces in their names.
@@ -870,7 +870,7 @@ install_webserver_et_al()
 
 prompt_for_hostname()
 {
-	local CURRENT_HOSTNAME=$(tr -d " \t\n\r" < /etc/hostname)
+	local CURRENT_HOSTNAME=$( tr -d " \t\n\r" < /etc/hostname )
 	if [[ ${CURRENT_HOSTNAME} != "raspberrypi" ]]; then
 		display_msg --logonly info "Using current hostname of '${CURRENT_HOSTNAME}'."
 		NEW_HOST_NAME="${CURRENT_HOSTNAME}"
@@ -883,8 +883,8 @@ prompt_for_hostname()
 	MSG="Please enter a hostname for your Pi."
 	MSG="${MSG}\n\nIf you have more than one Pi on your network they MUST all have unique names."
 	MSG="${MSG}\n\nThe current hostname is '${CURRENT_HOSTNAME}'; the suggested name is below:\n"
-	NEW_HOST_NAME=$(whiptail --title "${TITLE}" --inputbox "${MSG}" 15 "${WT_WIDTH}" \
-		"${SUGGESTED_NEW_HOST_NAME}" 3>&1 1>&2 2>&3)
+	NEW_HOST_NAME=$( whiptail --title "${TITLE}" --inputbox "${MSG}" 15 "${WT_WIDTH}" \
+		"${SUGGESTED_NEW_HOST_NAME}" 3>&1 1>&2 2>&3 )
 	if [[ $? -ne 0 ]]; then
 		MSG="You must specify a host name."
 		MSG="${MSG}  Please re-run the installation and select one."
@@ -924,7 +924,7 @@ set_permissions()
 
 	# Make sure the currently running user has can write to the webserver root
 	# and can run sudo on anything.
-	G="$(id "${ALLSKY_OWNER}")"
+	G="$( id "${ALLSKY_OWNER}" )"
 
 	if ! echo "${G}" | grep --silent "(sudo)"; then
 		display_msg --log progress "Adding ${ALLSKY_OWNER} to sudo group."
@@ -1102,7 +1102,7 @@ handle_prior_website()
 		PV="${PRIOR_VERSION}"
 	fi
 
-	local NEWEST_VERSION="$(get_Git_version "${GITHUB_MAIN_BRANCH}" "${GITHUB_WEBSITE_PACKAGE}")"
+	local NEWEST_VERSION="$( get_Git_version "${GITHUB_MAIN_BRANCH}" "${GITHUB_WEBSITE_PACKAGE}" )"
 	if [[ -z ${NEWEST_VERSION} ]]; then
 		display_msg --log warning "Unable to determine version of GitHub's Website branch '${GITHUB_MAIN_BRANCH}'."
 	fi
@@ -1186,7 +1186,7 @@ get_desired_locale()
 
 	# List of all installed locales, ignoring any lines with ":" which
 	# are usually error messages.
-	local INSTALLED_LOCALES="$(locale -a 2>/dev/null | grep -E -v "^C$|:" | sed 's/utf8/UTF-8/')"
+	local INSTALLED_LOCALES="$( locale -a 2>/dev/null | grep -E -v "^C$|:" | sed 's/utf8/UTF-8/' )"
 	if [[ -z ${INSTALLED_LOCALES} ]]; then
 		MSG="There are no locales on your system ('locale -a' didn't return valid locales)."
 		MSG="${MSG}\nYou need to install and set one before Allsky installation can run."
@@ -1213,7 +1213,7 @@ get_desired_locale()
 		# People rarely change locale once set, so assume they still want the prior one.
 		DESIRED_LOCALE="$( settings .locale "${PRIOR_SETTINGS_FILE}" )"
 		if [[ -n ${DESIRED_LOCALE} ]]; then
-			local X="$(echo "${INSTALLED_LOCALES}" | grep "${DESIRED_LOCALE}")"
+			local X="$( echo "${INSTALLED_LOCALES}" | grep "${DESIRED_LOCALE}" )"
 			if [[ -z ${X} ]]; then
 				# This is probably EXTREMELY rare.
 				MSG2="NOTE: Your prior locale (${DESIRED_LOCALE}) is no longer installed on this Pi."
@@ -1223,12 +1223,12 @@ get_desired_locale()
 
 	# Get current locale to use as the default.
 	# Ignore any line that doesn't have a value, and get rid of double quotes.
-	local TEMP_LOCALE="$(locale | grep -E "^LANG=|^LANGUAGE=|^LC_ALL=" | sed -e '/=$/d' -e 's/"//g')"
-	CURRENT_LOCALE="$(echo "${TEMP_LOCALE}" | sed --silent -e '/LANG=/ s/LANG=//p')"
+	local TEMP_LOCALE="$( locale | grep -E "^LANG=|^LANGUAGE=|^LC_ALL=" | sed -e '/=$/d' -e 's/"//g' )"
+	CURRENT_LOCALE="$( echo "${TEMP_LOCALE}" | sed --silent -e '/LANG=/ s/LANG=//p' )"
 	if [[ -z ${CURRENT_LOCALE} ]];  then
-		CURRENT_LOCALE="$(echo "${TEMP_LOCALE}" | sed --silent -e '/LANGUAGE=/ s/LANGUAGE=//p')"
+		CURRENT_LOCALE="$( echo "${TEMP_LOCALE}" | sed --silent -e '/LANGUAGE=/ s/LANGUAGE=//p' )"
 		if [[ -z ${CURRENT_LOCALE} ]];  then
-			CURRENT_LOCALE="$(echo "${TEMP_LOCALE}" | sed --silent -e '/LC_ALL=/ s/LC_ALL=//p')"
+			CURRENT_LOCALE="$( echo "${TEMP_LOCALE}" | sed --silent -e '/LC_ALL=/ s/LC_ALL=//p' )"
 		fi
 	fi
 	MSG="CURRENT_LOCALE=${CURRENT_LOCALE}, TEMP_LOCALE=[[$( echo "${TEMP_LOCALE}" | tr '\n' ' ' )]]"
@@ -1265,8 +1265,8 @@ get_desired_locale()
 	done
 
 	#shellcheck disable=SC2086
-	DESIRED_LOCALE=$(whiptail --title "${TITLE}" ${D} --menu "${MSG}" 25 "${WT_WIDTH}" 4 "${IL[@]}" \
-		3>&1 1>&2 2>&3)
+	DESIRED_LOCALE=$( whiptail --title "${TITLE}" ${D} --menu "${MSG}" 25 "${WT_WIDTH}" 4 "${IL[@]}" \
+		3>&1 1>&2 2>&3 )
 	if [[ -z ${DESIRED_LOCALE} ]]; then
 		MSG="You need to set the locale before the installation can run."
 		MSG="${MSG}\n  If your desired locale was not in the list,"
@@ -1601,7 +1601,7 @@ prompt_for_lat_long()
 	while :
 	do
 		local M="${ERROR_MSG}${PROMPT}"
-		VALUE=$(whiptail --title "${TITLE}" --inputbox "${M}" 18 "${WT_WIDTH}" "" 3>&1 1>&2 2>&3)
+		VALUE=$( whiptail --title "${TITLE}" --inputbox "${M}" 18 "${WT_WIDTH}" "" 3>&1 1>&2 2>&3 )
 		if [[ -z ${VALUE} ]]; then
 			# Let the user not enter anything.  A message is printed below.
 			break
@@ -1632,12 +1632,12 @@ get_lat_long()
 	MSG="Enter your Latitude."
 	MSG="${MSG}\nIt can either have a plus or minus sign (e.g., -20.1)"
 	MSG="${MSG}\nor N or S (e.g., 20.1S)"
-	LATITUDE="$(prompt_for_lat_long "${MSG}" "latitude" "Latitude")"
+	LATITUDE="$( prompt_for_lat_long "${MSG}" "latitude" "Latitude" )"
 
 	MSG="Enter your Longitude."
 	MSG="${MSG}\nIt can either have a plus or minus sign (e.g., -20.1)"
 	MSG="${MSG}\nor E or W (e.g., 20.1W)"
-	LONGITUDE="$(prompt_for_lat_long "${MSG}" "longitude" "Longitude")"
+	LONGITUDE="$( prompt_for_lat_long "${MSG}" "longitude" "Longitude" )"
 
 	if [[ -z ${LATITUDE} || -z ${LONGITUDE} ]]; then
 		display_msg --log warning "Latitude and longitude need to be set in the WebUI before Allsky can start."
@@ -1794,7 +1794,7 @@ restore_prior_settings_file()
 		# Copy all the camera-specific settings files; don't copy the generic-named
 		# file since it will be recreated.
 		# There will be more than one camera-specific file if the user has multiple cameras.
-		local PRIOR_SPECIFIC_FILES="$(find "${PRIOR_CONFIG_DIR}" -name "${NAME}_"'*'".${EXT}")"
+		local PRIOR_SPECIFIC_FILES="$( find "${PRIOR_CONFIG_DIR}" -name "${NAME}_"'*'".${EXT}" )"
 		if [[ -n ${PRIOR_SPECIFIC_FILES} ]]; then
 			FIRST_ONE="true"
 			echo "${PRIOR_SPECIFIC_FILES}" | while read -r F
@@ -1803,7 +1803,7 @@ restore_prior_settings_file()
 						display_msg --log progress "Restoring camera-specific settings files:"
 						FIRST_ONE="false"
 					fi
-					display_msg --log progress "\t$(basename "${F}")"
+					display_msg --log progress "\t$( basename "${F}" )"
 					cp -a "${F}" "${ALLSKY_CONFIG}"
 				done
 			RESTORED_PRIOR_SETTINGS_FILE="true"
@@ -2038,8 +2038,8 @@ restore_prior_files()
 		# Check if this is an older Allsky Website configuration file type.
 		# The remote config file should have .ConfigVersion.
 		local OLD="false"
-		local NEW_CONFIG_VERSION="$(settings .ConfigVersion "${REPO_WEBCONFIG_FILE}")"
-		local PRIOR_CONFIG_VERSION="$(settings .ConfigVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}")"
+		local NEW_CONFIG_VERSION="$( settings .ConfigVersion "${REPO_WEBCONFIG_FILE}" )"
+		local PRIOR_CONFIG_VERSION="$( settings .ConfigVersion "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
 		if [[ -z ${PRIOR_CONFIG_VERSION} ]]; then
 			OLD="true"		# Hmmm, it should have the version
 			MSG="Prior Website configuration file '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}'"
@@ -2617,7 +2617,7 @@ update_status_from_temp_file()
 ####
 exit_installation()
 {
-	[[ -z ${FUNCTION} ]] && display_msg "${LOG_TYPE}" info "\nENDING INSTALLATON AT $(date).\n"
+	[[ -z ${FUNCTION} ]] && display_msg "${LOG_TYPE}" info "\nENDING INSTALLATON AT $( date ).\n"
 	local RET="${1}"
 
 	# If STATUS_LINE is set, add that and all STATUS_VARIABLES to the status file.
@@ -2710,7 +2710,7 @@ if [[ ${IN_TESTING} == "true" ]]; then
 		MSG="${MSG}\n * Bug fixes in the Overlay Editor and Module manager"
 
 		MSG="${MSG}\n\nIf you agree, enter:    yes"
-		A=$(whiptail --title "*** MESSAGE FOR TESTERS ***" --inputbox "${MSG}" 26 "${WT_WIDTH}"  3>&1 1>&2 2>&3)
+		A=$( whiptail --title "*** MESSAGE FOR TESTERS ***" --inputbox "${MSG}" 26 "${WT_WIDTH}"  3>&1 1>&2 2>&3 )
 		if [[ $? -ne 0 || ${A} != "yes" ]]; then
 			MSG="\nYou need to TYPE 'yes' to continue the installation."
 			MSG="${MSG}\nThis is to make sure you read it.\n"
@@ -2761,7 +2761,7 @@ if [[ -n ${FUNCTION} ]]; then
 else
 	mkdir -p "${ALLSKY_LOGS}"
 
-	display_msg "${LOG_TYPE}" info "STARTING INSTALLATON AT $(date).\n"
+	display_msg "${LOG_TYPE}" info "STARTING INSTALLATON AT $( date ).\n"
 fi
 
 [[ ${HELP} == "true" ]] && usage_and_exit 0

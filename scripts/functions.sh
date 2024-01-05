@@ -102,7 +102,7 @@ function determineCommandToUse()
 			return 1
 		fi
 
-		"${CMD}" --timeout 1 --nopreview # > /dev/null 2>&1
+		"${CMD}" --timeout 1 --nopreview > /dev/null 2>&1
 		RET=$?
 	fi
 

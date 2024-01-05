@@ -68,8 +68,8 @@ fi
 
 # The image may be in a memory filesystem, so do all the processing there and
 # leave the image used by the website(s) in that directory.
-IMAGE_NAME=$( basename "${CURRENT_IMAGE}" )	# just the file name
-WORKING_DIR=$( dirname "${CURRENT_IMAGE}" )	# the directory the image is currently in
+IMAGE_NAME=$( basename "${CURRENT_IMAGE}" )		# just the file name
+WORKING_DIR=$( dirname "${CURRENT_IMAGE}" )		# the directory the image is currently in
 
 # Optional full check for bad images.
 if [[ ${REMOVE_BAD_IMAGES} == "true" ]]; then

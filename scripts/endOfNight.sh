@@ -5,8 +5,8 @@
 #	2. Perform daily housekeeping not related to the specified day, like removing old files.
 
 # Allow this script to be executed manually, which requires several variables to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
 source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
@@ -26,7 +26,7 @@ if [[ $# -eq 1 ]]; then
 		DATE="${1}"
 	fi
 else
-	DATE=$(date -d 'yesterday' +'%Y%m%d')
+	DATE=$( date -d 'yesterday' +'%Y%m%d' )
 fi
 
 DATE_DIR="${ALLSKY_IMAGES}/${DATE}"
@@ -45,7 +45,7 @@ else
 fi
 
 # Post end of night data. This includes next twilight time
-WEBSITES="$(whatWebsites)"
+WEBSITES="$( whatWebsites )"
 
 if [[ ${WEBSITES} != "none" ]]; then
 	echo -e "${ME}: ===== Posting twilight data"
@@ -102,14 +102,14 @@ WEB_DAYS_TO_KEEP=${WEB_DAYS_TO_KEEP:-0}			# old versions allowed "" to disable
 
 # Automatically delete old images and videos.
 if [[ ${DAYS_TO_KEEP} -gt 0 ]]; then
-	del=$(date --date="${DAYS_TO_KEEP} days ago" +%Y%m%d)
+	del=$( date --date="${DAYS_TO_KEEP} days ago" +%Y%m%d )
 	# "20" for years >= 2000.   Format:  YYYYMMDD
 	#                                                   YY  Y    Y   M    M   D      D
 	find "${ALLSKY_IMAGES}/" -maxdepth 1 -type d -name "20[2-9][0-9][01][0-9][0123][0-9]" | \
 		while read -r i
 
 	do
-		if (( del > $(basename "${i}") )); then
+		if (( del > $( basename "${i}" ) )); then
 			echo "${ME}: Deleting old directory ${i}"
 			rm -rf "${i}"
 		fi
@@ -125,7 +125,7 @@ if [[ ${WEB_DAYS_TO_KEEP} -gt 0 ]]; then
 		echo -e "${ME}: ${YELLOW}WARNING: 'WEB_DAYS_TO_KEEP' set but no website found in '${ALLSKY_WEBSITE}!${NC}"
 		echo -e 'Set WEB_DAYS_TO_KEEP to ""'
 	else
-		del=$(date --date="${WEB_DAYS_TO_KEEP} days ago" +%Y%m%d)
+		del=$( date --date="${WEB_DAYS_TO_KEEP} days ago" +%Y%m%d )
 		(
 			cd "${ALLSKY_WEBSITE}" || exit 1
 			NUM_DELETED=0
@@ -155,7 +155,7 @@ if [[ ${WEB_DAYS_TO_KEEP} -gt 0 ]]; then
 	fi
 fi
 
-SHOW_ON_MAP=$(settings ".showonmap")
+SHOW_ON_MAP=$( settings ".showonmap" )
 if [[ ${SHOW_ON_MAP} -eq 1 ]]; then
 	echo -e "${ME}: ===== Posting camera details to allsky map"
 	"${ALLSKY_SCRIPTS}/postToMap.sh" --endofnight

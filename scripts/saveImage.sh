@@ -444,7 +444,7 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 		[ "${ALLSKY_DEBUG_LEVEL}" -ge 4 ] && echo "${ME}: Resizing upload file '${FILE_TO_UPLOAD}' to ${S}"
 		if ! convert "${CURRENT_IMAGE}" -resize "${S}" -gravity East -chop 2x0 "${FILE_TO_UPLOAD}" ; then
 			echo -e "${YELLOW}*** ${ME}: WARNING: RESIZE_UPLOADS failed; continuing with larger image.${NC}"
-			# We don't know the state of $FILE_TO_UPLOAD so use the larger file.
+			# We don't know the state of ${FILE_TO_UPLOAD} so use the larger file.
 			FILE_TO_UPLOAD="${CURRENT_IMAGE}"
 		fi
 	else

@@ -7,8 +7,8 @@
 # TODO: Right now the checks within each heading are in the order I thought of them!
 
 # Allow this script to be executed manually, which requires several variables to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck disable=SC1091 source-path=.
 source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
@@ -92,7 +92,7 @@ if [[ ${FORCE_CHECK} == "true" || ${BRANCH} == "${GITHUB_MAIN_BRANCH}" ]]; then
 
 	else
 		# See if there's a newer version of this script; if so, download it and execute it.
-		FILE_TO_CHECK="$(basename "${ALLSKY_SCRIPTS}")/${ME}"
+		FILE_TO_CHECK="$( basename "${ALLSKY_SCRIPTS}" )/${ME}"
 		NEWER_SCRIPT="/tmp/${ME}"
 		checkAndGetNewerFile --branch "${BRANCH}" "${CURRENT_SCRIPT}" "${FILE_TO_CHECK}" "${NEWER_SCRIPT}"
 		RET=$?
@@ -208,8 +208,8 @@ function check_exists() {
 
 
 
-DAYDELAY_MS=$(settings .daydelay) || echo "Problem getting .daydelay"
-NIGHTDELAY_MS=$(settings .nightdelay) || echo "Problem getting .nightdelay"
+DAYDELAY_MS=$( settings .daydelay ) || echo "Problem getting .daydelay"
+NIGHTDELAY_MS=$( settings .nightdelay ) || echo "Problem getting .nightdelay"
 
 	# Use min() for worst case.
 MIN_DELAY_MS=$( min "${DAYDELAY_MS}" "${NIGHTDELAY_MS}" )
@@ -225,7 +225,7 @@ function check_delay()
 
 	# With the legacy overlay method it might take up to a couple seconds to save an image.
 	# With the module method it can take up to 5 seconds.
-	local OVERLAY_METHOD=$(settings .overlaymethod) || echo "Problem getting .overlayMethod." >&2
+	local OVERLAY_METHOD=$( settings .overlaymethod ) || echo "Problem getting .overlayMethod." >&2
 	if [[ ${OVERLAY_METHOD} -eq 1 ]]; then
 		MAX_TIME_TO_SAVE_MS=5000
 	else
@@ -246,22 +246,22 @@ function check_delay()
 #
 
 # Variables used below.
-TAKING_DARKS="$(settings .takedarkframes)" || echo "Problem getting .takeDarkFrames." >&2
+TAKING_DARKS="$( settings .takedarkframes )" || echo "Problem getting .takeDarkFrames." >&2
 # per the WebUI, width and height are usually 0
-WIDTH="$(settings .width)" || echo "Problem getting .width." >&2
-HEIGHT="$(settings .height)" || echo "Problem getting .height." >&2
+WIDTH="$( settings .width )" || echo "Problem getting .width." >&2
+HEIGHT="$( settings .height )" || echo "Problem getting .height." >&2
 # physical sensor size
-SENSOR_WIDTH="$(settings .sensorWidth "${CC_FILE}")" || echo "Problem getting .sensorWidth." >&2
-SENSOR_HEIGHT="$(settings .sensorHeight "${CC_FILE}")" || echo "Problem getting .sensorHeight." >&2
-TAKE="$(settings .takedaytimeimages)" || echo "Problem getting .takeDaytimeImages." >&2
-SAVE="$(settings .savedaytimeimages)" || echo "Problem getting .saveDaytimeImages." >&2
-ANGLE="$(settings .angle)" || echo "Problem getting .angle" >&2
-LATITUDE="$(settings .latitude)" || echo "Problem getting .latitude." >&2
-LONGITUDE="$(settings .longitude)" || echo "Problem getting .longitude" >&2
+SENSOR_WIDTH="$( settings .sensorWidth "${CC_FILE}" )" || echo "Problem getting .sensorWidth." >&2
+SENSOR_HEIGHT="$( settings .sensorHeight "${CC_FILE}" )" || echo "Problem getting .sensorHeight." >&2
+TAKE="$( settings .takedaytimeimages )" || echo "Problem getting .takeDaytimeImages." >&2
+SAVE="$( settings .savedaytimeimages )" || echo "Problem getting .saveDaytimeImages." >&2
+ANGLE="$( settings .angle )" || echo "Problem getting .angle" >&2
+LATITUDE="$( settings .latitude )" || echo "Problem getting .latitude." >&2
+LONGITUDE="$( settings .longitude )" || echo "Problem getting .longitude" >&2
 # shellcheck disable=SC2034
-LOCALE="$(settings .locale)" || echo "Problem getting .locale" >&2
-USING_DARKS="$(settings .usedarkframes)" || echo "Problem getting .useDarkFrames" >&2
-WEBSITES="$(whatWebsites)"
+LOCALE="$( settings .locale )" || echo "Problem getting .locale" >&2
+USING_DARKS="$( settings .usedarkframes )" || echo "Problem getting .useDarkFrames" >&2
+WEBSITES="$( whatWebsites )"
 
 # ======================================================================
 # ================= Check for informational items.
@@ -435,7 +435,7 @@ if [[ ${TIMELAPSE_MINI_IMAGES} -gt 0 ]]; then
 	# 	4. the speed of the Pi - this is the biggest unknown
 	function get_exposure() {	# return the time spent on one image, prior to delay
 		local TIME="${1}"
-		if [[ $(settings ".${TIME}autoexposure") -eq 1 ]]; then
+		if [[ $( settings ".${TIME}autoexposure" ) -eq 1 ]]; then
 			settings ".${TIME}maxautoexposure" || echo "Problem getting .${TIME}maxautoexposure." >&2
 		else
 			settings ".${TIME}exposure" || echo "Problem getting .${TIME}exposure." >&2
@@ -444,7 +444,7 @@ if [[ ${TIMELAPSE_MINI_IMAGES} -gt 0 ]]; then
 
 	# Minimum total time between start of timelapse creations.
 	MIN_IMAGE_TIME_SEC=$(( MIN_IMAGE_TIME_MS / 1000))
-	MIN_TIME_BETWEEN_TIMELAPSE_SEC=$(echo "scale=0; ${TIMELAPSE_MINI_FREQUENCY} * ${MIN_IMAGE_TIME_SEC}" | bc -l)
+	MIN_TIME_BETWEEN_TIMELAPSE_SEC=$( echo "scale=0; ${TIMELAPSE_MINI_FREQUENCY} * ${MIN_IMAGE_TIME_SEC}" | bc -l )
 	MIN_TIME_BETWEEN_TIMELAPSE_SEC=${MIN_TIME_BETWEEN_TIMELAPSE_SEC/.*/}
 
 if false; then		# for testing
@@ -465,7 +465,7 @@ fi
 	else
 		S=60
 	fi
-	EXPECTED_TIME=$(echo "scale=0; (${TIMELAPSE_MINI_IMAGES} / 50) * ${S}" | bc -l)
+	EXPECTED_TIME=$( echo "scale=0; (${TIMELAPSE_MINI_IMAGES} / 50) * ${S}" | bc -l )
 	if [[ ${EXPECTED_TIME} -gt ${MIN_TIME_BETWEEN_TIMELAPSE_SEC} ]]; then
 		heading "Warnings"
 		echo "Your mini timelapse settings may cause multiple timelapse to be created simultaneously."
@@ -634,13 +634,13 @@ if [[ -n ${ANGLE} ]] && ! is_number "${ANGLE}" ; then
 	echo "ANGLE (${ANGLE}) must be a number."
 fi
 if [[ -n ${LATITUDE} ]]; then
-	if ! LAT="$(convertLatLong "${LATITUDE}" "latitude" 2>&1)" ; then
+	if ! LAT="$( convertLatLong "${LATITUDE}" "latitude" 2>&1 )" ; then
 		heading "Errors"
 		echo -e "${LAT}"		# ${LAT} contains the error message
 	fi
 fi
 if [[ -n ${LONGITUDE} ]]; then
-	if ! LONG="$(convertLatLong "${LONGITUDE}" "longitude" 2>&1)" ; then
+	if ! LONG="$( convertLatLong "${LONGITUDE}" "longitude" 2>&1 )" ; then
 		heading "Errors"
 		echo -e "${LONG}"
 	fi
@@ -652,7 +652,7 @@ if [[ ${USING_DARKS} -eq 1 ]]; then
 		heading "Errors"
 		echo "'Use Dark Frames' is set but the '${ALLSKY_DARKS}' directory does not exist."
 	else
-		NUM_DARKS=$(find "${ALLSKY_DARKS}" -name "*.${EXTENSION}" 2>/dev/null | wc -l)
+		NUM_DARKS=$( find "${ALLSKY_DARKS}" -name "*.${EXTENSION}" 2>/dev/null | wc -l )
 		if [[ ${NUM_DARKS} -eq 0 ]]; then
 			heading "Errors"
 			echo -n "'Use Dark Frames' is set but there are no darks"
@@ -706,12 +706,12 @@ fi
 # make sure the resized/cropped image is fully within the sensor image.
 HAS_PIXEL_ERROR="false"
 if [[ ${IMG_RESIZE} == "true" ]]; then
-	if ! X="$(checkPixelValue "IMG_WIDTH" "${IMG_WIDTH}" "width" "${SENSOR_WIDTH}")" ; then
+	if ! X="$( checkPixelValue "IMG_WIDTH" "${IMG_WIDTH}" "width" "${SENSOR_WIDTH}" )" ; then
 		heading "Errors"
 		echo -e "${X}"
 		HAS_PIXEL_ERROR="true"
 	fi
-	if ! X="$(checkPixelValue "IMG_HEIGHT" "${IMG_HEIGHT}" "height" "${SENSOR_HEIGHT}")" ; then
+	if ! X="$( checkPixelValue "IMG_HEIGHT" "${IMG_HEIGHT}" "height" "${SENSOR_HEIGHT}" )" ; then
 		heading "Errors"
 		echo -e "${X}"
 		HAS_PIXEL_ERROR="true"
@@ -719,23 +719,23 @@ if [[ ${IMG_RESIZE} == "true" ]]; then
 fi
 
 if [[ ${CROP_IMAGE} == "true" ]]; then
-	if ! X="$(checkPixelValue "CROP_WIDTH" "${CROP_WIDTH}" "width" "${SENSOR_WIDTH}")" ; then
+	if ! X="$( checkPixelValue "CROP_WIDTH" "${CROP_WIDTH}" "width" "${SENSOR_WIDTH}" )" ; then
 		heading "Errors"
 		echo -e "${X}"
 		HAS_PIXEL_ERROR="true"
 	fi
-	if ! X="$(checkPixelValue "CROP_HEIGHT" "${CROP_HEIGHT}" "height" "${SENSOR_HEIGHT}")" ; then
+	if ! X="$( checkPixelValue "CROP_HEIGHT" "${CROP_HEIGHT}" "height" "${SENSOR_HEIGHT}" )" ; then
 		heading "Errors"
 		echo -e "${X}"
 		HAS_PIXEL_ERROR="true"
 	fi
 	# "any" means it can be any number, positive or negative.
-	if ! X="$(checkPixelValue "CROP_OFFSET_X" "${CROP_OFFSET_X}" "width" "${SENSOR_WIDTH}" "any")" ; then
+	if ! X="$( checkPixelValue "CROP_OFFSET_X" "${CROP_OFFSET_X}" "width" "${SENSOR_WIDTH}" "any" )" ; then
 		heading "Errors"
 		echo -e "${X}"
 		HAS_PIXEL_ERROR="true"
 	fi
-	if ! X="$(checkPixelValue "CROP_OFFSET_Y" "${CROP_OFFSET_Y}" "height" "${SENSOR_HEIGHT}" "any")" ; then
+	if ! X="$( checkPixelValue "CROP_OFFSET_Y" "${CROP_OFFSET_Y}" "height" "${SENSOR_HEIGHT}" "any" )" ; then
 		heading "Errors"
 		echo -e "${X}"
 		HAS_PIXEL_ERROR="true"
@@ -751,9 +751,9 @@ if [[ ${CROP_IMAGE} == "true" ]]; then
 			MAX_X=${SENSOR_WIDTH}
 			MAX_Y=${SENSOR_HEIGHT}
 		fi
-		if ! X="$(checkCropValues "${CROP_WIDTH}" "${CROP_HEIGHT}" \
+		if ! X="$( checkCropValues "${CROP_WIDTH}" "${CROP_HEIGHT}" \
 				"${CROP_OFFSET_X}" "${CROP_OFFSET_Y}" \
-				"${MAX_X}" "${MAX_Y}")" ; then
+				"${MAX_X}" "${MAX_Y}" )" ; then
 			heading "Errors"
 			echo -e "${X}"
 		fi
@@ -761,12 +761,12 @@ if [[ ${CROP_IMAGE} == "true" ]]; then
 fi
 
 if [[ ${RESIZE_UPLOADS} == "true" ]]; then
-	if ! X="$(checkPixelValue "RESIZE_UPLOADS_WIDTH" "${RESIZE_UPLOADS_WIDTH}" "width" "${SENSOR_WIDTH}")" ; then
+	if ! X="$( checkPixelValue "RESIZE_UPLOADS_WIDTH" "${RESIZE_UPLOADS_WIDTH}" "width" "${SENSOR_WIDTH}" )" ; then
 		heading "Errors"
 		echo -e "${X}"
 		echo "It is typically less than the sensor width of ${SENSOR_WIDTH}."
 	fi
-	if ! X="$(checkPixelValue "RESIZE_UPLOADS_HEIGHT" "${RESIZE_UPLOADS_HEIGHT}" "height" "${SENSOR_HEIGHT}")" ; then
+	if ! X="$( checkPixelValue "RESIZE_UPLOADS_HEIGHT" "${RESIZE_UPLOADS_HEIGHT}" "height" "${SENSOR_HEIGHT}" )" ; then
 		heading "Errors"
 		echo -e "${X}"
 		echo "It is typically less than the sensor height of ${SENSOR_HEIGHT}."

@@ -61,7 +61,7 @@ else
 	ME="${ME}:"
 fi
 
-# If it's not a full pathname, assume it's in $ALLSKY_IMAGES.
+# If it's not a full pathname, assume it's in ${ALLSKY_IMAGES}.
 [[ ${DATE:0:1} != "/" ]] && DATE="${ALLSKY_IMAGES}/${DATE}"
 if [[ ! -d ${DATE} ]]; then
 	echo -e "${RED}${ME} '${DATE}' is not a directory${NC}" >&2
@@ -90,7 +90,7 @@ fi
 # Use IMAGE_FILES and ERROR_WORDS to avoid duplicating those strings.
 # ${DATE} may end in a "/" so there will be "//" in the filenames, but there's no harm in that.
 
-set +a		# turn off auto-export since $IMAGE_FILES might be huge and produce errors
+set +a		# turn off auto-export since ${IMAGE_FILES} might be huge and produce errors
 
 cd "${DATE}" || exit 99
 if [[ -n ${FILE} ]]; then
@@ -201,7 +201,7 @@ for f in ${IMAGE_FILES} ; do
 	fi
 done
 
-if [[ $num_bad -eq 0 ]]; then
+if [[ ${num_bad} -eq 0 ]]; then
 	# If only one file, "no news is good news".
 	if [[ -z ${FILE} ]]; then
 		echo -e "\n${ME} ${GREEN}No bad files found.${NC}" >&2
@@ -241,7 +241,7 @@ else
 	fi
 fi
 
-if [[ $num_bad -eq 0 ]]; then
+if [[ ${num_bad} -eq 0 ]]; then
 	exit 0
 else
 	exit 99		# "99" means we deleted at least one file.

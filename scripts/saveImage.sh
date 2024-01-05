@@ -2,7 +2,7 @@
 
 # Script to save a DAY or NIGHT image.
 
-ME="$(basename "${BASH_ARGV0}")"
+ME="$( basename "${BASH_ARGV0}" )"
 
 [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "${ME} $*"
 
@@ -68,8 +68,8 @@ fi
 
 # The image may be in a memory filesystem, so do all the processing there and
 # leave the image used by the website(s) in that directory.
-IMAGE_NAME=$(basename "${CURRENT_IMAGE}")	# just the file name
-WORKING_DIR=$(dirname "${CURRENT_IMAGE}")	# the directory the image is currently in
+IMAGE_NAME=$( basename "${CURRENT_IMAGE}" )	# just the file name
+WORKING_DIR=$( dirname "${CURRENT_IMAGE}" )	# the directory the image is currently in
 
 # Optional full check for bad images.
 if [[ ${REMOVE_BAD_IMAGES} == "true" ]]; then
@@ -88,7 +88,7 @@ fi
 # If we didn't execute removeBadImages.sh do a quick sanity check on the image.
 # OR, if we did execute removeBaImages.sh but we're cropping the image, get the image resolution.
 if [[ ${REMOVE_BAD_IMAGES} != "true" || ${CROP_IMAGE} == "true" ]]; then
-	x=$(identify "${CURRENT_IMAGE}" 2>/dev/null)
+	x=$( identify "${CURRENT_IMAGE}" 2>/dev/null )
 	if [[ $? -ne 0 ]]; then
 		echo -e "${RED}*** ${ME}: ERROR: '${CURRENT_IMAGE}' is corrupt; not saving.${NC}"
 		exit 3
@@ -97,7 +97,7 @@ if [[ ${REMOVE_BAD_IMAGES} != "true" || ${CROP_IMAGE} == "true" ]]; then
 	if [[ ${CROP_IMAGE} == "true" ]]; then
 		# Typical output:
 			# image.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.19257MiB 0.000u 0:00.000
-		RESOLUTION=$(echo "${x}" | awk '{ print $3 }')
+		RESOLUTION=$( echo "${x}" | awk '{ print $3 }' )
 		# These are the resolution of the image (which may have been binned), not the sensor.
 		RESOLUTION_X=${RESOLUTION%x*}	# everything before the "x"
 		RESOLUTION_Y=${RESOLUTION##*x}	# everything after  the "x"
@@ -133,7 +133,7 @@ if [[ -z ${AS_TEMPERATURE_C} ]]; then
 fi
 
 # If taking dark frames, save the dark frame then exit.
-if [[ $(settings ".takedarkframes") -eq 1 ]]; then
+if [[ $( settings ".takedarkframes" ) -eq 1 ]]; then
 	#shellcheck source-path=scripts
 	source "${ALLSKY_SCRIPTS}/darkCapture.sh"
 	exit 0
@@ -202,25 +202,25 @@ if [[ ${CROP_IMAGE} == "true" ]]; then
 	# Do some sanity checks on the CROP_* variables.
 	ERROR_MSG=""
 	# shellcheck disable=SC2153
-	if ! E="$(checkPixelValue "CROP_WIDTH" "${CROP_WIDTH}" "width" "${RESOLUTION_X}")" ; then
+	if ! E="$( checkPixelValue "CROP_WIDTH" "${CROP_WIDTH}" "width" "${RESOLUTION_X}" )" ; then
 		ERROR_MSG="${ERROR_MSG}\n${E}"
 	fi
 	# shellcheck disable=SC2153
-	if ! E="$(checkPixelValue "CROP_HEIGHT" "${CROP_HEIGHT}" "height" "${RESOLUTION_Y}")"; then
+	if ! E="$( checkPixelValue "CROP_HEIGHT" "${CROP_HEIGHT}" "height" "${RESOLUTION_Y}" )"; then
 		ERROR_MSG="${ERROR_MSG}\n${E}"
 	fi
-	if ! E="$(checkPixelValue "CROP_OFFSET_X" "${CROP_OFFSET_X}" "width" "${RESOLUTION_X}" "any")" ; then
+	if ! E="$( checkPixelValue "CROP_OFFSET_X" "${CROP_OFFSET_X}" "width" "${RESOLUTION_X}" "any" )" ; then
 		ERROR_MSG="${ERROR_MSG}\n${E}"
 	fi
-	if ! E="$(checkPixelValue "CROP_OFFSET_Y" "${CROP_OFFSET_Y}" "height" "${RESOLUTION_Y}" "any")" ; then
+	if ! E="$( checkPixelValue "CROP_OFFSET_Y" "${CROP_OFFSET_Y}" "height" "${RESOLUTION_Y}" "any" )" ; then
 		ERROR_MSG="${ERROR_MSG}\n${E}"
 	fi
 
 	# Now for more intensive checks.
 	if [[ -z ${ERROR_MSG} ]]; then
-		ERROR_MSG="$(checkCropValues "${CROP_WIDTH}" "${CROP_HEIGHT}" \
+		ERROR_MSG="$( checkCropValues "${CROP_WIDTH}" "${CROP_HEIGHT}" \
 			"${CROP_OFFSET_X}" "${CROP_OFFSET_Y}" \
-			"${RESOLUTION_X}" "${RESOLUTION_Y}")"
+			"${RESOLUTION_X}" "${RESOLUTION_Y}" )"
 	fi
 
 	if [[ -z ${ERROR_MSG} ]]; then
@@ -253,10 +253,10 @@ fi
 if [ "${DAY_OR_NIGHT}" = "NIGHT" ] ; then
 	# The 12 hours ago option ensures that we're always using today's date
 	# even at high latitudes where civil twilight can start after midnight.
-	export DATE_NAME="$(date -d '12 hours ago' +'%Y%m%d')"
+	export DATE_NAME="$( date -d '12 hours ago' +'%Y%m%d' )"
 else
 	# During the daytime we alway save the file in today's directory.
-	export DATE_NAME="$(date +'%Y%m%d')"
+	export DATE_NAME="$( date +'%Y%m%d' )"
 fi
 
 activate_python_venv
@@ -272,7 +272,7 @@ SAVED_FILE="${CURRENT_IMAGE}"						# The name of the file saved from the camera.
 WEBSITE_FILE="${WORKING_DIR}/${FULL_FILENAME}"		# The name of the file the websites look for
 
 # If needed, save the current image in today's directory.
-if [[ $(settings ".savedaytimeimages") -eq 1 || ${DAY_OR_NIGHT} == "NIGHT" ]]; then
+if [[ $( settings ".savedaytimeimages" ) -eq 1 || ${DAY_OR_NIGHT} == "NIGHT" ]]; then
 	SAVE_IMAGE="true"
 else
 	SAVE_IMAGE="false"
@@ -282,10 +282,10 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 	if [[ ${DAY_OR_NIGHT} == "NIGHT" ]]; then
 		# The 12 hours ago option ensures that we're always using today's date
 		# even at high latitudes where civil twilight can start after midnight.
-		DATE_NAME="$(date -d '12 hours ago' +'%Y%m%d')"
+		DATE_NAME="$( date -d '12 hours ago' +'%Y%m%d' )"
 	else
 		# During the daytime we alway save the file in today's directory.
-		DATE_NAME="$(date +'%Y%m%d')"
+		DATE_NAME="$( date +'%Y%m%d' )"
 	fi
 	DATE_DIR="${ALLSKY_IMAGES}/${DATE_NAME}"
 	mkdir -p "${DATE_DIR}"
@@ -323,7 +323,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 					# This shouldn't happen...
 					echo -e "${YELLOW}${ME} WARNING: '${FINAL_FILE}' already in set.${NC}" >&2
 				fi
-				NUM_IMAGES=$(wc -l < "${MINI_TIMELAPSE_FILES}")
+				NUM_IMAGES=$( wc -l < "${MINI_TIMELAPSE_FILES}" )
 				LEFT=$((TIMELAPSE_MINI_IMAGES - NUM_IMAGES))
 			fi
 			[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && echo -e "NUM_IMAGES=${NUM_IMAGES}" >&2
@@ -335,7 +335,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 				if [[ ${LEFT} -lt ${TIMELAPSE_MINI_FREQUENCY} ]]; then
 					TIMELAPSE_MINI_FORCE_CREATION="false"
 				else
-					MOD="$(echo "${NUM_IMAGES} % ${TIMELAPSE_MINI_FREQUENCY}" | bc)"
+					MOD="$( echo "${NUM_IMAGES} % ${TIMELAPSE_MINI_FREQUENCY}" | bc )"
 					[[ ${MOD} -ne 0 ]] && TIMELAPSE_MINI_FORCE_CREATION="false"
 				fi
 			fi
@@ -371,7 +371,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 				# this mini-timelapse because of a force.
 				if [[ ${RET} -eq 0 && (${MOD} -ne 0 || ${TIMELAPSE_MINI_FORCE_CREATION} == "false") ]]; then
 					KEEP=$((TIMELAPSE_MINI_IMAGES - TIMELAPSE_MINI_FREQUENCY))
-					x="$(tail -${KEEP} "${MINI_TIMELAPSE_FILES}")"
+					x="$( tail -${KEEP} "${MINI_TIMELAPSE_FILES}" )"
 					echo -e "${x}" > "${MINI_TIMELAPSE_FILES}"
 					if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 						echo -en "${YELLOW}${ME}: Replaced ${TIMELAPSE_MINI_FREQUENCY} oldest"

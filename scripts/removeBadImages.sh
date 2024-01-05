@@ -23,13 +23,13 @@ source "${ALLSKY_CONFIG}/config.sh" 		|| exit "${EXIT_ERROR_STOP}"
 
 usage()
 {
-	retcode="${1}"
+	local RET="${1}"
 	(
 		echo
 		echo "Remove images with corrupt data which might mess up startrails and keograms."
-		[ "${retcode}" -ne 0 ] && echo -en "${RED}"
+		[ "${RET}" -ne 0 ] && echo -en "${RED}"
 		echo -n "Usage: ${ME} [--help] [--debug]  directory  [file]"
-		[ "${retcode}" -ne 0 ] && echo -e "${NC}"
+		[ "${RET}" -ne 0 ] && echo -e "${NC}"
 		echo
 		echo "You must enter the arguments in the above order."
 # TODO: use getopts to allow any order
@@ -37,7 +37,7 @@ usage()
 		echo "If 'file' is specified, only that file in 'directory' will be checked,"
 		echo "otherwise all files in 'directory' will be checked."
 	) >&2
-	exit "${retcode}"
+	exit "${RET}"
 }
 [[ ${1} == "-h" || ${1} == "--help" ]] && usage 0
 if [[ ${1} == "-d" || ${1} == "--debug" ]]; then

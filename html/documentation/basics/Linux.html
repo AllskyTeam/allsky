@@ -250,7 +250,7 @@ Note that the output is in color:
 </ul>
 </p>
 <p>
-The detailed view includes the following seven columns of data:
+The detailed view includes the following 7 columns of data:
 <ol>
 <li><b>Permissions</b>.
 	All Linux files have an owner as well as a group the file is in.
@@ -270,24 +270,28 @@ The detailed view includes the following seven columns of data:
 	</p>
 	<ol>
 	<li>The first character of each group determines if the
-		owner/group/other can <b>read</b> the file.
-		<code>r</code> means the login can read the file; <code>-</code> means it can't.
-		<br>For directories, read permission means the login can view the contents of a directory.
-	<li>The second character determines if the owner/group/other
-		can <b>write</b> the file.
-		<code>w</code> means the login can write the file; <code>-</code> means it can't.
-		<br>For directories, write permission means the login can add to,
+		entity can <b>read</b> the file.
+		<code>r</code> means yes; <code>-</code> means no.
+		<br>For directories, read permission means the entity
+		can view the contents of a directory.
+	<li>The second character determines if the entity
+		can <b>write</b> to the file.
+		<code>w</code> means yes; <code>-</code> means no.
+		<br>For directories, write permission means the entity can add to,
 		or delete from, the directory, e.g., create a file in the directory.
-	<li>The third character determines if the owner/group/other
+	<li>The third character determines if the entity
 		can <b>execute</b> the file.
-		<code>x</code> means the login can write the file; <code>-</code> means it can't.
+		<code>x</code> means yes; <code>-</code> means no.
 		Commands must have this flag set, otherwise they can't be executed.
-		<br>For directories, execute permissions mean the login can <code>cd</code> into it.
+		<br>For directories, execute permissions mean the entity can
+		<code>cd</code> into it; "executing" a directory doesn't make sense.
 	</ol>
+	<p>
 	In our example (<code>-rwxr-xr-x</code>), the object is a file,
 	the owner can read, write, and execute it (which implies it's a command),
-	anyone in the group can read and execute the command but not write, i.e., change it,
-	and everyone else can also read and execute it.
+	anyone in the group the file is in can read and execute the command but not write,
+	i.e., change it, and everyone else can also read and execute it.
+	</p>
 <li>Number of <b>links</b> to the file.
 	You can normally ignore this field.
 <li>Name of the <b>owner</b> of the file.
@@ -299,17 +303,16 @@ The detailed view includes the following seven columns of data:
 </ol>
 </p>
 <p>
-In the example above that all but one object is owned by the "pi" login
-and is in the "pi" group.
-This is what you'd expect since the "pi" login was used to install Allsky.
+In the example above all the objects are owned by the <code>pi</code> login,
+and all but one object is also in the <code>pi</code> group.
 Note, however, this entry:
 <a href="ls-config.png" target="_blank">
 <img allsky="true" title="ls output" alt="ls output for config directory" src="ls-config.png" loading="lazy">
 </a>
 <br>
-It's in the "www-data" group, which is the group that the web server runs in.
+It's in the <code>www-data</code> group, which is the group that the web server runs in.
 Because the web server (which is what runs the WebUI) creates configuration files in
-that directory, it also has "rwx" group permissions.
+that directory, it also has <code>rwx</code> group permissions.
 </p>
 </details>
 
@@ -331,15 +334,8 @@ to display, for example, the first 20 lines.
 </p>
 <p>
 The most common text-file editor is <code>nano</code>.
-Before using it you'll probably want to view its manual page.
+Before using it you'll probably want to view its manual page by typing <code>man nano</code>.
 </p>
-<blockquote>
-The Allsky configuration files should ONLY be edited via the WebUI - either
-via the "Allsky Settings" page for the main "settings" file,
-or via the WebUI's "Editor" page for the <span class="fileName">config.sh</span> and
-<span class="fileName">ftp-settings.js</span> files,
-and the Allsky Website's <span class="fileName">configuration.json</span> file.
-</blockquote>
 </details>
 
 <h2>Standard in, standard out</h2>

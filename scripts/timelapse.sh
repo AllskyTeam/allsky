@@ -250,7 +250,7 @@ X="$( ffmpeg -y -f image2 \
 	-b:v "${TIMELAPSE_BITRATE}" \
 	-pix_fmt "${PIX_FMT}" \
 	-movflags +faststart \
-	$SCALE \
+	${SCALE} \
 	${TIMELAPSE_EXTRA_PARAMETERS} \
 	"${OUTPUT_FILE}" 2>&1 )"
 RET=$?
@@ -260,7 +260,7 @@ X="$( echo "${X}" | grep -v "deprecated pixel format used" )"
 [ "${X}" != "" ] && echo "${X}" >> "${TMP}"		# a warning/error message
 
 if [[ ${RET} -ne -0 ]]; then
-	echo -e "\n${RED}*** $ME: ERROR: ffmpeg failed."
+	echo -e "\n${RED}*** ${ME}: ERROR: ffmpeg failed."
 	echo -e "Error log:\n $( < "${TMP}" )'."
 	echo "=============================================="
 	echo "Links in '${SEQUENCE_DIR}' left for debugging."
@@ -272,7 +272,7 @@ if [[ ${RET} -ne -0 ]]; then
 	else
 		M="T"
 	fi
-	MSG="${M}imelapse creation for $( basename "$OUTPUT_FILE" ) failed!"
+	MSG="${M}imelapse creation for $( basename "${OUTPUT_FILE}" ) failed!"
 	"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${MSG}"
 
 	[[ -n ${PID_FILE} ]] && rm -f "${PID_FILE}"

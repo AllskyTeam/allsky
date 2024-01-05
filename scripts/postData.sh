@@ -20,14 +20,14 @@ source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 usage_and_exit()
 {
-	retcode=${1}
+	local RET=${1}
 	echo
-	[[ ${retcode} -ne 0 ]] && echo -en "${RED}"
+	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
 	echo "Usage: ${ME} [--help] [--debug] [--settingsOnly] [--websites w] [--allfiles]"
-	[[ ${retcode} -ne 0 ]] && echo -en "${NC}"
+	[[ ${RET} -ne 0 ]] && echo -en "${NC}"
 	echo "    where:"
 	echo "      '--allfiles' causes all 'view settings' files to be uploaded"
-	exit "${retcode}"
+	exit "${RET}"
 }
 
 HELP="false"

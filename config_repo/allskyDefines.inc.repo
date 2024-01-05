@@ -35,5 +35,4 @@ if (ALLSKY_HOME == "XX_ALLSKY_HOME" . "_XX") {
 	echo "</div>";
 	exit;
 }
-
 ?>

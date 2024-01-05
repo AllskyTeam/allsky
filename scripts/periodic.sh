@@ -11,7 +11,7 @@ source "${ALLSKY_CONFIG}/config.sh"			|| exit "${EXIT_ERROR_STOP}"
 
 trap "exit 0" SIGTERM SIGINT
 
-cd "${ALLSKY_SCRIPTS}" || exit "${EXIT_ERROR_STOP}"
+cd "${ALLSKY_SCRIPTS}"						|| exit "${EXIT_ERROR_STOP}"
 
 while :
 do
@@ -21,11 +21,11 @@ do
 
     DELAY=$( settings ".periodictimer" "${ALLSKY_MODULES}/module-settings.json" )
 
-    if [[ ! ($DELAY =~ ^[0-9]+$) ]]; then
+    if [[ ! (${DELAY} =~ ^[0-9]+$) ]]; then
         DELAY=60
     fi
     if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
-		echo "INFO: Sleeping for $DELAY seconds"
+		echo "INFO: Sleeping for ${DELAY} seconds"
 	fi
-    sleep "$DELAY"
+    sleep "${DELAY}"
 done

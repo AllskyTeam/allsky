@@ -158,8 +158,7 @@ function make_image()
 	done
 }
 
-which mogrify > /dev/null
-if [[ $? -ne 0 ]]; then
+if ! which mogrify > /dev/null ; then
 	# Testing for mogrify which seems like a much more distinctive executable
 	# name than "convert". I assume that if "mogrify" is in the path, then
 	# ImageMagick is installed and "convert" will run ImageMagick and not some

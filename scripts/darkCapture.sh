@@ -14,7 +14,7 @@ if [[ ! -f ${CURRENT_IMAGE} ]]; then
 	exit 2
 fi
 
-# The extension on $CURRENT_IMAGE may not be $EXTENSION.
+# The extension on ${CURRENT_IMAGE} may not be ${EXTENSION}.
 DARK_EXTENSION="${CURRENT_IMAGE##*.}"
 
 DARKS_DIR="${ALLSKY_DARKS}"

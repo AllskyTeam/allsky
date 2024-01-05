@@ -10,7 +10,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 
 	ALLSKY_VARIABLE_SET="true"	# so we only do the following once
 
-	ME2="$(basename "${BASH_SOURCE[0]}")"
+	ME2="$( basename "${BASH_SOURCE[0]}" )"
 
 	# Set colors used by many scripts in output.
 	# If we're not on a tty output is likely being written to a file, so don't use colors.
@@ -47,7 +47,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	ALLSKY_INSTALL_DIR="$( basename "${ALLSKY_HOME}" )"
 
 	# Optional prior copy of Allsky.
-	PRIOR_ALLSKY_DIR="$(dirname "${ALLSKY_HOME}")/${ALLSKY_INSTALL_DIR}-OLD"
+	PRIOR_ALLSKY_DIR="$( dirname "${ALLSKY_HOME}" )/${ALLSKY_INSTALL_DIR}-OLD"
 
 	# For temporary files or files that can be deleted at reboot.
 	ALLSKY_TMP="${ALLSKY_HOME}/tmp"

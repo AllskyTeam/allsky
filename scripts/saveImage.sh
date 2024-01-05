@@ -15,11 +15,11 @@ source "${ALLSKY_CONFIG}/config.sh"			|| exit "${EXIT_ERROR_STOP}"
 
 usage_and_exit()
 {
-	retcode=${1}
-	[[ ${retcode} -ne 0 ]] && echo -ne "${RED}"
+	local RET=${1}
+	[[ ${RET} -ne 0 ]] && echo -ne "${RED}"
 	echo -n "Usage: ${ME} DAY|NIGHT  full_path_to_image  [variable=value [...]]"
-	[[ ${retcode} -ne 0 ]] && echo -e "${NC}"
-	exit "${retcode}"
+	[[ ${RET} -ne 0 ]] && echo -e "${NC}"
+	exit "${RET}"
 }
 [[ $# -lt 2 ]] && usage_and_exit 1
 

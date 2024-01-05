@@ -6,8 +6,8 @@ EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
 # Make it easy to find the beginning of this run in the log file.
 echo "     ***** Starting AllSky *****"
 
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
+ME="$( basename "${BASH_ARGV0}" )"
 
 cd "${ALLSKY_HOME}" || exit 1
 
@@ -21,7 +21,7 @@ if [[ -z ${ALLSKY_CONFIG} ]]; then
 	MSG="FATAL ERROR: 'source variables.sh' did not work properly."
 	echo -e "${RED}*** ${MSG}${NC}"
 	doExit "${EXIT_ERROR_STOP}" "Error" \
-		"${ERROR_MSG_PREFIX}\n$(basename "${ALLSKY_HOME}")/variables.sh\nis corrupted." \
+		"${ERROR_MSG_PREFIX}\n$( basename "${ALLSKY_HOME}" )/variables.sh\nis corrupted." \
 		"${NOT_STARTED_MSG}<br>${MSG}"
 fi
 
@@ -153,7 +153,7 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 	}
 
 	# "03c3" is the USB ID for ZWO devices.
-	ZWOdev=$(lsusb -d '03c3:' | awk '{ bus=$2; dev=$4; gsub(/[^0-9]/,"",dev); print "/dev/bus/usb/"bus"/"dev;}')
+	ZWOdev=$( lsusb -d '03c3:' | awk '{ bus=$2; dev=$4; gsub(/[^0-9]/,"",dev); print "/dev/bus/usb/"bus"/"dev;}' )
 	# We have to run "lsusb -D" once for each device returned by "lsusb -d", and can't
 	# use "echo x | while read" because variables set inside the "while" loop don't get exposed
 	# to the calling code, so use a temp file.

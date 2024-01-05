@@ -19,7 +19,7 @@ do
 	python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event periodic
 	deactivate_python_venv
 
-    DELAY=$(jq ".periodictimer" "${ALLSKY_MODULES}/module-settings.json")
+    DELAY=$( settings ".periodictimer" "${ALLSKY_MODULES}/module-settings.json" )
 
     if [[ ! ($DELAY =~ ^[0-9]+$) ]]; then
         DELAY=60

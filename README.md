@@ -162,12 +162,12 @@ See the **DAYS_TO_KEEP** and **WEB_DAYS_TO_KEEP** settings in [Settings --> Alls
 ## Share your sky
 
 
-If you want your allsky camera added to the [Allsky map](http://www.AllskyTeam.com/allsky-map), see [Put your camera on Allsky Map](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/miscellaneous/AllskyMap.html).
+If you want your allsky camera added to the [Allsky map](http://www.thomasjacquin.com/allsky-map), see [Put your camera on Allsky Map](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/miscellaneous/AllskyMap.html).
 
 If you know anyone in Greenland or Antartica, send them a camera!!
 
 <p align="center">
-<a href="https://www.AllskyTeam.com/allsky-map/" title="Allsky map example - click to see real map">
+<a href="https://www.thomasjacquin.com/allsky-map/" title="Allsky map example - click to see real map">
 <img src="https://github.com/AllskyTeam/allsky/blob/master/html/documentation/miscellaneous/allsky-map-with-pins.png">
 </a>
 </p>

@@ -1261,7 +1261,7 @@ get_desired_locale()
 	local IL=()
 	for i in ${INSTALLED_LOCALES}
 	do
-		IL+=("$i" "")
+		IL+=("${i}" "")
 	done
 
 	#shellcheck disable=SC2086
@@ -1374,7 +1374,7 @@ is_reboot_needed()
 	local OLD_BASE_VERSION="$( remove_point_release "${OLD_VERSION}" )"
 	local NEW_VERSION="${2}"
 	if [[ ${OLD_VERSION} < "v2023.05.01_04" ]]; then
-		# v2023.05.01_04 added to $PATH and a reboot's needed to have it take effect.
+		# v2023.05.01_04 added to ${PATH} and a reboot's needed to have it take effect.
 		display_msg --log progress "A reboot is needed after installation finishes."
 	else
 		REBOOT_NEEDED="false"
@@ -1834,7 +1834,7 @@ restore_prior_settings_file()
 			  ${PRIOR_ALLSKY_VERSION} != "${ALLSKY_VERSION}" ]]; then
 			for S in ${PRIOR_SPECIFIC_FILES}
 			do
-				# Update all the prior camera-specific files (which are now in $ALLSKY_CONFIG).
+				# Update all the prior camera-specific files (which are now in ${ALLSKY_CONFIG}).
 				# The new settings file will be based on a camera specific file.
 				local B="$( basename "${S}" )"
 				S="${ALLSKY_CONFIG}/${B}"

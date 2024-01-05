@@ -89,7 +89,7 @@ fi
 
 DIRECTORY="${2}"
 DESTINATION_NAME="${3}"
-[[ -z ${DESTINATION_NAME} ]] && DESTINATION_NAME="$(basename "${FILE_TO_UPLOAD}")"
+[[ -z ${DESTINATION_NAME} ]] && DESTINATION_NAME="$( basename "${FILE_TO_UPLOAD}" )"
 # When run manually, the FILE_TYPE normally won't be given.
 FILE_TYPE="${4:-x}"		# A unique identifier for this type of file
 COPY_TO="${5}"
@@ -115,7 +115,7 @@ else
 	SLEEP="10s"
 fi
 ABORTED_MSG1="Another '${FILE_TYPE}' upload is in progress so the new upload of"
-ABORTED_MSG1="${ABORTED_MSG1} $(basename "${FILE_TO_UPLOAD}") was aborted."
+ABORTED_MSG1="${ABORTED_MSG1} $( basename "${FILE_TO_UPLOAD}" ) was aborted."
 ABORTED_FIELDS="${FILE_TYPE}\t${FILE_TO_UPLOAD}"
 ABORTED_MSG2="uploads"
 CAUSED_BY="This could be caused network issues or by delays between images that are too short."

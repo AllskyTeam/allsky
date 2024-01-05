@@ -12,7 +12,7 @@
 
 # The MEAN is the only thing that should go to stdout.
 
-ME="$(basename "${BASH_ARGV0}")"
+ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck disable=SC1091 source-path=.
 source "${ALLSKY_HOME}/variables.sh" 		|| exit "${EXIT_ERROR_STOP}"
@@ -73,7 +73,7 @@ if [[ ${FILE} != "" && ! -f ${DATE}/${FILE} ]]; then
 	exit 2
 fi
 
-if [[ $(settings ".takedarkframes") -eq 1 ]]; then
+if [[ $( settings ".takedarkframes" ) -eq 1 ]]; then
 	# Disable low brightness check since darks will have extremely low brightness.
 	# But continue with the other checks in case the dark file is corrupted.
 	REMOVE_BAD_IMAGES_THRESHOLD_LOW=0
@@ -145,7 +145,7 @@ for f in ${IMAGE_FILES} ; do
 		elif echo "${MEAN}" | grep -E -q "${ERROR_WORDS}"; then
 			# At least one error word was found in the output.
 			# Get rid of unnecessary error text, and only look at first line of error message.
-			BAD="'${f}' (corrupt file: $(echo "${MEAN}" | sed -e 's;convert-im6.q16: ;;' -e 's; @ error.*;;' -e 's; @ warning.*;;' -e q))"
+			BAD="'${f}' (corrupt file: $( echo "${MEAN}" | sed -e 's;convert-im6.q16: ;;' -e 's; @ error.*;;' -e 's; @ warning.*;;' -e q ))"
 		else
 			# If only one file, output its mean.
 			[[ ${FILE} != "" ]] && echo "${MEAN}"
@@ -168,7 +168,7 @@ for f in ${IMAGE_FILES} ; do
 			MSG=""
 
 			if [[ ${HIGH} != "0" ]]; then		# Use the HIGH check
-				if [[ $(echo "${MEAN_CHECK} > ${HIGH_CHECK}" | bc ) -eq 1 ]]; then
+				if [[ $( echo "${MEAN_CHECK} > ${HIGH_CHECK}" | bc ) -eq 1 ]]; then
 					BAD="'${f}' (above threshold: MEAN=${MEAN}, threshold = ${HIGH})"
 				elif [[ ${DEBUG} == "true" ]]; then
 					MSG="===== OK: ${f}, MEAN=${MEAN}, HIGH=${HIGH}, LOW=${LOW}"
@@ -177,7 +177,7 @@ for f in ${IMAGE_FILES} ; do
 
 			# An image can't be both HIGH and LOW so if it was HIGH don't check for LOW.
 			if [[ ${BAD} == "" && ${LOW} != "0" ]]; then
-				if [[ $(echo "${MEAN_CHECK} < ${LOW_CHECK}" | bc ) -eq 1 ]]; then
+				if [[ $( echo "${MEAN_CHECK} < ${LOW_CHECK}" | bc ) -eq 1 ]]; then
 					BAD="'${f}' (below threshold: MEAN=${MEAN}, threshold = ${LOW})"
 				elif [[ ${DEBUG} == "true" && ${MSG} == "" ]]; then
 					MSG="===== OK: ${f}, MEAN=${MEAN}, HIGH=${HIGH}, LOW=${LOW}"

@@ -138,7 +138,8 @@ if [[ ${FORCE_CHECK} == "true" || ${BRANCH} == "${GITHUB_MAIN_BRANCH}" ]]; then
 	fi
 fi
 
-# TODO: these are here to keep shellcheck quiet.
+# TODO: these are here to keep shellcheck quiet while this script is incomplete.
+
 DEBUG="${DEBUG}"
 DEBUG_ARG="${DEBUG_ARG}"
 FUNCTION="${FUNCTION}"

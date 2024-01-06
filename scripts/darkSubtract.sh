@@ -45,7 +45,8 @@ if [[ $( settings ".usedarkframes" ) -eq 1 ]]; then
 		# than ${AS_TEMPERATURE_C}, stop, then compare it to the previous file to
 		# determine which is closer to ${AS_TEMPERATURE_C}.
 		# Need "--general-numeric-sort" in case any files have a leading "-".
-		for file in $( find "${DARKS_DIR}" -maxdepth 1 -iname "*.${EXTENSION}" | sed 's;.*/;;' | sort --general-numeric-sort )
+		for file in $( find "${DARKS_DIR}" -maxdepth 1 -iname "*.${EXTENSION}" |
+			sed 's;.*/;;' | sort --general-numeric-sort )
 		do
 			[[ ${ALLSKY_DEBUG_LEVEL} -ge 5 ]] && echo "Looking at ${file}"
 			# Example file name for 21 degree dark: "21.jpg".

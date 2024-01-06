@@ -18,8 +18,8 @@ source "${ALLSKY_CONFIG}/config.sh"			|| exit "${EXIT_ERROR_STOP}"
 
 function usage_and_exit()
 {
-	RET_CODE=${1}
-	[[ ${RET_CODE} -ne 0 ]] && echo -en "${wERROR}"
+	local RET=${1}
+	[[ ${RET} -ne 0 ]] && echo -en "${wERROR}"
 	echo
 	echo -e "Usage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug] [--machineid id] [--endofnight]"
 	echo
@@ -30,8 +30,8 @@ function usage_and_exit()
 	echo "--debug: Output debugging statements."
 	echo "--endofnight: Indicates how ${ME} was invoked."
 	echo
-	[[ ${RET_CODE} -ne 0 ]] && echo -e "${wNC}"
-	exit "${RET_CODE}"
+	[[ ${RET} -ne 0 ]] && echo -e "${wNC}"
+	exit "${RET}"
 }
 
 function get_domain()
@@ -170,7 +170,7 @@ fi
 
 
 if [[ -z ${MACHINE_ID} ]]; then
-	MACHINE_ID="$(< /etc/machine-id)"
+	MACHINE_ID="$( < /etc/machine-id )"
 	if [[ -z ${MACHINE_ID} ]]; then
 		E="ERROR: Unable to get 'machine_id': check /etc/machine-id."
 		echo -e "${ERROR_MSG_START}${E}${wNC}"
@@ -180,14 +180,14 @@ if [[ -z ${MACHINE_ID} ]]; then
 fi
 
 OK="true"
-E=""
+E=""			# Global variable
 LATITUDE="$( settings ".latitude" )"
-if [[ ${LATITUDE} == "" ]]; then
+if [[ -z ${LATITUDE} ]]; then
 	E="ERROR: 'Latitude' is required.${BR}${E}"
 	OK="false"
 fi
 LONGITUDE="$( settings ".longitude" )"
-if [[ ${LONGITUDE} == "" ]]; then
+if [[ -z ${LONGITUDE} ]]; then
 	E="ERROR: 'Longitude' is required.${BR}${E}"
 	OK="false"
 fi
@@ -228,23 +228,23 @@ else
 	E=""
 	W=""
 	# Check for required fields
-	if [[ ${CAMERA} == "" ]]; then
+	if [[ -z ${CAMERA} ]]; then
 		E="ERROR: 'Camera' is required.${BR}${E}"
 		OK="false"
 	fi
-	if [[ ${COMPUTER} == "" ]]; then
+	if [[ -z ${COMPUTER} ]]; then
 		E="ERROR: 'Computer' is required.${BR}${E}"
 		OK="false"
 	fi
 
 	# Check for optional, but suggested fields
-	if [[ ${LOCATION} == "" ]]; then
+	if [[ -z ${LOCATION} ]]; then
 		W="WARNING: 'Location' not set; continuing.${BR}${W}"
 	fi
-	if [[ ${OWNER} == "" ]]; then
+	if [[ -z ${OWNER} ]]; then
 		W="WARNING: 'Owner' not set; continuing.${BR}${W}"
 	fi
-	if [[ ${LENS} == "" ]]; then
+	if [[ -z ${LENS} ]]; then
 		W="WARNING: 'Lens' not set; continuing.${BR}${W}"
 	fi
 

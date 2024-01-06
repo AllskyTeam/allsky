@@ -5,12 +5,12 @@ function DisplayLiveView($image_name, $delay, $daydelay, $nightdelay, $darkframe
 	// For example, if liveview is started during the day we use "daydelay" but then
 	// at night we're still using "daydelay" but should be using "nightdelay".
 	// The user can fix this by reloading the web page.
-	// TODO: Should we automatically reload the page every so often?
+	// TODO: Should we automatically reload the page every so often (we already reload the image)?
 
 	$status = new StatusMessages();
 
 	if ($darkframe === '1') {
-		$status->addMessage('Currently capturing dark frames. You can turn this off on the Allsky Settings page.');
+		$status->addMessage('Currently capturing dark frames. You can turn this off in the Allsky Settings page.');
 	} else if ($daydelay != -1) {
 		$s =  number_format($daydelay);
 		$msg =  "Daytime images updated every $s seconds,";

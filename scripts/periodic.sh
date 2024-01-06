@@ -29,3 +29,5 @@ do
 	fi
     sleep "${DELAY}"
 done
+
+exit 0

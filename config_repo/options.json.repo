@@ -890,7 +890,7 @@
 "type" : "select",
 "usage" : "capture",
 "options" : [
-	{"value" : 1, "label" : "legacy"},
+	{"value" : 0, "label" : "legacy"},
 	{"value" : 1, "label" : "module"}
 ],
 "checkchanges" : true,

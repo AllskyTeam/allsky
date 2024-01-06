@@ -107,7 +107,7 @@ function initialize_variables() {
 
 
 	////////////////// Determine delay between refreshes of the image.
-	$consistentDelays = $settings_array["consistentdelays"] == 1 ? true : false;
+	$consistentDelays = getVariableOrDefault($settings_array 'consistentdelays', true);
 	$daydelay = $settings_array["daydelay"];
 	$daymaxautoexposure = $settings_array["daymaxautoexposure"];
 	$dayexposure = $settings_array["dayexposure"];
@@ -118,33 +118,33 @@ function initialize_variables() {
 	$ok = true;
 	if (! is_numeric($daydelay)) {
 		$ok = false;
-		$status->addMessage("<strong>daydelay</strong> is not a number.", 'danger', false);
+		$status->addMessage("<strong>daydelay</strong> is not a number: $daydelay.", 'danger', false);
 	}
 	if (! is_numeric($daymaxautoexposure)) {
 		$ok = false;
-		$status->addMessage("<strong>daymaxautoexposure</strong> is not a number.", 'danger', false);
+		$status->addMessage("<strong>daymaxautoexposure</strong> is not a number: $maymaxautoexposure.", 'danger', false);
 	}
 	if (! is_numeric($dayexposure)) {
 		$ok = false;
-		$status->addMessage("<strong>dayexposure</strong> is not a number.", 'danger', false);
+		$status->addMessage("<strong>dayexposure</strong> is not a number: $dayexposure.", 'danger', false);
 	}
 	if (! is_numeric($nightdelay)) {
 		$ok = false;
-		$status->addMessage("<strong>nightdelay</strong> is not a number.", 'danger', false);
+		$status->addMessage("<strong>nightdelay</strong> is not a number: $nightdelay.", 'danger', false);
 	}
 	if (! is_numeric($nightmaxautoexposure)) {
 		$ok = false;
-		$status->addMessage("<strong>nightmaxautoexposure</strong> is not a number.", 'danger', false);
+		$status->addMessage("<strong>nightmaxautoexposure</strong> is not a number: $nightmaxautoexposure.", 'danger', false);
 	}
 	if (! is_numeric($nightexposure)) {
 		$ok = false;
-		$status->addMessage("<strong>nightexposure</strong> is not a number.", 'danger', false);
+		$status->addMessage("<strong>nightexposure</strong> is not a number: $nightexposure.", 'danger', false);
 	}
 	if ($ok) {
 		$daydelay += ($consistentDelays ? $daymaxautoexposure : $dayexposure);
 		$nightdelay += ($consistentDelays ? $nightmaxautoexposure : $nightexposure);
 
-		$showDelay = getVariableOrDefault($settings_array, 'showDelay', true);
+		$showDelay = getVariableOrDefault($settings_array, 'showdelay', true);
 		if ($showDelay) {
 			// Determine if it's day or night so we know which delay to use.
 			$angle = $settings_array['angle'];
@@ -465,7 +465,7 @@ function get_variable($file, $searchfor, $default)
 {
 	// get the file contents
 	$contents = file_get_contents($file);
-	if ("$contents" == "") return($default);	// file not found or not readable
+	if ($contents == "") return($default);	// file not found or not readable
 
 	// escape special characters in the query
 	$pattern = preg_quote($searchfor, '/');
@@ -501,8 +501,9 @@ function get_variable($file, $searchfor, $default)
 /**
 * 
 * List a type of file - either "All" (case sensitive) for all days, or only for the specified day.
+* If $dir is not null, it ends in "/".
 */
-function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {	// if $dir is not null, it ends in "/"
+function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
 	$num = 0;	// Let the user know when there are no images for the specified day
 	// "/images" is an alias in the web server for ALLSKY_IMAGES
 	$images_dir = "/images";

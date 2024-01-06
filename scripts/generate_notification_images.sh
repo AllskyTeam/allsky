@@ -6,8 +6,8 @@
 # This is quick - on a Pi 4 it takes about one second per image.
 
 # Allow this script to be executed manually, which requires several variables to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck disable=SC1091 source-path=.
 source "${ALLSKY_HOME}/variables.sh"	|| exit "${EXIT_ERROR_STOP}"
@@ -107,7 +107,7 @@ function make_image()
 	TEXTCOLOR="${2:-"white"}"
 	FONT="${3:-"Helvetica-Bold"}"
 	FONT_SIZE="${4:-128}"
-	INTERLINE_SPACING=$(echo "${FONT_SIZE} / 3" | bc)
+	INTERLINE_SPACING=$( echo "${FONT_SIZE} / 3" | bc )
 	STROKE_COLOR="${5:-"black"}"
 	STROKE_WIDTH="${6:-2}"
 	BGCOLOR="${7:-"#404040"}"
@@ -158,8 +158,7 @@ function make_image()
 	done
 }
 
-which mogrify > /dev/null
-if [[ $? -ne 0 ]]; then
+if ! which mogrify > /dev/null ; then
 	# Testing for mogrify which seems like a much more distinctive executable
 	# name than "convert". I assume that if "mogrify" is in the path, then
 	# ImageMagick is installed and "convert" will run ImageMagick and not some

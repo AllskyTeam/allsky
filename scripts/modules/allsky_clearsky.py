@@ -24,12 +24,12 @@ metaData = {
     "name": "Clear Sky Alarm",
     "description": "Clear Sky Alarm",
     "module": "allsky_clearsky",
-    "version": "v1.0.0",        
+    "version": "v1.0.0",
     "events": [
         "day",
         "night"
     ],
-    "experimental": "true",    
+    "experimental": "true",
     "arguments":{
         "detectionThreshold": 0.55,
         "distanceThreshold": 20,
@@ -55,8 +55,8 @@ metaData = {
             "help": "The area of the image to check for clear skies. Format is x1,y1,x2,y2",
             "type": {
                 "fieldtype": "roi"
-            }            
-        },          
+            }
+        },
         "roifallback" : {
             "required": "true",
             "description": "Fallback %",
@@ -99,7 +99,7 @@ metaData = {
                 "min": 0,
                 "max": 100,
                 "step": 1
-            }          
+            }
         },
         "template1" : {
             "required": "true",
@@ -110,16 +110,16 @@ metaData = {
                 "min": 0,
                 "max": 100,
                 "step": 1
-            }          
-        },               
+            }
+        },
         "mask" : {
             "required": "false",
             "description": "Mask Path",
             "help": "The name of the image mask. THis mask is applied when counting stars bit not visible in the final image",
             "type": {
                 "fieldtype": "image"
-            }                
-        },        
+            }
+        },
         "annotate" : {
             "required": "false",
             "description": "Annotate Stars",
@@ -127,7 +127,7 @@ metaData = {
             "tab": "Debug",
             "type": {
                 "fieldtype": "checkbox"
-            }          
+            }
         },
         "debug" : {
             "required": "false",
@@ -136,14 +136,14 @@ metaData = {
             "tab": "Debug",
             "type": {
                 "fieldtype": "checkbox"
-            }          
+            }
         },
         "debugimage" : {
             "required": "false",
             "description": "Debug Image",
             "help": "Image to use for debugging. DO NOT set this unless you know what you are doing",
-            "tab": "Debug"        
-        },        
+            "tab": "Debug"
+        },
         "mqttenable" : {
             "required": "false",
             "description": "Enable MQTT",
@@ -151,13 +151,13 @@ metaData = {
             "tab": "MQTT",
             "type": {
                 "fieldtype": "checkbox"
-            }          
-        }, 
+            }
+        },
         "mqttbroker" : {
             "required": "false",
             "description": "MQTT Broker address",
             "help": "MQTT Broker address",
-            "tab": "MQTT"        
+            "tab": "MQTT"
         },
         "mqttport" : {
             "required": "false",
@@ -169,32 +169,32 @@ metaData = {
                 "min": 1,
                 "max": 65536,
                 "step": 1
-            }                      
+            }
         },
         "mqttusername" : {
             "required": "false",
             "description": "MQTT Username",
             "help": "MQTT Username",
-            "tab": "MQTT"        
-        },                                                             
+            "tab": "MQTT"
+        },
         "mqttpassword" : {
             "required": "false",
             "description": "MQTT Pasword",
             "help": "MQTT Password",
-            "tab": "MQTT"        
+            "tab": "MQTT"
         },
         "mqtttopic" : {
             "required": "false",
             "description": "MQTT Topic",
             "help": "MQTT Topic the sky state is published to",
-            "tab": "MQTT"        
-        }        
+            "tab": "MQTT"
+        }
     },
-    "enabled": "false"            
+    "enabled": "false"
 }
 
 def onPublish(client, userdata, mid, properties=None):
-    s.log(4,"INFO: Sky state published to MQTT Broker mid {0}".format(mid))    
+    s.log(4,"INFO: Sky state published to MQTT Broker mid {0}".format(mid))
 
 def clearsky(params, event):
     #ONLY AT NIGHT !
@@ -214,7 +214,7 @@ def clearsky(params, event):
     mqttbroker = params["mqttbroker"]
     mqttport = s.int(params["mqttport"])
     mqttusername = params["mqttusername"]
-    mqttpassword = params["mqttpassword"]        
+    mqttpassword = params["mqttpassword"]
     mqtttopic = params["mqtttopic"]
 
     starCount = ""
@@ -238,7 +238,7 @@ def clearsky(params, event):
         maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_OVERLAY"),"images",mask)
         imageMask = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
         if debug:
-            s.writeDebugImage(metaData["module"], "image-mask.png", imageMask)  
+            s.writeDebugImage(metaData["module"], "image-mask.png", imageMask)
 
     if len(image.shape) == 2:
         grayImage = image
@@ -266,10 +266,10 @@ def clearsky(params, event):
         x2 = s.int((imageWidth / 2) + (imageWidth / fallbackAdj))
         y2 = s.int((imageHeight / 2) + (imageHeight / fallbackAdj))
 
-    croppedImage = grayImage[y1:y2, x1:x2] 
+    croppedImage = grayImage[y1:y2, x1:x2]
 
     if debug:
-        s.writeDebugImage(metaData["module"], "cropped.png", croppedImage)  
+        s.writeDebugImage(metaData["module"], "cropped.png", croppedImage)
 
     starTemplateSize = starTemplate1Size * 4
     if (starTemplateSize % 2) != 0:
@@ -322,8 +322,8 @@ def clearsky(params, event):
                 cv2.circle(croppedImage, (star[0] + wOffset, star[1] + hOffset), 10, (255, 255, 255), 1)
 
     if debug:
-        s.writeDebugImage(metaData["module"], "result.png", croppedImage)  
-    
+        s.writeDebugImage(metaData["module"], "result.png", croppedImage)
+
     starCount = len(starList)
 
     if starCount >= clearvalue:

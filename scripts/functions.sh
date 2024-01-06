@@ -39,7 +39,7 @@ function doExit()
 		# even if the user has them turned off.
 		if [[ -n ${CUSTOM_MESSAGE} ]]; then
 			# Create a custom error message.
-			# If we error out before config.sh is sourced in, $FILENAME and $EXTENSION won't be
+			# If we error out before config.sh is sourced in, ${FILENAME} and ${EXTENSION} won't be
 			# set so guess at what they are.
 			"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" \
 				"${FILENAME:-"image"}" \
@@ -102,7 +102,7 @@ function determineCommandToUse()
 			return 1
 		fi
 
-		"${CMD}" --timeout 1 --nopreview # > /dev/null 2>&1
+		"${CMD}" --timeout 1 --nopreview > /dev/null 2>&1
 		RET=$?
 	fi
 
@@ -227,18 +227,18 @@ function get_sunrise_sunset()
 	#shellcheck disable=SC1091		# file doesn't exist in GitHub
 	source "${ALLSKY_CONFIG}/config.sh"		|| return 1
 
-	[[ -z ${ANGLE} ]] && ANGLE="$(settings ".angle")"
-	[[ -z ${LATITUDE} ]] && LATITUDE="$(settings ".latitude")"
-	[[ -z ${LONGITUDE} ]] && LONGITUDE="$(settings ".longitude")"
+	[[ -z ${ANGLE} ]] && ANGLE="$( settings ".angle" )"
+	[[ -z ${LATITUDE} ]] && LATITUDE="$( settings ".latitude" )"
+	[[ -z ${LONGITUDE} ]] && LONGITUDE="$( settings ".longitude" )"
 
-	LATITUDE="$(convertLatLong "${LATITUDE}" "latitude")"		|| return 2
-	LONGITUDE="$(convertLatLong "${LONGITUDE}" "longitude")"	|| return 2
+	LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" )"		|| return 2
+	LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )"	|| return 2
 
 	echo "Daytime start    Nighttime start   Angle"
-	local X="$(sunwait list angle "0" "${LATITUDE}" "${LONGITUDE}")"
+	local X="$( sunwait list angle "0" "${LATITUDE}" "${LONGITUDE}" )"
 	# Replace comma by several spaces so the output lines up.
 	echo "${X/,/           }               0"
-	X="$(sunwait list angle "${ANGLE}" "${LATITUDE}" "${LONGITUDE}")"
+	X="$( sunwait list angle "${ANGLE}" "${LATITUDE}" "${LONGITUDE}" )"
 	echo "${X/,/           }              ${ANGLE}"
 }
 
@@ -259,7 +259,7 @@ function whatWebsites()
 	# Determine remote Website - this is more involved.
 	# Not only must the file exist, but there also has to be a way to upload to it.
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
-		local PROTOCOL="$(get_variable "PROTOCOL" "${ALLSKY_CONFIG}/ftp-settings.sh")"
+		local PROTOCOL="$( get_variable "PROTOCOL" "${ALLSKY_CONFIG}/ftp-settings.sh" )"
 		PROTOCOL=${PROTOCOL,,}
 		if [[ -n ${PROTOCOL} && ${PROTOCOL} != "local" ]]; then
 			local X
@@ -268,17 +268,17 @@ function whatWebsites()
 					;;
 
 				ftp | ftps | sftp | scp)		# These require R
-					X="$(get_variable "REMOTE_HOST" "${ALLSKY_CONFIG}/ftp-settings.sh")" 
+					X="$( get_variable "REMOTE_HOST" "${ALLSKY_CONFIG}/ftp-settings.sh" )" 
 					[[ -n ${X} ]] && HAS_REMOTE="true"
 					;;
 
 				s3)
-					X="$(get_variable "AWS_CLI_DIR" "${ALLSKY_CONFIG}/ftp-settings.sh")" 
+					X="$( get_variable "AWS_CLI_DIR" "${ALLSKY_CONFIG}/ftp-settings.sh" )" 
 					[[ -n ${X} ]] && HAS_REMOTE="true"
 					;;
 
 				gcs)
-					X="$(get_variable "GCS_BUCKET" "${ALLSKY_CONFIG}/ftp-settings.sh")" 
+					X="$( get_variable "GCS_BUCKET" "${ALLSKY_CONFIG}/ftp-settings.sh" )" 
 					[[ -n ${X} ]] && HAS_REMOTE="true"
 					;;
 
@@ -320,13 +320,13 @@ function checkAndGetNewerFile()
 	local GIT_FILE="${GITHUB_RAW_ROOT}/allsky/${BRANCH}/${2}"
 	local DOWNLOADED_FILE="${3}"
 	# Download the file and put in DOWNLOADED_FILE
-	X="$(curl --show-error --silent "${GIT_FILE}")"
+	X="$( curl --show-error --silent "${GIT_FILE}" )"
 	RET=$?
 	if [[ ${RET} -eq 0 && ${X} != "404: Not Found" ]]; then
 		# We really just check if the files are different.
 		echo "${X}" > "${DOWNLOADED_FILE}"
-		DOWNLOADED_CHECKSUM="$(sum "${DOWNLOADED_FILE}")"
-		MY_CHECKSUM="$(sum "${CURRENT_FILE}")"
+		DOWNLOADED_CHECKSUM="$( sum "${DOWNLOADED_FILE}" )"
+		MY_CHECKSUM="$( sum "${CURRENT_FILE}" )"
 		if [[ ${MY_CHECKSUM} == "${DOWNLOADED_CHECKSUM}" ]]; then
 			rm -f "${DOWNLOADED_FILE}"
 			return 0
@@ -735,7 +735,7 @@ function one_instance()
 			# If it's happening often let the user know.
 			[[ ! -d ${ALLSKY_ABORTS_DIR} ]] && mkdir "${ALLSKY_ABORTS_DIR}"
 			local AF="${ALLSKY_ABORTS_DIR}/${ABORTED_FILE}"
-			echo -e "$(date)\t${ABORTED_FIELDS}" >> "${AF}"
+			echo -e "$( date )\t${ABORTED_FIELDS}" >> "${AF}"
 			NUM=$( wc -l < "${AF}" )
 			if [[ ${NUM} -eq 10 ]]; then
 				MSG="${NUM} ${ABORTED_MSG2} have been aborted waiting for others to finish."

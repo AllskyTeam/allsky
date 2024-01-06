@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Allow this script to be executed manually, which requires several variables to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
 # This script uploads various information relative to the camera setup to the allsky map.
 # https://www.thomasjacquin.com/allsky-map/
@@ -18,8 +18,8 @@ source "${ALLSKY_CONFIG}/config.sh"			|| exit "${EXIT_ERROR_STOP}"
 
 function usage_and_exit()
 {
-	RET_CODE=${1}
-	[[ ${RET_CODE} -ne 0 ]] && echo -en "${wERROR}"
+	local RET=${1}
+	[[ ${RET} -ne 0 ]] && echo -en "${wERROR}"
 	echo
 	echo -e "Usage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug] [--machineid id] [--endofnight]"
 	echo
@@ -30,8 +30,8 @@ function usage_and_exit()
 	echo "--debug: Output debugging statements."
 	echo "--endofnight: Indicates how ${ME} was invoked."
 	echo
-	[[ ${RET_CODE} -ne 0 ]] && echo -e "${wNC}"
-	exit "${RET_CODE}"
+	[[ ${RET} -ne 0 ]] && echo -e "${wNC}"
+	exit "${RET}"
 }
 
 function get_domain()
@@ -56,7 +56,7 @@ function check_URL()
 	URL_TYPE="${2}"
 	FIELD_NAME="${3}"
 
-	D="$(get_domain "${URL}")"
+	D="$( get_domain "${URL}" )"
 	if [[ "${D:0:7}"  == "192.168"		||
 		  "${D:0:4}"  == "10.0"			||
 		  "${D:0:6}"  == "172.16"		||
@@ -72,7 +72,7 @@ function check_URL()
 
 	else
 		# Make sure it's a valid URL
-		CONTENT="$(curl --head --silent --show-error --connect-timeout ${TIMEOUT} "${URL}" 2>&1)"
+		CONTENT="$( curl --head --silent --show-error --connect-timeout ${TIMEOUT} "${URL}" 2>&1 )"
 		RET=$?
 		if [[ ${RET} -eq 6 ]]; then
 			E="ERROR: ${FIELD_NAME} '${URL}' not found - check spelling and network connectivity.${BR}${E}"
@@ -82,10 +82,10 @@ function check_URL()
 				E="ERROR: ${FIELD_NAME} '${URL}' cannot be reached (${CONTENT}).${BR}${E}"
 		else
 			if [[ ${URL_TYPE} == "websiteurl" ]]; then
-				TYPE="$(echo "${CONTENT}" | grep -i "Content-Type: text")"
+				TYPE="$( echo "${CONTENT}" | grep -i "Content-Type: text" )"
 				T="web site"
 			else
-				TYPE="$(echo "${CONTENT}" | grep -i "Content-Type: image")"
+				TYPE="$( echo "${CONTENT}" | grep -i "Content-Type: image" )"
 				T="image"
 			fi
 			if [[ -z ${TYPE} ]]; then
@@ -170,7 +170,7 @@ fi
 
 
 if [[ -z ${MACHINE_ID} ]]; then
-	MACHINE_ID="$(< /etc/machine-id)"
+	MACHINE_ID="$( < /etc/machine-id )"
 	if [[ -z ${MACHINE_ID} ]]; then
 		E="ERROR: Unable to get 'machine_id': check /etc/machine-id."
 		echo -e "${ERROR_MSG_START}${E}${wNC}"
@@ -180,22 +180,22 @@ if [[ -z ${MACHINE_ID} ]]; then
 fi
 
 OK="true"
-E=""
-LATITUDE="$(settings ".latitude")"
-if [[ ${LATITUDE} == "" ]]; then
+E=""			# Global variable
+LATITUDE="$( settings ".latitude" )"
+if [[ -z ${LATITUDE} ]]; then
 	E="ERROR: 'Latitude' is required.${BR}${E}"
 	OK="false"
 fi
-LONGITUDE="$(settings ".longitude")"
-if [[ ${LONGITUDE} == "" ]]; then
+LONGITUDE="$( settings ".longitude" )"
+if [[ -z ${LONGITUDE} ]]; then
 	E="ERROR: 'Longitude' is required.${BR}${E}"
 	OK="false"
 fi
 [[ ${OK} == "false" ]] && echo -e "${ERROR_MSG_START}${E}${wNC}" && exit 1
 
 OK="true"
-LATITUDE="$(convertLatLong "${LATITUDE}" "latitude")" || OK="false"
-LONGITUDE="$(convertLatLong "${LONGITUDE}" "longitude")" || OK="false"
+LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" )" || OK="false"
+LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )" || OK="false"
 [[ ${OK} == "false" ]] && exit 1	# convertLatLong output error message
 
 if false; then
@@ -216,35 +216,35 @@ if [[ ${DELETE} == "true" ]]; then
 	}
 
 else
-	LOCATION="$(settings ".location")"
-	OWNER="$(settings ".owner")"
-	WEBSITE_URL="$(settings ".websiteurl")"
-	IMAGE_URL="$(settings ".imageurl")"
-	CAMERA="$(settings ".camera")"
-	LENS="$(settings ".lens")"
-	COMPUTER="$(settings ".computer")"
+	LOCATION="$( settings ".location" )"
+	OWNER="$( settings ".owner" )"
+	WEBSITE_URL="$( settings ".websiteurl" )"
+	IMAGE_URL="$( settings ".imageurl" )"
+	CAMERA="$( settings ".camera" )"
+	LENS="$( settings ".lens" )"
+	COMPUTER="$( settings ".computer" )"
 
 	OK="true"
 	E=""
 	W=""
 	# Check for required fields
-	if [[ ${CAMERA} == "" ]]; then
+	if [[ -z ${CAMERA} ]]; then
 		E="ERROR: 'Camera' is required.${BR}${E}"
 		OK="false"
 	fi
-	if [[ ${COMPUTER} == "" ]]; then
+	if [[ -z ${COMPUTER} ]]; then
 		E="ERROR: 'Computer' is required.${BR}${E}"
 		OK="false"
 	fi
 
 	# Check for optional, but suggested fields
-	if [[ ${LOCATION} == "" ]]; then
+	if [[ -z ${LOCATION} ]]; then
 		W="WARNING: 'Location' not set; continuing.${BR}${W}"
 	fi
-	if [[ ${OWNER} == "" ]]; then
+	if [[ -z ${OWNER} ]]; then
 		W="WARNING: 'Owner' not set; continuing.${BR}${W}"
 	fi
-	if [[ ${LENS} == "" ]]; then
+	if [[ -z ${LENS} ]]; then
 		W="WARNING: 'Lens' not set; continuing.${BR}${W}"
 	fi
 
@@ -255,8 +255,8 @@ else
 		OK="false"
 	elif [[ -n ${WEBSITE_URL} ]]; then		# they specified both
 		# The domain names (or IP addresses) must be the same.
-		Wurl="$(get_domain "${WEBSITE_URL}")"
-		Iurl="$(get_domain "${IMAGE_URL}")"
+		Wurl="$( get_domain "${WEBSITE_URL}" )"
+		Iurl="$( get_domain "${IMAGE_URL}" )"
 		if [[ ${Wurl} != "${Iurl}" ]]; then
 			E="ERROR: The Website and Image URLs must have the same domain name or IP address.${BR}${E}"
 			OK="false"
@@ -323,7 +323,7 @@ if [[ ${UPLOAD} == "false" ]]; then
 	digit="${MACHINE_ID: -1}"
 	decimal=$(( 16#$digit ))
 	parity="$(( decimal % 2 ))"
-	(( $(date +%e) % 2 == parity )) && UPLOAD="true"
+	(( $( date +%e ) % 2 == parity )) && UPLOAD="true"
 fi
 
 RETURN_CODE=0
@@ -336,10 +336,10 @@ if [[ ${UPLOAD} == "true" ]]; then
 	# shellcheck disable=SC2089
 	CMD="curl --silent -i -H 'Accept: application/json' -H 'Content-Type:application/json'"
 	# shellcheck disable=SC2089
-	CMD="${CMD} --data '$(generate_post_data)' 'https://www.thomasjacquin.com/allsky-map/postToMap.php'"
+	CMD="${CMD} --data '$( generate_post_data )' 'https://www.thomasjacquin.com/allsky-map/postToMap.php'"
 	[[ ${DEBUG} == "true" ]] && echo -e "\n${wDEBUG}Executing:\n${CMD}${wNC}\n"
 	# shellcheck disable=SC2090,SC2086
-	RETURN="$(echo ${CMD} | bash)"
+	RETURN="$( echo ${CMD} | bash )"
 	RETURN_CODE=$?
 	[[ ${DEBUG} == "true" ]] && echo -e "\n${wDEBUG}Returned:\n${RETURN}${wNC}.\n"
 	if [[ ${RETURN_CODE} -ne 0 ]]; then
@@ -350,7 +350,7 @@ if [[ ${UPLOAD} == "true" ]]; then
 	fi
 
 	# Get the return string from the server.  It's the last line of output.
-	RET="$(echo "${RETURN}" | tail -1)"
+	RET="$( echo "${RETURN}" | tail -1 )"
 	if [[ ${RET} == "INSERTED" || ${RET} == "DELETED" ]]; then
 		echo -e "${wOK}${MSG_START}Map data ${RET}.${wNC}"
 

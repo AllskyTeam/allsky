@@ -72,7 +72,7 @@ def convertLatLon(input):
     else:
         ret = float(input)
     return ret
-    
+
 def skyClear():
     skyState = "unknown"
     skyStateFlag = True
@@ -313,18 +313,18 @@ def var_dump(variable):
 
 def setEnvironmentVariable(name, value, logMessage='', logLevel=4):
     result = True
-    
+
     try:
         os.environ[name] = value
-        
+
         if log != '':
             log(logLevel, logMessage)
     except:
         result = False
         log(4, f'ERROR: Failed to set environment variable {name} to value {value}')
-        
+
     return result
-    
+
 def getEnvironmentVariable(name, fatal=False, error=''):
     result = None
 
@@ -380,7 +380,7 @@ def dbDeleteKey(key):
     if dbHasKey(key):
         del DBDATA[key]
         writeDB()
-    
+
 def dbHasKey(key):
     global DBDATA
     return (key in DBDATA)
@@ -431,7 +431,7 @@ def int(val):
 
 def asfloat(val):
     localDP = ','
-    
+
     if not isinstance(val, str):
         val = locale.str(val)
 
@@ -466,7 +466,7 @@ def cleanupModule(moduleData):
         if "env" in moduleData["cleanup"]:
             for envVariable in moduleData["cleanup"]["env"]:
                 os.environ.pop(envVariable, None)
-                                
+
 def getGPIOPin(pin):
     result = None
     if pin == 0:

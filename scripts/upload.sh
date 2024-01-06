@@ -4,7 +4,7 @@
 # This is a separate script so it can also be used manually to test uploads.
 
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}")/.." )"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck disable=SC1091 source-path=.
@@ -49,7 +49,8 @@ SILENT="false"
 DEBUG="false"
 RET=0
 while [[ $# -gt 0 ]]; do
-	case "${1}" in
+	ARG="${1}"
+	case "${ARG}" in
 		--help)
 			HELP="true"
 			shift
@@ -67,7 +68,7 @@ while [[ $# -gt 0 ]]; do
 			shift
 			;;
 		-*)
-			echo -e "${RED}Unknown argument '${1}'.${NC}" >&2
+			echo -e "${RED}Unknown argument '${ARG}'.${NC}" >&2
 			shift
 			RET=1
 			;;
@@ -89,7 +90,7 @@ fi
 
 DIRECTORY="${2}"
 DESTINATION_NAME="${3}"
-[[ -z ${DESTINATION_NAME} ]] && DESTINATION_NAME="$(basename "${FILE_TO_UPLOAD}")"
+[[ -z ${DESTINATION_NAME} ]] && DESTINATION_NAME="$( basename "${FILE_TO_UPLOAD}" )"
 # When run manually, the FILE_TYPE normally won't be given.
 FILE_TYPE="${4:-x}"		# A unique identifier for this type of file
 COPY_TO="${5}"
@@ -115,7 +116,7 @@ else
 	SLEEP="10s"
 fi
 ABORTED_MSG1="Another '${FILE_TYPE}' upload is in progress so the new upload of"
-ABORTED_MSG1="${ABORTED_MSG1} $(basename "${FILE_TO_UPLOAD}") was aborted."
+ABORTED_MSG1="${ABORTED_MSG1} $( basename "${FILE_TO_UPLOAD}" ) was aborted."
 ABORTED_FIELDS="${FILE_TYPE}\t${FILE_TO_UPLOAD}"
 ABORTED_MSG2="uploads"
 CAUSED_BY="This could be caused network issues or by delays between images that are too short."
@@ -178,7 +179,7 @@ elif [[ ${PROTOCOL} == "gcs" ]] ; then
 		RET=$?
 	else
 		OUTPUT="${ME}: ERROR: 'gsutil' command not found; cannot upload."
-		OUTPUT="${OUTPUT}\nIt should be in one of these directories: $PATH"
+		OUTPUT="${OUTPUT}\nIt should be in one of these directories: ${PATH}"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${OUTPUT}"
 		OUTPUT="${RED}*** ${OUTPUT}${NC}"
 	fi

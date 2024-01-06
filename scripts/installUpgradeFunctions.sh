@@ -26,7 +26,7 @@ display_header() {
 #####
 calc_wt_size()
 {
-	WT_WIDTH=$(tput cols)
+	WT_WIDTH=$( tput cols )
 	[[ ${WT_WIDTH} -gt 80 ]] && WT_WIDTH=80
 }
 
@@ -37,7 +37,7 @@ function get_Git_version() {
 	local BRANCH="${1}"
 	local PACKAGE="${2}"
 	local VF="$( basename "${ALLSKY_VERSION_FILE}" )"
-	local V="$(curl --show-error --silent "${GITHUB_RAW_ROOT}/${PACKAGE}/${BRANCH}/${VF}" | tr -d '\n\r')"
+	local V="$( curl --show-error --silent "${GITHUB_RAW_ROOT}/${PACKAGE}/${BRANCH}/${VF}" | tr -d '\n\r' )"
 	# "404" means the branch isn't found since all new branches have a version file.
 	[[ ${V} != "404: Not Found" ]] && echo -n "${V}"
 }
@@ -55,7 +55,7 @@ function get_version() {
 	if [[ -z ${F} ]]; then
 		F="${ALLSKY_VERSION_FILE}"		# default
 	else
-		[[ ${F:1,-1} == "/" ]] && F="${F}$(basename "${ALLSKY_VERSION_FILE}")"
+		[[ ${F:1,-1} == "/" ]] && F="${F}$( basename "${ALLSKY_VERSION_FILE}" )"
 	fi
 	if [[ -f ${F} ]]; then
 		# Sometimes the branch file will have both "master" and "dev" on two lines.
@@ -201,7 +201,7 @@ function display_msg()
 ######################################### variables
 
 # export to keep shellcheck quiet
-export ALLSKY_OWNER=$(id --group --name)		# The login installing Allsky
+export ALLSKY_OWNER=$( id --group --name )		# The login installing Allsky
 export ALLSKY_GROUP=${ALLSKY_OWNER}
 export WEBSERVER_GROUP="www-data"
 export REPO_WEBCONFIG_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"

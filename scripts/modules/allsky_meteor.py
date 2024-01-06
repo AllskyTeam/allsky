@@ -14,7 +14,7 @@ from scipy.spatial import distance as dist
 
 metaData = {
     "name": "AllSKY Meteor Detection",
-    "description": "Detects meteors in images",  
+    "description": "Detects meteors in images",
     "events": [
         "night"
     ],
@@ -34,7 +34,7 @@ metaData = {
             "help": "The name of the image mask. This mask is applied when detecting meteors bit not visible in the final image",
             "type": {
                 "fieldtype": "image"
-            }                
+            }
         },
         "length" : {
             "required": "true",
@@ -45,34 +45,34 @@ metaData = {
                 "min": 0,
                 "max": 500,
                 "step": 1
-            }          
+            }
         },
         "useclearsky" : {
             "required": "false",
             "description": "Use Clear Sky",
-            "help": "If available use the results of the clear sky module. If the sky is not clear meteor detection will be skipped",         
+            "help": "If available use the results of the clear sky module. If the sky is not clear meteor detection will be skipped",
             "type": {
                 "fieldtype": "checkbox"
-            }          
-        },            
+            }
+        },
         "annotate" : {
             "required": "false",
             "description": "Annotate Meteors",
             "help": "If selected the identified meteors in the image will be highlighted",
-            "tab": "Debug",            
+            "tab": "Debug",
             "type": {
                 "fieldtype": "checkbox"
-            }          
+            }
         },
         "debug" : {
             "required": "false",
             "description": "Enable debug mode",
             "help": "If selected each stage of the detection will generate images in the allsky tmp debug folder",
-            "tab": "Debug",            
+            "tab": "Debug",
             "type": {
                 "fieldtype": "checkbox"
-            }          
-        }                          
+            }
+        }
     }
 }
 
@@ -88,12 +88,12 @@ def meteor(params, event):
     if not rainFlag:
         if skyClear:
             mask = params["mask"]
-            annotate = params["annotate"]    
+            annotate = params["annotate"]
             length = s.int(params["length"])
             debug = params["debug"]
 
             maskImage = None
-            
+
             if debug:
                 s.startModuleDebug(metaData["module"])
 
@@ -153,7 +153,7 @@ def meteor(params, event):
                     dilation_mask = cv2.bitwise_and(dilation_mask,dilation_mask,mask = maskImage)
                 except Exception as ex:
                     s.log(0,"ERROR: There is a problem with the meteor mask. Please check the masks dimensions and colour depth")
-        
+
                 if debug:
                     s.writeDebugImage(metaData["module"], "dilation-mask.png", dilation_mask)
 
@@ -169,15 +169,15 @@ def meteor(params, event):
                             if annotate:
                                 cv2.line(s.image,(x1,y1),(x2,y2),(0,255,0),10)
                     lineCount += 1
-            
-            os.environ["AS_METEORLINECOUNT"] = str(lineCount)    
+
+            os.environ["AS_METEORLINECOUNT"] = str(lineCount)
             os.environ["AS_METEORCOUNT"] = str(meteorCount)
             result = "{0} Meteors found, {1} Lines detected".format(meteorCount, lineCount)
             s.log(4,"INFO: {}".format(result))
         else:
             result = "Sky is not clear so ignoring meteor detection"
             s.log(4,"INFO: {0}".format(result))
-            os.environ["AS_METEORCOUNT"] = "Disabled"            
+            os.environ["AS_METEORCOUNT"] = "Disabled"
     else:
         result = "Its raining so ignorning meteor detection"
         s.log(4,"INFO: {0}".format(result))

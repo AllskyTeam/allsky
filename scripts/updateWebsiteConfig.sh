@@ -4,8 +4,8 @@
 # If no file is specified, use the local one if it exists, else use the remote one.
 
 # Allow this script to be executed manually, which requires several variables to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck disable=SC1091 source-path=.
 source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
@@ -141,7 +141,8 @@ if [[ ${DEBUG} == "true" ]]; then
 	echo -e "${wNC}"
 fi
 
-if OUTPUT="$(jq "${S}" "${CONFIG_FILE}" 2>&1 > /tmp/x && mv /tmp/x "${CONFIG_FILE}")"; then
+# Need to use "jq", not "settings".
+if OUTPUT="$( jq "${S}" "${CONFIG_FILE}" 2>&1 > /tmp/x && mv /tmp/x "${CONFIG_FILE}" )"; then
 	if [[ ${VERBOSITY} == "verbose" ]]; then
 		echo -e "${wOK}${OUTPUT_MESSAGE}${wNC}"
 	elif [[ ${VERBOSITY} == "summary" ]]; then

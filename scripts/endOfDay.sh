@@ -1,17 +1,17 @@
 #!/bin/bash
 
 # Allow this script to be executed manually, which requires several variables to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck disable=SC1091 source-path=.
-source "${ALLSKY_HOME}/variables.sh"			|| exit  "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"			|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit "${EXIT_ERROR_STOP}"
 #shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"				|| exit  "${EXIT_ERROR_STOP}"
+source "${ALLSKY_CONFIG}/config.sh"				|| exit "${EXIT_ERROR_STOP}"
 #shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh"		|| exit  "${EXIT_ERROR_STOP}"
+source "${ALLSKY_CONFIG}/ftp-settings.sh"		|| exit "${EXIT_ERROR_STOP}"
 
 if [[ $# -eq 1 ]]; then
 	if [[ ${1} == "--help" ]]; then
@@ -21,7 +21,7 @@ if [[ $# -eq 1 ]]; then
 		DATE="${1}"
 	fi
 else
-	DATE=$(date +'%Y%m%d')
+	DATE=$( date +'%Y%m%d' )
 fi
 
 # If we weren't saving daytime images the directory won't exist.

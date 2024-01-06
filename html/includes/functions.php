@@ -107,7 +107,7 @@ function initialize_variables() {
 
 
 	////////////////// Determine delay between refreshes of the image.
-	$consistentDelays = getVariableOrDefault($settings_array 'consistentdelays', true);
+	$consistentDelays = getVariableOrDefault($settings_array, 'consistentdelays', true);
 	$daydelay = $settings_array["daydelay"];
 	$daymaxautoexposure = $settings_array["daymaxautoexposure"];
 	$dayexposure = $settings_array["dayexposure"];

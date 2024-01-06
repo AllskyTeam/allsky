@@ -2,7 +2,7 @@
 {
 "name" : "daynighttab========================================",
 "label" : "Day/Night Settings",
-"optional" : 1, "display":0,
+"optional" : true, "display":false,
 "type" : "header-tab"
 },
 {
@@ -14,22 +14,22 @@
 "name" : "daynightcolumns",
 "label" : "Setting, Day Value, Description",
 "candrop" : "Description",
-"optional" : 1, "display":0,
+"optional" : true, "display":false,
 "type" : "header-column"
 },
 {
 "name" : "takedaytimeimages",
-"default" : 1,
+"default" : true,
 "description" : "Enable to <strong>take</strong> daytime images.",
 "label" : "Daytime Capture",
 "type" : "boolean",
 "usage" : "capture",
-"checkchanges" : 1,
+"checkchanges" : true,
 "action" : "reload"
 },
 {
 "name" : "savedaytimeimages",
-"default" : 0,
+"default" : false,
 "description" : "Enable to <strong>save</strong> daytime images.",
 "label" : "Daytime Save",
 "type" : "boolean",
@@ -38,7 +38,7 @@
 },
 {
 "name" : "dayautoexposure",
-"default" : 1,
+"default" : true,
 "description" : "Enable to use daytime auto-exposure.",
 "label" : "Auto-Exposure",
 "type" : "boolean",
@@ -119,7 +119,7 @@
 },
 {
 "name" : "dayautogain",
-"default" : 0,
+"default" : false,
 "description" : "Enable to use dayime Auto-Gain.",
 "label" : "Auto-Gain",
 "type" : "boolean",
@@ -166,7 +166,7 @@
 },
 {
 "name" : "dayawb",
-"default" : 0,
+"default" : false,
 "description" : "Sets Auto White Balance (camera adjusts color).",
 "label" : "Auto White Balance",
 "type" : "boolean",
@@ -215,7 +215,7 @@
 },
 {
 "name" : "dayenablecooler",
-"default" : 0,
+"default" : false,
 "description" : "Enable to use cooling (on cooled cameras only).",
 "label" : "Cooling",
 "type" : "boolean",
@@ -244,8 +244,8 @@
 "label" : "Tuning File",
 "type" : "widetext",
 "usage" : "capture",
-"checkchanges" : 1,
-"optional" : 1,
+"checkchanges" : true,
+"optional" : true,
 "display" : "_display",
 "booldependson" : "takedaytimeimages",
 "action" : "restart"
@@ -258,12 +258,12 @@
 },
 {
 "name" : "takenighttimeimages",
-"default" : 1,
+"default" : true,
 "description" : "Enable to <strong>take</strong> nighttime images.",
 "label" : "Nighttime Capture",
 "type" : "boolean",
 "usage" : "capture",
-"checkchanges" : 1,
+"checkchanges" : true,
 "action" : "reload"
 },
 {
@@ -277,7 +277,7 @@
 },
 {
 "name" : "nightautoexposure",
-"default" : 1,
+"default" : true,
 "description" : "Enable to use nighttime auto-exposure.",
 "label" : "Auto-Exposure",
 "type" : "boolean",
@@ -354,7 +354,7 @@
 },
 {
 "name" : "nightautogain",
-"default" : 0,
+"default" : false,
 "description" : "Enable to use nighttime Auto-Gain.",
 "label" : "Auto-Gain",
 "type" : "boolean",
@@ -398,7 +398,7 @@
 },
 {
 "name" : "nightawb",
-"default" : 0,
+"default" : false,
 "description" : "Enable to use Auto White Balance (camera adjusts color).<br>NOTE: enabling this can significantly increase the time needed to capture a nighttime image.",
 "label" : "Auto White Balance",
 "type" : "boolean",
@@ -445,7 +445,7 @@
 },
 {
 "name" : "nightenablecooler",
-"default" : 0,
+"default" : false,
 "description" : "Enable to use cooling (on cooled cameras only).",
 "label" : "Cooling",
 "type" : "boolean",
@@ -474,15 +474,15 @@
 "type" : "widetext",
 "usage" : "capture",
 "display" : "_display",
-"checkchanges" : 1,
-"optional" : 1,
+"checkchanges" : true,
+"optional" : true,
 "action" : "restart"
 },
 
 {
 "name" : "bothtab========================================",
 "label" : "24 Hours",
-"optional" : 1, "display":0,
+"optional" : true, "display":false,
 "type" : "header-tab"
 },
 {
@@ -497,8 +497,8 @@
 "label" : "Configuration File",
 "type" : "widetext",
 "usage" : "capture",
-"checkchanges" : 1,
-"optional" : 1,
+"checkchanges" : true,
+"optional" : true,
 "action" : "reload"
 },
 {
@@ -509,7 +509,7 @@
 "type" : "widetext",
 "usage" : "capture",
 "display" : "_display",
-"optional" : 1,
+"optional" : true,
 "action" : "reload"
 },
 {
@@ -630,7 +630,7 @@
 "options" : [
 	"type_values"
 ],
-"checkchanges" : 1,
+"checkchanges" : true,
 "action" : "reload"
 },
 {
@@ -646,7 +646,7 @@
 },
 {
 "name" : "autousb",
-"default" : 1,
+"default" : true,
 "description" : "Automatically set the USB bandwidth.",
 "label" : "Auto USB Bandwidth",
 "type" : "boolean",
@@ -674,7 +674,7 @@
 "label" : "Filename",
 "type" : "text",
 "usage" : "capture",
-"checkchanges" : 1,
+"checkchanges" : true,
 "action" : "reload"
 },
 {
@@ -716,7 +716,7 @@
 },
 {
 "name" : "notificationimages",
-"default" : 1,
+"default" : true,
 "description" : "Enable to display notification images, e.g., 'Camera is off during the day'.<br>While these messages appear in the WebUI and Allsky Website, they are not saved so don't appear in timelapse, startrails, or keograms.",
 "label" : "Notification Images",
 "type" : "boolean",
@@ -725,7 +725,7 @@
 },
 {
 "name" : "consistentdelays",
-"default" : 1,
+"default" : true,
 "description" : "Enable to have the delays between images be a consistent length.<br>The time between the start of exposures will always be (max exposure + delay).",
 "label" : "Consistent Delays Between Images",
 "type" : "boolean",
@@ -762,7 +762,7 @@
 "label" : "Latitude",
 "type" : "text",
 "usage" : "capture",
-"checkchanges" : 1,
+"checkchanges" : true,
 "action" : "reload"
 },
 {
@@ -772,7 +772,7 @@
 "label" : "Longitude",
 "type" : "text",
 "usage" : "capture",
-"checkchanges" : 1,
+"checkchanges" : true,
 "action" : "reload"
 },
 {
@@ -782,12 +782,12 @@
 "label" : "Angle",
 "type" : "float",
 "usage" : "capture",
-"checkchanges" : 1,
+"checkchanges" : true,
 "action" : "reload"
 },
 {
 "name" : "takedarkframes",
-"default" : 0,
+"default" : false,
 "description" : "Enable to capture dark frames, which are used to decrease noise.<br>Continues taking dark frames until Allsky is restarted.",
 "label" : "Take Dark Frames",
 "type" : "boolean",
@@ -796,7 +796,7 @@
 },
 {
 "name" : "usedarkframes",
-"default" : 0,
+"default" : false,
 "description" : "Enables dark frame subtraction if you have dark frames.",
 "label" : "Use Dark Frames",
 "type" : "boolean"
@@ -812,7 +812,7 @@
 },
 {
 "name" : "experimentalexposure",
-"default" : 0,
+"default" : true,
 "description" : "Enable to use an improved auto-exposure algorithm at night.  Initial testing indictes the images taken during the day-to-night transition as well as at night have better exposures.<br>If you use this, please add a Discussion item describing your results - good or bad.  We need the feedback.",
 "label" : "New Exposure Algorithm",
 "type" : "boolean",
@@ -849,7 +849,7 @@
 },
 {
 "name" : "newexposure",
-"default" : 1,
+"default" : true,
 "description" : "Enable to use the Allsky version 0.8 exposure method which decreases sensor temperature.  If you see ASI_ERROR_TIMEOUTs in the log file, deactivate this.",
 "label" : "Version 0.8 Exposure",
 "type" : "boolean",
@@ -859,7 +859,7 @@
 },
 {
 "name" : "uselogin",
-"default" : 1,
+"default" : true,
 "description" : "Determines if you need to login to the WebUI or not.<br><b>If your Pi is accessible on the Internet, do NOT turn this off!!</b>.",
 "label" : "Require WebUI Login",
 "type" : "boolean"
@@ -868,13 +868,13 @@
 {
 "name" : "postprocessingtab========================================",
 "label" : "Post-processing",
-"optional" : 1, "display":0,
+"optional" : true, "display":false,
 "type" : "header-tab"
 },
 {
 "name" : "postprocessingheader",
 "label" : "Post-processing",
-"optional" : 1, "display":0,
+"optional" : true, "display":false,
 "type" : "header"
 },
 {
@@ -890,15 +890,15 @@
 "type" : "select",
 "usage" : "capture",
 "options" : [
-	{"value" : 0, "label" : "legacy"},
+	{"value" : 1, "label" : "legacy"},
 	{"value" : 1, "label" : "module"}
 ],
-"checkchanges" : 1,
+"checkchanges" : true,
 "action" : "reload"
 },
 {
 "name" : "showtime",
-"default" : 1,
+"default" : true,
 "description" : "Activate to display the time an image was taken on the overlay.",
 "label" : "Show Time",
 "type" : "boolean",
@@ -907,7 +907,7 @@
 },
 {
 "name" : "showtemp",
-"default" : 1,
+"default" : true,
 "description" : "Enable to display the camera sensor temperature on the overlay.",
 "label" : "Show Temperature",
 "type" : "boolean",
@@ -916,7 +916,7 @@
 },
 {
 "name" : "showexposure",
-"default" : 1,
+"default" : true,
 "description" : "Enable to display the exposure length on the overlay.<br>If <span class='WebUISetting'>Auto-Exposure</span> is set, '(auto)' will appear after the exposure time.",
 "label" : "Show Exposure",
 "type" : "boolean",
@@ -925,7 +925,7 @@
 },
 {
 "name" : "showgain",
-"default" : 0,
+"default" : false,
 "description" : "Enable to display the camera gain on the overlay.<br>If <span class='WebUISetting'>Auto-Gain</span> is set, '(auto)' will appear after the gain value.",
 "label" : "Show Gain",
 "type" : "boolean",
@@ -935,7 +935,7 @@
 },
 {
 "name" : "showbrightness",
-"default" : 0,
+"default" : false,
 "description" : "Enable to display the <span class='WebUISetting'>Brightness</span> number you set on the overlay.",
 "label" : "Show Brightness",
 "type" : "boolean",
@@ -944,7 +944,7 @@
 },
 {
 "name" : "showusb",
-"default" : 0,
+"default" : false,
 "description" : "Enable to display the USB Bandwidth number on the overlay.<br>This is primarily for troubleshooting.",
 "label" : "Show USB",
 "type" : "boolean",
@@ -955,7 +955,7 @@
 },
 {
 "name" : "showmean",
-"default" : 0,
+"default" : false,
 "description" : "Enable to display the calculated mean image brightness on the overlay.",
 "label" : "Show Mean Brightness",
 "type" : "boolean",
@@ -965,7 +965,7 @@
 },
 {
 "name" : "showhistogrambox",
-"default" : 0,
+"default" : false,
 "description" : "Enable to show an outline of the histogram box, useful for determining what the 'Histogram Box' numbers should be.",
 "label" : "Show Histogram Box",
 "type" : "boolean",
@@ -976,7 +976,7 @@
 },
 {
 "name" : "showfocus",
-"default" : 0,
+"default" : false,
 "description" : "Enable to display a focus metric to help you focus the camera.<br>This is only usefull while focusing.",
 "label" : "Show Focus Metric",
 "type" : "boolean",
@@ -991,7 +991,7 @@
 "label" : "Text Overlay",
 "type" : "widetext",
 "usage" : "capture",
-"optional" : 1,
+"optional" : true,
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
@@ -1002,8 +1002,8 @@
 "label" : "Extra Text File",
 "type" : "widetext",
 "usage" : "capture",
-"checkchanges" : 1,
-"optional" : 1,
+"checkchanges" : true,
+"optional" : true,
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
@@ -1138,7 +1138,7 @@
 },
 {
 "name" : "outlinefont",
-"default" : 0,
+"default" : false,
 "description" : "Adds a black outline to the text overlay to improve contrast.",
 "label" : "Use Outline Font",
 "type" : "boolean",
@@ -1154,16 +1154,16 @@
 },
 {
 "name" : "displaysettings",
-"default" : 0,
+"default" : false,
 "description" : "Enable to add a link on the Allsky Website to display the settings on this page.",
 "label" : "Display Settings",
 "type" : "boolean",
-"checkchanges" : 1,
+"checkchanges" : true,
 "booldependson" : "uselocalwebsite OR useremotewebsite OR useremoteserver"
 },
 {
 "name" : "showonmap",
-"default" : 0,
+"default" : false,
 "description" : "Enable to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map' target='_blank' title='Opens in new tab/window'><span class='WebUISetting'>Allsky Map <i class='fa fa-external-link-alt fa-fw'></i></span></a>.",
 "label" : "Show on Map",
 "type" : "boolean",
@@ -1175,7 +1175,7 @@
 "description" : "The URL of your Allsky Website, for example: https://my.allskyweb.com/allsky.<br>If your camera is not accessible on the Internet, leave this field empty.<br>Must begin with <b>http</b> or <b>https</b>.",
 "label" : "Website URL",
 "type" : "widetext",
-"checkchanges" : 1,
+"checkchanges" : true,
 "optional" : 1
 },
 {
@@ -1184,7 +1184,7 @@
 "description" : "The URL of the image on your Allsky Website, for example: https://mywebsite.com/allsky/image.jpg.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
 "label" : "Image URL",
 "type" : "widetext",
-"checkchanges" : 1,
+"checkchanges" : true,
 "optional" : 1
 },
 {
@@ -1193,8 +1193,8 @@
 "description" : "The location of your camera, for example: Whitehorse, YT.<br>This setting and the remaining ones also appear on the Allsky Website, if installed.",
 "label" : "Location",
 "type" : "widetext",
-"checkchanges" : 1,
-"optional" : 1,
+"checkchanges" : true,
+"optional" : true,
 "booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 {
@@ -1203,8 +1203,8 @@
 "description" : "The owner of the camera. It can be your name, an association, or observatory, etc.",
 "label" : "Owner",
 "type" : "text",
-"checkchanges" : 1,
-"optional" : 1,
+"checkchanges" : true,
+"optional" : true,
 "booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 {
@@ -1213,8 +1213,8 @@
 "description" : "The type and model of your camera, for example: <span class='WebUIValue'>ZWO 224MC</span> or <span class='WebUIValue'>RPi HQ</span>.  Set automatically.",
 "label" : "Camera",
 "type" : "widetext",
-"checkchanges" : 1,
-"optional" : 1,
+"checkchanges" : true,
+"optional" : true,
 "booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 {
@@ -1223,8 +1223,8 @@
 "description" : "The lens you're using on your camera, for example: <span class='WebUIValue'>Arecont 1.55</span>.",
 "label" : "Lens",
 "type" : "text",
-"checkchanges" : 1,
-"optional" : 1,
+"checkchanges" : true,
+"optional" : true,
 "booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 {
@@ -1233,8 +1233,8 @@
 "description" : "The computer running your allsky camera, for example: <span class='WebUIValue'>Raspberry Pi 3, 4 GB</span>.",
 "label" : "Computer",
 "type" : "widetext",
-"checkchanges" : 1,
-"optional" : 1,
+"checkchanges" : true,
+"optional" : true,
 "booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 {
@@ -1253,7 +1253,7 @@
 	{"value" : "ZWO", "label" : "ZWO"},
 	{"value" : "Refresh", "label" : "Refresh"}
 ],
-"checkchanges" : 1,
+"checkchanges" : true,
 "action" : "restart"
 },
 {
@@ -1274,17 +1274,17 @@
 "label" : "Camera Number",
 "type" : "integer",
 "usage" : "capture",
-"checkchanges" : 1,
+"checkchanges" : true,
 "xxxdisplay" : "_display",
-"display" : 0,
-"optional" : 1,
+"display" : false,
+"optional" : true,
 "action" : "restart"
 },
 
 {
 "name" : "webuitab========================================",
 "label" : "WebUI",
-"optional" : 1, "display":0,
+"optional" : true, "display":false,
 "type" : "header-tab"
 },
 {

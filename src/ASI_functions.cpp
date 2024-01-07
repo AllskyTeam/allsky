@@ -986,7 +986,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "DayMeanThreshold");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "daymeanthreshold");
 	fprintf(f, "\t\t\t\"MinValue\" : 0.01,\n");
-	fprintf(f, "\t\t\t\"MaxValue\" : \"1.0\",\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n");
 	fprintf(f, "\t\t\t\"DefaultValue\" : %.3f\n", CG.myModeMeanSetting.dayMean_threshold);
 	fprintf(f, "\t\t},\n");
 
@@ -1002,7 +1002,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "NightMeanThreshold");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "nightmeanthreshold");
 	fprintf(f, "\t\t\t\"MinValue\" : 0.01,\n");
-	fprintf(f, "\t\t\t\"MaxValue\" : \"1.0\",\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n");
 	fprintf(f, "\t\t\t\"DefaultValue\" : %.3f\n", CG.myModeMeanSetting.nightMean_threshold);
 	fprintf(f, "\t\t},\n");
 

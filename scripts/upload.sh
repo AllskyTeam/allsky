@@ -53,29 +53,25 @@ while [[ $# -gt 0 ]]; do
 	case "${ARG}" in
 		--help)
 			HELP="true"
-			shift
 			;;
 		--wait)
 			WAIT="true"
-			shift
 			;;
 		--silent)
 			SILENT="true"
-			shift
 			;;
 		--debug)
 			DEBUG="true"
-			shift
 			;;
 		-*)
 			echo -e "${RED}Unknown argument '${ARG}'.${NC}" >&2
-			shift
 			RET=1
 			;;
 		*)
 			break		# done with arguments
 			;;
 	esac
+	shift
 done
 [[ $# -lt 3 || ${RET} -ne 0 ]] && usage_and_exit 1
 [[ ${HELP} == "true" ]] && usage_and_exit 0

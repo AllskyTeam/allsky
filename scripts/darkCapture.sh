@@ -35,7 +35,7 @@ mv "${CURRENT_IMAGE}" "${MOVE_TO_FILE}" || exit 3
 # Some people may want to see the dark frame even if notification images
 # are being used, but no one's askef for that feature so don't worry about it.
 
-if [[ $( settings ".notificationimages" ) -eq 0 ]]; then
+if [[ $( settings ".notificationimages" ) == "false" ]]; then
 	# We're copying back the file we just moved, but the assumption is few people
 	# will want to see the dark frames so the performance hit is 
 	cp "${MOVE_TO_FILE}" "${ALLSKY_TMP}/${FILENAME}.${EXTENSION}"

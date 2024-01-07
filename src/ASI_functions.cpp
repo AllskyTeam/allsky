@@ -1024,7 +1024,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		fprintf(f, "\t\t{\n");	// TODO This will go away when the legacy overlay is removed
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showTemp");
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showtemp");
-		fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showTemp ? "true" : "false");
+		fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.overlay.showTemp ? "true" : "false");
 		fprintf(f, "\t\t},\n");
 	}
 	if (CG.supportsAggression) {
@@ -1055,13 +1055,13 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showUSB");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showusb");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showUSB ? "true" : "false");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.overlay.showUSB ? "true" : "false");
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "experimentalExposure");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "experimentalexposure");
-	fprintf(f, "\t\t\t\"DefaultValue\" : \"%d\"\n", CG.HB.useExperimentalExposure ? "true" : "false");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.HB.useExperimentalExposure ? "true" : "false");
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
@@ -1073,13 +1073,13 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showhistogrambox");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showhistogrambox");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showHistogramBox ? "true" : "false");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.overlay.showHistogramBox ? "true" : "false");
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "newexposure");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "newexposure");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.videoOffBetweenImages ? "true" : "false");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.videoOffBetweenImages ? "true" : "false");
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");

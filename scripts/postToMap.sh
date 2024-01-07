@@ -36,6 +36,8 @@ function usage_and_exit()
 
 function get_domain()
 {
+	local URL D
+
 	# Get the domain name or IP address from a URL
 	# Examples:
 	#	http://myallsky.com						# Return "myallsky.com"
@@ -48,15 +50,16 @@ function get_domain()
 	echo "${D}"
 }
 
-TIMEOUT=30		# seconds to wait when trying to reach a URL
 
 function check_URL()
 {
-	URL="${1}"
-	URL_TYPE="${2}"
-	FIELD_NAME="${3}"
+	local URL="${1}"
+	local URL_TYPE="${2}"
+	local FIELD_NAME="${3}"
 
-	D="$( get_domain "${URL}" )"
+	# ${E} is a global variable we may set.
+	local TIMEOUT=30		# seconds to wait when trying to reach a URL
+	local D="$( get_domain "${URL}" )"
 	if [[ "${D:0:7}"  == "192.168"		||
 		  "${D:0:4}"  == "10.0"			||
 		  "${D:0:6}"  == "172.16"		||
@@ -72,8 +75,8 @@ function check_URL()
 
 	else
 		# Make sure it's a valid URL
-		CONTENT="$( curl --head --silent --show-error --connect-timeout ${TIMEOUT} "${URL}" 2>&1 )"
-		RET=$?
+		local CONTENT="$( curl --head --silent --show-error --connect-timeout ${TIMEOUT} "${URL}" 2>&1 )"
+		local RET=$?
 		if [[ ${RET} -eq 6 ]]; then
 			E="ERROR: ${FIELD_NAME} '${URL}' not found - check spelling and network connectivity.${BR}${E}"
 		elif [[ ${RET} -eq 28 ]]; then
@@ -138,7 +141,7 @@ done
 
 
 # If not on a tty, then we're either called from the endOfNight.sh script (plain text), or the WebUI (html).
-if [[ ${ON_TTY} -eq 0 && ${ENDOFNIGHT} == "false" ]]; then
+if [[ ${ON_TTY} == "false" && ${ENDOFNIGHT} == "false" ]]; then
 	BR="<br>"		# Line break
 else
 	BR="\n"
@@ -273,25 +276,25 @@ else
 		echo -e "${WARNING_MSG_START}${W%%"${BR}"}${NC}"
 		# Want each message to have its own addMessage.sh entry.
 		if [[ ${ENDOFNIGHT} == "true" ]]; then
-			echo "${W}" | while read -r w
+			echo "${W}" | while read -r MSG
 			do
-				"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${ME}: ${w}"
+				"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${ME}: ${MSG}"
 			done
 		fi
 	fi
 	if [[ ${OK} == "false" ]]; then
 		echo -e "${ERROR_MSG_START}${E%%"${BR}"}${NC}"
 		if [[ ${ENDOFNIGHT} == "true" ]]; then
-			echo "${E}" | while read -r e
+			echo "${E}" | while read -r MSG
 			do
-				"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${e}"
+				"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${MSG}"
 			done
 		fi
 		exit 2
 	fi
 
 	if [[ -f ${ALLSKY_HOME}/version ]]; then
-		ALLSKY_VERSION="$(< "${ALLSKY_HOME}/version")"
+		ALLSKY_VERSION="$( < "${ALLSKY_HOME}/version" )"
 	else
 		ALLSKY_VERSION="unknown"		# This really should be an error
 	fi
@@ -330,7 +333,7 @@ RETURN_CODE=0
 if [[ ${UPLOAD} == "true" ]]; then
 	if [[ ${DELETE} == "true" ]]; then
 		[[ ${WHISPER} == "false" ]] && echo "${ME}: Deleting map data."
-	elif [[ ${ON_TTY} -eq 1 || ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+	elif [[ ${ON_TTY} == "true" ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		[[ ${WHISPER} == "false" ]] && echo "${ME}: Uploading map data."
 	fi
 	# shellcheck disable=SC2089
@@ -395,8 +398,8 @@ if [[ ${UPLOAD} == "true" ]]; then
 		RETURN_CODE=2
 	fi
 
-elif [[ ( ${ON_TTY} -eq 1 || ${ALLSKY_DEBUG_LEVEL} -ge 4) && ${ENDOFNIGHT} == "false"  ]]; then
+elif [[ ( ${ON_TTY} == "true" ${ALLSKY_DEBUG_LEVEL} -ge 4) && ${ENDOFNIGHT} == "false"  ]]; then
 	echo "${ME}: Week day doesn't match Machine ID ending - don't upload."
 fi
 
-exit ${RETURN_CODE}
+exit "${RETURN_CODE}"

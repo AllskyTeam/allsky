@@ -699,10 +699,10 @@ function getOptionsFile() {
 function getVariableOrDefault($a, $v, $d) {
 	if (isset($a[$v])) {
 		$value = $a[$v];
-		if (gettype($value) === "boolean" && $value == "") return 0;
+		if (gettype($value) === "boolean" && $value == "") return false;
 		return $value;
 	} else if (gettype($d) === "boolean" && $d == "") {
-		return 0;
+		return false;
 	} else if (gettype($d) === "null") {
 		return null;
 	}

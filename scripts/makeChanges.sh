@@ -81,7 +81,7 @@ if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
 	[[ $(($# % 4)) -ne 0 ]] && usage_and_exit 2
 fi
 
-if [[ ${ON_TTY} -eq 0 ]]; then		# called from WebUI.
+if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
 	ERROR_PREFIX=""
 else
 	ERROR_PREFIX="${ME}: "
@@ -110,7 +110,7 @@ SHOW_POSTDATA_MESSAGE="true"
 TWILIGHT_DATA_CHANGED="false"
 CAMERA_TYPE_CHANGED="false"
 GOT_WARNING="false"
-SHOW_ON_MAP=""
+SHOW_ON_MAP="false"
 
 # Several of the fields are in the Allsky Website configuration file,
 # so check if the IS a file before trying to update it.
@@ -164,7 +164,7 @@ do
 	if [[ ${DEBUG} == "true" ]]; then
 		MSG="${KEY}: Old=[${OLD_VALUE}], New=[${NEW_VALUE}]"
 		echo -e "${wDEBUG}${ME}: ${MSG}${wNC}"
-		if [[ ${ON_TTY} -eq 0 ]]; then		# called from WebUI.
+		if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
 			echo -e "<script>console.log('${MSG}');</script>"
 		fi
 	fi
@@ -175,15 +175,15 @@ do
 	K="${KEY,,}"		# convert to lowercase
 	case "${K}" in
 
-		cameranumber | cameratype)
+		"cameranumber" | "cameratype")
 			if [[ ${K} == "cameranumber" ]]; then
 				NEW_CAMERA_NUMBER="${NEW_VALUE}"
 				CAMERA_NUMBER=" -cameranumber ${NEW_CAMERA_NUMBER}"
 				# Set NEW_VALUE to the current Camera Type
-				NEW_VALUE="$( settings .cameratype )"
+				NEW_VALUE="$( settings ".cameratype" )"
 
 				MSG="Re-creating files for cameratype ${NEW_VALUE}, cameranumber ${NEW_CAMERA_NUMBER}"
-				if [[ ${ON_TTY} -eq 0 ]]; then		# called from WebUI.
+				if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
 					echo -e "<script>console.log('${MSG}');</script>"
 				elif [[ ${DEBUG} == "true" ]]; then
 					echo -e "${wDEBUG}${MSG}${wNC}"
@@ -254,13 +254,13 @@ do
 						fi
 						echo -e "${wNC}"
 					fi
-					exit ${RET}		# the actual exit code is important
+					exit "${RET}"		# the actual exit code is important
 				fi
 				[[ -n ${R} ]] && echo -e "${R}"
 
 				# Create a link to a file that contains the camera type and model in the name.
 				CAMERA_TYPE="${NEW_VALUE}"		# already know it
-				CAMERA_MODEL="$( settings .cameraModel "${CC_FILE}" )"
+				CAMERA_MODEL="$( settings ".cameraModel" "${CC_FILE}" )"
 				if [[ -z ${CAMERA_MODEL} ]]; then
 					echo -e "${wERROR}ERROR: 'cameraModel' not found in ${CC_FILE}.${wNC}"
 					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
@@ -335,12 +335,12 @@ do
 					"${wNC}"
 			fi
 			# shellcheck disable=SC2086
-			R="$("${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
+			R="$( "${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
 				${FORCE} ${DEBUG_ARG} \
 				--cc_file "${CC_FILE}" \
 				--options_file "${OPTIONS_FILE}" \
 				--settings_file "${SETTINGS_FILE}" \
-				2>&1)"
+				2>&1 )"
 			RET=$?
 
 			if [[ ${RET} -ne 0 ]]; then
@@ -380,12 +380,12 @@ do
 			NEEDS_RESTART="true"
 			;;
 
-		type)
+		"type")
 			check_filename_type "$( settings '.filename' )" "${NEW_VALUE}" || OK="false"
 			NEEDS_RESTART="true"
 			;;
 
-		filename)
+		"filename")
 			if check_filename_type "${NEW_VALUE}" "$( settings '.type' )" ; then
 				check_website && WEBSITE_CONFIG+=("config.imageName" "${LABEL}" "${NEW_VALUE}")
 				NEEDS_RESTART="true"
@@ -394,7 +394,7 @@ do
 			fi
 			;;
 
-		extratext)
+		"extratext")
 			# It's possible the user will create/populate the file while Allsky is running,
 			# so it's not an error if the file doesn't exist or is empty.
 			if [[ -n ${NEW_VALUE} ]]; then
@@ -407,7 +407,7 @@ do
 			NEEDS_RESTART="true"
 			;;
 
-		latitude | longitude)
+		"latitude" | "longitude")
 			# Allow either +/- decimal numbers, OR numbers with N, S, E, W, but not both.
 			if NEW_VALUE="$( convertLatLong "${NEW_VALUE}" "${KEY}" )" ; then
 				check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
@@ -418,17 +418,17 @@ do
 			TWILIGHT_DATA_CHANGED="true"
 			;;
 
-		angle)
+		"angle")
 			NEEDS_RESTART="true"
 			TWILIGHT_DATA_CHANGED="true"
 			;;
 
-		takedaytimeimages)
+		"takedaytimeimages")
 			NEEDS_RESTART="true"
 			TWILIGHT_DATA_CHANGED="true"
 			;;
 
-		config)
+		"config")
 			if [[ ${NEW_VALUE} == "" ]]; then
 				NEW_VALUE="[none]"
 			elif [[ ${NEW_VALUE} != "[none]" ]]; then
@@ -440,19 +440,15 @@ do
 			fi
 			;;
 
-		daytuningfile | nighttuningfile)
+		"daytuningfile" | "nighttuningfile")
 			if [[ -n ${NEW_VALUE} && ! -f ${NEW_VALUE} ]]; then
 				echo -e "${wWARNING}WARNING: Tuning File '${NEW_VALUE}' does not exist; please change it.${wNC}"
 			fi
 			NEEDS_RESTART="true"
 			;;
 
-		displaysettings)
-			if [[ ${NEW_VALUE} -eq 0 ]]; then
-				NEW_VALUE="false"
-			else
-				NEW_VALUE="true"
-			fi
+		"displaysettings")
+			[[ ${NEW_VALUE} != "false" ]] && NEW_VALUE="true"
 			if check_website; then
 				# If there are two Websites, this gets the index in the first one.
 				# Let's hope it's the same index in the second one...
@@ -472,22 +468,22 @@ do
 			fi
 			;;
 
-		showonmap)
-			SHOW_ON_MAP="1"
-			[[ ${NEW_VALUE} -eq 0 ]] && POSTTOMAP_ACTION="--delete"
+		"showonmap")
+			SHOW_ON_MAP="true"
+			[[ ${NEW_VALUE} == "false" ]] && POSTTOMAP_ACTION="--delete"
 			RUN_POSTTOMAP="true"
 			;;
 
-		location | owner | camera | lens | computer)
+		"location" | "owner" | "camera" | "lens" | "computer")
 			RUN_POSTTOMAP="true"
 			check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
 			;;
 
-		websiteurl | imageurl)
+		"websiteurl" | "imageurl")
 			RUN_POSTTOMAP="true"
 			;;
 
-		overlaymethod)
+		"overlaymethod")
 			if [[ ${NEW_VALUE} -eq 1 ]]; then		# 1 == "overlay" method
 				echo -en "${wWARNING}"
 				echo -en "NOTE: You must enable the ${wBOLD}Overlay Module${wNBOLD} in the"
@@ -570,8 +566,8 @@ if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 fi
 
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
-	[[ -z ${SHOW_ON_MAP} ]] && SHOW_ON_MAP="$( settings ".showonmap" )"
-	if [[ ${SHOW_ON_MAP} == "1" ]]; then
+	[[ -${SHOW_ON_MAP} == "true" ]] && SHOW_ON_MAP="$( settings ".showonmap" )"
+	if [[ ${SHOW_ON_MAP} == "true" ]]; then
 		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postToMap.sh${NC}"
 		# shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${POSTTOMAP_ACTION}

@@ -333,7 +333,7 @@ RETURN_CODE=0
 if [[ ${UPLOAD} == "true" ]]; then
 	if [[ ${DELETE} == "true" ]]; then
 		[[ ${WHISPER} == "false" ]] && echo "${ME}: Deleting map data."
-	elif [[ ${ON_TTY} == "true" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+	elif [[ ${ON_TTY} == "true" || ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		[[ ${WHISPER} == "false" ]] && echo "${ME}: Uploading map data."
 	fi
 	# shellcheck disable=SC2089
@@ -398,7 +398,7 @@ if [[ ${UPLOAD} == "true" ]]; then
 		RETURN_CODE=2
 	fi
 
-elif [[ ( ${ON_TTY} == "true" && ${ALLSKY_DEBUG_LEVEL} -ge 4) && ${ENDOFNIGHT} == "false"  ]]; then
+elif [[ ( ${ON_TTY} == "true" || ${ALLSKY_DEBUG_LEVEL} -ge 4) && ${ENDOFNIGHT} == "false"  ]]; then
 	echo "${ME}: Week day doesn't match Machine ID ending - don't upload."
 fi
 

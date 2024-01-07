@@ -38,26 +38,15 @@ usage_and_exit()
 # Check arguments
 OK="true"
 HELP="false"
-DEBUG="false"
 NEWER=""
-FORCE_CHECK="true"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG}" in
 		--help)
 			HELP="true"
 			;;
-		--debug)
-			DEBUG="true"
-			;;
 		--newer)
 			NEWER="true"
-			;;
-		--no-check)
-			FORCE_CHECK="false"
-			;;
-		--force-check)
-			FORCE_CHECK="true"
 			;;
 		*)
 			display_msg error "Unknown argument: '${ARG}'."

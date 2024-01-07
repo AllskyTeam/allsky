@@ -159,7 +159,8 @@ else
 			if [[ ${OVERRIDE_DESTINATION_NAME} != "" ]]; then
 				DESTINATION_NAME="${OVERRIDE_DESTINATION_NAME}"
 			fi
-			[[ ${SILENT} == "false" ]] && echo "===== Uploading '${UPLOAD_FILE}'"
+			[[ ${SILENT} == "false" ]] && echo "===== Uploading '${UPLOAD_FILE}' to '${DIRECTORY}'"
+
 			# shellcheck disable=SC2086
 			"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} \
 				"${UPLOAD_FILE}" "${DIRECTORY}" "${DESTINATION_NAME}" \
@@ -196,7 +197,7 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 	KEOGRAM_FILE="keogram-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${OUTPUT_DIR}/keogram/${KEOGRAM_FILE}"
 	if [[ ${TYPE} == "GENERATE" ]]; then
-		if [[ -z "${NICE}" ]]; then
+		if [[ -z ${NICE} ]]; then
 			N=""
 		else
 			N="--nice-level ${NICE}"
@@ -215,7 +216,7 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 	STARTRAILS_FILE="startrails-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${OUTPUT_DIR}/startrails/${STARTRAILS_FILE}"
 	if [[ ${TYPE} == "GENERATE" ]]; then
-		if [[ -z "${NICE}" ]]; then
+		if [[ -z ${NICE} ]]; then
 			N=""
 		else
 			N="--nice ${NICE}"
@@ -250,7 +251,7 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 				RET=1
 			fi
 		else
-			if [[ -z "${NICE}" ]]; then
+			if [[ -z ${NICE} ]]; then
 				N=""
 			else
 				N="nice -n ${NICE}"

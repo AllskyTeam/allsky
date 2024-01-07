@@ -19,16 +19,16 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP
 
 usage_and_exit()
 {
-	RET=${1}
+	local RET=${1}
 	if [[ ${RET} == 0 ]]; then
-		C="${YELLOW}"
+		local C="${YELLOW}"
 	else
-		C="${RED}"
+		local C="${RED}"
 	fi
 	# Don't show the "--newer", "--no-check", or "--force-check" options since users
 	# should never use them.
 	echo
-	echo -e "${C}Usage: ${ME} [--help] [--debug] [--no-check]${NC}"
+	echo -e "${C}Usage: ${ME} [--help]${NC}"
 	echo
 	echo "'--help' displays this message and exits."
 	echo
@@ -38,26 +38,15 @@ usage_and_exit()
 # Check arguments
 OK="true"
 HELP="false"
-DEBUG="false"
 NEWER=""
-FORCE_CHECK="true"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG}" in
 		--help)
 			HELP="true"
 			;;
-		--debug)
-			DEBUG="true"
-			;;
 		--newer)
 			NEWER="true"
-			;;
-		--no-check)
-			FORCE_CHECK="false"
-			;;
-		--force-check)
-			FORCE_CHECK="true"
 			;;
 		*)
 			display_msg error "Unknown argument: '${ARG}'."
@@ -74,35 +63,6 @@ source "${ALLSKY_CONFIG}/config.sh"	 					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck disable=SC1091		# file doesn't exist in GitHub
 source "${ALLSKY_CONFIG}/ftp-settings.sh" 				|| exit "${EXIT_ERROR_STOP}"
 PROTOCOL="${PROTOCOL,,}"	# set to lowercase to make comparing easier
-
-BRANCH="$( get_branch "" )"
-[[ -z ${BRANCH} ]] && BRANCH="${GITHUB_MAIN_BRANCH}"
-[[ ${DEBUG} == "true" ]] && echo "DEBUG: using '${BRANCH}' branch."
-
-# Unless forced to, only do the version check if we're on the main branch,
-# not on development branches, because when we're updating this script we
-# don't want to have the updates overwritten from an older version on GitHub.
-if [[ ${FORCE_CHECK} == "true" || ${BRANCH} == "${GITHUB_MAIN_BRANCH}" ]]; then
-	CURRENT_SCRIPT="${ALLSKY_SCRIPTS}/${ME}"
-	if [[ -n ${NEWER} ]]; then
-		# This is a newer version
-		echo "[${CURRENT_SCRIPT}] being replaced by newer version from GitHub."
-		cp "${BASH_ARGV0}" "${CURRENT_SCRIPT}"
-		chmod 775 "${CURRENT_SCRIPT}"
-
-	else
-		# See if there's a newer version of this script; if so, download it and execute it.
-		FILE_TO_CHECK="$( basename "${ALLSKY_SCRIPTS}" )/${ME}"
-		NEWER_SCRIPT="/tmp/${ME}"
-		checkAndGetNewerFile --branch "${BRANCH}" "${CURRENT_SCRIPT}" "${FILE_TO_CHECK}" "${NEWER_SCRIPT}"
-		RET=$?
-		[[ ${RET} -eq 2 ]] && exit 2
-		if [[ ${RET} -eq 1 ]]; then
-			exec "${NEWER_SCRIPT}" --newer
-			# Does not return
-		fi
-	fi
-fi
 
 NUM_INFOS=0
 NUM_WARNINGS=0
@@ -268,7 +228,7 @@ WEBSITES="$( whatWebsites )"
 #	There is nothing wrong with these, it's just that they typically don't exist.
 
 # Is Allsky set up to take dark frames?  This isn't done often, so if it is, inform the user.
-if [[ ${TAKING_DARKS} -eq 1 ]]; then
+if [[ ${TAKING_DARKS} == "true" ]]; then
 	heading "Information"
 	echo "'Take Dark Frames' is set."
 	echo "Unset when you are done taking dark frames."
@@ -435,7 +395,7 @@ if [[ ${TIMELAPSE_MINI_IMAGES} -gt 0 ]]; then
 	# 	4. the speed of the Pi - this is the biggest unknown
 	function get_exposure() {	# return the time spent on one image, prior to delay
 		local TIME="${1}"
-		if [[ $( settings ".${TIME}autoexposure" ) -eq 1 ]]; then
+		if [[ $( settings ".${TIME}autoexposure" ) == "true" ]]; then
 			settings ".${TIME}maxautoexposure" || echo "Problem getting .${TIME}maxautoexposure." >&2
 		else
 			settings ".${TIME}exposure" || echo "Problem getting .${TIME}exposure." >&2
@@ -506,7 +466,7 @@ fi
 
 ##### Images
 
-if [[ ${TAKE} -eq 0 && ${SAVE} -eq 1 ]]; then
+if [[ ${TAKE} == "false" && ${SAVE} == "true" ]]; then
 	heading "Warnings"
 	echo "'Daytime Capture' is off but 'Daytime Save' is on in the WebUI."
 fi
@@ -647,7 +607,7 @@ if [[ -n ${LONGITUDE} ]]; then
 fi
 
 ##### Check dark frames
-if [[ ${USING_DARKS} -eq 1 ]]; then
+if [[ ${USING_DARKS} == "true" ]]; then
 	if [[ ! -d ${ALLSKY_DARKS} ]]; then
 		heading "Errors"
 		echo "'Use Dark Frames' is set but the '${ALLSKY_DARKS}' directory does not exist."

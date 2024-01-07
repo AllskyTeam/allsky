@@ -36,7 +36,7 @@ if [[ ! -d ${DATE_DIR} ]]; then
 fi
 
 # Decrease priority when running in background.
-if [[ ${ON_TTY} -eq 1 ]]; then
+if [[ ${ON_TTY} == "true" ]]; then
 	NICE=""
 	NICE_ARG=""
 else
@@ -156,7 +156,7 @@ if [[ ${WEB_DAYS_TO_KEEP} -gt 0 ]]; then
 fi
 
 SHOW_ON_MAP=$( settings ".showonmap" )
-if [[ ${SHOW_ON_MAP} -eq 1 ]]; then
+if [[ ${SHOW_ON_MAP} == "true" ]]; then
 	echo -e "${ME}: ===== Posting camera details to allsky map"
 	"${ALLSKY_SCRIPTS}/postToMap.sh" --endofnight
 fi

@@ -5,10 +5,10 @@
 
 ME2="$( basename "${BASH_SOURCE[0]}" )"
 
-# Subtract dark frame if there is one defined in config.sh
+# Subtract dark frame if there is one.
 # This has to come after executing darkCapture.sh which sets ${AS_TEMPERATURE_C}.
 
-if [[ $( settings ".usedarkframes" ) -eq 1 ]]; then
+if [[ $( settings ".usedarkframes" ) == "true" ]]; then
 	# Make sure the input file exists; if not, something major is wrong so exit.
 	if [[ -z ${CURRENT_IMAGE} ]]; then
 		echo "*** ${ME2}: ERROR: 'CURRENT_IMAGE' not set; aborting."
@@ -48,7 +48,6 @@ if [[ $( settings ".usedarkframes" ) -eq 1 ]]; then
 		for file in $( find "${DARKS_DIR}" -maxdepth 1 -iname "*.${EXTENSION}" |
 			sed 's;.*/;;' | sort --general-numeric-sort )
 		do
-			[[ ${ALLSKY_DEBUG_LEVEL} -ge 5 ]] && echo "Looking at ${file}"
 			# Example file name for 21 degree dark: "21.jpg".
 			if [[ -s ${DARKS_DIR}/${file} ]]; then
 				file="$( basename "./${file}" )"	# need "./" in case file has "-"

@@ -30,10 +30,10 @@ function DisplayAllskyConfig(){
 		// If we went ahead and made the changes, we would be making them to the NEW
 		// camera's settings file, but using values from the OLD file.
 		if (CSRFValidate()) {
-			$settings = array();
+			$settings_array = array();
 			$optional_array = array();
 			$changes = "";
-			$somethingChanged = false;
+			$nonCameraChanges = "";
 
 			$refreshingCameraType = false;
 			$newCameraType = "";
@@ -48,7 +48,8 @@ function DisplayAllskyConfig(){
 				$optional_array[$n] = getVariableOrDefault($option, 'optional', false);
 			}
 
-	 		foreach ($_POST as $key => $value){
+			$numSettingsChanges = 0;
+	 		foreach ($_POST as $key => $newValue) {
 				// Anything that's sent "hidden" in a form that isn't a settings needs to go here.
 				if (in_array($key, ["csrf_token", "save_settings", "reset_settings", "restart", "page", "_ts", "XX_END_XX"]))
 					continue;
@@ -60,9 +61,13 @@ function DisplayAllskyConfig(){
 				$isOLD = substr($key, 0, 4) === "OLD_";
 				if ($isOLD) {
 					$key = substr($key, 4);		// everything after "OLD_"
-					$oldValue = str_replace("'", "&#x27", $value);
-					$newValue = getVariableOrDefault($settings, $key, "");
+					$oldValue = str_replace("'", "&#x27", $newValue);
+					$newValue = getVariableOrDefault($settings_array, $key, "");
+
 					if ($oldValue !== $newValue) {
+						$numSettingsChanges++;
+						$nonCameraChangesExist = false;
+
 						if ($key === $cameraTypeName) {
 							if ($newValue === "Refresh") {
 								// Refresh the same Camera Type
@@ -77,7 +82,8 @@ function DisplayAllskyConfig(){
 						} elseif ($key === $cameraNumberName) {
 							$newCameraNumber = $newValue;
 						} else {
-							$somethingChanged = true;	// want to know about OTHER changes
+							// want to know changes other than camera
+							$nonCameraChangesExist = true;
 						}
 
 						$checkchanges = false;
@@ -91,8 +97,17 @@ function DisplayAllskyConfig(){
 								break;
 							}
 						}
-						if ($checkchanges)
+						if ($checkchanges) {		// Changes for makeChanges.sh to check
 							$changes .= "  '$key' '$label' '$oldValue' '$newValue'";
+						}
+
+						if ($nonCameraChangesExist) {
+							if ($nonCameraChanges === "")
+								$nonCameraChanges = "<b>$label</b>";
+							else
+								$nonCameraChanges .= ", <b>$label</b>";
+							$nonCameraChanges .= " (from '$oldValue' to '$newValue')";
+						}
 					}
 
 				} else {
@@ -104,25 +119,29 @@ function DisplayAllskyConfig(){
 							$type = getVariableOrDefault($option, 'type', null);
 							$lab = $option['label'];
 
-							if ($value == "" && ! $optional_array[$key]) {
+							if ($newValue == "" && ! $optional_array[$key]) {
 								$msg = "<$span>$lab</span> is empty";
 								$status->addMessage($msg, 'danger', false);
 								$ok = false;
 
-							} else if ($type !== null) {
+							} else if ($type !== null && $newValue != "") {
 								$msg = "";
-								// $value will be of type string, even if it's actually a number,
+								// $newValue will be of type string, even if it's actually a number,
 								// and only is_numeric() accounts for types of string.
 								if ($type === "integer" || $type == "percent") {
-									if (! is_numeric($value) || ! is_int($value + 0))
+									if (! is_numeric($newValue) || ! is_int($newValue + 0))
 										$msg = "without a fraction";
+									else
+										$newValue += 0;
 								} else if ($type === "float") {
-									if (! is_numeric($value) || ! is_float($value + 0.0))
+									if (! is_numeric($newValue) || ! is_float($newValue + 0.0))
 										$msg = "with, or without, a fraction";
+									else
+										$newValue += 0.0;
 								}
 								if ($msg !== "") {
 									$msg2 = "<$span>$lab</span> must be a number $msg.";
-									$msg2 .= " You entered: <$spanValue>$value</span>";
+									$msg2 .= " You entered: <$spanValue>$newValue</span>";
 									$status->addMessage($msg2, 'danger', false);
 									$ok = false;
 								}
@@ -130,10 +149,11 @@ function DisplayAllskyConfig(){
 						}
 					}
 
-					if ($ok) {
-						$settings[$key] = str_replace("'", "&#x27", $value);
+					if ($ok && $numSettingsChanges > 0) {
+						$n = str_replace("'", "&#x27", $newValue);
+						$settings_array[$key] = $n;
 
-						if ($key === $debugLevelName && $value >= 4) {
+						if ($key === $debugLevelName && $newValue >= 4) {
 							$debugArg = "--debug";
 						}
 					}
@@ -141,25 +161,35 @@ function DisplayAllskyConfig(){
 			}
 
 			$msg = "";
-			if ($ok) {
-				if ($somethingChanged || $lastChanged === "") {
+			if ($ok && $numSettingsChanges > 0) {
+				if ($nonCameraChangesExist || $lastChanged === "") {
 					if ($newCameraType !== "" || $newCameraModel !== "" || $newCameraNumber != "") {
 						$msg = "If you change <b>Camera Type</b>, <b>Camera Model</b>,";
 						$msg .= " or <b>Camera Number</b>  you cannot change anything else.";
+						$msg .= "<br>You also changed: $nonCameraChanges.";
 						$status->addMessage($msg, 'danger', false);
 						$ok = false;
 					} else {
-						// Keep track of the last time the file changed.
-						// If we end up not updating the file this will be ignored.
-						$lastChanged = date('Y-m-d H:i:s');
-						$settings[$lastChangedName] = $lastChanged;
-						$content = json_encode($settings, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
-						// updateFile() only returns error messages.
-						$msg = updateFile($settings_file, $content, "settings", true);
-						if ($msg === "")
-							$msg = "Settings saved";
-						else
-							$ok = false;
+						$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
+						if ($numSettingsChanges > 0) {
+							// Keep track of the last time the file changed.
+							// If we end up not updating the file this will be ignored.
+							$lastChanged = date('Y-m-d H:i:s');
+							$settings_array[$lastChangedName] = $lastChanged;
+							$content = json_encode($settings_array, $mode);
+							// updateFile() only returns error messages.
+if ($debug) {
+	echo "<br>Updating settings_file $settings_file, # changes = $numSettingsChanges";
+	echo "<pre>"; var_dump($content); echo "</pre>";
+}
+							$msg = updateFile($settings_file, $content, "settings", true);
+							if ($msg === "") {
+								$msg = "Settings saved";
+							} else {
+								$status->addMessage("Failed to update settings in '$settings_file': $msg", 'danger');
+								$ok = false;
+							}
+						}
 					}
 				} else {
 					if ($newCameraType !== "") {
@@ -187,7 +217,9 @@ function DisplayAllskyConfig(){
 				$doingRestart = getVariableOrDefault($_POST, 'restart', false);
 				if ($doingRestart === "on") $doingRestart = true;
 
-				if ($changes !== "") {
+				if ($numSettingsChanges == 0) {
+					$msg = "No settings changed";
+				} else if ($changes !== "") {
 					// This must run with different permissions so makeChanges.sh can
 					// write to the allsky directory.
 					$moreArgs = "";
@@ -226,13 +258,13 @@ function DisplayAllskyConfig(){
 
 	if (isset($_POST['reset_settings'])) {
 		if (CSRFValidate()) {
-			$settings = array();
+			$settings_array = array();
 			foreach ($options_array as $option){
 				$key = $option['name'];
 				$value = getVariableOrDefault($option, 'default', null);
-				if ($value !== null) $settings[$key] = $value;
+				if ($value !== null) $settings_array[$key] = $value;
 			}
-			$content = json_encode($settings, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK);
+			$content = json_encode($settings_array, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK);
 			$msg = updateFile($settings_file, $content, "settings", true);
 			if ($msg === "")
 				$status->addMessage("Settings reset to default", 'info');
@@ -304,28 +336,34 @@ if ($formReadonly != "readonly") { ?>
 		$numMissing = 0;
 		$numMissingHasDefault = 0;
 		$missingSettingsHasDefault = "";
+		$missingSettings = "";
 		echo "<table border='0'>";
 			foreach($options_array as $option) {
 				$name = $option['name'];
 
 				$type = getVariableOrDefault($option, 'type', "");	// should be a type
-				if ($type == "header") {
+				$isHeader = substr($type, 0, 6) === "header";
+				if ($isHeader) {
 					$value = "";
 					$OLDvalue = "";
+					$default = "";
 				} else {
 					$default = getVariableOrDefault($option, 'default', "");
-					$default = str_replace("'", "&#x27;", $default);
+					if ($default !== "" && $type != "boolean" && $type != "integer" && $type != "float")
+						$default = str_replace("'", "&#x27;", $default);
 
 					// Allow single quotes in values (for string values).
 					// &apos; isn't supported by all browsers so use &#x27.
 					$value = getVariableOrDefault($settings_array, $name, $default);
-					$value = str_replace("'", "&#x27;", $value);
+					if ($default !== "" && $type != "boolean" && $type != "integer" && $type != "float")
+						$value = str_replace("'", "&#x27;", $value);
+
 					$OLDvalue = $value;
 				}
 
 				// Should this setting be displayed?
 				$display = getVariableOrDefault($option, 'display', true);
-				if (! $display && $type != "header") {
+				if (! $display && ! $isHeader) {
 					if ($formReadonly != "readonly") {
 						// Don't display it, but if it has a value, pass it on.
 						echo "\n\t<!-- NOT DISPLAYED -->";
@@ -338,7 +376,7 @@ if ($formReadonly != "readonly") { ?>
 				$maximum = getVariableOrDefault($option, 'maximum', "");
 				$label = getVariableOrDefault($option, 'label', "");
 
-				if ($type != "header") {
+				if (! $isHeader) {
 					$optional = getVariableOrDefault($option, 'optional', false);
 					if ($value === "" && ! $optional) {
 						if ($default === "") {
@@ -374,12 +412,12 @@ if ($formReadonly != "readonly") { ?>
 				// a wide input box on the top row spanning the 2nd and 3rd columns,
 				// and the description on the bottom row in the 3rd column.
 				// This way, all descriptions are in the 3rd column.
-				if ($type !== "widetext" && $type != "header") $class = "rowSeparator";
+				if ($type !== "widetext" && ! $isHeader) $class = "rowSeparator";
 				else $class="";
 				echo "\n";	// to make it easier to read web source when debugging
 
 				// Put some space before and after headers.  This next line is the "before":
-				if ($type == "header") {
+				if ($isHeader) {
 					// Not sure how to display the header with a background color with 10px
 					// of white above and below it using only one <tr>.
 					echo "<tr style='height: 10px;'><td colspan='3'></td></tr>";

@@ -19,15 +19,14 @@ do
 	python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event periodic
 	deactivate_python_venv
 
-    DELAY=$( settings ".periodictimer" "${ALLSKY_MODULES}/module-settings.json" )
-
-    if [[ ! (${DELAY} =~ ^[0-9]+$) ]]; then
-        DELAY=60
-    fi
-    if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
+	DELAY=$( settings ".periodictimer" "${ALLSKY_MODULES}/module-settings.json" )
+	if [[ ! (${DELAY} =~ ^[0-9]+$) ]]; then
+		DELAY=60
+	fi
+	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
 		echo "INFO: Sleeping for ${DELAY} seconds"
 	fi
-    sleep "${DELAY}"
+	sleep "${DELAY}"
 done
 
 exit 0

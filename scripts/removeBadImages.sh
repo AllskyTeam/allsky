@@ -55,7 +55,7 @@ DATE="${1}"
 FILE="${2}"
 
 # If we're running in debug mode don't display ${ME} since it makes the output harder to read.
-if [[ ${DEBUG} == "true" || ${ON_TTY} -eq 1 ]]; then
+if [[ ${DEBUG} == "true" || ${ON_TTY} == "true" ]]; then
 	ME=""
 else
 	ME="${ME}:"
@@ -73,7 +73,7 @@ if [[ ${FILE} != "" && ! -f ${DATE}/${FILE} ]]; then
 	exit 2
 fi
 
-if [[ $( settings ".takedarkframes" ) -eq 1 ]]; then
+if [[ $( settings ".takedarkframes" ) == "true" ]]; then
 	# Disable low brightness check since darks will have extremely low brightness.
 	# But continue with the other checks in case the dark file is corrupted.
 	REMOVE_BAD_IMAGES_THRESHOLD_LOW=0
@@ -148,7 +148,7 @@ for f in ${IMAGE_FILES} ; do
 			BAD="'${f}' (corrupt file: $( echo "${MEAN}" | sed -e 's;convert-im6.q16: ;;' -e 's; @ error.*;;' -e 's; @ warning.*;;' -e q ))"
 		else
 			# If only one file, output its mean.
-			[[ ${FILE} != "" ]] && echo "${MEAN}"
+			[[ -n ${FILE} ]] && echo "${MEAN}"
 
 			# MEAN is a number between 0.0 and 1.0, but it may have format:
 			#	6.90319e-06
@@ -161,9 +161,9 @@ for f in ${IMAGE_FILES} ; do
 			# be able to specify up to two digits precision,
 			# multiple everything by 100 and convert to integer.
 			# Awk handles the "e-" format.
-			MEAN_CHECK=$( echo "${MEAN}" | awk '{ printf("%d", $1 * 100); }' )
-			HIGH_CHECK=$( echo "${HIGH}" | awk '{ printf("%d", $1 * 100); }' )
-			LOW_CHECK=$( echo "${LOW}" | awk '{ printf("%d", $1 * 100); }' )
+			MEAN_CHECK=$( echo "${MEAN}"	| awk '{ printf("%d", $1 * 100); }' )
+			HIGH_CHECK=$( echo "${HIGH}"	| awk '{ printf("%d", $1 * 100); }' )
+			LOW_CHECK=$( echo "${LOW}"		| awk '{ printf("%d", $1 * 100); }' )
 
 			MSG=""
 

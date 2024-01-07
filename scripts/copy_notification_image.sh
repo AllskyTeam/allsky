@@ -134,8 +134,8 @@ fi
 # Don't save in main image directory because we don't want the notification image in timelapses.
 # If at nighttime, save them in (possibly) yesterday's directory.
 # If during day, save in today's directory.
-if [[ $( settings ".takedaytimeimages" ) == "1" && \
-	  $( settings ".savedaytimeimages" ) == "1" && \
+if [[ $( settings ".takedaytimeimages" ) == "true" && \
+	  $( settings ".savedaytimeimages" ) == "true" && \
 	  ${IMG_CREATE_THUMBNAILS} == "true" ]]; then
 	DATE_DIR="${ALLSKY_IMAGES}/$( date +'%Y%m%d' )"
 	# Use today's folder if it exists, otherwise yesterday's

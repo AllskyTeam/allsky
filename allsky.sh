@@ -134,7 +134,7 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 		fi
 
 		MSG="${YELLOW}WARNING: Resetting USB ports ${REASON/\\n/ }"
-		if [[ ${ON_TTY} -eq 1 ]]; then
+		if [[ ${ON_TTY} == "true" ]]; then
 			echo "${MSG}; restart ${ME} when done.${NC}" >&2
 		else
 			echo "${MSG}, then restarting.${NC}" >&2
@@ -231,7 +231,7 @@ sudo chmod 775 "${ALLSKY_ABORTS_DIR}"
 rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 
 # Optionally display a notification image.
-if [[ ${USE_NOTIFICATION_IMAGES} -eq 1 ]]; then
+if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
 	# Can do this in the background to speed up startup.
 	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "StartingUp" 2>&1 &
 fi
@@ -257,7 +257,7 @@ fi
 
 # When using a desktop environment a preview of the capture can be displayed in a separate window.
 # The preview mode does not work if we are started as a service or if the debian distribution has no desktop environment.
-[[ $1 == "preview" ]] && echo "preview=1"
+[[ $1 == "preview" ]] && echo "preview=true"
 
 echo "version=${ALLSKY_VERSION}" >> "${ARGS_FILE}"
 echo "save_dir=${CAPTURE_SAVE_DIR}" >> "${ARGS_FILE}"
@@ -289,7 +289,7 @@ RETCODE=$?
 [[ ${RETCODE} -eq ${EXIT_OK} ]] && doExit "${EXIT_OK}" ""
 
 if [[ ${RETCODE} -eq ${EXIT_RESTARTING} ]]; then
-	if [[ ${ON_TTY} -eq 1 ]]; then
+	if [[ ${ON_TTY} == "true" ]]; then
 		echo "*** Can restart allsky now. ***"
 		NOTIFICATION_TYPE="NotRunning"
 	else
@@ -302,20 +302,20 @@ if [[ ${RETCODE} -eq ${EXIT_RESET_USB} ]]; then
 	# Reset the USB bus if possible
 	if [[ ${UHUBCTL_PATH} != "" ]]; then
 		reset_usb " (ASI_ERROR_TIMEOUTs)"
-		if [[ ${ON_TTY} -eq 1 ]]; then
+		if [[ ${ON_TTY} == "true" ]]; then
 			echo "*** USB bus was reset; You can restart allsky now. ***"
 			NOTIFICATION_TYPE="NotRunning"
 		else
 			NOTIFICATION_TYPE="Restarting"
 		fi
-		if [[ ${USE_NOTIFICATION_IMAGES} -eq 1 ]]; then
+		if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
 			"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "${NOTIFICATION_TYPE}"
 		fi
 		doExit 0 ""		# use 0 so the service is restarted
 	else
 		# TODO: use ASI_ERROR_TIMEOUT message
 		MSG="Non-recoverable ERROR found"
-		[[ ${ON_TTY} -eq 1 ]] && echo "*** ${MSG} - ${SEE_LOG_MSG}. ***"
+		[[ ${ON_TTY} == "true" ]] && echo "*** ${MSG} - ${SEE_LOG_MSG}. ***"
 		doExit "${EXIT_ERROR_STOP}" "Error" \
 			"${ERROR_MSG_PREFIX}Too many\nASI_ERROR_TIMEOUT\nerrors received!\n${SEE_LOG_MSG}" \
 			"${STOPPED_MSG}<br>${MSG}<br>${SEE_LOG_MSG}."
@@ -325,7 +325,7 @@ fi
 # RETCODE -ge ${EXIT_ERROR_STOP} means we should not restart until the user fixes the error.
 if [[ ${RETCODE} -ge ${EXIT_ERROR_STOP} ]]; then
 	echo "***"
-	if [[ ${ON_TTY} -eq 1 ]]; then
+	if [[ ${ON_TTY} == "true" ]]; then
 		echo "*** After fixing, restart ${ME}.sh. ***"
 	else
 		echo "*** After fixing, restart the allsky service. ***"
@@ -335,7 +335,7 @@ if [[ ${RETCODE} -ge ${EXIT_ERROR_STOP} ]]; then
 fi
 
 # Some other error
-if [[ ${USE_NOTIFICATION_IMAGES} -eq 1 ]]; then
+if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
 	# If started by the service, it will restart us once we exit.
 	doExit "${RETCODE}" "NotRunning"
 else

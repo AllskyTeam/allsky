@@ -157,7 +157,7 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	FILE="data.json"
 	OUTPUT_FILE="${ALLSKY_TMP}/${FILE}"
 	(
-		if [[ $( settings ".takedaytimeimages" ) -eq 1 ]]; then
+		if [[ $( settings ".takedaytimeimages" ) == "true" ]]; then
 			D="true"
 		else
 			D="false"
@@ -248,7 +248,7 @@ if [[ ${ALL_FILES} == "true" ]]; then
 fi
 
 if [[ ${SETTINGS_ONLY} == "false" ]]; then
-	upload_file "${OUTPUT_FILE}" ""		# Goes in top-level directory
+	upload_file "${OUTPUT_FILE}" ""			# Goes in top-level directory
 	exit "$?"
 fi
 

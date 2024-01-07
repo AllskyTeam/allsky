@@ -68,8 +68,11 @@ if ($capture_only) {
 		if ($usage == "capture") {
 			$name = $option['name'];
 			$val = getVariableOrDefault($settings_array, $name, null);
-			if ($val !== null)
+			if ($val !== null) {
+				if ($val === false) $val = "false";
+				else if ($val === true) $val = "true";
 				echo "$name=$val\n";
+			}
 		}
 	}
 } else {

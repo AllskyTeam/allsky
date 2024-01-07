@@ -312,7 +312,7 @@ else # sftp/ftp/ftps
 
 		echo -e "\n${YELLOW}Commands used${NC} are in: ${GREEN}${LFTP_CMDS}${NC}"
 	else
-		if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 4 && ${ON_TTY} -eq 0 ]]; then
+		if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 4 && ${ON_TTY} == "false" ]]; then
 			echo "${ME}: FTP '${FILE_TO_UPLOAD}' finished"
 		fi
 	fi
@@ -336,5 +336,4 @@ fi
 
 rm -f "${PID_FILE}"
 
-# shellcheck disable=SC2086
-exit ${RET}
+exit "${RET}"

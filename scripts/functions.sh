@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # Shell functions used by multiple scripts.
-# This file is "source"d into others, and must be done AFTER source'ing variables.sh
-# and config.sh.
+# This file is "source"d into others, and must be done AFTER source'ing variables.sh.
 
 
 #####
@@ -39,8 +38,8 @@ function doExit()
 		# even if the user has them turned off.
 		if [[ -n ${CUSTOM_MESSAGE} ]]; then
 			# Create a custom error message.
-			# If we error out before config.sh is sourced in, ${FILENAME} and ${EXTENSION} won't be
-			# set so guess at what they are.
+			# If we error out before config.sh is sourced in,
+			# ${FILENAME} and ${EXTENSION} won't be set so guess at what they are.
 			"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" \
 				"${FILENAME:-"image"}" \
 				"${COLOR}" "" "85" "" "" \
@@ -64,8 +63,8 @@ function doExit()
 # RPi cameras can use either "raspistill" on Buster or "libcamera-still" on Bullseye
 # to actually take pictures.
 # Determine which to use.
-# On success, return 1 and the command to use.
-# On failure, return 0 and an error message.
+# On success, return 0 and the command to use.
+# On failure, return non-0 and an error message.
 function determineCommandToUse()
 {
 	local USE_doExit="${1}"			# Call doExit() on error?
@@ -528,15 +527,15 @@ function check_settings_link()
 	FULL_FILE="${1}"
 	if [[ -z ${FULL_FILE} ]]; then
 		echo "check_settings_link(): Settings file not specified."
-		return "${EXIT_ERROR_STOP}"
+		return 1
 	fi
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		CAMERA_TYPE="$( settings ".${CT}"  "${FULL_FILE}" )"
-		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
+		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return 1
 	fi
 	if [[ -z ${CAMERA_MODEL} ]]; then
 		CAMERA_MODEL="$( settings ".${CM}"  "${FULL_FILE}" )"
-		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
+		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return 1
 	fi
 
 	DIRNAME="$( dirname "${FULL_FILE}" )"
@@ -600,9 +599,12 @@ function update_json_file()		# field, new value, file
 
 	local NEW_VALUE="${2}"
 	local FILE="${3:-${SETTINGS_FILE}}"
+	local DOUBLE_QUOTE='"'
+	[[ -n ${TYPE} && (${TYPE} == "number" || ${TYPE} == "boolean") ]] && DOUBLE_QUOTE=""
+
 	local TEMP="/tmp/$$"
 	# Have to use "cp" instead of "mv" to keep any hard link.
-	if jq "${FIELD} = \"${NEW_VALUE}\"" "${FILE}" > "${TEMP}" ; then
+	if jq "${FIELD} = ${DOUBLE_QUOTE}${NEW_VALUE}${DOUBLE_QUOTE}" "${FILE}" > "${TEMP}" ; then
 		cp "${TEMP}" "${FILE}"
 		rm "${TEMP}"
 		return 0
@@ -702,7 +704,7 @@ function one_instance()
 	fi
 
 
-	NUM_CHECKS=0
+	local NUM_CHECKS=0
 	local INITIAL_PID
 	while  : ;
 	do

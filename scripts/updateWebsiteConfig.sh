@@ -119,7 +119,8 @@ while [[ $# -gt 0 ]]; do
 
 	# Only put quotes around ${NEW_VALUE} if it's a string,
 	# i.e., not a number or a special name.
-	if  [[ ! (${NEW_VALUE} =~ ${NUMRE}) && ${NEW_VALUE} != "true" && ${NEW_VALUE} != "false" && ${NEW_VALUE} != "null" ]]; then
+	if  [[ ! (${NEW_VALUE} =~ ${NUMRE}) && ${NEW_VALUE} != "true" &&
+			${NEW_VALUE} != "false" && ${NEW_VALUE} != "null" ]]; then
 		Q='"'
 		NEW_VALUE="${Q}${NEW_VALUE}${Q}"
 	fi

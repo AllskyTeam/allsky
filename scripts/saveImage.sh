@@ -133,7 +133,7 @@ if [[ -z ${AS_TEMPERATURE_C} ]]; then
 fi
 
 # If taking dark frames, save the dark frame then exit.
-if [[ $( settings ".takedarkframes" ) -eq 1 ]]; then
+if [[ $( settings ".takedarkframes" ) == "true" ]]; then
 	#shellcheck source-path=scripts
 	source "${ALLSKY_SCRIPTS}/darkCapture.sh"
 	exit 0
@@ -272,7 +272,7 @@ SAVED_FILE="${CURRENT_IMAGE}"						# The name of the file saved from the camera.
 WEBSITE_FILE="${WORKING_DIR}/${FULL_FILENAME}"		# The name of the file the websites look for
 
 # If needed, save the current image in today's directory.
-if [[ $( settings ".savedaytimeimages" ) -eq 1 || ${DAY_OR_NIGHT} == "NIGHT" ]]; then
+if [[ $( settings ".savedaytimeimages" ) == "true" || ${DAY_OR_NIGHT} == "NIGHT" ]]; then
 	SAVE_IMAGE="true"
 else
 	SAVE_IMAGE="false"

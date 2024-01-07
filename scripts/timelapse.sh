@@ -222,8 +222,8 @@ if [[ ${KEEP_SEQUENCE} == "false" ]]; then
 		exit 1
 	fi
 else
-	echo -e "${ME} ${YELLOW}"
-	echo "Not regenerating sequence because KEEP_SEQUENCE is enabled."
+	echo -en "${ME} ${YELLOW}"
+	echo -n "Not regenerating sequence because KEEP_SEQUENCE is enabled."
 	echo -e "${NC}"
 fi
 
@@ -261,7 +261,7 @@ X="$( echo "${X}" | grep -v "deprecated pixel format used" )"
 
 if [[ ${RET} -ne -0 ]]; then
 	echo -e "\n${RED}*** ${ME}: ERROR: ffmpeg failed."
-	echo -e "Error log:\n $( < "${TMP}" )'."
+	echo -e "Error log:\n $( < "${TMP}" )"
 	echo "=============================================="
 	echo "Links in '${SEQUENCE_DIR}' left for debugging."
 	echo -e "Remove them when the problem is fixed.${NC}\n"

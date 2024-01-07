@@ -566,7 +566,7 @@ if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 fi
 
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
-	[[ -${SHOW_ON_MAP} == "true" ]] && SHOW_ON_MAP="$( settings ".showonmap" )"
+	[[ ${SHOW_ON_MAP} == "true" ]] && SHOW_ON_MAP="$( settings ".showonmap" )"
 	if [[ ${SHOW_ON_MAP} == "true" ]]; then
 		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postToMap.sh${NC}"
 		# shellcheck disable=SC2086

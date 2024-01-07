@@ -38,5 +38,5 @@ mv "${CURRENT_IMAGE}" "${MOVE_TO_FILE}" || exit 3
 if [[ $( settings ".notificationimages" ) == "false" ]]; then
 	# We're copying back the file we just moved, but the assumption is few people
 	# will want to see the dark frames so the performance hit is 
-	cp "${MOVE_TO_FILE}" "${ALLSKY_TMP}/${FILENAME}.${EXTENSION}"
+	cp "${MOVE_TO_FILE}" "${ALLSKY_TMP}/${FILENAME}.${EXTENSION}" || exit 4
 fi

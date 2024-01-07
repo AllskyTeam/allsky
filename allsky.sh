@@ -255,12 +255,15 @@ fi
 "${ALLSKY_WEBUI}/includes/outputJSONwithEqual.php" --capture-only "${OPTIONS_FILE}" |
 	grep -E -i -v "^config=|^debuglevel=" >> "${ARGS_FILE}"
 
-# When using a desktop environment a preview of the capture can be displayed in a separate window.
-# The preview mode does not work if we are started as a service or if the debian distribution has no desktop environment.
-[[ $1 == "preview" ]] && echo "preview=true"
+# When using a desktop environment a preview of the capture can be displayed.
+# The preview mode does not work if we are started as a service or
+# if the debian distribution has no desktop environment.
+{
+	[[ $1 == "preview" ]] && echo "preview=true"
 
-echo "version=${ALLSKY_VERSION}" >> "${ARGS_FILE}"
-echo "save_dir=${CAPTURE_SAVE_DIR}" >> "${ARGS_FILE}"
+	echo "version=${ALLSKY_VERSION}"
+	echo "save_dir=${CAPTURE_SAVE_DIR}"
+} >> "${ARGS_FILE}"
 
 FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
 # If the user wants images uploaded only every n times, save that number to a file.

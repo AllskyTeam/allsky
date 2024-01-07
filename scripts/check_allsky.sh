@@ -19,16 +19,16 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP
 
 usage_and_exit()
 {
-	RET=${1}
+	local RET=${1}
 	if [[ ${RET} == 0 ]]; then
-		C="${YELLOW}"
+		local C="${YELLOW}"
 	else
-		C="${RED}"
+		local C="${RED}"
 	fi
 	# Don't show the "--newer", "--no-check", or "--force-check" options since users
 	# should never use them.
 	echo
-	echo -e "${C}Usage: ${ME} [--help] [--debug] [--no-check]${NC}"
+	echo -e "${C}Usage: ${ME} [--help]${NC}"
 	echo
 	echo "'--help' displays this message and exits."
 	echo

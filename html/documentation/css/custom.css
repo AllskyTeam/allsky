@@ -585,7 +585,9 @@ select {
 }
 .live_container {
 	background-color: black;
-	margin-bottom: 15px;
+}
+.current {
+	width: 100%;
 }
 
 div.sticky {

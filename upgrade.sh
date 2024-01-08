@@ -139,16 +139,10 @@ if [[ ${FORCE_CHECK} == "true" || ${BRANCH} == "${GITHUB_MAIN_BRANCH}" ]]; then
 fi
 
 # TODO: these are here to keep shellcheck quiet while this script is incomplete.
-
 DEBUG="${DEBUG}"
 DEBUG_ARG="${DEBUG_ARG}"
 FUNCTION="${FUNCTION}"
 WORD="${WORD}"
-
-#shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit "${EXIT_ERROR_STOP}"
-#shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 
 if [[ ${ACTION} == "upgrade" ]]; then
@@ -211,14 +205,5 @@ elif [[ ${ACTION} == "restore" ]]; then
 	#	mv ${ALLSKY_HOME}-OLD ${ALLSKY_HOME}
 	#	move images from ${ALLSKY_HOME}-new_tmp to ${ALLSKY_HOME}
 	#	move darks from ${ALLSKY_HOME}-new_tmp to ${ALLSKY_HOME}
-	#	copy scripts/endOfNight_additionalSteps.sh from ${ALLSKY_HOME}-new_tmp to ${ALLSKY_HOME}
-
-	# Prompt the user if they want to:
-	#	restore their old "images" folder (if there's anything in it)
-	#	restore their old "darks" folder (if there's anything in it)
-	#	restore their old configuration settings
-	#		(config.sh, ftp-settings.sh, scripts/endOfNight_additionalSteps.sh)
-	#	upgrade their WebUI (if installed)
-	#	upgrade their Website (if installed)
 
 fi

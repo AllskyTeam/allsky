@@ -725,10 +725,16 @@ $lastFileName = str_replace('${ALLSKY_HOME}', ALLSKY_HOME, $lastFileName);
 function getVariableOrDefault($a, $v, $d) {
 	if (isset($a[$v])) {
 		$value = $a[$v];
-		if (gettype($value) === "boolean" && $value == "") return false;
+		if (gettype($value) === "boolean") {
+			if ($value || $value == "true") {
+				return "true";
+			} else {
+				return "false";
+			}
+		}
 		return $value;
 	} else if (gettype($d) === "boolean" && $d == "") {
-		return false;
+		return "false";
 	} else if (gettype($d) === "null") {
 		return null;
 	}

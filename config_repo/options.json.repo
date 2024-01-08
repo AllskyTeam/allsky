@@ -884,7 +884,7 @@
 },
 {
 "name" : "overlaymethod",
-"default" : 0,
+"default" : 1,
 "description" : "Determines how image overlays are done.<br><span class='WebUIValue'>module</span> supports a visual editor.<br><b>When set to <span class='WebUIValue'>module</span>, the overlay settings below do NOT apply.</b>",
 "label" : "Overlay Method",
 "type" : "select",
@@ -899,10 +899,11 @@
 {
 "name" : "showtime",
 "default" : true,
-"description" : "Activate to display the time an image was taken on the overlay.",
+"description" : "Enable to display the time an image was taken on the overlay.",
 "label" : "Show Time",
 "type" : "boolean",
 "usage" : "capture",
+"booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
 {
@@ -912,6 +913,8 @@
 "label" : "Show Temperature",
 "type" : "boolean",
 "usage" : "capture",
+"display" : "_display",
+"booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
 {
@@ -921,6 +924,7 @@
 "label" : "Show Exposure",
 "type" : "boolean",
 "usage" : "capture",
+"booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
 {
@@ -940,6 +944,7 @@
 "label" : "Show Brightness",
 "type" : "boolean",
 "usage" : "capture",
+"booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
 {
@@ -1158,8 +1163,8 @@
 "description" : "Enable to add a link on the Allsky Website to display the settings on this page.",
 "label" : "Display Settings",
 "type" : "boolean",
+"booldependson" : "uselocalwebsite OR useremotewebsite"
 "checkchanges" : true,
-"booldependson" : "uselocalwebsite OR useremotewebsite OR useremoteserver"
 },
 {
 "name" : "showonmap",
@@ -1167,7 +1172,8 @@
 "description" : "Enable to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map' target='_blank' title='Opens in new tab/window'><span class='WebUISetting'>Allsky Map <i class='fa fa-external-link-alt fa-fw'></i></span></a>.",
 "label" : "Show on Map",
 "type" : "boolean",
-"checkchanges" : 1
+"booldependson" : "uselocalwebsite OR useremotewebsite"
+"checkchanges" : true
 },
 {
 "name" : "websiteurl",
@@ -1175,8 +1181,9 @@
 "description" : "The URL of your Allsky Website, for example: https://my.allskyweb.com/allsky.<br>If your camera is not accessible on the Internet, leave this field empty.<br>Must begin with <b>http</b> or <b>https</b>.",
 "label" : "Website URL",
 "type" : "widetext",
+"booldependson" : "showonmap OR remotewebsiteimageurl",
 "checkchanges" : true,
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "imageurl",
@@ -1184,8 +1191,9 @@
 "description" : "The URL of the image on your Allsky Website, for example: https://mywebsite.com/allsky/image.jpg.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
 "label" : "Image URL",
 "type" : "widetext",
+"booldependson" : "showonmap OR remotewebsiteimageurl",
 "checkchanges" : true,
-"optional" : 1
+"optional" : true
 },
 {
 "name" : "location",
@@ -1195,7 +1203,7 @@
 "type" : "widetext",
 "checkchanges" : true,
 "optional" : true,
-"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
+"booldependson" : "showonmap"
 },
 {
 "name" : "owner",
@@ -1205,7 +1213,7 @@
 "type" : "text",
 "checkchanges" : true,
 "optional" : true,
-"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
+"booldependson" : "showonmap"
 },
 {
 "name" : "camera",
@@ -1215,7 +1223,7 @@
 "type" : "widetext",
 "checkchanges" : true,
 "optional" : true,
-"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
+"booldependson" : "showonmap"
 },
 {
 "name" : "lens",
@@ -1225,7 +1233,7 @@
 "type" : "text",
 "checkchanges" : true,
 "optional" : true,
-"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
+"booldependson" : "showonmap"
 },
 {
 "name" : "computer",
@@ -1235,7 +1243,13 @@
 "type" : "widetext",
 "checkchanges" : true,
 "optional" : true,
-"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
+"booldependson" : "showonmap"
+},
+
+{
+"name" : "cameratab========================================",
+"label" : "Camera Type",
+"type" : "header-tab"
 },
 {
 "name" : "cameraheading",

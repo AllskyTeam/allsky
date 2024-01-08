@@ -92,17 +92,13 @@ class DATAUTIL
     }
 
     public function getStartup() {
-
+		global $settings_array;		// Set in initialize_variables()
         $haveDatabase = $this->haveDatabase();
 
         if ($haveDatabase) {
-            $cam_type = getCameraType();
-            $settings_file = getSettingsFile($cam_type);
-            $camera_settings_str = file_get_contents($settings_file, true);
-            $camera_settings_array = json_decode($camera_settings_str, true);
-            $angle = $camera_settings_array['angle'];
-            $lat = $camera_settings_array['latitude'];
-            $lon = $camera_settings_array['longitude'];
+            $angle = $settings_array['angle'];
+            $lat = $settings_array['latitude'];
+            $lon = $settings_array['longitude'];
 
             $tod = 'Unknown';
             exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);

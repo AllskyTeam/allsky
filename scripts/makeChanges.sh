@@ -87,16 +87,6 @@ else
 	ERROR_PREFIX="${ME}: "
 fi
 
-# This output may go to a web page, so use "w" colors.
-# shell check doesn't realize there were set in variables.sh
-wOK="${wOK}"
-wWARNING="${wWARNING}"
-wERROR="${wERROR}"
-wDEBUG="${wDEBUG}"
-wBOLD="${wBOLD}"
-wNBOLD="${wNBOLD}"
-wNC="${wNC}"
-
 # Does the change need Allsky to be restarted in order to take affect?
 NEEDS_RESTART="false"
 

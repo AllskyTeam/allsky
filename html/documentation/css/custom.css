@@ -97,9 +97,11 @@
 
 .switch-field {
 	font-family: "Lucida Grande", Tahoma, Verdana, sans-serif;
-	margin: 3px 2px -15px 0;
+	/* old values: margin: 3px 2px -15px 0; */
+	margin: 2px 0 -2px 0;
 	display: inline-block;
 	overflow: hidden;
+	border-radius: 4px;
 }
 
 .switch-field input {

@@ -22,11 +22,30 @@ function &getSourceArray($f) {
 	return $filesContents[$fileName];
 }
 
+// Return "true" or "false" if $b is a boolean, depending on the value.
+// This is used when outputing a boolean.
+function toString($b) {
+	if (gettype($b) == "boolean") {
+		if ($b) return("true");
+		return("false");
+	}
+	return($b);
+}
 
+// The opposite of toString().  Given a string version of a boolean, return true or false.
+function toBool($s) {
+	if ($s == "true" || $s == "Yes" || $s == "yes" || $s == "1")
+		return true;
+	return false;
+}
+
+
+// The main function.
 function DisplayAllskyConfig(){
 	global $formReadonly, $settings_array;
 
 	$debug = false;
+//x if ($debug) { echo "<pre>settings_array<br>"; var_dump($settings_array); echo "</pre>"; }
 	$cameraTypeName = "cameratype";			// json setting name
 	$cameraModelName = "cameramodel";		// json setting name
 	$cameraNumberName = "cameranumber";		// json setting name
@@ -71,7 +90,7 @@ function DisplayAllskyConfig(){
 			// Keep track of optional settings and which settings are from a different source.
 			foreach ($options_array as $option) {
 				$key = $option['name'];
-				$optional_array[$key] = getVariableOrDefault($option, 'optional', false);
+				$optional_array[$key] = toBool(getVariableOrDefault($option, 'optional', "false"));
 				$type_array[$key] = getVariableOrDefault($option, 'type', "");
 				$s = getVariableOrDefault($option, 'source', null);
 				if ($s !== null) {
@@ -98,21 +117,22 @@ function DisplayAllskyConfig(){
 					$isSettingsField = false;
 				} else {
 					$oldValue = getVariableOrDefault($settings_array, $key, "");
+if ($debug) { if ($oldValue != $newValue) echo "<br>NOT SOURCE $key, old=$oldValue, new=$newValue"; }
 					$isSettingsField = true;		// this field is in the settings file.
 				}
+
 				if ($oldValue !== "")
 					$oldValue = str_replace("'", "&#x27", $oldValue);
 
-				if ($type_array[$key] == "boolean") {
-					if ($oldValue === 0 || $oldValue === "0") $oldValue = "false";
-					else if ($oldValue === 1 || $oldValue === "1") $oldValue = "true";
-				}
+if ($debug && $type_array[$key] == "boolean" && $oldValue != $newValue) {
+	echo "<br>key=$key, oldValue=$oldValue, newValue=$newValue";
+}
 
 				if ($oldValue !== $newValue) {
 					$nonCameraChangesExist = false;
 					if ($isSettingsField) $numSettingsChanges++;
 					else $numSourceChanges++;
-if ($debug) echo "<br>&nbsp; &nbsp; after $key, numSettingsChanges=$numSettingsChanges, numSourceChanges=$numSourceChanges";
+//x if ($debug) { echo "<br>&nbsp; &nbsp; after $key, numSettingsChanges=$numSettingsChanges, numSourceChanges=$numSourceChanges"; }
 
 					if ($key === $cameraTypeName) {
 						if ($newValue === "Refresh") {
@@ -137,7 +157,7 @@ if ($debug) echo "<br>&nbsp; &nbsp; after $key, numSettingsChanges=$numSettingsC
 						if ($option['name'] === $key) {
 							$optional = $optional_array[$key];
 							if ($newValue !== "" || $optional) {
-								$checkchanges = getVariableOrDefault($option, 'checkchanges', false);
+								$checkchanges = toBool(getVariableOrDefault($option, 'checkchanges', "false"));
 								$label = getVariableOrDefault($option, 'label', "");
 							}
 							break;
@@ -164,7 +184,7 @@ if ($debug) echo "<br>&nbsp; &nbsp; after $key, numSettingsChanges=$numSettingsC
 					if ($option['name'] === $key) {
 						$type = getVariableOrDefault($option, 'type', null);
 						$lab = $option['label'];
-
+if ($debug) { echo "<br>$key: $newValue, "; }
 						if ($newValue == "" && ! $optional_array[$key]) {
 							$msg = "<$span>$lab</span> is empty";
 							$status->addMessage($msg, 'danger', false);
@@ -172,14 +192,23 @@ if ($debug) echo "<br>&nbsp; &nbsp; after $key, numSettingsChanges=$numSettingsC
 
 						} else if ($type !== null && $newValue != "") {
 							$msg = "";
-							// $newValue will be of type string, even if it's actually a number,
-							// and only is_numeric() accounts for types of string.
-							if ($type === "integer" || $type == "percent") {
+							// $newValue will be of type string, even if it's actually a number
+							// or a boolean, and only is_numeric() accounts for types of string.
+if ($debug) { echo " &nbsp; &nbsp; &nbsp; [$type, $newValue]: ";  var_dump($newValue); }
+							if ($type === "integer" || $type === "percent") {
+if ($debug) { echo " &nbsp; &nbsp; &nbsp; [is $type] "; }
 								if (! is_numeric($newValue) || ! is_int($newValue + 0))
 									$msg = "without a fraction";
 								else
 									$newValue += 0;
+if ($debug && $key == "height") {
+	echo "<pre>";
+	echo ">>>>>>>>> newValue now $newValue: ";  var_dump($newValue);
+	echo "settings_array['height'] =";  var_dump($settings_array['height']);
+	echo "</pre>";
+}
 							} else if ($type === "float") {
+//x echo " &nbsp; &nbsp; &nbsp; [is $type], is_numeric=" . is_numeric($newValue) . ", is_float=" . is_float($newValue + 0.0);
 								if (! is_numeric($newValue) || ! is_float($newValue + 0.0))
 									$msg = "with, or without, a fraction";
 								else
@@ -192,20 +221,52 @@ if ($debug) echo "<br>&nbsp; &nbsp; after $key, numSettingsChanges=$numSettingsC
 								$ok = false;
 							}
 						}
+//x echo "<br><pre>in loop with $key: settings_array['height'] =";  var_dump($settings_array['height']); echo "newValue ="; var_dump($newValue); echo "</pre>";
 					}
 				}
+//x echo "<br><pre>OUTSIDE loop with $key: settings_array['height'] =";  var_dump($settings_array['height']); echo "newValue ="; var_dump($newValue); echo "</pre>";
 
 				if ($ok && ($numSettingsChanges > 0 || $numSourceChanges > 0)) {
 					// Update the appropriate array with the new value.
-					$n = str_replace("'", "&#x27", $newValue);
+					if ($newValue === "true") {
+						$newValue = true;
+						$s_newValue = "true";
+					} else if ($newValue === "false") {
+						$newValue = false;
+						$s_newValue = "false";
+					} else {
+						// Don't do unless needed - str_replace() changes non-strings like numbers to strings.
+						if (strpos($newValue, "'") !== false)
+							$newValue = str_replace("'", "&#x27", $newValue);
+						$s_newValue = $newValue;
+					}
+if ($debug && $key == "height") {
+	echo "<br><pre>AFTER if with height: settings_array['height'] =";
+	var_dump($settings_array['height']);
+	echo "newValue =";
+	var_dump($newValue);
+	echo "</pre>";
+}
+
 					if (isset($sourceFilesContents[$key])) {
-if ($debug) echo "<br>sourceFilesContent[$key][$key] = " . $sourceFilesContents[$key][$key] . ", newValue=$newValue";
-						$sourceFilesContents[$key][$key] = $n;
+if ($debug) {
+	$s = toString($sourceFileContents[$key][$key]);
+	echo "<br>sourceFilesContent[$key][$key] = $s, newValue=$s_newValue";
+}
+						$sourceFilesContents[$key][$key] = $newValue;
 						$fileName = $sourceFiles[$key];
 						$sourceFilesChanged[$fileName] = $fileName;
 					} else {
-if ($debug) echo "<br>settings[$key] = " . $settings_array[$key] . ", newValue=$newValue";
-						$settings_array[$key] = $n;
+if ($debug) {
+	$s = toString($settings_array[$key]);
+	if ($s != $s_newValue) echo "<br><br>settings_array[$key] = $s, newValue=$s_newValue";
+}
+						$settings_array[$key] = $newValue;
+if ($debug && $s != $s_newValue) {
+	echo "<br><pre>====== settings_array['height'] now:<br>";
+	var_dump($settings_array['height']);
+	echo "</pre>";
+}
 					}
 
 					if ($key === $debugLevelName && $newValue >= 4) {
@@ -230,12 +291,19 @@ if ($debug) echo "<br>settings[$key] = " . $settings_array[$key] . ", newValue=$
 							// If we end up not updating the file this will be ignored.
 							$lastChanged = date('Y-m-d H:i:s');
 							$settings_array[$lastChangedName] = $lastChanged;
+if ($debug) {
+	echo "<br><pre>====== settings_array[height] now:<br>";
+	var_dump($settings_array['height']);
+	echo "</pre>";
+}
 							$content = json_encode($settings_array, $mode);
 							// updateFile() only returns error messages.
 if ($debug) {
-	echo "<br>Updating settings_file $settings_file, # changes = $numSettingsChanges";
+	echo "<br><br>Updating settings_file $settings_file, # changes = $numSettingsChanges";
 	echo "<pre>"; var_dump($content); echo "</pre>";
+	$msg = "";
 }
+//xxx
 							$msg = updateFile($settings_file, $content, "settings", true);
 							if ($msg === "") {
 								$msg = "Settings saved";
@@ -248,8 +316,9 @@ if ($debug) {
 							// Now save the settings from the source files that changed.
 							foreach($sourceFilesChanged as $fileName) {
 								$content = json_encode(getSourceArray($fileName), $mode);
-if ($debug) echo "<br>Updating fileName $fileName, # changes=$numSourceChanges";
+if ($debug) { echo "<br>Updating fileName $fileName, # changes=$numSourceChanges"; }
 if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
+//xxx
 								$msg = updateFile($fileName, $content, "source_settings", true);
 								if ($msg === "") {
 									$msg = "Settings saved";
@@ -284,7 +353,7 @@ if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
 
 			if ($ok) {
 				// 'restart' is a checkbox: if check, it returns 'on', otherwise nothing.
-				$doingRestart = getVariableOrDefault($_POST, 'restart', false);
+				$doingRestart = toBool(getVariableOrDefault($_POST, 'restart', "false"));
 				if ($doingRestart === "on") $doingRestart = true;
 
 				if ($numSettingsChanges == 0 && $numSourceChanges == 0) {
@@ -346,7 +415,7 @@ if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
 					}
 				}
 			}
-			$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES; // |JSON_NUMERIC_CHECK;
+			$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
 			$content = json_encode($settings_array, $mode);
 			$msg = updateFile($settings_file, $content, "settings", true);
 			if ($msg === "") {
@@ -416,7 +485,7 @@ if ($formReadonly != "readonly") { ?>
 			onclick="return confirm('Really RESET ALL VALUES TO DEFAULT??');">
 		<div title="UNcheck to only save settings without restarting Allsky" style="line-height: 0.3em;">
 			<br>
-			<input type="checkbox" name="restart" checked> Restart Allsky after saving changes?
+			<input type="checkbox" name="restart" value="true" checked> Restart Allsky after saving changes?
 			<br><br>&nbsp;
 		</div>
 	</div>
@@ -442,7 +511,7 @@ if ($formReadonly != "readonly") { ?>
 			foreach($options_array as $option) {
 				$name = $option['name'];
 
-				$type = getVariableOrDefault($option, 'type', "");	// should be a type
+				$type = getVariableOrDefault($option, 'type', "");	// There should be a type.
 				$isHeader = substr($type, 0, 6) === "header";
 				if ($isHeader) {
 					$value = "";
@@ -450,7 +519,7 @@ if ($formReadonly != "readonly") { ?>
 					$default = "";
 				} else {
 					$default = getVariableOrDefault($option, 'default', "");
-					if ($default !== "" && $type != "boolean" && $type != "integer" && $type != "float")
+					if ($default !== "")
 						$default = str_replace("'", "&#x27;", $default);
 
 					$s = getVariableOrDefault($option, 'source', null);
@@ -462,17 +531,18 @@ if ($formReadonly != "readonly") { ?>
 						$value = getVariableOrDefault($source_array, $name, $default);
 					} else {
 						$value = getVariableOrDefault($settings_array, $name, $default);
+//x if ($debug) echo "<br>JUST GOT $name = $value";
 					}
-					if ($type != "boolean" && $default !== "" && $type != "integer" && $type != "float") {
-						// Allow single quotes in values (for string values).
-						// &apos; isn't supported by all browsers so use &#x27.
-						$value = str_replace("'", "&#x27;", $value);
-					}
+
+					// Allow single quotes in values (for string values).
+					// &apos; isn't supported by all browsers so use &#x27.
+					$value = str_replace("'", "&#x27;", $value);
+
 					$OLDvalue = $value;
 				}
 
 				// Should this setting be displayed?
-				$display = getVariableOrDefault($option, 'display', true);
+				$display = toBool(getVariableOrDefault($option, 'display', "true"));
 				if (! $display && ! $isHeader) {
 					if ($formReadonly != "readonly") {
 						// Don't display it, but if it has a value, pass it on.
@@ -528,7 +598,7 @@ if ($formReadonly != "readonly") { ?>
 
 				// Put some space before and after headers.  This next line is the "before":
 				if ($type == "header-tab") {
-/* TODO put in actual tab in the new WebUI.
+/* TODO: This will be put in an actual tab in the new WebUI.
 					echo "<tr style='height: 10px; color: red; font-size: 125%'>";
 						echo "<td colspan='3' align='center'>[[[ <b>$label</b> tab goes here ]]]</td>";
 					echo "</tr>";
@@ -578,12 +648,18 @@ if ($formReadonly != "readonly") { ?>
 
 				} else {
 					echo "<tr class='form-group $class $warning_class' style='margin-bottom: 0px;'>";
-					$restartRequired = (getVariableOrDefault($option, 'action', "none") === "restart" ? true : false);
+					$action = getVariableOrDefault($option, 'action', "none");
+// TODO: when "reload" is implemented remove it from this check:
+					if ($action == "restart" || $action == "reload")
+						$restartRequired = true;
+					else
+						$restartRequired = false;
 
 					// Show the default in a popup
 					if ($type == "boolean") {
-						if (! $default) $default = "No";
-						else $default = "Yes";
+						// Boolean values are strings: "true" or "false".
+						if ($default == "true") $default = "Yes";
+						else $default = "No";
 
 					} elseif ($type == "select") {
 						foreach($option['options'] as $opt) {
@@ -594,7 +670,6 @@ if ($formReadonly != "readonly") { ?>
 						}
 					}
 					$popup = "";
-					if ($restartRequired) $popup .= "RESTART REQUIRED\n";
 					if ($default == "") $default="[blank]";
 					$popup .= "Default=$default";
 					if ($minimum !== "") $popup .= "\nMinimum=$minimum";
@@ -611,6 +686,8 @@ if ($formReadonly != "readonly") { ?>
 						$rspan="rowspan='2'";
 						$cspan="colspan='2'";
 					}
+					if ($restartRequired) $popup .= "\nRESTART REQUIRED";
+
 					echo "\n\t<td $rspan valign='middle' style='padding: 2px 0px'>";
 						echo "<label class='WebUISetting' style='padding-right: 3px;'>$label</label>";
 					echo "</td>";
@@ -624,9 +701,8 @@ if ($formReadonly != "readonly") { ?>
 					}
 
 					echo "\n\t<td $cspan valign='middle' style='$style' align='center'>";
-					// The popup gets in the way of seeing the value a little.
-					// May want to consider having a symbol next to the field
-					// that has the popup.
+					// TODO: The popup can get in the way of seeing the value a little.
+					// May want to consider having a symbol next to the field that has the popup.
 					echo "<span title='$popup'>";
 // TODO: add percent sign for "percent"
 					if (in_array($type, ["text", "password", "integer", "float", "color", "percent", "readonly"])) {
@@ -639,12 +715,13 @@ if ($formReadonly != "readonly") { ?>
 							// Browsers put the up/down arrows for numbers which moves the
 							// numbers to the left, and they don't line up with text.
 							// Plus, they don't accept decimal points in "float".
+							// So, display numbers as text.
 							if ($type == "integer" || $type == "float" || $type == "percent" || $type == "color")
 								$type = "text";
 							$t = $type;
 						}
-						echo "\n\t\t<input $readonly class='form-control boxShadow settingInput settingInputTextNumber'" .
-							" type='$t' $readonlyForm name='$name' value='$value' >";
+						echo "\n\t\t<input class='form-control boxShadow settingInput settingInputTextNumber'" .
+							" type='$t' $readonly $readonlyForm name='$name' value='$value' >";
 
 					} else if ($type == "widetext"){
 						echo "\n\t\t<input class='form-control boxShadow settingInputWeidetext'" .
@@ -666,14 +743,14 @@ if ($formReadonly != "readonly") { ?>
 
 					} else if ($type == "boolean"){
 						echo "\n\t\t<div class='switch-field boxShadow settingInput settingInputBoolean'>";
-							echo "\n\t\t<input id='switch_no_".$name."' class='form-control' type='radio' ".
+							echo "\n\t\t<input id='switch_no_$name' class='form-control' type='radio' ".
 								"$readonlyForm name='$name' value='false' ".
-								($value == false ? " checked " : "").  ">";
-							echo "<label style='margin-bottom: 0px;' for='switch_no_".$name."'>No</label>";
-							echo "\n\t\t<input id='switch_yes_".$name."' class='form-control' type='radio' ".
+								($value == "false" ? " checked " : "").  ">";
+							echo "<label style='margin-bottom: 0px;' for='switch_no_$name'>No</label>";
+							echo "\n\t\t<input id='switch_yes_$name' class='form-control' type='radio' ".
 								"$readonlyForm name='$name' value='true' ".
-								($value == true ? " checked " : "").  ">";
-							echo "<label style='margin-bottom: 0px;' for='switch_yes_".$name."'>Yes</label>";
+								($value == "true" ? " checked " : "").  ">";
+							echo "<label style='margin-bottom: 0px;' for='switch_yes_$name'>Yes</label>";
 						echo "</div>";
 					}
 					echo "</span>";

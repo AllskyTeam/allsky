@@ -1163,8 +1163,8 @@
 "description" : "Enable to add a link on the Allsky Website to display the settings on this page.",
 "label" : "Display Settings",
 "type" : "boolean",
-"booldependson" : "uselocalwebsite OR useremotewebsite"
-"checkchanges" : true,
+"booldependson" : "uselocalwebsite OR useremotewebsite",
+"checkchanges" : true
 },
 {
 "name" : "showonmap",
@@ -1172,7 +1172,7 @@
 "description" : "Enable to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map' target='_blank' title='Opens in new tab/window'><span class='WebUISetting'>Allsky Map <i class='fa fa-external-link-alt fa-fw'></i></span></a>.",
 "label" : "Show on Map",
 "type" : "boolean",
-"booldependson" : "uselocalwebsite OR useremotewebsite"
+"booldependson" : "uselocalwebsite OR useremotewebsite",
 "checkchanges" : true
 },
 {

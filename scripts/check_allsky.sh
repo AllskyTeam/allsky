@@ -120,6 +120,9 @@ function heading()
 	fi
 }
 
+
+# =================================================== FUNCTIONS
+
 # Determine if the specified value is a number.
 function is_number()
 {
@@ -147,8 +150,6 @@ function min()
 		echo "${TWO}"
 	fi
 }
-
-# =================================================== CHECKING FUNCTIONS
 
 # The various upload protocols need different variables defined.
 # For the specified protocol, make sure the specified variable is defined.

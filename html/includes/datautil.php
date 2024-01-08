@@ -130,7 +130,7 @@ class DATAUTIL
                 $days[ $row['folder']] = [
                     'text' => ''
                 ];
-            }   
+            }
 
             $result = [
                 'tod' => $tod,
@@ -144,7 +144,7 @@ class DATAUTIL
             $this->send404();
         }
     }
-    
+
     public function getLiveData() {
         $db = new SQLite3(ALLSKY_HOME . '/' . $this->database);
 
@@ -163,7 +163,7 @@ class DATAUTIL
             'meteors' => [],
             'exposure' => [],
             'gain' => [],
-            'skystate' => []                                  
+            'skystate' => []
         ];
 
         $lastHour = -1;
@@ -189,7 +189,7 @@ class DATAUTIL
                         'hour' => $lastHour,
                         'count' => $count,
                         'total' => $total,
-                        'percentage' => $percentage                        
+                        'percentage' => $percentage
                     ];
                     $lastHour = $hour;
                     $count = 0;
@@ -218,7 +218,7 @@ class DATAUTIL
             array_push($hours, $state['hour']);
             array_push($skyState, $state['count']);
             array_push($percentage, $state['percentage']);
-            array_push($total, $state['total']);            
+            array_push($total, $state['total']);
         }
         $data['hours'] = $hours;
         $data['clearimages'] = $skyState;
@@ -240,7 +240,7 @@ class DATAUTIL
             'meteors' => [],
             'exposure' => [],
             'gain' => [],
-            'skystate' => []                                  
+            'skystate' => []
         ];
 
         $lastHour = -1;
@@ -266,7 +266,7 @@ class DATAUTIL
                         'hour' => $lastHour,
                         'count' => $count,
                         'total' => $total,
-                        'percentage' => $percentage                        
+                        'percentage' => $percentage
                     ];
                     $lastHour = $hour;
                     $count = 0;
@@ -294,7 +294,7 @@ class DATAUTIL
             array_push($hours, $state['hour']);
             array_push($skyState, $state['count']);
             array_push($percentage, $state['percentage']);
-            array_push($total, $state['total']);            
+            array_push($total, $state['total']);
         }
         $data['hours'] = $hours;
         $data['clearimages'] = $skyState;

@@ -7,7 +7,7 @@
 },
 {
 "name" : "daytimesettingsheader",
-"description" : "Daytime settings",
+"label" : "Daytime settings",
 "type" : "header"
 },
 {
@@ -253,7 +253,7 @@
 
 {
 "name" : "nighttimesettingsheader",
-"description" : "Nighttime settings",
+"label" : "Nighttime settings",
 "type" : "header"
 },
 {
@@ -487,7 +487,7 @@
 },
 {
 "name" : "dayandnightheader",
-"description" : "Both day and night settings",
+"label" : "Both day and night settings",
 "type" : "header"
 },
 {
@@ -879,7 +879,7 @@
 },
 {
 "name" : "overlayHeader",
-"description" : "Image overlay settings",
+"label" : "Image overlay settings",
 "type" : "header"
 },
 {
@@ -1149,7 +1149,7 @@
 
 {
 "name" : "AllskyMapHeader",
-"description" : "Allsky Map and Website Settings",
+"label" : "Allsky Map and Website Settings",
 "type" : "header"
 },
 {
@@ -1239,7 +1239,7 @@
 },
 {
 "name" : "cameraheading",
-"description" : "Camera Type",
+"label" : "Camera Type",
 "type" : "header"
 },
 {

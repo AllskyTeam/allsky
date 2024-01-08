@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Script to save a DAY or NIGHT image.
+# It goes in ${ALLSKY_TMP} where the WebUI and local Allsky Website can find it.
 
 ME="$( basename "${BASH_ARGV0}" )"
-
 [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "${ME} $*"
 
 #shellcheck disable=SC1091 source-path=.

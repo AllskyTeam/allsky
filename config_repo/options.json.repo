@@ -14,7 +14,7 @@
 "name" : "daynightcolumns",
 "label" : "Setting, Day Value, Description",
 "candrop" : "Description",
-"optional" : true, "display":false,
+"display":false,
 "type" : "header-column"
 },
 {
@@ -874,7 +874,7 @@
 {
 "name" : "postprocessingheader",
 "label" : "Post-processing",
-"optional" : true, "display":false,
+"display":false,
 "type" : "header"
 },
 {

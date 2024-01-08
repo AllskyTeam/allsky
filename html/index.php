@@ -34,7 +34,7 @@ define('RASPI_WPA_SUPPLICANT_CONFIG', '/etc/wpa_supplicant/wpa_supplicant.conf')
 define('RASPI_WPA_CTRL_INTERFACE', '/var/run/wpa_supplicant');
 
 // Optional services, set to true to enable.
-define('DHCP_ENABLED', false);
+define('DHCP_ENABLED', true);
 define('APD_ENABLED', false);
 define('RASPI_OPENVPN_ENABLED', false);
 define('RASPI_TORPROXY_ENABLED', false);
@@ -149,10 +149,6 @@ if (file_exists($f)) {
 
 	<!-- MetisMenu CSS -->
 	<link href="documentation/bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
-
-	<!-- Timeline CSS
-	<link href="documentation/css/timeline.css" rel="stylesheet">
--->
 
 	<!-- Custom CSS -->
 	<link href="documentation/css/sb-admin-2.css" rel="stylesheet">

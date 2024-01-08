@@ -57,7 +57,7 @@ function DisplayAllskyConfig(){
 			$optional_array = array();
 			$type_array = array();
 			$sourceFiles = array();			// list of files in the "source" field
-			$sourceFilesContent = array();	// contents of each sourceFiles file
+			$sourceFilesContents = array();	// contents of each sourceFiles file
 			$changes = "";
 			$nonCameraChanges = "";
 

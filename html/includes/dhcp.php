@@ -143,7 +143,7 @@ function DisplayDHCPConfig() {
 		// count:	1				 2			 3				4
 		$arrRange = explode( ",", $range );
 		if (count($arrRange) < 3) {
-				$status->addMessage("dhcp-range in '" . RASPI_DNSMASQ_CONFIG . " missing fields: $range", "warning");
+				$status->addMessage("dhcp-range in '" . RASPI_DNSMASQ_CONFIG . " missing fields: $range", "danger");
 		} else {
 			$RangeStart = $arrRange[0];
 			$RangeEnd = $arrRange[1];

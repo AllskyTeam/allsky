@@ -73,11 +73,13 @@ $image_name=null; $delay=null; $daydelay=null; $nightdelay=null; $darkframe=null
 $temptype = null;
 $lastChanged = null;
 $websiteURL = null;
+$settings_array = null;
 function initialize_variables() {
 	global $status, $needToDisplayMessages;
 	global $image_name, $delay, $daydelay, $nightdelay;
 	global $darkframe, $useLogin, $temptype, $lastChanged, $lastChangedName;
 	global $websiteURL;
+	global $settings_array;
 
 	// The Camera Type should be set during the installation, so this "should" never fail...
 	$cam_type = getCameraType();
@@ -122,7 +124,7 @@ function initialize_variables() {
 	}
 	if (! is_numeric($daymaxautoexposure)) {
 		$ok = false;
-		$status->addMessage("<strong>daymaxautoexposure</strong> is not a number: $maymaxautoexposure.", 'danger', false);
+		$status->addMessage("<strong>daymaxautoexposure</strong> is not a number: $daymaxautoexposure.", 'danger', false);
 	}
 	if (! is_numeric($dayexposure)) {
 		$ok = false;
@@ -458,12 +460,17 @@ function handle_interface_POST_and_status($interface, $input, &$status) {
 * so there shouldn't be a comment on the line,
 * however, there can be optional spaces or tabs before the string.
 *
-* This function will go away once the config.sh and ftp-settings.sh files are merged
-* into the settings.json file.
 */
 function get_variable($file, $searchfor, $default)
 {
 	// get the file contents
+	if (! file_exists($file)) {
+		$msg  = "<div style='color: red; font-size: 200%;'>";
+		$msg .= "<br>File '$file' not found!";
+		$msg .= "</div>";
+		echo $msg;
+		return($default);
+	}
 	$contents = file_get_contents($file);
 	if ($contents == "") return($default);	// file not found or not readable
 

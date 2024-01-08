@@ -700,6 +700,25 @@ function getOptionsFile() {
 	return ALLSKY_CONFIG . "/options.json";
 }
 
+// Return the file name after accounting for any ${} variables.
+// Since there will often only be one file used by multiple settings,
+// as an optimization save the last name.
+$lastFileName = null;
+function getFileName($file) {
+	global $lastFileName;
+
+	if ($lastFileName === $file) return $lastFileName;
+
+	if (strpos('${HOME}', $file) !== false) {
+		$lastFileName = str_replace('${HOME}', HOME, $file);
+	} else {
+		$lastFileName = get_variable(ALLSKY_HOME . '/variables.sh', "$file=", '');
+// TODO: don't hard code
+$lastFileName = str_replace('${ALLSKY_HOME}', ALLSKY_HOME, $lastFileName);
+	}
+	return $lastFileName;
+}
+
 // Check if the specified variable is in the specified array.
 // If so, return it; if not, return default value;
 // This is used to make the code easier to read.

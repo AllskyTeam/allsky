@@ -117,18 +117,26 @@ function DisplayDHCPConfig() {
 
 	exec( 'cat ' . RASPI_DNSMASQ_CONFIG, $return );
 	if ($return !== null) {
+		if (count($return) == 0) {
+			$return = null;
+			$status->addMessage(RASPI_DNSMASQ_CONFIG . ' appears empty', 'warning');
+		}
+	}
+
+	if ($return !== null) {
 		$conf = ParseConfig($return);
 		$interface = $conf['interface'];
+		$range = $conf['dhcp-range'];
 		if ($interface === null) {
 			$return = null;
 			$status->addMessage(RASPI_DNSMASQ_CONFIG . ' has no interface', 'danger');
 		}
-		$range = $conf['dhcp-range'];
 		if ($range === null) {
 			$return = null;
 			$status->addMessage(RASPI_DNSMASQ_CONFIG . ' has no dhcp-range', 'warning');
 		}
 	}
+
 	if ($return !== null) {
 		// $range:	start_ip, end_ip, mask [, lease]
 		// index:	0				 1			 2				3

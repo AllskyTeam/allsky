@@ -123,9 +123,6 @@ function DisplayEditor()
 					<div style="margin-top: 15px;">
 				 <?php
 						$scripts = null;
-						if (file_exists(ALLSKY_SCRIPTS . "/endOfNight_additionalSteps.sh")) {
-							$scripts[0] = "endOfNight_additionalSteps.sh";
-						}
 				?>
 						<select class="form-control" id="script_path" title="Pick a file"
 							style="display: inline-block; width: auto; margin-right: 15px; margin-bottom: 5px"

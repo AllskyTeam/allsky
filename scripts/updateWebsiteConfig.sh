@@ -26,6 +26,7 @@ function usage_and_exit()
 	echo "There must be a multiple of 3 arguments." >&2
 	exit "${RET}"
 }
+
 # Check arguments
 OK="true"
 HELP="false"

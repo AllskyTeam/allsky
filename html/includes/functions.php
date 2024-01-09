@@ -73,11 +73,13 @@ $image_name=null; $delay=null; $daydelay=null; $nightdelay=null; $darkframe=null
 $temptype = null;
 $lastChanged = null;
 $websiteURL = null;
+$settings_array = null;
 function initialize_variables() {
 	global $status, $needToDisplayMessages;
 	global $image_name, $delay, $daydelay, $nightdelay;
 	global $darkframe, $useLogin, $temptype, $lastChanged, $lastChangedName;
 	global $websiteURL;
+	global $settings_array;
 
 	// The Camera Type should be set during the installation, so this "should" never fail...
 	$cam_type = getCameraType();
@@ -122,7 +124,7 @@ function initialize_variables() {
 	}
 	if (! is_numeric($daymaxautoexposure)) {
 		$ok = false;
-		$status->addMessage("<strong>daymaxautoexposure</strong> is not a number: $maymaxautoexposure.", 'danger', false);
+		$status->addMessage("<strong>daymaxautoexposure</strong> is not a number: $daymaxautoexposure.", 'danger', false);
 	}
 	if (! is_numeric($dayexposure)) {
 		$ok = false;
@@ -458,12 +460,17 @@ function handle_interface_POST_and_status($interface, $input, &$status) {
 * so there shouldn't be a comment on the line,
 * however, there can be optional spaces or tabs before the string.
 *
-* This function will go away once the config.sh and ftp-settings.sh files are merged
-* into the settings.json file.
 */
 function get_variable($file, $searchfor, $default)
 {
 	// get the file contents
+	if (! file_exists($file)) {
+		$msg  = "<div style='color: red; font-size: 200%;'>";
+		$msg .= "<br>File '$file' not found!";
+		$msg .= "</div>";
+		echo $msg;
+		return($default);
+	}
 	$contents = file_get_contents($file);
 	if ($contents == "") return($default);	// file not found or not readable
 
@@ -693,16 +700,41 @@ function getOptionsFile() {
 	return ALLSKY_CONFIG . "/options.json";
 }
 
+// Return the file name after accounting for any ${} variables.
+// Since there will often only be one file used by multiple settings,
+// as an optimization save the last name.
+$lastFileName = null;
+function getFileName($file) {
+	global $lastFileName;
+
+	if ($lastFileName === $file) return $lastFileName;
+
+	if (strpos('${HOME}', $file) !== false) {
+		$lastFileName = str_replace('${HOME}', HOME, $file);
+	} else {
+		$lastFileName = get_variable(ALLSKY_HOME . '/variables.sh', "$file=", '');
+// TODO: don't hard code
+$lastFileName = str_replace('${ALLSKY_HOME}', ALLSKY_HOME, $lastFileName);
+	}
+	return $lastFileName;
+}
+
 // Check if the specified variable is in the specified array.
 // If so, return it; if not, return default value;
 // This is used to make the code easier to read.
 function getVariableOrDefault($a, $v, $d) {
 	if (isset($a[$v])) {
 		$value = $a[$v];
-		if (gettype($value) === "boolean" && $value == "") return false;
+		if (gettype($value) === "boolean") {
+			if ($value || $value == "true") {
+				return "true";
+			} else {
+				return "false";
+			}
+		}
 		return $value;
 	} else if (gettype($d) === "boolean" && $d == "") {
-		return false;
+		return "false";
 	} else if (gettype($d) === "null") {
 		return null;
 	}

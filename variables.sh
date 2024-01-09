@@ -149,7 +149,25 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	# They are configuration files so go in ${ALLSKY_CONFIG) like all the other config files.
 	CC_FILE="${ALLSKY_CONFIG}/cc.json"
 	SETTINGS_FILE="${ALLSKY_CONFIG}/settings.json"
+	if [[ -s ${SETTINGS_FILE} ]]; then
+		# Get the name of the file the websites will look for, and split into name and extension.
+		FULL_FILENAME="$( jq -r ".filename" "${SETTINGS_FILE}" )"
+		EXTENSION="${FULL_FILENAME##*.}"
+		FILENAME="${FULL_FILENAME%.*}"
+
+		CAMERA_TYPE="$( jq -r '.cameratype' "${SETTINGS_FILE}" )"
+		CAMERA_MODEL="$( jq -r '.cameramodel' "${SETTINGS_FILE}" )"
+
+		# So scripts can conditionally output messages.
+		ALLSKY_DEBUG_LEVEL="$( jq -r '.debuglevel' "${SETTINGS_FILE}" )"
+	else
+		ALLSKY_DEBUG_LEVEL=1
+	fi
 	OPTIONS_FILE="${ALLSKY_CONFIG}/options.json"
+	ALLSKY_ENV="${ALLSKY_HOME}/env.json"
+
+	IMG_DIR="current/tmp"
+	CAPTURE_SAVE_DIR="${ALLSKY_TMP}"
 
 	# Python virtual environment
 	ALLSKY_PYTHON_VENV="${ALLSKY_HOME}/venv"

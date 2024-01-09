@@ -5,7 +5,6 @@ initialize_variables();		// sets some variables
 
 define('RASPI_ADMIN_DETAILS', RASPI_CONFIG . '/raspap.auth');
 
-include_once('raspap.php');
 include_once('authenticate.php');
 
 class OVERLAYUTIL
@@ -24,7 +23,7 @@ class OVERLAYUTIL
         "\${TEMPERATURE_F}" => array(
             "ccfield" => "hasSensorTemperature",
             "value" => false,
-        )            
+        )
     );
 
     public function __construct()
@@ -206,7 +205,7 @@ class OVERLAYUTIL
         $fileName = $this->overlayPath . '/config/fields.json';
         $fields = file_get_contents($fileName);
         $systemData = json_decode($fields);
-        
+
         $fileName = $this->overlayPath . '/config/userfields.json';
         $fields = file_get_contents($fileName);
         $userData = json_decode($fields);
@@ -215,7 +214,7 @@ class OVERLAYUTIL
         $mergedFields = array();
 
         foreach($systemData->data as $systemField) {
-            if ($this->includeField($systemField->name)) { 
+            if ($this->includeField($systemField->name)) {
                 $field = array(
                     "id" => $counter,
                     "name" => $systemField->name,
@@ -232,7 +231,7 @@ class OVERLAYUTIL
 
         foreach($userData->data as $userField) {
 
-            if ($this->includeField($systemField->name)) {          
+            if ($this->includeField($systemField->name)) {
                 $field = array(
                     "id" => $counter,
                     "name" => $userField->name,
@@ -251,7 +250,7 @@ class OVERLAYUTIL
             "data" => $mergedFields
         );
         $jsonFields = json_encode($fields);
-        
+
         $this->sendResponse($jsonFields);
     }
 
@@ -452,7 +451,7 @@ class OVERLAYUTIL
         }
 
         if ($proceed) {
-            $saveFolder = $this->overlayPath . "/fonts/";          
+            $saveFolder = $this->overlayPath . "/fonts/";
             $result = array();
             $zipArchive = new ZipArchive();
             $zipArchive->open($downloadPath);

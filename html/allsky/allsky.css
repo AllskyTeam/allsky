@@ -1,0 +1,284 @@
+body {
+	color:white;
+	font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+	background-color: black;
+	max-width: 960px;
+	margin: auto;
+}
+img.current {
+	width: 100%;
+	max-width: 960px;
+}
+
+#starmap_container {
+	position: absolute;
+	overflow: hidden;
+}
+
+
+.header {
+	display:block;
+	width: 100%;
+}
+
+.title {
+	float: left;
+	color: #DDD;
+	font-size: 20px;
+	padding-left: 65px;
+	padding-top: 4px;
+	margin-left: 5px;
+	margin-top: 2px;
+	background: url('allsky-logo.png') left center;
+	background-size: 57px;
+	background-repeat: no-repeat;
+	font-family: 'Ubuntu', sans-serif;
+	font-weight: 400;
+	height: 35px;
+}
+
+.personalLink {
+	text-align: center;
+	font-size: 150%;
+}
+
+.info {
+	font-size: 90%;
+	padding: 8px;
+	position: fixed;
+	top: 150px;
+	right: 0px;
+	border-top-left-radius: 5px;
+	border-bottom-left-radius: 5px;
+	background-color: #333;
+	border: 2px solid #888;
+	border-right: none;
+	z-index: 1;
+}
+
+.info ul {
+	list-style: none;
+	padding-left: 2px;
+	margin-bottom: 0;
+}
+
+.info ul li i {
+	margin-right: 3px;
+}
+
+#leftSidebar {
+	position: fixed;
+	left: 0;
+	top: 150px;
+	padding: 5px;
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 5px;
+	background-color: #333;
+	border: 2px solid #888;
+	border-left: none;
+	z-index: 2;
+}
+
+#leftSidebar li {
+	list-style: none;
+	padding: 2px 0
+}
+
+#leftSidebar li i {
+	cursor: pointer;
+	color: #888;
+	margin: 2px 0;
+}
+
+#leftSidebar li i:hover,
+#leftSidebar li i.active {
+	color: orange;
+}
+
+#imageContainer {
+	margin: auto;
+}
+.imageContainer {
+	border: 1px solid #5a5a5a;
+}
+
+.starmap_credit {
+	display: none !important;
+}
+
+.diy {
+	position: fixed;
+	bottom: 10px;
+	right: 10px;
+	opacity: 0.5;
+}
+
+.diy:hover {
+	opacity: 1;
+}
+
+.diy a {
+	color: white;
+}
+
+.diy i {
+	margin-right: 5px;
+}
+
+.noImages {
+	text-align: center;
+	font-size: 200%;
+	color: #ffc107;
+	border: 2px solid gray;
+	margin: 4px;
+}
+
+.imagesHeader {	/* the whole table */
+	width: 100%;
+	padding: 5px 5px 20px 20px;
+}
+.imagesHeader .headerButton {
+	text-align: left;
+	width: 5%;	/* want headerTitle to be as wide as possible */
+}
+.imagesHeader .headerTitle {
+	text-align: center;
+	font-weight: bold;
+	font-size: 150%;
+}
+
+.back-button {
+	text-decoration: none;
+	margin: 5px;
+	padding: 5px 10px;
+	color: white;
+	background-color: #5D5D5D;
+	border-radius: 5px;
+	white-space: nowrap;
+}
+
+.back-button i {
+	margin-right: 5px;
+}
+
+.archived-files {
+}
+
+.archived-files .day-container{
+	/* width: 10%; */
+	min-width: 100px;	/* same as thumbnail width */
+	float: left;
+	padding: 8px;
+	text-align: center;	/* so text is centered below thumbnail */
+}
+
+.archived-files .img-text {
+	border: 1px solid #333;
+}
+
+.archived-files .day-container .day-text {
+	padding-top: 2px;
+	color: #7777ff;
+}
+
+.archived-files .day-container .image-container {
+	height: 100px;	/* based on 100px wide thumbnail */
+}
+
+.archived-files .day-container .image-container img{
+	max-width: 100%;
+	max-height: 100%;
+}
+
+.archived-files-end {
+	clear: both;
+}
+
+.archived-files hr {
+	margin-top: 25px;
+	width: 50%;
+	height: 2px;
+	background-color: #7777ffaa;
+	border-radius: 2px;
+	border: 1px solid #7777ffaa;
+}
+
+.forecast {
+	padding: 9px;
+}
+
+.forecast-day {
+	font-weight: bold;
+	margin: 0 3px;
+}
+
+.forecast .Very_Quite,
+.forecast .Quiet {
+	color: green;
+}
+
+.forecast .Unsettled,
+.forecast .Active {
+	color: #ffc107;
+}
+
+.forecast .Minor_Storm,
+.forecast .Moderate_Storm {
+	color: darkorange;
+}
+
+.forecast .Strong_Storm,
+.forecast .Severe_Storm,
+.forecast .Extreme_Storm {
+	color: #dc3545;
+}
+
+.forecast .WARNING {	/* for Aurora activity */
+	color: #ffc107;
+	font-weight: bold;
+	font-size: 125%;
+}
+
+.forecast-map {
+	width: 75%;
+	max-width: 800px;
+	margin-top: 30px;
+}
+
+.virtualsky_help {
+	color: black;
+}
+
+.thumbnailError {
+	color: #dc3545;
+}
+
+/* Messages on the home page */
+.msg {
+	background-color: #222;
+	text-align: center;
+	font-size: 145%;
+	font-weight: bold;
+	margin: 10px 0 20px 0;
+	padding: 20px 0 20px 0;
+	border-radius: 10px;
+}
+.error-msg {
+	color: #dc3545;
+	border: 3px dashed #dc3545;
+}
+.warning-msg {
+	color: #ffc107;
+	border: 3px dashed #ffc107;
+}
+.notice-msg {
+	color: white;
+	border: 3px solid white;
+}
+
+@media screen and (max-width: 480px) {
+	.msg {
+		font-size: 100%;
+	}
+}
+

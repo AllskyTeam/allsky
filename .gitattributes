@@ -1,0 +1,17 @@
+* text=auto
+
+*.c text
+*.cpp text
+*.h text
+*.hpp text
+*.conf text
+*.py text
+*.sh text
+*.txt text
+*.md text
+Makefile text
+.gitignore text
+
+*.png binary
+*.jpg binary
+*.a binary

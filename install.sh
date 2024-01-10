@@ -1697,7 +1697,7 @@ convert_settings()			# prior_file, new_file
 
 	# Output the field name and value as text separated by a tab.
 	"${ALLSKY_WEBUI}/includes/convertJSON.php" \
-			--delimiter "$( echo -e '\t' )"
+			--delimiter "$( echo -e '\t' )" \
 			--settings-file "${TEMP_PRIOR}" |
 		while read -r F V
 		do

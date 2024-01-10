@@ -1760,7 +1760,7 @@ convert_settings()			# prior_file, new_file
 			esac
 
 			update_json_file ".${F}" "${V}" "${NEW_FILE}"
-		done )
+		done
 
 	# Fields whose location changed.
 	x="$( get_variable "DAYTIME_CAPTURE" "${PRIOR_CONFIG_FILE}" )"

@@ -40,8 +40,8 @@ $longopts = array(
 	"settings-file:",
 	"delimiter:",
 	"capture-only:",
-	"convert::",
-	"debug::",			// no arguments
+	"convert",
+	"debug",			// no arguments
 );
 $options = getopt("", $longopts, $rest_index);
 $ok=true;
@@ -65,12 +65,13 @@ foreach ($options as $opt => $val) {
 		}
 	} else if ($opt === "convert") {
 		$convert = true;
-	}
+	} else if ($opt === "delimiter") {
+		$delimiter = $val;
+	} // else: getopt() doesn't return a bad argument
 }
 
-if ($convert && $capture_only) {
+if (! $ok || ($convert && $capture_only))
 	exit(1);
-}
 
 if ($settings_file === null) {
 	// use default
@@ -117,15 +118,15 @@ if ($capture_only) {
 
 	// We want all lines in the settings file so create an options array
 	// indexed by the name.
-	$options = Array();
+	$new_options = Array();
 	foreach ($options_array as $option) {
 		$name = $option['name'];
-		$options[$name] = $option;
+		$new_options[$name] = $option;
 	}
 
 	$new_array = Array();
 	foreach ($settings_array as $name => $val) {
-		$n = getVariableOrDefault($options, $name, null);
+		$n = getVariableOrDefault($new_options, $name, null);
 		// If $n is null let's hope it's not a boolean.
 
 		if ($n !== null) {

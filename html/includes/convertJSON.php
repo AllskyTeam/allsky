@@ -126,6 +126,7 @@ if ($capture_only) {
 
 	$new_array = Array();
 	foreach ($settings_array as $name => $val) {
+		$name = strtolower($name);
 		$n = getVariableOrDefault($new_options, $name, null);
 		// If $n is null let's hope it's not a boolean.
 
@@ -141,7 +142,7 @@ if ($capture_only) {
 					$val = false;
 			}
 		}
-		$new_array[strtolower($name)] = $val;
+		$new_array[$name] = $val;
 	}
 
 	echo json_encode($new_array, $mode);

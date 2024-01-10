@@ -252,7 +252,7 @@ fi
 # We must pass "-config ${ARGS_FILE}" on the command line,
 # and debuglevel we did above, so don't do them again.
 # Only pass settings that are used by the capture program.
-"${ALLSKY_WEBUI}/includes/outputJSONwithEqual.php" --capture-only "${OPTIONS_FILE}" |
+"${ALLSKY_WEBUI}/includes/convertJSON.php" --capture-only "${OPTIONS_FILE}" |
 	grep -E -i -v "^config=|^debuglevel=" >> "${ARGS_FILE}"
 
 # When using a desktop environment a preview of the capture can be displayed.

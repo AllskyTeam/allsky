@@ -4,8 +4,8 @@ server.document-root        = "XX_ALLSKY_WEBUI_XX"
 server.upload-dirs          = ( "/var/cache/lighttpd/uploads" )
 server.errorlog             = "/var/log/lighttpd/error.log"
 server.pid-file             = "/var/run/lighttpd.pid"
-#server.username             = "www-data"
-#server.groupname            = "www-data"
+server.username             = "XX_WEBSERVER_OWNER_XX"
+server.groupname            = "XX_WEBSERVER_GROUP_XX"
 server.port                 = 80
 server.tag                  = "Allsky"
 

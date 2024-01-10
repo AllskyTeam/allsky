@@ -22,13 +22,40 @@ if ((include $defs) == false) {
 }
 
 // Read and decode a json file, returning the decoded results or null.
-// On error, display the specified error message
+// On error, display the specified error message.
+// If we're being run by the user it's likely on a tty so don't use html.
 function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=null) {
-	if (! file_exists($file)) {
-		$retMsg  = "<div style='color: red; font-size: 200%;'>";
+	$retMsg = "";
+	$html = (get_current_user() == WEBSERVER_OWNER);
+	if ($html) {
+		$div = "<div style='color: red; font-size: 200%;'>";
+		$end = "</div>";
+		$br = "<br>";
+		$sep = "<br>";
+	} else {
+		$div = "";
+		$end = "\n";
+		$br = "\n";
+		$sep = "\n";
+	}
+
+	if ($file == "") {
+		$retMsg .= $div;
 		$retMsg .= "$errorMsg";
-		$retMsg .= "<br>File '$file' missing!";
-		$retMsg .= "</div>";
+		$retMsg .= $br;
+		$retMsg .= "JSON file not specified!";
+		$retMsg .= $end;
+		if ($returnedMsg === null) echo "$retMsg";
+		else $returnedMsg = $retMsg;
+		return null;
+	}
+
+	if (! file_exists($file)) {
+		$retMsg .= $div;
+		$retMsg .= "$errorMsg";
+		$retMsg .= $br;
+		$retMsg .= "File '$file' missing!";
+		$retMsg .= $end;
 		if ($returnedMsg === null) echo "$retMsg";
 		else $returnedMsg = $retMsg;
 		return null;
@@ -36,18 +63,20 @@ function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=nul
 
 	$str = file_get_contents($file, true);
 	if ($str === "") {
-		$retMsg  = "<div style='color: red; font-size: 200%;'>";
+		$retMsg .= $div;
 		$retMsg .= "$errorMsg";
-		$retMsg .= "<br>File '$file' is empty!";
-		$retMsg .= "</div>";
+		$retMsg .= $br;
+		$retMsg .= "File '$file' is empty!";
+		$retMsg .= $end;
 		if ($returnedMsg === null) echo "$retMsg";
 		else $returnedMsg = $retMsg;
 		return null;
 	} else if ($str === false) {
-		$retMsg  = "<div style='color: red; font-size: 200%;'>";
+		$retMsg .= $div;
 		$retMsg .= "$errorMsg:";
-		$retMsg .= "<br>Error reading '$file'!";
-		$retMsg .= "</div>";
+		$retMsg .= $br;
+		$retMsg .= "Error reading '$file'!";
+		$retMsg .= $end;
 		if ($returnedMsg === null) echo "$retMsg";
 		else $returnedMsg = $retMsg;
 		return null;
@@ -55,13 +84,15 @@ function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=nul
 
 	$str_array = json_decode($str, $associative);
 	if ($str_array == null) {
-		$retMsg  = "<div style='color: red; font-size: 200%;'>";
+		$retMsg .= $div;
 		$retMsg .= "$errorMsg";
-		$retMsg .= "<br>" . json_last_error_msg();
+		$retMsg .= $br;
+		$retMsg .= json_last_error_msg();
 		$cmd = "json_pp < $file 2>&1";
 		exec($cmd, $output);
-		$retMsg .= "<br>" . implode("<br>", $output);
-		$retMsg .= "</div>";
+		$retMsg .= $br;
+		$retMsg .= implode($sep, $output);
+		$retMsg .= $end;
 		if ($returnedMsg === null) echo "$retMsg";
 		else $returnedMsg = $retMsg;
 		return null;

@@ -38,10 +38,13 @@ $options_array = null;
 $rest_index;
 $longopts = array(
 	"settings-file:",
+	"options-file:",
 	"delimiter:",
-	"capture-only:",
+
+	// no arguments:
+	"capture-only",
 	"convert",
-	"debug",			// no arguments
+	"debug",
 );
 $options = getopt("", $longopts, $rest_index);
 $ok=true;
@@ -54,6 +57,12 @@ foreach ($options as $opt => $val) {
 		$settings_file = $val;
 		if (! file_exists($settings_file)) {
 			echo "ERROR: settings file '$settings_file' not found!\n";
+			$ok = false;
+		}
+	} else if ($opt === "options-file") {
+		$options_file = $val;
+		if (! file_exists($options_file)) {
+			echo "ERROR: options file '$options_file' not found!\n";
 			$ok = false;
 		}
 	} else if ($opt === "capture-only") {
@@ -77,17 +86,16 @@ if ($settings_file === null) {
 	// use default
 	$settings_file = getSettingsFile();
 }
-if ($options_file === null) {
-	// use default
-	$options_file = getOptionsFile();
-}
-
 $errorMsg = "ERROR: Unable to process settings file '$settings_file'.";
 $settings_array = get_decoded_json_file($settings_file, true, $errorMsg);
 if ($settings_array === null) {
 	exit(2);
 }
 
+if ($options_file === null) {
+	// use default
+	$options_file = getOptionsFile();
+}
 if ($capture_only || $convert) {
 	$errorMsg = "ERROR: Unable to process options file '$options_file'.";
 	$options_array = get_decoded_json_file($options_file, true, $errorMsg);
@@ -156,3 +164,4 @@ if ($capture_only) {
 
 exit(0);
 ?>
+

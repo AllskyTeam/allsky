@@ -8,8 +8,6 @@ ME="$( basename "${BASH_ARGV0}" )"
 source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
-
-# This file defines functions plus sets many variables.
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
@@ -24,7 +22,7 @@ fi
 chmod 755 "${ALLSKY_HOME}"  							|| exit "${EXIT_ERROR_STOP}"
 cd "${ALLSKY_HOME}"  									|| exit "${EXIT_ERROR_STOP}"
 
-# PRIOR_ALL_DIR is passed to us and is the location of an optional prior copy of Allsky.
+# PRIOR_ALLSKY_DIR is passed to us and is the location of an optional prior copy of Allsky.
 PRIOR_CONFIG_DIR="${PRIOR_ALLSKY_DIR}/config"
 PRIOR_CONFIG_FILE="${PRIOR_CONFIG_DIR}/config.sh"
 PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"	# may change depending on old version
@@ -36,8 +34,8 @@ SETTINGS_FILE_NAME="$( basename "${SETTINGS_FILE}" )"
 FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"	# should a default settings file be created?
 RESTORED_PRIOR_SETTINGS_FILE="false"
 PRIOR_SETTINGS_FILE=""					# Full pathname to the prior settings file, if it exists
-RESTORED_PRIOR_CONFIG_SH="false"		# prior config.sh restored?
-RESTORED_PRIOR_FTP_SH="false"			# prior ftp-settings.sh restored?
+COPIED_PRIOR_CONFIG_SH="false"			# prior config.sh restored?
+COPIED_PRIOR_FTP_SH="false"				# prior ftp-settings.sh restored?
 SUGGESTED_NEW_HOST_NAME="allsky"		# Suggested new host name
 NEW_HOST_NAME=""						# User-specified host name
 BRANCH="${GITHUB_MAIN_BRANCH}"			# default branch
@@ -54,11 +52,12 @@ FIRST_CAMERA_TYPE_BASE_VERSION="v2023.05.01"
 	# It's also when ftp-settings.sh moved to ${ALLSKY_CONFIG}
 FIRST_VERSION_VERSION="v2022.03.01"
 	# Versions before ${FIRST_VERSION_VERSION} that didn't have version numbers.
-##xxx TODO: uncomment:    PRE_FIRST_VERSION_VERSION="old"
+PRE_FIRST_VERSION_VERSION="old"
 
 # Repo files
 REPO_SUDOERS_FILE="${ALLSKY_REPO}/sudoers.repo"
-REPO_WEBUI_DEFINES_FILE="${ALLSKY_REPO}/allskyDefines.inc.repo"
+ALLSKY_DEFINES_INC="allskyDefines.inc"
+REPO_WEBUI_DEFINES_FILE="${ALLSKY_REPO}/${ALLSKY_DEFINES_INC}.repo"
 REPO_LIGHTTPD_FILE="${ALLSKY_REPO}/lighttpd.conf.repo"
 REPO_AVI_FILE="${ALLSKY_REPO}/avahi-daemon.conf.repo"
 
@@ -111,6 +110,7 @@ if [[ -d "${ALLSKY_PYTHON_VENV}" ]]; then
 else
 	INSTALLED_VENV="true"
 fi
+
 
 ############################################## functions
 
@@ -402,7 +402,7 @@ check_for_raspistill()
 create_webui_defines()
 {
 	display_msg --log progress "Modifying locations for WebUI."
-	FILE="${ALLSKY_WEBUI}/includes/allskyDefines.inc"
+	FILE="${ALLSKY_WEBUI}/includes/${ALLSKY_DEFINES_INC}"
 	sed		-e "s;XX_HOME_XX;${HOME};" \
 			-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
 			-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
@@ -418,6 +418,7 @@ create_webui_defines()
 			-e "s;XX_ALLSKY_WEBSITE_REMOTE_CONFIG_XX;${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE};" \
 			-e "s;XX_ALLSKY_OWNER_XX;${ALLSKY_OWNER};" \
 			-e "s;XX_ALLSKY_GROUP_XX;${ALLSKY_GROUP};" \
+			-e "s;XX_WEBSERVER_OWNER_XX;${WEBSERVER_OWNER};" \
 			-e "s;XX_WEBSERVER_GROUP_XX;${WEBSERVER_GROUP};" \
 			-e "s;XX_ALLSKY_REPO_XX;${ALLSKY_REPO};" \
 			-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};" \
@@ -830,6 +831,9 @@ install_webserver_et_al()
 		FINAL_LIGHTTPD_FILE="/etc/lighttpd/lighttpd.conf"
 		sed \
 			-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};g" \
+			-e "s;XX_WEBSERVER_OWNER_XX;${WEBSERVER_OWNER};g" \
+			-e "s;XX_WEBSERVER_GROUP_XX;${WEBSERVER_GROUP};g" \
+			-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};g" \
 			-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};g" \
 			-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};g" \
 			-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};g" \
@@ -961,8 +965,8 @@ set_permissions()
 	# We don't know what permissions may have been on the old website, so use "sudo".
 	sudo find "${ALLSKY_WEBUI}/" -type f -exec chmod 644 '{}' \;
 	sudo find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 '{}' \;
-	chmod 755 "${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
-			  "${ALLSKY_WEBUI}/includes/outputJSONwithEqual.php"
+	chmod 755	"${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
+				"${ALLSKY_WEBUI}/includes/convertJSON.php"
 
 	if [[ -d "${ALLSKY_WEBSITE}" ]]; then
 		sudo find "${ALLSKY_WEBUI}/" -type d -name thumbnails \! -perm 775 -exec chmod 775 '{}' \;
@@ -1353,8 +1357,8 @@ set_what_can_be_skipped()
 		local OLD_VERSION="${1}"
 		local OLD_BASE_VERSION="$( remove_point_release "${OLD_VERSION}" )"
 		local NEW_VERSION="${2}"
-		if [[ ${NEW_VERSION} == "v2023.05.01_02" &&
-				${OLD_BASE_VERSION} == "${FIRST_CAMERA_TYPE_BASE_VERSION}" ]]; then
+		local NEW_BASE_VERSION="$( remove_point_release "${NEW_VERSION}" )"
+		if [[ ${NEW_BASE_VERSION} == "${OLD_BASE_VERSION}" ]]; then
 			# No changes to these packages so no need to reinstall.
 			MSG="Skipping installation of: webserver et.al., PHP modules, Trutype fonts, Python"
 			display_msg --logonly info "${MSG}"
@@ -1373,12 +1377,15 @@ is_reboot_needed()
 	local OLD_VERSION="${1}"
 	local OLD_BASE_VERSION="$( remove_point_release "${OLD_VERSION}" )"
 	local NEW_VERSION="${2}"
-	if [[ ${OLD_VERSION} < "v2023.05.01_04" ]]; then
-		# v2023.05.01_04 added to ${PATH} and a reboot's needed to have it take effect.
-		display_msg --log progress "A reboot is needed after installation finishes."
-	else
+	local NEW_BASE_VERSION="$( remove_point_release "${NEW_VERSION}" )"
+	if [[ ${NEW_BASE_VERSION} == "${OLD_BASE_VERSION}" ]]; then
+# TODO: this may not always be true.
+		# Assume just bug fixes between point releases.
 		REBOOT_NEEDED="false"
 		display_msg --logonly info "No reboot is needed."
+	else
+		REBOOT_NEEDED="true"
+		display_msg --log progress "A reboot is needed after installation finishes."
 	fi
 }
 
@@ -1392,7 +1399,7 @@ OLD_STYLE_ALLSKY="oldStyle"
 # PRIOR_ALLSKY_DIR set in variables.sh
 PRIOR_ALLSKY_STYLE=""			# Set to the style if they have a prior version
 PRIOR_ALLSKY_VERSION=""			# The version number of the prior version, if known
-##xxx TODO: uncomment:    PRIOR_ALLSKY_BASE_VERSION=""	# The base version number of the prior version, if known
+PRIOR_ALLSKY_BASE_VERSION=""	# The base version number of the prior version, if known
 PRIOR_CAMERA_TYPE=""
 PRIOR_CAMERA_MODEL=""
 
@@ -1418,20 +1425,13 @@ does_prior_Allsky_exist()
 
 	# Determine the prior Allsky version and set some PRIOR_* locations.
 	PRIOR_ALLSKY_VERSION="$( get_version "${PRIOR_ALLSKY_DIR}/" )"	# Returns "" if no version file.
-	if [[ -n  ${PRIOR_ALLSKY_VERSION} ]]; then
-		display_msg --logonly info "Prior Allsky version ${PRIOR_ALLSKY_VERSION} found."
-		if [[ ${PRIOR_ALLSKY_VERSION} == "${FIRST_VERSION_VERSION}" ]]; then
-			# First Allsky version with a "version" file.
-			# This is an old style Allsky with ${CAMERA} in config.sh.
-			# Don't do anything here; go to the "if" below.
-			:
-		else
-			PRIOR_ALLSKY_STYLE="${NEW_STYLE_ALLSKY}"
+	if [[ -n ${PRIOR_ALLSKY_VERSION} && (! ${PRIOR_ALLSKY_VERSION} < "${FIRST_CAMERA_TYPE_BASE_VERSION}") ]]; then
+		PRIOR_ALLSKY_STYLE="${NEW_STYLE_ALLSKY}"
 
-			# PRIOR_SETTINGS_FILE should be a link to a camera-specific settings file
-			# and that file will have the camera type and model.
-			PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}"
-			if [[ -f ${PRIOR_SETTINGS_FILE} ]]; then
+		# PRIOR_SETTINGS_FILE should be a link to a camera-specific settings file
+		# and that file will have the camera type and model.
+		PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}"
+		if [[ -f ${PRIOR_SETTINGS_FILE} ]]; then
 			if [[ ${PRIOR_ALLSKY_VERSION} < "${COMBINED_BASE_VERSION}" ]]; then
 				CT_=".cameraType"
 				CM_=".cameraModel"
@@ -1443,22 +1443,38 @@ does_prior_Allsky_exist()
 			PRIOR_CAMERA_MODEL="$( settings "${CM_}" "${PRIOR_SETTINGS_FILE}" )"
 			MSG="Prior Camera Type = ${PRIOR_CAMERA_TYPE}, prior model = ${PRIOR_CAMERA_MODEL}"
 			display_msg --logonly info "${MSG}"
-			else
-				# This shouldn't happen...
-				PRIOR_SETTINGS_FILE=""
-				display_msg --log warning "No prior new style settings file found!"
-			fi
+		else
+			# This shouldn't happen...
+			PRIOR_SETTINGS_FILE=""
+			display_msg --log warning "No prior new style settings file found!"
 		fi
-	fi
 
-	if [[ -z ${PRIOR_ALLSKY_STYLE} ]]; then
+	else		# pre-${FIRST_VERSION_VERSION}
+		# V0.6, v0.7, and v0.8:
+		#	"allsky" directory contained capture.cpp, config.sh.
+		#	"scripts" directory had ftp-settings.sh.
+		#	No "src" directory.
+			# NOTE: v0.6's capture.cpp said v0.5.
+		# V0.8.1 added "scr" and "config" directories and "variables.sh" file.
+
 		PRIOR_ALLSKY_STYLE="${OLD_STYLE_ALLSKY}"
-		PRIOR_ALLSKY_VERSION="${PRIOR_ALLSKY_VERSION:-old}"
-		local CAMERA="$( get_variable "CAMERA" "${PRIOR_CONFIG_FILE}" )"
-		PRIOR_CAMERA_TYPE="$( CAMERA_to_CAMERA_TYPE "${CAMERA}" )"
-		# PRIOR_CAMERA_MODEL wasn't stored anywhere so can't set it.
-		PRIOR_SETTINGS_FILE="${OLD_RASPAP_DIR}/settings_${CAMERA}.json"
-		[[ ! -f ${PRIOR_SETTINGS_FILE} ]] && PRIOR_SETTINGS_FILE=""
+		if [[ -z ${PRIOR_ALLSKY_VERSION} ]]; then
+			# No version file so try to determine version via .cpp file.
+			# sample:    printf("%s *** Allsky Camera Software v0.8.3 | 2021 ***\n", c(KGRN));
+			DIR="${PRIOR_ALLSKY_DIR}/src"
+			[[ ! -d "${DIR}" ]] && DIR="${PRIOR_ALLSKY_DIR}"
+			PRIOR_ALLSKY_VERSION="$( grep "Camera Software" "${DIR}/capture.cpp" | awk '{print $6}' )"
+		fi
+			PRIOR_ALLSKY_VERSION="${PRIOR_ALLSKY_VERSION:-${PRE_FIRST_VERSION_VERSION}}"
+			local CAMERA="$( get_variable "CAMERA" "${PRIOR_CONFIG_FILE}" )"
+			PRIOR_CAMERA_TYPE="$( CAMERA_to_CAMERA_TYPE "${CAMERA}" )"
+			# PRIOR_CAMERA_MODEL wasn't stored anywhere so can't set it.
+			PRIOR_SETTINGS_FILE="${OLD_RASPAP_DIR}/settings_${CAMERA}.json"
+			[[ ! -f ${PRIOR_SETTINGS_FILE} ]] && PRIOR_SETTINGS_FILE=""
+		fi
+
+	if [[ -n ${PRIOR_ALLSKY_VERSION} && ${PRIOR_ALLSKY_VERSION} != "${PRE_FIRST_VERSION_VERSION}" ]]; then
+		PRIOR_ALLSKY_BASE_VERSION="$( remove_point_release "${PRIOR_ALLSKY_VERSION}" )"
 	fi
 
 	display_msg --logonly info "PRIOR_ALLSKY_VERSION=${PRIOR_ALLSKY_VERSION}"
@@ -1647,27 +1663,44 @@ get_lat_long()
 
 
 ####
-# Convert the prior settings file to a new one.
-convert_settings()			# prior_version, prior_file, new_file
+# If needed, convert the prior settings file.
+convert_settings()			# prior_file, new_file
 {
-	PRIOR_VERSION="${1}"
-		PRIOR_BASE_VERSION="$( remove_point_release "${PRIOR_VERSION}" )"
-	PRIOR_FILE="${2}"
-	NEW_FILE="${3}"
+	PRIOR_FILE="${1}"
+	NEW_FILE="${2}"
 
-	[[ ${ALLSKY_VERSION} == "${PRIOR_VERSION}" ]] && return
+	[[ ${ALLSKY_VERSION} == "${PRIOR_ALLSKY_VERSION}" ]] && return
+	# If we're upgrading a version >= COMBINED_BASE_VERSION then return.
+	# bash doesn't have >= so use   ! <
+	[[ ! (${PRIOR_ALLSKY_BASE_VERSION} < "${COMBINED_BASE_VERSION}") ]] && return
+# TODO: versions after COMBINED_BASE_VERSION may also need
+#		similar changes to what's in the "while" loop below.
 
-	if [[ ${PRIOR_BASE_VERSION} < "${COMBINED_BASE_VERSION}" ]]; then
-		# Older version had uppercase letters in settings name.
-		display_msg --logonly info "   Making all settings names lowercase."
-		# This assumes json key names only contain what's between the brackets:
-		sed -i -e 's/\("[-_a-zA-Z]*"\)/\L\1/' "${NEW_FILE}"
+	MSG="   Converting old settings file to new format with new settings."
+	display_msg --log info "${MSG}"
+
+	# Don't modify the prior file, so make the changes to a temporary file.
+	local TEMP_PRIOR="/tmp/converted_old_settings.json"
+
+	# Older version had uppercase letters in settings name and "1" and "0" for booleans
+	# and quotes around numbers.
+	"${ALLSKY_WEBUI}/includes/convertJSON.php" --convert "${PRIOR_FILE}" > "${TEMP_PRIOR}" 2>&1
+	if [[ $? -ne 0 ]]; then
+		MSG="Unable to convert old settings file: $( < "${TEMP_PRIOR}" )"
+		display_msg --log error "${MSG}"
+# TODO: tell the user what to do ??
+		return
 	fi
 
-	convert_json_to_tabs "${PRIOR_FILE}" |
+	# For each field in prior file, update new file with old value.
+	# Then handle new fields and fields that changed locations or names.
+
+	# Output the field name and value as text separated by a tab.
+	"${ALLSKY_WEBUI}/includes/convertJSON.php" \
+			--delimiter "$( echo -e '\t' )"
+			--settings-file "${TEMP_PRIOR}" |
 		while read -r F V
 		do
-			F="${F,,}"
 			case "${F}" in
 				"lastchanged")
 					V="$( date +'%Y-%m-%d %H:%M:%S' )"
@@ -1681,9 +1714,6 @@ convert_settings()			# prior_version, prior_file, new_file
 				# These changed names.
 				"darkframe")
 					F="takedarkframes"
-					;;
-				"daymaxautoexposure")
-					F="daymaxautoexposure"
 					;;
 				"daymaxgain")
 					F="daymaxautogain"
@@ -1701,6 +1731,7 @@ convert_settings()			# prior_version, prior_file, new_file
 					F="night${F}"
 					;;
 				"awb"|"autowhitebalance")
+					F="awb"
 					update_json_file ".day${F}" "${V}" "${NEW_FILE}"
 					F="night${F}"
 					;;
@@ -1713,34 +1744,33 @@ convert_settings()			# prior_version, prior_file, new_file
 					F="night${F}"
 					;;
 				"targettemp")
-					F="targettemp"
 					update_json_file ".day${F}" "${V}" "${NEW_FILE}"
 					F="night${F}"
 					;;
 				"coolerenabled")
+					F="enablecooler"		# also a name change
 					F="enablecooler"
 					update_json_file ".day${F}" "${V}" "${NEW_FILE}"
 					F="night${F}"
 					;;
 				"meanthreshold")
-					F="meanthreshold"
 					update_json_file ".day${F}" "${V}" "${NEW_FILE}"
 					F="night${F}"
 					;;
 			esac
 
 			update_json_file ".${F}" "${V}" "${NEW_FILE}"
-		done
+		done )
 
-		# Fields whose location changed.
-		x="$( get_variable "DAYTIME_CAPTURE" "${PRIOR_CONFIG_FILE}" )"
-		[[ -n ${x} ]] && update_json_file ".takedaytimeimages" "${x}" "${NEW_FILE}"
+	# Fields whose location changed.
+	x="$( get_variable "DAYTIME_CAPTURE" "${PRIOR_CONFIG_FILE}" )"
+	[[ -n ${x} ]] && update_json_file ".takedaytimeimages" "${x}" "${NEW_FILE}"
 
-		x="$( get_variable "DAYTIME_SAVE" "${PRIOR_CONFIG_FILE}" )"
-		[[ -n ${x} ]] && update_json_file ".savedaytimeimages" "${x}" "${NEW_FILE}"
+	x="$( get_variable "DAYTIME_SAVE" "${PRIOR_CONFIG_FILE}" )"
+	[[ -n ${x} ]] && update_json_file ".savedaytimeimages" "${x}" "${NEW_FILE}"
 
-		x="$( get_variable "DARK_FRAME_SUBTRACTION" "${PRIOR_CONFIG_FILE}" )"
-		[[ -n ${x} ]] && update_json_file ".usedarkframes" "${x}" "${NEW_FILE}"
+	x="$( get_variable "DARK_FRAME_SUBTRACTION" "${PRIOR_CONFIG_FILE}" )"
+	[[ -n ${x} ]] && update_json_file ".usedarkframes" "${x}" "${NEW_FILE}"
 }
 
 
@@ -1764,7 +1794,7 @@ restore_prior_settings_file()
 		return
 	fi
 
-	local MSG NAME EXT FIRST_ONE
+	local MSG NAME EXT FIRST_ONE CHECK_UPPER
 
 	if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
 		# The prior settings file SHOULD be a link to a camera-specific file.
@@ -1772,10 +1802,10 @@ restore_prior_settings_file()
 
 		MSG="Checking link for ${NEW_STYLE_ALLSKY} PRIOR_SETTINGS_FILE '${PRIOR_SETTINGS_FILE}'"
 		display_msg --logonly info "${MSG}"
-		if [[ ${PRIOR_BASE_VERSION} < "${COMBINED_BASE_VERSION}" ]]; then
-			local CHECK_UPPER="--uppercase"
+		if [[ ${PRIOR_ALLSKY_BASE_VERSION} < "${COMBINED_BASE_VERSION}" ]]; then
+			CHECK_UPPER="--uppercase"
 		else
-			local CHECK_UPPER=""
+			CHECK_UPPER=""
 		fi
 	
 		# shellcheck disable=SC2086
@@ -1839,8 +1869,7 @@ restore_prior_settings_file()
 				local B="$( basename "${S}" )"
 				S="${ALLSKY_CONFIG}/${B}"
 				display_msg --log progress "Updating '${S}'"
-				convert_settings "${PRIOR_ALLSKY_VERSION}" \
-					"${S}" "${S}"
+				convert_settings "${S}" "${S}"
 			done
 		fi
 
@@ -1851,8 +1880,7 @@ restore_prior_settings_file()
 
 			case "${PRIOR_ALLSKY_VERSION}" in
 				"${FIRST_VERSION_VERSION}")
-					convert_settings "${PRIOR_ALLSKY_VERSION}" \
-						"${PRIOR_SETTINGS_FILE}" "${SETTINGS_FILE}"
+					convert_settings "${PRIOR_SETTINGS_FILE}" "${SETTINGS_FILE}"
 
 					MSG="Your old WebUI settings were transfered to the new release,"
 					MSG="${MSG}\n but note that there have been some changes to the settings file."
@@ -1885,6 +1913,7 @@ restore_prior_settings_file()
 					whiptail --title "${TITLE}" --msgbox "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 					display_msg info "\n${MSG}\n"
 					echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+
 					MSG="Only a few settings from very old ${PRIOR_ALLSKY_VERSION} copied over."
 					display_msg --logonly info "${MSG}"
 					;;
@@ -2082,15 +2111,15 @@ restore_prior_files()
 	# See if the prior config.sh and ftp-setting.sh are the same version as
 	# the new ones; if so, we can copy them to the new version.
 	# Currently what's in ${ALLSKY_CONFIG} are copies of the repo files.
-	RESTORED_PRIOR_CONFIG_SH="false"		# Global variable
-	RESTORED_PRIOR_FTP_SH="false"			# Global variable
+	COPIED_PRIOR_CONFIG_SH="false"		# Global variable
+	COPIED_PRIOR_FTP_SH="false"			# Global variable
 
 	local CONFIG_SH_VERSION="$( get_variable "CONFIG_SH_VERSION" "${ALLSKY_CONFIG}/config.sh" )"
 	local PRIOR_CONFIG_SH_VERSION="$( get_variable "CONFIG_SH_VERSION" "${PRIOR_CONFIG_FILE}" )"
 	ITEM="${SPACE}'config.sh' file"
 	if [[ ${CONFIG_SH_VERSION} == "${PRIOR_CONFIG_SH_VERSION}" ]]; then
 		display_msg --log progress "${ITEM}, as is"
-		cp "${PRIOR_CONFIG_FILE}" "${ALLSKY_CONFIG}" && RESTORED_PRIOR_CONFIG_SH="true"
+		cp "${PRIOR_CONFIG_FILE}" "${ALLSKY_CONFIG}" && COPIED_PRIOR_CONFIG_SH="true"
 	else
 		if [[ -z ${PRIOR_CONFIG_SH_VERSION} ]]; then
 			MSG="no prior version specified"
@@ -2124,7 +2153,7 @@ restore_prior_files()
 	ITEM="${SPACE}'ftp-settings.sh'"
 	if [[ ${FTP_SH_VERSION} == "${PRIOR_FTP_SH_VERSION}" ]]; then
 		display_msg --log progress "${ITEM}, as is"
-		cp "${PRIOR_FTP_FILE}" "${ALLSKY_CONFIG}" && RESTORED_PRIOR_FTP_SH="true"
+		cp "${PRIOR_FTP_FILE}" "${ALLSKY_CONFIG}" && COPIED_PRIOR_FTP_SH="true"
 	else
 		if [[ ${PRIOR_FTP_SH_VERSION} == "no version" ]]; then
 			MSG=": unknown prior FTP_SH_VERSION"
@@ -2149,10 +2178,10 @@ restore_prior_files()
 		fi
 	fi
 
-	STATUS_VARIABLES+=( "RESTORED_PRIOR_CONFIG_SH='${RESTORED_PRIOR_CONFIG_SH}'\n" )
-	STATUS_VARIABLES+=( "RESTORED_PRIOR_FTP_SH='${RESTORED_PRIOR_FTP_SH}'\n" )
+	STATUS_VARIABLES+=( "COPIED_PRIOR_CONFIG_SH='${COPIED_PRIOR_CONFIG_SH}'\n" )
+	STATUS_VARIABLES+=( "COPIED_PRIOR_FTP_SH='${COPIED_PRIOR_FTP_SH}'\n" )
 
-	if [[ ${RESTORED_PRIOR_CONFIG_SH} == "true" && ${RESTORED_PRIOR_FTP_SH} == "true" ]]; then
+	if [[ ${COPIED_PRIOR_CONFIG_SH} == "true" && ${COPIED_PRIOR_FTP_SH} == "true" ]]; then
 		return 0
 	fi
 
@@ -2160,10 +2189,10 @@ restore_prior_files()
 		# The prior versions are similar to the new ones.
 		MSG=""
 		# If it has a version number it's probably close to the current version.
-		if [[ ${RESTORED_PRIOR_CONFIG_SH} == "false" && -n ${PRIOR_CONFIG_SH_VERSION} ]]; then
+		if [[ ${COPIED_PRIOR_CONFIG_SH} == "false" && -n ${PRIOR_CONFIG_SH_VERSION} ]]; then
 			MSG="${MSG}\nYour prior 'config.sh' file is similar to the new one."
 		fi
-		if [[ ${RESTORED_PRIOR_FTP_SH} == "false" && ${PRIOR_FTP_SH_VERSION} == "no version" ]]; then
+		if [[ ${COPIED_PRIOR_FTP_SH} == "false" && ${PRIOR_FTP_SH_VERSION} == "no version" ]]; then
 			MSG="${MSG}\nYour prior 'ftp-settings.sh' file is similar to the new one."
 		fi
 		# Don't wantn this line in the post-installation file.
@@ -2178,10 +2207,10 @@ restore_prior_files()
 		MSG2="${MSG2}\n\ndiff ${PRIOR_FTP_FILE} ${ALLSKY_CONFIG}"
 	else
 		MSG="You need to manually move the CONTENTS of:"
-		if [[ ${RESTORED_PRIOR_CONFIG_SH} == "false" ]]; then
+		if [[ ${COPIED_PRIOR_CONFIG_SH} == "false" ]]; then
 			MSG="${MSG}\n     ${PRIOR_CONFIG_DIR}/config.sh"
 		fi
-		if [[ ${RESTORED_PRIOR_FTP_SH} == "false" ]]; then
+		if [[ ${COPIED_PRIOR_FTP_SH} == "false" ]]; then
 			MSG="${MSG}\n     ${PRIOR_FTP_FILE}"
 		fi
 		MSG="${MSG}\n\nto the new files in ${ALLSKY_CONFIG}."
@@ -2500,8 +2529,8 @@ exit_with_image()
 check_restored_settings()
 {
 	if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" && \
-	  	  ${RESTORED_PRIOR_CONFIG_SH} == "true" && \
-	  	  ${RESTORED_PRIOR_FTP_SH} == "true" ]]; then
+	  	  ${COPIED_PRIOR_CONFIG_SH} == "true" && \
+	  	  ${COPIED_PRIOR_FTP_SH} == "true" ]]; then
 		# We restored all the prior settings no configuration is needed.
 		# However, check if a reboot is needed.
 		CONFIGURATION_NEEDED="false"
@@ -2525,11 +2554,11 @@ check_restored_settings()
 		MSG="${MSG} 'Allsky Settings' page in the WebUI after ${AFTER}."
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 	fi
-	if [[ ${RESTORED_PRIOR_CONFIG_SH} == "false" || \
-	  	${RESTORED_PRIOR_FTP_SH} == "false" ]]; then
+	if [[ ${COPIED_PRIOR_CONFIG_SH} == "false" || \
+	  	${COPIED_PRIOR_FTP_SH} == "false" ]]; then
 		MSG="Default files were created for:"
-		[[ ${RESTORED_PRIOR_CONFIG_SH} == "false" ]] && MSG="${MSG}\n   config.sh"
-		[[ ${RESTORED_PRIOR_FTP_SH}    == "false" ]] && MSG="${MSG}\n   ftp-settings.sh"
+		[[ ${COPIED_PRIOR_CONFIG_SH} == "false" ]] && MSG="${MSG}\n   config.sh"
+		[[ ${COPIED_PRIOR_FTP_SH}    == "false" ]] && MSG="${MSG}\n   ftp-settings.sh"
 		MSG="${MSG}\n\nHowever, you must update them by going to the"
 		MSG="${MSG} 'Editor' page in the WebUI after ${AFTER}."
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
@@ -2591,7 +2620,7 @@ update_modules()
 	if [[ ${EXTRA_MODULES_INSTALLED} == "true" && ${INSTALLED_VENV} == "true" ]]; then
 		MSG="You appear to have the Allsky Extra modules installed."
 		MSG="${MSG}\nPlease reinstall these using the normal instructions at"
-		MSG="${MSG}  https://github.com/Alex-developer/allsky-modules"
+		MSG="${MSG}  https://github.com/AllskyTeam/allsky-modules"
 		MSG="${MSG}\nThe extra modules will not function until you have reinstalled them."
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 		display_msg --logonly info "Reminded user to re install the extra modules."
@@ -2703,11 +2732,10 @@ if [[ ${IN_TESTING} == "true" ]]; then
 		MSG="${MSG}\n\nPlease set Debug Level to 3 during testing."
 		MSG="${MSG}\n"
 
-		MSG="${MSG}\nChanges from prior branch:"
+		MSG="${MSG}\nChanges from prior release:"
 
-		MSG="${MSG}\n * Support for the newest ZWO cameras."
-		MSG="${MSG}\n * Support for a couple new RPi cameras."
-		MSG="${MSG}\n * Bug fixes in the Overlay Editor and Module manager"
+		MSG="${MSG}\n * ZWO library 1.33 cameras."
+		MSG="${MSG}\n * Setting names are now lowercase."
 
 		MSG="${MSG}\n\nIf you agree, enter:    yes"
 		A=$( whiptail --title "*** MESSAGE FOR TESTERS ***" --inputbox "${MSG}" 26 "${WT_WIDTH}"  3>&1 1>&2 2>&3 )
@@ -2735,6 +2763,7 @@ while [ $# -gt 0 ]; do
 			DEBUG_ARG="${ARG}"		# we can pass this to other scripts
 			LOG_TYPE="--log"
 			;;
+#XXX TODO: is --update still needed?
 		--update)
 			UPDATE="true"
 			;;
@@ -2761,7 +2790,8 @@ if [[ -n ${FUNCTION} ]]; then
 else
 	mkdir -p "${ALLSKY_LOGS}"
 
-	display_msg "${LOG_TYPE}" info "STARTING INSTALLATON AT $( date ).\n"
+	display_msg "${LOG_TYPE}" info "STARTING INSTALLATON OF ${ALLSKY_VERSION} AT $( date ).\n"
+	display_msg --logonly info "OS=${OS}"
 fi
 
 [[ ${HELP} == "true" ]] && usage_and_exit 0

@@ -443,7 +443,7 @@ function settings()
 {
 	local DO_NULL="false"
 	[[ ${1} == "--null" ]] && DO_NULL="true" && shift
-	local M="${ME:-settings}"
+	local M="${ME:-${FUNCNAME[0]}}"
 	local FIELD="${1}"
 	# Arrays can't begin with period but everything else should.
 	if [[ ${FIELD:0:1} != "." && ${FIELD: -2:2} != "[]" && ${FIELD:0:3} != "if " ]]; then
@@ -474,7 +474,7 @@ function get_links()
 {
 	local FILE="$1"
 	if [[ -z ${FILE} ]]; then
-		echo "get_links(): File not specified."
+		echo "${FUNCNAME[0]}(): File not specified."
 		return 1
 	fi
 	local DIRNAME="$( dirname "${FILE}" )"
@@ -526,7 +526,11 @@ function check_settings_link()
 
 	FULL_FILE="${1}"
 	if [[ -z ${FULL_FILE} ]]; then
-		echo "check_settings_link(): Settings file not specified."
+		echo "${FUNCNAME[0]}(): Settings file not specified."
+		return 1
+	fi
+	if [[ ! -f ${FULL_FILE} ]]; then
+		echo "${FUNCNAME[0]}(): File '${FULL_FILE}' not found."
 		return 1
 	fi
 	if [[ -z ${CAMERA_TYPE} ]]; then
@@ -590,7 +594,7 @@ function fix_settings_link()
 
 function update_json_file()		# field, new value, file
 {
-	local M="${ME:-update_json_file}"
+	local M="${ME:-${FUNCNAME[0]}}"
 	local FIELD="${1}"
 	if [[ ${FIELD:0:1} != "." ]]; then
 		echo "${M}: Field names must begin with period '.' (Field='${FIELD}')" >&2
@@ -800,7 +804,10 @@ function indent()
 # Python virtual environment
 PYTHON_VENV_ACTIVATED="false"
 activate_python_venv() {
-	if [[ ${PI_OS} == "bookworm" ]]; then
+
+# TODO: will need to change when the OS after bookworm is released
+
+	if [[ ${PI_OS,,} == "bookworm" ]]; then
 		#shellcheck disable=SC1090,SC1091
 		source "${ALLSKY_PYTHON_VENV}/bin/activate" || exit 1
 		PYTHON_VENV_ACTIVATED="true"

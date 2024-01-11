@@ -11,7 +11,7 @@
 // --delimiter D
 //		Use "D" as the delimiter between the field name and its value.  Default is "=".
 
-// --capture-only OPTIONS_FILE
+// --capture-only
 //		Limit output to only settings used by the capture_* programs.
 //		which will have this field in the options file:		"capture" : true
 //		Without this option ALL settings/values in the settings file are output.
@@ -67,11 +67,6 @@ foreach ($options as $opt => $val) {
 		}
 	} else if ($opt === "capture-only") {
 		$capture_only = true;
-		$options_file = $val;
-		if (! file_exists($options_file)) {
-			echo "ERROR: options file '$options_file' not found!\n";
-			$ok = false;
-		}
 	} else if ($opt === "convert") {
 		$convert = true;
 	} else if ($opt === "delimiter") {

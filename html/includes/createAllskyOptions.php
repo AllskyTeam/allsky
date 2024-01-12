@@ -502,7 +502,7 @@ if ($settings_file !== "") {
 	// If there isn't a camera-specific file, create one.
 	if ($force || ! file_exists($fullSpecificFileName)) {
 		// For each item in the options file, write the name and a value.
-		$contents = "{\n";
+		$new_settings = Array();
 		$options_array = json_decode($options_str, true);
 		foreach ($options_array as $option) {
 			$type = getVariableOrDefault($option, 'type', "");
@@ -518,12 +518,16 @@ if ($settings_file !== "") {
 			} else {
 				$val = getVariableOrDefault($option, 'default', "");
 			}
-			$contents .= "\t\"$name\" : " . quote_value($val, null) . ",\n";
+			if ($type == "boolean") {
+				if ($val == "true") $val = true;
+				else $val = false;
+			}
+			$new_settings[$name] = $val;
 		}
-		// This comes last so we don't worry about whether or not the items above
-		// need a trailing comma.
-		$contents .= "\t\"XX_END_XX\" : true\n";
-		$contents .= "}\n";
+		$new_settings['XX_END_XX'] = true;
+
+		$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
+		$contents = json_encode($new_settings, $mode);
 
 		if ($debug > 0) echo "Creating camera-specific settings file: $fullSpecificFileName.\n";
 		$results = updateFile($fullSpecificFileName, $contents, $cameraSpecificSettingsName, true);

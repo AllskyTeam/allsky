@@ -995,6 +995,7 @@ void displayHelp(config cg)
 
 	printf("\nDaytime settings:\n");
 	printf(" -%-*s - 1 enables capturing of daytime images [%s].\n", n, "takedaytimeimages b", yesNo(cg.daytimeCapture));
+	printf(" -%-*s - 1 enables saving of daytime images [%s].\n", n, "savedaytimeimages b", yesNo(cg.daytimeSave));
 	printf(" -%-*s - 1 enables daytime auto-exposure [%s].\n", n, "dayautoexposure b", yesNo(cg.dayAutoExposure));
 	printf(" -%-*s - Maximum daytime auto-exposure in ms.\n", n, "daymaxexposure n");
 	printf(" -%-*s - Daytime exposure in us [%'ld].\n", n, "dayexposure n", cg.dayExposure_us);
@@ -1021,6 +1022,7 @@ void displayHelp(config cg)
 
 	printf("\nNighttime settings:\n");
 	printf(" -%-*s - 1 enables capturing of nighttime images [%s].\n", n, "takenighttimeimages b", yesNo(cg.nighttimeCapture));
+	printf(" -%-*s - 1 enables saving of nighttime images [%s].\n", n, "savenighttimeimages b", yesNo(cg.nighttimeSave));
 	printf(" -%-*s - 1 enables nighttime auto-exposure [%s].\n", n, "nightautoexposure b", yesNo(cg.nightAutoExposure));
 	printf(" -%-*s - Maximum nighttime auto-exposure in ms.\n", n, "nightmaxexposure n");
 	printf(" -%-*s - Nighttime exposure in us [%'ld].\n", n, "nightexposure n", cg.nightExposure_us);
@@ -1186,7 +1188,9 @@ void displaySettings(config cg)
 	printf("   Configuration file: %s\n", stringORnone(cg.configFile));
 	printf("   Quality: %ld\n", cg.userQuality);
 	printf("   Daytime capture: %s\n", yesNo(cg.daytimeCapture));
+	printf("   Daytime save: %s\n", yesNo(cg.daytimeSave));
 	printf("   Nighttime capture: %s\n", yesNo(cg.nighttimeCapture));
+	printf("   Nighttime save: %s\n", yesNo(cg.nighttimeSave));
 
 	printf("   Exposure (day):   %15s, Auto: %3s", length_in_units(cg.dayExposure_us, true), yesNo(cg.dayAutoExposure));
 		if (cg.dayAutoExposure)
@@ -1604,6 +1608,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		{
 			cg->daytimeCapture = getBoolean(argv[++i]);
 		}
+		else if (strcmp(a, "savedaytimeimages") == 0)
+		{
+			cg->daytimeSave = getBoolean(argv[++i]);
+		}
 		else if (strcmp(a, "dayautoexposure") == 0)
 		{
 			cg->dayAutoExposure = getBoolean(argv[++i]);
@@ -1681,6 +1689,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else if (strcmp(a, "takenighttimeimages") == 0)
 		{
 			cg->nighttimeCapture = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "savenighttimeimages") == 0)
+		{
+			cg->nighttimeSave = getBoolean(argv[++i]);
 		}
 		else if (strcmp(a, "nightautoexposure") == 0)
 		{

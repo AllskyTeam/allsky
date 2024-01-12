@@ -60,14 +60,14 @@ ALLSKY_DEFINES_INC="allskyDefines.inc"
 REPO_WEBUI_DEFINES_FILE="${ALLSKY_REPO}/${ALLSKY_DEFINES_INC}.repo"
 REPO_LIGHTTPD_FILE="${ALLSKY_REPO}/lighttpd.conf.repo"
 REPO_AVI_FILE="${ALLSKY_REPO}/avahi-daemon.conf.repo"
+REPO_OPTIONS_FILE="${ALLSKY_REPO}/$( basename "${OPTIONS_FILE}" ).repo"
 
 # The POST_INSTALLATION_ACTIONS contains information the user needs to act upon after the reboot.
 rm -f "${POST_INSTALLATION_ACTIONS}"		# Shouldn't be there, but just in case.
 
 rm -f "${ALLSKY_MESSAGES}"					# Start out with no messages.
 
-# display_msg() will send "log" entries to this file.
-# DISPLAY_MSG_LOG is used in display_msg()
+# display_msg() sends log entries to this file.
 # shellcheck disable=SC2034
 DISPLAY_MSG_LOG="${ALLSKY_LOGS}/install.sh.log"
 
@@ -154,7 +154,7 @@ do_initial_heading()
 		display_header "Welcome to the ${TITLE}"
 	fi
 
-	[[ ${do_initial_heading} != "true" ]] && STATUS_VARIABLES+=("do_initial_heading='true'\n")
+	[[ ${do_initial_heading} != "true" ]] && STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
 
 ####
@@ -201,7 +201,7 @@ get_this_branch()
 		display_msg --logonly info "Using the '${BRANCH}' branch."
 	fi
 
-	STATUS_VARIABLES+=("get_this_branch='true'\n")
+	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 	STATUS_VARIABLES+=("BRANCH='${BRANCH}'\n")
 }
 
@@ -292,7 +292,7 @@ get_connected_cameras()
 		return
 	fi
 
-	[[ ${get_connected_cameras} != "true" ]] && STATUS_VARIABLES+=("get_connected_cameras='true'\n")
+	[[ ${get_connected_cameras} != "true" ]] && STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 	# Either not set before or is different this time
 	CONNECTED_CAMERAS="${CC}"
 }
@@ -312,7 +312,7 @@ select_camera_type()
 
 			if [[ -n ${CAMERA_TYPE} ]]; then
 				MSG="Using Camera Type '${CAMERA_TYPE}' from prior Allsky."
-				STATUS_VARIABLES+=("select_camera_type='true'\n")
+				STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 				STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
 				display_msg --logonly info "${MSG}"
 				return
@@ -325,7 +325,7 @@ select_camera_type()
 			local CAMERA="$( get_variable "CAMERA" "${PRIOR_CONFIG_FILE}" )"
 			if [[ -n ${CAMERA} ]]; then
 				CAMERA_TYPE="$( CAMERA_to_CAMERA_TYPE "${CAMERA}" )"
-				STATUS_VARIABLES+=("select_camera_type='true'\n")
+				STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 				STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
 				if [[ ${CAMERA} != "${CAMERA_TYPE}" ]]; then
 					NEW=" (now called ${CAMERA_TYPE})"
@@ -379,7 +379,7 @@ select_camera_type()
 	fi
 
 	display_msg --log progress "Using ${CAMERA_TYPE} camera."
-	STATUS_VARIABLES+=("select_camera_type='true'\n")
+	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 	STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
 }
 
@@ -388,7 +388,7 @@ select_camera_type()
 # rename it so it's not used.
 check_for_raspistill()
 {
-	STATUS_VARIABLES+=("check_for_raspistill='true'\n")
+	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 
 	if W="$( which raspistill )" && [[ ${PI_OS} != "buster" ]]; then
 		display_msg --longonly info "Renaming 'raspistill' on ${PI_OS}."
@@ -428,7 +428,7 @@ create_webui_defines()
 		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
 		chmod 644 "${FILE}"
 
-	STATUS_VARIABLES+=("create_webui_defines='true'\n")
+	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
 
 
@@ -515,7 +515,7 @@ save_camera_capabilities()
 		return 1
 	fi
 
-	STATUS_VARIABLES+=("save_camera_capabilities='true'\n")
+	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 	return 0
 }
 
@@ -524,9 +524,12 @@ save_camera_capabilities()
 # Update the sudoers file so the web server can execute certain commands with sudo.
 do_sudoers()
 {
+	[[ ${do_sudoers} == "true" ]] && return
+
 	display_msg --log progress "Creating/updating sudoers file."
 	sed -e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" "${REPO_SUDOERS_FILE}"  >  /tmp/x
 	sudo install -m 0644 /tmp/x "${FINAL_SUDOERS_FILE}" && rm -f /tmp/x
+	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
 
 
@@ -601,7 +604,7 @@ recheck_swap()
 }
 check_swap()
 {
-	STATUS_VARIABLES+=("check_swap='true'\n")
+	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 
 	local PROMPT="false"
 	[[ ${1} == "prompt" ]] && PROMPT="true"
@@ -751,7 +754,7 @@ check_tmp()
 				)
 		fi
 
-		STATUS_VARIABLES+=("check_tmp='true'\n")
+		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 
 		# If the new Allsky's ${ALLSKY_TMP} is already mounted, don't do anything.
 		# This would be the case during an upgrade.
@@ -781,7 +784,7 @@ check_tmp()
 		mkdir -p "${ALLSKY_TMP}"
 	fi
 
-	STATUS_VARIABLES+=("check_tmp='true'\n")
+	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
 
 
@@ -861,7 +864,7 @@ install_webserver_et_al()
 	# Starting it added an entry so truncate the file so it's 0-length
 	sleep 1; truncate -s 0 "${LIGHTTPD_LOG}"
 
-	STATUS_VARIABLES+=("install_webserver_et_al='true'\n")
+	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
 
 
@@ -879,7 +882,7 @@ prompt_for_hostname()
 		display_msg --logonly info "Using current hostname of '${CURRENT_HOSTNAME}'."
 		NEW_HOST_NAME="${CURRENT_HOSTNAME}"
 
-		STATUS_VARIABLES+=("prompt_for_hostname='true'\n")
+		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 		STATUS_VARIABLES+=("NEW_HOST_NAME='${NEW_HOST_NAME}'\n")
 		return
 	fi
@@ -895,7 +898,7 @@ prompt_for_hostname()
 		display_msg --log warning "${MSG}"
 		exit_installation 2 "No host name selected"
 	else
-		STATUS_VARIABLES+=("prompt_for_hostname='true'\n")
+		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 		STATUS_VARIABLES+=("NEW_HOST_NAME='${NEW_HOST_NAME}'\n")
 	fi
 
@@ -992,7 +995,7 @@ does_old_WebUI_location_exist()
 {
 	[[ -d ${OLD_WEBUI_LOCATION} ]] && OLD_WEBUI_LOCATION_EXISTS_AT_START="true"
 
-	STATUS_VARIABLES+=("does_old_WebUI_location_exist='true'\n")
+	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 	STATUS_VARIABLES+=("OLD_WEBUI_LOCATION_EXISTS_AT_START='${OLD_WEBUI_LOCATION_EXISTS_AT_START}'\n")
 }
 
@@ -1004,7 +1007,7 @@ does_old_WebUI_location_exist()
 
 check_old_WebUI_location()
 {
-	STATUS_VARIABLES+=("check_old_WebUI_location='true'\n")
+	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 
 	[[ ! -d ${OLD_WEBUI_LOCATION} ]] && return
 
@@ -1052,7 +1055,7 @@ check_old_WebUI_location()
 # If it's a new-style website, copy to the new Allsky release directory.
 handle_prior_website()
 {
-	STATUS_VARIABLES+=( "handle_prior_website='true'\n" )
+	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 	# No variables to add to STATUS_VARIABLES.
 
 	local PRIOR_SITE=""
@@ -1248,7 +1251,7 @@ get_desired_locale()
 
 	# If they had a locale from the prior Allsky and it's still here, use it; no need to prompt.
 	if [[ -n ${DESIRED_LOCALE} && ${DESIRED_LOCALE} == "${CURRENT_LOCALE}" ]]; then
-		STATUS_VARIABLES+=("get_desired_locale='true'\n")
+		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 		STATUS_VARIABLES+=("DESIRED_LOCALE='${DESIRED_LOCALE}'\n")
 		return
 	fi
@@ -1290,7 +1293,7 @@ get_desired_locale()
 		exit_installation 1 "${STATUS_ERROR}" "Got usage message from whitail."
 	fi
 
-	STATUS_VARIABLES+=("get_desired_locale='true'\n")
+	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 	STATUS_VARIABLES+=("DESIRED_LOCALE='${DESIRED_LOCALE}'\n")
 }
 
@@ -1322,7 +1325,7 @@ display_msg --logonly info "Settings files now:\n${MSG}"
 			MSG="${MSG} CONTAINED .locale = '${L}'."
 			display_msg --logonly info "${MSG}"
 		fi
-		STATUS_VARIABLES+=("set_locale='true'\n")
+		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 		return
 	fi
 
@@ -1441,8 +1444,6 @@ does_prior_Allsky_exist()
 			fi
 			PRIOR_CAMERA_TYPE="$( settings "${CT_}" "${PRIOR_SETTINGS_FILE}" )"
 			PRIOR_CAMERA_MODEL="$( settings "${CM_}" "${PRIOR_SETTINGS_FILE}" )"
-			MSG="Prior Camera Type = ${PRIOR_CAMERA_TYPE}, prior model = ${PRIOR_CAMERA_MODEL}"
-			display_msg --logonly info "${MSG}"
 		else
 			# This shouldn't happen...
 			PRIOR_SETTINGS_FILE=""
@@ -1478,7 +1479,8 @@ does_prior_Allsky_exist()
 	fi
 
 	display_msg --logonly info "PRIOR_ALLSKY_VERSION=${PRIOR_ALLSKY_VERSION}"
-	display_msg --logonly info "PRIOR_CAMERA_TYPE=${PRIOR_CAMERA_TYPE}"
+	MSG="PRIOR_CAMERA_TYPE=${PRIOR_CAMERA_TYPE}, PRIOR_CAMERA_MODEL=${PRIOR_CAMERA_MODEL:-unknown}"
+	display_msg --logonly info "${MSG}"
 	display_msg --logonly info "PRIOR_SETTINGS_FILE=${PRIOR_SETTINGS_FILE}"
 
 	return 0
@@ -1493,7 +1495,7 @@ prompt_for_prior_Allsky()
 {
 
 	if [[ -n ${PRIOR_ALLSKY_STYLE} ]]; then
-		STATUS_VARIABLES+=("prompt_for_prior_Allsky='true'\n")
+		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 		MSG="You have a prior version of Allsky in ${PRIOR_ALLSKY_DIR}."
 		MSG="${MSG}\n\nDo you want to restore the prior images, darks, and certain settings?"
 		if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
@@ -1524,7 +1526,7 @@ prompt_for_prior_Allsky()
 			display_msg --logonly info "User elected not to continue.  Exiting installation."
 			exit_installation 0 "${STATUS_NOT_CONTINUE}" "after no prior Allsky was found."
 		fi
-		STATUS_VARIABLES+=("prompt_for_prior_Allsky='true'\n")
+		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 	fi
 
 	# No prior Allsky so force creating a default settings file.
@@ -1559,7 +1561,7 @@ install_dependencies_etc()
 	check_success $? "make install failed" "${TMP}" "${DEBUG}"
 	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "make insall_failed"
 
-	STATUS_VARIABLES+=("install_dependencies_etc='true'\n")
+	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 	return 0
 }
 
@@ -1579,7 +1581,7 @@ update_config_sh()
 		-e "/ALLSKY_VERSION=/ c ALLSKY_VERSION=\"${ALLSKY_VERSION}\"" \
 		"${C}"
 
-	STATUS_VARIABLES+=( "update_config_sh='true'\n" )
+	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }
 
 
@@ -1663,7 +1665,8 @@ get_lat_long()
 
 
 ####
-# If needed, convert the prior settings file.
+# If needed, update the new settings file based on the prior one.
+# The old and new files both exist and may be the same, but either way, do not modify the old file.
 convert_settings()			# prior_file, new_file
 {
 	PRIOR_FILE="${1}"
@@ -1676,39 +1679,29 @@ convert_settings()			# prior_file, new_file
 # TODO: versions after COMBINED_BASE_VERSION may also need
 #		similar changes to what's in the "while" loop below.
 
-	MSG="   Converting old settings file to new format with new settings."
-	display_msg --log info "${MSG}"
-
-	# Don't modify the prior file, so make the changes to a temporary file.
-	local TEMP_PRIOR="/tmp/converted_old_settings.json"
-
-	# Older version had uppercase letters in settings name and "1" and "0" for booleans
-	# and quotes around numbers.
-	"${ALLSKY_WEBUI}/includes/convertJSON.php" --convert "${PRIOR_FILE}" > "${TEMP_PRIOR}" 2>&1
-	if [[ $? -ne 0 ]]; then
-		MSG="Unable to convert old settings file: $( < "${TEMP_PRIOR}" )"
-		display_msg --log error "${MSG}"
-# TODO: tell the user what to do ??
-		return
-	fi
-
 	# For each field in prior file, update new file with old value.
 	# Then handle new fields and fields that changed locations or names.
 
 	# Output the field name and value as text separated by a tab.
 	"${ALLSKY_WEBUI}/includes/convertJSON.php" \
 			--delimiter "$( echo -e '\t' )" \
-			--settings-file "${TEMP_PRIOR}" |
+			--settings-file "${PRIOR_FILE}" |
 		while read -r F V
 		do
+			F="${F,,}"		# convert old setting names to lowercase
 			case "${F}" in
 				"lastchanged")
 					V="$( date +'%Y-%m-%d %H:%M:%S' )"
 					;;
 
+				# Don't carry this forward
+				"XX_END_XX")
+					continue
+					;;
+
 				# These don't exist anymore.
-				"autofocus"|"background")
-					continue;
+				"autofocus" | "background" | "alwaysshowadvanced")
+					continue
 					;;
 
 				# These changed names.
@@ -1749,7 +1742,6 @@ convert_settings()			# prior_file, new_file
 					;;
 				"coolerenabled")
 					F="enablecooler"		# also a name change
-					F="enablecooler"
 					update_json_file ".day${F}" "${V}" "${NEW_FILE}"
 					F="night${F}"
 					;;
@@ -1771,6 +1763,26 @@ convert_settings()			# prior_file, new_file
 
 	x="$( get_variable "DARK_FRAME_SUBTRACTION" "${PRIOR_CONFIG_FILE}" )"
 	[[ -n ${x} ]] && update_json_file ".usedarkframes" "${x}" "${NEW_FILE}"
+
+
+	# Older versions had uppercase letters in settings name and "1" and "0" for booleans and
+	# quotes around numbers.  Change that.
+	MSG="Converting '${NEW_FILE}' to new format."
+	display_msg --log progress "${MSG}"
+
+	local TEMP_NEW="/tmp/converted_new_settings.json"
+
+	"${ALLSKY_WEBUI}/includes/convertJSON.php" --convert \
+		--settings-file "${NEW_FILE}" \
+		--options-file "${REPO_OPTIONS_FILE}" \
+		> "${TEMP_NEW}" 2>&1
+	if [[ $? -ne 0 ]]; then
+		local M="Unable to convert from old settings file"
+		MSG="${M}: $( < "${TEMP_NEW}" )"
+		display_msg --log error "${MSG}"
+		exit_installation 1 "${STATUS_ERROR}" "${M}."
+	fi
+	cp "${TEMP_NEW}" "${NEW_FILE}"
 }
 
 
@@ -1784,11 +1796,8 @@ restore_prior_settings_file()
 {
 	[[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" ]] && return
 
-	STATUS_VARIABLES+=( "RESTORED_PRIOR_SETTINGS_FILE='${RESTORED_PRIOR_SETTINGS_FILE}'\n" )
-
 	if [[ ! -f ${PRIOR_SETTINGS_FILE} ]]; then
-		# This should "never" happen.
-		# Huh?  No prior settings file ?
+		# This should "never" happen since we are only called if the file exists.
 		display_msg --log error "Prior settings file missing: ${PRIOR_SETTINGS_FILE}."
 		FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
 		return
@@ -1802,6 +1811,8 @@ restore_prior_settings_file()
 
 		MSG="Checking link for ${NEW_STYLE_ALLSKY} PRIOR_SETTINGS_FILE '${PRIOR_SETTINGS_FILE}'"
 		display_msg --logonly info "${MSG}"
+
+		# Do we need to check for upperCase or lowercase setting names?
 		if [[ ${PRIOR_ALLSKY_BASE_VERSION} < "${COMBINED_BASE_VERSION}" ]]; then
 			CHECK_UPPER="--uppercase"
 		else
@@ -1903,7 +1914,7 @@ restore_prior_settings_file()
 					local LONG="$( settings .longitude "${PRIOR_SETTINGS_FILE}" )"
 					update_json_file ".longitude" "${LONG}" "${SETTINGS_FILE}"
 					local ANGLE="$( settings .angle "${PRIOR_SETTINGS_FILE}" )"
-					update_json_file ".angle" "${ANGLE}" "${SETTINGS_FILE}"
+					update_json_file ".angle" "${ANGLE}" "${SETTINGS_FILE}" "number"
 					display_msg --log progress "Prior latitude, longitude, and angle restored."
 
 					MSG="You need to manually transfer your old settings to the WebUI.\n"
@@ -1930,13 +1941,15 @@ restore_prior_settings_file()
 			FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
 		fi
 	fi
+
+	STATUS_VARIABLES+=( "RESTORED_PRIOR_SETTINGS_FILE='${RESTORED_PRIOR_SETTINGS_FILE}'\n" )
 }
 
 ####
 # If the user wanted to restore files from a prior version of Allsky, do that.
 restore_prior_files()
 {
-	STATUS_VARIABLES+=( "restore_prior_files='true'\n" )
+	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 
 	if [[ -d ${OLD_RASPAP_DIR} ]]; then
 		MSG="\nThe '${OLD_RASPAP_DIR}' directory is no longer used.\n"
@@ -2440,16 +2453,13 @@ install_overlay()
 ####
 check_if_buster()
 {
-	STATUS_VARIABLES+=("check_if_buster='true'\n")
+	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 
 	[[ ${PI_OS} != "buster" ]] && return
 
 	MSG="WARNING: You are running the older Buster operating system."
-	MSG="${MSG}\n\nThis is the last Allsky release that will support Buster.\n"
-	MSG="${MSG}\nWe recommend doing a fresh install of Bookworm on a clean SD card now."
-	if [[ ${PRIOR_CAMERA_TYPE} == "RPi" ]]; then
-		MSG="${MSG}\nRPi cameras have more features on newer operating systems.\n"
-	fi
+	MSG="${MSG}\n\n\n>>> This is the last Allsky release that will support Buster. <<<\n\n"
+	MSG="${MSG}\nWe recommend doing a fresh install of Bookworm 64-bit on a clean SD card now."
 	MSG="${MSG}\n\nDo you want to continue anyhow?"
 	if ! whiptail --title "${TITLE}" --yesno --defaultno "${MSG}" 20 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
 		display_msg --logonly info "User running Buster and elected not to continue."
@@ -2570,28 +2580,6 @@ check_restored_settings()
 
 
 ####
-# See if the new ZWO exposure algorithm should be used.
-check_new_exposure_algorithm()
-{
-	local FIELD="experimentalexposure"
-	local NEW="$( settings ".${FIELD}" )"
-	[[ ${NEW} -eq 1 ]] && return
-
-	MSG="There is a new auto-exposure algorithm for nighttime images that initial testing indicates"
-	MSG="${MSG} it creates better images at night and during the day-to-night transition."
-	MSG="${MSG}\n\nDo you want to use it?"
-	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
-		display_msg --logonly info "Enabling ${FIELD}."
-		update_json_file ".${FIELD}" 1 "${SETTINGS_FILE}"
-	else
-		display_msg --logonly info "User elected NOT to use ${FIELD}."
-	fi
-
-	STATUS_VARIABLES+=( "check_new_exposure_algorithm='true'\n" )
-}
-
-
-####
 remind_run_check_allsky()
 {
 	MSG="After you've configured Allsky, run:"
@@ -2600,7 +2588,7 @@ remind_run_check_allsky()
 	"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
 	display_msg --logonly info "Added message about running 'check_allsky.sh'."
 
-	STATUS_VARIABLES+=( "remind_run_check_allsky='true'\n" )
+	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }
 
 
@@ -2646,7 +2634,6 @@ update_status_from_temp_file()
 ####
 exit_installation()
 {
-	[[ -z ${FUNCTION} ]] && display_msg "${LOG_TYPE}" info "\nENDING INSTALLATON AT $( date ).\n"
 	local RET="${1}"
 
 	# If STATUS_LINE is set, add that and all STATUS_VARIABLES to the status file.
@@ -2681,6 +2668,8 @@ exit_installation()
 			fi
 		fi
 	fi
+
+	[[ -z ${FUNCTION} ]] && display_msg "${LOG_TYPE}" info "\nENDING INSTALLATON AT $( date ).\n"
 
 	# Don't exit for negative numbers.
 	[[ ${RET} -ge 0 ]] && exit "${RET}"
@@ -2790,8 +2779,9 @@ if [[ -n ${FUNCTION} ]]; then
 else
 	mkdir -p "${ALLSKY_LOGS}"
 
-	display_msg "${LOG_TYPE}" info "STARTING INSTALLATON OF ${ALLSKY_VERSION} AT $( date ).\n"
-	display_msg --logonly info "OS=${OS}"
+	display_msg "${LOG_TYPE}" info "STARTING INSTALLATON AT $( date ).\n"
+	display_msg --logonly info "ALLSKY_VERSION=${ALLSKY_VERSION}"
+	display_msg --logonly info "PI_OS=${PI_OS}"
 fi
 
 [[ ${HELP} == "true" ]] && usage_and_exit 0
@@ -2804,7 +2794,7 @@ trap "handle_interrupts" SIGTERM SIGINT
 if [[ -z ${FUNCTION} && -s ${STATUS_FILE} ]]; then
 	# Initially just get the status.
 	# After that we may clear the file or get all the variables.
-	eval "$( grep STATUS_INSTALLATION "${STATUS_FILE}" )"
+	eval "$( grep "^STATUS_INSTALLATION" "${STATUS_FILE}" )"
 
 	if [[ ${STATUS_INSTALLATION} == "${STATUS_OK}" ]]; then
 		MSG="The last installation completed successfully."
@@ -2999,12 +2989,6 @@ set_permissions
 # Re-run every time to possibly remind them to update their settings.
 check_restored_settings
 
-##### If using ZWO, prompt if the New Exposure Algorithm should be used.
-# TODO: remove check_new_exposure_algorithm() when it's the default.
-if [[ ${CAMERA_TYPE} == "ZWO" && ${check_new_exposure_algorithm} != "true" ]]; then
-	check_new_exposure_algorithm
-fi
-
 ##### Let the user know to run check_allsky.sh.
 [[ ${remind_run_check_allsky} != "true" ]] && remind_run_check_allsky
 
@@ -3033,3 +3017,4 @@ else
 	display_msg progress "\nEnjoy Allsky!\n"
 	exit_installation 0 "${STATUS_OK}" ""
 fi
+

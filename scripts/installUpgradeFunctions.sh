@@ -7,7 +7,7 @@
 
 #####
 # Display a header surrounded by stars.
-display_header() {
+function display_header() {
 	local HEADER="${1}"
 	local LEN
 	((LEN = ${#HEADER} + 8))		# 8 for leading and trailing "*** "
@@ -24,7 +24,7 @@ display_header() {
 }
 
 #####
-calc_wt_size()
+function calc_wt_size()
 {
 	WT_WIDTH=$( tput cols )
 	[[ ${WT_WIDTH} -gt 80 ]] && WT_WIDTH=80
@@ -49,7 +49,7 @@ function get_Git_version() {
 # in case we ever change it.
 
 #####
-# Get the version from a local file, if it exists.
+# Get the version from a local file, if it exists.  If not, get from default file.
 function get_version() {
 	local F="${1}"
 	if [[ -z ${F} ]]; then
@@ -196,6 +196,37 @@ function display_msg()
 	fi >>  "${DISPLAY_MSG_LOG}"
 }
 
+function update_json_file()		# field, new value, file, [type]
+{
+	local M="${ME:-${FUNCNAME[0]}}"
+	local FIELD="${1}"
+	if [[ ${FIELD:0:1} != "." ]]; then
+		echo "${M}: Field names must begin with period '.' (Field='${FIELD}')" >&2
+		return 1
+	fi
+
+	local NEW_VALUE="${2}"
+	local FILE="${3:-${SETTINGS_FILE}}"
+	local TYPE="${4:-string}"		# optional
+	local DOUBLE_QUOTE
+	if [[ ${TYPE} == "string" ]]; then
+		DOUBLE_QUOTE='"'
+	else
+		DOUBLE_QUOTE=""
+	fi
+
+	local TEMP="/tmp/$$"
+	# Have to use "cp" instead of "mv" to keep any hard link.
+	if jq "${FIELD} = ${DOUBLE_QUOTE}${NEW_VALUE}${DOUBLE_QUOTE}" "${FILE}" > "${TEMP}" ; then
+		cp "${TEMP}" "${FILE}"
+		rm "${TEMP}"
+		return 0
+	fi
+
+	echo "${M}: Unable to update json value of '${FIELD}' to '${NEW_VALUE}' in '${FILE}'." >&2
+
+	return 2
+}
 
 
 ######################################### variables

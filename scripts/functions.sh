@@ -592,32 +592,6 @@ function fix_settings_link()
 	return 0
 }
 
-function update_json_file()		# field, new value, file
-{
-	local M="${ME:-${FUNCNAME[0]}}"
-	local FIELD="${1}"
-	if [[ ${FIELD:0:1} != "." ]]; then
-		echo "${M}: Field names must begin with period '.' (Field='${FIELD}')" >&2
-		return 1
-	fi
-
-	local NEW_VALUE="${2}"
-	local FILE="${3:-${SETTINGS_FILE}}"
-	local DOUBLE_QUOTE='"'
-	[[ -n ${TYPE} && (${TYPE} == "number" || ${TYPE} == "boolean") ]] && DOUBLE_QUOTE=""
-
-	local TEMP="/tmp/$$"
-	# Have to use "cp" instead of "mv" to keep any hard link.
-	if jq "${FIELD} = ${DOUBLE_QUOTE}${NEW_VALUE}${DOUBLE_QUOTE}" "${FILE}" > "${TEMP}" ; then
-		cp "${TEMP}" "${FILE}"
-		rm "${TEMP}"
-		return 0
-	fi
-
-	echo "${M}: Unable to update json value of '${FIELD}' to '${NEW_VALUE}' in '${FILE}'." >&2
-
-	return 2
-}
 
 ####
 # Only allow one of the specified process at a time.

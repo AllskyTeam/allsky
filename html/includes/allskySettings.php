@@ -104,8 +104,13 @@ function DisplayAllskyConfig(){
 			$numSourceChanges = 0;
 	 		foreach ($_POST as $key => $newValue) {
 				// Anything that's sent "hidden" in a form that isn't a settings needs to go here.
-				if (in_array($key, ["csrf_token", "save_settings", "reset_settings", "restart", "page", "_ts", "XX_END_XX"]))
+				if (in_array($key, ["csrf_token", "save_settings", "reset_settings", "restart", "page", "_ts"]))
 					continue;
+				if ($key == "XX_END_XX") {
+					$lastChanged = ""
+					check_if_configured("settings", "configuration");
+					continue;
+				}
 
 				// We look into POST data to only select settings.
 				// Because we are passing the changes enclosed in single quotes below,
@@ -132,7 +137,6 @@ if ($debug && $type_array[$key] == "boolean" && $oldValue != $newValue) {
 					$nonCameraChangesExist = false;
 					if ($isSettingsField) $numSettingsChanges++;
 					else $numSourceChanges++;
-//x if ($debug) { echo "<br>&nbsp; &nbsp; after $key, numSettingsChanges=$numSettingsChanges, numSourceChanges=$numSourceChanges"; }
 
 					if ($key === $cameraTypeName) {
 						if ($newValue === "Refresh") {
@@ -201,14 +205,7 @@ if ($debug) { echo " &nbsp; &nbsp; &nbsp; [is $type] "; }
 									$msg = "without a fraction";
 								else
 									$newValue += 0;
-if ($debug && $key == "height") {
-	echo "<pre>";
-	echo ">>>>>>>>> newValue now $newValue: ";  var_dump($newValue);
-	echo "settings_array['height'] =";  var_dump($settings_array['height']);
-	echo "</pre>";
-}
 							} else if ($type === "float") {
-//x echo " &nbsp; &nbsp; &nbsp; [is $type], is_numeric=" . is_numeric($newValue) . ", is_float=" . is_float($newValue + 0.0);
 								if (! is_numeric($newValue) || ! is_float($newValue + 0.0))
 									$msg = "with, or without, a fraction";
 								else
@@ -221,10 +218,8 @@ if ($debug && $key == "height") {
 								$ok = false;
 							}
 						}
-//x echo "<br><pre>in loop with $key: settings_array['height'] =";  var_dump($settings_array['height']); echo "newValue ="; var_dump($newValue); echo "</pre>";
 					}
 				}
-//x echo "<br><pre>OUTSIDE loop with $key: settings_array['height'] =";  var_dump($settings_array['height']); echo "newValue ="; var_dump($newValue); echo "</pre>";
 
 				if ($ok && ($numSettingsChanges > 0 || $numSourceChanges > 0)) {
 					// Update the appropriate array with the new value.
@@ -240,13 +235,6 @@ if ($debug && $key == "height") {
 							$newValue = str_replace("'", "&#x27", $newValue);
 						$s_newValue = $newValue;
 					}
-if ($debug && $key == "height") {
-	echo "<br><pre>AFTER if with height: settings_array['height'] =";
-	var_dump($settings_array['height']);
-	echo "newValue =";
-	var_dump($newValue);
-	echo "</pre>";
-}
 
 					if (isset($sourceFilesContents[$key])) {
 if ($debug) {
@@ -291,11 +279,6 @@ if ($debug && $s != $s_newValue) {
 							// If we end up not updating the file this will be ignored.
 							$lastChanged = date('Y-m-d H:i:s');
 							$settings_array[$lastChangedName] = $lastChanged;
-if ($debug) {
-	echo "<br><pre>====== settings_array[height] now:<br>";
-	var_dump($settings_array['height']);
-	echo "</pre>";
-}
 							$content = json_encode($settings_array, $mode);
 							// updateFile() only returns error messages.
 if ($debug) {
@@ -305,7 +288,10 @@ if ($debug) {
 }
 							$msg = updateFile($settings_file, $content, "settings", true);
 							if ($msg === "") {
-								$msg = "Settings saved";
+								if ($numSettingsChanges > 0)
+									$msg = "Settings saved";
+								else	# configuration needed
+									$msg = "Configuration saved";
 							} else {
 								$status->addMessage("Failed to update settings in '$settings_file': $msg", 'danger');
 								$ok = false;

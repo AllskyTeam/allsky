@@ -311,25 +311,34 @@ do
 			# camera type/model then createAllskyOptions.php will use it and link it
 			# to SETTINGS_FILE.
 			# If there is no existing camera-specific file, i.e., this camera is new
-			# to Allsky, it will create a default settings file using the generic
-			# values from the prior settings file if it exists.
+			# to Allsky, it will create a default settings file.  The default file
+			# won't have values for items we can't automatically determine,
+			# so try to get those values from a prior settings file if it exists.
+			if [[ -f ${SETTINGS_FILE} ]]; then
+				# Prior settings file exists so save the old TYPE and MODEL
+				OLD_TYPE="${OLD_VALUE}"
+				OLD_MODEL="$( settings .cameramodel )"
+			else
+				OLD_TYPE=""
+				OLD_MODEL=""
+			fi
 
 			if [[ ${DEBUG} == "true" ]]; then
 				# shellcheck disable=SC2086
 				echo -e "${wDEBUG}Calling:" \
 					"${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
 					${FORCE} ${DEBUG_ARG} \
-					"\n\t--cc_file ${CC_FILE}" \
-					"\n\t--options_file ${OPTIONS_FILE}" \
-					"\n\t--settings_file ${SETTINGS_FILE}" \
+					"\n\t--cc-file ${CC_FILE}" \
+					"\n\t--options-file ${OPTIONS_FILE}" \
+					"\n\t--settings-file ${SETTINGS_FILE}" \
 					"${wNC}"
 			fi
 			# shellcheck disable=SC2086
 			R="$( "${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
 				${FORCE} ${DEBUG_ARG} \
-				--cc_file "${CC_FILE}" \
-				--options_file "${OPTIONS_FILE}" \
-				--settings_file "${SETTINGS_FILE}" \
+				--cc-file "${CC_FILE}" \
+				--options-file "${OPTIONS_FILE}" \
+				--settings-file "${SETTINGS_FILE}" \
 				2>&1 )"
 			RET=$?
 
@@ -355,6 +364,48 @@ do
 				OK="false"
 			fi
 			[[ ${OK} == "false" ]] && exit 2
+
+			# See if a camera-specific settings file was created.
+			# If the latitude isn't set assume it's a new file.
+			if [[ -n ${OLD_TYPE} && -n ${OLD_MODEL} &&
+					-z "$( settings .latitude "${SETTINGS_FILE}" )" ]]; then
+				#shellcheck source-path=scripts
+				source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"
+				[[ $? -ne 0 ]] && exit "${EXIT_ERROR_STOP}"
+
+				# We assume the user wants these settings for
+				# this camera to be the same as the prior one.
+
+				if [[ ${DEBUG} == "true" ]]; then
+					MSG="Updating user-defined settings in new settings file."
+					echo -e "${wDEBUG}${MSG}${wNC}"
+				fi
+
+				# First determine the name of the prior camera-specific settings file.
+				NAME="$( basename "${SETTINGS_FILE}" )"
+				S_NAME="${NAME%.*}"
+				S_EXT="${NAME##*.}"
+				OLD_SETTINGS_FILE="${ALLSKY_CONFIG}/${S_NAME}_${OLD_TYPE}_${OLD_MODEL}.${S_EXT}"
+
+				for s in latitude longitude locale websiteurl imageurl location owner computer
+				do
+					X="$( settings .${s} "${OLD_SETTINGS_FILE}" )"
+					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}"
+				done
+
+				for s in angle debuglevel
+				do
+					X="$( settings .${s} "${OLD_SETTINGS_FILE}" )"
+					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}" "number"
+				done
+
+				for s in uselogin displaysettings showonmap
+				do
+					X="$( settings .${s} "${OLD_SETTINGS_FILE}" )"
+					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}" "boolean"
+				done
+			fi
+
 
 			# Don't do anything else if ${CAMERA_TYPE_ONLY} is set.
 			if [[ ${CAMERA_TYPE_ONLY} == "true" ]]; then

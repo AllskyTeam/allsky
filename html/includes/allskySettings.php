@@ -303,7 +303,6 @@ if ($debug) {
 	echo "<pre>"; var_dump($content); echo "</pre>";
 	$msg = "";
 }
-//xxx
 							$msg = updateFile($settings_file, $content, "settings", true);
 							if ($msg === "") {
 								$msg = "Settings saved";
@@ -318,7 +317,6 @@ if ($debug) {
 								$content = json_encode(getSourceArray($fileName), $mode);
 if ($debug) { echo "<br>Updating fileName $fileName, # changes=$numSourceChanges"; }
 if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
-//xxx
 								$msg = updateFile($fileName, $content, "source_settings", true);
 								if ($msg === "") {
 									$msg = "Settings saved";

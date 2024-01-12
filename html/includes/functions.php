@@ -212,8 +212,12 @@ function initialize_variables() {
 }
 
 // Check if the settings have been configured.
+$displayed_configured_message = false;
 function check_if_configured($page, $calledFrom) {
-	global $lastChanged, $status, $needToDisplayMessages;
+	global $lastChanged, $status, $needToDisplayMessages, $displayed_configured_message;
+
+	if ($displayed_configured_message)
+		return;
 
 	// The conf page calls us if needed.
 	if ($calledFrom === "main" && $page === "configuration")
@@ -225,8 +229,9 @@ function check_if_configured($page, $calledFrom) {
 			$m = "";
 		else
 			$m = "<br>Go to the 'Allsky Settings' page.";
-		$status->addMessage("You must configure Allsky before using it.<br>If it's already configured, just click on the 'Save changes' button.$m", 'danger', false);
+		$status->addMessage("<br><strong>You must configure Allsky before using it.<br>If it's already configured, just click on the 'Save changes' button.$m</strong></p>", 'danger', false);
 		$needToDisplayMessage = true;
+		$displayed_configured_message = true;
 	}
 }
 /**

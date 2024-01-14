@@ -255,13 +255,13 @@ function add_options_field($field, $options, $setting) {
 
 $rest_index;
 $longopts = array(
-	"debug::",		// no arguments
-	"debug2::",		// no arguments
-	"help::",		// no arguments
-	"cc_file:",
-	"options_file:",
-	"settings_file:",
-	"force::",		// no arguments
+	"debug",		// no arguments
+	"debug2",		// no arguments
+	"help",			// no arguments
+	"cc-file:",
+	"options-file:",
+	"settings-file:",
+	"force",		// no arguments
 );
 $options = getopt("", $longopts, $rest_index);
 
@@ -281,11 +281,11 @@ foreach ($options as $opt => $val) {
 		$debug = 2;
 	else if ($opt === "help")
 		$help = true;
-	else if ($opt === "cc_file")
+	else if ($opt === "cc-file")
 		$cc_file = $val;
-	else if ($opt === "options_file")
+	else if ($opt === "options-file")
 		$options_file = $val;
-	else if ($opt === "settings_file")
+	else if ($opt === "settings-file")
 		$settings_file = $val;
 	else if ($opt === "force")
 		$force = true;
@@ -294,7 +294,7 @@ foreach ($options as $opt => $val) {
 }
 
 if ($help || $cc_file === "" || $options_file === "") {
-	echo "\nUsage: " . basename($argv[0]) . " [--debug] [--debug2] [--help] [--settings_file file] --cc_file file --options_file file\n";
+	echo "\nUsage: " . basename($argv[0]) . " [--debug] [--debug2] [--help] [--settings-file file] --cc-file file --options-file file\n";
 	exit(1);
 }
 
@@ -480,8 +480,9 @@ if ($settings_file !== "") {
 	// e.g., "settings_ZWO_ASI123.json"
 	$cameraSpecificSettingsName = $FileName . "_$cameraType" . "_$cameraModel.$FileExt";
 	$fullSpecificFileName = dirname($settings_file) . "/$cameraSpecificSettingsName";
+	$specificFileExists =  file_exists($fullSpecificFileName);
 	if ($debug > 0) {
-		$e =  file_exists($fullSpecificFileName) ? "yes" : "no";
+		$e =  $specificFileExists ? "yes" : "no";
 		echo "Camera-specific settings file exists ($e): $fullSpecificFileName.\n";
 	}
 
@@ -490,7 +491,9 @@ if ($settings_file !== "") {
 	$settings_array = null;
 	if (file_exists($settings_file)) {
 		$errorMsg = "ERROR: Unable to process prior settings file '$settings_file'.";
-		$settings_array = get_decoded_json_file($settings_file, true, $errorMsg);
+
+		if ($specificFileExists)
+			$settings_array = get_decoded_json_file($settings_file, true, $errorMsg);
 
 		if ($debug > 0) echo "Removing $settings_file.\n";
 		if (! unlink($settings_file)) {
@@ -500,9 +503,9 @@ if ($settings_file !== "") {
 	}
 
 	// If there isn't a camera-specific file, create one.
-	if ($force || ! file_exists($fullSpecificFileName)) {
+	if ($force || ! $specificFileExists) {
 		// For each item in the options file, write the name and a value.
-		$contents = "{\n";
+		$new_settings = Array();
 		$options_array = json_decode($options_str, true);
 		foreach ($options_array as $option) {
 			$type = getVariableOrDefault($option, 'type', "");
@@ -518,12 +521,16 @@ if ($settings_file !== "") {
 			} else {
 				$val = getVariableOrDefault($option, 'default', "");
 			}
-			$contents .= "\t\"$name\" : " . quote_value($val, null) . ",\n";
+			if ($type == "boolean") {
+				if ($val == "true") $val = true;
+				else $val = false;
+			}
+			$new_settings[$name] = $val;
 		}
-		// This comes last so we don't worry about whether or not the items above
-		// need a trailing comma.
-		$contents .= "\t\"XX_END_XX\" : true\n";
-		$contents .= "}\n";
+		$new_settings['XX_END_XX'] = true;
+
+		$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
+		$contents = json_encode($new_settings, $mode);
 
 		if ($debug > 0) echo "Creating camera-specific settings file: $fullSpecificFileName.\n";
 		$results = updateFile($fullSpecificFileName, $contents, $cameraSpecificSettingsName, true);

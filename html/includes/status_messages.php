@@ -33,21 +33,21 @@ class StatusMessages {
 			$count++;
 			if ($count === 1) {
 				if ($highlight) {
-					$x .= " style=$apos" . "border: 3px dashed black; margin-top: 20px;$apos";
+					$x .= "style=$apos" . "border: 3px dashed black; margin-top: 20px;$apos";
 				} else {
 					$x = "";
 				}
-				echo "<table width=$apos" . "100%$apos $x>";
+				echo "\n<table width=$apos" . "100%$apos $x>";
 				if ($highlight) {
-					echo "<tr class=$apos alert-danger$apos style=$apos" . "height: 1em;$apos>";
-					echo "<td colspan=$apos" . "2$apos></td>";
-					echo "</tr>";
+					echo "\n\t<tr class=$apos alert-danger$apos style=$apos" . "height: 1em;$apos>";
+					echo "\n\t\t<td colspan=$apos" . "2$apos></td>";
+					echo "\n\t</tr>";
 				}
 			}
 
 			if ($count >= 2) {
 				// space between messages
-				echo "<tr style=$apos" . "height: 5px$apos><td></td></tr>";
+				echo "\n\t<tr style=$apos" . "height: 5px$apos><td></td></tr>";
 			}
 
 			if ($escape === true)
@@ -55,16 +55,16 @@ class StatusMessages {
 
 
 			// Replace newlines with HTML breaks.
-			echo str_replace("\n", "<br>", $message);
+			echo "\n\t" . str_replace("\n", "<br>", $message);
 		}
 
 		if ($count > 0) {
 			if ($highlight) {
-				echo "<tr class=$apos alert-danger$apos style=$apos" . "height: 1em;$apos>";
-				echo "<td colspan=$apos" . "2$apos></td>";
-				echo "</tr>";
+				echo "\n\t<tr class=$apos alert-danger$apos style=$apos" . "height: 1em;$apos>";
+				echo "\n\t\t<td colspan=$apos" . "2$apos></td>";
+				echo "\n\t</tr>";
 			}
-			echo "</table>";
+			echo "\n</table>";
 		}
 
 		if ( $clear ) $this->messages = array();

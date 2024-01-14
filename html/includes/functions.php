@@ -107,26 +107,25 @@ function toBool($s) {
 	return false;
 }
 
-function verifyNumber($num, $settingName) {
-	global $status;
-
+function verifyNumber($num) {
 	if ($num == "" || ! is_numeric($num)) {
-		if ($num != "") {
-			$msg = "ERROR: <strong>$settingName</strong> is not a number";
-			$status->addMessage("$msg: $num.", 'danger', false);
-		}
 		return false;
 	}
-	return false;
+	return true;
 }
-$image_name=null; $delay=null; $daydelay=null; $nightdelay=null; $darkframe=null; $useLogin=null;
+
+$image_name=null;
+$showDelay = true; $delay=null; $daydelay=null; $nightdelay=null;
+$darkframe=null;
+$useLogin=null;
 $temptype = null;
 $lastChanged = null;
 $websiteURL = null;
 $settings_array = null;
 function initialize_variables() {
 	global $status, $needToDisplayMessages;
-	global $image_name, $delay, $daydelay, $nightdelay;
+	global $image_name;
+	global $showDelay, $delay, $daydelay, $nightdelay;
 	global $darkframe, $useLogin, $temptype, $lastChanged, $lastChangedName;
 	global $websiteURL;
 	global $settings_array;
@@ -151,7 +150,7 @@ function initialize_variables() {
 	// It's the same as ${ALLSKY_TMP} which is the physical path name on the server.
 	$img_dir = get_variable(ALLSKY_CONFIG . '/config.sh', 'IMG_DIR=', 'current/tmp');
 	$image_name = $img_dir . "/" . $settings_array['filename'];
-	$darkframe = $settings_array['takedarkframes'];
+	$darkframe = toBool(getVariableOrDefault($settings_array, 'takedarkframes', "false"));
 	$useLogin = toBool(getVariableOrDefault($settings_array, 'uselogin', "true"));
 	$temptype = getVariableOrDefault($settings_array, 'temptype', "C");
 	$lastChanged = getVariableOrDefault($settings_array, $lastChangedName, "");
@@ -159,64 +158,60 @@ function initialize_variables() {
 
 
 	////////////////// Determine delay between refreshes of the image.
-	$consistentDelays = toBool(getVariableOrDefault($settings_array, 'consistentdelays', "true"));
 	$daydelay = $settings_array["daydelay"];
+	$nightdelay = $settings_array["nightdelay"];
+	$showDelay = toBool(getVariableOrDefault($settings_array, 'showdelay', "true"));
+	if (! $showDelay) return;
+
 	$daymaxautoexposure = $settings_array["daymaxautoexposure"];
 	$dayexposure = $settings_array["dayexposure"];
-	$nightdelay = $settings_array["nightdelay"];
 	$nightmaxautoexposure = $settings_array["nightmaxautoexposure"];
 	$nightexposure = $settings_array["nightexposure"];
+	$consistentDelays = toBool(getVariableOrDefault($settings_array, 'consistentdelays', "true"));
 
 	$ok = true;
 	// These are all required settings so if they are blank don't display a
 	// message since the WebUI will.
-	if (! verifyNumber($daydelay, "Daytime Delay")) $ok = false;
-	if (! verifyNumber($daymaxautoexposure, "Daytime Max Auto-Exposure")) $ok = false;
-	if (! verifyNumber($dayexposure, "Daytime Manual Exposure")) $ok = false;
-	if (! verifyNumber($nightdelay, "Nighttime Delay")) $ok = false;
-	if (! verifyNumber($nightmaxautoexposure, "Nighttime Max Auto-Exposure")) $ok = false;
-	if (! verifyNumber($nightexposure, "Nighttime Manual Exposure")) $ok = false;
+	if (! verifyNumber($daydelay)) $ok = false;
+	if (! verifyNumber($daymaxautoexposure)) $ok = false;
+	if (! verifyNumber($dayexposure)) $ok = false;
+	if (! verifyNumber($nightdelay)) $ok = false;
+	if (! verifyNumber($nightmaxautoexposure)) $ok = false;
+	if (! verifyNumber($nightexposure)) $ok = false;
 	if ($ok) {
 		$daydelay += ($consistentDelays ? $daymaxautoexposure : $dayexposure);
 		$nightdelay += ($consistentDelays ? $nightmaxautoexposure : $nightexposure);
 
-		$showDelay = toBool(getVariableOrDefault($settings_array, 'showdelay', "true"));
-		if ($showDelay) {
-			// Determine if it's day or night so we know which delay to use.
-			$angle = getVariableOrDefault($settings_array, 'angle', -6);
-			$lat = getVariableOrDefault($settings_array, 'latitude', "");
-			$lon = getVariableOrDefault($settings_array, 'longitude', "");
-			if ($lat != "" && $lon != "") {
-				exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
-				if ($retval == 2) {
-					$delay = $daydelay;
-				} else if ($retval == 3) {
-					$delay = $nightdelay;
-				} else {
-					$msg = "<code>sunwait</code> returned $retval; don't know if it's day or night.";
-					$status->addMessage($msg, 'danger', false);
-					$needToDisplayMessages = true;
-					$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
-				}
-
-				// Convert to seconds for display.
-				$daydelay /= 1000;
-				$nightdelay /= 1000;
+		// Determine if it's day or night so we know which delay to use.
+		$angle = getVariableOrDefault($settings_array, 'angle', -6);
+		$lat = getVariableOrDefault($settings_array, 'latitude', "");
+		$lon = getVariableOrDefault($settings_array, 'longitude', "");
+		if ($lat != "" && $lon != "") {
+			exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
+			if ($retval == 2) {
+				$delay = $daydelay;
+			} else if ($retval == 3) {
+				$delay = $nightdelay;
 			} else {
-				// Error message will be displayed by WebUI.
-				$showDelay = false;
+				$msg = "<code>sunwait</code> returned $retval; don't know if it's day or night.";
+				$status->addMessage($msg, 'danger', false);
+				$needToDisplayMessages = true;
+				$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
 			}
-		}
-		if ($showDelay) {
+
+			// Convert to seconds for display.
+			$daydelay /= 1000;
+			$nightdelay /= 1000;
+		} else {
+			// Error message will be displayed by WebUI.
+			$showDelay = false;
 			// Not showing delay so just use average
 			$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
-			$daydelay = -1;		// signifies it's not being used
 		}
+
 		// Lessen the delay between a new picture and when we check.
 		$delay /= 4;
 	} else {
-		$daydelay = -1;
-		$needToDisplayMessages = true;
 		$showDelay = false;
 	}
 }
@@ -224,14 +219,14 @@ function initialize_variables() {
 // Check if the settings have been configured.
 $displayed_configured_message = false;
 function check_if_configured($page, $calledFrom) {
-	global $lastChanged, $status, $needToDisplayMessages, $displayed_configured_message;
+	global $lastChanged, $status, $displayed_configured_message;
 
 	if ($displayed_configured_message)
-		return;
+		return(true);
 
 	// The conf page calls us if needed.
 	if ($calledFrom === "main" && $page === "configuration")
-		return;
+		return(true);
 
 	if ($lastChanged === "") {
 		// The settings aren't configured - probably right after an installation.
@@ -240,9 +235,11 @@ function check_if_configured($page, $calledFrom) {
 		else
 			$m = "<br>Go to the 'Allsky Settings' page.";
 		$status->addMessage("<div class='important'>You must configure Allsky before using it.<br>If it's already configured, just click on the 'Save changes' button.$m</div>", 'danger', false);
-		$needToDisplayMessage = true;
 		$displayed_configured_message = true;
+		return(false);
 	}
+
+	return(true);
 }
 /**
 *

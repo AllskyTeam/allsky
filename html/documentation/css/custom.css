@@ -225,6 +225,13 @@ button.close {
 .alert td {
 	padding: 0 10px 0 3px;
 }
+.alert td .important {
+	font-weight: bold;
+	font-size: 150%;
+	padding-top: 2em;
+	padding-bottom: 2em;
+	padding-left: 1em;
+}
 table .alert-dismissable button {
 	font-size: 175%;
 }

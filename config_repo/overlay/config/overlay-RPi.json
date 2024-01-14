@@ -39,7 +39,7 @@
         {
             "label": "${CAMERA_TYPE} ${CAMERA_MODEL}",
             "x": 419,
-            "y": 3002,
+            "y": 522,
             "id": "oe-field-3",
             "fontsize": 44,
             "strokewidth": 0,

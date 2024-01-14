@@ -28,6 +28,7 @@ class StatusMessages {
 			$apos = "'";
 
 		$count = 0;
+		$x = "";
 		foreach($this->messages as $message) {
 			$count++;
 			if ($count === 1) {

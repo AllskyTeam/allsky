@@ -44,8 +44,8 @@ function toBool($s) {
 function DisplayAllskyConfig(){
 	global $formReadonly, $settings_array;
 
+	$END = "XX_END_XX";
 	$debug = false;
-//x if ($debug) { echo "<pre>settings_array<br>"; var_dump($settings_array); echo "</pre>"; }
 	$cameraTypeName = "cameratype";			// json setting name
 	$cameraModelName = "cameramodel";		// json setting name
 	$cameraNumberName = "cameranumber";		// json setting name
@@ -60,12 +60,17 @@ function DisplayAllskyConfig(){
 
 	$settings_file = getSettingsFile();
 	$options_file = getOptionsFile();
+	$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
 
 	$errorMsg = "ERROR: Unable to process options file '$options_file'.";
 	$options_array = get_decoded_json_file($options_file, true, $errorMsg);
 	if ($options_array === null) {
 		exit;
 	}
+
+	// If there's no last changed date, they haven't configured Allsky,
+	// which sets $lastChanged.
+	$needsConfiguration = ($lastChanged == "");
 
 	if (isset($_POST['save_settings'])) {
 		// If the user changed the camera type and anything else,
@@ -85,6 +90,10 @@ function DisplayAllskyConfig(){
 			$newCameraModel = "";
 			$newCameraNumber = "";
 
+			// If set, the prior screen said "you must configure Allsky ..." so it's
+			// ok if nothing changed, but we need to update $lastChanged.
+			$fromConfiguration = isset($_POST['fromConfiguration']);
+
 			$ok = true;
 
 			// Keep track of optional settings and which settings are from a different source.
@@ -102,13 +111,11 @@ function DisplayAllskyConfig(){
 
 			$numSettingsChanges = 0;
 			$numSourceChanges = 0;
+			$nonCameraChangesExist = false;
+
 	 		foreach ($_POST as $key => $newValue) {
 				// Anything that's sent "hidden" in a form that isn't a settings needs to go here.
-				if (in_array($key, ["csrf_token", "save_settings", "reset_settings", "restart", "page", "_ts"]))
-					continue;
-				if ($key == "XX_END_XX") {
-					$lastChanged = ""
-					check_if_configured("settings", "configuration");
+				if (in_array($key, ["csrf_token", "save_settings", "reset_settings", "restart", "page", "_ts", $END, "fromConfiguration"])) {
 					continue;
 				}
 
@@ -157,6 +164,7 @@ if ($debug && $type_array[$key] == "boolean" && $oldValue != $newValue) {
 					}
 
 					$checkchanges = false;
+					$label = "??";
 					foreach ($options_array as $option){
 						if ($option['name'] === $key) {
 							$optional = $optional_array[$key];
@@ -264,8 +272,8 @@ if ($debug && $s != $s_newValue) {
 			}
 
 			$msg = "";
-			if ($ok && ($numSettingsChanges > 0 || $numSourceChanges > 0)) {
-				if ($nonCameraChangesExist || $lastChanged === "") {
+			if ( $ok && ($numSettingsChanges > 0 || $numSourceChanges > 0 || $fromConfiguration) ) {
+				if ($nonCameraChangesExist || $fromConfiguration) {
 					if ($newCameraType !== "" || $newCameraModel !== "" || $newCameraNumber != "") {
 						$msg = "If you change <b>Camera Type</b>, <b>Camera Model</b>,";
 						$msg .= " or <b>Camera Number</b>  you cannot change anything else.";
@@ -273,25 +281,27 @@ if ($debug && $s != $s_newValue) {
 						$status->addMessage($msg, 'danger', false);
 						$ok = false;
 					} else {
-						$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
-						if ($numSettingsChanges > 0) {
+						if ($numSettingsChanges > 0 || $fromConfiguration) {
 							// Keep track of the last time the file changed.
 							// If we end up not updating the file this will be ignored.
 							$lastChanged = date('Y-m-d H:i:s');
 							$settings_array[$lastChangedName] = $lastChanged;
+							if ($fromConfiguration)
+								unset($settings_array[$END]);
 							$content = json_encode($settings_array, $mode);
-							// updateFile() only returns error messages.
 if ($debug) {
 	echo "<br><br>Updating settings_file $settings_file, # changes = $numSettingsChanges";
 	echo "<pre>"; var_dump($content); echo "</pre>";
 	$msg = "";
 }
+							// updateFile() only returns error messages.
 							$msg = updateFile($settings_file, $content, "settings", true);
 							if ($msg === "") {
-								if ($numSettingsChanges > 0)
+								if ($numSettingsChanges > 0 || $numSourceChanges > 0)
 									$msg = "Settings saved";
-								else	# configuration needed
-									$msg = "Configuration saved";
+								else	# configuration needed and not changes made.
+									$msg = "Configuration saved and timestamp updated";
+								$needsConfiguration = false;
 							} else {
 								$status->addMessage("Failed to update settings in '$settings_file': $msg", 'danger');
 								$ok = false;
@@ -340,7 +350,7 @@ if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
 				$doingRestart = toBool(getVariableOrDefault($_POST, 'restart', "false"));
 				if ($doingRestart === "on") $doingRestart = true;
 
-				if ($numSettingsChanges == 0 && $numSourceChanges == 0) {
+				if ($numSettingsChanges == 0 && $numSourceChanges == 0 && ! $fromConfiguration) {
 					$msg = "No settings changed";
 				} else if ($changes !== "") {
 					// This must run with different permissions so makeChanges.sh can
@@ -399,7 +409,6 @@ if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
 					}
 				}
 			}
-			$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
 			$content = json_encode($settings_array, $mode);
 			$msg = updateFile($settings_file, $content, "settings", true);
 			if ($msg === "") {
@@ -441,43 +450,37 @@ if ($formReadonly != "readonly") {
 }
 ?>
 
-  <div class="row">
-	<div class="col-lg-12">
-		<div class="panel panel-primary">
+<div class="row"> <div class="col-lg-12"> <div class="panel panel-primary">
 <?php
 	if ($formReadonly == "readonly") {
 		$x = "(READ ONLY) &nbsp; &nbsp; ";
 	} else {
-		$x = "<i class='fa fa-camera fa-fw'></i>";
+		$x = "<i class='fa fa-camera fa-fw'></i> ";
 	}
-?>
-		<div class="panel-heading"><?php echo $x; ?> Allsky Settings for &nbsp; <b><?php echo "$cameraType $cameraModel"; ?></b></div>
-
-		<div class="panel-body" style="padding: 5px;">
-<?php if ($formReadonly != "readonly")
+	echo "<div class='panel-heading'>$x Allsky Settings for &nbsp; <b>$cameraType $cameraModel</b></div>";
+	echo "<div class='panel-body' style='padding: 5px;'>";
+		if ($formReadonly != "readonly")
 			echo "<p id='messages'>" . $status->showMessages() . "</p>";
-?>
-
-		<form method="POST" action="<?php echo "$ME?_ts=" . time(); ?>" name="conf_form">
-
-<?php
+		echo "<form method='POST' action='$ME?_ts=" . time() . " name='conf_form'>";
 if ($formReadonly != "readonly") { ?>
-	<div class="sticky">
-		<input type="submit" class="btn btn-primary" name="save_settings" value="Save changes">
-		<input type="submit" class="btn btn-warning" name="reset_settings"
-			value="Reset to default values"
-			onclick="return confirm('Really RESET ALL VALUES TO DEFAULT??');">
-		<div title="UNcheck to only save settings without restarting Allsky" style="line-height: 0.3em;">
-			<br>
-			<input type="checkbox" name="restart" value="true" checked> Restart Allsky after saving changes?
-			<br><br>&nbsp;
+		<div class="sticky">
+			<input type="submit" class="btn btn-primary" name="save_settings" value="Save changes">
+			<input type="submit" class="btn btn-warning" name="reset_settings"
+				value="Reset to default values"
+				onclick="return confirm('Really RESET ALL VALUES TO DEFAULT??');">
+			<div title="UNcheck to only save settings without restarting Allsky" style="line-height: 0.3em;">
+				<br>
+				<input type="checkbox" name="restart" value="true" checked> Restart Allsky after saving changes?
+				<br><br>&nbsp;
+			</div>
 		</div>
-	</div>
-	<button onclick="topFunction(); return false;" id="backToTopBtn" title="Go to top of page">Top</button>
-<?php } ?>
+		<button onclick="topFunction(); return false;" id="backToTopBtn" title="Go to top of page">Top</button>
+<?php }
 
-		<input type="hidden" name="page" value="<?php echo "$page"; ?>">
-		<?php CSRFToken();
+CSRFToken();
+		echo "<input type='hidden' name='page' value='$page'>\n";
+		if ($needsConfiguration)
+			echo "<input type='hidden' name='fromConfiguration' value='true'>\n";
 
 		if ($formReadonly == "readonly") {
 			$readonlyForm = "readonly disabled";	// covers both bases
@@ -527,7 +530,7 @@ if ($formReadonly != "readonly") { ?>
 
 				// Should this setting be displayed?
 				$display = toBool(getVariableOrDefault($option, 'display', "true"));
-				if (! $display && ! $isHeader) {
+				if (! $display && ! $isHeader && $name != $END) {
 					if ($formReadonly != "readonly") {
 						// Don't display it, but if it has a value, pass it on.
 						echo "\n\t<!-- NOT DISPLAYED -->";
@@ -771,22 +774,18 @@ if ($popupYesNo !== "") {
 			$status->addMessage($msg, 'danger');
 		}
 		if ($needToShowMessages) {
-		?>
+?>
 			<script>
 				var messages = document.getElementById("messages");
 				// Call showMessages() with the 2nd (escape) argument of true so it escapes single quotes.
 				// We then have to restore them so the html is correct.
 				messages.innerHTML += '<?php $status->showMessages(true, true); ?>'.replace(/&apos;/g, "'");
 			</script>
-		<?php
-		} 
-		?>
+<?php } ?>
 
 	</form>
 </div><!-- ./ Panel body -->
-</div><!-- /.panel-primary -->
-</div><!-- /.col-lg-12 -->
-</div><!-- /.row -->
+</div><!-- /.panel-primary --> </div><!-- /.col-lg-12 --> </div><!-- /.row -->
 <?php
 }
 ?>

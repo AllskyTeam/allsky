@@ -21,11 +21,16 @@ class StatusMessages {
 	// If $highlight is true, hightlight the groups of messages (often only error message(s)).
 
 	public function showMessages($clear=true, $escape=false, $highlight=false) {
-		if ($escape === true)
+		if ($escape === true) {
 			// We can't have any single quotes in the output.
 			$apos = "&apos;";
-		else
+			$nl = "";
+			$tab = "";
+		} else {
 			$apos = "'";
+			$nl = "\n";
+			$tab = "\t";
+		}
 
 		$count = 0;
 		$x = "";
@@ -37,17 +42,17 @@ class StatusMessages {
 				} else {
 					$x = "";
 				}
-				echo "\n<table width=$apos" . "100%$apos $x>";
+				echo "$nl<table width=$apos" . "100%$apos $x>";
 				if ($highlight) {
-					echo "\n\t<tr class=$apos alert-danger$apos style=$apos" . "height: 1em;$apos>";
-					echo "\n\t\t<td colspan=$apos" . "2$apos></td>";
-					echo "\n\t</tr>";
+					echo "$nl$tab<tr class=$apos alert-danger$apos style=$apos" . "height: 1em;$apos>";
+					echo "$nl$tab$tab<td colspan=$apos" . "2$apos></td>";
+					echo "$nl$tab</tr>";
 				}
 			}
 
 			if ($count >= 2) {
 				// space between messages
-				echo "\n\t<tr style=$apos" . "height: 5px$apos><td></td></tr>";
+				echo "$nl$tab<tr style=$apos" . "height: 5px$apos><td></td></tr>";
 			}
 
 			if ($escape === true)
@@ -55,16 +60,16 @@ class StatusMessages {
 
 
 			// Replace newlines with HTML breaks.
-			echo "\n\t" . str_replace("\n", "<br>", $message);
+			echo "$nl$tab" . str_replace("\n", "<br>", $message);
 		}
 
 		if ($count > 0) {
 			if ($highlight) {
-				echo "\n\t<tr class=$apos alert-danger$apos style=$apos" . "height: 1em;$apos>";
-				echo "\n\t\t<td colspan=$apos" . "2$apos></td>";
-				echo "\n\t</tr>";
+				echo "$nl$tab<tr class=$apos alert-danger$apos style=$apos" . "height: 1em;$apos>";
+				echo "$nl$tab$tab<td colspan=$apos" . "2$apos></td>";
+				echo "$nl$tab</tr>";
 			}
-			echo "\n</table>";
+			echo "$nl</table>";
 		}
 
 		if ( $clear ) $this->messages = array();

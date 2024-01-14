@@ -100,6 +100,25 @@ function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=nul
 	return $str_array;
 }
 
+// The opposite of toString().  Given a string version of a boolean, return true or false.
+function toBool($s) {
+	if ($s == "true" || $s == "Yes" || $s == "yes" || $s == "1")
+		return true;
+	return false;
+}
+
+function verifyNumber($num, $settingName) {
+	global $status;
+
+	if ($num == "" || ! is_numeric($num)) {
+		if ($num != "") {
+			$msg = "ERROR: <strong>$settingName</strong> is not a number";
+			$status->addMessage("$msg: $num.", 'danger', false);
+		}
+		return false;
+	}
+	return false;
+}
 $image_name=null; $delay=null; $daydelay=null; $nightdelay=null; $darkframe=null; $useLogin=null;
 $temptype = null;
 $lastChanged = null;
@@ -133,14 +152,14 @@ function initialize_variables() {
 	$img_dir = get_variable(ALLSKY_CONFIG . '/config.sh', 'IMG_DIR=', 'current/tmp');
 	$image_name = $img_dir . "/" . $settings_array['filename'];
 	$darkframe = $settings_array['takedarkframes'];
-	$useLogin = getVariableOrDefault($settings_array, 'uselogin', true);
+	$useLogin = toBool(getVariableOrDefault($settings_array, 'uselogin', "true"));
 	$temptype = getVariableOrDefault($settings_array, 'temptype', "C");
 	$lastChanged = getVariableOrDefault($settings_array, $lastChangedName, "");
 	$websiteURL = getVariableOrDefault($settings_array, 'websiteurl', "");
 
 
 	////////////////// Determine delay between refreshes of the image.
-	$consistentDelays = getVariableOrDefault($settings_array, 'consistentdelays', true);
+	$consistentDelays = toBool(getVariableOrDefault($settings_array, 'consistentdelays', "true"));
 	$daydelay = $settings_array["daydelay"];
 	$daymaxautoexposure = $settings_array["daymaxautoexposure"];
 	$dayexposure = $settings_array["dayexposure"];
@@ -149,56 +168,46 @@ function initialize_variables() {
 	$nightexposure = $settings_array["nightexposure"];
 
 	$ok = true;
-	if (! is_numeric($daydelay)) {
-		$ok = false;
-		$status->addMessage("<strong>daydelay</strong> is not a number: $daydelay.", 'danger', false);
-	}
-	if (! is_numeric($daymaxautoexposure)) {
-		$ok = false;
-		$status->addMessage("<strong>daymaxautoexposure</strong> is not a number: $daymaxautoexposure.", 'danger', false);
-	}
-	if (! is_numeric($dayexposure)) {
-		$ok = false;
-		$status->addMessage("<strong>dayexposure</strong> is not a number: $dayexposure.", 'danger', false);
-	}
-	if (! is_numeric($nightdelay)) {
-		$ok = false;
-		$status->addMessage("<strong>nightdelay</strong> is not a number: $nightdelay.", 'danger', false);
-	}
-	if (! is_numeric($nightmaxautoexposure)) {
-		$ok = false;
-		$status->addMessage("<strong>nightmaxautoexposure</strong> is not a number: $nightmaxautoexposure.", 'danger', false);
-	}
-	if (! is_numeric($nightexposure)) {
-		$ok = false;
-		$status->addMessage("<strong>nightexposure</strong> is not a number: $nightexposure.", 'danger', false);
-	}
+	// These are all required settings so if they are blank don't display a
+	// message since the WebUI will.
+	if (! verifyNumber($daydelay, "Daytime Delay")) $ok = false;
+	if (! verifyNumber($daymaxautoexposure, "Daytime Max Auto-Exposure")) $ok = false;
+	if (! verifyNumber($dayexposure, "Daytime Manual Exposure")) $ok = false;
+	if (! verifyNumber($nightdelay, "Nighttime Delay")) $ok = false;
+	if (! verifyNumber($nightmaxautoexposure, "Nighttime Max Auto-Exposure")) $ok = false;
+	if (! verifyNumber($nightexposure, "Nighttime Manual Exposure")) $ok = false;
 	if ($ok) {
 		$daydelay += ($consistentDelays ? $daymaxautoexposure : $dayexposure);
 		$nightdelay += ($consistentDelays ? $nightmaxautoexposure : $nightexposure);
 
-		$showDelay = getVariableOrDefault($settings_array, 'showdelay', true);
+		$showDelay = toBool(getVariableOrDefault($settings_array, 'showdelay', "true"));
 		if ($showDelay) {
 			// Determine if it's day or night so we know which delay to use.
-			$angle = $settings_array['angle'];
-			$lat = $settings_array['latitude'];
-			$lon = $settings_array['longitude'];
-			exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
-			if ($retval == 2) {
-				$delay = $daydelay;
-			} else if ($retval == 3) {
-				$delay = $nightdelay;
-			} else {
-				$msg = "<code>sunwait</code> returned $retval; don't know if it's day or night.";
-				$status->addMessage($msg, 'danger', false);
-				$needToDisplayMessages = true;
-				$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
-			}
+			$angle = getVariableOrDefault($settings_array, 'angle', -6);
+			$lat = getVariableOrDefault($settings_array, 'latitude', "");
+			$lon = getVariableOrDefault($settings_array, 'longitude', "");
+			if ($lat != "" && $lon != "") {
+				exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
+				if ($retval == 2) {
+					$delay = $daydelay;
+				} else if ($retval == 3) {
+					$delay = $nightdelay;
+				} else {
+					$msg = "<code>sunwait</code> returned $retval; don't know if it's day or night.";
+					$status->addMessage($msg, 'danger', false);
+					$needToDisplayMessages = true;
+					$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
+				}
 
-			// Convert to seconds for display.
-			$daydelay /= 1000;
-			$nightdelay /= 1000;
-		} else {
+				// Convert to seconds for display.
+				$daydelay /= 1000;
+				$nightdelay /= 1000;
+			} else {
+				// Error message will be displayed by WebUI.
+				$showDelay = false;
+			}
+		}
+		if ($showDelay) {
 			// Not showing delay so just use average
 			$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
 			$daydelay = -1;		// signifies it's not being used
@@ -208,6 +217,7 @@ function initialize_variables() {
 	} else {
 		$daydelay = -1;
 		$needToDisplayMessages = true;
+		$showDelay = false;
 	}
 }
 

@@ -229,7 +229,7 @@ function check_if_configured($page, $calledFrom) {
 			$m = "";
 		else
 			$m = "<br>Go to the 'Allsky Settings' page.";
-		$status->addMessage("<br><strong>You must configure Allsky before using it.<br>If it's already configured, just click on the 'Save changes' button.$m</strong></p>", 'danger', false);
+		$status->addMessage("<div class='important'>You must configure Allsky before using it.<br>If it's already configured, just click on the 'Save changes' button.$m</div>", 'danger', false);
 		$needToDisplayMessage = true;
 		$displayed_configured_message = true;
 	}

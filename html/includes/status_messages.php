@@ -35,10 +35,9 @@ class StatusMessages {
 		$count = 0;
 		foreach($this->messages as $message) {
 			$count++;
-			$style = "";
 			if ($count === 1) {
 				if ($highlight) {
-					$class .= "class=${apos}highlightedBox${apos}";
+					$class = "class=${apos}highlightedBox${apos}";
 				} else {
 					$class = "";
 				}

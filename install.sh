@@ -1754,7 +1754,7 @@ convert_settings()			# prior_file, new_file
 			update_json_file ".${F}" "${V}" "${NEW_FILE}"
 		done
 
-	# Fields whose location changed.
+	##### Fields whose location changed.
 	x="$( get_variable "DAYTIME_CAPTURE" "${PRIOR_CONFIG_FILE}" )"
 	[[ -n ${x} ]] && update_json_file ".takedaytimeimages" "${x}" "${NEW_FILE}"
 
@@ -1763,6 +1763,17 @@ convert_settings()			# prior_file, new_file
 
 	x="$( get_variable "DARK_FRAME_SUBTRACTION" "${PRIOR_CONFIG_FILE}" )"
 	[[ -n ${x} ]] && update_json_file ".usedarkframes" "${x}" "${NEW_FILE}"
+
+	##### New fields not already handled in loop above.
+	# If they are already in PRIOR_FILE then they are also in NEW_FILE.
+	x="$( settings ".takenighttimeimages" "${PRIOR_FILE}" )"
+	[[ -z ${x} ]] && update_json_file ".takenighttimeimages" "true" "${NEW_FILE}"
+
+	x="$( settings ".savenighttimeimages" "${PRIOR_FILE}" )"
+	[[ -z ${x} ]] && update_json_file ".savenighttimeimages" "true" "${NEW_FILE}"
+
+	x="$( settings ".determinefocus" "${PRIOR_FILE}" )"
+	[[ -z ${x} ]] && update_json_file ".determinefocus" "false" "${NEW_FILE}"
 
 
 	# Older versions had uppercase letters in settings name and "1" and "0" for booleans and

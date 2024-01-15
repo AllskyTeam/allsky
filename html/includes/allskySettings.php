@@ -32,16 +32,57 @@ function toString($b) {
 	return($b);
 }
 
-// The opposite of toString().  Given a string version of a boolean, return true or false.
-function toBool($s) {
-	if ($s == "true" || $s == "Yes" || $s == "yes" || $s == "1")
-		return true;
-	return false;
+// Error checking functions.
+function formatSettingName($name) {
+	return("<span class='WebUISetting'>$name</span>");
+}
+function formatSettingValue($value) {
+	return("<span class='WebUIValue'>$value</span>");
 }
 
+function checkType($fieldName, $value, $old, $label, $type, &$shortened=null) {
+	global $status;
 
-// The main function.
-function DisplayAllskyConfig(){
+	if ($type === null || $value == "") {
+		return("");
+	}
+
+	$msg = "";
+
+	// $value will be of type string, even if it's actually a number
+	// or a boolean, and only is_numeric() accounts for types of string.
+	if ($type === "integer" || $type === "percent") {
+		if (! is_numeric($value) || ! is_int($value + 0))
+			$msg = "without a fraction";
+		else
+			$value += 0;
+	} else if ($type === "float") {
+		if (! is_numeric($value) || ! is_float($value + 0.0))
+			$msg = "with, or without, a fraction";
+		else
+			$value += 0.0;
+	}
+	if ($msg !== "") {
+		$msg = "must be a number $msg.";
+		$shortened .= "It $msg";
+		if ($value === $old) {
+			$msg .= " The saved value is: ";
+			$msg .= formatSettingValue($value);
+		} else {
+			$msg .= " You entered: ";
+			$msg .= formatSettingValue($value);
+		}
+
+		if (substr($fieldName, 0, 3) === "day") $label = "Daytime $label";
+		else if (substr($fieldName, 0, 5) == "night") $label = "Nighttime $label";
+		return(formatSettingName($label) . " $msg");
+	}
+
+	return("");
+}
+
+// ============================================= The main function.
+function DisplayAllskyConfig() {
 	global $formReadonly, $settings_array;
 
 	$END = "XX_END_XX";
@@ -51,6 +92,12 @@ function DisplayAllskyConfig(){
 	$cameraNumberName = "cameranumber";		// json setting name
 	$debugLevelName = "debuglevel";			// json setting name
 	$debugArg = "";
+	$hideHeaderBodies = true;
+	$numErrors = 0;
+	$updatedSettings = false;
+	$bullet = "<div class='bullet'>*</div>";
+	$showIcon = "<i class='fa fa-chevron-down fa-fw'></i>";
+	$hideIcon = "<i class='fa fa-chevron-up fa-fw'></i>";
 
 	global $lastChangedName;				// name of json setting
 	global $lastChanged;
@@ -71,6 +118,22 @@ function DisplayAllskyConfig(){
 	// If there's no last changed date, they haven't configured Allsky,
 	// which sets $lastChanged.
 	$needsConfiguration = ($lastChanged == "");
+	if ($needsConfiguration)
+		$hideHeaderBodies = false;		// show all the settings
+
+	$error_array = array();
+	$error_array_short = array();
+	$error_array_source = array();
+
+	// Keep track of required settings and the type of every setting.
+	// This will be used to check for errors.
+	$optional_array = array();
+	$type_array = array();
+	foreach ($options_array as $option) {
+		$name = $option['name'];
+		$optional_array[$name] = toBool(getVariableOrDefault($option, 'optional', "false"));
+		$type_array[$name] = getVariableOrDefault($option, 'type', "");
+	}
 
 	if (isset($_POST['save_settings'])) {
 		// If the user changed the camera type and anything else,
@@ -78,8 +141,6 @@ function DisplayAllskyConfig(){
 		// If we went ahead and made the changes, we would be making them to the NEW
 		// camera's settings file, but using values from the OLD file.
 		if (CSRFValidate()) {
-			$optional_array = array();
-			$type_array = array();
 			$sourceFiles = array();			// list of files in the "source" field
 			$sourceFilesContents = array();	// contents of each sourceFiles file
 			$changes = "";
@@ -96,16 +157,14 @@ function DisplayAllskyConfig(){
 
 			$ok = true;
 
-			// Keep track of optional settings and which settings are from a different source.
+			// Keep track of which settings are from a different source.
 			foreach ($options_array as $option) {
-				$key = $option['name'];
-				$optional_array[$key] = toBool(getVariableOrDefault($option, 'optional', "false"));
-				$type_array[$key] = getVariableOrDefault($option, 'type', "");
+				$name = $option['name'];
 				$s = getVariableOrDefault($option, 'source', null);
 				if ($s !== null) {
 					$fileName = getFileName($s);
-					$sourceFiles[$key] = $fileName;
-					$sourceFilesContents[$key] = &getSourceArray($fileName);
+					$sourceFiles[$name] = $fileName;
+					$sourceFilesContents[$name] = &getSourceArray($fileName);
 				}
 			}
 
@@ -113,9 +172,9 @@ function DisplayAllskyConfig(){
 			$numSourceChanges = 0;
 			$nonCameraChangesExist = false;
 
-	 		foreach ($_POST as $key => $newValue) {
+	 		foreach ($_POST as $name => $newValue) {
 				// Anything that's sent "hidden" in a form that isn't a settings needs to go here.
-				if (in_array($key, ["csrf_token", "save_settings", "reset_settings", "restart", "page", "_ts", $END, "fromConfiguration"])) {
+				if (in_array($name, ["csrf_token", "save_settings", "reset_settings", "restart", "page", "_ts", $END, "fromConfiguration"])) {
 					continue;
 				}
 
@@ -123,29 +182,54 @@ function DisplayAllskyConfig(){
 				// Because we are passing the changes enclosed in single quotes below,
 				// we need to escape the single quotes, but I never figured out how to do that,
 				// so convert them to HTML codes instead.
-				$source_array = getVariableOrDefault($sourceFilesContents, $key, null);
+				$source_array = getVariableOrDefault($sourceFilesContents, $name, null);
 				if ($source_array !== null) {
-					$oldValue = getVariableOrDefault($source_array, $key, "");
+					$oldValue = getVariableOrDefault($source_array, $name, "");
 					$isSettingsField = false;
 				} else {
-					$oldValue = getVariableOrDefault($settings_array, $key, "");
-if ($debug) { if ($oldValue != $newValue) echo "<br>NOT SOURCE $key, old=$oldValue, new=$newValue"; }
+					$oldValue = getVariableOrDefault($settings_array, $name, "");
 					$isSettingsField = true;		// this field is in the settings file.
+				}
+
+				// Check for empty non-optional settings and valid numbers.
+				foreach ($options_array as $option) {
+					if ($option['name'] === $name) {
+						$shortMsg = "";
+//x echo "<br>=== Checking $name: oldValue=$oldValue, newValue=$newValue, type=${type_array[$name]}";
+						$e = checkType($name,
+								$newValue,
+								$oldValue,
+								$option['label'],
+								$type_array[$name],
+								$shortMsg);
+						if ($e != "") {
+//x echo "<br>&nbsp; &nbsp; &nbsp; e=$e, shortMsg=$shortMsg";
+							$ok = false;
+							$numErrors++;
+							$error_array[$name] = $e;
+							$error_array_short[$name] = $shortMsg;
+							if ($oldValue === $newValue)		// where did the error come from?
+								$error_array_source[$name] = "db";
+							else
+								$error_array_source[$name] = "user";
+
+							if ($oldValue !== $newValue) {
+								// Set to $newValue so the user sees the bad value.
+								$settings_array[$name] = $newValue;
+							}
+						}
+					}
 				}
 
 				if ($oldValue !== "")
 					$oldValue = str_replace("'", "&#x27", $oldValue);
-
-if ($debug && $type_array[$key] == "boolean" && $oldValue != $newValue) {
-	echo "<br>key=$key, oldValue=$oldValue, newValue=$newValue";
-}
 
 				if ($oldValue !== $newValue) {
 					$nonCameraChangesExist = false;
 					if ($isSettingsField) $numSettingsChanges++;
 					else $numSourceChanges++;
 
-					if ($key === $cameraTypeName) {
+					if ($name === $cameraTypeName) {
 						if ($newValue === "Refresh") {
 							// Refresh the same Camera Type
 							$refreshingCameraType = true;
@@ -154,9 +238,9 @@ if ($debug && $type_array[$key] == "boolean" && $oldValue != $newValue) {
 						} else {
 							$newCameraType = $newValue;
 						}
-					} elseif ($key === $cameraModelName) {
+					} elseif ($name === $cameraModelName) {
 						$newCameraModel = $newValue;
-					} elseif ($key === $cameraNumberName) {
+					} elseif ($name === $cameraNumberName) {
 						$newCameraNumber = $newValue;
 					} else {
 						// want to know changes other than camera
@@ -166,8 +250,8 @@ if ($debug && $type_array[$key] == "boolean" && $oldValue != $newValue) {
 					$checkchanges = false;
 					$label = "??";
 					foreach ($options_array as $option){
-						if ($option['name'] === $key) {
-							$optional = $optional_array[$key];
+						if ($option['name'] === $name) {
+							$optional = $optional_array[$name];
 							if ($newValue !== "" || $optional) {
 								$checkchanges = toBool(getVariableOrDefault($option, 'checkchanges', "false"));
 								$label = getVariableOrDefault($option, 'label', "");
@@ -177,7 +261,7 @@ if ($debug && $type_array[$key] == "boolean" && $oldValue != $newValue) {
 					}
 
 					if ($checkchanges) {		// Changes for makeChanges.sh to check
-						$changes .= "  '$key' '$label' '$oldValue' '$newValue'";
+						$changes .= "  '$name' '$label' '$oldValue' '$newValue'";
 					}
 
 					if ($nonCameraChangesExist) {
@@ -186,46 +270,6 @@ if ($debug && $type_array[$key] == "boolean" && $oldValue != $newValue) {
 						else
 							$nonCameraChanges .= ", <b>$label</b>";
 						$nonCameraChanges .= " (from '$oldValue' to '$newValue')";
-					}
-				}
-
-				// Check for empty non-optional settings and valid numbers.
-				$span = "span class='WebUISetting'";
-				$spanValue = "span class='WebUIValue'";
-				foreach ($options_array as $option) {
-					if ($option['name'] === $key) {
-						$type = getVariableOrDefault($option, 'type', null);
-						$lab = $option['label'];
-if ($debug) { echo "<br>$key: $newValue, "; }
-						if ($newValue == "" && ! $optional_array[$key]) {
-							$msg = "<$span>$lab</span> is empty";
-							$status->addMessage($msg, 'danger', false);
-							$ok = false;
-
-						} else if ($type !== null && $newValue != "") {
-							$msg = "";
-							// $newValue will be of type string, even if it's actually a number
-							// or a boolean, and only is_numeric() accounts for types of string.
-if ($debug) { echo " &nbsp; &nbsp; &nbsp; [$type, $newValue]: ";  var_dump($newValue); }
-							if ($type === "integer" || $type === "percent") {
-if ($debug) { echo " &nbsp; &nbsp; &nbsp; [is $type] "; }
-								if (! is_numeric($newValue) || ! is_int($newValue + 0))
-									$msg = "without a fraction";
-								else
-									$newValue += 0;
-							} else if ($type === "float") {
-								if (! is_numeric($newValue) || ! is_float($newValue + 0.0))
-									$msg = "with, or without, a fraction";
-								else
-									$newValue += 0.0;
-							}
-							if ($msg !== "") {
-								$msg2 = "<$span>$lab</span> must be a number $msg.";
-								$msg2 .= " You entered: <$spanValue>$newValue</span>";
-								$status->addMessage($msg2, 'danger', false);
-								$ok = false;
-							}
-						}
 					}
 				}
 
@@ -244,20 +288,22 @@ if ($debug) { echo " &nbsp; &nbsp; &nbsp; [is $type] "; }
 						$s_newValue = $newValue;
 					}
 
-					if (isset($sourceFilesContents[$key])) {
+					if (isset($sourceFilesContents[$name])) {
 if ($debug) {
-	$s = toString($sourceFileContents[$key][$key]);
-	echo "<br>sourceFilesContent[$key][$key] = $s, newValue=$s_newValue";
+	$s = toString($sourceFileContents[$name][$name]);
+	echo "<br>sourceFilesContent[$name][$name] = $s, newValue=$s_newValue";
 }
-						$sourceFilesContents[$key][$key] = $newValue;
-						$fileName = $sourceFiles[$key];
+						$sourceFilesContents[$name][$name] = $newValue;
+						$fileName = $sourceFiles[$name];
 						$sourceFilesChanged[$fileName] = $fileName;
 					} else {
 if ($debug) {
-	$s = toString($settings_array[$key]);
-	if ($s != $s_newValue) echo "<br><br>settings_array[$key] = $s, newValue=$s_newValue";
+	$s = toString($settings_array[$name]);
+	if ($s != $s_newValue) { echo "<br><br>settings_array[$name] = $s, newValue=$s_newValue"; }
 }
-						$settings_array[$key] = $newValue;
+
+						$settings_array[$name] = $newValue;
+
 if ($debug && $s != $s_newValue) {
 	echo "<br><pre>====== settings_array['height'] now:<br>";
 	var_dump($settings_array['height']);
@@ -265,7 +311,7 @@ if ($debug && $s != $s_newValue) {
 }
 					}
 
-					if ($key === $debugLevelName && $newValue >= 4) {
+					if ($name === $debugLevelName && $newValue >= 4) {
 						$debugArg = "--debug";
 					}
 				}
@@ -302,6 +348,7 @@ if ($debug) {
 								else	# configuration needed and not changes made.
 									$msg = "Configuration saved and timestamp updated";
 								$needsConfiguration = false;
+								$updatedSettings = true;
 							} else {
 								$status->addMessage("Failed to update settings in '$settings_file': $msg", 'danger');
 								$ok = false;
@@ -395,17 +442,17 @@ if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
 			$sourceFilesChanged = array();
 			$sourceFilesContents = array();
 			foreach ($options_array as $option){
-				$key = $option['name'];
+				$name = $option['name'];
 				$newValue = getVariableOrDefault($option, 'default', null);
 				if ($newValue !== null) {
 					$s = getVariableOrDefault($option, 'source', null);
 					if ($s !== null) {
 						$fileName = getFileName($s);
 						$sourceFilesChanged[$fileName] = $fileName;
-						$sourceFilesContents[$key] = &getSourceArray($fileName);
-						$sourceFilesContents[$key][$key] = $newValue;
+						$sourceFilesContents[$name] = &getSourceArray($fileName);
+						$sourceFilesContents[$name][$name] = $newValue;
 					} else {
-						$settings_array[$key] = $newValue;
+						$settings_array[$name] = $newValue;
 					}
 				}
 			}
@@ -413,6 +460,7 @@ if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
 			$msg = updateFile($settings_file, $content, "settings", true);
 			if ($msg === "") {
 				$status->addMessage("Settings reset to default", 'info');
+				$updatedSettings = true;
 
 				foreach($sourceFilesChanged as $fileName) {
 					$content = json_encode(getSourceArray($fileName), $mode);
@@ -432,7 +480,7 @@ if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
 	// If the settings file changed above, re-read the file.
 	// Also, if $settings_array is null it means we're being called from the Allsky Website,
 	// so read the file.
-	if (isset($_POST['save_settings']) || isset($_POST['reset_settings']) || $settings_array === null) {
+	if ($updatedSettings || $settings_array === null) {
 		$errorMsg = "ERROR: Unable to process settings file '$settings_file'.";
 		$settings_array = get_decoded_json_file($settings_file, true, $errorMsg);
 		if ($settings_array === null) {
@@ -443,7 +491,7 @@ if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
 	$cameraType = getVariableOrDefault($settings_array, $cameraTypeName, "");
 	$cameraModel = getVariableOrDefault($settings_array, $cameraModelName, "");
 
-	check_if_configured($page, "settings");
+	if (! check_if_configured($page, "settings")) $needToDisplayMessages = true;
 
 if ($formReadonly != "readonly") {
 	$settingsDescription = "";
@@ -460,7 +508,9 @@ if ($formReadonly != "readonly") {
 	echo "<div class='panel-heading'>$x Allsky Settings for &nbsp; <b>$cameraType $cameraModel</b></div>";
 	echo "<div class='panel-body' style='padding: 5px;'>";
 		if ($formReadonly != "readonly")
-			echo "<p id='messages'>" . $status->showMessages() . "</p>";
+			echo "<p id='messages'>";
+				if ($status->isMessage()) echo $status->showMessages();
+			echo "</p>";
 		echo "<form method='POST' action='$ME?_ts=" . time() . " name='conf_form'>";
 if ($formReadonly != "readonly") { ?>
 		<div class="sticky">
@@ -494,15 +544,59 @@ CSRFToken();
 		$missingSettings = "";
 		$sourceFiles = array();
 		$sourceFilesContents = array();
-		echo "<table border='0'>";
+		echo "<table border='0' width='100%'>";
+			$inHeader = false;
+			$onHeader = 0;
+?>
+<script lang="javascript">
+function showHeader(headerNum) {
+	var header = document.getElementById('header' + headerNum);
+	var h = document.getElementById('h' + headerNum);
+	show(headerNum, header, h);
+}
+function show(headerNum, header, h) {
+	header.style.display = "table-row";
+	h.title = "Click to hide";
+	h.innerHTML = "<?php echo "$hideIcon" ?>";
+}
+function toggle(headerNum) {
+	var header = document.getElementById('header' + headerNum);
+	var h = document.getElementById('h' + headerNum);
+	if (header.style.display == "none") {
+		show(headerNum, header, h);
+	} else {
+		header.style.display = "none";
+		h.title = "Click to expand";
+		h.innerHTML = "<?php echo "$showIcon" ?>";
+	}
+}
+</script>
+<?php
 			foreach($options_array as $option) {
 				$name = $option['name'];
+				if ($name === $END) continue;
 
-				$type = getVariableOrDefault($option, 'type', "");	// There should be a type.
+				// Should this setting be displayed?
+				$display = toBool(getVariableOrDefault($option, 'display', "true"));
+				if (! $display && ! $isHeader) {
+					if ($formReadonly != "readonly") {
+						// Don't display it, but if it has a value, pass it on.
+						echo "\n\t<!-- NOT DISPLAYED -->";
+						echo "<input type='hidden' name='$name' value='$value'>";
+					}
+					continue;
+				}
+
+				$type = getVariableOrDefault($option, 'type', null);	// There should be a type.
+				if ($type === null) {
+					$msg = "INTERNAL ERROR: Field '$name' has no type; ignoring";
+					$status->addMessage($msg, 'danger');
+					continue;
+				}
+
 				$isHeader = substr($type, 0, 6) === "header";
 				if ($isHeader) {
 					$value = "";
-					$OLDvalue = "";
 					$default = "";
 				} else {
 					$default = getVariableOrDefault($option, 'default', "");
@@ -515,57 +609,86 @@ CSRFToken();
 						$source_array = &getSourceArray($fileName);
 						if ($source_array === null)
 							continue;
-						$value = getVariableOrDefault($source_array, $name, $default);
+						$value = getVariableOrDefault($source_array, $name, null);
 					} else {
-						$value = getVariableOrDefault($settings_array, $name, $default);
-//x if ($debug) echo "<br>JUST GOT $name = $value";
+						$value = getVariableOrDefault($settings_array, $name, null);
 					}
-
-					// Allow single quotes in values (for string values).
-					// &apos; isn't supported by all browsers so use &#x27.
-					$value = str_replace("'", "&#x27;", $value);
-
-					$OLDvalue = $value;
+					if ($value === null) {
+						$value = "";
+					} else {
+						// Allow single quotes in values (for string values).
+						// &apos; isn't supported by all browsers so use &#x27.
+						$value = str_replace("'", "&#x27;", $value);
+					}
 				}
 
-				// Should this setting be displayed?
-				$display = toBool(getVariableOrDefault($option, 'display', "true"));
-				if (! $display && ! $isHeader && $name != $END) {
-					if ($formReadonly != "readonly") {
-						// Don't display it, but if it has a value, pass it on.
-						echo "\n\t<!-- NOT DISPLAYED -->";
-						echo "<input type='hidden' name='$name' value='$value'>";
-					}
-					continue;
-				}
-
-				$minimum = getVariableOrDefault($option, 'minimum', "");
-				$maximum = getVariableOrDefault($option, 'maximum', "");
 				$label = getVariableOrDefault($option, 'label', "");
 
 				if (! $isHeader) {
-					$optional = getVariableOrDefault($option, 'optional', false);
-					if ($value === "" && ! $optional) {
-						if ($default === "") {
+					// Do error checking of values in settings file
+					// except for any settings already checked.
+
+					$optional = toBool(getVariableOrDefault($option, 'optional', "false"));
+					$minimum = getVariableOrDefault($option, 'minimum', "");
+					$maximum = getVariableOrDefault($option, 'maximum', "");
+					$shortMsg = getVariableOrDefault($error_array_short, $name, "");
+
+					if ($shortMsg == "" && $value !== "") {
+//x echo "<br>=== Checking $name: value=$value, type=${type_array[$name]}";
+						$e = checkType($name,
+								$value,
+								$value,
+								$option['label'],
+								$type_array[$name],
+								$shortMsg);
+						if ($e != "") {
+//x echo "<br>&nbsp; &nbsp; &nbsp; e=$e, shortMsg=$shortMsg";
+							$numErrors++;
+							$error_array[$name] = $e;
+							$error_array_short[$name] = $shortMsg;
+							$error_array_source[$name] = "db";	// All these errors are in the settings file
+						}
+					}
+
+					if ($shortMsg !== "" || ($value === "" && ! $optional)) {
+
+						if ($shortMsg !== "") {
+							$warning_class = "alert-danger";
+							$warning_msg = "<span class='errorMsg'>";
+							$whereFrom = getVariableOrDefault($error_array_source, $name, "");
+							if ($whereFrom === "user")
+								$warning_msg .= "You entered an invalid entry: ";
+							else
+								$warning_msg .= "This field is invalid: ";
+							$warning_msg .= "$shortMsg</span><br>";
+
+						} else if ($default === "") {
 							$numMissing++;
 							if ($missingSettings == "") {
-								$missingSettings = "$label";
+								$missingSettings = "&nbsp; &nbsp; $bullet ";
 							} else {
-								$missingSettings .= ", $label";
+								$missingSettings .= "<br>&nbsp; &nbsp; $bullet ";
 							}
+							$missingSettings .= formatSettingName($label);
 							$warning_class = "alert-danger";
-							$warning_msg = "<span style='color: red'>This field cannot be empty.</span><br>";
+							$warning_msg = "<span class='errorMsg'>This field cannot be empty.</span><br>";
+
 						} else {
 							// Use the default but let the user know.
 							$value = $default;
 							$numMissingHasDefault++;
 							if ($missingSettingsHasDefault == "") {
-								$missingSettingsHasDefault = "$label";
+								$missingSettingsHasDefault = "&nbsp; &nbsp; $bullet ";
 							} else {
-								$missingSettingsHasDefault .= ", $label";
+								$missingSettingsHasDefault .= "<br>&nbsp; &nbsp; $bullet ";
 							}
-							$warning_class = "alert-danger";
-							$warning_msg = "<span style='color: red'>This field was empty but set to default.</span><br>";
+							$missingSettingsHasDefault .= formatSettingName($label);
+							$warning_class = "alert-warning";
+							$warning_msg = "<span class='errorMsg'>This field was empty but set to the default.</span><br>";
+						}
+						if ($onHeader > 0) {
+							// Make sure the missing setting's section is displayed.
+							echo "<script>showHeader($onHeader);</script>";
 						}
 					} else {
 						$warning_class = "";
@@ -586,7 +709,7 @@ CSRFToken();
 				// Put some space before and after headers.  This next line is the "before":
 				if ($type == "header-tab") {
 /* TODO: This will be put in an actual tab in the new WebUI.
-					echo "<tr style='height: 10px; color: red; font-size: 125%'>";
+					echo "<tr style='height: 10px; font-size: 125%'>";
 						echo "<td colspan='3' align='center'>[[[ <b>$label</b> tab goes here ]]]</td>";
 					echo "</tr>";
 					continue;
@@ -595,15 +718,36 @@ CSRFToken();
 				} else if ($type == "header") {
 					// Not sure how to display the header with a background color with 10px
 					// of white above and below it using only one <tr>.
-					echo "<tr style='height: 10px;'>";
-						echo "<td colspan='3'></td>";
+					if ($hideHeaderBodies) {
+						if ($inHeader) echo "</tbody>";
+						else $inHeader = true;
+					}
+
+					echo "\n\t<tr class='headingRow'>";
+					if ($hideHeaderBodies) {
+						$onHeader++;
+						echo "<td colspan='3'>";
+						echo "<table border=0 class='settingsHeader'>";
+						echo "<tbody class='headingRowPadding'>";
+						echo "<tr>";
+						echo "<td class='headingToggle' title='Click to expand'>";
+						echo "<span id='h$onHeader' onClick='toggle($onHeader);'>$showIcon</span>";
+						echo "</td>";
+						echo "<td class='headingTitle'>$label</td>";
+						echo "</tr>";
+						echo "</tbody>";
+						echo "</table>";
+						echo "</td>";
+					} else {
+						echo "<td colspan='3' class='settingsHeader headingRowPadding'>";
+						echo "$label";
+						echo "</td>";
+					}
 					echo "</tr>";
-					echo "\n\t<tr class='rowSeparator'>";
-						echo "<td colspan='3' class='settingsHeader'>$label</td>";
-					echo "</tr>";
-					echo "\n\t<tr class='rowSeparator' style='height: 10px;'>";
-						echo "<td colspan='3'></td>";
-					echo "</tr>";
+
+					if ($hideHeaderBodies)
+						echo "<tbody style='display: none' id='header$onHeader'>";
+
 					continue;
 
 				} else if ($type == "header-sub") {
@@ -757,29 +901,49 @@ if ($popupYesNo !== "") {
 
 					echo "\n</tr>";
 				}
-			 }
+			}
+			if ($inHeader) echo "</tbody>";
 		echo "</table>";
 
-		$needToShowMessages = false;
-		if ($numMissing > 0 && $formReadonly != "readonly") {
-			$needToShowMessages = true;
-			$msg = "ERROR: $numMissing required field" . ($numMissing === 1 ? " is" : "s are");
-			$msg .= " missing (<strong>$missingSettings</strong>) - see highlighted entries below.";
-			$status->addMessage($msg, 'danger');
+		if ($formReadonly != "readonly") {
+			$msg = "";
+			if ($numErrors > 0) {
+				$msg .= "<strong>";
+				$msg .= "ERROR: invalid/missing field" . ($numErrors+$numMissing > 1 ? "s" : "") . ":";
+				$msg .= "</strong>";
+				foreach ($error_array as $errorName => $errorMsg) {
+					$msg .= "<br>&nbsp; &nbsp; $bullet $errorMsg";
+				}
+			}
+			if ($numMissing > 0) {
+				$msg .= "<br><strong>$missingSettings</strong> is missing";
+			}
+			if ($msg != "") {
+				// Combine invalid and missing fields since they are both errors.
+				$status->addMessage($msg, 'danger', false);
+			}
+
+			if ($numMissingHasDefault > 0) {
+				$msg = "<strong>";
+				$msg .= "WARNING: required field" . ($numMissingHasDefault === 1 ? " is" : "s are");
+				$msg .= " missing but replaced by the default:";
+				$msg .= "</strong>";
+				$msg .= "<br><strong>$missingSettingsHasDefault</strong>";
+				$status->addMessage($msg, 'warning', false);
+			}
 		}
-		if ($numMissingHasDefault > 0 && $formReadonly != "readonly") {
-			$needToShowMessages = true;
-			$msg = "WARNING: $numMissingHasDefault required field" . ($numMissingHasDefault === 1 ? " is" : "s are");
-			$msg .= " missing (<strong>$missingSettingsHasDefault</strong>) but replaced by the default - see highlighted entries below. You MUST click the 'Save changes' button below.";
-			$status->addMessage($msg, 'danger');
-		}
-		if ($needToShowMessages) {
+		if ($status->isMessage()) {
+			$status->addMessage("<strong>See the highlighted entries below.</strong>", 'info', false);
 ?>
 			<script>
 				var messages = document.getElementById("messages");
-				// Call showMessages() with the 2nd (escape) argument of true so it escapes single quotes.
+				var inner = messages.innerHTML;
+				// Call showMessages() with the 2nd (escape) argument of "true" so
+				// it escapes single quotes and deletes newlines.
 				// We then have to restore them so the html is correct.
-				messages.innerHTML += '<?php $status->showMessages(true, true); ?>'.replace(/&apos;/g, "'");
+				messages.innerHTML += '<?php $status->showMessages(true, true, true); ?>'
+					.replace(/&apos;/g, "'")
+					.replace(/&#10/g, "\n");
 			</script>
 <?php } ?>
 

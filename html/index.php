@@ -322,7 +322,7 @@ if (file_exists($f)) {
 			<div class="col-lg-12">
 				<?php
 				// Check if the settings are configured.
-				check_if_configured($page, "main");
+				if (! check_if_configured($page, "main")) $needToDisplayMessages = true;
 
 				if ($needToDisplayMessages)
 					$status->showMessages(true, false, true);

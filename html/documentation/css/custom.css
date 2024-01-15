@@ -7,6 +7,8 @@
 	--WebUI-setting-color-dark: #68a0ff;
 	--dark-text: #aaaaaa;
 	--dark-text-reversed: #eeeeee;
+	--rowSeparator: 1px solid #d3d3d3;
+	--rowSeparator-dark: 1px solid #707070;
 }
 
 .page-header {
@@ -211,6 +213,19 @@ body.dark {
 	color: var(--dark-text);
 	border-color: #333333;
 	background-color: #171717;
+}
+
+.highlightedBox {
+	border: 4px dashed red;
+	margin-top: 40px;
+	margin-bottom: 40px;
+	padding: 10px 5px 10px 5px;
+}
+.bullet {
+	font-weight: bold;
+	font-size: 125%;
+	display: inline;
+	vertical-align: top;
 }
 
 .alert {
@@ -437,6 +452,24 @@ table .alert-dismissable {
 .dark .settingsHeader {
 	background-color: #555;
 }
+.headingRow {
+	border-top: 15px solid transparent;
+	border-bottom: 15px solid var(--rowSeparator);
+}
+.dark .headingRow {
+	border-bottom-color: var(--rowSeparator-dark);
+}
+.headingRowPadding {
+	border-top: 3px solid transparent;
+	border-bottom: 3px solid transparent;
+}
+.headingToggle {
+	cursor: pointer;
+	padding-left: 0.5em;
+}
+.headingTitle {
+	width: 100%;
+}
 
 .boxShadow {
 	-webkit-box-shadow: 2px 3px rgb(0,0,0,15%);
@@ -445,10 +478,10 @@ table .alert-dismissable {
 
 /* separate table rows */
 .rowSeparator {
-	border-bottom: 1px solid #d3d3d3;
+	border-bottom: var(--rowSeparator);
 }
 .dark .rowSeparator {
-	border-bottom: 1px solid #707070;
+	border-bottom: var(--rowSeparator-dark);
 }
 /* used in system.php */
 .progress-bar {

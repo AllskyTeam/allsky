@@ -590,7 +590,7 @@ ASI_ERROR_CODE ASIGetControlValue(int iCameraIndex, ASI_CONTROL_TYPE ControlType
 // Empty routines so code compiles.
 int stopVideoCapture(int cameraID) { return((int) ASI_SUCCESS); }
 int closeCamera(int cameraID) { return((int) ASI_SUCCESS); }
-char const *getZWOexposureType(int t) { return("ZWOend"); }
+char const *getZWOexposureType(ZWOexposure t) { return("ZWOend"); }
 
 // Get the camera's serial number.  RPi cameras don't support serial numbers.
 ASI_ERROR_CODE  ASIGetSerialNumber(int iCameraIndex, ASI_SN *pSN)

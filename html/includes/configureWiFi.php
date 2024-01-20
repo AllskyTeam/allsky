@@ -7,35 +7,36 @@ function DisplayWPAConfig(){
 	// Find currently configured networks
 	exec(' sudo cat ' . RASPI_WPA_SUPPLICANT_CONFIG, $known_return);
 
-	$network = null;
+	$thisNetwork = null;
 	$ssid = null;
 
 	// Process the already-configured networks.
 	foreach($known_return as $line) {
 		if (preg_match('/network\s*=/', $line)) {
-			$network = array('visible' => false, 'configured' => true, 'connected' => false);
-		} elseif ($network !== null) {
-			if (preg_match('/^\s*}\s*$/', $line)) {
-				$networks[$ssid] = $network;
-				$network = null;
+			$thisNetwork = array('visible' => false, 'configured' => true, 'connected' => false);
+		} elseif ($thisNetwork !== null) {
+			if (preg_match('/^\s*}\s*$/', $line)) {		// end of info for this Network
+				$networks[$ssid] = $thisNetwork;
+				$thisNetwork = null;
 				$ssid = null;
 			} elseif ($lineArr = preg_split('/\s*=\s*/', trim($line))) {
 				switch(strtolower($lineArr[0])) {
 					case 'ssid':
 						$ssid = trim($lineArr[1], '"');
 						break;
-					case 'psk':
-						if (array_key_exists('passphrase', $network)) {
+					case 'psk':		// This may be a plain-text value or a 64-character encrypted value.
+						if (array_key_exists('passphrase', $thisNetwork)) {
 							break;
 						}
 					case '#psk':
-						$network['protocol'] = 'WPA';
+						$thisNetwork['#psk'] = trim($lineArr[1], '"');
+						$thisNetwork['protocol'] = 'WPA';
 					case 'wep_key0': // Untested
-						$network['passphrase'] = trim($lineArr[1], '"');
+						$thisNetwork['passphrase'] = trim($lineArr[1], '"');
 						break;
 					case 'key_mgmt':
-						if (! array_key_exists('passphrase', $network) && $lineArr[1] === 'NONE') {
-							$network['protocol'] = 'Open';
+						if (! array_key_exists('passphrase', $thisNetwork) && $lineArr[1] === 'NONE') {
+							$thisNetwork['protocol'] = 'Open';
 						}
 						break;
 				}
@@ -70,6 +71,7 @@ function DisplayWPAConfig(){
 			}
 
 			$ok = true;
+// echo "<br>tmp_networks=<pre>"; print_r($tmp_networks); echo "</pre>";
 			foreach($tmp_networks as $ssid => $network) {
 				if ($network['protocol'] === 'Open') {
 					fwrite($wpa_file, "network={".PHP_EOL);
@@ -77,7 +79,11 @@ function DisplayWPAConfig(){
 					fwrite($wpa_file, "\tkey_mgmt=NONE".PHP_EOL);
 					fwrite($wpa_file, "}".PHP_EOL);
 				} else {
-					$passphrase = $network['passphrase'];
+					$pound_psk = $network['#psk'];
+					if ($pound_psk !== "")
+						$passphrase = $pound_psk;
+					else
+						$passphrase = $network['passphrase'];
 					$len = strlen($passphrase);
 					if ($len >=8 && $len <= 63) {
 						unset($wpa_passphrase);
@@ -87,6 +93,16 @@ function DisplayWPAConfig(){
 						foreach($wpa_passphrase as $line) {
 							fwrite($wpa_file, $line.PHP_EOL);
 						}
+					} else if ($len == 64) {	// 64 means it's already encrypted
+						fwrite($wpa_file, "network={".PHP_EOL);
+						fwrite($wpa_file, "\tssid=\"$ssid\"".PHP_EOL);
+						if ($pound_psk !== "")
+							fwrite($wpa_file, "\t#psk=\"$pound_psk\"".PHP_EOL);
+						if ($passphrase !== "")
+							fwrite($wpa_file, "\tpsk=\"$passphrase\"".PHP_EOL);
+						fwrite($wpa_file, "}".PHP_EOL);
+
+						fwrite($wpa_file, $passphrase.PHP_EOL);
 					} else {
 						$status->addMessage("WPA passphrase for $ssid must be between 8 and 63 characters (it is $len)", "danger");
 						$ok = false;
@@ -148,14 +164,12 @@ function DisplayWPAConfig(){
 				// Some SSIDs may be on multiple channels in multiple bands
 				if (! isset($networks[$ssid]['channel'])) {
 					// This is the SSID that's in use.
-// echo "<br>Existing SSD $ssid, in use";
 					$networks[$ssid]['channel'] = $channel;
 					$networks[$ssid]['times'] = 1;
 				} else {
 					$have_multiple = true;
 					// $networks[$ssid]['channel'] .= "<br>$channel";
 					$networks[$ssid]['times']++;
-// echo "<br>Existing SSD $ssid, Occurence: " . $networks[$ssid]['times'] . ", channel=$channel";
 				}
 			} else {
 				// New SSID
@@ -218,8 +232,6 @@ function DisplayWPAConfig(){
 					$protocol = getVariableOrDefault($network, 'protocol', "");
 					$passphrase = getVariableOrDefault($network, 'passphrase', "");
 					$fullPassphrase = $passphrase;
-					// If the passphrase is long, shorten it so it doesn't take up too much space.
-					if (strlen($passphrase) > 10) $passphrase = substr($passphrase, 0, 10);
 
 					echo "<tr>";
 

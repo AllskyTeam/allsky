@@ -4,11 +4,11 @@
 # If the message is already there, just update the time and count.
 
 # Allow this script to be executed manually, which requires several variables to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
-#shellcheck disable=SC2086 source=variables.sh
-source "${ALLSKY_HOME}/variables.sh"					|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC1091 source=variables.sh
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 
 if [ $# -ne 2 ]; then
 	# shellcheck disable=SC2154
@@ -29,11 +29,11 @@ elif [[ ${TYPE} != "warning" && ${TYPE} != "info" && ${TYPE} != "success" ]]; th
 	TYPE="info"
 fi
 MESSAGE="${2}"
-DATE="$(date '+%B %d, %r')"
+DATE="$( date '+%B %d, %r' )"
 
 # The file is tab-separated: type date count message
 COUNT=0
-TAB="$(echo -e "\t")"
+TAB="$( echo -e "\t" )"
 
 # Convert newlines to HTML breaks.
 MESSAGE="$( echo -en "${MESSAGE}" |
@@ -50,9 +50,9 @@ MESSAGE="${MESSAGE//%/\&\#37;}"
 ESCAPED_MESSAGE="${MESSAGE//\*/\\*}"
 
 
-if [[ -f ${ALLSKY_MESSAGES} ]] &&  M="$(grep "${TAB}${ESCAPED_MESSAGE}$" "${ALLSKY_MESSAGES}")" ; then
+if [[ -f ${ALLSKY_MESSAGES} ]] &&  M="$( grep "${TAB}${ESCAPED_MESSAGE}$" "${ALLSKY_MESSAGES}" )" ; then
 	# tail -1  in case file is corrupt and has more than one line we want.
-	PRIOR_COUNT=$(echo -e "${M}" | cut -f3 -d"${TAB}" | tail -1)
+	PRIOR_COUNT=$( echo -e "${M}" | cut -f3 -d"${TAB}" | tail -1 )
 
 	# If this entry is corrupted don't try to update the counter.
 	[[ ${PRIOR_COUNT} != "" ]] && ((COUNT = PRIOR_COUNT + 1))

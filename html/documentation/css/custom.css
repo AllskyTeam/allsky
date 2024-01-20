@@ -5,6 +5,10 @@
 	--navbar-border-color-dark: #333333;
 	--WebUI-setting-color: #00009b;
 	--WebUI-setting-color-dark: #68a0ff;
+	--dark-text: #aaaaaa;
+	--dark-text-reversed: #eeeeee;
+	--rowSeparator: 1px solid #d3d3d3;
+	--rowSeparator-dark: 1px solid #707070;
 }
 
 .page-header {
@@ -38,6 +42,9 @@
 }
 .version-title-color {
 	color: #777;
+}
+.dark .version-title-color {
+	color: var(--dark-text);
 }
 
 @media (max-width: 450px) {.version-title { font-size: 75%; }}
@@ -92,9 +99,11 @@
 
 .switch-field {
 	font-family: "Lucida Grande", Tahoma, Verdana, sans-serif;
-	margin: 3px 2px -15px 0;
+	/* old values: margin: 3px 2px -15px 0; */
+	margin: 2px 0 -2px 0;
 	display: inline-block;
 	overflow: hidden;
+	border-radius: 4px;
 }
 
 .switch-field input {
@@ -156,7 +165,7 @@ h2 {
 
 body.dark {
 	background-color: #222222;
-	color: #888888;
+	color: var(--dark-text);
 }
 
 .dark #page-wrapper {
@@ -169,13 +178,17 @@ body.dark {
 	border: 1px solid var(--navbar-border-color-dark);
 }
 
+.dark .navbar-brand {
+	color: var(--dark-text);
+}
+
 .dark .sidebar ul li {
 	border-bottom: 1px solid #333333;
 }
 
 .dark .sidebar ul li a,
 .dark .sidebar ul li span {
-	color: #888888;
+	color: var(--dark-text);
 }
 
 .dark .sidebar ul li a.active {
@@ -190,15 +203,29 @@ body.dark {
 	background-color: #272727;
 }
 
-.dark .panel-default {
+.dark .panel-default,
+.dark .panel-primary {
 	border-color: #333333;
 }
 
 .dark .panel-heading,
 .dark .panel-footer {
-	color: #888888;
+	color: var(--dark-text);
 	border-color: #333333;
 	background-color: #171717;
+}
+
+.highlightedBox {
+	border: 4px dashed red;
+	margin-top: 40px;
+	margin-bottom: 40px;
+	padding: 10px 5px 10px 5px;
+}
+.bullet {
+	font-weight: bold;
+	font-size: 125%;
+	display: inline;
+	vertical-align: top;
 }
 
 .alert {
@@ -212,6 +239,13 @@ button.close {
 }
 .alert td {
 	padding: 0 10px 0 3px;
+}
+.alert td .important {
+	font-weight: bold;
+	font-size: 150%;
+	padding-top: 2em;
+	padding-bottom: 2em;
+	padding-left: 1em;
 }
 table .alert-dismissable button {
 	font-size: 175%;
@@ -250,17 +284,13 @@ table .alert-dismissable {
 	border-color: #f1b1b1;
 	background-color: #a94442;
 }
-.alert-danger {
-	border-top-width: 10px;
-	border-bottom-width: 10px;
-}
 
 .dark .form-control,
 .dark input[type="text"],
 .dark input[type="number"],
 .dark select {
 	background-color: #171717;
-	color: #888888;
+	color: var(--dark-text);
 	border-color: #555555;
 }
 
@@ -299,7 +329,7 @@ table .alert-dismissable {
 
 .dark .switch-field label { 
 	background-color: #171717;
-	color: #888888;
+	color: var(--dark-text);
 }
 
 .dark .switch-field input:checked + label {
@@ -363,6 +393,21 @@ table .alert-dismissable {
 	border-color: #ad5451;
 }
 
+.btn.focus.navbar-btn,
+.btn:focus.navbar-btn,
+.btn:hover.navbar-btn
+{
+	color: var(--dark-text);
+	border: 1px solid var(--dark-text);
+}
+.dark .btn.focus.navbar-btn,
+.dark .btn:focus.navbar-btn,
+.dark .btn:hover.navbar-btn,
+.dark .help-block
+{
+	color: var(--dark-text-reversed);
+}
+
 .dark .btn-primary:hover,
 .dark .btn-success:hover,
 .dark .btn-warning:hover,
@@ -407,6 +452,24 @@ table .alert-dismissable {
 .dark .settingsHeader {
 	background-color: #555;
 }
+.headingRow {
+	border-top: 15px solid transparent;
+	border-bottom: 15px solid var(--rowSeparator);
+}
+.dark .headingRow {
+	border-bottom-color: var(--rowSeparator-dark);
+}
+.headingRowPadding {
+	border-top: 3px solid transparent;
+	border-bottom: 3px solid transparent;
+}
+.headingToggle {
+	cursor: pointer;
+	padding-left: 0.5em;
+}
+.headingTitle {
+	width: 100%;
+}
 
 .boxShadow {
 	-webkit-box-shadow: 2px 3px rgb(0,0,0,15%);
@@ -415,10 +478,10 @@ table .alert-dismissable {
 
 /* separate table rows */
 .rowSeparator {
-	border-bottom: 1px solid #d3d3d3;
+	border-bottom: var(--rowSeparator);
 }
 .dark .rowSeparator {
-	border-bottom: 1px solid #707070;
+	border-bottom: var(--rowSeparator-dark);
 }
 /* used in system.php */
 .progress-bar {
@@ -467,7 +530,7 @@ select {
 .dark .btn-white { border-color: #ffffff; }
 
 .btn-black		 { background-color: #333333; border-color: #777777; color: white; }
-.btn-black:hover { background-color: #888888; border-color: #000000; color: white; }
+.btn-black:hover { background-color: var(--dark-text); border-color: #000000; color: white; }
 .dark .btn-black { border-color: #ffffff; }
 
 /* Error messages */
@@ -560,7 +623,9 @@ select {
 }
 .live_container {
 	background-color: black;
-	margin-bottom: 15px;
+}
+.current {
+	width: 100%;
 }
 
 div.sticky {

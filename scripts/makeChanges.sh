@@ -1,22 +1,22 @@
 #!/bin/bash
 
 # Allow this script to be executed manually, which requires several variables to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"			|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"			|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit "${EXIT_ERROR_STOP}"
 
 # This script may be called during installation BEFORE there is a settings file.
 # config.sh looks for the file and produces an error if it doesn't exist,
 # so only include these two files if there IS a settings file.
 if [[ -f ${SETTINGS_FILE} ]]; then
 	#shellcheck disable=SC1091		# file doesn't exist in GitHub
-	source "${ALLSKY_CONFIG}/config.sh"			|| exit "${ALLSKY_ERROR_STOP}"
+	source "${ALLSKY_CONFIG}/config.sh"			|| exit "${EXIT_ERROR_STOP}"
 	#shellcheck disable=SC1091		# file doesn't exist in GitHub
-	source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit "${ALLSKY_ERROR_STOP}"
+	source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit "${EXIT_ERROR_STOP}"
 fi
 
 function usage_and_exit()
@@ -37,11 +37,11 @@ DEBUG_ARG=""
 HELP="false"
 OPTIONS_FILE_ONLY="false"
 RESTARTING="false"			# Will the caller restart Allsky?
-CAMERA_TYPE_ONLY="false"	# Only update the cameraType ?
+CAMERA_TYPE_ONLY="false"	# Only update the cameratype ?
 FORCE=""					# Passed to createAllskyOptions.php
 
 while [[ $# -gt 0 ]]; do
-	ARG="${1,,}"					# convert to lowercase
+	ARG="${1}"
 	case "${ARG}" in
 		--debug)
 			DEBUG="true"
@@ -54,7 +54,7 @@ while [[ $# -gt 0 ]]; do
 			OPTIONS_FILE_ONLY="true"
 			SETTINGS_FILE=""
 			;;
-		--cameratypeonly)
+		--cameraTypeOnly)
 			CAMERA_TYPE_ONLY="true"
 			;;
 		--force)
@@ -81,21 +81,11 @@ if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
 	[[ $(($# % 4)) -ne 0 ]] && usage_and_exit 2
 fi
 
-if [[ ${ON_TTY} -eq 0 ]]; then		# called from WebUI.
+if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
 	ERROR_PREFIX=""
 else
 	ERROR_PREFIX="${ME}: "
 fi
-
-# This output may go to a web page, so use "w" colors.
-# shell check doesn't realize there were set in variables.sh
-wOK="${wOK}"
-wWARNING="${wWARNING}"
-wERROR="${wERROR}"
-wDEBUG="${wDEBUG}"
-wBOLD="${wBOLD}"
-wNBOLD="${wNBOLD}"
-wNC="${wNC}"
 
 # Does the change need Allsky to be restarted in order to take affect?
 NEEDS_RESTART="false"
@@ -110,7 +100,7 @@ SHOW_POSTDATA_MESSAGE="true"
 TWILIGHT_DATA_CHANGED="false"
 CAMERA_TYPE_CHANGED="false"
 GOT_WARNING="false"
-SHOW_ON_MAP=""
+SHOW_ON_MAP="false"
 
 # Several of the fields are in the Allsky Website configuration file,
 # so check if the IS a file before trying to update it.
@@ -120,7 +110,7 @@ function check_website()
 {
 	[[ -n ${HAS_WEBSITE_RET} ]] && return "${HAS_WEBSITE_RET}"		# already checked
 
-	WEBSITES="$(whatWebsites)"
+	WEBSITES="$( whatWebsites )"
 	if [[ ${WEBSITES} == "local" || ${WEBSITES} == "both" ]]; then
 		WEB_CONFIG_FILE="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 		HAS_WEBSITE_RET=0
@@ -164,7 +154,7 @@ do
 	if [[ ${DEBUG} == "true" ]]; then
 		MSG="${KEY}: Old=[${OLD_VALUE}], New=[${NEW_VALUE}]"
 		echo -e "${wDEBUG}${ME}: ${MSG}${wNC}"
-		if [[ ${ON_TTY} -eq 0 ]]; then		# called from WebUI.
+		if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
 			echo -e "<script>console.log('${MSG}');</script>"
 		fi
 	fi
@@ -175,15 +165,15 @@ do
 	K="${KEY,,}"		# convert to lowercase
 	case "${K}" in
 
-		cameranumber | cameratype)
+		"cameranumber" | "cameratype")
 			if [[ ${K} == "cameranumber" ]]; then
 				NEW_CAMERA_NUMBER="${NEW_VALUE}"
-				CAMERA_NUMBER=" -cameraNumber ${NEW_CAMERA_NUMBER}"
+				CAMERA_NUMBER=" -cameranumber ${NEW_CAMERA_NUMBER}"
 				# Set NEW_VALUE to the current Camera Type
-				NEW_VALUE="$( settings .cameraType )"
+				NEW_VALUE="$( settings ".cameratype" )"
 
-				MSG="Re-creating files for cameraType ${NEW_VALUE}, cameraNumber ${NEW_CAMERA_NUMBER}"
-				if [[ ${ON_TTY} -eq 0 ]]; then		# called from WebUI.
+				MSG="Re-creating files for cameratype ${NEW_VALUE}, cameranumber ${NEW_CAMERA_NUMBER}"
+				if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
 					echo -e "<script>console.log('${MSG}');</script>"
 				elif [[ ${DEBUG} == "true" ]]; then
 					echo -e "${wDEBUG}${MSG}${wNC}"
@@ -203,7 +193,7 @@ do
 			if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
 
 				# If we can't set the new camera type, it's a major problem so exit right away.
-				# NOTE: when we're changing cameraType we're not changing anything else.
+				# NOTE: when we're changing cameratype we're not changing anything else.
 
 				# The software for RPi cameras needs to know what command is being used to
 				# capture the images.
@@ -254,13 +244,13 @@ do
 						fi
 						echo -e "${wNC}"
 					fi
-					exit ${RET}		# the actual exit code is important
+					exit "${RET}"		# the actual exit code is important
 				fi
 				[[ -n ${R} ]] && echo -e "${R}"
 
 				# Create a link to a file that contains the camera type and model in the name.
 				CAMERA_TYPE="${NEW_VALUE}"		# already know it
-				CAMERA_MODEL="$( settings .cameraModel "${CC_FILE}" )"
+				CAMERA_MODEL="$( settings ".cameraModel" "${CC_FILE}" )"
 				if [[ -z ${CAMERA_MODEL} ]]; then
 					echo -e "${wERROR}ERROR: 'cameraModel' not found in ${CC_FILE}.${wNC}"
 					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
@@ -270,7 +260,7 @@ do
 				# ${CC_FILE} is a generic name defined in config.sh.
 				# ${SPECIFIC_NAME} is specific to the camera type/model.
 				# It isn't really needed except debugging.
-				CC="$(basename "${CC_FILE}")"
+				CC="$( basename "${CC_FILE}" )"
 				CC_EXT="${CC##*.}"			# after "."
 				CC_NAME="${CC%.*}"			# before "."
 				SPECIFIC_NAME="${ALLSKY_CONFIG}/${CC_NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${CC_EXT}"
@@ -321,26 +311,35 @@ do
 			# camera type/model then createAllskyOptions.php will use it and link it
 			# to SETTINGS_FILE.
 			# If there is no existing camera-specific file, i.e., this camera is new
-			# to Allsky, it will create a default settings file using the generic
-			# values from the prior settings file if it exists.
+			# to Allsky, it will create a default settings file.  The default file
+			# won't have values for items we can't automatically determine,
+			# so try to get those values from a prior settings file if it exists.
+			if [[ -f ${SETTINGS_FILE} ]]; then
+				# Prior settings file exists so save the old TYPE and MODEL
+				OLD_TYPE="${OLD_VALUE}"
+				OLD_MODEL="$( settings .cameramodel )"
+			else
+				OLD_TYPE=""
+				OLD_MODEL=""
+			fi
 
 			if [[ ${DEBUG} == "true" ]]; then
 				# shellcheck disable=SC2086
 				echo -e "${wDEBUG}Calling:" \
 					"${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
 					${FORCE} ${DEBUG_ARG} \
-					"\n\t--cc_file ${CC_FILE}" \
-					"\n\t--options_file ${OPTIONS_FILE}" \
-					"\n\t--settings_file ${SETTINGS_FILE}" \
+					"\n\t--cc-file ${CC_FILE}" \
+					"\n\t--options-file ${OPTIONS_FILE}" \
+					"\n\t--settings-file ${SETTINGS_FILE}" \
 					"${wNC}"
 			fi
 			# shellcheck disable=SC2086
-			R="$("${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
+			R="$( "${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
 				${FORCE} ${DEBUG_ARG} \
-				--cc_file "${CC_FILE}" \
-				--options_file "${OPTIONS_FILE}" \
-				--settings_file "${SETTINGS_FILE}" \
-				2>&1)"
+				--cc-file "${CC_FILE}" \
+				--options-file "${OPTIONS_FILE}" \
+				--settings-file "${SETTINGS_FILE}" \
+				2>&1 )"
 			RET=$?
 
 			if [[ ${RET} -ne 0 ]]; then
@@ -366,6 +365,48 @@ do
 			fi
 			[[ ${OK} == "false" ]] && exit 2
 
+			# See if a camera-specific settings file was created.
+			# If the latitude isn't set assume it's a new file.
+			if [[ -n ${OLD_TYPE} && -n ${OLD_MODEL} &&
+					-z "$( settings .latitude "${SETTINGS_FILE}" )" ]]; then
+				#shellcheck source-path=scripts
+				source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"
+				[[ $? -ne 0 ]] && exit "${EXIT_ERROR_STOP}"
+
+				# We assume the user wants these settings for
+				# this camera to be the same as the prior one.
+
+				if [[ ${DEBUG} == "true" ]]; then
+					MSG="Updating user-defined settings in new settings file."
+					echo -e "${wDEBUG}${MSG}${wNC}"
+				fi
+
+				# First determine the name of the prior camera-specific settings file.
+				NAME="$( basename "${SETTINGS_FILE}" )"
+				S_NAME="${NAME%.*}"
+				S_EXT="${NAME##*.}"
+				OLD_SETTINGS_FILE="${ALLSKY_CONFIG}/${S_NAME}_${OLD_TYPE}_${OLD_MODEL}.${S_EXT}"
+
+				for s in latitude longitude locale websiteurl imageurl location owner computer
+				do
+					X="$( settings .${s} "${OLD_SETTINGS_FILE}" )"
+					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}"
+				done
+
+				for s in angle debuglevel
+				do
+					X="$( settings .${s} "${OLD_SETTINGS_FILE}" )"
+					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}" "number"
+				done
+
+				for s in uselogin displaysettings showonmap
+				do
+					X="$( settings .${s} "${OLD_SETTINGS_FILE}" )"
+					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}" "boolean"
+				done
+			fi
+
+
 			# Don't do anything else if ${CAMERA_TYPE_ONLY} is set.
 			if [[ ${CAMERA_TYPE_ONLY} == "true" ]]; then
 				if [[ ${GOT_WARNING} == "true" ]]; then
@@ -380,12 +421,12 @@ do
 			NEEDS_RESTART="true"
 			;;
 
-		type)
+		"type")
 			check_filename_type "$( settings '.filename' )" "${NEW_VALUE}" || OK="false"
 			NEEDS_RESTART="true"
 			;;
 
-		filename)
+		"filename")
 			if check_filename_type "${NEW_VALUE}" "$( settings '.type' )" ; then
 				check_website && WEBSITE_CONFIG+=("config.imageName" "${LABEL}" "${NEW_VALUE}")
 				NEEDS_RESTART="true"
@@ -394,7 +435,7 @@ do
 			fi
 			;;
 
-		extratext)
+		"extratext")
 			# It's possible the user will create/populate the file while Allsky is running,
 			# so it's not an error if the file doesn't exist or is empty.
 			if [[ -n ${NEW_VALUE} ]]; then
@@ -407,9 +448,9 @@ do
 			NEEDS_RESTART="true"
 			;;
 
-		latitude | longitude)
+		"latitude" | "longitude")
 			# Allow either +/- decimal numbers, OR numbers with N, S, E, W, but not both.
-			if NEW_VALUE="$(convertLatLong "${NEW_VALUE}" "${KEY}")" ; then
+			if NEW_VALUE="$( convertLatLong "${NEW_VALUE}" "${KEY}" )" ; then
 				check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
 			else
 				echo -e "${wWARNING}WARNING: ${NEW_VALUE}.${wNC}"
@@ -418,17 +459,17 @@ do
 			TWILIGHT_DATA_CHANGED="true"
 			;;
 
-		angle)
+		"angle")
 			NEEDS_RESTART="true"
 			TWILIGHT_DATA_CHANGED="true"
 			;;
 
-		takedaytimeimages)
+		"takedaytimeimages")
 			NEEDS_RESTART="true"
 			TWILIGHT_DATA_CHANGED="true"
 			;;
 
-		config)
+		"config")
 			if [[ ${NEW_VALUE} == "" ]]; then
 				NEW_VALUE="[none]"
 			elif [[ ${NEW_VALUE} != "[none]" ]]; then
@@ -440,24 +481,20 @@ do
 			fi
 			;;
 
-		daytuningfile | nighttuningfile)
+		"daytuningfile" | "nighttuningfile")
 			if [[ -n ${NEW_VALUE} && ! -f ${NEW_VALUE} ]]; then
 				echo -e "${wWARNING}WARNING: Tuning File '${NEW_VALUE}' does not exist; please change it.${wNC}"
 			fi
 			NEEDS_RESTART="true"
 			;;
 
-		displaysettings)
-			if [[ ${NEW_VALUE} -eq 0 ]]; then
-				NEW_VALUE="false"
-			else
-				NEW_VALUE="true"
-			fi
+		"displaysettings")
+			[[ ${NEW_VALUE} != "false" ]] && NEW_VALUE="true"
 			if check_website; then
 				# If there are two Websites, this gets the index in the first one.
 				# Let's hope it's the same index in the second one...
 				PARENT="homePage.popoutIcons"
-				INDEX=$(getJSONarrayIndex "${WEB_CONFIG_FILE}" "${PARENT}" "Allsky Settings")
+				INDEX=$( getJSONarrayIndex "${WEB_CONFIG_FILE}" "${PARENT}" "Allsky Settings" )
 				if [[ ${INDEX} -ge 0 ]]; then
 					WEBSITE_CONFIG+=("${PARENT}[${INDEX}].display" "${LABEL}" "${NEW_VALUE}")
 				else
@@ -472,22 +509,22 @@ do
 			fi
 			;;
 
-		showonmap)
-			SHOW_ON_MAP="1"
-			[[ ${NEW_VALUE} -eq 0 ]] && POSTTOMAP_ACTION="--delete"
+		"showonmap")
+			SHOW_ON_MAP="true"
+			[[ ${NEW_VALUE} == "false" ]] && POSTTOMAP_ACTION="--delete"
 			RUN_POSTTOMAP="true"
 			;;
 
-		location | owner | camera | lens | computer)
+		"location" | "owner" | "camera" | "lens" | "computer")
 			RUN_POSTTOMAP="true"
 			check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
 			;;
 
-		websiteurl | imageurl)
+		"websiteurl" | "imageurl")
 			RUN_POSTTOMAP="true"
 			;;
 
-		overlaymethod)
+		"overlaymethod")
 			if [[ ${NEW_VALUE} -eq 1 ]]; then		# 1 == "overlay" method
 				echo -en "${wWARNING}"
 				echo -en "NOTE: You must enable the ${wBOLD}Overlay Module${wNBOLD} in the"
@@ -570,8 +607,8 @@ if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 fi
 
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
-	[[ -z ${SHOW_ON_MAP} ]] && SHOW_ON_MAP="$( settings ".showonmap" )"
-	if [[ ${SHOW_ON_MAP} == "1" ]]; then
+	[[ ${SHOW_ON_MAP} == "true" ]] && SHOW_ON_MAP="$( settings ".showonmap" )"
+	if [[ ${SHOW_ON_MAP} == "true" ]]; then
 		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postToMap.sh${NC}"
 		# shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${POSTTOMAP_ACTION}

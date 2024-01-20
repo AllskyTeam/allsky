@@ -22,13 +22,40 @@ if ((include $defs) == false) {
 }
 
 // Read and decode a json file, returning the decoded results or null.
-// On error, display the specified error message
+// On error, display the specified error message.
+// If we're being run by the user it's likely on a tty so don't use html.
 function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=null) {
-	if (! file_exists($file)) {
-		$retMsg  = "<div style='color: red; font-size: 200%;'>";
+	$retMsg = "";
+	$html = (get_current_user() == WEBSERVER_OWNER);
+	if ($html) {
+		$div = "<div style='color: red; font-size: 200%;'>";
+		$end = "</div>";
+		$br = "<br>";
+		$sep = "<br>";
+	} else {
+		$div = "";
+		$end = "\n";
+		$br = "\n";
+		$sep = "\n";
+	}
+
+	if ($file == "") {
+		$retMsg .= $div;
 		$retMsg .= "$errorMsg";
-		$retMsg .= "<br>File '$file' missing!";
-		$retMsg .= "</div>";
+		$retMsg .= $br;
+		$retMsg .= "JSON file not specified!";
+		$retMsg .= $end;
+		if ($returnedMsg === null) echo "$retMsg";
+		else $returnedMsg = $retMsg;
+		return null;
+	}
+
+	if (! file_exists($file)) {
+		$retMsg .= $div;
+		$retMsg .= "$errorMsg";
+		$retMsg .= $br;
+		$retMsg .= "File '$file' missing!";
+		$retMsg .= $end;
 		if ($returnedMsg === null) echo "$retMsg";
 		else $returnedMsg = $retMsg;
 		return null;
@@ -36,18 +63,20 @@ function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=nul
 
 	$str = file_get_contents($file, true);
 	if ($str === "") {
-		$retMsg  = "<div style='color: red; font-size: 200%;'>";
+		$retMsg .= $div;
 		$retMsg .= "$errorMsg";
-		$retMsg .= "<br>File '$file' is empty!";
-		$retMsg .= "</div>";
+		$retMsg .= $br;
+		$retMsg .= "File '$file' is empty!";
+		$retMsg .= $end;
 		if ($returnedMsg === null) echo "$retMsg";
 		else $returnedMsg = $retMsg;
 		return null;
 	} else if ($str === false) {
-		$retMsg  = "<div style='color: red; font-size: 200%;'>";
+		$retMsg .= $div;
 		$retMsg .= "$errorMsg:";
-		$retMsg .= "<br>Error reading '$file'!";
-		$retMsg .= "</div>";
+		$retMsg .= $br;
+		$retMsg .= "Error reading '$file'!";
+		$retMsg .= $end;
 		if ($returnedMsg === null) echo "$retMsg";
 		else $returnedMsg = $retMsg;
 		return null;
@@ -55,13 +84,15 @@ function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=nul
 
 	$str_array = json_decode($str, $associative);
 	if ($str_array == null) {
-		$retMsg  = "<div style='color: red; font-size: 200%;'>";
+		$retMsg .= $div;
 		$retMsg .= "$errorMsg";
-		$retMsg .= "<br>" . json_last_error_msg();
+		$retMsg .= $br;
+		$retMsg .= json_last_error_msg();
 		$cmd = "json_pp < $file 2>&1";
 		exec($cmd, $output);
-		$retMsg .= "<br>" . implode("<br>", $output);
-		$retMsg .= "</div>";
+		$retMsg .= $br;
+		$retMsg .= implode($sep, $output);
+		$retMsg .= $end;
 		if ($returnedMsg === null) echo "$retMsg";
 		else $returnedMsg = $retMsg;
 		return null;
@@ -69,15 +100,35 @@ function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=nul
 	return $str_array;
 }
 
-$image_name=null; $delay=null; $daydelay=null; $nightdelay=null; $darkframe=null; $useLogin=null;
+// The opposite of toString().  Given a string version of a boolean, return true or false.
+function toBool($s) {
+	if ($s == "true" || $s == "Yes" || $s == "yes" || $s == "1")
+		return true;
+	return false;
+}
+
+function verifyNumber($num) {
+	if ($num == "" || ! is_numeric($num)) {
+		return false;
+	}
+	return true;
+}
+
+$image_name=null;
+$showDelay = true; $delay=null; $daydelay=null; $nightdelay=null;
+$darkframe=null;
+$useLogin=null;
 $temptype = null;
 $lastChanged = null;
 $websiteURL = null;
+$settings_array = null;
 function initialize_variables() {
 	global $status, $needToDisplayMessages;
-	global $image_name, $delay, $daydelay, $nightdelay;
+	global $image_name;
+	global $showDelay, $delay, $daydelay, $nightdelay;
 	global $darkframe, $useLogin, $temptype, $lastChanged, $lastChangedName;
 	global $websiteURL;
+	global $settings_array;
 
 	// The Camera Type should be set during the installation, so this "should" never fail...
 	$cam_type = getCameraType();
@@ -99,57 +150,43 @@ function initialize_variables() {
 	// It's the same as ${ALLSKY_TMP} which is the physical path name on the server.
 	$img_dir = get_variable(ALLSKY_CONFIG . '/config.sh', 'IMG_DIR=', 'current/tmp');
 	$image_name = $img_dir . "/" . $settings_array['filename'];
-	$darkframe = $settings_array['takeDarkFrames'];
-	$useLogin = getVariableOrDefault($settings_array, 'useLogin', true);
+	$darkframe = toBool(getVariableOrDefault($settings_array, 'takedarkframes', "false"));
+	$useLogin = toBool(getVariableOrDefault($settings_array, 'uselogin', "true"));
 	$temptype = getVariableOrDefault($settings_array, 'temptype', "C");
 	$lastChanged = getVariableOrDefault($settings_array, $lastChangedName, "");
 	$websiteURL = getVariableOrDefault($settings_array, 'websiteurl', "");
 
 
 	////////////////// Determine delay between refreshes of the image.
-	$consistentDelays = $settings_array["consistentDelays"] == 1 ? true : false;
 	$daydelay = $settings_array["daydelay"];
+	$nightdelay = $settings_array["nightdelay"];
+	$showDelay = toBool(getVariableOrDefault($settings_array, 'showdelay', "true"));
+	if (! $showDelay) return;
+
 	$daymaxautoexposure = $settings_array["daymaxautoexposure"];
 	$dayexposure = $settings_array["dayexposure"];
-	$nightdelay = $settings_array["nightdelay"];
 	$nightmaxautoexposure = $settings_array["nightmaxautoexposure"];
 	$nightexposure = $settings_array["nightexposure"];
+	$consistentDelays = toBool(getVariableOrDefault($settings_array, 'consistentdelays', "true"));
 
 	$ok = true;
-	if (! is_numeric($daydelay)) {
-		$ok = false;
-		$status->addMessage("<strong>daydelay</strong> is not a number.", 'danger', false);
-	}
-	if (! is_numeric($daymaxautoexposure)) {
-		$ok = false;
-		$status->addMessage("<strong>daymaxautoexposure</strong> is not a number.", 'danger', false);
-	}
-	if (! is_numeric($dayexposure)) {
-		$ok = false;
-		$status->addMessage("<strong>dayexposure</strong> is not a number.", 'danger', false);
-	}
-	if (! is_numeric($nightdelay)) {
-		$ok = false;
-		$status->addMessage("<strong>nightdelay</strong> is not a number.", 'danger', false);
-	}
-	if (! is_numeric($nightmaxautoexposure)) {
-		$ok = false;
-		$status->addMessage("<strong>nightmaxautoexposure</strong> is not a number.", 'danger', false);
-	}
-	if (! is_numeric($nightexposure)) {
-		$ok = false;
-		$status->addMessage("<strong>nightexposure</strong> is not a number.", 'danger', false);
-	}
+	// These are all required settings so if they are blank don't display a
+	// message since the WebUI will.
+	if (! verifyNumber($daydelay)) $ok = false;
+	if (! verifyNumber($daymaxautoexposure)) $ok = false;
+	if (! verifyNumber($dayexposure)) $ok = false;
+	if (! verifyNumber($nightdelay)) $ok = false;
+	if (! verifyNumber($nightmaxautoexposure)) $ok = false;
+	if (! verifyNumber($nightexposure)) $ok = false;
 	if ($ok) {
 		$daydelay += ($consistentDelays ? $daymaxautoexposure : $dayexposure);
 		$nightdelay += ($consistentDelays ? $nightmaxautoexposure : $nightexposure);
 
-		$showDelay = getVariableOrDefault($settings_array, 'showDelay', true);
-		if ($showDelay) {
-			// Determine if it's day or night so we know which delay to use.
-			$angle = $settings_array['angle'];
-			$lat = $settings_array['latitude'];
-			$lon = $settings_array['longitude'];
+		// Determine if it's day or night so we know which delay to use.
+		$angle = getVariableOrDefault($settings_array, 'angle', -6);
+		$lat = getVariableOrDefault($settings_array, 'latitude', "");
+		$lon = getVariableOrDefault($settings_array, 'longitude', "");
+		if ($lat != "" && $lon != "") {
 			exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
 			if ($retval == 2) {
 				$delay = $daydelay;
@@ -166,25 +203,30 @@ function initialize_variables() {
 			$daydelay /= 1000;
 			$nightdelay /= 1000;
 		} else {
+			// Error message will be displayed by WebUI.
+			$showDelay = false;
 			// Not showing delay so just use average
 			$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
-			$daydelay = -1;		// signifies it's not being used
 		}
+
 		// Lessen the delay between a new picture and when we check.
 		$delay /= 4;
 	} else {
-		$daydelay = -1;
-		$needToDisplayMessages = true;
+		$showDelay = false;
 	}
 }
 
 // Check if the settings have been configured.
+$displayed_configured_message = false;
 function check_if_configured($page, $calledFrom) {
-	global $lastChanged, $status, $needToDisplayMessages;
+	global $lastChanged, $status, $displayed_configured_message;
+
+	if ($displayed_configured_message)
+		return(true);
 
 	// The conf page calls us if needed.
 	if ($calledFrom === "main" && $page === "configuration")
-		return;
+		return(true);
 
 	if ($lastChanged === "") {
 		// The settings aren't configured - probably right after an installation.
@@ -192,9 +234,12 @@ function check_if_configured($page, $calledFrom) {
 			$m = "";
 		else
 			$m = "<br>Go to the 'Allsky Settings' page.";
-		$status->addMessage("You must configure Allsky before using it.<br>If it's already configured, just click on the 'Save changes' button.$m", 'danger', false);
-		$needToDisplayMessage = true;
+		$status->addMessage("<div class='important'>You must configure Allsky before using it.<br>If it's already configured, just click on the 'Save changes' button.$m</div>", 'danger', false);
+		$displayed_configured_message = true;
+		return(false);
 	}
+
+	return(true);
 }
 /**
 *
@@ -458,14 +503,19 @@ function handle_interface_POST_and_status($interface, $input, &$status) {
 * so there shouldn't be a comment on the line,
 * however, there can be optional spaces or tabs before the string.
 *
-* This function will go away once the config.sh and ftp-settings.sh files are merged
-* into the settings.json file.
 */
 function get_variable($file, $searchfor, $default)
 {
 	// get the file contents
+	if (! file_exists($file)) {
+		$msg  = "<div style='color: red; font-size: 200%;'>";
+		$msg .= "<br>File '$file' not found!";
+		$msg .= "</div>";
+		echo $msg;
+		return($default);
+	}
 	$contents = file_get_contents($file);
-	if ("$contents" == "") return($default);	// file not found or not readable
+	if ($contents == "") return($default);	// file not found or not readable
 
 	// escape special characters in the query
 	$pattern = preg_quote($searchfor, '/');
@@ -501,8 +551,9 @@ function get_variable($file, $searchfor, $default)
 /**
 * 
 * List a type of file - either "All" (case sensitive) for all days, or only for the specified day.
+* If $dir is not null, it ends in "/".
 */
-function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {	// if $dir is not null, it ends in "/"
+function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
 	$num = 0;	// Let the user know when there are no images for the specified day
 	// "/images" is an alias in the web server for ALLSKY_IMAGES
 	$images_dir = "/images";
@@ -692,16 +743,41 @@ function getOptionsFile() {
 	return ALLSKY_CONFIG . "/options.json";
 }
 
+// Return the file name after accounting for any ${} variables.
+// Since there will often only be one file used by multiple settings,
+// as an optimization save the last name.
+$lastFileName = null;
+function getFileName($file) {
+	global $lastFileName;
+
+	if ($lastFileName === $file) return $lastFileName;
+
+	if (strpos('${HOME}', $file) !== false) {
+		$lastFileName = str_replace('${HOME}', HOME, $file);
+	} else {
+		$lastFileName = get_variable(ALLSKY_HOME . '/variables.sh', "$file=", '');
+// TODO: don't hard code
+$lastFileName = str_replace('${ALLSKY_HOME}', ALLSKY_HOME, $lastFileName);
+	}
+	return $lastFileName;
+}
+
 // Check if the specified variable is in the specified array.
 // If so, return it; if not, return default value;
 // This is used to make the code easier to read.
 function getVariableOrDefault($a, $v, $d) {
 	if (isset($a[$v])) {
 		$value = $a[$v];
-		if (gettype($value) === "boolean" && $value == "") return 0;
+		if (gettype($value) === "boolean") {
+			if ($value || $value == "true") {
+				return "true";
+			} else {
+				return "false";
+			}
+		}
 		return $value;
 	} else if (gettype($d) === "boolean" && $d == "") {
-		return 0;
+		return "false";
 	} else if (gettype($d) === "null") {
 		return null;
 	}

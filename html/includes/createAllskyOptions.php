@@ -54,31 +54,53 @@ function get_control($array, $setting, &$min, &$max, &$default) {
 // If a field is null that means it wasn't in the repo file,
 // so don't add it to the options string.
 // We need this because we look for all fields in a setting.
-function add_non_null_field($a, $f, $setting) {	// array, field name, name_of_setting
+function add_non_null_field($a, $f, $setting, $type=null) {	// array, field name, setting_name, type
+	global $options_str;
+	global $num_fields_this_setting;
+
 	$value = getVariableOrDefault($a, $f, null);
 	if ($value === null) return;
+
+	// Add command and newline to prior line starting with 2nd field.
+	if ($num_fields_this_setting++ > 0) {
+		$options_str .= ",\n";
+	}
 
 	if ($f === "options")
 		add_options_field($f, $value, $setting);
 	else
-		add_field($f, $value, $setting);
+		add_field($f, $value, $setting, $type);
 }
 
-// Update $options_str with $v if it's not a string, and optionally if $return_string is set.
-// Return true if we updated $options_str.
-// This is needed because we never need to look in non-string values for "_min", "_max", etc.
-function add_value($v, $return_string) {
+// Format the given argument with or without quotes, depending on the argument type.
+// If a type is specified, use it.
+function quote_value($v, $type=null) {
 	global $q;
-	global $options_str;
 
-	if ($v === true || $v === false || $v === null || is_numeric($v)) {
-		$options_str .= $v;
-		return true;
-	} else if ($return_string) {
-		$options_str .= "$q$v$q";
-		return true;
+	if ($type === null)
+		$type = gettype($v);
+
+	if ($type == "boolean") {
+		if ($v === 0 || $v === "0" || $v === "false" || $v === false || ! $v)
+			return("false");
+		else
+			return("true");
+	} else if (is_numeric($v)) {
+		return($v);
+	} else {
+		return("$q$v$q");
 	}
-	return false;
+}
+
+
+// Return $v if it's not a string, and optionally if $return_string is set.
+// This is needed because we never need to look in non-string values for "_min", "_max", etc.
+function add_value($v, $return_string, $type=null) {
+	$newV = quote_value($v, $type);
+	if (! $return_string && substr($newV, 0, 1) == '"')
+		return(null);		// Is a string so dont' return it.
+	else
+		return($newV);
 }
 
 // Add a field to the options string.
@@ -86,7 +108,7 @@ function add_value($v, $return_string) {
 // For the value, we first need to check if it's a placeholder value,
 // and if so, replace the placeholder with the actual value from the camera capabilities file.
 // If it's not a placeholder value we just add it.
-function add_field($f, $v, $setting) {	// field, value, name_of_setting
+function add_field($f, $v, $setting, $type=null) {	// field, value, setting_name, type
 	global $q;
 	global $debug;
 	global $cc_controls;
@@ -94,57 +116,58 @@ function add_field($f, $v, $setting) {	// field, value, name_of_setting
 	$options_str .= "$q$f$q : ";				// field name
 
 	// Do not add value if it's a string since we need to check if it needs to be replaced
-	if (! add_value($v, false)) {
-		if ($debug > 1) {
-			// It's hard to read the output with really long strings.
-			if (strlen($v) > 50) $vv = substr($v, 0, 50) . "...";
-			else $vv = $v;
-			echo "    '$f', v='$vv'";
-		}
-
-		// Check if the value is a generic placeholder, like "_min".
-		// The "options" field is handled in add_options_field() since it's value is an array.
-		// The "display" field was handled earlier.
-		if (is_generic_value($v) || is_specific_value($v)) {
-			$searchCC = true;
-		} else {
-			$searchCC = false;
-		}
-
-		if ($searchCC) {
-			// For generic values, if the setting is a day/night one, e.g., "dayexposure",
-			// get just the "exposure" portion.
-			// For specific values e.g., "daymean" : "day_default",
-			// need to look up "daymean" in the CC file,
-			// not "mean" like we do for generic values
-
-			if (is_generic_value($v)) {
-				$setting = get_generic_name($setting);
-			}
-			if (get_control($cc_controls, $setting, $min, $max, $default)) {
-				$vReset = false;
-				if ($f === "minimum") {
-					$v = $min;
-					$vReset = true;
-				} else if ($f === "maximum") {
-					$v = $max;
-					$vReset = true;
-				} else if ($f === "default") {
-					$v = $default;
-					$vReset = true;
-				}
-				if ($debug > 1) {
-					if ($vReset) echo ", RESET v='$v'";
-				}
-			}
-		}
-		if ($debug > 1) echo "\n";
-		$options_str .= "$q$v$q";
+	$newV = add_value($v, false, $type);
+	if ($newV !== null) {
+		$options_str .= $newV;
+		return;
 	}
 
-	// The "display" field comes last in a setting, so don't append a comma to it.
-	if ($f !== "display") $options_str .= ",";
-	$options_str .= "\n";
+	if ($debug > 1) {
+		// It's hard to read the output with really long strings.
+		if (strlen($v) > 50) $vv = substr($v, 0, 50) . "...";
+		else $vv = $v;
+		if ($f != "name") echo "    ";
+		echo "$f: $vv";
+	}
+
+	// Check if the value is a generic placeholder, like "_min".
+	// The "options" field is handled in add_options_field() since it's value is an array.
+	// The "display" field was handled earlier.
+	if (is_generic_value($v) || is_specific_value($v)) {
+		$searchCC = true;
+	} else {
+		$searchCC = false;
+	}
+
+	if ($searchCC) {
+		// For generic values, if the setting is a day/night one, e.g., "dayexposure",
+		// get just the "exposure" portion.
+		// For specific values e.g., "daymean" : "day_default",
+		// need to look up "daymean" in the CC file,
+		// not "mean" like we do for generic values
+
+		if (is_generic_value($v)) {
+			$setting = get_generic_name($setting);
+		}
+		if (get_control($cc_controls, $setting, $min, $max, $default)) {
+			$vReset = false;
+			if ($f === "minimum") {
+				$v = $min;
+				$vReset = true;
+			} else if ($f === "maximum") {
+				$v = $max;
+				$vReset = true;
+			} else if ($f === "default") {
+				$v = $default;
+				$vReset = true;
+			}
+			if ($debug > 1) {
+				if ($vReset) echo ", RESET v='$v'";
+			}
+		}
+	}
+	if ($debug > 1) echo "\n";
+	$options_str .= quote_value($v, null);
 }
 
 // Add the options for the specified field to the options string.
@@ -177,8 +200,8 @@ function handle_options($f) {
 			$options_str .= "\t" . '{';
 			$num = count($opt);
 			foreach ($opt as $f => $v) {
-				$options_str .= "$q$f$q : ";		// must split this line from next
-				add_value($v, true);	// output if string or not
+				// output if string or not
+				$options_str .= "$q$f$q : " . add_value($v, true, null);
 				$num--;
 				if ($num > 0)
 					$options_str .= ", ";
@@ -210,8 +233,8 @@ function add_options_field($field, $options, $setting) {
 			$options_str .= "\t" . '{';
 			$num = count($opt);
 			foreach ($opt as $f => $v) {
-				$options_str .= "$q$f$q : ";		// must split this line from next
-				add_value($v, true);	// output if string or not
+				// output if string or not
+				$options_str .= "$q$f$q : " . add_value($v, true, null);
 				$num--;
 				if ($num > 0)
 					$options_str .= ", ";
@@ -227,18 +250,18 @@ function add_options_field($field, $options, $setting) {
 			}
 		}
 	}
-	$options_str .= "],\n";
+	$options_str .= "]";
 }
 
 $rest_index;
 $longopts = array(
-	"debug::",		// no arguments
-	"debug2::",		// no arguments
-	"help::",		// no arguments
-	"cc_file:",
-	"options_file:",
-	"settings_file:",
-	"force::",		// no arguments
+	"debug",		// no arguments
+	"debug2",		// no arguments
+	"help",			// no arguments
+	"cc-file:",
+	"options-file:",
+	"settings-file:",
+	"force",		// no arguments
 );
 $options = getopt("", $longopts, $rest_index);
 
@@ -250,7 +273,7 @@ $settings_file = "";
 $force = false;		// force creation of settings file even if it already exists?
 
 foreach ($options as $opt => $val) {
-	if ($debug > 1 || $opt === "debug") echo "   Argument $opt $val\n";
+	if ($debug > 1 || $opt === "debug" || $opt === "debug2") echo "   Argument $opt $val\n";
 
 	if ($opt === "debug")
 		$debug++;
@@ -258,11 +281,11 @@ foreach ($options as $opt => $val) {
 		$debug = 2;
 	else if ($opt === "help")
 		$help = true;
-	else if ($opt === "cc_file")
+	else if ($opt === "cc-file")
 		$cc_file = $val;
-	else if ($opt === "options_file")
+	else if ($opt === "options-file")
 		$options_file = $val;
-	else if ($opt === "settings_file")
+	else if ($opt === "settings-file")
 		$settings_file = $val;
 	else if ($opt === "force")
 		$force = true;
@@ -271,7 +294,7 @@ foreach ($options as $opt => $val) {
 }
 
 if ($help || $cc_file === "" || $options_file === "") {
-	echo "\nUsage: " . basename($argv[0]) . " [--debug] [--debug2] [--help] [--settings_file file] --cc_file file --options_file file\n";
+	echo "\nUsage: " . basename($argv[0]) . " [--debug] [--debug2] [--help] [--settings-file file] --cc-file file --options-file file\n";
 	exit(1);
 }
 
@@ -293,8 +316,19 @@ if ($cc_array === null) {
 	exit(4);
 }
 $cc_controls = $cc_array["controls"];
-$cameraType = $cc_array["cameraType"];
-$cameraModel = $cc_array["cameraModel"];
+$ok = true;
+$cameraType = getVariableOrDefault($cc_array, "cameraType", "");
+if ($cameraType === "") {
+	echo "ERROR: cameraType empty in cc_array!\n";
+	$ok = false;
+}
+$cameraModel = getVariableOrDefault($cc_array, "cameraModel", "");
+if ($cameraModel === "") {
+	echo "ERROR: cameraModel empty in cc_array!\n";
+	$ok = false;
+}
+if (! $ok) exit(5);
+
 if ($debug > 0) echo "cameraType=$cameraType, cameraModel=$cameraModel\n";
 
 // Read $repo_file
@@ -305,7 +339,7 @@ if ($repo_array === null) {
 }
 
 // All entries except the last "XX_END_XX" name have a "type". 
-// All entries but type=="header" have a "name".
+// All entries but type=="header*" have a "name".
 // Out of convention, the order of the fields is (a setting may not have all fields):
 	// name				[string]
 	// minimum			[number]
@@ -313,12 +347,18 @@ if ($repo_array === null) {
 	// default			[string, but usually a number]
 	// description		[string]
 	// label			[string]
-	// type				[string - header, number, text, checkbox, select, readonly]
+	// type				[string]
+	// usage			[string]
 	// options			[array with 1 or more entries] (only if "type" == "select")
-	// checkchanges		[0/1]
-	// optional			[0/1]
-	// generic			[0/1]
-	// display			[0/1]
+	// popup-yesno		[string]
+	// popup-yesno-value	[number or string]
+	// display			[boolean]
+	// checkchanges		[boolean]
+	// source			[string]
+	// booldependson	[string]	("name" of other setting)
+	// booldependsoff	[string]	("name" of other setting)
+	// optional			[boolean]
+	// action			[string]
 
 
 // ==================   Create options file
@@ -326,7 +366,7 @@ if ($repo_array === null) {
 // A "generic" value is one that's the same for day and night, e.g., the minimum value
 // for the "dayexposure" and "nightexposure".
 // These are often specified by the camera and have an "argumentName" in the CC
-// file without the "day" or "night", e.g., "exposure.
+// file without the "day" or "night", e.g., "exposure".
 
 // Field values that begin with "_", e.g., "_default" are generic placeholders; their
 // actual values need to be determined by looking in the CC file for the generic name.
@@ -337,17 +377,23 @@ if ($repo_array === null) {
 // different values for day and night in the CC file, e.g., default value for day
 // and night exposure.
 
+// How many fields for this setting have we output?
+// Used to add commas to all but the last field.
+$num_fields_this_setting = 0;
+
 $options_str = "[\n";
 foreach ($repo_array as $repo) {
 	global $debug;
 	global $cc_controls;
+	global $num_fields_this_setting;
+	$num_fields_this_setting = 0;
 
 	$type = getVariableOrDefault($repo, "type", null);
 	$name = getVariableOrDefault($repo, "name", null);
 	if ($type === null && $name === "XX_END_XX") {
 		$options_str .= "{\n";
 		$options_str .= "$q" . "name$q : $q$name$q,\n";
-		$options_str .= "$q" . "display$q : 0\n";
+		$options_str .= "$q" . "display$q : false\n";
 		$options_str .= "}\n";
 		break;		// hit the end
 	}
@@ -358,27 +404,32 @@ foreach ($repo_array as $repo) {
 	// The value will be 1 (can display) or 0 (don't display), or a placeholder.
 	// It should normally not be missing, but check anyhow.
 	$display = getVariableOrDefault($repo, "display", null);
-	if ($display === null || $display === 0) {
-		if ($debug > 1) echo "    display field is null or 0\n";
+	if ($display === null) {
+		if ($debug > 1) echo "    display field is null\n";
+		$display = true;		// default
+	} else if ($display === "false") {
+		if ($debug > 1) echo "\nname: $name: 'display' is false; skipping\n";
 		continue;
 	}
+
 	if (is_generic_value($display)) {
 		// Is a placeholder - need to check if the setting is in the CC file.
 		// If not, don't output this setting.
 		if (! get_control($cc_controls, get_generic_name($name), $min, $max, $default)) {
-			if ($debug > 1) echo "     <<<<< NOT SUPPORTED >>>>>\n";
+			if ($debug > 1) {
+				echo "\n$name: <<<<< NOT SUPPORTED >>>>>\n";
+			}
 			// Not an error - just means this isn't supported.
 			continue;
 		}
-		$repo["display"] = 1;	// a control exists for it, so display the setting.
 	}
 	if ($debug > 1) echo "\n";
 
 	// Have to handle camera type and model differently because the defaults
 	// might not be what we want.
-	if ($name === "cameraType")
+	if ($name === "cameratype")
 			$repo["default"] = $cameraType;
-	elseif ($name === "cameraModel")
+	elseif ($name === "cameramodel")
 			$repo["default"] = $cameraModel;
 	elseif ($name === "camera")
 			$repo["default"] = "$cameraType $cameraModel";
@@ -387,16 +438,22 @@ foreach ($repo_array as $repo) {
 		add_non_null_field($repo, "name", $name);
 		add_non_null_field($repo, "minimum", $name);
 		add_non_null_field($repo, "maximum", $name);
-		add_non_null_field($repo, "default", $name);
+		add_non_null_field($repo, "default", $name, $type);
 		add_non_null_field($repo, "description", $name);
 		add_non_null_field($repo, "label", $name);
 		add_non_null_field($repo, "type", $name);
+		add_non_null_field($repo, "usage", $name);
 		add_non_null_field($repo, "options", $name);
-		add_non_null_field($repo, "checkchanges", $name);
-		add_non_null_field($repo, "optional", $name);
-		add_non_null_field($repo, "generic", $name);
-		add_non_null_field($repo, "display", $name);
-	$options_str .= "},\n";
+		add_non_null_field($repo, "popup-yesno", $name);
+		add_non_null_field($repo, "popup-yesno-value", $name);
+		// Only get here if display is true, which is the default, so no need to add "display".
+		add_non_null_field($repo, "checkchanges", $name, "boolean");
+		add_non_null_field($repo, "optional", $name, "boolean");
+		add_non_null_field($repo, "source", $name);
+		add_non_null_field($repo, "booldependson", $name);
+		add_non_null_field($repo, "booldependsoff", $name);
+		add_non_null_field($repo, "action", $name);
+	$options_str .= "\n},\n";
 }
 $options_str .= "]\n\n";
 
@@ -423,8 +480,9 @@ if ($settings_file !== "") {
 	// e.g., "settings_ZWO_ASI123.json"
 	$cameraSpecificSettingsName = $FileName . "_$cameraType" . "_$cameraModel.$FileExt";
 	$fullSpecificFileName = dirname($settings_file) . "/$cameraSpecificSettingsName";
+	$specificFileExists =  file_exists($fullSpecificFileName);
 	if ($debug > 0) {
-		$e =  file_exists($fullSpecificFileName) ? "yes" : "no";
+		$e =  $specificFileExists ? "yes" : "no";
 		echo "Camera-specific settings file exists ($e): $fullSpecificFileName.\n";
 	}
 
@@ -433,7 +491,9 @@ if ($settings_file !== "") {
 	$settings_array = null;
 	if (file_exists($settings_file)) {
 		$errorMsg = "ERROR: Unable to process prior settings file '$settings_file'.";
-		$settings_array = get_decoded_json_file($settings_file, true, $errorMsg);
+
+		if ($specificFileExists)
+			$settings_array = get_decoded_json_file($settings_file, true, $errorMsg);
 
 		if ($debug > 0) echo "Removing $settings_file.\n";
 		if (! unlink($settings_file)) {
@@ -442,40 +502,35 @@ if ($settings_file !== "") {
 		}
 	}
 
-
 	// If there isn't a camera-specific file, create one.
-	if ($force || ! file_exists($fullSpecificFileName)) {
+	if ($force || ! $specificFileExists) {
 		// For each item in the options file, write the name and a value.
-		$contents = "{\n";
+		$new_settings = Array();
 		$options_array = json_decode($options_str, true);
 		foreach ($options_array as $option) {
 			$type = getVariableOrDefault($option, 'type', "");
-			if ($type == "header") continue;	// don't put in settings file
-			$display = getVariableOrDefault($option, 'display', 0);
-			if ($display === 0) continue;
+			if (substr($type, 0, 6) == "header") continue;	// don't put in settings file
+			$display = getVariableOrDefault($option, 'display', "true");
+			if ($display == "false") continue;
 
 			$name = $option['name'];
 
-			// If it's a generic setting, use it's prior value if it exists.
-			if (getVariableOrDefault($option, 'generic', 0) !== 0 && $settings_array !== null) {
+			// If there's a previous value, use it, else use the default.
+			if ($settings_array !== null) {
 				$val = getVariableOrDefault($settings_array, $name, null);
 			} else {
-				$val = null;
-			}
-
-			if ($val === null) {
 				$val = getVariableOrDefault($option, 'default', "");
-				if ($debug > 1) echo ">> default $name = [$val]\n";
-			} else {
-				if ($debug > 1) echo ">> generic $name = [$val]\n";
 			}
-			// Don't worry about whether or not the default is a string, number, etc.
-			$contents .= "\t\"$name\" : \"$val\",\n";
+			if ($type == "boolean") {
+				if ($val == "true") $val = true;
+				else $val = false;
+			}
+			$new_settings[$name] = $val;
 		}
-		// This comes last so we don't worry about whether or not the items above
-		// need a trailing comma.
-		$contents .= "\t\"XX_END_XX\" : 1\n";
-		$contents .= "}\n";
+		$new_settings['XX_END_XX'] = true;
+
+		$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
+		$contents = json_encode($new_settings, $mode);
 
 		if ($debug > 0) echo "Creating camera-specific settings file: $fullSpecificFileName.\n";
 		$results = updateFile($fullSpecificFileName, $contents, $cameraSpecificSettingsName, true);

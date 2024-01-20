@@ -1,3 +1,6 @@
+:root {
+	--dark-text: #aaaaaa;
+}
 
 .ghost {
     opacity: 0.4;
@@ -68,21 +71,21 @@
 }
 .dark .list-group .locked .panel-heading {
     background-color: #400000 !important;
-    color: #888888 !important;
+    color: var(--dark-text) !important;
 }
 .dark .list-group .locked .panel-body {
     background-color: #500000 !important;
-    color: #888888 !important;
+    color: var(--dark-text) !important;
 } 
 .dark .panel-heading, .dark .panel-footer {
-  color: #888888;
+  color: var(--dark-text);
   border-color: #333333;
   background-color: #171717;
 }
 
 .dark .modal-content {
     background-color: #222222 !important;
-    color: #888888 !important;    
+    color: var(--dark-text) !important;    
 }
 
 .dark .modal-header {
@@ -97,13 +100,13 @@
     color: green;
   }
 
-  .red {
+.red {
     color: red;
-  }
+}
 
 .pulse {
     animation: pulse 1s infinite ease-out;
-  }
+}
 
   @keyframes pulse {
     0% {

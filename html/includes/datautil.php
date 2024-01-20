@@ -92,17 +92,13 @@ class DATAUTIL
     }
 
     public function getStartup() {
-
+		global $settings_array;		// Set in initialize_variables()
         $haveDatabase = $this->haveDatabase();
 
         if ($haveDatabase) {
-            $cam_type = getCameraType();
-            $settings_file = getSettingsFile($cam_type);
-            $camera_settings_str = file_get_contents($settings_file, true);
-            $camera_settings_array = json_decode($camera_settings_str, true);
-            $angle = $camera_settings_array['angle'];
-            $lat = $camera_settings_array['latitude'];
-            $lon = $camera_settings_array['longitude'];
+            $angle = $settings_array['angle'];
+            $lat = $settings_array['latitude'];
+            $lon = $settings_array['longitude'];
 
             $tod = 'Unknown';
             exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
@@ -134,7 +130,7 @@ class DATAUTIL
                 $days[ $row['folder']] = [
                     'text' => ''
                 ];
-            }   
+            }
 
             $result = [
                 'tod' => $tod,
@@ -148,7 +144,7 @@ class DATAUTIL
             $this->send404();
         }
     }
-    
+
     public function getLiveData() {
         $db = new SQLite3(ALLSKY_HOME . '/' . $this->database);
 
@@ -167,7 +163,7 @@ class DATAUTIL
             'meteors' => [],
             'exposure' => [],
             'gain' => [],
-            'skystate' => []                                  
+            'skystate' => []
         ];
 
         $lastHour = -1;
@@ -193,7 +189,7 @@ class DATAUTIL
                         'hour' => $lastHour,
                         'count' => $count,
                         'total' => $total,
-                        'percentage' => $percentage                        
+                        'percentage' => $percentage
                     ];
                     $lastHour = $hour;
                     $count = 0;
@@ -222,7 +218,7 @@ class DATAUTIL
             array_push($hours, $state['hour']);
             array_push($skyState, $state['count']);
             array_push($percentage, $state['percentage']);
-            array_push($total, $state['total']);            
+            array_push($total, $state['total']);
         }
         $data['hours'] = $hours;
         $data['clearimages'] = $skyState;
@@ -244,7 +240,7 @@ class DATAUTIL
             'meteors' => [],
             'exposure' => [],
             'gain' => [],
-            'skystate' => []                                  
+            'skystate' => []
         ];
 
         $lastHour = -1;
@@ -270,7 +266,7 @@ class DATAUTIL
                         'hour' => $lastHour,
                         'count' => $count,
                         'total' => $total,
-                        'percentage' => $percentage                        
+                        'percentage' => $percentage
                     ];
                     $lastHour = $hour;
                     $count = 0;
@@ -298,7 +294,7 @@ class DATAUTIL
             array_push($hours, $state['hour']);
             array_push($skyState, $state['count']);
             array_push($percentage, $state['percentage']);
-            array_push($total, $state['total']);            
+            array_push($total, $state['total']);
         }
         $data['hours'] = $hours;
         $data['clearimages'] = $skyState;

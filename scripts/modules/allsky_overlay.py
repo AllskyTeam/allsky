@@ -76,7 +76,7 @@ class ALLSKYOVERLAY:
     _fields = {}
     _systemfields = {}
     _userfields = {}
-        
+
     _extraData = {}
 
     _startTime = 0
@@ -98,18 +98,18 @@ class ALLSKYOVERLAY:
         self._overlayConfigFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYCONFIGFILE)
         fieldsFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYFIELDSFILE)
         userFieldsFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYUSERFIELDSFILE)
-        
+
         tmpFolder = os.path.join(os.environ['ALLSKY_OVERLAY'], 'tmp')
         self._createTempDir(tmpFolder)
         self._OVERLAYTMP = os.path.join(tmpFolder, 'overlay')
         self._createTempDir(self._OVERLAYTMP)
         self._OVERLAYTLEFOLDER = os.path.join(self._OVERLAYTMP , 'tle')
         self._createTempDir(self._OVERLAYTLEFOLDER)
-        
+
         with open(fieldsFile) as file:
             self._systemfields = json.load(file)['data']
         with open(userFieldsFile) as file:
-            self._userfields = json.load(file)['data']    
+            self._userfields = json.load(file)['data']
 
         self._fields = self._systemfields + self._userfields
 
@@ -515,14 +515,14 @@ class ALLSKYOVERLAY:
                 stroke = self._overlayConfig["settings"]["defaultstrokecolour"]
             else:
                 stroke = '#ffffff'
-        
+
         if stroke != None:
             stroker, strokeg, strokeb = self._convertColour(name, stroke)
         else:
             stroker = None
             strokeg = None
             strokeb = None
-            
+
         r, g, b = self._convertColour(name, fieldColour)
 
         regex =  r"\$\{.*?\}"
@@ -600,7 +600,7 @@ class ALLSKYOVERLAY:
                 cv2.putText(self._image, fieldLabel, (fieldX,fieldY), cv2.FONT_HERSHEY_SIMPLEX, 1, (b,g,r), 1, cv2.LINE_AA)
             else:
                 fill = (b, g, r, 0)
-                
+
                 if stroker == None or strokeg == None or strokeb == None:
                     strokeFill = None
                     strokeWidth = 0
@@ -648,12 +648,12 @@ class ALLSKYOVERLAY:
                 outOfBounds = True
             if (y > h):
                 outOfBounds = True
-            
+
             if outOfBounds:
-                s.log(0, f"ERROR: Field '{fieldLabel}' is outside of the image")    
+                s.log(0, f"ERROR: Field '{fieldLabel}' is outside of the image")
         except:
             pass
-    
+
     def get_text_dimensions(self, text_string, font):
         ascent, descent = font.getmetrics()
 
@@ -671,7 +671,7 @@ class ALLSKYOVERLAY:
         return colour
 
     def _draw_rotated_text(self, image, angle, xy, text, fill, font, opacity, strokeWidth, strokeFill):
-    
+
         fill = self._convertRGBtoBGR(fill, opacity)
         if strokeFill != "":
             strokeFill = self._convertRGBtoBGR(strokeFill,1)
@@ -718,7 +718,7 @@ class ALLSKYOVERLAY:
 
     def _isUnixTimestamp(self, value):
         isUnixTimestamp = False
-        isFloat = False    
+        isFloat = False
         sanityCheckDate = time.mktime((date(2023, 1, 1)).timetuple())
 
         try:
@@ -741,7 +741,7 @@ class ALLSKYOVERLAY:
                     pass
 
         return isUnixTimestamp, value
-    
+
     def _getValue(self, placeHolder, variableType, format=None, empty=''):
         value = None
         valueOk = True
@@ -820,8 +820,8 @@ class ALLSKYOVERLAY:
                         try:
                             value = tempDate.strftime(format)
                         except Exception:
-                            pass  
-                
+                            pass
+
                 if variableType == 'Time':
                     if envCheck == 'AS_TIME' or envCheck == 'TIME':
                         timeStamp = time.localtime(self._imageDate)
@@ -832,7 +832,7 @@ class ALLSKYOVERLAY:
                             value = time.strftime(format, timeStamp)
                     else:
                         pass
-                    
+
                 if variableType == 'Number':
                     if format is not None and format != "":
                         f = format
@@ -1007,7 +1007,7 @@ class ALLSKYOVERLAY:
                     self._moonElevation = str(round(degrees(moon.alt),2)) + u"\N{DEGREE SIGN}"
                     self._moonIllumination = str(round(moon.phase, 2))
                     self._moonPhaseSymbol  = symbol
-                    
+
                     os.environ['AS_MOON_AZIMUTH'] = self._moonAzimuth
                     s.log(4, 'INFO: Adding Moon Azimuth {}'.format(self._moonAzimuth))
                     os.environ['AS_MOON_ELEVATION'] = self._moonElevation
@@ -1022,7 +1022,7 @@ class ALLSKYOVERLAY:
                 s.log(4,'INFO: Moon not enabled.')
         except Exception as e:
             eType, eObject, eTraceback = sys.exc_info()
-            s.log(0, f'ERROR: _initialiseMoon failed on line {eTraceback.tb_lineno} - {e}')            
+            s.log(0, f'ERROR: _initialiseMoon failed on line {eTraceback.tb_lineno} - {e}')
         return True
 
     def _fileCreatedToday(self, fileName):
@@ -1058,7 +1058,7 @@ class ALLSKYOVERLAY:
             file.close()
         except:
             tz = "Europe/London"
-        
+
         return tz, timezone(tz)
 
     def _initialiseSun(self):
@@ -1069,10 +1069,10 @@ class ALLSKYOVERLAY:
                 lat = self._convertLatLon(self._observerLat)
                 lon = self._convertLatLon(self._observerLon)
 
-                tzName, tz = self._getTimeZone()                
+                tzName, tz = self._getTimeZone()
                 location = Observer(lat, lon, 0)
-                    
-                today = datetime.now(tz) 
+
+                today = datetime.now(tz)
                 tomorrow = today + timedelta(days = 1)
                 yesterday = today + timedelta(days = -1)
 
@@ -1117,7 +1117,7 @@ class ALLSKYOVERLAY:
         except Exception as e:
             eType, eObject, eTraceback = sys.exc_info()
             s.log(0, f'ERROR: _initialiseSun failed on line {eTraceback.tb_lineno} - {e}')
-            
+
         return True
 
     def _initialiseSunOld(self):
@@ -1190,7 +1190,9 @@ class ALLSKYOVERLAY:
     def _convertLatLon(self, input):
         """ lat and lon can either be a positive or negative float, or end with N, S, E,or W. """
         """ If in  N, S, E, W format, 0.2E becomes -0.2 """
-        nsew = 1 if input[-1] in ['N', 'S', 'E', 'W'] else 0
+        nsew = False
+        if isinstance(input, str):
+            nsew = 1 if input[-1] in ['N', 'S', 'E', 'W'] else 0
         if nsew:
             multiplier = 1 if input[-1] in ['N', 'E'] else -1
             ret = multiplier * sum(s.asfloat(x) / 60 ** n for n, x in enumerate(input[:-1].split('-')))
@@ -1239,7 +1241,7 @@ class ALLSKYOVERLAY:
         return tle[0].strip(), tle[1].strip(), tle[2].strip()
 
     def _initSatellites(self):
-        
+
         try:
             satellites = self._overlayConfig["settings"]["defaultnoradids"]
             satellites = satellites.strip()
@@ -1283,7 +1285,7 @@ class ALLSKYOVERLAY:
             eType, eObject, eTraceback = sys.exc_info()
             s.log(4, ' ')
             s.log(0, f'ERROR: _initSatellites failed on line {eTraceback.tb_lineno} - {e}')
-            
+
         return True
 
     def _initPlanets(self):
@@ -1303,10 +1305,10 @@ class ALLSKYOVERLAY:
                         'NEPTUNE BARYCENTER',
                         'PLUTO BARYCENTER'
                     }
-                    
+
                     timeNow = time.time()
                     utcOffset = (datetime.fromtimestamp(timeNow) - datetime.utcfromtimestamp(timeNow)).total_seconds()
-                    
+
                     ts = load.timescale()
                     t = ts.now() #- timedelta(seconds=utcOffset)
                     earth = self._eph['earth']
@@ -1337,7 +1339,7 @@ class ALLSKYOVERLAY:
         except Exception as e:
             eType, eObject, eTraceback = sys.exc_info()
             s.log(0, f'ERROR: _initPlanets failed on line {eTraceback.tb_lineno}- {e}')
-            
+
         return True
 
     def annotate(self):

@@ -5,7 +5,6 @@ initialize_variables();		// sets some variables
 
 define('RASPI_ADMIN_DETAILS', RASPI_CONFIG . '/raspap.auth');
 
-include_once('raspap.php');
 include_once('authenticate.php');
 
 class MODULEUTIL
@@ -77,7 +76,7 @@ class MODULEUTIL
     private function readModuleData($moduleDirectory, $type, $event) {
         $arrFiles = array();
         $handle = opendir($moduleDirectory);
- 
+
         if ($handle) {
             while (($entry = readdir($handle)) !== FALSE) {
                 if (preg_match('/^allsky_/', $entry)) {
@@ -90,13 +89,13 @@ class MODULEUTIL
                         foreach ($fileContents as $sourceLine) {
                             $line = str_replace(" ", "", $sourceLine);
                             $line = str_replace("\n", "", $line);
-                            $line = str_replace("\r", "", $line);                            
+                            $line = str_replace("\r", "", $line);
                             $line = strtolower($line);
                             if ($line == "metadata={") {
                                 $found = true;
                                 $sourceLine = str_ireplace("metadata","", $sourceLine);
                                 $sourceLine = str_ireplace("=","", $sourceLine);
-                                $sourceLine = str_ireplace(" ","", $sourceLine);                                
+                                $sourceLine = str_ireplace(" ","", $sourceLine);
                             }
 
                             if ($found) {
@@ -147,7 +146,7 @@ class MODULEUTIL
     }
 
     private function changeOwner($filename) {
-        $user = get_current_user();        
+        $user = get_current_user();
         exec("sudo chown " . $user . " " . $filename);
     }
 
@@ -160,16 +159,16 @@ class MODULEUTIL
 
     public function getRestore() {
         $flow = $_GET['flow'];
-                
+
         $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($flow) . '.json';
         $backupConfigFileName = $configFileName . '-last';
         copy($backupConfigFileName, $configFileName);
         $this->changeOwner($configFileName);
-        $this->sendResponse();        
+        $this->sendResponse();
     }
 
     public function postModulesSettings() {
-        $configFileName = ALLSKY_MODULES . '/module-settings.json';        
+        $configFileName = ALLSKY_MODULES . '/module-settings.json';
         $settings = $_POST['settings'];
         $formattedJSON = json_encode(json_decode($settings), JSON_PRETTY_PRINT);
 
@@ -182,13 +181,10 @@ class MODULEUTIL
     }
 
     public function getModuleBaseData() {
-        $cam_type = getCameraType();
-        $settings_file = getSettingsFile($cam_type);
-        $camera_settings_str = file_get_contents($settings_file, true);
-        $camera_settings_array = json_decode($camera_settings_str, true);
-        $angle = $camera_settings_array['angle'];
-        $lat = $camera_settings_array['latitude'];
-        $lon = $camera_settings_array['longitude'];
+        global $settings_array;		// defined in initialize_variables()
+        $angle = $settings_array['angle'];
+        $lat = $settings_array['latitude'];
+        $lon = $settings_array['longitude'];
 
         $result['lat'] = $lat;
         $result['lon'] = $lon;
@@ -203,7 +199,7 @@ class MODULEUTIL
         }
 
         $result['version'] = ALLSKY_VERSION;
-        
+
         $configFileName = ALLSKY_MODULES . '/module-settings.json';
         $rawConfigData = file_get_contents($configFileName);
         $configData = json_decode($rawConfigData);
@@ -215,8 +211,8 @@ class MODULEUTIL
 
     public function getModules() {
         $result = $this->readModules();
-        $result = json_encode($result, JSON_FORCE_OBJECT);     
-        $this->sendResponse($result);       
+        $result = json_encode($result, JSON_FORCE_OBJECT);
+        $this->sendResponse($result);
     }
 
     private function readModules() {
@@ -243,7 +239,7 @@ class MODULEUTIL
         foreach ($allModules as $moduleData) {
             $module = str_replace('allsky_', '', $moduleData["module"]);
             $module = str_replace('.py', '', $module);
-            
+
             if (!isset($configData->{$module})) {
                 $moduleData["enabled"] = false;
                 $availableResult[$module] = $moduleData;
@@ -282,12 +278,12 @@ class MODULEUTIL
             if (isset($data->lastexecutiontime)) {
                 $moduleData['lastexecutiontime'] = $data->lastexecutiontime;
             } else {
-                $moduleData['lastexecutiontime'] = '0';                
+                $moduleData['lastexecutiontime'] = '0';
             }
             if (isset($data->lastexecutionresult)) {
                 $moduleData['lastexecutionresult'] = $data->lastexecutionresult;
             } else {
-                $moduleData['lastexecutionresult'] = '';                
+                $moduleData['lastexecutionresult'] = '';
             }
 
             $selectedResult[$selectedName] = $moduleData;
@@ -335,7 +331,7 @@ class MODULEUTIL
 
         foreach ($oldModules as $key=>$module) {
             $moduleList[$key] = $module->module;
-        } 
+        }
 
         foreach ($newModules as $key=>$module) {
             if (isset($moduleList[$key])) {
@@ -391,7 +387,7 @@ class MODULEUTIL
         $zipArchive->open($sourcePath);
         for ($i = 0; $i < $zipArchive->numFiles; $i++) {
             $stat = $zipArchive->statIndex($i);
-  
+
             $nameInArchive = $stat['name'];
 
             if ($scriptName == $nameInArchive) {
@@ -399,7 +395,7 @@ class MODULEUTIL
                 if (!$fp) {
                     $this->send500('Unable to extract module from zip file');
                 }
-    
+
                 $contents = '';
                 while (!feof($fp)) {
                   $contents .= fread($fp, 1024);
@@ -418,7 +414,7 @@ class MODULEUTIL
 
     public function getReset() {
         $flow = $_GET['flow'];
-        
+
         $sourceConfigFileName = ALLSKY_REPO . '/modules/postprocessing_' . strtolower($flow) . '.json';
         $rawConfigData = file_get_contents($sourceConfigFileName);
         $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($flow) . '.json';

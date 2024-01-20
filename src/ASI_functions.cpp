@@ -587,8 +587,9 @@ ASI_ERROR_CODE ASIGetControlValue(int iCameraIndex, ASI_CONTROL_TYPE ControlType
 }
 
 
-// Empty routine so code compiles.
-int stopVideoCapture(int cameraID) { return(ASI_SUCCESS); }
+// Empty routines so code compiles.
+int stopVideoCapture(int cameraID) { return((int) ASI_SUCCESS); }
+int closeCamera(int cameraID) { return((int) ASI_SUCCESS); }
 
 // Get the camera's serial number.  RPi cameras don't support serial numbers.
 ASI_ERROR_CODE  ASIGetSerialNumber(int iCameraIndex, ASI_SN *pSN)
@@ -646,6 +647,10 @@ int const argumentNamesSize =  sizeof(argumentNames) / sizeof(argumentNames[0]);
 int stopVideoCapture(int cameraID)
 {
 	return((int) ASIStopVideoCapture(cameraID));
+}
+int closeCamera(int cameraID)
+{
+	return((int) ASICloseCamera(cameraID));
 }
 
 int getCameraNumber()
@@ -883,6 +888,9 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		}
 	fprintf(f, "\t],\n");
 
+	// RPi only supports sensor temp with libcamera.
+	if (CG.ct == ctZWO || CG.isLibcamera)
+		fprintf(f, "\t\"hasSensorTemperature\" : %s,\n", CG.supportsTemperature ? "true" : "false");
 	fprintf(f, "\t\"colorCamera\" : %s,\n", cameraInfo.IsColorCam ? "true" : "false");
 	if (cameraInfo.IsColorCam)
 		fprintf(f, "\t\"bayerPattern\" : \"%s\",\n", bayer);
@@ -942,7 +950,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	// Adding it to the "controls" array makes the code that checks what's available easier.
 	fprintf(f, "\t\"controls\": [\n");
 
-	// sensor size was also saved above, but save here with min/max/default
+	// sensor size was also saved above, but this is the size the user can change.
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"sensorWidth\",\n");
 	fprintf(f, "\t\t\t\"argumentName\" : \"width\",\n");
@@ -978,7 +986,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "DayMeanThreshold");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "daymeanthreshold");
 	fprintf(f, "\t\t\t\"MinValue\" : 0.01,\n");
-	fprintf(f, "\t\t\t\"MaxValue\" : \"1.0\",\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n");
 	fprintf(f, "\t\t\t\"DefaultValue\" : %.3f\n", CG.myModeMeanSetting.dayMean_threshold);
 	fprintf(f, "\t\t},\n");
 
@@ -994,7 +1002,7 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "NightMeanThreshold");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "nightmeanthreshold");
 	fprintf(f, "\t\t\t\"MinValue\" : 0.01,\n");
-	fprintf(f, "\t\t\t\"MaxValue\" : \"1.0\",\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n");
 	fprintf(f, "\t\t\t\"DefaultValue\" : %.3f\n", CG.myModeMeanSetting.nightMean_threshold);
 	fprintf(f, "\t\t},\n");
 
@@ -1002,21 +1010,21 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "AutoWhiteBalance");
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "awb");
-		fprintf(f, "\t\t\t\"DefaultValue\" : 0\n");
+		fprintf(f, "\t\t\t\"DefaultValue\" : false\n");
 		fprintf(f, "\t\t},\n");
 	}
 	if (CG.isCooledCamera) {
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "EnableCooler");
-		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "EnableCooler");
-		fprintf(f, "\t\t\t\"DefaultValue\" : 0\n");
+		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "enablecooler");
+		fprintf(f, "\t\t\t\"DefaultValue\" : false\n");
 		fprintf(f, "\t\t},\n");
 	}
 	if (CG.supportsTemperature) {
-		fprintf(f, "\t\t{\n");
+		fprintf(f, "\t\t{\n");	// TODO This will go away when the legacy overlay is removed
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showTemp");
-		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showTemp");
-		fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showTemp ? 1 : 0);
+		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showtemp");
+		fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.overlay.showTemp ? "true" : "false");
 		fprintf(f, "\t\t},\n");
 	}
 	if (CG.supportsAggression) {
@@ -1041,19 +1049,19 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "autousb");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "autousb");
-	fprintf(f, "\t\t\t\"DefaultValue\" : 1\n");
+	fprintf(f, "\t\t\t\"DefaultValue\" : true\n");
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showUSB");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showUSB");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showUSB ? 1 : 0);
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showusb");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.overlay.showUSB ? "true" : "false");
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "experimentalExposure");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "experimentalExposure");
-	fprintf(f, "\t\t\t\"DefaultValue\" : \"%d\"\n", CG.HB.useExperimentalExposure ? 1 : 0);
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "experimentalexposure");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.HB.useExperimentalExposure ? "true" : "false");
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
@@ -1065,18 +1073,18 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showhistogrambox");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showhistogrambox");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.overlay.showHistogramBox ? 1 : 0);
+	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.overlay.showHistogramBox ? "true" : "false");
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "newexposure");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "newexposure");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.videoOffBetweenImages ? 1 : 0);
+	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.videoOffBetweenImages ? "true" : "false");
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "CameraNumber");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "cameraNumber");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "cameranumber");
 	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.cameraNumber);
 	fprintf(f, "\t\t},\n");
 #endif
@@ -1084,14 +1092,19 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 #ifdef IS_RPi
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "ExtraArguments");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "extraArgs");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "extraargs");
 	fprintf(f, "\t\t},\n");
 
 	if (CG.ct == ctRPi && CG.isLibcamera) {
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "TuningFile");
-		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "TuningFile");
+		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "tuningfile");
 		fprintf(f, "\t\t\t\"DefaultValue\" : \"\"\n");
+		fprintf(f, "\t\t},\n");
+
+		fprintf(f, "\t\t{\n");
+		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "Rotation");
+		fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "rotation");
 		fprintf(f, "\t\t},\n");
 	}
 #endif
@@ -1138,7 +1151,10 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", a);
 		fprintf(f, "\t\t\t\"MinValue\" : %s,\n", LorF(min, "%ld", "%.3f"));
 		fprintf(f, "\t\t\t\"MaxValue\" : %s,\n", LorF(max, "%ld", "%.3f"));
-		fprintf(f, "\t\t\t\"DefaultValue\" : %s,\n", LorF(def, "%ld", "%.3f"));
+		if (def == NO_DEFAULT)
+			fprintf(f, "\t\t\t\"DefaultValue\" : \"none\",\n");
+		else
+			fprintf(f, "\t\t\t\"DefaultValue\" : %s,\n", LorF(def, "%ld", "%.3f"));
 		fprintf(f, "\t\t\t\"IsAutoSupported\" : %s,\n", cc.IsAutoSupported == ASI_TRUE ? "true" : "false");
 		fprintf(f, "\t\t\t\"IsWritable\" : %s,\n", cc.IsWritable == ASI_TRUE ? "true" : "false");
 		fprintf(f, "\t\t\t\"ControlType\" : %d\n", cc.ControlType);

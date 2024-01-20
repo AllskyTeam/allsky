@@ -4,15 +4,15 @@
 # If no file is specified, use the local one if it exists, else use the remote one.
 
 # Allow this script to be executed manually, which requires several variables to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"			|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"				|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC1091 source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+#shellcheck disable=SC1091		# file doesn't exist in GitHub
+source "${ALLSKY_CONFIG}/config.sh"			|| exit "${EXIT_ERROR_STOP}"
 
 function usage_and_exit()
 {
@@ -24,9 +24,9 @@ function usage_and_exit()
 	fi
 	echo -e "${C}Usage: ${ME} [--help] [--debug] [--verbosity silent|summary|verbose] [--local | --remote | --config file] key label new_value [...]${wNC}" >&2
 	echo "There must be a multiple of 3 arguments." >&2
-	# shellcheck disable=SC2086
-	exit ${RET}
+	exit "${RET}"
 }
+
 # Check arguments
 OK="true"
 HELP="false"
@@ -120,7 +120,8 @@ while [[ $# -gt 0 ]]; do
 
 	# Only put quotes around ${NEW_VALUE} if it's a string,
 	# i.e., not a number or a special name.
-	if  [[ ! (${NEW_VALUE} =~ ${NUMRE}) && ${NEW_VALUE} != "true" && ${NEW_VALUE} != "false" && ${NEW_VALUE} != "null" ]]; then
+	if  [[ ! (${NEW_VALUE} =~ ${NUMRE}) && ${NEW_VALUE} != "true" &&
+			${NEW_VALUE} != "false" && ${NEW_VALUE} != "null" ]]; then
 		Q='"'
 		NEW_VALUE="${Q}${NEW_VALUE}${Q}"
 	fi
@@ -142,7 +143,8 @@ if [[ ${DEBUG} == "true" ]]; then
 	echo -e "${wNC}"
 fi
 
-if OUTPUT="$(jq "${S}" "${CONFIG_FILE}" 2>&1 > /tmp/x && mv /tmp/x "${CONFIG_FILE}")"; then
+# Need to use "jq", not "settings".
+if OUTPUT="$( jq "${S}" "${CONFIG_FILE}" 2>&1 > /tmp/x && mv /tmp/x "${CONFIG_FILE}" )"; then
 	if [[ ${VERBOSITY} == "verbose" ]]; then
 		echo -e "${wOK}${OUTPUT_MESSAGE}${wNC}"
 	elif [[ ${VERBOSITY} == "summary" ]]; then

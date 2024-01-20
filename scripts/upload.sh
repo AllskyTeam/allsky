@@ -4,17 +4,17 @@
 # This is a separate script so it can also be used manually to test uploads.
 
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}")/.." )"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
 ME="$( basename "${BASH_ARGV0}" )"
 
-#shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+#shellcheck disable=SC1091 source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 #shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_CONFIG}/config.sh"			|| exit "${EXIT_ERROR_STOP}"
 #shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit "${ALLSKY_ERROR_STOP}"
+source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 
 usage_and_exit() {
@@ -49,32 +49,29 @@ SILENT="false"
 DEBUG="false"
 RET=0
 while [[ $# -gt 0 ]]; do
-	case "${1}" in
+	ARG="${1}"
+	case "${ARG}" in
 		--help)
 			HELP="true"
-			shift
 			;;
 		--wait)
 			WAIT="true"
-			shift
 			;;
 		--silent)
 			SILENT="true"
-			shift
 			;;
 		--debug)
 			DEBUG="true"
-			shift
 			;;
 		-*)
-			echo -e "${RED}Unknown argument '${1}'.${NC}" >&2
-			shift
+			echo -e "${RED}Unknown argument '${ARG}'.${NC}" >&2
 			RET=1
 			;;
 		*)
 			break		# done with arguments
 			;;
 	esac
+	shift
 done
 [[ $# -lt 3 || ${RET} -ne 0 ]] && usage_and_exit 1
 [[ ${HELP} == "true" ]] && usage_and_exit 0
@@ -89,7 +86,7 @@ fi
 
 DIRECTORY="${2}"
 DESTINATION_NAME="${3}"
-[[ -z ${DESTINATION_NAME} ]] && DESTINATION_NAME="$(basename "${FILE_TO_UPLOAD}")"
+[[ -z ${DESTINATION_NAME} ]] && DESTINATION_NAME="$( basename "${FILE_TO_UPLOAD}" )"
 # When run manually, the FILE_TYPE normally won't be given.
 FILE_TYPE="${4:-x}"		# A unique identifier for this type of file
 COPY_TO="${5}"
@@ -115,7 +112,7 @@ else
 	SLEEP="10s"
 fi
 ABORTED_MSG1="Another '${FILE_TYPE}' upload is in progress so the new upload of"
-ABORTED_MSG1="${ABORTED_MSG1} $(basename "${FILE_TO_UPLOAD}") was aborted."
+ABORTED_MSG1="${ABORTED_MSG1} $( basename "${FILE_TO_UPLOAD}" ) was aborted."
 ABORTED_FIELDS="${FILE_TYPE}\t${FILE_TO_UPLOAD}"
 ABORTED_MSG2="uploads"
 CAUSED_BY="This could be caused network issues or by delays between images that are too short."
@@ -178,7 +175,7 @@ elif [[ ${PROTOCOL} == "gcs" ]] ; then
 		RET=$?
 	else
 		OUTPUT="${ME}: ERROR: 'gsutil' command not found; cannot upload."
-		OUTPUT="${OUTPUT}\nIt should be in one of these directories: $PATH"
+		OUTPUT="${OUTPUT}\nIt should be in one of these directories: ${PATH}"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${OUTPUT}"
 		OUTPUT="${RED}*** ${OUTPUT}${NC}"
 	fi
@@ -288,7 +285,7 @@ else # sftp/ftp/ftps
 	RET=$?
 	if [[ ${RET} -ne 0 ]]; then
 		HEADER="${RED}*** ${ME}: ERROR,"
-		if [[ ${RET} -eq ${ALLSKY_ERROR_STOP} ]]; then
+		if [[ ${RET} -eq ${EXIT_ERROR_STOP} ]]; then
 			# shellcheck disable=SC2153
 			OUTPUT="$(
 				echo "${HEADER} unable to log in to '${REMOTE_HOST}', user ${REMOTE_USER}'."
@@ -311,7 +308,7 @@ else # sftp/ftp/ftps
 
 		echo -e "\n${YELLOW}Commands used${NC} are in: ${GREEN}${LFTP_CMDS}${NC}"
 	else
-		if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 4 && ${ON_TTY} -eq 0 ]]; then
+		if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 4 && ${ON_TTY} == "false" ]]; then
 			echo "${ME}: FTP '${FILE_TO_UPLOAD}' finished"
 		fi
 	fi
@@ -335,5 +332,4 @@ fi
 
 rm -f "${PID_FILE}"
 
-# shellcheck disable=SC2086
-exit ${RET}
+exit "${RET}"

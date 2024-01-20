@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # Shell functions used by multiple scripts.
-# This file is "source"d into others, and must be done AFTER source'ing variables.sh
-# and config.sh.
+# This file is "source"d into others, and must be done AFTER source'ing variables.sh.
 
 
 #####
@@ -39,8 +38,8 @@ function doExit()
 		# even if the user has them turned off.
 		if [[ -n ${CUSTOM_MESSAGE} ]]; then
 			# Create a custom error message.
-			# If we error out before config.sh is sourced in, $FILENAME and $EXTENSION won't be
-			# set so guess at what they are.
+			# If we error out before config.sh is sourced in,
+			# ${FILENAME} and ${EXTENSION} won't be set so guess at what they are.
 			"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" \
 				"${FILENAME:-"image"}" \
 				"${COLOR}" "" "85" "" "" \
@@ -56,8 +55,7 @@ function doExit()
 	# Don't let the service restart us because we'll likely get the same error again.
 	[[ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]] && sudo systemctl stop allsky
 
-	# shellcheck disable=SC2086
-	exit ${EXITCODE}
+	exit "${EXITCODE}"
 }
 
 
@@ -65,8 +63,8 @@ function doExit()
 # RPi cameras can use either "raspistill" on Buster or "libcamera-still" on Bullseye
 # to actually take pictures.
 # Determine which to use.
-# On success, return 1 and the command to use.
-# On failure, return 0 and an error message.
+# On success, return 0 and the command to use.
+# On failure, return non-0 and an error message.
 function determineCommandToUse()
 {
 	local USE_doExit="${1}"			# Call doExit() on error?
@@ -103,7 +101,7 @@ function determineCommandToUse()
 			return 1
 		fi
 
-		"${CMD}" --timeout 1 --nopreview # > /dev/null 2>&1
+		"${CMD}" --timeout 1 --nopreview > /dev/null 2>&1
 		RET=$?
 	fi
 
@@ -223,23 +221,23 @@ function get_sunrise_sunset()
 	local ANGLE="${1}"
 	local LATITUDE="${2}"
 	local LONGITUDE="${3}"
-	#shellcheck disable=SC2086 source-path=.
+	#shellcheck disable=SC1091 source-path=.
 	source "${ALLSKY_HOME}/variables.sh"	|| return 1
-	#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
+	#shellcheck disable=SC1091		# file doesn't exist in GitHub
 	source "${ALLSKY_CONFIG}/config.sh"		|| return 1
 
-	[[ -z ${ANGLE} ]] && ANGLE="$(settings ".angle")"
-	[[ -z ${LATITUDE} ]] && LATITUDE="$(settings ".latitude")"
-	[[ -z ${LONGITUDE} ]] && LONGITUDE="$(settings ".longitude")"
+	[[ -z ${ANGLE} ]] && ANGLE="$( settings ".angle" )"
+	[[ -z ${LATITUDE} ]] && LATITUDE="$( settings ".latitude" )"
+	[[ -z ${LONGITUDE} ]] && LONGITUDE="$( settings ".longitude" )"
 
-	LATITUDE="$(convertLatLong "${LATITUDE}" "latitude")"		|| return 2
-	LONGITUDE="$(convertLatLong "${LONGITUDE}" "longitude")"	|| return 2
+	LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" )"		|| return 2
+	LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )"	|| return 2
 
 	echo "Daytime start    Nighttime start   Angle"
-	local X="$(sunwait list angle "0" "${LATITUDE}" "${LONGITUDE}")"
+	local X="$( sunwait list angle "0" "${LATITUDE}" "${LONGITUDE}" )"
 	# Replace comma by several spaces so the output lines up.
 	echo "${X/,/           }               0"
-	X="$(sunwait list angle "${ANGLE}" "${LATITUDE}" "${LONGITUDE}")"
+	X="$( sunwait list angle "${ANGLE}" "${LATITUDE}" "${LONGITUDE}" )"
 	echo "${X/,/           }              ${ANGLE}"
 }
 
@@ -248,7 +246,7 @@ function get_sunrise_sunset()
 # Return which Allsky Websites exist - local, remote, both, none
 function whatWebsites()
 {
-	#shellcheck disable=SC2086 source-path=.
+	#shellcheck disable=SC1091 source-path=.
 	source "${ALLSKY_HOME}/variables.sh"	|| return 1
 
 	local HAS_LOCAL="false"
@@ -260,7 +258,7 @@ function whatWebsites()
 	# Determine remote Website - this is more involved.
 	# Not only must the file exist, but there also has to be a way to upload to it.
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
-		local PROTOCOL="$(get_variable "PROTOCOL" "${ALLSKY_CONFIG}/ftp-settings.sh")"
+		local PROTOCOL="$( get_variable "PROTOCOL" "${ALLSKY_CONFIG}/ftp-settings.sh" )"
 		PROTOCOL=${PROTOCOL,,}
 		if [[ -n ${PROTOCOL} && ${PROTOCOL} != "local" ]]; then
 			local X
@@ -269,17 +267,17 @@ function whatWebsites()
 					;;
 
 				ftp | ftps | sftp | scp)		# These require R
-					X="$(get_variable "REMOTE_HOST" "${ALLSKY_CONFIG}/ftp-settings.sh")" 
+					X="$( get_variable "REMOTE_HOST" "${ALLSKY_CONFIG}/ftp-settings.sh" )" 
 					[[ -n ${X} ]] && HAS_REMOTE="true"
 					;;
 
 				s3)
-					X="$(get_variable "AWS_CLI_DIR" "${ALLSKY_CONFIG}/ftp-settings.sh")" 
+					X="$( get_variable "AWS_CLI_DIR" "${ALLSKY_CONFIG}/ftp-settings.sh" )" 
 					[[ -n ${X} ]] && HAS_REMOTE="true"
 					;;
 
 				gcs)
-					X="$(get_variable "GCS_BUCKET" "${ALLSKY_CONFIG}/ftp-settings.sh")" 
+					X="$( get_variable "GCS_BUCKET" "${ALLSKY_CONFIG}/ftp-settings.sh" )" 
 					[[ -n ${X} ]] && HAS_REMOTE="true"
 					;;
 
@@ -321,13 +319,13 @@ function checkAndGetNewerFile()
 	local GIT_FILE="${GITHUB_RAW_ROOT}/allsky/${BRANCH}/${2}"
 	local DOWNLOADED_FILE="${3}"
 	# Download the file and put in DOWNLOADED_FILE
-	X="$(curl --show-error --silent "${GIT_FILE}")"
+	X="$( curl --show-error --silent "${GIT_FILE}" )"
 	RET=$?
 	if [[ ${RET} -eq 0 && ${X} != "404: Not Found" ]]; then
 		# We really just check if the files are different.
 		echo "${X}" > "${DOWNLOADED_FILE}"
-		DOWNLOADED_CHECKSUM="$(sum "${DOWNLOADED_FILE}")"
-		MY_CHECKSUM="$(sum "${CURRENT_FILE}")"
+		DOWNLOADED_CHECKSUM="$( sum "${DOWNLOADED_FILE}" )"
+		MY_CHECKSUM="$( sum "${CURRENT_FILE}" )"
 		if [[ ${MY_CHECKSUM} == "${DOWNLOADED_CHECKSUM}" ]]; then
 			rm -f "${DOWNLOADED_FILE}"
 			return 0
@@ -445,7 +443,7 @@ function settings()
 {
 	local DO_NULL="false"
 	[[ ${1} == "--null" ]] && DO_NULL="true" && shift
-	local M="${ME:-settings}"
+	local M="${ME:-${FUNCNAME[0]}}"
 	local FIELD="${1}"
 	# Arrays can't begin with period but everything else should.
 	if [[ ${FIELD:0:1} != "." && ${FIELD: -2:2} != "[]" && ${FIELD:0:3} != "if " ]]; then
@@ -476,7 +474,7 @@ function get_links()
 {
 	local FILE="$1"
 	if [[ -z ${FILE} ]]; then
-		echo "get_links(): File not specified."
+		echo "${FUNCNAME[0]}(): File not specified."
 		return 1
 	fi
 	local DIRNAME="$( dirname "${FILE}" )"
@@ -518,18 +516,30 @@ function get_links()
 function check_settings_link()
 {
 	local FULL_FILE FILE DIRNAME SETTINGS_LINK RET MSG F E CORRECT_NAME
+	local CT="cameratype"
+	local CM="cameramodel"
+	if [[ ${1} == "--uppercase" ]]; then
+		CT="cameraType"
+		CM="cameraModel"
+		shift
+	fi
+
 	FULL_FILE="${1}"
 	if [[ -z ${FULL_FILE} ]]; then
-		echo "check_settings_link(): Settings file not specified."
-		return "${EXIT_ERROR_STOP}"
+		echo "${FUNCNAME[0]}(): Settings file not specified."
+		return 1
+	fi
+	if [[ ! -f ${FULL_FILE} ]]; then
+		echo "${FUNCNAME[0]}(): File '${FULL_FILE}' not found."
+		return 1
 	fi
 	if [[ -z ${CAMERA_TYPE} ]]; then
-		CAMERA_TYPE="$( settings .cameraType  "${FULL_FILE}" )"
-		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
+		CAMERA_TYPE="$( settings ".${CT}"  "${FULL_FILE}" )"
+		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return 1
 	fi
 	if [[ -z ${CAMERA_MODEL} ]]; then
-		CAMERA_MODEL="$( settings .cameraModel  "${FULL_FILE}" )"
-		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
+		CAMERA_MODEL="$( settings ".${CM}"  "${FULL_FILE}" )"
+		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return 1
 	fi
 
 	DIRNAME="$( dirname "${FULL_FILE}" )"
@@ -544,7 +554,7 @@ function check_settings_link()
 		MSG="The settings file '${FILE}' was not linked to '${CORRECT_NAME}'"
 		[[ ${RET} -ne "${NO_LINK_}" ]] && MSG="${MSG}\nERROR: ${SETTINGS_LINK}."
 		echo -e "${MSG}$( fix_settings_link "${FULL_FILE}" "${FULL_CORRECT_NAME}" )"
-		return 1
+		return "${EXIT_ERROR_STOP}"
 	else
 		# Make sure it's linked to the correct file.
 		if [[ ${SETTINGS_LINK} != "${FULL_CORRECT_NAME}" ]]; then
@@ -553,7 +563,7 @@ function check_settings_link()
 			MSG="${MSG}\nbut should have been linked to:"
 			MSG="${MSG}\n    ${FULL_CORRECT_NAME}"
 			echo -e "${MSG}$( fix_settings_link "${FULL_FILE}" "${FULL_CORRECT_NAME}" )"
-			return 1
+			return "${EXIT_ERROR_STOP}"
 		fi
 	fi
 
@@ -582,29 +592,6 @@ function fix_settings_link()
 	return 0
 }
 
-function update_json_file()		# field, new value, file
-{
-	local M="${ME:-update_json_file}"
-	local FIELD="${1}"
-	if [[ ${FIELD:0:1} != "." ]]; then
-		echo "${M}: Field names must begin with period '.' (Field='${FIELD}')" >&2
-		return 1
-	fi
-
-	local NEW_VALUE="${2}"
-	local FILE="${3:-${SETTINGS_FILE}}"
-	local TEMP="/tmp/$$"
-	# Have to use "cp" instead of "mv" to keep any hard link.
-	if jq "${FIELD} = \"${NEW_VALUE}\"" "${FILE}" > "${TEMP}" ; then
-		cp "${TEMP}" "${FILE}"
-		rm "${TEMP}"
-		return 0
-	fi
-
-	echo "${M}: Unable to update json value of '${FIELD}' to '${NEW_VALUE}' in '${FILE}'." >&2
-
-	return 2
-}
 
 ####
 # Only allow one of the specified process at a time.
@@ -695,7 +682,7 @@ function one_instance()
 	fi
 
 
-	NUM_CHECKS=0
+	local NUM_CHECKS=0
 	local INITIAL_PID
 	while  : ;
 	do
@@ -728,7 +715,7 @@ function one_instance()
 			# If it's happening often let the user know.
 			[[ ! -d ${ALLSKY_ABORTS_DIR} ]] && mkdir "${ALLSKY_ABORTS_DIR}"
 			local AF="${ALLSKY_ABORTS_DIR}/${ABORTED_FILE}"
-			echo -e "$(date)\t${ABORTED_FIELDS}" >> "${AF}"
+			echo -e "$( date )\t${ABORTED_FIELDS}" >> "${AF}"
 			NUM=$( wc -l < "${AF}" )
 			if [[ ${NUM} -eq 10 ]]; then
 				MSG="${NUM} ${ABORTED_MSG2} have been aborted waiting for others to finish."
@@ -782,38 +769,6 @@ function reboot_needed()
 	fi
 }
 
-####
-# Read json on stdin and output each field and value separated by a tab.
-function convert_json_to_tabs()
-{
-	# Possible input formats, all with and without trailing "," and
-	# with or without leading spaces or tabs.
-	#   "field" : "value"
-	#   "field" : number
-	#   "field": "value"
-	#   "field": number
-	#   "field":"value"
-	#   "field":number
-	# Want to output two fields (field name and value), separated by tabs.
-	# First get rid of the brackets,
-	# then the optional leading spaces and tabs,
-	# then everything between the field and and its value,
-	# then ending " and/or comma.
-
-	local JSON_FILE="${1}"
-	if [[ ! -f ${JSON_FILE} ]]; then
-		echo -e "${RED}convert_json_to_tabs(): ERROR: json file '${JSON_FILE}' not found.${NC}" >&2
-		return 1
-	fi
-
-	sed -e '/^{/d' -e '/^}/d' \
-		-e 's/^[\t ]*"//' \
-		-e 's/"[\t :]*[ "]/\t/' \
-		-e 's/",$//' -e 's/"$//' -e 's/,$//' \
-			"${JSON_FILE}"
-}
-
-
 # Indent all lines.
 function indent()
 {
@@ -823,7 +778,10 @@ function indent()
 # Python virtual environment
 PYTHON_VENV_ACTIVATED="false"
 activate_python_venv() {
-	if [[ ${PI_OS} == "bookworm" ]]; then
+
+# TODO: will need to change when the OS after bookworm is released
+
+	if [[ ${PI_OS,,} == "bookworm" ]]; then
 		#shellcheck disable=SC1090,SC1091
 		source "${ALLSKY_PYTHON_VENV}/bin/activate" || exit 1
 		PYTHON_VENV_ACTIVATED="true"

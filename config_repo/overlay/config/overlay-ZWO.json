@@ -48,13 +48,13 @@
         {
             "label": "${CAMERA_TYPE} ${CAMERA_MODEL}",
             "x": 195,
-            "y": 1080,
+            "y": 522,
             "id": "oe-field-4",
             "fontsize": 20,
             "strokewidth": 0,
             "sample": "ZWO ASI174MC",
             "tlx": 9,
-            "tly": 1070
+            "tly": 500
         }
     ],
     "images": [],

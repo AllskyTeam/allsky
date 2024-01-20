@@ -8,7 +8,7 @@ if [[ -z ${PID} ]]; then
 	exit 1
 fi
 
-TO_SEND_SIGNAL="$(pgrep --parent "${PID}")"
+TO_SEND_SIGNAL="$( pgrep --parent "${PID}" )"
 if [[ -z ${TO_SEND_SIGNAL} ]]; then
 	echo "*** ERROR in reload.sh: cannot find any children of PID ${PID} ***"
 	exit 2

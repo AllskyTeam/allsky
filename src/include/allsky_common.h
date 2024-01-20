@@ -308,7 +308,7 @@ struct config {			// for configuration variables
 	bool consistentDelays				= true;
 	char const *ASIversion				= "UNKNOWN";		// calculated value
 	bool videoOffBetweenImages			= true;
-	ZWOexposure ZWOexposureType			= ZWOvideo;
+	ZWOexposure ZWOexposureType			= ZWOsnap;
 
 	struct overlay overlay;
 	struct myModeMeanSetting myModeMeanSetting;

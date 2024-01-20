@@ -1081,7 +1081,7 @@ int main(int argc, char *argv[])
 
 	// Start taking pictures
 
-	if (CG->ZWOexposureType == ZWOvideo)
+	if (CG.ZWOexposureType == ZWOvideo)
 	{
 		asiRetCode = ASIStartVideoCapture(CG.cameraNumber);
 		if (asiRetCode != ASI_SUCCESS)

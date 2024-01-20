@@ -475,6 +475,10 @@ if ($results != "") {
 if ($settings_file !== "") {
 	// Determine the name of the camera type/model-specific file.
 	$pieces = explode(".", basename($settings_file));		// e.g., "settings.json"
+	if (count($pieces) !== 2) {
+		echo "ERROR: invalid name: '$settings_file'\n";
+		exit(7);
+	}
 	$FileName = $pieces[0];		// e.g., "settings"
 	$FileExt = $pieces[1];		// e.g., "json"
 	// e.g., "settings_ZWO_ASI123.json"
@@ -498,7 +502,7 @@ if ($settings_file !== "") {
 		if ($debug > 0) echo "Removing $settings_file.\n";
 		if (! unlink($settings_file)) {
 			echo "ERROR: Unable to delete $settings_file.\n";
-			exit(7);
+			exit(8);
 		}
 	}
 
@@ -536,7 +540,7 @@ if ($settings_file !== "") {
 		$results = updateFile($fullSpecificFileName, $contents, $cameraSpecificSettingsName, true);
 		if ($results != "") {
 			echo "ERROR: Unable to create $fullSpecificFileName.\n";
-			exit(8);
+			exit(9);
 		}
 
 	} else if ($debug > 0) {
@@ -549,7 +553,7 @@ if ($settings_file !== "") {
 	if ($debug > 0) echo "Linking $fullSpecificFileName to $settings_file.\n";
 	if (! link($fullSpecificFileName, $settings_file)) {
 		echo "ERROR: Unable to link $fullSpecificFileName to $settings_file.\n";
-		exit(9);
+		exit(10);
 	}
 }
 

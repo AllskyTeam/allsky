@@ -62,7 +62,7 @@ ALLSKY_DEFINES_INC="allskyDefines.inc"
 REPO_WEBUI_DEFINES_FILE="${ALLSKY_REPO}/${ALLSKY_DEFINES_INC}.repo"
 REPO_LIGHTTPD_FILE="${ALLSKY_REPO}/lighttpd.conf.repo"
 REPO_AVI_FILE="${ALLSKY_REPO}/avahi-daemon.conf.repo"
-REPO_OPTIONS_FILE="${ALLSKY_REPO}/$( basename "${OPTIONS_FILE}" ).repo"
+# NOT USED: REPO_OPTIONS_FILE="${ALLSKY_REPO}/$( basename "${OPTIONS_FILE}" ).repo"
 
 # The POST_INSTALLATION_ACTIONS contains information the user needs to act upon after the reboot.
 rm -f "${POST_INSTALLATION_ACTIONS}"		# Shouldn't be there, but just in case.
@@ -1785,7 +1785,7 @@ convert_settings()			# prior_file, new_file
 
 	# Older versions had uppercase letters in settings name and "1" and "0" for booleans and
 	# quotes around numbers.  Change that.
-	MSG="Converting '${NEW_FILE}' to new format."
+	MSG="Converting '$( basename "${NEW_FILE}" )' to new format using '${OPTIONS_FILE}'."
 	display_msg --log progress "${MSG}"
 
 	# New fields were added to the bottom of the settings file but the below
@@ -1899,7 +1899,6 @@ restore_prior_settings_file()
 				# The new settings file will be based on a camera specific file.
 				local B="$( basename "${S}" )"
 				S="${ALLSKY_CONFIG}/${B}"
-				display_msg --log progress "Updating '${S}'"
 				convert_settings "${S}" "${S}"
 			done
 		else

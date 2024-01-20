@@ -15,11 +15,12 @@ cd "${ALLSKY_SCRIPTS}"						|| exit "${EXIT_ERROR_STOP}"
 
 while :
 do
+  DELAY=$(jq ".periodictimer" "${ALLSKY_MODULES}/module-settings.json")
+
 	activate_python_venv
 	python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event periodic
 	deactivate_python_venv
 
-	DELAY=$( settings ".periodictimer" "${ALLSKY_MODULES}/module-settings.json" )
 	if [[ ! (${DELAY} =~ ^[0-9]+$) ]]; then
 		DELAY=60
 	fi

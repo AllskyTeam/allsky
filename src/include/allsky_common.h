@@ -93,6 +93,13 @@ enum cameraType {
 	ctRPi
 };
 
+enum ZWOexposure {
+	ZWOsnap,		// snapshot mode
+	ZWOvideoOff,	// video mode with video off between shots
+	ZWOvideo,		// video mode with video on all the time (original method)
+	ZWOend
+};
+
 // Use long instead of int so we can use validateLong() without creating validateInt().
 struct overlay {
 	char const *ImgText					= "";
@@ -129,7 +136,6 @@ struct overlay {
 // Histogram Box, ZWO only
 struct HB {
 	bool useHistogram					= false;		// Should we use histogram auto-exposure?
-	bool useExperimentalExposure		= false;		// Should histogram auto-exposure at night?
 	int histogramBoxSizeX				= 500;			// width of box in pixels
 	int currentHistogramBoxSizeX		= NOT_CHANGED;
 	int histogramBoxSizeY				= 500;			// height of box in pixels
@@ -300,8 +306,9 @@ struct config {			// for configuration variables
 	char const *locale					= NULL;
 	long debugLevel						= 1;
 	bool consistentDelays				= true;
-	bool videoOffBetweenImages			= true;
 	char const *ASIversion				= "UNKNOWN";		// calculated value
+	bool videoOffBetweenImages			= true;
+	ZWOexposure ZWOexposureType			= ZWOvideo;
 
 	struct overlay overlay;
 	struct myModeMeanSetting myModeMeanSetting;
@@ -397,3 +404,4 @@ bool getCommandLineArguments(config *, int, char *[]);
 int displayNotificationImage(char const *);
 bool validateLatitudeLongitude(config *);
 void doLocale(config *);
+char const *getZWOexposureType(ZWOexposureType);

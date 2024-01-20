@@ -464,7 +464,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 
 		} else {
 			status = ASIGetVideoData(cg->cameraNumber, imageBuffer, bufferSize, timeout);
-			if (cg->ZWOexposureType == ZWOvideooff)
+			if (cg->ZWOexposureType == ZWOvideoOff)
 			{
 				ret = ASIStopVideoCapture(cg->cameraNumber);
 				if (ret != ASI_SUCCESS)
@@ -1274,7 +1274,6 @@ int main(int argc, char *argv[])
 				CG.currentExposure_us = CG.nightExposure_us;
 			}
 
-if (CG.HB.useExperimentalExposure) {
 			// Don't use camera auto-exposure since we mimic it ourselves.
 			CG.HB.useHistogram = CG.nightAutoExposure;
 			if (CG.HB.useHistogram)
@@ -1282,10 +1281,6 @@ if (CG.HB.useExperimentalExposure) {
 				Log(4, "Turning off nighttime ZWO auto-exposure to use Allsky auto-exposure.\n");
 			}
 			CG.currentAutoExposure = false;
-} else {
-			CG.currentAutoExposure = CG.nightAutoExposure;
-			CG.HB.useHistogram = false;		// only used during day
-}
 			CG.currentBrightness = CG.nightBrightness;
 			if (CG.isColorCamera)
 			{

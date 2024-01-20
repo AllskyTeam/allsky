@@ -811,13 +811,17 @@
 "action" : "reload"
 },
 {
-"name" : "experimentalexposure",
-"default" : true,
-"description" : "Enable to use an improved auto-exposure algorithm at night.  Initial testing indictes the images taken during the day-to-night transition as well as at night have better exposures.<br>If you use this, please add a Discussion item describing your results - good or bad.  We need the feedback.",
+"name" : "zwoexposuretype",
+"default" : 0,
+"description" : "Select the type of exposure to use with ZWO cameras.  Use <snap class='WebUIValue'>Snapshot</span> if possible since it should fix ASI_ERROR_TIMEOUT problems.  If that doesn't work try <snap class='WebUIValue'>Video Off</span>.",
 "label" : "New Exposure Algorithm",
-"type" : "boolean",
+"type" : "select",
 "usage" : "capture",
-"display" : "_display",
+"options" : [
+	{"value" : 0, "label" : "Snapshot"},
+	{"value" : 1, "label" : "Video Off"},
+	{"value" : 2, "label" : "Video (original)"},
+],
 "action" : "reload"
 },
 {
@@ -845,16 +849,6 @@
 	{"value" : 3, "label" : 3},
 	{"value" : 4, "label" : 4}
 ],
-"action" : "reload"
-},
-{
-"name" : "newexposure",
-"default" : true,
-"description" : "Enable to use the Allsky version 0.8 exposure method which decreases sensor temperature.  If you see ASI_ERROR_TIMEOUTs in the log file, deactivate this.",
-"label" : "Version 0.8 Exposure",
-"type" : "boolean",
-"usage" : "capture",
-"display" : "_display",
 "action" : "reload"
 },
 {

@@ -820,7 +820,7 @@
 "options" : [
 	{"value" : 0, "label" : "Snapshot"},
 	{"value" : 1, "label" : "Video Off"},
-	{"value" : 2, "label" : "Video (original)"},
+	{"value" : 2, "label" : "Video (original)"}
 ],
 "action" : "reload"
 },

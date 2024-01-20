@@ -404,4 +404,4 @@ bool getCommandLineArguments(config *, int, char *[]);
 int displayNotificationImage(char const *);
 bool validateLatitudeLongitude(config *);
 void doLocale(config *);
-char const *getZWOexposureType(ZWOexposureType);
+char const *getZWOexposureType(ZWOexposure);

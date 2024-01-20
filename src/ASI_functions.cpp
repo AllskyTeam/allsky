@@ -682,7 +682,7 @@ ASI_ID getCameraID(ASI_CAMERA_INFO camInfo)
 	return(cameraID);
 }
 
-char const *getZWOexposureType(ZWOexposureType t)
+char const *getZWOexposureType(ZWOexposure t)
 {
 	if (t == ZWOsnap) return("snapshot");
 	if (t == ZWOvideoOff) return("video off between frames");

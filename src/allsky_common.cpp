@@ -1090,7 +1090,7 @@ void displayHelp(config cg)
 		printf(" -%-*s - Default = %d %d %0.2f %0.2f (box width X, box width y, X offset percent (0-100), Y offset (0-100))\n", n, "histogrambox n n n n", cg.HB.histogramBoxSizeX, cg.HB.histogramBoxSizeY, cg.HB.histogramBoxPercentFromLeft * 100.0, cg.HB.histogramBoxPercentFromTop * 100.0);
 		printf(" -%-*s - 1 enables auto USB Speed.\n", n, "autousb b");
 		printf(" -%-*s - USB bandwidth percent.\n", n, "usb n");
-		printf(" -%-*s - Determines what type of exposure ZWO cameras should use [%s].\n", n, "zwoexposuretype n", getZWOexposureType(ZWOsnap);
+		printf(" -%-*s - Determines what type of exposure ZWO cameras should use [%s].\n", n, "zwoexposuretype n", getZWOexposureType(ZWOsnap));
 	}
 	if (cg.ct == ctRPi) {
 		printf(" -%-*s - Extra arguments pass to image capture program [%s].\n", n, "extraargs s", cg.extraArgs);
@@ -1269,7 +1269,7 @@ void displaySettings(config cg)
 			cg.HB.histogramBoxSizeX, cg.HB.histogramBoxSizeY,
 			cg.HB.histogramBoxPercentFromLeft * 100.0, cg.HB.histogramBoxPercentFromTop * 100.0,
 			cg.HB.centerX, cg.HB.centerY, cg.HB.leftOfBox, cg.HB.topOfBox, cg.HB.rightOfBox, cg.HB.bottomOfBox);
-		printf("   ZWO Exposure Type: %s\n", getZWOexposureType(cg.ZWOexposureType);
+		printf("   ZWO Exposure Type: %s\n", getZWOexposureType(cg.ZWOexposureType));
 	}
 	printf("   Preview: %s\n", yesNo(cg.preview));
 	printf("   Focus mode: %s\n", yesNo(cg.determineFocus));
@@ -1884,7 +1884,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		}
 		else if (strcmp(a, "zwoexposuretype") == 0)
 		{
-			cg->ZWOexposureType = atoi(argv[++i]);
+			cg->ZWOexposureType = (ZWOexposure) atoi(argv[++i]);
 		}
 		else if (strcmp(a, "extraargs") == 0)
 		{

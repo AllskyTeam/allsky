@@ -25,8 +25,6 @@ config CG;
 #define IS_ZWO
 #include "ASI_functions.cpp"
 
-bool useSnapshotMode = false;	// XXXXXX use the ZWO snapshot exposure mode or vide mode?
-
 // Forward definitions
 char *getRetCode(ASI_ERROR_CODE);
 void closeUp(int);
@@ -389,7 +387,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 			(wasAutoExposure == ASI_TRUE ? "Camera set auto-exposure" : "Manual exposure set"),
 		length_in_units(cg->currentExposure_us, true));
 
-	if (! useSnapshotMode)
+	if (cg->ZWOexposureType != ZWOsnap)
 		flushBufferedImages(cg, imageBuffer, bufferSize);
 
 	// Sanity check.
@@ -398,7 +396,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 
 	setControl(cg->cameraNumber, ASI_EXPOSURE, cg->currentExposure_us, cg->currentAutoExposure ? ASI_TRUE : ASI_FALSE);
 
-	if (! useSnapshotMode && cg->videoOffBetweenImages)
+	if (cg->ZWOexposureType == ZWOvideoOff)
 	{
 		status = ASIStartVideoCapture(cg->cameraNumber);
 	} else {
@@ -409,12 +407,64 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 		// Make sure the actual time to take the picture is "close" to the requested time.
 		auto tStart = std::chrono::high_resolution_clock::now();
 
-		if (useSnapshotMode)
+		if (cg->ZWOexposureType == ZWOsnap)
 		{
-// xxxxxxxxxxxxxxxxxx start exposure, sleep for 95% of cg->currentExposure_us, then check every 5 us.
+			status = ASIStartExposure(cg->cameraNumber, ASI_FALSE);
+			if (status != ASI_SUCCESS)
+			{
+				Log(0, "  > %s: ERROR: ASIStartExposure() failed: %s\n", cg->ME, getRetCode(status));
+			}
+			else
+			{
+				int sleep_us = 10 * US_IN_MS;
+				if (cg->currentExposure_us < sleep_us)
+				{
+					// short exposure, go directly to loop
+					sleep_us = 1 * US_IN_MS;
+				}
+				else
+				{
+					// "longer" exposure so sleep for exposure length - half the sleep time
+					// which gets us close to the total, then go into the loop.
+					usleep(cg->currentExposure_us - ((float) sleep_us / 2));
+				}
+
+				// We should be fairly close to the end of the exposure so now go
+				// into a loop until the exposure is done.
+				ASI_EXPOSURE_STATUS s = ASI_EXP_WORKING;
+				while (s == ASI_EXP_WORKING)
+				{
+					usleep(sleep_us);
+					status = ASIGetExpStatus(cg->cameraNumber, &s);
+					if (status != ASI_SUCCESS)
+					{
+						Log(0, "  > %s: ERROR: ASIGetExpStatus() failed: %s\n", cg->ME, getRetCode(status));
+						break;
+					}
+				}
+
+				if (status == ASI_SUCCESS)
+				{
+					// Exposure done, if it worked get the image
+					if (s != ASI_EXP_SUCCESS)
+					{
+						// Unfortunately s is either success or failure - not much help.
+						Log(0, "  > %s: ERROR: Exposure failed, s=%d\n", cg->ME, s);
+					}
+					else
+					{
+						status = ASIGetDataAfterExp(cg->cameraNumber,  imageBuffer, bufferSize);
+						if (status != ASI_SUCCESS)
+						{
+							Log(0, "  > %s: ERROR: ASIGetDataAfterExp() failed: %s\n", cg->ME, getRetCode(status));
+						}
+					}
+				}
+			}
+
 		} else {
 			status = ASIGetVideoData(cg->cameraNumber, imageBuffer, bufferSize, timeout);
-			if (cg->videoOffBetweenImages)
+			if (cg->ZWOexposureType == ZWOvideooff)
 			{
 				ret = ASIStopVideoCapture(cg->cameraNumber);
 				if (ret != ASI_SUCCESS)
@@ -1031,7 +1081,7 @@ int main(int argc, char *argv[])
 
 	// Start taking pictures
 
-	if (! CG.videoOffBetweenImages)
+	if (CG->ZWOexposureType == ZWOvideo)
 	{
 		asiRetCode = ASIStartVideoCapture(CG.cameraNumber);
 		if (asiRetCode != ASI_SUCCESS)

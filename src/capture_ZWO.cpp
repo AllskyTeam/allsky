@@ -421,13 +421,13 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 			return(status);
 		}
 
-		// Do an initial sleep of the exposure time,
+		// Do an initial sleep of the exposure time + 500 ms for overhead,
 		// then go into a check_status / sleep loop where
-		// we sleep for 0.5% of the exposure time.
+		// we sleep for 5% of the exposure time.
 		// The total sleep time will be longer than exposure time due to overhead starting the exposure.
-		long initial_sleep_us = cg->currentExposure_us;
-		long sleep_us = std::max(cg->currentExposure_us * 0.005, 1.0);
-		Log(4, "    > Doing initial usleep(%'ld) of exposure time.\n", cg->currentExposure_us);
+		long initial_sleep_us = cg->currentExposure_us + 500 * US_IN_MS;
+		long sleep_us = std::max(cg->currentExposure_us * 0.05, 1.0);
+		Log(4, "    > Doing initial usleep(%'ld) for exposure time %'ld.\n", initial_sleep_us, cg->currentExposure_us);
 		usleep(cg->currentExposure_us);
 
 		// We should be fairly close to the end of the exposure so now go

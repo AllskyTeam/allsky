@@ -373,7 +373,7 @@ int RPicapture(config cg, cv::Mat *image)
 
 int main(int argc, char *argv[])
 {
-	CG.ME = argv[0];
+	CG.ME = basename(argv[0]);
 
 	static char *a = getenv("ALLSKY_HOME");		// This must come before anything else
 	if (a == NULL)

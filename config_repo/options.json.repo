@@ -813,7 +813,7 @@
 {
 "name" : "zwoexposuretype",
 "default" : 0,
-"description" : "Select the type of exposure to use with ZWO cameras.  Use <snap class='WebUIValue'>Snapshot</span> if possible since it should fix ASI_ERROR_TIMEOUT problems.  If that doesn't work try <snap class='WebUIValue'>Video Off</span>.",
+"description" : "Select the type of exposure to use with ZWO cameras.  Use <span class='WebUIValue'>Snapshot</span> if possible since it should fix ASI_ERROR_TIMEOUT problems.  If that doesn't work try <span class='WebUIValue'>Video Off</span>.",
 "label" : "ZWO Exposure Type",
 "type" : "select",
 "usage" : "capture",

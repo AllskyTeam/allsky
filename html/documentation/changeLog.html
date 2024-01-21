@@ -47,6 +47,11 @@
 			<summary></summary>
 			<h4>Enhancements / Changes</h4>
 			<ul>
+				<li>The WebUI now hides the settings in each section unless there's
+					an error in that section.
+					To view a section's settings, click the
+					<i class='fa fa-chevron-down fa-fw'></i> symbol on the left side
+					of a section heading.
 				<li>The "module" overlay method is now the default for new installations.
 					In the next major release the "legacy" method will be removed
 					so we encourage you to change now.
@@ -59,18 +64,6 @@
 				<li>The ZWO library was upgraded to version 1.33 which adds support
 					for the ASI676 and other new cameras.
 				</li>
-				<li>The <span class="WebUISetting">ZWO Exposure Type</span>
-					setting was added to specify how images should be taken.
-					See the documentation for a description of the different types.
-				</li>
-				<li>The <span class="WebUISetting">Version 0.8 Exposure</span>
-					setting was deleted since it's functionality is incorporated
-					into the <span class="WebUISetting">ZWO Exposure Type</span> setting.
-				</li>
-				<li>The <span class="WebUISetting">New Exposure Algorithm</span>
-					setting was deleted.
-					That algorithm produced better results so is always used.
-				</li>
 				<li>Hovering you mouse over a WebUI data field will display a popup.
 					This release now indicates whether or not changing that field
 					will restart Allsky.
@@ -80,6 +73,26 @@
 					This is an advanced option that is not used very often.
 				</li>
 			</ul>
+
+			<h4>Added / Deleted Settings</h4>
+				<li>The new <span class="WebUISetting">ZWO Exposure Type</span>
+					setting specifies how images should be taken.
+					See the documentation for a description of the different types.
+				</li>
+				<li>The <span class="WebUISetting">Version 0.8 Exposure</span>
+					setting was deleted since it's functionality is incorporated
+					into the <span class="WebUISetting">ZWO Exposure Type</span> setting.
+				</li>
+				<li>The <span class="WebUISetting">New Exposure Algorithm</span>
+					setting was deleted because it produced better results
+					so is now always used.
+				</li>
+				<li>The <span class="WebUISetting">New Exposure Algorithm</span>
+				</li>
+				<li>The new <span class="WebUISetting">Nighttime Capture</span> and
+					<span class="WebUISetting">Nighttime Save</span> settings
+					are the same as the daytime versions, except for nighttime.
+			<ul>
 
 			<h4>Bug Fixes</h4>
 			<ul class="minimalPadding">

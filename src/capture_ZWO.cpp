@@ -448,8 +448,8 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 			usleep(sleep_us);
 			num_sleeps++;
 		}
-		Log(4, "    > %s: Did usleep(%'ld) %d times in loop for total usleep() of %'ldus\n",
-			cg->ME, sleep_us, num_sleeps, initial_sleep_us + (sleep_us * num_sleeps));
+		Log(4, "    > Did usleep(%'ld) %d times in loop for total usleep() of %'ldus\n",
+			sleep_us, num_sleeps, initial_sleep_us + (sleep_us * num_sleeps));
 
 		// Exposure done, if it worked get the image
 		if (s != ASI_EXP_SUCCESS)

@@ -491,7 +491,7 @@ use the <span class="shSetting">CROP</span> setting in the
 	before continuing the installation.
 	</blockquote>
 	</p>
-	If the correct local isn't in the list it needs to be installed,
+	If the correct locale isn't in the list it needs to be installed,
 	so <code>&lt;Cancel&gt;</code> out of the installation and run
 	<code>sudo raspi-config</code>, selecting <code>Localisation Options</code>,
 	followed by the <code>Locale</code> option.
@@ -502,15 +502,26 @@ use the <span class="shSetting">CROP</span> setting in the
 	when done, re-run the installation script selecting the locale you just installed.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">New Exposure Algorithm</span></td>
-	<td>No</td>
-	<td>(ZWO only) Activate to use a auto-exposure algorithm at night.
-		Initial testing indictes the images taken during the day-to-night transition
-		as well as at night have better exposures.
-		If you use this, please add a Discussion item describing your results - good or bad.
-		We need the feedback.
-		<br>If this provides better results overall it will be the default in the next release.
-	</td>
+<tr><td><span class="WebUISetting">ZWO Exposure Type</span></td>
+	<td>Snapshot</td>
+	<td>(ZWO only) Determines what type of exposures to take:
+	<ol>
+		<li><span class="WebUIValue">Snapshot</span>
+			takes pictures one at a time like a "normal" camera.
+			If for some reason this doesn't work,
+			try the next type and let the Allsky developers know.
+		</li>
+		<li><span class="WebUIValue">Video Off</span>
+			takes pictures like a video camera that is turned off after every picture.
+			This is the same as the old
+			<span class="WebUISetting">Version 0.8 exposure</span> setting.
+		</li>
+		<li><span class="WebUIValue">Video (original)</span>
+			takes pictures like a video camera that is always on.
+			This is the original exposure method.
+		</li>
+	</ol>
+	The first two types decrease the sensor temperature between 5 - 15 degrees Celsius.
 </tr>
 <tr><td><span class="WebUISetting">Histogram Box</span></td>
 	<td>500 500 50 50</td>
@@ -529,13 +540,6 @@ use the <span class="shSetting">CROP</span> setting in the
 	<span class="WebUIValue">4</span> outputs a LOT of messages and generally should
 	only be used if an Allsky developers directs you to.
 	</td>
-</tr>
-<tr><td><span class="WebUISetting">Version 0.8 Exposure</span></td>
-	<td>Yes</td>
-	<td>(ZWO only) Determines if the Allsky version 0.8 exposure method is used (video capture stops between images).
-	This decreases the sensor temperature between 5 - 15 degrees Celsius.
-	If you see ASI_ERROR_TIMEOUTs in the log file, try turning this off.
-	See <a href="https://github.com/AllskyTeam/allsky/issues/417">Issue 417</a>.</td>
 </tr>
 <tr><td><span class="WebUISetting">Require WebUI Login</span></td>
 	<td>Yes</td>

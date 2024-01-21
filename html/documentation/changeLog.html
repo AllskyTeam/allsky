@@ -56,20 +56,36 @@
 					The few people that had that file should use the "day to night"
 					module flow instead.
 				</li>
-				<li>Upgraded to ZWO library 1.33 which adds support for the ASI676 camera.</li>
-				<li>DHCP on the Pi can be configured on the WebUI using the
-					<span class="WebUIWebPage">Configure DHCP</span> page.
-					This is an advanced option and is not done very often.
+				<li>The ZWO library was upgraded to version 1.33 which adds support
+					for the ASI676 and other new cameras.
 				</li>
-				<li>The WebUI performs fewer disk reads so may be slightly faster.</li>
+				<li>The <span class="WebUISetting">ZWO Exposure Type</span>
+					setting was added to specify how images should be taken.
+					See the documentation for a description of the different types.
+				</li>
+				<li>The <span class="WebUISetting">Version 0.8 Exposure</span>
+					setting was deleted since it's functionality is incorporated
+					into the <span class="WebUISetting">ZWO Exposure Type</span> setting.
+				</li>
+				<li>The <span class="WebUISetting">New Exposure Algorithm</span>
+					setting was deleted.
+					That algorithm produced better results so is always used.
+				</li>
 				<li>Hovering you mouse over a WebUI data field will display a popup.
 					This release now indicates whether or not changing that field
 					will restart Allsky.
+				</li>
+				<li>DHCP on the Pi can be configured via the WebUI's
+					<span class="WebUIWebPage">Configure DHCP</span> page.
+					This is an advanced option that is not used very often.
 				</li>
 			</ul>
 
 			<h4>Bug Fixes</h4>
 			<ul class="minimalPadding">
+				<li>ASI_ERROR_TIMEOUT messages are mostly gone!
+					This uses the new <span class="WebUISetting">ZWO Exposure Type</span>
+					setting.</li>
 			</ul>
 
 			<h4>Maintenance</h4>

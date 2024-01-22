@@ -29,7 +29,7 @@ function doExit()
 	if [[ -n ${WEBUI_MESSAGE} ]]; then
 		[[ ${TYPE} = "no-image" ]] && TYPE="success"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "${TYPE}" "${WEBUI_MESSAGE}"
-		echo "Stopping Allsky: ${WEBUI_MESSAGE}"
+		echo -e "Stopping Allsky: ${WEBUI_MESSAGE}" >&2
 		OUTPUT_A_MSG="true"
 	fi
 

@@ -2352,7 +2352,7 @@ install_overlay()
 			fi
 
 	    	if [[ -f ${REQUIREMENTS_FILE} ]]; then
-	        	display_msg --logonly info "Using '${REQUIREMENTS_FILE}'"
+	        	display_msg --logonly info "  Using '${REQUIREMENTS_FILE}'"
 				break
 			fi
 		done

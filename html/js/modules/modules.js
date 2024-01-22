@@ -489,10 +489,12 @@ class MODULESEDITOR {
                         if (fallbackValue === undefined) {
                             fallbackValue = 5;
                         }
+
                         $.allskyROI({
                             id: key,
                             roi: roi,
                             fallbackValue: fallbackValue,
+                            imageFile : this.#settings.filename,
                             roiSelected: function(roi) {
                                 $('#' + key).val(roi.x1 + ',' + roi.y1 + ',' + roi.x2 + ',' + roi.y2)
                             }

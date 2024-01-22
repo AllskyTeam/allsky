@@ -91,12 +91,6 @@ if [[ ${TIMELAPSE} == "true" ]]; then
 	fi
 fi
 
-# Run custom script at the end of a night. This is run BEFORE the automatic deletion
-# just in case you need to do something with the files before they are removed
-# TODO: remove in next release.
-CMD="${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh"
-[[ -x ${CMD} ]] && "${CMD}"
-
 DAYS_TO_KEEP=${DAYS_TO_KEEP:-0}					# old versions allowed "" to disable
 WEB_DAYS_TO_KEEP=${WEB_DAYS_TO_KEEP:-0}			# old versions allowed "" to disable
 

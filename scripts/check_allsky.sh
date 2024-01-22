@@ -558,7 +558,6 @@ fi
 	check_exists "WEB_VIDEOS_DIR"
 	check_exists "WEB_KEOGRAM_DIR"
 	check_exists "WEB_STARTRAILS_DIR"
-	check_exists "UHUBCTL_PATH"
 
 	##### Check for Allsky Website-related issues.
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} && (${PROTOCOL} == "" || ${PROTOCOL} == "local") ]]; then

@@ -454,11 +454,12 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 		// Exposure done, if it worked get the image
 		if (s != ASI_EXP_SUCCESS)
 		{
+			// This error DOES happen sometimes.
 			// Unfortunately "s" is either success or failure - not much help.
-			Log(0, "  > %s: ERROR: Exposure failed after %d sleeps, s=%d\n", cg->ME, num_sleeps, s);
+			Log(1, "    > ERROR: Exposure failed after %d sleeps, s=%d\n", num_sleeps, s);
 			if (! checkMaxErrors(&exitCode, maxErrors))
 				closeUp(exitCode);
-			return(status);
+			return(ASI_ERROR_END);
 		}
 
 		status = ASIGetDataAfterExp(cg->cameraNumber,  imageBuffer, bufferSize);
@@ -466,8 +467,8 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 		{
 			// For whatever reason this does fail sometimes, so to avoid having
 			// every failure appear in the WebUI message center, log with level 1.
-			Log(1, "  > %s: ERROR: ASIGetDataAfterExp() failed after %d sleeps: %s\n",
-				cg->ME, num_sleeps, getRetCode(status));
+			Log(1, "  > ERROR: ASIGetDataAfterExp() failed after %d sleeps: %s\n",
+				num_sleeps, getRetCode(status));
 			if (! checkMaxErrors(&exitCode, maxErrors))
 				closeUp(exitCode);
 			return(status);
@@ -489,7 +490,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 			ret = ASIStopVideoCapture(cg->cameraNumber);
 			if (ret != ASI_SUCCESS)
 			{
-				Log(1, "  > %s: WARNING: ASIStopVideoCapture() failed: %s\n", cg->ME, getRetCode(ret));
+				Log(1, "  > WARNING: ASIStopVideoCapture() failed: %s\n", getRetCode(ret));
 				// continue
 			}
 		}
@@ -1632,11 +1633,12 @@ int main(int argc, char *argv[])
 
 						if (numPingPongs >= 3)
 						{
-printf(" > xxx newExposure_us=%s, CG.lastExposure_us=%s, CG.currentExposure_us=%s,",
-	length_in_units(newExposure_us, true), length_in_units(CG.lastExposure_us, true),
+Log(3, "     > xxx newExposure_us=%s, CG.lastExposure_us=%s, CG.currentExposure_us=%s,",
+	length_in_units(newExposure_us, true),
+	length_in_units(CG.lastExposure_us, true),
 	length_in_units(CG.currentExposure_us, true));
 							newExposure_us = (newExposure_us + CG.lastExposure_us) / 2;
-printf(" new newExposure_us=%s\n", length_in_units(newExposure_us, true));
+Log(3, " new newExposure_us=%s\n", length_in_units(newExposure_us, true));
 							Log(3, " > Ping-Ponged %d times, setting exposure to mid-point of %s\n", numPingPongs, length_in_units(newExposure_us, true));
 
 // XXXX testing
@@ -1656,7 +1658,7 @@ long saved_newExposure_us = newExposure_us;
 						newExposure_us = std::min(tempMaxExposure_us, newExposure_us);
 if (saved_newExposure_us != newExposure_us)
 {
-	Log(3, "> xxx newExposure_us changed from %s to %s due to tempMin/tempMax\n",
+	Log(3, "    > xxx newExposure_us changed from %s to %s due to tempMin/tempMax\n",
 		length_in_units(saved_newExposure_us, true), length_in_units(newExposure_us, true));
 }
 

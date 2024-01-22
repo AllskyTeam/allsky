@@ -85,12 +85,12 @@ endif
 
 CFLAGS += $(DEFS) $(ZWOSDK)
 
-all:check_deps capture_ZWO capture_RPi startrails keogram sunwait
+all:check_deps capture_ZWO capture_RPi startrails keogram sunwait uhubctl
 .PHONY : all
 
 ifneq ($(shell id -u), 0)
 deps:
-	echo This must be ran with root permissions.
+	echo This must be run with root permissions.
 	echo Please run 'sudo make deps'
 else
 deps:
@@ -154,19 +154,26 @@ startrails:startrails.cpp
 	@$(CC) $@.cpp -o $@ $(CFLAGS) $(OPENCV)
 	@echo `date +%F\ %R:%S` Done.
 
+uhubctl:uhubctl.c
+	@echo `date +%F\ %R:%S` Building $@ program...
+# This comes from the uhubctl Makefile:
+	@cc -g -O0 -Wall -Wextra -std=c99 -pedantic -DPROGRAM_VERSION=\"2.5.0\" -I/usr/include/libusb-1.0 $@.c -o $@ -Wl,-zrelro,-znow -lusb-1.0
+	@echo `date +%F\ %R:%S` Done.
+
 symlink: all
 	@echo `date +%F\ %R:%S` Symlinking binaries...
 	@ln -s $$PWD/capture_ZWO ../bin/
 	@ln -s $$PWD/capture_RPi ../bin/
 	@ln -s $$PWD/keogram ../bin/
 	@ln -s $$PWD/startrails ../bin/
+	@ln -s $$PWD/uhubctl ../bin/
 
 .PHONY: symlink
 
 ifneq ($(ROOTCHECK), 0)
 install uninstall:
 	@echo This must be run with root permissions.
-	@echo Please run \'sudo make $@\'
+	@echo Please run 'sudo make $@'
 else
 install:
 	@echo `date +%F\ %R:%S` Copying binaries...
@@ -176,12 +183,14 @@ install:
 	  install capture_RPi $(DESTDIR)$(bindir); \
 	  install keogram $(DESTDIR)$(bindir); \
 	  install startrails $(DESTDIR)$(bindir); \
+	  install uhubctl $(DESTDIR)$(bindir); \
 	else \
 	  [ ! -e ../bin ] && mkdir -p ../bin; \
 	  install -o $(SUDO_USER) -g $(SUDO_USER) capture_ZWO ../bin/; \
 	  install -o $(SUDO_USER) -g $(SUDO_USER) capture_RPi ../bin/; \
 	  install -o $(SUDO_USER) -g $(SUDO_USER) keogram ../bin/; \
 	  install -o $(SUDO_USER) -g $(SUDO_USER) startrails ../bin/; \
+	  install -o $(SUDO_USER) -g $(SUDO_USER) uhubctl ../bin/; \
 	fi
 	@install sunwait $(DESTDIR)$(bindir)
 
@@ -193,18 +202,20 @@ uninstall:
 	  rm -f $(DESTDIR)$(bindir)/keogram; \
 	  rm -f $(DESTDIR)$(bindir)/startrails; \
 	  rm -f $(DESTDIR)$(bindir)/sunwait; \
+	  rm -f $(DESTDIR)$(bindir)/uhubctl; \
 	else \
 	  rm -f ../bin/capture_ZWO; \
 	  rm -f ../bin/capture_RPi; \
 	  rm -f ../bin/keogram; \
 	  rm -f ../bin/startrails; \
+	  rm -f ../bin/uhubctl; \
 	fi
 
 endif # sudo / root check
 .PHONY : install uninstall
 
 clean:
-	rm -f capture_ZWO capture_RPi startrails keogram sunwait *.o *.a
+	rm -f capture_ZWO capture_RPi startrails keogram sunwait uhubctl *.o *.a
 .PHONY : clean
 
 endif # Correct directory structure check

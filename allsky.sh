@@ -115,29 +115,46 @@ if [[ ${CAMERA_TYPE} == "RPi" ]]; then
 elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 	RPi_COMMAND_TO_USE=""
 	RESETTING_USB_LOG="${ALLSKY_TMP}/resetting_USB.txt"
+	ZWO_VENDOR="03c3"
+	TEMP="${ALLSKY_TMP}/${CAMERA_TYPE}_cameras.txt"
+	# Output will be:   camera_model TAB ZWO_camera_ID      for each camera found.
+	# The awk code assumes idProduct comes before iProduct.
+	CAMERAS="$( lsusb -d "${ZWO_VENDOR}:" -v 2>/dev/null |
+		awk '{
+				if ($1 == "idProduct") {
+					idProduct = substr($2, 3);
+				} else if ($1 == "iProduct") {
+					printf("%s\t%s\n", $3, idProduct);
+					exit(0);
+				}
+			}'
+	)"
+	NUM_CAMERAS=$( echo "${CAMERAS}" | wc -l )
+
 	reset_usb()		# resets the USB bus
 	{
 		REASON="${1}"		# why are we resetting the bus?
 		# Only reset a couple times, then exit with fatal error.
 		if [[ -f ${RESETTING_USB_LOG} ]]; then
 			NUM_USB_RESETS=$( < "${RESETTING_USB_LOG}" )
-			if [[ ${NUM_USB_RESETS} -eq 2 ]]; then
-				MSG="FATAL ERROR: Too many consecutive USB bus resets done (${NUM_USB_RESETS})."
-				echo -e "${RED}*** ${MSG} Stopping." >&2
+			if [[ ${NUM_USB_RESETS} -ge 2 ]]; then
+				MSG="Too many consecutive USB bus resets done (${NUM_USB_RESETS})."
+				echo -e "${RED}*** FATAL ERROR: ${MSG} Stopping Allsky.${NC}" >&2
 				rm -f "${RESETTING_USB_LOG}"
-				doExit "${EXIT_ERROR_STOP}" "Error" \
+				doExit "${EXIT_ERROR_STOP}" \
+					"Error" \
 					"${ERROR_MSG_PREFIX}\nToo many consecutive\nUSB bus resets done!\n${SEE_LOG_MSG}" \
-					"${NOT_STARTED_MSG}<br>${MSG}"
+					"${NOT_STARTED_MSG}: ${MSG}"
 			fi
 		else
 			NUM_USB_RESETS=0
 		fi
 
-		MSG="${YELLOW}WARNING: Resetting USB ports ${REASON/\\n/ }"
+		MSG="WARNING: Resetting USB ports ${REASON/\\n/ }"
 		if [[ ${ON_TTY} == "true" ]]; then
-			echo "${MSG}; restart ${ME} when done.${NC}" >&2
+			echo "${YELLOW}${MSG}; restart ${ME} when done.${NC}" >&2
 		else
-			echo "${MSG}, then restarting.${NC}" >&2
+			echo "${MSG}, then restarting." >&2
 			# The service will automatically restart this script.
 		fi
 
@@ -148,45 +165,41 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 		"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" "${FILENAME}" \
 			"yellow" "" "85" "" "" \
 			"" "5" "yellow" "${EXTENSION}" "" "WARNING:\n\nResetting USB bus\n${REASON}.\nAttempt ${NUM_USB_RESETS}."
-		sudo "${UHUBCTL_PATH}" -a cycle -l "${UHUBCTL_PORT}"
+		SEARCH="${ZWO_VENDOR}:${ZWO_CAMERA_ID}"
+		sudo "${ALLSKY_BIN}/uhubctl" --action cycle --exact --search "${SEARCH}"
 		sleep 3		# give it a few seconds, plus, allow the notification images to be seen
 	}
 
-	# "03c3" is the USB ID for ZWO devices.
-	ZWOdev=$( lsusb -d '03c3:' | awk '{ bus=$2; dev=$4; gsub(/[^0-9]/,"",dev); print "/dev/bus/usb/"bus"/"dev;}' )
-	# We have to run "lsusb -D" once for each device returned by "lsusb -d", and can't
-	# use "echo x | while read" because variables set inside the "while" loop don't get exposed
-	# to the calling code, so use a temp file.
+	if [[ ${NUM_CAMERAS} -eq 0 ]]; then
+		# reset_usb() exits if too many tries
+		reset_usb "looking for a\nZWO camera"
+		exit 0	# exit with 0 so the service is restarted
+	fi
 
-	TEMP="${ALLSKY_TMP}/${CAMERA_TYPE}_cameras.txt"
-	echo "${ZWOdev}" > "${TEMP}"
-	NUM=0
-	while read -r DEV
-	do
-		lsusb -D "${DEV}" 2>/dev/null | grep --silent 'iProduct .*ASI[0-9]' && ((NUM++))
-	done < "${TEMP}"
+	echo "${CAMERAS}" > "${TEMP}"
 
-	if [[ ${NUM} -eq 0 ]]; then
-		if [[ -n ${UHUBCTL_PATH} ]] ; then
-			reset_usb "looking for a\nZWO camera"		# reset_usb exits if too many tries
-			exit 0	# exit with 0 so the service is restarted
-		else
-			MSG="FATAL ERROR: ZWO Camera not found"
-			echo -en "${RED}*** ${MSG}" >&2
-			if [[ ${ZWOdev} == "" ]]; then
-				echo " and no USB entry either.${NC}" >&2
-				USB_MSG=""
-			else
-				echo " but ${ZWOdev} found.${NC}" >&2
-				USB_MSG="\n${SEE_LOG_MSG}"
-			fi
-
-			echo "  If you have the 'uhubctl' command installed, add it to config.sh." >&2
-			echo "  In the meantime, try running it to reset the USB bus." >&2
-			doExit "${EXIT_NO_CAMERA}" "Error" \
-				"${ERROR_MSG_PREFIX}\nNo ZWO camera\nfound!${USB_MSG}" \
-				"${NOT_STARTED_MSG}<br>${MSG}<br>${SEE_LOG_MSG}."
-		fi
+	# See if the user changed camera models without telling Allsky.
+	# Get the ZWO ID for the camera model in the settings file and
+	# check if that camera is currently connected.
+	ZWO_CAMERA_ID="$( echo "${CAMERAS}" |
+		awk -v MODEL="${CAMERA_MODEL}" '
+			{
+				if ($1 == MODEL) {
+					print $2;
+					exit(0);
+				}
+			}'
+	)"
+	if [[ -z ${ZWO_CAMERA_ID} ]]; then
+		MSG="ZWO camera model '${CAMERA_MODEL}' not found."
+		MSG="${MSG}\nConnected cameras are:"
+		MSG="${MSG}\n$( echo "${CAMERAS}" | awk '{ printf(" * %s\n", $1); }' )"
+		MSG="${MSG}\nIf you changed cameras, select 'Refresh' for the"
+		MSG="${MSG} Camera Type on the Allsky Settings page."
+		doExit "${EXIT_ERROR_STOP}" \
+			"Error" \
+			"${NOT_STARTED_MSG}\nZWO camera\n${CAMERA_MODEL}\nnot found!" \
+			"${NOT_STARTED_MSG} ${MSG}"
 	fi
 
 	rm -f "${RESETTING_USB_LOG}"	# We found the camera so don't need to reset.
@@ -306,34 +319,25 @@ if [[ ${RETCODE} -eq ${EXIT_RESTARTING} ]]; then
 fi
 
 if [[ ${RETCODE} -eq ${EXIT_RESET_USB} ]]; then
-	# Reset the USB bus if possible
-	if [[ ${UHUBCTL_PATH} != "" ]]; then
-		reset_usb " (ASI_ERROR_TIMEOUTs)"
-		if [[ ${ON_TTY} == "true" ]]; then
-			echo "*** USB bus was reset; You can restart allsky now. ***"
-			NOTIFICATION_TYPE="NotRunning"
-		else
-			NOTIFICATION_TYPE="Restarting"
-		fi
-		if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
-			"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "${NOTIFICATION_TYPE}"
-		fi
-		doExit 0 ""		# use 0 so the service is restarted
+	# Reset the USB bus
+	reset_usb " (too many capture errors)"
+	if [[ ${ON_TTY} == "true" ]]; then
+		echo "*** USB bus was reset; You can restart allsky now. ***"
+		NOTIFICATION_TYPE="NotRunning"
 	else
-		# TODO: use ASI_ERROR_TIMEOUT message
-		MSG="Non-recoverable ERROR found"
-		[[ ${ON_TTY} == "true" ]] && echo "*** ${MSG} - ${SEE_LOG_MSG}. ***"
-		doExit "${EXIT_ERROR_STOP}" "Error" \
-			"${ERROR_MSG_PREFIX}Too many\nASI_ERROR_TIMEOUT\nerrors received!\n${SEE_LOG_MSG}" \
-			"${STOPPED_MSG}<br>${MSG}<br>${SEE_LOG_MSG}."
+		NOTIFICATION_TYPE="Restarting"
 	fi
+	if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
+		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "${NOTIFICATION_TYPE}"
+	fi
+	doExit 0 ""		# use 0 so the service is restarted
 fi
 
 # RETCODE -ge ${EXIT_ERROR_STOP} means we should not restart until the user fixes the error.
 if [[ ${RETCODE} -ge ${EXIT_ERROR_STOP} ]]; then
 	echo "***"
 	if [[ ${ON_TTY} == "true" ]]; then
-		echo "*** After fixing, restart ${ME}.sh. ***"
+		echo "*** After fixing, restart ${ME}. ***"
 	else
 		echo "*** After fixing, restart the allsky service. ***"
 	fi

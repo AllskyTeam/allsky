@@ -48,6 +48,8 @@ COMBINED_BASE_VERSION="v2024.xx.xx"
 	# Base of first version with CAMERA_TYPE instead of CAMERA in config.sh and
 	# "cameratype" in the settings file.
 FIRST_CAMERA_TYPE_BASE_VERSION="v2023.05.01"
+	# When ALLSKY_SCRIPTS was added to PATH, requiring a reboot:
+SCRIPTS_PATH_ADDED_VERSION="v2023.05.01_04"
 	# First Allsky version that used the "version" file.
 	# It's also when ftp-settings.sh moved to ${ALLSKY_CONFIG}
 FIRST_VERSION_VERSION="v2022.03.01"
@@ -60,7 +62,7 @@ ALLSKY_DEFINES_INC="allskyDefines.inc"
 REPO_WEBUI_DEFINES_FILE="${ALLSKY_REPO}/${ALLSKY_DEFINES_INC}.repo"
 REPO_LIGHTTPD_FILE="${ALLSKY_REPO}/lighttpd.conf.repo"
 REPO_AVI_FILE="${ALLSKY_REPO}/avahi-daemon.conf.repo"
-REPO_OPTIONS_FILE="${ALLSKY_REPO}/$( basename "${OPTIONS_FILE}" ).repo"
+# NOT USED: REPO_OPTIONS_FILE="${ALLSKY_REPO}/$( basename "${OPTIONS_FILE}" ).repo"
 
 # The POST_INSTALLATION_ACTIONS contains information the user needs to act upon after the reboot.
 rm -f "${POST_INSTALLATION_ACTIONS}"		# Shouldn't be there, but just in case.
@@ -564,7 +566,7 @@ ask_reboot()
 	AT="${AT}     http://$( hostname -I | sed -e 's/ .*$//' )"
 
 	if [[ ${REBOOT_NEEDED} == "false" ]]; then
-		MSG="\nAfter reboot you can connect to the WebUI at:\n${AT}"
+		MSG="\nAfter installation you can connect to the WebUI at:\n${AT}"
 		display_msg -log progress "${MSG}"
 		return 0
 	fi
@@ -578,8 +580,7 @@ ask_reboot()
 		WILL_REBOOT="true"
 		display_msg --logonly info "Pi will reboot after installation completes."
 	else
-		display_msg --logonly info "User elected not to reboot; displayed warning message."
-		display_msg notice "You need to reboot the Pi before Allsky will work."
+		display_msg --logonly info "User elected not to reboot."
 
 		MSG="If you have not already rebooted your Pi, please do so now.\n"
 		MSG="${MSG}You can then connect to the WebUI at:\n"
@@ -1127,6 +1128,7 @@ handle_prior_website()
 		PRIOR_BRANCH="${PRIOR_BRANCH:-${GITHUB_MAIN_BRANCH}}"
 
 		display_msg --log progress "Restoring local Allsky Website from ${PRIOR_SITE}."
+#### xxx TODO: only copy myImages/myFiles and configuration.json file
 		sudo mv "${PRIOR_SITE}" "${ALLSKY_WEBSITE}"
 
 		# Update "AllskyVersion" if needed.
@@ -1381,9 +1383,10 @@ is_reboot_needed()
 	local OLD_BASE_VERSION="$( remove_point_release "${OLD_VERSION}" )"
 	local NEW_VERSION="${2}"
 	local NEW_BASE_VERSION="$( remove_point_release "${NEW_VERSION}" )"
-	if [[ ${NEW_BASE_VERSION} == "${OLD_BASE_VERSION}" ]]; then
-# TODO: this may not always be true.
+	if [[ ${NEW_BASE_VERSION} == "${OLD_BASE_VERSION}" ||
+		  (! ${OLD_VERSION} < "${SCRIPTS_PATH_ADDED_VERSION}") ]]; then
 		# Assume just bug fixes between point releases.
+# TODO: this may not always be true.
 		REBOOT_NEEDED="false"
 		display_msg --logonly info "No reboot is needed."
 	else
@@ -1700,7 +1703,8 @@ convert_settings()			# prior_file, new_file
 					;;
 
 				# These don't exist anymore.
-				"autofocus" | "background" | "alwaysshowadvanced")
+				"autofocus" | "background" | "alwaysshowadvanced" | \
+				"newexposure" | "experimentalexposure")
 					continue
 					;;
 
@@ -1775,17 +1779,22 @@ convert_settings()			# prior_file, new_file
 	x="$( settings ".determinefocus" "${PRIOR_FILE}" )"
 	[[ -z ${x} ]] && update_json_file ".determinefocus" "false" "${NEW_FILE}"
 
+	x="$( settings ".zwoexposuretype" "${PRIOR_FILE}" )"
+	[[ -z ${x} ]] && update_json_file ".zwoexposuretype" 0 "${NEW_FILE}"
+
 
 	# Older versions had uppercase letters in settings name and "1" and "0" for booleans and
 	# quotes around numbers.  Change that.
-	MSG="Converting '${NEW_FILE}' to new format."
+	MSG="Converting '$( basename "${NEW_FILE}" )' to new format using '${OPTIONS_FILE}'."
 	display_msg --log progress "${MSG}"
 
-	local TEMP_NEW="/tmp/converted_new_settings.json"
+	# New fields were added to the bottom of the settings file but the below
+	# command will order them the same as in the options file, which we want.
 
+	local TEMP_NEW="/tmp/converted_new_settings.json"
 	"${ALLSKY_WEBUI}/includes/convertJSON.php" --convert \
 		--settings-file "${NEW_FILE}" \
-		--options-file "${REPO_OPTIONS_FILE}" \
+		--options-file "${OPTIONS_FILE}" \
 		> "${TEMP_NEW}" 2>&1
 	if [[ $? -ne 0 ]]; then
 		local M="Unable to convert from old settings file"
@@ -1890,9 +1899,11 @@ restore_prior_settings_file()
 				# The new settings file will be based on a camera specific file.
 				local B="$( basename "${S}" )"
 				S="${ALLSKY_CONFIG}/${B}"
-				display_msg --log progress "Updating '${S}'"
 				convert_settings "${S}" "${S}"
 			done
+		else
+			MSG="No need to update prior settings files - same Allsky version"
+			display_msg --logonly info "${MSG}"
 		fi
 
 	else
@@ -2311,7 +2322,7 @@ install_overlay()
 	fi
 
 	if [[ ${installed_python} == "true" ]]; then
-		display_msg --log info "Python and related packages already installed."
+		display_msg --log progress "Python and related packages already installed."
 	else
 		# Doing all the python dependencies at once can run /tmp out of space, so do one at a time.
 		# This also allows us to display progress messages.
@@ -2341,7 +2352,7 @@ install_overlay()
 			fi
 
 	    	if [[ -f ${REQUIREMENTS_FILE} ]]; then
-	        	display_msg --logonly info "Using '${REQUIREMENTS_FILE}'"
+	        	display_msg --logonly info "  Using '${REQUIREMENTS_FILE}'"
 				break
 			fi
 		done
@@ -2941,8 +2952,8 @@ display_image "InstallationInProgress"
 [[ ${check_tmp} != "true" ]] && check_tmp
 
 
-MSG="The following steps can take up to an hour depending on the speed of your Pi"
-MSG="${MSG}\nand how many of the necessary dependencies are already installed."
+MSG="The following steps can take up to an hour depending on the speed of"
+MSG="${MSG}\nyour Pi and how many of the necessary dependencies are already installed."
 MSG="${MSG}\nYou will see progress messages throughout the process."
 MSG="${MSG}\nAt the end you will be prompted again for additional steps."
 display_msg notice "${MSG}"
@@ -3016,16 +3027,15 @@ remind_old_version
 [[ ${WILL_REBOOT} == "true" ]] && do_reboot "${STATUS_FINISH_REBOOT}" ""		# does not return
 
 if [[ ${REBOOT_NEEDED} == "true" ]]; then
-	display_msg --log progress "\nInstallation is done but the Pi needs a reboot.\n"
+	display_msg --log progress "\nInstallation is done" " but the Pi needs a reboot.\n"
 	exit_installation 0 "${STATUS_NO_FINISH_REBOOT}" ""
 else
 	if [[ ${CONFIGURATION_NEEDED} == "false" ]]; then
 		display_image --custom "lime" "Allsky is\nready to start"
 		display_msg --log progress "\nInstallation is done and Allsky is ready to start."
 	else
-		display_msg --log progress "\nInstallation is done but Allsky needs to be configured."
+		display_msg --log progress "\nInstallation is done" " but Allsky needs to be configured."
 	fi
 	display_msg progress "\nEnjoy Allsky!\n"
 	exit_installation 0 "${STATUS_OK}" ""
 fi
-

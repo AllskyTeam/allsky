@@ -223,6 +223,8 @@ function DisplayAllskyConfig() {
 
 				if ($oldValue !== "")
 					$oldValue = str_replace("'", "&#x27", $oldValue);
+				if ($newValue !== "")
+					$newValue = str_replace("'", "&#x27", $newValue);
 
 				if ($oldValue !== $newValue) {
 					$nonCameraChangesExist = false;

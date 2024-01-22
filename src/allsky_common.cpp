@@ -1090,8 +1090,7 @@ void displayHelp(config cg)
 		printf(" -%-*s - Default = %d %d %0.2f %0.2f (box width X, box width y, X offset percent (0-100), Y offset (0-100))\n", n, "histogrambox n n n n", cg.HB.histogramBoxSizeX, cg.HB.histogramBoxSizeY, cg.HB.histogramBoxPercentFromLeft * 100.0, cg.HB.histogramBoxPercentFromTop * 100.0);
 		printf(" -%-*s - 1 enables auto USB Speed.\n", n, "autousb b");
 		printf(" -%-*s - USB bandwidth percent.\n", n, "usb n");
-		printf(" -%-*s - 1 enables a newer ZWO auto-exposure algorithm [%s].\n", n, "experimentalexposure b", yesNo(cg.HB.useExperimentalExposure));
-		printf(" -%-*s - Determines if version 0.8 exposure method should be used [%s].\n", n, "newexposure b", yesNo(cg.videoOffBetweenImages));
+		printf(" -%-*s - Determines what type of exposure ZWO cameras should use [%s].\n", n, "zwoexposuretype n", getZWOexposureType(ZWOsnap));
 	}
 	if (cg.ct == ctRPi) {
 		printf(" -%-*s - Extra arguments pass to image capture program [%s].\n", n, "extraargs s", cg.extraArgs);
@@ -1270,8 +1269,7 @@ void displaySettings(config cg)
 			cg.HB.histogramBoxSizeX, cg.HB.histogramBoxSizeY,
 			cg.HB.histogramBoxPercentFromLeft * 100.0, cg.HB.histogramBoxPercentFromTop * 100.0,
 			cg.HB.centerX, cg.HB.centerY, cg.HB.leftOfBox, cg.HB.topOfBox, cg.HB.rightOfBox, cg.HB.bottomOfBox);
-		printf("   New Exposure Algorithm: %s\n", yesNo(cg.HB.useExperimentalExposure));
-		printf("   Video OFF Between Images: %s\n", yesNo(cg.videoOffBetweenImages));
+		printf("   ZWO Exposure Type: %s\n", getZWOexposureType(cg.ZWOexposureType));
 	}
 	printf("   Preview: %s\n", yesNo(cg.preview));
 	printf("   Focus mode: %s\n", yesNo(cg.determineFocus));
@@ -1884,13 +1882,9 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		{
 			cg->debugLevel = atol(argv[++i]);
 		}
-		else if (strcmp(a, "experimentalexposure") == 0)
+		else if (strcmp(a, "zwoexposuretype") == 0)
 		{
-			cg->HB.useExperimentalExposure = getBoolean(argv[++i]);
-		}
-		else if (strcmp(a, "newexposure") == 0)
-		{
-			cg->videoOffBetweenImages = getBoolean(argv[++i]);
+			cg->ZWOexposureType = (ZWOexposure) atoi(argv[++i]);
 		}
 		else if (strcmp(a, "extraargs") == 0)
 		{

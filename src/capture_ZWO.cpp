@@ -25,8 +25,6 @@ config CG;
 #define IS_ZWO
 #include "ASI_functions.cpp"
 
-bool useSnapshotMode = false;	// XXXXXX use the ZWO snapshot exposure mode or vide mode?
-
 // Forward definitions
 char *getRetCode(ASI_ERROR_CODE);
 void closeUp(int);
@@ -39,13 +37,7 @@ bool checkMaxErrors(int *, int);
 // These are global so they can be used by other routines.
 // Variables for command-line settings are first and are "long" so we can use validateLong().
 
-// In version 0.8 we introduced a different way to take exposures. Instead of turning video mode on at
-// the beginning of the program and off at the end (which kept the camera running all the time, heating it up),
-// version 0.8 turned video mode on, then took a picture, then turned it off. This helps cool the camera,
-// but some users (seems hit or miss) get ASI_ERROR_TIMEOUTs when taking exposures with the new method.
-// So, we added the ability for them to use the 0.7 video-always-on method, or the 0.8 "new exposure" method.
 timeval exposureStartDateTime;									// date/time an image started
-
 cv::Mat pRgb;
 std::vector<int> compressionParameters;
 bool bMain						= true;
@@ -140,7 +132,7 @@ void *Display(void *params)
 		// default preview size usually fills whole screen, so shrink.
 		cv::resize(*pImg, *pImg2, cv::Size((int)w/2, (int)h/2));
 		cv::imshow("Preview", *pImg2);
-		cv::waitKey(500);	// TODO: wait for exposure time instead of hard-coding value
+		cv::waitKey(500);
 	}
 	cv::destroyWindow("Preview");
 	Log(4, "Display thread over\n");
@@ -360,6 +352,13 @@ ASI_ERROR_CODE flushBufferedImages(config *cg, unsigned char *buf, long size)
 }
 
 
+// In version 0.8 we introduced a different way to take exposures. Instead of turning video mode on at
+// the beginning of the program and off at the end (which kept the camera running all the time, heating it up),
+// version 0.8 turned video mode on, then took a picture, then turned it off. This helps cool the camera,
+// but some users (seems hit or miss) get ASI_ERROR_TIMEOUTs when taking exposures with the new method.
+// So, we added the ability for them to use the 0.7 video-always-on method, or the 0.8 "new exposure" method.
+// In the 2024 version we added "snapshot" mode to overcome the ASI_ERROR_TIMEOUTs.
+
 // Next exposure suggested by the camera.
 long suggestedNextExposure_us = 0;
 
@@ -389,180 +388,255 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 			(wasAutoExposure == ASI_TRUE ? "Camera set auto-exposure" : "Manual exposure set"),
 		length_in_units(cg->currentExposure_us, true));
 
-	if (! useSnapshotMode)
+	if (cg->ZWOexposureType != ZWOsnap)
 		flushBufferedImages(cg, imageBuffer, bufferSize);
 
 	// Sanity check.
 	if (cg->HB.useHistogram && cg->currentAutoExposure == ASI_TRUE)
-		Log(0, "*** %s: ERROR: HB.useHistogram AND currentAutoExposure are both set\n", cg->ME);
+		Log(0, "  > %s: ERROR: HB.useHistogram AND currentAutoExposure are both set\n", cg->ME);
 
 	setControl(cg->cameraNumber, ASI_EXPOSURE, cg->currentExposure_us, cg->currentAutoExposure ? ASI_TRUE : ASI_FALSE);
 
-	if (! useSnapshotMode && cg->videoOffBetweenImages)
+	if (cg->ZWOexposureType == ZWOvideoOff)
 	{
 		status = ASIStartVideoCapture(cg->cameraNumber);
-	} else {
-		status = ASI_SUCCESS;
+		if (status != ASI_SUCCESS) {
+			Log(0, "  > %s: ERROR: ASIStartVideoCapture() failed: %s\n", cg->ME, getRetCode(status));
+			return(status);
+		}
 	}
 
-	if (status == ASI_SUCCESS) {
-		// Make sure the actual time to take the picture is "close" to the requested time.
-		auto tStart = std::chrono::high_resolution_clock::now();
+	// Make sure the actual time to take the picture is "close" to the requested time.
+	auto tStart = std::chrono::high_resolution_clock::now();
+	int exitCode;
 
-		if (useSnapshotMode)
-		{
-// xxxxxxxxxxxxxxxxxx start exposure, sleep for 95% of cg->currentExposure_us, then check every 5 us.
-		} else {
-			status = ASIGetVideoData(cg->cameraNumber, imageBuffer, bufferSize, timeout);
-			if (cg->videoOffBetweenImages)
-			{
-				ret = ASIStopVideoCapture(cg->cameraNumber);
-				if (ret != ASI_SUCCESS)
-				{
-					Log(1, "  > %s: WARNING: ASIStopVideoCapture() failed: %s\n", cg->ME, getRetCode(ret));
-				}
-			}
-		}
-
+	if (cg->ZWOexposureType == ZWOsnap)
+	{
+		status = ASIStartExposure(cg->cameraNumber, ASI_FALSE);
 		if (status != ASI_SUCCESS)
 		{
-			int exitCode;
-			Log(0, "  > %s: ERROR: Failed getting image: %s\n", cg->ME, getRetCode(status));
+			Log(0, "  > %s: ERROR: ASIStartExposure() failed: %s\n", cg->ME, getRetCode(status));
+			if (! checkMaxErrors(&exitCode, maxErrors))
+				closeUp(exitCode);
+			return(status);
+		}
 
+		// Do an initial sleep of the exposure time + 500 ms for overhead,
+		// then go into a check_status / sleep loop where
+		// we sleep for 5% of the exposure time.
+		// The total sleep time will be longer than exposure time due to overhead starting the exposure.
+		long initial_sleep_us = cg->currentExposure_us + 500 * US_IN_MS;
+		long sleep_us = std::max(cg->currentExposure_us * 0.05, 1.0);
+		Log(4, "    > Doing initial usleep(%'ld) for exposure time %'ld.\n", initial_sleep_us, cg->currentExposure_us);
+		usleep(cg->currentExposure_us);
+
+		// We should be fairly close to the end of the exposure so now go
+		// into a loop until the exposure is done.
+		ASI_EXPOSURE_STATUS s = ASI_EXP_WORKING;
+		int num_sleeps = 0;
+		while (s == ASI_EXP_WORKING)
+		{
+			status = ASIGetExpStatus(cg->cameraNumber, &s);
+			if (status != ASI_SUCCESS)
+			{
+				Log(0, "  > %s: ERROR: ASIGetExpStatus() failed after %d sleeps: %s\n",
+					cg->ME, num_sleeps, getRetCode(status));
+				if (! checkMaxErrors(&exitCode, maxErrors))
+					closeUp(exitCode);
+				return(status);
+			}
+			usleep(sleep_us);
+			num_sleeps++;
+		}
+		Log(4, "    > Did usleep(%'ld) %d times in loop for total usleep() of %'ldus\n",
+			sleep_us, num_sleeps, initial_sleep_us + (sleep_us * num_sleeps));
+
+		// Exposure done, if it worked get the image
+		if (s != ASI_EXP_SUCCESS)
+		{
+			// This error DOES happen sometimes.
+			// Unfortunately "s" is either success or failure - not much help.
+			Log(1, "    > ERROR: Exposure failed after %d sleeps, s=%d\n", num_sleeps, s);
+			if (! checkMaxErrors(&exitCode, maxErrors))
+				closeUp(exitCode);
+			return(ASI_ERROR_END);
+		}
+
+		status = ASIGetDataAfterExp(cg->cameraNumber,  imageBuffer, bufferSize);
+		if (status != ASI_SUCCESS)
+		{
+			// For whatever reason this does fail sometimes, so to avoid having
+			// every failure appear in the WebUI message center, log with level 1.
+			Log(1, "  > ERROR: ASIGetDataAfterExp() failed after %d sleeps: %s\n",
+				num_sleeps, getRetCode(status));
+			if (! checkMaxErrors(&exitCode, maxErrors))
+				closeUp(exitCode);
+			return(status);
+		}
+
+	} else {	// some video mode
+		status = ASIGetVideoData(cg->cameraNumber, imageBuffer, bufferSize, timeout);
+		if (status != ASI_SUCCESS)
+		{
+			Log(0, "  > %s: ERROR: Failed getting image: %s\n", cg->ME, getRetCode(status));
+	
 			// Check if we reached the maximum number of consective errors
 			if (! checkMaxErrors(&exitCode, maxErrors))
-			{
 				closeUp(exitCode);
+			return(status);
+		}
+		if (cg->ZWOexposureType == ZWOvideoOff)
+		{
+			ret = ASIStopVideoCapture(cg->cameraNumber);
+			if (ret != ASI_SUCCESS)
+			{
+				Log(1, "  > WARNING: ASIStopVideoCapture() failed: %s\n", getRetCode(ret));
+				// continue
 			}
+		}
+	}
+
+	// We successfully got the image so reset the global error counter;
+	numErrors = 0;
+
+	// The timeToTakeImage_us should never be less than what was requested.
+	// and shouldn't be less then the time taken plus overhead of setting up the shot.
+
+	auto tElapsed = std::chrono::high_resolution_clock::now() - tStart;
+	long timeToTakeImage_us = std::chrono::duration_cast<std::chrono::microseconds>(tElapsed).count();
+	long diff_us = timeToTakeImage_us - cg->currentExposure_us;
+	long threshold_us = 0;
+
+	bool tooShort = false;
+	if (diff_us < 0)
+	{
+		// This "should" never happen but actually does sometimes.
+		tooShort = true;
+	}
+	else if (cg->currentExposure_us > (5 * US_IN_SEC))
+	{
+		// There is too much variance in the overhead of taking pictures to
+		// accurately determine the actual time to take an image at short exposures,
+		// so only check for long ones.
+		// Testing shows there's about this much us overhead (at least for video mode),
+		// so subtract it to get our best estimate of the "actual" time.
+		const int OVERHEAD_us = (int) (0.34 * US_IN_SEC);
+
+		// Don't subtract if it would have made timeToTakeImage_us negative.
+		if (timeToTakeImage_us > OVERHEAD_us)
+			diff_us -= OVERHEAD_us;
+
+		threshold_us = cg->currentExposure_us * 0.5;	// 50% seems like a good number
+		if (abs(diff_us) > threshold_us)
+			tooShort = true;
+	}
+
+	if (tooShort)
+	{
+		Log(1, "   *** WARNING: Time to take exposure (%s) ",
+			length_in_units(timeToTakeImage_us, true));
+		Log(1, "differs from requested exposure time (%s) by %s, threshold=%s\n",
+			length_in_units(cg->currentExposure_us, true),
+			length_in_units(diff_us, true),
+			length_in_units(threshold_us, true));
+	}
+	else
+	{
+		Log(4, "    > Time to take exposure=%'ld us, diff_us=%'ld", timeToTakeImage_us, diff_us);
+		if (threshold_us > 0)
+			Log(4, ", threshold_us=%'ld", threshold_us);
+		Log(4, "\n");
+	}
+
+	// Get some metadata on the image.
+
+	long l;
+	ret = ASIGetControlValue(cg->cameraNumber, ASI_GAIN, &l, &bAuto);
+	if (ret != ASI_SUCCESS)
+	{
+		Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_GAIN) failed: %s\n", cg->ME, getRetCode(ret));
+	}
+	else
+	{
+		cg->lastGain = (double) l;
+	}
+
+	char tempBuf[500];
+	tempBuf[0] = '\0';
+	char *tb = tempBuf;
+
+	cg->lastMean = (double)computeHistogram(imageBuffer, *cg, true);
+	sprintf(tb, " @ mean %d, %sgain %ld",
+		(int) cg->lastMean, cg->currentAutoGain ? "(auto) " : "", (long) cg->lastGain);
+	cg->lastExposure_us = cg->currentExposure_us;
+
+	// Per ZWO, when in manual-exposure mode, the returned exposure length
+	// should always be equal to the requested length;
+	// they said, "there's no need to call ASIGetControlValue()".
+	// When in auto-exposure mode the returned exposure length is what the driver thinks the
+	// next exposure should be, and will eventually converge on the correct exposure.
+
+	Log(2, "  > GOT IMAGE%s.", tb);
+	ret = ASIGetControlValue(cg->cameraNumber, ASI_EXPOSURE, &suggestedNextExposure_us, &wasAutoExposure);
+	if (ret != ASI_SUCCESS)
+	{
+		Log(1, "  > WARNING: ASIGetControlValue(ASI_EXPOSURE) failed: %s\n",
+			cg->ME, getRetCode(ret));
+	}
+	else
+	{
+		Log(3, cg->HB.useHistogram ? " Ignoring suggested next exposure of %s." : "  Suggested next exposure: %s.",
+			length_in_units(suggestedNextExposure_us, true));
+	}
+	Log(2, "\n");
+
+	long temp;
+	ret = ASIGetControlValue(cg->cameraNumber, ASI_TEMPERATURE, &temp, &bAuto);
+	if (ret != ASI_SUCCESS)
+	{
+		Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_TEMPERATURE) failed: %s\n",
+			cg->ME, getRetCode(ret));
+	}
+	else
+	{
+		cg->lastSensorTemp = (long) ((double)temp / cg->divideTemperatureBy);
+	}
+
+	if (cg->isColorCamera)
+	{
+		ret = ASIGetControlValue(cg->cameraNumber, ASI_WB_R, &l, &bAuto);
+		if (ret != ASI_SUCCESS)
+		{
+			Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_WB_R) failed: %s\n",
+				cg->ME, getRetCode(ret));
 		}
 		else
 		{
-			// The timeToTakeImage_us should never be less than what was requested.
-			// and shouldn't be less then the time taked plus overhead of setting up the shot.
+			cg->lastWBR = (double) l;
+		}
 
-			auto tElapsed = std::chrono::high_resolution_clock::now() - tStart;
-			long timeToTakeImage_us = std::chrono::duration_cast<std::chrono::microseconds>(tElapsed).count();
-			long diff_us = timeToTakeImage_us - cg->currentExposure_us;
-			long threshold_us = 0;
-
-			bool tooShort = false;
-			if (diff_us < 0)
-			{
-				tooShort = true;			// WAY too short
-			}
-			else if (cg->currentExposure_us > (5 * US_IN_SEC))
-			{
-				// There is too much variance in the overhead of taking pictures to
-				// accurately determine the actual time to take an image at short exposures,
-				// so only check for long ones.
-				// Testing shows there's about this much us overhead,
-				// so subtract it to get our best estimate of the "actual" time.
-				const int OVERHEAD_us = (int) (0.34 * US_IN_SEC);
-
-				// Don't subtract if it would have made timeToTakeImage_us negative.
-				if (timeToTakeImage_us > OVERHEAD_us)
-					diff_us -= OVERHEAD_us;
-
-				threshold_us = cg->currentExposure_us * 0.5;	// 50% seems like a good number
-				if (abs(diff_us) > threshold_us)
-					tooShort = true;
-			}
-
-			if (tooShort)
-			{
-				Log(1, "   *** WARNING: Time to take exposure (%s) ",
-					length_in_units(timeToTakeImage_us, true));
-				Log(1, "differs from requested exposure time (%s) by %s, threshold=%s\n",
-					length_in_units(cg->currentExposure_us, true),
-					length_in_units(diff_us, true),
-					length_in_units(threshold_us, true));
-			}
-			else
-			{
-				Log(4, "    > Time to take exposure=%'ld us, diff_us=%'ld", timeToTakeImage_us, diff_us);
-				if (threshold_us > 0)
-					Log(4, ", threshold_us=%'ld", threshold_us);
-				Log(4, "\n");
-			}
-
-			numErrors = 0;
-			long l;
-			ret = ASIGetControlValue(cg->cameraNumber, ASI_GAIN, &l, &bAuto);
-			if (ret != ASI_SUCCESS)
-			{
-				Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_GAIN) failed: %s\n", cg->ME, getRetCode(ret));
-			}
-			cg->lastGain = (double) l;
-
-			char tempBuf[500];
-			tempBuf[0] = '\0';
-			char *tb = tempBuf;
-
-			cg->lastMean = (double)computeHistogram(imageBuffer, *cg, true);
-			sprintf(tb, " @ mean %d, %sgain %ld, fullMean %d",
-				(int) cg->lastMean, cg->currentAutoGain ? "(auto) " : "",
-				(long) cg->lastGain, (int) cg->lastMeanFull);
-			cg->lastExposure_us = cg->currentExposure_us;
-
-			// Per ZWO, when in manual-exposure mode, the returned exposure length
-			// should always be equal to the requested length;
-			// in fact, "there's no need to call ASIGetControlValue()".
-			// When in auto-exposure mode the returned exposure length is what the driver thinks the
-			// next exposure should be, and will eventually converge on the correct exposure.
-
-			ret = ASIGetControlValue(cg->cameraNumber, ASI_EXPOSURE, &suggestedNextExposure_us, &wasAutoExposure);
-			if (ret != ASI_SUCCESS)
-			{
-				Log(1, "  > WARNING: ASIGetControlValue(ASI_EXPOSURE) failed: %s\n",
-					cg->ME, getRetCode(ret));
-			}
-			Log(2, "  > GOT IMAGE%s.", tb);
-			Log(3, cg->HB.useHistogram ? " Ignoring suggested next exposure of %s." : "  Suggested next exposure: %s.",
-				length_in_units(suggestedNextExposure_us, true));
-			Log(2, "\n");
-
-			long temp;
-			ret = ASIGetControlValue(cg->cameraNumber, ASI_TEMPERATURE, &temp, &bAuto);
-			if (ret != ASI_SUCCESS)
-			{
-				Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_TEMPERATURE) failed: %s\n",
-					cg->ME, getRetCode(ret));
-			}
-			cg->lastSensorTemp = (long) ((double)temp / cg->divideTemperatureBy);
-			if (cg->isColorCamera)
-			{
-				ret = ASIGetControlValue(cg->cameraNumber, ASI_WB_R, &l, &bAuto);
-				if (ret != ASI_SUCCESS)
-				{
-					Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_WB_R) failed: %s\n",
-						cg->ME, getRetCode(ret));
-				}
-				cg->lastWBR = (double) l;
-
-				ret = ASIGetControlValue(cg->cameraNumber, ASI_WB_B, &l, &bAuto);
-				if (ret != ASI_SUCCESS)
-				{
-					Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_WB_B) failed: %s\n",
-						cg->ME, getRetCode(ret));
-				}
-				cg->lastWBB = (double) l;
-			}
-
-			if (cg->asiAutoBandwidth)
-			{
-				ret = ASIGetControlValue(cg->cameraNumber, ASI_BANDWIDTHOVERLOAD, &cg->lastAsiBandwidth, &wasAutoExposure);
-				if (ret != ASI_SUCCESS)
-				{
-					Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_BANDWIDTHOVERLOAD) failed: %s\n", cg->ME, getRetCode(ret));
-				}
-			}
+		ret = ASIGetControlValue(cg->cameraNumber, ASI_WB_B, &l, &bAuto);
+		if (ret != ASI_SUCCESS)
+		{
+			Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_WB_B) failed: %s\n",
+				cg->ME, getRetCode(ret));
+		}
+		else
+		{
+			cg->lastWBB = (double) l;
 		}
 	}
-	else {
-		Log(0, "  > %s: ERROR: Not fetching exposure data because status is %s\n", cg->ME, getRetCode(status));
+
+	if (cg->asiAutoBandwidth)
+	{
+		ret = ASIGetControlValue(cg->cameraNumber, ASI_BANDWIDTHOVERLOAD, &cg->lastAsiBandwidth, &wasAutoExposure);
+		if (ret != ASI_SUCCESS)
+		{
+			Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_BANDWIDTHOVERLOAD) failed: %s\n", cg->ME, getRetCode(ret));
+		}
 	}
 
-	return status;
+	return ASI_SUCCESS;
 }
 
 bool adjustGain = false;	// Should we adjust the gain? Set by user on command line.
@@ -703,7 +777,7 @@ bool checkMaxErrors(int *e, int maxErrors)
 {
 	// Once takeOneExposure() fails with a timeout, it seems to always fail,
 	// even with extremely large timeout values, so apparently ASI_ERROR_TIMEOUT doesn't
-	// necessarily mean it's timing out. Exit which will cause us to be restarted.
+	// necessarily mean it's timing out. Exit forcing us to be restarted.
 	numErrors++; sleep(2);
 	if (numErrors >= maxErrors)
 	{
@@ -719,7 +793,7 @@ bool checkMaxErrors(int *e, int maxErrors)
 
 int main(int argc, char *argv[])
 {
-	CG.ME = argv[0];
+	CG.ME = basename(argv[0]);
 	
 	static char *a = getenv("ALLSKY_HOME");		// This must come before anything else
 	if (a == NULL)
@@ -1031,7 +1105,7 @@ int main(int argc, char *argv[])
 
 	// Start taking pictures
 
-	if (! CG.videoOffBetweenImages)
+	if (CG.ZWOexposureType == ZWOvideo)
 	{
 		asiRetCode = ASIStartVideoCapture(CG.cameraNumber);
 		if (asiRetCode != ASI_SUCCESS)
@@ -1224,7 +1298,6 @@ int main(int argc, char *argv[])
 				CG.currentExposure_us = CG.nightExposure_us;
 			}
 
-if (CG.HB.useExperimentalExposure) {
 			// Don't use camera auto-exposure since we mimic it ourselves.
 			CG.HB.useHistogram = CG.nightAutoExposure;
 			if (CG.HB.useHistogram)
@@ -1232,10 +1305,6 @@ if (CG.HB.useExperimentalExposure) {
 				Log(4, "Turning off nighttime ZWO auto-exposure to use Allsky auto-exposure.\n");
 			}
 			CG.currentAutoExposure = false;
-} else {
-			CG.currentAutoExposure = CG.nightAutoExposure;
-			CG.HB.useHistogram = false;		// only used during day
-}
 			CG.currentBrightness = CG.nightBrightness;
 			if (CG.isColorCamera)
 			{
@@ -1564,11 +1633,12 @@ if (CG.HB.useExperimentalExposure) {
 
 						if (numPingPongs >= 3)
 						{
-printf(" > xxx newExposure_us=%s, CG.lastExposure_us=%s, CG.currentExposure_us=%s,",
-	length_in_units(newExposure_us, true), length_in_units(CG.lastExposure_us, true),
+Log(3, "     > xxx newExposure_us=%s, CG.lastExposure_us=%s, CG.currentExposure_us=%s,",
+	length_in_units(newExposure_us, true),
+	length_in_units(CG.lastExposure_us, true),
 	length_in_units(CG.currentExposure_us, true));
 							newExposure_us = (newExposure_us + CG.lastExposure_us) / 2;
-printf(" new newExposure_us=%s\n", length_in_units(newExposure_us, true));
+Log(3, " new newExposure_us=%s\n", length_in_units(newExposure_us, true));
 							Log(3, " > Ping-Ponged %d times, setting exposure to mid-point of %s\n", numPingPongs, length_in_units(newExposure_us, true));
 
 // XXXX testing
@@ -1588,7 +1658,7 @@ long saved_newExposure_us = newExposure_us;
 						newExposure_us = std::min(tempMaxExposure_us, newExposure_us);
 if (saved_newExposure_us != newExposure_us)
 {
-	Log(3, "> xxx newExposure_us changed from %s to %s due to tempMin/tempMax\n",
+	Log(3, "    > xxx newExposure_us changed from %s to %s due to tempMin/tempMax\n",
 		length_in_units(saved_newExposure_us, true), length_in_units(newExposure_us, true));
 }
 

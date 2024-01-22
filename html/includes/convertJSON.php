@@ -49,7 +49,7 @@ $longopts = array(
 $options = getopt("", $longopts, $rest_index);
 $ok=true;
 foreach ($options as $opt => $val) {
-	if ($debug || $opt === "debug") echo "===== Argument $opt $val\n";
+	if ($debug || $opt === "debug") fwrite(STDERR, "===== Argument $opt $val\n");
 
 	if ($opt === "debug") {
 		$debug = true;
@@ -119,23 +119,29 @@ if ($capture_only) {
 } else if ($convert) {
 	$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
 
-	// We want all lines in the settings file so create an options array
-	// indexed by the name.
+	// We want the output to be the same order as the options file so
+	// create an options array indexed by the name where each element contains
+	// all the fields of an option (name, type, default, etc.).
+	// Keep track of any setting not in the options file,
+	// and add it to the end of the new settings file.
+// TODO: Do NOT add settings not in the options file.
+// The only legit one would be "lastchanged", and since we're converting
+// the settings file we want the user to be forced to look at the settings
+// before starting Allsky.
+	$new_settings_array = Array();
 	$new_options = Array();
 	foreach ($options_array as $option) {
+		$type = getVariableOrDefault($option, 'type', "");
+		if (substr($type, 0, 6) === "header") continue;
+
 		$name = $option['name'];
 		$new_options[$name] = $option;
-	}
+// if ($debug) fwrite(STDERR, "Looking at option $name\n");
 
-	$new_array = Array();
-	foreach ($settings_array as $name => $val) {
-		$name = strtolower($name);
-		$n = getVariableOrDefault($new_options, $name, null);
-		// If $n is null let's hope it's not a boolean.
-
-		if ($n !== null) {
-			$type = getVariableOrDefault($n, 'type', "");
-
+		$val = getVariableOrDefault($settings_array, $name, null);
+		if ($val === null) {
+			$val = getVariableOrDefault($option, 'default', "");
+		} else {
 			// $mode handles quotes around numbers.
 			// We just need to convert bools to true and false without quotes.
 			if ($type == "boolean") {
@@ -145,10 +151,20 @@ if ($capture_only) {
 					$val = false;
 			}
 		}
-		$new_array[$name] = $val;
+		$new_settings_array[$name] = $val;
 	}
 
-	echo json_encode($new_array, $mode);
+	// Now determine which settings weren't in the options file.
+	foreach ($settings_array as $setting => $val) {
+		if (getVariableOrDefault($new_settings_array, $setting, null) === null) {
+			if ($debug) fwrite(STDERR, "Setting '$setting' not in options file.\n");
+/*
+			$new_settings_array[$setting] = $val;
+*/
+		}
+	}
+
+	echo json_encode($new_settings_array, $mode);
 
 
 } else {

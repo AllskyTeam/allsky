@@ -590,6 +590,7 @@ ASI_ERROR_CODE ASIGetControlValue(int iCameraIndex, ASI_CONTROL_TYPE ControlType
 // Empty routines so code compiles.
 int stopVideoCapture(int cameraID) { return((int) ASI_SUCCESS); }
 int closeCamera(int cameraID) { return((int) ASI_SUCCESS); }
+char const *getZWOexposureType(ZWOexposure t) { return("ZWOend"); }
 
 // Get the camera's serial number.  RPi cameras don't support serial numbers.
 ASI_ERROR_CODE  ASIGetSerialNumber(int iCameraIndex, ASI_SN *pSN)
@@ -680,6 +681,15 @@ ASI_ID getCameraID(ASI_CAMERA_INFO camInfo)
 
 	return(cameraID);
 }
+
+char const *getZWOexposureType(ZWOexposure t)
+{
+	if (t == ZWOsnap) return("snapshot");
+	if (t == ZWOvideoOff) return("video off between frames");
+	if (t == ZWOvideo) return("video (original)");
+	return("invalid type");
+}
+
 #endif		// IS_RPi
 
 
@@ -709,8 +719,12 @@ char *getRetCode(ASI_ERROR_CODE code)
 	else if (code == ASI_ERROR_OUTOF_BOUNDARY) ret = "ASI_ERROR_OUTOF_BOUNDARY";
 	else if (code == ASI_ERROR_TIMEOUT)
 	{
-		std::string yesno = CG.videoOffBetweenImages ? "YES" : "NO";
-		ret = "ASI_ERROR_TIMEOUT (with 0.8 exposure = " + yesno + ")";
+		ret = "ASI_ERROR_TIMEOUT";
+		if (CG.ZWOexposureType == ZWOvideoOff)
+			ret += " (video off between images)";
+		else if (CG.ZWOexposureType == ZWOvideo)
+			ret += " (original video mode)";
+		// else just return ASI_ERROR_TIMEOUT.  Should never happen in ZWOsnap mode.
 	}
 	else if (code == ASI_ERROR_INVALID_SEQUENCE) ret = "ASI_ERROR_INVALID_SEQUENCE";
 	else if (code == ASI_ERROR_BUFFER_TOO_SMALL) ret = "ASI_ERROR_BUFFER_TOO_SMALL";
@@ -1059,12 +1073,6 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "experimentalExposure");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "experimentalexposure");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.HB.useExperimentalExposure ? "true" : "false");
-	fprintf(f, "\t\t},\n");
-
-	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "histogrambox");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "histogrambox");
 	fprintf(f, "\t\t\t\"DefaultValue\" : \"%s\"\n", CG.HB.sArgs);
@@ -1077,9 +1085,9 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "newexposure");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "newexposure");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.videoOffBetweenImages ? "true" : "false");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "ZWOexposureType");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "zwoexposuretype");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", ZWOsnap);
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");

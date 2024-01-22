@@ -427,7 +427,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 		// The total sleep time will be longer than exposure time due to overhead starting the exposure.
 		long initial_sleep_us = cg->currentExposure_us + 500 * US_IN_MS;
 		long sleep_us = std::max(cg->currentExposure_us * 0.05, 1.0);
-		Log(4, "    > Doing initial usleep(%'ld) for exposure time %'ld.\n", initial_sleep_us, cg->currentExposure_us);
+		Log(4, "      > Doing initial usleep(%'ld) for exposure time %'ld.\n", initial_sleep_us, cg->currentExposure_us);
 		usleep(cg->currentExposure_us);
 
 		// We should be fairly close to the end of the exposure so now go
@@ -448,7 +448,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 			usleep(sleep_us);
 			num_sleeps++;
 		}
-		Log(4, "    > Did usleep(%'ld) %d times in loop for total usleep() of %'ldus\n",
+		Log(4, "      > Did usleep(%'ld) %d times in loop for total usleep() of %'ldus\n",
 			sleep_us, num_sleeps, initial_sleep_us + (sleep_us * num_sleeps));
 
 		// Exposure done, if it worked get the image
@@ -520,13 +520,20 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 		// so only check for long ones.
 		// Testing shows there's about this much us overhead (at least for video mode),
 		// so subtract it to get our best estimate of the "actual" time.
-		const int OVERHEAD_us = (int) (0.34 * US_IN_SEC);
+		const int OVERHEAD_us = (int) (340 * US_IN_MS);
 
 		// Don't subtract if it would have made timeToTakeImage_us negative.
 		if (timeToTakeImage_us > OVERHEAD_us)
 			diff_us -= OVERHEAD_us;
 
-		threshold_us = cg->currentExposure_us * 0.5;	// 50% seems like a good number
+		float t;
+		// These seem like good numbers.
+		// snapshot mode seems more consistent so use a lower threshold.
+		if (cg->ZWOexposureType == ZWOsnap)
+			t = 0.2;
+		else
+			t = 0.5;
+		threshold_us = cg->currentExposure_us * t;
 		if (abs(diff_us) > threshold_us)
 			tooShort = true;
 	}
@@ -542,7 +549,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 	}
 	else
 	{
-		Log(4, "    > Time to take exposure=%'ld us, diff_us=%'ld", timeToTakeImage_us, diff_us);
+		Log(4, "      > Time to take exposure=%'ld us, diff_us=%'ld", timeToTakeImage_us, diff_us);
 		if (threshold_us > 0)
 			Log(4, ", threshold_us=%'ld", threshold_us);
 		Log(4, "\n");
@@ -583,7 +590,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 		Log(1, "  > WARNING: ASIGetControlValue(ASI_EXPOSURE) failed: %s\n",
 			cg->ME, getRetCode(ret));
 	}
-	else
+	else if (cg->ZWOexposureType != ZWOsnap)
 	{
 		Log(3, cg->HB.useHistogram ? " Ignoring suggested next exposure of %s." : "  Suggested next exposure: %s.",
 			length_in_units(suggestedNextExposure_us, true));
@@ -1226,11 +1233,6 @@ int main(int argc, char *argv[])
 			}
 			// Don't use camera auto-exposure since we mimic it ourselves.
 			CG.HB.useHistogram = CG.dayAutoExposure;
-			if (CG.HB.useHistogram)
-			{
-				// Only need to display this once, not every night-to-day transition...
-				Log(4, "Turning off daytime ZWO auto-exposure to use Allsky auto-exposure.\n");
-			}
 			// With the histogram method we NEVER use ZWO auto exposure - either the user said
 			// not to, or we turn it off ourselves.
 			CG.currentAutoExposure = false;
@@ -1300,10 +1302,6 @@ int main(int argc, char *argv[])
 
 			// Don't use camera auto-exposure since we mimic it ourselves.
 			CG.HB.useHistogram = CG.nightAutoExposure;
-			if (CG.HB.useHistogram)
-			{
-				Log(4, "Turning off nighttime ZWO auto-exposure to use Allsky auto-exposure.\n");
-			}
 			CG.currentAutoExposure = false;
 			CG.currentBrightness = CG.nightBrightness;
 			if (CG.isColorCamera)
@@ -1921,3 +1919,4 @@ if (saved_newExposure_us != newExposure_us)
 
 	closeUp(EXIT_OK);
 }
+

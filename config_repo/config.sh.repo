@@ -148,9 +148,6 @@ WEB_DAYS_TO_KEEP=0
 # See the documentation for a description of this setting.
 WEBUI_DATA_FILES=""
 
-# See the documentation for a description of this setting.
-UHUBCTL_PORT=2
-
 
 # ================ DO NOT CHANGE ANYTHING BELOW THIS LINE ================
 ME2="$(basename "${BASH_SOURCE[0]}")"

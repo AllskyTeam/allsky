@@ -231,7 +231,7 @@ if ($debug) { echo "<br><pre><b>tmp_networks=</b>\n"; print_r($tmp_networks); ec
 				<tbody>
 
 			<?php $index = 0;
-			if ($num_networks != 0) {
+			if ($num_networks == 0) {
 				echo "<tr>";
 					echo "<td colspan='6' class='errorMsgBig'>";
 						echo "No networks found";

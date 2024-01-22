@@ -20,6 +20,8 @@ class OEUIMANAGER {
     #stageScale = 0.6;
     #stageMode = 'fit';   
     #imageCache = null;
+    #errorFields = [];
+    #errorsTable = null;
 
     #fieldTable = null;
     #allFieldTable = null;
@@ -328,6 +330,7 @@ class OEUIMANAGER {
                 this.#snapRectangle.visible(false);
             }
             this.#movingField = null;
+            this.checkFields();
             this.updateToolbar();
         });
 
@@ -1095,10 +1098,113 @@ class OEUIMANAGER {
 
         $('[data-toggle="tooltip"]').tooltip();
 
+
+        $(document).on('click', '#oe-field-errors', (event) => {
+
+            this.#errorsTable = $('#fielderrorstable').DataTable({
+                data: this.#errorFields,
+                autoWidth: false,
+                pagingType: 'simple_numbers',
+                paging: true,
+                info: true,
+                ordering: false,
+                searching: true,
+                rowId: 'id',
+                pageLength: parseInt(this.#configManager.addListPageSize),
+                lengthMenu: [ [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, -1], [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 'All']],
+                order: [[0, 'asc']],
+                columns: [
+                    {
+                        data: 'id',
+                        width: '150px'
+                    }, {
+                        data: 'name',
+                        width: '600px'
+                    }, {
+                        data: 'type',
+                        width: '100px'
+                    }, {
+                        data: null,
+                        width: '100px',
+                        render: function (item, type, row, meta) {
+                            let buttons = '';
+                            buttons += '<button type="button" class="btn btn-primary btn-xs oe-field-errors-dialog-fix" data-id="' + item.id + '" data-type="' + item.type + '">Fix</button>';
+                            buttons += '<button style="margin-left:10px;" type="button" class="btn btn-danger btn-xs oe-field-errors-dialog-delete" data-id="' + item.id + '"><i class="fa-solid fa-trash oe-field-errors-dialog-delete" data-id="' + item.id + '"></i></button>';
+                            buttons += '</div>';
+                            return buttons;
+                        }
+                    }
+
+                ],
+                fnDrawCallback: function (oSettings) {
+                    if (oSettings._iDisplayLength >= oSettings.aoData.length) {
+                        $(oSettings.nTableWrapper).find('.dataTables_paginate').hide();
+                        $(oSettings.nTableWrapper).children('div').first().hide();
+                        $(oSettings.nTableWrapper).children('div').last().hide();
+                    } else {
+                        $(oSettings.nTableWrapper).find('.dataTables_paginate').show();
+                        $(oSettings.nTableWrapper).children('div').first().show();
+                        $(oSettings.nTableWrapper).children('div').last().show();
+                    }
+                }
+            });
+
+            $('#oe-field-errors-dialog').modal({
+                keyboard: false,
+                width: 800
+            })
+
+            $('#oe-field-errors-dialog').on('hidden.bs.modal', (event) => {
+                this.checkFields();
+                $('#fielderrorstable').DataTable().destroy();
+            });            
+        });
+
+        $(document).on('click', '#oe-field-errors-dialog-close', (event) => {
+            $('#oe-field-errors-dialog').modal('hide');            
+        });
+
+        $(document).on('click', '.oe-field-errors-dialog-delete', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            let fieldId = $(event.currentTarget).data('id');
+            let field = this.#fieldManager.findField(fieldId);
+
+            let shape = field.shape;
+            this.#fieldManager.deleteField(shape.id());
+            shape.destroy();
+            this.#errorsTable.rows('#' + fieldId).remove().draw();
+
+            if (this.#errorsTable .rows().count() == 0) {
+                $('#oe-field-errors-dialog').modal('hide');
+            }    
+        });
+
+        $(document).on('click', '.oe-field-errors-dialog-fix', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            let fieldId = $(event.currentTarget).data('id');
+            let field = this.#fieldManager.findField(fieldId);
+
+            let stageWidth = this.#oeEditorStage.width();
+            let stageHeight = this.#oeEditorStage.height();
+            
+            field.x = (stageWidth / 2)|0;
+            field.y = (stageHeight / 3)|0;
+
+            this.#errorsTable.rows('#' + fieldId).remove().draw();
+
+            if (this.#errorsTable .rows().count() == 0) {
+                $('#oe-field-errors-dialog').modal('hide');
+            }
+
+        });
+
         this.updateDebugWindow();
         this.drawGrid();
         this.updateBackgroundImage();
         this.setupDebug();
+        this.checkFields();
         this.updateToolbar();
     }
 
@@ -1136,13 +1242,83 @@ class OEUIMANAGER {
         this.checkFieldBounds(shape, this.#oeEditorStage, this.#transformer);
     }
 
-    checkFieldBounds(shape, oeEditorStage, transformer) {
-        if (transformer.borderStroke() !== '#00a1ff') {
-            transformer.borderStroke('#00a1ff');
-            transformer.borderStrokeWidth(1);
+    checkFields() {
+        this.#errorFields = [];
+        let fields = this.#fieldManager.fields;
+        for (let [fieldName, field] of fields.entries()) {
+  
+            let result = this.isFieldOutsideViewport(field);
+            if (result.outOfBounds) {
+                let name = 'Unknown';
+                if (field instanceof OEIMAGEFIELD) {
+                    name = field.image;
+                } else {
+                    name = field.label;
+                }
+                this.#errorFields.push({
+                    'id': fieldName,
+                    'name': name,
+                    'field': field,
+                    'type': result.type
+                });
+            }
         }
 
-      
+        if (this.#errorFields.length > 0) {
+            $('#oe-field-errors').removeClass('hidden');
+            $('#oe-field-errors').addClass('red pulse');
+        } else {
+            $('#oe-field-errors').addClass('hidden');
+            $('#oe-field-errors').removeClass('red pulse');
+        }
+    }
+
+    isFieldOutsideViewport(field) {
+        let result = false;
+        let type = '';
+        let stageWidth = this.#oeEditorStage.width();
+        let stageHeight = this.#oeEditorStage.height();
+
+        let x = field.tlx;
+        let y = field.tly;
+
+        if (x < 0) {
+            result = true;
+            type = 'left';
+        }
+        if (y < 0) {
+            result = true;
+            type = 'top';
+        }
+
+        if (x > stageWidth) {
+            result = true;
+            type = 'right';
+        }
+        if (y > stageHeight) {
+            result = true;
+            type = 'bottom';
+        }
+
+        if ((x < 0 && y < 0) || (x > stageWidth && y > stageHeight)) {
+            result = true;
+            type = 'all';
+        }
+
+        return {
+            outOfBounds: result, 
+            type: type
+        };
+    }
+
+    checkFieldBounds(shape, oeEditorStage, transformer=null) {
+        if (transformer !== null) {
+            if (transformer.borderStroke() !== '#00a1ff') {
+                transformer.borderStroke('#00a1ff');
+                transformer.borderStrokeWidth(1);
+            }
+        }
+
         let stageWidth = oeEditorStage.width();
         let stageHeight = oeEditorStage.height();
 
@@ -1171,11 +1347,12 @@ class OEUIMANAGER {
             outOfBounds = true;
         }
 
-        if (outOfBounds) {
+        if (outOfBounds && transformer !== null) {
             transformer.borderStrokeWidth(3);
             transformer.borderStroke('red');    
         }
 
+        return outOfBounds;
     }
 
     #saveConfig() {

@@ -170,6 +170,15 @@ class OEFIELD {
     this.dirty = true;
   }
 
+  get tlx() {
+    return this.fieldData.tlx;
+  }
+
+  get tly() {
+    return this.fieldData.tly;
+  }
+
+
   get rotation() {
     return this.fieldData.rotate;
   }

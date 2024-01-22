@@ -112,6 +112,11 @@ function DisplayOverlay($image_name)
                                             <li>
                                                 <div class="btn btn-lg navbar-btn oe-zoom" id="oe-zoom-fit" data-toggle="tooltip" data-container="body" data-placement="top" title="Fit to Window"><i class="fa-solid fa-down-left-and-up-right-to-center"></i></div>
                                             </li>
+                                            <li>
+                                                <div class="btn btn-lg navbar-btn oe-field-errors hidden" id="oe-field-errors" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Field Errors">
+                                                    <i class="fa-solid fa-circle-exclamation"></i>
+                                                </div>
+                                            </li>
                                         </ul>
                                         <ul class="nav navbar-nav navbar-right">
                                             <li id="oe-toolbar-debug" class="hidden">
@@ -218,6 +223,34 @@ function DisplayOverlay($image_name)
                         </tr>
                     </thead>
                 </table>                
+            </div>
+
+            <div class="modal" role="dialog" id="oe-field-errors-dialog">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title">Field Errors</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div role="tabpanel" class="tab-pane active" id="oe-field-errors-dialog-fields">
+                                <table id="fielderrorstable" class="display compact" style="width:98%">
+                                    <thead>
+                                        <tr>
+                                            <th>Id</th>
+                                            <th>Field Name</th>
+                                            <th>Type</th>
+                                            <th>&nbsp;</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" id="oe-field-errors-dialog-close">Close</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="modal" role="dialog" id="oe-item-list-dialog">

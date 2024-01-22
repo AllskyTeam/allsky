@@ -3,6 +3,7 @@
 function DisplayWPAConfig(){
 	global $page;
 	$status = new StatusMessages();
+	$debug = true;
 
 	// Find currently configured networks
 	exec(' sudo cat ' . RASPI_WPA_SUPPLICANT_CONFIG, $known_return);
@@ -20,22 +21,26 @@ function DisplayWPAConfig(){
 				$thisNetwork = null;
 				$ssid = null;
 			} elseif ($lineArr = preg_split('/\s*=\s*/', trim($line))) {
-				switch(strtolower($lineArr[0])) {
+				$key = strtolower($lineArr[0]);
+				$value = trim($lineArr[1], '"');
+				switch($key) {
 					case 'ssid':
-						$ssid = trim($lineArr[1], '"');
+						$ssid = $value;
 						break;
-					case 'psk':		// This may be a plain-text value or a 64-character encrypted value.
+					case 'psk':
+						// This may be a plain-text value or a 64-character encrypted value.
 						if (array_key_exists('passphrase', $thisNetwork)) {
 							break;
 						}
 					case '#psk':
-						$thisNetwork['#psk'] = trim($lineArr[1], '"');
+						if ($key === '#psk')
+							$thisNetwork['#psk'] = $value;	// usually plain-text passphrase
 						$thisNetwork['protocol'] = 'WPA';
 					case 'wep_key0': // Untested
-						$thisNetwork['passphrase'] = trim($lineArr[1], '"');
+						$thisNetwork['passphrase'] = $value;
 						break;
 					case 'key_mgmt':
-						if (! array_key_exists('passphrase', $thisNetwork) && $lineArr[1] === 'NONE') {
+						if (! array_key_exists('passphrase', $thisNetwork) && $value === 'NONE') {
 							$thisNetwork['protocol'] = 'Open';
 						}
 						break;
@@ -51,11 +56,15 @@ function DisplayWPAConfig(){
 			fwrite($wpa_file, 'ctrl_interface=DIR=' . RASPI_WPA_CTRL_INTERFACE . ' GROUP=netdev' . PHP_EOL);
 			fwrite($wpa_file, 'update_config=1' . PHP_EOL);
 
-// echo "<br>POST=<pre>"; print_r($_POST); echo "</pre>";
+if ($debug) { echo "<br><pre><b>POST</b>=\n"; print_r($_POST); echo "</pre>"; }
 
+			// Look for items to delete or update.
+			// This assumes the "delete" and "update" lines come last for each ssid.
 			foreach(array_keys($_POST) as $post) {
 				if (preg_match('/delete(\d+)/', $post, $post_match)) {
-					unset($tmp_networks[$_POST['ssid' . $post_match[1]]]);
+					$num = $post_match[1];
+					$s = $_POST["ssid$num"];
+					unset($tmp_networks[$s]);
 				} elseif (preg_match('/update(\d+)/', $post, $post_match)) {
 					// NB, at the moment, the value of protocol from the form may
 					// contain HTML line breaks
@@ -66,12 +75,12 @@ function DisplayWPAConfig(){
 						'passphrase' => $_POST["passphrase$num"],
 						'configured' => true
 						);
-// echo "<br>tmp_networks[$s]=<pre>"; print_r($tmp_networks[$s]); echo "</pre>";
+if ($debug) { echo "<br><pre><b>tmp_networks[$s]</b>=\n"; print_r($tmp_networks[$s]); echo "</pre>"; }
 				}
 			}
 
 			$ok = true;
-// echo "<br>tmp_networks=<pre>"; print_r($tmp_networks); echo "</pre>";
+if ($debug) { echo "<br><pre><b>tmp_networks=</b>\n"; print_r($tmp_networks); echo "</pre>"; }
 			foreach($tmp_networks as $ssid => $network) {
 				if ($network['protocol'] === 'Open') {
 					fwrite($wpa_file, "network={".PHP_EOL);
@@ -79,17 +88,21 @@ function DisplayWPAConfig(){
 					fwrite($wpa_file, "\tkey_mgmt=NONE".PHP_EOL);
 					fwrite($wpa_file, "}".PHP_EOL);
 				} else {
-					$pound_psk = $network['#psk'];
+					$pound_psk = getVariableOrDefault($network, '#psk', "");
 					if ($pound_psk !== "")
 						$passphrase = $pound_psk;
 					else
 						$passphrase = $network['passphrase'];
 					$len = strlen($passphrase);
 					if ($len >=8 && $len <= 63) {
+						// un-encrypted passphrase - get encrypted version.
 						unset($wpa_passphrase);
 						unset($line);
-						$cmd = 'wpa_passphrase '. escapeshellarg($ssid) . ' ' . escapeshellarg($passphrase);
+						$cmd = 'wpa_passphrase ' . escapeshellarg($ssid);
+						$cmd .= ' ' . escapeshellarg($passphrase);
 						exec($cmd, $wpa_passphrase );
+
+						// This writes a complete "network={ ... }" block with #psk.
 						foreach($wpa_passphrase as $line) {
 							fwrite($wpa_file, $line.PHP_EOL);
 						}
@@ -101,8 +114,6 @@ function DisplayWPAConfig(){
 						if ($passphrase !== "")
 							fwrite($wpa_file, "\tpsk=\"$passphrase\"".PHP_EOL);
 						fwrite($wpa_file, "}".PHP_EOL);
-
-						fwrite($wpa_file, $passphrase.PHP_EOL);
 					} else {
 						$status->addMessage("WPA passphrase for $ssid must be between 8 and 63 characters (it is $len)", "danger");
 						$ok = false;
@@ -195,9 +206,8 @@ function DisplayWPAConfig(){
 	}
 ?>
 
-	<div class="row"><!-- don't indent all <div> - there are too many of them -->
-	<div class="col-lg-12">
-		<div class="panel panel-primary">
+<div class="row"> <div class="col-lg-12">
+	<div class="panel panel-primary">
 		<div class="panel-heading"><i class="fa fa-wifi fa-fw"></i> Configure Wi-Fi</div>
 		<!-- /.panel-heading -->
 		<div class="panel-body">
@@ -209,20 +219,24 @@ function DisplayWPAConfig(){
 			<input type="hidden" name="client_settings">
 			<table class="table table-responsive table-striped">
 				<thead>
-				<tr>
-				<th></th>
-				<th>SSID</th>
-				<th>Channel&nbsp;/&nbsp;Band</th>
-				<th>Security</th>
-				<th>Passphrase</th>
-				<th></th>
-				</tr>
+					<tr>
+						<th></th>
+						<th>SSID</th>
+						<th>Channel&nbsp;/&nbsp;Band</th>
+						<th>Security</th>
+						<th>Passphrase</th>
+						<th></th>
+					</tr>
 				</thead>
 				<tbody>
 
 			<?php $index = 0;
-			if ($num_networks == 0) {
-				echo "<p style='font-size: 150%; color: red;'>No networks found</p>";
+			if ($num_networks != 0) {
+				echo "<tr>";
+					echo "<td colspan='6' class='errorMsgBig'>";
+						echo "No networks found";
+					echo "</td>";
+				echo "</tr>";
 			} else foreach ($networks as $ssid => $network) {
 					$configured = getVariableOrDefault($network, 'configured', false);
 					$connected = getVariableOrDefault($network, 'connected', false);
@@ -296,9 +310,8 @@ function DisplayWPAConfig(){
 			WEP access points appear as 'Open'.
 			Allsky does not currently support connecting to WEP.
 		</div>
-		</div><!-- /.panel-primary -->
-	</div><!-- /.col-lg-12 -->
-	</div><!-- /.row -->
+	</div><!-- /.panel-primary -->
+</div><!-- /.col-lg-12 --> </div><!-- /.row -->
 <?php
 }
 ?>

@@ -1995,21 +1995,15 @@ restore_prior_files()
 
 	local SPACE="    "
 	local NOT_RESTORED="NO PRIOR VERSION"
-	# TODO: endOfNight_additionalStepts.sh script is going away in the next major release.
+
 	local ITEM="${SPACE}endOfNight_additionalSteps.sh"
 	if [[ -f ${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh ]]; then
-		display_msg --log progress "${ITEM}"
-		cp -a "${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh" "${ALLSKY_SCRIPTS}"
-
-		MSG="The ${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh file will be removed"
-		MSG="${MSG}\nin the next version of Allsky.  You appear to be using this file,"
-		MSG="${MSG}\nso please move your code to the 'Script' module in"
+		MSG="The ${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh file is no longer supported."
+		MSG="${MSG}\nPlease move your code in that file to the 'Script' module in"
 		MSG="${MSG}\nthe 'Night to Day Transition Flow' of the Module Manager."
 		MSG="${MSG}\nSee the 'Explanations --> Module' documentation for more details."
 		display_msg --log warning "\n${MSG}\n"
 		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
-	else
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
 	ITEM="${SPACE}'images' directory"

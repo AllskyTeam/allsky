@@ -221,7 +221,7 @@ else
 		BAD_LIMIT=3
 # echo "xxxxxxxxxx ${BAD_COUNT} bad consecutive images" >&2
 		if [[ $((BAD_COUNT % BAD_LIMIT)) -eq 0 ]]; then
-			MSG="Multiple bad consecutive bad images."
+			MSG="Multiple consecutive bad images."
 			MSG="${MSG}\nCheck 'REMOVE_BAD_IMAGES_THRESHOLD_LOW' and 'REMOVE_BAD_IMAGES_THRESHOLD_HIGH' in config.sh"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}" >&2
 		fi

@@ -246,7 +246,7 @@ rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 # Optionally display a notification image.
 if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
 	# Can do this in the background to speed up startup.
-	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "StartingUp" 2>&1 &
+	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 0 "StartingUp" 2>&1 &
 fi
 
 : > "${ARGS_FILE}"

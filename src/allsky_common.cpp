@@ -817,7 +817,13 @@ void closeUp(int e)
 
 	closingUp = true;
 
-	(void) stopVideoCapture(CG.cameraNumber);
+	if (CG.ct == ctZWO)
+	{
+		if (CG.ZWOexposureType == ZWOsnap)
+			(void) stopExposure(CG.cameraNumber);
+		else
+			(void) stopVideoCapture(CG.cameraNumber);
+	}
 
 	// Close the optional display window.	// not used by RPi
 	if (bDisplay)

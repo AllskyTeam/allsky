@@ -588,6 +588,7 @@ ASI_ERROR_CODE ASIGetControlValue(int iCameraIndex, ASI_CONTROL_TYPE ControlType
 
 
 // Empty routines so code compiles.
+int stopExposure(int cameraID) { return((int) ASI_SUCCESS); }
 int stopVideoCapture(int cameraID) { return((int) ASI_SUCCESS); }
 int closeCamera(int cameraID) { return((int) ASI_SUCCESS); }
 char const *getZWOexposureType(ZWOexposure t) { return("ZWOend"); }
@@ -645,6 +646,10 @@ char const *argumentNames[][2] = {
 };
 int const argumentNamesSize =  sizeof(argumentNames) / sizeof(argumentNames[0]);
 
+int stopExposure(int cameraID)
+{
+	return((int) ASIStopExposure(cameraID));
+}
 int stopVideoCapture(int cameraID)
 {
 	return((int) ASIStopVideoCapture(cameraID));
@@ -1510,6 +1515,15 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 	ASI_ERROR_CODE ret;
 	ASI_CONTROL_CAPS cc;
 	bool ok = true;
+
+	// If this camera model/name is different than the last one it likely means the settings
+	// are the the last camera as well, so stop.
+	char *model = getCameraModel(ci);
+	if (strcmp(model, cg->cm) != 0)
+	{
+		Log(0, "%s: ERROR: camera model changed; was [%s], now [%s].\n", cg->ME, cg->cm, model);
+		closeUp(EXIT_ERROR_STOP);
+	}
 
 	// If an exposure value, which was entered on the command-line in MS, is out of range,
 	// we want to specify the valid range in MS, not US which we use internally.

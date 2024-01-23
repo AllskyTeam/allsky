@@ -817,7 +817,13 @@ void closeUp(int e)
 
 	closingUp = true;
 
-	(void) stopVideoCapture(CG.cameraNumber);
+	if (CG.ct == ctZWO)
+	{
+		if (CG.ZWOexposureType == ZWOsnap)
+			(void) stopExposure(CG.cameraNumber);
+		else
+			(void) stopVideoCapture(CG.cameraNumber);
+	}
 
 	// Close the optional display window.	// not used by RPi
 	if (bDisplay)
@@ -832,8 +838,10 @@ void closeUp(int e)
 	if (CG.notificationImages) {
 		if (e == EXIT_RESTARTING)
 			(void) displayNotificationImage("--expires 15 Restarting &");
-		else
+		else if (e == EXIT_OK)
 			(void) displayNotificationImage("--expires 2 NotRunning &");
+		else
+			(void) displayNotificationImage("--expires 0 Error &");
 
 		// Sleep to give it a chance to print any messages so they (hopefully) get printed
 		// before the one below. This is only so it looks nicer in the log file.
@@ -1126,6 +1134,7 @@ void displayHelp(config cg)
 	printf(" -%-*s - 1 enables outline font [%s].\n", n, "outlinefont b", yesNo(cg.overlay.outlinefont));
 
 	printf("\nMisc. settings:\n");
+	printf(" -%-*s - Last camera model [no default].\n", n, "cameramodel s");
 	printf(" -%-*s - Camera number [%d].\n", n, "cameranumber n", cg.cameraNumber);
 	printf(" -%-*s - Where to save 'filename' [%s].\n", n, "save_dir s", cg.saveDir);
 	printf(" -%-*s - 1 previews the captured images. Only works with a Desktop Environment [%s]\n", n, "preview", yesNo(cg.preview));
@@ -1178,6 +1187,7 @@ void displaySettings(config cg)
 	printf("%s", c(KGRN));
 	printf("\nSettings:\n");
 
+	printf("   Camera model: %s\n", cg.cm);
 	if (cg.cameraNumber > 0)
 		printf("   Camera number: %d\n", cg.cameraNumber);
 	if (cg.cmdToUse != NULL)
@@ -1570,6 +1580,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else if (strcmp(a, "version") == 0)
 		{
 			cg->version = argv[++i];
+		}
+		else if (strcmp(a, "cameramodel") == 0)
+		{
+			cg->cm = argv[++i];
 		}
 		else if (strcmp(a, "cameranumber") == 0)
 		{

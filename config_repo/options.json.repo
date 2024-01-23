@@ -1270,6 +1270,7 @@
 "description" : "The model of camera you are using.<br><strong>To change it, change the <span class='WebUISetting'>Camera Type</span> above.</strong>",
 "label" : "Camera Model",
 "type" : "readonly",
+"usage" : "capture",
 "display" : true,
 "action" : "restart"
 },

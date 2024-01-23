@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# This EXIT code is also defined in variables.sh, but in case we can't open that file, we need it here.
-EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
-
 # Make it easy to find the beginning of this run in the log file.
 echo "     ***** Starting AllSky *****"
 
@@ -16,7 +13,7 @@ STOPPED_MSG="Allsky Stopped!"
 ERROR_MSG_PREFIX="*** ERROR ***\n${STOPPED_MSG}\n"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP:-100}"
 if [[ -z ${ALLSKY_CONFIG} ]]; then
 	MSG="FATAL ERROR: 'source variables.sh' did not work properly."
 	echo -e "${RED}*** ${MSG}${NC}"
@@ -246,7 +243,7 @@ rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 # Optionally display a notification image.
 if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
 	# Can do this in the background to speed up startup.
-	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "StartingUp" 2>&1 &
+	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 0 "StartingUp" 2>&1 &
 fi
 
 : > "${ARGS_FILE}"
@@ -342,7 +339,7 @@ if [[ ${RETCODE} -ge ${EXIT_ERROR_STOP} ]]; then
 		echo "*** After fixing, restart the allsky service. ***"
 	fi
 	echo "***"
-	doExit "${EXIT_ERROR_STOP}" "Error"	# Can't do a custom message since we don't know the problem
+	doExit "${RETCODE}" "Error"	# Can't do a custom message since we don't know the problem
 fi
 
 # Some other error

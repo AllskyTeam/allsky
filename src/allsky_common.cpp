@@ -838,8 +838,10 @@ void closeUp(int e)
 	if (CG.notificationImages) {
 		if (e == EXIT_RESTARTING)
 			(void) displayNotificationImage("--expires 15 Restarting &");
-		else
+		else if (e == EXIT_OK)
 			(void) displayNotificationImage("--expires 2 NotRunning &");
+		else
+			(void) displayNotificationImage("--expires 0 Error &");
 
 		// Sleep to give it a chance to print any messages so they (hopefully) get printed
 		// before the one below. This is only so it looks nicer in the log file.

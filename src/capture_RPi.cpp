@@ -40,21 +40,22 @@ using namespace std;
 timeval exposureStartDateTime;						// date/time an image started
 
 std::vector<int> compressionParameters;
-bool bMain					= true;
-bool bDisplay				= false;
+bool bMain						= true;
+bool bDisplay					= false;
 std::string dayOrNight;
-int numErrors				= 0;					// Number of errors in a row
-int maxErrors				= 4;					// Max number of errors in a row before we exit
+int numTotalErrors				= 0;				// Total number of errors, fyi
+int numConsecutiveErrors		= 0;				// Number of consecutive errors
+int maxErrors					= 4;				// Max number of errors in a row before we exit
 
-bool gotSignal				= false;				// did we get a SIGINT (from keyboard), or SIGTERM/SIGHUP (from service)?
-int iNumOfCtrl				= NOT_SET;				// Number of camera control capabilities
-pthread_t threadDisplay		= 0;					// Not used by Rpi;
-int numExposures			= 0;					// how many valid pictures have we taken so far?
-int currentBpp				= NOT_SET;				// bytes per pixel: 8, 16, or 24
-int currentBitDepth			= NOT_SET;				// 8 or 16
+bool gotSignal					= false;			// Did we get signal?
+int iNumOfCtrl					= NOT_SET;			// Number of camera control capabilities
+pthread_t threadDisplay			= 0;				// Not used by Rpi;
+int numExposures				= 0;				// how many valid pictures have we taken so far?
+int currentBpp					= NOT_SET;			// bytes per pixel: 8, 16, or 24
+int currentBitDepth				= NOT_SET;			// 8 or 16
 raspistillSetting myRaspistillSetting;
 modeMeanSetting myModeMeanSetting;
-std::string errorOutput		= "/tmp/capture_RPi_debug.txt";
+std::string errorOutput			= "/tmp/capture_RPi_debug.txt";
 
 
 //---------------------------------------------------------------------------------------------
@@ -332,7 +333,7 @@ int RPicapture(config cg, cv::Mat *image)
 	{
 		// If there have been 2 consecutive errors, chances are this one will fail too,
 		// so capture the error message.
-		if (cg.debugLevel >= 3 || numErrors >= 2)
+		if (cg.debugLevel >= 3 || numConsecutiveErrors >= 2)
 			s2 = " > " + errorOutput + " 2>&1";
 		else
 			s2 = " 2> /dev/null";	// gets rid of a bunch of libcamera verbose messages
@@ -777,7 +778,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 			if (retCode == 0)
 			{
 				numExposures++;
-				numErrors = 0;
+				numConsecutiveErrors = 0;
 
 				// We currently have no way to get the actual white balance values,
 				// so use what the user requested.
@@ -890,10 +891,11 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 						CG.ME, retCode, WEXITSTATUS(retCode));
 				}
 
-				numErrors++;
-				if (numErrors >= maxErrors)
+				numTotalErrors++;
+				numConsecutiveErrors++;
+				if (numConsecutiveErrors >= maxErrors)
 				{
-					Log(0, "*** %s: ERROR: maximum number of consecutive errors of %d reached; capture program stopped.\n", CG.ME, maxErrors);
+					Log(0, "*** %s: ERROR: maximum number of consecutive errors of %d reached; capture program stopped. Total errors=%'d.\n", CG.ME, maxErrors, numTotalErrors);
 					Log(0, "Make sure cable between camera and Pi is all the way in.\n");
 					Log(0, "Look in '%s' for details.\n", errorOutput.c_str());
 					closeUp(EXIT_ERROR_STOP);

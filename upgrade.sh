@@ -23,11 +23,6 @@ source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 
-if [[ ${EUID} -eq 0 ]]; then
-	display_msg error "This script must NOT be run as root, do NOT use 'sudo'."
-	exit 1
-fi
-
 cd "${ALLSKY_HOME}"  						|| exit "${EXIT_ERROR_STOP}"
 
 

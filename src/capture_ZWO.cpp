@@ -48,9 +48,10 @@ bool bSavingImg					= false;
 pthread_mutex_t mtxSaveImg;
 pthread_cond_t condStartSave;
 ASI_CONTROL_CAPS ControlCaps;
-int numErrors					= 0;				// Number of errors in a row.
+int numTotalErrors				= 0;				// Total number of errors, fyi
+int numConsecutiveErrors		= 0;				// Number of consecutive errors
 int maxErrors					= 5;				// Max number of errors in a row before we exit
-bool gotSignal					= false;			// did we get a SIGINT (from keyboard), or SIGTERM/SIGHUP (from service)?
+bool gotSignal					= false;			// Did we get a signal?
 int iNumOfCtrl					= NOT_SET;			// Number of camera control capabilities
 pthread_t threadDisplay			= 0;
 pthread_t hthdSave				= 0;
@@ -497,7 +498,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 	}
 
 	// We successfully got the image so reset the global error counter;
-	numErrors = 0;
+	numConsecutiveErrors = 0;
 
 	// The timeToTakeImage_us should never be less than what was requested.
 	// and shouldn't be less then the time taken plus overhead of setting up the shot.
@@ -785,11 +786,12 @@ bool checkMaxErrors(int *e, int maxErrors)
 	// Once takeOneExposure() fails with a timeout, it seems to always fail,
 	// even with extremely large timeout values, so apparently ASI_ERROR_TIMEOUT doesn't
 	// necessarily mean it's timing out. Exit forcing us to be restarted.
-	numErrors++; sleep(2);
-	if (numErrors >= maxErrors)
+	numTotalErrors++;
+	numConsecutiveErrors++; sleep(2);
+	if (numConsecutiveErrors >= maxErrors)
 	{
 		*e = EXIT_RESET_USB;		// exit code. Need to reset USB bus
-		Log(0, "*** %s: ERROR: Maximum number of consecutive errors of %d reached; capture program exited.\n", CG.ME, maxErrors);
+		Log(0, "*** %s: ERROR: Maximum number of consecutive errors of %d reached; capture program exited. Total errors=%'d.\n", CG.ME, maxErrors, numTotalErrors);
 		return(false);	// gets us out of inner and outer loop
 	}
 	return(true);
@@ -1465,7 +1467,7 @@ int main(int argc, char *argv[])
 			asiRetCode = takeOneExposure(&CG, pRgb.data);
 			if (asiRetCode == ASI_SUCCESS)
 			{
-				numErrors = 0;
+				numConsecutiveErrors = 0;
 				numExposures++;
 				bool hitMinOrMax = false;
 

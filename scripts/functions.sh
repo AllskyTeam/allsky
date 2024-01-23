@@ -3,6 +3,11 @@
 # Shell functions used by multiple scripts.
 # This file is "source"d into others, and must be done AFTER source'ing variables.sh.
 
+SUDO_OK="${SUDO_OK:-false}"
+if [[ ${SUDO_OK} == "false" && ${EUID} -eq 0 ]]; then
+	echo -e "\n${RED}${ME}: This script must NOT be run as root, do NOT use 'sudo'.${NC}\n" >&2
+	exit 1
+fi
 
 #####
 # Exit with error message and a custom notification image.

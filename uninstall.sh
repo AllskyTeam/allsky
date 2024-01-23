@@ -1,10 +1,12 @@
 #!/bin/bash
 
 [[ -z "${ALLSKY_HOME}" ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
-# ME="$( basename "${BASH_ARGV0}" )"
+ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
 source "${ALLSKY_HOME}/variables.sh"			|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit "${EXIT_ERROR_STOP}"
 
 cd "${ALLSKY_HOME}"  							|| exit "${EXIT_ERROR_STOP}"
 

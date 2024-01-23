@@ -11,11 +11,6 @@ source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
-if [[ ${EUID} -eq 0 ]]; then
-	display_msg error "This script must NOT be run as root, do NOT use 'sudo'."
-	exit 1
-fi
-
 # This script assumes the user already did the "git clone" into ${ALLSKY_HOME}.
 
 # Some versions of Linux default to 750 so web server can't read it

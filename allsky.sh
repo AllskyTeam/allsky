@@ -331,7 +331,10 @@ if [[ ${RETCODE} -eq ${EXIT_RESET_USB} ]]; then
 fi
 
 # RETCODE -ge ${EXIT_ERROR_STOP} means we should not restart until the user fixes the error.
-if [[ ${RETCODE} -ge ${EXIT_ERROR_STOP} ]]; then
+# If RETCODE is negative it means the capture program already displayed a message.
+R=${RETCODE}
+[[ ${R} -lt 0 ]] && (( R *= -1 ))
+if [[ ${R} -ge ${EXIT_ERROR_STOP} ]]; then
 	echo "***"
 	if [[ ${ON_TTY} == "true" ]]; then
 		echo "*** After fixing, restart ${ME}. ***"
@@ -339,7 +342,7 @@ if [[ ${RETCODE} -ge ${EXIT_ERROR_STOP} ]]; then
 		echo "*** After fixing, restart the allsky service. ***"
 	fi
 	echo "***"
-	doExit "${EXIT_ERROR_STOP}" "Error"	# Can't do a custom message since we don't know the problem
+	doExit "${RETCODE}" "Error"	# Can't do a custom message since we don't know the problem
 fi
 
 # Some other error

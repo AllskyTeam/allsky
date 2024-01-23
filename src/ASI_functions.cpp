@@ -1518,9 +1518,10 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 
 	// If this camera model/name is different than the last one it likely means the settings
 	// are the the last camera as well, so stop.
-	if (strcmp(ci.Name, cg->cm) != 0)
+	char *model = getCameraModel(ci);
+	if (strcmp(model, cg->cm) != 0)
 	{
-		Log(0, "%s: ERROR: camera changed; was [%s], now [%s].\n", cg->ME, cg->cm, ci.Name);
+		Log(0, "%s: ERROR: camera model changed; was [%s], now [%s].\n", cg->ME, cg->cm, model);
 		closeUp(EXIT_ERROR_STOP);
 	}
 

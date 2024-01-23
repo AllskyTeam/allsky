@@ -53,7 +53,6 @@ function doExit()
 	echo "     ***** AllSky Stopped *****"
 
 	# Don't let the service restart us because we'll likely get the same error again.
-	[[ ${EXITCODE} -lt 0 ]] && (( EXITCODE *= -1 ))
 	[[ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]] && sudo systemctl stop allsky
 
 	exit "${EXITCODE}"

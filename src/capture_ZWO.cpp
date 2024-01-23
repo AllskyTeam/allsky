@@ -402,8 +402,8 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 	{
 		status = ASIStartVideoCapture(cg->cameraNumber);
 		if (status != ASI_SUCCESS) {
-			Log(0, "  > %s: ERROR: ASIStartVideoCapture() failed: %s. Total errors=%'d\n",
-				cg->ME, getRetCode(status), numTotalErrors+1);
+			Log(0, "  > %s: ERROR: ASIStartVideoCapture() failed: %s.\n", cg->ME, getRetCode(status));
+			Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
 			return(status);
 		}
 	}
@@ -417,8 +417,8 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 		status = ASIStartExposure(cg->cameraNumber, ASI_FALSE);
 		if (status != ASI_SUCCESS)
 		{
-			Log(0, "  > %s: ERROR: ASIStartExposure() failed: %s. Total errors=%'d\n",
-				cg->ME, getRetCode(status), numTotalErrors+1);
+			Log(0, "  > %s: ERROR: ASIStartExposure() failed: %s.\n", cg->ME, getRetCode(status));
+			Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
 			if (! checkMaxErrors(&exitCode, maxErrors))
 				closeUp(exitCode);
 			return(status);
@@ -442,8 +442,9 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 			status = ASIGetExpStatus(cg->cameraNumber, &s);
 			if (status != ASI_SUCCESS)
 			{
-				Log(0, "  > %s: ERROR: ASIGetExpStatus() failed after %d sleeps: %s. Total errors=%'d\n",
-					cg->ME, num_sleeps, getRetCode(status), numTotalErrors+1);
+				Log(0, "  > %s: ERROR: ASIGetExpStatus() failed after %d sleeps: %s.\n",
+					cg->ME, num_sleeps, getRetCode(status));
+				Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
 				if (! checkMaxErrors(&exitCode, maxErrors))
 					closeUp(exitCode);
 				return(status);
@@ -459,8 +460,8 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 		{
 			// This error DOES happen sometimes.
 			// Unfortunately "s" is either success or failure - not much help.
-			Log(1, "    > ERROR: Exposure failed after %d sleeps, s=%d.  Total errors=%'d\n",
-				num_sleeps, s, numTotalErrors+1);
+			Log(1, "    > ERROR: Exposure failed after %d sleeps, s=%d.\n", num_sleeps, s);
+			Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
 			if (! checkMaxErrors(&exitCode, maxErrors))
 				closeUp(exitCode);
 			return(ASI_ERROR_END);
@@ -471,8 +472,9 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 		{
 			// For whatever reason this does fail sometimes, so to avoid having
 			// every failure appear in the WebUI message center, log with level 1.
-			Log(1, "  > ERROR: ASIGetDataAfterExp() failed after %d sleeps: %s.  Total errors=%'d\n",
-				num_sleeps, getRetCode(status), numTotalErrors+1);
+			Log(1, "  > ERROR: ASIGetDataAfterExp() failed after %d sleeps: %s.\n",
+				num_sleeps, getRetCode(status));
+			Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
 			if (! checkMaxErrors(&exitCode, maxErrors))
 				closeUp(exitCode);
 			return(status);
@@ -482,8 +484,9 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 		status = ASIGetVideoData(cg->cameraNumber, imageBuffer, bufferSize, timeout);
 		if (status != ASI_SUCCESS)
 		{
-			Log(0, "  > %s: ERROR: Failed getting image: %s. Total errors=%'d\n",
-				cg->ME, getRetCode(status), numTotalErrors+1);
+			Log(0, "  > %s: ERROR: Failed getting image: %s.\n",
+				cg->ME, getRetCode(status));
+			Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
 	
 			// Check if we reached the maximum number of consective errors
 			if (! checkMaxErrors(&exitCode, maxErrors))
@@ -795,7 +798,9 @@ bool checkMaxErrors(int *e, int maxErrors)
 	if (numConsecutiveErrors >= maxErrors)
 	{
 		*e = EXIT_RESET_USB;		// exit code. Need to reset USB bus
-		Log(0, "*** %s: ERROR: Maximum number of consecutive errors of %d reached; capture program exited. Total errors=%'d.\n", CG.ME, maxErrors, numTotalErrors);
+		Log(0, "*** %s: ERROR: Maximum number of consecutive errors of %d reached; capture program exited.\n",
+			CG.ME, maxErrors);
+		Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
 		return(false);	// gets us out of inner and outer loop
 	}
 	return(true);

@@ -421,6 +421,7 @@ create_webui_defines()
 			-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};" \
 			-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};" \
 			-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};" \
+			-e "s;XX_MY_OVERLAY_TEMPLATES_XX;${MY_OVERLAY_TEMPLATES};" \
 			-e "s;XX_ALLSKY_MODULES_XX;${ALLSKY_MODULES};" \
 		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
 		chmod 644 "${FILE}"
@@ -521,11 +522,10 @@ save_camera_capabilities()
 # Update the sudoers file so the web server can execute certain commands with sudo.
 do_sudoers()
 {
-	[[ ${do_sudoers} == "true" ]] && return
-
 	display_msg --log progress "Creating/updating sudoers file."
 	sed -e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" "${REPO_SUDOERS_FILE}"  >  /tmp/x
 	sudo install -m 0644 /tmp/x "${FINAL_SUDOERS_FILE}" && rm -f /tmp/x
+
 	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
 
@@ -832,13 +832,13 @@ install_webserver_et_al()
 			-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};g" \
 			-e "s;XX_WEBSERVER_OWNER_XX;${WEBSERVER_OWNER};g" \
 			-e "s;XX_WEBSERVER_GROUP_XX;${WEBSERVER_GROUP};g" \
-			-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};g" \
 			-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};g" \
 			-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};g" \
 			-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};g" \
 			-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};g" \
-			-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};g" \
 			-e "s;XX_ALLSKY_DOCUMENTATION_XX;${ALLSKY_DOCUMENTATION};g" \
+			-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};g" \
+			-e "s;XX_MY_OVERLAY_TEMPLATES_XX;${MY_OVERLAY_TEMPLATES};g" \
 				"${REPO_LIGHTTPD_FILE}"  >  /tmp/x
 		sudo install -m 0644 /tmp/x "${FINAL_LIGHTTPD_FILE}" && rm -f /tmp/x
 	fi
@@ -948,36 +948,25 @@ set_permissions()
 		# Not sure what to do about this...
 	fi
 
-	# Remove any old entries; we now use /etc/sudoers.d/allsky instead of /etc/sudoers.
-	# TODO: Can remove this in the next release
-	sudo sed -i -e "/allsky/d" -e "/${WEBSERVER_GROUP}/d" /etc/sudoers
-
-	do_sudoers
-
 	# The web server needs to be able to create and update many of the files in ${ALLSKY_CONFIG}.
 	# Not all, but go ahead and chgrp all of them so we don't miss any new ones.
 	sudo find "${ALLSKY_CONFIG}/" -type f -exec chmod 664 '{}' \;
 	sudo find "${ALLSKY_CONFIG}/" -type d -exec chmod 775 '{}' \;
 	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_CONFIG}"
 
-	# The files should already be the correct permissions/owners, but just in case, set them.
-	# We don't know what permissions may have been on the old website, so use "sudo".
-	sudo find "${ALLSKY_WEBUI}/" -type f -exec chmod 644 '{}' \;
-	sudo find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 '{}' \;
+	# The files should already be the correct permissions, but just in case, set them.
 	chmod 755	"${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
 				"${ALLSKY_WEBUI}/includes/convertJSON.php"
 
+	# We don't know what permissions may have been on the old website, so use "sudo".
 	if [[ -d "${ALLSKY_WEBSITE}" ]]; then
-		sudo find "${ALLSKY_WEBUI}/" -type d -name thumbnails \! -perm 775 -exec chmod 775 '{}' \;
-		sudo find "${ALLSKY_WEBUI}/" -type d -name thumbnails \! -group "${WEBSERVER_GROUP}" -exec chgrp "${WEBSERVER_GROUP}" '{}' \;
+		sudo find "${ALLSKY_WEBSITE}/" -type d -exec chmod 775 '{}' \;
+		sudo find "${ALLSKY_WEBSITE}/" -type d -name thumbnails -exec chgrp "${WEBSERVER_GROUP}" '{}' \;
+		chgrp -f "${WEBSERVER_GROUP}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 	fi
 
 	chmod 775 "${ALLSKY_TMP}"
 	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_TMP}"
-
-	# This is actually an Allsky Website file, but in case we restored the old website,
-	# set its permissions.
-	chgrp -f "${WEBSERVER_GROUP}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 }
 
 
@@ -2037,9 +2026,9 @@ restore_prior_files()
 		display_msg --log progress "${ITEM}"
 		cp -ar "${PRIOR_CONFIG_DIR}/overlay" "${ALLSKY_CONFIG}"
 
-		# Restore the fields.json file as it's part of the main Allsky distribution
+		# Restore the new fields.json file as it's part of the main Allsky distribution
 		# and should be replaced during an upgrade.
-		cp -ar "${ALLSKY_REPO}/overlay/config/fields.json" "${ALLSKY_OVERLAY}/config/"
+		cp -a "${ALLSKY_REPO}/overlay/config/fields.json" "${ALLSKY_OVERLAY}/config/"
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
@@ -2272,20 +2261,6 @@ do_update()
 
 	save_camera_capabilities "false" || exit 1
 	set_permissions
-
-	# Update the sudoers file if it's missing some entries.
-	# Look for the last entry added (should be the last entry in the file).
-	# Don't simply copy the repo file to the final location in case the repo file isn't up to date.
-	if ! grep --silent "/date" "${FINAL_SUDOERS_FILE}" ; then
-		display_msg --log progress "Updating sudoers list."
-		if ! grep --silent "/date" "${REPO_SUDOERS_FILE}" ; then
-			local F="$( basename "${REPO_SUDOERS_FILE}" )"
-			MSG="Please get the newest '${F}' file from Git and try again."
-			display_msg --log error "${MSG}"
-			exit_installation 2 "${STATUS_ERROR}" "'${F}' file is old."
-		fi
-		do_sudoers
-	fi
 
 	exit_installation 0 "${STATUS_OK}" "Update completed."
 }
@@ -2988,6 +2963,9 @@ install_overlay
 ##### Set permissions.  Want this at the end so we make sure we get all files.
 # Re-run every time in case permissions changed.
 set_permissions
+
+##### Update the sudoers file
+[[ ${do_sudoers} != "true" ]] && do_sudoers
 
 ##### Check if there's an old WebUI and let the user know it's no longer used.
 # Prompt user to remove any prior old-style WebUI.

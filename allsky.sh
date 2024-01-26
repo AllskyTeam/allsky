@@ -107,10 +107,10 @@ pgrep "${ME}" | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
 if [[ ${CAMERA_TYPE} == "RPi" ]]; then
 	# "true" means use doExit() on error
-	RPi_COMMAND_TO_USE="$( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" )"
+	RPi_COMMAND="-cmd $( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" )"
 
 elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
-	RPi_COMMAND_TO_USE=""
+	RPi_COMMAND=""
 	RESETTING_USB_LOG="${ALLSKY_TMP}/resetting_USB.txt"
 	ZWO_VENDOR="03c3"
 	TEMP="${ALLSKY_TMP}/${CAMERA_TYPE}_cameras.txt"
@@ -297,10 +297,12 @@ python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --cleartimings
 deactivate_python_venv
 
 # Run the main program - this is the main attraction...
-# -cmd needs to come first since the capture_RPi code checks for it first.  It's ignored
-# in capture_ZWO.
-# Pass debuglevel on command line so the capture program knows if it should display debug output.
-"${ALLSKY_BIN}/${CAPTURE}" -cmd "${RPi_COMMAND_TO_USE}" -debuglevel "${ALLSKY_DEBUG_LEVEL}" -config "${ARGS_FILE}"
+# ${RPi_COMMAND} needs to come first since the capture_RPi code checks for it first.
+# Pass debuglevel on command line so the capture program knows right away
+# if it should display debug output.
+
+#shellcheck disable=SC2086
+"${ALLSKY_BIN}/${CAPTURE}" "${RPi_COMMAND}" -debuglevel "${ALLSKY_DEBUG_LEVEL}" -config "${ARGS_FILE}"
 RETCODE=$?
 
 [[ ${RETCODE} -eq ${EXIT_OK} ]] && doExit "${EXIT_OK}" ""

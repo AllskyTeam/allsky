@@ -384,7 +384,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 
 	// This debug message isn't typcally needed since we already displayed a message about
 	// starting a new exposure, and below we display the result when the exposure is done.
-	Log(3, "    > %s to %s\n",
+	Log(2, "    > %s to %s\n",
 		cg->HB.useHistogram ? "Histogram set exposure" :
 			(wasAutoExposure == ASI_TRUE ? "Camera set auto-exposure" : "Manual exposure set"),
 		length_in_units(cg->currentExposure_us, true));
@@ -431,7 +431,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 		long initial_sleep_us = cg->currentExposure_us + 500 * US_IN_MS;
 		long sleep_us = std::max(cg->currentExposure_us * 0.05, 1.0);
 		Log(4, "      > Doing initial usleep(%'ld) for exposure time %'ld.\n", initial_sleep_us, cg->currentExposure_us);
-		usleep(cg->currentExposure_us);
+		usleep(initial_sleep_us);
 
 		// We should be fairly close to the end of the exposure so now go
 		// into a loop until the exposure is done.
@@ -1590,7 +1590,8 @@ int main(int argc, char *argv[])
 						long exposureDiffBeforeAgression_us = exposureDiff_us;
 
 						// Adjust by aggression setting.
-						if (CG.aggression != 100 && CG.currentSkipFrames <= 0 && exposureDiff_us != 0)
+//x						if (CG.aggression != 100 && CG.currentSkipFrames <= 0 && exposureDiff_us != 0)
+						if (CG.aggression != 100 && exposureDiff_us != 0)
 						{
 							exposureDiff_us *= (float)CG.aggression / 100;
 						}
@@ -1709,9 +1710,11 @@ if (saved_newExposure_us != newExposure_us)
 
 					if (asiRetCode != ASI_SUCCESS)
 					{
-						Log(2,"  > Sleeping %s from failed exposure\n",
-							length_in_units(CG.currentDelay_ms * US_IN_MS, false));
-						usleep(CG.currentDelay_ms * US_IN_MS);
+						// Sleep half the normal time.
+						long s = (CG.currentDelay_ms / 2 * US_IN_MS) * 0.5;
+						Log(2,"  > Sleeping %s us from failed exposure\n",
+							length_in_units(s, false));
+						usleep(s);
 						// Don't save the file or do anything below.
 						continue;
 					}

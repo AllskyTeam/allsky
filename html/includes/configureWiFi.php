@@ -285,9 +285,9 @@ if ($debug) { echo "<br><pre>wpa_cli scan_results:<br>"; print_r($scan_return); 
 			<?php
 				$index = 0;
 				foreach ($networks as $ssid => $network) {
-					$configured = getVariableOrDefault($network, 'configured', false);
-					$connected = getVariableOrDefault($network, 'connected', false);
-					$visible = getVariableOrDefault($network, 'visible', false);
+					$configured = toBool(getVariableOrDefault($network, 'configured', "false"));
+					$connected = toBool(getVariableOrDefault($network, 'connected', "false"));
+					$visible = toBool(getVariableOrDefault($network, 'visible', "false"));
 					$channel = getVariableOrDefault($network, 'channel', "");
 					$times = getVariableOrDefault($network, 'times', 1);
 					$protocol = getVariableOrDefault($network, 'protocol', "");
@@ -330,15 +330,15 @@ if ($debug) { echo "<br><pre>wpa_cli scan_results:<br>"; print_r($scan_return); 
 					$d="";		// TODO: Any reason NOT to allow adding Open SSIDs ?
 					if ($configured) {
 						echo "<input type='submit' class='btn btn-warning' $buttonStyle value='Update' ";
-						if ($protocol === 'Open')
+						if ($protocol === 'TODO: why not?   Open')
 							echo "disabled title='Cannot update Open SSIDs' />";
 						else
 							echo "id='update$index' name='update$index' $d />";
 					} else {
 						echo "<input type='submit' class='btn btn-info' $buttonStyle value='Add' id='update$index' name='update$index' $d />";
 					}
-					$d = $configured ? '' : ' disabled title="SSID not configured"';
-					echo "<input type='submit' class='btn btn-danger' $buttonStyle value='Delete' name='delete$index' $d />";
+					if ($configured)
+						echo "<input type='submit' class='btn btn-danger' $buttonStyle value='Delete' name='delete$index'/>";
 					echo "</div>";
 					echo "</td>";
 					echo "</tr>\n";

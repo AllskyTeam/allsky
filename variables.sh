@@ -100,6 +100,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 
 	# Base location of the overlay and module configuration and data files.
 	ALLSKY_OVERLAY="${ALLSKY_CONFIG}/overlay"
+	MY_OVERLAY_TEMPLATES="${ALLSKY_OVERLAY}/config/myTemplates"
 	ALLSKY_MODULES="${ALLSKY_CONFIG}/modules"
 	ALLSKY_MODULE_LOCATION="/opt/allsky"
 	ALLSKY_EXTRA="${ALLSKY_OVERLAY}/extra"

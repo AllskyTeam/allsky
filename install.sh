@@ -2023,6 +2023,7 @@ restore_prior_files()
 
 	ITEM="${SPACE}'overlay' directory"
 	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
+#XXXX FIX: TODO: only copy over user-generated or user-modified files
 		display_msg --log progress "${ITEM}"
 		cp -ar "${PRIOR_CONFIG_DIR}/overlay" "${ALLSKY_CONFIG}"
 
@@ -2032,6 +2033,7 @@ restore_prior_files()
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
+	[[ ! -d ${MY_OVERLAY_TEMPLATES} ]] && mkdir -p "${MY_OVERLAY_TEMPLATES}"
 
 	ITEM="${SPACE}'ssl' directory"
 	if [[ -d ${PRIOR_CONFIG_DIR}/ssl ]]; then

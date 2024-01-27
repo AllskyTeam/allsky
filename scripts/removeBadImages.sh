@@ -75,8 +75,9 @@ fi
 
 if [[ $( settings ".takedarkframes" ) == "true" ]]; then
 	# Disable low brightness check since darks will have extremely low brightness.
-	# But continue with the other checks in case the dark file is corrupted.
+	# Set the high value to something a dark frame should never get to.
 	REMOVE_BAD_IMAGES_THRESHOLD_LOW=0
+	REMOVE_BAD_IMAGES_THRESHOLD_HIGH=1.00
 fi
 
 # Find the full size image-*jpg and image-*png files (not the thumbnails) and

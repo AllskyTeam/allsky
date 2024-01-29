@@ -302,7 +302,7 @@ deactivate_python_venv
 # if it should display debug output.
 
 #shellcheck disable=SC2086
-"${ALLSKY_BIN}/${CAPTURE}" "${RPi_COMMAND}" -debuglevel "${ALLSKY_DEBUG_LEVEL}" -config "${ARGS_FILE}"
+"${ALLSKY_BIN}/${CAPTURE}" ${RPi_COMMAND} -debuglevel "${ALLSKY_DEBUG_LEVEL}" -config "${ARGS_FILE}"
 RETCODE=$?
 
 [[ ${RETCODE} -eq ${EXIT_OK} ]] && doExit "${EXIT_OK}" ""

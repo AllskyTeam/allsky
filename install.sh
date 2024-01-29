@@ -259,7 +259,7 @@ get_connected_cameras()
 	if C="$( determineCommandToUse "false" "" 2>&1 )" ; then
 		if [[ "${C}" == "libcamera-still" ]]; then
 			# Only get the first camera.
-			RPI_MODEL="$( libcamera-still --list-cameras 2>/dev/null |
+			RPI_MODEL="$( LIBCAMERA_LOG_LEVELS="ERROR,FATAL" libcamera-still --list-cameras |
 				awk '{if ($1 == 0) { print $3; exit 0; }}' )"
 		fi
 		display_msg --log progress "RPi ${RPI_MODEL} camera found."

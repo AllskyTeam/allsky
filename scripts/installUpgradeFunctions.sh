@@ -271,3 +271,33 @@ function update_json_file()		# field, new value, file, [type]
 
 	return 2
 }
+
+####
+# Update a Website configuration file from old to current version.
+update_website_config_file()
+{
+	local FILE="${1}"
+	local PRIOR_VERSION="${2}"
+	local CURRENT_VERSION="${3}"
+	local LOCAL_OR_REMOTE="${4}"
+	local MSG
+
+	MSG="Updating ${FILE} for version ${CURRENT_VERSION}."
+	display_msg --log progress "${MSG}"
+
+	# Current version: 2
+	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
+		# Version 2 removed AllskyWebsiteVersion.
+#XX TODO: is this how to delete the field?
+		update_json_file ".AllskyWebsiteVersion" "null" "${FILE}"
+	fi
+
+	# Set to current version.
+	update_json_file ".${WEBSITE_CONFIG_VERSION}" "${CURRENT_VERSION}" "${FILE}"
+
+	if [[ ${LOCAL_OR_REMOTE} == "local" ]]; then
+		# Since we're installing a new Allsky, update the Allsky version.
+		# For remote Websites it'll be updated when the user updates the Website.
+		update_json_file ".${WEBSITE_ALLSKY_VERSION}" "${ALLSKY_VERSION}" "${FILE}"
+	fi
+}

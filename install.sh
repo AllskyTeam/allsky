@@ -991,6 +991,13 @@ set_permissions()
 	# Unlike the WebUI files and directories, these need to be writable by the web server.
 	sudo chmod 664 "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+
+	# These directories aren't in GitHub so need to be manually created.
+	mkdir -p \
+		"${ALLSKY_WEBSITE}/videos/thumbnails" \
+		"${ALLSKY_WEBSITE}/keograms/thumbnails" \
+		"${ALLSKY_WEBSITE}/startrails/thumbnails"
+
 	sudo find "${ALLSKY_WEBSITE}/" -type d -name thumbnails -exec chmod 775 '{}' '{}/..' \;
 	sudo find "${ALLSKY_WEBSITE}/" -type d -name thumbnails -exec chgrp "${WEBSERVER_GROUP}" '{}' '{}/..' \;
 }
@@ -2254,7 +2261,10 @@ restore_prior_files()
 # If a prior Website exists move its data to the new location.
 restore_prior_website_files()
 {
-	[[ -z ${PRIOR_ALLSKY_WEBSITE_STYLE} ]] && return
+	if [[ -z ${PRIOR_ALLSKY_WEBSITE_DIR} ]]; then
+		display_msg --logonly info "No prior Website so nothing to restore."
+		return
+	fi
 
 	if [[ ${PRIOR_ALLSKY_WEBSITE_STYLE} == "${OLD_STYLE_WEBSITE}" ]]; then
 		# The format of the old files is too different from the new file,
@@ -2336,12 +2346,6 @@ restore_prior_website_files()
 	else
 		display_msg "${LOG_TYPE}" info "No prior startrails to restore."
 	fi
-
-	# Create any directories not created above.
-	mkdir -p \
-		"${ALLSKY_WEBSITE}/videos/thumbnails" \
-		"${ALLSKY_WEBSITE}/keograms/thumbnails" \
-		"${ALLSKY_WEBSITE}/startrails/thumbnails"
 
 	D="${PRIOR_WEBSITE}/myFiles"
 	if [[ -d ${D} ]]; then

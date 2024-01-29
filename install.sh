@@ -1984,7 +1984,7 @@ restore_prior_files()
 	# Do all the restores, then all the updates.
 	display_msg --log progress "Restoring prior:"
 
-	local E  EXTRA  D  R  ITEM  VER=""
+	local E  EXTRA  D  R  ITEM
 
 	if [[ -f ${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh ]]; then
 		MSG="The ${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh file is no longer supported."

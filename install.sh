@@ -1244,9 +1244,9 @@ set_what_can_be_skipped()
 			MSG="Skipping installation of: webserver et.al., PHP modules, Trutype fonts, Python"
 			display_msg --logonly info "${MSG}"
 			install_webserver_et_al="true"
-			installed_PHP_modules="true"
-			installed_Trutype_fonts="true"
-			installed_Python_dependencies="true"
+			install_fonts="true"
+			install_PHP_modules="true"
+			install_Python="true"
 		fi
 	fi
 }

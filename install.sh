@@ -1320,7 +1320,7 @@ does_prior_Allsky_Website_exist()
 	fi
 
 	if [[ -z ${PRIOR_ALLSKY_WEBSITE_STYLE} ]]; then
-		display_msg "${LOG_TYPE}" info "No prior Allsky Website"
+		display_msg --logonly info "No prior Allsky Website"
 	else
 		display_msg "${LOG_TYPE}" info "PRIOR_ALLSKY_WEBSITE_STYLE=${PRIOR_ALLSKY_WEBSITE_STYLE}"
 		display_msg "${LOG_TYPE}" info "PRIOR_ALLSKY_WEBSITE_DIR=${PRIOR_ALLSKY_WEBSITE_DIR}"
@@ -1347,7 +1347,7 @@ PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"
 
 does_prior_Allsky_exist()
 {
-	# First just look for the top-level directory.
+	# If a prior config directory doesn't exist then there's no prior Allsky.
 	if [[ ! -d ${PRIOR_CONFIG_DIR} ]]; then
 		display_msg --logonly info "No prior Allsky found."
 		does_prior_Allsky_Website_exist ""

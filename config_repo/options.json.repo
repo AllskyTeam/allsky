@@ -817,6 +817,7 @@
 "label" : "ZWO Exposure Type",
 "type" : "select",
 "usage" : "capture",
+"display" : "_display",
 "options" : [
 	{"value" : 0, "label" : "Snapshot"},
 	{"value" : 1, "label" : "Video Off"},

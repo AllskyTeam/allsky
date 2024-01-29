@@ -247,6 +247,7 @@ CAMERA_to_CAMERA_TYPE()
 
 #######
 CONNECTED_CAMERAS=""
+# TODO: Make arrays and allow multiple cameras of each camera type
 RPI_MODEL=""
 ZWO_MODEL=""
 
@@ -259,8 +260,8 @@ get_connected_cameras()
 	if C="$( determineCommandToUse "false" "" 2>&1 )" ; then
 		if [[ "${C}" == "libcamera-still" ]]; then
 			# Only get the first camera.
-			RPI_MODEL="$( LIBCAMERA_LOG_LEVELS="ERROR,FATAL" libcamera-still --list-cameras |
-				awk '{if ($1 == 0) { print $3; exit 0; }}' )"
+			RPI_MODEL="$( LIBCAMERA_LOG_LEVELS="ERROR,FATAL" libcamera-still --list-cameras 2>&1 |
+				awk '{if ($2 == ":") { print $3; exit 0; }}' )"
 		fi
 		display_msg --log progress "RPi ${RPI_MODEL} camera found."
 		CC="RPi"

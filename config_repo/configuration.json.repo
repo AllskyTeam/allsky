@@ -58,8 +58,7 @@
 		},
 		"live": true,
 		"id": "starmap",
-		"AllskyVersion" : "XX_ALLSKY_VERSION_XX",
-		"AllskyWebsiteVersion" : "XX_ALLSKY_WEBSITE_VERSION_XX"
+		"AllskyVersion" : "XX_ALLSKY_VERSION_XX"
 	},
 	"homePage": {
 		"comment": "These settings impact the look and feel of the Website home page.",
@@ -229,5 +228,5 @@
 			}
 		]
 	},
-	"ConfigVersion" : "1"
+	"ConfigVersion" : "2"
 }

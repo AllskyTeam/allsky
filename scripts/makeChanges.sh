@@ -100,7 +100,7 @@ SHOW_POSTDATA_MESSAGE="true"
 TWILIGHT_DATA_CHANGED="false"
 CAMERA_TYPE_CHANGED="false"
 GOT_WARNING="false"
-SHOW_ON_MAP="false"
+SHOW_ON_MAP=""
 
 # Several of the fields are in the Allsky Website configuration file,
 # so check if the IS a file before trying to update it.
@@ -123,7 +123,11 @@ function check_website()
 	fi
 	return "${HAS_WEBSITE_RET}"
 }
-check_website		# invoke to set variables
+if [[ -f ${SETTINGS_FILE} ]]; then
+	# check_website requires the settings file to exist.
+	# If it doesn't we are likely called from the install script before the file is created.
+	check_website		# invoke to set variables
+fi
 
 # Make sure RAW16 files have a .png extension.
 function check_filename_type()
@@ -144,6 +148,7 @@ function check_filename_type()
 }
 
 CAMERA_NUMBER=""
+NUM_CHANGED=0
 
 while [[ $# -gt 0 ]]
 do
@@ -151,6 +156,7 @@ do
 	LABEL="${2}"
 	OLD_VALUE="${3}"
 	NEW_VALUE="${4}"
+
 	if [[ ${DEBUG} == "true" ]]; then
 		MSG="${KEY}: Old=[${OLD_VALUE}], New=[${NEW_VALUE}]"
 		echo -e "${wDEBUG}${ME}: ${MSG}${wNC}"
@@ -159,14 +165,25 @@ do
 		fi
 	fi
 
+	KEY="${KEY,,}"		# convert to lowercase
+	KEY="${KEY/#_/}"	# Remove any leading "_"
+
+	# Don't skip if it's cameratype since that indicates we need to refresh.
+	if [[ ${KEY} != "cameratype" && ${OLD_VALUE} == "${NEW_VALUE}" ]]; then
+		[[ ${DEBUG} == "true" ]] && echo -e "    ${wDEBUG}Skipping - old and new are equal${wNC}"
+		shift 4
+		continue
+	fi
+
 	# Unfortunately, the Allsky configuration file was already updated,
 	# so if we find a bad entry, e.g., a file doesn't exist, all we can do is warn the user.
 	
-	K="${KEY,,}"		# convert to lowercase
-	case "${K}" in
+	((NUM_CHANGED++))
+	case "${KEY}" in
 
 		"cameranumber" | "cameratype")
-			if [[ ${K} == "cameranumber" ]]; then
+
+			if [[ ${KEY} == "cameranumber" ]]; then
 				NEW_CAMERA_NUMBER="${NEW_VALUE}"
 				CAMERA_NUMBER=" -cameranumber ${NEW_CAMERA_NUMBER}"
 				# Set NEW_VALUE to the current Camera Type
@@ -311,9 +328,8 @@ do
 			# camera type/model then createAllskyOptions.php will use it and link it
 			# to SETTINGS_FILE.
 			# If there is no existing camera-specific file, i.e., this camera is new
-			# to Allsky, it will create a default settings file.  The default file
-			# won't have values for items we can't automatically determine,
-			# so try to get those values from a prior settings file if it exists.
+			# to Allsky, it will create a default settings file using the generic
+			# values from the prior settings file if it exists.
 			if [[ -f ${SETTINGS_FILE} ]]; then
 				# Prior settings file exists so save the old TYPE and MODEL
 				OLD_TYPE="${OLD_VALUE}"
@@ -538,7 +554,8 @@ do
 
 
 		*)
-			echo -e "${wWARNING}WARNING: Unknown label '${LABEL}', key='${KEY}'; ignoring.${wNC}"
+			echo -e "${wWARNING}WARNING: Unknown key '${KEY}'; ignoring.  Old=${OLD_VALUE}, New=${NEW_VALUE}${wNC}"
+			((NUM_CHANGED--))
 			;;
 
 		esac
@@ -546,6 +563,8 @@ do
 done
 
 [[ ${OK} == "false" ]] && exit 1
+
+[[ ${NUM_CHANGED} -le 0 ]] && exit 0		# Nothing changed
 
 if check_website ; then
 	# Anytime a setting in settings.json changed we want to
@@ -607,7 +626,7 @@ if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 fi
 
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
-	[[ ${SHOW_ON_MAP} == "true" ]] && SHOW_ON_MAP="$( settings ".showonmap" )"
+	[[ -z ${SHOW_ON_MAP} ]] && SHOW_ON_MAP="$( settings ".showonmap" )"
 	if [[ ${SHOW_ON_MAP} == "true" ]]; then
 		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postToMap.sh${NC}"
 		# shellcheck disable=SC2086

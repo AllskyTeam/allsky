@@ -248,12 +248,12 @@ CAMERA_to_CAMERA_TYPE()
 #######
 CONNECTED_CAMERAS=""
 # TODO: Make arrays and allow multiple cameras of each camera type
-RPI_MODEL=""
-ZWO_MODEL=""
+RPI_MODEL="HQ, Module 3, and compatibles"
+ZWO_MODEL="ASI"
 
 get_connected_cameras()
 {
-	local CC
+	local C Z CC MSG
 
 	# Check if there is an RPi camera connected, and if so, determine what command
 	# to use to control it.
@@ -262,6 +262,8 @@ get_connected_cameras()
 			# Only get the first camera.
 			RPI_MODEL="$( LIBCAMERA_LOG_LEVELS="ERROR,FATAL" libcamera-still --list-cameras 2>&1 |
 				awk '{if ($2 == ":") { print $3; exit 0; }}' )"
+		else
+			:   # XXXXXXXXX  TODO: How to determine with raspicam?
 		fi
 		display_msg --log progress "RPi ${RPI_MODEL} camera found."
 		CC="RPi"
@@ -350,17 +352,16 @@ select_camera_type()
 	fi
 
 	local CT=()			# Camera Type array - what to display in whiptail
-	local NUM=0
-	RPI_MODEL="${RPI_MODEL:=Raspberry Pi (HQ, Module 3, and compatibles}"
-	ZWO_MODEL="${ZWO_MODEL:=ZWO_ASI}"
+	local NUM_RPI=0 NUM_ZWO=0
 	if [[ ${CONNECTED_CAMERAS} =~ "RPi" ]]; then
-		CT+=("RPi" "     ${RPI_MODEL}")
-		((NUM++))
+		CT+=("${NUM_RPI}_RPi_${RPI_MODEL}" "RPi     ${RPI_MODEL}")
+		((NUM_RPI++))
 	fi
 	if [[ ${CONNECTED_CAMERAS} =~ "ZWO" ]]; then
-		CT+=("ZWO" "     ${ZWO_MODEL}")
-		((NUM++))
+		CT+=("${NUM_ZWO}_ZWO_${ZWO_MODEL}" "ZWO     ${ZWO_MODEL}")
+		((NUM_ZWO++))
 	fi
+	local NUM=$(( NUM_RPI + NUM_ZWO ))
 	if [[ ${NUM} -eq 0 ]]; then		# shouldn't happen since we already checked
 		MSG="INTERNAL ERROR:"
 		if [[ -z ${CONNECTED_CAMERAS} ]]; then
@@ -377,7 +378,7 @@ select_camera_type()
 	MSG="\nThe following camera${S} connected to the Pi.\n"
 	MSG="${MSG}Pick the one you want."
 	MSG="${MSG}\nIf it's not in the list, select <Cancel> and determine why."
-	CAMERA_TYPE=$( whiptail --title "${TITLE}" --menu "${MSG}" 15 "${WT_WIDTH}" "${NUM}" \
+	local CAMERA_INFO=$( whiptail --title "${TITLE}" --notags --menu "${MSG}" 15 "${WT_WIDTH}" "${NUM}" \
 		"${CT[@]}" 3>&1 1>&2 2>&3 )
 	if [[ $? -ne 0 ]]; then
 		MSG="Camera selection required."
@@ -385,8 +386,14 @@ select_camera_type()
 		display_msg --log warning "${MSG}"
 		exit_installation 2 "${STATUS_NO_CAMERA}" "User did not select a camera."
 	fi
+	# CAMERA_INFO is:    number_type_model
+# TODO: CAMERA_NUMBER not used yet
+	CAMERA_NUMBER="${CAMERA_INFO%%_*}"				# before first "_"
+	CAMERA_MODEL="${CAMERA_INFO##*_}"				# after last "_"
+	CAMERA_INFO="${CAMERA_INFO/${CAMERA_NUMBER}_/}"		# Now:  type_model
+	CAMERA_TYPE="${CAMERA_INFO%_*}"					# before "_"
 
-	display_msg --log progress "Using ${CAMERA_TYPE} camera."
+	display_msg --log progress "Using ${CAMERA_TYPE} ${CAMERA_MODEL} camera."
 	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 	STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
 }
@@ -2985,7 +2992,7 @@ if [[ -z ${FUNCTION} && -s ${STATUS_FILE} ]]; then
 		MSG="${MSG}\n\nDo you want to continue where you left off?"
 		if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 			MSG="Continuing installation.  Steps already performed will be skipped."
-			MSG="${MSG}\n   The last status was: ${STATUS_INSTALLATION}${MORE_STATUS}"
+			MSG="${MSG}\n  The last status was: ${STATUS_INSTALLATION}${MORE_STATUS}"
 			display_msg --log progress "${MSG}"
 
 			#shellcheck disable=SC1090		# file doesn't exist in GitHub

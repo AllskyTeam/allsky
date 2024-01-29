@@ -18,6 +18,46 @@ TITLE="Remote Allsky Website Installer"
 DISPLAY_MSG_LOG="${ALLSKY_LOGS}/remote_website_install.sh.log"		# display_msg() sends log entries to this file.
 
 #XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX TODO: get working
+IS_NEW_INSTALL="false"
+
+############################################## functions
+
+####
+#
+do_initial_heading()
+{
+	if [[ ${UPDATE} == "true" ]]; then
+		display_header "Updating Remote Allsky Website"
+		return
+	fi
+
+	if [[ ${do_initial_heading} == "true" ]]; then
+		display_header "Welcome back to the ${TITLE}!"
+	else
+		local MSG="Welcome to the ${TITLE}!\n"
+
+		if [[ ${IS_NEW_INSTALL} == "true" ]]; then
+			# If the local Website is being used ask if the user wants to upload its images
+			# and use its configuration.json file (with changes for remote Websites).
+			MSG="${MSG}\nxxxxx"
+			MSG="${MSG} xxxxx"
+		else
+			# Upgrade
+			MSG="${MSG}\nxxxxx"
+			MSG="${MSG} xxxxx"
+		fi
+
+		MSG="${MSG}\n\nContinue?"
+		if ! whiptail --title "${TITLE}" --yesno "${MSG}" 25 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
+			display_msg "${LOG_TYPE}" info "User not ready to continue."
+			exit_installation 1 "${STATUS_CLEAR}" ""
+		fi
+
+		display_header "Welcome to the ${TITLE}"
+	fi
+
+	[[ ${do_initial_heading} != "true" ]] && STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+}
 
 ############# Current remote Website exists:
 #	Upgrade if config.AllskyVersion is old

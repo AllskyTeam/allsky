@@ -34,6 +34,12 @@ export PRIOR_CONFIG_DIR="${PRIOR_ALLSKY_DIR}/$( basename "${ALLSKY_CONFIG}" )"
 export PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE="${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
 export PRIOR_PYTHON_VENV="${PRIOR_ALLSKY_DIR}/venv/lib"
 
+	# Name of setting that determines version of Website config file.
+export WEBSITE_CONFIG_VERSION="ConfigVersion"
+	# Name of setting that holds the Allsky version.
+export WEBSITE_ALLSKY_VERSION="config.AllskyVersion"
+
+
 	# Location of prior "config.sh" file; varies by release; this is most recent.
 export PRIOR_CONFIG_FILE="${PRIOR_CONFIG_DIR}/config.sh"
 	# Location of prior "ftp-settings.sh" file; varies by release; this is most recent.
@@ -264,4 +270,31 @@ function update_json_file()		# field, new value, file, [type]
 	echo "${M}: Unable to update json value of '${FIELD}' to '${NEW_VALUE}' in '${FILE}'." >&2
 
 	return 2
+}
+
+####
+# Update a Website configuration file from old to current version.
+update_website_config_file()
+{
+	local FILE="${1}"
+	local PRIOR_VERSION="${2}"
+	local CURRENT_VERSION="${3}"
+	local LOCAL_OR_REMOTE="${4}"
+	local MSG
+
+	# Current version: 2
+	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
+		# Version 2 removed AllskyWebsiteVersion.
+#XX TODO: is this how to delete the field?
+		update_json_file ".AllskyWebsiteVersion" "null" "${FILE}"
+	fi
+
+	# Set to current version.
+	update_json_file ".${WEBSITE_CONFIG_VERSION}" "${CURRENT_VERSION}" "${FILE}"
+
+	if [[ ${LOCAL_OR_REMOTE} == "local" ]]; then
+		# Since we're installing a new Allsky, update the Allsky version.
+		# For remote Websites it'll be updated when the user updates the Website.
+		update_json_file ".${WEBSITE_ALLSKY_VERSION}" "${ALLSKY_VERSION}" "${FILE}"
+	fi
 }

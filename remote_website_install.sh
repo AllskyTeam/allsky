@@ -18,7 +18,10 @@ TITLE="Remote Allsky Website Installer"
 DISPLAY_MSG_LOG="${ALLSKY_LOGS}/remote_website_install.sh.log"		# display_msg() sends log entries to this file.
 
 #XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX TODO: get working
+
+# Keep shellcheck quiet during construction...
 IS_NEW_INSTALL="false"
+do_initial_heading="false"
 
 ############################################## functions
 

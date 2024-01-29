@@ -282,9 +282,6 @@ update_website_config_file()
 	local LOCAL_OR_REMOTE="${4}"
 	local MSG
 
-	MSG="Updating ${FILE} for version ${CURRENT_VERSION}."
-	display_msg --log progress "${MSG}"
-
 	# Current version: 2
 	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
 		# Version 2 removed AllskyWebsiteVersion.

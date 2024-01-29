@@ -34,6 +34,12 @@ export PRIOR_CONFIG_DIR="${PRIOR_ALLSKY_DIR}/$( basename "${ALLSKY_CONFIG}" )"
 export PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE="${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
 export PRIOR_PYTHON_VENV="${PRIOR_ALLSKY_DIR}/venv/lib"
 
+	# Name of setting that determines version of Website config file.
+export WEBSITE_CONFIG_VERSION="ConfigVersion"
+	# Name of setting that holds the Allsky version.
+export WEBSITE_ALLSKY_VERSION="config.AllskyVersion"
+
+
 	# Location of prior "config.sh" file; varies by release; this is most recent.
 export PRIOR_CONFIG_FILE="${PRIOR_CONFIG_DIR}/config.sh"
 	# Location of prior "ftp-settings.sh" file; varies by release; this is most recent.

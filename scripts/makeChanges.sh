@@ -41,7 +41,7 @@ CAMERA_TYPE_ONLY="false"	# Only update the cameratype ?
 FORCE=""					# Passed to createAllskyOptions.php
 
 while [[ $# -gt 0 ]]; do
-	ARG="${1,,}"					# convert to lowercase
+	ARG="${1}"
 	case "${ARG}" in
 		--debug)
 			DEBUG="true"

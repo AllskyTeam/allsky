@@ -3,6 +3,44 @@
 # Shell variables and functions used by the installation and upgrade scripts.
 # This file is "source"d into others, and must be done AFTER source'ing variables.sh.
 
+
+######################################### variables
+
+# export to keep shellcheck quiet
+	# The login installing Allsky
+export ALLSKY_OWNER=$( id --group --name )
+export ALLSKY_GROUP=${ALLSKY_OWNER}
+export WEBSERVER_OWNER="www-data"
+export WEBSERVER_GROUP="${WEBSERVER_OWNER}"
+
+	# Central location for all master repository files.
+export ALLSKY_REPO="${ALLSKY_HOME}/config_repo"
+export REPO_WEBCONFIG_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
+export REPO_SUDOERS_FILE="${ALLSKY_REPO}/sudoers.repo"
+export ALLSKY_DEFINES_INC="allskyDefines.inc"
+export REPO_WEBUI_DEFINES_FILE="${ALLSKY_REPO}/${ALLSKY_DEFINES_INC}.repo"
+export REPO_LIGHTTPD_FILE="${ALLSKY_REPO}/lighttpd.conf.repo"
+export REPO_AVI_FILE="${ALLSKY_REPO}/avahi-daemon.conf.repo"
+export REPO_OPTIONS_FILE="${ALLSKY_REPO}/$( basename "${OPTIONS_FILE}" ).repo"
+
+##### Information on prior Allsky versions
+	# Location of old-style WebUI and Website.
+export OLD_WEBUI_LOCATION="/var/www/html"
+export OLD_WEBSITE_LOCATION="${OLD_WEBUI_LOCATION}/allsky"
+	# Directory of prior version of Allsky, if it exists.
+export PRIOR_ALLSKY_DIR="$( dirname "${ALLSKY_HOME}" )/${ALLSKY_INSTALL_DIR}-OLD"
+	# Prior "config" directory, if it exists.
+export PRIOR_CONFIG_DIR="${PRIOR_ALLSKY_DIR}/$( basename "${ALLSKY_CONFIG}" )"
+export PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE="${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
+export PRIOR_PYTHON_VENV="${PRIOR_ALLSKY_DIR}/venv/lib"
+
+	# Location of prior "config.sh" file; varies by release; this is most recent.
+export PRIOR_CONFIG_FILE="${PRIOR_CONFIG_DIR}/config.sh"
+	# Location of prior "ftp-settings.sh" file; varies by release; this is most recent.
+export PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"
+
+
+
 ######################################### functions
 
 #####
@@ -227,15 +265,3 @@ function update_json_file()		# field, new value, file, [type]
 
 	return 2
 }
-
-
-######################################### variables
-
-# export to keep shellcheck quiet
-export ALLSKY_OWNER=$( id --group --name )		# The login installing Allsky
-export ALLSKY_GROUP=${ALLSKY_OWNER}
-export WEBSERVER_OWNER="www-data"
-export WEBSERVER_GROUP="${WEBSERVER_OWNER}"
-export REPO_WEBCONFIG_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
-export OLD_WEBUI_LOCATION="/var/www/html"		# location of old-style WebUI
-export OLD_WEBSITE_LOCATION="${OLD_WEBUI_LOCATION}/allsky"

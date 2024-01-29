@@ -849,7 +849,6 @@ install_webserver_et_al()
 		if ! check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" ; then
 			exit_with_image 1 "${STATUS_ERROR}" "lighttpd installation failed"
 		fi
-		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 	fi
 
 	FINAL_LIGHTTPD_FILE="/etc/lighttpd/lighttpd.conf"
@@ -1438,9 +1437,12 @@ does_prior_Allsky_exist()
 # If there's a prior version of the software,
 # ask the user if they want to move stuff from there to the new directory.
 # Look for a directory inside the old one to make sure it's really an old allsky.
+
+WILL_USE_PRIOR=""
+
 prompt_for_prior_Allsky()
 {
-	local WILL_USE_PRIOR="false"
+	local MSG
 
 	if [[ -n ${PRIOR_ALLSKY_STYLE} ]]; then
 		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
@@ -1464,8 +1466,10 @@ prompt_for_prior_Allsky()
 			MSG="${MSG}\nThis can take quite a while."
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 			display_msg --logonly info "Will NOT restore from prior version of Allsky."
+			WILL_USE_PRIOR="false"
 		fi
 	else
+		WILL_USE_PRIOR="false"
 		MSG="No prior version of Allsky found."
 		MSG="${MSG}\n\nIf you DO have a prior version and you want images, darks, and certain settings moved from the prior version to the new one, rename the prior version to ${PRIOR_ALLSKY_DIR} before running this installation."
 		MSG="${MSG}\n\nDo you want to continue?"
@@ -1485,6 +1489,7 @@ prompt_for_prior_Allsky()
 		FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
 		STATUS_VARIABLES+=("FORCE_CREATING_DEFAULT_SETTINGS_FILE='true'\n")
 	fi
+	STATUS_VARIABLES+=("WILL_USE_PRIOR='${WILL_USE_PRIOR}'\n")
 }
 
 
@@ -2290,31 +2295,34 @@ restore_prior_website_files()
 			MSG="${MSG} '${ALLSKY_WEBSITE_CONFIGURATION_FILE}."
 			display_msg --log info "${MSG}"
 
-		elif [[ ${PRIOR_WEB_CONFIG_VERSION} -eq ${NEW_WEB_CONFIG_VERSION} ]]; then
-			MSG="Prior local Website's ConfigVersion already at ${NEW_WEB_CONFIG_VERSION}"
-			display_msg --logonly info "${MSG}"
-			local PRIOR_FILE="${PRIOR_ALLSKY_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
+		else
+			# Copy the old file to the current location.
+			# If different versions, then update the current one.
+			local PRIOR_FILE="${PRIOR_ALLSKY_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 			cp "${PRIOR_FILE}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 
-		else
-			MSG="Checking for changes to ${ALLSKY_WEBSITE_CONFIGURATION_NAME} due"
-			MSG="${MSG} to version '${V}'."
-			display_msg --log progress "${MSG}"
-			# Version 2 and newer have no AllskyWebsiteVersion.
-			if [[ ${PRIOR_WEB_CONFIG_VERSION} -eq 1 ]]; then
+			if [[ ${PRIOR_WEB_CONFIG_VERSION} -eq ${NEW_WEB_CONFIG_VERSION} ]]; then
+				MSG="Prior local Website's ConfigVersion already at ${NEW_WEB_CONFIG_VERSION}"
+				display_msg --logonly info "${MSG}"
+			else
+				MSG="Checking for changes to ${ALLSKY_WEBSITE_CONFIGURATION_NAME} due"
+				MSG="${MSG} to version '${V}'."
+				display_msg --log progress "${MSG}"
+				# Version 2 and newer have no AllskyWebsiteVersion.
+				if [[ ${PRIOR_WEB_CONFIG_VERSION} -eq 1 ]]; then
+					# Current version: 2
+					# Changes: removed AllskyWebsiteVersion
 #XX TODO: is this how to delete the field?
-				update_json_file ".AllskyWebsiteVersion" "null" \
+					update_json_file ".AllskyWebsiteVersion" "null" \
+						"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+				fi
+				update_json_file ".ConfigVersion" "${NEW_WEB_CONFIG_DIR}" \
 					"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 			fi
-			update_json_file ".ConfigVersion" "${NEW_WEB_CONFIG_DIR}" \
-				"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
-#XX TODO: other changes?
 		fi
 	fi
 
-	# Move the data but not ${ALLSKY_WEBSITE_CONFIGURATION_FILE} which we did above.
-
-	# Each directory will have zero or more images.
+	# Each data directory will have zero or more images.
 	# Make sure we do NOT mv any .php files.
 
 	D="${PRIOR_WEBSITE}/videos/thumbnails"
@@ -3052,7 +3060,7 @@ display_image "InstallationInProgress"
 # Do as much of the prompting up front, then do the long-running work, then prompt at the end.
 
 ##### Prompt to use prior Allsky
-[[ ${prompt_for_prior_Allsky} != "true" ]] && prompt_for_prior_Allsky
+[[ ${prompt_for_prior_Allsky} != "true" ]] && prompt_for_prior_Allsky	# Sets ${WILL_USE_PRIOR}
 
 ##### Get locale (prompt if needed).  May not return.
 [[ ${get_desired_locale} != "true" ]] && get_desired_locale
@@ -3109,7 +3117,7 @@ create_allsky_logs
 install_overlay
 
 ##### Restore prior files if needed
-[[ ${restore_prior_files} != "true" ]] && restore_prior_files	# prompts if prior Allsky exists
+[[ ${restore_prior_files} != "true" && ${WILL_USE_PRIOR} == "true" ]] && restore_prior_files
 
 ##### Update variables.sh
 [[ ${update_variables_sh} != "true" ]] && update_variables_sh

@@ -187,6 +187,7 @@ stop_allsky()
 # Get the branch of the release we are installing;
 get_this_branch()
 {
+	#shellcheck disable=SC2119
 	if ! B="$( get_branch )" ; then
 		display_msg --log warning "Unable to determine branch; assuming '${BRANCH}'."
 	else
@@ -952,6 +953,7 @@ set_permissions()
 	# can write to the webserver root (is in the webserver group).
 	G="$( id "${ALLSKY_OWNER}" )"
 
+	#shellcheck disable=SC2076
 	if ! [[ ${G} =~ "(sudo)" ]]; then
 		display_msg --log progress "Adding ${ALLSKY_OWNER} to sudo group."
 
@@ -961,6 +963,7 @@ set_permissions()
 		sudo adduser --quiet "${ALLSKY_OWNER}" "sudo"
 	fi
 
+	#shellcheck disable=SC2076
 	if ! [[ ${G} =~ "(${WEBSERVER_GROUP})" ]]; then
 		display_msg --log progress "Adding ${ALLSKY_OWNER} to ${WEBSERVER_GROUP} group."
 		sudo adduser --quiet "${ALLSKY_OWNER}" "${WEBSERVER_GROUP}"
@@ -989,13 +992,15 @@ set_permissions()
 	chmod 775 "${ALLSKY_TMP}"
 	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_TMP}"
 
+	if [[ ! -f "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" ]]; then
+		# No prior config file (this should only happen if there was no prior Website).
+		cp "${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+	fi
 	# Unlike the WebUI files and directories, these need to be writable by the web server.
-if [[ -d ${ALLSKY_WEBSITE} ]]; then		## XXXXX Until everything is working
 	sudo chmod 664 "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 	sudo find "${ALLSKY_WEBSITE}/" -type d -name thumbnails -exec chmod 775 '{}' '{}/..' \;
 	sudo find "${ALLSKY_WEBSITE}/" -type d -name thumbnails -exec chgrp "${WEBSERVER_GROUP}" '{}' '{}/..' \;
-fi
 }
 
 
@@ -2298,7 +2303,7 @@ restore_prior_website_files()
 			# Version 2 and newer have no AllskyWebsiteVersion.
 			if [[ ${PRIOR_WEB_CONFIG_VERSION} -eq 1 ]]; then
 #XX TODO: is this how to delete the field?
-				update_json_file ".ConfigVersion" "null" \
+				update_json_file ".AllskyWebsiteVersion" "null" \
 					"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 			fi
 			update_json_file ".ConfigVersion" "${NEW_WEB_CONFIG_DIR}" \
@@ -2849,6 +2854,7 @@ DEBUG_ARG=""
 LOG_TYPE="--logonly"	# by default we only log some messages but don't display
 IN_TESTING="false"
 
+#shellcheck disable=SC2119
 [[ $( get_branch ) != "${GITHUB_MAIN_BRANCH}" ]] && IN_TESTING="true"
 
 if [[ ${IN_TESTING} == "true" ]]; then

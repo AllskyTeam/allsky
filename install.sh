@@ -37,7 +37,6 @@ DISPLAY_MSG_LOG="${ALLSKY_LOGS}/install.sh.log"		# display_msg() sends log entri
 LONG_BITS=$( getconf LONG_BIT ) # Size of a long, 32 or 64
 REBOOT_NEEDED="true"					# Is a reboot needed at end of installation?
 CONFIGURATION_NEEDED="true"				# Does Allsky need to be configured at end of installation?
-WEBSITE_CONFIG_VERSION="ConfigVersion"	# Name of setting that determines version of Website config file
 
 ##### Allsky versions.   ${ALLSKY_VERSION} is set in variables.sh
 # TODO: uncomment if needed:    ALLSKY_BASE_VERSION="$( remove_point_release "${ALLSKY_VERSION}" )"
@@ -82,6 +81,7 @@ STATUS_VARIABLES=()									# Holds all the variables and values to save
 # PRIOR_ALLSKY_DIR
 # PRIOR_CONFIG_DIR
 # PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE
+# WEBSITE_CONFIG_VERSION, WEBSITE_ALLSKY_VERSION
 # PRIOR_CONFIG_FILE, PRIOR_FTP_FILE			# no longer-used files
 # PRIOR_PYTHON_VENV
 # ALLSKY_DEFINES_INC, REPO_WEBUI_DEFINES_FILE
@@ -1285,10 +1285,11 @@ OLD_STYLE_ALLSKY="oldStyle"
 # See if a prior Allsky Website exists; if so, set some variables.
 # First look in the prior Allsky directory, if it exists.
 # If not, look in the old Website location.
-PRIOR_ALLSKY_WEBSITE_STYLE=""
-PRIOR_ALLSKY_WEBSITE_DIR=""
+PRIOR_WEBSITE_STYLE=""
+PRIOR_WEBSITE_DIR=""
+PRIOR_WEBSITE_CONFIG_FILE=""
 
-# Versions of the Website configuration files.
+# Versions of the Website configuration files: 1, 2, etc.
 NEW_WEB_CONFIG_VERSION=""
 PRIOR_WEB_CONFIG_VERSION=""
 
@@ -1296,41 +1297,44 @@ does_prior_Allsky_Website_exist()
 {
 	local PRIOR_STYLE="${1}"
 
-display_msg info "xxxx PRIOR_STYLE=${PRIOR_STYLE}, NEW_STYLE_ALLSKY=${NEW_STYLE_ALLSKY}"
 	if [[ ${PRIOR_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
-		PRIOR_ALLSKY_WEBSITE_DIR="${PRIOR_ALLSKY_DIRECTORY}${ALLSKY_WEBSITE/${ALLSKY_HOME}/}"
-		if [[ -d ${PRIOR_ALLSKY_WEBSITE_DIR} ]]; then
-			PRIOR_ALLSKY_WEBSITE_STYLE="${NEW_STYLE_ALLSKY}"
+		PRIOR_WEBSITE_DIR="${PRIOR_ALLSKY_DIR}${ALLSKY_WEBSITE/${ALLSKY_HOME}/}"
+		if [[ -d ${PRIOR_WEBSITE_DIR} ]]; then
+			PRIOR_WEBSITE_STYLE="${NEW_STYLE_ALLSKY}"
 
-			local PC="${PRIOR_ALLSKY_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
-			PRIOR_WEB_CONFIG_VERSION="$( settings ".${WEBSITE_CONFIG_VERSION}" "${PC}" )"
+			PRIOR_WEBSITE_CONFIG_FILE="${PRIOR_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
+			PRIOR_WEB_CONFIG_VERSION="$( settings ".${WEBSITE_CONFIG_VERSION}" "${PRIOR_WEBSITE_CONFIG_FILE}" )"
 			if [[ -z ${PRIOR_WEB_CONFIG_VERSION} ]]; then
-				MSG="Unable to get ${FIELD} from '${PRIOR_CONFIGURATION_FILE}'."
+				# This shouldn't happen ...
+				MSG="Missing ${WEBSITE_CONFIG_VERSION} in ${PRIOR_WEBSITE_CONFIG_FILE}."
+				MSG="${MSG}\nYou need to manually copy your prior local Allsky Website settings to"
+				MSG="${MSG}\n${ALLSKY_WEBSITE_CONFIGURATION_FILE}."
 				display_msg --log error "${MSG}"
+				PRIOR_WEB_CONFIG_VERSION="1"		# Assume the oldest version
 			fi
 		else
-			PRIOR_ALLSKY_WEBSITE_DIR=""
+			PRIOR_WEBSITE_DIR=""
 		fi
 	else
 		# Either old style, or didn't find a prior Allsky.
 		# Either way, look in the old location.
-		PRIOR_ALLSKY_WEBSITE_DIR="${PRIOR_WEBSITE_LOCATION}"
-		if [[ -d ${PRIOR_ALLSKY_WEBSITE_DIR} ]]; then
-			PRIOR_ALLSKY_WEBSITE_STYLE="${OLD_STYLE_ALLSKY}"
+		PRIOR_WEBSITE_DIR="${PRIOR_WEBSITE_LOCATION}"
+		if [[ -d ${PRIOR_WEBSITE_DIR} ]]; then
+			PRIOR_WEBSITE_STYLE="${OLD_STYLE_ALLSKY}"
 			# old style websites don't have ${WEBSITE_CONFIG_VERSION}.
 		else
-			PRIOR_ALLSKY_WEBSITE_DIR=""
+			PRIOR_WEBSITE_DIR=""
 		fi
 	fi
 
-	if [[ -z ${PRIOR_ALLSKY_WEBSITE_DIR} ]]; then
+	if [[ -z ${PRIOR_WEBSITE_DIR} ]]; then
 		display_msg --logonly info "No prior Allsky Website"
 	else
-		display_msg "${LOG_TYPE}" info "PRIOR_ALLSKY_WEBSITE_STYLE=${PRIOR_ALLSKY_WEBSITE_STYLE}"
-		display_msg "${LOG_TYPE}" info "PRIOR_ALLSKY_WEBSITE_DIR=${PRIOR_ALLSKY_WEBSITE_DIR}"
+		display_msg --logonly info "PRIOR_WEBSITE_STYLE=${PRIOR_WEBSITE_STYLE}"
+		display_msg --logonly info "PRIOR_WEBSITE_DIR=${PRIOR_WEBSITE_DIR}"
 		# New Website configuration file may not exist yet so use repo version.
 		NEW_WEB_CONFIG_VERSION="$( settings ".${WEBSITE_CONFIG_VERSION}" "${REPO_WEBCONFIG_FILE}" )"
-		display_msg "${LOG_TYPE}" info "NEW_WEB_CONFIG_VERSION=${NEW_WEB_CONFIG_VERSION}"
+		display_msg --logonly info "NEW_WEB_CONFIG_VERSION=${NEW_WEB_CONFIG_VERSION}"
 	fi
 }
 
@@ -1952,6 +1956,9 @@ restore_prior_settings_file()
 	STATUS_VARIABLES+=( "RESTORED_PRIOR_SETTINGS_FILE='${RESTORED_PRIOR_SETTINGS_FILE}'\n" )
 }
 
+SPACE="    "
+NOT_RESTORED="NO PRIOR VERSION"
+
 ####
 # If the user wanted to restore files from a prior version of Allsky, do that.
 restore_prior_files()
@@ -1966,10 +1973,8 @@ restore_prior_files()
 		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	fi
 
-	# It's possible there's a prior old style Website but no prior Allsky, so do this now.
-	restore_prior_website_files
-
 	if [[ -z ${PRIOR_ALLSKY_STYLE} ]]; then
+		restore_prior_website_files
 		get_lat_long	# prompt for them to put in new settings file
 		mkdir -p "${ALLSKY_EXTRA}"		# default permissions is ok
 
@@ -1979,8 +1984,7 @@ restore_prior_files()
 	# Do all the restores, then all the updates.
 	display_msg --log progress "Restoring prior:"
 
-	local E  EXTRA  D  R  ITEM  V=""  SPACE="    "
-	local NOT_RESTORED="NO PRIOR VERSION"
+	local E  EXTRA  D  R  ITEM  VER=""
 
 	if [[ -f ${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh ]]; then
 		MSG="The ${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh file is no longer supported."
@@ -2080,41 +2084,26 @@ restore_prior_files()
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
+	restore_prior_website_files
+
 	# Restore any REMOTE Allsky Website configuration file.
 	ITEM="${SPACE}'${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}'"
 	if [[ -f ${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
 		display_msg --log progress "${ITEM} (copying)"
 		cp "${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
-		# Used below to update "AllskyVersion" if needed.
-		V="$( settings ".config.AllskyVersion" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
+		local PRIOR_V
 
-		# Check if this is an older Allsky Website configuration file type.
-		# The remote config file should have ${WEBSITE_CONFIG_VERSION}.
-		local OLD="false"
-		# NEW_WEB_CONFIG_VERSION and PRIOR_WEB_CONFIG_VERSION are globals
-
-		if [[ -z ${PRIOR_WEB_CONFIG_VERSION} ]]; then
-			OLD="true"		# Hmmm, it should have the version
-			MSG="Prior Website configuration file '${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE}'"
-			MSG="${MSG}\nis missing ${WEBSITE_CONFIG_VERSION}.  It should be '${NEW_WEB_CONFIG_VERSION}'."
-			display_msg --log warning "${MSG}"
-			PRIOR_WEB_CONFIG_VERSION="** Unknown **"
-		elif [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
-			OLD="true"
-		fi
-
-		if [[ ${OLD} == "true" ]]; then
-			MSG="Your ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} is an older version.\n"
-			MSG="${MSG}Your    version: ${PRIOR_WEB_CONFIG_VERSION}\n"
-			MSG="${MSG}Current version: ${NEW_WEB_CONFIG_VERSION}\n"
-			MSG="${MSG}\nPlease compare it to the new one in ${REPO_WEBCONFIG_FILE}"
-			MSG="${MSG} to see what fields have been added, changed, or removed.\n"
-			display_msg --log warning "${MSG}"
-			echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+		# Check the Allsky version in the remote file - if it's old let user know.
+		PRIOR_V="$( settings ".${WEBSITE_ALLSKY_VERSION}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
+		if [[ ${PRIOR_V} == "${ALLSKY_VERSION}" ]]; then
+			display_msg --log progress "Remote Website already at latest Allsky version ${PRIOR_V}."
 		else
-			MSG="${SPACE}${SPACE}Remote Website ${WEBSITE_CONFIG_VERSION} is current @ ${NEW_WEB_CONFIG_VERSION}"
-			display_msg --logonly info "${MSG}"
+			MSG="Your remote Website needs to be updated to this newest version."
+			MSG="${MSG}\nIt is at version ${PRIOR_V}"
+			MSG="${MSG}\n\nRun:  cd ~/allsky;  ./remote_website_install.sh"
+			display_msg --log notice "${MSG}"
+			# The command above will update the version.
 		fi
 	else
 		# We don't check for old LOCAL Allsky Website configuration files.
@@ -2192,17 +2181,6 @@ restore_prior_files()
 
 	# Done with restores, now the updates.
 
-	if [[ -f ${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
-		if [[ ${V} == "${ALLSKY_VERSION}" ]]; then
-			display_msg --log progress "Prior remote Website already at latest Allsky version ${V}."
-		else
-			MSG="Your remote Website needs to be updated to this newest release."
-			MSG="${MSG}\nRun:  cd ~/allsky;  ./remote_website_install.sh"
-			display_msg --log info "${MSG}"
-			# The command above will update the version.
-		fi
-	fi
-
 	STATUS_VARIABLES+=( "COPIED_PRIOR_CONFIG_SH='${COPIED_PRIOR_CONFIG_SH}'\n" )
 	STATUS_VARIABLES+=( "COPIED_PRIOR_FTP_SH='${COPIED_PRIOR_FTP_SH}'\n" )
 
@@ -2261,127 +2239,122 @@ restore_prior_files()
 # If a prior Website exists move its data to the new location.
 restore_prior_website_files()
 {
-	if [[ -z ${PRIOR_ALLSKY_WEBSITE_DIR} ]]; then
-		display_msg --logonly info "No prior Website so nothing to restore."
+	local ITEM
+
+	ITEM="${SPACE}Local Website files"
+	if [[ -n ${PRIOR_WEBSITE_DIR} ]]; then
+		display_msg --log progress "${ITEM}:"
+	else
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		return
-	fi
-
-	if [[ ${PRIOR_ALLSKY_WEBSITE_STYLE} == "${OLD_STYLE_WEBSITE}" ]]; then
-		# The format of the old files is too different from the new file,
-		# so force them to manually copy settings.
-		MSG="You need to manually copy your prior Website settings in"
-		MSG="${MSG}\n\t${PRIOR_ALLSKY_WEBSITE_DIR}"
-		MSG="${MSG}\nto '${ALLSKY_WEBSITE_CONFIGURATION_NAME}' in the WebUI."
-		display_msg --log info "${MSG}"
-		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
-
-	else		# NEW_STYLE_WEBSITE
-		MSG="Restoring local Allsky Website data from ${PRIOR_ALLSKY_WEBSITE_DIR}."
-		display_msg --log progress "${MSG}"
-
-		# If the prior version of the config file is different than the new one,
-		# see if any changes have been made to the config file.
-		if [[ -z ${PRIOR_WEB_CONFIG_VERSION} ]]; then
-			# This shouldn't happen ...
-			MSG="You need to manually copy your prior local Allsky Website settings to"
-			MSG="${MSG} '${ALLSKY_WEBSITE_CONFIGURATION_FILE}."
-			display_msg --log info "${MSG}"
-
-		else
-			# Copy the old file to the current location.
-			# If different versions, then update the current one.
-			local PRIOR_FILE="${PRIOR_ALLSKY_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
-			cp "${PRIOR_FILE}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
-
-			if [[ ${PRIOR_WEB_CONFIG_VERSION} -eq ${NEW_WEB_CONFIG_VERSION} ]]; then
-				MSG="Prior local Website's ${WEBSITE_CONFIG_VERSION} already at ${NEW_WEB_CONFIG_VERSION}"
-				display_msg --logonly info "${MSG}"
-			else
-				MSG="Checking for changes to ${ALLSKY_WEBSITE_CONFIGURATION_NAME} due"
-				MSG="${MSG} to version '${V}'."
-				display_msg --log progress "${MSG}"
-				# Version 2 and newer have no AllskyWebsiteVersion.
-				if [[ ${PRIOR_WEB_CONFIG_VERSION} -eq 1 ]]; then
-					# Current version: 2
-					# Changes: removed AllskyWebsiteVersion
-#XX TODO: is this how to delete the field?
-					update_json_file ".AllskyWebsiteVersion" "null" \
-						"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
-				fi
-				update_json_file ".${WEBSITE_CONFIG_VERSION}" "${NEW_WEB_CONFIG_DIR}" \
-					"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
-			fi
-		fi
 	fi
 
 	# Each data directory will have zero or more images.
 	# Make sure we do NOT mv any .php files.
 
-	D="${PRIOR_WEBSITE}/videos/thumbnails"
+	ITEM="${SPACE}${SPACE}videos"
+	D="${PRIOR_WEBSITE_DIR}/videos/thumbnails"
 	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/videos"
-	count=$( find "${PRIOR_WEBSITE}/videos" -maxdepth 1 -name 'allsky-*' | wc -l )
+	count=$( find "${PRIOR_WEBSITE_DIR}/videos" -maxdepth 1 -name 'allsky-*' | wc -l )
 	if [[ ${count} -ge 1 ]]; then
-		display_msg --log progress "Restoring prior videos."
-		mv "${PRIOR_WEBSITE}"/videos/allsky-*   "${ALLSKY_WEBSITE}/videos"
+		display_msg --log progress "${ITEM} (moving)"
+		mv "${PRIOR_WEBSITE_DIR}"/videos/allsky-*   "${ALLSKY_WEBSITE}/videos"
 	else
-		display_msg "${LOG_TYPE}" info "No prior vidoes to restore."
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-	D="${PRIOR_WEBSITE}/keograms/thumbnails"
+	ITEM="${SPACE}${SPACE}keograms"
+	D="${PRIOR_WEBSITE_DIR}/keograms/thumbnails"
 	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/keograms"
-	count=$( find "${PRIOR_WEBSITE}/keograms" -maxdepth 1 -name 'keogram-*' | wc -l )
+	count=$( find "${PRIOR_WEBSITE_DIR}/keograms" -maxdepth 1 -name 'keogram-*' | wc -l )
 	if [[ ${count} -ge 1 ]]; then
-		display_msg progress "Restoring prior keograms."
-		mv "${PRIOR_WEBSITE}"/keograms/keogram-*   "${ALLSKY_WEBSITE}/keograms"
+		display_msg --log progress "${ITEM} (moving)"
+		mv "${PRIOR_WEBSITE_DIR}"/keograms/keogram-*   "${ALLSKY_WEBSITE}/keograms"
 	else
-		display_msg "${LOG_TYPE}" info "No prior keograms to restore."
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-	D="${PRIOR_WEBSITE}/startrails/thumbnails"
+	ITEM="${SPACE}${SPACE}startrails"
+	D="${PRIOR_WEBSITE_DIR}/startrails/thumbnails"
 	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/startrails"
-	count=$( find "${PRIOR_WEBSITE}/startrails" -maxdepth 1 -name 'startrails-*' | wc -l )
+	count=$( find "${PRIOR_WEBSITE_DIR}/startrails" -maxdepth 1 -name 'startrails-*' | wc -l )
 	if [[ ${count} -ge 1 ]]; then
-		display_msg progress "Restoring prior startrails."
-		mv "${PRIOR_WEBSITE}"/startrails/startrails-*   "${ALLSKY_WEBSITE}/startrails"
+		display_msg --log progress "${ITEM} (moving)"
+		mv "${PRIOR_WEBSITE_DIR}"/startrails/startrails-*   "${ALLSKY_WEBSITE}/startrails"
 	else
-		display_msg "${LOG_TYPE}" info "No prior startrails to restore."
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-	D="${PRIOR_WEBSITE}/myFiles"
+	ITEM="${SPACE}${SPACE}'myFiles' directory"
+	D="${PRIOR_WEBSITE_DIR}/myFiles"
 	if [[ -d ${D} ]]; then
 		count=$( find "${D}" | wc -l )
 		if [[ ${count} -gt 1 ]]; then
-			display_msg --log progress "Restoring prior 'myFiles' directory."
+			display_msg --log progress "${ITEM} (moving)"
 			mv "${D}"   "${ALLSKY_WEBSITE}"
 		fi
 	else
-		display_msg "${LOG_TYPE}" info "No prior 'myFiles' to restore."
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
 	# This is the old name.
 # TODO: remove this check in the next release.
-	D="${PRIOR_WEBSITE}/myImages"
+	ITEM="${SPACE}${SPACE}'myImages' directory"
+	D="${PRIOR_WEBSITE_DIR}/myImages"
 	if [[ -d ${D} ]]; then
 		count=$( find "${D}" | wc -l )
 		if [[ ${count} -gt 1 ]]; then
-			MSG="Moving prior 'myImages' contents to 'myFiles'."
-			MSG="${MSG}  Please use that directory going forward."
-			display_msg --log progress "${MSG}"
-			mv "${D}"*   "${ALLSKY_WEBSITE}/myFiles"
+			MSG2="  Please use 'myFiles' going forward."
+			display_msg --log progress "${ITEM} (copying to '${ALLSKY_WEBSITE}/myFiles')" "${MSG2}"
+			cp "${D}"/*   "${ALLSKY_WEBSITE}/myFiles"
 		fi
 	else
-		display_msg "${LOG_TYPE}" info "No prior 'myImages' to restore."
+		# Since this is obsolete only add to log file.
+		display_msg --logonly progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
 	A="analyticsTracking.js"
-	D="${PRIOR_WEBSITE}/${A}"
+	ITEM="${SPACE}${SPACE}${A}"
+	D="${PRIOR_WEBSITE_DIR}/${A}"
 	if [[ -f ${D} ]]; then
-		if ! cmp --silent "${D}" "${A}" ; then
-			display_msg progress "Restoring prior '${A}'."
-			mv "${D}" "${ALLSKY_WEBSITE}"
+		if ! cmp --silent "${D}" "${ALLSKY_WEBSITE}/${A}" ; then
+			display_msg --log progress "${ITEM} (copying)"
+			cp "${D}" "${ALLSKY_WEBSITE}"
 		fi
 	else
-		display_msg "${LOG_TYPE}" info "No prior '${A}' to restore."
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+	fi
+
+	# Now deal with the configuration file.
+	if [[ ${PRIOR_WEBSITE_STYLE} == "${OLD_STYLE_WEBSITE}" ]]; then
+		# The format of the old files is too different from the new file,
+		# so force them to manually copy settings.
+		MSG="You need to manually copy your prior Website settings in"
+		MSG="${MSG}\n\t${PRIOR_WEBSITE_DIR}"
+		MSG="${MSG}\nto '${ALLSKY_WEBSITE_CONFIGURATION_NAME}' in the WebUI."
+		display_msg --log info "${MSG}"
+		echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+
+	else		# NEW_STYLE_WEBSITE
+		ITEM="${SPACE}${SPACE}${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
+		if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
+			MSG="${ITEM} (copying and updating for version ${NEW_WEB_CONFIG_VERSION})"
+			display_msg --log progress "${MSG}"
+		fi
+
+		# Copy the old file to the current location.
+		cp "${PRIOR_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}" \
+			"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+
+		if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
+			# If different versions, then update the current one.
+			update_website_config_file "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" \
+				"${PRIOR_WEB_CONFIG_VERSION}" "${NEW_WEB_CONFIG_VERSION}" "local"
+		else
+			display_msg --log progress "${ITEM} (copying)"
+			MSG="${ALLSKY_WEBSITE_CONFIGURATION_NAME}: Already current @ version ${NEW_WEB_CONFIG_VERSION}"
+			display_msg --logonly info "${MSG}"
+		fi
 	fi
 }
 
@@ -2491,16 +2464,7 @@ install_Python()
 	fi
 
 	local NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
-
-	# See how many have already been installed - if all, then skip this step.
-	# This shouldn't be needed since if all are installed then we would have returned
-	# from this function at the top.
-#x	local NAME="Python_dependencies"
-#x	local NUM_INSTALLED="$( set | grep -c "^${NAME}" )"
-#x	if [[ ${NUM_INSTALLED} -eq "${NUM_TO_INSTALL}" ]]; then
-#x		display_msg --logonly info "All ${NAME} already installed"
-#x		return
-#x	fi
+	local NAME="Python_dependencies"
 
 	if [[ ${PI_OS} == "bookworm" ]]; then
 		local PKGs="python3-full libgfortran5 libopenblas0-pthread"

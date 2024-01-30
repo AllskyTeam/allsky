@@ -114,30 +114,24 @@ function verifyNumber($num) {
 	return true;
 }
 
-$image_name=null;
+$image_name = null;
 $showDelay = true; $delay=null; $daydelay=null; $nightdelay=null;
-$darkframe=null;
-$useLogin=null;
+$imagesSortOrder = null;
+$darkframe = null;
+$useLogin = null;
 $temptype = null;
 $lastChanged = null;
 $websiteURL = null;
 $settings_array = null;
+
 function initialize_variables() {
 	global $status, $needToDisplayMessages;
 	global $image_name;
 	global $showDelay, $delay, $daydelay, $nightdelay;
+	global $imagesSortOrder;
 	global $darkframe, $useLogin, $temptype, $lastChanged, $lastChangedName;
 	global $websiteURL;
 	global $settings_array;
-
-	// The Camera Type should be set during the installation, so this "should" never fail...
-	$cam_type = getCameraType();
-	if ($cam_type == '') {
-		echo "<div style='color: red; font-size: 200%;'>";
-		echo "'Camera Type' not defined in config.sh.  Please update it.";
-		echo "</div>";
-		exit;
-	}
 
 	$settings_file = getSettingsFile();
 	$errorMsg = "ERROR: Unable to process settings file '$settings_file'.";
@@ -151,6 +145,7 @@ function initialize_variables() {
 	$img_dir = get_variable(ALLSKY_CONFIG . '/config.sh', 'IMG_DIR=', 'current/tmp');
 	$image_name = $img_dir . "/" . $settings_array['filename'];
 	$darkframe = toBool(getVariableOrDefault($settings_array, 'takedarkframes', "false"));
+	$imagesSortOrder = getVariableOrDefault($settings_array, 'imagessortorder', "ascending");
 	$useLogin = toBool(getVariableOrDefault($settings_array, 'uselogin', "true"));
 	$temptype = getVariableOrDefault($settings_array, 'temptype', "C");
 	$lastChanged = getVariableOrDefault($settings_array, $lastChangedName, "");
@@ -727,10 +722,6 @@ function updateFile($file, $contents, $fileName, $toConsole) {
 		}
 	}
 	return "";
-}
-
-function getCameraType() {
-	return get_variable(ALLSKY_CONFIG . '/config.sh', 'CAMERA_TYPE=', '');
 }
 
 // Return the settings file for the specified camera.

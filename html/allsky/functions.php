@@ -52,16 +52,13 @@ if ($onPi && ALLSKY_CONFIG == "XX_ALLSKY_CONFIG" . "_XX") {
 	// This file hasn't been updated yet after installation.
 	echo "<div style='font-size: 200%;'>";
 	echo "<span style='color: red'>";
-	echo "If this Website is running on a Pi, please run the following:";
+	echo "The Website is not configured correctly.";
+	echo "<br>Please run the following:";
 	echo "</span>";
 	echo "<br><code>";
 	echo "&nbsp; &nbsp; &nbsp; &nbsp; cd ~/allsky";
-	echo "<br>&nbsp; &nbsp; &nbsp; &nbsp; website/install.sh --update";
+	echo "<br>&nbsp; &nbsp; &nbsp; &nbsp; ./install.sh --fix";
 	echo "</code>";
-
-	echo "<span style='color: red'>";
-	echo "<br><br>If instead, this Website is being run on a remote server, change the <b>onPi</b> variable in the '$configurationFileName' configuration file to <b>false</b>.";
-	echo "</span>";
 	echo "</div>";
 	exit;
 }

@@ -137,7 +137,7 @@ float aegCalcMean(cv::Mat image, bool useMask)
 	{
 		maskCreated = true;
 
-		Log(4, (">=>= Creating new mask @ cols=%d, rows=%d\n", image.cols, image.rows);
+		Log(4, ">=>= Creating new mask @ cols=%d, rows=%d\n", image.cols, image.rows);
 
 // TODO: Allow user to specify a mask file
 

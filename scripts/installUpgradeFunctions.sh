@@ -240,53 +240,74 @@ function display_msg()
 	fi >>  "${DISPLAY_MSG_LOG}"
 }
 
-function update_json_file()		# field, new value, file, [type]
+####
+# Update a json file.   -d  deletes the field
+function update_json_file()		# [-d] field, new value, file, [type]
 {
-	local M="${ME:-${FUNCNAME[0]}}"
-	local FIELD="${1}"
+	local M FIELD NEW_VALUE FILE TYPE DOUBLE_QUOTE TEMP ACTION
+
+	M="${ME:-${FUNCNAME[0]}}"
+
+	if [[ ${1} == "-d" ]]; then
+		DELETE="true"
+		shift
+	else
+		DELETE="false"
+	fi
+
+	FIELD="${1}"
 	if [[ ${FIELD:0:1} != "." ]]; then
 		echo "${M}: Field names must begin with period '.' (Field='${FIELD}')" >&2
 		return 1
 	fi
 
-	local NEW_VALUE="${2}"
-	local FILE="${3:-${SETTINGS_FILE}}"
-	local TYPE="${4:-string}"		# optional
-	local DOUBLE_QUOTE
-	if [[ ${TYPE} == "string" ]]; then
-		DOUBLE_QUOTE='"'
+	FILE="${3:-${SETTINGS_FILE}}"
+	TEMP="/tmp/$$"
+
+	if [[ ${DELETE} == "true" ]]; then
+		NEW_VALUE="(delete)"	# only used in error message below.
+		ACTION="del(${FIELD})"
 	else
-		DOUBLE_QUOTE=""
+		NEW_VALUE="${2}"
+		TYPE="${4:-string}"		# optional
+		if [[ ${TYPE} == "string" ]]; then
+			DOUBLE_QUOTE='"'
+		else
+			DOUBLE_QUOTE=""
+		fi
+		ACTION="${FIELD} = ${DOUBLE_QUOTE}${NEW_VALUE}${DOUBLE_QUOTE}"
 	fi
-
-	local TEMP="/tmp/$$"
-	# Have to use "cp" instead of "mv" to keep any hard link.
-	if jq "${FIELD} = ${DOUBLE_QUOTE}${NEW_VALUE}${DOUBLE_QUOTE}" "${FILE}" > "${TEMP}" ; then
+	if jq --indent 4 "${ACTION}" "${FILE}" > "${TEMP}" ; then
+		# Have to use "cp" instead of "mv" to keep any hard link.
 		cp "${TEMP}" "${FILE}"
-		rm "${TEMP}"
-		return 0
+		RET=0
+	else
+		RET=1
+	fi
+	rm "${TEMP}"
+
+	if [[ ${RET} -ne 0 ]]; then
+		echo "${M}: Unable to update json value of '${FIELD}' to '${NEW_VALUE}' in '${FILE}'." >&2
 	fi
 
-	echo "${M}: Unable to update json value of '${FIELD}' to '${NEW_VALUE}' in '${FILE}'." >&2
-
-	return 2
+	return "${RET}"
 }
 
 ####
 # Update a Website configuration file from old to current version.
 update_website_config_file()
 {
-	local FILE="${1}"
-	local PRIOR_VERSION="${2}"
-	local CURRENT_VERSION="${3}"
-	local LOCAL_OR_REMOTE="${4}"
-	local MSG
+	local FILE PRIOR_VERSION CURRENT_VERSION LOCAL_OR_REMOTE
+
+	FILE="${1}"
+	PRIOR_VERSION="${2}"
+	CURRENT_VERSION="${3}"
+	LOCAL_OR_REMOTE="${4}"
 
 	# Current version: 2
 	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
 		# Version 2 removed AllskyWebsiteVersion.
-#XX TODO: is this how to delete the field?
-		update_json_file ".AllskyWebsiteVersion" "null" "${FILE}"
+		update_json_file -d ".AllskyWebsiteVersion" "" "${FILE}"
 	fi
 
 	# Set to current version.

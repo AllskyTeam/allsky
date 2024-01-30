@@ -46,7 +46,7 @@
 		<details open>
 			<summary></summary>
 			<h4>Enhancements / Changes</h4>
-			<ul>
+			<ul class="minimalPadding">
 				<li>The WebUI now hides the settings in each section unless there's
 					an error in that section.
 					To view a section's settings, click the
@@ -79,9 +79,15 @@
 			</ul>
 
 			<h4>Added / Deleted Settings</h4>
+			<ul class="minimalPadding">
 				<li>The new <span class="WebUISetting">Images Sort Order</span>
 					setting determines the sort order of the images on the
 					WebUI's <span class="WebUIWebPage">Images</span> page.
+				</li>
+				<li>The new <span class="WebUISetting">Hide Updated Message</span>
+					setting allows hiding the
+					<span class="alert-info">Daytime images updated every...</span>
+					message on the WebUI's <span class="WebUIWebPage">Live View</span> page.
 				</li>
 				<li>The new <span class="WebUISetting">ZWO Exposure Type</span>
 					setting specifies how images should be taken.
@@ -98,18 +104,20 @@
 				<li>The new <span class="WebUISetting">Nighttime Capture</span> and
 					<span class="WebUISetting">Nighttime Save</span> settings
 					are the same as the daytime versions, except for nighttime.
-			<ul>
+				</li>
+			</ul>
 
 			<h4>Bug Fixes</h4>
 			<ul class="minimalPadding">
 				<li>ASI_ERROR_TIMEOUT messages are mostly gone!
 					This uses the new <span class="WebUISetting">ZWO Exposure Type</span>
-					setting.</li>
+					setting.
+				</li>
 			</ul>
 
 			<h4>Maintenance</h4>
 			<ul class="minimalPadding">
-				<li>All setting names are now lowercase and boolean settings are now
+				<li>All setting names are now lowercase and boolean settings are
 					"true" and "false" rather than 1 and 0.
 					These changes should have no impact on users.
 				</li>

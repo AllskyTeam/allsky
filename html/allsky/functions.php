@@ -4,11 +4,78 @@
 // On other machines it won't and references to it will silently fail.
 define('ALLSKY_CONFIG',  'XX_ALLSKY_CONFIG_XX');
 
-// Look for $var in the $a array and return its value.
-// If not found, return $default.
-// If the value is a boolean and is false, an empty string is returned (not a 0).
-// A true boolean value returns 1.  We want to return 0 if false.
-// Ditto for $default.
+// Globals
+$settings_array = null;
+
+function initialize() {
+	global $settings_array;
+
+	$needToUpdateString = "XX_NEED_TO_UPDATE_XX";
+	$configurationFileName = "configuration.json";
+
+	// Read the configuration file.
+	// Some settings impact this page, some impact the constellation overlay.
+	if (! isset($configFilePrefix)) {
+		$configFilePrefix = "";
+	}
+	$configuration_file = $configFilePrefix . $configurationFileName;
+	if (! file_exists($configuration_file)) {
+		echo "<p class='error-msg'>";
+			echo "ERROR: Missing configuration file '$configuration_file'.";
+			echo "<br>Cannot continue.";
+		echo "</p>";
+		return(false);
+	}
+	$settings_str = file_get_contents($configuration_file, true);
+	if (strpos($settings_str, $needToUpdateString) !== false) {
+		echo "<p class='warning-msg'>";
+			echo "WARNING: Configuration file '$configurationFileName' needs updating.";
+			echo "<br>Look for fields with '$needToUpdateString'.";
+			echo "The Website may not work correctly until updated.";
+		echo "</p>";
+	}
+
+	$settings_array = json_decode($settings_str, true);
+	if ($settings_array == null) {
+		echo "<p class='error-msg'>";
+			echo "ERROR: Bad configuration file '$configurationFileName'.";
+			echo "<br>Cannot continue.";
+			echo "<br>Check for missing quotes or commas at the end of every line except the last one.";
+		echo "</p>";
+		echo "<pre>$settings_str</pre>";
+		return(false);
+	}
+
+	// If on a Pi, check that the placeholder was replaced.
+	$onPi = v("onPi", true, $settings_array['homePage']);
+	if ($onPi && ALLSKY_CONFIG == "XX_ALLSKY_CONFIG" . "_XX") {
+		// This file hasn't been updated yet after installation.
+		echo "<div class='error-msg'>";
+			echo "ERROR: The Website is not configured correctly.";
+			echo "<br>Please run the following:<br><br>";
+			echo "<div style='background-color: white;'>";
+				echo "<code style='color: black'>";
+				echo "&nbsp; &nbsp; &nbsp; &nbsp; cd ~/allsky";
+				echo "<br>&nbsp; &nbsp; &nbsp; &nbsp; ./install.sh --fix";
+				echo "</code>";
+			echo "</div>";
+			echo "<br>Then refresh this page.";
+		echo "</div>";
+		return(false);
+	}
+
+	return(true);
+}
+if (! initialize()) exit(1);
+
+
+/*
+ * Look for $var in the $a array and return its value.
+ * If not found, return $default.
+ * If the value is a boolean and is false, an empty string is given to us so return 0;
+ * IMHO this isn't very friendly json or PHP - they should give us false.
+ * A true boolean value returns 1.
+*/
 function v($var, $default, $a) {
 	if (isset($a[$var])) {
 		$value = $a[$var];
@@ -18,49 +85,9 @@ function v($var, $default, $a) {
 			return($value);
 	} else if (gettype($default) === "boolean" && $default == "") {
 		return(0);
-	}else {
+	} else {
 		return($default);
 	}
-}
-
-$configurationFileName = "configuration.json";
-// Read the configuration file.
-// Some settings impact this page, some impact the constellation overlay.
-if (! isset($configFilePrefix))
-	$configFilePrefix = "";
-$configuration_file = $configFilePrefix . $configurationFileName;
-if (! file_exists($configuration_file)) {
-	echo "<p style='color: red; font-size: 200%'>";
-	echo "ERROR: Missing configuration file '$configuration_file'.  Cannot continue.";
-	echo "</p>";
-	exit;
-}
-$settings_str = file_get_contents($configuration_file, true);
-$settings_array = json_decode($settings_str, true);
-if ($settings_array == null) {
-	echo "<p style='color: red; font-size: 200%'>";
-	echo "ERROR: Bad configuration file '<span style='color: black'>$configurationFileName</span>'.  Cannot continue.";
-	echo "<br>Check for missing quotes or commas at the end of every line (except the last one).";
-	echo "</p>";
-	echo "<pre>$settings_str</pre>";
-	exit;
-}
-$onPi = v("onPi", true, $settings_array['homePage']);
-
-// If on a Pi, check that the placeholder was replaced.
-if ($onPi && ALLSKY_CONFIG == "XX_ALLSKY_CONFIG" . "_XX") {
-	// This file hasn't been updated yet after installation.
-	echo "<div style='font-size: 200%;'>";
-	echo "<span style='color: red'>";
-	echo "The Website is not configured correctly.";
-	echo "<br>Please run the following:";
-	echo "</span>";
-	echo "<br><code>";
-	echo "&nbsp; &nbsp; &nbsp; &nbsp; cd ~/allsky";
-	echo "<br>&nbsp; &nbsp; &nbsp; &nbsp; ./install.sh --fix";
-	echo "</code>";
-	echo "</div>";
-	exit;
 }
 
 /*

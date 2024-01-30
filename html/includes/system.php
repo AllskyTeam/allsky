@@ -8,6 +8,18 @@
 
 function RPiVersion()
 {
+	exec('cat /proc/device-tree/model', $model);
+	$RPI = getVariableOrDefault($model, 0, null);
+	if ($RPI !== null) {
+		exec('sudo vcgencmd get_config total_mem | cut -d= -f2', $mem);		// in KB
+		$mem = getVariableOrDefault($mem, 0, null);
+		if ($mem !== null) {
+			$mem = formatSize($mem * 1024 * 1024);
+			$RPI = "$RPI ($mem)";
+		}
+		return($RPI);
+	}
+
 	// Lookup table from https://www.raspberrypi.org/documentation/hardware/raspberrypi/revision-codes/README.md
 	// Last updated December 2023 with Pi 5
 	$revisions = array(
@@ -70,12 +82,7 @@ function RPiVersion()
 	if (array_key_exists($rev, $revisions)) {
 		return $revisions[$rev];
 	} else {
-		exec('cat /proc/device-tree/model', $model);
-		if (isset($model[0])) {
-			return $model[0];
-		} else {
-			return 'Unknown Pi, rev=' . $rev;
-		}
+		return 'Unknown Pi, rev=' . $rev;
 	}
 }
 

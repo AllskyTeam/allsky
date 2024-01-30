@@ -729,12 +729,17 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 			CG.overlay.fontsize		= originalFontsize / CG.currentBin;
 			CG.overlay.linewidth	= originalLinewidth / CG.currentBin;
 
-// TODO: if not the first time, should we free the old pRgb?
+			if (numExposures > 0)
+			{
+				// If not the first time, free the prior pRgb.
+				pRgb.release();
+			}
+
 			if (CG.imageType == IMG_RAW16)
 			{
 				pRgb.create(cv::Size(CG.width, CG.height), CV_16UC1);
 			}
-				else if (CG.imageType == IMG_RGB24)
+			else if (CG.imageType == IMG_RGB24)
 			{
 				pRgb.create(cv::Size(CG.width, CG.height), CV_8UC3);
 			}

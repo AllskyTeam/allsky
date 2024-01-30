@@ -22,10 +22,10 @@ function ListImages() {
 	if ($num > 0) {
 		if ($imagesSortOrder === "descending") {
 			arsort($images);
-			$sortOrder = "Sorted newest to oldest";
+			$sortOrder = "Sorted newest to oldest (descending)";
 		} else {
 			asort($images);
-			$sortOrder = "Sorted oldest to newest";
+			$sortOrder = "Sorted oldest to newest (ascending)";
 		}
 		$sortOrder = "<span style='font-size: 80%;'>$sortOrder</span>";
 	} else {

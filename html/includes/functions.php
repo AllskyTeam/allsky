@@ -133,15 +133,6 @@ function initialize_variables() {
 	global $websiteURL;
 	global $settings_array;
 
-	// The Camera Type should be set during the installation, so this "should" never fail...
-	$cam_type = getCameraType();
-	if ($cam_type == '') {
-		echo "<div style='color: red; font-size: 200%;'>";
-		echo "'Camera Type' not defined in config.sh.  Please update it.";
-		echo "</div>";
-		exit;
-	}
-
 	$settings_file = getSettingsFile();
 	$errorMsg = "ERROR: Unable to process settings file '$settings_file'.";
 	$settings_array = get_decoded_json_file($settings_file, true, $errorMsg);
@@ -731,10 +722,6 @@ function updateFile($file, $contents, $fileName, $toConsole) {
 		}
 	}
 	return "";
-}
-
-function getCameraType() {
-	return get_variable(ALLSKY_CONFIG . '/config.sh', 'CAMERA_TYPE=', '');
 }
 
 // Return the settings file for the specified camera.

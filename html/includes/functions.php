@@ -114,18 +114,21 @@ function verifyNumber($num) {
 	return true;
 }
 
-$image_name=null;
+$image_name = null;
 $showDelay = true; $delay=null; $daydelay=null; $nightdelay=null;
-$darkframe=null;
-$useLogin=null;
+$imagesSortOrder = null;
+$darkframe = null;
+$useLogin = null;
 $temptype = null;
 $lastChanged = null;
 $websiteURL = null;
 $settings_array = null;
+
 function initialize_variables() {
 	global $status, $needToDisplayMessages;
 	global $image_name;
 	global $showDelay, $delay, $daydelay, $nightdelay;
+	global $imagesSortOrder;
 	global $darkframe, $useLogin, $temptype, $lastChanged, $lastChangedName;
 	global $websiteURL;
 	global $settings_array;
@@ -151,6 +154,7 @@ function initialize_variables() {
 	$img_dir = get_variable(ALLSKY_CONFIG . '/config.sh', 'IMG_DIR=', 'current/tmp');
 	$image_name = $img_dir . "/" . $settings_array['filename'];
 	$darkframe = toBool(getVariableOrDefault($settings_array, 'takedarkframes', "false"));
+	$imagesSortOrder = getVariableOrDefault($settings_array, 'imagessortorder', "ascending");
 	$useLogin = toBool(getVariableOrDefault($settings_array, 'uselogin', "true"));
 	$temptype = getVariableOrDefault($settings_array, 'temptype', "C");
 	$lastChanged = getVariableOrDefault($settings_array, $lastChangedName, "");

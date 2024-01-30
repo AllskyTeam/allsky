@@ -683,8 +683,22 @@ use the <span class="shSetting">CROP</span> setting in the
 </tr>
 <tr><td><span class="WebUISetting">Use Outline Font</span></td>
 	<td>No</td>
-	<td>Should an outline to the text overlay be added to improve contrast?</td>
-</tr>
+	<td>Should an outline to the text overlay be added to improve contrast?</td></tr>
+
+<tr><td class="note" colspan="3">WebUI Configuration
+	<p>
+	Settings dealing with the WebUI itself.
+	</p>
+	</td></tr>
+<tr><td><span class="WebUISetting">Images Sort Order</span></td>
+	<td>Ascending</td>
+	<td>Determines how the images for a day in the
+	the WebUI's <span class="WebUIWebPage">Images</span> page are displayed.
+	<br><span class="WebUIValue">Ascending</span>
+		sorts oldest image to newest.
+	<br><span class="WebUIValue">Descending</span>
+		sorts newest (i.e., most recent) image to oldest.
+	</td></tr>
 
 <tr><td class="note" colspan="3">Allsky Map and Website Setting
 	<p>
@@ -695,20 +709,18 @@ use the <span class="shSetting">CROP</span> setting in the
 	The server automatically removes old data.
 	Note that only a limited number of updates per day are allowed to catch bogus updates.
 	</p>
-	</td>
-</tr>
-
+	</td></tr>
 <tr><td><span class="WebUISetting">Display Settings</span></td>
 	<td>No</td>
 	<td>People sometimes ask others what settings they are using.
 	Enable this setting to add a link to your Allsky Website's popout that displays your
 	settings in the WebUI's <span class="WebUIWebPage">Allsky Settings</span> page.
-	<br>Only works if you are running the Allsky Website.</td></tr>
+	<br>Only applies if you are running the Allsky Website.</td></tr>
 <tr><td><span class="WebUISetting">Show on Map</span></td>
 	<td>No</td>
 	<td>Enable to have your camera appear on the
 	<a href='https://www.thomasjacquin.com/allsky-map'>Allsky map</a>.
-	<br><b>If off, the following settings are ignored.</b></td></tr>
+	<br><b>If off, the URL settings below are ignored.</b></td></tr>
 <tr><td><span class="WebUISetting">Website URL</span></td>
 	<td></td>
 	<td>Your website's URL, for example: https://www.thomasjacquin.com/allsky.
@@ -775,13 +787,12 @@ use the <span class="shSetting">CROP</span> setting in the
 	(e.g., a ZWO ASI120 with a ZWO ASI290)
 	select <span class="dropdown">Refresh</span> in the drop-down.
 	</td></tr>
-<!--
 <tr><td><span class="WebUISetting">Camera Model</span></td>
 	<td></td>
-	<td>This read-only field displays the model of camera you are using.
+	<td>This <strong>read-only</strong> field displays the model of camera you are using.
 	It is determined automatically based on what camera is connected to your Pi.
-	<br>If more than one camera of the specified type is connected, the first one is used.</td></tr>
--->
+	<br>If more than one camera of the specified type is connected,
+	the first one is used.</td></tr>
 
 </tbody>
 </table>

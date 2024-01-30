@@ -1414,7 +1414,12 @@ int main(int argc, char *argv[])
 
 			bufferSize = (long) (CG.width * CG.height * currentBpp);
 
-// TODO: if not the first time, should we free the old pRgb?
+			if (numExposures > 0)
+			{
+				// If not the first time, free the prior pRgb.
+				pRgb.release();
+			}
+
 			if (CG.imageType == IMG_RAW16)
 			{
 				pRgb.create(cv::Size(CG.width, CG.height), CV_16UC1);

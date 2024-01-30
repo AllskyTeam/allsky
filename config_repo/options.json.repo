@@ -1242,6 +1242,28 @@
 },
 
 {
+"name" : "webuitab========================================",
+"label" : "WebUI",
+"type" : "header-tab"
+},
+{
+"name" : "webuiheading",
+"label" : "WebUI Configuration",
+"type" : "header"
+},
+{
+"name" : "imagessortorder",
+"default" : "ascending",
+"description" : "The order the images on the 'Images' page are sorted in.<br>'Ascending' is oldest to newest. 'Descending' is newest to oldest.",
+"label" : "Images Sort Order",
+"type" : "select",
+"options" : [
+	{"value" : "ascending", "label" : "Ascending"},
+	{"value" : "descending", "label" : "Descending"}
+]
+},
+
+{
 "name" : "cameratab========================================",
 "label" : "Camera Type",
 "type" : "header-tab"
@@ -1291,18 +1313,6 @@
 "action" : "restart"
 },
 
-{
-"name" : "webuitab========================================",
-"label" : "WebUI",
-"display" : false,
-"type" : "header-tab"
-},
-{
-"name" : "webuiheading",
-"label" : "WebUI Configuration",
-"display" : false,
-"type" : "header"
-},
 {
 "name" : "XX_END_XX"
 }

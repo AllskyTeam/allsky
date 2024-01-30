@@ -156,7 +156,6 @@ function initialize_variables() {
 	$daydelay = $settings_array["daydelay"];
 	$nightdelay = $settings_array["nightdelay"];
 	$showDelay = toBool(getVariableOrDefault($settings_array, 'showdelay', "true"));
-	if (! $showDelay) return;
 
 	$daymaxautoexposure = $settings_array["daymaxautoexposure"];
 	$dayexposure = $settings_array["dayexposure"];
@@ -167,48 +166,53 @@ function initialize_variables() {
 	$ok = true;
 	// These are all required settings so if they are blank don't display a
 	// message since the WebUI will.
-	if (! verifyNumber($daydelay)) $ok = false;
+	$delay = 0;
+	if (! verifyNumber($daydelay)) $ok = false; else $delay += $daydelay;
 	if (! verifyNumber($daymaxautoexposure)) $ok = false;
 	if (! verifyNumber($dayexposure)) $ok = false;
-	if (! verifyNumber($nightdelay)) $ok = false;
+	if (! verifyNumber($nightdelay)) $ok = false; else $delay += $nightdelay;
 	if (! verifyNumber($nightmaxautoexposure)) $ok = false;
 	if (! verifyNumber($nightexposure)) $ok = false;
-	if ($ok) {
-		$daydelay += ($consistentDelays ? $daymaxautoexposure : $dayexposure);
-		$nightdelay += ($consistentDelays ? $nightmaxautoexposure : $nightexposure);
 
-		// Determine if it's day or night so we know which delay to use.
-		$angle = getVariableOrDefault($settings_array, 'angle', -6);
-		$lat = getVariableOrDefault($settings_array, 'latitude', "");
-		$lon = getVariableOrDefault($settings_array, 'longitude', "");
-		if ($lat != "" && $lon != "") {
-			exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
-			if ($retval == 2) {
-				$delay = $daydelay;
-			} else if ($retval == 3) {
-				$delay = $nightdelay;
-			} else {
-				$msg = "<code>sunwait</code> returned $retval; don't know if it's day or night.";
-				$status->addMessage($msg, 'danger', false);
-				$needToDisplayMessages = true;
-				$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
-			}
+	if (! $ok) {
+		$showDelay = false;
+		if ($delay === 0) $delay = 20;	// a reasonable default
+		return;
+	}
 
-			// Convert to seconds for display.
-			$daydelay /= 1000;
-			$nightdelay /= 1000;
+	$daydelay += ($consistentDelays ? $daymaxautoexposure : $dayexposure);
+	$nightdelay += ($consistentDelays ? $nightmaxautoexposure : $nightexposure);
+
+	// Determine if it's day or night so we know which delay to use.
+	$angle = getVariableOrDefault($settings_array, 'angle', -6);
+	$lat = getVariableOrDefault($settings_array, 'latitude', "");
+	$lon = getVariableOrDefault($settings_array, 'longitude', "");
+	if ($lat != "" && $lon != "") {
+		exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
+		if ($retval == 2) {
+			$delay = $daydelay;
+		} else if ($retval == 3) {
+			$delay = $nightdelay;
 		} else {
-			// Error message will be displayed by WebUI.
-			$showDelay = false;
-			// Not showing delay so just use average
+			$msg = "<code>sunwait</code> returned $retval; don't know if it's day or night.";
+			$status->addMessage($msg, 'danger', false);
+			$needToDisplayMessages = true;
 			$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
 		}
 
-		// Lessen the delay between a new picture and when we check.
-		$delay /= 4;
+		// Convert to seconds for display.
+		$daydelay /= 1000;
+		$nightdelay /= 1000;
 	} else {
+		// Error message will be displayed by WebUI.
 		$showDelay = false;
+		// Not showing delay so just use average
+		$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
 	}
+
+	// Lessen the delay between a new picture and when we check.
+	$delay /= 5;
+	if ($delay < 2) $delay = 2;
 }
 
 // Check if the settings have been configured.

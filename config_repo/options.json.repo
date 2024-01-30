@@ -1266,7 +1266,7 @@
 "name" : "showdelay",
 "default" : true,
 "description" : "Disable to hide the <span class='alert-info'>Daytime images updated every...</span> message in the <span class='WebUIWebPage'>Live View</span> page.",
-"label" : "Hide Updated Message",
+"label" : "Show Updated Message",
 "type" : "boolean"
 },
 

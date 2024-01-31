@@ -261,9 +261,10 @@ do
 
 				# Create a link to a file that contains the camera type and model in the name.
 				CAMERA_TYPE="${NEW_VALUE}"		# already know it
-				CAMERA_MODEL="$( settings ".cameraModel" "${CC_FILE}" )"
+				SETTING_NAME="cameraModel"		# Name is Upper case in CC file
+				CAMERA_MODEL="$( settings ".${SETTING_NAME}" "${CC_FILE}" )"
 				if [[ -z ${CAMERA_MODEL} ]]; then
-					echo -e "${wERROR}ERROR: 'cameraModel' not found in ${CC_FILE}.${wNC}"
+					echo -e "${wERROR}ERROR: '${SETTING_NAME}' not found in ${CC_FILE}.${wNC}"
 					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
 					exit 1
 				fi
@@ -397,7 +398,7 @@ do
 				S_EXT="${NAME##*.}"
 				OLD_SETTINGS_FILE="${ALLSKY_CONFIG}/${S_NAME}_${OLD_TYPE}_${OLD_MODEL}.${S_EXT}"
 
-				for s in latitude longitude locale websiteurl imageurl location owner computer
+				for s in latitude longitude locale websiteurl imageurl location owner computer imagesortorder
 				do
 					X="$( settings .${s} "${OLD_SETTINGS_FILE}" )"
 					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}"
@@ -409,7 +410,7 @@ do
 					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}" "number"
 				done
 
-				for s in uselogin displaysettings showonmap
+				for s in uselogin displaysettings showonmap showdelay
 				do
 					X="$( settings .${s} "${OLD_SETTINGS_FILE}" )"
 					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}" "boolean"
@@ -458,9 +459,6 @@ do
 			else
 				echo -e "${wWARNING}WARNING: ${NEW_VALUE}.${wNC}"
 			fi
-			;;
-
-		"angle")
 			;;
 
 		"takedaytimeimages")

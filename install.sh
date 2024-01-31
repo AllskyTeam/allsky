@@ -991,22 +991,22 @@ set_permissions()
 	chmod 775 "${ALLSKY_TMP}"
 	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_TMP}"
 
+	#### Website files
 	if [[ ! -f "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" ]]; then
 		# No prior config file (this should only happen if there was no prior Website).
 		cp "${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 	fi
-	# Unlike the WebUI files and directories, these need to be writable by the web server.
-	sudo chmod 664 "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
-	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
-
 	# These directories aren't in GitHub so need to be manually created.
 	mkdir -p \
 		"${ALLSKY_WEBSITE}/videos/thumbnails" \
 		"${ALLSKY_WEBSITE}/keograms/thumbnails" \
 		"${ALLSKY_WEBSITE}/startrails/thumbnails"
 
-	sudo find "${ALLSKY_WEBSITE}/" -type d -name thumbnails -exec chmod 775 '{}' '{}/..' \;
-	sudo find "${ALLSKY_WEBSITE}/" -type d -name thumbnails -exec chgrp "${WEBSERVER_GROUP}" '{}' '{}/..' \;
+	# Not everything in the Website needs to be writable by the web server,
+	# but make them all that way so we don't worry about missing something.
+	sudo find "${ALLSKY_WEBSITE}" -type d -exec chmod 775 '{}' \;
+	sudo find "${ALLSKY_WEBSITE}" -type f -exec chmod 664 '{}' \;
+	sudo chgrp --recursive "${WEBSERVER_GROUP}" "${ALLSKY_WEBSITE}"
 }
 
 

@@ -5,19 +5,18 @@
 define('ALLSKY_CONFIG',  'XX_ALLSKY_CONFIG_XX');
 
 // Globals
-$settings_array = null;
+$webSettings_array = null;
+if (! isset($configFilePrefix)) $configFilePrefix = "";
 
 function initialize() {
-	global $settings_array;
+	global $webSettings_array;
+	global $configFilePrefix;
 
 	$needToUpdateString = "XX_NEED_TO_UPDATE_XX";
 	$configurationFileName = "configuration.json";
 
-	// Read the configuration file.
+	// Read the website configuration file.
 	// Some settings impact this page, some impact the constellation overlay.
-	if (! isset($configFilePrefix)) {
-		$configFilePrefix = "";
-	}
 	$configuration_file = $configFilePrefix . $configurationFileName;
 	if (! file_exists($configuration_file)) {
 		echo "<p class='error-msg'>";
@@ -26,8 +25,8 @@ function initialize() {
 		echo "</p>";
 		return(false);
 	}
-	$settings_str = file_get_contents($configuration_file, true);
-	if (strpos($settings_str, $needToUpdateString) !== false) {
+	$webSettings_str = file_get_contents($configuration_file, true);
+	if (strpos($webSettings_str, $needToUpdateString) !== false) {
 		echo "<p class='warning-msg'>";
 			echo "WARNING: Configuration file '$configurationFileName' needs updating.";
 			echo "<br>Look for fields with '$needToUpdateString'.";
@@ -35,19 +34,19 @@ function initialize() {
 		echo "</p>";
 	}
 
-	$settings_array = json_decode($settings_str, true);
-	if ($settings_array == null) {
+	$webSettings_array = json_decode($webSettings_str, true);
+	if ($webSettings_array == null) {
 		echo "<p class='error-msg'>";
 			echo "ERROR: Bad configuration file '$configurationFileName'.";
 			echo "<br>Cannot continue.";
 			echo "<br>Check for missing quotes or commas at the end of every line except the last one.";
 		echo "</p>";
-		echo "<pre>$settings_str</pre>";
+		echo "<pre>$webSettings_str</pre>";
 		return(false);
 	}
 
 	// If on a Pi, check that the placeholder was replaced.
-	$onPi = v("onPi", true, $settings_array['homePage']);
+	$onPi = v("onPi", true, $webSettings_array['homePage']);
 	if ($onPi && ALLSKY_CONFIG == "XX_ALLSKY_CONFIG" . "_XX") {
 		// This file hasn't been updated yet after installation.
 		echo "<div class='error-msg'>";

@@ -7,18 +7,17 @@
  *
 */
 
-// Sets all the define() variables.
+// This file sets all the define() variables.
 $defs = 'allskyDefines.inc';
 if ((include $defs) == false) {
-	echo "<div style='font-size: 200%;'>";
-	echo "<p style='color: red'>";
+	echo "<br><div class='errorMsgBig errorMsgBox'>";
 	echo "The installation of the WebUI is incomplete.<br>";
 	echo "File '$defs' not found.<br>";
-	echo "Please run the following from the 'allsky' directory:";
-	echo "</p>";
-	echo "<code>   ./install.sh --function create_webui_defines</code>";
+	echo "Please run the following to fix:";
+	echo "<br><br>";
+	echo "<code>   cd ~/allsky; ./install.sh --function create_webui_defines</code>";
 	echo "</div>";
-	exit;
+	exit(1);
 }
 
 // Read and decode a json file, returning the decoded results or null.
@@ -28,7 +27,7 @@ function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=nul
 	$retMsg = "";
 	$html = (get_current_user() == WEBSERVER_OWNER);
 	if ($html) {
-		$div = "<div style='color: red; font-size: 200%;'>";
+		$div = "<div class='errorMsgBig'>";
 		$end = "</div>";
 		$br = "<br>";
 		$sep = "<br>";
@@ -114,6 +113,7 @@ function verifyNumber($num) {
 	return true;
 }
 
+// Globals
 $image_name = null;
 $showDelay = true; $delay=null; $daydelay=null; $nightdelay=null;
 $imagesSortOrder = null;
@@ -123,6 +123,8 @@ $temptype = null;
 $lastChanged = null;
 $websiteURL = null;
 $settings_array = null;
+$hasLocalWebsite = null;
+$hasRemoteWebsite = null;
 
 function initialize_variables() {
 	global $status, $needToDisplayMessages;
@@ -132,12 +134,26 @@ function initialize_variables() {
 	global $darkframe, $useLogin, $temptype, $lastChanged, $lastChangedName;
 	global $websiteURL;
 	global $settings_array;
+	global $hasLocalWebsite, $hasRemoteWebsite;
 
 	$settings_file = getSettingsFile();
 	$errorMsg = "ERROR: Unable to process settings file '$settings_file'.";
 	$settings_array = get_decoded_json_file($settings_file, true, $errorMsg);
 	if ($settings_array === null) {
-		exit;
+		exit(1);
+	}
+
+// TODO: replace with settings when in settings file.
+	// See if there are any websites.
+	if (file_exists(getLocalWebsiteConfigFile())) {
+		$hasLocalWebsite = true;
+	} else {
+		$hasLocalWebsite = false;
+	}
+	if (file_exists(getRemoteWebsiteConfigFile())) {
+		$hasRemoteWebsite = true;
+	} else {
+		$hasRemoteWebsite = true;
 	}
 
 	// $img_dir is an alias in the web server's config that points to where the current image is.
@@ -507,7 +523,7 @@ function get_variable($file, $searchfor, $default)
 {
 	// get the file contents
 	if (! file_exists($file)) {
-		$msg  = "<div style='color: red; font-size: 200%;'>";
+		$msg  = "<div class='error-msg'>";
 		$msg .= "<br>File '$file' not found!";
 		$msg .= "</div>";
 		echo $msg;
@@ -587,16 +603,16 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
 						$fullFilename = "$images_dir/$day/$dir$imageType_name";
 						if ($type == "picture") {
 							echo "<a href='$fullFilename'>";
-							echo "<div style='float: left; width: 100%; margin-bottom: 2px;'>";
+							echo "<div class='functionsListFileType'>";
 							echo "<label>$day</label>";
-							echo "<img src='$fullFilename' style='margin-left: 10px; max-width: 50%; max-height:100px'/>";
+							echo "<img src='$fullFilename' class='functionsListTypeImg' />";
 							echo "</div></a>\n";
 						} else {	// is video
-							// xxxx TODO: Show a thumbnail since loading all the videos is bandwidth intensive.
+							// TODO: Show a thumbnail since loading videos is bandwidth intensive.
 							echo "<a href='$fullFilename'>";
-							echo "<div style='float: left; width: 100%; margin-bottom: 2px;'>";
-							echo "<label style='vertical-align: middle'>$day &nbsp; &nbsp;</label>";
-							echo "<video width='85%' height='85%' controls style='vertical-align: middle'>";
+							echo "<div class='functionsListFileType'>";
+							echo "<label class='middleVerticalAlign'>$day &nbsp; &nbsp;</label>";
+							echo "<video width='85%' height='85%' controls class='middleVerticalAlign'>";
 							echo "<source src='$fullFilename' type='video/mp4'>";
 							echo "Your browser does not support the video tag.";
 							echo "</video>";
@@ -622,12 +638,12 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
 				$fullFilename = "$images_dir/$chosen_day/$dir$imageType_name";
 				if ($type == "picture") {
 				    echo "<a href='$fullFilename'>
-					<div style='float: left'>
-					<img src='$fullFilename' style='max-width: 100%;max-height:400px'/>
+					<div class='left'>
+					<img src='$fullFilename' style='max-width: 100%; max-height: 400px'/>
 					</div></a>\n";
 				} else {	//video
 				    echo "<a href='$fullFilename'>";
-				    echo "<div style='float: left; width: 100%'>
+				    echo "<div class='left' style='width: 100%'>
 					<video width='85%' height='85%' controls>
 						<source src='$fullFilename' type='video/mp4'>
 						Your browser does not support the video tag.
@@ -728,14 +744,24 @@ function updateFile($file, $contents, $fileName, $toConsole) {
 	return "";
 }
 
-// Return the settings file for the specified camera.
+// Return the settings file for the current camera.
 function getSettingsFile() {
 	return ALLSKY_CONFIG . "/settings.json";
 }
 
-// Return the options file for the specified camera.
+// Return the options file for the current camera.
 function getOptionsFile() {
 	return ALLSKY_CONFIG . "/options.json";
+}
+
+// Return the full path name of the local Website configuration file.
+function getLocalWebsiteConfigFile() {
+	return ALLSKY_WEBSITE_LOCAL_CONFIG;
+}
+
+// Return the full path name of the remote Website configuration file.
+function getRemoteWebsiteConfigFile() {
+	return ALLSKY_WEBSITE_REMOTE_CONFIG;
 }
 
 // Return the file name after accounting for any ${} variables.

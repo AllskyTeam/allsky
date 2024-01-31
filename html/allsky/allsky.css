@@ -270,18 +270,21 @@ img.current {
 	border-radius: 10px;
 }
 .error-msg {
+	font-size: 150%;
 	margin: 10px;
 	padding: 10px;
 	color: var(--error-color);
 	border: 3px dashed var(--error-color);
 }
 .warning-msg {
+	font-size: 125%;
 	margin: 10px;
 	padding: 10px;
 	color: var(--warning-color);
 	border: 3px dashed var(--warning-color);
 }
 .notice-msg {
+	font-size: 110%;
 	margin: 10px;
 	padding: 10px;
 	color: var(--notice-color);

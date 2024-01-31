@@ -57,6 +57,7 @@ pthread_t threadDisplay			= 0;
 pthread_t hthdSave				= 0;
 int numExposures				= 0;				// how many valid pictures have we taken so far?
 int currentBpp					= NOT_SET;			// bytes per pixel: 1, 2, or 3
+bool capturingVideo				= false;			// are we capturing video?
 
 // Make sure we don't try to update a non-updateable control, and check for errors.
 ASI_ERROR_CODE setControl(int camNum, ASI_CONTROL_TYPE control, long value, ASI_BOOL makeAuto)
@@ -333,23 +334,23 @@ ASI_ERROR_CODE flushBufferedImages(config *cg, unsigned char *buf, long size)
 
 	for (int i = 0; i < NUM_IMAGE_BUFFERS; i++)
 	{
-		status = ASIGetVideoData(cg->cameraNumber, buf, size, 10);
+		status = ASIGetVideoData(cg->cameraNumber, buf, size, 500 + (2 * cg->cameraMinExposure_us));
 		if (status == ASI_SUCCESS)
 		{
 			Log(3, "  > [Cleared buffer frame]: %s\n", getRetCode(status));
 		}
-		else if (status != ASI_ERROR_TIMEOUT)
+		else if (status == ASI_ERROR_TIMEOUT)
 		{
-			Log(0, "*** %s: ERROR: flushBufferedImages() got %s\n", cg->ME, getRetCode(status));
+			// No more frames left in buffer.
+			return(status);
 		}
 		else
 		{
-			// ASI_ERROR_TIMEOUT.  No more left.
-			return(status);
+			Log(1, "%s: WARNING: flushBufferedImages() got %s\n", cg->ME, getRetCode(status));
 		}
 	}
 
-	return(ASI_SUCCESS);
+	return(status);
 }
 
 
@@ -389,16 +390,16 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 			(wasAutoExposure == ASI_TRUE ? "Camera set auto-exposure" : "Manual exposure set"),
 		length_in_units(cg->currentExposure_us, true));
 
-	if (cg->ZWOexposureType != ZWOsnap)
-		flushBufferedImages(cg, imageBuffer, bufferSize);
-
 	// Sanity check.
 	if (cg->HB.useHistogram && cg->currentAutoExposure == ASI_TRUE)
 		Log(0, "  > %s: ERROR: HB.useHistogram AND currentAutoExposure are both set\n", cg->ME);
 
+	if (cg->ZWOexposureType != ZWOsnap)
+		flushBufferedImages(cg, imageBuffer, bufferSize);
+
 	setControl(cg->cameraNumber, ASI_EXPOSURE, cg->currentExposure_us, cg->currentAutoExposure ? ASI_TRUE : ASI_FALSE);
 
-	if (cg->ZWOexposureType == ZWOvideoOff)
+	if (cg->ZWOexposureType == ZWOvideoOff && ! capturingVideo)
 	{
 		status = ASIStartVideoCapture(cg->cameraNumber);
 		if (status != ASI_SUCCESS) {
@@ -406,6 +407,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 			Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
 			return(status);
 		}
+		capturingVideo = true;
 	}
 
 	// Make sure the actual time to take the picture is "close" to the requested time.
@@ -501,6 +503,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 				Log(1, "  > WARNING: ASIStopVideoCapture() failed: %s\n", getRetCode(ret));
 				// continue
 			}
+			capturingVideo = false;
 		}
 	}
 
@@ -686,7 +689,7 @@ bool resetGainTransitionVariables(config cg)
 	float totalTimeInSec;
 	totalTimeInSec = ((float) cg.currentMaxAutoExposure_us / US_IN_SEC) +
 		((float) cg.currentDelay_ms / MS_IN_SEC);
-/* xxxx
+/* xxxx remove after we know new gain algorithm works
 	if (dayOrNight == "DAY")
 	{
 		totalTimeInSec = (cg.dayExposure_us / US_IN_SEC) + (cg.dayDelay_ms / MS_IN_SEC);
@@ -1121,16 +1124,16 @@ int main(int argc, char *argv[])
 		Log(4, "Extra Text File Age Disabled So Displaying Anyway\n");
 	}
 
-	// Start taking pictures
-
-	if (CG.ZWOexposureType == ZWOvideo)
+	if (CG.ZWOexposureType == ZWOvideo && ! capturingVideo)
 	{
+		// Start video capture; we'll stop when exiting.
 		asiRetCode = ASIStartVideoCapture(CG.cameraNumber);
 		if (asiRetCode != ASI_SUCCESS)
 		{
 			Log(0, "*** %s: ERROR: Unable to start video capture: %s\n", CG.ME, getRetCode(asiRetCode));
 			closeUp(EXIT_ERROR_STOP);
 		}
+		capturingVideo = true;
 	}
 
 	while (bMain)

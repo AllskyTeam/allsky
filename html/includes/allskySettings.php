@@ -84,6 +84,7 @@ function checkType($fieldName, $value, $old, $label, $type, &$shortened=null) {
 // ============================================= The main function.
 function DisplayAllskyConfig() {
 	global $formReadonly, $settings_array;
+	global $hasLocalWebsite, $hasRemoteWebsite;
 
 	$END = "XX_END_XX";
 	$debug = false;
@@ -173,6 +174,7 @@ function DisplayAllskyConfig() {
 			$numSettingsChanges = 0;
 			$numSourceChanges = 0;
 			$nonCameraChangesExist = false;
+			$changesMade = false;
 
 	 		foreach ($_POST as $name => $newValue) {
 				// Anything that's sent "hidden" in a form that isn't a settings needs to go here.
@@ -294,7 +296,8 @@ function DisplayAllskyConfig() {
 					}
 				}
 
-				if ($ok && ($numSettingsChanges > 0 || $numSourceChanges > 0)) {
+				$changesMade = ($numSettingsChanges > 0 || $numSourceChanges > 0);
+				if ($ok && $changesMade) {
 					// Update the appropriate array with the new value.
 					if ($newValue === "true") {
 						$newValue = true;
@@ -336,8 +339,7 @@ if ($debug && $s != $s_newValue) {
 				}
 			}
 
-			$msg = "";
-			if ( $ok && ($numSettingsChanges > 0 || $numSourceChanges > 0 || $fromConfiguration) ) {
+			if ( $ok && ($changesMade || $fromConfiguration) ) {
 				if ($nonCameraChangesExist || $fromConfiguration) {
 					if ($newCameraType !== "" || $newCameraModel !== "" || $newCameraNumber != "") {
 						$msg = "If you change <b>Camera Type</b>, <b>Camera Model</b>,";
@@ -355,21 +357,27 @@ if ($debug && $s != $s_newValue) {
 								unset($settings_array[$END]);
 							$content = json_encode($settings_array, $mode);
 if ($debug) {
-	echo "<br><br>Updating settings_file $settings_file, # changes = $numSettingsChanges";
+	echo "<br><br>Updating $settings_file, numSettingsChanges = $numSettingsChanges";
 	echo "<pre>"; var_dump($content); echo "</pre>";
 	$msg = "";
 }
 							// updateFile() only returns error messages.
 							$msg = updateFile($settings_file, $content, "settings", true);
 							if ($msg === "") {
-								if ($numSettingsChanges > 0 || $numSourceChanges > 0)
-									$msg = "Settings saved";
-								else	# configuration needed and no changes made.
-									$msg = "Configuration saved and timestamp updated";
+echo '<script>console.log("Updated $settings_file");</script>';
+								if ($numSettingsChanges > 0) {
+									$msg = "$numSettingsChanges setting";
+									if ($numSettingsChanges > 1)
+										$msg .= "s";
+									$msg .= " changed.";
+								} else {	# configuration needed and no changes made.
+									$msg = "Configuration saved and timestamp updated.";
+								}
 								$needsConfiguration = false;
 								$updatedSettings = true;
 							} else {
-								$status->addMessage("Failed to update settings in '$settings_file': $msg", 'danger');
+								$msg = "Failed to update settings in '$settings_file': $msg";
+								$status->addMessage($msg, 'danger');
 								$ok = false;
 							}
 						}
@@ -377,54 +385,51 @@ if ($debug) {
 							// Now save the settings from the source files that changed.
 							foreach($sourceFilesChanged as $fileName) {
 								$content = json_encode(getSourceArray($fileName), $mode);
-if ($debug) { echo "<br>Updating fileName $fileName, # changes=$numSourceChanges"; }
-if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
+if ($debug) {
+	echo "<br>Updating $fileName, numSourceChanges = $numSourceChanges";
+	echo "<pre>"; var_dump($content); echo "</pre>";
+}
 								$msg = updateFile($fileName, $content, "source_settings", true);
+echo '<script>console.log("Updated $fileName");</script>';
 								if ($msg === "") {
-									$msg = "Settings saved";
+									$msg = "Settings in $fileName saved.";
+									$status->addMessage($msg, 'info');
 								} else {
-									$status->addMessage("Failed to update settings in '$fileName': $msg", 'danger');
+									$msg = "Failed to update settings in '$fileName': $msg";
+									$status->addMessage($msg, 'danger');
 									$ok = false;
 								}
 							}
 						}
 					}
 				} else {
+					$msg = "";
 					if ($newCameraType !== "") {
 						if ($msg !== "") $msg = "<br>$msg";
 						if ($refreshingCameraType)
-							$msg .= "<b>Camera Type</b> $newCameraType refreshed";
+							$msg .= "<b>Camera Type</b> $newCameraType refreshed.";
 						else
-							$msg .= "<b>Camera Type</b> changed to <b>$newCameraType</b>";
+							$msg .= "<b>Camera Type</b> changed to <b>$newCameraType</b>.";
 					}
 					if ($newCameraModel !== "") {
 						if ($msg !== "") $msg = "<br>$msg";
-						$msg .= "<b>Camera Model</b> changed to <b>$newCameraModel</b>";
+						$msg .= "<b>Camera Model</b> changed to <b>$newCameraModel</b>.";
 					}
 					if ($newCameraNumber !== "") {
 						if ($msg !== "") $msg = "<br>$msg";
-						$msg .= "<b>Camera Number</b> changed to <b>$newCameraNumber</b>";
+						$msg .= "<b>Camera Number</b> changed to <b>$newCameraNumber</b>.";
 					}
+
+					if ($msg !== "")
+						$status->addMessage($msg, 'info');
 				}
 			}
 
 			if ($ok) {
-				// See if we need to restart Allsky.
-// TODO: allow some way to force a restart?
-				if ($restartRequired) {
-					// The "restart" field is a checkbox.
-					// If checked, it returns 'on', otherwise nothing.
-					$doingRestart = toBool(getVariableOrDefault($_POST, 'restart', "false"));
-					if ($doingRestart === "on") $doingRestart = true;
-				} else {
-					$doingRestart = false;
-				}
-
-				if ($numSettingsChanges == 0 && $numSourceChanges == 0 && ! $fromConfiguration) {
+				if (! $changesMade && ! $fromConfiguration) {
 					$msg = "No settings changed";
-					if ($updatedSettings)
-						$msg .= " but timestamp updated";
 				} else if ($changes !== "") {
+					$msg = "";
 					// This must run with different permissions so makeChanges.sh can
 					// write to the allsky directory.
 					$moreArgs = "";
@@ -441,34 +446,46 @@ if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
 				}
 
 				if ($ok) {
-					if ($doingRestart) {
-						$msg .= " and Allsky restarted.";
-						// runCommand displays $msg.
-						runCommand("sudo /bin/systemctl reload-or-restart allsky.service", $msg, "success");
-					} else if ($restartRequired) {
-						$msg .= "; Allsky NOT restarted.";
-						$status->addMessage($msg, 'info');
-						$msg = "Allsky needs to be restarted for changes to take affect.";
-						$status->addMessage($msg, 'warning');
+					// The "restart" field is a checkbox.  If not checked it returns nothing.
+					if ($restartRequired && getVariableOrDefault($_POST, 'restart', "no") != "no") {
+						if ($msg !== "")
+							$msg .= " and ";
+						$msg .= "Allsky restarted.";
+						// runCommand() displays $msg on success.
+						$CMD = "sudo /bin/systemctl reload-or-restart allsky.service";
+						if (! runCommand($CMD, $msg, "success")) {
+							$status->addMessage("Unable to restart Allsky.", 'warning');
+						}
+
 					} else {
-						$msg .= "; Allsky NOT restarted - no changes required it.";
-						$status->addMessage($msg, 'info');
+						if ($msg !== "")
+							$msg .= "; ";
+						$msg .= "Allsky NOT restarted";
+
+						if (! $restartRequired && $changesMade) {
+							$msg .= " - no changes required it";
+						}
+						$status->addMessage("$msg.", 'info');
+
+						if ($restartRequired) {
+							$msg = "However, a restart is needed for changes to take affect.";
+							$status->addMessage($msg, 'warning');
+						}
 					}
 
 					// If there's a website let it know of the changes.
-// TODO: run only if there's a local or remote website
-					if (true) {
+					if ($changesMade || $fromConfiguration && ($hasLocalWebsite || $hasRemoteWebsite)) {
 						$moreArgs = "";
 						if (! $twilightDataChanged)
 							$moreArgs .= " --settingsOnly";
 						if (! $cameraChanged)
 							$moreArgs .= " --allFiles";
-						$CMD = ALLSKY_SCRIPTS . "/postData.sh $debugArg $moreArgs";
+						$CMD = "sudo --user=" . ALLSKY_OWNER;
+						$CMD .= " " . ALLSKY_SCRIPTS . "/postData.sh --fromWebUI $debugArg $moreArgs";
 						echo '<script>console.log("Running: ' . $CMD . '");</script>';
 						$worked = runCommand($CMD, "", "success", false);
 						// postData.sh will output necessary messages.
 					}
-
 				}
 
 			} else {	// not $ok

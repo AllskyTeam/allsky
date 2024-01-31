@@ -495,12 +495,12 @@ save_camera_capabilities()
 
 	local ERR="/tmp/makeChanges.errors.txt"
 	#shellcheck disable=SC2086
-	MSG="$( "${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} ${OPTIONSONLY} --cameraTypeOnly \
+	M="$( "${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} ${OPTIONSONLY} --cameraTypeOnly \
 		${DEBUG_ARG} "cameratype" "Camera Type" "${PRIOR_CAMERA_TYPE}" "${CAMERA_TYPE}" 2> "${ERR}" )"
 	RET=$?
 
-	[[ -n ${MSG} ]] && display_msg "${LOG_TYPE}" info "${MSG}"
 	if [[ ${RET} -ne 0 ]]; then
+		[[ -n ${X} ]] && display_msg --log info "${X}"
 		if [[ ${RET} -eq ${EXIT_NO_CAMERA} ]]; then
 			MSG="No camera was found; one must be connected and working for the installation to succeed.\n"
 			MSG="${MSG}After connecting your camera, re-run the installation."
@@ -512,6 +512,7 @@ save_camera_capabilities()
 		fi
 		return 1
 	else
+		[[ -n ${X} ]] && display_msg --logonly info "${X}"
 		if [[ -s ${ERR} ]]; then
 			display_msg --log error "$( < "${ERR}" )"
 		fi
@@ -524,7 +525,7 @@ save_camera_capabilities()
 
 	#shellcheck disable=SC2012
 	MSG="$( /bin/ls -l "${ALLSKY_CONFIG}/settings"*.json 2>/dev/null | sed 's/^/    /' )"
-	display_msg "${LOG_TYPE}" info "Settings files:\n${MSG}"
+	display_msg --logonly info "Settings files:\n${MSG}"
 	CAMERA_MODEL="$( settings ".cameramodel" "${SETTINGS_FILE}" )"
 	if [[ -z ${CAMERA_MODEL} ]]; then
 		display_msg --log error "cameramodel not found in settings file."
@@ -1747,6 +1748,12 @@ convert_settings()			# prior_file, new_file
 
 	x="$( settings ".determinefocus" "${PRIOR_FILE}" )"
 	[[ -z ${x} ]] && update_json_file ".determinefocus" "false" "${NEW_FILE}"
+
+	x="$( settings ".showdelay" "${PRIOR_FILE}" )"
+	[[ -z ${x} ]] && update_json_file ".showdelay" "true" "${NEW_FILE}"
+
+	x="$( settings ".imagessortorder" "${PRIOR_FILE}" )"
+	[[ -z ${x} ]] && update_json_file ".imagessortorder" "ascending" "${NEW_FILE}"
 
 	x="$( settings ".zwoexposuretype" "${PRIOR_FILE}" )"
 	[[ -z ${x} ]] && update_json_file ".zwoexposuretype" 0 "${NEW_FILE}"

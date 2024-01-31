@@ -199,8 +199,6 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 			"${NOT_STARTED_MSG} ${MSG}"
 	fi
 
-	rm -f "${RESETTING_USB_LOG}"	# We found the camera so don't need to reset.
-
 else
 	MSG="FATAL ERROR: Unknown Camera Type: ${CAMERA_TYPE}."
 	echo -e "${RED}${MSG}  Stopping.${NC}" >&2
@@ -305,7 +303,10 @@ deactivate_python_venv
 "${ALLSKY_BIN}/${CAPTURE}" ${RPi_COMMAND} -debuglevel "${ALLSKY_DEBUG_LEVEL}" -config "${ARGS_FILE}"
 RETCODE=$?
 
-[[ ${RETCODE} -eq ${EXIT_OK} ]] && doExit "${EXIT_OK}" ""
+if [[ ${RETCODE} -eq ${EXIT_OK} ]]; then
+	[[ ${CAMERA_TYPE} == "ZWO" ]] && rm -f "${RESETTING_USB_LOG}"
+	doExit "${EXIT_OK}" ""
+fi
 
 if [[ ${RETCODE} -eq ${EXIT_RESTARTING} ]]; then
 	if [[ ${ON_TTY} == "true" ]]; then

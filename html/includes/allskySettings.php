@@ -146,10 +146,12 @@ function DisplayAllskyConfig() {
 			$changes = "";
 			$nonCameraChanges = "";
 			$restartRequired = false;
+			$cameraChanged = false;
 			$refreshingCameraType = false;
 			$newCameraType = "";
 			$newCameraModel = "";
 			$newCameraNumber = "";
+			$twilightDataChanged = false;
 
 			// If set, the prior screen said "you must configure Allsky ..." so it's
 			// ok if nothing changed, but we need to update $lastChanged.
@@ -232,6 +234,7 @@ function DisplayAllskyConfig() {
 					else $numSourceChanges++;
 
 					if ($name === $cameraTypeName) {
+						$cameraChanged = true;
 						if ($newValue === "Refresh") {
 							// Refresh the same Camera Type
 							$refreshingCameraType = true;
@@ -241,9 +244,16 @@ function DisplayAllskyConfig() {
 							$newCameraType = $newValue;
 						}
 					} elseif ($name === $cameraModelName) {
+						$cameraChanged = true;
 						$newCameraModel = $newValue;
 					} elseif ($name === $cameraNumberName) {
+						$cameraChanged = true;
 						$newCameraNumber = $newValue;
+					} elseif ($name === "latitude" ||
+							  $name === "longitude" ||
+							  $name === "angle" ||
+							  $name === "takedaytimeimages") {
+						$twilightDataChanged = $newValue;
 					} else {
 						// want to know changes other than camera
 						$nonCameraChangesExist = true;
@@ -438,6 +448,21 @@ if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
 						$msg .= "; Allsky NOT restarted.";
 						$status->addMessage($msg, 'info');
 					}
+
+					// If there's a website let it know of the changes.
+// TODO: run only if there's a local or remote website
+					if (true) {
+						$moreArgs = "";
+						if (! $twilightDataChanged)
+							$moreArgs .= " --settingsOnly";
+						if (! $cameraChanged)
+							$moreArgs .= " --allFiles";
+						$CMD = ALLSKY_SCRIPTS . "/postData.sh $debugArg $moreArgs";
+						echo '<script>console.log("Running: ' . $CMD . '");</script>';
+//						$worked = runCommand($CMD, "", "success", false);
+						// postData.sh will output necessary messages.
+					}
+
 				}
 
 			} else {	// not $ok

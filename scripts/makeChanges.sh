@@ -22,7 +22,7 @@ fi
 function usage_and_exit()
 {
 	echo -en "${wERROR}"
-	echo     "Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly] [--needsRestart]"
+	echo     "Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly]"
 	echo -en "\tkey label old_value new_value [...]"
 	echo -e  "${wNC}"
 	echo "There must be a multiple of 4 key/label/old_value/new_value arguments"
@@ -36,7 +36,6 @@ DEBUG="false"
 DEBUG_ARG=""
 HELP="false"
 OPTIONS_FILE_ONLY="false"
-NEEDS_RESTART="false"		# Is a restart required for changes to take affect?
 CAMERA_TYPE_ONLY="false"	# Only update the cameratype?
 FORCE=""					# Passed to createAllskyOptions.php
 
@@ -59,9 +58,6 @@ while [[ $# -gt 0 ]]; do
 			;;
 		--force)
 			FORCE="${ARG}"
-			;;
-		--needsrestart)
-			NEEDS_RESTART="true"
 			;;
 		-*)
 			echo -e "${wERROR}ERROR: Unknown argument: '${ARG}'${wNC}"
@@ -261,9 +257,10 @@ do
 
 				# Create a link to a file that contains the camera type and model in the name.
 				CAMERA_TYPE="${NEW_VALUE}"		# already know it
-				CAMERA_MODEL="$( settings ".cameraModel" "${CC_FILE}" )"
+				SETTING_NAME="cameraModel"		# Name is Upper case in CC file
+				CAMERA_MODEL="$( settings ".${SETTING_NAME}" "${CC_FILE}" )"
 				if [[ -z ${CAMERA_MODEL} ]]; then
-					echo -e "${wERROR}ERROR: 'cameraModel' not found in ${CC_FILE}.${wNC}"
+					echo -e "${wERROR}ERROR: '${SETTING_NAME}' not found in ${CC_FILE}.${wNC}"
 					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
 					exit 1
 				fi
@@ -397,7 +394,7 @@ do
 				S_EXT="${NAME##*.}"
 				OLD_SETTINGS_FILE="${ALLSKY_CONFIG}/${S_NAME}_${OLD_TYPE}_${OLD_MODEL}.${S_EXT}"
 
-				for s in latitude longitude locale websiteurl imageurl location owner computer
+				for s in latitude longitude locale websiteurl imageurl location owner computer imagesortorder
 				do
 					X="$( settings .${s} "${OLD_SETTINGS_FILE}" )"
 					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}"
@@ -409,7 +406,7 @@ do
 					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}" "number"
 				done
 
-				for s in uselogin displaysettings showonmap
+				for s in uselogin displaysettings showonmap showdelay
 				do
 					X="$( settings .${s} "${OLD_SETTINGS_FILE}" )"
 					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}" "boolean"
@@ -458,9 +455,6 @@ do
 			else
 				echo -e "${wWARNING}WARNING: ${NEW_VALUE}.${wNC}"
 			fi
-			;;
-
-		"angle")
 			;;
 
 		"takedaytimeimages")
@@ -593,13 +587,6 @@ if [[ ${RUN_POSTTOMAP} == "true" ]]; then
 		"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${POSTTOMAP_ACTION}
 	fi
 fi
-
-if [[ ${NEEDS_RESTART} == "true" ]]; then
-	echo -en "${wOK}${wBOLD}"
-	echo "*** You must restart Allsky for your change to take affect. ***"
-	echo -en "${wNBOLD}${wNC}"
-fi
-
 
 if [[ ${GOT_WARNING} == "true" ]]; then
 	exit 255

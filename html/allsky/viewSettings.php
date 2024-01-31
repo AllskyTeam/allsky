@@ -4,9 +4,10 @@
 <?php
 	$vSDir = "viewSettings";
 	$settingsScript = "allskySettings.php";
-	$fullMode = false;
 	if (file_exists("$vSDir/$settingsScript")) {
 		$fullMode = true;
+	} else {
+		$fullMode = false;
 	}
 
 	// This gets the web page settings.
@@ -121,9 +122,9 @@
 	</thead>
 	<tbody>
 		<?php		// Only display certain settings.
-			$cameraType = v("cameraType", "", $settings);
+			$cameraType = v("cameratype", "", $settings);
 			echo "<tr> <td>Camera Type</td><td>$cameraType</td> </tr>";
-			$cameraModel = v("cameraModel", "", $settings);
+			$cameraModel = v("cameramodel", "", $settings);
 			echo "<tr> <td>Camera Model</td><td>$cameraModel</td> </tr>";
 			$lens = v("lens", "", $settings);
 			if ($lens !== "") echo "<tr> <td>Lens</td><td>$lens</td> </tr>";
@@ -206,6 +207,7 @@
 			$sharpness = v("sharpness", "", $settings);
 			if ($sharpness !== "") echo "<tr> <td>Sharpness</td><td>$sharpness</td> </tr>";
 
+// TODO: add remaining settings
 		?>
 	</tbody>
 </body>

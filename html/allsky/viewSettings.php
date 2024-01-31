@@ -11,7 +11,7 @@
 	}
 
 	// This gets the web page settings.
-	include_once('functions.php');		// Sets $settings_array
+	include_once('functions.php');		// Sets $webSettings_array
 
 	function getSettingsFile() { global $vSDir; return "$vSDir/settings.json"; }
 	if ($fullMode) {
@@ -20,6 +20,7 @@
 		function getVariableOrDefault($a, $v, $d) { return v($v, $d, $a); }
 		function check_if_configured($page, $calledFrom) { return true; }
 		function CSRFToken() { return true; }
+		function toBool($x) { return $x; }
 
 		$formReadonly = true;
 		include_once("$vSDir/$settingsScript");
@@ -28,7 +29,7 @@
 	}
 
 	// Get home page options
-	$homePage = v("homePage", null, $settings_array);
+	$homePage = v("homePage", null, $webSettings_array);
 	$title = v("title", "Website", $homePage);
 	$favicon = v("favicon", "allsky-favicon.png", $homePage);
 	$ext = pathinfo($favicon, PATHINFO_EXTENSION); if ($ext === "jpg") $ext = "jpeg";

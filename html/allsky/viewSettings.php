@@ -20,7 +20,7 @@
 		function getVariableOrDefault($a, $v, $d) { return v($v, $d, $a); }
 		function check_if_configured($page, $calledFrom) { return true; }
 		function CSRFToken() { return true; }
-		function toBool($x) { return $x; }
+		function toBool($x) { if ($x == "true" || $x == "1" || $x == 1) return true; else return false; }
 
 		$formReadonly = true;
 		include_once("$vSDir/$settingsScript");
@@ -64,6 +64,8 @@
 <?php
 		if ($fullMode) {
 			echo "body { background-color: white; color: black; }";
+			echo ".switch-field label:hover { cursor: default; }";
+
 		} else {
 			echo ".clear { clear: both; }";
 			echo ".title { box-sizing: border-box; }";

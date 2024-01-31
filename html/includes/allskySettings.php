@@ -422,8 +422,6 @@ if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
 					// This must run with different permissions so makeChanges.sh can
 					// write to the allsky directory.
 					$moreArgs = "";
-					if ($doingRestart)
-						$moreArgs .= " --restarting";
 					if ($newCameraType !== "") {
 						$moreArgs .= " --cameraTypeOnly";
 					}
@@ -441,11 +439,13 @@ if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
 						$msg .= " and Allsky restarted.";
 						// runCommand displays $msg.
 						runCommand("sudo /bin/systemctl reload-or-restart allsky.service", $msg, "success");
-					} else if (! $restartRequired) {
-						$msg .= "; Allsky NOT restarted - no changes required it.";
-						$status->addMessage($msg, 'info');
-					} else {
+					} else if ($restartRequired) {
 						$msg .= "; Allsky NOT restarted.";
+						$status->addMessage($msg, 'info');
+						$msg = "Allsky needs to be restarted for changes to take affect.";
+						$status->addMessage($msg, 'warning');
+					} else {
+						$msg .= "; Allsky NOT restarted - no changes required it.";
 						$status->addMessage($msg, 'info');
 					}
 

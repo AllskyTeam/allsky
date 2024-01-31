@@ -145,7 +145,7 @@ function DisplayAllskyConfig() {
 			$sourceFilesContents = array();	// contents of each sourceFiles file
 			$changes = "";
 			$nonCameraChanges = "";
-
+			$restartRequired = false;
 			$refreshingCameraType = false;
 			$newCameraType = "";
 			$newCameraModel = "";
@@ -395,9 +395,16 @@ if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
 			}
 
 			if ($ok) {
-				// 'restart' is a checkbox: if check, it returns 'on', otherwise nothing.
-				$doingRestart = toBool(getVariableOrDefault($_POST, 'restart', "false"));
-				if ($doingRestart === "on") $doingRestart = true;
+				// See if we need to restart Allsky.
+// TODO: allow some way to force a restart?
+				if ($restartRequired) {
+					// The "restart" field is a checkbox.
+					// If checked, it returns 'on', otherwise nothing.
+					$doingRestart = toBool(getVariableOrDefault($_POST, 'restart', "false"));
+					if ($doingRestart === "on") $doingRestart = true;
+				} else {
+					$doingRestart = false;
+				}
 
 				if ($numSettingsChanges == 0 && $numSourceChanges == 0 && ! $fromConfiguration) {
 					$msg = "No settings changed";
@@ -424,6 +431,9 @@ if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
 						$msg .= " and Allsky restarted.";
 						// runCommand displays $msg.
 						runCommand("sudo /bin/systemctl reload-or-restart allsky.service", $msg, "success");
+					} else if (! $restartRequired) {
+						$msg .= "; Allsky NOT restarted - no changes required it.";
+						$status->addMessage($msg, 'info');
 					} else {
 						$msg .= "; Allsky NOT restarted.";
 						$status->addMessage($msg, 'info');
@@ -522,7 +532,7 @@ if ($formReadonly != "readonly") { ?>
 				onclick="return confirm('Really RESET ALL VALUES TO DEFAULT??');">
 			<div title="UNcheck to only save settings without restarting Allsky" style="line-height: 0.3em;">
 				<br>
-				<input type="checkbox" name="restart" value="true" checked> Restart Allsky after saving changes?
+				<input type="checkbox" name="restart" value="true" checked> Restart Allsky after saving changes, if needed?
 				<br><br>&nbsp;
 			</div>
 		</div>
@@ -783,10 +793,12 @@ function toggle(headerNum) {
 					echo "<tr class='form-group $class $warning_class' style='margin-bottom: 0px;'>";
 					$action = getVariableOrDefault($option, 'action', "none");
 // TODO: when "reload" is implemented remove it from this check:
-					if ($action == "restart" || $action == "reload")
+					if ($action == "restart" || $action == "reload") {
+						$restartRequiredMsg = true;
 						$restartRequired = true;
-					else
-						$restartRequired = false;
+					} else {
+						$restartRequiredMsg = false;
+					}
 
 					// Show the default in a popup
 					if ($type == "boolean") {
@@ -819,7 +831,7 @@ function toggle(headerNum) {
 						$rspan="rowspan='2'";
 						$cspan="colspan='2'";
 					}
-					if ($restartRequired) $popup .= "\nRESTART REQUIRED";
+					if ($restartRequiredMsg) $popup .= "\nRESTART REQUIRED";
 
 					echo "\n\t<td $rspan valign='middle' style='padding: 2px 0px'>";
 						echo "<label class='WebUISetting' style='padding-right: 3px;'>$label</label>";

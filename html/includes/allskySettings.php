@@ -638,10 +638,19 @@ function toggle(headerNum) {
 				$name = $option['name'];
 				if ($name === $END) continue;
 
+				$type = getVariableOrDefault($option, 'type', null);
+				if ($type === null) {
+					$msg = "INTERNAL ERROR: Field '$name' has no type; ignoring";
+					$status->addMessage($msg, 'danger');
+					continue;
+				}
+
 				// Should this setting be displayed?
 				$display = toBool(getVariableOrDefault($option, 'display', "true"));
+				$isHeader = substr($type, 0, 6) === "header";
 				if (! $display && ! $isHeader) {
 					if ($formReadonly != "readonly") {
+						$value = getVariableOrDefault($settings_array, $name, "");
 						// Don't display it, but if it has a value, pass it on.
 						echo "\n\t<!-- NOT DISPLAYED -->";
 						echo "<input type='hidden' name='$name' value='$value'>";
@@ -649,14 +658,6 @@ function toggle(headerNum) {
 					continue;
 				}
 
-				$type = getVariableOrDefault($option, 'type', null);	// There should be a type.
-				if ($type === null) {
-					$msg = "INTERNAL ERROR: Field '$name' has no type; ignoring";
-					$status->addMessage($msg, 'danger');
-					continue;
-				}
-
-				$isHeader = substr($type, 0, 6) === "header";
 				if ($isHeader) {
 					$value = "";
 					$default = "";
@@ -675,6 +676,17 @@ function toggle(headerNum) {
 					} else {
 						$value = getVariableOrDefault($settings_array, $name, null);
 					}
+
+					// In read-only mode, getVariableOrDefault() returns booleans differently.
+					// A 0 or 1 is returned.
+					if ($type === "boolean" && $formReadonly == "readonly") {
+						if ($value === null || $value == 0) {
+							$value = "false";
+						} else {
+							$value = "true";
+						}
+					}
+
 					if ($value === null) {
 						$value = "";
 					} else {
@@ -990,9 +1002,10 @@ if ($popupYesNo !== "") {
 				$msg .= "<br><strong>$missingSettingsHasDefault</strong>";
 				$status->addMessage($msg, 'warning', false);
 			}
-		}
-		if ($status->isMessage()) {
-			$status->addMessage("<strong>See the highlighted entries below.</strong>", 'info', false);
+
+			if ($status->isMessage()) {
+				$status->addMessage("<strong>See the highlighted entries below.</strong>", 'info', false);
+			}
 ?>
 			<script>
 				var messages = document.getElementById("messages");
@@ -1004,7 +1017,7 @@ if ($popupYesNo !== "") {
 					.replace(/&apos;/g, "'")
 					.replace(/&#10/g, "\n");
 			</script>
-<?php } ?>
+<?php	} ?>
 
 	</form>
 </div><!-- ./ Panel body -->

@@ -84,6 +84,7 @@ function checkType($fieldName, $value, $old, $label, $type, &$shortened=null) {
 // ============================================= The main function.
 function DisplayAllskyConfig() {
 	global $formReadonly, $settings_array;
+	global $hasLocalWebsite, $hasRemoteWebsite;
 
 	$END = "XX_END_XX";
 	$debug = false;
@@ -105,14 +106,14 @@ function DisplayAllskyConfig() {
 	global $ME;
 	global $status;
 
+	$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
 	$settings_file = getSettingsFile();
 	$options_file = getOptionsFile();
-	$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
 
 	$errorMsg = "ERROR: Unable to process options file '$options_file'.";
 	$options_array = get_decoded_json_file($options_file, true, $errorMsg);
 	if ($options_array === null) {
-		exit;
+		exit(1);
 	}
 
 	// If there's no last changed date, they haven't configured Allsky,
@@ -173,6 +174,7 @@ function DisplayAllskyConfig() {
 			$numSettingsChanges = 0;
 			$numSourceChanges = 0;
 			$nonCameraChangesExist = false;
+			$changesMade = false;
 
 	 		foreach ($_POST as $name => $newValue) {
 				// Anything that's sent "hidden" in a form that isn't a settings needs to go here.
@@ -193,42 +195,60 @@ function DisplayAllskyConfig() {
 					$isSettingsField = true;		// this field is in the settings file.
 				}
 
-				// Check for empty non-optional settings and valid numbers.
+				// Check for empty non-optional settings and valid numbers, and
+				// get some info about the setting we'll need if it changed.
+				// Do this for ALL settings, not just changed ones so we can
+				// let the user know if there's a problem with a setting.
+				$checkchanges = false;
+				$label = "??";
+				$found = false;
 				foreach ($options_array as $option) {
-					if ($option['name'] === $name) {
-						$shortMsg = "";
-//x echo "<br>=== Checking $name: oldValue=$oldValue, newValue=$newValue, type=${type_array[$name]}";
-						$e = checkType($name,
-								$newValue,
-								$oldValue,
-								$option['label'],
-								$type_array[$name],
-								$shortMsg);
-						if ($e != "") {
-//x echo "<br>&nbsp; &nbsp; &nbsp; e=$e, shortMsg=$shortMsg";
-							$ok = false;
-							$numErrors++;
-							$error_array[$name] = $e;
-							$error_array_short[$name] = $shortMsg;
-							if ($oldValue === $newValue)		// where did the error come from?
-								$error_array_source[$name] = "db";
-							else
-								$error_array_source[$name] = "user";
+					if ($option['name'] !== $name) continue;
 
-							if ($oldValue !== $newValue) {
-								// Set to $newValue so the user sees the bad value.
-								$settings_array[$name] = $newValue;
-							}
+					$found = true;
+					$shortMsg = "";
+					$e = checkType($name,
+							$newValue,
+							$oldValue,
+							$option['label'],
+							$type_array[$name],
+							$shortMsg);
+					if ($e != "") {
+						$ok = false;
+						$numErrors++;
+						$error_array[$name] = $e;
+						$error_array_short[$name] = $shortMsg;
+						if ($oldValue === $newValue)		// where did the error come from?
+							$error_array_source[$name] = "db";
+						else
+							$error_array_source[$name] = "user";
+
+						if ($oldValue !== $newValue) {
+							// Set to $newValue so the user sees the bad value.
+							$settings_array[$name] = $newValue;
 						}
 					}
+
+					$optional = $optional_array[$name];
+					if ($newValue !== "" || $optional) {
+						$checkchanges = toBool(getVariableOrDefault($option, 'checkchanges', "false"));
+						$label = getVariableOrDefault($option, 'label', "");
+					}
+					$action = getVariableOrDefault($option, 'action', "none");
+					break;
 				}
+				if (! $found) {
+					$msg = "Setting '$name' not in options file.";
+					$status->addMessage($msg, 'danger', false);
+					$ok = false;
+				} else {
+					if ($oldValue !== "")
+						$oldValue = str_replace("'", "&#x27", $oldValue);
+					if ($newValue !== "")
+						$newValue = str_replace("'", "&#x27", $newValue);
 
-				if ($oldValue !== "")
-					$oldValue = str_replace("'", "&#x27", $oldValue);
-				if ($newValue !== "")
-					$newValue = str_replace("'", "&#x27", $newValue);
+					if ($oldValue === $newValue) continue;
 
-				if ($oldValue !== $newValue) {
 					$nonCameraChangesExist = false;
 					if ($isSettingsField) $numSettingsChanges++;
 					else $numSourceChanges++;
@@ -253,23 +273,14 @@ function DisplayAllskyConfig() {
 							  $name === "longitude" ||
 							  $name === "angle" ||
 							  $name === "takedaytimeimages") {
-						$twilightDataChanged = $newValue;
+							$twilightDataChanged = $newValue;
 					} else {
 						// want to know changes other than camera
 						$nonCameraChangesExist = true;
 					}
 
-					$checkchanges = false;
-					$label = "??";
-					foreach ($options_array as $option){
-						if ($option['name'] === $name) {
-							$optional = $optional_array[$name];
-							if ($newValue !== "" || $optional) {
-								$checkchanges = toBool(getVariableOrDefault($option, 'checkchanges', "false"));
-								$label = getVariableOrDefault($option, 'label', "");
-							}
-							break;
-						}
+					if ($action == "restart" || $action == "reload") {
+						$restartRequired = true;
 					}
 
 					if ($checkchanges) {		// Changes for makeChanges.sh to check
@@ -285,7 +296,8 @@ function DisplayAllskyConfig() {
 					}
 				}
 
-				if ($ok && ($numSettingsChanges > 0 || $numSourceChanges > 0)) {
+				$changesMade = ($numSettingsChanges > 0 || $numSourceChanges > 0);
+				if ($ok && $changesMade) {
 					// Update the appropriate array with the new value.
 					if ($newValue === "true") {
 						$newValue = true;
@@ -313,9 +325,7 @@ if ($debug) {
 	$s = toString($settings_array[$name]);
 	if ($s != $s_newValue) { echo "<br><br>settings_array[$name] = $s, newValue=$s_newValue"; }
 }
-
 						$settings_array[$name] = $newValue;
-
 if ($debug && $s != $s_newValue) {
 	echo "<br><pre>====== settings_array['height'] now:<br>";
 	var_dump($settings_array['height']);
@@ -329,8 +339,7 @@ if ($debug && $s != $s_newValue) {
 				}
 			}
 
-			$msg = "";
-			if ( $ok && ($numSettingsChanges > 0 || $numSourceChanges > 0 || $fromConfiguration) ) {
+			if ( $ok && ($changesMade || $fromConfiguration) ) {
 				if ($nonCameraChangesExist || $fromConfiguration) {
 					if ($newCameraType !== "" || $newCameraModel !== "" || $newCameraNumber != "") {
 						$msg = "If you change <b>Camera Type</b>, <b>Camera Model</b>,";
@@ -348,21 +357,27 @@ if ($debug && $s != $s_newValue) {
 								unset($settings_array[$END]);
 							$content = json_encode($settings_array, $mode);
 if ($debug) {
-	echo "<br><br>Updating settings_file $settings_file, # changes = $numSettingsChanges";
+	echo "<br><br>Updating $settings_file, numSettingsChanges = $numSettingsChanges";
 	echo "<pre>"; var_dump($content); echo "</pre>";
 	$msg = "";
 }
 							// updateFile() only returns error messages.
 							$msg = updateFile($settings_file, $content, "settings", true);
 							if ($msg === "") {
-								if ($numSettingsChanges > 0 || $numSourceChanges > 0)
-									$msg = "Settings saved";
-								else	# configuration needed and not changes made.
-									$msg = "Configuration saved and timestamp updated";
+echo '<script>console.log("Updated $settings_file");</script>';
+								if ($numSettingsChanges > 0) {
+									$msg = "$numSettingsChanges setting";
+									if ($numSettingsChanges > 1)
+										$msg .= "s";
+									$msg .= " changed.";
+								} else {	# configuration needed and no changes made.
+									$msg = "Configuration saved and timestamp updated.";
+								}
 								$needsConfiguration = false;
 								$updatedSettings = true;
 							} else {
-								$status->addMessage("Failed to update settings in '$settings_file': $msg", 'danger');
+								$msg = "Failed to update settings in '$settings_file': $msg";
+								$status->addMessage($msg, 'danger');
 								$ok = false;
 							}
 						}
@@ -370,55 +385,51 @@ if ($debug) {
 							// Now save the settings from the source files that changed.
 							foreach($sourceFilesChanged as $fileName) {
 								$content = json_encode(getSourceArray($fileName), $mode);
-if ($debug) { echo "<br>Updating fileName $fileName, # changes=$numSourceChanges"; }
-if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
+if ($debug) {
+	echo "<br>Updating $fileName, numSourceChanges = $numSourceChanges";
+	echo "<pre>"; var_dump($content); echo "</pre>";
+}
 								$msg = updateFile($fileName, $content, "source_settings", true);
+echo '<script>console.log("Updated $fileName");</script>';
 								if ($msg === "") {
-									$msg = "Settings saved";
+									$msg = "Settings in $fileName saved.";
+									$status->addMessage($msg, 'info');
 								} else {
-									$status->addMessage("Failed to update settings in '$fileName': $msg", 'danger');
+									$msg = "Failed to update settings in '$fileName': $msg";
+									$status->addMessage($msg, 'danger');
 									$ok = false;
 								}
 							}
 						}
 					}
 				} else {
+					$msg = "";
 					if ($newCameraType !== "") {
 						if ($msg !== "") $msg = "<br>$msg";
 						if ($refreshingCameraType)
-							$msg .= "<b>Camera Type</b> $newCameraType refreshed";
+							$msg .= "<b>Camera Type</b> $newCameraType refreshed.";
 						else
-							$msg .= "<b>Camera Type</b> changed to <b>$newCameraType</b>";
+							$msg .= "<b>Camera Type</b> changed to <b>$newCameraType</b>.";
 					}
 					if ($newCameraModel !== "") {
 						if ($msg !== "") $msg = "<br>$msg";
-						$msg .= "<b>Camera Model</b> changed to <b>$newCameraModel</b>";
+						$msg .= "<b>Camera Model</b> changed to <b>$newCameraModel</b>.";
 					}
 					if ($newCameraNumber !== "") {
 						if ($msg !== "") $msg = "<br>$msg";
-						$msg .= "<b>Camera Number</b> changed to <b>$newCameraNumber</b>";
+						$msg .= "<b>Camera Number</b> changed to <b>$newCameraNumber</b>.";
 					}
 
-					if ($msg === "")
-						$msg = "No settings changed (but timestamp updated)";
+					if ($msg !== "")
+						$status->addMessage($msg, 'info');
 				}
 			}
 
 			if ($ok) {
-				// See if we need to restart Allsky.
-// TODO: allow some way to force a restart?
-				if ($restartRequired) {
-					// The "restart" field is a checkbox.
-					// If checked, it returns 'on', otherwise nothing.
-					$doingRestart = toBool(getVariableOrDefault($_POST, 'restart', "false"));
-					if ($doingRestart === "on") $doingRestart = true;
-				} else {
-					$doingRestart = false;
-				}
-
-				if ($numSettingsChanges == 0 && $numSourceChanges == 0 && ! $fromConfiguration) {
+				if (! $changesMade && ! $fromConfiguration) {
 					$msg = "No settings changed";
 				} else if ($changes !== "") {
+					$msg = "";
 					// This must run with different permissions so makeChanges.sh can
 					// write to the allsky directory.
 					$moreArgs = "";
@@ -435,34 +446,46 @@ if ($debug) { echo "<pre>"; var_dump($content); echo "</pre>"; }
 				}
 
 				if ($ok) {
-					if ($doingRestart) {
-						$msg .= " and Allsky restarted.";
-						// runCommand displays $msg.
-						runCommand("sudo /bin/systemctl reload-or-restart allsky.service", $msg, "success");
-					} else if ($restartRequired) {
-						$msg .= "; Allsky NOT restarted.";
-						$status->addMessage($msg, 'info');
-						$msg = "Allsky needs to be restarted for changes to take affect.";
-						$status->addMessage($msg, 'warning');
+					// The "restart" field is a checkbox.  If not checked it returns nothing.
+					if ($restartRequired && getVariableOrDefault($_POST, 'restart', "no") != "no") {
+						if ($msg !== "")
+							$msg .= " and ";
+						$msg .= "Allsky restarted.";
+						// runCommand() displays $msg on success.
+						$CMD = "sudo /bin/systemctl reload-or-restart allsky.service";
+						if (! runCommand($CMD, $msg, "success")) {
+							$status->addMessage("Unable to restart Allsky.", 'warning');
+						}
+
 					} else {
-						$msg .= "; Allsky NOT restarted - no changes required it.";
-						$status->addMessage($msg, 'info');
+						if ($msg !== "")
+							$msg .= "; ";
+						$msg .= "Allsky NOT restarted";
+
+						if (! $restartRequired && $changesMade) {
+							$msg .= " - no changes required it";
+						}
+						$status->addMessage("$msg.", 'info');
+
+						if ($restartRequired) {
+							$msg = "However, a restart is needed for changes to take affect.";
+							$status->addMessage($msg, 'warning');
+						}
 					}
 
 					// If there's a website let it know of the changes.
-// TODO: run only if there's a local or remote website
-					if (true) {
+					if ($changesMade || $fromConfiguration && ($hasLocalWebsite || $hasRemoteWebsite)) {
 						$moreArgs = "";
 						if (! $twilightDataChanged)
 							$moreArgs .= " --settingsOnly";
 						if (! $cameraChanged)
 							$moreArgs .= " --allFiles";
-						$CMD = ALLSKY_SCRIPTS . "/postData.sh $debugArg $moreArgs";
+						$CMD = "sudo --user=" . ALLSKY_OWNER;
+						$CMD .= " " . ALLSKY_SCRIPTS . "/postData.sh --fromWebUI $debugArg $moreArgs";
 						echo '<script>console.log("Running: ' . $CMD . '");</script>';
-//						$worked = runCommand($CMD, "", "success", false);
+						$worked = runCommand($CMD, "", "success", false);
 						// postData.sh will output necessary messages.
 					}
-
 				}
 
 			} else {	// not $ok
@@ -745,12 +768,8 @@ function toggle(headerNum) {
 
 				// Put some space before and after headers.  This next line is the "before":
 				if ($type == "header-tab") {
-/* TODO: This will be put in an actual tab in the new WebUI.
-					echo "<tr style='height: 10px; font-size: 125%'>";
-						echo "<td colspan='3' align='center'>[[[ <b>$label</b> tab goes here ]]]</td>";
-					echo "</tr>";
+// TODO: placeholder for code to create a new tab
 					continue;
-*/
 
 				} else if ($type == "header") {
 					// Not sure how to display the header with a background color with 10px
@@ -819,10 +838,9 @@ function toggle(headerNum) {
 					$action = getVariableOrDefault($option, 'action', "none");
 // TODO: when "reload" is implemented remove it from this check:
 					if ($action == "restart" || $action == "reload") {
-						$restartRequiredMsg = true;
-						$restartRequired = true;
+						$showRestartMsg = true;
 					} else {
-						$restartRequiredMsg = false;
+						$showRestartMsg = false;
 					}
 
 					// Show the default in a popup
@@ -856,7 +874,7 @@ function toggle(headerNum) {
 						$rspan="rowspan='2'";
 						$cspan="colspan='2'";
 					}
-					if ($restartRequiredMsg) $popup .= "\nRESTART REQUIRED";
+					if ($showRestartMsg) $popup .= "\nRESTART REQUIRED";
 
 					echo "\n\t<td $rspan valign='middle' style='padding: 2px 0px'>";
 						echo "<label class='WebUISetting' style='padding-right: 3px;'>$label</label>";

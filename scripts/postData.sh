@@ -21,15 +21,19 @@ source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit "${EXIT_ERROR_STOP}"
 usage_and_exit()
 {
 	local RET=${1}
-	echo
-	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-	echo "Usage: ${ME} [--help] [--debug] [--settingsOnly] [--websites w] [--allfiles]"
-	[[ ${RET} -ne 0 ]] && echo -en "${NC}"
-	echo "    where:"
-	echo "      '--allfiles' causes all 'view settings' files to be uploaded"
+	{
+		echo
+		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
+		echo "Usage: ${ME} [--help] [--debug] [--settingsOnly] [--websites w] [--allfiles]"
+		[[ ${RET} -ne 0 ]] && echo -en "${NC}"
+		echo "    where:"
+		echo "      '--allfiles' causes all 'view settings' files to be uploaded"
+	} >&2
 	exit "${RET}"
 }
 
+# If called from the WebUI, it displays our output so don't call addMessage.sh.
+FROM_WEBUI="false"
 HELP="false"
 DEBUG="false"
 DEBUG_ARG=""
@@ -43,33 +47,32 @@ while [[ $# -gt 0 ]]; do
 		--debug)
 			DEBUG="true"
 			DEBUG_ARG="--debug"
-			shift
 			;;
 		--help)
 			HELP="true"
-			shift
 			;;
 		--websites)
 			WEBSITES_TO_DO="${2}"
-			shift 2
+			shift
 			;;
 		--allfiles)
 			ALL_FILES="true"
-			shift
 			;;
 		--settingsonly)
 			SETTINGS_ONLY="true"
-			shift
+			;;
+		--fromwebui)
+			FROM_WEBUI="true"
 			;;
 		-*)
 			echo -e "${RED}Unknown argument '${ARG}'.${NC}" >&2
-			shift
 			RET=1
 			;;
 		*)
 			break		# done with arguments
 			;;
 	esac
+	shift
 done
 [[ ${RET} -ne 0 ]] && usage_and_exit ${RET}
 [[ ${HELP} = "true" ]] && usage_and_exit 0
@@ -77,11 +80,13 @@ done
 WEBSITES="$( whatWebsites )"
 # Make sure a local or remote Allsky Website exists.
 if [[ ${WEBSITES} == "none" ]]; then
-	echo -e "${YELLOW}${ME}: WARNING: No local or remote website found.${NC}"
+	echo -e "${YELLOW}${ME}: WARNING: No local or remote website found.${NC}" >&2
 	exit 0		# It's not an error
 fi
 
-[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}WEBSITES=${WEBSITES}, WEBSITES_TO_TO=${WEBSITES_TO_DO}${NC}"
+if [[ ${DEBUG} == "true" ]]; then
+	echo -e "${wDEBUG}WEBSITES=${WEBSITES}, WEBSITES_TO_TO=${WEBSITES_TO_DO}${NC}"
+fi
 # Make sure we have the specified Website(s).
 if [[ -n ${WEBSITES_TO_DO} && ${WEBSITES_TO_DO} != "${WEBSITES}" ]]; then
 	case "${WEBSITES_TO_DO}" in
@@ -89,14 +94,14 @@ if [[ -n ${WEBSITES_TO_DO} && ${WEBSITES_TO_DO} != "${WEBSITES}" ]]; then
 			;;
 		*)
 	  		MSG="Invalid requested Website type: ${WEBSITES_TO_DO}. Must be 'local', 'remote', or 'both'"
-			echo -e "${RED}${ME}: ERROR: ${MSG}"
+			echo -e "${RED}${ME}: ERROR: ${MSG}" >&2
 			exit 1
 			;;
 	esac
 	if [[ ( ${WEBSITES_TO_DO} == "local"  && ${WEBSITES} != "both") ||
 		  ( ${WEBSITES_TO_DO} == "remote" && ${WEBSITES} != "both") ]]; then
 	  	MSG="Requested Website type '${WEBSITES_TO_DO}' does not exist. Valid Websites='${WEBSITES}'."
-		echo -e "${RED}${ME}: ERROR: ${MSG}"
+		echo -e "${RED}${ME}: ERROR: ${MSG}" >&2
 		exit 1
 	fi
 
@@ -118,13 +123,17 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	OK="true"
 	if ! latitude="$( convertLatLong "$( settings ".latitude" )" "latitude" )" ; then
 		OK="false"
-		echo -e "${RED}${ME}: ERROR: ${latitude}"
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${latitude}"
+		echo -e "${RED}${ME}: ERROR: ${latitude}" >&2
+		if [[ ${FROM_WEBUI} == "false" ]]; then
+			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${latitude}"
+		fi
 	fi
 	if ! longitude="$( convertLatLong "$( settings ".longitude" )" "longitude" )" ; then
 		OK="false"
-		echo -e "${RED}${ME}: ERROR: ${longitude}"
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${longitude}"
+		echo -e "${RED}${ME}: ERROR: ${longitude}" >&2
+		if [[ ${FROM_WEBUI} == "false" ]]; then
+			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${longitude}"
+		fi
 	fi
 	[[ ${OK} == "false" ]] && exit 1
 
@@ -145,18 +154,20 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 		sunrise_hhmm="00:00"
 		sunset_hhmm="00:00"
 
-		echo "***"
-		echo -e "${RED}${ME}: WARNING: angle ${angle} caused sunwait to return"
-		echo -e "sunrise='${sunrise}' and sunset='${sunset}'.${NC}"
-		echo "Using tomorrow at '${sunrise_hhmm}' instead."
-		echo "***"
+		{
+			echo "***"
+			echo -e "${RED}${ME}: WARNING: angle ${angle} caused sunwait to return"
+			echo -e "sunrise='${sunrise}' and sunset='${sunset}'.${NC}"
+			echo "Using tomorrow at '${sunrise_hhmm}' instead."
+			echo "***"
+		} >&2
 	else
 		today="$( date +%Y-%m-%d )"
 	fi
 
 	FILE="data.json"
 	OUTPUT_FILE="${ALLSKY_TMP}/${FILE}"
-	(
+	{
 		if [[ $( settings ".takedaytimeimages" ) == "true" ]]; then
 			D="true"
 		else
@@ -167,7 +178,7 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 		echo "\"sunset\": \"${today}T${sunset_hhmm}:00.000${timezone}\","
 		echo "\"streamDaytime\": \"${D}\""
 		echo "}"
-	) > "${OUTPUT_FILE}"
+	} > "${OUTPUT_FILE}"
 fi
 
 
@@ -177,8 +188,10 @@ function upload_file()
 	local DIRECTORY="${2}"		# Directory to put file in
 	if [[ ! -f ${FILE_TO_UPLOAD} ]]; then
 		MSG="File to upload '${FILE_TO_UPLOAD}' not found."
-		echo -e "${RED}${ME}: ERROR: ${MSG}.${NC}"
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${MSG}"
+		echo -e "${RED}${ME}: ERROR: ${MSG}.${NC}" >&2
+		if [[ ${FROM_WEBUI} == "false" ]]; then
+			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${MSG}"
+		fi
 		return 1
 	fi
 
@@ -198,10 +211,13 @@ function upload_file()
 		TO="${ALLSKY_WEBSITE}${S}${DIRECTORY}"
 		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}cp '${FILE_TO_UPLOAD}' '${TO}'${wNC}"
 
-		if ! cp "${FILE_TO_UPLOAD}" "${TO}" ; then
-			MSG="Unable to copy '${FILE_TO_UPLOAD}' to '${ALLSKY_WEBSITE}'"
-			echo -e "${RED}${ME}: ERROR: ${MSG}.${NC}"
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${MSG}"
+		if ! ERR="$( cp "${FILE_TO_UPLOAD}" "${TO}" 2>&1 )" ; then
+			MSG="Unable to copy '${FILE_TO_UPLOAD}' to '${ALLSKY_WEBSITE}':"
+			MSG="${MSG}\n  ${ERR}"
+			echo -e "${RED}${ME}: ERROR: ${MSG}.${NC}" >&2
+			if [[ ${FROM_WEBUI} == "false" ]]; then
+				"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${MSG}"
+			fi
 			RETCODE=1
 		fi
 	fi
@@ -227,8 +243,10 @@ function upload_file()
 			"PostData"
 		if [[ $? -ne 0 ]]; then
 			MSG="Unable to upload '${FILE_TO_UPLOAD}'"
-			echo -e "${RED}${ME}: ${MSG}.${NC}"
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${MSG}"
+			echo -e "${RED}${ME}: ${MSG}.${NC}" >&2
+			if [[ ${FROM_WEBUI} == "false" ]]; then
+				"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${MSG}"
+			fi
 			RETCODE=1
 		fi
 	fi

@@ -1,3 +1,9 @@
+:root {
+	--error-color: #dc3545;
+	--warning-color: #ffc107;
+	--notice-color: white;
+}
+
 body {
 	color:white;
 	font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
@@ -264,16 +270,25 @@ img.current {
 	border-radius: 10px;
 }
 .error-msg {
-	color: #dc3545;
-	border: 3px dashed #dc3545;
+	font-size: 150%;
+	margin: 10px;
+	padding: 10px;
+	color: var(--error-color);
+	border: 3px dashed var(--error-color);
 }
 .warning-msg {
-	color: #ffc107;
-	border: 3px dashed #ffc107;
+	font-size: 125%;
+	margin: 10px;
+	padding: 10px;
+	color: var(--warning-color);
+	border: 3px dashed var(--warning-color);
 }
 .notice-msg {
-	color: white;
-	border: 3px solid white;
+	font-size: 110%;
+	margin: 10px;
+	padding: 10px;
+	color: var(--notice-color);
+	border: 3px solid var(--notice-color);
 }
 
 @media screen and (max-width: 480px) {

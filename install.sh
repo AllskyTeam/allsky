@@ -136,20 +136,22 @@ do_initial_heading()
 ####
 usage_and_exit()
 {
+	local RET C MSG
+
 	RET=${1}
 	if [[ ${RET} -eq 0 ]]; then
 		C="${YELLOW}"
 	else
 		C="${RED}"
 	fi
-	# Don't show --testing option since users shouldn't use it.
-	echo
-#XXX TODO: is --update still needed?
-	echo -e "${C}Usage: ${ME} [--help] [--debug [...]] [--update] [--function function]${NC}"
+	MSG="Usage: ${ME} [--help] [--debug [...]] [--fix] [--update] [--function function]"
+	echo -e "\n${C}${MSG}${NC}"
 	echo
 	echo "'--help' displays this message and exits."
 	echo
 	echo "'--debug' displays debugging information. Can be called multiple times to increase level."
+	echo
+	echo "'--fix' should only be used when instructed to by the Allsky Website."
 	echo
 	echo "'--update' should only be used when instructed to by the Allsky Website."
 	echo
@@ -397,10 +399,10 @@ check_for_raspistill()
 
 
 ####
-# Create the file that defines the WebUI variables.
-create_webui_defines()
+# Update various PHP define() variables.
+update_php_defines()
 {
-	display_msg --log progress "Modifying locations for WebUI."
+	display_msg --log progress "Modifying variables for WebUI and Website."
 	FILE="${ALLSKY_WEBUI}/includes/${ALLSKY_DEFINES_INC}"
 	sed		-e "s;XX_HOME_XX;${HOME};" \
 			-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
@@ -428,7 +430,11 @@ create_webui_defines()
 		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
 		chmod 644 "${FILE}"
 
-	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+	sed -i -e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" "${ALLSKY_WEBSITE}/functions.php"
+
+	if [[ ${FIX} == "false" ]]; then
+		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+	fi
 }
 
 
@@ -2360,6 +2366,17 @@ restore_prior_website_files()
 
 
 ####
+# "Fix" things then exit.
+# This can be needed if the user hosed something up, or there was a problem somewhere.
+# It does no harm to call this when not needed.
+do_fix()
+{
+	update_php_defines
+	set_permissions
+	exit 0
+}
+
+####
 # Update Allsky and exit.  It basically resets things.
 # This can be needed if the user hosed something up, or there was a problem somewhere.
 do_update()
@@ -2370,10 +2387,8 @@ do_update()
 		exit_installation 1 "${STATUS_ERROR}" "No Camera Type in settings file during update."
 	fi
 
-	[[ ${create_webui_defines} != "true" ]] && create_webui_defines
-
 	save_camera_capabilities "false" || exit 1
-	set_permissions
+	do_fix
 
 	exit_installation 0 "${STATUS_OK}" "Update completed."
 }
@@ -2881,6 +2896,7 @@ if [[ ${IN_TESTING} == "true" ]]; then
 fi
 
 UPDATE="false"
+FIX="false"
 FUNCTION=""
 while [ $# -gt 0 ]; do
 	ARG="${1}"
@@ -2897,6 +2913,9 @@ while [ $# -gt 0 ]; do
 		--update)
 			UPDATE="true"
 			;;
+		--fix)
+			FIX="true"
+			;;
 		--function)
 			FUNCTION="${2}"
 			shift
@@ -2910,7 +2929,7 @@ while [ $# -gt 0 ]; do
 done
 
 
-if [[ -n ${FUNCTION} ]]; then
+if [[ -n ${FUNCTION} || ${FIX} == "true" ]]; then
 	# Don't log when a single function is executed.
 	DISPLAY_MSG_LOG=""
 else
@@ -2922,6 +2941,8 @@ fi
 
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
+
+[[ ${FIX} == "true" ]] && do_fix		# does not return
 
 trap "handle_interrupts" SIGTERM SIGINT
 
@@ -3084,8 +3105,8 @@ display_msg notice "${MSG}"
 # This will create the "config" directory and put default files in it.
 [[ ${install_dependencies_etc} != "true" ]] && install_dependencies_etc
 
-##### Create the file that defines the WebUI variables.
-[[ ${create_webui_defines} != "true" ]] && create_webui_defines
+##### Update PHP "define()" variables
+[[ ${update_php_defines} != "true" ]] && update_php_defines
 
 ##### Create the camera type/model-specific "options" file
 # This should come after the steps above that create ${ALLSKY_CONFIG}.

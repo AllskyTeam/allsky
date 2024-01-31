@@ -22,7 +22,7 @@ fi
 function usage_and_exit()
 {
 	echo -en "${wERROR}"
-	echo     "Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly] [--needsRestart]"
+	echo     "Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly]"
 	echo -en "\tkey label old_value new_value [...]"
 	echo -e  "${wNC}"
 	echo "There must be a multiple of 4 key/label/old_value/new_value arguments"
@@ -36,7 +36,6 @@ DEBUG="false"
 DEBUG_ARG=""
 HELP="false"
 OPTIONS_FILE_ONLY="false"
-NEEDS_RESTART="false"		# Is a restart required for changes to take affect?
 CAMERA_TYPE_ONLY="false"	# Only update the cameratype?
 FORCE=""					# Passed to createAllskyOptions.php
 
@@ -59,9 +58,6 @@ while [[ $# -gt 0 ]]; do
 			;;
 		--force)
 			FORCE="${ARG}"
-			;;
-		--needsrestart)
-			NEEDS_RESTART="true"
 			;;
 		-*)
 			echo -e "${wERROR}ERROR: Unknown argument: '${ARG}'${wNC}"
@@ -591,13 +587,6 @@ if [[ ${RUN_POSTTOMAP} == "true" ]]; then
 		"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${POSTTOMAP_ACTION}
 	fi
 fi
-
-if [[ ${NEEDS_RESTART} == "true" ]]; then
-	echo -en "${wOK}${wBOLD}"
-	echo "*** You must restart Allsky for your change to take affect. ***"
-	echo -en "${wNBOLD}${wNC}"
-fi
-
 
 if [[ ${GOT_WARNING} == "true" ]]; then
 	exit 255

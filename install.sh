@@ -1719,6 +1719,19 @@ convert_settings()			# prior_file, new_file
 				"newexposure" | "experimentalexposure")
 					continue
 					;;
+				# Deleted in ${COMBINED_BASE_VERSION}
+				"daybrightness" | "nightbrightness" | "showbrightness")
+					MSG="The 'Brightness' settings were removed."
+					MSG+="\nUse the 'Target Mean' settings to adjust brightness."
+					display_msg --log info "${MSG}"
+					continue
+					;;
+				"offset")
+					MSG="The 'Offset' setting was removed."
+					MSG+="\nUse the 'Target Mean' settings to adjust brightness."
+					display_msg --log info "${MSG}"
+					continue
+					;;
 
 				# These changed names.
 				"darkframe")
@@ -1735,10 +1748,6 @@ convert_settings()			# prior_file, new_file
 					;;
 
 				# These now have day and night versions.
-				"brightness")
-					update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-					F="night${F}"
-					;;
 				"awb"|"autowhitebalance")
 					F="awb"
 					update_json_file ".day${F}" "${V}" "${NEW_FILE}"

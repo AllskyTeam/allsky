@@ -248,11 +248,6 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 		strcat(cmd, tmp);
 	}
 
-	if (cg.currentBrightness >= 0) {
-		snprintf(tmp, s, " BRIGHTNESS=%ld", cg.currentBrightness);
-		strcat(cmd, tmp);
-	}
-
 	if (cg.lastMean >= 0.0) {
 		snprintf(tmp, s, " MEAN=%s", LorF(cg.lastMean, "%d", "%f"));
 		strcat(cmd, tmp);
@@ -658,15 +653,6 @@ int doOverlay(cv::Mat image, config cg, char *startTime, int gainChange)
 		iYOffset += cg.overlay.iTextLineHeight;
 	}
 
-	if (cg.overlay.showBrightness)
-	{
-		sprintf(tmp, "Brightness: %ld", cg.currentBrightness);
-		cvText(image, tmp, cg.overlay.iTextX, cg.overlay.iTextY + (iYOffset / cg.currentBin),
-			cg.overlay.fontsize * SMALLFONTSIZE_MULTIPLIER, cg.overlay.linewidth,
-			lineType, font, cg.overlay.smallFontcolor, cg.imageType, cg.overlay.outlinefont, cg.width);
-		iYOffset += cg.overlay.iTextLineHeight;
-	}
-
 	if (cg.overlay.showMean && cg.lastMean != 1)
 	{
 		snprintf(tmp, sizeof(tmp), "Mean: %s", LorF(cg.lastMean, "%d", "%.3f"));
@@ -1010,7 +996,6 @@ void displayHelp(config cg)
 	printf(" -%-*s - Daytime mean target brightness [%.2f].\n", n, "daymean", cg.myModeMeanSetting.dayMean);
 	printf(" -%-*s - Daytime mean target threshold [%.2f].\n", n, "daymeanthreshold n", cg.myModeMeanSetting.dayMean_threshold);
 	printf("  %-*s   NOTE: Daytime auto-gain and auto-exposure should be on for best results.\n", n, "");
-	printf(" -%-*s - Daytime brightness change [%'ld].\n", n, "daybrightness n", cg.dayBrightness);
 	printf(" -%-*s - Delay between daytime images in ms [%'ld].\n", n, "daydelay n", cg.dayDelay_ms);
 	printf(" -%-*s - 1 enables daytime auto gain [%s].\n", n, "dayautogain b", yesNo(cg.dayAutoGain));
 	printf(" -%-*s - Daytime maximum auto gain.\n", n, "daymaxautogain n");
@@ -1037,7 +1022,6 @@ void displayHelp(config cg)
 	printf(" -%-*s - Nighttime mean target brightness [%.2f].\n", n, "nightmean n", cg.myModeMeanSetting.nightMean);
 	printf("  %-*s   NOTE: Nighttime auto-gain and auto-exposure should be on for best results.\n", n, "");
 	printf(" -%-*s - Nighttime mean target threshold [%.2f].\n", n, "nightmeanthreshold n", cg.myModeMeanSetting.nightMean_threshold);
-	printf(" -%-*s - Nighttime brightness change [%ld].\n", n, "nightbrightness n n", cg.nightBrightness);
 	printf(" -%-*s - Delay between nighttime images in ms [%'ld].\n", n, "nightdelay n", cg.nightDelay_ms);
 	printf(" -%-*s - 1 enables nighttime auto gain [%s].\n", n, "nightautogain b", yesNo(cg.nightAutoGain));
 	printf(" -%-*s - Nighttime maximum auto gain.\n", n, "nightmaxautogain n");
@@ -1063,7 +1047,6 @@ void displayHelp(config cg)
 	}
 	if (cg.ct == ctZWO) {
 		printf(" -%-*s - Gamma level.\n", n, "gamma n");
-		printf(" -%-*s - Offset.\n", n, "offset n");
 		printf(" -%-*s - Percent of exposure change to make, similar to PHD2 [%ld%%].\n", n, "aggression n", cg.aggression);
 		printf(" -%-*s - Seconds to transition gain from day-to-night or night-to-day.  0 disable it [%'ld].\n", n, "gaintransitiontime n", cg.gainTransitionTime);
 	}
@@ -1112,7 +1095,6 @@ void displayHelp(config cg)
 	printf(" -%-*s - 1 displays the exposure length [%s].\n", n, "showexposure b", yesNo(cg.overlay.showExposure));
 	printf(" -%-*s - 1 displays the camera sensor temperature [%s].\n", n, "showtemp b", yesNo(cg.overlay.showTemp));
 	printf(" -%-*s - 1 displays the gain [%s].\n", n, "showgain b", yesNo(cg.overlay.showGain));
-	printf(" -%-*s - 1 displays the brightness [%s].\n", n, "showbrightness b", yesNo(cg.overlay.showBrightness));
 	printf(" -%-*s - 1 displays the mean brightness used in auto-exposure [%s].\n", n, "showmean b", yesNo(cg.overlay.showMean));
 	printf(" -%-*s - 1 displays a focus metric - the higher the number the better focus [%s].\n", n, "showfocus b", yesNo(cg.overlay.showFocus));
 	if (cg.ct == ctZWO) {
@@ -1231,8 +1213,6 @@ void displaySettings(config cg)
 		printf("      p2: %1.3f\n", cg.myModeMeanSetting.mean_p2);
 	}
 
-	printf("   Brightness (day):   %ld\n", cg.dayBrightness);
-	printf("   Brightness (night): %ld\n", cg.nightBrightness);
 	printf("   Binning (day):   %ld\n", cg.dayBin);
 	printf("   Binning (night): %ld\n", cg.nightBin);
 	if (cg.isColorCamera) {
@@ -1256,7 +1236,6 @@ void displaySettings(config cg)
 	}
 	if (cg.ct == ctZWO) {
 		if (cg.gamma != NOT_CHANGED) printf("   Gamma: %ld\n", cg.gamma);
-		if (cg.offset != NOT_CHANGED) printf("   Offset: %ld\n", cg.offset);
 		if (cg.asiBandwidth != NOT_CHANGED) printf("   USB Speed: %ld, auto: %s\n", cg.asiBandwidth, yesNo(cg.asiAutoBandwidth));
 	}
 	if (cg.ct == ctRPi) {
@@ -1311,7 +1290,6 @@ void displaySettings(config cg)
 		if (cg.supportsTemperature)
 			printf("      Show Temperature: %s, type: %s\n", yesNo(cg.overlay.showTemp), stringORnone(cg.tempType));
 		printf("      Show Gain: %s\n", yesNo(cg.overlay.showGain));
-		printf("      Show Brightness: %s\n", yesNo(cg.overlay.showBrightness));
 		printf("      Show Target Mean Brightness: %s\n", yesNo(cg.overlay.showMean));
 		printf("      Show Focus Metric: %s\n", yesNo(cg.overlay.showFocus));
 		if (cg.ct == ctZWO) {
@@ -1644,10 +1622,6 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		{
 			cg->myModeMeanSetting.dayMean_threshold = atof(argv[++i]);
 		}
-		else if (strcmp(a, "daybrightness") == 0)
-		{
-			cg->dayBrightness = atol(argv[++i]);
-		}
 		else if (strcmp(a, "daydelay") == 0)
 		{
 			cg->dayDelay_ms = atol(argv[++i]);
@@ -1726,10 +1700,6 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		{
 			cg->myModeMeanSetting.nightMean_threshold = atof(argv[++i]);
 		}
-		else if (strcmp(a, "nightbrightness") == 0)
-		{
-			cg->nightBrightness = atol(argv[++i]);
-		}
 		else if (strcmp(a, "nightdelay") == 0)
 		{
 			cg->nightDelay_ms = atol(argv[++i]);
@@ -1795,10 +1765,6 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else if (strcmp(a, "gamma") == 0)
 		{
 			cg->gamma = atol(argv[++i]);
-		}
-		else if (strcmp(a, "offset") == 0)
-		{
-			cg->offset = atol(argv[++i]);
 		}
 		else if (strcmp(a, "aggression") == 0)
 		{
@@ -1933,10 +1899,6 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else if (strcmp(a, "showgain") == 0)
 		{
 			cg->overlay.showGain = getBoolean(argv[++i]);
-		}
-		else if (strcmp(a, "showbrightness") == 0)
-		{
-			cg->overlay.showBrightness = getBoolean(argv[++i]);
 		}
 		else if (strcmp(a, "showmean") == 0)
 		{

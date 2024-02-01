@@ -1083,8 +1083,6 @@ int main(int argc, char *argv[])
 		setControl(CG.cameraNumber, ASI_BANDWIDTHOVERLOAD, CG.asiBandwidth, CG.asiAutoBandwidth ? ASI_TRUE : ASI_FALSE);
 	if (CG.gamma != NOT_CHANGED)
 		setControl(CG.cameraNumber, ASI_GAMMA, CG.gamma, ASI_FALSE);
-	if (CG.offset != NOT_CHANGED)
-		setControl(CG.cameraNumber, ASI_OFFSET, CG.offset, ASI_FALSE);
 	if (CG.flip != NOT_CHANGED)
 		setControl(CG.cameraNumber, ASI_FLIP, CG.flip, ASI_FALSE);
 
@@ -1145,7 +1143,7 @@ int main(int argc, char *argv[])
 		if (CG.takeDarkFrames)
 		{
 			// We're doing dark frames so turn off autoexposure and autogain, and use
-			// nightime gain, delay, max exposure, bin, and brightness to mimic a nightime shot.
+			// nightime gain, delay, max exposure, and bin to mimic a nightime shot.
 			CG.currentSkipFrames = 0;
 			CG.currentAutoExposure = false;
 			CG.nightAutoExposure = false;
@@ -1159,7 +1157,6 @@ int main(int argc, char *argv[])
 			CG.currentDelay_ms = CG.nightDelay_ms;
 			CG.currentMaxAutoExposure_us = CG.currentExposure_us = CG.nightMaxAutoExposure_us;
 			CG.currentBin = CG.nightBin;
-			CG.currentBrightness = CG.nightBrightness;
 			if (CG.isColorCamera)
 			{
 				CG.currentAutoAWB = false;
@@ -1250,7 +1247,6 @@ int main(int argc, char *argv[])
 			// With the histogram method we NEVER use ZWO auto exposure - either the user said
 			// not to, or we turn it off ourselves.
 			CG.currentAutoExposure = false;
-			CG.currentBrightness = CG.dayBrightness;
 			if (CG.isColorCamera)
 			{
 				CG.currentAutoAWB = CG.dayAutoAWB;
@@ -1317,7 +1313,6 @@ int main(int argc, char *argv[])
 			// Don't use camera auto-exposure since we mimic it ourselves.
 			CG.HB.useHistogram = CG.nightAutoExposure;
 			CG.currentAutoExposure = false;
-			CG.currentBrightness = CG.nightBrightness;
 			if (CG.isColorCamera)
 			{
 				CG.currentAutoAWB = CG.nightAutoAWB;
@@ -1399,7 +1394,6 @@ int main(int argc, char *argv[])
 		if (CG.currentAutoExposure)
 		{
 			setControl(CG.cameraNumber, ASI_AUTO_MAX_EXP, CG.currentMaxAutoExposure_us / US_IN_MS, ASI_FALSE);
-			setControl(CG.cameraNumber, ASI_AUTO_TARGET_BRIGHTNESS, CG.currentBrightness, ASI_FALSE);
 		}
 
 		if (numExposures == 0 || CG.dayBin != CG.nightBin)
@@ -1508,46 +1502,6 @@ int main(int argc, char *argv[])
 					long tempMinExposure_us = CG.cameraMinExposure_us;
 					long tempMaxExposure_us = CG.cameraMaxExposure_us;
 					long newExposure_us = 0;
-
-// TODO: dump Brightness - user can adjust Target Mean or Manual Exposure.
-					if (CG.currentBrightness != CG.defaultBrightness)
-					{
-						// Adjust brightness based on Brightness.
-						// The default value has no adjustment.
-						// The only way we can do this easily is via adjusting the exposure.
-						// We could apply a stretch to the image, but that's more difficult.
-						// Sure would be nice to see how ZWO handles this variable.
-						// We asked but got a useless reply.
-						// Values below the default make the image darker; above make it brighter.
-						float exposureAdjustment = 1.0;
-
-						// Adjustments of DEFAULT_BRIGHTNESS up or down make the image this much darker/lighter.
-						// Don't want the max brightness to give pure white.
-						//xxx May have to play with this number, but it seems to work ok.
-						// 100 * this number is the percent to change.
-						const float adjustmentAmountPerMultiple = 0.12;
-
-						// The amount doesn't change after being set, so only display once.
-						static bool showedMessage = false;
-						if (! showedMessage)
-						{
-							float numMultiples;
-
-							// Determine the adjustment amount - only done once.
-							// See how many multiples we're different.
-							// If currentBrightness < default then numMultiples will be negative,
-							// which is ok - it just means the multiplier will be less than 1.
-
-							numMultiples = (float)(CG.currentBrightness - CG.defaultBrightness) / CG.defaultBrightness;
-							exposureAdjustment = 1 + (numMultiples * adjustmentAmountPerMultiple);
-							Log(4, "  > >>> Adjusting exposure x %.2f (%.1f%%) for brightness\n", exposureAdjustment, (exposureAdjustment - 1) * 100);
-							showedMessage = true;
-						}
-
-						// Now adjust the variables
-						minAcceptableMean *= exposureAdjustment;
-						maxAcceptableMean *= exposureAdjustment;
-					}
 
 					// Keep track of whether or not we're bouncing around, for example,
 					// one exposure is less than the min and the second is greater than the max.

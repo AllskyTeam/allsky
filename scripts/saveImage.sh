@@ -16,9 +16,11 @@ source "${ALLSKY_CONFIG}/config.sh"			|| exit "${EXIT_ERROR_STOP}"
 usage_and_exit()
 {
 	local RET=${1}
-	[[ ${RET} -ne 0 ]] && echo -ne "${RED}"
-	echo -n "Usage: ${ME} DAY|NIGHT  full_path_to_image  [variable=value [...]]"
-	[[ ${RET} -ne 0 ]] && echo -e "${NC}"
+	{
+		[[ ${RET} -ne 0 ]] && echo -ne "${RED}"
+		echo -n "Usage: ${ME} DAY|NIGHT  full_path_to_image  [variable=value [...]]"
+		[[ ${RET} -ne 0 ]] && echo -e "${NC}"
+	} >&2
 	exit "${RET}"
 }
 [[ $# -lt 2 ]] && usage_and_exit 1
@@ -72,17 +74,20 @@ IMAGE_NAME=$( basename "${CURRENT_IMAGE}" )		# just the file name
 WORKING_DIR=$( dirname "${CURRENT_IMAGE}" )		# the directory the image is currently in
 
 # Check for bad images.
-# If the return code is 99, the file was bad and deleted so don't continue and
-# removeBadImages.sh displayed and error message.
+# Return code 99 means the image was bad and deleted and an error message
+# displayed so don't continue.
 "${ALLSKY_SCRIPTS}/removeBadImages.sh" "${WORKING_DIR}" "${IMAGE_NAME}"
-if [[ $? -eq 99 ]]; then
-	exit 99
-fi
+[[ $? -eq 99 ]] && exit 99
 
 # If we're cropping the image, get the image resolution.
 if [[ ${CROP_IMAGE} == "true" ]]; then
-	# Typical output:
-		# image.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.19257MiB 0.000u 0:00.000
+	# Typical "identify" output:
+	#	image.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.19257MiB 0.000u 0:00.000
+	if ! x=$( identify "${CURRENT_IMAGE}" 2>/dev/null ) ; then
+		echo -e "${RED}*** ${ME}: ERROR: '${CURRENT_IMAGE}' is corrupt; not saving.${NC}"
+		exit 3
+	fi
+
 	RESOLUTION=$( echo "${x}" | awk '{ print $3 }' )
 	# These are the resolution of the image (which may have been binned), not the sensor.
 	RESOLUTION_X=${RESOLUTION%x*}	# everything before the "x"

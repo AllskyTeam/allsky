@@ -67,6 +67,19 @@ if ! one_instance --pid-file "${PID_FILE}" --sleep "3s" --max-checks 3 \
 	exit 1
 fi
 
+# Get passed-in variables.
+# Normally at least the exposure will be passed and the sensor temp if known.
+while [[ $# -gt 0 ]]; do
+	VARIABLE="AS_${1%=*}"		# everything before the "="
+	VALUE="${1##*=}"			# everything after  the "="
+	shift
+	# Export the variable so other scripts we call can use it.
+	# shellcheck disable=SC2086
+	export ${VARIABLE}="${VALUE}"	# need "export" to get indirection to work
+done
+# Export other variables so user can use them in overlays
+export AS_CAMERA_TYPE="${CAMERA_TYPE}"
+export AS_CAMERA_MODEL="${CAMERA_MODEL}"
 
 # The image may be in a memory filesystem, so do all the processing there and
 # leave the image used by the website(s) in that directory.
@@ -93,21 +106,6 @@ if [[ ${CROP_IMAGE} == "true" ]]; then
 	RESOLUTION_X=${RESOLUTION%x*}	# everything before the "x"
 	RESOLUTION_Y=${RESOLUTION##*x}	# everything after  the "x"
 fi
-
-# Get passed-in variables.
-# Normally at least the exposure will be passed and the sensor temp if known.
-while [[ $# -gt 0 ]]; do
-	VARIABLE="AS_${1%=*}"		# everything before the "="
-	VALUE="${1##*=}"			# everything after  the "="
-	shift
-	# Export the variable so other scripts we call can use it.
-	# shellcheck disable=SC2086
-	export ${VARIABLE}="${VALUE}"	# need "export" to get indirection to work
-done
-# Export other variables so user can use them in overlays
-export AS_CAMERA_TYPE="${CAMERA_TYPE}"
-export AS_CAMERA_MODEL="${CAMERA_MODEL}"
-
 
 # If ${AS_TEMPERATURE_C} is set, use it as the sensor temperature,
 # otherwise use the temperature in ${TEMPERATURE_FILE}.

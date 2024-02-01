@@ -24,34 +24,50 @@ source "${ALLSKY_CONFIG}/config.sh" 		|| exit "${EXIT_ERROR_STOP}"
 usage()
 {
 	local RET="${1}"
-	(
+	{
 		echo
 		echo "Remove images with corrupt data which might mess up startrails and keograms."
 		[ "${RET}" -ne 0 ] && echo -en "${RED}"
 		echo -n "Usage: ${ME} [--help] [--debug]  directory  [file]"
 		[ "${RET}" -ne 0 ] && echo -e "${NC}"
 		echo
-		echo "You must enter the arguments in the above order."
-# TODO: use getopts to allow any order
 		echo "Turning on debug will indicate bad images but will not remove them."
 		echo "If 'file' is specified, only that file in 'directory' will be checked,"
 		echo "otherwise all files in 'directory' will be checked."
-	) >&2
+	} >&2
 	exit "${RET}"
 }
-[[ ${1} == "-h" || ${1} == "--help" ]] && usage 0
-if [[ ${1} == "-d" || ${1} == "--debug" ]]; then
-	DEBUG="true"
-	r="would be removed"
-	shift
-else
-	DEBUG="false"
-	r="removed"
-fi
 
+OK="true"
+DO_HELP="false"
+DEBUG="false"
+r="removed"
+
+while [[ $# -gt 0 ]]; do
+	ARG="${1}"
+	case "${ARG,,}" in
+			--help)
+				DO_HELP="true"
+				;;
+			--debug)
+				DEBUG="true"
+				r="would be removed"
+				;;
+			-*)
+				echo -e "${RED}${ME}: Unknown argument '${ARG}'.${NC}" >&2
+				OK="false"
+				;;
+			*)
+				break
+				;;
+	esac
+	shift
+done
+[[ ${DO_HELP} == "true" ]] && usage_and_exit 0
+[[ ${OK} == "false" ]] && usage_and_exit 1
 [[ $# -eq 0 || $# -gt 2 ]] && usage 1
 
-DATE="${1}"
+DIRECTORY="${1}"
 FILE="${2}"
 
 # If we're running in debug mode don't display ${ME} since it makes the output harder to read.
@@ -62,14 +78,14 @@ else
 fi
 
 # If it's not a full pathname, assume it's in ${ALLSKY_IMAGES}.
-[[ ${DATE:0:1} != "/" ]] && DATE="${ALLSKY_IMAGES}/${DATE}"
-if [[ ! -d ${DATE} ]]; then
-	echo -e "${RED}${ME} '${DATE}' is not a directory${NC}" >&2
+[[ ${DIRECTORY:0:1} != "/" ]] && DIRECTORY="${ALLSKY_IMAGES}/${DIRECTORY}"
+if [[ ! -d ${DIRECTORY} ]]; then
+	echo -e "${RED}${ME} '${DIRECTORY}' is not a directory${NC}" >&2
 	exit 2
 fi
 
-if [[ ${FILE} != "" && ! -f ${DATE}/${FILE} ]]; then
-	echo -e "${RED}${ME} '${FILE}' not found in '${DATE}'${NC}" >&2
+if [[ ${FILE} != "" && ! -f ${DIRECTORY}/${FILE} ]]; then
+	echo -e "${RED}${ME} '${FILE}' not found in '${DIRECTORY}'${NC}" >&2
 	exit 2
 fi
 
@@ -89,11 +105,11 @@ fi
 # sometimes produce corrupt or zero-length files.
 
 # Use IMAGE_FILES and ERROR_WORDS to avoid duplicating those strings.
-# ${DATE} may end in a "/" so there will be "//" in the filenames, but there's no harm in that.
+# ${DIRECTORY} may end in a "/" so there will be "//" in the filenames, but there's no harm in that.
 
 set +a		# turn off auto-export since ${IMAGE_FILES} might be huge and produce errors
 
-cd "${DATE}" || exit 99
+cd "${DIRECTORY}" || exit 99
 if [[ -n ${FILE} ]]; then
 	IMAGE_FILES="${FILE}"
 else

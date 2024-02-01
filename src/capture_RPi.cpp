@@ -296,16 +296,6 @@ int RPicapture(config cg, cv::Mat *image)
 		command += " --sharpness "+ ss.str();
 	}
 
-	if (cg.currentBrightness != cg.defaultBrightness) {
-		ss.str("");
-		if (cg.isLibcamera)
-			// User enters -100 to 100.  Convert to -1.0 to 1.0.
-			ss << (float) cg.currentBrightness / 100;
-		else
-			ss << cg.currentBrightness;
-		command += " --brightness " + ss.str();
-	}
-
 	if (cg.quality != cg.defaultQuality) {
 		ss.str("");
 		ss << cg.quality;
@@ -553,13 +543,12 @@ int main(int argc, char *argv[])
 		if (CG.takeDarkFrames)
 		{
 			// We're doing dark frames so turn off autoexposure and autogain, and use
-			// nightime gain, delay, exposure, and brightness to mimic a nightime shot.
+			// nightime gain, delay, and exposure to mimic a nightime shot.
 			CG.currentSkipFrames = 0;
 			CG.currentAutoExposure = false;
 			CG.nightAutoExposure = false;
 			CG.currentExposure_us = CG.nightMaxAutoExposure_us;
 			CG.currentMaxAutoExposure_us = CG.nightMaxAutoExposure_us;
-			CG.currentBrightness = CG.nightBrightness;
 			if (CG.isColorCamera)
 			{
 				CG.currentAutoAWB = false;
@@ -618,7 +607,6 @@ int main(int argc, char *argv[])
 			CG.currentAutoExposure = CG.dayAutoExposure;
 			CG.currentExposure_us = CG.dayExposure_us;
 			CG.currentMaxAutoExposure_us = CG.dayMaxAutoExposure_us;
-			CG.currentBrightness = CG.dayBrightness;
 			if (CG.isColorCamera)
 			{
 				CG.currentAutoAWB = CG.dayAutoAWB;
@@ -670,7 +658,6 @@ int main(int argc, char *argv[])
 			CG.currentAutoExposure = CG.nightAutoExposure;
 			CG.currentExposure_us = CG.nightExposure_us;
 			CG.currentMaxAutoExposure_us = CG.nightMaxAutoExposure_us;
-			CG.currentBrightness = CG.nightBrightness;
 			if (CG.isColorCamera)
 			{
 				CG.currentAutoAWB = CG.nightAutoAWB;

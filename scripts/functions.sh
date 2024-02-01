@@ -791,8 +791,9 @@ PYTHON_VENV_ACTIVATED="false"
 activate_python_venv() {
 
 # TODO: will need to change when the OS after bookworm is released
+# If our next release is out, it won't support buster so may be check  != bullseye  ?
 
-	if [[ ${PI_OS,,} == "bookworm" ]]; then
+	if [[ ${PI_OS} == "bookworm" ]]; then
 		#shellcheck disable=SC1090,SC1091
 		source "${ALLSKY_PYTHON_VENV}/bin/activate" || exit 1
 		PYTHON_VENV_ACTIVATED="true"

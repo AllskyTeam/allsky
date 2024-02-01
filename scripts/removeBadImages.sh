@@ -8,9 +8,6 @@
 
 # If a file is specified, only look at that file,
 # otherwise look at all the files in the specified directory.
-# If only 1 file, return it's MEAN.
-
-# The MEAN is the only thing that should go to stdout.
 
 ME="$( basename "${BASH_ARGV0}" )"
 
@@ -21,7 +18,7 @@ source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 #shellcheck disable=SC1091				# file doesn't exist in GitHub
 source "${ALLSKY_CONFIG}/config.sh" 		|| exit "${EXIT_ERROR_STOP}"
 
-usage()
+usage_and_exit()
 {
 	local RET="${1}"
 	{
@@ -65,7 +62,7 @@ while [[ $# -gt 0 ]]; do
 done
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
-[[ $# -eq 0 || $# -gt 2 ]] && usage 1
+[[ $# -eq 0 || $# -gt 2 ]] && usage_and_exit 1
 
 DIRECTORY="${1}"
 FILE="${2}"
@@ -110,13 +107,24 @@ fi
 set +a		# turn off auto-export since ${IMAGE_FILES} might be huge and produce errors
 
 cd "${DIRECTORY}" || exit 99
+
+# If the LOW threshold is 0 it's disabled.
+# If the HIGH threshold is 0 or 100 (nothing can be brighter than 100) it's disabled.
+# Convert possibly 0.0 and 100.0 to 0 and 100 so we can check using bash.
+HIGH=${REMOVE_BAD_IMAGES_THRESHOLD_HIGH}
+[[ $( echo "${HIGH} == 0 || ${HIGH} > 100" | bc ) -eq 1 ]] && HIGH=0
+LOW=${REMOVE_BAD_IMAGES_THRESHOLD_LOW}
+[[ $( echo "${LOW} <= 0" | bc ) -eq 1 ]] && LOW=0
+
+# Use == instead of -eq since the values may be floating point which bash doesn't handle.
+[[ ${HIGH} == "0" && ${LOW} == "0" ]] && exit 0		# No checking needed
+
 if [[ -n ${FILE} ]]; then
 	IMAGE_FILES="${FILE}"
 else
 	IMAGE_FILES="$( find . -maxdepth 1 -type f -iname "${FILENAME}"-\*."${EXTENSION}" )"
 fi
 ERROR_WORDS="Huffman|Bogus|Corrupt|Invalid|Trunc|Missing|insufficient image data|no decode delegate|no images defined"
-
 # Reduce writes to disk if possible.  This script is normally called once for each file,
 # and most files are good so no output is created and hence no reason to create a temporary
 # OUTPUT file.  Only use OUTPUT if we're doing a whole directory at once,
@@ -129,14 +137,6 @@ else							# looking at a directory
 fi
 
 num_bad=0
-
-# If the LOW threshold is 0 it's disabled.
-# If the HIGH threshold is 0 or 100 (nothing can be brighter than 100) it's disabled.
-# Convert possibly 0.0 and 100.0 to 0 and 100 so we can check using bash.
-HIGH=${REMOVE_BAD_IMAGES_THRESHOLD_HIGH}
-[[ $( echo "${HIGH} == 0 || ${HIGH} > 100" | bc ) -eq 1 ]] && HIGH=0
-LOW=${REMOVE_BAD_IMAGES_THRESHOLD_LOW}
-[[ $( echo "${LOW} <= 0" | bc ) -eq 1 ]] && LOW=0
 
 # If we're processing a whole directory assume it's done in the background so "nice" it.
 # If we're only processing one file we want it done quickly.
@@ -152,7 +152,9 @@ for f in ${IMAGE_FILES} ; do
 	if [[ ! -s ${f} ]]; then
 		BAD="'${f}' (zero length)"
 	else
-		if ! MEAN=$( ${NICE} convert "${f}" -colorspace Gray -format "%[fx:image.mean]" info: 2>&1 ) ; then
+		if [[ -n ${AS_MEAN} ]]; then
+			MEAN="${AS_MEAN}"		# single image: mean passed to us
+		elif ! MEAN=$( ${NICE} convert "${f}" -colorspace Gray -format "%[fx:image.mean]" info: 2>&1 ) ; then
 			# Do NOT set BAD since this isn't necessarily a problem with the file.
 			echo -e "${RED}***${ME}: ERROR: 'convert ${f}' failed; leaving file.${NC}" >&2
 			echo -e "Message=${MEAN}" >&2
@@ -164,9 +166,6 @@ for f in ${IMAGE_FILES} ; do
 			# Get rid of unnecessary error text, and only look at first line of error message.
 			BAD="'${f}' (corrupt file: $( echo "${MEAN}" | sed -e 's;convert-im6.q16: ;;' -e 's; @ error.*;;' -e 's; @ warning.*;;' -e q ))"
 		else
-			# If only one file, output its mean.
-			[[ -n ${FILE} ]] && echo "${MEAN}"
-
 			# MEAN is a number between 0.0 and 1.0, but it may have format:
 			#	6.90319e-06
 			# which "bc" doesn't accept.
@@ -234,9 +233,8 @@ else
 		echo "${ME} File is bad: ${OUTPUT}" >&2
 		echo -e "${OUTPUT}" >> "${ALLSKY_BAD_IMAGE_COUNT}"
 		BAD_COUNT="$( wc -l < "${ALLSKY_BAD_IMAGE_COUNT}" )"
-		# TODO: make BAD_LIMIT a WebUI setting.
-		BAD_LIMIT=3
-# echo "xxxxxxxxxx ${BAD_COUNT} bad consecutive images" >&2
+# TODO: make BAD_LIMIT a WebUI setting.
+		BAD_LIMIT=5
 		if [[ $((BAD_COUNT % BAD_LIMIT)) -eq 0 ]]; then
 			MSG="Multiple consecutive bad images."
 			MSG="${MSG}\nCheck 'REMOVE_BAD_IMAGES_THRESHOLD_LOW' and 'REMOVE_BAD_IMAGES_THRESHOLD_HIGH' in config.sh"

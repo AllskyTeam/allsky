@@ -71,37 +71,22 @@ fi
 IMAGE_NAME=$( basename "${CURRENT_IMAGE}" )		# just the file name
 WORKING_DIR=$( dirname "${CURRENT_IMAGE}" )		# the directory the image is currently in
 
-# Optional full check for bad images.
-if [[ ${REMOVE_BAD_IMAGES} == "true" ]]; then
-	# If the return code is 99, the file was bad and deleted so don't continue.
-	AS_BAD_IMAGES_MEAN="$( "${ALLSKY_SCRIPTS}/removeBadImages.sh" "${WORKING_DIR}" "${IMAGE_NAME}" )"
-	# removeBadImages.sh displayed error message and deleted the file.
-	if [[ $? -eq 99 ]]; then
-		exit 99
-	elif [[ -n ${AS_BAD_IMAGES_MEAN} ]]; then
-		export AS_BAD_IMAGES_MEAN
-	fi
-else
-	AS_BAD_IMAGES_MEAN=""
+# Check for bad images.
+# If the return code is 99, the file was bad and deleted so don't continue and
+# removeBadImages.sh displayed and error message.
+"${ALLSKY_SCRIPTS}/removeBadImages.sh" "${WORKING_DIR}" "${IMAGE_NAME}"
+if [[ $? -eq 99 ]]; then
+	exit 99
 fi
 
-# If we didn't execute removeBadImages.sh do a quick sanity check on the image.
-# OR, if we did execute removeBaImages.sh but we're cropping the image, get the image resolution.
-if [[ ${REMOVE_BAD_IMAGES} != "true" || ${CROP_IMAGE} == "true" ]]; then
-	x=$( identify "${CURRENT_IMAGE}" 2>/dev/null )
-	if [[ $? -ne 0 ]]; then
-		echo -e "${RED}*** ${ME}: ERROR: '${CURRENT_IMAGE}' is corrupt; not saving.${NC}"
-		exit 3
-	fi
-
-	if [[ ${CROP_IMAGE} == "true" ]]; then
-		# Typical output:
-			# image.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.19257MiB 0.000u 0:00.000
-		RESOLUTION=$( echo "${x}" | awk '{ print $3 }' )
-		# These are the resolution of the image (which may have been binned), not the sensor.
-		RESOLUTION_X=${RESOLUTION%x*}	# everything before the "x"
-		RESOLUTION_Y=${RESOLUTION##*x}	# everything after  the "x"
-	fi
+# If we're cropping the image, get the image resolution.
+if [[ ${CROP_IMAGE} == "true" ]]; then
+	# Typical output:
+		# image.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.19257MiB 0.000u 0:00.000
+	RESOLUTION=$( echo "${x}" | awk '{ print $3 }' )
+	# These are the resolution of the image (which may have been binned), not the sensor.
+	RESOLUTION_X=${RESOLUTION%x*}	# everything before the "x"
+	RESOLUTION_Y=${RESOLUTION##*x}	# everything after  the "x"
 fi
 
 # Get passed-in variables.
@@ -117,14 +102,11 @@ done
 # Export other variables so user can use them in overlays
 export AS_CAMERA_TYPE="${CAMERA_TYPE}"
 export AS_CAMERA_MODEL="${CAMERA_MODEL}"
-if [[ -n ${AS_BAD_IMAGES_MEAN} ]]; then
-	export AS_MEAN_NORMALIZED="$( echo "${AS_BAD_IMAGES_MEAN} * 255" | bc )"	# xxxx for testing
-fi
 
 
 # If ${AS_TEMPERATURE_C} is set, use it as the sensor temperature,
 # otherwise use the temperature in ${TEMPERATURE_FILE}.
-# TODO: Currently nothing creates the TEMPERATURE_FILE.  Eventually RPi cameras will.
+# The TEMPERATURE_FILE is manually created if needed.
 if [[ -z ${AS_TEMPERATURE_C} ]]; then
 	TEMPERATURE_FILE="${ALLSKY_TMP}/temperature.txt"
 	if [[ -s ${TEMPERATURE_FILE} ]]; then	# -s so we don't use an empty file

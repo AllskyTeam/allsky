@@ -882,7 +882,6 @@ install_webserver_et_al()
 		) > "${TMP}" 2>&1
 		check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" ||
 			exit_with_image 1 "${STATUS_ERROR}" "lighttpd installation failed"
-		fi
 	fi
 
 	FINAL_LIGHTTPD_FILE="/etc/lighttpd/lighttpd.conf"

@@ -252,12 +252,6 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 		snprintf(tmp, s, " MEAN=%s", LorF(cg.lastMean, "%d", "%f"));
 		strcat(cmd, tmp);
 	}
-	// FULLMEAN is to see if the mean of the whole image is the same as the mean returned
-	// by removeBadImages.sh; if so, removeBadImages.sh doesn't need to determine the mean.
-	if (cg.lastMeanFull >= 0.0) {
-		snprintf(tmp, s, " FULLMEAN=%s", LorF(cg.lastMeanFull, "%d", "%f"));
-		strcat(cmd, tmp);
-	}
 
 	// Since negative temperatures are valid, check against an impossible temperature.
 	// The temperature passed to us is 10 times the actual temperature so we can deal with

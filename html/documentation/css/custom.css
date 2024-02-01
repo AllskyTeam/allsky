@@ -676,3 +676,34 @@ div.sticky {
 #backToTopBtn:hover {
 	background-color: #888; /* Add a lighter-grey background on hover */
 }
+
+.middleVerticalAlign {
+	vertical-align: middle;
+}
+
+/* Classes specific to WebUI pages */
+.editorForm {
+	display: inline-block;
+	width: auto;
+	margin-right: 15px;
+	margin-bottom: 5px;
+}
+.editorSaveChanges {
+	margin-bottom: 5px;
+}
+.editorBottomSection {
+	margin-top: 15px;
+}
+.functionsListFileType {
+	float: left;
+	width: 100%;
+	margin-bottom: 2px;
+}
+.functionsListTypeImg {
+	margin-left: 10px;
+	max-width: 50%;
+	max-height:100px;
+}
+.imagesSortOrder {
+	font-size: 60%;
+}

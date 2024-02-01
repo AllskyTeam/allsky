@@ -1,19 +1,6 @@
 #!/bin/bash
 
-# Upgrade an existing release of Allsky.
-# This includes upgrading code as well as configuration files.
-
-############################
-# TODO: This file currently just checks if there's a newer version on GitHub,
-# and if so, it grabs the newer version and executes it.
-# We did this so we could distribute a basic script with the new release,
-# but didn't have time to fully complete and test this script.
-############################
-# TODO: Move variables and functions used by this script and install.sh into
-# scripts/installUpgradeFunctions.sh, including functions in functiton.sh that
-# are only used by upgrade.sh and install.sh.
-############################
-
+# Upgrade the current Allsky release.
 
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
 ME="$( basename "${BASH_ARGV0}" )"
@@ -25,30 +12,52 @@ source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 
 cd "${ALLSKY_HOME}"  						|| exit "${EXIT_ERROR_STOP}"
 
+# High-level view of tasks for upgrade:
+#	Prompt if user wants to carry current settings to new release.
+#	Rename current release.
+#	Download new release from GitHub.
+#	Execute new release's installation script telling it it's an upgrade.
 
-####
-usage_and_exit()
+# High-level view of tasks for restore:
+#	Rename current release to "${ALLSKY_HOME}-${ALLSKY_VERSION}"
+#	Rename prior release to ${ALLSKY_HOME}
+#	Execute old release's installation script telling it it's a restore.
+
+#############
+# Changes to install.sh needed:
+#	* Accept "--upgrade" argument which means we're doing an upgrade.
+#		- Don't display "**** Welcome to the Allsky Camera installer ****"
+#		- Don't prompt to reboot
+#	* Accept "--camera camera" option and set CAMERA=<camera>
+#		Don't prompt for camera.
+#
+#	* Accept "--restore" argument which means we're doing a restore.
+#############
+# TODO:
+#	Check for symbolic links
+#	Allow installing the "dev" branch.
+#############
+
+############################## functions
+function usage_and_exit()
 {
-	RET=${1}
-	if [[ ${RET} -eq 0 ]]; then
-		C="${YELLOW}"
-	else
-		C="${RED}"
-	fi
-	# Don't show the "--newer", "--no-check", or "--force-check" options since users
-	# should never use them.
-	# TODO: Also don't show future --doUpgrade and --doUpgradeInPlace options.
-	echo
-	echo -e "${C}Usage: ${ME} [--help] [--debug] [--restore] [--function function]${NC}"
-	echo
-	echo "'--help' displays this message and exits."
-	echo
-	echo "'--debug' displays debugging information."
-	echo
-	echo "'--restore' restores a previously upgraded Allsky.  Rarely needed."
-	echo
-	echo "'--function' executes the specified function and quits."
-	echo
+	local RET=${1}
+	{
+		[ ${RET} -ne 0 ] && echo -e "${RED}"
+		echo -e "\nUpgrade the 'allsky' package, or restore the prior version from your Pi."
+		echo
+		echo -e "Usage: ${ME} [--help] [--debug] [--restore] [--function function]${NC}"
+		echo
+		echo "'--help' displays this message and exits."
+		echo
+		echo "'--debug' displays debugging information."
+		echo
+		echo "'--restore' restores the prior version from '${ALLSKY_HOME}-OLD'."
+		echo
+		echo "'--function' executes the specified function and quits."
+		echo
+		[ ${RET} -ne 0 ] && echo -e "${NC}"
+	} >&2
 	exit "${RET}"
 }
 
@@ -59,25 +68,18 @@ ALL_ARGS="$@"
 ##### Check arguments
 OK="true"
 HELP="false"
-DEBUG="false"
-DEBUG_ARG=""
-NEWER="false"
-ACTION="upgrade"
-WORD="Upgrade"
+DEBUG="false"; DEBUG_ARG=""
+ACTION="upgrade"; WORD="Upgrade"		# default
 FUNCTION=""
-FORCE_CHECK="true"		# Set to "true" to ALWAYS do the version check
 while [ $# -gt 0 ]; do
 	ARG="${1}"
-	case "${ARG}" in
+	case "${ARG,,}" in
 		--help)
 			HELP="true"
 			;;
 		--debug)
 			DEBUG="true"
 			DEBUG_ARG="${ARG}"		# we can pass this to other scripts
-			;;
-		--newer)
-			NEWER="true"
 			;;
 		--restore)
 			ACTION="restore"
@@ -86,12 +88,6 @@ while [ $# -gt 0 ]; do
 		--function)
 			FUNCTION="${2}"
 			shift
-			;;
-		--no-check)
-			FORCE_CHECK="false"
-			;;
-		--force-check)
-			FORCE_CHECK="true"
 			;;
 		*)
 			display_msg error "Unknown argument: '${ARG}'."
@@ -102,43 +98,25 @@ while [ $# -gt 0 ]; do
 done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" || $# -ne 0 ]] && usage_and_exit 1
-
 [[ ${DEBUG} == "true" ]] && echo "Running: ${ME} ${ALL_ARGS}"
 
 BRANCH="$( get_branch )"
 [[ -z ${BRANCH} ]] && BRANCH="${GITHUB_MAIN_BRANCH}"
 
-# Unless forced to, only do the version check if we're on the main branch,
-# not on development branches, because when we're updating this script we
-# don't want to have the updates overwritten from an older version on GitHub.
-if [[ ${FORCE_CHECK} == "true" || ${BRANCH} == "${GITHUB_MAIN_BRANCH}" ]]; then
-	CURRENT_SCRIPT="${ALLSKY_HOME}/${ME}"
-	if [[ ${NEWER} == "true" ]]; then
-		# This is the newer version
-		echo "[${CURRENT_SCRIPT}] was replaced by newer version from GitHub."
-		cp "${BASH_ARGV0}" "${CURRENT_SCRIPT}"
-		chmod 775 "${CURRENT_SCRIPT}"
-
-	else
-		# See if there's a newer version of this script; if so, download it and execute it.
-		BRANCH="$( getBranch) " || exit 2
-		NEWER_SCRIPT="/tmp/${ME}"
-		checkAndGetNewerFile --branch "${BRANCH}" "${CURRENT_SCRIPT}" "${ME}" "${NEWER_SCRIPT}"
-		RET=$?
-		[[ ${RET} -eq 2 ]] && exit 2
-		if [[ ${RET} -eq 1 ]]; then
-			exec "${NEWER_SCRIPT}" --newer "${ALL_ARGS}"
-			# Does not return
-		fi
-	fi
-fi
-
 # TODO: these are here to keep shellcheck quiet while this script is incomplete.
 DEBUG="${DEBUG}"
 DEBUG_ARG="${DEBUG_ARG}"
 FUNCTION="${FUNCTION}"
-WORD="${WORD}"
 
+if [ "${ACTION}" != "doUpgrade" ]; then
+	echo
+	echo "***********************************************"
+	echo "*** Welcome to the Allsky Software ${WORD} ***"
+	echo "***********************************************"
+	echo
+else	# we're continuing where we left off, so don't welcome again.
+	echo -e "* ${GREEN}Continuing the ${WORD}...${NC}"
+fi
 
 if [[ ${ACTION} == "upgrade" ]]; then
 	:
@@ -200,5 +178,6 @@ elif [[ ${ACTION} == "restore" ]]; then
 	#	mv ${ALLSKY_HOME}-OLD ${ALLSKY_HOME}
 	#	move images from ${ALLSKY_HOME}-new_tmp to ${ALLSKY_HOME}
 	#	move darks from ${ALLSKY_HOME}-new_tmp to ${ALLSKY_HOME}
+	#	move other stuff that was moved in install.sh from old to new
 
 fi

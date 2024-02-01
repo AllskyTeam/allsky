@@ -93,6 +93,7 @@ function DisplayAllskyConfig() {
 	$cameraNumberName = "cameranumber";		// json setting name
 	$debugLevelName = "debuglevel";			// json setting name
 	$debugArg = "";
+	$cmdDebugArg = "";		// set to --debug for runCommand() debugging
 	$hideHeaderBodies = true;
 	$numErrors = 0;
 	$updatedSettings = false;
@@ -438,7 +439,7 @@ echo '<script>console.log("Updated $fileName");</script>';
 					}
 
 					$CMD = "sudo --user=" . ALLSKY_OWNER;
-					$CMD .= " " . ALLSKY_SCRIPTS . "/makeChanges.sh $debugArg $moreArgs $changes";
+					$CMD .= " " . ALLSKY_SCRIPTS . "/makeChanges.sh $cmdDebugArg $moreArgs $changes";
 					# Let makeChanges.sh display any output
 					echo '<script>console.log("Running: ' . $CMD . '");</script>';
 					// false = don't add anything to the message
@@ -481,7 +482,7 @@ echo '<script>console.log("Updated $fileName");</script>';
 						if (! $cameraChanged)
 							$moreArgs .= " --allFiles";
 						$CMD = "sudo --user=" . ALLSKY_OWNER;
-						$CMD .= " " . ALLSKY_SCRIPTS . "/postData.sh --fromWebUI $debugArg $moreArgs";
+						$CMD .= " " . ALLSKY_SCRIPTS . "/postData.sh --fromWebUI $cmdDebugArg $moreArgs";
 						echo '<script>console.log("Running: ' . $CMD . '");</script>';
 						$worked = runCommand($CMD, "", "success", false);
 						// postData.sh will output necessary messages.

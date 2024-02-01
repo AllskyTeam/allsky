@@ -2,38 +2,37 @@
 
 function DisplayEditor()
 {
-	global $hasLocalWebsite, $hasRemoteWebsite;
-
-	$status = new StatusMessages();
+	global $hasLocalWebsite, $hasRemoteWebsite, $status;
 
 	// See what files there are to edit.
-
-	$localN = ""; $remoteN = "";
-	if ($hasLocalWebsite) {
-		$N = "website/" . ALLSKY_WEBSITE_LOCAL_CONFIG_NAME;
-		$localN = $N;
+	$numFiles = 0;
+$numFiles = 2;	// TODO: remove when config.sh and ftp-settings.sh are deleted
+	if ($hasLocalWebsite && file_exists(ALLSKY_WEBSITE_LOCAL_CONFIG)) {
+		$localN = ALLSKY_WEBSITE_LOCAL_CONFIG_NAME;
+		$numFiles++;
 	} else {
-		if ($hasRemoteWebsite) {
-			$N = "config/" . ALLSKY_WEBSITE_REMOTE_CONFIG_NAME;
-			$remoteN = $N;
-		} else {
-			$N = "";
-		}
+		$localN = null;
+	}
+	if ($hasRemoteWebsite && file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
+		$remoteN = ALLSKY_WEBSITE_REMOTE_CONFIG_NAME;
+		$numFiles++;
+	} else {
+		$remoteN = null;
 	}
 
-	if ($N !== "") {
+	if ($numFiles > 0) {
 ?>
 	<script type="text/javascript">
 		$(document).ready(function () {
-			var editor = null;
-			$.get("config/config.sh?_ts=" + new Date().getTime(), function (data) {
 
+			var editor = null;
+
+			$.get("config/config.sh?_ts=" + new Date().getTime(), function (data) {
 				// .json files return "data" as json array, and we need a regular string.
 				// Get around this by stringify'ing "data".
 				if (typeof data != 'string') {
 					data = JSON.stringify(data, null, "\t");
 				}
-
 				editor = CodeMirror(document.querySelector("#editorContainer"), {
 					value: data,
 					mode: "shell",
@@ -94,7 +93,8 @@ function DisplayEditor()
 								returnMsg = "No response from save_file.php";
 							}
 							var m = '<div class="alert alert-' + c + '">' + returnMsg;
-							m += '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">x</button>';
+							m += '<button type="button" class="close" data-dismiss="alert"';
+							m += ' aria-hidden="true">x</button>';
 							m += '</div>';
 							messages.innerHTML += m;
 						},
@@ -102,9 +102,6 @@ function DisplayEditor()
 							alert("Unable to save '" + fileName + ": " + errorThrown);
 						}
 					});
-				}
-				else{
-					//alert("File not saved!");
 				}
 			});
 
@@ -142,13 +139,12 @@ function DisplayEditor()
 		<div class="col-lg-12">
 			<div class="panel panel-primary">
 				<div class="panel-heading"><i class="fa fa-code fa-fw"></i> Editor</div>
-				<!-- /.panel-heading -->
 				<div class="panel-body">
 					<p id="editor-messages"><?php $status->showMessages(); ?></p>
 					<div id="editorContainer"></div>
 					<div class="editorBottomSection">
 				<?php
-					if ($N == "") {
+					if ($numFiles === 0) {
 						echo "<div class='errorMsgBig'>No files to edit</div>";
 					} else {
 				?>
@@ -156,7 +152,7 @@ function DisplayEditor()
 							<option value="config/config.sh">config.sh</option>
 							<option value="config/ftp-settings.sh">ftp-settings.sh</option>
 				<?php
-							if ($hasLocalWebsite) {
+							if ($localN !== null) {
 								// The website is installed on this Pi.
 								// The physical path is ALLSKY_WEBSITE; virtual path is "website".
 								echo "<option value='website/$localN'>";
@@ -164,7 +160,7 @@ function DisplayEditor()
 								echo "</option>";
 							}
 
-							if ($hasRemoteWebsite) {
+							if ($remoteN !== null) {
 								// A copy of the remote website's config file is on the Pi.
 								echo "<option value='{REMOTE}config/$remoteN'>";
 								echo "$remoteN (remote Allsky Website)";
@@ -182,7 +178,6 @@ function DisplayEditor()
 			</div>
 		</div>
 	</div>
-
 <?php
 }
 ?>

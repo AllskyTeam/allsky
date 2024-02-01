@@ -473,8 +473,10 @@ recreate_options_file()
 # Wrapper function to call do_save_camera_capabilities and exit on error.
 save_camera_capabilities()
 {
-	do_save_camera_capabilities
-	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "save_camera_capabilities failed."
+	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
+
+	do_save_camera_capabilities "${1}"
+	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "${FUNCNAME[0]} failed."
 
 	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
@@ -751,7 +753,7 @@ check_swap()
 # then mount it.
 check_and_mount_tmp()
 {
-	local TMP_DIR="/tmp/IMAGES"  IMAGES
+	local TMP_DIR="/tmp/IMAGES"
 
 	if [[ -d "${ALLSKY_TMP}" ]]; then
 		mkdir -p "${TMP_DIR}"
@@ -1303,9 +1305,13 @@ set_what_can_be_skipped()
 			# No changes to these packages so no need to reinstall.
 			MSG="Skipping installation of: webserver et.al., PHP modules, Trutype fonts, Python"
 			display_msg --logonly info "${MSG}"
+			# shellcheck disable=SC2034
 			install_webserver_et_al="true"
+			# shellcheck disable=SC2034
 			install_fonts="true"
+			# shellcheck disable=SC2034
 			install_PHP_modules="true"
+			# shellcheck disable=SC2034
 			install_Python="true"
 		fi
 	fi
@@ -3207,7 +3213,7 @@ update_php_defines
 
 ##### Create the camera type/model-specific "options" file
 # This should come after the steps above that create ${ALLSKY_CONFIG}.
-[[ ${save_camera_capabilities} != "true" ]] && save_camera_capabilities "false"
+save_camera_capabilities "false"
 
 ##### Set locale.  May reboot instead of returning.
 set_locale

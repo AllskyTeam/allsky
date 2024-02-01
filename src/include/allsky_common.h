@@ -348,7 +348,6 @@ struct config {			// for configuration variables
 	long lastFocusMetric				= NOT_SET;
 	long lastAsiBandwidth				= NOT_SET;
 	double lastMean						= NOT_SET;
-	double lastMeanFull					= NOT_SET;
 	bool goodLastExposure				= false;		// Was the last image propery exposed?
 };
 

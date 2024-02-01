@@ -793,7 +793,6 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					}
 
 					CG.lastMean = aegCalcMean(pRgb, true);
-					CG.lastMeanFull = aegCalcMean(pRgb, false);
 					if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 					{
 						// set myRaspistillSetting.shutter_us and myRaspistillSetting.analoggain

@@ -30,12 +30,11 @@ if (ALLSKY_HOME == "XX_ALLSKY_HOME" . "_XX") {
 	// This file hasn't been updated yet after installation.
 	// This would only happen if they updated this file and not the whole Allsky release,
 	// which is hard since we only come out with releases.
-	echo "<div style='font-size: 200%;'>";
-	echo "<span style='color: red'>";
+	echo "<div class='errorMsgBig errorMsgBox'>";
 	echo "Please run the following from the 'allsky' directory before using the WebUI:";
-	echo "</span>";
-	echo "<code>   ./install.sh --update</code>";
+	echo "<br><br>";
+	echo "<code>   ./install.sh --fix</code>";
 	echo "</div>";
-	exit;
+	exit(1);
 }
 ?>

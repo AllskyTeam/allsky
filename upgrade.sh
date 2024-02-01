@@ -43,7 +43,7 @@ function usage_and_exit()
 {
 	local RET=${1}
 	{
-		[ ${RET} -ne 0 ] && echo -e "${RED}"
+		[[ ${RET} -ne 0 ]] && echo -e "${RED}"
 		echo -e "\nUpgrade the 'allsky' package, or restore the prior version from your Pi."
 		echo
 		echo -e "Usage: ${ME} [--help] [--debug] [--restore] [--function function]${NC}"
@@ -56,7 +56,7 @@ function usage_and_exit()
 		echo
 		echo "'--function' executes the specified function and quits."
 		echo
-		[ ${RET} -ne 0 ] && echo -e "${NC}"
+		[[ ${RET} -ne 0 ]] && echo -e "${NC}"
 	} >&2
 	exit "${RET}"
 }

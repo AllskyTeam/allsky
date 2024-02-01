@@ -27,7 +27,7 @@ function ListImages() {
 			asort($images);
 			$sortOrder = "Sorted oldest to newest (ascending)";
 		}
-		$sortOrder = "<span style='font-size: 80%;'>$sortOrder</span>";
+		$sortOrder = "<span class='imagesSortOrder'>$sortOrder</span>";
 	} else {
 		$sortOrder = "";
 	}

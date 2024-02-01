@@ -104,9 +104,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	ALLSKY_FLOWTIMINGS_DAY="${ALLSKY_FLOWTIMINGS}/day-average"
 	ALLSKY_FLOWTIMINGS_NIGHT="${ALLSKY_FLOWTIMINGS}/night-average"
 
-	# Allsky version.  Updated during installation.
+	# Allsky version.
 	ALLSKY_VERSION_FILE="${ALLSKY_HOME}/version"
-	ALLSKY_VERSION="$( head -1 "${ALLSKY_VERSION_FILE}" | tr -d '\n\r' )"
+	ALLSKY_VERSION="$( < "${ALLSKY_VERSION_FILE}" )"
 
 	# Location of optional allsky-website package.
 	ALLSKY_WEBSITE="${ALLSKY_WEBUI}/allsky"
@@ -136,10 +136,10 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 
 	# NAMEs of some configuration files:
 	#	Camera Capabilities - specific to a camera type and model (cc.json)
-	#	Allsky WebUI settings - specific to a camera type and model (settings.json)
 	#	Allsky WebUI options - created at installation and when camera type changes (options.json)
-	# They are configuration files so go in ${ALLSKY_CONFIG) like all the other config files.
+	#	Allsky WebUI settings - specific to a camera type and model (settings.json)
 	CC_FILE="${ALLSKY_CONFIG}/cc.json"
+	OPTIONS_FILE="${ALLSKY_CONFIG}/options.json"
 	SETTINGS_FILE="${ALLSKY_CONFIG}/settings.json"
 	if [[ -s ${SETTINGS_FILE} ]]; then
 		# Get the name of the file the websites will look for, and split into name and extension.
@@ -155,8 +155,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	else
 		ALLSKY_DEBUG_LEVEL=1
 	fi
-	OPTIONS_FILE="${ALLSKY_CONFIG}/options.json"
-	ALLSKY_ENV="${ALLSKY_HOME}/env.json"
+	ALLSKY_ENV="${ALLSKY_HOME}/env.json"	# holds private info like passwords
 
 	IMG_DIR="current/tmp"
 	CAPTURE_SAVE_DIR="${ALLSKY_TMP}"
@@ -172,8 +171,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
 	EXIT_NO_CAMERA=101		# cannot find camera
 
-	# Name of the Pi's OS.
-	PI_OS="$( grep CODENAME /etc/os-release | cut -d= -f2 )"
+	# Name of the Pi's OS in lowercase.
+	PI_OS="$( grep VERSION_CODENAME /etc/os-release )"; PI_OS="${PI_OS/VERSION_CODENAME=/}"
+	PI_OS="${PI_OS,,}"
 
 	# If a user wants to define new variables or assign variables differently,
 	# then load their file if it exists.

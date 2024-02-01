@@ -33,7 +33,7 @@ if (ALLSKY_HOME == "XX_ALLSKY_HOME" . "_XX") {
 	echo "<div class='errorMsgBig errorMsgBox'>";
 	echo "Please run the following from the 'allsky' directory before using the WebUI:";
 	echo "<br><br>";
-	echo "<code>   ./install.sh --update</code>";
+	echo "<code>   ./install.sh --fix</code>";
 	echo "</div>";
 	exit(1);
 }

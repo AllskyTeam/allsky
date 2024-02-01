@@ -50,10 +50,10 @@
 	<?php
 		// This gets the settings.
 		// Some settings impact this page, some impact the constellation overlay.
-		include_once('functions.php');		// Sets $settings_array
+		include_once('functions.php');		// Sets $webSettings_array
 
 		// Get home page options
-		$homePage = v("homePage", null, $settings_array);
+		$homePage = v("homePage", null, $webSettings_array);
 			// TODO: replace double quotes with &quot; in any variable that can be in an HTML attribute,
 			// which is many of them.
 			$backgroundImage = v("backgroundImage", "", $homePage);
@@ -100,7 +100,7 @@
 		// Get javascript config variable options.
 		// To avoid changing too much code, the "config" javascript variable is created
 		// here to replace the old config.js file that contained that variable.
-		$config = v("config", null, $settings_array);
+		$config = v("config", null, $webSettings_array);
 		$imageWidth = v("imageWidth", null, $config);
 			echo "<script>config = {\n";
 			foreach ($config as $var => $val) {	// ok to have comma after last entry

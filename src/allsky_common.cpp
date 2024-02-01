@@ -249,7 +249,7 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 	}
 
 	if (cg.lastMean >= 0.0) {
-		snprintf(tmp, s, " MEAN=%s", LorF(cg.lastMean, "%d", "%f"));
+		snprintf(tmp, s, " MEAN=%f", cg.lastMean);
 		strcat(cmd, tmp);
 	}
 
@@ -647,9 +647,9 @@ int doOverlay(cv::Mat image, config cg, char *startTime, int gainChange)
 		iYOffset += cg.overlay.iTextLineHeight;
 	}
 
-	if (cg.overlay.showMean && cg.lastMean != 1)
+	if (cg.overlay.showMean && cg.lastMean != 1.0)
 	{
-		snprintf(tmp, sizeof(tmp), "Mean: %s", LorF(cg.lastMean, "%d", "%.3f"));
+		snprintf(tmp, sizeof(tmp), "Mean: %.3f", cg.lastMean);
 		cvText(image, tmp, cg.overlay.iTextX, cg.overlay.iTextY + (iYOffset / cg.currentBin),
 			cg.overlay.fontsize * SMALLFONTSIZE_MULTIPLIER, cg.overlay.linewidth,
 			lineType, font, cg.overlay.smallFontcolor, cg.imageType, cg.overlay.outlinefont, cg.width);
@@ -1196,15 +1196,15 @@ void displaySettings(config cg)
 	if (cg.gainTransitionTimeImplemented)
 		printf("   Gain Transition Time: %.1f minutes\n", (float) cg.gainTransitionTime/60);
 
-	printf("   Target Mean Value (day):       %1.3f\n", cg.myModeMeanSetting.dayMean);
-	printf("   Target Mean Value (night):     %1.3f\n", cg.myModeMeanSetting.nightMean);
-	printf("   Target Mean Threshold (day):   %1.3f\n", cg.myModeMeanSetting.dayMean_threshold);
-	printf("   Target Mean Threshold (night): %1.3f\n", cg.myModeMeanSetting.nightMean_threshold);
+	printf("   Target Mean Value (day):       %.3f\n", cg.myModeMeanSetting.dayMean);
+	printf("   Target Mean Value (night):     %.3f\n", cg.myModeMeanSetting.nightMean);
+	printf("   Target Mean Threshold (day):   %.3f\n", cg.myModeMeanSetting.dayMean_threshold);
+	printf("   Target Mean Threshold (night): %.3f\n", cg.myModeMeanSetting.nightMean_threshold);
 	if (cg.supportsMyModeMean)
 	{
-		printf("      p0: %1.3f\n", cg.myModeMeanSetting.mean_p0);
-		printf("      p1: %1.3f\n", cg.myModeMeanSetting.mean_p1);
-		printf("      p2: %1.3f\n", cg.myModeMeanSetting.mean_p2);
+		printf("      p0: %.3f\n", cg.myModeMeanSetting.mean_p0);
+		printf("      p1: %.3f\n", cg.myModeMeanSetting.mean_p1);
+		printf("      p2: %.3f\n", cg.myModeMeanSetting.mean_p2);
 	}
 
 	printf("   Binning (day):   %ld\n", cg.dayBin);

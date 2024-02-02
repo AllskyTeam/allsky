@@ -769,8 +769,11 @@ b, strong {
 .position-relative {
 	position: relative !important;
 }
+.markdown-body .mediumPadding li {
+	margin-top: 0.25em;
+}
 .markdown-body .minimalPadding li {
-	margin-top: 0;
+	margin-top: 0em;
 }
 .markdown-body .morePadding {
 	margin-top: 1.75em !important;
@@ -928,4 +931,10 @@ b, strong {
 }
 .green {
 	color: green;
+}
+
+.possibleAction {
+	font-weight: bold;
+	border: 1px dotted gray;
+	margin-right: 10px;
 }

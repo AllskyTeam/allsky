@@ -953,15 +953,17 @@ and are updated by clicking on the WebUI's
 	</td>
 </tr>
 <tr><td><span class="shSetting">REMOVE_BAD_IMAGES_THRESHOLD_LOW</span></td>
-	<td>1</td>
+	<td>0.01</td>
 	<td>Images whose mean brightness is below this percent will be removed.
-	Set to <code>0</code> to disable this check.
+	Useful values range from <code>0.01</code> to around <code>0.2</code>.
+	<br>Set to <code>0</code> to disable this check.
 	</td>
 </tr>
 <tr><td><span class="shSetting">REMOVE_BAD_IMAGES_THRESHOLD_HIGH</span></td>
-	<td>90</td>
-	<td>Images whose mean brightness is above this percent will be removed (max: 100).
-	Set to <code>0</code> to disable this check.
+	<td>0.9</td>
+	<td>Images whose mean brightness is above this percent will be removed.
+	Useful values range from <code>0.8</code> to around <code>0.95</code>.
+	<br>Set to <code>0</code> to disable this check.
 	</td>
 </tr>
 

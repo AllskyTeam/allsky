@@ -89,8 +89,8 @@ fi
 if [[ $( settings ".takedarkframes" ) == "true" ]]; then
 	# Disable low brightness check since darks will have extremely low brightness.
 	# Set the high value to something a dark frame should never get to.
-	REMOVE_BAD_IMAGES_THRESHOLD_LOW=0
-	REMOVE_BAD_IMAGES_THRESHOLD_HIGH=1.00
+	REMOVE_BAD_IMAGES_THRESHOLD_LOW=0.00000
+	REMOVE_BAD_IMAGES_THRESHOLD_HIGH=0.01000	# 1%
 fi
 
 # Find the full size image-*jpg and image-*png files (not the thumbnails) and
@@ -108,23 +108,35 @@ set +a		# turn off auto-export since ${IMAGE_FILES} might be huge and produce er
 
 cd "${DIRECTORY}" || exit 99
 
-# If the LOW threshold is 0 it's disabled.
-# If the HIGH threshold is 0 or 100 (nothing can be brighter than 100) it's disabled.
-# Convert possibly 0.0 and 100.0 to 0 and 100 so we can check using bash.
-HIGH=${REMOVE_BAD_IMAGES_THRESHOLD_HIGH}
-[[ $( echo "${HIGH} == 0 || ${HIGH} > 100" | bc ) -eq 1 ]] && HIGH=0
-LOW=${REMOVE_BAD_IMAGES_THRESHOLD_LOW}
-[[ $( echo "${LOW} <= 0" | bc ) -eq 1 ]] && LOW=0
-
-# Use == instead of -eq since the values may be floating point which bash doesn't handle.
-[[ ${HIGH} == "0" && ${LOW} == "0" ]] && exit 0		# No checking needed
+# If the LOW threshold is 0 or < 0 it's disabled.
+# If the HIGH threshold is 0 or 1.0 (nothing can be brighter than 1.0) it's disabled.
+LOW="${REMOVE_BAD_IMAGES_THRESHOLD_LOW:-0.0}"
+HIGH="${REMOVE_BAD_IMAGES_THRESHOLD_HIGH:-0.0}"
+if echo "${LOW}" "${HIGH}" |
+	awk '{
+		l=$1;
+		if (l < 0) l=0;
+		h=$2;
+		if (h > 1) h=0;
+		if ((l + h) == 0) {
+			exit 0;
+		} else {
+			exit 1;
+		}
+	}' ; then
+	# Both are 0 so no checking needed.
+	exit 0
+fi
 
 if [[ -n ${FILE} ]]; then
 	IMAGE_FILES="${FILE}"
 else
 	IMAGE_FILES="$( find . -maxdepth 1 -type f -iname "${FILENAME}"-\*."${EXTENSION}" )"
 fi
-ERROR_WORDS="Huffman|Bogus|Corrupt|Invalid|Trunc|Missing|insufficient image data|no decode delegate|no images defined"
+
+ERROR_WORDS="Huffman|Bogus|Corrupt|Invalid|Trunc|Missing"
+ERROR_WORDS+="|insufficient image data|no decode delegate|no images defined"
+
 # Reduce writes to disk if possible.  This script is normally called once for each file,
 # and most files are good so no output is created and hence no reason to create a temporary
 # OUTPUT file.  Only use OUTPUT if we're doing a whole directory at once,
@@ -158,43 +170,52 @@ for f in ${IMAGE_FILES} ; do
 			# Do NOT set BAD since this isn't necessarily a problem with the file.
 			echo -e "${RED}***${ME}: ERROR: 'convert ${f}' failed; leaving file.${NC}" >&2
 			echo -e "Message=${MEAN}" >&2
-		elif [[ -z ${MEAN} ]]; then
+			continue
+		fi
+		if [[ -z ${MEAN} ]]; then
 			# Do NOT set BAD since this isn't necessarily a problem with the file.
 			echo -e "${RED}***${ME}: ERROR: 'convert ${f}' returned nothing; leaving file.${NC}" >&2
-		elif echo "${MEAN}" | grep -E -q "${ERROR_WORDS}"; then
+			continue
+		fi
+
+		if echo "${MEAN}" | grep -E --quiet "${ERROR_WORDS}"; then
 			# At least one error word was found in the output.
 			# Get rid of unnecessary error text, and only look at first line of error message.
-			BAD="'${f}' (corrupt file: $( echo "${MEAN}" | sed -e 's;convert-im6.q16: ;;' -e 's; @ error.*;;' -e 's; @ warning.*;;' -e q ))"
+			BAD="'${f}' (corrupt file: "
+			BAD+="$( echo "${MEAN}" | sed -e 's;convert-im6.q16: ;;' -e 's; @ error.*;;' -e 's; @ warning.*;;' -e q ))"
+			continue
+
 		else
 			# MEAN is a number between 0.0 and 1.0, but it may have format:
 			#	6.90319e-06
-			# which "bc" doesn't accept.
-			# LOW and HIGH are from 0 to 100 so first multiple the MEAN by 100
-			# to match the LOW and HIGH.
-			MEAN=$( echo "${MEAN}" | awk '{ printf("%0.2f", $1 * 100); }' )
+			# which "bc" doesn't accept so use awk.
+			# LOW and HIGH are also between 0.0 and 1.0.
 
-			# Since the shell doesn't do floating point math and we want the user to
-			# be able to specify up to two digits precision,
-			# multiple everything by 100 and convert to integer.
+			# Since the shell doesn't do floating point math and we want up to
+			# 5 digits precision, multiple everything by 100000 and convert to integer.
+			# We can then use bash math with the *_CHECK values.
 			# Awk handles the "e-" format.
-			MEAN_CHECK=$( echo "${MEAN}"	| awk '{ printf("%d", $1 * 100); }' )
-			HIGH_CHECK=$( echo "${HIGH}"	| awk '{ printf("%d", $1 * 100); }' )
-			LOW_CHECK=$( echo "${LOW}"		| awk '{ printf("%d", $1 * 100); }' )
+			MEAN_CHECK=$( echo "${MEAN}"	| awk '{ printf("%d", $1 * 100000); }' )
+			HIGH_CHECK=$( echo "${HIGH}"	| awk '{ printf("%d", $1 * 100000); }' )
+			LOW_CHECK=$( echo "${LOW}"		| awk '{ printf("%d", $1 * 100000); }' )
 
+			if [[ ${DEBUG} == "true" ]]; then
+				echo -n "${ME}: ${FILE}: MEAN=${MEAN}, MEAN_CHECK=${MEAN_CHECK},"
+				echo " LOW_CHECK=${LOW_CHECK}, HIGH_CHECK=${HIGH_CHECK}"
+			fi
 			MSG=""
-
-			if [[ ${HIGH} != "0" ]]; then		# Use the HIGH check
-				if [[ $( echo "${MEAN_CHECK} > ${HIGH_CHECK}" | bc ) -eq 1 ]]; then
-					BAD="'${f}' (above threshold: MEAN=${MEAN}, threshold = ${HIGH})"
+			if [[ ${HIGH_CHECK} -ne 0 ]]; then
+				if [[ ${MEAN_CHECK} -gt ${HIGH_CHECK} ]]; then
+					BAD="'${f}' (MEAN of ${MEAN} is above high threshold of ${HIGH})"
 				elif [[ ${DEBUG} == "true" ]]; then
 					MSG="===== OK: ${f}, MEAN=${MEAN}, HIGH=${HIGH}, LOW=${LOW}"
 				fi
 			fi
 
 			# An image can't be both HIGH and LOW so if it was HIGH don't check for LOW.
-			if [[ ${BAD} == "" && ${LOW} != "0" ]]; then
-				if [[ $( echo "${MEAN_CHECK} < ${LOW_CHECK}" | bc ) -eq 1 ]]; then
-					BAD="'${f}' (below threshold: MEAN=${MEAN}, threshold = ${LOW})"
+			if [[ ${BAD} == "" && ${LOW_CHECK} -ne 0 ]]; then
+				if [[ ${MEAN_CHECK} -lt ${LOW_CHECK} ]]; then
+					BAD="'${f}' (MEAN of ${MEAN} is below low threshold of ${LOW})"
 				elif [[ ${DEBUG} == "true" && ${MSG} == "" ]]; then
 					MSG="===== OK: ${f}, MEAN=${MEAN}, HIGH=${HIGH}, LOW=${LOW}"
 				fi

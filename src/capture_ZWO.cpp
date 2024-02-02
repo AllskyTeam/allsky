@@ -155,7 +155,6 @@ void *SaveImgThd(void *para)
 			break;
 		}
 
-		bSavingImg = true;
 
 		// I don't know how to cast "st" to 0, so call now() and ignore it.
 		auto st = std::chrono::high_resolution_clock::now();
@@ -164,49 +163,52 @@ void *SaveImgThd(void *para)
 		bool result = false;
 		if (pRgb.data)
 		{
+			bSavingImg = true;
+
 			char cmd[1100+strlen(CG.allskyHome)];
-			Log(4, "  > Saving %s image '%s'\n", CG.takeDarkFrames ? "dark" : dayOrNight.c_str(), CG.finalFileName);
-			snprintf(cmd, sizeof(cmd), "%s/scripts/saveImage.sh %s '%s'", CG.allskyHome, dayOrNight.c_str(), CG.fullFilename);
+			Log(4, "  > Saving %s image '%s'\n",
+				CG.takeDarkFrames ? "dark" : dayOrNight.c_str(), CG.finalFileName);
+			snprintf(cmd, sizeof(cmd), "%s/scripts/saveImage.sh %s '%s'",
+				CG.allskyHome, dayOrNight.c_str(), CG.fullFilename);
 			add_variables_to_command(CG, cmd, exposureStartDateTime);
 			strcat(cmd, " &");
 
-			st = std::chrono::high_resolution_clock::now();
 			try
 			{
+				st = std::chrono::high_resolution_clock::now();
 				result = imwrite(CG.fullFilename, pRgb, compressionParameters);
+				et = std::chrono::high_resolution_clock::now();
 			}
 			catch (const cv::Exception& ex)
 			{
 				Log(0, "*** %s: ERROR: Exception saving image: %s\n", CG.ME, ex.what());
 			}
-			et = std::chrono::high_resolution_clock::now();
 
 			if (result)
+			{
 				system(cmd);
+
+				static int totalSaves = 0;
+				static double totalTime_ms = 0;
+
+				totalSaves++;
+				long long diff_us = std::chrono::duration_cast<std::chrono::microseconds>(et - st).count();
+				double diff_ms = diff_us / US_IN_MS;
+				totalTime_ms += diff_ms;
+
+				Log(4, "  > Image took %'.1f ms to save (average %'.1f ms).\n",
+					diff_ms, totalTime_ms / totalSaves);
+			}
 			else
+			{
 				Log(0, "*** %s: ERROR: Unable to save image '%s'.\n", CG.ME, CG.fullFilename);
+			}
+
+			bSavingImg = false;
 
 		} else {
 			// This can happen if the program is closed before the first picture.
 			Log(0, "----- SaveImgThd(): pRgb.data is null\n");
-		}
-		bSavingImg = false;
-
-		if (result)
-		{
-			static int totalSaves = 0;
-			static double totalTime_ms = 0;
-			totalSaves++;
-// FIX: should be / ?
-			long long diff_us = std::chrono::duration_cast<std::chrono::microseconds>(et - st).count();
-			double diff_ms = diff_us / US_IN_MS;
-			totalTime_ms += diff_ms;
-			char const *x;
-			if (diff_ms > 1 * MS_IN_SEC)
-				x = "  > *****\n";	// indicate when it takes a REALLY long time to save
-			else
-				x = "";
-			Log(4, "%s  > Image took %'.1f ms to save (average %'.1f ms).\n%s", x, diff_ms, totalTime_ms / totalSaves, x);
 		}
 
 		pthread_mutex_unlock(&mtxSaveImg);
@@ -225,7 +227,7 @@ void *SaveImgThd(void *para)
 // eg. box size 0x0, box size WxW, box crosses image edge, ... basically
 // anything that would read/write out-of-bounds
 
-int computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox)
+double computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox)
 {
 	unsigned char *buf = imageBuffer;
 	const int histogramEntries = 256;
@@ -259,8 +261,6 @@ int computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox
 	// For RGB24, data for each pixel is stored in 3 consecutive bytes: blue, green, red.
 	// For all image types, each row in the image contains one row of pixels.
 	// currentBpp doesn't apply to rows, just columns.
-//x int on = 0;
-//x static int did = 0; did++;
 	switch (cg.imageType) {
 	case IMG_RGB24:
 	case IMG_RAW8:
@@ -275,7 +275,6 @@ int computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox
 					avg += buf[i+1] + buf[i+2];
 					avg /= currentBpp;
 				}
-//x if (useHistogramBox && did <=5) { printf("avg[%d]=%d\n", ++on, avg); }
 				histogram[avg]++;
 			}
 		}
@@ -288,7 +287,6 @@ int computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox
 				// Use the least significant byte.
 				// This assumes the image data is laid out in big endian format.
 				pixelValue = buf[i+1];
-//x if (useHistogramBox && did <=5) { printf("pixel[%d]=0x%02x%02x, pixelValue=%'d\n", ++on, buf[i], buf[i+1], pixelValue); }
 				histogram[pixelValue]++;
 			}
 		}
@@ -298,12 +296,10 @@ int computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox
 	}
 
 	// Now calculate the mean.
-	int meanBin = 0;
 	int a = 0, b = 0;
 	for (int i = 0; i < histogramEntries; i++) {
 		a += (i+1) * histogram[i];
 		b += histogram[i];
-//x if (useHistogramBox && histogram[i] > 0 && did <=5) { printf("histogram[%d]=%'d, a=%'d, b=%'d\n", i, histogram[i], a, b); }
 	}
 
 	if (b == 0)
@@ -312,8 +308,8 @@ int computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox
 		return(0);
 	}
 
-	meanBin = a/b - 1;
-	return meanBin;
+	// Need to normalize from 0.0 to 1.0.
+	return ((a/b - 1) / (double)histogramEntries);
 }
 
 // This is based on code from PHD2.
@@ -583,9 +579,9 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 	tempBuf[0] = '\0';
 	char *tb = tempBuf;
 
-	cg->lastMean = (double)computeHistogram(imageBuffer, *cg, true);
-	sprintf(tb, " @ mean %d, %sgain %ld",
-		(int) cg->lastMean, cg->currentAutoGain ? "(auto) " : "", (long) cg->lastGain);
+	cg->lastMean = computeHistogram(imageBuffer, *cg, true);
+	sprintf(tb, " @ mean %.3f, %sgain %ld",
+		cg->lastMean, cg->currentAutoGain ? "(auto) " : "", (long) cg->lastGain);
 	cg->lastExposure_us = cg->currentExposure_us;
 
 	// Per ZWO, when in manual-exposure mode, the returned exposure length
@@ -1349,9 +1345,6 @@ int main(int argc, char *argv[])
 		CG.myModeMeanSetting.minMean = CG.myModeMeanSetting.currentMean - CG.myModeMeanSetting.currentMean_threshold;
 		CG.myModeMeanSetting.maxMean = CG.myModeMeanSetting.currentMean + CG.myModeMeanSetting.currentMean_threshold;
 
-		CG.myModeMeanSetting.minMean *= 255;	// our algorithm compares to 0 - 255
-		CG.myModeMeanSetting.maxMean *= 255;
-
 		Log(3, "minMean=%.3f, maxMean=%.3f\n", CG.myModeMeanSetting.minMean, CG.myModeMeanSetting.maxMean);
 
 
@@ -1497,8 +1490,8 @@ int main(int argc, char *argv[])
 
 					attempts = 0;
 
-					int minAcceptableMean = CG.myModeMeanSetting.minMean;
-					int maxAcceptableMean = CG.myModeMeanSetting.maxMean;
+					double minAcceptableMean = CG.myModeMeanSetting.minMean;
+					double maxAcceptableMean = CG.myModeMeanSetting.maxMean;
 					long tempMinExposure_us = CG.cameraMinExposure_us;
 					long tempMaxExposure_us = CG.cameraMaxExposure_us;
 					long newExposure_us = 0;
@@ -1508,9 +1501,9 @@ int main(int argc, char *argv[])
 					// When that happens we don't want to set the min to the second exposure
 					// or else we'll never get low enough.
 					// Negative is below lower limit, positive is above upper limit.
-					int priorMean = NOT_SET;		// The mean for the image before the last one.
-					int priorMeanDiff = 0;
-					int lastMeanDiff = 0;	// like priorMeanDiff but for next exposure
+					double priorMean = NOT_SET;		// The mean for the image before the last one.
+					double priorMeanDiff = 0.0;
+					double lastMeanDiff = 0.0;	// like priorMeanDiff but for next exposure
 					int numPingPongs = 0;
 
 					if (CG.lastMean < minAcceptableMean)
@@ -1526,8 +1519,8 @@ int main(int argc, char *argv[])
 					while ((CG.lastMean < minAcceptableMean || CG.lastMean > maxAcceptableMean) &&
 						    ++attempts <= maxHistogramAttempts)
 					{
-						int acceptableMean;
-						float multiplier = 1.10;
+						double acceptableMean;
+						double multiplier = 1.10;
 						char const *acceptableType;
 						if (CG.lastMean < minAcceptableMean) {
 							acceptableMean = minAcceptableMean;
@@ -1535,24 +1528,23 @@ int main(int argc, char *argv[])
 						} else {
 							acceptableMean = maxAcceptableMean;
 							acceptableType = "max";
-							multiplier = 1 / multiplier;
+							multiplier = 1.0 / multiplier;
 						}
 
 						// If lastMean/acceptableMean is 9/90, it's 1/10th of the way there,
 						// so multiple exposure by 90/9 (10).
 						// ZWO cameras don't appear to be linear so increase the multiplier amount some.
-						float multiply;
-						if (CG.lastMean == 0) {
+						double multiply;
+						if (CG.lastMean == 0.0) {
 							// TODO: is this correct?
-							multiply = ((double)acceptableMean) * multiplier;
+							multiply = acceptableMean * multiplier;
 						} else {
-							multiply = ((double)acceptableMean / CG.lastMean) * multiplier;
+							multiply = (acceptableMean / CG.lastMean) * multiplier;
 						}
 						long exposureDiff_us = (CG.lastExposure_us * multiply) - CG.lastExposure_us;
 						long exposureDiffBeforeAgression_us = exposureDiff_us;
 
 						// Adjust by aggression setting.
-//x						if (CG.aggression != 100 && CG.currentSkipFrames <= 0 && exposureDiff_us != 0)
 						if (CG.aggression != 100 && exposureDiff_us != 0)
 						{
 							exposureDiff_us *= (float)CG.aggression / 100;
@@ -1566,27 +1558,27 @@ int main(int argc, char *argv[])
 								newExposure_us, CG.currentMaxAutoExposure_us);
 							newExposure_us = CG.currentMaxAutoExposure_us;
 						} else {
-							Log(3, "    > Next exposure change: %'ld us (%'ld pre agression) to %'ld (* %.3f) [CG.lastExposure_us=%'ld, %sAcceptableMean=%d, CG.lastMean=%d]\n",
+							Log(3, "    > Next exposure change: %'ld us (%'ld pre agression) to %'ld (* %.3f) [CG.lastExposure_us=%'ld, %sAcceptableMean=%.3f, CG.lastMean=%.3f]\n",
 								exposureDiff_us, exposureDiffBeforeAgression_us,
 								newExposure_us, multiply, CG.lastExposure_us,
-								acceptableType, acceptableMean, (int)CG.lastMean);
+								acceptableType, acceptableMean, CG.lastMean);
 						}
 
-						if (priorMeanDiff > 0 && lastMeanDiff < 0)
+						if (priorMeanDiff > 0.0 && lastMeanDiff < 0.0)
 						{ 
 							++numPingPongs;
-							Log(2, "    > xxx lastMean was %d and went from %d above max of %d to %d below min of %d, is now at %d;\n",
+							Log(2, "    > xxx lastMean was %.3f and went from %.3f above max of %.3f to %.3f below min of %.3f, is now at %.3f;\n",
 								priorMean, priorMeanDiff, maxAcceptableMean, -lastMeanDiff,
-									minAcceptableMean, (int)CG.lastMean);
+									minAcceptableMean, CG.lastMean);
 						} 
 						else
 						{
-							if (priorMeanDiff < 0 && lastMeanDiff > 0)
+							if (priorMeanDiff < 0.0 && lastMeanDiff > 0.0)
 							{
 								++numPingPongs;
-								Log(2, "    > xxx lastMean was %d and went from %d below min of %d to %d above max of %d, is now at %d;\n",
+								Log(2, "    > xxx lastMean was %.3f and went from %.3f below min of %.3f to %.3f above max of %.3f, is now at %.3f;\n",
 									priorMean, -priorMeanDiff, minAcceptableMean, lastMeanDiff,
-									maxAcceptableMean, (int)CG.lastMean);
+									maxAcceptableMean, CG.lastMean);
 							}
 							else
 							{
@@ -1660,7 +1652,7 @@ if (saved_newExposure_us != newExposure_us)
 							else if (CG.lastMean > maxAcceptableMean)
 								lastMeanDiff = CG.lastMean - maxAcceptableMean;
 							else
-								lastMeanDiff = 0;
+								lastMeanDiff = 0.0;
 
 							continue;
 						}
@@ -1684,13 +1676,13 @@ if (saved_newExposure_us != newExposure_us)
 					if (CG.lastMean >= minAcceptableMean && CG.lastMean <= maxAcceptableMean)
 					{
 						// +++ at end makes it easier to see in log file
-						Log(2, "  > Good image: mean %d within range of %d to %d ++++++++++\n",
-							(int)CG.lastMean, minAcceptableMean, maxAcceptableMean);
+						Log(2, "  > Good image: mean %.3f within range of %.3f to %.3f +++++++++\n",
+							CG.lastMean, minAcceptableMean, maxAcceptableMean);
 					}
 					else if (attempts > maxHistogramAttempts)
 					{
-						 Log(2, "  > max attempts reached - using exposure of %s with mean %d\n",
-							length_in_units(CG.currentExposure_us, true), (int)CG.lastMean);
+						 Log(2, "  > max attempts reached - using exposure of %s with mean %.3f\n",
+							length_in_units(CG.currentExposure_us, true), CG.lastMean);
 					}
 					else if (attempts >= 1)
 					{
@@ -1744,21 +1736,21 @@ if (saved_newExposure_us != newExposure_us)
 						}
 						else
 						{
-							Log(2, "  > Stopped trying, using exposure of %s with mean %d, min=%d, max=%d\n",
+							Log(2, "  > Stopped trying, using exposure of %s with mean %.3f, min=%.3f, max=%.3f\n",
 								length_in_units(CG.currentExposure_us, false),
-								(int)CG.lastMean, minAcceptableMean, maxAcceptableMean);
+								CG.lastMean, minAcceptableMean, maxAcceptableMean);
 						}
 						 
 					}
 					else if (CG.currentExposure_us == CG.cameraMinExposure_us)
 					{
-						Log(3, "  > Did not make any additional attempts - at min exposure limit of %s, mean %d\n",
-							length_in_units(CG.cameraMinExposure_us, false), (int)CG.lastMean);
+						Log(3, "  > Did not make any additional attempts - at min exposure limit of %s, mean %.3f\n",
+							length_in_units(CG.cameraMinExposure_us, false), CG.lastMean);
 					}
 					else if (CG.currentExposure_us == CG.cameraMaxExposure_us)
 					{
-						Log(3, "  > Did not make any additional attempts - at max exposure limit of %s, mean %d\n",
-							length_in_units(CG.cameraMaxExposure_us, false), (int)CG.lastMean);
+						Log(3, "  > Did not make any additional attempts - at max exposure limit of %s, mean %.3f\n",
+							length_in_units(CG.cameraMaxExposure_us, false), CG.lastMean);
 					}
 
 				} else {

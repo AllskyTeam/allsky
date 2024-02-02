@@ -952,26 +952,16 @@ and are updated by clicking on the WebUI's
 	consider changing this to "false".
 	</td>
 </tr>
-<tr><td><span class="shSetting">REMOVE_BAD_IMAGES</span></td>
-	<td>true</td>
-	<td>Remove corrupt or too bright/too dark images and their
-	thumbnails before generating keograms, startrails, and timelapse videos?
-	<br><b>We suggest always leaving this turned on</b>;
-	if images are being removed that you want to keep, change the
-	<span class="shSetting">*_THRESHOLD_*<span> values below.</td>
-</tr>
 <tr><td><span class="shSetting">REMOVE_BAD_IMAGES_THRESHOLD_LOW</span></td>
 	<td>1</td>
 	<td>Images whose mean brightness is below this percent will be removed.
 	Set to <code>0</code> to disable this check.
-	<br>Only applies if <span class="shSetting">REMOVE_BAD_IMAGES</span> is "true".
 	</td>
 </tr>
 <tr><td><span class="shSetting">REMOVE_BAD_IMAGES_THRESHOLD_HIGH</span></td>
 	<td>90</td>
 	<td>Images whose mean brightness is above this percent will be removed (max: 100).
 	Set to <code>0</code> to disable this check.
-	<br>Only applies if <span class="shSetting">REMOVE_BAD_IMAGES</span> is "true".
 	</td>
 </tr>
 

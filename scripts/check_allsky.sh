@@ -490,12 +490,6 @@ fi
 		echo "'Daytime Capture' is off but 'Daytime Save' is on in the WebUI."
 	fi
 
-	if [[ ${REMOVE_BAD_IMAGES} != "true" ]]; then
-		heading "Warnings"
-		echo "REMOVE_BAD_IMAGES is not 'true'."
-		echo We HIGHLY recommend setting it to 'true' unless you are debugging issues.
-	fi
-
 	##### Uploads
 	if [[ ${RESIZE_UPLOADS} == "true" && ${IMG_UPLOAD} == "false" ]]; then
 		heading "Warnings"
@@ -588,7 +582,7 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 
 	##### Make sure these booleans have boolean values, or are blank.
 	for i in IMG_UPLOAD IMG_UPLOAD_ORIGINAL_NAME IMG_RESIZE CROP_IMAGE AUTO_STRETCH \
-		RESIZE_UPLOADS IMG_CREATE_THUMBNAILS REMOVE_BAD_IMAGES TIMELAPSE UPLOAD_VIDEO \
+		RESIZE_UPLOADS IMG_CREATE_THUMBNAILS TIMELAPSE UPLOAD_VIDEO \
 		TIMELAPSE_UPLOAD_THUMBNAIL TIMELAPSE_MINI_FORCE_CREATION TIMELAPSE_MINI_UPLOAD_VIDEO \
 		TIMELAPSE_MINI_UPLOAD_THUMBNAIL KEOGRAM UPLOAD_KEOGRAM \
 		STARTRAILS UPLOAD_STARTRAILS POST_END_OF_NIGHT_DATA
@@ -666,21 +660,20 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 		heading "Errors"
 		echo "BRIGHTNESS_THRESHOLD (${BRIGHTNESS_THRESHOLD}) must be 0.0 - 1.0"
 	fi
-	if [[ ${REMOVE_BAD_IMAGES} == "true" ]]; then
-		if ! is_number "${REMOVE_BAD_IMAGES_THRESHOLD_LOW}" || \
-			! echo "${REMOVE_BAD_IMAGES_THRESHOLD_LOW}" | \
-			awk '{if ($1 < 0.0) exit 1; exit 0; }' ; then
-			heading "Errors"
-			echo "REMOVE_BAD_IMAGES_THRESHOLD_LOW (${REMOVE_BAD_IMAGES_THRESHOLD_LOW}) must be 0 - 100.0,"
-			echo "although it's normally around 0.5.  0 disables the low threshold check."
-		fi
-		if ! is_number "${REMOVE_BAD_IMAGES_THRESHOLD_HIGH}" || \
-			! echo "${REMOVE_BAD_IMAGES_THRESHOLD_HIGH}" | \
-			awk '{if ($1 < 0.0) exit 1; exit 0; }' ; then
-			heading "Errors"
-			echo "REMOVE_BAD_IMAGES_THRESHOLD_HIGH (${REMOVE_BAD_IMAGES_THRESHOLD_HIGH}) must be 0 - 100.0,"
-			echo "although it's normally around 90.  0 disables the high threshold check."
-		fi
+
+	if ! is_number "${REMOVE_BAD_IMAGES_THRESHOLD_LOW}" || \
+		! echo "${REMOVE_BAD_IMAGES_THRESHOLD_LOW}" | \
+		awk '{if ($1 < 0.0) exit 1; exit 0; }' ; then
+		heading "Errors"
+		echo "REMOVE_BAD_IMAGES_THRESHOLD_LOW (${REMOVE_BAD_IMAGES_THRESHOLD_LOW}) must be 0 - 100.0,"
+		echo "although it's normally around 0.5.  0 disables the low threshold check."
+	fi
+	if ! is_number "${REMOVE_BAD_IMAGES_THRESHOLD_HIGH}" || \
+		! echo "${REMOVE_BAD_IMAGES_THRESHOLD_HIGH}" | \
+		awk '{if ($1 < 0.0) exit 1; exit 0; }' ; then
+		heading "Errors"
+		echo "REMOVE_BAD_IMAGES_THRESHOLD_HIGH (${REMOVE_BAD_IMAGES_THRESHOLD_HIGH}) must be 0 - 100.0,"
+		echo "although it's normally around 90.  0 disables the high threshold check."
 	fi
 
 	##### If images are being resized or cropped,

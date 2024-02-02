@@ -104,6 +104,24 @@
 					setting was deleted because it produced better results
 					so is now always used.
 				</li>
+				<li>The <span class="shSetting">REMOVE_BAD_IMAGES</span> setting was deleted to
+					keep people from disabling the check.
+					In addition to "too dark" and "too light" images, images that are empty
+					and corrupt are also checked for, and those images would keep timelapses
+					from being created.
+					<br>
+					If you don't want to run the brightness checks set their THRESHOLDS to 0.
+				</li>
+				<li>Checking the brightness of an image is quicker since the mean brightness
+					determined by the capture programs is used rather than recalculating
+					the brightness.
+					<blockquote class="warning">
+					The capture programs look at the center
+					of an image to determine its brightness whereas the whole image
+					(including any dark borders) was used in the last release.
+					<strong>You may need to adjust your thresholds.</strong>
+					</blockquote>
+				</li>
 				<li>The <span class="WebUISetting">Brightness</span> settings
 					were deleted since there is no need for them.
 					Changes to brightness should be done via the

@@ -196,8 +196,8 @@ void *SaveImgThd(void *para)
 				double diff_ms = diff_us / US_IN_MS;
 				totalTime_ms += diff_ms;
 
-				Log(4, "  > Image took %'.1f ms to save (average %'.1f ms).\n%s",
-					diff_ms, totalTime_ms / totalSaves, x);
+				Log(4, "  > Image took %'.1f ms to save (average %'.1f ms).\n",
+					diff_ms, totalTime_ms / totalSaves);
 			}
 			else
 			{

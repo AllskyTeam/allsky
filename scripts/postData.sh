@@ -20,7 +20,7 @@ usage_and_exit()
 	{
 		echo
 		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-		echo "Usage: ${ME} [--help] [--debug] [--settingsOnly] [--websites w] [--allfiles]"
+		echo "Usage: ${ME} [--help] [--settingsOnly] [--websites w] [--allfiles]"
 		[[ ${RET} -ne 0 ]] && echo -en "${NC}"
 		echo "    where:"
 		echo "      '--allfiles' causes all 'view settings' files to be uploaded"
@@ -31,18 +31,12 @@ usage_and_exit()
 # If called from the WebUI, it displays our output so don't call addMessage.sh.
 FROM_WEBUI="false"
 HELP="false"
-DEBUG="false"
-DEBUG_ARG=""
 SETTINGS_ONLY="false"
 ALL_FILES="false"
 RET=0
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in		# lower case
-		--debug)
-			DEBUG="true"
-			DEBUG_ARG="--debug"
-			;;
 		--help)
 			HELP="true"
 			;;

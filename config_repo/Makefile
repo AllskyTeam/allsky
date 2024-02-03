@@ -24,7 +24,7 @@ ifeq ($(PKGBUILD),)
 endif
 
 
-CONFIGFILES := config.sh ftp-settings.sh 
+ENVFILE := env.json
 UNINSTALLFILES := $(DESTDIR)$(sysconfdir)/logrotate.d/allsky $(DESTDIR)$(sysconfdir)/rsyslog.d/allsky.conf $(DESTDIR)$(sysconfdir)/systemd/system/allsky.service $(DESTDIR)$(sysconfdir)/systemd/system/allskyperiodic.service
 
 %:
@@ -60,14 +60,14 @@ createDirs:
 
 .PHONY : createDirs
 
-$(CONFIGFILES):
+$(ENVFILE):
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/allsky/$@ ]; then \
 	  echo `date +%F\ %R:%S` Copying default $@; \
 	  install -m 0644 $@.repo $(DESTDIR)$(sysconfdir)/allsky/$@; \
 	fi
-.PHONY : $(CONFIGFILES)
+.PHONY : $(ENVFILE)
 
-install: createDirs $(CONFIGFILES)
+install: createDirs $(ENVFILE)
 	@echo `date +%F\ %R:%S` Setting up udev rules...
 	@install -D -m 0644 asi.rules $(DESTDIR)$(sysconfdir)/udev/rules.d/
 	@echo `date +%F\ %R:%S` Setting up logging...
@@ -86,22 +86,21 @@ else # Not in package build mode ######################################
 remove_configs:
 	@echo `date +%F\ %R:%S` Removing config path and files ../config
 	@rm -rf ../config
-
 .PHONY : remove_configs
 
 createDirs:
 	@echo `date +%F\ %R:%S` Creating directory structures...
 	@if [ ! -e ../config ]; then mkdir -p ../config; chown $(SUDO_USER):$(SUDO_USER) ../config; fi
-
 .PHONY : createDirs
-$(CONFIGFILES):
-	@if [ ! -e ../config/$@ ]; then \
-	  echo `date +%F\ %R:%S` Copying default $@; \
-	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) $@.repo ../config/$@; \
-	fi
-.PHONY : $(CONFIGFILES)
 
-install: createDirs $(CONFIGFILES)
+$(ENVFILE):
+	@if [ ! -e ../$@ ]; then \
+	  echo `date +%F\ %R:%S` Copying default .$@; \
+	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) $@.repo ../$@; \
+	fi
+.PHONY : $(ENVFILE)
+
+install: createDirs $(ENVFILE)
 	@echo `date +%F\ %R:%S` Setting up udev rules...
 	@install -D -m 0644 asi.rules $(DESTDIR)$(sysconfdir)/udev/rules.d/
 	@echo `date +%F\ %R:%S` Setting up logging...

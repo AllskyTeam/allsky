@@ -29,13 +29,14 @@ This page describes how to install and upgrade Allsky.
 </p>
 <p>
 After Allsky is running and you've configured it to your satisfaction,
-you may want to install the Allsky Website on your Pi and/or on a remote server.
-See the <a allsky="true" href="AllskyWebsite.html">Allsky Website Installation</a> page for details.
+you may want to install the Allsky Website on a remote server.
+See the <a allsky="true" href="AllskyWebsite.html">Allsky Website Installation</a>
+page for details.
 </p>
 <blockquote>
 This release of Allsky has many updates so we suggest
 you <b>install the newest <a href="https://www.raspberrypi.com/software/">Raspberry Pi OS</a>
-(Bullseye) on your Pi</b>,
+(Bookworm 64-bit) on your Pi</b>,
 before installing this release of Allsky.
 You'll first need to save any files, images, etc. to a USB drive, PC, Mac, or another device,
 then install the new Pi operating system (OS), and then restore your files before installing Allsky.
@@ -48,30 +49,6 @@ the Pi after the new OS is installed.
 Copying your old files is then a breeze.
 </blockquote>
 
-<h2>Install AllSky in a different location (advanced)</h2>
-<details><summary></summary>
-
-<blockquote>
-Only advanced users should consider installing Allsky in a different location.
-All the documentation assumes it's installed in the default location,
-so it may be more difficult to troubleshoot if it's elsewhere.
-</blockquote>
-<p>
-By default, Allsky is installed as the login "pi" in <span class="fileName">/home/pi/allsky</span>.
-The name <span class="fileName">allsky</span> can not be changed,
-but you can install Allsky in a different directory
-(which usually means it'll run as a different login).
-For example, to install in <span class="fileName">/home/mylogin</span>
-and run as the "mylogin" user, do the following before installing Allsky:
-<pre>
-sudo mkdir /home/mylogin      <span class="pl-c"># if not already there</span>
-sudo addgroup mylogin sudo    <span class="pl-c"># allows Allsky to execute system commands</span>
-cd /home/mylogin
-</pre>
-After the above, continue with the steps below.
-</details>
-
-
 <h2>If a version of Allsky already exists</h2>
 <details><summary></summary>
 <p>
@@ -82,22 +59,22 @@ sudo systemctl stop allsky
 cd
 </pre>
 
-then perform one of the steps below:
+then perform <strong>one</strong> of the steps below:
 </p>
-<ol class="minimalPadding">
+<ol>
 	<li>To <b>upgrade</b> the old version:
-	<pre>mv allsky allsky-OLD         <span class="pl-c"># The installation looks for this directory</span></pre>
+	<pre>mv  allsky  allsky-OLD         <span class="pl-c"># The installation looks for this directory</span></pre>
 
 	<li>To <b>save</b> the old version but not use it:
 	<br>
-	<pre>mv allsky allsky-SAVED</pre>
+	<pre>mv  allsky  allsky-SAVED</pre>
 	At some point you'll want to delete the SAVED version so it doesn't take disk space.
 
 	<li>To <b>delete</b> the old version.
 		Only select this option if you're sure you don't want any saved
 		images, darks, and configuration settings.
 	Either way, execute:
-	<pre>rm -fr allsky</pre>
+	<pre>rm  -fr  allsky</pre>
 </ol>
 <p>
 Continue to the <a href="#PreInstallation">Pre installation</a> section.
@@ -128,12 +105,6 @@ These only need to be done once.
 
 <h2 id="Installation">Installation</h2>
 <details><summary></summary>
-<blockquote>
-Unlike prior versions of AllSky this version requires that the camera be
-connected prior to starting the installation process.
-During installation, the camera model will be automatically determined
-and the appropriate minimum, maximum, and default settings populated in the WebUI.
-</blockquote>
 <p>
 The following commands will put the new release of Allsky in <span class="fileName">~/allsky</span>.
 Except for some system files, all Allsky and Allsky Website-related files reside in this directory.
@@ -141,13 +112,13 @@ Except for some system files, all Allsky and Allsky Website-related files reside
 
 <pre>
 cd
-git clone --recursive https://github.com/AllskyTeam/allsky.git
+git clone --recursive --depth=1 https://github.com/AllskyTeam/allsky.git   # "--depth=1" is new
 cd allsky
 ./install.sh</pre>
 <p>
 The <code>git clone</code> will take a couple minutes and should produce output similar to
 what's below.
-The new <span class="fileName">allsky</span> directory is approximately 150 MB after download.
+The new <span class="fileName">allsky</span> directory is approximately 50 MB after download.
 <pre>
 Cloning into 'allsky'...
 remote: Enumerating objects: 16464, done.
@@ -173,7 +144,7 @@ These prompts include:
 <ul>
 	<li>New host name, if not the default of <b>allsky</b>.
 		If you have more than one Pi on the same network they must all have unique names.
-		For example, if you have a test Pi you may want to call it <span class="fileName">allsky-test</span>.
+		For example, if you have a test Pi you may want to call it <strong>allsky-test</strong>.
 	<li>Adding swap space if needed.
 		Swap space effectively increases the amount of memory your Pi has.
 		Insufficient swap space is one of the leading causes of timelapse video creations problems.
@@ -187,16 +158,12 @@ It's highly recommended to accept the defaults.
 <p>
 During installation you'll be notified of any actions you need
 to take when the installation completes.
-If there are any such actions, the first time Allsky runs after the reboot it will stop and:
-<ul>
-	<li>add those actions to the log file
-	<li>display an image telling you to see the log file
-	<li>display a message in the WebUI (which you should clear when done performing the actions)
-</ul>
+If there are any such actions, the first time Allsky runs after the reboot it will stop and
+display a message in the WebUI (which you should clear when done performing the actions).
 </p>
 <p>
 <blockquote>
-Parts of the installation take up to an hour, depending on how many package
+Parts of the installation <i>may</i> take up to an hour, depending on how many package
 you already have installed and the speed of your Pi.
 Subsequent installations of Allsky will be significantly faster.
 </blockquote>
@@ -208,15 +175,7 @@ Subsequent installations of Allsky will be significantly faster.
 <details><summary></summary>
 <p>
 After installation, reboot if told to,
-then perform any actions the installation script identified.
-</p>
-<blockquote>
-If instructed to copy the contents of a prior configuration file to the new release,
-it's important to manually copy the <b>values</b>
-from the old file to the new file and <b>not</b> copy the entire file.
-</blockquote>
-
-After the reboot, do the following:
+then perform any actions the installation script identified and do the following:
 <ol>
 	<li>Bring up the WebUI by entering
 		<code>http://allsky.local</code> or
@@ -231,7 +190,7 @@ After the reboot, do the following:
 	<li>Make any necessary changes.
 	<li>Click on the
 		<span class="btn btn-primary btn-not-real btn-small">Save changes</span> button.
-		Allsky will (re)start.
+		Allsky will start.
 </ol>
 </details>
 
@@ -243,6 +202,7 @@ AllSky starts automatically when the Raspberry Pi boots up.
 To enable or disable this behavior, use these commands:
 <pre>
 sudo systemctl enable allsky     <span class="shellComment"># starts the software when the Pi boots up</span>
+<span class="shellComment">#   OR</span>
 sudo systemctl disable allsky    <span class="shellComment"># does NOT automatically start the software</span>
 </pre>
 
@@ -260,8 +220,8 @@ Tip: Add lines like the following to <span class="fileName">~/.bashrc</span> to 
 <pre>
 alias start='sudo systemctl start allsky'
 </pre>
-You will then only need to type <code>start</code> to start Allsky.
-Do this for <b>stop</b> and <b>restart</b> as well.
+You then only need to type <code>start</code> to start Allsky.
+Do this for the other commands as well.
 </blockquote>
 </p>
 
@@ -290,6 +250,30 @@ but if you need to do so run <code>systemctl start lighttpd</code>.
 </blockquote>
 </p>
 </details>
+
+<h2>Install AllSky in a different location (advanced)</h2>
+<details><summary></summary>
+
+<blockquote>
+Only advanced users should consider installing Allsky in a different location.
+All the documentation assumes it's installed in the default location,
+so it may be more difficult to troubleshoot if it's elsewhere.
+</blockquote>
+<p>
+By default, Allsky is installed as the login "pi" in <span class="fileName">/home/pi/allsky</span>.
+The name <span class="fileName">allsky</span> can not be changed,
+but you can install Allsky in a different directory
+(which usually means it'll run as a different login).
+For example, to install in <span class="fileName">/home/mylogin</span>
+and run as the "mylogin" user, do the following before installing Allsky:
+<pre>
+sudo mkdir /home/mylogin      <span class="pl-c"># if not already there</span>
+sudo addgroup mylogin sudo    <span class="pl-c"># allows Allsky to execute system commands</span>
+cd /home/mylogin
+</pre>
+After the above, perform the steps above.
+</details>
+
 
 
 </div><!-- Layout-main -->

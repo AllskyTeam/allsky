@@ -53,6 +53,20 @@
 			</blockquote>
 
 			<ul>
+				<li>The <span class="fileName">config.sh</span>
+					and <span class="fileName">ftp-settings.sh</span>
+					files are gone - their settings are now in the WebUI.
+					<br><span class="possibleAction">Possible action: </span>
+					The installation <strong>should </strong>migrate all your settings
+					to the WebUI but you are strongly encouraged to check they are correct.
+				</li>
+				<li>The CROP settings have been simplified.
+					You now specifiy the number of pixels to crop from
+					the top, right, bottom, and left.
+					<br><span class="possibleAction">Possible action: </span>
+					If you used the CROP settings you'll need to re-enter
+					them using the new fields.
+				</li>
 				<li>Checking the brightness of an image is quicker since the mean brightness
 					determined by the capture program is used rather than recalculating
 					the brightness.
@@ -60,7 +74,7 @@
 					of an image to determine its brightness whereas
 					the last release looked at the whole image including any dark borders.
 					<br><span class="possibleAction">Possible action: </span>
-					You may need to adjust your thresholds.
+					You may need to adjust your
 					<span class="WebUISetting">Remove Bad Images Thresholds</span>.
 				</li>
 				<li>The <span class="WebUISetting">Remove Bad Images Thresholds</span>

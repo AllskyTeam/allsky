@@ -147,6 +147,7 @@ if [[ $( settings ".takedaytimeimages" ) == "true" && \
 	else
 		THUMB="${THUMBNAILS_DIR}/${FILENAME}-$( date +'%Y%m%d%H%M%S' ).${EXTENSION}"
 
+		#shellcheck disable=SC2153
 		if ! convert "${CURRENT_IMAGE}" -resize "${THUMBNAIL_SIZE_X}x${THUMBNAIL_SIZE_Y}" "${THUMB}" ; then
 			echo -e "${YELLOW}*** ${ME}: WARNING: THUMBNAIL resize failed; continuing.${NC}"
 		fi

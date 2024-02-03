@@ -9,14 +9,10 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
 ME="$( basename "${BASH_ARGV0}" )"
 
-#shellcheck disable=SC1091 source-path=.
+#shellcheck source-path=.
 source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
-#shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit "${EXIT_ERROR_STOP}"
-#shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 usage_and_exit()
 {
@@ -38,7 +34,6 @@ HELP="false"
 DEBUG="false"
 DEBUG_ARG=""
 SETTINGS_ONLY="false"
-WEBSITES_TO_DO=""
 ALL_FILES="false"
 RET=0
 while [[ $# -gt 0 ]]; do
@@ -50,10 +45,6 @@ while [[ $# -gt 0 ]]; do
 			;;
 		--help)
 			HELP="true"
-			;;
-		--websites)
-			WEBSITES_TO_DO="${2}"
-			shift
 			;;
 		--allfiles)
 			ALL_FILES="true"
@@ -76,48 +67,6 @@ while [[ $# -gt 0 ]]; do
 done
 [[ ${RET} -ne 0 ]] && usage_and_exit ${RET}
 [[ ${HELP} = "true" ]] && usage_and_exit 0
-
-WEBSITES="$( whatWebsites )"
-# Make sure a local or remote Allsky Website exists.
-if [[ ${WEBSITES} == "none" ]]; then
-	echo -e "${YELLOW}${ME}: WARNING: No local or remote website found.${NC}" >&2
-	exit 0		# It's not an error
-fi
-
-if [[ ${DEBUG} == "true" ]]; then
-	echo -e "${wDEBUG}WEBSITES=${WEBSITES}, WEBSITES_TO_TO=${WEBSITES_TO_DO}${NC}"
-fi
-# Make sure we have the specified Website(s).
-if [[ -n ${WEBSITES_TO_DO} && ${WEBSITES_TO_DO} != "${WEBSITES}" ]]; then
-	case "${WEBSITES_TO_DO}" in
-		local | remote | both)
-			;;
-		*)
-	  		MSG="Invalid requested Website type: ${WEBSITES_TO_DO}. Must be 'local', 'remote', or 'both'"
-			echo -e "${RED}${ME}: ERROR: ${MSG}" >&2
-			exit 1
-			;;
-	esac
-	if [[ ( ${WEBSITES_TO_DO} == "local"  && ${WEBSITES} != "both") ||
-		  ( ${WEBSITES_TO_DO} == "remote" && ${WEBSITES} != "both") ]]; then
-	  	MSG="Requested Website type '${WEBSITES_TO_DO}' does not exist. Valid Websites='${WEBSITES}'."
-		echo -e "${RED}${ME}: ERROR: ${MSG}" >&2
-		exit 1
-	fi
-
-	WEBSITES="${WEBSITES_TO_DO}"
-fi
-
-if [[ ${WEBSITES} == "local" || ${WEBSITES} == "both" ]]; then
-	HAS_LOCAL_WEBSITE="true"
-else
-	HAS_LOCAL_WEBSITE="false"
-fi
-if [[ ${WEBSITES} == "remote" || ${WEBSITES} == "both" ]]; then
-	HAS_REMOTE_WEBSITE="true"
-else
-	HAS_REMOTE_WEBSITE="false"
-fi
 
 if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	OK="true"
@@ -184,8 +133,9 @@ fi
 
 function upload_file()
 {
-	local FILE_TO_UPLOAD="${1}"
-	local DIRECTORY="${2}"		# Directory to put file in
+	local WHERE="${1}"
+	local FILE_TO_UPLOAD="${2}"
+	local DIRECTORY="${3}"		# Directory to put file in
 	if [[ ! -f ${FILE_TO_UPLOAD} ]]; then
 		MSG="File to upload '${FILE_TO_UPLOAD}' not found."
 		echo -e "${RED}${ME}: ERROR: ${MSG}.${NC}" >&2
@@ -195,78 +145,30 @@ function upload_file()
 		return 1
 	fi
 
-	local RETCODE=0
-	local S="${DIRECTORY:0:1}"
-
-	# Copy to local Allsky Website if it exists.
-	if [[ ${HAS_LOCAL_WEBSITE} == "true" ]]; then
-
-		# If ${DIRECTORY} isn't "" and doesn't start with "/", add one.
-		if [[ -n ${S} && ${S} != "/" ]]; then
-			S="/"
-		else
-			S=""
-		fi
-
-		TO="${ALLSKY_WEBSITE}${S}${DIRECTORY}"
-		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}cp '${FILE_TO_UPLOAD}' '${TO}'${wNC}"
-
-		if ! ERR="$( cp "${FILE_TO_UPLOAD}" "${TO}" 2>&1 )" ; then
-			MSG="Unable to copy '${FILE_TO_UPLOAD}' to '${ALLSKY_WEBSITE}':"
-			MSG="${MSG}\n  ${ERR}"
-			echo -e "${RED}${ME}: ERROR: ${MSG}.${NC}" >&2
-			if [[ ${FROM_WEBUI} == "false" ]]; then
-				"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${MSG}"
-			fi
-			RETCODE=1
-		fi
-	fi
-
-	# Upload to remote Website if there is one.
-	if [[ ${HAS_REMOTE_WEBSITE} == "true" ]]; then
-
-		# Need a "/" to separate when both variables exist.
-		if [[ -n ${IMAGE_DIR} ]]; then
-			[[ -n ${S} && ${S} != "/" ]] && S="/"
-		else
-			S=""
-		fi
-
-		# Copy relative to ${IMAGE_DIR}
-		TO="${IMAGE_DIR}${S}${DIRECTORY}"
-		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Uploading '${FILE_TO_UPLOAD}' to ${TO:-root}${wNC}"
-
-		"${ALLSKY_SCRIPTS}/upload.sh" --silent ${DEBUG_ARG} \
-			"${FILE_TO_UPLOAD}" \
-			"${TO}" \
-			"" \
-			"PostData"
-		if [[ $? -ne 0 ]]; then
-			MSG="Unable to upload '${FILE_TO_UPLOAD}'"
-			echo -e "${RED}${ME}: ${MSG}.${NC}" >&2
-			if [[ ${FROM_WEBUI} == "false" ]]; then
-				"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${MSG}"
-			fi
-			RETCODE=1
-		fi
-	fi
-
-	return "${RETCODE}"
+	#shellcheck disable=SC2086
+	upload_all ${WHERE} "${FILE_TO_UPLOAD}" "${DIRECTORY}" "" "PostData"
+	return $?
 }
 
 # These files go in ${VIEW_DIR} so the user can display their settings.
 # This directory is in the root of the Allsky Website.
 # Assume if the first upload fails they all will, so exit.
-upload_file "${SETTINGS_FILE}" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}" || exit $?
+WEB_ONLY="--local-web --remote-web"
+upload_file "${WEB_ONLY}" "${SETTINGS_FILE}" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}" \
+	|| exit "$?"
 
 if [[ ${ALL_FILES} == "true" ]]; then
-	upload_file "${OPTIONS_FILE}" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
-	upload_file "${ALLSKY_WEBUI}/includes/allskySettings.php" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
-	upload_file "${ALLSKY_DOCUMENTATION}/css/custom.css" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
+	upload_file "${WEB_ONLY}" "${OPTIONS_FILE}" \
+		"${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
+	upload_file "${WEB_ONLY}" "${ALLSKY_WEBUI}/includes/allskySettings.php" \
+		"${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
+	upload_file "${WEB_ONLY}" "${ALLSKY_DOCUMENTATION}/css/custom.css" \
+		"${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
 fi
 
 if [[ ${SETTINGS_ONLY} == "false" ]]; then
-	upload_file "${OUTPUT_FILE}" ""			# Goes in top-level directory
+	# Some remote servers may want to see this file so upload everywhere.
+	upload_file "" "${OUTPUT_FILE}" ""		# Goes in top-level directory
 	exit "$?"
 fi
 

@@ -6,8 +6,6 @@
 source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
-#shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit "${EXIT_ERROR_STOP}"
 
 trap "exit 0" SIGTERM SIGINT
 
@@ -15,12 +13,11 @@ cd "${ALLSKY_SCRIPTS}"						|| exit "${EXIT_ERROR_STOP}"
 
 while :
 do
-  DELAY=$(jq ".periodictimer" "${ALLSKY_MODULES}/module-settings.json")
-
 	activate_python_venv
 	python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event periodic
 	deactivate_python_venv
 
+	DELAY=$( settings ".periodictimer" "${ALLSKY_MODULES}/module-settings.json" )
 	if [[ ! (${DELAY} =~ ^[0-9]+$) ]]; then
 		DELAY=60
 	fi

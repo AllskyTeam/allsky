@@ -281,6 +281,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 		# Create a thumbnail of the image for faster load in the WebUI.
 		# If we resized above, this will be a resize of a resize,
 		# but for thumbnails that should be ok.
+		#shellcheck disable=SC2153
 		convert "${CURRENT_IMAGE}" -resize "${THUMBNAIL_SIZE_X}x${THUMBNAIL_SIZE_Y}" "${THUMBNAILS_DIR}/${IMAGE_NAME}"
 		if [ $? -ne 0 ] ; then
 			echo -e "${YELLOW}*** ${ME}: WARNING: THUMBNAIL resize failed; continuing.${NC}"

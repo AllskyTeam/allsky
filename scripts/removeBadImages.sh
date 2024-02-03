@@ -11,12 +11,10 @@
 
 ME="$( basename "${BASH_ARGV0}" )"
 
-#shellcheck disable=SC1091 source-path=.
+#shellcheck source-path=.
 source "${ALLSKY_HOME}/variables.sh" 		|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
-#shellcheck disable=SC1091				# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh" 		|| exit "${EXIT_ERROR_STOP}"
 
 usage_and_exit()
 {
@@ -86,11 +84,13 @@ if [[ ${FILE} != "" && ! -f ${DIRECTORY}/${FILE} ]]; then
 	exit 2
 fi
 
+HIGH="$( settings ".imageremovebadhigh" )"
+LOW="$( settings ".imageremovebadlow" )"
 if [[ $( settings ".takedarkframes" ) == "true" ]]; then
 	# Disable low brightness check since darks will have extremely low brightness.
 	# Set the high value to something a dark frame should never get to.
-	REMOVE_BAD_IMAGES_THRESHOLD_LOW=0.00000
-	REMOVE_BAD_IMAGES_THRESHOLD_HIGH=0.01000	# 1%
+	LOW=0.00000
+	HIGH=0.01000	# 1%
 fi
 
 # Find the full size image-*jpg and image-*png files (not the thumbnails) and
@@ -110,8 +110,6 @@ cd "${DIRECTORY}" || exit 99
 
 # If the LOW threshold is 0 or < 0 it's disabled.
 # If the HIGH threshold is 0 or 1.0 (nothing can be brighter than 1.0) it's disabled.
-LOW="${REMOVE_BAD_IMAGES_THRESHOLD_LOW:-0.0}"
-HIGH="${REMOVE_BAD_IMAGES_THRESHOLD_HIGH:-0.0}"
 if echo "${LOW}" "${HIGH}" |
 	awk '{
 		l=$1;
@@ -258,7 +256,7 @@ else
 		BAD_LIMIT=5
 		if [[ $((BAD_COUNT % BAD_LIMIT)) -eq 0 ]]; then
 			MSG="Multiple consecutive bad images."
-			MSG="${MSG}\nCheck 'REMOVE_BAD_IMAGES_THRESHOLD_LOW' and 'REMOVE_BAD_IMAGES_THRESHOLD_HIGH' in config.sh"
+			MSG+="\nCheck 'REMOVE_BAD_IMAGES_THRESHOLD_LOW' and 'REMOVE_BAD_IMAGES_THRESHOLD_HIGH' in config.sh"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}" >&2
 		fi
 		if [[ ${BAD_COUNT} -ge "${BAD_LIMIT}" ]]; then

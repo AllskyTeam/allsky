@@ -80,7 +80,6 @@ WEB_CONFIG_FILE=""
 HAS_WEBSITE_RET=""
 WEBSITES=""		# local, remote, both, none
 SHOW_POSTDATA_MESSAGE="true"
-TWILIGHT_DATA_CHANGED="false"
 CAMERA_TYPE_CHANGED="false"
 GOT_WARNING="false"
 SHOW_ON_MAP=""
@@ -413,10 +412,6 @@ do
 					exit 0
 				fi
 			fi
-
-			SHOW_POSTDATA_MESSAGE="false"	# user doesn't need to see this output
-			CAMERA_TYPE_CHANGED="true"
-			NEEDS_RESTART="true"
 			;;
 
 		"type")

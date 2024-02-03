@@ -24,8 +24,6 @@ fi
 
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
-#shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"						|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
@@ -93,6 +91,8 @@ fi
 
 USE_NOTIFICATION_IMAGES="$( settings ".notificationimages" )"		|| exit "${EXIT_ERROR_STOP}"
 LOCALE="$( settings ".locale" )"									|| exit "${EXIT_ERROR_STOP}"
+UHUBCTL_PATH="$( settings ".uhubctlpath" )"							|| exit "${EXIT_ERROR_STOP}"
+UHUBCTL_PORT="$( settings ".uhubctlport" )"							|| exit "${EXIT_ERROR_STOP}"
 
 if [[ -z ${CAMERA_TYPE} ]]; then
 	MSG="FATAL ERROR: 'Camera Type' not set in WebUI."
@@ -107,10 +107,10 @@ pgrep "${ME}" | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
 if [[ ${CAMERA_TYPE} == "RPi" ]]; then
 	# "true" means use doExit() on error
-	RPi_COMMAND="-cmd $( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" )"
+	RPi_COMMAND_TO_USE="$( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" )"
 
 elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
-	RPi_COMMAND=""
+	RPi_COMMAND_TO_USE=""
 	RESETTING_USB_LOG="${ALLSKY_TMP}/resetting_USB.txt"
 	ZWO_VENDOR="03c3"
 	TEMP="${ALLSKY_TMP}/${CAMERA_TYPE}_cameras.txt"

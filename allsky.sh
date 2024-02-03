@@ -91,8 +91,6 @@ fi
 
 USE_NOTIFICATION_IMAGES="$( settings ".notificationimages" )"		|| exit "${EXIT_ERROR_STOP}"
 LOCALE="$( settings ".locale" )"									|| exit "${EXIT_ERROR_STOP}"
-UHUBCTL_PATH="$( settings ".uhubctlpath" )"							|| exit "${EXIT_ERROR_STOP}"
-UHUBCTL_PORT="$( settings ".uhubctlport" )"							|| exit "${EXIT_ERROR_STOP}"
 
 if [[ -z ${CAMERA_TYPE} ]]; then
 	MSG="FATAL ERROR: 'Camera Type' not set in WebUI."
@@ -295,12 +293,12 @@ python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --cleartimings
 deactivate_python_venv
 
 # Run the main program - this is the main attraction...
-# ${RPi_COMMAND} needs to come first since the capture_RPi code checks for it first.
+# ${RPi_COMMAND_TO_USE} needs to come first since the capture_RPi code checks for it first.
 # Pass debuglevel on command line so the capture program knows right away
 # if it should display debug output.
 
 #shellcheck disable=SC2086
-"${ALLSKY_BIN}/${CAPTURE}" ${RPi_COMMAND} -debuglevel "${ALLSKY_DEBUG_LEVEL}" -config "${ARGS_FILE}"
+"${ALLSKY_BIN}/${CAPTURE}" ${RPi_COMMAND_TO_USE} -debuglevel "${ALLSKY_DEBUG_LEVEL}" -config "${ARGS_FILE}"
 RETCODE=$?
 
 if [[ ${RETCODE} -eq ${EXIT_OK} ]]; then

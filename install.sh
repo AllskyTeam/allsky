@@ -27,8 +27,8 @@ SETTINGS_FILE_NAME="$( basename "${SETTINGS_FILE}" )"
 FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"	# should a default settings file be created?
 RESTORED_PRIOR_SETTINGS_FILE="false"
 PRIOR_SETTINGS_FILE=""					# Full pathname to the prior settings file, if it exists
-COPIED_PRIOR_CONFIG_SH="false"			# prior config.sh restored?
-COPIED_PRIOR_FTP_SH="false"				# prior ftp-settings.sh restored?
+COPIED_PRIOR_CONFIG_SH="false"			# prior config.sh's settings copied to settings file?
+COPIED_PRIOR_FTP_SH="false"				# prior ftp-settings.sh's settings copied to settings file?
 SUGGESTED_NEW_HOST_NAME="allsky"		# Suggested new host name
 NEW_HOST_NAME=""						# User-specified host name
 BRANCH="${GITHUB_MAIN_BRANCH}"			# default branch
@@ -39,20 +39,19 @@ REBOOT_NEEDED="true"					# Is a reboot needed at end of installation?
 CONFIGURATION_NEEDED="true"				# Does Allsky need to be configured at end of installation?
 
 ##### Allsky versions.   ${ALLSKY_VERSION} is set in variables.sh
-# TODO: uncomment if needed:    ALLSKY_BASE_VERSION="$( remove_point_release "${ALLSKY_VERSION}" )"
-	# First Allsky version that used the "version" file.
-	# It's also when ftp-settings.sh moved to the ${ALLSKY_CONFIG} directory.
-FIRST_VERSION_VERSION="v2022.03.01"
-	# Versions before ${FIRST_VERSION_VERSION} that didn't have version numbers.
-PRE_FIRST_VERSION_VERSION="old"
-
+##xxx TODO: uncomment:    ALLSKY_BASE_VERSION="$( remove_point_release "${ALLSKY_VERSION}" )"
+	# Base of first version with combined configuration files and all lowercase setting names.
+COMBINED_BASE_VERSION="v2024.xx.xx"				#xxxxxxx TODO: update when release name is final
 	# Base of first version with CAMERA_TYPE instead of CAMERA in config.sh and
 	# "cameratype" in the settings file.
 FIRST_CAMERA_TYPE_BASE_VERSION="v2023.05.01"
 	# When ALLSKY_SCRIPTS was added to PATH, requiring a reboot:
 SCRIPTS_PATH_ADDED_VERSION="v2023.05.01_04"
-	# Base of first version with combined configuration files and all lowercase setting names.
-COMBINED_BASE_VERSION="v2024.xx.xx"				#xxxxxxx TODO: update when release name is final
+	# First Allsky version that used the "version" file.
+	# It's also when ftp-settings.sh moved to ${ALLSKY_CONFIG}
+FIRST_VERSION_VERSION="v2022.03.01"
+	# Versions before ${FIRST_VERSION_VERSION} that didn't have version numbers.
+PRE_FIRST_VERSION_VERSION="old"
 
 ##### Information on the prior Allsky version, if used
 PRIOR_ALLSKY_STYLE=""			# Set to the style if they have a prior version
@@ -269,8 +268,8 @@ get_connected_cameras()
 		ZWO_MODEL="$( echo "${Z}" |
 				awk '{if ($1 == "iProduct") { print $3; exit 0; }}' )"
 		display_msg --log progress "ZWO ${ZWO_MODEL} camera found."
-		[[ -n ${CC} ]] && CC="${CC} "
-		CC="${CC}ZWO"
+		[[ -n ${CC} ]] && CC+=" "
+		CC+="ZWO"
 	fi
 
 	if [[ -z ${CC} ]]; then
@@ -393,7 +392,6 @@ select_camera_type()
 
 	display_msg --log progress "Using user-selected ${CAMERA_TYPE} ${CAMERA_MODEL} camera."
 	STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
-
 	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
 
@@ -612,8 +610,8 @@ ask_reboot()
 	fi
 
 	AT="     http://${NEW_HOST_NAME}.local\n"
-	AT="${AT}or\n"
-	AT="${AT}     http://$( hostname -I | sed -e 's/ .*$//' )"
+	AT+="or\n"
+	AT+="     http://$( hostname -I | sed -e 's/ .*$//' )"
 
 	if [[ ${REBOOT_NEEDED} == "false" ]]; then
 		MSG="\nAfter installation you can connect to the WebUI at:\n${AT}"
@@ -878,10 +876,10 @@ install_webserver_et_al()
 	else
 		display_msg --log progress "Installing the web server."
 		TMP="${ALLSKY_LOGS}/lighttpd.install.log"
-		(
+		{
 			sudo apt-get update && \
 				sudo apt-get --assume-yes install lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
-		) > "${TMP}" 2>&1
+		} > "${TMP}" 2>&1
 		check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" ||
 			exit_with_image 1 "${STATUS_ERROR}" "lighttpd installation failed"
 	fi
@@ -1115,7 +1113,7 @@ check_old_WebUI_location()
 	display_msg --log notice "${MSG}"
 	echo -e "\n\n==========\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 
-	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }
 
 
@@ -1226,7 +1224,7 @@ get_desired_locale()
 		# Must be no space between the last double quote and ${INSTALLED_LOCALES}.
 		#shellcheck disable=SC2086
 		MSG="Got usage message from whiptail: D='${D}', INSTALLED_LOCALES="${INSTALLED_LOCALES}
-		MSG=+="\n  Fix the problem and try the installation again."
+		MSG+="\n  Fix the problem and try the installation again."
 		display_msg --log error "${MSG}"
 		exit_installation 1 "${STATUS_ERROR}" "Got usage message from whitail."
 	fi
@@ -1720,7 +1718,7 @@ convert_settings()			# prior_file, new_file
 					continue
 					;;
 				# Deleted in ${COMBINED_BASE_VERSION}
-				"daybrightness" | "nightbrightness" | "showbrightness")
+				"brightness" | "daybrightness" | "nightbrightness" | "showbrightness")
 					MSG="The 'Brightness' settings were removed."
 					MSG+="\nUse the 'Target Mean' settings to adjust brightness."
 					display_msg --log info "${MSG}"
@@ -1746,9 +1744,15 @@ convert_settings()			# prior_file, new_file
 				"nightmaxgain")
 					F="nightmaxautogain"
 					;;
+				"websiteurl")
+					F="remotewebsiteurl"
+					;;
+				"imageurl")
+					F="remotewebsiteimageurl"
+					;;
 
 				# These now have day and night versions.
-				"awb"|"autowhitebalance")
+				"awb" | "autowhitebalance")
 					F="awb"
 					update_json_file ".day${F}" "${V}" "${NEW_FILE}"
 					F="night${F}"
@@ -1778,16 +1782,6 @@ convert_settings()			# prior_file, new_file
 
 			update_json_file ".${F}" "${V}" "${NEW_FILE}"
 		done
-
-	##### Fields whose location changed.
-	x="$( get_variable "DAYTIME_CAPTURE" "${PRIOR_CONFIG_FILE}" )"
-	[[ -n ${x} ]] && update_json_file ".takedaytimeimages" "${x}" "${NEW_FILE}"
-
-	x="$( get_variable "DAYTIME_SAVE" "${PRIOR_CONFIG_FILE}" )"
-	[[ -n ${x} ]] && update_json_file ".savedaytimeimages" "${x}" "${NEW_FILE}"
-
-	x="$( get_variable "DARK_FRAME_SUBTRACTION" "${PRIOR_CONFIG_FILE}" )"
-	[[ -n ${x} ]] && update_json_file ".usedarkframes" "${x}" "${NEW_FILE}"
 
 	##### New fields not already handled in loop above.
 	# If they are already in PRIOR_FILE then they are also in NEW_FILE.
@@ -1856,6 +1850,248 @@ doV()
 	fi
 }
 
+# Copy everything from old config.sh to the settings file.
+convert_config_sh()
+{
+	[[ ${convert_config_sh} == "true" ]] && return 0
+
+	local OLD_CONFIG_FILE="${1}"
+	local NEW_FILE="${2}"
+
+	if [[ ! -e ${OLD_CONFIG_FILE} ]]; then
+		display_msg --log info "No prior config.sh file to process."
+		return 1
+	fi
+
+	display_msg --log progress "Copying contents of prior config.sh to the settings file."
+	(
+		#shellcheck disable=SC1090
+		if ! source "${OLD_CONFIG_FILE}" ; then
+			display_msg --log error "Unable to process prior config.sh file (${OLD_CONFIG_FILE})."
+			return 1
+		fi
+
+		local X		# temporary variable
+
+		if [[ -n ${DAYTIME} ]]; then		# old name
+			X="${DAYTIME}"
+		else
+			X="${DAYTIME_CAPTURE}"
+		fi
+		if [[ -n ${CAPTURE_24HR} ]]; then	# old name
+			X="${CAPTURE_24HR}"
+		else
+			X="${DAYTIME_SAVE}"
+		fi
+		doV "X" ".savedaytimeimages" "boolean" "${NEW_FILE}"
+
+		doV "DARK_FRAME_SUBTRACTION" ".usedarkframes" "boolean" "${NEW_FILE}"
+
+		# IMG_UPLOAD no longer used; instead, upload if FREQUENCY > 0.
+		# shellcheck disable=SC2034
+		[[ ${IMG_UPLOAD} != "true" ]] && IMG_UPLOAD_FREQUENCY=0
+		doV "IMG_UPLOAD_FREQUENCY" ".imageuploadfrequency" "number" "${NEW_FILE}"
+
+		# IMG_RESIZE no longer used; only resize if width and height are > 0.
+		if [[ -n ${IMG_WIDTH} && ${IMG_WIDTH} -gt 0 && -n ${IMG_HEIGHT} && ${IMG_HEIGHT} -gt 0 ]];
+		then
+			doV "IMG_WIDTH" ".imageresizewidth" "number" "${NEW_FILE}"
+			doV "IMG_HEIGHT" ".imageresizeheight" "number" "${NEW_FILE}"
+		else
+			MSG="Ignoring IMG_RESIZE since IMG_WIDTH (${IMG_WIDTH}) and/or IMG_HEIGHT (${IMG_HEIGHT}) are not positive numbers."
+			display_msg --log info "${MSG}"
+			X=0; doV "X" ".imageresizewidth" "number" "${NEW_FILE}"
+			X=0; doV "X" ".imageresizeheight" "number" "${NEW_FILE}"
+		fi
+
+		# CROP_IMAGE, CROP_WIDTH, CROP_HEIGHT, CROP_OFFSET_X, and CROP_OFFSET_Y are no longer used.
+		# Instead the user specifies the number of pixels to crop from the top, right, bottom, and left.
+		# It's too difficult to convert old numbers to new, so force the user to enter new numbers.
+		# We'd need to know actual number of image pixels, bin level, and .width and .height to get
+		# the effective width and height, then convert.
+		if [[ ${CROP_IMAGE} == "true" ]]; then
+			MSG="The way to specify cropping images has changed."
+			MSG="${MSG}You need to reenter your crop settings."
+			MSG="${MSG}\nSpecify the amount to crop from the top, right, bottom, and left."
+			display_msg --log info "${MSG}"
+			X=0; doV "X" ".imagecroptop" "number" "${NEW_FILE}"
+			X=0; doV "X" ".imagecropright" "number" "${NEW_FILE}"
+			X=0; doV "X" ".imagecropbottom" "number" "${NEW_FILE}"
+			X=0; doV "X" ".imagecropleft" "number" "${NEW_FILE}"
+		fi
+
+		# AUTOSTRETCH no longer used; only stretch if AMOUNT > 0 and MID_POINT != ""
+		X=0; doV "X" ".imagestretchamountdaytime" "number" "${NEW_FILE}"		# new
+		X=0; doV "X" ".imagestretchmidpointdaytime" "text" "${NEW_FILE}"		# new
+		# shellcheck disable=SC2034
+		[[ ${AUTOSTRETCH} != "true" || -n ${AUTOSTRETCH_MID_POINT} ]] && AUTOSTRETCH_AMOUNT=0
+		doV "AUTOSTRETCH_AMOUNT" ".imagestretchamountnighttime" "number" "${NEW_FILE}"
+		doV "AUTOSTRETCH_MID_POINT" ".imagestretchmidpointnighttime" "text" "${NEW_FILE}"
+
+		# RESIZE_UPLOADS no longer used; resize only if width > 0 and height > 0.
+		if [[ ${RESIZE_UPLOADS} != "true" ]]; then
+			# shellcheck disable=SC2034
+			RESIZE_UPLOADS_WIDTH=0;
+			# shellcheck disable=SC2034
+			RESIZE_UPLOADS_HEIGHT=0
+		fi
+		doV "RESIZE_UPLOADS_WIDTH" ".imageresizeuploadswidth" "number" "${NEW_FILE}"
+		doV "RESIZE_UPLOADS_HEIGHT" ".imageresizeuploadsheight" "number" "${NEW_FILE}"
+
+		doV "IMG_CREATE_THUMBNAILS" ".imagecreatethumbnails" "boolean" "${NEW_FILE}"
+
+		# REMOVE_BAD_IMAGES no longer used; remove only if low > 0 or high > 0.
+		if [[ ${REMOVE_BAD_IMAGES} != "true" ]]; then
+			# shellcheck disable=SC2034
+			REMOVE_BAD_IMAGES_THRESHOLD_LOW=0;
+			# shellcheck disable=SC2034
+			REMOVE_BAD_IMAGES_THRESHOLD_HIGH=0
+		fi
+		doV "REMOVE_BAD_IMAGES_THRESHOLD_LOW" ".imageremovebadlow" "number" "${NEW_FILE}"
+		doV "REMOVE_BAD_IMAGES_THRESHOLD_HIGH" ".imageremovebadhigh" "number" "${NEW_FILE}"
+
+		doV "TIMELAPSE" ".timelapsegenerate" "boolean" "${NEW_FILE}"
+		doV "TIMELAPSEWIDTH" ".timelapsewidth" "number" "${NEW_FILE}"
+		doV "TIMELAPSEHEIGHT" ".timelapseheight" "number" "${NEW_FILE}"
+		# We no longer include the trailing "k".
+		TIMELAPSE_BITRATE="${TIMELAPSE_BITRATE//k/}"
+		doV "TIMELAPSE_BITRATE" ".timelapsebitrate" "number" "${NEW_FILE}"
+		doV "FPS" ".timelapsefps" "number" "${NEW_FILE}"
+		doV "VCODEC" ".timelapsevcodec" "text" "${NEW_FILE}"
+		doV "PIX_FMT" ".timelapsepixfmt" "text" "${NEW_FILE}"
+		doV "FFLOG" ".timelapsefflog" "text" "${NEW_FILE}"
+		doV "KEEP_SEQUENCE" ".timelapsekeepsequence" "boolean" "${NEW_FILE}"
+		doV "TIMELAPSE_EXTRA_PARAMETERS" ".timelapseextraparameters" "text" "${NEW_FILE}"
+		doV "UPLOAD_VIDEO" ".timelapseupload" "boolean" "${NEW_FILE}"
+		doV "TIMELAPSE_UPLOAD_THUMBNAIL" ".timelapseuploadthumbnail" "boolean" "${NEW_FILE}"
+
+		doV "TIMELAPSE_MINI_IMAGES" ".minitimelapsenumimages" "number" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_FORCE_CREATION" ".minitimelapseforcecreation" "boolean" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_FREQUENCY" ".minitimelapsefrequency" "number" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_UPLOAD_VIDIO" ".minitimelapseupload" "boolean" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_UPLOAD_THUMBNAIL" ".minitimelapseuploadthumbnail" "boolean" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_FPS" ".minitimelapsefps" "number" "${NEW_FILE}"
+		TIMELAPSE_MINI_BITRATE="${TIMELAPSE_MINI_BITRATE//k/}"
+		doV "TIMELAPSE_MINI_BITRATE" ".minitimelapsebitrate" "number" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_WIDTH" ".minitimelapsewidth" "number" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_HEIGHT" ".minitimelapseheight" "number" "${NEW_FILE}"
+
+		doV "KEOGRAM" ".keogramgenerate" "boolean" "${NEW_FILE}"
+		doV "KEOGRAM_EXTRA_PARAMETERS" ".keogramextraparameters" "text" "${NEW_FILE}"
+		doV "UPLOAD_KEOGRAM" ".keogramupload" "boolean" "${NEW_FILE}"
+		X="true"; doV "X" ".keogramexpand" "boolean" "${NEW_FILE}"		# new
+		X="simplex"; doV "X" ".keogramfontname" "text" "${NEW_FILE}"	# new
+		X="#ffff"; doV "X" ".keogramfontcolor" "text" "${NEW_FILE}"		# new
+		X=1; doV "X" ".keogramfontsize" "text" "${NEW_FILE}"			# new
+		X=3; doV "X" ".keogramlinethickness" "text" "${NEW_FILE}"		# new
+
+		doV "STARTRAILS" ".startrailsgramgenerate" "boolean" "${NEW_FILE}"
+		doV "BRIGHTNESS_THRESHOLD" ".startrailsbrightnessthreshold" "number" "${NEW_FILE}"
+		doV "STARTRAILS_EXTRA_PARAMETERS" ".startrailsextraparameters" "text" "${NEW_FILE}"
+		doV "UPLOAD_STARTRAILS" ".startrailsupload" "boolean" "${NEW_FILE}"
+
+		[[ -z ${THUMBNAIL_SIZE_X} ]] && THUMBNAIL_SIZE_X=100
+		doV "THUMBNAIL_SIZE_X" ".thumbnailsizex" "number" "${NEW_FILE}"
+		[[ -z ${THUMBNAIL_SIZE_Y} ]] && THUMBNAIL_SIZE_Y=75
+		doV "THUMBNAIL_SIZE_Y" ".thumbnailsizey" "number" "${NEW_FILE}"
+
+		# NIGHTS_TO_KEEP was replaced by DAYS_TO_KEEP and the AUTO_DELETE boolean was deleted.
+		if [[ -n ${NIGHTS_TO_KEEP} && ${AUTO_DELETE} == "true" ]]; then
+			doV "NIGHTS_TO_KEEP" ".daystokeep" "number" "${NEW_FILE}"
+		else
+			doV "DAYS_TO_KEEP" ".daystokeep" "number" "${NEW_FILE}"
+		fi
+		doV "WEB_DAYS_TO_KEEP" ".daystokeeplocalwebsite" "number" "${NEW_FILE}"
+		X=0; doV "X" ".daystokeepremotewebsite" "number" "${NEW_FILE}"
+		doV "WEBUI_DATA_FILES" ".webuidatafiles" "text" "${NEW_FILE}"
+		doV "UHUBCTL_PATH" ".uhubctlpath" "text" "${NEW_FILE}"
+		doV "UHUBCTL_PORT" ".uhubctlport" "number" "${NEW_FILE}"
+
+	) || return 1
+
+	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
+	convert_config_sh="true"
+
+	return 0
+}
+
+# Copy everything from old ftp-settings.sh to the settings file.
+convert_ftp_sh()
+{
+	[[ ${convert_ftp_sh} == "true" ]] && return 0
+
+	local FTP_FILE="${1}"
+	local NEW_FILE="${2}"
+
+	if [[ ! -e ${FTP_FILE} ]]; then
+		display_msg --log info "No prior ftp-settings.sh file to process (${FTP_FILE})."
+		return 1
+	fi
+
+	display_msg --log progress "Copying contents of prior ftp-settings.sh to settings file."
+	(
+		#shellcheck disable=SC1090
+		if ! source "${FTP_FILE}" ; then
+			display_msg --log error "Unable to process prior ftp-settings.sh file (${FTP_FILE})."
+			return 1
+		fi
+
+		# Ignore the WEB_*_DIR entries - the user can no longer specify local directories.
+		# Ignore VIDEOS_DIR, KEOGRAM_DIR, STARTRAILS_DIR - the user can no longer specify them.
+		# Don't update REMOTEWEBSITE_* settings since they are new so have no prior value.
+
+		# "local" PROTOCOL means they're using local Website.
+		# WEB_IMAGE_DIR means they have both local and remote Website.
+		if [[ -d ${ALLSKY_WEBSITE} && (${PROTOCOL} == "local" || -n ${WEB_IMAGE_DIR}) ]]; then
+			X="true";  doV "X" ".uselocalwebsite" "boolean" "${NEW_FILE}"
+		else
+			X="false"; doV "X" ".uselocalwebsite" "boolean" "${NEW_FILE}"
+		fi
+		if [[ (-n ${PROTOCOL} && ${PROTOCOL} != "local") || -n ${REMOTE_HOST} ]]; then
+			doV "PROTOCOL" ".remotewebsiteprotocol" "text" "${NEW_FILE}"
+			doV "IMAGE_DIR" ".remotewebsiteimagedir" "text" "${NEW_FILE}"
+			X="true"; doV "X" ".useremotewebsite" "boolean" "${NEW_FILE}"
+		else
+			X=""; doV "X" ".remotewebsiteprotocol" "text" "${NEW_FILE}"
+			X=""; doV "X" ".remotewebsiteimagedir" "text" "${NEW_FILE}"
+			X="false"; doV "X" ".useremotewebsite" "boolean" "${NEW_FILE}"
+		fi
+		doV "IMG_UPLOAD_ORIGINAL_NAME" ".remotewebsiteimageuploadoriginalname" "boolean" "${NEW_FILE}"
+		doV "VIDEOS_DESTINATION_NAME" ".remotewebsitevideodestinationname" "text" "${ALLSKY_ENV}"
+		doV "KEOGRAM_DESTINATION_NAME" ".remotewebsitekeogramdestinationname" "text" "${ALLSKY_ENV}"
+		doV "STARTRAILS_DESTINATION_NAME" ".remotewebsitestartrailsdestinationname" "text" "${ALLSKY_ENV}"
+		# shellcheck disable=SC2034
+		[[ -n ${HOST} ]] && REMOTE_HOST="${HOST}"
+		doV "REMOTE_HOST" ".REMOTEWEBSITE_HOST" "text" "${ALLSKY_ENV}"
+		if [[ -z ${REMOTE_PORT} ]]; then
+			# Don't want a default value.
+			doV "REMOTE_PORT" ".REMOTEWEBSITE_PORT" "text" "${ALLSKY_ENV}"
+		else
+			doV "REMOTE_PORT" ".REMOTEWEBSITE_PORT" "number" "${ALLSKY_ENV}"
+		fi
+		# shellcheck disable=SC2034
+		[[ -n ${USER} ]] && REMOTE_USER="${USER}"
+		doV "REMOTE_USER" ".REMOTEWEBSITE_USER" "text" "${ALLSKY_ENV}"
+		# shellcheck disable=SC2034
+		[[ -n ${PASSWORD} ]] && REMOTE_PASSWORD="${PASSWORD}"
+		doV "REMOTE_PASSWORD" ".REMOTEWEBSITE_PASSWORD" "text" "${ALLSKY_ENV}"
+		doV "LFTP_COMMANDS" ".REMOTEWEBSITE_LFTP_COMMANDS" "text" "${ALLSKY_ENV}"
+		doV "SSH_KEY_FILE" ".REMOTEWEBSITE_SSH_KEY_FILE" "text" "${ALLSKY_ENV}"
+		doV "AWS_CLI_DIR" ".REMOTEWEBSITE_AWS_CLI_DIR" "text" "${ALLSKY_ENV}"
+		doV "S3_BUCKET" ".REMOTEWEBSITE_S3_BUCKET" "text" "${ALLSKY_ENV}"
+		doV "S3_ACL" ".REMOTEWEBSITE_S3_ACL" "text" "${ALLSKY_ENV}"
+		doV "GCS_BUCKET" ".REMOTEWEBSITE_GCS_BUCKET" "text" "${ALLSKY_ENV}"
+		doV "GCS_ACL" ".REMOTEWEBSITE_GCS_ACL" "text" "${ALLSKY_ENV}"
+
+		# Remote server
+		doV "IMG_UPLOAD_ORIGINAL_NAME" ".remoteserverimageuploadoriginalname" "boolean" "${NEW_FILE}"
+	) || return 1
+
+	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
+	convert_ftp_sh="true"
+
+	return 0
+}
 
 ####
 # Restore the prior settings file(s) if the user wanted to use them.
@@ -2160,107 +2396,49 @@ restore_prior_files()
 
 	# Do NOT restore options.json - it will be recreated.
 
-	# See if the prior config.sh and ftp-setting.sh are the same version as
-	# the new ones; if so, we can copy them to the new version.
-	# Currently what's in ${ALLSKY_CONFIG} are copies of the repo files.
-	COPIED_PRIOR_CONFIG_SH="false"		# Global variable
-	COPIED_PRIOR_FTP_SH="false"			# Global variable
+	# Done with restores, now the updates.
 
-	local CONFIG_SH_VERSION="$( get_variable "CONFIG_SH_VERSION" "${ALLSKY_CONFIG}/config.sh" )"
-	local PRIOR_CONFIG_SH_VERSION="$( get_variable "CONFIG_SH_VERSION" "${PRIOR_CONFIG_FILE}" )"
-	ITEM="${SPACE}'config.sh' file"
-	if [[ ${CONFIG_SH_VERSION} == "${PRIOR_CONFIG_SH_VERSION}" ]]; then
-		display_msg --log progress "${ITEM} (copying)"
-		cp "${PRIOR_CONFIG_FILE}" "${ALLSKY_CONFIG}" && COPIED_PRIOR_CONFIG_SH="true"
-	else
-		if [[ -z ${PRIOR_CONFIG_SH_VERSION} ]]; then
-			MSG="no prior version specified"
-		else
-			# v2023.05.01 is the last version with config.sh so don't
-			# bother writing a function to convert from the prior version to this.
-			MSG="prior version is old (${PRIOR_CONFIG_SH_VERSION})"
-		fi
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}: ${MSG}"
+	COPIED_PRIOR_CONFIG_SH="true"		# Global variable
+	if [[ -s ${PRIOR_CONFIG_FILE} ]]; then
+		# This copies the settings from the prior config file to the settings file.
+		convert_config_sh "${PRIOR_CONFIG_FILE}" "${SETTINGS_FILE}" || COPIED_PRIOR_CONFIG_SH="false"
 	fi
+	STATUS_VARIABLES+=( "COPIED_PRIOR_CONFIG_SH='${COPIED_PRIOR_CONFIG_SH}'\n" )
 
 	# The ftp-settings.sh file was originally in allsky/scripts but
 	# moved to allsky/config in version ${FIRST_VERSION_VERSION}.
+	# It no longer exists, but if a prior one exists copy its contents to the settings file.
 	# Get the current and prior (if any) file version.
-	local FTP_SH_VERSION="$( get_variable "FTP_SH_VERSION" "${ALLSKY_CONFIG}/ftp-settings.sh" )"
-	local PRIOR_FTP_SH_VERSION
-	if [[ -f ${PRIOR_FTP_FILE} ]]; then
-		# Allsky v2022.03.01 and newer. It doesn't have FTP_SH_VERSION.
-		PRIOR_FTP_SH_VERSION="$( get_variable "FTP_SH_VERSION" "${PRIOR_FTP_FILE}" )"
-		PRIOR_FTP_SH_VERSION="${PRIOR_FTP_SH_VERSION:-"no version"}"
+	if [[ -f ${PRIOR_FTP_FILE} ]]; then			# allsky/config version
+		# Version ${FIRST_VERSION_VERSION} and newer.
+		:
 	elif [[ -f ${PRIOR_ALLSKY_DIR}/scripts/ftp-settings.sh ]]; then
 		# pre ${FIRST_VERSION_VERSION}
 		PRIOR_FTP_FILE="${PRIOR_ALLSKY_DIR}/scripts/ftp-settings.sh"
-		PRIOR_FTP_SH_VERSION="old"
 	else
-		display_msg --log error "Unable to find prior ftp-settings.sh"
-		PRIOR_FTP_FILE=""
-		PRIOR_FTP_SH_VERSION="no file"
-	fi
-
-	ITEM="${SPACE}'ftp-settings.sh'"
-	if [[ ${FTP_SH_VERSION} == "${PRIOR_FTP_SH_VERSION}" ]]; then
-		display_msg --log progress "${ITEM} (copying)"
-		cp "${PRIOR_FTP_FILE}" "${ALLSKY_CONFIG}" && COPIED_PRIOR_FTP_SH="true"
-	else
-		if [[ ${PRIOR_FTP_SH_VERSION} == "no version" ]]; then
-			MSG=": unknown prior FTP_SH_VERSION"
-		elif [[ ${PRIOR_FTP_SH_VERSION} == "old" ]]; then
-			MSG=": old location so no FTP_SH_VERSION"
-		elif [[ ${PRIOR_FTP_SH_VERSION} != "no file" ]]; then
-			MSG=": unknown PRIOR_FTP_SH_VERSION: '${PRIOR_FTP_SH_VERSION}'"
+		if [[ -s ${PRIOR_CONFIG_FILE} ]]; then
+			# If there was a prior config file there should have been a prior ftp file.
+			display_msg --log error "Unable to find prior ftp-settings.sh (${PRIOR_FTP_FILE})."
 		fi
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}${MSG}"
+		PRIOR_FTP_FILE=""
 	fi
-
-	# Done with restores, now the updates.
-
-	STATUS_VARIABLES+=( "COPIED_PRIOR_CONFIG_SH='${COPIED_PRIOR_CONFIG_SH}'\n" )
+	COPIED_PRIOR_FTP_SH="true"			# Global variable
+	if [[ -s ${PRIOR_FTP_FILE} ]]; then
+		convert_ftp_sh "${PRIOR_FTP_FILE}" "${SETTINGS_FILE}" || COPIED_PRIOR_FTP_SH="false"
+	fi
 	STATUS_VARIABLES+=( "COPIED_PRIOR_FTP_SH='${COPIED_PRIOR_FTP_SH}'\n" )
-	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
+
 
 	if [[ ${COPIED_PRIOR_CONFIG_SH} == "true" && ${COPIED_PRIOR_FTP_SH} == "true" ]]; then
 		return 0
 	fi
 
-	if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
-		# The prior versions are similar to the new ones.
-		MSG=""
-		# If it has a version number it's probably close to the current version.
-		if [[ ${COPIED_PRIOR_CONFIG_SH} == "false" && -n ${PRIOR_CONFIG_SH_VERSION} ]]; then
-			MSG+="\nYour prior 'config.sh' file is similar to the new one."
-		fi
-		if [[ ${COPIED_PRIOR_FTP_SH} == "false" && ${PRIOR_FTP_SH_VERSION} == "no version" ]]; then
-			MSG+="\nYour prior 'ftp-settings.sh' file is similar to the new one."
-		fi
-		# Don't wantn this line in the post-installation file.
-		MSGb="\nAfter installation, see ${POST_INSTALLATION_ACTIONS} for details."
-
-		MSG2="You can compare the old and new configuration files using the following commands,"
-		MSG2+="\nand apply your changes from the prior file to the new file."
-		MSG2+="\nDo NOT simply copy the old files to the new location because"
-		MSG2+="\ntheir formats are different."
-		MSG2+="\n\ndiff ${PRIOR_CONFIG_DIR}/config.sh ${ALLSKY_CONFIG}"
-		MSG2+="\n\n   and"
-		MSG2+="\n\ndiff ${PRIOR_FTP_FILE} ${ALLSKY_CONFIG}"
-	else
-		MSG="You need to manually move the CONTENTS of:"
-		if [[ ${COPIED_PRIOR_CONFIG_SH} == "false" ]]; then
-			MSG+="\n     ${PRIOR_CONFIG_DIR}/config.sh"
-		fi
-		if [[ ${COPIED_PRIOR_FTP_SH} == "false" ]]; then
-			MSG+="\n     ${PRIOR_FTP_FILE}"
-		fi
-		MSG+="\n\nto the new files in ${ALLSKY_CONFIG}."
-		MSG+="\n\nNOTE: some settings are no longer in the new files and some changed names"
-		MSG+="\nso NOT add the old/deleted settings back in or simply copy the files."
-		MSG+="\n*** This will take several minutes ***"
-		MSGb=""
-		MSG2=""
+	MSG="You need to manually move the CONTENTS of:"
+	if [[ ${COPIED_PRIOR_CONFIG_SH} == "false" ]]; then
+		MSG="${MSG}\n     ${PRIOR_CONFIG_DIR}/config.sh"
+	fi
+	if [[ ${COPIED_PRIOR_FTP_SH} == "false" ]]; then
+		MSG="${MSG}\n     ${PRIOR_FTP_FILE}"
 	fi
 	MSG+=""
 	whiptail --title "${TITLE}" --msgbox "${MSG}${MSGb}" 20 "${WT_WIDTH}" 3>&1 1>&2 2>&3
@@ -2813,16 +2991,6 @@ check_restored_settings()
 		MSG+=" 'Allsky Settings' page in the WebUI after ${AFTER}."
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 	fi
-# TODO: remove this "if" when config.sh and ftp-settings.sh are gone.
-	if [[ ${COPIED_PRIOR_CONFIG_SH} == "false" || \
-	  	${COPIED_PRIOR_FTP_SH} == "false" ]]; then
-		MSG="Default files were created for:"
-		[[ ${COPIED_PRIOR_CONFIG_SH} == "false" ]] && MSG+="\n   config.sh"
-		[[ ${COPIED_PRIOR_FTP_SH}    == "false" ]] && MSG+="\n   ftp-settings.sh"
-		MSG+="\n\nHowever, you must update them by going to the"
-		MSG+=" 'Editor' page in the WebUI after ${AFTER}."
-		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
-	fi
 
 	display_image "ConfigurationNeeded"
 	CONFIGURATION_NEEDED="true"
@@ -2950,6 +3118,7 @@ exit_installation()
 # Format of a version (_PP is optional point release):
 #	12345678901234
 #	vYYYY.MM.DD_PP
+
 function remove_point_release()
 {
 	# Get just the base portion.
@@ -2991,6 +3160,8 @@ if [[ ${IN_TESTING} == "true" ]]; then
 		MSG+="\n * ZWO library 1.33 cameras."
 		MSG+="\n * Setting names are now lowercase."
 		MSG+="\n * WebUI sections are hidden by default."
+		MSG+="\n * ftp-settings.sh and config.sh are gone."
+		MSG+="\n   Their settings are now in the WebUI's 'Allsky Settings' page."
 
 		MSG+="\n\nIf you want to continue with the installation, enter:    yes"
 		title="*** MESSAGE FOR TESTERS ***"

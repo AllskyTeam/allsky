@@ -1668,8 +1668,13 @@
 },
 
 {
-"name" : "AllskyMapHeader",
-"label" : "Allsky Map and Website Settings",
+"name" : "websitetab========================================",
+"label" : "Website",
+"type" : "header-tab"
+},
+{
+"name" : "websiteheader",
+"label" : "Website and Remote Server Settings",
 "type" : "header"
 },
 {
@@ -1678,8 +1683,477 @@
 "description" : "Enable to add a link on the Allsky Website to display the settings on this page.",
 "label" : "Display Settings",
 "type" : "boolean",
-"booldependson" : "uselocalwebsite OR useremotewebsite",
+"checkchanges" : true,
+"booldependson" : "uselocalwebsite OR useremotewebsite OR useremoteserver"
+},
+{
+"name" : "uselocalwebsite",
+"description" : "Enable to use the local Allsky Website.  No other settings are needed.",
+"default" : false,
+"label" : "Use Local Website",
+"type" : "boolean",
+"popup-yesno" : "Do you want to remove all saved images, keograms, startrails, and videos in the local Website?",
+"popup-yesno-value" : 0
+},
+{
+"name" : "daystokeeplocalwebsite",
+"minimum" : 0,
+"maximum" : "none",
+"default" : 0,
+"description" : "Number of days of images and videos to keep on the Pi's Website.",
+"label" : "Days To Keep on Pi Website",
+"type" : "integer",
+"booldependson" : "uselocalwebsite"
+},
+{
+"name" : "remotewebsiteheader",
+"label" : "Remote Website Settings",
+"type" : "header-sub"
+},
+{
+"name" : "useremotewebsite",
+"default" : false,
+"description" : "Enable to use a remote Allsky Website.<br>See the Allsky Documentation for how to install the Website.",
+"label" : "Use Remote Website",
+"type" : "boolean",
 "checkchanges" : true
+},
+{
+"name" : "daystokeepremotewebsite",
+"minimum" : 0,
+"maximum" : "none",
+"default" : 0,
+"description" : "Number of days of images and videos to keep on the remote Website.",
+"label" : "Days To Keep on Remote Website",
+"type" : "integer",
+"booldependson" : "useremotewebsite"
+},
+{
+"name" : "remotewebsiteprotocol",
+"default" : "ftps",
+"description" : "Protocol for remote Website",
+"label" : "Protocol",
+"type" : "select",
+"options" : [
+	{"value" : "ftps", "label" : "ftps"},
+	{"value" : "ftp", "label" : "ftp"},
+	{"value" : "sftp", "label" : "sftp"},
+	{"value" : "scp", "label" : "scp"},
+	{"value" : "S3", "label" : "s3"},
+	{"value" : "GCS", "label" : "gcs"}
+],
+"checkchanges" : true,
+"booldependson" : "useremotewebsite"
+},
+{
+"name" : "REMOTEWEBSITE_HOST",
+"default" : "",
+"description" : "Name of server hosting the remote Allsky Website.",
+"label" : "Server Name",
+"type" : "widetext",
+"checkchanges" : true,
+"source" : "ALLSKY_ENV",
+"booldependson" : "useremotewebsite",
+"optional" : true
+},
+{
+"name" : "REMOTEWEBSITE_PORT",
+"default" : "",
+"description" : "Optional port required by server.  Rarely required.",
+"label" : "Port",
+"type" : "integer",
+"checkchanges" : true,
+"source" : "ALLSKY_ENV",
+"booldependson" : "useremotewebsite",
+"optional" : true
+},
+{
+"name" : "REMOTEWEBSITE_USER",
+"default" : "",
+"description" : "Username of the login on the remote Website server.",
+"label" : "User Name",
+"type" : "text",
+"checkchanges" : true,
+"source" : "ALLSKY_ENV",
+"booldependson" : "useremotewebsite",
+"optional" : true
+},
+{
+"name" : "REMOTEWEBSITE_PASSWORD",
+"default" : "",
+"description" : "Password of the login on the remote Website server.",
+"label" : "Password",
+"type" : "password",
+"checkchanges" : true,
+"source" : "ALLSKY_ENV",
+"booldependson" : "useremotewebsite",
+"optional" : true
+},
+{
+"name" : "REMOTEWEBSITE_LFTP_COMMANDS",
+"default" : "",
+"description" : "Special commands needed when connecting to an FTP server.",
+"label" : "FTP Commands",
+"type" : "text",
+"checkchanges" : true,
+"source" : "ALLSKY_ENV",
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=*ftp*",
+"optional" : true
+},
+{
+"name" : "remotewebsiteimagedir",
+"default" : "allsky",
+"description" : "Name of the top-level remote Website directory where images go.",
+"label" : "Image Directory",
+"type" : "text",
+"checkchanges" : true,
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=*ftp*",
+"optional" : true
+},
+{
+"name" : "REMOTEWEBSITE_SSH_KEY_FILE",
+"default" : "",
+"description" : "Path on the Pi to the SSH key file.",
+"label" : "SSH Key File",
+"type" : "widetext",
+"checkchanges" : true,
+"source" : "ALLSKY_ENV",
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=scp",
+"optional" : true
+},
+{
+"name" : "REMOTEWEBSITE_AWS_CLI_DIR",
+"default" : "${HOME}/.local/bin",
+"description" : "AWS CLI directory where the AWS CLI tools are installed.",
+"label" : "AWS CLI Directory",
+"type" : "widetext",
+"checkchanges" : true,
+"source" : "ALLSKY_ENV",
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=s3",
+"optional" : true
+},
+{
+"name" : "REMOTEWEBSITE_S3_BUCKET",
+"default" : "allskybucket",
+"description" : "Name of S3 bucket where files will be upload.",
+"label" : "S3 Bucket",
+"type" : "text",
+"checkchanges" : true,
+"source" : "ALLSKY_ENV",
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=s3",
+"optional" : true
+},
+{
+"name" : "REMOTEWEBSITE_S3_ACL",
+"default" : "private",
+"description" : "S3 Access Control List (ACL).",
+"label" : "S3 ACL",
+"type" : "text",
+"checkchanges" : true,
+"source" : "ALLSKY_ENV",
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=s3",
+"optional" : true
+},
+{
+"name" : "REMOTEWEBSITE_GCS_BUCKET",
+"default" : "allskybucket",
+"description" : "Name of GCS bucket where files will be upload.",
+"label" : "GCS Bucket",
+"type" : "text",
+"checkchanges" : true,
+"source" : "ALLSKY_ENV",
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=gcs",
+"optional" : true
+},
+{
+"name" : "REMOTEWEBSITE_GCS_ACL",
+"default" : "private",
+"description" : "GCS Access Control List (ACL).",
+"label" : "GCS ACL",
+"type" : "text",
+"checkchanges" : true,
+"source" : "ALLSKY_ENV",
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=gcs",
+"optional" : true
+},
+{
+"name" : "remotewebsiteimageuploadoriginalname",
+"default" : false,
+"description" : "Enable to upload images using YYYYMMDDHHMMSS naming.",
+"label" : "Upload With Original Name",
+"type" : "boolean",
+"valuedependson" : "imageuploadfrequency=[1-9]*"
+},
+{
+"name" : "remotewebsitevideodestinationname",
+"default" : "",
+"description" : "Optional name of the remote video file.",
+"label" : "Remote Video File Name",
+"type" : "text",
+"booldependson" : "useremotewebsite",
+"optional" : true
+},
+{
+"name" : "remotewebsitekeogramdestinationname",
+"default" : "",
+"description" : "Optional name of the remote keogram file.",
+"label" : "Remote Keogram File Name",
+"type" : "text",
+"booldependson" : "useremotewebsite",
+"optional" : true
+},
+{
+"name" : "remotewebsitestartrailsdestinationname",
+"default" : "",
+"description" : "Optional name of the remote startrails file.",
+"label" : "Remote Startrails Name",
+"type" : "text",
+"booldependson" : "useremotewebsite",
+"optional" : true
+},
+{
+"name" : "remotewebsiteurl",
+"default" : "",
+"description" : "The URL of your Allsky Website, for example: https://mywebsite.com/allsky.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
+"label" : "Website URL",
+"type" : "widetext",
+"checkchanges" : true,
+"booldependson" : "showonmap OR useremotewebsite OR remotewebsiteimageurl",
+"optional" : true
+},
+{
+"name" : "remotewebsiteimageurl",
+"default" : "",
+"description" : "The URL of the image on your Allsky Website, for example: https://mywebsite.com/allsky/image.jpg.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
+"label" : "Image URL",
+"type" : "widetext",
+"checkchanges" : true,
+"booldependson" : "showonmap OR useremotewebsite OR remotewebsiteurl",
+"optional" : true
+},
+
+
+{
+"name" : "remoteserverheader",
+"label" : "Remote Server Settings",
+"type" : "header-sub"
+},
+{
+"name" : "useremoteserver",
+"default" : false,
+"description" : "This is a remote server NOT running the Allsky Website.<br>See the documentation for the necessary directory layout.",
+"label" : "Use Remote Server",
+"type" : "boolean",
+"checkchanges" : true
+},
+{
+"name" : "remoteserverprotocol",
+"default" : "ftps",
+"description" : "Protocol for remote server",
+"label" : "Protocol",
+"type" : "select",
+"options" : [
+	{"value" : "ftps", "label" : "ftps"},
+	{"value" : "ftp", "label" : "ftp"},
+	{"value" : "sftp", "label" : "sftp"},
+	{"value" : "scp", "label" : "scp"},
+	{"value" : "S3", "label" : "s3"},
+	{"value" : "GCS", "label" : "gcs"}
+],
+"checkchanges" : true,
+"booldependson" : "useremoteserver"
+},
+{
+"name" : "REMOTESERVER_HOST",
+"default" : "",
+"description" : "Name of remote server NOT hosting an Allsky Website.",
+"label" : "Server Name",
+"type" : "widetext",
+"checkchanges" : true,
+"source" : "ALLSKY_ENV",
+"booldependson" : "useremoteserver",
+"optional" : true
+},
+{
+"name" : "REMOTESERVER_PORT",
+"default" : "",
+"description" : "Optional port required by remote server.  Rarely required.",
+"label" : "Port",
+"type" : "integer",
+"checkchanges" : true,
+"source" : "ALLSKY_ENV",
+"booldependson" : "useremoteserver",
+"optional" : true
+},
+{
+"name" : "REMOTESERVER_USER",
+"default" : "",
+"description" : "Username of the login on the remote server.",
+"label" : "User Name",
+"type" : "text",
+"checkchanges" : true,
+"source" : "ALLSKY_ENV",
+"booldependson" : "useremoteserver",
+"optional" : true
+},
+{
+"name" : "REMOTESERVER_PASSWORD",
+"default" : "",
+"description" : "Password of the remote server login.",
+"label" : "Password",
+"type" : "password",
+"checkchanges" : true,
+"source" : "ALLSKY_ENV",
+"booldependson" : "useremoteserver",
+"optional" : true
+},
+{
+"name" : "REMOTESERVER_LFTP_COMMANDS",
+"default" : "",
+"description" : "Special commands needed when connecting to an FTP server.",
+"label" : "FTP Commands",
+"type" : "text",
+"checkchanges" : true,
+"source" : "ALLSKY_ENV",
+"booldependson" : "useremoteserver",
+"valuedependson" : "remoteserverprotocol=*ftp*",
+"optional" : true
+},
+{
+"name" : "REMOTESERVER_SSH_KEY_FILE",
+"default" : "",
+"description" : "Path on the Pi to the SSH key file.",
+"label" : "SSH Key File",
+"type" : "widetext",
+"checkchanges" : true,
+"source" : "ALLSKY_ENV",
+"booldependson" : "useremoteserver",
+"valuedependson" : "remoteserverprotocol=scp",
+"optional" : true
+},
+{
+"name" : "REMOTESERVER_AWS_CLI_DIR",
+"default" : "${HOME}/.local/bin",
+"description" : "AWS CLI directory where the AWS CLI tools are installed.",
+"label" : "AWS CLI Directory",
+"type" : "widetext",
+"checkchanges" : true,
+"source" : "ALLSKY_ENV",
+"booldependson" : "useremoteserver",
+"valuedependson" : "remoteserverprotocol=s3",
+"optional" : true
+},
+{
+"name" : "REMOTESERVER_S3_BUCKET",
+"default" : "allskybucket",
+"description" : "Name of S3 bucket where files will be upload.",
+"label" : "S3 Bucket",
+"type" : "text",
+"checkchanges" : true,
+"source" : "ALLSKY_ENV",
+"booldependson" : "useremoteserver",
+"valuedependson" : "remoteserverprotocol=s3",
+"optional" : true
+},
+{
+"name" : "REMOTESERVER_S3_ACL",
+"default" : "private",
+"description" : "S3 Access Control List (ACL).",
+"label" : "S3 ACL",
+"type" : "text",
+"checkchanges" : true,
+"source" : "ALLSKY_ENV",
+"booldependson" : "useremoteserver",
+"valuedependson" : "remoteserverprotocol=s3",
+"optional" : true
+},
+{
+"name" : "REMOTESERVER_GCS_BUCKET",
+"default" : "allskybucket",
+"description" : "Name of GCS bucket where files will be upload.",
+"label" : "GCS Bucket",
+"type" : "text",
+"checkchanges" : true,
+"source" : "ALLSKY_ENV",
+"booldependson" : "useremoteserver",
+"valuedependson" : "remoteserverprotocol=gcs",
+"optional" : true
+},
+{
+"name" : "REMOTESERVER_GCS_ACL",
+"default" : "private",
+"description" : "S3 Access Control List (ACL).",
+"label" : "S3 ACL",
+"type" : "text",
+"checkchanges" : true,
+"source" : "ALLSKY_ENV",
+"booldependson" : "useremoteserver",
+"valuedependson" : "remoteserverprotocol=gcs",
+"optional" : true
+},
+{
+"name" : "remoteserverimagedir",
+"default" : "",
+"description" : "Name of the top-level remote server directory where images go.",
+"label" : "Image Directory",
+"type" : "text",
+"checkchanges" : true,
+"booldependson" : "useremoteserver",
+"optional" : true
+},
+{
+"name" : "remoteserverimageuploadoriginalname",
+"default" : false,
+"description" : "Enable to upload images using YYYYMMDDHHMMSS naming.",
+"label" : "Upload With Original Name",
+"type" : "boolean",
+"valuedependson" : "imageuploadfrequency=[1-9]*"
+},
+{
+"name" : "remoteservervideodestinationname",
+"default" : "",
+"description" : "Optional name of the remote video file.",
+"label" : "Remote Video File Name",
+"type" : "text",
+"booldependson" : "useremoteserver",
+"optional" : true
+},
+{
+"name" : "remoteserverkeogramdestinationname",
+"default" : "",
+"description" : "Optional name of the remote keogram file.",
+"label" : "Remote Keogram File Name",
+"type" : "text",
+"booldependson" : "useremoteserver",
+"optional" : true
+},
+{
+"name" : "remoteserverstartrailsdestinationname",
+"default" : "",
+"description" : "Optional name of the remote startrails file.",
+"label" : "Remote Startrails File Name",
+"type" : "text",
+"booldependson" : "useremoteserver",
+"optional" : true
+},
+
+{
+"name" : "allskymaptab========================================",
+"label" : "Map",
+"type" : "header-tab"
+},
+{
+"name" : "allskymapheader",
+"label" : "Allsky Map Settings",
+"type" : "header"
 },
 {
 "name" : "showonmap",
@@ -1687,28 +2161,8 @@
 "description" : "Enable to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map' target='_blank' title='Opens in new tab/window'><span class='WebUISetting'>Allsky Map <i class='fa fa-external-link-alt fa-fw'></i></span></a>.",
 "label" : "Show on Map",
 "type" : "boolean",
-"booldependson" : "uselocalwebsite OR useremotewebsite",
-"checkchanges" : true
-},
-{
-"name" : "websiteurl",
-"default" : "",
-"description" : "The URL of your Allsky Website, for example: https://my.allskyweb.com/allsky.<br>If your camera is not accessible on the Internet, leave this field empty.<br>Must begin with <b>http</b> or <b>https</b>.",
-"label" : "Website URL",
-"type" : "widetext",
-"booldependson" : "showonmap OR remotewebsiteimageurl",
 "checkchanges" : true,
-"optional" : true
-},
-{
-"name" : "imageurl",
-"default" : "",
-"description" : "The URL of the image on your Allsky Website, for example: https://mywebsite.com/allsky/image.jpg.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
-"label" : "Image URL",
-"type" : "widetext",
-"booldependson" : "showonmap OR remotewebsiteimageurl",
-"checkchanges" : true,
-"optional" : true
+"booldependson" : "uselocalwebsite OR useremotewebsite"
 },
 {
 "name" : "location",
@@ -1718,7 +2172,7 @@
 "type" : "widetext",
 "checkchanges" : true,
 "optional" : true,
-"booldependson" : "showonmap"
+"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 {
 "name" : "owner",
@@ -1728,7 +2182,7 @@
 "type" : "text",
 "checkchanges" : true,
 "optional" : true,
-"booldependson" : "showonmap"
+"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 {
 "name" : "camera",
@@ -1738,7 +2192,7 @@
 "type" : "widetext",
 "checkchanges" : true,
 "optional" : true,
-"booldependson" : "showonmap"
+"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 {
 "name" : "lens",
@@ -1748,7 +2202,7 @@
 "type" : "text",
 "checkchanges" : true,
 "optional" : true,
-"booldependson" : "showonmap"
+"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 {
 "name" : "computer",
@@ -1758,7 +2212,7 @@
 "type" : "widetext",
 "checkchanges" : true,
 "optional" : true,
-"booldependson" : "showonmap"
+"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 
 {
@@ -1783,14 +2237,23 @@
 ]
 },
 {
-"name" : "showdelay",
+"name" : "showupdatedmessage",
 "default" : true,
 "description" : "Disable to hide the <span class='alert-info'>Daytime images updated every...</span> message in the <span class='WebUIWebPage'>Live View</span> page.",
 "label" : "Show Updated Message",
 "type" : "boolean"
 },
+{
+"name" : "webuidatafiles",
+"default" : "",
+"description" : "See documentation for a description of this setting,",
+"label" : "Items to add to WebUI",
+"type" : "widetext",
+"optional" : true
+},
 
 {
+
 "name" : "cameratab========================================",
 "label" : "Camera Type",
 "type" : "header-tab"

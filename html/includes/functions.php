@@ -123,6 +123,8 @@ $temptype = null;
 $lastChanged = null;
 $websiteURL = null;
 $settings_array = null;
+$useLocalWebsite = null;
+$useRemoteWebsite = null;
 $hasLocalWebsite = null;
 $hasRemoteWebsite = null;
 
@@ -134,6 +136,7 @@ function initialize_variables() {
 	global $darkframe, $useLogin, $temptype, $lastChanged, $lastChangedName;
 	global $websiteURL;
 	global $settings_array;
+	global $useLocalWebsite, $useRemoteWebsite;
 	global $hasLocalWebsite, $hasRemoteWebsite;
 
 	$settings_file = getSettingsFile();
@@ -155,6 +158,8 @@ function initialize_variables() {
 	} else {
 		$hasRemoteWebsite = true;
 	}
+	$useLocalWebsite = toBool(getVariableOrDefault($settings_array, 'uselocalwebsite', "false"));
+	$useRemoteWebsite = toBool(getVariableOrDefault($settings_array, 'useremotewebsite', "false"));
 
 	// $img_dir is an alias in the web server's config that points to where the current image is.
 	// It's the same as ${ALLSKY_TMP} which is the physical path name on the server.

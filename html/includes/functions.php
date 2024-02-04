@@ -115,7 +115,7 @@ function verifyNumber($num) {
 
 // Globals
 $image_name = null;
-$showDelay = true; $delay=null; $daydelay=null; $nightdelay=null;
+$showUpdatedMessage = true; $delay=null; $daydelay=null; $nightdelay=null;
 $imagesSortOrder = null;
 $darkframe = null;
 $useLogin = null;
@@ -129,7 +129,7 @@ $hasRemoteWebsite = null;
 function initialize_variables() {
 	global $status, $needToDisplayMessages;
 	global $image_name;
-	global $showDelay, $delay, $daydelay, $nightdelay;
+	global $showUpdatedMessage, $delay, $daydelay, $nightdelay;
 	global $imagesSortOrder;
 	global $darkframe, $useLogin, $temptype, $lastChanged, $lastChangedName;
 	global $websiteURL;
@@ -171,7 +171,7 @@ function initialize_variables() {
 	////////////////// Determine delay between refreshes of the image.
 	$daydelay = $settings_array["daydelay"];
 	$nightdelay = $settings_array["nightdelay"];
-	$showDelay = toBool(getVariableOrDefault($settings_array, 'showdelay', "true"));
+	$showUpdatedMessage = toBool(getVariableOrDefault($settings_array, 'showupdatedmessage', "true"));
 
 	$daymaxautoexposure = $settings_array["daymaxautoexposure"];
 	$dayexposure = $settings_array["dayexposure"];
@@ -191,7 +191,7 @@ function initialize_variables() {
 	if (! verifyNumber($nightexposure)) $ok = false;
 
 	if (! $ok) {
-		$showDelay = false;
+		$showUpdatedMessage = false;
 		if ($delay === 0) $delay = 20;	// a reasonable default
 		return;
 	}
@@ -221,7 +221,7 @@ function initialize_variables() {
 		$nightdelay /= 1000;
 	} else {
 		// Error message will be displayed by WebUI.
-		$showDelay = false;
+		$showUpdatedMessage = false;
 		// Not showing delay so just use average
 		$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
 	}

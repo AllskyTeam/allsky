@@ -62,27 +62,6 @@ class OEUIMANAGER {
         this.#oeEditorStage.add(this.#overlayLayer);
         this.#oeEditorStage.add(this.#gridLayer);
 
-        this.#transformer = new Konva.Transformer({
-            resizeEnabled: false
-        });
-        this.#overlayLayer.add(this.#transformer);
-
-        this.setZoom('oe-zoom-fit');
-
-        this.#snapRectangle = new Konva.Rect({
-            x: 0,
-            y: 0,
-            name: 'snapRectangle',
-            width: 100,
-            height: 50,
-            fill: '#cccccc',
-            opacity: 0.6,
-            stroke: '#333',
-            strokeWidth: 1,
-            visible: false
-        });
-        this.#overlayLayer.add(this.#snapRectangle);
-
         this.#oeEditorStage.on('mousemove', (e) => {
             let mousePos = this.#oeEditorStage.getPointerPosition();
             this.updateDebugWindowMousePos(mousePos.x, mousePos.y);
@@ -115,6 +94,15 @@ class OEUIMANAGER {
         return params;
     }
 
+    get dirty() {
+        let result = false;
+        if (this.#fieldManager.dirty || this.#configManager.dirty) {
+            result = true;
+        }
+
+        return result;
+    }
+
     get selected() {
         return this.#selected;
     }
@@ -143,8 +131,35 @@ class OEUIMANAGER {
         }
     }
 
+    resetUI() {
+        this.#overlayLayer.destroyChildren();
+        this.#transformer = new Konva.Transformer({
+            resizeEnabled: false
+        });
+        this.#overlayLayer.add(this.#transformer);        
+
+        this.setZoom('oe-zoom-fit');
+
+        this.#snapRectangle = new Konva.Rect({
+            x: 0,
+            y: 0,
+            name: 'snapRectangle',
+            width: 100,
+            height: 50,
+            fill: '#cccccc',
+            opacity: 0.6,
+            stroke: '#333',
+            strokeWidth: 1,
+            visible: false
+        });
+        this.#overlayLayer.add(this.#snapRectangle);
+    }
+
     buildUI() {
+        this.resetUI();
         this.setupFonts();
+
+        window.oedi.get('fieldmanager').parseConfig();
 
         let fields = this.#fieldManager.fields;
         for (let [fieldName, field] of fields.entries()) {
@@ -158,7 +173,7 @@ class OEUIMANAGER {
         });
 
         jQuery(window).bind('beforeunload', ()=> {
-            if (this.#fieldManager.dirty) {
+            if (this.#fieldManager.dirty || this.#configManager.dirty) {
                 return ' ';
             } else {
                 return undefined;
@@ -771,7 +786,7 @@ class OEUIMANAGER {
         });
 
         $(document).on('click', '#oe-save', (event) => {
-            if (this.#fieldManager.dirty) {
+            if (this.#fieldManager.dirty || this.#configManager.dirty) {
                 this.#saveConfig();
             }
         });
@@ -1098,7 +1113,6 @@ class OEUIMANAGER {
 
         $('[data-toggle="tooltip"]').tooltip();
 
-
         $(document).on('click', '#oe-field-errors', (event) => {
 
             this.#errorsTable = $('#fielderrorstable').DataTable({
@@ -1198,6 +1212,10 @@ class OEUIMANAGER {
                 $('#oe-field-errors-dialog').modal('hide');
             }
 
+        });
+             
+        $(document).on('oe-config-updated', (e) => {
+            this.updateToolbar();
         });
 
         this.updateDebugWindow();
@@ -1359,6 +1377,7 @@ class OEUIMANAGER {
         this.#fieldManager.buildJSON();
         this.#configManager.saveConfig1();
         this.#fieldManager.clearDirty();
+        this.#configManager.dirty = false;
         this.updateToolbar();
     }
 
@@ -1446,7 +1465,7 @@ class OEUIMANAGER {
             $('#oe-delete').addClass('green');
         }
 
-        if (this.#fieldManager.dirty) {
+        if (this.#fieldManager.dirty || this.#configManager.dirty) {
             $('#oe-save').removeClass('disabled');
             $('#oe-save').addClass('green pulse');
             $('#oe-overlay-editor-tab').addClass('oe-overlay-editor-tab-modified');            

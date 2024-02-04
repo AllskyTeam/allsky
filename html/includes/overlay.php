@@ -38,6 +38,8 @@ function DisplayOverlay($image_name)
     <link rel="stylesheet" type="text/css" href="/js/overlay/imagemanager/oe-imagemanager.css" />
     <script type="text/javascript" src="/js/overlay/imagemanager/oe-imagemanager.js"></script>
 
+    <script type="text/javascript" src="/js/jquery-overlaymanager/jquery-overlaymanager.js"></script>
+
 
     <link href="/js/dropzone/dropzone.css" type="text/css" rel="stylesheet" />
     <script src="/js/dropzone/dropzone-min.js"></script>
@@ -49,10 +51,10 @@ function DisplayOverlay($image_name)
     <div id="oeeditor">
         <div class="row">
             <div id="oe-viewport" class="panel panel-primary">
-                <div class="panel-heading"><i class="fa fa-code fa-edit"></i> Overlay Editor</div>
-
+                <!--<div class="panel-heading"><i class="fa fa-code fa-edit"></i> Overlay Editor</div>-->
 
                 <div>
+                    <div id="oe-overlay-manager"></div>
 
                     <ul class="nav nav-tabs" role="tablist">
                         <li role="presentation" class="active">
@@ -74,7 +76,6 @@ function DisplayOverlay($image_name)
                                             <span class="icon-bar"></span>                                            
                                         </button>
                                     </div>
-    
                                     <div class="collapse navbar-collapse" id="oe-main-navbar">
                                         <ul class="nav navbar-nav">
                                             <li>
@@ -118,6 +119,7 @@ function DisplayOverlay($image_name)
                                                 </div>
                                             </li>
                                         </ul>
+
                                         <ul class="nav navbar-nav navbar-right">
                                             <li id="oe-toolbar-debug" class="hidden">
                                                 <div id="oe-toobar-debug-button" class="btn btn-lg navbar-btn" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"><i class="fa-solid fa-bug"></i></div>

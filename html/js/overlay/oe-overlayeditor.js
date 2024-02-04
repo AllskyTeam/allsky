@@ -14,30 +14,33 @@ class OVERLAYEDITOR {
         let uiManager = new OEUIMANAGER(image);
         window.oedi.add('uimanager', uiManager);
         window.oedi.add('BASEDIR', 'overlay/');    
-        window.oedi.add('IMAGEDIR', 'overlay/images/');       
+        window.oedi.add('IMAGEDIR', 'overlay/images/');
     }
 
-    async #loadFonts() {
-        let config = window.oedi.get('config');
-        let fonts = config.getValue('fonts', {});
-        for (let font in fonts) {
-            let fontData = config.getValue('fonts.' + font, {});
-
-            let fontFace = new FontFace(font, 'url(' + window.oedi.get('BASEDIR') + fontData.fontPath + ')');
-            await fontFace.load();
-            document.fonts.add(fontFace);
-        }
-    }
-
-    async buildUI() {
+    buildUI() {
         $.LoadingOverlay('show');
-        if (await window.oedi.get('config').loadConfig()) {
-            await this.#loadFonts();
 
-            window.oedi.get('fieldmanager').parseConfig();
-            window.oedi.get('uimanager').buildUI();
-            $.LoadingOverlay('hide');
-        }        
+        $.ajax({
+            url: 'includes/overlayutil.php?request=Overlays',
+            type: 'GET',
+            dataType: 'json',
+            cache: false,
+            async: false,                
+            context: this
+        }).done((overlays) => {
+            let configManager = window.oedi.get('config');
+            configManager.overlays = overlays;
+
+            $('#oe-overlay-manager').allskyMM();
+
+            configManager.loadConfig();
+            if (1==2) {
+                configManager.loadOverlay('overlay.json', 'core');
+            } else {
+                $(document).trigger('oe-startup');
+            }
+            $.LoadingOverlay('hide');            
+        }); 
     }
 
     /**

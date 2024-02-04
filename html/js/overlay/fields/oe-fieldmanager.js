@@ -35,7 +35,8 @@ class OEFIELDMANAGER {
         this.#fieldDeletedAddedDefaultsChanged = false;
     }
 
-    async parseConfig() {
+    parseConfig() {
+        this.#fields = new Map();
         let config = window.oedi.get('config');
         let fields = config.getValue('fields', {});
         for (let index in fields) {

@@ -294,6 +294,14 @@ table .alert-dismissable {
 	border-color: #555555;
 }
 
+input[type="text"].has-error {
+	border-color: #d41c0f !important;
+}
+
+.text-danger {
+	color: #d41c0f !important;
+}
+
 .dark .progress {
 	background-color: #171717;
 }

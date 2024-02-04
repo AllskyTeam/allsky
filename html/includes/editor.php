@@ -5,16 +5,18 @@ function DisplayEditor()
 	global $hasLocalWebsite, $hasRemoteWebsite, $status;
 
 	// See what files there are to edit.
+	$N = null;			// this is the file that's displayed by default
 	$numFiles = 0;
-$numFiles = 2;	// TODO: remove when config.sh and ftp-settings.sh are deleted
 	if ($hasLocalWebsite && file_exists(ALLSKY_WEBSITE_LOCAL_CONFIG)) {
 		$localN = ALLSKY_WEBSITE_LOCAL_CONFIG_NAME;
+		$N = $localN;
 		$numFiles++;
 	} else {
 		$localN = null;
 	}
 	if ($hasRemoteWebsite && file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
 		$remoteN = ALLSKY_WEBSITE_REMOTE_CONFIG_NAME;
+		if ($N === null) $N = $remoteN;
 		$numFiles++;
 	} else {
 		$remoteN = null;
@@ -26,16 +28,17 @@ $numFiles = 2;	// TODO: remove when config.sh and ftp-settings.sh are deleted
 		$(document).ready(function () {
 
 			var editor = null;
+			$.get("<?php echo $N; ?>", function (data) {
 
-			$.get("config/config.sh?_ts=" + new Date().getTime(), function (data) {
 				// .json files return "data" as json array, and we need a regular string.
 				// Get around this by stringify'ing "data".
 				if (typeof data != 'string') {
 					data = JSON.stringify(data, null, "\t");
 				}
+
 				editor = CodeMirror(document.querySelector("#editorContainer"), {
 					value: data,
-					mode: "shell",
+					mode: "json",
 					theme: "monokai"
 				});
 			});
@@ -149,8 +152,6 @@ $numFiles = 2;	// TODO: remove when config.sh and ftp-settings.sh are deleted
 					} else {
 				?>
 						<select class="form-control editorForm" id="script_path" title="Pick a file">
-							<option value="config/config.sh">config.sh</option>
-							<option value="config/ftp-settings.sh">ftp-settings.sh</option>
 				<?php
 							if ($localN !== null) {
 								// The website is installed on this Pi.

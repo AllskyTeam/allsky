@@ -146,11 +146,13 @@ class OVERLAYUTIL
 
     public function postConfig()
     {
-        $overlayName = $_POST['overlay'];
-        if ($overlayName == 'overlay.json') {
-            $fileName = $this->overlayPath . '/config/overlay.json';
+        $overlayName = $_POST['overlay']['name'];
+        $overlayType = $_POST['overlay']['type'];
+
+        if ($overlayType === 'user') {
+            $fileName = $this->overlayPath . '/myTemplates/' . $overlayName;
         } else {
-            $fileName = '/home/pi/allsky/config/overlay/myTemplates/' . $overlayName;
+            $fileName = $this->overlayPath . '/config/' . $overlayName;
         }
         $config = $_POST['config'];
         $formattedJSON = json_encode(json_decode($config), JSON_PRETTY_PRINT);

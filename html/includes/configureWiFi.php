@@ -1,34 +1,50 @@
 <?php
 
 function DisplayWPAConfig(){
-	global $page;
-	$status = new StatusMessages();
-	$debug = true;
+	global $page, $status;
+	$debug = false;
 
 	// Find currently configured networks
-	exec(' sudo cat ' . RASPI_WPA_SUPPLICANT_CONFIG, $known_return);
+	$dataFile = RASPI_WPA_SUPPLICANT_CONFIG;
+	$cmd = "sudo cat '$dataFile'";
+	if ($debug) echo "<br>Executing $cmd";
+	exec($cmd, $known_out);
 
 	$thisNetwork = null;
 	$ssid = null;
 
 	// Process the already-configured networks.
-	foreach($known_return as $line) {
+	$onLine = 0;
+	$inNetwork = false;
+	$numNetworks = 0;
+	foreach($known_out as $line) {
+		$onLine++;
+		if ($debug) echo "<br>Line $onLine: $line";
 		if (preg_match('/network\s*=/', $line)) {
+		if ($debug) echo "<br>&nbsp; &nbsp; new network";
+			$inNetwork = true;
+			$numNetworks++;
 			$thisNetwork = array('visible' => false, 'configured' => true, 'connected' => false);
 		} elseif ($thisNetwork !== null) {
 			if (preg_match('/^\s*}\s*$/', $line)) {		// end of info for this Network
+			if ($debug) echo "<br>&nbsp; &nbsp; end of network $ssid";
 				$networks[$ssid] = $thisNetwork;
 				$thisNetwork = null;
 				$ssid = null;
+				$inNetwork = false;
 			} elseif ($lineArr = preg_split('/\s*=\s*/', trim($line))) {
+				// The ssid and #psk keys have double quotes around the values.
+				// The psk key does not (at least when it's an encrypted value).
+				// The psk key may be a plain-text value or a 64-character encrypted value.
+
 				$key = strtolower($lineArr[0]);
 				$value = trim($lineArr[1], '"');
+				if ($debug) echo "<br>&nbsp; &nbsp; data line, key=${key}";
 				switch($key) {
 					case 'ssid':
 						$ssid = $value;
 						break;
 					case 'psk':
-						// This may be a plain-text value or a 64-character encrypted value.
 						if (array_key_exists('passphrase', $thisNetwork)) {
 							break;
 						}
@@ -44,22 +60,39 @@ function DisplayWPAConfig(){
 							$thisNetwork['protocol'] = 'Open';
 						}
 						break;
+
+					default:
+						// Except debugging, don't display this since there
+						// are likely other keys than the ones above.
+//						echo "<br> &nbsp; &nbsp; *** Line $onLine: Unknown key: [$key]";
+						break;
 				}
+			} else {
+				// All the lines within a network entry should be   key=value
+				$msg = "Line $onLine in $dataFile may be invalid: $line";
+				$status->addMessage($msg, "warning", false);
 			}
+		} else if ($numNetworks > 0) {
+			// The first couple lines in the file may be configuration lines,
+			// so ignore.
+			// Any other line inbetween network entries is invalid
+			// and will likely cause a failure.
+			$msg = "Line $onLine in $dataFile is out of place: $line";
+			$status->addMessage($msg, "danger", false);
 		}
 	}
 
 	if ( isset($_POST['client_settings']) && CSRFValidate() ) {
 		$tmp_networks = $networks;
-		if ($wpa_file = fopen('/tmp/wifidata', 'w')) {
+		$tmp_file = "/tmp/wifidata";
+		if ($wpa_file = fopen($tmp_file, 'w')) {
 			// Re-create whole configuration file - don't try to only update the changed SSID.
-			fwrite($wpa_file, 'ctrl_interface=DIR=' . RASPI_WPA_CTRL_INTERFACE . ' GROUP=netdev' . PHP_EOL);
+			fwrite($wpa_file, 'ctrl_interface=DIR=' . RASPI_WPA_CTRL_INTERFACE);
+			fwrite($wpa_file, ' GROUP=netdev' . PHP_EOL);
 			fwrite($wpa_file, 'update_config=1' . PHP_EOL);
 
-if ($debug) { echo "<br><pre><b>POST</b>=\n"; print_r($_POST); echo "</pre>"; }
+if ($debug) { echo "<br>POST=<pre>"; print_r($_POST); echo "</pre>"; }
 
-			// Look for items to delete or update.
-			// This assumes the "delete" and "update" lines come last for each ssid.
 			foreach(array_keys($_POST) as $post) {
 				if (preg_match('/delete(\d+)/', $post, $post_match)) {
 					$num = $post_match[1];
@@ -75,12 +108,12 @@ if ($debug) { echo "<br><pre><b>POST</b>=\n"; print_r($_POST); echo "</pre>"; }
 						'passphrase' => $_POST["passphrase$num"],
 						'configured' => true
 						);
-if ($debug) { echo "<br><pre><b>tmp_networks[$s]</b>=\n"; print_r($tmp_networks[$s]); echo "</pre>"; }
+if ($debug) { echo "<br>tmp_networks[$s]=<pre>"; print_r($tmp_networks[$s]); echo "</pre>"; }
 				}
 			}
 
 			$ok = true;
-if ($debug) { echo "<br><pre><b>tmp_networks=</b>\n"; print_r($tmp_networks); echo "</pre>"; }
+if ($debug) { echo "<br>tmp_networks=<pre>"; print_r($tmp_networks); echo "</pre>"; }
 			foreach($tmp_networks as $ssid => $network) {
 				if ($network['protocol'] === 'Open') {
 					fwrite($wpa_file, "network={".PHP_EOL);
@@ -96,15 +129,21 @@ if ($debug) { echo "<br><pre><b>tmp_networks=</b>\n"; print_r($tmp_networks); ec
 					$len = strlen($passphrase);
 					if ($len >=8 && $len <= 63) {
 						// un-encrypted passphrase - get encrypted version.
-						unset($wpa_passphrase);
+						unset($wpa_passphrase_out);
 						unset($line);
-						$cmd = 'wpa_passphrase ' . escapeshellarg($ssid);
+						$cmd = 'wpa_passphrase '. escapeshellarg($ssid);
 						$cmd .= ' ' . escapeshellarg($passphrase);
-						exec($cmd, $wpa_passphrase );
+						exec($cmd, $wpa_passphrase_out, $wpa_passphrase_return);
 
-						// This writes a complete "network={ ... }" block with #psk.
-						foreach($wpa_passphrase as $line) {
-							fwrite($wpa_file, $line.PHP_EOL);
+						if ($wpa_passphrase_return == 0) {
+							# This writes a complete "network={ ... }" block with #psk.
+							foreach($wpa_passphrase_out as $line) {
+								fwrite($wpa_file, $line.PHP_EOL);
+							}
+						} else {
+							$msg = "'$cmd' failed";
+							$status->addMessage($msg, 'danger', false);
+							$ok = false;
 						}
 					} else if ($len == 64) {	// 64 means it's already encrypted
 						fwrite($wpa_file, "network={".PHP_EOL);
@@ -112,10 +151,12 @@ if ($debug) { echo "<br><pre><b>tmp_networks=</b>\n"; print_r($tmp_networks); ec
 						if ($pound_psk !== "")
 							fwrite($wpa_file, "\t#psk=\"$pound_psk\"".PHP_EOL);
 						if ($passphrase !== "")
-							fwrite($wpa_file, "\tpsk=\"$passphrase\"".PHP_EOL);
+							fwrite($wpa_file, "\tpsk=$passphrase".PHP_EOL);
 						fwrite($wpa_file, "}".PHP_EOL);
 					} else {
-						$status->addMessage("WPA passphrase for $ssid must be between 8 and 63 characters (it is $len)", "danger");
+						$msg = "WPA passphrase for $ssid ($passphrase)";
+						$msg = "  is $len characters but must be between 8 and 63.";
+						$status->addMessage($msg, "danger", false);
 						$ok = false;
 					}
 				}
@@ -123,28 +164,32 @@ if ($debug) { echo "<br><pre><b>tmp_networks=</b>\n"; print_r($tmp_networks); ec
 			fclose($wpa_file);
 
 			if ($ok) {
-				system( 'sudo cp /tmp/wifidata ' . RASPI_WPA_SUPPLICANT_CONFIG, $returnval );
+				system( "sudo cp '$tmp_file' '$dataFile'", $returnval );
 				if( $returnval == 0 ) {
 					exec('sudo wpa_cli reconfigure', $reconfigure_out, $reconfigure_return );
 					if ($reconfigure_return == 0) {
 						$status->addMessage('Wifi settings updated successfully', 'success');
 						$networks = $tmp_networks;
 					} else {
-						$status->addMessage('Wifi settings updated but cannot restart (cannot execute "wpa_cli reconfigure")', 'danger');
+						$msg = 'Wifi settings updated but cannot restart';
+						$msg .= ' (cannot execute "wpa_cli reconfigure")';
+						$status->addMessage($msg, 'danger', false);
 					}
 				} else {
-					$status->addMessage('Wifi settings failed to be updated', 'danger');
+					$status->addMessage('Wifi settings failed to be updated', 'danger', false);
 				}
 			}
 		} else {
-			$status->addMessage('Failed to updated wifi settings', 'danger');
+			$status->addMessage('Failed to updated wifi settings', 'danger', false);
 		}
 	}
 
 	// Scan for all networks.
 	exec( 'sudo wpa_cli scan' );
 	sleep(3);
-	exec( 'sudo wpa_cli scan_results', $scan_return );
+	$cmd = 'sudo wpa_cli scan_results';
+	exec( $cmd, $scan_return );
+if ($debug) { echo "<br><pre>wpa_cli scan_results:<br>"; print_r($scan_return); echo "</pre>"; }
 	for( $shift = 0; $shift < 2; $shift++ ) {
 		// Skip first two header lines
 		array_shift($scan_return);
@@ -154,18 +199,19 @@ if ($debug) { echo "<br><pre><b>tmp_networks=</b>\n"; print_r($tmp_networks); ec
 	static $note = " <span style='color: red; font-weight: bold'>*</span>";
 	// $networks contains the prior-configured SSID(s).
 	// New SSIDs are added to $networks.
-	$num_networks = 0;
 	if (! isset($networks)) $networks = [];	// eliminates warning messages in log file
 
-	// Walk through each scanned SSID.
+	// Walk through each scanned network.
+	$numScannedNetworks = 0;
 	foreach( $scan_return as $network ) {
 		$arrNetwork = preg_split("/[\t]+/",$network);
-		// fields: bssid,   frequency, signal level, flags,    ssid 
-		// fields:          channel                  protocol  ssid
-		// fields: 0        1          2             3         4
-		if (isset($arrNetwork[4])) {
+		// fields:		bssid,   frequency, signal level, flags,    ssid 
+		// fields:		         channel                  protocol
+		// field #:		0        1          2             3         4
+		$ssid = getVariableOrDefault($arrNetwork, 4, null);
+		if ($ssid !== null) {
+			$numScannedNetworks += 1;
 			$channel = ConvertToChannel($arrNetwork[1]);
-			$ssid = $arrNetwork[4];
 			if (substr($ssid, 0, 4) == "\\x00") $ssid = "Unknown (\\x00)";
 			if (array_key_exists($ssid, $networks)) {
 				// Already configured SSID.
@@ -184,7 +230,6 @@ if ($debug) { echo "<br><pre><b>tmp_networks=</b>\n"; print_r($tmp_networks); ec
 				}
 			} else {
 				// New SSID
-				$num_networks += 1;
 				$networks[$ssid] = array(
 					'configured' => false,
 					'protocol' => ConvertToSecurity($arrNetwork[3]),
@@ -195,7 +240,13 @@ if ($debug) { echo "<br><pre><b>tmp_networks=</b>\n"; print_r($tmp_networks); ec
 					'connected' => false
 				);
 			}
+		} else {
+			// TODO: Is this ok?
+			$status->addMessage("'$cmd' returned line without SSID in field 4: $network", 'warning', false);
 		}
+	}
+	if ($numScannedNetworks == 0) {
+		$status->addMessage("No scanned networks found", 'warning', false);
 	}
 
 	exec( 'iwconfig wlan0', $iwconfig_return );
@@ -206,8 +257,9 @@ if ($debug) { echo "<br><pre><b>tmp_networks=</b>\n"; print_r($tmp_networks); ec
 	}
 ?>
 
-<div class="row"> <div class="col-lg-12">
-	<div class="panel panel-primary">
+	<div class="row"><!-- don't indent all <div> - there are too many of them -->
+	<div class="col-lg-12">
+		<div class="panel panel-primary">
 		<div class="panel-heading"><i class="fa fa-wifi fa-fw"></i> Configure Wi-Fi</div>
 		<!-- /.panel-heading -->
 		<div class="panel-body">
@@ -219,28 +271,23 @@ if ($debug) { echo "<br><pre><b>tmp_networks=</b>\n"; print_r($tmp_networks); ec
 			<input type="hidden" name="client_settings">
 			<table class="table table-responsive table-striped">
 				<thead>
-					<tr>
-						<th></th>
-						<th>SSID</th>
-						<th>Channel&nbsp;/&nbsp;Band</th>
-						<th>Security</th>
-						<th>Passphrase</th>
-						<th></th>
-					</tr>
+				<tr>
+				<th></th>
+				<th>SSID</th>
+				<th>Channel&nbsp;/&nbsp;Band</th>
+				<th>Security</th>
+				<th>Passphrase</th>
+				<th></th>
+				</tr>
 				</thead>
 				<tbody>
 
-			<?php $index = 0;
-			if ($num_networks == 0) {
-				echo "<tr>";
-					echo "<td colspan='6' class='errorMsgBig'>";
-						echo "No networks found";
-					echo "</td>";
-				echo "</tr>";
-			} else foreach ($networks as $ssid => $network) {
-					$configured = getVariableOrDefault($network, 'configured', false);
-					$connected = getVariableOrDefault($network, 'connected', false);
-					$visible = getVariableOrDefault($network, 'visible', false);
+			<?php
+				$index = 0;
+				foreach ($networks as $ssid => $network) {
+					$configured = toBool(getVariableOrDefault($network, 'configured', "false"));
+					$connected = toBool(getVariableOrDefault($network, 'connected', "false"));
+					$visible = toBool(getVariableOrDefault($network, 'visible', "false"));
 					$channel = getVariableOrDefault($network, 'channel', "");
 					$times = getVariableOrDefault($network, 'times', 1);
 					$protocol = getVariableOrDefault($network, 'protocol', "");
@@ -283,15 +330,15 @@ if ($debug) { echo "<br><pre><b>tmp_networks=</b>\n"; print_r($tmp_networks); ec
 					$d="";		// TODO: Any reason NOT to allow adding Open SSIDs ?
 					if ($configured) {
 						echo "<input type='submit' class='btn btn-warning' $buttonStyle value='Update' ";
-						if ($protocol === 'Open')
+						if ($protocol === 'TODO: why not?   Open')
 							echo "disabled title='Cannot update Open SSIDs' />";
 						else
 							echo "id='update$index' name='update$index' $d />";
 					} else {
 						echo "<input type='submit' class='btn btn-info' $buttonStyle value='Add' id='update$index' name='update$index' $d />";
 					}
-					$d = $configured ? '' : ' disabled title="SSID not configured"';
-					echo "<input type='submit' class='btn btn-danger' $buttonStyle value='Delete' name='delete$index' $d />";
+					if ($configured)
+						echo "<input type='submit' class='btn btn-danger' $buttonStyle value='Delete' name='delete$index'/>";
 					echo "</div>";
 					echo "</td>";
 					echo "</tr>\n";
@@ -310,8 +357,9 @@ if ($debug) { echo "<br><pre><b>tmp_networks=</b>\n"; print_r($tmp_networks); ec
 			WEP access points appear as 'Open'.
 			Allsky does not currently support connecting to WEP.
 		</div>
-	</div><!-- /.panel-primary -->
-</div><!-- /.col-lg-12 --> </div><!-- /.row -->
+		</div><!-- /.panel-primary -->
+	</div><!-- /.col-lg-12 -->
+	</div><!-- /.row -->
 <?php
 }
 ?>

@@ -34,6 +34,7 @@ $delimiter = "=";
 $convert = false;
 $options_file = null;
 $options_array = null;
+$use_not_in_settings_file = true;	// use only settings that are in settings file?
 
 $rest_index;
 $longopts = array(
@@ -42,6 +43,7 @@ $longopts = array(
 	"delimiter:",
 
 	// no arguments:
+	"settings-only",
 	"capture-only",
 	"convert",
 	"debug",
@@ -67,6 +69,8 @@ foreach ($options as $opt => $val) {
 		}
 	} else if ($opt === "capture-only") {
 		$capture_only = true;
+	} else if ($opt === "settings-only") {
+		$use_not_in_settings_file = false;
 	} else if ($opt === "convert") {
 		$convert = true;
 	} else if ($opt === "delimiter") {
@@ -128,40 +132,51 @@ if ($capture_only) {
 // The only legit one would be "lastchanged", and since we're converting
 // the settings file we want the user to be forced to look at the settings
 // before starting Allsky.
+
+	// Current settings my have uppercase so convert to lowercase so the
+	// getVariableOrDefault() below finds the setting.
+	$lowercaseSettings = Array();
+	foreach ($settings_array as $setting => $value) {
+		if ($setting !== "XX_END_XX")
+			$setting = strtolower($setting);
+		$lowercaseSettings[$setting] = $value;
+	}
+
 	$new_settings_array = Array();
 	$new_options = Array();
 	foreach ($options_array as $option) {
-		$type = getVariableOrDefault($option, 'type', "");
-		if (substr($type, 0, 6) === "header") continue;
-
 		$name = $option['name'];
-		$new_options[$name] = $option;
-// if ($debug) fwrite(STDERR, "Looking at option $name\n");
 
-		$val = getVariableOrDefault($settings_array, $name, null);
-		if ($val === null) {
-			$val = getVariableOrDefault($option, 'default', "");
-		} else {
+		// If needed, skip any option not in the settings file.
+		if (! $use_not_in_settings_file &&
+				getVariableOrDefault($lowercaseSettings, $name, null) === null) {
+			continue;
+		}
+
+		$type = getVariableOrDefault($option, 'type', "");
+##		if (substr($type, 0, 6) === "header") continue;
+
+		$new_options[$name] = $option;
+		if ($type === "boolean") {
+			$val = toBool(getVariableOrDefault($lowercaseSettings, $name, "false"));
+			$v = $val;
 			// $mode handles quotes around numbers.
 			// We just need to convert bools to true and false without quotes.
-			if ($type == "boolean") {
-				if ($val == 1 || $val == "1" || $val == "true")
-					$val = true;
-				else
-					$val = false;
+			if ($val == 1 || $val == "1" || $val == "true")
+				$val = true;
+			else
+				$val = false;
+		} else {
+			$val = getVariableOrDefault($lowercaseSettings, $name, null);
+			if ($val === null) {
+				$val = getVariableOrDefault($option, 'default', "");
 			}
+			$v = $val;
 		}
-		$new_settings_array[$name] = $val;
-	}
 
-	// Now determine which settings weren't in the options file.
-	foreach ($settings_array as $setting => $val) {
-		if (getVariableOrDefault($new_settings_array, $setting, null) === null) {
-			if ($debug) fwrite(STDERR, "Setting '$setting' not in options file.\n");
-/*
-			$new_settings_array[$setting] = $val;
-*/
-		}
+if ($debug) { fwrite(STDERR, "$name: type=$type, val=$v\n"); }
+
+		$new_settings_array[$name] = $val;
 	}
 
 	echo json_encode($new_settings_array, $mode);

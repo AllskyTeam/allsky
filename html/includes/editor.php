@@ -2,14 +2,37 @@
 
 function DisplayEditor()
 {
-	$status = new StatusMessages();
+	global $hasLocalWebsite, $hasRemoteWebsite, $status;
+
+	// See what files there are to edit.
+	$numFiles = 0;
+$numFiles = 2;	// TODO: remove when config.sh and ftp-settings.sh are deleted
+	if ($hasLocalWebsite && file_exists(ALLSKY_WEBSITE_LOCAL_CONFIG)) {
+		$localN = ALLSKY_WEBSITE_LOCAL_CONFIG_NAME;
+		$numFiles++;
+	} else {
+		$localN = null;
+	}
+	if ($hasRemoteWebsite && file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
+		$remoteN = ALLSKY_WEBSITE_REMOTE_CONFIG_NAME;
+		$numFiles++;
+	} else {
+		$remoteN = null;
+	}
+
+	if ($numFiles > 0) {
 ?>
-
 	<script type="text/javascript">
-
 		$(document).ready(function () {
+
 			var editor = null;
+
 			$.get("config/config.sh?_ts=" + new Date().getTime(), function (data) {
+				// .json files return "data" as json array, and we need a regular string.
+				// Get around this by stringify'ing "data".
+				if (typeof data != 'string') {
+					data = JSON.stringify(data, null, "\t");
+				}
 				editor = CodeMirror(document.querySelector("#editorContainer"), {
 					value: data,
 					mode: "shell",
@@ -70,7 +93,8 @@ function DisplayEditor()
 								returnMsg = "No response from save_file.php";
 							}
 							var m = '<div class="alert alert-' + c + '">' + returnMsg;
-							m += '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">x</button>';
+							m += '<button type="button" class="close" data-dismiss="alert"';
+							m += ' aria-hidden="true">x</button>';
 							m += '</div>';
 							messages.innerHTML += m;
 						},
@@ -78,9 +102,6 @@ function DisplayEditor()
 							alert("Unable to save '" + fileName + ": " + errorThrown);
 						}
 					});
-				}
-				else{
-					//alert("File not saved!");
 				}
 			});
 
@@ -97,7 +118,8 @@ function DisplayEditor()
 				} else {
 					editor.setOption("mode", "shell");
 				}
-				// It would be easy to support other files types.  Would need "type.js" file to do the formatting.
+				// It would be easy to support other files types.
+				// Would need "type.js" file to do the formatting.
 				$.get(fileName + "?_ts=" + new Date().getTime(), function (data) {
 					editor.getDoc().setValue(data);
 				}).fail(function(x) {
@@ -111,53 +133,51 @@ function DisplayEditor()
 		});
 
 	</script>
+<?php } ?>
 
 	<div class="row">
 		<div class="col-lg-12">
 			<div class="panel panel-primary">
 				<div class="panel-heading"><i class="fa fa-code fa-fw"></i> Editor</div>
-				<!-- /.panel-heading -->
 				<div class="panel-body">
 					<p id="editor-messages"><?php $status->showMessages(); ?></p>
 					<div id="editorContainer"></div>
-					<div style="margin-top: 15px;">
-				 <?php
-						$scripts = null;
+					<div class="editorBottomSection">
+				<?php
+					if ($numFiles === 0) {
+						echo "<div class='errorMsgBig'>No files to edit</div>";
+					} else {
 				?>
-						<select class="form-control" id="script_path" title="Pick a file"
-							style="display: inline-block; width: auto; margin-right: 15px; margin-bottom: 5px"
-						>
+						<select class="form-control editorForm" id="script_path" title="Pick a file">
 							<option value="config/config.sh">config.sh</option>
 							<option value="config/ftp-settings.sh">ftp-settings.sh</option>
-
 				<?php
-							if ($scripts != null) {
-								foreach ($scripts as $script) {
-									echo "<option value='current/" . basename(ALLSKY_SCRIPTS) . "/$script'>$script</option>";
-								}
-							}
-							if (file_exists(ALLSKY_WEBSITE_LOCAL_CONFIG)) {
+							if ($localN !== null) {
 								// The website is installed on this Pi.
 								// The physical path is ALLSKY_WEBSITE; virtual path is "website".
-								$N = ALLSKY_WEBSITE_LOCAL_CONFIG_NAME;
-								echo "<option value='website/$N'>$N (local Allsky Website)</option>";
+								echo "<option value='website/$localN'>";
+								echo "$localN (local Allsky Website)";
+								echo "</option>";
 							}
 
-							if (file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
-								// The website is remote, but a copy of the config file is on the Pi.
-								$N = ALLSKY_WEBSITE_REMOTE_CONFIG_NAME;
-								echo "<option value='{REMOTE}config/$N'>$N (remote Allsky Website)</option>";
+							if ($remoteN !== null) {
+								// A copy of the remote website's config file is on the Pi.
+								echo "<option value='{REMOTE}config/$remoteN'>";
+								echo "$remoteN (remote Allsky Website)";
+								echo "</option>";
 							}
-			   ?>
+				?>
 						</select>
-						<button type="submit" class="btn btn-primary" style="margin-bottom:5px" id="save_file"/>
+						<button type="submit" class="btn btn-primary editorSaveChanges" id="save_file"/>
 							<i class="fa fa-save"></i> Save Changes</button>
+				<?php
+					}
+				?>
 					</div>
 				</div>
 			</div>
 		</div>
 	</div>
-
 <?php
 }
 ?>

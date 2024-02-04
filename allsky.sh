@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# This EXIT code is also defined in variables.sh, but in case we can't open that file, we need it here.
-EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
-
 # Make it easy to find the beginning of this run in the log file.
 echo "     ***** Starting AllSky *****"
 
@@ -110,10 +107,10 @@ pgrep "${ME}" | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
 if [[ ${CAMERA_TYPE} == "RPi" ]]; then
 	# "true" means use doExit() on error
-	RPi_COMMAND_TO_USE="$( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" )"
+	RPi_COMMAND="-cmd $( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" )"
 
 elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
-	RPi_COMMAND_TO_USE=""
+	RPi_COMMAND=""
 	RESETTING_USB_LOG="${ALLSKY_TMP}/resetting_USB.txt"
 	ZWO_VENDOR="03c3"
 	TEMP="${ALLSKY_TMP}/${CAMERA_TYPE}_cameras.txt"
@@ -202,8 +199,6 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 			"${NOT_STARTED_MSG} ${MSG}"
 	fi
 
-	rm -f "${RESETTING_USB_LOG}"	# We found the camera so don't need to reset.
-
 else
 	MSG="FATAL ERROR: Unknown Camera Type: ${CAMERA_TYPE}."
 	echo -e "${RED}${MSG}  Stopping.${NC}" >&2
@@ -246,7 +241,7 @@ rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 # Optionally display a notification image.
 if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
 	# Can do this in the background to speed up startup.
-	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "StartingUp" 2>&1 &
+	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 0 "StartingUp" 2>&1 &
 fi
 
 : > "${ARGS_FILE}"
@@ -300,13 +295,18 @@ python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --cleartimings
 deactivate_python_venv
 
 # Run the main program - this is the main attraction...
-# -cmd needs to come first since the capture_RPi code checks for it first.  It's ignored
-# in capture_ZWO.
-# Pass debuglevel on command line so the capture program knows if it should display debug output.
-"${ALLSKY_BIN}/${CAPTURE}" -cmd "${RPi_COMMAND_TO_USE}" -debuglevel "${ALLSKY_DEBUG_LEVEL}" -config "${ARGS_FILE}"
+# ${RPi_COMMAND} needs to come first since the capture_RPi code checks for it first.
+# Pass debuglevel on command line so the capture program knows right away
+# if it should display debug output.
+
+#shellcheck disable=SC2086
+"${ALLSKY_BIN}/${CAPTURE}" ${RPi_COMMAND} -debuglevel "${ALLSKY_DEBUG_LEVEL}" -config "${ARGS_FILE}"
 RETCODE=$?
 
-[[ ${RETCODE} -eq ${EXIT_OK} ]] && doExit "${EXIT_OK}" ""
+if [[ ${RETCODE} -eq ${EXIT_OK} ]]; then
+	[[ ${CAMERA_TYPE} == "ZWO" ]] && rm -f "${RESETTING_USB_LOG}"
+	doExit "${EXIT_OK}" ""
+fi
 
 if [[ ${RETCODE} -eq ${EXIT_RESTARTING} ]]; then
 	if [[ ${ON_TTY} == "true" ]]; then
@@ -342,7 +342,7 @@ if [[ ${RETCODE} -ge ${EXIT_ERROR_STOP} ]]; then
 		echo "*** After fixing, restart the allsky service. ***"
 	fi
 	echo "***"
-	doExit "${EXIT_ERROR_STOP}" "Error"	# Can't do a custom message since we don't know the problem
+	doExit "${RETCODE}" "Error"	# Can't do a custom message since we don't know the problem
 fi
 
 # Some other error

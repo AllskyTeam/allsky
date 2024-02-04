@@ -34,13 +34,26 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta property="og:title" content="All Sky Camera" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"
+		rel="stylesheet"
+		integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx"
+		crossorigin="anonymous">
+
+	<link href='https://fonts.googleapis.com/css?family=Ubuntu:400,300' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" type="text/css" href="animate.min.css">
+	<link rel="stylesheet" type="text/css" href="allsky.css">
+	<link rel="stylesheet" type="text/css" href="allsky-font.css">
+
 	<?php
 		// This gets the settings.
 		// Some settings impact this page, some impact the constellation overlay.
-		include_once('functions.php');		// Sets $settings_array
+		include_once('functions.php');		// Sets $webSettings_array
 
 		// Get home page options
-		$homePage = v("homePage", null, $settings_array);
+		$homePage = v("homePage", null, $webSettings_array);
 			// TODO: replace double quotes with &quot; in any variable that can be in an HTML attribute,
 			// which is many of them.
 			$backgroundImage = v("backgroundImage", "", $homePage);
@@ -87,7 +100,7 @@
 		// Get javascript config variable options.
 		// To avoid changing too much code, the "config" javascript variable is created
 		// here to replace the old config.js file that contained that variable.
-		$config = v("config", null, $settings_array);
+		$config = v("config", null, $webSettings_array);
 		$imageWidth = v("imageWidth", null, $config);
 			echo "<script>config = {\n";
 			foreach ($config as $var => $val) {	// ok to have comma after last entry
@@ -110,24 +123,12 @@
 	?>
 
 	<title><?php echo $title ?></title>
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta property="og:title" content="All Sky Camera" />
 	<meta property="og:description" content="<?php echo $og_description ?>" />
 	<meta property="og:type" content="<?php echo $og_type ?>" />
 	<meta property="og:url" content="<?php echo $og_url ?>" />
 	<meta property="og:image" content="<?php echo $og_image ?>" />
 	<meta property="og:image:type" content="<?php echo $og_image_type ?>" />
 	<link rel="shortcut icon" type="<?php echo $faviconType ?>" href="<?php echo $favicon ?>">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"
-		rel="stylesheet"
-		integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx"
-		crossorigin="anonymous">
-
-	<link href='https://fonts.googleapis.com/css?family=Ubuntu:400,300' rel='stylesheet' type='text/css'>
-	<link rel="stylesheet" type="text/css" href="animate.min.css">
-	<link rel="stylesheet" type="text/css" href="allsky.css">
-	<link rel="stylesheet" type="text/css" href="allsky-font.css">
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"

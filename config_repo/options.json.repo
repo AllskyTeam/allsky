@@ -95,17 +95,6 @@
 "action" : "reload"
 },
 {
-"name" : "daybrightness",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "_default",
-"description" : "<strong>Deprecated</strong>.  Use <span class='WebUISettings'>Mean Target</span> instead.<br>Changes the amount of light in the image. Higher numbers are brighter.",
-"label" : "Brightness",
-"type" : "float",
-"usage" : "capture",
-"action" : "reload"
-},
-{
 "name" : "daydelay",
 "minimum" : "_min",
 "maximum" : "none",
@@ -331,17 +320,6 @@
 "action" : "reload"
 },
 {
-"name" : "nightbrightness",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "_default",
-"description" : "<strong>Deprecated</strong>.  Use <span class='WebUISettings'>Mean Target</span> instead.<br>Changes the amount of light in the image. Higher numbers are brighter.",
-"label" : "Brightness",
-"type" : "float",
-"usage" : "capture",
-"action" : "reload"
-},
-{
 "name" : "nightdelay",
 "minimum" : "_min",
 "maximum" : "none",
@@ -555,18 +533,6 @@
 "default" : "_default",
 "description" : "Changes the difference between light and dark areas.<br>Higher numbers increase contrast.",
 "label" : "Gamma",
-"type" : "integer",
-"usage" : "capture",
-"display" : "_display",
-"action" : "reload"
-},
-{
-"name" : "offset",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "_default",
-"description" : "Adds about 1/10 the specified number to every pixel to brighten everything.",
-"label" : "Offset",
 "type" : "integer",
 "usage" : "capture",
 "display" : "_display",
@@ -817,6 +783,7 @@
 "label" : "ZWO Exposure Type",
 "type" : "select",
 "usage" : "capture",
+"display" : "_display",
 "options" : [
 	{"value" : 0, "label" : "Snapshot"},
 	{"value" : 1, "label" : "Video Off"},
@@ -926,16 +893,6 @@
 "default" : false,
 "description" : "Enable to display the camera gain on the overlay.<br>If <span class='WebUISetting'>Auto-Gain</span> is set, '(auto)' will appear after the gain value.",
 "label" : "Show Gain",
-"type" : "boolean",
-"usage" : "capture",
-"booldependsoff" : "overlaymethod",
-"action" : "reload"
-},
-{
-"name" : "showbrightness",
-"default" : false,
-"description" : "Enable to display the <span class='WebUISetting'>Brightness</span> number you set on the overlay.",
-"label" : "Show Brightness",
 "type" : "boolean",
 "usage" : "capture",
 "booldependsoff" : "overlaymethod",
@@ -1241,6 +1198,35 @@
 },
 
 {
+"name" : "webuitab========================================",
+"label" : "WebUI",
+"type" : "header-tab"
+},
+{
+"name" : "webuiheading",
+"label" : "WebUI Configuration",
+"type" : "header"
+},
+{
+"name" : "imagessortorder",
+"default" : "ascending",
+"description" : "The order the images on the 'Images' page are sorted in.<br>'Ascending' is oldest to newest. 'Descending' is newest to oldest.",
+"label" : "Images Sort Order",
+"type" : "select",
+"options" : [
+	{"value" : "ascending", "label" : "Ascending"},
+	{"value" : "descending", "label" : "Descending"}
+]
+},
+{
+"name" : "showdelay",
+"default" : true,
+"description" : "Disable to hide the <span class='alert-info'>Daytime images updated every...</span> message in the <span class='WebUIWebPage'>Live View</span> page.",
+"label" : "Show Updated Message",
+"type" : "boolean"
+},
+
+{
 "name" : "cameratab========================================",
 "label" : "Camera Type",
 "type" : "header-tab"
@@ -1270,6 +1256,7 @@
 "description" : "The model of camera you are using.<br><strong>To change it, change the <span class='WebUISetting'>Camera Type</span> above.</strong>",
 "label" : "Camera Model",
 "type" : "readonly",
+"usage" : "capture",
 "display" : true,
 "action" : "restart"
 },
@@ -1289,18 +1276,6 @@
 "action" : "restart"
 },
 
-{
-"name" : "webuitab========================================",
-"label" : "WebUI",
-"display" : false,
-"type" : "header-tab"
-},
-{
-"name" : "webuiheading",
-"label" : "WebUI Configuration",
-"display" : false,
-"type" : "header"
-},
 {
 "name" : "XX_END_XX"
 }

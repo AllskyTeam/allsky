@@ -48,7 +48,7 @@ function process_WLAN_data($interface, $interface_output, $numCalls)
 	parse_ifconfig($interface_output, $strHWAddress, $strIPAddress, $strNetMask, $strRxPackets, $strTxPackets, $strRxBytes, $strTxBytes);
 
 	// parse the iwconfig data:
-	preg_match( '/ESSID:\"([a-zA-Z0-9\s]+)\"/i',$interface_output,$result );
+	preg_match( '/ESSID:\"([-a-zA-Z0-9\s]+)\"/i',$interface_output,$result );
 	$strSSID = isset($result[1]) ?  str_replace('"','',$result[1]) : $notSetMsg;
 
 	preg_match( '/Access Point: ([0-9a-f:]+)/i',$interface_output,$result );

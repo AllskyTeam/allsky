@@ -123,7 +123,6 @@ struct overlay {
 	bool showExposure					= false;
 	bool showTemp						= false;
 	bool showGain						= false;
-	bool showBrightness					= false;
 	bool showMean						= false;
 	bool showFocus						= false;
 	bool showHistogramBox				= false;
@@ -261,8 +260,6 @@ struct config {			// for configuration variables
 	long nightExposure_us				= 20 * US_IN_SEC;
 	double temp_nightExposure_ms		= nightExposure_us / US_IN_MS;
 
-	long dayBrightness					= NOT_CHANGED;		// Brightness requested by user
-	long nightBrightness				= NOT_CHANGED;
 	bool dayAutoGain					= true;				// Use auto-gain?
 	bool nightAutoGain					= true;
 	double dayMaxAutoGain				= NOT_CHANGED;		// Max gain in auto-gain mode
@@ -285,7 +282,6 @@ struct config {			// for configuration variables
 	double contrast						= NOT_CHANGED;
 	double sharpness					= NOT_CHANGED;
 	long gamma							= NOT_CHANGED;
-	long offset							= NOT_CHANGED;
 	bool asiAutoBandwidth				= true;
 	long asiBandwidth					= NOT_CHANGED;
 	char const *fileName				= "image.jpg";		// value user specified
@@ -325,14 +321,12 @@ struct config {			// for configuration variables
 	double defaultSaturation			= NOT_SET;
 	double defaultContrast				= NOT_SET;
 	double defaultSharpness				= NOT_SET;
-	long defaultBrightness				= NOT_SET;
 	int defaultQuality					= NOT_SET;
 
 	// Current values - may vary between day and night
 	bool currentAutoExposure;
 	long currentMaxAutoExposure_us;
 	long currentExposure_us;
-	long currentBrightness;
 	int currentDelay_ms;
 	bool currentAutoGain;
 	double currentMaxAutoGain;
@@ -354,7 +348,6 @@ struct config {			// for configuration variables
 	long lastFocusMetric				= NOT_SET;
 	long lastAsiBandwidth				= NOT_SET;
 	double lastMean						= NOT_SET;
-	double lastMeanFull					= NOT_SET;
 	bool goodLastExposure				= false;		// Was the last image propery exposed?
 };
 
@@ -391,6 +384,7 @@ char const *getFlip(int);
 void closeUp(int);
 void IntHandle(int);
 int stopVideoCapture(int);
+int stopExposure(int);
 int closeCamera(int);
 bool validateLong(long *, long, long, char const *, bool);
 bool validateFloat(double *, double, double, char const *, bool);

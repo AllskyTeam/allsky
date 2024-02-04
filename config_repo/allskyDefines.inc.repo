@@ -15,6 +15,7 @@ define('ALLSKY_WEBSITE_REMOTE_CONFIG_NAME',  'XX_ALLSKY_WEBSITE_REMOTE_CONFIG_NA
 define('ALLSKY_WEBSITE_LOCAL_CONFIG',  'XX_ALLSKY_WEBSITE_LOCAL_CONFIG_XX');
 define('ALLSKY_WEBSITE_REMOTE_CONFIG',  'XX_ALLSKY_WEBSITE_REMOTE_CONFIG_XX');
 define('ALLSKY_OVERLAY',  'XX_ALLSKY_OVERLAY_XX');
+define('MY_OVERLAY_TEMPLATES',  'XX_MY_OVERLAY_TEMPLATES_XX');
 define('ALLSKY_MODULES',  'XX_ALLSKY_MODULES_XX');
 define('ALLSKY_OWNER', 'XX_ALLSKY_OWNER_XX');
 define('ALLSKY_GROUP', 'XX_ALLSKY_GROUP_XX');
@@ -29,12 +30,11 @@ if (ALLSKY_HOME == "XX_ALLSKY_HOME" . "_XX") {
 	// This file hasn't been updated yet after installation.
 	// This would only happen if they updated this file and not the whole Allsky release,
 	// which is hard since we only come out with releases.
-	echo "<div style='font-size: 200%;'>";
-	echo "<span style='color: red'>";
+	echo "<div class='errorMsgBig errorMsgBox'>";
 	echo "Please run the following from the 'allsky' directory before using the WebUI:";
-	echo "</span>";
-	echo "<code>   ./install.sh --update</code>";
+	echo "<br><br>";
+	echo "<code>   ./install.sh --fix</code>";
 	echo "</div>";
-	exit;
+	exit(1);
 }
 ?>

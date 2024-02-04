@@ -9,6 +9,8 @@
 	--dark-text-reversed: #eeeeee;
 	--rowSeparator: 1px solid #d3d3d3;
 	--rowSeparator-dark: 1px solid #707070;
+	--btn-hover-color: black;
+	--btn-dark-color: #bfbfbf;
 }
 
 .page-header {
@@ -350,11 +352,11 @@ input[type="text"].has-error {
 	border: 2px solid #00527c;
 }
 .btn-primary:hover {
-	color: black;
+	color: var(--btn-hover-color);
 	background-color: #73baf7;
 }
 .dark .btn-primary {
-	color: #bfbfbf;
+	color: var(--btn-dark-color);
 	border-color: #1475a7;
 	background-color: #1d5a79;
 }
@@ -363,13 +365,26 @@ input[type="text"].has-error {
 	border: 2px solid #3e743e;
 }
 .btn-success:hover {
-	color: black;
+	color: var(--btn-hover-color);
 	background-color: #6cd76c;
 }
 .dark .btn-success {
-	color: #bfbfbf;
+	color: var(--btn-dark-color);
 	border-color: #5ea853;
 	background-color: #338833;
+}
+
+.btn-info {
+	border: 2px solid #32869f;
+}
+.btn-info:hover {
+	color: var(--btn-hover-color);
+	background-color: #62dbff;
+}
+.dark .btn-info {
+	color: #d7d7d7;
+	border: 2px solid #7cb9cb;
+	background-color: #4998af;
 }
 
 .btn-warning {
@@ -377,11 +392,11 @@ input[type="text"].has-error {
 	background-color: #e48d12;
 }
 .btn-warning:hover {
-	color: black;
+	color: var(--btn-hover-color);
 	background-color: #ffa019;
 }
 .dark .btn-warning {
-	color: #bfbfbf;
+	color: var(--btn-dark-color);
 	background-color: #c46d0d;
 	border-color: #e48d2d;
 }
@@ -392,11 +407,11 @@ input[type="text"].has-error {
 	background-color: #f13636;
 }
 .btn-danger:hover {
-	color: black;
+	color: var(--btn-hover-color);
 	background-color: #f96f6f;
 }
 .dark .btn-danger {
-	color: #bfbfbf;
+	color: var(--btn-dark-color);
 	background-color: #8d3431;
 	border-color: #ad5451;
 }
@@ -418,6 +433,7 @@ input[type="text"].has-error {
 
 .dark .btn-primary:hover,
 .dark .btn-success:hover,
+.dark .btn-info:hover,
 .dark .btn-warning:hover,
 .dark .btn-danger:hover
 {
@@ -667,4 +683,35 @@ div.sticky {
 
 #backToTopBtn:hover {
 	background-color: #888; /* Add a lighter-grey background on hover */
+}
+
+.middleVerticalAlign {
+	vertical-align: middle;
+}
+
+/* Classes specific to WebUI pages */
+.editorForm {
+	display: inline-block;
+	width: auto;
+	margin-right: 15px;
+	margin-bottom: 5px;
+}
+.editorSaveChanges {
+	margin-bottom: 5px;
+}
+.editorBottomSection {
+	margin-top: 15px;
+}
+.functionsListFileType {
+	float: left;
+	width: 100%;
+	margin-bottom: 2px;
+}
+.functionsListTypeImg {
+	margin-left: 10px;
+	max-width: 50%;
+	max-height:100px;
+}
+.imagesSortOrder {
+	font-size: 60%;
 }

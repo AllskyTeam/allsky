@@ -7,18 +7,17 @@
  *
 */
 
-// Sets all the define() variables.
+// This file sets all the define() variables.
 $defs = 'allskyDefines.inc';
 if ((include $defs) == false) {
-	echo "<div style='font-size: 200%;'>";
-	echo "<p style='color: red'>";
+	echo "<br><div class='errorMsgBig errorMsgBox'>";
 	echo "The installation of the WebUI is incomplete.<br>";
 	echo "File '$defs' not found.<br>";
-	echo "Please run the following from the 'allsky' directory:";
-	echo "</p>";
-	echo "<code>   ./install.sh --function create_webui_defines</code>";
+	echo "Please run the following to fix:";
+	echo "<br><br>";
+	echo "<code>   cd ~/allsky; ./install.sh --function create_webui_defines</code>";
 	echo "</div>";
-	exit;
+	exit(1);
 }
 
 // Read and decode a json file, returning the decoded results or null.
@@ -28,7 +27,7 @@ function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=nul
 	$retMsg = "";
 	$html = (get_current_user() == WEBSERVER_OWNER);
 	if ($html) {
-		$div = "<div style='color: red; font-size: 200%;'>";
+		$div = "<div class='errorMsgBig'>";
 		$end = "</div>";
 		$br = "<br>";
 		$sep = "<br>";
@@ -114,36 +113,47 @@ function verifyNumber($num) {
 	return true;
 }
 
-$image_name=null;
+// Globals
+$image_name = null;
 $showDelay = true; $delay=null; $daydelay=null; $nightdelay=null;
-$darkframe=null;
-$useLogin=null;
+$imagesSortOrder = null;
+$darkframe = null;
+$useLogin = null;
 $temptype = null;
 $lastChanged = null;
 $websiteURL = null;
 $settings_array = null;
+$hasLocalWebsite = null;
+$hasRemoteWebsite = null;
+
 function initialize_variables() {
 	global $status, $needToDisplayMessages;
 	global $image_name;
 	global $showDelay, $delay, $daydelay, $nightdelay;
+	global $imagesSortOrder;
 	global $darkframe, $useLogin, $temptype, $lastChanged, $lastChangedName;
 	global $websiteURL;
 	global $settings_array;
-
-	// The Camera Type should be set during the installation, so this "should" never fail...
-	$cam_type = getCameraType();
-	if ($cam_type == '') {
-		echo "<div style='color: red; font-size: 200%;'>";
-		echo "'Camera Type' not defined in config.sh.  Please update it.";
-		echo "</div>";
-		exit;
-	}
+	global $hasLocalWebsite, $hasRemoteWebsite;
 
 	$settings_file = getSettingsFile();
 	$errorMsg = "ERROR: Unable to process settings file '$settings_file'.";
 	$settings_array = get_decoded_json_file($settings_file, true, $errorMsg);
 	if ($settings_array === null) {
-		exit;
+		exit(1);
+	}
+
+// TODO: replace with settings when in settings file.
+	// See if there are any websites.
+	if (file_exists(getLocalWebsiteConfigFile())) {
+		$hasLocalWebsite = true;
+	} else {
+		$hasLocalWebsite = false;
+	}
+	if (file_exists(getRemoteWebsiteConfigFile())) {
+		$hasRemoteWebsite = true;
+	} else {
+		$hasRemoteWebsite = true;
 	}
 
 	// $img_dir is an alias in the web server's config that points to where the current image is.
@@ -151,6 +161,7 @@ function initialize_variables() {
 	$img_dir = get_variable(ALLSKY_CONFIG . '/config.sh', 'IMG_DIR=', 'current/tmp');
 	$image_name = $img_dir . "/" . $settings_array['filename'];
 	$darkframe = toBool(getVariableOrDefault($settings_array, 'takedarkframes', "false"));
+	$imagesSortOrder = getVariableOrDefault($settings_array, 'imagessortorder', "ascending");
 	$useLogin = toBool(getVariableOrDefault($settings_array, 'uselogin', "true"));
 	$temptype = getVariableOrDefault($settings_array, 'temptype', "C");
 	$lastChanged = getVariableOrDefault($settings_array, $lastChangedName, "");
@@ -161,7 +172,6 @@ function initialize_variables() {
 	$daydelay = $settings_array["daydelay"];
 	$nightdelay = $settings_array["nightdelay"];
 	$showDelay = toBool(getVariableOrDefault($settings_array, 'showdelay', "true"));
-	if (! $showDelay) return;
 
 	$daymaxautoexposure = $settings_array["daymaxautoexposure"];
 	$dayexposure = $settings_array["dayexposure"];
@@ -172,48 +182,53 @@ function initialize_variables() {
 	$ok = true;
 	// These are all required settings so if they are blank don't display a
 	// message since the WebUI will.
-	if (! verifyNumber($daydelay)) $ok = false;
+	$delay = 0;
+	if (! verifyNumber($daydelay)) $ok = false; else $delay += $daydelay;
 	if (! verifyNumber($daymaxautoexposure)) $ok = false;
 	if (! verifyNumber($dayexposure)) $ok = false;
-	if (! verifyNumber($nightdelay)) $ok = false;
+	if (! verifyNumber($nightdelay)) $ok = false; else $delay += $nightdelay;
 	if (! verifyNumber($nightmaxautoexposure)) $ok = false;
 	if (! verifyNumber($nightexposure)) $ok = false;
-	if ($ok) {
-		$daydelay += ($consistentDelays ? $daymaxautoexposure : $dayexposure);
-		$nightdelay += ($consistentDelays ? $nightmaxautoexposure : $nightexposure);
 
-		// Determine if it's day or night so we know which delay to use.
-		$angle = getVariableOrDefault($settings_array, 'angle', -6);
-		$lat = getVariableOrDefault($settings_array, 'latitude', "");
-		$lon = getVariableOrDefault($settings_array, 'longitude', "");
-		if ($lat != "" && $lon != "") {
-			exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
-			if ($retval == 2) {
-				$delay = $daydelay;
-			} else if ($retval == 3) {
-				$delay = $nightdelay;
-			} else {
-				$msg = "<code>sunwait</code> returned $retval; don't know if it's day or night.";
-				$status->addMessage($msg, 'danger', false);
-				$needToDisplayMessages = true;
-				$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
-			}
+	if (! $ok) {
+		$showDelay = false;
+		if ($delay === 0) $delay = 20;	// a reasonable default
+		return;
+	}
 
-			// Convert to seconds for display.
-			$daydelay /= 1000;
-			$nightdelay /= 1000;
+	$daydelay += ($consistentDelays ? $daymaxautoexposure : $dayexposure);
+	$nightdelay += ($consistentDelays ? $nightmaxautoexposure : $nightexposure);
+
+	// Determine if it's day or night so we know which delay to use.
+	$angle = getVariableOrDefault($settings_array, 'angle', -6);
+	$lat = getVariableOrDefault($settings_array, 'latitude', "");
+	$lon = getVariableOrDefault($settings_array, 'longitude', "");
+	if ($lat != "" && $lon != "") {
+		exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
+		if ($retval == 2) {
+			$delay = $daydelay;
+		} else if ($retval == 3) {
+			$delay = $nightdelay;
 		} else {
-			// Error message will be displayed by WebUI.
-			$showDelay = false;
-			// Not showing delay so just use average
+			$msg = "<code>sunwait</code> returned $retval; don't know if it's day or night.";
+			$status->addMessage($msg, 'danger', false);
+			$needToDisplayMessages = true;
 			$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
 		}
 
-		// Lessen the delay between a new picture and when we check.
-		$delay /= 4;
+		// Convert to seconds for display.
+		$daydelay /= 1000;
+		$nightdelay /= 1000;
 	} else {
+		// Error message will be displayed by WebUI.
 		$showDelay = false;
+		// Not showing delay so just use average
+		$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
 	}
+
+	// Lessen the delay between a new picture and when we check.
+	$delay /= 5;
+	if ($delay < 2) $delay = 2;
 }
 
 // Check if the settings have been configured.
@@ -508,7 +523,7 @@ function get_variable($file, $searchfor, $default)
 {
 	// get the file contents
 	if (! file_exists($file)) {
-		$msg  = "<div style='color: red; font-size: 200%;'>";
+		$msg  = "<div class='error-msg'>";
 		$msg .= "<br>File '$file' not found!";
 		$msg .= "</div>";
 		echo $msg;
@@ -588,16 +603,16 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
 						$fullFilename = "$images_dir/$day/$dir$imageType_name";
 						if ($type == "picture") {
 							echo "<a href='$fullFilename'>";
-							echo "<div style='float: left; width: 100%; margin-bottom: 2px;'>";
+							echo "<div class='functionsListFileType'>";
 							echo "<label>$day</label>";
-							echo "<img src='$fullFilename' style='margin-left: 10px; max-width: 50%; max-height:100px'/>";
+							echo "<img src='$fullFilename' class='functionsListTypeImg' />";
 							echo "</div></a>\n";
 						} else {	// is video
-							// xxxx TODO: Show a thumbnail since loading all the videos is bandwidth intensive.
+							// TODO: Show a thumbnail since loading videos is bandwidth intensive.
 							echo "<a href='$fullFilename'>";
-							echo "<div style='float: left; width: 100%; margin-bottom: 2px;'>";
-							echo "<label style='vertical-align: middle'>$day &nbsp; &nbsp;</label>";
-							echo "<video width='85%' height='85%' controls style='vertical-align: middle'>";
+							echo "<div class='functionsListFileType'>";
+							echo "<label class='middleVerticalAlign'>$day &nbsp; &nbsp;</label>";
+							echo "<video width='85%' height='85%' controls class='middleVerticalAlign'>";
 							echo "<source src='$fullFilename' type='video/mp4'>";
 							echo "Your browser does not support the video tag.";
 							echo "</video>";
@@ -623,12 +638,12 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
 				$fullFilename = "$images_dir/$chosen_day/$dir$imageType_name";
 				if ($type == "picture") {
 				    echo "<a href='$fullFilename'>
-					<div style='float: left'>
-					<img src='$fullFilename' style='max-width: 100%;max-height:400px'/>
+					<div class='left'>
+					<img src='$fullFilename' style='max-width: 100%; max-height: 400px'/>
 					</div></a>\n";
 				} else {	//video
 				    echo "<a href='$fullFilename'>";
-				    echo "<div style='float: left; width: 100%'>
+				    echo "<div class='left' style='width: 100%'>
 					<video width='85%' height='85%' controls>
 						<source src='$fullFilename' type='video/mp4'>
 						Your browser does not support the video tag.
@@ -729,18 +744,24 @@ function updateFile($file, $contents, $fileName, $toConsole) {
 	return "";
 }
 
-function getCameraType() {
-	return get_variable(ALLSKY_CONFIG . '/config.sh', 'CAMERA_TYPE=', '');
-}
-
-// Return the settings file for the specified camera.
+// Return the settings file for the current camera.
 function getSettingsFile() {
 	return ALLSKY_CONFIG . "/settings.json";
 }
 
-// Return the options file for the specified camera.
+// Return the options file for the current camera.
 function getOptionsFile() {
 	return ALLSKY_CONFIG . "/options.json";
+}
+
+// Return the full path name of the local Website configuration file.
+function getLocalWebsiteConfigFile() {
+	return ALLSKY_WEBSITE_LOCAL_CONFIG;
+}
+
+// Return the full path name of the remote Website configuration file.
+function getRemoteWebsiteConfigFile() {
+	return ALLSKY_WEBSITE_REMOTE_CONFIG;
 }
 
 // Return the file name after accounting for any ${} variables.

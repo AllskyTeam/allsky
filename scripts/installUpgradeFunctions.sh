@@ -3,6 +3,50 @@
 # Shell variables and functions used by the installation and upgrade scripts.
 # This file is "source"d into others, and must be done AFTER source'ing variables.sh.
 
+
+######################################### variables
+
+# export to keep shellcheck quiet
+	# The login installing Allsky
+export ALLSKY_OWNER=$( id --group --name )
+export ALLSKY_GROUP=${ALLSKY_OWNER}
+export WEBSERVER_OWNER="www-data"
+export WEBSERVER_GROUP="${WEBSERVER_OWNER}"
+
+	# Central location for all master repository files.
+export ALLSKY_REPO="${ALLSKY_HOME}/config_repo"
+export REPO_WEBCONFIG_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
+export REPO_SUDOERS_FILE="${ALLSKY_REPO}/sudoers.repo"
+export ALLSKY_DEFINES_INC="allskyDefines.inc"
+export REPO_WEBUI_DEFINES_FILE="${ALLSKY_REPO}/${ALLSKY_DEFINES_INC}.repo"
+export REPO_LIGHTTPD_FILE="${ALLSKY_REPO}/lighttpd.conf.repo"
+export REPO_AVI_FILE="${ALLSKY_REPO}/avahi-daemon.conf.repo"
+export REPO_OPTIONS_FILE="${ALLSKY_REPO}/$( basename "${OPTIONS_FILE}" ).repo"
+
+##### Information on prior Allsky versions
+	# Location of old-style WebUI and Website.
+export OLD_WEBUI_LOCATION="/var/www/html"
+export OLD_WEBSITE_LOCATION="${OLD_WEBUI_LOCATION}/allsky"
+	# Directory of prior version of Allsky, if it exists.
+export PRIOR_ALLSKY_DIR="$( dirname "${ALLSKY_HOME}" )/${ALLSKY_INSTALL_DIR}-OLD"
+	# Prior "config" directory, if it exists.
+export PRIOR_CONFIG_DIR="${PRIOR_ALLSKY_DIR}/$( basename "${ALLSKY_CONFIG}" )"
+export PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE="${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
+export PRIOR_PYTHON_VENV="${PRIOR_ALLSKY_DIR}/venv/lib"
+
+	# Name of setting that determines version of Website config file.
+export WEBSITE_CONFIG_VERSION="ConfigVersion"
+	# Name of setting that holds the Allsky version.
+export WEBSITE_ALLSKY_VERSION="config.AllskyVersion"
+
+
+	# Location of prior "config.sh" file; varies by release; this is most recent.
+export PRIOR_CONFIG_FILE="${PRIOR_CONFIG_DIR}/config.sh"
+	# Location of prior "ftp-settings.sh" file; varies by release; this is most recent.
+export PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"
+
+
+
 ######################################### functions
 
 #####
@@ -196,46 +240,82 @@ function display_msg()
 	fi >>  "${DISPLAY_MSG_LOG}"
 }
 
-function update_json_file()		# field, new value, file, [type]
+####
+# Update a json file.   -d  deletes the field
+function update_json_file()		# [-d] field, new value, file, [type]
 {
-	local M="${ME:-${FUNCNAME[0]}}"
-	local FIELD="${1}"
+	local M FIELD NEW_VALUE FILE TYPE DOUBLE_QUOTE TEMP ACTION
+
+	M="${ME:-${FUNCNAME[0]}}"
+
+	if [[ ${1} == "-d" ]]; then
+		DELETE="true"
+		shift
+	else
+		DELETE="false"
+	fi
+
+	FIELD="${1}"
 	if [[ ${FIELD:0:1} != "." ]]; then
 		echo "${M}: Field names must begin with period '.' (Field='${FIELD}')" >&2
 		return 1
 	fi
 
-	local NEW_VALUE="${2}"
-	local FILE="${3:-${SETTINGS_FILE}}"
-	local TYPE="${4:-string}"		# optional
-	local DOUBLE_QUOTE
-	if [[ ${TYPE} == "string" ]]; then
-		DOUBLE_QUOTE='"'
+	FILE="${3:-${SETTINGS_FILE}}"
+	TEMP="/tmp/$$"
+
+	if [[ ${DELETE} == "true" ]]; then
+		NEW_VALUE="(delete)"	# only used in error message below.
+		ACTION="del(${FIELD})"
 	else
-		DOUBLE_QUOTE=""
+		NEW_VALUE="${2}"
+		TYPE="${4:-string}"		# optional
+		if [[ ${TYPE} == "string" ]]; then
+			DOUBLE_QUOTE='"'
+		else
+			DOUBLE_QUOTE=""
+		fi
+		ACTION="${FIELD} = ${DOUBLE_QUOTE}${NEW_VALUE}${DOUBLE_QUOTE}"
 	fi
-
-	local TEMP="/tmp/$$"
-	# Have to use "cp" instead of "mv" to keep any hard link.
-	if jq "${FIELD} = ${DOUBLE_QUOTE}${NEW_VALUE}${DOUBLE_QUOTE}" "${FILE}" > "${TEMP}" ; then
+	if jq --indent 4 "${ACTION}" "${FILE}" > "${TEMP}" ; then
+		# Have to use "cp" instead of "mv" to keep any hard link.
 		cp "${TEMP}" "${FILE}"
-		rm "${TEMP}"
-		return 0
+		RET=0
+	else
+		RET=1
+	fi
+	rm "${TEMP}"
+
+	if [[ ${RET} -ne 0 ]]; then
+		echo "${M}: Unable to update json value of '${FIELD}' to '${NEW_VALUE}' in '${FILE}'." >&2
 	fi
 
-	echo "${M}: Unable to update json value of '${FIELD}' to '${NEW_VALUE}' in '${FILE}'." >&2
-
-	return 2
+	return "${RET}"
 }
 
+####
+# Update a Website configuration file from old to current version.
+update_website_config_file()
+{
+	local FILE PRIOR_VERSION CURRENT_VERSION LOCAL_OR_REMOTE
 
-######################################### variables
+	FILE="${1}"
+	PRIOR_VERSION="${2}"
+	CURRENT_VERSION="${3}"
+	LOCAL_OR_REMOTE="${4}"
 
-# export to keep shellcheck quiet
-export ALLSKY_OWNER=$( id --group --name )		# The login installing Allsky
-export ALLSKY_GROUP=${ALLSKY_OWNER}
-export WEBSERVER_OWNER="www-data"
-export WEBSERVER_GROUP="${WEBSERVER_OWNER}"
-export REPO_WEBCONFIG_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
-export OLD_WEBUI_LOCATION="/var/www/html"		# location of old-style WebUI
-export OLD_WEBSITE_LOCATION="${OLD_WEBUI_LOCATION}/allsky"
+	# Current version: 2
+	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
+		# Version 2 removed AllskyWebsiteVersion.
+		update_json_file -d ".AllskyWebsiteVersion" "" "${FILE}"
+	fi
+
+	# Set to current version.
+	update_json_file ".${WEBSITE_CONFIG_VERSION}" "${CURRENT_VERSION}" "${FILE}"
+
+	if [[ ${LOCAL_OR_REMOTE} == "local" ]]; then
+		# Since we're installing a new Allsky, update the Allsky version.
+		# For remote Websites it'll be updated when the user updates the Website.
+		update_json_file ".${WEBSITE_ALLSKY_VERSION}" "${ALLSKY_VERSION}" "${FILE}"
+	fi
+}

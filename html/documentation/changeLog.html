@@ -45,15 +45,65 @@
 		<h2>v2024.xx.xx</h2>
 		<details open>
 			<summary></summary>
-			<h4>Enhancements / Changes</h4>
+
+			<h4>Changes that may require action</h4>
+			<blockquote class="warning">
+			The changes in this section may require you to change settings;
+			at the least you should check that everything is still working.
+			</blockquote>
+
 			<ul>
+				<li>Checking the brightness of an image is quicker since the mean brightness
+					determined by the capture program is used rather than recalculating
+					the brightness.
+					The capture programs look at the center
+					of an image to determine its brightness whereas
+					the last release looked at the whole image including any dark borders.
+					<br><span class="possibleAction">Possible action: </span>
+					You may need to adjust your thresholds.
+					<span class="WebUISetting">Remove Bad Images Thresholds</span>.
+				</li>
+				<li>The <span class="WebUISetting">Remove Bad Images Thresholds</span>
+					settings are now between 0.0 and 1.0; they used to be between
+					0 and 100.
+					<br><span class="possibleAction">Possible action: </span>
+					Although the threshold values should have been adjusted to the
+					new range during installation, you should check them to make sure.
+				</li>
+				<li>(ZWO) The mean brightness returned by the capture program is
+					now a number between 0.0 and 1.0; it used to be between 0 and 255.
+					This matches the <span class="WebUISetting">Target Brightness</span>
+					settings which are also between 0.0 and 1.0 as well as the
+					<span class="WebUISetting">Remove Bad Images Thresholds</span>.
+					settings, making it easier to determine what settings to use.
+					<br><span class="possibleAction">Possible action: </span>
+					If the MEAN is on your overlay you may need to resize and/or move it.
+					<span class="WebUISetting">Remove Bad Images Thresholds</span>.
+				</li>
 				<li>The WebUI now hides the settings in each section unless there's
 					an error in that section.
 					To view a section's settings, click the
 					<i class='fa fa-chevron-down fa-fw'></i> symbol on the left side
 					of a section heading.
+					<br><span class="possibleAction">Possible action: </span>
+					This may take some time to get used to.
+					However, with the significant increase in settings available in the
+					WebUI it would be difficult to find what you want if
+					the sections weren't hidden.
+				</li>
+			</ul>
+
+			<h4>Enhancements / Changes</h4>
+			<ul>
+				<li>When changing settings, Allsky is only restarted if it needs to be.
+					Some settings, like the <span class="WebUISetting">Owner</span>
+					don't impact taking images so there's no reason to restart picture taking
+					when it changes.
+					<br>Hovering you mouse over a WebUI data field displays a popup
+					that indicates whether or not changing that field requires a restart.
+				</li>
 				<li>The "module" overlay method is now the default for new installations.
-					In the next major release the "legacy" method will be removed
+					In the next major Allsky release the "legacy" method will be removed
 					so we encourage you to change now.
 				</li>
 				<li>The <span class="fileName">endOfNight_additionalSteps.sh</span>
@@ -64,17 +114,27 @@
 				<li>The ZWO library was upgraded to version 1.33 which adds support
 					for the ASI676 and other new cameras.
 				</li>
-				<li>Hovering you mouse over a WebUI data field will display a popup.
-					This release now indicates whether or not changing that field
-					will restart Allsky.
-				</li>
 				<li>DHCP on the Pi can be configured via the WebUI's
 					<span class="WebUIWebPage">Configure DHCP</span> page.
 					This is an advanced option that is not used very often.
 				</li>
+				<li>When taking dark frames, any images that is too bright is deleted.
+					This can happen if you start taking darks before covering the lens
+					or if the lens cover lets in some light, e.g., a plastic lens cap.
+				</li>
 			</ul>
 
 			<h4>Added / Deleted Settings</h4>
+			<ul class="mediumPadding">
+				<li>The new <span class="WebUISetting">Images Sort Order</span>
+					setting determines the sort order of the images on the
+					WebUI's <span class="WebUIWebPage">Images</span> page.
+				</li>
+				<li>The new <span class="WebUISetting">Show Updated Message</span>
+					setting allows hiding the
+					<span class="alert-info">Daytime images updated every...</span>
+					message on the WebUI's <span class="WebUIWebPage">Live View</span> page.
+				</li>
 				<li>The new <span class="WebUISetting">ZWO Exposure Type</span>
 					setting specifies how images should be taken.
 					See the documentation for a description of the different types.
@@ -87,23 +147,40 @@
 					setting was deleted because it produced better results
 					so is now always used.
 				</li>
-				<li>The <span class="WebUISetting">New Exposure Algorithm</span>
+				<li>The <span class="shSetting">REMOVE_BAD_IMAGES</span> setting was deleted to
+					keep people from disabling the check.
+					In addition to "too dark" and "too light" images, images that are empty
+					and corrupt are also checked for, and those images kept timelapses
+					from being created.
+					<br>
+					If you don't want to run the brightness checks set their THRESHOLDS to 0.0.
+				</li>
+				<li>The <span class="WebUISetting">Brightness</span> settings
+					were deleted since there is no need for them.
+					Changes to brightness should be done via the
+					<span class="WebUISetting">Target Mean</span> settings.
+				</li>
+				<li>The <span class="WebUISetting">Offset</span> setting (ZWO only)
+					was deleted.  It brightened every pixel by the amount specified
+					and is not needed with allsky cameras.
 				</li>
 				<li>The new <span class="WebUISetting">Nighttime Capture</span> and
 					<span class="WebUISetting">Nighttime Save</span> settings
 					are the same as the daytime versions, except for nighttime.
-			<ul>
+				</li>
+			</ul>
 
 			<h4>Bug Fixes</h4>
-			<ul class="minimalPadding">
+			<ul>
 				<li>ASI_ERROR_TIMEOUT messages are mostly gone!
 					This uses the new <span class="WebUISetting">ZWO Exposure Type</span>
-					setting.</li>
+					setting which is the default.
+				</li>
 			</ul>
 
 			<h4>Maintenance</h4>
-			<ul class="minimalPadding">
-				<li>All setting names are now lowercase and boolean settings are now
+			<ul>
+				<li>All setting names are now lowercase and boolean settings are
 					"true" and "false" rather than 1 and 0.
 					These changes should have no impact on users.
 				</li>

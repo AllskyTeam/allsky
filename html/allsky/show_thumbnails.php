@@ -1,14 +1,14 @@
 <?php
 	$configFilePrefix = "../";
 	include_once('functions.php'); disableBuffering();	 // must be first line
-	// Settings are now in $settings_array.
+	// Settings are now in $webSettings_array.
 
 	if (! isset($dir) || ! isset($prefix) || ! isset($title)) {
 		echo "<p>INTERNAL ERROR: incomplete arguments given to view thumbnails.</p>";
 		echo "dir, prefix, and/or title missing.";
 		exit;
 	}
-	$homePage = v("homePage", null, $settings_array);
+	$homePage = v("homePage", null, $webSettings_array);
 	$includeGoogleAnalytics = v("includeGoogleAnalyticsx", false, $homePage);
 ?>
 <!DOCTYPE html>

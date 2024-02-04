@@ -3,6 +3,11 @@
 # Shell functions used by multiple scripts.
 # This file is "source"d into others, and must be done AFTER source'ing variables.sh.
 
+SUDO_OK="${SUDO_OK:-false}"
+if [[ ${SUDO_OK} == "false" && ${EUID} -eq 0 ]]; then
+	echo -e "\n${RED}${ME}: This script must NOT be run as root, do NOT use 'sudo'.${NC}\n" >&2
+	exit 1
+fi
 
 #####
 # Exit with error message and a custom notification image.
@@ -452,6 +457,11 @@ function settings()
 	fi
 
 	local FILE="${2:-${SETTINGS_FILE}}"
+	if [[ ! -f ${FILE} ]]; then
+		echo "${M}: File '${FILE}' does not exist!  Cannot get '${FIELD}'." >&2
+		return 2
+	fi
+
 	if j="$( jq -r "${FIELD}" "${FILE}" )" ; then
 		[[ ${j} == "null" && ${DO_NULL} == "false" ]] && j=""
 		echo "${j}"
@@ -460,7 +470,7 @@ function settings()
 
 	echo "${M}: Unable to get json value for '${FIELD}' in '${FILE}." >&2
 	
-	return 2
+	return 3
 }
 
 
@@ -527,7 +537,7 @@ function check_settings_link()
 	FULL_FILE="${1}"
 	if [[ -z ${FULL_FILE} ]]; then
 		echo "${FUNCNAME[0]}(): Settings file not specified."
-		return 1
+		return "${EXIT_ERROR_STOP}"
 	fi
 	if [[ ! -f ${FULL_FILE} ]]; then
 		echo "${FUNCNAME[0]}(): File '${FULL_FILE}' not found."
@@ -535,11 +545,11 @@ function check_settings_link()
 	fi
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		CAMERA_TYPE="$( settings ".${CT}"  "${FULL_FILE}" )"
-		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return 1
+		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
 	fi
 	if [[ -z ${CAMERA_MODEL} ]]; then
 		CAMERA_MODEL="$( settings ".${CM}"  "${FULL_FILE}" )"
-		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return 1
+		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
 	fi
 
 	DIRNAME="$( dirname "${FULL_FILE}" )"
@@ -600,13 +610,14 @@ function one_instance()
 	local SLEEP_TIME="5s"
 	local MAX_CHECKS=3
 	local PID_FILE=""
+	local PID=""
 	local ABORTED_FILE=""
 	local ABORTED_FIELDS=""
 	local ABORTED_MSG1=""
 	local ABORTED_MSG2=""
 	local CAUSED_BY=""
 
-	OK="true"
+	local OK="true"
 	local ERRORS=""
 	while [[ $# -gt 0 ]]; do
 		ARG="${1}"
@@ -674,7 +685,7 @@ function one_instance()
 		ERRORS="${ERRORS}\nABORTED_MSG2 not specified."
 		OK="false"
 	fi
-	# CAUSED_BY isn't required
+	# CAUSED_BY and PID aren't required
 
 	if [[ ${OK} == "false" ]]; then
 		echo -e "${RED}${ME}: ERROR: ${ERRORS}.${NC}" >&2
@@ -780,8 +791,9 @@ PYTHON_VENV_ACTIVATED="false"
 activate_python_venv() {
 
 # TODO: will need to change when the OS after bookworm is released
+# If our next release is out, it won't support buster so may be check  != bullseye  ?
 
-	if [[ ${PI_OS,,} == "bookworm" ]]; then
+	if [[ ${PI_OS} == "bookworm" ]]; then
 		#shellcheck disable=SC1090,SC1091
 		source "${ALLSKY_PYTHON_VENV}/bin/activate" || exit 1
 		PYTHON_VENV_ACTIVATED="true"

@@ -4,13 +4,14 @@
 <?php
 	$vSDir = "viewSettings";
 	$settingsScript = "allskySettings.php";
-	$fullMode = false;
 	if (file_exists("$vSDir/$settingsScript")) {
 		$fullMode = true;
+	} else {
+		$fullMode = false;
 	}
 
 	// This gets the web page settings.
-	include_once('functions.php');		// Sets $settings_array
+	include_once('functions.php');		// Sets $webSettings_array
 
 	function getSettingsFile() { global $vSDir; return "$vSDir/settings.json"; }
 	if ($fullMode) {
@@ -19,6 +20,7 @@
 		function getVariableOrDefault($a, $v, $d) { return v($v, $d, $a); }
 		function check_if_configured($page, $calledFrom) { return true; }
 		function CSRFToken() { return true; }
+		function toBool($x) { if ($x == "true" || $x == "1" || $x == 1) return true; else return false; }
 
 		$formReadonly = true;
 		include_once("$vSDir/$settingsScript");
@@ -27,7 +29,7 @@
 	}
 
 	// Get home page options
-	$homePage = v("homePage", null, $settings_array);
+	$homePage = v("homePage", null, $webSettings_array);
 	$title = v("title", "Website", $homePage);
 	$favicon = v("favicon", "allsky-favicon.png", $homePage);
 	$ext = pathinfo($favicon, PATHINFO_EXTENSION); if ($ext === "jpg") $ext = "jpeg";
@@ -62,6 +64,8 @@
 <?php
 		if ($fullMode) {
 			echo "body { background-color: white; color: black; }";
+			echo ".switch-field label:hover { cursor: default; }";
+
 		} else {
 			echo ".clear { clear: both; }";
 			echo ".title { box-sizing: border-box; }";
@@ -121,9 +125,9 @@
 	</thead>
 	<tbody>
 		<?php		// Only display certain settings.
-			$cameraType = v("cameraType", "", $settings);
+			$cameraType = v("cameratype", "", $settings);
 			echo "<tr> <td>Camera Type</td><td>$cameraType</td> </tr>";
-			$cameraModel = v("cameraModel", "", $settings);
+			$cameraModel = v("cameramodel", "", $settings);
 			echo "<tr> <td>Camera Model</td><td>$cameraModel</td> </tr>";
 			$lens = v("lens", "", $settings);
 			if ($lens !== "") echo "<tr> <td>Lens</td><td>$lens</td> </tr>";
@@ -206,6 +210,7 @@
 			$sharpness = v("sharpness", "", $settings);
 			if ($sharpness !== "") echo "<tr> <td>Sharpness</td><td>$sharpness</td> </tr>";
 
+// TODO: add remaining settings
 		?>
 	</tbody>
 </body>

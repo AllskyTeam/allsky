@@ -134,14 +134,6 @@ and only displays settings the camera supports, like cooler temperature for cool
 		then the target brightness ranges from <code>0.3</code> to <code>0.5</code>
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Brightness</span></td>
-	<td><span class="cameraDependent">CD</span></td>
-	<td>This setting changes the amount of light in images.
-		<br>This settings has been <strong>deprecated</strong> and will be
-		removed in a future release.
-		Use <span class="WebUISetting">Mean Target</span> to adjust the brightness instead.
-	</td>
-</tr>
 <tr><td><span class="WebUISetting">Delay</span></td>
 	<td>5000</td>
 	<td>Time in milliseconds to wait between the end of one image and the start of the next.</td>
@@ -244,13 +236,6 @@ and only displays settings the camera supports, like cooler temperature for cool
 	<td>0.1</td>
 	<td></td>
 </tr>
-<tr><td><span class="WebUISetting">Brightness</span></td>
-	<td><span class="cameraDependent">CD</span></td>
-	<td>This settings has been <strong>deprecated</strong> and will be
-		removed in a future release.
-		Use <span class="WebUISetting">Mean Target</span> to adjust the brightness instead.
-	</td>
-</tr>
 <tr><td><span class="WebUISetting">Delay</span></td>
 	<td>10</td>
 	<td></td>
@@ -342,11 +327,6 @@ use the <span class="shSetting">CROP</span> setting in the
 <tr><td><span class="WebUISetting class="WebUISetting"">Gamma</span></td>
 	<td><span class="cameraDependent">CD</span></td>
 	<td>(ZWO only) Increases or decreases contrast between dark and bright areas.</td>
-</tr>
-<tr><td><span class="WebUISetting">Offset</span></td>
-	<td>0</td>
-	<td>(ZWO only) Adds about 1/10 the specified value to every pixel,
-	which brightens the whole image.</td>
 </tr>
 <tr><td><span class="WebUISetting">Aggression</span></td>
 	<td>75%</td>
@@ -602,10 +582,6 @@ use the <span class="shSetting">CROP</span> setting in the
 	<td>Display the gain in the overlay? If <span class="WebUISetting">Auto-Gain</span> is enabled,
 	"(auto)" will appear after the gain.</td>
 </tr>
-<tr><td><span class="WebUISetting">Show Brightness</span></td>
-	<td>No</td>
-	<td>Display the brightness level in the overlay?</td>
-</tr>
 <tr><td><span class="WebUISetting">Show USB</span></td>
 	<td>No</td>
 	<td>(ZWO only) Display the USB Bandwidth in the overlay? This is primarily for debugging.</td>
@@ -683,8 +659,27 @@ use the <span class="shSetting">CROP</span> setting in the
 </tr>
 <tr><td><span class="WebUISetting">Use Outline Font</span></td>
 	<td>No</td>
-	<td>Should an outline to the text overlay be added to improve contrast?</td>
-</tr>
+	<td>Should an outline to the text overlay be added to improve contrast?</td></tr>
+
+<tr><td class="note" colspan="3">WebUI Configuration
+	<p>
+	Settings dealing with the WebUI itself.
+	</p>
+	</td></tr>
+<tr><td><span class="WebUISetting">Images Sort Order</span></td>
+	<td>Ascending</td>
+	<td>Determines how the images for a day in the
+	the WebUI's <span class="WebUIWebPage">Images</span> page are displayed.
+	<br><span class="WebUIValue">Ascending</span>
+		sorts oldest image to newest.
+	<br><span class="WebUIValue">Descending</span>
+		sorts newest (i.e., most recent) image to oldest.
+	</td></tr>
+<tr><td><span class="WebUISetting">Show Updated Message</span></td>
+	<td>No</td>
+	<td>Disable to hide the <span class="alert-info">Daytime images updated every...</span>
+	message on the WebUI's <span class="WebUIWebPage">Live View</span> page.
+	</td></tr>
 
 <tr><td class="note" colspan="3">Allsky Map and Website Setting
 	<p>
@@ -695,20 +690,18 @@ use the <span class="shSetting">CROP</span> setting in the
 	The server automatically removes old data.
 	Note that only a limited number of updates per day are allowed to catch bogus updates.
 	</p>
-	</td>
-</tr>
-
+	</td></tr>
 <tr><td><span class="WebUISetting">Display Settings</span></td>
 	<td>No</td>
 	<td>People sometimes ask others what settings they are using.
 	Enable this setting to add a link to your Allsky Website's popout that displays your
 	settings in the WebUI's <span class="WebUIWebPage">Allsky Settings</span> page.
-	<br>Only works if you are running the Allsky Website.</td></tr>
+	<br>Only applies if you are running the Allsky Website.</td></tr>
 <tr><td><span class="WebUISetting">Show on Map</span></td>
 	<td>No</td>
 	<td>Enable to have your camera appear on the
 	<a href='https://www.thomasjacquin.com/allsky-map'>Allsky map</a>.
-	<br><b>If off, the following settings are ignored.</b></td></tr>
+	<br><b>If off, the URL settings below are ignored.</b></td></tr>
 <tr><td><span class="WebUISetting">Website URL</span></td>
 	<td></td>
 	<td>Your website's URL, for example: https://www.thomasjacquin.com/allsky.
@@ -775,13 +768,12 @@ use the <span class="shSetting">CROP</span> setting in the
 	(e.g., a ZWO ASI120 with a ZWO ASI290)
 	select <span class="dropdown">Refresh</span> in the drop-down.
 	</td></tr>
-<!--
 <tr><td><span class="WebUISetting">Camera Model</span></td>
 	<td></td>
-	<td>This read-only field displays the model of camera you are using.
+	<td>This <strong>read-only</strong> field displays the model of camera you are using.
 	It is determined automatically based on what camera is connected to your Pi.
-	<br>If more than one camera of the specified type is connected, the first one is used.</td></tr>
--->
+	<br>If more than one camera of the specified type is connected,
+	the first one is used.</td></tr>
 
 </tbody>
 </table>
@@ -802,18 +794,6 @@ and if you have a local and/or remote Allsky Website installed, the
 <span class="dropdown">ftp-settings.sh</span>,
 <span class="dropdown">configuration.json</span>, and
 <span class="dropdown">remote_configuration.json</span> files can also be edited.
-Further, if you have a <span class="dropdown">endOfNight_additionalSteps.sh</span> file,
-it can also be edited.
-
-<blockquote class="warning">
-The <span class="dropdown">endOfNight_additionalSteps.sh</span> file will no longer
-be supported in the next version of Allsky.
-If you use this file, please move your code to the <strong>Script</strong> module
-in the <strong>Night to Day Transition Flow</strong>,
-then remove this file.
-See the <a allsky="true" href="/documentation/modules/modules.html">Module</a>
-documentation for more details.
-</blockquote>
 </p>
 <p>
 The table below describes the settings in the
@@ -972,26 +952,18 @@ and are updated by clicking on the WebUI's
 	consider changing this to "false".
 	</td>
 </tr>
-<tr><td><span class="shSetting">REMOVE_BAD_IMAGES</span></td>
-	<td>true</td>
-	<td>Remove corrupt or too bright/too dark images and their
-	thumbnails before generating keograms, startrails, and timelapse videos?
-	<br><b>We suggest always leaving this turned on</b>;
-	if images are being removed that you want to keep, change the
-	<span class="shSetting">*_THRESHOLD_*<span> values below.</td>
-</tr>
 <tr><td><span class="shSetting">REMOVE_BAD_IMAGES_THRESHOLD_LOW</span></td>
-	<td>1</td>
+	<td>0.01</td>
 	<td>Images whose mean brightness is below this percent will be removed.
-	Set to <code>0</code> to disable this check.
-	<br>Only applies if <span class="shSetting">REMOVE_BAD_IMAGES</span> is "true".
+	Useful values range from <code>0.01</code> to around <code>0.2</code>.
+	<br>Set to <code>0</code> to disable this check.
 	</td>
 </tr>
 <tr><td><span class="shSetting">REMOVE_BAD_IMAGES_THRESHOLD_HIGH</span></td>
-	<td>90</td>
-	<td>Images whose mean brightness is above this percent will be removed (max: 100).
-	Set to <code>0</code> to disable this check.
-	<br>Only applies if <span class="shSetting">REMOVE_BAD_IMAGES</span> is "true".
+	<td>0.9</td>
+	<td>Images whose mean brightness is above this percent will be removed.
+	Useful values range from <code>0.8</code> to around <code>0.95</code>.
+	<br>Set to <code>0</code> to disable this check.
 	</td>
 </tr>
 

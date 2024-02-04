@@ -22,7 +22,7 @@ fi
 function usage_and_exit()
 {
 	echo -en "${wERROR}"
-	echo     "Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly] [--restarting]"
+	echo     "Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly]"
 	echo -en "\tkey label old_value new_value [...]"
 	echo -e  "${wNC}"
 	echo "There must be a multiple of 4 key/label/old_value/new_value arguments"
@@ -36,13 +36,12 @@ DEBUG="false"
 DEBUG_ARG=""
 HELP="false"
 OPTIONS_FILE_ONLY="false"
-RESTARTING="false"			# Will the caller restart Allsky?
-CAMERA_TYPE_ONLY="false"	# Only update the cameratype ?
+CAMERA_TYPE_ONLY="false"	# Only update the cameratype?
 FORCE=""					# Passed to createAllskyOptions.php
 
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
-	case "${ARG}" in
+	case "${ARG,,}" in
 		--debug)
 			DEBUG="true"
 			DEBUG_ARG="${ARG}"		# So we can pass to other scripts
@@ -54,14 +53,11 @@ while [[ $# -gt 0 ]]; do
 			OPTIONS_FILE_ONLY="true"
 			SETTINGS_FILE=""
 			;;
-		--cameraTypeOnly)
+		--cameratypeonly)
 			CAMERA_TYPE_ONLY="true"
 			;;
 		--force)
 			FORCE="${ARG}"
-			;;
-		--restarting)
-			RESTARTING="true"
 			;;
 		-*)
 			echo -e "${wERROR}ERROR: Unknown argument: '${ARG}'${wNC}"
@@ -87,20 +83,14 @@ else
 	ERROR_PREFIX="${ME}: "
 fi
 
-# Does the change need Allsky to be restarted in order to take affect?
-NEEDS_RESTART="false"
-
 RUN_POSTTOMAP="false"
 POSTTOMAP_ACTION=""
 WEBSITE_CONFIG=()
 WEB_CONFIG_FILE=""
 HAS_WEBSITE_RET=""
 WEBSITES=""		# local, remote, both, none
-SHOW_POSTDATA_MESSAGE="true"
-TWILIGHT_DATA_CHANGED="false"
-CAMERA_TYPE_CHANGED="false"
 GOT_WARNING="false"
-SHOW_ON_MAP="false"
+SHOW_ON_MAP=""
 
 # Several of the fields are in the Allsky Website configuration file,
 # so check if the IS a file before trying to update it.
@@ -123,7 +113,11 @@ function check_website()
 	fi
 	return "${HAS_WEBSITE_RET}"
 }
-check_website		# invoke to set variables
+if [[ -f ${SETTINGS_FILE} ]]; then
+	# check_website requires the settings file to exist.
+	# If it doesn't we are likely called from the install script before the file is created.
+	check_website		# invoke to set variables
+fi
 
 # Make sure RAW16 files have a .png extension.
 function check_filename_type()
@@ -144,6 +138,7 @@ function check_filename_type()
 }
 
 CAMERA_NUMBER=""
+NUM_CHANGED=0
 
 while [[ $# -gt 0 ]]
 do
@@ -151,6 +146,7 @@ do
 	LABEL="${2}"
 	OLD_VALUE="${3}"
 	NEW_VALUE="${4}"
+
 	if [[ ${DEBUG} == "true" ]]; then
 		MSG="${KEY}: Old=[${OLD_VALUE}], New=[${NEW_VALUE}]"
 		echo -e "${wDEBUG}${ME}: ${MSG}${wNC}"
@@ -159,14 +155,25 @@ do
 		fi
 	fi
 
+	KEY="${KEY,,}"		# convert to lowercase
+	KEY="${KEY/#_/}"	# Remove any leading "_"
+
+	# Don't skip if it's cameratype since that indicates we need to refresh.
+	if [[ ${KEY} != "cameratype" && ${OLD_VALUE} == "${NEW_VALUE}" ]]; then
+		[[ ${DEBUG} == "true" ]] && echo -e "    ${wDEBUG}Skipping - old and new are equal${wNC}"
+		shift 4
+		continue
+	fi
+
 	# Unfortunately, the Allsky configuration file was already updated,
 	# so if we find a bad entry, e.g., a file doesn't exist, all we can do is warn the user.
 	
-	K="${KEY,,}"		# convert to lowercase
-	case "${K}" in
+	((NUM_CHANGED++))
+	case "${KEY}" in
 
 		"cameranumber" | "cameratype")
-			if [[ ${K} == "cameranumber" ]]; then
+
+			if [[ ${KEY} == "cameranumber" ]]; then
 				NEW_CAMERA_NUMBER="${NEW_VALUE}"
 				CAMERA_NUMBER=" -cameranumber ${NEW_CAMERA_NUMBER}"
 				# Set NEW_VALUE to the current Camera Type
@@ -250,9 +257,10 @@ do
 
 				# Create a link to a file that contains the camera type and model in the name.
 				CAMERA_TYPE="${NEW_VALUE}"		# already know it
-				CAMERA_MODEL="$( settings ".cameraModel" "${CC_FILE}" )"
+				SETTING_NAME="cameraModel"		# Name is Upper case in CC file
+				CAMERA_MODEL="$( settings ".${SETTING_NAME}" "${CC_FILE}" )"
 				if [[ -z ${CAMERA_MODEL} ]]; then
-					echo -e "${wERROR}ERROR: 'cameraModel' not found in ${CC_FILE}.${wNC}"
+					echo -e "${wERROR}ERROR: '${SETTING_NAME}' not found in ${CC_FILE}.${wNC}"
 					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
 					exit 1
 				fi
@@ -311,9 +319,8 @@ do
 			# camera type/model then createAllskyOptions.php will use it and link it
 			# to SETTINGS_FILE.
 			# If there is no existing camera-specific file, i.e., this camera is new
-			# to Allsky, it will create a default settings file.  The default file
-			# won't have values for items we can't automatically determine,
-			# so try to get those values from a prior settings file if it exists.
+			# to Allsky, it will create a default settings file using the generic
+			# values from the prior settings file if it exists.
 			if [[ -f ${SETTINGS_FILE} ]]; then
 				# Prior settings file exists so save the old TYPE and MODEL
 				OLD_TYPE="${OLD_VALUE}"
@@ -387,7 +394,7 @@ do
 				S_EXT="${NAME##*.}"
 				OLD_SETTINGS_FILE="${ALLSKY_CONFIG}/${S_NAME}_${OLD_TYPE}_${OLD_MODEL}.${S_EXT}"
 
-				for s in latitude longitude locale websiteurl imageurl location owner computer
+				for s in latitude longitude locale websiteurl imageurl location owner computer imagesortorder
 				do
 					X="$( settings .${s} "${OLD_SETTINGS_FILE}" )"
 					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}"
@@ -399,7 +406,7 @@ do
 					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}" "number"
 				done
 
-				for s in uselogin displaysettings showonmap
+				for s in uselogin displaysettings showonmap showdelay
 				do
 					X="$( settings .${s} "${OLD_SETTINGS_FILE}" )"
 					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}" "boolean"
@@ -415,21 +422,15 @@ do
 					exit 0
 				fi
 			fi
-
-			SHOW_POSTDATA_MESSAGE="false"	# user doesn't need to see this output
-			CAMERA_TYPE_CHANGED="true"
-			NEEDS_RESTART="true"
 			;;
 
 		"type")
 			check_filename_type "$( settings '.filename' )" "${NEW_VALUE}" || OK="false"
-			NEEDS_RESTART="true"
 			;;
 
 		"filename")
 			if check_filename_type "${NEW_VALUE}" "$( settings '.type' )" ; then
 				check_website && WEBSITE_CONFIG+=("config.imageName" "${LABEL}" "${NEW_VALUE}")
-				NEEDS_RESTART="true"
 			else
 				OK="false"
 			fi
@@ -445,7 +446,6 @@ do
 					echo -e "${wWARNING}WARNING: '${NEW_VALUE}' is empty; please change it.${wNC}"
 				fi
 			fi
-			NEEDS_RESTART="true"
 			;;
 
 		"latitude" | "longitude")
@@ -455,37 +455,31 @@ do
 			else
 				echo -e "${wWARNING}WARNING: ${NEW_VALUE}.${wNC}"
 			fi
-			NEEDS_RESTART="true"
-			TWILIGHT_DATA_CHANGED="true"
-			;;
-
-		"angle")
-			NEEDS_RESTART="true"
-			TWILIGHT_DATA_CHANGED="true"
 			;;
 
 		"takedaytimeimages")
-			NEEDS_RESTART="true"
-			TWILIGHT_DATA_CHANGED="true"
 			;;
 
 		"config")
 			if [[ ${NEW_VALUE} == "" ]]; then
 				NEW_VALUE="[none]"
 			elif [[ ${NEW_VALUE} != "[none]" ]]; then
+				echo -e "${wWARNING}WARNING: Configuration file '${NEW_VALUE}'"
 				if [[ ! -f ${NEW_VALUE} ]]; then
-					echo -e "${wWARNING}WARNING: Configuration File '${NEW_VALUE}' does not exist; please change it.${wNC}"
+					echo " does not exist; please change it."
 				elif [[ ! -s ${NEW_VALUE} ]]; then
-					echo -e "${wWARNING}WARNING: Configuration File '${NEW_VALUE}' is empty; please change it.${wNC}"
+					echo " is empty; please change it."
 				fi
+				echo -e "${wNC}"
 			fi
 			;;
 
 		"daytuningfile" | "nighttuningfile")
 			if [[ -n ${NEW_VALUE} && ! -f ${NEW_VALUE} ]]; then
-				echo -e "${wWARNING}WARNING: Tuning File '${NEW_VALUE}' does not exist; please change it.${wNC}"
+				echo -e "${wWARNING}"
+				echo    "WARNING: Tuning File '${NEW_VALUE}' does not exist; please change it."
+				echo -e "${wNC}"
 			fi
-			NEEDS_RESTART="true"
 			;;
 
 		"displaysettings")
@@ -538,7 +532,8 @@ do
 
 
 		*)
-			echo -e "${wWARNING}WARNING: Unknown label '${LABEL}', key='${KEY}'; ignoring.${wNC}"
+			echo -e "${wWARNING}WARNING: Unknown key '${KEY}'; ignoring.  Old=${OLD_VALUE}, New=${NEW_VALUE}${wNC}"
+			((NUM_CHANGED--))
 			;;
 
 		esac
@@ -547,29 +542,7 @@ done
 
 [[ ${OK} == "false" ]] && exit 1
 
-if check_website ; then
-	# Anytime a setting in settings.json changed we want to
-	# send an updated file to all Allsky Website(s).
-	[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postData.sh${NC}"
-	x=""
-	[[ ${TWILIGHT_DATA_CHANGED} == "false" ]] && x="${x} --settingsOnly"
-	[[ ${CAMERA_TYPE_CHANGED}   == "false" ]] && x="${x} --allFiles"
-
-	# shellcheck disable=SC2086
-	if RESULT="$( "${ALLSKY_SCRIPTS}/postData.sh" ${x} >&2 )" ; then
-		if [[ ${SHOW_POSTDATA_MESSAGE} == "true" ]]; then
-			if [[ ${TWILIGHT_DATA_CHANGED} == "true" ]]; then
-				echo -en "${wOK}"
-				echo -e "Updated twilight data sent to your Allsky Website."
-				echo -e "${wBOLD}If you have the Allsky Website open in a browser, please refresh the window.${wNBOLD}"
-				echo -en "${wNC}"
-			fi
-			# Users don't need to know that the settings file and possibly others were sent.
-		fi
-	else
-		echo -e "${wERROR}ERROR posting updated twilight data: ${RESULT}.${wNC}"
-	fi
-fi
+[[ ${NUM_CHANGED} -le 0 ]] && exit 0		# Nothing changed
 
 # shellcheck disable=SC2128
 if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
@@ -607,20 +580,13 @@ if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 fi
 
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
-	[[ ${SHOW_ON_MAP} == "true" ]] && SHOW_ON_MAP="$( settings ".showonmap" )"
+	[[ -z ${SHOW_ON_MAP} ]] && SHOW_ON_MAP="$( settings ".showonmap" )"
 	if [[ ${SHOW_ON_MAP} == "true" ]]; then
 		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postToMap.sh${NC}"
 		# shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${POSTTOMAP_ACTION}
 	fi
 fi
-
-if [[ ${RESTARTING} == "false" && ${NEEDS_RESTART} == "true" ]]; then
-	echo -en "${wOK}${wBOLD}"
-	echo "*** You must restart Allsky for your change to take affect. ***"
-	echo -en "${wNBOLD}${wNC}"
-fi
-
 
 if [[ ${GOT_WARNING} == "true" ]]; then
 	exit 255

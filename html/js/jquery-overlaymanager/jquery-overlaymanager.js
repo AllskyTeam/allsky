@@ -15,6 +15,7 @@
 
         plugin.settings = $.extend({}, defaults, options);
         plugin.data = [];
+        plugin.debug = false;
         plugin.selectedOverlay = {
             type: null,
             name: null            
@@ -29,6 +30,7 @@
         plugin.mmEditSelect = pluginPrefix + '-edit-select';
         plugin.mmDaySelect = pluginPrefix + '-day-select';
         plugin.mmNightSelect = pluginPrefix + '-night-select';
+        plugin.mmTODSelect = pluginPrefix + '-tod-select';
 
         plugin.mmMetaData = pluginPrefix + '-meta-data';
         plugin.mmFileName = pluginPrefix + '-meta-filename';
@@ -40,13 +42,13 @@
         plugin.mmMetaResolutionHeight = pluginPrefix + '-meta-resolution-height';
         plugin.mmMetaTod = pluginPrefix + '-meta-tod';
         plugin.mmConfigSave = pluginPrefix + '-config-save';
+        plugin.mmDebug = pluginPrefix + '-debug';
 
         plugin.init = function () {
-            
+            setupDebug();
             createHtml();
             setupMenu();
             setupEvents();
-            //buildUI();
         }
 
         plugin.destroy = function () {
@@ -55,6 +57,21 @@
 
         plugin.enabled = function() {
             return plugin.active;
+        }
+
+        var setupDebug = function() {
+            let url = window.location.href;
+            const paramArr = url.slice(url.indexOf('?') + 1).split('&');
+            const params = {};
+            paramArr.map(param => {
+                const [key, val] = param.split('=');
+                params[key] = decodeURIComponent(val);
+            })
+            if (params.hasOwnProperty('debug')) {
+                if (params.debug == 'true') {
+                    plugin.debug = true;
+                }
+            }            
         }
 
         var createHtml = function() {
@@ -112,7 +129,7 @@
                                     <div class="panel-body">\
                                         <div class="row">\
                                             <div class="col-md-12 col-sm-12 col-xs-12">\
-                                                <div class="form-group hidden">\
+                                                <div class="form-group ' + plugin.mmDebug + ' hidden">\
                                                     <label class="control-label requiredField" for="' + plugin.mmFileName + '">Filename\
                                                         <span class="asteriskField">*</span>\
                                                     </label>\
@@ -142,7 +159,7 @@
                                             <div class="col-md-6">\
                                                 <div class="form-group ">\
                                                     <label class="control-label " for="' + plugin.mmMetaBrand + '">Camera Brand</label>\
-                                                    <select class="select form-control ' + plugin.mmMetaData + '" id="' + plugin.mmMetaBrand + '" name="' + plugin.mmMetaBrand + '" >\
+                                                    <select class="select form-control ' + plugin.mmMetaData + '" id="' + plugin.mmMetaBrand + '" name="' + plugin.mmMetaBrand + '" data-field="camerabrand" >\
                                                     </select>\
                                                 </div>\
                                             </div>\
@@ -179,11 +196,6 @@
                                                 </div>\
                                             </div>\
                                         </div>\
-                                        <div class="row mt-2">\
-                                            <div class="col-md-12 col-sm-12 col-xs-12">\
-                                                <button type="button" class="btn btn-primary pull-right" id="">Save</button>\
-                                            </div>\
-                                        </div>\
                                     </div>\
                                 </div>\
                             </div>\
@@ -197,11 +209,11 @@
                                             <div class="col-md-12 col-sm-12 col-xs-12">\
                                                 <div class="form-group ">\
                                                     <label class="control-label " for="select">Daytime Overlay</label>\
-                                                    <select class="select form-control" id="' + plugin.mmDaySelect + '" name="' + plugin.mmDaySelect + '"></select>\
+                                                    <select class="select form-control ' + plugin.mmTODSelect + '" id="' + plugin.mmDaySelect + '" name="' + plugin.mmDaySelect + '"></select>\
                                                 </div>\
                                                 <div class="form-group ">\
                                                     <label class="control-label " for="select1">Nighttime Overlay</label>\
-                                                    <select class="select form-control" id="' + plugin.mmNightSelect + '" name="' + plugin.mmNightSelect + '"></select>\
+                                                    <select class="select form-control ' + plugin.mmTODSelect + '" id="' + plugin.mmNightSelect + '" name="' + plugin.mmNightSelect + '"></select>\
                                                 </div>\
                                             </div>\
                                         </div>\
@@ -385,7 +397,7 @@
             });
 
             $(document).on('oe-startup', (e,data) => {
-                window.oedi.get('config').loadOverlay('overlay.json', 'core');
+                window.oedi.get('config').loadOverlay('overlay.json', 'system');
             });
             
             $(document).on('change', '#' + plugin.mmEditSelect, (e) => {
@@ -396,7 +408,7 @@
                     bootbox.confirm('Are you sure you wish to load a new overlay. You will lose any unsaved changes', (result) => {
                         if (result) {
                             let selectOption = $('#' + plugin.mmEditSelect).find(':selected');
-                            if (selectOption.data('type') === 'core') {
+                            if (selectOption.data('type') === 'system') {
                                 $('#' + plugin.mmNewDialogDelete).addClass('disabled');
                             } else {
                                 $('#' + plugin.mmNewDialogDelete).removeClass('disabled');
@@ -408,7 +420,7 @@
                     });                    
                 } else {
                     let selectOption = $('#' + plugin.mmEditSelect).find(':selected');
-                    if (selectOption.data('type') === 'core') {
+                    if (selectOption.data('type') === 'system') {
                         $('#' + plugin.mmNewDialogDelete).addClass('disabled');
                     } else {
                         $('#' + plugin.mmNewDialogDelete).removeClass('disabled');
@@ -553,6 +565,10 @@
                 destroyDialog();
             });
 
+            $(document).on('change', '.' + plugin.mmTODSelect, (e) => {
+                $('#' + plugin.mmConfigSave).removeClass('disabled');
+            });
+
             $(document).on('click', '#' + plugin.mmConfigSave, (e) => {
                 let result = $.ajax({
                     type: 'POST',
@@ -564,7 +580,8 @@
                     dataType: 'json',
                     cache: false,
                     async: false
-                });                
+                });
+                $('#' + plugin.mmConfigSave).addClass('disabled');           
             });
 
             $(document).on('change', '.' + plugin.mmNewDialogAdvancedField, (e) => {
@@ -633,7 +650,7 @@
             let data = configManager.overlays;
             for (overlay in data.coreoverlays) {
                 let name = data.coreoverlays[overlay].metadata.name
-                $('#' + plugin.mmNewDialogCopy).append($('<option>').val(overlay).text('Core - ' + name));
+                $('#' + plugin.mmNewDialogCopy).append($('<option>').val(overlay).text('System - ' + name));
             }
             for (overlay in data.useroverlays) {
                 let name = data.useroverlays[overlay].metadata.name
@@ -691,8 +708,15 @@
             }
 
             let selectOption = $('#' + plugin.mmEditSelect).find(':selected');
-            if (selectOption.data('type') === 'core') {
+            if (selectOption.data('type') === 'system') {
                 $('#' + plugin.mmNewDialogDelete).addClass('disabled');
+            }
+
+            $('#' + plugin.mmConfigSave).addClass('disabled');             
+            $('#' + plugin.mmMetaSave).addClass('disabled');             
+
+            if (plugin.debug) {
+                $('.' + plugin.mmDebug).removeClass('hidden');
             }
 
             function resetSelect(id, selectedValue=null) {
@@ -705,7 +729,7 @@
                         selected = 'selected';
                     }
                     let name = data.coreoverlays[overlay].metadata.name
-                    $(selectId).append($('<option ' + selected + '>').val(overlay).text('Core - ' + name).data('type','core'));
+                    $(selectId).append($('<option ' + selected + '>').val(overlay).text('System - ' + name).data('type','system'));
                 }
 
                 for (overlay in data.useroverlays) {

@@ -2,7 +2,9 @@
 
 function DisplayEditor()
 {
-	global $hasLocalWebsite, $hasRemoteWebsite, $status;
+	global $status;
+	global $useLocalWebsite, $useRemoteWebsite;
+	global $hasLocalWebsite, $hasRemoteWebsite;
 
 	// See what files there are to edit.
 	$N = null;			// this is the file that's displayed by default
@@ -11,6 +13,11 @@ function DisplayEditor()
 		$localN = ALLSKY_WEBSITE_LOCAL_CONFIG_NAME;
 		$N = $localN;
 		$numFiles++;
+		if (! $useLocalWebsite) {
+			$msg = "<span class='WebUISetting'>Use Local Website</span> not enabled."
+			$msg .= "<br>Your changes won't take effect until you enable the setting.</span>";
+			$status->addMessage($msg, 'warning', false);
+		}
 	} else {
 		$localN = null;
 	}
@@ -18,6 +25,11 @@ function DisplayEditor()
 		$remoteN = ALLSKY_WEBSITE_REMOTE_CONFIG_NAME;
 		if ($N === null) $N = $remoteN;
 		$numFiles++;
+		if (! $useRemoteWebsite) {
+			$msg = "<span class='WebUISetting'>Use Remote Website</span> not enabled."
+			$msg .= "<br>Your changes won't take effect until you enable the setting.</span>";
+			$status->addMessage($msg, 'warning', false);
+		}
 	} else {
 		$remoteN = null;
 	}

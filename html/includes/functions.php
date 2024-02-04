@@ -143,8 +143,8 @@ function initialize_variables() {
 		exit(1);
 	}
 
-// TODO: replace with settings when in settings file.
-	// See if there are any websites.
+	// See if there are any website configuration files.
+	// Assume if there are, that website is in use.
 	if (file_exists(getLocalWebsiteConfigFile())) {
 		$hasLocalWebsite = true;
 	} else {
@@ -158,14 +158,14 @@ function initialize_variables() {
 
 	// $img_dir is an alias in the web server's config that points to where the current image is.
 	// It's the same as ${ALLSKY_TMP} which is the physical path name on the server.
-	$img_dir = get_variable(ALLSKY_CONFIG . '/config.sh', 'IMG_DIR=', 'current/tmp');
+	$img_dir = get_variable(ALLSKY_HOME . '/variables.sh', 'IMG_DIR=', 'current/tmp');
 	$image_name = $img_dir . "/" . $settings_array['filename'];
 	$darkframe = toBool(getVariableOrDefault($settings_array, 'takedarkframes', "false"));
 	$imagesSortOrder = getVariableOrDefault($settings_array, 'imagessortorder', "ascending");
 	$useLogin = toBool(getVariableOrDefault($settings_array, 'uselogin', "true"));
 	$temptype = getVariableOrDefault($settings_array, 'temptype', "C");
 	$lastChanged = getVariableOrDefault($settings_array, $lastChangedName, "");
-	$websiteURL = getVariableOrDefault($settings_array, 'websiteurl', "");
+	$websiteURL = getVariableOrDefault($settings_array, 'remotewebsiteurl', "");
 
 
 	////////////////// Determine delay between refreshes of the image.

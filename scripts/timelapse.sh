@@ -16,6 +16,7 @@ HELP="false"
 IS_MINI="false"
 LOCK="false"
 IMAGES_FILE=""
+IMAGE_NAME="${FILENAME}"
 OUTPUT_FILE=""
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
@@ -31,6 +32,10 @@ while [[ $# -gt 0 ]]; do
 				;;
 			-l | --lock)
 				LOCK="true"
+				;;
+			--filename)
+				IMAGE_NAME="${2}"
+				shift
 				;;
 			-o | --output)
 				OUTPUT_FILE="${2}"
@@ -62,31 +67,36 @@ usage_and_exit()
 	RET=$1
 	XD="/some_nonstandard_path"
 	TODAY="$( date +%Y%m%d )"
-	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-	echo -n "Usage: ${ME} [--debug] [--help] [--lock] [--output file] [--mini] {--images file | <INPUT_DIR> }"
-	echo -e "${NC}"
-	echo "    example: ${ME} ${TODAY}"
-	echo "    or:      ${ME} --output '${XD}' ${TODAY}"
-	echo
-	echo -en "${YELLOW}"
-	echo
-	echo "You entered: ${ME} ${ENTERED}"
-	echo
-	echo "The list of images is determined in one of two ways:"
-	echo "1. Looking in '<INPUT_DIR>' for files with an extension of '${EXTENSION}'."
-	echo "   If <INPUT_DIR> is NOT a full path name it is assumed to be in '${ALLSKY_IMAGES}',"
-	echo "   which allows using images on a USB stick, for example."
-	echo "   The timelapse file is stored in <INPUT_DIR> and is called 'allsky-<BASENAME_DIR>.mp4',"
-	echo "   where <BASENAME_DIR> is the basename of <INPUT_DIR>."
-	echo
-	echo "2. Specifying '--images file' uses the images listed in 'file'; <INPUT_DIR> is not used."
-	echo "   The timelapse file is stored in the same directory as the first image."
-	echo
-	echo "'--lock' ensures only one instance of ${ME} runs at a time."
-	echo "'--output file' overrides the default storage location and file name."
-	echo "'--mini' uses the MINI_TIMELAPSE settings and the timelapse file is"
-	echo "   called 'mini-timelapse.mp4' if '--output' isn't used."
-	echo -en "${NC}"
+	{
+		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
+		echo -n "Usage: ${ME} [--debug] [--help] [--lock] [--output file]"
+		echo -en "\t[--mini] [--filename file] {--images file | <INPUT_DIR> }"
+		echo -e "${NC}"
+		echo "    example: ${ME} ${TODAY}"
+		echo "    or:      ${ME} --output '${XD}' ${TODAY}"
+		echo
+		echo -en "${YELLOW}"
+		echo
+		echo "You entered: ${ME} ${ENTERED}"
+		echo
+		echo "The list of images is determined in one of two ways:"
+		echo "1. Looking in '<INPUT_DIR>' for files with an extension of '${EXTENSION}'."
+		echo "   If <INPUT_DIR> is NOT a full path name it is assumed to be in '${ALLSKY_IMAGES}',"
+		echo "   which allows using images on a USB stick, for example."
+		echo "   The timelapse is stored in <INPUT_DIR> and is called 'allsky-<BASENAME_DIR>.mp4',"
+		echo "   where <BASENAME_DIR> is the basename of <INPUT_DIR>."
+		echo
+		echo "2. Specifying '--images file' uses the images listed in 'file'; <INPUT_DIR> is not used."
+		echo "   The timelapse file is stored in the same directory as the first image."
+		echo
+		echo "'--lock' ensures only one instance of ${ME} runs at a time."
+		echo "'--output file' overrides the default storage location and file name."
+		echo "'--mini' uses the MINI_TIMELAPSE settings and the timelapse file is"
+		echo "   called 'mini-timelapse.mp4' if '--output' isn't used."
+		echo "'--filename file' uses 'file' as the begininning of the file names." 
+		echo "'  This is useful if creating timelapse of non-allsky files."
+		echo -en "${NC}"
+	} >&2
 	exit "${RET}"
 }
 if [[ -n ${IMAGES_FILE} ]]; then
@@ -214,7 +224,7 @@ if [[ ${KEEP_SEQUENCE} == "false" || ! -d ${SEQUENCE_DIR} ]]; then
 		# have thousands of images.
 		echo "[end]"		# signals end of the list
 	else
-		ls -rt "${INPUT_DIR}/${FILENAME}-"*".${EXTENSION}" 2>/dev/null
+		ls -rt "${INPUT_DIR}/${IMAGE_NAME}"*".${EXTENSION}" 2>/dev/null
 		echo "[end]"
 	fi | while read -r IMAGE
 		do

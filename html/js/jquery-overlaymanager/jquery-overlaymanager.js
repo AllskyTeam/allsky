@@ -1,3 +1,5 @@
+"use strict";
+
 ; (function ($) {
 
     $.allskyMM = function (element, options) {
@@ -56,7 +58,7 @@
         }
 
         plugin.enabled = function() {
-            return plugin.active;
+            return plugin.settings.active;
         }
 
         var setupDebug = function() {
@@ -264,7 +266,7 @@
                                         <form id="' + plugin.mmNewDialogForm + '">\
                                             <div class="panel panel-default">\
                                                 <div class="panel-heading">\
-                                                    <h3 class="panel-title">Overlay to copy</h3>\
+                                                    <h3 class="panel-title">Based on</h3>\
                                                 </div>\
                                                 <div class="panel-body">\
                                                     <div class="form-group ">\
@@ -397,7 +399,9 @@
             });
 
             $(document).on('oe-startup', (e,data) => {
-                window.oedi.get('config').loadOverlay('overlay.json', 'system');
+                let configManager = window.oedi.get('config');
+                let overlays = configManager.overlays;
+                configManager.loadOverlay(overlays.current, 'system');
             });
             
             $(document).on('change', '#' + plugin.mmEditSelect, (e) => {
@@ -648,17 +652,17 @@
             $('#' + plugin.mmNewDialogCopy).empty().append($('<option>').val('none').text('Blank Overlay'));
             let configManager = window.oedi.get('config');
             let data = configManager.overlays;
-            for (overlay in data.coreoverlays) {
+            for (let overlay in data.coreoverlays) {
                 let name = data.coreoverlays[overlay].metadata.name
                 $('#' + plugin.mmNewDialogCopy).append($('<option>').val(overlay).text('System - ' + name));
             }
-            for (overlay in data.useroverlays) {
+            for (let overlay in data.useroverlays) {
                 let name = data.useroverlays[overlay].metadata.name
                 $('#' + plugin.mmNewDialogCopy).append($('<option>').val(overlay).text('User - ' + name));
             }
 
             $('#' + plugin.mmNewDialogBrand).empty();
-            for (brand in data.brands) {
+            for (let brand in data.brands) {
                 $('#' + plugin.mmNewDialogBrand).append($('<option>').val(data.brands[brand]).text(data.brands[brand]));
             }
 
@@ -686,7 +690,7 @@
             resetSelect(plugin.mmMetaData, (plugin.selectedOverlay.name !== null) ? plugin.selectedOverlay.name : null);
             
             $('#' + plugin.mmMetaBrand).empty();
-            for (brand in data.brands) {
+            for (let brand in data.brands) {
                 $('#' + plugin.mmMetaBrand).append($('<option>').val(data.brands[brand]).text(data.brands[brand]));
             }
             $(plugin.mmMetaBrand).val(configManager.getMetaField('camerabrand'));
@@ -723,7 +727,7 @@
                 let selectId = '#' + id;
                 $(selectId).empty();
 
-                for (overlay in data.coreoverlays) {
+                for (let overlay in data.coreoverlays) {
                     let selected = '';
                     if (selectedValue !== null && selectedValue === overlay) {
                         selected = 'selected';
@@ -732,7 +736,7 @@
                     $(selectId).append($('<option ' + selected + '>').val(overlay).text('System - ' + name).data('type','system'));
                 }
 
-                for (overlay in data.useroverlays) {
+                for (let overlay in data.useroverlays) {
                     let selected = '';
                     if (selectedValue !== null && selectedValue === overlay) {
                         selected = 'selected';

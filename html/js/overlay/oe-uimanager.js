@@ -384,6 +384,7 @@ class OEUIMANAGER {
 
             this.#fieldTable = $('#itemlisttable').DataTable({
                 data: this.#configManager.dataFields,
+                retrieve: true,
                 autoWidth: false,
                 pagingType: 'simple_numbers',
                 paging: true,
@@ -444,6 +445,7 @@ class OEUIMANAGER {
                 $('#oe-item-list-dialog-all-error').hide();
                 this.#allFieldTable = $('#allitemlisttable').DataTable({
                     data: this.#configManager.allDataFields,
+                    retrieve: true,
                     autoWidth: false,
                     pagingType: 'simple_numbers',
                     paging: true,
@@ -1004,10 +1006,10 @@ class OEUIMANAGER {
                 columns: [
                     {
                         data: 'name',
-                        width: '150px'
+                        width: '250px'
                     }, {
                         data: 'path',
-                        width: '150px',
+                        width: '250px',
                         render: function (item, type, row, meta) {
                             if (item.includes('msttcorefonts')) {
                                 return 'System Font';
@@ -1025,8 +1027,30 @@ class OEUIMANAGER {
 
                             let buttons = '';
                             if (item.name !== 'moon_phases' && item.name !== defaultFont && !item.path.includes('msttcorefonts')) {
-                                buttons += '&nbsp; <button type="button" class="btn btn-danger btn-xs oe-list-font-delete" data-fontname="' + item.name + '"><i class="fa-solid fa-trash"></i></button>';
-                                buttons += '</div>';
+
+
+                                let fonts = config.getValue('fonts');
+                                let extPos = item.name.indexOf('.');
+    
+                                let fontName = item.name;
+                                if (extPos > -1) {
+                                    let parts = item.name.split('.');
+                                    fontName = parts[0];
+                                }
+                                let fontLCName = fontName.toLowerCase();
+
+                                let enabled = false;
+                                if (fonts[fontLCName] !== undefined) {
+                                    enabled = true;
+                                }
+
+
+                                buttons += '<button type="button" class="btn btn-danger btn-xs oe-list-font-delete" data-fontname="' + item.name + '"><i class="fa-solid fa-trash"></i></button>';
+                                if (!enabled) {
+                                    buttons += '&nbsp; <button type="button" class="btn btn-primary btn-xs oe-list-font-use" data-fontname="' + fontName + '" data-path="' + item.path + '">Use</button>';
+                                } else {
+                                    buttons += '&nbsp; <button type="button" class="btn btn-danger btn-xs oe-list-font-remove" data-fontname="' + fontName + '" data-path="' + item.path + '">Remove</button>';
+                                }
                             }
                             return buttons;
                         }
@@ -1040,6 +1064,40 @@ class OEUIMANAGER {
                 width: 600
             })
         });
+
+
+        $('#fontlisttable').on('click', '.oe-list-font-use', function(e) {
+            let fontName = $(e.currentTarget).data('fontname');
+            let fontPath = $(e.currentTarget).data('path');
+
+            let fontFace = new FontFace(fontName, 'url(' + window.oedi.get('BASEDIR') + fontPath + ')');
+            fontFace.load().then(function(font) {
+                document.fonts.add(fontFace);
+                this.setupFonts();
+                this.#configManager.setValue('fonts.' + fontName.toLowerCase() + '.fontPath', fontPath);
+                $('#fontlisttable').DataTable().ajax.reload( null, false );    
+            }.bind(this));
+        }.bind(this));
+
+        $('#fontlisttable').on('click', '.oe-list-font-remove', function(e) {
+            let fontName = $(e.currentTarget).data('fontname');
+            let fontToDelete = null;
+            for (let fontFace of document.fonts.values()) {
+                if (fontFace.family == fontName) {
+                    fontToDelete = fontFace;
+                    break;
+                }
+            }
+    
+            if (fontToDelete !== null) {
+                document.fonts.delete(fontToDelete);
+            }
+            
+            this.#configManager.deleteValue('fonts.' + fontName.toLowerCase());
+            this.#fieldManager.switchFontUsed(fontName);
+            this.setupFonts();
+            $('#fontlisttable').DataTable().ajax.reload( null, false );
+        }.bind(this));
 
         $(document).on('click', '.oe-list-font-delete', (event) => {
             event.stopPropagation();

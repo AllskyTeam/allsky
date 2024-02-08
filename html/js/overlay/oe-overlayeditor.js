@@ -34,7 +34,7 @@ class OVERLAYEDITOR {
             $('#oe-overlay-manager').allskyMM();
 
             configManager.loadConfig();
-            if (1==2) {
+            if (!$('#oe-overlay-manager').data("allskyMM").enabled()) {
                 configManager.loadOverlay('overlay.json', 'core');
             } else {
                 $(document).trigger('oe-startup');

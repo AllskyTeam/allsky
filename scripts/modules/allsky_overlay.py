@@ -95,7 +95,7 @@ class ALLSKYOVERLAY:
     _formaterrortext = ""
 
     def __init__(self, formaterrortext):
-        self._overlayConfigFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYCONFIGFILE)
+        self._loadOverlay()
         fieldsFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYFIELDSFILE)
         userFieldsFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYUSERFIELDSFILE)
 
@@ -128,6 +128,25 @@ class ALLSKYOVERLAY:
 
         self._formaterrortext = formaterrortext;
 
+    def _loadOverlay(self):
+        dayORNight = os.environ['DAY_OR_NIGHT']
+        if dayORNight == 'DAY':
+            overlayName = s.getSetting('daytimeoverlay')
+        else:
+            overlayName = s.getSetting('nighttimeoverlay')
+
+        userPath = os.path.join(os.environ['ALLSKY_OVERLAY'], 'myTemplates', overlayName)
+        if os.path.isfile(userPath):
+            self._overlayConfigFile = userPath
+            s.log(4, f'INFO: Time of day is {dayORNight} using overlay {overlayName}')
+        else:
+            corePath = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', overlayName)
+            if os.path.isfile(corePath):
+                self._overlayConfigFile = corePath
+                s.log(4, f'INFO: Time of day is {dayORNight} using overlay {overlayName}')
+            else:
+                s.log(0, f'ERROR: Unable to locate an overlay file: TOD {dayORNight}, overlay "{overlayName}"')
+                
     def _dumpDebugData(self):
         debugFilePath = os.path.join(s.getEnvironmentVariable('ALLSKY_TMP'),'overlaydebug.txt')
         env = {}

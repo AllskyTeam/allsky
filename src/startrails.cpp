@@ -314,7 +314,10 @@ void usage_and_exit(int x) {
 
 	std::cout << std::endl << "Arguments:" << std::endl;
 	std::cout << "-h | --help : display this help, then exit" << std::endl;
-	std::cout << "-v | --verbose : increase log verbosity" << std::endl;kust this extension" << std::endl;
+	std::cout << "-v | --verbose : increase log verbosity" << std::endl;
+	std::cout << "-S | --statistics : print image directory statistics without producing image" << std::endl;
+	std::cout << "-d | --directory <str> : directory from which to read images" << std::endl;
+	std::cout << "-e | --extension <str> : filter images to just this extension" << std::endl;
 	std::cout << "-Q | --max-threads <int> : limit maximum number of processing threads (all cpus)" << std::endl;
 	std::cout << "-q | --nice <int> : nice(2) level of processing threads (10)" << std::endl;
 	std::cout << "-o | --output-file <str> : output image filename" << std::endl;

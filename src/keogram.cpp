@@ -64,6 +64,7 @@ std::mutex stdio_mutex;
 int nchan = 0;
 unsigned long nfiles = 0;
 int s_len = 0;	// length in characters of nfiles, e.g. if nfiles == "1000", s_len = 4.
+const char *ME = "";
 
 // Read a single file and return true on success and false on error.
 // On success, set "mat".
@@ -627,7 +628,8 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 }
 
 void usage_and_exit(int x) {
-	std::cout << "Usage:\tkeogram -d <imagedir> -e <ext> -o <outputfile> [<other_args>]" << std::endl;
+	std::cout << "Usage: " << ME << " -d <imagedir> -e <ext>"
+		<< " -o <outputfile> [<other_args>]" << std::endl;
 	if (x)
 		std::cout << KRED << "Source directory, image extension, and output file are required" << std::endl;
 
@@ -658,11 +660,13 @@ void usage_and_exit(int x) {
 	std::cout << "Font name is one of these OpenCV font names:\n\tSimplex, Plain, "
 	"Duplex, Complex, Triplex, ComplexSmall, ScriptSimplex, ScriptComplex" << std::endl;
 	std::cout << "Font Type is an OpenCV line type: 0=antialias, 1=8-connected, 2=4-connected" << std::endl;
-	std::cout << KNRM << std::endl;
-	std::cout << "In some cases --font-line and --font-size can lead to annoying horizontal lines. Solution: try other values" << std::endl;
-	std::cout << KNRM << std::endl;
-	std::cout << "	ex: keogram --directory ../images/current/ --extension jpg --output-file keogram.jpg --font-size 2" << std::endl;
-	std::cout << "	ex: keogram -d . -e png -o /home/pi/allsky/keogram.jpg -n" << KNRM << std::endl;
+//x	std::cout << KNRM << std::endl;
+	std::cout << "In some cases --font-line and --font-size can lead to annoying horizontal lines.:"
+		<< std::endl
+		<< "Solution: try other values" << std::endl;
+//x	std::cout << KNRM << std::endl;
+	std::cout << "   ex: keogram --directory ../images/current/ --extension jpg --output-file keogram.jpg --font-size 2" << std::endl;
+	std::cout << "   ex: keogram -d . -e png -o /home/pi/allsky/keogram.jpg -n" << KNRM << std::endl;
 	exit(x);
 }
 
@@ -692,6 +696,7 @@ int get_font_by_name(char* s) {
 int main(int argc, char* argv[]) {
 	struct config_t config;
 	int r;
+	ME = basename(argv[0]);
 
 	parse_args(argc, argv, &config);
 
@@ -711,7 +716,7 @@ int main(int argc, char* argv[]) {
 	nfiles = files.gl_pathc;
 	if (nfiles == 0) {
 		globfree(&files);
-		std::cout << "No images found, exiting." << std::endl;
+		std::cout << "ERROR: No images found in " << config.img_src_dir << ", exiting." << std::endl;
 		exit(1);
 	}
 	// Determine width of the number of files, e.g., "1234" is 4 characters wide.

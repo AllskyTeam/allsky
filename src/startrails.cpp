@@ -48,6 +48,7 @@ std::mutex stdio_mutex;
 int nchan = 0;
 unsigned long nfiles = 0;
 int s_len = 0;	// length in characters of nfiles, e.g. if nfiles == "1000", s_len = 4.
+const char *ME = "";
 
 // Read a single file and return true on success and false on error.
 // On success, set "mat".
@@ -301,8 +302,9 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 }
 
 void usage_and_exit(int x) {
-	std::cout << "Usage: startrails [-v] -d <dir> -e <ext> [-b <brightness> -o <output> | -S] "
-		" [-s <WxH>] [-Q <max-threads>] [-q <nice>]" << std::endl;
+	std::cout << "Usage: " << ME << " [-v] -d <imagedir> -e <ext>"
+		<< " [-b <brightness> -o <output> | -S] "
+		<< " [-s <WxH>] [-Q <max-threads>] [-q <nice>]" << std::endl;
 	if (x) {
 		std::cout << KRED
 			<< "Source directory and file extension are always required." << std::endl
@@ -312,10 +314,7 @@ void usage_and_exit(int x) {
 
 	std::cout << std::endl << "Arguments:" << std::endl;
 	std::cout << "-h | --help : display this help, then exit" << std::endl;
-	std::cout << "-v | --verbose : increase log verbosity" << std::endl;
-	std::cout << "-S | --statistics : print image directory statistics without producing image" << std::endl;
-	std::cout << "-d | --directory <str> : directory from which to read images" << std::endl;
-	std::cout << "-e | --extension <str> : filter images to just this extension" << std::endl;
+	std::cout << "-v | --verbose : increase log verbosity" << std::endl;kust this extension" << std::endl;
 	std::cout << "-Q | --max-threads <int> : limit maximum number of processing threads (all cpus)" << std::endl;
 	std::cout << "-q | --nice <int> : nice(2) level of processing threads (10)" << std::endl;
 	std::cout << "-o | --output-file <str> : output image filename" << std::endl;
@@ -331,6 +330,7 @@ void usage_and_exit(int x) {
 int main(int argc, char* argv[]) {
 	struct config_t config;
 	int r;
+	ME = basename(argv[0]);
 
 	parse_args(argc, argv, &config);
 
@@ -367,7 +367,8 @@ int main(int argc, char* argv[]) {
 	nfiles = files.gl_pathc;
 	if (nfiles == 0) {
 		globfree(&files);
-		std::cout << "ERROR: No images found in " << config.img_src_dir << ", exiting." << std::endl;
+		std::cout << ME << ": ERROR: No images found in " << config.img_src_dir;
+		std::cout << ", exiting." << std::endl;
 		exit(1);
 	}
 	// Determine width of the number of files, e.g., "1234" is 4 characters wide.

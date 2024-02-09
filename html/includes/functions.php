@@ -780,10 +780,10 @@ function getFileName($file) {
 
 	if (strpos('${HOME}', $file) !== false) {
 		$lastFileName = str_replace('${HOME}', HOME, $file);
-	} else {
-		$lastFileName = get_variable(ALLSKY_HOME . '/variables.sh', "$file=", '');
-// TODO: don't hard code
-$lastFileName = str_replace('${ALLSKY_HOME}', ALLSKY_HOME, $lastFileName);
+	} else if (strpos('${ALLSKY_ENV}', $file) !== false) {
+		$lastFileName = str_replace('${ALLSKY_ENV}', ALLSKY_ENV, $file);
+	} else if (strpos('${ALLSKY_HOME}', $file) !== false) {
+		$lastFileName = str_replace('${ALLSKY_HOME}', ALLSKY_HOME, $lastFileName);
 	}
 	return $lastFileName;
 }

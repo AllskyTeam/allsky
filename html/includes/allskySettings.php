@@ -833,7 +833,7 @@ function toggle(headerNum) {
 						echo "<td colspan='3'></td>";
 					echo "</tr>";
 					echo "\n\t<tr>";
-						echo "<td colspan='3' class='subSettingsHeader'><div>$label</div></td>";
+						echo "<td colspan='3'><div class='subSettingsHeader'>$label</div></td>";
 					echo "</tr>";
 					echo "\n\t<tr class='rowSeparator' style='height: 5x;'>";
 						echo "<td colspan='3'></td>";

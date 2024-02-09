@@ -42,7 +42,6 @@ uninstall:
 	@echo `date +%F\ %R:%S` Complete.
 	@echo `date +%F\ %R:%S` NOTE: Config files were \-NOT\- removed.
 	@echo `date +%F\ %R:%S` To remove config files, please run \'sudo make remove_configs\'
-
 .PHONY : uninstall
 
 ifeq ($(PKGBUILD),1)
@@ -57,7 +56,6 @@ createDirs:
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/profile.d ]; then mkdir -p $(DESTDIR)$(sysconfdir)/profile.d; fi
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/systemd/system ]; then mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system; fi
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/udev/rules.d ]; then mkdir -p $(DESTDIR)$(sysconfdir)/udev/rules.d; fi
-
 .PHONY : createDirs
 
 $(ENVFILE):

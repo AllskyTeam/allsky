@@ -507,6 +507,7 @@ table .alert-dismissable {
 .subSettingsHeader div {
 	margin: 0 3em 0 3em;
 	background-color: #aac;
+	padding: 3px 0px;
 }
 .dark .subSettingsHeader {
 	background-color: #339

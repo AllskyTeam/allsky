@@ -367,7 +367,7 @@ int main(int argc, char* argv[]) {
 	nfiles = files.gl_pathc;
 	if (nfiles == 0) {
 		globfree(&files);
-		std::cout << "ERROR: No images found, exiting." << std::endl;
+		std::cout << "ERROR: No images found in " << config.img_src_dir << ", exiting." << std::endl;
 		exit(1);
 	}
 	// Determine width of the number of files, e.g., "1234" is 4 characters wide.

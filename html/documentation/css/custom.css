@@ -5,6 +5,9 @@
 	--navbar-border-color-dark: #333333;
 	--WebUI-setting-color: #00009b;
 	--WebUI-setting-color-dark: #68a0ff;
+	--WebUI-subSetting-color: black;
+	--WebUI-subSetting-background-color: #aac;
+	--WebUI-subSetting-background-color-dark: #339;
 	--dark-text: #aaaaaa;
 	--dark-text-reversed: #eeeeee;
 	--rowSeparator: 1px solid #d3d3d3;
@@ -499,18 +502,19 @@ table .alert-dismissable {
 	background-color: #555;
 }
 .subSettingsHeader {
+	color: var(--WebUI-subSetting-color);
+	background-color: var(--WebUI-subSetting-background-color);
 	text-align: center;
 	font-weight: bold;
 	font-size: 1.05em;
 	padding: 0;
 }
-.subSettingsHeader div {
+div.subSettingsHeader {
 	margin: 0 3em 0 3em;
-	background-color: #aac;
 	padding: 3px 0px;
 }
 .dark .subSettingsHeader {
-	background-color: #339
+	background-color: var(--WebUI-subSetting-background-color-dark);
 }
 .headingRow {
 	border-top: 15px solid transparent;

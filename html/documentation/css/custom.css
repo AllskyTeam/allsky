@@ -89,6 +89,21 @@
 .settingInput { /* Input field in Allsky Settings page */
 	width: 120px;
 }
+.settingInputSelect {
+	padding: 0px 3px 0px 3px;
+	text-align: right;
+}
+.settingInputTextNumber {
+	padding: 0px 3px 0px 0px;
+	text-align: right;
+}
+.settingInputWidetext {
+	padding: 6px 5px;
+}
+.settingInputBoolean {
+	margin-bottom: -3px !important;
+	border-radius: 4px;
+}
 
 .info-item {
 	width: 140px;
@@ -286,6 +301,10 @@ table .alert-dismissable {
 	border-color: #f1b1b1;
 	background-color: #a94442;
 }
+.alert-danger {
+	border-top-width: 10px;
+	border-bottom-width: 10px;
+}
 
 .dark .form-control,
 .dark input[type="text"],
@@ -422,6 +441,17 @@ table .alert-dismissable {
 {
 	color: var(--dark-text-reversed);
 }
+.advanced, .btn-advanced { /* "advanced" options are highlighted in same color as button */
+	background-color: #fffcc0;
+}
+.dark .advanced, .dark .btn-advanced {
+	color: #bfbfbf;
+	border-color: #bdb173;
+	background-color: #837a2f;
+}
+.advanced-nocolor {
+	background-color: inherit;
+}
 
 .dark .btn-primary:hover,
 .dark .btn-success:hover,
@@ -468,6 +498,19 @@ table .alert-dismissable {
 .dark .settingsHeader {
 	background-color: #555;
 }
+.subSettingsHeader {
+	text-align: center;
+	font-weight: bold;
+	font-size: 1.05em;
+	padding: 0;
+}
+.subSettingsHeader div {
+	margin: 0 3em 0 3em;
+	background-color: #aac;
+}
+.dark .subSettingsHeader {
+	background-color: #339
+}
 .headingRow {
 	border-top: 15px solid transparent;
 	border-bottom: 15px solid var(--rowSeparator);
@@ -475,6 +518,17 @@ table .alert-dismissable {
 .dark .headingRow {
 	border-bottom-color: var(--rowSeparator-dark);
 }
+.columnHeader {
+	background-color: #aac;
+	text-align: center;
+	font-weight: bold;
+	font-size: 1.05em;
+	padding: 0;
+}
+.dark .columnHeader {
+	background-color: #339
+}
+
 .headingRowPadding {
 	border-top: 3px solid transparent;
 	border-bottom: 3px solid transparent;

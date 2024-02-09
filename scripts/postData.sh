@@ -20,7 +20,7 @@ usage_and_exit()
 	{
 		echo
 		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-		echo "Usage: ${ME} [--help] [--settingsOnly] [--websites w] [--allfiles]"
+		echo "Usage: ${ME} [--help] [--settingsOnly] [--fromWebUI] [--allfiles]"
 		[[ ${RET} -ne 0 ]] && echo -en "${NC}"
 		echo "    where:"
 		echo "      '--allfiles' causes all 'view settings' files to be uploaded"
@@ -148,8 +148,10 @@ function upload_file()
 # This directory is in the root of the Allsky Website.
 # Assume if the first upload fails they all will, so exit.
 WEB_ONLY="--local-web --remote-web"
-upload_file "${WEB_ONLY}" "${SETTINGS_FILE}" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}" \
-	|| exit "$?"
+upload_file "${WEB_ONLY}" \
+		"${SETTINGS_FILE}" \
+		"${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}" \
+	|| exit $?
 
 if [[ ${ALL_FILES} == "true" ]]; then
 	upload_file "${WEB_ONLY}" "${OPTIONS_FILE}" \
@@ -163,7 +165,7 @@ fi
 if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	# Some remote servers may want to see this file so upload everywhere.
 	upload_file "" "${OUTPUT_FILE}" ""		# Goes in top-level directory
-	exit "$?"
+	exit $?
 fi
 
 exit 0

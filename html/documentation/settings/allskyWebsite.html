@@ -33,24 +33,19 @@ Constellations and other objects can be overlayed on the image,
 and aurora activity can be listed.
 </p>
 <p>
-Make sure you follow the
-<a allsky="true" href=../installations/AllskyWebsite.html">Allsky Website Installation Instructions</a>
-exactly to install the Allsky Website on your Pi and/or a remote server.
+For a local Allsky Website you only need to enable it in
+the WebUI's <span class="WebUIWebPage">Allsky Settings</span> page.
+There are no other settings on this page and no installation needed.
 </p>
 <p>
-To configure the Website:
+For a remote Website follow the
+<a allsky="true" href="../installations/AllskyWebsite.html">Allsky Website Installation Instructions</a>.
+</p>
+
+<p>
+To configure a local or remote Website, do the following:
 <ol>
 <li>In the WebUI, click on the <span class="WebUIWebPage">Editor</span> link in the menu.
-
-<li>If you have not already done so while installing the Website,
-	in the drop-down at the bottom of the page, select
-	<span class="dropdown">ftp-settings.sh</span>
-	to specify the settings to upload image,
-	keogram, startrails, and timelapse 
-	files to your local and/or remote Allsky Website.
-	<br>See the <a href="#ftp-settings">ftp-settings.sh file</a> section below
-	for the various settings and their meanings.
-
 <li>In the drop-down at the bottom of the page, select
 	one of the following, depending on which Website you want to configure:
 	<ul>
@@ -64,8 +59,6 @@ To configure the Website:
 </p>
 <p>
 The sections below list all the settings, their default values, and a description.
-Information on the color scheme used by the Editor is
-<a allsky="true" external="true" href="EditorColors.html" target="_blank" title="Opens in new tab">here</a>.
 </p>
 
 
@@ -363,9 +356,11 @@ LFTP_COMMANDS="set sftp:connect-program 'ssh -a -x -i /home/pi/ssh-key.pem'"
 <p>
 This section describes the settings in the 
 <span class="dropdown">configuration.json (local Allsky Website)</span> and
-<span class="dropdown">remote_configuration.json (remote Allsky Website)</span> files.
+<span class="dropdown">remote_configuration.json (remote Allsky Website)</span> files,
+their default values, and a description.
+Information on the color scheme used by the Editor is
+<a allsky="true" external="true" href="EditorColors.html" target="_blank" title="Opens in new tab">here</a>.
 </p>
-<details><summary></summary>
 <p id="configuration.json">
 The settings in both files are identical (although their values may differ)
 and they are split into two sections:
@@ -391,7 +386,7 @@ needs to be updated prior to using the Website.
 <ul class="minimalPadding">
 <li>Values for setting names with "<span class="sentToMapServer"></span>" after them
 	are sent to the <a allsky="true" href="/documentation/allskyMap/index.html">Allsky Map</a>
-	server if you camera is on the map.
+	server if your camera is on the map.
 <li>Setting names with "<span class="vsOverlay"></span>" after them
 	impact the virtual sky overlay.
 	A complete list of virtual-sky based options is
@@ -731,11 +726,6 @@ Allsky Website so you only have to update them once.
 	<td></td>
 	<td><b>Do not change</b>.</td>
 </tr>
-<tr>
-	<td><span class="editorSetting">AllskyWebsiteVersion</span></td>
-	<td></td>
-	<td><b>Do not change</b>.</td>
-</tr>
 </tbody>
 </table>
 <hr class="separator">
@@ -975,8 +965,6 @@ Allsky Website so you only have to update them once.
 </tr>
 </tbody>
 </table>
-</details>
-
 </details>
 
 </div><!-- Layout-main -->

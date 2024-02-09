@@ -395,24 +395,9 @@ class OVERLAYUTIL
         return $exampleData;
     }
 
-    public function getFonts()
-    {
-        $fileName = $this->overlayPath . '/config/overlay.json';
-        $config = file_get_contents($fileName);
-        $config = json_decode($config);
+    public function getFonts() {
 
-        $fields = [];
         $count = 1;
-        foreach ($config->fonts as $name => $font) {
-            $obj = (object) [
-                'id' => $count,
-                'name' => $name,
-                'path' => $font->fontPath,
-            ];
-            $fields[] = $obj;
-            $count++;
-        }
-
         $usableFonts = array(
             'Arial' => array('fontpath' => '/usr/share/fonts/truetype/msttcorefonts/Arial.ttf'),
             'Arial Black' => array('fontpath' => '/usr/share/fonts/truetype/msttcorefonts/Arial_Black.ttf'),
@@ -435,12 +420,26 @@ class OVERLAYUTIL
             $count++;
         }
 
+        $fontDir = $this->overlayPath . '/fonts/';
+        $fontList = scandir($fontDir);
+        foreach ($fontList as $font) {
+            if ($font !== '.' && $font !== '..') {
+                $obj = (object) [
+                    'id' => $count,
+                    'name' => basename($font),
+                    'path' => '/fonts/' . $font,
+                ];
+            }
+            $fields[] = $obj;
+            $count++;
+        }
+
         $data = array(
             'data' => $fields,
         );
 
         $data = json_encode($data, JSON_PRETTY_PRINT);
-        $this->sendResponse($data);
+        $this->sendResponse($data);        
     }
 
     public function postFonts()
@@ -670,16 +669,16 @@ class OVERLAYUTIL
         $fileName = $this->overlayPath . '/config/' . $overlayName;
 
         if (file_exists($fileName)) {
-            $config = file_get_contents($fileName);
+            $overlay = file_get_contents($fileName);
         } else {
             $fileName = $this->overlayPath . '/myTemplates/' . $overlayName;
-            $config = file_get_contents($fileName);
-        }
+            $overlay = file_get_contents($fileName);
+        }     
 
         if (!$return) {
-            $this->sendResponse($config);
+            $this->sendResponse($overlay);
         } else {
-            return $config;
+            return $overlay;
         }
 
     }
@@ -700,6 +699,17 @@ class OVERLAYUTIL
         $overlayData['brands'] = ['RPi', 'ZWO', 'Arducam'];
         $overlayData['brand'] = $this->getSetting('cameratype');
         $overlayData['model'] = $this->getSetting('cameramodel');
+
+        $tod = getenv('DAY_OR_NIGHT');
+        if ($tod === false) {
+            $tod = 'night';
+        }
+        $tod = strtolower($tod);
+        if ($tod == 'day') {
+            $overlayData['current'] = $overlayData['config']['daytime'];
+        } else {
+            $overlayData['current'] = $overlayData['config']['nighttime'];
+        }
 
         $defaultDir = $this->overlayPath . '/config/';
         $entries = scandir($defaultDir);
@@ -797,6 +807,39 @@ class OVERLAYUTIL
         $newOverlay = json_decode($newOverlay);
 
         $newOverlay->metadata = $_POST['fields'];
+
+        $overlay = json_decode($newOverlay);
+        if (!isset($newOverlay->fields)) {
+            $newOverlay->fields = [];
+        }
+        if (!isset($newOverlay->images)) {
+            $newOverlay->images = [];
+        }
+        if (!isset($newOverlay->fonts)) {
+            $newOverlay->fonts = [
+                'moon_phases' => [
+                    'fontPath' => 'fonts/moon_phases.ttf'
+                ]
+            ];
+        }
+        if (!isset($newOverlay->settings)) {
+            $newOverlay->settings = [
+                'defaultdatafileexpiry' => '550',
+                'defaultincludeplanets' => false,
+                'defaultincludesun' => false,
+                'defaultincludemoon' => false,
+                'defaultimagetopacity' => 0.63,
+                'defaultimagerotation' => 0,
+                'defaulttextrotation' => 0,
+                'defaultfontopacity' => 1,
+                'defaultfontcolour' => 'white',
+                'defaultfont' => 'Arial',
+                'defaultfontsize' => 52,
+                'defaultimagescale' => 1,
+                'defaultnoradids' => ''                
+            ];
+        }            
+                
         $newOverlay = json_encode($newOverlay, JSON_PRETTY_PRINT);
 
         $overlayFile = $this->overlayPath . '/myTemplates/' . $_POST['data']['filename'] . '.json';

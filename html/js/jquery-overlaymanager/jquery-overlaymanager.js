@@ -254,7 +254,7 @@
 
             let dialogHTML = '\
                 <div class="modal" role="dialog" id="' + plugin.mmNewDialog + '">\
-                    <div class="modal-dialog modal-sm" role="document">\
+                    <div class="modal-dialog" role="document">\
                         <div class="modal-content">\
                             <div class="modal-header">\
                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>\
@@ -393,6 +393,12 @@
         }
 
         var setupEvents = function() {
+            $(document).on('oe-overlay-saved', (e,data) => {
+                let configManager = window.oedi.get('config');
+                configManager.loadOverlays();
+                buildUI();
+            });
+
             $(document).on('oe-overlay-loaded', (e,data) => {
                 plugin.selectedOverlay = data.overlay
                 buildUI();
@@ -683,9 +689,9 @@
         var buildUI = function () {
             let configManager = window.oedi.get('config');
             let data = configManager.overlays;
-            resetSelect(plugin.mmEditSelect, (plugin.selectedOverlay.name !== null) ? plugin.selectedOverlay.name : null);
-            resetSelect(plugin.mmDaySelect, (data.config.daytime !== null) ? data.config.daytime : null);
-            resetSelect(plugin.mmNightSelect, (data.config.nighttime !== null) ? data.config.nighttime : null);
+            resetSelect(plugin.mmEditSelect, 'both', (plugin.selectedOverlay.name !== null) ? plugin.selectedOverlay.name : null);
+            resetSelect(plugin.mmDaySelect, 'day', (data.config.daytime !== null) ? data.config.daytime : null);
+            resetSelect(plugin.mmNightSelect, 'night', (data.config.nighttime !== null) ? data.config.nighttime : null);
 
             resetSelect(plugin.mmMetaData, (plugin.selectedOverlay.name !== null) ? plugin.selectedOverlay.name : null);
             
@@ -723,26 +729,57 @@
                 $('.' + plugin.mmDebug).removeClass('hidden');
             }
 
-            function resetSelect(id, selectedValue=null) {
+            function resetSelect(id, tod, selectedValue=null) {
                 let selectId = '#' + id;
                 $(selectId).empty();
 
                 for (let overlay in data.coreoverlays) {
-                    let selected = '';
-                    if (selectedValue !== null && selectedValue === overlay) {
-                        selected = 'selected';
+                    let add = false;
+                    if (tod == 'both') {
+                        add = true;
+                    } else {
+                        let overlayTod = data.coreoverlays[overlay].metadata.tod;
+                        if (overlayTod !== undefined) {
+                            if (overlayTod === tod || overlayTod === 'both') {
+                                add = true;
+                            }
+                        } else {
+                            add = true;
+                        }
                     }
-                    let name = data.coreoverlays[overlay].metadata.name
-                    $(selectId).append($('<option ' + selected + '>').val(overlay).text('System - ' + name).data('type','system'));
+
+                    if (add) {
+                        let selected = '';
+                        if (selectedValue !== null && selectedValue === overlay) {
+                            selected = 'selected';
+                        }
+                        let name = data.coreoverlays[overlay].metadata.name
+                        $(selectId).append($('<option ' + selected + '>').val(overlay).text('System - ' + name).data('type','system'));
+                    }
                 }
 
                 for (let overlay in data.useroverlays) {
-                    let selected = '';
-                    if (selectedValue !== null && selectedValue === overlay) {
-                        selected = 'selected';
+                    let add = false;
+                    if (tod == 'both') {
+                        add = true;
+                    } else {
+                        let overlayTod = data.useroverlays[overlay].metadata.tod;
+                        if (overlayTod !== undefined) {
+                            if (overlayTod === tod || overlayTod === 'both') {
+                                add = true;
+                            }
+                        } else {
+                            add = true;
+                        }
                     }
-                    let name = data.useroverlays[overlay].metadata.name
-                    $(selectId).append($('<option ' + selected + '>').val(overlay).text('User - ' + name).data('type','user'));
+                    if (add) {                    
+                        let selected = '';
+                        if (selectedValue !== null && selectedValue === overlay) {
+                            selected = 'selected';
+                        }
+                        let name = data.useroverlays[overlay].metadata.name
+                        $(selectId).append($('<option ' + selected + '>').val(overlay).text('User - ' + name).data('type','user'));
+                    }
                 }                
             }
         }

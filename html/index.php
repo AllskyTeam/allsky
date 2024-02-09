@@ -1,45 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="Web User Interface (WebUI) for Allsky">
-	<meta name="author" content="Thomas Jacquin">
-
-	<!-- Bootstrap Core CSS -->
-	<link href="documentation/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-
-	<!-- MetisMenu CSS -->
-	<link href="documentation/bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
-
-	<!-- Custom CSS -->
-	<link href="documentation/css/sb-admin-2.css" rel="stylesheet">
-
-	<!-- Font Awesome -->
-	<script defer src="documentation/js/all.min.js"></script>
-
-	<!-- Custom CSS -->
-	<link href="documentation/css/custom.css" rel="stylesheet">
-
-	<link rel="shortcut icon" type="image/png" href="documentation/img/allsky-favicon.png">
-
-	<!-- RaspAP JavaScript -->
-	<script src="documentation/js/functions.js"></script>
-
-	<!-- jQuery -->
-	<script src="documentation/bower_components/jquery/dist/jquery.min.js"></script>
-
-	<!-- Bootstrap Core JavaScript -->
-	<script src="documentation/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-
-	<!-- Metis Menu Plugin JavaScript -->
-	<script src="documentation/bower_components/metisMenu/dist/metisMenu.min.js"></script>
-
-	<script src="js/bigscreen.min.js"></script>
-
-	<style> .current { width: 100%; } </style>
-
 <?php
 
 /**
@@ -128,10 +86,16 @@ if ($useLogin) {
 	$csrf_token = $_SESSION['csrf_token'];
 }
 
+$websiteFile = ALLSKY_WEBSITE . "/version";
+if (file_exists($websiteFile)) {
+	$localWebsiteVersion = file_get_contents($websiteFile);
+} else {
+	$localWebsiteVersion = "";
+}
 // Get the version of the remote Allsky Website, if it exists.
 $remoteWebsiteVersion = "";
-if ($hasRemoteWebsite) {
-	$f = getRemoteWebsiteConfigFile(); 
+$f = ALLSKY_WEBSITE_REMOTE_CONFIG;
+if (file_exists($f)) {
 	$errorMsg = "WARNING: Unable to process '$f'.";
 	$retMsg = "";
 	$a_array = get_decoded_json_file($f, true, $errorMsg, $retMsg);
@@ -143,8 +107,18 @@ if ($hasRemoteWebsite) {
 			$remoteWebsiteVersion = getVariableOrDefault($c, 'AllskyWebsiteVersion', '<span class="errorMsg">[unknown]</span>');
 	}
 }
+?>
 
-// Give each page its own <title> so they are easy to distinguish in the browser.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="Web User Interface (WebUI) for Allsky">
+	<meta name="author" content="Thomas Jacquin">
+
+<?php	// Give each page its own <title> so they are easy to distinguish in the browser.
 	switch ($page) {
 		case "WLAN_info":			$Title = "WLAN Dashboard";		break;
 		case "LAN_info":			$Title = "LAN Dashboard";		break;
@@ -167,8 +141,41 @@ if ($hasRemoteWebsite) {
 		case "live_view":			$Title = "Liveview";			break;
 		default:					$Title = "Allsky WebUI";		break;
 	}
-	echo "<title>$Title - WebUI</title>";
 ?>
+	<title><?php echo "$Title - WebUI"; ?></title>
+
+	<!-- Bootstrap Core CSS -->
+	<link href="documentation/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+
+	<!-- MetisMenu CSS -->
+	<link href="documentation/bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
+
+	<!-- Custom CSS -->
+	<link href="documentation/css/sb-admin-2.css" rel="stylesheet">
+
+	<!-- Font Awesome -->
+	<script defer src="documentation/js/all.min.js"></script>
+
+	<!-- Custom CSS -->
+	<link href="documentation/css/custom.css" rel="stylesheet">
+
+	<link rel="shortcut icon" type="image/png" href="documentation/img/allsky-favicon.png">
+
+	<!-- RaspAP JavaScript -->
+	<script src="documentation/js/functions.js"></script>
+
+	<!-- jQuery -->
+	<script src="documentation/bower_components/jquery/dist/jquery.min.js"></script>
+
+	<!-- Bootstrap Core JavaScript -->
+	<script src="documentation/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+
+	<!-- Metis Menu Plugin JavaScript -->
+	<script src="documentation/bower_components/metisMenu/dist/metisMenu.min.js"></script>
+
+	<script src="js/bigscreen.min.js"></script>
+
+	<style> .current { width: 100%; } </style>
 	<script type="text/javascript">
 		function getImage() {
 			var newImg = new Image();
@@ -202,7 +209,7 @@ if ($hasRemoteWebsite) {
 	<link rel="stylesheet" href="lib/codeMirror/monokai.min.css">
 	<script type="text/javascript" src="lib/codeMirror/codemirror.js"> </script>
 	<script type="text/javascript" src="lib/codeMirror/shell.js"> </script>
-<?php if ($hasLocalWebsite || $hasRemoteWebsite) { ?>
+<?php if ($localWebsiteVersion !== "" || $remoteWebsiteVersion !== "") { ?>
 	<script type="text/javascript" src="lib/codeMirror/json.js"> </script>
 <?php } ?>
 </head>
@@ -211,7 +218,7 @@ if ($hasRemoteWebsite) {
 	<!-- Navigation -->
 	<nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
 		<div class="navbar-header">
-			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+			<button type="button" class="navbar-toggle as-nav-toggle" data-toggle="collapse" data-target=".navbar-collapse">
 				<span class="sr-only">Toggle navigation</span>
 				<span class="icon-bar"></span>
 				<span class="icon-bar"></span>
@@ -225,10 +232,10 @@ if ($hasRemoteWebsite) {
 				<div class="version-title version-title-color">
 					<span class="nowrap">Version: <?php echo ALLSKY_VERSION; ?></span>
 					&nbsp; &nbsp;
-<?php if ($hasLocalWebsite) {
+<?php if ($localWebsiteVersion !== "") {
 					echo "<span class='nowrap'>";
 					echo "<a class='version-title-color' href='allsky/index.php' target='_blank' title='Click to go to local Website'>";
-					echo "Local Website";
+					echo "Local Website: $localWebsiteVersion";
 					echo " <i class='fa fa-external-link-alt fa-fw'></i></a></span>";
 } ?>
 					&nbsp; &nbsp;

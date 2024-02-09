@@ -67,7 +67,7 @@
 }
 
 .right-panel .panel:first-of-type {
-	margin: 20px 0;
+	margin: 10px 0;
 }
 
 .panel-primary {
@@ -667,4 +667,9 @@ div.sticky {
 
 #backToTopBtn:hover {
 	background-color: #888; /* Add a lighter-grey background on hover */
+}
+
+.as-nav-toggle {
+	float: left !important;
+	margin-left: 5px;
 }

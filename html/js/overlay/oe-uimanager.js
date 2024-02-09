@@ -790,6 +790,7 @@ class OEUIMANAGER {
         $(document).on('click', '#oe-save', (event) => {
             if (this.#fieldManager.dirty || this.#configManager.dirty) {
                 this.#saveConfig();
+                $(document).trigger('oe-overlay-saved');
             }
         });
 

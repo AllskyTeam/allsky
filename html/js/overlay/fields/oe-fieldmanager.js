@@ -41,6 +41,7 @@ class OEFIELDMANAGER {
         let fields = config.getValue('fields', {});
         for (let index in fields) {
             let newField = new OETEXTFIELD(fields[index], this.#idcounter++);
+            newField.dirty = false;
             fields[index].id = newField.id;
             this.#fields.set(newField.id, newField);
         }
@@ -48,6 +49,7 @@ class OEFIELDMANAGER {
         fields = config.getValue('images', {});
         for (let index in fields) {
             let newField = new OEIMAGEFIELD(fields[index], this.#idcounter++);
+            newField.dirty = false;
             fields[index].id = newField.id;
             this.#fields.set(newField.id, newField);
         }

@@ -1752,7 +1752,7 @@
 "label" : "Server Name",
 "type" : "widetext",
 "checkchanges" : true,
-"source" : "ALLSKY_ENV",
+"source" : "${ALLSKY_ENV}",
 "booldependson" : "useremotewebsite",
 "optional" : true
 },
@@ -1763,7 +1763,7 @@
 "label" : "Port",
 "type" : "integer",
 "checkchanges" : true,
-"source" : "ALLSKY_ENV",
+"source" : "${ALLSKY_ENV}",
 "booldependson" : "useremotewebsite",
 "optional" : true
 },
@@ -1774,7 +1774,7 @@
 "label" : "User Name",
 "type" : "text",
 "checkchanges" : true,
-"source" : "ALLSKY_ENV",
+"source" : "${ALLSKY_ENV}",
 "booldependson" : "useremotewebsite",
 "optional" : true
 },
@@ -1785,7 +1785,7 @@
 "label" : "Password",
 "type" : "password",
 "checkchanges" : true,
-"source" : "ALLSKY_ENV",
+"source" : "${ALLSKY_ENV}",
 "booldependson" : "useremotewebsite",
 "optional" : true
 },
@@ -1796,7 +1796,7 @@
 "label" : "FTP Commands",
 "type" : "text",
 "checkchanges" : true,
-"source" : "ALLSKY_ENV",
+"source" : "${ALLSKY_ENV}",
 "booldependson" : "useremotewebsite",
 "valuedependson" : "remotewebsiteprotocol=*ftp*",
 "optional" : true
@@ -1819,7 +1819,7 @@
 "label" : "SSH Key File",
 "type" : "widetext",
 "checkchanges" : true,
-"source" : "ALLSKY_ENV",
+"source" : "${ALLSKY_ENV}",
 "booldependson" : "useremotewebsite",
 "valuedependson" : "remotewebsiteprotocol=scp",
 "optional" : true
@@ -1831,7 +1831,7 @@
 "label" : "AWS CLI Directory",
 "type" : "widetext",
 "checkchanges" : true,
-"source" : "ALLSKY_ENV",
+"source" : "${ALLSKY_ENV}",
 "booldependson" : "useremotewebsite",
 "valuedependson" : "remotewebsiteprotocol=s3",
 "optional" : true
@@ -1843,7 +1843,7 @@
 "label" : "S3 Bucket",
 "type" : "text",
 "checkchanges" : true,
-"source" : "ALLSKY_ENV",
+"source" : "${ALLSKY_ENV}",
 "booldependson" : "useremotewebsite",
 "valuedependson" : "remotewebsiteprotocol=s3",
 "optional" : true
@@ -1855,7 +1855,7 @@
 "label" : "S3 ACL",
 "type" : "text",
 "checkchanges" : true,
-"source" : "ALLSKY_ENV",
+"source" : "${ALLSKY_ENV}",
 "booldependson" : "useremotewebsite",
 "valuedependson" : "remotewebsiteprotocol=s3",
 "optional" : true
@@ -1867,7 +1867,7 @@
 "label" : "GCS Bucket",
 "type" : "text",
 "checkchanges" : true,
-"source" : "ALLSKY_ENV",
+"source" : "${ALLSKY_ENV}",
 "booldependson" : "useremotewebsite",
 "valuedependson" : "remotewebsiteprotocol=gcs",
 "optional" : true
@@ -1879,7 +1879,7 @@
 "label" : "GCS ACL",
 "type" : "text",
 "checkchanges" : true,
-"source" : "ALLSKY_ENV",
+"source" : "${ALLSKY_ENV}",
 "booldependson" : "useremotewebsite",
 "valuedependson" : "remotewebsiteprotocol=gcs",
 "optional" : true
@@ -1978,7 +1978,7 @@
 "label" : "Server Name",
 "type" : "widetext",
 "checkchanges" : true,
-"source" : "ALLSKY_ENV",
+"source" : "${ALLSKY_ENV}",
 "booldependson" : "useremoteserver",
 "optional" : true
 },
@@ -1989,7 +1989,7 @@
 "label" : "Port",
 "type" : "integer",
 "checkchanges" : true,
-"source" : "ALLSKY_ENV",
+"source" : "${ALLSKY_ENV}",
 "booldependson" : "useremoteserver",
 "optional" : true
 },
@@ -2000,7 +2000,7 @@
 "label" : "User Name",
 "type" : "text",
 "checkchanges" : true,
-"source" : "ALLSKY_ENV",
+"source" : "${ALLSKY_ENV}",
 "booldependson" : "useremoteserver",
 "optional" : true
 },
@@ -2011,7 +2011,7 @@
 "label" : "Password",
 "type" : "password",
 "checkchanges" : true,
-"source" : "ALLSKY_ENV",
+"source" : "${ALLSKY_ENV}",
 "booldependson" : "useremoteserver",
 "optional" : true
 },
@@ -2022,7 +2022,7 @@
 "label" : "FTP Commands",
 "type" : "text",
 "checkchanges" : true,
-"source" : "ALLSKY_ENV",
+"source" : "${ALLSKY_ENV}",
 "booldependson" : "useremoteserver",
 "valuedependson" : "remoteserverprotocol=*ftp*",
 "optional" : true
@@ -2034,7 +2034,7 @@
 "label" : "SSH Key File",
 "type" : "widetext",
 "checkchanges" : true,
-"source" : "ALLSKY_ENV",
+"source" : "${ALLSKY_ENV}",
 "booldependson" : "useremoteserver",
 "valuedependson" : "remoteserverprotocol=scp",
 "optional" : true
@@ -2046,7 +2046,7 @@
 "label" : "AWS CLI Directory",
 "type" : "widetext",
 "checkchanges" : true,
-"source" : "ALLSKY_ENV",
+"source" : "${ALLSKY_ENV}",
 "booldependson" : "useremoteserver",
 "valuedependson" : "remoteserverprotocol=s3",
 "optional" : true
@@ -2058,7 +2058,7 @@
 "label" : "S3 Bucket",
 "type" : "text",
 "checkchanges" : true,
-"source" : "ALLSKY_ENV",
+"source" : "${ALLSKY_ENV}",
 "booldependson" : "useremoteserver",
 "valuedependson" : "remoteserverprotocol=s3",
 "optional" : true
@@ -2070,7 +2070,7 @@
 "label" : "S3 ACL",
 "type" : "text",
 "checkchanges" : true,
-"source" : "ALLSKY_ENV",
+"source" : "${ALLSKY_ENV}",
 "booldependson" : "useremoteserver",
 "valuedependson" : "remoteserverprotocol=s3",
 "optional" : true
@@ -2082,7 +2082,7 @@
 "label" : "GCS Bucket",
 "type" : "text",
 "checkchanges" : true,
-"source" : "ALLSKY_ENV",
+"source" : "${ALLSKY_ENV}",
 "booldependson" : "useremoteserver",
 "valuedependson" : "remoteserverprotocol=gcs",
 "optional" : true
@@ -2094,7 +2094,7 @@
 "label" : "S3 ACL",
 "type" : "text",
 "checkchanges" : true,
-"source" : "ALLSKY_ENV",
+"source" : "${ALLSKY_ENV}",
 "booldependson" : "useremoteserver",
 "valuedependson" : "remoteserverprotocol=gcs",
 "optional" : true

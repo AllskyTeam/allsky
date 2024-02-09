@@ -1,9 +1,12 @@
 <?php
 
 // Get the json for the given file "f" if we haven't already and return a pointer to the data.
+// Most of the time there will only be one source file, so check if we're getting the
+// same file as last time.
 function &getSourceArray($f) {
 	global $status;
 	static $filesContents = array();
+	static $lastFile = null;
 
 	$fileName = getFileName($f);
 	if ($fileName == "") {
@@ -11,12 +14,16 @@ function &getSourceArray($f) {
 		$status->addMessage($msg, 'danger', false);
 		return ("");
 	}
+
+	if ($fileName === $lastFile) return($fileContents[$fileName]);
+	$lastFile = $fileName;
+
 	if (! isset($filesContents[$fileName])) {
-		$errorMsg = "Unable to read source file '$fileName'";
-		$filesContents[$fileName] = get_decoded_json_file($fileName, true, $errorMsg);
+		$errorMsg = "<br>Unable to read source file '$fileName' ($f).";
+		$fullErrorMsg = "";
+		$filesContents[$fileName] = get_decoded_json_file($fileName, true, $errorMsg, $fullErrorMsg);
 		if ($filesContents[$fileName] === null) {
-			$msg = "Unable to get json contents of '$fileName' ($f).";
-			$status->addMessage($msg, 'danger', false);
+			$status->addMessage($fullErrorMsg, 'danger', false);
 		}
 	}
 	return $filesContents[$fileName];
@@ -967,7 +974,7 @@ function toggle(headerNum) {
 $popupYesNo = getVariableOrDefault($option, 'popup-yesno', "");
 if ($popupYesNo !== "") {
 	$popupYesNoValue = getVariableOrDefault($option, 'popup-yesno-value', "");
-	$description .= "<br><span style='color: red;'>If value changes to '$popupYesNoValue' then ask '$popupYesNo'</span>";
+	echo "<!-- <br><span style='color: red;'>If value changes to '$popupYesNoValue' then ask '$popupYesNo'</span> -->";
 }
 					echo "\n\t<td style='padding-left: 10px;'>$warning_msg$description</td>";
 

@@ -65,6 +65,38 @@ if ! one_instance --pid-file "${PID_FILE}" --sleep "3s" --max-checks 3 \
 	exit 1
 fi
 
+# The image may be in a memory filesystem, so do all the processing there and
+# leave the image used by the website(s) in that directory.
+IMAGE_NAME=$( basename "${CURRENT_IMAGE}" )		# just the file name
+WORKING_DIR=$( dirname "${CURRENT_IMAGE}" )		# the directory the image is currently in
+
+# Check for bad images.
+# Return code 99 means the image was bad and deleted and an error message
+# displayed so don't continue.
+"${ALLSKY_SCRIPTS}/removeBadImages.sh" "${WORKING_DIR}" "${IMAGE_NAME}"
+[[ $? -eq 99 ]] && exit 99
+
+CROP_TOP="$( settings ".imagecroptop" )"
+CROP_RIGHT="$( settings ".imagecropright" )"
+CROP_BOTTOM="$( settings ".imagecropbottom" )"
+CROP_LEFT="$( settings ".imagecropleft" )"
+CROP_IMAGE=$(( CROP_TOP + CROP_RIGHT + CROP_BOTTOM + CROP_LEFT ))		# > 0 if cropping
+
+# If we're cropping the image, get the image resolution.
+if [[ ${CROP_IMAGE} -gt 0 ]]; then
+	# Typical "identify" output:
+	#	image.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.19257MiB 0.000u 0:00.000
+	if ! x=$( identify "${CURRENT_IMAGE}" 2>/dev/null ) ; then
+		echo -e "${RED}*** ${ME}: ERROR: '${CURRENT_IMAGE}' is corrupt; not saving.${NC}"
+		exit 3
+	fi
+
+	RESOLUTION=$(echo "${x}" | awk '{ print $3 }')
+	# These are the resolution of the image (which may have been binned), not the sensor.
+	RESOLUTION_X=${RESOLUTION%x*}	# everything before the "x"
+	RESOLUTION_Y=${RESOLUTION##*x}	# everything after  the "x"
+fi
+
 # Get passed-in variables.
 while [[ $# -gt 0 ]]; do
 	VARIABLE="AS_${1%=*}"		# everything before the "="
@@ -77,32 +109,6 @@ done
 # Export other variables so user can use them in overlays
 export AS_CAMERA_TYPE="$( settings ".cameratype" )"
 export AS_CAMERA_MODEL="$( settings ".cameramodel" )"
-
-# The image may be in a memory filesystem, so do all the processing there and
-# leave the image used by the website(s) in that directory.
-IMAGE_NAME=$( basename "${CURRENT_IMAGE}" )		# just the file name
-WORKING_DIR=$( dirname "${CURRENT_IMAGE}" )		# the directory the image is currently in
-
-# Check for bad images.
-# Return code 99 means the image was bad and deleted and an error message
-# displayed so don't continue.
-"${ALLSKY_SCRIPTS}/removeBadImages.sh" "${WORKING_DIR}" "${IMAGE_NAME}"
-[[ $? -eq 99 ]] && exit 99
-
-# If we're cropping the image, get the image resolution.
-if [[ ${CROP_IMAGE} == "true" ]]; then
-	# Typical "identify" output:
-	#	image.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.19257MiB 0.000u 0:00.000
-	if ! x=$( identify "${CURRENT_IMAGE}" 2>/dev/null ) ; then
-		echo -e "${RED}*** ${ME}: ERROR: '${CURRENT_IMAGE}' is corrupt; not saving.${NC}"
-		exit 3
-	fi
-
-	RESOLUTION=$( echo "${x}" | awk '{ print $3 }' )
-	# These are the resolution of the image (which may have been binned), not the sensor.
-	RESOLUTION_X=${RESOLUTION%x*}	# everything before the "x"
-	RESOLUTION_Y=${RESOLUTION##*x}	# everything after  the "x"
-fi
 
 # If ${AS_TEMPERATURE_C} is set, use it as the sensor temperature,
 # otherwise use the temperature in ${TEMPERATURE_FILE}.
@@ -274,7 +280,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 		DATE_NAME="$( date +'%Y%m%d' )"
 	fi
 	DATE_DIR="${ALLSKY_IMAGES}/${DATE_NAME}"
-	mkdir -p "${DATE_DIR}"
+	[[ ! -d ${DATE_DIR} ]] && mkdir -p "${DATE_DIR}"
 
 	if [[ $( settings ".imagecreatethumbnails" ) == "true" ]]; then
 		THUMBNAILS_DIR="${DATE_DIR}/thumbnails"
@@ -296,7 +302,10 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 
 		TIMELAPSE_MINI_IMAGES="$( settings ".minitimelapsenumimages" )"
 		TIMELAPSE_MINI_FREQUENCY="$( settings ".minitimelapsefrequency" )"
-		if [[ ${TIMELAPSE_MINI_IMAGES} -ne 0 && ${TIMELAPSE_MINI_FREQUENCY} -ne 1 ]]; then
+		if [[ ${TIMELAPSE_MINI_IMAGES} -eq 0 ]]; then
+			TIMELAPSE_MINI_UPLOAD_VIDEO="false"
+
+		elif [[ ${TIMELAPSE_MINI_FREQUENCY} -ne 1 ]]; then
 			TIMELAPSE_MINI_FORCE_CREATION="$( settings ".minitimelapseforcecreation" )"
 			# We are creating mini-timelapses; see if we should create one now.
 
@@ -390,7 +399,6 @@ if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "false" ]]; then
 fi
 
 # If upload is true, optionally create a smaller version of the image; either way, upload it
-RET=0
 IMG_UPLOAD_FREQUENCY="$( settings ".imageuploadfrequency" )"
 if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 	# First check if we should upload this image
@@ -421,6 +429,7 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 	fi
 fi
 
+RET=0
 if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 	W="$( settings ".imageresizeuploadswidth" )"
 	H="$( settings ".imageresizeuploadsheight" )"
@@ -444,7 +453,6 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 		FILE_TO_UPLOAD="${CURRENT_IMAGE}"
 	fi
 
-	RET=0
 	if [[ $( settings ".remotewebsiteimageuploadoriginalname" ) == "true" ]]; then
 		DESTINATION_NAME=""
 	else

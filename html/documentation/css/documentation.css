@@ -1,6 +1,12 @@
 :root {
 	--main-body-padding: 12px;
 	--Layout-sidebar-width: 250px;
+	--WebUI-setting-color: #00009b;
+	--WebUI-setting-color-dark: #68a0ff;
+	--WebUI-value-color: #555;
+	--WebUI-value-background-color: #e4e4e4;
+	--WebUI-link-color: #4b4a4b;
+	--WebUI-link-background-color: #f8f8f8;
 }
 
 body {
@@ -679,27 +685,25 @@ b, strong {
 }
 .WebUIWebPage, /* old name */
 .WebUILink {	/* link on the WebUI to one of its pages */
-	padding: 0 .2em;
-	color: #4b4a4b;
 	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-	background-color: #f8f8f8;
+	padding: 0 .2em;
+	color: var(--WebUI-link-color);
+	background-color: var(--WebUI-link-background-color);
 	border-bottom: 1px solid #e7e7e7;
 }
 .WebUISetting {	/* Matches what's in the WebUI */
 	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-	color: #333;
-	color:#00009b;
+	color: var(--WebUI-setting-color);
 	font-weight: bold;
 	font-size: 95%;
 }
 .WebUIValue {
 	padding: 0 3px 0 3px;
 	font-size: 14px;
-	font-family: "Helvetica Neue", Helvetica, Arial;
 	font-family: inherit;
-	color: #555;
+	color: var(--WebUI-value-color);
+	background-color: var(--WebUI-value-background-color);
 	border: 1px solid #ccc;
-	background-color: #e4e4e4;
 	border-radius: 4px;
 }
 .shSetting {	/* Matches what's in the WebUI's "Editor" page for *.sh files. */

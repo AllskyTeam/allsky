@@ -2517,7 +2517,7 @@ get_count()
 {
 	local DIR="${1}"
 	local FILENAME="${2}"
-	return echo $( find "${DIR}" -maxdepth 1 -name "${FILENAME}" | wc -l )
+	echo $( find "${DIR}" -maxdepth 1 -name "${FILENAME}" | wc -l )
 }
 
 ####

@@ -198,7 +198,7 @@ function initialize_variables() {
 
 	if (! $ok) {
 		$showUpdatedMessage = false;
-		if ($delay === 0) $delay = 20;	// a reasonable default
+		if ($delay === 0) $delay = 20000;	// a reasonable default
 		return;
 	}
 

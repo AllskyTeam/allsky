@@ -1687,6 +1687,11 @@
 "booldependson" : "uselocalwebsite OR useremotewebsite OR useremoteserver"
 },
 {
+"name" : "localwebsiteheader",
+"label" : "Local Website Settings",
+"type" : "header-sub"
+},
+{
 "name" : "uselocalwebsite",
 "description" : "Enable to use the local Allsky Website.  No other settings are needed.",
 "default" : false,

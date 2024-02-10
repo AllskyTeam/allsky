@@ -177,6 +177,7 @@ stop_allsky()
 # Get the branch of the release we are installing;
 get_this_branch()
 {
+	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 	local B		# BRANCH is global
 
 	#shellcheck disable=SC2119
@@ -187,8 +188,8 @@ get_this_branch()
 		display_msg --logonly info "Using the '${BRANCH}' branch."
 	fi
 
-	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 	STATUS_VARIABLES+=("BRANCH='${BRANCH}'\n")
+	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
 
 
@@ -444,7 +445,6 @@ update_php_defines()
 			-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};" \
 			-e "s;XX_MY_OVERLAY_TEMPLATES_XX;${MY_OVERLAY_TEMPLATES};" \
 			-e "s;XX_ALLSKY_MODULES_XX;${ALLSKY_MODULES};" \
-			-e "s;XX_ALLSKY_MODULE_LOCATION_XX;${ALLSKY_MODULE_LOCATION};" \
 		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
 		chmod 644 "${FILE}"
 
@@ -1351,6 +1351,7 @@ PRIOR_WEBSITE_CONFIG_FILE=""
 NEW_WEB_CONFIG_VERSION=""
 PRIOR_WEB_CONFIG_VERSION=""
 
+# Run every time in case the Website was removed after first run.
 does_prior_Allsky_Website_exist()
 {
 	local PRIOR_STYLE="${1}"
@@ -1578,7 +1579,6 @@ install_dependencies_etc()
 		exit_with_image 1 "${STATUS_ERROR}" "make insall_failed"
 
 	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
-	return 0
 }
 
 
@@ -1661,13 +1661,15 @@ get_lat_long()
 
 ####
 # If needed, update the new settings file based on the prior one.
-# The old and new files both exist and may be the same, but either way, do not modify the old file.
+# The old and new files both exist and may be the same,
+# but either way, do not modify the old file.
 convert_settings()			# prior_file, new_file
 {
 	local PRIOR_FILE="${1}"
 	local NEW_FILE="${2}"
 
 	[[ ${ALLSKY_VERSION} == "${PRIOR_ALLSKY_VERSION}" ]] && return
+
 	# If we're upgrading a version >= COMBINED_BASE_VERSION then return.
 	# bash doesn't have >= so use   ! <
 	[[ ! (${PRIOR_ALLSKY_BASE_VERSION} < "${COMBINED_BASE_VERSION}") ]] && return
@@ -1679,7 +1681,7 @@ convert_settings()			# prior_file, new_file
 	# Older version had uppercase letters in setting names and "1" and "0" for booleans
 	# and quotes around numbers. Change that.
 	# Don't modify the prior file, so make the changes to a temporary file.
-	# --setings-only  says only output settings that are in the settings file.
+	# --settings-only  says only output settings that are in the settings file.
 	# The OPTIONS_FILE doesn't exist yet so use REPO_OPTIONS_FILE>
 	local TEMP_PRIOR="/tmp/converted_old_settings.json"
 	"${ALLSKY_WEBUI}/includes/convertJSON.php" --convert \
@@ -1854,7 +1856,7 @@ doV()
 # Copy everything from old config.sh to the settings file.
 convert_config_sh()
 {
-	[[ ${convert_config_sh} == "true" ]] && return 0
+	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 
 	local OLD_CONFIG_FILE="${1}"
 	local NEW_FILE="${2}"
@@ -1906,7 +1908,8 @@ convert_config_sh()
 		fi
 
 		# CROP_IMAGE, CROP_WIDTH, CROP_HEIGHT, CROP_OFFSET_X, and CROP_OFFSET_Y are no longer used.
-		# Instead the user specifies the number of pixels to crop from the top, right, bottom, and left.
+		# Instead the user specifies the number of pixels to crop from the
+		# top, right, bottom, and left.
 		# It's too difficult to convert old numbers to new, so force the user to enter new numbers.
 		# We'd need to know actual number of image pixels, bin level, and .width and .height to get
 		# the effective width and height, then convert.
@@ -2011,7 +2014,6 @@ convert_config_sh()
 	) || return 1
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
-	convert_config_sh="true"
 
 	return 0
 }
@@ -2019,7 +2021,7 @@ convert_config_sh()
 # Copy everything from old ftp-settings.sh to the settings file.
 convert_ftp_sh()
 {
-	[[ ${convert_ftp_sh} == "true" ]] && return 0
+	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 
 	local FTP_FILE="${1}"
 	local NEW_FILE="${2}"
@@ -2030,7 +2032,7 @@ convert_ftp_sh()
 	fi
 
 	display_msg --log progress "Copying contents of prior ftp-settings.sh to settings file."
-	(
+	{
 		#shellcheck disable=SC1090
 		if ! source "${FTP_FILE}" ; then
 			display_msg --log error "Unable to process prior ftp-settings.sh file (${FTP_FILE})."
@@ -2086,10 +2088,9 @@ convert_ftp_sh()
 
 		# Remote server
 		doV "IMG_UPLOAD_ORIGINAL_NAME" ".remoteserverimageuploadoriginalname" "boolean" "${NEW_FILE}"
-	) || return 1
+	} || return 1
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
-	convert_ftp_sh="true"
 
 	return 0
 }
@@ -2462,8 +2463,10 @@ do_Website_tasks()
 #XXXX TODO: do this in makeChanges.sh when they enable the local Website.
 	if [[ ! -f "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" ]]; then
 		# No prior config file (this should only happen if there was no prior Website).
-		cp "${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
-		update_json_file ".${WEBSITE_ALLSKY_VERSION}" "${ALLSKY_VERSION}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+		cp  "${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo" \
+			"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+		update_json_file ".${WEBSITE_ALLSKY_VERSION}"  "${ALLSKY_VERSION}" \
+			"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
@@ -2509,6 +2512,15 @@ restore_prior_remote_website_files()
 }
 
 ####
+# Get a count of the number of the specified file in the specified directory.
+get_count()
+{
+	local DIR="${1}"
+	local FILENAME="${2}"
+	return echo $( find "${DIR}" -maxdepth 1 -name "${FILENAME}" | wc -l )
+}
+
+####
 # If a prior local Website exists move its data to the new location.
 restore_prior_local_website_files()
 {
@@ -2521,21 +2533,21 @@ restore_prior_local_website_files()
 	local ITEM   D   count   A   MSG
 
 	ITEM="${SPACE}Local Website files"
-	if [[ -n ${PRIOR_WEBSITE_DIR} ]]; then
-		display_msg --log progress "${ITEM}:"
-	else
+	if [[ -z ${PRIOR_WEBSITE_DIR} ]]; then
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		restore_prior_remote_website_files
 		return
 	fi
 
-	# Each data directory will have zero or more images.
+	display_msg --log progress "${ITEM}:"
+
+	# Each data directory will have zero or more images/videos.
 	# Make sure we do NOT mv any .php files.
 
-	ITEM="${SPACE}${SPACE}videos"
+	ITEM="${SPACE}${SPACE}timelapse videos"
 	D="${PRIOR_WEBSITE_DIR}/videos/thumbnails"
 	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/videos"
-	count=$( find "${PRIOR_WEBSITE_DIR}/videos" -maxdepth 1 -name 'allsky-*' | wc -l )
+	count=$( get_count "${PRIOR_WEBSITE_DIR}/videos" 'allsky-*' )
 	if [[ ${count} -ge 1 ]]; then
 		display_msg --log progress "${ITEM} (moving)"
 		mv "${PRIOR_WEBSITE_DIR}"/videos/allsky-*   "${ALLSKY_WEBSITE}/videos"
@@ -2546,7 +2558,7 @@ restore_prior_local_website_files()
 	ITEM="${SPACE}${SPACE}keograms"
 	D="${PRIOR_WEBSITE_DIR}/keograms/thumbnails"
 	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/keograms"
-	count=$( find "${PRIOR_WEBSITE_DIR}/keograms" -maxdepth 1 -name 'keogram-*' | wc -l )
+	count=$( get_count "${PRIOR_WEBSITE_DIR}/keograms" 'keogram-*' )
 	if [[ ${count} -ge 1 ]]; then
 		display_msg --log progress "${ITEM} (moving)"
 		mv "${PRIOR_WEBSITE_DIR}"/keograms/keogram-*   "${ALLSKY_WEBSITE}/keograms"
@@ -2557,7 +2569,7 @@ restore_prior_local_website_files()
 	ITEM="${SPACE}${SPACE}startrails"
 	D="${PRIOR_WEBSITE_DIR}/startrails/thumbnails"
 	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/startrails"
-	count=$( find "${PRIOR_WEBSITE_DIR}/startrails" -maxdepth 1 -name 'startrails-*' | wc -l )
+	count=$( get_count "${PRIOR_WEBSITE_DIR}/startrails" 'startrails-*' )
 	if [[ ${count} -ge 1 ]]; then
 		display_msg --log progress "${ITEM} (moving)"
 		mv "${PRIOR_WEBSITE_DIR}"/startrails/startrails-*   "${ALLSKY_WEBSITE}/startrails"
@@ -2568,7 +2580,7 @@ restore_prior_local_website_files()
 	ITEM="${SPACE}${SPACE}'myFiles' directory"
 	D="${PRIOR_WEBSITE_DIR}/myFiles"
 	if [[ -d ${D} ]]; then
-		count=$( find "${D}" | wc -l )
+		count=$( get_count "${D}" '*' )
 		if [[ ${count} -gt 1 ]]; then
 			display_msg --log progress "${ITEM} (moving)"
 			mv "${D}"   "${ALLSKY_WEBSITE}"
@@ -2582,7 +2594,7 @@ restore_prior_local_website_files()
 	ITEM="${SPACE}${SPACE}'myImages' directory"
 	D="${PRIOR_WEBSITE_DIR}/myImages"
 	if [[ -d ${D} ]]; then
-		count=$( find "${D}" | wc -l )
+		count=$( get_count "${D}" '*' )
 		if [[ ${count} -gt 1 ]]; then
 			local MSG2="  Please use 'myFiles' going forward."
 			display_msg --log progress "${ITEM} (copying to '${ALLSKY_WEBSITE}/myFiles')" "${MSG2}"
@@ -3251,7 +3263,8 @@ if [[ -z ${FUNCTION} && -s ${STATUS_FILE} ]]; then
 	elif [[ ${STATUS_INSTALLATION} == "${STATUS_NO_FINISH_REBOOT}" ]]; then
 		MSG="The installation completed successfully but the following needs to happen"
 		MSG+=" before Allsky is ready to run:"
-		MSG2="\n\n    1. Verify your settings in the WebUi's 'Allsky Settings' page."
+		MSG2="\n"
+		MSG2+="\n    1. Verify your settings in the WebUi's 'Allsky Settings' page."
 		MSG2+="\n    2. Reboot the Pi."
 		MSG3="\n\nHave you already performed those steps?"
 		if whiptail --title "${TITLE}" --yesno "${MSG}${MSG2}${MSG3}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
@@ -3333,7 +3346,7 @@ stop_allsky
 get_connected_cameras
 
 ##### Get branch
-[[ ${get_this_branch} != "true" ]] && get_this_branch
+get_this_branch
 
 ##### Handle updates
 [[ ${UPDATE} == "true" ]] && do_update		# does not return

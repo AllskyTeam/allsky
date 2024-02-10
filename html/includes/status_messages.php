@@ -37,11 +37,11 @@ class StatusMessages {
 			$count++;
 			if ($count === 1) {
 				if ($highlight) {
-					$class = "class=${apos}highlightedBox${apos}";
+					$class = " class=${apos}highlightedBox${apos}";
 				} else {
 					$class = "";
 				}
-				echo "$nl<div $class><table width=${apos}100%${apos}>";
+				echo "$nl<div$class><table width=${apos}100%${apos}>";
 			}
 
 			if ($count >= 2) {
@@ -59,7 +59,7 @@ class StatusMessages {
 		}
 
 		if ($count > 0) {
-			echo "$nl</table></div>";
+			echo "$nl</table></div>$nl";
 		}
 
 		if ( $clear ) $this->messages = array();

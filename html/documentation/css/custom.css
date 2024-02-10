@@ -5,6 +5,10 @@
 	--navbar-border-color-dark: #333333;
 	--WebUI-setting-color: #00009b;
 	--WebUI-setting-color-dark: #68a0ff;
+	--WebUI-value-color: #555;
+	--WebUI-value-background-color: #e4e4e4;
+	--WebUI-link-color: #4b4a4b;
+	--WebUI-link-background-color: #f8f8f8;
 	--WebUI-subSetting-color: black;
 	--WebUI-subSetting-background-color: #aac;
 	--WebUI-subSetting-background-color-dark: #339;
@@ -661,6 +665,13 @@ select {
 .nowrap {
 	white-space: nowrap;
 }
+.WebUILink {	/* link on the WebUI to one of its pages */
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	padding: 0 .2em;
+	color: var(--WebUI-link-color);
+	background-color: var(--WebUI-link-background-color);
+	border-bottom: 1px solid #e7e7e7;
+}
 .WebUISetting {	/* Matches what's in the WebUI */
 	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 	color: var(--WebUI-setting-color);
@@ -672,11 +683,10 @@ select {
 .WebUIValue {
 	padding: 0 3px 0 3px;
 	font-size: 14px;
-	font-family: "Helvetica Neue", Helvetica, Arial;
 	font-family: inherit;
-	color: #555;
+	color: var(--WebUI-value-color);
+	background-color: var(--WebUI-value-background-color);
 	border: 1px solid #ccc;
-	background-color: #e4e4e4;
 	border-radius: 4px;
 }
 

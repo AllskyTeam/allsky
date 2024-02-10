@@ -486,15 +486,12 @@ function DisplayOverlay($image_name)
                         <h4 class="modal-title">Overlay Editor Options</h4>
                     </div>
                     <div class="modal-body">
-
-
-
                         <div>
-
                             <!-- Nav tabs -->
                             <ul class="nav nav-tabs" role="tablist">
                                 <li role="presentation" class="active"><a href="#configoptions" aria-controls="configoptions" role="tab" data-toggle="tab">Layout Defaults</a></li>
                                 <li role="presentation"><a href="#oeeditoroptions" aria-controls="oeeditoroptions" role="tab" data-toggle="tab">Editor Settings</a></li>
+                                <li role="presentation"><a href="#oeeditoroverlays" aria-controls="oeeditoroverlays" role="tab" data-toggle="tab">Overlays</a></li>
                             </ul>
 
                             <!-- Tab panes -->
@@ -752,11 +749,29 @@ function DisplayOverlay($image_name)
                                     </form>
 
                                 </div>
+
+                                <div role="tabpanel" class="tab-pane" id="oeeditoroverlays">
+                                    <div class="mt-2">
+                                        <table id="overlaytablelist" style="width:100%">
+                                            <thead>
+                                                <tr>
+                                                    <th>Type</th>                                                
+                                                    <th>Name</th>
+                                                    <th>Brand</th>
+                                                    <th>Model</th>
+                                                    <th>TOD</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                        </table> 
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                     </div>
                     <div class="modal-footer">
+                        <button type="button" class="btn btn-primary pull-left hidden" name="optionsdialognewoverlay" id="optionsdialognewoverlay">New Overlay</button>
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                         <button type="button" id="oe-defaults-save" class="btn btn-primary">Save changes</button>
                     </div>

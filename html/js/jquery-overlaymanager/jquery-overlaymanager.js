@@ -61,6 +61,29 @@
             return plugin.settings.active;
         }
 
+        plugin.show = function() {
+            let menu = $('#' + plugin.mmWrapper);
+            if (!menu.hasClass('active')) {
+                menu.addClass('active');
+            }
+        }
+
+        plugin.setSelected = function(fileName) {
+            $('#' + plugin.mmEditSelect).val(fileName);
+            $('#' + plugin.mmEditSelect).trigger('change');
+        }
+
+        plugin.showNew = function() {
+            $('#' + plugin.mmNewDialogNew).trigger('click');
+        }
+
+        plugin.hide = function() {
+            let menu = $('#' + plugin.mmWrapper);
+            if (menu.hasClass('active')) {
+                menu.removeClass('active');
+            }
+        }
+
         var setupDebug = function() {
             let url = window.location.href;
             const paramArr = url.slice(url.indexOf('?') + 1).split('&');

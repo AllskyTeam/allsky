@@ -874,6 +874,78 @@ class OVERLAYUTIL
         $this->sendResponse($result);
 
     }
+
+    private function fixMetaData(&$overlay) {
+        if (!isset($overlay->metadata)) {
+            $overlay->metadata = (object)null;
+        }
+        if (!isset($overlay->metadata->name)) {
+            $overlay->metadata->name = '???';
+        }
+        if (!isset($overlay->metadata->camerabrand)) {
+            $overlay->metadata->camerabrand = '???';
+        }
+        if (!isset($overlay->metadata->cameramodel)) {
+            $overlay->metadata->cameramodel = '???';
+        }
+        if (!isset($overlay->metadata->tod)) {
+            $overlay->metadata->tod = '???';
+        }
+    }
+
+    public function getOverlayList() {
+        
+        $overlays = [];
+
+        $defaultDir = $this->overlayPath . '/config/';
+        $entries = scandir($defaultDir);
+        foreach ($entries as $entry) {
+            if ($entry !== '.' && $entry !== '..') {
+                if (substr($entry,0, 7) === 'overlay') {
+                    $templatePath = $defaultDir . $entry;
+                    $template = file_get_contents($templatePath);
+                    $templateData = json_decode($template);
+                    $this->fixMetaData($templateData);
+                    $overlays[] = [
+                        'type' => 'System',
+                        'name' => $templateData->metadata->name,
+                        'brand' => $templateData->metadata->camerabrand,
+                        'model' => $templateData->metadata->cameramodel,
+                        'tod' => $templateData->metadata->tod,
+                        'filename' => $entry
+                    ];
+                }
+            }
+        }
+
+        $userDir = $this->overlayPath . '/myTemplates/';
+        $entries = scandir($userDir);
+        foreach ($entries as $entry) {
+            if ($entry !== '.' && $entry !== '..') {
+                if (substr($entry,0, 7) === 'overlay') {
+                    $templatePath = $userDir . $entry;
+                    $template = file_get_contents($templatePath);
+                    $templateData = json_decode($template);
+                    $this->fixMetaData($templateData);
+                    $overlays[] = [
+                        'type' => 'User',
+                        'name' => $templateData->metadata->name,
+                        'brand' => $templateData->metadata->camerabrand,
+                        'model' => $templateData->metadata->cameramodel,
+                        'tod' => $templateData->metadata->tod,
+                        'filename' => $entry
+                    ];
+                }
+            }
+        }
+
+        $data = array(
+            'data' => $overlays
+        );
+        
+        $data = json_encode($data, JSON_PRETTY_PRINT);
+        $this->sendResponse($data);            
+    }
 }
 
 $overlayUtil = new OVERLAYUTIL();

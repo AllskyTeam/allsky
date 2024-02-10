@@ -905,12 +905,77 @@ class OEUIMANAGER {
                 preferredFormat: 'hex'
             });            
             
+
+            $('#overlaytablelist').DataTable().destroy();
+            $('#overlaytablelist').DataTable({
+                ajax: 'includes/overlayutil.php?request=OverlayList',
+                dom: '<"toolbar">frtip',
+                autoWidth: false,
+                pagingType: 'simple_numbers',
+                paging: true,
+                pageLength: 20,
+                info: false,
+                searching: false,
+                order: [[0, 'asc']],
+                ordering: false,
+                columns: [
+                    {
+                        data: 'type',
+                        width: '80px'
+                    }, {
+                        data: 'name',
+                        width: '300px'
+                    }, {
+                        data: 'brand',
+                        width: '80px'
+                    }, {
+                        data: 'model',
+                        width: '80px'
+                    }, {
+                        data: 'tod',
+                        width: '80px'
+                    }, {
+                        data: null,
+                        width: '50px',
+                        render: function (item, type, row, meta) {
+
+                            let buttons = '<button type="button" class="btn btn-primary btn-xs oe-options-overlay-edit" data-filename="' + item.filename + '"><i class="fa-solid fa-pen-to-square"></i></button>';
+
+                            return buttons;
+                        }
+                    }
+                ]
+            });
+
             $('#optionsdialog').modal({
                 keyboard: false
             });
 
             $('a[href="#configoptions"]').tab('show');
 
+        });
+
+        $('#optionsdialog a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            var target = $(e.target).attr('href')
+            if (target === '#oeeditoroverlays') {
+                $('#optionsdialognewoverlay').removeClass('hidden');
+            } else {
+                $('#optionsdialognewoverlay').addClass('hidden');
+            }
+          });
+
+          
+        $(document).on('click', '#optionsdialognewoverlay', (event) => {
+            $('#oe-overlay-manager').data('allskyMM').show();
+            $('#oe-overlay-manager').data('allskyMM').showNew();            
+            $('#optionsdialog').modal('hide');
+        });
+
+        $(document).on('click', '.oe-options-overlay-edit', (event) => {
+            let fileName = $(event.currentTarget).data('filename');
+            $('#oe-overlay-manager').data('allskyMM').show();
+            $('#oe-overlay-manager').data('allskyMM').setSelected(fileName);
+            $('#optionsdialog').modal('hide');
         });
 
         $(document).on('click', '#oe-defaults-save', (event) => {
@@ -1065,7 +1130,6 @@ class OEUIMANAGER {
                 width: 600
             })
         });
-
 
         $('#fontlisttable').on('click', '.oe-list-font-use', function(e) {
             let fontName = $(e.currentTarget).data('fontname');

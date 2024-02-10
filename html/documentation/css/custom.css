@@ -18,6 +18,7 @@
 	--rowSeparator-dark: 1px solid #707070;
 	--btn-hover-color: black;
 	--btn-dark-color: #bfbfbf;
+	--panel-heading-color: #6b6b6b;
 }
 
 .page-header {
@@ -81,13 +82,16 @@
 	margin: 20px 0;
 }
 
+hr.panel-primary {
+	border-top-width: 10px;
+}
 .panel-primary {
-	border-color: #6b6b6b;
+	border-color: var(--panel-heading-color);
 }
 
 .panel-primary>.panel-heading {
-	border-color: #6b6b6b;
-	background-color: #6b6b6b;
+	border-color: var(--panel-heading-color);
+	background-color: var(--panel-heading-color);
 }
 
 .panel-footer {

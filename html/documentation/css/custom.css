@@ -56,12 +56,14 @@
 	color: var(--dark-text);
 }
 
+#page-wrapper { padding: 0 10px; }
+.navbar-toggle { float: left; margin-left: 10px; }
 @media (max-width: 450px) {.version-title { font-size: 75%; }}
 @media (max-width: 400px) {.version-title { font-size: 65%; }}
 @media (min-width: 796px) {	/* was 768px */
 	.sidebar { width: 210px; }
 	.navbar-title { display: inline-block; }
-	#page-wrapper { margin-left: 210px; padding: 0 30px; }
+	#page-wrapper { margin-left: 210px; }
 	.navbar-collapse { display: block; visibility: visible; }
 }
 @media (max-width: 795px) {
@@ -90,6 +92,7 @@
 
 .panel-footer {
 	background-color: #f2f1f0;
+	margin-bottom: 1em;
 }
 
 

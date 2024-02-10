@@ -164,7 +164,8 @@ function initialize_variables() {
 	// $img_dir is an alias in the web server's config that points to where the current image is.
 	// It's the same as ${ALLSKY_TMP} which is the physical path name on the server.
 	$img_dir = get_variable(ALLSKY_HOME . '/variables.sh', 'IMG_DIR=', 'current/tmp');
-	$image_name = $img_dir . "/" . $settings_array['filename'];
+	$f = getVariableOrDefault($settings_array, 'filename', "image.jpg");
+	$image_name = "$img_dir/$f";
 	$darkframe = toBool(getVariableOrDefault($settings_array, 'takedarkframes', "false"));
 	$imagesSortOrder = getVariableOrDefault($settings_array, 'imagessortorder', "ascending");
 	$useLogin = toBool(getVariableOrDefault($settings_array, 'uselogin', "true"));
@@ -174,14 +175,14 @@ function initialize_variables() {
 
 
 	////////////////// Determine delay between refreshes of the image.
-	$daydelay = $settings_array["daydelay"];
-	$nightdelay = $settings_array["nightdelay"];
+	$daydelay = getVariableOrDefault($settings_array, 'daydelay', 30000);
+	$nightdelay = getVariableOrDefault($settings_array, 'nightdelay', 30000);
 	$showUpdatedMessage = toBool(getVariableOrDefault($settings_array, 'showupdatedmessage', "true"));
 
-	$daymaxautoexposure = $settings_array["daymaxautoexposure"];
-	$dayexposure = $settings_array["dayexposure"];
-	$nightmaxautoexposure = $settings_array["nightmaxautoexposure"];
-	$nightexposure = $settings_array["nightexposure"];
+	$daymaxautoexposure = getVariableOrDefault($settings_array, 'daymaxautoexposure', 100);
+	$dayexposure = getVariableOrDefault($settings_array, 'dayexposure', 500);
+	$nightmaxautoexposure = getVariableOrDefault($settings_array, 'nightmaxautoexposure', 10000);
+	$nightexposure = getVariableOrDefault($settings_array, 'nightexposure', 10000);
 	$consistentDelays = toBool(getVariableOrDefault($settings_array, 'consistentdelays', "true"));
 
 	$ok = true;
@@ -462,19 +463,19 @@ function handle_interface_POST_and_status($interface, $input, &$status) {
 		// If the interface is down it's also not running.
 		$s = get_interface_status("ifconfig $interface");
 		if (! is_interface_up($s)) {
-			$status->addMessage("Interface $interface was already down", 'warning');
+			$status->addMessage("Interface $interface was already down", 'warning', false);
 		} else {
 			exec( "sudo ifconfig $interface down 2>&1", $output );	// stop
 			// Check that it actually stopped
 			$s = get_interface_status("ifconfig $interface");
 			if (! is_interface_up($s)) {
-				$status->addMessage("Interface $interface stopped", 'success');
+				$status->addMessage("Interface $interface stopped", 'success', false);
 			} else {
 				if ($output == "")
 					$output = "Unknown reason";
 				else
 					$output = implode(" ", $output);
-				$status->addMessage("Unable to stop interface $interface<br>$output" , 'danger');
+				$status->addMessage("Unable to stop interface $interface<br>$output" , 'danger', false);
 				$interface_up = true;
 			}
 		}
@@ -483,19 +484,19 @@ function handle_interface_POST_and_status($interface, $input, &$status) {
 		// We should only get here if the interface is down,
 		// but just in case, check if it's already up.
 		if (is_interface_up(get_interface_status("ifconfig $interface"))) {
-			$status->addMessage("Interface $interface was already up", 'warning');
+			$status->addMessage("Interface $interface was already up", 'warning', false);
 			$interface_up = true;
 		} else {
 			exec( "sudo ifconfig $interface up 2>&1", $output );	// start
 			// Check that it actually started
 			$s = get_interface_status("ifconfig $interface");
 			if (! is_interface_up($s)) {
-				$status->addMessage("Unable to start interface $interface", 'danger');
+				$status->addMessage("Unable to start interface $interface", 'danger', false);
 			} else {
 				if (is_interface_running($s))
-					$status->addMessage("Interface $interface started", 'success');
+					$status->addMessage("Interface $interface started", 'success', false);
 				else
-					$status->addMessage("Interface $interface started but nothing connected to it", 'warning');
+					$status->addMessage("Interface $interface started but nothing connected to it", 'warning', false);
 				$interface_up = true;
 			}
 		}
@@ -503,13 +504,13 @@ function handle_interface_POST_and_status($interface, $input, &$status) {
 	} elseif (is_interface_up($input)) {
 		// The interface can be up but nothing connected to it (i.e., not RUNNING).
 		if (is_interface_running($input))
-			$status->addMessage("Interface $interface is up", 'success');
+			$status->addMessage("Interface $interface is up", 'success', false);
 		else
-			$status->addMessage("Interface $interface is up but nothing connected to it", 'warning');
+			$status->addMessage("Interface $interface is up but nothing connected to it", 'warning', false);
 		$interface_up = true;
 
 	} else {
-		$status->addMessage("Interface $interface is down", 'danger');
+		$status->addMessage("Interface $interface is down", 'danger', false);
 	}
 
 	return($interface_up);
@@ -672,7 +673,7 @@ function runCommand($cmd, $message, $messageColor, $addMsg=true)
 		// This is only a warning so only display the caller's message, if any.
 		if ($result != null) $msg = implode("<br>", $result);
 		else $msg = "";
-		$status->addMessage($msg, "warning", true);
+		$status->addMessage($msg, "warning", false);
 		return false;
 	} elseif ($return_val > 0) {
 		// Display a failure message, plus the caller's message, if any.
@@ -683,16 +684,16 @@ function runCommand($cmd, $message, $messageColor, $addMsg=true)
 			if ($result != null) $msg = implode("<br>", $result);
 			else $msg = "";
 		}
-		$status->addMessage($msg, "danger", true);
+		$status->addMessage($msg, "danger", false);
 		return false;
 	}
 
 	// Display the caller's "on success" message, if any.
 	if ($message !== "")
-		$status->addMessage($message, $messageColor, true);
+		$status->addMessage($message, $messageColor, false);
 
 	// Display any output from the command.
-	if ($result != null) $status->addMessage(implode("<br>", $result), "message", true);
+	if ($result != null) $status->addMessage(implode("<br>", $result), "message", false);
 
 	return true;
 }

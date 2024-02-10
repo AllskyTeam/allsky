@@ -138,7 +138,8 @@ body {
 	font-size: inherit;
 }
 .markdown-body h1 {
-	padding-bottom: .3em;
+	padding-bottom: .25em;
+	padding-left: .2em;
 	font-size: 2em;
 	border-bottom: 1px solid var(--color-border-muted);
 }
@@ -264,7 +265,6 @@ body {
 	margin-bottom: 10px;
 	line-height: 1.25;
 	background-color: var(--color-accent-muted);
-	padding: 3px 0 3px 5px;
 }
 .markdown-body h2,
 .markdown-body h3 {
@@ -342,10 +342,12 @@ body {
 	margin-top: 5px;
 	margin-bottom: 5px;
 }
-.markdown-body table td.subnote {
+.markdown-body .subnote {
 	background-color: var(--color-accent-muted);
 	color: var(--color-accent-emphasis);
 	text-align: center;
+}
+.markdown-body table td.subnote {
 	margin: 0 3em 0 3em;
 }
 .markdown-body table img {
@@ -943,4 +945,13 @@ b, strong {
 	font-weight: bold;
 	border: 1px dotted gray;
 	margin-right: 10px;
+}
+
+.gitHubLink {
+	color: rgb(31, 25, 40);
+	background-color: #f7f8fa;
+	border: 1px solid #d0d7de;
+	border-radius: 3px;
+	padding: 0 3px 0 3px;
+	font-family: "Segoe UI","Noto Sans",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
 }

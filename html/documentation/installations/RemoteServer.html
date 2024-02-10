@@ -31,28 +31,46 @@ This page describes how to prepare a remote server
 to accept uploads of the current Allsky image
 as well as startrails, keograms, and timelapse videos.
 </p>
+<h4>Why use a remote server?</h4>
 <p>
-Since this server normally is NOT running the Allsky Website software,
-setting it up is easy:
+Since this server does NOT run the Allsky Website software you may wonder
+why have a remote server.
+Let's say you have a web page for an observatory that has a description of
+your equipment as well as some astrophotographs you've taken.
+If you also want to include the current allsky image as well as last night's timelapse,
+you'd simply set up your observatory web server to accept pictures from Allsky,
+then add those pictures to your observatory website.
+</p>
+
+<h4>Preparing the remote server</h4>
+<p>
+The exact commands you use will depend on your server and/or hosting solution,
+but at a high-level the steps are:
 <ol>
-	<li>Create the necessary directories on the server.
-		The web server software needs to be able to write to these directories:
+	<li>Create a directory called <span class="fileName">allsky</span> then enter that directory.
+	<li>Create these directories inside <span class="fileName">allsky</span>:
 		<ul class="minimalpadding">
-			<li><code>videos</code> and <code>videos/thumbnails</code>
-			<li><code>startrails</code> and <code>startrails/thumbnails</code>
-			<li><code>keograms</code> and <code>keograms/thumbnails</code>
+			<li><span class="fileName">videos</span>
+				and <span class="fileName">videos/thumbnails</span>
+			<li><span class="fileName">startrails</span>
+				and <span class="fileName">startrails/thumbnails</span>
+			<li><span class="fileName">keograms</span>
+				and <span class="fileName">keograms/thumbnails</span>
 		</ul>
-	<li>Go to the WebUI's <span class="WebUIWebPage">Allsky Settings</span> page
-		and fill in the settings in the
-		<span class="subSettingsHeader">Remote Server Settings</span> section.
+		Make sure their names are lowercase and spelled exactly as above.
+	<li>Go to the <span class="subSettingsHeader">Remote Server Settings</span> section
+		of the WebUI's <span class="WebUIWebPage">Allsky Settings</span> page
+		and fill in the settings.
+		See the <a allsky="true" external="true" href="../settings/allsky.html#remoteServerSettings">
+		Allsky Settings</a> page for a description of the settings.
 </ol>
 </p>
 <p>
-After enabling the remote server a test file will be uploaded to
-ensure it works.
+After enabling the <span class="WebUISetting">Use Remote Server</span> setting above
+a test file will be uploaded to the server ensure it works.
 If there are any problems, visit the
-<a allsky="true" href="/documentation/troubleshooting/uploads.html">Troubleshooting -&gt; Uploads</a>
-page for details on how to fix the problem.
+<a allsky="true" href="/documentation/troubleshooting/uploads.html">
+Troubleshooting -&gt; Uploads</a> page for details on how to fix the problem.
 
 
 </div><!-- Layout-main -->

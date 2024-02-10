@@ -6,27 +6,31 @@ function DisplayEditor()
 	global $useLocalWebsite, $useRemoteWebsite;
 	global $hasLocalWebsite, $hasRemoteWebsite;
 
+	$fullN = null;			// this is the file that's displayed by default
+	$localN = basename(getLocalWebsiteConfigFile());
+	$fullLocalN = "website/$localN";
+	$remoteN = basename(getRemoteWebsiteConfigFile());
+	$fullRemoteN = "config/$remoteN";
+
 	// See what files there are to edit.
-	$N = null;			// this is the file that's displayed by default
 	$numFiles = 0;
-	if ($hasLocalWebsite && file_exists(ALLSKY_WEBSITE_LOCAL_CONFIG)) {
-		$localN = ALLSKY_WEBSITE_LOCAL_CONFIG_NAME;
-		$N = $localN;
+	if ($hasLocalWebsite) {
+		$fullN = $fullLocalN;
 		$numFiles++;
 		if (! $useLocalWebsite) {
-			$msg = "<span class='WebUISetting'>Use Local Website</span> not enabled."
+			$msg = "<span class='WebUISetting'>Use Local Website</span> not enabled.";
 			$msg .= "<br>Your changes won't take effect until you enable the setting.</span>";
 			$status->addMessage($msg, 'warning', false);
 		}
 	} else {
 		$localN = null;
 	}
-	if ($hasRemoteWebsite && file_exists(ALLSKY_WEBSITE_REMOTE_CONFIG)) {
-		$remoteN = ALLSKY_WEBSITE_REMOTE_CONFIG_NAME;
-		if ($N === null) $N = $remoteN;
+
+	if ($hasRemoteWebsite) {
+		if ($fullN === null) $fullN = $fullRemoteN;
 		$numFiles++;
 		if (! $useRemoteWebsite) {
-			$msg = "<span class='WebUISetting'>Use Remote Website</span> not enabled."
+			$msg = "<span class='WebUISetting'>Use Remote Website</span> not enabled.";
 			$msg .= "<br>Your changes won't take effect until you enable the setting.</span>";
 			$status->addMessage($msg, 'warning', false);
 		}
@@ -35,12 +39,18 @@ function DisplayEditor()
 	}
 
 	if ($numFiles > 0) {
+		if ($fullN === null) {
+			if ($hasLocalWebsite)
+				$fullN = $fullLocalN;
+			else
+				$fullN = $fullRemoteN;
+		}
 ?>
-	<script type="text/javascript">
+		<script type="text/javascript">
 		$(document).ready(function () {
 
 			var editor = null;
-			$.get("<?php echo $N; ?>", function (data) {
+			$.get("<?php echo $fullN; ?>", function (data) {
 
 				// .json files return "data" as json array, and we need a regular string.
 				// Get around this by stringify'ing "data".
@@ -147,7 +157,7 @@ function DisplayEditor()
 			});
 		});
 
-	</script>
+		</script>
 <?php } ?>
 
 	<div class="row">
@@ -168,14 +178,14 @@ function DisplayEditor()
 							if ($localN !== null) {
 								// The website is installed on this Pi.
 								// The physical path is ALLSKY_WEBSITE; virtual path is "website".
-								echo "<option value='website/$localN'>";
+								echo "<option value='$fullLocalN'>";
 								echo "$localN (local Allsky Website)";
 								echo "</option>";
 							}
 
 							if ($remoteN !== null) {
 								// A copy of the remote website's config file is on the Pi.
-								echo "<option value='{REMOTE}config/$remoteN'>";
+								echo "<option value='{REMOTE}$fullRemoteN'>";
 								echo "$remoteN (remote Allsky Website)";
 								echo "</option>";
 							}

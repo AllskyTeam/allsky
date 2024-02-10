@@ -1,10 +1,13 @@
 <?php
 
+$debug = false;
+
 // Get the json for the given file "f" if we haven't already and return a pointer to the data.
 // Most of the time there will only be one source file, so check if we're getting the
 // same file as last time.
 function &getSourceArray($f) {
-	global $status;
+	global $status, $debug;
+
 	static $filesContents = array();
 	static $lastFile = null;
 
@@ -15,17 +18,19 @@ function &getSourceArray($f) {
 		return ("");
 	}
 
-	if ($fileName === $lastFile) return($fileContents[$fileName]);
+	if ($fileName === $lastFile) return($filesContents[$fileName]);
+
 	$lastFile = $fileName;
 
 	if (! isset($filesContents[$fileName])) {
 		$errorMsg = "<br>Unable to read source file '$fileName' ($f).";
 		$fullErrorMsg = "";
 		$filesContents[$fileName] = get_decoded_json_file($fileName, true, $errorMsg, $fullErrorMsg);
-		if ($filesContents[$fileName] === null) {
+		if ($filesContents[$fileName] === null || $fullErrorMsg !== "") {
 			$status->addMessage($fullErrorMsg, 'danger', false);
 		}
 	}
+//x echo "<br><pre>return fileName=$fileName: "; var_dump($filesContents); echo "</pre>";
 	return $filesContents[$fileName];
 }
 
@@ -92,9 +97,14 @@ function checkType($fieldName, $value, $old, $label, $type, &$shortened=null) {
 function DisplayAllskyConfig() {
 	global $formReadonly, $settings_array;
 	global $hasLocalWebsite, $hasRemoteWebsite;
+	global $debug;
+	global $lastChangedName;				// name of json setting
+	global $lastChanged;
+	global $page;
+	global $ME;
+	global $status;
 
 	$END = "XX_END_XX";
-	$debug = false;
 	$cameraTypeName = "cameratype";			// json setting name
 	$cameraModelName = "cameramodel";		// json setting name
 	$cameraNumberName = "cameranumber";		// json setting name
@@ -107,12 +117,6 @@ function DisplayAllskyConfig() {
 	$bullet = "<div class='bullet'>*</div>";
 	$showIcon = "<i class='fa fa-chevron-down fa-fw'></i>";
 	$hideIcon = "<i class='fa fa-chevron-up fa-fw'></i>";
-
-	global $lastChangedName;				// name of json setting
-	global $lastChanged;
-	global $page;
-	global $ME;
-	global $status;
 
 	$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
 	$settings_file = getSettingsFile();
@@ -511,19 +515,22 @@ echo '<script>console.log("Updated $fileName");</script>';
 			$sourceFilesContents = array();
 			foreach ($options_array as $option){
 				$name = $option['name'];
-				$newValue = getVariableOrDefault($option, 'default', null);
-				if ($newValue !== null) {
+				$default = getVariableOrDefault($option, 'default', null);
+				if ($default !== null) {
 					$s = getVariableOrDefault($option, 'source', null);
 					if ($s !== null) {
 						$fileName = getFileName($s);
 						$sourceFilesChanged[$fileName] = $fileName;
+						// Multiple settings will likely have the same source file.
 						$sourceFilesContents[$name] = &getSourceArray($fileName);
-						$sourceFilesContents[$name][$name] = $newValue;
+						$sourceFilesContents[$name][$name] = $default;
 					} else {
-						$settings_array[$name] = $newValue;
+						$settings_array[$name] = $default;
 					}
 				}
 			}
+
+			// Update the settings file then any source files.
 			$content = json_encode($settings_array, $mode);
 			$msg = updateFile($settings_file, $content, "settings", true);
 			if ($msg === "") {
@@ -531,7 +538,7 @@ echo '<script>console.log("Updated $fileName");</script>';
 				$updatedSettings = true;
 
 				foreach($sourceFilesChanged as $fileName) {
-					$content = json_encode(getSourceArray($fileName), $mode);
+					$content = json_encode($sourcFilesContents[$fileName], $mode);
 					$msg = updateFile($fileName, $content, "source_settings", true);
 					if ($msg !== "") {
 						$status->addMessage("Failed to reset settings in '$fileName': $msg", 'danger');
@@ -644,6 +651,9 @@ function toggle(headerNum) {
 <?php
 			foreach($options_array as $option) {
 				$name = $option['name'];
+if (false && $debug) {
+	echo "<br>Option $name";
+}
 				if ($name === $END) continue;
 
 				$type = getVariableOrDefault($option, 'type', null);
@@ -678,9 +688,12 @@ function toggle(headerNum) {
 					if ($s !== null) {
 						$fileName = getFileName($s);
 						$source_array = &getSourceArray($fileName);
-						if ($source_array === null)
+if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; name=$name, fileName=$fileName"; }
+						if ($source_array === null) {
 							continue;
+						}
 						$value = getVariableOrDefault($source_array, $name, null);
+if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 					} else {
 						$value = getVariableOrDefault($settings_array, $name, null);
 					}

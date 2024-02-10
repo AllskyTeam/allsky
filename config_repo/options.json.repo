@@ -1674,7 +1674,7 @@
 },
 {
 "name" : "websiteheader",
-"label" : "Website and Remote Server Settings",
+"label" : "Websites and Remote Server Settings",
 "type" : "header"
 },
 {
@@ -1693,7 +1693,7 @@
 },
 {
 "name" : "uselocalwebsite",
-"description" : "Enable to use the local Allsky Website.  No other settings are needed.",
+"description" : "Enable to use the local Allsky Website.<br>You should configure in the <span class='WebUILink'>Editor</span> page it first.",
 "default" : false,
 "label" : "Use Local Website",
 "type" : "boolean",

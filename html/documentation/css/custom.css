@@ -495,21 +495,24 @@ table .alert-dismissable {
 	background-color: #aaa;
 	text-align: center;
 	font-weight: bold;
-	font-size: 1.25em;
-	padding: 3px 0 3px 0;
+	padding: 1px 3px 1px 3px;
 }
 .dark .settingsHeader {
 	background-color: #555;
+}
+table.settingsHeader {
+	font-size: 1.25em;
+	padding: 3px 3px 3px 3px;
 }
 .subSettingsHeader {
 	color: var(--WebUI-subSetting-color);
 	background-color: var(--WebUI-subSetting-background-color);
 	text-align: center;
 	font-weight: bold;
-	font-size: 1.05em;
-	padding: 0;
+	padding: 1px 3px 1px 3px;
 }
 div.subSettingsHeader {
+	font-size: 1.05em;
 	margin: 0 3em 0 3em;
 	padding: 3px 0px;
 }

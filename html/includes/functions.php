@@ -121,7 +121,7 @@ $darkframe = null;
 $useLogin = null;
 $temptype = null;
 $lastChanged = null;
-$websiteURL = null;
+$remoteWebsiteURL = null;
 $settings_array = null;
 $useLocalWebsite = null;
 $useRemoteWebsite = null;
@@ -134,7 +134,7 @@ function initialize_variables() {
 	global $showUpdatedMessage, $delay, $daydelay, $nightdelay;
 	global $imagesSortOrder;
 	global $darkframe, $useLogin, $temptype, $lastChanged, $lastChangedName;
-	global $websiteURL;
+	global $remoteWebsiteURL;
 	global $settings_array;
 	global $useLocalWebsite, $useRemoteWebsite;
 	global $hasLocalWebsite, $hasRemoteWebsite;
@@ -171,7 +171,7 @@ function initialize_variables() {
 	$useLogin = toBool(getVariableOrDefault($settings_array, 'uselogin', "true"));
 	$temptype = getVariableOrDefault($settings_array, 'temptype', "C");
 	$lastChanged = getVariableOrDefault($settings_array, $lastChangedName, "");
-	$websiteURL = getVariableOrDefault($settings_array, 'remotewebsiteurl', "");
+	$remoteWebsiteURL = getVariableOrDefault($settings_array, 'remotewebsiteurl', "");
 
 
 	////////////////// Determine delay between refreshes of the image.

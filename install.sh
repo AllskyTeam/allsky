@@ -985,7 +985,6 @@ set_permissions()
 	# Make sure the currently running user can run sudo on anything and
 	# can write to the webserver root (is in the webserver group).
 	local G="$( id "${ALLSKY_OWNER}" )"
-
 	#shellcheck disable=SC2076
 	if ! [[ ${G} =~ "(sudo)" ]]; then
 		display_msg --log progress "Adding ${ALLSKY_OWNER} to sudo group."
@@ -995,7 +994,6 @@ set_permissions()
 
 		sudo adduser --quiet "${ALLSKY_OWNER}" "sudo"
 	fi
-
 	#shellcheck disable=SC2076
 	if ! [[ ${G} =~ "(${WEBSERVER_GROUP})" ]]; then
 		display_msg --log progress "Adding ${ALLSKY_OWNER} to ${WEBSERVER_GROUP} group."
@@ -1030,6 +1028,9 @@ set_permissions()
 	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_TMP}"
 
 	#### Website files
+
+	chmod 664 "${ALLSKY_ENV}"
+	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_ENV}"
 
 	# These directories aren't in GitHub so need to be manually created.
 	mkdir -p \
@@ -2465,11 +2466,14 @@ do_Website_tasks()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 
+	if [[ ! -f ${ALLSKY_ENV} ]]; then
+		sed -e "s;XX_HOME_XX;${HOME};" "${REPO_ENV_FILE}" > "${ALLSKY_ENV}"
+	fi
+
 #XXXX TODO: do this in makeChanges.sh when they enable the local Website.
-	if [[ ! -f "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" ]]; then
+	if [[ ! -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
 		# No prior config file (this should only happen if there was no prior Website).
-		cp  "${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo" \
-			"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+		cp  "${REPO_WEBSITE_CONFIGURATION_FILE}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 		update_json_file ".${WEBSITE_ALLSKY_VERSION}"  "${ALLSKY_VERSION}" \
 			"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 	fi

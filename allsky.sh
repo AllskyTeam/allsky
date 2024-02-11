@@ -6,8 +6,6 @@ echo "     ***** Starting AllSky *****"
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
 ME="$( basename "${BASH_ARGV0}" )"
 
-cd "${ALLSKY_HOME}" || exit 1
-
 NOT_STARTED_MSG="Unable to start Allsky!"
 STOPPED_MSG="Allsky Stopped!"
 ERROR_MSG_PREFIX="*** ERROR ***\n${STOPPED_MSG}\n"
@@ -22,10 +20,22 @@ if [[ -z ${ALLSKY_CONFIG} ]]; then
 		"${NOT_STARTED_MSG}<br>${MSG}"
 fi
 
-#shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+
+if [[ ! -d ${ALLSKY_CONFIG} ]]; then
+	{
+		echo "*** ====="
+		echo "Allsky needs to be installed.  Run:  cd ~/allsky; ./install.sh"
+		echo "*** ====="
+	} >&2
+	# Can't call addMessage.sh or copy_notification_image.sh or almost anything
+	# since they use ${ALLSKY_CONIG} and/or ${ALLSKY_TMP} which don't exist yet.
+	doExit "${EXIT_ERROR_STOP}" "no-image" "" ""
+fi
+
+cd "${ALLSKY_HOME}" || exit 1
 
 # Make sure they rebooted if they were supposed to.
 NEEDS_REBOOT="false"

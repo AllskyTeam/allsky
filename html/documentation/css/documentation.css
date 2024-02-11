@@ -634,6 +634,7 @@ b, strong {
 	grid-auto-flow: column;
 	grid-gap: var(--Layout-gutter);
 	margin-top: 24px !important;
+	margin-bottom: 3em;
 }
 .Layout .Layout-main {
 	grid-column: 1;

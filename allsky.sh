@@ -20,6 +20,7 @@ if [[ -z ${ALLSKY_CONFIG} ]]; then
 		"${NOT_STARTED_MSG}<br>${MSG}"
 fi
 
+#shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"

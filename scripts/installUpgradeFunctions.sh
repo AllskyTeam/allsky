@@ -22,6 +22,7 @@ export REPO_WEBUI_DEFINES_FILE="${ALLSKY_REPO}/${ALLSKY_DEFINES_INC}.repo"
 export REPO_LIGHTTPD_FILE="${ALLSKY_REPO}/lighttpd.conf.repo"
 export REPO_AVI_FILE="${ALLSKY_REPO}/avahi-daemon.conf.repo"
 export REPO_OPTIONS_FILE="${ALLSKY_REPO}/$( basename "${OPTIONS_FILE}" ).repo"
+export REPO_ENV_FILE="${ALLSKY_REPO}/$( basename "${ALLSKY_ENV}" ).repo"
 
 ##### Information on prior Allsky versions
 	# Location of old-style WebUI and Website.

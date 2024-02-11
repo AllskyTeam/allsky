@@ -20,7 +20,8 @@ rm -f "${POST_INSTALLATION_ACTIONS}"		# Shouldn't be there, but just in case.
 rm -f "${ALLSKY_MESSAGES}"					# Start out with no messages.
 
 
-TITLE="Allsky Installer - ${ALLSKY_VERSION}"
+SHORT_TITLE="Allsky Installer"
+TITLE="${SHORT_TITLE} - ${ALLSKY_VERSION}"
 FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 OLD_RASPAP_DIR="/etc/raspap"			# used to contain WebUI configuration files
 SETTINGS_FILE_NAME="$( basename "${SETTINGS_FILE}" )"
@@ -102,21 +103,13 @@ do_initial_heading()
 
 	declare -n v="${FUNCNAME[0]}"
 	if [[ ${v} == "true" ]]; then
-		display_header "Welcome back to the ${TITLE}!"
+		display_header "Welcome back to the ${SHORT_TITLE}!"
 	else
-		MSG="Welcome to the ${TITLE}!\n"
+		MSG="Welcome to the ${SHORT_TITLE}!\n"
 
-		if [[ -n ${PRIOR_ALLSKY_STYLE} ]]; then
-			MSG+="\nYou will be asked if you want to use the images and darks (if any) from"
-			MSG+=" your prior version of Allsky."
-			if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
-				MSG+="\nIf so, its settings will be used as well."
-			else
-				MSG+="\nIf so, we will attempt to use its settings as well, but may not be"
-				MSG+="\nable to use ALL prior settings depending on how old your prior Allsky is."
-				MSG+="\nIn that case, you'll be prompted for required information such as"
-				MSG+="\nthe camera's latitude, logitude, and locale."
-			fi
+		if [[ -n ${PRIOR_ALLSKY_DIR} ]]; then
+			MSG+="\nYou will be asked if you want to use the images and darks"
+			MSG+=" from your prior version of Allsky."
 		else
 			MSG+="\nYou will be prompted for required information such as the type"
 			MSG+="\nof camera you have and the camera's latitude, logitude, and locale."
@@ -129,7 +122,7 @@ do_initial_heading()
 			exit_installation 1 "${STATUS_CLEAR}" ""
 		fi
 
-		display_header "Welcome to the ${TITLE}"
+		display_header "Welcome to the ${SHORT_TITLE}"
 	fi
 
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} != "true" ]] && STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
@@ -374,7 +367,7 @@ select_camera_type()
 	S=" is"
 	[[ ${NUM} -gt 1 ]] && S="s are"
 	MSG="\nThe following camera${S} connected to the Pi.\n"
-	MSG+="Pick the one you want."
+	[[ ${NUM} -gt 1 ]] && MSG+="Pick the one you want."
 	MSG+="\nIf it's not in the list, select <Cancel> and determine why."
 	CAMERA_INFO=$( whiptail --title "${TITLE}" --notags --menu "${MSG}" 15 "${WT_WIDTH}" "${NUM}" \
 		"${CT[@]}" 3>&1 1>&2 2>&3 )
@@ -868,8 +861,8 @@ install_webserver_et_al()
 {
 	declare -n v="${FUNCNAME[0]}"	# do not return
 
-	sudo systemctl stop hostapd 2> /dev/null
-	sudo systemctl stop lighttpd 2> /dev/null
+	sudo systemctl stop hostapd 2>/dev/null
+	sudo systemctl stop lighttpd 2>/dev/null
 
 	if [[ ${v} == "true" ]]; then
 		# Already installed it; just configure it.
@@ -913,7 +906,10 @@ install_webserver_et_al()
 	sudo chmod 664 "${LIGHTTPD_LOG}"
 	sudo chown "${WEBSERVER_GROUP}:${ALLSKY_GROUP}" "${LIGHTTPD_LOG}"
 
-	sudo systemctl start lighttpd
+	TMP="${ALLSKY_LOGS}/lighttpd.start.log"
+	#shellcheck disable=SC2024
+	sudo systemctl start lighttpd > "${TMP}" 2>&1
+	check_success $? "Unable to start lighttpd" "${TMP}" "${DEBUG}"
 	# Starting it added an entry so truncate the file so it's 0-length
 	sleep 1; truncate -s 0 "${LIGHTTPD_LOG}"
 
@@ -1501,8 +1497,17 @@ prompt_for_prior_Allsky()
 
 	if [[ -n ${PRIOR_ALLSKY_STYLE} ]]; then
 		MSG="You have a prior version of Allsky in ${PRIOR_ALLSKY_DIR}."
-		MSG+="\n\nDo you want to restore the prior images, darks, and settings?"
-		if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
+		MSG+="\n\nDo you want to restore the prior images and other files you've changed?"
+		if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
+			MSG+="\nIf so, your prior settings will be restored as well."
+		else
+			MSG+="\nIf so, we will attempt to use its settings as well, but may not be"
+			MSG+="\nable to use ALL prior settings depending on how old your prior Allsky is."
+			MSG+="\nIn that case, you'll be prompted for required information such as"
+			MSG+="\nthe camera's latitude, logitude, and locale."
+		fi
+
+		if whiptail --title "${TITLE}" --yesno "${MSG}" 20 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 			# Set the prior camera type to the new, default camera type.
 			CAMERA_TYPE="${PRIOR_CAMERA_TYPE}"
 			STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
@@ -3178,11 +3183,11 @@ if [[ ${IN_TESTING} == "true" ]]; then
 		MSG+="\n"
 
 		MSG+="\nMajor changes from prior release:"
-		MSG+="\n * ZWO library 1.33 cameras."
+		MSG+="\n * ftp-settings.sh and config.sh are gone and"
+		MSG+="\n   their settings are in the WebUI's 'Allsky Settings' page."
+		MSG+="\n * ZWO library 1.33 included and supports newest cameras."
 		MSG+="\n * Setting names are now lowercase."
 		MSG+="\n * WebUI sections are hidden by default."
-		MSG+="\n * ftp-settings.sh and config.sh are gone."
-		MSG+="\n   Their settings are now in the WebUI's 'Allsky Settings' page."
 
 		MSG+="\n\nIf you want to continue with the installation, enter:    yes"
 		title="*** MESSAGE FOR TESTERS ***"

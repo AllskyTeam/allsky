@@ -61,8 +61,12 @@ createDirs:
 $(ENVFILE):
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/allsky/$@ ]; then \
 	  echo `date +%F\ %R:%S` Copying default $@; \
-	  install -m 0644 $@.repo $(DESTDIR)$(sysconfdir)/allsky/$@; \
+	  sed -e "s|XX_HOME_XX|$(HOMEDIR)|" $@.repo > env; \
+	  install -m 0664 env $(HOMEDIR)/$@; \
+	  rm -f env; \
 	fi
+# TODO: In PKGBUILD mode, where is the "allsky" directory?  $(ENVFILE) needs to go in it.
+# Is $(HOMEDIR) the correct location, or should it be $(DESTDIR)$(sysconfdir)/allsky  ?
 .PHONY : $(ENVFILE)
 
 install: createDirs $(ENVFILE)
@@ -91,14 +95,7 @@ createDirs:
 	@if [ ! -e ../config ]; then mkdir -p ../config; chown $(SUDO_USER):$(SUDO_USER) ../config; fi
 .PHONY : createDirs
 
-$(ENVFILE):
-	@if [ ! -e ../$@ ]; then \
-	  echo `date +%F\ %R:%S` Copying default .$@; \
-	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) $@.repo ../$@; \
-	fi
-.PHONY : $(ENVFILE)
-
-install: createDirs $(ENVFILE)
+install: createDirs
 	@echo `date +%F\ %R:%S` Setting up udev rules...
 	@install -D -m 0644 asi.rules $(DESTDIR)$(sysconfdir)/udev/rules.d/
 	@echo `date +%F\ %R:%S` Setting up logging...

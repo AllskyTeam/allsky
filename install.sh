@@ -34,10 +34,13 @@ SUGGESTED_NEW_HOST_NAME="allsky"		# Suggested new host name
 NEW_HOST_NAME=""						# User-specified host name
 BRANCH="${GITHUB_MAIN_BRANCH}"			# default branch
 # shellcheck disable=SC2034
-DISPLAY_MSG_LOG="${ALLSKY_LOGS}/install.sh.log"		# display_msg() sends log entries to this file.
+DISPLAY_MSG_LOG="${ALLSKY_LOGS}/install.log"		# display_msg() sends log entries to this file.
 LONG_BITS=$( getconf LONG_BIT ) # Size of a long, 32 or 64
 REBOOT_NEEDED="true"					# Is a reboot needed at end of installation?
 CONFIGURATION_NEEDED="true"				# Does Allsky need to be configured at end of installation?
+SPACE="    "
+NOT_RESTORED="NO PRIOR VERSION"
+
 
 ##### Allsky versions.   ${ALLSKY_VERSION} is set in variables.sh
 ##xxx TODO: uncomment:    ALLSKY_BASE_VERSION="$( remove_point_release "${ALLSKY_VERSION}" )"
@@ -62,7 +65,7 @@ PRIOR_CAMERA_TYPE=""
 PRIOR_CAMERA_MODEL=""
 
 # Holds status of installation if we need to exit and get back in.
-STATUS_FILE="${ALLSKY_LOGS}/status.txt"
+STATUS_FILE="${ALLSKY_LOGS}/install_status.txt"
 STATUS_FILE_TEMP="${ALLSKY_TMP}/temp_status.txt"	# holds intermediate status
 STATUS_LOCALE_REBOOT="Rebooting to change locale"	# status of rebooting due to locale change
 STATUS_FINISH_REBOOT="Rebooting to finish installation"
@@ -99,7 +102,7 @@ do_initial_heading()
 		return
 	fi
 
-	local MSG
+	local MSG  X
 
 	declare -n v="${FUNCNAME[0]}"
 	if [[ ${v} == "true" ]]; then
@@ -107,15 +110,30 @@ do_initial_heading()
 	else
 		MSG="Welcome to the ${SHORT_TITLE}!\n"
 
-		if [[ -n ${PRIOR_ALLSKY_DIR} ]]; then
+		if [[ ${RESTORE} == "true" ]]; then
+			X="$( basename "${RENAMED_DIR}" )"
+			MSG+="\nYour current Allsky will be renamed to ${X}"
+			X="$( basename "${PRIOR_ALLSKY_DIR}" )"
+			MSG+=" and the prior Allsky in ${X} will be"
+			X="$( basename "${ALLSKY_HOME}" )"
+			MSG+=" renamed to ${X}."
+			MSG+="\nFiles that were moved from the old release to the current one"
+			MSG+=" will be moved back."
+			MSG+="\nYou will manually need to restart Allsky after checking that"
+			MSG+=" the settings are correct in the WebUI."
+
+		elif [[ -n ${PRIOR_ALLSKY_DIR} ]]; then
 			MSG+="\nYou will be asked if you want to use the images and darks"
 			MSG+=" from your prior version of Allsky."
+
 		else
 			MSG+="\nYou will be prompted for required information such as the type"
 			MSG+="\nof camera you have and the camera's latitude, logitude, and locale."
 		fi
 
-		MSG+="\n\nNOTE: your camera must be connected to the Pi before continuing."
+		if [[ ${RESTORE} != "true" ]]; then
+			MSG+="\n\nNOTE: your camera must be connected to the Pi before continuing."
+		fi
 		MSG+="\n\nContinue?"
 		if ! whiptail --title "${TITLE}" --yesno "${MSG}" 25 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 			display_msg "${LOG_TYPE}" info "User not ready to continue."
@@ -139,7 +157,7 @@ usage_and_exit()
 	else
 		C="${RED}"
 	fi
-	MSG="Usage: ${ME} [--help] [--debug [...]] [--fix] [--update] [--function function]"
+	MSG="Usage: ${ME} [--help] [--debug [...]] [--fix |--update | --restore | --function function]"
 	{
 		echo -e "\n${C}${MSG}${NC}"
 		echo
@@ -150,6 +168,8 @@ usage_and_exit()
 		echo "'--fix' should only be used when instructed to by the Allsky Website."
 		echo
 		echo "'--update' should only be used when instructed to by the Allsky Website."
+		echo
+		echo "'--restore' restores ${PRIOR_ALLSKY_DIR} to ${ALLSKY_HOME}."
 		echo
 		echo "'--function' executes the specified function and quits."
 		echo
@@ -856,6 +876,25 @@ check_success()
 
 
 ####
+# Set up lighttpd log file.
+create_lighttpd_log_file()
+{
+	local D  LIGHTTPD_LOG
+
+	# Remove any old log files.
+	# Start off with a 0-length log file the user can write to.
+	D="/var/log/lighttpd"
+	sudo chmod 755 "${D}"
+	sudo rm -fr "${D}"/*
+
+	LIGHTTPD_LOG="${D}/error.log"
+	sudo touch "${LIGHTTPD_LOG}"
+	sudo chmod 664 "${LIGHTTPD_LOG}"
+	sudo chown "${WEBSERVER_GROUP}:${ALLSKY_GROUP}" "${LIGHTTPD_LOG}"
+	truncate -s 0 "${LIGHTTPD_LOG}"
+}
+
+####
 # Install the web server.
 install_webserver_et_al()
 {
@@ -896,15 +935,7 @@ install_webserver_et_al()
 	# Ignore output since it may already be enabled.
 	sudo lighty-enable-mod fastcgi-php > /dev/null 2>&1
 
-	# Remove any old log files.
-	# Start off with a 0-length log file the user can write to.
-	local D="/var/log/lighttpd"
-	sudo chmod 755 "${D}"
-	sudo rm -fr "${D}"/*
-	local LIGHTTPD_LOG="${D}/error.log"
-	sudo touch "${LIGHTTPD_LOG}"
-	sudo chmod 664 "${LIGHTTPD_LOG}"
-	sudo chown "${WEBSERVER_GROUP}:${ALLSKY_GROUP}" "${LIGHTTPD_LOG}"
+	create_lighttpd_log_file
 
 	TMP="${ALLSKY_LOGS}/lighttpd.start.log"
 	#shellcheck disable=SC2024
@@ -1420,7 +1451,6 @@ does_prior_Allsky_exist()
 	fi
 
 	# Determine the prior Allsky version and set some PRIOR_* locations.
-	PRIOR_ALLSKY_VERSION="$( get_version "${PRIOR_ALLSKY_DIR}/" )"	# Returns "" if no version file.
 	if [[ -n ${PRIOR_ALLSKY_VERSION} && (! ${PRIOR_ALLSKY_VERSION} < "${FIRST_CAMERA_TYPE_BASE_VERSION}") ]]; then
 		PRIOR_ALLSKY_STYLE="${NEW_STYLE_ALLSKY}"
 
@@ -1593,20 +1623,26 @@ install_dependencies_etc()
 # Re-run every time in case permissions changed.
 create_allsky_logs()
 {
+	local DO_ALL="${1}"
+
 	display_msg --log progress "Setting permissions on ${ALLSKY_LOG} and ${ALLSKY_PERIODIC_LOG}."
 
-	sudo systemctl stop rsyslog 2> /dev/null
+	if [[ ${DO_ALL} == "true" ]]; then
+		sudo systemctl stop rsyslog 2> /dev/null
 
-	TMP="${ALLSKY_LOGS}/rsyslog.log"
-	sudo apt-get --assume-yes install rsyslog > "${TMP}" 2>&1	
-	check_success $? "rsyslog installation failed" "${TMP}" "${DEBUG}" ||
-		exit_with_image 1 "${STATUS_ERROR}" "rsyslog install failed."
+		TMP="${ALLSKY_LOGS}/rsyslog.log"
+		sudo apt-get --assume-yes install rsyslog > "${TMP}" 2>&1	
+		check_success $? "rsyslog installation failed" "${TMP}" "${DEBUG}" ||
+			exit_with_image 1 "${STATUS_ERROR}" "rsyslog install failed."
+	fi
 
 	sudo truncate -s 0 "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
 	sudo chmod 664 "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
 	sudo chgrp "${ALLSKY_GROUP}" "${ALLSKY_LOG}" "${ALLSKY_PERIODIC_LOG}"
 
-	sudo systemctl start rsyslog		# so logs go to the files above
+	if [[ ${DO_ALL} == "true" ]]; then
+		sudo systemctl start rsyslog		# so logs go to the files above
+	fi
 }
 
 
@@ -2264,9 +2300,6 @@ restore_prior_settings_file()
 	STATUS_VARIABLES+=( "RESTORED_PRIOR_SETTINGS_FILE='${RESTORED_PRIOR_SETTINGS_FILE}'\n" )
 }
 
-SPACE="    "
-NOT_RESTORED="NO PRIOR VERSION"
-
 ####
 # If the user wanted to restore files from a prior version of Allsky, do that.
 restore_prior_files()
@@ -2671,6 +2704,157 @@ restore_prior_local_website_files()
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }
 
+
+####
+# High-level view of tasks for restore:
+#	Rename current release to "${ALLSKY_HOME}-${ALLSKY_VERSION}"
+#	Rename prior release to ${ALLSKY_HOME}
+#	Execute old release's installation script telling it it's a restore.
+	# If running in ${ALLSKY_HOME}		# us 1st time through
+	#	Make sure ${PRIOR_ALLSKY_DIR} exists
+	#		If not, warn user and exit:
+	#			"No prior version to restore from: ${PRIOR_ALLSKY_DIR} does not exist".
+	#	cp ${ME} /tmp
+	#	chmod 775 /tmp/${ME}
+	#	exec /tmp/${ME} --restore ${ALL_ARGS} ${ALLSKY_HOME}
+
+	# Else		# running from /tmp - do the actual work
+	#	Stop allsky
+	#	mv ${ALLSKY_HOME} ${ALLSKY_HOME}-new_tmp
+	#	mv ${ALLSKY_HOME}-OLD ${ALLSKY_HOME}
+	#	move images from ${ALLSKY_HOME}-new_tmp to ${ALLSKY_HOME}
+	#	move darks from ${ALLSKY_HOME}-new_tmp to ${ALLSKY_HOME}
+	#	move other stuff that was moved in install.sh from old to new
+
+RENAMED_DIR=""
+
+do_restore()
+{
+	local MSG  MSG2  ITEM
+
+	# This is what the current ${ALLSKY_HOME} will be renamed to.
+	RENAMED_DIR="${ALLSKY_HOME}-${ALLSKY_VERSION}"
+
+	if [[ ! -d ${ALLSKY_CONFIG} ]]; then
+		MSG="Unable to restore Allsky - Allsky isn't installed."
+		display_msg --log error "${MSG}"
+		exit_installation 1 "${STATUS_ERROR}" "${MSG}"
+	fi
+	if [[ ! -d ${PRIOR_ALLSKY_DIR} ]]; then
+		MSG="Unable to restore Allsky - no prior version"
+		MSG+=" exists in '${PRIOR_ALLSKY_DIR}'."
+		display_msg --log error "${MSG}"
+		exit_installation 1 "${STATUS_ERROR}" "${MSG}"
+	fi
+	if [[ -d ${RENAMED_DIR} ]]; then
+		MSG="Unable to restore Allsky - a restored version"
+		MSG+=" already exists in '${RENAMED_DIR}'."
+		display_msg --log error "${MSG}"
+		exit_installation 1 "${STATUS_ERROR}" "${MSG}"
+	fi
+
+	do_initial_heading
+
+echo	stop_allsky
+
+	# During installation some files were MOVED from the old release to
+	# the new release (which is now the current release).
+	# Move those items back.
+	# Don't worry about the items that were COPIED to the current release.
+
+	display_msg --log progress "Restoring files:"
+
+	ITEM="${SPACE}'images' directory"
+	if [[ -d ${ALLSKY_HOME}/images ]]; then
+		display_msg --log progress "${ITEM} (moving)"
+echo		mv "${ALLSKY_HOME}/images" "${PRIOR_ALLSKY_DIR}"
+	else
+		# This is probably very rare so let the user know
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}.  This is unusual."
+	fi
+
+	ITEM="${SPACE}'darks' directory"
+	if [[ -d ${ALLSKY_HOME}/darks ]]; then
+		display_msg --log progress "${ITEM} (moving)"
+echo		mv "${ALLSKY_HOME}/darks" "${PRIOR_ALLSKY_DIR}"
+	else
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+	fi
+
+# TODO: set PRIOR_WEBSITE_DIR
+
+PRIOR_WEBSITE_DIR=""
+	if [[ -n ${PRIOR_WEBSITE_DIR} ]]; then
+
+		ITEM="${SPACE}${SPACE}timelapse videos"
+		D="${ALLSKY_WEBSITE}/videos/thumbnails"
+		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/videos"
+		count=$( get_count "${ALLSKY_WEBSITE}/videos" 'allsky-*' )
+		if [[ ${count} -ge 1 ]]; then
+			display_msg --log progress "${ITEM} (moving)"
+			mv "${ALLSKY_WEBSITE}"/videos/allsky-*   "${PRIOR_WEBSITE_DIR}/videos"
+		else
+			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+		fi
+
+		ITEM="${SPACE}${SPACE}keograms"
+		D="${ALLSKY_WEBSITE}/keograms/thumbnails"
+		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/keograms"
+		count=$( get_count "${ALLSKY_WEBSITE}/keograms" 'keogram-*' )
+		if [[ ${count} -ge 1 ]]; then
+			display_msg --log progress "${ITEM} (moving)"
+			mv "${ALLSKY_WEBSITE}"/keograms/keogram-*   "${PRIOR_WEBSITE_DIR}/keograms"
+		else
+			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+		fi
+
+		ITEM="${SPACE}${SPACE}startrails"
+		D="${ALLSKY_WEBSITE}/startrails/thumbnails"
+		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/startrails"
+		count=$( get_count "${ALLSKY_WEBSITE}/startrails" 'startrails-*' )
+		if [[ ${count} -ge 1 ]]; then
+			display_msg --log progress "${ITEM} (moving)"
+			mv "${ALLSKY_WEBSITE}"/startrails/startrails-*   "${PRIOR_WEBSITE_DIR}/startrails"
+		else
+			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+		fi
+
+		ITEM="${SPACE}${SPACE}'myFiles' directory"
+		D="${ALLSKY_WEBSITE}/myFiles"
+		if [[ -d ${D} ]]; then
+			count=$( get_count "${D}" '*' )
+			if [[ ${count} -gt 1 ]]; then
+				display_msg --log progress "${ITEM} (moving)"
+				mv "${D}"   "${PRIOR_WEBSITE_DIR}"
+			fi
+		else
+			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+		fi
+	fi
+
+	# Truncate log files
+# /var/log/allsky.log, /var/log/lighttpd/error.log
+	create_lighttpd_log_file
+	create_allsky_logs "false"		# "false" = only create log file
+
+	# Force the user to at least look at the settings.
+
+	MSG="\nRestoration is done"
+	MSG2="and Allsky needs its settings checked."
+	display_msg --log progress "${MSG}" " ${MSG2}"
+	echo -e "\n\n========== ACTION NEEDED:\n${MSG} ${MSG2}" >> "${POST_INSTALLATION_ACTIONS}"
+
+	MSG="Go to the 'Allsky Settings' page of the WebUI to check."
+	MSG+="\nMake any necessary changes then press the 'Save changes' button."
+	display_msg progress "\n\n${MSG}"
+	echo -e "${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+
+	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+	display_image "ConfigurationNeeded"
+CONFIGURATION_NEEDED="true"
+
+	exit_installation 0 "${STATUS_OK}" ""
+}
 
 ####
 # "Fix" things then exit.
@@ -3136,7 +3320,7 @@ exit_installation()
 		fi
 	fi
 
-	[[ -z ${FUNCTION} ]] && display_msg "${LOG_TYPE}" info "\nENDING INSTALLATON AT $( date ).\n"
+	[[ -z ${FUNCTION} ]] && display_msg "${LOG_TYPE}" info "\nENDING ${IorR} AT $( date ).\n"
 
 	# Don't exit for negative numbers.
 	[[ ${RET} -ge 0 ]] && exit "${RET}"
@@ -3169,14 +3353,84 @@ handle_interrupts()
 calc_wt_size
 
 ##### Check arguments
+OK="true"
 DEBUG=0
 DEBUG_ARG=""
 LOG_TYPE="--logonly"	# by default we only log some messages but don't display
-IN_TESTING="false"
+HELP="false"
+UPDATE="false"
+FIX="false"
+RESTORE="false"
+FUNCTION=""
+while [ $# -gt 0 ]; do
+	ARG="${1}"
+	case "${ARG,,}" in
+		--help)
+			HELP="true"
+			;;
+		--debug)
+			((DEBUG++))
+			DEBUG_ARG="${ARG}"		# we can pass this to other scripts
+			LOG_TYPE="--log"
+			;;
+#XXX TODO: is --update still needed?
+		--update)
+			UPDATE="true"
+			;;
+		--fix)
+			FIX="true"
+			;;
+		--restore)
+			RESTORE="true"
+			;;
+		--function)
+			FUNCTION="${2}"
+			shift
+			;;
+		*)
+			display_msg --log error "Unknown argument: '${ARG}'."
+			OK="false"
+			;;
+	esac
+	shift
+done
+[[ ${OK} == "false" ]] && usage_and_exit 1
+[[ ${HELP} == "true" ]] && usage_and_exit 0
+
+IorR="INSTALLATION"		# Installation or Restoration
+
+if [[ -n ${FUNCTION} || ${FIX} == "true" ]]; then
+	# Don't log when a single function is executed.
+	DISPLAY_MSG_LOG=""
+else
+	mkdir -p "${ALLSKY_LOGS}"
+
+	if [[ ${RESTORE} == "true" ]]; then
+		DISPLAY_MSG_LOG="${ALLSKY_LOGS}/restore.log"
+		STATUS_FILE="${ALLSKY_LOGS}/restore_status.txt"
+		IorR="RESTORATION"
+		V="$( get_version "${PRIOR_ALLSKY_DIR}/" )"		# Returns "" if no version file.
+		V="${V:-prior version}"
+		SHORT_TITLE="Allsky Restorer"
+		TITLE="${SHORT_TITLE} - from ${ALLSKY_VERSION} to ${V}"
+		NOT_RESTORED="NO CURRENT VERSION"
+	else
+		V="${ALLSKY_VERSION}"
+	fi
+	MSG="STARTING ${IorR} OF ${V} AT $( date ).\n"
+	display_msg "${LOG_TYPE}" info "${MSG}"
+	[[ ${RESTORE} != "true" ]] && display_msg --logonly info "PI_OS=${PI_OS}"
+fi
+
+[[ ${FIX} == "true" ]] && do_fix				# does not return
+[[ ${RESTORE} == "true" ]] && do_restore		# does not return
 
 #shellcheck disable=SC2119
-[[ $( get_branch ) != "${GITHUB_MAIN_BRANCH}" ]] && IN_TESTING="true"
-
+if [[ $( get_branch ) != "${GITHUB_MAIN_BRANCH}" ]]; then
+	IN_TESTING="true"
+else
+	IN_TESTING="false"
+fi
 if [[ ${IN_TESTING} == "true" ]]; then
 	DEBUG=1; DEBUG_ARG="--debug"; LOG_TYPE="--log"
 
@@ -3206,56 +3460,6 @@ if [[ ${IN_TESTING} == "true" ]]; then
 	fi
 fi
 
-OK="true"
-HELP="false"
-UPDATE="false"
-FIX="false"
-FUNCTION=""
-while [ $# -gt 0 ]; do
-	ARG="${1}"
-	case "${ARG,,}" in
-		--help)
-			HELP="true"
-			;;
-		--debug)
-			((DEBUG++))
-			DEBUG_ARG="${ARG}"		# we can pass this to other scripts
-			LOG_TYPE="--log"
-			;;
-#XXX TODO: is --update still needed?
-		--update)
-			UPDATE="true"
-			;;
-		--fix)
-			FIX="true"
-			;;
-		--function)
-			FUNCTION="${2}"
-			shift
-			;;
-		*)
-			display_msg --log error "Unknown argument: '${ARG}'."
-			OK="false"
-			;;
-	esac
-	shift
-done
-
-
-if [[ -n ${FUNCTION} || ${FIX} == "true" ]]; then
-	# Don't log when a single function is executed.
-	DISPLAY_MSG_LOG=""
-else
-	mkdir -p "${ALLSKY_LOGS}"
-
-	display_msg "${LOG_TYPE}" info "STARTING INSTALLATON OF ${ALLSKY_VERSION} AT $( date ).\n"
-	display_msg --logonly info "PI_OS=${PI_OS}"
-fi
-
-[[ ${HELP} == "true" ]] && usage_and_exit 0
-[[ ${OK} == "false" ]] && usage_and_exit 1
-
-[[ ${FIX} == "true" ]] && do_fix		# does not return
 
 trap "handle_interrupts" SIGTERM SIGINT
 
@@ -3430,7 +3634,7 @@ save_camera_capabilities "false"
 set_locale
 
 ##### Create the Allsky log files
-create_allsky_logs
+create_allsky_logs "true"			# "true" == do everything
 
 ##### Install the overlay and modules system and things it needs
 install_fonts

@@ -41,12 +41,14 @@ export WEBSITE_CONFIG_VERSION="ConfigVersion"
 	# Name of setting that holds the Allsky version.
 export WEBSITE_ALLSKY_VERSION="config.AllskyVersion"
 
-
-	# Location of prior "config.sh" file; varies by release; this is most recent.
+	# Location of prior files varies by release; this is most recent location.
 export PRIOR_CONFIG_FILE="${PRIOR_CONFIG_DIR}/config.sh"
-	# Location of prior "ftp-settings.sh" file; varies by release; this is most recent.
 export PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"
 
+	# Location of lighttpd files.
+export LIGHTTPD_LOG_DIR="/var/log/lighttpd"
+export LIGHTTPD_LOG_FILE="${LIGHTTPD_LOG_DIR}/error.log"
+export LIGHTTPD_CONFIG_FILE="/etc/lighttpd/lighttpd.conf"
 
 
 ######################################### functions
@@ -421,7 +423,7 @@ function update_json_file()		# [-d] field, new value, file, [type]
 
 ####
 # Update a Website configuration file from old to current version.
-update_website_config_file()
+function update_website_config_file()
 {
 	local FILE PRIOR_VERSION CURRENT_VERSION LOCAL_OR_REMOTE
 
@@ -444,4 +446,44 @@ update_website_config_file()
 		# For remote Websites it'll be updated when the user updates the Website.
 		update_json_file ".${WEBSITE_ALLSKY_VERSION}" "${ALLSKY_VERSION}" "${FILE}"
 	fi
+}
+
+####
+# Create the lighttpd configuration file.
+function create_lighttpd_config_file()
+{
+	local TMP="/tmp/x"
+
+	sudo rm -f "${TMP}"
+	sed \
+		-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};g" \
+		-e "s;XX_WEBSERVER_OWNER_XX;${WEBSERVER_OWNER};g" \
+		-e "s;XX_WEBSERVER_GROUP_XX;${WEBSERVER_GROUP};g" \
+		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};g" \
+		-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};g" \
+		-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};g" \
+		-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};g" \
+		-e "s;XX_ALLSKY_DOCUMENTATION_XX;${ALLSKY_DOCUMENTATION};g" \
+		-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};g" \
+		-e "s;XX_MY_OVERLAY_TEMPLATES_XX;${MY_OVERLAY_TEMPLATES};g" \
+			"${REPO_LIGHTTPD_FILE}"  >  "${TMP}"
+	sudo install -m 0644 "${TMP}" "${LIGHTTPD_CONFIG_FILE}" && rm -f "${TMP}"
+}
+
+####
+# Create the lighttpd log file with permissions so user can update it.
+create_lighttpd_log_file()
+{
+	display_msg --log progress "Creating new ${LIGHTTPD_LOG_FILE}."
+
+	# Remove any old log files.
+	# Start off with a 0-length log file the user can write to.
+	sudo -s -- <<-EOF
+		chmod 755 "${LIGHTTPD_LOG_DIR}"
+		rm -fr "${LIGHTTPD_LOG_DIR}"/*
+
+		touch "${LIGHTTPD_LOG_FILE}"
+		sudo chmod 664 "${LIGHTTPD_LOG_FILE}"
+		sudo chown "${WEBSERVER_GROUP}:${ALLSKY_GROUP}" "${LIGHTTPD_LOG_FILE}"
+	EOF
 }

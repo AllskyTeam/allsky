@@ -688,74 +688,6 @@ check_and_mount_tmp()
 
 
 ####
-# Check if prior ${ALLSKY_TMP} was a memory filesystem.
-# If not, offer to make it one.
-check_tmp()
-{
-	if [[ ${FROM_INSTALL} == "true" ]]; then
-		declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
-	fi
-
-	local STRING  SIZE  D  MSG  INITIAL_FSTAB_STRING="tmpfs ${ALLSKY_TMP} tmpfs"
-
-	# Check if currently a memory filesystem.
-	if grep --quiet "^${INITIAL_FSTAB_STRING}" /etc/fstab; then
-		MSG="${ALLSKY_TMP} is currently a memory filesystem; no change needed."
-		display_msg --log progress "${MSG}"
-
-		# If there's a prior Allsky version and it's tmp directory is mounted,
-		# try to unmount it, but that often gives an error that it's busy,
-		# which isn't really a problem since it'll be unmounted at the reboot.
-		# We know from the grep above that /etc/fstab has ${ALLSKY_TMP}
-		# but the mount point is currently in the PRIOR Allsky.
-		D="${PRIOR_ALLSKY_DIR}/tmp"
-		if [[ -d "${D}" ]] && mount | grep --silent "${D}" ; then
-			# The Samba daemon is one known cause of "target busy".
-			sudo umount -f "${D}" 2> /dev/null ||
-				{
-					sudo systemctl restart smbd 2> /dev/null
-					sudo umount -f "${D}" 2> /dev/null
-				}
-		fi
-
-		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
-
-		# If the new Allsky's ${ALLSKY_TMP} is already mounted, don't do anything.
-		# This would be the case during an upgrade.
-		if mount | grep --silent "${ALLSKY_TMP}" ; then
-			display_msg --logonly info "${ALLSKY_TMP} already mounted."
-			return 0
-		fi
-
-		check_and_mount_tmp		# works on new ${ALLSKY_TMP}
-		return 0
-	fi
-
-	SIZE=75		# MB - should be enough
-	MSG="Making ${ALLSKY_TMP} reside in memory can drastically decrease the amount"
-	MSG+=" of writes to the SD card, increasing its life."
-	MSG+="\n\nDo you want to make it reside in memory?"
-	MSG+="\n\nNote: anything in it will be deleted whenever the Pi is rebooted,"
-	MSG+=" but that's not an issue since the directory only contains temporary files."
-	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
-		STRING="${INITIAL_FSTAB_STRING} size=${SIZE}M,noatime,lazytime,nodev,"
-		STRING+="nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${WEBSERVER_GROUP}"
-		if ! echo "${STRING}" | sudo tee -a /etc/fstab > /dev/null ; then
-			display_msg --log error "Unable to update /etc/fstab"
-			return 1
-		fi
-		check_and_mount_tmp
-		display_msg --log progress "${ALLSKY_TMP} is now in memory."
-	else
-		display_msg --log info "${ALLSKY_TMP} will remain on disk."
-		mkdir -p "${ALLSKY_TMP}"
-	fi
-
-	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
-}
-
-
-####
 # If the return code -ne 0
 check_success()
 {
@@ -1514,61 +1446,6 @@ create_allsky_logs()
 	if [[ ${DO_ALL} == "true" ]]; then
 		sudo systemctl start rsyslog		# so logs go to the files above
 	fi
-}
-
-
-####
-# Prompt for either latitude or longitude, and make sure it's a valid entry.
-prompt_for_lat_long()
-{
-	local PROMPT="${1}"
-	local TYPE="${2}"
-	local HUMAN_TYPE="${3}"
-	local ERROR_MSG=""   VALUE  M
-
-	while :
-	do
-		M="${ERROR_MSG}${PROMPT}"
-		VALUE=$( whiptail --title "${TITLE}" --inputbox "${M}" 18 "${WT_WIDTH}" "" 3>&1 1>&2 2>&3 )
-		if [[ -z ${VALUE} ]]; then
-			# Let the user not enter anything.  A message is printed below.
-			break
-		elif VALUE="$( convertLatLong "${VALUE}" "${TYPE}" 2>&1 )" ; then
-			update_json_file ".${TYPE}" "${VALUE}" "${SETTINGS_FILE}"
-			display_msg --log progress "${HUMAN_TYPE} set to ${VALUE}."
-			echo "${VALUE}"
-			break
-		else
-			ERROR_MSG="${VALUE}\n\n"
-		fi
-	done
-}
-
-####
-# We can't automatically determine the latitude and longitude, so prompt for them.
-get_lat_long()
-{
-	if [[ ! -f ${SETTINGS_FILE} ]]; then
-		display_msg --log error "INTERNAL ERROR: '${SETTINGS_FILE}' not found!"
-		return 1
-	fi
-
-	display_msg --log progress "Prompting for Latitude and Longitude."
-
-	MSG="Enter your Latitude."
-	MSG+="\nIt can either have a plus or minus sign (e.g., -20.1)"
-	MSG+="\nor N or S (e.g., 20.1S)"
-	LATITUDE="$( prompt_for_lat_long "${MSG}" "latitude" "Latitude" )"
-
-	MSG="Enter your Longitude."
-	MSG+="\nIt can either have a plus or minus sign (e.g., -20.1)"
-	MSG+="\nor E or W (e.g., 20.1W)"
-	LONGITUDE="$( prompt_for_lat_long "${MSG}" "longitude" "Longitude" )"
-
-	if [[ -z ${LATITUDE} || -z ${LONGITUDE} ]]; then
-		display_msg --log warning "Latitude and longitude need to be set in the WebUI before Allsky can start."
-	fi
-	return 0
 }
 
 
@@ -3274,7 +3151,7 @@ if [[ -n ${FUNCTION} || ${FIX} == "true" ]]; then
 	# Don't log when a single function is executed.
 	DISPLAY_MSG_LOG=""
 else
-	mkdir -p "${ALLSKY_LOGS}"
+	mkdir -p "${ALLSKY_LOGS}" || display_msg --log "error" "Unable to make ${ALLSKY_LOGS}"
 
 	if [[ ${RESTORE} == "true" ]]; then
 		DISPLAY_MSG_LOG="${ALLSKY_LOGS}/restore.log"
@@ -3473,10 +3350,10 @@ check_for_raspistill
 prompt_for_hostname
 
 ##### Check for sufficient swap space
-check_swap "" ""
+check_swap "install" ""
 
 ##### Optionally make ${ALLSKY_TMP} a memory filesystem
-check_tmp
+check_tmp "install"
 
 
 MSG="The following steps can take up to an hour depending on the speed of"

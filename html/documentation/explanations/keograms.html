@@ -25,30 +25,33 @@
 <div class="Layout-main markdown-body" id="mainContents">
 
 <p>
-A <b>Keogram</b> is an image giving a quick view of a night's activity.
-For each nighttime image a central vertical column 1 pixel wide is extracted.
-All these columns are then stitched together from left to right.
-This results in a timeline that reads from dusk to dawn.
+A <b>Keogram</b> is an image giving a quick view of a day's activity.
+A central vertical column 1 pixel wide is extracted from each image
+and added to the Keogram from left to right.
+<blockquote>
+Only images that are saved are included in a Keogram,
+so if you don't save your daytime and/or nightime images,
+they won't be included.
+</blockquote>
 </p>
-<img allsky="true" src="keogram.png" title="Sample Keogram" class="imgCenter imgBorder" loading="lazy">
+<img allsky="true" src="keogram.png" title="Sample Keogram"
+	class="imgCenter imgBorder" loading="lazy">
 <p>
 To get the best results north should be at the top of the image.
-If it's not, include <code>--rotate DEG</code> in the
-<span class="shSetting">KEOGRAM_EXTRA_PARAMETERS</span> setting in
-<span class="fileName">config.sh</span>,
+If it's not, include <span class="WebUIValue">--rotate DEG</span> in the
+<span class="WebUISetting">Keogram Extra Parameters</span> setting in the WebUI,
 where "DEG" is the degrees of rotation.
 That way, using a fisheye lens, you end up with the bottom of the keogram
 being the southern horizon and the top being the northern horizon.
 </p>
 
 <blockquote>
-The keogram will only show what happens at the meridian during the night
+The keogram will only show what happens at the meridian
 and will not display events on the east or west.
 </blockquote>
 
 
 <h2><code>keogram</code> program</h2>
-<details><summary></summary>
 <p>
 The <code>keogram</code> program takes multiple arguments:
 </p>
@@ -84,22 +87,22 @@ Font Type is an OpenCV line type: 0=antialias, 1=8-connected, 2=4-connected
 Example when running the program manually:
 </p>
 <pre>
-cd ~/allsky
-./keogram -d images/20220710/ -e jpg -o images/20220710/keogram/keogram.jpg --rotate 42 --font-size 2
+cd ~/allsky/bin
+./keogram -d images/20240710/ -e jpg -o images/20240710/keogram/keogram.jpg --rotate 42 --font-size 2
 </pre>
 
 <br><p>
-To disable keograms, open <span class="fileName">config.sh</span> in the WebUI's <b>Editor</b> page
-and set <span class="shSetting">KEOGRAM</span> to "false".
+The <span class="WebUISetting">Generate Keogram</span> setting in the WebUI
+can be used to disable keograms.
 </p>
 
 <blockquote>
 If you set the
 <span class="WebUISetting">Image Width</span> and
 <span class="WebUISetting">Image Height</span>
-of your camera in the WebUI <b>Camera Settings</b> page to the actual values of your camera,
-keogram generation will skip any file that's not the correct size.
-This will eliminate any garbage images that happen to be generated.
+of your camera in the WebUI to the actual values of your camera,
+keogram generation will skip any file that's not that size.
+This eliminates any garbage images that happen to be generated.
 </blockquote>
 
 

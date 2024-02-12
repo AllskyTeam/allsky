@@ -84,11 +84,13 @@ STATUS_VARIABLES=()									# Holds all the variables and values to save
 # PRIOR_ALLSKY_DIR
 # PRIOR_CONFIG_DIR
 # PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE
-# WEBSITE_CONFIG_VERSION, WEBSITE_ALLSKY_VERSION
 # PRIOR_CONFIG_FILE, PRIOR_FTP_FILE
 # PRIOR_PYTHON_VENV
+# WEBSITE_CONFIG_VERSION, WEBSITE_ALLSKY_VERSION
 # ALLSKY_DEFINES_INC, REPO_WEBUI_DEFINES_FILE
 # REPO_SUDOERS_FILE, REPO_LIGHTTPD_FILE, REPO_AVI_FILE, REPO_OPTIONS_FILE
+# LIGHTTPD_LOG_DIR, LIGHTTPD_LOG
+# Plus others I probably forgot about...
 
 
 ############################################## functions
@@ -102,7 +104,7 @@ do_initial_heading()
 		return
 	fi
 
-	local MSG  X
+	local MSG  X  H
 
 	declare -n v="${FUNCNAME[0]}"
 	if [[ ${v} == "true" ]]; then
@@ -111,13 +113,14 @@ do_initial_heading()
 		MSG="Welcome to the ${SHORT_TITLE}!\n"
 
 		if [[ ${RESTORE} == "true" ]]; then
+			H="$( basename "${ALLSKY_HOME}" )"
 			X="$( basename "${RENAMED_DIR}" )"
-			MSG+="\nYour current Allsky will be renamed to ${X}"
+			MSG+="\nYour current '${H}' directory will be renamed to"
+			MSG+="\n    ${X}"
 			X="$( basename "${PRIOR_ALLSKY_DIR}" )"
-			MSG+=" and the prior Allsky in ${X} will be"
-			X="$( basename "${ALLSKY_HOME}" )"
-			MSG+=" renamed to ${X}."
-			MSG+="\nFiles that were moved from the old release to the current one"
+			MSG+="\nand the prior Allsky in '${X}' will be"
+			MSG+=" renamed to back to '${H}'."
+			MSG+="\n\nFiles that were moved from the old release to the current one"
 			MSG+=" will be moved back."
 			MSG+="\nYou will manually need to restart Allsky after checking that"
 			MSG+=" the settings are correct in the WebUI."
@@ -876,25 +879,6 @@ check_success()
 
 
 ####
-# Set up lighttpd log file.
-create_lighttpd_log_file()
-{
-	local D  LIGHTTPD_LOG
-
-	# Remove any old log files.
-	# Start off with a 0-length log file the user can write to.
-	D="/var/log/lighttpd"
-	sudo chmod 755 "${D}"
-	sudo rm -fr "${D}"/*
-
-	LIGHTTPD_LOG="${D}/error.log"
-	sudo touch "${LIGHTTPD_LOG}"
-	sudo chmod 664 "${LIGHTTPD_LOG}"
-	sudo chown "${WEBSERVER_GROUP}:${ALLSKY_GROUP}" "${LIGHTTPD_LOG}"
-	truncate -s 0 "${LIGHTTPD_LOG}"
-}
-
-####
 # Install the web server.
 install_webserver_et_al()
 {
@@ -917,25 +901,11 @@ install_webserver_et_al()
 			exit_with_image 1 "${STATUS_ERROR}" "lighttpd installation failed"
 	fi
 
-	FINAL_LIGHTTPD_FILE="/etc/lighttpd/lighttpd.conf"
-	sed \
-		-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};g" \
-		-e "s;XX_WEBSERVER_OWNER_XX;${WEBSERVER_OWNER};g" \
-		-e "s;XX_WEBSERVER_GROUP_XX;${WEBSERVER_GROUP};g" \
-		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};g" \
-		-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};g" \
-		-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};g" \
-		-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};g" \
-		-e "s;XX_ALLSKY_DOCUMENTATION_XX;${ALLSKY_DOCUMENTATION};g" \
-		-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};g" \
-		-e "s;XX_MY_OVERLAY_TEMPLATES_XX;${MY_OVERLAY_TEMPLATES};g" \
-			"${REPO_LIGHTTPD_FILE}"  >  /tmp/x
-	sudo install -m 0644 /tmp/x "${FINAL_LIGHTTPD_FILE}" && rm -f /tmp/x
+	create_lighttpd_config_file
+	create_lighttpd_log_file
 
 	# Ignore output since it may already be enabled.
 	sudo lighty-enable-mod fastcgi-php > /dev/null 2>&1
-
-	create_lighttpd_log_file
 
 	TMP="${ALLSKY_LOGS}/lighttpd.start.log"
 	#shellcheck disable=SC2024
@@ -2832,26 +2802,26 @@ PRIOR_WEBSITE_DIR=""
 		fi
 	fi
 
-	# Truncate log files
-# /var/log/allsky.log, /var/log/lighttpd/error.log
+	# Since we'll be running a new Allsky, start off with clean log files.
 	create_lighttpd_log_file
 	create_allsky_logs "false"		# "false" = only create log file
 
 	# Force the user to at least look at the settings.
 
-	MSG="\nRestoration is done"
-	MSG2="and Allsky needs its settings checked."
-	display_msg --log progress "${MSG}" " ${MSG2}"
-	echo -e "\n\n========== ACTION NEEDED:\n${MSG} ${MSG2}" >> "${POST_INSTALLATION_ACTIONS}"
+	MSG="\nRestoration is done and"
+	MSG2=" Allsky needs its settings checked."
+	display_msg --log progress "${MSG}" "${MSG2}"
+	echo -e "\n\n========== ACTION NEEDED:\n${MSG}${MSG2}" >> "${POST_INSTALLATION_ACTIONS}"
 
-	MSG="Go to the 'Allsky Settings' page of the WebUI to check."
+	MSG="${MSG}${MSG2}\nGo to the 'Allsky Settings' page of the WebUI to check."
 	MSG+="\nMake any necessary changes then press the 'Save changes' button."
-	display_msg progress "\n\n${MSG}"
 	echo -e "${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 	display_image "ConfigurationNeeded"
-CONFIGURATION_NEEDED="true"
+
+	# Set to null to force the user to look at the settings before Allsky will run.
+	update_json_file ".lastchanged" "" "${SETTINGS_FILE}"
 
 	exit_installation 0 "${STATUS_OK}" ""
 }

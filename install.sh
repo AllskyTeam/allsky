@@ -413,78 +413,6 @@ select_camera_type()
 }
 
 ####
-# If the raspistill command exists on post-Buster releases,
-# rename it so it's not used.
-check_for_raspistill()
-{
-	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
-	local W
-
-	if W="$( which raspistill )" && [[ ${PI_OS} != "buster" ]]; then
-		display_msg --longonly info "Renaming 'raspistill' on ${PI_OS}."
-		sudo mv "${W}" "${W}-OLD"
-	fi
-
-	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
-}
-
-
-####
-# Update various PHP define() variables.
-update_php_defines()
-{
-	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
-	local FILE
-
-	display_msg --log progress "Modifying variables for WebUI and Website."
-	FILE="${ALLSKY_WEBUI}/includes/${ALLSKY_DEFINES_INC}"
-	sed		-e "s;XX_HOME_XX;${HOME};" \
-			-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
-			-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
-			-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
-			-e "s;XX_ALLSKY_TMP_XX;${ALLSKY_TMP};" \
-			-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};" \
-			-e "s;XX_ALLSKY_MESSAGES_XX;${ALLSKY_MESSAGES};" \
-			-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};" \
-			-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};" \
-			-e "s;XX_ALLSKY_WEBSITE_LOCAL_CONFIG_NAME_XX;${ALLSKY_WEBSITE_CONFIGURATION_NAME};" \
-			-e "s;XX_ALLSKY_WEBSITE_REMOTE_CONFIG_NAME_XX;${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME};" \
-			-e "s;XX_ALLSKY_WEBSITE_LOCAL_CONFIG_XX;${ALLSKY_WEBSITE_CONFIGURATION_FILE};" \
-			-e "s;XX_ALLSKY_WEBSITE_REMOTE_CONFIG_XX;${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE};" \
-			-e "s;XX_ALLSKY_OWNER_XX;${ALLSKY_OWNER};" \
-			-e "s;XX_ALLSKY_GROUP_XX;${ALLSKY_GROUP};" \
-			-e "s;XX_WEBSERVER_OWNER_XX;${WEBSERVER_OWNER};" \
-			-e "s;XX_WEBSERVER_GROUP_XX;${WEBSERVER_GROUP};" \
-			-e "s;XX_ALLSKY_REPO_XX;${ALLSKY_REPO};" \
-			-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};" \
-			-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};" \
-			-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};" \
-			-e "s;XX_MY_OVERLAY_TEMPLATES_XX;${MY_OVERLAY_TEMPLATES};" \
-			-e "s;XX_ALLSKY_MODULES_XX;${ALLSKY_MODULES};" \
-		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
-		chmod 644 "${FILE}"
-
-	sed -i -e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" "${ALLSKY_WEBSITE}/functions.php"
-
-	# Don't save status if we did a fix.
-	if [[ ${FIX} == "false" ]]; then
-		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
-	fi
-}
-
-
-####
-# Recreate the options file.
-# This can be used after installation if the options file gets hosed.
-recreate_options_file()
-{
-	CAMERA_TYPE="$( settings ".cameratype" )"
-	save_camera_capabilities "true"
-	set_permissions
-}
-
-
-####
 # Wrapper function to call do_save_camera_capabilities and exit on error.
 save_camera_capabilities()
 {
@@ -585,6 +513,78 @@ do_save_camera_capabilities()
 
 
 ####
+# If the raspistill command exists on post-Buster releases,
+# rename it so it's not used.
+check_for_raspistill()
+{
+	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
+	local W
+
+	if W="$( which raspistill )" && [[ ${PI_OS} != "buster" ]]; then
+		display_msg --longonly info "Renaming 'raspistill' on ${PI_OS}."
+		sudo mv "${W}" "${W}-OLD"
+	fi
+
+	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+}
+
+
+####
+# Update various PHP define() variables.
+update_php_defines()
+{
+	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
+	local FILE
+
+	display_msg --log progress "Modifying variables for WebUI and Website."
+	FILE="${ALLSKY_WEBUI}/includes/${ALLSKY_DEFINES_INC}"
+	sed		-e "s;XX_HOME_XX;${HOME};" \
+			-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+			-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" \
+			-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
+			-e "s;XX_ALLSKY_TMP_XX;${ALLSKY_TMP};" \
+			-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};" \
+			-e "s;XX_ALLSKY_MESSAGES_XX;${ALLSKY_MESSAGES};" \
+			-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};" \
+			-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};" \
+			-e "s;XX_ALLSKY_WEBSITE_LOCAL_CONFIG_NAME_XX;${ALLSKY_WEBSITE_CONFIGURATION_NAME};" \
+			-e "s;XX_ALLSKY_WEBSITE_REMOTE_CONFIG_NAME_XX;${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME};" \
+			-e "s;XX_ALLSKY_WEBSITE_LOCAL_CONFIG_XX;${ALLSKY_WEBSITE_CONFIGURATION_FILE};" \
+			-e "s;XX_ALLSKY_WEBSITE_REMOTE_CONFIG_XX;${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE};" \
+			-e "s;XX_ALLSKY_OWNER_XX;${ALLSKY_OWNER};" \
+			-e "s;XX_ALLSKY_GROUP_XX;${ALLSKY_GROUP};" \
+			-e "s;XX_WEBSERVER_OWNER_XX;${WEBSERVER_OWNER};" \
+			-e "s;XX_WEBSERVER_GROUP_XX;${WEBSERVER_GROUP};" \
+			-e "s;XX_ALLSKY_REPO_XX;${ALLSKY_REPO};" \
+			-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};" \
+			-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};" \
+			-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};" \
+			-e "s;XX_MY_OVERLAY_TEMPLATES_XX;${MY_OVERLAY_TEMPLATES};" \
+			-e "s;XX_ALLSKY_MODULES_XX;${ALLSKY_MODULES};" \
+		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
+		chmod 644 "${FILE}"
+
+	sed -i -e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" "${ALLSKY_WEBSITE}/functions.php"
+
+	# Don't save status if we did a fix.
+	if [[ ${FIX} == "false" ]]; then
+		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+	fi
+}
+
+
+####
+# Recreate the options file.
+# This can be used after installation if the options file gets hosed.
+recreate_options_file()
+{
+	CAMERA_TYPE="$( settings ".cameratype" )"
+	save_camera_capabilities "true"
+	set_permissions
+}
+
+
+####
 # Update the sudoers file so the web server can execute certain commands with sudo.
 do_sudoers()
 {
@@ -657,108 +657,6 @@ do_reboot()
 {
 	exit_installation -1 "${1}" "${2}"		# -1 means just log ending statement but don't exit.
 	sudo reboot now
-}
-
-
-####
-# Check for size of RAM+swap during installation (Issue # 969).
-# recheck_swap is used to check swap after the installation,
-# and is referenced in the Allsky Documentation.
-recheck_swap()
-{
-	check_swap "prompt"
-}
-check_swap()
-{
-	PROMPT="false"
-	[[ ${1} == "prompt" ]] && PROMPT="true"
-
-	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" && ${PROMPT} == "false" ]] && return
-	local PROMPT  RAM_SIZE DESIRED_COMBINATION SUGGESTED_SWAP_SIZE CURRENT_SWAP
-	local SWAP_CONFIG_FILE  AMT  M  SWAP_SIZE  CURRENT_MAX
-
-	# This can return "total_mem is unknown" if the OS is REALLY old.
-	RAM_SIZE="$( vcgencmd get_config total_mem )"
-	if [[ ${RAM_SIZE} =~ "unknown" ]]; then
-		# Note: This doesn't produce exact results.  On a 4 GB Pi, it returns 3.74805.
-		RAM_SIZE=$( free --mebi | awk '{if ($1 == "Mem:") {print $2; exit 0} }' )		# in MB
-	else
-		RAM_SIZE="${RAM_SIZE//total_mem=/}"
-	fi
-	DESIRED_COMBINATION=$((1024 * 5))		# desired minimum memory + swap
-	SUGGESTED_SWAP_SIZE=0
-	for i in 512 1024 2048 4096		# 8192 and above don't need any swap
-	do
-		if [[ ${RAM_SIZE} -le ${i} ]]; then
-			SUGGESTED_SWAP_SIZE=$((DESIRED_COMBINATION - i))
-			break
-		fi
-	done
-	display_msg --logonly info "RAM_SIZE=${RAM_SIZE}, SUGGESTED_SWAP_SIZE=${SUGGESTED_SWAP_SIZE}."
-
-	# Not sure why, but displayed swap is often 1 MB less than what's in /etc/dphys-swapfile
-	CURRENT_SWAP=$( free --mebi | awk '{if ($1 == "Swap:") {print $2 + 1; exit 0} }' )	# in MB
-	CURRENT_SWAP=${CURRENT_SWAP:-0}
-	if [[ ${CURRENT_SWAP} -lt ${SUGGESTED_SWAP_SIZE} || ${PROMPT} == "true" ]]; then
-		SWAP_CONFIG_FILE="/etc/dphys-swapfile"
-
-		[[ -z ${FUNCTION} ]] && sleep 2		# give user time to read prior messages
-		if [[ ${CURRENT_SWAP} -eq 1 ]]; then
-			CURRENT_SWAP=0
-			AMT="no"
-			M="added"
-		else
-			AMT="${CURRENT_SWAP} MB of"
-			M="increased"
-		fi
-		MSG="\nYour Pi currently has ${AMT} swap space."
-		MSG+="\nBased on your memory size of ${RAM_SIZE} MB,"
-		if [[ ${CURRENT_SWAP} -ge ${SUGGESTED_SWAP_SIZE} ]]; then
-			SUGGESTED_SWAP_SIZE=${CURRENT_SWAP}
-			MSG+=" there is no need to change anything, but you can if you would like."
-		else
-			MSG+=" we suggest ${SUGGESTED_SWAP_SIZE} MB of swap"
-			MSG+=" to decrease the chance of timelapse and other failures."
-			MSG+="\n\nDo you want swap space ${M}?"
-			MSG+="\n\nYou may change the amount of swap space by changing the number below."
-		fi
-
-		SWAP_SIZE=$( whiptail --title "${TITLE}" --inputbox "${MSG}" 18 "${WT_WIDTH}" \
-			"${SUGGESTED_SWAP_SIZE}" 3>&1 1>&2 2>&3 )
-		# If the suggested swap was 0 and the user added a number but didn't first delete the 0,
-		# do it now so we don't have numbers like "0256".
-		[[ ${SWAP_SIZE:0:1} == "0" ]] && SWAP_SIZE="${SWAP_SIZE:1}"
-
-		if [[ -z ${SWAP_SIZE} || ${SWAP_SIZE} == "0" ]]; then
-			if [[ ${CURRENT_SWAP} -eq 0 && ${SUGGESTED_SWAP_SIZE} -gt 0 ]]; then
-				display_msg --log warning "With no swap space you run the risk of programs failing."
-			else
-				display_msg --log info "Swap will remain at ${CURRENT_SWAP}."
-			fi
-		else
-			display_msg --log progress "Setting swap space to ${SWAP_SIZE} MB."
-			sudo dphys-swapfile swapoff					# Stops the swap file
-			sudo sed -i "/CONF_SWAPSIZE/ c CONF_SWAPSIZE=${SWAP_SIZE}" "${SWAP_CONFIG_FILE}"
-
-			CURRENT_MAX="$( get_variable "CONF_MAXSWAP" "${SWAP_CONFIG_FILE}" )"
-			# TODO: Can we determine the default max rather than hard-code it.
-			CURRENT_MAX="${CURRENT_MAX:-2048}"
-			if [[ ${CURRENT_MAX} -lt ${SWAP_SIZE} ]]; then
-				if [[ ${DEBUG} -gt 0 ]]; then
-					display_msg --log debug "Increasing max swap size to ${SWAP_SIZE} MB."
-				fi
-				sudo sed -i "/CONF_MAXSWAP/ c CONF_MAXSWAP=${SWAP_SIZE}" "${SWAP_CONFIG_FILE}"
-			fi
-
-			sudo dphys-swapfile setup  > /dev/null		# Sets up new swap file
-			sudo dphys-swapfile swapon					# Turns on new swap file
-		fi
-	else
-		MSG="Size of current swap (${CURRENT_SWAP} MB) is sufficient; no change needed."
-		display_msg --log progress "${MSG}"
-	fi
-
-	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
 
 
@@ -3572,7 +3470,7 @@ check_for_raspistill
 prompt_for_hostname
 
 ##### Check for sufficient swap space
-check_swap
+check_swap "" ""
 
 ##### Optionally make ${ALLSKY_TMP} a memory filesystem
 check_tmp

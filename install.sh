@@ -692,7 +692,10 @@ check_and_mount_tmp()
 # If not, offer to make it one.
 check_tmp()
 {
-	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
+	if [[ ${FROM_INSTALL} == "true" ]]; then
+		declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
+	fi
+
 	local STRING  SIZE  D  MSG  INITIAL_FSTAB_STRING="tmpfs ${ALLSKY_TMP} tmpfs"
 
 	# Check if currently a memory filesystem.
@@ -3218,7 +3221,7 @@ handle_interrupts()
 ############################################## Main part of program
 
 ##### Calculate whiptail sizes
-calc_wt_size
+WT_WIDTH="$( calc_wt_size )"
 
 ##### Check arguments
 OK="true"

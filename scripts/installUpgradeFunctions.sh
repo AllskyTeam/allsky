@@ -511,7 +511,7 @@ function check_swap()
 
 	[[ -z ${WT_WIDTH} ]] && WT_WIDTH="$( calc_wt_size )"
 	local RAM_SIZE  DESIRED_COMBINATION  SUGGESTED_SWAP_SIZE  CURRENT_SWAP
-	local f AMT  M  MSG  SWAP_SIZE  CURRENT_MAX
+	local AMT  M  MSG  SWAP_SIZE  CURRENT_MAX
 
 	# This can return "total_mem is unknown" if the OS is REALLY old.
 	RAM_SIZE="$( vcgencmd get_config total_mem )"

@@ -50,9 +50,6 @@ export LIGHTTPD_LOG_DIR="/var/log/lighttpd"
 export LIGHTTPD_LOG_FILE="${LIGHTTPD_LOG_DIR}/error.log"
 export LIGHTTPD_CONFIG_FILE="/etc/lighttpd/lighttpd.conf"
 
-# Other variables used below and are hear to centralize them.
-export SWAP_CONFIG_FILE="/etc/dphys-swapfile"
-
 ######################################### functions
 
 #####
@@ -233,7 +230,7 @@ function display_msg()
 	# I don't know how to replace "\n" with an
 	# actual newline in sed, and there HAS to be a better way to strip the
 	# escape sequences.
-	# I simply replace actual escape characters in the input with "033" then 
+	# I simply replace actual escape characters in the input with "033" then
 	# replace "033[" with "033X".
 	# Feel free to improve...
 
@@ -475,7 +472,7 @@ function create_lighttpd_config_file()
 
 ####
 # Create the lighttpd log file with permissions so user can update it.
-create_lighttpd_log_file()
+function create_lighttpd_log_file()
 {
 	display_msg --log progress "Creating new ${LIGHTTPD_LOG_FILE}."
 
@@ -496,21 +493,23 @@ create_lighttpd_log_file()
 # and ask the user to increase if not "big enough".
 # recheck_swap() is is referenced in the Allsky Documentation and can
 # optionally be called after installation to adjust swap space.
-recheck_swap()
+function recheck_swap()
 {
-	check_swap "prompt" "after_install"
+	check_swap "after_install" "prompt"
 }
-check_swap()
+function check_swap()
 {
-	# global: TITLE  WT_WIDTH  SWAP_CONFIG_FILE
-	local PROMPT  FROM_INSTALL
-	PROMPT="false"; [[ ${1} == "prompt" ]] && PROMPT="true" && shift
-	FROM_INSTALL="false"; [[ ${1} == "install" ]] && FROM_INSTALL="true" && shift
+	# global: TITLE  WT_WIDTH
+	local SWAP_CONFIG_FILE="/etc/dphys-swapfile"
+	local CALLED_FROM PROMPT
+	CALLED_FROM="${1}"
+	PROMPT="${2:-false}"
 
-	if [[ ${FROM_INSTALL} == "true" ]]; then
+	if [[ ${CALLED_FROM} == "install" ]]; then
 		declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" && ${PROMPT} == "false" ]] && return
 	fi
 
+	[[ -z ${WT_WIDTH} ]] && WT_WIDTH="$( calc_wt_size )"
 	local RAM_SIZE  DESIRED_COMBINATION  SUGGESTED_SWAP_SIZE  CURRENT_SWAP
 	local f AMT  M  MSG  SWAP_SIZE  CURRENT_MAX
 
@@ -594,7 +593,154 @@ check_swap()
 		display_msg --log progress "${MSG}"
 	fi
 
-	if [[ ${FROM_INSTALL} == "true" ]]; then
+	if [[ ${CALLED_FROM} == "install" ]]; then
 		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 	fi
+}
+
+
+####
+function recheck_tmp()
+{
+	check_tmp "after_install"
+}
+####
+# Check if prior ${ALLSKY_TMP} was a memory filesystem.
+# If not, offer to make it one.
+function check_tmp()
+{
+	# global: TITLE  WT_WIDTH
+	local PROMPT  CALLED_FROM
+	CALLED_FROM="${1}"
+
+	if [[ ${CALLED_FROM} == "install" ]]; then
+		declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
+	fi
+
+	[[ -z ${WT_WIDTH} ]] && WT_WIDTH="$( calc_wt_size )"
+	local INITIAL_FSTAB_STRING="tmpfs ${ALLSKY_TMP} tmpfs"
+	local STRING  SIZE  D  MSG
+
+	# Check if currently a memory filesystem.
+	if grep --quiet "^${INITIAL_FSTAB_STRING}" /etc/fstab; then
+		MSG="${ALLSKY_TMP} is currently a memory filesystem; no change needed."
+		display_msg --log progress "${MSG}"
+
+		# If there's a prior Allsky version and it's tmp directory is mounted,
+		# try to unmount it, but that often gives an error that it's busy,
+		# which isn't really a problem since it'll be unmounted at the reboot.
+		# We know from the grep above that /etc/fstab has ${ALLSKY_TMP}
+		# but the mount point is currently in the PRIOR Allsky.
+		D="${PRIOR_ALLSKY_DIR}/tmp"
+		if [[ -d "${D}" ]] && mount | grep --silent "${D}" ; then
+			# The Samba daemon is one known cause of "target busy".
+			sudo umount -f "${D}" 2> /dev/null ||
+				{
+					sudo systemctl restart smbd 2> /dev/null
+					sudo umount -f "${D}" 2> /dev/null
+				}
+		fi
+
+		if [[ ${CALLED_FROM} == "install" ]]; then
+			STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+		fi
+
+		# If the new Allsky's ${ALLSKY_TMP} is already mounted, don't do anything.
+		# This would be the case during an upgrade.
+		if mount | grep --silent "${ALLSKY_TMP}" ; then
+			display_msg --logonly info "${ALLSKY_TMP} already mounted."
+			return 0
+		fi
+
+		check_and_mount_tmp		# works on new ${ALLSKY_TMP}
+		return 0
+	fi
+
+	SIZE=75		# MB - should be enough
+	MSG="Making ${ALLSKY_TMP} reside in memory can drastically decrease the amount"
+	MSG+=" of writes to the SD card, increasing its life."
+	MSG+="\n\nDo you want to make it reside in memory?"
+	MSG+="\n\nNote: anything in it will be deleted whenever the Pi is rebooted,"
+	MSG+=" but that's not an issue since the directory only contains temporary files."
+	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
+		STRING="${INITIAL_FSTAB_STRING} size=${SIZE}M,noatime,lazytime,nodev,"
+		STRING+="nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${WEBSERVER_GROUP}"
+		if ! echo "${STRING}" | sudo tee -a /etc/fstab > /dev/null ; then
+			display_msg --log error "Unable to update /etc/fstab"
+			return 1
+		fi
+		check_and_mount_tmp
+		display_msg --log progress "${ALLSKY_TMP} is now in memory."
+	else
+		display_msg --log info "${ALLSKY_TMP} will remain on disk."
+		mkdir -p "${ALLSKY_TMP}"
+	fi
+
+	if [[ ${CALLED_FROM} == "install" ]]; then
+		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+	fi
+}
+
+####
+# Prompt for either latitude or longitude, and make sure it's a valid entry.
+prompt_for_lat_long()
+{
+	local PROMPT="${1}"
+	local SETTING_NAME="${2}"
+	local WEBUI_SETTING_LABEL="${3}"
+	local ERROR_MSG=""   VALUE  M
+
+	[[ -z ${WT_WIDTH} ]] && WT_WIDTH="$( calc_wt_size )"
+	[[ -z ${TITLE} ]] && TITLE="Enter ${SETTING_NAME}"
+
+	while :
+	do
+		M="${ERROR_MSG}${PROMPT}"
+		VALUE=$( whiptail --title "${TITLE}" --inputbox "${M}" 18 "${WT_WIDTH}" "" 3>&1 1>&2 2>&3 )
+		if [[ -z ${VALUE} ]]; then
+			# Let the user not enter anything.
+			# A warning message is printed by our invoker.
+			echo ""
+			return
+
+		elif VALUE="$( convertLatLong "${VALUE}" "${SETTING_NAME}" 2>&1 )" ; then
+			update_json_file ".${SETTING_NAME}" "${VALUE}" "${SETTINGS_FILE}"
+			display_msg --log progress "${WEBUI_SETTING_LABEL} set to ${VALUE}."
+			echo "${VALUE}"
+			return
+
+		else
+			ERROR_MSG="${VALUE}\n\n"
+		fi
+	done
+}
+
+####
+# We can't automatically determine the latitude and longitude, so prompt for them.
+get_lat_long()
+{
+	# Global: SETTINGS_FILE
+	local MSG  LATITUDE  LONGITUDE
+
+	if [[ ! -f ${SETTINGS_FILE} ]]; then
+		display_msg --log error "INTERNAL ERROR: '${SETTINGS_FILE}' not found!"
+		return 1
+	fi
+
+	display_msg --log progress "Prompting for Latitude and Longitude."
+	MSG="Enter your Latitude."
+	MSG+="\nIt can either have a plus or minus sign (e.g., -20.1)"
+	MSG+="\nor N or S (e.g., 20.1S)"
+	LATITUDE="$( prompt_for_lat_long "${MSG}" "latitude" "Latitude" )"
+
+	MSG="Enter your Longitude."
+	MSG+="\nIt can either have a plus or minus sign (e.g., -20.1)"
+	MSG+="\nor E or W (e.g., 20.1W)"
+	LONGITUDE="$( prompt_for_lat_long "${MSG}" "longitude" "Longitude" )"
+
+	if [[ -z ${LATITUDE} || -z ${LONGITUDE} ]]; then
+		MSG="Latitude and Longitude need to be set in the WebUI before Allsky can start."
+		display_msg --log warning "${MSG}"
+	fi
+	return 0
 }

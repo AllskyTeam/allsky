@@ -53,7 +53,6 @@ export LIGHTTPD_CONFIG_FILE="/etc/lighttpd/lighttpd.conf"
 # Other variables used below and are hear to centralize them.
 export SWAP_CONFIG_FILE="/etc/dphys-swapfile"
 
-
 ######################################### functions
 
 #####
@@ -77,8 +76,9 @@ function display_header() {
 #####
 function calc_wt_size()
 {
-	WT_WIDTH=$( tput cols )
+	local WT_WIDTH=$( tput cols )
 	[[ ${WT_WIDTH} -gt 80 ]] && WT_WIDTH=80
+	echo "${WT_WIDTH}"
 }
 
 #####

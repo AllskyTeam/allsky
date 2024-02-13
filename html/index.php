@@ -65,7 +65,6 @@ $ME = htmlspecialchars($_SERVER["PHP_SELF"]);
 include_once('includes/functions.php');
 include_once('includes/status_messages.php');
 $status = new StatusMessages();
-$needToDisplayMessages = false;
 initialize_variables();		// sets some variables
 
 // Constants for configuration file paths.

@@ -7,6 +7,7 @@
 */
 function DisplayDHCPConfig() {
 	global $page;
+	$myStatus = new StatusMessages();
 
 	$interface = null;
 	$RangeStart = "";
@@ -15,7 +16,6 @@ function DisplayDHCPConfig() {
 	$hselected = ""; $mselected = ""; $dselected = "";
 	$infinite = "Infinite";
 
-	$myStatus = new StatusMessages();
 	if( isset( $_POST['savedhcpdsettings'] ) ) {
 		if (CSRFValidate()) {
 			$ok = true;
@@ -125,8 +125,8 @@ function DisplayDHCPConfig() {
 
 	if ($return !== null) {
 		$conf = ParseConfig($return);
-		$interface = $conf['interface'];
-		$range = $conf['dhcp-range'];
+		$interface = getVariableOrDefault($conf, 'interface', null);
+		$range = getVariableOrDefault($conf, 'dhcp-range', null);
 		if ($interface === null) {
 			$return = null;
 			$myStatus->addMessage(RASPI_DNSMASQ_CONFIG . ' has no interface', 'danger');
@@ -171,7 +171,7 @@ function DisplayDHCPConfig() {
 <div class="row"> <div class="col-lg-12"> <div class="panel panel-primary">
 	<div class="panel-heading"><i class="fa fa-exchange fa-fw"></i> Configure DHCP</div>
 	<div class="panel-body">
-		<?php if ($myStatus->isMessage()) echo "<p>${myStatus->showMessages()}</p>"; ?>
+		<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
 
 		<!-- Nav tabs -->
 			<ul class="nav nav-tabs">

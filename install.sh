@@ -11,8 +11,8 @@ source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
-# Some versions of Linux default to 750 so web server can't read it
-chmod 755 "${ALLSKY_HOME}"								|| exit "${EXIT_ERROR_STOP}"
+# Default may be 700 (HOME) or 750 (ALLSKY_HOME) so web server can't read it
+chmod 755 "${HOME}" "${ALLSKY_HOME}"					|| exit "${EXIT_ERROR_STOP}"
 cd "${ALLSKY_HOME}"  									|| exit "${EXIT_ERROR_STOP}"
 
 # The POST_INSTALLATION_ACTIONS contains information the user needs to act upon after the reboot.
@@ -551,6 +551,11 @@ update_php_defines()
 			-e "s;XX_ALLSKY_WEBSITE_REMOTE_CONFIG_NAME_XX;${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME};" \
 			-e "s;XX_ALLSKY_WEBSITE_LOCAL_CONFIG_XX;${ALLSKY_WEBSITE_CONFIGURATION_FILE};" \
 			-e "s;XX_ALLSKY_WEBSITE_REMOTE_CONFIG_XX;${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE};" \
+			-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};" \
+			-e "s;XX_ALLSKY_ENV_XX;${ALLSKY_ENV};" \
+			-e "s;XX_MY_OVERLAY_TEMPLATES_XX;${MY_OVERLAY_TEMPLATES};" \
+			-e "s;XX_ALLSKY_MODULES_XX;${ALLSKY_MODULES};" \
+			-e "s;XX_ALLSKY_MODULE_LOCATION_XX;${ALLSKY_MODULE_LOCATION};" \
 			-e "s;XX_ALLSKY_OWNER_XX;${ALLSKY_OWNER};" \
 			-e "s;XX_ALLSKY_GROUP_XX;${ALLSKY_GROUP};" \
 			-e "s;XX_WEBSERVER_OWNER_XX;${WEBSERVER_OWNER};" \
@@ -558,9 +563,6 @@ update_php_defines()
 			-e "s;XX_ALLSKY_REPO_XX;${ALLSKY_REPO};" \
 			-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};" \
 			-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};" \
-			-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};" \
-			-e "s;XX_MY_OVERLAY_TEMPLATES_XX;${MY_OVERLAY_TEMPLATES};" \
-			-e "s;XX_ALLSKY_MODULES_XX;${ALLSKY_MODULES};" \
 		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
 		chmod 644 "${FILE}"
 

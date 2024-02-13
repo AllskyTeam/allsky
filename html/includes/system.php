@@ -447,7 +447,7 @@ function DisplaySystem()
 						$e .= displayUserData($user_data_files[$i], "button-action");
 					}
 
-					if ($myStatus->isMessage()) echo "<p>${myStatus->showMessages()}</p>";
+					if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>";
 					?>
 
 					<div class="row">

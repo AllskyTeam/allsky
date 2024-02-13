@@ -40,8 +40,8 @@ function DisplayDashboard_WLAN() {
 
 function process_WLAN_data($interface, $interface_output)
 {
-	global $page;
-	$status = new StatusMessages();
+	global $page, $status;
+
 	$notSetMsg = "[not set]";
 
 	// $interface_output is sent and the other variables are returned.

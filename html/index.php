@@ -132,15 +132,17 @@ if ($useLogin) {
 $remoteWebsiteVersion = "";
 if ($hasRemoteWebsite) {
 	$f = getRemoteWebsiteConfigFile(); 
-	$errorMsg = "WARNING: Unable to process '$f'.";
+	$errorMsg = "WARNING: ";
 	$retMsg = "";
 	$a_array = get_decoded_json_file($f, true, $errorMsg, $retMsg);
 	if ($a_array === null) {
-		echo "$retMsg";
+		$status->addMessage($retMsg, 'warning');
 	} else {
 		$c = getVariableOrDefault($a_array, 'config', '');
-		if ($c !== "")
-			$remoteWebsiteVersion = getVariableOrDefault($c, 'AllskyWebsiteVersion', '<span class="errorMsg">[unknown]</span>');
+		if ($c !== "") {
+			$s = '<span class="errorMsg">[unknown]</span>';
+			$remoteWebsiteVersion = getVariableOrDefault($c, 'AllskyWebsiteVersion', $s);
+		}
 	}
 }
 

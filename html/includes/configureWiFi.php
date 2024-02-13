@@ -264,7 +264,7 @@ if ($debug) { echo "<br><pre>wpa_cli scan_results:<br>"; print_r($scan_return); 
 		<div class="panel-heading"><i class="fa fa-wifi fa-fw"></i> Configure Wi-Fi</div>
 		<!-- /.panel-heading -->
 		<div class="panel-body">
-			<?php if ($myStatus->isMessage()) echo "<p>${myStatus->showMessages()}</p>"; ?>
+			<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
 			<h4>Wi-Fi SSIDs</h4>
 
 			<form method="POST" action="?page=<?php echo $page ?>" name="wpa_conf_form">

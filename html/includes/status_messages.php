@@ -2,7 +2,7 @@
 class StatusMessages {
 	public $messages = array();
 
-	public function addMessage($message, $level='success', $dismissable=true) {
+	public function addMessage($message, $level='success', $dismissable=false) {
 		$status = "<tr class='alert alert-$level'><td>$message</td>";
 		if ($dismissable) {
 			$status .= "<td class='alert-dismissable'>";
@@ -46,7 +46,7 @@ class StatusMessages {
 
 			if ($count >= 2) {
 				// space between messages
-				echo "$nl$tab<tr style=${apos}height: 10px${apos}><td></td></tr>";
+				echo "$nl$tab<tr><td style=${apos}padding-top: 5px${apos}></td></tr>";
 			}
 
 			if ($escape === true)

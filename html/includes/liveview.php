@@ -1,15 +1,13 @@
 <?php
 
 function DisplayLiveView($image_name, $delay, $daydelay, $nightdelay, $darkframe) {
-	global $showUpdatedMessage;
+	global $showUpdatedMessage, $status;
 
 	// Note: if liveview is left open during a day/night transition the delay will become wrong.
 	// For example, if liveview is started during the day we use "daydelay" but then
 	// at night we're still using "daydelay" but should be using "nightdelay".
 	// The user can fix this by reloading the web page.
 	// TODO: Should we automatically reload the page every so often (we already reload the image)?
-
-	$status = new StatusMessages();
 
 	if ($darkframe) {
 		$status->addMessage('Currently capturing dark frames. You can turn this off in the Allsky Settings page.');

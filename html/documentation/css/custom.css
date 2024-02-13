@@ -57,7 +57,6 @@
 	color: var(--dark-text);
 }
 
-#page-wrapper { padding: 0 10px; }
 .navbar-toggle { float: left; margin-left: 10px; }
 @media (max-width: 450px) {.version-title { font-size: 75%; }}
 @media (max-width: 400px) {.version-title { font-size: 65%; }}

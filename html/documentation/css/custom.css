@@ -14,8 +14,8 @@
 	--WebUI-subSetting-background-color-dark: #339;
 	--dark-text: #aaaaaa;
 	--dark-text-reversed: #eeeeee;
-	--rowSeparator: 1px solid #d3d3d3;
-	--rowSeparator-dark: 1px solid #707070;
+	--rowSeparator: #d3d3d3;
+	--rowSeparator-dark: #707070;
 	--btn-hover-color: black;
 	--btn-dark-color: #bfbfbf;
 	--panel-heading-color: #6b6b6b;
@@ -530,11 +530,13 @@ div.subSettingsHeader {
 	background-color: var(--WebUI-subSetting-background-color-dark);
 }
 .headingRow {
-	border-top: 15px solid transparent;
-	border-bottom: 15px solid var(--rowSeparator);
+	font-size: 110%;
+	border-top: 10px solid transparent;
+	border-bottom: 5px solid transparent;
 }
-.dark .headingRow {
-	border-bottom-color: var(--rowSeparator-dark);
+.headingRowPadding {
+	border-top: 3px solid transparent;
+	border-bottom: 3px solid transparent;
 }
 .columnHeader {
 	background-color: #aac;
@@ -547,10 +549,6 @@ div.subSettingsHeader {
 	background-color: #339
 }
 
-.headingRowPadding {
-	border-top: 3px solid transparent;
-	border-bottom: 3px solid transparent;
-}
 .headingToggle {
 	cursor: pointer;
 	padding-left: 0.5em;
@@ -566,10 +564,10 @@ div.subSettingsHeader {
 
 /* separate table rows */
 .rowSeparator {
-	border-bottom: var(--rowSeparator);
+	border-bottom: 1px solid var(--rowSeparator);
 }
 .dark .rowSeparator {
-	border-bottom: var(--rowSeparator-dark);
+	border-bottom-color: var(--rowSeparator-dark);
 }
 /* used in system.php */
 .progress-bar {

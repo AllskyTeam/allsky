@@ -40,9 +40,8 @@ function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=nul
 
 	if ($file == "") {
 		$retMsg .= $div;
-		$retMsg .= "$errorMsg";
-		$retMsg .= $br;
-		$retMsg .= "JSON file not specified!";
+		$retMsg .= $errorMsg;
+		$retMsg .= " File not specified!";
 		$retMsg .= $end;
 		if ($returnedMsg === null) echo "$retMsg";
 		else $returnedMsg = $retMsg;
@@ -51,9 +50,8 @@ function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=nul
 
 	if (! file_exists($file)) {
 		$retMsg .= $div;
-		$retMsg .= "$errorMsg";
-		$retMsg .= $br;
-		$retMsg .= "File '$file' missing!";
+		$retMsg .= $errorMsg;
+		$retMsg .= " File <b>$file</b> not found!";
 		$retMsg .= $end;
 		if ($returnedMsg === null) echo "$retMsg";
 		else $returnedMsg = $retMsg;
@@ -63,18 +61,16 @@ function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=nul
 	$str = file_get_contents($file, true);
 	if ($str === "") {
 		$retMsg .= $div;
-		$retMsg .= "$errorMsg";
-		$retMsg .= $br;
-		$retMsg .= "File '$file' is empty!";
+		$retMsg .= $errorMsg;
+		$retMsg .= " File <b>$file</b> is empty!";
 		$retMsg .= $end;
 		if ($returnedMsg === null) echo "$retMsg";
 		else $returnedMsg = $retMsg;
 		return null;
 	} else if ($str === false) {
 		$retMsg .= $div;
-		$retMsg .= "$errorMsg:";
-		$retMsg .= $br;
-		$retMsg .= "Error reading '$file'!";
+		$retMsg .= $errorMsg;
+		$retMsg .= " Error reading <b>$file</b>!";
 		$retMsg .= $end;
 		if ($returnedMsg === null) echo "$retMsg";
 		else $returnedMsg = $retMsg;
@@ -84,8 +80,7 @@ function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=nul
 	$str_array = json_decode($str, $associative);
 	if ($str_array == null) {
 		$retMsg .= $div;
-		$retMsg .= "$errorMsg";
-		$retMsg .= $br;
+		$retMsg .= "$errorMsg ";
 		$retMsg .= json_last_error_msg();
 		$cmd = "json_pp < $file 2>&1";
 		exec($cmd, $output);
@@ -217,7 +212,7 @@ function initialize_variables() {
 			$delay = $nightdelay;
 		} else {
 			$msg = "<code>sunwait</code> returned $retval; don't know if it's day or night.";
-			$status->addMessage($msg, 'danger', false);
+			$status->addMessage($msg, 'danger');
 			$needToDisplayMessages = true;
 			$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
 		}
@@ -251,11 +246,12 @@ function check_if_configured($page, $calledFrom) {
 
 	if ($lastChanged === "") {
 		// The settings aren't configured - probably right after an installation.
+		$msg = "Allsky must be configured before using it.";
 		if ($page === "configuration")
-			$m = "";
+			$msg .= " If it's already configured, just click on the 'Save changes' button.";
 		else
-			$m = "<br>Go to the 'Allsky Settings' page.";
-		$status->addMessage("<div class='important'>You must configure Allsky before using it.<br>If it's already configured, just click on the 'Save changes' button.$m</div>", 'danger', false);
+			$msg .= "<br>Go to the 'Allsky Settings' page to do so.";
+		$status->addMessage("<div class='important'>$msg</div>", 'danger');
 		$displayed_configured_message = true;
 		return(false);
 	}

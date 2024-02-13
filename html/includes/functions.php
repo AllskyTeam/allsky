@@ -447,7 +447,7 @@ function parse_ifconfig($input, &$strHWAddress, &$strIPAddress, &$strNetMask, &$
 	}
 }
 
-function handle_interface_POST_and_status($interface, $input, &$status) {
+function handle_interface_POST_and_status($interface, $input, &$myStatus) {
 	$interface_up = false;
 	if( isset($_POST['turn_down']) ) {
 		// We should only get here if the interface is up,
@@ -455,19 +455,19 @@ function handle_interface_POST_and_status($interface, $input, &$status) {
 		// If the interface is down it's also not running.
 		$s = get_interface_status("ifconfig $interface");
 		if (! is_interface_up($s)) {
-			$status->addMessage("Interface $interface was already down", 'warning', false);
+			$myStatus->addMessage("Interface $interface was already down", 'warning', false);
 		} else {
 			exec( "sudo ifconfig $interface down 2>&1", $output );	// stop
 			// Check that it actually stopped
 			$s = get_interface_status("ifconfig $interface");
 			if (! is_interface_up($s)) {
-				$status->addMessage("Interface $interface stopped", 'success', false);
+				$myStatus->addMessage("Interface $interface stopped", 'success', false);
 			} else {
 				if ($output == "")
 					$output = "Unknown reason";
 				else
 					$output = implode(" ", $output);
-				$status->addMessage("Unable to stop interface $interface<br>$output" , 'danger', false);
+				$myStatus->addMessage("Unable to stop interface $interface<br>$output" , 'danger', false);
 				$interface_up = true;
 			}
 		}
@@ -476,19 +476,19 @@ function handle_interface_POST_and_status($interface, $input, &$status) {
 		// We should only get here if the interface is down,
 		// but just in case, check if it's already up.
 		if (is_interface_up(get_interface_status("ifconfig $interface"))) {
-			$status->addMessage("Interface $interface was already up", 'warning', false);
+			$myStatus->addMessage("Interface $interface was already up", 'warning', false);
 			$interface_up = true;
 		} else {
 			exec( "sudo ifconfig $interface up 2>&1", $output );	// start
 			// Check that it actually started
 			$s = get_interface_status("ifconfig $interface");
 			if (! is_interface_up($s)) {
-				$status->addMessage("Unable to start interface $interface", 'danger', false);
+				$myStatus->addMessage("Unable to start interface $interface", 'danger', false);
 			} else {
 				if (is_interface_running($s))
-					$status->addMessage("Interface $interface started", 'success', false);
+					$myStatus->addMessage("Interface $interface started", 'success', false);
 				else
-					$status->addMessage("Interface $interface started but nothing connected to it", 'warning', false);
+					$myStatus->addMessage("Interface $interface started but nothing connected to it", 'warning', false);
 				$interface_up = true;
 			}
 		}
@@ -496,13 +496,13 @@ function handle_interface_POST_and_status($interface, $input, &$status) {
 	} elseif (is_interface_up($input)) {
 		// The interface can be up but nothing connected to it (i.e., not RUNNING).
 		if (is_interface_running($input))
-			$status->addMessage("Interface $interface is up", 'success', false);
+			$myStatus->addMessage("Interface $interface is up", 'success', false);
 		else
-			$status->addMessage("Interface $interface is up but nothing connected to it", 'warning', false);
+			$myStatus->addMessage("Interface $interface is up but nothing connected to it", 'warning', false);
 		$interface_up = true;
 
 	} else {
-		$status->addMessage("Interface $interface is down", 'danger', false);
+		$myStatus->addMessage("Interface $interface is down", 'danger', false);
 	}
 
 	return($interface_up);

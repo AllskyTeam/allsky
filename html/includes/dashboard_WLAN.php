@@ -89,7 +89,7 @@ function process_WLAN_data($interface, $interface_output)
 	$interface_up = handle_interface_POST_and_status($interface, $interface_output, $myStatus);
 ?>
 				<div class="panel-body">
-					<?php if ($myStatus->isMessage()) echo "<p>${myStatus->showMessages()}</p>"; ?>
+					<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
 					<div class="row">
 						<div class="panel panel-default"> <div class="panel-body">
 							<h4><?php echo $interface ?> Interface Information</h4>

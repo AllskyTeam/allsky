@@ -61,7 +61,7 @@ function DisplayHostAPDConfig(){
         <div class="panel-heading"><i class="fa fa-dot-circle fa-fw"></i> Configure Hotspot</div>
         <!-- /.panel-heading -->
         <div class="panel-body">
-          <?php if ($myStatus->isMessage()) echo "<p>${myStatus->showMessages()}</p>"; ?>
+          <?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
           <form role="form" action="?page=<?php echo $page ?>" method="POST">
             <!-- Nav tabs -->
             <ul class="nav nav-tabs">

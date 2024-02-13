@@ -233,11 +233,11 @@ function initialize_variables() {
 }
 
 // Check if the settings have been configured.
-$displayed_configured_message = false;
 function check_if_configured($page, $calledFrom) {
-	global $lastChanged, $status, $displayed_configured_message;
+	global $lastChanged, $status;
+	static $will_display_configured_message = false;
 
-	if ($displayed_configured_message)
+	if ($will_display_configured_message)
 		return(true);
 
 	// The conf page calls us if needed.
@@ -252,7 +252,7 @@ function check_if_configured($page, $calledFrom) {
 		else
 			$msg .= "<br>Go to the 'Allsky Settings' page to do so.";
 		$status->addMessage("<div class='important'>$msg</div>", 'danger');
-		$displayed_configured_message = true;
+		$will_display_configured_message = true;
 		return(false);
 	}
 

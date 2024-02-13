@@ -16,8 +16,8 @@ if [ $# -lt 2 ]; then
 		echo -e "${wERROR}"
 		echo    "Usage: ${ME}  message_type  message  [url]"
 		echo -e "${wNC}"
-		echo    "\n'message_type' is 'success', 'warning', 'error', 'info', or 'debug'."
-		echo    "\n'url' is a URL to (normally) a documentation page."
+		echo -e "\n'message_type' is 'success', 'warning', 'error', 'info', or 'debug'."
+		echo -e "\n'url' is a URL to (normally) a documentation page."
 	} >&2
 	exit 1
 fi

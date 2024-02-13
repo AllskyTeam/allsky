@@ -46,7 +46,7 @@ function DisplayAuthConfig($username, $password) {
 		<div class="panel panel-primary">
 			<div class="panel-heading"><i class="fa fa-lock fa-fw"></i> Change Admin Username and/or Password</div>
 			<div class="panel-body">
-				<?php if ($myStatus->isMessage()) echo "<p>${myStatus->showMessages()}</p>"; ?>
+				<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
 
 				<form role="form" action="?page=<?php echo $page ?>" method="POST">
 					<?php CSRFToken() ?>

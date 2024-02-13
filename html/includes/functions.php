@@ -151,7 +151,7 @@ function initialize_variables() {
 	if (file_exists(getRemoteWebsiteConfigFile())) {
 		$hasRemoteWebsite = true;
 	} else {
-		$hasRemoteWebsite = true;
+		$hasRemoteWebsite = false;
 	}
 	$useLocalWebsite = toBool(getVariableOrDefault($settings_array, 'uselocalwebsite', "false"));
 	$useRemoteWebsite = toBool(getVariableOrDefault($settings_array, 'useremotewebsite', "false"));

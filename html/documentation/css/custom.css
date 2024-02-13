@@ -274,8 +274,8 @@ button.close {
 .alert td .important {
 	font-weight: bold;
 	font-size: 150%;
-	padding-top: 2em;
-	padding-bottom: 2em;
+	padding-top: 1em;
+	padding-bottom: 1em;
 	padding-left: 1em;
 }
 table .alert-dismissable button {
@@ -315,9 +315,9 @@ table .alert-dismissable {
 	border-color: #f1b1b1;
 	background-color: #a94442;
 }
-.alert-danger {
-	border-top-width: 10px;
-	border-bottom-width: 10px;
+.alert-danger, .alert-warning {
+	border-top-width: 3px;
+	border-bottom-width: 3px;
 }
 
 .dark .form-control,
@@ -758,6 +758,10 @@ div.sticky {
 
 .middleVerticalAlign {
 	vertical-align: middle;
+}
+
+.externalSmall {	/* the icon indicated a new web page */
+	font-size: 90%;
 }
 
 /* Classes specific to WebUI pages */

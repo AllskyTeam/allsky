@@ -338,7 +338,8 @@ if ($hasRemoteWebsite) {
 						}
 					}
 				}
-				if (@filesize(ALLSKY_MESSAGES) > 0) {
+				$size = @filesize(ALLSKY_MESSAGES);
+				if ($size !== false && $size > 0) {
 					$contents_array = file(ALLSKY_MESSAGES, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 					echo "<div class='row'>"; echo "<div class='system-message'>";
 						echo "<div class='title'>System Messages</div>";

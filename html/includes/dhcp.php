@@ -15,23 +15,23 @@ function DisplayDHCPConfig() {
 	$hselected = ""; $mselected = ""; $dselected = "";
 	$infinite = "Infinite";
 
-	$status = new StatusMessages();
+	$myStatus = new StatusMessages();
 	if( isset( $_POST['savedhcpdsettings'] ) ) {
 		if (CSRFValidate()) {
 			$ok = true;
 			$interface = getVariableOrDefault($_POST, 'interface', "");
 			if ($interface === "") {
-				$status->addMessage('<strong>Interface</strong> not specified', 'danger');
+				$myStatus->addMessage('<strong>Interface</strong> not specified', 'danger');
 				$ok = false;
 			}
 			$RangeStart = getVariableOrDefault($_POST, 'RangeStart', "");
 			if ($RangeStart === "") {
-				$status->addMessage('<strong>Starting IP Address</strong> not specified', 'danger');
+				$myStatus->addMessage('<strong>Starting IP Address</strong> not specified', 'danger');
 				$ok = false;
 			}
 			$RangeEnd = getVariableOrDefault($_POST, 'RangeEnd', "");
 			if ($RangeEnd === "") {
-				$status->addMessage('<strong>Ending IP Address</strong> not specified', 'danger');
+				$myStatus->addMessage('<strong>Ending IP Address</strong> not specified', 'danger');
 				$ok = false;
 			}
 			$RangeLeaseTime = getVariableOrDefault($_POST, 'RangeLeaseTime', "");
@@ -39,12 +39,12 @@ function DisplayDHCPConfig() {
 				// $RangeLeaseTime is optional, but if given, the units must also be given.
 				$RangeLeaseTimeUnits = getVariableOrDefault($_POST, 'RangeLeaseTimeUnits', "");
 				if ($RangeLeaseTimeUnits === "") {
-					$status->addMessage('<strong>Interval</strong> not specified', 'danger');
+					$myStatus->addMessage('<strong>Interval</strong> not specified', 'danger');
 					$ok = false;
 				} else if ($RangeLeaseTimeUnits === $infinite) {
 					$msg = "Can not specify a <strong>Lease Time</strong> with an ";
 					$msg .= "<strong>Interval</strong> of <strong>$infinite</strong>";
-					$status->addMessage($msg, 'danger');
+					$myStatus->addMessage($msg, 'danger');
 					$ok = false;
 				}
 			}
@@ -58,12 +58,12 @@ function DisplayDHCPConfig() {
 				system( 'sudo cp /tmp/dhcpddata '. RASPI_DNSMASQ_CONFIG, $return );
 
 				if( $return == 0 ) {
-					$status->addMessage('dnsmasq configuration updated successfully', 'success');
+					$myStatus->addMessage('dnsmasq configuration updated successfully', 'success');
 				} else {
-					$status->addMessage('dnsmasq configuration failed to be updated', 'danger');
+					$myStatus->addMessage('dnsmasq configuration failed to be updated', 'danger');
 				}
 			} else {
-				$status->addMessage('No changes made', 'danger');
+				$myStatus->addMessage('No changes made', 'danger');
 			}
 		} else {
 			error_log('CSRF violation');
@@ -76,14 +76,14 @@ function DisplayDHCPConfig() {
 	if( isset( $_POST['startdhcpd'] ) ) {
 		if (CSRFValidate()) {
 			if ($dnsmasq_state) {
-				$status->addMessage('dnsmasq already running', 'info');
+				$myStatus->addMessage('dnsmasq already running', 'info');
 			} else {
 				exec('sudo /etc/init.d/dnsmasq start 2>&1', $dnsmasq, $return);
 				if ($return == 0) {
-					$status->addMessage('Successfully started dnsmasq', 'success');
+					$myStatus->addMessage('Successfully started dnsmasq', 'success');
 					$dnsmasq_state = true;
 				} else {
-					$status->addMessage('Failed to start dnsmasq: ' . implode('<br>', $dnsmasq), 'danger');
+					$myStatus->addMessage('Failed to start dnsmasq: ' . implode('<br>', $dnsmasq), 'danger');
 				}
 			}
 		} else {
@@ -95,13 +95,13 @@ function DisplayDHCPConfig() {
 			if ($dnsmasq_state) {
 				exec('sudo /etc/init.d/dnsmasq stop 2>&1', $dnsmasq, $return);
 				if ($return == 0) {
-					$status->addMessage('Successfully stopped dnsmasq', 'success');
+					$myStatus->addMessage('Successfully stopped dnsmasq', 'success');
 					$dnsmasq_state = false;
 				} else {
-					$status->addMessage('Failed to stop dnsmasq: ' . implode('<br>', $dnsmasq), 'danger');
+					$myStatus->addMessage('Failed to stop dnsmasq: ' . implode('<br>', $dnsmasq), 'danger');
 				}
 			} else {
-				$status->addMessage('dnsmasq already stopped', 'info');
+				$myStatus->addMessage('dnsmasq already stopped', 'info');
 			}
 		} else {
 			error_log('CSRF violation');
@@ -109,9 +109,9 @@ function DisplayDHCPConfig() {
 
 	} else {
 		if( $dnsmasq_state ) {
-			$status->addMessage('dnsmasq is running', 'success');
+			$myStatus->addMessage('dnsmasq is running', 'success');
 		} else {
-			$status->addMessage('dnsmasq is not running', 'warning');
+			$myStatus->addMessage('dnsmasq is not running', 'warning');
 		}
 	}
 
@@ -119,7 +119,7 @@ function DisplayDHCPConfig() {
 	if ($return !== null) {
 		if (count($return) == 0) {
 			$return = null;
-			$status->addMessage(RASPI_DNSMASQ_CONFIG . ' appears empty', 'warning');
+			$myStatus->addMessage(RASPI_DNSMASQ_CONFIG . ' appears empty', 'warning');
 		}
 	}
 
@@ -129,11 +129,11 @@ function DisplayDHCPConfig() {
 		$range = $conf['dhcp-range'];
 		if ($interface === null) {
 			$return = null;
-			$status->addMessage(RASPI_DNSMASQ_CONFIG . ' has no interface', 'danger');
+			$myStatus->addMessage(RASPI_DNSMASQ_CONFIG . ' has no interface', 'danger');
 		}
 		if ($range === null) {
 			$return = null;
-			$status->addMessage(RASPI_DNSMASQ_CONFIG . ' has no dhcp-range', 'warning');
+			$myStatus->addMessage(RASPI_DNSMASQ_CONFIG . ' has no dhcp-range', 'warning');
 		}
 	}
 
@@ -143,7 +143,7 @@ function DisplayDHCPConfig() {
 		// count:	1				 2			 3				4
 		$arrRange = explode( ",", $range );
 		if (count($arrRange) < 3) {
-				$status->addMessage("dhcp-range in '" . RASPI_DNSMASQ_CONFIG . " missing fields: $range", "danger");
+				$myStatus->addMessage("dhcp-range in '" . RASPI_DNSMASQ_CONFIG . " missing fields: $range", "danger");
 		} else {
 			$RangeStart = $arrRange[0];
 			$RangeEnd = $arrRange[1];
@@ -171,7 +171,7 @@ function DisplayDHCPConfig() {
 <div class="row"> <div class="col-lg-12"> <div class="panel panel-primary">
 	<div class="panel-heading"><i class="fa fa-exchange fa-fw"></i> Configure DHCP</div>
 	<div class="panel-body">
-		<?php if ($status->isMessage()) echo "<p>${status->showMessages()}</p>"; ?>
+		<?php if ($myStatus->isMessage()) echo "<p>${status->showMessages()}</p>"; ?>
 
 		<!-- Nav tabs -->
 			<ul class="nav nav-tabs">

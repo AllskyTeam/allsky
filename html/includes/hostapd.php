@@ -2,7 +2,7 @@
 
 function DisplayHostAPDConfig(){
   global $page;
-  $status = new StatusMessages();
+  $myStatus = new StatusMessages();
 
   $arrConfig = array();
   $arrChannel = array('a','b','g');
@@ -13,26 +13,26 @@ function DisplayHostAPDConfig(){
 
   if( isset($_POST['SaveHostAPDSettings']) ) {
     if (CSRFValidate()) {
-      SaveHostAPDConfig($arrSecurity, $arrEncType, $arrChannel, $interfaces, $status);
+      SaveHostAPDConfig($arrSecurity, $arrEncType, $arrChannel, $interfaces, $myStatus);
     } else {
       error_log('CSRF violation');
     }
   } elseif( isset($_POST['StartHotspot']) ) {
     if (CSRFValidate()) {
-      $status->addMessage('Attempting to start hotspot', 'info');
+      $myStatus->addMessage('Attempting to start hotspot', 'info');
       exec( 'sudo /etc/init.d/hostapd start', $return );
       foreach( $return as $line ) {
-        $status->addMessage($line, 'info');
+        $myStatus->addMessage($line, 'info');
       }
     } else {
       error_log('CSRF violation');
     }
   } elseif( isset($_POST['StopHotspot']) ) {
     if (CSRFValidate()) {
-      $status->addMessage('Attempting to stop hotspot', 'info');
+      $myStatus->addMessage('Attempting to stop hotspot', 'info');
       exec( 'sudo /etc/init.d/hostapd stop', $return );
       foreach( $return as $line ) {
-        $status->addMessage($line, 'info');
+        $myStatus->addMessage($line, 'info');
       }
     } else {
       error_log('CSRF violation');
@@ -43,9 +43,9 @@ function DisplayHostAPDConfig(){
   exec( 'pidof hostapd | wc -l', $hostapdstatus);
 
   if( $hostapdstatus[0] == 0 ) {
-    $status->addMessage('HostAPD is not running', 'warning');
+    $myStatus->addMessage('HostAPD is not running', 'warning');
   } else {
-    $status->addMessage('HostAPD is running', 'success');
+    $myStatus->addMessage('HostAPD is running', 'success');
   }
 
   foreach( $return as $a ) {
@@ -61,7 +61,7 @@ function DisplayHostAPDConfig(){
         <div class="panel-heading"><i class="fa fa-dot-circle fa-fw"></i> Configure Hotspot</div>
         <!-- /.panel-heading -->
         <div class="panel-body">
-	  <?php if ($status->isMessage()) echo "<p>" . $status->showMessages() . "</p>"; ?>
+          <?php if ($myStatus->isMessage()) echo "<p>${myStatus->showMessages()}</p>"; ?>
           <form role="form" action="?page=<?php echo $page ?>" method="POST">
             <!-- Nav tabs -->
             <ul class="nav nav-tabs">
@@ -132,7 +132,7 @@ function DisplayHostAPDConfig(){
                   <input type="hidden" id="selected_country" value="<?php echo $arrConfig['country_code'] ?>">
                   <select  class="form-control"  id="countries" name="country_code"  style="background-color: #c0ffc0;">
                     <option value="AF">Afghanistan</option>
-                    <option value="AX">Åland Islands</option>
+                    <option value="AX">Ã…land Islands</option>
                     <option value="AL">Albania</option>
                     <option value="DZ">Algeria</option>
                     <option value="AS">American Samoa</option>
@@ -185,10 +185,10 @@ function DisplayHostAPDConfig(){
                     <option value="CD">Congo, the Democratic Republic of the</option>
                     <option value="CK">Cook Islands</option>
                     <option value="CR">Costa Rica</option>
-                    <option value="CI">Côte d'Ivoire</option>
+                    <option value="CI">CÃ´te d'Ivoire</option>
                     <option value="HR">Croatia</option>
                     <option value="CU">Cuba</option>
-                    <option value="CW">Curaçao</option>
+                    <option value="CW">CuraÃ§ao</option>
                     <option value="CY">Cyprus</option>
                     <option value="CZ">Czech Republic</option>
                     <option value="DK">Denmark</option>
@@ -311,11 +311,11 @@ function DisplayHostAPDConfig(){
                     <option value="PT">Portugal</option>
                     <option value="PR">Puerto Rico</option>
                     <option value="QA">Qatar</option>
-                    <option value="RE">Réunion</option>
+                    <option value="RE">RÃ©union</option>
                     <option value="RO">Romania</option>
                     <option value="RU">Russian Federation</option>
                     <option value="RW">Rwanda</option>
-                    <option value="BL">Saint Barthélemy</option>
+                    <option value="BL">Saint BarthÃ©lemy</option>
                     <option value="SH">Saint Helena, Ascension and Tristan da Cunha</option>
                     <option value="KN">Saint Kitts and Nevis</option>
                     <option value="LC">Saint Lucia</option>
@@ -411,7 +411,7 @@ function DisplayHostAPDConfig(){
 <?php 
 }
 
-function SaveHostAPDConfig($wpa_array, $enc_types, $modes, $interfaces, $status) {
+function SaveHostAPDConfig($wpa_array, $enc_types, $modes, $interfaces, $myStatus) {
   // It should not be possible to send bad data for these fields so clearly
   // someone is up to something if they fail. Fail silently.
   if (!(array_key_exists($_POST['wpa'], $wpa_array) && array_key_exists($_POST['wpa_pairwise'], $enc_types) && in_array($_POST['hw_mode'], $modes))) {
@@ -428,21 +428,21 @@ function SaveHostAPDConfig($wpa_array, $enc_types, $modes, $interfaces, $status)
   // Verify input
   if (strlen($_POST['ssid']) == 0 || strlen($_POST['ssid']) > 32) {
     // Not sure of all the restrictions of SSID
-    $status->addMessage('SSID must be between 1 and 32 characters', 'danger');
+    $myStatus->addMessage('SSID must be between 1 and 32 characters', 'danger');
     $good_input = false;
   }
   if (strlen($_POST['wpa_passphrase']) < 8 || strlen($_POST['wpa_passphrase']) > 63) {
-    $status->addMessage('WPA passphrase must be between 8 and 63 characters', 'danger');
+    $myStatus->addMessage('WPA passphrase must be between 8 and 63 characters', 'danger');
     $good_input = false;
   }
   if (! in_array($_POST['interface'], $interfaces)) {
     // The user is probably up to something here but it may also be a
     // genuine error.
-    $status->addMessage('Unknown interface '.$_POST['interface'], 'danger');
+    $myStatus->addMessage('Unknown interface '.$_POST['interface'], 'danger');
     $good_input = false;
   }
   if (strlen($_POST['country_code']) != 0 && strlen($_POST['country_code']) != 2) {
-    $status->addMessage('Country code must be blank or two characters', 'danger');
+    $myStatus->addMessage('Country code must be blank or two characters', 'danger');
     $good_input = false;
   }
 
@@ -468,12 +468,12 @@ function SaveHostAPDConfig($wpa_array, $enc_types, $modes, $interfaces, $status)
 
       system( "sudo cp /tmp/hostapddata " . RASPI_HOSTAPD_CONFIG, $return );
       if( $return == 0 ) {
-        $status->addMessage('Wifi Hotspot settings saved', 'success');
+        $myStatus->addMessage('Wifi Hotspot settings saved', 'success');
       } else {
-        $status->addMessage('Unable to save wifi hotspot settings', 'danger');
+        $myStatus->addMessage('Unable to save wifi hotspot settings', 'danger');
       }
     } else {
-      $status->addMessage('Unable to save wifi hotspot settings', 'danger');
+      $myStatus->addMessage('Unable to save wifi hotspot settings', 'danger');
       return false;
     }
   }

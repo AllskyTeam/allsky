@@ -240,17 +240,13 @@ function check_if_configured($page, $calledFrom) {
 	if ($will_display_configured_message)
 		return(true);
 
-	// The conf page calls us if needed.
-	if ($calledFrom === "main" && $page === "configuration")
-		return(true);
-
 	if ($lastChanged === "") {
 		// The settings aren't configured - probably right after an installation.
-		$msg = "Allsky must be configured before using it.";
+		$msg = "Allsky must be configured before using it.<br>";
 		if ($page === "configuration")
-			$msg .= " If it's already configured, just click on the 'Save changes' button.";
+			$msg .= "If it's already configured, just click on the 'Save changes' button.";
 		else
-			$msg .= "<br>Go to the 'Allsky Settings' page to do so.";
+			$msg .= "Go to the 'Allsky Settings' page to do so.";
 		$status->addMessage("<div class='important'>$msg</div>", 'danger');
 		$will_display_configured_message = true;
 		return(false);

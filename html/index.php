@@ -316,11 +316,7 @@ if ($hasRemoteWebsite) {
 		<div class="row right-panel">
 			<div class="col-lg-12">
 				<?php
-				// Check if the settings are configured.
-				if (! check_if_configured($page, "main")) $needToDisplayMessages = true;
-
-				if ($needToDisplayMessages)
-					$status->showMessages(true, false, true);
+				check_if_configured($page, "main");	// It calls addMessage() on error.
 
 				if (isset($_POST['clear'])) {
 					$t = @filemtime(ALLSKY_MESSAGES);
@@ -375,14 +371,14 @@ if ($hasRemoteWebsite) {
 							$status->addMessage($message, $level);
 						}
 						$status->showMessages();
-						echo "<div class='message-button'>";
+						echo "<br><div class='message-button'>";
 							$ts = time();
 							echo "<form action='$ME?_ts=$ts' method='POST'>";
 							echo "<input type='hidden' name='page' value='$page'>";
 							echo "<input type='hidden' name='clear' value='true'>";
 							$t = @filemtime(ALLSKY_MESSAGES);
 							echo "<input type='hidden' name='filetime' value='$t'>";
-							echo "<input type='submit' class='btn btn-primary' value='Clear all messages' />";
+							echo "<input type='submit' class='btn btn-primary' value='Clear messages' />";
 							echo "</form>";
 						echo "</div>";
 					echo "</div>"; echo "</div>";// /.system-message and /.row

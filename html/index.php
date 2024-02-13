@@ -329,31 +329,39 @@ if ($hasRemoteWebsite) {
 						if ($t == $newT) {
 							exec("sudo rm -f " . ALLSKY_MESSAGES, $result, $retcode);
 							if ($retcode !== 0) {
-								$status->addMessage("Unable to clear messages: " . $result[0], 'danger', true);
+								$status->addMessage("Unable to clear messages: " . $result[0], 'danger');
 								$status->showMessages();
 							}
 						} else {
-							// If the messages changed after the user did a "clear",
-							// and then the user refreshed the browser,
+							// If the messages changed after the user viewed the last page
+							// and before they clicked the "Clear" button,
 							// we'll have the old time in $filetime, but the timestamp of the file
 							// won't match so we'll get here, and then display the messages below.
-							$status->addMessage("System Messages changed.  New content is:", "warning", false);
+							$status->addMessage("System Messages changed.  New content is:", "warning");
 						}
 					}
 				}
-				if (file_exists(ALLSKY_MESSAGES) && filesize(ALLSKY_MESSAGES) > 0) {
+				if (@filesize(ALLSKY_MESSAGES) > 0) {
 					$contents_array = file(ALLSKY_MESSAGES, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-					echo "<div class='row'>";
-					echo "<div class='system-message'>";
+					echo "<div class='row'>"; echo "<div class='system-message'>";
 						echo "<div class='title'>System Messages</div>";
 						foreach ($contents_array as $line) {
-							// Format: level (i.e., CSS class), date, count, message
+							// Format: level (i.e., CSS class), date, count, message [, url]
+							//         0                        1     2      3          4
 							$message_array = explode("\t", $line);
-							if (isset($message_array[3])) {
+							$message = getVariableOrDefault($message_array, 3, null);
+							if ($message !== null) {
 								$level = $message_array[0];
 								$date = $message_array[1];
 								$count = $message_array[2];
-								$message = "<strong>" . $message_array[3] . "</strong>";
+								$url = getVariableOrDefault($message_array, 4, "");
+								if ($url !== "") {
+									$m1 = "<a href='$url' title='Click for more information' target='_messages'>";
+									$m2 = "<i class='fa fa-external-link-alt fa-fw'></i>";
+									$m2 = "<span class='externalSmall'>$m2</span>";
+									$message = "$m1 $message $m2</a>";
+								}
+								$message = "<strong>$message</strong>";
 								if ($count == 1)
 									$message .= " &nbsp; ($date)";
 								else
@@ -362,7 +370,7 @@ if ($hasRemoteWebsite) {
 								$level = "error";	// badly formed message
 								$message = "INTERNAL ERROR: Poorly formatted message: $line";
 							}
-							$status->addMessage($message, $level, false);
+							$status->addMessage($message, $level);
 						}
 						$status->showMessages();
 						echo "<div class='message-button'>";
@@ -375,8 +383,7 @@ if ($hasRemoteWebsite) {
 							echo "<input type='submit' class='btn btn-primary' value='Clear all messages' />";
 							echo "</form>";
 						echo "</div>";
-					echo "</div>";
-					echo "</div>";
+					echo "</div>"; echo "</div>";// /.system-message and /.row
 				}
 
 				switch ($page) {

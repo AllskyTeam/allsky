@@ -40,7 +40,8 @@ function DisplayDashboard_WLAN() {
 
 function process_WLAN_data($interface, $interface_output)
 {
-	global $page, $status;
+	global $page;
+	$myStatus = new StatusMessages();
 
 	$notSetMsg = "[not set]";
 
@@ -84,11 +85,11 @@ function process_WLAN_data($interface, $interface_output)
 	preg_match('/Frequency:(\d+.\d+ GHz)/i', $interface_output, $result);
 	$strFrequency = getVariableOrDefault($result, 1, $notSetMsg);
 
-	// $interface and $interface_output are sent, $status is returned.
-	$interface_up = handle_interface_POST_and_status($interface, $interface_output, $status);
+	// $interface and $interface_output are sent, $myStatus is returned.
+	$interface_up = handle_interface_POST_and_status($interface, $interface_output, $myStatus);
 ?>
 				<div class="panel-body">
-					<?php if ($status->isMessage()) $status->showMessages(); ?>
+					<?php if ($myStatus->isMessage()) echo "<p>${myStatus->showMessages()}</p>"; ?>
 					<div class="row">
 						<div class="panel panel-default"> <div class="panel-body">
 							<h4><?php echo $interface ?> Interface Information</h4>

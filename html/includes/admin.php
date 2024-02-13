@@ -1,10 +1,8 @@
 <?php
 
-include_once( 'includes/status_messages.php' );
-
 function DisplayAuthConfig($username, $password) {
-	global $page;
-	$status = new StatusMessages();
+	global $page, $status;
+
 	if (isset($_POST['UpdateAdminPassword'])) {
 		// Update the password
 		if (CSRFValidate()) {
@@ -37,7 +35,7 @@ function DisplayAuthConfig($username, $password) {
 				$status->addMessage('Old password does not match.', 'danger');
 			}
 		} else {
-			error_log('CSRF violation');		// TODO: need better message
+			error_log('CSRF violation');
 		}
 	}
 ?>

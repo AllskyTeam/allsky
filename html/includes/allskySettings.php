@@ -2,19 +2,19 @@
 
 $debug = false;
 
-// Get the json for the given file "f" if we haven't already and return a pointer to the data.
+// Get the json for the given file if we haven't already and return a pointer to the data.
 // Most of the time there will only be one source file, so check if we're getting the
 // same file as last time.
-function &getSourceArray($f) {
+function &getSourceArray($file) {
 	global $status, $debug;
 
 	static $filesContents = array();
 	static $lastFile = null;
 
-	$fileName = getFileName($f);
+	$fileName = getFileName($file);
 	if ($fileName == "") {
-		$errorMsg = "Unable to get file name for '$f'. Some settings will not work.";
-		$status->addMessage($msg, 'danger', false);
+		$errorMsg = "Unable to get file name for '$file'. Some settings will not work.";
+		$status->addMessage($msg, 'danger');
 		return ("");
 	}
 
@@ -23,11 +23,11 @@ function &getSourceArray($f) {
 	$lastFile = $fileName;
 
 	if (! isset($filesContents[$fileName])) {
-		$errorMsg = "<br>Unable to read source file '$fileName' ($f).";
-		$fullErrorMsg = "";
-		$filesContents[$fileName] = get_decoded_json_file($fileName, true, $errorMsg, $fullErrorMsg);
-		if ($filesContents[$fileName] === null || $fullErrorMsg !== "") {
-			$status->addMessage($fullErrorMsg, 'danger', false);
+		$errorMsg = "Unable to read source file from $file.";
+		$retMsg = "";
+		$filesContents[$fileName] = get_decoded_json_file($fileName, true, $errorMsg, $retMsg);
+		if ($filesContents[$fileName] === null || $retMsg !== "") {
+			$status->addMessage($retMsg, 'danger');
 		}
 	}
 //x echo "<br><pre>return fileName=$fileName: "; var_dump($filesContents); echo "</pre>";
@@ -53,8 +53,6 @@ function formatSettingValue($value) {
 }
 
 function checkType($fieldName, $value, $old, $label, $type, &$shortened=null) {
-	global $status;
-
 	if ($type === null || $value == "") {
 		return("");
 	}
@@ -251,7 +249,7 @@ function DisplayAllskyConfig() {
 				}
 				if (! $found) {
 					$msg = "Setting '$name' not in options file.";
-					$status->addMessage($msg, 'danger', false);
+					$status->addMessage($msg, 'danger');
 					$ok = false;
 				} else {
 					if ($oldValue !== "")
@@ -357,7 +355,7 @@ if ($debug && $s != $s_newValue) {
 						$msg = "If you change <b>Camera Type</b>, <b>Camera Model</b>,";
 						$msg .= " or <b>Camera Number</b>  you cannot change anything else.";
 						$msg .= "<br>You also changed: $nonCameraChanges.";
-						$status->addMessage($msg, 'danger', false);
+						$status->addMessage($msg, 'danger');
 						$ok = false;
 					} else {
 						if ($numSettingsChanges > 0 || $fromConfiguration) {
@@ -501,7 +499,7 @@ echo '<script>console.log("Updated $fileName");</script>';
 				}
 
 			} else {	// not $ok
-				$status->addMessage("Settings NOT saved due to errors above.", 'info', false);
+				$status->addMessage("Settings NOT saved due to errors above.", 'info');
 			}
 		} else {
 			$status->addMessage('Unable to save settings - session timeout.', 'danger');
@@ -566,11 +564,9 @@ echo '<script>console.log("Updated $fileName");</script>';
 	$cameraType = getVariableOrDefault($settings_array, $cameraTypeName, "");
 	$cameraModel = getVariableOrDefault($settings_array, $cameraModelName, "");
 
-	if (! check_if_configured($page, "settings")) $needToDisplayMessages = true;
+	check_if_configured($page, "settings");	// Calls addMessage() on error
 
-if ($formReadonly != "readonly") {
-	$settingsDescription = "";
-}
+	if ($formReadonly != "readonly") $settingsDescription = "";
 ?>
 
 <div class="row"> <div class="col-lg-12"> <div class="panel panel-primary">
@@ -1012,7 +1008,7 @@ if ($popupYesNo !== "") {
 			}
 			if ($msg != "") {
 				// Combine invalid and missing fields since they are both errors.
-				$status->addMessage($msg, 'danger', false);
+				$status->addMessage($msg, 'danger');
 			}
 
 			if ($numMissingHasDefault > 0) {
@@ -1021,11 +1017,11 @@ if ($popupYesNo !== "") {
 				$msg .= " missing but replaced by the default:";
 				$msg .= "</strong>";
 				$msg .= "<br><strong>$missingSettingsHasDefault</strong>";
-				$status->addMessage($msg, 'warning', false);
+				$status->addMessage($msg, 'warning');
 			}
 
 			if ($status->isMessage()) {
-				$status->addMessage("<strong>See the highlighted entries below.</strong>", 'info', false);
+				$status->addMessage("<strong>See the highlighted entries below.</strong>", 'info');
 			}
 ?>
 			<script>

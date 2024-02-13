@@ -123,8 +123,8 @@ $useRemoteWebsite = null;
 $hasLocalWebsite = null;
 $hasRemoteWebsite = null;
 
-function initialize_variables() {
-	global $status, $needToDisplayMessages;
+function initialize_variables($website_only=false) {
+	global $status;
 	global $image_name;
 	global $showUpdatedMessage, $delay, $daydelay, $nightdelay;
 	global $imagesSortOrder;
@@ -155,6 +155,8 @@ function initialize_variables() {
 	}
 	$useLocalWebsite = toBool(getVariableOrDefault($settings_array, 'uselocalwebsite', "false"));
 	$useRemoteWebsite = toBool(getVariableOrDefault($settings_array, 'useremotewebsite', "false"));
+
+	if ($website_only) return;
 
 	// $img_dir is an alias in the web server's config that points to where the current image is.
 	// It's the same as ${ALLSKY_TMP} which is the physical path name on the server.
@@ -213,7 +215,6 @@ function initialize_variables() {
 		} else {
 			$msg = "<code>sunwait</code> returned $retval; don't know if it's day or night.";
 			$status->addMessage($msg, 'danger');
-			$needToDisplayMessages = true;
 			$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
 		}
 

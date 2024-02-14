@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, date
 class ALLSKYFORMAT:
 
     _allSkyVariables = {}
+    _returnString = None
 
     _config = ""
     _fields = ""
@@ -33,13 +34,36 @@ class ALLSKYFORMAT:
         self._getAllSkyVariables()
 
     def _getAllSkyVariables(self):
-        allskyVariables = {}
-
+        # Can't use ALLSKY_TMP since it's not defined
         scriptName = f"html{os.environ['SCRIPT_NAME']}"
         scriptFileName = os.environ["SCRIPT_FILENAME"]
         allSkyHome = scriptFileName.replace(scriptName, "")
         allSkyTmp = f"{allSkyHome}tmp"
         allSkyVariableFile = f"{allSkyTmp}/overlaydebug.txt"
+
+        # Don't return any data in legacy mode.
+        # We really shouldn't even be called.
+        if self._getSetting('overlaymethod') == 0:
+            self._returnString = "LEGACY_MODE"
+            print("Content-type: text/html\n")
+            data = {
+                "result": self._returnString,
+                "fields": {}
+            }
+            print(json.dumps(data, indent = 4))
+            return
+
+        if os.path.isfile(allSkyVariableFile) == False:
+            self._returnString = "FILE_MISSING"
+            print("Content-type: text/html\n")
+            data = {
+                "result": self._returnString,
+                "missingFile": allSkyVariableFile,
+                "fields": {}
+            }
+            print(json.dumps(data, indent = 4))
+            return
+
         with open(allSkyVariableFile, "r", encoding="ISO-8859-1") as f:
             try:
                 for line in f:
@@ -51,6 +75,7 @@ class ALLSKYFORMAT:
                         self._allSkyVariables[variable] = value
             except Exception as e:
                 raise(e)
+        self._returnString = "OK"
 
     def _getFieldType(self, name):
         result = None
@@ -105,7 +130,6 @@ class ALLSKYFORMAT:
         return result
 
     def _readSettings(self):
-
         settingsFile = self._getEnvironmentVariable("SETTINGS_FILE")
         if settingsFile is None:
             settingsFile = os.path.join(self._getEnvironmentVariable("ALLSKY_HOME"),"config","settings.json")
@@ -114,7 +138,6 @@ class ALLSKYFORMAT:
             self._settings = json.load(fp)
 
     def _getSetting(self, settingName):
-
         if self._settings == None:
             self._readSettings()
 
@@ -257,9 +280,16 @@ class ALLSKYFORMAT:
         }
         print(json.dumps(data, indent = 4))
 
+    def getReturnString(self):
+        return self._returnString
+
+
 try:
+    sampleEngine = None
     sampleEngine = ALLSKYFORMAT()
-    sampleEngine.createSampleData()
+    if sampleEngine is not None and sampleEngine.getReturnString() == "OK":
+        sampleEngine.createSampleData()
+
 except Exception as e:
     print("Content-type: text/html\n")
     data = {

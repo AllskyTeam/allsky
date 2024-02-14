@@ -93,10 +93,11 @@ if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 		rm "${F}"		# so next time we'll remind them.
 		doExit "${EXIT_ERROR_STOP}" "no-image" "" ""
 	else
-		MSG="Reminder to perform the action(s) in '${POST_INSTALLATION_ACTIONS}'."
-		MSG="${MSG}\nIf you already have, remove the file so you will no longer see this message:"
+		MSG="Reminder: Click here to see the action(s) that need to be performed."
+		MSG="${MSG}\nOnce you perform the actions, run this to remove this message:"
 		MSG="${MSG}\n &nbsp; &nbsp;<code>rm -f '${POST_INSTALLATION_ACTIONS}'</code>"
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}" "${POST_INSTALLATION_ACTIONS/${ALLSKY_HOME}/}"
+		PIA="${POST_INSTALLATION_ACTIONS/${ALLSKY_HOME}/}"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}" "${PIA/${ALLSKY_HOME}/}"
 	fi
 fi
 

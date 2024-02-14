@@ -2861,7 +2861,7 @@ check_if_buster()
 display_image()
 {
 	local IMAGE_OR_CUSTOM="${1}"
-	local FULL_FILENAME  FILENAME  EXTENSION  IMAGE_NAME  COLOR  CUSTOM_MESSAGE  MSG
+	local FULL_FILENAME  FILENAME  EXTENSION  IMAGE_NAME  COLOR  CUSTOM_MESSAGE  MSG  X
 
 	# ${ALLSKY_TMP} may not exist yet, i.e., at the beginning of installation.
 	mkdir -p "${ALLSKY_TMP}"
@@ -2898,7 +2898,8 @@ display_image()
 		if [[ ${IMAGE_NAME} == "ConfigurationNeeded" && -f ${POST_INSTALLATION_ACTIONS} ]]; then
 			# Add a message the user will see in the WebUI.
 			MSG="Actions needed.  See ${POST_INSTALLATION_ACTIONS}."
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}"
+			X="${POST_INSTALLATION_ACTIONS/${ALLSKY_HOME}/}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}" "${X}"
 
 			# This tells allsky.sh not to display a message about actions since we just did.
 			touch "${POST_INSTALLATION_ACTIONS}_initial_message"

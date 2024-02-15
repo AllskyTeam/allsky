@@ -304,12 +304,12 @@ table .alert-dismissable {
 	border-color: #8f9d84;
 	background-color: #044a05;
 }
-.dark .alert-warning {
+.dark .alert-warning, .dark .alert-warning a {
 	color: #c0bba0;
 	border-color: #c0bba0;
 	background-color: #8a6b3b;
 }
-.dark .alert-danger {
+.dark .alert-danger, .dark .alert-danger a {
 	color: #f1b1b1;
 	border-color: #f1b1b1;
 	background-color: #a94442;

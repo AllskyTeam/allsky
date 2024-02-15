@@ -205,9 +205,6 @@ function compile($compile) {
 	};
 }
 
-var configNotSet = false;	// Has the configuration file been updated by the user?
-var needToUpdate = "XX_NEED_TO_UPDATE_XX";	// must match what's in configData
-
 function convertLatitude(sc, lat) {			// sc == scope
 	var convertToString = false;
 	var len, direction;
@@ -293,12 +290,6 @@ function AppCtrl($scope, $timeout, $http, _) {
 		buildOverlay();
 	}
 	$scope.notification = "";
-	if (config.title == needToUpdate) {
-		// Assume if the title isn't set, nothing else is either.
-		configNotSet = true;
-		$scope.notification = formatMessage("Please update the '" + configData + "' file.<br>Replace the '" + needToUpdate + "' entries and check all other entries.<br>Refresh your browser when done.", msgType="error");
-		return;
-	}
 	$scope.location = config.location;
 	$scope.camera = config.camera;
 	$scope.lens = config.lens;
@@ -374,10 +365,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 		// Go through the loop occassionally even when hidden so we re-read the sunData file
 		// if needed.
 		if (! isHidden() || ++numCalls % 5 == 0) {
-			if (configNotSet) {
-// xxxxxxxxx test deleting the "if" portion
-				$scope.notification = formatMessage("Please update the '" + configData + "' file.<br>Replace the '" + needToUpdate + "' entries and check all other entries.<br>Refresh your browser when done.", msgType="error");
-			} else if (dataMissingMessage !== "") {
+			if (dataMissingMessage !== "") {
 				$scope.notification = formatMessage(dataMissingMessage, msgType = dataFileIsOld ? "warning": "error");
 			} else {
 				$scope.notification = "";

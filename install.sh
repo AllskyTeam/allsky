@@ -566,8 +566,6 @@ update_php_defines()
 		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
 		chmod 644 "${FILE}"
 
-	sed -i -e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};" "${ALLSKY_WEBSITE}/functions.php"
-
 	# Don't save status if we did a fix.
 	if [[ ${FIX} == "false" ]]; then
 		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")

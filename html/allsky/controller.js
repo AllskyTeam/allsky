@@ -4,7 +4,11 @@ var overlayBuilt = false;				// has the overlay been built yet?
 
 var virtualSkyData = null;
 var sunData = "data.json";				// contains sunrise/sunset times and related data
-var configData = "configuration.json"	// contains web configuration data
+var configData = "configuration.json";	// contains web configuration data
+var dateTimeF = "YYYY-MM-DD HH:mm:ss";
+var dateF = "YYYY-MM-DD";
+var timeF = "HH:mm";
+var timeAmPmF = "h:mm a";
 
 // This returns the height INCLUDING the border:      $("#imageContainer").css('height')
 // This returns the height NOT including the border:  $("#imageContainer").height()
@@ -323,8 +327,10 @@ function AppCtrl($scope, $timeout, $http, _) {
 	}
 
 	// If the "sunData" file wasn't found, or for some reason "sunset" isn't in it,
-	// the routine that reads "sunData" will set "dataMissingMessage" so display it.
-	var dataMissingMessage = "";
+	// the routine that reads "sunData" will set "dataMissingMsg" so display it.
+	// If the file's old "dataOldMsg" will be set.
+	var dataMissingMsg = "";
+	var dataOldMsg = "";
 
 	function formatMessage(msg, msgType) {
 		return("<div class='msg " + msgType + "-msg'>" + msg + "</div>");
@@ -359,16 +365,19 @@ function AppCtrl($scope, $timeout, $http, _) {
 	var loggedTimes = false;
 	var numImagesRead = 0;
 	var numCalls = 0;
+
 	$scope.getImage = function () {
 		var url= "";
 		var imageClass= "";
 		// Go through the loop occassionally even when hidden so we re-read the sunData file
 		// if needed.
 		if (! isHidden() || ++numCalls % 5 == 0) {
-			if (dataMissingMessage !== "") {
-				$scope.notification = formatMessage(dataMissingMessage, msgType = dataFileIsOld ? "warning": "error");
-			} else {
-				$scope.notification = "";
+			$scope.notification = "";
+			if (dataMissingMsg !== "") {
+				$scope.notification += formatMessage(dataMissingMsg, "error");
+			}
+			if (dataOldMsg !== "") {
+				$scope.notification += formatMessage(dataOldMsg, "warning");
 			}
 
 			var rereadSunriseSunset = false;
@@ -377,27 +386,19 @@ function AppCtrl($scope, $timeout, $http, _) {
 
 			// the "m_" prefix means it's a moment() object.
 			var m_now = moment(new Date());
-
-			var m_nowTime = m_now.format("HH:mm");
-			var m_sunriseTime = moment($scope.sunrise).format("HH:mm");
-			var m_sunsetTime  = moment($scope.sunset).format("HH:mm");
+			var m_nowTime = m_now.format(timeF);
+			var m_sunriseTime = moment($scope.sunrise).format(timeF);
+			var m_sunsetTime  = moment($scope.sunset).format(timeF);
 			var beforeSunriseTime = m_nowTime < m_sunriseTime;
 			var afterSunsetTime = m_nowTime > m_sunsetTime;
 
 			// Check if the sunset time is too old.
 			// If the data file is old, don't bother checking sunset time since it'll be old too.
 			// However, we may need "daysOld" below so calculate it.
-			var m_nowDate = moment(m_now.format("YYYY-MM-DD"));	// needs to be moment() object
-			var m_sunsetDate = moment($scope.sunset.format("YYYY-MM-DD"));
+			var m_nowDate = moment(m_now.format(dateF));	// needs to be moment() object
+			var m_sunsetDate = moment($scope.sunset.format(dateF));
 			var daysOld = moment.duration(m_nowDate.diff(m_sunsetDate)).days();
-			var oldMsg = ""
-			if (! dataFileIsOld) {
-//console.log("DEBUG: sunset daysOld=" + daysOld);
-				if (daysOld > oldDataLimit) {
-					var oldMsg = "WARNING: sunset data is " + daysOld + " days old.";
-					$scope.notification = formatMessage(oldMsg + "<br>See the 'Troubleshooting &gt; Allsky Website' documentation page for how to resolve this.", msgType="warning");
-				}
-			}
+			var oldMsg = "";
 
 			// This check assumes sunrise and sunset are both in the same day,
 			// which they should be since postData.sh runs at the end of nighttime and calculates
@@ -415,11 +416,11 @@ function AppCtrl($scope, $timeout, $http, _) {
 			}
 
 			// The sunrise and sunset times change every day, and the user may have changed
-			// streamDaytime, so re-read the "sunData" file when something changes.
+			// when they're taking images, so re-read the "sunData" file when something changes.
 			if (is_nighttime) {
 				// Only add to the console log once per message type
 				if (lastType !== "nighttime") {
-					console.log("=== Night Time streaming starting at " + m_now.format("h:mm a"));
+					console.log("=== Night Time imaging starts at " + m_now.format(timeAmPmF));
 					lastType = "nighttime";
 					loggedTimes = false;
 					rereadSunriseSunset = true;
@@ -428,9 +429,9 @@ function AppCtrl($scope, $timeout, $http, _) {
 				imageClass = 'current';
 				intervalTimer = defaultInterval;
 
-			} else if ($scope.streamDaytime) {
+			} else if ($scope.takedaytimeimages) {
 				if (lastType !== "daytime") {
-					console.log("=== Day Time streaming starting at " + m_now.format("h:mm a"));
+					console.log("=== Day Time imaging starts at " + m_now.format(timeAmPmF));
 					lastType = "daytime";
 					loggedTimes = false;
 					rereadSunriseSunset = true;
@@ -441,7 +442,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 
 			} else {	// daytime but we're not taking pictures
 				if (lastType !== "daytimeoff") {
-					console.log("=== Camera turned off during Day Time at " + m_now.format("h:mm a"));
+					console.log("=== Camera turned off during Day Time at " + m_now.format(timeAmPmF));
 					lastType = "daytimeoff";
 					loggedTimes = false;
 					rereadSunriseSunset = true;
@@ -453,13 +454,15 @@ function AppCtrl($scope, $timeout, $http, _) {
 				// have the actual time be 1 minute, than to tell them 1 minute and a new
 				// picture doesn't appear for 2 minutes after they return so they sit around waiting.
 				// Need to compare on the same date, but different times.
-				var ms = moment($scope.sunset,"DD/MM/YYYY HH:mm:ss").add(daysOld,"days").diff(moment(m_now,"DD/MM/YYYY HH:mm:ss"));
+				var ms = moment($scope.sunset, dateTimeF)
+						.add(daysOld,"days")
+						.diff(moment(m_now, dateTimeF));
 
 				// Testing showed that 1 minute wasn't enough to add, and we need to account for
 				// long nighttime exposures, so add 2.5 minutes.
 				const add = 2.5 * 60 * 1000;
 				ms += add;
-				const time_to_come_back = moment($scope.sunset + add).format("h:mm a");
+				const time_to_come_back = moment($scope.sunset + add).format(timeAmPmF);
 
 				var d = moment.duration(ms);
 				var hours = Math.floor(d.asHours());
@@ -473,13 +476,14 @@ function AppCtrl($scope, $timeout, $http, _) {
 					s = seconds + " seconds";
 				else
 					s = h + m;
-				$scope.notification += formatMessage("It's not dark yet in " + config.location + ".&nbsp; &nbsp; Come back at " + time_to_come_back + " (" + s + ").", msgType="notice");
+				$scope.notification += formatMessage("It's not dark yet in " + config.location + ".&nbsp; &nbsp; Come back at " + time_to_come_back + " (" + s + ").", "notice");
 
 				if (! loggedTimes) {
 					console.log("=== Resuming at nighttime in " + s);
 				}
 				if ($scope.auroraForecast) {
-					url = "https://services.swpc.noaa.gov/images/animations/ovation/" + config.auroraMap + "/latest.jpg";
+					url = "https://services.swpc.noaa.gov/images/animations/ovation/";
+					url += config.auroraMap + "/latest.jpg";
 					imageClass = 'forecast-map';
 					// If less than startShortenedTimeout time left, shorten the timer.
 					if (ms < startShortenedTimeout) {
@@ -497,7 +501,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 
 			if (! loggedTimes) {		// for debugging
 				loggedTimes = true;
-				console.log("  m_now = " + m_now.format("YYYY-MM-DD HH:mm:ss"));
+				console.log("  m_now = " + m_now.format(dateTimeF));
 				if (oldMsg !== "") console.log("    > " + oldMsg);
 
 				console.log("  m_now="+m_nowTime + ", m_sunrise="+m_sunriseTime + ", m_sunset="+m_sunsetTime);
@@ -539,17 +543,21 @@ function AppCtrl($scope, $timeout, $http, _) {
 	}
 
 	function writeSunriseSunsetToConsole() {
-		console.log("  * streamDaytime == " + $scope.streamDaytime);
-		console.log("  * sunrise = " + $scope.sunrise.format("YYYY-MM-DD HH:mm:ss") + (usingDefaultSunrise ? " (default)" : ""));
-		console.log("  * sunset = "  + $scope.sunset.format("YYYY-MM-DD HH:mm:ss") + (usingDefaultSunset ? " (default)" : ""));
-		console.log("  * last modified = "  + lastModifiedSunriseSunsetFile.format("YYYY-MM-DD HH:mm:ss"));
+		console.log("  * sunrise = " + $scope.sunrise.format(dateTimeF) +
+			(usingDefaultSunrise ? " (default)" : ""));
+		console.log("  * sunset = "  + $scope.sunset.format(dateTimeF) +
+			(usingDefaultSunset ? " (default)" : ""));
+		console.log("  * takedaytimeimages == " + $scope.takedaytimeimages);
+		console.log("  * takenighttimeimages == " + $scope.takenighttimeimages);
+		if (lastModifiedSunriseSunsetFile !== null)
+			console.log("  * last modified = "  + lastModifiedSunriseSunsetFile.format(dateTimeF));
 	}
 
+	var usingDefaultTakingDaytime = false;
+	var usingDefaultTakingNighttime = false;
 	var lastModifiedSunriseSunsetFile = null;
-	var dataFileIsOld;
 
 	$scope.getSunRiseSet = function () {
-		dataFileIsOld = false;
 		now = new Date();
 		var url = sunData;
 // TODO: is ?_ts needed if we are not cache'ing ?
@@ -559,33 +567,60 @@ function AppCtrl($scope, $timeout, $http, _) {
 			cache: false
 		}).then(
 			function (data) {
+				// Make sure all the data is there.
 				if (data.data.sunrise) {
 					$scope.sunrise = moment(data.data.sunrise);
 					usingDefaultSunrise = false;
 				} else if (! usingDefaultSunrise) {
-// TODO: Is this needed with the new Allsky Website, given that it only works with the new Allsky?
-					// Older versions of allsky/scripts/postData.sh didn't include sunrise.
 					$scope.sunrise = getDefaultSunrise(now);
 					usingDefaultSunrise = true;
-					console.log("  ********** WARNING: 'sunrise' not defined in " + sunData);
+//x					console.log("  ********** WARNING: 'sunrise' not defined in " + sunData);
 				}
 				if (data.data.sunset) {
 					$scope.sunset = moment(data.data.sunset);
 					usingDefaultSunset = false;
-					dataMissingMessage = "";
 				} else if (! usingDefaultSunset) {
-// TODO: Is this needed with the new Allsky Website, given that it only works with the new Allsky?
 					$scope.sunset = getDefaultSunset(now);
 					usingDefaultSunset = true;
-					dataMissingMessage = "ERROR: 'sunset' not defined in '" + sunData + "', using " + $scope.sunset.format("h:mm a") + ".<br>Run 'allsky/scripts/postData.sh'.<br>Refresh your browser when done.";
-					console.log("  ********** ERROR: 'sunset' not defined in " + sunData);
+//x					console.log("  ********** ERROR: 'sunset' not defined in " + sunData);
 				}
-				if (data.data.streamDaytime) {
-					$scope.streamDaytime = data.data.streamDaytime === "true";
+				if (data.data.takedaytimeimages) {
+					$scope.takedaytimeimages = data.data.takedaytimeimages === "true";
+// TODO: streamDaytime is old name - delete in next release
+				} else if (data.data.streamDaytime) {
+					$scope.takedaytimeimages = data.data.streamDaytime === "true";
 				} else {
-// TODO: Is this needed with the new Allsky Website, given that it only works with the new Allsky?
-					$scope.streamDaytime = true;
-					console.log("  ********** WARNING: 'streamDaytime' not defined in " + sunData);
+					$scope.takedaytimeimages = true;
+					usingDefaultTakingDaytime = true;
+//x					console.log("  ********** WARNING: 'takedaytimeimages' not defined in " + sunData);
+				}
+				if (data.data.takenighttimeimages) {
+					$scope.takenighttimeimages = data.data.takenighttimeimages === "true";
+				} else {
+					$scope.takenighttimeimages = true;
+					usingDefaultTakingNighttime = true;
+//x					console.log("  ********** WARNING: 'takenighttimeimages' not defined in " + sunData);
+				}
+
+				dataMissingMsg = "";
+				if (usingDefaultSunset || usingDefaultSunrise ||
+						usingDefaultTakingDaytime || usingDefaultTakingNighttime) {
+					dataMissingMsg = "ERROR: Data missing from '" + sunData + "':";
+					dataMissingMsg += "<div><ul style='text-align: left; display: inline-block; '>";
+					if (usingDefaultSunrise) {
+						dataMissingMsg += "<li>'sunrise' (using " + $scope.sunrise.format(timeAmPmF) + ")";
+					}
+					if (usingDefaultSunset) {
+						dataMissingMsg += "<li>'sunset' (using " + $scope.sunset.format(timeAmPmF) + ")";
+					}
+					if (usingDefaultTakingDaytime) {
+						dataMissingMsg += "<li>'takedaytimeimages' (using " + $scope.takedaytimeimages + ")";
+					}
+					if (usingDefaultTakingNighttime) {
+						dataMissingMsg += "<li>'takenighttimeimages' (using " + $scope.takenighttimeimages + ")";
+					}
+					dataMissingMsg += "</ul></div>";
+					dataMissingMsg += "Run 'postData.sh' to determine why data is missing.";
 				}
 
 				// Get when the file was last modified so we can warn if it's old
@@ -607,12 +642,13 @@ function AppCtrl($scope, $timeout, $http, _) {
 				if (typeof x === "object") {	// success - "x" is a Date object
 					lastModifiedSunriseSunsetFile = moment(x);
 					var duration = moment.duration(moment(now).diff(lastModifiedSunriseSunsetFile));
-// console.log("DEBUG: " + sunData + " is " + duration.days() + " days old");
 					if (duration.days() > oldDataLimit) {
-						dataFileIsOld = true;
-						var msg = "WARNING: " + sunData + " is " + duration.days() + " days old.";
-						console.log(msg);
-						dataMissingMessage = msg + "<br>Check Allsky log file if 'postData.sh' has been running successfully at the end of nighttime.";
+						dataOldMsg = "WARNING: '" + sunData + "' is " + duration.days() + " days old.";
+//x						console.log(dataOldMsg);
+						if (dataMissingMsg == "") {
+							dataOldMsg += "<br>Check Allsky log file if 'postData.sh' has";
+							dataOldMsg += " been running successfully at the end of nighttime.";
+						}
 					}
 
 				} else {
@@ -622,15 +658,19 @@ function AppCtrl($scope, $timeout, $http, _) {
 				writeSunriseSunsetToConsole();
 
 				$scope.getImage()
+
 			}, function() {
 				// Unable to read file.  Set to defaults.
-				$scope.sunrise = getDefaultSunrise(now);
-				usingDefaultSunrise = true;
-				$scope.sunset = getDefaultSunset(now);
-				usingDefaultSunset = true;
-				$scope.streamDaytime = true;
+				$scope.sunrise = getDefaultSunrise(now); usingDefaultSunrise = true;
+				$scope.sunset = getDefaultSunset(now); usingDefaultSunset = true;
+				$scope.takedaytimeimages = true;; usingDefaultTakingDaytime = true;
+				$scope.takenighttimeimages = true;; usingDefaultTakingDaytime = true;
 
-				dataMissingMessage = "ERROR: '" + sunData + " file not found, using " + $scope.sunset.format("h:mm a") + " for sunset.<br>Run 'allsky/scripts/postData.sh'.<br>Refresh your browser when done.";
+				dataMissingMsg = "ERROR: '" + sunData + " file not found.";
+				dataMissingMsg += "<br>Using " + $scope.sunrise.format("h:mm a") + " for sunrise";
+				dataMissingMsg += " and " + $scope.sunset.format("h:mm a") + " for sunset.";
+				dataMissingMsg += "<br>Run 'postData.sh' to create the file,";
+				dataMissingMsg += " then refresh this browser window.";
 				console.log("  *** Unable to read '" + sunData + "' file");
 				writeSunriseSunsetToConsole();
 

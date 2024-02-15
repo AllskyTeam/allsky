@@ -50,91 +50,105 @@
 	<?php
 		// This gets the settings.
 		// Some settings impact this page, some impact the constellation overlay.
+		$exitOnInitializationError = false;
 		include_once('functions.php');		// Sets $webSettings_array
 
-		// Get home page options
-		$homePage = v("homePage", null, $webSettings_array);
-			// TODO: replace double quotes with &quot; in any variable that can be in an HTML attribute,
-			// which is many of them.
-			$backgroundImage = v("backgroundImage", "", $homePage);
-			if ($backgroundImage != null) {
-				$backgroundImage_url = v("url", "", $backgroundImage);
-				if ($backgroundImage_url == "") $backgroundImage = null;
-				else $backgroundImage_style = v("style", "", $backgroundImage);
-			}
-			$loadingImage = v("loadingImage", "loading.jpg", $homePage);
-			$title = v("title", "Website", $homePage);
-			$og_description = v("og_description", "", $homePage);
-			$og_type = v("og_type", "website", $homePage);
-			$og_url = v("og_url", "http://www.thomasjacquin/allsky/", $homePage);
-			$og_image = v("og_image", "image.jpg", $homePage);
-			$ext = pathinfo($og_image, PATHINFO_EXTENSION); if ($ext === "jpg") $ext = "jpeg";
-			$og_image_type = "image/$ext";
-			$favicon = v("favicon", "allsky-favicon.png", $homePage);
-			$ext = pathinfo($favicon, PATHINFO_EXTENSION); if ($ext === "jpg") $ext = "jpeg";
-			$faviconType = "image/$ext";
-			$includeGoogleAnalytics = v("includeGoogleAnalytics", "", $homePage);
-				if ($includeGoogleAnalytics == "") $includeGoogleAnalytics = 0;		// boolean
-			$imageBorder = v("imageBorder", false, $homePage);
-			$includeLinkToMakeOwn = v("includeLinkToMakeOwn", true, $homePage);
-				if ($includeLinkToMakeOwn == "") $includeLinkToMakeOwn = 0;		// boolean
-			$showOverlayIcon = v("showOverlayIcon", false, $homePage);
-				if ($showOverlayIcon == "") $showOverlayIcon = 0;		// boolean
-			$leftSidebar = v("leftSidebar", null, $homePage);
-			$leftSidebarStyle = v("leftSidebarStyle", null, $homePage);
-			$popoutIcons = v("popoutIcons", null, $homePage);
-			$personalLink_style = "";
-			$personalLink = v("personalLink", null, $homePage);
-			if ($personalLink != null) {
-				$personalLink_url = v("url", "", $personalLink);
-				if ($personalLink_url == "") {
-					$personalLink = null;
-				} else {
-					$personalLink_prelink = v("prelink", "", $personalLink);
-					$personalLink_message = v("message", "", $personalLink);
-					$personalLink_title = v("title", "", $personalLink);
-					$personalLink_style = v("style", "", $personalLink);
+		if ($initializeErrorMessage === "") {
+			// Get home page options
+			$homePage = v("homePage", null, $webSettings_array);
+				// TODO: replace double quotes with &quot; in any variable that
+				// can be in an HTML attribute, which is many of them.
+				$backgroundImage = v("backgroundImage", "", $homePage);
+				if ($backgroundImage != null) {
+					$backgroundImage_url = v("url", "", $backgroundImage);
+					if ($backgroundImage_url == "") $backgroundImage = null;
+					else $backgroundImage_style = v("style", "", $backgroundImage);
 				}
-			}
-
-		// Get javascript config variable options.
-		// To avoid changing too much code, the "config" javascript variable is created
-		// here to replace the old config.js file that contained that variable.
-		$config = v("config", null, $webSettings_array);
-		$imageWidth = v("imageWidth", null, $config);
-			echo "<script>config = {\n";
-			foreach ($config as $var => $val) {	// ok to have comma after last entry
-				echo "\t\t$var: ";
-				if ($val === true || $val === false || $val === null || is_numeric($val)) {
-					echo var_export($val, true) . ",\n";
-				} else if (is_array($val)) {
-					echo '"[array]",' . "\n";
-				} else {
-					echo '"' . str_replace('"', '\"', $val) . '",' . "\n";
+				$loadingImage = v("loadingImage", "loading.jpg", $homePage);
+				$title = v("title", "Website", $homePage);
+				$og_description = v("og_description", "", $homePage);
+				$og_type = v("og_type", "website", $homePage);
+				$og_url = v("og_url", "http://www.thomasjacquin/allsky/", $homePage);
+				$og_image = v("og_image", "image.jpg", $homePage);
+				$ext = pathinfo($og_image, PATHINFO_EXTENSION); if ($ext === "jpg") $ext = "jpeg";
+				$og_image_type = "image/$ext";
+				$favicon = v("favicon", "allsky-favicon.png", $homePage);
+				$ext = pathinfo($favicon, PATHINFO_EXTENSION); if ($ext === "jpg") $ext = "jpeg";
+				$faviconType = "image/$ext";
+				$includeGoogleAnalytics = v("includeGoogleAnalytics", "", $homePage);
+					if ($includeGoogleAnalytics == "") $includeGoogleAnalytics = 0;		// boolean
+				$imageBorder = v("imageBorder", false, $homePage);
+				$includeLinkToMakeOwn = v("includeLinkToMakeOwn", true, $homePage);
+					if ($includeLinkToMakeOwn == "") $includeLinkToMakeOwn = 0;		// boolean
+				$showOverlayIcon = v("showOverlayIcon", false, $homePage);
+					if ($showOverlayIcon == "") $showOverlayIcon = 0;		// boolean
+				$leftSidebar = v("leftSidebar", null, $homePage);
+				$leftSidebarStyle = v("leftSidebarStyle", null, $homePage);
+				$popoutIcons = v("popoutIcons", null, $homePage);
+				$personalLink_style = "";
+				$personalLink = v("personalLink", null, $homePage);
+				if ($personalLink != null) {
+					$personalLink_url = v("url", "", $personalLink);
+					if ($personalLink_url == "") {
+						$personalLink = null;
+					} else {
+						$personalLink_prelink = v("prelink", "", $personalLink);
+						$personalLink_message = v("message", "", $personalLink);
+						$personalLink_title = v("title", "", $personalLink);
+						$personalLink_style = v("style", "", $personalLink);
+					}
 				}
-			}
-			// Add additional variable(s) from $homePage that are needed in controller.js.
-			echo "\t\timageBorder: $imageBorder,\n";
-			echo "\t\ttitle: " . '"' . $title . '",' . "\n";
-			echo "\t\tloadingImage: " . '"' . $loadingImage . '"';
 
-			echo "\n\t}";
-			echo "\n\t</script>\n";
+			// Get javascript config variable options.
+			// To avoid changing too much code, the "config" javascript variable is created
+			// here to replace the old config.js file that contained that variable.
+			$config = v("config", null, $webSettings_array);
+			$imageWidth = v("imageWidth", null, $config);
+				echo "<script>config = {\n";
+				foreach ($config as $var => $val) {	// ok to have comma after last entry
+					echo "\t\t$var: ";
+					if ($val === true || $val === false || $val === null || is_numeric($val)) {
+						echo var_export($val, true) . ",\n";
+					} else if (is_array($val)) {
+						echo '"[array]",' . "\n";
+					} else {
+						echo '"' . str_replace('"', '\"', $val) . '",' . "\n";
+					}
+				}
+				// Add additional variable(s) from $homePage that are needed in controller.js.
+				echo "\t\timageBorder: $imageBorder,\n";
+				echo "\t\ttitle: " . '"' . $title . '",' . "\n";
+				echo "\t\tloadingImage: " . '"' . $loadingImage . '"';
+
+				echo "\n\t}";
+				echo "\n\t</script>\n";
+
+		} else {	// initialization failed.
+?>
+			<title>Allsky Website</title>
+			</head><body>
+			<p>
+				<div class='title'>Allsky Website</div>
+				<?php echo "<br><br><br><br>$initializeErrorMessage\n"; ?>
+			</p>
+			</body></html>
+<?php
+			exit(1);
+		}
 	?>
 
 	<title><?php echo $title ?></title>
+
 	<meta property="og:description" content="<?php echo $og_description ?>" />
 	<meta property="og:type" content="<?php echo $og_type ?>" />
 	<meta property="og:url" content="<?php echo $og_url ?>" />
 	<meta property="og:image" content="<?php echo $og_image ?>" />
 	<meta property="og:image:type" content="<?php echo $og_image_type ?>" />
 	<link rel="shortcut icon" type="<?php echo $faviconType ?>" href="<?php echo $favicon ?>">
-
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"
 		integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa"
 		crossorigin="anonymous"></script>
-  </body>
 	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
 	<script src="moment.js"></script>
 	<script src="virtualsky/stuquery.js"></script>
@@ -160,7 +174,7 @@
 </head>
 <body id="body" <?php if ($backgroundImage !== null) echo "class='.backgroundImage'"; ?>>
 	<div class="header">
-		<div class=title><?php echo $title; ?></div>
+		<div class="title"><?php echo $title; ?></div>
 		<div ng-show="auroraForecast === true && forecast" class="forecast float-end">
 			<span>Aurora activity: </span>
 			<span class="forecast-day" ng-repeat="(key,val) in forecast">{{key}}:

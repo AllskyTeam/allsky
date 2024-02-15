@@ -2320,7 +2320,7 @@ restore_prior_local_website_files()
 		return
 	fi
 
-	local ITEM   D   count   A   MSG
+	local ITEM  D  count  A  MSG
 
 	ITEM="${SPACE}Local Website files"
 	if [[ -z ${PRIOR_WEBSITE_DIR} ]]; then
@@ -2393,6 +2393,18 @@ restore_prior_local_website_files()
 	else
 		# Since this is obsolete only add to log file.
 		display_msg --logonly progress "${ITEM}: ${NOT_RESTORED}"
+	fi
+
+	A="data.json"
+	ITEM="${SPACE}${SPACE}${A}"
+	D="${PRIOR_WEBSITE_DIR}/${A}"
+	if [[ -f ${D} ]]; then
+		if ! cmp --silent "${D}" "${ALLSKY_WEBSITE}/${A}" ; then
+			display_msg --log progress "${ITEM} (copying)"
+			cp "${D}" "${ALLSKY_WEBSITE}"
+		fi
+	else
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
 	A="analyticsTracking.js"

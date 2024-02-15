@@ -116,10 +116,17 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 		else
 			D="false"
 		fi
+		if [[ $( settings ".takenighttimeimages" ) == "true" ]]; then
+			N="true"
+		else
+			N="false"
+		fi
 		echo "{"
 		echo "\"sunrise\": \"${today}T${sunrise_hhmm}:00.000${timezone}\","
 		echo "\"sunset\": \"${today}T${sunset_hhmm}:00.000${timezone}\","
-		echo "\"streamDaytime\": \"${D}\""
+		echo "\"takedaytimeimages\": \"${D}\""
+		echo "\"takenighttimeimages\": \"${N}\""
+		echo "\"streamDaytime\": \"${D}\""		# TODO: old name - remove in next release
 		echo "}"
 	} > "${OUTPUT_FILE}"
 fi

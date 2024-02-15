@@ -88,11 +88,14 @@ function DisplayEditor()
 							// then a tab, then a message.
 							var returnMsg = "";
 							var ok = true;
+							var c = "success";		// CSS class
 							if (data == "") {
 								returnMsg = "No response from save_file.php";
+								c = "danger";
 								ok = false;
 							} else {
 								returnArray = data.split("\n");
+
 								// Check every line in the output.
 								// output any lines not beginnning with "S " or "E ",
 								// they are probably debug lines.
@@ -100,27 +103,28 @@ function DisplayEditor()
 									var line = returnArray[i];
 									returnStatus = line.substr(0,2);
 									if (returnStatus === "S\t") {
-										ok = true;
+										returnMsg += line.substr(2);
+									} else if (returnStatus === "W\t") {
+										c = "warning";
 										returnMsg += line.substr(2);
 									} else if (returnStatus === "E\t") {
 										ok = false;
+										c = "danger";
 										returnMsg += line.substr(2);
 									} else {
-										// Assume it's a debug statement.
+										// Assume it's a debug statement.  Display whole line.
+										c = "info";
 										console.log(line);
 									}
 								}
 							}
-							var c = ok ? "success" : "danger";
 							var messages = document.getElementById("editor-messages");
 							if (messages === null) {
 								ok = false;
+								c = "danger";
 								returnMsg = "No response from save_file.php";
 							}
-							var m = '<div class="alert alert-' + c + '">' + returnMsg;
-							m += '<button type="button" class="close" data-dismiss="alert"';
-							m += ' aria-hidden="true">x</button>';
-							m += '</div>';
+							var m = '<div class="alert alert-' + c + '">' + returnMsg + '</div>';
 							messages.innerHTML += m;
 						},
 						error: function(XMLHttpRequest, textStatus, errorThrown) {

@@ -25,8 +25,9 @@ function initialize() {
 	$configuration_file = "$configFilePrefix$configurationFileName";
 	if (! file_exists($configuration_file)) {
 		$retMsg .= "<p class='error-msg'>";
-			$retMsg .= "ERROR: Missing configuration file '$configuration_file'.";
-			$retMsg .= "<br>Cannot continue.";
+			$retMsg .= "ERROR: The Website does not appear to be enabled.";
+			$retMsg .= "<br>The configuration file '$configuration_file' is missing.";
+			$retMsg .= "<br><br>Make sure the Website is enabled in the WebUI.";
 		$retMsg .= "</p>";
 		return($retMsg);
 	}

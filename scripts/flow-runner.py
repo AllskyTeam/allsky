@@ -110,9 +110,9 @@ if __name__ == "__main__":
             shared.log(0, "ERROR: Unable to read SETTINGS_FILE - Aborting", exitCode=1)
 
         shared.fullFilename = os.environ["FULL_FILENAME"]
-        shared.createThumbnails = bool(shared.getSetting("imagecreatethumbnails"))
-        shared.thumbnailWidth = int(shared.getSetting("thumbnailsizex"))
-        shared.thumbnailHeight = int(shared.getSetting("thumbnailsizey"))
+        shared.createThumbnails = os.environ["IMG_CREATE_THUMBNAILS"]
+        shared.thumbnailWidth = int(os.environ["THUMBNAIL_SIZE_X"])
+        shared.thumbnailHeight = int(os.environ["THUMBNAIL_SIZE_Y"])
         shared.websiteImageFile = os.path.join(shared.allskyTmp, shared.fullFilename)
         shared.TOD = shared.args.tod
         date = datetime.now()
@@ -170,13 +170,16 @@ if __name__ == "__main__":
         moduleConfig = "{0}/postprocessing_{1}.json".format(shared.args.allskyConfig, flowName)
    
         with open(moduleConfig) as flow_file:
+            flow_file.seek(0, os.SEEK_END)
+            if (flow_file.tell() == 0):
+                shared.log(0, "ERROR: File is empty: {0}".format(moduleConfig), exitCode=1)
             try:
                 shared.flow=json.load(flow_file)
             except json.JSONDecodeError as err:
                 shared.log(0, "ERROR: Error parsing {0} {1}".format(moduleConfig, err), exitCode=1)
-    except:
-        shared.log(0, "ERROR: Failed to open {0}".format(moduleConfig), exitCode=1)
-    
+    except OSError as error:
+        shared.log(0, "ERROR: Failed to open {0} {1}".format(moduleConfig, error), exitCode=1)
+
     if (shared.args.event == "postcapture"):
         disableFile = os.path.join(shared.allskyTmp,"disable")
         if shared.isFileReadable(disableFile):

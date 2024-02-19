@@ -338,6 +338,7 @@ if ($hasRemoteWebsite) {
 						}
 					}
 				}
+				clearstatcache();
 				$size = @filesize(ALLSKY_MESSAGES);
 				if ($size !== false && $size > 0) {
 					$contents_array = file(ALLSKY_MESSAGES, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);

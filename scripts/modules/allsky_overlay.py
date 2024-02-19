@@ -68,6 +68,7 @@ class ALLSKYOVERLAY:
     _OVERLAYFIELDSFILE = 'fields.json'
     _OVERLAYUSERFIELDSFILE = 'userfields.json'
     _OVERLAYTMPFOLDER = ''
+    _ALLSKY_OVERLAY = None
     _OVERLAYTLEFOLDER = None
     _overlayConfigFile = None
     _overlayConfig = None
@@ -95,11 +96,13 @@ class ALLSKYOVERLAY:
     _formaterrortext = ""
 
     def __init__(self, formaterrortext):
-        self._overlayConfigFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYCONFIGFILE)
-        fieldsFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYFIELDSFILE)
-        userFieldsFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYUSERFIELDSFILE)
+        self.ALLSKY_OVERLAY = s.getEnvironmentVariable("ALLSKY_OVERLAY", fatal=True)
+        C = os.path.join(self.ALLSKY_OVERLAY, 'config')
+        self._overlayConfigFile = os.path.join(C, self._OVERLAYCONFIGFILE)
+        fieldsFile = os.path.join(C, self._OVERLAYFIELDSFILE)
+        userFieldsFile = os.path.join(C, self._OVERLAYUSERFIELDSFILE)
 
-        tmpFolder = os.path.join(os.environ['ALLSKY_OVERLAY'], 'tmp')
+        tmpFolder = os.path.join(O, 'tmp')
         self._createTempDir(tmpFolder)
         self._OVERLAYTMP = os.path.join(tmpFolder, 'overlay')
         self._createTempDir(self._OVERLAYTMP)
@@ -119,7 +122,7 @@ class ALLSKYOVERLAY:
             load = Loader(self._OVERLAYTMP, verbose=False)
             self._eph = load('de421.bsp')
         except Exception as err:
-            s.log(0, "ERROR: Unable to download de421.bsp: {}".format(err))
+            s.log(0, f"ERROR: Unable to download de421.bsp: {err}")00
             self._enableSkyfield = False
         self._setDateandTime()
         self._observerLat = s.getSetting('latitude')
@@ -129,10 +132,10 @@ class ALLSKYOVERLAY:
         self._formaterrortext = formaterrortext;
 
     def _dumpDebugData(self):
-        debugFilePath = os.path.join(s.getEnvironmentVariable('ALLSKY_TMP'),'overlaydebug.txt')
+        debugFilePath = os.path.join(s.TMPDIR, 'overlaydebug.txt')
         env = {}
         for var in os.environ:
-            varValue = os.environ[var]
+            varValue = s.getEnvironmentVariable(var, fatal=True)
             varValue = varValue.replace('\n', '')
             varValue = varValue.replace('\r', '')
             var = var.ljust(50, ' ')
@@ -143,7 +146,7 @@ class ALLSKYOVERLAY:
                 varValue = env[var]
                 debugFile.write(var + varValue + os.linesep)
 
-        s.log(4, "INFO: Debug information written to {}".format(debugFilePath))
+        s.log(4, f"INFO: Debug information written to {debugFilePath}")
 
     def _createTempDir(self, path):
         if not os.path.isdir(path):
@@ -152,8 +155,8 @@ class ALLSKYOVERLAY:
             os.umask(umask)
 
     def _setDateandTime(self):
-        osDate = s.getEnvironmentVariable('AS_DATE', True)
-        osTime = s.getEnvironmentVariable('AS_TIME', True)
+        osDate = s.getEnvironmentVariable('AS_DATE', fatal=True)
+        osTime = s.getEnvironmentVariable('AS_TIME', fatal=True)
         if osDate.startswith('20'):
             self._imageDate = time.mktime(datetime.strptime(osDate + ' ' + osTime,"%Y%m%d %H%M%S").timetuple())
         else:
@@ -201,8 +204,7 @@ class ALLSKYOVERLAY:
         result = True
 
         defaultExpiry = self._overlayConfig["settings"]["defaultdatafileexpiry"]
-        extraFolder = os.environ['ALLSKY_EXTRA']
-
+        extraFolder = s.getEnvironmentVariable('ALLSKY_EXTRA', fatal=True)
         for (dirPath, dirNames, fileNames) in os.walk(extraFolder):
             for fileName in fileNames:
                 dataFilename = os.path.join(extraFolder, fileName)
@@ -281,13 +283,13 @@ class ALLSKYOVERLAY:
                                 expires = defaultExpiry
 
                             if name[0:3] != 'AS_':
-                                name = 'AS_{}'.format(name)
-                            os.environ[name] = str(value)
+                                name = f'AS_{name}'
+                            s.setEnvironmentVariable(name, str(value))
                             self._saveExtraDataField(name, fileModifiedTime, expires, x, y, fill, font, fontsize, image, rotate, scale, opacity, stroke, strokewidth)
                 except:
-                    s.log(0, 'WARNING: Data File {} is invalid - IGNORING.'.format(dataFilename))
+                    s.log(1, f'WARNING: Data File {dataFilename} is invalid - IGNORING.')
             else:
-                s.log(0, 'ERROR: Data File {} is not accessible - IGNORING.'.format(dataFilename))
+                s.log(1, f'WARNING: Data File {dataFilename} is not accessible - IGNORING.')
                 result = False
         elif fileExtension == '.txt':
             if s.isFileReadable(dataFilename):
@@ -301,7 +303,7 @@ class ALLSKYOVERLAY:
                         os.environ[name] = str(value)
                         self._saveExtraDataField(name, fileModifiedTime, defaultExpiry)
             else:
-                s.log(0, "ERROR: Data File {} is not accessible - IGNORING.".format(dataFilename))
+                s.log(1, f"WARNING: Data File {dataFilename} is not accessible - IGNORING.")
                 result = False
 
         return result
@@ -325,7 +327,7 @@ class ALLSKYOVERLAY:
             'strokewidth': strokewidth
         }
         self._extraData[name] = _extraField
-        s.log(4,"INFO: Added extra data field {0}, expiry {1} seconds.".format(name, expires))
+        s.log(4, f"INFO: Added extra data field {name}, expiry {expires} seconds.")
 
     def _loadConfigFile(self):
         result = True
@@ -388,19 +390,20 @@ class ALLSKYOVERLAY:
             'Comic Sans MS': {'fontpath': '/usr/share/fonts/truetype/msttcorefonts/comic.ttf'},
         }
 
-        preMsg = "Loading '{0}' font, size {1} pixels".format(font, fontSize)
+        preMsg = f"Loading '{font}' font, size {fontSize} pixels"
         fontPath = None
         if font in self._overlayConfig['fonts']:
             fontData = self._overlayConfig['fonts'][font]
             fontConfigPath = fontData['fontPath']
             if fontConfigPath.startswith('/'):
                 fontConfigPath = fontConfigPath[1:]
-            fontPath = os.path.join(os.environ['ALLSKY_CONFIG'], 'overlay', fontConfigPath)
+            C = s.getEnvironmentVariable('ALLSKY_CONFIG', fatal=True)
+            fontPath = os.path.join(C, 'overlay', fontConfigPath)
         else:
             if font in systemFontMap:
                 fontPath = systemFontMap[font]['fontpath']
             else:
-                s.log(0, "ERROR: System font '{}' not found in internal map.".format(font))
+                s.log(0, f"ERROR: System font '{font}' not found in internal map.")
 
         if fontPath is not None:
             if fontSize is None:
@@ -421,7 +424,7 @@ class ALLSKYOVERLAY:
                     font = self._fonts[fontKey]
                     s.log(4, F'{preMsg} - loaded from disk.')
                 except OSError as err:
-                    s.log(0, "ERROR: Font '{}' could not be loaded from disk.".format(fontPath))
+                    s.log(0, f"ERROR: Font '{fontPath}' could not be loaded from disk.")
                     font = None
         else:
             font = None
@@ -446,14 +449,14 @@ class ALLSKYOVERLAY:
     def _processText(self, name, fieldData, pilImage = None):
 
         if "format" in fieldData:
-            format = fieldData['format']
-            if format.startswith('%'):
-                formatArray = format.split(',')
+            Format = fieldData['format']
+            if Format.startswith('%'):
+                formatArray = Format.split(',')
             else:
                 regex = r"\{(.*?)\}"
-                formatArray = re.findall(regex, format)
+                formatArray = re.findall(regex, Format)
         else:
-            format = None
+            Format = None
             formatArray = {}
 
         if "empty" in fieldData:
@@ -536,7 +539,7 @@ class ALLSKYOVERLAY:
             variableType = self._getFieldType(variable)
 
             fieldFormat = None
-            if format is not None:
+            if Format is not None:
                 try:
                     fieldFormat = formatArray[matchNum-1]
                 except IndexError:
@@ -550,7 +553,6 @@ class ALLSKYOVERLAY:
                     fieldEmpty = ''
 
             fieldValue, overrideX, overrideY, overrideFill, overrideFont, overrideFontSize, overrideRotate, overrideScale, overrideOpacity, overrideStroke, overrideStrokewidth = self._getValue(variable, variableType, fieldFormat, fieldEmpty)
-            #s.log(0, f"XXXXX: variable={variable}, fieldEmpty={fieldEmpty}, fieldValue={fieldValue}")
 
             if overrideStroke is not None:
                 stroke = overrideStroke
@@ -589,7 +591,6 @@ class ALLSKYOVERLAY:
 
             totalVariables += 1
 
-        # s.log(0, f"YYXXX: totalVariables={totalVariables}, totalVariablesReplaced={totalVariablesReplaced}, fieldLabel=[{fieldLabel}]")
         # If there were variables and none matched, don't display the field.
         if totalVariables != 0 and totalVariablesReplaced == 0:
             fieldLabel = None
@@ -671,7 +672,6 @@ class ALLSKYOVERLAY:
         return colour
 
     def _draw_rotated_text(self, image, angle, xy, text, fill, font, opacity, strokeWidth, strokeFill):
-
         fill = self._convertRGBtoBGR(fill, opacity)
         if strokeFill != "":
             strokeFill = self._convertRGBtoBGR(strokeFill,1)
@@ -742,7 +742,7 @@ class ALLSKYOVERLAY:
 
         return isUnixTimestamp, value
 
-    def _getValue(self, placeHolder, variableType, format=None, empty=''):
+    def _getValue(self, placeHolder, variableType, Format=None, empty=''):
         value = None
         valueOk = True
         x = None
@@ -816,27 +816,27 @@ class ALLSKYOVERLAY:
                             value = timeStamp.strftime(internalFormat)
 
                     tempDate = datetime.strptime(value, internalFormat)
-                    if format is not None:
+                    if Format is not None:
                         try:
-                            value = tempDate.strftime(format)
+                            value = tempDate.strftime(Format)
                         except Exception:
                             pass
 
                 if variableType == 'Time':
                     if envCheck == 'AS_TIME' or envCheck == 'TIME':
                         timeStamp = time.localtime(self._imageDate)
-                        if format is None:
+                        if Format is None:
                             value = time.strftime('%H:%M:%S', timeStamp)
                         else:
 			    # TODO: Check for bad format?
-                            value = time.strftime(format, timeStamp)
+                            value = time.strftime(Format, timeStamp)
                     else:
                         pass
 
                 if variableType == 'Number':
-                    if format is not None and format != "":
-                        f = format
-                        format = "{" + format + "}"
+                    if Format is not None and Format != "":
+                        f = Format
+                        Format = "{" + Format + "}"
                         convertValue = 0
                         try:
                             try:
@@ -844,7 +844,7 @@ class ALLSKYOVERLAY:
                             except ValueError:
                                 convertValue = float(value)
                             try:
-                                value = format.format(convertValue)
+                                value = Format.format(convertValue)
                             except Exception as err:
                                 s.log(0, f"ERROR: Cannot use format '{f}' on Number variables like {rawFieldName} (value={value}).")
                                 value = self._formaterrortext
@@ -852,9 +852,9 @@ class ALLSKYOVERLAY:
                             s.log(0, f"ERROR: Cannot use format '{f}' on Number variables like {rawFieldName} (value={value}).")
 
                 if variableType == 'Bool':
-                    if format is None or format == '':
-                        format = "%yes"
-                    value = self._doBoolFormat(rawFieldName, value, format)
+                    if Format is None or Format == '':
+                        Format = "%yes"
+                    value = self._doBoolFormat(rawFieldName, value, Format)
 
             if variableType == 'Text' or variableType == 'Number':
                 if value == '' or value is None:
@@ -888,11 +888,10 @@ class ALLSKYOVERLAY:
             imageY = int(imageData["y"])
             image = None
 
-            imagePath = os.path.join(os.environ['ALLSKY_OVERLAY'], "images", imageName)
+            imagePath = os.path.join(self.ALLSKY_OVERLAY, "images", imageName)
 
             if s.isFileReadable(imagePath):
                 image = cv2.imread(imagePath, cv2.IMREAD_UNCHANGED)
-
             if image is not None:
                 if "scale" in imageData:
                     if imageData["scale"] is not None:
@@ -910,23 +909,20 @@ class ALLSKYOVERLAY:
                 imageY = imageY - int(height / 2)
 
                 self._image = self._overlay_transparent(imageName, self._image, image, imageX, imageY, imageData)
-                s.log(4, "INFO: Adding image field {}".format(imageName))
+                s.log(4, f"INFO: Adding image field {imageName}")
 
             else:
-                s.log(0, "ERROR: Cannot locate image {}.".format(imageName))
+                s.log(1, f"WARNING: image '{imageName}' missing; ignoring.")
         else:
-            s.log(0, "ERROR: Image not set so ignoring.")
+            s.log(1, "WARNING: Image not set so ignoring.")
 
     def _overlay_transparent(self, imageName, background, overlay, x, y, imageData):
+        background_height, background_width = background.shape[0], background.shape[1]
+        h, w = overlay.shape[0], overlay.shape[1]
 
-        if (overlay.shape[0] + y < background.shape[0]) and (overlay.shape[1] + x < background.shape[1] and x >= 0 and y >= 0):
-            background_width = background.shape[1]
-            background_height = background.shape[0]
-
+        if (h + y < background_height) and (w + x < background_width and x >= 0 and y >= 0):
             if x >= background_width or y >= background_height:
                 return background
-
-            h, w = overlay.shape[0], overlay.shape[1]
 
             if x + w > background_width:
                 w = background_width - x
@@ -961,7 +957,7 @@ class ALLSKYOVERLAY:
 
             background[y:y+h, x:x+w] = (1.0 - mask) * background[y:y+h, x:x+w] + mask * overlay_image
         else:
-            s.log(0, "ERROR: Image '{}' is outside the bounds of the main image.".format(imageName))
+            s.log(0, f"ERROR: Image '{imageName}' is outside the bounds of the main image.")
         return background
 
     def _rotate_image(self, image, angle):
@@ -1008,14 +1004,12 @@ class ALLSKYOVERLAY:
                     self._moonIllumination = str(round(moon.phase, 2))
                     self._moonPhaseSymbol  = symbol
 
-                    os.environ['AS_MOON_AZIMUTH'] = self._moonAzimuth
-                    s.log(4, 'INFO: Adding Moon Azimuth {}'.format(self._moonAzimuth))
-                    os.environ['AS_MOON_ELEVATION'] = self._moonElevation
-                    s.log(4, 'INFO: Adding Moon Elevation {}'.format(self._moonElevation))
-                    os.environ['AS_MOON_ILLUMINATION'] = self._moonIllumination
-                    s.log(4, 'INFO: Adding Moon Illumination {}'.format(self._moonIllumination))
-                    os.environ['AS_MOON_SYMBOL'] = self._moonPhaseSymbol
-                    s.log(4, 'INFO: Adding Moon Symbol {}'.format(self._moonPhaseSymbol))
+                    s.log(4, 'INFO: Adding Moon Azimuth {self._moonAzimuth} and Elevation {self._moonElevation}.')
+                    s.setEnvironmentVariable('AS_MOON_AZIMUTH', self._moonAzimuth)
+                    s.setEnvironmentVariable('AS_MOON_ELEVATION', self._moonElevation)
+                    s.log(4, 'INFO: Adding Moon Illumination {self._moonIllumination} and Symbol {self._moonPhaseSymbol}')
+                    s.setEnvironmentVariable('AS_MOON_ILLUMINATION', self._moonIllumination)
+                    s.setEnvironmentVariable('AS_MOON_SYMBOL', self._moonPhaseSymbol)
                 else:
                     s.log(4,'INFO: Moon enabled but cannot use due to prior error.')
             else:
@@ -1065,7 +1059,6 @@ class ALLSKYOVERLAY:
         try:
             sunEnabled = self._overlayConfig['settings']['defaultincludesun']
             if sunEnabled:
-
                 lat = self._convertLatLon(self._observerLat)
                 lon = self._convertLatLon(self._observerLon)
 
@@ -1101,15 +1094,14 @@ class ALLSKYOVERLAY:
                         sunset = todaySunData["sunset"]
                         dusk = todaySunData["dusk"]
 
-                format = s.getSetting("timeformat")
-                os.environ["AS_SUN_DAWN"] = dawn.strftime(format)
-                os.environ["AS_SUN_SUNRISE"] = sunrise.strftime(format)
-                os.environ["AS_SUN_NOON"] = noon.strftime(format)
-                os.environ["AS_SUN_SUNSET"] = sunset.strftime(format)
-                os.environ["AS_SUN_DUSK"] = dusk.strftime(format)
-
-                os.environ["AS_SUN_AZIMUTH"] = str(int(todaySunData["azimuth"]))
-                os.environ["AS_SUN_ELEVATION"] = str(int(todaySunData["elevation"]))
+                Format = s.getSetting("timeformat")
+                s.setEnvironmentVariable("AS_SUN_DAWN", dawn.strftime(Format))
+                s.setEnvironmentVariable("AS_SUN_SUNRISE", sunrise.strftime(Format))
+                s.setEnvironmentVariable("AS_SUN_NOON", noon.strftime(Format))
+                s.setEnvironmentVariable("AS_SUN_SUNSET", sunset.strftime(Format))
+                s.setEnvironmentVariable("AS_SUN_DUSK", dusk.strftime(Format))
+                s.setEnvironmentVariable("AS_SUN_AZIMUTH", str(int(todaySunData["azimuth"])))
+                s.setEnvironmentVariable("AS_SUN_ELEVATION", str(int(todaySunData["elevation"])))
 
                 s.log(4, f'INFO: Lat = {lat}, Lon = {lon}, tz = {tzName}, Sunrise = {sunrise}, Sunset = {sunset}')
             else:
@@ -1132,10 +1124,7 @@ class ALLSKYOVERLAY:
 
                 if not self._fileCreatedToday(sunTmpFile):
                     if not self._sunFast:
-                        file = open('/etc/timezone', 'r')
-                        tz = file.readline()
-                        tz = tz.strip()
-                        file.close()
+                        notUsed, tz = self._getTimeZone()
 
                         # Figure out local midnight.
                         zone = timezone(tz)
@@ -1179,11 +1168,11 @@ class ALLSKYOVERLAY:
 
                 for key, value in cacheData.items():
                     os.environ[key] = value
-                    s.log(4, 'INFO: Adding {0}:{1}'.format(key,value))
+                    s.log(4, f'INFO: Adding {key}:{value}')
             else:
-                s.log(4,'INFO: Sun enabled but cannot use due to prior error.')
+                s.log(4, 'INFO: Sun enabled but cannot use due to prior error.')
         else:
-            s.log(4,'INFO: Sun not enabled.')
+            s.log(4, 'INFO: Sun not enabled.')
 
         return True
 
@@ -1214,7 +1203,7 @@ class ALLSKYOVERLAY:
             fileAge = 9999
 
         if fileAge > 2:
-            r = requests.get('https://www.celestrak.com/NORAD/elements/gp.php?CATNR={}'.format(noradCatId), verify=verify, timeout=5)
+            r = requests.get(f'https://www.celestrak.com/NORAD/elements/gp.php?CATNR={noradCatId}', verify=verify, timeout=5)
             r.raise_for_status()
 
             if r.text == 'No GP data found':
@@ -1266,15 +1255,15 @@ class ALLSKYOVERLAY:
                             difference = satellite - bluffton
                             topocentric = difference.at(t)
                             alt, az, distance = topocentric.altaz()
-                            os.environ['AS_' + noradId + 'ALT'] = str(alt)
-                            os.environ['AS_' + noradId + 'AZ'] = str(az)
+                            s.setEnvironmentVariable('AS_' + noradId + 'ALT', str(alt))
+                            s.setEnvironmentVariable('AS_' + noradId + 'AZ', str(az))
 
                             if alt.degrees > 5 and sunlit:
-                                os.environ['AS_' + noradId + 'VISIBLE'] = 'Yes'
+                                s.SetEnvironmentVariable('AS_' + noradId + 'VISIBLE', 'Yes')
                             else:
-                                os.environ['AS_' + noradId + 'VISIBLE'] = 'No'
+                                s.SetEnvironmentVariable('AS_' + noradId + 'VISIBLE', 'No')
                         except LookupError:
-                            s.log(0, 'ERROR: Norad ID ' + noradId + ' Not found.')
+                            s.log(0, f'ERROR: Norad ID {noradId} Not found.')
                 else:
                     s.log(4, 'INFO: Satellites enabled but cannot use due to prior error.')
 
@@ -1321,16 +1310,15 @@ class ALLSKYOVERLAY:
                         alt, az, d = astrometric.apparent().altaz()
                         ra, dec, distance = astrometric.radec()
                         #prs.int(planetId, alt, az)
-                        os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'ALT'] = str(alt)
-                        os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'AZ'] = str(az)
-
-                        os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'RA'] = str(ra)
-                        os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'DEC'] = str(dec)
+                        s.setEnvironmentVariable('AS_' + planetId.replace(' BARYCENTER','') + 'ALT', str(alt))
+                        s.setEnvironmentVariable('AS_' + planetId.replace(' BARYCENTER','') + 'AZ', str(az))
+                        s.setEnvironmentVariable('AS_' + planetId.replace(' BARYCENTER','') + 'RA', str(ra))
+                        s.setEnvironmentVariable('AS_' + planetId.replace(' BARYCENTER','') + 'DEC', str(dec))
 
                         if alt.degrees > 5:
-                            os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'VISIBLE'] = 'Yes'
+                            s.setEnvironmentVariable('AS_' + planetId.replace(' BARYCENTER','') + 'VISIBLE', 'Yes')
                         else:
-                            os.environ['AS_' + planetId.replace(' BARYCENTER','') + 'VISIBLE'] = 'No'
+                            s.setEnvironmentVariable('AS_' + planetId.replace(' BARYCENTER','') + 'VISIBLE', 'No')
                 else:
                     s.log(4, 'INFO: Planets enabled but unable to use due to prior error.')
             else:
@@ -1389,5 +1377,5 @@ def overlay(params, event):
     else:
         result = "External Overlay Disabled"
 
-    s.log(4,"INFO: {0}.".format(result))
+    s.log(4, f"INFO: {result}.")
     return result

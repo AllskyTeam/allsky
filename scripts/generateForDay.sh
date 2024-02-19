@@ -264,6 +264,12 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 		CMD="'${ALLSKY_BIN}/keogram' ${N} ${SIZE_FILTER} -d '${OUTPUT_DIR}' \
 			-e ${EXTENSION} -o '${UPLOAD_FILE}' ${MORE} ${KEOGRAM_EXTRA_PARAMETERS}"
 		generate "Keogram" "keogram" "${CMD}"
+		if [[ $? -gt 90 && ${DO_STARTRAILS} == "true" ]]; then
+			DO_STARTRAILS="false"
+			# -gt 90 means either no files or unable to read initial file, and
+			# keograms will have the same problem, so don't bother running.
+			echo "Keogram creation unable to read files; will not run startrails."
+		fi
 	else
 		upload "Keogram" "${UPLOAD_FILE}" "keograms" "${KEOGRAM_FILE}" \
 			 "${KEOGRAM_DESTINATION_NAME}"
@@ -286,6 +292,12 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 			-e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o '${UPLOAD_FILE}' \
 			${STARTRAILS_EXTRA_PARAMETERS}"
 		generate "Startrails, threshold=${BRIGHTNESS_THRESHOLD}" "startrails" "${CMD}"
+		if [[ $? -gt 90 && ${DO_KEOGRAM} == "true" ]]; then
+			DO_STARTRAILS="false"
+			# -gt 90 means either no files or unable to read initial file, and
+			# startrails will have the same problem, so don't bother running.
+			echo "Startrails creation unable to read files; will not run startrails."
+		fi
 	else
 		upload "Startrails" "${UPLOAD_FILE}" "startrails" "${STARTRAILS_FILE}" \
 			"${STARTRAILS_DESTINATION_NAME}"

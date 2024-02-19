@@ -41,7 +41,7 @@ def maskimage(params, event):
     result = ""
     mask = params['mask']
     if (mask is not None) and (mask != ""):
-        maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_OVERLAY"),"images",mask)
+        maskPath = os.path.join(s.ALLSKY_OVERLAY, "images", mask)
         maskImage = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
         if maskImage is not None:
             maskChannels = maskImage.shape[-1] if maskImage.ndim == 3 else 1

@@ -253,6 +253,8 @@ def var_dump(variable):
 
 def log(level, text, preventNewline = False, exitCode=None):
     """ Very simple method to log data if in verbose mode """
+    global LOGLEVEL
+
     if LOGLEVEL >= level:
         if preventNewline:
             print(text, end="")
@@ -277,7 +279,7 @@ def initDB():
         DBDATA = database.DataBase
     except:
         DBDATA = {}
-        log(0, "ERROR: Allsy database corrupted - Resetting")
+        log(0, f"ERROR: Resetting corrupted Allsky database '{dbFile}'")
 
 def dbAdd(key, value):
     global DBDATA

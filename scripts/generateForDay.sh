@@ -265,7 +265,7 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 			-e ${EXTENSION} -o '${UPLOAD_FILE}' ${MORE} ${KEOGRAM_EXTRA_PARAMETERS}"
 		generate "Keogram" "keogram" "${CMD}"
 
-		if [[ $? -gt 90 && (${DO_STARTRAILS} == "true" || ${DO_TIMELAPSE} == "true" ]]; then
+		if [[ $? -gt 90 && (${DO_STARTRAILS} == "true" || ${DO_TIMELAPSE} == "true") ]]; then
 			DO_STARTRAILS="false"
 			DO_TIMELAPSE="false"
 			# -gt 90 means either no files or unable to read initial file, and
@@ -295,7 +295,7 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 			${STARTRAILS_EXTRA_PARAMETERS}"
 		generate "Startrails, threshold=${BRIGHTNESS_THRESHOLD}" "startrails" "${CMD}"
 
-		if [[ $? -gt 90 && (${DO_KEOGRAM} == "true" || ${DO_TIMELAPSE} == "true" ]]; then
+		if [[ $? -gt 90 && (${DO_KEOGRAM} == "true" || ${DO_TIMELAPSE} == "true") ]]; then
 			DO_STARTRAILS="false"
 			# -gt 90 means either no files or unable to read initial file, and
 			# startrails will have the same problem, so don't bother running.

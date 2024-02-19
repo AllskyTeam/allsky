@@ -73,6 +73,7 @@ class ALLSKYOVERLAY:
     _overlayConfig = None
     _image = None
     _fonts = {}
+    _fontMsgs = {}
     _fields = {}
     _systemfields = {}
     _userfields = {}
@@ -93,6 +94,7 @@ class ALLSKYOVERLAY:
     _debug = False
     _enableSkyfield = True
     _formaterrortext = ""
+    _notEnabled = ""
 
     def __init__(self, formaterrortext):
         C = os.path.join(s.ALLSKY_OVERLAY, 'config')
@@ -130,7 +132,7 @@ class ALLSKYOVERLAY:
         self._formaterrortext = formaterrortext;
 
     def _dumpDebugData(self):
-        debugFilePath = os.path.join(s.TMPDIR, 'overlaydebug.txt')
+        debugFilePath = os.path.join(s.ALLSKY_TMP, 'overlaydebug.txt')
         env = {}
         for var in os.environ:
             varValue = s.getEnvironmentVariable(var, fatal=True)
@@ -350,6 +352,8 @@ class ALLSKYOVERLAY:
         result = True
 
         self._image = s.image
+        if self._notEnabled is not "":
+            s.log(4, f'INFO: Not enabled: {self._notEnabled}')
         return result
 
     def _saveImagefile(self):
@@ -358,21 +362,20 @@ class ALLSKYOVERLAY:
 
     def _timer(self, text, showIntermediate = True, showMessage=True):
         """ Method to display the elapsed time between function calls and the total script execution time """
-        if s.LOGLEVEL:
-            if showMessage:
-                if self._lastTimer is None:
-                    elapsedSinceLastTime = datetime.now() - self._startTime
-                else:
-                    elapsedSinceLastTime = datetime.now() - self._lastTimer
+        if s.LOGLEVEL and showMessage:
+            if self._lastTimer is None:
+                elapsedSinceLastTime = datetime.now() - self._startTime
+            else:
+                elapsedSinceLastTime = datetime.now() - self._lastTimer
 
-                lastText = str(elapsedSinceLastTime.total_seconds())
-                self._lastTimer = datetime.now()
+            lastText = str(elapsedSinceLastTime.total_seconds())
+            self._lastTimer = datetime.now()
 
-                elapsedTime = datetime.now() - self._startTime
-                if showIntermediate:
-                    s.log(4, "INFO: {0} took {1} seconds. Elapsed time {2} seconds.".format(text, lastText, elapsedTime.total_seconds()))
-                else:
-                    s.log(4, "INFO: {0} Elapsed time {1} seconds.".format(text, elapsedTime.total_seconds()))
+            elapsedTime = datetime.now() - self._startTime
+            if showIntermediate:
+                s.log(4, f"INFO: {text} took {lastText} seconds. Elapsed time {elapsedTime.total_seconds()} seconds")
+            else:
+                s.log(4, f"INFO: {text} Elapsed time {elapsedTime.total_seconds()} seconds")
 
     def _getFont(self, font, fontSize):
 
@@ -414,15 +417,21 @@ class ALLSKYOVERLAY:
 
             if fontKey in self._fonts:
                 font = self._fonts[fontKey]
-                s.log(4, F'{preMsg} - found in cache.')
-            else :
+                # Only display this message once per font/size
+                if fontKey not in self._fontMsgs:
+                    self._fontMsgs[fontKey] = True
+                    s.log(4, F'{preMsg} (from cache).')
+            else:
                 try:
                     fontSize = s.int(fontSize)
                     self._fonts[fontKey] = ImageFont.truetype(fontPath, fontSize)
                     font = self._fonts[fontKey]
-                    s.log(4, F'{preMsg} - loaded from disk.')
+                    s.log(4, F'{preMsg} (from disk).')
+#                    if fontKey not in self._fontMsgs:
+#                        self._fontMsgs[fontKey] = True
+#                        s.log(4, F'{preMsg} (from disk).')
                 except OSError as err:
-                    s.log(0, f"ERROR: Font '{fontPath}' could not be loaded from disk.")
+                    s.log(0, f"ERROR: Could not load font '{fontPath}' from disk.")
                     font = None
         else:
             font = None
@@ -1011,7 +1020,7 @@ class ALLSKYOVERLAY:
                 else:
                     s.log(4,'INFO: Moon enabled but cannot use due to prior error.')
             else:
-                s.log(4,'INFO: Moon not enabled.')
+                self._notEnabled = self._notEnabled + "  Moon"
         except Exception as e:
             eType, eObject, eTraceback = sys.exc_info()
             s.log(0, f'ERROR: _initialiseMoon failed on line {eTraceback.tb_lineno} - {e}')
@@ -1103,7 +1112,7 @@ class ALLSKYOVERLAY:
 
                 s.log(4, f'INFO: Lat = {lat}, Lon = {lon}, tz = {tzName}, Sunrise = {sunrise}, Sunset = {sunset}')
             else:
-                s.log(4,'INFO: Sun not enabled')
+                self._notEnabled = self._notEnabled + "  Sun"
         except Exception as e:
             eType, eObject, eTraceback = sys.exc_info()
             s.log(0, f'ERROR: _initialiseSun failed on line {eTraceback.tb_lineno} - {e}')
@@ -1170,7 +1179,7 @@ class ALLSKYOVERLAY:
             else:
                 s.log(4, 'INFO: Sun enabled but cannot use due to prior error.')
         else:
-            s.log(4, 'INFO: Sun not enabled.')
+            self._notEnabled = self._notEnabled + "  sun"
 
         return True
 
@@ -1228,7 +1237,6 @@ class ALLSKYOVERLAY:
         return tle[0].strip(), tle[1].strip(), tle[2].strip()
 
     def _initSatellites(self):
-
         try:
             satellites = self._overlayConfig["settings"]["defaultnoradids"]
             satellites = satellites.strip()
@@ -1266,7 +1274,7 @@ class ALLSKYOVERLAY:
                     s.log(4, 'INFO: Satellites enabled but cannot use due to prior error.')
 
             else:
-                s.log(4, 'INFO: Satellites not enabled.')
+                self._notEnabled = self._notEnabled + "  Satellites"
 
         except Exception as e:
             eType, eObject, eTraceback = sys.exc_info()
@@ -1276,10 +1284,8 @@ class ALLSKYOVERLAY:
         return True
 
     def _initPlanets(self):
-
         try:
             planetsEnabled = self._overlayConfig["settings"]["defaultincludeplanets"]
-
             if planetsEnabled:
                 if self._enableSkyfield:
                     planets = {
@@ -1320,7 +1326,7 @@ class ALLSKYOVERLAY:
                 else:
                     s.log(4, 'INFO: Planets enabled but unable to use due to prior error.')
             else:
-                s.log(4, 'INFO: Planets not enabled.')
+                self._notEnabled = self._notEnabled + "  Planets"
 
         except Exception as e:
             eType, eObject, eTraceback = sys.exc_info()
@@ -1366,12 +1372,14 @@ class ALLSKYOVERLAY:
 def overlay(params, event):
     enabled = s.int(s.getEnvironmentVariable("AS_eOVERLAY"))
     if enabled == 1:
-        formaterrortext = "??"
         if "formaterrortext" in params:
             formaterrortext = params["formaterrortext"]
+        else:
+            formaterrortext = "??"
         annotater = ALLSKYOVERLAY(formaterrortext)
         annotater.annotate()
-        result = "Overlay Complete"
+        #result = "Overlay Complete"
+        return
     else:
         result = "External Overlay Disabled"
 

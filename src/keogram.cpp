@@ -4,6 +4,11 @@
 // Rotation added by Agustin Nunez @agnunez
 // SPDX-License-Identifier: MIT
 
+// These tell the invoker to not try again with these images
+// since the next command will have the same problem.
+#define NO_IMAGES			98
+#define BAD_SAMPLE_FILE		99
+
 using namespace std;
 
 #include <getopt.h>
@@ -67,15 +72,20 @@ int s_len = 0;	// length in characters of nfiles, e.g. if nfiles == "1000", s_le
 const char *ME = "";
 
 // Read a single file and return true on success and false on error.
-// On success, set "mat".
-bool read_file(struct config_t* cf, char* filename, cv::Mat* mat, int file_num, char *msg, int msg_size)
+bool read_file(
+		struct config_t* cf,
+		char* filename,
+		cv::Mat* mat,
+		int file_num,
+		char *msg,
+		int msg_size)
 {
 	*mat = cv::imread(filename, cv::IMREAD_UNCHANGED);
+
 	if (! mat->data || mat->empty()) {
 		if (cf->verbose) {
 			stdio_mutex.lock();
-			fprintf(stderr, "Error reading file '%s': no data\n", filename);
-			std::cout << "Error reading file " << filename << ": no data" << std::endl;
+			std::cerr << "Error reading file " << filename << ": no data" << std::endl;
 			stdio_mutex.unlock();
 		}
 		return(false);
@@ -94,8 +104,9 @@ bool read_file(struct config_t* cf, char* filename, cv::Mat* mat, int file_num, 
 		}
 		return(false);
 	}
+
 	if (cf->img_height && cf->img_width &&
-		(mat->cols != cf->img_width || mat->rows != cf->img_height)) {
+			(mat->cols != cf->img_width || mat->rows != cf->img_height)) {
 		if (cf->verbose) {
 			stdio_mutex.lock();
 			fprintf(stderr, "%s: image size %dx%d does not match expected size %dx%d; ignoring\n",
@@ -118,13 +129,14 @@ char s_[10];
 const int num_hours = 24;
 bool hours[num_hours];
 
-void keogram_worker(int thread_num,			// thread num
-					struct config_t* cf,	// config
-					glob_t* files,			// file list
-					std::mutex* mtx,		// mutex
-					cv::Mat* acc,			// accumulated
-					cv::Mat* ann,			// annotations
-					cv::Mat* mask)			// mask
+void keogram_worker(
+		int thread_num,			// thread num
+		struct config_t* cf,	// config
+		glob_t* files,			// file list
+		std::mutex* mtx,		// mutex
+		cv::Mat* acc,			// accumulated
+		cv::Mat* ann,			// annotations
+		cv::Mat* mask)			// mask
 {
 	int start_num, end_num, batch_size, prevHour = -1;
 	cv::Mat thread_accumulator;
@@ -226,7 +238,8 @@ void keogram_worker(int thread_num,			// thread num
 			try {
 				imagesrc.col(imagesrc.cols / 2).copyTo(acc->col(destCol+i));	 //copy
 			} catch (cv::Exception& ex) {
-				fprintf(stderr, "WARNING: internal copy of '%s' failed; ignoring\n", filename);
+				fprintf(stderr, "%s: WARNING: internal copy of '%s' failed; ignoring\n",
+						ME, filename);
 				continue;
 			}
 		}
@@ -234,9 +247,9 @@ void keogram_worker(int thread_num,			// thread num
 		if (cf->labels_enabled) {
 			struct tm ft;	// the time of the file, by any means necessary
 			if (cf->parse_filename) {
-				// engage your safety squints!
 				char* s;
 				// TODO: make sure strrchr() and sscanf work
+
 				// Example of name:  image-yyyymmddhhmmss.jpg
 				s = strrchr(filename, '-');
 				s++;
@@ -252,7 +265,8 @@ void keogram_worker(int thread_num,			// thread num
 					ft.tm_mon = t->tm_mon +1;
 					ft.tm_year = t->tm_year+1900;
 				} else {
-					fprintf(stderr, "WARNING: unable to get time of '%s': %s\n", filename, strerror(errno));
+					fprintf(stderr, "%s: WARNING: unable to get time of '%s': %s\n",
+						ME, filename, strerror(errno));
 					ft.tm_hour = -1;
 				}
 			}
@@ -360,7 +374,8 @@ void keogram_worker(int thread_num,			// thread num
 	}
 }
 
-void annotate_image(cv::Mat* ann, cv::Mat* acc, struct config_t* cf) {
+void annotate_image(cv::Mat* ann, cv::Mat* acc, struct config_t* cf)
+{
 	int baseline = 0;
 	char hour[3];
 
@@ -416,7 +431,8 @@ void annotate_image(cv::Mat* ann, cv::Mat* acc, struct config_t* cf) {
 					cv::Scalar(cf->b, cf->g, cf->r), cf->lineWidth,
 					cf->fontType);
 			} else if (cf->verbose) {
-				fprintf(stderr, "WARNING: not enough space to print date '%s' at column %d\n", text.c_str(), column);
+				fprintf(stderr, "WARNING: not enough space to print date '%s' at column %d\n",
+					text.c_str(), column);
 			}
 		}
 
@@ -456,13 +472,15 @@ void annotate_image(cv::Mat* ann, cv::Mat* acc, struct config_t* cf) {
 					cv::Scalar(cf->b, cf->g, cf->r), cf->lineWidth,
 					cf->fontType);
 			} else if (cf->verbose) {
-				fprintf(stderr, "WARNING: not enough space to print hour label '%s' at column %d\n", text.c_str(), column);
+				fprintf(stderr, "WARNING: not enough space to print hour label '%s' at column %d\n",
+					text.c_str(), column);
 			}
 		}
 	}
 }
 
-void parse_args(int argc, char** argv, struct config_t* cf) {
+void parse_args(int argc, char** argv, struct config_t* cf)
+{
 	int c, tmp, ncpu = std::thread::hardware_concurrency();
 
 	cf->labels_enabled = true;
@@ -553,8 +571,17 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 				int height, width;
 				sscanf(optarg, "%dx%d", &width, &height);
 				// 122.8Mpx should be enough for anybody.
-				if (height < 0 || height > 9600 || width < 0 || width > 12800)
+				if (height < 0 || width < 0) {
 					height = width = 0;
+					fprintf(stderr, "%s: WARNING: height (%d) and width (%d) must be >= 0.",
+						ME, height, width);
+					fprintf(stderr, "  Setting to 0.\n");
+				} else if (height > 9600 || width > 12800) {
+					fprintf(stderr, "%s: WARNING: maximum height (%d) is 9600 and maximum width (%d) is 12800.",
+						ME, height, width);
+					fprintf(stderr, "  Setting to 0.\n");
+					height = width = 0;
+				}
 				cf->img_height = height;
 				cf->img_width = width;
 				break;
@@ -585,7 +612,7 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 				cf->lineWidth = atoi(optarg);
 				if (cf->lineWidth < 1) {
 					cf->lineWidth = 1;
-					fprintf(stderr, "font-line changed to 1 (=minimum)\n");
+					fprintf(stderr, "%s: font-line changed to 1 (=minimum)\n", ME);
 				}				
 				break;
 			case 'N':
@@ -608,15 +635,18 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 				if ((tmp >= 1) && (tmp <= ncpu))
 					cf->num_threads = tmp;
 				else
-					fprintf(stderr, "WARNING: invalid number of threads %d; using %d\n", tmp, cf->num_threads);
+					fprintf(stderr, "%s: WARNING: invalid number of threads %d; using %d\n",
+						ME, tmp, cf->num_threads);
 				break;
 			case 'q':
 				tmp = atoi(optarg);
 				if (PRIO_MIN > tmp) {
 					tmp = PRIO_MIN;
-					fprintf(stderr, "WARNING: clamping scheduler priority to PRIO_MIN (%d)\n", PRIO_MIN);
+					fprintf(stderr, "%s: WARNING: clamping scheduler priority to PRIO_MIN (%d)\n",
+						ME, PRIO_MIN);
 				} else if (PRIO_MAX < tmp) {
-					fprintf(stderr, "WARNING: clamping scheduler priority to PRIO_MAX (%d)\n", PRIO_MAX);
+					fprintf(stderr, "%s: WARNING: clamping scheduler priority to PRIO_MAX (%d)\n",
+						ME, PRIO_MAX);
 					tmp = PRIO_MAX;
 				}
 				cf->nice_level = atoi(optarg);
@@ -628,49 +658,50 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 }
 
 void usage_and_exit(int x) {
-	std::cout << "Usage: " << ME << " -d <imagedir> -e <ext>"
+	std::cerr << "Usage: " << ME << " -d <imagedir> -e <ext>"
 		<< " -o <outputfile> [<other_args>]" << std::endl;
 	if (x)
-		std::cout << KRED << "Source directory, image extension, and output file are required" << std::endl;
+		std::cerr << KRED << "Source directory, image extension, and output file are required" << std::endl;
 
-	std::cout << KNRM << std::endl;
-	std::cout << "Arguments:" << std::endl;
-	std::cout << "-d | --directory <str> : directory from which to load images (required)" << std::endl;
-	std::cout << "-e | --extension <str> : image extension to process (required)" << std::endl;
-	std::cout << "-o | --output-file <str> : name of output file (required)" << std::endl;
-	std::cout << "-r | --rotate <float> : number of degrees to rotate image, counterclockwise (0)" << std::endl;
-	std::cout << "-s | --image-size <int>x<int> : only process images of a given size, eg. 1280x960" << std::endl;
-	std::cout << "-h | --help : display this help message" << std::endl;
-	std::cout << "-v | --verbose : Increase logging verbosity" << std::endl;
-	std::cout << "-n | --no-label : Disable hour and date labels" << std::endl;
-	std::cout << "-D | --no-date : Disable date label" << std::endl;
-	std::cout << "-C | --font-color <str> : label font color, in HTML format (0000ff)" << std::endl;
-	std::cout << "-L | --font-line <int> : font line thickness (3), (min=1)" << std::endl;
-	std::cout << "-N | --font-name <str> : font name (simplex)" << std::endl;
-	std::cout << "-S | --font-size <float> : font size (2.0)" << std::endl;
-	std::cout << "-T | --font-type <int> : font line type (1)" << std::endl;
-	std::cout << "-Q | --max-threads <int> : limit maximum number of processing threads. (use all cpus)" << std::endl;
-	std::cout << "-q | --nice-level <int> : nice(2) level of processing threads (10)" << std::endl;
-	std::cout << "-x | --image-expand : expand image to get the proportions of source" << std::endl;
-	std::cout << "-c | --channel-info : show channel infos - mean value of R/G/B" << std::endl;
-	std::cout << "-f | --fixed-channel-number <int> : define number of channels 0=auto, 1=mono, 3=rgb (0=auto)" << std::endl;
-	std::cout << "-p | --parse-filename : parse time using filename instead of stat(filename)" << std::endl;
+	std::cerr << KNRM << std::endl;
+	std::cerr << "Arguments:" << std::endl;
+	std::cerr << "-d | --directory <str> : directory from which to load images (required)" << std::endl;
+	std::cerr << "-e | --extension <str> : image extension to process (required)" << std::endl;
+	std::cerr << "-o | --output-file <str> : name of output file (required)" << std::endl;
+	std::cerr << "-r | --rotate <float> : number of degrees to rotate image, counterclockwise (0)" << std::endl;
+	std::cerr << "-s | --image-size <int>x<int> : only process images of a given size, eg. 1280x960" << std::endl;
+	std::cerr << "-h | --help : display this help message" << std::endl;
+	std::cerr << "-v | --verbose : Increase logging verbosity" << std::endl;
+	std::cerr << "-n | --no-label : Disable hour and date labels" << std::endl;
+	std::cerr << "-D | --no-date : Disable date label" << std::endl;
+	std::cerr << "-C | --font-color <str> : label font color, in HTML format (0000ff)" << std::endl;
+	std::cerr << "-L | --font-line <int> : font line thickness (3), (min=1)" << std::endl;
+	std::cerr << "-N | --font-name <str> : font name (simplex)" << std::endl;
+	std::cerr << "-S | --font-size <float> : font size (2.0)" << std::endl;
+	std::cerr << "-T | --font-type <int> : font line type (1)" << std::endl;
+	std::cerr << "-Q | --max-threads <int> : limit maximum number of processing threads. (use all cpus)" << std::endl;
+	std::cerr << "-q | --nice-level <int> : nice(2) level of processing threads (10)" << std::endl;
+	std::cerr << "-x | --image-expand : expand image to get the proportions of source" << std::endl;
+	std::cerr << "-c | --channel-info : show channel infos - mean value of R/G/B" << std::endl;
+	std::cerr << "-f | --fixed-channel-number <int> : define number of channels 0=auto, 1=mono, 3=rgb (0=auto)" << std::endl;
+	std::cerr << "-p | --parse-filename : parse time using filename instead of stat(filename)" << std::endl;
 
-	std::cout << KNRM << std::endl;
-	std::cout << "Font name is one of these OpenCV font names:\n\tSimplex, Plain, "
+	std::cerr << KNRM << std::endl;
+	std::cerr << "Font name is one of these OpenCV font names:\n\tSimplex, Plain, "
 	"Duplex, Complex, Triplex, ComplexSmall, ScriptSimplex, ScriptComplex" << std::endl;
-	std::cout << "Font Type is an OpenCV line type: 0=antialias, 1=8-connected, 2=4-connected" << std::endl;
-//x	std::cout << KNRM << std::endl;
-	std::cout << "In some cases --font-line and --font-size can lead to annoying horizontal lines.:"
+	std::cerr << "Font Type is an OpenCV line type: 0=antialias, 1=8-connected, 2=4-connected" << std::endl;
+//x	std::cerr << KNRM << std::endl;
+	std::cerr << "In some cases --font-line and --font-size can lead to annoying horizontal lines.:"
 		<< std::endl
 		<< "Solution: try other values" << std::endl;
-//x	std::cout << KNRM << std::endl;
-	std::cout << "   ex: keogram --directory ../images/current/ --extension jpg --output-file keogram.jpg --font-size 2" << std::endl;
-	std::cout << "   ex: keogram -d . -e png -o /home/pi/allsky/keogram.jpg -n" << KNRM << std::endl;
+//x	std::cerr << KNRM << std::endl;
+	std::cerr << "   ex: keogram --directory ../images/current/ --extension jpg --output-file keogram.jpg --font-size 2" << std::endl;
+	std::cerr << "   ex: keogram -d . -e png -o /home/pi/allsky/keogram.jpg -n" << KNRM << std::endl;
 	exit(x);
 }
 
-int get_font_by_name(char* s) {
+int get_font_by_name(char* s)
+{
 	// case insensitively check the user-specified font, and use something
 	// sensible in case of erroneous input
 	if (strcasecmp(s, "plain") == 0)
@@ -688,12 +719,13 @@ int get_font_by_name(char* s) {
 	if (strcasecmp(s, "scriptcomplex") == 0)
 		return cv::FONT_HERSHEY_SCRIPT_COMPLEX;
 	if (strcasecmp(s, "simplex"))	// yes, this is intentional
-		std::cout << KRED << "Unknown font '" << s << "', using SIMPLEX " << KNRM << std::endl;
+		std::cerr << KRED << ME << ": Unknown font '" << s << "', using SIMPLEX " << KNRM << std::endl;
 
 	return cv::FONT_HERSHEY_SIMPLEX;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
 	struct config_t config;
 	int r;
 	ME = basename(argv[0]);
@@ -706,7 +738,7 @@ int main(int argc, char* argv[]) {
 	r = setpriority(PRIO_PROCESS, 0, config.nice_level);
 	if (r) {
 		config.nice_level = getpriority(PRIO_PROCESS, 0);
-		fprintf(stderr, "unable to set nice level: %s\n", strerror(errno));
+		fprintf(stderr, "%s: WARNING: unable to set nice level to %s; ignoring\n", ME, strerror(errno));
 	}
 
 	// Find files
@@ -716,8 +748,9 @@ int main(int argc, char* argv[]) {
 	nfiles = files.gl_pathc;
 	if (nfiles == 0) {
 		globfree(&files);
-		std::cout << "ERROR: No images found in " << config.img_src_dir << ", exiting." << std::endl;
-		exit(1);
+		std::cerr << ME << ": ERROR: No images found in " << config.img_src_dir;
+		std::cerr << ", exiting." << std::endl;
+		exit(NO_IMAGES);
 	}
 	// Determine width of the number of files, e.g., "1234" is 4 characters wide.
 	sprintf(s_, "%d", (int)nfiles);
@@ -741,8 +774,8 @@ int main(int argc, char* argv[]) {
 	if (nchan == 0 || (config.img_width == 0 && config.img_height == 0)) {
 		char not_used[1];
 		if (! read_file(&config, sample_file, &temp, sample_file_num+1, not_used, 0)) {
-			fprintf(stderr, "ERROR: Unable to read sample file '%s'; quitting\n", sample_file);
-			exit(1);
+			fprintf(stderr, "%s: ERROR: Unable to read sample file '%s'; quitting\n", ME, sample_file);
+			exit(BAD_SAMPLE_FILE);
 		}
 		if (config.verbose > 1) {
 			fprintf(stderr, "Getting nchan and/or size from: '%s'\n", sample_file);
@@ -804,11 +837,13 @@ int main(int argc, char* argv[]) {
 	try {
 		result = cv::imwrite(config.dst_keogram, accumulated, compression_params);
 	} catch (cv::Exception& ex) {
-		fprintf(stderr, "ERROR: could not save keogram file: %s\n", ex.what());
+		// Use lowercase "k"eogram here and uppercase below so we
+		// know what produced the error.
+		fprintf(stderr, "%s: ERROR: could not save keogram file: %s\n", ME, ex.what());
 		exit(2);
 	}
 	if (! result) {
-		fprintf(stderr, "ERROR: could not save Keogram file: %s\n", strerror(errno));
+		fprintf(stderr, "%s: ERROR: could not save Keogram file: %s\n", ME, strerror(errno));
 		exit(2);
 	}
 

@@ -46,11 +46,11 @@ def saveimage(params, event):
 
         if not writeImage(s.image, s.CURRENTIMAGEPATH, quality):
             result = "Failed to save {0}".format(s.CURRENTIMAGEPATH) 
-            s.log(0, "ERROR: Failed to save image {0}".format(s.CURRENTIMAGEPATH), exitCode=1)
+            s.log(0, f"ERROR: {result}", exitCode=1)
         else:
-            s.log(4, "INFO: {}".format(result))
+            s.log(4, f"INFO: {result}")
     else:
         result = "Cannot determine the image quality. Image NOT saved"
-        s.log(0, "ERROR: {}".format(result))
+        s.log(0, f"ERROR: {result}")
 
     return result

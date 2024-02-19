@@ -55,15 +55,15 @@ def maskimage(params, event):
             if (maskWidth == imageWidth) and (maskHeight == imageHeight):            
                 s.image = cv2.bitwise_and(s.image,s.image,mask = maskImage)
                 result = "Mask {0} applied".format(maskPath)
-                s.log(4,f"INFO: {result}")
+                s.log(4, f"INFO: {result}")
             else:
-                result = f"Mask {mask} is the incorrct size {maskWidth}x{maskHeight} Main image is {imageWidth}x{imageHeight}"
-                s.log(0,f"ERROR: {result}")
+                result = f"Mask {mask} is incorrect size: {maskWidth}x{maskHeight}. Main image is {imageWidth}x{imageHeight}."
+                s.log(0, f"ERROR: {result}")
         else:
-            s.log(0,"ERROR: Unable to read the mask image {0}".format(maskPath))
             result = "Mask {0} not found".format(maskPath)
+            s.log(0, f"ERROR: {result}")
     else:
-        s.log(0,"ERROR: No mask defined")
         result = "No mask defined"
+        s.log(0, f"ERROR: {result}")
 
     return result

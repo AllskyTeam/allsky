@@ -100,7 +100,7 @@ class ALLSKYOVERLAY:
         fieldsFile = os.path.join(C, self._OVERLAYFIELDSFILE)
         userFieldsFile = os.path.join(C, self._OVERLAYUSERFIELDSFILE)
 
-        tmpFolder = os.path.join(O, 'tmp')
+        tmpFolder = os.path.join(C, 'tmp')
         self._createTempDir(tmpFolder)
         self._OVERLAYTMP = os.path.join(tmpFolder, 'overlay')
         self._createTempDir(self._OVERLAYTMP)

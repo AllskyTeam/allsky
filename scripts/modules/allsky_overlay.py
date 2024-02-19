@@ -68,7 +68,6 @@ class ALLSKYOVERLAY:
     _OVERLAYFIELDSFILE = 'fields.json'
     _OVERLAYUSERFIELDSFILE = 'userfields.json'
     _OVERLAYTMPFOLDER = ''
-    _ALLSKY_OVERLAY = None
     _OVERLAYTLEFOLDER = None
     _overlayConfigFile = None
     _overlayConfig = None
@@ -96,8 +95,7 @@ class ALLSKYOVERLAY:
     _formaterrortext = ""
 
     def __init__(self, formaterrortext):
-        self.ALLSKY_OVERLAY = s.getEnvironmentVariable("ALLSKY_OVERLAY", fatal=True)
-        C = os.path.join(self.ALLSKY_OVERLAY, 'config')
+        C = os.path.join(s.ALLSKY_OVERLAY, 'config')
         self._overlayConfigFile = os.path.join(C, self._OVERLAYCONFIGFILE)
         fieldsFile = os.path.join(C, self._OVERLAYFIELDSFILE)
         userFieldsFile = os.path.join(C, self._OVERLAYUSERFIELDSFILE)
@@ -888,7 +886,7 @@ class ALLSKYOVERLAY:
             imageY = int(imageData["y"])
             image = None
 
-            imagePath = os.path.join(self.ALLSKY_OVERLAY, "images", imageName)
+            imagePath = os.path.join(s.ALLSKY_OVERLAY, "images", imageName)
 
             if s.isFileReadable(imagePath):
                 image = cv2.imread(imagePath, cv2.IMREAD_UNCHANGED)

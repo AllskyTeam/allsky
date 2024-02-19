@@ -44,6 +44,7 @@ def getEnvironmentVariable(name, fatal=False):
 ALLSKYPATH = getEnvironmentVariable("ALLSKY_HOME", fatal=True)
 TMPDIR = getEnvironmentVariable("ALLSKY_TMP", fatal=True)
 SETTINGSFILE = getEnvironmentVariable("SETTINGS_FILE", fatal=True)
+ALLSKY_OVERLAY = getEnvironmentVariable("ALLSKY_OVERLAY", fatal=True)
 
 
 LOGLEVEL = 0

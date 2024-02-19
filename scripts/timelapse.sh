@@ -259,7 +259,7 @@ if [[ ${KEEP_SEQUENCE} == "false" || ! -d ${SEQUENCE_DIR} ]]; then
 		echo -e "${RED}*** ${ME} ERROR: No images found in '${INPUT_DIR}'!${NC}"
 		rm -fr "${SEQUENCE_DIR}"
 		[[ -n ${ALLSKY_TIMELAPSE_PID_FILE} ]] && rm -f "${ALLSKY_TIMELAPSE_PID_FILE}"
-		exit 1
+		exit 98		# this number should match what's in {startrails|keogram}.cpp
 	fi
 else
 	echo -en "${ME} ${YELLOW}"

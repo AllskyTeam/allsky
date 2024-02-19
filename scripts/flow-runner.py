@@ -40,7 +40,7 @@ allSkyModulesLocation = os.path.join(allSkyModules, "modules")
 try:
     allSkyScripts = os.environ["ALLSKY_SCRIPTS"]
 except KeyError:
-    print("ERROR: $ALLSKY_SCRIPTS not found in environment variables - Aborting")
+    print("ERROR: $ALLSKY_SCRIPTS not found - Aborting")
     sys.exit(1)
 allSkyModulesPath = os.path.join(allSkyScripts, "modules")
 

@@ -125,16 +125,21 @@
 					The few people that had that file should use the "day to night"
 					module flow instead.
 				</li>
-				<li>The ZWO library was upgraded to version 1.33 which adds support
+				<li>The ZWO library is at version 1.33 which adds support
 					for the ASI676 and other new cameras.
 				</li>
-				<li>DHCP on the Pi can be configured via the WebUI's
-					<span class="WebUIWebPage">Configure DHCP</span> page.
-					This is an advanced option that is not used very often.
+				<li>When creating startrails, keograms, and/or timelapse,
+					if one of them fails due to no images,
+					subsequent operations will be aborted since they will also fail.
+					This avoids multiple "no images" messages.
 				</li>
 				<li>When taking dark frames, any images that is too bright is deleted.
 					This can happen if you start taking darks before covering the lens
 					or if the lens cover lets in some light, e.g., a plastic lens cap.
+				</li>
+				<li>DHCP on the Pi can be configured via the WebUI's
+					<span class="WebUIWebPage">Configure DHCP</span> page.
+					This is an advanced option that is not used very often.
 				</li>
 			</ul>
 

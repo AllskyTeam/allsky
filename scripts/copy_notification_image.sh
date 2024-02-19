@@ -112,7 +112,7 @@ else
 	# Don't overwrite notification images so create a temporary copy and use that.
 	CURRENT_IMAGE="${CAPTURE_SAVE_DIR}/notification-${FULL_FILENAME}"
 	if ! cp "${NOTIFICATION_FILE}" "${CURRENT_IMAGE}" ; then
-		echo -e "${RED}*** ${ME}: ERROR: Cannot copy to CURRENT_IMAGE '${NOTIFICATION_FILE}' to '${CURRENT_IMAGE}'${NC}"
+		echo -e "${RED}*** ${ME}: ERROR: Cannot copy '${NOTIFICATION_FILE}' to '${CURRENT_IMAGE}'${NC}"
 		exit 3
 	fi
 fi
@@ -158,7 +158,13 @@ fi
 # The "mv" may be a rename or an actual move.
 FINAL_IMAGE="${CAPTURE_SAVE_DIR}/${FULL_FILENAME}"
 if ! mv -f "${CURRENT_IMAGE}" "${FINAL_IMAGE}" ; then
-	echo -e "${RED}*** ${ME}: ERROR: Cannot mv to FINAL_IMAGE: '${FINAL_IMAGE}' to '${TEMP_FILE}'${NC}"
+	echo -e "${RED}*** ${ME}: ERROR: "
+	if [[ -f ${CURRENT_IMAGE} ]]; then
+		echo "Cannot mv '${CURRENT_IMAGE}' to '${FINAL_IMAGE}'"
+	else
+		echo "'${CURRENT_IMAGE}' does not exist!"
+	fi
+	echo -e "${NC}"
 	exit 4
 fi
 

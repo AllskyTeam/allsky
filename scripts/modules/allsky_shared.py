@@ -152,6 +152,7 @@ def convertPath(path):
 
     return path
 
+
 def startModuleDebug(module):
     global TMPDIR
 
@@ -164,6 +165,7 @@ def startModuleDebug(module):
     except:
         log(0,"ERROR: Unable to create {0}".format(moduleTmpDir))
 
+
 def writeDebugImage(module, fileName, image):
     global TMPDIR
 
@@ -172,6 +174,21 @@ def writeDebugImage(module, fileName, image):
     moduleTmpFile = os.path.join(debugDir, fileName)
     cv2.imwrite(moduleTmpFile, image, params=None)
     log(4,"INFO: Wrote debug file {0}".format(moduleTmpFile))
+
+
+def setEnvironmentVariable(name, value, logMessage='', logLevel=4):
+    result = True
+
+    try:
+        os.environ[name] = value
+        if logMessage != '':
+            log(logLevel, logMessage)
+    except:
+        result = False
+        log(4, f'ERROR: Failed to set environment variable {name} to value {value}')
+
+    return result
+
 
 def setupForCommandLine():
     global ALLSKYPATH, LOGLEVEL
@@ -184,7 +201,7 @@ def setupForCommandLine():
         line = line.strip("\r")
         try:
             (key, _, value) = line.partition("=")
-            os.environ[key] = value
+            setEnvironmentVariable(key, value)
         except Exception:
             pass
     proc.communicate()
@@ -230,20 +247,6 @@ def updateSetting(values):
 
 def var_dump(variable):
     pprint.PrettyPrinter(indent=2, width=128).pprint(variable)
-
-
-def setEnvironmentVariable(name, value, logMessage='', logLevel=4):
-    result = True
-
-    try:
-        os.environ[name] = value
-        if logMessage != '':
-            log(logLevel, logMessage)
-    except:
-        result = False
-        log(4, f'ERROR: Failed to set environment variable {name} to value {value}')
-
-    return result
 
 
 def log(level, text, preventNewline = False, exitCode=None):

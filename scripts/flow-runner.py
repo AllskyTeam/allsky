@@ -64,16 +64,16 @@ if __name__ == "__main__":
     if shared.args.cleartimings:
         if shared.dbHasKey("flowtimer"):
             shared.dbDeleteKey("flowtimer")
-            
+
         try:
             flowTimingsFolder = os.environ["ALLSKY_FLOWTIMINGS"]
         except KeyError:
-            flowTimingsFolder = os.path.join(shared.allskyTmp,"flowtimings")   
-                        
+            flowTimingsFolder = os.path.join(shared.allskyTmp,"flowtimings")
+
         if os.path.exists(flowTimingsFolder):
-            shutil.rmtree(flowTimingsFolder)            
+            shutil.rmtree(flowTimingsFolder)
         sys.exit(0)
-        
+
     try:
         shared.allskyTmp = os.environ["ALLSKY_TMP"]
     except:
@@ -152,7 +152,7 @@ if __name__ == "__main__":
             moduleDebug = module_settings['debugmode']
     except:
         watchdog = False
-        
+
     shared.args.config = rawSettings
     shared.log(4, "INFO: Loading config {0}".format(shared.args.config))
     try:
@@ -163,12 +163,12 @@ if __name__ == "__main__":
                 shared.log(0, "Error: {0}".format(err), exitCode=1)
     except:
         shared.log(0, "ERROR: Failed to open {0}".format(shared.args.config), exitCode=1)
-    
+
     flowName = shared.args.tod if shared.args.event == "postcapture" else shared.args.event
     shared.log(4, "INFO: Running {0} flow...".format(flowName))
     try:
         moduleConfig = "{0}/postprocessing_{1}.json".format(shared.args.allskyConfig, flowName)
-   
+
         with open(moduleConfig) as flow_file:
             flow_file.seek(0, os.SEEK_END)
             if (flow_file.tell() == 0):
@@ -195,9 +195,9 @@ if __name__ == "__main__":
                         shared.log(4, "INFO: Cleared module data for {0}".format(moduleName))
                     else:
                         shared.log(3, "INFO: Attempting to clear module data for {0} but no function provided".format(moduleName))
-                        
+
             os.remove(disableFile)
-    
+
     results = {}
     if moduleDebug:
         flowStartTime = round(time.time() * 1000)
@@ -218,11 +218,11 @@ if __name__ == "__main__":
         if shared.flow[shared.step]["enabled"] and method in globals():
             startTime = datetime.now()
             result = False
-            
+
             arguments = {}
             if 'arguments' in shared.flow[shared.step]['metadata']:
                 arguments = shared.flow[shared.step]['metadata']['arguments']
-                
+
             try:
                 result = globals()[method](arguments, shared.args.event)
             except Exception as e:
@@ -239,7 +239,7 @@ if __name__ == "__main__":
                 if 'ignorewatchdog' in shared.flow[shared.step]['metadata']:
                     if shared.flow[shared.step]['metadata']['ignorewatchdog']:
                         ignoreWatchdog = True
-                    
+
             results[shared.step] = {}
             if not ignoreWatchdog:
                 if watchdog:
@@ -251,9 +251,9 @@ if __name__ == "__main__":
                 else:
                     shared.log(4, 'INFO: Module {0} ran ok in {1:.2f}s'.format(shared.flow[shared.step]['module'], elapsedTime))
             else:
-                shared.log(4, f'INFO: Ignoring watchdog for module {shared.step}')             
-                    
-            results[shared.step]["lastexecutiontime"] = str(elapsedTime) 
+                shared.log(4, f'INFO: Ignoring watchdog for module {shared.step}')
+
+            results[shared.step]["lastexecutiontime"] = str(elapsedTime)
 
             if result == shared.ABORT:
                 break
@@ -277,10 +277,10 @@ if __name__ == "__main__":
         except json.JSONDecodeError as err:
             shared.log(0, "ERROR: Error parsing {0} {1}".format(moduleConfig, err), exitCode=1)
 
-    if moduleDebug:        
+    if moduleDebug:
         try:
             flowTimingsFile = os.environ[f"ALLSKY_FLOWTIMINGS_{flowName.upper()}"]
-        
+
             flowEndTime = round(time.time() * 1000)
             flowElapsedTime = int(flowEndTime - flowStartTime)
             queueData = []
@@ -289,37 +289,37 @@ if __name__ == "__main__":
                 allQueueData = shared.dbGet("flowtimer")
                 if flowName in allQueueData:
                     queueData = allQueueData[flowName]
-                
+
             queue = deque(queueData, maxlen = shared.args.flowtimerframes)
             queue.append(flowElapsedTime)
-            
+
             queueData = list(queue)
             allQueueData[flowName] = queueData
             shared.dbUpdate("flowtimer", allQueueData)
-            
+
             try:
                 flowTimingsFolder = os.environ["ALLSKY_FLOWTIMINGS"]
             except KeyError:
                 flowTimingsFolder = os.path.join(shared.allskyTmp,"flowtimings")
-            
+
             shared.checkAndCreateDirectory(flowTimingsFolder)
             if len(list(queue)) >= shared.args.flowtimerframes:
                 average = str(int(numpy.average(list(queue))))
                 with open(flowTimingsFile, 'w') as f:
-                    f.write(average) 
+                    f.write(average)
             else:
                 if shared.isFileWriteable(flowTimingsFile):
                     os.remove(flowTimingsFile)
         except KeyError:
             pass
-            
+
     if not moduleDebug:
         try:
             flowTimingsFolder = os.environ["ALLSKY_FLOWTIMINGS"]
         except KeyError:
-            flowTimingsFolder = os.path.join(shared.allskyTmp,"flowtimings")        
+            flowTimingsFolder = os.path.join(shared.allskyTmp,"flowtimings")
         if shared.dbHasKey("flowtimer"):
             shared.dbDeleteKey("flowtimer")
-            
+
         if os.path.exists(flowTimingsFolder):
             shutil.rmtree(flowTimingsFolder)

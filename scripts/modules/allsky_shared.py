@@ -42,7 +42,7 @@ def getEnvironmentVariable(name, fatal=False):
 
 # These must exist and are used in several places.
 ALLSKYPATH = getEnvironmentVariable("ALLSKY_HOME", fatal=True)
-TMPDIR = getEnvironmentVariable("ALLSKY_TMP", fatal=True)
+ALLSKY_TMP = getEnvironmentVariable("ALLSKY_TMP", fatal=True)
 SETTINGSFILE = getEnvironmentVariable("SETTINGS_FILE", fatal=True)
 ALLSKY_OVERLAY = getEnvironmentVariable("ALLSKY_OVERLAY", fatal=True)
 
@@ -157,9 +157,9 @@ def convertPath(path):
 
 
 def startModuleDebug(module):
-    global TMPDIR
+    global ALLSKY_TMP
 
-    moduleTmpDir = os.path.join(TMPDIR, "debug", module)
+    moduleTmpDir = os.path.join(ALLSKY_TMP, "debug", module)
     try:
         if os.path.exists(moduleTmpDir):
             shutil.rmtree(moduleTmpDir)
@@ -170,9 +170,9 @@ def startModuleDebug(module):
 
 
 def writeDebugImage(module, fileName, image):
-    global TMPDIR
+    global ALLSKY_TMP
 
-    debugDir = os.path.join(TMPDIR, "debug", module)
+    debugDir = os.path.join(ALLSKY_TMP, "debug", module)
     os.makedirs(debugDir, mode = 0o777, exist_ok = True)
     moduleTmpFile = os.path.join(debugDir, fileName)
     cv2.imwrite(moduleTmpFile, image, params=None)
@@ -264,16 +264,16 @@ def log(level, text, preventNewline = False, exitCode=None):
         sys.exit(exitCode)
 
 def initDB():
-    global DBDATA, TMPDIR
+    global DBDATA, ALLSKY_TMP
 
-    dbFile = os.path.join(TMPDIR, 'allskydb.py')
+    dbFile = os.path.join(ALLSKY_TMP, 'allskydb.py')
     if not os.path.isfile(dbFile):
         file = open(dbFile, 'w+')
         file.write('DataBase = {}')
         file.close()
 
     try:
-        sys.path.insert(1, TMPDIR)
+        sys.path.insert(1, ALLSKY_TMP)
         database = __import__('allskydb')
         DBDATA = database.DataBase
     except:
@@ -308,9 +308,9 @@ def dbGet(key):
         return None
 
 def writeDB():
-    global DBDATA, TMPDIR
+    global DBDATA, ALLSKY_TMP
 
-    dbFile = os.path.join(TMPDIR, 'allskydb.py')
+    dbFile = os.path.join(ALLSKY_TMP, 'allskydb.py')
     file = open(dbFile, 'w+')
     file.write('DataBase = ')
     file.write(str(DBDATA))

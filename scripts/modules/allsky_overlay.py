@@ -352,7 +352,7 @@ class ALLSKYOVERLAY:
         result = True
 
         self._image = s.image
-        if self._notEnabled is not "":
+        if self._notEnabled != "":
             s.log(4, f'INFO: Not enabled: {self._notEnabled}')
         return result
 
@@ -360,35 +360,38 @@ class ALLSKYOVERLAY:
         """ Saves the final image """
         s.image = self._image
 
-    def _timer(self, text, showIntermediate = True, showMessage=True):
+    def _timer(self, text, showIntermediate=True, showMessage=True):
         """ Method to display the elapsed time between function calls and the total script execution time """
         if s.LOGLEVEL and showMessage:
+            now = datetime.now()
             if self._lastTimer is None:
-                elapsedSinceLastTime = datetime.now() - self._startTime
+                elapsedSinceLastTime = now - self._startTime
             else:
-                elapsedSinceLastTime = datetime.now() - self._lastTimer
+                elapsedSinceLastTime = now - self._lastTimer
 
-            lastText = str(elapsedSinceLastTime.total_seconds())
-            self._lastTimer = datetime.now()
+            self._lastTimer = now
 
-            elapsedTime = datetime.now() - self._startTime
+            elapsedTime = now - self._startTime
+            # Need .6f  or else really small numbers have scientific notation
             if showIntermediate:
-                s.log(4, f"INFO: {text} took {lastText} seconds. Elapsed time {elapsedTime.total_seconds()} seconds")
+                lastText = elapsedSinceLastTime.total_seconds()
+                s.log(4, f"INFO: {text} took {lastText:.6f} seconds. Elapsed time {elapsedTime.total_seconds():.6f} seconds")
             else:
-                s.log(4, f"INFO: {text} Elapsed time {elapsedTime.total_seconds()} seconds")
+                s.log(4, f"INFO: {text} Elapsed time {elapsedTime.total_seconds():.6f} seconds")
 
     def _getFont(self, font, fontSize):
 
+        tt = '/usr/share/fonts/truetype/msttcorefonts'
         systemFontMap = {
-            'Arial': {'fontpath': '/usr/share/fonts/truetype/msttcorefonts/Arial.ttf'},
-            'Arial Black': {'fontpath': '/usr/share/fonts/truetype/msttcorefonts/Arial_Black.ttf'},
-            'Times New Roman': {'fontpath': '/usr/share/fonts/truetype/msttcorefonts/Times_New_Roman.ttf'},
-            'Courier New': {'fontpath': '/usr/share/fonts/truetype/msttcorefonts/cour.ttf'},
-            'Verdana': {'fontpath': '/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf'},
-            'Trebuchet MS': {'fontpath': '/usr/share/fonts/truetype/msttcorefonts/trebuc.ttf'},
-            'Impact': {'fontpath': '/usr/share/fonts/truetype/msttcorefonts/Impact.ttf'},
-            'Georgia': {'fontpath': '/usr/share/fonts/truetype/msttcorefonts/Georgia.ttf'},
-            'Comic Sans MS': {'fontpath': '/usr/share/fonts/truetype/msttcorefonts/comic.ttf'},
+            'Arial':           {'fontpath': f'{tt}/Arial.ttf'},
+            'Arial Black':     {'fontpath': f'{tt}/Arial_Black.ttf'},
+            'Times New Roman': {'fontpath': f'{tt}/Times_New_Roman.ttf'},
+            'Courier New':     {'fontpath': f'{tt}/cour.ttf'},
+            'Verdana':         {'fontpath': f'{tt}/Verdana.ttf'},
+            'Trebuchet MS':    {'fontpath': f'{tt}/trebuc.ttf'},
+            'Impact':          {'fontpath': f'{tt}/Impact.ttf'},
+            'Georgia':         {'fontpath': f'{tt}/Georgia.ttf'},
+            'Comic Sans MS':   {'fontpath': f'{tt}/comic.ttf'},
         }
 
         preMsg = f"Loading '{font}' font, size {fontSize} pixels"
@@ -414,22 +417,18 @@ class ALLSKYOVERLAY:
                     fontSize = self._overlayConfig['settings']['defaultfontsize']
 
             fontKey = font + '_' + str(fontSize)
-
             if fontKey in self._fonts:
                 font = self._fonts[fontKey]
                 # Only display this message once per font/size
                 if fontKey not in self._fontMsgs:
                     self._fontMsgs[fontKey] = True
-                    s.log(4, F'{preMsg} (from cache).')
+                    s.log(4, F'{preMsg} from cache.')
             else:
                 try:
                     fontSize = s.int(fontSize)
                     self._fonts[fontKey] = ImageFont.truetype(fontPath, fontSize)
                     font = self._fonts[fontKey]
-                    s.log(4, F'{preMsg} (from disk).')
-#                    if fontKey not in self._fontMsgs:
-#                        self._fontMsgs[fontKey] = True
-#                        s.log(4, F'{preMsg} (from disk).')
+                    s.log(4, F'{preMsg} from disk.')
                 except OSError as err:
                     s.log(0, f"ERROR: Could not load font '{fontPath}' from disk.")
                     font = None
@@ -626,7 +625,7 @@ class ALLSKYOVERLAY:
                 else:
                     pilImage = self._draw_rotated_text(pilImage,-rotation,(fieldX, fieldY), fieldLabel, fill = fieldColour, font = font, opacity = opacity, strokeWidth=strokeWidth, strokeFill=stroke)
 
-            self._timer("Adding text field " + fieldLabel + ' (' + fieldData["label"] + ') ')
+            self._timer("Adding text field '" + fieldLabel + ' (' + fieldData["label"] + ")'")
         else:
             self._timer("Adding text field " + fieldData['label'] + " failed no variable data available")
 
@@ -1358,9 +1357,9 @@ class ALLSKYOVERLAY:
                                 if self._loadDataFile():
                                     self._timer("Loading Extra Data")
                                     self._addText()
-                                    self._timer("Adding Text Fields")
+                                    self._timer("Adding All Text Fields")
                                     self._addImages()
-                                    self._timer("Adding Image Fields")
+                                    self._timer("Adding All Image Fields")
                                     self._saveImagefile()
                                     self._timer("Saving Final Image")
                                     if self._debug:

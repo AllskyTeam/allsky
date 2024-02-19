@@ -35,7 +35,7 @@ def getEnvironmentVariable(name, fatal=False):
         result = os.environ[name]
     except KeyError:
         if fatal:
-            log(0, "ERROR: Environment variable '{0}' not found.".format(name), exitCode=98)
+            log(0, f"ERROR: Environment variable '{name}' not found.", exitCode=98)
 
     return result
 
@@ -91,8 +91,9 @@ def convertLatLon(input):
 def skyClear():
     skyState = "unknown"
     skyStateFlag = True
-    if "AS_SKYSTATE" in os.environ:
-        if os.environ["AS_SKYSTATE"] == "Clear":
+    X = getEnvironmentVariable("AS_SKYSTATE")
+    if X is not None:
+        if X == "Clear":
             skyState = "clear"
             skyStateFlag = True
         else:
@@ -107,8 +108,9 @@ def skyClear():
 def raining():
     raining = "unknown"
     rainFlag = False
-    if "AS_ALLSKYRAINFLAG" in os.environ:
-        rainingFlag = os.environ["AS_ALLSKYRAINFLAG"]
+    X = getEnvironmentVariable("AS_ALLSKYRAINFLAG")
+    if X is not None:
+        rainingFlag = X
         if rainingFlag == "True":
             raining = "yes"
             rainFlag = True
@@ -135,7 +137,7 @@ def convertPath(path):
 
         value = None
         if envVar == "CURRENT_IMAGE":
-            value = getEnvironmentVariable(envVar)
+            value = getEnvironmentVariable(envVar, fatal=True)
             value = os.path.basename(value)
         else:
             if envVar in os.environ:
@@ -161,9 +163,9 @@ def startModuleDebug(module):
         if os.path.exists(moduleTmpDir):
             shutil.rmtree(moduleTmpDir)
         os.makedirs(moduleTmpDir, exist_ok=True)
-        log(4,"INFO: Creating folder for debug {0}".format(moduleTmpDir))
+        log(4, f"INFO: Creating folder for debug {moduleTmpDir}")
     except:
-        log(0,"ERROR: Unable to create {0}".format(moduleTmpDir))
+        log(0, f"ERROR: Unable to create {moduleTmpDir}")
 
 
 def writeDebugImage(module, fileName, image):
@@ -185,7 +187,7 @@ def setEnvironmentVariable(name, value, logMessage='', logLevel=4):
             log(logLevel, logMessage)
     except:
         result = False
-        log(4, f'ERROR: Failed to set environment variable {name} to value {value}')
+        log(2, f'ERROR: Failed to set environment variable {name} to value {value}')
 
     return result
 

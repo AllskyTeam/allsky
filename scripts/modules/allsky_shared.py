@@ -43,7 +43,7 @@ def getEnvironmentVariable(name, fatal=False):
 # These must exist and are used in several places.
 ALLSKYPATH = getEnvironmentVariable("ALLSKY_HOME", fatal=True)
 ALLSKY_TMP = getEnvironmentVariable("ALLSKY_TMP", fatal=True)
-SETTINGSFILE = getEnvironmentVariable("SETTINGS_FILE", fatal=True)
+SETTINGS_FILE = getEnvironmentVariable("SETTINGS_FILE", fatal=True)
 ALLSKY_OVERLAY = getEnvironmentVariable("ALLSKY_OVERLAY", fatal=True)
 
 
@@ -133,8 +133,7 @@ def convertPath(path):
     matches = re.finditer(regex, path, re.MULTILINE | re.IGNORECASE)
     for matchNum, match in enumerate(matches, start=1):
         variable = match.group()
-        envVar = variable.replace("${", "")
-        envVar = envVar.replace("}", "")
+        envVar = variable.replace("${", "").replace("}", "")
 
         value = None
         if envVar == "CURRENT_IMAGE":
@@ -213,9 +212,9 @@ def setupForCommandLine():
 
 ####### settings file functions
 def readSettings():
-    global SETTINGS, SETTINGSFILE
+    global SETTINGS, SETTINGS_FILE
 
-    with open(SETTINGSFILE, "r") as fp:
+    with open(SETTINGS_FILE, "r") as fp:
         SETTINGS = json.load(fp)
 
     LOGLEVEL = int(getSetting("debuglevel"))
@@ -235,9 +234,9 @@ def getSetting(settingName):
     return result
 
 def writeSettings():
-    global SETTINGS, SETTINGSFILE
+    global SETTINGS, SETTINGS_FILE
 
-    with open(SETTINGSFILE, "w") as fp:
+    with open(SETTINGS_FILE, "w") as fp:
         json.dump(SETTINGS, fp, indent=4)
 
 def updateSetting(values):

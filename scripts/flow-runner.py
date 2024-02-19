@@ -34,8 +34,7 @@ Get the locations of the modules and scripts and add them to the path.
 try:
     allSkyModules = os.environ["ALLSKY_MODULE_LOCATION"]
 except KeyError:
-    print("ERROR: $ALLSKY_MODULE_LOCATION not found in environment variables - Aborting")
-    sys.exit(1)
+    Log(0, "ERROR: $ALLSKY_MODULE_LOCATION not found - Aborting.", exitCode=1)
 allSkyModulesLocation = os.path.join(allSkyModules, "modules")
 
 try:
@@ -61,31 +60,24 @@ if __name__ == "__main__":
 
     shared.initDB()
 
+    # TODO: ALLSKY_TMP and SETTINGS_FILE are checked in allsky_shared.py.
+    # Do they need to be checked here as well?
+    shared.allskyTmp = shared.getEnvironmentVariable("ALLSKY_TMP", fatal=True);
+
     if shared.args.cleartimings:
         if shared.dbHasKey("flowtimer"):
             shared.dbDeleteKey("flowtimer")
 
-        try:
-            flowTimingsFolder = os.environ["ALLSKY_FLOWTIMINGS"]
-        except KeyError:
+        flowTimingsFolder = shared.getEnvironmentVariable("ALLSKY_TMP", fatal=False);
+        if flowTimingsFolder is None:
             flowTimingsFolder = os.path.join(shared.allskyTmp,"flowtimings")
 
         if os.path.exists(flowTimingsFolder):
             shutil.rmtree(flowTimingsFolder)
         sys.exit(0)
 
-    try:
-        shared.allskyTmp = os.environ["ALLSKY_TMP"]
-    except:
-        shared.log(0, "ERROR: $ALLSKY_TMP not found in the variables", exitCode=1)
-    try:
-        imagesRoot = os.environ["ALLSKY_IMAGES"]
-    except:
-        shared.log(0, "ERROR: $ALLSKY_IMAGES not found in the variables", exitCode=1)
-    try:
-        rawSettings = os.environ["SETTINGS_FILE"]
-    except:
-        shared.log(0, "ERROR: no camera config file available in the environment", exitCode=1)
+    imagesRoot = shared.getEnvironmentVariable("ALLSKY_IMAGES", fatal=True);
+    rawSettings = shared.getEnvironmentVariable("SETTINGS_FILE", fatal=True);
 
     if (shared.args.event == "postcapture"):
         try:
@@ -93,15 +85,8 @@ if __name__ == "__main__":
         except KeyError:
             shared.LOGLEVEL = 0
 
-        try:
-            shared.CURRENTIMAGEPATH = os.environ['CURRENT_IMAGE']
-        except KeyError:
-            shared.log(0, "ERROR: no image file available in the environment", exitCode=1)
-
-        try:
-            shared.args.tod = os.environ["DAY_OR_NIGHT"].lower()
-        except:
-            shared.log(0, "ERROR: unable to determine if its day or night in the environment", exitCode=1)
+        shared.CURRENTIMAGEPATH = shared.getEnvironmentVariable("CURRENT_IMAGE", fatal=True);
+        shared.args.tod = shared.getEnvironmentVariable("DAY_OR_NIGHT", fatal=True).lower();
 
         try:
             with open(rawSettings, 'r') as settingsFile:
@@ -109,7 +94,7 @@ if __name__ == "__main__":
         except (FileNotFoundError, KeyError):
             shared.log(0, "ERROR: Unable to read SETTINGS_FILE - Aborting", exitCode=1)
 
-        shared.fullFilename = os.environ["FULL_FILENAME"]
+        shared.fullFilename = shared.getEnvironmentVariable("FULL_FILENAME", fatal=True);
         shared.createThumbnails = bool(shared.getSetting("imagecreatethumbnails"))
         shared.thumbnailWidth = int(shared.getSetting("thumbnailsizex"))
         shared.thumbnailHeight = int(shared.getSetting("thumbnailsizey"))
@@ -135,11 +120,7 @@ if __name__ == "__main__":
         dateString = date.strftime("%Y%m%d")
         shared.imageFolder = os.path.join(imagesRoot, dateString)
 
-    try:
-        shared.args.allskyConfig = os.environ["ALLSKY_MODULES"]
-    except:
-        shared.log(0, "ERROR: no allsky config directory available in the environment", exitCode=1)
-
+    shared.args.allskyConfig = shared.getEnvironmentVariable("ALLSKY_MODULES", fatal=True);
     watchdog = False
     moduleDebug = False
     timeout = 0
@@ -166,12 +147,10 @@ if __name__ == "__main__":
 
     flowName = shared.args.tod if shared.args.event == "postcapture" else shared.args.event
     shared.log(4, "INFO: Running {0} flow...".format(flowName))
+    moduleConfig = "{0}/postprocessing_{1}.json".format(shared.args.allskyConfig, flowName)
     try:
-        moduleConfig = "{0}/postprocessing_{1}.json".format(shared.args.allskyConfig, flowName)
-
         with open(moduleConfig) as flow_file:
-            flow_file.seek(0, os.SEEK_END)
-            if (flow_file.tell() == 0):
+            if (os.stat(moduleConfig).st_size == 0):
                 shared.log(0, "ERROR: File is empty: {0}".format(moduleConfig), exitCode=1)
             try:
                 shared.flow=json.load(flow_file)

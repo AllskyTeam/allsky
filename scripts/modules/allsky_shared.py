@@ -28,7 +28,7 @@ except:
 
 ABORT = True
 
-def getEnvironmentVariable(name, fatal=False, error=''):
+def getEnvironmentVariable(name, fatal=False):
     result = None
 
     try:

@@ -31,10 +31,12 @@ signal.signal(signal.SIGUSR2, signalHandler)
 '''
 Get the locations of the modules and scripts and add them to the path.
 '''
+# Can't use log() or getEnvironmentVariable() yet.
 try:
     allSkyModules = os.environ["ALLSKY_MODULE_LOCATION"]
 except KeyError:
-    Log(0, "ERROR: $ALLSKY_MODULE_LOCATION not found - Aborting.", exitCode=1)
+    print(0, "ERROR: $ALLSKY_MODULE_LOCATION not found - Aborting.")
+    sys.exit(1)
 allSkyModulesLocation = os.path.join(allSkyModules, "modules")
 
 try:

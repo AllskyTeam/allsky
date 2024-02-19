@@ -59,6 +59,7 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--flowtimerframes",  type=int, help="Number of frames to capture for the flow timing averages.", default=10)
     parser.add_argument("-c", "--cleartimings", action="store_true", help="Clear any flow average timing data.")
     shared.args = parser.parse_args()
+    ignoreWatchdogMsg = ""
 
     shared.initDB()
 
@@ -224,7 +225,7 @@ if __name__ == "__main__":
                 else:
                     shared.log(4, f'INFO: Module {fileName} ran ok in {elapsedTime:.2f} seconds')
             else:
-                shared.log(4, f'INFO: Ignoring watchdog for module {shared.step}')
+                ignoreWatchdogMsg = ignoreWatchdogMsg + f"  {shared.step}"
 
             results[shared.step]["lastexecutiontime"] = str(elapsedTime)
 
@@ -232,6 +233,8 @@ if __name__ == "__main__":
                 break
 
             results[shared.step]["lastexecutionresult"] = result
+    if ignoreWatchdogMsg is not "":
+        shared.log(4, f'INFO: Ignored watchdog for: {ignoreWatchdogMsg}')
     shared.log(4, f"INFO: ===== {flowName} flow complete.")
 
     with open(moduleConfig) as updatefile:

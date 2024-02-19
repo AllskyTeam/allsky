@@ -35,7 +35,7 @@ Get the locations of the modules and scripts and add them to the path.
 try:
     allSkyModules = os.environ["ALLSKY_MODULE_LOCATION"]
 except KeyError:
-    print(0, "ERROR: $ALLSKY_MODULE_LOCATION not found - Aborting.")
+    print("ERROR: $ALLSKY_MODULE_LOCATION not found - Aborting.")
     sys.exit(1)
 allSkyModulesLocation = os.path.join(allSkyModules, "modules")
 

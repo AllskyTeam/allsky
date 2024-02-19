@@ -66,10 +66,10 @@ if __name__ == "__main__":
         if shared.dbHasKey("flowtimer"):
             shared.dbDeleteKey("flowtimer")
 
-        flowTimingsFolder = os.path.join(shared.ALLSKY_TMP, "flowtimings")
-
+        flowTimingsFolder = shared.getEnvironmentVariable("ALLSKY_FLOWTIMINGS", fatal=True)
         if os.path.exists(flowTimingsFolder):
-            shutil.rmtree(flowTimingsFolder)
+            shared.log(0, f"======= removing {flowTimingsFolder}")
+            ####### shutil.rmtree(flowTimingsFolder)
         sys.exit(0)
 
     imagesRoot = shared.getEnvironmentVariable("ALLSKY_IMAGES", fatal=True);
@@ -115,12 +115,12 @@ if __name__ == "__main__":
         dateString = date.strftime("%Y%m%d")
         shared.imageFolder = os.path.join(imagesRoot, dateString)
 
-    shared.args.allskyConfig = shared.getEnvironmentVariable("ALLSKY_MODULES", fatal=True);
+    shared.args.ALLSKY_MODULES = shared.getEnvironmentVariable("ALLSKY_MODULES", fatal=True);
     watchdog = False
     moduleDebug = False
     timeout = 0
     try:
-        configFile = os.path.join(shared.args.allskyConfig, 'module-settings.json')
+        configFile = os.path.join(shared.args.ALLSKY_MODULES, 'module-settings.json')
         with open(configFile, 'r') as module_Settings_file:
             module_settings = json.load(module_Settings_file)
             watchdog = module_settings['watchdog']
@@ -135,13 +135,13 @@ if __name__ == "__main__":
             try:
                 shared.conf=json.load(config)
             except json.JSONDecodeError as err:
-                shared.log(0, f"Error: {err}", exitCode=1)
+                shared.log(0, f"ERROR: {err}", exitCode=1)
     except:
         shared.log(0, f"ERROR: Failed to open {shared.SETTINGS_FILE}", exitCode=1)
 
     flowName = shared.args.tod if shared.args.event == "postcapture" else shared.args.event
     shared.log(4, f"INFO: Running {flowName} flow...")
-    moduleConfig = f"{shared.args.allskyConfig}/postprocessing_{flowName}.json"
+    moduleConfig = f"{shared.args.ALLSKY_MODULES}/postprocessing_{flowName}.json"
     try:
         with open(moduleConfig) as flow_file:
             if (os.stat(moduleConfig).st_size == 0):
@@ -160,14 +160,14 @@ if __name__ == "__main__":
                 disable = json.load(fp)
                 for module in disable:
                     moduleName = disable[module].replace('.py','')
-                    method = disable[module].replace('.py','').replace('allsky_','') + "_cleanup"
+                    method = moduleName.replace('allsky_','') + "_cleanup"
                     _temp = importlib.import_module(moduleName)
                     if hasattr(_temp, method):
                         globals()[method] = getattr(_temp, method)
                         result = globals()[method]()
                         shared.log(4, f"INFO: Cleared module data for {moduleName}")
                     else:
-                        shared.log(3, f"INFO: Attempting to clear module data for {moduleName} but no function provided")
+                        shared.log(3, f"WARNING: Attempted to clear module data for {moduleName} but no function provided.")
 
             os.remove(disableFile)
 
@@ -176,7 +176,8 @@ if __name__ == "__main__":
         flowStartTime = round(time.time() * 1000)
     for shared.step in shared.flow:
         m = shared.flow[shared.step]['module']
-        if shared.flow[shared.step]["enabled"] and m not in globals():
+        enabled = shared.flow[shared.step]["enabled"]
+        if enabled and m not in globals():
             try:
                 moduleName = m.replace('.py','')
                 method = m.replace('allsky_','')
@@ -189,7 +190,7 @@ if __name__ == "__main__":
         else:
             shared.log(4, f"INFO: Ignorning module {m} as its disabled")
 
-        if shared.flow[shared.step]["enabled"] and method in globals():
+        if enabled and method in globals():
             startTime = datetime.now()
             result = False
 
@@ -218,12 +219,12 @@ if __name__ == "__main__":
             if not ignoreWatchdog:
                 if watchdog:
                     if elapsedTime > timeout:
-                        shared.log(0, f'ERROR: Module {m} will be disabled, it took {1:.2f}s max allowed is {2}s', elapsedTime, timeout))
+                        shared.log(0, f'ERROR: Module {m} will be disabled, it took {elapsedTime:.2f} seconds; max allowed is {timeout} seconds')
                         results[shared.step]["disable"] = True
                     else:
-                        shared.log(4, f'INFO: Module {m} ran ok in {1:.2f}s', elapsedTime))
+                        shared.log(4, f'INFO: Module {m} ran ok in {elapsedTime:.2f} seconds')
                 else:
-                    shared.log(4, f'INFO: Module {m} ran ok in {1:.2f}s', elapsedTime))
+                    shared.log(4, f'INFO: Module {m} ran ok in {elapsedTime:.2f} seconds')
             else:
                 shared.log(4, f'INFO: Ignoring watchdog for module {shared.step}')
 
@@ -251,6 +252,7 @@ if __name__ == "__main__":
         except json.JSONDecodeError as err:
             shared.log(0, f"ERROR: Error parsing {moduleConfig} {err}", exitCode=1)
 
+    flowTimingsFolder = shared.getEnvironmentVariable("ALLSKY_FLOWTIMINGS", fatal=True)
     if moduleDebug:
         try:
             flowTimingsFile = os.environ[f"ALLSKY_FLOWTIMINGS_{flowName.upper()}"]
@@ -271,11 +273,6 @@ if __name__ == "__main__":
             allQueueData[flowName] = queueData
             shared.dbUpdate("flowtimer", allQueueData)
 
-            try:
-                flowTimingsFolder = os.environ["ALLSKY_FLOWTIMINGS"]
-            except KeyError:
-                flowTimingsFolder = os.path.join(shared.ALLSKY_TMP,"flowtimings")
-
             shared.checkAndCreateDirectory(flowTimingsFolder)
             if len(list(queue)) >= shared.args.flowtimerframes:
                 average = str(int(numpy.average(list(queue))))
@@ -287,11 +284,7 @@ if __name__ == "__main__":
         except KeyError:
             pass
 
-    if not moduleDebug:
-        try:
-            flowTimingsFolder = os.environ["ALLSKY_FLOWTIMINGS"]
-        except KeyError:
-            flowTimingsFolder = os.path.join(shared.ALLSKY_TMP,"flowtimings")
+    else:
         if shared.dbHasKey("flowtimer"):
             shared.dbDeleteKey("flowtimer")
 

@@ -337,9 +337,9 @@ select_camera_type()
 
 			if [[ -n ${CAMERA_TYPE} ]]; then
 				MSG="Using Camera Type '${CAMERA_TYPE}' from prior Allsky."
+				display_msg --logonly info "${MSG}"
 				STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 				STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
-				display_msg --logonly info "${MSG}"
 				return
 			else
 				MSG="Camera Type not in prior new-style settings file."
@@ -350,14 +350,14 @@ select_camera_type()
 			CAMERA="$( get_variable "CAMERA" "${PRIOR_CONFIG_FILE}" )"
 			if [[ -n ${CAMERA} ]]; then
 				CAMERA_TYPE="$( CAMERA_to_CAMERA_TYPE "${CAMERA}" )"
-				STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
-				STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
 				if [[ ${CAMERA} != "${CAMERA_TYPE}" ]]; then
 					NEW=" (now called ${CAMERA_TYPE})"
 				else
 					NEW=""
 				fi
 				display_msg --log progress "Using prior ${CAMERA} camera${NEW}."
+				STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+				STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
 				return
 			else
 				MSG="CAMERA not in prior old-style config.sh."
@@ -1779,7 +1779,7 @@ convert_config_sh()
 		X=1; doV "X" ".keogramfontsize" "text" "${NEW_FILE}"			# new
 		X=3; doV "X" ".keogramlinethickness" "text" "${NEW_FILE}"		# new
 
-		doV "STARTRAILS" ".startrailsgramgenerate" "boolean" "${NEW_FILE}"
+		doV "STARTRAILS" ".startrailsgenerate" "boolean" "${NEW_FILE}"
 		doV "BRIGHTNESS_THRESHOLD" ".startrailsbrightnessthreshold" "number" "${NEW_FILE}"
 		doV "STARTRAILS_EXTRA_PARAMETERS" ".startrailsextraparameters" "text" "${NEW_FILE}"
 		doV "UPLOAD_STARTRAILS" ".startrailsupload" "boolean" "${NEW_FILE}"
@@ -1798,9 +1798,6 @@ convert_config_sh()
 		doV "WEB_DAYS_TO_KEEP" ".daystokeeplocalwebsite" "number" "${NEW_FILE}"
 		X=0; doV "X" ".daystokeepremotewebsite" "number" "${NEW_FILE}"
 		doV "WEBUI_DATA_FILES" ".webuidatafiles" "text" "${NEW_FILE}"
-		doV "UHUBCTL_PATH" ".uhubctlpath" "text" "${NEW_FILE}"
-		doV "UHUBCTL_PORT" ".uhubctlport" "number" "${NEW_FILE}"
-
 	) || return 1
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )

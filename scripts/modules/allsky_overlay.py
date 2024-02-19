@@ -114,13 +114,13 @@ class ALLSKYOVERLAY:
 
         self._fields = self._systemfields + self._userfields
 
-        s.log(4, "INFO: Config file set to '{}'.".format(self._overlayConfigFile))
+        s.log(4, f"INFO: Config file set to '{self._overlayConfigFile}'.")
         self._enableSkyfield = True
         try:
             load = Loader(self._OVERLAYTMP, verbose=False)
             self._eph = load('de421.bsp')
         except Exception as err:
-            s.log(0, f"ERROR: Unable to download de421.bsp: {err}")00
+            s.log(0, f"ERROR: Unable to download de421.bsp: {err}")
             self._enableSkyfield = False
         self._setDateandTime()
         self._observerLat = s.getSetting('latitude')
@@ -206,7 +206,7 @@ class ALLSKYOVERLAY:
         for (dirPath, dirNames, fileNames) in os.walk(extraFolder):
             for fileName in fileNames:
                 dataFilename = os.path.join(extraFolder, fileName)
-                s.log(4, "INFO: Loading Data File {}".format(dataFilename))
+                s.log(4, f"INFO: Loading Data File {dataFilename}")
                 self._readData(dataFilename, defaultExpiry)
 
         return result
@@ -334,10 +334,10 @@ class ALLSKYOVERLAY:
                 self._overlayConfig = json.load(file)
 
             if len(self._overlayConfig["fields"]) == 0 and len(self._overlayConfig["images"]) == 0:
-                s.log(1, "WARNING: Config file '{}' is empty.".format(self._overlayConfigFile))
+                s.log(1, f"WARNING: Config file '{self._overlayConfigFile}' is empty.")
                 result = True
         else:
-            s.log(0, "ERROR: Config File '{}' not accessible.".format(self._overlayConfigFile))
+            s.log(0, f"ERROR: Config File '{self._overlayConfigFile}' not accessible.")
             result = False
 
         return result
@@ -1188,7 +1188,7 @@ class ALLSKYOVERLAY:
         return ret
 
     def _fetchTleFromCelestrak(self, noradCatId, verify=True):
-        s.log(4, 'INFO: Loading Satellite {}'.format(noradCatId), True)
+        s.log(4, f'INFO: Loading Satellite {noradCatId}', fatal=True)
         tleFileName = os.path.join(self._OVERLAYTLEFOLDER , noradCatId + '.tle')
 
         self._createTempDir(self._OVERLAYTLEFOLDER)

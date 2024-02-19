@@ -35,7 +35,7 @@ def getEnvironmentVariable(name, fatal=False):
         result = os.environ[name]
     except KeyError:
         if fatal:
-            Log(0, "ERROR: Environment variable '{0}' not found.".format(name), exitCode=98)
+            log(0, "ERROR: Environment variable '{0}' not found.".format(name), exitCode=98)
 
     return result
 

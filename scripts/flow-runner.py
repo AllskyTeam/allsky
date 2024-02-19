@@ -233,7 +233,8 @@ if __name__ == "__main__":
                 break
 
             results[shared.step]["lastexecutionresult"] = result
-    if ignoreWatchdogMsg is not "":
+
+    if ignoreWatchdogMsg != "":
         shared.log(4, f'INFO: Ignored watchdog for: {ignoreWatchdogMsg}')
     shared.log(4, f"INFO: ===== {flowName} flow complete.")
 

@@ -193,7 +193,7 @@ def setEnvironmentVariable(name, value, logMessage='', logLevel=4):
 
 
 def setupForCommandLine():
-    global ALLSKYPATH, LOGLEVEL
+    global ALLSKYPATH
 
     command = shlex.split("bash -c 'source " + ALLSKYPATH + "/variables.sh && env'")
     proc = subprocess.Popen(command, stdout = subprocess.PIPE)
@@ -212,7 +212,7 @@ def setupForCommandLine():
 
 ####### settings file functions
 def readSettings():
-    global SETTINGS, SETTINGS_FILE
+    global SETTINGS, SETTINGS_FILE, LOGLEVEL
 
     with open(SETTINGS_FILE, "r") as fp:
         SETTINGS = json.load(fp)

@@ -38,20 +38,13 @@ function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=nul
 		$sep = "\n";
 	}
 
-	if ($file == "") {
+	if ($file == "" || ! file_exists($file)) {
 		$retMsg .= $div;
 		$retMsg .= $errorMsg;
-		$retMsg .= " File not specified!";
-		$retMsg .= $end;
-		if ($returnedMsg === null) echo "$retMsg";
-		else $returnedMsg = $retMsg;
-		return null;
-	}
-
-	if (! file_exists($file)) {
-		$retMsg .= $div;
-		$retMsg .= $errorMsg;
-		$retMsg .= " File <b>$file</b> not found!";
+		if ($file == "")
+			$retMsg .= " File not specified!";
+		else
+			$retMsg .= " File <b>$file</b> not found!";
 		$retMsg .= $end;
 		if ($returnedMsg === null) echo "$retMsg";
 		else $returnedMsg = $retMsg;
@@ -59,18 +52,13 @@ function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=nul
 	}
 
 	$str = file_get_contents($file, true);
-	if ($str === "") {
+	if ($str === "" || $str === false) {
 		$retMsg .= $div;
 		$retMsg .= $errorMsg;
-		$retMsg .= " File <b>$file</b> is empty!";
-		$retMsg .= $end;
-		if ($returnedMsg === null) echo "$retMsg";
-		else $returnedMsg = $retMsg;
-		return null;
-	} else if ($str === false) {
-		$retMsg .= $div;
-		$retMsg .= $errorMsg;
-		$retMsg .= " Error reading <b>$file</b>!";
+		if ($str === "")
+			$retMsg .= " File <b>$file</b> is empty!";
+		else
+			$retMsg .= " Error reading <b>$file</b>!";
 		$retMsg .= $end;
 		if ($returnedMsg === null) echo "$retMsg";
 		else $returnedMsg = $retMsg;

@@ -101,7 +101,7 @@ def meteor(params, event):
             height, width = s.image.shape[:2]
 
             if mask != "":
-                maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_OVERLAY", fatal=True),"images",mask)
+                maskPath = os.path.join(s.ALLSKY_OVERLAY, "images", mask)
                 s.log(4,f"INFO: Loading mask {maskPath}")
                 maskImage = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
                 if maskImage is not None:

@@ -68,8 +68,7 @@ if __name__ == "__main__":
 
         flowTimingsFolder = shared.getEnvironmentVariable("ALLSKY_FLOWTIMINGS", fatal=True)
         if os.path.exists(flowTimingsFolder):
-            shared.log(0, f"======= removing {flowTimingsFolder}")
-            ####### shutil.rmtree(flowTimingsFolder)
+            shutil.rmtree(flowTimingsFolder)
         sys.exit(0)
 
     imagesRoot = shared.getEnvironmentVariable("ALLSKY_IMAGES", fatal=True);
@@ -129,7 +128,7 @@ if __name__ == "__main__":
     except:
         watchdog = False
 
-    shared.log(4, f"INFO: Loading config {shared.SETTINGS_FILE}")
+    shared.log(4, f"INFO: Loading {shared.SETTINGS_FILE}")
     try:
         with open(shared.SETTINGS_FILE,'r') as config:
             try:
@@ -140,7 +139,7 @@ if __name__ == "__main__":
         shared.log(0, f"ERROR: Failed to open {shared.SETTINGS_FILE}", exitCode=1)
 
     flowName = shared.args.tod if shared.args.event == "postcapture" else shared.args.event
-    shared.log(4, f"INFO: Running {flowName} flow...")
+    shared.log(4, f"INFO: ===== Running {flowName} flow...")
     moduleConfig = f"{shared.args.ALLSKY_MODULES}/postprocessing_{flowName}.json"
     try:
         with open(moduleConfig) as flow_file:
@@ -175,20 +174,19 @@ if __name__ == "__main__":
     if moduleDebug:
         flowStartTime = round(time.time() * 1000)
     for shared.step in shared.flow:
-        m = shared.flow[shared.step]['module']
+        fileName = shared.flow[shared.step]['module']
         enabled = shared.flow[shared.step]["enabled"]
-        if enabled and m not in globals():
+        if enabled and fileName not in globals():
             try:
-                moduleName = m.replace('.py','')
-                method = m.replace('allsky_','')
-                shared.log(4, f"INFO: ---------------- Running Module {m} ----------------")
-                shared.log(4, f"INFO: Attempting to load {moduleName}")
+                moduleName = fileName.replace('.py','')
+                method = moduleName.replace('allsky_','')
+                shared.log(4, f"INFO: --------------- Running Module {moduleName} ---------------")
                 _temp = importlib.import_module(moduleName)
                 globals()[method] = getattr(_temp, method)
             except Exception as e:
-                shared.log(0, f"ERROR: Failed to import module allsky_{moduleName}.py: {e}. Ignoring Module.")
+                shared.log(0, f"ERROR: Failed to import module {moduleName}.py: {e}; ignoring.")
         else:
-            shared.log(4, f"INFO: Ignorning module {m} as its disabled")
+            shared.log(4, f"INFO: Module {fileName} disabled; ignoring.")
 
         if enabled and method in globals():
             startTime = datetime.now()
@@ -202,7 +200,7 @@ if __name__ == "__main__":
                 result = globals()[method](arguments, shared.args.event)
             except Exception as e:
                 eType, eObject, eTraceback = sys.exc_info()
-                shared.log(0, f"ERROR: Module {m} failed on line {eTraceback.tb_lineno} - {e}")
+                shared.log(0, f"ERROR: Module {fileName} failed on line {eTraceback.tb_lineno} - {e}")
 
             endTime = datetime.now()
             elapsedTime = (((endTime - startTime).total_seconds()) * 1000) / 1000
@@ -219,12 +217,12 @@ if __name__ == "__main__":
             if not ignoreWatchdog:
                 if watchdog:
                     if elapsedTime > timeout:
-                        shared.log(0, f'ERROR: Module {m} will be disabled, it took {elapsedTime:.2f} seconds; max allowed is {timeout} seconds')
+                        shared.log(0, f'ERROR: Module {fileName} will be disabled, it took {elapsedTime:.2f} seconds; max allowed is {timeout} seconds')
                         results[shared.step]["disable"] = True
                     else:
-                        shared.log(4, f'INFO: Module {m} ran ok in {elapsedTime:.2f} seconds')
+                        shared.log(4, f'INFO: Module {fileName} ran ok in {elapsedTime:.2f} seconds')
                 else:
-                    shared.log(4, f'INFO: Module {m} ran ok in {elapsedTime:.2f} seconds')
+                    shared.log(4, f'INFO: Module {fileName} ran ok in {elapsedTime:.2f} seconds')
             else:
                 shared.log(4, f'INFO: Ignoring watchdog for module {shared.step}')
 
@@ -234,7 +232,7 @@ if __name__ == "__main__":
                 break
 
             results[shared.step]["lastexecutionresult"] = result
-    shared.log(4, f"INFO: {flowName} flow Complete...")
+    shared.log(4, f"INFO: ===== {flowName} flow complete.")
 
     with open(moduleConfig) as updatefile:
         try:

@@ -29,7 +29,7 @@ IMAGES_FILE=""
 
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
-	case "${ARG}" in
+	case "${ARG,,}" in
 			--help)
 				DO_HELP="true"
 				;;
@@ -264,11 +264,13 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 		CMD="'${ALLSKY_BIN}/keogram' ${N} ${SIZE_FILTER} -d '${OUTPUT_DIR}' \
 			-e ${EXTENSION} -o '${UPLOAD_FILE}' ${MORE} ${KEOGRAM_EXTRA_PARAMETERS}"
 		generate "Keogram" "keogram" "${CMD}"
-		if [[ $? -gt 90 && ${DO_STARTRAILS} == "true" ]]; then
+
+		if [[ $? -gt 90 && (${DO_STARTRAILS} == "true" || ${DO_TIMELAPSE} == "true" ]]; then
 			DO_STARTRAILS="false"
+			DO_TIMELAPSE="false"
 			# -gt 90 means either no files or unable to read initial file, and
 			# keograms will have the same problem, so don't bother running.
-			echo "Keogram creation unable to read files; will not run startrails."
+			echo "Keogram creation unable to read files; will not run startrails or timelapse."
 		fi
 	else
 		upload "Keogram" "${UPLOAD_FILE}" "keograms" "${KEOGRAM_FILE}" \
@@ -292,11 +294,12 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 			-e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o '${UPLOAD_FILE}' \
 			${STARTRAILS_EXTRA_PARAMETERS}"
 		generate "Startrails, threshold=${BRIGHTNESS_THRESHOLD}" "startrails" "${CMD}"
-		if [[ $? -gt 90 && ${DO_KEOGRAM} == "true" ]]; then
+
+		if [[ $? -gt 90 && (${DO_KEOGRAM} == "true" || ${DO_TIMELAPSE} == "true" ]]; then
 			DO_STARTRAILS="false"
 			# -gt 90 means either no files or unable to read initial file, and
 			# startrails will have the same problem, so don't bother running.
-			echo "Startrails creation unable to read files; will not run startrails."
+			echo "Startrails creation unable to read files; will not run keogram or timelapse."
 		fi
 	else
 		upload "Startrails" "${UPLOAD_FILE}" "startrails" "${STARTRAILS_FILE}" \

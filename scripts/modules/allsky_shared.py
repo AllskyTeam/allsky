@@ -28,23 +28,23 @@ except:
 
 ABORT = True
 
-try:
-    ALLSKYPATH = os.environ["ALLSKY_HOME"]
-except KeyError:
-    log(0, "ERROR: $ALLSKY_HOME not found.")
-    sys.exit(1)
+def getEnvironmentVariable(name, fatal=False, error=''):
+    result = None
 
-try:
-    TMPDIR = getEnvironmentVariable("ALLSKY_TMP")
-except KeyError:
-    log(0, "ERROR: $ALLSKY_TMP not found.")
-    sys.exit(1)
+    try:
+        result = os.environ[name]
+    except KeyError:
+        if fatal:
+            Log(0, "ERROR: Environment variable '{0}' not found.".format(name), exitCode=98)
 
-try:
-    SETTINGSFILE = getEnvironmentVariable("SETTINGS_FILE")
-except KeyError:
-    log(0, "ERROR: $SETTINGS_FILE not found.")
-    sys.exit(1)
+    return result
+
+
+# These must exist and are used in several places.
+ALLSKYPATH = getEnvironmentVariable("ALLSKY_HOME", fatal=True)
+TMPDIR = getEnvironmentVariable("ALLSKY_TMP", fatal=True)
+SETTINGSFILE = getEnvironmentVariable("SETTINGS_FILE", fatal=True)
+
 
 LOGLEVEL = 0
 SETTINGS = {}
@@ -193,7 +193,7 @@ def setupForCommandLine():
 
 ####### settings file functions
 def readSettings():
-    global SETTINGS SETTINGSFILE
+    global SETTINGS, SETTINGSFILE
 
     with open(SETTINGSFILE, "r") as fp:
         SETTINGS = json.load(fp)
@@ -215,7 +215,7 @@ def getSetting(settingName):
     return result
 
 def writeSettings():
-    global SETTINGS SETTINGSFILE
+    global SETTINGS, SETTINGSFILE
 
     with open(SETTINGSFILE, "w") as fp:
         json.dump(SETTINGS, fp, indent=4)
@@ -231,13 +231,13 @@ def updateSetting(values):
 def var_dump(variable):
     pprint.PrettyPrinter(indent=2, width=128).pprint(variable)
 
+
 def setEnvironmentVariable(name, value, logMessage='', logLevel=4):
     result = True
 
     try:
         os.environ[name] = value
-
-        if log != '':
+        if logMessage != '':
             log(logLevel, logMessage)
     except:
         result = False
@@ -245,17 +245,6 @@ def setEnvironmentVariable(name, value, logMessage='', logLevel=4):
 
     return result
 
-def getEnvironmentVariable(name, fatal=False, error=''):
-    result = None
-
-    try:
-        result = os.environ[name]
-    except KeyError:
-        if fatal:
-            print("Sorry, environment variable ( {0} ) not found.".format(name))
-            sys.exit(98)
-
-    return result
 
 def log(level, text, preventNewline = False, exitCode=None):
     """ Very simple method to log data if in verbose mode """
@@ -269,7 +258,7 @@ def log(level, text, preventNewline = False, exitCode=None):
         sys.exit(exitCode)
 
 def initDB():
-    global DBDATA TMPDIR
+    global DBDATA, TMPDIR
 
     dbFile = os.path.join(TMPDIR, 'allskydb.py')
     if not os.path.isfile(dbFile):
@@ -313,7 +302,7 @@ def dbGet(key):
         return None
 
 def writeDB():
-    global DBDATA TMPDIR
+    global DBDATA, TMPDIR
 
     dbFile = os.path.join(TMPDIR, 'allskydb.py')
     file = open(dbFile, 'w+')
@@ -360,13 +349,8 @@ def asfloat(val):
 
     return val
 
-def getExtraDir:
-    try:
-        E = getEnvironmentVariable("ALLSKY_EXTRA")
-    except KeyError:
-        log(0, "ERROR: $ALLSKY_EXTRA not found.")
-        sys.exit(1)
-    return E
+def getExtraDir():
+    return getEnvironmentVariable("ALLSKY_EXTRA", fatal=True)
 
 def saveExtraData(fileName, extraData):
     extraDataPath = getExtraDir()

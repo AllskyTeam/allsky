@@ -1133,7 +1133,7 @@ set_what_can_be_skipped()
 		local NEW_BASE_VERSION="$( remove_point_release "${NEW_VERSION}" )"
 		if [[ ${NEW_BASE_VERSION} == "${OLD_BASE_VERSION}" ]]; then
 			# No changes to these packages so no need to reinstall.
-			MSG="Skipping installation of: webserver et.al., PHP modules, Trutype fonts, Python"
+			MSG="Skipping installation of: webserver et.al., PHP modules, Truetype fonts, Python"
 			display_msg --logonly info "${MSG}"
 			# shellcheck disable=SC2034
 			install_webserver_et_al="true"
@@ -2642,7 +2642,7 @@ do_update()
 }
 
 ####
-# Install the Trutype fonts
+# Install the Truetype fonts
 install_fonts()
 {
 	declare -n v="${FUNCNAME[0]}"
@@ -2651,9 +2651,9 @@ install_fonts()
 		return
 	fi
 
-	display_msg --log progress "Installing Trutype fonts."
+	display_msg --log progress "Installing Truetype fonts."
 	TMP="${ALLSKY_LOGS}/msttcorefonts.log"
-	local M="Trutype fonts failed"
+	local M="Truetype fonts failed"
 	sudo apt-get --assume-yes install msttcorefonts > "${TMP}" 2>&1
 	check_success $? "${M}" "${TMP}" "${DEBUG}" || exit_with_image 1 "${STATUS_ERROR}" "${M}"
 

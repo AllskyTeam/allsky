@@ -478,7 +478,6 @@ function create_lighttpd_log_file()
 
 	# Remove any old log files.
 	# Start off with a 0-length log file the user can write to.
-set -x
 	sudo -s -- <<-EOF
 		chmod 755 "${LIGHTTPD_LOG_DIR}"
 		rm -fr "${LIGHTTPD_LOG_DIR}"/*
@@ -487,8 +486,6 @@ set -x
 		sudo chmod 664 "${LIGHTTPD_LOG_FILE}"
 		sudo chown "${WEBSERVER_GROUP}:${ALLSKY_GROUP}" "${LIGHTTPD_LOG_FILE}"
 	EOF
-set -x
-ls -ld ${LIGHTTPD_LOG_DIR} ${LIGHTTPD_LOG_FILE}
 }
 
 ####

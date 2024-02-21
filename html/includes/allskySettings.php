@@ -101,8 +101,8 @@ function DisplayAllskyConfig() {
 	global $page;
 	global $ME;
 	global $status;
+	global $endSetting;
 
-	$END = "XX_END_XX";
 	$cameraTypeName = "cameratype";			// json setting name
 	$cameraModelName = "cameramodel";		// json setting name
 	$cameraNumberName = "cameranumber";		// json setting name
@@ -188,7 +188,7 @@ function DisplayAllskyConfig() {
 
 	 		foreach ($_POST as $name => $newValue) {
 				// Anything that's sent "hidden" in a form that isn't a settings needs to go here.
-				if (in_array($name, ["csrf_token", "save_settings", "reset_settings", "restart", "page", "_ts", $END, "fromConfiguration"])) {
+				if (in_array($name, ["csrf_token", "save_settings", "reset_settings", "restart", "page", "_ts", $endSetting, "fromConfiguration"])) {
 					continue;
 				}
 
@@ -364,7 +364,7 @@ if ($debug && $s != $s_newValue) {
 							$lastChanged = date('Y-m-d H:i:s');
 							$settings_array[$lastChangedName] = $lastChanged;
 							if ($fromConfiguration)
-								unset($settings_array[$END]);
+								unset($settings_array[$endSetting]);
 							$content = json_encode($settings_array, $mode);
 if ($debug) {
 	echo "<br><br>Updating $settings_file, numSettingsChanges = $numSettingsChanges";
@@ -650,7 +650,7 @@ function toggle(headerNum) {
 if (false && $debug) {
 	echo "<br>Option $name";
 }
-				if ($name === $END) continue;
+				if ($name === $endSetting) continue;
 
 				$type = getVariableOrDefault($option, 'type', null);
 				if ($type === null) {

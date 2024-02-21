@@ -338,7 +338,7 @@ if ($repo_array === null) {
 	exit(5);
 }
 
-// All entries except the last "XX_END_XX" name have a "type". 
+// All entries except the last "$endSetting" name have a "type". 
 // All entries but type=="header*" have a "name".
 // Out of convention, the order of the fields is (a setting may not have all fields):
 	// name				[string]
@@ -385,12 +385,13 @@ $options_str = "[\n";
 foreach ($repo_array as $repo) {
 	global $debug;
 	global $cc_controls;
+	global $endSetting;
 	global $num_fields_this_setting;
 	$num_fields_this_setting = 0;
 
 	$type = getVariableOrDefault($repo, "type", null);
 	$name = getVariableOrDefault($repo, "name", null);
-	if ($type === null && $name === "XX_END_XX") {
+	if ($type === null && $name === $endSetting) {
 		$options_str .= "{\n";
 		$options_str .= "$q" . "name$q : $q$name$q,\n";
 		$options_str .= "$q" . "display$q : false\n";
@@ -531,7 +532,7 @@ if ($settings_file !== "") {
 			}
 			$new_settings[$name] = $val;
 		}
-		$new_settings['XX_END_XX'] = true;
+		$new_settings[$endSetting] = true;
 
 		$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
 		$contents = json_encode($new_settings, $mode);

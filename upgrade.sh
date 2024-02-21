@@ -94,6 +94,7 @@ done
 [[ ${OK} == "false" || $# -ne 0 ]] && usage_and_exit 1
 [[ ${DEBUG} == "true" ]] && echo "Running: ${ME} ${ALL_ARGS}"
 
+# shellcheck disable=SC2119
 BRANCH="$( get_branch )"
 [[ -z ${BRANCH} ]] && BRANCH="${GITHUB_MAIN_BRANCH}"
 

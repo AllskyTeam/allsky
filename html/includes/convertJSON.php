@@ -35,7 +35,7 @@ $convert = false;
 $options_file = null;
 $options_file_specified = false;
 $options_array = null;
-$use_not_in_settings_file = true;	// use only settings that are in settings file?
+$only_in_settings_file = false;	// use only settings that are in settings file?
 
 $rest_index;
 $longopts = array(
@@ -76,7 +76,7 @@ foreach ($options as $opt => $val) {
 		$capture_only = true;
 
 	} else if ($opt === "settings-only") {
-		$use_not_in_settings_file = false;
+		$only_in_settings_file = true;
 
 	} else if ($opt === "convert") {
 		$convert = true;
@@ -157,7 +157,7 @@ if ($capture_only) {
 		$name = $option['name'];
 
 		// If needed, skip any option not in the settings file.
-		if (! $use_not_in_settings_file &&
+		if ($only_in_settings_file &&
 				getVariableOrDefault($lowercaseSettings, $name, null) === null) {
 			continue;
 		}
@@ -168,22 +168,15 @@ if ($capture_only) {
 		$new_options[$name] = $option;
 		if ($type === "boolean") {
 			$val = toBool(getVariableOrDefault($lowercaseSettings, $name, "false"));
-			$v = $val;
 			// $mode handles quotes around numbers.
-			// We just need to convert bools to true and false without quotes.
-			if ($val == 1 || $val == "1" || $val == "true")
-				$val = true;
-			else
-				$val = false;
 		} else {
 			$val = getVariableOrDefault($lowercaseSettings, $name, null);
 			if ($val === null) {
 				$val = getVariableOrDefault($option, 'default', "");
 			}
-			$v = $val;
 		}
 
-if ($debug) { fwrite(STDERR, "$name: type=$type, val=$v\n"); }
+if ($debug) { fwrite(STDERR, "$name: type=$type, val=$val\n"); }
 
 		$new_settings_array[$name] = $val;
 	}

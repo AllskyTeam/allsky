@@ -33,6 +33,7 @@ $capture_only = false;
 $delimiter = "=";
 $convert = false;
 $options_file = null;
+$options_file_specified = false;
 $options_array = null;
 $use_not_in_settings_file = true;	// use only settings that are in settings file?
 
@@ -55,26 +56,34 @@ foreach ($options as $opt => $val) {
 
 	if ($opt === "debug") {
 		$debug = true;
+
 	} else if ($opt === "settings-file") {
 		$settings_file = $val;
 		if (! file_exists($settings_file)) {
 			echo "ERROR: settings file '$settings_file' not found!\n";
 			$ok = false;
 		}
+
 	} else if ($opt === "options-file") {
 		$options_file = $val;
 		if (! file_exists($options_file)) {
 			echo "ERROR: options file '$options_file' not found!\n";
 			$ok = false;
 		}
+		$options_file_specified = true;
+
 	} else if ($opt === "capture-only") {
 		$capture_only = true;
+
 	} else if ($opt === "settings-only") {
 		$use_not_in_settings_file = false;
+
 	} else if ($opt === "convert") {
 		$convert = true;
+
 	} else if ($opt === "delimiter") {
 		$delimiter = $val;
+
 	} // else: getopt() doesn't return a bad argument
 }
 
@@ -95,7 +104,7 @@ if ($options_file === null) {
 	// use default
 	$options_file = getOptionsFile();
 }
-if ($capture_only || $convert) {
+if ($capture_only || $convert || $options_file_specified) {
 	$errorMsg = "ERROR: Unable to process options file '$options_file'.";
 	$options_array = get_decoded_json_file($options_file, true, $errorMsg);
 	if ($options_array === null) {
@@ -183,7 +192,19 @@ if ($debug) { fwrite(STDERR, "$name: type=$type, val=$v\n"); }
 
 
 } else {
+	// Booleans are either 1 for true, or "" for false, so convert to "true" and "false".
 	foreach ($settings_array as $name => $val) {
+		foreach ($options_array as $option) {
+			if ($name == $option['name']) {
+				if ($option['type'] == "boolean") {
+					if ($val == 1)
+						$val = "true";
+					else
+						$val = "false";
+				}
+				break;
+			}
+		}
 		echo "$name$delimiter$val\n";
 	}
 }

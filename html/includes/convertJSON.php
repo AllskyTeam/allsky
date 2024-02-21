@@ -24,7 +24,6 @@
 //		Cannot be used with --capture-only.  Ignores --delimiter.
 
 
-
 include_once("functions.php");
 
 $debug = false;
@@ -146,7 +145,7 @@ if ($capture_only) {
 	// getVariableOrDefault() below finds the setting.
 	$lowercaseSettings = Array();
 	foreach ($settings_array as $setting => $value) {
-		if ($setting !== "XX_END_XX")
+		if ($setting !== $endSetting)
 			$setting = strtolower($setting);
 		$lowercaseSettings[$setting] = $value;
 	}
@@ -197,6 +196,7 @@ if ($debug) { fwrite(STDERR, "$name: type=$type, val=$val\n"); }
 	foreach ($settings_array as $name => $val) {
 		foreach ($options_array as $option) {
 			if ($name == $option['name']) {
+				$type = getVariableOrDefault($option, 'type', "");
 				if ($option['type'] == "boolean") {
 					if ($val == 1)
 						$val = "true";

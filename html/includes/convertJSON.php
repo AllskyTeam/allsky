@@ -163,7 +163,6 @@ if ($capture_only) {
 		}
 
 		$type = getVariableOrDefault($option, 'type', "");
-##		if (substr($type, 0, 6) === "header") continue;
 
 		$new_options[$name] = $option;
 		if ($type === "boolean") {
@@ -179,6 +178,15 @@ if ($capture_only) {
 if ($debug) { fwrite(STDERR, "$name: type=$type, val=$val\n"); }
 
 		$new_settings_array[$name] = $val;
+	}
+
+	// Now process any setting not in the options array.
+	// This will catch old settings.
+	foreach ($settings_array as $setting => $value) {
+		$val = getVariableOrDefault($new_settings_array, strtolower($setting), null);
+		if ($val === null) {
+			$new_settings_array[$name] = $val;
+		}
 	}
 
 	echo json_encode($new_settings_array, $mode);

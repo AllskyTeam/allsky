@@ -268,7 +268,8 @@ else # sftp/ftp/ftps
 
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		MSG="${ME}: FTP '${FILE_TO_UPLOAD}' to"
-		MSG+=" '${DIRECTORY}${DESTINATION_NAME}', TEMP_NAME=${TEMP_NAME}"
+		MSG+=" '${DIRECTORY}${DESTINATION_NAME}'"
+		[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && MSG+=", TEMP_NAME=${TEMP_NAME}"
 		echo "${MSG}"
 	fi
 	# LFTP_CMDS needs to be unique per file type so we don't overwrite a different upload type.

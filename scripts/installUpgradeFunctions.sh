@@ -478,14 +478,17 @@ function create_lighttpd_log_file()
 
 	# Remove any old log files.
 	# Start off with a 0-length log file the user can write to.
+set -x
 	sudo -s -- <<-EOF
 		chmod 755 "${LIGHTTPD_LOG_DIR}"
 		rm -fr "${LIGHTTPD_LOG_DIR}"/*
 
-		touch "${LIGHTTPD_LOG_FILE}"
+		truncate -s 0 "${LIGHTTPD_LOG_FILE}"
 		sudo chmod 664 "${LIGHTTPD_LOG_FILE}"
 		sudo chown "${WEBSERVER_GROUP}:${ALLSKY_GROUP}" "${LIGHTTPD_LOG_FILE}"
 	EOF
+set -x
+ls -ld ${LIGHTTPD_LOG_DIR} ${LIGHTTPD_LOG_FILE}
 }
 
 ####
@@ -683,7 +686,7 @@ function check_tmp()
 
 ####
 # Prompt for either latitude or longitude, and make sure it's a valid entry.
-prompt_for_lat_long()
+function prompt_for_lat_long()
 {
 	local PROMPT="${1}"
 	local SETTING_NAME="${2}"
@@ -717,7 +720,7 @@ prompt_for_lat_long()
 
 ####
 # We can't automatically determine the latitude and longitude, so prompt for them.
-get_lat_long()
+function get_lat_long()
 {
 	# Global: SETTINGS_FILE
 	local MSG  LATITUDE  LONGITUDE

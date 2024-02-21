@@ -207,7 +207,7 @@ make_image DarkFrames           "green"    ""                 ""     "white"    
 make_image StartingUp           "lime"     ""                 150    ""        ""      ""         10      "lime"    ""          ""        "Allsky\nis starting\nup"
 make_image Restarting           "lime"     ""                 ""     ""        ""      ""          7      "lime"    ""          ""        "Allsky\nis restarting"
 make_image CameraOffDuringDay   "#ffff4a"  ""                 ""     ""        ""      "gray"      5      "yellow"  ""          ""        "Camera\nis off\nduring the day"
-make_image CameraOffDuringNight "#ffff4a"  ""                 ""     ""        ""      "gray"      5      "yellow"  ""          ""        "Camera\nis off\nduring the night"
+make_image CameraOffDuringNight "#ffff4a"  ""                 ""     ""        ""      "gray"      5      "yellow"  ""          ""        "Camera\nis off\nat night"
 make_image Error                "red"      ""                 80     ""        ""      ""         10      "red"     ""          ""        "ERROR\n\nSee the WebUI\nfor details"
 
 make_image ConfigurationNeeded  "yellow"   ""                 80     ""        ""      ""         ""      ""        ""          ""        "***\nUse the WebUI\n'Allsky Settings'\npage to\nconfigure Allsky\n***"

@@ -110,6 +110,7 @@ $useLocalWebsite = null;
 $useRemoteWebsite = null;
 $hasLocalWebsite = null;
 $hasRemoteWebsite = null;
+$endSetting = "XX_END_XX";
 
 function initialize_variables($website_only=false) {
 	global $status;

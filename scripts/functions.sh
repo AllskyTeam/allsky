@@ -856,6 +856,7 @@ function indent()
 	echo -e "${1}" | sed 's/^/\t/'
 }
 
+
 # Python virtual environment
 PYTHON_VENV_ACTIVATED="false"
 activate_python_venv() {
@@ -874,4 +875,21 @@ activate_python_venv() {
 
 deactivate_python_venv() {
 	[[ ${PYTHON_VENV_ACTIVATED} == "true" ]] && deactivate
+}
+
+
+# Determine if the specified value is a number.
+function is_number()
+{
+	local VALUE="${1}"
+	[[ -z ${VALUE} ]] && return 1
+	shopt -s extglob
+	local NON_NUMERIC="${VALUE/?([-+])*([0-9])?(.)*([0-9])/}"
+	if [[ -z ${NON_NUMERIC} ]]; then
+		# Nothing but +, -, 0-9, .
+		return 0
+	else
+		# Has non-numeric character
+		return 1
+	fi
 }

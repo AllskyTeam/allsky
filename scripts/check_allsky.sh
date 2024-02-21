@@ -117,22 +117,6 @@ function heading()
 
 # =================================================== FUNCTIONS
 
-# Determine if the specified value is a number.
-function is_number()
-{
-	local VALUE="${1}"
-	[[ -z ${VALUE} ]] && return 1
-	shopt -s extglob
-	local NON_NUMERIC="${VALUE/?([-+])*([0-9])?(.)*([0-9])/}"
-	if [[ -z ${NON_NUMERIC} ]]; then
-		# Nothing but +, -, 0-9, .
-		return 0
-	else
-		# Has non-numeric character
-		return 1
-	fi
-}
-
 # Return the min of two numbers.
 function min()
 {

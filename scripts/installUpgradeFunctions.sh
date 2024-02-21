@@ -398,7 +398,7 @@ function update_json_file()		# [-d] field, new value, file, [type]
 	else
 		NEW_VALUE="${2}"
 		TYPE="${4:-string}"		# optional
-		if [[ ${TYPE} == "string" ]]; then
+		if [[ ${TYPE} == "text" ]]; then
 			DOUBLE_QUOTE='"'
 		else
 			DOUBLE_QUOTE=""

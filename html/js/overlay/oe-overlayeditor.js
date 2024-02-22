@@ -35,11 +35,7 @@ class OVERLAYEDITOR {
             $('#oe-overlay-manager').allskyMM();
 
             configManager.loadConfig();
-            if (!$('#oe-overlay-manager').data("allskyMM").enabled()) {
-                configManager.loadOverlay('overlay.json', 'core');
-            } else {
-                $(document).trigger('oe-startup');
-            }
+            $(document).trigger('oe-startup');
             $.LoadingOverlay('hide');            
         }); 
     }

@@ -13,6 +13,7 @@ class OVERLAYUTIL
     private $method;
     private $jsonResponse = false;
     private $overlayPath;
+    private $allskyOverlays;
     private $allskyTmp;
     private $cc = "";
     private $excludeVariables = array(
@@ -29,6 +30,7 @@ class OVERLAYUTIL
     public function __construct()
     {
         $this->overlayPath = ALLSKY_OVERLAY;
+        $this->allskyOverlays = MY_OVERLAY_TEMPLATES . '/';
         $this->allskyTmp = ALLSKY_HOME . '/tmp';
 
         $ccFile = ALLSKY_CONFIG . "/cc.json";
@@ -181,6 +183,15 @@ class OVERLAYUTIL
                 "backgroundopacity": 40
             }';
         }
+
+        $config = json_decode($config);
+        if (!isset($config->overlayErrors)) {
+            $config->overlayErrors = true;
+        }
+        if (!isset($config->overlayErrorsText)) {
+            $config->overlayErrorsText = 'Error found; see the WebU';
+        }
+        $config = json_encode($config);
 
         if (!$config) {
             $this->sendResponse($config);
@@ -644,10 +655,22 @@ class OVERLAYUTIL
 
     public function getConfigs() {
         $result = [];
-        $fileName = $this->overlayPath . '/config/overlay.json';
-        $config = file_get_contents($fileName);
-        $config = json_decode($config);
-        $result['config'] = $config;
+
+        $tod = getenv('DAY_OR_NIGHT');
+        if ($tod === false) {
+            $tod = 'night';
+        }
+        if ($tod == 'day') {
+            $overlayFilename = $this->getSetting('daytimeoverlay');
+        } else {
+            $overlayFilename = $this->getSetting('nighttimeoverlay');
+        }
+
+        $fileName = $this->overlayPath . '/myTemplates/' . $overlayFilename;
+        $template = file_get_contents($fileName);
+        $templateData = json_decode($template);      
+        $this->fixMetaData($templateData);     
+        $result['config'] = $templateData;
 
         $data = $this->getData(true);
         $result['data'] = $data;
@@ -666,7 +689,7 @@ class OVERLAYUTIL
         if ($overlayName === null) {
             $overlayName = $_GET['overlay'];
         }
-        $fileName = $this->overlayPath . '/config/' . $overlayName;
+        $fileName = $this->allskyOverlays . $overlayName;
 
         if (file_exists($fileName)) {
             $overlay = file_get_contents($fileName);
@@ -711,7 +734,7 @@ class OVERLAYUTIL
             $overlayData['current'] = $overlayData['config']['nighttime'];
         }
 
-        $defaultDir = $this->overlayPath . '/config/';
+        $defaultDir = $this->allskyOverlays;
         $entries = scandir($defaultDir);
         foreach ($entries as $entry) {
             if ($entry !== '.' && $entry !== '..') {
@@ -719,6 +742,7 @@ class OVERLAYUTIL
                     $templatePath = $defaultDir . $entry;
                     $template = file_get_contents($templatePath);
                     $templateData = json_decode($template);
+                    $this->fixMetaData($templateData);
                     if (!isset($templateData->metadata)) {
                         $name = 'Unknown';
                         switch ($entry) {
@@ -752,6 +776,7 @@ class OVERLAYUTIL
                 if (is_file($templatePath)) {
                     $template = file_get_contents($templatePath);
                     $templateData = json_decode($template);
+                    $this->fixMetaData($templateData);
                     $overlayData['useroverlays'][$entry] = $templateData;
                 }
             }
@@ -889,7 +914,7 @@ class OVERLAYUTIL
             $overlay->metadata->cameramodel = '???';
         }
         if (!isset($overlay->metadata->tod)) {
-            $overlay->metadata->tod = '???';
+            $overlay->metadata->tod = 'both';
         }
     }
 
@@ -897,7 +922,7 @@ class OVERLAYUTIL
         
         $overlays = [];
 
-        $defaultDir = $this->overlayPath . '/config/';
+        $defaultDir = $this->allskyOverlays;
         $entries = scandir($defaultDir);
         foreach ($entries as $entry) {
             if ($entry !== '.' && $entry !== '..') {
@@ -907,7 +932,7 @@ class OVERLAYUTIL
                     $templateData = json_decode($template);
                     $this->fixMetaData($templateData);
                     $overlays[] = [
-                        'type' => 'System',
+                        'type' => 'Allsky',
                         'name' => $templateData->metadata->name,
                         'brand' => $templateData->metadata->camerabrand,
                         'model' => $templateData->metadata->cameramodel,

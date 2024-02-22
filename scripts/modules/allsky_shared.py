@@ -165,7 +165,7 @@ def setupForCommandLine():
         ALLSKYPATH = "/home/pi/allsky"
 
     command = shlex.split("bash -c 'source " + ALLSKYPATH + "/variables.sh && env'")
-    proc = subprocess.Popen(command, stdout = subprocess.PIPE)
+    proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     for line in proc.stdout:
         line = line.decode(encoding='UTF-8')
         line = line.strip("\n")
@@ -337,7 +337,7 @@ def getEnvironmentVariable(name, fatal=False, error=''):
 
     return result
 
-def log(level, text, preventNewline = False, exitCode=None):
+def log(level, text, preventNewline = False, exitCode=None, sendToAllsky=False):
     """ Very simple method to log data if in verbose mode """
     if LOGLEVEL >= level:
         if preventNewline:
@@ -345,6 +345,12 @@ def log(level, text, preventNewline = False, exitCode=None):
         else:
             print(text)
 
+    if sendToAllsky and level == 0:
+        allskyHome = os.environ['ALLSKY_HOME']
+        if allskyHome is not None:
+            command = os.path.join(allskyHome, 'scripts', f'addMessage.sh error "{text}"')
+            os.system(command)
+    
     if exitCode is not None:
         sys.exit(exitCode)
 
@@ -440,6 +446,22 @@ def asfloat(val):
 
     return val
 
+def validateExtraFileName(params, module, fileKey):
+    
+    fileBits = os.path.splitext(params[fileKey])
+    fileName = fileBits[0].strip()
+    fileExtension = fileBits[1].strip()
+    
+    if fileExtension == '':
+        fileExtension = '.json'
+        
+    if fileName == '':
+        fileName = module
+
+    extraDataFilename = fileName + fileExtension
+                    
+    params[fileKey] = extraDataFilename
+            
 def saveExtraData(fileName, extraData):
     extraDataPath = getEnvironmentVariable("ALLSKY_EXTRA")
     if extraDataPath is not None:
@@ -467,6 +489,12 @@ def cleanupModule(moduleData):
             for envVariable in moduleData["cleanup"]["env"]:
                 os.environ.pop(envVariable, None)
 
+def createTempDir(path):
+    if not os.path.isdir(path):
+        umask = os.umask(0o000)
+        os.makedirs(path, mode=0o777)
+        os.umask(umask)
+            
 def getGPIOPin(pin):
     result = None
     if pin == 0:

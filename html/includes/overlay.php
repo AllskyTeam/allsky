@@ -49,13 +49,17 @@ function DisplayOverlay($image_name)
     <link href="/css/overlay.css" rel="stylesheet">
 
     <div id="oeeditor">
+        <div id="oe-overlay-manager"></div>
+        <div id="oe-overlay-disable" class="hidden">
+            <div class="center">
+                <div class="center-paragraph">This overlay is provided by the Allsky team and cannot be edited. <br>Click <a href="#" id="oe-overlay-disable-new">here</a> to create a new editable overlay based upon this one.</div>
+            </div>
+        </div>
         <div class="row">
             <div id="oe-viewport" class="panel panel-primary">
                 <!--<div class="panel-heading"><i class="fa fa-code fa-edit"></i> Overlay Editor</div>-->
 
                 <div>
-                    <div id="oe-overlay-manager"></div>
-
                     <ul class="nav nav-tabs" role="tablist">
                         <li role="presentation" class="active">
 							<a href="#oe-editor-tab" aria-controls="oe-editor-tab" role="tab" data-toggle="tab" id="oe-overlay-editor-tab">Overlay Editor</a></li>
@@ -745,7 +749,26 @@ function DisplayOverlay($image_name)
                                                 </div>
                                                 <p class="help-block">0 = Lowest, 100 = Brightest</p>
                                             </div>
-                                        </div>                                       
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-sm-offset-4 col-sm-8">
+                                                <div class="checkbox">
+                                                    <label>
+                                                        <input type="checkbox" id="oe-app-options-show-errors"> Display Error Warning On Overlay
+                                                    </label>
+                                                    <p class="help-block">If the overlay modules detects an error display a warning on the overlay. Full details of the error will be in the main WebUI</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="oe-app-options-show-errors-text" class="col-sm-4 control-label">Select Field Brightness</label>
+                                            <div class="col-sm-8">
+                                                <div class="input-group">
+                                                    <input id="oe-app-options-show-errors-text" name="oe-app-options-show-errors-text" type="text" size=30 class="form-control">
+                                                </div>
+                                                <p class="help-block">The error text to display on the image, will be centered at the top in red text</p>
+                                            </div>
+                                        </div>                                                                                                                     
                                     </form>
 
                                 </div>

@@ -18,6 +18,10 @@ class OECONFIG {
     constructor() {
     }
 
+    get selectedOverlay() {
+        return this.#selectedOverlay;
+    }
+
     get overlays() {
         return this.#overlays;
     }
@@ -212,6 +216,20 @@ class OECONFIG {
     }
     set dataFields(dataFields) {
         return this.#dataFields = dataFields;
+    }
+
+    get overlayErrors() {
+        return this.#appConfig.overlayErrors;
+    }
+    set overlayErrors(overlayErrors) {
+        return this.#appConfig.overlayErrors = overlayErrors;
+    }
+
+    get overlayErrorsText() {
+        return this.#appConfig.overlayErrorsText;
+    }
+    set overlayErrorsText(overlayErrorsText) {
+        return this.#appConfig.overlayErrorsText = overlayErrorsText;
     }
 
     getMetaField(field) {

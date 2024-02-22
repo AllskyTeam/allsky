@@ -172,6 +172,17 @@ class OEUIMANAGER {
             this.#resizeWindow();
         });
 
+        if (!this.#debugMode) {
+            let selectedOverlay = this.#configManager.selectedOverlay;
+            if (selectedOverlay.type === 'allsky') {
+                $('#oe-overlay-disable').removeClass('hidden');
+            } else {
+                $('#oe-overlay-disable').addClass('hidden');
+            }
+        } else {
+            $('#oe-overlay-disable').addClass('hidden');
+        }
+
         jQuery(window).bind('beforeunload', ()=> {
             if (this.#fieldManager.dirty || this.#configManager.dirty) {
                 return ' ';
@@ -897,6 +908,9 @@ class OEUIMANAGER {
             $('#oe-app-options-background-opacity').val(this.#configManager.backgroundImageOpacity);
             $('#oe-app-options-grid-colour').val(this.#configManager.gridColour);
 
+            $('#oe-app-options-show-errors').prop('checked', this.#configManager.overlayErrors);
+            $('#oe-app-options-show-errors-text').val(this.#configManager.overlayErrorsText);
+
             $('#oe-app-options-grid-colour').spectrum({
                 type: 'color',
                 showInput: true,
@@ -962,9 +976,8 @@ class OEUIMANAGER {
             } else {
                 $('#optionsdialognewoverlay').addClass('hidden');
             }
-          });
+        });
 
-          
         $(document).on('click', '#optionsdialognewoverlay', (event) => {
             $('#oe-overlay-manager').data('allskyMM').show();
             $('#oe-overlay-manager').data('allskyMM').showNew();            
@@ -1022,6 +1035,9 @@ class OEUIMANAGER {
             this.#configManager.selectFieldOpacity = $('#oe-app-options-select-field-opacity').val() | 0;
             this.#configManager.mouseWheelZoom = $('#oe-app-options-mousewheel-zoom').prop('checked');
             this.#configManager.backgroundImageOpacity = $('#oe-app-options-background-opacity').val() | 0;
+
+            this.#configManager.overlayErrors = $('#oe-app-options-show-error').prop('checked');
+            this.#configManager.overlayErrorsText = $('#oe-app-options-show-error').val();
 
             this.#fieldManager.updateFieldDefaults();
             this.drawGrid();

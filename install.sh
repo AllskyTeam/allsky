@@ -40,6 +40,7 @@ REBOOT_NEEDED="true"					# Is a reboot needed at end of installation?
 CONFIGURATION_NEEDED="true"				# Does Allsky need to be configured at end of installation?
 SPACE="    "
 NOT_RESTORED="NO PRIOR VERSION"
+TMP_FILE="/tmp/x"						# temporary file used by many functions
 
 
 ##### Allsky versions.   ${ALLSKY_VERSION} is set in variables.sh
@@ -89,7 +90,7 @@ STATUS_VARIABLES=()									# Holds all the variables and values to save
 # WEBSITE_CONFIG_VERSION, WEBSITE_ALLSKY_VERSION
 # ALLSKY_DEFINES_INC, REPO_WEBUI_DEFINES_FILE
 # REPO_SUDOERS_FILE, REPO_LIGHTTPD_FILE, REPO_AVI_FILE, REPO_OPTIONS_FILE
-# LIGHTTPD_LOG_DIR, LIGHTTPD_LOG
+# LIGHTTPD_LOG_DIR, LIGHTTPD_LOG_FILE
 # Plus others I probably forgot about...
 
 
@@ -600,8 +601,8 @@ do_sudoers()
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 
 	display_msg --log progress "Creating/updating sudoers file."
-	sed -e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" "${REPO_SUDOERS_FILE}"  >  /tmp/x
-	sudo install -m 0644 /tmp/x "${FINAL_SUDOERS_FILE}" && rm -f /tmp/x
+	sed -e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" "${REPO_SUDOERS_FILE}"  >  "${TMP_FILE}"
+	sudo install -m 0644 "${TMP_FILE}" "${FINAL_SUDOERS_FILE}" && rm -f "${TMP_FILE}"
 
 	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
@@ -754,7 +755,7 @@ install_webserver_et_al()
 	sudo systemctl start lighttpd > "${TMP}" 2>&1
 	check_success $? "Unable to start lighttpd" "${TMP}" "${DEBUG}"
 	# Starting it added an entry so truncate the file so it's 0-length
-	sleep 1; truncate -s 0 "${LIGHTTPD_LOG}"
+	sleep 1; truncate -s 0 "${LIGHTTPD_LOG_FILE}"
 
 	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
@@ -810,8 +811,8 @@ prompt_for_hostname()
 		# so need to configure it.
 		display_msg --log progress "Configuring avahi-daemon."
 
-		sed "s/XX_HOST_NAME_XX/${NEW_HOST_NAME}/g" "${REPO_AVI_FILE}" > /tmp/x
-		sudo install -m 0644 /tmp/x "${FINAL_AVI_FILE}" && rm -f /tmp/x
+		sed "s/XX_HOST_NAME_XX/${NEW_HOST_NAME}/g" "${REPO_AVI_FILE}" > "${TMP_FILE}"
+		sudo install -m 0644 "${TMP_FILE}" "${FINAL_AVI_FILE}" && rm -f "${TMP_FILE}"
 	fi
 
 	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
@@ -905,11 +906,10 @@ does_old_WebUI_location_exist()
 	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
 
-# If the old WebUI location is there:
-#	but it wasn't when the installation started,
-#	that means the installation created it so remove it.
+# If the old WebUI location is there but it wasn't when the installation started,
+# that means the installation created it so remove it.
 #
-#	Let the user know if there's an old WebUI, or something unknown there.
+# Let the user know if there's an old WebUI, or something unknown there.
 
 check_old_WebUI_location()
 {
@@ -922,6 +922,9 @@ check_old_WebUI_location()
 		sudo rm -fr "${OLD_WEBUI_LOCATION}"
 		return
 	fi
+
+	MSG="Checking old WebUI location at ${OLD_WEBUI_LOCATION}."
+	display_msg --log progress "${MSG}"
 
 	# ${OLD_WEBUI_LOCATION}.  It just says "No files yet...", so delete it.
 	sudo rm -f "${OLD_WEBUI_LOCATION}/index.lighttpd.html"
@@ -1091,7 +1094,7 @@ set_locale()
 			# Either a new install or an upgrade from an older Allsky.
 			MSG+=" did NOT contain .locale so adding it."
 			display_msg --logonly info "${MSG}"
-			update_json_file ".locale" "${DESIRED_LOCALE}"  "${SETTINGS_FILE}"
+			doV "DESIRED_LOCAL" "locale" "text" "${SETTINGS_FILE}"
 
 # TODO: Something was unlinking the settings file from its camera-specific file,
 # so do "ls" of the settings files to try and pinpoint the problem.
@@ -1109,7 +1112,7 @@ display_msg --logonly info "Settings files now:\n${MSG}"
 	fi
 
 	display_msg --log progress "Setting locale to '${DESIRED_LOCALE}'."
-	update_json_file ".locale" "${DESIRED_LOCALE}"  "${SETTINGS_FILE}"
+	doV "DESIRED_LOCALE" "locale" "text" "${SETTINGS_FILE}"
 
 # TODO: same as above...
 #shellcheck disable=SC2012
@@ -1522,10 +1525,12 @@ convert_settings()			# prior_file, new_file
 	# --settings-only  says only output settings that are in the settings file.
 	# The OPTIONS_FILE doesn't exist yet so use REPO_OPTIONS_FILE>
 	local TEMP_PRIOR="/tmp/converted_old_settings.json"
-	"${ALLSKY_WEBUI}/includes/convertJSON.php" --convert \
+	"${ALLSKY_WEBUI}/includes/convertJSON.php" \
+		--convert \
 		--settings-only \
 		--settings-file "${PRIOR_FILE}" \
 		--options-file "${REPO_OPTIONS_FILE}" \
+		--include-not-in-options \
 		> "${TEMP_PRIOR}" 2>&1
 	if [[ $? -ne 0 ]]; then
 		MSG="Unable to convert old settings file: $( < "${TEMP_PRIOR}" )"
@@ -1538,111 +1543,130 @@ convert_settings()			# prior_file, new_file
 
 	# Output the field name and value as text separated by a tab.
 	# Field names are already lowercase from above.
+	local DISPLAYED_BRIGHTNESS_MSG="false"
 	"${ALLSKY_WEBUI}/includes/convertJSON.php" \
 			--delimiter "$( echo -e '\t' )" \
+			--options-file "${REPO_OPTIONS_FILE}" \
+			--include-not-in-options \
 			--settings-file "${TEMP_PRIOR}" |
-		while read -r F V
+		while read -r FIELD X			# the name "X" is special to doV()
 		do
-			case "${F}" in
+			case "${FIELD}" in
 				"lastchanged")
-					V="$( date +'%Y-%m-%d %H:%M:%S' )"
+					# Update the value
+					X="$( date +'%Y-%m-%d %H:%M:%S' )"
+					doV "X" "lastchanged" "text" "${NEW_FILE}"
 					;;
 
 				# Don't carry this forward
 				"XX_END_XX")
-					continue
 					;;
 
 				# These don't exist anymore.
 				"autofocus" | "background" | "alwaysshowadvanced" | \
-				"newexposure" | "experimentalexposure")
-					continue
+				"newexposure" | "experimentalexposure" | "showbrightness")
 					;;
 				# Deleted in ${COMBINED_BASE_VERSION}
-				"brightness" | "daybrightness" | "nightbrightness" | "showbrightness")
-					MSG="The 'Brightness' settings were removed."
-					MSG+="\nUse the 'Target Mean' settings to adjust brightness."
-					display_msg --log info "${MSG}"
-					continue
+				"brightness" | "daybrightness" | "nightbrightness")
+					if [[ ${DISPLAYED_BRIGHTNESS_MSG} == "false" ]]; then
+						DISPLAYED_BRIGHTNESS_MSG="true"		# only display once.
+						MSG="The 'Brightness' settings were removed."
+						MSG+="\n  Use the 'Target Mean' settings to adjust brightness."
+						display_msg --log notice "${MSG}"
+					fi
 					;;
 				"offset")
 					MSG="The 'Offset' setting was removed."
-					MSG+="\nUse the 'Target Mean' settings to adjust brightness."
-					display_msg --log info "${MSG}"
-					continue
+					MSG+="\n  Use the 'Target Mean' settings to adjust brightness."
+					display_msg --log notice "${MSG}"
 					;;
 
 				# These changed names.
 				"darkframe")
-					F="takedarkframes"
+					doV "X" "takedarkframes" "boolean" "${NEW_FILE}"
 					;;
 				"daymaxgain")
-					F="daymaxautogain"
+					doV "X" "daymaxautogain" "boolean" "${NEW_FILE}"
 					;;
 				"nightmaxexposure")
-					F="nightmaxautoexposure"
+					doV "X" "nightmaxautoexposure" "boolean" "${NEW_FILE}"
 					;;
 				"nightmaxgain")
-					F="nightmaxautogain"
+					doV "X" "nightmaxautogain" "boolean" "${NEW_FILE}"
 					;;
 				"websiteurl")
-					F="remotewebsiteurl"
+					doV "X" "remotewebsiteurl" "boolean" "${NEW_FILE}"
 					;;
 				"imageurl")
-					F="remotewebsiteimageurl"
+					doV "X" "remotewebsiteimageurl" "boolean" "${NEW_FILE}"
 					;;
 
 				# These now have day and night versions.
 				"awb" | "autowhitebalance")
-					F="awb"
-					update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-					F="night${F}"
+					FIELD="awb"
+					doV "X" "day${FIELD}" "boolean" "${NEW_FILE}"
+					doV "X" "night${FIELD}" "boolean" "${NEW_FILE}"
 					;;
 				"wbr")
-					update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-					F="night${F}"
+					doV "X" "day${FIELD}" "boolean" "${NEW_FILE}"
+					doV "X" "night${FIELD}" "boolean" "${NEW_FILE}"
 					;;
 				"wbb")
-					update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-					F="night${F}"
+					doV "X" "day${FIELD}" "boolean" "${NEW_FILE}"
+					doV "X" "night${FIELD}" "boolean" "${NEW_FILE}"
 					;;
 				"targettemp")
-					update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-					F="night${F}"
+					doV "X" "day${FIELD}" "boolean" "${NEW_FILE}"
+					doV "X" "night${FIELD}" "boolean" "${NEW_FILE}"
 					;;
 				"coolerenabled")
-					F="enablecooler"		# also a name change
-					update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-					F="night${F}"
+					FIELD="enablecooler"		# also a name change
+					doV "X" "day${FIELD}" "boolean" "${NEW_FILE}"
+					doV "X" "night${FIELD}" "boolean" "${NEW_FILE}"
 					;;
 				"meanthreshold")
-					update_json_file ".day${F}" "${V}" "${NEW_FILE}"
-					F="night${F}"
+					doV "X" "day${FIELD}" "boolean" "${NEW_FILE}"
+					doV "X" "night${FIELD}" "boolean" "${NEW_FILE}"
+					;;
+
+				*)
+					#x V="${X}"
+					doV "X" "${FIELD}" "" "${NEW_FILE}"		# don't know the type
 					;;
 			esac
-
-			update_json_file ".${F}" "${V}" "${NEW_FILE}"
 		done
 
 	##### New fields not already handled in loop above.
 	# If they are already in PRIOR_FILE then they are also in NEW_FILE.
 	x="$( settings ".takenighttimeimages" "${PRIOR_FILE}" )"
-	[[ -z ${x} ]] && update_json_file ".takenighttimeimages" "true" "${NEW_FILE}"
+	if [[ -z ${x} ]]; then
+		X="true"; doV "X" "takenighttimeimages" "boolean" "${NEW_FILE}"
+	fi
 
 	x="$( settings ".savenighttimeimages" "${PRIOR_FILE}" )"
-	[[ -z ${x} ]] && update_json_file ".savenighttimeimages" "true" "${NEW_FILE}"
+	if [[ -z ${x} ]]; then
+		X="true"; doV "X" "savenighttimeimages" "boolean" "${NEW_FILE}"
+	fi
 
 	x="$( settings ".determinefocus" "${PRIOR_FILE}" )"
-	[[ -z ${x} ]] && update_json_file ".determinefocus" "false" "${NEW_FILE}"
+	if [[ -z ${x} ]]; then
+		X="false"; doV "X" "determinefocus" "boolean" "${NEW_FILE}"
+	fi
 
 	x="$( settings ".showdelay" "${PRIOR_FILE}" )"
-	[[ -z ${x} ]] && update_json_file ".showdelay" "true" "${NEW_FILE}"
+	if [[ -z ${x} ]]; then
+		X="true"; doV "X" "showdelay" "boolean" "${NEW_FILE}"
+	fi
 
 	x="$( settings ".imagessortorder" "${PRIOR_FILE}" )"
-	[[ -z ${x} ]] && update_json_file ".imagessortorder" "ascending" "${NEW_FILE}"
+	if [[ -z ${x} ]]; then
+		X="ascending"; doV "X" "imagessortorder" "text" "${NEW_FILE}"
+	fi
 
 	x="$( settings ".zwoexposuretype" "${PRIOR_FILE}" )"
-	[[ -z ${x} ]] && update_json_file ".zwoexposuretype" 0 "${NEW_FILE}"
+	if [[ -z ${x} ]]; then
+		X=0; doV "X" "zwoexposuretype" "number" "${NEW_FILE}"
+	fi
 
 	# New fields were added to the bottom of the settings file but the below
 	# command will order them the same as in the options file, which we want.
@@ -1663,16 +1687,17 @@ convert_settings()			# prior_file, new_file
 }
 
 # Update the specified file with the specified new value.
+# ${V} must be a legal shell variable name.
 doV()
 {
-	local V="${1}"			# name of the variable
+	local V="${1}"			# name of the variable that holds the new value
 	local VAL="${!V}"		# value of the variable
 	local jV="${2}"			# new json variable name
 	local TYPE="${3}"
 	local FILE="${4}"
 
 	[[ -z ${VAL} ]] && return
-	[[ ${V} == "X" ]] && V="${jV}"		# "X" is used for new setting names
+	[[ ${V} == "X" ]] && V="NEW"		# "X" is used for new setting names
 
 	if [[ ${TYPE} == "boolean" ]]; then
 		# Some booleans used "true/false" and some used "1/0".
@@ -1685,10 +1710,16 @@ doV()
 		VAL=0		# give it a default
 	fi
 
-	if update_json_file "${jV}" "${VAL}" "${FILE}" "${TYPE}" 2> /dev/null ; then
-		display_msg --logonly info "   ${V} (${VAL})"
+	local ERR  MSG
+	if ERR="$( update_json_file ".${jV}" "${VAL}" "${FILE}" "${TYPE}" > "${TMP_FILE}" 2>&1 )" ; then
+		if [[ ${V} == "V" ]]; then
+			MSG="   ${jV}=${VAL}"
+		else
+			MSG="   ${V}: ${jV}=${VAL}"
+		fi
+		display_msg --logonly info "${MSG}"
 	else
-		display_msg --logonly error "Unable to update ${jV} from ${V} (${!V})"
+		display_msg --log info "Warning: Unable to update ${jV} to '${VAL}': $( < "${TMP_FILE}" )"
 	fi
 }
 
@@ -1718,35 +1749,48 @@ convert_config_sh()
 
 		local X		# temporary variable
 
-		if [[ -n ${DAYTIME} ]]; then		# old name
-			X="${DAYTIME}"
-		else
-			X="${DAYTIME_CAPTURE}"
+		# Determine name of settings to capture/save daytime images.
+		# They initially were DAYTIME/CAPTURE_24HR, then DAYTIME_CAPTURE/DAYTIME_SAVE,
+		# then moved to settings file.
+		X=""
+		if [[ -n ${DAYTIME_CAPTURE} ]]; then
+			X="DAYTIME_CAPTURE"
+		elif [[ -n ${DAYTIME} ]]; then
+			X="DAYTIME"
+			if [[ ${DAYTIME} == "1" ]]; then
+				DAYTIME="true"
+			else
+				DAYTIME="false"
+			fi
 		fi
-		if [[ -n ${CAPTURE_24HR} ]]; then	# old name
-			X="${CAPTURE_24HR}"
-		else
-			X="${DAYTIME_SAVE}"
-		fi
-		doV "X" ".savedaytimeimages" "boolean" "${NEW_FILE}"
+		[[ -n ${X} ]] && doV "X" "takedaytimeimages" "boolean" "${NEW_FILE}"
 
-		doV "DARK_FRAME_SUBTRACTION" ".usedarkframes" "boolean" "${NEW_FILE}"
+		X=""
+		if [[ -n ${DAYTIME_SAVE} ]]; then
+			X="DAYTIME_SAVE"
+		elif [[ -n ${CAPTURE_24HR} ]]; then	# bad name - really means DAYTIME_SAVE
+			X="CAPTURE_24HR"
+		fi
+		[[ -n ${X} ]] && doV "X" "savedaytimeimages" "boolean" "${NEW_FILE}"
+
+		doV "DARK_FRAME_SUBTRACTION" "usedarkframes" "boolean" "${NEW_FILE}"
 
 		# IMG_UPLOAD no longer used; instead, upload if FREQUENCY > 0.
 		# shellcheck disable=SC2034
 		[[ ${IMG_UPLOAD} != "true" ]] && IMG_UPLOAD_FREQUENCY=0
-		doV "IMG_UPLOAD_FREQUENCY" ".imageuploadfrequency" "number" "${NEW_FILE}"
+		doV "IMG_UPLOAD_FREQUENCY" "imageuploadfrequency" "number" "${NEW_FILE}"
 
 		# IMG_RESIZE no longer used; only resize if width and height are > 0.
 		if [[ -n ${IMG_WIDTH} && ${IMG_WIDTH} -gt 0 && -n ${IMG_HEIGHT} && ${IMG_HEIGHT} -gt 0 ]];
 		then
-			doV "IMG_WIDTH" ".imageresizewidth" "number" "${NEW_FILE}"
-			doV "IMG_HEIGHT" ".imageresizeheight" "number" "${NEW_FILE}"
+			doV "IMG_WIDTH" "imageresizewidth" "number" "${NEW_FILE}"
+			doV "IMG_HEIGHT" "imageresizeheight" "number" "${NEW_FILE}"
 		else
 			MSG="Ignoring IMG_RESIZE since IMG_WIDTH (${IMG_WIDTH}) and/or IMG_HEIGHT (${IMG_HEIGHT}) are not positive numbers."
 			display_msg --log info "${MSG}"
-			X=0; doV "X" ".imageresizewidth" "number" "${NEW_FILE}"
-			X=0; doV "X" ".imageresizeheight" "number" "${NEW_FILE}"
+			X=0
+			doV "X" "imageresizewidth" "number" "${NEW_FILE}"
+			doV "X" "imageresizeheight" "number" "${NEW_FILE}"
 		fi
 
 		# CROP_IMAGE, CROP_WIDTH, CROP_HEIGHT, CROP_OFFSET_X, and CROP_OFFSET_Y are no longer used.
@@ -1760,19 +1804,21 @@ convert_config_sh()
 			MSG="${MSG}You need to reenter your crop settings."
 			MSG="${MSG}\nSpecify the amount to crop from the top, right, bottom, and left."
 			display_msg --log info "${MSG}"
-			X=0; doV "X" ".imagecroptop" "number" "${NEW_FILE}"
-			X=0; doV "X" ".imagecropright" "number" "${NEW_FILE}"
-			X=0; doV "X" ".imagecropbottom" "number" "${NEW_FILE}"
-			X=0; doV "X" ".imagecropleft" "number" "${NEW_FILE}"
 		fi
+		X=0
+		doV "X" "imagecroptop" "number" "${NEW_FILE}"
+		doV "X" "imagecropright" "number" "${NEW_FILE}"
+		doV "X" "imagecropbottom" "number" "${NEW_FILE}"
+		doV "X" "imagecropleft" "number" "${NEW_FILE}"
 
 		# AUTOSTRETCH no longer used; only stretch if AMOUNT > 0 and MID_POINT != ""
-		X=0; doV "X" ".imagestretchamountdaytime" "number" "${NEW_FILE}"		# new
-		X=0; doV "X" ".imagestretchmidpointdaytime" "text" "${NEW_FILE}"		# new
+		X=0
+		doV "X" "imagestretchamountdaytime" "number" "${NEW_FILE}"		# new
+		doV "X" "imagestretchmidpointdaytime" "text" "${NEW_FILE}"		# new
 		# shellcheck disable=SC2034
 		[[ ${AUTOSTRETCH} != "true" || -n ${AUTOSTRETCH_MID_POINT} ]] && AUTOSTRETCH_AMOUNT=0
-		doV "AUTOSTRETCH_AMOUNT" ".imagestretchamountnighttime" "number" "${NEW_FILE}"
-		doV "AUTOSTRETCH_MID_POINT" ".imagestretchmidpointnighttime" "text" "${NEW_FILE}"
+		doV "AUTOSTRETCH_AMOUNT" "imagestretchamountnighttime" "number" "${NEW_FILE}"
+		doV "AUTOSTRETCH_MID_POINT" "imagestretchmidpointnighttime" "text" "${NEW_FILE}"
 
 		# RESIZE_UPLOADS no longer used; resize only if width > 0 and height > 0.
 		if [[ ${RESIZE_UPLOADS} != "true" ]]; then
@@ -1781,10 +1827,10 @@ convert_config_sh()
 			# shellcheck disable=SC2034
 			RESIZE_UPLOADS_HEIGHT=0
 		fi
-		doV "RESIZE_UPLOADS_WIDTH" ".imageresizeuploadswidth" "number" "${NEW_FILE}"
-		doV "RESIZE_UPLOADS_HEIGHT" ".imageresizeuploadsheight" "number" "${NEW_FILE}"
+		doV "RESIZE_UPLOADS_WIDTH" "imageresizeuploadswidth" "number" "${NEW_FILE}"
+		doV "RESIZE_UPLOADS_HEIGHT" "imageresizeuploadsheight" "number" "${NEW_FILE}"
 
-		doV "IMG_CREATE_THUMBNAILS" ".imagecreatethumbnails" "boolean" "${NEW_FILE}"
+		doV "IMG_CREATE_THUMBNAILS" "imagecreatethumbnails" "boolean" "${NEW_FILE}"
 
 		# REMOVE_BAD_IMAGES no longer used; remove only if low > 0 or high > 0.
 		if [[ ${REMOVE_BAD_IMAGES} != "true" ]]; then
@@ -1793,63 +1839,63 @@ convert_config_sh()
 			# shellcheck disable=SC2034
 			REMOVE_BAD_IMAGES_THRESHOLD_HIGH=0
 		fi
-		doV "REMOVE_BAD_IMAGES_THRESHOLD_LOW" ".imageremovebadlow" "number" "${NEW_FILE}"
-		doV "REMOVE_BAD_IMAGES_THRESHOLD_HIGH" ".imageremovebadhigh" "number" "${NEW_FILE}"
+		doV "REMOVE_BAD_IMAGES_THRESHOLD_LOW" "imageremovebadlow" "number" "${NEW_FILE}"
+		doV "REMOVE_BAD_IMAGES_THRESHOLD_HIGH" "imageremovebadhigh" "number" "${NEW_FILE}"
 
-		doV "TIMELAPSE" ".timelapsegenerate" "boolean" "${NEW_FILE}"
-		doV "TIMELAPSEWIDTH" ".timelapsewidth" "number" "${NEW_FILE}"
-		doV "TIMELAPSEHEIGHT" ".timelapseheight" "number" "${NEW_FILE}"
+		doV "TIMELAPSE" "timelapsegenerate" "boolean" "${NEW_FILE}"
+		doV "TIMELAPSEWIDTH" "timelapsewidth" "number" "${NEW_FILE}"
+		doV "TIMELAPSEHEIGHT" "timelapseheight" "number" "${NEW_FILE}"
 		# We no longer include the trailing "k".
 		TIMELAPSE_BITRATE="${TIMELAPSE_BITRATE//k/}"
-		doV "TIMELAPSE_BITRATE" ".timelapsebitrate" "number" "${NEW_FILE}"
-		doV "FPS" ".timelapsefps" "number" "${NEW_FILE}"
-		doV "VCODEC" ".timelapsevcodec" "text" "${NEW_FILE}"
-		doV "PIX_FMT" ".timelapsepixfmt" "text" "${NEW_FILE}"
-		doV "FFLOG" ".timelapsefflog" "text" "${NEW_FILE}"
-		doV "KEEP_SEQUENCE" ".timelapsekeepsequence" "boolean" "${NEW_FILE}"
-		doV "TIMELAPSE_EXTRA_PARAMETERS" ".timelapseextraparameters" "text" "${NEW_FILE}"
-		doV "UPLOAD_VIDEO" ".timelapseupload" "boolean" "${NEW_FILE}"
-		doV "TIMELAPSE_UPLOAD_THUMBNAIL" ".timelapseuploadthumbnail" "boolean" "${NEW_FILE}"
+		doV "TIMELAPSE_BITRATE" "timelapsebitrate" "number" "${NEW_FILE}"
+		doV "FPS" "timelapsefps" "number" "${NEW_FILE}"
+		doV "VCODEC" "timelapsevcodec" "text" "${NEW_FILE}"
+		doV "PIX_FMT" "timelapsepixfmt" "text" "${NEW_FILE}"
+		doV "FFLOG" "timelapsefflog" "text" "${NEW_FILE}"
+		doV "KEEP_SEQUENCE" "timelapsekeepsequence" "boolean" "${NEW_FILE}"
+		doV "TIMELAPSE_EXTRA_PARAMETERS" "timelapseextraparameters" "text" "${NEW_FILE}"
+		doV "UPLOAD_VIDEO" "timelapseupload" "boolean" "${NEW_FILE}"
+		doV "TIMELAPSE_UPLOAD_THUMBNAIL" "timelapseuploadthumbnail" "boolean" "${NEW_FILE}"
 
-		doV "TIMELAPSE_MINI_IMAGES" ".minitimelapsenumimages" "number" "${NEW_FILE}"
-		doV "TIMELAPSE_MINI_FORCE_CREATION" ".minitimelapseforcecreation" "boolean" "${NEW_FILE}"
-		doV "TIMELAPSE_MINI_FREQUENCY" ".minitimelapsefrequency" "number" "${NEW_FILE}"
-		doV "TIMELAPSE_MINI_UPLOAD_VIDIO" ".minitimelapseupload" "boolean" "${NEW_FILE}"
-		doV "TIMELAPSE_MINI_UPLOAD_THUMBNAIL" ".minitimelapseuploadthumbnail" "boolean" "${NEW_FILE}"
-		doV "TIMELAPSE_MINI_FPS" ".minitimelapsefps" "number" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_IMAGES" "minitimelapsenumimages" "number" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_FORCE_CREATION" "minitimelapseforcecreation" "boolean" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_FREQUENCY" "minitimelapsefrequency" "number" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_UPLOAD_VIDIO" "minitimelapseupload" "boolean" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_UPLOAD_THUMBNAIL" "minitimelapseuploadthumbnail" "boolean" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_FPS" "minitimelapsefps" "number" "${NEW_FILE}"
 		TIMELAPSE_MINI_BITRATE="${TIMELAPSE_MINI_BITRATE//k/}"
-		doV "TIMELAPSE_MINI_BITRATE" ".minitimelapsebitrate" "number" "${NEW_FILE}"
-		doV "TIMELAPSE_MINI_WIDTH" ".minitimelapsewidth" "number" "${NEW_FILE}"
-		doV "TIMELAPSE_MINI_HEIGHT" ".minitimelapseheight" "number" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_BITRATE" "minitimelapsebitrate" "number" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_WIDTH" "minitimelapsewidth" "number" "${NEW_FILE}"
+		doV "TIMELAPSE_MINI_HEIGHT" "minitimelapseheight" "number" "${NEW_FILE}"
 
-		doV "KEOGRAM" ".keogramgenerate" "boolean" "${NEW_FILE}"
-		doV "KEOGRAM_EXTRA_PARAMETERS" ".keogramextraparameters" "text" "${NEW_FILE}"
-		doV "UPLOAD_KEOGRAM" ".keogramupload" "boolean" "${NEW_FILE}"
-		X="true"; doV "X" ".keogramexpand" "boolean" "${NEW_FILE}"		# new
-		X="simplex"; doV "X" ".keogramfontname" "text" "${NEW_FILE}"	# new
-		X="#ffff"; doV "X" ".keogramfontcolor" "text" "${NEW_FILE}"		# new
-		X=1; doV "X" ".keogramfontsize" "text" "${NEW_FILE}"			# new
-		X=3; doV "X" ".keogramlinethickness" "text" "${NEW_FILE}"		# new
+		doV "KEOGRAM" "keogramgenerate" "boolean" "${NEW_FILE}"
+		doV "KEOGRAM_EXTRA_PARAMETERS" "keogramextraparameters" "text" "${NEW_FILE}"
+		doV "UPLOAD_KEOGRAM" "keogramupload" "boolean" "${NEW_FILE}"
+		X="true"; doV "X" "keogramexpand" "boolean" "${NEW_FILE}"		# new
+		X="simplex"; doV "X" "keogramfontname" "text" "${NEW_FILE}"	# new
+		X="#ffff"; doV "X" "keogramfontcolor" "text" "${NEW_FILE}"		# new
+		X=1; doV "X" "keogramfontsize" "text" "${NEW_FILE}"			# new
+		X=3; doV "X" "keogramlinethickness" "text" "${NEW_FILE}"		# new
 
-		doV "STARTRAILS" ".startrailsgenerate" "boolean" "${NEW_FILE}"
-		doV "BRIGHTNESS_THRESHOLD" ".startrailsbrightnessthreshold" "number" "${NEW_FILE}"
-		doV "STARTRAILS_EXTRA_PARAMETERS" ".startrailsextraparameters" "text" "${NEW_FILE}"
-		doV "UPLOAD_STARTRAILS" ".startrailsupload" "boolean" "${NEW_FILE}"
+		doV "STARTRAILS" "startrailsgenerate" "boolean" "${NEW_FILE}"
+		doV "BRIGHTNESS_THRESHOLD" "startrailsbrightnessthreshold" "number" "${NEW_FILE}"
+		doV "STARTRAILS_EXTRA_PARAMETERS" "startrailsextraparameters" "text" "${NEW_FILE}"
+		doV "UPLOAD_STARTRAILS" "startrailsupload" "boolean" "${NEW_FILE}"
 
 		[[ -z ${THUMBNAIL_SIZE_X} ]] && THUMBNAIL_SIZE_X=100
-		doV "THUMBNAIL_SIZE_X" ".thumbnailsizex" "number" "${NEW_FILE}"
+		doV "THUMBNAIL_SIZE_X" "thumbnailsizex" "number" "${NEW_FILE}"
 		[[ -z ${THUMBNAIL_SIZE_Y} ]] && THUMBNAIL_SIZE_Y=75
-		doV "THUMBNAIL_SIZE_Y" ".thumbnailsizey" "number" "${NEW_FILE}"
+		doV "THUMBNAIL_SIZE_Y" "thumbnailsizey" "number" "${NEW_FILE}"
 
 		# NIGHTS_TO_KEEP was replaced by DAYS_TO_KEEP and the AUTO_DELETE boolean was deleted.
 		if [[ -n ${NIGHTS_TO_KEEP} && ${AUTO_DELETE} == "true" ]]; then
-			doV "NIGHTS_TO_KEEP" ".daystokeep" "number" "${NEW_FILE}"
+			doV "NIGHTS_TO_KEEP" "daystokeep" "number" "${NEW_FILE}"
 		else
-			doV "DAYS_TO_KEEP" ".daystokeep" "number" "${NEW_FILE}"
+			doV "DAYS_TO_KEEP" "daystokeep" "number" "${NEW_FILE}"
 		fi
-		doV "WEB_DAYS_TO_KEEP" ".daystokeeplocalwebsite" "number" "${NEW_FILE}"
-		X=0; doV "X" ".daystokeepremotewebsite" "number" "${NEW_FILE}"
-		doV "WEBUI_DATA_FILES" ".webuidatafiles" "text" "${NEW_FILE}"
+		doV "WEB_DAYS_TO_KEEP" "daystokeeplocalwebsite" "number" "${NEW_FILE}"
+		X=0; doV "X" "daystokeepremotewebsite" "number" "${NEW_FILE}"
+		doV "WEBUI_DATA_FILES" "webuidatafiles" "text" "${NEW_FILE}"
 
 	) || return 1
 
@@ -1891,48 +1937,48 @@ convert_ftp_sh()
 		# "local" PROTOCOL means they're using local Website.
 		# WEB_IMAGE_DIR means they have both local and remote Website.
 		if [[ -d ${ALLSKY_WEBSITE} && (${PROTOCOL} == "local" || -n ${WEB_IMAGE_DIR}) ]]; then
-			X="true";  doV "X" ".uselocalwebsite" "boolean" "${NEW_FILE}"
+			X="true";  doV "X" "uselocalwebsite" "boolean" "${NEW_FILE}"
 		else
-			X="false"; doV "X" ".uselocalwebsite" "boolean" "${NEW_FILE}"
+			X="false"; doV "X" "uselocalwebsite" "boolean" "${NEW_FILE}"
 		fi
 		if [[ (-n ${PROTOCOL} && ${PROTOCOL} != "local") || -n ${REMOTE_HOST} ]]; then
-			doV "PROTOCOL" ".remotewebsiteprotocol" "text" "${NEW_FILE}"
-			doV "IMAGE_DIR" ".remotewebsiteimagedir" "text" "${NEW_FILE}"
-			X="true"; doV "X" ".useremotewebsite" "boolean" "${NEW_FILE}"
+			doV "PROTOCOL" "remotewebsiteprotocol" "text" "${NEW_FILE}"
+			doV "IMAGE_DIR" "remotewebsiteimagedir" "text" "${NEW_FILE}"
+			X="true"; doV "X" "useremotewebsite" "boolean" "${NEW_FILE}"
 		else
-			X=""; doV "X" ".remotewebsiteprotocol" "text" "${NEW_FILE}"
-			X=""; doV "X" ".remotewebsiteimagedir" "text" "${NEW_FILE}"
-			X="false"; doV "X" ".useremotewebsite" "boolean" "${NEW_FILE}"
+			X=""; doV "X" "remotewebsiteprotocol" "text" "${NEW_FILE}"
+			X=""; doV "X" "remotewebsiteimagedir" "text" "${NEW_FILE}"
+			X="false"; doV "X" "useremotewebsite" "boolean" "${NEW_FILE}"
 		fi
-		doV "IMG_UPLOAD_ORIGINAL_NAME" ".remotewebsiteimageuploadoriginalname" "boolean" "${NEW_FILE}"
-		doV "VIDEOS_DESTINATION_NAME" ".remotewebsitevideodestinationname" "text" "${ALLSKY_ENV}"
-		doV "KEOGRAM_DESTINATION_NAME" ".remotewebsitekeogramdestinationname" "text" "${ALLSKY_ENV}"
-		doV "STARTRAILS_DESTINATION_NAME" ".remotewebsitestartrailsdestinationname" "text" "${ALLSKY_ENV}"
+		doV "IMG_UPLOAD_ORIGINAL_NAME" "remotewebsiteimageuploadoriginalname" "boolean" "${NEW_FILE}"
+		doV "VIDEOS_DESTINATION_NAME" "remotewebsitevideodestinationname" "text" "${ALLSKY_ENV}"
+		doV "KEOGRAM_DESTINATION_NAME" "remotewebsitekeogramdestinationname" "text" "${ALLSKY_ENV}"
+		doV "STARTRAILS_DESTINATION_NAME" "remotewebsitestartrailsdestinationname" "text" "${ALLSKY_ENV}"
 		# shellcheck disable=SC2034
 		[[ -n ${HOST} ]] && REMOTE_HOST="${HOST}"
-		doV "REMOTE_HOST" ".REMOTEWEBSITE_HOST" "text" "${ALLSKY_ENV}"
+		doV "REMOTE_HOST" "REMOTEWEBSITE_HOST" "text" "${ALLSKY_ENV}"
 		if [[ -z ${REMOTE_PORT} ]]; then
 			# Don't want a default value.
-			doV "REMOTE_PORT" ".REMOTEWEBSITE_PORT" "text" "${ALLSKY_ENV}"
+			doV "REMOTE_PORT" "REMOTEWEBSITE_PORT" "text" "${ALLSKY_ENV}"
 		else
-			doV "REMOTE_PORT" ".REMOTEWEBSITE_PORT" "number" "${ALLSKY_ENV}"
+			doV "REMOTE_PORT" "REMOTEWEBSITE_PORT" "number" "${ALLSKY_ENV}"
 		fi
 		# shellcheck disable=SC2034
 		[[ -n ${USER} ]] && REMOTE_USER="${USER}"
-		doV "REMOTE_USER" ".REMOTEWEBSITE_USER" "text" "${ALLSKY_ENV}"
+		doV "REMOTE_USER" "REMOTEWEBSITE_USER" "text" "${ALLSKY_ENV}"
 		# shellcheck disable=SC2034
 		[[ -n ${PASSWORD} ]] && REMOTE_PASSWORD="${PASSWORD}"
-		doV "REMOTE_PASSWORD" ".REMOTEWEBSITE_PASSWORD" "text" "${ALLSKY_ENV}"
-		doV "LFTP_COMMANDS" ".REMOTEWEBSITE_LFTP_COMMANDS" "text" "${ALLSKY_ENV}"
-		doV "SSH_KEY_FILE" ".REMOTEWEBSITE_SSH_KEY_FILE" "text" "${ALLSKY_ENV}"
-		doV "AWS_CLI_DIR" ".REMOTEWEBSITE_AWS_CLI_DIR" "text" "${ALLSKY_ENV}"
-		doV "S3_BUCKET" ".REMOTEWEBSITE_S3_BUCKET" "text" "${ALLSKY_ENV}"
-		doV "S3_ACL" ".REMOTEWEBSITE_S3_ACL" "text" "${ALLSKY_ENV}"
-		doV "GCS_BUCKET" ".REMOTEWEBSITE_GCS_BUCKET" "text" "${ALLSKY_ENV}"
-		doV "GCS_ACL" ".REMOTEWEBSITE_GCS_ACL" "text" "${ALLSKY_ENV}"
+		doV "REMOTE_PASSWORD" "REMOTEWEBSITE_PASSWORD" "text" "${ALLSKY_ENV}"
+		doV "LFTP_COMMANDS" "REMOTEWEBSITE_LFTP_COMMANDS" "text" "${ALLSKY_ENV}"
+		doV "SSH_KEY_FILE" "REMOTEWEBSITE_SSH_KEY_FILE" "text" "${ALLSKY_ENV}"
+		doV "AWS_CLI_DIR" "REMOTEWEBSITE_AWS_CLI_DIR" "text" "${ALLSKY_ENV}"
+		doV "S3_BUCKET" "REMOTEWEBSITE_S3_BUCKET" "text" "${ALLSKY_ENV}"
+		doV "S3_ACL" "REMOTEWEBSITE_S3_ACL" "text" "${ALLSKY_ENV}"
+		doV "GCS_BUCKET" "REMOTEWEBSITE_GCS_BUCKET" "text" "${ALLSKY_ENV}"
+		doV "GCS_ACL" "REMOTEWEBSITE_GCS_ACL" "text" "${ALLSKY_ENV}"
 
-		# Remote server
-		doV "IMG_UPLOAD_ORIGINAL_NAME" ".remoteserverimageuploadoriginalname" "boolean" "${NEW_FILE}"
+		# Remote server - wasn't in prior releases so don't need to update ${ALLSKY_ENV}.
+		doV "IMG_UPLOAD_ORIGINAL_NAME" "remoteserverimageuploadoriginalname" "boolean" "${NEW_FILE}"
 	) || return 1
 
 	if [[ ${CALLED_FROM} == "install" ]]; then
@@ -2070,11 +2116,11 @@ restore_prior_settings_file()
 					# and are required and have no default,
 					# so try to restore them so Allsky can restart automatically.
 					local LAT="$( settings .latitude "${PRIOR_SETTINGS_FILE}" )"
-					update_json_file ".latitude" "${LAT}" "${SETTINGS_FILE}"
+					X="LAT"; doV "X" "latitude" "text" "${SETTINGS_FILE}"
 					local LONG="$( settings .longitude "${PRIOR_SETTINGS_FILE}" )"
-					update_json_file ".longitude" "${LONG}" "${SETTINGS_FILE}"
+					X="LONG"; doV "X" "longitude" "text" "${SETTINGS_FILE}"
 					local ANGLE="$( settings .angle "${PRIOR_SETTINGS_FILE}" )"
-					update_json_file ".angle" "${ANGLE}" "${SETTINGS_FILE}" "number"
+					X="ANGLE"; doV "X" "angle" "number" "${SETTINGS_FILE}"
 					display_msg --log progress "Prior latitude, longitude, and angle restored."
 
 					MSG="You need to manually transfer your old settings to the WebUI.\n"
@@ -2091,7 +2137,8 @@ restore_prior_settings_file()
 			esac
 
 			# Set to null to force the user to look at the settings before Allsky will run.
-			update_json_file ".lastchanged" "" "${SETTINGS_FILE}"
+			EMPTY=""
+			X="EMPTY"; doV "X" "lastchanged" "text" "${SETTINGS_FILE}"
 
 			RESTORED_PRIOR_SETTINGS_FILE="true"
 			FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"
@@ -2222,7 +2269,7 @@ restore_prior_files()
 		D="${OLD_RASPAP_DIR}"
 	fi
 	R="raspap.auth"
-	ITEM="${SPACE}WebUI security settings (${R})."
+	ITEM="${SPACE}WebUI security settings (${R})"
 	if [[ -f ${D}/${R} ]]; then
 		display_msg --log progress "${ITEM} (copying)"
 		cp -a "${D}/${R}" "${ALLSKY_CONFIG}"
@@ -2314,8 +2361,8 @@ do_Website_tasks()
 	if [[ ! -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
 		# No prior config file (this should only happen if there was no prior Website).
 		cp  "${REPO_WEBSITE_CONFIGURATION_FILE}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
-		update_json_file ".${WEBSITE_ALLSKY_VERSION}"  "${ALLSKY_VERSION}" \
-			"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+		X="ALLSKY_VERSION"
+		doV "X" "${WEBSITE_ALLSKY_VERSION}" "text" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
@@ -2574,7 +2621,7 @@ do_restore()
 
 	do_initial_heading
 
-echo	stop_allsky
+	stop_allsky
 
 	# During installation some files were MOVED from the old release to
 	# the new release (which is now the current release).
@@ -2586,7 +2633,7 @@ echo	stop_allsky
 	ITEM="${SPACE}'images' directory"
 	if [[ -d ${ALLSKY_HOME}/images ]]; then
 		display_msg --log progress "${ITEM} (moving)"
-echo		mv "${ALLSKY_HOME}/images" "${PRIOR_ALLSKY_DIR}"
+		mv "${ALLSKY_HOME}/images" "${PRIOR_ALLSKY_DIR}"
 	else
 		# This is probably very rare so let the user know
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}.  This is unusual."
@@ -2595,7 +2642,7 @@ echo		mv "${ALLSKY_HOME}/images" "${PRIOR_ALLSKY_DIR}"
 	ITEM="${SPACE}'darks' directory"
 	if [[ -d ${ALLSKY_HOME}/darks ]]; then
 		display_msg --log progress "${ITEM} (moving)"
-echo		mv "${ALLSKY_HOME}/darks" "${PRIOR_ALLSKY_DIR}"
+		mv "${ALLSKY_HOME}/darks" "${PRIOR_ALLSKY_DIR}"
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
@@ -2670,7 +2717,8 @@ PRIOR_WEBSITE_DIR=""
 	display_image "ConfigurationNeeded"
 
 	# Set to null to force the user to look at the settings before Allsky will run.
-	update_json_file ".lastchanged" "" "${SETTINGS_FILE}"
+	EMPTY=""
+	X="EMPTY"; doV "X" "lastchanged" "text" "${SETTINGS_FILE}"
 
 	exit_installation 0 "${STATUS_OK}" ""
 }
@@ -2771,7 +2819,7 @@ install_Python()
 		R=""
 	fi
 
-    display_msg --logonly info "Attempting to locate Python dependency file"
+    display_msg --logonly info "Locating Python dependency file"
 	PREFIX="${ALLSKY_REPO}/requirements"
 	REQUIREMENTS_FILE=""
 	for file in "${PREFIX}${R}-${LONG_BITS}.txt" \
@@ -2957,10 +3005,13 @@ display_image()
 
 		MSG="Displaying custom notification image: $( echo -e "${CUSTOM_MESSAGE}" | tr '\n' ' ' )"
 		display_msg --logonly info "${MSG}"
-		"${ALLSKY_SCRIPTS}/generate_notification_images.sh" \
+		MSG="$( "${ALLSKY_SCRIPTS}/generate_notification_images.sh" \
 			--directory "${ALLSKY_TMP}" \
 			"${FILENAME}" "${COLOR}" "" "" "" "" \
-			"" "10" "${COLOR}" "${EXTENSION}" "" "${CUSTOM_MESSAGE}"   > /dev/null
+			"" "10" "${COLOR}" "${EXTENSION}" "" "${CUSTOM_MESSAGE}"  2>&1 >/dev/null )"
+		if [[ -n ${MSG} ]]; then
+			display_msg --logonly info "${MSG}"
+		fi
 	else
 		IMAGE_NAME="${IMAGE_OR_CUSTOM}"
 

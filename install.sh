@@ -2115,8 +2115,10 @@ restore_prior_settings_file()
 					# As far as I know, latitude, longitude, and angle have never changed names,
 					# and are required and have no default,
 					# so try to restore them so Allsky can restart automatically.
+					# shellcheck disable=SC2034
 					local LAT="$( settings .latitude "${PRIOR_SETTINGS_FILE}" )"
 					X="LAT"; doV "X" "latitude" "text" "${SETTINGS_FILE}"
+					# shellcheck disable=SC2034
 					local LONG="$( settings .longitude "${PRIOR_SETTINGS_FILE}" )"
 					X="LONG"; doV "X" "longitude" "text" "${SETTINGS_FILE}"
 					local ANGLE="$( settings .angle "${PRIOR_SETTINGS_FILE}" )"
@@ -2717,6 +2719,7 @@ PRIOR_WEBSITE_DIR=""
 	display_image "ConfigurationNeeded"
 
 	# Set to null to force the user to look at the settings before Allsky will run.
+	# shellcheck disable=SC2034
 	EMPTY=""
 	X="EMPTY"; doV "X" "lastchanged" "text" "${SETTINGS_FILE}"
 

@@ -398,6 +398,7 @@ function update_json_file()		# [-d] field, new value, file, [type]
 		ACTION="del(${FIELD})"
 	else
 		NEW_VALUE="${2}"
+		TYPE="${4}"
 		# Numbers and booleans don't need quotes.
 		if [[ -z ${TYPE} && ${NEW_VALUE} != "true" && ${NEW_VALUE} != "false" ]] &&
 			! is_number "${NEW_VALUE}" ; then

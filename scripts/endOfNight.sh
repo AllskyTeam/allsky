@@ -110,7 +110,7 @@ fi
 LOCAL_WEB_DAYS_TO_KEEP="$( settings ".daystokeeplocalwebsite" )"
 if [[ ${LOCAL_WEB_DAYS_TO_KEEP} -gt 0 && $( settings ".uselocalwebsite" ) == "true" ]]; then
 	if [[ ! -d ${ALLSKY_WEBSITE} ]]; then
-		echo -e "${ME}: ${YELLOW}WARNING: 'Days to Keep on Pi Website' set but no Website found in '${ALLSKY_WEBSITE}!${NC}"
+		echo -e "${ME}: ${YELLOW}WARNING: 'Days to Keep on Pi Website' set but no Local Website found in '${ALLSKY_WEBSITE}!${NC}"
 		echo -e 'Set "Days to Keep on Pi Website" to ""'
 	else
 		del=$( date --date="${LOCAL_WEB_DAYS_TO_KEEP} days ago" +%Y%m%d )

@@ -243,7 +243,6 @@ function DisplayOverlay($image_name)
                                 <table id="fielderrorstable" class="display compact" style="width:98%">
                                     <thead>
                                         <tr>
-                                            <th>Id</th>
                                             <th>Field Name</th>
                                             <th>Type</th>
                                             <th>&nbsp;</th>

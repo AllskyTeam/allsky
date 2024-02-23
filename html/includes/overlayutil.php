@@ -781,6 +781,12 @@ class OVERLAYUTIL
                 }
             }
         }
+
+        $settingsFile = ALLSKY_CONFIG . '/settings.json';
+        $settings = file_get_contents($settingsFile);
+        $settings = json_decode($settings);
+        $overlayData['settings'] = $settings;
+
         $overlayData = json_encode($overlayData);
         $this->sendResponse($overlayData);
     }

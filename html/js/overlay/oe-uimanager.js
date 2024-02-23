@@ -1268,9 +1268,6 @@ class OEUIMANAGER {
                 order: [[0, 'asc']],
                 columns: [
                     {
-                        data: 'id',
-                        width: '150px'
-                    }, {
                         data: 'name',
                         width: '600px'
                     }, {

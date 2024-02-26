@@ -354,6 +354,7 @@ select_camera_type()
 			else
 				MSG="Camera Type not in prior new-style settings file."
 				display_msg --log error "${MSG}"
+				exit_installation 2 "${STATUS_NO_CAMERA}" "${MSG}"
 			fi
 		else
 			# Older style using ${CAMERA}
@@ -1245,7 +1246,7 @@ does_prior_Allsky_Website_exist()
 
 does_prior_Allsky_exist()
 {
-	local MSG  CT_  CM_  DIR  CAPTURE  STRING
+	local MSG  DIR  CAPTURE  STRING
 
 	# ${PRIOR_ALLSKY_DIR} points to where the prior Allsky would be.
 	# Make sure it's there and is valid.
@@ -1286,15 +1287,14 @@ does_prior_Allsky_exist()
 		# and that file will have the camera type and model.
 		PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}"
 		if [[ -f ${PRIOR_SETTINGS_FILE} ]]; then
-			if [[ ${PRIOR_ALLSKY_VERSION} < "${COMBINED_BASE_VERSION}" ]]; then
-				CT_=".cameraType"
-				CM_=".cameraModel"
+			# Look for newer, lowercase setting names
+			PRIOR_CAMERA_TYPE="$( settings ".cameratype" "${PRIOR_SETTINGS_FILE}" )"
+			if [[ -n ${PRIOR_CAMERA_TYPE} ]]; then
+				PRIOR_CAMERA_MODEL="$( settings ".cameramodel" "${PRIOR_SETTINGS_FILE}" )"
 			else
-				CT_=".cameratype"
-				CM_=".cameramodel"
+				PRIOR_CAMERA_TYPE="$( settings ".cameraType" "${PRIOR_SETTINGS_FILE}" )"
+				PRIOR_CAMERA_MODEL="$( settings ".cameraModel" "${PRIOR_SETTINGS_FILE}" )"
 			fi
-			PRIOR_CAMERA_TYPE="$( settings "${CT_}" "${PRIOR_SETTINGS_FILE}" )"
-			PRIOR_CAMERA_MODEL="$( settings "${CM_}" "${PRIOR_SETTINGS_FILE}" )"
 		else
 			# This shouldn't happen...
 			PRIOR_SETTINGS_FILE=""
@@ -1571,14 +1571,17 @@ convert_settings()			# prior_file, new_file
 					if [[ ${DISPLAYED_BRIGHTNESS_MSG} == "false" ]]; then
 						DISPLAYED_BRIGHTNESS_MSG="true"		# only display once.
 						MSG="The 'Brightness' settings were removed."
-						MSG+="\n  Use the 'Target Mean' settings to adjust brightness."
+						MSG+="\nUse the 'Target Mean' settings to adjust brightness."
 						display_msg --log notice "${MSG}"
 					fi
 					;;
 				"offset")
-					MSG="The 'Offset' setting was removed."
-					MSG+="\n  Use the 'Target Mean' settings to adjust brightness."
-					display_msg --log notice "${MSG}"
+					if [[ ${X} > "1" ]]; then
+						# 1 is default.  > 1 means they changed it, which is rare.
+						MSG="The 'Offset' setting was removed."
+						MSG+="\nUse the 'Target Mean' settings to adjust brightness."
+						display_msg --log notice "${MSG}"
+					fi
 					;;
 
 				# These changed names.
@@ -1630,7 +1633,6 @@ convert_settings()			# prior_file, new_file
 					;;
 
 				*)
-					#x V="${X}"
 					doV "X" "${FIELD}" "" "${NEW_FILE}"		# don't know the type
 					;;
 			esac
@@ -1640,39 +1642,40 @@ convert_settings()			# prior_file, new_file
 	# If they are already in PRIOR_FILE then they are also in NEW_FILE.
 	x="$( settings ".takenighttimeimages" "${PRIOR_FILE}" )"
 	if [[ -z ${x} ]]; then
-		X="true"; doV "X" "takenighttimeimages" "boolean" "${NEW_FILE}"
+		X="true"; doV "X" "takenighttimeimages" "boolean" "${NEW_FILE}" "NEW"
 	fi
 
 	x="$( settings ".savenighttimeimages" "${PRIOR_FILE}" )"
 	if [[ -z ${x} ]]; then
-		X="true"; doV "X" "savenighttimeimages" "boolean" "${NEW_FILE}"
+		X="true"; doV "X" "savenighttimeimages" "boolean" "${NEW_FILE}" "NEW"
 	fi
 
 	x="$( settings ".determinefocus" "${PRIOR_FILE}" )"
 	if [[ -z ${x} ]]; then
-		X="false"; doV "X" "determinefocus" "boolean" "${NEW_FILE}"
+		X="false"; doV "X" "determinefocus" "boolean" "${NEW_FILE}" "NEW"
 	fi
 
 	x="$( settings ".showdelay" "${PRIOR_FILE}" )"
 	if [[ -z ${x} ]]; then
-		X="true"; doV "X" "showdelay" "boolean" "${NEW_FILE}"
+		X="true"; doV "X" "showdelay" "boolean" "${NEW_FILE}" "NEW"
 	fi
 
 	x="$( settings ".imagessortorder" "${PRIOR_FILE}" )"
 	if [[ -z ${x} ]]; then
-		X="ascending"; doV "X" "imagessortorder" "text" "${NEW_FILE}"
+		X="ascending"; doV "X" "imagessortorder" "text" "${NEW_FILE}" "NEW"
 	fi
 
 	x="$( settings ".zwoexposuretype" "${PRIOR_FILE}" )"
 	if [[ -z ${x} ]]; then
-		X=0; doV "X" "zwoexposuretype" "number" "${NEW_FILE}"
+		X=0; doV "X" "zwoexposuretype" "number" "${NEW_FILE}" "NEW"
 	fi
 
 	# New fields were added to the bottom of the settings file but the below
 	# command will order them the same as in the options file, which we want.
 
 	local TEMP_NEW="/tmp/converted_new_settings.json"
-	"${ALLSKY_WEBUI}/includes/convertJSON.php" --convert \
+	"${ALLSKY_WEBUI}/includes/convertJSON.php" \
+		--convert \
 		--settings-only \
 		--settings-file "${NEW_FILE}" \
 		--options-file "${REPO_OPTIONS_FILE}" \
@@ -1695,9 +1698,10 @@ doV()
 	local jV="${2}"			# new json variable name
 	local TYPE="${3}"
 	local FILE="${4}"
+	local NEW="${5}"		# Optional
 
 	[[ -z ${VAL} ]] && return
-	[[ ${V} == "X" ]] && V="NEW"		# "X" is used for new setting names
+	[[ ${NEW} == "NEW" ]] && V="NEW"
 
 	if [[ ${TYPE} == "boolean" ]]; then
 		# Some booleans used "true/false" and some used "1/0".
@@ -1712,11 +1716,7 @@ doV()
 
 	local ERR  MSG
 	if ERR="$( update_json_file ".${jV}" "${VAL}" "${FILE}" "${TYPE}" > "${TMP_FILE}" 2>&1 )" ; then
-		if [[ ${V} == "V" ]]; then
-			MSG="   ${jV}=${VAL}"
-		else
-			MSG="   ${V}: ${jV}=${VAL}"
-		fi
+		MSG="   ${V}: ${jV}=${VAL}"
 		display_msg --logonly info "${MSG}"
 	else
 		display_msg --log info "Warning: Unable to update ${jV} to '${VAL}': $( < "${TMP_FILE}" )"
@@ -1813,10 +1813,11 @@ convert_config_sh()
 
 		# AUTOSTRETCH no longer used; only stretch if AMOUNT > 0 and MID_POINT != ""
 		X=0
-		doV "X" "imagestretchamountdaytime" "number" "${NEW_FILE}"		# new
-		doV "X" "imagestretchmidpointdaytime" "text" "${NEW_FILE}"		# new
+		doV "X" "imagestretchamountdaytime" "number" "${NEW_FILE}" "NEW"
+		doV "X" "imagestretchmidpointdaytime" "text" "${NEW_FILE}" "NEW"
 		# shellcheck disable=SC2034
 		[[ ${AUTOSTRETCH} != "true" || -n ${AUTOSTRETCH_MID_POINT} ]] && AUTOSTRETCH_AMOUNT=0
+#XXX
 		doV "AUTOSTRETCH_AMOUNT" "imagestretchamountnighttime" "number" "${NEW_FILE}"
 		doV "AUTOSTRETCH_MID_POINT" "imagestretchmidpointnighttime" "text" "${NEW_FILE}"
 
@@ -1860,6 +1861,7 @@ convert_config_sh()
 		doV "TIMELAPSE_MINI_IMAGES" "minitimelapsenumimages" "number" "${NEW_FILE}"
 		doV "TIMELAPSE_MINI_FORCE_CREATION" "minitimelapseforcecreation" "boolean" "${NEW_FILE}"
 		doV "TIMELAPSE_MINI_FREQUENCY" "minitimelapsefrequency" "number" "${NEW_FILE}"
+#XXX
 		doV "TIMELAPSE_MINI_UPLOAD_VIDIO" "minitimelapseupload" "boolean" "${NEW_FILE}"
 		doV "TIMELAPSE_MINI_UPLOAD_THUMBNAIL" "minitimelapseuploadthumbnail" "boolean" "${NEW_FILE}"
 		doV "TIMELAPSE_MINI_FPS" "minitimelapsefps" "number" "${NEW_FILE}"
@@ -1871,11 +1873,11 @@ convert_config_sh()
 		doV "KEOGRAM" "keogramgenerate" "boolean" "${NEW_FILE}"
 		doV "KEOGRAM_EXTRA_PARAMETERS" "keogramextraparameters" "text" "${NEW_FILE}"
 		doV "UPLOAD_KEOGRAM" "keogramupload" "boolean" "${NEW_FILE}"
-		X="true"; doV "X" "keogramexpand" "boolean" "${NEW_FILE}"		# new
-		X="simplex"; doV "X" "keogramfontname" "text" "${NEW_FILE}"	# new
-		X="#ffff"; doV "X" "keogramfontcolor" "text" "${NEW_FILE}"		# new
-		X=1; doV "X" "keogramfontsize" "text" "${NEW_FILE}"			# new
-		X=3; doV "X" "keogramlinethickness" "text" "${NEW_FILE}"		# new
+		X="true"; doV "X" "keogramexpand" "boolean" "${NEW_FILE}" "NEW"
+		X="simplex"; doV "X" "keogramfontname" "text" "${NEW_FILE}" "NEW"
+		X="#ffff"; doV "X" "keogramfontcolor" "text" "${NEW_FILE}" "NEW"
+		X=1; doV "X" "keogramfontsize" "text" "${NEW_FILE}" "NEW"
+		X=3; doV "X" "keogramlinethickness" "text" "${NEW_FILE}" "NEW"
 
 		doV "STARTRAILS" "startrailsgenerate" "boolean" "${NEW_FILE}"
 		doV "BRIGHTNESS_THRESHOLD" "startrailsbrightnessthreshold" "number" "${NEW_FILE}"
@@ -1894,7 +1896,7 @@ convert_config_sh()
 			doV "DAYS_TO_KEEP" "daystokeep" "number" "${NEW_FILE}"
 		fi
 		doV "WEB_DAYS_TO_KEEP" "daystokeeplocalwebsite" "number" "${NEW_FILE}"
-		X=0; doV "X" "daystokeepremotewebsite" "number" "${NEW_FILE}"
+		X=0; doV "X" "daystokeepremotewebsite" "number" "${NEW_FILE}" "NEW"
 		doV "WEBUI_DATA_FILES" "webuidatafiles" "text" "${NEW_FILE}"
 
 	) || return 1
@@ -1937,18 +1939,18 @@ convert_ftp_sh()
 		# "local" PROTOCOL means they're using local Website.
 		# WEB_IMAGE_DIR means they have both local and remote Website.
 		if [[ -d ${ALLSKY_WEBSITE} && (${PROTOCOL} == "local" || -n ${WEB_IMAGE_DIR}) ]]; then
-			X="true";  doV "X" "uselocalwebsite" "boolean" "${NEW_FILE}"
+			X="true";  doV "X" "uselocalwebsite" "boolean" "${NEW_FILE}" "NEW"
 		else
-			X="false"; doV "X" "uselocalwebsite" "boolean" "${NEW_FILE}"
+			X="false"; doV "X" "uselocalwebsite" "boolean" "${NEW_FILE}" "NEW"
 		fi
 		if [[ (-n ${PROTOCOL} && ${PROTOCOL} != "local") || -n ${REMOTE_HOST} ]]; then
 			doV "PROTOCOL" "remotewebsiteprotocol" "text" "${NEW_FILE}"
 			doV "IMAGE_DIR" "remotewebsiteimagedir" "text" "${NEW_FILE}"
-			X="true"; doV "X" "useremotewebsite" "boolean" "${NEW_FILE}"
+			X="true"; doV "X" "useremotewebsite" "boolean" "${NEW_FILE}" "NEW"
 		else
 			X=""; doV "X" "remotewebsiteprotocol" "text" "${NEW_FILE}"
 			X=""; doV "X" "remotewebsiteimagedir" "text" "${NEW_FILE}"
-			X="false"; doV "X" "useremotewebsite" "boolean" "${NEW_FILE}"
+			X="false"; doV "X" "useremotewebsite" "boolean" "${NEW_FILE}" "NEW"
 		fi
 		doV "IMG_UPLOAD_ORIGINAL_NAME" "remotewebsiteimageuploadoriginalname" "boolean" "${NEW_FILE}"
 		doV "VIDEOS_DESTINATION_NAME" "remotewebsitevideodestinationname" "text" "${ALLSKY_ENV}"

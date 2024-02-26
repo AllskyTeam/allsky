@@ -1576,7 +1576,7 @@ convert_settings()			# prior_file, new_file
 					fi
 					;;
 				"offset")
-					if [[ ${X} > "1" ]]; then
+					if [[ "${X}" > "1" ]]; then
 						# 1 is default.  > 1 means they changed it, which is rare.
 						MSG="The 'Offset' setting was removed."
 						MSG+="\nUse the 'Target Mean' settings to adjust brightness."

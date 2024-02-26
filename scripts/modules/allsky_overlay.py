@@ -504,7 +504,7 @@ class ALLSKYOVERLAY:
         if "tly" in fieldData:
             fieldY = s.int(fieldData["tly"])
         else:
-            fieldY = s.int(fieldData["x"])
+            fieldY = s.int(fieldData["y"])
 
 
         if "fill" in fieldData:

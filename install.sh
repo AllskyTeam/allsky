@@ -726,7 +726,7 @@ check_success()
 # Install the web server.
 install_webserver_et_al()
 {
-	declare -n v="${FUNCNAME[0]}"	# do not return
+	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 
 	sudo systemctl stop hostapd 2>/dev/null
 	sudo systemctl stop lighttpd 2>/dev/null
@@ -3345,6 +3345,7 @@ if [[ -z ${FUNCTION} && -s ${STATUS_FILE} ]]; then
 	# Initially just get the STATUS and MORE_STATUS.
 	# After that we may clear the file or get all the variables.
 	eval "$( grep "^STATUS_INSTALLATION" "${STATUS_FILE}" )"
+	[[ $? -ne 0 ]] && exit_installation 1 "${STATUS_ERROR}"
 
 	if [[ ${STATUS_INSTALLATION} == "${STATUS_OK}" ]]; then
 		MSG="The last installation completed successfully."

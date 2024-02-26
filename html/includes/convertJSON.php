@@ -211,7 +211,7 @@ if ($convert || $order) {
 			$name = $option['name'];
 	
 			// Skip any setting not in settings array (e.g., for other camera type).
-			$v = getVariableOrDefault($a, $name, null) === null);
+			$v = getVariableOrDefault($a, $name, null);
 			if ($v === null) {
 				continue;
 			}
@@ -242,4 +242,3 @@ if ($convert || $order) {
 
 exit(0);
 ?>
-

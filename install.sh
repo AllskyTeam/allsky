@@ -2722,7 +2722,13 @@ do_restore()
 	create_allsky_logs "false"		# "false" = only create log file
 
 	# If ${ALLSKY_TMP} is a memory filesystem, unmount it.
-	is_tmp_mounted && umount_tmp "${ALLSKY_TMP}"
+	if is_tmp_mounted ; then
+		display_msg --log progress "Unmounting '${ALLSKY_TMP}'."
+		umount_tmp "${ALLSKY_TMP}"
+		MOUNTED="true"
+	else
+		MOUNTED="false"
+	fi
 
 	display_msg --log progress "Renaming directories"
 	if ! mv "${ALLSKY_HOME}" "${RENAMED_DIR}" ; then
@@ -2737,7 +2743,14 @@ do_restore()
 		exit_installation 1 "${STATUS_ERROR}" "${MSG}"
 	fi
 
+	if [[ ${MOUNTED} == "true" ]]; then
+		# Remount ${ALLSKY_TMP}
+		sudo mount -a
+	fi
+
 	# Force the user to at least look at the settings.
+
+	mkdir -p "$( dirname "${POST_INSTALLATION_ACTIONS}" )"
 
 	MSG="\nRestoration is done and"
 	MSG2=" Allsky needs its settings checked."

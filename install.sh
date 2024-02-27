@@ -1784,7 +1784,7 @@ convert_config_sh()
 
 		# IMG_RESIZE no longer used; only resize if width and height are > 0.
 		if [[ ! (-n ${IMG_WIDTH} && ${IMG_WIDTH} -gt 0 &&
-				 -n ${IMG_HEIGHT} && ${IMG_HEIGHT} -gt 0 ) ]];
+				 -n ${IMG_HEIGHT} && ${IMG_HEIGHT} -gt 0 ) ]]; then
 			MSG="Ignoring IMG_RESIZE since IMG_WIDTH (${IMG_WIDTH}) and/or"
 			MSG+=" IMG_HEIGHT (${IMG_HEIGHT}) are not positive numbers."
 			display_msg --log info "${MSG}"
@@ -3255,7 +3255,7 @@ while [ $# -gt 0 ]; do
 			shift
 			;;
 		*)
-			display_msg --log error "Unknown argument: '${ARG}'."
+			display_msg --log error "Unknown argument: '${ARG}'." >&2
 			OK="false"
 			;;
 	esac
@@ -3263,6 +3263,11 @@ while [ $# -gt 0 ]; do
 done
 [[ ${OK} == "false" ]] && usage_and_exit 1
 [[ ${HELP} == "true" ]] && usage_and_exit 0
+
+if [[ ${RESTORE} == "true" && ! -d ${PRIOR_ALLSKY_DIR} ]]; then
+	echo -e "\nERROR: You requested a restore but no prior Allsky was found.\n" >&2
+	exit 1
+fi
 
 IorR="INSTALLATION"		# Installation or Restoration
 

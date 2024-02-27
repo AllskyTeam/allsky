@@ -603,6 +603,25 @@ function check_swap()
 
 
 ####
+
+INITIAL_FSTAB_STRING="tmpfs ${ALLSKY_TMP} tmpfs"
+
+function is_tmp_mounted()
+{
+	grep --quiet "^${INITIAL_FSTAB_STRING}" /etc/fstab
+}
+function umount_tmp()
+{
+	local TMP="${1}"
+
+	sudo umount -f "${TMP}" 2> /dev/null ||
+		{
+			sudo systemctl restart smbd 2> /dev/null
+			sudo umount -f "${TMP}" 2> /dev/null
+		}
+}
+
+####
 function recheck_tmp()
 {
 	check_tmp "after_install"
@@ -621,11 +640,10 @@ function check_tmp()
 	fi
 
 	[[ -z ${WT_WIDTH} ]] && WT_WIDTH="$( calc_wt_size )"
-	local INITIAL_FSTAB_STRING="tmpfs ${ALLSKY_TMP} tmpfs"
 	local STRING  SIZE  D  MSG
 
 	# Check if currently a memory filesystem.
-	if grep --quiet "^${INITIAL_FSTAB_STRING}" /etc/fstab; then
+	if is_tmp_mounted; then
 		MSG="${ALLSKY_TMP} is currently a memory filesystem; no change needed."
 		display_msg --log progress "${MSG}"
 
@@ -637,11 +655,7 @@ function check_tmp()
 		D="${PRIOR_ALLSKY_DIR}/tmp"
 		if [[ -d "${D}" ]] && mount | grep --silent "${D}" ; then
 			# The Samba daemon is one known cause of "target busy".
-			sudo umount -f "${D}" 2> /dev/null ||
-				{
-					sudo systemctl restart smbd 2> /dev/null
-					sudo umount -f "${D}" 2> /dev/null
-				}
+			umount_tmp "${D}"
 		fi
 
 		if [[ ${CALLED_FROM} == "install" ]]; then

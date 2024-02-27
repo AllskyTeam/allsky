@@ -141,6 +141,26 @@
 "action" : "reload"
 },
 {
+"name": "imagestretchamountdaytime",
+"minimum": 0,
+"maximum": 100,
+"default": 0,
+"description": "Amount to stretch daytime images.  <span class='WebUIValue'>0</span> means don't stretch.",
+"label": "Stretch Amount",
+"type": "integer",
+"booldependson": "takedaytimeimages"
+},
+{
+"name": "imagestretchmidpointdaytime",
+"minimum": 1,
+"maximum": 100,
+"default": 10,
+"description": "Mid point of image stretch.<br>Lower numbers brighten darker parts of image; higher numbers brighten lighter parts.<br>Only applies if <span class='WebUISetting'>Stretch Amount</span> is greater than 0.",
+"label": "Stretch mid point",
+"type": "percent",
+"booldependson": "takedaytimeimages"
+},
+{
 "name" : "daybin",
 "default" : 1,
 "description" : "Binning level. <span class='WebUIValue'>1x1</span> = OFF.",
@@ -361,6 +381,26 @@
 "type" : "float",
 "usage" : "capture",
 "action" : "reload"
+},
+{
+"name": "imagestretchamountnighttime",
+"minimum": 0,
+"maximum": 100,
+"default": 0,
+"description": "Amount to stretch nighttime images.  <span class='WebUIValue'>0</span> means don't stretch.",
+"label": "Stretch Amount",
+"type": "integer",
+"booldependson": "takenighttimeimages"
+},
+{
+"name": "imagestretchmidpointnighttime",
+"minimum": 1,
+"maximum": 100,
+"default": 10,
+"description": "Mid point of image stretch.<br>Lower numbers brighten darker parts of image; higher numbers brighten lighter parts.<br>Only applies if <span class='WebUISetting'>Stretch Amount</span> is greater than 0.",
+"label": "Stretch mid point",
+"type": "percent",
+"booldependson": "takenighttimeimages"
 },
 {
 "name" : "nightbin",
@@ -691,15 +731,6 @@
 "action" : "stop"
 },
 {
-"name" : "notificationimages",
-"default" : true,
-"description" : "Enable to display notification images, e.g., 'Camera is off during the day'.<br>While these messages appear in the WebUI and Allsky Website, they are not saved so don't appear in timelapse, startrails, or keograms.",
-"label" : "Notification Images",
-"type" : "boolean",
-"usage" : "capture",
-"action" : "reload"
-},
-{
 "name" : "consistentdelays",
 "default" : true,
 "description" : "Enable to have the delays between images be a consistent length.<br>The time between the start of exposures will always be (max exposure + delay).",
@@ -848,13 +879,6 @@
 ],
 "action" : "reload"
 },
-{
-"name" : "uselogin",
-"default" : true,
-"description" : "Determines if you need to login to the WebUI or not.<br><b>If your Pi is accessible on the Internet, do NOT turn this off!!</b>.",
-"label" : "Require WebUI Login",
-"type" : "boolean"
-},
 
 {
 "name" : "postprocessingtab========================================",
@@ -909,46 +933,6 @@
 "checkchanges" : true,
 "booldependson" : "takedaytimeimages OR takenighttimeimages",
 "action" : "reload"
-},
-{
-"name": "imagestretchamountdaytime",
-"minimum": 0,
-"maximum": 100,
-"default": 0,
-"description": "Amount to stretch daytime images.  <span class='WebUIValue'>0</span> means don't stretch.",
-"label": "Stretch Amount",
-"type": "integer",
-"booldependson": "takedaytimeimages"
-},
-{
-"name": "imagestretchmidpointdaytime",
-"minimum": 0,
-"maximum": 100,
-"default": 0,
-"description": "Mid point of image stretch.<br>Lower numbers brighten darker parts of image; higher numbers brighten lighter parts.<br>Only applies if <span class='WebUISetting'>Stretch Amount</span> is greater than 0.",
-"label": "Stretch mid point",
-"type": "percent",
-"booldependson": "takedaytimeimages"
-},
-{
-"name": "imagestretchamountnighttime",
-"minimum": 0,
-"maximum": 100,
-"default": 0,
-"description": "Amount to stretch nighttime images.  <span class='WebUIValue'>0</span> means don't stretch.",
-"label": "Stretch Amount",
-"type": "integer",
-"booldependson": "takenighttimeimages"
-},
-{
-"name": "imagestretchmidpointnighttime",
-"minimum": 0,
-"maximum": 100,
-"default": 0,
-"description": "Mid point of image stretch.<br>Lower numbers brighten darker parts of image; higher numbers brighten lighter parts.<br>Only applies if <span class='WebUISetting'>Stretch Amount</span> is greater than 0.",
-"label": "Stretch mid point",
-"type": "percent",
-"booldependson": "takenighttimeimages"
 },
 {
 "name" : "imagecroptop",
@@ -2247,6 +2231,22 @@
 "description" : "Disable to hide the <span class='alert-info'>Daytime images updated every...</span> message in the <span class='WebUIWebPage'>Live View</span> page.",
 "label" : "Show Updated Message",
 "type" : "boolean"
+},
+{
+"name" : "uselogin",
+"default" : true,
+"description" : "Determines if you need to login to the WebUI or not.<br><b>If your Pi is accessible on the Internet, do NOT turn this off!!</b>.",
+"label" : "Require WebUI Login",
+"type" : "boolean"
+},
+{
+"name" : "notificationimages",
+"default" : true,
+"description" : "Enable to display notification images, e.g., 'Camera is off during the day'.<br>While these messages appear in the WebUI and Allsky Website, they are not saved so don't appear in timelapse, startrails, or keograms.",
+"label" : "Notification Images",
+"type" : "boolean",
+"usage" : "capture",
+"action" : "reload"
 },
 {
 "name" : "webuidatafiles",

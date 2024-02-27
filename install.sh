@@ -1282,6 +1282,10 @@ does_prior_Allsky_exist()
 	PRIOR_ALLSKY_VERSION="$( get_version "${PRIOR_ALLSKY_DIR}/" )"	# Returns "" if no version file.
 	if [[ -n ${PRIOR_ALLSKY_VERSION} && (! ${PRIOR_ALLSKY_VERSION} < "${FIRST_CAMERA_TYPE_BASE_VERSION}") ]]; then
 		PRIOR_ALLSKY_STYLE="${NEW_STYLE_ALLSKY}"
+		if [[ ${RESTORE} == "true" ]]; then
+			does_prior_Allsky_Website_exist "${PRIOR_ALLSKY_STYLE}"
+			return 0
+		fi
 
 		# PRIOR_SETTINGS_FILE should be a link to a camera-specific settings file
 		# and that file will have the camera type and model.
@@ -1314,6 +1318,11 @@ does_prior_Allsky_exist()
 		PRIOR_CAMERA_TYPE="$( CAMERA_to_CAMERA_TYPE "${CAMERA}" )"
 
 		PRIOR_ALLSKY_STYLE="${OLD_STYLE_ALLSKY}"
+		if [[ ${RESTORE} == "true" ]]; then
+			does_prior_Allsky_Website_exist "${PRIOR_ALLSKY_STYLE}"
+			return 0
+		fi
+
 		if [[ -z ${PRIOR_ALLSKY_VERSION} ]]; then
 			# No version file so try to determine version via .cpp file.
 			# sample:    printf("%s *** Allsky Camera Software v0.8.3 | 2021 ***\n", c(KGRN));
@@ -1823,7 +1832,9 @@ convert_config_sh()
 		# RESIZE_UPLOADS no longer used; resize only if width > 0 and height > 0.
 		if [[ ${RESIZE_UPLOADS} != "true" ]]; then
 			# shellcheck disable=SC2034
-			RESIZE_UPLOADS_WIDTH=0; RESIZE_UPLOADS_HEIGHT=0
+			RESIZE_UPLOADS_WIDTH=0
+			# shellcheck disable=SC2034
+			RESIZE_UPLOADS_HEIGHT=0
 		fi
 		doV "RESIZE_UPLOADS_WIDTH" "imageresizeuploadswidth" "number" "${NEW_FILE}"
 		doV "RESIZE_UPLOADS_HEIGHT" "imageresizeuploadsheight" "number" "${NEW_FILE}"
@@ -1833,7 +1844,9 @@ convert_config_sh()
 		# REMOVE_BAD_IMAGES no longer used; remove only if low > 0 or high > 0.
 		if [[ ${REMOVE_BAD_IMAGES} != "true" ]]; then
 			# shellcheck disable=SC2034
-			REMOVE_BAD_IMAGES_THRESHOLD_LOW=0; REMOVE_BAD_IMAGES_THRESHOLD_HIGH=0
+			REMOVE_BAD_IMAGES_THRESHOLD_LOW=0
+			# shellcheck disable=SC2034
+			REMOVE_BAD_IMAGES_THRESHOLD_HIGH=0
 		fi
 		doV "REMOVE_BAD_IMAGES_THRESHOLD_LOW" "imageremovebadlow" "number" "${NEW_FILE}"
 		doV "REMOVE_BAD_IMAGES_THRESHOLD_HIGH" "imageremovebadhigh" "number" "${NEW_FILE}"
@@ -2590,25 +2603,40 @@ RENAMED_DIR=""
 
 do_restore()
 {
-	local MSG  MSG2  ITEM
+	local MSG  MSG2  ITEM  OK
 
 	# This is what the current ${ALLSKY_HOME} will be renamed to.
 	RENAMED_DIR="${ALLSKY_HOME}-${ALLSKY_VERSION}"
 
+	MSG="Unable to restore Allsky - "
+
+	OK="true"
+	if [[ -z ${PRIOR_ALLSKY_DIR} ]]; then
+		MSG+="No valid prior Allsky to restore."
+		OK="false"
+	fi
+
+	if [[ -d ${RENAMED_DIR} ]]; then
+		MSG+="'${RENAMED_DIR}' already exists."
+		MSG+="\nDid you already restore Allsky?"
+		OK="false"
+	fi
+
 	if [[ ! -d ${ALLSKY_CONFIG} ]]; then
-		MSG="Unable to restore Allsky - Allsky isn't installed."
-		display_msg --log error "${MSG}"
-		exit_installation 1 "${STATUS_ERROR}" "${MSG}"
+		MSG+="Allsky isn't installed."
+		OK="false"
 	fi
 	if [[ ! -d ${PRIOR_ALLSKY_DIR} ]]; then
-		MSG="Unable to restore Allsky - no prior version"
+		MSG+="no prior version"
 		MSG+=" exists in '${PRIOR_ALLSKY_DIR}'."
-		display_msg --log error "${MSG}"
-		exit_installation 1 "${STATUS_ERROR}" "${MSG}"
+		OK="false"
 	fi
 	if [[ -d ${RENAMED_DIR} ]]; then
-		MSG="Unable to restore Allsky - a restored version"
+		MSG+="a restored version"
 		MSG+=" already exists in '${RENAMED_DIR}'."
+		OK="false"
+	fi
+	if [[ ${OK} == "false" ]]; then
 		display_msg --log error "${MSG}"
 		exit_installation 1 "${STATUS_ERROR}" "${MSG}"
 	fi
@@ -2641,9 +2669,6 @@ do_restore()
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-# TODO: set PRIOR_WEBSITE_DIR
-
-PRIOR_WEBSITE_DIR=""
 	if [[ -n ${PRIOR_WEBSITE_DIR} ]]; then
 
 		ITEM="${SPACE}${SPACE}timelapse videos"
@@ -2696,6 +2721,22 @@ PRIOR_WEBSITE_DIR=""
 	create_lighttpd_log_file
 	create_allsky_logs "false"		# "false" = only create log file
 
+	# If ${ALLSKY_TMP} is a memory filesystem, unmount it.
+	is_tmp_mounted && umount_tmp "${ALLSKY_TMP}"
+
+	display_msg --log progress "Renaming directories"
+	if ! mv "${ALLSKY_HOME}" "${RENAMED_DIR}" ; then
+		MSG="Unable to rename '${ALLSKY_HOME}' to '${RENAMED_DIR}'"
+		exit_installation 1 "${STATUS_ERROR}" "${MSG}"
+	fi
+	# Need to point log to old location
+	DISPLAY_MSG_LOG="${DISPLAY_MSG_LOG/${ALLSKY_HOME}/${RENAMED_DIR}}"
+
+	if ! mv "${PRIOR_ALLSKY_DIR}" "${ALLSKY_HOME}" ; then
+		MSG="Unable to rename '${PRIOR_ALLSKY_DIR}' to '${ALLSKY_HOME}'"
+		exit_installation 1 "${STATUS_ERROR}" "${MSG}"
+	fi
+
 	# Force the user to at least look at the settings.
 
 	MSG="\nRestoration is done and"
@@ -2703,8 +2744,8 @@ PRIOR_WEBSITE_DIR=""
 	display_msg --log progress "${MSG}" "${MSG2}"
 	echo -e "\n\n========== ACTION NEEDED:\n${MSG}${MSG2}" >> "${POST_INSTALLATION_ACTIONS}"
 
-	MSG="${MSG}${MSG2}\nGo to the 'Allsky Settings' page of the WebUI to check."
-	MSG+="\nMake any necessary changes then press the 'Save changes' button."
+	MSG="Restoration is done.  Go to the 'Allsky Settings' page of the WebUI and"
+	MSG+="\nmake any necessary changes, then press the 'Save changes' button."
 	echo -e "${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
@@ -3294,7 +3335,6 @@ else
 fi
 
 [[ ${FIX} == "true" ]] && do_fix				# does not return
-[[ ${RESTORE} == "true" ]] && do_restore		# does not return
 
 #shellcheck disable=SC2119
 if [[ $( get_branch ) != "${GITHUB_MAIN_BRANCH}" ]]; then
@@ -3336,7 +3376,7 @@ trap "handle_interrupts" SIGTERM SIGINT
 
 # See if we should skip some steps.
 # When most function are called they add a variable with the function's name set to "true".
-if [[ -z ${FUNCTION} && -s ${STATUS_FILE} ]]; then
+if [[ -z ${FUNCTION} && -s ${STATUS_FILE} && ${RESTORE} == "false" ]]; then
 	# Initially just get the STATUS and MORE_STATUS.
 	# After that we may clear the file or get all the variables.
 	eval "$( grep "^STATUS_INSTALLATION" "${STATUS_FILE}" )"
@@ -3412,15 +3452,20 @@ if [[ -z ${FUNCTION} && -s ${STATUS_FILE} ]]; then
 	fi
 fi
 
-##### Log some info to help in troubleshooting.
-[[ -z ${FUNCTION} ]] && log_info
+if [[ -z ${FUNCTION} && ${RESTORE} == "false" ]]; then
 
-##### Display a message to Buster users.
-[[ -z ${FUNCTION} ]] && check_if_buster
+	##### Log some info to help in troubleshooting.
+	log_info
+
+	##### Display a message to Buster users.
+	check_if_buster
+fi
 
 ##### Does a prior Allsky exist? If so, set PRIOR_ALLSKY_STYLE and other PRIOR_* variables.
 # Re-run every time in case the directory was removed.
 does_prior_Allsky_exist
+
+[[ ${RESTORE} == "true" ]] && do_restore		# does not return
 
 ##### Display the welcome header
 [[ -z ${FUNCTION} ]] && do_initial_heading

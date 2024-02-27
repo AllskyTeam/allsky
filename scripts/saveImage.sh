@@ -129,7 +129,6 @@ fi
 
 # TODO: Dark subtract long-exposure images, even if during daytime.
 # TODO: Need a config variable to specify the threshold to dark subtract.
-# TODO: Possibly also for stretching below.
 if [[ ${DAY_OR_NIGHT} == "NIGHT" ]]; then
 	#shellcheck source-path=scripts
 	source "${ALLSKY_SCRIPTS}/darkSubtract.sh"	# It will modify the image but not its name.
@@ -218,7 +217,7 @@ if [[ ${CROP_IMAGE} -gt 0 ]]; then
 	fi
 fi
 
-# Stretch the image if required, but only at night.
+# Stretch the image if required.
 STRETCH_AMOUNT=0
 STRETCH_MIDPOINT=0
 if [[ ${DAY_OR_NIGHT} == "NIGHT" ]]; then

@@ -26,6 +26,7 @@ define('WEBSERVER_GROUP', 'XX_WEBSERVER_GROUP_XX');
 define('ALLSKY_REPO',  'XX_ALLSKY_REPO_XX');
 define('ALLSKY_VERSION',  'XX_ALLSKY_VERSION_XX');
 define('RASPI_CONFIG',   'XX_RASPI_CONFIG_XX');
+define('RASPI_ADMIN_DETAILS', 'XX_RASPI_CONFIG_XX/raspap.auth');
 
 // Split the placeholder so it doesn't get replaced.
 if (ALLSKY_HOME == "XX_ALLSKY_HOME" . "_XX") {

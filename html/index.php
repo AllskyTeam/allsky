@@ -69,7 +69,6 @@ initialize_variables();		// sets some variables
 
 // Constants for configuration file paths.
 // These are typical for default RPi installs. Modify if needed.
-define('RASPI_ADMIN_DETAILS', RASPI_CONFIG . '/raspap.auth');
 include_once('includes/authenticate.php');
 define('RASPI_WPA_SUPPLICANT_CONFIG', '/etc/wpa_supplicant/wpa_supplicant.conf');
 define('RASPI_WPA_CTRL_INTERFACE', '/var/run/wpa_supplicant');

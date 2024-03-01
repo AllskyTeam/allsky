@@ -695,13 +695,16 @@ function updateFile($file, $contents, $fileName, $toConsole) {
 			$cl1 = "";
 			$cl2 = "";
 		}
-		echo $cl1 . "Unable to update $file 1st time: $e$cl2\n";
+		echo "${cl1}Unable to update $file 1st time: ${e}${cl2}\n";
 
 		// Assumed it failed due to lack of permissions,
 		// usually because the file isn't grouped to the web server group.
 		// Set the permissions and try again.
 
-		$err = str_replace("\n", "", shell_exec("x=\$(sudo chgrp " . WEBSERVER_GROUP . " '$file' 2>&1 && sudo chmod g+w '$file') || echo \${x}"));
+		$cmd = "x=\$(sudo touch '$file';";
+		$cmd .= " sudo chgrp " . WEBSERVER_GROUP . " '$file' 2>&1 &&";
+		$cmd .= " && sudo chmod g+w '$file') || echo \${x}";
+		$err = str_replace("\n", "", $shell_exec($cmd));
 		if ($err != "") {
 			return "Unable to update settings: $err";
 		}
@@ -709,9 +712,9 @@ function updateFile($file, $contents, $fileName, $toConsole) {
 		if (@file_put_contents($file, $contents) == false) {
 			$e = error_get_last()['message'];
 			$err = "Failed to save settings: $e";
-			echo $cl1 . "Unable to update file for 2nd time: $e$cl2";
+			echo "${cl1}Unable to update file for 2nd time: ${e}${cl2}";
 			$x = str_replace("\n", "", shell_exec("ls -l '$file'"));
-			echo $cl1 . "ls -l returned: $x$cl2";
+			echo "${cl1}ls -l returned: ${x}${cl2}";
 
 			// Save a temporary copy of the file in a place the webserver can write to,
 			// then use sudo to "cp" the file to the final place.
@@ -724,8 +727,9 @@ function updateFile($file, $contents, $fileName, $toConsole) {
 				return $err;
 			}
 
-			$err = str_replace("\n", "", shell_exec("x=\$(sudo cp '$tempFile' '$file' 2>&1) || echo 'Unable to copy [$tempFile] to [$file]': \${x}"));
-			echo $cl1 . "cp returned: [$err]$cl2";
+			$cmd = "x=\$(sudo cp '$tempFile' '$file' 2>&1) || echo 'Unable to copy [$tempFile] to [$file]': \${x}";
+			$err = str_replace("\n", "", shell_exec($cmd));
+			echo "${cl1}cp returned: [$err]${cl2}";
 			return $err;
 		}
 	}

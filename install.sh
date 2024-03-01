@@ -3395,7 +3395,7 @@ if [[ -z ${FUNCTION} && -s ${STATUS_FILE} && ${RESTORE} == "false" ]]; then
 	# Initially just get the STATUS and MORE_STATUS.
 	# After that we may clear the file or get all the variables.
 	eval "$( grep "^STATUS_INSTALLATION" "${STATUS_FILE}" )"
-	[[ $? -ne 0 ]] && exit_installation 1 "${STATUS_ERROR}"
+	[[ $? -ne 0 ]] && exit_installation 1 ""	# "" means do NOT update the status file
 
 	if [[ ${STATUS_INSTALLATION} == "${STATUS_OK}" ]]; then
 		MSG="The last installation completed successfully."

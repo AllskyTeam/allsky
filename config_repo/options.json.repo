@@ -2067,7 +2067,7 @@
 {
 "name" : "REMOTESERVER_GCS_BUCKET",
 "default" : "",
-"description" : "Name of GCS bucket where files will be upload.<br>Suggested name: <span class='WebUIValue'>allskybucket</span>",",
+"description" : "Name of GCS bucket where files will be upload.<br>Suggested name: <span class='WebUIValue'>allskybucket</span>",
 "label" : "GCS Bucket",
 "type" : "text",
 "checkchanges" : true,

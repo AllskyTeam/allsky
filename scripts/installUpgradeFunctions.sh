@@ -369,7 +369,10 @@ function check_remote_server()
 
 
 ####
-# Update a json file.   -d  deletes the field
+# Update a json file.
+#	field, new value, file, [type]
+# or
+#	-d field, "" value, file
 function update_json_file()		# [-d] field, new value, file, [type]
 {
 	local M  DELETE  FIELD  FILE  TEMP  NEW_VALUE

@@ -1678,7 +1678,7 @@ convert_settings()			# prior_file, new_file
 	##### New fields not already handled in loop above.
 	# If they are already in PRIOR_FILE then they are also in NEW_FILE.
 
-	for s in takenighttimeimages savenighttimeimages determinefocus showdelay
+	for s in takenighttimeimages savenighttimeimages determinefocus showupdatedmessage
 	do
 		x="$( settings ".${s}" "${PRIOR_FILE}" )"
 		if [[ -z ${x} ]]; then

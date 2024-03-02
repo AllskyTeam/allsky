@@ -372,7 +372,8 @@ function check_remote_server()
 # Update a json file.   -d  deletes the field
 function update_json_file()		# [-d] field, new value, file, [type]
 {
-	local M FIELD NEW_VALUE FILE TYPE DOUBLE_QUOTE TEMP ACTION
+	local M  DELETE  FIELD  FILE  TEMP  NEW_VALUE
+	local ACTION  TYPE  DOUBLE_QUOTE  ERR_MSG  RET
 
 	M="${ME:-${FUNCNAME[0]}}"
 
@@ -391,7 +392,6 @@ function update_json_file()		# [-d] field, new value, file, [type]
 
 	FILE="${3:-${SETTINGS_FILE}}"
 	TEMP="/tmp/$$"
-	ERR_TEMP="/tmp/$$_error"
 
 	if [[ ${DELETE} == "true" ]]; then
 		NEW_VALUE="(delete)"	# only used in error message below.
@@ -411,18 +411,15 @@ function update_json_file()		# [-d] field, new value, file, [type]
 		fi
 		ACTION="${FIELD} = ${DOUBLE_QUOTE}${NEW_VALUE}${DOUBLE_QUOTE}"
 	fi
-	if jq --indent 4 "${ACTION}" "${FILE}" > "${TEMP}" 2> "${ERR_TEMP}" ; then
+	ERR_MSG="$( jq --indent 4 "${ACTION}" "${FILE}" 2>&1 > "${TEMP}" )"
+	RET=$?
+	if [[ ${RET} -eq 0 ]]; then
 		# Have to use "cp" instead of "mv" to keep any hard link.
 		cp "${TEMP}" "${FILE}"
-		RET=0
 	else
-		RET=1
+		echo "${M}: Unable to update json value of '${FIELD}' to '${NEW_VALUE}' in '${FILE}': ${ERR_MSG}" >&2
 	fi
 	rm "${TEMP}"
-
-	if [[ ${RET} -ne 0 ]]; then
-		echo "${M}: Unable to update json value of '${FIELD}' to '${NEW_VALUE}' in '${FILE}': ${ERR_TEMP}" >&2
-	fi
 
 	return "${RET}"
 }

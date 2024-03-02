@@ -2643,7 +2643,7 @@ do_restore()
 
 	ITEM="${SPACE}'images' directory"
 	if [[ -d ${ALLSKY_HOME}/images ]]; then
-		display_msg --log progress "${ITEM} (moving)"
+		display_msg --log progress "${ITEM} (moving back)"
 		mv "${ALLSKY_HOME}/images" "${PRIOR_ALLSKY_DIR}"
 	else
 		# This is probably very rare so let the user know
@@ -2652,7 +2652,7 @@ do_restore()
 
 	ITEM="${SPACE}'darks' directory"
 	if [[ -d ${ALLSKY_HOME}/darks ]]; then
-		display_msg --log progress "${ITEM} (moving)"
+		display_msg --log progress "${ITEM} (moving back)"
 		mv "${ALLSKY_HOME}/darks" "${PRIOR_ALLSKY_DIR}"
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
@@ -2660,40 +2660,40 @@ do_restore()
 
 	if [[ -n ${PRIOR_WEBSITE_DIR} ]]; then
 
-		ITEM="${SPACE}${SPACE}timelapse videos"
+		ITEM="${SPACE}timelapse videos"
 		D="${ALLSKY_WEBSITE}/videos/thumbnails"
 		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/videos"
 		count=$( get_count "${ALLSKY_WEBSITE}/videos" 'allsky-*' )
 		if [[ ${count} -ge 1 ]]; then
-			display_msg --log progress "${ITEM} (moving)"
+			display_msg --log progress "${ITEM} (moving back)"
 			mv "${ALLSKY_WEBSITE}"/videos/allsky-*   "${PRIOR_WEBSITE_DIR}/videos"
 		else
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		fi
 
-		ITEM="${SPACE}${SPACE}keograms"
+		ITEM="${SPACE}keograms"
 		D="${ALLSKY_WEBSITE}/keograms/thumbnails"
 		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/keograms"
 		count=$( get_count "${ALLSKY_WEBSITE}/keograms" 'keogram-*' )
 		if [[ ${count} -ge 1 ]]; then
-			display_msg --log progress "${ITEM} (moving)"
+			display_msg --log progress "${ITEM} (moving back)"
 			mv "${ALLSKY_WEBSITE}"/keograms/keogram-*   "${PRIOR_WEBSITE_DIR}/keograms"
 		else
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		fi
 
-		ITEM="${SPACE}${SPACE}startrails"
+		ITEM="${SPACE}startrails"
 		D="${ALLSKY_WEBSITE}/startrails/thumbnails"
 		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/startrails"
 		count=$( get_count "${ALLSKY_WEBSITE}/startrails" 'startrails-*' )
 		if [[ ${count} -ge 1 ]]; then
-			display_msg --log progress "${ITEM} (moving)"
+			display_msg --log progress "${ITEM} (moving back)"
 			mv "${ALLSKY_WEBSITE}"/startrails/startrails-*   "${PRIOR_WEBSITE_DIR}/startrails"
 		else
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		fi
 
-		ITEM="${SPACE}${SPACE}'myFiles' directory"
+		ITEM="${SPACE}'myFiles' directory"
 		D="${ALLSKY_WEBSITE}/myFiles"
 		if [[ -d ${D} ]]; then
 			count=$( get_count "${D}" '*' )
@@ -2756,10 +2756,8 @@ do_restore()
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 	display_image "ConfigurationNeeded"
 
-	# Set to null to force the user to look at the settings before Allsky will run.
-	# shellcheck disable=SC2034
-	EMPTY=""
-	X="EMPTY"; doV "X" "lastchanged" "text" "${SETTINGS_FILE}"
+	# Force the user to look at the settings before Allsky will run.
+	update_json_file -d ".lastchanged" "" "${FILE}"
 
 	exit_installation 0 "${STATUS_OK}" ""
 }

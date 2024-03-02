@@ -2718,7 +2718,7 @@ do_restore()
 		MOUNTED="false"
 	fi
 
-	display_msg --log progress "Renaming directories"
+	display_msg --log progress "Renaming '${ALLSKY_HOME}' to '${RENAMED_DIR}'"
 	if ! mv "${ALLSKY_HOME}" "${RENAMED_DIR}" ; then
 		MSG="Unable to rename '${ALLSKY_HOME}' to '${RENAMED_DIR}'"
 		exit_installation 1 "${STATUS_ERROR}" "${MSG}"
@@ -2729,6 +2729,7 @@ do_restore()
 	STATUS_FILE="${STATUS_FILE/${ALLSKY_HOME}/${RENAMED_DIR}}"
 	ALLSKY_SCRIPTS="${ALLSKY_SCRIPTS/${ALLSKY_HOME}/${RENAMED_DIR}}"
 
+	display_msg --log progress "Renaming '${PRIOR_ALLSKY_DIR}' to '${ALLSKY_HOME}'"
 	if ! mv "${PRIOR_ALLSKY_DIR}" "${ALLSKY_HOME}" ; then
 		MSG="Unable to rename '${PRIOR_ALLSKY_DIR}' to '${ALLSKY_HOME}'"
 		exit_installation 1 "${STATUS_ERROR}" "${MSG}"
@@ -2738,8 +2739,6 @@ do_restore()
 		# Remount ${ALLSKY_TMP}
 		sudo mount -a
 	fi
-
-	# Force the user to at least look at the settings.
 
 	mkdir -p "$( dirname "${POST_INSTALLATION_ACTIONS}" )"
 

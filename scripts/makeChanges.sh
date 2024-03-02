@@ -368,8 +368,8 @@ do
 				source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"
 				[[ $? -ne 0 ]] && exit "${EXIT_ERROR_STOP}"
 
-				# We assume the user wants these settings for
-				# this camera to be the same as the prior one.
+				# We assume the user wants the non-camera specific settings below
+				# for this camera to be the same as the prior camera.
 
 				if [[ ${DEBUG} == "true" ]]; then
 					MSG="Updating user-defined settings in new settings file."
@@ -382,19 +382,25 @@ do
 				S_EXT="${NAME##*.}"
 				OLD_SETTINGS_FILE="${ALLSKY_CONFIG}/${S_NAME}_${OLD_TYPE}_${OLD_MODEL}.${S_EXT}"
 
-				for s in latitude longitude locale websiteurl imageurl location owner computer imagesortorder
+# TODO: Replace these "for" statements with code using the "carryforward" field in
+# in the options file.
+				for s in latitude longitude locale websiteurl imageurl \
+					location owner computer imagesortorder temptype
 				do
 					X="$( settings .${s} "${OLD_SETTINGS_FILE}" )"
-					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}"
+					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}" "text"
 				done
 
-				for s in angle debuglevel
+				for s in angle debuglevel dayskipframes nightskipframes quality \
+					overlaymethod daystokeep daystokeepremotewebsite
 				do
 					X="$( settings .${s} "${OLD_SETTINGS_FILE}" )"
 					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}" "number"
 				done
 
-				for s in uselogin displaysettings showonmap showdelay
+				for s in uselogin displaysettings showonmap showupdatedmessage \
+					consistentdelays uselocalwebsite useremotewebsite useremoteserver \
+					notificationimages
 				do
 					X="$( settings .${s} "${OLD_SETTINGS_FILE}" )"
 					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}" "boolean"
@@ -547,7 +553,9 @@ do
 
 
 		*)
-			echo -e "${wWARNING}WARNING: Unknown key '${KEY}'; ignoring.  Old=${OLD_VALUE}, New=${NEW_VALUE}${wNC}"
+			echo -e "${wWARNING}"
+			echo    "WARNING: Unknown key '${KEY}'; ignoring.  Old=${OLD_VALUE}, New=${NEW_VALUE}"
+			echo -e "${wNC}"
 			((NUM_CHANGED--))
 			;;
 
@@ -560,12 +568,18 @@ done
 [[ ${NUM_CHANGED} -le 0 ]] && exit 0		# Nothing changed
 
 USE_REMOTE_WEBSITE="$( settings ".useremotewebsite" )"
-if [[ ${USE_REMOTE_WEBSITE} == "true" && ${CHECK_REMOTE_WEBSITE_ACCESS} == "true" ]]; then
-	: # TODO - do a test upload
-fi
 USE_REMOTE_SERVER="$( settings ".useremoteserver" )"
-if [[ ${USE_REMOTE_SERVER} == "true" && ${CHECK_REMOTE_SERVER_ACCESS} == "true" ]]; then
-	: # TODO - do a test upload
+if [[ ${USE_REMOTE_WEBSITE} == "true" || ${USE_REMOTE_SERVER} == "true" ]]; then
+	if [[ ! -f ${ALLSKY_ENV} ]]; then
+		cp "${REPO_ENV_FILE}" "${ALLSKY_ENV}"
+	fi
+	if [[ ${USE_REMOTE_WEBSITE} == "true" && ${CHECK_REMOTE_WEBSITE_ACCESS} == "true" ]]; then
+		# testUpload.sh displays error messages
+		"${ALLSKY_SCRIPTS}/testUpload.sh" --website
+	fi
+	if [[ ${USE_REMOTE_SERVER} == "true" && ${CHECK_REMOTE_SERVER_ACCESS} == "true" ]]; then
+		"${ALLSKY_SCRIPTS}/testUpload.sh" --server
+	fi
 fi
 
 

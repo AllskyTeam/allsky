@@ -3211,7 +3211,7 @@ exit_installation()
 		else
 			if [[ -n ${MORE_STATUS} && ${MORE_STATUS} != "${STATUS_CODE}" ]]; then
 				Q="'"	# single quote.  Escape it:
-				MORE="; MORE_STATUS='${MORE_STATUS//${q}/\\${q}}'"
+				MORE="; MORE_STATUS='${MORE_STATUS//${Q}/\\${Q}}'"
 			else
 				MORE=""
 			fi

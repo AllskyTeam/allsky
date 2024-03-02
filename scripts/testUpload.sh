@@ -17,12 +17,14 @@ usage_and_exit()
 	local RET=${1}
 	{
 		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-		echo "Usage: ${ME} [--help] --website | --server ......."
+		echo "Usage: ${ME} [--help] --website  and/or  --server"
+		[[ ${RET} -eq 2 ]] && echo -e "\nMust specify --website and/or --server\n"
 		[[ ${RET} -ne 0 ]] && echo -e "${NC}"
 	} >&2
 	exit "${RET}"
 }
 
+OK="true"
 DEBUG="false"
 DO_WEBSITE="false"
 DO_SERVER="false"
@@ -43,7 +45,7 @@ while [[ $# -gt 0 ]]; do
 			;;
 		-*)
 			echo -e "${RED}Unknown argument '${ARG}'.${NC}" >&2
-			RET=1
+			OK="false"
 			;;
 		*)
 			break	# done with arguments
@@ -52,14 +54,16 @@ while [[ $# -gt 0 ]]; do
 	shift
 done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
-[[ ${DO_WEBSITE} == "false" && ${DO_SERVER} == "false" ]] && usage_and_exit 1
+[[ ${OK} == "false" ]] && usage_and_exit 1
+[[ ${DO_WEBSITE} == "false" && ${DO_SERVER} == "false" ]] && usage_and_exit 2
+
 
 # Parse the output and provide fixes when possible.
 parse_output()
 {	local OUTPUT="${1}"
 	local TYPE="${2}"
 
-	local PROTOCOL DIR HOST USER S
+	local PROTOCOL  DIR  HOST  USER  STRING  S  SSL
 
 	if [[ ${TYPE} == "REMOTEWEBSITE" ]]; then
 		PROTOCOL=".remotewebsiteprotocol"
@@ -74,82 +78,91 @@ parse_output()
 	USER="${TYPE}_USER"
 
 	# Parse output.
-	if grep -i --silent "host name resolve timeout" "${OUTPUT}" ; then
+	STRING="host name resolve timeout"
+	if grep --ignore-case --silent "${STRING}" "${OUTPUT}" ; then
 		HOST="$( settings ".${HOST}" "${ENV_FILE}" )"
-		echo -e "\t* Host name '${HOST}' not found."
-		echo -e "\t  FIX: Check the spelling of the server."
-	   	echo -e "\t       Make sure your network is up."
-	   	echo -e "\t       Make sure the network the server is on is up."
+		echo "* Host name '${HOST}' not found."
+		echo "  FIX: Check the spelling of the server."
+	   	echo "       Make sure your network is up."
+	   	echo "       Make sure the network the server is on is up."
 	fi >&2
 
-	if grep -E -i --silent "User cannot log in|Login failed|Login incorrect" "${OUTPUT}" ; then
-		echo -e "\t* Unable to login."
-		echo -e "\t  FIX: Make sure the username and password are correct."
+	STRING="User cannot log in|Login failed|Login incorrect"
+	if grep -E --ignore-case --silent "${STRING}" "${OUTPUT}" ; then
+		echo "* Unable to login."
+		echo "  FIX: Make sure the username and password are correct."
 	fi >&2
 
-	if grep -i --silent "max-retries exceeded" "${OUTPUT}" ; then
-		echo -e "\t* Unable to login for unknown reason."
-		echo -e "\t  FIX: Make sure the port is correct and your network is working."
+	STRING="max-retries exceeded"
+	if grep --ignore-case --silent "${STRING}" "${OUTPUT}" ; then
+		echo "* Unable to login for unknown reason."
+		echo "  FIX: Make sure the port is correct and your network is working."
 		PROTOCOL="$( settings "${PROTOCOL}" )"
 		if [[ ${PROTOCOL} == "sftp" ]]; then
 			HOST="$( settings ".${HOST}" "${ENV_FILE}" )"
 			USER="$( settings ".${USER}" "${ENV_FILE}" )"
-			echo -e "\t       On your Pi, run:  ssh ${USER}@${HOST}"
-			echo -e "\t       When prompted to enter 'yes' or 'no', enter 'yes'."
-			echo -e "\t       You may need to do this if the IP address of your Pi changed."
+			echo "       On your Pi, run:  ssh ${USER}@${HOST}"
+			echo "       When prompted to enter 'yes' or 'no', enter 'yes'."
+			echo "       You may need to do this if the IP address of your Pi changed."
 		fi
 	fi >&2
 
-	if grep -i --silent "The system cannot find the file specified" "${OUTPUT}" ; then
-		if grep -i --silent "is current directory" "${OUTPUT}" ; then
-			echo -e "\t* Login succeeded but unknown location found."
+	STRING="The system cannot find the file specified"
+	if grep --ignore-case --silent "${STRING}" "${OUTPUT}" ; then
+		STRING="is current directory"
+		if grep --ignore-case --silent "${STRING}" "${OUTPUT}" ; then
+			echo "* Login succeeded but unknown location found."
 		else
 			# This should never happen.
 			# If we can't login we wouldn't know if the location was there.
-			echo -e "\t* Login failed and unknown location found."
+			echo "* Login failed and unknown location found."
 		fi
 		DIR="$( settings "${DIR}" )"
 		if [[ -n ${DIR} ]]; then
-			echo -e "\t  The 'Image Directory' in the WebUI's '${S}' section is '${DIR}'."
-			echo -e "\t  FIX: make sure that directory exists on the server."
+			echo "  The 'Image Directory' in the WebUI's '${S}' section is '${DIR}'."
+			echo "  FIX: make sure that directory exists on the server."
 		else
-			echo -e "\t  The 'Image Directory' in the WebUI's '${S}' section is empty."
+			echo "  The 'Image Directory' in the WebUI's '${S}' section is empty."
 			# TODO: can this ever happen?
-			echo -e "\t  FIX: unknown - not sure why this failed."
+			echo "  FIX: unknown - not sure why this failed."
 		fi
 	fi >&2
 
 	# Certificate-related issues
-	if grep -i --silent "The authenticity of host" "${OUTPUT}" ; then
+	STRING="The authenticity of host"
+	if grep --ignore-case --silent "${STRING}" "${OUTPUT}" ; then
 		HOST="$( settings ".${HOST}" "${ENV_FILE}" )"
 		USER="$( settings ".${USER}" "${ENV_FILE}" )"
 		PROTOCOL="$( settings "${PROTOCOL}" )"
-		echo -e "\t* The remote machine doesn't know about your Pi."
+		echo "* The remote machine doesn't know about your Pi."
 		if [[ ${PROTOCOL} == "sftp" ]]; then
-			echo -e "\t  This happens the first time you use Protocol 'sftp' on a new Pi."
-			echo -e "\t  FIX: On your Pi, run:  ssh ${USER}@${HOST}"
-			echo -e "\t       When prompted to enter 'yes' or 'no', enter 'yes'."
-			echo -e "\t       You may need to do this if the IP address of your Pi changed."
+			echo "  This happens the first time you use Protocol 'sftp' on a new Pi."
+			echo "  FIX: On your Pi, run:  ssh ${USER}@${HOST}"
+			echo "       When prompted to enter 'yes' or 'no', enter 'yes'."
+			echo "       You may need to do this if the IP address of your Pi changed."
 		else
-			echo -e "\t  This error usually only happens when using Protocol 'sftp' on a new Pi."
-			echo -e "\t  You are using Protocol '${PROTOCOL}', so no know fix exists."
+			echo "  This error usually only happens when using Protocol 'sftp' on a new Pi."
+			echo "  You are using Protocol '${PROTOCOL}', so no know fix exists."
 		fi
 	fi >&2
 
-	if grep -i --silent "certificate common name doesn't match requested host name" "${OUTPUT}" ; then
-		echo -e "\t* Certificate verification issue."
-		echo -e "\t  FIX: Do one of the following on your Pi:"
-		echo -e "\t    echo 'set ssl:check-hostname' > ~/.lftprc"
-		echo -e "\t  or"
-		echo -e "\t    In the WebUI's '${S}' section set 'FTP Commands' to 'set ssl:check-hostname'."
+	STRING="certificate common name doesn't match requested host name"
+	if grep --ignore-case --silent "${STRING}" "${OUTPUT}" ; then
+		echo "* Certificate verification issue."
+		echo "  FIX: Do one of the following on your Pi:"
+		echo "    echo 'set ssl:check-hostname' > ~/.lftprc"
+		echo "  or"
+		echo "    In the WebUI's '${S}' section set 'FTP Commands' to 'set ssl:check-hostname'."
 	fi >&2
 
-	if grep -i --silent "Not trusted" "${OUTPUT}" ; then
-		echo -e "\t* Certificate verification issue."
-		echo -e "\t  FIX: o one of the following on your Pi:"
-		echo -e "\t    echo 'set ssl:verify-certificate no' > ~/.lftprc"
-		echo -e "\t  or"
-		echo -e "\t    In the WebUI's '${S}' section set 'FTP Commands' to 'set ssl:verify-certificate no'."
+	STRING="Not trusted"
+	if grep --ignore-case --silent "${STRING}" "${OUTPUT}" ; then
+		SSL="set ssl:verify-certificate no"
+		echo "* Certificate verification issue."
+		echo "  FIX: do one of the following on your Pi:"
+		echo "    echo '${SSL}' > ~/.lftprc"
+		echo "  or"
+		echo "    In the WebUI's '${S}' section set 'FTP Commands' to '${SSL}'."
 	fi >&2
 
 
@@ -175,26 +188,27 @@ do_test()
 
 	if [[ ${TYPE} == "REMOTEWEBSITE" ]]; then
 		HUMAN_TYPE="Remote Website"
-		PROTOCOL=".remotewebsiteprotocol"
-		DIR=".remotewebsiteimagedir"
+		PROTOCOL="remotewebsiteprotocol"
+		DIR="remotewebsiteimagedir"
 		REMOTE="web"
 	else
 		HUMAN_TYPE="Remote Server"
-		PROTOCOL=".remoteserverprotocol"
-		DIR=".remoteserverimagedir"
+		PROTOCOL="remoteserverprotocol"
+		DIR="remoteserverimagedir"
 		REMOTE="server"
 	fi
 
-	PROTOCOL="$( settings "${PROTOCOL}" )"
+	PROTOCOL="$( settings ".${PROTOCOL}" )"
 	if [[ $? -ne 0 || -z ${PROTOCOL} ]]; then
 		echo -e "${RED}${ME}: could not find protocol for ${HUMAN_TYPE}; unable to test.${NC}" >&2
 		return 1
 	fi
 
-	DIR="$( settings "${DIR}" )"
+	DIR="$( settings ".${DIR}" )"
 	DIR="${DIR:=null}"
 
-	CMD="${ALLSKY_SCRIPTS}/upload.sh --debug --remote ${REMOTE} ${TEST_FILE} ${DIR} ${bTEST_FILE} ${ME}"
+	CMD="${ALLSKY_SCRIPTS}/upload.sh --debug --remote ${REMOTE}"
+	CMD+=" ${TEST_FILE} ${DIR} ${bTEST_FILE} ${ME}"
 	[[ ${DEBUG} == "true" ]] && echo -e "Executing:\n\t${CMD}"
 	${CMD} > "${OUTPUT_FILE}" 2>&1
 	RET=$?
@@ -205,23 +219,55 @@ do_test()
 		else
 			D="${DIR}/"
 		fi
-		echo -e "\tPlease remove '${D}${bTEST_FILE}' on your server."
+		echo -en "\t"
+		echo     "Please remove '${D}${bTEST_FILE}' on your server." >> "${MSG_FILE}"
 		if [[ -s ${OUTPUT_FILE} && ${DEBUG} == "true" ]]; then
 			echo -e "OUTPUT:"
 			echo -e "${YELLOW}$( < "${OUTPUT_FILE}" )${NC}\n"
 		fi
 	else
-		echo -e "${RED}Upload to ${HUMAN_TYPE} FAILED with RET=${RET}.${NC}"
+		echo -ne "${RED}"
+		echo -n  "Upload to ${HUMAN_TYPE} FAILED with RET=${RET}."
+		echo -e  "${NC}"
 		parse_output "${OUTPUT_FILE}" "${TYPE}"
 	fi
 
 	rm -f "${TEST_FILE}"
 	[[ ! -s ${OUTPUT_FILE} ]] && rm -f "${OUTPUT_FILE}"
-	exit "${RET}"
+
+	return "${RET}"
 }
 
 # ========================= main body of program
-[[ ${DO_WEBSITE} == "true" ]] && do_test "REMOTEWEBSITE"
-[[ ${DO_SERVER} == "true" ]] && do_test "REMOTESERVER"
+MSG_FILE="/tmp/$$"
+ERR_MSG=""
+RET=0
+if [[ ${DO_WEBSITE} == "true" ]]; then
+	ERR_MSG+="$( do_test "REMOTEWEBSITE" 2>&1 )"
+	(( RET += $? ))
+fi
+if [[ ${DO_SERVER} == "true" ]]; then
+	ERR_MSG+="$( do_test "REMOTESERVER" 2>&1 )"
+	(( RET += $? ))
+fi
 
-exit 0
+if [[ -n ${ERR_MSG} ]]; then
+	if [[ ${ON_TTY} == "true" ]]; then
+		echo -e "\n${ERR_MSG}" >&2
+	else
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ERR_MSG}"
+	fi
+fi
+
+if [[ -s ${MSG_FILE} ]]; then
+	M="$( < "${MSG_FILE}" )"
+	if [[ ${ON_TTY} == "true" ]]; then
+		echo -e "\n${M}"
+	else
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${M}"
+	fi
+	rm "${MSG_FILE}"
+fi
+
+exit ${RET}
+

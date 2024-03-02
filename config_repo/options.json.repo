@@ -24,6 +24,7 @@
 "label" : "Daytime Capture",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "checkchanges" : true,
 "action" : "reload"
 },
@@ -34,6 +35,7 @@
 "label" : "Daytime Save",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "booldependson" : "takedaytimeimages"
 },
 {
@@ -103,6 +105,7 @@
 "label" : "Delay",
 "type" : "integer",
 "usage" : "capture",
+"carryforward" : true,
 "booldependson" : "takedaytimeimages",
 "action" : "reload"
 },
@@ -229,6 +232,7 @@
 "label" : "Cooling",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "display" : "_display",
 "booldependson" : "takedaytimeimages",
 "action" : "reload"
@@ -272,6 +276,7 @@
 "label" : "Nighttime Capture",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "checkchanges" : true,
 "action" : "reload"
 },
@@ -282,6 +287,7 @@
 "label" : "Nighttime Save",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "booldependson" : "takenighttimeimages"
 },
 {
@@ -348,6 +354,7 @@
 "label" : "Delay",
 "type" : "integer",
 "usage" : "capture",
+"carryforward" : true,
 "action" : "reload"
 },
 {
@@ -468,6 +475,7 @@
 "label" : "Cooling",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "display" : "_display",
 "action" : "reload"
 },
@@ -516,6 +524,7 @@
 "description" : "Number of days of images and videos to keep on the Pi.",
 "label" : "Days To Keep",
 "type" : "integer",
+"carryforward" : true,
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
@@ -658,6 +667,7 @@
 "label" : "Quality / Compression",
 "type" : "integer",
 "usage" : "capture",
+"carryforward" : true,
 "action" : "reload"
 },
 {
@@ -690,6 +700,7 @@
 "label" : "Filename",
 "type" : "text",
 "usage" : "capture",
+"carryforward" : true,
 "checkchanges" : true,
 "action" : "reload"
 },
@@ -737,6 +748,7 @@
 "label" : "Consistent Delays Between Images",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "action" : "reload"
 },
 {
@@ -746,6 +758,7 @@
 "label" : "Time Format",
 "type" : "text",
 "usage" : "capture",
+"carryforward" : true,
 "action" : "reload"
 },
 {
@@ -755,6 +768,7 @@
 "label" : "Temperature Units",
 "type" : "select",
 "usage" : "capture",
+"carryforward" : true,
 "options" : [
 	{"value" : "C", "label" : "Celcius"},
 	{"value" : "F", "label" : "Fahrenheit"},
@@ -769,6 +783,7 @@
 "label" : "Latitude",
 "type" : "text",
 "usage" : "capture",
+"carryforward" : true,
 "checkchanges" : true,
 "action" : "reload"
 },
@@ -779,6 +794,7 @@
 "label" : "Longitude",
 "type" : "text",
 "usage" : "capture",
+"carryforward" : true,
 "checkchanges" : true,
 "action" : "reload"
 },
@@ -789,6 +805,7 @@
 "label" : "Angle",
 "type" : "float",
 "usage" : "capture",
+"carryforward" : true,
 "checkchanges" : true,
 "action" : "reload"
 },
@@ -815,6 +832,7 @@
 "label" : "Locale",
 "type" : "text",
 "usage" : "capture",
+"carryforward" : true,
 "action" : "reload"
 },
 {
@@ -851,6 +869,7 @@
 "description" : "Width of image and video thumbnails.",
 "label" : "Thumbnail Width",
 "type" : "integer",
+"carryforward" : true,
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
@@ -861,6 +880,7 @@
 "description" : "Height of image and video thumbnails.",
 "label" : "Thumbnail Height",
 "type" : "integer",
+"carryforward" : true,
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
@@ -870,6 +890,7 @@
 "label" : "Debug Level",
 "type" : "select",
 "usage" : "capture",
+"carryforward" : true,
 "options" : [
 	{"value" : 0, "label" : 0},
 	{"value" : 1, "label" : 1},
@@ -900,6 +921,7 @@
 "description" : "How often should images be uploaded to an Allsky Website or remote server?<br><span class='WebUIValue'>0</span> never uploads images, <span class='WebUIValue'>1</span> uploads every frame, <span class='WebUIValue'>2</span> every other frame, etc.",
 "label" : "Upload Every X Images",
 "type" : "integer",
+"carryforward" : true,
 "booldependson" : "uselocalwebsite OR useremotewebsite OR useremoteserver"
 },
 {
@@ -908,6 +930,7 @@
 "description" : "Enable to create thumbnails of images. If you never look at them, unset this.",
 "label" : "Create Image Thumbnails",
 "type" : "boolean",
+"carryforward" : true,
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
@@ -1041,6 +1064,7 @@
 "description" : "Enable to generate a timelapse video of the prior 24 hours at the end of night.",
 "label" : "Generate Timelapse",
 "type" : "boolean",
+"carryforward" : true,
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
@@ -1049,6 +1073,7 @@
 "description": "Enable to upload the timelapse video to an Allsky Website or remote server.",
 "label": "Upload Timelapse",
 "type": "boolean",
+"carryforward" : true,
 "booldependson" : "timelapsegenerate"
 },
 {
@@ -1057,6 +1082,7 @@
 "description": "Enable to upload the timelapse video thumbnail.",
 "label": "Upload Timelapse Thumbnail",
 "type": "boolean",
+"carryforward" : true,
 "booldependson" : "timelapsegenerate AND timelapseupload AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
 },
 {
@@ -1097,6 +1123,7 @@
 "description": "Frames Per Second (FPS) of timelapse video.  Higher values will produce smoother, but faster videos.",
 "label": "Timelapse FPS",
 "type": "integer",
+"carryforward" : true,
 "booldependson" : "timelapsegenerate"
 },
 {
@@ -1105,6 +1132,7 @@
 "description" : "Video encoder for timelapse.  Rarely changed.",
 "label" : "Timelapse VCODEC",
 "type" : "text",
+"carryforward" : true,
 "comment": "check using ffmpeg -encoder looking at argument 2 for ' libxs264  '",
 "booldependson" : "timelapsegenerate",
 "checkchanges": true
@@ -1115,6 +1143,7 @@
 "description" : "Pixel format for timelapse.  Rarely changed.",
 "label" : "Timelapse Pixel format",
 "type" : "text",
+"carryforward" : true,
 "booldependson" : "timelapsegenerate",
 "comment": "check using ffmpeg -pix_fmts looking at argument 2 for ' yuv420p  '",
 "checkchanges" : true
@@ -1125,6 +1154,7 @@
 "description" : "Amount of information to display while creating a timelapse.  Rarely changed.",
 "label" : "Timelapse Log Level",
 "type" : "select",
+"carryforward" : true,
 "options": [
 	{ "value": "quiet", "label": "No output" },
 	{ "value": "fatal", "label": "Fatal Errors" },
@@ -1148,6 +1178,7 @@
 "description" : "Optional additional timelapse creation parameters.  Run <code>ffmpeg -?</code> to see the options.",
 "label" : "Timelapse Extra Parameters",
 "type" : "widetext",
+"carryforward" : true,
 "optional" : true,
 "booldependson" : "timelapsegenerate"
 },
@@ -1165,6 +1196,7 @@
 "description" : "Number of images in a mini-timelapse. <span class='WebUIValue'>0</span> disables mini-timelapse creation.",
 "label" : "Number Of Images",
 "type" : "integer",
+"carryforward" : true,
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
@@ -1173,6 +1205,7 @@
 "description" : "Create a mini-timelapse even if <span class='WebUISetting'>Number Of Images</span> isn't reached?",
 "label" : "Force Creation",
 "type" : "boolean",
+"carryforward" : true,
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 {
@@ -1183,6 +1216,7 @@
 "description": "Make a mini-timelapse every X images.<br>If you have a slow Pi or short delays between images, set this to a higher number (i.e., not as often).",
 "label": "Mini-Timelapse Frequency",
 "type": "integer",
+"carryforward" : true,
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 {
@@ -1191,6 +1225,7 @@
 "description": "Enable to upload the mini-timelapse video to an Allsky Website or remote server.",
 "label": "Upload Mini-Timelapse",
 "type": "boolean",
+"carryforward" : true,
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 {
@@ -1199,6 +1234,7 @@
 "description": "Enable to upload the mini-timelapse video thumbnail.",
 "label": "Upload Mini-Timelapse Thumbnail",
 "type": "boolean",
+"carryforward" : true,
 "booldependson" : "minitimelapseupload AND (uselocalwebsite OR useremotewebsite OR useremoteserver)",
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
@@ -1230,6 +1266,7 @@
 "description": "Bitrate (in K) of mini-timelapse video. Higher values produce higher quality but larger files.",
 "label": "Mini-Timelapse Bitrate",
 "type": "integer",
+"carryforward" : true,
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 {
@@ -1240,6 +1277,7 @@
 "description": "Frames Per Second (FPS) of mini-timelapse video.",
 "label": "Mini-Timelapse FPS",
 "type": "integer",
+"carryforward" : true,
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 
@@ -1264,6 +1302,7 @@
 "description" : "Enable to generate a keogram at the end of night.",
 "label" : "Generate Keogram",
 "type" : "boolean",
+"carryforward" : true,
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
@@ -1272,6 +1311,7 @@
 "description": "Enable to upload the keogram to an Allsky Website or remote server.",
 "label": "Upload Keogram",
 "type": "boolean",
+"carryforward" : true,
 "booldependson" : "keogramgenerate AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
 },
 
@@ -1281,6 +1321,7 @@
 "description" : "Enable to expand keograms to the image width.",
 "label" : "Expand Keograms",
 "type" : "boolean",
+"carryforward" : true,
 "booldependsoff" : "keogramgenerate"
 },
 {
@@ -1299,6 +1340,7 @@
 	{"value" : "scriptsimplex", "label" : "Script Simplex"},
 	{"value" : "scriptcomplex", "label" : "Script Complex"}
 ],
+"carryforward" : true,
 "booldependson" : "keogramgenerate"
 },
 {
@@ -1350,6 +1392,7 @@
 "description" : "Enable to generate a startrails at the end of night.",
 "label" : "Generate Startrails",
 "type" : "boolean",
+"carryforward" : true,
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
@@ -1368,6 +1411,7 @@
 "description": "Enable to upload the startrails to an Allsky Website or remote server.",
 "label": "Upload Startrails",
 "type": "boolean",
+"carryforward" : true,
 "booldependson" : "startrailsgenerate AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
 },
 {
@@ -1396,12 +1440,13 @@
 "default" : 1,
 "description" : "Determines how image overlays are done.<br><span class='WebUIValue'>module</span> supports a visual editor.<br><b>When set to <span class='WebUIValue'>module</span>, the overlay settings below do NOT apply.</b>",
 "label" : "Overlay Method",
-"type" : "select",
 "usage" : "capture",
+"type" : "select",
 "options" : [
 	{"value" : 0, "label" : "legacy"},
 	{"value" : 1, "label" : "module"}
 ],
+"carryforward" : true,
 "checkchanges" : true,
 "action" : "reload"
 },
@@ -1412,6 +1457,7 @@
 "label" : "Show Time",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
@@ -1422,6 +1468,7 @@
 "label" : "Show Temperature",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "display" : "_display",
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
@@ -1433,6 +1480,7 @@
 "label" : "Show Exposure",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
@@ -1443,6 +1491,7 @@
 "label" : "Show Gain",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
@@ -1453,6 +1502,7 @@
 "label" : "Show USB",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "display" : "_display",
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
@@ -1464,6 +1514,7 @@
 "label" : "Show Mean Brightness",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
@@ -1474,6 +1525,7 @@
 "label" : "Show Histogram Box",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "display" : "_display",
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
@@ -1485,6 +1537,7 @@
 "label" : "Show Focus Metric",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
@@ -1520,6 +1573,7 @@
 "label" : "Max Age Of Extra",
 "type" : "integer",
 "usage" : "capture",
+"carryforward" : true,
 "valuedependson" : "extratext=*",
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
@@ -1565,8 +1619,9 @@
 "default" : 0,
 "description" : "Font name for the text overlay. Used for both large and small text.",
 "label" : "Font Name",
-"type" : "select",
 "usage" : "capture",
+"carryforward" : true,
+"type" : "select",
 "options" : [
 	{"value" : 0, "label" : "Simplex"},
 	{"value" : 1, "label" : "Plain"},
@@ -1647,6 +1702,7 @@
 "label" : "Use Outline Font",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
@@ -1667,6 +1723,7 @@
 "description" : "Enable to add a link on the Allsky Website to display the settings on this page.",
 "label" : "Display Settings",
 "type" : "boolean",
+"carryforward" : true,
 "checkchanges" : true,
 "booldependson" : "uselocalwebsite OR useremotewebsite OR useremoteserver"
 },
@@ -1681,6 +1738,7 @@
 "default" : false,
 "label" : "Use Local Website",
 "type" : "boolean",
+"carryforward" : true,
 "popup-yesno" : "Do you want to remove all saved images, keograms, startrails, and videos in the local Website?",
 "popup-yesno-value" : 0
 },
@@ -1692,6 +1750,7 @@
 "description" : "Number of days of images and videos to keep on the Pi's Website.",
 "label" : "Days To Keep on Pi Website",
 "type" : "integer",
+"carryforward" : true,
 "booldependson" : "uselocalwebsite"
 },
 {
@@ -1705,6 +1764,7 @@
 "description" : "Enable to use a remote Allsky Website.<br>See the Allsky Documentation for how to install the Website.",
 "label" : "Use Remote Website",
 "type" : "boolean",
+"carryforward" : true,
 "checkchanges" : true
 },
 {
@@ -1715,6 +1775,7 @@
 "description" : "Number of days of images and videos to keep on the remote Website.",
 "label" : "Days To Keep on Remote Website",
 "type" : "integer",
+"carryforward" : true,
 "booldependson" : "useremotewebsite"
 },
 {
@@ -1731,6 +1792,7 @@
 	{"value" : "S3", "label" : "s3"},
 	{"value" : "GCS", "label" : "gcs"}
 ],
+"carryforward" : true,
 "checkchanges" : true,
 "booldependson" : "useremotewebsite"
 },
@@ -1796,6 +1858,7 @@
 "description" : "Name of the top-level remote Website directory where images go.",
 "label" : "Image Directory",
 "type" : "text",
+"carryforward" : true,
 "checkchanges" : true,
 "booldependson" : "useremotewebsite",
 "valuedependson" : "remotewebsiteprotocol=*ftp*",
@@ -1879,6 +1942,7 @@
 "description" : "Enable to upload images using YYYYMMDDHHMMSS naming.",
 "label" : "Upload With Original Name",
 "type" : "boolean",
+"carryforward" : true,
 "valuedependson" : "imageuploadfrequency=[1-9]*"
 },
 {
@@ -1887,6 +1951,7 @@
 "description" : "Optional name of the remote video file.",
 "label" : "Remote Video File Name",
 "type" : "text",
+"carryforward" : true,
 "booldependson" : "useremotewebsite",
 "optional" : true
 },
@@ -1896,6 +1961,7 @@
 "description" : "Optional name of the remote keogram file.",
 "label" : "Remote Keogram File Name",
 "type" : "text",
+"carryforward" : true,
 "booldependson" : "useremotewebsite",
 "optional" : true
 },
@@ -1905,6 +1971,7 @@
 "description" : "Optional name of the remote startrails file.",
 "label" : "Remote Startrails Name",
 "type" : "text",
+"carryforward" : true,
 "booldependson" : "useremotewebsite",
 "optional" : true
 },
@@ -1914,6 +1981,7 @@
 "description" : "The URL of your Allsky Website, for example: https://mywebsite.com/allsky.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
 "label" : "Website URL",
 "type" : "widetext",
+"carryforward" : true,
 "checkchanges" : true,
 "booldependson" : "showonmap OR useremotewebsite OR remotewebsiteimageurl",
 "optional" : true
@@ -1924,6 +1992,7 @@
 "description" : "The URL of the image on your Allsky Website, for example: https://mywebsite.com/allsky/image.jpg.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
 "label" : "Image URL",
 "type" : "widetext",
+"carryforward" : true,
 "checkchanges" : true,
 "booldependson" : "showonmap OR useremotewebsite OR remotewebsiteurl",
 "optional" : true
@@ -1941,6 +2010,7 @@
 "description" : "This is a remote server NOT running the Allsky Website.<br>See the documentation for the necessary directory layout.",
 "label" : "Use Remote Server",
 "type" : "boolean",
+"carryforward" : true,
 "checkchanges" : true
 },
 {
@@ -1957,6 +2027,7 @@
 	{"value" : "S3", "label" : "s3"},
 	{"value" : "GCS", "label" : "gcs"}
 ],
+"carryforward" : true,
 "checkchanges" : true,
 "booldependson" : "useremoteserver"
 },
@@ -2094,6 +2165,7 @@
 "description" : "Name of the top-level remote server directory where images go.",
 "label" : "Image Directory",
 "type" : "text",
+"carryforward" : true,
 "checkchanges" : true,
 "booldependson" : "useremoteserver",
 "optional" : true
@@ -2104,6 +2176,7 @@
 "description" : "Enable to upload images using YYYYMMDDHHMMSS naming.",
 "label" : "Upload With Original Name",
 "type" : "boolean",
+"carryforward" : true,
 "valuedependson" : "imageuploadfrequency=[1-9]*"
 },
 {
@@ -2112,6 +2185,7 @@
 "description" : "Optional name of the remote video file.",
 "label" : "Remote Video File Name",
 "type" : "text",
+"carryforward" : true,
 "booldependson" : "useremoteserver",
 "optional" : true
 },
@@ -2121,6 +2195,7 @@
 "description" : "Optional name of the remote keogram file.",
 "label" : "Remote Keogram File Name",
 "type" : "text",
+"carryforward" : true,
 "booldependson" : "useremoteserver",
 "optional" : true
 },
@@ -2130,6 +2205,7 @@
 "description" : "Optional name of the remote startrails file.",
 "label" : "Remote Startrails File Name",
 "type" : "text",
+"carryforward" : true,
 "booldependson" : "useremoteserver",
 "optional" : true
 },
@@ -2150,6 +2226,7 @@
 "description" : "Enable to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map' target='_blank' title='Opens in new tab/window'><span class='WebUISetting'>Allsky Map <i class='fa fa-external-link-alt fa-fw'></i></span></a>.",
 "label" : "Show on Map",
 "type" : "boolean",
+"carryforward" : true,
 "checkchanges" : true,
 "booldependson" : "uselocalwebsite OR useremotewebsite"
 },
@@ -2159,6 +2236,7 @@
 "description" : "The location of your camera, for example: Whitehorse, YT.<br>This setting and the remaining ones also appear on the Allsky Website, if installed.",
 "label" : "Location",
 "type" : "widetext",
+"carryforward" : true,
 "checkchanges" : true,
 "optional" : true,
 "booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
@@ -2169,6 +2247,7 @@
 "description" : "The owner of the camera. It can be your name, an association, or observatory, etc.",
 "label" : "Owner",
 "type" : "text",
+"carryforward" : true,
 "checkchanges" : true,
 "optional" : true,
 "booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
@@ -2199,6 +2278,7 @@
 "description" : "The computer running your allsky camera, for example: <span class='WebUIValue'>Raspberry Pi 3, 4 GB</span>.",
 "label" : "Computer",
 "type" : "widetext",
+"carryforward" : true,
 "checkchanges" : true,
 "optional" : true,
 "booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
@@ -2220,6 +2300,7 @@
 "description" : "The order the images on the 'Images' page are sorted in.<br>'Ascending' is oldest to newest. 'Descending' is newest to oldest.",
 "label" : "Images Sort Order",
 "type" : "select",
+"carryforward" : true,
 "options" : [
 	{"value" : "ascending", "label" : "Ascending"},
 	{"value" : "descending", "label" : "Descending"}
@@ -2230,14 +2311,16 @@
 "default" : true,
 "description" : "Disable to hide the <span class='alert-info'>Daytime images updated every...</span> message in the <span class='WebUIWebPage'>Live View</span> page.",
 "label" : "Show Updated Message",
-"type" : "boolean"
+"type" : "boolean",
+"carryforward" : true
 },
 {
 "name" : "uselogin",
 "default" : true,
 "description" : "Determines if you need to login to the WebUI or not.<br><b>If your Pi is accessible on the Internet, do NOT turn this off!!</b>.",
 "label" : "Require WebUI Login",
-"type" : "boolean"
+"type" : "boolean",
+"carryforward" : true
 },
 {
 "name" : "notificationimages",
@@ -2246,6 +2329,7 @@
 "label" : "Notification Images",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "action" : "reload"
 },
 {
@@ -2254,6 +2338,7 @@
 "description" : "See documentation for a description of this setting,",
 "label" : "Items to add to WebUI",
 "type" : "widetext",
+"carryforward" : true,
 "optional" : true
 },
 

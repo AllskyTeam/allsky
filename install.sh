@@ -468,7 +468,8 @@ do_save_camera_capabilities()
 		OPTIONSONLY=" --optionsOnly"
 	else
 		OPTIONSONLY=""
-		display_msg --log progress "Setting up WebUI options${MSG} for ${CAMERA_TYPE} cameras."
+		MSG="Setting up WebUI options${MSG} for ${CAMERA_TYPE} cameras."
+		display_msg --log progress "${MSG}"
 	fi
 
 	# Restore the prior settings file or camera-specific settings file(s) so
@@ -1765,7 +1766,8 @@ convert_config_sh()
 		return 1
 	fi
 
-	display_msg --log progress "Copying contents of prior config.sh to the settings file."
+	MSG="${SPACE}Copying prior config.sh settings to settings file."
+	display_msg --log progress "${MSG}"
 	(		# Use (  and not {  so the source'd variables don't stay in our environment
 		#shellcheck disable=SC1090
 		if ! source "${OLD_CONFIG_FILE}" ; then
@@ -1946,7 +1948,8 @@ convert_ftp_sh()
 		return 1
 	fi
 
-	display_msg --log progress "Copying contents of prior ftp-settings.sh to settings file."
+	MSG="${SPACE}Copying prior ftp-settings.sh settings to settings file."
+	display_msg --log progress "${MSG}"
 	(		# Use (  and not {  so the source'd variables don't stay in our environment
 		#shellcheck disable=SC1090
 		if ! source "${FTP_FILE}" ; then

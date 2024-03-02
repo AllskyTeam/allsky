@@ -2725,9 +2725,10 @@ do_restore()
 		exit_installation 1 "${STATUS_ERROR}" "${MSG}"
 	fi
 
-	# Need to point logs to old location
+	# Need to point to location of original Allsky.
 	DISPLAY_MSG_LOG="${DISPLAY_MSG_LOG/${ALLSKY_HOME}/${RENAMED_DIR}}"
 	STATUS_FILE="${STATUS_FILE/${ALLSKY_HOME}/${RENAMED_DIR}}"
+	ALLSKY_SCRIPTS="${ALLSKY_SCRIPTS/${ALLSKY_HOME}/${RENAMED_DIR}}"
 
 	if ! mv "${PRIOR_ALLSKY_DIR}" "${ALLSKY_HOME}" ; then
 		MSG="Unable to rename '${PRIOR_ALLSKY_DIR}' to '${ALLSKY_HOME}'"
@@ -3201,7 +3202,7 @@ exit_installation()
 	local RET="${1}"
 	local STATUS_CODE="${2}"
 	local MORE_STATUS="${3}"
-	local MORE
+	local MORE  S  Q
 
 	# If STATUS_CODE is set, add it and all STATUS_VARIABLES to the status file.
 	if [[ -n ${STATUS_CODE} ]]; then
@@ -3209,11 +3210,17 @@ exit_installation()
 			clear_status
 		else
 			if [[ -n ${MORE_STATUS} && ${MORE_STATUS} != "${STATUS_CODE}" ]]; then
-				MORE="; MORE_STATUS='${MORE_STATUS}'"
+				Q="'"	# single quote.  Escape it:
+				MORE="; MORE_STATUS='${MORE_STATUS//${q}/\\${q}}'"
 			else
 				MORE=""
 			fi
-			echo -e "STATUS_INSTALLATION='${STATUS_CODE}'${MORE}" > "${STATUS_FILE}"
+			if [[ ${RESTORE} == "true" ]]; then
+				S="RESTORATION"
+			else
+				S="INSTALLATION"
+			fi
+			echo -e "STATUS_${S}='${STATUS_CODE}'${MORE}" > "${STATUS_FILE}"
 			update_status_from_temp_file
 			echo -e "${STATUS_VARIABLES[@]}" >> "${STATUS_FILE}"
 
@@ -3232,7 +3239,7 @@ exit_installation()
 		fi
 	fi
 
-	[[ -z ${FUNCTION} ]] && display_msg "${LOG_TYPE}" info "\nENDING ${IorR} AT $( date ).\n"
+	[[ -z ${FUNCTION} ]] && display_msg --logonly info "\nENDING ${IorR} AT $( date ).\n"
 
 	# Don't exit for negative numbers.
 	[[ ${RET} -ge 0 ]] && exit "${RET}"
@@ -3335,7 +3342,7 @@ else
 		V="${ALLSKY_VERSION}"
 	fi
 	MSG="STARTING ${IorR} OF ${V} AT $( date ).\n"
-	display_msg "${LOG_TYPE}" info "${MSG}"
+	display_msg --logonly info "${MSG}"
 fi
 
 [[ ${FIX} == "true" ]] && do_fix				# does not return
@@ -3381,6 +3388,7 @@ trap "handle_interrupts" SIGTERM SIGINT
 # See if we should skip some steps.
 # When most function are called they add a variable with the function's name set to "true".
 if [[ -z ${FUNCTION} && -s ${STATUS_FILE} && ${RESTORE} == "false" ]]; then
+
 	# Initially just get the STATUS and MORE_STATUS.
 	# After that we may clear the file or get all the variables.
 	eval "$( grep "^STATUS_INSTALLATION" "${STATUS_FILE}" )"

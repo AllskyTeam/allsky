@@ -349,6 +349,7 @@ if ($repo_array === null) {
 	// label			[string]
 	// type				[string]
 	// usage			[string]
+	// carryforward		[boolean]
 	// options			[array with 1 or more entries] (only if "type" == "select")
 	// popup-yesno		[string]
 	// popup-yesno-value	[number or string]
@@ -444,6 +445,7 @@ foreach ($repo_array as $repo) {
 		add_non_null_field($repo, "label", $name);
 		add_non_null_field($repo, "type", $name);
 		add_non_null_field($repo, "usage", $name);
+		add_non_null_field($repo, "carryforward", $name, "boolean");
 		add_non_null_field($repo, "options", $name);
 		add_non_null_field($repo, "popup-yesno", $name);
 		add_non_null_field($repo, "popup-yesno-value", $name);

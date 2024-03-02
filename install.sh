@@ -2169,8 +2169,7 @@ restore_prior_settings_file()
 			esac
 
 			# Set to null to force the user to look at the settings before Allsky will run.
-			EMPTY=""
-			X="EMPTY"; doV "X" "lastchanged" "text" "${SETTINGS_FILE}"
+			update_json_file -d ".lastchanged" "" "${SETTINGS_FILE}"
 
 			RESTORED_PRIOR_SETTINGS_FILE="true"
 			FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"
@@ -2757,7 +2756,7 @@ do_restore()
 	display_image "ConfigurationNeeded"
 
 	# Force the user to look at the settings before Allsky will run.
-	update_json_file -d ".lastchanged" "" "${FILE}"
+	update_json_file -d ".lastchanged" "" "${SETTINGS_FILE}"
 
 	exit_installation 0 "${STATUS_OK}" ""
 }

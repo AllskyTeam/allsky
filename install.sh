@@ -1742,7 +1742,7 @@ doV()
 
 	local ERR  MSG
 	if ERR="$( update_json_file ".${jV}" "${VAL}" "${FILE}" "${TYPE}" 2>&1 )" ; then
-		MSG="   ${V}: ${jV}=${VAL}"
+		MSG="   ${V}: ${jV} = ${VAL}"
 		display_msg --logonly info "${MSG}"
 	else
 		# update_json_file() returns error message.
@@ -1951,11 +1951,29 @@ convert_ftp_sh()
 	MSG="${SPACE}Copying prior ftp-settings.sh settings to settings file."
 	display_msg --log progress "${MSG}"
 	(		# Use (  and not {  so the source'd variables don't stay in our environment
+
+		# These are really old names from the ftp file.
+		# Make sure they aren't set before source'ing the file in.
+		unset HOST USER PASSWORD IMGDIR MP4DIR
+
 		#shellcheck disable=SC1090
 		if ! source "${FTP_FILE}" ; then
 			display_msg --log error "Unable to process prior ftp-settings.sh file (${FTP_FILE})."
 			return 1
 		fi
+
+		# Really old names:
+
+		# shellcheck disable=SC2034
+		[[ -n ${HOST} ]] && REMOTE_HOST="${HOST}"
+		# shellcheck disable=SC2034
+		[[ -n ${USER} ]] && REMOTE_USER="${USER}"
+		# shellcheck disable=SC2034
+		[[ -n ${PASSWORD} ]] && REMOTE_PASSWORD="${PASSWORD}"
+		# shellcheck disable=SC2034
+		[[ -n ${IMGDIR} ]] && IMAGE_DIR="${IMGDIR}"
+		# shellcheck disable=SC2034
+		[[ -n ${MP4DIR} ]] && VIDEOS_DIR="${MP4DIR}"
 
 		# ALLSKY_ENV is used by a remote Website and/or server.
 		# Since we update it below, make sure it exists.
@@ -1992,16 +2010,10 @@ convert_ftp_sh()
 		doV "VIDEOS_DESTINATION_NAME" "remotewebsitevideodestinationname" "text" "${NEW_FILE}"
 		doV "KEOGRAM_DESTINATION_NAME" "remotewebsitekeogramdestinationname" "text" "${NEW_FILE}"
 		doV "STARTRAILS_DESTINATION_NAME" "remotewebsitestartrailsdestinationname" "text" "${NEW_FILE}"
-		# shellcheck disable=SC2034
-		[[ -n ${HOST} ]] && REMOTE_HOST="${HOST}"
 		doV "REMOTE_HOST" "REMOTEWEBSITE_HOST" "text" "${ALLSKY_ENV}"
 		doV "REMOTE_PORT" "REMOTEWEBSITE_PORT" "text" "${ALLSKY_ENV}"
 
-		# shellcheck disable=SC2034
-		[[ -n ${USER} ]] && REMOTE_USER="${USER}"
 		doV "REMOTE_USER" "REMOTEWEBSITE_USER" "text" "${ALLSKY_ENV}"
-		# shellcheck disable=SC2034
-		[[ -n ${PASSWORD} ]] && REMOTE_PASSWORD="${PASSWORD}"
 		doV "REMOTE_PASSWORD" "REMOTEWEBSITE_PASSWORD" "text" "${ALLSKY_ENV}"
 		doV "LFTP_COMMANDS" "REMOTEWEBSITE_LFTP_COMMANDS" "text" "${ALLSKY_ENV}"
 		doV "SSH_KEY_FILE" "REMOTEWEBSITE_SSH_KEY_FILE" "text" "${ALLSKY_ENV}"

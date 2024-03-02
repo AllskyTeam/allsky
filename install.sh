@@ -541,6 +541,16 @@ check_for_raspistill()
 
 
 ####
+# Get a count of the number of the specified file in the specified directory.
+get_count()
+{
+	local DIR="${1}"
+	local FILENAME="${2}"
+	find "${DIR}" -maxdepth 1 -name "${FILENAME}" | wc -l
+}
+
+
+####
 # Update various PHP define() variables.
 update_php_defines()
 {
@@ -1513,8 +1523,12 @@ create_allsky_logs()
 # The old and new files both exist and may be the same,
 # but either way, do not modify the old file.
 
-DISPLAYED_BRIGHTNESS_MSG="false"
-DISPLAYED_OFFSET_MSG="false"
+# Can't use variables since these messages are displayed in a "while read x" loop which
+# runs in a subshell.
+DISPLAYED_BRIGHTNESS_MSG="/tmp/displayed_brightness_msg"
+DISPLAYED_OFFSET_MSG="/tmp/displayed_offset_msg"
+rm -f "${DISPLAYED_BRIGHTNESS_MSG}" "${DISPLAYED_OFFSET_MSG}"
+
 CONVERTED_SETTINGS=0
 
 convert_settings()			# prior_file, new_file
@@ -1590,16 +1604,16 @@ convert_settings()			# prior_file, new_file
 
 				# These two were deleted in ${COMBINED_BASE_VERSION}:
 				"brightness" | "daybrightness" | "nightbrightness")
-					if [[ ${DISPLAYED_BRIGHTNESS_MSG} == "false" ]]; then
-						DISPLAYED_BRIGHTNESS_MSG="true"		# only display once.
+					if [[ ! -f ${DISPLAYED_BRIGHTNESS_MSG} ]]; then
+						touch "${DISPLAYED_BRIGHTNESS_MSG}"
 						MSG="The 'Brightness' settings were removed."
 						MSG+="\nUse the 'Target Mean' settings to adjust brightness."
 						display_msg --log notice "${MSG}"
 					fi
 					;;
 				"offset")
-					if [[ ${VALUE} -gt 1 && ${DISPLAYED_OFFSET_MSG} == "false" ]]; then
-						DISPLAYED_OFFSET_MSG="true"		# only display once.
+					if [[ ${VALUE} -gt 1 && ! -f ${DISPLAYED_OFFSET_MSG} ]]; then
+						touch "${DISPLAYED_OFFSET_MSG}"
 						# 1 is default.  > 1 means they changed it, which is rare.
 						MSG="The 'Offset' setting was removed."
 						MSG+="\nUse the 'Target Mean' settings to adjust brightness."
@@ -1726,11 +1740,12 @@ doV()
 	fi
 
 	local ERR  MSG
-	if ERR="$( update_json_file ".${jV}" "${VAL}" "${FILE}" "${TYPE}" > "${TMP_FILE}" 2>&1 )" ; then
+	if ERR="$( update_json_file ".${jV}" "${VAL}" "${FILE}" "${TYPE}" 2>&1 )" ; then
 		MSG="   ${V}: ${jV}=${VAL}"
 		display_msg --logonly info "${MSG}"
 	else
-		display_msg --log info "Warning: Unable to update ${jV} to '${VAL}': $( < "${TMP_FILE}" )"
+		# update_json_file() returns error message.
+		display_msg --log info "${ERR}"
 	fi
 }
 
@@ -1811,7 +1826,7 @@ convert_config_sh()
 		if [[ ${CROP_IMAGE} == "true" ]]; then
 			MSG="The way to specify cropping images has changed."
 			MSG+=" You need to reenter your crop settings."
-			MSG+="\nSpecify the amount to crop from the top, right, bottom, and left."
+			MSG+="\n  Specify the amount to crop from the top, right, bottom, and left."
 			display_msg --log info "${MSG}"
 		fi
 		X=0
@@ -1939,6 +1954,12 @@ convert_ftp_sh()
 			return 1
 		fi
 
+		# ALLSKY_ENV is used by a remote Website and/or server.
+		# Since we update it below, make sure it exists.
+		if [[ ! -f ${ALLSKY_ENV} ]]; then
+			cp "${REPO_ENV_FILE}" "${ALLSKY_ENV}"
+		fi
+
 		# Ignore the WEB_*_DIR entries - the user can no longer specify local directories.
 		# Ignore VIDEOS_DIR, KEOGRAM_DIR, STARTRAILS_DIR - the user can no longer specify them.
 		# Don't update REMOTEWEBSITE_* settings since they are new so have no prior value.
@@ -1946,20 +1967,24 @@ convert_ftp_sh()
 		# "local" PROTOCOL means they're using local Website.
 		# WEB_IMAGE_DIR means they have both local and remote Website.
 		if [[ -d ${ALLSKY_WEBSITE} && (${PROTOCOL,,} == "local" || -n ${WEB_IMAGE_DIR}) ]]; then
-			X="true";  doV "X" "uselocalwebsite" "boolean" "${NEW_FILE}" "NEW"
+			X="true"
 		else
-			X="false"; doV "X" "uselocalwebsite" "boolean" "${NEW_FILE}" "NEW"
+			X="false"
 		fi
+		doV "X" "uselocalwebsite" "boolean" "${NEW_FILE}" "NEW"
+
 		if [[ (-n ${PROTOCOL} && ${PROTOCOL,,} != "local") || -n ${REMOTE_HOST} ]]; then
 			doV "PROTOCOL" "remotewebsiteprotocol" "text" "${NEW_FILE}"
 			doV "IMAGE_DIR" "remotewebsiteimagedir" "text" "${NEW_FILE}"
-			X="true"; doV "X" "useremotewebsite" "boolean" "${NEW_FILE}" "NEW"
+			X="true"
 		else
 			X=""
 			doV "X" "remotewebsiteprotocol" "text" "${NEW_FILE}"
 			doV "X" "remotewebsiteimagedir" "text" "${NEW_FILE}"
-			X="false"; doV "X" "useremotewebsite" "boolean" "${NEW_FILE}" "NEW"
+			X="false"
 		fi
+		doV "X" "useremotewebsite" "boolean" "${NEW_FILE}" "NEW"
+
 		doV "IMG_UPLOAD_ORIGINAL_NAME" "remotewebsiteimageuploadoriginalname" "boolean" "${NEW_FILE}"
 		doV "VIDEOS_DESTINATION_NAME" "remotewebsitevideodestinationname" "text" "${NEW_FILE}"
 		doV "KEOGRAM_DESTINATION_NAME" "remotewebsitekeogramdestinationname" "text" "${NEW_FILE}"
@@ -2047,14 +2072,14 @@ restore_prior_settings_file()
 		local PRIOR_SPECIFIC_FILES="$( find "${PRIOR_CONFIG_DIR}" -name "${NAME}_"'*'".${EXT}" )"
 		if [[ -n ${PRIOR_SPECIFIC_FILES} ]]; then
 			FIRST_ONE="true"
-			echo "${PRIOR_SPECIFIC_FILES}" | while read -r F
+			echo "${PRIOR_SPECIFIC_FILES}" | while read -r FILE
 				do
 					if [[ ${FIRST_ONE} == "true" ]]; then
 						display_msg --log progress "Restoring camera-specific settings files:"
 						FIRST_ONE="false"
 					fi
-					display_msg --log progress "\t$( basename "${F}" )"
-					cp -a "${F}" "${ALLSKY_CONFIG}"
+					display_msg --log progress "\t$( basename "${FILE}" )"
+					cp -a "${FILE}" "${ALLSKY_CONFIG}"
 				done
 			RESTORED_PRIOR_SETTINGS_FILE="true"
 			FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"
@@ -2174,7 +2199,6 @@ restore_prior_files()
 	fi
 
 	if [[ -z ${PRIOR_ALLSKY_DIR} ]]; then
-		restore_prior_local_website_files
 		get_lat_long	# prompt for them to put in new settings file
 		mkdir -p "${ALLSKY_EXTRA}"		# default permissions is ok
 
@@ -2194,14 +2218,6 @@ restore_prior_files()
 		MSG+="\nSee the 'Explanations --> Module' documentation for more details."
 		display_msg --log warning "\n${MSG}\n"
 		echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
-	fi
-
-	E="$( basename "${ALLSKY_ENV}" )"
-	ITEM="${SPACE}'${E}' file"
-	if [[ -f ${PRIOR_ALLSKY_DIR}/${E} ]]; then
-		display_msg --log progress "${ITEM}"
-		cp -ar "${PRIOR_ALLSKY_DIR}/${E}" "${ALLSKY_ENV}"
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
 	ITEM="${SPACE}'images' directory"
@@ -2237,7 +2253,7 @@ restore_prior_files()
 
 	ITEM="${SPACE}'config/overlay' directory"
 	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
-#XXXX FIX: TODO: only copy over user-generated or user-modified files
+#XXXX FIX: TODO: ALEX:  only copy over user-generated or user-modified files
 		display_msg --log progress "${ITEM} (copying)"
 		cp -ar "${PRIOR_CONFIG_DIR}/overlay" "${ALLSKY_CONFIG}"
 
@@ -2291,8 +2307,43 @@ restore_prior_files()
 	# Don't bother with the "else" part since this file is very rarely used.
 	fi
 
-	restore_prior_local_website_files
-	restore_prior_settings_file
+# TODO: remove
+echo XXXX NOT RUNNING	restore_prior_settings_file
+
+
+	########## Website files
+	# ALLSKY_ENV is for a remote Website and/or server.
+	# Restore it now because it's potentially written to below.
+	E="$( basename "${ALLSKY_ENV}" )"
+	ITEM="${SPACE}'${E}' file"
+	if [[ -f ${PRIOR_ALLSKY_DIR}/${E} ]]; then
+		display_msg --log progress "${ITEM} (copying)"
+		cp -ar "${PRIOR_ALLSKY_DIR}/${E}" "${ALLSKY_ENV}"
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+	fi
+
+	# Restore the remote Allsky Website configuration file if it exists.
+	ITEM="${SPACE}'${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}'"
+	if [[ -f ${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
+		display_msg --log progress "${ITEM} (copying)"
+		cp "${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
+
+		# Check the Allsky version in the remote file - if it's old let user know.
+		PRIOR_V="$( settings ".${WEBSITE_ALLSKY_VERSION}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
+# TODO: if not using remote Website, change messages below.
+		if [[ ${PRIOR_V} == "${ALLSKY_VERSION}" ]]; then
+			display_msg --log progress "Remote Website already at latest Allsky version ${PRIOR_V}."
+		else
+			MSG="Your remote Website needs to be updated to this newest version."
+			MSG+="\nIt is at version ${PRIOR_V}"
+			MSG+="\n\nRun:  cd ~/allsky;  ./remote_website_install.sh"
+			display_msg --log notice "${MSG}"
+			# The command above will update the version.
+		fi
+	else
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+	fi
+
 
 	# Do NOT restore options.json - it will be recreated.
 
@@ -2355,13 +2406,15 @@ restore_prior_files()
 
 
 ####
-# Perform all tasks related to local and remote Websites.
-do_Website_tasks()
+# If a prior local Website exists move its data to the new location.
+# If using a remote website, copy it's config file.
+restore_prior_website_files()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
+	local ITEM  D  count  A  MSG
 
 	if [[ ! -f ${ALLSKY_ENV} ]]; then
-		sed -e "s;XX_HOME_XX;${HOME};" "${REPO_ENV_FILE}" > "${ALLSKY_ENV}"
+		cp "${REPO_ENV_FILE}" "${ALLSKY_ENV}"
 	fi
 
 #XXXX TODO: do this in makeChanges.sh when they enable the local Website.
@@ -2372,77 +2425,15 @@ do_Website_tasks()
 		doV "X" "${WEBSITE_ALLSKY_VERSION}" "text" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 	fi
 
-	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
-}
-
-####
-# If a prior Website exists move its data to the new location.
-restore_prior_remote_website_files()
-{
-	declare -n v="${FUNCNAME[0]}"
-	if [[ ${v} == "true" ]]; then
-		display_msg --logonly info "Remote Website configuration file already restored."
-		return
-	fi
-
-	local PRIOR_V   ITEM   MSG
-
-	# Restore the remote Allsky Website configuration file if it exists.
-	ITEM="${SPACE}'${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}'"
-	if [[ -f ${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
-		display_msg --log progress "${ITEM} (copying)"
-		cp "${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
-
-		# Check the Allsky version in the remote file - if it's old let user know.
-		PRIOR_V="$( settings ".${WEBSITE_ALLSKY_VERSION}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
-# TODO: if not using remote Website, change messages below
-		if [[ ${PRIOR_V} == "${ALLSKY_VERSION}" ]]; then
-			display_msg --log progress "Remote Website already at latest Allsky version ${PRIOR_V}."
-		else
-			MSG="Your remote Website needs to be updated to this newest version."
-			MSG+="\nIt is at version ${PRIOR_V}"
-			MSG+="\n\nRun:  cd ~/allsky;  ./remote_website_install.sh"
-			display_msg --log notice "${MSG}"
-			# The command above will update the version.
-		fi
-	else
-# TODO: if they are using the remote website warn them the old configuration.json file wasn't found
-# and turn off useRemoteWebsite.
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-	fi
-
-	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
-}
-
-####
-# Get a count of the number of the specified file in the specified directory.
-get_count()
-{
-	local DIR="${1}"
-	local FILENAME="${2}"
-	find "${DIR}" -maxdepth 1 -name "${FILENAME}" | wc -l
-}
-
-####
-# If a prior local Website exists move its data to the new location.
-restore_prior_local_website_files()
-{
-	declare -n v="${FUNCNAME[0]}"
-	if [[ ${v} == "true" ]]; then
-		display_msg --logonly info "Local Website files already restored."
-		return
-	fi
-
-	local ITEM  D  count  A  MSG
 
 	ITEM="${SPACE}Local Website files"
+	display_msg --log progress "${ITEM}:"
+
 	if [[ -z ${PRIOR_WEBSITE_DIR} ]]; then
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-		restore_prior_remote_website_files
 		return
 	fi
 
-	display_msg --log progress "${ITEM}:"
 
 	# Each data directory will have zero or more images/videos.
 	# Make sure we do NOT mv any .php files.
@@ -2571,8 +2562,6 @@ restore_prior_local_website_files()
 			display_msg --logonly info "${MSG}"
 		fi
 	fi
-
-	restore_prior_remote_website_files
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }
@@ -3577,8 +3566,9 @@ install_overlay
 ##### Restore prior files if needed
 [[ ${WILL_USE_PRIOR} == "true" ]] && restore_prior_files
 
-##### Tasks for Allsky Websites
-do_Website_tasks
+##### Restore prior Website files if needed.
+# This has to come after restore_prior_files() since it may set some variables we need.
+restore_prior_website_files
 
 ##### Set permissions.  Want this at the end so we make sure we get all files.
 # Re-run every time in case permissions changed.

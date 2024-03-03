@@ -3,8 +3,6 @@
 include_once('functions.php');
 initialize_variables();		// sets some variables
 
-define('RASPI_ADMIN_DETAILS', RASPI_CONFIG . '/raspap.auth');
-
 include_once('authenticate.php');
 
 class MODULEUTIL
@@ -17,7 +15,7 @@ class MODULEUTIL
 
     function __construct() {
         $this->allskyModules = ALLSKY_SCRIPTS . '/modules';
-        $this->userModules = '/opt/allsky/modules';
+        $this->userModules = ALLSKY_MODULE_LOCATION . '/modules';
     }
 
     public function run()

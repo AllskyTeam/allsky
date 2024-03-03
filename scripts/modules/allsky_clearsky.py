@@ -235,7 +235,7 @@ def clearsky(params, event):
         image = s.image
 
     if mask != "":
-        maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_OVERLAY"),"images",mask)
+        maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_OVERLAY", fatal=True),"images",mask)
         imageMask = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
         if debug:
             s.writeDebugImage(metaData["module"], "image-mask.png", imageMask)
@@ -327,10 +327,10 @@ def clearsky(params, event):
     starCount = len(starList)
 
     if starCount >= clearvalue:
-        s.log(4,"INFO: Sky is clear. {0} Stars found, clear limit is {1}".format(starCount, clearvalue))
+        s.log(4,"INFO: Sky is clear. {0} stars found, clear limit is {1}".format(starCount, clearvalue))
         skyState = "Clear"
     else:
-        s.log(4,"INFO: Sky is NOT clear. {0} Stars found, clear limit is {1}".format(starCount, clearvalue))
+        s.log(4,"INFO: Sky is NOT clear. {0} stars found, clear limit is {1}".format(starCount, clearvalue))
         skyState = "NOT Clear"
 
     if mqttenable:
@@ -344,8 +344,9 @@ def clearsky(params, event):
     else:
         s.log(4,"INFO: MQTT disabled")
 
+    s.setEnvironmentVariable("AS_SKYSTATE", skyState)
     os.environ["AS_SKYSTATE"] = skyState
-    os.environ["AS_SKYSTATESTARS"] = str(starCount)
+    s.setEnvironmentVariable("AS_SKYSTATESTARS", str(starCount))
     return "Sky is {0}".format(skyState)
 
 def clearsky_cleanup():

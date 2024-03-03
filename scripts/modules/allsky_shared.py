@@ -28,11 +28,27 @@ except:
 
 ABORT = True
 
-ALLSKYPATH = None
+def getEnvironmentVariable(name, fatal=False):
+    result = None
+
+    try:
+        result = os.environ[name]
+    except KeyError:
+        if fatal:
+            log(0, f"ERROR: Environment variable '{name}' not found.", exitCode=98)
+
+    return result
+
+
+# These must exist and are used in several places.
+ALLSKYPATH = getEnvironmentVariable("ALLSKY_HOME", fatal=True)
+ALLSKY_TMP = getEnvironmentVariable("ALLSKY_TMP", fatal=True)
+SETTINGS_FILE = getEnvironmentVariable("SETTINGS_FILE", fatal=True)
+ALLSKY_OVERLAY = getEnvironmentVariable("ALLSKY_OVERLAY", fatal=True)
+
+
 LOGLEVEL = 0
 SETTINGS = {}
-CONFIG = {}
-UPLOAD = {}
 TOD = ''
 DBDATA = {}
 
@@ -58,7 +74,7 @@ def setLastRun(module):
     dbUpdate(dbKey, now)
 
 def convertLatLonOld(input):
-    """ Converts the lat and lon from the all sky config to decimal notation i.e. 0.2E becomes -0.2"""
+    """ Converts the lat and lon to decimal notation i.e. 0.2E becomes -0.2"""
     multiplier = 1 if input[-1] in ['N', 'E'] else -1
     return multiplier * sum(float(x) / 60 ** n for n, x in enumerate(input[:-1].split('-')))
 
@@ -76,8 +92,9 @@ def convertLatLon(input):
 def skyClear():
     skyState = "unknown"
     skyStateFlag = True
-    if "AS_SKYSTATE" in os.environ:
-        if os.environ["AS_SKYSTATE"] == "Clear":
+    X = getEnvironmentVariable("AS_SKYSTATE")
+    if X is not None:
+        if X == "Clear":
             skyState = "clear"
             skyStateFlag = True
         else:
@@ -92,8 +109,9 @@ def skyClear():
 def raining():
     raining = "unknown"
     rainFlag = False
-    if "AS_ALLSKYRAINFLAG" in os.environ:
-        rainingFlag = os.environ["AS_ALLSKYRAINFLAG"]
+    X = getEnvironmentVariable("AS_ALLSKYRAINFLAG")
+    if X is not None:
+        rainingFlag = X
         if rainingFlag == "True":
             raining = "yes"
             rainFlag = True
@@ -115,12 +133,11 @@ def convertPath(path):
     matches = re.finditer(regex, path, re.MULTILINE | re.IGNORECASE)
     for matchNum, match in enumerate(matches, start=1):
         variable = match.group()
-        envVar = variable.replace("${", "")
-        envVar = envVar.replace("}", "")
+        envVar = variable.replace("${", "").replace("}", "")
 
         value = None
         if envVar == "CURRENT_IMAGE":
-            value = getEnvironmentVariable(envVar)
+            value = getEnvironmentVariable(envVar, fatal=True)
             value = os.path.basename(value)
         else:
             if envVar in os.environ:
@@ -137,32 +154,46 @@ def convertPath(path):
 
     return path
 
+
 def startModuleDebug(module):
-    tmpDir = getEnvironmentVariable("ALLSKY_TMP")
-    moduleTmpDir = os.path.join(tmpDir, "debug", module)
+    global ALLSKY_TMP
+
+    moduleTmpDir = os.path.join(ALLSKY_TMP, "debug", module)
     try:
         if os.path.exists(moduleTmpDir):
             shutil.rmtree(moduleTmpDir)
         os.makedirs(moduleTmpDir, exist_ok=True)
-        log(4,"INFO: Creating folder for debug {0}".format(moduleTmpDir))
+        log(4, f"INFO: Creating folder for debug {moduleTmpDir}")
     except:
-        log(0,"ERROR: Unable to create {0}".format(moduleTmpDir))
+        log(0, f"ERROR: Unable to create {moduleTmpDir}")
+
 
 def writeDebugImage(module, fileName, image):
-    tmpDir = getEnvironmentVariable("ALLSKY_TMP")
-    debugDir = os.path.join(tmpDir, "debug", module)
+    global ALLSKY_TMP
+
+    debugDir = os.path.join(ALLSKY_TMP, "debug", module)
     os.makedirs(debugDir, mode = 0o777, exist_ok = True)
     moduleTmpFile = os.path.join(debugDir, fileName)
     cv2.imwrite(moduleTmpFile, image, params=None)
     log(4,"INFO: Wrote debug file {0}".format(moduleTmpFile))
 
-def setupForCommandLine():
-    global ALLSKYPATH, LOGLEVEL
+
+def setEnvironmentVariable(name, value, logMessage='', logLevel=4):
+    result = True
 
     try:
-        ALLSKYPATH = os.environ["ALLSKY_HOME"]
-    except KeyError:
-        ALLSKYPATH = "/home/pi/allsky"
+        os.environ[name] = value
+        if logMessage != '':
+            log(logLevel, logMessage)
+    except:
+        result = False
+        log(2, f'ERROR: Failed to set environment variable {name} to value {value}')
+
+    return result
+
+
+def setupForCommandLine():
+    global ALLSKYPATH
 
     command = shlex.split("bash -c 'source " + ALLSKYPATH + "/variables.sh && env'")
     proc = subprocess.Popen(command, stdout = subprocess.PIPE)
@@ -172,76 +203,18 @@ def setupForCommandLine():
         line = line.strip("\r")
         try:
             (key, _, value) = line.partition("=")
-            os.environ[key] = value
+            setEnvironmentVariable(key, value)
         except Exception:
             pass
     proc.communicate()
 
-    readConfig()
     readSettings()
 
-def readConfig():
-    global CONFIG
-
-    if not CONFIG:
-        log(1, "INFO: Loading and parsing config.sh")
-        allskyConfigPath = getEnvironmentVariable("ALLSKY_CONFIG", True)
-        allskyConfigFile = os.path.join(allskyConfigPath, "config.sh")
-        with open(allskyConfigFile) as fp:
-            Lines = fp.readlines()
-            for line in Lines:
-                if not line.startswith("#"):
-                    if not line.startswith("if"):
-                        line = line.strip("\n")
-                        line = line.strip("\r")
-                        if line:
-                            if not line.startswith("END_OF_USER_SETTINGS"):
-                                if "=" in line:
-                                    try:
-                                        (key, _, value) = line.partition("=")
-                                        value = value.strip("\"")
-                                        CONFIG[key] = value
-                                    except Exception:
-                                        pass
-                            else:
-                                break
-
-def readUploadConfig():
-    global UPLOAD
-
-    if not UPLOAD:
-        log(1, "INFO: Loading and parsing ftp-settings.sh")
-        allskyConfigPath = getEnvironmentVariable("ALLSKY_CONFIG", True)
-        allskyConfigFile = os.path.join(allskyConfigPath, "ftp-settings.sh")
-        with open(allskyConfigFile) as fp:
-            Lines = fp.readlines()
-            for line in Lines:
-                line = line.lstrip()
-                if not line.startswith("#"):
-                    if not line.startswith("if"):
-                        line = line.strip("\n")
-                        line = line.strip("\r")
-                        if line:
-                            if "=" in line:
-                                try:
-                                    (key, _, value) = line.partition("=")
-                                    value = value.strip("\"")
-                                    UPLOAD[key] = value
-                                except Exception:
-                                    pass
-
+####### settings file functions
 def readSettings():
-    global SETTINGS
+    global SETTINGS, SETTINGS_FILE, LOGLEVEL
 
-    settingsFile = getEnvironmentVariable("SETTINGS_FILE")
-    if settingsFile is None:
-        camera = getEnvironmentVariable("CAMERA_TYPE")
-        if camera is None:
-            camera = CONFIG["CAMERA"]
-
-        settingsFile = os.path.join(getEnvironmentVariable("ALLSKY_CONFIG"), "settings_" + camera + ".json")
-
-    with open(settingsFile, "r") as fp:
+    with open(SETTINGS_FILE, "r") as fp:
         SETTINGS = json.load(fp)
 
     LOGLEVEL = int(getSetting("debuglevel"))
@@ -261,17 +234,9 @@ def getSetting(settingName):
     return result
 
 def writeSettings():
-    global SETTINGS
+    global SETTINGS, SETTINGS_FILE
 
-    settingsFile = getEnvironmentVariable("SETTINGS_FILE")
-    if settingsFile is None:
-        camera = getEnvironmentVariable("CAMERA_TYPE")
-        if camera is None:
-            camera = CONFIG["CAMERA"]
-
-        settingsFile = os.path.join(getEnvironmentVariable("ALLSKY_CONFIG"), "settings_" + camera + ".json")
-
-    with open(settingsFile, "w") as fp:
+    with open(SETTINGS_FILE, "w") as fp:
         json.dump(SETTINGS, fp, indent=4)
 
 def updateSetting(values):
@@ -281,64 +246,15 @@ def updateSetting(values):
 
     writeSettings()
 
-def getConfig(settingName):
-    result = None
-    try:
-        result = CONFIG[settingName]
-    except Exception:
-        pass
-
-    return result
-
-def setupParams(params, metaData):
-    readConfig()
-
-    for param in metaData["arguments"]:
-        if param in metaData["argumentdetails"]:
-            if "setting" in metaData["argumentdetails"][param]:
-                settingKey = metaData["argumentdetails"][param]["setting"]
-                value = getConfig(settingKey)
-                if "type" in metaData["argumentdetails"][param]:
-                    if "fieldtype" in metaData["argumentdetails"][param]["type"]:
-                        type = metaData["argumentdetails"][param]["type"]["fieldtype"]
-                        if type == "spinner":
-                            value = int(value)
-
-                params[param] = value
-
-    return params
 
 def var_dump(variable):
     pprint.PrettyPrinter(indent=2, width=128).pprint(variable)
 
-def setEnvironmentVariable(name, value, logMessage='', logLevel=4):
-    result = True
-
-    try:
-        os.environ[name] = value
-
-        if log != '':
-            log(logLevel, logMessage)
-    except:
-        result = False
-        log(4, f'ERROR: Failed to set environment variable {name} to value {value}')
-
-    return result
-
-def getEnvironmentVariable(name, fatal=False, error=''):
-    result = None
-
-    try:
-        result = os.environ[name]
-    except KeyError:
-        if fatal:
-            print("Sorry, environment variable ( {0} ) not found.".format(name))
-            sys.exit(98)
-
-    return result
 
 def log(level, text, preventNewline = False, exitCode=None):
     """ Very simple method to log data if in verbose mode """
+    global LOGLEVEL
+
     if LOGLEVEL >= level:
         if preventNewline:
             print(text, end="")
@@ -349,21 +265,21 @@ def log(level, text, preventNewline = False, exitCode=None):
         sys.exit(exitCode)
 
 def initDB():
-    global DBDATA
-    tmpDir = getEnvironmentVariable('ALLSKY_TMP')
-    dbFile = os.path.join(tmpDir, 'allskydb.py')
+    global DBDATA, ALLSKY_TMP
+
+    dbFile = os.path.join(ALLSKY_TMP, 'allskydb.py')
     if not os.path.isfile(dbFile):
         file = open(dbFile, 'w+')
         file.write('DataBase = {}')
         file.close()
 
     try:
-        sys.path.insert(1, tmpDir)
+        sys.path.insert(1, ALLSKY_TMP)
         database = __import__('allskydb')
         DBDATA = database.DataBase
     except:
         DBDATA = {}
-        log(0, "ERROR: Allsy database corrupted - Resetting")
+        log(0, f"ERROR: Resetting corrupted Allsky database '{dbFile}'")
 
 def dbAdd(key, value):
     global DBDATA
@@ -393,9 +309,9 @@ def dbGet(key):
         return None
 
 def writeDB():
-    global DBDATA
-    tmpDir = getEnvironmentVariable('ALLSKY_TMP')
-    dbFile = os.path.join(tmpDir, 'allskydb.py')
+    global DBDATA, ALLSKY_TMP
+
+    dbFile = os.path.join(ALLSKY_TMP, 'allskydb.py')
     file = open(dbFile, 'w+')
     file.write('DataBase = ')
     file.write(str(DBDATA))
@@ -440,9 +356,12 @@ def asfloat(val):
 
     return val
 
+def getExtraDir():
+    return getEnvironmentVariable("ALLSKY_EXTRA", fatal=True)
+
 def saveExtraData(fileName, extraData):
-    extraDataPath = getEnvironmentVariable("ALLSKY_EXTRA")
-    if extraDataPath is not None:
+    extraDataPath = getExtraDir()
+    if extraDataPath is not None:               # it should never be None
         checkAndCreateDirectory(extraDataPath)
         extraDataFilename = os.path.join(extraDataPath, fileName)
         with open(extraDataFilename, "w") as file:
@@ -450,8 +369,8 @@ def saveExtraData(fileName, extraData):
             file.write(formattedJSON)
 
 def deleteExtraData(fileName):
-    extraDataPath = getEnvironmentVariable("ALLSKY_EXTRA")
-    if extraDataPath is not None:
+    extraDataPath = getExtraDir()
+    if extraDataPath is not None:               # it should never be None
         extraDataFilename = os.path.join(extraDataPath, fileName)
         if os.path.exists(extraDataFilename):
             if isFileWriteable(extraDataFilename):

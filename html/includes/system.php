@@ -145,17 +145,17 @@ function checkNumFields($num_required, $num_have, $type, $line_num, $line, $file
 function displayProgress($x, $label, $data, $min, $current, $max, $danger, $warning, $status_override)
 {
 	if ($status_override !== "") {
-		$status = $status_override;
+		$myStatus = $status_override;
 	} else if ($current >= $danger) {
-		$status = "danger";
+		$myStatus = "danger";
 	} elseif ($current >= $warning) {
-		$status = "warning";
+		$myStatus = "warning";
 	} else {
-		$status = "success";
+		$myStatus = "success";
 	}
 	echo "<tr><td colspan='2' style='height: 5px'></td></tr>\n";
 	echo "<tr><td $x>$label</td>\n";
-	echo "    <td style='width: 100%' class='progress'><div class='progress-bar progress-bar-$status'\n";
+	echo "    <td style='width: 100%' class='progress'><div class='progress-bar progress-bar-$myStatus'\n";
 	echo "    role='progressbar'\n";
 
 	echo "    title='current: $current, min: $min, max: $max'";
@@ -279,8 +279,8 @@ function displayUserData($file, $displayType)
  */
 function DisplaySystem()
 {
-	global $status, $temptype, $page;
-	$status = new StatusMessages();
+	global $temptype, $page, $settings_array;
+	$myStatus = new StatusMessages();
 
 	$top_dir = dirname(ALLSKY_WEBSITE, 1);
 
@@ -408,7 +408,7 @@ function DisplaySystem()
 
 	// Optional user-specified data.
 	// TODO: read each file once and populate arrays for "data", "progress", and "button".
-	$udf = get_variable(ALLSKY_CONFIG .'/config.sh', 'WEBUI_DATA_FILES=', '');
+	$udf = getVariableOrDefault($settings_array, 'webuidatafiles', '');
 	if ($udf !== "") {
 		$user_data_files = explode(':', $udf);
 		$user_data_files_count = count($user_data_files);
@@ -425,11 +425,11 @@ function DisplaySystem()
 
 					<?php
 					if (isset($_POST['system_reboot'])) {
-						$status->addMessage("System Rebooting Now!", "warning", true);
+						$myStatus->addMessage("System Rebooting Now!", "warning", true);
 						$result = shell_exec("sudo /sbin/reboot");
 					}
 					if (isset($_POST['system_shutdown'])) {
-						$status->addMessage("System Shutting Down Now!", "warning", true);
+						$myStatus->addMessage("System Shutting Down Now!", "warning", true);
 						$result = shell_exec("sudo /sbin/shutdown -h now");
 					}
 					if (isset($_POST['service_start'])) {
@@ -447,8 +447,7 @@ function DisplaySystem()
 						$e .= displayUserData($user_data_files[$i], "button-action");
 					}
 
-					if ($status->isMessage()) 
-						echo "<P>" . $status->showMessages() . "</p>";
+					if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>";
 					?>
 
 					<div class="row">

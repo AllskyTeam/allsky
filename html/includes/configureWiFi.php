@@ -1,8 +1,9 @@
 <?php
 
 function DisplayWPAConfig(){
-	global $page, $status;
+	global $page;
 	$debug = false;
+	$myStatus = new StatusMessages();
 
 	// Find currently configured networks
 	$dataFile = RASPI_WPA_SUPPLICANT_CONFIG;
@@ -70,7 +71,7 @@ function DisplayWPAConfig(){
 			} else {
 				// All the lines within a network entry should be   key=value
 				$msg = "Line $onLine in $dataFile may be invalid: $line";
-				$status->addMessage($msg, "warning", false);
+				$myStatus->addMessage($msg, "warning");
 			}
 		} else if ($numNetworks > 0) {
 			// The first couple lines in the file may be configuration lines,
@@ -78,7 +79,7 @@ function DisplayWPAConfig(){
 			// Any other line inbetween network entries is invalid
 			// and will likely cause a failure.
 			$msg = "Line $onLine in $dataFile is out of place: $line";
-			$status->addMessage($msg, "danger", false);
+			$myStatus->addMessage($msg, "danger");
 		}
 	}
 
@@ -142,7 +143,7 @@ if ($debug) { echo "<br>tmp_networks=<pre>"; print_r($tmp_networks); echo "</pre
 							}
 						} else {
 							$msg = "'$cmd' failed";
-							$status->addMessage($msg, 'danger', false);
+							$myStatus->addMessage($msg, 'danger');
 							$ok = false;
 						}
 					} else if ($len == 64) {	// 64 means it's already encrypted
@@ -156,7 +157,7 @@ if ($debug) { echo "<br>tmp_networks=<pre>"; print_r($tmp_networks); echo "</pre
 					} else {
 						$msg = "WPA passphrase for $ssid ($passphrase)";
 						$msg = "  is $len characters but must be between 8 and 63.";
-						$status->addMessage($msg, "danger", false);
+						$myStatus->addMessage($msg, "danger");
 						$ok = false;
 					}
 				}
@@ -168,19 +169,19 @@ if ($debug) { echo "<br>tmp_networks=<pre>"; print_r($tmp_networks); echo "</pre
 				if( $returnval == 0 ) {
 					exec('sudo wpa_cli reconfigure', $reconfigure_out, $reconfigure_return );
 					if ($reconfigure_return == 0) {
-						$status->addMessage('Wifi settings updated successfully', 'success');
+						$myStatus->addMessage('Wifi settings updated successfully', 'success');
 						$networks = $tmp_networks;
 					} else {
 						$msg = 'Wifi settings updated but cannot restart';
 						$msg .= ' (cannot execute "wpa_cli reconfigure")';
-						$status->addMessage($msg, 'danger', false);
+						$myStatus->addMessage($msg, 'danger');
 					}
 				} else {
-					$status->addMessage('Wifi settings failed to be updated', 'danger', false);
+					$myStatus->addMessage('Wifi settings failed to be updated', 'danger');
 				}
 			}
 		} else {
-			$status->addMessage('Failed to updated wifi settings', 'danger', false);
+			$myStatus->addMessage('Failed to updated wifi settings', 'danger');
 		}
 	}
 
@@ -242,11 +243,11 @@ if ($debug) { echo "<br><pre>wpa_cli scan_results:<br>"; print_r($scan_return); 
 			}
 		} else {
 			// TODO: Is this ok?
-			$status->addMessage("'$cmd' returned line without SSID in field 4: $network", 'warning', false);
+			$myStatus->addMessage("'$cmd' returned line without SSID in field 4: $network", 'warning');
 		}
 	}
 	if ($numScannedNetworks == 0) {
-		$status->addMessage("No scanned networks found", 'warning', false);
+		$myStatus->addMessage("No scanned networks found", 'warning');
 	}
 
 	exec( 'iwconfig wlan0', $iwconfig_return );
@@ -263,7 +264,7 @@ if ($debug) { echo "<br><pre>wpa_cli scan_results:<br>"; print_r($scan_return); 
 		<div class="panel-heading"><i class="fa fa-wifi fa-fw"></i> Configure Wi-Fi</div>
 		<!-- /.panel-heading -->
 		<div class="panel-body">
-			<?php if ($status->isMessage()) echo "<p>" . $status->showMessages() . "</p>"; ?>
+			<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
 			<h4>Wi-Fi SSIDs</h4>
 
 			<form method="POST" action="?page=<?php echo $page ?>" name="wpa_conf_form">

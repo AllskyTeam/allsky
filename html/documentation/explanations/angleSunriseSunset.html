@@ -42,12 +42,10 @@ called the <span class="WebUISetting">Angle</span>.
 This is set in the <span class="WebUILink">Allsky Settings</span> page of the WebUI
 and is a positive or negative number that indicates the number of degrees
 <em>above</em> (positive) or <em>below</em> (negative) the horizon the Sun is when daytime starts.
-We refer to <em>Allsky's daytime</em> as the period when Allsky is using your daytime settings.
 </p>
 <p>
 Allsky starts using your <strong>nighttime</strong> settings
 at your actual sunset time <strong>minus</strong> the <span class="WebUISetting">Angle</span>.
-We refer to <em>Allsky's nighttime</em> as the period when Allsky is using your nighttime settings.
 </p>
 <p>
 As an example, assume the Sun rises at 7:00 AM and sets at 18:00 (6:00 PM).
@@ -80,7 +78,7 @@ larger the <span class="WebUISetting">Angle</span> the shorter the daytime.
 <p>
 You tell Allsky when to start using your daytime settings and nighttime settings
 by adjusting your <span class="WebUISetting">Angle</span>.
-</p>
+<!--
 <p>
 Astrophotographers rarely start taking pictures at sunset since it's still too light.
 Instead, they start taking pictures when it's much darker, often one of the following times:
@@ -97,9 +95,8 @@ Instead, they start taking pictures when it's much darker, often one of the foll
 	This is 1 hour, 12 minutes after sunset through 1 hour, 12 minutes before sunrise.
 </ul>
 </p>
-<p>
-Many people use an <span class="WebUISetting">Angle</span>
-of <span class="WebUIValue">-6</span> for their allsky camera but it's
+-->
+Many people use <span class="WebUIValue">-6</span> but it's
 up to you to determine where the daytime and nighttime transition points should be.
 <blockquote>
 Startrails, keograms, and timelapse videos are created at the end of nighttime,
@@ -153,9 +150,6 @@ get_sunrise_sunset "" "" 88.2W         <span class="shComment"># longitude only<
 This can be useful for debugging purposes to determine what values to use
 to cause a day/night transition in a few minutes,
 rather than waiting for tomorrow morning.
-for debugging purposes
-
-<br><p></p>
 
 
 </div><!-- Layout-main -->

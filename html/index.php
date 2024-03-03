@@ -65,12 +65,10 @@ $ME = htmlspecialchars($_SERVER["PHP_SELF"]);
 include_once('includes/functions.php');
 include_once('includes/status_messages.php');
 $status = new StatusMessages();
-$needToDisplayMessages = false;
 initialize_variables();		// sets some variables
 
 // Constants for configuration file paths.
 // These are typical for default RPi installs. Modify if needed.
-define('RASPI_ADMIN_DETAILS', RASPI_CONFIG . '/raspap.auth');
 include_once('includes/authenticate.php');
 define('RASPI_WPA_SUPPLICANT_CONFIG', '/etc/wpa_supplicant/wpa_supplicant.conf');
 define('RASPI_WPA_CTRL_INTERFACE', '/var/run/wpa_supplicant');
@@ -132,15 +130,17 @@ if ($useLogin) {
 $remoteWebsiteVersion = "";
 if ($hasRemoteWebsite) {
 	$f = getRemoteWebsiteConfigFile(); 
-	$errorMsg = "WARNING: Unable to process '$f'.";
+	$errorMsg = "WARNING: ";
 	$retMsg = "";
 	$a_array = get_decoded_json_file($f, true, $errorMsg, $retMsg);
 	if ($a_array === null) {
-		echo "$retMsg";
+		$status->addMessage($retMsg, 'warning');
 	} else {
 		$c = getVariableOrDefault($a_array, 'config', '');
-		if ($c !== "")
-			$remoteWebsiteVersion = getVariableOrDefault($c, 'AllskyWebsiteVersion', '<span class="errorMsg">[unknown]</span>');
+		if ($c !== "") {
+			$s = '<span class="errorMsg">[unknown]</span>';
+			$remoteWebsiteVersion = getVariableOrDefault($c, 'AllskyWebsiteVersion', $s);
+		}
 	}
 }
 
@@ -314,11 +314,7 @@ if ($hasRemoteWebsite) {
 		<div class="row right-panel">
 			<div class="col-lg-12">
 				<?php
-				// Check if the settings are configured.
-				if (! check_if_configured($page, "main")) $needToDisplayMessages = true;
-
-				if ($needToDisplayMessages)
-					$status->showMessages(true, false, true);
+				check_if_configured($page, "main");	// It calls addMessage() on error.
 
 				if (isset($_POST['clear'])) {
 					$t = @filemtime(ALLSKY_MESSAGES);
@@ -329,31 +325,41 @@ if ($hasRemoteWebsite) {
 						if ($t == $newT) {
 							exec("sudo rm -f " . ALLSKY_MESSAGES, $result, $retcode);
 							if ($retcode !== 0) {
-								$status->addMessage("Unable to clear messages: " . $result[0], 'danger', true);
+								$status->addMessage("Unable to clear messages: " . $result[0], 'danger');
 								$status->showMessages();
 							}
 						} else {
-							// If the messages changed after the user did a "clear",
-							// and then the user refreshed the browser,
+							// If the messages changed after the user viewed the last page
+							// and before they clicked the "Clear" button,
 							// we'll have the old time in $filetime, but the timestamp of the file
 							// won't match so we'll get here, and then display the messages below.
-							$status->addMessage("System Messages changed.  New content is:", "warning", false);
+							$status->addMessage("System Messages changed.  New content is:", "warning");
 						}
 					}
 				}
-				if (file_exists(ALLSKY_MESSAGES) && filesize(ALLSKY_MESSAGES) > 0) {
+				clearstatcache();
+				$size = @filesize(ALLSKY_MESSAGES);
+				if ($size !== false && $size > 0) {
 					$contents_array = file(ALLSKY_MESSAGES, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-					echo "<div class='row'>";
-					echo "<div class='system-message'>";
+					echo "<div class='row'>"; echo "<div class='system-message'>";
 						echo "<div class='title'>System Messages</div>";
 						foreach ($contents_array as $line) {
-							// Format: level (i.e., CSS class), date, count, message
+							// Format: level (i.e., CSS class), date, count, message [, url]
+							//         0                        1     2      3          4
 							$message_array = explode("\t", $line);
-							if (isset($message_array[3])) {
+							$message = getVariableOrDefault($message_array, 3, null);
+							if ($message !== null) {
 								$level = $message_array[0];
 								$date = $message_array[1];
 								$count = $message_array[2];
-								$message = "<strong>" . $message_array[3] . "</strong>";
+								$url = getVariableOrDefault($message_array, 4, "");
+								if ($url !== "") {
+									$m1 = "<a href='$url' title='Click for more information' target='_messages'>";
+									$m2 = "<i class='fa fa-external-link-alt fa-fw'></i>";
+									$m2 = "<span class='externalSmall'>$m2</span>";
+									$message = "$m1 $message $m2</a>";
+								}
+								$message = "<strong>$message</strong>";
 								if ($count == 1)
 									$message .= " &nbsp; ($date)";
 								else
@@ -362,21 +368,20 @@ if ($hasRemoteWebsite) {
 								$level = "error";	// badly formed message
 								$message = "INTERNAL ERROR: Poorly formatted message: $line";
 							}
-							$status->addMessage($message, $level, false);
+							$status->addMessage($message, $level);
 						}
 						$status->showMessages();
-						echo "<div class='message-button'>";
+						echo "<br><div class='message-button'>";
 							$ts = time();
 							echo "<form action='$ME?_ts=$ts' method='POST'>";
 							echo "<input type='hidden' name='page' value='$page'>";
 							echo "<input type='hidden' name='clear' value='true'>";
 							$t = @filemtime(ALLSKY_MESSAGES);
 							echo "<input type='hidden' name='filetime' value='$t'>";
-							echo "<input type='submit' class='btn btn-primary' value='Clear all messages' />";
+							echo "<input type='submit' class='btn btn-primary' value='Clear messages' />";
 							echo "</form>";
 						echo "</div>";
-					echo "</div>";
-					echo "</div>";
+					echo "</div>"; echo "</div>";// /.system-message and /.row
 				}
 
 				switch ($page) {

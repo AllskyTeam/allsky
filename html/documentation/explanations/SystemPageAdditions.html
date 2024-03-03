@@ -11,13 +11,13 @@
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 	<style>
 		#pageTitle::before {
-			content: "WEBUI_DATA_FILES";
+			content: "System Page Additions";
 		} 
 	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<script src="../js/all.min.js" type="application/javascript"></script>
-	<title>WEBUI_DATA_FILES Tutorial</title>
+	<title>System Page Additions Tutorial</title>
 </head>
 <body>
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
@@ -32,7 +32,7 @@ You can add information and buttons to the WebUI's
 without having to change any Allsky files.
 The data can be anything you want, but often contains weather, dew heater, and/or fan data.
 </p>
-This page assumes you are familiar with writing scripts;
+This documentation page assumes you are familiar with writing scripts;
 if so, adding the information is straightforward
 if you follow the instructions on this page.
 
@@ -52,8 +52,7 @@ The image below shows the types of items that can be added:
 <p>
 The information to display on the <span class="WebUIWebPage">System</span> page
 is described in one or more "data files"
-which are listed in the <span class="shSetting">WEBUI_DATA_FILES</span> setting
-in <span class="fileName">config.sh</span>
+which are listed in the <span class="WebUISetting">System Page Additions</span> setting.
 This section describes the format of those data files.
 <blockquote>
 <b>You</b> need to provide the script(s) to create the data files.
@@ -75,8 +74,8 @@ That file needs 2 lines describing the attributes for
 each button such as color and what it should say (e.g., "Heater ON").
 The exact contents of those lines are described below.
 The buttons appear on the <span class="WebUILink">System</span> page
-when you set <code>WEBUI_DATA_FILES="/home/pi/my_buttons.txt"</code>
-in <span class="fileName">config.sh</span>.
+when you set the <span class="WebUISetting">System Page Additions</span> setting
+to <span class="WebUIValue">/home/pi/my_buttons.txt</span>.
 </p>
 
 <p>
@@ -400,11 +399,10 @@ to look for an icon (Allsky uses Font Awesome version 6).
 You pick the "random" icon so set the button's <b>FA icon</b> field to <code>random</code>.
 </p>
 
-<h4 id="WEBUI_DATA_FILES">Specify the data files</h4>
+<h4 id="SystemPageAdditions">Specify the data files</h4>
 You need to enter the names of your data files (i.e., the files created by your scripts) in the
-<span class="shSetting">WEBUI_DATA_FILES</span> setting of the
-<span class="fileName">config.sh</span> file,
-but how many data files should you have?
+<span class="WebUISetting">System Page Additions</span> setting.
+But how many data files should you have?
 You could put everything in one file but you have two scripts that create data files
 and would need to coordinate between them so they don't overwrite each other.
 You decide on three data files containing:
@@ -418,9 +416,10 @@ but to simplify the <span class="fileName">toggleDewHeater.py</span>
 script you put it in a 3rd file that will never change.
 You call the 3rd file <span class="fileName">/home/pi/dewheater/button.txt</span>.
 <p class="morePadding">
-This is what you use:
-<pre>
-WEBUI_DATA_FILES="/home/pi/weather/weatherdata.txt:/home/pi/dewheater/status.txt:/home/pi/dewheater/button.txt"
+This is what you enter into the
+<span class="WebUISetting">System Page Additions</span> setting.
+<pre class="WebUIValue">
+/home/pi/weather/weatherdata.txt:/home/pi/dewheater/status.txt:/home/pi/dewheater/button.txt
 </pre>
 </p>
 <blockquote>
@@ -434,7 +433,7 @@ lines in the first data file will appear first on the
 <span class="WebUIWebPage">System</span> page;
 those in the second file will appear second, etc.
 You can change the order items appear by changing the order of data file names in the
-<span class="shSetting">WEBUI_DATA_FILES</span> setting.
+<span class="WebUISetting">System Page Additions</span> setting.
 </p>
 
 <h4>Create/modify scripts to update the data file(s)</h4>
@@ -567,26 +566,28 @@ copy/paste the above file examples to
 and <span class="fileName">/home/pi/dewheater/button.txt</span> files on your Pi.
 Then add
 <p>
-<pre>
-WEBUI_DATA_FILES="/home/pi/weather/weatherdata.txt:/home/pi/dewheater/status.txt
+<pre class="WebUIValue">
+/home/pi/weather/weatherdata.txt:/home/pi/dewheater/status.txt
 </pre>
+to the <span class="WebUISetting">System Page Additions</span> setting.
 </p>
-to <span class="fileName">config.sh</span> via the WebUI's
-<span class="WebUIWebPage">Editor</span> page.
 Now, go to the <span class="WebUIWebPage">System</span> page in the WebUI
 and in addition to the normal information you should see the items you added.
 Refreshing the screen won't change those items since the data files are not being updated yet.
 
 <p>
-Clicking the "Toggle dew heater" button should display a red message at the top of the web page that says "'/home/pi/dewheater/toggleDewHeater.py' failed: sh: 1: /home/pi/dewheater/toggleDewHeater.py: not found".
-That's the output when the web page tried to execute '/home/pi/dewheater/toggleDewHeater.py' which doesn't exist.
+Clicking the "Toggle dew heater" button should display a red message
+at the top of the web page that says
+<code>'/home/pi/dewheater/toggleDewHeater.py' failed: sh: 1: /home/pi/dewheater/toggleDewHeater.py: not found"</code>
+That's the output when the web page tried to execute
+<span class='fileName'>/home/pi/dewheater/toggleDewHeater.py</span> which doesn't exist.
 </p>
 
 <p>
 Try making changes to the three files you created.
 For example, change the <b>command</b> for the button to <code>echo 'Hello, world!'</code>.
 When you next click on the button you should see a green message at the top saying "Hello, world!".
-Now change it to "echo 'Hello, world!' ; exit 1".
+Now change it to <code>echo 'Hello, world!' ; exit 1</code>.
 What happens now?
 </p>
 
@@ -601,10 +602,10 @@ start modifying your script(s) to put your own data into the required format.
 <ul>
 	<li>Do not store your data files in the <span class="fileName">allsky</span> directory
 		since they won't be saved when upgrading Allsky.
-		It's suggested to create a directory one level above
+		Instead, create a directory one level above
 		<span class="fileName">allsky</span> and put all your files there.
-		The <span class="shSetting">WEBUI_DATA_FILES</span> setting WILL be
-		saved when upgrading Allsky.
+		The <span class="WebUISetting">System Page Additions</span> setting
+		WILL be saved when upgrading Allsky.
 </ul>
 </p>
 

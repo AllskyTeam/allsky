@@ -6,8 +6,6 @@ echo "     ***** Starting AllSky *****"
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
 ME="$( basename "${BASH_ARGV0}" )"
 
-cd "${ALLSKY_HOME}" || exit 1
-
 NOT_STARTED_MSG="Unable to start Allsky!"
 STOPPED_MSG="Allsky Stopped!"
 ERROR_MSG_PREFIX="*** ERROR ***\n${STOPPED_MSG}\n"
@@ -24,10 +22,21 @@ fi
 
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
-#shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"						|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+
+if [[ ! -d ${ALLSKY_CONFIG} ]]; then
+	{
+		echo "*** ====="
+		echo "Allsky needs to be installed.  Run:  cd ~/allsky; ./install.sh"
+		echo "*** ====="
+	} >&2
+	# Can't call addMessage.sh or copy_notification_image.sh or almost anything
+	# since they use ${ALLSKY_CONIG} and/or ${ALLSKY_TMP} which don't exist yet.
+	doExit "${EXIT_ERROR_STOP}" "no-image" "" ""
+fi
+
+cd "${ALLSKY_HOME}" || exit 1
 
 # Make sure they rebooted if they were supposed to.
 NEEDS_REBOOT="false"
@@ -84,10 +93,11 @@ if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 		rm "${F}"		# so next time we'll remind them.
 		doExit "${EXIT_ERROR_STOP}" "no-image" "" ""
 	else
-		MSG="Reminder to perform the action(s) in '${POST_INSTALLATION_ACTIONS}'."
-		MSG="${MSG}\nIf you already have, remove the file so you will no longer see this message:"
+		MSG="Reminder: Click here to see the action(s) that need to be performed."
+		MSG="${MSG}\nOnce you perform the actions, run this to remove this message:"
 		MSG="${MSG}\n &nbsp; &nbsp;<code>rm -f '${POST_INSTALLATION_ACTIONS}'</code>"
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
+		PIA="${POST_INSTALLATION_ACTIONS/${ALLSKY_HOME}/}"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}" "${PIA/${ALLSKY_HOME}/}"
 	fi
 fi
 
@@ -107,10 +117,10 @@ pgrep "${ME}" | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
 if [[ ${CAMERA_TYPE} == "RPi" ]]; then
 	# "true" means use doExit() on error
-	RPi_COMMAND="-cmd $( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" )"
+	RPi_COMMAND_TO_USE="$( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" )"
 
 elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
-	RPi_COMMAND=""
+	RPi_COMMAND_TO_USE=""
 	RESETTING_USB_LOG="${ALLSKY_TMP}/resetting_USB.txt"
 	ZWO_VENDOR="03c3"
 	TEMP="${ALLSKY_TMP}/${CAMERA_TYPE}_cameras.txt"
@@ -295,12 +305,12 @@ python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --cleartimings
 deactivate_python_venv
 
 # Run the main program - this is the main attraction...
-# ${RPi_COMMAND} needs to come first since the capture_RPi code checks for it first.
+# ${RPi_COMMAND_TO_USE} needs to come first since the capture_RPi code checks for it first.
 # Pass debuglevel on command line so the capture program knows right away
 # if it should display debug output.
 
 #shellcheck disable=SC2086
-"${ALLSKY_BIN}/${CAPTURE}" ${RPi_COMMAND} -debuglevel "${ALLSKY_DEBUG_LEVEL}" -config "${ARGS_FILE}"
+"${ALLSKY_BIN}/${CAPTURE}" ${RPi_COMMAND_TO_USE} -debuglevel "${ALLSKY_DEBUG_LEVEL}" -config "${ARGS_FILE}"
 RETCODE=$?
 
 if [[ ${RETCODE} -eq ${EXIT_OK} ]]; then

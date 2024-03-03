@@ -379,13 +379,6 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 	// USB contention, such as that caused by heavy USB disk IO
 	long timeout = ((cg->currentExposure_us * 2) / US_IN_MS) + 5000;	// timeout is in ms
 
-	// This debug message isn't typcally needed since we already displayed a message about
-	// starting a new exposure, and below we display the result when the exposure is done.
-	Log(2, "    > %s to %s\n",
-		cg->HB.useHistogram ? "Histogram set exposure" :
-			(wasAutoExposure == ASI_TRUE ? "Camera set auto-exposure" : "Manual exposure set"),
-		length_in_units(cg->currentExposure_us, true));
-
 	// Sanity check.
 	if (cg->HB.useHistogram && cg->currentAutoExposure == ASI_TRUE)
 		Log(0, "  > %s: ERROR: HB.useHistogram AND currentAutoExposure are both set\n", cg->ME);
@@ -575,8 +568,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 		cg->lastGain = (double) l;
 	}
 
-	char tempBuf[500];
-	tempBuf[0] = '\0';
+	char tempBuf[500] = { 0 };
 	char *tb = tempBuf;
 
 	cg->lastMean = computeHistogram(imageBuffer, *cg, true);
@@ -1460,7 +1452,8 @@ int main(int argc, char *argv[])
 			// Unfortunately our histogram method only does exposure, not gain, so we
 			// can't say what gain we are going to use.
 			Log(2, "-----\n");
-			Log(1, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(CG.currentExposure_us, true));
+			Log(1, "STARTING EXPOSURE at: %s   @ %s\n",
+				exposureStart, length_in_units(CG.currentExposure_us, true));
 
 			// Get start time for overlay. Make sure it has the same time as exposureStart.
 			if (CG.overlay.showTime)

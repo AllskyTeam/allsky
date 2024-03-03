@@ -24,7 +24,7 @@ ifeq ($(PKGBUILD),)
 endif
 
 
-CONFIGFILES := config.sh ftp-settings.sh 
+ENVFILE := env.json
 UNINSTALLFILES := $(DESTDIR)$(sysconfdir)/logrotate.d/allsky $(DESTDIR)$(sysconfdir)/rsyslog.d/allsky.conf $(DESTDIR)$(sysconfdir)/systemd/system/allsky.service $(DESTDIR)$(sysconfdir)/systemd/system/allskyperiodic.service
 
 %:
@@ -42,7 +42,6 @@ uninstall:
 	@echo `date +%F\ %R:%S` Complete.
 	@echo `date +%F\ %R:%S` NOTE: Config files were \-NOT\- removed.
 	@echo `date +%F\ %R:%S` To remove config files, please run \'sudo make remove_configs\'
-
 .PHONY : uninstall
 
 ifeq ($(PKGBUILD),1)
@@ -57,17 +56,20 @@ createDirs:
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/profile.d ]; then mkdir -p $(DESTDIR)$(sysconfdir)/profile.d; fi
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/systemd/system ]; then mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system; fi
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/udev/rules.d ]; then mkdir -p $(DESTDIR)$(sysconfdir)/udev/rules.d; fi
-
 .PHONY : createDirs
 
-$(CONFIGFILES):
+$(ENVFILE):
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/allsky/$@ ]; then \
 	  echo `date +%F\ %R:%S` Copying default $@; \
-	  install -m 0644 $@.repo $(DESTDIR)$(sysconfdir)/allsky/$@; \
+	  sed -e "s|XX_HOME_XX|$(HOMEDIR)|" $@.repo > env; \
+	  install -m 0664 env $(HOMEDIR)/$@; \
+	  rm -f env; \
 	fi
-.PHONY : $(CONFIGFILES)
+# TODO: In PKGBUILD mode, where is the "allsky" directory?  $(ENVFILE) needs to go in it.
+# Is $(HOMEDIR) the correct location, or should it be $(DESTDIR)$(sysconfdir)/allsky  ?
+.PHONY : $(ENVFILE)
 
-install: createDirs $(CONFIGFILES)
+install: createDirs $(ENVFILE)
 	@echo `date +%F\ %R:%S` Setting up udev rules...
 	@install -D -m 0644 asi.rules $(DESTDIR)$(sysconfdir)/udev/rules.d/
 	@echo `date +%F\ %R:%S` Setting up logging...
@@ -86,22 +88,14 @@ else # Not in package build mode ######################################
 remove_configs:
 	@echo `date +%F\ %R:%S` Removing config path and files ../config
 	@rm -rf ../config
-
 .PHONY : remove_configs
 
 createDirs:
 	@echo `date +%F\ %R:%S` Creating directory structures...
 	@if [ ! -e ../config ]; then mkdir -p ../config; chown $(SUDO_USER):$(SUDO_USER) ../config; fi
-
 .PHONY : createDirs
-$(CONFIGFILES):
-	@if [ ! -e ../config/$@ ]; then \
-	  echo `date +%F\ %R:%S` Copying default $@; \
-	  install -m 0644 -o $(SUDO_USER) -g $(SUDO_USER) $@.repo ../config/$@; \
-	fi
-.PHONY : $(CONFIGFILES)
 
-install: createDirs $(CONFIGFILES)
+install: createDirs
 	@echo `date +%F\ %R:%S` Setting up udev rules...
 	@install -D -m 0644 asi.rules $(DESTDIR)$(sysconfdir)/udev/rules.d/
 	@echo `date +%F\ %R:%S` Setting up logging...

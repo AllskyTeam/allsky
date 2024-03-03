@@ -43,12 +43,13 @@ function doExit()
 		# even if the user has them turned off.
 		if [[ -n ${CUSTOM_MESSAGE} ]]; then
 			# Create a custom error message.
-			# If we error out before config.sh is sourced in,
+			# If we error out before variables.sh is sourced in,
 			# ${FILENAME} and ${EXTENSION} won't be set so guess at what they are.
 			"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" \
 				"${FILENAME:-"image"}" \
 				"${COLOR}" "" "85" "" "" \
 				"" "10" "${COLOR}" "${EXTENSION:-"jpg"}" "" "${CUSTOM_MESSAGE}"
+			echo "Stopping Allsky: ${CUSTOM_MESSAGE}"
 		elif [[ ${TYPE} != "no-image" ]]; then
 			[[ ${OUTPUT_A_MSG} == "false" && ${TYPE} == "RebootNeeded" ]] && echo "Reboot needed"
 			"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 0 "${TYPE}" 2>&1
@@ -166,11 +167,11 @@ function convertLatLong()
 			# No sign either
 			EMSG="ERROR: '${TYPE}' should contain EITHER a '+' or '-', OR a"
 			if [[ ${TYPE} == "latitude" ]]; then
-				EMSG="${EMSG} 'N' or 'S'"
+				EMSG+=" 'N' or 'S'"
 			else
-				EMSG="${EMSG} 'E' or 'W'"
+				EMSG+=" 'E' or 'W'"
 			fi
-			EMSG="${EMSG}; you entered '${LATLONG}'."
+			EMSG+="; you entered '${LATLONG}'."
 			echo -e "${EMSG}" >&2
 			return 1
 		fi
@@ -226,10 +227,8 @@ function get_sunrise_sunset()
 	local ANGLE="${1}"
 	local LATITUDE="${2}"
 	local LONGITUDE="${3}"
-	#shellcheck disable=SC1091 source-path=.
+	#shellcheck source-path=.
 	source "${ALLSKY_HOME}/variables.sh"	|| return 1
-	#shellcheck disable=SC1091		# file doesn't exist in GitHub
-	source "${ALLSKY_CONFIG}/config.sh"		|| return 1
 
 	[[ -z ${ANGLE} ]] && ANGLE="$( settings ".angle" )"
 	[[ -z ${LATITUDE} ]] && LATITUDE="$( settings ".latitude" )"
@@ -251,47 +250,14 @@ function get_sunrise_sunset()
 # Return which Allsky Websites exist - local, remote, both, none
 function whatWebsites()
 {
-	#shellcheck disable=SC1091 source-path=.
+	#shellcheck source-path=.
 	source "${ALLSKY_HOME}/variables.sh"	|| return 1
 
 	local HAS_LOCAL="false"
 	local HAS_REMOTE="false"
 
-	# Determine local Website - this is easy.
-	[[ -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]] && HAS_LOCAL="true"
-
-	# Determine remote Website - this is more involved.
-	# Not only must the file exist, but there also has to be a way to upload to it.
-	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
-		local PROTOCOL="$( get_variable "PROTOCOL" "${ALLSKY_CONFIG}/ftp-settings.sh" )"
-		PROTOCOL=${PROTOCOL,,}
-		if [[ -n ${PROTOCOL} && ${PROTOCOL} != "local" ]]; then
-			local X
-			case "${PROTOCOL}" in
-				"" | local)
-					;;
-
-				ftp | ftps | sftp | scp)		# These require R
-					X="$( get_variable "REMOTE_HOST" "${ALLSKY_CONFIG}/ftp-settings.sh" )" 
-					[[ -n ${X} ]] && HAS_REMOTE="true"
-					;;
-
-				s3)
-					X="$( get_variable "AWS_CLI_DIR" "${ALLSKY_CONFIG}/ftp-settings.sh" )" 
-					[[ -n ${X} ]] && HAS_REMOTE="true"
-					;;
-
-				gcs)
-					X="$( get_variable "GCS_BUCKET" "${ALLSKY_CONFIG}/ftp-settings.sh" )" 
-					[[ -n ${X} ]] && HAS_REMOTE="true"
-					;;
-
-				*)
-					echo "ERROR: Unknown PROTOCOL: '${PROTOCOL}'" >&2
-					;;
-			esac
-		fi
-	fi
+	[[ "$( settings ".uselocalwebsite" )" == "true" ]] && HAS_LOCAL="true"
+	[[ "$( settings ".useremotewebsite" )" == "true" ]] && HAS_REMOTE="true"
 
 	if [[ ${HAS_LOCAL} == "true" ]]; then
 		if [[ ${HAS_REMOTE} == "true" ]]; then
@@ -375,9 +341,53 @@ function checkPixelValue()	# variable name, variable value, width_or_height, res
 
 
 #####
+# The crop rectangle needs to fit within the image and the numbers be even.
+# TODO: should there be a maximum for any number (other than the image size)?
+# Number of pixels to crop off top, right, bottom, left, plus max_resolution_x and max_resolution_y.
+function checkCropValues()
+{
+	local CROP_TOP="${1}"
+	local CROP_RIGHT="${2}"
+	local CROP_BOTTOM="${3}"
+	local CROP_LEFT="${4}"
+	local MAX_RESOLUTION_X="${5}"
+	local MAX_RESOLUTION_Y="${6}"
+
+	local ERR=""
+	if [[ ${CROP_TOP} -lt 0 || ${CROP_RIGHT} -lt 0 ||
+			${CROP_BOTTOM} -lt 0 || ${CROP_LEFT} -lt 0 ]]; then
+		ERR+="\nCrop numbers must all be positive."
+	fi
+	if [[ $((CROP_TOP % 2)) -eq 1 || $((CROP_RIGHT % 2)) -eq 1 ||
+			$((CROP_BOTTOM % 2)) -eq 1 || $((CROP_LEFT % 2)) -eq 1 ]]; then
+		ERR+="\nCrop numbers must all be even."
+	fi
+	if [[ ${CROP_TOP} -gt $((MAX_RESOLUTION_Y -2)) ]]; then
+		ERR+="\nCropping on top (${CROP_TOP}) is larger than the image height (${MAX_RESOLUTION_Y})."
+	fi
+	if [[ ${CROP_RIGHT} -gt $((MAX_RESOLUTION_X - 2)) ]]; then
+		ERR+="\nCropping on right (${CROP_RIGHT}) is larger than the image width (${MAX_RESOLUTION_X})."
+	fi
+	if [[ ${CROP_BOTTOM} -gt $((MAX_RESOLUTION_Y - 2)) ]]; then
+		ERR+="\nCropping on bottom (${CROP_BOTTOM}) is larger than the image height (${MAX_RESOLUTION_Y})."
+	fi
+	if [[ ${CROP_LEFT} -gt $((MAX_RESOLUTION_X - 2)) ]]; then
+		ERR+="\nCropping on left (${CROP_LEFT}) is larger than the image width (${MAX_RESOLUTION_X})."
+	fi
+
+	if [[ -z ${ERR} ]]; then
+		return 0
+	else
+		echo -e "${ERR}"
+		return 1
+	fi
+}
+
+#####
 # The crop rectangle needs to fit within the image, be an even number, and be greater than 0.
 # x, y, offset_x, offset_y, max_resolution_x, max_resolution_y
-function checkCropValues()
+# TODO: remove this after testing.  It's the old way of cropping.
+function checkCropValuesOLD()
 {
 	local X="${1}"
 	local Y="${2}"
@@ -404,16 +414,16 @@ function checkCropValues()
 
 	local ERR=""
 	if [[ ${CROP_TOP} -lt 0 ]]; then
-		ERR="${ERR}\nCROP rectangle goes off the top of the image by ${CROP_TOP#-} pixel(s)."
+		ERR+="\nCROP rectangle goes off the top of the image by ${CROP_TOP#-} pixel(s)."
 	fi
 	if [[ ${CROP_BOTTOM} -gt ${MAX_RESOLUTION_Y} ]]; then
-		ERR="${ERR}\nCROP rectangle goes off the bottom of the image: ${CROP_BOTTOM} is greater than image height (${MAX_RESOLUTION_Y})."
+		ERR+="\nCROP rectangle goes off the bottom of the image: ${CROP_BOTTOM} is greater than image height (${MAX_RESOLUTION_Y})."
 	fi
 	if [[ ${CROP_LEFT} -lt 0 ]]; then
-		ERR="${ERR}\nCROP rectangle goes off the left of the image: ${CROP_LEFT} is less than 0."
+		ERR+="\nCROP rectangle goes off the left of the image: ${CROP_LEFT} is less than 0."
 	fi
 	if [[ ${CROP_RIGHT} -gt ${MAX_RESOLUTION_X} ]]; then
-		ERR="${ERR}\nCROP rectangle goes off the right of the image: ${CROP_RIGHT} is greater than image width (${MAX_RESOLUTION_X})."
+		ERR+="\nCROP rectangle goes off the right of the image: ${CROP_RIGHT} is greater than image width (${MAX_RESOLUTION_X})."
 	fi
 
 	if [[ -z ${ERR} ]]; then
@@ -424,21 +434,6 @@ function checkCropValues()
 	fi
 }
 
-#####
-# Get a shell variable's value.  The variable can have optional spaces and tabs before it.
-# This function is useful when we can't "source" the file.
-function get_variable() {
-	local VARIABLE="${1}"
-	local FILE="${2}"
-	local LINE=""
-	local SEARCH_STRING="^[ 	]*${VARIABLE}="
-	if ! LINE="$( /bin/grep -E "${SEARCH_STRING}" "${FILE}" 2>/dev/null )" ; then
-		return 1
-	fi
-
-	echo "${LINE}" | sed -e "s/${SEARCH_STRING}//" -e 's/"//g'
-	return 0
-}
 
 #####
 # Simple way to get a setting that hides the details.
@@ -562,18 +557,18 @@ function check_settings_link()
 	RET=$?
 	if [[ ${RET} -ne 0 ]]; then
 		MSG="The settings file '${FILE}' was not linked to '${CORRECT_NAME}'"
-		[[ ${RET} -ne "${NO_LINK_}" ]] && MSG="${MSG}\nERROR: ${SETTINGS_LINK}."
+		[[ ${RET} -ne "${NO_LINK_}" ]] && MSG+="\nERROR: ${SETTINGS_LINK}."
 		echo -e "${MSG}$( fix_settings_link "${FULL_FILE}" "${FULL_CORRECT_NAME}" )"
-		return "${EXIT_ERROR_STOP}"
+		return 1
 	else
 		# Make sure it's linked to the correct file.
 		if [[ ${SETTINGS_LINK} != "${FULL_CORRECT_NAME}" ]]; then
 			MSG="The settings file (${FULL_FILE}) was linked to:"
-			MSG="${MSG}\n    ${SETTINGS_LINK}"
-			MSG="${MSG}\nbut should have been linked to:"
-			MSG="${MSG}\n    ${FULL_CORRECT_NAME}"
+			MSG+="\n    ${SETTINGS_LINK}"
+			MSG+="\nbut should have been linked to:"
+			MSG+="\n    ${FULL_CORRECT_NAME}"
 			echo -e "${MSG}$( fix_settings_link "${FULL_FILE}" "${FULL_CORRECT_NAME}" )"
-			return "${EXIT_ERROR_STOP}"
+			return 1
 		fi
 	fi
 
@@ -666,23 +661,23 @@ function one_instance()
 		shift
 	done
 	if [[ -z ${PID_FILE} ]]; then
-		ERRORS="${ERRORS}\nPID_FILE not specified."
+		ERRORS+="\nPID_FILE not specified."
 		OK="false"
 	fi
 	if [[ -z ${ABORTED_FILE} ]]; then
-		ERRORS="${ERRORS}\nABORTED_FILE not specified."
+		ERRORS+="\nABORTED_FILE not specified."
 		OK="false"
 	fi
 	if [[ -z ${ABORTED_FIELDS} ]]; then
-		ERRORS="${ERRORS}\nABORTED_FIELDS not specified."
+		ERRORS+="\nABORTED_FIELDS not specified."
 		OK="false"
 	fi
 	if [[ -z ${ABORTED_MSG1} ]]; then
-		ERRORS="${ERRORS}\nABORTED_MSG1 not specified."
+		ERRORS+="\nABORTED_MSG1 not specified."
 		OK="false"
 	fi
 	if [[ -z ${ABORTED_MSG2} ]]; then
-		ERRORS="${ERRORS}\nABORTED_MSG2 not specified."
+		ERRORS+="\nABORTED_MSG2 not specified."
 		OK="false"
 	fi
 	# CAUSED_BY and PID aren't required
@@ -730,10 +725,10 @@ function one_instance()
 			NUM=$( wc -l < "${AF}" )
 			if [[ ${NUM} -eq 10 ]]; then
 				MSG="${NUM} ${ABORTED_MSG2} have been aborted waiting for others to finish."
-				[[ -n ${CAUSED_BY} ]] && MSG="${MSG}\n${CAUSED_BY}"
+				[[ -n ${CAUSED_BY} ]] && MSG+="\n${CAUSED_BY}"
 				SEVERITY="warning"
-				MSG="${MSG}\nOnce you have resolved the cause, reset the aborted counter:"
-				MSG="${MSG}\n&nbsp; &nbsp; <code>rm -f '${AF}'</code>"
+				MSG+="\nOnce you have resolved the cause, reset the aborted counter:"
+				MSG+="\n&nbsp; &nbsp; <code>rm -f '${AF}'</code>"
 				"${ALLSKY_SCRIPTS}/addMessage.sh" "${SEVERITY}" "${MSG}"
 			fi
 
@@ -757,6 +752,7 @@ function make_thumbnail()
 	local SEC="${1}"
 	local INPUT_FILE="${2}"
 	local THUMBNAIL="${3}"
+	local THUMBNAIL_SIZE_X="$( settings ".thumbnailsizex" )"
 	ffmpeg -loglevel error -ss "00:00:${SEC}" -i "${INPUT_FILE}" \
 		-filter:v scale="${THUMBNAIL_SIZE_X:-100}:-1" -frames:v 1 "${THUMBNAIL}"
 }
@@ -780,11 +776,86 @@ function reboot_needed()
 	fi
 }
 
+
+####
+# Upload to the appropriate Websites and/or servers.
+# Everything is put relative to the root directory.
+#
+# --local-web: copy to local website
+# --remote-web: upload to remote website
+# --remote-server: upload to remote server
+function upload_all()
+{
+	local ARGS=""
+	local LOCAL_WEB="false"
+	local REMOTE_WEB="false"
+	local REMOTE_SERVER="false"
+	while [[ ${1:0:2} == "--" ]]
+	do
+		if [[ ${1} == "--local-web" ]]; then
+			LOCAL_WEB="true"
+		elif [[ ${1} == "--remote-web" ]]; then
+			REMOTE_WEB="true"
+		elif [[ ${1} == "--remote-server" ]]; then
+			REMOTE_SERVER="true"
+		else
+			ARGS="${ARGS} ${1}"
+		fi
+		shift
+	done
+	if [[ ${LOCAL_WEB} == "false" && ${REMOTE_WEB} == "false" && ${REMOTE_SERVER} == "false" ]]; then
+		LOCAL_WEB="true"
+		REMOTE_WEB="true"
+		REMOTE_SERVER="true"
+	fi
+
+	local UPLOAD_FILE="${1}"
+	local SUBDIR="${2}"
+	local DESTINATION_NAME="${3}"
+	local FILE_TYPE="${4}"		# optional
+	local RET=0
+	local ROOT REMOTE_DIR
+	if [[ ${LOCAL_WEB} == "true" && "$( settings ".uselocalwebsite" )" == "true" ]]; then
+		#shellcheck disable=SC2086
+		"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --local \
+			"${UPLOAD_FILE}" "${ALLSKY_WEBSITE}/${SUBDIR}" "${DESTINATION_NAME}"
+		((RET+=$?))
+	fi
+	if [[ ${REMOTE_WEB} == "true" && "$( settings ".useremotewebsite" )" == "true" ]]; then
+		ROOT="$( settings ".remotewebsiteimagedir" )"
+		if [[ -z ${ROOT} ]]; then
+			REMOTE_DIR="${SUBDIR}"
+		else
+			REMOTE_DIR="${ROOT}/${SUBDIR}"
+		fi
+		#shellcheck disable=SC2086
+		"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --remote "web" \
+			"${UPLOAD_FILE}" "${REMOTE_DIR}" "${DESTINATION_NAME}" "${FILE_TYPE}"
+		((RET+=$?))
+	fi
+	if [[ ${REMOTE_SERVER} == "true" && "$( settings ".useremoteserver" )" == "true" ]]; then
+		ROOT="$( settings ".remoteserverimagedir" )"
+		if [[ -z ${ROOT} ]]; then
+			REMOTE_DIR="${SUBDIR}"
+		else
+			REMOTE_DIR="${ROOT}/${SUBDIR}"
+		fi
+		#shellcheck disable=SC2086
+		"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --remote "server" \
+			"${UPLOAD_FILE}" "${REMOTE_DIR}" "${DESTINATION_NAME}" "${FILE_TYPE}"
+		((RET+=$?))
+	fi
+
+	return "${RET}"
+}
+
+
 # Indent all lines.
 function indent()
 {
 	echo -e "${1}" | sed 's/^/\t/'
 }
+
 
 # Python virtual environment
 PYTHON_VENV_ACTIVATED="false"
@@ -804,4 +875,21 @@ activate_python_venv() {
 
 deactivate_python_venv() {
 	[[ ${PYTHON_VENV_ACTIVATED} == "true" ]] && deactivate
+}
+
+
+# Determine if the specified value is a number.
+function is_number()
+{
+	local VALUE="${1}"
+	[[ -z ${VALUE} ]] && return 1
+	shopt -s extglob
+	local NON_NUMERIC="${VALUE/?([-+])*([0-9])?(.)*([0-9])/}"
+	if [[ -z ${NON_NUMERIC} ]]; then
+		# Nothing but +, -, 0-9, .
+		return 0
+	else
+		# Has non-numeric character
+		return 1
+	fi
 }

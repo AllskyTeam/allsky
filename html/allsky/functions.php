@@ -1,10 +1,14 @@
 <?php
 
-// On Pi's, this placeholder gets replaced with ${ALLSKY_CONFIG}.
-// On other machines it won't and references to it will silently fail.
-define('ALLSKY_CONFIG',  'XX_ALLSKY_CONFIG_XX');
-
 // Globals
+// If the caller needs to do additional work after initialize() fails
+// they will set this to "false":
+
+if (! isset($exitOnInitializationError)) {
+	$exitOnInitializationError = true;		// Invoker optionally disables this.
+}
+$initializeErrorMessage = null;				// Invoker can check this.
+
 $webSettings_array = null;
 if (! isset($configFilePrefix)) $configFilePrefix = "";
 
@@ -14,58 +18,49 @@ function initialize() {
 
 	$needToUpdateString = "XX_NEED_TO_UPDATE_XX";
 	$configurationFileName = "configuration.json";
+	$retMsg = "";
 
 	// Read the website configuration file.
 	// Some settings impact this page, some impact the constellation overlay.
-	$configuration_file = $configFilePrefix . $configurationFileName;
+	$configuration_file = "$configFilePrefix$configurationFileName";
 	if (! file_exists($configuration_file)) {
-		echo "<p class='error-msg'>";
-			echo "ERROR: Missing configuration file '$configuration_file'.";
-			echo "<br>Cannot continue.";
-		echo "</p>";
-		return(false);
+		$retMsg .= "<p class='error-msg'>";
+			$retMsg .= "ERROR: The Website does not appear to be enabled.";
+			$retMsg .= "<br>The configuration file '$configuration_file' is missing.";
+			$retMsg .= "<br><br>Make sure the Website is enabled in the WebUI.";
+		$retMsg .= "</p>";
+		return($retMsg);
 	}
 	$webSettings_str = file_get_contents($configuration_file, true);
 	if (strpos($webSettings_str, $needToUpdateString) !== false) {
-		echo "<p class='warning-msg'>";
-			echo "WARNING: Configuration file '$configurationFileName' needs updating.";
-			echo "<br>Look for fields with '$needToUpdateString'.";
-			echo "The Website may not work correctly until updated.";
-		echo "</p>";
+		$retMsg .= "<p class='warning-msg'>";
+			$retMsg .= "The '$configurationFileName' file needs to be updated via";
+			$retMsg .= " the 'Editor' page in the WebUI.";
+			$retMsg .= "<br><br>Update fields with '$needToUpdateString'";
+			$retMsg .= " and check all other entries.";
+			$retMsg .= "<br><br>This Allsky Website will not work until updated.";
+		$retMsg .= "</p>";
+		return($retMsg);
 	}
 
 	$webSettings_array = json_decode($webSettings_str, true);
 	if ($webSettings_array == null) {
-		echo "<p class='error-msg'>";
-			echo "ERROR: Bad configuration file '$configurationFileName'.";
-			echo "<br>Cannot continue.";
-			echo "<br>Check for missing quotes or commas at the end of every line except the last one.";
-		echo "</p>";
-		echo "<pre>$webSettings_str</pre>";
-		return(false);
+		$retMsg .= "<p class='error-msg'>";
+			$retMsg .= "ERROR: Bad configuration file '$configurationFileName'.";
+			$retMsg .= "<br>Cannot continue.";
+			$retMsg .= "<br>Check for missing quotes or commas at the end of every line except the last one.";
+		$retMsg .= "</p>";
+		$retMsg .= "<pre>$webSettings_str</pre>";
+		return($retMsg);
 	}
 
-	// If on a Pi, check that the placeholder was replaced.
-	$onPi = v("onPi", true, $webSettings_array['homePage']);
-	if ($onPi && ALLSKY_CONFIG == "XX_ALLSKY_CONFIG" . "_XX") {
-		// This file hasn't been updated yet after installation.
-		echo "<div class='error-msg'>";
-			echo "ERROR: The Website is not configured correctly.";
-			echo "<br>Please run the following:<br><br>";
-			echo "<div style='background-color: white;'>";
-				echo "<code style='color: black'>";
-				echo "&nbsp; &nbsp; &nbsp; &nbsp; cd ~/allsky";
-				echo "<br>&nbsp; &nbsp; &nbsp; &nbsp; ./install.sh --fix";
-				echo "</code>";
-			echo "</div>";
-			echo "<br>Then refresh this page.";
-		echo "</div>";
-		return(false);
-	}
-
-	return(true);
+	return("");
 }
-if (! initialize()) exit(1);
+$initializeErrorMessage = initialize();
+if ($initializeErrorMessage !== "" && $exitOnInitializationError) {
+	echo "$initializeErrorMessage";
+	exit(1);
+}
 
 
 /*
@@ -295,10 +290,13 @@ function make_thumb_from_video($src, $dest, $desired_width, $attempts)
 // Display thumbnails with links to the full-size files
 // for startrails, keograms, and videos.
 // The function to make thumbnails for videos is different
-$back_button = "<a class='back-button' href='../index.php'><i class='fa fa-chevron-left'></i>&nbsp; Back to Live View</a>";
+$back_button = "<a class='back-button' href='../index.php'>";
+$back_button .= "<i class='fa fa-chevron-left'></i>&nbsp; Back to Live View</a>";
+
 function display_thumbnails($dir, $file_prefix, $title)
 {
-	global $back_button;
+	global $back_button, $webSettings_array;
+
 	if ($file_prefix === "allsky") {
 		$ext = "/\.(mp4|webm)$/";
 	} else {
@@ -333,10 +331,13 @@ function display_thumbnails($dir, $file_prefix, $title)
 			print_r(error_get_last());
 	}
 
-	echo "<table class='imagesHeader'><tr><td class='headerButton'>$back_button</td> <td class='headerTitle'>$title</td></tr></table>";
+	echo "<table class='imagesHeader'><tr>";
+		echo "<td class='headerButton'>$back_button</td>";
+		echo "<td class='headerTitle'>$title</td>";
+	echo "</tr></table>";
 	echo "<div class='archived-files'>\n";
 
-	$thumbnailSizeX = get_variable(ALLSKY_CONFIG .'/config.sh', 'THUMBNAIL_SIZE_X=', '100');
+	$thumbnailSizeX = v("thumbnailsizex", 100, $webSettings_array['homePage']);
 	foreach ($files as $file) {
 		// The thumbnail should be a .jpg.
 		$thumbnail = preg_replace($ext, ".jpg", "$dir/thumbnails/$file");
@@ -361,7 +362,12 @@ function display_thumbnails($dir, $file_prefix, $title)
 		$month = substr($file, $file_prefix_len + 5, 2);
 		$day = substr($file, $file_prefix_len + 7, 2);
 		$date = $year.$month.$day;
-		echo "<a href='$dir/$file'><div class='day-container'><div class='img-text'><div class='image-container'><img id=".$date." src='$thumbnail' title='$file_prefix-$year-$month-$day'/></div><div class='day-text'>$year-$month-$day</div></div></div></a>\n";
+		echo "<a href='$dir/$file'><div class='day-container'><div class='img-text'>";
+			echo "<div class='image-container'>";
+				echo "<img id='$date' src='$thumbnail' title='$file_prefix-$year-$month-$day'/>";
+			echo "</div>";
+			echo "<div class='day-text'>$year-$month-$day</div>";
+		echo "</div></div></a>\n";
 	}
 	echo "</div>";	// archived-files
 	echo "<div class='archived-files-end'></div>";	// clears "float" from archived-files

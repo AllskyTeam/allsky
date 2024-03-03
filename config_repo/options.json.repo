@@ -24,6 +24,7 @@
 "label" : "Daytime Capture",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "checkchanges" : true,
 "action" : "reload"
 },
@@ -34,6 +35,7 @@
 "label" : "Daytime Save",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "booldependson" : "takedaytimeimages"
 },
 {
@@ -103,6 +105,7 @@
 "label" : "Delay",
 "type" : "integer",
 "usage" : "capture",
+"carryforward" : true,
 "booldependson" : "takedaytimeimages",
 "action" : "reload"
 },
@@ -139,6 +142,26 @@
 "usage" : "capture",
 "booldependson" : "takedaytimeimages",
 "action" : "reload"
+},
+{
+"name": "imagestretchamountdaytime",
+"minimum": 0,
+"maximum": 100,
+"default": 0,
+"description": "Amount to stretch daytime images.  <span class='WebUIValue'>0</span> means don't stretch.",
+"label": "Stretch Amount",
+"type": "integer",
+"booldependson": "takedaytimeimages"
+},
+{
+"name": "imagestretchmidpointdaytime",
+"minimum": 1,
+"maximum": 100,
+"default": 10,
+"description": "Mid point of image stretch.<br>Lower numbers brighten darker parts of image; higher numbers brighten lighter parts.<br>Only applies if <span class='WebUISetting'>Stretch Amount</span> is greater than 0.",
+"label": "Stretch mid point",
+"type": "percent",
+"booldependson": "takedaytimeimages"
 },
 {
 "name" : "daybin",
@@ -209,6 +232,7 @@
 "label" : "Cooling",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "display" : "_display",
 "booldependson" : "takedaytimeimages",
 "action" : "reload"
@@ -252,6 +276,7 @@
 "label" : "Nighttime Capture",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "checkchanges" : true,
 "action" : "reload"
 },
@@ -262,6 +287,7 @@
 "label" : "Nighttime Save",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "booldependson" : "takenighttimeimages"
 },
 {
@@ -328,6 +354,7 @@
 "label" : "Delay",
 "type" : "integer",
 "usage" : "capture",
+"carryforward" : true,
 "action" : "reload"
 },
 {
@@ -361,6 +388,26 @@
 "type" : "float",
 "usage" : "capture",
 "action" : "reload"
+},
+{
+"name": "imagestretchamountnighttime",
+"minimum": 0,
+"maximum": 100,
+"default": 0,
+"description": "Amount to stretch nighttime images.  <span class='WebUIValue'>0</span> means don't stretch.",
+"label": "Stretch Amount",
+"type": "integer",
+"booldependson": "takenighttimeimages"
+},
+{
+"name": "imagestretchmidpointnighttime",
+"minimum": 1,
+"maximum": 100,
+"default": 10,
+"description": "Mid point of image stretch.<br>Lower numbers brighten darker parts of image; higher numbers brighten lighter parts.<br>Only applies if <span class='WebUISetting'>Stretch Amount</span> is greater than 0.",
+"label": "Stretch mid point",
+"type": "percent",
+"booldependson": "takenighttimeimages"
 },
 {
 "name" : "nightbin",
@@ -428,6 +475,7 @@
 "label" : "Cooling",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "display" : "_display",
 "action" : "reload"
 },
@@ -467,6 +515,17 @@
 "name" : "dayandnightheader",
 "label" : "Both day and night settings",
 "type" : "header"
+},
+{
+"name" : "daystokeep",
+"minimum" : 0,
+"maximum" : "none",
+"default" : 14,
+"description" : "Number of days of images and videos to keep on the Pi.",
+"label" : "Days To Keep",
+"type" : "integer",
+"carryforward" : true,
+"booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
 "name" : "config",
@@ -608,6 +667,7 @@
 "label" : "Quality / Compression",
 "type" : "integer",
 "usage" : "capture",
+"carryforward" : true,
 "action" : "reload"
 },
 {
@@ -640,6 +700,7 @@
 "label" : "Filename",
 "type" : "text",
 "usage" : "capture",
+"carryforward" : true,
 "checkchanges" : true,
 "action" : "reload"
 },
@@ -681,21 +742,13 @@
 "action" : "stop"
 },
 {
-"name" : "notificationimages",
-"default" : true,
-"description" : "Enable to display notification images, e.g., 'Camera is off during the day'.<br>While these messages appear in the WebUI and Allsky Website, they are not saved so don't appear in timelapse, startrails, or keograms.",
-"label" : "Notification Images",
-"type" : "boolean",
-"usage" : "capture",
-"action" : "reload"
-},
-{
 "name" : "consistentdelays",
 "default" : true,
 "description" : "Enable to have the delays between images be a consistent length.<br>The time between the start of exposures will always be (max exposure + delay).",
 "label" : "Consistent Delays Between Images",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "action" : "reload"
 },
 {
@@ -705,6 +758,7 @@
 "label" : "Time Format",
 "type" : "text",
 "usage" : "capture",
+"carryforward" : true,
 "action" : "reload"
 },
 {
@@ -714,6 +768,7 @@
 "label" : "Temperature Units",
 "type" : "select",
 "usage" : "capture",
+"carryforward" : true,
 "options" : [
 	{"value" : "C", "label" : "Celcius"},
 	{"value" : "F", "label" : "Fahrenheit"},
@@ -728,6 +783,7 @@
 "label" : "Latitude",
 "type" : "text",
 "usage" : "capture",
+"carryforward" : true,
 "checkchanges" : true,
 "action" : "reload"
 },
@@ -738,6 +794,7 @@
 "label" : "Longitude",
 "type" : "text",
 "usage" : "capture",
+"carryforward" : true,
 "checkchanges" : true,
 "action" : "reload"
 },
@@ -748,6 +805,7 @@
 "label" : "Angle",
 "type" : "float",
 "usage" : "capture",
+"carryforward" : true,
 "checkchanges" : true,
 "action" : "reload"
 },
@@ -774,6 +832,7 @@
 "label" : "Locale",
 "type" : "text",
 "usage" : "capture",
+"carryforward" : true,
 "action" : "reload"
 },
 {
@@ -803,12 +862,35 @@
 "action" : "reload"
 },
 {
+"name" : "thumbnailsizex",
+"minimum" : 25,
+"maximum" : "500",
+"default" : 100,
+"description" : "Width of image and video thumbnails.",
+"label" : "Thumbnail Width",
+"type" : "integer",
+"carryforward" : true,
+"booldependson" : "savedaytimeimages OR savenighttimeimages"
+},
+{
+"name" : "thumbnailsizey",
+"minimum" : 20,
+"maximum" : "400",
+"default" : 75,
+"description" : "Height of image and video thumbnails.",
+"label" : "Thumbnail Height",
+"type" : "integer",
+"carryforward" : true,
+"booldependson" : "savedaytimeimages OR savenighttimeimages"
+},
+{
 "name" : "debuglevel",
 "default" : 1,
 "description" : "Debug level. <span class='WebUIValue'>0</span> is errors only.  <span class='WebUIValue'>4</span> is for Allsky developers use.",
 "label" : "Debug Level",
 "type" : "select",
 "usage" : "capture",
+"carryforward" : true,
 "options" : [
 	{"value" : 0, "label" : 0},
 	{"value" : 1, "label" : 1},
@@ -817,13 +899,6 @@
 	{"value" : 4, "label" : 4}
 ],
 "action" : "reload"
-},
-{
-"name" : "uselogin",
-"default" : true,
-"description" : "Determines if you need to login to the WebUI or not.<br><b>If your Pi is accessible on the Internet, do NOT turn this off!!</b>.",
-"label" : "Require WebUI Login",
-"type" : "boolean"
 },
 
 {
@@ -839,7 +914,524 @@
 "type" : "header"
 },
 {
-"name" : "overlayHeader",
+"name" : "imageuploadfrequency",
+"minimum" : 0,
+"maximum" : "none",
+"default" : 1,
+"description" : "How often should images be uploaded to an Allsky Website or remote server?<br><span class='WebUIValue'>0</span> never uploads images, <span class='WebUIValue'>1</span> uploads every frame, <span class='WebUIValue'>2</span> every other frame, etc.",
+"label" : "Upload Every X Images",
+"type" : "integer",
+"carryforward" : true,
+"booldependson" : "uselocalwebsite OR useremotewebsite OR useremoteserver"
+},
+{
+"name" : "imagecreatethumbnails",
+"default" : true,
+"description" : "Enable to create thumbnails of images. If you never look at them, unset this.",
+"label" : "Create Image Thumbnails",
+"type" : "boolean",
+"carryforward" : true,
+"booldependson" : "savedaytimeimages OR savenighttimeimages"
+},
+{
+"name" : "imageresizewidth",
+"minimum" : 2,
+"maximum" : "none",
+"default" : 0,
+"description" : "Width of resized image before cropping.  <span class='WebUIValue'>0</span> means don't resize.",
+"label" : "Image Resize Width",
+"type" : "integer",
+"checkchanges" : true,
+"booldependson" : "takedaytimeimages OR takenighttimeimages",
+"action" : "reload"
+},
+{
+"name" : "imageresizeheight",
+"minimum" : 2,
+"maximum" : "none",
+"default" : 0,
+"description" : "Height of resized image before cropping.  <span class='WebUIValue'>0</span> means don't resize.",
+"label" : "Image Resize Height",
+"type" : "integer",
+"checkchanges" : true,
+"booldependson" : "takedaytimeimages OR takenighttimeimages",
+"action" : "reload"
+},
+{
+"name" : "imagecroptop",
+"minimum" : 0,
+"maximum" : "_max",
+"default" : 0,
+"description" : "Number of pixels to crop off the top of image.",
+"label" : "Image Crop Top",
+"type" : "integer",
+"checkchanges": true,
+"booldependson": "takedaytimeimages OR takenighttimeimages"
+},
+{
+"name" : "imagecropright",
+"minimum" : 0,
+"maximum" : "_max",
+"default" : 0,
+"description" : "Number of pixels to crop off the right side of image.",
+"label" : "Image Crop Right",
+"type" : "integer",
+"checkchanges": true,
+"booldependson": "takedaytimeimages OR takenighttimeimages"
+},
+{
+"name" : "imagecropbottom",
+"minimum" : 0,
+"maximum" : "_max",
+"default" : 0,
+"description" : "Number of pixels to crop off the bottom of image.",
+"label" : "Image Crop Bottom",
+"type" : "integer",
+"checkchanges": true,
+"booldependson": "takedaytimeimages OR takenighttimeimages"
+},
+{
+"name" : "imagecropleft",
+"minimum" : 0,
+"maximum" : "_max",
+"default" : 0,
+"description" : "Number of pixels to crop off the left side of image.",
+"label" : "Image Crop Left",
+"type" : "integer",
+"checkchanges": true,
+"booldependson": "takedaytimeimages OR takenighttimeimages"
+},
+{
+"name" : "imageresizeuploadswidth",
+"minimum" : 0,
+"maximum" : "_max",
+"default" : 0,
+"description" : "Resized width of uploaded images. <span class='WebUIValue'>0</span> means don't resize.",
+"label" : "Resize Uploaded Images Width",
+"type" : "integer",
+"booldependson" : "imageupload"
+},
+{
+"name" : "imageresizeuploadsheight",
+"minimum" : 0,
+"maximum" : "_max",
+"default" : 0,
+"description" : "Resized height of uploaded images. <span class='WebUIValue'>0</span> means don't resize.",
+"label" : "Resize Uploaded Images Height",
+"type" : "integer",
+"booldependson" : "imageupload"
+},
+{
+"name": "imageremovebadlow",
+"minimum": 0,
+"maximum": 0.5,
+"default": 0.1,
+"description": "Delete images whose mean is below this value.<br><span class='WebUIValue'>0</span> disables this check.",
+"label": "Remove Bad Images Threshold Low",
+"type": "float",
+"booldependson" : "savedaytimeimages OR savenighttimeimages"
+},
+{
+"name": "imageremovebadhigh",
+"minimum": 0,
+"maximum": 0.5,
+"default": 0.9,
+"description": "Delete images whose mean is above this value.<br><span class='WebUIValue'>0</span> disables this check.",
+"label": "Remove Bad Images Threshold High",
+"type": "float",
+"booldependson" : "savedaytimeimages OR savenighttimeimages"
+},
+
+
+{
+"name" : "timelapsetab========================================",
+"label" : "Timelapses",
+"type" : "header-tab"
+},
+{
+"name" : "timelapseheader",
+"label" : "Timelapse settings",
+"type" : "header"
+},
+{
+"name" : "timelapsesubheader",
+"label" : "Daily Timelapse Settings",
+"type" : "header-sub"
+},
+{
+"name" : "timelapsegenerate",
+"default" : true,
+"description" : "Enable to generate a timelapse video of the prior 24 hours at the end of night.",
+"label" : "Generate Timelapse",
+"type" : "boolean",
+"carryforward" : true,
+"booldependson" : "savedaytimeimages OR savenighttimeimages"
+},
+{
+"name": "timelapseupload",
+"default": true,
+"description": "Enable to upload the timelapse video to an Allsky Website or remote server.",
+"label": "Upload Timelapse",
+"type": "boolean",
+"carryforward" : true,
+"booldependson" : "timelapsegenerate"
+},
+{
+"name": "timelapseuploadthumbnail",
+"default": true,
+"description": "Enable to upload the timelapse video thumbnail.",
+"label": "Upload Timelapse Thumbnail",
+"type": "boolean",
+"carryforward" : true,
+"booldependson" : "timelapsegenerate AND timelapseupload AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
+},
+{
+"name": "timelapsewidth",
+"minimum": 0,
+"maximum": "_max",
+"default": 0,
+"description": "Width of resized timelapse video. <span class='WebUIValue'>0</span> disables resize.",
+"label": "Timelapse Width",
+"type": "integer",
+"booldependson" : "timelapsegenerate"
+},
+{
+"name": "timelapseheight",
+"minimum": 0,
+"maximum": "_max",
+"default": 0,
+"description": "Height of resized timelapse video. <span class='WebUIValue'>0</span> disables resize.",
+"label": "Timelapse Height",
+"type": "integer",
+"booldependson" : "timelapsegenerate"
+},
+{
+"name": "timelapsebitrate",
+"minimum": 100,
+"maximum": 30000,
+"default": 5000,
+"description": "Bitrate (in K) of timelapse video. Higher values produce higher quality but larger files.",
+"label": "Timelapse Bitrate",
+"type" : "integer",
+"booldependson" : "timelapsegenerate"
+},
+{
+"name": "timelapsefps",
+"minimum": 1,
+"maximum": 200,
+"default": 25,
+"description": "Frames Per Second (FPS) of timelapse video.  Higher values will produce smoother, but faster videos.",
+"label": "Timelapse FPS",
+"type": "integer",
+"carryforward" : true,
+"booldependson" : "timelapsegenerate"
+},
+{
+"name" : "timelapsevcodec",
+"default" : "libx264",
+"description" : "Video encoder for timelapse.  Rarely changed.",
+"label" : "Timelapse VCODEC",
+"type" : "text",
+"carryforward" : true,
+"comment": "check using ffmpeg -encoder looking at argument 2 for ' libxs264  '",
+"booldependson" : "timelapsegenerate",
+"checkchanges": true
+},
+{
+"name" : "timelapsepixfmt",
+"default" : "yuv420p",
+"description" : "Pixel format for timelapse.  Rarely changed.",
+"label" : "Timelapse Pixel format",
+"type" : "text",
+"carryforward" : true,
+"booldependson" : "timelapsegenerate",
+"comment": "check using ffmpeg -pix_fmts looking at argument 2 for ' yuv420p  '",
+"checkchanges" : true
+},
+{
+"name" : "timelapsefflog",
+"default" : "Warning",
+"description" : "Amount of information to display while creating a timelapse.  Rarely changed.",
+"label" : "Timelapse Log Level",
+"type" : "select",
+"carryforward" : true,
+"options": [
+	{ "value": "quiet", "label": "No output" },
+	{ "value": "fatal", "label": "Fatal Errors" },
+	{ "value": "error", "label": "Errors" },
+	{ "value": "warning", "label": "Warnings + Errors" },
+	{ "value": "info", "label": "Info + Warnings + Errors" }
+],
+"booldependson" : "timelapsegenerate"
+},
+{
+"name": "timelapsekeepsequence",
+"default": false,
+"description": "Enable to keep the list of files used in creating the timelapse video. Rarely changed.",
+"label": "Keep Timelapse Sequence",
+"type": "boolean",
+"booldependson" : "timelapsegenerate"
+},
+{
+"name" : "timelapseextraparameters",
+"default" : "",
+"description" : "Optional additional timelapse creation parameters.  Run <code>ffmpeg -?</code> to see the options.",
+"label" : "Timelapse Extra Parameters",
+"type" : "widetext",
+"carryforward" : true,
+"optional" : true,
+"booldependson" : "timelapsegenerate"
+},
+
+{
+"name" : "minitimelapseheader",
+"label" : "Mini Timelapse Settings",
+"type" : "header-sub"
+},
+{
+"name" : "minitimelapsenumimages",
+"minimum" : 0,
+"maximum" : "none",
+"default" : 0,
+"description" : "Number of images in a mini-timelapse. <span class='WebUIValue'>0</span> disables mini-timelapse creation.",
+"label" : "Number Of Images",
+"type" : "integer",
+"carryforward" : true,
+"booldependson" : "savedaytimeimages OR savenighttimeimages"
+},
+{
+"name" : "minitimelapseforcecreation",
+"default" : false,
+"description" : "Create a mini-timelapse even if <span class='WebUISetting'>Number Of Images</span> isn't reached?",
+"label" : "Force Creation",
+"type" : "boolean",
+"carryforward" : true,
+"valuedependson" : "minitimelapsenumimages=[1-9]*"
+},
+{
+"name": "minitimelapsefrequency",
+"minimum": 1,
+"maximum": "none",
+"default": 5,
+"description": "Make a mini-timelapse every X images.<br>If you have a slow Pi or short delays between images, set this to a higher number (i.e., not as often).",
+"label": "Mini-Timelapse Frequency",
+"type": "integer",
+"carryforward" : true,
+"valuedependson" : "minitimelapsenumimages=[1-9]*"
+},
+{
+"name": "minitimelapseupload",
+"default": true,
+"description": "Enable to upload the mini-timelapse video to an Allsky Website or remote server.",
+"label": "Upload Mini-Timelapse",
+"type": "boolean",
+"carryforward" : true,
+"valuedependson" : "minitimelapsenumimages=[1-9]*"
+},
+{
+"name": "minitimelapseuploadthumbnail",
+"default": true,
+"description": "Enable to upload the mini-timelapse video thumbnail.",
+"label": "Upload Mini-Timelapse Thumbnail",
+"type": "boolean",
+"carryforward" : true,
+"booldependson" : "minitimelapseupload AND (uselocalwebsite OR useremotewebsite OR useremoteserver)",
+"valuedependson" : "minitimelapsenumimages=[1-9]*"
+},
+{
+"name": "minitimelapsewidth",
+"minimum": 0,
+"maximum": "_max",
+"default": 0,
+"description": "Width of resized mini-timelapse video. <span class='WebUIValue'>0</span> disables resize.",
+"label": "Mini-Timelapse Width",
+"type": "integer",
+"valuedependson" : "minitimelapsenumimages=[1-9]*"
+},
+{
+"name": "minitimelapseheight",
+"minimum": 0,
+"maximum": "_max",
+"default": 0,
+"description": "Height of resized mini-timelapse video. <span class='WebUIValue'>0</span> disables resize.",
+"label": "Mini-Timelapse Height",
+"type": "integer",
+"valuedependson" : "minitimelapsenumimages=[1-9]*"
+},
+{
+"name": "minitimelapsebitrate",
+"minimum": 100,
+"maximum": 30000,
+"default": 2000,
+"description": "Bitrate (in K) of mini-timelapse video. Higher values produce higher quality but larger files.",
+"label": "Mini-Timelapse Bitrate",
+"type": "integer",
+"carryforward" : true,
+"valuedependson" : "minitimelapsenumimages=[1-9]*"
+},
+{
+"name": "minitimelapsefps",
+"minimum": 1,
+"maximum": 200,
+"default": 5,
+"description": "Frames Per Second (FPS) of mini-timelapse video.",
+"label": "Mini-Timelapse FPS",
+"type": "integer",
+"carryforward" : true,
+"valuedependson" : "minitimelapsenumimages=[1-9]*"
+},
+
+{
+"name" : "keogramstartrailstab========================================",
+"label" : "Keogram and Startrails",
+"type" : "header-tab"
+},
+{
+"name" : "timelapseheader",
+"label" : "Keogram and Startrails Settings",
+"type" : "header"
+},
+{
+"name" : "keogramsubheader",
+"label" : "Keogram Settings",
+"type" : "header-sub"
+},
+{
+"name" : "keogramgenerate",
+"default" : true,
+"description" : "Enable to generate a keogram at the end of night.",
+"label" : "Generate Keogram",
+"type" : "boolean",
+"carryforward" : true,
+"booldependson" : "savedaytimeimages OR savenighttimeimages"
+},
+{
+"name": "keogramupload",
+"default": true,
+"description": "Enable to upload the keogram to an Allsky Website or remote server.",
+"label": "Upload Keogram",
+"type": "boolean",
+"carryforward" : true,
+"booldependson" : "keogramgenerate AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
+},
+
+{
+"name" : "keogramexpand",
+"default" : true,
+"description" : "Enable to expand keograms to the image width.",
+"label" : "Expand Keograms",
+"type" : "boolean",
+"carryforward" : true,
+"booldependsoff" : "keogramgenerate"
+},
+{
+"name" : "keogramfontname",
+"default" : "Simplex",
+"description" : "Font name.",
+"label" : "Font Name",
+"type" : "select",
+"options" : [
+	{"value" : "simplex", "label" : "Simplex"},
+	{"value" : "plain", "label" : "Plain"},
+	{"value" : "duplex", "label" : "Duplex"},
+	{"value" : "complex", "label" : "Complex"},
+	{"value" : "complexsmall", "label" : "Complex Small"},
+	{"value" : "triplex", "label" : "Triplex"},
+	{"value" : "scriptsimplex", "label" : "Script Simplex"},
+	{"value" : "scriptcomplex", "label" : "Script Complex"}
+],
+"carryforward" : true,
+"booldependson" : "keogramgenerate"
+},
+{
+"name" : "keogramfontcolor",
+"default" : "#fff",
+"description" : "Font color.",
+"label" : "Font Color",
+"type" : "color",
+"booldependson" : "keogramgenerate"
+},
+{
+"name" : "keogramfontsize",
+"minimum" : 1.0,
+"maximum" : 10.0,
+"default" : 2.0,
+"description" : "Font size.",
+"label" : "Font Size",
+"type" : "integer",
+"booldependson" : "keogramgenerate"
+},
+{
+"name" : "keogramlinethickness",
+"minimum" : 1,
+"maximum" : 5,
+"default" : 3,
+"description" : "Font line thickness.",
+"label" : "Font Line Thickness",
+"type" : "integer",
+"booldependson" : "keogramgenerate"
+},
+{
+"name" : "keogramextraparameters",
+"default" : "",
+"description" : "Optional additional keogram creation parameters.<br>Run <code>~/allsky/bin/keogram --help</code> for a list of options.",
+"label" : "Keogram Extra Parameters",
+"type" : "widetext",
+"optional" : true,
+"booldependson" : "keogramgenerate"
+},
+
+{
+"name" : "startrailssubheader",
+"label" : "Startrails Settings",
+"type" : "header-sub"
+},
+{
+"name" : "startrailsgenerate",
+"default" : true,
+"description" : "Enable to generate a startrails at the end of night.",
+"label" : "Generate Startrails",
+"type" : "boolean",
+"carryforward" : true,
+"booldependson" : "savedaytimeimages OR savenighttimeimages"
+},
+{
+"name" : "startrailsbrightnessthreshold",
+"minimum" : 0.0,
+"maximum" : 1.0,
+"default" : 0.1,
+"description" : "Images with a brightness higher than this threshold will not be included in the startrails.",
+"label" : "Startrails Brightness Threshold",
+"type" : "float",
+"booldependson" : "startrailsgenerate"
+},
+{
+"name": "startrailsupload",
+"default": true,
+"description": "Enable to upload the startrails to an Allsky Website or remote server.",
+"label": "Upload Startrails",
+"type": "boolean",
+"carryforward" : true,
+"booldependson" : "startrailsgenerate AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
+},
+{
+"name" : "startrailsextraparameters",
+"default" : "",
+"description" : "Optional additional startrails creation parameters.<br>Run <code>~/allsky/bin/startrails --help</code> for a list of options.",
+"label" : "Startrails Extra Parameters",
+"type" : "widetext",
+"optional" : true,
+"booldependson" : "startrailsgenerate"
+},
+
+
+{
+"name" : "overlaytab========================================",
+"label" : "Overlay",
+"type" : "header-tab"
+},
+{
+"name" : "overlayheader",
 "label" : "Image overlay settings",
 "type" : "header"
 },
@@ -848,12 +1440,13 @@
 "default" : 1,
 "description" : "Determines how image overlays are done.<br><span class='WebUIValue'>module</span> supports a visual editor.<br><b>When set to <span class='WebUIValue'>module</span>, the overlay settings below do NOT apply.</b>",
 "label" : "Overlay Method",
-"type" : "select",
 "usage" : "capture",
+"type" : "select",
 "options" : [
 	{"value" : 0, "label" : "legacy"},
 	{"value" : 1, "label" : "module"}
 ],
+"carryforward" : true,
 "checkchanges" : true,
 "action" : "reload"
 },
@@ -864,6 +1457,7 @@
 "label" : "Show Time",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
@@ -874,6 +1468,7 @@
 "label" : "Show Temperature",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "display" : "_display",
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
@@ -885,6 +1480,7 @@
 "label" : "Show Exposure",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
@@ -895,6 +1491,7 @@
 "label" : "Show Gain",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
@@ -905,6 +1502,7 @@
 "label" : "Show USB",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "display" : "_display",
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
@@ -916,6 +1514,7 @@
 "label" : "Show Mean Brightness",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
@@ -926,6 +1525,7 @@
 "label" : "Show Histogram Box",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "display" : "_display",
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
@@ -937,6 +1537,7 @@
 "label" : "Show Focus Metric",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
@@ -972,6 +1573,7 @@
 "label" : "Max Age Of Extra",
 "type" : "integer",
 "usage" : "capture",
+"carryforward" : true,
 "valuedependson" : "extratext=*",
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
@@ -1017,8 +1619,9 @@
 "default" : 0,
 "description" : "Font name for the text overlay. Used for both large and small text.",
 "label" : "Font Name",
-"type" : "select",
 "usage" : "capture",
+"carryforward" : true,
+"type" : "select",
 "options" : [
 	{"value" : 0, "label" : "Simplex"},
 	{"value" : 1, "label" : "Plain"},
@@ -1099,13 +1702,19 @@
 "label" : "Use Outline Font",
 "type" : "boolean",
 "usage" : "capture",
+"carryforward" : true,
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
 
 {
-"name" : "AllskyMapHeader",
-"label" : "Allsky Map and Website Settings",
+"name" : "websitetab========================================",
+"label" : "Website",
+"type" : "header-tab"
+},
+{
+"name" : "websiteheader",
+"label" : "Websites and Remote Server Settings",
 "type" : "header"
 },
 {
@@ -1114,8 +1723,502 @@
 "description" : "Enable to add a link on the Allsky Website to display the settings on this page.",
 "label" : "Display Settings",
 "type" : "boolean",
-"booldependson" : "uselocalwebsite OR useremotewebsite",
+"carryforward" : true,
+"checkchanges" : true,
+"booldependson" : "uselocalwebsite OR useremotewebsite OR useremoteserver"
+},
+{
+"name" : "localwebsiteheader",
+"label" : "Local Website Settings",
+"type" : "header-sub"
+},
+{
+"name" : "uselocalwebsite",
+"description" : "Enable to use the local Allsky Website.<br>You should configure in the <span class='WebUILink'>Editor</span> page it first.",
+"default" : false,
+"label" : "Use Local Website",
+"type" : "boolean",
+"carryforward" : true,
+"popup-yesno" : "Do you want to remove all saved images, keograms, startrails, and videos in the local Website?",
+"popup-yesno-value" : 0
+},
+{
+"name" : "daystokeeplocalwebsite",
+"minimum" : 0,
+"maximum" : "none",
+"default" : 0,
+"description" : "Number of days of images and videos to keep on the Pi's Website.",
+"label" : "Days To Keep on Pi Website",
+"type" : "integer",
+"carryforward" : true,
+"booldependson" : "uselocalwebsite"
+},
+{
+"name" : "remotewebsiteheader",
+"label" : "Remote Website Settings",
+"type" : "header-sub"
+},
+{
+"name" : "useremotewebsite",
+"default" : false,
+"description" : "Enable to use a remote Allsky Website.<br>See the Allsky Documentation for how to install the Website.",
+"label" : "Use Remote Website",
+"type" : "boolean",
+"carryforward" : true,
 "checkchanges" : true
+},
+{
+"name" : "daystokeepremotewebsite",
+"minimum" : 0,
+"maximum" : "none",
+"default" : 0,
+"description" : "Number of days of images and videos to keep on the remote Website.",
+"label" : "Days To Keep on Remote Website",
+"type" : "integer",
+"carryforward" : true,
+"booldependson" : "useremotewebsite"
+},
+{
+"name" : "remotewebsiteprotocol",
+"default" : "ftps",
+"description" : "Protocol for remote Website",
+"label" : "Protocol",
+"type" : "select",
+"options" : [
+	{"value" : "ftps", "label" : "ftps"},
+	{"value" : "ftp", "label" : "ftp"},
+	{"value" : "sftp", "label" : "sftp"},
+	{"value" : "scp", "label" : "scp"},
+	{"value" : "s3", "label" : "S3"},
+	{"value" : "gcs", "label" : "GCS"}
+],
+"carryforward" : true,
+"checkchanges" : true,
+"booldependson" : "useremotewebsite"
+},
+{
+"name" : "REMOTEWEBSITE_HOST",
+"default" : "",
+"description" : "Name of server hosting the remote Allsky Website.",
+"label" : "Server Name",
+"type" : "widetext",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremotewebsite",
+"optional" : true
+},
+{
+"name" : "REMOTEWEBSITE_PORT",
+"default" : "",
+"description" : "Optional port required by server.  Rarely required.",
+"label" : "Port",
+"type" : "text",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremotewebsite",
+"optional" : true
+},
+{
+"name" : "REMOTEWEBSITE_USER",
+"default" : "",
+"description" : "Username of the login on the remote Website server.",
+"label" : "User Name",
+"type" : "text",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremotewebsite",
+"optional" : true
+},
+{
+"name" : "REMOTEWEBSITE_PASSWORD",
+"default" : "",
+"description" : "Password of the login on the remote Website server.",
+"label" : "Password",
+"type" : "password",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremotewebsite",
+"optional" : true
+},
+{
+"name" : "REMOTEWEBSITE_LFTP_COMMANDS",
+"default" : "",
+"description" : "Special commands needed when connecting to an FTP server.",
+"label" : "FTP Commands",
+"type" : "text",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=*ftp*",
+"optional" : true
+},
+{
+"name" : "remotewebsiteimagedir",
+"default" : "allsky",
+"description" : "Name of the top-level remote Website directory where images go.",
+"label" : "Image Directory",
+"type" : "text",
+"carryforward" : true,
+"checkchanges" : true,
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=*ftp*",
+"optional" : true
+},
+{
+"name" : "REMOTEWEBSITE_SSH_KEY_FILE",
+"default" : "",
+"description" : "Path on the Pi to the SSH key file.",
+"label" : "SSH Key File",
+"type" : "widetext",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=scp",
+"optional" : true
+},
+{
+"name" : "REMOTEWEBSITE_AWS_CLI_DIR",
+"default" : "",
+"description" : "AWS CLI directory where the AWS CLI tools are installed.<br>Often stored in <span class='fileName'>${HOME}/.local/bin</span>",
+"label" : "AWS CLI Directory",
+"type" : "widetext",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=s3",
+"optional" : true
+},
+{
+"name" : "REMOTEWEBSITE_S3_BUCKET",
+"default" : "",
+"description" : "Name of S3 bucket where files will be upload.<br>Suggested name: <span class='WebUIValue'>allskybucket</span>",
+"label" : "S3 Bucket",
+"type" : "text",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=s3",
+"optional" : true
+},
+{
+"name" : "REMOTEWEBSITE_S3_ACL",
+"default" : "private",
+"description" : "S3 Access Control List (ACL).",
+"label" : "S3 ACL",
+"type" : "text",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=s3",
+"optional" : true
+},
+{
+"name" : "REMOTEWEBSITE_GCS_BUCKET",
+"default" : "",
+"description" : "Name of GCS bucket where files will be upload.<br>Suggested name: <span class='WebUIValue'>allskybucket</span>",
+"label" : "GCS Bucket",
+"type" : "text",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=gcs",
+"optional" : true
+},
+{
+"name" : "REMOTEWEBSITE_GCS_ACL",
+"default" : "private",
+"description" : "GCS Access Control List (ACL).",
+"label" : "GCS ACL",
+"type" : "text",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=gcs",
+"optional" : true
+},
+{
+"name" : "remotewebsiteimageuploadoriginalname",
+"default" : false,
+"description" : "Enable to upload images using YYYYMMDDHHMMSS naming.",
+"label" : "Upload With Original Name",
+"type" : "boolean",
+"carryforward" : true,
+"valuedependson" : "imageuploadfrequency=[1-9]*"
+},
+{
+"name" : "remotewebsitevideodestinationname",
+"default" : "",
+"description" : "Optional name of the remote video file.",
+"label" : "Remote Video File Name",
+"type" : "text",
+"carryforward" : true,
+"booldependson" : "useremotewebsite",
+"optional" : true
+},
+{
+"name" : "remotewebsitekeogramdestinationname",
+"default" : "",
+"description" : "Optional name of the remote keogram file.",
+"label" : "Remote Keogram File Name",
+"type" : "text",
+"carryforward" : true,
+"booldependson" : "useremotewebsite",
+"optional" : true
+},
+{
+"name" : "remotewebsitestartrailsdestinationname",
+"default" : "",
+"description" : "Optional name of the remote startrails file.",
+"label" : "Remote Startrails Name",
+"type" : "text",
+"carryforward" : true,
+"booldependson" : "useremotewebsite",
+"optional" : true
+},
+{
+"name" : "remotewebsiteurl",
+"default" : "",
+"description" : "The URL of your Allsky Website, for example: https://mywebsite.com/allsky.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
+"label" : "Website URL",
+"type" : "widetext",
+"carryforward" : true,
+"checkchanges" : true,
+"booldependson" : "showonmap OR useremotewebsite OR remotewebsiteimageurl",
+"optional" : true
+},
+{
+"name" : "remotewebsiteimageurl",
+"default" : "",
+"description" : "The URL of the image on your Allsky Website, for example: https://mywebsite.com/allsky/image.jpg.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
+"label" : "Image URL",
+"type" : "widetext",
+"carryforward" : true,
+"checkchanges" : true,
+"booldependson" : "showonmap OR useremotewebsite OR remotewebsiteurl",
+"optional" : true
+},
+
+
+{
+"name" : "remoteserverheader",
+"label" : "Remote Server Settings",
+"type" : "header-sub"
+},
+{
+"name" : "useremoteserver",
+"default" : false,
+"description" : "This is a remote server NOT running the Allsky Website.<br>See the documentation for the necessary directory layout.",
+"label" : "Use Remote Server",
+"type" : "boolean",
+"carryforward" : true,
+"checkchanges" : true
+},
+{
+"name" : "remoteserverprotocol",
+"default" : "ftps",
+"description" : "Protocol for remote server",
+"label" : "Protocol",
+"type" : "select",
+"options" : [
+	{"value" : "ftps", "label" : "ftps"},
+	{"value" : "ftp", "label" : "ftp"},
+	{"value" : "sftp", "label" : "sftp"},
+	{"value" : "scp", "label" : "scp"},
+	{"value" : "s3", "label" : "S3"},
+	{"value" : "gcs", "label" : "GCS"}
+],
+"carryforward" : true,
+"checkchanges" : true,
+"booldependson" : "useremoteserver"
+},
+{
+"name" : "REMOTESERVER_HOST",
+"default" : "",
+"description" : "Name of remote server NOT hosting an Allsky Website.",
+"label" : "Server Name",
+"type" : "widetext",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremoteserver",
+"optional" : true
+},
+{
+"name" : "REMOTESERVER_PORT",
+"default" : "",
+"description" : "Optional port required by remote server.  Rarely required.",
+"label" : "Port",
+"type" : "text",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremoteserver",
+"optional" : true
+},
+{
+"name" : "REMOTESERVER_USER",
+"default" : "",
+"description" : "Username of the login on the remote server.",
+"label" : "User Name",
+"type" : "text",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremoteserver",
+"optional" : true
+},
+{
+"name" : "REMOTESERVER_PASSWORD",
+"default" : "",
+"description" : "Password of the remote server login.",
+"label" : "Password",
+"type" : "password",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremoteserver",
+"optional" : true
+},
+{
+"name" : "REMOTESERVER_LFTP_COMMANDS",
+"default" : "",
+"description" : "Special commands needed when connecting to an FTP server.",
+"label" : "FTP Commands",
+"type" : "text",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremoteserver",
+"valuedependson" : "remoteserverprotocol=*ftp*",
+"optional" : true
+},
+{
+"name" : "REMOTESERVER_SSH_KEY_FILE",
+"default" : "",
+"description" : "Path on the Pi to the SSH key file.",
+"label" : "SSH Key File",
+"type" : "widetext",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremoteserver",
+"valuedependson" : "remoteserverprotocol=scp",
+"optional" : true
+},
+{
+"name" : "REMOTESERVER_AWS_CLI_DIR",
+"default" : "",
+"description" : "AWS CLI directory where the AWS CLI tools are installed.<br>Often stored in <span class='fileName'>${HOME}/.local/bin</span>",
+"label" : "AWS CLI Directory",
+"type" : "widetext",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremoteserver",
+"valuedependson" : "remoteserverprotocol=s3",
+"optional" : true
+},
+{
+"name" : "REMOTESERVER_S3_BUCKET",
+"default" : "",
+"description" : "Name of S3 bucket where files will be upload.<br>Suggested name: <span class='WebUIValue'>allskybucket</span>",
+"label" : "S3 Bucket",
+"type" : "text",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremoteserver",
+"valuedependson" : "remoteserverprotocol=s3",
+"optional" : true
+},
+{
+"name" : "REMOTESERVER_S3_ACL",
+"default" : "private",
+"description" : "S3 Access Control List (ACL).",
+"label" : "S3 ACL",
+"type" : "text",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremoteserver",
+"valuedependson" : "remoteserverprotocol=s3",
+"optional" : true
+},
+{
+"name" : "REMOTESERVER_GCS_BUCKET",
+"default" : "",
+"description" : "Name of GCS bucket where files will be upload.<br>Suggested name: <span class='WebUIValue'>allskybucket</span>",
+"label" : "GCS Bucket",
+"type" : "text",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremoteserver",
+"valuedependson" : "remoteserverprotocol=gcs",
+"optional" : true
+},
+{
+"name" : "REMOTESERVER_GCS_ACL",
+"default" : "private",
+"description" : "S3 Access Control List (ACL).",
+"label" : "S3 ACL",
+"type" : "text",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremoteserver",
+"valuedependson" : "remoteserverprotocol=gcs",
+"optional" : true
+},
+{
+"name" : "remoteserverimagedir",
+"default" : "",
+"description" : "Name of the top-level remote server directory where images go.",
+"label" : "Image Directory",
+"type" : "text",
+"carryforward" : true,
+"checkchanges" : true,
+"booldependson" : "useremoteserver",
+"optional" : true
+},
+{
+"name" : "remoteserverimageuploadoriginalname",
+"default" : false,
+"description" : "Enable to upload images using YYYYMMDDHHMMSS naming.",
+"label" : "Upload With Original Name",
+"type" : "boolean",
+"carryforward" : true,
+"valuedependson" : "imageuploadfrequency=[1-9]*"
+},
+{
+"name" : "remoteservervideodestinationname",
+"default" : "",
+"description" : "Optional name of the remote video file.",
+"label" : "Remote Video File Name",
+"type" : "text",
+"carryforward" : true,
+"booldependson" : "useremoteserver",
+"optional" : true
+},
+{
+"name" : "remoteserverkeogramdestinationname",
+"default" : "",
+"description" : "Optional name of the remote keogram file.",
+"label" : "Remote Keogram File Name",
+"type" : "text",
+"carryforward" : true,
+"booldependson" : "useremoteserver",
+"optional" : true
+},
+{
+"name" : "remoteserverstartrailsdestinationname",
+"default" : "",
+"description" : "Optional name of the remote startrails file.",
+"label" : "Remote Startrails File Name",
+"type" : "text",
+"carryforward" : true,
+"booldependson" : "useremoteserver",
+"optional" : true
+},
+
+{
+"name" : "allskymaptab========================================",
+"label" : "Map",
+"type" : "header-tab"
+},
+{
+"name" : "allskymapheader",
+"label" : "Allsky Map Settings",
+"type" : "header"
 },
 {
 "name" : "showonmap",
@@ -1123,28 +2226,9 @@
 "description" : "Enable to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map' target='_blank' title='Opens in new tab/window'><span class='WebUISetting'>Allsky Map <i class='fa fa-external-link-alt fa-fw'></i></span></a>.",
 "label" : "Show on Map",
 "type" : "boolean",
-"booldependson" : "uselocalwebsite OR useremotewebsite",
-"checkchanges" : true
-},
-{
-"name" : "websiteurl",
-"default" : "",
-"description" : "The URL of your Allsky Website, for example: https://my.allskyweb.com/allsky.<br>If your camera is not accessible on the Internet, leave this field empty.<br>Must begin with <b>http</b> or <b>https</b>.",
-"label" : "Website URL",
-"type" : "widetext",
-"booldependson" : "showonmap OR remotewebsiteimageurl",
+"carryforward" : true,
 "checkchanges" : true,
-"optional" : true
-},
-{
-"name" : "imageurl",
-"default" : "",
-"description" : "The URL of the image on your Allsky Website, for example: https://mywebsite.com/allsky/image.jpg.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
-"label" : "Image URL",
-"type" : "widetext",
-"booldependson" : "showonmap OR remotewebsiteimageurl",
-"checkchanges" : true,
-"optional" : true
+"booldependson" : "uselocalwebsite OR useremotewebsite"
 },
 {
 "name" : "location",
@@ -1152,9 +2236,10 @@
 "description" : "The location of your camera, for example: Whitehorse, YT.<br>This setting and the remaining ones also appear on the Allsky Website, if installed.",
 "label" : "Location",
 "type" : "widetext",
+"carryforward" : true,
 "checkchanges" : true,
 "optional" : true,
-"booldependson" : "showonmap"
+"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 {
 "name" : "owner",
@@ -1162,9 +2247,10 @@
 "description" : "The owner of the camera. It can be your name, an association, or observatory, etc.",
 "label" : "Owner",
 "type" : "text",
+"carryforward" : true,
 "checkchanges" : true,
 "optional" : true,
-"booldependson" : "showonmap"
+"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 {
 "name" : "camera",
@@ -1174,7 +2260,7 @@
 "type" : "widetext",
 "checkchanges" : true,
 "optional" : true,
-"booldependson" : "showonmap"
+"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 {
 "name" : "lens",
@@ -1184,7 +2270,7 @@
 "type" : "text",
 "checkchanges" : true,
 "optional" : true,
-"booldependson" : "showonmap"
+"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 {
 "name" : "computer",
@@ -1192,9 +2278,10 @@
 "description" : "The computer running your allsky camera, for example: <span class='WebUIValue'>Raspberry Pi 3, 4 GB</span>.",
 "label" : "Computer",
 "type" : "widetext",
+"carryforward" : true,
 "checkchanges" : true,
 "optional" : true,
-"booldependson" : "showonmap"
+"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
 },
 
 {
@@ -1213,20 +2300,50 @@
 "description" : "The order the images on the 'Images' page are sorted in.<br>'Ascending' is oldest to newest. 'Descending' is newest to oldest.",
 "label" : "Images Sort Order",
 "type" : "select",
+"carryforward" : true,
 "options" : [
 	{"value" : "ascending", "label" : "Ascending"},
 	{"value" : "descending", "label" : "Descending"}
 ]
 },
 {
-"name" : "showdelay",
+"name" : "showupdatedmessage",
 "default" : true,
 "description" : "Disable to hide the <span class='alert-info'>Daytime images updated every...</span> message in the <span class='WebUIWebPage'>Live View</span> page.",
 "label" : "Show Updated Message",
-"type" : "boolean"
+"type" : "boolean",
+"carryforward" : true
+},
+{
+"name" : "uselogin",
+"default" : true,
+"description" : "Determines if you need to login to the WebUI or not.<br><b>If your Pi is accessible on the Internet, do NOT turn this off!!</b>.",
+"label" : "Require WebUI Login",
+"type" : "boolean",
+"carryforward" : true
+},
+{
+"name" : "notificationimages",
+"default" : true,
+"description" : "Enable to display notification images, e.g., 'Camera is off during the day'.<br>While these messages appear in the WebUI and Allsky Website, they are not saved so don't appear in timelapse, startrails, or keograms.",
+"label" : "Notification Images",
+"type" : "boolean",
+"usage" : "capture",
+"carryforward" : true,
+"action" : "reload"
+},
+{
+"name" : "webuidatafiles",
+"default" : "",
+"description" : "See documentation for a description of this setting,",
+"label" : "Items to add to WebUI",
+"type" : "widetext",
+"carryforward" : true,
+"optional" : true
 },
 
 {
+
 "name" : "cameratab========================================",
 "label" : "Camera Type",
 "type" : "header-tab"

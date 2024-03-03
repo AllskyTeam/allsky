@@ -22,6 +22,8 @@ export REPO_WEBUI_DEFINES_FILE="${ALLSKY_REPO}/${ALLSKY_DEFINES_INC}.repo"
 export REPO_LIGHTTPD_FILE="${ALLSKY_REPO}/lighttpd.conf.repo"
 export REPO_AVI_FILE="${ALLSKY_REPO}/avahi-daemon.conf.repo"
 export REPO_OPTIONS_FILE="${ALLSKY_REPO}/$( basename "${OPTIONS_FILE}" ).repo"
+export REPO_ENV_FILE="${ALLSKY_REPO}/$( basename "${ALLSKY_ENV}" ).repo"
+export REPO_WEBSITE_CONFIGURATION_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
 
 ##### Information on prior Allsky versions
 	# Location of old-style WebUI and Website.
@@ -39,13 +41,14 @@ export WEBSITE_CONFIG_VERSION="ConfigVersion"
 	# Name of setting that holds the Allsky version.
 export WEBSITE_ALLSKY_VERSION="config.AllskyVersion"
 
-
-	# Location of prior "config.sh" file; varies by release; this is most recent.
+	# Location of prior files varies by release; this is most recent location.
 export PRIOR_CONFIG_FILE="${PRIOR_CONFIG_DIR}/config.sh"
-	# Location of prior "ftp-settings.sh" file; varies by release; this is most recent.
 export PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"
 
-
+	# Location of lighttpd files.
+export LIGHTTPD_LOG_DIR="/var/log/lighttpd"
+export LIGHTTPD_LOG_FILE="${LIGHTTPD_LOG_DIR}/error.log"
+export LIGHTTPD_CONFIG_FILE="/etc/lighttpd/lighttpd.conf"
 
 ######################################### functions
 
@@ -57,7 +60,7 @@ function display_header() {
 	((LEN = ${#HEADER} + 8))		# 8 for leading and trailing "*** "
 	local STARS=""
 	while [[ ${LEN} -gt 0 ]]; do
-		STARS="${STARS}*"
+		STARS+="*"
 		((LEN--))
 	done
 	echo
@@ -70,8 +73,9 @@ function display_header() {
 #####
 function calc_wt_size()
 {
-	WT_WIDTH=$( tput cols )
+	local WT_WIDTH=$( tput cols )
 	[[ ${WT_WIDTH} -gt 80 ]] && WT_WIDTH=80
+	echo "${WT_WIDTH}"
 }
 
 #####
@@ -99,7 +103,7 @@ function get_version() {
 	if [[ -z ${F} ]]; then
 		F="${ALLSKY_VERSION_FILE}"		# default
 	else
-		[[ ${F:1,-1} == "/" ]] && F="${F}$( basename "${ALLSKY_VERSION_FILE}" )"
+		[[ ${F:1,-1} == "/" ]] && F+="$( basename "${ALLSKY_VERSION_FILE}" )"
 	fi
 	if [[ -f ${F} ]]; then
 		# Sometimes the branch file will have both "master" and "dev" on two lines.
@@ -114,6 +118,23 @@ function get_version() {
 function get_branch() {
 	local H="${1:-${ALLSKY_HOME}}"
 	echo "$( cd "${H}" || exit; git rev-parse --abbrev-ref HEAD )"
+}
+
+
+#####
+# Get a shell variable's value.  The variable can have optional spaces and tabs before it.
+# This function is useful when we can't "source" the file.
+function get_variable() {
+	local VARIABLE="${1}"
+	local FILE="${2}"
+	local LINE=""
+	local SEARCH_STRING="^[ 	]*${VARIABLE}="
+	if ! LINE="$( /bin/grep -E "${SEARCH_STRING}" "${FILE}" 2>/dev/null )" ; then
+		return 1
+	fi
+
+	echo "${LINE}" | sed -e "s/${SEARCH_STRING}//" -e 's/"//g'
+	return 0
 }
 
 
@@ -184,15 +205,15 @@ function display_msg()
 	fi
 
 	if [[ ${STARS} == "true" ]]; then
-		MSG="${MSG}\n"
-		MSG="${MSG}**********\n"
-		MSG="${MSG}${MESSAGE}\n"
-		MSG="${MSG}**********${NC}\n"
+		MSG+="\n"
+		MSG+="**********\n"
+		MSG+="${MESSAGE}\n"
+		MSG+="**********${NC}\n"
 
-		LOGMSG="${LOGMSG}\n"
-		LOGMSG="${LOGMSG}**********\n"
-		LOGMSG="${LOGMSG}${MESSAGE}\n"
-		LOGMSG="${LOGMSG}**********\n"
+		LOGMSG+="\n"
+		LOGMSG+="**********\n"
+		LOGMSG+="${MESSAGE}\n"
+		LOGMSG+="**********\n"
 	fi
 
 	[[ ${LOG_ONLY} == "false" ]] && echo -e "${MSG}${MESSAGE2}"
@@ -209,7 +230,7 @@ function display_msg()
 	# I don't know how to replace "\n" with an
 	# actual newline in sed, and there HAS to be a better way to strip the
 	# escape sequences.
-	# I simply replace actual escape characters in the input with "033" then 
+	# I simply replace actual escape characters in the input with "033" then
 	# replace "033[" with "033X".
 	# Feel free to improve...
 
@@ -240,11 +261,122 @@ function display_msg()
 	fi >>  "${DISPLAY_MSG_LOG}"
 }
 
+
+# The various upload protocols need different variables defined.
+# For the specified protocol, make sure the specified variable is defined.
+function check_PROTOCOL()
+{
+	local P="${1}"	# Protocol
+	local V="${2}"	# Variable
+	local N="${3}"	# Name
+	local VALUE="$( settings ".${V}" "${ALLSKY_ENV}" )"
+	if [[ -z ${VALUE} ]]; then
+		echo "${N} Protocol (${P}) set but not '${V}'."
+		echo "Uploads will not work until this is fixed."
+		return 1
+	fi
+	return 0
+}
+# Check variables are correct for a remote server.
+# Return 0 for OK, 1 for warning, 2 for error.
+function check_remote_server()
+{
+	check_for_env_file || return 1
+
+	local TYPE="${1}"
+	local TYPE_STRING
+	if [[ ${TYPE} == "REMOTEWEBSITE" ]]; then
+		TYPE_STRING="Remote Website"
+	else
+		TYPE_STRING="Remote Server"
+	fi
+
+	local USE="$( settings ".use${TYPE,,}" )"
+	if [[ ${USE} != "true" ]]; then
+		# Variables should be empty.
+		x="$( grep -E -v "^#|^$" "${ALLSKY_ENV}" | grep "${TYPE}" | grep -E -v "${TYPE}.*=\"\"|${TYPE}.*=$" )"
+		if [[ -n "${x}" ]]; then
+			echo "${TYPE_STRING} is not being used but settings for it exist in '${ALLSKY_ENV}:"
+			indent "${x}" | sed "s/${TYPE}.*=.*/${TYPE}/"
+			return 1
+		fi
+		return 0
+	fi
+
+	local RET=0
+	local PROTOCOL="$( settings ".${TYPE,,}protocol" )"
+	case "${PROTOCOL}" in
+		"")
+			echo "${TYPE_STRING} is being used but has no Protocol."
+			echo "Uploads to it will not work."
+			return 2
+			;;
+
+		ftp | ftps | sftp)
+			check_PROTOCOL "${PROTOCOL}" "${TYPE}_HOST" "${TYPE_STRING}" || RET=1
+			check_PROTOCOL "${PROTOCOL}" "${TYPE}_USER" "${TYPE_STRING}" || RET=1
+			check_PROTOCOL "${PROTOCOL}" "${TYPE}_PASSWORD" "${TYPE_STRING}" || RET=1
+			if [[ ${PROTOCOL} == "ftp" ]]; then
+				echo "${TYPE_STRING} Protocol set to insecure 'ftp'."
+				echo "Try using 'ftps' or 'sftp' instead."
+				RET=1
+			fi
+			;;
+
+		scp)
+			check_PROTOCOL "${PROTOCOL}" "${TYPE}_HOST" "${TYPE_STRING}" || RET=1
+			check_PROTOCOL "${PROTOCOL}" "${TYPE}_USER" "${TYPE_STRING}" || RET=1
+			if check_PROTOCOL "${PROTOCOL}" "${TYPE}_SSH_KEY_FILE" "${TYPE_STRING}" \
+					&& [[ ! -e ${SSH_KEY_FILE} ]]; then
+				echo "${TYPE_STRING} Protocol (${PROTOCOL}) set but '${TYPE}_SSH_KEY_FILE' (${SSH_KEY_FILE}) does not exist."
+				echo "Uploads will not work."
+				RET=1
+			fi
+			;;
+
+		s3)
+			if check_PROTOCOL "${PROTOCOL}" "${TYPE}_AWS_CLI_DIR" "${TYPE_STRING}" \
+					&& [[ ! -e ${AWS_CLI_DIR} ]]; then
+				echo "${TYPE_STRING} Protocol (${PROTOCOL}) set but '${TYPE}_AWS_CLI_DIR' (${AWS_CLI_DIR}) does not exist."
+				echo "Uploads will not work."
+				RET=1
+			fi
+			check_PROTOCOL "${PROTOCOL}" "${TYPE}_S3_BUCKET" "${TYPE_STRING}" || RET=1
+			check_PROTOCOL "${PROTOCOL}" "${TYPE}_S3_ACL" "${TYPE_STRING}" || RET=1
+			;;
+
+		gcs)
+			check_PROTOCOL "${PROTOCOL}" "${TYPE}_GCS_BUCKET" "${TYPE_STRING}" || RET=1
+			check_PROTOCOL "${PROTOCOL}" "${TYPE}_GCS_ACL" "${TYPE_STRING}" || RET=1
+			;;
+
+		*)
+			echo "${TYPE_STRING} Protocol (${PROTOCOL}) not blank or one of: ftp, ftps, sftp, scp, s3, gcs."
+			echo "Uploads will not work until this is corrected."
+			RET=1
+			;;
+	esac
+
+	REMOTE_PORT="$( get_variable "${TYPE}_PORT" "${ALLSKY_ENV}" )"
+	if [[ -n ${REMOTE_PORT} ]] && ! is_number "${REMOTE_PORT}" ; then
+		echo "${TYPE}_PORT (${REMOTE_PORT}) must be a number."
+		echo "Uploads will not work until this is corrected."
+		RET=1
+	fi
+
+	return "${RET}"
+}
+
+
 ####
-# Update a json file.   -d  deletes the field
+# Update a json file.
+#	field, new value, file, [type]
+# or
+#	-d field, "" value, file
 function update_json_file()		# [-d] field, new value, file, [type]
 {
-	local M FIELD NEW_VALUE FILE TYPE DOUBLE_QUOTE TEMP ACTION
+	local M  DELETE  FIELD  FILE  TEMP  NEW_VALUE
+	local ACTION  TYPE  DOUBLE_QUOTE  ERR_MSG  RET
 
 	M="${ME:-${FUNCNAME[0]}}"
 
@@ -269,33 +401,35 @@ function update_json_file()		# [-d] field, new value, file, [type]
 		ACTION="del(${FIELD})"
 	else
 		NEW_VALUE="${2}"
-		TYPE="${4:-string}"		# optional
-		if [[ ${TYPE} == "string" ]]; then
+		TYPE="${4}"
+		# Numbers and booleans don't need quotes.
+		if [[ -z ${TYPE} && ${NEW_VALUE} != "true" && ${NEW_VALUE} != "false" ]] &&
+			! is_number "${NEW_VALUE}" ; then
+				TYPE="text"
+		fi
+		if [[ ${TYPE} == "text" ]]; then
 			DOUBLE_QUOTE='"'
 		else
 			DOUBLE_QUOTE=""
 		fi
 		ACTION="${FIELD} = ${DOUBLE_QUOTE}${NEW_VALUE}${DOUBLE_QUOTE}"
 	fi
-	if jq --indent 4 "${ACTION}" "${FILE}" > "${TEMP}" ; then
+	ERR_MSG="$( jq --indent 4 "${ACTION}" "${FILE}" 2>&1 > "${TEMP}" )"
+	RET=$?
+	if [[ ${RET} -eq 0 ]]; then
 		# Have to use "cp" instead of "mv" to keep any hard link.
 		cp "${TEMP}" "${FILE}"
-		RET=0
 	else
-		RET=1
+		echo "${M}: Unable to update json value of '${FIELD}' to '${NEW_VALUE}' in '${FILE}': ${ERR_MSG}" >&2
 	fi
 	rm "${TEMP}"
-
-	if [[ ${RET} -ne 0 ]]; then
-		echo "${M}: Unable to update json value of '${FIELD}' to '${NEW_VALUE}' in '${FILE}'." >&2
-	fi
 
 	return "${RET}"
 }
 
 ####
 # Update a Website configuration file from old to current version.
-update_website_config_file()
+function update_website_config_file()
 {
 	local FILE PRIOR_VERSION CURRENT_VERSION LOCAL_OR_REMOTE
 
@@ -318,4 +452,312 @@ update_website_config_file()
 		# For remote Websites it'll be updated when the user updates the Website.
 		update_json_file ".${WEBSITE_ALLSKY_VERSION}" "${ALLSKY_VERSION}" "${FILE}"
 	fi
+}
+
+####
+# Create the lighttpd configuration file.
+function create_lighttpd_config_file()
+{
+	local TMP="/tmp/x"
+
+	sudo rm -f "${TMP}"
+	sed \
+		-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};g" \
+		-e "s;XX_WEBSERVER_OWNER_XX;${WEBSERVER_OWNER};g" \
+		-e "s;XX_WEBSERVER_GROUP_XX;${WEBSERVER_GROUP};g" \
+		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};g" \
+		-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};g" \
+		-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};g" \
+		-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};g" \
+		-e "s;XX_ALLSKY_DOCUMENTATION_XX;${ALLSKY_DOCUMENTATION};g" \
+		-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};g" \
+		-e "s;XX_MY_OVERLAY_TEMPLATES_XX;${MY_OVERLAY_TEMPLATES};g" \
+			"${REPO_LIGHTTPD_FILE}"  >  "${TMP}"
+	sudo install -m 0644 "${TMP}" "${LIGHTTPD_CONFIG_FILE}" && rm -f "${TMP}"
+}
+
+####
+# Create the lighttpd log file with permissions so user can update it.
+function create_lighttpd_log_file()
+{
+	display_msg --log progress "Creating new ${LIGHTTPD_LOG_FILE}."
+
+	# Remove any old log files.
+	# Start off with a 0-length log file the user can write to.
+	sudo chmod 755 "${LIGHTTPD_LOG_DIR}"
+	sudo rm -fr "${LIGHTTPD_LOG_DIR}"/*
+	sudo truncate -s 0 "${LIGHTTPD_LOG_FILE}"
+	sudo chmod 664 "${LIGHTTPD_LOG_FILE}"
+	sudo chown "${WEBSERVER_GROUP}:${ALLSKY_GROUP}" "${LIGHTTPD_LOG_FILE}"
+}
+
+####
+# Check for size of RAM+swap during installation (Issue # 969)
+# and ask the user to increase if not "big enough".
+# recheck_swap() is is referenced in the Allsky Documentation and can
+# optionally be called after installation to adjust swap space.
+function recheck_swap()
+{
+	check_swap "after_install" "prompt"
+}
+function check_swap()
+{
+	# global: TITLE  WT_WIDTH
+	local SWAP_CONFIG_FILE="/etc/dphys-swapfile"
+	local CALLED_FROM PROMPT
+	CALLED_FROM="${1}"
+	PROMPT="${2:-false}"
+
+	if [[ ${CALLED_FROM} == "install" ]]; then
+		declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" && ${PROMPT} == "false" ]] && return
+	fi
+
+	[[ -z ${WT_WIDTH} ]] && WT_WIDTH="$( calc_wt_size )"
+	local RAM_SIZE  DESIRED_COMBINATION  SUGGESTED_SWAP_SIZE  CURRENT_SWAP
+	local AMT  M  MSG  SWAP_SIZE  CURRENT_MAX
+
+	# This can return "total_mem is unknown" if the OS is REALLY old.
+	RAM_SIZE="$( vcgencmd get_config total_mem )"
+	if [[ ${RAM_SIZE} =~ "unknown" ]]; then
+		# Note: This doesn't produce exact results.  On a 4 GB Pi, it returns 3.74805.
+		RAM_SIZE=$( free --mebi | awk '{if ($1 == "Mem:") {print $2; exit 0} }' )		# in MB
+	else
+		RAM_SIZE="${RAM_SIZE//total_mem=/}"
+	fi
+	DESIRED_COMBINATION=$((1024 * 5))		# desired minimum memory + swap
+	SUGGESTED_SWAP_SIZE=0
+	for i in 512 1024 2048 4096		# 8192 and above don't need any swap
+	do
+		if [[ ${RAM_SIZE} -le ${i} ]]; then
+			SUGGESTED_SWAP_SIZE=$((DESIRED_COMBINATION - i))
+			break
+		fi
+	done
+	display_msg --logonly info "RAM_SIZE=${RAM_SIZE}, SUGGESTED_SWAP_SIZE=${SUGGESTED_SWAP_SIZE}."
+
+	# Not sure why, but displayed swap is often 1 MB less than what's in /etc/dphys-swapfile
+	CURRENT_SWAP=$( free --mebi | awk '{if ($1 == "Swap:") {print $2 + 1; exit 0} }' )	# in MB
+	CURRENT_SWAP=${CURRENT_SWAP:-0}
+	if [[ ${CURRENT_SWAP} -lt ${SUGGESTED_SWAP_SIZE} || ${PROMPT} == "true" ]]; then
+
+		[[ -z ${FUNCTION} ]] && sleep 2		# give user time to read prior messages
+		if [[ ${CURRENT_SWAP} -eq 1 ]]; then
+			CURRENT_SWAP=0
+			AMT="no"
+			M="added"
+		else
+			AMT="${CURRENT_SWAP} MB of"
+			M="increased"
+		fi
+		MSG="\nYour Pi currently has ${AMT} swap space."
+		MSG+="\nBased on your memory size of ${RAM_SIZE} MB,"
+		if [[ ${CURRENT_SWAP} -ge ${SUGGESTED_SWAP_SIZE} ]]; then
+			SUGGESTED_SWAP_SIZE=${CURRENT_SWAP}
+			MSG+=" there is no need to change anything, but you can if you would like."
+		else
+			MSG+=" we suggest ${SUGGESTED_SWAP_SIZE} MB of swap"
+			MSG+=" to decrease the chance of timelapse and other failures."
+			MSG+="\n\nDo you want swap space ${M}?"
+			MSG+="\n\nYou may change the amount of swap space by changing the number below."
+		fi
+
+		SWAP_SIZE=$( whiptail --title "${TITLE}" --inputbox "${MSG}" 18 "${WT_WIDTH}" \
+			"${SUGGESTED_SWAP_SIZE}" 3>&1 1>&2 2>&3 )
+		# If the suggested swap was 0 and the user added a number but didn't first delete the 0,
+		# do it now so we don't have numbers like "0256".
+		[[ ${SWAP_SIZE:0:1} == "0" ]] && SWAP_SIZE="${SWAP_SIZE:1}"
+
+		if [[ -z ${SWAP_SIZE} || ${SWAP_SIZE} == "0" ]]; then
+			if [[ ${CURRENT_SWAP} -eq 0 && ${SUGGESTED_SWAP_SIZE} -gt 0 ]]; then
+				display_msg --log warning "With no swap space you run the risk of programs failing."
+			else
+				display_msg --log info "Swap will remain at ${CURRENT_SWAP}."
+			fi
+		else
+			display_msg --log progress "Setting swap space to ${SWAP_SIZE} MB."
+			sudo dphys-swapfile swapoff					# Stops the swap file
+			sudo sed -i "/CONF_SWAPSIZE/ c CONF_SWAPSIZE=${SWAP_SIZE}" "${SWAP_CONFIG_FILE}"
+
+			CURRENT_MAX="$( get_variable "CONF_MAXSWAP" "${SWAP_CONFIG_FILE}" )"
+			# TODO: Can we determine the default max rather than hard-code it?
+			CURRENT_MAX="${CURRENT_MAX:-2048}"
+			if [[ ${CURRENT_MAX} -lt ${SWAP_SIZE} ]]; then
+				if [[ ${DEBUG} -gt 0 ]]; then
+					display_msg --log debug "Increasing max swap size to ${SWAP_SIZE} MB."
+				fi
+				sudo sed -i "/CONF_MAXSWAP/ c CONF_MAXSWAP=${SWAP_SIZE}" "${SWAP_CONFIG_FILE}"
+			fi
+
+			sudo dphys-swapfile setup  > /dev/null		# Sets up new swap file
+			sudo dphys-swapfile swapon					# Turns on new swap file
+		fi
+	else
+		MSG="Size of current swap (${CURRENT_SWAP} MB) is sufficient; no change needed."
+		display_msg --log progress "${MSG}"
+	fi
+
+	if [[ ${CALLED_FROM} == "install" ]]; then
+		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+	fi
+}
+
+
+####
+
+INITIAL_FSTAB_STRING="tmpfs ${ALLSKY_TMP} tmpfs"
+
+function is_tmp_mounted()
+{
+	grep --quiet "^${INITIAL_FSTAB_STRING}" /etc/fstab
+}
+function umount_tmp()
+{
+	local TMP="${1}"
+
+	sudo umount -f "${TMP}" 2> /dev/null ||
+		{
+			sudo systemctl restart smbd 2> /dev/null
+			sudo umount -f "${TMP}" 2> /dev/null
+		}
+}
+
+####
+function recheck_tmp()
+{
+	check_tmp "after_install"
+}
+####
+# Check if prior ${ALLSKY_TMP} was a memory filesystem.
+# If not, offer to make it one.
+function check_tmp()
+{
+	# global: TITLE  WT_WIDTH
+	local PROMPT  CALLED_FROM
+	CALLED_FROM="${1}"
+
+	if [[ ${CALLED_FROM} == "install" ]]; then
+		declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
+	fi
+
+	[[ -z ${WT_WIDTH} ]] && WT_WIDTH="$( calc_wt_size )"
+	local STRING  SIZE  D  MSG
+
+	# Check if currently a memory filesystem.
+	if is_tmp_mounted; then
+		MSG="${ALLSKY_TMP} is currently a memory filesystem; no change needed."
+		display_msg --log progress "${MSG}"
+
+		# If there's a prior Allsky version and it's tmp directory is mounted,
+		# try to unmount it, but that often gives an error that it's busy,
+		# which isn't really a problem since it'll be unmounted at the reboot.
+		# We know from the grep above that /etc/fstab has ${ALLSKY_TMP}
+		# but the mount point is currently in the PRIOR Allsky.
+		D="${PRIOR_ALLSKY_DIR}/tmp"
+		if [[ -d "${D}" ]] && mount | grep --silent "${D}" ; then
+			# The Samba daemon is one known cause of "target busy".
+			umount_tmp "${D}"
+		fi
+
+		if [[ ${CALLED_FROM} == "install" ]]; then
+			STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+		fi
+
+		# If the new Allsky's ${ALLSKY_TMP} is already mounted, don't do anything.
+		# This would be the case during an upgrade.
+		if mount | grep --silent "${ALLSKY_TMP}" ; then
+			display_msg --logonly info "${ALLSKY_TMP} already mounted."
+			return 0
+		fi
+
+		check_and_mount_tmp		# works on new ${ALLSKY_TMP}
+		return 0
+	fi
+
+	SIZE=75		# MB - should be enough
+	MSG="Making ${ALLSKY_TMP} reside in memory can drastically decrease the amount"
+	MSG+=" of writes to the SD card, increasing its life."
+	MSG+="\n\nDo you want to make it reside in memory?"
+	MSG+="\n\nNote: anything in it will be deleted whenever the Pi is rebooted,"
+	MSG+=" but that's not an issue since the directory only contains temporary files."
+	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
+		STRING="${INITIAL_FSTAB_STRING} size=${SIZE}M,noatime,lazytime,nodev,"
+		STRING+="nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${WEBSERVER_GROUP}"
+		if ! echo "${STRING}" | sudo tee -a /etc/fstab > /dev/null ; then
+			display_msg --log error "Unable to update /etc/fstab"
+			return 1
+		fi
+		check_and_mount_tmp
+		display_msg --log progress "${ALLSKY_TMP} is now in memory."
+	else
+		display_msg --log info "${ALLSKY_TMP} will remain on disk."
+		mkdir -p "${ALLSKY_TMP}"
+	fi
+
+	if [[ ${CALLED_FROM} == "install" ]]; then
+		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+	fi
+}
+
+####
+# Prompt for either latitude or longitude, and make sure it's a valid entry.
+function prompt_for_lat_long()
+{
+	local PROMPT="${1}"
+	local SETTING_NAME="${2}"
+	local WEBUI_SETTING_LABEL="${3}"
+	local ERROR_MSG=""   VALUE  M
+
+	[[ -z ${WT_WIDTH} ]] && WT_WIDTH="$( calc_wt_size )"
+	[[ -z ${TITLE} ]] && TITLE="Enter ${SETTING_NAME}"
+
+	while :
+	do
+		M="${ERROR_MSG}${PROMPT}"
+		VALUE=$( whiptail --title "${TITLE}" --inputbox "${M}" 18 "${WT_WIDTH}" "" 3>&1 1>&2 2>&3 )
+		if [[ -z ${VALUE} ]]; then
+			# Let the user not enter anything.
+			# A warning message is printed by our invoker.
+			echo ""
+			return
+
+		elif VALUE="$( convertLatLong "${VALUE}" "${SETTING_NAME}" 2>&1 )" ; then
+			update_json_file ".${SETTING_NAME}" "${VALUE}" "${SETTINGS_FILE}"
+			display_msg --log progress "${WEBUI_SETTING_LABEL} set to ${VALUE}."
+			echo "${VALUE}"
+			return
+
+		else
+			ERROR_MSG="${VALUE}\n\n"
+		fi
+	done
+}
+
+####
+# We can't automatically determine the latitude and longitude, so prompt for them.
+function get_lat_long()
+{
+	# Global: SETTINGS_FILE
+	local MSG  LATITUDE  LONGITUDE
+
+	if [[ ! -f ${SETTINGS_FILE} ]]; then
+		display_msg --log error "INTERNAL ERROR: '${SETTINGS_FILE}' not found!"
+		return 1
+	fi
+
+	display_msg --log progress "Prompting for Latitude and Longitude."
+	MSG="Enter your Latitude."
+	MSG+="\nIt can either have a plus or minus sign (e.g., -20.1)"
+	MSG+="\nor N or S (e.g., 20.1S)"
+	LATITUDE="$( prompt_for_lat_long "${MSG}" "latitude" "Latitude" )"
+
+	MSG="Enter your Longitude."
+	MSG+="\nIt can either have a plus or minus sign (e.g., -20.1)"
+	MSG+="\nor E or W (e.g., 20.1W)"
+	LONGITUDE="$( prompt_for_lat_long "${MSG}" "longitude" "Longitude" )"
+
+	if [[ -z ${LATITUDE} || -z ${LONGITUDE} ]]; then
+		MSG="Latitude and Longitude need to be set in the WebUI before Allsky can start."
+		display_msg --log warning "${MSG}"
+	fi
+	return 0
 }

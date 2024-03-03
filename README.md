@@ -1,4 +1,4 @@
-# Allsky Camera ![Release](https://img.shields.io/badge/Version-v2024.xx.xx-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
+# Allsky Camera ![Release](https://img.shields.io/badge/Version-v2024.xx.xy-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
 
 This is the source code for the Allsky Camera project described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/).
 &nbsp;  
@@ -6,9 +6,6 @@ This is the source code for the Allsky Camera project described [on Instructable
 <img src="https://github.com/AllskyTeam/allsky/blob/master/assets/allsky_camera.png" width="50%" title="Example of an allsky camera">
 </p>
 
-> **This README and the [Allsky documentation](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/index.html) will help get your allsky camera up and running.**
-
-&nbsp;  
 
 <!-- =============================================================================== --> 
 ## Requirements
@@ -16,13 +13,13 @@ This is the source code for the Allsky Camera project described [on Instructable
 You will need the following:
 
  * A Raspberry Pi (Zero 2, 2, 3, 4, 5) running Pi OS.
- * A camera (Raspberry Pi or compatible (HQ, Module 3, etc.), or ZWO ASI)
+ * A camera - Raspberry Pi or compatible (HQ, Module 3, etc.), or ZWO ASI.
 
 
 &nbsp;  
 > **NOTES:**
->	- Only the Raspberry Pi OS is supported.  Other operating systems like Ubuntu are NOT supported.  If possible use the newest Bookworm 64-bit release. Bullseye will also work, as will Buster, but support for Buster will be dropped after this release.
->	- The ZWO ASI120-series cameras are not recommended due to somewhat poor quality. See [Troubleshooting --> ZWO Cameras](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/troubleshooting/ZWOCameras.html) for notes on the ASI120-series and related T7 / T7C cameras.
+>	- Only the Raspberry Pi OS is supported.  Other operating systems like Ubuntu are NOT supported.  If possible use the newest Bookworm 64-bit release. Bullseye will also work. **Buster support will be dropped in the next release**.
+>	- The ZWO ASI120-series cameras are **not** recommended due to somewhat poor quality and tendency to produce a lot of errors.
 >	- The Pi Zero with its limited memory and _very_ limited CPU power (single CPU core), is not recommended.  You will likely not be able to create keograms, startrails, or timelapse videos.
 >	- The Pi Zero 2 with its limited memory and somewhat limited CPU power, is not recommended unless cost is the only concern.  Creating keograms, startrails, and timelapse videos may or may not be possible.
 >	- The Le Potato is the only "Pi-compatible" board that we've found to actually be compatible, so buyer beware.
@@ -46,12 +43,12 @@ Detailed installation instructions can be found at [Installing / Upgrading --> A
 ## Web User Interface (WebUI)
 
 <p align="center">
-<img src="https://github.com/AllskyTeam/allsky/blob/master/html/documentation/settings/AllskySettingsPage.png" style="border: 1px solid black">
+<img src="https://github.com/AllskyTeam/allsky/blob/master/html/documentation/settings/AllskySettingsPage.png"  width="90%" style="border: 1px solid black;">
 </p>
 
-The WebUI is now installed as part of Allsky and is used to administer Allsky, and to a lesser extent, your Pi. It can also be used to view the current image as well as all saved images, keograms, startrails, and timelapse videos.
+The WebUI is used to administer Allsky, and to a lesser extent, your Pi. It can also be used to view the current image as well as all saved images, keograms, startrails, and timelapse videos.
 
-A public page is also available in order to view the current image without having to log into the WebUI and without being able to do any administrative tasks. This can be useful for people who don't have a Allsky Website but still want to share a view of their sky:
+A public page is also available in order to view the current image without having to log into the WebUI and without being able to do any administrative tasks. This can be useful for people who don't use an Allsky Website but still want to share a view of their sky:
 
 ```
 http://your_raspberry_IP/public.php
@@ -60,15 +57,21 @@ http://your_raspberry_IP/public.php
 Make sure this page is publically viewable.
 If it is behind a firewall consult the documentation for your network equipment for information on allowing inbound connections.
 
+The WebUI has a link to the Allsky Documentation which describes all the settings Allsky uses as well as troubleshooting information.
+It should be used before requesting support on GitHub.
+
 ---
 
 &nbsp;
 <!-- =============================================================================== --> 
-## Allsky Website
+## Allsky Website and remote server
 
-By installling the optional Allsky Website you can display your files on a website on the Pi, on another machine, or on both.
+The local Allsky Website (i.e., on the Pi) in installed with Allsky but must be enabled in the WebUI in order to use it.
+You can also install the Allsky Website on a remote server so it can be viewable via the Internet.
 
 See [Installation / Upgrading --> Website](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/installations/AllskyWebsite.html) for information on how to install and configure an Allsky Website.
+
+Allsky images, keograms, startrails, and timelapse videos can optionally be uploaded to a remote server **not** running and Allsky Website.  This is useful if you have a personal website and want to include Allsky images.
 
 ---
 
@@ -92,7 +95,7 @@ See [Explanations / How To -> Overlays](https://htmlpreview.github.io/?https://r
 <!-- =============================================================================== --> 
 ## Dark frame subtraction
 
-Dark frame subtraction removes hot pixels from images by taking images at different temperatures with a cover on your camera lens and subtracting those images from nighttime images.
+Dark frame subtraction removes white (i.e., "hot") pixels from images by taking images with a cover over the camera lens and subtracting those images from images.
 
 See [Explanations / How To -> Dark frames](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/explanations/darkFrames.html) for more information.
 
@@ -148,10 +151,10 @@ See [Explanations / How To --> Startrails](https://htmlpreview.github.io/?https:
 <!-- =============================================================================== --> 
 ## Automatic deletion of old data
 
-You can specify how many days worth of images to keep in order to keep the Raspberry Pi SD card from filling up.  If you have the Allsky Website installed on your Pi, you can specify how many days worth of its imags to keep.
+You can specify how many days worth of images to keep in order to keep the Raspberry Pi SD card from filling up.  If you are using the Allsky Website on your Pi, you can specify how many days worth of its imags to keep.
 
 
-See the **DAYS_TO_KEEP** and **WEB_DAYS_TO_KEEP** settings in [Settings --> Allsky](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/settings/allsky.html).
+See the **Days to Keep on Pi Website** and **Web Days To Keep on Remote Website** settings in [Settings --> Allsky](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/settings/allsky.html).
 
 ---
 

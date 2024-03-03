@@ -3,6 +3,11 @@
 // Based on script by Thomas Jacquin
 // SPDX-License-Identifier: MIT
 
+// These tell the invoker to not try again with these images
+// since the next command will have the same problem.
+#define NO_IMAGES			98
+#define BAD_SAMPLE_FILE		99
+
 using namespace std;
 
 #include <getopt.h>
@@ -48,10 +53,17 @@ std::mutex stdio_mutex;
 int nchan = 0;
 unsigned long nfiles = 0;
 int s_len = 0;	// length in characters of nfiles, e.g. if nfiles == "1000", s_len = 4.
+const char *ME = "";
 
 // Read a single file and return true on success and false on error.
 // On success, set "mat".
-bool read_file(struct config_t* cf, char* filename, cv::Mat* mat, int file_num, char *msg, int msg_size)
+bool read_file(
+		struct config_t* cf,
+		char* filename,
+		cv::Mat* mat,
+		int file_num,
+		char *msg,
+		int msg_size)
 {
 	*mat = cv::imread(filename, cv::IMREAD_UNCHANGED);
 	if (! mat->data || mat->empty()) {
@@ -96,12 +108,13 @@ void usage_and_exit(int);
 // Keep track of number of digits in nfiles so file numbers will be consistent width.
 char s_[10];
 
-void startrail_worker(int thread_num,				// thread num
-					  struct config_t* cf,			// config
-					  glob_t* files,				// file list
-					  std::mutex* mtx,				// mutex
-					  cv::Mat* stats_ptr,			// statistics
-					  cv::Mat* main_accumulator)	// accumulated
+void startrail_worker(
+		int thread_num,				// thread num
+		struct config_t* cf,			// config
+		glob_t* files,				// file list
+		std::mutex* mtx,				// mutex
+		cv::Mat* stats_ptr,			// statistics
+		cv::Mat* main_accumulator)	// accumulated
 {
 	int start_num, end_num, batch_size;
 	cv::Mat thread_accumulator;
@@ -139,7 +152,8 @@ void startrail_worker(int thread_num,				// thread num
 		repair_msg[0] = '\0';
 		if (imagesrc.channels() != nchan) {
 			if (cf->verbose) {
-				snprintf(repair_msg, repair_msg_size, "%s: repairing channel mismatch from %d to %d\n", filename, imagesrc.channels(), nchan);
+				snprintf(repair_msg, repair_msg_size, "%s: repairing channel mismatch from %d to %d\n",
+					filename, imagesrc.channels(), nchan);
 			}
 			if (imagesrc.channels() < nchan)
 				cv::cvtColor(imagesrc, imagesrc, cv::COLOR_GRAY2BGR, nchan);
@@ -207,7 +221,8 @@ void startrail_worker(int thread_num,				// thread num
 	}
 }
 
-void parse_args(int argc, char** argv, struct config_t* cf) {
+void parse_args(int argc, char** argv, struct config_t* cf)
+{
 	int c, tmp, ncpu = std::thread::hardware_concurrency();
 
 	cf->verbose = 0;
@@ -252,8 +267,17 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 				int height, width;
 				sscanf(optarg, "%dx%d", &width, &height);
 				// 122.8Mpx should be enough for anybody.
-				if (height < 0 || height > 9600 || width < 0 || width > 12800)
+				if (height < 0 || width < 0) {
 					height = width = 0;
+					fprintf(stderr, "%s: WARNING: height (%d) and width (%d) must be >= 0.",
+						ME, height, width);
+					fprintf(stderr, "  Setting to 0.\n");
+				} else if (height > 9600 || width > 12800) {
+					fprintf(stderr, "%s: WARNING: maximum height (%d) is 9600 and maximum width (%d) is 12800.",
+						ME, height, width);
+					fprintf(stderr, "  Setting to 0.\n");
+					height = width = 0;
+				}
 				cf->img_height = height;
 				cf->img_width = width;
 				break;
@@ -278,15 +302,18 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 				if ((tmp >= 1) && (tmp <= ncpu))
 					cf->num_threads = tmp;
 				else
-					fprintf(stderr, "WARNING: Invalid number of threads %d; using %d\n", tmp, cf->num_threads);
+					fprintf(stderr, "%s: WARNING: Invalid number of threads %d; using %d\n",
+						ME, tmp, cf->num_threads);
 				break;
 			case 'q':
 				tmp = atoi(optarg);
 				if (PRIO_MIN > tmp) {
 					tmp = PRIO_MIN;
-					fprintf(stderr, "WARNING: Clamping scheduler priority to PRIO_MIN (%d)\n", PRIO_MIN);
+					fprintf(stderr, "%s: WARNING: Clamping scheduler priority to PRIO_MIN (%d)\n",
+						ME, PRIO_MIN);
 				} else if (PRIO_MAX < tmp) {
-					fprintf(stderr, "WARNING: Clamping scheduler priority to PRIO_MAX (%d)\n", PRIO_MAX);
+					fprintf(stderr, "%s: WARNING: Clamping scheduler priority to PRIO_MAX (%d)\n",
+						ME, PRIO_MAX);
 					tmp = PRIO_MAX;
 				}
 				cf->nice_level = atoi(optarg);
@@ -301,36 +328,38 @@ void parse_args(int argc, char** argv, struct config_t* cf) {
 }
 
 void usage_and_exit(int x) {
-	std::cout << "Usage: startrails [-v] -d <dir> -e <ext> [-b <brightness> -o <output> | -S] "
-		" [-s <WxH>] [-Q <max-threads>] [-q <nice>]" << std::endl;
+	std::cerr << "Usage: " << ME << " [-v] -d <imagedir> -e <ext>"
+		<< " [-b <brightness> -o <output> | -S] "
+		<< " [-s <WxH>] [-Q <max-threads>] [-q <nice>]" << std::endl;
 	if (x) {
-		std::cout << KRED
+		std::cerr << KRED
 			<< "Source directory and file extension are always required." << std::endl
 			<< "Brightness threshold and output file are required to render startrails."
 			<< KNRM << std::endl;
 	}
 
-	std::cout << std::endl << "Arguments:" << std::endl;
-	std::cout << "-h | --help : display this help, then exit" << std::endl;
-	std::cout << "-v | --verbose : increase log verbosity" << std::endl;
-	std::cout << "-S | --statistics : print image directory statistics without producing image" << std::endl;
-	std::cout << "-d | --directory <str> : directory from which to read images" << std::endl;
-	std::cout << "-e | --extension <str> : filter images to just this extension" << std::endl;
-	std::cout << "-Q | --max-threads <int> : limit maximum number of processing threads (all cpus)" << std::endl;
-	std::cout << "-q | --nice <int> : nice(2) level of processing threads (10)" << std::endl;
-	std::cout << "-o | --output-file <str> : output image filename" << std::endl;
-	std::cout << "-s | --image-size <int>x<int> : restrict processed images to this size" << std::endl;
-	std::cout << "-b | --brightness-limit <float> : ranges from 0 (black) to 1 (white). (0.35)" << std::endl;
-	std::cout << "\tA moonless sky may be as low as 0.05 while full moon can be as high as 0.4" << std::endl;
+	std::cerr << std::endl << "Arguments:" << std::endl;
+	std::cerr << "-h | --help : display this help, then exit" << std::endl;
+	std::cerr << "-v | --verbose : increase log verbosity" << std::endl;
+	std::cerr << "-S | --statistics : print image directory statistics without producing image" << std::endl;
+	std::cerr << "-d | --directory <str> : directory from which to read images" << std::endl;
+	std::cerr << "-e | --extension <str> : filter images to just this extension" << std::endl;
+	std::cerr << "-Q | --max-threads <int> : limit maximum number of processing threads (all cpus)" << std::endl;
+	std::cerr << "-q | --nice <int> : nice(2) level of processing threads (10)" << std::endl;
+	std::cerr << "-o | --output-file <str> : output image filename" << std::endl;
+	std::cerr << "-s | --image-size <int>x<int> : restrict processed images to this size" << std::endl;
+	std::cerr << "-b | --brightness-limit <float> : ranges from 0 (black) to 1 (white). (0.35)" << std::endl;
+	std::cerr << "\tA moonless sky may be as low as 0.05 while full moon can be as high as 0.4" << std::endl;
 
-	std::cout << std::endl;
-	std::cout << "ex: startrails -b 0.07 -d ../images/20220710/ -e jpg -o startrails.jpg" << std::endl;
+	std::cerr << std::endl;
+	std::cerr << "ex: startrails -b 0.07 -d ../images/20240710/ -e jpg -o startrails.jpg" << std::endl;
 	exit(x);
 }
 
 int main(int argc, char* argv[]) {
 	struct config_t config;
 	int r;
+	ME = basename(argv[0]);
 
 	parse_args(argc, argv, &config);
 
@@ -367,8 +396,9 @@ int main(int argc, char* argv[]) {
 	nfiles = files.gl_pathc;
 	if (nfiles == 0) {
 		globfree(&files);
-		std::cout << "ERROR: No images found, exiting." << std::endl;
-		exit(1);
+		std::cerr << ME << ": ERROR: No images found in " << config.img_src_dir;
+		std::cerr << ", exiting." << std::endl;
+		exit(NO_IMAGES);
 	}
 	// Determine width of the number of files, e.g., "1234" is 4 characters wide.
 	sprintf(s_, "%d", (int)nfiles);
@@ -395,8 +425,8 @@ int main(int argc, char* argv[]) {
 	if (nchan == 0 || (config.img_width == 0 && config.img_height == 0)) {
 		char not_used[1];
 		if (! read_file(&config, sample_file, &temp, sample_file_num+1, not_used, 0)) {
-			fprintf(stderr, "ERROR: Unable to read sample file '%s'; quitting\n", sample_file);
-			exit(1);
+			fprintf(stderr, "%s: ERROR: Unable to read sample file '%s'; quitting\n", ME, sample_file);
+			exit(BAD_SAMPLE_FILE);
 		}
 		if (config.verbose > 1) {
 			fprintf(stderr, "Getting nchan and/or size from: '%s'\n", sample_file);
@@ -447,14 +477,15 @@ int main(int argc, char* argv[]) {
 	std::nth_element(vec.begin(), vec.begin() + (vec.size() / 2), vec.end());
 	ds_median = vec[vec.size() / 2];
 
-	std::cout << "Minimum: " << ds_min << " maximum: " << ds_max
-			<< " mean: " << ds_mean << " median: " << ds_median << std::endl;
+	std::cout << ME << ": Minimum: " << ds_min << "   maximum: " << ds_max
+			<< "   mean: " << ds_mean << "   median: " << ds_median << std::endl;
 
 	// If we still don't have an image (no images below threshold), copy the
 	// minimum mean image so we see why
 	if (config.startrails_enabled) {
 		if (accumulated.empty()) {
-			fprintf(stderr, "No images below threshold %.3f, writing the minimum mean image only.\n",
+			// Indent since this msg goes with the line above.
+			fprintf(stderr, "    No images below threshold %.3f, writing the minimum mean image only.\n",
 					config.brightness_limit);
 			accumulated = cv::imread(files.gl_pathv[min_loc.x], cv::IMREAD_UNCHANGED);
 		}
@@ -472,11 +503,13 @@ int main(int argc, char* argv[]) {
 		try {
 			result = cv::imwrite(config.dst_startrails, accumulated, compression_params);
 		} catch (cv::Exception& ex) {
-			fprintf(stderr, "ERROR: could not save startrails file: %s\n", ex.what());
+			// Use lowercase "s"tartrails here and uppercase below so we
+			// know what produced the error.
+			fprintf(stderr, "%s: ERROR: could not save startrails file: %s\n", ME, ex.what());
 			exit(2);
 		}
 		if (! result) {
-			fprintf(stderr, "ERROR: could not save Startrails file: %s\n", strerror(errno));
+			fprintf(stderr, "%s: ERROR: could not save Startrails file: %s\n", ME, strerror(errno));
 			exit(2);
 		}
 	}

@@ -42,15 +42,15 @@ def saveimage(params, event):
     quality = s.getSetting("quality")
     if quality is not None:
         quality = s.int(quality)
-        result = "Image {0} Saved, quality {1}".format(s.CURRENTIMAGEPATH, quality)
+        result = f"Image {s.CURRENTIMAGEPATH} Saved, quality {quality}"
 
         if not writeImage(s.image, s.CURRENTIMAGEPATH, quality):
-            result = "Failed to save {0}".format(s.CURRENTIMAGEPATH) 
-            s.log(0, "ERROR: Failed to save image {0}".format(s.CURRENTIMAGEPATH), exitCode=1)
+            result = f"Failed to save {s.CURRENTIMAGEPATH}"
+            s.log(0, f"ERROR: {result}", exitCode=1)
         else:
-            s.log(4, "INFO: {}".format(result))
+            s.log(4, f"INFO: {result}")
     else:
         result = "Cannot determine the image quality. Image NOT saved"
-        s.log(0, "ERROR: {}".format(result))
+        s.log(0, f"ERROR: {result}")
 
     return result

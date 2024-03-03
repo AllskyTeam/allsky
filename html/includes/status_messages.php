@@ -2,7 +2,7 @@
 class StatusMessages {
 	public $messages = array();
 
-	public function addMessage($message, $level='success', $dismissable=true) {
+	public function addMessage($message, $level='success', $dismissable=false) {
 		$status = "<tr class='alert alert-$level'><td>$message</td>";
 		if ($dismissable) {
 			$status .= "<td class='alert-dismissable'>";
@@ -37,16 +37,16 @@ class StatusMessages {
 			$count++;
 			if ($count === 1) {
 				if ($highlight) {
-					$class = "class=${apos}highlightedBox${apos}";
+					$class = " class=${apos}highlightedBox${apos}";
 				} else {
 					$class = "";
 				}
-				echo "$nl<div $class><table width=${apos}100%${apos}>";
+				echo "$nl<div$class><table width=${apos}100%${apos}>";
 			}
 
 			if ($count >= 2) {
 				// space between messages
-				echo "$nl$tab<tr style=${apos}height: 10px${apos}><td></td></tr>";
+				echo "$nl$tab<tr><td style=${apos}padding-top: 5px${apos}></td></tr>";
 			}
 
 			if ($escape === true)
@@ -59,7 +59,7 @@ class StatusMessages {
 		}
 
 		if ($count > 0) {
-			echo "$nl</table></div>";
+			echo "$nl</table></div>$nl";
 		}
 
 		if ( $clear ) $this->messages = array();

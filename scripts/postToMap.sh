@@ -9,12 +9,10 @@ ME="$( basename "${BASH_ARGV0}" )"
 # Information is gathered automatically from the settings file.
 # The script can be called manually, via endOfNight.sh, or via the WebUI.
 
-#shellcheck disable=SC1091 source-path=.
+#shellcheck source-path=.
 source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
-#shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit "${EXIT_ERROR_STOP}"
 
 function usage_and_exit()
 {
@@ -37,7 +35,6 @@ function usage_and_exit()
 function get_domain()
 {
 	local URL D
-
 	# Get the domain name or IP address from a URL
 	# Examples:
 	#	http://myallsky.com						# Return "myallsky.com"
@@ -59,6 +56,7 @@ function check_URL()
 
 	# ${E} is a global variable we may set.
 	local TIMEOUT=30		# seconds to wait when trying to reach a URL
+
 	local D="$( get_domain "${URL}" )"
 	if [[ "${D:0:7}"  == "192.168"		||
 		  "${D:0:4}"  == "10.0"			||
@@ -77,6 +75,7 @@ function check_URL()
 		# Make sure it's a valid URL
 		local CONTENT="$( curl --head --silent --show-error --connect-timeout ${TIMEOUT} "${URL}" 2>&1 )"
 		local RET=$?
+		[[ ${DEBUG} == "true" ]] && echo -e "\n${wDEBUG}check_URL() RET=${RET}:\n${CONTENT}${wNC}.\n"
 		if [[ ${RET} -eq 6 ]]; then
 			E="ERROR: ${FIELD_NAME} '${URL}' not found - check spelling and network connectivity.${BR}${E}"
 		elif [[ ${RET} -eq 28 ]]; then
@@ -84,7 +83,8 @@ function check_URL()
 		elif [[ ${RET} -ne 0 ]]; then
 				E="ERROR: ${FIELD_NAME} '${URL}' cannot be reached (${CONTENT}).${BR}${E}"
 		else
-			if [[ ${URL_TYPE} == "websiteurl" ]]; then
+			local TYPE T
+			if [[ ${URL_TYPE} == "remotewebsiteurl" ]]; then
 				TYPE="$( echo "${CONTENT}" | grep -i "Content-Type: text" )"
 				T="web site"
 			else
@@ -108,7 +108,7 @@ WHISPER="false"
 ENDOFNIGHT="false"
 MACHINE_ID=""
 while [[ $# -ne 0 ]]; do
-	case "${1}" in
+	case "${1,,}" in
 		--help)
 			usage_and_exit 0;
 			;;
@@ -146,13 +146,6 @@ if [[ ${ON_TTY} == "false" && ${ENDOFNIGHT} == "false" ]]; then
 else
 	BR="\n"
 fi
-
-# shell check doesn't realize there were set in variables.sh
-wOK="${wOK}"
-wWARNING="${wWARNING}"
-wERROR="${wERROR}"
-wDEBUG="${wDEBUG}"
-wNC="${wNC}"
 
 if [[ ${ENDOFNIGHT} == "true" ]]; then
 	# All stdout/stderr output goes to the log file so don't include colors.
@@ -196,7 +189,6 @@ if [[ -z ${LONGITUDE} ]]; then
 fi
 [[ ${OK} == "false" ]] && echo -e "${ERROR_MSG_START}${E}${wNC}" && exit 1
 
-OK="true"
 LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" )" || OK="false"
 LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )" || OK="false"
 [[ ${OK} == "false" ]] && exit 1	# convertLatLong output error message
@@ -221,8 +213,8 @@ if [[ ${DELETE} == "true" ]]; then
 else
 	LOCATION="$( settings ".location" )"
 	OWNER="$( settings ".owner" )"
-	WEBSITE_URL="$( settings ".websiteurl" )"
-	IMAGE_URL="$( settings ".imageurl" )"
+	WEBSITE_URL="$( settings ".remotewebsiteurl" )"
+	IMAGE_URL="$( settings ".remotewebsiteimageurl" )"
 	CAMERA="$( settings ".camera" )"
 	LENS="$( settings ".lens" )"
 	COMPUTER="$( settings ".computer" )"
@@ -264,11 +256,12 @@ else
 			E="ERROR: The Website and Image URLs must have the same domain name or IP address.${BR}${E}"
 			OK="false"
 		fi
+		# check_URL() may set ${E}.
 		if [[ -n ${WEBSITE_URL} ]]; then
-			check_URL "${WEBSITE_URL}" websiteurl "Website URL" || OK="false"
+			check_URL "${WEBSITE_URL}" remotewebsiteurl "Website URL" || OK="false"
 		fi
 		if [[ -n ${IMAGE_URL} ]]; then
-			check_URL "${IMAGE_URL}" imageurl "Image URL" || OK="false"
+			check_URL "${IMAGE_URL}" remotewebsiteimageurl "Image URL" || OK="false"
 		fi
 	fi
 
@@ -339,8 +332,9 @@ if [[ ${UPLOAD} == "true" ]]; then
 	# shellcheck disable=SC2089
 	CMD="curl --silent -i -H 'Accept: application/json' -H 'Content-Type:application/json'"
 	# shellcheck disable=SC2089
-	CMD="${CMD} --data '$( generate_post_data )' 'https://www.thomasjacquin.com/allsky-map/postToMap.php'"
+	CMD+=" --data '$( generate_post_data )' 'https://www.thomasjacquin.com/allsky-map/postToMap.php'"
 	[[ ${DEBUG} == "true" ]] && echo -e "\n${wDEBUG}Executing:\n${CMD}${wNC}\n"
+
 	# shellcheck disable=SC2090,SC2086
 	RETURN="$( echo ${CMD} | bash )"
 	RETURN_CODE=$?

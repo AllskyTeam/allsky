@@ -6,36 +6,34 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
-
-cd "${ALLSKY_HOME}"  						|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 # High-level view of tasks for upgrade:
+#	Check if ${PRIOR_ALLSKY_DIR} exists.
+#		If so, warn user they won't be able to save current release.
 #	Prompt if user wants to carry current settings to new release.
-#	Rename current release.
-#	Download new release from GitHub.
+#		If so:
+#			If ${PRIOR_ALLSKY_DIR} exists, error out
+#		Rename ${ALLSKY_HOME} to ${PRIOR_ALLSKY_DIR}
+#	Download new release (with optional branch) from GitHub.
 #	Execute new release's installation script telling it it's an upgrade.
-
-# High-level view of tasks for restore:
-#	Rename current release to "${ALLSKY_HOME}-${ALLSKY_VERSION}"
-#	Rename prior release to ${ALLSKY_HOME}
-#	Execute old release's installation script telling it it's a restore.
 
 #############
 # Changes to install.sh needed:
 #	* Accept "--upgrade" argument which means we're doing an upgrade.
-#		- Don't display "**** Welcome to the Allsky Camera installer ****"
+#		- Don't display "**** Welcome to the installer ****"
+#		- Don't prompt for camera
 #		- Don't prompt to reboot
-#	* Accept "--camera camera" option and set CAMERA=<camera>
-#		Don't prompt for camera.
+#		- Don't prompt other things ??
 #
-#	* Accept "--restore" argument which means we're doing a restore.
 #############
 # TODO:
 #	Check for symbolic links
-#	Allow installing the "dev" branch.
+#	Allow installing other branches.
 #############
 
 ############################## functions
@@ -44,15 +42,15 @@ function usage_and_exit()
 	local RET=${1}
 	{
 		[[ ${RET} -ne 0 ]] && echo -e "${RED}"
-		echo -e "\nUpgrade the 'allsky' package, or restore the prior version from your Pi."
+		echo -e "\nUpgrade the Allsky software to a newer version.."
 		echo
-		echo -e "Usage: ${ME} [--help] [--debug] [--restore] [--function function]${NC}"
+		echo -e "Usage: ${ME} [--help] [--debug] [--branch branch] [--function function]${NC}"
 		echo
 		echo "'--help' displays this message and exits."
 		echo
 		echo "'--debug' displays debugging information."
 		echo
-		echo "'--restore' restores the prior version from '${ALLSKY_HOME}-OLD'."
+		echo "'--branch branch' uses 'branch' instead of the production branch."
 		echo
 		echo "'--function' executes the specified function and quits."
 		echo
@@ -71,7 +69,7 @@ HELP="false"
 DEBUG="false"; DEBUG_ARG=""
 ACTION="upgrade"; WORD="Upgrade"		# default
 FUNCTION=""
-while [ $# -gt 0 ]; do
+while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in
 		--help)
@@ -80,10 +78,6 @@ while [ $# -gt 0 ]; do
 		--debug)
 			DEBUG="true"
 			DEBUG_ARG="${ARG}"		# we can pass this to other scripts
-			;;
-		--restore)
-			ACTION="restore"
-			WORD="Restorer"
 			;;
 		--function)
 			FUNCTION="${2}"
@@ -100,6 +94,7 @@ done
 [[ ${OK} == "false" || $# -ne 0 ]] && usage_and_exit 1
 [[ ${DEBUG} == "true" ]] && echo "Running: ${ME} ${ALL_ARGS}"
 
+# shellcheck disable=SC2119
 BRANCH="$( get_branch )"
 [[ -z ${BRANCH} ]] && BRANCH="${GITHUB_MAIN_BRANCH}"
 
@@ -108,7 +103,7 @@ DEBUG="${DEBUG}"
 DEBUG_ARG="${DEBUG_ARG}"
 FUNCTION="${FUNCTION}"
 
-if [ "${ACTION}" != "doUpgrade" ]; then
+if [[ "${ACTION}" != "doUpgrade" ]]; then
 	echo
 	echo "***********************************************"
 	echo "*** Welcome to the Allsky Software ${WORD} ***"
@@ -125,23 +120,22 @@ if [[ ${ACTION} == "upgrade" ]]; then
 
 	# Make sure we can upgrade:
 	#	If config/ does NOT exist, the user hasn't installed Allsky.
-	#		Tell the user.
-	#		Invoke install.sh, or exit ?????
+	#		Warn the user but let them continue (won't be able to restore from prior).
 
 	# Ask user if they want to upgrade in place (i.e., overwrite code),
-	# or move current code to ${ALLSKY_HOME}-OLD.
+	# or move current code to ${PRIOR_ALLSKY_DIR}.
 
 	# If move current code:
 	#	Check for prior Allsky versions:
-	#		If ${ALLSKY_HOME}-OLD exist:
-	#			If ${ALLSKY_HOME}-OLDEST exists
+	#		If ${PRIOR_ALLSKY_DIR} exist:
+	#			If ${PRIOR_ALLSKY_DIR}-OLDEST exists
 	#				Let user know both old versions exist
 	#				Exit
-	#			Let the user know ${ALLSKY_HOME}-OLD exists as FYI:
-	#				echo "Saving prior version in ${ALLSKY_HOME}-OLDEST"
-	#			Move ${ALLSKY_HOME}-OLD to ${ALLSKY_HOME}-OLDEST
+	#			Let the user know ${PRIOR_ALLSKY_DIR} exists as FYI:
+	#				echo "Saving prior version in ${PRIOR_ALLSKY_DIR}-OLDEST"
+	#			Move ${PRIOR_ALLSKY_DIR} to ${PRIOR_ALLSKY_DIR}-OLDEST
 	#	Stop allsky
-	#	Move ${ALLSKY_HOME} to ${ALLSKY_HOME}-OLD
+	#	Move ${ALLSKY_HOME} to ${PRIOR_ALLSKY_DIR}
 	#	cd
 	#	Git new code into ${ALLSKY_HOME}
 	#	cd ${ALLSKY_HOME}
@@ -160,24 +154,5 @@ if [[ ${ACTION} == "upgrade" ]]; then
 	#		not display header, change messages to say "upgrade", not "install", etc.
 	#		How is --doUpgradeInPlace different from --doUpgrade ??
 	#	?? anything else?
-
-elif [[ ${ACTION} == "restore" ]]; then
-	:
-
-	# If running in ${ALLSKY_HOME}		# us 1st time through
-	#	Make sure ${ALLSKY_HOME}-OLD exists
-	#		If not, warn user and exit:
-	#			"No prior version to restore from: ${ALLSKY_HOME}-OLD does not exist".
-	#	cp ${ME} /tmp
-	#	chmod 775 /tmp/${ME}
-	#	exec /tmp/${ME} --restore ${ALL_ARGS} ${ALLSKY_HOME}
-
-	# Else		# running from /tmp - do the actual work
-	#	Stop allsky
-	#	mv ${ALLSKY_HOME} ${ALLSKY_HOME}-new_tmp
-	#	mv ${ALLSKY_HOME}-OLD ${ALLSKY_HOME}
-	#	move images from ${ALLSKY_HOME}-new_tmp to ${ALLSKY_HOME}
-	#	move darks from ${ALLSKY_HOME}-new_tmp to ${ALLSKY_HOME}
-	#	move other stuff that was moved in install.sh from old to new
 
 fi

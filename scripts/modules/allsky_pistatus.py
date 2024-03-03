@@ -49,10 +49,10 @@ tstats = {
     '19': 'Soft temperature limit has occurred'
 }
 
-def formatSize(bytes):
+def formatSize(Bytes):
     try:
-        bytes = float(bytes)
-        kb = bytes / 1024
+        Bytes = float(Bytes)
+        kb = Bytes / 1024
     except:
         return "Error"
     if kb >= 1024:
@@ -136,7 +136,7 @@ def pistatus(params, event):
     if data:
         s.saveExtraData("pistatus.json", data)
     
-    s.log(1,'INFO: ' + result)
+    s.log(4, f'INFO: {result}')
     return result
 
 def pistatus_cleanup():

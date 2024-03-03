@@ -2023,6 +2023,7 @@ convert_ftp_sh()
 
 		if [[ ${PROTOCOL} != "s3" ]]; then
 			AWS_CLI_DIR=""
+			# shellcheck disable=SC2034
 			S3_BUCKET=""
 		fi
 		doV "" "AWS_CLI_DIR" "REMOTEWEBSITE_AWS_CLI_DIR" "text" "${ALLSKY_ENV}"
@@ -2030,6 +2031,7 @@ convert_ftp_sh()
 		doV "" "S3_ACL" "REMOTEWEBSITE_S3_ACL" "text" "${ALLSKY_ENV}"
 
 		if [[ ${PROTOCOL} != "gcs" ]]; then
+			# shellcheck disable=SC2034
 			GCS_BUCKET=""
 		fi
 		doV "" "GCS_BUCKET" "REMOTEWEBSITE_GCS_BUCKET" "text" "${ALLSKY_ENV}"

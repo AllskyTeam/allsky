@@ -1743,7 +1743,12 @@ doV()
 
 	local ERR  MSG
 	if ERR="$( update_json_file ".${jV}" "${VAL}" "${FILE}" "${TYPE}" 2>&1 )" ; then
-		MSG="${SPACE}${oldV}: ${jV} = ${VAL}"
+		if [[ ${oldV} == "${jV}" ]]; then
+			oldV=""
+		else
+			oldV="${oldV}: "
+		fi
+		MSG="${SPACE}${oldV}${jV} = ${VAL}"
 		display_msg --logonly info "${MSG}"
 	else
 		# update_json_file() returns error message.

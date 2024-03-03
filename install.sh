@@ -1544,7 +1544,7 @@ convert_settings()			# prior_file, new_file
 	# bash doesn't have >= so use   ! <
 	[[ ! (${PRIOR_ALLSKY_BASE_VERSION} < "${COMBINED_BASE_VERSION}") ]] && return
 
-	local MSG="Converting '$( basename "${PRIOR_FILE}" )' to new format."
+	local MSG="Converting '$( basename "${PRIOR_FILE}" )' to new format:"
 	display_msg --log progress "${MSG}"
 
 	local DIR  TEMP_PRIOR  TEMP_NEW
@@ -1728,7 +1728,6 @@ doV()
 	local TYPE="${4}"
 	local FILE="${5}"
 
-	[[ -z ${VAL} ]] && return
 	[[ -z ${oldV} ]] && oldV="${V}"
 
 	if [[ ${TYPE} == "boolean" ]]; then
@@ -1744,7 +1743,7 @@ doV()
 
 	local ERR  MSG
 	if ERR="$( update_json_file ".${jV}" "${VAL}" "${FILE}" "${TYPE}" 2>&1 )" ; then
-		MSG="   ${oldV}: ${jV} = ${VAL}"
+		MSG="${SPACE}${oldV}: ${jV} = ${VAL}"
 		display_msg --logonly info "${MSG}"
 	else
 		# update_json_file() returns error message.
@@ -1768,7 +1767,7 @@ convert_config_sh()
 		return 1
 	fi
 
-	MSG="${SPACE}Copying prior config.sh settings to settings file."
+	MSG="Copying prior config.sh settings to settings file:"
 	display_msg --log progress "${MSG}"
 	(		# Use (  and not {  so the source'd variables don't stay in our environment
 		#shellcheck disable=SC1090
@@ -1839,14 +1838,14 @@ convert_config_sh()
 		doV "NEW" "X" "imagecropbottom" "number" "${NEW_FILE}"
 		doV "NEW" "X" "imagecropleft" "number" "${NEW_FILE}"
 
-		# AUTOSTRETCH no longer used; only stretch if AMOUNT > 0 and MID_POINT != ""
+		# AUTO_STRETCH no longer used; only stretch if AMOUNT > 0 and MID_POINT != ""
 		X=0; doV "NEW" "X" "imagestretchamountdaytime" "number" "${NEW_FILE}"
 		X=10; doV "NEW" "X" "imagestretchmidpointdaytime" "number" "${NEW_FILE}"
 		# shellcheck disable=SC2034
-		[[ ${AUTOSTRETCH} != "true" || -z ${AUTOSTRETCH_MID_POINT} ]] && AUTOSTRETCH_AMOUNT=0
-		doV "" "AUTOSTRETCH_AMOUNT" "imagestretchamountnighttime" "number" "${NEW_FILE}"
-		AUTOSTRETCH_MID_POINT="${AUTOSTRETCH_MID_POINT/\%/}"	# % no longer used
-		doV "" "AUTOSTRETCH_MID_POINT" "imagestretchmidpointnighttime" "number" "${NEW_FILE}"
+		[[ ${AUTO_STRETCH} != "true" || -z ${AUTO_STRETCH_MID_POINT} ]] && AUTO_STRETCH_AMOUNT=0
+		doV "" "AUTO_STRETCH_AMOUNT" "imagestretchamountnighttime" "number" "${NEW_FILE}"
+		AUTO_STRETCH_MID_POINT="${AUTO_STRETCH_MID_POINT/\%/}"	# % no longer used
+		doV "" "AUTO_STRETCH_MID_POINT" "imagestretchmidpointnighttime" "number" "${NEW_FILE}"
 
 		# RESIZE_UPLOADS no longer used; resize only if width > 0 and height > 0.
 		if [[ ${RESIZE_UPLOADS} != "true" ]]; then
@@ -1888,7 +1887,7 @@ convert_config_sh()
 		doV "" "TIMELAPSE_MINI_IMAGES" "minitimelapsenumimages" "number" "${NEW_FILE}"
 		doV "" "TIMELAPSE_MINI_FORCE_CREATION" "minitimelapseforcecreation" "boolean" "${NEW_FILE}"
 		doV "" "TIMELAPSE_MINI_FREQUENCY" "minitimelapsefrequency" "number" "${NEW_FILE}"
-		doV "" "TIMELAPSE_MINI_UPLOAD_VIDIO" "minitimelapseupload" "boolean" "${NEW_FILE}"
+		doV "" "TIMELAPSE_MINI_UPLOAD_VIDEO" "minitimelapseupload" "boolean" "${NEW_FILE}"
 		doV "" "TIMELAPSE_MINI_UPLOAD_THUMBNAIL" "minitimelapseuploadthumbnail" "boolean" "${NEW_FILE}"
 		doV "" "TIMELAPSE_MINI_FPS" "minitimelapsefps" "number" "${NEW_FILE}"
 		TIMELAPSE_MINI_BITRATE="${TIMELAPSE_MINI_BITRATE//k/}"
@@ -1950,7 +1949,7 @@ convert_ftp_sh()
 		return 1
 	fi
 
-	MSG="${SPACE}Copying prior ftp-settings.sh settings to settings file."
+	MSG="Copying prior ftp-settings.sh settings to settings file:"
 	display_msg --log progress "${MSG}"
 	(		# Use (  and not {  so the source'd variables don't stay in our environment
 
@@ -1996,6 +1995,7 @@ convert_ftp_sh()
 		fi
 		doV "NEW" "X" "uselocalwebsite" "boolean" "${NEW_FILE}"
 
+		##### Remote Website
 		if [[ (-n ${PROTOCOL} && ${PROTOCOL,,} != "local") || -n ${REMOTE_HOST} ]]; then
 			doV "" "PROTOCOL" "remotewebsiteprotocol" "text" "${NEW_FILE}"
 			doV "" "IMAGE_DIR" "remotewebsiteimagedir" "text" "${NEW_FILE}"
@@ -2025,13 +2025,13 @@ convert_ftp_sh()
 		doV "" "GCS_BUCKET" "REMOTEWEBSITE_GCS_BUCKET" "text" "${ALLSKY_ENV}"
 		doV "" "GCS_ACL" "REMOTEWEBSITE_GCS_ACL" "text" "${ALLSKY_ENV}"
 
-		# Remote server - wasn't in prior releases so don't need to update ${ALLSKY_ENV}.
-		doV "" "IMG_UPLOAD_ORIGINAL_NAME" "remoteserverimageuploadoriginalname" "boolean" "${NEW_FILE}"
-	) || return 1
+		##### Remote server - wasn't in prior releases so don't need to update ${ALLSKY_ENV}.
+		X="false"; doV "NEW" "X" "useremoteserver" "boolean" "${NEW_FILE}"
+		X=""; doV "NEW" "X" "remoteserverprotocol" "text" "${NEW_FILE}"
+		X="false"; doV "NEW" "X" "remoteserverimageuploadoriginalname" "boolean" "${NEW_FILE}"
+	)
 
-	if [[ ${CALLED_FROM} == "install" ]]; then
-		STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
-	fi
+	[[ ${CALLED_FROM} == "install" ]] && STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 
 	return 0
 }
@@ -2253,6 +2253,15 @@ restore_prior_files()
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
+	ITEM="${SPACE}'config/ssl' directory"
+	if [[ -d ${PRIOR_CONFIG_DIR}/ssl ]]; then
+		display_msg --log progress "${ITEM} (copying)"
+		cp -ar "${PRIOR_CONFIG_DIR}/ssl" "${ALLSKY_CONFIG}"
+	else
+		# Almost no one has this directory, so don't show to user.
+		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
+	fi
+
 	ITEM="${SPACE}'config/modules' directory"
 	if [[ -d ${PRIOR_CONFIG_DIR}/modules ]]; then
 		display_msg --log progress "${ITEM}"
@@ -2281,15 +2290,7 @@ restore_prior_files()
 	fi
 	[[ ! -d ${MY_OVERLAY_TEMPLATES} ]] && mkdir -p "${MY_OVERLAY_TEMPLATES}"
 
-	ITEM="${SPACE}'config/ssl' directory"
-	if [[ -d ${PRIOR_CONFIG_DIR}/ssl ]]; then
-		display_msg --log progress "${ITEM} (copying)"
-		cp -ar "${PRIOR_CONFIG_DIR}/ssl" "${ALLSKY_CONFIG}"
-	else
-		# Almost no one has this directory, so don't show to user.
-		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
-	fi
-
+if false; then		# done as part of config/overlay above XXXXXXXXXXXXXXXXXXX
 	# This is not in a "standard" directory so we need to determine where it was.
 	E="${ALLSKY_EXTRA//${ALLSKY_HOME}\//}"
 	EXTRA="${PRIOR_ALLSKY_DIR}${E}"
@@ -2300,6 +2301,7 @@ restore_prior_files()
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
+fi
 
 	if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
 		D="${PRIOR_CONFIG_DIR}"
@@ -2322,9 +2324,6 @@ restore_prior_files()
 		cp -a "${PRIOR_CONFIG_DIR}/uservariables.sh" "${ALLSKY_CONFIG}"
 	# Don't bother with the "else" part since this file is very rarely used.
 	fi
-
-# TODO: remove
-echo XXXX NOT RUNNING	restore_prior_settings_file
 
 
 	########## Website files

@@ -1789,8 +1789,8 @@
 	{"value" : "ftp", "label" : "ftp"},
 	{"value" : "sftp", "label" : "sftp"},
 	{"value" : "scp", "label" : "scp"},
-	{"value" : "S3", "label" : "s3"},
-	{"value" : "GCS", "label" : "gcs"}
+	{"value" : "s3", "label" : "S3"},
+	{"value" : "gcs", "label" : "GCS"}
 ],
 "carryforward" : true,
 "checkchanges" : true,
@@ -2024,8 +2024,8 @@
 	{"value" : "ftp", "label" : "ftp"},
 	{"value" : "sftp", "label" : "sftp"},
 	{"value" : "scp", "label" : "scp"},
-	{"value" : "S3", "label" : "s3"},
-	{"value" : "GCS", "label" : "gcs"}
+	{"value" : "s3", "label" : "S3"},
+	{"value" : "gcs", "label" : "GCS"}
 ],
 "carryforward" : true,
 "checkchanges" : true,

@@ -66,12 +66,12 @@ parse_output()
 	local PROTOCOL  DIR  HOST  USER  STRING  S  SSL
 
 	if [[ ${TYPE} == "REMOTEWEBSITE" ]]; then
-		PROTOCOL=".remotewebsiteprotocol"
-		DIR=".remotewebsiteimagedir"
+		PROTOCOL="remotewebsiteprotocol"
+		DIR="remotewebsiteimagedir"
 		S="Remote Website Settings"
 	else
-		PROTOCOL=".remoteserverprotocol"
-		DIR=".remoteserverimagedir"
+		PROTOCOL="remoteserverprotocol"
+		DIR="remoteserverimagedir"
 		S="Remote Server Settings"
 	fi
 	HOST="${TYPE}_HOST"
@@ -97,7 +97,7 @@ parse_output()
 	if grep --ignore-case --silent "${STRING}" "${OUTPUT}" ; then
 		echo "* Unable to login for unknown reason."
 		echo "  FIX: Make sure the port is correct and your network is working."
-		PROTOCOL="$( settings "${PROTOCOL}" )"
+		PROTOCOL="$( settings ".${PROTOCOL}" )"
 		if [[ ${PROTOCOL} == "sftp" ]]; then
 			HOST="$( settings ".${HOST}" "${ENV_FILE}" )"
 			USER="$( settings ".${USER}" "${ENV_FILE}" )"
@@ -117,7 +117,7 @@ parse_output()
 			# If we can't login we wouldn't know if the location was there.
 			echo "* Login failed and unknown location found."
 		fi
-		DIR="$( settings "${DIR}" )"
+		DIR="$( settings ".${DIR}" )"
 		if [[ -n ${DIR} ]]; then
 			echo "  The 'Image Directory' in the WebUI's '${S}' section is '${DIR}'."
 			echo "  FIX: make sure that directory exists on the server."
@@ -133,7 +133,7 @@ parse_output()
 	if grep --ignore-case --silent "${STRING}" "${OUTPUT}" ; then
 		HOST="$( settings ".${HOST}" "${ENV_FILE}" )"
 		USER="$( settings ".${USER}" "${ENV_FILE}" )"
-		PROTOCOL="$( settings "${PROTOCOL}" )"
+		PROTOCOL="$( settings ".${PROTOCOL}" )"
 		echo "* The remote machine doesn't know about your Pi."
 		if [[ ${PROTOCOL} == "sftp" ]]; then
 			echo "  This happens the first time you use Protocol 'sftp' on a new Pi."
@@ -270,4 +270,3 @@ if [[ -s ${MSG_FILE} ]]; then
 fi
 
 exit ${RET}
-

@@ -1901,7 +1901,7 @@ convert_config_sh()
 		X="true"; doV "NEW" "X" "keogramexpand" "boolean" "${NEW_FILE}"
 		X="simplex"; doV "NEW" "X" "keogramfontname" "text" "${NEW_FILE}"
 		X="#ffff"; doV "NEW" "X" "keogramfontcolor" "text" "${NEW_FILE}"
-		X=1; d "NEW"oV "X" "keogramfontsize" "text" "${NEW_FILE}"
+		X=1; doV "NEW" "X" "keogramfontsize" "text" "${NEW_FILE}"
 		X=3; doV "NEW" "X" "keogramlinethickness" "text" "${NEW_FILE}"
 
 		doV "" "STARTRAILS" "startrailsgenerate" "boolean" "${NEW_FILE}"
@@ -2719,6 +2719,10 @@ do_restore()
 		else
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		fi
+
+		ITEM="${SPACE}Local Website directory"
+		display_msg --log progress "${ITEM} (removing)"
+		rm -fr "${ALLSKY_WEBSITE}"
 	fi
 
 	# Since we'll be running a new Allsky, start off with clean log files.
@@ -3104,10 +3108,10 @@ sort_settings_file()
 {
 	local FILE="${1}"
 
-	display_msg --logonly info "Sorting setings file '${FILE}'."
+	display_msg --logonly info "Sorting settings file '${FILE}'."
 
 	"${ALLSKY_WEBUI}/includes/convertJSON.php" \
-		--sort \
+		--order \
 		--settings-file "${FILE}" \
 		--options-file "${OPTIONS_FILE}" \
 		> "${TMP_FILE}" 2>&1

@@ -1963,8 +1963,9 @@ convert_ftp_sh()
 			return 1
 		fi
 
-		# Really old names:
+		PROTOCOL="${PROTOCOL,,}"
 
+		# Really old names:
 		# shellcheck disable=SC2034
 		[[ -n ${HOST} ]] && REMOTE_HOST="${HOST}"
 		# shellcheck disable=SC2034
@@ -1996,7 +1997,7 @@ convert_ftp_sh()
 		doV "NEW" "X" "uselocalwebsite" "boolean" "${NEW_FILE}"
 
 		##### Remote Website
-		if [[ (-n ${PROTOCOL} && ${PROTOCOL,,} != "local") || -n ${REMOTE_HOST} ]]; then
+		if [[ (-n ${PROTOCOL} && ${PROTOCOL} != "local") || -n ${REMOTE_HOST} ]]; then
 			doV "" "PROTOCOL" "remotewebsiteprotocol" "text" "${NEW_FILE}"
 			doV "" "IMAGE_DIR" "remotewebsiteimagedir" "text" "${NEW_FILE}"
 			X="true"
@@ -2019,9 +2020,18 @@ convert_ftp_sh()
 		doV "" "REMOTE_PASSWORD" "REMOTEWEBSITE_PASSWORD" "text" "${ALLSKY_ENV}"
 		doV "" "LFTP_COMMANDS" "REMOTEWEBSITE_LFTP_COMMANDS" "text" "${ALLSKY_ENV}"
 		doV "" "SSH_KEY_FILE" "REMOTEWEBSITE_SSH_KEY_FILE" "text" "${ALLSKY_ENV}"
+
+		if [[ ${PROTOCOL} != "s3" ]]; then
+			AWS_CLI_DIR=""
+			S3_BUCKET=""
+		fi
 		doV "" "AWS_CLI_DIR" "REMOTEWEBSITE_AWS_CLI_DIR" "text" "${ALLSKY_ENV}"
 		doV "" "S3_BUCKET" "REMOTEWEBSITE_S3_BUCKET" "text" "${ALLSKY_ENV}"
 		doV "" "S3_ACL" "REMOTEWEBSITE_S3_ACL" "text" "${ALLSKY_ENV}"
+
+		if [[ ${PROTOCOL} != "gcs" ]]; then
+			GCS_BUCKET=""
+		fi
 		doV "" "GCS_BUCKET" "REMOTEWEBSITE_GCS_BUCKET" "text" "${ALLSKY_ENV}"
 		doV "" "GCS_ACL" "REMOTEWEBSITE_GCS_ACL" "text" "${ALLSKY_ENV}"
 
@@ -3132,9 +3142,9 @@ check_restored_settings()
 {
 	local IMG  AFTER  MSG
 
-	for s in $( ls "${ALLSKY_CONFIG}/settings_"* 2>/dev/null )
+	for s in "${ALLSKY_CONFIG}/settings_"*
 	do
-		sort_settings_file "${s}"
+		[[ -f ${s} ]] && sort_settings_file "${s}"
 	done
 
 	if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" && \

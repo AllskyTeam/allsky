@@ -3099,11 +3099,40 @@ exit_with_image()
 
 
 ####
+# Sort the specified settings file to be the same as the options file.
+sort_settings_file()
+{
+	local FILE="${1}"
+
+	display_msg --logonly info "Sorting setings file '${FILE}'."
+
+	"${ALLSKY_WEBUI}/includes/convertJSON.php" \
+		--sort \
+		--settings-file "${FILE}" \
+		--options-file "${OPTIONS_FILE}" \
+		> "${TMP_FILE}" 2>&1
+	if [[ $? -ne 0 ]]; then
+		MSG="Unable to sort settings file '${FILE}': $( < "${TMP_FILE}" ); ignoring"
+		display_msg --log error "${MSG}"
+		return 1
+	fi
+
+	cp "${TMP_FILE}" "${FILE}"
+	return 0
+}
+	
+####
 # Check if we restored all prior settings.
 # Global: CONFIGURATION_NEEDED
 check_restored_settings()
 {
 	local IMG  AFTER  MSG
+
+	for s in $( ls "${ALLSKY_CONFIG}/settings_"* 2>/dev/null )
+	do
+		sort_settings_file "${s}"
+	done
+
 	if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" && \
 	  	  ${COPIED_PRIOR_CONFIG_SH} == "true" && \
 	  	  ${COPIED_PRIOR_FTP_SH} == "true" ]]; then

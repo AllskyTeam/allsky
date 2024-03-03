@@ -573,10 +573,12 @@ if [[ ${USE_REMOTE_WEBSITE} == "true" || ${USE_REMOTE_SERVER} == "true" ]]; then
 	if [[ ! -f ${ALLSKY_ENV} ]]; then
 		cp "${REPO_ENV_FILE}" "${ALLSKY_ENV}"
 	fi
+
 	if [[ ${USE_REMOTE_WEBSITE} == "true" && ${CHECK_REMOTE_WEBSITE_ACCESS} == "true" ]]; then
 		# testUpload.sh displays error messages
 		"${ALLSKY_SCRIPTS}/testUpload.sh" --website
 	fi
+
 	if [[ ${USE_REMOTE_SERVER} == "true" && ${CHECK_REMOTE_SERVER_ACCESS} == "true" ]]; then
 		"${ALLSKY_SCRIPTS}/testUpload.sh" --server
 	fi

@@ -1802,7 +1802,7 @@ convert_config_sh()
 		fi
 		[[ -n ${X} ]] && doV "${X}" "X" "savedaytimeimages" "boolean" "${NEW_FILE}"
 
-		doV "DARK_FRAME_SUBTRACTION" "usedarkframes" "boolean" "${NEW_FILE}"
+		doV "" "DARK_FRAME_SUBTRACTION" "usedarkframes" "boolean" "${NEW_FILE}"
 
 		# IMG_UPLOAD no longer used; instead, upload if FREQUENCY > 0.
 		# shellcheck disable=SC2034

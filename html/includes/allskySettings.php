@@ -1,24 +1,36 @@
 <?php
 
-// Get the json for the given file "f" if we haven't already and return a pointer to the data.
-function &getSourceArray($f) {
-	global $status;
-	static $filesContents = array();
+$debug = false;
 
-	$fileName = getFileName($f);
+// Get the json for the given file if we haven't already and return a pointer to the data.
+// Most of the time there will only be one source file, so check if we're getting the
+// same file as last time.
+function &getSourceArray($file) {
+	global $status, $debug;
+
+	static $filesContents = array();
+	static $lastFile = null;
+
+	$fileName = getFileName($file);
 	if ($fileName == "") {
-		$errorMsg = "Unable to get file name for '$f'. Some settings will not work.";
-		$status->addMessage($msg, 'danger', false);
+		$errorMsg = "Unable to get file name for '$file'. Some settings will not work.";
+		$status->addMessage($msg, 'danger');
 		return ("");
 	}
+
+	if ($fileName === $lastFile) return($filesContents[$fileName]);
+
+	$lastFile = $fileName;
+
 	if (! isset($filesContents[$fileName])) {
-		$errorMsg = "Unable to read source file '$fileName'";
-		$filesContents[$fileName] = get_decoded_json_file($fileName, true, $errorMsg);
-		if ($filesContents[$fileName] === null) {
-			$msg = "Unable to get json contents of '$fileName' ($f).";
-			$status->addMessage($msg, 'danger', false);
+		$errorMsg = "Unable to read source file from $file.";
+		$retMsg = "";
+		$filesContents[$fileName] = get_decoded_json_file($fileName, true, $errorMsg, $retMsg);
+		if ($filesContents[$fileName] === null || $retMsg !== "") {
+			$status->addMessage($retMsg, 'danger');
 		}
 	}
+//x echo "<br><pre>return fileName=$fileName: "; var_dump($filesContents); echo "</pre>";
 	return $filesContents[$fileName];
 }
 
@@ -41,8 +53,6 @@ function formatSettingValue($value) {
 }
 
 function checkType($fieldName, $value, $old, $label, $type, &$shortened=null) {
-	global $status;
-
 	if ($type === null || $value == "") {
 		return("");
 	}
@@ -85,9 +95,14 @@ function checkType($fieldName, $value, $old, $label, $type, &$shortened=null) {
 function DisplayAllskyConfig() {
 	global $formReadonly, $settings_array;
 	global $hasLocalWebsite, $hasRemoteWebsite;
+	global $debug;
+	global $lastChangedName;				// name of json setting
+	global $lastChanged;
+	global $page;
+	global $ME;
+	global $status;
+	global $endSetting;
 
-	$END = "XX_END_XX";
-	$debug = false;
 	$cameraTypeName = "cameratype";			// json setting name
 	$cameraModelName = "cameramodel";		// json setting name
 	$cameraNumberName = "cameranumber";		// json setting name
@@ -100,12 +115,6 @@ function DisplayAllskyConfig() {
 	$bullet = "<div class='bullet'>*</div>";
 	$showIcon = "<i class='fa fa-chevron-down fa-fw'></i>";
 	$hideIcon = "<i class='fa fa-chevron-up fa-fw'></i>";
-
-	global $lastChangedName;				// name of json setting
-	global $lastChanged;
-	global $page;
-	global $ME;
-	global $status;
 
 	$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
 	$settings_file = getSettingsFile();
@@ -179,7 +188,7 @@ function DisplayAllskyConfig() {
 
 	 		foreach ($_POST as $name => $newValue) {
 				// Anything that's sent "hidden" in a form that isn't a settings needs to go here.
-				if (in_array($name, ["csrf_token", "save_settings", "reset_settings", "restart", "page", "_ts", $END, "fromConfiguration"])) {
+				if (in_array($name, ["csrf_token", "save_settings", "reset_settings", "restart", "page", "_ts", $endSetting, "fromConfiguration"])) {
 					continue;
 				}
 
@@ -240,7 +249,7 @@ function DisplayAllskyConfig() {
 				}
 				if (! $found) {
 					$msg = "Setting '$name' not in options file.";
-					$status->addMessage($msg, 'danger', false);
+					$status->addMessage($msg, 'danger');
 					$ok = false;
 				} else {
 					if ($oldValue !== "")
@@ -346,7 +355,7 @@ if ($debug && $s != $s_newValue) {
 						$msg = "If you change <b>Camera Type</b>, <b>Camera Model</b>,";
 						$msg .= " or <b>Camera Number</b>  you cannot change anything else.";
 						$msg .= "<br>You also changed: $nonCameraChanges.";
-						$status->addMessage($msg, 'danger', false);
+						$status->addMessage($msg, 'danger');
 						$ok = false;
 					} else {
 						if ($numSettingsChanges > 0 || $fromConfiguration) {
@@ -355,7 +364,7 @@ if ($debug && $s != $s_newValue) {
 							$lastChanged = date('Y-m-d H:i:s');
 							$settings_array[$lastChangedName] = $lastChanged;
 							if ($fromConfiguration)
-								unset($settings_array[$END]);
+								unset($settings_array[$endSetting]);
 							$content = json_encode($settings_array, $mode);
 if ($debug) {
 	echo "<br><br>Updating $settings_file, numSettingsChanges = $numSettingsChanges";
@@ -490,7 +499,7 @@ echo '<script>console.log("Updated $fileName");</script>';
 				}
 
 			} else {	// not $ok
-				$status->addMessage("Settings NOT saved due to errors above.", 'info', false);
+				$status->addMessage("Settings NOT saved due to errors above.", 'info');
 			}
 		} else {
 			$status->addMessage('Unable to save settings - session timeout.', 'danger');
@@ -504,19 +513,22 @@ echo '<script>console.log("Updated $fileName");</script>';
 			$sourceFilesContents = array();
 			foreach ($options_array as $option){
 				$name = $option['name'];
-				$newValue = getVariableOrDefault($option, 'default', null);
-				if ($newValue !== null) {
+				$default = getVariableOrDefault($option, 'default', null);
+				if ($default !== null) {
 					$s = getVariableOrDefault($option, 'source', null);
 					if ($s !== null) {
 						$fileName = getFileName($s);
 						$sourceFilesChanged[$fileName] = $fileName;
+						// Multiple settings will likely have the same source file.
 						$sourceFilesContents[$name] = &getSourceArray($fileName);
-						$sourceFilesContents[$name][$name] = $newValue;
+						$sourceFilesContents[$name][$name] = $default;
 					} else {
-						$settings_array[$name] = $newValue;
+						$settings_array[$name] = $default;
 					}
 				}
 			}
+
+			// Update the settings file then any source files.
 			$content = json_encode($settings_array, $mode);
 			$msg = updateFile($settings_file, $content, "settings", true);
 			if ($msg === "") {
@@ -524,7 +536,7 @@ echo '<script>console.log("Updated $fileName");</script>';
 				$updatedSettings = true;
 
 				foreach($sourceFilesChanged as $fileName) {
-					$content = json_encode(getSourceArray($fileName), $mode);
+					$content = json_encode($sourcFilesContents[$fileName], $mode);
 					$msg = updateFile($fileName, $content, "source_settings", true);
 					if ($msg !== "") {
 						$status->addMessage("Failed to reset settings in '$fileName': $msg", 'danger');
@@ -552,11 +564,9 @@ echo '<script>console.log("Updated $fileName");</script>';
 	$cameraType = getVariableOrDefault($settings_array, $cameraTypeName, "");
 	$cameraModel = getVariableOrDefault($settings_array, $cameraModelName, "");
 
-	if (! check_if_configured($page, "settings")) $needToDisplayMessages = true;
+	check_if_configured($page, "settings");	// Calls addMessage() on error
 
-if ($formReadonly != "readonly") {
-	$settingsDescription = "";
-}
+	if ($formReadonly != "readonly") $settingsDescription = "";
 ?>
 
 <div class="row"> <div class="col-lg-12"> <div class="panel panel-primary">
@@ -637,7 +647,10 @@ function toggle(headerNum) {
 <?php
 			foreach($options_array as $option) {
 				$name = $option['name'];
-				if ($name === $END) continue;
+if (false && $debug) {
+	echo "<br>Option $name";
+}
+				if ($name === $endSetting) continue;
 
 				$type = getVariableOrDefault($option, 'type', null);
 				if ($type === null) {
@@ -671,9 +684,12 @@ function toggle(headerNum) {
 					if ($s !== null) {
 						$fileName = getFileName($s);
 						$source_array = &getSourceArray($fileName);
-						if ($source_array === null)
+if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; name=$name, fileName=$fileName"; }
+						if ($source_array === null) {
 							continue;
+						}
 						$value = getVariableOrDefault($source_array, $name, null);
+if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 					} else {
 						$value = getVariableOrDefault($settings_array, $name, null);
 					}
@@ -826,7 +842,7 @@ function toggle(headerNum) {
 						echo "<td colspan='3'></td>";
 					echo "</tr>";
 					echo "\n\t<tr>";
-						echo "<td colspan='3' class='subSettingsHeader'><div>$label</div></td>";
+						echo "<td colspan='3'><div class='subSettingsHeader'>$label</div></td>";
 					echo "</tr>";
 					echo "\n\t<tr class='rowSeparator' style='height: 5x;'>";
 						echo "<td colspan='3'></td>";
@@ -967,7 +983,7 @@ function toggle(headerNum) {
 $popupYesNo = getVariableOrDefault($option, 'popup-yesno', "");
 if ($popupYesNo !== "") {
 	$popupYesNoValue = getVariableOrDefault($option, 'popup-yesno-value', "");
-	$description .= "<br><span style='color: red;'>If value changes to '$popupYesNoValue' then ask '$popupYesNo'</span>";
+	echo "<!-- <br><span style='color: red;'>If value changes to '$popupYesNoValue' then ask '$popupYesNo'</span> -->";
 }
 					echo "\n\t<td style='padding-left: 10px;'>$warning_msg$description</td>";
 
@@ -992,7 +1008,7 @@ if ($popupYesNo !== "") {
 			}
 			if ($msg != "") {
 				// Combine invalid and missing fields since they are both errors.
-				$status->addMessage($msg, 'danger', false);
+				$status->addMessage($msg, 'danger');
 			}
 
 			if ($numMissingHasDefault > 0) {
@@ -1001,11 +1017,11 @@ if ($popupYesNo !== "") {
 				$msg .= " missing but replaced by the default:";
 				$msg .= "</strong>";
 				$msg .= "<br><strong>$missingSettingsHasDefault</strong>";
-				$status->addMessage($msg, 'warning', false);
+				$status->addMessage($msg, 'warning');
 			}
 
 			if ($status->isMessage()) {
-				$status->addMessage("<strong>See the highlighted entries below.</strong>", 'info', false);
+				$status->addMessage("<strong>See the highlighted entries below.</strong>", 'info');
 			}
 ?>
 			<script>

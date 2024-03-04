@@ -11,12 +11,12 @@
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 	<style>
 		#pageTitle::before {
-			content: "Pi Basics";
+			content: "Raspberry Pi Basics";
 		}
 	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
-	<title>Pi Basics</title>
+	<title>Raspberry Pi Basics</title>
 </head>
 <body>
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
@@ -24,7 +24,6 @@
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
 <div class="Layout-main markdown-body" id="mainContents">
 
-<h1>Overview</h1>
 <p>
 This page is for people with little or no Pi experience.
 To keep the other Allsky documentation pages a manageable length,
@@ -32,32 +31,32 @@ they assume you have basic Pi knowledge.
 For example, you know how to turn a Pi on and off and how to connect a camera to it.
 </p>
 
-<h3>Operating Systems</h3>
-<details><summary></summary>
+<h2>Operating Systems</h2>
 <p>
 The Linux operating system controls the Pi's hardware and lets you run software
 such as Allsky.
-The two most common versions of Linux for the Pi are <b>Buster</b>,
-which was released several years ago,
-and <b>Bullseye</b> which was released late 2021. <b>Bookworm</b> was released with the launch of the Pi 5. 
-Allsky runs on all three operating systems but use <b>Bookworm</b> 64bit if possible,
-especially if you have an RPi camera.
-Allsky works on both the 32-bit and 64-bit versions of Bullseye and Bookworm;
-there was no official 64-bit version of Buster and Allsky is not supported on it.
+Just like Windows and MacOS, there are multiple versions of
+the Pi's operating system (called "Pi OS"),
+and support for old versions is eventually dropped.
+</p>
+<p>
+<b>Bookworm</b> is the current Pi OS
+and is what you should run (use the 64-bit version if you can).
+Allsky runs on the older <b>Bullseye</b> and <b>Buster</b>
+operating systems but this is the last version of Allsky
+that will run on <b>Buster</b>.
 </p>
 <p>
 There are different distributions of Linux (called "distros") from various companies.
 While they are basically the same Linux,
 there can be subtle differences and the administrative commands can vary.
 </p>
-<blockquote>
-The recommended Linux distro is <b>Debian</b>.
-We can't guarantee Allsky will run on other distros.
+<blockquote class="warning">
+Allsky only supports the <b>Debian</b> distro.
 </blockquote>
-</details>
 
-<h3>Raspberry Pi Models</h3>
-<details><summary></summary>
+
+<h2>Raspberry Pi Models</h2>
 <p>
 There are several models of the Pi including Zero, Zero 2, 1, 2, 3, 4, 5, and others.
 The Pi 3 and 4 are the most common being used for Allsky,
@@ -67,29 +66,17 @@ the Pi 5 is the most powerful, followed by the 4, then 3, then 2, then 1.
 The Zero 2 is near the Pi 3 in terms of processing power but has less memory.
 The Pi 4 is available with up to 8 GB memory whereas the
 Pi Zero and Zero 2 are limited to 0.5 GB memory.
-The Pi 5 is the latest version and is supported as of v2023.05.01_04 release.
-Although Allsky can run on the Zero 2, several GB of swap space are needed,
-and even then, Allsky just barely runs.
+</p>
+<blockquote class="warning">
+Allsky runs on the Zero 2, but just barely.
 The processing power of the Pi Zero is very limited so you likely won't
 be able to create timelapse videos - stay away from it if possible.
-</p>
+</blockquote>
 <p>
 <strong>The recommended unit is a Pi 4 or 5 with 4 GB or more of memory.</strong>
-Allsky runs nicely on that and the USB 3.0 ports are nice for cameras that support it.
+Allsky runs nicely on them and the USB 3.0 ports are nice for cameras that support it.
 </p>
-</details>
 
-<h3>Hardware Overview</h3>
-<details><summary></summary>
-<p>
-Newer devices come with USB 2 ports and the Pi 4 and 5 both have two USB 3 ports.
-They also have a special port to plug RPi and compatible cameras into.
-</p>
-</details>
-
-<h3 style="color: red">MORE TO COME</h3>
-If you have any suggestions on what should be added here,
-please add a <a href="https://github.com/AllskyTeam/allsky/discussions">Discussion</a> item.
 
 </div><!-- Layout-main -->
 </div><!-- Layout -->

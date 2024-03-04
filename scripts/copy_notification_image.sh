@@ -8,10 +8,6 @@ ME="$( basename "${BASH_ARGV0}" )"
 source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
-#shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit "${EXIT_ERROR_STOP}"
-#shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 function usage_and_exit
 {
@@ -63,8 +59,8 @@ done
 NOTIFICATION_TYPE="${1}"	# filename, minus the extension, since the extension may vary
 [[ ${NOTIFICATION_TYPE} == "" ]] && usage_and_exit 1
 
-if [[ ${NOTIFICATION_TYPE} == "custom" ]]; then
 NUM_ARGS=12
+if [[ ${NOTIFICATION_TYPE} == "custom" ]]; then
 	if [[ $# -ne ${NUM_ARGS} ]]; then
 		echo -e "${RED}'custom' notification type requires ${NUM_ARGS} arguments" >&2
 		usage_and_exit 1
@@ -116,14 +112,16 @@ else
 	# Don't overwrite notification images so create a temporary copy and use that.
 	CURRENT_IMAGE="${CAPTURE_SAVE_DIR}/notification-${FULL_FILENAME}"
 	if ! cp "${NOTIFICATION_FILE}" "${CURRENT_IMAGE}" ; then
-		echo -e "${RED}*** ${ME}: ERROR: Cannot copy to CURRENT_IMAGE '${NOTIFICATION_FILE}' to '${CURRENT_IMAGE}'${NC}"
+		echo -e "${RED}*** ${ME}: ERROR: Cannot copy '${NOTIFICATION_FILE}' to '${CURRENT_IMAGE}'${NC}"
 		exit 3
 	fi
 fi
 
 # Resize the image if required
-if [[ ${IMG_RESIZE} == "true" ]]; then
-	if ! convert "${CURRENT_IMAGE}" -resize "${IMG_WIDTH}x${IMG_HEIGHT}" "${CURRENT_IMAGE}" ; then
+RESIZE_W="$( settings ".imageresizewidth" )"
+if [[ ${RESIZE_W} -gt 0 ]]; then
+	RESIZE_H="$( settings ".imageresizeheight" )"
+	if ! convert "${CURRENT_IMAGE}" -resize "${RESIZE_W}x${RESIZE_H}" "${CURRENT_IMAGE}" ; then
 		echo -e "${RED}*** ${ME}: ERROR: IMG_RESIZE failed${NC}"
 		exit 3
 	fi
@@ -136,7 +134,7 @@ fi
 # If during day, save in today's directory.
 if [[ $( settings ".takedaytimeimages" ) == "true" && \
 	  $( settings ".savedaytimeimages" ) == "true" && \
-	  ${IMG_CREATE_THUMBNAILS} == "true" ]]; then
+	  $( settings ".imagecreatethumbnails" ) == "true" ]]; then
 	DATE_DIR="${ALLSKY_IMAGES}/$( date +'%Y%m%d' )"
 	# Use today's folder if it exists, otherwise yesterday's
 	[[ ! -d ${DATE_DIR} ]] && DATE_DIR="${ALLSKY_IMAGES}/$( date -d '12 hours ago' +'%Y%m%d' )"
@@ -147,7 +145,9 @@ if [[ $( settings ".takedaytimeimages" ) == "true" && \
 	else
 		THUMB="${THUMBNAILS_DIR}/${FILENAME}-$( date +'%Y%m%d%H%M%S' ).${EXTENSION}"
 
-		if ! convert "${CURRENT_IMAGE}" -resize "${THUMBNAIL_SIZE_X}x${THUMBNAIL_SIZE_Y}" "${THUMB}" ; then
+		X="$( settings ".thumbnailsizex" )"
+		Y="$( settings ".thumbnailsizey" )"
+		if ! convert "${CURRENT_IMAGE}" -resize "${X}x${Y}" "${THUMB}" ; then
 			echo -e "${YELLOW}*** ${ME}: WARNING: THUMBNAIL resize failed; continuing.${NC}"
 		fi
 	fi
@@ -158,7 +158,13 @@ fi
 # The "mv" may be a rename or an actual move.
 FINAL_IMAGE="${CAPTURE_SAVE_DIR}/${FULL_FILENAME}"
 if ! mv -f "${CURRENT_IMAGE}" "${FINAL_IMAGE}" ; then
-	echo -e "${RED}*** ${ME}: ERROR: Cannot mv to FINAL_IMAGE: '${FINAL_IMAGE}' to '${TEMP_FILE}'${NC}"
+	echo -e "${RED}*** ${ME}: ERROR: "
+	if [[ -f ${CURRENT_IMAGE} ]]; then
+		echo "Cannot mv '${CURRENT_IMAGE}' to '${FINAL_IMAGE}'"
+	else
+		echo "'${CURRENT_IMAGE}' does not exist!"
+	fi
+	echo -e "${NC}"
 	exit 4
 fi
 
@@ -170,8 +176,10 @@ echo "${NOTIFICATION_TYPE},${EXPIRES_IN_SECONDS},${EXPIRE_TIME}" >> "${ALLSKY_NO
 touch --date="${EXPIRE_TIME}" "${ALLSKY_NOTIFICATION_LOG}"
 
 # If upload is true, optionally create a smaller version of the image, either way, upload it.
-if [[ ${IMG_UPLOAD} == "true" ]]; then
-	if [[ ${RESIZE_UPLOADS} == "true" ]]; then
+if [[ $( settings ".imageuploadfrequency" ) -gt 0 ]]; then
+	RESIZE_UPLOADS_WIDTH="$( settings ".imageresizeuploadswidth" )"
+	if [[ ${RESIZE_UPLOADS_WIDTH} == "true" ]]; then
+		RESIZE_UPLOADS_HEIGHT="$( settings ".imageresizeuploadsheight" )"
 		# Don't overwrite FINAL_IMAGE since the web server(s) may be looking at it.
 		TEMP_FILE="${CAPTURE_SAVE_DIR}/resize-${FULL_FILENAME}"
 
@@ -198,8 +206,7 @@ if [[ ${IMG_UPLOAD} == "true" ]]; then
 	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
 		echo -e "${ME}: Uploading $( basename "${NOTIFICATION_FILE}" )"
 	fi
-	"${ALLSKY_SCRIPTS}/upload.sh" --wait --silent \
-		"${UPLOAD_FILE}" "${IMAGE_DIR}" "${FULL_FILENAME}" "NotificationImage" "${WEB_IMAGE_DIR}"
+	upload_all --local-web --remote-web --wait --silent "${UPLOAD_FILE}" "" "${FULL_FILENAME}" "NotificationImage"
 	RET=$?
 
 	# If we created a temporary copy, delete it.

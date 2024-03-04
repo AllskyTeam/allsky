@@ -38,12 +38,12 @@ def script(params, event):
     if os.path.isfile(script):
         if os.access(script, os.X_OK):
             res = subprocess.check_output(script) 
-            result = "Script {0} Executed.".format(script)
+            result = f"Script {script} executed."
         else:
-            s.log(0,"ERROR: Script {0} is not executable".format(script))
-            result = "Script {0} Is NOT Executeable.".format(script)
+            result = f"Script {script} is NOT executeable."
+            s.log(0, f"ERROR: {result}")
     else:
-        s.log(0,"ERROR: cannot access {0}".format(script))
-        result = "Script {0} Not FOund.".format(script)
+        result = f"Script {script} not found."
+        s.log(0, f"ERROR: {result}")
 
     return result

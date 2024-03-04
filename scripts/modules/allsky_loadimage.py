@@ -28,14 +28,9 @@ def loadimage(params, event):
     try:
         s.image = cv2.imread(s.CURRENTIMAGEPATH)
         if s.image is None:
-            result = s.ABORT
+            s.log(0, "ERROR: Cannot read {0}...".format(s.CURRENTIMAGEPATH), exitCode=1)
     except Exception as e:
-        print(e)
-        result = s.ABORT
+        s.log(0, "ERROR: Cannot load {0}: {1}".format(s.CURRENTIMAGEPATH, e), exitCode=1)
 
-    if result == s.ABORT:
-        s.log(0,"ERROR: Cannot load {0}...".format(s.CURRENTIMAGEPATH), exitCode=1)
-    else:
-        s.log(4, "INFO: {}".format(result))
-
+    s.log(4, "INFO: {}".format(result))
     return result        

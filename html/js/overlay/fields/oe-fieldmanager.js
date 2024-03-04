@@ -229,6 +229,7 @@ class OEFIELDMANAGER {
         }).done((data) => {
             $.LoadingOverlay('hide');
             clearTimeout(loadingTimer);
+// console.log("data", data);
             if (data.result === "OK") {
                 for (let key in data.fields) {
                     let field = this.findField(key);
@@ -238,16 +239,22 @@ class OEFIELDMANAGER {
                 }
             } else {
                 this.disableTestMode();
-                bootbox.alert('Error generating sample data. Please ensure the overlay module is enabled');
+                var msg;
+                if (data.result === "LEGACY_MODE") {
+                    msg = 'The WebUI "Overlay Method" setting is set to "legacy" so overlays will not work.';
+                } else if (data.result === "FILE_MISSING") {
+                    msg = 'Error generating sample data. Missing file: ' + data.missingFile + ',  Try later';
+                } else {    // should be data.result == "ERROR"
+                    msg = 'Error generating sample data: ' + data.error;
+                }
+                bootbox.alert(msg);
             }
         }).fail((jqXHR, textStatus, errorThrown) => {
+            console.log("in .fail:  errorThrown=", errorThrown, ", jqXHR=", jqXHR);
         }).always(() => {
             clearTimeout(loadingTimer);
             $.LoadingOverlay('hide');
         });
-
-
-
     }
 
     disableTestMode() {

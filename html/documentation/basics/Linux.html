@@ -40,8 +40,42 @@ view and edit files, and execute commands.
 </p>
 <p>
 To get information on any Linux command, enter <code>man <i>command_name</i></code>,
-for example, <code>man date</code>.
+for example, <code>man date</code> at a command prompt on your Pi.
 </p>
+
+<h2>Logging into your Pi</h2>
+<details><summary></summary>
+<p>
+There are several ways you can log into a Pi.
+<ol>
+	<li>
+	Plug a keyboard, mouse, and monitor directly into the Pi.
+	Although this is the easiest way, it requires that you have access to the Pi,
+	which when used with an allsky camera is rarely the case,
+	except when you're initially setting up the Pi.
+	<li>
+	The Pi comes with a <b>VNC</b> (Virtual Network Connection) server,
+	so you can access the Pi remotely by installing a VNC client on your
+	PC, phone, tablet, or almost any other device.
+	When using the VNC client, you see your Pi desktop and interact with it as if you
+	were directly attached to the Pi.
+	<li>
+	<b>SSH</b> (<u>s</u>ecure <u>sh</u>ell) is used to log into the Pi from a remote devices,
+	usually a PC or Mac but could be a tablet or phone.
+	SSH needs to be enabled on the Pi - the easiest way is when using the
+	"Raspberry Pi Imager" to create the intial Raspberry Pi OS.
+	Once SSH is enabled, do the following to use it:
+	<ol class="minimal padding">
+		<li>On the remote device, open a terminal window
+			(<code>cmd</code> on Windows or <code>terminal</code> on Mac)
+		<li>Type <code>ssh pi@allsky.local</code>.
+		<li>Enter the password when prompted.
+		<li>You can now enter Linux commands.
+	</ol>
+</ol>
+</p>
+</details>
+
 
 <h2>Linux Desktop</h2>
 <details><summary></summary>
@@ -49,25 +83,22 @@ for example, <code>man date</code>.
 Linux is similar in many ways to Windows and MacOS - they
 all have a Desktop as well as a command-line interface (also called a "terminal window").
 Most of the interactions you'll have with your Pi for Allsky-related tasks
-will be via the command-line (or via the WebUI),
+will be via the command-line,
 whereas in Windows and MacOS the terminal window is rarely used.
 </p>
 <p>
 The screenshot below shows a typical Linux desktop.
 Starting from the far left are 5 icons followed by a file explore window and
 a terminal window showing the output of the <code>date</code> command.
-At the bottom is the taskbar - very similar to Windows and MacOS.
+At the bottom is the taskbar.
 </p>
 <a href="Desktop.png" target="_blank">
 <img allsky="true" title="Linux Desktop - Click for full version" alt="Desktop" src="Desktop.png" loading="lazy">
 </a>
-</details>
 
-<h2>Terminal Window</h2>
-<details><summary></summary>
+<h3>Terminal Window</h3>
 <p>
-A Terminal Window emulates the old ASCII-based character-only terminals.
-Notice the one above has no graphics - only characters.
+A Terminal Window like the one above with a gray background, has no graphics - only characters.
 It prompts for commands to enter, so is also called a "command-line interface".
 Whereas Windows has one primary command-line interpreter
 (called <code>cmd</code>, which looks like a DOS window),
@@ -75,10 +106,12 @@ Linus has multiple interpreters, called "shells".
 When UNIX was first invented in the late 1960s, the only shell available was <code>sh</code>.
 Since then, many other shells have been created; the one Allsky uses is <code>bash</code>
 since it has many useful features not in <code>sh</code>.
-You'll notice the commands in the <span class="fileName">allsky/scripts</span> directory have an
-extension of <code>.sh</code> which signifies they are shell scripts.
+</p>
+<p>
+Notice the <span class="fileName">install.sh</span> file in the left window
+above has an extension of <code>.sh</code> which signifies it is shell script.
 Unlike in Windows, Linux commands don't actually need an extension,
-but all the Allsky text-based commands have extensions so it's obvious what type of file it is.
+but the Allsky text-based commands have extensions so it's obvious what type of file it is.
 </p>
 <p>
 Throughout the Allsky documentation you'll see instructions like:
@@ -93,52 +126,13 @@ ls -l
 <p>
 The <code>cd</code> and <code>ls -l</code> commands should be executed at the command-line.
 </p>
-<blockquote>
-Because Allsky commands are executed on the command-line,
-this page only mentions the commands to execute to perform an action,
-and ignores any associated desktop icon that performs the same action.
-</blockquote>
-</details>
-
-<h2>Logging in</h2>
-<details><summary></summary>
-<p>
-There are several ways you can log into a Pi.
-<ol>
-<li>
-<b>On the console</b>, with a keyboard, mouse, and monitor plugged directly into the Pi.
-Although this is the easiest way, it requires that you have access to the Pi,
-which when used with an allsky camera is rarely the case,
-except when you're initially setting up the Pi.
-<li>
-The Pi comes with a <b>VNC</b> (Virtual Network Connection) server,
-so you can access the Pi remotely by installing a VNC client on your
-PC, phone, tablet, or almost any other device.
-When using the VNC client, you see your Pi desktop and interact with it as if you
-were directly attached to the Pi.
-<li>
-<b>SSH</b> (<u>s</u>ecure <u>sh</u>ell) is used to log into the Pi from a remote devices,
-usually a PC or Mac but could be a tablet or phone.
-SSH needs to be enabled on the Pi - the easiest way is when using the
-"Raspberry Pi Imager" to create the intial Raspberry Pi OS.
-Once SSH is enabled, do the following to use it:
-<ol>
-	<li>On the remote device, open a terminal window
-		(<code>cmd</code> on Windows or <code>terminal</code> on Mac)
-	<li>Type <code>ssh pi@allsky.local</code>.
-	<li>Enter the password when prompted.
-	<li>You can now enter Linux commands.
-</ol>
-<br><span style="color: red">NEED MORE INFO</span>
-</ol>
-</p>
 </details>
 
 
 <h2>Executing commands</h2>
 <details><summary></summary>
 <p>
-To execute a command you simply type it's name followed by any optional arguments:
+To execute a command type it's name followed by any optional arguments:
 <pre>
 date
 sudo systemctl start allsky
@@ -166,23 +160,23 @@ otherwise it's treated as multiple arguments:
 <pre>
 echo "Hello world!"
 echo         "Hello world!"
+echo "Hello    world!"
+echo Hello    world!
 </pre>
-
 <p>
-Note the first line above has a single space between <code>echo</code> and the argument
+The first line above has a single space between <code>echo</code> and the argument
 and the second line has several spaces.
 Those spaces are considered "white space", and unless quoted,
 the shell doesn't care if there's one white space or a million.
 Hence, both the lines above are treated the same.
-<br>
-What happens if you don't included that white space?
-The shell will look for a command called <code>echoHello world!</code>
-which of course doesn't exist and you'll get an error message.
-<br>
-What's the difference in these?
+The output from all four lines is below.
+The first three commands have one argument (it's surrounded by double quotes)
+and the forth command has two arguments.
 <pre>
-echo "Hello world!"
-echo "Hello    world!"
+Hello world!
+Hello world!
+Hello    world!
+Hello world!
 </pre>
 </p>
 </details>
@@ -202,6 +196,8 @@ for example:
 <br>
 The above string is called a "path name" since it names the path to a file or directory,
 in this case, the "allsky" directory.
+</p>
+<p>Using <span class="fileName">/home/pi/allsky</span> as an example:
 <ul>
 <li>The first <span class="fileName">/</span> is the root directory.
 <li><span class="fileName">home</span> is a directory under the root directory, and contains home directories for
@@ -211,14 +207,14 @@ in this case, the "allsky" directory.
 <span class="fileName">home</span> directory that contains all the "pi"
 	login's files and directories and is called pi's HOME directory.
 <li><span class="fileName">allsky</span> is the name of a directory that contains
-most of the Allsky files, images, etc.
+the Allsky files, commands, images, etc.
 </ul>
 <p>
 To move from one location to another, use the <code>cd</code>
 (<u>c</u>hange <u>d</u>irectory) command.
-In the examples below, it's assumed you're logged in as "pi",
+In the examples below, it's assumed you're logged in as "pi".
 <code>~</code> stands for pi's HOME directory,
-and anything after the "#" is a shell comment.
+and anything after the <code>#</code> is a shell comment.
 <pre>
 cd           <span class="pl-c"># goes to the HOME directory of whatever login you are</span>
 cd ~/allsky  <span class="pl-c"># goes to pi's "allsky" directory</span>
@@ -238,15 +234,15 @@ To see the contents of a directory, type <code>ls</code> (<u>l</u>ist file<u>s</
 Like most commands, <code>ls</code> takes a bunch of arguments.
 A common one is <code>-l</code> which produces long (i.e., detailed) output.
 </p>
-<a href="ls.png" target="_blank">
-<img allsky="true" title="ls output - Click for full version" alt="ls output" src="ls.png" loading="lazy">
-</a>
+<img allsky="true" title="ls output" alt="ls output" src="ls.png" loading="lazy">
 <p>
 Note that the output is in color:
-<ul>
-<li><span style="color: #23ad1e">Green</span> indicates the file is executable (i.e., a command).
-<li><span style="color: #595ded">Blue</span> indicates the object is a directory.
-<li>Black indicates the file is an "ordinary" one.
+<ul class="minimalPadding">
+	<li><span style="color: #23ad1e"><strong>Green</strong></span>
+		indicates the file is executable (i.e., a command).
+	<li><span style="color: #595ded"><strong>Blue</strong></span>
+		indicates the object is a directory.
+	<li><strong>Black</strong> indicates the file is an "ordinary" one.
 </ul>
 </p>
 <p>
@@ -255,36 +251,37 @@ The detailed view includes the following 7 columns of data:
 <li><b>Permissions</b>.
 	All Linux files have an owner as well as a group the file is in.
 	There are three sets of permissions:
-	<ol>
-	<li>The <b>owner</b> of the file.
-	<li>The <b>group</b> of the file.
-	<li>Everyone else, called <b>other</b>.
+	<ol class="minimalPadding">
+		<li>The <b>owner</b> of the file.</li>
+		<li>The <b>group</b> of the file.</li>
+		<li>Everyone else, called <b>other</b>.</li>
 	</ol>
 	<p>
 	A typical listing of the permissions is <code>-rwxr-xr-x</code>.
 	If an object is a directory, the first character is <code>d</code>,
 	otherwise it's <code>-</code>.
 	<br>
-	Each of the three sets of permissions above have a read, write, and execute permission flag,
+	The <b>owner</b>, <b>group</b>, and <b>other</b> entities
+	have three permission flags each (read, write, and execute)
 	for a total of 9 more characters, in groups of 3:
 	</p>
 	<ol>
-	<li>The first character of each group determines if the
-		entity can <b>read</b> the file.
-		<code>r</code> means yes; <code>-</code> means no.
-		<br>For directories, read permission means the entity
-		can view the contents of a directory.
-	<li>The second character determines if the entity
-		can <b>write</b> to the file.
-		<code>w</code> means yes; <code>-</code> means no.
-		<br>For directories, write permission means the entity can add to,
-		or delete from, the directory, e.g., create a file in the directory.
-	<li>The third character determines if the entity
-		can <b>execute</b> the file.
-		<code>x</code> means yes; <code>-</code> means no.
-		Commands must have this flag set, otherwise they can't be executed.
-		<br>For directories, execute permissions mean the entity can
-		<code>cd</code> into it; "executing" a directory doesn't make sense.
+		<li>The first character of each group determines if the
+			entity can <b>read</b> the file.
+			<code>r</code> means yes; <code>-</code> means no.
+			<br>For directories, read permission means the entity
+			can view the contents of a directory.</li>
+		<li>The second character determines if the entity
+			can <b>write</b> to the file.
+			<code>w</code> means yes; <code>-</code> means no.
+			<br>For directories, write permission means the entity can add to,
+			or delete from, the directory, e.g., create a file in the directory.</li>
+		<li>The third character determines if the entity
+			can <b>execute</b> the file.
+			<code>x</code> means yes; <code>-</code> means no.
+			Commands must have this flag set, otherwise they can't be executed.
+			<br>For directories, execute permissions mean the entity can
+			<code>cd</code> into it; "executing" a directory doesn't make sense.</li>
 	</ol>
 	<p>
 	In our example (<code>-rwxr-xr-x</code>), the object is a file,
@@ -312,16 +309,16 @@ Note, however, this entry:
 <br>
 It's in the <code>www-data</code> group, which is the group that the web server runs in.
 Because the web server (which is what runs the WebUI) creates configuration files in
-that directory, it also has <code>rwx</code> group permissions.
+that directory, it also has <code>rwx</code> group permissions so it can look
+in the directory and create files there.
 </p>
 </details>
 
 <h2>Viewing / editing files</h2>
 <details><summary></summary>
 <p>
-The <code>cat</code> (<u>cat</u>enate) command outputs the whole contents of a file
-as fast as it can.
-For small files this is fine, but what if the file is larger than the size of your window?
+The <code>cat</code> (<u>cat</u>enate) command outputs the contents of a file.
+For small files this is fine, but what if the file is larger than the size of your terminal window?
 In that case, use <code>more</code> which will display the file one page at a time.
 Pressing the space bar will move to the next page.
 If you only want to see the beginning or end of a file,
@@ -343,7 +340,7 @@ Before using it you'll probably want to view its manual page by typing <code>man
 <p>
 By default, commands that expect input read it from the keyboard
 (referred to as "standard input" or "stdin")
-and write to the display ("standard output" or "stdout").
+and write to the terminal window ("standard output" or "stdout").
 <br>
 If you want the input to come from a file,
 or the output to go to a file, use <code>&lt;</code> or <code>&gt;</code>:
@@ -371,12 +368,11 @@ Most operating systems, including Linux and Windows,
 don't like it when you simply unplug the power to the device.
 On the Pi you should instead use the
 <img allsky="true" src="/documentation/img/shutdownPi.png" class="buttonIconLarge" title="Shutdown button" loading="lazy">
-button on the WebUI's <span class="WebUIPage">System</span> page or via the command prompt:
+button on the WebUI's <span class="WebUILink">System</span> page or via the command prompt:
 <pre>
 sudo shutdown -r now
 </pre>
-Unless you're on the console (which is very rare with an allsky camera),
-you won't know when the Pi has fully shutdown so wait 30 or so seconds
+You won't know when the Pi has fully shutdown so wait 30 or so seconds
 before turning the power off.
 </details>
 
@@ -384,10 +380,10 @@ before turning the power off.
 <h2>Getting help</h2>
 <details><summary></summary>
 <p>
-As stated previously, you can get information on all Linux commands via the
+You can get information on all Linux commands via the
 <code>man</code> command.
 Most commands also take a <code>--help</code> option
-(including the Allsky commands that are desiged to optionally be run manually):
+(including the Allsky commands that can be run manually):
 </p>
 <p>
 <a href="date--help.png" target="_blank">

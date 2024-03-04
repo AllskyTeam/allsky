@@ -5,10 +5,20 @@
 	--navbar-border-color-dark: #333333;
 	--WebUI-setting-color: #00009b;
 	--WebUI-setting-color-dark: #68a0ff;
+	--WebUI-value-color: #555;
+	--WebUI-value-background-color: #e4e4e4;
+	--WebUI-link-color: #4b4a4b;
+	--WebUI-link-background-color: #f8f8f8;
+	--WebUI-subSetting-color: black;
+	--WebUI-subSetting-background-color: #aac;
+	--WebUI-subSetting-background-color-dark: #339;
 	--dark-text: #aaaaaa;
 	--dark-text-reversed: #eeeeee;
 	--rowSeparator: 1px solid #d3d3d3;
 	--rowSeparator-dark: 1px solid #707070;
+	--btn-hover-color: black;
+	--btn-dark-color: #bfbfbf;
+	--panel-heading-color: #6b6b6b;
 }
 
 .page-header {
@@ -47,12 +57,13 @@
 	color: var(--dark-text);
 }
 
+.navbar-toggle { float: left; margin-left: 10px; }
 @media (max-width: 450px) {.version-title { font-size: 75%; }}
 @media (max-width: 400px) {.version-title { font-size: 65%; }}
 @media (min-width: 796px) {	/* was 768px */
 	.sidebar { width: 210px; }
 	.navbar-title { display: inline-block; }
-	#page-wrapper { margin-left: 210px; padding: 0 30px; }
+	#page-wrapper { margin-left: 210px; }
 	.navbar-collapse { display: block; visibility: visible; }
 }
 @media (max-width: 795px) {
@@ -70,22 +81,41 @@
 	margin: 10px 0;
 }
 
+hr.panel-primary {
+	border-top-width: 10px;
+}
 .panel-primary {
-	border-color: #6b6b6b;
+	border-color: var(--panel-heading-color);
 }
 
 .panel-primary>.panel-heading {
-	border-color: #6b6b6b;
-	background-color: #6b6b6b;
+	border-color: var(--panel-heading-color);
+	background-color: var(--panel-heading-color);
 }
 
 .panel-footer {
 	background-color: #f2f1f0;
+	margin-bottom: 1em;
 }
 
 
 .settingInput { /* Input field in Allsky Settings page */
 	width: 120px;
+}
+.settingInputSelect {
+	padding: 0px 3px 0px 3px;
+	text-align: right;
+}
+.settingInputTextNumber {
+	padding: 0px 3px 0px 0px;
+	text-align: right;
+}
+.settingInputWidetext {
+	padding: 6px 5px;
+}
+.settingInputBoolean {
+	margin-bottom: -3px !important;
+	border-radius: 4px;
 }
 
 .info-item {
@@ -217,8 +247,8 @@ body.dark {
 
 .highlightedBox {
 	border: 4px dashed red;
-	margin-top: 40px;
-	margin-bottom: 40px;
+	margin-top: 30px;
+	margin-bottom: 30px;
 	padding: 10px 5px 10px 5px;
 }
 .bullet {
@@ -243,8 +273,8 @@ button.close {
 .alert td .important {
 	font-weight: bold;
 	font-size: 150%;
-	padding-top: 2em;
-	padding-bottom: 2em;
+	padding-top: 1em;
+	padding-bottom: 1em;
 	padding-left: 1em;
 }
 table .alert-dismissable button {
@@ -274,15 +304,19 @@ table .alert-dismissable {
 	border-color: #8f9d84;
 	background-color: #044a05;
 }
-.dark .alert-warning {
+.dark .alert-warning, .dark .alert-warning a {
 	color: #c0bba0;
 	border-color: #c0bba0;
 	background-color: #8a6b3b;
 }
-.dark .alert-danger {
+.dark .alert-danger, .dark .alert-danger a {
 	color: #f1b1b1;
 	border-color: #f1b1b1;
 	background-color: #a94442;
+}
+.alert-danger, .alert-warning {
+	border-top-width: 3px;
+	border-bottom-width: 3px;
 }
 
 .dark .form-control,
@@ -415,6 +449,17 @@ input[type="text"].has-error {
 {
 	color: var(--dark-text-reversed);
 }
+.advanced, .btn-advanced { /* "advanced" options are highlighted in same color as button */
+	background-color: #fffcc0;
+}
+.dark .advanced, .dark .btn-advanced {
+	color: #bfbfbf;
+	border-color: #bdb173;
+	background-color: #837a2f;
+}
+.advanced-nocolor {
+	background-color: inherit;
+}
 
 .dark .btn-primary:hover,
 .dark .btn-success:hover,
@@ -454,23 +499,50 @@ input[type="text"].has-error {
 	background-color: #aaa;
 	text-align: center;
 	font-weight: bold;
-	font-size: 1.25em;
-	padding: 3px 0 3px 0;
+	padding: 1px 3px 1px 3px;
 }
 .dark .settingsHeader {
 	background-color: #555;
 }
-.headingRow {
-	border-top: 15px solid transparent;
-	border-bottom: 15px solid var(--rowSeparator);
+table.settingsHeader {
+	font-size: 1.25em;
+	padding: 3px 3px 3px 3px;
 }
-.dark .headingRow {
-	border-bottom-color: var(--rowSeparator-dark);
+.subSettingsHeader {
+	color: var(--WebUI-subSetting-color);
+	background-color: var(--WebUI-subSetting-background-color);
+	text-align: center;
+	font-weight: bold;
+	padding: 1px 3px 1px 3px;
+}
+div.subSettingsHeader {
+	font-size: 1.05em;
+	margin: 0 3em 0 3em;
+	padding: 3px 0px;
+}
+.dark .subSettingsHeader {
+	background-color: var(--WebUI-subSetting-background-color-dark);
+}
+.headingRow {
+	font-size: 110%;
+	border-top: 10px solid transparent;
+	border-bottom: 5px solid transparent;
 }
 .headingRowPadding {
 	border-top: 3px solid transparent;
 	border-bottom: 3px solid transparent;
 }
+.columnHeader {
+	background-color: #aac;
+	text-align: center;
+	font-weight: bold;
+	font-size: 1.05em;
+	padding: 0;
+}
+.dark .columnHeader {
+	background-color: #339
+}
+
 .headingToggle {
 	cursor: pointer;
 	padding-left: 0.5em;
@@ -486,10 +558,10 @@ input[type="text"].has-error {
 
 /* separate table rows */
 .rowSeparator {
-	border-bottom: var(--rowSeparator);
+	border-bottom: 1px solid var(--rowSeparator);
 }
 .dark .rowSeparator {
-	border-bottom: var(--rowSeparator-dark);
+	border-bottom-color: var(--rowSeparator-dark);
 }
 /* used in system.php */
 .progress-bar {
@@ -591,6 +663,13 @@ select {
 .nowrap {
 	white-space: nowrap;
 }
+.WebUILink {	/* link on the WebUI to one of its pages */
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	padding: 0 .2em;
+	color: var(--WebUI-link-color);
+	background-color: var(--WebUI-link-background-color);
+	border-bottom: 1px solid #e7e7e7;
+}
 .WebUISetting {	/* Matches what's in the WebUI */
 	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 	color: var(--WebUI-setting-color);
@@ -602,11 +681,10 @@ select {
 .WebUIValue {
 	padding: 0 3px 0 3px;
 	font-size: 14px;
-	font-family: "Helvetica Neue", Helvetica, Arial;
 	font-family: inherit;
-	color: #555;
+	color: var(--WebUI-value-color);
+	background-color: var(--WebUI-value-background-color);
 	border: 1px solid #ccc;
-	background-color: #e4e4e4;
 	border-radius: 4px;
 }
 
@@ -668,6 +746,41 @@ div.sticky {
 #backToTopBtn:hover {
 	background-color: #888; /* Add a lighter-grey background on hover */
 }
+
+
+.middleVerticalAlign {
+	vertical-align: middle;
+}
+
+.externalSmall {	/* the icon indicated a new web page */
+	font-size: 90%;
+}
+
+/* Classes specific to WebUI pages */
+.editorForm {
+	display: inline-block;
+	width: auto;
+	margin-right: 15px;
+	margin-bottom: 5px;
+}
+.editorSaveChanges {
+	margin-bottom: 5px;
+}
+.editorBottomSection {
+	margin-top: 15px;
+}
+.functionsListFileType {
+	float: left;
+	width: 100%;
+	margin-bottom: 2px;
+}
+.functionsListTypeImg {
+	margin-left: 10px;
+	max-width: 50%;
+	max-height:100px;
+}
+.imagesSortOrder {
+	font-size: 60%;
 
 .as-nav-toggle {
 	float: left !important;

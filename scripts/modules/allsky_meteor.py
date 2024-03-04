@@ -93,6 +93,7 @@ def meteor(params, event):
             debug = params["debug"]
 
             maskImage = None
+            maskPath = ""
 
             if debug:
                 s.startModuleDebug(metaData["module"])
@@ -100,7 +101,7 @@ def meteor(params, event):
             height, width = s.image.shape[:2]
 
             if mask != "":
-                maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_OVERLAY"),"images",mask)
+                maskPath = os.path.join(s.ALLSKY_OVERLAY, "images", mask)
                 s.log(4,f"INFO: Loading mask {maskPath}")
                 maskImage = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
                 if maskImage is not None:
@@ -150,9 +151,9 @@ def meteor(params, event):
 
             if maskImage is not None:
                 try:
-                    dilation_mask = cv2.bitwise_and(dilation_mask,dilation_mask,mask = maskImage)
+                    dilation_mask = cv2.bitwise_and(dilation_mask, dilation_mask, mask = maskImage)
                 except Exception as ex:
-                    s.log(0,"ERROR: There is a problem with the meteor mask. Please check the masks dimensions and colour depth")
+                    s.log(0, f"ERROR: There is a problem with the meteor mask {maskPath}. Check the mask's dimensions and colour depth.", exitCode=1)
 
                 if debug:
                     s.writeDebugImage(metaData["module"], "dilation-mask.png", dilation_mask)
@@ -170,18 +171,18 @@ def meteor(params, event):
                                 cv2.line(s.image,(x1,y1),(x2,y2),(0,255,0),10)
                     lineCount += 1
 
-            os.environ["AS_METEORLINECOUNT"] = str(lineCount)
-            os.environ["AS_METEORCOUNT"] = str(meteorCount)
-            result = "{0} Meteors found, {1} Lines detected".format(meteorCount, lineCount)
-            s.log(4,"INFO: {}".format(result))
+            setEnvironmentVariable("AS_METEORLINECOUNT", str(lineCount))
+            setEnvironmentVariable("AS_METEORCOUNT", str(meteorCount))
+            result = f"{meteorCount} Meteors found, {lineCount} Lines detected"
+            s.log(4, f"INFO: {result}")
         else:
             result = "Sky is not clear so ignoring meteor detection"
-            s.log(4,"INFO: {0}".format(result))
-            os.environ["AS_METEORCOUNT"] = "Disabled"
+            s.log(4, f"INFO: {result}")
+            setEnvironmentVariable("AS_METEORCOUNT", "Disabled")
     else:
         result = "Its raining so ignorning meteor detection"
-        s.log(4,"INFO: {0}".format(result))
-        os.environ["AS_METEORCOUNT"] = "Disabled"
+        s.log(4, f"INFO: {result}")
+        setEnvironmentVariable("AS_METEORCOUNT", "Disabled")
 
     return result
 

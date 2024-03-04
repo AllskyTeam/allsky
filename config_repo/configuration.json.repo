@@ -1,5 +1,5 @@
 {
-    "comment": "See https://github.com/AllskyTeam/allsky/wiki/allsky-website-Settings for a description of these settings.",
+    "comment": "See the 'Settings -> Allsky Website' documentation page for a description of these settings.",
     "config": {
         "comment": "These settings impact what appears in the popout and the constellation overlay",
         "imageName": "/current/tmp/image.jpg",
@@ -21,7 +21,7 @@
         "az": 0,
         "imageWidth": 900,
         "opacity": 0.5,
-        "objectsComment": "If you want the Messier objects on the overlay, remove the 'XXX_' below.",
+        "objectsComment": "If you want the Messier objects on the overlay remove the 'XXX_' below.",
         "XXX_objects": "virtualsky/messier.json",
         "meridian": false,
         "ecliptic": false,
@@ -62,7 +62,6 @@
     },
     "homePage": {
         "comment": "These settings impact the look and feel of the Website home page.",
-        "onPi": true,
         "title": "XX_NEED_TO_UPDATE_XX",
         "og_description": "XX_NEED_TO_UPDATE_XX",
         "backgroundImage": {
@@ -84,6 +83,9 @@
         "og_url": "https://github.com/AllskyTeam/allsky/",
         "og_image": "image.jpg",
         "favicon": "allsky-favicon.png",
+        "thumbnailsizex": 100,
+        "thumbnailsizey": 75,
+        "thumbnailsortorder": "ascending",
         "leftSidebar": [
             {
                 "comment": "Once you have modified the settings so the overlay fits, set 'display' to true.",

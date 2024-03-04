@@ -9,16 +9,6 @@ source "${ALLSKY_HOME}/variables.sh"			|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit "${EXIT_ERROR_STOP}"
 
-# This script may be called during installation BEFORE there is a settings file.
-# config.sh looks for the file and produces an error if it doesn't exist,
-# so only include these two files if there IS a settings file.
-if [[ -f ${SETTINGS_FILE} ]]; then
-	#shellcheck disable=SC1091		# file doesn't exist in GitHub
-	source "${ALLSKY_CONFIG}/config.sh"			|| exit "${EXIT_ERROR_STOP}"
-	#shellcheck disable=SC1091		# file doesn't exist in GitHub
-	source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit "${EXIT_ERROR_STOP}"
-fi
-
 function usage_and_exit()
 {
 	echo -en "${wERROR}"
@@ -91,6 +81,10 @@ HAS_WEBSITE_RET=""
 WEBSITES=""		# local, remote, both, none
 GOT_WARNING="false"
 SHOW_ON_MAP=""
+CHECK_REMOTE_WEBSITE_ACCESS="false"
+CHECK_REMOTE_SERVER_ACCESS="false"
+USE_REMOTE_WEBSITE=""
+USE_REMOTE_SERVER=""
 
 # Several of the fields are in the Allsky Website configuration file,
 # so check if the IS a file before trying to update it.
@@ -265,7 +259,7 @@ do
 					exit 1
 				fi
 
-				# ${CC_FILE} is a generic name defined in config.sh.
+				# ${CC_FILE} is a generic name defined in variables.sh.
 				# ${SPECIFIC_NAME} is specific to the camera type/model.
 				# It isn't really needed except debugging.
 				CC="$( basename "${CC_FILE}" )"
@@ -276,12 +270,6 @@ do
 				# Any old and new camera capabilities file should be the same unless Allsky
 				# adds or changes capabilities, so delete the old one just in case.
 				ln --force "${CC_FILE}" "${SPECIFIC_NAME}"
-
-				if ! sed -i -e "s/^CAMERA_TYPE=.*$/CAMERA_TYPE=\"${NEW_VALUE}\"/" "${ALLSKY_CONFIG}/config.sh"; then
-					echo -e "${wERROR}ERROR updating ${wBOLD}${LABEL}${wNBOLD}.${wNC}"
-					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
-					exit 1
-				fi
 
 				# The old file is no longer needed.
 				rm -f "${CC_FILE_OLD}"
@@ -380,8 +368,8 @@ do
 				source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"
 				[[ $? -ne 0 ]] && exit "${EXIT_ERROR_STOP}"
 
-				# We assume the user wants these settings for
-				# this camera to be the same as the prior one.
+				# We assume the user wants the non-camera specific settings below
+				# for this camera to be the same as the prior camera.
 
 				if [[ ${DEBUG} == "true" ]]; then
 					MSG="Updating user-defined settings in new settings file."
@@ -394,19 +382,25 @@ do
 				S_EXT="${NAME##*.}"
 				OLD_SETTINGS_FILE="${ALLSKY_CONFIG}/${S_NAME}_${OLD_TYPE}_${OLD_MODEL}.${S_EXT}"
 
-				for s in latitude longitude locale websiteurl imageurl location owner computer imagesortorder
+# TODO: Replace these "for" statements with code using the "carryforward" field in
+# in the options file.
+				for s in latitude longitude locale websiteurl imageurl \
+					location owner computer imagesortorder temptype
 				do
 					X="$( settings .${s} "${OLD_SETTINGS_FILE}" )"
-					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}"
+					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}" "text"
 				done
 
-				for s in angle debuglevel
+				for s in angle debuglevel dayskipframes nightskipframes quality \
+					overlaymethod daystokeep daystokeepremotewebsite
 				do
 					X="$( settings .${s} "${OLD_SETTINGS_FILE}" )"
 					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}" "number"
 				done
 
-				for s in uselogin displaysettings showonmap showdelay
+				for s in uselogin displaysettings showonmap showupdatedmessage \
+					consistentdelays uselocalwebsite useremotewebsite useremoteserver \
+					notificationimages
 				do
 					X="$( settings .${s} "${OLD_SETTINGS_FILE}" )"
 					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}" "boolean"
@@ -455,9 +449,6 @@ do
 			else
 				echo -e "${wWARNING}WARNING: ${NEW_VALUE}.${wNC}"
 			fi
-			;;
-
-		"takedaytimeimages")
 			;;
 
 		"config")
@@ -514,8 +505,38 @@ do
 			check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
 			;;
 
-		"websiteurl" | "imageurl")
+
+		"remotewebsiteurl" | "remotewebsiteimageurl")
+			CHECK_REMOTE_WEBSITE_ACCESS="true"
 			RUN_POSTTOMAP="true"
+			;;
+
+		"useremotewebsite")
+			CHECK_REMOTE_WEBSITE_ACCESS="true"
+			USE_REMOTE_WEBSITE="${NEW_VALUE}"
+			;;
+
+		"remotewebsiteprotocol" | "remotewebsiteimagedir" | \
+		"remotewebsitevideodestinationname" | "remotewebsitekeogramdestinationname" | "remotewebsitestartrailsdestinationname")
+			CHECK_REMOTE_WEBSITE_ACCESS="true"
+			;;
+
+		remotewebsite_*)
+			CHECK_REMOTE_WEBSITE_ACCESS="true"
+			;;
+
+		"useremoteserver")
+			CHECK_REMOTE_SERVER_ACCESS="true"
+			USE_REMOTE_SERVER="${NEW_VALUE}"
+			;;
+
+		# We don't care about the *destination names for remote servers
+		"remoteserverprotocol" | "remoteserveriteimagedir")
+			CHECK_REMOTE_SERVER_ACCESS="true"
+			;;
+
+		remoteserver_*)
+			CHECK_REMOTE_SERVER_ACCESS="true"
 			;;
 
 		"overlaymethod")
@@ -532,7 +553,9 @@ do
 
 
 		*)
-			echo -e "${wWARNING}WARNING: Unknown key '${KEY}'; ignoring.  Old=${OLD_VALUE}, New=${NEW_VALUE}${wNC}"
+			echo -e "${wWARNING}"
+			echo    "WARNING: Unknown key '${KEY}'; ignoring.  Old=${OLD_VALUE}, New=${NEW_VALUE}"
+			echo -e "${wNC}"
 			((NUM_CHANGED--))
 			;;
 
@@ -543,6 +566,24 @@ done
 [[ ${OK} == "false" ]] && exit 1
 
 [[ ${NUM_CHANGED} -le 0 ]] && exit 0		# Nothing changed
+
+USE_REMOTE_WEBSITE="$( settings ".useremotewebsite" )"
+USE_REMOTE_SERVER="$( settings ".useremoteserver" )"
+if [[ ${USE_REMOTE_WEBSITE} == "true" || ${USE_REMOTE_SERVER} == "true" ]]; then
+	if [[ ! -f ${ALLSKY_ENV} ]]; then
+		cp "${REPO_ENV_FILE}" "${ALLSKY_ENV}"
+	fi
+
+	if [[ ${USE_REMOTE_WEBSITE} == "true" && ${CHECK_REMOTE_WEBSITE_ACCESS} == "true" ]]; then
+		# testUpload.sh displays error messages
+		"${ALLSKY_SCRIPTS}/testUpload.sh" --website
+	fi
+
+	if [[ ${USE_REMOTE_SERVER} == "true" && ${CHECK_REMOTE_SERVER_ACCESS} == "true" ]]; then
+		"${ALLSKY_SCRIPTS}/testUpload.sh" --server
+	fi
+fi
+
 
 # shellcheck disable=SC2128
 if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
@@ -562,19 +603,18 @@ if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${DEBUG_ARG} --remote "${WEBSITE_CONFIG[@]}"
 
 		FILE_TO_UPLOAD="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
-		TO="${IMAGE_DIR}"
+
+		IMAGE_DIR="$( settings ".remotewebsiteimagedir" )"
 		if [[ ${DEBUG} == "true" ]]; then
-			echo -e "${wDEBUG}Uploading '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}' to ${TO:-root}${wNC}"
+			echo -e "${wDEBUG}Uploading '${FILE_TO_UPLOAD}' to remote Website.${wNC}"
 		fi
 
-		"${ALLSKY_SCRIPTS}/upload.sh" --silent \
-			"${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" \
-			"${TO}" \
-			"${ALLSKY_WEBSITE_CONFIGURATION_NAME}" \
-			"RemoteWebsite"
-		R=$?
-		if [[ ${R} -ne 0 ]]; then
-			echo -e "${RED}${ERROR_PREFIX}Unable to upload '${FILE_TO_UPLOAD}'.${NC}"
+		if ! "${ALLSKY_SCRIPTS}/upload.sh" --silent --remote "web" \
+				"${FILE_TO_UPLOAD}" \
+				"${IMAGE_DIR}" \
+				"${ALLSKY_WEBSITE_CONFIGURATION_NAME}" \
+				"RemoteWebsite" ; then
+			echo -e "${RED}${ERROR_PREFIX}Unable to upload '${FILE_TO_UPLOAD}' to Website ${NUM}.${NC}"
 		fi
 	fi
 fi

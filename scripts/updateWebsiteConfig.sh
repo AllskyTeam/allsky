@@ -11,8 +11,6 @@ ME="$( basename "${BASH_ARGV0}" )"
 source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
-#shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit "${EXIT_ERROR_STOP}"
 
 function usage_and_exit()
 {
@@ -22,8 +20,13 @@ function usage_and_exit()
 	else
 		C="${wERROR}"
 	fi
-	echo -e "${C}Usage: ${ME} [--help] [--debug] [--verbosity silent|summary|verbose] [--local | --remote | --config file] key label new_value [...]${wNC}" >&2
-	echo "There must be a multiple of 3 arguments." >&2
+	{
+		echo -en "${C}"
+		echo -n "Usage: ${ME} [--help] [--debug] [--verbosity silent|summary|verbose]"
+		echo -n " [--local | --remote | --config file] key label new_value [...]"
+		echo -en "${wNC}"
+		echo "There must be a multiple of 3 arguments."
+	} >&2
 	exit "${RET}"
 }
 
@@ -36,7 +39,7 @@ CONFIG_FILE=""
 WEBSITE_TYPE="local and remote"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
-	case "${ARG}" in
+	case "${ARG,,}" in
 		--help)
 			HELP="true"
 			;;
@@ -129,8 +132,8 @@ while [[ $# -gt 0 ]]; do
 
 	shift 3
 
-	OUTPUT_MESSAGE="${OUTPUT_MESSAGE}'${LABEL}' updated to ${wBOLD}${NEW}${wNBOLD}."
-	[ $# -gt 0 ] && OUTPUT_MESSAGE="${OUTPUT_MESSAGE}${wBR}"
+	OUTPUT_MESSAGE+="'${LABEL}' updated to ${wBOLD}${NEW}${wNBOLD}."
+	[ $# -gt 0 ] && OUTPUT_MESSAGE+="${wBR}"
 done
 
 

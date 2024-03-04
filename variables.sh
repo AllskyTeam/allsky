@@ -144,8 +144,8 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	if [[ -s ${SETTINGS_FILE} ]]; then
 		# Get the name of the file the websites will look for, and split into name and extension.
 		FULL_FILENAME="$( jq -r ".filename" "${SETTINGS_FILE}" )"
-		EXTENSION="${FULL_FILENAME##*.}"
 		FILENAME="${FULL_FILENAME%.*}"
+		EXTENSION="${FULL_FILENAME##*.}"
 
 		CAMERA_TYPE="$( jq -r '.cameratype' "${SETTINGS_FILE}" )"
 		CAMERA_MODEL="$( jq -r '.cameramodel' "${SETTINGS_FILE}" )"
@@ -153,6 +153,10 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 		# So scripts can conditionally output messages.
 		ALLSKY_DEBUG_LEVEL="$( jq -r '.debuglevel' "${SETTINGS_FILE}" )"
 	else
+		# Allsky probably not installed yet so provide defaults.
+		FILENAME="image"
+		EXTENSION="jpg"
+		FULL_FILENAME="${FILENAME}.${EXTENSION}"
 		ALLSKY_DEBUG_LEVEL=1
 	fi
 	ALLSKY_ENV="${ALLSKY_HOME}/env.json"	# holds private info like passwords

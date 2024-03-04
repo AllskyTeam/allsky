@@ -2,19 +2,18 @@
 
 function DisplayDashboard_LAN($interface) {
 	global $page;
+	$myStatus = new StatusMessages();
 
 	// Unlike with WLAN where when it's UP it's also RUNNING,
 	// with the LAN, the port can be up but nothing connected, i.e., not "RUNNING".
-
-	$status = new StatusMessages();
 
 	$interface_output = get_interface_status("ifconfig $interface");
 
 	// $interface_output is sent and the other variables are returned.
 	parse_ifconfig($interface_output, $strHWAddress, $strIPAddress, $strNetMask, $strRxPackets, $strTxPackets, $strRxBytes, $strTxBytes);
 
-	// $interface and $interface_output are sent, $status is returned.
-	$interface_up = handle_interface_POST_and_status($interface, $interface_output, $status);
+	// $interface and $interface_output are sent, $myStatus is returned.
+	$interface_up = handle_interface_POST_and_status($interface, $interface_output, $myStatus);
 ?>
 
 <div class="row">
@@ -22,7 +21,7 @@ function DisplayDashboard_LAN($interface) {
 	<div class="panel panel-primary">
 		<div class="panel-heading"><i class="fa fa-network-wired fa-fw"></i> LAN Dashboard</div>
 		<div class="panel-body">
-			<?php if ($status->isMessage()) echo "<p>" . $status->showMessages() . "</p>"; ?>
+			<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
 			<div class="row">
 				<div class="panel panel-default">
 					<div class="panel-body">

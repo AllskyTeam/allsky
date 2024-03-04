@@ -7,22 +7,19 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
 ME="$( basename "${BASH_ARGV0}" )"
 
-#shellcheck disable=SC1091 source-path=.
+#shellcheck source-path=.
 source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
-#shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"			|| exit "${EXIT_ERROR_STOP}"
-#shellcheck disable=SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/ftp-settings.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 
 usage_and_exit() {
 	RET=$1
 	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
 	echo "*** Usage: ${ME} [--help] [--wait] [--silent] [--debug] \\"
+	echo "               { --local | --remote type } \\"
 	echo "               file_to_upload  directory  destination_file_name \\"
-	echo "               [file_type] [local_directory]"
+	echo "               [file_type]"
 	[[ ${RET} -ne 0 ]] && echo -e "${NC}"
 
 	echo
@@ -30,12 +27,12 @@ usage_and_exit() {
 	echo "   '--help'    displays this message and exits."
 	echo "   '--wait'    waits for any upload of the same type to finish."
 	echo "   '--silent'  doesn't display any status messages."
+	echo "   '--local'   copy to local Website."
+	echo "   '--remote type'   upload to remote 'web' or 'server'."
 	echo "   'file_to_upload' is the path name of the file to upload."
 	echo "   'directory' is the directory ON THE SERVER the file should be uploaded to."
 	echo "   'destination_file_name' is the name the file should be called ON THE SERVER."
 	echo "   'file_type' is an optional, temporary name to use when uploading the file."
-	echo "   'local_directory' is the name of an optional local directory the file should be"
-	echo "        copied to IN ADDITION TO being uploaded to a remote server."
 	echo
 	echo "For example: ${ME}  keogram-20230710.jpg  /keograms  keogram.jpg"
 
@@ -47,10 +44,12 @@ HELP="false"
 WAIT="false"
 SILENT="false"
 DEBUG="false"
+LOCAL="false"
+REMOTE_TYPE=""
 RET=0
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
-	case "${ARG}" in
+	case "${ARG,,}" in
 		--help)
 			HELP="true"
 			;;
@@ -62,6 +61,13 @@ while [[ $# -gt 0 ]]; do
 			;;
 		--debug)
 			DEBUG="true"
+			;;
+		--local)
+			LOCAL="true"
+			;;
+		--remote)
+			REMOTE_TYPE="${2}"
+			shift
 			;;
 		-*)
 			echo -e "${RED}Unknown argument '${ARG}'.${NC}" >&2
@@ -75,6 +81,16 @@ while [[ $# -gt 0 ]]; do
 done
 [[ $# -lt 3 || ${RET} -ne 0 ]] && usage_and_exit 1
 [[ ${HELP} == "true" ]] && usage_and_exit 0
+[[ ${LOCAL} == "false" && -z ${REMOTE_TYPE} ]] && usage_and_exit 1
+[[ ${LOCAL} == "true" && -n ${REMOTE_TYPE} ]] && usage_and_exit 1
+if [[ -n ${REMOTE_TYPE} ]]; then
+	if [[ ${REMOTE_TYPE} != "web" && ${REMOTE_TYPE} != "server" ]]; then
+		echo -en "${RED}" >&2
+		echo -n "*** ${ME}: ERROR: Unknown remote type: '${REMOTE_TYPE}'." >&2
+		echo -e "${NC}" >&2
+		exit 2
+	fi
+fi
 
 FILE_TO_UPLOAD="${1}"
 if [[ ! -f ${FILE_TO_UPLOAD} ]]; then
@@ -85,6 +101,8 @@ if [[ ! -f ${FILE_TO_UPLOAD} ]]; then
 fi
 
 DIRECTORY="${2}"
+# Allow explicit empty directory.
+[[ ${DIRECTORY} == "null" ]] && DIRECTORY=""
 DESTINATION_NAME="${3}"
 [[ -z ${DESTINATION_NAME} ]] && DESTINATION_NAME="$( basename "${FILE_TO_UPLOAD}" )"
 # When run manually, the FILE_TYPE normally won't be given.
@@ -97,8 +115,40 @@ if [[ -n ${COPY_TO} && ! -d ${COPY_TO} ]]; then
 	exit 2
 fi
 
+PID_FILE=""
+
+function check_for_error_messages()
+{
+	local ERROR_MESSAGES="${1}"
+	# Output any error messages
+	if [[ -n ${ERROR_MESSAGES} ]]; then
+		echo -e "Upload output from '${FILE_TO_UPLOAD}:\n   ${ERROR_MESSAGES}\n" >&2
+		echo -e "${ERROR_MESSAGES}" > "${LOG}"
+	fi
+	[[ -n ${PID_FILE} ]] && rm -f "${PID_FILE}"
+}
+
 # To save a write to the SD card, only save output to ${LOG} on error.
 LOG="${ALLSKY_TMP}/upload_errors.txt"
+
+if [[ ${LOCAL} == "true" ]]; then
+	if [[ -z ${DIRECTORY} ]]; then
+		DIRECTORY="${ALLSKY_WEBSITE}"
+	elif [[ ${DIRECTORY:0:1} != "/" ]]; then
+		DIRECTORY="${ALLSKY_WEBSITE}/${DIRECTORY}"
+	fi
+	# No need to set the lock for local copies - they are fast.
+	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${DIRECTORY}/${DESTINATION_NAME}"
+	fi
+	OUTPUT="$( cp "${FILE_TO_UPLOAD}" "${DIRECTORY}/${DESTINATION_NAME}" 2>&1 )"
+	RET=$?
+	check_for_error_messages "${OUTPUT}"
+	exit "${RET}"
+fi
+
+
+############## Remote Website or server
 
 # Make sure only one upload of this file type happens at once.
 # Multiple concurrent uploads (which can happen if the system and/or network is slow can
@@ -112,7 +162,7 @@ else
 	SLEEP="10s"
 fi
 ABORTED_MSG1="Another '${FILE_TYPE}' upload is in progress so the new upload of"
-ABORTED_MSG1="${ABORTED_MSG1} $( basename "${FILE_TO_UPLOAD}" ) was aborted."
+ABORTED_MSG1+=" $( basename "${FILE_TO_UPLOAD}" ) was aborted."
 ABORTED_FIELDS="${FILE_TYPE}\t${FILE_TO_UPLOAD}"
 ABORTED_MSG2="uploads"
 CAUSED_BY="This could be caused network issues or by delays between images that are too short."
@@ -123,17 +173,27 @@ if ! one_instance --sleep "${SLEEP}" --max-checks "${MAX_CHECKS}" --pid-file "${
 	exit 1
 fi
 
-# Convert to lowercase so we don't care if user specified upper or lowercase.
-PROTOCOL="${PROTOCOL,,}"
+if [[ ${REMOTE_TYPE} == "web" ]]; then
+	prefix="remotewebsite"
+	PREFIX="REMOTEWEBSITE"
+else	# "server"
+	prefix="remoteserver"
+	PREFIX="REMOTESERVER"
+fi
+PROTOCOL="$( settings ".${prefix}protocol" )"
 
 # SIGTERM is sent by systemctl to stop Allsky.
-# SIGHUP is sent to have the capture program reload their arguments.
-# Ignore them so we don't leave a temporary or partially uploaded file if the service is stopped
-# in the middle of an upload.
+# SIGHUP is sent to have the capture program reload its arguments.
+# Ignore them so we don't leave a temporary or partially uploaded file if the service
+# is stopped in the middle of an upload.
 trap "" SIGTERM
 trap "" SIGHUP
 
 if [[ ${PROTOCOL} == "s3" ]] ; then
+	AWS_CLI_DIR="$( settings ".${PREFIX}_AWS_CLI_DIR" "${ALLSKY_ENV}" )"
+	S3_BUCKET="$( settings ".${PREFIX}_S3_BUCKET" "${ALLSKY_ENV}" )"
+	S3_ACL="$( settings ".${PREFIX}_S3_ACL" "${ALLSKY_ENV}" )"
+
 	DEST="s3://${S3_BUCKET}${DIRECTORY}/${DESTINATION_NAME}"
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "${ME}: Uploading ${FILE_TO_UPLOAD} to ${DEST}"
@@ -142,17 +202,12 @@ if [[ ${PROTOCOL} == "s3" ]] ; then
 	RET=$?
 
 
-elif [[ ${PROTOCOL} == "local" ]] ; then
-	DEST="${DIRECTORY}/${DESTINATION_NAME}"
-	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${DEST}"
-	fi
-	OUTPUT="$( cp "${FILE_TO_UPLOAD}" "${DEST}" 2>&1 )"
-	RET=$?
-
-
 elif [[ "${PROTOCOL}" == "scp" ]] ; then
-	#shellcheck disable=SC2153
+	REMOTE_USER="$( settings ".${PREFIX}_USER" "${ALLSKY_ENV}" )"
+	REMOTE_HOST="$( settings ".${PREFIX}_HOST" "${ALLSKY_ENV}" )"
+	REMOTE_PORT="$( settings ".${PREFIX}_PORT" "${ALLSKY_ENV}" )"
+	SSH_KEY_FILE="$( settings ".${PREFIX}_SSH_KEY_FILE" "${ALLSKY_ENV}" )"
+
 	DEST="${REMOTE_USER}@${REMOTE_HOST}:${DIRECTORY}/${DESTINATION_NAME}"
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${DEST}"
@@ -164,9 +219,10 @@ elif [[ "${PROTOCOL}" == "scp" ]] ; then
 
 
 elif [[ ${PROTOCOL} == "gcs" ]] ; then
-	type gsutil >/dev/null 2>&1
-	RET=$?
-	if [[ ${RET} -eq 0 ]]; then
+	GCS_BUCKET="$( settings ".${PREFIX}_GCS_BUCKET" "${ALLSKY_ENV}" )"
+	GCS_ACL="$( settings ".${PREFIX}_GCS_ACL" "${ALLSKY_ENV}" )"
+
+	if type gsutil >/dev/null 2>&1 ; then
 		DEST="gs://${GCS_BUCKET}${DIRECTORY}/${DESTINATION_NAME}"
 		if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 			echo "${ME}: Uploading ${FILE_TO_UPLOAD} to ${DEST}"
@@ -175,16 +231,18 @@ elif [[ ${PROTOCOL} == "gcs" ]] ; then
 		RET=$?
 	else
 		OUTPUT="${ME}: ERROR: 'gsutil' command not found; cannot upload."
-		OUTPUT="${OUTPUT}\nIt should be in one of these directories: ${PATH}"
+		OUTPUT+="\nIt should be in one of these directories: ${PATH}"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${OUTPUT}"
 		OUTPUT="${RED}*** ${OUTPUT}${NC}"
+		RET=1
 	fi
 
 
 else # sftp/ftp/ftps
 	# "put" to a temp name, then move the temp name to the final name.
-	# This is useful with slow uplinks where multiple lftp requests can be running at once,
-	# and only one lftp can upload the file at once, otherwise we get this error:
+	# This is useful with slow uplinks where multiple upload requests can be running at once,
+	# and only one upload can upload the file at once.
+	# For lftp we get this error:
 	#	put: Access failed: 550 The process cannot access the file because it is being used by
 	#		another process. (image.jpg)
 	# Slow uplinks also cause problems with web servers that read the file as it's being uploaded.
@@ -194,20 +252,47 @@ else # sftp/ftp/ftps
 
 	TEMP_NAME="${FILE_TYPE}-${RANDOM}"
 
-	# If DIRECTORY isn't null (which it can be) and doesn't already have a trailing "/", append one.
-	[[ -n ${DIRECTORY} && ${DIRECTORY: -1:1} != "/" ]] && DIRECTORY="${DIRECTORY}/"
+	# If directory is null (which it can be) put the file in the image directory
+	# which is the root.
+	if [[ -z ${DIRECTORY} ]]; then
+		IMAGE_DIR="$( settings ".${prefix}imagedir" )"
+		if [[ -n ${IMAGE_DIR} ]]; then
+			[[ ${IMAGE_DIR: -1:1} != "/" ]] && IMAGE_DIR+="/"
+			DIRECTORY="${IMAGE_DIR}"
+		fi
+		
+	elif [[ ${DIRECTORY: -1:1} != "/" ]]; then
+		# If DIRECTORY doesn't already have a trailing "/", append one.
+		DIRECTORY+="/"
+	fi
 
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		echo "${ME}: FTP '${FILE_TO_UPLOAD}' to '${DIRECTORY}${DESTINATION_NAME}', TEMP_NAME=${TEMP_NAME}"
+		MSG="${ME}: FTP '${FILE_TO_UPLOAD}' to"
+		MSG+=" '${DIRECTORY}${DESTINATION_NAME}'"
+		[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && MSG+=", TEMP_NAME=${TEMP_NAME}"
+		echo "${MSG}"
 	fi
 	# LFTP_CMDS needs to be unique per file type so we don't overwrite a different upload type.
 	DIR="${ALLSKY_TMP}/lftp_cmds"
-	[[ ! -d ${DIR} ]] && mkdir "${DIR}"
+	if [[ ! -d ${DIR} ]]; then
+		if ! mkdir "${DIR}" ; then
+			echo -e "${RED}"
+			echo -e "*** ERROR: Unable to create '${DIR}'."
+			echo -e "${NC}"
+			ls -ld "${ALLSKY_TMP}"
+			exit 1
+		fi
+	fi
+
 	LFTP_CMDS="${DIR}/${FILE_TYPE}.txt"
 
 	set +H	# This keeps "!!" from being processed in REMOTE_PASSWORD
 
+	REMOTE_USER="$( settings ".${PREFIX}_USER" "${ALLSKY_ENV}" )"
+	REMOTE_HOST="$( settings ".${PREFIX}_HOST" "${ALLSKY_ENV}" )"
+	REMOTE_PORT="$( settings ".${PREFIX}_PORT" "${ALLSKY_ENV}" )"
 	# The export LFTP_PASSWORD has to be OUTSIDE the ( ) below.
+	REMOTE_PASSWORD="$( settings ".${PREFIX}_PASSWORD" "${ALLSKY_ENV}" )"
 	if [[ ${DEBUG} == "true" ]]; then
 		# In debug mode, include the password on the command line so it's easier
 		# for the user to run "lftp -f ${LFT_CMDS}"
@@ -219,7 +304,8 @@ else # sftp/ftp/ftps
 		PW="--env-password"
 	fi
 
-	(
+	{
+		LFTP_COMMANDS="$( settings ".${PREFIX}_LFTP_COMMANDS" "${ALLSKY_ENV}" )"
 		[[ -n ${LFTP_COMMANDS} ]] && echo "${LFTP_COMMANDS}"
 
 		# Sometimes have problems with "max-reties 1", so make it 2
@@ -279,7 +365,17 @@ else # sftp/ftp/ftps
 			|| exit 4"
 
 		echo exit 0
-	) > "${LFTP_CMDS}"
+	} > "${LFTP_CMDS}"
+	if [[ $? -ne 0 ]]; then
+		echo -e "${RED}"
+		echo -e "*** ERROR: Unable to create '${LFTP_CMDS}'."
+		echo -e "${NC}"
+		# Do ls of parent and grandparent.
+		PARENT="$( dirname "${LFTP_CMDS}" )"
+		GRANDPARENT="$( dirname "${PARENT}" )"
+		ls -ld "${PARENT}" "${GRANDPARENT}"
+		exit 1
+	fi
 
 	OUTPUT="$( lftp -f "${LFTP_CMDS}" 2>&1 )"
 	RET=$?
@@ -308,28 +404,12 @@ else # sftp/ftp/ftps
 
 		echo -e "\n${YELLOW}Commands used${NC} are in: ${GREEN}${LFTP_CMDS}${NC}"
 	else
-		if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 4 && ${ON_TTY} == "false" ]]; then
+		if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 && ${ON_TTY} == "false" ]]; then
 			echo "${ME}: FTP '${FILE_TO_UPLOAD}' finished"
 		fi
 	fi
 fi
 
-# Output any error messages
-if [[ -n ${OUTPUT} ]]; then
-	echo -e "Upload output from '${FILE_TO_UPLOAD}:\n   ${OUTPUT}\n" >&2
-	echo -e "${OUTPUT}" > "${LOG}"
-fi
-
-# If a local directory was also specified, copy the file there.
-if [[ -n ${COPY_TO} ]]; then
-	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		# No need to specify the file being copied again since we did so above.
-		echo "${ME}: Also copying to ${COPY_TO}/${DESTINATION_NAME}"
-	fi
-	cp "${FILE_TO_UPLOAD}" "${COPY_TO}/${DESTINATION_NAME}"
-	((RET=RET + $?))
-fi
-
-rm -f "${PID_FILE}"
+check_for_error_messages "${OUTPUT}"
 
 exit "${RET}"

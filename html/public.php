@@ -21,8 +21,10 @@ initialize_variables();		// sets some variables
 </head>
 <body>
 
-<div id="live_container" class="live_container">
-	<img id="current" class="current" src="<?php echo $image_name ?>">
+<div class="row">
+	<div id="live_container" class="live_container">
+		<img id="current" class="current" src="<?php echo $image_name ?>">
+	</div>
 </div>
 
 <script src="documentation/bower_components/jquery/dist/jquery.min.js"></script>
@@ -32,20 +34,26 @@ initialize_variables();		// sets some variables
 		var newImg = new Image();
 		newImg.src = '<?php echo $image_name ?>?_ts=' + new Date().getTime();
 		newImg.id = "current";
-		newImg.style = "width: 100%";	// should match "current" class
+		newImg.class = "current";
+
 		newImg.decode().then(() => {
-			$("#live_container").empty().append(newImg);
-		}).catch((err) => {
-			if (!this.complete || typeof this.naturalWidth == "undefined" || this.naturalWidth == 0) {
-				console.log('broken image: ', err);
-			}
+			$("#current").attr('src', newImg.src)
+				.attr("id", "current")
+				.attr("class", "current")
+				.on('load', function () {
+					if (!this.complete || typeof this.naturalWidth == "undefined" || this.naturalWidth == 0) {
+						console.log('broken image!');
+					} else {
+						$("#live_container").empty().append(newImg);
+					}
+				});
 		}).finally(() => {
 			// Use tail recursion to trigger the next invocation after `$delay` milliseconds
 			setTimeout(function () { getImage(); }, <?php echo $delay ?>);
 		});
 	}
 
-	setTimeout(function () { getImage(); }, <?php echo $delay ?>);
+	getImage();
 </script>
 </body>
 </html>

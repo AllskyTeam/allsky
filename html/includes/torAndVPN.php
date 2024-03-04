@@ -21,11 +21,11 @@ function DisplayOpenVPNConfig() {
 	exec( 'pidof openvpn | wc -l', $openvpnstatus);
 
 	if( $openvpnstatus[0] == 0 ) {
-		$status = '<div class="alert alert-warning alert-dismissable">OpenVPN is not running';
+		$myStatus = '<div class="alert alert-warning alert-dismissable">OpenVPN is not running';
 	} else {
-		$status = '<div class="alert alert-success alert-dismissable">OpenVPN is running';
+		$myStatus = '<div class="alert alert-success alert-dismissable">OpenVPN is running';
 	}
-	$status .= '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">x</button></div>';
+	$myStatus .= '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">x</button></div>';
 
 	// parse client settings
 	foreach( $returnClient as $a ) {
@@ -58,7 +58,7 @@ function DisplayOpenVPNConfig() {
 			<form role="form" action="?page=save_hostapd_conf" method="POST">
 			<!-- Tab panes -->
 		   	<div class="tab-content">
-		   		<p><?php echo $status; ?></p>
+		   		<p><?php echo $myStatus; ?></p>
 				<div class="tab-pane fade in active" id="openvpnclient">
 				<h4>Client settings</h4>
 					<div class="row">
@@ -164,11 +164,11 @@ function DisplayTorProxyConfig(){
 	exec( 'pidof tor | wc -l', $torproxystatus);
 
 	if( $torproxystatus[0] == 0 ) {
-		$status = '<div class="alert alert-warning alert-dismissable">TOR is not running';
+		$myStatus = '<div class="alert alert-warning alert-dismissable">TOR is not running';
 	} else {
-		$status = '<div class="alert alert-success alert-dismissable">TOR is running';
+		$myStatus = '<div class="alert alert-success alert-dismissable">TOR is running';
 	}
-	$status .= '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">x</button></div>';
+	$myStatus .= '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">x</button></div>';
 
 	foreach( $return as $a ) {
 		if( $a[0] != "#" ) {
@@ -193,7 +193,7 @@ function DisplayTorProxyConfig(){
 			<form role="form" action="?page=save_hostapd_conf" method="POST">
 			<!-- Tab panes -->
 		   	<div class="tab-content">
-		   		<p><?php echo $status; ?></p>
+		   		<p><?php echo $myStatus; ?></p>
 
 				<div class="tab-pane fade in active" id="basic">
 					<h4>Basic settings</h4>

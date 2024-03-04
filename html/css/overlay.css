@@ -190,10 +190,6 @@ table.dataTable td {
     color: black;
 }
 
-.modal-dialog {
-    width: 770px !important;
-}
-
 .dtsp-panesContainer, .dtsp-collapseAll {
     background-color: black !important;
 }
@@ -237,3 +233,62 @@ div.dtsp-searchPane div.dtsp-topRow {
     margin-right: 5px;
 }
 
+.btn-lg {
+    padding-right: 10px !important;
+    padding-left: 10px !important;
+}
+
+.panel {
+    border: none !important;
+}
+
+/** Remove after BS4 upgrade **/
+.mt-1 {
+    margin-top: 10px;
+}
+
+.mt-2 {
+    margin-top: 20px;
+}
+
+  .oe-mm-wrapper {
+    position: fixed;
+    top: 0px;
+    right: 0;
+    z-index: 1001;
+    width: 400px;
+    height: 100%;
+    padding: 10px;
+    background-color: white;    
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    transition: all 0.1s cubic-bezier(0.7,0,0.3,1);
+    transform: translate3d(410px,0,0);
+    z-index: 9999;
+  }
+  .oe-mm-wrapper.active {
+    transform: translate3d(0px,0,0);
+  }
+  
+  .dark .oe-mm-wrapper {
+    background-color: #222;
+  }
+
+  /* Buttons */
+  .oe-mm-trigger {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    width: 25px;
+    height: 25px;
+    basckground-color: #fff;
+    font-size: 20px;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    z-index: 9999;
+}
+
+.asteriskField{
+    color: red;
+}

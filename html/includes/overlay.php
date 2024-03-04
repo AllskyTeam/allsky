@@ -54,6 +54,7 @@ function DisplayOverlay($image_name)
     <link rel="stylesheet" type="text/css" href="/js/overlay/imagemanager/oe-imagemanager.css" />
     <script type="text/javascript" src="/js/overlay/imagemanager/oe-imagemanager.js"></script>
 
+    <script type="text/javascript" src="/js/jquery-overlaymanager/jquery-overlaymanager.js"></script>
 
     <link href="/js/dropzone/dropzone.css" type="text/css" rel="stylesheet" />
     <script src="/js/dropzone/dropzone-min.js"></script>
@@ -62,7 +63,14 @@ function DisplayOverlay($image_name)
 
     <link href="/css/overlay.css" rel="stylesheet">
 
-    <div id="oeeditor"> <div class="row">
+    <div id="oeeditor"> 
+        <div id="oe-overlay-manager"></div>
+        <div id="oe-overlay-disable" class="hidden">
+            <div class="center">
+                <div class="center-paragraph">This overlay is provided by the Allsky team and cannot be edited. <br>Click <a href="#" id="oe-overlay-disable-new">here</a> to create a new editable overlay based upon this one.</div>
+            </div>
+        </div>      
+        <div class="row">
         <div id="oe-viewport" class="panel panel-primary">
             <div class="panel-heading"><i class="fa fa-code fa-edit"></i> Overlay Editor</div>
                 <p id="editor-messages"><?php $myStatus->showMessages(); ?></p>

@@ -14,8 +14,8 @@
 	--WebUI-subSetting-background-color-dark: #339;
 	--dark-text: #aaaaaa;
 	--dark-text-reversed: #eeeeee;
-	--rowSeparator: #d3d3d3;
-	--rowSeparator-dark: #707070;
+	--rowSeparator: 1px solid #d3d3d3;
+	--rowSeparator-dark: 1px solid #707070;
 	--btn-hover-color: black;
 	--btn-dark-color: #bfbfbf;
 	--panel-heading-color: #6b6b6b;
@@ -78,7 +78,7 @@
 }
 
 .right-panel .panel:first-of-type {
-	margin: 20px 0;
+	margin: 10px 0;
 }
 
 hr.panel-primary {
@@ -328,6 +328,14 @@ table .alert-dismissable {
 	border-color: #555555;
 }
 
+input[type="text"].has-error {
+	border-color: #d41c0f !important;
+}
+
+.text-danger {
+	color: #d41c0f !important;
+}
+
 .dark .progress {
 	background-color: #171717;
 }
@@ -376,11 +384,11 @@ table .alert-dismissable {
 	border: 2px solid #00527c;
 }
 .btn-primary:hover {
-	color: var(--btn-hover-color);
+	color: black;
 	background-color: #73baf7;
 }
 .dark .btn-primary {
-	color: var(--btn-dark-color);
+	color: #bfbfbf;
 	border-color: #1475a7;
 	background-color: #1d5a79;
 }
@@ -389,26 +397,13 @@ table .alert-dismissable {
 	border: 2px solid #3e743e;
 }
 .btn-success:hover {
-	color: var(--btn-hover-color);
+	color: black;
 	background-color: #6cd76c;
 }
 .dark .btn-success {
-	color: var(--btn-dark-color);
+	color: #bfbfbf;
 	border-color: #5ea853;
 	background-color: #338833;
-}
-
-.btn-info {
-	border: 2px solid #32869f;
-}
-.btn-info:hover {
-	color: var(--btn-hover-color);
-	background-color: #62dbff;
-}
-.dark .btn-info {
-	color: #d7d7d7;
-	border: 2px solid #7cb9cb;
-	background-color: #4998af;
 }
 
 .btn-warning {
@@ -416,11 +411,11 @@ table .alert-dismissable {
 	background-color: #e48d12;
 }
 .btn-warning:hover {
-	color: var(--btn-hover-color);
+	color: black;
 	background-color: #ffa019;
 }
 .dark .btn-warning {
-	color: var(--btn-dark-color);
+	color: #bfbfbf;
 	background-color: #c46d0d;
 	border-color: #e48d2d;
 }
@@ -431,11 +426,11 @@ table .alert-dismissable {
 	background-color: #f13636;
 }
 .btn-danger:hover {
-	color: var(--btn-hover-color);
+	color: black;
 	background-color: #f96f6f;
 }
 .dark .btn-danger {
-	color: var(--btn-dark-color);
+	color: #bfbfbf;
 	background-color: #8d3431;
 	border-color: #ad5451;
 }
@@ -468,7 +463,6 @@ table .alert-dismissable {
 
 .dark .btn-primary:hover,
 .dark .btn-success:hover,
-.dark .btn-info:hover,
 .dark .btn-warning:hover,
 .dark .btn-danger:hover
 {
@@ -753,6 +747,7 @@ div.sticky {
 	background-color: #888; /* Add a lighter-grey background on hover */
 }
 
+
 .middleVerticalAlign {
 	vertical-align: middle;
 }
@@ -786,4 +781,8 @@ div.sticky {
 }
 .imagesSortOrder {
 	font-size: 60%;
+
+.as-nav-toggle {
+	float: left !important;
+	margin-left: 5px;
 }

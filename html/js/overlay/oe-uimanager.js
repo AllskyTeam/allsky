@@ -62,27 +62,6 @@ class OEUIMANAGER {
         this.#oeEditorStage.add(this.#overlayLayer);
         this.#oeEditorStage.add(this.#gridLayer);
 
-        this.#transformer = new Konva.Transformer({
-            resizeEnabled: false
-        });
-        this.#overlayLayer.add(this.#transformer);
-
-        this.setZoom('oe-zoom-fit');
-
-        this.#snapRectangle = new Konva.Rect({
-            x: 0,
-            y: 0,
-            name: 'snapRectangle',
-            width: 100,
-            height: 50,
-            fill: '#cccccc',
-            opacity: 0.6,
-            stroke: '#333',
-            strokeWidth: 1,
-            visible: false
-        });
-        this.#overlayLayer.add(this.#snapRectangle);
-
         this.#oeEditorStage.on('mousemove', (e) => {
             let mousePos = this.#oeEditorStage.getPointerPosition();
             this.updateDebugWindowMousePos(mousePos.x, mousePos.y);
@@ -115,6 +94,15 @@ class OEUIMANAGER {
         return params;
     }
 
+    get dirty() {
+        let result = false;
+        if (this.#fieldManager.dirty || this.#configManager.dirty) {
+            result = true;
+        }
+
+        return result;
+    }
+
     get selected() {
         return this.#selected;
     }
@@ -143,8 +131,35 @@ class OEUIMANAGER {
         }
     }
 
+    resetUI() {
+        this.#overlayLayer.destroyChildren();
+        this.#transformer = new Konva.Transformer({
+            resizeEnabled: false
+        });
+        this.#overlayLayer.add(this.#transformer);        
+
+        this.setZoom('oe-zoom-fit');
+
+        this.#snapRectangle = new Konva.Rect({
+            x: 0,
+            y: 0,
+            name: 'snapRectangle',
+            width: 100,
+            height: 50,
+            fill: '#cccccc',
+            opacity: 0.6,
+            stroke: '#333',
+            strokeWidth: 1,
+            visible: false
+        });
+        this.#overlayLayer.add(this.#snapRectangle);
+    }
+
     buildUI() {
+        this.resetUI();
         this.setupFonts();
+
+        window.oedi.get('fieldmanager').parseConfig();
 
         let fields = this.#fieldManager.fields;
         for (let [fieldName, field] of fields.entries()) {
@@ -157,8 +172,19 @@ class OEUIMANAGER {
             this.#resizeWindow();
         });
 
+        if (!this.#debugMode) {
+            let selectedOverlay = this.#configManager.selectedOverlay;
+            if (selectedOverlay.type === 'allsky') {
+                $('#oe-overlay-disable').removeClass('hidden');
+            } else {
+                $('#oe-overlay-disable').addClass('hidden');
+            }
+        } else {
+            $('#oe-overlay-disable').addClass('hidden');
+        }
+
         jQuery(window).bind('beforeunload', ()=> {
-            if (this.#fieldManager.dirty) {
+            if (this.#fieldManager.dirty || this.#configManager.dirty) {
                 return ' ';
             } else {
                 return undefined;
@@ -369,6 +395,7 @@ class OEUIMANAGER {
 
             this.#fieldTable = $('#itemlisttable').DataTable({
                 data: this.#configManager.dataFields,
+                retrieve: true,
                 autoWidth: false,
                 pagingType: 'simple_numbers',
                 paging: true,
@@ -429,6 +456,7 @@ class OEUIMANAGER {
                 $('#oe-item-list-dialog-all-error').hide();
                 this.#allFieldTable = $('#allitemlisttable').DataTable({
                     data: this.#configManager.allDataFields,
+                    retrieve: true,
                     autoWidth: false,
                     pagingType: 'simple_numbers',
                     paging: true,
@@ -771,8 +799,9 @@ class OEUIMANAGER {
         });
 
         $(document).on('click', '#oe-save', (event) => {
-            if (this.#fieldManager.dirty) {
+            if (this.#fieldManager.dirty || this.#configManager.dirty) {
                 this.#saveConfig();
+                $(document).trigger('oe-overlay-saved');
             }
         });
 
@@ -879,6 +908,9 @@ class OEUIMANAGER {
             $('#oe-app-options-background-opacity').val(this.#configManager.backgroundImageOpacity);
             $('#oe-app-options-grid-colour').val(this.#configManager.gridColour);
 
+            $('#oe-app-options-show-errors').prop('checked', this.#configManager.overlayErrors);
+            $('#oe-app-options-show-errors-text').val(this.#configManager.overlayErrorsText);
+
             $('#oe-app-options-grid-colour').spectrum({
                 type: 'color',
                 showInput: true,
@@ -887,12 +919,76 @@ class OEUIMANAGER {
                 preferredFormat: 'hex'
             });            
             
+
+            $('#overlaytablelist').DataTable().destroy();
+            $('#overlaytablelist').DataTable({
+                ajax: 'includes/overlayutil.php?request=OverlayList',
+                dom: '<"toolbar">frtip',
+                autoWidth: false,
+                pagingType: 'simple_numbers',
+                paging: true,
+                pageLength: 20,
+                info: false,
+                searching: false,
+                order: [[0, 'asc']],
+                ordering: false,
+                columns: [
+                    {
+                        data: 'type',
+                        width: '80px'
+                    }, {
+                        data: 'name',
+                        width: '300px'
+                    }, {
+                        data: 'brand',
+                        width: '80px'
+                    }, {
+                        data: 'model',
+                        width: '80px'
+                    }, {
+                        data: 'tod',
+                        width: '80px'
+                    }, {
+                        data: null,
+                        width: '50px',
+                        render: function (item, type, row, meta) {
+
+                            let buttons = '<button type="button" class="btn btn-primary btn-xs oe-options-overlay-edit" data-filename="' + item.filename + '"><i class="fa-solid fa-pen-to-square"></i></button>';
+
+                            return buttons;
+                        }
+                    }
+                ]
+            });
+
             $('#optionsdialog').modal({
                 keyboard: false
             });
 
             $('a[href="#configoptions"]').tab('show');
 
+        });
+
+        $('#optionsdialog a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            var target = $(e.target).attr('href')
+            if (target === '#oeeditoroverlays') {
+                $('#optionsdialognewoverlay').removeClass('hidden');
+            } else {
+                $('#optionsdialognewoverlay').addClass('hidden');
+            }
+        });
+
+        $(document).on('click', '#optionsdialognewoverlay', (event) => {
+            $('#oe-overlay-manager').data('allskyMM').show();
+            $('#oe-overlay-manager').data('allskyMM').showNew();            
+            $('#optionsdialog').modal('hide');
+        });
+
+        $(document).on('click', '.oe-options-overlay-edit', (event) => {
+            let fileName = $(event.currentTarget).data('filename');
+            $('#oe-overlay-manager').data('allskyMM').show();
+            $('#oe-overlay-manager').data('allskyMM').setSelected(fileName);
+            $('#optionsdialog').modal('hide');
         });
 
         $(document).on('click', '#oe-defaults-save', (event) => {
@@ -939,6 +1035,9 @@ class OEUIMANAGER {
             this.#configManager.selectFieldOpacity = $('#oe-app-options-select-field-opacity').val() | 0;
             this.#configManager.mouseWheelZoom = $('#oe-app-options-mousewheel-zoom').prop('checked');
             this.#configManager.backgroundImageOpacity = $('#oe-app-options-background-opacity').val() | 0;
+
+            this.#configManager.overlayErrors = $('#oe-app-options-show-error').prop('checked');
+            this.#configManager.overlayErrorsText = $('#oe-app-options-show-error').val();
 
             this.#fieldManager.updateFieldDefaults();
             this.drawGrid();
@@ -989,10 +1088,10 @@ class OEUIMANAGER {
                 columns: [
                     {
                         data: 'name',
-                        width: '150px'
+                        width: '250px'
                     }, {
                         data: 'path',
-                        width: '150px',
+                        width: '250px',
                         render: function (item, type, row, meta) {
                             if (item.includes('msttcorefonts')) {
                                 return 'System Font';
@@ -1010,8 +1109,30 @@ class OEUIMANAGER {
 
                             let buttons = '';
                             if (item.name !== 'moon_phases' && item.name !== defaultFont && !item.path.includes('msttcorefonts')) {
-                                buttons += '&nbsp; <button type="button" class="btn btn-danger btn-xs oe-list-font-delete" data-fontname="' + item.name + '"><i class="fa-solid fa-trash"></i></button>';
-                                buttons += '</div>';
+
+
+                                let fonts = config.getValue('fonts');
+                                let extPos = item.name.indexOf('.');
+    
+                                let fontName = item.name;
+                                if (extPos > -1) {
+                                    let parts = item.name.split('.');
+                                    fontName = parts[0];
+                                }
+                                let fontLCName = fontName.toLowerCase();
+
+                                let enabled = false;
+                                if (fonts[fontLCName] !== undefined) {
+                                    enabled = true;
+                                }
+
+
+                                buttons += '<button type="button" class="btn btn-danger btn-xs oe-list-font-delete" data-fontname="' + item.name + '"><i class="fa-solid fa-trash"></i></button>';
+                                if (!enabled) {
+                                    buttons += '&nbsp; <button type="button" class="btn btn-primary btn-xs oe-list-font-use" data-fontname="' + fontName + '" data-path="' + item.path + '">Use</button>';
+                                } else {
+                                    buttons += '&nbsp; <button type="button" class="btn btn-danger btn-xs oe-list-font-remove" data-fontname="' + fontName + '" data-path="' + item.path + '">Remove</button>';
+                                }
                             }
                             return buttons;
                         }
@@ -1025,6 +1146,39 @@ class OEUIMANAGER {
                 width: 600
             })
         });
+
+        $('#fontlisttable').on('click', '.oe-list-font-use', function(e) {
+            let fontName = $(e.currentTarget).data('fontname');
+            let fontPath = $(e.currentTarget).data('path');
+
+            let fontFace = new FontFace(fontName, 'url(' + window.oedi.get('BASEDIR') + fontPath + ')');
+            fontFace.load().then(function(font) {
+                document.fonts.add(fontFace);
+                this.setupFonts();
+                this.#configManager.setValue('fonts.' + fontName.toLowerCase() + '.fontPath', fontPath);
+                $('#fontlisttable').DataTable().ajax.reload( null, false );    
+            }.bind(this));
+        }.bind(this));
+
+        $('#fontlisttable').on('click', '.oe-list-font-remove', function(e) {
+            let fontName = $(e.currentTarget).data('fontname');
+            let fontToDelete = null;
+            for (let fontFace of document.fonts.values()) {
+                if (fontFace.family == fontName) {
+                    fontToDelete = fontFace;
+                    break;
+                }
+            }
+    
+            if (fontToDelete !== null) {
+                document.fonts.delete(fontToDelete);
+            }
+            
+            this.#configManager.deleteValue('fonts.' + fontName.toLowerCase());
+            this.#fieldManager.switchFontUsed(fontName);
+            this.setupFonts();
+            $('#fontlisttable').DataTable().ajax.reload( null, false );
+        }.bind(this));
 
         $(document).on('click', '.oe-list-font-delete', (event) => {
             event.stopPropagation();
@@ -1098,7 +1252,6 @@ class OEUIMANAGER {
 
         $('[data-toggle="tooltip"]').tooltip();
 
-
         $(document).on('click', '#oe-field-errors', (event) => {
 
             this.#errorsTable = $('#fielderrorstable').DataTable({
@@ -1115,9 +1268,6 @@ class OEUIMANAGER {
                 order: [[0, 'asc']],
                 columns: [
                     {
-                        data: 'id',
-                        width: '150px'
-                    }, {
                         data: 'name',
                         width: '600px'
                     }, {
@@ -1198,6 +1348,10 @@ class OEUIMANAGER {
                 $('#oe-field-errors-dialog').modal('hide');
             }
 
+        });
+             
+        $(document).on('oe-config-updated', (e) => {
+            this.updateToolbar();
         });
 
         this.updateDebugWindow();
@@ -1359,6 +1513,7 @@ class OEUIMANAGER {
         this.#fieldManager.buildJSON();
         this.#configManager.saveConfig1();
         this.#fieldManager.clearDirty();
+        this.#configManager.dirty = false;
         this.updateToolbar();
     }
 
@@ -1446,7 +1601,7 @@ class OEUIMANAGER {
             $('#oe-delete').addClass('green');
         }
 
-        if (this.#fieldManager.dirty) {
+        if (this.#fieldManager.dirty || this.#configManager.dirty) {
             $('#oe-save').removeClass('disabled');
             $('#oe-save').addClass('green pulse');
             $('#oe-overlay-editor-tab').addClass('oe-overlay-editor-tab-modified');            

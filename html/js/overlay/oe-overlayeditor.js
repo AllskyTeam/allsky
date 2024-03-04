@@ -14,32 +14,43 @@ class OVERLAYEDITOR {
         let uiManager = new OEUIMANAGER(image);
         window.oedi.add('uimanager', uiManager);
         window.oedi.add('BASEDIR', 'overlay/');    
-        window.oedi.add('IMAGEDIR', 'overlay/images/');       
+        window.oedi.add('IMAGEDIR', 'overlay/images/');
     }
 
-    async #loadFonts() {
-        let config = window.oedi.get('config');
-        let fonts = config.getValue('fonts', {});
-        for (let font in fonts) {
-            let fontData = config.getValue('fonts.' + font, {});
+    buildUI() {
+        this.#checkResolution();
+        $.LoadingOverlay('show');
 
-            let fontFace = new FontFace(font, 'url(' + window.oedi.get('BASEDIR') + fontData.fontPath + ')');
-            await fontFace.load();
-            document.fonts.add(fontFace);
+        $.ajax({
+            url: 'includes/overlayutil.php?request=Overlays',
+            type: 'GET',
+            dataType: 'json',
+            cache: false,
+            async: false,                
+            context: this
+        }).done((overlays) => {
+            let configManager = window.oedi.get('config');
+            configManager.overlays = overlays;
+
+            $('#oe-overlay-manager').allskyMM();
+
+            configManager.loadConfig();
+            $(document).trigger('oe-startup');
+            $.LoadingOverlay('hide');            
+        }); 
+    }
+
+    #checkResolution() {
+        var width = window.innerWidth;
+        var height = window.innerHeight;
+
+        if (width < 1024 || height < 768) {
+            bootbox.alert({
+                title: 'Overlay Editor Warning',
+                message: 'Your screen resolution (' + width + 'x' + height + ') is below the recommened resolution for the overlay editor. You may continue to use the overlay editor but some functions may not be useable.'
+            });
         }
     }
-
-    async buildUI() {
-        $.LoadingOverlay('show');
-        if (await window.oedi.get('config').loadConfig()) {
-            await this.#loadFonts();
-
-            window.oedi.get('fieldmanager').parseConfig();
-            window.oedi.get('uimanager').buildUI();
-            $.LoadingOverlay('hide');
-        }        
-    }
-
     /**
      * A DI container for the overlay editor. This reduces a lot of issues with scope in 3rd party
      * libraries.

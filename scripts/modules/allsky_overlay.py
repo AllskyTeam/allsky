@@ -67,6 +67,7 @@ class ALLSKYOVERLAY:
     _OVERLAYCONFIGFILE = 'overlay.json'
     _OVERLAYFIELDSFILE = 'fields.json'
     _OVERLAYUSERFIELDSFILE = 'userfields.json'
+    _OVERLAYOECONFIG = 'oe-config.json'
     _OVERLAYTMPFOLDER = ''
     _OVERLAYTLEFOLDER = None
     _overlayConfigFile = None
@@ -96,9 +97,13 @@ class ALLSKYOVERLAY:
     _formaterrortext = ""
     _notEnabled = ""
 
+    _errors = ''
+    _oeConfig = None
+    
     def __init__(self, formaterrortext):
         C = os.path.join(s.ALLSKY_OVERLAY, 'config')
         self._overlayConfigFile = os.path.join(C, self._OVERLAYCONFIGFILE)
+        self._loadOverlay()
         fieldsFile = os.path.join(C, self._OVERLAYFIELDSFILE)
         userFieldsFile = os.path.join(C, self._OVERLAYUSERFIELDSFILE)
 
@@ -129,8 +134,47 @@ class ALLSKYOVERLAY:
         self._observerLon = s.getSetting('longitude')
         self._debug = True
 
-        self._formaterrortext = formaterrortext;
+        self._formaterrortext = formaterrortext
+        
+        try:
+            oeConfigFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYOECONFIG)
+            with open(oeConfigFile) as file:
+                self._oeConfig = json.load(file)
+                
+                if 'overlayErrors' not in self._oeConfig:
+                    self._oeConfig['overlayErrors'] = True
+                if 'overlayErrorsText' not in self._oeConfig:
+                    self._oeConfig['overlayErrorsText'] = 'Error found; see the WebU'
+                    
+        except Exception as e:
+            s.log(0,f'ERROR: Unable to read the overlay config file {oeConfigFile}')
+            
+    def _log(self, level, text, preventNewline = False, exitCode=None, sendToAllsky=False, addErrorToOverlay=False):
+        s.log(level=level, text=text, preventNewline=preventNewline,exitCode=exitCode, sendToAllsky=sendToAllsky)
+        if sendToAllsky:
+            if self._oeConfig is not None:
+                if self._oeConfig['overlayErrors']:
+                    self._errors = self._oeConfig['overlayErrorsText']
+    
+    def _loadOverlay(self):
+        dayORNight = os.environ['DAY_OR_NIGHT']
+        if dayORNight == 'DAY':
+            overlayName = s.getSetting('daytimeoverlay')
+        else:
+            overlayName = s.getSetting('nighttimeoverlay')
 
+        userPath = os.path.join(os.environ['ALLSKY_OVERLAY'], 'myTemplates', overlayName)
+        if os.path.isfile(userPath):
+            self._overlayConfigFile = userPath
+            self._log(4, f'INFO: Time of day is {dayORNight} using overlay {overlayName}')
+        else:
+            corePath = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', overlayName)
+            if os.path.isfile(corePath):
+                self._overlayConfigFile = corePath
+                self._log(4, f'INFO: Time of day is {dayORNight} using overlay {overlayName}')
+            else:
+                self._log(0, f'ERROR: Unable to locate an overlay file: TOD {dayORNight}, overlay "{overlayName}"', sendToAllsky=True)
+                
     def _dumpDebugData(self):
         debugFilePath = os.path.join(s.ALLSKY_TMP, 'overlaydebug.txt')
         env = {}
@@ -287,9 +331,9 @@ class ALLSKYOVERLAY:
                             s.setEnvironmentVariable(name, str(value))
                             self._saveExtraDataField(name, fileModifiedTime, expires, x, y, fill, font, fontsize, image, rotate, scale, opacity, stroke, strokewidth)
                 except:
-                    s.log(1, f'WARNING: Data File {dataFilename} is invalid - IGNORING.')
+                    self._log(0, f'WARNING: Data File {dataFilename} is invalid - IGNORING.', sendToAllsky=True)
             else:
-                s.log(1, f'WARNING: Data File {dataFilename} is not accessible - IGNORING.')
+                self._log(0, 'fERROR: Data File {dataFilename} is not accessible - IGNORING.', sendToAllsky=True)
                 result = False
         elif fileExtension == '.txt':
             if s.isFileReadable(dataFilename):
@@ -303,7 +347,7 @@ class ALLSKYOVERLAY:
                         os.environ[name] = str(value)
                         self._saveExtraDataField(name, fileModifiedTime, defaultExpiry)
             else:
-                s.log(1, f"WARNING: Data File {dataFilename} is not accessible - IGNORING.")
+                self._log(0, f"ERROR: Data File {dataFilename} is not accessible - IGNORING.", sendToAllsky=True)
                 result = False
 
         return result
@@ -339,7 +383,7 @@ class ALLSKYOVERLAY:
                 s.log(1, f"WARNING: Config file '{self._overlayConfigFile}' is empty.")
                 result = True
         else:
-            s.log(0, f"ERROR: Config File '{self._overlayConfigFile}' not accessible.")
+            self._log(0, f"ERROR: Config File '{self._overlayConfigFile}' not accessible.", sendToAllsky=True)
             result = False
 
         return result
@@ -407,7 +451,7 @@ class ALLSKYOVERLAY:
             if font in systemFontMap:
                 fontPath = systemFontMap[font]['fontpath']
             else:
-                s.log(0, f"ERROR: System font '{font}' not found in internal map.")
+                self._log(0, "ERROR: System font '{font}' not found in internal map.", sendToAllsky=True)
 
         if fontPath is not None:
             if fontSize is None:
@@ -430,7 +474,7 @@ class ALLSKYOVERLAY:
                     font = self._fonts[fontKey]
                     s.log(4, F'{preMsg} from disk.')
                 except OSError as err:
-                    s.log(0, f"ERROR: Could not load font '{fontPath}' from disk.")
+                    self._log(0, f"ERROR: Could not load font '{fontPath}' from disk.", sendToAllsky=True)
                     font = None
         else:
             font = None
@@ -635,7 +679,7 @@ class ALLSKYOVERLAY:
         try:
             r,g,b = ImageColor.getcolor(value, "RGB")
         except:
-            #s.log(0, f"ERROR: The colour '{value}' for field '{name}' is NOT valid - Defaulting to white.")
+            #self._log(0, f"ERROR: The colour '{value}' for field '{name}' is NOT valid - Defaulting to white.")
             r = 255
             g = 255
             b = 255
@@ -657,7 +701,7 @@ class ALLSKYOVERLAY:
                 outOfBounds = True
 
             if outOfBounds:
-                s.log(0, f"ERROR: Field '{fieldLabel}' is outside of the image")
+                self._log(0, f"ERROR: Field '{fieldLabel}' is outside of the image", sendToAllsky=True)
         except:
             pass
 
@@ -705,7 +749,7 @@ class ALLSKYOVERLAY:
             elif format == '%1':
                 v = '1'
             else:
-                s.log(0, f"ERROR: Cannot use format '{format}' on Bool variables like {field} (value={value}).")
+                self._log(0, f"ERROR: Cannot use format '{format}' on Bool variables like {field} (value={value}).", sendToAllsky=True)
                 v = self._formaterrortext
 
         elif format == '%yes':
@@ -717,7 +761,7 @@ class ALLSKYOVERLAY:
         elif format == '%1':
             v = '0'
         else:
-            s.log(0, f"ERROR: Cannot use format '{format}' on Bool variables like {field} (value={value}).")
+            self._log(0, f"ERROR: Cannot use format '{format}' on Bool variables like {field} (value={value}).", sendToAllsky=True)
             v = self._formaterrortext
 
         return v
@@ -785,7 +829,7 @@ class ALLSKYOVERLAY:
                     fileTimeHR = fileTime.strftime("%d.%m.%y %H:%M:%S")
                     nowTime = datetime.fromtimestamp(int(time.time()))
                     nowTimeHR = nowTime.strftime("%d.%m.%y %H:%M:%S")
-                    s.log(4, "WARNING: data field {0} expired. File time {1}, now {2}. Expiry {3} Seconds. Age {4} Seconds"
+                    self._log(4, "WARNING: data field {0} expired. File time {1}, now {2}. Expiry {3} Seconds. Age {4} Seconds"
                         .format(placeHolder, fileTimeHR, nowTimeHR, self._extraData[envCheck]["expires"], age))
                     valueOk = False
                     expiredText = ''
@@ -811,22 +855,26 @@ class ALLSKYOVERLAY:
 
             if fieldFound:
                 if variableType == 'Date':
-                    internalFormat = s.getSetting('timeformat')
-                    if envCheck == 'DATE' or envCheck == 'AS_DATE':
-                        timeStamp = datetime.fromtimestamp(self._imageDate)
-                        value = timeStamp.strftime(internalFormat)
-                    else:
-                        isUnixTimestamp, value = self._isUnixTimestamp(value)
-                        if isUnixTimestamp:
-                            timeStamp = datetime.fromtimestamp(value)
+                    try:
+                        internalFormat = s.getSetting('timeformat')
+                        if envCheck == 'DATE' or envCheck == 'AS_DATE':
+                            timeStamp = datetime.fromtimestamp(self._imageDate)
                             value = timeStamp.strftime(internalFormat)
+                        else:
+                            isUnixTimestamp, value = self._isUnixTimestamp(value)
+                            if isUnixTimestamp:
+                                timeStamp = datetime.fromtimestamp(value)
+                                value = timeStamp.strftime(internalFormat)
 
-                    tempDate = datetime.strptime(value, internalFormat)
-                    if Format is not None:
-                        try:
-                            value = tempDate.strftime(Format)
-                        except Exception:
-                            pass
+                        tempDate = datetime.strptime(value, internalFormat)
+                        if format is not None:
+                            try:
+                                value = tempDate.strftime(format)
+                            except Exception:
+                                pass
+                    except Exception as e:
+                        self._log(0, f"ERROR: Cannot use format '{internalFormat}' from Allsky settings. Please check the date/time format in the main Allsky Settings", sendToAllsky=True)
+                            
 
                 if variableType == 'Time':
                     if envCheck == 'AS_TIME' or envCheck == 'TIME':
@@ -852,10 +900,10 @@ class ALLSKYOVERLAY:
                             try:
                                 value = Format.format(convertValue)
                             except Exception as err:
-                                s.log(0, f"ERROR: Cannot use format '{f}' on Number variables like {rawFieldName} (value={value}).")
+                                self._log(0, f"ERROR: Cannot use format '{f}' on Number variables like {rawFieldName} (value={value}).", sendToAllsky=True)
                                 value = self._formaterrortext
                         except ValueError as err:
-                            s.log(0, f"ERROR: Cannot use format '{f}' on Number variables like {rawFieldName} (value={value}).")
+                            self._log(0, f"ERROR: Cannot use format '{f}' on Number variables like {rawFieldName} (value={value}).", sendToAllsky=True)
 
                 if variableType == 'Bool':
                     if Format is None or Format == '':
@@ -868,7 +916,7 @@ class ALLSKYOVERLAY:
                         value = empty
             elif variableType is None or variableType == '':
                 value = '???'
-                s.log(0, f"ERROR: {rawFieldName} has no variable type; check 'userfields.json'.  Using '{value}' instead.")
+                self._log(0, f"ERROR: {rawFieldName} has no variable type; check 'userfields.json'.  Using '{value}' instead.", sendToAllsky=True)
 
         return value, x, y, fill, font, fontsize, rotate, scale, opacity, stroke, strokewidth
 
@@ -916,9 +964,8 @@ class ALLSKYOVERLAY:
 
                 self._image = self._overlay_transparent(imageName, self._image, image, imageX, imageY, imageData)
                 s.log(4, f"INFO: Adding image field {imageName}")
-
             else:
-                s.log(1, f"WARNING: image '{imageName}' missing; ignoring.")
+                self._log(1, f"WARNING: image '{imageName}' missing; ignoring.", sendToAllsky=True)
         else:
             s.log(1, "WARNING: Image not set so ignoring.")
 
@@ -963,7 +1010,8 @@ class ALLSKYOVERLAY:
 
             background[y:y+h, x:x+w] = (1.0 - mask) * background[y:y+h, x:x+w] + mask * overlay_image
         else:
-            s.log(0, f"ERROR: Image '{imageName}' is outside the bounds of the main image.")
+            self._log(0, f"ERROR: Image '{imageName}' is outside the bounds of the main image.", sendToAllsky=True)
+
         return background
 
     def _rotate_image(self, image, angle):
@@ -1016,13 +1064,14 @@ class ALLSKYOVERLAY:
                     s.log(4, 'INFO: Adding Moon Illumination {self._moonIllumination} and Symbol {self._moonPhaseSymbol}')
                     s.setEnvironmentVariable('AS_MOON_ILLUMINATION', self._moonIllumination)
                     s.setEnvironmentVariable('AS_MOON_SYMBOL', self._moonPhaseSymbol)
+
                 else:
-                    s.log(4,'INFO: Moon enabled but cannot use due to prior error.')
+                    self._log(4,'INFO: Moon enabled but cannot use due to prior error.')
             else:
                 self._notEnabled = self._notEnabled + "  Moon"
         except Exception as e:
             eType, eObject, eTraceback = sys.exc_info()
-            s.log(0, f'ERROR: _initialiseMoon failed on line {eTraceback.tb_lineno} - {e}')
+            self._log(0, f'ERROR: _initialiseMoon failed on line {eTraceback.tb_lineno} - {e}')
         return True
 
     def _fileCreatedToday(self, fileName):
@@ -1109,12 +1158,12 @@ class ALLSKYOVERLAY:
                 s.setEnvironmentVariable("AS_SUN_AZIMUTH", str(int(todaySunData["azimuth"])))
                 s.setEnvironmentVariable("AS_SUN_ELEVATION", str(int(todaySunData["elevation"])))
 
-                s.log(4, f'INFO: Lat = {lat}, Lon = {lon}, tz = {tzName}, Sunrise = {sunrise}, Sunset = {sunset}')
+                self._log(4, f'INFO: Lat = {lat}, Lon = {lon}, tz = {tzName}, Sunrise = {sunrise}, Sunset = {sunset}')
             else:
                 self._notEnabled = self._notEnabled + "  Sun"
         except Exception as e:
             eType, eObject, eTraceback = sys.exc_info()
-            s.log(0, f'ERROR: _initialiseSun failed on line {eTraceback.tb_lineno} - {e}')
+            self._log(0, f'ERROR: _initialiseSun failed on line {eTraceback.tb_lineno} - {e}')
 
         return True
 
@@ -1224,14 +1273,14 @@ class ALLSKYOVERLAY:
                 outfile.write(tle[2].strip() + os.linesep)
             os.umask(umask)
 
-            s.log(4, ' TLE file over 2 days old so downloaded')
+            self._log(4, ' TLE file over 2 days old so downloaded')
         else:
             tle = {}
             with open(tleFileName) as f:
                 tle[0] = f.readline()
                 tle[1] = f.readline()
                 tle[2] = f.readline()
-            s.log(4, ' TLE loaded from cache')
+            self._log(4, ' TLE loaded from cache')
 
         return tle[0].strip(), tle[1].strip(), tle[2].strip()
 
@@ -1270,15 +1319,15 @@ class ALLSKYOVERLAY:
                         except LookupError:
                             s.log(0, f'ERROR: Norad ID {noradId} Not found.')
                 else:
-                    s.log(4, 'INFO: Satellites enabled but cannot use due to prior error.')
+                    self._log(4, 'INFO: Satellites enabled but cannot use due to prior error.')
 
             else:
                 self._notEnabled = self._notEnabled + "  Satellites"
 
         except Exception as e:
             eType, eObject, eTraceback = sys.exc_info()
-            s.log(4, ' ')
-            s.log(0, f'ERROR: _initSatellites failed on line {eTraceback.tb_lineno} - {e}')
+            self._log(4, ' ')
+            self._log(0, f'ERROR: _initSatellites failed on line {eTraceback.tb_lineno} - {e}')
 
         return True
 
@@ -1323,16 +1372,31 @@ class ALLSKYOVERLAY:
                         else:
                             s.setEnvironmentVariable('AS_' + planetId.replace(' BARYCENTER','') + 'VISIBLE', 'No')
                 else:
-                    s.log(4, 'INFO: Planets enabled but unable to use due to prior error.')
+                    self._log(4, 'INFO: Planets enabled but unable to use due to prior error.')
             else:
                 self._notEnabled = self._notEnabled + "  Planets"
 
         except Exception as e:
             eType, eObject, eTraceback = sys.exc_info()
-            s.log(0, f'ERROR: _initPlanets failed on line {eTraceback.tb_lineno}- {e}')
+            self._log(0, f'ERROR: _initPlanets failed on line {eTraceback.tb_lineno}- {e}')
 
         return True
 
+    def _addErrors(self):
+        print(f'Errors = "{self._errors}"')
+        if self._errors != '':
+            h, w, c = self._image.shape
+            fontSize = int(h * 0.015)
+            font = self._getFont('Arial', fontSize)
+            textWidth, textHeight = self.get_text_dimensions(self._errors, font)
+            fieldX = (w - textWidth) // 2
+            fieldY = 1
+            pilImage = Image.fromarray(self._image)        
+            draw = ImageDraw.Draw(pilImage)
+            print(fieldX, fieldY, textWidth, textHeight, w, h, c)
+            draw.text((fieldX, fieldY), self._errors, font = font, fill = (0,0,255))
+            self._image = np.array(pilImage)
+        
     def annotate(self):
         self._startTime = datetime.now()
         if self._loadConfigFile():

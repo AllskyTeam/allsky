@@ -910,7 +910,7 @@
 {
 "name" : "postprocessingheader",
 "label" : "Post-processing",
-"display" : false,
+"display" : true,
 "type" : "header"
 },
 {

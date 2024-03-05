@@ -122,12 +122,12 @@ function add_field($f, $v, $setting, $type=null) {	// field, value, setting_name
 		return;
 	}
 
-	if ($debug > 1) {
+	if ($debug > 1 && $f !== "name") {
+		// The "name" was already displayed.
 		// It's hard to read the output with really long strings.
 		if (strlen($v) > 50) $vv = substr($v, 0, 50) . "...";
 		else $vv = $v;
-		if ($f != "name") echo "    ";
-		echo "$f: $vv";
+		echo "    $f: $vv";
 	}
 
 	// Check if the value is a generic placeholder, like "_min".
@@ -166,7 +166,7 @@ function add_field($f, $v, $setting, $type=null) {	// field, value, setting_name
 			}
 		}
 	}
-	if ($debug > 1) echo "\n";
+	if ($debug > 1 && $f !== "name") echo "\n";
 	$options_str .= quote_value($v, null);
 }
 
@@ -197,7 +197,7 @@ function handle_options($f) {
 	$num_options = count($cc_options);
 	foreach ($cc_options as $opt) {
 		if (is_array($opt)) {
-			$options_str .= "\t" . '{';
+			$options_str .= "\t{";
 			$num = count($opt);
 			foreach ($opt as $f => $v) {
 				// output if string or not
@@ -230,7 +230,7 @@ function add_options_field($field, $options, $setting) {
 	$num_options = count($options);
 	foreach ($options as $opt) {
 		if (is_array($opt)) {
-			$options_str .= "\t" . '{';
+			$options_str .= "\t{";
 			$num = count($opt);
 			foreach ($opt as $f => $v) {
 				// output if string or not
@@ -245,7 +245,7 @@ function add_options_field($field, $options, $setting) {
 			$options_str .= "\n";
 
 		} else {	// single value - check it for _values, etc.
-			if ($opt === $setting . "_values") {
+			if ($opt === "${setting}_values") {
 				handle_options($setting);
 			}
 		}
@@ -273,7 +273,8 @@ $settings_file = "";
 $force = false;		// force creation of settings file even if it already exists?
 
 foreach ($options as $opt => $val) {
-	if ($debug > 1 || $opt === "debug" || $opt === "debug2") echo "   Argument $opt $val\n";
+	// if ($debug > 1 || $opt === "debug" || $opt === "debug2") echo "   Argument $opt $val\n";
+	if ($debug > 1) echo "   Argument $opt $val\n";
 
 	if ($opt === "debug")
 		$debug++;
@@ -342,6 +343,8 @@ if ($repo_array === null) {
 // All entries but type=="header*" have a "name".
 // Out of convention, the order of the fields is (a setting may not have all fields):
 	// name				[string]
+	// display			[boolean]	# must be 2nd if present
+	// settingsonly		[boolean]	# must be 3rd if present
 	// minimum			[number]
 	// maximum			[number]
 	// default			[string, but usually a number]
@@ -351,13 +354,12 @@ if ($repo_array === null) {
 	// usage			[string]
 	// carryforward		[boolean]
 	// options			[array with 1 or more entries] (only if "type" == "select")
-	// popup-yesno		[string]
-	// popup-yesno-value	[number or string]
-	// display			[boolean]
 	// checkchanges		[boolean]
 	// source			[string]
 	// booldependson	[string]	("name" of other setting)
 	// booldependsoff	[string]	("name" of other setting)
+	// popup-yesno		[string]
+	// popup-yesno-value	[number or string]
 	// optional			[boolean]
 	// action			[string]
 
@@ -390,12 +392,12 @@ foreach ($repo_array as $repo) {
 	global $num_fields_this_setting;
 	$num_fields_this_setting = 0;
 
-	$type = getVariableOrDefault($repo, "type", null);
 	$name = getVariableOrDefault($repo, "name", null);
+	$type = getVariableOrDefault($repo, "type", null);
 	if ($type === null && $name === $endSetting) {
 		$options_str .= "{\n";
-		$options_str .= "$q" . "name$q : $q$name$q,\n";
-		$options_str .= "$q" . "display$q : false\n";
+		$options_str .= "${q}name${q} : ${q}$name${q},\n";
+		$options_str .= "${q}display${q} : false\n";
 		$options_str .= "}\n";
 		break;		// hit the end
 	}
@@ -403,14 +405,13 @@ foreach ($repo_array as $repo) {
 	if ($debug > 1) echo "Processing setting [$name]: ";
 
 	// Before adding the setting, make sure the "display" field says we can.
-	// The value will be 1 (can display) or 0 (don't display), or a placeholder.
-	// It should normally not be missing, but check anyhow.
+	// The value will be true (can display) or false (don't display), or a placeholder.
+
 	$display = getVariableOrDefault($repo, "display", null);
 	if ($display === null) {
-		if ($debug > 1) echo "    display field is null\n";
-		$display = true;		// default
+		$display = "true";		// default
 	} else if ($display === "false") {
-		if ($debug > 1) echo "\nname: $name: 'display' is false; skipping\n";
+		if ($debug > 1) echo "    'display' field is false; skipping\n";
 		continue;
 	}
 
@@ -438,24 +439,33 @@ foreach ($repo_array as $repo) {
 
 	$options_str .= "{\n";
 		add_non_null_field($repo, "name", $name);
-		add_non_null_field($repo, "minimum", $name);
-		add_non_null_field($repo, "maximum", $name);
-		add_non_null_field($repo, "default", $name, $type);
-		add_non_null_field($repo, "description", $name);
-		add_non_null_field($repo, "label", $name);
-		add_non_null_field($repo, "type", $name);
-		add_non_null_field($repo, "usage", $name);
-		add_non_null_field($repo, "carryforward", $name, "boolean");
-		add_non_null_field($repo, "options", $name);
-		add_non_null_field($repo, "popup-yesno", $name);
-		add_non_null_field($repo, "popup-yesno-value", $name);
-		// Only get here if display is true, which is the default, so no need to add "display".
-		add_non_null_field($repo, "checkchanges", $name, "boolean");
-		add_non_null_field($repo, "optional", $name, "boolean");
-		add_non_null_field($repo, "source", $name);
-		add_non_null_field($repo, "booldependson", $name);
-		add_non_null_field($repo, "booldependsoff", $name);
-		add_non_null_field($repo, "action", $name);
+
+		// Only get here if display is true so no need to add "display" field.
+
+		if (getVariableOrDefault($repo, "settingsonly", "false") === "true") {
+			add_non_null_field($repo, "settingsonly", $name, "boolean");
+			add_non_null_field($repo, "type", $name);
+		} else {
+			add_non_null_field($repo, "minimum", $name);
+			add_non_null_field($repo, "maximum", $name);
+			add_non_null_field($repo, "default", $name, $type);
+			add_non_null_field($repo, "description", $name);
+			add_non_null_field($repo, "label", $name);
+			add_non_null_field($repo, "type", $name);
+			add_non_null_field($repo, "usage", $name);
+			add_non_null_field($repo, "carryforward", $name, "boolean");
+			add_non_null_field($repo, "options", $name);
+			add_non_null_field($repo, "checkchanges", $name, "boolean");
+			add_non_null_field($repo, "optional", $name, "boolean");
+			add_non_null_field($repo, "source", $name);
+/* NOT IMPLEMENTED
+			add_non_null_field($repo, "booldependson", $name);
+			add_non_null_field($repo, "booldependsoff", $name);
+			add_non_null_field($repo, "popup-yesno", $name);
+			add_non_null_field($repo, "popup-yesno-value", $name);
+*/
+			add_non_null_field($repo, "action", $name);
+		}
 	$options_str .= "\n},\n";
 }
 $options_str .= "]\n\n";
@@ -490,6 +500,7 @@ if ($settings_file !== "") {
 	$specificFileExists =  file_exists($fullSpecificFileName);
 	if ($debug > 0) {
 		$e =  $specificFileExists ? "yes" : "no";
+		if ($debug > 1) echo "\n";
 		echo "Camera-specific settings file exists ($e): $fullSpecificFileName.\n";
 	}
 

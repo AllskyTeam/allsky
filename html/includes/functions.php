@@ -165,11 +165,17 @@ function initialize_variables($website_only=false) {
 	$nightdelay = getVariableOrDefault($settings_array, 'nightdelay', 30000);
 	$showUpdatedMessage = toBool(getVariableOrDefault($settings_array, 'showupdatedmessage', "true"));
 
+	$nightautoexposure = getVariableOrDefault($settings_array, 'nightautoexposure', "true");
+	$dayautoexposure = getVariableOrDefault($settings_array, 'dayautoexposure', "true");
+
 	$daymaxautoexposure = getVariableOrDefault($settings_array, 'daymaxautoexposure', 100);
 	$dayexposure = getVariableOrDefault($settings_array, 'dayexposure', 500);
 	$nightmaxautoexposure = getVariableOrDefault($settings_array, 'nightmaxautoexposure', 10000);
 	$nightexposure = getVariableOrDefault($settings_array, 'nightexposure', 10000);
 	$consistentDelays = toBool(getVariableOrDefault($settings_array, 'consistentdelays', "true"));
+
+	$maxNightExposure = ($nightautoexposure ?  $nightexposure : $nightmaxautoexposure);
+	$maxDayExposure = ($dayautoexposure ? $dayexposure : $daymaxautoexposure);
 
 	$ok = true;
 	// These are all required settings so if they are blank don't display a
@@ -188,8 +194,8 @@ function initialize_variables($website_only=false) {
 		return;
 	}
 
-	$daydelay += ($consistentDelays ? $daymaxautoexposure : $dayexposure);
-	$nightdelay += ($consistentDelays ? $nightmaxautoexposure : $nightexposure);
+	$daydelay += ($consistentDelays ? $maxDayExposure : $dayexposure);
+	$nightdelay += ($consistentDelays ? $maxNightExposure : $nightexposure);
 
 	// Determine if it's day or night so we know which delay to use.
 	$angle = getVariableOrDefault($settings_array, 'angle', -6);
@@ -221,6 +227,7 @@ function initialize_variables($website_only=false) {
 	$delay /= 5;
 	if ($delay < 2) $delay = 2;
 }
+
 
 // Check if the settings have been configured.
 function check_if_configured($page, $calledFrom) {

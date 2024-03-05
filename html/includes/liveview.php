@@ -21,7 +21,26 @@ function DisplayLiveView($image_name, $delay, $daydelay, $nightdelay, $darkframe
 	}
 ?>
 
-<script> setTimeout(function () { getImage(); }, <?php echo $delay ?>); </script>
+<script>
+		function getImage() {
+			var newImg = new Image();
+			newImg.src = '<?php echo $image_name ?>?_ts=' + new Date().getTime();
+			newImg.id = "current";
+			newImg.style = "width: 100%";
+			newImg.decode().then(() => {
+				$("#live_container").empty().append(newImg);
+			}).catch((err) => {
+				if (!this.complete || typeof this.naturalWidth == "undefined" || this.naturalWidth == 0) {
+					console.log('broken image: ', err);
+				}
+			}).finally(() => {
+				// Use tail recursion to trigger the next invocation after `$delay` milliseconds
+				setTimeout(function () { getImage(); }, <?php echo $delay ?>);
+			});
+		};
+
+		getImage();
+</script>
 
 <div class="row">
 	<div class="panel panel-primary">

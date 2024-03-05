@@ -53,7 +53,7 @@ function formatSettingValue($value) {
 }
 
 function checkType($fieldName, $value, $old, $label, $type, &$shortened=null) {
-	if ($type === null || $value == "") {
+	if ($type === null || $type === "text" || $value === "") {
 		return("");
 	}
 
@@ -208,7 +208,7 @@ function DisplayAllskyConfig() {
 				// Check for empty non-optional settings and valid numbers, and
 				// get some info about the setting we'll need if it changed.
 				// Do this for ALL settings, not just changed ones so we can
-				// let the user know if there's a problem with a setting.
+				// let the user know if there's a problem with an existing value.
 				$checkchanges = false;
 				$label = "??";
 				$found = false;
@@ -252,6 +252,12 @@ function DisplayAllskyConfig() {
 					$status->addMessage($msg, 'danger');
 					$ok = false;
 				} else {
+					if (toBool(getVariableOrDefault($option, 'settingsonly', "false"))) {
+						// "settingsonly" settings aren't changed in the WebUI
+						$settings_array[$name] = $oldValue;
+						continue;
+					}
+
 					if ($oldValue !== "")
 						$oldValue = str_replace("'", "&#x27", $oldValue);
 					if ($newValue !== "")
@@ -661,6 +667,9 @@ if (false && $debug) {
 
 				// Should this setting be displayed?
 				$display = toBool(getVariableOrDefault($option, 'display', "true"));
+				if (toBool(getVariableOrDefault($option, 'settingsonly', "false"))) {
+					$display = false;
+				}
 				$isHeader = substr($type, 0, 6) === "header";
 				if (! $display && ! $isHeader) {
 					if ($formReadonly != "readonly") {
@@ -943,7 +952,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 							" type='$t' $readonly $readonlyForm name='$name' value='$value' >";
 
 					} else if ($type == "widetext"){
-						echo "\n\t\t<input class='form-control boxShadow settingInputWeidetext'" .
+						echo "\n\t\t<input class='form-control boxShadow settingInputWidetext'" .
 							" type='text' $readonlyForm name='$name' value='$value'>";
 
 					} else if ($type == "select"){
@@ -980,11 +989,6 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 						echo "\n<tr class='rowSeparator'>";
 							echo "\n\t<td></td>";
 					}
-$popupYesNo = getVariableOrDefault($option, 'popup-yesno', "");
-if ($popupYesNo !== "") {
-	$popupYesNoValue = getVariableOrDefault($option, 'popup-yesno-value', "");
-	echo "<!-- <br><span style='color: red;'>If value changes to '$popupYesNoValue' then ask '$popupYesNo'</span> -->";
-}
 					echo "\n\t<td style='padding-left: 10px;'>$warning_msg$description</td>";
 
 					echo "\n</tr>";

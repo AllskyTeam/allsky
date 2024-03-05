@@ -1688,6 +1688,7 @@ convert_settings()			# prior_file, new_file
 		fi
 	done
 
+	# shellcheck disable=SC2043
 	for s in zwoexposuretype
 	do
 		x="$( settings ".${s}" "${PRIOR_FILE}" )"
@@ -1703,17 +1704,14 @@ convert_settings()			# prior_file, new_file
 		VALUE="ascending"; doV "NEW" "VALUE" "${s}" "text" "${NEW_FILE}"
 	fi
 
-	s="daytimeoverlay"
-	x="$( settings ".${s}" "${PRIOR_FILE}" )"
-	if [[ -z ${x} ]]; then
-		VALUE=""; doV "NEW" "VALUE" "${s}" "text" "${NEW_FILE}"
-	fi
+	for s in daytimeoverlay nighttimeoverlay
+	do
+		x="$( settings ".${s}" "${PRIOR_FILE}" )"
+		if [[ -z ${x} ]]; then
+			VALUE=""; doV "NEW" "VALUE" "${s}" "text" "${NEW_FILE}"
+		fi
+	done
 
-	s="nighttimeoverlay"
-	x="$( settings ".${s}" "${PRIOR_FILE}" )"
-	if [[ -z ${x} ]]; then
-		VALUE=""; doV "NEW" "VALUE" "${s}" "text" "${NEW_FILE}"
-	fi
 
 	# New fields were added to the bottom of the settings file but the below
 	# command will order them the same as in the options file, which we want.

@@ -1,8 +1,8 @@
 [
 {
 "name" : "daynighttab========================================",
-"label" : "Day/Night Settings",
 "display" : false,
+"label" : "Day/Night Settings",
 "type" : "header-tab"
 },
 {
@@ -12,9 +12,9 @@
 },
 {
 "name" : "daynightcolumns",
+"display" : false,
 "label" : "Setting, Day Value, Description",
 "candrop" : "Description",
-"display" : false,
 "type" : "header-column"
 },
 {
@@ -36,7 +36,8 @@
 "type" : "boolean",
 "usage" : "capture",
 "carryforward" : true,
-"booldependson" : "takedaytimeimages"
+"booldependson" : "takedaytimeimages",
+"action" : "reload"
 },
 {
 "name" : "dayautoexposure",
@@ -178,17 +179,18 @@
 },
 {
 "name" : "dayawb",
+"display" : "_display",
 "default" : false,
 "description" : "Sets Auto White Balance (camera adjusts color).",
 "label" : "Auto White Balance",
 "type" : "boolean",
 "usage" : "capture",
-"display" : "_display",
 "booldependson" : "takedaytimeimages",
 "action" : "reload"
 },
 {
 "name" : "daywbr",
+"display" : "_display",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -196,12 +198,12 @@
 "label" : "Red Balance",
 "type" : "float",
 "usage" : "capture",
-"display" : "_display",
 "booldependson" : "takedaytimeimages AND dayawb",
 "action" : "reload"
 },
 {
 "name" : "daywbb",
+"display" : "_display",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -209,7 +211,6 @@
 "label" : "Blue Balance",
 "type" : "float",
 "usage" : "capture",
-"display" : "_display",
 "booldependson" : "takedaytimeimages AND dayawb",
 "action" : "reload"
 },
@@ -227,18 +228,19 @@
 },
 {
 "name" : "dayenablecooler",
+"display" : "_display",
 "default" : false,
 "description" : "Enable to use cooling (on cooled cameras only).",
 "label" : "Cooling",
 "type" : "boolean",
 "usage" : "capture",
 "carryforward" : true,
-"display" : "_display",
 "booldependson" : "takedaytimeimages",
 "action" : "reload"
 },
 {
 "name" : "daytargettemp",
+"display" : "_display",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -247,11 +249,11 @@
 "type" : "integer",
 "usage" : "capture",
 "booldependson" : "takedaytimeimages AND dayenablecooler",
-"display" : "_display",
 "action" : "reload"
 },
 {
 "name" : "daytuningfile",
+"display" : "_display",
 "default" : "",
 "description" : "Name of the optional day camera tuning file to use.<br>See <a href='https://www.raspberrypi.com/documentation/accessories/camera.html' target='_blank' rel='noreferrer' title='Opens in new tab/window'>documentation <i class='fa fa-external-link-alt fa-fw'></i></a>, <a href='https://datasheets.raspberrypi.com/camera/raspberry-pi-camera-guide.pdf' target='_blank' rel='noreferrer' title='Opens in new tab/window'>document <i class='fa fa-external-link-alt fa-fw'></i></a>, or the camera manual for more information.",
 "label" : "Tuning File",
@@ -259,7 +261,6 @@
 "usage" : "capture",
 "checkchanges" : true,
 "optional" : true,
-"display" : "_display",
 "booldependson" : "takedaytimeimages",
 "action" : "restart"
 },
@@ -423,16 +424,17 @@
 },
 {
 "name" : "nightawb",
+"display" : "_display",
 "default" : false,
 "description" : "Enable to use Auto White Balance (camera adjusts color).<br>NOTE: enabling this can significantly increase the time needed to capture a nighttime image.",
 "label" : "Auto White Balance",
 "type" : "boolean",
 "usage" : "capture",
-"display" : "_display",
 "action" : "reload"
 },
 {
 "name" : "nightwbr",
+"display" : "_display",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -440,12 +442,12 @@
 "label" : "Red Balance",
 "type" : "float",
 "usage" : "capture",
-"display" : "_display",
 "booldependsoff" : "nightawb",
 "action" : "reload"
 },
 {
 "name" : "nightwbb",
+"display" : "_display",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -453,7 +455,6 @@
 "label" : "Blue Balance",
 "type" : "float",
 "usage" : "capture",
-"display" : "_display",
 "booldependsoff" : "nightawb",
 "action" : "reload"
 },
@@ -466,21 +467,23 @@
 "label" : "Frames To Skip",
 "type" : "integer",
 "usage" : "capture",
-"booldependson" : "nightautoexposure"
+"booldependson" : "nightautoexposure",
+"action" : "reload"
 },
 {
 "name" : "nightenablecooler",
+"display" : "_display",
 "default" : false,
 "description" : "Enable to use cooling (on cooled cameras only).",
 "label" : "Cooling",
 "type" : "boolean",
 "usage" : "capture",
 "carryforward" : true,
-"display" : "_display",
 "action" : "reload"
 },
 {
 "name" : "nighttargettemp",
+"display" : "_display",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -488,18 +491,17 @@
 "label" : "Target Temp.",
 "type" : "integer",
 "usage" : "capture",
-"display" : "_display",
 "booldependson" : "nightenablecooler",
 "action" : "reload"
 },
 {
 "name" : "nighttuningfile",
+"display" : "_display",
 "default" : "",
 "description" : "Name of the night camera tuning file to use.",
 "label" : "Tuning File",
 "type" : "widetext",
 "usage" : "capture",
-"display" : "_display",
 "checkchanges" : true,
 "optional" : true,
 "action" : "restart"
@@ -507,8 +509,8 @@
 
 {
 "name" : "bothtab========================================",
-"label" : "24 Hours",
 "display" : false,
+"label" : "24 Hours",
 "type" : "header-tab"
 },
 {
@@ -540,17 +542,18 @@
 },
 {
 "name" : "extraargs",
+"display" : "_display",
 "default" : "",
 "description" : "Extra arguments to pass to the capture program that Allsky doesn't support.",
 "label" : "Extra Arguments",
 "type" : "widetext",
 "usage" : "capture",
-"display" : "_display",
 "optional" : true,
 "action" : "reload"
 },
 {
 "name" : "saturation",
+"display" : "_display",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -558,11 +561,11 @@
 "label" : "Saturation",
 "type" : "float",
 "usage" : "capture",
-"display" : "_display",
 "action" : "reload"
 },
 {
 "name" : "contrast",
+"display" : "_display",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -570,11 +573,11 @@
 "label" : "Contrast",
 "type" : "float",
 "usage" : "capture",
-"display" : "_display",
 "action" : "reload"
 },
 {
 "name" : "sharpness",
+"display" : "_display",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -582,11 +585,11 @@
 "label" : "Sharpness",
 "type" : "float",
 "usage" : "capture",
-"display" : "_display",
 "action" : "reload"
 },
 {
 "name" : "gamma",
+"display" : "_display",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -594,11 +597,11 @@
 "label" : "Gamma",
 "type" : "integer",
 "usage" : "capture",
-"display" : "_display",
 "action" : "reload"
 },
 {
 "name" : "aggression",
+"display" : "_display",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -606,12 +609,12 @@
 "label" : "Aggression",
 "type" : "percent",
 "usage" : "capture",
-"display" : "_display",
 "booldependson" : "dayautoexposure OR nightautoexposure",
 "action" : "reload"
 },
 {
 "name" : "gaintransitiontime",
+"display" : "_display",
 "minimum" : 0,
 "maximum" : "none",
 "default" : "_default",
@@ -619,7 +622,6 @@
 "label" : "Gain Transition Time",
 "type" : "integer",
 "usage" : "capture",
-"display" : "_display",
 "booldependsoff" : "nightautogain",
 "action" : "reload"
 },
@@ -672,16 +674,17 @@
 },
 {
 "name" : "autousb",
+"display" : "_display",
 "default" : true,
 "description" : "Automatically set the USB bandwidth.",
 "label" : "Auto USB Bandwidth",
 "type" : "boolean",
 "usage" : "capture",
-"display" : "_display",
 "action" : "reload"
 },
 {
 "name" : "usb",
+"display" : "_display",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
@@ -689,7 +692,6 @@
 "label" : "USB Bandwidth",
 "type" : "integer",
 "usage" : "capture",
-"display" : "_display",
 "booldependsoff" : "autousb",
 "action" : "reload"
 },
@@ -706,6 +708,7 @@
 },
 {
 "name" : "rotation",
+"display" : "_display",
 "default" : 0,
 "description" : "Set image rotation to enable proper orientation.",
 "label" : "Rotation",
@@ -714,7 +717,6 @@
 "options" : [
 	"rotation_values"
 ],
-"display" : "_display",
 "action" : "reload"
 },
 {
@@ -837,12 +839,12 @@
 },
 {
 "name" : "zwoexposuretype",
+"display" : "_display",
 "default" : 0,
 "description" : "Select the type of exposure to use with ZWO cameras.  Use <span class='WebUIValue'>Snapshot</span> if possible since it should fix ASI_ERROR_TIMEOUT problems.  If that doesn't work try <span class='WebUIValue'>Video Off</span>.",
 "label" : "ZWO Exposure Type",
 "type" : "select",
 "usage" : "capture",
-"display" : "_display",
 "options" : [
 	{"value" : 0, "label" : "Snapshot"},
 	{"value" : 1, "label" : "Video Off"},
@@ -852,12 +854,12 @@
 },
 {
 "name" : "histogrambox",
+"display" : "_display",
 "default" : "500 500 50 50",
 "description" : "Size of the histogram box (X and Y in pixels) and offset from left and top (0-100 percent). Sizes must be even numbers.",
 "label" : "Histogram Box",
 "type" : "text",
 "usage" : "capture",
-"display" : "_display",
 "booldependson" : "dayautoexposure OR nightautoexposure",
 "action" : "reload"
 },
@@ -903,14 +905,14 @@
 
 {
 "name" : "postprocessingtab========================================",
-"label" : "Post-processing",
 "display" : false,
+"label" : "Post-processing",
 "type" : "header-tab"
 },
 {
 "name" : "postprocessingheader",
-"label" : "Post-processing",
 "display" : false,
+"label" : "Post-processing",
 "type" : "header"
 },
 {
@@ -1463,13 +1465,13 @@
 },
 {
 "name" : "showtemp",
+"display" : "_display",
 "default" : true,
 "description" : "Enable to display the camera sensor temperature on the overlay.",
 "label" : "Show Temperature",
 "type" : "boolean",
 "usage" : "capture",
 "carryforward" : true,
-"display" : "_display",
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
@@ -1497,13 +1499,13 @@
 },
 {
 "name" : "showusb",
+"display" : "_display",
 "default" : false,
 "description" : "Enable to display the USB Bandwidth number on the overlay.<br>This is primarily for troubleshooting.",
 "label" : "Show USB",
 "type" : "boolean",
 "usage" : "capture",
 "carryforward" : true,
-"display" : "_display",
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
@@ -1520,13 +1522,13 @@
 },
 {
 "name" : "showhistogrambox",
+"display" : "_display",
 "default" : false,
 "description" : "Enable to show an outline of the histogram box, useful for determining what the 'Histogram Box' numbers should be.",
 "label" : "Show Histogram Box",
 "type" : "boolean",
 "usage" : "capture",
 "carryforward" : true,
-"display" : "_display",
 "booldependsoff" : "overlaymethod",
 "action" : "reload"
 },
@@ -2341,6 +2343,22 @@
 "carryforward" : true,
 "optional" : true
 },
+{
+"name" : "daytimeoverlay",
+"settingsonly" : true,
+"default" : "",
+"description" : "The overlay file to use during daytime",
+"label" : "NOT DISPLAYED IN WebUI",
+"type" : "text"
+},
+{
+"name" : "nighttimeoverlay",
+"settingsonly" : true,
+"default" : "",
+"description" : "The overlay file to use during nighttime",
+"label" : "NOT DISPLAYED IN WebUI",
+"type" : "text"
+},
 
 {
 
@@ -2369,16 +2387,18 @@
 },
 {
 "name" : "cameramodel",
+"display" : true,
 "default" : "",
 "description" : "The model of camera you are using.<br><strong>To change it, change the <span class='WebUISetting'>Camera Type</span> above.</strong>",
 "label" : "Camera Model",
 "type" : "readonly",
 "usage" : "capture",
-"display" : true,
 "action" : "restart"
 },
 {
 "name" : "cameranumber",
+"display" : false,
+"xxxdisplay" : "_display",
 "minimum" : 0,
 "maximum" : "none",
 "default" : 0,
@@ -2387,8 +2407,6 @@
 "type" : "integer",
 "usage" : "capture",
 "checkchanges" : true,
-"xxxdisplay" : "_display",
-"display" : false,
 "optional" : true,
 "action" : "restart"
 },

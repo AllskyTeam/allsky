@@ -157,8 +157,8 @@ function display_error_and_exit()	# error message, notification string
 }
 
 # Resize the image if required
-RESIZE_W="$( settings ".imagresizewidth" )"
-RESIZE_H="$( settings ".imagresizeheight" )"
+RESIZE_W="$( settings ".imageresizewidth" )"
+RESIZE_H="$( settings ".imageresizeheight" )"
 if [[ ${RESIZE_W} -gt 0 && ${RESIZE_H} -gt 0 ]]; then
 	# Make sure we were given numbers.
 	ERROR_MSG=""

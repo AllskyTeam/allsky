@@ -1245,7 +1245,7 @@ class ALLSKYOVERLAY:
         return ret
 
     def _fetchTleFromCelestrak(self, noradCatId, verify=True):
-        s.log(4, f'INFO: Loading Satellite {noradCatId}')
+        s.log(4, f'INFO: Loading Satellite {noradCatId}', preventNewline=True)
         tleFileName = os.path.join(self._OVERLAYTLEFOLDER , noradCatId + '.tle')
 
         self._createTempDir(self._OVERLAYTLEFOLDER)
@@ -1273,14 +1273,14 @@ class ALLSKYOVERLAY:
                 outfile.write(tle[2].strip() + os.linesep)
             os.umask(umask)
 
-            self._log(4, ' TLE file over 2 days old so downloaded')
+            s.log(4, ' TLE file over 2 days old so downloaded')
         else:
             tle = {}
             with open(tleFileName) as f:
                 tle[0] = f.readline()
                 tle[1] = f.readline()
                 tle[2] = f.readline()
-            self._log(4, ' TLE loaded from cache')
+            s.log(4, ' TLE loaded from cache')
 
         return tle[0].strip(), tle[1].strip(), tle[2].strip()
 

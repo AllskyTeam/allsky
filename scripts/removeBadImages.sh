@@ -92,6 +92,8 @@ if [[ $( settings ".takedarkframes" ) == "true" ]]; then
 	LOW=0.00000
 	HIGH=0.01000	# 1%
 fi
+# TODO: make BAD_LIMIT a WebUI setting.
+BAD_LIMIT=5
 
 # Find the full size image-*jpg and image-*png files (not the thumbnails) and
 # have "convert" compute a histogram in order to capture any error messages and determine
@@ -110,11 +112,8 @@ cd "${DIRECTORY}" || exit 99
 
 # If the LOW threshold is 0 or < 0 it's disabled.
 # If the HIGH threshold is 0 or 1.0 (nothing can be brighter than 1.0) it's disabled.
-if echo "${LOW}" "${HIGH}" |
-	awk '{
-		l=$1;
+if awk -v l="${LOW}" -v h="${HIGH}" '{
 		if (l < 0) l=0;
-		h=$2;
 		if (h > 1) h=0;
 		if ((l + h) == 0) {
 			exit 0;
@@ -193,9 +192,9 @@ for f in ${IMAGE_FILES} ; do
 			# 5 digits precision, multiple everything by 100000 and convert to integer.
 			# We can then use bash math with the *_CHECK values.
 			# Awk handles the "e-" format.
-			MEAN_CHECK=$( echo "${MEAN}"	| awk '{ printf("%d", $1 * 100000); }' )
-			HIGH_CHECK=$( echo "${HIGH}"	| awk '{ printf("%d", $1 * 100000); }' )
-			LOW_CHECK=$( echo "${LOW}"		| awk '{ printf("%d", $1 * 100000); }' )
+			MEAN_CHECK=$( awk -v x="${MEAN}" '{ printf("%d", x * 100000); }' )
+			HIGH_CHECK=$( awk -v x="${HIGH}" '{ printf("%d", x * 100000); }' )
+			LOW_CHECK=$(  awk -v x="${LOW}"  '{ printf("%d", x * 100000); }' )
 
 			if [[ ${DEBUG} == "true" ]]; then
 				echo -n "${ME}: ${FILE}: MEAN=${MEAN}, MEAN_CHECK=${MEAN_CHECK},"
@@ -252,11 +251,9 @@ else
 		echo "${ME} File is bad: ${OUTPUT}" >&2
 		echo -e "${OUTPUT}" >> "${ALLSKY_BAD_IMAGE_COUNT}"
 		BAD_COUNT="$( wc -l < "${ALLSKY_BAD_IMAGE_COUNT}" )"
-# TODO: make BAD_LIMIT a WebUI setting.
-		BAD_LIMIT=5
 		if [[ $((BAD_COUNT % BAD_LIMIT)) -eq 0 ]]; then
 			MSG="Multiple consecutive bad images."
-			MSG+="\nCheck 'REMOVE_BAD_IMAGES_THRESHOLD_LOW' and 'REMOVE_BAD_IMAGES_THRESHOLD_HIGH' in config.sh"
+			MSG+="\nCheck the values of 'Remove Bad Images Threshold Low' and 'Remove Bad Images Threshold High' in the WebUI"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}" >&2
 		fi
 		if [[ ${BAD_COUNT} -ge "${BAD_LIMIT}" ]]; then

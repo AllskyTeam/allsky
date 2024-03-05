@@ -215,12 +215,13 @@ function DisplayAllskyConfig() {
 				foreach ($options_array as $option) {
 					if ($option['name'] !== $name) continue;
 
+					$label = getVariableOrDefault($option, 'label', "");
 					$found = true;
 					$shortMsg = "";
 					$e = checkType($name,
 							$newValue,
 							$oldValue,
-							$option['label'],
+							$label,
 							$type_array[$name],
 							$shortMsg);
 					if ($e != "") {
@@ -242,7 +243,6 @@ function DisplayAllskyConfig() {
 					$optional = $optional_array[$name];
 					if ($newValue !== "" || $optional) {
 						$checkchanges = toBool(getVariableOrDefault($option, 'checkchanges', "false"));
-						$label = getVariableOrDefault($option, 'label', "");
 					}
 					$action = getVariableOrDefault($option, 'action', "none");
 					break;

@@ -159,17 +159,17 @@ function initialize_variables($website_only=false) {
 	$lastChanged = getVariableOrDefault($settings_array, $lastChangedName, "");
 	$remoteWebsiteURL = getVariableOrDefault($settings_array, 'remotewebsiteurl', "");
 
+	$ms_per_sec = 1000;		// to make the code easier to read
 
 	////////////////// Determine delay between refreshes of the image.
-	$daydelay = getVariableOrDefault($settings_array, 'daydelay', 30000);
-	$nightdelay = getVariableOrDefault($settings_array, 'nightdelay', 30000);
+	$daydelay = getVariableOrDefault($settings_array, 'daydelay', 30 * $ms_per_sec);
+	$nightdelay = getVariableOrDefault($settings_array, 'nightdelay', 30 * $ms_per_sec);
 	$showUpdatedMessage = toBool(getVariableOrDefault($settings_array, 'showupdatedmessage', "true"));
 
-	$daymaxautoexposure = getVariableOrDefault($settings_array, 'daymaxautoexposure', 100);
 	$dayexposure = getVariableOrDefault($settings_array, 'dayexposure', 500);
-	$nightmaxautoexposure = getVariableOrDefault($settings_array, 'nightmaxautoexposure', 10000);
-	$nightexposure = getVariableOrDefault($settings_array, 'nightexposure', 10000);
-	$consistentDelays = toBool(getVariableOrDefault($settings_array, 'consistentdelays', "true"));
+	$daymaxautoexposure = getVariableOrDefault($settings_array, 'daymaxautoexposure', 100);
+	$nightexposure = getVariableOrDefault($settings_array, 'nightexposure', 10 * $ms_per_sec);
+	$nightmaxautoexposure = getVariableOrDefault($settings_array, 'nightmaxautoexposure', 10 * $ms_per_sec);
 
 	$ok = true;
 	// These are all required settings so if they are blank don't display a
@@ -184,12 +184,18 @@ function initialize_variables($website_only=false) {
 
 	if (! $ok) {
 		$showUpdatedMessage = false;
-		if ($delay === 0) $delay = 20000;	// a reasonable default
+		if ($delay === 0) $delay = 20 * $ms_per_sec;	// a reasonable default
 		return;
 	}
 
-	$daydelay += ($consistentDelays ? $daymaxautoexposure : $dayexposure);
-	$nightdelay += ($consistentDelays ? $nightmaxautoexposure : $nightexposure);
+	$dayautoexposure = toBool(getVariableOrDefault($settings_array, 'dayautoexposure', "true"));
+	$nightautoexposure = toBool(getVariableOrDefault($settings_array, 'nightautoexposure', "true"));
+	$maxDayExposure = ($dayautoexposure ? $dayexposure : $daymaxautoexposure);
+	$maxNightExposure = ($nightautoexposure ?  $nightexposure : $nightmaxautoexposure);
+	$consistentDelays = toBool(getVariableOrDefault($settings_array, 'consistentdelays', "true"));
+
+	$daydelay += ($consistentDelays ? $maxDayExposure : $dayexposure);
+	$nightdelay += ($consistentDelays ? $maxNightExposure : $nightexposure);
 
 	// Determine if it's day or night so we know which delay to use.
 	$angle = getVariableOrDefault($settings_array, 'angle', -6);
@@ -207,9 +213,10 @@ function initialize_variables($website_only=false) {
 			$delay = ($daydelay + $nightdelay) / 2;		// Use the average delay
 		}
 
-		// Convert to seconds for display.
-		$daydelay /= 1000;
-		$nightdelay /= 1000;
+		// Convert to seconds for display on the LiveView page.
+		// These variables are now only used for the display.
+		$daydelay /= $ms_per_sec;
+		$nightdelay /= $ms_per_sec;
 	} else {
 		// Error message will be displayed by WebUI.
 		$showUpdatedMessage = false;
@@ -219,7 +226,7 @@ function initialize_variables($website_only=false) {
 
 	// Lessen the delay between a new picture and when we check.
 	$delay /= 5;
-	if ($delay < 2) $delay = 2;
+	$delay = max($delay, 2 * $ms_in_sec);
 }
 
 // Check if the settings have been configured.

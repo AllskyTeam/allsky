@@ -171,18 +171,18 @@ def meteor(params, event):
                                 cv2.line(s.image,(x1,y1),(x2,y2),(0,255,0),10)
                     lineCount += 1
 
-            setEnvironmentVariable("AS_METEORLINECOUNT", str(lineCount))
-            setEnvironmentVariable("AS_METEORCOUNT", str(meteorCount))
+            s.setEnvironmentVariable("AS_METEORLINECOUNT", str(lineCount))
+            s.setEnvironmentVariable("AS_METEORCOUNT", str(meteorCount))
             result = f"{meteorCount} Meteors found, {lineCount} Lines detected"
             s.log(4, f"INFO: {result}")
         else:
             result = "Sky is not clear so ignoring meteor detection"
             s.log(4, f"INFO: {result}")
-            setEnvironmentVariable("AS_METEORCOUNT", "Disabled")
+            s.setEnvironmentVariable("AS_METEORCOUNT", "Disabled")
     else:
         result = "Its raining so ignorning meteor detection"
         s.log(4, f"INFO: {result}")
-        setEnvironmentVariable("AS_METEORCOUNT", "Disabled")
+        s.setEnvironmentVariable("AS_METEORCOUNT", "Disabled")
 
     return result
 

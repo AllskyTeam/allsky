@@ -1245,7 +1245,7 @@ class ALLSKYOVERLAY:
         return ret
 
     def _fetchTleFromCelestrak(self, noradCatId, verify=True):
-        s.log(4, f'INFO: Loading Satellite {noradCatId}', fatal=True)
+        s.log(4, f'INFO: Loading Satellite {noradCatId}')
         tleFileName = os.path.join(self._OVERLAYTLEFOLDER , noradCatId + '.tle')
 
         self._createTempDir(self._OVERLAYTLEFOLDER)

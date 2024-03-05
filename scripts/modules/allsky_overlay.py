@@ -1313,9 +1313,9 @@ class ALLSKYOVERLAY:
                             s.setEnvironmentVariable('AS_' + noradId + 'AZ', str(az))
 
                             if alt.degrees > 5 and sunlit:
-                                s.SetEnvironmentVariable('AS_' + noradId + 'VISIBLE', 'Yes')
+                                s.setEnvironmentVariable('AS_' + noradId + 'VISIBLE', 'Yes')
                             else:
-                                s.SetEnvironmentVariable('AS_' + noradId + 'VISIBLE', 'No')
+                                s.setEnvironmentVariable('AS_' + noradId + 'VISIBLE', 'No')
                         except LookupError:
                             s.log(0, f'ERROR: Norad ID {noradId} Not found.')
                 else:

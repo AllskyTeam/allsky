@@ -249,10 +249,6 @@ echo "${ARGS}" | grep -E -i -v "^config=|^debuglevel=" >> "${ARGS_FILE}"
 	echo "version=${ALLSKY_VERSION}"
 	echo "save_dir=${CAPTURE_SAVE_DIR}"
 
-	if [[ ${CAMERA_TYPE} == "RPi" ]]; then
-		echo "connected-cameras-file=${CONNECTED_CAMERAS_INFO}"
-		echo "rpi-camera-info-file=${RPi_SUPPORTED_CAMERAS}"
-	fi
 } >> "${ARGS_FILE}"
 
 FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
@@ -272,13 +268,16 @@ activate_python_venv
 python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --cleartimings
 deactivate_python_venv
 
-# Run the main program - this is the main attraction...
-# ${RPi_COMMAND_TO_USE} needs to come first since the capture_RPi code checks for it first.
-# Pass debuglevel on command line so the capture program knows right away
-# if it should display debug output.
+# Pass some arguments via the environment so they can be used as soon as the program starts.
+export ALLSKY_DEBUG_LEVEL
+if [[ ${CAMERA_TYPE} == "RPi" ]]; then
+	export RPi_COMMAND_TO_USE
+	export CONNECTED_CAMERAS_INFO
+	export RPi_SUPPORTED_CAMERAS
+fi
 
-#shellcheck disable=SC2086
-"${ALLSKY_BIN}/${CAPTURE}" ${RPi_COMMAND_TO_USE} -debuglevel "${ALLSKY_DEBUG_LEVEL}" -config "${ARGS_FILE}"
+# Run the main program - this is the main attraction...
+"${ALLSKY_BIN}/${CAPTURE}" -config "${ARGS_FILE}"
 RETCODE=$?
 
 if [[ ${RETCODE} -eq ${EXIT_OK} ]]; then

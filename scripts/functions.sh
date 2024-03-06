@@ -223,13 +223,14 @@ function determineCommandToUse()
 # Prepend each line with the CAMERA_TYPE.
 function get_connected_cameras_info()
 {
+	local IGNORE_ERRORS="${1:-false}"
+
 	####### Check for RPi
 	# Output will be:
 	#		RPi  <TAB>  camera_number   : camera_model  [widthXheight]
 	# for each camera found.
 	if [[ -z ${CMD_TO_USE_} ]]; then
-		# true == ignore errors
-		determineCommandToUse "false" "" "true" > /dev/null
+		determineCommandToUse "false" "" "${IGNORE_ERRORS}" > /dev/null
 	fi
 	if [[ -n ${CMD_TO_USE_} ]]; then
 		if [[ ${CMD_TO_USE_} == "raspistill" ]]; then

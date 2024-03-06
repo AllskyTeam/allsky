@@ -126,8 +126,8 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 				MSG="Too many consecutive USB bus resets done (${NUM_USB_RESETS})."
 				echo -e "${RED}*** ${FATAL_MSG} ${MSG} Stopping Allsky.${NC}" >&2
 				IMAGE_MSG="${ERROR_MSG_PREFIX}"
-				IMAGE_MSG+="\nToo many consecutive\nUSB bus resets done!\n${SEE_LOG_MSG}" \
-				doExit "${EXIT_ERROR_STOP}" "Error" \
+				IMAGE_MSG+="\nToo many consecutive\nUSB bus resets done!\n${SEE_LOG_MSG}"
+				doExit "${EXIT_ERROR_STOP}" "Error" 
 					"${IMAGE_MSG}" "${NOT_STARTED_MSG}: ${MSG}"
 			fi
 		else

@@ -189,7 +189,7 @@ do
 
 			# This requires Allsky to be stopped so we don't
 			# try to call the capture program while it's already running.
-			sudo systemctl stop allsky 2> /dev/null
+			stop_Allsky
 
 			if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
 
@@ -201,7 +201,7 @@ do
 				# determineCommandToUse either retuns the command with exit code 0,
 				# or an error message with non-zero exit code.
 				if [[ ${NEW_VALUE} == "RPi" ]]; then
-					C="$( determineCommandToUse "false" "" )"
+					C="$( determineCommandToUse "false" "" "false" 2>&1 )"
 					RET=$?
 					if [[ ${RET} -ne 0 ]] ; then
 						echo -e "${wERROR}${ERROR_PREFIX}ERROR: ${C}.${wNC}"

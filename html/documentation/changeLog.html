@@ -120,6 +120,19 @@
 					In the next major Allsky release the "legacy" method will be removed
 					so we encourage you to change now.
 				</li>
+				<li>If you change cameras without notifying Allsky
+					(e.g., you shutdown the Pi, replace the camera with a different model,
+					then restart the Pi), you will receive a message telling you
+					how to properly change camera types or models.
+					<br>No message will be given if you replace a cameras with the same model,
+					e.g., an RPi HQ with another RPi HQ camera.
+				</li>
+				<li>If you try and use an unsupported camera you will
+					receive a message stating that and telling you to run the new
+					<span class="fileName">show_supported_cameras.sh</span>
+					program that shows the RPi and/or ZWO cameras that Allsky supports.
+					<br>The message also tells you how to request support for the camera.
+				</li>
 				<li>The <span class="fileName">endOfNight_additionalSteps.sh</span>
 					file is no longer supported.
 					The few people that had that file should use the "day to night"

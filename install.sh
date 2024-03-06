@@ -183,14 +183,6 @@ usage_and_exit()
 
 
 ####
-# Stop Allsky.  If it's not running, nothing happens.
-stop_allsky()
-{
-	sudo systemctl stop allsky 2> /dev/null
-}
-
-
-####
 # Get the branch of the release we are installing;
 get_this_branch()
 {
@@ -266,6 +258,19 @@ CAMERA_to_CAMERA_TYPE()
 	fi
 }
 
+
+#######
+# Set up the file that contains information on all supported RPi cameras.
+# Have separate function so it can be called from "--function".
+setup_rpi_supported_cameras()
+{
+	if [[ ! -f ${RPi_SUPPORTED_CAMERAS} ]]; then
+		local B="$( basename "${RPi_SUPPORTED_CAMERAS}" )"
+		# Remove comment and blank lines.
+		grep -v -E '^$|^#' "${ALLSKY_REPO}/${B}.repo" > "${RPi_SUPPORTED_CAMERAS}"
+	fi
+}
+
 #######
 CONNECTED_CAMERAS=""
 # TODO: Make arrays and allow multiple cameras of each camera type
@@ -274,28 +279,36 @@ ZWO_MODEL="ASI"
 
 get_connected_cameras()
 {
-	local C CC Z MSG
+	local C  CC=""  MSG
 	# RPI_MODEL, ZWO_MODEL, and CONNECTED_CAMERAS are global
 
-	# Check if there is an RPi camera connected, and if so, determine what command
-	# to use to control it.
-	if C="$( determineCommandToUse "false" "" 2>&1 )" ; then
-		if [[ "${C}" == "libcamera-still" ]]; then
-			# Only get the first camera.
-			RPI_MODEL="$( LIBCAMERA_LOG_LEVELS="ERROR,FATAL" libcamera-still --list-cameras 2>&1 |
-				awk '{if ($2 == ":") { print $3; exit 0; }}' )"
-		else
-			:   # XXXXXXXXX  TODO: How to determine with raspicam?
+	setup_rpi_supported_cameras
+
+	# true == ignore errors.  ${C} will be "" if no command found.
+	C="$( determineCommandToUse "false" "" "true" 2> /dev/null )"
+
+	# RPi format:	RPi \t camera_number : camera_model [4056x3050]
+	# ZWO format:	ZWO \t camera_number : camera_model ZWO_camera_ID
+	# "true" == ignore errors
+	get_connected_cameras_info "true" > "${CONNECTED_CAMERAS_INFO}" 2>/dev/null
+
+	# Check if there is an RPi camera connected, and if so,
+	# determine what command to use to control it.
+	if [[ -n ${C} ]]; then
+		# Only get the first camera.
+		RPI_MODEL="$( gawk '{if ($1 == "RPi") { print $4; exit 0; }}' "${CONNECTED_CAMERAS_INFO}" )"
+		if [[ -n ${RPI_MODEL} ]]; then
+			[[ -z ${FUNCTION} ]] && display_msg --log progress "RPi ${RPI_MODEL} camera found."
+			CC="RPi"
 		fi
-		display_msg --log progress "RPi ${RPI_MODEL} camera found."
-		CC="RPi"
 	fi
 
-	# Check if there is a USB-based camera, i.e., ZWO (03c3).
-	if Z="$( lsusb --verbose -d "03c3:" 2>/dev/null )" ; then
-		ZWO_MODEL="$( echo "${Z}" |
-				awk '{if ($1 == "iProduct") { print $3; exit 0; }}' )"
-		display_msg --log progress "ZWO ${ZWO_MODEL} camera found."
+	# Check if there is a ZWO USB-based camera.
+	# Only get the first camera.
+# TODO: support multiple RPi and ZWO cameras
+	ZWO_MODEL="$( gawk '{if ($1 == "ZWO") { print $4; exit 0; }}' "${CONNECTED_CAMERAS_INFO}" )"
+	if [[ -n ${ZWO_MODEL} ]]; then
+		[[ -z ${FUNCTION} ]] && display_msg --log progress "ZWO ${ZWO_MODEL} camera found."
 		[[ -n ${CC} ]] && CC+=" "
 		CC+="ZWO"
 	fi
@@ -1360,7 +1373,7 @@ does_prior_Allsky_exist()
 			fi
 			STRING="Camera Software"
 			if ! PRIOR_ALLSKY_VERSION="$( grep "Camera Software" "${CAPTURE}" |
-					awk '{print $6}' )" ; then
+					gawk '{print $6}' )" ; then
 				MSG="Unable to determine version of prior Allsky: '${STRING}' not in '${CAPTURE}'."
 				display_msg --log "warning" "${MSG}${MSG2}"
 				PRIOR_ALLSKY_DIR=""
@@ -2256,7 +2269,7 @@ restore_prior_files()
 	# Do all the restores, then all the updates.
 	display_msg --log progress "Restoring prior:"
 
-	local E  EXTRA  D  R  ITEM  X
+	local E  D  R  ITEM  X
 
 	if [[ -f ${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh ]]; then
 		MSG="The ${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh file is no longer supported."
@@ -2319,20 +2332,17 @@ restore_prior_files()
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
-	[[ ! -d ${MY_OVERLAY_TEMPLATES} ]] && mkdir -p "${MY_OVERLAY_TEMPLATES}"
 
-if false; then		# done as part of config/overlay above XXXXXXXXXXXXXXXXXXX
-	# This is not in a "standard" directory so we need to determine where it was.
-	E="${ALLSKY_EXTRA//${ALLSKY_HOME}\//}"
-	EXTRA="${PRIOR_ALLSKY_DIR}${E}"
-	ITEM="${SPACE}'${E}' directory"
-	if [[ -d ${EXTRA} ]]; then
+	X="${PRIOR_ALLSKY_DIR}${MY_OVERLAY_TEMPLATES/${ALLSKY_HOME}/}"
+	ITEM="${SPACE}'$( basename "${MY_OVERLAY_TEMPLATES}" )' directory"
+	if [[ -d ${X} ]]; then
 		display_msg --log progress "${ITEM} (copying)"
-		cp -ar "${EXTRA}" "${ALLSKY_EXTRA}/.."
+		cp -ar "${X}" "${MY_OVERLAY_TEMPLATES}"
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+		mkdir -p "${MY_OVERLAY_TEMPLATES}"
+		# The directory will get populated as the user creates templates.
 	fi
-fi
 
 	if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
 		D="${PRIOR_CONFIG_DIR}"
@@ -3493,7 +3503,7 @@ if [[ -z ${FUNCTION} && -s ${STATUS_FILE} && ${RESTORE} == "false" ]]; then
 			MSG+="\nAllsky is starting.  Look in the 'Live View' page of the WebUI to ensure"
 			MSG+="\nimages are being taken.\n"
 			display_msg --log progress "${MSG}"
-			sudo systemctl start allsky
+			start_Allsky
 
 			# Update status
 			sed -i \
@@ -3565,7 +3575,7 @@ does_prior_Allsky_exist
 set_what_can_be_skipped "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
 
 ##### Stop Allsky
-stop_allsky
+stop_Allsky
 
 ##### Determine what camera(s) are connected
 # Re-run every time in case a camera was connected or disconnected.

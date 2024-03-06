@@ -5,6 +5,7 @@
 
 # Globals
 ZWO_VENDOR="03c3"
+# shellcheck disable=SC2034
 NOT_STARTED_MSG="Can't start Allsky!"
 STOPPED_MSG="Allsky Stopped!"
 ERROR_MSG_PREFIX="*** ERROR ***\n${STOPPED_MSG}\n"
@@ -106,7 +107,7 @@ function test_verify_CAMERA_TYPE()
 function verify_CAMERA_TYPE()
 {
 	local CT="${1}"
-	local IGNORE_ERROR="${2:-false}"
+	local IGNORE_ERRORS="${2:-false}"
 
 	local OK  MSG  IMAGE_MSG
 
@@ -286,7 +287,7 @@ function validate_camera()
 
 	verify_CAMERA_TYPE "${CT}" "${IGNORE_ERRORS}" || return 2
 
-	local WHAT_TO_DO  MSG  URL  RET=0
+	local MSG  URL  RET=0
 
 	# Compare the current CAMERA_MODEL to what's in the settings file.
 	SETTINGS_CT="$( settings ".cameratype" )"
@@ -318,7 +319,7 @@ function validate_camera()
 		if [[ ${ON_TTY} == "true" ]]; then
 			echo -e "\n${RED}${MSG}${NC}\n"
 		else
-			URL="${GITHUB_ROOT}/${GITHUB_ALLLSKY_PACKAGE}/discussions"
+			URL="${GITHUB_ROOT}/${GITHUB_ALLSKY_PACKAGE}/discussions"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}" "${URL}"
 		fi
 

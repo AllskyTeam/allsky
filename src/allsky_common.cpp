@@ -1576,7 +1576,23 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else if (strcmp(a, "cmd") == 0)
 		{
 			cg->cmdToUse = argv[++i];
-			cg->isLibcamera = strcmp(cg->cmdToUse, "libcamera-still") == 0 ? true : false;
+			if (strcmp(cg->cmdToUse, "libcamera-still") == 0 ||
+			    strcmp(cg->cmdToUse, "rpicam-still") == 0)
+			{
+				cg->isLibcamera = true;
+			}
+			else
+			{
+				cg->isLibcamera = false;
+			}
+		}
+		else if (strcmp(a, "connected-cameras-file") == 0)
+		{
+			cg->connectedCamerasFile = argv[++i];
+		}
+		else if (strcmp(a, "rpi-camera-info-file") == 0)
+		{
+			cg->RPI_cameraInfoFile = argv[++i];
 		}
 		else if (strcmp(a, "tty") == 0)	// overrides what was automatically determined
 		{

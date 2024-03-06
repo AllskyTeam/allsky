@@ -3,11 +3,29 @@
 # Shell functions used by multiple scripts.
 # This file is "source"d into others, and must be done AFTER source'ing variables.sh.
 
+# Globals
+ZWO_VENDOR="03c3"
+NOT_STARTED_MSG="Can't start Allsky!"
+STOPPED_MSG="Allsky Stopped!"
+ERROR_MSG_PREFIX="*** ERROR ***\n${STOPPED_MSG}\n"
+FATAL_MSG="FATAL ERROR:"
+
+
 SUDO_OK="${SUDO_OK:-false}"
 if [[ ${SUDO_OK} == "false" && ${EUID} -eq 0 ]]; then
 	echo -e "\n${RED}${ME}: This script must NOT be run as root, do NOT use 'sudo'.${NC}\n" >&2
 	exit 1
 fi
+
+##### Start and Stop Allsky
+start_Allsky()
+{
+	sudo systemctl start allsky 2> /dev/null
+}
+stop_Allsky()
+{
+	sudo systemctl stop allsky 2> /dev/null
+}
 
 #####
 # Exit with error message and a custom notification image.
@@ -17,6 +35,8 @@ function doExit()
 	local TYPE=${2:-"Error"}
 	local CUSTOM_MESSAGE="${3}"		# optional
 	local WEBUI_MESSAGE="${4}"		# optional
+
+	local COLOR=""  OUTPUT_A_MSG
 
 	case "${TYPE}" in
 		"Warning")
@@ -32,7 +52,13 @@ function doExit()
 
 	OUTPUT_A_MSG="false"
 	if [[ -n ${WEBUI_MESSAGE} ]]; then
-		[[ ${TYPE} = "no-image" ]] && TYPE="success"
+		if [[ -z ${COLOR} ]]; then
+			# ${TYPE} is the name of a notification image,
+			# assume it's for an error.
+			TYPE="error"
+		elif [[ ${TYPE} == "no-image" ]]; then
+			TYPE="success"
+		fi
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "${TYPE}" "${WEBUI_MESSAGE}"
 		echo -e "Stopping Allsky: ${WEBUI_MESSAGE}" >&2
 		OUTPUT_A_MSG="true"
@@ -56,72 +82,250 @@ function doExit()
 		fi
 	fi
 
-	echo "     ***** AllSky Stopped *****"
+	echo "     ***** AllSky Stopped *****" >&2
 
 	# Don't let the service restart us because we'll likely get the same error again.
-	[[ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]] && sudo systemctl stop allsky
+	# Stop here so the message above is output first.
+	[[ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]] && stop_Allsky
 
 	exit "${EXITCODE}"
 }
 
 
 #####
-# RPi cameras can use either "raspistill" on Buster or "libcamera-still" on Bullseye
-# to actually take pictures.
+# This allows testing from the command line without "return" or doExit() killing the shell.
+function test_verify_CAMERA_TYPE()
+{
+	# "true" == ignore errors
+	verify_CAMERA_TYPE "${1}" "true" || echo -e "\nverify_CAMERA_TYPE() returned $?"
+}
+#####
+# Make sure the CAMERA_TYPE is valid.
+# This should never happen unless something got corrupted.
+# Exit on error.
+function verify_CAMERA_TYPE()
+{
+	local CT="${1}"
+	local IGNORE_ERROR="${2:-false}"
+
+	local OK  MSG  IMAGE_MSG
+
+	OK="true"
+	if [[ -z ${CT} ]]; then
+		OK="false"
+		MSG="'Camera Type' not set in WebUI."
+		IMAGE_MSG="${ERROR_MSG_PREFIX}\nCamera Type\nnot specified\nin the WebUI."
+
+	elif [[ ${CT} != "RPi" && ${CT} != "ZWO" ]]; then
+		OK="false"
+		MSG="Unknown Camera Type: ${CT}."
+		IMAGE_MSG="${ERROR_MSG_PREFIX}\nCamera Type\nnot specified\nin the WebUI."
+	fi
+
+	if [[ ${OK} == "false" ]]; then
+		echo -e "${RED}${FATAL_MSG} ${MSG}${NC}" >&2
+
+		if [[ ${IGNORE_ERRORS} != "true" ]]; then
+			doExit "${EXIT_NO_CAMERA}" "Error" "${IMAGE_MSG}" "${MSG}"
+		fi
+
+		return 1
+	fi
+
+	return 0
+}
+
+#####
+# This allows testing from the command line without "return" or doExit() killing the shell.
+function test_determineCommandToUse()
+{
+	# true == ignore errors
+	determineCommandToUse "${1}" "${2}" "true" || echo -e "\ndetermineCommandToUse() returned $?"
+}
+
+#####
+# RPi cameras can use either "raspistill" on Buster or "{rpicam|libcamera}-still" on newer
+# OS's to actually take pictures.
 # Determine which to use.
 # On success, return 0 and the command to use.
 # On failure, return non-0 and an error message.
+CMD_TO_USE_=""
 function determineCommandToUse()
 {
-	local USE_doExit="${1}"			# Call doExit() on error?
-	local PREFIX="${2}"				# only used if calling doExit()
+	local USE_doExit="${1}"				# Call doExit() on error?
+	local PREFIX="${2}"					# Only used if calling doExit().
+	local IGNORE_ERRORS="${3:-false}"	# True if just checking
+
+	local RET  MSG  EXIT_MSG
 
 	# If libcamera is installed and works, use it.
 	# If it's not installed, or IS installed but doesn't work (the user may not have it configured),
 	# use raspistill.
 
-	local RET=1
-	local CMD="libcamera-still"
-	if command -v ${CMD} > /dev/null; then
+	RET=1
+	CMD_TO_USE_="rpicam-still"
+	command -v "${CMD_TO_USE_}" > /dev/null || CMD_TO_USE_="libcamera-still"
+	if command -v "${CMD_TO_USE_}" > /dev/null; then
 		# Found the command - see if it works.
-		"${CMD}" --timeout 1 --nopreview > /dev/null 2>&1
+		"${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1
 		RET=$?
 		if [[ ${RET} -eq 137 ]]; then
-			# If another libcamera-still is running the one we execute will hang for
+			# If another of these commands is running ours will hang for
 			# about a minute then be killed with RET=137.
-			# If that happens, assume libcamera-still is the command to use.
+			# If that happens, assume this is the command to use.
 			RET=0
 		fi
 	fi
 
 	if [[ ${RET} -ne 0 ]]; then
-		# Didn't find libcamera-still, or it didn't work.
+		# Didn't find libcamera-based command, or it didn't work.
 
-		CMD="raspistill"
-		if ! command -v "${CMD}" > /dev/null; then
-			echo "Can't determine what command to use for RPi camera." >&2
-			if [[ ${USE_doExit} == "true" ]]; then
-				doExit "${EXIT_ERROR_STOP}" "Error" "${PREFIX}\nRPi camera command\nnot found!."
+		CMD_TO_USE_="raspistill"
+		if ! command -v "${CMD_TO_USE_}" > /dev/null; then
+			CMD_TO_USE_=""
+
+			MSG="Can't determine what command to use for RPi camera."
+			echo "${MSG}" >&2
+
+			if [[ ${IGNORE_ERRORS} == "false" && ${USE_doExit} == "true" ]]; then
+				EXIT_MSG="${PREFIX}\nRPi camera command\nnot found!."
+				doExit "${EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
 			fi
 
 			return 1
 		fi
 
-		"${CMD}" --timeout 1 --nopreview > /dev/null 2>&1
+		"${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1
 		RET=$?
+
+		if [[ ${RET} -ne 0 ]]; then
+			CMD_TO_USE_=""
+
+			MSG="RPi camera not found.  Make sure it's enabled."
+			echo "${MSG}" >&2
+
+			if [[ ${IGNORE_ERRORS} == "false" && ${USE_doExit} == "true" ]]; then
+				EXIT_MSG="${PREFIX}\nRPi camera\nnot found!\nMake sure it's enabled."
+				doExit "${EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
+			fi
+
+			return "${EXIT_NO_CAMERA}"
+		fi
 	fi
 
-	if [[ ${RET} -ne 0 ]]; then
-		echo "RPi camera not found.  Make sure it's enabled." >&2
-		if [[ ${USE_doExit} == "true" ]]; then
-			doExit "${EXIT_NO_CAMERA}" "Error" "${PREFIX}\nRPi camera\nnot found!\nMake sure it's enabled."
+	echo "${CMD_TO_USE_}"
+	return 0
+}
+
+#####
+# Get information on the connected camera(s), one line per camera.
+# Prepend each line with the CAMERA_TYPE.
+function get_connected_cameras_info()
+{
+	####### Check for RPi
+	# Output will be:
+	#		RPi  <TAB>  camera_number   : camera_model  [widthXheight]
+	# for each camera found.
+	if [[ -z ${CMD_TO_USE_} ]]; then
+		# true == ignore errors
+		determineCommandToUse "false" "" "true" > /dev/null
+	fi
+	if [[ -n ${CMD_TO_USE_} ]]; then
+		if [[ ${CMD_TO_USE_} == "raspistill" ]]; then
+			# Only supported camera with raspistill
+			echo -e "RPi\t0 : imx477 [4056x3040]"
+
+		else
+			local C="$( LIBCAMERA_LOG_LEVELS=FATAL "${CMD_TO_USE_}" --list-cameras 2>&1 |
+				grep -E '^[0-9] : ' )"
+			echo -e "RPi\t${C}"
+		fi
+	fi
+
+	####### Check for ZWO
+	# Keep Output similar to RPi:
+	#		ZWO  <TAB>  camera_number?? : camera_model  ZWO_camera_ID
+	# for each camera found.
+# TODO: Is the order they appear from lsusb the same as the camera number?
+	# lsusb output:
+	#	Bus 002 Device 002: ID 03c3:290b ZWO ASI290MM
+	#	1   2   3       4   5  6         7   8
+	lsusb -d "${ZWO_VENDOR}:" --verbose 2>/dev/null |
+	gawk 'BEGIN { num = 0; }
+		{
+			if ($1 == "Bus" && $3 == "Device") {
+				model_id = substr($6, 5);
+				model = $8;
+				printf("ZWO\t%d : %s %s\n", num++, model, model_id);
+			}
+		}'
+}
+
+
+#####
+# This allows testing from the command line without "return" or doExit() killing the shell.
+function test_validate_camera()
+{
+	# true == ignore errors
+	validate_camera "${1}" "${2}" "true" || echo -e "\nvalidate_camera() returned $?"
+}
+
+#####
+# Check if the current camera is known (i.e., supported by Allsky) and is
+# different from the last camera used (i.e., the user changed cameras without telling Allsky).
+function validate_camera()
+{
+	local CT="${1}"		# Camera type
+	local CM="${2}"		# Camera model
+	if [[ -z ${CT} || -z ${CM} ]]; then
+		local M="${ME:-${FUNCNAME[0]}}"
+		echo -e "\n${RED}Usage: ${M} camera_type camera_model${NC}\n" >&2
+		return 2
+	fi
+	local IGNORE_ERRORS="${3:-false}"	# True if just checking
+
+	verify_CAMERA_TYPE "${CT}" "${IGNORE_ERRORS}" || return 2
+
+	local WHAT_TO_DO  MSG  URL  RET=0
+
+	# Compare the current CAMERA_MODEL to what's in the settings file.
+	SETTINGS_CT="$( settings ".cameratype" )"
+	SETTINGS_CM="$( settings ".cameramodel" )"
+	if [[ ${SETTINGS_CT} != "${CT}" || ${SETTINGS_CM} != "${CM}" ]]; then
+		MSG="You appear to have changed the camera to ${CT} ${CM} without notifying Allsky."
+		MSG+="\nThe last known camera was ${SETTINGS_CT} ${SETTINGS_CM}."
+		MSG+="\nIf this is correct, go to the 'Allsky Settings' page of the WebUI and"
+		MSG+=" change the 'Camera Type' to 'Refresh' then save the settings."
+		if [[ ${ON_TTY} == "true" ]]; then
+			echo -e "\n${RED}${MSG}${NC}\n"
+		else
+			URL="/index.php?page=configuration&_ts=${RANDOM}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${MSG}" "${URL}"
+		fi
+		RET=1
+	fi
+
+	# Now make sure the camera is supported.
+	[[ ${CT} == "ZWO" ]] && CM="${CM/ASI/}"		# "ASI" isn't in the names
+	if ! "${ALLSKY_SCRIPTS}/show_supported_cameras.sh" "--${CT}" |
+		grep --silent "${CM}" ; then
+
+		MSG="Camera model ${CM} is not supported by Allsky."
+		MSG+="\nTo see the list of supported ${CT} cameras, run"
+		MSG+="\n  show_supported_cameras.sh --${CT}"
+		[[ ${CT} == "ZWO" ]] && MSG+="\nWARNING: the list is long!"
+		MSG+="\n\nIf you want this camera supported, enter a new Discussion item."
+		if [[ ${ON_TTY} == "true" ]]; then
+			echo -e "\n${RED}${MSG}${NC}\n"
+		else
+			URL="${GITHUB_ROOT}/${GITHUB_ALLLSKY_PACKAGE}/discussions"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}" "${URL}"
 		fi
 
-		return "${EXIT_NO_CAMERA}"
+		return 2
 	fi
 
-	echo "${CMD}"
-	return 0
+	return "${RET}"
 }
 
 

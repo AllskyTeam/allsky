@@ -189,6 +189,8 @@ struct config {			// for configuration variables
 	// Settings can be in the config file and/or command-line.
 	char const *allskyHome				= "";			// full pathname to home of Allsky
 	char const *configFile				= "";
+	char const *connectedCamerasFile	= "";			// File with list of connected cameras
+	char const *RPI_cameraInfoFile		= "";			// File with info on all supported RPI cameras.
 
 	bool isColorCamera					= false;		// Is the camera color or mono?
 	bool isCooledCamera					= false;		// Does the camera have a cooler?

@@ -279,7 +279,7 @@ ZWO_MODEL="ASI"
 
 get_connected_cameras()
 {
-	local C  CC=""  Z  MSG
+	local C  CC=""  MSG
 	# RPI_MODEL, ZWO_MODEL, and CONNECTED_CAMERAS are global
 
 	setup_rpi_supported_cameras
@@ -289,7 +289,8 @@ get_connected_cameras()
 
 	# RPi format:	RPi \t camera_number : camera_model [4056x3050]
 	# ZWO format:	ZWO \t camera_number : camera_model ZWO_camera_ID
-	get_connected_cameras_info > "${CONNECTED_CAMERAS_INFO}"
+	# "true" == ignore errors
+	get_connected_cameras_info "true" > "${CONNECTED_CAMERAS_INFO}" 2>/dev/null
 
 	# Check if there is an RPi camera connected, and if so,
 	# determine what command to use to control it.
@@ -2268,7 +2269,7 @@ restore_prior_files()
 	# Do all the restores, then all the updates.
 	display_msg --log progress "Restoring prior:"
 
-	local E  EXTRA  D  R  ITEM  X
+	local E  D  R  ITEM  X
 
 	if [[ -f ${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh ]]; then
 		MSG="The ${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh file is no longer supported."

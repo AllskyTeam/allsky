@@ -168,6 +168,15 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 	fi
 fi
 
+if [[ ! -s ${CONNECTED_CAMERAS_INFO} ]]; then
+	MSG="Unable to start Allsky - no connected cameras found!"
+	echo -e "${RED}*** ${MSG}${NC}" >&2
+	IMAGE_MSG="${ERROR_MSG_PREFIX}"
+	IMAGE_MSG+="\nNo connected\ncameras found!"
+	doExit "${EXIT_ERROR_STOP}" "Error" 
+		"${IMAGE_MSG}" "${NOT_STARTED_MSG}: ${MSG}"
+fi
+
 # Make sure the current camera is supported and hasn't changed unexpectedly.
 validate_camera "${CAMERA_TYPE}" "${CAMERA_MODEL}"		# exits on error
 
@@ -239,6 +248,11 @@ echo "${ARGS}" | grep -E -i -v "^config=|^debuglevel=" >> "${ARGS_FILE}"
 
 	echo "version=${ALLSKY_VERSION}"
 	echo "save_dir=${CAPTURE_SAVE_DIR}"
+
+	if [[ ${CAMERA_TYPE} == "RPi" ]]; then
+		echo "connected-cameras-file=${CONNECTED_CAMERAS_INFO}"
+		echo "rpi-camera-info-file=${RPi_SUPPORTED_CAMERAS}"
+	fi
 } >> "${ARGS_FILE}"
 
 FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"

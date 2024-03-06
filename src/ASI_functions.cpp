@@ -163,6 +163,11 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 		10, ASI_FALSE, ASI_TRUE
 	},
 
+	{ "imx219", 0, "Waveshare imx219-d160", 0, 2464, 3280, ASI_TRUE,
+		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.12, ASI_FALSE,
+		10, ASI_FALSE, ASI_FALSE
+	},
+
 	// FUTURE CAMERAS GO HERE...
 };
 int const ASICameraInfoArraySize =  sizeof(ASICameraInfoArray) / sizeof(ASI_CAMERA_INFO);
@@ -367,43 +372,41 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
 
+
+	{ // Waveshare imx290, libcamera
+		{ "Gain", "Gain", 10.666667, 1.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
+		{ "Exposure", "Exposure Time (us)", 11.767556 * US_IN_SEC, 75, 10 * US_IN_SEC, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
+		{ "WB_R", "White balance: Red component", 32.0, 0.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
+		{ "WB_B", "White balance: Blue component", 32.0, 0.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
+		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
+		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 10.666667, 1.0, 10.666667, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
+		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 11.767556 * MS_IN_SEC, 1, 11.767556 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
+		{ "ExposureCompensation", "Exposure Compensation", 8.0, -8.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
+		{ "Brightness", "Brightness", 1.0, -1.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
+		{ "Saturation", "Saturation", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
+		{ "Contrast", "Contrast", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
+		{ "Sharpness", "Sharpness", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
+
+		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
+	},
+
 	// FUTURE CAMERAS GO HERE...
+
 };
 
-char camerasInfoFile[128]	= { 0 };	// name of temporary file
 
-
-// Return the number of cameras PHYSICALLY connected and put basic info on each camera in a file.
-// We need the temporary file because it's a quick and dirty way to get output from system().
-// TODO: use std::string exec(cmd) from allsky_common.cpp to avoid a temporary file
+// Return the number of cameras PHYSICALLY connected.
+// allsky.sh created the file; we just need to count the number of lines in it.
 int ASIGetNumOfConnectedCameras()
 {
-	// CG.saveDir should be specified, but in case it isn't...
-	const char *dir = CG.saveDir;
-	if (dir == NULL)
-		dir = "/tmp";
-
-	// File to hold info on all the cameras.
-	snprintf(camerasInfoFile, sizeof(camerasInfoFile), "%s/%s_cameras.txt", dir, CAMERA_TYPE);
-
-	char cmd[300];
+	char cmd[100];
 	int num;
-	// Put the list of cameras and attributes in a file and return the number of cameras (the exit code).
-	if (CG.isLibcamera)
-	{
-		// --list-cameras" writes to stderr.
-		snprintf(cmd, sizeof(cmd), "NUM=$(LIBCAMERA_LOG_LEVELS=FATAL %s --list-cameras 2>&1 | grep -E '^[0-9 ]' | tee '%s' | grep -E '^[0-9] : ' | wc -l); exit ${NUM}", CG.cmdToUse, camerasInfoFile);
-	}
-	else
-	{
-		// raspistill doesn't return any info on cameras, so assume only 1 camera attached.
-		// Further raspistill only supports RPi HQ camera which we assume to be 1st camera.
-		snprintf(cmd, sizeof(cmd), "echo '0 : imx477 [%ldx%ld]' > '%s'; exit 1", ASICameraInfoArray[0].MaxWidth, ASICameraInfoArray[0].MaxHeight, camerasInfoFile);
-	}
+	snprintf(cmd, sizeof(cmd), "exit $( wc -l < %s )", CG.connectedCamerasFile);
 	num = system(cmd);
 	if (WIFEXITED(num))
 		num = WEXITSTATUS(num);
 	Log(4, "cmd='%s', num=%d\n", cmd, num);
+
 	return(num);
 }
 
@@ -424,21 +427,17 @@ int ASIGetNumOfConnectedCameras()
 int getCameraNumber()
 {
 	// Determine which camera sensor(s) we have by reading the file created in ASIGetNumOfConnectedCameras().
-	if (camerasInfoFile[0] == '\0')
-	{
-		Log(0, "%s: ERROR: camerasInfoFile not created!\n", CG.ME);
-		closeUp(EXIT_ERROR_STOP);
-	}
-	FILE *f = fopen(camerasInfoFile, "r");
+	FILE *f = fopen(CG.connectedCamerasFile, "r");
 	if (f == NULL)
 	{
-		Log(0, "%s: ERROR: Unable to open '%s': %s\n", CG.ME, camerasInfoFile, strerror(errno));
+		Log(0, "%s: ERROR: Unable to open '%s': %s\n", CG.ME, CG.connectedCamerasFile, strerror(errno));
 		closeUp(EXIT_ERROR_STOP);
 	}
 
 	char line[256];
 	int num = NOT_SET;
-#define SENSOR_STRING_SIZE	25
+	char cameraType[10];
+#define SENSOR_STRING_SIZE	50
 	char sensor[SENSOR_STRING_SIZE];
 	int actualIndex;					// index into ASICameraInfoArray[]
 	int RPiCameraIndex = -1;			// index into RPiCameras[]
@@ -446,13 +445,21 @@ int getCameraNumber()
 	// For each camera found, update the next *RPiCameras[] entry to point to the
 	// camera's ASICameraInfoArray[] entry.
 	// Return the index into *RPiCameras[] of the attached camera we're using.
+
+	// File format
+	//					camera_type  <TAB>  camera_number   : sensor_name  [widthXheight]
+	// Sample line:     RPi          <TAB>  0               : imx477       [4056x3040]
 	while (fgets(line, sizeof(line)-1, f) != NULL)
 	{
-		// Sample line:     0 : imx477 [4056x3040] ....
-		// We only care about first two.
-		if (sscanf(line, "%d : %s ", &num, sensor) == 2)
+		if (sscanf(line, "%s\t%d : %s ", cameraType, &num, sensor) == 3 &&
+				strcmp(cameraType, CAMERA_TYPE) == 0 &&
+				CG.cameraNumber == num)
 		{
-			// Found a camera; check all known cameras to make sure it's one we know about.
+			// Found a camera of the right type and number.
+
+// XXX TODO: use RPI_cameraInfoFile instead
+
+			// Now check all known cameras to make sure it's one we know about.
 			// Unfortunately we don't have anything else to check, like serial number.
 			// I suppose we could also check the Modes are the same, but it's not worth it.
 			bool foundThisSensor = false;
@@ -482,17 +489,23 @@ int getCameraNumber()
 					RPiCameras[RPiCameraIndex].ControlCaps = &ControlCapsArray[actualIndex][0];
 					Log(4, " ControlCapsArray[%d].\n", actualIndex);
 
-					break;
+					break;		// exit inner loop
 				}
 			}
-			if (! foundThisSensor) {
-				Log(1, "%s: WARNING: Sensor '%s' found but not supported by Allsky.\n", CG.ME, sensor);
+			if (foundThisSensor) {
+				break;			// exit outer loop
 			}
 		}
 	}
+
+	fclose(f);
+
 	if (RPiCameraIndex == -1)
 	{
-		Log(0, "%s: ERROR: No RPi cameras found.\n", CG.ME);
+		// This should "never" happen since allsky.sh created the input file
+		// based on what's connected.
+
+		Log(0, "%s: ERROR: No %s cameras found.\n", CG.ME, CAMERA_TYPE);
 		closeUp(EXIT_NO_CAMERA);
 	}
 

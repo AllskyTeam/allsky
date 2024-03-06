@@ -75,8 +75,11 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	# Holds the PID of the process that called timelapse.sh.
 	ALLSKY_TIMELAPSE_PID_FILE="${ALLSKY_TMP}/timelapse-pid.txt"
 
+	# Camera information:
 	# List of ALL connected cameras.
 	CONNECTED_CAMERAS_INFO="${ALLSKY_TMP}/connected_cameras.txt"
+	# RPi supported cameras
+	RPi_SUPPORTED_CAMERAS="${ALLSKY_CONFIG}/RPi_cameraInfo.txt"
 
 	# Holds information on what the user needs to do after an installation.
 	ALLSKY_LOGS="${ALLSKY_CONFIG}/logs"

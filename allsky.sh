@@ -6,20 +6,11 @@ echo "     ***** Starting AllSky *****"
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
 ME="$( basename "${BASH_ARGV0}" )"
 
-NOT_STARTED_MSG="Unable to start Allsky!"
-STOPPED_MSG="Allsky Stopped!"
-ERROR_MSG_PREFIX="*** ERROR ***\n${STOPPED_MSG}\n"
+# NOT_STARTED_MSG, STOPPED_MSG, ERROR_MSG_PREFIX, and ZWO_VENDOR are globals
+
 
 #shellcheck source-path=.
 source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
-if [[ -z ${ALLSKY_CONFIG} ]]; then
-	MSG="FATAL ERROR: 'source variables.sh' did not work properly."
-	echo -e "${RED}*** ${MSG}${NC}"
-	doExit "${EXIT_ERROR_STOP}" "Error" \
-		"${ERROR_MSG_PREFIX}\n$( basename "${ALLSKY_HOME}" )/variables.sh\nis corrupted." \
-		"${NOT_STARTED_MSG}<br>${MSG}"
-fi
-
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
@@ -36,28 +27,32 @@ if [[ ! -d ${ALLSKY_CONFIG} ]]; then
 	doExit "${EXIT_ERROR_STOP}" "no-image" "" ""
 fi
 
+# Make sure ${CAMERA_TYPE} is valid; if not, exit with a message.
+verify_CAMERA_TYPE "${CAMERA_TYPE}"
+
 cd "${ALLSKY_HOME}" || exit 1
 
 # Make sure they rebooted if they were supposed to.
-NEEDS_REBOOT="false"
-reboot_needed && NEEDS_REBOOT="true"
+if reboot_needed ; then
+	NEEDS_REBOOT="true"
+else
+	NEEDS_REBOOT="false"
+fi
 
 # Make sure the settings have been configured after an installation or upgrade.
 LAST_CHANGED="$( settings ".lastchanged" )"
 if [[ ${LAST_CHANGED} == "" ]]; then
-	echo "*** ===== Allsky needs to be configured before it can be used.  See the WebUI."
+	echo "*** ===== Allsky needs to be configured before it can be used.  See the WebUI." >&2
 	if [[ ${NEEDS_REBOOT} == "true" ]]; then
-		echo "*** ===== The Pi also needs to be rebooted."
+		echo "*** ===== The Pi also needs to be rebooted." >&2
 		doExit "${EXIT_ERROR_STOP}" "Error" \
 			"Allsky needs\nconfiguration\nand the Pi needs\na reboot" \
-			"Allsky needs to be configured then the Pi rebooted."
+			"Allsky needs to be configured and then the Pi rebooted."
 	else
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "Error" "Allsky needs to be configured."
-		doExit "${EXIT_ERROR_STOP}" "ConfigurationNeeded" "" ""
+		doExit "${EXIT_ERROR_STOP}" "ConfigurationNeeded" "" "Allsky needs to be configured."
 	fi
 elif [[ ${NEEDS_REBOOT} == "true" ]]; then
-	"${ALLSKY_SCRIPTS}/addMessage.sh" "Error" "The Pi needs to be rebooted."
-	doExit "${EXIT_ERROR_STOP}" "RebootNeeded" "" ""
+	doExit "${EXIT_ERROR_STOP}" "RebootNeeded" "" "The Pi needs to be rebooted."
 fi
 
 SEE_LOG_MSG="See ${ALLSKY_LOG}"
@@ -75,8 +70,8 @@ if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
 	fi
 	if [[ ${DO_MSG} == "true" ]]; then
 		MSG="Reminder: your prior Allsky is still in '${PRIOR_ALLSKY_DIR}'."
-		MSG="${MSG}\nIf you are no longer using it, it can be removed to save disk space:"
-		MSG="${MSG}\n&nbsp; &nbsp;<code>rm -fr '${PRIOR_ALLSKY_DIR}'</code>\n"
+		MSG+="\nIf you are no longer using it, it can be removed to save disk space:"
+		MSG+="\n&nbsp; &nbsp;<code>rm -fr '${PRIOR_ALLSKY_DIR}'</code>\n"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
 		touch "${OLD_ALLSKY_REMINDER}"		# last time we displayed the message
 	fi
@@ -90,68 +85,50 @@ if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 		# There is already a message so don't add another,
 		# and there's already an image, so don't overwrite it.
 		# shellcheck disable=SC2154
-		rm "${F}"		# so next time we'll remind them.
+		rm -f "${F}"		# so next time we'll remind them.
 		doExit "${EXIT_ERROR_STOP}" "no-image" "" ""
 	else
 		MSG="Reminder: Click here to see the action(s) that need to be performed."
-		MSG="${MSG}\nOnce you perform the actions, run this to remove this message:"
-		MSG="${MSG}\n &nbsp; &nbsp;<code>rm -f '${POST_INSTALLATION_ACTIONS}'</code>"
+		MSG+="\nOnce you perform them run the following to remove this message:"
+		MSG+="\n &nbsp; &nbsp;<code>rm -f '${POST_INSTALLATION_ACTIONS}'</code>"
 		PIA="${POST_INSTALLATION_ACTIONS/${ALLSKY_HOME}/}"
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}" "${PIA/${ALLSKY_HOME}/}"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}" "${PIA}"
 	fi
 fi
 
 USE_NOTIFICATION_IMAGES="$( settings ".notificationimages" )"		|| exit "${EXIT_ERROR_STOP}"
 LOCALE="$( settings ".locale" )"									|| exit "${EXIT_ERROR_STOP}"
 
-if [[ -z ${CAMERA_TYPE} ]]; then
-	MSG="FATAL ERROR: 'Camera Type' not set in WebUI."
-	echo -e "${RED}*** ${MSG}${NC}"
-	doExit "${EXIT_NO_CAMERA}" "Error" \
-		"${ERROR_MSG_PREFIX}\nCamera Type\nnot specified\nin the WebUI." \
-		"${NOT_STARTED_MSG}<br>${MSG}"
-fi
-
 # Make sure we are not already running.
 pgrep "${ME}" | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
+
 if [[ ${CAMERA_TYPE} == "RPi" ]]; then
 	# "true" means use doExit() on error
-	RPi_COMMAND_TO_USE="-cmd $( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" )"
+	RPi_COMMAND_TO_USE="$( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" "false" )"
+	# "false" means don't ignore errors (i.e., exit on error).
+	get_connected_cameras_info "false" > "${CONNECTED_CAMERAS_INFO}"
 
 elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 	RPi_COMMAND_TO_USE=""
 	RESETTING_USB_LOG="${ALLSKY_TMP}/resetting_USB.txt"
-	ZWO_VENDOR="03c3"
-	TEMP="${ALLSKY_TMP}/${CAMERA_TYPE}_cameras.txt"
-	# Output will be:   camera_model TAB ZWO_camera_ID      for each camera found.
-	# The awk code assumes idProduct comes before iProduct.
-	CAMERAS="$( lsusb -d "${ZWO_VENDOR}:" -v 2>/dev/null |
-		awk '{
-				if ($1 == "idProduct") {
-					idProduct = substr($2, 3);
-				} else if ($1 == "iProduct") {
-					printf("%s\t%s\n", $3, idProduct);
-					exit(0);
-				}
-			}'
-	)"
-	NUM_CAMERAS=$( echo "${CAMERAS}" | wc -l )
 
 	reset_usb()		# resets the USB bus
 	{
-		REASON="${1}"		# why are we resetting the bus?
+		local REASON="${1}"		# why are we resetting the bus?
+		local MSG  IMAGE_MSG
 		# Only reset a couple times, then exit with fatal error.
 		if [[ -f ${RESETTING_USB_LOG} ]]; then
 			NUM_USB_RESETS=$( < "${RESETTING_USB_LOG}" )
 			if [[ ${NUM_USB_RESETS} -ge 2 ]]; then
-				MSG="Too many consecutive USB bus resets done (${NUM_USB_RESETS})."
-				echo -e "${RED}*** FATAL ERROR: ${MSG} Stopping Allsky.${NC}" >&2
 				rm -f "${RESETTING_USB_LOG}"
-				doExit "${EXIT_ERROR_STOP}" \
-					"Error" \
-					"${ERROR_MSG_PREFIX}\nToo many consecutive\nUSB bus resets done!\n${SEE_LOG_MSG}" \
-					"${NOT_STARTED_MSG}: ${MSG}"
+
+				MSG="Too many consecutive USB bus resets done (${NUM_USB_RESETS})."
+				echo -e "${RED}*** ${FATAL_MSG} ${MSG} Stopping Allsky.${NC}" >&2
+				IMAGE_MSG="${ERROR_MSG_PREFIX}"
+				IMAGE_MSG+="\nToo many consecutive\nUSB bus resets done!\n${SEE_LOG_MSG}" \
+				doExit "${EXIT_ERROR_STOP}" "Error" \
+					"${IMAGE_MSG}" "${NOT_STARTED_MSG}: ${MSG}"
 			fi
 		else
 			NUM_USB_RESETS=0
@@ -169,53 +146,30 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 		echo "${NUM_USB_RESETS}" > "${RESETTING_USB_LOG}"
 
 		# Display a warning message
-		"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" "${FILENAME}" \
-			"yellow" "" "85" "" "" \
-			"" "5" "yellow" "${EXTENSION}" "" "WARNING:\n\nResetting USB bus\n${REASON}.\nAttempt ${NUM_USB_RESETS}."
+		"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" \
+			"${FILENAME}" "yellow" "" "85" "" "" \
+			"" "5" "yellow" "${EXTENSION}" "" \
+			"WARNING:\n\nResetting USB bus\n${REASON}.\nAttempt ${NUM_USB_RESETS}."
+
 		SEARCH="${ZWO_VENDOR}:${ZWO_CAMERA_ID}"
 		sudo "${ALLSKY_BIN}/uhubctl" --action cycle --exact --search "${SEARCH}"
 		sleep 3		# give it a few seconds, plus, allow the notification images to be seen
 	}
+
+	# "true" means ignore errors (i.e., do not exit on error).
+	CAMERAS="$( get_connected_cameras_info "true" 2> /dev/null |
+		tee "${CONNECTED_CAMERAS_INFO}" )"
+	NUM_CAMERAS=$( echo "${CAMERAS}" | wc -l )
 
 	if [[ ${NUM_CAMERAS} -eq 0 ]]; then
 		# reset_usb() exits if too many tries
 		reset_usb "looking for a\nZWO camera"
 		exit 0	# exit with 0 so the service is restarted
 	fi
-
-	echo "${CAMERAS}" > "${TEMP}"
-
-	# See if the user changed camera models without telling Allsky.
-	# Get the ZWO ID for the camera model in the settings file and
-	# check if that camera is currently connected.
-	ZWO_CAMERA_ID="$( echo "${CAMERAS}" |
-		awk -v MODEL="${CAMERA_MODEL}" '
-			{
-				if ($1 == MODEL) {
-					print $2;
-					exit(0);
-				}
-			}'
-	)"
-	if [[ -z ${ZWO_CAMERA_ID} ]]; then
-		MSG="ZWO camera model '${CAMERA_MODEL}' not found."
-		MSG="${MSG}\nConnected cameras are:"
-		MSG="${MSG}\n$( echo "${CAMERAS}" | awk '{ printf(" * %s\n", $1); }' )"
-		MSG="${MSG}\nIf you changed cameras, select 'Refresh' for the"
-		MSG="${MSG} Camera Type on the Allsky Settings page."
-		doExit "${EXIT_ERROR_STOP}" \
-			"Error" \
-			"${NOT_STARTED_MSG}\nZWO camera\n${CAMERA_MODEL}\nnot found!" \
-			"${NOT_STARTED_MSG} ${MSG}"
-	fi
-
-else
-	MSG="FATAL ERROR: Unknown Camera Type: ${CAMERA_TYPE}."
-	echo -e "${RED}${MSG}  Stopping.${NC}" >&2
-	doExit "${EXIT_NO_CAMERA}" "Error" \
-		"${ERROR_MSG_PREFIX}\nUnknown Camera\nType: ${CAMERA_TYPE}" \
-		"${NOT_STARTED_MSG}<br>${MSG}"
 fi
+
+# Make sure the current camera is supported and hasn't changed unexpectedly.
+validate_camera "${CAMERA_TYPE}" "${CAMERA_MODEL}"		# exits on error
 
 # Make sure the settings file is linked to the camera-specific file.
 if ! MSG="$( check_settings_link "${SETTINGS_FILE}" )" ; then

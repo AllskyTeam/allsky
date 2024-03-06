@@ -55,7 +55,7 @@ int currentBpp					= NOT_SET;			// bytes per pixel: 8, 16, or 24
 int currentBitDepth				= NOT_SET;			// 8 or 16
 raspistillSetting myRaspistillSetting;
 modeMeanSetting myModeMeanSetting;
-std::string errorOutput			= "/tmp/capture_RPi_debug.txt";
+std::string errorOutput;
 
 
 //---------------------------------------------------------------------------------------------
@@ -377,22 +377,33 @@ int main(int argc, char *argv[])
 		CG.allskyHome = a;
 	}
 
+	// Get other settings passed via the environment so we can use
+	// them right away.
+	char *x = getenv("ALLSKY_DEBUG_LEVEL");
+	if (x != NULL) { CG.debugLevel = atoi(x); }
+
+	CG.connectedCamerasFile = getenv("CONNECTED_CAMERAS_INFO");
+	CG.RPI_cameraInfoFile = getenv("RPi_SUPPORTED_CAMERAS");
+
+	CG.cmdToUse = getenv("RPi_COMMAND_TO_USE");
+	if (CG.cmdToUse != NULL)
+	{
+		if (strcmp(CG.cmdToUse, "rpicam-still") == 0 ||
+		    strcmp(CG.cmdToUse, "libcamera-still") == 0)
+		{
+			CG.isLibcamera = true;
+		}
+		else
+		{
+			CG.isLibcamera = false;
+		}
+	}
+
 	char bufTime[128]			= { 0 };
 	char bufTemp[1024]			= { 0 };
 	char const *bayer[]			= { "RG", "BG", "GR", "GB" };
 	bool justTransitioned		= false;
 	ASI_ERROR_CODE asiRetCode;		// used for return code from ASI functions.
-
-	// We need to know its value before setting other variables.
-	CG.cmdToUse = "libcamera-still";		// default
-	if (argc > 2 && strcmp(argv[1], "-cmd") == 0 && strcmp(argv[2], CG.cmdToUse) == 0)
-	{
-		CG.isLibcamera = true;
-	} else {
-		CG.isLibcamera = false;
-		CG.cmdToUse = "raspistill";
-	}
-
 	int retCode;
 	cv::Mat pRgb;							// the image
 
@@ -451,6 +462,8 @@ int main(int argc, char *argv[])
 		closeUp(EXIT_ERROR_STOP);
 	}
 
+	errorOutput = CG.saveDir;
+	errorOutput += "/capture_RPi_debug.txt";
 
 	int iMaxWidth, iMaxHeight;
 	double pixelSize;

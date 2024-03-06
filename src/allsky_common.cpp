@@ -1576,7 +1576,14 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 		else if (strcmp(a, "cmd") == 0)
 		{
 			cg->cmdToUse = argv[++i];
-			cg->isLibcamera = strcmp(cg->cmdToUse, "libcamera-still") == 0 ? true : false;
+			if (strcmp(cg->cmdToUse, "raspistill") == 0)
+			{
+				cg->isLibcamera = false;
+			}
+			else
+			{
+				cg->isLibcamera = true;
+			}
 		}
 		else if (strcmp(a, "tty") == 0)	// overrides what was automatically determined
 		{

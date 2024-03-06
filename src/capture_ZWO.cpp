@@ -815,6 +815,11 @@ int main(int argc, char *argv[])
 		CG.allskyHome = a;
 	}
 
+	// Get other settings passed via the environment so we can use
+	// them right away.
+	char *x = getenv("ALLSKY_DEBUG_LEVEL");
+	if (x != NULL) { CG.debugLevel = atoi(x); }
+
 	pthread_mutex_init(&mtxSaveImg, 0);
 	pthread_cond_init(&condStartSave, 0);
 

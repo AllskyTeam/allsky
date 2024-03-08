@@ -46,53 +46,50 @@
 		<details open>
 			<summary></summary>
 
-			<h4>Changes that may require action</h4>
-			<blockquote class="warning">
-			The changes in this section may require you to change settings;
-			at the least you should check that everything is still working.
-			</blockquote>
-
+			<h4>Changes that may require action (upgrades only)</h4>
 			<ul>
+				<li><blockquote class="warning">
+					The changes in this section may require settings changes;
+					after upgrading, check that your settings and images look right.
+					</blockquote>
+				</li>
 				<li>The <span class="fileName">config.sh</span>
 					and <span class="fileName">ftp-settings.sh</span>
 					files are gone - their settings are now in the WebUI.
 					<br><span class="possibleAction">Possible action: </span>
-					The installation <strong>should </strong>migrate all your settings
-					to the WebUI but you are strongly encouraged to check they are correct.
+					The upgrade should migrate your prior settings to the WebUI
+					unless you have a very old version of Allsky in which case
+					you'll be notified during the upgrade on what to do.
 				</li>
-				<li>The CROP settings have been simplified.
-					You now specifiy the number of pixels to crop from
-					the top, right, bottom, and left.
+				<li>The <b>CROP</b> settings have been simplified to specifiy the number
+					of pixels to crop from the top, right, bottom, and left of an image.
 					<br><span class="possibleAction">Possible action: </span>
-					If you used the CROP settings you'll need to re-enter
-					them using the new fields.
-				</li>
-				<li>Checking the brightness of an image is quicker since the mean brightness
-					determined by the capture program is used rather than recalculating
-					the brightness.
-					The capture programs look at the center
-					of an image to determine its brightness whereas
-					the last release looked at the whole image including any dark borders.
-					<br><span class="possibleAction">Possible action: </span>
-					You may need to adjust your
-					<span class="WebUISetting">Remove Bad Images Thresholds</span>.
+					If you cropped your images the upgrade will notify you
+					to re-enter the settings using the new fields.
 				</li>
 				<li>The <span class="WebUISetting">Remove Bad Images Thresholds</span>
-					settings are now between 0.0 and 1.0; they used to be between
-					0 and 100.
+					settings are now between 0.0 and 1.0 instead of 0 - 100.
 					<br><span class="possibleAction">Possible action: </span>
-					Although the threshold values should have been adjusted to the
-					new range during installation, you should check them to make sure.
+					The upgrade should adjust your threshold values to the
+					new range, but check;
 				</li>
-				<li>(ZWO) The mean brightness returned by the capture program is
-					now a number between 0.0 and 1.0; it used to be between 0 and 255.
+				<li>Allsky now looks at the <u>center</u> of an image to determine the
+					mean brightness whereas prior releases looked at the whole
+					image including any dark borders.
+					<br><span class="possibleAction">Possible action: </span>
+					You may need to adjust your
+					<span class="WebUISetting">Remove Bad Images Thresholds</span>
+					to take into account the lack of borders.
+				</li>
+				<li>(ZWO only) The mean brightness of an images is
+					now a number between 0.0 and 1.0; it used to be 0 - 255.
 					This matches the <span class="WebUISetting">Target Brightness</span>
-					settings which are also between 0.0 and 1.0 as well as the
+					settings which have always been between 0.0 and 1.0 as well as the
 					<span class="WebUISetting">Remove Bad Images Thresholds</span>.
 					settings, making it easier to determine what settings to use.
 					<br><span class="possibleAction">Possible action: </span>
-					If the MEAN is on your overlay you may need to resize and/or move it.
-					<span class="WebUISetting">Remove Bad Images Thresholds</span>.
+					If the <b>MEAN</b> variable is on your overlay you may need
+					to resize and/or move it.
 				</li>
 				<li>The WebUI now hides the settings in each section unless there's
 					an error in that section.
@@ -100,46 +97,64 @@
 					<i class='fa fa-chevron-down fa-fw'></i> symbol on the left side
 					of a section heading.
 					<br><span class="possibleAction">Possible action: </span>
-					This may take some time to get used to.
-					However, with the significant increase in settings available in the
-					WebUI it would be difficult to find what you want if
+					This may take a little time to get used to.
+					However, with the significant increase in WebUI settings
+					it would be difficult to find what you want if
 					the sections weren't hidden.
 				</li>
 			</ul>
 
 			<h4>Enhancements / Changes</h4>
 			<ul>
-				<li>When changing settings, Allsky is only restarted if it needs to be.
+				<li>The new <span class="fileName">testUpload.sh</span> command
+					tries to upload a test file to either a remote Website or remote server.
+					If the upload fails, the command
+					<strong>attempts to tell you why it failed and what to do about it</strong>.
+				</li>
+				<li>When changing settings, Allsky is only restarted if it needs to.
 					Some settings, like the <span class="WebUISetting">Owner</span>
-					don't impact taking images so there's no reason to restart picture taking
-					when it changes.
-					<br>Hovering you mouse over a WebUI data field displays a popup
-					that indicates whether or not changing that field requires a restart.
+					don't impact taking images so there's no reason to restart Allsky.
+					A few settings cause Allsky to stop after being changed.
+					Hovering you mouse over a WebUI data field displays a popup
+					that indicates what will happen after changing that field.
 				</li>
 				<li>The "module" overlay method is now the default for new installations.
 					In the next major Allsky release the "legacy" method will be removed
+					and the only way to add text will be using the
+					<span class="editorName">Overlay Editor</span>
 					so we encourage you to change now.
 				</li>
 				<li>If you change cameras without notifying Allsky
 					(e.g., you shutdown the Pi, replace the camera with a different model,
-					then restart the Pi), you will receive a message telling you
-					how to properly change camera types or models.
-					<br>No message will be given if you replace a cameras with the same model,
+					then restart the Pi), Allsky will not start but will put a
+					message in the WebUI message telling you how to properly change cameras.
+					No message will be given if you replace a camera with the same model,
 					e.g., an RPi HQ with another RPi HQ camera.
 				</li>
-				<li>If you try and use an unsupported camera you will
-					receive a message stating that and telling you to run the new
+				<li>The ZWO library is at version 1.33 (latest as of March 1, 2024)
+					which adds support for the ASI676 and other new cameras.
+					<br>Support for some new third-party RPi cameras was added.
+					<blockquote>
+					Run the 
 					<span class="fileName">show_supported_cameras.sh</span>
-					program that shows the RPi and/or ZWO cameras that Allsky supports.
-					<br>The message also tells you how to request support for the camera.
+					command to see the supported ZWO and RPi cameras.
+					<p>
+					The ZWO list is over 100 entries so if you want to see
+					if a camera you are considering getting is supported, run:
+					</p>
+					<pre>show_supported_cameras.sh | grep -i "CAMERA_NAME"</pre>
+					replacing <code>CAMERA_NAME</code> with the name with <strong>OUT</strong>
+					<code>ASI</code>, e.g., <code>178mc</code>.
+					</blockquote>
+				</li>
+				<li>If you try using an unsupported camera you will
+					receive a message stating that and telling you what to do
+					and how to request support for the camera.
 				</li>
 				<li>The <span class="fileName">endOfNight_additionalSteps.sh</span>
 					file is no longer supported.
 					The few people that had that file should use the "day to night"
 					module flow instead.
-				</li>
-				<li>The ZWO library is at version 1.33 which adds support
-					for the ASI676 and other new cameras.
 				</li>
 				<li>When creating startrails, keograms, and/or timelapse,
 					if one of them fails due to no images,
@@ -185,14 +200,16 @@
 					and corrupt are also checked for, and those images kept timelapses
 					from being created.
 					<br>
-					If you don't want to run the brightness checks set their THRESHOLDS to 0.0.
+					If you don't want to run the brightness checks set their
+					<span class="WebUISetting">Remove Bad Images Thresholds</span> to
+					<span class="WebUIValue">0</span>.
 				</li>
 				<li>The <span class="WebUISetting">Brightness</span> settings
 					were deleted since there is no need for them.
 					Changes to brightness should be done via the
 					<span class="WebUISetting">Target Mean</span> settings.
 				</li>
-				<li>The <span class="WebUISetting">Offset</span> setting (ZWO only)
+				<li>(ZWO only) The <span class="WebUISetting">Offset</span> setting
 					was deleted.  It brightened every pixel by the amount specified
 					and is not needed with allsky cameras.
 				</li>
@@ -204,9 +221,8 @@
 
 			<h4>Bug Fixes</h4>
 			<ul>
-				<li>ASI_ERROR_TIMEOUT messages are mostly gone!
-					This uses the new <span class="WebUISetting">ZWO Exposure Type</span>
-					setting which is the default.
+				<li><code>ASI_ERROR_TIMEOUT</code> messages are mostly gone.
+					<b>Yea!!!</b>
 				</li>
 			</ul>
 

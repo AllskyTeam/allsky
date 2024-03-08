@@ -1778,7 +1778,20 @@
 "label" : "Days To Keep on Remote Website",
 "type" : "integer",
 "carryforward" : true,
-"booldependson" : "useremotewebsite"
+"booldependson" : "useremotewebsite",
+"display" : false
+},
+{
+"name" : "remotewebsiteimagedir",
+"default" : "allsky",
+"description" : "Name of the top-level remote Website directory where images go.",
+"label" : "Image Directory",
+"type" : "text",
+"carryforward" : true,
+"checkchanges" : true,
+"booldependson" : "useremotewebsite",
+"valuedependson" : "remotewebsiteprotocol=*ftp*",
+"optional" : true
 },
 {
 "name" : "remotewebsiteprotocol",
@@ -1850,18 +1863,6 @@
 "type" : "text",
 "checkchanges" : true,
 "source" : "${ALLSKY_ENV}",
-"booldependson" : "useremotewebsite",
-"valuedependson" : "remotewebsiteprotocol=*ftp*",
-"optional" : true
-},
-{
-"name" : "remotewebsiteimagedir",
-"default" : "allsky",
-"description" : "Name of the top-level remote Website directory where images go.",
-"label" : "Image Directory",
-"type" : "text",
-"carryforward" : true,
-"checkchanges" : true,
 "booldependson" : "useremotewebsite",
 "valuedependson" : "remotewebsiteprotocol=*ftp*",
 "optional" : true
@@ -2016,6 +2017,17 @@
 "checkchanges" : true
 },
 {
+"name" : "remoteserverimagedir",
+"default" : "",
+"description" : "Name of the top-level remote server directory where images go.",
+"label" : "Image Directory",
+"type" : "text",
+"carryforward" : true,
+"checkchanges" : true,
+"booldependson" : "useremoteserver",
+"optional" : true
+},
+{
 "name" : "remoteserverprotocol",
 "default" : "ftps",
 "description" : "Protocol for remote server",
@@ -2159,17 +2171,6 @@
 "source" : "${ALLSKY_ENV}",
 "booldependson" : "useremoteserver",
 "valuedependson" : "remoteserverprotocol=gcs",
-"optional" : true
-},
-{
-"name" : "remoteserverimagedir",
-"default" : "",
-"description" : "Name of the top-level remote server directory where images go.",
-"label" : "Image Directory",
-"type" : "text",
-"carryforward" : true,
-"checkchanges" : true,
-"booldependson" : "useremoteserver",
 "optional" : true
 },
 {

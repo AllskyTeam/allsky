@@ -951,7 +951,7 @@ b, strong {
 
 .possibleAction {
 	font-weight: bold;
-	border: 1px dotted gray;
+	text-decoration-line: underline;
 	margin-right: 10px;
 }
 

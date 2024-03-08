@@ -828,7 +828,7 @@ void closeUp(int e)
 		sleep(3);
 	}
 
-	printf("     ***** %s AllSky *****\n", a);
+	printf("     ***** %s Allsky *****\n", a);
 
 	// ZWO seems to hang on ASICloseCamera() if taking a picture when the signal is sent,
 	// until the exposure finishes, then it never returns so the remaining code doesn't

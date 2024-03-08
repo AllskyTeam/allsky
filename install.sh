@@ -2847,7 +2847,7 @@ do_update()
 	save_camera_capabilities "false"
 	do_fix
 
-	set_allsky_status "ALLSKY_STATUS_NOT_RUNNING"
+	do_allsky_status "ALLSKY_STATUS_NOT_RUNNING"
 
 	exit_installation 0 "${STATUS_OK}" "Update completed."
 }
@@ -3568,7 +3568,7 @@ if [[ -z ${FUNCTION} && ${RESTORE} == "false" ]]; then
 
 	##### Keep track of current Allsky status
 	mkdir -p "$( dirname "${ALLSKY_STATUS}" )"		# location of status file
-	set_allsky_status "ALLSKY_STATUS_INSTALLING"
+	do_allsky_status "ALLSKY_STATUS_INSTALLING"
 
 	##### Log some info to help in troubleshooting.
 	log_info
@@ -3714,22 +3714,22 @@ remind_old_version
 ######## All done
 
 if [[ ${WILL_REBOOT} == "true" ]]; then
-	set_allsky_status "ALLSKY_STATUS_SEE_WEBUI"
+	do_allsky_status "ALLSKY_STATUS_SEE_WEBUI"
 	do_reboot "${STATUS_FINISH_REBOOT}" ""		# does not return
 fi
 
 if [[ ${REBOOT_NEEDED} == "true" ]]; then
 	display_msg --log progress "\nInstallation is done" " but the Pi needs a reboot.\n"
-	set_allsky_status "ALLSKY_STATUS_SEE_WEBUI"
+	do_allsky_status "ALLSKY_STATUS_SEE_WEBUI"
 	exit_installation 0 "${STATUS_NO_FINISH_REBOOT}" ""
 fi
 
 if [[ ${CONFIGURATION_NEEDED} == "false" ]]; then
-	set_allsky_status "ALLSKY_STATUS_NOT_RUNNING"
+	do_allsky_status "ALLSKY_STATUS_NOT_RUNNING"
 	display_image --custom "lime" "Allsky is\nready to start"
 	display_msg --log progress "\nInstallation is done and Allsky is ready to start."
 else
-	set_allsky_status "ALLSKY_STATUS_SEE_WEBUI"
+	do_allsky_status "ALLSKY_STATUS_SEE_WEBUI"
 	display_msg --log progress "\nInstallation is done" " but Allsky needs to be configured."
 	display_msg progress "" "Go to the 'Allsky Settings' page of the WebUI to configure Allsky."
 fi

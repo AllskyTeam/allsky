@@ -72,16 +72,22 @@ class OEUIMANAGER {
 
         if (params.hasOwnProperty('debug')) {
             if (params.debug == 'true') {
-                this.#debugMode = true;
+                localStorage.setItem('debugMode', 'true');
+            } else {
+                localStorage.setItem('debugMode', 'false');
             }
         }
 
         if (params.hasOwnProperty('debugpos')) {
             if (params.debugpos == 'true') {
-                this.#debugPosMode = true;
+                localStorage.setItem('debugpos', 'true');
+            } else {
+                localStorage.setItem('debugpos', 'false');
             }
         }
 
+        this.#debugMode = localStorage.getItem('debugMode') === 'true' ? true: false;
+        this.#debugPosMode = localStorage.getItem('debugpos') === 'true' ? true: false;
     }
 
     getQueryParams(url) {
@@ -1256,6 +1262,7 @@ class OEUIMANAGER {
 
             this.#errorsTable = $('#fielderrorstable').DataTable({
                 data: this.#errorFields,
+                retrieve: true,
                 autoWidth: false,
                 pagingType: 'simple_numbers',
                 paging: true,
@@ -1299,10 +1306,14 @@ class OEUIMANAGER {
                 }
             });
 
-            $('#oe-field-errors-dialog').modal({
-                keyboard: false,
-                width: 800
-            })
+            if ($('#oe-field-errors-dialog').data('bs.modal') === undefined) {
+                $('#oe-field-errors-dialog').modal({
+                    keyboard: false,
+                    width: 800
+                })
+            } else {
+                $('#oe-field-errors-dialog').modal('show');
+            }
 
             $('#oe-field-errors-dialog').on('hidden.bs.modal', (event) => {
                 this.checkFields();
@@ -1358,8 +1369,28 @@ class OEUIMANAGER {
         this.drawGrid();
         this.updateBackgroundImage();
         this.setupDebug();
-        this.checkFields();
         this.updateToolbar();
+        this.checkFieldstimer();
+    }
+
+    checkFieldstimer() {
+        let checkFunction = function() {
+            let allLoaded = true;
+            let fields = this.#fieldManager.fields;
+            for (let [fieldName, field] of fields.entries()) {
+                if (!field.loaded) {
+                    allLoaded = false;
+                    break;
+                }
+            }
+            if (!allLoaded) {
+                setTimeout(checkFunction, 100);
+            } else {
+                this.checkFields();
+            }
+        }.bind(this);
+
+        setTimeout(checkFunction, 100);
     }
 
     moveField(event) {
@@ -1435,6 +1466,14 @@ class OEUIMANAGER {
 
         let x = field.tlx;
         let y = field.tly;
+
+        /** Nasty hack to fix tlx and tly being wrong on scaled images */
+        if (field instanceof OEIMAGEFIELD) {
+            let tx = field.shape.getWidth()* field.scale/2;
+            let ty = field.shape.getHeight()* field.scale/2;
+            x = field.x - tx;
+            y = field.y - ty;
+        }
 
         if (x < 0) {
             result = true;

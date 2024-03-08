@@ -427,10 +427,27 @@
                 buildUI();
             });
 
+            $(document).on('click', '#oe-overlay-disable-new', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                plugin.show();
+                plugin.showNew();
+                $('#' + plugin.mmNewDialogCopy).val(plugin.selectedOverlay.name);
+            });
+
             $(document).on('oe-startup', (e,data) => {
                 let configManager = window.oedi.get('config');
                 let overlays = configManager.overlays;
-                configManager.loadOverlay(overlays.current, 'system');
+
+                let type = 'allsky';
+                for (let overlay in overlays.useroverlays) {
+                    if (overlay == overlays.current) {
+                        type = 'user';
+                        break;
+                    }
+                }
+                configManager.loadOverlay(overlays.current, type);
+                                
             });
             
             $(document).on('change', '#' + plugin.mmEditSelect, (e) => {
@@ -441,7 +458,7 @@
                     bootbox.confirm('Are you sure you wish to load a new overlay. You will lose any unsaved changes', (result) => {
                         if (result) {
                             let selectOption = $('#' + plugin.mmEditSelect).find(':selected');
-                            if (selectOption.data('type') === 'system') {
+                            if (selectOption.data('type') === 'allsky') {
                                 $('#' + plugin.mmNewDialogDelete).addClass('disabled');
                             } else {
                                 $('#' + plugin.mmNewDialogDelete).removeClass('disabled');
@@ -453,7 +470,7 @@
                     });                    
                 } else {
                     let selectOption = $('#' + plugin.mmEditSelect).find(':selected');
-                    if (selectOption.data('type') === 'system') {
+                    if (selectOption.data('type') === 'allsky') {
                         $('#' + plugin.mmNewDialogDelete).addClass('disabled');
                     } else {
                         $('#' + plugin.mmNewDialogDelete).removeClass('disabled');
@@ -683,7 +700,7 @@
             let data = configManager.overlays;
             for (let overlay in data.coreoverlays) {
                 let name = data.coreoverlays[overlay].metadata.name
-                $('#' + plugin.mmNewDialogCopy).append($('<option>').val(overlay).text('System - ' + name));
+                $('#' + plugin.mmNewDialogCopy).append($('<option>').val(overlay).text('Allsky - ' + name));
             }
             for (let overlay in data.useroverlays) {
                 let name = data.useroverlays[overlay].metadata.name
@@ -712,9 +729,9 @@
         var buildUI = function () {
             let configManager = window.oedi.get('config');
             let data = configManager.overlays;
-            resetSelect(plugin.mmEditSelect, 'both', (plugin.selectedOverlay.name !== null) ? plugin.selectedOverlay.name : null);
-            resetSelect(plugin.mmDaySelect, 'day', (data.config.daytime !== null) ? data.config.daytime : null);
-            resetSelect(plugin.mmNightSelect, 'night', (data.config.nighttime !== null) ? data.config.nighttime : null);
+            resetSelect(plugin.mmEditSelect, 'both', true, (plugin.selectedOverlay.name !== null) ? plugin.selectedOverlay.name : null);
+            resetSelect(plugin.mmDaySelect, 'day', true, (data.config.daytime !== null) ? data.config.daytime : null);
+            resetSelect(plugin.mmNightSelect, 'night', true, (data.config.nighttime !== null) ? data.config.nighttime : null);
 
             resetSelect(plugin.mmMetaData, (plugin.selectedOverlay.name !== null) ? plugin.selectedOverlay.name : null);
             
@@ -741,7 +758,7 @@
             }
 
             let selectOption = $('#' + plugin.mmEditSelect).find(':selected');
-            if (selectOption.data('type') === 'system') {
+            if (selectOption.data('type') === 'allsky') {
                 $('#' + plugin.mmNewDialogDelete).addClass('disabled');
             }
 
@@ -752,32 +769,34 @@
                 $('.' + plugin.mmDebug).removeClass('hidden');
             }
 
-            function resetSelect(id, tod, selectedValue=null) {
+            function resetSelect(id, tod, includeAllsky=false, selectedValue=null) {
                 let selectId = '#' + id;
                 $(selectId).empty();
 
-                for (let overlay in data.coreoverlays) {
-                    let add = false;
-                    if (tod == 'both') {
-                        add = true;
-                    } else {
-                        let overlayTod = data.coreoverlays[overlay].metadata.tod;
-                        if (overlayTod !== undefined) {
-                            if (overlayTod === tod || overlayTod === 'both') {
+                if (includeAllsky) {
+                    for (let overlay in data.coreoverlays) {
+                        let add = false;
+                        if (tod == 'both') {
+                            add = true;
+                        } else {
+                            let overlayTod = data.coreoverlays[overlay].metadata.tod;
+                            if (overlayTod !== undefined) {
+                                if (overlayTod === tod || overlayTod === 'both') {
+                                    add = true;
+                                }
+                            } else {
                                 add = true;
                             }
-                        } else {
-                            add = true;
                         }
-                    }
 
-                    if (add) {
-                        let selected = '';
-                        if (selectedValue !== null && selectedValue === overlay) {
-                            selected = 'selected';
+                        if (add) {
+                            let selected = '';
+                            if (selectedValue !== null && selectedValue === overlay) {
+                                selected = 'selected';
+                            }
+                            let name = data.coreoverlays[overlay].metadata.name
+                            $(selectId).append($('<option ' + selected + '>').val(overlay).text('Allsky - ' + name).data('type','allsky'));
                         }
-                        let name = data.coreoverlays[overlay].metadata.name
-                        $(selectId).append($('<option ' + selected + '>').val(overlay).text('System - ' + name).data('type','system'));
                     }
                 }
 

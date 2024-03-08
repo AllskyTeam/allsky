@@ -136,6 +136,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 
 	# Status of Allsky
 	ALLSKY_STATUS="${ALLSKY_CONFIG}/status.json"
+	ALLSKY_STATUS_INSTALLING="Installing..."
 	ALLSKY_STATUS_NEVER_RUN="Never Run"
 	ALLSKY_STATUS_NOT_RUNNING="Not Running"
 	ALLSKY_STATUS_STARTING="Starting..."

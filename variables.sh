@@ -78,7 +78,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	# Camera information:
 	# List of ALL connected cameras.
 	CONNECTED_CAMERAS_INFO="${ALLSKY_TMP}/connected_cameras.txt"
-	# RPi supported cameras
+	# Supported RPi cameras
 	RPi_SUPPORTED_CAMERAS="${ALLSKY_CONFIG}/RPi_cameraInfo.txt"
 
 	# Holds information on what the user needs to do after an installation.
@@ -133,6 +133,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	# Log files for main Allsky and modules
 	ALLSKY_LOG="/var/log/allsky.log"
 	ALLSKY_PERIODIC_LOG="/var/log/allskyperiodic.log"
+
+	# Status of Allsky
+	ALLSKY_STATUS="${ALLSKY_CONFIG}/status.json"
 
 	# GitHub information - package names, repository, and contents of a file.
 	GITHUB_ROOT="https://github.com/AllskyTeam"

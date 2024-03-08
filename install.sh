@@ -597,6 +597,7 @@ update_php_defines()
 			-e "s;XX_WEBSERVER_GROUP_XX;${WEBSERVER_GROUP};g" \
 			-e "s;XX_ALLSKY_REPO_XX;${ALLSKY_REPO};g" \
 			-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};g" \
+			-e "s;XX_ALLSKY_STATUS_XX;${ALLSKY_STATUS};g" \
 			-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};g" \
 		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
 		chmod 644 "${FILE}"
@@ -2846,6 +2847,8 @@ do_update()
 	save_camera_capabilities "false"
 	do_fix
 
+	set_allsky_status "ALLSKY_STATUS_NOT_RUNNING"
+
 	exit_installation 0 "${STATUS_OK}" "Update completed."
 }
 
@@ -3352,6 +3355,17 @@ handle_interrupts()
 	exit_installation 1 "${STATUS_INT}" "Saving status."
 }
 
+
+####
+# Set the current Allsky status and log a message.
+do_allsky_status()
+{
+	local STATUS="${1}"
+	display_msg --logonly info "Setting Allsky status to ${!STATUS}."
+	set_allsky_status "${!STATUS}"
+}
+
+
 ############################################## Main part of program
 
 ##### Calculate whiptail sizes
@@ -3407,10 +3421,10 @@ if [[ ${RESTORE} == "true" && ! -d ${PRIOR_ALLSKY_DIR} ]]; then
 	exit 1
 fi
 
-IorR="INSTALLATION"		# Installation or Restoration
+IorR="INSTALLATION"		# Installation (default) or Restoration
 
 if [[ -n ${FUNCTION} || ${FIX} == "true" ]]; then
-	# Don't log when a single function is executed.
+	# Don't log when a single function is executed or we're fixing things.
 	DISPLAY_MSG_LOG=""
 else
 	mkdir -p "${ALLSKY_LOGS}" || display_msg --log "error" "Unable to make ${ALLSKY_LOGS}"
@@ -3552,6 +3566,10 @@ fi
 
 if [[ -z ${FUNCTION} && ${RESTORE} == "false" ]]; then
 
+	##### Keep track of current Allsky status
+	mkdir -p "$( dirname "${ALLSKY_STATUS}" )"		# location of status file
+	set_allsky_status "ALLSKY_STATUS_INSTALLING"
+
 	##### Log some info to help in troubleshooting.
 	log_info
 
@@ -3627,7 +3645,7 @@ MSG="The following steps can take up to an hour depending on the speed of"
 MSG+="\nyour Pi and how many of the necessary dependencies are already installed."
 MSG+="\nYou will see progress messages throughout the process."
 MSG+="\nAt the end you will be prompted again for additional steps."
-display_msg notice "${MSG}"
+display_msg "notice" "${MSG}"
 
 
 ##### Install web server
@@ -3695,17 +3713,23 @@ remind_old_version
 
 ######## All done
 
-[[ ${WILL_REBOOT} == "true" ]] && do_reboot "${STATUS_FINISH_REBOOT}" ""		# does not return
+if [[ ${WILL_REBOOT} == "true" ]]; then
+	set_allsky_status "ALLSKY_STATUS_SEE_WEBUI"
+	do_reboot "${STATUS_FINISH_REBOOT}" ""		# does not return
+fi
 
 if [[ ${REBOOT_NEEDED} == "true" ]]; then
 	display_msg --log progress "\nInstallation is done" " but the Pi needs a reboot.\n"
+	set_allsky_status "ALLSKY_STATUS_SEE_WEBUI"
 	exit_installation 0 "${STATUS_NO_FINISH_REBOOT}" ""
 fi
 
 if [[ ${CONFIGURATION_NEEDED} == "false" ]]; then
+	set_allsky_status "ALLSKY_STATUS_NOT_RUNNING"
 	display_image --custom "lime" "Allsky is\nready to start"
 	display_msg --log progress "\nInstallation is done and Allsky is ready to start."
 else
+	set_allsky_status "ALLSKY_STATUS_SEE_WEBUI"
 	display_msg --log progress "\nInstallation is done" " but Allsky needs to be configured."
 	display_msg progress "" "Go to the 'Allsky Settings' page of the WebUI to configure Allsky."
 fi

@@ -283,9 +283,12 @@ if [[ ${CAMERA_TYPE} == "RPi" ]]; then
 	export RPi_SUPPORTED_CAMERAS
 fi
 
+function catch_signal() { return 0; }
+trap "catch_signal" SIGTERM SIGINT SIGHUP
+
 set_allsky_status "${ALLSKY_STATUS_STARTING}"
 
-# Run the main program - this is the main attraction...
+# Run the camera-specific capture program - this is the main attraction...
 "${ALLSKY_BIN}/${CAPTURE}" -config "${ARGS_FILE}"
 RETCODE=$?
 

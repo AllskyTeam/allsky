@@ -1099,3 +1099,23 @@ function is_number()
 		return 1
 	fi
 }
+
+
+####
+# Set the Allsky status along with a timestamp.
+function set_allsky_status()
+{
+	local STATUS="${1}"		# can be ""
+
+	local S=".status = \"${STATUS}\""
+	local T=".timestamp = \"$( date +'%Y-%m-%d %H:%M:%S' )\""
+	echo "{ }" | jq --indent 4 "${S} | ${T}" > "${ALLSKY_STATUS}"
+}
+function get_allsky_status()
+{
+	settings ".status" "${ALLSKY_STATUS}" 2> /dev/null
+}
+function get_allsky_status_timestamp()
+{
+	settings ".timestamp" "${ALLSKY_STATUS}" 2> /dev/null
+}

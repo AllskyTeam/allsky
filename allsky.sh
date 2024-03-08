@@ -24,6 +24,7 @@ if [[ ! -d ${ALLSKY_CONFIG} ]]; then
 	} >&2
 	# Can't call addMessage.sh or copy_notification_image.sh or almost anything
 	# since they use ${ALLSKY_CONIG} and/or ${ALLSKY_TMP} which don't exist yet.
+	set_allsky_status "${ALLSKY_STATUS_NEVER_RUN}"
 	doExit "${EXIT_ERROR_STOP}" "no-image" "" ""
 fi
 
@@ -42,6 +43,7 @@ fi
 # Make sure the settings have been configured after an installation or upgrade.
 LAST_CHANGED="$( settings ".lastchanged" )"
 if [[ ${LAST_CHANGED} == "" ]]; then
+	set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
 	echo "*** ===== Allsky needs to be configured before it can be used.  See the WebUI." >&2
 	if [[ ${NEEDS_REBOOT} == "true" ]]; then
 		echo "*** ===== The Pi also needs to be rebooted." >&2
@@ -52,6 +54,7 @@ if [[ ${LAST_CHANGED} == "" ]]; then
 		doExit "${EXIT_ERROR_STOP}" "ConfigurationNeeded" "" "Allsky needs to be configured."
 	fi
 elif [[ ${NEEDS_REBOOT} == "true" ]]; then
+	set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
 	doExit "${EXIT_ERROR_STOP}" "RebootNeeded" "" "The Pi needs to be rebooted."
 fi
 
@@ -86,6 +89,7 @@ if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 		# and there's already an image, so don't overwrite it.
 		# shellcheck disable=SC2154
 		rm -f "${F}"		# so next time we'll remind them.
+		set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
 		doExit "${EXIT_ERROR_STOP}" "no-image" "" ""
 	else
 		MSG="Reminder: Click here to see the action(s) that need to be performed."
@@ -164,11 +168,13 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 	if [[ ${NUM_CAMERAS} -eq 0 ]]; then
 		# reset_usb() exits if too many tries
 		reset_usb "looking for a\nZWO camera"
+		set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
 		exit 0	# exit with 0 so the service is restarted
 	fi
 fi
 
 if [[ ! -s ${CONNECTED_CAMERAS_INFO} ]]; then
+		set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
 	MSG="Unable to start Allsky - no connected cameras found!"
 	echo -e "${RED}*** ${MSG}${NC}" >&2
 	IMAGE_MSG="${ERROR_MSG_PREFIX}"
@@ -236,6 +242,7 @@ fi
 ARGS="$( "${ALLSKY_WEBUI}/includes/convertJSON.php" --capture-only )"
 if [[ $? -ne 0 ]]; then
 	echo "${ME}: ERROR: convertJSON.php returned: ${ARGS}"
+	set_allsky_status "${ALLSKY_STATUS_ERROR}"
 	exit "${EXIT_ERROR_STOP}"
 fi
 echo "${ARGS}" | grep -E -i -v "^config=|^debuglevel=" >> "${ARGS_FILE}"
@@ -276,12 +283,15 @@ if [[ ${CAMERA_TYPE} == "RPi" ]]; then
 	export RPi_SUPPORTED_CAMERAS
 fi
 
+set_allsky_status "${ALLSKY_STATUS_STARTING}"
+
 # Run the main program - this is the main attraction...
 "${ALLSKY_BIN}/${CAPTURE}" -config "${ARGS_FILE}"
 RETCODE=$?
 
 if [[ ${RETCODE} -eq ${EXIT_OK} ]]; then
 	[[ ${CAMERA_TYPE} == "ZWO" ]] && rm -f "${RESETTING_USB_LOG}"
+	set_allsky_status "${ALLSKY_STATUS_STOPPED}"
 	doExit "${EXIT_OK}" ""
 fi
 
@@ -292,6 +302,7 @@ if [[ ${RETCODE} -eq ${EXIT_RESTARTING} ]]; then
 	else
 		NOTIFICATION_TYPE="Restarting"
 	fi
+	set_allsky_status "${ALLSKY_STATUS_STOPPED}"
 	doExit 0 "${NOTIFICATION_TYPE}"		# use 0 so the service is restarted
 fi
 
@@ -307,6 +318,7 @@ if [[ ${RETCODE} -eq ${EXIT_RESET_USB} ]]; then
 	if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
 		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "${NOTIFICATION_TYPE}"
 	fi
+	set_allsky_status "${ALLSKY_STATUS_ERROR}"
 	doExit 0 ""		# use 0 so the service is restarted
 fi
 
@@ -319,13 +331,16 @@ if [[ ${RETCODE} -ge ${EXIT_ERROR_STOP} ]]; then
 		echo "*** After fixing, restart the allsky service. ***"
 	fi
 	echo "***"
+	set_allsky_status "${ALLSKY_STATUS_ERROR}"
 	doExit "${RETCODE}" "Error"	# Can't do a custom message since we don't know the problem
 fi
 
 # Some other error
 if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
 	# If started by the service, it will restart us once we exit.
+	set_allsky_status "${ALLSKY_STATUS_NOT_RUNNING}"
 	doExit "${RETCODE}" "NotRunning"
 else
+	set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
 	doExit "${RETCODE}" ""
 fi

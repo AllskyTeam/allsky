@@ -51,7 +51,7 @@ usage_and_exit()
 
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
-if [[ -z ${DO_RPI} && -z ${DO_ZWO} ]]; then
+if [[ ${DO_RPI} == "false" && ${DO_ZWO} == "false" ]]; then
 	echo -e "${RED}You must specify --rpi and/or --zwo${NC}"
 	usage_and_exit 2
 fi

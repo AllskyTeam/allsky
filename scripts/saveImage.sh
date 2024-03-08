@@ -120,6 +120,8 @@ if [[ -z ${AS_TEMPERATURE_C} ]]; then
 	fi
 fi
 
+set_allsky_status "${ALLSKY_STATUS_RUNNING}"
+
 # If taking dark frames, save the dark frame then exit.
 if [[ $( settings ".takedarkframes" ) == "true" ]]; then
 	#shellcheck source-path=scripts
@@ -152,7 +154,8 @@ function display_error_and_exit()	# error message, notification string
 		"*** ERROR ***\nAllsky Stopped!\nInvalid ${NOTIFICATION_STRING} settings\nSee\n/var/log/allsky.log"
 
 	# Don't let the service restart us because we will get the same error again.
-	sudo systemctl stop allsky
+	stop_Allsky
+	set_allsky_status "${ALLSKY_STATUS_ERROR}"
 	exit "${EXIT_ERROR_STOP}"
 }
 

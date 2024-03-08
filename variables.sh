@@ -136,6 +136,13 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 
 	# Status of Allsky
 	ALLSKY_STATUS="${ALLSKY_CONFIG}/status.json"
+	ALLSKY_STATUS_NEVER_RUN="Never Run"
+	ALLSKY_STATUS_NOT_RUNNING="Not Running"
+	ALLSKY_STATUS_STARTING="Starting..."
+	ALLSKY_STATUS_RUNNING="Running"
+	ALLSKY_STATUS_STOPPED="Stopped (normal)"
+	ALLSKY_STATUS_ERROR="Stopped (error detected)"
+	ALLSKY_STATUS_SEE_WEBUI="See the WebUI"
 
 	# GitHub information - package names, repository, and contents of a file.
 	GITHUB_ROOT="https://github.com/AllskyTeam"

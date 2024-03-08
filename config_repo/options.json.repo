@@ -1778,7 +1778,8 @@
 "label" : "Days To Keep on Remote Website",
 "type" : "integer",
 "carryforward" : true,
-"booldependson" : "useremotewebsite"
+"booldependson" : "useremotewebsite",
+"display" : false
 },
 {
 "name" : "remotewebsiteimagedir",
@@ -2016,6 +2017,17 @@
 "checkchanges" : true
 },
 {
+"name" : "remoteserverimagedir",
+"default" : "",
+"description" : "Name of the top-level remote server directory where images go.",
+"label" : "Image Directory",
+"type" : "text",
+"carryforward" : true,
+"checkchanges" : true,
+"booldependson" : "useremoteserver",
+"optional" : true
+},
+{
 "name" : "remoteserverprotocol",
 "default" : "ftps",
 "description" : "Protocol for remote server",
@@ -2032,17 +2044,6 @@
 "carryforward" : true,
 "checkchanges" : true,
 "booldependson" : "useremoteserver"
-},
-{
-"name" : "remoteserverimagedir",
-"default" : "",
-"description" : "Name of the top-level remote server directory where images go.",
-"label" : "Image Directory",
-"type" : "text",
-"carryforward" : true,
-"checkchanges" : true,
-"booldependson" : "useremoteserver",
-"optional" : true
 },
 {
 "name" : "REMOTESERVER_HOST",

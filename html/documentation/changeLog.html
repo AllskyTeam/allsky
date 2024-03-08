@@ -106,12 +106,27 @@
 
 			<h4>Enhancements / Changes</h4>
 			<ul>
+				<li>Setting up a Website on the Pi is trivial - just enable the
+					the <span class="WebUISetting">Use Local Website</span> setting
+					and optionally set the number of days' images to keep using the
+					<span class="WebUISetting">Days To Keep on Pi Website</span> setting.
+					No more trying to figure out how to specify various directories!
+				</li>
+				<li>Setting up a Website on a remote server is easier since the only
+					directory you have to specify is the top-level
+					<span class="WebUISetting">Image Directory</span>.
+				</li>
+				<li>Images, timelapse, keograms, and startrails can now be written
+					to a <u>remote server</u> in addition to, or instead of, a remote Website.
+					This is useful if you want to include those images in a different website
+					or want to archive them.
+				</li>
 				<li>The new <span class="fileName">testUpload.sh</span> command
 					tries to upload a test file to either a remote Website or remote server.
 					If the upload fails, the command
 					<strong>attempts to tell you why it failed and what to do about it</strong>.
 				</li>
-				<li>When changing settings, Allsky is only restarted if it needs to.
+				<li>When changing settings, Allsky only restarts if it needs to.
 					Some settings, like the <span class="WebUISetting">Owner</span>
 					don't impact taking images so there's no reason to restart Allsky.
 					A few settings cause Allsky to stop after being changed.
@@ -131,25 +146,26 @@
 					No message will be given if you replace a camera with the same model,
 					e.g., an RPi HQ with another RPi HQ camera.
 				</li>
-				<li>The ZWO library is at version 1.33 (latest as of March 1, 2024)
-					which adds support for the ASI676 and other new cameras.
-					<br>Support for some new third-party RPi cameras was added.
+				<li>If you try using an <u>unsupported</u> camera you'll
+					receive a message stating that and telling you what to do
+					and how to request support for the camera.
+				</li>
+				<li>All ZWO cameras as of March 1, 2024 are supported.
+					Support for some new third-party RPi cameras was added.
 					<blockquote>
 					Run the 
 					<span class="fileName">show_supported_cameras.sh</span>
 					command to see the supported ZWO and RPi cameras.
 					<p>
-					The ZWO list is over 100 entries so if you want to see
-					if a camera you are considering getting is supported, run:
+					The ZWO list is over 130 entries so if you want to check
+					if a camera you're considering getting is supported, run:
 					</p>
-					<pre>show_supported_cameras.sh | grep -i "CAMERA_NAME"</pre>
+					<pre>show_supported_cameras.sh --zwo | grep -i "CAMERA_NAME"</pre>
 					replacing <code>CAMERA_NAME</code> with the name with <strong>OUT</strong>
 					<code>ASI</code>, e.g., <code>178mc</code>.
+					<p>Checking for an RPi camera is easier:
+					<pre>show_supported_cameras.sh --rpi</pre>
 					</blockquote>
-				</li>
-				<li>If you try using an unsupported camera you will
-					receive a message stating that and telling you what to do
-					and how to request support for the camera.
 				</li>
 				<li>The <span class="fileName">endOfNight_additionalSteps.sh</span>
 					file is no longer supported.

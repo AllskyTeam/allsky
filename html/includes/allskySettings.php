@@ -878,9 +878,11 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 					$action = getVariableOrDefault($option, 'action', "none");
 // TODO: when "reload" is implemented remove it from this check:
 					if ($action == "restart" || $action == "reload") {
-						$showRestartMsg = true;
+						$popupExtraMsg = "RESTART REQUIRED";
+					} else if ($action == "stop") {
+						$popupExtraMsg = "ALLSKY WILL STOP AFTER\nCHANGING THIS SETTING";
 					} else {
-						$showRestartMsg = false;
+						$popupExtraMsg = "";
 					}
 
 					// Show the default in a popup
@@ -914,7 +916,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 						$rspan="rowspan='2'";
 						$cspan="colspan='2'";
 					}
-					if ($showRestartMsg) $popup .= "\nRESTART REQUIRED";
+					if ($popupExtraMessage !== "") $popup .= "\n**********\n$popupExtraMsg";
 
 					echo "\n\t<td $rspan valign='middle' style='padding: 2px 0px'>";
 						echo "<label class='WebUISetting' style='padding-right: 3px;'>$label</label>";

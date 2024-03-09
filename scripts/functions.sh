@@ -997,7 +997,6 @@ function upload_all()
 	local REMOTE_WEB=""
 	local REMOTE_SERVER=""
 	local SILENT=""
-	local SUMMARY="false"
 	local NUM=0
 	while [[ ${1:0:2} == "--" ]]
 	do

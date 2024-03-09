@@ -369,8 +369,10 @@ if ($debug && $s != $s_newValue) {
 							// If we end up not updating the file this will be ignored.
 							$lastChanged = date('Y-m-d H:i:s');
 							$settings_array[$lastChangedName] = $lastChanged;
-							if ($fromConfiguration)
+							if ($fromConfiguration) {
+								$restartRequired = true;
 								unset($settings_array[$endSetting]);
+							}
 							$content = json_encode($settings_array, $mode);
 if ($debug) {
 	echo "<br><br>Updating $settings_file, numSettingsChanges = $numSettingsChanges";
@@ -463,10 +465,13 @@ echo '<script>console.log("Updated $fileName");</script>';
 
 				if ($ok) {
 					// The "restart" field is a checkbox.  If not checked it returns nothing.
-					if ($restartRequired && getVariableOrDefault($_POST, 'restart', "no") != "no") {
+					if ($restartRequired && getVariableOrDefault($_POST, 'restart', "") != "") {
 						if ($msg !== "")
 							$msg .= " and ";
 						$msg .= "Allsky restarted.";
+						if ($fromConfiguration) {
+							$msg .= "<div class='removeMessage'>Click on the 'Allsky Settings' link to remove the red message above.</div>";
+						}
 						// runCommand() displays $msg on success.
 						$CMD = "sudo /bin/systemctl reload-or-restart allsky.service";
 						if (! runCommand($CMD, $msg, "success")) {
@@ -490,7 +495,7 @@ echo '<script>console.log("Updated $fileName");</script>';
 					}
 
 					// If there's a website let it know of the changes.
-					if ($changesMade || $fromConfiguration && ($hasLocalWebsite || $hasRemoteWebsite)) {
+					if (($changesMade || $fromConfiguration) && ($hasLocalWebsite || $hasRemoteWebsite)) {
 						$moreArgs = "";
 						if (! $twilightDataChanged)
 							$moreArgs .= " --settingsOnly";
@@ -1048,3 +1053,4 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 <?php
 }
 ?>
+

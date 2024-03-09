@@ -246,7 +246,7 @@ function get_connected_cameras_info()
 
 	####### Check for ZWO
 	# Keep Output similar to RPi:
-	#		ZWO  <TAB>  camera_number?? : camera_model  ZWO_camera_ID
+	#		ZWO  <TAB>  camera_number?? : camera_model  ZWO_camera_model_ID
 	# for each camera found.
 # TODO: Is the order they appear from lsusb the same as the camera number?
 	# lsusb output:
@@ -256,7 +256,7 @@ function get_connected_cameras_info()
 	gawk 'BEGIN { num = 0; }
 		{
 			if ($1 == "Bus" && $3 == "Device") {
-				model_id = substr($6, 5);
+				model_id = substr($6, 6);
 				model = $8;
 				printf("ZWO\t%d : %s %s\n", num++, model, model_id);
 			}

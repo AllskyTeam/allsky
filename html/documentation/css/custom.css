@@ -756,6 +756,17 @@ div.sticky {
 	font-size: 90%;
 }
 
+.removeMessage {
+	color: red;
+	font-weight: bold;
+	font-size: 150%;
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+.dark .removeMessage {
+	color: white;
+}
+
 /* Classes specific to WebUI pages */
 .editorForm {
 	display: inline-block;

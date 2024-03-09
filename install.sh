@@ -2689,7 +2689,7 @@ do_restore()
 
 	do_initial_heading
 
-	stop_allsky
+	stop_Allsky
 
 	# During installation some files were MOVED from the old release to
 	# the new release (which is now the current release).

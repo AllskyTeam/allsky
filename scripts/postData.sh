@@ -65,8 +65,8 @@ done
 
 # If there are no enabled Websites or an enabled remote server, then exit.
 WEBS=""
-SERVER=""
 WHERE_TO=""
+USE_REMOTE_SERVER="false"
 if [[ "$( settings ".uselocalwebsite" )" == "true" ]]; then
 	WEBS+=" --local-web"
 	WHERE_TO="local Website"
@@ -77,11 +77,11 @@ if [[ "$( settings ".useremotewebsite" )" == "true" ]]; then
 	WHERE_TO="remote Website"
 fi
 if [[ "$( settings ".useremoteserver" )" == "true" ]]; then
-	SERVER="--remote-server"
+	USE_REMOTE_SERVER="true"
 	[[ -n ${WHERE_TO} ]] && WHERE_TO+=", "
 	WHERE_TO="remote server"
 fi
-if [[ -z ${WEBS} && -z ${USE_REMOTE_SERVER} ]]; then
+if [[ -z ${WEBS} && ${USE_REMOTE_SERVER} == "false" ]]; then
 	if [[ ${ON_TTY} == "true" ]]; then
 		echo -e "\nWARNING: No action taken because no Websites are enabled.\n" >&2
 		exit 1

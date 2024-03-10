@@ -3025,17 +3025,38 @@ install_overlay()
 	# These will get overwritten later if the user has prior versions.
 	cp -ar "${ALLSKY_REPO}/overlay" "${ALLSKY_REPO}/modules" "${ALLSKY_CONFIG}"
 
+	SENSOR_WIDTH="$( settings ".sensorWidth" "${CC_FILE}" )"
+	SENSOR_HEIGHT="$( settings ".sensorHeight" "${CC_FILE}" )"
+
+	FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}-${CAMERA_MODEL}-${SENSOR_WIDTH}x${SENSOR_HEIGHT}-both.json"
+	SHORT_OVERLAY_NAME="overlay-${CAMERA_TYPE}.json"
+	OVERLAY_PATH="${ALLSKY_REPO}/overlay/config/${FULL_OVERLAY_NAME}"
+
+	if [[ -f ${OVERLAY_PATH} ]]; then
+		OVERLAY_NAME=${FULL_OVERLAY_NAME}
+	else
+		display_msg --log progress "Camera specific overlay ${FULL_OVERLAY_NAME} not found."	
+		OVERLAY_NAME=${SHORT_OVERLAY_NAME}
+	fi
+	
+	display_msg --log progress "using overlay ${OVERLAY_NAME}."
+
+	for s in daytimeoverlay nighttimeoverlay
+	do
+		VALUE=""; doV "" "OVERLAY_NAME" "${s}" "text" "${SETTINGS_FILE}"
+	done
+
 	# Normally makeChanges.sh handles creating the "overlay.json" file, but the
 	# Camera-Specific Overlay (CSO) file didn't exist when makeChanges was called,
 	# so we have to set it up here.
-	CSO="${ALLSKY_OVERLAY}/config/overlay-${CAMERA_TYPE}.json"
-	O="${ALLSKY_OVERLAY}/config/overlay.json"		# generic name
-	if [[ -f ${CSO} ]]; then
-		display_msg "${LOG_TYPE}" progress "Copying '${CSO}' to 'overlay.json'."
-		cp "${CSO}" "${O}"
-	else
-		display_msg --log error "'${CSO}' does not exist; unable to create default overlay file."
-	fi
+	#CSO="${ALLSKY_OVERLAY}/config/overlay-${CAMERA_TYPE}.json"
+	#O="${ALLSKY_OVERLAY}/config/overlay.json"		# generic name
+	#if [[ -f ${CSO} ]]; then
+	#	display_msg "${LOG_TYPE}" progress "Copying '${CSO}' to 'overlay.json'."
+	#	cp "${CSO}" "${O}"
+	#else
+	#	display_msg --log error "'${CSO}' does not exist; unable to create default overlay file."
+	#fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }

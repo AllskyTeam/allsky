@@ -77,7 +77,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 
 	# Camera information:
 	# List of ALL connected cameras.
-	CONNECTED_CAMERAS_INFO="${ALLSKY_TMP}/connected_cameras.txt"
+	CONNECTED_CAMERAS_INFO="${ALLSKY_CONFIG}/connected_cameras.txt"
 	# Supported RPi cameras
 	RPi_SUPPORTED_CAMERAS="${ALLSKY_CONFIG}/RPi_cameraInfo.txt"
 

@@ -2022,7 +2022,8 @@ convert_ftp_sh()
 
 		# "local" PROTOCOL means they're using local Website.
 		# WEB_IMAGE_DIR means they have both local and remote Website.
-		if [[ -d ${ALLSKY_WEBSITE} && (${PROTOCOL,,} == "local" || -n ${WEB_IMAGE_DIR}) ]]; then
+		PROTOCOL="${PROTOCOL,,}"
+		if [[ (${PROTOCOL} == "local" || -n ${WEB_IMAGE_DIR}) ]]; then
 			X="true"
 		else
 			X="false"
@@ -2036,6 +2037,7 @@ convert_ftp_sh()
 			X="true"
 		else
 			X=""
+			PROTOCOL="${PROTOCOL:-ftps}"	# WebUI complains if it's not set
 			doV "PROTOCOL" "X" "remotewebsiteprotocol" "text" "${NEW_FILE}"
 			doV "IMAGE_DIR" "X" "remotewebsiteimagedir" "text" "${NEW_FILE}"
 			X="false"

@@ -17,7 +17,7 @@ usage_and_exit() {
 	RET=$1
 	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
 	echo "*** Usage: ${ME} [--help] [--wait] [--silent] [--debug] \\"
-	echo "               { --local | --remote type } \\"
+	echo "               { --local-web | --remote-web | --remote-server } \\"
 	echo "               file_to_upload  directory  destination_file_name \\"
 	echo "               [file_type]"
 	[[ ${RET} -ne 0 ]] && echo -e "${NC}"
@@ -27,14 +27,15 @@ usage_and_exit() {
 	echo "   '--help'    displays this message and exits."
 	echo "   '--wait'    waits for any upload of the same type to finish."
 	echo "   '--silent'  doesn't display any status messages."
-	echo "   '--local'   copy to local Website."
-	echo "   '--remote type'   upload to remote 'web' or 'server'."
+	echo "   '--local-web'      copy to local Website."
+	echo "   '--remote-web'     upload to the remote Website"
+	echo "   '--remote-server'  upload to the remote server."
 	echo "   'file_to_upload' is the path name of the file to upload."
 	echo "   'directory' is the directory ON THE SERVER the file should be uploaded to."
 	echo "   'destination_file_name' is the name the file should be called ON THE SERVER."
 	echo "   'file_type' is an optional, temporary name to use when uploading the file."
 	echo
-	echo "For example: ${ME}  keogram-20230710.jpg  /keograms  keogram.jpg"
+	echo "For example: ${ME}  keogram-20240710.jpg  /keograms  keogram.jpg"
 
 	exit "${RET}"
 }
@@ -45,7 +46,9 @@ WAIT="false"
 SILENT="false"
 DEBUG="false"
 LOCAL="false"
-REMOTE_TYPE=""
+REMOTE_WEB="false"
+REMOTE_SERVER="false"
+NUM=0
 RET=0
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
@@ -62,12 +65,17 @@ while [[ $# -gt 0 ]]; do
 		--debug)
 			DEBUG="true"
 			;;
-		--local)
+		--local-web)
 			LOCAL="true"
+			(( NUM++ ))
 			;;
-		--remote)
-			REMOTE_TYPE="${2}"
-			shift
+		--remote-web)
+			REMOTE_WEB="true"
+			(( NUM++ ))
+			;;
+		--remote-server)
+			REMOTE_SERVER="true"
+			(( NUM++ ))
 			;;
 		-*)
 			echo -e "${RED}Unknown argument '${ARG}'.${NC}" >&2
@@ -81,16 +89,8 @@ while [[ $# -gt 0 ]]; do
 done
 [[ $# -lt 3 || ${RET} -ne 0 ]] && usage_and_exit 1
 [[ ${HELP} == "true" ]] && usage_and_exit 0
-[[ ${LOCAL} == "false" && -z ${REMOTE_TYPE} ]] && usage_and_exit 1
-[[ ${LOCAL} == "true" && -n ${REMOTE_TYPE} ]] && usage_and_exit 1
-if [[ -n ${REMOTE_TYPE} ]]; then
-	if [[ ${REMOTE_TYPE} != "web" && ${REMOTE_TYPE} != "server" ]]; then
-		echo -en "${RED}" >&2
-		echo -n "*** ${ME}: ERROR: Unknown remote type: '${REMOTE_TYPE}'." >&2
-		echo -e "${NC}" >&2
-		exit 2
-	fi
-fi
+# Have to specify exactly one place to upload to.
+[[ ${NUM} -ne 1 ]] && usage_and_exit 1
 
 FILE_TO_UPLOAD="${1}"
 if [[ ! -f ${FILE_TO_UPLOAD} ]]; then
@@ -173,7 +173,7 @@ if ! one_instance --sleep "${SLEEP}" --max-checks "${MAX_CHECKS}" --pid-file "${
 	exit 1
 fi
 
-if [[ ${REMOTE_TYPE} == "web" ]]; then
+if [[ ${REMOTE_WEB} == "true" ]]; then
 	prefix="remotewebsite"
 	PREFIX="REMOTEWEBSITE"
 else	# "server"

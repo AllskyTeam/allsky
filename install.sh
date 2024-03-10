@@ -3393,8 +3393,7 @@ do_allsky_status()
 set_lat_lon()
 {
 	# Check we have an internect connection
-    wget -q --spider "http://google.com"
-    if [ $? -eq 0 ]; then
+    if [[ $(wget -q --spider "http://google.com") -eq 0 ]]; then
         LAT=""
         LON=""
 
@@ -3406,19 +3405,20 @@ set_lat_lon()
 			display_msg --log progress "Got error response trying to get latitude and longitude from ip address"
         else
 			# Lat and Lon are returned as a comma separated string i.e. 52.1234,0.3123
-            MY_LOCATION_PARTS=($(echo $RAW_LOCATION | tr "," "\n"))
+            # shellcheck disable=SC2207
+            MY_LOCATION_PARTS=($(echo "$RAW_LOCATION" | tr "," "\n"))
             if [[ ${#MY_LOCATION_PARTS[@]} = 2 ]]; then
 
                 LAT=${MY_LOCATION_PARTS[0]}
                 LON=${MY_LOCATION_PARTS[1]}
 
-                if [[ ${LAT} -gt 0 ]]; then
+                if [[ $(echo "${LAT} > 0" |bc -l) -eq 1 ]]; then 
                     LAT=${LAT}N
                 else
                     LAT=${LAT}S
                 fi
                 
-                if [[ ${LON} -gt 0 ]]; then
+                if [[ $(echo "$LON > 0" |bc -l) -eq 1 ]]; then 
                     LON=${LON}E
                 else
                     LON=${LON}W
@@ -3431,6 +3431,8 @@ set_lat_lon()
 				doV "" "LON" "longitude" "text" "${SETTINGS_FILE}"
 			fi			
         fi
+    else
+        display_msg --log progress "No internet connection detected skipping geolocation"
     fi
 }
 

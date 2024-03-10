@@ -246,7 +246,7 @@ function get_connected_cameras_info()
 
 	####### Check for ZWO
 	# Keep Output similar to RPi:
-	#		ZWO  <TAB>  camera_number?? : camera_model  ZWO_camera_ID
+	#		ZWO  <TAB>  camera_number?? : camera_model  ZWO_camera_model_ID
 	# for each camera found.
 # TODO: Is the order they appear from lsusb the same as the camera number?
 	# lsusb output:
@@ -256,7 +256,7 @@ function get_connected_cameras_info()
 	gawk 'BEGIN { num = 0; }
 		{
 			if ($1 == "Bus" && $3 == "Device") {
-				model_id = substr($6, 5);
+				model_id = substr($6, 6);
 				model = $8;
 				printf("ZWO\t%d : %s %s\n", num++, model, model_id);
 			}
@@ -993,26 +993,36 @@ function reboot_needed()
 function upload_all()
 {
 	local ARGS=""
-	local LOCAL_WEB="false"
-	local REMOTE_WEB="false"
-	local REMOTE_SERVER="false"
+	local LOCAL_WEB=""
+	local REMOTE_WEB=""
+	local REMOTE_SERVER=""
+	local SILENT=""
+	local NUM=0
 	while [[ ${1:0:2} == "--" ]]
 	do
-		if [[ ${1} == "--local-web" ]]; then
-			LOCAL_WEB="true"
-		elif [[ ${1} == "--remote-web" ]]; then
-			REMOTE_WEB="true"
-		elif [[ ${1} == "--remote-server" ]]; then
-			REMOTE_SERVER="true"
+		ARG="${1,,}"
+		if [[ ${ARG} == "--local-web" ]]; then
+			LOCAL_WEB="${ARG}"
+			(( NUM++ ))
+		elif [[ ${ARG} == "--remote-web" ]]; then
+			REMOTE_WEB="${ARG}"
+			(( NUM++ ))
+		elif [[ ${ARG} == "--remote-server" ]]; then
+			REMOTE_SERVER="${ARG}"
+			(( NUM++ ))
+		elif [[ ${ARG} == "--silent" ]]; then
+			SILENT="${ARG}"
 		else
-			ARGS="${ARGS} ${1}"
+			ARGS+=" ${ARG}"
 		fi
 		shift
 	done
-	if [[ ${LOCAL_WEB} == "false" && ${REMOTE_WEB} == "false" && ${REMOTE_SERVER} == "false" ]]; then
-		LOCAL_WEB="true"
-		REMOTE_WEB="true"
-		REMOTE_SERVER="true"
+
+	# If no locations specified, try them all.
+	if [[ ${NUM} -eq 0 ]]; then
+		LOCAL_WEB="--local-web"
+		REMOTE_WEB="--remote-web"
+		REMOTE_SERVER="--remote-server"
 	fi
 
 	local UPLOAD_FILE="${1}"
@@ -1020,14 +1030,16 @@ function upload_all()
 	local DESTINATION_NAME="${3}"
 	local FILE_TYPE="${4}"		# optional
 	local RET=0
-	local ROOT REMOTE_DIR
-	if [[ ${LOCAL_WEB} == "true" && "$( settings ".uselocalwebsite" )" == "true" ]]; then
+	local ROOT  REMOTE_DIR
+
+	if [[ -n ${LOCAL_WEB} && "$( settings ".uselocalwebsite" )" == "true" ]]; then
 		#shellcheck disable=SC2086
-		"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --local \
+		"${ALLSKY_SCRIPTS}/upload.sh" ${SILENT} ${ARGS} "${LOCAL_WEB}" \
 			"${UPLOAD_FILE}" "${ALLSKY_WEBSITE}/${SUBDIR}" "${DESTINATION_NAME}"
 		((RET+=$?))
 	fi
-	if [[ ${REMOTE_WEB} == "true" && "$( settings ".useremotewebsite" )" == "true" ]]; then
+
+	if [[ -n ${REMOTE_WEB} && "$( settings ".useremotewebsite" )" == "true" ]]; then
 		ROOT="$( settings ".remotewebsiteimagedir" )"
 		if [[ -z ${ROOT} ]]; then
 			REMOTE_DIR="${SUBDIR}"
@@ -1035,11 +1047,12 @@ function upload_all()
 			REMOTE_DIR="${ROOT}/${SUBDIR}"
 		fi
 		#shellcheck disable=SC2086
-		"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --remote "web" \
+		"${ALLSKY_SCRIPTS}/upload.sh" ${SILENT} ${ARGS} "${REMOTE_WEB}" \
 			"${UPLOAD_FILE}" "${REMOTE_DIR}" "${DESTINATION_NAME}" "${FILE_TYPE}"
 		((RET+=$?))
 	fi
-	if [[ ${REMOTE_SERVER} == "true" && "$( settings ".useremoteserver" )" == "true" ]]; then
+
+	if [[ -n ${REMOTE_SERVER} && "$( settings ".useremoteserver" )" == "true" ]]; then
 		ROOT="$( settings ".remoteserverimagedir" )"
 		if [[ -z ${ROOT} ]]; then
 			REMOTE_DIR="${SUBDIR}"
@@ -1047,7 +1060,7 @@ function upload_all()
 			REMOTE_DIR="${ROOT}/${SUBDIR}"
 		fi
 		#shellcheck disable=SC2086
-		"${ALLSKY_SCRIPTS}/upload.sh" ${ARGS} --remote "server" \
+		"${ALLSKY_SCRIPTS}/upload.sh" ${SILENT} ${ARGS} "${REMOTE_SERVER}" \
 			"${UPLOAD_FILE}" "${REMOTE_DIR}" "${DESTINATION_NAME}" "${FILE_TYPE}"
 		((RET+=$?))
 	fi

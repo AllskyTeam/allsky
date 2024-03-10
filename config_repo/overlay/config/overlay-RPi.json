@@ -68,6 +68,14 @@
             "backgroundcolor": "white",
             "fontopacity": 0.5
         }
-    }
+    },
+    "metadata": {
+        "camerabrand": "RPi",
+        "cameramodel": "",
+        "cameraresolutionwidth": "4056",
+        "cameraresolutionheight": "3040",
+        "tod": "both",
+        "name": "Allsky RPi (Default)"
+    }     
 }
 

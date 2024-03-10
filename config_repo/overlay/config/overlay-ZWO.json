@@ -80,5 +80,13 @@
             "backgroundcolor": "white",
             "fontopacity": 0.5
         }
+    },
+    "metadata": {
+        "camerabrand": "ZWO",
+        "cameramodel": "ASI178MM",
+        "cameraresolutionwidth": "2048",
+        "cameraresolutionheight": "1376",
+        "tod": "both",
+        "name": "Allsky ZWO (Default)"
     }
 }

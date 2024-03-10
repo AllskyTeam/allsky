@@ -1120,7 +1120,7 @@ set_locale()
 			# Either a new install or an upgrade from an older Allsky.
 			MSG+=" did NOT contain .locale so adding it."
 			display_msg --logonly info "${MSG}"
-			doV "" "DESIRED_LOCAL" "locale" "text" "${SETTINGS_FILE}"
+			doV "" "DESIRED_LOCALE" "locale" "text" "${SETTINGS_FILE}"
 
 # TODO: Something was unlinking the settings file from its camera-specific file,
 # so do "ls" of the settings files to try and pinpoint the problem.

@@ -3388,6 +3388,51 @@ do_allsky_status()
 	set_allsky_status "${!STATUS}"
 }
 
+####
+# Sets the users latitude and longitude ffrom their ip address if possible
+set_lat_lon()
+{
+	# Check we have an internect connection
+    wget -q --spider "http://google.com"
+    if [ $? -eq 0 ]; then
+        LAT=""
+        LON=""
+
+		# Use ipinfo.io to get the users lat and lon from their ip
+        RAW_LOCATION="$(curl -s ipinfo.io/loc 2>/dev/null)"
+
+		# If we got a json response then its an error
+        if jq -e . >/dev/null 2>&1 <<<"$RAW_LOCATION"; then
+			display_msg --log progress "Got error response trying to get latitude and longitude from ip address"
+        else
+			# Lat and Lon are returned as a comma separated string i.e. 52.1234,0.3123
+            MY_LOCATION_PARTS=($(echo $RAW_LOCATION | tr "," "\n"))
+            if [[ ${#MY_LOCATION_PARTS[@]} = 2 ]]; then
+
+                LAT=${MY_LOCATION_PARTS[0]}
+                LON=${MY_LOCATION_PARTS[1]}
+
+                if [[ ${LAT} -gt 0 ]]; then
+                    LAT=${LAT}N
+                else
+                    LAT=${LAT}S
+                fi
+                
+                if [[ ${LON} -gt 0 ]]; then
+                    LON=${LON}E
+                else
+                    LON=${LON}W
+                fi
+            fi
+
+			# Sanity check. Only set the lat and lon if they appear valid i.e. not empty
+			if [[ ${LAT} != "" && ${LON} != "" ]]; then
+				doV "" "LAT" "latitude" "text" "${SETTINGS_FILE}"
+				doV "" "LON" "longitude" "text" "${SETTINGS_FILE}"
+			fi			
+        fi
+    fi
+}
 
 ############################################## Main part of program
 
@@ -3697,6 +3742,8 @@ install_fonts
 install_PHP_modules
 install_Python
 install_overlay
+
+set_lat_lon
 
 ##### Restore prior files if needed
 [[ ${WILL_USE_PRIOR} == "true" ]] && restore_prior_files

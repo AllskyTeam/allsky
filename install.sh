@@ -491,11 +491,19 @@ do_save_camera_capabilities()
 
 	display_msg --log progress "Making new settings file '${SETTINGS_FILE}'."
 
+	### TODO: Eric no idea if this is right or not but it strips any suffix from the camera type
+	# shellcheck disable=SC2207
+    CAMERA_TYPE_PARTS=($(echo "$CAMERA_TYPE" | tr "_" "\n"))
+    if [[ ${#CAMERA_TYPE_PARTS[@]} = 2 ]]; then
+		CAMERA_TYPE=${CAMERA_TYPE_PARTS[0]}
+	fi
+
 	MSG="Executing makeChanges.sh${FORCE}${OPTIONSONLY} --cameraTypeOnly"
 	MSG+="  ${DEBUG_ARG} 'cameratype' 'Camera Type' '${PRIOR_CAMERA_TYPE}' '${CAMERA_TYPE}'"
 	display_msg "${LOG_TYPE}" info "${MSG}"
 
 	ERR="/tmp/makeChanges.errors.txt"
+
 	#shellcheck disable=SC2086
 	M="$( "${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} ${OPTIONSONLY} --cameraTypeOnly \
 		${DEBUG_ARG} "cameratype" "Camera Type" "${PRIOR_CAMERA_TYPE}" "${CAMERA_TYPE}" 2> "${ERR}" )"

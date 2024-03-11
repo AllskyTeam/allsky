@@ -3436,6 +3436,17 @@ set_lat_lon()
     fi
 }
 
+install_installer_dependencies() {
+
+	display_msg --log progress "Installing installer dependencies."
+	TMP="${ALLSKY_LOGS}/installer.dependencies.log"
+	{
+		sudo apt-get update && \
+			sudo apt-get --assume-yes install gawk
+	} > "${TMP}" 2>&1
+
+}
+
 ############################################## Main part of program
 
 ##### Calculate whiptail sizes
@@ -3664,6 +3675,8 @@ set_what_can_be_skipped "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
 
 ##### Stop Allsky
 stop_Allsky
+
+install_installer_dependencies
 
 ##### Determine what camera(s) are connected
 # Re-run every time in case a camera was connected or disconnected.

@@ -654,7 +654,7 @@
         }
 
         var updateNewFilename = function() {
-            let template = 'overlay{num}-{brand}-{model}-{width}x{height}-{tod}';
+            let template = 'overlay{num}-{brand}_{model}-{width}x{height}-{tod}';
 
             let brand = $('#' + plugin.mmNewDialogBrand).val();
             let fileName = template.replace('{brand}', brand);

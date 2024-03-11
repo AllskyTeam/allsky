@@ -3028,7 +3028,7 @@ install_overlay()
 	SENSOR_WIDTH="$( settings ".sensorWidth" "${CC_FILE}" )"
 	SENSOR_HEIGHT="$( settings ".sensorHeight" "${CC_FILE}" )"
 
-	FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}-${CAMERA_MODEL}-${SENSOR_WIDTH}x${SENSOR_HEIGHT}-both.json"
+	FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}_${CAMERA_MODEL}-${SENSOR_WIDTH}x${SENSOR_HEIGHT}-both.json"
 	SHORT_OVERLAY_NAME="overlay-${CAMERA_TYPE}.json"
 	OVERLAY_PATH="${ALLSKY_REPO}/overlay/config/${FULL_OVERLAY_NAME}"
 

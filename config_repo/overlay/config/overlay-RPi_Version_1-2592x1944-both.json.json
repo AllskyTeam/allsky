@@ -2,44 +2,55 @@
     "fields": [
         {
             "label": "${DATE}  ${TIME}",
-            "x": 259,
-            "y": 50,
+            "x": 122,
+            "y": 24,
             "id": "oe-field-0",
             "format": "%d-%m-%Y,%H:%M:%S",
             "strokewidth": 0,
             "sample": "DATE,TIME",
-            "tlx": 19,
-            "tly": 20,
-            "fontsize": 60,
+            "tlx": 10,
+            "tly": 10,
+            "fontsize": 28,
             "fill": "#ff0000"
         },
         {
             "label": "Exposure: ${sEXPOSURE}",
-            "x": 237,
-            "y": 108,
+            "x": 131,
+            "y": 50,
             "id": "oe-field-1",
-            "fontsize": 36,
+            "fontsize": 20,
             "strokewidth": 0,
-            "tlx": 19,
-            "tly": 90
+            "tlx": 10,
+            "tly": 40
         },
         {
             "label": "Gain: ${GAIN}",
-            "x": 134,
-            "y": 158,
+            "x": 73,
+            "y": 75,
             "id": "oe-field-2",
-            "fontsize": 36,
+            "fontsize": 20,
             "strokewidth": 0,
-            "tlx": 19,
-            "tly": 140
+            "tlx": 10,
+            "tly": 65
+        },
+        {
+            "label": "${CAMERA_TYPE} ${CAMERA_MODEL}",
+            "x": 157,
+            "y": 100,
+            "id": "oe-field-3",
+            "fontsize": 16,
+            "strokewidth": 0,
+            "tlx": 10,
+            "tly": 90,
+            "sample": "RPi HQ"
         }
     ],
     "images": [],
     "settings": {
-        "defaultdatafileexpiry": "600",
-        "defaultincludeplanets": true,
-        "defaultincludesun": true,
-        "defaultincludemoon": true,
+        "defaultdatafileexpiry": "550",
+        "defaultincludeplanets": false,
+        "defaultincludesun": false,
+        "defaultincludemoon": false,
         "defaultimagetopacity": 0.63,
         "defaultimagerotation": 0,
         "defaulttextrotation": 0,
@@ -48,9 +59,7 @@
         "defaultfont": "Arial",
         "defaultfontsize": 52,
         "defaultimagescale": 1,
-        "defaultnoradids": "25544",
-        "defaultstrokecolour": "",
-        "defaultexpirytext": ""
+        "defaultnoradids": ""
     },
     "fonts": {
         "moon_phases": {
@@ -61,11 +70,12 @@
         }
     },
     "metadata": {
-        "camerabrand": "ZWO",
-        "cameramodel": "",
-        "cameraresolutionwidth": "2048",
-        "cameraresolutionheight": "1376",
+        "camerabrand": "RPi",
+        "cameramodel": "Module 1",
+        "cameraresolutionwidth": "2592",
+        "cameraresolutionheight": "1944",
         "tod": "both",
-        "name": "ASI178MM\/MC"
-    }
+        "name": "RPI Module 1"
+    }    
 }
+

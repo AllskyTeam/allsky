@@ -3394,7 +3394,7 @@ install_installer_dependencies() {
 	TMP="${ALLSKY_LOGS}/installer.dependencies.log"
 	{
 		sudo apt-get update && \
-			sudo apt-get --assume-yes install gawk
+			sudo apt-get --assume-yes install gawk jq
 	} > "${TMP}" 2>&1
 
 }

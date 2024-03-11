@@ -95,7 +95,7 @@ deps:
 else
 deps:
 	@echo `date +%F\ %R:%S` Installing build dependencies...
-	@apt update && apt -y install libopencv-dev libusb-dev libusb-1.0-0-dev ffmpeg gawk lftp jq imagemagick bc
+	@apt update && apt -y install libopencv-dev libusb-dev libusb-1.0-0-dev ffmpeg lftp imagemagick bc
 endif
 
 .PHONY : deps

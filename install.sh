@@ -2333,13 +2333,12 @@ restore_prior_files()
 
 	ITEM="${SPACE}'config/overlay' directory"
 	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
-#XXXX FIX: TODO: ALEX:  only copy over user-generated or user-modified files
 		display_msg --log progress "${ITEM} (copying)"
-		cp -ar "${PRIOR_CONFIG_DIR}/overlay" "${ALLSKY_CONFIG}"
-
-		# Restore the new fields.json file as it's part of the main Allsky distribution
-		# and should be replaced during an upgrade.
-		cp -a "${ALLSKY_REPO}/overlay/config/fields.json" "${ALLSKY_OVERLAY}/config/"
+		cp -ar "${PRIOR_CONFIG_DIR}/overlay/fonts" "${ALLSKY_OVERLAY}/fonts"
+		cp -ar "${PRIOR_CONFIG_DIR}/overlay/images" "${ALLSKY_OVERLAY}/images"
+		cp -ar "${PRIOR_CONFIG_DIR}/overlay/imagethumbnails" "${ALLSKY_OVERLAY}/imagethumbnails"
+		cp -ar "${PRIOR_CONFIG_DIR}/overlay/config/userfields.json" "${ALLSKY_OVERLAY}/config/"
+		cp -ar "${PRIOR_CONFIG_DIR}/overlay/config/oe-config.json" "${ALLSKY_OVERLAY}/config/"
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
@@ -3718,6 +3717,7 @@ install_PHP_modules
 install_Python
 install_overlay
 
+### TODO: ERIC this ok>
 ##### Restore prior files if needed
 if [[ ${WILL_USE_PRIOR} == "true" ]]; then 
 	restore_prior_files

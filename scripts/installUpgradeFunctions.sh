@@ -705,6 +705,7 @@ function prompt_for_lat_long()
 	local PROMPT="${1}"
 	local SETTING_NAME="${2}"
 	local WEBUI_SETTING_LABEL="${3}"
+	local DEFAULT="${4}"
 	local ERROR_MSG=""   VALUE  M
 
 	[[ -z ${WT_WIDTH} ]] && WT_WIDTH="$( calc_wt_size )"
@@ -713,7 +714,7 @@ function prompt_for_lat_long()
 	while :
 	do
 		M="${ERROR_MSG}${PROMPT}"
-		VALUE=$( whiptail --title "${TITLE}" --inputbox "${M}" 18 "${WT_WIDTH}" "" 3>&1 1>&2 2>&3 )
+		VALUE=$( whiptail --title "${TITLE}" --inputbox "${M}" 18 "${WT_WIDTH}" "${DEFAULT}" 3>&1 1>&2 2>&3 )
 		if [[ -z ${VALUE} ]]; then
 			# Let the user not enter anything.
 			# A warning message is printed by our invoker.
@@ -744,16 +745,65 @@ function get_lat_long()
 		return 1
 	fi
 
+    LAT=""
+    LON=""
+	# Check we have an internect connection
+    if [[ $(wget -q --spider "http://google.com") -eq 0 ]]; then
+
+		# Use ipinfo.io to get the users lat and lon from their ip
+        RAW_LOCATION="$(curl -s ipinfo.io/loc 2>/dev/null)"
+
+		# If we got a json response then its an error
+        if jq -e . >/dev/null 2>&1 <<<"$RAW_LOCATION"; then
+			display_msg --log progress "Got error response trying to get latitude and longitude from ip address"
+        else
+			# Lat and Lon are returned as a comma separated string i.e. 52.1234,0.3123
+            # shellcheck disable=SC2207
+            MY_LOCATION_PARTS=($(echo "$RAW_LOCATION" | tr "," "\n"))
+            if [[ ${#MY_LOCATION_PARTS[@]} = 2 ]]; then
+
+                LAT=${MY_LOCATION_PARTS[0]}
+                LON=${MY_LOCATION_PARTS[1]}
+
+                if [[ $(echo "${LAT} > 0" |bc -l) -eq 1 ]]; then 
+                    LAT=${LAT}N
+                else
+                    LAT=${LAT}S
+                fi
+                
+                if [[ $(echo "$LON > 0" |bc -l) -eq 1 ]]; then 
+                    LON=${LON}E
+                else
+                    LON=${LON}W
+                fi
+            fi
+
+			# Sanity check. Only set the lat and lon if they appear valid i.e. not empty
+			#if [[ ${LAT} != "" && ${LON} != "" ]]; then
+			#	doV "" "LAT" "latitude" "text" "${SETTINGS_FILE}"
+			#	doV "" "LON" "longitude" "text" "${SETTINGS_FILE}"
+			#fi			
+        fi
+    else
+        display_msg --log progress "No internet connection detected skipping geolocation"
+    fi
+	
 	display_msg --log progress "Prompting for Latitude and Longitude."
 	MSG="Enter your Latitude."
 	MSG+="\nIt can either have a plus or minus sign (e.g., -20.1)"
 	MSG+="\nor N or S (e.g., 20.1S)"
-	LATITUDE="$( prompt_for_lat_long "${MSG}" "latitude" "Latitude" )"
+	if [[ -n ${LAT} ]]; then
+		MSG+="\n\nWe have defaulted your approximate location using your IP Address"
+	fi
+	LATITUDE="$( prompt_for_lat_long "${MSG}" "latitude" "Latitude" "${LAT}")"
 
 	MSG="Enter your Longitude."
 	MSG+="\nIt can either have a plus or minus sign (e.g., -20.1)"
 	MSG+="\nor E or W (e.g., 20.1W)"
-	LONGITUDE="$( prompt_for_lat_long "${MSG}" "longitude" "Longitude" )"
+	if [[ -n ${LON} ]]; then
+		MSG+="\n\nWe have defaulted your approximate location using your IP Address"
+	fi
+	LONGITUDE="$( prompt_for_lat_long "${MSG}" "longitude" "Longitude" "${LON}")"
 
 	if [[ -z ${LATITUDE} || -z ${LONGITUDE} ]]; then
 		MSG="Latitude and Longitude need to be set in the WebUI before Allsky can start."

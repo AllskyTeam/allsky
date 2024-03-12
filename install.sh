@@ -2367,7 +2367,7 @@ restore_prior_files()
 		OVERLAY_REPO_FILE="${PRIOR_ALLSKY_DIR}/config_repo/overlay/config/overlay.json"
 
 		# If old overlay file is same as config_repo file then use one of the new overlay files
-		if cmp -s ${OVERLAY_FILE} ${OVERLAY_REPO_FILE} ; then
+		if cmp -s "${OVERLAY_FILE}" "${OVERLAY_REPO_FILE}" ; then
 			
 			display_msg --log progress "Current overlay file matches config_repo overlay file"
 

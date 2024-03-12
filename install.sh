@@ -2382,10 +2382,22 @@ restore_prior_files()
 
 		else
 			# The old overlay file has been changed so copy it to the new format and set in the settings file
-			OVERLAY_NAME=${FULL_OVERLAY_NAME}
+			# NOTE: we add a 1 to the overlay name here so that the overay manager can pick it up and increment
+			# it as new overlays are created
+			OVERLAY_NAME="overlay1-${CAMERA_TYPE}_${CAMERA_MODEL}-${SENSOR_WIDTH}x${SENSOR_HEIGHT}-both.json"
 			display_msg --log progress "Current overlay file has been modified so creating user overlay ${OVERLAY_NAME}."
 			DEST_FILE="${MY_OVERLAY_TEMPLATES}/${OVERLAY_NAME}"
-			cp ${OVERLAY_FILE}  ${DEST_FILE}
+			cp ${OVERLAY_FILE} ${DEST_FILE}
+
+			# Add the metadata for th eoverlay manager
+			echo "$(jq '. += {"metatdata": { 
+				"camerabrand": "'${CAMERA_TYPE}'",
+				"cameramodel": "'${CAMERA_MODEL}'", 
+				"cameraresolutionwidth": "'${SENSOR_WIDTH}'", 
+				"cameraresolutionheight": "'${SENSOR_HEIGHT}'", 
+				"tod": "both", 
+				"name": "'${CAMERA_MODEL}'" 
+			}}' "${DEST_FILE}" )" > "${DEST_FILE}"
 		fi
 
 		for s in daytimeoverlay nighttimeoverlay

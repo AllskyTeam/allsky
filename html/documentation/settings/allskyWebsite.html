@@ -49,7 +49,7 @@ To configure an Allsky Website, do the following in this order:
 
 <h4>Change settings</h4>
 <ol>
-	<li>In the WebUI, click on the <span class="WebUILink">Editor</span>.
+	<li>In the WebUI, click on the <span class="WebUILink">Editor</span> link.
 	<li>In the drop-down at the bottom of the page, select
 		one of the following, depending on which Website you want to configure:
 		<ul>
@@ -61,9 +61,9 @@ To configure an Allsky Website, do the following in this order:
 		you will do that in the next step.
 		<ul>
 			<li id="configuration.json">
-				The settings in both files are identical although their values may differ,
-				and they are split into two parts:
-				<ol type="A">
+				The settings in both files are identical although their values may differ.
+				The files are split into two sections:
+				<ol type="i" class="minimalPadding">
 					<li><span class="settings editorSetting">"config"</span> -
 						settings for the liveview image and constellation overlay.</li>
 					<li><span class="settings editorSetting">"homePage"</span> -
@@ -72,19 +72,22 @@ To configure an Allsky Website, do the following in this order:
 						the information popout on the right side,
 						an optional background image, etc.</li>
 				</ol>
-				See the two subsections at the bottom of this page for information
+				See the two sections at the bottom of this page for information
 				on each setting.
 				</li>
-			<li>Settings <strong>names</strong> in the file look like
+			<li>Each setting has a <strong>name</strong> and <strong>value</strong>,
+				separated by a colon (<code>:</code>).
+				Setting <strong>names</strong> in the file look like
 				<span class="editorSetting">this</span>
 				and should generally NOT be changed unless, for example,
 				you are adding a new icon on the left side of the screen.
+				<br>Setting names MUST always be enclosed in double quotes.
 				</li>
-			<li>Change setting <strong>values</strong> in the file as desired -
+			<li>You should change setting <strong>values</strong> as desired -
 				they have different colors depending on their types,
 				as described <a allsky="true" external="true" href="EditorColors.html"
 					target="_blank" title="Opens in new tab">here</a>.
-				<blockquote>
+				<blockquote class="warning">
 				Make sure all <span class="editorString">XX_NEED_TO_UPDATE_XX</span>
 				values are updated.
 				</blockquote>
@@ -117,12 +120,12 @@ To configure an Allsky Website, do the following in this order:
 		<span class="settingsHeader">Website and Remote Server Settings</span> section.
 		</li>
 	<li>Enable the Website in either the
-		<span class="subSettingsHeader">Local Website Settings</span> area
+		<span class="subSettingsHeader">Local Website Settings</span>
 		or
-		<span class="subSettingsHeader">Remote Website Settings</span> area,
+		<span class="subSettingsHeader">Remote Website Settings</span> subsection,
 		depending on which Website you are configuring.
 		</li>
-	<li>Change the other settings in that area as needed.
+	<li>Change the other settings in that subsection as needed.
 		Remote Websites need to know the server name, login, etc.
 		</li>
 </ol>
@@ -145,7 +148,7 @@ their default values, and a description.
 <li>Setting names with "<span class="vsOverlay"></span>" after them
 	impact the virtual sky overlay.
 	A complete list of virtual-sky based options is
-	<a href="https://slowe.github.io/VirtualSky/#options">here</a>.
+	<a external="true" href="https://slowe.github.io/VirtualSky/#options">here</a>.
 <li>Values marked with <span class="autoSet"></span> are automatically set during
 	installation based on your WebUI settings and your Pi model, but can be overridden.
 </ul>
@@ -175,7 +178,7 @@ Allsky Website so you only have to update them once.
 		<span class="editorString">image.jpg</span> (remote)
 	</td>
 	<td>The image uploaded from your allsky camera.
-		<br>Normally should not be changed.
+		<br><strong>Normally should not be changed.</strong>
 	</td>
 </tr>
 <tr>
@@ -262,7 +265,7 @@ Allsky Website so you only have to update them once.
 	<td><span class="editorSetting">showOverlayAtStartup</span></td>
 	<td><span class="editorBool">false</span></td>
 	<td>Set to <span class="editorBool">true</span>
-		to have the overlay displayed when the page is loaded.
+		to have the constellation overlay displayed when the page is loaded.
 	</td>
 </tr>
 <tr>
@@ -278,14 +281,14 @@ Allsky Website so you only have to update them once.
 <tr>
 	<td><span class="editorSetting">overlayOffsetLeft</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorNum">0</span></td>
-	<td>Horizontal adjustment of the overlay in pixels.
+	<td>Enter a positive number of pixels to move the constellation overlay to the right.
 		Use negative numbers to move left.
 	</td>
 </tr>
 <tr>
 	<td><span class="editorSetting">overlayOffsetTop</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorNum">0</span></td>
-	<td>Vertical adjustment of the overlay in pixels.
+	<td>Enter a positive number of pixels to move the constellation overlay down.
 		Use negative numbers to move up.
 	</td>
 </tr>
@@ -324,12 +327,12 @@ Allsky Website so you only have to update them once.
 <tr>
 	<td><span class="editorSetting">meridian</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">false</span></td>
-	<td>Displays the meridian line.</td>
+	<td>Display the meridian line?</td>
 </tr>
 <tr>
 	<td><span class="editorSetting">ecliptic</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">false</span></td>
-	<td>Displays the ecliptic line.</td>
+	<td>Display the ecliptic line?</td>
 </tr>
 <tr>
 	<td><span class="editorSetting">fontsize</span> <span class="vsOverlay"></span></td>
@@ -352,7 +355,7 @@ Allsky Website so you only have to update them once.
 <tr>
 	<td><span class="editorSetting">showstarlabels</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">true</span></td>
-	<td>Display the star names.</td>
+	<td>Display the star names?</td>
 </tr>
 <tr>
 	<td><span class="editorSetting">projection</span> <span class="vsOverlay"></span></td>
@@ -416,7 +419,7 @@ Allsky Website so you only have to update them once.
 	<td><span class="editorBool">true</span></td>
 	<td>Allow keyboard controls?
 		If set to <span class="editorBool">true</span>,
-		type "?" when over the image for a list of keyboard commands.
+		type <code>?</code> when over the image for a list of keyboard commands.
 	</td>
 </tr>
 <tr>
@@ -505,16 +508,6 @@ Allsky Website so you only have to update them once.
 	<td>This line is describes what this section is for and can be deleted if desired.</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">onPi</span></td>
-	<td><span class="editorBool">true</span> (local) or
-		<br><span class="editorBool">false</span> (remote)
-	</td>
-	<td>Automatically set to indicate if the Website is running locally on the Pi
-		or on a remote server.
-		Should normally not need to change.
-	</td>
-</tr>
-<tr>
 	<td><span class="editorSetting">title</span></td>
 	<td>XX_NEED_TO_UPDATE_XX</td>
 	<td>Text displayed next to the Allsky logo on the upper left.
@@ -532,7 +525,7 @@ Allsky Website so you only have to update them once.
 <tr>
 	<td><span class="editorSetting">backgroundImage</span></td>
 	<td></td>
-	<td>An optional background image for the home page.
+	<td>An optional background image for the Website home page.
 		Sub-settings:
 		<ul class="minimalPadding">
 		<li><span class="editorSetting">url</span> is
@@ -646,8 +639,8 @@ Allsky Website so you only have to update them once.
 			<blockquote>
 			The overlay toggle icon's display setting is
 			<span class="editorBool">false</span> by default.
-			If you plan to allow the overlay to be displayed,
-			modify its size and position so it mostly matches the sky,
+			If you plan to allow the constellation overlay to be displayed,
+			modify the overlay's size and position so it mostly matches the sky,
 			then set this field to
 			<span class="editorBool">true</span>.
 			</blockquote>
@@ -674,7 +667,7 @@ Allsky Website so you only have to update them once.
 	<td><span class="editorSetting">leftSidebarStyle</span></td>
 	<td></td>
 	<td>CSS for the left sidebar itself, not the icons in it.
-		To change the sidebar background yellow:
+		To change the sidebar background to yellow:
 			<span class="editorString">background-color: yellow;</span>.
 	</td>
 </tr>
@@ -702,7 +695,7 @@ Allsky Website so you only have to update them once.
 			The same as with <span class="editorSetting">leftSidebar</span> above.
 		<li><span class="editorSetting">variable</span> - A setting name from the
 			<span class="editorSetting">config</span>
-			section whose value should be displayed.
+			section of the configuration file whose value should be displayed.
 			For example, if you set the <span class="editorSetting">owner</span>
 			to <span class="editorString">Eric</span>,
 			entering <span class="editorSetting">owner</span> for this setting will display

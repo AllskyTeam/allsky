@@ -2390,13 +2390,13 @@ restore_prior_files()
 			cp ${OVERLAY_FILE} ${DEST_FILE}
 
 			# Add the metadata for th eoverlay manager
-			echo "$(jq '. += {"metatdata": { 
+			echo "$(jq '. += {"metadata": { 
 				"camerabrand": "'${CAMERA_TYPE}'",
 				"cameramodel": "'${CAMERA_MODEL}'", 
 				"cameraresolutionwidth": "'${SENSOR_WIDTH}'", 
 				"cameraresolutionheight": "'${SENSOR_HEIGHT}'", 
 				"tod": "both", 
-				"name": "'${CAMERA_MODEL}'" 
+				"name": "'${CAMERA_TYPE}' '${CAMERA_MODEL}'"
 			}}' "${DEST_FILE}" )" > "${DEST_FILE}"
 		fi
 

@@ -891,7 +891,7 @@ set_permissions()
 
 	sudo mkdir -p "${ALLSKY_MODULE_LOCATION}/modules"
 	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_MODULE_LOCATION}"
-	sudo chmod -R 775 "${ALLSKY_MODULE_LOCATION}"			
+	sudo chmod -R 775 "${ALLSKY_MODULE_LOCATION}"
 
 	# The files should already be the correct permissions/owners, but just in case, set them.
 	# We don't know what permissions may have been on the old website, so use "sudo".
@@ -1526,7 +1526,7 @@ create_allsky_logs()
 		sudo systemctl stop rsyslog 2> /dev/null
 
 		TMP="${ALLSKY_LOGS}/rsyslog.log"
-		sudo apt-get --assume-yes install rsyslog > "${TMP}" 2>&1	
+		sudo apt-get --assume-yes install rsyslog > "${TMP}" 2>&1
 		check_success $? "rsyslog installation failed" "${TMP}" "${DEBUG}" ||
 			exit_with_image 1 "${STATUS_ERROR}" "rsyslog install failed."
 	fi
@@ -2044,10 +2044,11 @@ convert_ftp_sh()
 			doV "" "IMAGE_DIR" "remotewebsiteimagedir" "text" "${NEW_FILE}"
 			X="true"
 		else
-			X=""
 			PROTOCOL="${PROTOCOL:-ftps}"	# WebUI complains if it's not set
-			doV "PROTOCOL" "X" "remotewebsiteprotocol" "text" "${NEW_FILE}"
-			doV "IMAGE_DIR" "X" "remotewebsiteimagedir" "text" "${NEW_FILE}"
+			doV "" "PROTOCOL" "remotewebsiteprotocol" "text" "${NEW_FILE}"
+			# shellcheck disable=SC2034
+			IMAGE_DIR=""
+			doV "" "IMAGE_DIR" "remotewebsiteimagedir" "text" "${NEW_FILE}"
 			X="false"
 		fi
 		doV "NEW" "X" "useremotewebsite" "boolean" "${NEW_FILE}"
@@ -2124,7 +2125,7 @@ restore_prior_settings_file()
 		else
 			CHECK_UPPER=""
 		fi
-	
+
 		# shellcheck disable=SC2086
 		MSG="$( check_settings_link ${CHECK_UPPER} "${PRIOR_SETTINGS_FILE}" )"
 		if [[ $? -eq "${EXIT_ERROR_STOP}" ]]; then
@@ -2354,59 +2355,59 @@ restore_prior_files()
 		# The directory will get populated as the user creates templates.
 	fi
 
-	## Convert old overlay.json files to new format if required
-	OVERLAY_FILE="${PRIOR_CONFIG_DIR}/overlay/config/overlay.json"
-	# If overlay.json exists in old config then we need to upgrade to the new system
-	if [[ -f "${OVERLAY_FILE}" ]]; then
+	PRIOR_OVERLAY_FILE="${PRIOR_CONFIG_DIR}/overlay/config/overlay.json"
+	SENSOR_WIDTH="$( settings ".sensorWidth" "${CC_FILE}" )"
+	SENSOR_HEIGHT="$( settings ".sensorHeight" "${CC_FILE}" )"
+	FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}_${CAMERA_MODEL}-${SENSOR_WIDTH}x${SENSOR_HEIGHT}-both.json"
+	SHORT_OVERLAY_NAME="overlay-${CAMERA_TYPE}.json"
 
-		SENSOR_WIDTH="$( settings ".sensorWidth" "${CC_FILE}" )"
-		SENSOR_HEIGHT="$( settings ".sensorHeight" "${CC_FILE}" )"
-		FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}_${CAMERA_MODEL}-${SENSOR_WIDTH}x${SENSOR_HEIGHT}-both.json"
-		SHORT_OVERLAY_NAME="overlay-${CAMERA_TYPE}.json"
+	PRIOR_OVERLAY_REPO_FILE="${PRIOR_ALLSKY_DIR}/config_repo/overlay/config/overlay.json"
 
-		OVERLAY_REPO_FILE="${PRIOR_ALLSKY_DIR}/config_repo/overlay/config/overlay.json"
+	# If no prior overlay.json exists or the user never changed it (i.e., it's the same
+	# as the prior confi_repo file), use the new format.
 
-		# If old overlay file is same as config_repo file then use one of the new overlay files
-		if cmp -s "${OVERLAY_FILE}" "${OVERLAY_REPO_FILE}" ; then
-			
-			display_msg --log progress "Current overlay file matches config_repo overlay file"
+	ITEM="${SPACE}Overlay configuration file"
+	if [[ ! -f ${PRIOR_OVERLAY_FILE} ]] ||
+			cmp -s "${PRIOR_OVERLAY_FILE}" "${PRIOR_OVERLAY_REPO_FILE}" ; then
 
-			OVERLAY_PATH="${ALLSKY_REPO}/overlay/config/${FULL_OVERLAY_NAME}"
-			if [[ -f ${OVERLAY_PATH} ]]; then
-				OVERLAY_NAME=${FULL_OVERLAY_NAME}
-			else
-				display_msg --log progress "Camera specific overlay ${FULL_OVERLAY_NAME} not found."	
-				OVERLAY_NAME=${SHORT_OVERLAY_NAME}
-			fi
-			display_msg --log progress "Using overlay ${OVERLAY_NAME}"
-
+		OVERLAY_PATH="${ALLSKY_REPO}/overlay/config/${FULL_OVERLAY_NAME}"
+		if [[ -f ${OVERLAY_PATH} ]]; then
+			OVERLAY_NAME=${FULL_OVERLAY_NAME}
 		else
-			# The old overlay file has been changed so copy it to the new format and set in the settings file
-			# NOTE: we add a 1 to the overlay name here so that the overay manager can pick it up and increment
-			# it as new overlays are created
-			OVERLAY_NAME="overlay1-${CAMERA_TYPE}_${CAMERA_MODEL}-${SENSOR_WIDTH}x${SENSOR_HEIGHT}-both.json"
-			display_msg --log progress "Current overlay file has been modified so creating user overlay ${OVERLAY_NAME}."
-			DEST_FILE="${MY_OVERLAY_TEMPLATES}/${OVERLAY_NAME}"
-
-			# Add the metadata for th eoverlay manager
-			# shellcheck disable=SC2086
-			jq '. += {"metadata": { 
-				"camerabrand": "'${CAMERA_TYPE}'",
-				"cameramodel": "'${CAMERA_MODEL}'", 
-				"cameraresolutionwidth": "'${SENSOR_WIDTH}'", 
-				"cameraresolutionheight": "'${SENSOR_HEIGHT}'", 
-				"tod": "both", 
-				"name": "'${CAMERA_TYPE}' '${CAMERA_MODEL}'" 
-			}}' "${OVERLAY_FILE}"  > "${DEST_FILE}"
+			OVERLAY_NAME=${SHORT_OVERLAY_NAME}
 		fi
+		MSG="${ITEM} (creating default)"
+		display_msg progress "${MSG}"
+       	MSG="User didn't change prior overlay file; using new '${OVERLAY_NAME}'"
+       	display_msg --logonly info "${MSG}"
 
-		for s in daytimeoverlay nighttimeoverlay
-		do
-		    doV "" "OVERLAY_NAME" "${s}" "text" "${SETTINGS_FILE}"
-		done
+	else
+       	# The user changed the old overlay file so copy it to the new format and
+		# save its location in the settings file.
+		# NOTE: we add a 1 to the overlay name here so that the overay manager can
+		# pick it up and increment it as new overlays are created.
+		OVERLAY_NAME="${FULL_OVERLAY_NAME/overlay/overlay1}"
+       	display_msg --log progress "${ITEM} (renamed to '${OVERLAY_NAME}')"
 
+		DEST_FILE="${MY_OVERLAY_TEMPLATES}/${OVERLAY_NAME}"
+
+		# Add the metadata for th eoverlay manager
+		# shellcheck disable=SC2086
+		jq '. += {"metadata": {
+			"camerabrand": "'${CAMERA_TYPE}'",
+			"cameramodel": "'${CAMERA_MODEL}'",
+			"cameraresolutionwidth": "'${SENSOR_WIDTH}'",
+			"cameraresolutionheight": "'${SENSOR_HEIGHT}'",
+			"tod": "both",
+			"name": "'${CAMERA_TYPE}' '${CAMERA_MODEL}'"
+		}}' "${PRIOR_OVERLAY_FILE}"  > "${DEST_FILE}"
 	fi
-	
+
+	for s in daytimeoverlay nighttimeoverlay
+	do
+	    doV "" "OVERLAY_NAME" "${s}" "text" "${SETTINGS_FILE}"
+	done
+
 	if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
 		D="${PRIOR_CONFIG_DIR}"
 	else
@@ -2544,15 +2545,13 @@ restore_prior_website_files()
 		doV "${X}" "X" "${WEBSITE_ALLSKY_VERSION}" "text" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 	fi
 
-
 	ITEM="${SPACE}Local Website files"
-	display_msg --log progress "${ITEM}:"
-
 	if [[ -z ${PRIOR_WEBSITE_DIR} ]]; then
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		return
 	fi
 
+	display_msg --log progress "${ITEM}:"
 
 	# Each data directory will have zero or more images/videos.
 	# Make sure we do NOT mv any .php files.
@@ -3095,10 +3094,9 @@ install_overlay()
 	if [[ -f ${OVERLAY_PATH} ]]; then
 		OVERLAY_NAME=${FULL_OVERLAY_NAME}
 	else
-		display_msg --log progress "Camera specific overlay ${FULL_OVERLAY_NAME} not found."	
 		OVERLAY_NAME=${SHORT_OVERLAY_NAME}
 	fi
-	
+
 	display_msg --log progress "using overlay ${OVERLAY_NAME}."
 
 	for s in daytimeoverlay nighttimeoverlay
@@ -3251,7 +3249,7 @@ sort_settings_file()
 	cp "${TMP_FILE}" "${FILE}"
 	return 0
 }
-	
+
 ####
 # Check if we restored all prior settings.
 # Global: CONFIGURATION_NEEDED
@@ -3772,7 +3770,7 @@ install_overlay
 
 ### TODO: ERIC this ok>
 ##### Restore prior files if needed
-if [[ ${WILL_USE_PRIOR} == "true" ]]; then 
+if [[ ${WILL_USE_PRIOR} == "true" ]]; then
 	restore_prior_files
 else
 	get_lat_long	# prompt for them to put in new settings file

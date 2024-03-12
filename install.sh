@@ -491,11 +491,19 @@ do_save_camera_capabilities()
 
 	display_msg --log progress "Making new settings file '${SETTINGS_FILE}'."
 
+	### TODO: Eric no idea if this is right or not but it strips any suffix from the camera type
+	# shellcheck disable=SC2207
+    CAMERA_TYPE_PARTS=($(echo "$CAMERA_TYPE" | tr "_" "\n"))
+    if [[ ${#CAMERA_TYPE_PARTS[@]} = 2 ]]; then
+		CAMERA_TYPE=${CAMERA_TYPE_PARTS[0]}
+	fi
+
 	MSG="Executing makeChanges.sh${FORCE}${OPTIONSONLY} --cameraTypeOnly"
 	MSG+="  ${DEBUG_ARG} 'cameratype' 'Camera Type' '${PRIOR_CAMERA_TYPE}' '${CAMERA_TYPE}'"
 	display_msg "${LOG_TYPE}" info "${MSG}"
 
 	ERR="/tmp/makeChanges.errors.txt"
+
 	#shellcheck disable=SC2086
 	M="$( "${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} ${OPTIONSONLY} --cameraTypeOnly \
 		${DEBUG_ARG} "cameratype" "Camera Type" "${PRIOR_CAMERA_TYPE}" "${CAMERA_TYPE}" 2> "${ERR}" )"
@@ -1120,7 +1128,7 @@ set_locale()
 			# Either a new install or an upgrade from an older Allsky.
 			MSG+=" did NOT contain .locale so adding it."
 			display_msg --logonly info "${MSG}"
-			doV "" "DESIRED_LOCAL" "locale" "text" "${SETTINGS_FILE}"
+			doV "" "DESIRED_LOCALE" "locale" "text" "${SETTINGS_FILE}"
 
 # TODO: Something was unlinking the settings file from its camera-specific file,
 # so do "ls" of the settings files to try and pinpoint the problem.
@@ -2325,13 +2333,12 @@ restore_prior_files()
 
 	ITEM="${SPACE}'config/overlay' directory"
 	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
-#XXXX FIX: TODO: ALEX:  only copy over user-generated or user-modified files
 		display_msg --log progress "${ITEM} (copying)"
-		cp -ar "${PRIOR_CONFIG_DIR}/overlay" "${ALLSKY_CONFIG}"
-
-		# Restore the new fields.json file as it's part of the main Allsky distribution
-		# and should be replaced during an upgrade.
-		cp -a "${ALLSKY_REPO}/overlay/config/fields.json" "${ALLSKY_OVERLAY}/config/"
+		cp -ar "${PRIOR_CONFIG_DIR}/overlay/fonts" "${ALLSKY_OVERLAY}/fonts"
+		cp -ar "${PRIOR_CONFIG_DIR}/overlay/images" "${ALLSKY_OVERLAY}/images"
+		cp -ar "${PRIOR_CONFIG_DIR}/overlay/imagethumbnails" "${ALLSKY_OVERLAY}/imagethumbnails"
+		cp -ar "${PRIOR_CONFIG_DIR}/overlay/config/userfields.json" "${ALLSKY_OVERLAY}/config/"
+		cp -ar "${PRIOR_CONFIG_DIR}/overlay/config/oe-config.json" "${ALLSKY_OVERLAY}/config/"
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
@@ -2347,6 +2354,59 @@ restore_prior_files()
 		# The directory will get populated as the user creates templates.
 	fi
 
+	## Convert old overlay.json files to new format if required
+	OVERLAY_FILE="${PRIOR_CONFIG_DIR}/overlay/config/overlay.json"
+	# If overlay.json exists in old config then we need to upgrade to the new system
+	if [[ -f "${OVERLAY_FILE}" ]]; then
+
+		SENSOR_WIDTH="$( settings ".sensorWidth" "${CC_FILE}" )"
+		SENSOR_HEIGHT="$( settings ".sensorHeight" "${CC_FILE}" )"
+		FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}_${CAMERA_MODEL}-${SENSOR_WIDTH}x${SENSOR_HEIGHT}-both.json"
+		SHORT_OVERLAY_NAME="overlay-${CAMERA_TYPE}.json"
+
+		OVERLAY_REPO_FILE="${PRIOR_ALLSKY_DIR}/config_repo/overlay/config/overlay.json"
+
+		# If old overlay file is same as config_repo file then use one of the new overlay files
+		if cmp -s "${OVERLAY_FILE}" "${OVERLAY_REPO_FILE}" ; then
+			
+			display_msg --log progress "Current overlay file matches config_repo overlay file"
+
+			OVERLAY_PATH="${ALLSKY_REPO}/overlay/config/${FULL_OVERLAY_NAME}"
+			if [[ -f ${OVERLAY_PATH} ]]; then
+				OVERLAY_NAME=${FULL_OVERLAY_NAME}
+			else
+				display_msg --log progress "Camera specific overlay ${FULL_OVERLAY_NAME} not found."	
+				OVERLAY_NAME=${SHORT_OVERLAY_NAME}
+			fi
+			display_msg --log progress "Using overlay ${OVERLAY_NAME}"
+
+		else
+			# The old overlay file has been changed so copy it to the new format and set in the settings file
+			# NOTE: we add a 1 to the overlay name here so that the overay manager can pick it up and increment
+			# it as new overlays are created
+			OVERLAY_NAME="overlay1-${CAMERA_TYPE}_${CAMERA_MODEL}-${SENSOR_WIDTH}x${SENSOR_HEIGHT}-both.json"
+			display_msg --log progress "Current overlay file has been modified so creating user overlay ${OVERLAY_NAME}."
+			DEST_FILE="${MY_OVERLAY_TEMPLATES}/${OVERLAY_NAME}"
+
+			# Add the metadata for th eoverlay manager
+			# shellcheck disable=SC2086
+			jq '. += {"metadata": { 
+				"camerabrand": "'${CAMERA_TYPE}'",
+				"cameramodel": "'${CAMERA_MODEL}'", 
+				"cameraresolutionwidth": "'${SENSOR_WIDTH}'", 
+				"cameraresolutionheight": "'${SENSOR_HEIGHT}'", 
+				"tod": "both", 
+				"name": "'${CAMERA_TYPE}' '${CAMERA_MODEL}'" 
+			}}' "${OVERLAY_FILE}"  > "${DEST_FILE}"
+		fi
+
+		for s in daytimeoverlay nighttimeoverlay
+		do
+		    doV "" "OVERLAY_NAME" "${s}" "text" "${SETTINGS_FILE}"
+		done
+
+	fi
+	
 	if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
 		D="${PRIOR_CONFIG_DIR}"
 	else
@@ -3016,7 +3076,7 @@ install_Python()
 install_overlay()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
-	local CSO  O
+	#local CSO  O
 
 	# Do the rest, even if we already did it in a previous installation,
 	# in case something in the directories changed.
@@ -3025,17 +3085,38 @@ install_overlay()
 	# These will get overwritten later if the user has prior versions.
 	cp -ar "${ALLSKY_REPO}/overlay" "${ALLSKY_REPO}/modules" "${ALLSKY_CONFIG}"
 
+	SENSOR_WIDTH="$( settings ".sensorWidth" "${CC_FILE}" )"
+	SENSOR_HEIGHT="$( settings ".sensorHeight" "${CC_FILE}" )"
+
+	FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}_${CAMERA_MODEL}-${SENSOR_WIDTH}x${SENSOR_HEIGHT}-both.json"
+	SHORT_OVERLAY_NAME="overlay-${CAMERA_TYPE}.json"
+	OVERLAY_PATH="${ALLSKY_REPO}/overlay/config/${FULL_OVERLAY_NAME}"
+
+	if [[ -f ${OVERLAY_PATH} ]]; then
+		OVERLAY_NAME=${FULL_OVERLAY_NAME}
+	else
+		display_msg --log progress "Camera specific overlay ${FULL_OVERLAY_NAME} not found."	
+		OVERLAY_NAME=${SHORT_OVERLAY_NAME}
+	fi
+	
+	display_msg --log progress "using overlay ${OVERLAY_NAME}."
+
+	for s in daytimeoverlay nighttimeoverlay
+	do
+		VALUE=""; doV "" "OVERLAY_NAME" "${s}" "text" "${SETTINGS_FILE}"
+	done
+
 	# Normally makeChanges.sh handles creating the "overlay.json" file, but the
 	# Camera-Specific Overlay (CSO) file didn't exist when makeChanges was called,
 	# so we have to set it up here.
-	CSO="${ALLSKY_OVERLAY}/config/overlay-${CAMERA_TYPE}.json"
-	O="${ALLSKY_OVERLAY}/config/overlay.json"		# generic name
-	if [[ -f ${CSO} ]]; then
-		display_msg "${LOG_TYPE}" progress "Copying '${CSO}' to 'overlay.json'."
-		cp "${CSO}" "${O}"
-	else
-		display_msg --log error "'${CSO}' does not exist; unable to create default overlay file."
-	fi
+	#CSO="${ALLSKY_OVERLAY}/config/overlay-${CAMERA_TYPE}.json"
+	#O="${ALLSKY_OVERLAY}/config/overlay.json"		# generic name
+	#if [[ -f ${CSO} ]]; then
+	#	display_msg "${LOG_TYPE}" progress "Copying '${CSO}' to 'overlay.json'."
+	#	cp "${CSO}" "${O}"
+	#else
+	#	display_msg --log error "'${CSO}' does not exist; unable to create default overlay file."
+	#fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }
@@ -3367,6 +3448,16 @@ do_allsky_status()
 	set_allsky_status "${!STATUS}"
 }
 
+install_installer_dependencies() {
+
+	display_msg --log progress "Installing installer dependencies."
+	TMP="${ALLSKY_LOGS}/installer.dependencies.log"
+	{
+		sudo apt-get update && \
+			sudo apt-get --assume-yes install gawk jq
+	} > "${TMP}" 2>&1
+
+}
 
 ############################################## Main part of program
 
@@ -3597,6 +3688,8 @@ set_what_can_be_skipped "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
 ##### Stop Allsky
 stop_Allsky
 
+install_installer_dependencies
+
 ##### Determine what camera(s) are connected
 # Re-run every time in case a camera was connected or disconnected.
 get_connected_cameras
@@ -3677,8 +3770,14 @@ install_PHP_modules
 install_Python
 install_overlay
 
+### TODO: ERIC this ok>
 ##### Restore prior files if needed
-[[ ${WILL_USE_PRIOR} == "true" ]] && restore_prior_files
+if [[ ${WILL_USE_PRIOR} == "true" ]]; then 
+	restore_prior_files
+else
+	get_lat_long	# prompt for them to put in new settings file
+	mkdir -p "${ALLSKY_EXTRA}"		# default permissions is ok
+fi
 
 ##### Restore prior Website files if needed.
 # This has to come after restore_prior_files() since it may set some variables we need.

@@ -34,27 +34,15 @@
             "tly": 65
         },
         {
-            "label": "Sensor: ${TEMPERATURE_C} C",
+            "label": "${CAMERA_TYPE} ${CAMERA_MODEL}",
             "x": 157,
             "y": 100,
             "id": "oe-field-3",
-            "format": "{:.1f}",
-            "fontsize": 20,
+            "fontsize": 16,
             "strokewidth": 0,
             "tlx": 10,
             "tly": 90,
-            "sample": "20.1"
-        },
-        {
-            "label": "${CAMERA_TYPE} ${CAMERA_MODEL}",
-            "x": 159,
-            "y": 128,
-            "id": "oe-field-4",
-            "fontsize": 16,
-            "strokewidth": 0,
-            "sample": "ZWO ASI174MC",
-            "tlx": 10,
-            "tly": 120
+            "sample": "RPi HQ"
         }
     ],
     "images": [],
@@ -82,11 +70,12 @@
         }
     },
     "metadata": {
-        "camerabrand": "ZWO",
-        "cameramodel": "ASI178MM",
-        "cameraresolutionwidth": "2048",
-        "cameraresolutionheight": "1376",
+        "camerabrand": "RPi",
+        "cameramodel": "Module 1",
+        "cameraresolutionwidth": "2592",
+        "cameraresolutionheight": "1944",
         "tod": "both",
-        "name": "ZWO"
-    }
+        "name": "RPI Module 1"
+    }    
 }
+

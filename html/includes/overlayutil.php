@@ -664,8 +664,13 @@ class OVERLAYUTIL
             $overlayFilename = $this->getSetting('nighttimeoverlay');
         }
 
-        $fileName = $this->overlayPath . '/myTemplates/' . $overlayFilename;
-        $template = file_get_contents($fileName);
+        $fileName = $this->overlayPath . '/config/' . $overlayFilename;
+        if (file_exists($fileName)) {
+            $template = file_get_contents($fileName);
+        } else {
+            $fileName = $this->overlayPath . '/myTemplates/' . $overlayFilename;
+            $template = file_get_contents($fileName);
+        }
         $templateData = json_decode($template);      
         $this->fixMetaData($templateData);     
         $result['config'] = $templateData;
@@ -687,7 +692,7 @@ class OVERLAYUTIL
         if ($overlayName === null) {
             $overlayName = $_GET['overlay'];
         }
-        $fileName = $this->allskyOverlays . $overlayName;
+        $fileName = $this->overlayPath . '/config/' . $overlayName;
 
         if (file_exists($fileName)) {
             $overlay = file_get_contents($fileName);
@@ -732,7 +737,7 @@ class OVERLAYUTIL
             $overlayData['current'] = $overlayData['config']['nighttime'];
         }
 
-        $defaultDir = $this->allskyOverlays;
+        $defaultDir = $this->overlayPath . '/config/';
         $entries = scandir($defaultDir);
         foreach ($entries as $entry) {
             if ($entry !== '.' && $entry !== '..') {
@@ -837,7 +842,6 @@ class OVERLAYUTIL
 
         $newOverlay->metadata = $_POST['fields'];
 
-        $overlay = json_decode($newOverlay);
         if (!isset($newOverlay->fields)) {
             $newOverlay->fields = [];
         }

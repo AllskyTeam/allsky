@@ -867,9 +867,9 @@ class ALLSKYOVERLAY:
                                 value = timeStamp.strftime(internalFormat)
 
                         tempDate = datetime.strptime(value, internalFormat)
-                        if format is not None:
+                        if Format is not None:
                             try:
-                                value = tempDate.strftime(format)
+                                value = tempDate.strftime(Format)
                             except Exception:
                                 pass
                     except Exception as e:

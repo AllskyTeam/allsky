@@ -257,7 +257,6 @@ function DisplayOverlay($image_name)
                             <table id="fielderrorstable" class="display compact" style="width:98%">
                                 <thead>
                                     <tr>
-                                        <th>Id</th>
                                         <th>Field Name</th>
                                         <th>Type</th>
                                         <th>&nbsp;</th>
@@ -511,6 +510,7 @@ function DisplayOverlay($image_name)
                             <ul class="nav nav-tabs" role="tablist">
                                 <li role="presentation" class="active"><a href="#configoptions" aria-controls="configoptions" role="tab" data-toggle="tab">Layout Defaults</a></li>
                                 <li role="presentation"><a href="#oeeditoroptions" aria-controls="oeeditoroptions" role="tab" data-toggle="tab">Editor Settings</a></li>
+                                <li role="presentation"><a href="#oeeditoroverlays" aria-controls="oeeditoroverlays" role="tab" data-toggle="tab">Overlays</a></li>                                
                             </ul>
 
                             <!-- Tab panes -->
@@ -768,6 +768,24 @@ function DisplayOverlay($image_name)
                                     </form>
 
                                 </div>
+
+                                <div role="tabpanel" class="tab-pane" id="oeeditoroverlays">
+                                    <div class="mt-2">
+                                        <table id="overlaytablelist" style="width:100%">
+                                            <thead>
+                                                <tr>
+                                                    <th>Type</th>                                                
+                                                    <th>Name</th>
+                                                    <th>Brand</th>
+                                                    <th>Model</th>
+                                                    <th>TOD</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                        </table> 
+                                    </div>
+                                </div>
+                                
                             </div>
                         </div>
 

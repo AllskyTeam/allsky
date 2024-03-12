@@ -2354,6 +2354,47 @@ restore_prior_files()
 		# The directory will get populated as the user creates templates.
 	fi
 
+	## Convert old overlay.json files to new format if required
+	OVERLAY_FILE="${PRIOR_CONFIG_DIR}/overlay/config/overlay.json"
+	# If overlay.json exists in old config then we need to upgrade to the new system
+	if [[ -f "${OVERLAY_FILE}" ]]; then
+
+		SENSOR_WIDTH="$( settings ".sensorWidth" "${CC_FILE}" )"
+		SENSOR_HEIGHT="$( settings ".sensorHeight" "${CC_FILE}" )"
+		FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}_${CAMERA_MODEL}-${SENSOR_WIDTH}x${SENSOR_HEIGHT}-both.json"
+		SHORT_OVERLAY_NAME="overlay-${CAMERA_TYPE}.json"
+
+		OVERLAY_REPO_FILE="${PRIOR_ALLSKY_DIR}/config_repo/overlay/config/overlay.json"
+
+		# If old overlay file is same as config_repo file then use one of the new overlay files
+		if cmp -s ${OVERLAY_FILE} ${OVERLAY_REPO_FILE} ; then
+			
+			display_msg --log progress "Current overlay file matches config_repo overlay file"
+
+			OVERLAY_PATH="${ALLSKY_REPO}/overlay/config/${FULL_OVERLAY_NAME}"
+			if [[ -f ${OVERLAY_PATH} ]]; then
+				OVERLAY_NAME=${FULL_OVERLAY_NAME}
+			else
+				display_msg --log progress "Camera specific overlay ${FULL_OVERLAY_NAME} not found."	
+				OVERLAY_NAME=${SHORT_OVERLAY_NAME}
+			fi
+			display_msg --log progress "Using overlay ${OVERLAY_NAME}"
+
+		else
+			# The old overlay file has been changed so copy it to the new format and set in the settings file
+			OVERLAY_NAME=${FULL_OVERLAY_NAME}
+			display_msg --log progress "Current overlay file has been modified so creating user overlay ${OVERLAY_NAME}."
+			DEST_FILE="${MY_OVERLAY_TEMPLATES}/${OVERLAY_NAME}"
+			cp ${OVERLAY_FILE}  ${DEST_FILE}
+		fi
+
+		for s in daytimeoverlay nighttimeoverlay
+		do
+		    doV "" "OVERLAY_NAME" "${s}" "text" "${SETTINGS_FILE}"
+		done
+
+	fi
+	
 	if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
 		D="${PRIOR_CONFIG_DIR}"
 	else

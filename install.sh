@@ -2387,17 +2387,17 @@ restore_prior_files()
 			OVERLAY_NAME="overlay1-${CAMERA_TYPE}_${CAMERA_MODEL}-${SENSOR_WIDTH}x${SENSOR_HEIGHT}-both.json"
 			display_msg --log progress "Current overlay file has been modified so creating user overlay ${OVERLAY_NAME}."
 			DEST_FILE="${MY_OVERLAY_TEMPLATES}/${OVERLAY_NAME}"
-			cp ${OVERLAY_FILE} ${DEST_FILE}
 
 			# Add the metadata for th eoverlay manager
-			echo "$(jq '. += {"metadata": { 
+			# shellcheck disable=SC2086 I have too many quotes !!!!!
+			jq '. += {"metadata": { 
 				"camerabrand": "'${CAMERA_TYPE}'",
 				"cameramodel": "'${CAMERA_MODEL}'", 
 				"cameraresolutionwidth": "'${SENSOR_WIDTH}'", 
 				"cameraresolutionheight": "'${SENSOR_HEIGHT}'", 
 				"tod": "both", 
-				"name": "'${CAMERA_TYPE}' '${CAMERA_MODEL}'"
-			}}' "${DEST_FILE}" )" > "${DEST_FILE}"
+				"name": "'${CAMERA_TYPE}' '${CAMERA_MODEL}'" 
+			}}' "${OVERLAY_FILE}"  > "${DEST_FILE}"
 		fi
 
 		for s in daytimeoverlay nighttimeoverlay
@@ -3076,7 +3076,7 @@ install_Python()
 install_overlay()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
-	local CSO  O
+	#local CSO  O
 
 	# Do the rest, even if we already did it in a previous installation,
 	# in case something in the directories changed.

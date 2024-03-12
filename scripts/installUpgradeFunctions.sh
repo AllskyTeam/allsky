@@ -768,21 +768,17 @@ function get_lat_long()
                 if [[ $(echo "${LAT} > 0" |bc -l) -eq 1 ]]; then 
                     LAT=${LAT}N
                 else
+					LAT="${LAT//-/}"
                     LAT=${LAT}S
                 fi
                 
                 if [[ $(echo "$LON > 0" |bc -l) -eq 1 ]]; then 
                     LON=${LON}E
                 else
+					LON="${LON//-/}"
                     LON=${LON}W
                 fi
-            fi
-
-			# Sanity check. Only set the lat and lon if they appear valid i.e. not empty
-			#if [[ ${LAT} != "" && ${LON} != "" ]]; then
-			#	doV "" "LAT" "latitude" "text" "${SETTINGS_FILE}"
-			#	doV "" "LON" "longitude" "text" "${SETTINGS_FILE}"
-			#fi			
+            fi		
         fi
     else
         display_msg --log progress "No internet connection detected skipping geolocation"

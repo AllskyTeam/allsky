@@ -1202,6 +1202,25 @@
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
+"name": "minitimelapseupload",
+"default": true,
+"description": "Enable to upload the mini-timelapse video to an Allsky Website or remote server.",
+"label": "Upload Mini-Timelapse",
+"type": "boolean",
+"carryforward" : true,
+"valuedependson" : "minitimelapsenumimages=[1-9]*"
+},
+{
+"name": "minitimelapseuploadthumbnail",
+"default": true,
+"description": "Enable to upload the mini-timelapse video thumbnail.",
+"label": "Upload Mini-Timelapse Thumbnail",
+"type": "boolean",
+"carryforward" : true,
+"booldependson" : "minitimelapseupload AND (uselocalwebsite OR useremotewebsite OR useremoteserver)",
+"valuedependson" : "minitimelapsenumimages=[1-9]*"
+},
+{
 "name" : "minitimelapseforcecreation",
 "default" : false,
 "description" : "Create a mini-timelapse even if <span class='WebUISetting'>Number Of Images</span> isn't reached?",
@@ -1219,25 +1238,6 @@
 "label": "Mini-Timelapse Frequency",
 "type": "integer",
 "carryforward" : true,
-"valuedependson" : "minitimelapsenumimages=[1-9]*"
-},
-{
-"name": "minitimelapseupload",
-"default": true,
-"description": "Enable to upload the mini-timelapse video to an Allsky Website or remote server.",
-"label": "Upload Mini-Timelapse",
-"type": "boolean",
-"carryforward" : true,
-"valuedependson" : "minitimelapsenumimages=[1-9]*"
-},
-{
-"name": "minitimelapseuploadthumbnail",
-"default": true,
-"description": "Enable to upload the mini-timelapse video thumbnail.",
-"label": "Upload Mini-Timelapse Thumbnail",
-"type": "boolean",
-"carryforward" : true,
-"booldependson" : "minitimelapseupload AND (uselocalwebsite OR useremotewebsite OR useremoteserver)",
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 {
@@ -1398,6 +1398,15 @@
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
+"name": "startrailsupload",
+"default": true,
+"description": "Enable to upload the startrails to an Allsky Website or remote server.",
+"label": "Upload Startrails",
+"type": "boolean",
+"carryforward" : true,
+"booldependson" : "startrailsgenerate AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
+},
+{
 "name" : "startrailsbrightnessthreshold",
 "minimum" : 0.0,
 "maximum" : 1.0,
@@ -1406,15 +1415,6 @@
 "label" : "Startrails Brightness Threshold",
 "type" : "float",
 "booldependson" : "startrailsgenerate"
-},
-{
-"name": "startrailsupload",
-"default": true,
-"description": "Enable to upload the startrails to an Allsky Website or remote server.",
-"label": "Upload Startrails",
-"type": "boolean",
-"carryforward" : true,
-"booldependson" : "startrailsgenerate AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
 },
 {
 "name" : "startrailsextraparameters",

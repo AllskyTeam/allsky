@@ -2389,7 +2389,7 @@ restore_prior_files()
 			DEST_FILE="${MY_OVERLAY_TEMPLATES}/${OVERLAY_NAME}"
 
 			# Add the metadata for th eoverlay manager
-			# shellcheck disable=SC2086 I have too many quotes !!!!!
+			# shellcheck disable=SC2086
 			jq '. += {"metadata": { 
 				"camerabrand": "'${CAMERA_TYPE}'",
 				"cameramodel": "'${CAMERA_MODEL}'", 

@@ -2046,6 +2046,7 @@ convert_ftp_sh()
 		else
 			PROTOCOL="${PROTOCOL:-ftps}"	# WebUI complains if it's not set
 			doV "" "PROTOCOL" "remotewebsiteprotocol" "text" "${NEW_FILE}"
+			# shellcheck disable=SC2034
 			IMAGE_DIR=""
 			doV "" "IMAGE_DIR" "remotewebsiteimagedir" "text" "${NEW_FILE}"
 			X="false"

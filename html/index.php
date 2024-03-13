@@ -194,7 +194,7 @@ if ($hasRemoteWebsite) {
 <!--
 	<script type="text/javascript" src="lib/codeMirror/shell.js"> </script>
 -->
-<?php if ($useLocalWebsite || $useRemoteWebsite) { ?>
+<?php if ($hasLocalWebsite || $hasRemoteWebsite) { ?>
 	<script type="text/javascript" src="lib/codeMirror/json.js"> </script>
 <?php } ?>
 </head>

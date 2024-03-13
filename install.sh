@@ -1855,12 +1855,13 @@ convert_config_sh()
 		doV "" "IMG_UPLOAD_FREQUENCY" "imageuploadfrequency" "number" "${NEW_FILE}"
 
 		# IMG_RESIZE no longer used; only resize if width and height are > 0.
-		if [[ ! (-n ${IMG_WIDTH} && ${IMG_WIDTH} -gt 0 &&
-				 -n ${IMG_HEIGHT} && ${IMG_HEIGHT} -gt 0 ) ]]; then
-			MSG="Ignoring IMG_RESIZE since IMG_WIDTH (${IMG_WIDTH}) and/or"
-			MSG+=" IMG_HEIGHT (${IMG_HEIGHT}) are not positive numbers."
+		if [[ ${IMG_RESIZE} != "true" ]]; then
+			MSG="IMG_RESIZE is ${IMG_RESIZE} so setting resize width/height to 0."
 			display_msg --log info "${MSG}"
 			IMG_WIDTH=0; IMG_HEIGHT=0
+		else
+			IMG_WIDTH="${IMG_WIDTH:-0}"
+			IMG_HEIGHT="${IMG_HEIGHT:-0}"
 		fi
 		doV "" "IMG_WIDTH" "imageresizewidth" "number" "${NEW_FILE}"
 		doV "" "IMG_HEIGHT" "imageresizeheight" "number" "${NEW_FILE}"

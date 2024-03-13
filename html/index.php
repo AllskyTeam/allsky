@@ -98,7 +98,9 @@ if ($hasRemoteWebsite) {
 		if ($c !== "") {
 			$remoteWebsiteVersion = getVariableOrDefault($c, 'AllskyVersion', null);
 			if ($remoteWebsiteVersion === null) {
-				$remoteWebsiteVersion = '<span class="errorMsg">[unknown]</span>';
+				$remoteWebsiteVersion = '<span class="errorMsg">[version unknown]</span>';
+			} else if ($remoteWebsiteVersion == ALLSKY_VERSION) {
+				$remoteWebsiteVersion = "";		// don't display if same version as Allsky
 			} else {
 				$remoteWebsiteVersion = "&nbsp; (version $remoteWebsiteVersion)";
 			}

@@ -921,7 +921,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 						$rspan="rowspan='2'";
 						$cspan="colspan='2'";
 					}
-					if ($popupExtraMessage !== "") $popup .= "\n**********\n$popupExtraMsg";
+					if ($popupExtraMsg !== "") $popup .= "\n**********\n$popupExtraMsg";
 
 					echo "\n\t<td $rspan valign='middle' style='padding: 2px 0px'>";
 						echo "<label class='WebUISetting' style='padding-right: 3px;'>$label</label>";

@@ -1183,6 +1183,7 @@ set_what_can_be_skipped()
 		local OLD_BASE_VERSION="$( remove_point_release "${OLD_VERSION}" )"
 		local NEW_VERSION="${2}"
 		local NEW_BASE_VERSION="$( remove_point_release "${NEW_VERSION}" )"
+# TODO: compare OLD_VERSION and NEW_VERSION instead, in case a point release changed something?
 		if [[ ${NEW_BASE_VERSION} == "${OLD_BASE_VERSION}" ]]; then
 			# No changes to these packages so no need to reinstall.
 			MSG="Skipping installation of: webserver et.al., PHP modules, Truetype fonts, Python"
@@ -1193,8 +1194,7 @@ set_what_can_be_skipped()
 			install_fonts="true"
 			# shellcheck disable=SC2034
 			install_PHP_modules="true"
-			# shellcheck disable=SC2034
-			install_Python="true"
+			# need to always run install_Python() so it can set up venv
 		fi
 	fi
 }

@@ -711,7 +711,7 @@ function updateFile($file, $contents, $fileName, $toConsole) {
 		$cmd = "x=\$(sudo touch '$file';";
 		$cmd .= " sudo chgrp " . WEBSERVER_GROUP . " '$file' 2>&1 &&";
 		$cmd .= " && sudo chmod g+w '$file') || echo \${x}";
-		$err = str_replace("\n", "", $shell_exec($cmd));
+		$err = str_replace("\n", "", shell_exec($cmd));
 		if ($err != "") {
 			return "Unable to update settings: $err";
 		}

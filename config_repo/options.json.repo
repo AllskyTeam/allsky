@@ -1112,7 +1112,7 @@
 "minimum": 100,
 "maximum": 30000,
 "default": 5000,
-"description": "Bitrate (in K) of timelapse video. Higher values produce higher quality but larger files.",
+"description": "Bitrate (in K) of timelapse video. Higher values produce higher quality but larger files. Do NOT add <code>k</code>.",
 "label": "Timelapse Bitrate",
 "type" : "integer",
 "booldependson" : "timelapsegenerate"
@@ -1265,7 +1265,7 @@
 "minimum": 100,
 "maximum": 30000,
 "default": 2000,
-"description": "Bitrate (in K) of mini-timelapse video. Higher values produce higher quality but larger files.",
+"description": "Bitrate (in K) of timelapse video. Higher values produce higher quality but larger files. Do NOT add <code>k</code>.",
 "label": "Mini-Timelapse Bitrate",
 "type": "integer",
 "carryforward" : true,

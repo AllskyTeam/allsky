@@ -84,16 +84,11 @@ if ($useLogin) {
 	$csrf_token = $_SESSION['csrf_token'];
 }
 
-$websiteFile = ALLSKY_WEBSITE . "/version";
-if (file_exists($websiteFile)) {
-	$localWebsiteVersion = file_get_contents($websiteFile);
-} else {
-	$localWebsiteVersion = "";
-}
 // Get the version of the remote Allsky Website, if it exists.
 $remoteWebsiteVersion = "";
 if ($hasRemoteWebsite) {
 	$f = getRemoteWebsiteConfigFile(); 
+	echo "<br>==================f = $f";
 	$errorMsg = "WARNING: ";
 	$retMsg = "";
 	$a_array = get_decoded_json_file($f, true, $errorMsg, $retMsg);
@@ -102,8 +97,12 @@ if ($hasRemoteWebsite) {
 	} else {
 		$c = getVariableOrDefault($a_array, 'config', '');
 		if ($c !== "") {
-			$s = '<span class="errorMsg">[unknown]</span>';
-			$remoteWebsiteVersion = getVariableOrDefault($c, 'AllskyWebsiteVersion', $s);
+			$remoteWebsiteVersion = getVariableOrDefault($c, 'AllskyVersion', null);
+			if ($remoteWebsiteVersion === null) {
+				$remoteWebsiteVersion = '<span class="errorMsg">[unknown]</span>';
+			} else {
+				$remoteWebsiteVersion = "&nbsp; (version $remoteWebsiteVersion)";
+			}
 		}
 	}
 }
@@ -226,7 +225,8 @@ if ($hasRemoteWebsite) {
 <?php if ($useRemoteWebsite !== "") {
 					echo "<span class='nowrap'>";
 					echo "<a class='version-title-color' href='$remoteWebsiteURL' target='_blank' title='Click to go to remote Website'>";
-					echo "Remote Website <i class='fa fa-external-link-alt fa-fw'></i></a></span>";
+					echo "Remote Website $remoteWebsiteVersion";
+					echo " <i class='fa fa-external-link-alt fa-fw'></i></a></span>";
 } ?>
 				</div>
 		</div> <!-- /.navbar-header -->

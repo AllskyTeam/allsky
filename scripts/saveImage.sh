@@ -431,48 +431,61 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 	fi
 fi
 
+# image.jpg and mini-timelapse overwrite the prior files so are not copied to a local Website.
+# Instead, the local Website points to the files in ${SAVE_DIR}.
+
 RET=0
 if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
-	W="$( settings ".imageresizeuploadswidth" )"
-	H="$( settings ".imageresizeuploadsheight" )"
-	if [[ ${W} -gt 0 && ${H} -gt 0 ]]; then
-		RESIZE_UPLOADS="true"
-	else
-		RESIZE_UPLOADS="false"
-	fi
-	if [[ ${RESIZE_UPLOADS} == "true" ]]; then
-		# Need a copy of the image since we are going to resize it.
-		# Put the copy in ${WORKING_DIR}.
-		FILE_TO_UPLOAD="${WORKING_DIR}/resize-${IMAGE_NAME}"
-		S="${W}x${H}"
-		[[ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]] && echo "${ME}: Resizing upload file '${FILE_TO_UPLOAD}' to ${S}"
-		if ! convert "${CURRENT_IMAGE}" -resize "${S}" -gravity East -chop 2x0 "${FILE_TO_UPLOAD}" ; then
-			echo -e "${YELLOW}*** ${ME}: WARNING: Resize Uploads failed; continuing with larger image.${NC}"
-			# We don't know the state of $FILE_TO_UPLOAD so use the larger file.
+	R_WEB="$( settings ".useremotewebsite" )"
+	R_SERVER="$( settings ".useremoteserver" )"
+
+	if [[ ${R_WEB} == "true" || ${R_SERVER} == "true" ]]; then
+		W="$( settings ".imageresizeuploadswidth" )"
+		H="$( settings ".imageresizeuploadsheight" )"
+		if [[ ${W} -gt 0 && ${H} -gt 0 ]]; then
+			RESIZE_UPLOADS="true"
+		else
+			RESIZE_UPLOADS="false"
+		fi
+		if [[ ${RESIZE_UPLOADS} == "true" ]]; then
+			# Need a copy of the image since we are going to resize it.
+			# Put the copy in ${WORKING_DIR}.
+			FILE_TO_UPLOAD="${WORKING_DIR}/resize-${IMAGE_NAME}"
+			S="${W}x${H}"
+			[[ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]] && echo "${ME}: Resizing upload file '${FILE_TO_UPLOAD}' to ${S}"
+			if ! convert "${CURRENT_IMAGE}" -resize "${S}" -gravity East -chop 2x0 "${FILE_TO_UPLOAD}" ; then
+				echo -e "${YELLOW}*** ${ME}: WARNING: Resize Uploads failed; continuing with larger image.${NC}"
+				# We don't know the state of $FILE_TO_UPLOAD so use the larger file.
+				FILE_TO_UPLOAD="${CURRENT_IMAGE}"
+			fi
+		else
 			FILE_TO_UPLOAD="${CURRENT_IMAGE}"
 		fi
-	else
-		FILE_TO_UPLOAD="${CURRENT_IMAGE}"
-	fi
 
-	if [[ $( settings ".remotewebsiteimageuploadoriginalname" ) == "true" ]]; then
-		DESTINATION_NAME=""
-	else
-		DESTINATION_NAME="${FULL_FILENAME}"
-	fi
-	# Goes in root of Website so second arg is "".
-	upload_all --remote-web "${FILE_TO_UPLOAD}" "" "${DESTINATION_NAME}" "SaveImage"
-	((RET += $?))
-	if [[ $( settings ".remoteserverimageuploadoriginalname" ) == "true" ]]; then
-		DESTINATION_NAME=""
-	else
-		DESTINATION_NAME="${FULL_FILENAME}"
-	fi
-	# Goes in root of Website so second arg is "".
-	upload_all --remote-server "${FILE_TO_UPLOAD}" "" "${DESTINATION_NAME}" "SaveImage"
-	((RET += $?))
+		if [[ ${R_WEB} == "true" ]]; then
+			if [[ $( settings ".remotewebsiteimageuploadoriginalname" ) == "true" ]]; then
+				DESTINATION_NAME=""
+			else
+				DESTINATION_NAME="${FULL_FILENAME}"
+			fi
+			# Goes in root of Website so second arg is "".
+			upload_all --remote-web "${FILE_TO_UPLOAD}" "" "${DESTINATION_NAME}" "SaveImage"
+			((RET += $?))
+		fi
 
-	[[ ${RESIZE_UPLOADS} == "true" ]] && rm -f "${FILE_TO_UPLOAD}"	# was a temporary file
+		if [[ ${R_SERVER} == "true" ]]; then
+			if [[ $( settings ".remoteserverimageuploadoriginalname" ) == "true" ]]; then
+				DESTINATION_NAME=""
+			else
+				DESTINATION_NAME="${FULL_FILENAME}"
+			fi
+			# Goes in root of Website so second arg is "".
+			upload_all --remote-server "${FILE_TO_UPLOAD}" "" "${DESTINATION_NAME}" "SaveImage"
+			((RET += $?))
+		fi
+
+		[[ ${RESIZE_UPLOADS} == "true" ]] && rm -f "${FILE_TO_UPLOAD}"	# was a temporary file
+	fi
 fi
 
 # If needed, upload the mini timelapse.  If the upload failed above, it will likely fail below.

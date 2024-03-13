@@ -49,6 +49,7 @@ if ($msg != "") {
 $f = basename($file);		// easier to see just filename than long path
 if (! $isRemote) {
 	// Local file - we updated it a few lines above.
+}
 if ($useRemoteWebsite) {
 	message_and_exit($Success, "$f saved");
 }

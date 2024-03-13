@@ -88,7 +88,6 @@ if ($useLogin) {
 $remoteWebsiteVersion = "";
 if ($hasRemoteWebsite) {
 	$f = getRemoteWebsiteConfigFile(); 
-	echo "<br>==================f = $f";
 	$errorMsg = "WARNING: ";
 	$retMsg = "";
 	$a_array = get_decoded_json_file($f, true, $errorMsg, $retMsg);
@@ -224,9 +223,14 @@ if ($hasRemoteWebsite) {
 					&nbsp; &nbsp;
 <?php if ($useRemoteWebsite !== "") {
 					echo "<span class='nowrap'>";
-					echo "<a class='version-title-color' href='$remoteWebsiteURL' target='_blank' title='Click to go to remote Website'>";
-					echo "Remote Website $remoteWebsiteVersion";
-					echo " <i class='fa fa-external-link-alt fa-fw'></i></a></span>";
+					if ($remoteWebsiteURL !== "") {
+						echo "<a class='version-title-color' href='$remoteWebsiteURL' ";
+						echo " target='_blank' title='Click to go to remote Website'>";
+						echo "Remote Website $remoteWebsiteVersion";
+						echo " <i class='fa fa-external-link-alt fa-fw'></i></a></span>";
+					} else {
+						echo "Remote Website $remoteWebsiteVersion (unknown URL)";
+					}
 } ?>
 				</div>
 		</div> <!-- /.navbar-header -->

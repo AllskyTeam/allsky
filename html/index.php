@@ -217,18 +217,16 @@ if ($hasRemoteWebsite) {
 				<div class="version-title version-title-color">
 					<span class="nowrap">Version: <?php echo ALLSKY_VERSION; ?></span>
 					&nbsp; &nbsp;
-<?php if ($localWebsiteVersion !== "") {
+<?php if ($useLocalWebsite !== "") {
 					echo "<span class='nowrap'>";
 					echo "<a class='version-title-color' href='allsky/index.php' target='_blank' title='Click to go to local Website'>";
-					echo "Local Website: $localWebsiteVersion";
-					echo " <i class='fa fa-external-link-alt fa-fw'></i></a></span>";
+					echo "Local Website <i class='fa fa-external-link-alt fa-fw'></i></a></span>";
 } ?>
 					&nbsp; &nbsp;
-<?php if ($remoteWebsiteVersion !== "") {
+<?php if ($useRemoteWebsite !== "") {
 					echo "<span class='nowrap'>";
-					echo "<a class='version-title-color' href='$websiteURL' target='_blank' title='Click to go to remote Website'>";
-					echo "Remote Website: $remoteWebsiteVersion";
-					echo " <i class='fa fa-external-link-alt fa-fw'></i></a></span>";
+					echo "<a class='version-title-color' href='$remoteWebsiteURL' target='_blank' title='Click to go to remote Website'>";
+					echo "Remote Website <i class='fa fa-external-link-alt fa-fw'></i></a></span>";
 } ?>
 				</div>
 		</div> <!-- /.navbar-header -->

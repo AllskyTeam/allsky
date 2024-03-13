@@ -609,7 +609,7 @@ if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 			echo -e "${wDEBUG}Uploading '${FILE_TO_UPLOAD}' to remote Website.${wNC}"
 		fi
 
-		if ! "${ALLSKY_SCRIPTS}/upload.sh" --silent --remote "web" \
+		if ! "${ALLSKY_SCRIPTS}/upload.sh" --silent --remote-web \
 				"${FILE_TO_UPLOAD}" \
 				"${IMAGE_DIR}" \
 				"${ALLSKY_WEBSITE_CONFIGURATION_NAME}" \

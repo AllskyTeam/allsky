@@ -84,12 +84,6 @@ if ($useLogin) {
 	$csrf_token = $_SESSION['csrf_token'];
 }
 
-$websiteFile = ALLSKY_WEBSITE . "/version";
-if (file_exists($websiteFile)) {
-	$localWebsiteVersion = file_get_contents($websiteFile);
-} else {
-	$localWebsiteVersion = "";
-}
 // Get the version of the remote Allsky Website, if it exists.
 $remoteWebsiteVersion = "";
 if ($hasRemoteWebsite) {
@@ -102,8 +96,14 @@ if ($hasRemoteWebsite) {
 	} else {
 		$c = getVariableOrDefault($a_array, 'config', '');
 		if ($c !== "") {
-			$s = '<span class="errorMsg">[unknown]</span>';
-			$remoteWebsiteVersion = getVariableOrDefault($c, 'AllskyWebsiteVersion', $s);
+			$remoteWebsiteVersion = getVariableOrDefault($c, 'AllskyVersion', null);
+			if ($remoteWebsiteVersion === null) {
+				$remoteWebsiteVersion = '<span class="errorMsg">[version unknown]</span>';
+			} else if ($remoteWebsiteVersion == ALLSKY_VERSION) {
+				$remoteWebsiteVersion = "";		// don't display if same version as Allsky
+			} else {
+				$remoteWebsiteVersion = "&nbsp; (version $remoteWebsiteVersion)";
+			}
 		}
 	}
 }
@@ -217,18 +217,22 @@ if ($hasRemoteWebsite) {
 				<div class="version-title version-title-color">
 					<span class="nowrap">Version: <?php echo ALLSKY_VERSION; ?></span>
 					&nbsp; &nbsp;
-<?php if ($localWebsiteVersion !== "") {
+<?php if ($useLocalWebsite !== "") {
 					echo "<span class='nowrap'>";
 					echo "<a class='version-title-color' href='allsky/index.php' target='_blank' title='Click to go to local Website'>";
-					echo "Local Website: $localWebsiteVersion";
-					echo " <i class='fa fa-external-link-alt fa-fw'></i></a></span>";
+					echo "Local Website <i class='fa fa-external-link-alt fa-fw'></i></a></span>";
 } ?>
 					&nbsp; &nbsp;
-<?php if ($remoteWebsiteVersion !== "") {
+<?php if ($useRemoteWebsite !== "") {
 					echo "<span class='nowrap'>";
-					echo "<a class='version-title-color' href='$websiteURL' target='_blank' title='Click to go to remote Website'>";
-					echo "Remote Website: $remoteWebsiteVersion";
-					echo " <i class='fa fa-external-link-alt fa-fw'></i></a></span>";
+					if ($remoteWebsiteURL !== "") {
+						echo "<a class='version-title-color' href='$remoteWebsiteURL' ";
+						echo " target='_blank' title='Click to go to remote Website'>";
+						echo "Remote Website $remoteWebsiteVersion";
+						echo " <i class='fa fa-external-link-alt fa-fw'></i></a></span>";
+					} else {
+						echo "Remote Website $remoteWebsiteVersion (unknown URL)";
+					}
 } ?>
 				</div>
 		</div> <!-- /.navbar-header -->

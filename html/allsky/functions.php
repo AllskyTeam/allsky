@@ -25,9 +25,9 @@ function initialize() {
 	$configuration_file = "$configFilePrefix$configurationFileName";
 	if (! file_exists($configuration_file)) {
 		$retMsg .= "<p class='error-msg'>";
-			$retMsg .= "ERROR: The Website does not appear to be enabled.";
+			$retMsg .= "ERROR: This remote Website does not appear to be fully installed.";
 			$retMsg .= "<br>The configuration file '$configuration_file' is missing.";
-			$retMsg .= "<br><br>Make sure the Website is enabled in the WebUI.";
+			$retMsg .= "<br><br>Make sure this remote Website is installed enabled in the WebUI.";
 		$retMsg .= "</p>";
 		return($retMsg);
 	}

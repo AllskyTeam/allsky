@@ -191,8 +191,10 @@ if ($hasRemoteWebsite) {
 	<link rel="stylesheet" href="lib/codeMirror/codemirror.css">
 	<link rel="stylesheet" href="lib/codeMirror/monokai.min.css">
 	<script type="text/javascript" src="lib/codeMirror/codemirror.js"> </script>
+<!--
 	<script type="text/javascript" src="lib/codeMirror/shell.js"> </script>
-<?php if ($localWebsiteVersion !== "" || $remoteWebsiteVersion !== "") { ?>
+-->
+<?php if ($useLocalWebsite || $useRemoteWebsite) { ?>
 	<script type="text/javascript" src="lib/codeMirror/json.js"> </script>
 <?php } ?>
 </head>

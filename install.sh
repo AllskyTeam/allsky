@@ -42,6 +42,12 @@ SPACE="    "
 NOT_RESTORED="NO PRIOR VERSION"
 TMP_FILE="/tmp/x"						# temporary file used by many functions
 
+# Overlay variables
+SENSOR_WIDTH=""
+SENSOR_HEIGHT=""
+FULL_OVERLAY_NAME=""
+SHORT_OVERLAY_NAME=""
+OVERLAY_NAME=""
 
 ##### Allsky versions.   ${ALLSKY_VERSION} is set in variables.sh
 ##xxx TODO: uncomment:    ALLSKY_BASE_VERSION="$( remove_point_release "${ALLSKY_VERSION}" )"
@@ -1415,7 +1421,7 @@ does_prior_Allsky_exist()
 # ask the user if they want to move stuff from there to the new directory.
 # Look for a directory inside the old one to make sure it's really an old allsky.
 
-WILL_USE_PRIOR=""
+WILL_USE_PRIOR="false"
 
 prompt_for_prior_Allsky()
 {
@@ -1451,10 +1457,8 @@ prompt_for_prior_Allsky()
 			MSG+="\nThis can take quite a while."
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 			display_msg --logonly info "Will NOT restore from prior version of Allsky."
-			WILL_USE_PRIOR="false"
 		fi
 	else
-		WILL_USE_PRIOR="false"
 		MSG="No prior version of Allsky found."
 		MSG+="\n\nIf you DO have a prior version and you want images, darks,"
 		MSG+=" and certain settings moved from the prior version to the new one,"
@@ -2355,12 +2359,9 @@ restore_prior_files()
 		# The directory will get populated as the user creates templates.
 	fi
 
-	PRIOR_OVERLAY_FILE="${PRIOR_CONFIG_DIR}/overlay/config/overlay.json"
-	SENSOR_WIDTH="$( settings ".sensorWidth" "${CC_FILE}" )"
-	SENSOR_HEIGHT="$( settings ".sensorHeight" "${CC_FILE}" )"
-	FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}_${CAMERA_MODEL}-${SENSOR_WIDTH}x${SENSOR_HEIGHT}-both.json"
-	SHORT_OVERLAY_NAME="overlay-${CAMERA_TYPE}.json"
+	# Globals: SENSOR_WIDTH, SENSOR_HEIGHT, FULL_OVERLAY_NAME, SHORT_OVERLAY_NAME, OVERLAY_NAME
 
+	PRIOR_OVERLAY_FILE="${PRIOR_CONFIG_DIR}/overlay/config/overlay.json"
 	PRIOR_OVERLAY_REPO_FILE="${PRIOR_ALLSKY_DIR}/config_repo/overlay/config/overlay.json"
 
 	# If no prior overlay.json exists or the user never changed it (i.e., it's the same
@@ -2369,25 +2370,17 @@ restore_prior_files()
 	ITEM="${SPACE}Overlay configuration file"
 	if [[ ! -f ${PRIOR_OVERLAY_FILE} ]] ||
 			cmp -s "${PRIOR_OVERLAY_FILE}" "${PRIOR_OVERLAY_REPO_FILE}" ; then
-
-		OVERLAY_PATH="${ALLSKY_REPO}/overlay/config/${FULL_OVERLAY_NAME}"
-		if [[ -f ${OVERLAY_PATH} ]]; then
-			OVERLAY_NAME=${FULL_OVERLAY_NAME}
-		else
-			OVERLAY_NAME=${SHORT_OVERLAY_NAME}
-		fi
 		MSG="${ITEM} (creating default)"
 		display_msg progress "${MSG}"
-       	MSG="User didn't change prior overlay file; using new '${OVERLAY_NAME}'"
-       	display_msg --logonly info "${MSG}"
-
+		MSG="User didn't change prior overlay file; using new '${OVERLAY_NAME}'"
+		display_msg --logonly info "${MSG}"
 	else
-       	# The user changed the old overlay file so copy it to the new format and
+		# The user changed the old overlay file so copy it to the new format and
 		# save its location in the settings file.
 		# NOTE: we add a 1 to the overlay name here so that the overay manager can
 		# pick it up and increment it as new overlays are created.
 		OVERLAY_NAME="${FULL_OVERLAY_NAME/overlay/overlay1}"
-       	display_msg --log progress "${ITEM} (renamed to '${OVERLAY_NAME}')"
+		display_msg --log progress "${ITEM} (renamed to '${OVERLAY_NAME}')"
 
 		DEST_FILE="${MY_OVERLAY_TEMPLATES}/${OVERLAY_NAME}"
 
@@ -2405,7 +2398,7 @@ restore_prior_files()
 
 	for s in daytimeoverlay nighttimeoverlay
 	do
-	    doV "" "OVERLAY_NAME" "${s}" "text" "${SETTINGS_FILE}"
+		doV "" "OVERLAY_NAME" "${s}" "text" "${SETTINGS_FILE}"
 	done
 
 	if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
@@ -2534,6 +2527,7 @@ restore_prior_website_files()
 	local ITEM  D  count  A  MSG
 
 	if [[ ! -f ${ALLSKY_ENV} ]]; then
+		display_msg --log progress "${SPACE}$( basename "${ALLSKY_ENV}" ) (creating)"
 		cp "${REPO_ENV_FILE}" "${ALLSKY_ENV}"
 	fi
 
@@ -2541,8 +2535,7 @@ restore_prior_website_files()
 	if [[ ! -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
 		# No prior config file (this should only happen if there was no prior Website).
 		cp  "${REPO_WEBSITE_CONFIGURATION_FILE}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
-		X="ALLSKY_VERSION"
-		doV "${X}" "X" "${WEBSITE_ALLSKY_VERSION}" "text" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+		doV "" "ALLSKY_VERSION" "${WEBSITE_ALLSKY_VERSION}" "text" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 	fi
 
 	ITEM="${SPACE}Local Website files"
@@ -3075,46 +3068,32 @@ install_Python()
 install_overlay()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
-	#local CSO  O
-
-	# Do the rest, even if we already did it in a previous installation,
-	# in case something in the directories changed.
 
 	display_msg --log progress "Setting up default modules and overlays."
-	# These will get overwritten later if the user has prior versions.
+	# Some of these will get overwritten later if the user has prior versions.
 	cp -ar "${ALLSKY_REPO}/overlay" "${ALLSKY_REPO}/modules" "${ALLSKY_CONFIG}"
 
+	# Globals: SENSOR_WIDTH, SENSOR_HEIGHT, FULL_OVERLAY_NAME, SHORT_OVERLAY_NAME, OVERLAY_NAME
 	SENSOR_WIDTH="$( settings ".sensorWidth" "${CC_FILE}" )"
 	SENSOR_HEIGHT="$( settings ".sensorHeight" "${CC_FILE}" )"
-
 	FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}_${CAMERA_MODEL}-${SENSOR_WIDTH}x${SENSOR_HEIGHT}-both.json"
 	SHORT_OVERLAY_NAME="overlay-${CAMERA_TYPE}.json"
-	OVERLAY_PATH="${ALLSKY_REPO}/overlay/config/${FULL_OVERLAY_NAME}"
 
+	local OVERLAY_PATH="${ALLSKY_REPO}/overlay/config/${FULL_OVERLAY_NAME}"
 	if [[ -f ${OVERLAY_PATH} ]]; then
 		OVERLAY_NAME=${FULL_OVERLAY_NAME}
 	else
 		OVERLAY_NAME=${SHORT_OVERLAY_NAME}
 	fi
 
-	display_msg --log progress "using overlay ${OVERLAY_NAME}."
-
-	for s in daytimeoverlay nighttimeoverlay
-	do
-		VALUE=""; doV "" "OVERLAY_NAME" "${s}" "text" "${SETTINGS_FILE}"
-	done
-
-	# Normally makeChanges.sh handles creating the "overlay.json" file, but the
-	# Camera-Specific Overlay (CSO) file didn't exist when makeChanges was called,
-	# so we have to set it up here.
-	#CSO="${ALLSKY_OVERLAY}/config/overlay-${CAMERA_TYPE}.json"
-	#O="${ALLSKY_OVERLAY}/config/overlay.json"		# generic name
-	#if [[ -f ${CSO} ]]; then
-	#	display_msg "${LOG_TYPE}" progress "Copying '${CSO}' to 'overlay.json'."
-	#	cp "${CSO}" "${O}"
-	#else
-	#	display_msg --log error "'${CSO}' does not exist; unable to create default overlay file."
-	#fi
+	if [[ ${WILL_USE_PRIOR} == "false" ]]; then
+		# Set to defaults since there are no prior files.
+		display_msg --log progress "Using overlay ${OVERLAY_NAME}."
+		for s in daytimeoverlay nighttimeoverlay
+		do
+			local VALUE=""; doV "" "OVERLAY_NAME" "${s}" "text" "${SETTINGS_FILE}"
+		done
+	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }
@@ -3768,14 +3747,9 @@ install_PHP_modules
 install_Python
 install_overlay
 
-### TODO: ERIC this ok>
-##### Restore prior files if needed
-if [[ ${WILL_USE_PRIOR} == "true" ]]; then
-	restore_prior_files
-else
-	get_lat_long	# prompt for them to put in new settings file
-	mkdir -p "${ALLSKY_EXTRA}"		# default permissions is ok
-fi
+##### Restore prior files if needed.
+# This MUST be called even if we know we're not using an OLD directory.
+restore_prior_files
 
 ##### Restore prior Website files if needed.
 # This has to come after restore_prior_files() since it may set some variables we need.

@@ -322,7 +322,14 @@ function display_thumbnails($dir, $file_prefix, $title)
 		return;
 	}
 
-	asort($files);
+	if ($thumbnailsortorder === "descending") {
+		arsort($images);
+		$sortOrder = "Sorted newest to oldest (descending)";
+	} else {
+		asort($images);
+		$sortOrder = "Sorted oldest to newest (ascending)";
+	}
+	$sortOrder = "<span class='imagesSortOrder'>$sortOrder</span>";
 	
 	$thumb_dir = "$dir/thumbnails";
 	if (! is_dir($thumb_dir)) {

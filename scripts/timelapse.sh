@@ -269,6 +269,7 @@ fi
 
 # "-loglevel warning" gets rid of the dozens of lines of garbage output
 # but doesn't get rid of "deprecated pixel format" message when -pix_ftm is "yuv420p".
+# Bitrate settings are integers so do NOT include the "k", so add below.
 if [[ ${IS_MINI} == "true" ]]; then
 	FPS="$( settings ".minitimelapsefps" )"
 	TIMELAPSE_BITRATE="$( settings ".minitimelapsebitrate" )"
@@ -295,7 +296,7 @@ X="$( ffmpeg -y -f image2 \
 	-r "${FPS}" \
 	-i "${SEQUENCE_DIR}/%04d.${EXTENSION}" \
 	-vcodec "${VCODEC}" \
-	-b:v "${TIMELAPSE_BITRATE}" \
+	-b:v "${TIMELAPSE_BITRATE}k" \
 	-pix_fmt "${PIX_FMT}" \
 	-movflags +faststart \
 	${SCALE} \

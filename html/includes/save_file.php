@@ -6,6 +6,7 @@
 $status = null;
 include_once('functions.php');
 initialize_variables(true);		// "true" to only get website stuff
+
 $debug = false;
 $Success = "S"; $Warning = "W"; $Error = "E";
 
@@ -13,12 +14,12 @@ $Success = "S"; $Warning = "W"; $Error = "E";
 // or "W\t" (for Warning);
 // On failure, return a string that starts with "E\t" (for Error).
 
-$content = getVariableOrDefault($_POST, 'content', "");
-
 $path = getVariableOrDefault($_POST, 'path', null);
 if ($path === null) {
 	message_and_exit($Error, "No file name specified to save!");
 }
+
+$content = getVariableOrDefault($_POST, 'content', "");
 
 // "current" is a web alias to ALLSKY_HOME.
 // "website" is a web alias to ALLSKY_WEBSITE.
@@ -49,8 +50,6 @@ if ($msg != "") {
 $f = basename($file);		// easier to see just filename than long path
 if (! $isRemote) {
 	// Local file - we updated it a few lines above.
-}
-if ($useRemoteWebsite) {
 	message_and_exit($Success, "$f saved");
 }
 
@@ -61,7 +60,7 @@ if ($useRemoteWebsite) {
 	// name to NOT include that string.
 	$remoteName = str_replace("remote_", "", $f);
 
-	$U1 = ALLSKY_SCRIPTS . "/upload.sh --silent --remote web";
+	$U1 = ALLSKY_SCRIPTS . "/upload.sh --silent --remote-web";
 	$U2 = "'$file' '$imageDir' '$remoteName' 'remote_file'";
 	$cmd = "$U1 $U2";
 	exec("echo sudo -u " . ALLSKY_OWNER . " $cmd 2>&1", $output, $return_val);

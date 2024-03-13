@@ -45,7 +45,7 @@
 	margin-right: 15px;
 }
 .version-title {
-	margin-left: 40px;
+	margin-left: 10px;
 	display: inline-block;
 	font-size: 80%;
 	opacity: 0.7;
@@ -433,6 +433,19 @@ input[type="text"].has-error {
 	color: #bfbfbf;
 	background-color: #8d3431;
 	border-color: #ad5451;
+}
+
+.btn-delete {
+	color: white;
+	border: 1px solid #d42f3a;
+	background-color: #d9534f;
+}
+.btn-delete:hover {
+	color: black;
+	background-color: #f96f6f;
+}
+.dark .btn-delete {
+	color: black;
 }
 
 .btn.focus.navbar-btn,

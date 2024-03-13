@@ -159,9 +159,9 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 		echo "{"
 		echo "\"sunrise\": \"${today}T${sunrise_hhmm}:00.000${timezone}\","
 		echo "\"sunset\": \"${today}T${sunset_hhmm}:00.000${timezone}\","
-		echo "\"takedaytimeimages\": \"${D}\""
+		echo "\"streamDaytime\": \"${D}\"",		# TODO: old name - remove in next release
+		echo "\"takedaytimeimages\": \"${D}\"",
 		echo "\"takenighttimeimages\": \"${N}\""
-		echo "\"streamDaytime\": \"${D}\""		# TODO: old name - remove in next release
 		echo "}"
 	} > "${OUTPUT_FILE}"
 fi

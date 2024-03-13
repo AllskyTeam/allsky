@@ -226,7 +226,7 @@ function initialize_variables($website_only=false) {
 
 	// Lessen the delay between a new picture and when we check.
 	$delay /= 5;
-	$delay = max($delay, 2 * $ms_in_sec);
+	$delay = max($delay, 2 * $ms_per_sec);
 }
 
 // Check if the settings have been configured.

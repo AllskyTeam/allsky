@@ -20,34 +20,39 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP
 usage_and_exit()
 {
 	local RET=${1}
-	local C
-	if [[ ${RET} == 0 ]]; then
-		C="${YELLOW}"
-	else
-		C="${RED}"
-	fi
-	echo
-	echo -e "${C}Usage: ${ME} [--help] [--no-info] [--no-warn] [--no-error]${NC}"
-	echo
-	echo "'--help' displays this message and exits."
-	echo "'--no-info' skips checking for Informational items."
-	echo "'--no-warn' skips checking for Warning items."
-	echo "'--no-error' skips checking for Error items."
-	echo
+	local C=""
+	[[ ${RET} -ne 0 ]] && C="${RED}"
+	{
+		echo
+		echo -en "${C}"
+		echo -n  "Usage: ${ME} [--help] [--fromWebUI] [--no-info] [--no-warn] [--no-error]"
+		echo -e  "${NC}"
+		echo
+		echo "'--help' displays this message and exits."
+		echo "'--fromWebUI' displays output to be displayed in the WebUI."
+		echo "'--no-info' skips checking for Informational items."
+		echo "'--no-warn' skips checking for Warning items."
+		echo "'--no-error' skips checking for Error items."
+		echo
+	} >&2
 	exit "${RET}"
 }
 
 # Check arguments
 OK="true"
 HELP="false"
+FROM_WEBUI="false"
 CHECK_INFORMATIONAL="true"
 CHECK_WARNINGS="true"
 CHECK_ERRORS="true"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
-	case "${ARG}" in
+	case "${ARG,,}" in
 		--help)
 			HELP="true"
+			;;
+		--fromwebui)
+			FROM_WEBUI="true"
 			;;
 		--no-info)
 			CHECK_INFORMATIONAL="false"
@@ -59,7 +64,7 @@ while [[ $# -gt 0 ]]; do
 			CHECK_ERRORS="false"
 			;;
 		*)
-			display_msg error "Unknown argument: '${ARG}'."
+			echo -e "${RED}Unknown argument: '${ARG}'${NC}" >&2
 			OK="false"
 			;;
 	esac
@@ -67,6 +72,14 @@ while [[ $# -gt 0 ]]; do
 done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
+
+if [[ ${FROM_WEBUI} == "true" ]]; then
+	NL="<br>"
+	TAB="&nbsp; &nbsp; &nbsp;"
+else
+	NL="\n"
+	TAB="\t"
+fi
 
 NUM_INFOS=0
 NUM_WARNINGS=0
@@ -108,7 +121,7 @@ function heading()
 	esac
 
 	if [[ ${DISPLAY_HEADER} == "true" ]]; then
-		echo -e "\n---------- ${HEADER}${SUB_HEADER} ----------\n"
+		echo -e "${NL}---------- ${HEADER}${SUB_HEADER} ----------${NL}"
 	else
 		echo "-----"	# Separates lines within a header group
 	fi
@@ -244,6 +257,17 @@ TAKE="$( get_setting ".takedaytimeimages" )"
 SAVE="$( get_setting ".savedaytimeimages" )"
 BRIGHTNESS_THRESHOLD="$( get_setting ".startrailsbrightnessthreshold" )"
 
+USE_LOCAL_WEBSITE="$( get_setting ".uselocalwebsite" )"
+USE_REMOTE_WEBSITE="$( get_setting ".useremotewebsite" )"
+USE_REMOTE_SERVER="$( get_setting ".useremoteserver" )"
+if [[ ${USE_LOCAL_WEBSITE} == "true" ||
+	  ${USE_REMOTE_WEBSITE} == "true" ||
+	  ${USE_REMOTE_SERVER} == "true" ]]; then
+	USE_SOMETHING="true"
+else
+	USE_SOMETHING="false"
+fi
+
 # ======================================================================
 # ================= Check for informational items.
 
@@ -264,56 +288,58 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 	if [[ ${TAKING_DARKS} == "true" ]]; then
 		heading "Information"
 		echo "'Take Dark Frames' is set."
-		echo -e "\tUnset when you are done taking dark frames."
+		echo -e "${TAB}Unset when you are done taking dark frames."
 	fi
 
 	if [[ ${KEEP_SEQUENCE} == "true" ]]; then
 		heading "Information"
 		echo "'Keep Timelapse Sequence' in enabled."
-		echo -e "\tIf you are not testing / debugging timelapse videos consider disabling this"
-		echo -e "\tto save disk space."
+		echo -e "${TAB}If you are not testing / debugging timelapse videos consider disabling this"
+		echo -e "${TAB}to save disk space."
 	fi
 
 	if [[ ${THUMBNAIL_SIZE_X} -ne 100 || ${THUMBNAIL_SIZE_Y} -ne 75 ]]; then
 		heading "Information"
 		echo -n "You are using a non-standard thumbnail size (${THUMBNAIL_SIZE_X} x ${THUMBNAIL_SIZE_Y})."
-		echo -e "\tPlease note non-standard sizes have not been thoroughly tested and"
-		echo -e "\tyou will likely need to modify some code to get them working."
+		echo -e "${TAB}Please note non-standard sizes have not been thoroughly tested and"
+		echo -e "${TAB}you will likely need to modify some code to get them working."
 	fi
 
+	FOREVER="be kept forever or until you manually delete them."
 	if [[ ${DAYS_TO_KEEP} -eq 0 ]]; then
 		heading "Information"
 		echo "'Days To Keep' is 0 which means images and videos will"
-		echo -e "\tbe kept forever or until you manually delete them."
+		echo "${FOREVER}"
 	fi
 
 	if [[ (${WEBSITES} == "both" || ${WEBSITES} == "local") &&
 			${LOCAL_WEB_DAYS_TO_KEEP} -eq 0 ]]; then
 		heading "Information"
 		echo "'Days To Keep on Pi Website' is 0 which means local web images and videos will"
-		echo -e "\tbe kept forever or until you manually delete them."
+		echo "${FOREVER}"
 	fi
+	# REMOTE_WEB_DAYS_TO_KEEP may not be implemented; if so, ignore.
 	if [[ (${WEBSITES} == "both" || ${WEBSITES} == "remote") &&
-			${REMOTE_WEB_DAYS_TO_KEEP} -eq 0 ]]; then
+			-n ${REMOTE_WEB_DAYS_TO_KEEP} && ${REMOTE_WEB_DAYS_TO_KEEP} -eq 0 ]]; then
 		heading "Information"
 		echo "'Days To Keep on Remote Website' is 0 which means remote web images and videos will"
-		echo -e "\tbe kept forever or until you manually delete them."
+		echo "${FOREVER}"
 	fi
 
 	if [[ ${IMG_RESIZE_WIDTH} -gt 0 && ${IMG_RESIZE_HEIGHT} -eq 0 ]]; then
 		heading "Information"
 		echo "'Image Resize Width' set to ${IMG_RESIZE_WIDTH} but 'Image Resize Height' is 0."
-		echo -e "\tThe image will NOT be resized."
+		echo "The image will NOT be resized."
 	elif [[ ${IMG_RESIZE_WIDTH} -eq 0 && ${IMG_RESIZE_HEIGHT} -gt 0 ]]; then
 		heading "Information"
 		echo "'Image Resize Width' is 0 but 'Image Resize Height' is ${IMG_RESIZE_HEIGHT}."
-		echo -e "\tThe image will NOT be resized."
+		echo "The image will NOT be resized."
 	elif [[ ${IMG_RESIZE_WIDTH} -gt 0 && ${IMG_RESIZE_HEIGHT} -gt 0 ]]; then
 		if [[ ${SENSOR_WIDTH} == "${IMG_RESIZE_WIDTH}" && ${SENSOR_HEIGHT} == "${IMG_RESIZE_HEIGHT}" ]]; then
 			heading "Information"
 			echo "Images will be resized to the same size as the sensor; this does nothing useful."
-			echo -e "\tCheck 'Image Reize Width' (${IMG_RESIZE_WIDTH}) and"
-			echo -e "\t'Image Reize Height' (${IMG_RESIZE_HEIGHT})."
+			echo -n "Check 'Image Reize Width' (${IMG_RESIZE_WIDTH}) and"
+			echo    " 'Image Reize Height' (${IMG_RESIZE_HEIGHT})."
 		fi
 	fi
 
@@ -323,7 +349,7 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 		if [[ $? -ne 0 ]]; then
 			heading "Information"
 			echo "${ERR}"
-			echo -e "\tCheck the 'Image Crop Top/Right/Bottom/Left' settings."
+			echo -e "${TAB}Check the 'Image Crop Top/Right/Bottom/Left' settings."
 		fi
 	fi
 
@@ -335,10 +361,10 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 		if [[ ${FOUND} == "true" ]]; then
 			heading "Information"
 			echo "Check your 'Keogram Extra Parameters' setting:"
-			echo -e "\t--image-expand"
-			echo -e "\t--font-size"
-			echo -e "\t--font-line"
-			echo -e "\t--font-color"
+			echo -e "${TAB}--image-expand"
+			echo -e "${TAB}--font-size"
+			echo -e "${TAB}--font-line"
+			echo -e "${TAB}--font-color"
 			echo -e "are separate settings now."
 		fi
 	fi
@@ -374,7 +400,7 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 	if [[ ${LAST_CHANGED} == "" ]]; then
 		heading "Warning"
 		echo "Allsky needs to be configured before it will run."
-		echo -e "\tSee the 'Allsky Settings' page in the WebUI."
+		echo -e "${TAB}See the 'Allsky Settings' page in the WebUI."
 	fi
 
 	if reboot_needed ; then
@@ -442,7 +468,7 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 		fi
 		if [[ ${UPLOAD_VIDEO} == "false" ]]; then
 			heading "Warnings"
-			echo "Timelapse videos are being created (Generate Timelapse='true') but not uploaded (Upload Timelapse='false')"
+			echo "Timelapse videos are being created ('Generate Timelapse' = Yes) but not uploaded ('Upload Timelapse' = No)"
 		fi
 		if echo "${TIMELAPSE_BITRATE}" | grep -i --silent "k" ; then
 			heading "Warnings"
@@ -450,7 +476,7 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 		fi
 	elif [[ ${UPLOAD_VIDEO} == "true" ]]; then
 		heading "Warnings"
-		echo "Timelapse videos are not being created (Generate Timelapse='false') but Upload Timelapse='true'"
+		echo "Timelapse videos are not being created ('Generate Timelapse' = No) but 'Upload Timelapse' = Yes"
 	fi
 
 	# Mini-timelapse
@@ -460,7 +486,7 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 		fi
 		if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "false" ]]; then
 			heading "Warnings"
-			echo "Mini timelapse videos are being created (TIMELAPSE='true') but not uploaded (Upload Timelapse='false')"
+			echo "Mini timelapse videos are being created ('Number Of Images' > 0) but not uploaded ('Upload Timelapse' = No)"
 		fi
 		if echo "${TIMELAPSE_MINI_BITRATE}" | grep -i --silent "k" ; then
 			heading "Warnings"
@@ -499,7 +525,7 @@ if false; then		# for testing
 	TIMELAPSE_MINI_IMAGES=120
 fi
 
-		# On a Pi 4, creating a 50 image timelapse takes
+		# On a Pi 4, creating a 50-image timelapse takes
 		#	- a few seconds on a small ZWO camera
 		#	- about a minute with an RPi HQ camera
 
@@ -522,35 +548,36 @@ fi
 		fi
 	elif [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" ]]; then
 		heading "Warnings"
-		echo "Mini timelapse videos are not being created (Number of Images=0) but Upload Mini-Timelapse='true'"
+		echo "Mini timelapse videos are not being created ('Number of Images' = 0) but 'Upload Mini-Timelapse' = Yes"
 	fi
 
 	##### Keograms
-	if [[ ${KEOGRAM} == "true" && ${UPLOAD_KEOGRAM} == "false" ]]; then
+	if [[ ${KEOGRAM} == "true" && ${UPLOAD_KEOGRAM} == "false" && ${USE_SOMETHING} == "true" ]]; then
 		heading "Warnings"
-		echo "Keograms are being created (KEOGRAM='true') but not uploaded (UPLOAD_KEOGRAM='false' )"
+		echo "Keograms are being created ('Generate Keogram' = Yes) but not uploaded ('Upload Keogram' = No)"
 	fi
 	if [[ ${KEOGRAM} == "false" && ${UPLOAD_KEOGRAM} == "true" ]]; then
 		heading "Warnings"
-		echo "Keograms are not being created (KEOGRAM='false') but UPLOAD_KEOGRAM='true'"
+		echo "Keograms are not being created ('Generate Keogram' = No) but 'Upload Keogram' = Yes"
 	fi
 
 	##### Startrails
-	if [[ ${STARTRAILS} == "true" && ${UPLOAD_STARTRAILS} == "false" ]]; then
+	if [[ ${STARTRAILS} == "true" && ${UPLOAD_STARTRAILS} == "false" && ${USE_SOMETHING} == "true" ]]; then
 		heading "Warnings"
-		echo "Startrails are being created (Generate Startrails='true') but not uploaded (Upload Startrails='false' )"
+		echo "Startrails are being created ('Generate Startrails' = Yes) but not uploaded ('Upload Startrails' = No)"
 	fi
 	if [[ ${STARTRAILS} == "false" && ${UPLOAD_STARTRAILS} == "true" ]]; then
 		heading "Warnings"
-		echo "Startrails are not being created (Generate Startrails='false') but Upload Startrails='true'"
+		echo "Startrails are not being created ('Generate Startrails' = No) but 'Upload Startrails' = Yes"
 	fi
 
-	if [[ ${BRIGHTNESS_THRESHOLD} == "0" ]]; then
+	awk -v x="${BRIGHTNESS_THRESHOLD}" 'BEGIN {if (x == 0.0) exit 0; else if (x == 1.0) exit 1; exit 2; }'; X=$?
+	if [[ ${X} -eq 0 ]]; then
 		heading "Warnings"
-		echo "BRIGHTNESS_THRESHOLD is 0 which means ALL images will be IGNORED when creating startrails."
-	elif [[ ${BRIGHTNESS_THRESHOLD} == "1" ]]; then
+		echo "'Startrails Brightness Threshold' is 0.0 which means ALL images will be IGNORED when creating startrails."
+	elif [[ ${X} -eq 1 ]]; then
 		heading "Warnings"
-		echo "BRIGHTNESS_THRESHOLD is 1 which means ALL images will be USED when creating startrails, even daytime images."
+		echo "'Startrails Brightness Threshold' is 1.0 which means ALL images will be USED when creating startrails, even daytime images."
 	fi
 
 	##### Images
@@ -559,13 +586,15 @@ fi
 		echo "'Daytime Capture' is off but 'Daytime Save' is on in the WebUI."
 	fi
 
-	# These can be floats which bash doesn't support, so treat as strings.
-	if [[ ${REMOVE_BAD_IMAGES_LOW} == "0" ]]; then
+	# These will be floats (between 0.0 and 1.0) which bash doesn't support, so treat as strings.
+	awk -v x="${REMOVE_BAD_IMAGES_LOW}" 'BEGIN {if (x == 0.0) exit 0; else exit 1; }'; X=$?
+	if [[ ${X} -eq 0 ]]; then
 		heading "Warnings"
 		echo "'Remove Bad Images Threshold Low' is 0 (disabled)."
 		echo We HIGHLY recommend setting it to a value greater than 0 unless you are debugging issues.
 	fi
-	if [[ ${REMOVE_BAD_IMAGES_HIGH} == "0" ]]; then
+	awk -v x="${REMOVE_BAD_IMAGES_HIGH}" 'BEGIN {if (x == 0.0) exit 0; else exit 1; }'; X=$?
+	if [[ ${X} -eq 0 ]]; then
 		heading "Warnings"
 		echo "'Remove Bad Images Threshold High' is 0 (disabled)."
 		echo We HIGHLY recommend setting it to a value greater than 0 unless you are debugging issues.
@@ -608,15 +637,6 @@ fi
 		echo -e "${X}"
 	fi
 
-
-	##### If these variables are set, their corresponding directory should exist.
-	check_exists "UHUBCTL_PATH"
-
-	##### Check for Allsky Website-related issues.
-	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} && (${PROTOCOL} == "" || ${PROTOCOL} == "local") ]]; then
-		heading "Warnings"
-		echo "A remote Allsky Website configuration file was found but PROTOCOL doesn't support uploading files."
-	fi
 fi		# end of checking for warning items
 
 
@@ -629,7 +649,8 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 
 	# Settings used in this section.
 	USING_DARKS="$( get_setting ".usedarkframes" )"
-	IMG_UPLOAD_ORIGINAL_NAME="$( get_setting ".imageuploadoriginalname" )"
+	UPLOAD_ORIGINAL_NAME_WEBSITE="$( get_setting ".remotewebsiteimageuploadoriginalname" )"
+	UPLOAD_ORIGINAL_NAME_SERVER="$( get_setting ".remoteserverimageuploadoriginalname" )"
 	IMG_CREATE_THUMBNAILS="$( get_setting ".imagecreatethumbnails" )"
 	TIMELAPSE_MINI_FORCE_CREATION="$( get_setting ".minitimelapseforcecreation" )"
 	# shellcheck disable=SC2034
@@ -660,7 +681,8 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 	##### Make sure these booleans have boolean values.
 		# TODO: use options.json to determine which are type=boolean.
 	check_bool "${USING_DARKS}" "Use Dark Frames"
-	check_bool "${IMG_UPLOAD_ORIGINAL_NAME}" "Upload With Original Name"
+	check_bool "${UPLOAD_ORIGINAL_NAME_WEBSITE}" "Upload With Original Name (to website)"
+	check_bool "${UPLOAD_ORIGINAL_NAME_SERVER}" "Upload With Original Name (to server)"
 	check_bool "${IMG_CREATE_THUMBNAILS}" "Create Image Thumbnails"
 	check_bool "${TIMELAPSE}" "Generate Timelapse"
 	check_bool "${UPLOAD_VIDEO}" "Upload Timelapse"
@@ -723,8 +745,8 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 		echo "IMG_UPLOAD_FREQUENCY (${IMG_UPLOAD_FREQUENCY}) must be 1 or greater."
 	fi
 	if [[ ${AUTO_STRETCH} == "true" ]]; then
-		if ! is_number "${AUTO_STRETCH_AMOUNT}" || \
-				[[ ${AUTO_STRETCH_AMOUNT} -le 0 ]] || \
+		if ! is_number "${AUTO_STRETCH_AMOUNT}" ||
+				[[ ${AUTO_STRETCH_AMOUNT} -le 0 ]] ||
 				[[ ${AUTO_STRETCH_AMOUNT} -gt 100 ]] ; then
 			heading "Errors"
 			echo "AUTO_STRETCH_AMOUNT (${AUTO_STRETCH_AMOUNT}) must be 1 - 100."
@@ -735,40 +757,39 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 			echo "for example:  10%."
 		fi
 	fi
-	if ! is_number "${BRIGHTNESS_THRESHOLD}" || \
-			! echo "${BRIGHTNESS_THRESHOLD}" | \
-			awk '{if ($1 < 0.0 || $1 > 1.0) exit 1; exit 0; }' ; then
+	if ! is_number "${BRIGHTNESS_THRESHOLD}" ||
+			!  awk -v b="${BRIGHTNESS_THRESHOLD}" 'BEGIN {if (b < 0.0 || b > 1.0) exit 1; exit 0; }' ; then
 		heading "Errors"
 		echo "BRIGHTNESS_THRESHOLD (${BRIGHTNESS_THRESHOLD}) must be 0.0 - 1.0"
 	fi
-	if ! is_number "${REMOVE_BAD_IMAGES_THRESHOLD_LOW}" || \
-		! echo "${REMOVE_BAD_IMAGES_THRESHOLD_LOW}" | \
-		awk '{if ($1 < 0.0) exit 1; exit 0; }' ; then
+	if ! is_number "${REMOVE_BAD_IMAGES_LOW}" ||
+			!  awk -v l="${REMOVE_BAD_IMAGES_LOW}" 'BEGIN {if (l < 0.0) exit 1; exit 0; }' ; then
 		heading "Errors"
-		echo "REMOVE_BAD_IMAGES_THRESHOLD_LOW (${REMOVE_BAD_IMAGES_THRESHOLD_LOW}) must be 0.0 - 1.0,"
+		echo "'Remove Bad Images Threshold Low' (${REMOVE_BAD_IMAGES_LOW}) must be 0.0 - 1.0,"
 		echo "although it's normally around 0.005.  0 disables the low threshold check."
 	fi
-	if ! is_number "${REMOVE_BAD_IMAGES_THRESHOLD_HIGH}" || \
-		! echo "${REMOVE_BAD_IMAGES_THRESHOLD_HIGH}" | \
-		awk '{if ($1 > 1.0) exit 1; exit 0; }' ; then
+	if ! is_number "${REMOVE_BAD_IMAGES_HIGH}" ||
+			!  awk -v h="${REMOVE_BAD_IMAGES_HIGH}" 'BEGIN {if (h > 1.0) exit 1; exit 0; }' ; then
 		heading "Errors"
-		echo "REMOVE_BAD_IMAGES_THRESHOLD_HIGH (${REMOVE_BAD_IMAGES_THRESHOLD_HIGH}) must be 0.0 - 1.0,"
+		echo "'Remove Bad Images Threshold High' (${REMOVE_BAD_IMAGES_HIGH}) must be 0.0 - 1.0,"
 		echo "although it's normally around 0.9.  0 disables the high threshold check."
 	fi
 fi		# end of checking for error items
 
 
 # ======================================================================
-# ================= Summary
+# ================= Summary (not displayed if called from WebUI)
 RET=0
-if [[ $((NUM_INFOS + NUM_WARNINGS + NUM_ERRORS)) -eq 0 ]]; then
-	echo "No issues found."
-else
-	echo
-	heading "Summary"
-	[[ ${NUM_INFOS} -gt 0 ]] && echo "Informational messages: ${NUM_INFOS}"
-	[[ ${NUM_WARNINGS} -gt 0 ]] && echo "Warnings: ${NUM_WARNINGS}" && RET=1
-	[[ ${NUM_ERRORS} -gt 0 ]] && echo "Errors: ${NUM_ERRORS}" && RET=2
+if [[ ${FROM_WEBUI} == "false" ]]; then
+	if [[ $((NUM_INFOS + NUM_WARNINGS + NUM_ERRORS)) -eq 0 ]]; then
+		echo "No issues found."
+	else
+		echo
+		heading "Summary"
+		[[ ${NUM_INFOS} -gt 0 ]] && echo "Informational messages: ${NUM_INFOS}"
+		[[ ${NUM_WARNINGS} -gt 0 ]] && echo "Warnings: ${NUM_WARNINGS}" && RET=1
+		[[ ${NUM_ERRORS} -gt 0 ]] && echo "Errors: ${NUM_ERRORS}" && RET=2
+	fi
 fi
 
 exit ${RET}

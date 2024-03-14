@@ -268,10 +268,11 @@ function check_PROTOCOL()
 {
 	local P="${1}"	# Protocol
 	local V="${2}"	# Variable
-	local N="${3}"	# Name
+	local T="${3}"	# Type (web or server)
+	local N="${4}"	# Name of setting  
 	local VALUE="$( settings ".${V}" "${ALLSKY_ENV}" )"
 	if [[ -z ${VALUE} ]]; then
-		echo "${N} Protocol (${P}) set but not '${V}'."
+		echo "${T} Protocol (${P}) set but not '${N}'."
 		echo "Uploads will not work until this is fixed."
 		return 1
 	fi
@@ -284,22 +285,16 @@ function check_remote_server()
 	check_for_env_file || return 1
 
 	local TYPE="${1}"
-	local TYPE_STRING
+	local sTYPE
 	if [[ ${TYPE} == "REMOTEWEBSITE" ]]; then
-		TYPE_STRING="Remote Website"
+		sTYPE="Remote Website"
 	else
-		TYPE_STRING="Remote Server"
+		sTYPE="Remote Server"
 	fi
+	local CORRECTED="Uploads will not work until this is corrected."
 
 	local USE="$( settings ".use${TYPE,,}" )"
 	if [[ ${USE} != "true" ]]; then
-		# Variables should be empty.
-		x="$( grep -E -v "^#|^$" "${ALLSKY_ENV}" | grep "${TYPE}" | grep -E -v "${TYPE}.*=\"\"|${TYPE}.*=$" )"
-		if [[ -n "${x}" ]]; then
-			echo "${TYPE_STRING} is not being used but settings for it exist in '${ALLSKY_ENV}:"
-			indent "${x}" | sed "s/${TYPE}.*=.*/${TYPE}/"
-			return 1
-		fi
 		return 0
 	fi
 
@@ -307,60 +302,59 @@ function check_remote_server()
 	local PROTOCOL="$( settings ".${TYPE,,}protocol" )"
 	case "${PROTOCOL}" in
 		"")
-			echo "${TYPE_STRING} is being used but has no Protocol."
-			echo "Uploads to it will not work."
+			echo "${sTYPE} is being used but has no Protocol."
+			echo "${CORRECTED}"
 			return 2
 			;;
 
-		ftp | ftps | sftp)
-			check_PROTOCOL "${PROTOCOL}" "${TYPE}_HOST" "${TYPE_STRING}" || RET=1
-			check_PROTOCOL "${PROTOCOL}" "${TYPE}_USER" "${TYPE_STRING}" || RET=1
-			check_PROTOCOL "${PROTOCOL}" "${TYPE}_PASSWORD" "${TYPE_STRING}" || RET=1
-			if [[ ${PROTOCOL} == "ftp" ]]; then
-				echo "${TYPE_STRING} Protocol set to insecure 'ftp'."
-				echo "Try using 'ftps' or 'sftp' instead."
-				RET=1
+		ftp | ftps | sftp | scp)
+			check_PROTOCOL "${PROTOCOL}" "${TYPE}_HOST" "${sTYPE}" "Server Name" || RET=1
+			check_PROTOCOL "${PROTOCOL}" "${TYPE}_USER" "${sTYPE}" "User Name" || RET=1
+			if [[ ${PROTOCOL} == "scp" ]]; then
+				if check_PROTOCOL "${PROTOCOL}" "${TYPE}_SSH_KEY_FILE" "SSH Key File" "${sTYPE}" \
+						&& [[ ! -e ${SSH_KEY_FILE} ]]; then
+					echo -n "${sTYPE} Protocol (${PROTOCOL}) set but '${TYPE}_SSH_KEY_FILE'"
+					echo    " (${SSH_KEY_FILE}) does not exist."
+					echo "${CORRECTED}"
+					RET=1
+				fi
+			else
+				check_PROTOCOL "${PROTOCOL}" "${TYPE}_PASSWORD" "${sTYPE}" "Password" || RET=1
+				if [[ ${PROTOCOL} == "ftp" ]]; then
+					echo "${sTYPE} Protocol set to insecure 'ftp'."
+					echo "Try using 'ftps' or 'sftp' instead."
+					RET=1
+				fi
 			fi
 			;;
 
-		scp)
-			check_PROTOCOL "${PROTOCOL}" "${TYPE}_HOST" "${TYPE_STRING}" || RET=1
-			check_PROTOCOL "${PROTOCOL}" "${TYPE}_USER" "${TYPE_STRING}" || RET=1
-			if check_PROTOCOL "${PROTOCOL}" "${TYPE}_SSH_KEY_FILE" "${TYPE_STRING}" \
-					&& [[ ! -e ${SSH_KEY_FILE} ]]; then
-				echo "${TYPE_STRING} Protocol (${PROTOCOL}) set but '${TYPE}_SSH_KEY_FILE' (${SSH_KEY_FILE}) does not exist."
-				echo "Uploads will not work."
+		s3 | gcs)
+			P="${PROTOCOL^^}"
+			if [[ ${PROTOCOL} == "s3" ]] &&
+				check_PROTOCOL "${PROTOCOL}" "${TYPE}_AWS_CLI_DIR" "${sTYPE}" "AWS CLI Directory" \
+				&& [[ ! -e ${AWS_CLI_DIR} ]]; then
+
+				echo -n "${sTYPE} Protocol (${PROTOCOL}) set but '${TYPE}_AWS_CLI_DIR'"
+				echo    "(${AWS_CLI_DIR}) does not exist."
+				echo "${CORRECTED}"
 				RET=1
 			fi
-			;;
-
-		s3)
-			if check_PROTOCOL "${PROTOCOL}" "${TYPE}_AWS_CLI_DIR" "${TYPE_STRING}" \
-					&& [[ ! -e ${AWS_CLI_DIR} ]]; then
-				echo "${TYPE_STRING} Protocol (${PROTOCOL}) set but '${TYPE}_AWS_CLI_DIR' (${AWS_CLI_DIR}) does not exist."
-				echo "Uploads will not work."
-				RET=1
-			fi
-			check_PROTOCOL "${PROTOCOL}" "${TYPE}_S3_BUCKET" "${TYPE_STRING}" || RET=1
-			check_PROTOCOL "${PROTOCOL}" "${TYPE}_S3_ACL" "${TYPE_STRING}" || RET=1
-			;;
-
-		gcs)
-			check_PROTOCOL "${PROTOCOL}" "${TYPE}_GCS_BUCKET" "${TYPE_STRING}" || RET=1
-			check_PROTOCOL "${PROTOCOL}" "${TYPE}_GCS_ACL" "${TYPE_STRING}" || RET=1
+			check_PROTOCOL "${PROTOCOL}" "${TYPE}_${P}BUCKET" "${sTYPE}" "${P} Bucket" || RET=1
+			check_PROTOCOL "${PROTOCOL}" "${TYPE}_${P}ACL" "${sTYPE}" "${P} ACL" || RET=1
 			;;
 
 		*)
-			echo "${TYPE_STRING} Protocol (${PROTOCOL}) not blank or one of: ftp, ftps, sftp, scp, s3, gcs."
-			echo "Uploads will not work until this is corrected."
+			echo -n "${sTYPE} Protocol (${PROTOCOL}) is not blank or one of:"
+			echo    " ftp, ftps, sftp, scp, s3, gcs."
+			echo    "${CORRECTED}"
 			RET=1
 			;;
 	esac
 
 	REMOTE_PORT="$( get_variable "${TYPE}_PORT" "${ALLSKY_ENV}" )"
 	if [[ -n ${REMOTE_PORT} ]] && ! is_number "${REMOTE_PORT}" ; then
-		echo "${TYPE}_PORT (${REMOTE_PORT}) must be a number."
-		echo "Uploads will not work until this is corrected."
+		echo "${sTYPE} Port (${REMOTE_PORT}) must be a number."
+		echo "${CORRECTED}"
 		RET=1
 	fi
 

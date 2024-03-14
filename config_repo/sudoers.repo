@@ -1,8 +1,8 @@
 # Permissions for allsky webserver
-www-data ALL=(ALL) NOPASSWD:/sbin/ifdown wlan0
-www-data ALL=(ALL) NOPASSWD:/sbin/ifup wlan0
-www-data ALL=(ALL) NOPASSWD:/sbin/ifdown eth0
-www-data ALL=(ALL) NOPASSWD:/sbin/ifup eth0
+www-data ALL=(ALL) NOPASSWD:/sbin/ifdown
+www-data ALL=(ALL) NOPASSWD:/sbin/ifup
+www-data ALL=(ALL) NOPASSWD:/sbin/ifdown
+www-data ALL=(ALL) NOPASSWD:/sbin/ifup
 www-data ALL=(ALL) NOPASSWD:/bin/cat /etc/wpa_supplicant/wpa_supplicant.conf
 www-data ALL=(ALL) NOPASSWD:/bin/cp /tmp/wifidata /etc/wpa_supplicant/wpa_supplicant.conf
 www-data ALL=(ALL) NOPASSWD:/sbin/wpa_cli scan_results

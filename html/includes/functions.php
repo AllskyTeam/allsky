@@ -244,7 +244,7 @@ function check_if_configured($page, $calledFrom) {
 			$msg .= "If it's already configured, just click on the 'Save changes' button.";
 		else
 			$msg .= "Go to the 'Allsky Settings' page to do so.";
-		$status->addMessage("<div class='important'>$msg</div>", 'danger');
+		$status->addMessage("<div id='mustConfigure' class='important'>$msg</div>", 'danger');
 		$will_display_configured_message = true;
 		return(false);
 	}

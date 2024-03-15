@@ -594,6 +594,7 @@ update_php_defines()
 			-e "s;XX_ALLSKY_TMP_XX;${ALLSKY_TMP};g" \
 			-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};g" \
 			-e "s;XX_ALLSKY_MESSAGES_XX;${ALLSKY_MESSAGES};g" \
+			-e "s;XX_ALLSKY_CHECK_ALLSKY_LOG_XX;${CHECK_ALLSKY_LOG};g" \
 			-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};g" \
 			-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};g" \
 			-e "s;XX_ALLSKY_WEBSITE_LOCAL_CONFIG_NAME_XX;${ALLSKY_WEBSITE_CONFIGURATION_NAME};g" \
@@ -3276,20 +3277,6 @@ check_restored_settings()
 
 ####
 # Do every time as a reminder.
-remind_run_check_allsky()
-{
-	MSG="After you've configured Allsky, run:"
-	MSG+="\n&nbsp; &nbsp; &nbsp; check_allsky.sh"
-	MSG+="\nto check for any issues.  You can also run it whenever you make changes."
-	"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
-	display_msg --logonly info "Added message about running 'check_allsky.sh'."
-
-	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
-}
-
-
-####
-# Do every time as a reminder.
 remind_old_version()
 {
 	if [[ -n ${PRIOR_ALLSKY_DIR} ]]; then
@@ -3773,9 +3760,6 @@ check_old_WebUI_location
 ##### Display any necessary messaged about restored / not restored settings
 # Re-run every time to possibly remind them to update their settings.
 check_restored_settings
-
-##### Let the user know to run check_allsky.sh.
-remind_run_check_allsky
 
 ##### Check if extra modules need to be reinstalled.
 update_modules

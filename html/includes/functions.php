@@ -653,7 +653,7 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
 
 // Run a command and display the appropriate status message.
 // If $addMsg is false, then don't add our own message.
-function runCommand($cmd, $message, $messageColor, $addMsg=true)
+function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFailureMessage="")
 {
 	global $status;
 
@@ -673,13 +673,16 @@ function runCommand($cmd, $message, $messageColor, $addMsg=true)
 			if ($result != null) $msg = implode("<br>", $result);
 			else $msg = "";
 		}
+		// Display the caller's "on success" onSuccessMessage, if any.
+		if ($onFailureMessage !== "")
+			$status->addMessage($onFailureMessage, "danger", false);
 		$status->addMessage($msg, "danger", false);
 		return false;
 	}
 
-	// Display the caller's "on success" message, if any.
-	if ($message !== "")
-		$status->addMessage($message, $messageColor, false);
+	// Display the caller's "on success" onSuccessMessage, if any.
+	if ($onSuccessMessage !== "")
+		$status->addMessage($onSuccessMessage, $messageColor, false);
 
 	// Display any output from the command.
 	if ($result != null) $status->addMessage(implode("<br>", $result), "message", false);

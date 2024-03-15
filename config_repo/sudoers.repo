@@ -1,8 +1,8 @@
 # Permissions for allsky webserver
-www-data ALL=(ALL) NOPASSWD:/sbin/ifdown wlan0
-www-data ALL=(ALL) NOPASSWD:/sbin/ifup wlan0
-www-data ALL=(ALL) NOPASSWD:/sbin/ifdown eth0
-www-data ALL=(ALL) NOPASSWD:/sbin/ifup eth0
+www-data ALL=(ALL) NOPASSWD:/sbin/ifdown
+www-data ALL=(ALL) NOPASSWD:/sbin/ifup
+www-data ALL=(ALL) NOPASSWD:/sbin/ifdown
+www-data ALL=(ALL) NOPASSWD:/sbin/ifup
 www-data ALL=(ALL) NOPASSWD:/bin/cat /etc/wpa_supplicant/wpa_supplicant.conf
 www-data ALL=(ALL) NOPASSWD:/bin/cp /tmp/wifidata /etc/wpa_supplicant/wpa_supplicant.conf
 www-data ALL=(ALL) NOPASSWD:/sbin/wpa_cli scan_results
@@ -24,9 +24,11 @@ www-data ALL=(ALL) NOPASSWD:/bin/rm
 www-data ALL=(ALL) NOPASSWD:/bin/cp
 www-data ALL=(ALL) NOPASSWD:/bin/mv
 www-data ALL=(ALL) NOPASSWD:/usr/bin/vcgencmd
-www-data ALL=(ALL) NOPASSWD:XX_ALLSKY_SCRIPTS_XX/postData.sh
 www-data ALL=(ALL) NOPASSWD:/usr/sbin/ifconfig
 www-data ALL=(ALL) NOPASSWD:/usr/bin/truncate
 www-data ALL=(ALL) NOPASSWD:XX_ALLSKY_SCRIPTS_XX/upload.sh
 www-data ALL=(ALL) NOPASSWD:XX_ALLSKY_SCRIPTS_XX/makeChanges.sh
+www-data ALL=(ALL) NOPASSWD:XX_ALLSKY_SCRIPTS_XX/postData.sh
+www-data ALL=(ALL) NOPASSWD:XX_ALLSKY_SCRIPTS_XX/check_allsksy.sh
 www-data ALL=(ALL) NOPASSWD:/usr/bin/date
+www-data ALL=(ALL) NOPASSWD:/usr/bin/touch

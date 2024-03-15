@@ -80,6 +80,29 @@ if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
 	fi
 fi
 
+# If there's some check_allsky.sh output, remind the user.
+if [[ -f ${CHECK_ALLSKY_LOG} ]]; then
+	DO_MSG="true"
+	REMINDER="${ALLSKY_LOGS}/check_allsky_reminder.txt"
+	if [[ -f ${REMINDER} ]]; then
+		CHECK_DATE="$( date -d '1 week ago' +'%Y%m%d%H%M.%S' )"
+		CHECK_FILE="${ALLSKY_TMP}/check_date-check_allsky"
+		touch -t "${CHECK_DATE}" "${CHECK_FILE}"
+		[[ ${REMINDER} -nt "${CHECK_FILE}" ]] && DO_MSG="false"
+		rm -f "${CHECK_FILE}"
+	fi
+	if [[ ${DO_MSG} == "true" ]]; then
+		MSG="<div class='errorMsgBig errorMsgBox center-div center-text'>"
+		MSG+="Reminder to make these changes to your settings"
+		MSG+="</div>"
+		MSG+="$( < "${CHECK_ALLSKY_LOG}" )"
+		MSG+="<hr><span class='errorMsgBig'>If you made the changes run:</span>"
+		MSG+="\n&nbsp; &nbsp;<code>rm -f '${CHECK_ALLSKY_LOG}'</code>\n"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}"
+		touch "${REMINDER}"		# last time we displayed the message
+	fi
+fi
+
 # This file contains information the user needs to act upon after an installation.
 if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 	# If there's an initial message display an image and stop.

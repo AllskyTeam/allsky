@@ -244,7 +244,7 @@ function check_if_configured($page, $calledFrom) {
 			$msg .= "If it's already configured, just click on the 'Save changes' button.";
 		else
 			$msg .= "Go to the 'Allsky Settings' page to do so.";
-		$status->addMessage("<div class='important'>$msg</div>", 'danger');
+		$status->addMessage("<div id='mustConfigure' class='important'>$msg</div>", 'danger');
 		$will_display_configured_message = true;
 		return(false);
 	}
@@ -344,7 +344,7 @@ function ParseConfig( $arrConfig ) {
 	foreach( $arrConfig as $line ) {
 		$line = trim($line);
 		if( $line != "" && $line[0] != "#" ) {
-			$arrLine = explode( "=",$line );
+			$arrLine = explode( "=", $line );
 			$config[$arrLine[0]] = ( count($arrLine) > 1 ? $arrLine[1] : true );
 		}
 	}
@@ -653,7 +653,7 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
 
 // Run a command and display the appropriate status message.
 // If $addMsg is false, then don't add our own message.
-function runCommand($cmd, $message, $messageColor, $addMsg=true)
+function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFailureMessage="")
 {
 	global $status;
 
@@ -673,13 +673,16 @@ function runCommand($cmd, $message, $messageColor, $addMsg=true)
 			if ($result != null) $msg = implode("<br>", $result);
 			else $msg = "";
 		}
+		// Display the caller's "on success" onSuccessMessage, if any.
+		if ($onFailureMessage !== "")
+			$status->addMessage($onFailureMessage, "danger", false);
 		$status->addMessage($msg, "danger", false);
 		return false;
 	}
 
-	// Display the caller's "on success" message, if any.
-	if ($message !== "")
-		$status->addMessage($message, $messageColor, false);
+	// Display the caller's "on success" onSuccessMessage, if any.
+	if ($onSuccessMessage !== "")
+		$status->addMessage($onSuccessMessage, $messageColor, false);
 
 	// Display any output from the command.
 	if ($result != null) $status->addMessage(implode("<br>", $result), "message", false);
@@ -699,7 +702,7 @@ function updateFile($file, $contents, $fileName, $toConsole) {
 			$cl1 = "<script>console.log('";
 			$cl2 = "');</script>";
 		} else {
-			$cl1 = "";
+			$cl1 = "<br>";
 			$cl2 = "";
 		}
 		echo "${cl1}Unable to update $file 1st time: ${e}${cl2}\n";
@@ -708,11 +711,12 @@ function updateFile($file, $contents, $fileName, $toConsole) {
 		// usually because the file isn't grouped to the web server group.
 		// Set the permissions and try again.
 
-		$cmd = "x=\$(sudo touch '$file';";
-		$cmd .= " sudo chgrp " . WEBSERVER_GROUP . " '$file' 2>&1 &&";
-		$cmd .= " && sudo chmod g+w '$file') || echo \${x}";
-		$err = str_replace("\n", "", shell_exec($cmd));
-		if ($err != "") {
+		$cmd = "sudo touch '$file' && sudo chgrp " . WEBSERVER_GROUP . " '$file' &&";
+		$cmd .= " sudo chmod g+w '$file'";
+		$return = null;
+		exec("$cmd 2>&1", $return, $retval);
+		if ($return !== null || $retval !== 0) {
+			$err = implode("\n", $return);
 			return "Unable to update settings: $err";
 		}
 
@@ -736,7 +740,7 @@ function updateFile($file, $contents, $fileName, $toConsole) {
 
 			$cmd = "x=\$(sudo cp '$tempFile' '$file' 2>&1) || echo 'Unable to copy [$tempFile] to [$file]': \${x}";
 			$err = str_replace("\n", "", shell_exec($cmd));
-			echo "${cl1}cp returned: [$err]${cl2}";
+			if ($err !== "") echo "${cl1}cp returned: [$err]${cl2}";
 			return $err;
 		}
 	}

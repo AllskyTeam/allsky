@@ -274,6 +274,7 @@ function check_PROTOCOL()
 	if [[ -z ${VALUE} ]]; then
 		echo "${T} Protocol (${P}) set but not '${N}'."
 		echo "Uploads will not work until this is fixed."
+		echo "FIX: Set '${N}'."
 		return 1
 	fi
 	return 0
@@ -304,6 +305,7 @@ function check_remote_server()
 		"")
 			echo "${sTYPE} is being used but has no Protocol."
 			echo "${CORRECTED}"
+			echo "FIX: Either disable the remote Website/server or specify the protocol."
 			return 2
 			;;
 
@@ -315,14 +317,15 @@ function check_remote_server()
 						&& [[ ! -e ${SSH_KEY_FILE} ]]; then
 					echo -n "${sTYPE} Protocol (${PROTOCOL}) set but '${TYPE}_SSH_KEY_FILE'"
 					echo    " (${SSH_KEY_FILE}) does not exist."
-					echo "${CORRECTED}"
+					echo    "${CORRECTED}"
+					echo    "FIX: Create the file or use a different protocol."
 					RET=1
 				fi
 			else
 				check_PROTOCOL "${PROTOCOL}" "${TYPE}_PASSWORD" "${sTYPE}" "Password" || RET=1
 				if [[ ${PROTOCOL} == "ftp" ]]; then
 					echo "${sTYPE} Protocol set to insecure 'ftp'."
-					echo "Try using 'ftps' or 'sftp' instead."
+					echo "FIX: Using 'ftps' or 'sftp' if possible."
 					RET=1
 				fi
 			fi
@@ -336,7 +339,8 @@ function check_remote_server()
 
 				echo -n "${sTYPE} Protocol (${PROTOCOL}) set but '${TYPE}_AWS_CLI_DIR'"
 				echo    "(${AWS_CLI_DIR}) does not exist."
-				echo "${CORRECTED}"
+				echo    "${CORRECTED}"
+				echo    "FIX: Create the directory and its contents or use a different protocol."
 				RET=1
 			fi
 			check_PROTOCOL "${PROTOCOL}" "${TYPE}_${P}BUCKET" "${sTYPE}" "${P} Bucket" || RET=1
@@ -347,6 +351,7 @@ function check_remote_server()
 			echo -n "${sTYPE} Protocol (${PROTOCOL}) is not blank or one of:"
 			echo    " ftp, ftps, sftp, scp, s3, gcs."
 			echo    "${CORRECTED}"
+			echo    "FIX: Use a valid protocol."
 			RET=1
 			;;
 	esac
@@ -355,6 +360,7 @@ function check_remote_server()
 	if [[ -n ${REMOTE_PORT} ]] && ! is_number "${REMOTE_PORT}" ; then
 		echo "${sTYPE} Port (${REMOTE_PORT}) must be a number."
 		echo "${CORRECTED}"
+		echo "FIX: Use a valid port number."
 		RET=1
 	fi
 

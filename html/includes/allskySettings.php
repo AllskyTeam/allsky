@@ -112,6 +112,7 @@ function DisplayAllskyConfig() {
 	$hideHeaderBodies = true;
 	$numErrors = 0;
 	$updatedSettings = false;
+	$fromConfiguration = false;
 	$bullet = "<div class='bullet'>*</div>";
 	$showIcon = "<i class='fa fa-chevron-down fa-fw'></i>";
 	$hideIcon = "<i class='fa fa-chevron-up fa-fw'></i>";
@@ -128,7 +129,7 @@ function DisplayAllskyConfig() {
 
 	// If there's no last changed date, they haven't configured Allsky,
 	// which sets $lastChanged.
-	$needsConfiguration = ($lastChanged == "");
+	$needsConfiguration = ($lastChanged === "");
 	if ($needsConfiguration)
 		$hideHeaderBodies = false;		// show all the settings
 
@@ -164,10 +165,6 @@ function DisplayAllskyConfig() {
 			$newCameraNumber = "";
 			$twilightDataChanged = false;
 
-			// If set, the prior screen said "you must configure Allsky ..." so it's
-			// ok if nothing changed, but we need to update $lastChanged.
-			$fromConfiguration = isset($_POST['fromConfiguration']);
-
 			$ok = true;
 
 			// Keep track of which settings are from a different source.
@@ -188,7 +185,13 @@ function DisplayAllskyConfig() {
 
 	 		foreach ($_POST as $name => $newValue) {
 				// Anything that's sent "hidden" in a form that isn't a settings needs to go here.
-				if (in_array($name, ["csrf_token", "save_settings", "reset_settings", "restart", "page", "_ts", $endSetting, "fromConfiguration"])) {
+				if (in_array($name, ["csrf_token", "save_settings", "reset_settings",
+						"restart", "page", "_ts", $endSetting, "fromConfiguration"])) {
+					if ($name === "fromConfiguration") {
+						// If set, the prior screen said "you must configure Allsky ..." so it's
+						// ok if nothing changed, but we need to update $lastChanged.
+						$fromConfiguration = $newValue;
+					}
 					continue;
 				}
 
@@ -469,9 +472,6 @@ echo '<script>console.log("Updated $fileName");</script>';
 						if ($msg !== "")
 							$msg .= " and ";
 						$msg .= "Allsky restarted.";
-						if ($fromConfiguration) {
-							$msg .= "<div class='removeMessage'>Click on the 'Allsky Settings' link to remove the red message above.</div>";
-						}
 						// runCommand() displays $msg on success.
 						$CMD = "sudo /bin/systemctl reload-or-restart allsky.service";
 						if (! runCommand($CMD, $msg, "success")) {
@@ -496,16 +496,35 @@ echo '<script>console.log("Updated $fileName");</script>';
 
 					// If there's a website let it know of the changes.
 					if (($changesMade || $fromConfiguration) && ($hasLocalWebsite || $hasRemoteWebsite)) {
+						$CMD = "sudo --user=" . ALLSKY_OWNER . " " . ALLSKY_SCRIPTS;
+
 						$moreArgs = "";
 						if (! $twilightDataChanged)
 							$moreArgs .= " --settingsOnly";
 						if (! $cameraChanged)
 							$moreArgs .= " --allFiles";
-						$CMD = "sudo --user=" . ALLSKY_OWNER;
-						$CMD .= " " . ALLSKY_SCRIPTS . "/postData.sh --fromWebUI $cmdDebugArg $moreArgs";
-						echo '<script>console.log("Running: ' . $CMD . '");</script>';
-						$worked = runCommand($CMD, "", "success", false);
+
 						// postData.sh will output necessary messages.
+						$cmd = "${CMD}/postData.sh --fromWebUI $cmdDebugArg $moreArgs";
+						echo '<script>console.log("Running: ' . $cmd . '");</script>';
+						$worked = runCommand($cmd, "", "success", false);
+
+						if ($fromConfiguration) {
+							$cmd = "${CMD}/check_allsky.sh --fromWebUI";
+							echo "<script>console.log('Running: $cmd');</script>";
+							exec("$cmd 2>&1", $result, $return_val);
+							if ($result != null) {
+								$result = implode("<br>", $result);
+								// Not worth checking if the update worked.
+								updateFile(ALLSKY_CHECK_ALLSKY_LOG, $result, "check_allsky", false);
+	
+								$msg = "<div class='errorMsgBig errorMsgBox center-div center-text'>";
+								$msg .= "Suggested changes to your settings<br>";
+								$msg .= "</div>";
+								$msg .= $result;
+								$status->addMessage($msg, 'warning');
+							}
+						}
 					}
 				}
 
@@ -1003,6 +1022,18 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 			}
 			if ($inHeader) echo "</tbody>";
 		echo "</table>";
+
+		if ($fromConfiguration) {
+			// Hide the message about "Allsky must be configured..."
+?>
+			<script>
+			var p = document.getElementById('mustConfigure').parentElement;
+			var gp = p.parentElement;
+			if (gp != null) p = gp;
+			p.style.display = 'none';
+			</script>
+<?php
+		}
 
 		if ($formReadonly != "readonly") {
 			$msg = "";

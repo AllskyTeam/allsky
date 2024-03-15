@@ -702,7 +702,7 @@ function updateFile($file, $contents, $fileName, $toConsole) {
 			$cl1 = "<script>console.log('";
 			$cl2 = "');</script>";
 		} else {
-			$cl1 = "";
+			$cl1 = "<br>";
 			$cl2 = "";
 		}
 		echo "${cl1}Unable to update $file 1st time: ${e}${cl2}\n";

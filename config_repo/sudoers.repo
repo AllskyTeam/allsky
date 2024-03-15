@@ -31,3 +31,4 @@ www-data ALL=(ALL) NOPASSWD:XX_ALLSKY_SCRIPTS_XX/makeChanges.sh
 www-data ALL=(ALL) NOPASSWD:XX_ALLSKY_SCRIPTS_XX/postData.sh
 www-data ALL=(ALL) NOPASSWD:XX_ALLSKY_SCRIPTS_XX/check_allsksy.sh
 www-data ALL=(ALL) NOPASSWD:/usr/bin/date
+www-data ALL=(ALL) NOPASSWD:/usr/bin/touch

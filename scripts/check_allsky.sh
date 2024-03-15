@@ -307,9 +307,9 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 
 	if [[ ${KEEP_SEQUENCE} == "true" ]]; then
 		heading "Information"
-		echo "${WSNs}Keep Sequence${WSNe} in enabled."
-		echo "FIX: If you are not debugging timelapse videos consider disabling this"
-		echo "to save disk space."
+		echo    "${WSNs}Keep Sequence${WSNe} in enabled."
+		echo -n "FIX: If you are not debugging timelapse videos consider disabling this"
+		echo    " to save disk space."
 	fi
 
 	if [[ ${THUMBNAIL_SIZE_X} -ne 100 || ${THUMBNAIL_SIZE_Y} -ne 75 ]]; then
@@ -319,20 +319,19 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 		echo "FIX: You may need to modify some code to get your thumbnail sizes working."
 	fi
 
-	FOREVER="be kept forever or until you manually delete them."
+	FOREVER="be kept forever or until you manually delete them"
 	if [[ ${DAYS_TO_KEEP} -eq 0 ]]; then
 		heading "Information"
-		echo "${WSNs}Days To Keep${WSNe} is ${WSVs}0${WSVe} which means images and videos will"
-		echo "${FOREVER}"
-		echo "FIX: If this is not what you want, change the setting."
+		echo -n "${WSNs}Days To Keep${WSNe} is ${WSVs}0${WSVe}"
+		echo    " which means images and videos will ${FOREVER}."
+		echo    "FIX: If this is not what you want, change the setting."
 	fi
 
 	if [[ (${WEBSITES} == "both" || ${WEBSITES} == "local") &&
 			${LOCAL_WEB_DAYS_TO_KEEP} -eq 0 ]]; then
 		heading "Information"
 		echo -n "${WSNs}Days To Keep on Pi Website${WSNe} is ${WSVs}0${WSVe}"
-		echo    " which means local web images and videos will"
-		echo    "${FOREVER}"
+		echo    " which means local web images and videos will ${FOREVER}."
 		echo    "FIX: If this is not what you want, change the setting."
 	fi
 	# REMOTE_WEB_DAYS_TO_KEEP may not be implemented; if so, ignore.
@@ -340,8 +339,7 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 			-n ${REMOTE_WEB_DAYS_TO_KEEP} && ${REMOTE_WEB_DAYS_TO_KEEP} -eq 0 ]]; then
 		heading "Information"
 		echo -n "${WSNs}Days To Keep on Remote Website${WSNe} is ${WSVs}0${WSVe}"
-		echo    " which means remote web images and videos will"
-		echo    "${FOREVER}"
+		echo    " which means remote web images and videos will ${FOREVER}."
 		echo    "FIX: If this is not what you want, change the setting."
 	fi
 
@@ -362,11 +360,11 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 			${SENSOR_WIDTH} == "${IMG_RESIZE_WIDTH}" &&
 			${SENSOR_HEIGHT} == "${IMG_RESIZE_HEIGHT}" ]]; then
 		heading "Information"
-		echo "Images will be resized to the same size as the sensor; this does nothing useful."
+		echo    "Images will be resized to the same size as the sensor; this does nothing useful."
 		echo -n "FIX: Check ${WSNs}Image Resize Width${WSNe} (${IMG_RESIZE_WIDTH}) and"
-		echo    "${TAB}${WSNs}Image Resize Height${WSNe} (${IMG_RESIZE_HEIGHT})"
-		echo    "${TAB}and set them to something other than the sensor size of"
-		echo    "${TAB}${WSVs}${SENSOR_WIDTH} x ${SENSOR_HEIGHT}${WSVe}."
+		echo    " ${WSNs}Image Resize Height${WSNe} (${IMG_RESIZE_HEIGHT})"
+		echo    " and set them to something other than the sensor size of"
+		echo    " ${WSVs}${SENSOR_WIDTH} x ${SENSOR_HEIGHT}${WSVe}."
 	fi
 
 	if [[ $((CROP_TOP + CROP_RIGHT + CROP_BOTTOM + CROP_LEFT)) -gt 0 ]]; then
@@ -436,7 +434,7 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 	if [[ ${PI_OS} == "buster" ]]; then
 		heading "Warning"
 		echo -n "Your Pi is running the old 'Buster' operating system;"
-		echo    "this is the last release of Allsky that supports Buster."
+		echo    " this is the last release of Allsky that supports Buster."
 		echo    "FIX: Upgrade your Pi to Bookworm, 64-bit if possible."
 	fi
 
@@ -485,10 +483,10 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 			if [[ $(( W * H )) -gt ${PIXEL_LIMIT} ]]; then
 				heading "Warning"
 				echo -n "The ${WSNs}${TYPE} Width${WSNe} of ${WSVs}${W}${WSVe}"
-				echo    "and ${WSNs}Height${WSNe} of ${WSVs}${H}${WSVe}"
-				echo    "may cause errors while creating the video."
-				echo    "FIX: Consider either decreasing the video size or decreasing"
-				echo    "${TAB}each captured image via resizing and/or cropping."
+				echo -n " and ${WSNs}Height${WSNe} of ${WSVs}${H}${WSVe}"
+				echo    " may cause errors while creating the video."
+				echo -n "FIX: Consider either decreasing the video size or decreasing"
+				echo    " each captured image via resizing and/or cropping."
 			fi
 		}
 
@@ -511,9 +509,9 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 			heading "Warning"
 			echo -n "${TYPE} videos are being created"
 			if [[ ${TYPE} == "Daily Timelapse" ]]; then
-				echo "(${WSNs}Generate ${TYPE}${WSNe} = Yes)"
+				echo -n " (${WSNs}Generate ${TYPE}${WSNe} = Yes)"
 			else
-				echo "(${WSNs}Number of Images${WSNe} is greater than 0)"
+				echo -n " (${WSNs}Number of Images${WSNe} is greater than 0)"
 :
 			fi
 			echo    " but not uploaded anywhere (${WSNs}Upload${WSNe} = No)"
@@ -537,9 +535,9 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 
 	elif [[ ${TIMELAPSE_UPLOAD_VIDEO} == "true" ]]; then
 		heading "Warning"
-		echo "Daily Timelapse videos are not being created (${WSNs}Generate${WSNe} = No)"
-		echo " but ${WSNs}Upload${WSNe} = Yes."
-		echo "FIX: Either create daily timelapse videos or disable upload."
+		echo -n "Daily Timelapse videos are not being created (${WSNs}Generate${WSNe} = No)"
+		echo    " but ${WSNs}Upload${WSNe} = Yes."
+		echo    "FIX: Either create daily timelapse videos or disable upload."
 	fi
 
 	# Mini-timelapse
@@ -584,20 +582,21 @@ if false; then		# for testing
 fi
 		if [[ ${EXPECTED_TIME} -gt ${MIN_TIME_BETWEEN_TIMELAPSE_SEC} ]]; then
 			heading "Warning"
-			echo "Your mini-timelapse settings may cause multiple timelapse to be created simultaneously."
-			echo "FIX: Consider increasing the ${WSNs}Delay${WSNe} between pictures,"
-			echo "${TAB}increasing ${WSNs}Frequency${WSNe},"
-			echo "${TAB}decreasing ${WSNs}Number Of Images${WSNe},"
-			echo "${TAB}or a combination of those changes."
-			echo "${TAB}Expected time to create a mini-timelapse on a Pi 4 is"
-			echo "${TAB}${EXPECTED_TIME} seconds but with your settings one could be created"
-			echo "${TAB}as short as every ${MIN_TIME_BETWEEN_TIMELAPSE_SEC} seconds."
+			echo -n "Your mini-timelapse settings may cause multiple timelapse to"
+			echo    " be created simultaneously."
+			echo    "FIX: Consider increasing the ${WSNs}Delay${WSNe} between pictures,"
+			echo    "${TAB}increasing ${WSNs}Frequency${WSNe},"
+			echo    "${TAB}decreasing ${WSNs}Number Of Images${WSNe},"
+			echo    "${TAB}or a combination of those changes."
+			echo    "${TAB}Expected time to create a mini-timelapse on a Pi 4 is"
+			echo    "${TAB}${EXPECTED_TIME} seconds but with your settings one could be created"
+			echo    "${TAB}as short as every ${MIN_TIME_BETWEEN_TIMELAPSE_SEC} seconds."
 		fi
 	elif [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" ]]; then
 		heading "Warning"
-		echo "Mini-timelapse videos are not being created (${WSNs}Number of Images${WSNe} = 0)"
-		echo " but ${WSNs}Upload${WSNe} = Yes"
-		echo "FIX: Either create videos or disable upload."
+		echo -n "Mini-timelapse videos are not being created (${WSNs}Number of Images${WSNe} = 0)"
+		echo    " but ${WSNs}Upload${WSNe} = Yes"
+		echo    "FIX: Either create videos or disable upload."
 	fi
 
 	##### Keograms
@@ -812,22 +811,18 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 	##### Check that the required settings' values are valid.
 	if [[ -n ${ANGLE} ]] && ! is_number "${ANGLE}" ; then
 		heading "Error"
-		echo "ANGLE (${ANGLE}) must be a number."
+		echo "${WSNs}Angle${WSNe} (${ANGLE}) must be a number."
 		echo "FIX: Set to a number in the WebUI then rerun ${ME}."
 	fi
-	if [[ -n ${LATITUDE} ]]; then
-		if ! LAT="$( convertLatLong "${LATITUDE}" "latitude" 2>&1 )" ; then
-			heading "Error"
-			echo -e "${LAT}"		# ${LAT} contains the error message
-			echo    "FIX: Correct the latitude then rerun ${ME}."
-		fi
+	if [[ -n ${LATITUDE} ]] && ! LAT="$( convertLatLong "${LATITUDE}" "latitude" 2>&1 )" ; then
+		heading "Error"
+		echo -e "${LAT}"		# ${LAT} contains the error message
+		echo    "FIX: Correct the latitude then rerun ${ME}."
 	fi
-	if [[ -n ${LONGITUDE} ]]; then
-		if ! LONG="$( convertLatLong "${LONGITUDE}" "longitude" 2>&1 )" ; then
-			heading "Error"
-			echo -e "${LONG}"
-			echo    "FIX: Correct the longitude then rerun ${ME}."
-		fi
+	if [[ -n ${LONGITUDE} ]] && ! LONG="$( convertLatLong "${LONGITUDE}" "longitude" 2>&1 )" ; then
+		heading "Error"
+		echo -e "${LONG}"
+		echo    "FIX: Correct the longitude then rerun ${ME}."
 	fi
 
 	##### Check dark frames
@@ -872,8 +867,8 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 			echo    "FIX: remove the ${WSVs}%${WSVe}."
 		fi
 	}
-	check_stretch_numbers "Daytime" "${STRETCH_AMOUNT_DAYTIME}" "${STRETCH_AMOUNT_DAYTIME}"
-	check_stretch_numbers "Nighttime" "${STRETCH_AMOUNT_NIGHTTIME}" "${STRETCH_AMOUNT_NIGHTTIME}"
+	check_stretch_numbers "Daytime" "${STRETCH_AMOUNT_DAYTIME}" "${STRETCH_MIDPOINT_DAYTIME}"
+	check_stretch_numbers "Nighttime" "${STRETCH_AMOUNT_NIGHTTIME}" "${STRETCH_MIDPOINT_NIGHTTIME}"
 
 fi		# end of checking for error items
 

@@ -96,7 +96,7 @@ if [[ -f ${CHECK_ALLSKY_LOG} ]]; then
 		MSG+="Reminder to make these changes to your settings"
 		MSG+="</div>"
 		MSG+="$( < "${CHECK_ALLSKY_LOG}" )"
-		MSG+="<hr>If you made the changes run:"
+		MSG+="<hr><span class='errorMsgBig'>If you made the changes run:</span>"
 		MSG+="\n&nbsp; &nbsp;<code>rm -f '${CHECK_ALLSKY_LOG}'</code>\n"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}"
 		touch "${REMINDER}"		# last time we displayed the message

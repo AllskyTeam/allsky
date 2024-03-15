@@ -779,9 +779,13 @@ fi		# end of checking for error items
 
 # ======================================================================
 # ================= Summary (not displayed if called from WebUI)
-RET=0
-if [[ ${FROM_WEBUI} == "false" ]]; then
-	if [[ $((NUM_INFOS + NUM_WARNINGS + NUM_ERRORS)) -eq 0 ]]; then
+NUM_FINDINGS=$((NUM_INFOS + NUM_WARNINGS + NUM_ERRORS))
+
+if [[ ${FROM_WEBUI} == "true" ]]; then
+	RET=${NUM_FINDINGS}
+else
+	RET=0
+	if [[ ${NUM_FINDINGS} -eq 0 ]]; then
 		echo "No issues found."
 	else
 		echo

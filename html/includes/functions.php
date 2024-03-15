@@ -344,7 +344,7 @@ function ParseConfig( $arrConfig ) {
 	foreach( $arrConfig as $line ) {
 		$line = trim($line);
 		if( $line != "" && $line[0] != "#" ) {
-			$arrLine = explode( "=",$line );
+			$arrLine = explode( "=", $line );
 			$config[$arrLine[0]] = ( count($arrLine) > 1 ? $arrLine[1] : true );
 		}
 	}
@@ -711,11 +711,12 @@ function updateFile($file, $contents, $fileName, $toConsole) {
 		// usually because the file isn't grouped to the web server group.
 		// Set the permissions and try again.
 
-		$cmd = "x=\$(sudo touch '$file';";
-		$cmd .= " sudo chgrp " . WEBSERVER_GROUP . " '$file' 2>&1 &&";
-		$cmd .= " && sudo chmod g+w '$file') || echo \${x}";
-		$err = str_replace("\n", "", shell_exec($cmd));
-		if ($err != "") {
+		$cmd = "sudo touch '$file' && sudo chgrp " . WEBSERVER_GROUP . " '$file' &&";
+		$cmd .= " sudo chmod g+w '$file'";
+		$return = null;
+		exec("$cmd 2>&1", $return, $retval);
+		if ($return !== null || $retval !== 0) {
+			$err = implode("\n", $return);
 			return "Unable to update settings: $err";
 		}
 
@@ -739,7 +740,7 @@ function updateFile($file, $contents, $fileName, $toConsole) {
 
 			$cmd = "x=\$(sudo cp '$tempFile' '$file' 2>&1) || echo 'Unable to copy [$tempFile] to [$file]': \${x}";
 			$err = str_replace("\n", "", shell_exec($cmd));
-			echo "${cl1}cp returned: [$err]${cl2}";
+			if ($err !== "") echo "${cl1}cp returned: [$err]${cl2}";
 			return $err;
 		}
 	}

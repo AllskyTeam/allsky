@@ -516,7 +516,7 @@ echo '<script>console.log("Updated $fileName");</script>';
 							if ($result != null) {
 								$result = implode("<br>", $result);
 								// Not worth checking if the update worked.
-								updateFile(ALLSKY_CHECK_ALLSKY_LOG, $result, "check_allsky", false);
+								updateFile(ALLSKY_CHECK_ALLSKY_LOG, $result, "check_allsky", true);
 	
 								$msg = "<div class='errorMsgBig errorMsgBox center-div center-text'>";
 								$msg .= "Suggested changes to your settings<br>";

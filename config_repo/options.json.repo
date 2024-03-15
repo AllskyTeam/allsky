@@ -1056,49 +1056,6 @@
 "type" : "header"
 },
 {
-"name" : "timelapsebothsubheader",
-"label" : "Settings that apply to Daily and Mini- Timelapses",
-"type" : "header-sub"
-},
-{
-"name" : "timelapsevcodec",
-"default" : "libx264",
-"description" : "Video encoder for timelapse.  Rarely changed.",
-"label" : "VCODEC",
-"type" : "text",
-"carryforward" : true,
-"comment": "check using ffmpeg -encoder looking at argument 2 for ' libxs264  '",
-"booldependson" : "timelapsegenerate",
-"checkchanges": true
-},
-{
-"name" : "timelapsepixfmt",
-"default" : "yuv420p",
-"description" : "Pixel format for timelapse.  Rarely changed.",
-"label" : "Pixel format",
-"type" : "text",
-"carryforward" : true,
-"booldependson" : "timelapsegenerate",
-"comment": "check using ffmpeg -pix_fmts looking at argument 2 for ' yuv420p  '",
-"checkchanges" : true
-},
-{
-"name" : "timelapsefflog",
-"default" : "Warning",
-"description" : "Amount of information to display while creating a timelapse.  Rarely changed.",
-"label" : "Log Level",
-"type" : "select",
-"carryforward" : true,
-"options": [
-	{ "value": "quiet", "label": "No output" },
-	{ "value": "fatal", "label": "Fatal Errors" },
-	{ "value": "error", "label": "Errors" },
-	{ "value": "warning", "label": "Warnings + Errors" },
-	{ "value": "info", "label": "Info + Warnings + Errors" }
-],
-"booldependson" : "timelapsegenerate"
-},
-{
 "name" : "timelapsesubheader",
 "label" : "Daily Timelapse Settings",
 "type" : "header-sub"
@@ -1287,6 +1244,49 @@
 "carryforward" : true,
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
+{
+"name" : "timelapsebothsubheader",
+"label" : "Settings that apply to Daily and Mini- Timelapses",
+"type" : "header-sub"
+},
+{
+"name" : "timelapsevcodec",
+"default" : "libx264",
+"description" : "Video encoder for timelapse.  Rarely changed.",
+"label" : "VCODEC",
+"type" : "text",
+"carryforward" : true,
+"comment": "check using ffmpeg -encoder looking at argument 2 for ' libxs264  '",
+"booldependson" : "timelapsegenerate",
+"checkchanges": true
+},
+{
+"name" : "timelapsepixfmt",
+"default" : "yuv420p",
+"description" : "Pixel format for timelapse.  Rarely changed.",
+"label" : "Pixel format",
+"type" : "text",
+"carryforward" : true,
+"booldependson" : "timelapsegenerate",
+"comment": "check using ffmpeg -pix_fmts looking at argument 2 for ' yuv420p  '",
+"checkchanges" : true
+},
+{
+"name" : "timelapsefflog",
+"default" : "Warning",
+"description" : "Amount of information to display while creating a timelapse.  Rarely changed.",
+"label" : "Log Level",
+"type" : "select",
+"carryforward" : true,
+"options": [
+	{ "value": "quiet", "label": "No output" },
+	{ "value": "fatal", "label": "Fatal Errors" },
+	{ "value": "error", "label": "Errors" },
+	{ "value": "warning", "label": "Warnings + Errors" },
+	{ "value": "info", "label": "Info + Warnings + Errors" }
+],
+"booldependson" : "timelapsegenerate"
+},
 
 {
 "name" : "keogramstartrailstab========================================",
@@ -1307,7 +1307,7 @@
 "name" : "keogramgenerate",
 "default" : true,
 "description" : "Enable to generate a keogram at the end of night.",
-"label" : "Generate Keogram",
+"label" : "Generate",
 "type" : "boolean",
 "carryforward" : true,
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
@@ -1316,7 +1316,7 @@
 "name": "keogramupload",
 "default": true,
 "description": "Enable to upload the keogram to an Allsky Website and/or remote server.",
-"label": "Upload Keogram",
+"label": "Upload",
 "type": "boolean",
 "carryforward" : true,
 "booldependson" : "keogramgenerate AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
@@ -1326,7 +1326,7 @@
 "name" : "keogramexpand",
 "default" : true,
 "description" : "Enable to expand keograms to the image width.",
-"label" : "Expand Keograms",
+"label" : "Expand",
 "type" : "boolean",
 "carryforward" : true,
 "booldependsoff" : "keogramgenerate"
@@ -1382,7 +1382,7 @@
 "name" : "keogramextraparameters",
 "default" : "",
 "description" : "Optional additional keogram creation parameters.<br>Run <code>~/allsky/bin/keogram --help</code> for a list of options.",
-"label" : "Keogram Extra Parameters",
+"label" : "Extra Parameters",
 "type" : "widetext",
 "optional" : true,
 "booldependson" : "keogramgenerate"

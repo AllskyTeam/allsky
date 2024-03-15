@@ -920,7 +920,7 @@
 "minimum" : 0,
 "maximum" : "none",
 "default" : 1,
-"description" : "How often should images be uploaded to an Allsky Website or remote server?<br><span class='WebUIValue'>0</span> never uploads images, <span class='WebUIValue'>1</span> uploads every frame, <span class='WebUIValue'>2</span> every other frame, etc.",
+"description" : "How often should images be uploaded to an Allsky Website and/or remote server?<br><span class='WebUIValue'>0</span> never uploads images, <span class='WebUIValue'>1</span> uploads every frame, <span class='WebUIValue'>2</span> every other frame, etc.",
 "label" : "Upload Every X Images",
 "type" : "integer",
 "carryforward" : true,
@@ -1056,83 +1056,15 @@
 "type" : "header"
 },
 {
-"name" : "timelapsesubheader",
-"label" : "Daily Timelapse Settings",
+"name" : "timelapsebothsubheader",
+"label" : "Settings that apply to Daily and Mini- Timelapses",
 "type" : "header-sub"
-},
-{
-"name" : "timelapsegenerate",
-"default" : true,
-"description" : "Enable to generate a timelapse video of the prior 24 hours at the end of night.",
-"label" : "Generate Timelapse",
-"type" : "boolean",
-"carryforward" : true,
-"booldependson" : "savedaytimeimages OR savenighttimeimages"
-},
-{
-"name": "timelapseupload",
-"default": true,
-"description": "Enable to upload the timelapse video to an Allsky Website or remote server.",
-"label": "Upload Timelapse",
-"type": "boolean",
-"carryforward" : true,
-"booldependson" : "timelapsegenerate"
-},
-{
-"name": "timelapseuploadthumbnail",
-"default": true,
-"description": "Enable to upload the timelapse video thumbnail.",
-"label": "Upload Timelapse Thumbnail",
-"type": "boolean",
-"carryforward" : true,
-"booldependson" : "timelapsegenerate AND timelapseupload AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
-},
-{
-"name": "timelapsewidth",
-"minimum": 0,
-"maximum": "_max",
-"default": 0,
-"description": "Width of resized timelapse video. <span class='WebUIValue'>0</span> disables resize.",
-"label": "Timelapse Width",
-"type": "integer",
-"booldependson" : "timelapsegenerate"
-},
-{
-"name": "timelapseheight",
-"minimum": 0,
-"maximum": "_max",
-"default": 0,
-"description": "Height of resized timelapse video. <span class='WebUIValue'>0</span> disables resize.",
-"label": "Timelapse Height",
-"type": "integer",
-"booldependson" : "timelapsegenerate"
-},
-{
-"name": "timelapsebitrate",
-"minimum": 100,
-"maximum": 30000,
-"default": 5000,
-"description": "Bitrate (in K) of timelapse video. Higher values produce higher quality but larger files. Do NOT add <code>k</code>.",
-"label": "Timelapse Bitrate",
-"type" : "integer",
-"booldependson" : "timelapsegenerate"
-},
-{
-"name": "timelapsefps",
-"minimum": 1,
-"maximum": 200,
-"default": 25,
-"description": "Frames Per Second (FPS) of timelapse video.  Higher values will produce smoother, but faster videos.",
-"label": "Timelapse FPS",
-"type": "integer",
-"carryforward" : true,
-"booldependson" : "timelapsegenerate"
 },
 {
 "name" : "timelapsevcodec",
 "default" : "libx264",
 "description" : "Video encoder for timelapse.  Rarely changed.",
-"label" : "Timelapse VCODEC",
+"label" : "VCODEC",
 "type" : "text",
 "carryforward" : true,
 "comment": "check using ffmpeg -encoder looking at argument 2 for ' libxs264  '",
@@ -1143,7 +1075,7 @@
 "name" : "timelapsepixfmt",
 "default" : "yuv420p",
 "description" : "Pixel format for timelapse.  Rarely changed.",
-"label" : "Timelapse Pixel format",
+"label" : "Pixel format",
 "type" : "text",
 "carryforward" : true,
 "booldependson" : "timelapsegenerate",
@@ -1154,7 +1086,7 @@
 "name" : "timelapsefflog",
 "default" : "Warning",
 "description" : "Amount of information to display while creating a timelapse.  Rarely changed.",
-"label" : "Timelapse Log Level",
+"label" : "Log Level",
 "type" : "select",
 "carryforward" : true,
 "options": [
@@ -1167,18 +1099,91 @@
 "booldependson" : "timelapsegenerate"
 },
 {
+"name" : "timelapsesubheader",
+"label" : "Daily Timelapse Settings",
+"type" : "header-sub"
+},
+{
+"name" : "timelapsegenerate",
+"default" : true,
+"description" : "Enable to generate a timelapse video at the end of night.",
+"label" : "Generate",
+"type" : "boolean",
+"carryforward" : true,
+"booldependson" : "savedaytimeimages OR savenighttimeimages"
+},
+{
+"name": "timelapseupload",
+"default": true,
+"description": "Enable to upload the timelapse video to an Allsky Website and/or remote server.",
+"label": "Upload",
+"type": "boolean",
+"carryforward" : true,
+"booldependson" : "timelapsegenerate"
+},
+{
+"name": "timelapseuploadthumbnail",
+"default": true,
+"description": "Enable to upload the timelapse video thumbnail.",
+"label": "Upload Thumbnail",
+"type": "boolean",
+"carryforward" : true,
+"booldependson" : "timelapsegenerate AND timelapseupload AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
+},
+{
+"name": "timelapsewidth",
+"minimum": 0,
+"maximum": "_max",
+"default": 0,
+"description": "Width of resized timelapse video. <span class='WebUIValue'>0</span> disables resize.",
+"label": "Width",
+"type": "integer",
+"booldependson" : "timelapsegenerate"
+},
+{
+"name": "timelapseheight",
+"minimum": 0,
+"maximum": "_max",
+"default": 0,
+"description": "Height of resized timelapse video. <span class='WebUIValue'>0</span> disables resize.",
+"label": "Height",
+"type": "integer",
+"booldependson" : "timelapsegenerate"
+},
+{
+"name": "timelapsebitrate",
+"minimum": 100,
+"maximum": 30000,
+"default": 5000,
+"description": "Bitrate (in K) of timelapse video. Higher values produce higher quality but larger files. Do NOT add <code>k</code>.",
+"label": "Bitrate",
+"type" : "integer",
+"booldependson" : "timelapsegenerate"
+},
+{
+"name": "timelapsefps",
+"minimum": 1,
+"maximum": 200,
+"default": 25,
+"description": "Frames Per Second (FPS) of timelapse video.  Higher values will produce smoother, but faster videos.",
+"label": "FPS",
+"type": "integer",
+"carryforward" : true,
+"booldependson" : "timelapsegenerate"
+},
+{
 "name": "timelapsekeepsequence",
 "default": false,
 "description": "Enable to keep the list of files used in creating the timelapse video. Rarely changed.",
-"label": "Keep Timelapse Sequence",
+"label": "Keep Sequence",
 "type": "boolean",
 "booldependson" : "timelapsegenerate"
 },
 {
 "name" : "timelapseextraparameters",
 "default" : "",
-"description" : "Optional additional timelapse creation parameters.  Run <code>ffmpeg -?</code> to see the options.",
-"label" : "Timelapse Extra Parameters",
+"description" : "Optional additional timelapse creation parameters.  Run <code>ffmpeg -?</code> to see the options.<br>If quality is poor, try adding <code>-level 3.1</code>.",
+"label" : "Extra Parameters",
 "type" : "widetext",
 "carryforward" : true,
 "optional" : true,
@@ -1187,7 +1192,7 @@
 
 {
 "name" : "minitimelapseheader",
-"label" : "Mini Timelapse Settings",
+"label" : "Mini-Timelapse Settings",
 "type" : "header-sub"
 },
 {
@@ -1216,7 +1221,7 @@
 "maximum": "none",
 "default": 5,
 "description": "Make a mini-timelapse every X images.<br>If you have a slow Pi or short delays between images, set this to a higher number (i.e., not as often).",
-"label": "Mini-Timelapse Frequency",
+"label": "Frequency",
 "type": "integer",
 "carryforward" : true,
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
@@ -1224,8 +1229,8 @@
 {
 "name": "minitimelapseupload",
 "default": true,
-"description": "Enable to upload the mini-timelapse video to an Allsky Website or remote server.",
-"label": "Upload Mini-Timelapse",
+"description": "Enable to upload the mini-timelapse video to an Allsky Website and/or remote server.",
+"label": "Upload",
 "type": "boolean",
 "carryforward" : true,
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
@@ -1234,7 +1239,7 @@
 "name": "minitimelapseuploadthumbnail",
 "default": true,
 "description": "Enable to upload the mini-timelapse video thumbnail.",
-"label": "Upload Mini-Timelapse Thumbnail",
+"label": "Upload Thumbnail",
 "type": "boolean",
 "carryforward" : true,
 "booldependson" : "minitimelapseupload AND (uselocalwebsite OR useremotewebsite OR useremoteserver)",
@@ -1246,7 +1251,7 @@
 "maximum": "_max",
 "default": 0,
 "description": "Width of resized mini-timelapse video. <span class='WebUIValue'>0</span> disables resize.",
-"label": "Mini-Timelapse Width",
+"label": "Width",
 "type": "integer",
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
@@ -1256,7 +1261,7 @@
 "maximum": "_max",
 "default": 0,
 "description": "Height of resized mini-timelapse video. <span class='WebUIValue'>0</span> disables resize.",
-"label": "Mini-Timelapse Height",
+"label": "Height",
 "type": "integer",
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
@@ -1266,7 +1271,7 @@
 "maximum": 30000,
 "default": 2000,
 "description": "Bitrate (in K) of timelapse video. Higher values produce higher quality but larger files. Do NOT add <code>k</code>.",
-"label": "Mini-Timelapse Bitrate",
+"label": "Bitrate",
 "type": "integer",
 "carryforward" : true,
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
@@ -1277,7 +1282,7 @@
 "maximum": 200,
 "default": 5,
 "description": "Frames Per Second (FPS) of mini-timelapse video.",
-"label": "Mini-Timelapse FPS",
+"label": "FPS",
 "type": "integer",
 "carryforward" : true,
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
@@ -1310,7 +1315,7 @@
 {
 "name": "keogramupload",
 "default": true,
-"description": "Enable to upload the keogram to an Allsky Website or remote server.",
+"description": "Enable to upload the keogram to an Allsky Website and/or remote server.",
 "label": "Upload Keogram",
 "type": "boolean",
 "carryforward" : true,
@@ -1410,7 +1415,7 @@
 {
 "name": "startrailsupload",
 "default": true,
-"description": "Enable to upload the startrails to an Allsky Website or remote server.",
+"description": "Enable to upload the startrails to an Allsky Website and/or remote server.",
 "label": "Upload Startrails",
 "type": "boolean",
 "carryforward" : true,

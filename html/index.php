@@ -355,7 +355,8 @@ if ($hasRemoteWebsite) {
 									$m2 = "<span class='externalSmall'>$m2</span>";
 									$message = "$m1 $message $m2</a>";
 								}
-								$message = "<strong>$message</strong>";
+// This makes check_allsky.sh output all bold
+//								$message = "<strong>$message</strong>";
 								if ($count == 1)
 									$message .= " &nbsp; ($date)";
 								else

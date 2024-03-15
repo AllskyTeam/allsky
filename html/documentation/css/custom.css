@@ -29,6 +29,12 @@
 	margin-right: 5px;
 }
 
+.center-text {
+	text-align: center;
+}
+.center-div {
+	margin: auto;
+}
 .valign-center {
 	display: flex;
 	align-items: center;
@@ -435,6 +441,19 @@ input[type="text"].has-error {
 	border-color: #ad5451;
 }
 
+.btn-delete {
+	color: white;
+	border: 1px solid #d42f3a;
+	background-color: #d9534f;
+}
+.btn-delete:hover {
+	color: black;
+	background-color: #f96f6f;
+}
+.dark .btn-delete {
+	color: black;
+}
+
 .btn.focus.navbar-btn,
 .btn:focus.navbar-btn,
 .btn:hover.navbar-btn
@@ -616,7 +635,7 @@ select {
 /* Error messages */
 .errorMsg, .errorMsgBig { color: red; }
 .errorMsgBig { font-size: 200%; }
-.errorMsgBox { border: 2px solid red; padding-left: 5px; }
+.errorMsgBox { border: 2px solid red; padding-left: 5px; padding-right: 5px}
 
 .EXPIRED { color: red; font-weight: bold; }
 .systemPageAdditionsLineType {

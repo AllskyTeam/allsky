@@ -302,7 +302,6 @@ function AppCtrl($scope, $timeout, $http, _) {
 	$scope.auroraForecast = config.auroraForecast;
 	$scope.imageName = config.imageName;
 	$scope.AllskyVersion = config.AllskyVersion;
-	$scope.AllskyWebsiteVersion = config.AllskyWebsiteVersion;
 
 	function getHiddenProp() {
 		var prefixes = ['webkit', 'moz', 'ms', 'o'];

@@ -221,15 +221,8 @@ if [[ ${CROP_IMAGE} -gt 0 ]]; then
 fi
 
 # Stretch the image if required.
-STRETCH_AMOUNT=0
-STRETCH_MIDPOINT=0
-if [[ ${DAY_OR_NIGHT} == "NIGHT" ]]; then
-	STRETCH_AMOUNT="$( settings ".imagestretchamountnighttime" )"
-	STRETCH_MIDPOINT="$( settings ".imagestretchmidpointnighttime" )"
-else	# DAY
-	STRETCH_AMOUNT="$( settings ".imagestretchamountdaytime" )"
-	STRETCH_MIDPOINT="$( settings ".imagestretchmidpointdaytime" )"
-fi
+STRETCH_AMOUNT="$( settings ".imagestretchamount${DAY_OR_NIGHT,,}time" )"
+STRETCH_MIDPOINT="$( settings ".imagestretchmidpoint${DAY_OR_NIGHT,,}time" )"
 if [[ ${STRETCH_AMOUNT} -gt 0 ]]; then
 	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "${ME}: Stretching '${CURRENT_IMAGE}' by ${STRETCH_AMOUNT}"

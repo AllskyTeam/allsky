@@ -29,6 +29,12 @@
 	margin-right: 5px;
 }
 
+.center-text {
+	text-align: center;
+}
+.center-div {
+	margin: auto;
+}
 .valign-center {
 	display: flex;
 	align-items: center;
@@ -629,7 +635,7 @@ select {
 /* Error messages */
 .errorMsg, .errorMsgBig { color: red; }
 .errorMsgBig { font-size: 200%; }
-.errorMsgBox { border: 2px solid red; padding-left: 5px; }
+.errorMsgBox { border: 2px solid red; padding-left: 5px; padding-right: 5px}
 
 .EXPIRED { color: red; font-weight: bold; }
 .systemPageAdditionsLineType {
@@ -763,6 +769,11 @@ div.sticky {
 
 .middleVerticalAlign {
 	vertical-align: middle;
+}
+.centerImg {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 .externalSmall {	/* the icon indicated a new web page */

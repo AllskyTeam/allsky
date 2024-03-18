@@ -472,7 +472,7 @@ body {
 }
 .markdown-body pre {
 	word-wrap: normal;
-	margin-left: 10px;
+	margin-left: 0px;
 	margin-right: 10px;
 }
 .markdown-body pre code {
@@ -498,7 +498,7 @@ body {
 .markdown-body pre {
 	margin-top: 6px;
 	margin-bottom: 8px;
-	padding: 10px;
+	padding: 4px 10px;
 	overflow: auto;
 	font-size: 85%;
 	line-height: 1.45;

@@ -16,9 +16,11 @@
 	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<script src="../js/all.min.js" type="application/javascript"></script>
 	<title>Linux Basics</title>
 </head>
 <body>
+
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
 <div class="Layout">
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
@@ -27,14 +29,10 @@
 <h1>Overview</h1>
 <p>
 This page is for people will little or no Linux experience.
-It won't make you a guru,
-but should give you enough information to install and use the Allsky software.
-If you are new to the Raspberry Pi you may want to view the
-<a allsky="true" href="Pi.html">Pi Basics</a>.
-</p>
-<p>
-To keep the other Allsky documentation pages a manageable length,
-they assume you have basic Linux and Pi knowledge.
+It will give you enough information to install and use Allsky.
+If you are new to the Raspberry Pi see the
+<a allsky="true" external="true" href="Pi.html">Pi Basics</a> page.
+The Allsky documentation assumes you know what's on these two pages.
 For example, you know how to log into the Pi, move around to various directories,
 view and edit files, and execute commands.
 </p>
@@ -62,10 +60,10 @@ There are several ways you can log into a Pi.
 	<li>
 	<b>SSH</b> (<u>s</u>ecure <u>sh</u>ell) is used to log into the Pi from a remote devices,
 	usually a PC or Mac but could be a tablet or phone.
-	SSH needs to be enabled on the Pi - the easiest way is when using the
-	"Raspberry Pi Imager" to create the intial Raspberry Pi OS.
-	Once SSH is enabled, do the following to use it:
-	<ol class="minimal padding">
+	SSH needs to be enabled on the Pi - this should be done while
+	<a href="../explanations/imageSDcard.html" external="true">imaging your SD card</a>.
+	<br>Once SSH is enabled, do the following to use it:
+	<ol class="minimalPadding">
 		<li>On the remote device, open a terminal window
 			(<code>cmd</code> on Windows or <code>terminal</code> on Mac)
 		<li>Type <code>ssh pi@allsky.local</code>.
@@ -96,22 +94,19 @@ At the bottom is the taskbar.
 <img allsky="true" title="Linux Desktop - Click for full version" alt="Desktop" src="Desktop.png" loading="lazy">
 </a>
 
-<h3>Terminal Window</h3>
 <p>
-A Terminal Window like the one above with a gray background, has no graphics - only characters.
-It prompts for commands to enter, so is also called a "command-line interface".
-Whereas Windows has one primary command-line interpreter
-(called <code>cmd</code>, which looks like a DOS window),
-Linus has multiple interpreters, called "shells".
-When UNIX was first invented in the late 1960s, the only shell available was <code>sh</code>.
-Since then, many other shells have been created; the one Allsky uses is <code>bash</code>
-since it has many useful features not in <code>sh</code>.
+Terminal Windows like the one above with a gray background have no graphics - only characters.
+They prompt for commands to enter, so are also called a "command-line interface".
+Windows' primary command-line interpreter is called <code>cmd</code>
+and looks like a DOS window.
+The command-line interpreter, also called a "shell",
+used by Allsky is called <code>bash</code>.
 </p>
 <p>
 Notice the <span class="fileName">install.sh</span> file in the left window
-above has an extension of <code>.sh</code> which signifies it is shell script.
+above has an extension of <code>.sh</code> which signifies it's a shell script.
 Unlike in Windows, Linux commands don't actually need an extension,
-but the Allsky text-based commands have extensions so it's obvious what type of file it is.
+but the Allsky text-based commands have extensions so it's obvious what type of file they are.
 </p>
 <p>
 Throughout the Allsky documentation you'll see instructions like:
@@ -132,17 +127,19 @@ The <code>cd</code> and <code>ls -l</code> commands should be executed at the co
 <h2>Executing commands</h2>
 <details><summary></summary>
 <p>
-To execute a command type it's name followed by any optional arguments:
+To execute a command type its name followed by any optional arguments:
 <pre>
 date
 sudo systemctl start allsky
 </pre>
 In this example, <code>date</code> and <code>sudo</code> are the names of commands.
 <code>date</code> has no arguments and <code>sudo</code> has 3 arguments.
-<h3>Permissions</h3>
+</p>
+<p>
 Just like in other operating systems, files and commands have permissions that determines who
 can view, edit, and execute them.
-By default, when you login to the Pi, you are running as the "pi" login,
+By default, when you log into to the Pi, you are running as the "pi" login
+(or whatever you called it),
 which has limited permissions, e.g., it generally can't update system files.
 In Linux, the "root" login ("admin" in Windows) can do anything.
 <br>
@@ -153,7 +150,7 @@ and passes the last 2 arguments to <code>systemctl</code>.
 </p>
 <blockquote>
 An interesting fact - the "root" login is also called "<u>s</u>uper <u>u</u>ser",
-hence <code><u>su</u>do</code> - "super user do".
+hence <code><u>su</u>do</code> - "<u>s</u>uper <u>u</u>ser <u>do</u>".
 </blockquote>
 If an argument contains a space or other "special characters", it must be quoted,
 otherwise it's treated as multiple arguments:
@@ -168,10 +165,10 @@ The first line above has a single space between <code>echo</code> and the argume
 and the second line has several spaces.
 Those spaces are considered "white space", and unless quoted,
 the shell doesn't care if there's one white space or a million.
-Hence, both the lines above are treated the same.
+Hence, both those lines are treated the same.
 The output from all four lines is below.
 The first three commands have one argument (it's surrounded by double quotes)
-and the forth command has two arguments.
+and the forth command has two arguments since there are no quotes.
 <pre>
 Hello world!
 Hello world!
@@ -189,9 +186,8 @@ has a topmost, or "root" directory, called <span class="fileName">\</span>,
 e.g., <span class="fileName">C:\</span>.
 Linux does not use drive letters but has a single "root" directory,
 called <span class="fileName">/</span>.
-Note that the characters <span class="fileName">\</span> and
-<span class="fileName">/</span> also separate directories,
-for example:
+Windows uses <span class="fileName">\</span> to separate directories and
+Linux uses <span class="fileName">/</span>, for example:
 <span class="fileName">/home/pi/allsky</span>
 <br>
 The above string is called a "path name" since it names the path to a file or directory,
@@ -199,22 +195,23 @@ in this case, the "allsky" directory.
 </p>
 <p>Using <span class="fileName">/home/pi/allsky</span> as an example:
 <ul>
-<li>The first <span class="fileName">/</span> is the root directory.
-<li><span class="fileName">home</span> is a directory under the root directory, and contains home directories for
-	all the users on your Pi (on most machines, just the "pi" login).
-<li>The second and third <span class="fileName">/</span> characters separate directories.
-<li><span class="fileName">pi</span> is a sub-directory in the
-<span class="fileName">home</span> directory that contains all the "pi"
-	login's files and directories and is called pi's HOME directory.
-<li><span class="fileName">allsky</span> is the name of a directory that contains
-the Allsky files, commands, images, etc.
+	<li>The first <span class="fileName">/</span> is the root directory.
+	<li><span class="fileName">home</span>
+		is a directory under the root directory, and contains home directories for
+		all the users on your Pi (on most machines, just the "pi" login).
+	<li>The second and third <span class="fileName">/</span> characters separate directories.
+	<li><span class="fileName">pi</span> is a sub-directory in the
+	<span class="fileName">home</span> directory that contains all the "pi"
+		login's files and directories and is called pi's HOME directory.
+	<li><span class="fileName">allsky</span> is the name of a directory that contains
+		the Allsky files, commands, images, etc.
 </ul>
 <p>
 To move from one location to another, use the <code>cd</code>
 (<u>c</u>hange <u>d</u>irectory) command.
 In the examples below, it's assumed you're logged in as "pi".
 <code>~</code> stands for pi's HOME directory,
-and anything after the <code>#</code> is a shell comment.
+and anything after the <code>#</code> is a comment which is ignored.
 <pre>
 cd           <span class="pl-c"># goes to the HOME directory of whatever login you are</span>
 cd ~/allsky  <span class="pl-c"># goes to pi's "allsky" directory</span>
@@ -232,26 +229,26 @@ pwd          <span class="pl-c"># displays the current or working directory - <u
 To see the contents of a directory, type <code>ls</code> (<u>l</u>ist file<u>s</u>)
 (called <code>dir</code> in Windows).
 Like most commands, <code>ls</code> takes a bunch of arguments.
-A common one is <code>-l</code> which produces long (i.e., detailed) output.
+A common one is <code>-l</code> which produces long output.
 </p>
 <img allsky="true" title="ls output" alt="ls output" src="ls.png" loading="lazy">
 <p>
 Note that the output is in color:
 <ul class="minimalPadding">
 	<li><span style="color: #23ad1e"><strong>Green</strong></span>
-		indicates the file is executable (i.e., a command).
+		indicates the file can be executed (i.e., is a command).
 	<li><span style="color: #595ded"><strong>Blue</strong></span>
 		indicates the object is a directory.
 	<li><strong>Black</strong> indicates the file is an "ordinary" one.
 </ul>
 </p>
 <p>
-The detailed view includes the following 7 columns of data:
+The long view includes the following 7 columns of data:
 <ol>
 <li><b>Permissions</b>.
 	All Linux files have an owner as well as a group the file is in.
 	There are three sets of permissions:
-	<ol class="minimalPadding">
+	<ol class="minimalPadding" type="A">
 		<li>The <b>owner</b> of the file.</li>
 		<li>The <b>group</b> of the file.</li>
 		<li>Everyone else, called <b>other</b>.</li>
@@ -265,7 +262,7 @@ The detailed view includes the following 7 columns of data:
 	have three permission flags each (read, write, and execute)
 	for a total of 9 more characters, in groups of 3:
 	</p>
-	<ol>
+	<ol type="A">
 		<li>The first character of each group determines if the
 			entity can <b>read</b> the file.
 			<code>r</code> means yes; <code>-</code> means no.
@@ -300,15 +297,15 @@ The detailed view includes the following 7 columns of data:
 </ol>
 </p>
 <p>
-In the example above all the objects are owned by the <code>pi</code> login,
+In the screenshot above all the objects are owned by the <code>pi</code> login,
 and all but one object is also in the <code>pi</code> group.
-Note, however, this entry:
+Note this entry:
 <a href="ls-config.png" target="_blank">
 <img allsky="true" title="ls output" alt="ls output for config directory" src="ls-config.png" loading="lazy">
 </a>
 <br>
 It's in the <code>www-data</code> group, which is the group that the web server runs in.
-Because the web server (which is what runs the WebUI) creates configuration files in
+Because the web server (which runs the WebUI) creates configuration files in
 that directory, it also has <code>rwx</code> group permissions so it can look
 in the directory and create files there.
 </p>
@@ -331,7 +328,8 @@ to display, for example, the first 20 lines.
 </p>
 <p>
 The most common text-file editor is <code>nano</code>.
-Before using it you'll probably want to view its manual page by typing <code>man nano</code>.
+Before using it you'll probably want to view its manual page by typing
+<code class="nowrap">man nano</code>.
 </p>
 </details>
 

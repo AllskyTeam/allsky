@@ -458,12 +458,6 @@ foreach ($repo_array as $repo) {
 			add_non_null_field($repo, "checkchanges", $name, "boolean");
 			add_non_null_field($repo, "optional", $name, "boolean");
 			add_non_null_field($repo, "source", $name);
-/* NOT IMPLEMENTED
-			add_non_null_field($repo, "booldependson", $name);
-			add_non_null_field($repo, "booldependsoff", $name);
-			add_non_null_field($repo, "popup-yesno", $name);
-			add_non_null_field($repo, "popup-yesno-value", $name);
-*/
 			add_non_null_field($repo, "action", $name);
 		}
 	$options_str .= "\n},\n";

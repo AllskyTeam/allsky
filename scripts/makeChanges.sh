@@ -11,12 +11,14 @@ source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit "${EXIT_ERROR_STOP}"
 
 function usage_and_exit()
 {
-	echo -en "${wERROR}"
-	echo     "Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly] [--fromInstall]"
-	echo -en "\tkey label old_value new_value [...]"
-	echo -e  "${wNC}"
-	echo "There must be a multiple of 4 key/label/old_value/new_value arguments"
-	echo "unless the --optionsOnly argument is given."
+	{
+		echo -en "${wERROR}"
+		echo     "Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly] [--fromInstall]"
+		echo -en "\tkey label old_value new_value [...]"
+		echo -e  "${wNC}"
+		echo "There must be a multiple of 4 key/label/old_value/new_value arguments"
+		echo "unless the --optionsOnly argument is given."
+	} >&2
 	exit "${1}"
 }
 
@@ -215,6 +217,7 @@ do
 					if [[ ${FROM_INSTALL} == "false" ]]; then
 						# Installation routine already did this,
 						# otherwise do it again in case the list of cameras changed.
+
 						# "false" means don't ignore errors (i.e., exit on error).
 						get_connected_cameras_info "false" > "${CONNECTED_CAMERAS_INFO}"
 					fi

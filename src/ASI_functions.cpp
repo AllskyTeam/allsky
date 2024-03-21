@@ -407,6 +407,7 @@ int ASIGetNumOfConnectedCameras()
 		closeUp(EXIT_ERROR_STOP);
 	}
 	int num = 0;
+	char line[512];
 	while (fgets(line, sizeof(line)-1, f) != NULL)
 	{
 		num++;
@@ -443,7 +444,7 @@ int getCameraNumber()
 		closeUp(EXIT_ERROR_STOP);
 	}
 
-	char line[256];
+	char line[512];
 	int num = NOT_SET;
 	char cameraType[10];
 #define SENSOR_STRING_SIZE	50

@@ -366,24 +366,32 @@ int main(int argc, char *argv[])
 {
 	CG.ME = basename(argv[0]);
 
-	static char *a = getenv("ALLSKY_HOME");		// This must come before anything else
-	if (a == NULL)
+	/* getenv() is used for variables that need to be known very early,
+	 * usually before reading the command-line arguments.
+	*/
+
+	CG.allskyHome = getenv("ALLSKY_HOME");
+	if (CG.allskyHome == NULL)
 	{
 		Log(0, "*** %s: ERROR: ALLSKY_HOME not set!\n", CG.ME);
 		exit(EXIT_ERROR_STOP);
 	}
-	else
-	{
-		CG.allskyHome = a;
-	}
 
-	// Get other settings passed via the environment so we can use
-	// them right away.
 	char *x = getenv("ALLSKY_DEBUG_LEVEL");
 	if (x != NULL) { CG.debugLevel = atoi(x); }
 
 	CG.connectedCamerasFile = getenv("CONNECTED_CAMERAS_INFO");
+	if (CG.connectedCamerasFile == NULL)
+	{
+		Log(0, "*** %s: ERROR: CONNECTED_CAMERAS_INFO not set!\n", CG.ME);
+		exit(EXIT_ERROR_STOP);
+	}
 	CG.RPI_cameraInfoFile = getenv("RPi_SUPPORTED_CAMERAS");
+	if (CG.RPI_cameraInfoFile == NULL)
+	{
+		Log(0, "*** %s: ERROR: RPi_SUPPORTED_CAMERAS not set!\n", CG.ME);
+		exit(EXIT_ERROR_STOP);
+	}
 
 	CG.cmdToUse = getenv("RPi_COMMAND_TO_USE");
 	if (CG.cmdToUse != NULL)

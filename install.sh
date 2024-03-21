@@ -512,7 +512,7 @@ do_save_camera_capabilities()
 
 	ERR="/tmp/makeChanges.errors.txt"
 
-	#shellcheck disable=SC2090
+	#shellcheck disable=SC2086,SC2090
 	M="$( eval "${ALLSKY_SCRIPTS}/"${CMD} 2> "${ERR}" )"
 	RET=$?
 	if [[ ${RET} -ne 0 ]]; then

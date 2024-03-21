@@ -770,6 +770,11 @@ div.sticky {
 .middleVerticalAlign {
 	vertical-align: middle;
 }
+.centerImg {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}
 
 .externalSmall {	/* the icon indicated a new web page */
 	font-size: 90%;

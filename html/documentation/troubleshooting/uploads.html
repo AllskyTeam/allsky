@@ -16,6 +16,7 @@
 	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<script src="../js/all.min.js" type="application/javascript"></script>
 	<title>Upload Problems</title>
 </head>
 <body>
@@ -25,21 +26,34 @@
 <div class="Layout-main markdown-body" id="mainContents">
 
 <p>
-<b>Uploading</b> a file is the act of copying it to a different computer.
-Allsky supports several ways to upload files, typically to a remote Allsky Website:
+<b>Uploading</b> a file means copying it to a different computer.
+Allsky supports several ways to upload files including
 <code>ftp</code>, <code>scp</code>, and others.
+</p>
+
+<p>
+After you've configured settings for a remote Website or remote server such as
+<span class="WebUISetting">Server Name</span>
+and
+<span class="WebUISetting">Protocol</span>,
+run one of the commands below, depending on whether you are testing uploads
+to a remote Allsky Website or a remote server:
+<pre>
+testUpload.sh --website
+<span class="pl-c"> &nbsp; &nbsp; OR</span>
+testUpload.sh --server
+</pre>
+
+This attempts to upload a test file and if it fails,
+it tries to determine why it failed and display what to do to fix it.
+</p>
+<p>
+If that doesn't help, look at the sections below for additional information.
 Uploads can fail for many reasons.
 The most common ones are described below, as well as their fixes.
 </p>
 
-
-<h2>Uploads using FTP/FTPS/SFTP fail</h2>
-<p>
-The most common causes of FTP/FTPS/SFTP failures are:
-</p>
-
-
-<h3>Incorrect settings</h3>
+<h3>Incorrect WebUI settings or URL mapping</h3>
 <details><summary></summary>
 <blockquote>
 Most people use <code>ftp</code> or <code>sftp</code> to transfer files to another machine,
@@ -48,17 +62,18 @@ The term "remote website" means a website not on your Pi,
 but on a remote server, possibly one you pay for services on.
 </blockquote>
 <p>
-The <span class="shSetting">REMOTE_HOST</span>,
-<span class="shSetting">REMOTE_USER</span>,
-and <span class="shSetting">REMOTE_PASSWORD</span>
-settings in <span class="fileName">ftp-settings.sh</span> must be correct.
-If you can't log into to your remote server with that information, Allsky won't be able to either.
- Single quotes in the password can cause a problem for Allsky.
+The <span class="WebUISetting">Server Name</span>,
+<span class="WebUISetting">User Name</span>,
+and <span class="WebUISetting">Password</span>
+settings in WebUI must be correct.
+If you can't log into to your remote server with that information,
+Allsky won't be able to either.
+Single quotes in the password can cause a problem for Allsky.
 </p>
 <p>
-The values you entered into <span class="fileName">ftp-settings.sh</span> like
-<span class="shSetting">IMAGE_DIR</span> and <span class="shSetting">KEOGRAM_DIR</span>
-must match the directory structure on your FTP server.
+The directory structure on your FTP server must match the Allsky standard;
+changing locations and/or names of files and directories on the remote Website
+will cause uploads to fail.
 </p>
 
 <blockquote>
@@ -69,69 +84,63 @@ You may need to read this section multiple times.
 <p>
 When you enter a URL into a browser, how does the server know where the file is?
 It typically starts looking in the root of the website,
-which is usually specified by the web server administrator.
-When you go to the Allsky WebUI, for example via <b>http://allsky</b>,
-Allsky looks in <span class="fileName">/home/pi/allsky/html</span>
-since that's what the Allsky developers specified.
+which is specified by the hosting service.
+When you go to the WebUI, for example via <b>http://allsky</b>,
+the Pi's web server looks in <span class="fileName">~/allsky/html</span>
+since that's what the Allsky developers specified as the Pi's web root.
 </p>
-<p>As you can see, there are two paths to the file - one via a URL and another
-via the filesystem on the machine.
-The web server software maps a URL to a file on a computer.
+<p>There are two paths to the file - one via a URL (<b>https://allsky</b>)
+and the other via the filesystem on the machine
+(<span class="fileName">~/allsky/html</span>).
+The web server software maps the URL to a file on a computer.
 Sometimes that mapping is easy, and other times it's more difficult.
-In both cases, it impacts what you enter into the settings in
-<span class="fileName">ftp-settings.sh</span>.
+In both cases, it impacts what you enter into the settings into the
+<span class="WebUISetting">Image Directory</span> setting in the WebUI.
 </p>
 
 <h4>Easy case - URL matches server directory structure</h4>
 <p>
 Let's say you have a remote website at <b>https://mysite.com</b>
-and you store family photos there.
+where you store family photos.
 When you FTP into your server you see the family photos.
 This means your website URL is also the top-most directory of your remote
 server's directory structure, called the "root" 
 or <span class="fileName">/</span> directory.
 </p>
 <p>
-Per Allsky's recommendations, you create a directory in the root of the remote server called
+<a allsky="true" external="true"
+	href="/documentation/installations/AllskyWebsite.html">As recommended</a>,
+you create a directory in the root of the remote server called
 <span class="fileName">allsky</span> using your FTP client,
 and copy all the files from the Allsky Website to that directory.
-(See the
-<a allsky="true" href="/documentation/installations/AllskyWebsite.html">Allsky Website Installation</a>
-instructions for more details).
 The URL to your Allsky Website would be <b>https://mysite.com/allsky</b>.
-In <span class="fileName">ftp-settings.sh</span> you would set
-<span class="shSetting">IMAGE_DIR</span>="<span class="editorString">/allsky</span>"
-(or <span class="shSetting">IMAGE_DIR</span>="<span class="editorString">allsky</span>",
-depending on your service provider).
-You would also have
-<span class="shSetting">KEOGRAM_DIR</span>="<span class="editorString">/allsky/keogram</span>",
-and so on.
+In the WebUI set
+<span class="WebUISetting">Image Directory</span>
+to either <span class="WebUIValue">/allsky</span>
+or <span class="WebUIValue">allsky</span>, depending on your service provider.
 </p>
 
 
 <h4>More difficult case - URL does not match directory structure</h4>
 <p>
-You have the same website URL as above,
-but when you FTP into your server you don't see the photos;
-instead, you see a directory with the same name as your user name,
-for example, <span class="fileName">myusername</span>
+You have the same website as above,
+but when you FTP into your server you don't see your family photos;
+instead, you see called something like
+<span class="fileName">myusername</span>
 (the actual directory(s) you see will depend on your service provider).
 When you go into the <span class="fileName">myusername</span>
-directory with your FTP program you see your photos.
+directory you see your photos.
 </p>
 <p>
-In this case your web server is mapping the <b>https://myallsky.com</b> URL to the
-<span class="fileName">/myusername</span> directory,
-and you need to copy files to the <span class="fileName">/myusername</span>
-directory or anything below it.
-</p>
-<p>
-You install the Allsky Website in the <span class="fileName">/myusername/allsky</span>
-directory on the server.
+In this case the web server is mapping <b>https://mysite.com</b> to its
+<span class="fileName">myusername</span> directory.
+You need to create a directory on your server
+called <span class="fileName">myusername/allsky</span>
+and copy the Allsky Website files there.
 The URL to the Allsky Website is still <b>https://mysite.com/allsky</b>,
-but your <span class="fileName">ftp-settings.sh</span> needs settings like
-<span class="shSetting">IMAGE_DIR</span>="<span class="editorString">/myusername/allsky</span>"
-and so on.
+but the <span class="WebUISetting">Image Directory</span> setting
+should be <span class="WebUIValue">/myusername/allsky</span>
+or <span class="WebUIValue">myusername/allsky</span>.
 </p>
 <p>
 Mapping of URLs to directories like this is fairly common on remote servers that
@@ -165,8 +174,7 @@ There are three main certificate-related error messages you'll see.
 	<li>Create a file called <span class="fileName">~/.lftprc</span> and add
 	<code>set ssl:check-hostname false</code> to it:
 		<pre>echo "set ssl:check-hostname" &gt; ~/.lftprc</pre>
-	<li>Set <span class="shSetting">LFTP_COMMANDS</span> in
-		<span class="fileName">ftp-settings.sh</span> to
+	<li>Set <span class="WebUISetting">FTP Commands</span> setting
 		<code>set ssl:check-hostname false</code>.
      	If you expect to execute <code>lftp</code> manually the first method is better,
 		otherwise use the second method so all your configuration changes are in one place.
@@ -175,7 +183,7 @@ There are three main certificate-related error messages you'll see.
 <li><b>Certificate verification: Not trusted</b>
 	<br>
 	Add <code>set ssl:verify-certificate no</code> to
-	<span class="shSetting">LFTP_COMMANDS</span> or the
+	<span class="WebUISetting">FTP Commands</span> or the
 	<span class="fileName">~/.lftprc</span> file as above.
 </ol>
 If your Pi's IP address changed, or the IP address remained but the
@@ -187,54 +195,18 @@ then delete one entry at a time until you find the "bad" one.
 </details>
 
 
-<h3>Missing directories on the remote server</h3>
+<h3>Missing directories on the remote Website or server</h3>
 <details><summary></summary>
 <p>
-<b>YOU</b> need to create the necessary directories on the remote server.
-For example, if <span class="fileName">ftp-settings.sh</span> has
-<span class="shSetting">KEOGRAM_DIR</span>=<span class="editorString">/allsky/keogram</span>,
-make sure your remote server has a directory called <span class="fileName">/allsky/keogram</span>.
-Note that some servers don't accept the leading
-<span class="fileName">/</span> so you may need to set
-<span class="shSetting">KEOGRAM_DIR</span>="<span class="editorString">allsky/keogram</span>".
+Review the 
+<a allsky="true" external="true"
+href="/documentation/installations/AllskyWebsite.html">Allsky Website installation instructions</a>
+or the 
+<a allsky="true" external="true"
+href="/documentation/installations/RemoteServer.html">Remote server installation instructions</a>
+to determine how to create the necessary directories.
 </p>
 
-</details>
-
-
-<h3>Still having problems uploading?</h3>
-<details><summary></summary>
-<p>
-Try this from the command line and see what messages it produces
-(replace <code>XXXXX</code> with the value of <span class="shSetting">IMAGE_DIR</span> in the
-<span class="fileName">ftp-settings.sh</span> file):  
-<pre>
-echo hi &gt; /tmp/test.txt
-~/allsky/scripts/upload.sh --debug /tmp/test.txt XXXXX test.txt
-</pre>
-</p>
-<p> 
-This should upload the <span class="fileName">/tmp/test.txt</span>
-file to the same directory where your images go.
-It will also display the directory name it's in as well as the contents of that directory;
-this can help you determine if your path names are correct or not.
-</p>
-<p>
-A file called <span class="fileName">~/allsky/tmp/lftp_cmds/x.txt</span>
-will be created that contains the <code>lftp</code> commands used to upload
-<span class="fileName">/tmp/test.txt</span>.
-Look in that file to make sure the username and other information is correct.
-If not, fix them in <span class="fileName">ftp-settings.sh</span>.
-</p>
-<p>
-To see lftp messages line-by-line, do the following:
-<pre>
-export LFTP_PASSWORD=<i>your_REMOTE_PASSWORD</i>
-lftp
-</pre>
-then copy each line, one at a time, from the <span class="fileName">x.txt</span>
-file and paste it into the terminal window.
-</p>
 </details>
 
 

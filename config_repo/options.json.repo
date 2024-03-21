@@ -7,7 +7,7 @@
 },
 {
 "name" : "daytimesettingsheader",
-"label" : "Daytime settings",
+"label" : "Daytime Settings",
 "type" : "header"
 },
 {
@@ -160,7 +160,7 @@
 "maximum": 100,
 "default": 10,
 "description": "Mid point of image stretch.<br>Lower numbers brighten darker parts of image; higher numbers brighten lighter parts.<br>Only applies if <span class='WebUISetting'>Stretch Amount</span> is greater than 0.",
-"label": "Stretch mid point",
+"label": "Stretch Mid Point",
 "type": "percent",
 "booldependson": "takedaytimeimages"
 },
@@ -267,7 +267,7 @@
 
 {
 "name" : "nighttimesettingsheader",
-"label" : "Nighttime settings",
+"label" : "Nighttime Settings",
 "type" : "header"
 },
 {
@@ -515,7 +515,7 @@
 },
 {
 "name" : "dayandnightheader",
-"label" : "Both day and night settings",
+"label" : "Both Day and Night Settings",
 "type" : "header"
 },
 {
@@ -627,6 +627,7 @@
 },
 {
 "name" : "width",
+"display" : "_display",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : 0,
@@ -638,6 +639,7 @@
 },
 {
 "name" : "height",
+"display" : "_display",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : 0,
@@ -864,28 +866,6 @@
 "action" : "reload"
 },
 {
-"name" : "thumbnailsizex",
-"minimum" : 25,
-"maximum" : "500",
-"default" : 100,
-"description" : "Width of image and video thumbnails.",
-"label" : "Thumbnail Width",
-"type" : "integer",
-"carryforward" : true,
-"booldependson" : "savedaytimeimages OR savenighttimeimages"
-},
-{
-"name" : "thumbnailsizey",
-"minimum" : 20,
-"maximum" : "400",
-"default" : 75,
-"description" : "Height of image and video thumbnails.",
-"label" : "Thumbnail Height",
-"type" : "integer",
-"carryforward" : true,
-"booldependson" : "savedaytimeimages OR savenighttimeimages"
-},
-{
 "name" : "debuglevel",
 "default" : 1,
 "description" : "Debug level. <span class='WebUIValue'>0</span> is errors only.  <span class='WebUIValue'>4</span> is for Allsky developers use.",
@@ -932,6 +912,28 @@
 "description" : "Enable to create thumbnails of images. If you never look at them, unset this.",
 "label" : "Create Image Thumbnails",
 "type" : "boolean",
+"carryforward" : true,
+"booldependson" : "savedaytimeimages OR savenighttimeimages"
+},
+{
+"name" : "thumbnailsizex",
+"minimum" : 25,
+"maximum" : "500",
+"default" : 100,
+"description" : "Width of image and video thumbnails.",
+"label" : "Thumbnail Width",
+"type" : "integer",
+"carryforward" : true,
+"booldependson" : "savedaytimeimages OR savenighttimeimages"
+},
+{
+"name" : "thumbnailsizey",
+"minimum" : 20,
+"maximum" : "400",
+"default" : 75,
+"description" : "Height of image and video thumbnails.",
+"label" : "Thumbnail Height",
+"type" : "integer",
 "carryforward" : true,
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
@@ -1052,7 +1054,7 @@
 },
 {
 "name" : "timelapseheader",
-"label" : "Timelapse settings",
+"label" : "Timelapse Settings",
 "type" : "header"
 },
 {
@@ -1439,7 +1441,7 @@
 },
 {
 "name" : "overlayheader",
-"label" : "Image overlay settings",
+"label" : "Image Overlay Settings",
 "type" : "header"
 },
 {
@@ -2343,8 +2345,8 @@
 {
 "name" : "webuidatafiles",
 "default" : "",
-"description" : "See documentation for a description of this setting,",
-"label" : "Items to add to WebUI",
+"description" : "See the documentation for a <a allsky='true' external='true' href='/documentation/settings/allsky.html'>description of this setting</a>",
+"label" : "System Page Additions",
 "type" : "widetext",
 "carryforward" : true,
 "optional" : true

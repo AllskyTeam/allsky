@@ -868,7 +868,12 @@ char *getCameraModel(ASI_CAMERA_INFO cameraInfo)
 }
 
 // Save information on the specified camera.
-void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int height, double pixelSize, char const *bayer)
+void saveCameraInfo(
+		ASI_CAMERA_INFO cameraInfo,
+		char const *file,
+		int width, int height,
+		double pixelSize,
+		char const *bayer)
 {
 	char *camModel = getCameraModel(cameraInfo);
 	char *sn = getSerialNumber(cameraInfo.CameraID);
@@ -969,9 +974,14 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 		}
 	fprintf(f, "\t],\n");
 
+
 	// Add some other things the camera supports, or the software supports for this camera.
 	// Adding it to the "controls" array makes the code that checks what's available easier.
 	fprintf(f, "\t\"controls\": [\n");
+
+#ifdef IS_ZWO
+	// Setting the sensor width and height with libcamera does a digital zoom,
+	// the resizes the resulting image back to the original size.
 
 	// sensor size was also saved above, but this is the size the user can change.
 	fprintf(f, "\t\t{\n");
@@ -987,6 +997,38 @@ void saveCameraInfo(ASI_CAMERA_INFO cameraInfo, char const *file, int width, int
 	fprintf(f, "\t\t\t\"argumentName\" : \"height\",\n");
 	fprintf(f, "\t\t\t\"MinValue\" : 0,\n");		// TODO: I <think> some ZWO cameras have a min
 	fprintf(f, "\t\t\t\"MaxValue\" : %d,\n", height);
+	fprintf(f, "\t\t\t\"DefaultValue\" : 0\n");
+	fprintf(f, "\t\t},\n");
+#endif
+
+	// Crop values
+	float maxCropPercent = 0.9;	// Don't allow full size
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"imageCropTop\",\n");
+	fprintf(f, "\t\t\t\"argumentName\" : \"imagecroptop\",\n");
+	fprintf(f, "\t\t\t\"MinValue\" : 0,\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : %d,\n", int(height * maxCropPercent));
+	fprintf(f, "\t\t\t\"DefaultValue\" : 0\n");
+	fprintf(f, "\t\t},\n");
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"imageCropRight\",\n");
+	fprintf(f, "\t\t\t\"argumentName\" : \"imagecropright\",\n");
+	fprintf(f, "\t\t\t\"MinValue\" : 0,\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : %d,\n", int(width * maxCropPercent));
+	fprintf(f, "\t\t\t\"DefaultValue\" : 0\n");
+	fprintf(f, "\t\t},\n");
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"imageCropBottom\",\n");
+	fprintf(f, "\t\t\t\"argumentName\" : \"imagecropbottom\",\n");
+	fprintf(f, "\t\t\t\"MinValue\" : 0,\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : %d,\n", int(height * maxCropPercent));
+	fprintf(f, "\t\t\t\"DefaultValue\" : 0\n");
+	fprintf(f, "\t\t},\n");
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"imageCropLeft\",\n");
+	fprintf(f, "\t\t\t\"argumentName\" : \"imagecropleft\",\n");
+	fprintf(f, "\t\t\t\"MinValue\" : 0,\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : %d,\n", int(width * maxCropPercent));
 	fprintf(f, "\t\t\t\"DefaultValue\" : 0\n");
 	fprintf(f, "\t\t},\n");
 

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Imaging an SD card";
+		} 
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<script src="../js/all.min.js" type="application/javascript"></script>
+	<title>Imaging an SD Card</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<p>
+This page describes how to image an SD card for use by Allsky.
+This needs to be done prior to installing Allsky the first time,
+but can also be done anytime you want to "start over" or upgrade
+the Raspberry Pi Operating System (OS).
+</p>
+
+<p>
+There are two main scenarios when installing Pi OS.
+</p>
+<h3>1. Re-image an SD card but keep some files</h3>
+<p>
+In this scenario, you have an SD card that you've been using and
+want to upgrade the Pi OS but keep the Allsky images, darks, and configuration files.
+This scenario can also be used if you want to start over with a clean install
+but keep your Allsky files.
+</p>
+<p>
+If you have <strong>two SD cards</strong>, the process is straightforward:
+<ol class="minimalPadding">
+	<li>Image the second SD card using the
+		<a href="#install">instructions below.</a>
+	<li>Plug the newly-imaged SD card into your Pi and turn it on.
+	<li>Using an SD card-to-USB adapter, plug it into a USB port on your Pi
+		and copy whatever files you want from it to the main SD card.
+		<blockquote>
+		Copy the <span class="fileName">~/allsky</span> directory on the saved SD card
+		to <span class="fileName">~/allsky-OLD</span> on the main SD card.
+		</blockquote>
+</ol>
+</p>
+<p>
+If you only have <strong>one SD card</strong>, consider getting another one
+and use the instructions above.
+It's always good to have a spare SD card anyway in case the first one goes bad.
+<br>If you can't obtain a second card, do the following:
+<ol class="minimalPadding">
+	<li>Copy <span class="fileName">~/allsky</span> plus any other
+		files, images, etc. you want to keep from your SD card to a
+		USB drive, PC, Mac, or another device.
+	<li>Image the SD card using the
+		<a href="#install">instructions below.</a>
+	<li>Plug the newly-imaged SD card into your Pi and turn it on.
+	<li>Restore your files to the SD card.
+		<blockquote>
+		Copy the saved <span class="fileName">~/allsky</span> directory to
+		<span class="fileName">~/allsky-OLD</span> on the new SD card.
+		</blockquote>
+	<li><a href="../installations/allsky.html" external="true">Install Allsky</a>
+		and tell the installation you want to use the prior version of Allsky;
+		it will then restore your saved images, darks, and configuration files.
+</ol>
+</p>
+
+<h3 id="install">2. First install or "starting over"</h3>
+<p>
+In this scenario, you either have a new SD card or an existing one that you
+plan to wipe clean and "start over".
+</p>
+
+<p>
+<ol>
+	<li>Download the 
+		<a href="https://www.raspberrypi.com/software/" external="true">Raspberry Pi Imager></a>
+		to a PC or MAC.
+	<li>Start the Imager and choose your "Raspberry Pi Device".
+	<li>Choose your "Storage" (where to write the operating system to - your SD card).
+		If nothing appears in the list then the Imager can't find your SD card.
+	<li>Choose the Pi "Operating System".
+		<blockquote>
+		Select the <strong>(Recommended)</strong> entry which is usually the first one.
+		For Pi 4 and 5 models, that will be <strong>Raspberry Pi OS (64-bit)</strong>.
+		For older models it will be <strong>Raspberry Pi OS (Legacy, 32-bit)</strong>.
+		<br>Allsky installs many of the packages used by the "Desktop" version
+		so we suggest installing it.
+		</blockquote>
+		<br><img src="PiImager.png" title="Chosing Pi OS" width="50%">
+	<li>Press "NEXT".
+	<li>When asked to <strong>apply OS Customisation settings</strong> press
+		<strong>EDIT SETTINGS</strong> and make these changes:
+		<blockquote class="warning">
+		Skipping this step means you'll need to make those changes after
+		turning your Pi on the first time.
+		Wi-Fi won't work so you'll need to use a wired connection to the Pi,
+		or connect a monitor, keyboard, and mouse to it.
+		<p><strong>Do not skip this step unless you enjoy pain!</strong></p>
+		</blockquote>
+	<ul>
+		<li>GENERAL tab:
+		<ul>
+			<li><u>Set hostname</u>: <code>allsky</code>
+				<br>unless you have multiple Pi's on your network in which case
+				they must all have unique names.
+			<li><u>Set username and password</u>: <code>pi</code> and whatever you want
+				for the password.
+			<li><u>Configure wireless LAN</u>:
+				<br>it's MUCH easier to do this now rather than after your Pi is running.
+			<li><u>Set local settings</u>:
+				<br>This doesn't actually change the "Locale"; it just changes
+				the time zone and keyboard layout.
+				Allsky will prompt for the <span class="WebUISetting">Locale</span>
+				during installation.
+		</ul>
+		<li>SERVICES tab:
+		<ul>
+			<li>Enable SSH - Use password authentication
+		</ul>
+	</ul>
+<ol>
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>
+

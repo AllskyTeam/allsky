@@ -504,34 +504,32 @@ do_save_camera_capabilities()
 		CAMERA_TYPE=${CAMERA_TYPE_PARTS[0]}
 	fi
 
-	CMD="makeChanges.sh${FORCE}${OPTIONSONLY} --cameraTypeOnly"
-	CMD+=" --fromInstall ${DEBUG_ARG} 'cameratype' 'Camera Type'"
-	CMD+=" '${PRIOR_CAMERA_TYPE}' '${CAMERA_TYPE}'"
+	CMD="makeChanges.sh${FORCE}${OPTIONSONLY} --cameraTypeOnly --fromInstall ${DEBUG_ARG}"
+	#shellcheck disable=SC2089
+	CMD+=" cameratype 'Camera Type' ${PRIOR_CAMERA_TYPE} ${CAMERA_TYPE}"
 	MSG="Executing ${CMD}"
 	display_msg "${LOG_TYPE}" info "${MSG}"
 
 	ERR="/tmp/makeChanges.errors.txt"
 
-	#shellcheck disable=SC2086
-	M="$( "${ALLSKY_SCRIPTS}/"${CMD} 2> "${ERR}" )"
+	#shellcheck disable=SC2090
+	M="$( eval "${ALLSKY_SCRIPTS}/"${CMD} 2> "${ERR}" )"
 	RET=$?
 	if [[ ${RET} -ne 0 ]]; then
-		[[ -n ${X} ]] && display_msg --log info "${X}"
 		if [[ ${RET} -eq ${EXIT_NO_CAMERA} ]]; then
 			MSG="No camera was found; one must be connected and working for the installation to succeed.\n"
 			MSG+="After connecting your camera, re-run the installation."
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 			display_msg --log error "No camera detected - installation aborted."
+			[[ -s ${ERR} ]] && display_msg --log error "$( < "${ERR}" )"
 			exit_with_image 1 "${STATUS_ERROR}" "No camera detected"
 		elif [[ ${OPTIONSFILEONLY} == "false" ]]; then
+			[[ -s ${ERR} ]] && display_msg --log error "$( < "${ERR}" )"
 			display_msg --log error "Unable to save camera capabilities."
 		fi
 		return 1
 	else
 		[[ -n ${M} ]] && display_msg --logonly info "${M}"
-		if [[ -s ${ERR} ]]; then
-			display_msg --log error "$( < "${ERR}" )"
-		fi
 
 		if [[ ! -f ${SETTINGS_FILE} ]]; then
 			display_msg --log error "Settings file not created; cannot continue."
@@ -1858,9 +1856,8 @@ convert_config_sh()
 
 		# IMG_RESIZE no longer used; only resize if width and height are > 0.
 		if [[ ${IMG_RESIZE} != "true" ]]; then
-			MSG="IMG_RESIZE is ${IMG_RESIZE} so setting resize width/height to 0."
-			display_msg --log info "${MSG}"
-			IMG_WIDTH=0; IMG_HEIGHT=0
+			IMG_WIDTH=0
+			IMG_HEIGHT=0
 		else
 			IMG_WIDTH="${IMG_WIDTH:-0}"
 			IMG_HEIGHT="${IMG_HEIGHT:-0}"
@@ -2383,6 +2380,7 @@ restore_prior_files()
 		# NOTE: we add a 1 to the overlay name here so that the overay manager can
 		# pick it up and increment it as new overlays are created.
 		OVERLAY_NAME="${FULL_OVERLAY_NAME/overlay/overlay1}"
+		OVERLAY_NAME="${OVERLAY_NAME:-unknown.json}"
 		display_msg --log progress "${ITEM} (renamed to '${OVERLAY_NAME}')"
 
 		DEST_FILE="${MY_OVERLAY_TEMPLATES}/${OVERLAY_NAME}"

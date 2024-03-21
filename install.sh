@@ -504,15 +504,16 @@ do_save_camera_capabilities()
 		CAMERA_TYPE=${CAMERA_TYPE_PARTS[0]}
 	fi
 
-	MSG="Executing makeChanges.sh${FORCE}${OPTIONSONLY} --cameraTypeOnly"
-	MSG+="  ${DEBUG_ARG} 'cameratype' 'Camera Type' '${PRIOR_CAMERA_TYPE}' '${CAMERA_TYPE}'"
+	CMD="makeChanges.sh${FORCE}${OPTIONSONLY} --cameraTypeOnly"
+	CMD+=" --fromInstall ${DEBUG_ARG} 'cameratype' 'Camera Type'"
+	CMD+=" '${PRIOR_CAMERA_TYPE}' '${CAMERA_TYPE}'"
+	MSG="Executing ${CMD}"
 	display_msg "${LOG_TYPE}" info "${MSG}"
 
 	ERR="/tmp/makeChanges.errors.txt"
 
 	#shellcheck disable=SC2086
-	M="$( "${ALLSKY_SCRIPTS}/makeChanges.sh" ${FORCE} ${OPTIONSONLY} --cameraTypeOnly \
-		${DEBUG_ARG} "cameratype" "Camera Type" "${PRIOR_CAMERA_TYPE}" "${CAMERA_TYPE}" 2> "${ERR}" )"
+	M="$( "${ALLSKY_SCRIPTS}/"${CMD} 2> "${ERR}" )"
 	RET=$?
 	if [[ ${RET} -ne 0 ]]; then
 		[[ -n ${X} ]] && display_msg --log info "${X}"
@@ -3298,7 +3299,7 @@ update_modules()
 	X="$( find "${ALLSKY_MODULE_LOCATION}/modules" -type f -name "*.py" -print -quit 2> /dev/null )"
 	[[ -z ${X} ]] && return
 
-# xxxxxxxxxxx    TODO: check the CURRENT ${ALLSKY_PYTHON_VENV} or ${PRIOR_PYTHON_VENV} ?
+# xxxxxx    ALEX TODO: check the CURRENT ${ALLSKY_PYTHON_VENV} or ${PRIOR_PYTHON_VENV} ?
 
 	# If a venv isn't already installed then the install/update will create it,
 	# but warn the user to reinstall the extra modules.
@@ -3413,7 +3414,9 @@ do_allsky_status()
 	set_allsky_status "${!STATUS}"
 }
 
-install_installer_dependencies() {
+install_installer_dependencies()
+{
+	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 
 	display_msg --log progress "Installing installer dependencies."
 	TMP="${ALLSKY_LOGS}/installer.dependencies.log"
@@ -3422,6 +3425,7 @@ install_installer_dependencies() {
 			sudo apt-get --assume-yes install gawk jq
 	} > "${TMP}" 2>&1
 
+	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }
 
 ############################################## Main part of program

@@ -12,7 +12,7 @@ source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit "${EXIT_ERROR_STOP}"
 function usage_and_exit()
 {
 	echo -en "${wERROR}"
-	echo     "Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly]"
+	echo     "Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly] [--fromInstall]"
 	echo -en "\tkey label old_value new_value [...]"
 	echo -e  "${wNC}"
 	echo "There must be a multiple of 4 key/label/old_value/new_value arguments"
@@ -27,6 +27,7 @@ DEBUG_ARG=""
 HELP="false"
 OPTIONS_FILE_ONLY="false"
 CAMERA_TYPE_ONLY="false"	# Only update the cameratype?
+FROM_INSTALL="false"		# Called from install.sh ?
 FORCE=""					# Passed to createAllskyOptions.php
 
 while [[ $# -gt 0 ]]; do
@@ -45,6 +46,9 @@ while [[ $# -gt 0 ]]; do
 			;;
 		--cameratypeonly)
 			CAMERA_TYPE_ONLY="true"
+			;;
+		--frominstall)
+			FROM_INSTALL="true"
 			;;
 		--force)
 			FORCE="${ARG}"
@@ -201,15 +205,23 @@ do
 				# determineCommandToUse either retuns the command with exit code 0,
 				# or an error message with non-zero exit code.
 				if [[ ${NEW_VALUE} == "RPi" ]]; then
-					C="$( determineCommandToUse "false" "" "false" 2>&1 )"
+					RPi_COMMAND_TO_USE="$( determineCommandToUse "false" "" "false" 2>&1 )"
 					RET=$?
 					if [[ ${RET} -ne 0 ]] ; then
-						echo -e "${wERROR}${ERROR_PREFIX}ERROR: ${C}.${wNC}"
+						echo -e "${wERROR}${ERROR_PREFIX}ERROR: ${RPi_COMMAND_TO_USE}.${wNC}"
 						exit "${RET}"
 					fi
-					C=" -cmd ${C}"
-				else
-					C=""
+
+					if [[ ${FROM_INSTALL} == "false" ]]; then
+						# Installation routine already did this,
+						# otherwise do it again in case the list of cameras changed.
+						# "false" means don't ignore errors (i.e., exit on error).
+						get_connected_cameras_info "false" > "${CONNECTED_CAMERAS_INFO}"
+					fi
+
+					export RPi_COMMAND_TO_USE
+					export CONNECTED_CAMERAS_INFO
+					export RPi_SUPPORTED_CAMERAS
 				fi
 
 				CC_FILE_OLD="${CC_FILE}-OLD"
@@ -223,7 +235,7 @@ do
 				# Create the camera capabilities file for the new camera type.
 				# Use Debug Level 3 to give the user more info on error.
 
-				CMD="capture_${NEW_VALUE}${C}${CAMERA_NUMBER}"
+				CMD="capture_${NEW_VALUE} ${CAMERA_NUMBER}"
 				if [[ ${DEBUG} == "true" ]]; then
 					echo -e "${wDEBUG}Calling ${CMD} -cc_file '${CC_FILE}'${wNC}"
 				fi

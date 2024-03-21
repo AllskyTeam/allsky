@@ -399,13 +399,21 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 // allsky.sh created the file; we just need to count the number of lines in it.
 int ASIGetNumOfConnectedCameras()
 {
-	char cmd[100];
-	int num;
-	snprintf(cmd, sizeof(cmd), "exit $( wc -l < %s )", CG.connectedCamerasFile);
-	num = system(cmd);
-	if (WIFEXITED(num))
-		num = WEXITSTATUS(num);
-	Log(4, "cmd='%s', num=%d\n", cmd, num);
+	FILE *f = fopen(CG.connectedCamerasFile, "r");
+	if (f == NULL)
+	{
+		Log(0, "%s: ERROR: Unable to open '%s': %s\n",
+			CG.ME, CG.connectedCamerasFile, strerror(errno));
+		closeUp(EXIT_ERROR_STOP);
+	}
+	int num = 0;
+	char line[512];
+	while (fgets(line, sizeof(line)-1, f) != NULL)
+	{
+		num++;
+	}
+	fclose(f);
+	Log(4, "num cameras connected=%d\n", num);
 
 	return(num);
 }
@@ -426,15 +434,17 @@ int ASIGetNumOfConnectedCameras()
 // Get the cameraNumber for the camera we're using.
 int getCameraNumber()
 {
-	// Determine which camera sensor(s) we have by reading the file created in ASIGetNumOfConnectedCameras().
+	// Determine which camera sensor(s) we have by reading the file
+	// created in ASIGetNumOfConnectedCameras().
 	FILE *f = fopen(CG.connectedCamerasFile, "r");
 	if (f == NULL)
 	{
-		Log(0, "%s: ERROR: Unable to open '%s': %s\n", CG.ME, CG.connectedCamerasFile, strerror(errno));
+		Log(0, "%s: ERROR: Unable to open '%s': %s\n",
+			CG.ME, CG.connectedCamerasFile, strerror(errno));
 		closeUp(EXIT_ERROR_STOP);
 	}
 
-	char line[256];
+	char line[512];
 	int num = NOT_SET;
 	char cameraType[10];
 #define SENSOR_STRING_SIZE	50
@@ -458,6 +468,15 @@ int getCameraNumber()
 			// Found a camera of the right type and number.
 
 // XXX TODO: use RPI_cameraInfoFile instead
+/*
+			FILE *f2 = fopen(CG.RPI_cameraInfoFile, "r");
+			if (f == NULL)
+			{
+				Log(0, "%s: ERROR: Unable to open '%s': %s\n",
+					CG.ME, CG.RPI_cameraInfoFile, strerror(errno));
+				closeUp(EXIT_ERROR_STOP);
+			}
+*/
 
 			// Now check all known cameras to make sure it's one we know about.
 			// Unfortunately we don't have anything else to check, like serial number.
@@ -484,7 +503,8 @@ int getCameraNumber()
 					// There are TWO entries in ControlCapsArray[] for every entry in ASICameraInfoArray[].
 					// The first of each pair is for libcamera, the second is for raspistill.
 					// We need to return the index into ControlCapsArray[].
-					Log(4, "Camera matched ASICameraInfoArray[%d] (RPiCameras[%d]): sensor %s,", actualIndex, RPiCameraIndex, sensor);
+					Log(4, "Camera matched ASICameraInfoArray[%d] (RPiCameras[%d]): sensor %s,",
+						actualIndex, RPiCameraIndex, sensor);
 					actualIndex = (actualIndex * 2) + (CG.isLibcamera ? 0 : 1);
 					RPiCameras[RPiCameraIndex].ControlCaps = &ControlCapsArray[actualIndex][0];
 					Log(4, " ControlCapsArray[%d].\n", actualIndex);

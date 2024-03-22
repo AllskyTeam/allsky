@@ -506,7 +506,7 @@ do_save_camera_capabilities()
 
 	CMD="makeChanges.sh${FORCE}${OPTIONSONLY} --cameraTypeOnly --fromInstall ${DEBUG_ARG}"
 	#shellcheck disable=SC2089
-	CMD+=" cameratype 'Camera Type' ${PRIOR_CAMERA_TYPE} ${CAMERA_TYPE}"
+	CMD+=" cameratype 'Camera Type' '${PRIOR_CAMERA_TYPE}' '${CAMERA_TYPE}'"
 	MSG="Executing ${CMD}"
 	display_msg "${LOG_TYPE}" info "${MSG}"
 
@@ -1910,6 +1910,12 @@ convert_config_sh()
 			REMOVE_BAD_IMAGES_THRESHOLD_LOW=0
 			# shellcheck disable=SC2034
 			REMOVE_BAD_IMAGES_THRESHOLD_HIGH=0
+		else
+			# Old settings were 0 to 100, new are 0.0 to 1.0
+			REMOVE_BAD_IMAGES_THRESHOLD_LOW="$( awk -v n="${REMOVE_BAD_IMAGES_THRESHOLD_LOW}" \
+				'BEGIN { printf("%.3f", n/100); exit 0; }' )"
+			REMOVE_BAD_IMAGES_THRESHOLD_HIGH="$( awk -v n="${REMOVE_BAD_IMAGES_THRESHOLD_HIGH}" \
+				'BEGIN { printf("%.3f", n/100); exit 0; }' )"
 		fi
 		doV "" "REMOVE_BAD_IMAGES_THRESHOLD_LOW" "imageremovebadlow" "number" "${NEW_FILE}"
 		doV "" "REMOVE_BAD_IMAGES_THRESHOLD_HIGH" "imageremovebadhigh" "number" "${NEW_FILE}"

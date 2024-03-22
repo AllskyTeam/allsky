@@ -250,15 +250,24 @@ function get_connected_cameras_info()
 	# for each camera found.
 # TODO: Is the order they appear from lsusb the same as the camera number?
 	# lsusb output:
-	#	Bus 002 Device 002: ID 03c3:290b ZWO ASI290MM
+	#	Bus 002 Device 002: ID 03c3:290b				(Buster)
+	#		iProduct 2 ASI290MM
+	#	Bus 002 Device 002: ID 03c3:290b ZWO ASI290MM	(newer OS)
 	#	1   2   3       4   5  6         7   8
 	lsusb -d "${ZWO_VENDOR}:" --verbose 2>/dev/null |
-	gawk 'BEGIN { num = 0; }
+	gawk 'BEGIN { num = 0; model_id = ""; model = ""; }
 		{
 			if ($1 == "Bus" && $3 == "Device") {
 				model_id = substr($6, 6);
 				model = $8;
+				if (model != "") {
+					printf("ZWO\t%d : [%s] %s\n", num++, model, model_id);
+					model = "";		# This camera was output
+				}
+			} else if ($1 == "iProduct") {
+				model = $3;
 				printf("ZWO\t%d : %s %s\n", num++, model, model_id);
+				model = "";		# This camera was output
 			}
 		}'
 }

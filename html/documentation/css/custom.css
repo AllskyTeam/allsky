@@ -12,6 +12,7 @@
 	--WebUI-subSetting-color: black;
 	--WebUI-subSetting-background-color: #aac;
 	--WebUI-subSetting-background-color-dark: #339;
+	--WebUI-subSettingNote-background-color: #cce;
 	--dark-text: #aaaaaa;
 	--dark-text-reversed: #eeeeee;
 	--rowSeparator: 1px solid #d3d3d3;
@@ -523,9 +524,17 @@ input[type="text"].has-error {
 .dark .settingsHeader {
 	background-color: #555;
 }
-table.settingsHeader {
+table.settingsHeader {	/* In the WebUI */
 	font-size: 1.25em;
 	padding: 3px 3px 3px 3px;
+}
+.settingsHeaderNote {
+	background-color: #ccc;
+	font-weight: normal;
+	font-size: 0.95em;
+}
+.dark .settingsHeaderNote {
+	background-color: #777;
 }
 .subSettingsHeader {
 	color: var(--WebUI-subSetting-color);
@@ -542,6 +551,12 @@ div.subSettingsHeader {
 .dark .subSettingsHeader {
 	background-color: var(--WebUI-subSetting-background-color-dark);
 }
+.subSettingsHeaderNote {
+	background-color: var(--WebUI-subSettingNote-background-color);
+	font-weight: normal;
+	font-size: 0.95em;
+}
+
 .headingRow {
 	font-size: 110%;
 	border-top: 10px solid transparent;

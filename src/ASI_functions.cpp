@@ -395,7 +395,7 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 };
 
 
-// Return the number of cameras PHYSICALLY connected.
+// Return the number of cameras PHYSICALLY connected of the correct type.
 // allsky.sh created the file; we just need to count the number of lines in it.
 int ASIGetNumOfConnectedCameras()
 {
@@ -408,9 +408,12 @@ int ASIGetNumOfConnectedCameras()
 	}
 	int num = 0;
 	char line[512];
+	char cameraType[10];
+
 	while (fgets(line, sizeof(line)-1, f) != NULL)
 	{
-		num++;
+		if (sscanf(line, "%s\t", cameraType) == 1 && strcmp(cameraType, CAMERA_TYPE) == 0)
+			num++;
 	}
 	fclose(f);
 	Log(4, "num cameras connected=%d\n", num);

@@ -153,11 +153,11 @@ function test_determineCommandToUse()
 CMD_TO_USE_=""
 function determineCommandToUse()
 {
-	local USE_doExit="${1}"				# Call doExit() on error?
+	local USE_doExit="${1:-false}"		# Call doExit() on error?
 	local PREFIX="${2}"					# Only used if calling doExit().
 	local IGNORE_ERRORS="${3:-false}"	# True if just checking
 
-	local RET  MSG  EXIT_MSG
+	local CRET  RET  MSG  EXIT_MSG
 
 	# If libcamera is installed and works, use it.
 	# If it's not installed, or IS installed but doesn't work (the user may not have it configured),
@@ -165,8 +165,14 @@ function determineCommandToUse()
 
 	RET=1
 	CMD_TO_USE_="rpicam-still"
-	command -v "${CMD_TO_USE_}" > /dev/null || CMD_TO_USE_="libcamera-still"
-	if command -v "${CMD_TO_USE_}" > /dev/null; then
+	command -v "${CMD_TO_USE_}" > /dev/null
+	CRET=$?
+	if [[ ${CRET} -ne 0 ]]; then
+		CMD_TO_USE_="libcamera-still"
+		command -v "${CMD_TO_USE_}" > /dev/null
+		CRET=$?
+	fi
+	if [[ ${CRET} -eq 0 ]]; then
 		# Found the command - see if it works.
 		"${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1
 		RET=$?
@@ -185,12 +191,14 @@ function determineCommandToUse()
 		if ! command -v "${CMD_TO_USE_}" > /dev/null; then
 			CMD_TO_USE_=""
 
-			MSG="Can't determine what command to use for RPi camera."
-			echo "${MSG}" >&2
+			if [[ ${IGNORE_ERRORS} == "false" ]]; then
+				MSG="Can't determine what command to use for RPi camera."
+				echo "${MSG}" >&2
 
-			if [[ ${IGNORE_ERRORS} == "false" && ${USE_doExit} == "true" ]]; then
-				EXIT_MSG="${PREFIX}\nRPi camera command\nnot found!."
-				doExit "${EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
+				if [[ ${USE_doExit} == "true" ]]; then
+					EXIT_MSG="${PREFIX}\nRPi camera command\nnot found!."
+					doExit "${EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
+				fi
 			fi
 
 			return 1
@@ -202,12 +210,14 @@ function determineCommandToUse()
 		if [[ ${RET} -ne 0 ]]; then
 			CMD_TO_USE_=""
 
-			MSG="RPi camera not found.  Make sure it's enabled."
-			echo "${MSG}" >&2
+			if [[ ${IGNORE_ERRORS} == "false" ]]; then
+				MSG="RPi camera not found.  Make sure it's enabled."
+				echo "${MSG}" >&2
 
-			if [[ ${IGNORE_ERRORS} == "false" && ${USE_doExit} == "true" ]]; then
-				EXIT_MSG="${PREFIX}\nRPi camera\nnot found!\nMake sure it's enabled."
-				doExit "${EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
+				if [[ ${USE_doExit} == "true" ]]; then
+					EXIT_MSG="${PREFIX}\nRPi camera\nnot found!\nMake sure it's enabled."
+					doExit "${EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
+				fi
 			fi
 
 			return "${EXIT_NO_CAMERA}"

@@ -271,12 +271,14 @@ function get_connected_cameras_info()
 				model_id = substr($6, 6);
 				model = $8;
 				if (model != "") {
-					printf("ZWO\t%d : [%s] %s\n", num++, model, model_id);
-					model = "";		# This camera was output
+					printf("ZWO\t%d : %s %s\n", num++, model, model_id);
+					model = "<found>";		# This camera was output
 				}
 			} else if ($1 == "iProduct") {
-				model = $3;
-				printf("ZWO\t%d : %s %s\n", num++, model, model_id);
+				if (model != "<found>") {
+					model = $3;
+					printf("ZWO\t%d : %s %s\n", num++, model, model_id);
+				}
 				model = "";		# This camera was output
 			}
 		}'

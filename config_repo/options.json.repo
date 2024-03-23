@@ -34,10 +34,8 @@
 "description" : "Enable to <strong>save</strong> daytime images.",
 "label" : "Daytime Save",
 "type" : "boolean",
-"usage" : "capture",
 "carryforward" : true,
-"booldependson" : "takedaytimeimages",
-"action" : "reload"
+"booldependson" : "takedaytimeimages"
 },
 {
 "name" : "dayautoexposure",
@@ -287,7 +285,6 @@
 "description" : "Enable to <strong>save</strong> nighttime images.",
 "label" : "Nighttime Save",
 "type" : "boolean",
-"usage" : "capture",
 "carryforward" : true,
 "booldependson" : "takenighttimeimages"
 },

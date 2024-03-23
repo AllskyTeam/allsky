@@ -1237,8 +1237,7 @@
 "label" : "Image Resize Width",
 "type" : "integer",
 "checkchanges" : true,
-"booldependson" : "takedaytimeimages OR takenighttimeimages",
-"action" : "reload"
+"booldependson" : "takedaytimeimages OR takenighttimeimages"
 },
 {
 "name" : "imageresizeheight",
@@ -1249,8 +1248,7 @@
 "label" : "Image Resize Height",
 "type" : "integer",
 "checkchanges" : true,
-"booldependson" : "takedaytimeimages OR takenighttimeimages",
-"action" : "reload"
+"booldependson" : "takedaytimeimages OR takenighttimeimages"
 },
 {
 "name" : "imagecroptop",
@@ -1552,7 +1550,7 @@
 },
 {
 "name" : "keogramsubheader",
-"label" : "Keogram Settings",
+"label" : "Keograms",
 "type" : "header-sub"
 },
 {
@@ -1642,7 +1640,7 @@
 
 {
 "name" : "startrailssubheader",
-"label" : "Startrails Settings",
+"label" : "Startrails",
 "type" : "header-sub"
 },
 {
@@ -1736,7 +1734,7 @@
 },
 {
 "name" : "localwebsiteheader",
-"label" : "Local Website Settings",
+"label" : "Local Website",
 "type" : "header-sub"
 },
 {
@@ -1754,7 +1752,7 @@
 "minimum" : 0,
 "maximum" : "none",
 "default" : 0,
-"description" : "Number of days of images and videos to keep on the Pi's Website.",
+"description" : "Number of days of images and videos to keep on the Pi's Website. <span class='WebUIValue'>0</span> keeps all days.",
 "label" : "Days To Keep on Pi Website",
 "type" : "integer",
 "carryforward" : true,
@@ -1762,7 +1760,7 @@
 },
 {
 "name" : "remotewebsiteheader",
-"label" : "Remote Website Settings",
+"label" : "Remote Website",
 "type" : "header-sub"
 },
 {
@@ -1977,7 +1975,7 @@
 "name" : "remotewebsitestartrailsdestinationname",
 "default" : "",
 "description" : "Optional name of the remote startrails file.",
-"label" : "Remote Startrails Name",
+"label" : "Remote Startrails File Name",
 "type" : "text",
 "carryforward" : true,
 "booldependson" : "useremotewebsite",
@@ -2009,7 +2007,7 @@
 
 {
 "name" : "remoteserverheader",
-"label" : "Remote Server Settings",
+"label" : "Remote Server",
 "type" : "header-sub"
 },
 {
@@ -2169,8 +2167,8 @@
 {
 "name" : "REMOTESERVER_GCS_ACL",
 "default" : "private",
-"description" : "S3 Access Control List (ACL).",
-"label" : "S3 ACL",
+"description" : "GCS Access Control List (ACL).",
+"label" : "GCS ACL",
 "type" : "text",
 "checkchanges" : true,
 "source" : "${ALLSKY_ENV}",

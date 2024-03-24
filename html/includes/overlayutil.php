@@ -884,6 +884,7 @@ class OVERLAYUTIL
 
         $overlayFile = $this->allskyOverlays . '/' . $_POST['data']['filename'] . '.json';
         file_put_contents($overlayFile, $newOverlay);
+        chmod($overlayFile, 0775);
         $this->sendResponse();
     }
 

@@ -64,12 +64,7 @@ function DisplayOverlay($image_name)
     <link href="/css/overlay.css" rel="stylesheet">
 
     <div id="oeeditor"> 
-        <div id="oe-overlay-manager"></div>
-        <div id="oe-overlay-disable" class="hidden">
-            <div class="center">
-                <div class="center-paragraph">This overlay is provided by the Allsky team and cannot be edited. <br>Click <a href="#" id="oe-overlay-disable-new">here</a> to create a new editable overlay based upon this one.</div>
-            </div>
-        </div>      
+        <div id="oe-overlay-manager"></div>     
         <div class="row">
         <div id="oe-viewport" class="panel panel-primary">
             <div class="panel-heading"><i class="fa fa-code fa-edit"></i> Overlay Editor</div>
@@ -99,70 +94,76 @@ function DisplayOverlay($image_name)
                                 </div>
 
                                 <div class="collapse navbar-collapse" id="oe-main-navbar">
-                                    <ul class="nav navbar-nav">
+                                    <ul class="nav navbar-nav" id="oe-editor-toolbar">
                                         <li>
                                             <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Save The Current Configuration">
-                                                <div class="btn btn-lg navbar-btn disabled" id="oe-save"><i class="fa-solid fa-floppy-disk"></i></div>
+                                                <div class="btn btn-lg navbar-btn oe-button disabled" id="oe-save"><i class="fa-solid fa-floppy-disk"></i></div>
                                             </div>
                                         </li>
                                         <li>
-                                            <div class="btn btn-lg navbar-btn" id="oe-add-text" data-toggle="tooltip" data-container="body" data-placement="top" title="Add New Text Field"><i class="fa-solid fa-font"></i></div>
+                                            <div class="btn btn-lg navbar-btn oe-button" id="oe-add-text" data-toggle="tooltip" data-container="body" data-placement="top" title="Add New Text Field"><i class="fa-solid fa-font"></i></div>
                                         </li>
                                         <li>
-                                            <div class="btn btn-lg navbar-btn" id="oe-add-image" data-toggle="tooltip" data-container="body" data-placement="top" title="Add Existing Image Field"><i class="fa-regular fa-image"></i></div>
+                                            <div class="btn btn-lg navbar-btn oe-button" id="oe-add-image" data-toggle="tooltip" data-container="body" data-placement="top" title="Add Existing Image Field"><i class="fa-regular fa-image"></i></div>
                                         </li>
                                         <li>
                                             <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Delete The Selected Field">
-                                                <div class="btn btn-lg navbar-btn disabled" id="oe-delete"><i class="fa-solid fa-xmark"></i></div>
+                                                <div class="btn btn-lg navbar-btn oe-button disabled" id="oe-delete"><i class="fa-solid fa-xmark"></i></div>
                                             </div>
                                         </li>
                                         <li>
-                                            <div class="btn btn-lg navbar-btn" id="oe-item-list" data-toggle="tooltip" data-container="body" data-placement="top" title="Variable Manager"><i class="fa-regular fa-rectangle-list"></i></div>
+                                            <div class="btn btn-lg navbar-btn oe-button" id="oe-item-list" data-toggle="tooltip" data-container="body" data-placement="top" title="Variable Manager"><i class="fa-regular fa-rectangle-list"></i></div>
                                         </li>
                                         <li>
-                                            <div class="btn btn-lg navbar-btn" id="oe-test-mode" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Sample Data"><i class="fa-regular fa-square-check"></i></div>
+                                            <div class="btn btn-lg navbar-btn oe-button" id="oe-test-mode" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Sample Data"><i class="fa-regular fa-square-check"></i></div>
                                         </li>
 
                                         <li>
-                                            <div class="btn btn-lg navbar-btn oe-zoom" id="oe-zoom-in" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
+                                            <div class="btn btn-lg navbar-btn oe-zoom oe-button border-left" id="oe-zoom-in" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
                                         </li>
                                         <li>
-                                            <div class="btn btn-lg navbar-btn oe-zoom" id="oe-zoom-out" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></div>
+                                            <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-zoom-out" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></div>
                                         </li>
                                         <li>
-                                            <div class="btn btn-lg navbar-btn oe-zoom" id="oe-zoom-full" data-toggle="tooltip" data-container="body" data-placement="top" title="View Full Size"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></div>
+                                            <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-zoom-full" data-toggle="tooltip" data-container="body" data-placement="top" title="View Full Size"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></div>
                                         </li>
                                         <li>
-                                            <div class="btn btn-lg navbar-btn oe-zoom" id="oe-zoom-fit" data-toggle="tooltip" data-container="body" data-placement="top" title="Fit to Window"><i class="fa-solid fa-down-left-and-up-right-to-center"></i></div>
+                                            <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-zoom-fit" data-toggle="tooltip" data-container="body" data-placement="top" title="Fit to Window"><i class="fa-solid fa-down-left-and-up-right-to-center"></i></div>
                                         </li>
                                         <li>
-                                            <div class="btn btn-lg navbar-btn oe-field-errors hidden" id="oe-field-errors" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Field Errors">
-                                                <i class="fa-solid fa-circle-exclamation"></i>
-                                            </div>
+                                            <div class="btn btn-lg navbar-btn border-left" id="oe-show-overlay-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Overlay Manager"><i class="fa-solid fa-gears"></i></div>
+                                        </li>
+                                        <li>
+                                            <div class="btn btn-lg navbar-btn oe-field-errors hidden" id="oe-field-errors" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Field Errors"><i class="fa-solid fa-circle-exclamation"></i></div>
                                         </li>
                                     </ul>
                                     <ul class="nav navbar-nav navbar-right">
                                         <li id="oe-toolbar-debug" class="hidden">
-                                            <div id="oe-toobar-debug-button" class="btn btn-lg navbar-btn" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"><i class="fa-solid fa-bug"></i></div>
+                                            <div id="oe-toobar-debug-button" class="btn btn-lg navbar-btn oe-button" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"><i class="fa-solid fa-bug"></i></div>
                                         </li>
                                         <li>
-                                            <div id="oe-upload-font" class="btn btn-lg navbar-btn" data-toggle="tooltip" data-container="body" data-placement="top" title="Font Manager">
+                                            <div id="oe-upload-font" class="btn btn-lg navbar-btn oe-button" data-toggle="tooltip" data-container="body" data-placement="top" title="Font Manager">
                                                 <i class="fa-solid fa-download"></i>
                                             </div>
                                         </li>
                                         <li>
-                                            <div id="oe-show-image-manager" class="btn btn-lg navbar-btn" data-toggle="tooltip" data-container="body" data-placement="top" title="Image Manager"><i class="fa-regular fa-images"></i></div>
+                                            <div id="oe-show-image-manager" class="btn btn-lg navbar-btn oe-button" data-toggle="tooltip" data-container="body" data-placement="top" title="Image Manager"><i class="fa-regular fa-images"></i></div>
                                         </li>
                                         <li>
-                                            <div class="btn btn-lg navbar-btn" id="oe-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Layout and App Options"><i class="fa-solid fa-gear"></i>
+                                            <div class="btn btn-lg navbar-btn oe-button" id="oe-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Layout and App Options"><i class="fa-solid fa-gear"></i>
                                             </div>
                                         </li>
                                     </ul>
                                 </div>
                             </div>
-                        </nav>
+                        </nav>                        
                         <div class="oe-editor panel-body">
                             <div id="overlay_container" style="background-color: black; position: relative">
+                                <div id="oe-overlay-disable" class="hidden">
+                                    <div class="center">
+                                        <div class="center-paragraph">This overlay is provided by the Allsky team and cannot be edited. <br>Click <a href="#" id="oe-overlay-disable-new">here</a> to create a new editable overlay based upon this one.</div>
+                                    </div>
+                                </div> 
                                 <div id="oe-editor-stage"></div>
                             </div>
                         </div>
@@ -508,7 +509,7 @@ function DisplayOverlay($image_name)
 
                             <!-- Nav tabs -->
                             <ul class="nav nav-tabs" role="tablist">
-                                <li role="presentation" class="active"><a href="#configoptions" aria-controls="configoptions" role="tab" data-toggle="tab">Layout Defaults</a></li>
+                                <li role="presentation" class="active"><a href="#configoptions" aria-controls="configoptions" role="tab" data-toggle="tab" id="oe-editor-layout-defaults">Layout Defaults</a></li>
                                 <li role="presentation"><a href="#oeeditoroptions" aria-controls="oeeditoroptions" role="tab" data-toggle="tab">Editor Settings</a></li>
                                 <li role="presentation"><a href="#oeeditoroverlays" aria-controls="oeeditoroverlays" role="tab" data-toggle="tab">Overlays</a></li>                                
                             </ul>
@@ -524,7 +525,7 @@ function DisplayOverlay($image_name)
                                                 Opacity</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <input id="defaultimagetopacity" name="defaultimagetopacity" type="number" min="0" max="100" step="1" class="form-control">
+                                                    <input id="defaultimagetopacity" name="defaultimagetopacity" type="number" min="0" max="100" step="1" class="form-control layoutfield">
                                                 </div>
                                             </div>
                                         </div>
@@ -533,7 +534,7 @@ function DisplayOverlay($image_name)
                                                 Rotation</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <input id="defaultimagerotation" name="defaultimagerotation" type="number" min="0" max="359" step="1" class="form-control">
+                                                    <input id="defaultimagerotation" name="defaultimagerotation" type="number" min="0" max="359" step="1" class="form-control layoutfield">
                                                 </div>
                                             </div>
                                         </div>
@@ -541,7 +542,7 @@ function DisplayOverlay($image_name)
                                             <label for="defaultfont" class="control-label col-xs-4">Default Font</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <select id="defaultfont" name="defaultfont" class="form-control">
+                                                    <select id="defaultfont" name="defaultfont" class="form-control layoutfield">
                                                     </select>
                                                 </div>
                                             </div>
@@ -551,7 +552,7 @@ function DisplayOverlay($image_name)
                                                 Size</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <input id="defaultfontsize" name="defaultfontsize" type="number" min="8" max="64" step="1" class="form-control">
+                                                    <input id="defaultfontsize" name="defaultfontsize" type="number" min="8" max="64" step="1" class="form-control layoutfield">
                                                 </div>
                                             </div>
                                         </div>
@@ -560,7 +561,7 @@ function DisplayOverlay($image_name)
                                                 Opacity</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <input id="defaultfontopacity" name="defaultfontopacity" type="number" min="0" max="100" step="1" class="form-control">
+                                                    <input id="defaultfontopacity" name="defaultfontopacity" type="number" min="0" max="100" step="1" class="form-control layoutfield">
                                                 </div>
                                             </div>
                                         </div>
@@ -569,7 +570,7 @@ function DisplayOverlay($image_name)
                                                 Colour</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <input id="oe-default-font-colour" name="oe-default-font-colour" type="input" class="form-control">
+                                                    <input id="oe-default-font-colour" name="oe-default-font-colour" type="input" class="form-control layoutfield">
                                                 </div>
                                             </div>
                                         </div>
@@ -578,7 +579,7 @@ function DisplayOverlay($image_name)
                                                 Rotation</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <input id="defaulttextrotation" name="defaulttextrotation" type="number" min="0" max="359" step="1" class="form-control">
+                                                    <input id="defaulttextrotation" name="defaulttextrotation" type="number" min="0" max="359" step="1" class="form-control layoutfield">
                                                 </div>
                                             </div>
                                         </div>
@@ -587,7 +588,7 @@ function DisplayOverlay($image_name)
                                                 Colour</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <input id="oe-default-stroke-colour" name="oe-default-stroke-colour" type="input" class="form-control">
+                                                    <input id="oe-default-stroke-colour" name="oe-default-stroke-colour" type="input" class="form-control layoutfield">
                                                 </div>
                                             </div>
                                         </div>
@@ -595,7 +596,7 @@ function DisplayOverlay($image_name)
                                             <label for="defaultdatafileexpiry" class="control-label col-xs-4">Default Extra Data Expiry</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <input id="defaultdatafileexpiry" name="defaultdatafileexpiry" type="number" min="0" max="60000" step="10" class="form-control">
+                                                    <input id="defaultdatafileexpiry" name="defaultdatafileexpiry" type="number" min="0" max="60000" step="10" class="form-control layoutfield">
                                                 </div>
                                                 <p class="help-block">This is the default expiry time in seconds for the extra data files. This can be overriden for each variable in the data files, see the documentation for more details</p>
                                             </div>
@@ -605,7 +606,7 @@ function DisplayOverlay($image_name)
                                             <label for="defaultdatafileexpiry" class="control-label col-xs-4">Expiry Text</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <input id="defaultexpirytext" name="defaultexpirytext" type="text" class="form-control">
+                                                    <input id="defaultexpirytext" name="defaultexpirytext" type="text" class="form-control layoutfield">
                                                 </div>
                                                 <p class="help-block">If blank then any expired fields will be removed. If non blank the value of an expired field will be replaced with this text</p>
                                             </div>
@@ -615,7 +616,7 @@ function DisplayOverlay($image_name)
                                             <label for="defaultnoradids" class="control-label col-xs-4">Norad ID's</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <input id="defaultnoradids" name="defaultnoradids" type="text" class="form-control">
+                                                    <input id="defaultnoradids" name="defaultnoradids" type="text" class="form-control layoutfield">
                                                 </div>
                                                 <p class="help-block">List of NORAD Id's to calculate satellite positions for, satellite Id's can be found on the <a href="https://celestrak.org/satcat/search.php" target="_blank">Celestrak</a> website. See the documentaiton for more details</p>
                                             </div>
@@ -624,21 +625,21 @@ function DisplayOverlay($image_name)
                                             <div class="col-sm-offset-4 col-sm-2">
                                                 <div class="checkbox">
                                                     <label>
-                                                        <input type="checkbox" id="defaultincludeplanets"> Include Planets
+                                                        <input type="checkbox" id="defaultincludeplanets" class="layoutfield"> Include Planets
                                                     </label>
                                                 </div>
                                             </div>
                                             <div class="col-sm-2">
                                                 <div class="checkbox">
                                                     <label>
-                                                        <input type="checkbox" id="defaultincludesun"> Include Sun
+                                                        <input type="checkbox" id="defaultincludesun" class="layoutfield"> Include Sun
                                                     </label>
                                                 </div>
                                             </div>
                                             <div class="col-sm-4">
                                                 <div class="checkbox">
                                                     <label>
-                                                        <input type="checkbox" id="defaultincludemoon"> Include Moon
+                                                        <input type="checkbox" id="defaultincludemoon" class="layoutfield" class="layoutfield"> Include Moon
                                                     </label>
                                                 </div>
                                             </div>

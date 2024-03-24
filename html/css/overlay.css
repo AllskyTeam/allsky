@@ -294,13 +294,9 @@ div.dtsp-searchPane div.dtsp-topRow {
 }
 
 #oe-overlay-disable {
-    position: fixed;
+    position: absolute;
     width: 100%;
     height: 100%;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
     background-color: rgba(0,0,0,0.5); 
     z-index: 2; 
     cursor: pointer;
@@ -310,13 +306,18 @@ div.dtsp-searchPane div.dtsp-topRow {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100%;
-    border: 3px solid green;
+    height: 25%;
     font-size: 2em;
   }
 
   #oe-overlay-disable .center .center-paragraph {
     text-align: center;
+    border: 3px solid green;
     background-color: rgba(0,0,0,0.3);
     padding: 15px;    
+  }
+
+  .border-left {
+    border-left: 1px solid #666;
+    margin-left: 5px;
   }

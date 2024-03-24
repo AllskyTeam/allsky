@@ -150,7 +150,7 @@ class OVERLAYUTIL
         $overlayType = $_POST['overlay']['type'];
 
         if ($overlayType === 'user') {
-            $fileName = $this->overlayPath . '/myTemplates/' . $overlayName;
+            $fileName = $this->allskyOverlays . '/' . $overlayName;
         } else {
             $fileName = $this->overlayPath . '/config/' . $overlayName;
         }
@@ -668,7 +668,7 @@ class OVERLAYUTIL
         if (file_exists($fileName)) {
             $template = file_get_contents($fileName);
         } else {
-            $fileName = $this->overlayPath . '/myTemplates/' . $overlayFilename;
+            $fileName = $this->allskyOverlays . '/' . $overlayFilename;
             $template = file_get_contents($fileName);
         }
         $templateData = json_decode($template);      
@@ -697,7 +697,7 @@ class OVERLAYUTIL
         if (file_exists($fileName)) {
             $overlay = file_get_contents($fileName);
         } else {
-            $fileName = $this->overlayPath . '/myTemplates/' . $overlayName;
+            $fileName = $this->allskyOverlays . '/' . $overlayName;
             $overlay = file_get_contents($fileName);
         }     
 
@@ -771,16 +771,18 @@ class OVERLAYUTIL
         }
 
 
-        $userDir = $this->overlayPath . '/myTemplates';
+        $userDir = $this->allskyOverlays;
         $entries = scandir($userDir);
         foreach ($entries as $entry) {
             if ($entry !== '.' && $entry !== '..') {
-                $templatePath = $userDir . '/' . $entry;
-                if (is_file($templatePath)) {
-                    $template = file_get_contents($templatePath);
-                    $templateData = json_decode($template);
-                    $this->fixMetaData($templateData);
-                    $overlayData['useroverlays'][$entry] = $templateData;
+                if (substr($entry,0, 7) === 'overlay') {
+                    $templatePath = $userDir . '/' . $entry;
+                    if (is_file($templatePath)) {
+                        $template = file_get_contents($templatePath);
+                        $templateData = json_decode($template);
+                        $this->fixMetaData($templateData);
+                        $overlayData['useroverlays'][$entry] = $templateData;
+                    }
                 }
             }
         }
@@ -796,7 +798,7 @@ class OVERLAYUTIL
 
     public function getValidateFilename() {
         $fileName = $_GET['filename'];
-        $userDir = $this->overlayPath . '/myTemplates/';
+        $userDir = $this->allskyOverlays;
         $filePath = $userDir . $fileName;
         $fileExists = false;
 
@@ -812,7 +814,7 @@ class OVERLAYUTIL
     }
 
     public function getSuggest() {
-        $userDir = $this->overlayPath . '/myTemplates/';
+        $userDir = $this->allskyOverlays;
         $maxFound = 0;
 
         $entries = scandir($userDir);
@@ -836,6 +838,11 @@ class OVERLAYUTIL
     }
 
     public function postNewOverlay() {
+
+        if (!file_exists($this->allskyOverlays)) {
+            mkdir($this->allskyOverlays);
+        }
+
         $copyOverlay = $_POST['data']['copy'];
         $newOverlay = $this->getLoadOverlay($copyOverlay, true);
         $newOverlay = json_decode($newOverlay);
@@ -875,14 +882,14 @@ class OVERLAYUTIL
                 
         $newOverlay = json_encode($newOverlay, JSON_PRETTY_PRINT);
 
-        $overlayFile = $this->overlayPath . '/myTemplates/' . $_POST['data']['filename'] . '.json';
+        $overlayFile = $this->allskyOverlays . '/' . $_POST['data']['filename'] . '.json';
         file_put_contents($overlayFile, $newOverlay);
         $this->sendResponse();
     }
 
     public function getDeleteOverlay() {
         $fileName = $_GET['filename'];        
-        $overlayFile = $this->overlayPath . '/myTemplates/' . $fileName;
+        $overlayFile = $this->allskyOverlays . '/' . $fileName;
         if (file_exists($overlayFile)) {
             unlink($overlayFile);
         }
@@ -930,7 +937,7 @@ class OVERLAYUTIL
         
         $overlays = [];
 
-        $defaultDir = $this->allskyOverlays;
+        $defaultDir = $this->overlayPath . '/config/';
         $entries = scandir($defaultDir);
         foreach ($entries as $entry) {
             if ($entry !== '.' && $entry !== '..') {
@@ -951,7 +958,7 @@ class OVERLAYUTIL
             }
         }
 
-        $userDir = $this->overlayPath . '/myTemplates/';
+        $userDir = $this->allskyOverlays;
         $entries = scandir($userDir);
         foreach ($entries as $entry) {
             if ($entry !== '.' && $entry !== '..') {

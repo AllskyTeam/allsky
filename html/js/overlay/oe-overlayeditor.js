@@ -47,7 +47,7 @@ class OVERLAYEDITOR {
         if (width < 1024 || height < 768) {
             bootbox.alert({
                 title: 'Overlay Editor Warning',
-                message: 'Your screen resolution (' + width + 'x' + height + ') is below the recommened resolution for the overlay editor. You may continue to use the overlay editor but some functions may not be useable.'
+                message: 'Your screen resolution (' + width + 'x' + height + ') is below the recommened resolution (1024x768) for the overlay editor. You may continue to use the overlay editor but some functions may not be useable.'
             });
         }
     }

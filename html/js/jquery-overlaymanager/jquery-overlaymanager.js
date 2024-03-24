@@ -761,6 +761,12 @@
             }
             $(plugin.mmMetaBrand).val(configManager.getMetaField('camerabrand'));
 
+            if (plugin.selectedOverlay.type === 'allsky') {
+                $('.' + plugin.mmMetaData).prop('disabled', true);
+            } else {
+                $('.' + plugin.mmMetaData).prop('disabled', false);
+            }
+
             if (plugin.selectedOverlay.name !== null) {
                 $('#' + plugin.mmFileName).val(plugin.selectedOverlay.name);
                 $('#' + plugin.mmMetaName).val(configManager.getMetaField('name'));
@@ -770,8 +776,6 @@
                 $('#' + plugin.mmMetaResolutionWidth).val(configManager.getMetaField('cameraresolutionwidth'));
                 $('#' + plugin.mmMetaResolutionHeight).val(configManager.getMetaField('cameraresolutionheight'));
                 $('#' + plugin.mmMetaTod).val(configManager.getMetaField('tod'));
-
-                $('.' + plugin.mmMetaData ).prop('disabled', false);
             } else {
                 $('.' + plugin.mmMetaData ).val('');
                 $('.' + plugin.mmMetaData ).prop('disabled', true);

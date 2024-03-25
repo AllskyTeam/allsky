@@ -31,7 +31,8 @@
             "fontsize": 36,
             "strokewidth": 0,
             "tlx": 19,
-            "tly": 140
+            "tly": 140,
+            "format": "{:.2f}"
         },
         {
             "label": "${CAMERA_TYPE} ${CAMERA_MODEL}",

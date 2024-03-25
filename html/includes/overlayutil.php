@@ -150,7 +150,7 @@ class OVERLAYUTIL
         $overlayType = $_POST['overlay']['type'];
 
         if ($overlayType === 'user') {
-            $fileName = $this->allskyOverlays . '/' . $overlayName;
+            $fileName = $this->allskyOverlays . $overlayName;
         } else {
             $fileName = $this->overlayPath . '/config/' . $overlayName;
         }
@@ -668,7 +668,7 @@ class OVERLAYUTIL
         if (file_exists($fileName)) {
             $template = file_get_contents($fileName);
         } else {
-            $fileName = $this->allskyOverlays . '/' . $overlayFilename;
+            $fileName = $this->allskyOverlays . $overlayFilename;
             $template = file_get_contents($fileName);
         }
         $templateData = json_decode($template);      
@@ -697,7 +697,7 @@ class OVERLAYUTIL
         if (file_exists($fileName)) {
             $overlay = file_get_contents($fileName);
         } else {
-            $fileName = $this->allskyOverlays . '/' . $overlayName;
+            $fileName = $this->allskyOverlays . $overlayName;
             $overlay = file_get_contents($fileName);
         }     
 
@@ -776,7 +776,7 @@ class OVERLAYUTIL
         foreach ($entries as $entry) {
             if ($entry !== '.' && $entry !== '..') {
                 if (substr($entry,0, 7) === 'overlay') {
-                    $templatePath = $userDir . '/' . $entry;
+                    $templatePath = $userDir . $entry;
                     if (is_file($templatePath)) {
                         $template = file_get_contents($templatePath);
                         $templateData = json_decode($template);
@@ -844,8 +844,13 @@ class OVERLAYUTIL
         }
 
         $copyOverlay = $_POST['data']['copy'];
-        $newOverlay = $this->getLoadOverlay($copyOverlay, true);
-        $newOverlay = json_decode($newOverlay);
+        if ($copyOverlay !== 'none') {
+            $newOverlay = $this->getLoadOverlay($copyOverlay, true);
+            $newOverlay = json_decode($newOverlay);
+        } else {
+            $newOverlay = (object)null;
+            $this->fixMetaData($newOverlay);
+        }
 
         $newOverlay->metadata = $_POST['fields'];
 
@@ -882,7 +887,7 @@ class OVERLAYUTIL
                 
         $newOverlay = json_encode($newOverlay, JSON_PRETTY_PRINT);
 
-        $overlayFile = $this->allskyOverlays . '/' . $_POST['data']['filename'] . '.json';
+        $overlayFile = $this->allskyOverlays . $_POST['data']['filename'] . '.json';
         file_put_contents($overlayFile, $newOverlay);
         chmod($overlayFile, 0775);
         $this->sendResponse();
@@ -890,7 +895,7 @@ class OVERLAYUTIL
 
     public function getDeleteOverlay() {
         $fileName = $_GET['filename'];        
-        $overlayFile = $this->allskyOverlays . '/' . $fileName;
+        $overlayFile = $this->allskyOverlays . $fileName;
         if (file_exists($overlayFile)) {
             unlink($overlayFile);
         }

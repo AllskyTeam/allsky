@@ -1642,7 +1642,7 @@ class OEUIMANAGER {
     updateToolbar() {
 
         let selectedOverlay = this.#configManager.selectedOverlay;
-        if (selectedOverlay.type === 'allsky') {
+        if (selectedOverlay.type === 'allsky' && !this.#debugMode)  {
             $('#oe-delete').addClass('disabled');
             $('#oe-save').addClass('disabled');
             $('#oe-add-text').addClass('disabled');

@@ -101,9 +101,12 @@
             })
             if (params.hasOwnProperty('debug')) {
                 if (params.debug == 'true') {
-                    plugin.debug = true;
+                    localStorage.setItem('debugMode', 'true');
+                } else {
+                    localStorage.setItem('debugMode', 'false');
                 }
-            }            
+            }
+            plugin.debug  = localStorage.getItem('debugMode') === 'true' ? true: false;          
         }
 
         var createHtml = function() {
@@ -761,7 +764,7 @@
             }
             $(plugin.mmMetaBrand).val(configManager.getMetaField('camerabrand'));
 
-            if (plugin.selectedOverlay.type === 'allsky') {
+            if (plugin.selectedOverlay.type === 'allsky' && !plugin.debug ) {
                 $('.' + plugin.mmMetaData).prop('disabled', true);
             } else {
                 $('.' + plugin.mmMetaData).prop('disabled', false);

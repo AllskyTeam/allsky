@@ -1343,6 +1343,9 @@ class OEUIMANAGER {
             if (this.#errorsTable .rows().count() == 0) {
                 $('#oe-field-errors-dialog').modal('hide');
             }    
+
+            this.#configManager.dirty = true;
+            this.updateToolbar();            
         });
 
         $(document).on('click', '.oe-field-errors-dialog-fix', (event) => {
@@ -1363,6 +1366,8 @@ class OEUIMANAGER {
                 $('#oe-field-errors-dialog').modal('hide');
             }
 
+            this.#configManager.dirty = true;
+            this.updateToolbar();            
         });
              
         $(document).on('oe-config-updated', (e) => {

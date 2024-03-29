@@ -13,6 +13,7 @@ class OVERLAYUTIL
     private $overlayPath;
     private $allskyOverlays;
     private $allskyTmp;
+    private $allskyStatus;    
     private $cc = "";
     private $excludeVariables = array(
         "\${TEMPERATURE_C}" => array(
@@ -30,6 +31,7 @@ class OVERLAYUTIL
         $this->overlayPath = ALLSKY_OVERLAY;
         $this->allskyOverlays = MY_OVERLAY_TEMPLATES . '/';
         $this->allskyTmp = ALLSKY_HOME . '/tmp';
+        $this->allskyStatus = ALLSKY_CONFIG . '/status.json';
 
         $ccFile = ALLSKY_CONFIG . "/cc.json";
         $ccJson = file_get_contents($ccFile, true);
@@ -991,6 +993,30 @@ class OVERLAYUTIL
         
         $data = json_encode($data, JSON_PRETTY_PRINT);
         $this->sendResponse($data);            
+    }
+
+    public function getStatus() {
+        $running = [
+            'running' => true,
+            'status' => 'Unknown'
+        ];
+        if (is_file($this->allskyStatus)) {
+            try {
+                $statusTxt = file_get_contents($this->allskyStatus, true);
+                $status = json_decode($statusTxt, true);
+                if ($status !== null) {
+                    if (isset($status['status'])) {
+                        $running['status'] = $status['status'];
+                        if (strtolower($status['status']) != 'running') {
+                            $running['running'] = false;
+                        }
+                    }
+                }
+            } catch(Exception $e) {
+            }
+        }
+
+        $this->sendResponse(json_encode($running));
     }
 }
 

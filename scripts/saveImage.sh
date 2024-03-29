@@ -120,8 +120,6 @@ if [[ -z ${AS_TEMPERATURE_C} ]]; then
 	fi
 fi
 
-set_allsky_status "${ALLSKY_STATUS_RUNNING}"
-
 # If taking dark frames, save the dark frame then exit.
 if [[ $( settings ".takedarkframes" ) == "true" ]]; then
 	#shellcheck source-path=scripts
@@ -512,5 +510,7 @@ fi
 
 # We create ${WEBSITE_FILE} as late as possible to avoid it being overwritten.
 mv "${SAVED_FILE}" "${WEBSITE_FILE}"
+
+set_allsky_status "${ALLSKY_STATUS_RUNNING}"
 
 exit 0

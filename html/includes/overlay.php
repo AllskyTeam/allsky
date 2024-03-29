@@ -63,10 +63,19 @@ function DisplayOverlay($image_name)
 
     <link href="/css/overlay.css" rel="stylesheet">
 
-    <div id="oeeditor"> 
+    <div id="oeeditor">
         <div id="oe-overlay-manager"></div>     
         <div class="row">
         <div id="oe-viewport" class="panel panel-primary">
+            <div id="oe-overlay-disable" class="oe-not-running big hidden">
+                <div class="center-full">
+                    <div class="center-paragraph">
+                        <h1>Allsky is not currently capturing images</h1>
+                        <p>Please wait for Allsky to begin capturing before using the Overlay Manager</p>
+                        <small>You can stay on this page and the Overlay Manager will start automatically once Allsky is running. <span id="oe-overlay-disable-status"></span></small>
+                    </div>
+                </div>
+            </div> 
             <div class="panel-heading"><i class="fa fa-code fa-edit"></i> Overlay Editor</div>
                 <p id="editor-messages"><?php $myStatus->showMessages(); ?></p>
             <div>
@@ -603,7 +612,7 @@ function DisplayOverlay($image_name)
                                         </div>
 
                                         <div class="form-group">
-                                            <label for="defaultdatafileexpiry" class="control-label col-xs-4">Expiry Text</label>
+                                            <label for="defaultexpirytext" class="control-label col-xs-4">Expiry Text</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
                                                     <input id="defaultexpirytext" name="defaultexpirytext" type="text" class="form-control layoutfield">
@@ -832,22 +841,50 @@ function DisplayOverlay($image_name)
             </div>
         </div>
 
-        <img id="oe-background-image" class="oe-background-image" src="<?php echo $image_name ?>" style="width:100%">
+        <img id="oe-background-image" class="oe-background-image" alt="Overlay Image" src="<?php echo $image_name ?>" style="width:100%">
 
-        <script type="module">
-            var imageObj = new Image();
-            imageObj.src = $('#oe-background-image').attr('src');
+        <script>
+            startOverlayManager();
 
-            let that = this;
-            imageObj.onload = function() {
-                var overlayEditor = new OVERLAYEDITOR($("#overlay_container"), this);
-                overlayEditor.buildUI();
+            function startOverlayManager() {
+                let result = $.ajax({
+                    url: 'includes/overlayutil.php?request=Status',
+                    type: 'GET',
+                    dataType: 'json',
+                    cache: false,
+                    async: false,                
+                    context: this
+                });
 
-<?php if ($displayMaskTab) { ?>
-                var exposureEditor = new OEEXPOSURE();
-                exposureEditor.start();
-<?php } ?>
-            };
+                let startOverlay = true;
+                if (result.responseJSON !== undefined) {
+                    if (result.responseJSON.running !== undefined) {
+                        startOverlay = result.responseJSON.running;
+                        $('#oe-overlay-disable-status').html('Status: <em>' + result.responseJSON.status + '</em>');
+                    }
+                }
+                
+                if (startOverlay) {
+                    $('#oe-overlay-disable').addClass('hidden');
+                    var imageObj = new Image();
+                        imageObj.src = $('#oe-background-image').attr('src') + '?_ts=' + new Date().getTime();
+
+                        let that = this;
+                        imageObj.onload = function() {
+                            var overlayEditor = new OVERLAYEDITOR($("#overlay_container"), this);
+                            overlayEditor.buildUI();
+
+                            <?php if ($displayMaskTab) { ?>
+                                var exposureEditor = new OEEXPOSURE();
+                                exposureEditor.start();
+                            <?php } ?>
+                        };                    
+                } else {
+                    $('#oe-overlay-disable').removeClass('hidden');
+                    setTimeout(startOverlayManager, 1000);
+                }
+            }
+           
         </script>
 
     <?php

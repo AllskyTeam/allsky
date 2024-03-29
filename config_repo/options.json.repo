@@ -623,30 +623,6 @@
 "action" : "reload"
 },
 {
-"name" : "width",
-"display" : false,
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : 0,
-"description" : "Image width in pixels. <span class='WebUIValue'>0</span> = max sensor width.",
-"label" : "Image Width",
-"type" : "integer",
-"usage" : "capture",
-"action" : "reload"
-},
-{
-"name" : "height",
-"display" : false,
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : 0,
-"description" : "Image height in pixels. <span class='WebUIValue'>0</span> = max sensor height.",
-"label" : "Image Height",
-"type" : "integer",
-"usage" : "capture",
-"action" : "reload"
-},
-{
 "name" : "type",
 "default" : 99,
 "description" : "'auto' uses color if possible, otherwise the best mono mode supported.<br>RAW16 only works with PNG extension.",
@@ -1644,7 +1620,7 @@
 "name" : "startrailsgenerate",
 "default" : true,
 "description" : "Enable to generate a startrails at the end of night.",
-"label" : "Generate Startrails",
+"label" : "Generate",
 "type" : "boolean",
 "carryforward" : true,
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
@@ -1655,7 +1631,7 @@
 "maximum" : 1.0,
 "default" : 0.1,
 "description" : "Images with a brightness higher than this threshold will not be included in the startrails.",
-"label" : "Startrails Brightness Threshold",
+"label" : "Brightness Threshold",
 "type" : "float",
 "booldependson" : "startrailsgenerate"
 },
@@ -1663,7 +1639,7 @@
 "name": "startrailsupload",
 "default": true,
 "description": "Enable to upload the startrails to an Allsky Website and/or remote server.",
-"label": "Upload Startrails",
+"label": "Upload",
 "type": "boolean",
 "carryforward" : true,
 "booldependson" : "startrailsgenerate AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
@@ -1672,7 +1648,7 @@
 "name" : "startrailsextraparameters",
 "default" : "",
 "description" : "Optional additional startrails creation parameters.<br>Run <code>~/allsky/bin/startrails --help</code> for a list of options.",
-"label" : "Startrails Extra Parameters",
+"label" : "Extra Parameters",
 "type" : "widetext",
 "optional" : true,
 "booldependson" : "startrailsgenerate"

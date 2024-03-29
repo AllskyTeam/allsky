@@ -71,8 +71,8 @@ function DisplayOverlay($image_name)
                 <div class="center-full">
                     <div class="center-paragraph">
                         <h1>Allsky is not currently capturing images</h1>
-                        <p>Please wait for Allsky to begin capturing before using the Overlay Manager</p>
-                        <small>You can stay on this page and the Overlay Manager will start automatically once Allsky is running. <span id="oe-overlay-disable-status"></span></small>
+                        <p>Please wait for Allsky to begin capturing before using the Overlay Editor</p>
+                        <small>You can stay on this page and the Overlay Editor will start automatically once Allsky is running. <span id="oe-overlay-disable-status"></span></small>
                     </div>
                 </div>
             </div> 

@@ -5,6 +5,20 @@
 	--navbar-border-color-dark: #333333;
 	--WebUI-setting-color: #00009b;
 	--WebUI-setting-color-dark: #68a0ff;
+	--WebUI-value-color: #555;
+	--WebUI-value-background-color: #e4e4e4;
+	--WebUI-link-color: #4b4a4b;
+	--WebUI-link-background-color: #f8f8f8;
+	--WebUI-subSetting-color: black;
+	--WebUI-subSetting-background-color: #aac;
+	--WebUI-subSetting-background-color-dark: #339;
+	--dark-text: #aaaaaa;
+	--dark-text-reversed: #eeeeee;
+	--rowSeparator: 1px solid #d3d3d3;
+	--rowSeparator-dark: 1px solid #707070;
+	--btn-hover-color: black;
+	--btn-dark-color: #bfbfbf;
+	--panel-heading-color: #6b6b6b;
 }
 
 .page-header {
@@ -15,6 +29,12 @@
 	margin-right: 5px;
 }
 
+.center-text {
+	text-align: center;
+}
+.center-div {
+	margin: auto;
+}
 .valign-center {
 	display: flex;
 	align-items: center;
@@ -31,7 +51,7 @@
 	margin-right: 15px;
 }
 .version-title {
-	margin-left: 40px;
+	margin-left: 10px;
 	display: inline-block;
 	font-size: 80%;
 	opacity: 0.7;
@@ -39,13 +59,17 @@
 .version-title-color {
 	color: #777;
 }
+.dark .version-title-color {
+	color: var(--dark-text);
+}
 
+.navbar-toggle { float: left; margin-left: 10px; }
 @media (max-width: 450px) {.version-title { font-size: 75%; }}
 @media (max-width: 400px) {.version-title { font-size: 65%; }}
 @media (min-width: 796px) {	/* was 768px */
 	.sidebar { width: 210px; }
 	.navbar-title { display: inline-block; }
-	#page-wrapper { margin-left: 210px; padding: 0 30px; }
+	#page-wrapper { margin-left: 210px; }
 	.navbar-collapse { display: block; visibility: visible; }
 }
 @media (max-width: 795px) {
@@ -60,25 +84,44 @@
 }
 
 .right-panel .panel:first-of-type {
-	margin: 20px 0;
+	margin: 10px 0;
 }
 
+hr.panel-primary {
+	border-top-width: 10px;
+}
 .panel-primary {
-	border-color: #6b6b6b;
+	border-color: var(--panel-heading-color);
 }
 
 .panel-primary>.panel-heading {
-	border-color: #6b6b6b;
-	background-color: #6b6b6b;
+	border-color: var(--panel-heading-color);
+	background-color: var(--panel-heading-color);
 }
 
 .panel-footer {
 	background-color: #f2f1f0;
+	margin-bottom: 1em;
 }
 
 
 .settingInput { /* Input field in Allsky Settings page */
 	width: 120px;
+}
+.settingInputSelect {
+	padding: 0px 3px 0px 3px;
+	text-align: right;
+}
+.settingInputTextNumber {
+	padding: 0px 3px 0px 0px;
+	text-align: right;
+}
+.settingInputWidetext {
+	padding: 6px 5px;
+}
+.settingInputBoolean {
+	margin-bottom: -3px !important;
+	border-radius: 4px;
 }
 
 .info-item {
@@ -92,9 +135,11 @@
 
 .switch-field {
 	font-family: "Lucida Grande", Tahoma, Verdana, sans-serif;
-	margin: 3px 2px -15px 0;
+	/* old values: margin: 3px 2px -15px 0; */
+	margin: 2px 0 -2px 0;
 	display: inline-block;
 	overflow: hidden;
+	border-radius: 4px;
 }
 
 .switch-field input {
@@ -156,7 +201,7 @@ h2 {
 
 body.dark {
 	background-color: #222222;
-	color: #888888;
+	color: var(--dark-text);
 }
 
 .dark #page-wrapper {
@@ -169,13 +214,17 @@ body.dark {
 	border: 1px solid var(--navbar-border-color-dark);
 }
 
+.dark .navbar-brand {
+	color: var(--dark-text);
+}
+
 .dark .sidebar ul li {
 	border-bottom: 1px solid #333333;
 }
 
 .dark .sidebar ul li a,
 .dark .sidebar ul li span {
-	color: #888888;
+	color: var(--dark-text);
 }
 
 .dark .sidebar ul li a.active {
@@ -190,15 +239,29 @@ body.dark {
 	background-color: #272727;
 }
 
-.dark .panel-default {
+.dark .panel-default,
+.dark .panel-primary {
 	border-color: #333333;
 }
 
 .dark .panel-heading,
 .dark .panel-footer {
-	color: #888888;
+	color: var(--dark-text);
 	border-color: #333333;
 	background-color: #171717;
+}
+
+.highlightedBox {
+	border: 4px dashed red;
+	margin-top: 30px;
+	margin-bottom: 30px;
+	padding: 10px 5px 10px 5px;
+}
+.bullet {
+	font-weight: bold;
+	font-size: 125%;
+	display: inline;
+	vertical-align: top;
 }
 
 .alert {
@@ -211,7 +274,14 @@ button.close {
 	margin-top: -2px;
 }
 .alert td {
-	padding: 0 10px 0 3px;
+	padding: 5px 10px 5px 5px;
+}
+.alert td .important {
+	font-weight: bold;
+	font-size: 150%;
+	padding-top: 1em;
+	padding-bottom: 1em;
+	padding-left: 1em;
 }
 table .alert-dismissable button {
 	font-size: 175%;
@@ -232,27 +302,35 @@ table .alert-dismissable {
 }
 .dark .alert-message, .dark .alert-info {
 	color: #23485a;
-	border-color: #99ccdd;
-	background-color: #8b989f;
 }
 .dark .alert-success {
 	color: #95bb85;
 	border-color: #8f9d84;
 	background-color: #044a05;
 }
-.dark .alert-warning {
+.dark .alert-warning, .dark .alert-warning a {
 	color: #c0bba0;
 	border-color: #c0bba0;
 	background-color: #8a6b3b;
 }
-.dark .alert-danger {
+.dark .alert-danger, .dark .alert-danger a {
 	color: #f1b1b1;
 	border-color: #f1b1b1;
 	background-color: #a94442;
 }
-.alert-danger {
-	border-top-width: 10px;
-	border-bottom-width: 10px;
+.alert-danger, .alert-warning {
+	border-top-width: 3px;
+	border-bottom-width: 3px;
+}
+.dark .alert-info {
+	color: #888888 !important;
+	background-color: #111111 !important;
+	border: 1px solid green !important;
+}
+.dark .alert-warning {
+	color: #888888 !important;
+	background-color: #111111 !important;
+	border: 1px solid green !important;
 }
 
 .dark .form-control,
@@ -260,8 +338,16 @@ table .alert-dismissable {
 .dark input[type="number"],
 .dark select {
 	background-color: #171717;
-	color: #888888;
+	color: var(--dark-text);
 	border-color: #555555;
+}
+
+input[type="text"].has-error {
+	border-color: #d41c0f !important;
+}
+
+.text-danger {
+	color: #d41c0f !important;
 }
 
 .dark .progress {
@@ -299,7 +385,7 @@ table .alert-dismissable {
 
 .dark .switch-field label { 
 	background-color: #171717;
-	color: #888888;
+	color: var(--dark-text);
 }
 
 .dark .switch-field input:checked + label {
@@ -363,6 +449,45 @@ table .alert-dismissable {
 	border-color: #ad5451;
 }
 
+.btn-delete {
+	color: white;
+	border: 1px solid #d42f3a;
+	background-color: #d9534f;
+}
+.btn-delete:hover {
+	color: black;
+	background-color: #f96f6f;
+}
+.dark .btn-delete {
+	color: black;
+}
+
+.btn.focus.navbar-btn,
+.btn:focus.navbar-btn,
+.btn:hover.navbar-btn
+{
+	color: var(--dark-text);
+	border: 1px solid var(--dark-text);
+}
+.dark .btn.focus.navbar-btn,
+.dark .btn:focus.navbar-btn,
+.dark .btn:hover.navbar-btn,
+.dark .help-block
+{
+	color: var(--dark-text-reversed);
+}
+.advanced, .btn-advanced { /* "advanced" options are highlighted in same color as button */
+	background-color: #fffcc0;
+}
+.dark .advanced, .dark .btn-advanced {
+	color: #bfbfbf;
+	border-color: #bdb173;
+	background-color: #837a2f;
+}
+.advanced-nocolor {
+	background-color: inherit;
+}
+
 .dark .btn-primary:hover,
 .dark .btn-success:hover,
 .dark .btn-warning:hover,
@@ -401,11 +526,61 @@ table .alert-dismissable {
 	background-color: #aaa;
 	text-align: center;
 	font-weight: bold;
-	font-size: 1.25em;
-	padding: 3px 0 3px 0;
+	padding: 1px 3px 1px 3px;
 }
 .dark .settingsHeader {
 	background-color: #555;
+}
+table.settingsHeader {
+	font-size: 1.25em;
+	padding: 3px 3px 3px 3px;
+}
+.subSettingsHeader {
+	color: var(--WebUI-subSetting-color);
+	background-color: var(--WebUI-subSetting-background-color);
+	text-align: center;
+	font-weight: bold;
+	padding: 1px 3px 1px 3px;
+}
+div.subSettingsHeader {
+	font-size: 1.05em;
+	margin: 0 3em 0 3em;
+	padding: 3px 0px;
+}
+.dark .subSettingsHeader {
+	margin: 0 3em 0 0em;
+}
+.dark .subSettingsHeader {
+	background-color: #111111;
+	color: green;
+	margin-top: 10px;
+}
+.headingRow {
+	font-size: 110%;
+	border-top: 10px solid transparent;
+	border-bottom: 5px solid transparent;
+}
+.headingRowPadding {
+	border-top: 3px solid transparent;
+	border-bottom: 3px solid transparent;
+}
+.columnHeader {
+	background-color: #aac;
+	text-align: center;
+	font-weight: bold;
+	font-size: 1.05em;
+	padding: 0;
+}
+.dark .columnHeader {
+	background-color: #339
+}
+
+.headingToggle {
+	cursor: pointer;
+	padding-left: 0.5em;
+}
+.headingTitle {
+	width: 100%;
 }
 
 .boxShadow {
@@ -415,10 +590,10 @@ table .alert-dismissable {
 
 /* separate table rows */
 .rowSeparator {
-	border-bottom: 1px solid #d3d3d3;
+	border-bottom: 1px solid var(--rowSeparator);
 }
 .dark .rowSeparator {
-	border-bottom: 1px solid #707070;
+	border-bottom-color: var(--rowSeparator-dark);
 }
 /* used in system.php */
 .progress-bar {
@@ -467,13 +642,16 @@ select {
 .dark .btn-white { border-color: #ffffff; }
 
 .btn-black		 { background-color: #333333; border-color: #777777; color: white; }
-.btn-black:hover { background-color: #888888; border-color: #000000; color: white; }
+.btn-black:hover { background-color: var(--dark-text); border-color: #000000; color: white; }
 .dark .btn-black { border-color: #ffffff; }
 
 /* Error messages */
 .errorMsg, .errorMsgBig { color: red; }
 .errorMsgBig { font-size: 200%; }
-.errorMsgBox { border: 2px solid red; padding-left: 5px; }
+.errorMsgBox { 
+	padding-left: 5px; 
+	padding-right: 5px
+}
 
 .EXPIRED { color: red; font-weight: bold; }
 .systemPageAdditionsLineType {
@@ -520,22 +698,28 @@ select {
 .nowrap {
 	white-space: nowrap;
 }
+.WebUILink {	/* link on the WebUI to one of its pages */
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	padding: 0 .2em;
+	color: var(--WebUI-link-color);
+	background-color: var(--WebUI-link-background-color);
+	border-bottom: 1px solid #e7e7e7;
+}
 .WebUISetting {	/* Matches what's in the WebUI */
 	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 	color: var(--WebUI-setting-color);
 	font-weight: bold;
 }
 .dark .WebUISetting {
-	color: var(--WebUI-setting-color-dark);
+	color: #5cb85c;
 }
 .WebUIValue {
 	padding: 0 3px 0 3px;
 	font-size: 14px;
-	font-family: "Helvetica Neue", Helvetica, Arial;
 	font-family: inherit;
-	color: #555;
+	color: var(--WebUI-value-color);
+	background-color: var(--WebUI-value-background-color);
 	border: 1px solid #ccc;
-	background-color: #e4e4e4;
 	border-radius: 4px;
 }
 
@@ -560,7 +744,9 @@ select {
 }
 .live_container {
 	background-color: black;
-	margin-bottom: 15px;
+}
+.current {
+	width: 100%;
 }
 
 div.sticky {
@@ -573,8 +759,8 @@ div.sticky {
 	border: 2px solid var(--WebUI-setting-color);
 }
 .dark div.sticky {
-	background-color: var(--navbar-background-color-dark);
-	border-color: var(--WebUI-setting-color-dark);
+	background-color: #111111;
+	border: 1px solid green;
 }
 #backToTopBtn {
 	display: none; /* Hidden by default */
@@ -594,4 +780,60 @@ div.sticky {
 
 #backToTopBtn:hover {
 	background-color: #888; /* Add a lighter-grey background on hover */
+}
+
+
+.middleVerticalAlign {
+	vertical-align: middle;
+}
+.centerImg {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.externalSmall {	/* the icon indicated a new web page */
+	font-size: 90%;
+}
+
+.removeMessage {
+	color: red;
+	font-weight: bold;
+	font-size: 150%;
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+.dark .removeMessage {
+	color: white;
+}
+
+/* Classes specific to WebUI pages */
+.editorForm {
+	display: inline-block;
+	width: auto;
+	margin-right: 15px;
+	margin-bottom: 5px;
+}
+.editorSaveChanges {
+	margin-bottom: 5px;
+}
+.editorBottomSection {
+	margin-top: 15px;
+}
+.functionsListFileType {
+	float: left;
+	width: 100%;
+	margin-bottom: 2px;
+}
+.functionsListTypeImg {
+	margin-left: 10px;
+	max-width: 50%;
+	max-height:100px;
+}
+.imagesSortOrder {
+	font-size: 60%;
+
+.as-nav-toggle {
+	float: left !important;
+	margin-left: 5px;
 }

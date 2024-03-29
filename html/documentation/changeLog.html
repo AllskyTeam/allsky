@@ -136,9 +136,24 @@
 				<li>The "module" overlay method is now the default for new installations.
 					In the next major Allsky release the "legacy" method will be removed
 					and the only way to add text will be using the
-					<span class="editorName">Overlay Editor</span>
-					so we encourage you to change now.
+					<span class="editorName">Overlay Editor</span> so we encourage you to change now.
 				</li>
+				<li>The overlay module debugging output has been modified to make the logs easier to
+					read.</li>
+				<li>You can now create different overlays for daytime and nighttime captures. The
+					new 'Overlay Manager' is available from the main toolbar from within the 'Overlay
+					Editor'. The Allsky team provide a basic set of overlays which can be customised to
+					your requirements. If you have customised the overlay then during the
+					upgrade process a new custom overlay will be created for you and assigned to both
+					dat and nighttime captures. If you have not customised the overlay then Allsky will
+					attempt to use the best overlay for your camera.</li>
+				<li>The Overlay Editor has a new feature that will display a warning if any of the fields
+					on the overlay are outside the image area. The fields can be 'fixed' which will move
+				them into the bounds of the image. See <a href="https://github.com/AllskyTeam/allsky/issues/3317" target="_blank" allsky="true" external="true">[BUG] If a field is outside the image ...</a></li>
+				<li>The Overlay Editor will no longer load if Allsky is not capturing. This is to prevent the 
+					notification images being used as the overleay editor background. If the Overlay Editor
+					detects that Allsky is not currently capturing images it will display a message and
+					wait until allsky is capturing.</li>
 				<li>If you change cameras without notifying Allsky
 					(e.g., you shutdown the Pi, replace the camera with a different model,
 					then restart the Pi), Allsky will not start but will put a
@@ -184,6 +199,26 @@
 				<li>DHCP on the Pi can be configured via the WebUI's
 					<span class="WebUIWebPage">Configure DHCP</span> page.
 					This is an advanced option that is not used very often.
+				</li>
+				<li>Extra Module Changes See <a href="/documentation/modules/modules.html" target="_blank" allsky="true" external="true">Modules Documentation</a> for more details
+					<ul>
+						<li>New Module
+							<ul>
+								<li>Allsky AI - Ai detection of cloud cover</li>
+								<li>Allsky Fans - Controls a fan based upon cpu temperature</li>
+								<li>Allsky Border - Expands an image to include additional borders </li>
+								<li>Allsky HDD Temp - Uses SMART to retrive hard drive temperatures</li>
+								<li>Allsky ina3221 - Allows current and voltage measurements</li>
+								<li>Allsky influxdb - Allows data to be written to uinfluxdb</li>
+								<li>Allsky light - Determines light levels using a TSL2591</li>
+								<li>Allsky LightGraph - Displays a graph of day and night</li>
+								<li>Allsky ltr390 - Measures UV levels</li>
+								<li>Allsky mlx90640 - Captures an IR image of the sky (very experimental)</li>
+								<li>Allsky Publish Data - Publish AllSKY data to Redis, MQTT or REST</li>
+								<li>Allsky Temp - Reads upto three temperature sensors and controls a gpio pin based upon the temperature</li>
+							</ul>
+						</li>
+					</ul>
 				</li>
 			</ul>
 
@@ -240,6 +275,11 @@
 				<li><code>ASI_ERROR_TIMEOUT</code> messages are mostly gone.
 					<b>Yea!!!</b>
 				</li>
+				<li>The ROI selection code assumed the captured image was always a jpg. It now 
+					looks in the settings to dtermine the correct image name. See 
+					<a href="https://github.com/AllskyTeam/allsky/pull/3337" target="_blank" allsky="true" external="true">Ensure the ROI editor uses the correct image</a>
+				</li>
+				<li>Date formats in the overlay editor are now working correctly</li>
 			</ul>
 
 			<h4>Maintenance</h4>

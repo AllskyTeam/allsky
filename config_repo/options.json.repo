@@ -627,7 +627,7 @@
 },
 {
 "name" : "width",
-"display" : "_display",
+"display" : false,
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : 0,
@@ -639,7 +639,7 @@
 },
 {
 "name" : "height",
-"display" : "_display",
+"display" : false,
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : 0,

@@ -15,8 +15,8 @@
 	--WebUI-subSettingNote-background-color: #cce;
 	--dark-text: #aaaaaa;
 	--dark-text-reversed: #eeeeee;
-	--rowSeparator: 1px solid #d3d3d3;
-	--rowSeparator-dark: 1px solid #707070;
+	--rowSeparator: #d3d3d3;
+	--rowSeparator-dark: #707070;
 	--btn-hover-color: black;
 	--btn-dark-color: #bfbfbf;
 	--panel-heading-color: #6b6b6b;

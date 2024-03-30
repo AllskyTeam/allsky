@@ -38,14 +38,12 @@
 				You choose the method via the <span class="WebUISetting">Overlay Method</span>
 				setting in the WebUI's <span class="WebUILink">Allsky Settings</span> page.
 			<ol>
-				<li>The new <span class="WebUIValue">module</span> method has many new
+				<li>The <span class="WebUIValue">module</span> method has many new
 					features and is significantly more flexible than the older method.
 					For example, you can add an overlay ONLY to the live image but not to saved images.
 					You can also easily add images and text using a drag-and-drop method.
 				<li>The <span class="WebUIValue">legacy</span> method allows only text
 					text to be placed in a single location on an image with limited formatting.
-					See the <a allsky="true" external="true" href="overlaysLegacy.html">Legacy Overlay Method</a>
-					page for details on that method.
 					<br>This page focuses on the <span class="WebUIValue">module</span> method.
 			</ol>
 			<blockquote>
@@ -171,7 +169,7 @@
 				See the <a href="#ValidVariableNames">Variable names</a> section for details on variable names.
 			</p>
 			<p>There are two types of fields:
-			<ol>
+			<ol class="minimalPadding">
 				<li><strong>Text</strong> fields contain text and/or variables, for example,
 					<code class="noWrap">Exposure: ${sEXPOSURE}</code>,
 					which adds the word <code class="noWrap">Exposure: </code>
@@ -215,7 +213,7 @@
 						<strong>Allsky Variables</strong> tab.
 						<br>Undefined variables will have a line in
 						<span class="fileName">/var/log/allsky.log</span> like:
-						<code class="noWrap">ERROR: ${T2} has no variable type; check 'fields.json'</code>.
+						<code class="noWrap">ERROR: ${T2} has no variable type</code>.
 						<p>
 							If a variable is displayed as <code>??</code> it usually means
 							the variable's formatting is incorrect, for example,
@@ -243,8 +241,9 @@
 								<td><code>${DATE}</code></td>
 								<td>24/10/2023</td>
 								<td>Displays the date from the DATE system variable.
-									The date can be <a href=#formattingVariables">formatted in a variety of ways</a>.
-									<br>This field contains only a variable.
+									The date can be
+									<a href="#formattingVariables">formatted in a variety of ways</a>.
+									<br>This example field contains only a variable.
 								</td>
 							</tr>
 							<tr>
@@ -281,8 +280,8 @@
 
 					<p class="morePadding">Variables come from a variety of sources:</p>
 					<ol class="minimalPadding">
-						<li><strong>Allsky</strong> - The main Allsky application generates system variables.
-							Also called "system" variables because they are produced by the Allsky system.</li>
+						<li><strong>Allsky</strong> -
+							The main Allsky application generates many variables.</li>
 						<li><strong>Modules</strong> - Any module can create variables.</li>
 						<li><strong>Extra Data</strong> - Typically created by an application external to Allsky.
 						</li>
@@ -345,7 +344,7 @@
 								</tr>
 								<tr>
 									<td><code>${sEXPOSURE}</code></td>
-									<td>218 ms (0.2 sec)</td>
+									<td>218 ms (0.2&nbsp;sec)</td>
 									<td>The exposure of the image in a human readable format.
 										The format changes depending on the exposure time,
 										for example, very short exposures may be
@@ -383,13 +382,6 @@
 										Values for RPi cameras are from 0.0 (pure black) to 1.0 (pure white).
 									</td>
 								</tr>
-								<tr>
-									<td><code>${BRIGHTNESS}</code></td>
-									<td>0</td>
-									<td>The brightness per the
-										<span class="WebUISetting">Brightness</span> setting in the WebUI.
-									</td>
-								</tr>
 							</tbody>
 						</table>
 						<hr class="separatorMinor">
@@ -404,9 +396,9 @@
 						variable called <code>${STARCOUNT}</code> and passes it to the next module.
 					</p>
 					<p>Please refer to the
-						<a allsky="true" external="true" href="/documentation/modules/modules.html">documentation on
-							each module</a>
-						for the variables they makes available.
+						<a allsky="true" external="true" href="/documentation/modules/modules.html">
+							documentation on each module</a>
+						for the variables they make available.
 					</p>
 
 					<h3>3. Extra Data variables - advanced topic</h3>
@@ -422,17 +414,19 @@
 							page should provide the understanding you need.
 						</blockquote>
 						<p class="morePadding">As an example, assume you want to add weather data to your images.
-							You first need to create or obtain a program that gathers that data and writes it to a file.
+							You first need to create or obtain a program that gathers
+							that data and writes it to a file.
 							How you obtain that file is outside the scope of this documentation,
 							but the program needs to write the data in a specific format in a file called
 							<span class="fileName">~/allsky/config/overlay/extra/xxxxx</span>
 							(replace the <span class="fileName">xxxxx</span> with an appropriate name).
 						</p>
 						<p>
-							The "extra" file can be either a simple <span class="fileName">.txt</span>
+							The "extra" file can be either a simple
+							<span class="fileName">.txt</span>
 							file or preferably a <span class="fileName">.json</span>
 							file since it provides much more flexibility.
-							You can have multiple "extra" files (with different names);
+							You can have multiple "extra" files with different names;
 							this can be useful if you want to add different types of data to the overlay,
 							and each type has its own program to gather the data.
 							A typical example is weather data and dew heater status.
@@ -470,7 +464,7 @@
 								</tr>
 							</tbody>
 						</table>
-						<p>The data in these files could become 'old' if the application creating them
+						<p>The data in these files could become old if the application creating them
 							fails or is not running. To have Allsky detect this you tell it
 							to ignore "extra" files when they are over a certain age.
 							For <span class="fileName">.txt</span> files there is a single value which is specified
@@ -625,15 +619,18 @@
 								The variables in the examples above are prefixed with <code>AG_</code>.
 								You can use anything except <code>AS_</code> and <code>ALLSKY_</code>.
 							</li>
-							<li><strong>Variable values</strong> should generally not include units.
-								For example <code>${DOME_TEMPERATURE}</code> should be <code>20.72</code>,
+							<li><strong>Variable values</strong> should generally not include units
+								of measure.
+								For example <code>${DOME_TEMPERATURE}</code> should be
+								<code>20.72</code>,
 								not <code>20.72&deg; C</code> because <code>20.72</code> is a "Numeric"
 								variable that can be formated (e.g., to <code>20.7</code>) whereas
 								<code>20.72&deg; C</code> is a "Text" string that can't be formatted.
-								If you want <code>&deg; C</code> to appear on the overlay, add it in the field itself:
-								<br>
-								<code>Dome temperature: ${DOME_TEMPERATURE}&amp;deg; C</code>.
-								<br>Note that <code>&amp;deg;</code> add the degree symbol &deg;.
+								If you want <code>&deg; C</code>
+								to appear on the overlay, add it in the field itself:
+								<code class="nowrap">Dome temperature: ${DOME_TEMPERATURE}&amp;deg; C</code>.
+								<br>Note that <code>&amp;deg;</code> adds the degree symbol
+								<code>&deg;</code>.
 							</li>
 							<li><strong>Permissions</strong> - You must ensure that the "extra" files
 								can be read by the web server.
@@ -880,7 +877,13 @@
 								</td>
 								<td class="overlayIcon"><i class="fa fa-solid fa-circle-exclamation fa-lg"></i></td>
 								<td>
-									<p><strong>Only</strong> displayed if any fields are detected that are off off the screen. Selecting this icon will display a dialog allowing the off screen fields to be deleted or fixed. Fixing the field will move it into the visible portion of the overlay editor allowing you to move it to the exact position required.</p>
+									<p><strong>Only</strong> displayed if any fields are
+									detected that are off the screen.
+									Selecting this icon will display a dialog allowing the
+									off-screen fields to be deleted or fixed.
+									Fixing the field will move it into the visible portion
+									of the overlay editor allowing you to move it to
+									the exact position required.</p>
 								</td>
 							</tr>							
 						</tbody>
@@ -957,7 +960,7 @@
 										add your own variable and set the variable's Type and other attributes.
 									<blockquote>
 										This button does NOT add the variable to the overlay;
-										instead, it just adds it to the end of the
+										instead, it adds it to the end of the
 										<strong>Allsky Variables</strong> list so it can be added to the overlay.
 									</blockquote>
 									</p>
@@ -1034,7 +1037,7 @@
 									<ul>
 										<li><strong>Variable Name</strong> - The name of the variable
 											enclosed within <code><strong>${}</strong></code>.
-											For system variables the name cannot be changed.
+											Allsky variables' names cannot be changed.
 											See the <a href="#ValidVariableNames">Variable names</a>
 											section for details on valid variable names.
 										</li>
@@ -1107,7 +1110,7 @@
 											<li><span class="moduleToolbarIconNumber">3</span>
 												The <span class="btn btn-primary btn-small">Add Font</span>
 												button adds a font from
-												<a external="true" href="daFont.com">daFont.com</a> by entering a URL.
+												<a external="true" href="https://daFont.com">daFont.com</a> by entering a URL.
 												See <a href="#dafont">below</a>.
 											</li>
 											<li><span class="moduleToolbarIconNumber">4</span>
@@ -1129,10 +1132,10 @@
 							<li id="dafont"><strong>Add font from daFont.com</strong>
 								<br>
 								In a separate browser window, navigate to the font page on
-								<a external="true" href="http://daFont.com">http://daFont.com</a>
+								<a external="true" href="https://daFont.com">daFont.com</a>
 								that you wish to install, for example
 								<a external="true"
-									href="https://www.dafont.com/led-sled.font">https://www.dafont.com/led-sled.font</a>.
+									href="https://www.dafont.com/led-sled.font">www.dafont.com/led-sled.font</a>.
 								Copy the font URL to the clipboard.
 								Click the <span class="btn btn-primary btn-small">Add Font</span> button and enter
 								the font URL.
@@ -1143,15 +1146,24 @@
 								<br>
 								First ensure that the font(s) you wish to installed are contained within a zip file.
 								You can create the zip file yourself or download from a place like
-								<a external="true" href="https://fonts.google.com">https://fonts.google.com/</a>.
+								<a external="true" href="https://fonts.google.com">fonts.google.com/</a>.
 								Click the <span class="btn btn-primary btn-small">Upload Font</span>
 								button and browse to the zip file.
 								The fonts will be extracted from the zip file and installed.</p>
-								<blockquote><p>NOTE: If you receive an error when uploading a font please check the php max
-									file upload size. By default this is 2Mb which may be too small for some font zip
-									files</p>
-								<p>The php configuration file is normally <span class="fileName">/etc/php/7.4/cgi/php.ini</span>. Edit this file and locate the line containing 'upload_max_filesize =' and change the value. So if the exiting line says 'upload_max_filesize = 2MB' change it to 'upload_max_filesize = 20MB'</p>
-								<p>Following this change either restart lighttpd with <pre>sudo systemctl restart lighttpd</pre></p>
+								<blockquote>
+								NOTE: If you receive an error when uploading a font
+								please check the php max file upload size.
+								By default this is 2 MB which may be too small for some font zip
+								files</p>
+								<p>The php configuration file is normally
+								<span class="fileName">/etc/php/7.3/cgi/php.ini</span>.
+								Edit this file and locate the line containing
+								<code>upload_max_filesize =</code> and change the value.
+								So if the exiting line says
+								<code>upload_max_filesize = 2MB</code> change it to
+								<code>upload_max_filesize = 20MB</code></p>
+								Following this change restart the web server:
+								<pre>sudo systemctl restart lighttpd</pre>
 								</blockquote>
 							</li>
 						</ol>
@@ -1176,32 +1188,36 @@
 									<td>
 										<ul>
 											<li><span class="moduleToolbarIconNumber">1</span>
-												&nbsp; <i class="fa fa-solid fa-image fa-lg"></i> &nbsp;
-												<strong>Add Selected Image</strong> - Adds the selected
-												image to the overlay. The selected image has a
-												<span style="border: 1px solid red;">red</span> border
-												like the 3rd image above.
+												&nbsp; <i class="fa fa-solid fa-image fa-lg"></i>
+												&nbsp; <strong>Add Selected Image</strong> -
+												Adds the selected image to the overlay.
+												The selected image has a
+												<span style="border: 1px solid red;">red</span>
+												border like the 3rd image above.
 											</li>
 											<li><span class="moduleToolbarIconNumber">2</span>
-												&nbsp; <i class="fa fa-solid fa-trash fa-lg"></i> &nbsp;
-												<strong>Delete The Selected Image</strong> - Deletes the selected
-												image from the overlay.
-												Images that are grayed out like the 4th one above,
+												&nbsp; <i class="fa fa-solid fa-trash fa-lg"></i>
+												&nbsp; <strong>Delete The Selected Image</strong> -
+												Deletes the selected image from the overlay.
+												Images that are grayed out like the 4th one above
 												are in use in an overlay and cannot be deleted.
-												<blockquote>When deleting an image it will also be deleted
-													from the Pi.
-													If you want the image to remain on the Pi, select its field
-													in the <span class="editorName">Overlay Editor</span>
+												<blockquote>
+													When deleting an image it will also
+													be deleted from the Pi.
+													If you want the image to remain on the Pi,
+													select its field in the
+													<span class="editorName">Overlay Editor</span>
 													and delete it.
 												</blockquote>
 											</li>
 											<li><span class="moduleToolbarIconNumber">3</span>
-												<strong>Uploaded images area</strong> - Previously uploaded images
-												that can be selected.
+												&nbsp; <strong>Uploaded images area</strong> -
+												Previously uploaded images that can be selected.
 												Not all images need to be used on an overlay.
 											</li>
 											<li><span class="moduleToolbarIconNumber">4</span>
-												<strong>File upload area</strong> - Either click on this area
+												&nbsp; <strong>File upload area</strong> -
+												Either click on this area
 												to upload a new image or drag an image onto it.
 											</li>
 										</ul>
@@ -1277,7 +1293,7 @@
 											<li><strong>Format</strong> - Certain variable types allow for
 												formatting, including dates, times, numbers, and booleans.
 												Details of the formats that can be entered are covered in the
-												<a href=#formattingVariables">formatting text section</a>
+												<a href="#formattingVariables">formatting text section</a>
 												and can also be viewed by clicking on the <code>[?]</code> icon.
 											</li>
 											<li><strong>Sample</strong> - A value that is displayed when the

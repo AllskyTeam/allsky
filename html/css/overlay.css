@@ -293,7 +293,7 @@ div.dtsp-searchPane div.dtsp-topRow {
     color: red;
 }
 
-#oe-overlay-disable {
+#oe-overlay-not-running {
     position: absolute;
     width: 100%;
     height: 100%;
@@ -302,11 +302,11 @@ div.dtsp-searchPane div.dtsp-topRow {
     cursor: pointer;
 }
 
-#oe-overlay-disable.big {
+#oe-overlay-not-running.big {
     height: 80vh;
 }
 
-#oe-overlay-disable .center {
+#oe-overlay-not-running .center {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -314,7 +314,7 @@ div.dtsp-searchPane div.dtsp-topRow {
     font-size: 2em;
   }
 
-  #oe-overlay-disable .center-full {
+  #oe-overlay-not-running .center-full {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -322,7 +322,7 @@ div.dtsp-searchPane div.dtsp-topRow {
     font-size: 2em;
   }
 
-  #oe-overlay-disable .center,.center-full .center-paragraph {
+  #oe-overlay-not-running .center,.center-full .center-paragraph {
     text-align: center;
     border: 3px solid green;
     background-color: rgba(0,0,0,0.3);
@@ -334,15 +334,47 @@ div.dtsp-searchPane div.dtsp-topRow {
     margin-left: 5px;
   }
 
-  #oe-overlay-disable small {
+  #oe-overlay-not-running small {
     font-size: 50% !important;
   }
 
-  #oe-overlay-disable p {
+  #oe-overlay-not-running p {
     margin: 0px !important;
   }
 
-  #oe-overlay-disable h1 {
+  #oe-overlay-not-running h1 {
     margin-top: 10px !important;
     margin-bottom: 10px !important;
+  }
+
+
+
+
+  #oe-overlay-disable {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5); 
+    z-index: 2; 
+    cursor: pointer;
+}
+
+#oe-overlay-disable .center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 25%;
+    font-size: 2em;
+  }
+
+  #oe-overlay-disable .center .center-paragraph {
+    text-align: center;
+    border: 3px solid green;
+    background-color: rgba(0,0,0,0.3);
+    padding: 15px;    
+  }
+
+  .border-left {
+    border-left: 1px solid #666;
+    margin-left: 5px;
   }

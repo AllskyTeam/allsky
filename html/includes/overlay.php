@@ -67,12 +67,12 @@ function DisplayOverlay($image_name)
         <div id="oe-overlay-manager"></div>     
         <div class="row">
         <div id="oe-viewport" class="panel panel-primary">
-            <div id="oe-overlay-disable" class="oe-not-running big hidden">
+            <div id="oe-overlay-not-running" class="oe-not-running big hidden">
                 <div class="center-full">
                     <div class="center-paragraph">
                         <h1>Allsky is not currently capturing images</h1>
                         <p>Please wait for Allsky to begin capturing before using the Overlay Editor</p>
-                        <small>You can stay on this page and the Overlay Editor will start automatically once Allsky is running. <span id="oe-overlay-disable-status"></span></small>
+                        <small>You can stay on this page and the Overlay Editor will start automatically once Allsky is running. <span id="oe-overlay-not-running-status"></span></small>
                     </div>
                 </div>
             </div> 
@@ -860,12 +860,12 @@ function DisplayOverlay($image_name)
                 if (result.responseJSON !== undefined) {
                     if (result.responseJSON.running !== undefined) {
                         startOverlay = result.responseJSON.running;
-                        $('#oe-overlay-disable-status').html('Status: <em>' + result.responseJSON.status + '</em>');
+                        $('#oe-overlay-not-running-status').html('Status: <em>' + result.responseJSON.status + '</em>');
                     }
                 }
                 
                 if (startOverlay) {
-                    $('#oe-overlay-disable').addClass('hidden');
+                    $('#oe-overlay-not-running').addClass('hidden');
                     var imageObj = new Image();
                         imageObj.src = $('#oe-background-image').attr('src') + '?_ts=' + new Date().getTime();
 
@@ -880,7 +880,7 @@ function DisplayOverlay($image_name)
                             <?php } ?>
                         };                    
                 } else {
-                    $('#oe-overlay-disable').removeClass('hidden');
+                    $('#oe-overlay-not-running').removeClass('hidden');
                     setTimeout(startOverlayManager, 1000);
                 }
             }

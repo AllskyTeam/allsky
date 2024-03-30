@@ -158,6 +158,7 @@ function DisplayAllskyConfig() {
 			$changes = "";
 			$nonCameraChanges = "";
 			$restartRequired = false;
+			$stopRequired = false;
 			$cameraChanged = false;
 			$refreshingCameraType = false;
 			$newCameraType = "";
@@ -300,6 +301,8 @@ function DisplayAllskyConfig() {
 
 					if ($action == "restart" || $action == "reload") {
 						$restartRequired = true;
+					} else if ($action == "stop") {
+						$stopRequired = true;
 					}
 
 					if ($checkchanges) {		// Changes for makeChanges.sh to check
@@ -470,7 +473,7 @@ echo '<script>console.log("Updated $fileName");</script>';
 					// The "restart" field is a checkbox.  If not checked it returns nothing.
 					if ($restartRequired && getVariableOrDefault($_POST, 'restart', "") != "") {
 						if ($msg !== "")
-							$msg .= " and ";
+							$msg .= " &nbsp;";
 						$msg .= "Allsky restarted.";
 						// runCommand() displays $msg on success.
 						$CMD = "sudo /bin/systemctl reload-or-restart allsky.service";
@@ -478,9 +481,19 @@ echo '<script>console.log("Updated $fileName");</script>';
 							$status->addMessage("Unable to restart Allsky.", 'warning');
 						}
 
+					} else if ($stopRequired) {
+						if ($msg !== "")
+							$msg .= " &nbsp;";
+						$msg .= "<strong>Allsky stopped waiting for a manual restart</strong>.";
+						// runCommand() displays $msg on success.
+						$CMD = "sudo /bin/systemctl stop allsky.service";
+						if (! runCommand($CMD, $msg, "success")) {
+							$status->addMessage("Unable to stop Allsky.", 'warning');
+						}
+
 					} else {
 						if ($msg !== "")
-							$msg .= "; ";
+							$msg .= " &nbsp;";
 						$msg .= "Allsky NOT restarted";
 
 						if (! $restartRequired && $changesMade) {

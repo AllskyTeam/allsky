@@ -181,14 +181,17 @@ function get_setting()
 function is_zero()
 {
 	local NUM="${1}"
-	awk -v n="${NUM}" 'BEGIN {if (n == 0.0) exit 0; else exit 1; }'
+	gawk -v n="${NUM}" 'BEGIN {if (n == 0.0) exit 0; else exit 1; }'
 }
 
 # Return 0 if the number 0.0 - 1.0, else return 1.
 function is_within_range()
 {
 	local NUM="${1}"
-	awk -v n="${NUM}" 'BEGIN {if (n < 0.0 || n > 1.0) exit 1; exit 0; }'
+	local LOW="${2:-0.0}"
+	local HIGH="${3:-1.0}"
+	gawk -v n="${NUM}" -v low="${LOW}" -v high="${HIGH}" '
+		BEGIN {if (n < low || n > high) exit 1; exit 0; }'
 }
 
 DAY_DELAY_MS=$( settings ".daydelay" ) || echo "Problem getting .daydelay"
@@ -251,6 +254,7 @@ HEIGHT="$( get_setting ".height" )"
 
 IMG_RESIZE_WIDTH="$( get_setting ".imageresizewidth" )"
 IMG_RESIZE_HEIGHT="$( get_setting ".imageresizeheight" )"
+IMG_UPLOAD_FREQUENCY="$( get_setting ".imageuploadfrequency" )"
 CROP_TOP="$( get_setting ".imagecroptop" )"
 CROP_RIGHT="$( get_setting ".imagecropright" )"
 CROP_BOTTOM="$( get_setting ".imagecropbottom" )"
@@ -258,6 +262,7 @@ CROP_LEFT="$( get_setting ".imagecropleft" )"
 ANGLE="$( get_setting ".angle" )"
 LATITUDE="$( get_setting ".latitude" )"
 LONGITUDE="$( get_setting ".longitude" )"
+TIMELAPSE="$( get_setting ".timelapsegenerate" )"
 TIMELAPSE_UPLOAD_VIDEO="$( get_setting ".timelapseupload" )"
 TIMELAPSE_UPLOAD_THUMBNAIL="$( get_setting ".timelapseuploadthumbnail" )"
 TIMELAPSE_MINI_UPLOAD_VIDEO="$( get_setting ".minitimelapseupload" )"
@@ -405,7 +410,6 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 	LAST_CHANGED="$( get_setting ".lastchanged" )"
 	BAD_IMAGES_LOW="$( get_setting ".imageremovebadlow" )"
 	BAD_IMAGES_HIGH="$( get_setting ".imageremovebadhigh" )"
-	TIMELAPSE="$( get_setting ".timelapsegenerate" )"
 	TIMELAPSEWIDTH="$( get_setting ".timelapsewidth" )"
 	TIMELAPSEHEIGHT="$( get_setting ".timelapseheight" )"
 	VCODEC="$( get_setting ".timelapsevcodec" )"
@@ -417,7 +421,6 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 	TIMELAPSE_MINI_FREQUENCY="$( get_setting ".minitimelapsefrequency" )"
 	RESIZE_UPLOADS_WIDTH="$( get_setting ".imageresizeuploadswidth" )"
 	RESIZE_UPLOADS_HEIGHT="$( get_setting ".imageresizeuploadsheight" )"
-	IMG_UPLOAD_FREQUENCY="$( get_setting ".imageuploadfrequency" )"
 
 	if [[ ${LAST_CHANGED} == "" ]]; then
 		heading "Warning"
@@ -433,9 +436,9 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 
 	if [[ ${PI_OS} == "buster" ]]; then
 		heading "Warning"
-		echo -n "Your Pi is running the old 'Buster' operating system;"
-		echo    " this is the last release of Allsky that supports Buster."
-		echo    "FIX: Upgrade your Pi to Bookworm, 64-bit if possible."
+		echo "Your Pi is running the old 'Buster' operating system;"
+		echo "this is the last release of Allsky that supports Buster."
+		echo "FIX: Upgrade your Pi to Bookworm, 64-bit if possible."
 	fi
 
 	check_delay "Daytime"
@@ -630,7 +633,7 @@ fi
 	if ! is_number "${BRIGHTNESS_THRESHOLD}" ; then
 		X=2
 	else
-		awk -v x="${BRIGHTNESS_THRESHOLD}" ' BEGIN {
+		gawk -v x="${BRIGHTNESS_THRESHOLD}" ' BEGIN {
 			if (x == 0.0) exit 0;
 			else if (x == 1.0) exit 1;
 			else if (x < 0.0 || x > 1.0) exit 2;
@@ -663,7 +666,7 @@ fi
 		echo    "FIX: Either enable capture or disable saving."
 	fi
 
-	# These are floats which bash doesn't support, so use awk to compare.
+	# These are floats which bash doesn't support, so use gawk to compare.
 	if ! is_number "${BAD_IMAGES_LOW}" || ! is_within_range "${BAD_IMAGES_LOW}" ; then
 		heading "Error"
 		echo -n "${WSNs}Remove Bad Images Threshold Low${WSNe} (${BAD_IMAGES_LOW})"
@@ -856,9 +859,9 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 		local AMOUNT="${2}"
 		local MIDPOINT="${3}"
 
-		if ! is_number "${AMOUNT}" || ! is_within_range "${AMOUNT}" ; then
+		if ! is_number "${AMOUNT}" || ! is_within_range "${AMOUNT}" 0 100 ; then
 			heading "Error"
-			echo "${WSNs}${TYPE} Stretch Amount${WSNe} (${AMOUNT}) must be 0.0 - 1.0."
+			echo "${WSNs}${TYPE} Stretch Amount${WSNe} (${AMOUNT}) must be 0 - 100."
 			echo "FIX: Set to a vaild number.  ${WSVs}0${WSVe} disables stretching."
 		elif [[ ${MIDPOINT: -1} == "%" ]]; then
 			heading "Error"

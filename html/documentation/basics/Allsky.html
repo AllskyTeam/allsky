@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Allsky Basics";
+		}
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<script src="../js/all.min.js" type="application/javascript"></script>
+	<title>Allsky Basics</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<p>
+This page is for people who are new to the Allsky software and
+describes how Allsky works, what the various pieces are, and how they fit together.
+Although it is not necessary to know this in order to successfully use Allsky,
+it can help while troubleshooting and many people will find it interesting.
+If you haven't already read the
+<a href="../miscellaneous/nomenclature.html">Nomenclature</a> page,
+do so now as many of the terms described there are used on this page.
+</p>
+
+<h4>What does Allsky do?</h4>
+<p>
+The Allsky software is used to control an allsky camera which takes pictures of "all the sky".
+Once a picture is taken it is saved to disk and optionally processed and
+uploaded to an Allsky Website
+(either on the Pi and/or on a remote server running the Allsky Website software).
+It can also be uploaded to a remote server not running the Allsky Website software.
+At the end of the night, a startrails image, LINK, a keogram image,
+and/or timelapse video can be created and uploaded.
+</p>
+
+<h4>How does Allsky work?</h4>
+<p>
+Allsky automatically starts whenever your Pi is turned on or rebooted.
+It can also be started and stopped manually,
+and is restarted as needed when changing settings in the WebUI.
+When Allsky starts it checks a few things then executes a program to take the pictures.
+That program is either <code>capture_ZWO</code>
+or <code>capture_RPi</code>,
+depending on your camera type.
+The appropriate capture program first looks at many of the settings in the WebUI
+to determine how to expose pictures, how long to wait between pictures,
+when to switch between daytime and nighttime, and many other things.
+It then begins taking pictures.
+<code>capture_ZWO</code> uses a ZWO library to control the
+camera directly and get feedback from it.
+<code>capture_RPi</code> calls another program called
+<code>libcamera-still</code> to actually take a picture
+passing it the exposure time and other settings including the name of
+the file to save the picture to.
+</p>
+<p>
+After the picture is saved, usually to a file called
+<span class="fileName">~/allsky/tmp/image.jpg</span>,
+the capture program calls the <code>saveImage.sh</code>
+program to process the image while the
+capture program checks if a night-to-day transitioned occurred;
+if so, the capture program calls <code>endOfNight.sh</code>
+to create startrails, keograms, and a timelapse video as specified in the settings.
+Either way, the capture program then sleeps until it is time to take the next image.
+</p>
+
+<h4>Image processing</h4>
+<p>
+The <code>saveImage.sh</code> program first checks if
+the image is corrupt and then checks the settings in the WebUI to determine
+if the image is too dark or too bright.
+If any of those checks fail the image is deleted and
+<code>saveImage.sh</code> exits.
+If the image is good, it's optionally resized, cropped,
+and/or stretched per the settings, and an optional overlay is added.
+If the image is to be uploaded, <code>saveImage.sh</code>
+checks if it should first be resized,
+then calls <code>upload.sh</code> to upload it.
+If the image will be part of a mini-timelapse,
+<code>saveImage.sh</code> check if there are enough
+images to create a mini-timelapse;
+if so, it is created and optionally resized and uploaded.
+If not, the image is added to the list of images for the next mini-timelapse. 
+</p>
+<p>
+Finally, if the image is to be saved a copy of it with a name
+<span class="fileName">image-YYYYMMDDHHMMSS.jpg</span>
+is added the the current day's folder in  <span class="fileName">~/allsk/images</span>.
+</p>
+
+<h4>End of night processing</h4>
+<p>
+The <code>endOfNight.sh</code> program checks the
+settings to see whether or not a startrails, keogram,
+and/or timelapse video is to be created; if so they are created.
+If the items are to be uploaded they are.
+Either way, <code>endOfNight.sh</code> then exits.
+</p>
+
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>

@@ -279,8 +279,7 @@ function displayUserData($file, $displayType)
  */
 function DisplaySystem()
 {
-	global $temptype, $page, $settings_array;
-	$myStatus = new StatusMessages();
+	global $temptype, $page, $settings_array, $status;
 
 	$top_dir = dirname(ALLSKY_WEBSITE, 1);
 
@@ -308,12 +307,12 @@ function DisplaySystem()
 	}
 
 	// mem used
-	exec("free -m | awk '/Mem:/ { total=$2 } /buffers\/cache/ { used=$3 } END { print used/total*100}'", $memarray);
+	exec("free -m | gawk '/Mem:/ { total=$2 } /buffers\/cache/ { used=$3 } END { print used/total*100}'", $memarray);
 	$memused = floor($memarray[0]);
 	// check for memused being unreasonably low, if so repeat expecting modern output of "free" command
 	if ($memused < 0.1) {
 		unset($memarray);
-		exec("free -m | awk '/Mem:/ { total=$2 } /Mem:/ { used=$3 } END { print used/total*100}'", $memarray);
+		exec("free -m | gawk '/Mem:/ { total=$2 } /Mem:/ { used=$3 } END { print used/total*100}'", $memarray);
 		$memused = floor($memarray[0]);
 	}
 
@@ -425,11 +424,11 @@ function DisplaySystem()
 
 					<?php
 					if (isset($_POST['system_reboot'])) {
-						$myStatus->addMessage("System Rebooting Now!", "warning", true);
+						$status->addMessage("System Rebooting Now!", "warning", true);
 						$result = shell_exec("sudo /sbin/reboot");
 					}
 					if (isset($_POST['system_shutdown'])) {
-						$myStatus->addMessage("System Shutting Down Now!", "warning", true);
+						$status->addMessage("System Shutting Down Now!", "warning", true);
 						$result = shell_exec("sudo /sbin/shutdown -h now");
 					}
 					if (isset($_POST['service_start'])) {
@@ -447,7 +446,7 @@ function DisplaySystem()
 						$e .= displayUserData($user_data_files[$i], "button-action");
 					}
 
-					if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>";
+					if ($status->isMessage()) echo "<p>" . $status->showMessages() . "</p>";
 					?>
 
 					<div class="row">

@@ -605,8 +605,8 @@ function checkCropValues()
 	if [[ -z ${ERR} ]]; then
 		return 0
 	else
-		echo -e "${ERR}"
-		echo "Crop settings: top: ${CROP_TOP}, right: ${CROP_RIGHT}, bottom: ${CROP_BOTTOM}, left: ${CROP_LEFT}"
+		echo -e "${ERR}" >&2
+		echo "Crop settings: top: ${CROP_TOP}, right: ${CROP_RIGHT}, bottom: ${CROP_BOTTOM}, left: ${CROP_LEFT}" >&2
 		return 1
 	fi
 }

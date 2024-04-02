@@ -193,7 +193,7 @@ fi
 if [[ ${CROP_IMAGE} -gt 0 ]]; then
 	# Perform basic checks on crop settings.
 	ERROR_MSG="$( checkCropValues "${CROP_TOP}" "${CROP_RIGHT}" "${CROP_BOTTOM}" "${CROP_LEFT}" \
-		"${RESOLUTION_X}" "${RESOLUTION_Y}" )"
+		"${RESOLUTION_X}" "${RESOLUTION_Y}" 2>&1 )"
 	if [[ -z ${ERROR_MSG} ]]; then
 		if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 			CROP_WIDTH=$(( RESOLUTION_X - CROP_RIGHT - CROP_LEFT ))

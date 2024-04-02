@@ -605,58 +605,8 @@ function checkCropValues()
 	if [[ -z ${ERR} ]]; then
 		return 0
 	else
-		echo -e "${ERR}"
-		return 1
-	fi
-}
-
-#####
-# The crop rectangle needs to fit within the image, be an even number, and be greater than 0.
-# x, y, offset_x, offset_y, max_resolution_x, max_resolution_y
-# TODO: remove this after testing.  It's the old way of cropping.
-function checkCropValuesOLD()
-{
-	local X="${1}"
-	local Y="${2}"
-	local OFFSET_X="${3}"
-	local OFFSET_Y="${4}"
-	local MAX_RESOLUTION_X="${5}"
-	local MAX_RESOLUTION_Y="${6}"
-
-	local SENSOR_CENTER_X=$(( MAX_RESOLUTION_X / 2 ))
-	local SENSOR_CENTER_Y=$(( MAX_RESOLUTION_Y / 2 ))
-	local CROP_CENTER_ON_SENSOR_X=$(( SENSOR_CENTER_X + OFFSET_X ))
-	# There appears to be a bug in "convert" with "-gravity Center"; the Y offset is applied
-	# to the TOP of the image, not the CENTER.
-	# The X offset is correctly applied to the image CENTER.
-	# Should the division round up or down or truncate (current method)?
-	local CROP_CENTER_ON_SENSOR_Y=$(( SENSOR_CENTER_Y + (OFFSET_Y / 2) ))
-	local HALF_CROP_WIDTH=$(( X / 2 ))
-	local HALF_CROP_HEIGHT=$(( Y / 2 ))
-
-	local CROP_TOP=$(( CROP_CENTER_ON_SENSOR_Y - HALF_CROP_HEIGHT ))
-	local CROP_BOTTOM=$(( CROP_CENTER_ON_SENSOR_Y + HALF_CROP_HEIGHT ))
-	local CROP_LEFT=$(( CROP_CENTER_ON_SENSOR_X - HALF_CROP_WIDTH ))
-	local CROP_RIGHT=$(( CROP_CENTER_ON_SENSOR_X + HALF_CROP_WIDTH ))
-
-	local ERR=""
-	if [[ ${CROP_TOP} -lt 0 ]]; then
-		ERR+="\nCROP rectangle goes off the top of the image by ${CROP_TOP#-} pixel(s)."
-	fi
-	if [[ ${CROP_BOTTOM} -gt ${MAX_RESOLUTION_Y} ]]; then
-		ERR+="\nCROP rectangle goes off the bottom of the image: ${CROP_BOTTOM} is greater than image height (${MAX_RESOLUTION_Y})."
-	fi
-	if [[ ${CROP_LEFT} -lt 0 ]]; then
-		ERR+="\nCROP rectangle goes off the left of the image: ${CROP_LEFT} is less than 0."
-	fi
-	if [[ ${CROP_RIGHT} -gt ${MAX_RESOLUTION_X} ]]; then
-		ERR+="\nCROP rectangle goes off the right of the image: ${CROP_RIGHT} is greater than image width (${MAX_RESOLUTION_X})."
-	fi
-
-	if [[ -z ${ERR} ]]; then
-		return 0
-	else
-		echo -e "${ERR}"
+		echo -e "${ERR}" >&2
+		echo "Crop settings: top: ${CROP_TOP}, right: ${CROP_RIGHT}, bottom: ${CROP_BOTTOM}, left: ${CROP_LEFT}" >&2
 		return 1
 	fi
 }

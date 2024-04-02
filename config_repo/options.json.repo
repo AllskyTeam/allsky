@@ -1362,7 +1362,7 @@
 {
 "name" : "timelapseextraparameters",
 "default" : "",
-"description" : "Optional additional timelapse creation parameters.  Run <code>ffmpeg -?</code> to see the options.<br>If quality is poor, try adding <code>-level 3.1</code>.",
+"description" : "Optional additional timelapse creation parameters.  Run <code>ffmpeg -?</code> to see the options.<br>If quality is poor or the video does not plan on Apple devices, try adding <code>-level 3.1</code>.",
 "label" : "Extra Parameters",
 "type" : "widetext",
 "carryforward" : true,

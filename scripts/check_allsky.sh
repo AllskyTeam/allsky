@@ -374,7 +374,7 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 
 	if [[ $((CROP_TOP + CROP_RIGHT + CROP_BOTTOM + CROP_LEFT)) -gt 0 ]]; then
 		ERR="$( checkCropValues "${CROP_TOP}" "${CROP_RIGHT}" "${CROP_BOTTOM}" "${CROP_LEFT}" \
-				"${SENSOR_WIDTH}" "${SENSOR_HEIGHT}" )"
+				"${SENSOR_WIDTH}" "${SENSOR_HEIGHT}" 2>&1 )"
 		if [[ $? -ne 0 ]]; then
 			heading "Information"
 			echo "${ERR}"

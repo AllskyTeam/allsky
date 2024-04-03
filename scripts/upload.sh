@@ -266,12 +266,6 @@ else # sftp/ftp/ftps
 		DIRECTORY+="/"
 	fi
 
-	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		MSG="${ME}: FTP '${FILE_TO_UPLOAD}' to"
-		MSG+=" '${DIRECTORY}${DESTINATION_NAME}'"
-		[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && MSG+=", TEMP_NAME=${TEMP_NAME}"
-		echo "${MSG}"
-	fi
 	# LFTP_CMDS needs to be unique per file type so we don't overwrite a different upload type.
 	DIR="${ALLSKY_TMP}/lftp_cmds"
 	if [[ ! -d ${DIR} ]]; then
@@ -283,7 +277,6 @@ else # sftp/ftp/ftps
 			exit 1
 		fi
 	fi
-
 	LFTP_CMDS="${DIR}/${FILE_TYPE}.txt"
 
 	set +H	# This keeps "!!" from being processed in REMOTE_PASSWORD
@@ -293,6 +286,14 @@ else # sftp/ftp/ftps
 	REMOTE_PORT="$( settings ".${PREFIX}_PORT" "${ALLSKY_ENV}" )"
 	# The export LFTP_PASSWORD has to be OUTSIDE the ( ) below.
 	REMOTE_PASSWORD="$( settings ".${PREFIX}_PASSWORD" "${ALLSKY_ENV}" )"
+
+	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+		MSG="${ME}: FTP '${FILE_TO_UPLOAD}' to ${REMOTE_HOST}"
+		MSG+=" '${DIRECTORY}${DESTINATION_NAME}'"
+		[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && MSG+=", TEMP_NAME=${TEMP_NAME}"
+		echo "${MSG}"
+	fi
+
 	if [[ ${DEBUG} == "true" ]]; then
 		# In debug mode, include the password on the command line so it's easier
 		# for the user to run "lftp -f ${LFT_CMDS}"

@@ -211,25 +211,17 @@ function determineCommandToUse()
 		(
 			"${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1 &
 			sleep 4
-			jobs > /dev/null 2>&1		# needed to catch the initial "Running" output
-			jobs -l |
-				while read x PID y
-				do
-					if [[ -z ${PID} ]]; then
-						exit 0
-					else
-#echo "Killing ${PID}"
-						kill -9 ${PID}
-						exit 1
-					fi
-				done
-			R=$?
-#echo "jobs -l returned nothing"
-			exit ${R}
-		) # 2> /dev/null
+			PID=$!		# PID of background process
+			if [[ -e /proc/${PID} ]]; then
+					kill -9 ${PID}
+					exit 1
+			else
+				wait %1		# Gets return code of background process
+				exit $?
+			fi
+		) 2> /dev/null
 		RET=$?
 
-#echo AFTER, RET=${RET} >&2; sleep 5
 		if [[ ${RET} -ne 0 ]]; then
 			CMD_TO_USE_=""
 

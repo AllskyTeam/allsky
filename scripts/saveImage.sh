@@ -160,6 +160,8 @@ function display_error_and_exit()	# error message, notification string
 # Resize the image if required
 RESIZE_W="$( settings ".imageresizewidth" )"
 RESIZE_H="$( settings ".imageresizeheight" )"
+export AS_RESIZE_WIDTH="${RESIZE_W}"
+export AS_RESIZE_HEIGHT="${RESIZE_H}"
 if [[ ${RESIZE_W} -gt 0 && ${RESIZE_H} -gt 0 ]]; then
 	# Make sure we were given numbers.
 	ERROR_MSG=""
@@ -221,9 +223,11 @@ fi
 # Stretch the image if required.
 STRETCH_AMOUNT="$( settings ".imagestretchamount${DAY_OR_NIGHT,,}time" )"
 STRETCH_MIDPOINT="$( settings ".imagestretchmidpoint${DAY_OR_NIGHT,,}time" )"
+export AS_STRETCH_AMOUNT="${STRETCH_AMOUNT}"
+export AS_STRETCH_MIDPOINT="${STRETCH_MIDPOINT}"
 if [[ ${STRETCH_AMOUNT} -gt 0 ]]; then
 	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		echo "${ME}: Stretching '${CURRENT_IMAGE}' by ${STRETCH_AMOUNT}"
+		echo "${ME}: Stretching '${CURRENT_IMAGE}' by ${STRETCH_AMOUNT} @ ${STRETCH_MIDPOINT}%"
 	fi
  	convert "${CURRENT_IMAGE}" -sigmoidal-contrast "${STRETCH_AMOUNT}x${STRETCH_MIDPOINT}%" "${CURRENT_IMAGE}"
 
@@ -340,7 +344,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 				# Create a mini-timelapse
 				# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
 				# This causes timelapse.sh to print "before" and "after" debug messages.
-				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 2 ]]; then
+				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 					D="--debug"
 				else
 					D="--no-debug"

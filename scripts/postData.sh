@@ -20,7 +20,7 @@ usage_and_exit()
 	{
 		echo
 		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-		echo "Usage: ${ME} [--help] [--settingsOnly] [--fromWebUI] [--allfiles]"
+		echo "Usage: ${ME} [--help] [--debug] [--settingsOnly] [--fromWebUI] [--allfiles]"
 		[[ ${RET} -ne 0 ]] && echo -en "${NC}"
 		echo "    where:"
 		echo "      '--allfiles' causes all 'view settings' files to be uploaded"
@@ -31,6 +31,7 @@ usage_and_exit()
 # If called from the WebUI, it displays our output so don't call addMessage.sh.
 FROM_WEBUI="false"
 HELP="false"
+DEBUG="false"
 SETTINGS_ONLY="false"
 ALL_FILES="false"
 RET=0
@@ -39,6 +40,9 @@ while [[ $# -gt 0 ]]; do
 	case "${ARG,,}" in		# lower case
 		--help)
 			HELP="true"
+			;;
+		--debug)
+			DEBUG="true"
 			;;
 		--allfiles)
 			ALL_FILES="true"
@@ -81,11 +85,13 @@ if [[ "$( settings ".useremoteserver" )" == "true" ]]; then
 	[[ -n ${WHERE_TO} ]] && WHERE_TO+=", "
 	WHERE_TO="remote server"
 fi
+
 if [[ -z ${WEBS} && ${USE_REMOTE_SERVER} == "false" ]]; then
 	if [[ ${ON_TTY} == "true" ]]; then
 		echo -e "\nWARNING: No action taken because no Websites are enabled.\n" >&2
 		exit 1
 	else
+		# Not on a tty so probably called via end-of-night or WebUI so silently exit.
 		exit 0
 	fi
 fi
@@ -181,6 +187,7 @@ function upload_file()
 		return 1
 	fi
 
+	[[ ${DEBUG} == "true" ]] && echo "Uploading ${FILE_TO_UPLOAD} to ${WHERE:-everywhere}"
 	#shellcheck disable=SC2086
 	upload_all ${SILENT} ${WHERE} "${FILE_TO_UPLOAD}" "${DIRECTORY}" "" "PostData"
 	return $?

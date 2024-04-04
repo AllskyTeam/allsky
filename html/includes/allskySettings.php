@@ -130,8 +130,9 @@ function DisplayAllskyConfig() {
 	// If there's no last changed date, they haven't configured Allsky,
 	// which sets $lastChanged.
 	$needsConfiguration = ($lastChanged === "");
-	if ($needsConfiguration)
+	if ($needsConfiguration || $formReadonly) {
 		$hideHeaderBodies = false;		// show all the settings
+	}
 
 	$error_array = array();
 	$error_array_short = array();
@@ -619,7 +620,7 @@ echo '<script>console.log("Updated $fileName");</script>';
 	} else {
 		$x = "<i class='fa fa-camera fa-fw'></i> ";
 	}
-	echo "<div class='panel-heading'>$x Allsky Settings for &nbsp; <b>$cameraType $cameraModel</b></div>";
+	echo "<div class='panel-heading'>$x Allsky Settings for &nbsp;<b>$cameraType $cameraModel</b></div>";
 	echo "<div class='panel-body' style='padding: 5px;'>";
 	if ($formReadonly != "readonly") {
 		echo "<p id='messages'>";
@@ -663,36 +664,38 @@ CSRFToken();
 		echo "<table border='0' width='100%'>";
 			$inHeader = false;
 			$onHeader = 0;
+
+			if ($hideHeaderBodies) {
 ?>
-<script lang="javascript">
-function showHeader(headerNum) {
-	var header = document.getElementById('header' + headerNum);
-	var h = document.getElementById('h' + headerNum);
-	show(headerNum, header, h);
-}
-function show(headerNum, header, h) {
-	header.style.display = "table-row";
-	h.title = "Click to hide";
-	h.innerHTML = "<?php echo "$hideIcon" ?>";
-}
-function toggle(headerNum) {
-	var header = document.getElementById('header' + headerNum);
-	var h = document.getElementById('h' + headerNum);
-	if (header.style.display == "none") {
-		show(headerNum, header, h);
-	} else {
-		header.style.display = "none";
-		h.title = "Click to expand";
-		h.innerHTML = "<?php echo "$showIcon" ?>";
-	}
-}
-</script>
+				<script lang="javascript">
+				function showHeader(headerNum) {
+					var header = document.getElementById('header' + headerNum);
+					var h = document.getElementById('h' + headerNum);
+					show(headerNum, header, h);
+				}
+				function show(headerNum, header, h) {
+					header.style.display = "table-row";
+					h.title = "Click to hide";
+					h.innerHTML = "<?php echo "$hideIcon" ?>";
+				}
+				function toggle(headerNum) {
+					var header = document.getElementById('header' + headerNum);
+					var h = document.getElementById('h' + headerNum);
+					if (header.style.display == "none") {
+						show(headerNum, header, h);
+					} else {
+						header.style.display = "none";
+						h.title = "Click to expand";
+						h.innerHTML = "<?php echo "$showIcon" ?>";
+					}
+				}
+				</script>
 <?php
+			}
+
 			foreach($options_array as $option) {
 				$name = $option['name'];
-if (false && $debug) {
-	echo "<br>Option $name";
-}
+if (false && $debug) { echo "<br>Option $name"; }
 				if ($name === $endSetting) continue;
 
 				$type = getVariableOrDefault($option, 'type', null);
@@ -728,6 +731,11 @@ if (false && $debug) {
 
 					$s = getVariableOrDefault($option, 'source', null);
 					if ($s !== null) {
+						if ($formReadonly) {
+							// Don't show variables in other files since they
+							// may contain private information.
+							continue;
+						}
 						$fileName = getFileName($s);
 						$source_array = &getSourceArray($fileName);
 if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; name=$name, fileName=$fileName"; }
@@ -783,7 +791,8 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 							$numErrors++;
 							$error_array[$name] = $e;
 							$error_array_short[$name] = $shortMsg;
-							$error_array_source[$name] = "db";	// All these errors are in the settings file
+							// All these errors are in the settings file
+							$error_array_source[$name] = "db";
 						}
 					}
 
@@ -913,9 +922,11 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 				} else {
 					echo "<tr class='form-group $class $warning_class' style='margin-bottom: 0px;'>";
 					$action = getVariableOrDefault($option, 'action', "none");
-// TODO: when "reload" is implemented remove it from this check:
-					if ($action == "restart" || $action == "reload") {
+					if ($action == "restart") {
 						$popupExtraMsg = "RESTART REQUIRED";
+					} else if ($action == "reload") {
+// TODO: when "reload" is implemented change this message (make lowercase ?)
+						$popupExtraMsg = "RELOAD REQUIRED";
 					} else if ($action == "stop") {
 						$popupExtraMsg = "ALLSKY WILL STOP AFTER\nCHANGING THIS SETTING";
 					} else {
@@ -972,19 +983,21 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 					// May want to consider having a symbol next to the field that has the popup.
 					echo "<span title='$popup'>";
 // TODO: add percent sign for "percent"
-					if (in_array($type, ["text", "password", "integer", "float", "color", "percent", "readonly"])) {
+					if (in_array($type, ["text", "password", "integer",
+								"float", "color", "percent", "readonly"])) {
 						if ($type == "readonly") {
 							$readonly = "readonly";
 							$t = "text";
-
 						} else {
 							$readonly = "";
 							// Browsers put the up/down arrows for numbers which moves the
 							// numbers to the left, and they don't line up with text.
 							// Plus, they don't accept decimal points in "float".
 							// So, display numbers as text.
-							if ($type == "integer" || $type == "float" || $type == "percent" || $type == "color")
-								$type = "text";
+							if ($type == "integer" || $type == "float" ||
+								$type == "percent" || $type == "color") {
+									$type = "text";
+							}
 							$t = $type;
 						}
 						echo "\n\t\t<input class='form-control boxShadow settingInput settingInputTextNumber'" .
@@ -1068,7 +1081,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 
 			if ($numMissingHasDefault > 0) {
 				$msg = "<strong>";
-				$msg .= "WARNING: required field" . ($numMissingHasDefault === 1 ? " is" : "s are");
+				$msg .= "Required field" . ($numMissingHasDefault === 1 ? " is" : "s are");
 				$msg .= " missing but replaced by the default:";
 				$msg .= "</strong>";
 				$msg .= "<br><strong>$missingSettingsHasDefault</strong>";

@@ -203,26 +203,9 @@ function determineCommandToUse()
 			return 1
 		fi
 
-		# On Buster, raspistill can hang if no camera is found,
+		# On Buster, raspistill sometimes hangs if no camera is found,
 		# so work around that.
-		# Basically we put the command in the background then sleep a short time
-		# and if the command is still running it hung.
-		# Need to put everything in subprocess so we can ignore bash's "Killed ..." message.
-		(
-			"${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1 &
-			sleep 4
-			PID=$!		# PID of background process
-			if [[ -e /proc/${PID} ]]; then
-					kill -9 ${PID}
-					exit 1
-			else
-				wait %1		# Gets return code of background process
-				exit $?
-			fi
-		) 2> /dev/null
-		RET=$?
-
-		if [[ ${RET} -ne 0 ]]; then
+		if ! timeout 4 "${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1 ; then
 			CMD_TO_USE_=""
 
 			if [[ ${IGNORE_ERRORS} == "false" ]]; then

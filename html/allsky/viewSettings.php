@@ -23,6 +23,7 @@
 		function toBool($x) { if ($x == "true" || $x == "1" || $x == 1) return true; else return false; }
 
 		$formReadonly = true;
+		$endSetting = "XX_END_XX";
 		include_once("$vSDir/$settingsScript");
 	} else {
 		function doBool($b) { if ($b == true) return("Yes"); else return("No"); }

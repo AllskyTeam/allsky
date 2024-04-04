@@ -40,7 +40,7 @@ they won't be included.
 To get the best results north should be at the top of the image.
 If it's not, include <span class="WebUIValue">--rotate DEG</span> in the
 <span class="WebUISetting">Keogram Extra Parameters</span> setting in the WebUI,
-where "DEG" is the degrees of rotation.
+where <span class="WebUIValue">DEG</span> is the degrees of rotation.
 That way, using a fisheye lens, you end up with the bottom of the keogram
 being the southern horizon and the top being the northern horizon.
 </p>
@@ -92,10 +92,18 @@ cd ~/allsky/bin
 </pre>
 
 <br><p>
+You can add any of the arguments above to the
+<span class="WebUISetting">Keogram Extra Parameters</span> setting in the WebUI
+to change how the keogram looks.
+Note that some of the arguments have their own setting in the WebUI so should not be
+included in <span class="WebUISetting">Keogram Extra Parameters</span>.
+</p>
+<p>
 The <span class="WebUISetting">Generate Keogram</span> setting in the WebUI
 can be used to disable keograms.
 </p>
 
+<!-- THESE SETTINGS NO LONGER EXIST
 <blockquote>
 If you set the
 <span class="WebUISetting">Image Width</span> and
@@ -104,7 +112,7 @@ of your camera in the WebUI to the actual values of your camera,
 keogram generation will skip any file that's not that size.
 This eliminates any garbage images that happen to be generated.
 </blockquote>
-
+-->
 
 </div><!-- Layout-main -->
 </div><!-- Layout -->

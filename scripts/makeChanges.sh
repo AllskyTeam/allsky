@@ -288,32 +288,6 @@ do
 
 				# The old file is no longer needed.
 				rm -f "${CC_FILE_OLD}"
-
-				# Change other things that vary depending on CAMERA_TYPE and CAMERA_MODEL.
-				if [[ ${OLD_VALUE} != "${NEW_VALUE}" ]]; then
-					# Move the current overlay.json to the old camera-specific name,
-					# then copy the new camera-specific named file to overlay.json.
-					O="${ALLSKY_OVERLAY}/config/overlay.json"
-					if [[ -n ${OLD_VALUE} && -f ${O} ]]; then
-						if [[ ${DEBUG} == "true" ]]; then
-							echo -e "${wDEBUG}Moving overlay.json to overlay-${OLD_VALUE}.json${wNC}"
-						fi
-						mv -f "${O}" "${ALLSKY_OVERLAY}/config/overlay-${OLD_VALUE}.json"
-					fi
-
-					# When we're called during Allsky installation,
-					# the Camera-Specific Overlay (CSO) file may not exist yet.
-					CSO="${ALLSKY_OVERLAY}/config/overlay-${NEW_VALUE}.json"
-					if [[ -f ${CSO} ]]; then
-						if [[ ${DEBUG} == "true" ]]; then
-							echo -e "${wDEBUG}Copying overlay-${NEW_VALUE}.json to overlay.json${wNC}"
-						fi
-						# Need to preserve permissions so use "-a".
-						cp -a "${CSO}" "${O}"
-					elif [[ ${DEBUG} == "true" ]]; then
-						echo -e "${wDEBUG}'${CSO}' doesn't exist yet - ignoring.${wNC}"
-					fi
-				fi
 			fi
 
 			# createAllskyOptions.php will use the cc file and the options template file
@@ -422,6 +396,25 @@ do
 				done
 			fi
 
+			#shellcheck source-path=scripts
+			source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"
+			# Globals: SENSOR_WIDTH, SENSOR_HEIGHT, FULL_OVERLAY_NAME, SHORT_OVERLAY_NAME, OVERLAY_NAME
+			SENSOR_WIDTH="$( settings ".sensorWidth" "${CC_FILE}" )"
+			SENSOR_HEIGHT="$( settings ".sensorHeight" "${CC_FILE}" )"
+			FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}_${CAMERA_MODEL}-${SENSOR_WIDTH}x${SENSOR_HEIGHT}-both.json"
+			SHORT_OVERLAY_NAME="overlay-${CAMERA_TYPE}.json"
+
+			OVERLAY_PATH="${ALLSKY_REPO}/overlay/config/${FULL_OVERLAY_NAME}"
+			if [[ -f ${OVERLAY_PATH} ]]; then
+				OVERLAY_NAME=${FULL_OVERLAY_NAME}
+			else
+				OVERLAY_NAME=${SHORT_OVERLAY_NAME}
+			fi
+			# Set to defaults since there are no prior files.
+			for s in daytimeoverlay nighttimeoverlay
+			do
+				update_json_file ".${s}" "${OVERLAY_NAME}" "${SETTINGS_FILE}" "text"
+			done
 
 			# Don't do anything else if ${CAMERA_TYPE_ONLY} is set.
 			if [[ ${CAMERA_TYPE_ONLY} == "true" ]]; then

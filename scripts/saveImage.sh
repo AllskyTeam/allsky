@@ -120,8 +120,6 @@ if [[ -z ${AS_TEMPERATURE_C} ]]; then
 	fi
 fi
 
-set_allsky_status "${ALLSKY_STATUS_RUNNING}"
-
 # If taking dark frames, save the dark frame then exit.
 if [[ $( settings ".takedarkframes" ) == "true" ]]; then
 	#shellcheck source-path=scripts
@@ -162,6 +160,8 @@ function display_error_and_exit()	# error message, notification string
 # Resize the image if required
 RESIZE_W="$( settings ".imageresizewidth" )"
 RESIZE_H="$( settings ".imageresizeheight" )"
+export AS_RESIZE_WIDTH="${RESIZE_W}"
+export AS_RESIZE_HEIGHT="${RESIZE_H}"
 if [[ ${RESIZE_W} -gt 0 && ${RESIZE_H} -gt 0 ]]; then
 	# Make sure we were given numbers.
 	ERROR_MSG=""
@@ -195,7 +195,7 @@ fi
 if [[ ${CROP_IMAGE} -gt 0 ]]; then
 	# Perform basic checks on crop settings.
 	ERROR_MSG="$( checkCropValues "${CROP_TOP}" "${CROP_RIGHT}" "${CROP_BOTTOM}" "${CROP_LEFT}" \
-		"${RESOLUTION_X}" "${RESOLUTION_Y}" )"
+		"${RESOLUTION_X}" "${RESOLUTION_Y}" 2>&1 )"
 	if [[ -z ${ERROR_MSG} ]]; then
 		if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 			CROP_WIDTH=$(( RESOLUTION_X - CROP_RIGHT - CROP_LEFT ))
@@ -223,9 +223,11 @@ fi
 # Stretch the image if required.
 STRETCH_AMOUNT="$( settings ".imagestretchamount${DAY_OR_NIGHT,,}time" )"
 STRETCH_MIDPOINT="$( settings ".imagestretchmidpoint${DAY_OR_NIGHT,,}time" )"
+export AS_STRETCH_AMOUNT="${STRETCH_AMOUNT}"
+export AS_STRETCH_MIDPOINT="${STRETCH_MIDPOINT}"
 if [[ ${STRETCH_AMOUNT} -gt 0 ]]; then
 	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		echo "${ME}: Stretching '${CURRENT_IMAGE}' by ${STRETCH_AMOUNT}"
+		echo "${ME}: Stretching '${CURRENT_IMAGE}' by ${STRETCH_AMOUNT} @ ${STRETCH_MIDPOINT}%"
 	fi
  	convert "${CURRENT_IMAGE}" -sigmoidal-contrast "${STRETCH_AMOUNT}x${STRETCH_MIDPOINT}%" "${CURRENT_IMAGE}"
 
@@ -511,5 +513,7 @@ fi
 
 # We create ${WEBSITE_FILE} as late as possible to avoid it being overwritten.
 mv "${SAVED_FILE}" "${WEBSITE_FILE}"
+
+set_allsky_status "${ALLSKY_STATUS_RUNNING}"
 
 exit 0

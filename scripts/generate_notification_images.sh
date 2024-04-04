@@ -138,6 +138,9 @@ function make_image()
 
 	[[ ${ON_TTY} == "true" ]] && echo "Creating '${BASENAME}' in ${PWD}."
 	for EXT in ${EXTS} ; do
+		# In case ${EXT} starts with a ".", remove it.
+		EXT="${EXT/./}"
+
 		# Make highest quality for jpg and highest loss-less compression for png.
 		# jpg files at 95% produce somewhat bad artifacts.  Even 100% produces some artifacts.
 

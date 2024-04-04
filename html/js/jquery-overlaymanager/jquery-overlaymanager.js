@@ -81,7 +81,14 @@
             let menu = $('#' + plugin.mmWrapper);
             if (menu.hasClass('active')) {
                 menu.removeClass('active');
+                $('.' + plugin.mmTrigger).hide();
             }
+        }
+
+        plugin.show = function() {
+            let menu = $('#' + plugin.mmWrapper);
+            menu.addClass('active');
+            $('.' + plugin.mmTrigger).show();
         }
 
         var setupDebug = function() {
@@ -94,9 +101,12 @@
             })
             if (params.hasOwnProperty('debug')) {
                 if (params.debug == 'true') {
-                    plugin.debug = true;
+                    localStorage.setItem('debugMode', 'true');
+                } else {
+                    localStorage.setItem('debugMode', 'false');
                 }
-            }            
+            }
+            plugin.debug  = localStorage.getItem('debugMode') === 'true' ? true: false;          
         }
 
         var createHtml = function() {
@@ -110,7 +120,7 @@
                     <nav class="navbar navbar-default">\
                         <div class="container-fluid">\
                             <div class="navbar-header">\
-                                <div class="navbar-brand">Overlay Manager&nbsp<i class="fa-regular fa-circle-question"></i></div>\
+                                <div class="navbar-brand">Overlay Manager</div>\
                             </div>\
                         </div>\
                     </nav>\
@@ -250,10 +260,11 @@
                                     </div>\
                                 </div>\
                             </div>\
+                            <button type="button" class="btn btn-primary pull-right ' + plugin.mmTrigger + '">Close</button>\
                         </div>\
                     </div>\
                 </div>\
-                <button class="oe-mm-trigger fa fa-bars" id="' + plugin.mmTrigger + '">\
+                <button class="oe-mm-trigger fa fa-xmark ' + plugin.mmTrigger + '">\
                 </button>';
             
             plugin.mmNewDialog = pluginPrefix + "-new-dialog";
@@ -399,23 +410,35 @@
         }
 
         var setupMenu = function() {
+            $('.' + plugin.mmTrigger).hide();
             let menu = $('#' + plugin.mmWrapper);
-            $(document).on('click', '#' + plugin.mmTrigger, (e) => {
-                if (menu.hasClass('active')) {
+            $(document).on('click', '.' + plugin.mmTrigger, (e) => {
                     menu.removeClass('active');
-                } else {
-                    menu.addClass('active');
-                }
+                    $('.' + plugin.mmTrigger).hide();
             });
 
             $(document).on('click', (e) => {
-                if ($(e.target).is('canvas')) {
+                if ($(e.target).is('canvas') || $(e.target).is('#oe-overlay-disable')) {
                     menu.removeClass('active');
+                    $('.' + plugin.mmTrigger).hide();
                 }
             });              
         }
 
+        var show = function() {
+            let menu = $('#' + plugin.mmWrapper);
+            if (!menu.hasClass('active')) {
+                menu.addClass('active');
+                $('.' + plugin.mmTrigger).show();
+            }
+        }
+
         var setupEvents = function() {
+
+            $(document).on('oe-show-overlay-manager', (e) => {
+                show();
+            });
+
             $(document).on('oe-overlay-saved', (e,data) => {
                 let configManager = window.oedi.get('config');
                 configManager.loadOverlays();
@@ -741,6 +764,12 @@
             }
             $(plugin.mmMetaBrand).val(configManager.getMetaField('camerabrand'));
 
+            if (plugin.selectedOverlay.type === 'allsky' && !plugin.debug ) {
+                $('.' + plugin.mmMetaData).prop('disabled', true);
+            } else {
+                $('.' + plugin.mmMetaData).prop('disabled', false);
+            }
+
             if (plugin.selectedOverlay.name !== null) {
                 $('#' + plugin.mmFileName).val(plugin.selectedOverlay.name);
                 $('#' + plugin.mmMetaName).val(configManager.getMetaField('name'));
@@ -750,8 +779,6 @@
                 $('#' + plugin.mmMetaResolutionWidth).val(configManager.getMetaField('cameraresolutionwidth'));
                 $('#' + plugin.mmMetaResolutionHeight).val(configManager.getMetaField('cameraresolutionheight'));
                 $('#' + plugin.mmMetaTod).val(configManager.getMetaField('tod'));
-
-                $('.' + plugin.mmMetaData ).prop('disabled', false);
             } else {
                 $('.' + plugin.mmMetaData ).val('');
                 $('.' + plugin.mmMetaData ).prop('disabled', true);

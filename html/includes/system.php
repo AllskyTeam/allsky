@@ -8,10 +8,11 @@
 
 function RPiVersion()
 {
-	exec('cat /proc/device-tree/model', $model);
+	exec('cat /sys/firmware/devicetree/base/model', $model);
 	$RPI = getVariableOrDefault($model, 0, null);
 	if ($RPI !== null) {
-		exec('sudo vcgencmd get_config total_mem | cut -d= -f2', $mem);		// in KB
+		// Input example: total_mem=4096
+		exec('sudo vcgencmd get_config total_mem | cut -d= -f2', $mem);		// in MB
 		$mem = getVariableOrDefault($mem, 0, null);
 		if ($mem !== null) {
 			$mem = formatSize($mem * 1024 * 1024);

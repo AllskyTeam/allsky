@@ -213,7 +213,7 @@ do_test()
 	${CMD} > "${OUTPUT_FILE}" 2>&1
 	RET=$?
 	if [[ ${RET} -eq 0 ]]; then
-		echo -e "${GREEN}Upload to ${HUMAN_TYPE} succeeded.${NC}"
+		echo -e "${GREEN}Test upload to ${HUMAN_TYPE} succeeded.${NC}"
 		if [[ -z ${DIR} || ${DIR} == "null" ]]; then
 			D=""
 		else
@@ -227,7 +227,7 @@ do_test()
 		fi
 	else
 		echo -ne "${RED}"
-		echo -n  "Upload to ${HUMAN_TYPE} FAILED with RET=${RET}."
+		echo -n  "Test upload to ${HUMAN_TYPE} FAILED with RET=${RET}."
 		echo -e  "${NC}"
 		parse_output "${OUTPUT_FILE}" "${TYPE}"
 	fi
@@ -241,14 +241,23 @@ do_test()
 # ========================= main body of program
 MSG_FILE="/tmp/$$"
 ERR_MSG=""
+OK_MSG=""
 RET=0
 if [[ ${DO_WEBSITE} == "true" ]]; then
-	ERR_MSG+="$( do_test "REMOTEWEBSITE" 2>&1 )"
-	(( RET += $? ))
+	if X="$( do_test "REMOTEWEBSITE" 2>&1 )" ; then
+		OK_MSG+="${X}"
+	else
+		ERR_MSG+="${X}"
+		RET=1
+	fi
 fi
 if [[ ${DO_SERVER} == "true" ]]; then
-	ERR_MSG+="$( do_test "REMOTESERVER" 2>&1 )"
-	(( RET += $? ))
+	if X="$( do_test "REMOTESERVER" 2>&1 )" ; then
+		OK_MSG+="${X}"
+	else
+		ERR_MSG+="${X}"
+		RET=1
+	fi
 fi
 
 if [[ -n ${ERR_MSG} ]]; then
@@ -256,6 +265,13 @@ if [[ -n ${ERR_MSG} ]]; then
 		echo -e "\n${ERR_MSG}" >&2
 	else
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ERR_MSG}"
+	fi
+fi
+if [[ -n ${OK_MSG} ]]; then
+	if [[ ${ON_TTY} == "true" ]]; then
+		echo -e "\n${OK_MSG}" >&2
+	else
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "success" "${OK_MSG}"
 	fi
 fi
 
@@ -270,3 +286,4 @@ if [[ -s ${MSG_FILE} ]]; then
 fi
 
 exit ${RET}
+

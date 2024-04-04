@@ -153,11 +153,11 @@ function test_determineCommandToUse()
 CMD_TO_USE_=""
 function determineCommandToUse()
 {
-	local USE_doExit="${1}"				# Call doExit() on error?
+	local USE_doExit="${1:-false}"		# Call doExit() on error?
 	local PREFIX="${2}"					# Only used if calling doExit().
 	local IGNORE_ERRORS="${3:-false}"	# True if just checking
 
-	local RET  MSG  EXIT_MSG
+	local CRET  RET  MSG  EXIT_MSG
 
 	# If libcamera is installed and works, use it.
 	# If it's not installed, or IS installed but doesn't work (the user may not have it configured),
@@ -165,8 +165,14 @@ function determineCommandToUse()
 
 	RET=1
 	CMD_TO_USE_="rpicam-still"
-	command -v "${CMD_TO_USE_}" > /dev/null || CMD_TO_USE_="libcamera-still"
-	if command -v "${CMD_TO_USE_}" > /dev/null; then
+	command -v "${CMD_TO_USE_}" > /dev/null
+	CRET=$?
+	if [[ ${CRET} -ne 0 ]]; then
+		CMD_TO_USE_="libcamera-still"
+		command -v "${CMD_TO_USE_}" > /dev/null
+		CRET=$?
+	fi
+	if [[ ${CRET} -eq 0 ]]; then
 		# Found the command - see if it works.
 		"${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1
 		RET=$?
@@ -180,34 +186,36 @@ function determineCommandToUse()
 
 	if [[ ${RET} -ne 0 ]]; then
 		# Didn't find libcamera-based command, or it didn't work.
-
 		CMD_TO_USE_="raspistill"
 		if ! command -v "${CMD_TO_USE_}" > /dev/null; then
 			CMD_TO_USE_=""
 
-			MSG="Can't determine what command to use for RPi camera."
-			echo "${MSG}" >&2
+			if [[ ${IGNORE_ERRORS} == "false" ]]; then
+				MSG="Can't determine what command to use for RPi camera."
+				echo "${MSG}" >&2
 
-			if [[ ${IGNORE_ERRORS} == "false" && ${USE_doExit} == "true" ]]; then
-				EXIT_MSG="${PREFIX}\nRPi camera command\nnot found!."
-				doExit "${EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
+				if [[ ${USE_doExit} == "true" ]]; then
+					EXIT_MSG="${PREFIX}\nRPi camera command\nnot found!."
+					doExit "${EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
+				fi
 			fi
 
 			return 1
 		fi
 
-		"${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1
-		RET=$?
-
-		if [[ ${RET} -ne 0 ]]; then
+		# On Buster, raspistill sometimes hangs if no camera is found,
+		# so work around that.
+		if ! timeout 4 "${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1 ; then
 			CMD_TO_USE_=""
 
-			MSG="RPi camera not found.  Make sure it's enabled."
-			echo "${MSG}" >&2
+			if [[ ${IGNORE_ERRORS} == "false" ]]; then
+				MSG="RPi camera not found.  Make sure it's enabled."
+				echo "${MSG}" >&2
 
-			if [[ ${IGNORE_ERRORS} == "false" && ${USE_doExit} == "true" ]]; then
-				EXIT_MSG="${PREFIX}\nRPi camera\nnot found!\nMake sure it's enabled."
-				doExit "${EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
+				if [[ ${USE_doExit} == "true" ]]; then
+					EXIT_MSG="${PREFIX}\nRPi camera\nnot found!\nMake sure it's enabled."
+					doExit "${EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
+				fi
 			fi
 
 			return "${EXIT_NO_CAMERA}"
@@ -261,12 +269,14 @@ function get_connected_cameras_info()
 				model_id = substr($6, 6);
 				model = $8;
 				if (model != "") {
-					printf("ZWO\t%d : [%s] %s\n", num++, model, model_id);
-					model = "";		# This camera was output
+					printf("ZWO\t%d : %s %s\n", num++, model, model_id);
+					model = "<found>";		# This camera was output
 				}
 			} else if ($1 == "iProduct") {
-				model = $3;
-				printf("ZWO\t%d : %s %s\n", num++, model, model_id);
+				if (model != "<found>") {
+					model = $3;
+					printf("ZWO\t%d : %s %s\n", num++, model, model_id);
+				}
 				model = "";		# This camera was output
 			}
 		}'
@@ -593,58 +603,8 @@ function checkCropValues()
 	if [[ -z ${ERR} ]]; then
 		return 0
 	else
-		echo -e "${ERR}"
-		return 1
-	fi
-}
-
-#####
-# The crop rectangle needs to fit within the image, be an even number, and be greater than 0.
-# x, y, offset_x, offset_y, max_resolution_x, max_resolution_y
-# TODO: remove this after testing.  It's the old way of cropping.
-function checkCropValuesOLD()
-{
-	local X="${1}"
-	local Y="${2}"
-	local OFFSET_X="${3}"
-	local OFFSET_Y="${4}"
-	local MAX_RESOLUTION_X="${5}"
-	local MAX_RESOLUTION_Y="${6}"
-
-	local SENSOR_CENTER_X=$(( MAX_RESOLUTION_X / 2 ))
-	local SENSOR_CENTER_Y=$(( MAX_RESOLUTION_Y / 2 ))
-	local CROP_CENTER_ON_SENSOR_X=$(( SENSOR_CENTER_X + OFFSET_X ))
-	# There appears to be a bug in "convert" with "-gravity Center"; the Y offset is applied
-	# to the TOP of the image, not the CENTER.
-	# The X offset is correctly applied to the image CENTER.
-	# Should the division round up or down or truncate (current method)?
-	local CROP_CENTER_ON_SENSOR_Y=$(( SENSOR_CENTER_Y + (OFFSET_Y / 2) ))
-	local HALF_CROP_WIDTH=$(( X / 2 ))
-	local HALF_CROP_HEIGHT=$(( Y / 2 ))
-
-	local CROP_TOP=$(( CROP_CENTER_ON_SENSOR_Y - HALF_CROP_HEIGHT ))
-	local CROP_BOTTOM=$(( CROP_CENTER_ON_SENSOR_Y + HALF_CROP_HEIGHT ))
-	local CROP_LEFT=$(( CROP_CENTER_ON_SENSOR_X - HALF_CROP_WIDTH ))
-	local CROP_RIGHT=$(( CROP_CENTER_ON_SENSOR_X + HALF_CROP_WIDTH ))
-
-	local ERR=""
-	if [[ ${CROP_TOP} -lt 0 ]]; then
-		ERR+="\nCROP rectangle goes off the top of the image by ${CROP_TOP#-} pixel(s)."
-	fi
-	if [[ ${CROP_BOTTOM} -gt ${MAX_RESOLUTION_Y} ]]; then
-		ERR+="\nCROP rectangle goes off the bottom of the image: ${CROP_BOTTOM} is greater than image height (${MAX_RESOLUTION_Y})."
-	fi
-	if [[ ${CROP_LEFT} -lt 0 ]]; then
-		ERR+="\nCROP rectangle goes off the left of the image: ${CROP_LEFT} is less than 0."
-	fi
-	if [[ ${CROP_RIGHT} -gt ${MAX_RESOLUTION_X} ]]; then
-		ERR+="\nCROP rectangle goes off the right of the image: ${CROP_RIGHT} is greater than image width (${MAX_RESOLUTION_X})."
-	fi
-
-	if [[ -z ${ERR} ]]; then
-		return 0
-	else
-		echo -e "${ERR}"
+		echo -e "${ERR}" >&2
+		echo "Crop settings: top: ${CROP_TOP}, right: ${CROP_RIGHT}, bottom: ${CROP_BOTTOM}, left: ${CROP_LEFT}" >&2
 		return 1
 	fi
 }

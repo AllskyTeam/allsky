@@ -330,18 +330,18 @@ if [[ ${UPLOAD} == "true" ]]; then
 		[[ ${WHISPER} == "false" ]] && echo "${ME}: Uploading map data."
 	fi
 	# shellcheck disable=SC2089
-	CMD="curl --silent -i -H 'Accept: application/json' -H 'Content-Type:application/json'"
+	CMD="curl -i -H 'Accept: application/json' -H 'Content-Type:application/json'"
 	# shellcheck disable=SC2089
 	CMD+=" --data '$( generate_post_data )' 'https://www.thomasjacquin.com/allsky-map/postToMap.php'"
 	[[ ${DEBUG} == "true" ]] && echo -e "\n${wDEBUG}Executing:\n${CMD}${wNC}\n"
 
 	# shellcheck disable=SC2090,SC2086
-	RETURN="$( echo ${CMD} | bash )"
+	RETURN="$( echo ${CMD} | bash 2>&1 )"
 	RETURN_CODE=$?
 	[[ ${DEBUG} == "true" ]] && echo -e "\n${wDEBUG}Returned:\n${RETURN}${wNC}.\n"
 	if [[ ${RETURN_CODE} -ne 0 ]]; then
-		E="ERROR while uploading map data with curl: ${RETURN}."
-		echo -e "${ERROR_MSG_START}${E}${RETURN}${wNC}"
+		E="ERROR while uploading map data with curl: ${RETURN}, CMD=${CMD}."
+		echo -e "${ERROR_MSG_START}${E}${wNC}"
 		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${E}"
 		exit ${RETURN_CODE}
 	fi

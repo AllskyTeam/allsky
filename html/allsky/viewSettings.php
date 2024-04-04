@@ -140,9 +140,6 @@
 			$dayExposure = v("dayexposure", "", $settings);
 			echo "<tr> <td>Daytime Manual Exposure</td><td>$dayExposure</td> </tr>";
 
-			$dayBrightness = v("daybrightness", "?", $settings);
-			echo "<tr> <td>Daytime Brightness</td><td>$dayBrightness</td> </tr>";
-
 			$dayAutoGain = v("dayautogain", false, $settings);
 			$value = doBool($dayAutoGain);
 			echo "<tr> <td>Daytime Auto-Gain</td><td>$value</td> </tr>";
@@ -172,9 +169,6 @@
 			$nightExposure = v("nightexposure", "", $settings);
 			echo "<tr> <td>Nighttime Manual Exposure</td><td>$nightExposure</td> </tr>";
 
-			$nightBrightness = v("nightbrightness", "?", $settings);
-			echo "<tr> <td>Nighttime Brightness</td><td>$nightBrightness</td> </tr>";
-
 			$nightAutoGain = v("nightautogain", false, $settings);
 			$value = doBool($nightAutoGain);
 			echo "<tr> <td>Nighttime Auto-Gain</td><td>$value</td> </tr>";
@@ -199,9 +193,6 @@
 			if ($nightMean !== "") echo "<tr> <td>Nighttime Mean Target</td><td>$nightMean</td> </tr>";
 
 			// both day and night
-			$offset = v("offset", "", $settings);
-			if ($offset !== "") echo "<tr> <td>Offset</td><td>$offset</td> </tr>";
-
 			$saturation = v("saturation", "", $settings);
 			if ($saturation !== "") echo "<tr> <td>Saturation</td><td>$saturation</td> </tr>";
 

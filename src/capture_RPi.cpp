@@ -406,6 +406,8 @@ int main(int argc, char *argv[])
 			CG.isLibcamera = false;
 		}
 	}
+	Log(4, "CONNECTED_CAMERAS_INFO=[%s], RPi_SUPPORTED_CAMERAS=[%s], RPi_COMMAND_TO_USE=[%s]\n",
+		CG.connectedCamerasFile, CG.RPI_cameraInfoFile, CG.cmdToUse);
 
 	char bufTime[128]			= { 0 };
 	char bufTemp[1024]			= { 0 };

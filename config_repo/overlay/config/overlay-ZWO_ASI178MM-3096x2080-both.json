@@ -62,10 +62,10 @@
     },
     "metadata": {
         "camerabrand": "ZWO",
-        "cameramodel": "",
-        "cameraresolutionwidth": "2048",
-        "cameraresolutionheight": "1376",
+        "cameramodel": "ASI178MM",
+        "cameraresolutionwidth": "3096",
+        "cameraresolutionheight": "2080",
         "tod": "both",
-        "name": "ASI178MM\/MC"
+        "name": "ASI178MM"
     }
 }

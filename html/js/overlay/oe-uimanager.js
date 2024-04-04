@@ -953,14 +953,20 @@ class OEUIMANAGER {
                         width: '80px'
                     }, {
                         data: 'tod',
-                        width: '80px'
+                        width: '80px',
+                        render: function (item, type, row, meta) {
+                            return item.charAt(0).toUpperCase() + item.slice(1);
+                        }                        
                     }, {
                         data: null,
                         width: '50px',
                         render: function (item, type, row, meta) {
+                            let icon = 'fa-pen-to-square'
+                            if (item.type === 'Allsky') {
+                                icon = 'fa-file-circle-plus';
+                            }
 
-                            let buttons = '<button type="button" class="btn btn-primary btn-xs oe-options-overlay-edit" data-filename="' + item.filename + '"><i class="fa-solid fa-pen-to-square"></i></button>';
-
+                            let buttons = '<button type="button" class="btn btn-primary btn-sms oe-options-overlay-edit" data-filename="' + item.filename + '"><i class="fa-solid ' + icon + '"></i></button>';
                             return buttons;
                         }
                     }
@@ -1014,7 +1020,6 @@ class OEUIMANAGER {
             let defaultStrokeColour = $('#oe-default-stroke-colour').val();
             let defaultStrokeSize = $('#oe-default-stroke-size').val();
 
-            this.#configManager.backupConfig();
             this.#configManager.setValue('settings.defaultimagetopacity', defaultImagOpacity);
             this.#configManager.setValue('settings.defaultimagerotation', defaultImagRotation);
             this.#configManager.setValue('settings.defaultfontsize', defaultFontSize);
@@ -1029,7 +1034,6 @@ class OEUIMANAGER {
             this.#configManager.setValue('settings.defaultincludemoon', defaultincludemoon);
             this.#configManager.setValue('settings.defaultincludesun', defaultincludesun);
             this.#configManager.setValue('settings.defaultstrokecolour', defaultStrokeColour);
-
 
             this.#configManager.gridVisible = $('#oe-app-options-show-grid').prop('checked');
             this.#configManager.gridSize = $("#oe-app-options-grid-size option").filter(":selected").val();
@@ -1339,6 +1343,9 @@ class OEUIMANAGER {
             if (this.#errorsTable .rows().count() == 0) {
                 $('#oe-field-errors-dialog').modal('hide');
             }    
+
+            this.#configManager.dirty = true;
+            this.updateToolbar();            
         });
 
         $(document).on('click', '.oe-field-errors-dialog-fix', (event) => {
@@ -1359,10 +1366,16 @@ class OEUIMANAGER {
                 $('#oe-field-errors-dialog').modal('hide');
             }
 
+            this.#configManager.dirty = true;
+            this.updateToolbar();            
         });
              
         $(document).on('oe-config-updated', (e) => {
             this.updateToolbar();
+        });
+
+        $(document).on('click','#oe-show-overlay-manager', (e) => {
+            $(document).trigger('oe-show-overlay-manager');
         });
 
         this.updateDebugWindow();
@@ -1632,28 +1645,56 @@ class OEUIMANAGER {
     }
 
     updateToolbar() {
-        if (this.#selected === null) {
+
+        let selectedOverlay = this.#configManager.selectedOverlay;
+        if (selectedOverlay.type === 'allsky' && !this.#debugMode)  {
             $('#oe-delete').addClass('disabled');
-            $('#oe-delete').removeClass('green');
-        } else {
-            $('#oe-delete').removeClass('disabled');
-            $('#oe-delete').addClass('green');
-        }
-
-        if (this.#fieldManager.dirty || this.#configManager.dirty) {
-            $('#oe-save').removeClass('disabled');
-            $('#oe-save').addClass('green pulse');
-            $('#oe-overlay-editor-tab').addClass('oe-overlay-editor-tab-modified');            
-        } else {
             $('#oe-save').addClass('disabled');
-            $('#oe-save').removeClass('green pulse');
-            $('#oe-overlay-editor-tab').removeClass('oe-overlay-editor-tab-modified');
-        }
+            $('#oe-add-text').addClass('disabled');
+            $('#oe-add-image').addClass('disabled');
+            $('#oe-item-list').addClass('disabled');
+            $('#oe-test-mode').addClass('disabled');
+            $('#oe-field-errors').addClass('disabled');
+            $('#oe-toobar-debug-button').addClass('disabled');
+            $('#oe-upload-font').addClass('disabled');
+            $('#oe-show-image-manager').addClass('disabled');
+            $('#oe-options').addClass('disabled');            
+        } else {        
+            $('#oe-delete').removeClass('disabled');
+            $('#oe-save').removeClass('disabled');
+            $('#oe-add-text').removeClass('disabled');
+            $('#oe-add-image').removeClass('disabled');
+            $('#oe-item-list').removeClass('disabled');
+            $('#oe-test-mode').removeClass('disabled');
+            $('#oe-field-errors').removeClass('disabled');
+            $('#oe-toobar-debug-button').removeClass('disabled');
+            $('#oe-upload-font').removeClass('disabled');
+            $('#oe-show-image-manager').removeClass('disabled');
+            $('#oe-options').removeClass('disabled');            
 
-        if (this.#debugMode) {
-            $('#oe-toolbar-debug').removeClass('hidden')
-        } else {
-            $('#oe-toolbar-debug').addClass('hidden')
+            if (this.#selected === null) {
+                $('#oe-delete').addClass('disabled');
+                $('#oe-delete').removeClass('green');
+            } else {
+                $('#oe-delete').removeClass('disabled');
+                $('#oe-delete').addClass('green');
+            }
+
+            if (this.#fieldManager.dirty || this.#configManager.dirty) {
+                $('#oe-save').removeClass('disabled');
+                $('#oe-save').addClass('green pulse');
+                $('#oe-overlay-editor-tab').addClass('oe-overlay-editor-tab-modified');            
+            } else {
+                $('#oe-save').addClass('disabled');
+                $('#oe-save').removeClass('green pulse');
+                $('#oe-overlay-editor-tab').removeClass('oe-overlay-editor-tab-modified');
+            }
+
+            if (this.#debugMode) {
+                $('#oe-toolbar-debug').removeClass('hidden')
+            } else {
+                $('#oe-toolbar-debug').addClass('hidden')
+            }
         }
     }
 

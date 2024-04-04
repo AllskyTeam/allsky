@@ -807,3 +807,32 @@ function get_lat_long()
 	fi
 	return 0
 }
+
+
+####
+# Return the amount of RAM in GB.
+function get_RAM()
+{
+	# Input example: total_mem=4096
+	# Pi's have either 0.5 GB or an integer number of GB.
+	sudo vcgencmd get_config total_mem | gawk --field-separator "=" '
+		{
+			if ($2 < 1024)
+				printf("%.1f", $2 / 1024);
+			else
+				printf("%d", $2 / 1024);
+			exit 0;
+		}'
+
+}
+
+
+####
+# Return the "computer" - the Pi model and amount of memory in GB
+function get_computer()
+{
+	# The file has a NULL at the end so to avoid a bash warning, ignore it.
+	local MODEL="$( tr --delete '\0' < /sys/firmware/devicetree/base/model )"
+	local GB="$( get_RAM )"
+	echo "${MODEL}, ${GB} GB"
+}

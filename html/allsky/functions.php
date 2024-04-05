@@ -323,10 +323,10 @@ function display_thumbnails($dir, $file_prefix, $title)
 	}
 
 	if ($thumbnailsortorder === "descending") {
-		arsort($images);
+		arsort($files);
 		$sortOrder = "Sorted newest to oldest (descending)";
 	} else {
-		asort($images);
+		asort($files);
 		$sortOrder = "Sorted oldest to newest (ascending)";
 	}
 	$sortOrder = "<span class='imagesSortOrder'>$sortOrder</span>";

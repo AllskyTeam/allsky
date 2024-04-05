@@ -66,10 +66,20 @@ and <span class="WebUISetting">Blue Balance</span> to get a picture of your liki
 the amount of green in an image by adjusting the amount of red and blue).
 </p>
 <p>
-We suggest trying <span class="WebUISetting">Auto White Balance</span>
-and if you don't like the results, turn it off and set the red and blue balance manually.
+We suggest trying <span class="WebUISetting">Auto White Balance</span> during the day
+and if you don't like the results,
+turn it off and set the red and blue balance manually.
 You can change the <span class="WebUISetting">Auto White Balance</span> and red and blue balances
 separately for daytime and nighttime.
+<blockquote class="warning">
+You may not want to disable
+<span class="WebUISetting">Auto White Balance</span> at night
+since it may significantly increase the total time needed to get one picture.
+Some camera's auto white balance algorithm works by taking several pictures in a row,
+and if each picture is 60 seconds you may wait 3 minutes for each picture.
+If in doubt, enable <span class="WebUISetting">Auto White Balance</span> at night
+and see what happens.
+</blockquote>
 </p>
 
 
@@ -87,26 +97,22 @@ to its lowest value.
 <h2 id="stretch">Stretch</h2>
 <p>
 Stretching an image changes its contrast (difference between light and dark)
-and is good to bring out details in nighttime pictures.
-Stretching is enable by editing the <span class="fileName">config.sh</span> file via the WebUI.
-The settings are:
+and is good to bring out details in pictures.
+There are separate stretch settings for daytime and nighttime that work the same
+(daytime stretching is not very common).
+The stretch-related settings are:
 <ul>
-<li><span class="editorSetting">AUTO_STRETCH</span>
-	(default: <span class="editorBool">false</span>)
-	<br>Set to <span class="editorBool">True</span> to enable stretching.
-<li><span class="editorSetting">AUTO_STRETCH_AMOUNT</span>
-	(default: <span class="editorNum">10</span>)
-	<br>The amount to lighten an image,
-	<span class="editorNum">0</span> is none,
-	<span class="editorNum">3</span> is typical,
-	and <span class="editorNum">20</span> is a lot.
+<li><span class="WebUISetting">Stretch Amount</span>
+	(default: <span class="WebUIValue">0</span> which disables stretching)
+	<br><span class="WebUIValue">3</span> is typical
+	and <span class="WebUIValue">20</span> is a lot.
 	Higher numbers lighten the image more.
-<li><span class="editorSetting">AUTO_STRETCH_MID_POINT</span>
-	(default: <span class="editorString">10%</span>)
-	<br>This specifies what parts of the image should be lightened:
-	<span class="editorString">0%</span> lightens black items,
-	<span class="editorString">50%</span> lightens middle-gray items, and
-	<span class="editorString">100%</span> lightens white items.
+<li><span class="WebUISetting">Stretch mid point</span>
+	(default: <span class="WebUIValue">10</span>)
+	<br>This specifies what part of the image should be lightened:
+	<span class="WebUIValue">0</span> lightens black items,
+	<span class="WebUIValue">50</span> lightens middle-gray items, and
+	<span class="WebUIValue">100</span> lightens white items.
 </ul>
 You may find that you can decrease the gain, and hence the noise,
 by increasing the stretch.
@@ -116,31 +122,35 @@ Experiment with the settings to get the results you want.
 <h3>Sample Stretch Images</h3>
 
 <p>
-<span class="editorSetting">AUTO_STRETCH</span>="<span class="editorBool">False</span>"
+<span class="WebUISetting">Stretch Amount</span>: <span class="WebUIValue">0</span>
+<br>The exposure is 60 seconds; anything longer will produce streaks with
+most lenses.
+The gain is 250 which is near the maximum for the camera,
+and is already producing some noise.
 <br><img class="imgCenter" loading="lazy" src="Stretch_0.png" width="50%">
 </p>
 
 <br><p>
-<span class="editorSetting">AUTO_STRETCH_AMOUNT</span>=<span class="editorNum">10</span>,
-<span class="editorSetting">AUTO_STRETCH_MID_POINT</span>=<span class="editorString">10%</span>
+<span class="WebUISetting">Stretch Amount</span>: <span class="WebUIValue">10</span>,
+<span class="WebUISetting">Stretch mid point</span>: <span class="WebUIValue">10</span>
 <br>Notice the dark parts of the image are much brighter,
 and the light stars are only a little brighter
 (but the dark stars are much brighter and easier to see).
 <br><img class="imgCenter" loading="lazy" src="Stretch_10x10.png" width="50%">
 
 <br><p>
-<span class="editorSetting">AUTO_STRETCH_AMOUNT</span>=<span class="editorNum">10</span>,
-<span class="editorSetting">AUTO_STRETCH_MID_POINT</span>=<span class="editorString">30%</span>
+<span class="WebUISetting">Stretch Amount</span>: <span class="WebUIValue">10</span>,
+<span class="WebUISetting">Stretch mid point</span>: <span class="WebUIValue">30</span>
 <br>Notice a very slight overall increase in brightness,
 but a noticable increase in brightness of the stars.
 <br><img class="imgCenter" loading="lazy" src="Stretch_10x30.png" width="50%">
 </p>
 
 <br><p>
-<span class="editorSetting">AUTO_STRETCH_AMOUNT</span>=<span class="editorNum">20</span>,
-<span class="editorSetting">AUTO_STRETCH_MID_POINT</span>=<span class="editorString">10%</span>
+<span class="WebUISetting">Stretch Amount</span>: <span class="WebUIValue">20</span>,
+<span class="WebUISetting">Stretch mid point</span>: <span class="WebUIValue">10</span>
 <br>Compare this image to the
-<span class="editorSetting">AUTO_STRETCH_AMOUNT</span>=<span class="editorNum">10</span>
+<span class="WebUISetting">Stretch Amount</span>: <span class="WebUIValue">10</span>
 image;
 this one is even brighter.
 <br><img class="imgCenter" loading="lazy" src="Stretch_20x10.png" width="50%">

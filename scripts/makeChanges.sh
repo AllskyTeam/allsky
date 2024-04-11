@@ -450,15 +450,6 @@ do
 			fi
 			;;
 
-		"latitude" | "longitude")
-			# Allow either +/- decimal numbers, OR numbers with N, S, E, W, but not both.
-			if NEW_VALUE="$( convertLatLong "${NEW_VALUE}" "${KEY}" )" ; then
-				check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
-			else
-				echo -e "${wWARNING}WARNING: ${NEW_VALUE}.${wNC}"
-			fi
-			;;
-
 		"config")
 			if [[ ${NEW_VALUE} == "" ]]; then
 				NEW_VALUE="[none]"
@@ -505,6 +496,16 @@ do
 		"showonmap")
 			SHOW_ON_MAP="true"
 			[[ ${NEW_VALUE} == "false" ]] && POSTTOMAP_ACTION="--delete"
+			RUN_POSTTOMAP="true"
+			;;
+
+		"latitude" | "longitude")
+			# Allow either +/- decimal numbers, OR numbers with N, S, E, W, but not both.
+			if NEW_VALUE="$( convertLatLong "${NEW_VALUE}" "${KEY}" )" ; then
+				check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
+			else
+				echo -e "${wWARNING}WARNING: ${NEW_VALUE}.${wNC}"
+			fi
 			RUN_POSTTOMAP="true"
 			;;
 

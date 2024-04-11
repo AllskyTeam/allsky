@@ -252,6 +252,7 @@ function DisplayAllskyConfig() {
 					$action = getVariableOrDefault($option, 'action', "none");
 					break;
 				}
+
 				if (! $found) {
 					$msg = "Setting '$name' not in options file.";
 					$status->addMessage($msg, 'danger');
@@ -290,14 +291,16 @@ function DisplayAllskyConfig() {
 					} elseif ($name === $cameraNumberName) {
 						$cameraChanged = true;
 						$newCameraNumber = $newValue;
-					} elseif ($name === "latitude" ||
-							  $name === "longitude" ||
-							  $name === "angle" ||
-							  $name === "takedaytimeimages") {
-							$twilightDataChanged = $newValue;
 					} else {
 						// want to know changes other than camera
 						$nonCameraChangesExist = true;
+						if ($name === "latitude" ||
+							  $name === "longitude" ||
+							  $name === "angle" ||
+							  $name === "takedaytimeimages" ||
+							  $name === "takenighttimeimages") {
+							$twilightDataChanged = $newValue;
+						}
 					}
 
 					if ($action == "restart" || $action == "reload") {
@@ -388,8 +391,8 @@ if ($debug) {
 }
 							// updateFile() only returns error messages.
 							$msg = updateFile($settings_file, $content, "settings", true);
+echo "<script>console.log('Updated $settings_file, msg=$msg');</script>";
 							if ($msg === "") {
-echo '<script>console.log("Updated $settings_file");</script>';
 								if ($numSettingsChanges > 0) {
 									$msg = "$numSettingsChanges setting";
 									if ($numSettingsChanges > 1)

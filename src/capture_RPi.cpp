@@ -157,16 +157,11 @@ int RPicapture(config cg, cv::Mat *image)
 		//	'SRGGB10_CSI2P' : 1332x990 
 		//	'SRGGB12_CSI2P' : 2028x1080 2028x1520 4056x3040 
 		//								bin 2x2   bin 1x1
-		if (cg.currentBin == 1)
+		// cg.width and cg.height are already reduced for binning as needed.
+		if (cg.currentBin == 1 || cg.currentBin == 2)
 		{
 			ss << cg.width;
 			ss2 << cg.height;
-			command += " --width " + ss.str() + " --height " + ss2.str();
-		}
-		else if (cg.currentBin == 2)
-		{
-			ss << cg.width / 2;
-			ss2 << cg.height / 2;
 			command += " --width " + ss.str() + " --height " + ss2.str();
 		}
 	}
@@ -176,9 +171,10 @@ int RPicapture(config cg, cv::Mat *image)
 			command += " --mode 3";
 		else if (cg.currentBin == 2)
 		{
-			ss << cg.width / 2;
-			ss2 << cg.height / 2;
-			command += " --mode 2 --width " + ss.str() + " --height " + ss2.str();
+			command += " --mode 2";
+//x			ss << cg.width / 2;
+//x			ss2 << cg.height / 2;
+//x			command += " --mode 2 --width " + ss.str() + " --height " + ss2.str();
 		}
 	}
 

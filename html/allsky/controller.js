@@ -50,7 +50,7 @@ $(window).resize(function () {
 
 		wasDiff = true;
 
-		// TODO: probably also need to adjust #stamap's margin-left and margin-right.
+		// TODO: probably also need to adjust #starmap's margin-left and margin-right.
 
 		// This holds the starmap button, so needs to resize
 		starmapWidth += diffW;
@@ -128,6 +128,8 @@ function buildOverlay(){
 				icImageAspectRatio = icWidth / icHeight;
 
 				$("#starmap_container").css("width", icWidth + "px").css("height", icHeight + "px");
+				$("#starmap").css("width", icWidth + "px").css("height", icHeight + "px");
+				$(".starmap_btn_help").css("right", c.overlayOffsetLeft+5 + "px");
 
 				overlayWidth =  c.overlayWidth;
 				overlayHeight =  c.overlayHeight;

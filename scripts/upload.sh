@@ -288,7 +288,7 @@ else # sftp/ftp/ftps
 	REMOTE_PASSWORD="$( settings ".${PREFIX}_PASSWORD" "${ALLSKY_ENV}" )"
 
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		MSG="${ME}: FTP '${FILE_TO_UPLOAD}' to ${REMOTE_HOST}"
+		MSG="${ME}: FTP '${FILE_TO_UPLOAD}' to ${REMOTE_USER} @ ${REMOTE_HOST}"
 		MSG+=" '${DIRECTORY}${DESTINATION_NAME}'"
 		[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && MSG+=", TEMP_NAME=${TEMP_NAME}"
 		echo "${MSG}"

@@ -138,6 +138,8 @@ Notes:
 		</blockquote>
 	<li><span class="editorString">scp</span> -
 		uses secure cp (copy) to copy the file to a remote server.
+	<li><span class="editorString">rsync</span> -
+		uses rsync via ssh to copy the file to a remote server.
 	<li><span class="editorString">s3</span> -
 		copies the file to an Amazon Web Services (AWS) server.
 	<li><span class="editorString">gcs</span> -
@@ -190,7 +192,7 @@ Notes:
 	<td>Location on the Pi to copy the startrails file to.</td>
 </tr>
 
-<tr><td class="note" colspan="3">ftp, ftps, sftp, and scp Settings</td></tr>
+<tr><td class="note" colspan="3">ftp, ftps, sftp, rsync and scp Settings</td></tr>
 <tr><td><span class="shSetting">REMOTE_HOST</span></td> <td></td>
 	<td>Remote server DNS name or IP address.
 	If you don't know it, ask your service provider.
@@ -214,7 +216,7 @@ Notes:
 	</td>
 </tr>
 
-<tr><td class="note" colspan="3">scp Settings</td></tr>
+<tr><td class="note" colspan="3">rsync and scp Settings</td></tr>
 <tr><td><span class="shSetting">REMOTE_USER</span></td> <td></td>
 	<td>Your remote user name.
 		This is the same setting as above.

@@ -33,7 +33,7 @@ STARTRAILS_DESTINATION_NAME=""
 WEB_STARTRAILS_DIR=""
 
 
-############### ftp, ftps, sftp, and scp PROTOCOLS only:
+############### ftp, ftps, sftp, rsync and scp PROTOCOLS only:
 	# Name of the remote server.
 REMOTE_HOST=""
 
@@ -41,7 +41,7 @@ REMOTE_HOST=""
 REMOTE_PORT=""
 
 
-############### ftp, ftps, and sftp PROTOCOLS only.  REMOTE_USER is also used by the scp PROTOCOL:
+############### ftp, ftps, and sftp PROTOCOLS only.  REMOTE_USER is also used by the rsync and scp PROTOCOL:
 	# The username of the login on the remote server.
 REMOTE_USER=""
 
@@ -52,7 +52,7 @@ REMOTE_PASSWORD=""
 LFTP_COMMANDS=""
 
 
-############### scp PROTOCOL only:
+############### rsync and scp PROTOCOL only:
 	# The path to the SSH key.
 SSH_KEY_FILE=""
 

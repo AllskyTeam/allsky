@@ -268,7 +268,7 @@ function whatWebsites()
 				"" | local)
 					;;
 
-				ftp | ftps | sftp | scp)		# These require R
+				ftp | ftps | sftp | scp | rsync)		# These require R
 					X="$(get_variable "REMOTE_HOST" "${ALLSKY_CONFIG}/ftp-settings.sh")" 
 					[[ -n ${X} ]] && HAS_REMOTE="true"
 					;;

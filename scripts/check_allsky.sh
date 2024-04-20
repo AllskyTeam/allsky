@@ -547,6 +547,15 @@ case "${PROTOCOL}" in
 		fi
 		;;
 
+	rsync)
+		check_PROTOCOL "${PROTOCOL}" "REMOTE_HOST"
+		if check_PROTOCOL "${PROTOCOL}" "SSH_KEY_FILE" && [[ ! -e ${SSH_KEY_FILE} ]]; then
+			heading "Warnings"
+			echo "PROTOCOL (${PROTOCOL}) set but 'SSH_KEY_FILE' (${SSH_KEY_FILE}) does not exist."
+			echo "Uploads will not work."
+		fi
+		;;
+
 	s3)
 		if check_PROTOCOL "${PROTOCOL}" "AWS_CLI_DIR" && [[ ! -e ${AWS_CLI_DIR} ]]; then
 			heading "Warnings"
@@ -564,7 +573,7 @@ case "${PROTOCOL}" in
 
 	*)
 		heading "Warnings"
-		echo "PROTOCOL (${PROTOCOL}) not blank or one of: local, ftp, ftps, sftp, scp, s3, gcs."
+		echo "PROTOCOL (${PROTOCOL}) not blank or one of: local, ftp, ftps, rsync, sftp, scp, s3, gcs."
 		echo "Uploads will not work until this is corrected."
 		;;
 esac

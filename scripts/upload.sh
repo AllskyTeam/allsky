@@ -166,6 +166,18 @@ elif [[ "${PROTOCOL}" == "scp" ]] ; then
 	RET=$?
 
 
+elif [[ "${PROTOCOL}" == "rsync" ]] ; then
+	#shellcheck disable=SC2153
+	DEST="${REMOTE_USER}@${REMOTE_HOST}:${DIRECTORY}/${DESTINATION_NAME}"
+	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${DEST}"
+	fi
+	[[ -n ${REMOTE_PORT} ]] && REMOTE_PORT="-p ${REMOTE_PORT}"
+	# shellcheck disable=SC2086
+	OUTPUT="$( rsync -e "ssh -i ${SSH_KEY_FILE} ${REMOTE_PORT}" "${FILE_TO_UPLOAD}" "${DEST}" 2>&1 )"
+	RET=$?
+
+
 elif [[ ${PROTOCOL} == "gcs" ]] ; then
 	type gsutil >/dev/null 2>&1
 	RET=$?

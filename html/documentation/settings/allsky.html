@@ -1087,6 +1087,8 @@ A (partial) typical page is below.
 			</blockquote>
 		<li><code>scp</code> -
 			uses secure cp (copy) to copy the file to a remote server.
+		<li><code>rsync</code> -
+			uses rsync to copy the file to a remote server.
 		<li><code>s3</code> -
 			copies the file to an Amazon Web Services (AWS) server.
 		<li><code>gcs</code> -
@@ -1125,7 +1127,7 @@ A (partial) typical page is below.
 	</td></tr>
 <tr><td><span class="WebUISetting">SSH Key File</span></td>
 	<td></td>
-	<td>(scp protocol only) Path to the SSH key.
+	<td>(scp and Rsync protocols only) Path to the SSH key.
 	<br>
 	You need to set up SSH key authentication on your server.
 	First, generate an SSH key on your Pi:

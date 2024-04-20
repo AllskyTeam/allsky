@@ -218,6 +218,22 @@ elif [[ "${PROTOCOL}" == "scp" ]] ; then
 	RET=$?
 
 
+elif [[ "${PROTOCOL}" == "rsync" ]] ; then
+	REMOTE_USER="$( settings ".${PREFIX}_USER" "${ALLSKY_ENV}" )"
+	REMOTE_HOST="$( settings ".${PREFIX}_HOST" "${ALLSKY_ENV}" )"
+	REMOTE_PORT="$( settings ".${PREFIX}_PORT" "${ALLSKY_ENV}" )"
+	SSH_KEY_FILE="$( settings ".${PREFIX}_SSH_KEY_FILE" "${ALLSKY_ENV}" )"
+
+	DEST="${REMOTE_USER}@${REMOTE_HOST}:${DIRECTORY}/${DESTINATION_NAME}"
+	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${DEST}"
+	fi
+	[[ -n ${REMOTE_PORT} ]] && REMOTE_PORT="-p ${REMOTE_PORT}"
+	# shellcheck disable=SC2086
+	OUTPUT="$( rsync -e "ssh -i ${SSH_KEY_FILE} ${REMOTE_PORT}" "${FILE_TO_UPLOAD}" "${DEST}" 2>&1 )"
+	RET=$?
+
+
 elif [[ ${PROTOCOL} == "gcs" ]] ; then
 	GCS_BUCKET="$( settings ".${PREFIX}_GCS_BUCKET" "${ALLSKY_ENV}" )"
 	GCS_ACL="$( settings ".${PREFIX}_GCS_ACL" "${ALLSKY_ENV}" )"

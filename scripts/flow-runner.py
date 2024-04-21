@@ -142,6 +142,7 @@ if __name__ == "__main__":
     flowName = shared.args.tod if shared.args.event == "postcapture" else shared.args.event
     shared.log(4, f"INFO: ===== Running {flowName} flow...")
     moduleConfig = f"{shared.args.ALLSKY_MODULES}/postprocessing_{flowName}.json"
+    moduleDebugFile = f"{shared.args.ALLSKY_MODULES}/postprocessing_{flowName}-debug.json"
     try:
         with open(moduleConfig) as flow_file:
             if (os.stat(moduleConfig).st_size == 0):
@@ -238,22 +239,22 @@ if __name__ == "__main__":
         shared.log(4, f'INFO: Ignored watchdog for: {ignoreWatchdogMsg}')
     shared.log(4, f"INFO: ===== {flowName} flow complete.")
 
-    with open(moduleConfig) as updatefile:
-        try:
-            config = json.load(updatefile)
-            for step in config:
-                if step in results:
-                    config[step]["lastexecutiontime"] = results[step]["lastexecutiontime"]
-                    config[step]["lastexecutionresult"] = results[step]["lastexecutionresult"]
-                    if "disable" in results[step]:
-                        config[step]["enabled"] = False
-
-            updatefile.close()
-            with open(moduleConfig, "w") as updatefile:
-                json.dump(config, updatefile, indent=4)
-        except json.JSONDecodeError as err:
-            shared.log(0, f"ERROR: Error parsing {moduleConfig} {err}", exitCode=1)
-
+    try:
+        debugData = {}
+        for step in results:
+            if step not in debugData:
+                debugData[step] = {}
+                
+            debugData[step]["lastexecutiontime"] = results[step]["lastexecutiontime"]
+            debugData[step]["lastexecutionresult"] = results[step]["lastexecutionresult"]
+            if "disable" in results[step]:
+                debugData[step]["enabled"] = False
+                                                
+        with open(moduleDebugFile, "w+") as debugFile:
+            json.dump(debugData, debugFile, indent=4)
+    except Exception as err:
+        shared.log(0, f"ERROR: Error saving module debug data {err}", exitCode=1) 
+        
     flowTimingsFolder = shared.getEnvironmentVariable("ALLSKY_FLOWTIMINGS", fatal=True)
     if moduleDebug:
         try:

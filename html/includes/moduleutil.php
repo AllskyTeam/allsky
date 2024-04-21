@@ -222,6 +222,7 @@ class MODULEUTIL
 
         $event = $_GET['event'];
         $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($event) . '.json';
+        $debugFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($event) . '-debug.json';
         $rawConfigData = file_get_contents($configFileName);
         $configData = json_decode($rawConfigData);
 
@@ -293,11 +294,19 @@ class MODULEUTIL
         if (file_exists($configFileName . '-last')) {
             $restore = true;
         }
+
+        $debugInfo = null;
+        if (file_exists($debugFileName)) {
+            $debugInfo = file_get_contents($debugFileName);
+            $debugInfo = json_decode($debugInfo);
+        }
+
         $result = [
             'available' => $availableResult,
             'selected'=> $selectedResult,
             'corrupted' => $corrupted,
-            'restore' => $restore
+            'restore' => $restore,
+            'debug' => $debugInfo
         ];
 
         return $result;

@@ -251,11 +251,11 @@ fi
 # If the locale isn't in the settings file, try to determine it.
 if [[ -z ${LOCALE} ]]; then
 	if [[ -n ${LC_ALL} ]]; then
-		echo "-locale=${LC_ALL}"
+		echo "locale=${LC_ALL}"
 	elif [[ -n ${LANG} ]]; then
-		echo "-locale=${LANG}"
+		echo "locale=${LANG}"
 	elif [[ -n ${LANGUAGE} ]]; then
-		echo "-locale=${LANGUAGE}"
+		echo "locale=${LANGUAGE}"
 	fi >> "${ARGS_FILE}"
 fi
 

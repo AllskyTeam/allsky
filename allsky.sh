@@ -197,12 +197,12 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 fi
 
 if [[ ! -s ${CONNECTED_CAMERAS_INFO} ]]; then
-		set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
+	set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
 	MSG="Unable to start Allsky - no connected cameras found!"
 	echo -e "${RED}*** ${MSG}${NC}" >&2
 	IMAGE_MSG="${ERROR_MSG_PREFIX}"
 	IMAGE_MSG+="\nNo connected\ncameras found!"
-	doExit "${EXIT_ERROR_STOP}" "Error" 
+	doExit "${EXIT_ERROR_STOP}" "Error" \
 		"${IMAGE_MSG}" "${NOT_STARTED_MSG}: ${MSG}"
 fi
 

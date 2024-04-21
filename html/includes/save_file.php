@@ -60,7 +60,6 @@ if ($useRemoteWebsite) {
 	// name to NOT include that string.
 	$remoteName = str_replace("remote_", "", $f);
 	$imageDir = getVariableOrDefault($settings_array, 'remotewebsiteimagedir', "");
-$imageDir .= "/xxx";
 	$env_file = ALLSKY_ENV;
 	$errorMsg = "ERROR: Unable to process env file '$env_file'.";
 	$env_array = get_decoded_json_file($env_file, true, $errorMsg);

@@ -312,7 +312,7 @@ function check_remote_server()
 		ftp | ftps | sftp | scp | rsync)
 			check_PROTOCOL "${PROTOCOL}" "${TYPE}_HOST" "${sTYPE}" "Server Name" || RET=1
 			check_PROTOCOL "${PROTOCOL}" "${TYPE}_USER" "${sTYPE}" "User Name" || RET=1
-			if [[ ${PROTOCOL} == "scp" ]] || [[ ${PROTOCOL} == "rsync" ]]; then
+			if [[ ${PROTOCOL} == "scp" || ${PROTOCOL} == "rsync" ]]; then
 				if check_PROTOCOL "${PROTOCOL}" "${TYPE}_SSH_KEY_FILE" "SSH Key File" "${sTYPE}" \
 						&& [[ ! -e ${SSH_KEY_FILE} ]]; then
 					echo -n "${sTYPE} Protocol (${PROTOCOL}) set but '${TYPE}_SSH_KEY_FILE'"

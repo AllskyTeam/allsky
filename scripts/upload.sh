@@ -202,7 +202,7 @@ if [[ ${PROTOCOL} == "s3" ]] ; then
 	RET=$?
 
 
-elif [[ "${PROTOCOL}" == "scp" ]] ; then
+elif [[ "${PROTOCOL}" == "scp" || "${PROTOCOL}" == "rsync" ]] ; then
 	REMOTE_USER="$( settings ".${PREFIX}_USER" "${ALLSKY_ENV}" )"
 	REMOTE_HOST="$( settings ".${PREFIX}_HOST" "${ALLSKY_ENV}" )"
 	REMOTE_PORT="$( settings ".${PREFIX}_PORT" "${ALLSKY_ENV}" )"
@@ -212,25 +212,15 @@ elif [[ "${PROTOCOL}" == "scp" ]] ; then
 	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${DEST}"
 	fi
-	[[ -n ${REMOTE_PORT} ]] && REMOTE_PORT="-P ${REMOTE_PORT}"
-	# shellcheck disable=SC2086
-	OUTPUT="$( scp -i "${SSH_KEY_FILE}" ${REMOTE_PORT} "${FILE_TO_UPLOAD}" "${DEST}" 2>&1 )"
-	RET=$?
-
-
-elif [[ "${PROTOCOL}" == "rsync" ]] ; then
-	REMOTE_USER="$( settings ".${PREFIX}_USER" "${ALLSKY_ENV}" )"
-	REMOTE_HOST="$( settings ".${PREFIX}_HOST" "${ALLSKY_ENV}" )"
-	REMOTE_PORT="$( settings ".${PREFIX}_PORT" "${ALLSKY_ENV}" )"
-	SSH_KEY_FILE="$( settings ".${PREFIX}_SSH_KEY_FILE" "${ALLSKY_ENV}" )"
-
-	DEST="${REMOTE_USER}@${REMOTE_HOST}:${DIRECTORY}/${DESTINATION_NAME}"
-	if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		echo "${ME}: Copying ${FILE_TO_UPLOAD} to ${DEST}"
-	fi
-	[[ -n ${REMOTE_PORT} ]] && REMOTE_PORT="-p ${REMOTE_PORT}"
-	# shellcheck disable=SC2086
-	OUTPUT="$( rsync -e "ssh -i ${SSH_KEY_FILE} ${REMOTE_PORT}" "${FILE_TO_UPLOAD}" "${DEST}" 2>&1 )"
+	if [[ "${PROTOCOL}" == "scp" ]]; then
+		[[ -n ${REMOTE_PORT} ]] && REMOTE_PORT="-P ${REMOTE_PORT}"
+		# shellcheck disable=SC2086
+		OUTPUT="$( scp -i "${SSH_KEY_FILE}" ${REMOTE_PORT} "${FILE_TO_UPLOAD}" "${DEST}" 2>&1 )"
+ 	else
+		[[ -n ${REMOTE_PORT} ]] && REMOTE_PORT="-p ${REMOTE_PORT}"
+		# shellcheck disable=SC2086
+		OUTPUT="$( rsync -e "ssh -i ${SSH_KEY_FILE} ${REMOTE_PORT}" "${FILE_TO_UPLOAD}" "${DEST}" 2>&1 )"
+  	fi
 	RET=$?
 
 

@@ -42,7 +42,7 @@ fi
 
 # Make sure the settings have been configured after an installation or upgrade.
 LAST_CHANGED="$( settings ".lastchanged" )"
-if [[ ${LAST_CHANGED} == "" ]]; then
+if [[ -z ${LAST_CHANGED} ]]; then
 	set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
 	echo "*** ===== Allsky needs to be configured before it can be used.  See the WebUI." >&2
 	if [[ ${NEEDS_REBOOT} == "true" ]]; then
@@ -305,6 +305,8 @@ if [[ ${CAMERA_TYPE} == "RPi" ]]; then
 	export CONNECTED_CAMERAS_INFO
 	export RPi_SUPPORTED_CAMERAS
 fi
+C="$( settings ".cameranumber" )"
+[[ -n ${C} ]] && export CAMERANUMBER="${C}"
 
 function catch_signal() { return 0; }
 trap "catch_signal" SIGTERM SIGINT SIGHUP

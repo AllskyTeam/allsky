@@ -342,7 +342,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 				# Create a mini-timelapse
 				# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
 				# This causes timelapse.sh to print "before" and "after" debug messages.
-				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
 					echo -e "NUM_IMAGES=${NUM_IMAGES}"
 					D="--debug"
 				else

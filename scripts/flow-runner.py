@@ -59,7 +59,7 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--flowtimerframes",  type=int, help="Number of frames to capture for the flow timing averages.", default=10)
     parser.add_argument("-c", "--cleartimings", action="store_true", help="Clear any flow average timing data.")
     shared.args = parser.parse_args()
-    ignoreWatchdogMsg = ""
+    #ignoreWatchdogMsg = ""
 
     shared.initDB()
 
@@ -116,18 +116,19 @@ if __name__ == "__main__":
         shared.imageFolder = os.path.join(imagesRoot, dateString)
 
     shared.args.ALLSKY_MODULES = shared.getEnvironmentVariable("ALLSKY_MODULES", fatal=True);
-    watchdog = False
+    #watchdog = False
     moduleDebug = False
     timeout = 0
     try:
         configFile = os.path.join(shared.args.ALLSKY_MODULES, 'module-settings.json')
         with open(configFile, 'r') as module_Settings_file:
             module_settings = json.load(module_Settings_file)
-            watchdog = module_settings['watchdog']
+            #watchdog = module_settings['watchdog']
             timeout = module_settings['timeout']
             moduleDebug = module_settings['debugmode']
     except:
-        watchdog = False
+        pass
+        #watchdog = False
 
     shared.log(4, f"INFO: Loading {shared.SETTINGS_FILE}")
     try:
@@ -207,26 +208,26 @@ if __name__ == "__main__":
             endTime = datetime.now()
             elapsedTime = (((endTime - startTime).total_seconds()) * 1000) / 1000
 
-            ignoreWatchdog = False
-            if shared.step in ['loadimage','saveimage']:
-                 ignoreWatchdog = True
-            else:
-                if 'ignorewatchdog' in shared.flow[shared.step]['metadata']:
-                    if shared.flow[shared.step]['metadata']['ignorewatchdog']:
-                        ignoreWatchdog = True
+            #ignoreWatchdog = False
+            #if shared.step in ['loadimage','saveimage']:
+            #     ignoreWatchdog = True
+            #else:
+            #    if 'ignorewatchdog' in shared.flow[shared.step]['metadata']:
+            #        if shared.flow[shared.step]['metadata']['ignorewatchdog']:
+            #            ignoreWatchdog = True
 
             results[shared.step] = {}
-            if not ignoreWatchdog:
-                if watchdog:
-                    if elapsedTime > timeout:
-                        shared.log(0, f'ERROR: Module {fileName} will be disabled, it took {elapsedTime:.2f} seconds; max allowed is {timeout} seconds')
-                        results[shared.step]["disable"] = True
-                    else:
-                        shared.log(4, f'INFO: Module {fileName} ran ok in {elapsedTime:.2f} seconds')
-                else:
-                    shared.log(4, f'INFO: Module {fileName} ran ok in {elapsedTime:.2f} seconds')
-            else:
-                ignoreWatchdogMsg = ignoreWatchdogMsg + f"  {shared.step}"
+            #if not ignoreWatchdog:
+            #    if watchdog:
+            #        if elapsedTime > timeout:
+            #            shared.log(0, f'ERROR: Module {fileName} will be disabled, it took {elapsedTime:.2f} seconds; max allowed is {timeout} seconds')
+            #            results[shared.step]["disable"] = True
+            #        else:
+            #            shared.log(4, f'INFO: Module {fileName} ran ok in {elapsedTime:.2f} seconds')
+            #    else:
+            #        shared.log(4, f'INFO: Module {fileName} ran ok in {elapsedTime:.2f} seconds')
+            #else:
+            #    ignoreWatchdogMsg = ignoreWatchdogMsg + f"  {shared.step}"
 
             results[shared.step]["lastexecutiontime"] = str(elapsedTime)
 
@@ -235,8 +236,8 @@ if __name__ == "__main__":
 
             results[shared.step]["lastexecutionresult"] = result
 
-    if ignoreWatchdogMsg != "":
-        shared.log(4, f'INFO: Ignored watchdog for: {ignoreWatchdogMsg}')
+    #if ignoreWatchdogMsg != "":
+    #    shared.log(4, f'INFO: Ignored watchdog for: {ignoreWatchdogMsg}')
     shared.log(4, f"INFO: ===== {flowName} flow complete.")
 
     try:

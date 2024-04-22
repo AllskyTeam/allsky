@@ -972,8 +972,8 @@ class MODULESEDITOR {
                 if (result.periodictimer == undefined) {
                     result.periodictimer = 5;
                 }
-                $('#enablewatchdog').prop('checked', result.watchdog);
-                $('#watchdog-timeout').val(result.timeout);                
+                //$('#enablewatchdog').prop('checked', result.watchdog);
+                //$('#watchdog-timeout').val(result.timeout);                
                 $('#autoenable').prop('checked', result.autoenable);
                 $('#debugmode').prop('checked', result.debugmode);
                 $('#periodic-timer').val(result.periodictimer);                  
@@ -990,8 +990,8 @@ class MODULESEDITOR {
                 $.LoadingOverlay('show', {text : 'Sorry this is taking longer than expected ...'});
             }, 500)
 
-            this.#moduleSettings.watchdog = $('#enablewatchdog').prop('checked');
-            this.#moduleSettings.timeout = $('#watchdog-timeout').val() | 0;
+            //this.#moduleSettings.watchdog = $('#enablewatchdog').prop('checked');
+            //this.#moduleSettings.timeout = $('#watchdog-timeout').val() | 0;
             this.#moduleSettings.autoenable = $('#autoenable').prop('checked');
             this.#moduleSettings.debugmode = $('#debugmode').prop('checked');
 

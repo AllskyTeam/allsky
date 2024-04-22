@@ -71,11 +71,12 @@
 					settings are now between 0.0 and 1.0 instead of 0 - 100.
 					<br><span class="possibleAction">Possible action: </span>
 					The upgrade should adjust your threshold values to the
-					new range, but check;
+					new range, but check.
 				</li>
-				<li>Allsky now looks at the <u>center</u> of an image to determine the
-					mean brightness whereas prior releases looked at the whole
-					image including any dark borders.
+				<li>Allsky now uses the mean brightness
+					to determine the if an image is too bright or too dark.
+					This is the same way auto-exposure determines the exposure to use.
+					Prior releases looked at the whole image including any dark borders.
 					<br><span class="possibleAction">Possible action: </span>
 					You may need to adjust your
 					<span class="WebUISetting">Remove Bad Images Thresholds</span>
@@ -83,13 +84,14 @@
 				</li>
 				<li>(ZWO only) The mean brightness of an images is
 					now a number between 0.0 and 1.0; it used to be 0 - 255.
-					This matches the <span class="WebUISetting">Target Brightness</span>
+					This matches the <span class="WebUISetting">Mean Target</span>
 					settings which have always been between 0.0 and 1.0 as well as the
 					<span class="WebUISetting">Remove Bad Images Thresholds</span>.
-					settings, making it easier to determine what settings to use.
+					settings, making it easier to determine what values to use.
 					<br><span class="possibleAction">Possible action: </span>
 					If the <b>MEAN</b> variable is on your overlay you may need
-					to resize and/or move it.
+					to change the format it's displayed in.
+					A two or three-digit number is best.
 				</li>
 				<li>The WebUI now hides the settings in each section unless there's
 					an error in that section.
@@ -106,15 +108,16 @@
 
 			<h4>Enhancements / Changes</h4>
 			<ul>
-				<li>Setting up a Website on the Pi is trivial - just enable the
+				<li>Setting up an Allsky Website on the Pi is now trivial - just enable the
 					the <span class="WebUISetting">Use Local Website</span> setting
-					and optionally set the number of days' images to keep using the
+					and optionally set the number of days' images to keep via the
 					<span class="WebUISetting">Days To Keep on Pi Website</span> setting.
 					No more trying to figure out how to specify various directories!
 				</li>
 				<li>Setting up a Website on a remote server is easier since the only
 					directory you have to specify is the top-level
 					<span class="WebUISetting">Image Directory</span>.
+					You'll still need to specify the server name, login, password, etc.
 				</li>
 				<li>Images, timelapse, keograms, and startrails can now be written
 					to a <u>remote server</u> in addition to, or instead of, a remote Website.
@@ -126,6 +129,13 @@
 					If the upload fails, the command
 					<strong>attempts to tell you why it failed and what to do about it</strong>.
 				</li>
+				<li>The new <span class="fileName">installSamba.sh</span> command
+					can be used to mount <span class="fileName">~/allsky</span>
+					directory on a PC or MAC.
+					See the <a allsky="true" external="true"
+						href="/documentation/explanations/SAMBA.html">Copy files to / from a Pi</a>
+					documentation page.
+				</li>
 				<li>When changing settings, Allsky only restarts if it needs to.
 					Some settings, like the <span class="WebUISetting">Owner</span>
 					don't impact taking images so there's no reason to restart Allsky.
@@ -133,16 +143,16 @@
 					Hovering you mouse over a WebUI data field displays a popup
 					that indicates what will happen after changing that field.
 				</li>
-				<li>The "module" overlay method is now the default for new installations.
-					In the next major Allsky release the "legacy" method will be removed
-					and the only way to add text will be using the
-					<span class="editorName">Overlay Editor</span>
-					so we encourage you to change now.
+				<li>The <span class="WebUIValue">module</span>
+					overlay method is now the default for new installations.
+					In the next major Allsky release the <span class="WebUIValue">legacy</span>
+					method will be removed and the only way to add text will be using the
+					<span class="editorName">Overlay Editor</span>.
 				</li>
 				<li>If you change cameras without notifying Allsky
 					(e.g., you shutdown the Pi, replace the camera with a different model,
-					then restart the Pi), Allsky will not start but will put a
-					message in the WebUI message telling you how to properly change cameras.
+					then restart the Pi), Allsky will not start and will put a
+					message in the WebUI telling you how to properly change cameras.
 					No message will be given if you replace a camera with the same model,
 					e.g., an RPi HQ with another RPi HQ camera.
 				</li>
@@ -169,7 +179,7 @@
 				</li>
 				<li>The <span class="fileName">endOfNight_additionalSteps.sh</span>
 					file is no longer supported.
-					The few people that had that file should use the "day to night"
+					The few people that had that file should use the "night to day"
 					module flow instead.
 				</li>
 				<li>When creating startrails, keograms, and/or timelapse,
@@ -187,20 +197,33 @@
 				</li>
 			</ul>
 
-			<h4>Added / Deleted Settings</h4>
+			<h4>New Settings</h4>
 			<ul class="mediumPadding">
-				<li>The new <span class="WebUISetting">Images Sort Order</span>
-					setting determines the sort order of the images on the
+				<li><span class="WebUISetting">Images Sort Order</span>
+					determines the sort order of the images on the
 					WebUI's <span class="WebUIWebPage">Images</span> page.
 				</li>
-				<li>The new <span class="WebUISetting">Show Updated Message</span>
-					setting allows hiding the
+				<li><span class="WebUISetting">Show Updated Message</span>
+					allows hiding the
 					<span class="alert-info">Daytime images updated every...</span>
 					message on the WebUI's <span class="WebUIWebPage">Live View</span> page.
 				</li>
-				<li>The new <span class="WebUISetting">ZWO Exposure Type</span>
-					setting specifies how images should be taken.
+				<li><span class="WebUISetting">Nighttime Capture</span> and
+					<span class="WebUISetting">Nighttime Save</span>
+					are the same as the daytime settings but for nighttime.
+				</li>
+				<li><span class="WebUISetting">ZWO Exposure Type</span>
+					specifies how images should be taken.
 					See the documentation for a description of the different types.
+				</li>
+			</ul>
+
+			<h4>Deleted Settings</h4>
+			<ul class="mediumPadding">
+				<li>The Image <span class="WebUISetting">Width</span> and
+					<span class="WebUISetting">Height</span>
+					settings were deleted since they are no longer needed.
+					Use the crop and/or resize settings instead.
 				</li>
 				<li>The <span class="WebUISetting">Version 0.8 Exposure</span>
 					setting was deleted since it's functionality is incorporated
@@ -210,8 +233,8 @@
 					setting was deleted because it produced better results
 					so is now always used.
 				</li>
-				<li>The <span class="shSetting">REMOVE_BAD_IMAGES</span> setting was deleted to
-					keep people from disabling the check.
+				<li>The <span class="shSetting">REMOVE_BAD_IMAGES</span> setting was
+					deleted to keep people from disabling the check.
 					In addition to "too dark" and "too light" images, images that are empty
 					and corrupt are also checked for, and those images kept timelapses
 					from being created.

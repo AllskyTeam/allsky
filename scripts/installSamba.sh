@@ -14,12 +14,16 @@ SHARE_NAME="${LOGNAME}_home"
 
 echo -e "${YELLOW}"
 echo "*************"
-echo "This script will install SAMBA which lets remote devices mount your Pi as a network drive."
+echo "This script will install SAMBA which lets remote devices mount"
+echo "your Pi as a network drive."
 echo "The '${HOME}' directory on the Pi will appear as '${SHARE_NAME}' on remote devices."
 echo "You can then copy files to and from the Pi as you would from any other drive."
 echo
-echo -n "Press any key to continue: "; read x
-echo "${NC}"
+echo "If SAMBA is not already installed you will see a lot of lines during installation."
+echo "When installation is done you will be prompted for a SAMBA password."
+echo
+echo -n "Press any key to continue: "; read -r
+echo -e "${NC}"
 
 # Install SAMBA 
 sudo apt install samba -y				|| exit 1
@@ -32,19 +36,19 @@ echo "map to your Pi's drive."
 echo "This is a different password than ${LOGNAME}'s password or the root password,"
 echo "although you may elect to make them the same."
 echo
-echo "If this is your first time installing SAMBA and you are prompted for a current password,"
+echo "If this is your first time installing SAMBA and you are prompted for a CURRENT password,"
 echo "press 'Enter'."
 echo "*************"
-echo "${NC}"
-sudo smbpasswd -a ${LOGNAME}			|| exit 1
+echo -e "${NC}"
+sudo smbpasswd -a "${LOGNAME}"			|| exit 1
 
 WORKGROUP="WORKGROUP"
 CONFIG_FILE="/etc/samba/smb.conf"
 echo -e "${GREEN}..... Configuring SAMBA.${NC}"
 
-sudo mv -f ${CONFIG_FILE} ${CONFIG_FILE}.bak
+sudo mv -f "${CONFIG_FILE}" "${CONFIG_FILE}.bak"
 
-sudo tee ${CONFIG_FILE} > /dev/null <<EOF
+sudo tee "${CONFIG_FILE}" > /dev/null <<EOF
 ### Config File ###
 
 [global]
@@ -94,3 +98,5 @@ echo "workgroup '${WORKGROUP}' and login name '${LOGNAME}'."
 echo "If you don't know how to do that, see your remote device's operating system documentation."
 echo "*************"
 echo -e "${NC}"
+
+exit 0

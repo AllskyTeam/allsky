@@ -656,6 +656,7 @@
 					<li>The <strong>working area</strong> contains the overlay and the current image
 						in the background.</li>
 				</ol>
+				<blockquote><strong>NOTE:</strong> The Overlay Manager will only start if Allsky is capturing images. If Allsky is not capturing a warning is displayed and the Overlay Manager will wait until Allsky start capturing.</blockquote>
 				<details>
 					<summary></summary>
 					<blockquote class="morePadding">
@@ -909,7 +910,198 @@
 				<span class="editorName">Overlay Editor</span> and how to manage fields and their contents.
 			</p>
 			<details>
+
+				
 				<summary></summary>
+				<h3 id="overlayManager">The Overlay Manager &nbsp; <i class="fas fa-gears"></i>
+				</h3>				
+				<p>The <span class="managerName">Overlay Manager</span> is used to create and enable overlays for day and nighttime capture.
+				</p>
+				<details sub>
+					
+					
+					<p>The Overlay Manager comes pre installed with several overlays for common cameras. The Allsky team maintain these overlays. During installation the most appropriate overlay for your camera will have been selected, the Overlay Manager allows you to use these overlays or create a new one.</p>
+					
+					<blockquote>The Allsky maintained overlays cannot be edited, you must create a new overlay if you wish to edit it. The new overlay can be copied from any exising overlay</blockquote>
+					
+					<blockquote>During an upgrade from a previous version of Allsky the Module Manager will attempt to convert any of your customised overlays into the module manager format</blockquote>
+					
+					<table class="morePadding">
+						<tbody>
+							<tr>
+								<td width="25%"><img allsky="true" src="overlay-manager-full.png" alt="The Main Overlay Manager Window" loading="lazy" class="imgCenter" /></td>
+								<td>
+									<h4>The Overlay Manager</h4>
+									<p>To open the Overlay Manager select the <i class="fas fa-gears"></i> icon from the main toolbar</p>
+								</td>
+							</tr>
+							<tr>
+								<td><img allsky="true" src="overlay-manager.png" alt="The Main Overlay Manager Window" loading="lazy" class="imgCenter" /></td>
+								<td>
+									<h4>The Overlay Manager main tab</h4>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">1</span>
+										<span class="moduleToolbar">Overlay</span>
+										<span>Selects the main overlay manager tab</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">2</span>
+										<span class="moduleToolbar">Config</span>
+										<span>Selects the config options</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">3</span>
+										<span class="moduleToolbar">Overlay</span>
+										<span>Selects the overlay to display/edit. When selecting an overlay the overlay will be displayed in the main overlay editor</span>
+										<span>If you select an overlay that cannot be edited then a warning is displayed in the main overlay editor</span>
+										<img allsky="true" src="overlay-manager-team.png" alt="Overlay Manager Warning" loading="lazy" class="imgCenter" />
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">4</span>
+										<span class="moduleToolbar">Add Overlay</span>
+										<span>Adds a new overlay</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">5</span>
+										<span class="moduleToolbar">Delete Overlay</span>
+										<span>Deletes an overlay. <strong>NOTE:</strong> Allsky maintained overlays cannot be deleted</span>
+									</p>
+									<p>The remaining options on the Overlay Manager apply to the currently selected overlay, selected in <span class="moduleToolbarIconNumber">3</span></p>
+									<blockquote>When making any changes in this section you must use the main save button on the Overlay Editor toolbar, this will be highlighted in green if there are any changes to save</blockquote>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">6</span>
+										<span class="moduleToolbar">Overlay Name</span>
+										<span>The name of the overlay, this is used to identify the overlay in a human readable format</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">7</span>
+										<span class="moduleToolbar">Overlay Description</span>
+										<span>The name of the overlay description</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">8</span>
+										<span class="moduleToolbar">Camera Brand</span>
+										<span>The camera brand the overlay applies to</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">9</span>
+										<span class="moduleToolbar">Camera Model</span>
+										<span>The camera model the overlay applies to</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">10</span>
+										<span class="moduleToolbar">Image Width</span>
+										<span>The width of the captured image, after any cropping</span>
+									</p>									
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">11</span>
+										<span class="moduleToolbar">Image Height</span>
+										<span>The height of the captured image, after any cropping</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">12</span>
+										<span class="moduleToolbar">Time of Day</span>
+										<span>The Time of Day the overlay should be used for</span>
+									</p>									
+								</td>
+							</tr>
+							<tr>
+								<td><img allsky="true" src="overlay-manager-config.png" alt="The Main Overlay Manager Window" loading="lazy" class="imgCenter" /></td>
+								<td>
+									<h4>The Overlay Manager options tab</h4>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">1</span>
+										<span class="moduleToolbar">Daytime Overlay</span>
+										<span>Selects the overlay to use when capturing daytime images</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">2</span>
+										<span class="moduleToolbar">Nightime Overlay</span>
+										<span>Selects the overlay to use when capturing nightime images</span>
+									</p>									
+								</td>
+							</tr>							
+						</tbody>
+					</table>
+					
+					<h4>Selecting an overlay for Day/Night time capture</h4>
+					<p>To select the overlays to use open the Overlay Manager and switch to the Options Tab. Here you can select the appropriate overlay to use.</p>
+					<p>Overlays can be limited to daytime, nighttime capture ot both. Only the available overlays for day / nighttime capture will be displayed in the drop downs</p>
+					
+					<h4>Creating a new overlay</h4>
+					<p>To create a new overlay click the <span><i class="fas fa-square-plus"></i></span> icon (<span class="moduleToolbarIconNumber">4</span>). A new dialog will be displayed allowing you to create the new overly.</p>
+					
+					<table class="morePadding">
+						<tbody>
+							<tr>
+								<td width="25%"><img allsky="true" src="overlay-manager-add.png" alt="The Main Overlay Add Window" loading="lazy" class="imgCenter" /></td>
+								<td>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">1</span>
+										<span class="moduleToolbar">Copy From</span>
+										<span>Selects the overlay you wish to use as a starting point or select 'Blank Overlay' for an empty overlay</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">2</span>
+										<span class="moduleToolbar">Name</span>
+										<span>Enter a Human Readable name for the overlay</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">3</span>
+										<span class="moduleToolbar">Description</span>
+										<span>Enter a Human Readable name for the overlay</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">4</span>
+										<span class="moduleToolbar">Time Of Day</span>
+										<span>Select the time of day you wish this overlay to be used in</span>
+									</p>									
+								</td>
+							</tr>
+							<tr>
+								<td><img allsky="true" src="overlay-manager-add-adv.png" alt="The Main Overlay Add Advanced Window" loading="lazy" class="imgCenter" /></td>
+								<td>
+									<blockquote>You will only need to make changes on this tab if you are creating an empty overlay. If you are copying an existing overlay then all of the fields will be defaulted from the copied overlay.</blockquote>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">1</span>
+										<span class="moduleToolbar">Filename</span>
+										<span>This is for informatio only and is the filename of the overlay that will be used to store it on the Pi</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">2</span>
+										<span class="moduleToolbar">Camera Brand</span>
+										<span>The camera brand the overlay applies to</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">3</span>
+										<span class="moduleToolbar">Camera Model</span>
+										<span>The camera model the overlay applies to</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">4</span>
+										<span class="moduleToolbar">Image Width</span>
+										<span>The width of image the overlay applies to</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">5</span>
+										<span class="moduleToolbar">Image Height</span>
+										<span>The height of image the overlay applies to</span>
+									</p>									
+								</td>
+							</tr>
+						</tbody>
+					</table>
+					
+					<p>Once you have completed the required fields in the dialog select the 'Ok' button and the new overlay will be displayed allowing you to edit it.</p>
+					
+					<h4>Deleting an overlay</h4>
+					<p>To delete an overlay select the required overlay and click the delete buttton.</p>
+					
+					<summary></summary>
+
+				</details>
+				
+
 				<h3 id="variableManager">The Variable Manager &nbsp; <i class="fa fa-regular fa-rectangle-list"></i>
 				</h3>
 				<p>The <span class="managerName">Variable Manager</span> is used to store
@@ -1279,6 +1471,7 @@
 								uploaded via the <span class="managerName">Image Manager</span> as described above.
 							</li>
 						</ol>
+						<blockquote>Before a field can be displayed it <strong>MUST</strong> be defined in the 'Allsky Variables' tab. If the field is not defined in this tab then it will not be displayed by the overlay manager</blockquote>
 						<hr class="separatorMinor">
 					</details>
 
@@ -1731,6 +1924,40 @@
 							</tbody>
 						</table>
 
+					</details>
+				
+					<h3 id="fieldfaq">Field FAQ's</h3>
+					<p>Answers to some common issues with overlays and fields.</p>
+					<details sub>
+						<summary></summary>
+						<table>
+							<tr>
+								<td>Fields have been added to the overlay but are not appearing, the same set of fields appear no matter what changes are mode in the Overlay Manager</td>
+								<td>Please ensure that the overlay method is set to 'module' in the main Allsky settings</td>
+							</tr>
+							<tr>
+								<td>No overlays are added</td>
+								<td>Please ensure that the overlay module has been added to the relevant flow, day or night and that its enabled</td>
+							</tr>
+						  <tr>
+								<td>I have added a field but its not appearing</td>
+								<td>There are several possible reasons for this
+									<ul>
+										<li>The field is not in the 'Allsky Variables' tab. Please ensure that the variable has been added</li>
+										<li>There is no data available for the field. This is most likely due to an external data file not being available. The Allsky debug logs, see below, will contain a warning if this is the case</li>
+										<li>There is a problem with the formatting options for a field. The Allsky debug logs, see below, will contain a warning if this is the case </li>
+									</ul>
+								</td>
+							</tr>
+							<tr>
+								<td>The 'Field Errors' toobar icon is pulsing red.</td>
+								<td>This means that the Overlay Manager has detected fields that are outside of the image. Clicking the button will allow you to move the fields into the image and then reposition them as rquired.</td>
+							</tr>
+						</table>
+						
+						<h4>Checking the Allsky debug log</h4>
+						<p>If you need to look for issue in the Allsky log then first set the debug level to 4 in the main Allsky settings. After Allsky has restrted the logfile can be found in /var/log/allsky.log</p>
+						<blockquote>Its is not recommend to leave the debug level set to 4 for any extended period of time unlessed asked to do so by the Allsky Team</blockquote>
 					</details>
 				</div>
 				<hr class="separator">

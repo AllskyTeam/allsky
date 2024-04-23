@@ -1293,35 +1293,36 @@
 								</tr>
 								<tr>
 									<td>
-										<ul>
-											<li><span class="moduleToolbarIconNumber">1</span>
-												<strong>Installed Fonts</strong> - Lists all the fonts that can be
-												used.
-												System Fonts are marked as such in the <strong>Path</strong> column.
-											</li>
-											<li><span class="moduleToolbarIconNumber">2</span>
-												<strong>Delete Button</strong> - Deletes a font.
-												<blockquote>It is not possible to delete a System Font and they
-													will not have a delete icon as shown for the first several fonts
-													above.
-												</blockquote>
-												<blockquote>If a font is in use when deleted then any
-													fields using the font will revert to the default font as
-													specified in the overlay settings.
-												</blockquote>
-											</li>
-											<li><span class="moduleToolbarIconNumber">3</span>
-												The <span class="btn btn-primary btn-small">Add Font</span>
-												button adds a font from
-												<a external="true" href="https://daFont.com">daFont.com</a> by entering a URL.
-												See <a href="#dafont">below</a>.
-											</li>
-											<li><span class="moduleToolbarIconNumber">4</span>
-												The <span class="btn btn-primary btn-small">Upload Font</span> button
-												uploads a zip file to install fonts.
-												See <a href="#zip">below</a>.
-											</li>
-										</ul>
+
+										<p><span class="moduleToolbarIconNumber">1</span>
+											<strong>Installed Fonts</strong> - Lists all the fonts that can be used. System Fonts are marked as such in the <strong>Path</strong> column.
+										</p>
+										<p><span class="moduleToolbarIconNumber">2</span>
+											<strong>Delete Button</strong> - Deletes a font.
+											<blockquote>It is not possible to delete a System Font and they
+												will not have a delete icon as shown for the first several fonts
+												above.
+											</blockquote>
+											<blockquote>If a font is in use when deleted then any
+												fields using the font will revert to the default font as
+												specified in the overlay settings.
+											</blockquote>
+										</p>
+										<p><span class="moduleToolbarIconNumber">3</span>
+											<strong>Use/Delete Button</strong> - Enables the font for use in this overlay or removes it from the overlay
+										</p>								
+										<p><span class="moduleToolbarIconNumber">4</span>
+											The <span class="btn btn-primary btn-small">Add Font</span>
+											button adds a font from
+											<a external="true" href="https://daFont.com">daFont.com</a> by entering a URL.
+											See <a href="#dafont">below</a>.
+										</p>
+										<p><span class="moduleToolbarIconNumber">5</span>
+											The <span class="btn btn-primary btn-small">Upload Font</span> button
+											uploads a zip file to install fonts.
+											See <a href="#zip">below</a>.
+										</p>
+
 									</td>
 								</tr>
 							</tbody>
@@ -1359,8 +1360,7 @@
 								By default this is 2 MB which may be too small for some font zip
 								files</p>
 								<p>The php configuration file is normally
-								<span class="fileName">/etc/php/7.3/cgi/php.ini</span>.
-								Edit this file and locate the line containing
+								<span class="fileName">/etc/php/8.2/cgi/php.ini</span> but will vary depending upon the version of php you have install. Edit this file and locate the line containing
 								<code>upload_max_filesize =</code> and change the value.
 								So if the exiting line says
 								<code>upload_max_filesize = 2MB</code> change it to

@@ -963,3 +963,8 @@ b, strong {
 	padding: 0 3px 0 3px;
 	font-family: "Segoe UI","Noto Sans",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
 }
+
+.fa_external {	/* "external" icon */
+	height: 0.85em;
+	vertical-align: -0.05em;
+}

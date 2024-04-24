@@ -656,6 +656,7 @@
 					<li>The <strong>working area</strong> contains the overlay and the current image
 						in the background.</li>
 				</ol>
+				<blockquote><strong>NOTE:</strong> The Overlay Manager will only start if Allsky is capturing images. If Allsky is not capturing a warning is displayed and the Overlay Manager will wait until Allsky start capturing.</blockquote>
 				<details>
 					<summary></summary>
 					<blockquote class="morePadding">
@@ -805,10 +806,36 @@
 									<p>Click to zoom to fit the image on the screen.</p>
 								</td>
 							</tr>
-							<!-- TODO: add "fa-solid fa-bug"  for "Debug Info" ??? -->
 							<tr>
 								<td class="moduleAnnotation">
 									<span class="moduleToolbarIconNumber">11</span>
+									<span class="moduleToolbar">Overlay Manager</span>
+								</td>
+								<td class="overlayIcon"><i
+										class="fa fa-solid fa-gears fa-lg"></i></td>
+								<td>
+									<p>Displays the Overlay Manager.</p>
+								</td>
+							</tr>							
+							<tr>
+								<td class="moduleAnnotation">
+									<span class="moduleToolbarIconNumber">12</span>
+									<span class="moduleToolbar">Field Errors</span>
+								</td>
+								<td class="overlayIcon"><i class="fa fa-solid fa-circle-exclamation fa-lg"></i></td>
+								<td>
+									<p><strong>Only</strong> displayed if any fields are
+									detected that are off the screen.
+									Selecting this icon will display a dialog allowing the
+									off-screen fields to be deleted or fixed.
+									Fixing the field will move it into the visible portion
+									of the overlay editor allowing you to move it to
+									the exact position required.</p>
+								</td>
+							</tr>
+							<tr>
+								<td class="moduleAnnotation">
+									<span class="moduleToolbarIconNumber">13</span>
 									<span class="moduleToolbar">Font Manager</span>
 								</td>
 								<td class="overlayIcon"><i class="fa fa-solid fa-download fa-lg"></i></td>
@@ -821,7 +848,7 @@
 							</tr>
 							<tr>
 								<td class="moduleAnnotation">
-									<span class="moduleToolbarIconNumber">12</span>
+									<span class="moduleToolbarIconNumber">14</span>
 									<span class="moduleToolbar">Image Manager</span>
 								</td>
 								<td class="overlayIcon"><i class="fa fa-regular fa-images fa-lg"></i></td>
@@ -834,7 +861,7 @@
 							</tr>
 							<tr>
 								<td class="moduleAnnotation">
-									<span class="moduleToolbarIconNumber">13</span>
+									<span class="moduleToolbarIconNumber">15</span>
 									<span class="moduleToolbar">Layout and App Options</span>
 								</td>
 								<td class="overlayIcon"><i class="fa fa-solid fa-gear fa-lg"></i></td>
@@ -848,7 +875,7 @@
 							</tr>
 							<tr>
 								<td class="moduleAnnotation">
-									<span class="moduleToolbarIconNumber">14</span>
+									<span class="moduleToolbarIconNumber">16</span>
 									<span class="moduleToolbar">Working Area</span>
 								</td>
 								<td></td>
@@ -870,22 +897,7 @@
 									</blockquote>
 								</td>
 							</tr>
-							<tr>
-								<td class="moduleAnnotation">
-									<span class="moduleToolbarIconNumber">15</span>
-									<span class="moduleToolbar">Field Errors</span>
-								</td>
-								<td class="overlayIcon"><i class="fa fa-solid fa-circle-exclamation fa-lg"></i></td>
-								<td>
-									<p><strong>Only</strong> displayed if any fields are
-									detected that are off the screen.
-									Selecting this icon will display a dialog allowing the
-									off-screen fields to be deleted or fixed.
-									Fixing the field will move it into the visible portion
-									of the overlay editor allowing you to move it to
-									the exact position required.</p>
-								</td>
-							</tr>							
+							
 						</tbody>
 					</table>
 					<hr class="separatorSmall">
@@ -898,7 +910,198 @@
 				<span class="editorName">Overlay Editor</span> and how to manage fields and their contents.
 			</p>
 			<details>
+
+				
 				<summary></summary>
+				<h3 id="overlayManager">The Overlay Manager &nbsp; <i class="fas fa-gears"></i>
+				</h3>				
+				<p>The <span class="managerName">Overlay Manager</span> is used to create and enable overlays for day and nighttime capture.
+				</p>
+				<details sub>
+					
+					
+					<p>The Overlay Manager comes pre installed with several overlays for common cameras. The Allsky team maintain these overlays. During installation the most appropriate overlay for your camera will have been selected, the Overlay Manager allows you to use these overlays or create a new one.</p>
+					
+					<blockquote>The Allsky maintained overlays cannot be edited, you must create a new overlay if you wish to edit it. The new overlay can be copied from any exising overlay</blockquote>
+					
+					<blockquote>During an upgrade from a previous version of Allsky the Module Manager will attempt to convert any of your customised overlays into the module manager format</blockquote>
+					
+					<table class="morePadding">
+						<tbody>
+							<tr>
+								<td width="25%"><img allsky="true" src="overlay-manager-full.png" alt="The Main Overlay Manager Window" loading="lazy" class="imgCenter" /></td>
+								<td>
+									<h4>The Overlay Manager</h4>
+									<p>To open the Overlay Manager select the <i class="fas fa-gears"></i> icon from the main toolbar</p>
+								</td>
+							</tr>
+							<tr>
+								<td><img allsky="true" src="overlay-manager.png" alt="The Main Overlay Manager Window" loading="lazy" class="imgCenter" /></td>
+								<td>
+									<h4>The Overlay Manager main tab</h4>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">1</span>
+										<span class="moduleToolbar">Overlay</span>
+										<span>Selects the main overlay manager tab</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">2</span>
+										<span class="moduleToolbar">Config</span>
+										<span>Selects the config options</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">3</span>
+										<span class="moduleToolbar">Overlay</span>
+										<span>Selects the overlay to display/edit. When selecting an overlay the overlay will be displayed in the main overlay editor</span>
+										<span>If you select an overlay that cannot be edited then a warning is displayed in the main overlay editor</span>
+										<img allsky="true" src="overlay-manager-team.png" alt="Overlay Manager Warning" loading="lazy" class="imgCenter" />
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">4</span>
+										<span class="moduleToolbar">Add Overlay</span>
+										<span>Adds a new overlay</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">5</span>
+										<span class="moduleToolbar">Delete Overlay</span>
+										<span>Deletes an overlay. <strong>NOTE:</strong> Allsky maintained overlays cannot be deleted</span>
+									</p>
+									<p>The remaining options on the Overlay Manager apply to the currently selected overlay, selected in <span class="moduleToolbarIconNumber">3</span></p>
+									<blockquote>When making any changes in this section you must use the main save button on the Overlay Editor toolbar, this will be highlighted in green if there are any changes to save</blockquote>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">6</span>
+										<span class="moduleToolbar">Overlay Name</span>
+										<span>The name of the overlay, this is used to identify the overlay in a human readable format</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">7</span>
+										<span class="moduleToolbar">Overlay Description</span>
+										<span>The name of the overlay description</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">8</span>
+										<span class="moduleToolbar">Camera Brand</span>
+										<span>The camera brand the overlay applies to</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">9</span>
+										<span class="moduleToolbar">Camera Model</span>
+										<span>The camera model the overlay applies to</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">10</span>
+										<span class="moduleToolbar">Image Width</span>
+										<span>The width of the captured image, after any cropping</span>
+									</p>									
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">11</span>
+										<span class="moduleToolbar">Image Height</span>
+										<span>The height of the captured image, after any cropping</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">12</span>
+										<span class="moduleToolbar">Time of Day</span>
+										<span>The Time of Day the overlay should be used for</span>
+									</p>									
+								</td>
+							</tr>
+							<tr>
+								<td><img allsky="true" src="overlay-manager-config.png" alt="The Main Overlay Manager Window" loading="lazy" class="imgCenter" /></td>
+								<td>
+									<h4>The Overlay Manager options tab</h4>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">1</span>
+										<span class="moduleToolbar">Daytime Overlay</span>
+										<span>Selects the overlay to use when capturing daytime images</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">2</span>
+										<span class="moduleToolbar">Nightime Overlay</span>
+										<span>Selects the overlay to use when capturing nightime images</span>
+									</p>									
+								</td>
+							</tr>							
+						</tbody>
+					</table>
+					
+					<h4>Selecting an overlay for Day/Night time capture</h4>
+					<p>To select the overlays to use open the Overlay Manager and switch to the Options Tab. Here you can select the appropriate overlay to use.</p>
+					<p>Overlays can be limited to daytime, nighttime capture ot both. Only the available overlays for day / nighttime capture will be displayed in the drop downs</p>
+					
+					<h4>Creating a new overlay</h4>
+					<p>To create a new overlay click the <span><i class="fas fa-square-plus"></i></span> icon (<span class="moduleToolbarIconNumber">4</span>). A new dialog will be displayed allowing you to create the new overly.</p>
+					
+					<table class="morePadding">
+						<tbody>
+							<tr>
+								<td width="25%"><img allsky="true" src="overlay-manager-add.png" alt="The Main Overlay Add Window" loading="lazy" class="imgCenter" /></td>
+								<td>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">1</span>
+										<span class="moduleToolbar">Copy From</span>
+										<span>Selects the overlay you wish to use as a starting point or select 'Blank Overlay' for an empty overlay</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">2</span>
+										<span class="moduleToolbar">Name</span>
+										<span>Enter a Human Readable name for the overlay</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">3</span>
+										<span class="moduleToolbar">Description</span>
+										<span>Enter a Human Readable name for the overlay</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">4</span>
+										<span class="moduleToolbar">Time Of Day</span>
+										<span>Select the time of day you wish this overlay to be used in</span>
+									</p>									
+								</td>
+							</tr>
+							<tr>
+								<td><img allsky="true" src="overlay-manager-add-adv.png" alt="The Main Overlay Add Advanced Window" loading="lazy" class="imgCenter" /></td>
+								<td>
+									<blockquote>You will only need to make changes on this tab if you are creating an empty overlay. If you are copying an existing overlay then all of the fields will be defaulted from the copied overlay.</blockquote>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">1</span>
+										<span class="moduleToolbar">Filename</span>
+										<span>This is for informatio only and is the filename of the overlay that will be used to store it on the Pi</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">2</span>
+										<span class="moduleToolbar">Camera Brand</span>
+										<span>The camera brand the overlay applies to</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">3</span>
+										<span class="moduleToolbar">Camera Model</span>
+										<span>The camera model the overlay applies to</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">4</span>
+										<span class="moduleToolbar">Image Width</span>
+										<span>The width of image the overlay applies to</span>
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">5</span>
+										<span class="moduleToolbar">Image Height</span>
+										<span>The height of image the overlay applies to</span>
+									</p>									
+								</td>
+							</tr>
+						</tbody>
+					</table>
+					
+					<p>Once you have completed the required fields in the dialog select the 'Ok' button and the new overlay will be displayed allowing you to edit it.</p>
+					
+					<h4>Deleting an overlay</h4>
+					<p>To delete an overlay select the required overlay and click the delete buttton.</p>
+					
+					<summary></summary>
+
+				</details>
+				
+
 				<h3 id="variableManager">The Variable Manager &nbsp; <i class="fa fa-regular fa-rectangle-list"></i>
 				</h3>
 				<p>The <span class="managerName">Variable Manager</span> is used to store
@@ -1090,35 +1293,36 @@
 								</tr>
 								<tr>
 									<td>
-										<ul>
-											<li><span class="moduleToolbarIconNumber">1</span>
-												<strong>Installed Fonts</strong> - Lists all the fonts that can be
-												used.
-												System Fonts are marked as such in the <strong>Path</strong> column.
-											</li>
-											<li><span class="moduleToolbarIconNumber">2</span>
-												<strong>Delete Button</strong> - Deletes a font.
-												<blockquote>It is not possible to delete a System Font and they
-													will not have a delete icon as shown for the first several fonts
-													above.
-												</blockquote>
-												<blockquote>If a font is in use when deleted then any
-													fields using the font will revert to the default font as
-													specified in the overlay settings.
-												</blockquote>
-											</li>
-											<li><span class="moduleToolbarIconNumber">3</span>
-												The <span class="btn btn-primary btn-small">Add Font</span>
-												button adds a font from
-												<a external="true" href="https://daFont.com">daFont.com</a> by entering a URL.
-												See <a href="#dafont">below</a>.
-											</li>
-											<li><span class="moduleToolbarIconNumber">4</span>
-												The <span class="btn btn-primary btn-small">Upload Font</span> button
-												uploads a zip file to install fonts.
-												See <a href="#zip">below</a>.
-											</li>
-										</ul>
+
+										<p><span class="moduleToolbarIconNumber">1</span>
+											<strong>Installed Fonts</strong> - Lists all the fonts that can be used. System Fonts are marked as such in the <strong>Path</strong> column.
+										</p>
+										<p><span class="moduleToolbarIconNumber">2</span>
+											<strong>Delete Button</strong> - Deletes a font.
+											<blockquote>It is not possible to delete a System Font and they
+												will not have a delete icon as shown for the first several fonts
+												above.
+											</blockquote>
+											<blockquote>If a font is in use when deleted then any
+												fields using the font will revert to the default font as
+												specified in the overlay settings.
+											</blockquote>
+										</p>
+										<p><span class="moduleToolbarIconNumber">3</span>
+											<strong>Use/Delete Button</strong> - Enables the font for use in this overlay or removes it from the overlay
+										</p>								
+										<p><span class="moduleToolbarIconNumber">4</span>
+											The <span class="btn btn-primary btn-small">Add Font</span>
+											button adds a font from
+											<a external="true" href="https://daFont.com">daFont.com</a> by entering a URL.
+											See <a href="#dafont">below</a>.
+										</p>
+										<p><span class="moduleToolbarIconNumber">5</span>
+											The <span class="btn btn-primary btn-small">Upload Font</span> button
+											uploads a zip file to install fonts.
+											See <a href="#zip">below</a>.
+										</p>
+
 									</td>
 								</tr>
 							</tbody>
@@ -1156,8 +1360,7 @@
 								By default this is 2 MB which may be too small for some font zip
 								files</p>
 								<p>The php configuration file is normally
-								<span class="fileName">/etc/php/7.3/cgi/php.ini</span>.
-								Edit this file and locate the line containing
+								<span class="fileName">/etc/php/8.2/cgi/php.ini</span> but will vary depending upon the version of php you have install. Edit this file and locate the line containing
 								<code>upload_max_filesize =</code> and change the value.
 								So if the exiting line says
 								<code>upload_max_filesize = 2MB</code> change it to
@@ -1268,6 +1471,7 @@
 								uploaded via the <span class="managerName">Image Manager</span> as described above.
 							</li>
 						</ol>
+						<blockquote>Before a field can be displayed it <strong>MUST</strong> be defined in the 'Allsky Variables' tab. If the field is not defined in this tab then it will not be displayed by the overlay manager</blockquote>
 						<hr class="separatorMinor">
 					</details>
 
@@ -1721,6 +1925,40 @@
 						</table>
 
 					</details>
+				
+					<h3 id="fieldfaq">Field FAQ's</h3>
+					<p>Answers to some common issues with overlays and fields.</p>
+					<details sub>
+						<summary></summary>
+						<table>
+							<tr>
+								<td>Fields have been added to the overlay but are not appearing, the same set of fields appear no matter what changes are mode in the Overlay Manager</td>
+								<td>Please ensure that the overlay method is set to 'module' in the main Allsky settings</td>
+							</tr>
+							<tr>
+								<td>No overlays are added</td>
+								<td>Please ensure that the overlay module has been added to the relevant flow, day or night and that its enabled</td>
+							</tr>
+						  <tr>
+								<td>I have added a field but its not appearing</td>
+								<td>There are several possible reasons for this
+									<ul>
+										<li>The field is not in the 'Allsky Variables' tab. Please ensure that the variable has been added</li>
+										<li>There is no data available for the field. This is most likely due to an external data file not being available. The Allsky debug logs, see below, will contain a warning if this is the case</li>
+										<li>There is a problem with the formatting options for a field. The Allsky debug logs, see below, will contain a warning if this is the case </li>
+									</ul>
+								</td>
+							</tr>
+							<tr>
+								<td>The 'Field Errors' toobar icon is pulsing red.</td>
+								<td>This means that the Overlay Manager has detected fields that are outside of the image. Clicking the button will allow you to move the fields into the image and then reposition them as rquired.</td>
+							</tr>
+						</table>
+						
+						<h4>Checking the Allsky debug log</h4>
+						<p>If you need to look for issue in the Allsky log then first set the debug level to 4 in the main Allsky settings. After Allsky has restrted the logfile can be found in /var/log/allsky.log</p>
+						<blockquote>Its is not recommend to leave the debug level set to 4 for any extended period of time unlessed asked to do so by the Allsky Team</blockquote>
+					</details>
 				</div>
 				<hr class="separator">
 			</details>
@@ -1742,47 +1980,77 @@
 						<table class="morePadding">
 							<tbody>
 								<tr>
-									<td align="center">
-										<img allsky="true" src="overlay-settings-layout.png" alt="Layout Settings"
-											loading="lazy" />
+									<td width="30%">
+										<img allsky="true" src="overlay-settings-layout.png" alt="Layout Settings" loading="lazy" />
 									</td>
-								</tr>
-								<tr>
 									<td>
-										<ul style="padding-top: 0px">
-											<li><strong>Default Image Opacity</strong>
-												- The default opacity for new images.</li>
-											<li><strong>Default Image Rotation</strong>
-												- The default rotation for new images.</li>
-											<li><strong>Default Font</strong>
-												- The default font for new text fields.</li>
-											<li><strong>Default Font Size</strong>
-												- The default font size for new text fields.</li>
-											<li><strong>Default Font Opacity</strong>
-												- The default font opacity for new text fields.</li>
-											<li><strong>Default Font Colour</strong>
-												- The default font color for new text fields.</li>
-											<li><strong>Default Text Rotation</strong>
-												- The default rotation for new text fields.</li>
-											<li><strong>Default Extra Data Expiry</strong>
-												- The default expiration time in seconds for "extra" data files
-												that do not specify an expiry time.
-												This applies to all variables in <span class="fileName">.txt</span>
-												files
-												and entries in <span class="fileName">.json</span> files that
-												don't have an "<span class="json">expires</span>" attribute.</li>
-											<li><strong>Norad ID's</strong>
-												- A comma-separated list of NORAD IDs for generating
-												<a href="#satelliteData">satellite data</a>.
-											</li>
-											<li><strong>Include Planets</strong> - When enabled, data for the
-												planets' positions will be generated as variables.</li>
-											<li><strong>Include Sun</strong> - When enabled, data for the Sun's
-												position will be generated as variables.</li>
-											<li><strong>Include Moon</strong> - When enabled, data for the Moon's
-												position will be generated as variables.</li>
-										</ul>
-									</td>
+										<p>
+											<span class="moduleToolbarIconNumber">1</span><strong> Default Image Opacity</strong> - The default opacity for new images.
+										</p>
+										<p>
+											<span class="moduleToolbarIconNumber">2</span>
+											<strong> Default Image Rotation</strong>- The default rotation for new images.
+										</p>
+										<p>
+											<span class="moduleToolbarIconNumber">3</span>
+											<strong> Default Font</strong> - The default font for new text fields.
+										</p>
+										<p>
+											<span class="moduleToolbarIconNumber">4</span>
+											<strong> Default Font Size</strong> - The default font size for new text fields.
+										</p>
+										<p>
+											<span class="moduleToolbarIconNumber">5</span>
+											<strong> Default Font Opacity</strong> - The default font opacity for new text fields.
+										</p>
+										<p>
+											<span class="moduleToolbarIconNumber">6</span>
+											<strong> Default Font Colour</strong> - The default font color for new text fields.
+										</p>
+										<p>
+											<span class="moduleToolbarIconNumber">7</span>
+											<strong> Default Text Rotation</strong> - The default rotation for new text fields.
+										</p>
+										<p>
+											<span class="moduleToolbarIconNumber">8</span>
+											<strong> Default Stroke Colour</strong> - The default colour used for the font stroke.
+										</p>
+										<p>
+											<span class="moduleToolbarIconNumber">9</span>
+											<strong>Default Extra Data Expiry</strong>
+											- The default expiration time in seconds for "extra" data files
+											that do not specify an expiry time.
+											This applies to all variables in <span class="fileName">.txt</span>
+											files
+											and entries in <span class="fileName">.json</span> files that
+											don't have an "<span class="json">expires</span>" attribute.
+										</p>
+										<p>
+											<span class="moduleToolbarIconNumber">10</span>
+											<strong> Expiry Text</strong> - The default text used when a field has expired.
+										</p>										
+										<p>
+											<span class="moduleToolbarIconNumber">11</span>
+											<strong>Norad ID's</strong>
+											- A comma-separated list of NORAD IDs for generating
+											<a href="#satelliteData">satellite data</a>.
+										</p>
+										<p>
+											<span class="moduleToolbarIconNumber">12</span>
+											<strong>Include Planets</strong> - When enabled, data for the
+											planets' positions will be generated as variables.
+										</p>
+										<p>
+											<span class="moduleToolbarIconNumber">12</span>
+											<strong>Include Sun</strong> - When enabled, data for the Sun's
+											position will be generated as variables.
+										</p>
+										<p>
+											<span class="moduleToolbarIconNumber">14</span>
+											<strong>Include Moon</strong> - When enabled, data for the Moon's
+											position will be generated as variables.
+										</p>
+								  </td>
 								</tr>
 							</tbody>
 						</table>
@@ -1806,49 +2074,70 @@
 						<table class="two-col morePadding">
 							<tbody>
 								<tr>
-									<td align="center">
+									<td width="30%">
 										<img allsky="true" src="overlay-settings-editor.png" alt="Editor Settings"
 											loading="lazy" />
 									</td>
-								<tr>
-								<tr>
 									<td>
-										<ul style="padding-top: 0px">
-											<li><strong>Show Grid</strong> - When enabled, displays a grid for
-												easier
-												alignment of fields on the overlay.
-												The grid is used to 'snap' fields making their placement easier.
-											</li>
-											<li><strong>Grid Size</strong> - The size of the grid in pixels.</li>
-											<li><strong>Grid Colour</strong> - The colour to use for the grid.</li>
-											<li><strong>Grid Brightness</strong> - The grid brightness.
-												Values range from 0 (lowest brightness) to 100 (brightest).</li>
-											<li><strong>Show Snap Rectangle</strong> - When enabled, moving a field
-												will cause a rectangle to be displayed showing where the field will
-												snap to if dropped.</li>
-											<li><strong>Add List Page Size</strong> - The number of variables to
-												show per page in the
-												<span class="managerName">Variable Manager</span>.
-											</li>
-											<li><strong>Add Field Brightness</strong> - When adding a new field all
-												other fields will be set to this brightness to make the new field
-												easier to see.
-												Values range from 0 (darkest) to 100 (each field's full brightness).
-											</li>
-											<li><strong>Select Field Brightness</strong> - When selecting a field all
-												other fields will be set to this opacity to make the new field
-												easier to see.
-												Values range from 0 (darkest) to 100 (each field's full brightness).
-											</li>
-											<li><strong>Zoom with Mouse Wheel</strong> - When enabled, scrolling the
-												mouse wheel will zoom the overlay.</li>
-											<li><strong>Background Image Brightness</strong> - Brightness of the
-												captured image being overlayed.
-												Lower this if the captured image is bright to make
-												it easier to see the overlay fields.
-												Values range from 0 (black background) to
-												100 (full brightness of captured image).</li>
-										</ul>
+										<p>
+											<span class="moduleToolbarIconNumber">1</span>
+											<strong> Show Grid</strong> - When enabled, displays a grid for
+											easier
+											alignment of fields on the overlay.
+											The grid is used to 'snap' fields making their placement easier.
+										</p>
+										<p>
+											<span class="moduleToolbarIconNumber">2</span>
+											<strong> Grid Size</strong> - The size of the grid in pixels.
+										</p>
+										<p>
+											<span class="moduleToolbarIconNumber">3</span>
+											<strong> Grid Colour</strong> - The colour to use for the grid.
+										</p>
+										<p>
+											<span class="moduleToolbarIconNumber">4</span>
+											<strong> Grid Brightness</strong> - The grid brightness.
+											Values range from 0 (lowest brightness) to 100 (brightest).
+										</p>
+										<p>
+											<span class="moduleToolbarIconNumber">5</span>
+											<strong> Show Snap Rectangle</strong> - When enabled, moving a field
+											will cause a rectangle to be displayed showing where the field will
+											snap to if dropped.
+										</p>
+										<p>
+											<span class="moduleToolbarIconNumber">6</span><strong> Add List Page Size</strong> - The number of variables to
+											show per page in the
+											<span class="managerName">Variable Manager</span>.
+										</p>
+										<p>
+											<span class="moduleToolbarIconNumber">7</span>
+											<strong> Add Field Brightness</strong> - When adding a new field all
+											other fields will be set to this brightness to make the new field
+											easier to see.
+											Values range from 0 (darkest) to 100 (each field's full brightness).
+										</p>
+										<p>
+											<span class="moduleToolbarIconNumber">8</span>
+											<strong> Select Field Brightness</strong> - When selecting a field all
+											other fields will be set to this opacity to make the new field
+											easier to see.
+											Values range from 0 (darkest) to 100 (each field's full brightness).
+										</p>
+										<p>
+											<span class="moduleToolbarIconNumber">9</span>
+											<strong> Zoom with Mouse Wheel</strong> - When enabled, scrolling the
+											mouse wheel will zoom the overlay.
+										</p>
+										<p>
+											<span class="moduleToolbarIconNumber">10</span>
+											<strong> Background Image Brightness</strong> - Brightness of the
+											captured image being overlayed.
+											Lower this if the captured image is bright to make
+											it easier to see the overlay fields.
+											Values range from 0 (black background) to
+											100 (full brightness of captured image).
+										</p>
 									</td>
 								</tr>
 							</tbody>
@@ -1862,6 +2151,47 @@
 						</p>
 
 					</details>
+				
+					<h3>Editor Settings Overlays tab</h3>
+					<p>The editor settings Overlay displays available overlays and allows them to be viewed or edited.</p>
+					<details sub>
+						<summary></summary>
+						<table class="two-col morePadding">
+							<tbody>
+								<tr>
+									<td width="30%">
+										<img allsky="true" src="overlay-settings-overlays.png" alt="Editor Settings Overlays"
+											loading="lazy" />
+									</td>
+									<td>
+										<p>
+											<span class="moduleToolbarIconNumber">1</span>
+											<strong> Available Overlays </strong> - Displays a table showing all of the overlays available.
+										</p>
+										<p>
+											<span class="moduleToolbarIconNumber">2</span>
+											<strong> View Overlay </strong> - This icon is displayed when the overlay is not editable, these are overlays provided by the Allsky team. Clicking the button will view the overlay but not allow it to be edited
+										</p>										
+										<p>
+											<span class="moduleToolbarIconNumber">3</span>
+											<strong> Edit Overlay </strong> - This icon is displayed when the overlay is editable. Clicking the button will view the overlay and allow it to be edited
+										</p>										
+
+									</td>
+								</tr>
+							</tbody>
+						</table>
+
+						<p class="morePadding">
+						<blockquote class="morePadding">When changing the brightness settings you may need to click
+							somewhere in the
+							overlay in order for the change to take affect.
+						</blockquote>
+						</p>
+
+					</details>
+
+
 					<hr class="separatorSmall">
 				</div>
 			</details>

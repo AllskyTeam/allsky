@@ -227,24 +227,14 @@
 										alt="Module manager Settings" /></td>
 								<td>
 									<ul>
-										<li><strong>Enable Watchdog</strong> - When enabled any modules that
-											take longer than the max timer will automatically be disabled</li>
-										<li><strong>Module Max Time</strong> - The maximum time a module can run
-											for before its automatically disabled</li>
 										<li><strong>Auto Enable</strong> - If enabled then when a module is
 											added to the 'Selected' column it is enabled</li>
-										<li><strong>Show Experimental</strong> - When enabled any experimental
-											modules will be available</li>
 										<li><strong>Debug Mode</strong> - When enabled a debug option is
 											available in the toolbar which will show the results and execution
 											time for each module</li>
 										<li><strong>Periodic Timer</strong> - How frequently, in seconds, the periodic
 											flow is run</li>
 									</ul>
-									<blockquote>On occasion you may find that a module has been deactivated. THis can be
-										caused by the module taking longer than the 'Module Max Time' if the watchdog is
-										enabled. To prevent this happening you can either up the time value or disable
-										the watchdog all together</blockquote>
 								</td>
 							</tr>
 						</table>
@@ -1684,8 +1674,6 @@
 						running the relevant module flow. Its important that this process finishes before the
 						next image is captured. If the module flow takes too long multiple save image process
 						will be running, this will start to cause performance issues on the PI</p>
-					<p>The best way to ensure this does not happen is to make sure that the module watchdog is
-						enabled in the <span class="managerName">Module Manager</span> Settings</p>
 					<blockquote><strong>TIP</strong> - When installing a new module ensure debug mode is enabled
 						in the <span class="managerName">Module Manager Settings and monitor how long the new module is taking and what
 						effect its having on the overall flow time</blockquote>
@@ -1977,6 +1965,18 @@
 							<td>No</td>
 							<td>Dictionary of definitions for each of the arguments</td>
 						</tr>
+						<tr>
+							<td>businfo</td>
+							<td>string</td>
+							<td>No</td>
+							<td>Set to i2c if the module uses the i2c bus</td>
+						</tr>
+						<tr>
+							<td>changelog</td>
+							<td>Dictionary</td>
+							<td>Yes</td>
+							<td>Changelog information for the module, see below</td>
+						</tr>
 					</table>
 
 					<h5>The argumentdetails Dictionary</h5>
@@ -2086,10 +2086,228 @@
 						</tr>
 					</table>
 
+					<h5>The changelog Dictionary</h5>
+					
+					<p>A simple example with a single change, one change for the revision</p>
+<pre>
+"v1.0.0" : [
+	{
+		"author": "Alex Greenland",
+		"authorurl": "https://github.com/allskyteam",
+		"changes": "Initial Release"
+	}
+],
+</pre>
+				
+					<p>A slightly more complex change, multiple changes for a single revision</p>
+<pre>
+"v1.0.1" : [
+	{
+		"author": "Damian Grocholski (Mr-Groch)",
+		"authorurl": "https://github.com/Mr-Groch",
+		"changes": [
+			"Added extra pin that is triggered with heater pin",
+			"Fixed dhtxxdelay (was not implemented)",
+			"Fixed max heater time (was not implemented)"
+		]
+	}
+],
+</pre>
+				
+					<p>A chnage with multiple authors, not the change can be an array as in the above example</p>
+				
+<pre>
+"v1.0.4" : [
+	{
+		"author": "Alex Greenland",
+		"authorurl": "https://github.com/allskyteam",
+		"changes": "Add AHTx0 i2c sensor"
+	},            
+	{
+		"author": "Andreas Schminder",
+		"authorurl": "https://github.com/Adler6907",
+		"changes": "Added Solo Cloudwatcher"
+	}
+],
+</pre>
 					<h5>Complete metadata example</h5>
 					<table class="vtop">
 						<tr>
-							<td><img allsky="true" loading="lazy" src="metadata.png"></td>
+							<td>
+<pre>
+metaData = {
+    "name": "All Sky Boilerplate",
+    "description": "Example module for AllSky",
+    "module": "allsky_boilerplate",
+    "version": "v1.0.0",    
+    "events": [
+        "day",
+        "night",
+        "endofnight",
+        "daynight",
+        "nightday",
+        "periodic"
+    ],
+    "experimental": "false",    
+    "arguments":{
+        "textfield": "",
+        "select": "value1",
+        "checkbox": "",        
+        "number": "10",
+        "gpio": "",
+        "image": "",
+        "roi": ""
+    },
+    "argumentdetails": {
+        "textfield": {
+            "required": "true",
+            "description": "Text Field",
+            "help": "Example help for the text field",
+            "tab": "Field Types"
+        },  
+        "select" : {
+            "required": "false",
+            "description": "Select Field",
+            "help": "Example help for a select field",
+            "tab": "Field Types",
+            "type": {
+                "fieldtype": "select",
+                "values": "None,value1,value2,value3"
+            }                
+        },
+        "checkbox" : {
+            "required": "false",
+            "description": "Checkbox Field",
+            "help": "Example help for the checkbox field",
+            "tab": "Field Types",
+            "type": {
+                "fieldtype": "checkbox"
+            }          
+        },        
+        "number" : {
+            "required": "true",
+            "description": "Number Field",
+            "help": "Example help for the number field",
+            "tab": "Field Types",
+            "type": {
+                "fieldtype": "spinner",
+                "min": 0,
+                "max": 1000,
+                "step": 1
+            }          
+        },
+        "gpio": {
+            "required": "true",
+            "description": "GPIO Field",
+            "help": "Example help for the GPIO field",
+            "tab": "Field Types",
+            "type": {
+                "fieldtype": "gpio"
+            }           
+        },
+        "image" : {
+            "required": "false",
+            "description": "Image Field",
+            "help": "Example help for the image field",
+            "tab": "Field Types",            
+            "type": {
+                "fieldtype": "image"
+            }                
+        },
+        "roi": {
+            "required": "true",
+            "description": "Region of Interest field",
+            "help": "Help for the region of interest field",
+            "tab": "Field Types",            
+            "type": {
+                "fieldtype": "roi"
+            }            
+        },
+        "textfield1": {
+            "required": "true",
+            "description": "Text Field1",
+            "help": "Example help for the text field in a new tab",
+            "tab": "Another Tab"
+        }                                                              
+    },
+    "enabled": "false",
+    "changelog": {
+        "v1.0.0" : [
+            {
+                "author": "Alex Greenland",
+                "authorurl": "https://github.com/allskyteam",
+                "changes": "Initial Release"
+            }
+        ],
+        "v1.0.1" : [
+            {
+                "author": "Alex Greenland",
+                "authorurl": "https://github.com/Mr-Groch",
+                "changes": [
+                    "Change 1",
+                    "Change 2"
+                ]
+            }
+        ],
+        "v1.0.2" : [
+            {
+                "author": "Alex Greenland",
+                "authorurl": "https://github.com/allskyteam",
+                "changes": [
+                    "Change 1",
+                    "Change 2"
+                ]
+            },            
+            {
+                "author": "Andreas Schminder",
+                "authorurl": "https://github.com/Adler6907",
+                "changes": "Change 1"
+            }
+        ]                                
+    },
+    "businfo": [
+        "i2c"
+
+    ],
+    "changelog": {
+        "v1.0.0" : [
+            {
+                "author": "Alex Greenland",
+                "authorurl": "https://github.com/allskyteam",
+                "changes": "Initial Release"
+            }
+        ],
+        "v1.0.1" : [
+            {
+                "author": "Alex Greenland",
+                "authorurl": "https://github.com/allskyteam",
+                "changes": [
+                    "Change 1",
+                    "Change 2",
+                    "Change 3"
+                ]
+            }
+        ],
+        "v1.0.2" : [
+            {
+                "author": "Alex Greenland",
+                "authorurl": "https://github.com/allskyteam",
+                "changes": "Change 1"
+            },            
+            {
+                "author": "JOhn Doe",
+                "authorurl": "https://github.com/allskyteam",
+                "changes": [
+                    "Change 1",
+                    "Change 2",
+                    "Change 3"
+                ]
+            }
+        ]                                       
+    }                   
+}
+</pre>							
+							</td>
 							<td>
 								<p>This is a full example of all of the possible options available in the
 									metaData dictionary</p>
@@ -2239,6 +2457,14 @@
 						<tr>
 							<td>getGPIOPin(pin)</td>
 							<td>Returns the board.Pin from the passed in pin (int)</td>
+						</tr>
+						<tr>
+							<td>createTempDir(path)</td>
+							<td>Creates a temporary directory</td>
+						</tr>
+						<tr>
+							<td>cleanupModule(moduleData)</td>
+							<td>Removes any files or environment variables for a module</td>
 						</tr>
 					</table>
 				</details>

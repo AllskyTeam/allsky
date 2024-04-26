@@ -1210,24 +1210,26 @@ aws configure
 	<td>Determines the name of the uploaded image:
 	<span class="fileName">image.jpg</span> (if No)
 	or <span class="fileName">image-YYYYMMDDHHMMSS.jpg</span> (if Yes).
-	<br>This is rarely used and is ignored if you don't have an Allsky Website or
-	are not uploading files.
+	<br>This is rarely used since changing the image name will make it unviewable.
 	</td>
 </tr>
 <tr><td><span class="WebUISetting">Remote Video File Name</span></td>
 	<td></td>
 	<td>The name to give to the remote timelapse video file.
 		If not specified it's the same as the file on your Pi.
+	<br>This is rarely used since changing the image name will make it unviewable.
 	</td></tr>
 <tr><td><span class="WebUISetting">Remote Keogram File Name</span></td>
 	<td></td>
 	<td>The name to give to the remote keogram file.
 		If not specified it's the same as the file on your Pi.
+	<br>This is rarely used since changing the image name will make it unviewable.
 	</td></tr>
 <tr><td><span class="WebUISetting">Remote Startrails File Name</span></td>
 	<td></td>
 	<td>The name to give to the remote startrails file.
 		If not specified it's the same as the file on your Pi.
+	<br>This is rarely used since changing the image name will make it unviewable.
 	</td></tr>
 <tr><td><span class="WebUISetting">Website URL</span></td>
 	<td></td>
@@ -1303,16 +1305,28 @@ aws configure
 	<td></td></tr>
 <tr><td><span class="WebUISetting">Upload With Original Name</span></td>
 	<td>No</td>
-	<td></td></tr>
+	<td>
+	<br>Unless you are using the remote server as a backup,
+	this is <b>rarely</b> used since changing the image name will make it unviewable.
+	</td></tr>
 <tr><td><span class="WebUISetting">Remote Video File Name</span></td>
-	<td></td>
-	<td></td></tr>
+	<td>allsky.mp4</td>
+	<td>
+	<br>Unless you are using the remote server as a backup,
+	this is <b>usually</b> used so the server knows the file name.
+	</td></tr>
 <tr><td><span class="WebUISetting">Remote Keogram File Name</span></td>
-	<td></td>
-	<td></td></tr>
+	<td>keogram.jpg</td>
+	<td>
+	<br>Unless you are using the remote server as a backup,
+	this is <b>usually</b> used so the server knows the file name.
+	</td></tr>
 <tr><td><span class="WebUISetting">Remote Startrails File Name</span></td>
-	<td></td>
-	<td></td></tr>
+	<td>startrails.jpg</td>
+	<td>
+	<br>Unless you are using the remote server as a backup,
+	this is <b>usually</b> used so the server knows the file name.
+	</td></tr>
 
 
 <tr><td class="settingsHeader" colspan="3">Allsky Map Settings</td></tr>

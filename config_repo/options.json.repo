@@ -1918,7 +1918,7 @@
 {
 "name" : "remotewebsiteimageuploadoriginalname",
 "default" : false,
-"description" : "Enable to upload images using YYYYMMDDHHMMSS naming.",
+"description" : "Enable to upload images using YYYYMMDDHHMMSS naming.  Rarely used.",
 "label" : "Upload With Original Name",
 "type" : "boolean",
 "carryforward" : true,
@@ -1927,7 +1927,7 @@
 {
 "name" : "remotewebsitevideodestinationname",
 "default" : "",
-"description" : "Optional name of the remote video file.",
+"description" : "Optional name of the remote video file.  Rarely used.",
 "label" : "Remote Video File Name",
 "type" : "text",
 "carryforward" : true,
@@ -1937,7 +1937,7 @@
 {
 "name" : "remotewebsitekeogramdestinationname",
 "default" : "",
-"description" : "Optional name of the remote keogram file.",
+"description" : "Optional name of the remote keogram file.  Rarely used.",
 "label" : "Remote Keogram File Name",
 "type" : "text",
 "carryforward" : true,
@@ -1947,7 +1947,7 @@
 {
 "name" : "remotewebsitestartrailsdestinationname",
 "default" : "",
-"description" : "Optional name of the remote startrails file.",
+"description" : "Optional name of the remote startrails file.  Rarely used.",
 "label" : "Remote Startrails File Name",
 "type" : "text",
 "carryforward" : true,
@@ -2152,7 +2152,7 @@
 {
 "name" : "remoteserverimageuploadoriginalname",
 "default" : false,
-"description" : "Enable to upload images using YYYYMMDDHHMMSS naming.",
+"description" : "Enable to upload images using YYYYMMDDHHMMSS naming.  Rarely used.",
 "label" : "Upload With Original Name",
 "type" : "boolean",
 "carryforward" : true,
@@ -2161,7 +2161,7 @@
 {
 "name" : "remoteservervideodestinationname",
 "default" : "",
-"description" : "Optional name of the remote video file.",
+"description" : "Optional name of the remote video file. Often used.",
 "label" : "Remote Video File Name",
 "type" : "text",
 "carryforward" : true,
@@ -2171,7 +2171,7 @@
 {
 "name" : "remoteserverkeogramdestinationname",
 "default" : "",
-"description" : "Optional name of the remote keogram file.",
+"description" : "Optional name of the remote keogram file. Often used.",
 "label" : "Remote Keogram File Name",
 "type" : "text",
 "carryforward" : true,
@@ -2181,7 +2181,7 @@
 {
 "name" : "remoteserverstartrailsdestinationname",
 "default" : "",
-"description" : "Optional name of the remote startrails file.",
+"description" : "Optional name of the remote startrails file. Often used.",
 "label" : "Remote Startrails File Name",
 "type" : "text",
 "carryforward" : true,

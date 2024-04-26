@@ -1709,6 +1709,7 @@ convert_settings()			# prior_file, new_file
 		fi
 	done
 
+	#shellcheck disable=SC2043
 	for s in zwoexposuretype
 	do
 		x="$( settings ".${s}" "${PRIOR_FILE}" )"

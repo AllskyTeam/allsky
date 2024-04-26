@@ -438,10 +438,6 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 		H="$( settings ".imageresizeuploadsheight" )"
 		if [[ ${W} -gt 0 && ${H} -gt 0 ]]; then
 			RESIZE_UPLOADS="true"
-		else
-			RESIZE_UPLOADS="false"
-		fi
-		if [[ ${RESIZE_UPLOADS} == "true" ]]; then
 			# Need a copy of the image since we are going to resize it.
 			# Put the copy in ${WORKING_DIR}.
 			FILE_TO_UPLOAD="${WORKING_DIR}/resize-${IMAGE_NAME}"
@@ -453,6 +449,7 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 				FILE_TO_UPLOAD="${CURRENT_IMAGE}"
 			fi
 		else
+			RESIZE_UPLOADS="false"
 			FILE_TO_UPLOAD="${CURRENT_IMAGE}"
 		fi
 

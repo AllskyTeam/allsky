@@ -2160,8 +2160,8 @@
 },
 {
 "name" : "remoteservervideodestinationname",
-"default" : "",
-"description" : "Optional name of the remote video file. Often used.",
+"default" : "allsky.mp4",
+"description" : "Optional name of the remote video file. Usually used.",
 "label" : "Remote Video File Name",
 "type" : "text",
 "carryforward" : true,
@@ -2170,8 +2170,8 @@
 },
 {
 "name" : "remoteserverkeogramdestinationname",
-"default" : "",
-"description" : "Optional name of the remote keogram file. Often used.",
+"default" : "keogram.jpg",
+"description" : "Optional name of the remote keogram file. Usually used.",
 "label" : "Remote Keogram File Name",
 "type" : "text",
 "carryforward" : true,
@@ -2180,8 +2180,8 @@
 },
 {
 "name" : "remoteserverstartrailsdestinationname",
-"default" : "",
-"description" : "Optional name of the remote startrails file. Often used.",
+"default" : "startrails.jpg",
+"description" : "Optional name of the remote startrails file. Usually used.",
 "label" : "Remote Startrails File Name",
 "type" : "text",
 "carryforward" : true,

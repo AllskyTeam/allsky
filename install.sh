@@ -497,12 +497,7 @@ do_save_camera_capabilities()
 
 	display_msg --log progress "Making new settings file '${SETTINGS_FILE}'."
 
-	### TODO: Eric no idea if this is right or not but it strips any suffix from the camera type
-	# shellcheck disable=SC2207
-    CAMERA_TYPE_PARTS=($(echo "$CAMERA_TYPE" | tr "_" "\n"))
-    if [[ ${#CAMERA_TYPE_PARTS[@]} = 2 ]]; then
-		CAMERA_TYPE=${CAMERA_TYPE_PARTS[0]}
-	fi
+	CAMERA_TYPE="${CAMERA_TYPE/_*/}"
 
 	CMD="makeChanges.sh${FORCE}${OPTIONSONLY} --cameraTypeOnly --fromInstall ${DEBUG_ARG}"
 	#shellcheck disable=SC2089
@@ -728,7 +723,7 @@ check_and_mount_tmp()
 
 	# Now mount and restore any images that were there before
 	sudo systemctl daemon-reload 2> /dev/null
-	sudo mount -a
+	sudo mount -a || display_msg --log warning "Unable to mount '${ALLSKY_TMP}'."
 
 	if [[ -d ${TMP_DIR} ]]; then
 		mv "${TMP_DIR}"/* "${ALLSKY_TMP}" 2>/dev/null
@@ -1714,7 +1709,6 @@ convert_settings()			# prior_file, new_file
 		fi
 	done
 
-	# shellcheck disable=SC2043
 	for s in zwoexposuretype
 	do
 		x="$( settings ".${s}" "${PRIOR_FILE}" )"

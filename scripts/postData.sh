@@ -216,6 +216,8 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	upload_file "" "${OUTPUT_FILE}" ""		# Goes in top-level directory
 fi
 
-[[ ${FROM_WEBUI} == "true" ]] && echo "Uploaded configuration files to ${WHERE_TO}."
+if [[ ${FROM_WEBUI} == "true" ]]; then
+	echo "<script>console.log('Uploaded configuration files to ${WHERE_TO}.');</script>"
+fi
 
 exit 0

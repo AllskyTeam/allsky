@@ -791,7 +791,7 @@ function one_instance()
 	local ERRORS=""
 	while [[ $# -gt 0 ]]; do
 		ARG="${1}"
-		case "${ARG}" in
+		case "${ARG,,}" in
 				--sleep)
 					SLEEP_TIME="${2}"
 					shift
@@ -829,7 +829,7 @@ function one_instance()
 					shift
 					;;
 				*)
-					ERRORS="${ERRORS}\nUnknown argument: '${ARG}'."
+					ERRORS+="\nUnknown argument: '${ARG}'."
 					OK="false"
 					;;
 		esac
@@ -865,7 +865,7 @@ function one_instance()
 
 	local NUM_CHECKS=0
 	local INITIAL_PID
-	while  : ;
+	while  :
 	do
 		((NUM_CHECKS++))
 
@@ -1004,7 +1004,7 @@ function upload_all()
 	if [[ -n ${LOCAL_WEB} && "$( settings ".uselocalwebsite" )" == "true" ]]; then
 		#shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/upload.sh" ${SILENT} ${ARGS} "${LOCAL_WEB}" \
-			"${UPLOAD_FILE}" "${ALLSKY_WEBSITE}/${SUBDIR}" "${DESTINATION_NAME}"
+			"${UPLOAD_FILE}" "${SUBDIR}" "${DESTINATION_NAME}"
 		((RET+=$?))
 	fi
 
@@ -1017,7 +1017,7 @@ function upload_all()
 		fi
 		#shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/upload.sh" ${SILENT} ${ARGS} "${REMOTE_WEB}" \
-			"${UPLOAD_FILE}" "${REMOTE_DIR}" "${DESTINATION_NAME}" "${FILE_TYPE}"
+			"${UPLOAD_FILE}" "${REMOTE_DIR}" "${DESTINATION_NAME}" "${FILE_TYPE}-website"
 		((RET+=$?))
 	fi
 
@@ -1030,7 +1030,7 @@ function upload_all()
 		fi
 		#shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/upload.sh" ${SILENT} ${ARGS} "${REMOTE_SERVER}" \
-			"${UPLOAD_FILE}" "${REMOTE_DIR}" "${DESTINATION_NAME}" "${FILE_TYPE}"
+			"${UPLOAD_FILE}" "${REMOTE_DIR}" "${DESTINATION_NAME}" "${FILE_TYPE}-server"
 		((RET+=$?))
 	fi
 

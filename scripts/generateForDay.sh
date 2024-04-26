@@ -239,34 +239,6 @@ else
 			R_SERVER_VIDEO_NAME="$( settings ".remoteservervideodestinationname" )"
 		fi
 	fi
-
-
-	upload()
-	{
-		FILE_TYPE="${1}"
-		UPLOAD_FILE="${2}"
-		DIRECTORY="${3}"
-		DESTINATION_NAME="${4}"
-		OVERRIDE_DESTINATION_NAME="${5}"	# optional
-		if [[ -f ${UPLOAD_FILE} ]]; then
-			# If the user specified a different name for the destination file, use it.
-			if [[ ${OVERRIDE_DESTINATION_NAME} != "" ]]; then
-				DESTINATION_NAME="${OVERRIDE_DESTINATION_NAME}"
-			fi
-			[[ ${SILENT} == "false" ]] && echo "===== Uploading '${UPLOAD_FILE}' to '${DIRECTORY}'."
-
-			# shellcheck disable=SC2086
-			upload_all ${UPLOAD_SILENT} ${DEBUG_ARG} \
-				"${UPLOAD_FILE}" "${DIRECTORY}" "${DESTINATION_NAME}" \
-				"${FILE_TYPE}"
-			return $?
-		else
-			echo -en "${YELLOW}"
-			echo -n "WARNING: '${UPLOAD_FILE}' not found; skipping."
-			echo -e "${NC}"
-			return 1
-		fi
-	}
 fi
 
 EXIT_CODE=0
@@ -334,7 +306,7 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 				DEST_NAME="${KEOGRAM_FILE}"
 				#shellcheck disable=SC2086
 				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--local-web" \
-					"${UPLOAD_FILE}" "${DEST_DIR}" "${DEST_NAME}" "Keogram"
+					"${UPLOAD_FILE}" "${DEST_DIR}" "${DEST_NAME}"
 				((EXIT_CODE+=$?))
 			fi
 			if [[ ${R_WEB_USE} == "true" ]]; then
@@ -401,7 +373,7 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 				DEST_NAME="${STARTRAILS_FILE}"
 				#shellcheck disable=SC2086
 				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--local-web" \
-					"${UPLOAD_FILE}" "${DEST_DIR}" "${DEST_NAME}" "Startrails"
+					"${UPLOAD_FILE}" "${DEST_DIR}" "${DEST_NAME}"
 				((EXIT_CODE+=$?))
 			fi
 			if [[ ${R_WEB_USE} == "true" ]]; then
@@ -437,7 +409,6 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 	# Need a different name for the file so it's not mistaken for a regular image in the WebUI.
 	THUMBNAIL_FILE="thumbnail-${DATE}.jpg"
 
-	UPLOAD_THUMBNAIL_NAME="allsky-${DATE}.jpg"
 	UPLOAD_THUMBNAIL="${OUTPUT_DIR}/${THUMBNAIL_FILE}"
 	UPLOAD_FILE="${OUTPUT_DIR}/${VIDEO_FILE}"
 
@@ -489,7 +460,7 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 			if [[ ${THUMBNAIL_ONLY} != "true" ]]; then
 				#shellcheck disable=SC2086
 				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--local-web" \
-					"${UPLOAD_FILE}" "${D}" "${DEST_NAME}" "Timelapse"
+					"${UPLOAD_FILE}" "${D}" "${DEST_NAME}"
 				RET=$?
 				((EXIT_CODE+=RET))
 			else
@@ -498,7 +469,7 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 			if [[ ${RET} -eq 0 && ${TIMELAPSE_UPLOAD_THUMBNAIL} == "true" && -f ${UPLOAD_THUMBNAIL} ]]; then
 				#shellcheck disable=SC2086
 				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--local-web" \
-					"${UPLOAD_THUMBNAIL}" "${D}/thumbnails" "${DEST_NAME/mp4/jpg}" "TimelapseThumbnail"
+					"${UPLOAD_THUMBNAIL}" "${D}/thumbnails" "${DEST_NAME/mp4/jpg}"
 			fi
 		fi
 		if [[ ${R_WEB_USE} == "true" ]]; then

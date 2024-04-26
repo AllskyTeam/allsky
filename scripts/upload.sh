@@ -115,8 +115,6 @@ if [[ -n ${COPY_TO} && ! -d ${COPY_TO} ]]; then
 	exit 2
 fi
 
-PID_FILE=""
-
 function check_for_error_messages()
 {
 	local ERROR_MESSAGES="${1}"
@@ -125,7 +123,6 @@ function check_for_error_messages()
 		echo -e "Upload output from '${FILE_TO_UPLOAD}:\n   ${ERROR_MESSAGES}\n" >&2
 		echo -e "${ERROR_MESSAGES}" > "${LOG}"
 	fi
-	[[ -n ${PID_FILE} ]] && rm -f "${PID_FILE}"
 }
 
 # To save a write to the SD card, only save output to ${LOG} on error.
@@ -153,7 +150,7 @@ fi
 # Make sure only one upload of this file type happens at once.
 # Multiple concurrent uploads (which can happen if the system and/or network is slow can
 # cause errors and files left on the server.
-PID_FILE="${ALLSKY_TMP}/${FILE_TYPE}-pid.txt"
+
 if [[ ${WAIT} == "true" ]]; then
 	MAX_CHECKS=10
 	SLEEP="5s"
@@ -161,6 +158,7 @@ else
 	MAX_CHECKS=2
 	SLEEP="10s"
 fi
+PID_FILE="${ALLSKY_TMP}/${FILE_TYPE}-pid.txt"
 ABORTED_MSG1="Another '${FILE_TYPE}' upload is in progress so the new upload of"
 ABORTED_MSG1+=" $( basename "${FILE_TO_UPLOAD}" ) was aborted."
 ABORTED_FIELDS="${FILE_TYPE}\t${FILE_TO_UPLOAD}"
@@ -418,5 +416,6 @@ else # sftp/ftp/ftps
 fi
 
 check_for_error_messages "${OUTPUT}"
+rm -f "${PID_FILE}"
 
 exit "${RET}"

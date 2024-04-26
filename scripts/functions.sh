@@ -863,6 +863,7 @@ function one_instance()
 	fi
 
 
+	[[ -z ${PID} ]] && PID="$$"
 	local NUM_CHECKS=0
 	local INITIAL_PID
 	while  :
@@ -877,7 +878,7 @@ function one_instance()
 
 		[[ ${NUM_CHECKS} -eq 1 ]] && INITIAL_PID="${CURRENT_PID}"
 
-		# If the PID has changed since the first time we looked,
+		# If the INITIAL_PID has changed since the first time we looked,
 		# that means another process grabbed the lock.
 		# Since there may be several processes waiting, exit.
 		if [[ ${NUM_CHECKS} -eq ${MAX_CHECKS} || ${CURRENT_PID} -ne ${INITIAL_PID} ]]; then
@@ -886,9 +887,10 @@ function one_instance()
 			if [[ ${CURRENT_PID} -ne ${INITIAL_PID} ]]; then
 				echo -n  "Another process (PID=${CURRENT_PID}) got the lock." >&2
 			else
-				echo -n  "Made ${NUM_CHECKS} attempts at waiting. Process ${PID} still has lock." >&2
+				echo -n  "Made ${NUM_CHECKS} attempts at waiting." >&2
+				echo -n  " Process ${CURRENT_PID} still has lock." >&2
 			fi
-			echo -n  " If this happens often, check your settings." >&2
+			echo -n  " If this happens often, check your settings. PID=${PID}" >&2
 			echo -e  "${NC}" >&2
 			ps -fp "${CURRENT_PID}" >&2
 
@@ -913,7 +915,6 @@ function one_instance()
 		fi
 	done
 
-	[[ -z ${PID} ]] && PID="$$"
 	echo "${PID}" > "${PID_FILE}" || return 1
 
 	return 0

@@ -43,7 +43,14 @@ TAB="$( echo -e "\t" )"
 # Convert newlines to HTML breaks.
 MESSAGE="$( echo -en "${MESSAGE}" |
 	awk 'BEGIN { l=0; } { if (++l > 1) printf("<br>"); printf("%s", $0); }' )"
+
+# Make 2 spaces in a row viewable in HTML.
 MESSAGE="${MESSAGE//  /\&nbsp;\&nbsp;}"
+
+# Convert tabs to spaces because we use tabs as field separators.
+# Tabs in the input can either be an actual tab or \t
+MESSAGE="${MESSAGE//${TAB}/\&nbsp;\&nbsp;\&nbsp;\&nbsp;}"
+MESSAGE="${MESSAGE//\\t/\&nbsp;\&nbsp;\&nbsp;\&nbsp;}"
 
 # Messages may have "/" in them so we can't use that to search in sed,
 # so use "%" instead, but because it could be in a message (although unlikely),

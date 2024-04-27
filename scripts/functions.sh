@@ -564,6 +564,49 @@ function checkPixelValue()	# variable name, variable value, width_or_height, res
 	return 0
 }
 
+#####
+# Make sure the image resize width/height are valid.
+function checkResizeValues()
+{
+	local WIDTH="${1}"
+	local HEIGHT="${2}"
+	local WSNs="${3}"		# Web Setting Name "s"tart and "e"nd
+	local WSNe="${4}"
+	local WSVs="${5}"		# Web Setting Value "s"tart and "e"nd
+	local WSVe="${6}"
+	local MAX_RESOLUTION_X="${7}"
+	local MAX_RESOLUTION_Y="${8}"
+
+	local ERR=""
+	if [[ ${WIDTH} -gt 0 && ${HEIGHT} -eq 0 ]]; then
+		ERR+="${WSNs}Image Resize Width${WSNe} is ${WSVs}${WIDTH}${WSVe}"
+		ERR+=" but ${WSNs}Image Resize Height${WSNe} is ${WSVs}0${WSVe}.\n"
+		ERR+="The image will NOT be resized since the width would look unnatural.\n"
+		ERR+="FIX: Either set both numbers to 0 to not resize, or set the height to something.\n"
+	elif [[ ${WIDTH} -eq 0 && ${HEIGHT} -gt 0 ]]; then
+		ERR+="${WSNs}Image Resize Width${WSNe} is ${WSVs}0${WSVe}"
+		ERR+=" but ${WSNs}Image Resize Height${WSNe} is ${WSVs}${HEIGHT}${WSVe}.\n"
+		ERR+="The image will NOT be resized since the height would look unnatural.\n"
+		ERR+="FIX: Either set both numbers to 0 to not resize, or set the width to something.\n"
+	elif [[ ${WIDTH} -gt 0 &&
+			${HEIGHT} -gt 0 &&
+			${MAX_RESOLUTION_X} == "${WIDTH}" &&
+			${MAX_RESOLUTION_Y} == "${HEIGHT}" ]]; then
+		ERR+="Images will be resized to the same size as the sensor; this does nothing useful.\n"
+		ERR+="FIX: Check ${WSNs}Image Resize Width${WSNe} (${WIDTH}) and"
+		ERR+=" ${WSNs}Image Resize Height${WSNe} (${HEIGHT})\n"
+		ERR+=" and set them to something other than the sensor size of"
+		ERR+=" ${WSVs}${MAX_RESOLUTION_X} x ${MAX_RESOLUTION_Y}${WSVe}.\n"
+	fi
+
+	if [[ -z ${ERR} ]]; then
+		return 0
+	else
+		echo -e "${ERR}" >&2
+		return 1
+	fi
+}
+
 
 #####
 # The crop rectangle needs to fit within the image and the numbers be even.

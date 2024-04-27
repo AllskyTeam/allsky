@@ -75,8 +75,16 @@ fi
 
 if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
 	ERROR_PREFIX=""
+	WSNs="<span class='WebUISetting'>"		# Web Setting Name start
+	WSNe="</span>"
+	WSVs="<span class='WebUIValue'>"		# Web Setting Value start
+	WSVe="</span>"
 else
 	ERROR_PREFIX="${ME}: "
+	WSNs="'"
+	WSNe="'"
+	WSVs=""
+	WSVe=""
 fi
 
 RUN_POSTTOMAP="false"
@@ -521,30 +529,26 @@ do
 			;;
 
 		"useremotewebsite")
-			CHECK_REMOTE_WEBSITE_ACCESS="true"
-			USE_REMOTE_WEBSITE="${NEW_VALUE}"
+			[[ ${NEW_VALUE} == "true" ]] && CHECK_REMOTE_WEBSITE_ACCESS="true"
 			;;
 
-		"remotewebsiteprotocol" | "remotewebsiteimagedir" | \
-		"remotewebsitevideodestinationname" | "remotewebsitekeogramdestinationname" | "remotewebsitestartrailsdestinationname")
+		"remotewebsiteprotocol" | "remotewebsiteimagedir")
 			CHECK_REMOTE_WEBSITE_ACCESS="true"
 			;;
 
-		remotewebsite_*)
+		remotewebsite_*)		# from REMOTE_WEBSITE_* settings in env file
 			CHECK_REMOTE_WEBSITE_ACCESS="true"
 			;;
 
 		"useremoteserver")
-			CHECK_REMOTE_SERVER_ACCESS="true"
-			USE_REMOTE_SERVER="${NEW_VALUE}"
+			[[ ${NEW_VALUE} == "true" ]] && CHECK_REMOTE_SERVER_ACCESS="true"
 			;;
 
-		# We don't care about the *destination names for remote servers
-		"remoteserverprotocol" | "remoteserveriteimagedir")
+		"remoteserverprotocol" | "remoteserverimagedir")
 			CHECK_REMOTE_SERVER_ACCESS="true"
 			;;
 
-		remoteserver_*)
+		remoteserver_*)			# from env file
 			CHECK_REMOTE_SERVER_ACCESS="true"
 			;;
 
@@ -557,9 +561,81 @@ do
 				echo -en " ${wBOLD}Module Manager${wNBOLD}"
 				echo -en " for the '${LABEL}' to take effect."
 				echo -e "${wNC}"
+			else
+				rm -f "${ALLSKY_TMP}/overlaydebug.txt"
 			fi
 			;;
 
+		"takedaytimeimages" | "takenighttimeimages")
+:
+###### TODO FIX
+			;;
+
+		"imageresizewidth" | "imageresizeheight")
+			WIDTH="$( settings ".imageresizewidth" )"
+			HEIGHT="$( settings ".imageresizeheight" )"
+			SENSOR_WIDTH="$( get_setting ".sensorWidth" "${CC_FILE}" )"	# Physical sensor size.
+			SENSOR_HEIGHT="$( get_setting ".sensorHeight" "${CC_FILE}" )"
+
+			ERR="$( checkResizeValues "${WIDTH}" "${HEIGHT}" \
+				"${WSNs}" "${WSNe}" "${WSVs}" "${WSVe}" \
+	 			"${SENSOR_WIDTH}" "${SENSOR_HEIGHT}" 2>&1 )"
+###### TODO TEST
+			;;
+
+		"imagecroptop" | "imagecropright" | "imagecropbottom" | "imagecropleft")
+			TOP="$( settings ".imagecroptop" )"
+			RIGHT="$( settings ".imagecropright" )"
+			BOTTOM="$( settings ".imagecropbottom" )"
+			LEFT="$( settings ".imagecropleft" )"
+			SENSOR_WIDTH="$( get_setting ".sensorWidth" "${CC_FILE}" )"	# Physical sensor size.
+			SENSOR_HEIGHT="$( get_setting ".sensorHeight" "${CC_FILE}" )"
+
+###### TODO FIX / TEST
+			if [[ $((TOP + RIGHT + BOTTOM + LEFT)) -gt 0 ]]; then
+				ERR="$( checkCropValues "${TOP}" "${RIGHT}" "${BOTTOM}" "${LEFT}" \
+					"${SENSOR_WIDTH}" "${SENSOR_HEIGHT}" )"
+				if [[ $? -ne 0 ]]; then
+					echo "${ERR}"
+					echo "FIX: Check the ${WSNs}Image Crop Top/Right/Bottom/Left${WSNe} settings."
+				fi
+			fi
+			;;
+
+
+		"timelapsevcodec")
+			if ! ffmpeg -encoders 2>/dev/null | awk -v codec="${NEW_VALUE}" '
+				BEGIN { exit_code = 1; }
+				{ if ($2 == codec) { exit_code = 0; exit 0; } }
+				END { exit exit_code; }' ; then
+
+				echo -e "${wWARNING}"
+				echo    "WARNING: Unknown VCODEC: '${NEW_VALUE}'; resetting to '${OLD_VALUE}'."
+				echo    "Execute: ffmpeg -encoders"
+				echo    "for a list of VCODECs."
+				echo -e "${wNC}"
+
+				# Restore to old value
+				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "text"
+			fi
+			;;
+
+		"timelapsepixfmt")
+			if ! ffmpeg -pix_fmts 2>/dev/null | awk -v fmt="${NEW_VALUE}" '
+				BEGIN { exit_code = 1; }
+				{ if ($2 == fmt) { exit_code = 0; exit 0; } }
+				END { exit exit_code; }' ; then
+
+				echo -e "${wWARNING}"
+				echo    "WARNING: Unknown Pixel Format: '${NEW_VALUE}'; resetting to '${OLD_VALUE}'."
+				echo    "Execute: ffmpeg -pix_fmts"
+				echo    "for a list of formats."
+				echo -e "${wNC}"
+
+				# Restore to old value
+				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "text"
+			fi
+			;;
 
 		*)
 			echo -e "${wWARNING}"
@@ -586,6 +662,20 @@ if [[ ${USE_REMOTE_WEBSITE} == "true" || ${USE_REMOTE_SERVER} == "true" ]]; then
 	if [[ ${USE_REMOTE_WEBSITE} == "true" && ${CHECK_REMOTE_WEBSITE_ACCESS} == "true" ]]; then
 		# testUpload.sh displays error messages
 		"${ALLSKY_SCRIPTS}/testUpload.sh" --website
+
+		# If the remote configuration file doesn't exist assume it's because
+		# the user enabled it but hasn't yet "installed" it (which creates the file).
+		if [[ ! -s ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
+			echo -e "${wWARNING}"
+			echo    "The Remote Website is now enabled but hasn't been installed yet."
+			echo    "Please do so now."
+			if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
+				echo -n "See <a allsky='true' external='true'"
+				echo " href='/documentation/installations/AllskyWebsite.html'>See the documentation</a>"
+			fi
+			echo -e "${wNC}"
+			[[ ${WEBSITES} != "local" ]] && WEBSITES=""
+		fi
 	fi
 
 	if [[ ${USE_REMOTE_SERVER} == "true" && ${CHECK_REMOTE_SERVER_ACCESS} == "true" ]]; then
@@ -593,20 +683,19 @@ if [[ ${USE_REMOTE_WEBSITE} == "true" || ${USE_REMOTE_SERVER} == "true" ]]; then
 	fi
 fi
 
-
 # shellcheck disable=SC2128
 if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 	# Update the local and/or Website remote config file
 	if [[ ${WEBSITES} == "local" || ${WEBSITES} == "both" ]]; then
 		if [[ ${DEBUG} == "true" ]]; then
-			echo -e "${wDEBUG}Executing updateWebsiteConfig.sh local${NC}"
+			echo -e "${wDEBUG}Executing updateWebsiteConfig.sh local${wNC}"
 		fi
 		# shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${DEBUG_ARG} --local "${WEBSITE_CONFIG[@]}"
 	fi
 	if [[ ${WEBSITES} == "remote" || ${WEBSITES} == "both" ]]; then
 		if [[ ${DEBUG} == "true" ]]; then
-			echo -e "${wDEBUG}Executing updateWebsiteConfig.sh remote${NC}"
+			echo -e "${wDEBUG}Executing updateWebsiteConfig.sh remote${wNC}"
 		fi
 		# shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${DEBUG_ARG} --remote "${WEBSITE_CONFIG[@]}"
@@ -618,12 +707,13 @@ if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 			echo -e "${wDEBUG}Uploading '${FILE_TO_UPLOAD}' to remote Website.${wNC}"
 		fi
 
+# TODO: put in background to return to user faster?
 		if ! "${ALLSKY_SCRIPTS}/upload.sh" --silent --remote-web \
 				"${FILE_TO_UPLOAD}" \
 				"${IMAGE_DIR}" \
 				"${ALLSKY_WEBSITE_CONFIGURATION_NAME}" \
 				"RemoteWebsite" ; then
-			echo -e "${RED}${ERROR_PREFIX}Unable to upload '${FILE_TO_UPLOAD}' to Website ${NUM}.${NC}"
+			echo -e "${wERROR}${ERROR_PREFIX}Unable to upload '${FILE_TO_UPLOAD}' to Website ${NUM}.${NwC}"
 		fi
 	fi
 fi
@@ -631,7 +721,8 @@ fi
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
 	[[ -z ${SHOW_ON_MAP} ]] && SHOW_ON_MAP="$( settings ".showonmap" )"
 	if [[ ${SHOW_ON_MAP} == "true" ]]; then
-		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postToMap.sh${NC}"
+		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postToMap.sh${wNC}"
+# TODO: put in background to return to user faster?
 		# shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${POSTTOMAP_ACTION}
 	fi

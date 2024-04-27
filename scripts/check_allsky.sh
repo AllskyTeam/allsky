@@ -348,34 +348,18 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 		echo    "FIX: If this is not what you want, change the setting."
 	fi
 
-	if [[ ${IMG_RESIZE_WIDTH} -gt 0 && ${IMG_RESIZE_HEIGHT} -eq 0 ]]; then
+	ERR="$( checkResizeValues "${IMG_RESIZE_WIDTH}" "${IMG_RESIZE_HEIGHT}" \
+		"${WSNs}" "${WSNe}" "${WSVs}" "${WSVe}" \
+	 	"${SENSOR_WIDTH}" "${SENSOR_HEIGHT}" 2>&1 )"
+	if [[ $? -ne 0 || -n ${ERR} ]]; then
 		heading "Information"
-		echo -n "${WSNs}Image Resize Width${WSNe} is ${WSVs}${IMG_RESIZE_WIDTH}${WSVe}"
-		echo    " but ${WSNs}Image Resize Height${WSNe} is ${WSVs}0${WSVe}."
-		echo    "The image will NOT be resized since the width would look unnatural."
-		echo    "FIX: Either set both numbers to 0 to not resize, or set the height to something."
-	elif [[ ${IMG_RESIZE_WIDTH} -eq 0 && ${IMG_RESIZE_HEIGHT} -gt 0 ]]; then
-		heading "Information"
-		echo -n "${WSNs}Image Resize Width${WSNe} is ${WSVs}0${WSVe}"
-		echo    " but ${WSNs}Image Resize Height${WSNe} is ${WSVs}${IMG_RESIZE_HEIGHT}${WSVe}."
-		echo    "The image will NOT be resized since the height would look unnatural."
-		echo    "FIX: Either set both numbers to 0 to not resize, or set the width to something."
-	elif [[ ${IMG_RESIZE_WIDTH} -gt 0 &&
-			${IMG_RESIZE_HEIGHT} -gt 0 &&
-			${SENSOR_WIDTH} == "${IMG_RESIZE_WIDTH}" &&
-			${SENSOR_HEIGHT} == "${IMG_RESIZE_HEIGHT}" ]]; then
-		heading "Information"
-		echo    "Images will be resized to the same size as the sensor; this does nothing useful."
-		echo -n "FIX: Check ${WSNs}Image Resize Width${WSNe} (${IMG_RESIZE_WIDTH}) and"
-		echo    " ${WSNs}Image Resize Height${WSNe} (${IMG_RESIZE_HEIGHT})"
-		echo    " and set them to something other than the sensor size of"
-		echo    " ${WSVs}${SENSOR_WIDTH} x ${SENSOR_HEIGHT}${WSVe}."
+		echo "${ERR}"
 	fi
 
 	if [[ $((CROP_TOP + CROP_RIGHT + CROP_BOTTOM + CROP_LEFT)) -gt 0 ]]; then
 		ERR="$( checkCropValues "${CROP_TOP}" "${CROP_RIGHT}" "${CROP_BOTTOM}" "${CROP_LEFT}" \
-				"${SENSOR_WIDTH}" "${SENSOR_HEIGHT}" 2>&1 )"
-		if [[ $? -ne 0 ]]; then
+				"${SENSOR_WIDTH}" "${SENSOR_HEIGHT}" )"
+		if [[ $? -ne 0 || -n ${ERR} ]]; then
 			heading "Information"
 			echo "${ERR}"
 			echo "FIX: Check the ${WSNs}Image Crop Top/Right/Bottom/Left${WSNe} settings."

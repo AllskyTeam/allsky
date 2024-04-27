@@ -713,7 +713,7 @@ if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 				"${IMAGE_DIR}" \
 				"${ALLSKY_WEBSITE_CONFIGURATION_NAME}" \
 				"RemoteWebsite" ; then
-			echo -e "${wERROR}${ERROR_PREFIX}Unable to upload '${FILE_TO_UPLOAD}' to Website ${NUM}.${NwC}"
+			echo -e "${wERROR}${ERROR_PREFIX}Unable to upload '${FILE_TO_UPLOAD}' to Website ${NUM}.${wNC}"
 		fi
 	fi
 fi

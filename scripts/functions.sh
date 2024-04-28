@@ -1085,7 +1085,17 @@ function upload_all()
 # Indent all lines.
 function indent()
 {
-	echo -e "${1}" | sed 's/^/\t/'
+	local INDENT
+	if [[ ${1} == "--spaces" ]]; then
+		INDENT="    "
+		shift
+	elif [[ ${1} == "--html" ]]; then
+		INDENT="&nbsp;&nbsp;&nbsp;&nbsp;"
+		shift
+	else
+		INDENT="	"	# tab
+	fi
+	echo -e "${1}" | sed "s/^/${INDENT}/"
 }
 
 

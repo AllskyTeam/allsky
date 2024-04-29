@@ -28,17 +28,16 @@
 <h2>Raspberry Pi choices</h2>
 <details><summary></summary>
 <p>
-A <b>Pi 4 with 4 GB memory</b> is the best choice <em>if you can afford it</em>.
+A <b>Pi 5 with 8 GB memory</b> is the best choice <em>if you can afford it</em>.
 It handles everything Allsky currently does and has enough memory and CPU power for the future.
-The next best Pi to get is the Pi 4 with 2 GB memory.
-</p>
-<p>
-If you have a little more money, get a <b>Pi 5 with 4 GB or 8 GB memory</b>
-- it's faster than a Pi 4.
-You'll mainly notice the speed increase while producing
+You'll notice the speed increase while producing
 keograms, startrails, and timelapse videos as well as during installation and upgrades.
 Taking pictures doesn't require much power so you likely won't notice a difference there.
 If you use the Pi 5 for non-Allsky work you'll likely notice the speed increase as well.
+</p>
+<p>
+The next best Pi to get is the Pi 4 with 4 GB memory;
+if that's still too expensive get a Pi 4 with 2 GB memory.
 </p>
 <blockquote>
 Note that in general, the faster a Pi is, the more heat it produces.
@@ -55,7 +54,7 @@ slowing things down and putting more wear on your SD card.
 <strong>Do NOT get the Pi Zero</strong> - its extremely slow CPU
 and minimal memory will cause problems.
 You likely won't be able to create timelapse videos.
-The Pi Zero 2 has a faster CPU than the Pi Zero but still has limited memory and
+The <strong>Pi Zero 2</strong> has a faster CPU than the Pi Zero but still has limited memory and
 should only be considered if cost is the ONLY concern.
 You may or may not be able to do timelapse videos.
 Future versions of Allsky will likely require more processing power and memory so the
@@ -87,8 +86,8 @@ have a spare one lying around, and they may use their allsky camera for astropho
 </p>
 Some things to consider:
 <ul>
-<li>The <b>RPi HQ</b> is hard to beat unless you plan to use the camera for
-	astrophotography as well.
+<li>The <b>RPi HQ</b> is hard to beat unless you plan to also use the camera for
+	astrophotography.
 <li><strong>Stay away from the ZWO ASI120 camera</strong>.
 	Although it is inexpensive it often produces a lot of errors and many
 	people complain about its noise and hot pixels so have replaced theirs.
@@ -97,7 +96,7 @@ Some things to consider:
 	but many people prefer color for its more "natural" look, especially during the day.
 <li>Higher-resolution sensors (for example the RPi HQ @ 4056x3040 and ASI178MC @ 3096x2080)
 	require more memory to produce timelapses, so you may need to follow
-	<a allsky="true" href="/documentation/troubleshooting/timelapse.html">these suggestions</a>
+	<a allsky="true" external="true" href="../troubleshooting/timelapse.html">these suggestions</a>
 	to get timelapse working.
 <li>For allsky use, an extremely high resolution camera
 	(e.g., higher than the RPi HQ) probably isn't useful since the lens and
@@ -105,19 +104,18 @@ Some things to consider:
 <li>Increasing sensor temperature will always increase noise and hot pixels,
 	sometimes to the point of making the image unusable,
 	so many people put a fan in their allsky enclosure to pull in cooler outside air.
+	This can also increase the life of the camera and Pi.
 <li>Different cameras have different dynamic ranges
 	(the difference between the brightest and darkest parts).
 	Increasing a camera's gain will produce brighter, noisier images with less dynamic range.
-	Consult the camera specs to learn more about the trade-off between gain and dynamic range,
-	e.g., <a href="https://astronomy-imaging-camera.com/product/asi482mc">ASI482MC</a>,
-	<a href="https://astronomy-imaging-camera.com/product/asi290mm">ASI290MM</a>
-	<a href="https://astronomy-imaging-camera.com/product/asi178mc">ASI178MC</a>.
+	Consult the camera specs to learn more about the trade-off between gain and dynamic range.
 <li>Some RPi and RPi-compatible cameras support auto focus.
 	That feature sounds great but has some major limitations:
 	<ul class="minimalPadding">
 	<li>You will almost always disable auto focus at night - it takes a long time 
 		since the camera has to take several long-exposure images to find the correct focus.
-	<li>The lenses that come with these cameras typically produce only a 120 degree field of view.
+	<li>The lenses that come with these cameras typically produce at most
+		a 120 degree field of view.
 		Many allsky lenses produce about 180 degrees.
 		A narrower field of view may not matter if you have a lot of trees and/or buildings
 		blocking the view, however.
@@ -125,7 +123,8 @@ Some things to consider:
 		temperature changes drastically.
 	</ul>
 <li>The "T7C" camera is an OEM version of the ASI120MC-mini.
-	We <a allsky="true" href="/documentation/troubleshooting/T7cameras.html">do not recommend</a>
+	We <a allsky="true" external="true"
+		href="/documentation/troubleshooting/T7cameras.html">do not recommend</a>
 	it.
 </ul>
 </details>
@@ -160,7 +159,7 @@ Typical apertures (prepended by <code>f</code>) used in allsky lens are f 1.4 - 
 </p>
 <p>
 Lenses are round so produce round images.
-The size of the image, measured by its diameter in mm,
+The size of the image it produces on the sensor, measured by its diameter in mm,
 is called its <strong>image circle</strong>.
 </p>
 
@@ -178,21 +177,23 @@ There is no "right" or "wrong" combination - it's a personal preference.
 
 <ol>
 	<li>An image circle that is <em>much</em> smaller than the sensor.
-		This uncommon scenario produces a small sky image.
+		This uncommon scenario produces a very small sky image.
 		<br><img src="Case1a.png" class="centerImg" width="50%">
 	<li>An image circle whose height is the same as the sensor.
 		This shows the whole the sky image
 		and leaves ample room to overlay text and images.
-		<br>It's rare to have the heights be <em>identical</em>.
+		<br>It's rare to have the sensor height and imager circle be <em>identical</em>
+		as shown below.
 		<br><img src="Case1b.png" class="centerImg" width="50%">
 	<li>An image circle whose height is bigger than the sensor
 		but whose width is the same as the sensor.
 		This cuts off part of the sky image but minimizes the black border,
-		yet still allows for space to add text without overwriting the sky image.
+		yet still allows for some space to add text without overwriting the sky image.
 		Most very wide FOV sky images include some landscape and/or buildings
 		around the edges so depending on how much of the sky image is cut off,
 		this combination can be beneficial.
-		<br>It's rare to have the widths be <em>identical</em>.
+		<br>It's rare to have the sensor width and imager circle be <em>identical</em>
+		as shown below.
 		<br><img src="Case2a.png" class="centerImg" width="50%">
 	<li>If the lens' image fills the whole sensor you'll see what appears to be
 		a "normal" image with no black border.
@@ -202,7 +203,7 @@ There is no "right" or "wrong" combination - it's a personal preference.
 </p>
 </details>
 
-<h3>What will I get?</h3>
+<h3>What kind of image will I get?</h3>
 <details><summary></summary>
 <p>
 To determine which of the examples above you'll get you need to know the physical size of the
@@ -244,10 +245,6 @@ To see what you'll get, compare the sizes:
 <p>
 Some common allsky cameras and lenses are shown below
 followed by an example of the results that different lenses produce using the same camera.
-</p>
-<p>
-DISCLAIMER: The tables below are not meant to recommend anything;
-they are only used to illustrate a point.
 </p>
 
 <table>
@@ -346,7 +343,7 @@ they are only used to illustrate a point.
 </table>
 
 <p>
-As an example, let's use the common ZWO ASI178 camera with a couple different lenses.
+As an example, let's use the ZWO ASI178 camera with a couple different lenses.
 <ol>
 	<li><b>Lens # 1, ACF12F0155IRMM</b>: 1.5 mm focal length.
 		<br>

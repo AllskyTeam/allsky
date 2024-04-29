@@ -690,7 +690,7 @@ b, strong {
 	padding: 0 .2em;
 	color: var(--WebUI-link-color);
 	background-color: var(--WebUI-link-background-color);
-	border-bottom: 1px solid #e7e7e7;
+	border: 1px solid #d7d7d7;
 }
 .WebUISetting {	/* Matches what's in the WebUI */
 	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;

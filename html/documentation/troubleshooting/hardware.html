@@ -16,6 +16,7 @@
 	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<script src="../js/all.min.js" type="application/javascript"></script>
 	<title>Hardware Troublehooting</title>
 </head>
 <body>
@@ -32,12 +33,13 @@ but we're providing this page as a service to Allsky users.
 <h2>My Pi isn't using all its disk space</h2>
 <details><summary></summary>
 <p>
-If you have a large SD card like 64 GB but the WebUI's <b>System</b> page shows significantly less,
-you need to resize the card.  For example you see this:
-
+If you have a large SD card like 64 GB but the WebUI's
+<span class="WebUILink">System</span> page shows significantly less,
+you need to resize the card.
+For example you see this:
 <img src="notUsingAllDiskSpace.png" loading="lazy" class="imgCenter imgBorder" title="Not using all space">
-
-To fix this, resize your filesystem:
+but your SD card is much bigger than 28 GB,
+you need to resize your filesystem:
 <pre>
 sudo resize2fs /dev/sda2
 </pre>
@@ -60,28 +62,13 @@ He fixed the problem by shutting the system down as soon as it came up.
 <blockquote>
 If you need to shut down your Pi do not simply unplug the power;
 instead, use the
-<img allsky="true" src="/documentation/img/shutdownPi.png" class="buttonIconLarge" title="Shutdown button" loading="lazy">
-button on the WebUI's <span class="WebUIPage">System</span> page or via the command prompt:
+<img allsky="true" src="/documentation/img/shutdownPi.png"
+	class="buttonIconLarge" title="Shutdown button" loading="lazy">
+button on the WebUI's <span class="WebUILink">System</span> page or via the command prompt:
 <pre>
 sudo shutdown -r now
 </pre>
 </blockquote>
-</details>
-
-
-<h2>Pi 3B+ doesn't run the latest AllSky Software</h2>
-<details><summary></summary>
-<p>
-If your Pi either hangs while booting with a camera connected or it gives
-ASI_ERROR_TIMEOUT messages when connecting the camera after booting, read on.
-</p>
-<p>
-If you are running the much older "Stretch" version of Linux, upgrade the firmware:  
-<pre>
-sudo apt-get install rpi-update    # on Raspbian  
-sudo rpi-update
-</pre>
-</p>
 </details>
 
 
@@ -93,9 +80,10 @@ If you're in an urban canyon, maybe you don't need a 180&deg; lens.
 If you have light interference near the horizon you can create an artificial horizon,
 with a piece of black PVC pipe for example.
 If you're unsure of the field of view you can use a tool like
-<a href="https://www.bintel.com.au/tools/astronomy-calculator/">Bintel</a>
+<a external="true" href="https://www.bintel.com.au/tools/astronomy-calculator/">Bintel</a>
 to calculate the field of view on the sensor,
-or <a href="https://stellarium.org/">Stellarium</a> to simulate the field of view.
+or <a external="true" href="https://stellarium.org/">Stellarium</a>
+to simulate the field of view.
 </details>
 
 
@@ -103,8 +91,9 @@ or <a href="https://stellarium.org/">Stellarium</a> to simulate the field of vie
 <details><summary></summary>
 <p>
 If you are getting moisture on the inside of your allsky dome, consider adding a heater.
-Click <a href="https://github.com/AllskyTeam/allsky/issues/113">here</a>
-and <a href="https://www.instructables.com/Raspberry-Pi-Dew-Heater-for-All-sky-Camera/">here</a>.
+Click <a external="true" href="https://github.com/AllskyTeam/allsky/issues/113">here</a>
+and <a external="true"
+	href="https://www.instructables.com/Raspberry-Pi-Dew-Heater-for-All-sky-Camera/">here</a>.
 </p>
 <p>
 You can also add a fan to the enclosure that sends air warmed by the Pi into the dome via one hole,

@@ -305,11 +305,18 @@ X="$( ffmpeg -y -f image2 \
 RET=$?
 
 # The "deprecated..." message is useless and only confuses users, so hide it.
-X="$( echo "${X}" | grep -v "deprecated pixel format used" )"
-[ "${X}" != "" ] && echo "${X}" >> "${TMP}"		# a warning/error message
+X="$( echo "${X}" | grep -E -v "deprecated pixel format used|Processed " )"
+[[ -n ${X} ]] && echo "${X}" >> "${TMP}"		# a warning/error message
 
 if [[ ${RET} -ne -0 ]]; then
 	echo -e "\n${RED}*** ${ME}: ERROR: ffmpeg failed."
+
+	# Check for common, known errors.
+	if X="$( echo "${TMP}" | grep -E -i "Killed ffmpeg|malloc of size" )" ; then
+		indent --spaces "${X}"
+		echo -e "See the 'Troubleshooting -> Timelapse' documentation page for a fix.\n"
+	fi
+
 	indent --spaces "Output: $( < "${TMP}" )"
 	echo
 	echo "Links in '${SEQUENCE_DIR}' left for debugging."

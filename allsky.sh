@@ -42,7 +42,7 @@ fi
 
 # Make sure the settings have been configured after an installation or upgrade.
 LAST_CHANGED="$( settings ".lastchanged" )"
-if [[ ${LAST_CHANGED} == "" ]]; then
+if [[ -z ${LAST_CHANGED} ]]; then
 	set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
 	echo "*** ===== Allsky needs to be configured before it can be used.  See the WebUI." >&2
 	if [[ ${NEEDS_REBOOT} == "true" ]]; then
@@ -197,12 +197,12 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 fi
 
 if [[ ! -s ${CONNECTED_CAMERAS_INFO} ]]; then
-		set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
+	set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
 	MSG="Unable to start Allsky - no connected cameras found!"
 	echo -e "${RED}*** ${MSG}${NC}" >&2
 	IMAGE_MSG="${ERROR_MSG_PREFIX}"
 	IMAGE_MSG+="\nNo connected\ncameras found!"
-	doExit "${EXIT_ERROR_STOP}" "Error" 
+	doExit "${EXIT_ERROR_STOP}" "Error" \
 		"${IMAGE_MSG}" "${NOT_STARTED_MSG}: ${MSG}"
 fi
 
@@ -251,11 +251,11 @@ fi
 # If the locale isn't in the settings file, try to determine it.
 if [[ -z ${LOCALE} ]]; then
 	if [[ -n ${LC_ALL} ]]; then
-		echo "-locale=${LC_ALL}"
+		echo "locale=${LC_ALL}"
 	elif [[ -n ${LANG} ]]; then
-		echo "-locale=${LANG}"
+		echo "locale=${LANG}"
 	elif [[ -n ${LANGUAGE} ]]; then
-		echo "-locale=${LANGUAGE}"
+		echo "locale=${LANGUAGE}"
 	fi >> "${ARGS_FILE}"
 fi
 
@@ -305,6 +305,8 @@ if [[ ${CAMERA_TYPE} == "RPi" ]]; then
 	export CONNECTED_CAMERAS_INFO
 	export RPi_SUPPORTED_CAMERAS
 fi
+C="$( settings ".cameranumber" )"
+[[ -n ${C} ]] && export CAMERANUMBER="${C}"
 
 function catch_signal() { return 0; }
 trap "catch_signal" SIGTERM SIGINT SIGHUP

@@ -890,13 +890,13 @@ class MODULESEDITOR {
             html += '<div class="col-md-7"><strong>Result</strong></div>';
             html += '</div>';
 
-            for (let key in result.selected) {
-                let data = result.selected[key];
+            for (let key in result.debug) {
+                let data = result.debug[key];
                 let runTime = parseFloat(data.lastexecutiontime);
                 totalTime += runTime;
 
                 html += '<div class="row">';                
-                html += '<div class="col-md-3">' + data.module + '</div>';
+                html += '<div class="col-md-3">' + key + '</div>';
                 html += '<div class="col-md-2"><div class ="pull-right">' + runTime.toFixed(2) + '</div></div>';
                 html += '<div class="col-md-7">' + data.lastexecutionresult + '</div>';
                 html += '</div>';
@@ -972,8 +972,8 @@ class MODULESEDITOR {
                 if (result.periodictimer == undefined) {
                     result.periodictimer = 5;
                 }
-                $('#enablewatchdog').prop('checked', result.watchdog);
-                $('#watchdog-timeout').val(result.timeout);                
+                //$('#enablewatchdog').prop('checked', result.watchdog);
+                //$('#watchdog-timeout').val(result.timeout);                
                 $('#autoenable').prop('checked', result.autoenable);
                 $('#debugmode').prop('checked', result.debugmode);
                 $('#periodic-timer').val(result.periodictimer);                  
@@ -990,8 +990,8 @@ class MODULESEDITOR {
                 $.LoadingOverlay('show', {text : 'Sorry this is taking longer than expected ...'});
             }, 500)
 
-            this.#moduleSettings.watchdog = $('#enablewatchdog').prop('checked');
-            this.#moduleSettings.timeout = $('#watchdog-timeout').val() | 0;
+            //this.#moduleSettings.watchdog = $('#enablewatchdog').prop('checked');
+            //this.#moduleSettings.timeout = $('#watchdog-timeout').val() | 0;
             this.#moduleSettings.autoenable = $('#autoenable').prop('checked');
             this.#moduleSettings.debugmode = $('#debugmode').prop('checked');
 

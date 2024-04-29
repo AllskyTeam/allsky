@@ -815,8 +815,11 @@ int main(int argc, char *argv[])
 		exit(EXIT_ERROR_STOP);
 	}
 
-	char *x = getenv("ALLSKY_DEBUG_LEVEL");
+	char *x;
+	x = getenv("ALLSKY_DEBUG_LEVEL");
 	if (x != NULL) { CG.debugLevel = atoi(x); }
+	x = getenv("CAMERANUMBER");
+	if (x != NULL) { CG.cameraNumber = atoi(x); }
 
 	pthread_mutex_init(&mtxSaveImg, 0);
 	pthread_cond_init(&condStartSave, 0);
@@ -1520,6 +1523,7 @@ int main(int argc, char *argv[])
 						char const *acceptableType;
 						if (CG.lastMean < minAcceptableMean) {
 							acceptableMean = minAcceptableMean;
+// acceptableMean = 0.270
 							acceptableType = "min";
 						} else {
 							acceptableMean = maxAcceptableMean;
@@ -1532,21 +1536,28 @@ int main(int argc, char *argv[])
 						// ZWO cameras don't appear to be linear so increase the multiplier amount some.
 						double multiply;
 						if (CG.lastMean == 0.0) {
-							// TODO: is this correct?
-							multiply = acceptableMean * multiplier;
+							// means are less than 1 so force "multiply" to be > 1.
+							multiply = (1 + acceptableMean) * multiplier;
+// multiple = 0.270 * 1.1    0.297
 						} else {
 							multiply = (acceptableMean / CG.lastMean) * multiplier;
+/// multiply = (0.478 / 0.473) * 1.1     (1.0105708) * 1.1          1.112
 						}
+// TODO FIX: xxxxxxxxxxxxxxxxxx
 						long exposureDiff_us = (CG.lastExposure_us * multiply) - CG.lastExposure_us;
+// exposureDiff_us = (100,000 * 0.297) - 100,000      (29,700) - 100,000      -70,300
 						long exposureDiffBeforeAgression_us = exposureDiff_us;
+// exposureDiffBeforeAgression_us = -70,300
 
 						// Adjust by aggression setting.
 						if (CG.aggression != 100 && exposureDiff_us != 0)
 						{
 							exposureDiff_us *= (float)CG.aggression / 100;
+// exposureDiff_us = -70,300 * (85/100)     -70,300 * .85     -59,755
 						}
 
 						newExposure_us = CG.lastExposure_us + exposureDiff_us;
+// newExposure_us = 100,000 + -59,755       40,245
 						// Assume max auto exposure is <= max camera exposure.
 						if (newExposure_us > CG.currentMaxAutoExposure_us) {
 							hitMinOrMax = true;
@@ -1558,6 +1569,16 @@ int main(int argc, char *argv[])
 								exposureDiff_us, exposureDiffBeforeAgression_us,
 								newExposure_us, multiply, CG.lastExposure_us,
 								acceptableType, acceptableMean, CG.lastMean);
+// -59.755, -70,300
+// 40,245, 0.297, 100,000,
+// min, 0.270, 0
+// Next exposure change: -59,755 us (-70,300 pre agression) to 40,245 (* 0.297) [CG.lastExposure_us=100,000, minAcceptableMean=0.270, CG.lastMean=0.000]
+
+/// > GOT IMAGE @ mean 0.473, gain 0.
+/// > Next exposure change: 207 us (244 pre agression) to 2,379 (* 1.112) [CG.lastExposure_us=2,172, minAcceptableMean=0.478, CG.lastMean=0.473]
+/// >> Retry 1 @ 2,379 us, min=2,172 us, max=2,000,000,000 us
+/// > GOT IMAGE @ mean 0.516, gain 0.
+/// > Good image: mean 0.516 within range of 0.478 to 0.526 +++++++++
 						}
 
 						if (priorMeanDiff > 0.0 && lastMeanDiff < 0.0)
@@ -1584,6 +1605,7 @@ int main(int argc, char *argv[])
 							if (CG.lastMean < minAcceptableMean)
 							{
 								tempMinExposure_us = CG.currentExposure_us;
+// TODO: ???? set tempMaxExposure_us to ???
 							} 
 							else if (CG.lastMean > maxAcceptableMean)
 							{
@@ -1605,7 +1627,7 @@ Log(3, " new newExposure_us=%s\n", length_in_units(newExposure_us, true));
 							// To try and help, add (or subtract) the numPingPongs percent to the exposure.
 							// For example, if newExposure_us == 200 and numPingPongs == 4, add 4% (8 us = 4% * 200).
 							long us = (long) (newExposure_us * ((double)numPingPongs / 100.0));
-Log(3, "================ Adding %'ld us\n", us);
+							Log(3, "================ Adding %'ld us\n", us);
 							newExposure_us += us;
 							if (tempMaxExposure_us < newExposure_us)
 								tempMaxExposure_us = newExposure_us;
@@ -1616,11 +1638,13 @@ Log(3, "================ Adding %'ld us\n", us);
 long saved_newExposure_us = newExposure_us;
 						newExposure_us = std::max(tempMinExposure_us, newExposure_us);
 						newExposure_us = std::min(tempMaxExposure_us, newExposure_us);
-if (saved_newExposure_us != newExposure_us)
-{
-	Log(3, "    > xxx newExposure_us changed from %s to %s due to tempMin/tempMax\n",
-		length_in_units(saved_newExposure_us, true), length_in_units(newExposure_us, true));
-}
+						if (saved_newExposure_us != newExposure_us)
+						{
+							Log(3, "    > xxx newExposure_us changed from %s to %s due to tempMin/tempMax",
+								length_in_units(saved_newExposure_us, true), length_in_units(newExposure_us, true));
+							Log(3, " (%s/%s)\n",
+								length_in_units(tempMinExposure_us, true), length_in_units(tempMaxExposure_us, true));
+						}
 
 						if (newExposure_us == CG.currentExposure_us)
 						{

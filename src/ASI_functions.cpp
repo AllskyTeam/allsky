@@ -460,8 +460,10 @@ int getCameraNumber()
 	// Return the index into *RPiCameras[] of the attached camera we're using.
 
 	// File format
-	//					camera_type  <TAB>  camera_number   : sensor_name  [widthXheight]
-	// Sample line:     RPi          <TAB>  0               : imx477       [4056x3040]
+	//					camera_type  <TAB>  camera_number   : sensor_name  [width x height] or ZWO code
+	// Sample lines:
+	// 					RPi          <TAB>  0               : imx477       [4056x3040]
+	// 					ZWO          <TAB>  1               : ASI290MM     290b
 	while (fgets(line, sizeof(line)-1, f) != NULL)
 	{
 		if (sscanf(line, "%s\t%d : %s ", cameraType, &num, sensor) == 3 &&

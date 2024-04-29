@@ -11,14 +11,14 @@
 	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 	<style>
 		#pageTitle::before {
-			content: "Installing and upgrading Allsky Website";
+			content: "Installing and upgrading an Allsky Website";
 		} 
 	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../css/custom.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<script src="../js/all.min.js" type="application/javascript"></script>
-	<title>Installing and upgrading Allsky Website</title>
+	<title>Installing an Allsky Website</title>
 </head>
 <body>
 <div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
@@ -59,8 +59,7 @@ If the prior Website was version <b>v2022.03.01+</b> or earlier you need to:
 
 
 
-<h2>Install an Allsky Website on a remote server</h2>
-<details><summary></summary>
+<h2>Install a remote Allsky Website</h2>
 <p>
 Most people have their Pi behind a firewall where it's not accessible on the Internet,
 so they install the Allsky Website on a different
@@ -79,20 +78,26 @@ Prior to installing the Website on a remote server,
 make sure Allsky is working on your Pi, then do the following:
 <ol>
 	<li>On the remote server:
-		<ul class="minimalPadding">
+		<ul>
 			<li>Create an <span class="fileName">allsky</span>
 				directory to hold the Website.
 				<strong>Keep track of where on your server you created the directory</strong>
 				- you will need that information later when you tell Allsky
 				where to upload the images.
 		</ul>
-	<li>Copy ALL files and directories from <span class="fileName">~/allsky/html/allsky</span>
-		on the Pi to the <span class="fileName">allsky</span> directory on your remote Website.
-	<li>Do <b>not</b> configure the remote Website yet - you'll do that below.
 	<li>On the Pi:
-		<ol class="minimalPadding" type="A">
-		<li>In the WebUI's <span class="WebUIWebPage">Allsky Settings</span> page,
-			update the settings for the Remote Website.
+		<ol type="A">
+		<li>Copy ALL files and directories in
+			<span class="fileName">~/allsky/html/allsky</span>
+			to the <span class="fileName">allsky</span>
+			directory on your remote Website.
+			<br>Do this using whatever procedure you use to copy other files there.
+		<li>Go to the <span class="settingsHeader">Websites and Remote Server Settings</span>
+			section in the WebUI's <span class="WebUIWebPage">Allsky Settings</span> page.
+			Update the settings in the
+			<span class="subSettingsHeader">Remote Website</span> subsection.
+			Make sure to enable <span class="WebUISetting">Use Remote Website</span>
+			as well as enough other settings so Allsky can upload a file to the Website.
 		<li>Run <code>cd ~/allsky;  ./remote_website_install.sh</code>
 			to upload a default configuration file to your server,
 			leaving the master copy on the Pi.
@@ -114,9 +119,12 @@ make sure Allsky is working on your Pi, then do the following:
 				<li>In the WebUI, click on the <span class="WebUIWebPage">Editor</span> link.
 				<li>In the drop-down at the bottom of the page, select
 					<code class="noWrap">remote_configuration.json (remote Allsky Website).</code>
-				<li>See
-					<a allsky="true" href="/documentation/settings/allskyWebsite.html">this page</a>
-					for details on the Website settings.
+				<li>See the
+					<a allsky="true" href="/documentation/settings/allskyWebsite.html">
+					Settings -> Allsky Website</a>
+					page for details on the settings.
+				<li>A copy of the remote Website configuration
+					file will be uploaded to the server.
 			</ul>
 			<blockquote class="warning">
 			Whenever you update the remote Website's configuration you <strong>must</strong>
@@ -129,7 +137,7 @@ make sure Allsky is working on your Pi, then do the following:
 </ol>
 
 
-<h3>Remote Website Requirements</h3>
+<h4>Remote Website Requirements</h4>
 The remote server needs to support the following:
 <ul class="minimalPadding">
 	<li>PHP version 7 or newer.
@@ -150,8 +158,6 @@ The remote server needs to support the following:
 		Everything else will still work.
 		</blockquote>
 </ul>
-<hr class="separator">
-</details>
 
 
 <h2>Post installation</h2>
@@ -170,7 +176,6 @@ They are NOT automatically kept in sync so if you change something, for example,
 the lens, you'll need to change it in both files.
 </blockquote>
 
-</details>
 
 </div><!-- Layout-main -->
 </div><!-- Layout -->

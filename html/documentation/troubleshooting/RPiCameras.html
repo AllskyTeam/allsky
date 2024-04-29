@@ -25,14 +25,14 @@
 <div class="Layout-main markdown-body" id="mainContents">
 
 <p>
-This page describes known issues with the RPi cameras (HQ and Module 3).
+This page describes known issues with RPi and RPi-compatible cameras.
 </p>
 
 <h2>RPi camera not found or not working</h2>
 <details><summary></summary>
 <p>
 A "camera not found" message can be due many different things.
-Here are some steps to try.
+Here are some steps to try:
 </p>
 <ol>
 <li>If this is a new RPi camera, make sure the ribbon cable is installed correctly.
@@ -46,12 +46,13 @@ Here are some steps to try.
 	If you get an error like this:
 	<pre>terminate called after throwing an instance of 'std::runtime_error'
   	what():  failed to import fd 22</pre>
-	then run <code>sudo raspi-config</code>, navigate to
+	run <code>sudo raspi-config</code>, navigate to
 	<code>Advanced Options</code> and enable <code>Glamor</code> graphic acceleration.
 	Then reboot your Pi.
 	Now, try <code>libcamera-hello</code> again.
-	You should get a <b>Hello world!</b> message in a new window.
-<li>Check for under voltage (Bullseye only)
+	You should get a <code>Hello world!</code> message in a new window.
+	<br><strong>This is not needed on Bookworm.</strong>
+<li>Check for under voltage (Bullseye and Bookworm only)
 	<br>
 	Execute:
 	<pre>libcamera-hello</pre>
@@ -60,16 +61,14 @@ Here are some steps to try.
 	your Pi may be under voltaged.
 	<ul>
 	<li>If you have another power supply try it.
-	<li>Using <code>sudo</code>, add
-		<pre>over_voltage=4</pre>
+	<li>Using <code>sudo</code>, add <code>over_voltage=4</code>
 		to <span class="fileName">/boot/config.txt</span> then reboot your Pi.
-		<br>
-		If you are still having the problem, add
-		<pre>arm_freq=700</pre>
+		If you are still having the problem, add <code>arm_freq=700</code>
 		to <span class="fileName">/boot/config.txt</span> then reboot your Pi.
 		Note that this decreases the speed of your Pi so should be a last resort.
 		<br>See
-		<a href="https://github.com/raspberrypi/libcamera-apps/issues/246">more information</a>.
+		<a external="true"
+			href="https://github.com/raspberrypi/libcamera-apps/issues/246">more information</a>.
 	</ul>
 </ol>
 </details>
@@ -84,30 +83,6 @@ sudo apt update
 sudo apt full-upgrade
 sudo shutdown -r now
 </pre>
-</details>
-
-<h2>RPi settings are no longer good</h2>
-<details><summary></summary>
-<p>
-On October 31, 2021 a new version of the Raspberry Pi operating system,
-called "Bullseye" was released (the prior version was called "Buster").
-One of the changes in Bullseye was to replace the software that controls RPi cameras.
-If you downloaded the Raspberry Pi operating system on October 31 or after, you have Bullseye.
-<blockquote>
-It is <b>strongly</b> recommended that you use the Bullseye operating system if
-you have an RPi camera.
-All new features are being added to Bullseye only,
-so users of Buster won't have new features like sensor temperature.
-</blockquote>
-</p>
-<p>
-Some of the Allsky settings need to be changed when going from Buster to Bullseye.
-For example, the <span class="WebUISetting">Contrast</span> setting on Buster goes from
-<span class="WebUIValue">-100</span> to <span class="WebUIValue">100</span>
-but on Bullseye it starts at
-<span class="WebUIValue">0</span>.
-Hovering over a value will display the minimum, maximum, and default values for that setting.
-</p>
 </details>
 
 
@@ -126,14 +101,15 @@ they print an error message then exit with a non-zero code.
 An exit code of <b>137</b> usually means the command was forcefully killed by an outside source,
 often the Linux kernel.
 When this happens to an Allsky command, the log file will usually contain a message
-with <b>Killed</b> in it, and often with <b>RETCODE=137</b> in it.
+with <code>Killed</code> in it, and often with <code>RETCODE=137</code> in it.
 </p>
 <p>
 If you are using a RPi camera and get a notification message saying
 <code>ERROR  See /var/log/allsky.log for details</code>
 and the log file contains entries similar to these:
 <pre>
-Jan 20 18:45:50 allsky allsky.sh[4480]: /home/pi/allsky/allsky.sh: line 225:  4562 Killed "${ALLSKY_HOME}/${CAPTURE}" "${ARGUMENTS[@]}"
+Jan 20 18:45:50 allsky allsky.sh[4480]: /home/pi/allsky/allsky.sh: line 372:
+     4562 Killed "${ALLSKY_HOME}/${CAPTURE}" "${ARGUMENTS[@]}"
 Jan 20 18:45:50 allsky allsky.sh[4480]: 'capture_RPi' exited with RETCODE=137
 </pre>
 that usually means the Linux kernel killed the command because it was using
@@ -152,8 +128,8 @@ or additional space is needed.
 </blockquote>
 </p>
 <p>
-This problem happens more often on Pi's with small amounts of memory such as the Pi Zero
-with only 512 MB.
+This problem happens more often on Pi's with small amounts of memory such as
+the Pi Zero 2 with only 512 MB.
 It's less likely (although still possible) on a Pi 4 with 4 or 8 GB of memory.
 </p>
 </details>

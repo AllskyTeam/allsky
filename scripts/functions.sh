@@ -791,7 +791,7 @@ function one_instance()
 	local ERRORS=""
 	while [[ $# -gt 0 ]]; do
 		ARG="${1}"
-		case "${ARG}" in
+		case "${ARG,,}" in
 				--sleep)
 					SLEEP_TIME="${2}"
 					shift
@@ -829,7 +829,7 @@ function one_instance()
 					shift
 					;;
 				*)
-					ERRORS="${ERRORS}\nUnknown argument: '${ARG}'."
+					ERRORS+="\nUnknown argument: '${ARG}'."
 					OK="false"
 					;;
 		esac
@@ -863,9 +863,10 @@ function one_instance()
 	fi
 
 
+	[[ -z ${PID} ]] && PID="$$"
 	local NUM_CHECKS=0
 	local INITIAL_PID
-	while  : ;
+	while  :
 	do
 		((NUM_CHECKS++))
 
@@ -877,7 +878,7 @@ function one_instance()
 
 		[[ ${NUM_CHECKS} -eq 1 ]] && INITIAL_PID="${CURRENT_PID}"
 
-		# If the PID has changed since the first time we looked,
+		# If the INITIAL_PID has changed since the first time we looked,
 		# that means another process grabbed the lock.
 		# Since there may be several processes waiting, exit.
 		if [[ ${NUM_CHECKS} -eq ${MAX_CHECKS} || ${CURRENT_PID} -ne ${INITIAL_PID} ]]; then
@@ -886,9 +887,10 @@ function one_instance()
 			if [[ ${CURRENT_PID} -ne ${INITIAL_PID} ]]; then
 				echo -n  "Another process (PID=${CURRENT_PID}) got the lock." >&2
 			else
-				echo -n  "Made ${NUM_CHECKS} attempts at waiting. Process ${PID} still has lock." >&2
+				echo -n  "Made ${NUM_CHECKS} attempts at waiting." >&2
+				echo -n  " Process ${CURRENT_PID} still has lock." >&2
 			fi
-			echo -n  " If this happens often, check your settings." >&2
+			echo -n  " If this happens often, check your settings. PID=${PID}" >&2
 			echo -e  "${NC}" >&2
 			ps -fp "${CURRENT_PID}" >&2
 
@@ -913,7 +915,6 @@ function one_instance()
 		fi
 	done
 
-	[[ -z ${PID} ]] && PID="$$"
 	echo "${PID}" > "${PID_FILE}" || return 1
 
 	return 0
@@ -1004,7 +1005,7 @@ function upload_all()
 	if [[ -n ${LOCAL_WEB} && "$( settings ".uselocalwebsite" )" == "true" ]]; then
 		#shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/upload.sh" ${SILENT} ${ARGS} "${LOCAL_WEB}" \
-			"${UPLOAD_FILE}" "${ALLSKY_WEBSITE}/${SUBDIR}" "${DESTINATION_NAME}"
+			"${UPLOAD_FILE}" "${SUBDIR}" "${DESTINATION_NAME}"
 		((RET+=$?))
 	fi
 
@@ -1017,7 +1018,7 @@ function upload_all()
 		fi
 		#shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/upload.sh" ${SILENT} ${ARGS} "${REMOTE_WEB}" \
-			"${UPLOAD_FILE}" "${REMOTE_DIR}" "${DESTINATION_NAME}" "${FILE_TYPE}"
+			"${UPLOAD_FILE}" "${REMOTE_DIR}" "${DESTINATION_NAME}" "${FILE_TYPE}-website"
 		((RET+=$?))
 	fi
 
@@ -1030,7 +1031,7 @@ function upload_all()
 		fi
 		#shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/upload.sh" ${SILENT} ${ARGS} "${REMOTE_SERVER}" \
-			"${UPLOAD_FILE}" "${REMOTE_DIR}" "${DESTINATION_NAME}" "${FILE_TYPE}"
+			"${UPLOAD_FILE}" "${REMOTE_DIR}" "${DESTINATION_NAME}" "${FILE_TYPE}-server"
 		((RET+=$?))
 	fi
 

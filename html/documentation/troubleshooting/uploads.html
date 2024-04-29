@@ -31,11 +31,13 @@ Allsky supports several ways to upload files including
 <code>ftp</code>, <code>scp</code>, and others.
 </p>
 
+<h3>Testing an upload</h3>
 <p>
-After you've configured settings for a remote Website or remote server such as
+After you've configured settings such as
 <span class="WebUISetting">Server Name</span>
 and
-<span class="WebUISetting">Protocol</span>,
+<span class="WebUISetting">Protocol</span>
+for a remote Website or remote server,
 run one of the commands below, depending on whether you are testing uploads
 to a remote Allsky Website or a remote server:
 <pre>
@@ -43,24 +45,25 @@ testUpload.sh --website
 <span class="pl-c"> &nbsp; &nbsp; OR</span>
 testUpload.sh --server
 </pre>
+</p>
 
-This attempts to upload a test file and if it fails,
-it tries to determine why it failed and display what to do to fix it.
+<p>
+This attempts to upload a file and if it fails,
+it tries to determine why it failed and display how to fix it.
 </p>
 <p>
 If that doesn't help, look at the sections below for additional information.
-Uploads can fail for many reasons.
-The most common ones are described below, as well as their fixes.
 </p>
 
 <h3>Incorrect WebUI settings or URL mapping</h3>
-<details><summary></summary>
+<p>
 <blockquote>
 Most people use <code>ftp</code> or <code>sftp</code> to transfer files to another machine,
 so this section will assume that.
-The term "remote website" means a website not on your Pi,
+The term "remote Website" means an Allsky Website not on your Pi,
 but on a remote server, possibly one you pay for services on.
 </blockquote>
+</p>
 <p>
 The <span class="WebUISetting">Server Name</span>,
 <span class="WebUISetting">User Name</span>,
@@ -71,86 +74,19 @@ Allsky won't be able to either.
 Single quotes in the password can cause a problem for Allsky.
 </p>
 <p>
-The directory structure on your FTP server must match the Allsky standard;
+The directory structure on your remote server must match the Allsky standard;
 changing locations and/or names of files and directories on the remote Website
 will cause uploads to fail.
 </p>
-
-<blockquote>
-The concept of mapping URLs to file locations on a server is very important,
-but not very intuitive to most people.
-You may need to read this section multiple times.
-</blockquote>
 <p>
-When you enter a URL into a browser, how does the server know where the file is?
-It typically starts looking in the root of the website,
-which is specified by the hosting service.
-When you go to the WebUI, for example via <b>http://allsky</b>,
-the Pi's web server looks in <span class="fileName">~/allsky/html</span>
-since that's what the Allsky developers specified as the Pi's web root.
+If you don't know the difference in a file location on a server and
+its associated URL, check out the
+<a allsky="true" external="true" href="/documentation/explanations/serverLocationToURL.html">
+Mapping server locations to URLs</a> page.
 </p>
-<p>There are two paths to the file - one via a URL (<b>https://allsky</b>)
-and the other via the filesystem on the machine
-(<span class="fileName">~/allsky/html</span>).
-The web server software maps the URL to a file on a computer.
-Sometimes that mapping is easy, and other times it's more difficult.
-In both cases, it impacts what you enter into the settings into the
-<span class="WebUISetting">Image Directory</span> setting in the WebUI.
-</p>
-
-<h4>Easy case - URL matches server directory structure</h4>
-<p>
-Let's say you have a remote website at <b>https://mysite.com</b>
-where you store family photos.
-When you FTP into your server you see the family photos.
-This means your website URL is also the top-most directory of your remote
-server's directory structure, called the "root" 
-or <span class="fileName">/</span> directory.
-</p>
-<p>
-<a allsky="true" external="true"
-	href="/documentation/installations/AllskyWebsite.html">As recommended</a>,
-you create a directory in the root of the remote server called
-<span class="fileName">allsky</span> using your FTP client,
-and copy all the files from the Allsky Website to that directory.
-The URL to your Allsky Website would be <b>https://mysite.com/allsky</b>.
-In the WebUI set
-<span class="WebUISetting">Image Directory</span>
-to either <span class="WebUIValue">/allsky</span>
-or <span class="WebUIValue">allsky</span>, depending on your service provider.
-</p>
-
-
-<h4>More difficult case - URL does not match directory structure</h4>
-<p>
-You have the same website as above,
-but when you FTP into your server you don't see your family photos;
-instead, you see called something like
-<span class="fileName">myusername</span>
-(the actual directory(s) you see will depend on your service provider).
-When you go into the <span class="fileName">myusername</span>
-directory you see your photos.
-</p>
-<p>
-In this case the web server is mapping <b>https://mysite.com</b> to its
-<span class="fileName">myusername</span> directory.
-You need to create a directory on your server
-called <span class="fileName">myusername/allsky</span>
-and copy the Allsky Website files there.
-The URL to the Allsky Website is still <b>https://mysite.com/allsky</b>,
-but the <span class="WebUISetting">Image Directory</span> setting
-should be <span class="WebUIValue">/myusername/allsky</span>
-or <span class="WebUIValue">myusername/allsky</span>.
-</p>
-<p>
-Mapping of URLs to directories like this is fairly common on remote servers that
-are shared by many people.
-</p>
-</details>
 
 
 <h3>Certificate-related errors</h3>
-<details><summary></summary>
 <p>
 There are three main certificate-related error messages you'll see.
 </p>
@@ -174,8 +110,8 @@ There are three main certificate-related error messages you'll see.
 	<li>Create a file called <span class="fileName">~/.lftprc</span> and add
 	<code>set ssl:check-hostname false</code> to it:
 		<pre>echo "set ssl:check-hostname" &gt; ~/.lftprc</pre>
-	<li>Set <span class="WebUISetting">FTP Commands</span> setting
-		<code>set ssl:check-hostname false</code>.
+	<li>Set the <span class="WebUISetting">FTP Commands</span> setting to
+		<span class="WebUIValue">set ssl:check-hostname false</span>.
      	If you expect to execute <code>lftp</code> manually the first method is better,
 		otherwise use the second method so all your configuration changes are in one place.
 	</ol>
@@ -192,11 +128,9 @@ machine using the addressed changed, you probably need to remove the previous ke
 If the file has only one entry, simply remove it.
 If the file has multiple entries, make a backup of the file,
 then delete one entry at a time until you find the "bad" one.
-</details>
 
 
 <h3>Missing directories on the remote Website or server</h3>
-<details><summary></summary>
 <p>
 Review the 
 <a allsky="true" external="true"
@@ -206,8 +140,6 @@ or the
 href="/documentation/installations/RemoteServer.html">Remote server installation instructions</a>
 to determine how to create the necessary directories.
 </p>
-
-</details>
 
 
 </div><!-- Layout-main -->

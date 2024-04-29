@@ -342,7 +342,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 				# Create a mini-timelapse
 				# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
 				# This causes timelapse.sh to print "before" and "after" debug messages.
-				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+				if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
 					echo -e "NUM_IMAGES=${NUM_IMAGES}"
 					D="--debug"
 				else
@@ -438,10 +438,6 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 		H="$( settings ".imageresizeuploadsheight" )"
 		if [[ ${W} -gt 0 && ${H} -gt 0 ]]; then
 			RESIZE_UPLOADS="true"
-		else
-			RESIZE_UPLOADS="false"
-		fi
-		if [[ ${RESIZE_UPLOADS} == "true" ]]; then
 			# Need a copy of the image since we are going to resize it.
 			# Put the copy in ${WORKING_DIR}.
 			FILE_TO_UPLOAD="${WORKING_DIR}/resize-${IMAGE_NAME}"
@@ -453,6 +449,7 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 				FILE_TO_UPLOAD="${CURRENT_IMAGE}"
 			fi
 		else
+			RESIZE_UPLOADS="false"
 			FILE_TO_UPLOAD="${CURRENT_IMAGE}"
 		fi
 

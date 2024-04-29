@@ -59,21 +59,34 @@ if ($useRemoteWebsite) {
 	// Remote files may have "remote_" prepended to their names; if so, set the remote
 	// name to NOT include that string.
 	$remoteName = str_replace("remote_", "", $f);
+	$imageDir = getVariableOrDefault($settings_array, 'remotewebsiteimagedir', "");
+	$env_file = ALLSKY_ENV;
+	$errorMsg = "ERROR: Unable to process env file '$env_file'.";
+	$env_array = get_decoded_json_file($env_file, true, $errorMsg);
+	if ($env_array === null) {
+		$msg = "<strong>$f</strong> saved but NOT sent to remote Website; unable to read '$env_file'.";
+		message_and_exit($Warning, $msg);
+	}
+	$remoteHost = getVariableOrDefault($env_array, 'REMOTEWEBSITE_HOST', null);
+	if ($remoteHost === null) {
+		$msg = "<strong>$f</strong> saved but NOT sent to remote Website since there isn't one defined.";
+		message_and_exit($Warning, $msg);
+	}
 
 	$U1 = ALLSKY_SCRIPTS . "/upload.sh --silent --remote-web";
 	$U2 = "'$file' '$imageDir' '$remoteName' 'remote_file'";
 	$cmd = "$U1 $U2";
-	exec("echo sudo -u " . ALLSKY_OWNER . " $cmd 2>&1", $output, $return_val);
+	exec("sudo -u " . ALLSKY_OWNER . " $cmd 2>&1", $output, $return_val);
 	if ($return_val == 0) {
-		$msg = "$f saved and sent to remote Website as $remoteName.";
+		$msg = "<strong>$f</strong> saved and sent to remote Website as $remoteName.";
+		message_and_exit($Success, $msg);
 	} else {
-		$msg = implode("\n", $output);
-		$msg = "$f saved but unable to send to $remoteHost: <pre>$msg</pre>";
-		$msg .= "Executed $cmd";
+		$msg = "<strong>$f</strong> saved but unable to send to <strong>$remoteHost</strong>";
+		$msg .= "<pre>$U1<br>$U2 returned<br>" . implode("<br>", $output) . "</pre>";
 		message_and_exit($Error, $msg);
 	}
 } else {
-	$msg = "$f saved but NOT sent to remote Website since there isn't one defined.";
+	$msg = "$f saved but NOT sent to remote Website since it's not enabled.";
 	message_and_exit($Warning, $msg);
 }
 

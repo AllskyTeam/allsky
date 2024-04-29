@@ -144,7 +144,7 @@ function DisplayModule() {
             </div>
             <div class="modal-body">
                 <form id="oe-debug-dialog-form" class="form-horizontal">
-                    <div class="form-group">
+                    <!-- <div class="form-group">
                         <label for="checkbox" class="control-label col-xs-4"></label> 
                         <div class="col-xs-8">
                             <label class="checkbox-inline">
@@ -162,7 +162,7 @@ function DisplayModule() {
                             </div>
                             <p class="help-block">The maximum time a module can run for, in seconds. After this amount of time it will be disabled</p>
                         </div>
-                    </div>
+                    </div> -->
                     <div class="form-group">
                         <label for="checkbox" class="control-label col-xs-4"></label> 
                         <div class="col-xs-8">

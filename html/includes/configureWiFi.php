@@ -3,6 +3,7 @@
 function DisplayWPAConfig(){
 	global $page;
 	$debug = false;
+	$allowOpen = true;		// allow connecting to "open" SSIDs?  TODO: Any reason NOT to?
 	$myStatus = new StatusMessages();
 
 	// Find currently configured networks
@@ -20,6 +21,8 @@ function DisplayWPAConfig(){
 	$numNetworks = 0;
 	foreach($known_out as $line) {
 		$onLine++;
+		if ($line === "") continue;
+
 		if ($debug) echo "<br>Line $onLine: $line";
 		if (preg_match('/network\s*=/', $line)) {
 		if ($debug) echo "<br>&nbsp; &nbsp; new network";
@@ -154,9 +157,13 @@ if ($debug) { echo "<br>tmp_networks=<pre>"; print_r($tmp_networks); echo "</pre
 						if ($passphrase !== "")
 							fwrite($wpa_file, "\tpsk=$passphrase".PHP_EOL);
 						fwrite($wpa_file, "}".PHP_EOL);
+					} else if ($len == 0) {
+						$msg = "WPA passphrase for $ssid is required.";
+						$myStatus->addMessage($msg, "danger");
+						$ok = false;
 					} else {
 						$msg = "WPA passphrase for $ssid ($passphrase)";
-						$msg = "  is $len characters but must be between 8 and 63.";
+						$msg .= "  is $len characters but must be between 8 and 63.";
 						$myStatus->addMessage($msg, "danger");
 						$ok = false;
 					}
@@ -169,25 +176,25 @@ if ($debug) { echo "<br>tmp_networks=<pre>"; print_r($tmp_networks); echo "</pre
 				if( $returnval == 0 ) {
 					exec('sudo wpa_cli reconfigure', $reconfigure_out, $reconfigure_return );
 					if ($reconfigure_return == 0) {
-						$myStatus->addMessage('Wifi settings updated successfully', 'success');
+						$myStatus->addMessage('Wi-Fi settings updated successfully', 'success');
 						$networks = $tmp_networks;
 					} else {
-						$msg = 'Wifi settings updated but cannot restart';
+						$msg = 'Wi-Fi settings updated but cannot restart';
 						$msg .= ' (cannot execute "wpa_cli reconfigure")';
 						$myStatus->addMessage($msg, 'danger');
 					}
 				} else {
-					$myStatus->addMessage('Wifi settings failed to be updated', 'danger');
+					$myStatus->addMessage('Wi-Fi settings failed to be updated', 'danger');
 				}
 			}
 		} else {
-			$myStatus->addMessage('Failed to updated wifi settings', 'danger');
+			$myStatus->addMessage('Failed to updated Wi-Fi settings', 'danger');
 		}
 	}
 
 	// Scan for all networks.
 	exec( 'sudo wpa_cli scan' );
-	sleep(3);
+	sleep(2);
 	$cmd = 'sudo wpa_cli scan_results';
 	exec( $cmd, $scan_return );
 if ($debug) { echo "<br><pre>wpa_cli scan_results:<br>"; print_r($scan_return); echo "</pre>"; }
@@ -197,14 +204,17 @@ if ($debug) { echo "<br><pre>wpa_cli scan_results:<br>"; print_r($scan_return); 
 	}
 	// display output
 	$have_multiple = false;
-	static $note = " <span style='color: red; font-weight: bold'>*</span>";
+	static $note = " <span style='color: red; font-weight: 900; font-size: 110%;'>*</span>";
 	// $networks contains the prior-configured SSID(s).
 	// New SSIDs are added to $networks.
 	if (! isset($networks)) $networks = [];	// eliminates warning messages in log file
 
 	// Walk through each scanned network.
 	$numScannedNetworks = 0;
+	$noSSID = "";
+	$onLine = 0;
 	foreach( $scan_return as $network ) {
+		$onLine++;
 		$arrNetwork = preg_split("/[\t]+/",$network);
 		// fields:		bssid,   frequency, signal level, flags,    ssid 
 		// fields:		         channel                  protocol
@@ -242,12 +252,18 @@ if ($debug) { echo "<br><pre>wpa_cli scan_results:<br>"; print_r($scan_return); 
 				);
 			}
 		} else {
-			// TODO: Is this ok?
-			$myStatus->addMessage("'$cmd' returned line without SSID in field 4: $network", 'warning');
+			if ($noSSID === "") {
+				$noSSID = "[$cmd] Returned no SSD on:";
+			}
+			$noSSID .= "\n line $onLine: $network";
 		}
 	}
 	if ($numScannedNetworks == 0) {
 		$myStatus->addMessage("No scanned networks found", 'warning');
+	} else if ($noSSID !== "") {
+		// It's common for multiple lines to not have an SSID,
+		// so don't use addMessage().
+		echo "<script>console.log(`$noSSID`)</script>";
 	}
 
 	exec( 'iwconfig wlan0', $iwconfig_return );
@@ -318,20 +334,35 @@ if ($debug) { echo "<br><pre>wpa_cli scan_results:<br>"; print_r($scan_return); 
 					}
 					echo "</td>";
 
-					echo "\n\t<td><input type='hidden' name='protocol$index' value='$protocol' />$protocol</td>";
+					echo "\n\t<td>";
+					if ($protocol === 'Open' && ! $allowOpen) {
+						echo "Open $note $note";
+					} else {
+						echo "<input type='hidden' name='protocol$index' value='$protocol' />$protocol";
+					}
+					echo "</td>";
 
-					if ($protocol === 'Open')
-						echo "\n\t<td><input type='hidden' name='passphrase$index' value='' />---</td>";
-					else
-						echo "\n\t<td><input type='password' class='form-control' style='width: 7em; font-size: 80%; padding-left: 2px; padding-right: 2px;' name='passphrase$index' title='$fullPassphrase' value='$passphrase' onKeyUp='CheckPSK(this, " . '"' . "update$index" . '"' .")'></td>";
+					echo "\n\t<td>";
+					if ($protocol === 'Open') {
+						echo "<input type='hidden' name='passphrase$index' value='' />---";
+					} else {
+						echo "<input type='password'";
+						echo " class='form-control'";
+						echo " style='width: 7em; font-size: 80%; padding-left: 2px; padding-right: 2px;'";
+						echo " name='passphrase$index'";
+						echo " title='$fullPassphrase'";
+						echo " value='$passphrase'";
+						echo " onKeyUp='CheckPSK(this, " . '"' . "update$index" . '"' .")'>";
+					}
+					echo "</td>";
+
 					echo "\n\t<td>";
 					echo '<div class="btn-group btn-block nowrap">';
 					$buttonStyle = "style='padding-left: 3px; padding-right: 3px; width: 4em; pointer-events: auto;'";
-					$d = ($protocol === 'Open') ? ' disabled title="Cannot add Open SSIDs" ' : '';
-					$d="";		// TODO: Any reason NOT to allow adding Open SSIDs ?
+					$d = ($protocol === 'Open' && ! $allowOpen) ? ' disabled title="Cannot add Open SSIDs" ' : '';
 					if ($configured) {
 						echo "<input type='submit' class='btn btn-warning' $buttonStyle value='Update' ";
-						if ($protocol === 'TODO: why not?   Open')
+						if ($protocol === 'Open' && ! $allowOpen)
 							echo "disabled title='Cannot update Open SSIDs' />";
 						else
 							echo "id='update$index' name='update$index' $d />";
@@ -351,12 +382,14 @@ if ($debug) { echo "<br><pre>wpa_cli scan_results:<br>"; print_r($scan_return); 
 			</form>
 		</div><!-- ./ Panel body -->
 		<div class="panel-footer">
-			<?php if ($have_multiple)
-				echo "$note SSID is in multiple channels and/or bands; only the first is listed above.<br>";
+			<?php
+				if ($have_multiple)
+					echo "$note SSID is in multiple channels and/or bands; only the first is listed.<br>";
+				if (! $allowOpen) {
+					echo "$note $note WEP (insecure) access points appear as 'Open'.";
+					echo " Allsky does not support connecting to WEP for security reasons.";
+				}
 			?>
-			<strong>Note,</strong>
-			WEP access points appear as 'Open'.
-			Allsky does not currently support connecting to WEP.
 		</div>
 		</div><!-- /.panel-primary -->
 	</div><!-- /.col-lg-12 -->

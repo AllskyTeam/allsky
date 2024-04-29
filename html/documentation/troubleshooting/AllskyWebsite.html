@@ -32,27 +32,29 @@ This page lists various issues you may have with the Allsky Website and how to s
 <h2>WARNING: sunset is XX days old. Check Allsky log file if 'postData.sh' has been running...</h2>
 <p>
 If you have a local or remote Allsky Website, at the end of every night
-Allsky calls <code>postData.sh</code> to upload a small file called
+Allsky calls <code>postData.sh</code> to upload a file called
 <span class="fileName">data.json</span> to the Website(s).
 This file contains the sunset time and other information needed by the Website.
 </p>
-If you are seeing the message above when you go to the Allsky Website in a browser,
+<p>
+If you are seeing the message above when you go to the Allsky Website,
 try running the command manually:
-<pre>cd ~/allsky/scripts
-./postData.sh</pre>
-
+<pre>postData.sh</pre>
+</p>
+<p>
 There will be no output on success.
 If you see an error message and it's not obvious what it means, run:
-<pre>./postData.sh --debug</pre>
+<pre>postData.sh --debug</pre>
 which will produce many lines of debugging output which may help you determine
 where the problem is.
-At a minimum, it will provide something to attach to any trouble ticket you enter.
+At a minimum, it will provide something to attach to any GitHub Issue you enter.
+</p>
 
 <h2>ERROR: 'sunset' not defined in 'data.json' ...</h2>
 <p>
 Follow the instructions in the error message.
 If this message continues to appear,
-open a new <a href="https://github.com/AllskyTeam/allsky/issues">Issue</a>.
+open a new <a external="true" href="https://github.com/AllskyTeam/allsky/issues">Issue</a>.
 </p>
 
 
@@ -67,9 +69,8 @@ If that didn't happen, you must manually update the
 <span class="editorSetting">fileName</span> value in
 the <span class="fileName">configuration.json</span> file (local and/or remote)
 via the WebUI's <span class="WebUILink">Editor</span> page.
-If that solved your problem, please
-open an <a href="https://github.com/AllskyTeam/allsky/issues">Issue</a> per
-<a allsky="true" href="/documentation/troubleshooting/reportingIssues.html">these instructions</a>.
+If that solved your problem, please follow
+<a allsky="true" href="reportingIssues.html">these instructions</a> to report a problem.
 </p>
 
 
@@ -91,41 +92,45 @@ If you are using the Pi's hostname in the URL,
 for example <code>http://allsky/allsky</code>, then try using the Pi's IP address,
 for example <code>http://192.168.0.21/allsky</code>.
 </p>
+<blockquote>
+Remember that to access an Allsky Website on your Pi you need to enter
+<code>http://allsky/allsky</code>; entering
+<code>http://allsky</code> takes you to the WebUI.
+</blockquote>
 
 <h2>Archived video files have no thumbnail</h2>
 <p>
 If you click on the
-<i class="fa fa-lg fa-fw fa-play-circle"></i> "Archived Timelapses" icon on the left side of the
+<i class="fa fa-lg fa-fw fa-play-circle" style="color: #888"></i> (Archived Timelapses)
+icon on the left side of the
 Website and one or more videos say "No Thumbnail", see below.
 </p>
-<div style="margin-left: 5em">
-<h3>On your Pi</h3>
+<h4>On your Pi</h4>
+<p>
 This shouldn't happen on the Pi - it should automatically create the thumbnails when
 you go to the archived timelapses directory.
 Look in <span class="fileName">/var/log/lighttpd/error.log</span> for clues to the problem.
+</p>
 
-<h3>On a remote server</h3>
+<h4>On a remote server</h4>
 <p>
 For security reasons, many hosting solutions disable the commands needed to create
 video thumbnails.
 </p>
 <p>
-To overcome this problem, edit the <span class="fileName">config.sh</span> file via the WebUI
-and set <span class="shSetting">TIMELAPSE_UPLOAD_THUMBNAIL</span> to "true".
-If you are uploading mini-timelapse, also set
-<span class="shSetting">TIMELAPSE_MINI_UPLOAD_THUMBNAIL</span> to "true".
+To overcome this problem
+enable the <span class="WebUISetting">Upload Thumbnail</span> setting(s)
+for the Daily and/or Mini Timelapse.
 <blockquote>
 Making this change will only create thumbnails for all <em>future</em> videos.
-To create the currently missing thumbnails, do the following for each missing date,
+To create the currently missing thumbnails, do the following for each missing thumbnail,
 replacing <code>YYYYMMDD</code> with the date in <span class="fileName">~/allsky/images</span>
 <pre>
-cd ~/allsky/scripts
-./generateForDay.sh --thumbnail-only --upload --timelapse YYYYMMDD
+generateForDay.sh --thumbnail-only --upload --timelapse YYYYMMDD
 </pre>
 This will upload the thumbnail for the specified date.
 </blockquote>
 </p>
-</div>
 
 </div><!-- Layout-main -->
 </div><!-- Layout -->

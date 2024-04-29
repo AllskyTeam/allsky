@@ -373,8 +373,11 @@ int main(int argc, char *argv[])
 		exit(EXIT_ERROR_STOP);
 	}
 
-	char *x = getenv("ALLSKY_DEBUG_LEVEL");
+	char *x;
+	x = getenv("ALLSKY_DEBUG_LEVEL");
 	if (x != NULL) { CG.debugLevel = atoi(x); }
+	x = getenv("CAMERANUMBER");
+	if (x != NULL) { CG.cameraNumber = atoi(x); }
 
 	CG.connectedCamerasFile = getenv("CONNECTED_CAMERAS_INFO");
 	if (CG.connectedCamerasFile == NULL)

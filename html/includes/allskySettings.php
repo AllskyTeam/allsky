@@ -352,11 +352,6 @@ if ($debug) {
 	if ($s != $s_newValue) { echo "<br><br>settings_array[$name] = $s, newValue=$s_newValue"; }
 }
 						$settings_array[$name] = $newValue;
-if ($debug && $s != $s_newValue) {
-	echo "<br><pre>====== settings_array['height'] now:<br>";
-	var_dump($settings_array['height']);
-	echo "</pre>";
-}
 					}
 
 					if ($name === $debugLevelName && $newValue >= 4) {

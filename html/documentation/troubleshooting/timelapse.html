@@ -15,6 +15,7 @@
 		} 
 	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../css/custom.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<title>Timelapse Problems</title>
 </head>
@@ -26,64 +27,68 @@
 
 <p>
 Timelapse video creation can fail for a number of reasons.
-Luckily following the troubleshooting steps below will almost always fix it.
+The steps below, which apply to both the daily timelapse as well as mini timelapse,
+will almost always fix it.
 <p>
 
 <h2>Timelapse video is not created</h2>
 <details><summary></summary>
 <p>
-Using the WebUI's <span class="WebUIWebPage">Allsky Settings</span>
-page, check that <span class="shSetting">TIMELAPSE</span> is "true"</span>
-in <span class="fileName">config.sh</span>.
-If it is, then you should see a message in
+First make sure the timelapse is enabled.
+In the <span class="settingsHeader">Timelapse Settings</span> section of the
+WebUI's <span class="WebUILink">Allsky Settings</span> page,
+check that <span class="WebUISetting">Generate</span>
+setting for a Daily Timlapse is enabled;
+for a mini-timelapse, make sure <span class="WebUISetting">Number of Images</span>
+is <strong>not</strong> <span class="WebUIValue">0</span>.
+</p>
+
+<p>
+If the timelapse is enabled you should see a message in
 <span class="fileName">/var/log/allsky.log</span> like this:
 <pre>
 *** timelapse.sh: ERROR: ffmpeg failed.
-Error log is in '/home/pi/allsky/tmp/timelapseTMP.txt'.
 </pre>
 (<code>ffmpeg</code> is the command that actually creates the video.)
 </p>
 <p>
-Look at the <b>end</b> of the <span class="fileName">timelapseTMP.txt</span>
-file for an error message that looks like one of the following:
+See if one of the first lines in the error message is either:
 <pre>
-/home/pi/allsky/scripts/timelapse.sh: line 128: 6546 Killed ffmpeg -y -f image2 -loglevel ...
+/home/pi/allsky/scripts/timelapse.sh: line 294: 6546 Killed ffmpeg -y -f image2 -loglevel ...
 </pre>
 &nbsp; &nbsp; <b>OR</b>
 <pre>
 x264 [error]: malloc of size 38600544 failed
 </pre>
 <p>
-These errors are almost always caused by either not enough RAM memory and swap space,
+These errors are almost always caused by not enough RAM memory and swap space,
 or by having a large camera sensor (e.g., the RPi HQ).
 </p>
 <p>
 To fix, do the following:
-<ul>
+<ol>
 <li>Decide if you need a full-resolution video.
 	Most monitors only display High Definition (HD) which is 1920 x 1080 pixels.
-	If your sensor size is larger than that you can decrease the
-	<span class="shSetting">TIMELAPSEWIDTH</span> and
-	<span class="shSetting">TIMELAPSEHEIGHT</span> settings in
-	<span class="fileName">config.sh</span> to 1920 by 1080,
+	If your sensor size is larger than that you can decrease the timelapse
+	<span class="WebUISetting">Width</span> and
+	<span class="WebUISetting">Height</span> settings to 1920 by 1080,
 	adjusted for the aspect ratio of your sensor.
 	Decreasing these values will also make the video file smaller.
 	Even if your monitor can display higher resolution than HD,
 	do other people who will view your video have monitors that can?  
 	If this doesn't solve your problem, do the steps below.
 
-<li>If you saw the <b>Killed</b> error in <span class="fileName">timelapseTMP.txt</span>,
+<li>If you saw the <code>Killed ffmpeg ...</code> error
 	increase swap space (or buy a Pi with more memory).
 	The Linux kernel will kill any process that is taking "too much" memory
-	and swap space to avoid system issues.
+	to avoid system issues.
 	Click <a allsky="true" href="increaseSwap.html">here</a>
 	for details on how to increase swap.
 
 <li>Install <code>htop</code> via <code>sudo apt install htop</code>.
-	It's a nicer version of <code>top</code>, and is great for checking
-	<code>ffmpeg</code>'s memory use.
+	It's great for checking <code>ffmpeg</code>'s memory use.
 	Run <code>htop</code> in one terminal while running
-	<code>scripts/generateForDay.sh -t DATE</code>
+	<code>generateForDay.sh --timelapse DATE</code>
 	in another terminal to check on <code>ffmpeg</code>'s memory use.
 	<br>
 	If the number in the "VIRT" (virtual memory) column of <code>htop</code>
@@ -91,55 +96,43 @@ To fix, do the following:
 	adding swap space will <u>unlikely</u> fix the issue so you'll need to try one
 	of the other workarounds.
 
-<li>The <b>malloc</b> error is often caused by using a very high resolution camera.
-	The default video codec (<span class="shSetting">VCODEC</span>) in
-	<span class="fileName">config.sh</span>
-	is <span class="editorString">libx264</span>
+<li>The <code>malloc of size ...</code> error is often caused by using a
+	high resolution camera.
+	The default video codec (<span class="WebUISetting">VCODEC</span>) setting
+	is <span class="WebUIValue">libx264</span>
+<!--- 4096 x 2304 is the max for Buster -->
 	which has a stated maximum resolution of 4096 x 2304.
-	However, the RPi HQ, ZWO ASI183, and some newer cameras have resolutions higher than that.
-	If you saw the <b>malloc</b> error do one of the following:
+	However, the RPi HQ, ZWO ASI183, and other cameras have resolutions higher than that.
+	If you saw the <code>malloc</code> error do one of the following:
 	<ul>
-	<li>Decrease the <span class="shSetting">TIMELAPSEWIDTH</span>
-		and <span class="shSetting">TIMELAPSEHEIGHT</span>
-		variables in <span class="fileName">config.sh</span>.
-		For the RPi HQ camera (and likely any other camera),
-		the maximum that actually works is 3810 x 2828
-		(which interestingly is over the maximum for the <span class="editorString">libx264</span>
-		<span class="shSetting">VCODEC</span>).
-   	<li>Use the <span class="editorString">libx265</span>
-		<span class="shSetting">VCODEC</span> in
-		<span class="fileName">config.sh</span> along with
-		<span class="shSetting">TIMELAPSE_EXTRA_PARAMETERS</span>="<span class="editorString">-x265-params crf=30</span>".
-		This <span class="shSetting">VCODEC</span> takes a <u>long</u> time to create a video
-		(over 3 hours on a PI 4b with 1650 RPi HQ images versus about 15 minutes
-		with <span class="editorString">libx264</span>).
-		Lower <b>crf</b> numbers (a measure of file compression) mean larger,
-		higher-quality videos.
+	<li>Decrease the timelapse <span class="WebUISetting">Width</span>
+		and <span class="WebUISetting">Height</span> settings.
+	<li>Set the <span class="WebUISetting">VCODEC</span> setting to
+   		<span class="WebUIValue">libx265</span> and set timelapse
+		<span class="WebUISetting">Extra Parameters</span> to
+		<span class="WebUIValue">-x265-params crf=30</span>.
+
+		This video codec takes a <u>long</u> time to create a video
+		(over 3 hours on a PI 4b with 1500 RPi HQ images versus about 15 minutes
+		with <span class="WebUIValue">libx264</span>).
+		Lower <span class="WebUIValue">crf</span> numbers
+		(a measure of file compression) mean larger, higher-quality videos.
 		Note that small changes to the number can result in <u>huge</u> difference in file size,
-		for example, going from <span class="editorString">crf=30</span> to
-		<span class="editorString">crf=25</span> can increase the video size by over <b>five</b> times.
+		for example, going from <span class="WebUIValue">crf=30</span> to
+		<span class="WebUIValue">crf=25</span>
+		can increase the video size by over <b>five</b> times.
 	</ul>
-</ul>
+</ol>
 
-</details>
-
-
-<h2>Message in log file: "deprecated pixel format used, make sure you did set range correctly"</h2>
-<details><summary></summary>
-<p>
-You can safely ignore this message.
-</p>
 </details>
 
 
 <h2>Timelapse video doesn't have the correct number of images</h2>
 <details><summary></summary>
 <p>
-The number of images (also called "frames") in a timelapse video is simply
+The number of images (also called "frames") in a timelapse video is
 the number of seconds long it is (including fractions of a second) times the
-Frames Per Second (FPS) you set in <span class="fileName">config.sh</span>.
-</p>
-<p>
+Frames Per Second (<span class="WebUISetting">FPS</span>) you set.
 Execute the following to determine how many frames are in a video file as
 well as the length in seconds.
 Ignore the <code>fps</code> number,
@@ -149,24 +142,22 @@ ffmpeg -i <i>YOUR_FILE</i> -vcodec copy -f rawvideo -y /dev/null 2&gt;&amp;1 | t
 </pre>
 </p>
 <p>
-We believe one cause for videos that are too short is zero-length files.
+One cause for videos that are too short is zero-length files.
 Apparently when <code>ffmpeg</code> encounters a zero-length file it quits.
-Please make sure you have <span class="shSetting">REMOVE_BAD_IMAGES</span>
-set to "true" in <span class="fileName">config.sh</span> so zero-length
-and other "bad" images are not saved.
-</p>
-<p>
 To remove zero-length files for a specified day, do the following,
-replacing "DATE" with the name of directory in <code>allsky/images</code>:
-<pre>cd ~/allsky/scripts; ./removeBadImages.sh DATE</pre>.
+replacing "DATE" with the name of a directory in <span class="fileName">~/allsky/images</span>:
+<pre>removeBadImages.sh DATE</pre>
 It will take a while to run.
 When it's done you can re-create the timelapse by executing:
-<pre>cd ~/allsky/scripts; ./generateForDay.sh -t DATE</pre>.
-</p>
-<p>
-<span style="color: red">NEED MORE INFO ON WHAT TO CHECK/DO</span>
+<pre>generateForDay.sh --timelapse DATE</pre>
 </p>
 </details>
+
+
+<h2>Message in log file: "deprecated pixel format used, make sure you did set range correctly"</h2>
+<p>
+You can safely ignore this message.
+</p>
 
 
 </div><!-- Layout-main -->

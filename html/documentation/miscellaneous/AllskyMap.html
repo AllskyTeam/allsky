@@ -29,40 +29,41 @@
 <h2>Overview</h2>
 <p>
 The
-<a external="true" href="https://www.thomasjacquin.com/allsky-map/" target="_blank">Allsky Map</a>.
-shows the location of all known allsky cameras as well as basic information about them.
+<a external="true" href="https://www.thomasjacquin.com/allsky-map/" target="_blank">Allsky Map</a>
+shows the location and basic information of all known allsky cameras.
+Clicking on a pin displays information about the camera and if the owner has
+set their image URL, you'll see their last image as well;
+clicking on the image takes you to their Allsky website.
 </p>
 
 <img allsky="true" src="allsky-map-with-pins.png" class="imgCenter imgBorderDark" title="Example Allsky Map" loading="lazy">
 
+
+<h3>How to add your camera</h3>
 <p>
 To add your camera to the map, enable the <span class="WebUISetting">Show On Map</span>
 setting in the <span class="settingsHeader">Allsky Map Settings</span> section of the WebUI.
 If your camera is already on the map you can remove it by turning the setting off.
-You can also update your information by changing any of the map-related fields in the WebUI.
+You can also update your information by changing any of the map-related settings.
 </p>
 <p>
 Once you've enabled <span class="WebUISetting">Show On Map</span>,
-your map information will be automatically sent to the map server every other day
-so it can distinguish current data from old, expired data.
+your map information will be automatically sent to the map server whenever you change it,
+as well as every other day so it can distinguish current data from old, expired data.
 </p>
 <p>
 All these changes take effect immediately - no human intervention required!
 </p>
-<p>
-Clicking on a pin on the map displays information about the camera and if the owner has
-set their image URL, you'll see the last image as well.
-And if the owner set their website URL you can click on the image to go to their Allsky website.
-</p>
 
 <p>
 See the 
-<a allsky="true" external="true" href="/documentation/settings/allsky.html#AllskyMap" target="_blank">Allsky Settings</a>
-documentation page for a description of each map-related setting in the WebUI.
+<a allsky="true" external="true" href="/documentation/settings/allsky.html#AllskyMap"
+	target="_blank">Allsky Settings</a>
+documentation page for a description of the map-related settings.
 </p>
 
 
-<h2>My Website isn't available on the Internet</h2>
+<h3>My Website isn't available on the Internet</h3>
 You can still have a pin of your camera's location appear on the map - just
 leave the <span class="WebUISetting">Website URL</span> and
 <span class="WebUISetting">Image URL</span> fields blank in the WebUI.

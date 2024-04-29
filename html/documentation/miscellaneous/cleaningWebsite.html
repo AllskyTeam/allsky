@@ -24,33 +24,25 @@
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
 <div class="Layout-main markdown-body" id="mainContents">
 
-<h2>How to clean up old Allsky files from a Website on your Pi</h2>
+<h2>Removing old Allsky files from a Website on your Pi</h2>
 <p>
-You can easily limit the number of days of images stored on your local Website by
-using the WebUI to edit the
-<span class="shSetting">WEB_DAYS_TO_KEEP</span> setting in
-<span class="fileName">config.sh</span> with the number of days' data you want to keep.
+You can easily limit the number of days of images stored on your local Website via
+the <span class="WebUISetting">Days To Keep on Pi Website</span>
+setting in the WebUI with the number of days' data you want to keep.
 Older files will be removed every morning.
 </p>
 
-<h2>How to clean up old Allsky files from a remote Website</h2>
-<p>
-<blockquote>
-The following instructions assume your startrails, keograms,
-and timelapse files are stored in the directories specified in
-<span class="fileName">ftp-settings.sh</span>.
-</blockquote>
-</p>
+<h2>Removing old Allsky files from a remote Website</h2>
 <p>
 Because remote web sites vary, the instructions below are generic and it's
 assumed you know how to perform the steps.
 
-<ul>
-<li>Connect to the web site.
+<ol>
+<li>Connect to the remote Website server.
 <li>For each of the <span class="fileName">startrails</span>,
 	<span class="fileName">keograms</span>,
 	and <span class="fileName">videos</span> directories do the following:
-	<ul>
+	<ul class="minimalPadding">
 	<li>Enter the directory.
 	<li>Search for all *.jpg, *.png, or *.mp4 files older than your threshold,
 		for example, older than one month.
@@ -58,7 +50,7 @@ assumed you know how to perform the steps.
 		<b>Do NOT remove the <span class="fileName">index.php</span> files!</b>
 	<li>Enter the <span class="fileName">thumbnails</span> sub-directory
 		and delete files older than your threshold.
-</ul>
+</ol>
 
 
 </div><!-- Layout-main -->

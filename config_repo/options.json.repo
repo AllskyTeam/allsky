@@ -783,7 +783,6 @@
 "type" : "float",
 "usage" : "capture",
 "carryforward" : true,
-"checkchanges" : true,
 "action" : "reload"
 },
 {
@@ -1479,9 +1478,8 @@
 "label" : "VCODEC",
 "type" : "text",
 "carryforward" : true,
-"comment": "check using ffmpeg -encoder looking at argument 2 for ' libxs264  '",
 "booldependson" : "timelapsegenerate",
-"checkchanges": true
+"checkchanges" : true
 },
 {
 "name" : "timelapsepixfmt",
@@ -1491,7 +1489,6 @@
 "type" : "text",
 "carryforward" : true,
 "booldependson" : "timelapsegenerate",
-"comment": "check using ffmpeg -pix_fmts looking at argument 2 for ' yuv420p  '",
 "checkchanges" : true
 },
 {
@@ -1919,7 +1916,7 @@
 {
 "name" : "remotewebsiteimageuploadoriginalname",
 "default" : false,
-"description" : "Enable to upload images using YYYYMMDDHHMMSS naming.",
+"description" : "Enable to upload images using YYYYMMDDHHMMSS naming.  Rarely used.",
 "label" : "Upload With Original Name",
 "type" : "boolean",
 "carryforward" : true,
@@ -1928,7 +1925,7 @@
 {
 "name" : "remotewebsitevideodestinationname",
 "default" : "",
-"description" : "Optional name of the remote video file.",
+"description" : "Optional name of the remote video file.  Rarely used.",
 "label" : "Remote Video File Name",
 "type" : "text",
 "carryforward" : true,
@@ -1938,7 +1935,7 @@
 {
 "name" : "remotewebsitekeogramdestinationname",
 "default" : "",
-"description" : "Optional name of the remote keogram file.",
+"description" : "Optional name of the remote keogram file.  Rarely used.",
 "label" : "Remote Keogram File Name",
 "type" : "text",
 "carryforward" : true,
@@ -1948,7 +1945,7 @@
 {
 "name" : "remotewebsitestartrailsdestinationname",
 "default" : "",
-"description" : "Optional name of the remote startrails file.",
+"description" : "Optional name of the remote startrails file.  Rarely used.",
 "label" : "Remote Startrails File Name",
 "type" : "text",
 "carryforward" : true,
@@ -2154,7 +2151,7 @@
 {
 "name" : "remoteserverimageuploadoriginalname",
 "default" : false,
-"description" : "Enable to upload images using YYYYMMDDHHMMSS naming.",
+"description" : "Enable to upload images using YYYYMMDDHHMMSS naming.  Rarely used.",
 "label" : "Upload With Original Name",
 "type" : "boolean",
 "carryforward" : true,
@@ -2162,8 +2159,8 @@
 },
 {
 "name" : "remoteservervideodestinationname",
-"default" : "",
-"description" : "Optional name of the remote video file.",
+"default" : "allsky.mp4",
+"description" : "Optional name of the remote video file. Usually used.",
 "label" : "Remote Video File Name",
 "type" : "text",
 "carryforward" : true,
@@ -2172,8 +2169,8 @@
 },
 {
 "name" : "remoteserverkeogramdestinationname",
-"default" : "",
-"description" : "Optional name of the remote keogram file.",
+"default" : "keogram.jpg",
+"description" : "Optional name of the remote keogram file. Usually used.",
 "label" : "Remote Keogram File Name",
 "type" : "text",
 "carryforward" : true,
@@ -2182,8 +2179,8 @@
 },
 {
 "name" : "remoteserverstartrailsdestinationname",
-"default" : "",
-"description" : "Optional name of the remote startrails file.",
+"default" : "startrails.jpg",
+"description" : "Optional name of the remote startrails file. Usually used.",
 "label" : "Remote Startrails File Name",
 "type" : "text",
 "carryforward" : true,

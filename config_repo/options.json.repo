@@ -1317,7 +1317,8 @@
 "description": "Width of resized timelapse video. <span class='WebUIValue'>0</span> disables resize.",
 "label": "Width",
 "type": "integer",
-"booldependson" : "timelapsegenerate"
+"booldependson" : "timelapsegenerate",
+"checkchanges" : true
 },
 {
 "name": "timelapseheight",
@@ -1327,7 +1328,8 @@
 "description": "Height of resized timelapse video. <span class='WebUIValue'>0</span> disables resize.",
 "label": "Height",
 "type": "integer",
-"booldependson" : "timelapsegenerate"
+"booldependson" : "timelapsegenerate",
+"checkchanges" : true
 },
 {
 "name": "timelapsebitrate",
@@ -1337,7 +1339,8 @@
 "description": "Bitrate (in K) of timelapse video. Higher values produce higher quality but larger files. Do NOT add <code>k</code>.",
 "label": "Bitrate",
 "type" : "integer",
-"booldependson" : "timelapsegenerate"
+"booldependson" : "timelapsegenerate",
+"checkchanges" : true
 },
 {
 "name": "timelapsefps",
@@ -1432,7 +1435,8 @@
 "description": "Width of resized mini-timelapse video. <span class='WebUIValue'>0</span> disables resize.",
 "label": "Width",
 "type": "integer",
-"valuedependson" : "minitimelapsenumimages=[1-9]*"
+"valuedependson" : "minitimelapsenumimages=[1-9]*",
+"checkchanges" : true
 },
 {
 "name": "minitimelapseheight",
@@ -1442,7 +1446,8 @@
 "description": "Height of resized mini-timelapse video. <span class='WebUIValue'>0</span> disables resize.",
 "label": "Height",
 "type": "integer",
-"valuedependson" : "minitimelapsenumimages=[1-9]*"
+"valuedependson" : "minitimelapsenumimages=[1-9]*",
+"checkchanges" : true
 },
 {
 "name": "minitimelapsebitrate",

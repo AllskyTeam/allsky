@@ -1092,7 +1092,7 @@ get_desired_locale()
 	if [[ -z ${DESIRED_LOCALE} ]]; then
 		MSG="You need to set the locale before the installation can run."
 		MSG+="\n  If your desired locale was not in the list,"
-		MSG+="\n   run 'raspi-config' to update the list, then rerun the installation."
+		MSG+="\n   run 'sudo raspi-config' to update the list, then rerun the installation."
 		display_msg info "${MSG}"
 		display_msg --logonly info "No locale selected; exiting."
 

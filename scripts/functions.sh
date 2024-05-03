@@ -246,9 +246,8 @@ function get_connected_cameras_info()
 			echo -e "RPi\t0 : imx477 [4056x3040]"
 
 		else
-			local C="$( LIBCAMERA_LOG_LEVELS=FATAL "${CMD_TO_USE_}" --list-cameras 2>&1 |
-				grep -E '^[0-9] : ' )"
-			echo -e "RPi\t${C}"
+			LIBCAMERA_LOG_LEVELS=FATAL "${CMD_TO_USE_}" --list-cameras 2>&1 |
+				grep -E '^[0-9] : ' | sed 's/^/RPi\t/'
 		fi
 	fi
 

@@ -71,6 +71,9 @@ Here are some steps to try.
 		<br>See
 		<a href="https://github.com/raspberrypi/libcamera-apps/issues/246">more information</a>.
 	</ul>
+<li>Ensure your user is a member of the video group, or you will not have access to the camera device.
+	Add the user to the group by running <pre>sudo adduser USERNAME video</pre>, then logging out and back in.
+	When you run <pre>libcamera-jpeg --list-cameras</pre> you should see your camera listed.
 </ol>
 </details>
 

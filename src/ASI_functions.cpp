@@ -11,22 +11,24 @@
 extern int iNumOfCtrl;
 char *skipType(char *);
 
-#define CAMERA_NAME_SIZE	64
-#define	MODULE_SENSOR_SIZE	100
-// +5 for other characters in name
-#define CC_MODEL_SIZE		(CAMERA_NAME_SIZE + MODULE_SENSOR_SIZE + 5)
-
 #define CC_TYPE_SIZE		10
+#define CAMERA_NAME_SIZE	64
+#define	MODULE_SIZE			100
+// +5 for other characters in name
+#define SENSOR_SIZE			(CAMERA_NAME_SIZE + MODULE_SIZE + 5)
+#define FULL_SENSOR_SIZE	(2 * SENSOR_SIZE)
+
 // Holds connected camera types.
 struct CONNECTED_CAMERAS
 {
 	int cameraID;
 	char Type[CC_TYPE_SIZE];				// ZWO or RPi
-	char Name[CAMERA_NAME_SIZE];			// camera name, e.g., "ASI290MC", "HQ"
-	char Sensor[MODULE_SENSOR_SIZE];		// full sensor name (what --list-cameras returns)
+	char Name[CAMERA_NAME_SIZE];		// camera name, e.g., "ASI290MC", "HQ"
+	char Sensor[FULL_SENSOR_SIZE];		// full sensor name (what --list-cameras returns)
 
-	char Module[MODULE_SENSOR_SIZE];		// sensor type
-	size_t Module_len;						// strncmp length.  0 for whole Module name
+	// These are RPi only:
+	char *Module;						// sensor type
+	size_t Module_len;					// strncmp length.  0 for whole Module name
 };
 CONNECTED_CAMERAS connectedCameras[100];
 int totalNum_connectedCameras = 0;			// num connected cameras of all types
@@ -49,7 +51,7 @@ int getNumOfConnectedCameras()
 	int numThisType = 0;
 	char line[512];
 	char cameraType[CC_TYPE_SIZE];
-	char cameraModel[MODULE_SENSOR_SIZE];
+	char cameraModel[CAMERA_NAME_SIZE];
 
 	Log(5, ">>>>>> getNumOfConnecteeCameras() called:\n");
 	int on_line=0;
@@ -70,10 +72,10 @@ int getNumOfConnectedCameras()
 			cC->cameraID = num;
 			strncpy(cC->Type, cameraType, CC_TYPE_SIZE);
 #ifdef IS_ZWO
-			strncpy(cC->Name, cameraModel, CC_MODEL_SIZE);
+			strncpy(cC->Name, cameraModel, CAMERA_NAME_SIZE);
 #else
 			// cC->Name done later
-			strncpy(cC->Sensor, cameraModel, MODULE_SENSOR_SIZE);
+			strncpy(cC->Sensor, cameraModel, SENSOR_SIZE);
 #endif
 
 			if (strcmp(cameraType, CAMERA_TYPE) == 0)
@@ -162,7 +164,7 @@ typedef enum ASI_IMG_TYPE {	// Supported Video/Image Formats
 
 typedef struct _ASI_CAMERA_INFO
 {
-	char Module[MODULE_SENSOR_SIZE];		// sensor name; RPi only
+	char Module[MODULE_SIZE];				// sensor name; RPi only
 	size_t Module_len;						// strncmp length.  0 for whole Module name
 	char Name[CAMERA_NAME_SIZE];			// Name of camera
 	int CameraID;
@@ -179,12 +181,12 @@ typedef struct _ASI_CAMERA_INFO
 
 	// These are RPi only:
 	ASI_BOOL SupportsAutoFocus;
-	char Sensor[MODULE_SENSOR_SIZE];		// full sensor name returned by --list-cameras
+	char Sensor[SENSOR_SIZE];				// full sensor name returned by --list-cameras
 } ASI_CAMERA_INFO;
 
 
 // The number and order of these needs to match argumentNames[]
-typedef enum ASI_CONTROL_TYPE{ //Control type
+typedef enum ASI_CONTROL_TYPE{
 	ASI_GAIN = 0,
 	ASI_EXPOSURE,
 	ASI_WB_R,
@@ -544,6 +546,100 @@ int getCameraNumber()
 	int thisIndex = -1;					// index of camera found in RPiCameras
 	int num_RPiCameras = 0;
 
+	ASI_CAMERA_INFO *aci = NULL;
+	if ((aci = (ASI_CAMERA_INFO *) realloc(aci, sizeof(ASI_CAMERA_INFO) * CG.numCameras)) == NULL)
+	{
+		int e = errno;
+		Log(0, "*** %s: ERROR: Could not realloc() for aci: %s!", CG.ME, strerror(e));
+		closeUp(EXIT_ERROR_STOP);
+	}
+
+	int on_camera = -1;
+	int num;
+#define TOKEN_SIZE	50
+	char token1[TOKEN_SIZE];
+	char token2[TOKEN_SIZE];
+	char token3[TOKEN_SIZE];
+	char token4[TOKEN_SIZE];
+	char token5[TOKEN_SIZE];
+	char token6[TOKEN_SIZE];
+	char token7[TOKEN_SIZE];
+	char token8[TOKEN_SIZE];
+	char token9[TOKEN_SIZE];
+	char token10[TOKEN_SIZE];
+	char token11[TOKEN_SIZE];
+	char token12[TOKEN_SIZE];
+	char token13[TOKEN_SIZE];
+	char token14[TOKEN_SIZE];
+	char token15[TOKEN_SIZE];
+
+	// Read the whole configuration file into memory so we can create argv with pointers.
+	static char *buf = readFileIntoBuffer(&CG, CG.RPI_cameraInfoFile);
+	if (buf == NULL)
+	{
+		Log(0, "%s: ERROR: Unable to read from CG.RPI_cameraInfoFile '%s': %s\n",
+			CG.ME, CG.RPI_cameraInfoFile, strerror(errno));
+		closeUp(EXIT_ERROR_STOP);
+	}
+
+	bool inCamera = false, inControlCaps = false, inLibcamera = false;
+
+	getLine(NULL);		// resets the buffer pointer
+	char *line;
+	int on_line = 0;
+	while ((line = getLine(buf)) != NULL)
+	{
+		on_line++;
+		Log(5, "     line %3d: %s", on_line, line);
+		// sscanf() treats \t as whitespace and the input treats \t as a field separator.
+		num = sscanf(line, "%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]",
+			token1, token2, token3, token4, token5,
+			token6, token7, token8, token9, token10,
+			token11, token12, token13, token14, token15);
+		if (num == 1)
+		{
+			// End of libcamera or raspistill entries for this camera
+printf("line %3d: End", on_line);
+			if (inLibcamera)
+			{
+				inLibcamera = false;
+			}
+			else
+			{
+				// Just finished reading raspistill entries which come
+				// after libcamera entries, so we're done with this camera.
+				inCamera = false;
+			}
+			inControlCaps = false;
+		}
+
+		else if (num == 15)
+		{
+			// camera entry
+			on_camera++;
+			inCamera = true;
+printf("line %3d: camera %d", on_line, on_camera+1);
+		}
+
+		else if (num == 9)
+		{
+			// control caps entry
+printf("line %3d: camera %d, control caps", on_line, on_camera+1);
+			inControlCaps = true;
+			if (! inLibcamera && CG.isLibcamera)
+			{
+				// can skip these since we're not using raspistill
+			}
+		}
+
+		else
+		{
+			Log(1, "WARNING: Skipping invalid line # %d: %s\n", on_line, line);
+		}
+printf(", inCamera=%s, inControlCaps=%s, inLibcamera=%s\n",
+yesNo(inCamera), yesNo(inControlCaps), yesNo(inLibcamera));
+	}
+
 	// For each camera found, update the next *RPiCameras[] entry to point to the
 	// camera's ASICameraInfoArray[] entry.
 	// Return the index into *RPiCameras[] of the attached camera we're using.
@@ -561,23 +657,13 @@ int getCameraNumber()
 		// Found a camera of the right type.
 
 // XXX TODO: use RPI_cameraInfoFile instead
-/*
-		FILE *f2 = fopen(CG.RPI_cameraInfoFile, "r");
-		if (f == NULL)
-		{
-			Log(0, "%s: ERROR: Unable to open CG.RPI_cameraInfoFile '%s': %s\n",
-				CG.ME, CG.RPI_cameraInfoFile, strerror(errno));
-			closeUp(EXIT_ERROR_STOP);
-		}
-*/
-
 		// Check all known cameras to make sure it's one we know about.
 		for (int i=0; i < ASICameraInfoArraySize; i++)
 		{
-			// This code tells us how much of the Module name to compare.
-			size_t len;
 			ASI_CAMERA_INFO *p = &ASICameraInfoArray[i];
 
+			// This code tells us how much of the Module name to compare.
+			size_t len;
 			if (p->Module_len > 0)
 				len = p->Module_len;
 			else
@@ -591,8 +677,9 @@ int getCameraNumber()
 				num_RPiCameras++;
 				thisIndex++;
 				cC->Module_len = p->Module_len;
+				cC->Module = p->Module;
 
-				strncpy(p->Sensor, sensor, MODULE_SENSOR_SIZE);
+				strncpy(p->Sensor, sensor, SENSOR_SIZE);
 				RPiCameras[thisIndex].CameraInfo = &ASICameraInfoArray[actualIndex];
 				// There are TWO entries in ControlCapsArray[] for every
 				// entry in ASICameraInfoArray[].
@@ -923,8 +1010,8 @@ void processConnectedCameras()
 
 		char *cm;
 #ifdef IS_RPi
-		strncpy(cC->Name, info.Name, CC_MODEL_SIZE);
-		snprintf(cC->Sensor, CC_MODEL_SIZE, "%s [%s]", info.Name, info.Sensor);
+		strncpy(cC->Name, info.Name, CAMERA_NAME_SIZE);
+		snprintf(cC->Sensor, FULL_SENSOR_SIZE, "%s [%s]", info.Name, info.Sensor);
 		cm = cC->Sensor;
 #else
 		cm = info.Name;
@@ -1096,7 +1183,7 @@ void saveCameraInfo(
 				fprintf(f, "\n");
 			}
 			fprintf(f, "\t\t{ \"value\" : \"%s\", \"label\" : \"%s\" }",
-				skipType(cC->Name), skipType(cC->Sensor));
+				getCameraModel(cC->Name), skipType(cC->Sensor));
 
 			numThisType++;
 		}

@@ -903,7 +903,7 @@ set_permissions()
 
 	# Exceptions to files at 644:
 	chmod 755	"${ALLSKY_SCRIPTS}/createAllskyOptions.php" \
-				"${ALLSKY_SCRIPTS/convertJSON.php"
+				"${ALLSKY_SCRIPTS}/convertJSON.php"
 
 	chmod 775 "${ALLSKY_TMP}"
 	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_TMP}"
@@ -1585,7 +1585,7 @@ convert_settings()			# prior_file, new_file
 	# Don't modify the prior file, so make the changes to a temporary file.
 	# --settings-only  says only output settings that are in the settings file.
 	# The OPTIONS_FILE doesn't exist yet so use REPO_OPTIONS_FILE>
-	"${ALLSKY_WEBUI}/includes/convertJSON.php" \
+	"${ALLSKY_SCRIPTS}/convertJSON.php" \
 		--convert \
 		--settings-only \
 		--settings-file "${PRIOR_FILE}" \
@@ -1603,7 +1603,7 @@ convert_settings()			# prior_file, new_file
 
 	# Output the field name and value as text separated by a tab.
 	# Field names are already lowercase from above.
-	"${ALLSKY_WEBUI}/includes/convertJSON.php" \
+	"${ALLSKY_SCRIPTS}/convertJSON.php" \
 			--delimiter "$( echo -e '\t' )" \
 			--options-file "${REPO_OPTIONS_FILE}" \
 			--include-not-in-options \
@@ -1739,7 +1739,7 @@ convert_settings()			# prior_file, new_file
 	# New fields were added to the bottom of the settings file but the below
 	# command will order them the same as in the options file, which we want.
 
-	"${ALLSKY_WEBUI}/includes/convertJSON.php" \
+	"${ALLSKY_SCRIPTS}/convertJSON.php" \
 		--convert \
 		--settings-only \
 		--settings-file "${NEW_FILE}" \
@@ -3218,7 +3218,7 @@ sort_settings_file()
 
 	display_msg --logonly info "Sorting settings file '${FILE}'."
 
-	"${ALLSKY_WEBUI}/includes/convertJSON.php" \
+	"${ALLSKY_SCRIPTS}/convertJSON.php" \
 		--order \
 		--settings-file "${FILE}" \
 		--options-file "${OPTIONS_FILE}" \

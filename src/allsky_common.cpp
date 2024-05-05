@@ -1411,7 +1411,7 @@ char *getLine(char *buffer)
 
 // Get settings from a configuration file.
 bool called_from_getConfigFileArguments = false;
-static bool getConfigFileArguments(config *cg)
+bool getConfigFileArguments(config *cg)
 {
 	if (called_from_getConfigFileArguments)
 	{
@@ -1490,7 +1490,6 @@ static bool getConfigFileArguments(config *cg)
 			equal++;
 		}
 		// "equal" is pointing at equal sign or end of argumment
-// TODO: if line doesn't start with "-", add it
 		argv[argc++] = line;
 		if (*equal == '=')
 		{
@@ -1507,14 +1506,14 @@ static bool getConfigFileArguments(config *cg)
 
 	// Let's hope the config file doesn't call itself!
 	called_from_getConfigFileArguments = true;
-	bool ret = getCommandLineArguments(cg, argc, argv);
+	bool ret = getCommandLineArguments(cg, argc, argv, false);
 	called_from_getConfigFileArguments = false;
 	return(ret);
 }
 
 
 // Get arguments from the command line.
-bool getCommandLineArguments(config *cg, int argc, char *argv[])
+bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfigFile)
 {
 	const char *b;
 	if (called_from_getConfigFileArguments)
@@ -1539,7 +1538,9 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[])
 			// any command-line arguments after it will overwrite the config file.
 			// A file name of "[none]" means to ignore the option.
 			cg->configFile = argv[++i];
-			if (strcmp(cg->configFile, "[none]") != 0 && ! getConfigFileArguments(cg))
+			if (readConfigFile &&
+				strcmp(cg->configFile, "[none]") != 0 &&
+				! getConfigFileArguments(cg))
 			{
 				return(false);
 			}

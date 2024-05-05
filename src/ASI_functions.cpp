@@ -7,10 +7,129 @@
 #error ERROR: CAMERA_TYPE not defined
 #endif
 
-#define CAMERA_NAME_SIZE	64
-
 // Forward definitions of variables in capture*.cpp.
 extern int iNumOfCtrl;
+char *skipType(char *);
+
+#define CAMERA_NAME_SIZE	64
+#define	MODULE_SENSOR_SIZE	100
+// +5 for other characters in name
+#define CC_MODEL_SIZE		(CAMERA_NAME_SIZE + MODULE_SENSOR_SIZE + 5)
+
+// Holds camera model names of all connected cameras of the current type.
+// Should never be more than 100 connected cameras.
+char connectedCameraModels[100][CC_MODEL_SIZE] = {};
+
+#define CC_TYPE_SIZE		10
+// Holds connected camera types.
+struct CONNECTED_CAMERAS
+{
+	int cameraID;
+	char Type[CC_TYPE_SIZE];				// ZWO or RPi
+	char Model[CC_MODEL_SIZE];
+	char Module[MODULE_SENSOR_SIZE];		// sensor type
+	size_t Module_len;						// strncmp length.  0 for whole Module name
+	char Sensor[MODULE_SENSOR_SIZE];		// full sensor name (what --list-cameras returns)
+	char Name[CAMERA_NAME_SIZE];			// Name of camera
+};
+CONNECTED_CAMERAS connectedCameras[100];
+int totalNum_connectedCameras = 0;			// num connected cameras of all types
+
+char *connectedCameraTypes[100] = {};		// points to connectedCameras.Type
+int num_connectedCameraTypes = 0;
+
+// Return the number of cameras PHYSICALLY connected of the correct type.
+// allsky.sh created the file; we just need to count the number of lines in it.
+// Also, save information on all connected cameras.
+int getNumOfConnectedCameras()
+{
+	FILE *f = fopen(CG.connectedCamerasFile, "r");
+	if (f == NULL)
+	{
+		Log(0, "%s: ERROR: Unable to open CG.connectedCamerasFile '%s': %s\n",
+			CG.ME, CG.connectedCamerasFile, strerror(errno));
+		closeUp(EXIT_ERROR_STOP);
+	}
+	int numThisType = 0;
+	char line[512];
+	char cameraType[CC_TYPE_SIZE];
+	char cameraModel[MODULE_SENSOR_SIZE];
+
+	Log(5, ">>>>>> getNumOfConnecteeCameras() called:\n");
+	int on_line=0;
+	while (fgets(line, sizeof(line)-1, f) != NULL)
+	{
+		on_line++;
+		Log(5, "     line %d: %s", on_line, line);
+		int num;
+		if (sscanf(line, "%s\t%d : %s ", cameraType, &num, cameraModel) == 3)
+		{
+			CONNECTED_CAMERAS *cC = &connectedCameras[totalNum_connectedCameras++];
+			cC->cameraID = num;
+			strncpy(cC->Type, cameraType, CC_TYPE_SIZE);
+#ifdef IS_ZWO
+			strncpy(cC->Name, cameraModel, CC_MODEL_SIZE);
+#else
+			strncpy(cC->Model, cameraModel, CC_MODEL_SIZE);
+			strncpy(cC->Sensor, cameraModel, MODULE_SENSOR_SIZE);
+#endif
+
+			if (strcmp(cameraType, CAMERA_TYPE) == 0)
+				numThisType++;
+
+			// Add to the list of connected camera types if not already there.
+			const char *p;
+			int n = num_connectedCameraTypes;
+			for (int i=0; i <= n; i++)
+			{
+//x printf(" checking connectedCameraTypes[%d], num_connectedCameraTypes=%d\n", i, n);
+				if (i == num_connectedCameraTypes)
+				{
+					p = "";
+				}
+				else
+				{
+					p = connectedCameraTypes[i];
+				}
+//x printf("    p is [%s], cameraType=[%s]\n", *p != '\0' ? p : "NOT SET", cameraType);
+				if (strcmp(p, cameraType) == 0)
+				{
+//x printf("  >> %s already in list; skipping\n", p);
+					break;
+				} else if (num_connectedCameraTypes == 0 || strcmp(p, cameraType) != 0)
+				{
+					connectedCameraTypes[num_connectedCameraTypes] = cC->Type;
+					num_connectedCameraTypes++;
+//x printf("  NEW TYPE [%s], num_connectedCameraTypes=%d\n", cC->Type, num_connectedCameraTypes);
+					break;
+				}
+			}
+		}
+		else
+		{
+			// "line" ends with newline
+			Log(1, "%s: WARNING: skipping invalid line %d in '%s': %s",
+				CG.ME, on_line, basename(CG.connectedCamerasFile), line);
+		}
+	}
+	fclose(f);
+	Log(4, "Connected camera types: %d, connected %s cameras: %d\n",
+		num_connectedCameraTypes, CAMERA_TYPE, numThisType);
+
+#ifdef IS_ZWO
+	int  ZWOnum = ASIGetNumOfConnectedCameras();
+	if (ZWOnum != numThisType)
+	{
+		Log(0, "%s: ERROR: mismatch with number of ZWO cameras connected: ZWO=%d, other=%d\n",
+			CG.ME, ZWOnum, numThisType);
+		closeUp(EXIT_ERROR_STOP);
+	}
+#endif
+
+	return(numThisType);
+}
+
+
 
 //-----------------------------------------------------------------------------------------
 // Info and routines for RPi only
@@ -39,25 +158,26 @@ typedef enum ASI_IMG_TYPE {	// Supported Video/Image Formats
 	ASI_IMG_END = -1
 } ASI_IMG_TYPE;
 
-#define	MODULE_SENSOR_SIZE	100
-typedef struct ASI_CAMERA_INFO
+typedef struct _ASI_CAMERA_INFO
 {
-	char Module[MODULE_SENSOR_SIZE];// sensor type; RPi only
-	size_t Module_len;		// strncmp length.  0 for whole Module name
+	char Module[MODULE_SENSOR_SIZE];		// sensor name; RPi only
+	size_t Module_len;						// strncmp length.  0 for whole Module name
 	char Name[CAMERA_NAME_SIZE];			// Name of camera
 	int CameraID;
-	long MaxHeight;			// sensor height
+	long MaxHeight;							// sensor height
 	long MaxWidth;
-	ASI_BOOL IsColorCam;		// Is this a color camera?
+	ASI_BOOL IsColorCam;					// Is this a color camera?
 	ASI_BAYER_PATTERN BayerPattern;
 	int SupportedBins[5];	// 1 means bin 1x1 is supported, 2 means 2x2 is supported, etc.
 	ASI_IMG_TYPE SupportedVideoFormat[8];	// Supported image formats
-	double PixelSize;		// e.g, 5.6 um
+	double PixelSize;						// e.g, 5.6 um
 	ASI_BOOL IsCoolerCam;
 	int BitDepth;
 	ASI_BOOL SupportsTemperature;
-	ASI_BOOL SupportsAutoFocus;	// RPi only
-	char Sensor[MODULE_SENSOR_SIZE];		// full sensor name; RPi only
+
+	// These are RPi only:
+	ASI_BOOL SupportsAutoFocus;
+	char Sensor[MODULE_SENSOR_SIZE];		// full sensor name returned by --list-cameras
 } ASI_CAMERA_INFO;
 
 
@@ -136,7 +256,7 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 	},
 
 	// There are many versions of the imx708 (_wide, _noir, _wide_noir, etc.)
-	// so just check for "imx708" (6 characters.
+	// so just check for "imx708" (6 characters).
 	{ "imx708", 6, "RPi Module 3", 0, 2592, 4608, ASI_TRUE,
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.4, ASI_FALSE,
 		10, ASI_TRUE, ASI_TRUE
@@ -399,31 +519,6 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 };
 
 
-// Return the number of cameras PHYSICALLY connected of the correct type.
-// allsky.sh created the file; we just need to count the number of lines in it.
-int ASIGetNumOfConnectedCameras()
-{
-	FILE *f = fopen(CG.connectedCamerasFile, "r");
-	if (f == NULL)
-	{
-		Log(0, "%s: ERROR: Unable to open CG.connectedCamerasFile '%s': %s\n",
-			CG.ME, CG.connectedCamerasFile, strerror(errno));
-		closeUp(EXIT_ERROR_STOP);
-	}
-	int num = 0;
-	char line[512];
-	char cameraType[10];
-
-	while (fgets(line, sizeof(line)-1, f) != NULL)
-	{
-		if (sscanf(line, "%s\t", cameraType) == 1 && strcmp(cameraType, CAMERA_TYPE) == 0)
-			num++;
-	}
-	fclose(f);
-	Log(4, "Connected %s cameras: %d\n", CAMERA_TYPE, num);
-
-	return(num);
-}
 
 /* Sample "libcamera-still --list-cameras" ouput:
 	1 : imx477 [4056x3040] (/base/soc/i2c0mux/i2c@1/pca@70/i2c@1/imx477@1a)
@@ -439,10 +534,11 @@ int ASIGetNumOfConnectedCameras()
 
 
 // Get the cameraNumber for the camera we're using.
+// Also save the info on each connected camera of the current type.
 int getCameraNumber()
 {
 	// Determine which camera sensor(s) we have by reading the file
-	// created in ASIGetNumOfConnectedCameras().
+	// created in getNumOfConnectedCameras().
 	FILE *f = fopen(CG.connectedCamerasFile, "r");
 	if (f == NULL)
 	{
@@ -453,7 +549,7 @@ int getCameraNumber()
 
 	char line[512];
 	int num = NOT_SET;
-	char cameraType[10];
+	char cameraType[CC_TYPE_SIZE];
 	char sensor[MODULE_SENSOR_SIZE];
 	int actualIndex;					// index into ASICameraInfoArray[]
 	int RPiCameraIndex = -1;			// index into RPiCameras[]
@@ -613,7 +709,11 @@ ASI_ERROR_CODE ASIGetControlCaps(int iCameraIndex, int iControlIndex, ASI_CONTRO
 
 
 // Get the specified control capability's data value and put in plValue.
-ASI_ERROR_CODE ASIGetControlValue(int iCameraIndex, ASI_CONTROL_TYPE ControlType, double *plValue, ASI_BOOL *pbAuto)
+ASI_ERROR_CODE ASIGetControlValue(
+		int iCameraIndex,
+		ASI_CONTROL_TYPE ControlType,
+		double *plValue,
+		ASI_BOOL *pbAuto)
 {
 	if (iCameraIndex < 0 || iCameraIndex >= CG.numCameras)
 		return(ASI_ERROR_INVALID_INDEX);
@@ -798,7 +898,7 @@ char *getRetCode(ASI_ERROR_CODE code)
 // Get the number of cameras PHYSICALLY connected, making sure there's at least one.
 void processConnectedCameras()
 {
-	CG.numCameras = ASIGetNumOfConnectedCameras();
+	CG.numCameras = getNumOfConnectedCameras();
 	if (CG.numCameras <= 0)
 	{
 		Log(0, "*** %s: ERROR: No Connected Camera...\n", CG.ME);
@@ -812,29 +912,39 @@ void processConnectedCameras()
 			CG.ME, CG.cameraNumber, CG.numCameras-1);
 		closeUp(EXIT_NO_CAMERA);
 	}
-	else if (CG.numCameras > 1)
-	{
-		ASI_CAMERA_INFO info;
+
+	if (CG.numCameras > 1)
 		printf("\nAttached Cameras:\n");
-		for (int i = 0; i < CG.numCameras; i++)
+	ASI_CAMERA_INFO info;
+	for (int i = 0; i < CG.numCameras; i++)
+	{
+		if (ASIGetCameraProperty(&info, i) != ASI_SUCCESS)
 		{
-			if (ASIGetCameraProperty(&info, i) != ASI_SUCCESS)
-			{
-				printf("  - %d: unable to get information\n", i);
-				continue;
-			}
-			printf("  - %d %s", i, info.Name);
-#ifdef IS_RPi
-			printf(" [%s]", info.Sensor);
+#ifdef IS_ZWO	// RPi version already displayed message.
+			Log(0, "ERROR: unable to get information for camera number %d.\n", i);
 #endif
-			printf("%s\n", i == CG.cameraNumber ? " (selected)" : "");
+			continue;
+		}
+		if (CG.numCameras > 1)
+			printf("  - %d", i);
+#ifdef IS_RPi
+		snprintf(connectedCameraModels[i], CC_MODEL_SIZE, "%s [%s]", info.Name, info.Sensor);
+#else
+		snprintf(connectedCameraModels[i], CC_MODEL_SIZE, "%s", info.Name);
+#endif
+		if (CG.numCameras > 1)
+		{
+			printf(" %s %s\n", connectedCameraModels[i], i == CG.cameraNumber ? " (selected)" : "");
 		}
 	}
 }
 
 
 // Get the camera control with the specified control type.
-ASI_ERROR_CODE getControlCapForControlType(int iCameraIndex, ASI_CONTROL_TYPE ControlType, ASI_CONTROL_CAPS *pControlCap)
+ASI_ERROR_CODE getControlCapForControlType(
+		int iCameraIndex,
+		ASI_CONTROL_TYPE ControlType,
+		ASI_CONTROL_CAPS *pControlCap)
 {
 	if (iCameraIndex < 0 || iCameraIndex >= CG.numCameras)
 		return(ASI_ERROR_INVALID_INDEX);
@@ -898,18 +1008,27 @@ char *getSerialNumber(int camNum)
 	return(sn);
 }
 
-// Get the camera model, removing the camera type from the name if it's there.
-// Also, we don't want spaces in the file name - they are a hassle,
-// so replace them with underscores.
-char *getCameraModel(ASI_CAMERA_INFO cameraInfo)
+// Remove the camera type from the name if it's there.
+char *skipType(char *cameraName)
 {
-	static char cameraModel[CAMERA_NAME_SIZE + 1];
-	char *p = cameraInfo.Name;
-
+	static char *p;
+	p = cameraName;
 	int l = strlen(CAMERA_TYPE);
+
 	if (strncmp(CAMERA_TYPE, p, l) == 0)
 		p += l;
 	if (*p == ' ') p++;		// skip optional space
+	return(p);
+}
+
+
+// Get the camera model, removing the camera type from the name if it's there.
+// Also, we don't want spaces in the file name - they are a hassle,
+// so replace them with underscores.
+char *getCameraModel(char *cameraName)
+{
+	static char cameraModel[CAMERA_NAME_SIZE + 1];
+	char *p = skipType(cameraName);
 
 	unsigned int i;
 	for (i=0; i<CAMERA_NAME_SIZE; i++)
@@ -937,7 +1056,7 @@ void saveCameraInfo(
 		double pixelSize,
 		char const *bayer)
 {
-	char *camModel = getCameraModel(cameraInfo);
+	char *camModel = getCameraModel(cameraInfo.Name);
 	char *sn = getSerialNumber(cameraInfo.CameraID);
 
 	FILE *f = fopen(file, "w");
@@ -951,8 +1070,28 @@ void saveCameraInfo(
 	// output basic information on camera as well as all it's capabilities
 	fprintf(f, "{\n");
 	fprintf(f, "\t\"cameraType\" : \"%s\",\n", CAMERA_TYPE);
+		fprintf(f, "\t\"cameraTypes\" : [\n");
+		for (int camType = 0; camType < num_connectedCameraTypes; camType++)
+		{
+			fprintf(f, "\t\t{ \"value\" : \"%s\", \"label\" : \"%s\" },\n",
+				connectedCameraTypes[camType], connectedCameraTypes[camType]);
+		}
+		fprintf(f, "\t\t{ \"value\" : \"%s\", \"label\" : \"%s\" }\n", "Refresh", "Refresh");
+		fprintf(f, "\t],\n");
 	fprintf(f, "\t\"cameraName\" : \"%s\",\n", cameraInfo.Name);
 	fprintf(f, "\t\"cameraModel\" : \"%s\",\n", camModel);
+		fprintf(f, "\t\"cameraModels\" : [\n");
+		for (int camNum = 0; camNum < CG.numCameras; camNum++)
+		{
+			if (camNum > 0)
+			{
+				fprintf(f, ",");		// comma on all but last one
+				fprintf(f, "\n");
+			}
+			fprintf(f, "\t\t{ \"value\" : %d, \"label\" : \"%s\" }",
+				camNum, skipType(connectedCameraModels[camNum]));
+		}
+		fprintf(f, "\n\t],\n");
 #ifdef IS_RPi
 	fprintf(f, "\t\"sensor\" : \"%s\",\n", cameraInfo.Sensor);
 #endif
@@ -969,7 +1108,6 @@ void saveCameraInfo(
 			int b = cameraInfo.SupportedBins[i];
 			if (b == 0)
 			{
-				fprintf(f, "\n");
 				break;
 			}
 			if (i > 0)
@@ -979,7 +1117,7 @@ void saveCameraInfo(
 			}
 			fprintf(f, "\t\t{ \"value\" : %d, \"label\" : \"%dx%d\" }", b, b, b);
 		}
-	fprintf(f, "\t],\n");
+	fprintf(f, "\n\t],\n");
 
 	// RPi only supports sensor temp with libcamera.
 	if (CG.ct == ctZWO || CG.isLibcamera)
@@ -1019,7 +1157,6 @@ void saveCameraInfo(
 			ASI_IMG_TYPE it = cameraInfo.SupportedVideoFormat[i];
 			if (it == ASI_IMG_END)
 			{
-				fprintf(f, "\n");
 				break;
 			}
 			if (i > 0)
@@ -1037,7 +1174,7 @@ void saveCameraInfo(
 				"unknown format");
 			fprintf(f, " }");
 		}
-	fprintf(f, "\t],\n");
+	fprintf(f, "\n\t],\n");
 
 
 	// Add some other things the camera supports, or the software supports for this camera.
@@ -1339,7 +1476,7 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, config cg, long width, long he
 {
 	printf(" Camera Information:\n");
 	printf("  - Type: %s\n", CAMERA_TYPE);
-	printf("  - Model: %s\n", getCameraModel(cameraInfo));
+	printf("  - Model: %s\n", getCameraModel(cameraInfo.Name));
 #ifdef IS_ZWO
 	printf("  - Camera ID: %s\n", cID);
 #endif
@@ -1619,7 +1756,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 
 	// If this camera model/name is different than the last one it likely means the settings
 	// are the the last camera as well, so stop.
-	char *model = getCameraModel(ci);
+	char *model = getCameraModel(ci.Name);
 	if (strcmp(model, cg->cm) != 0)
 	{
 		Log(0, "%s: ERROR: camera model changed; was [%s], now [%s].\n", cg->ME, cg->cm, model);
@@ -1654,19 +1791,28 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 	cg->nightExposure_us = cg->temp_nightExposure_ms * US_IN_MS;
 	cg->nightMaxAutoExposure_us = cg->temp_nightMaxAutoExposure_ms * US_IN_MS;
 
-	if (! validateFloat(&cg->myModeMeanSetting.dayMean, cg->myModeMeanSetting.minMean, cg->myModeMeanSetting.maxMean, "Daytime Mean Target", false))
+	if (! validateFloat(&cg->myModeMeanSetting.dayMean, cg->myModeMeanSetting.minMean,
+			cg->myModeMeanSetting.maxMean, "Daytime Mean Target", false))
 		ok = false;
-	if (! validateFloat(&cg->myModeMeanSetting.dayMean_threshold, cg->myModeMeanSetting.minMean_threshold, cg->myModeMeanSetting.maxMean_threshold, "Mean Threshold", false))
+	if (! validateFloat(&cg->myModeMeanSetting.dayMean_threshold,
+			cg->myModeMeanSetting.minMean_threshold, cg->myModeMeanSetting.maxMean_threshold,
+			"Mean Threshold", false))
 		ok = false;
-	if (! validateFloat(&cg->myModeMeanSetting.nightMean, cg->myModeMeanSetting.minMean, cg->myModeMeanSetting.maxMean, "Nighttime Mean Target", false))
+	if (! validateFloat(&cg->myModeMeanSetting.nightMean, cg->myModeMeanSetting.minMean,
+			cg->myModeMeanSetting.maxMean, "Nighttime Mean Target", false))
 		ok = false;
-	if (! validateFloat(&cg->myModeMeanSetting.nightMean_threshold, cg->myModeMeanSetting.minMean_threshold, cg->myModeMeanSetting.maxMean_threshold, "Mean Threshold", false))
+	if (! validateFloat(&cg->myModeMeanSetting.nightMean_threshold,
+			cg->myModeMeanSetting.minMean_threshold, cg->myModeMeanSetting.maxMean_threshold,
+			"Mean Threshold", false))
 		ok = false;
-	if (! validateFloat(&cg->myModeMeanSetting.mean_p0, cg->myModeMeanSetting.minMean_p, cg->myModeMeanSetting.maxMean_p, "Mean p0", false))
+	if (! validateFloat(&cg->myModeMeanSetting.mean_p0, cg->myModeMeanSetting.minMean_p,
+			cg->myModeMeanSetting.maxMean_p, "Mean p0", false))
 		ok = false;
-	if (! validateFloat(&cg->myModeMeanSetting.mean_p0, cg->myModeMeanSetting.minMean_p, cg->myModeMeanSetting.maxMean_p, "Mean p1", false))
+	if (! validateFloat(&cg->myModeMeanSetting.mean_p0, cg->myModeMeanSetting.minMean_p,
+			cg->myModeMeanSetting.maxMean_p, "Mean p1", false))
 		ok = false;
-	if (! validateFloat(&cg->myModeMeanSetting.mean_p2, cg->myModeMeanSetting.minMean_p, cg->myModeMeanSetting.maxMean_p, "Mean p2", false))
+	if (! validateFloat(&cg->myModeMeanSetting.mean_p2, cg->myModeMeanSetting.minMean_p,
+			cg->myModeMeanSetting.maxMean_p, "Mean p2", false))
 		ok = false;
 
 	// If there's too short of a delay, pictures won't upload fast enough.

@@ -118,6 +118,10 @@ sunwait:
 	@cp sunwait-src/sunwait .
 	@echo `date +%F\ %R:%S` Done.
 
+# This is only needed for GitHub to compile
+allsky_common.h: include/allsky_common.h.repo
+	@cp include/allsky_common.h.repo $@
+
 allsky_common.o: allsky_common.cpp include/allsky_common.h
 	@echo Building $@ ...
 	@$(CC) -c  allsky_common.cpp -o $@ $(CFLAGS) $(OPENCV)

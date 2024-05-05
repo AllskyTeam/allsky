@@ -72,6 +72,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	# Holds a count of continuous "bad" images
 	ALLSKY_BAD_IMAGE_COUNT="${ALLSKY_TMP}/bad_image_count.txt"
 
+	# Holds the number of images left until uploading.
+	FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
+
 	# Holds the PID of the process that called timelapse.sh.
 	ALLSKY_TIMELAPSE_PID_FILE="${ALLSKY_TMP}/timelapse-pid.txt"
 

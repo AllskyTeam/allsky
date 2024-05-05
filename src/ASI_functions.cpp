@@ -406,7 +406,7 @@ int ASIGetNumOfConnectedCameras()
 	FILE *f = fopen(CG.connectedCamerasFile, "r");
 	if (f == NULL)
 	{
-		Log(0, "%s: ERROR: Unable to open '%s': %s\n",
+		Log(0, "%s: ERROR: Unable to open CG.connectedCamerasFile '%s': %s\n",
 			CG.ME, CG.connectedCamerasFile, strerror(errno));
 		closeUp(EXIT_ERROR_STOP);
 	}
@@ -446,7 +446,7 @@ int getCameraNumber()
 	FILE *f = fopen(CG.connectedCamerasFile, "r");
 	if (f == NULL)
 	{
-		Log(0, "%s: ERROR: Unable to open '%s': %s\n",
+		Log(0, "%s: ERROR: Unable to open CG.connectedCamerasFile '%s': %s\n",
 			CG.ME, CG.connectedCamerasFile, strerror(errno));
 		closeUp(EXIT_ERROR_STOP);
 	}
@@ -483,7 +483,7 @@ int getCameraNumber()
 			FILE *f2 = fopen(CG.RPI_cameraInfoFile, "r");
 			if (f == NULL)
 			{
-				Log(0, "%s: ERROR: Unable to open '%s': %s\n",
+				Log(0, "%s: ERROR: Unable to open CG.RPI_cameraInfoFile '%s': %s\n",
 					CG.ME, CG.RPI_cameraInfoFile, strerror(errno));
 				closeUp(EXIT_ERROR_STOP);
 			}
@@ -1895,12 +1895,14 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 				if (cg->dayTargetTemp == NOT_CHANGED)
 					cg->dayTargetTemp = cc.DefaultValue;
 				else
-					validateLong(&cg->dayTargetTemp, cc.MinValue, cc.MaxValue, "Daytime Target Sensor Temperature", true);
+					validateLong(&cg->dayTargetTemp, cc.MinValue, cc.MaxValue,
+						"Daytime Target Sensor Temperature", true);
 
 				if (cg->nightTargetTemp == NOT_CHANGED)
 					cg->nightTargetTemp = cc.DefaultValue;
 				else
-					validateLong(&cg->nightTargetTemp, cc.MinValue, cc.MaxValue, "Nighttime Target Sensor Temperature", true);
+					validateLong(&cg->nightTargetTemp, cc.MinValue, cc.MaxValue,
+						"Nighttime Target Sensor Temperature", true);
 			} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
 				Log(0, "*** %s ERROR: ASI_TARGET_TEMP failed with %s\n", cg->ME, getRetCode(ret));
 				ok = false;

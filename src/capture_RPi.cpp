@@ -373,6 +373,13 @@ int main(int argc, char *argv[])
 		exit(EXIT_ERROR_STOP);
 	}
 
+	if (! getCommandLineArguments(&CG, argc, argv, false))
+	{
+		// getCommandLineArguents outputs an error message.
+		exit(EXIT_ERROR_STOP);
+	}
+/*
+
 	char *x;
 	x = getenv("ALLSKY_DEBUG_LEVEL");
 	if (x != NULL) { CG.debugLevel = atoi(x); }
@@ -405,6 +412,7 @@ int main(int argc, char *argv[])
 			CG.isLibcamera = false;
 		}
 	}
+*/
 	Log(4, "CONNECTED_CAMERAS_INFO=[%s], RPi_SUPPORTED_CAMERAS=[%s], RPi_COMMAND_TO_USE=[%s]\n",
 		CG.connectedCamerasFile, CG.RPI_cameraInfoFile, CG.cmdToUse);
 
@@ -443,9 +451,10 @@ int main(int argc, char *argv[])
 	if (! setDefaults(&CG, ASICameraInfo))
 		closeUp(EXIT_ERROR_STOP);
 
-	if (! getCommandLineArguments(&CG, argc, argv))
+//x	if (! getCommandLineArguments(&CG, argc, argv))
+	if (CG.configFile[0] != '\0' && ! getConfigFileArguments(&CG))
 	{
-		// getCommandLineArguents outputs an error message.
+		// getConfigFileArguments() outputs error messages
 		exit(EXIT_ERROR_STOP);
 	}
 

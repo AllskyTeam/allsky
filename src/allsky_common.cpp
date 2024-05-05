@@ -1375,9 +1375,17 @@ void delayBetweenImages(config cg, long lastExposure_us, std::string sleepType)
 // NULL-out CR or LF, or both if they are in a row.
 // Keep track of the beginning of the next line.
 // Return a pointer to the beginning of the line or NULL if at the end of the file.
+
+// Calling getLine(NULL) resets the pointer so the next call
+// starts at the beginning of the buffer
 char *getLine(char *buffer)
 {
 	static char *nextLine = NULL;
+	if (buffer == NULL)
+	{
+		nextLine = NULL;
+		return(NULL);
+	}
 	char *startOfLine;
 	char *ptr;
 
@@ -1409,6 +1417,44 @@ char *getLine(char *buffer)
 	return(startOfLine);
 }
 
+// Read the specified file into the specified buffer.
+char * readFileIntoBuffer(config *cg, const char *file)
+{
+	int fd;
+	if ((fd = open(file, O_RDONLY)) == -1)
+	{
+		int e = errno;
+		Log(0, "*** %s: ERROR: Could not open file '%s': %s!", cg->ME, file, strerror(e));
+		return NULL;
+	}
+	struct stat statbuf;
+	if (fstat(fd, &statbuf) == 1)		// This should never fail
+	{
+		int e = errno;
+		Log(0, "*** %s: ERROR: Could not fstat() file '%s': %s!", cg->ME, file, strerror(e));
+		return NULL;
+	}
+	// + 1 for trailing NULL
+	char *buf = NULL;
+	if ((buf = (char *) realloc(buf, statbuf.st_size + 1)) == NULL)
+	{
+		int e = errno;
+		Log(0, "*** %s: ERROR: Could not realloc() file '%s': %s!", cg->ME, file, strerror(e));
+		return NULL;
+	}
+	if (read(fd, buf, statbuf.st_size) != statbuf.st_size)
+	{
+		int e = errno;
+		Log(0, "*** %s: ERROR: Could not read() file '%s': %s!", cg->ME, file, strerror(e));
+		return NULL;
+	}
+
+	buf[statbuf.st_size] = '\0';
+	(void) close(fd);
+
+	return(buf);
+}
+
 // Get settings from a configuration file.
 bool called_from_getConfigFileArguments = false;
 bool getConfigFileArguments(config *cg)
@@ -1424,41 +1470,10 @@ bool getConfigFileArguments(config *cg)
 		return false;
 	}
 
-	// Read the whole configuration file into memory so we can create argv with pointers
-	static char *buf = NULL;
-	int fd;
-	if ((fd = open(cg->configFile, O_RDONLY)) == -1)
-	{
-		int e = errno;
-		Log(0, "*** %s: ERROR: Could not open configuration file '%s': %s!",
-			cg->ME, cg->configFile, strerror(e));
-		return false;
-	}
-	struct stat statbuf;
-	if (fstat(fd, &statbuf) == 1)		// This should never fail
-	{
-		int e = errno;
-		Log(0, "*** %s: ERROR: Could not fstat() configuration file '%s': %s!",
-			cg->ME, cg->configFile, strerror(e));
-		return false;
-	}
-	// + 1 for trailing NULL
-	if ((buf = (char *) realloc(buf, statbuf.st_size + 1)) == NULL)
-	{
-		int e = errno;
-		Log(0, "*** %s: ERROR: Could not malloc() configuration file '%s': %s!",
-			cg->ME, cg->configFile, strerror(e));
-		return false;
-	}
-	if (read(fd, buf, statbuf.st_size) != statbuf.st_size)
-	{
-		int e = errno;
-		Log(0, "*** %s: ERROR: Could not read() configuration file '%s': %s!",
-			cg->ME, cg->configFile, strerror(e));
-		return false;
-	}
-	buf[statbuf.st_size] = '\0';
-	(void) close(fd);
+	// Read the whole configuration file into memory so we can create argv with pointers.
+	static char *buf = readFileIntoBuffer(cg, cg->configFile);
+	if (buf == NULL)
+		return(false);
 
 	int const numSettings = 500 * 2;	// some settings take an argument
 	char *argv[numSettings];

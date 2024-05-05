@@ -404,3 +404,5 @@ int displayNotificationImage(char const *);
 bool validateLatitudeLongitude(config *);
 void doLocale(config *);
 char const *getZWOexposureType(ZWOexposure);
+char *getLine(char *);
+char *readFileIntoBuffer(config *, const char *);

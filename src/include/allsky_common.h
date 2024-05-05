@@ -189,8 +189,10 @@ struct config {			// for configuration variables
 	// Settings can be in the config file and/or command-line.
 	char const *allskyHome				= "";			// full pathname to home of Allsky
 	char const *configFile				= "";
-	char const *connectedCamerasFile	= "";			// File with list of connected cameras
-	char const *RPI_cameraInfoFile		= "";			// File with info on all supported RPI cameras.
+	// File with list of connected cameras
+	char const *connectedCamerasFile	= "XX_CONNECTED_CAMERAS_FILE_XX";
+	// File with info on all supported RPI cameras.
+	char const *RPI_cameraInfoFile		= "XX_RPI_CAMERA_INFO_FILE_XX";
 
 	bool isColorCamera					= false;		// Is the camera color or mono?
 	bool isCooledCamera					= false;		// Does the camera have a cooler?
@@ -396,7 +398,8 @@ void displaySettings(config);
 char *LorF(double, char const *, char const *);
 bool day_night_timeSleep(bool, config, bool);
 void delayBetweenImages(config, long, std::string);
-bool getCommandLineArguments(config *, int, char *[]);
+bool getCommandLineArguments(config *, int, char *[], bool);
+bool getConfigFileArguments(config *);
 int displayNotificationImage(char const *);
 bool validateLatitudeLongitude(config *);
 void doLocale(config *);

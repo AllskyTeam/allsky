@@ -187,7 +187,7 @@ struct config {			// for configuration variables
 	int cameraNumber					= 0;			// camera number index (starts at 0)
 
 	// Settings can be in the config file and/or command-line.
-	char const *allskyHome				= "XX_ALLSKY_HOME";			// full pathname to home of Allsky
+	char const *allskyHome				= "XX_ALLSKY_HOME_XX";	// full pathname to home of Allsky
 	char const *configFile				= "";
 	// File with list of connected cameras
 	char const *connectedCamerasFile	= "XX_CONNECTED_CAMERAS_FILE_XX";

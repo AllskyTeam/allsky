@@ -887,9 +887,8 @@ int main(int argc, char *argv[])
 	if (! setDefaults(&CG, ASICameraInfo))
 		closeUp(EXIT_ERROR_STOP);
 
-	if (! getCommandLineArguments(&CG, argc, argv))
+	if (! getCommandLineArguments(&CG, argc, argv, true))	// it outputs error messages
 	{
-		// getCommandLineArguents outputs an error message.
 		exit(EXIT_ERROR_STOP);
 	}
 

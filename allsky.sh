@@ -295,7 +295,7 @@ CAMERA_NUMBER="$( settings ".cameranumber" )"
 CAMERA_NUMBER="${CAMERA_NUMBER:-0}"		# default
 "${ALLSKY_BIN}/${CAPTURE}" \
 	-debuglevel "${ALLSKY_DEBUG_LEVEL}" \
-	-cmd "${RPi_COMMAND_TO_USE}"
+	-cmd "${RPi_COMMAND_TO_USE}" \
 	-cameramodel "${CAMERA_MODEL}" \
 	-cameranumber "${CAMERA_NUMBER}" \
 	-locale "$( settings ".locale" )" \

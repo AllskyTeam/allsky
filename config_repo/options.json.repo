@@ -783,6 +783,7 @@
 "type" : "float",
 "usage" : "capture",
 "carryforward" : true,
+"checkchanges" : true,
 "action" : "reload"
 },
 {
@@ -1317,8 +1318,7 @@
 "description": "Width of resized timelapse video. <span class='WebUIValue'>0</span> disables resize.",
 "label": "Width",
 "type": "integer",
-"booldependson" : "timelapsegenerate",
-"checkchanges" : true
+"booldependson" : "timelapsegenerate"
 },
 {
 "name": "timelapseheight",
@@ -1328,8 +1328,7 @@
 "description": "Height of resized timelapse video. <span class='WebUIValue'>0</span> disables resize.",
 "label": "Height",
 "type": "integer",
-"booldependson" : "timelapsegenerate",
-"checkchanges" : true
+"booldependson" : "timelapsegenerate"
 },
 {
 "name": "timelapsebitrate",
@@ -1339,8 +1338,7 @@
 "description": "Bitrate (in K) of timelapse video. Higher values produce higher quality but larger files. Do NOT add <code>k</code>.",
 "label": "Bitrate",
 "type" : "integer",
-"booldependson" : "timelapsegenerate",
-"checkchanges" : true
+"booldependson" : "timelapsegenerate"
 },
 {
 "name": "timelapsefps",
@@ -1435,8 +1433,7 @@
 "description": "Width of resized mini-timelapse video. <span class='WebUIValue'>0</span> disables resize.",
 "label": "Width",
 "type": "integer",
-"valuedependson" : "minitimelapsenumimages=[1-9]*",
-"checkchanges" : true
+"valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 {
 "name": "minitimelapseheight",
@@ -1446,8 +1443,7 @@
 "description": "Height of resized mini-timelapse video. <span class='WebUIValue'>0</span> disables resize.",
 "label": "Height",
 "type": "integer",
-"valuedependson" : "minitimelapsenumimages=[1-9]*",
-"checkchanges" : true
+"valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 {
 "name": "minitimelapsebitrate",
@@ -1483,8 +1479,9 @@
 "label" : "VCODEC",
 "type" : "text",
 "carryforward" : true,
+"comment": "check using ffmpeg -encoder looking at argument 2 for ' libxs264  '",
 "booldependson" : "timelapsegenerate",
-"checkchanges" : true
+"checkchanges": true
 },
 {
 "name" : "timelapsepixfmt",
@@ -1494,6 +1491,7 @@
 "type" : "text",
 "carryforward" : true,
 "booldependson" : "timelapsegenerate",
+"comment": "check using ffmpeg -pix_fmts looking at argument 2 for ' yuv420p  '",
 "checkchanges" : true
 },
 {
@@ -1921,7 +1919,7 @@
 {
 "name" : "remotewebsiteimageuploadoriginalname",
 "default" : false,
-"description" : "Enable to upload images using YYYYMMDDHHMMSS naming.  Rarely used.",
+"description" : "Enable to upload images using YYYYMMDDHHMMSS naming.",
 "label" : "Upload With Original Name",
 "type" : "boolean",
 "carryforward" : true,
@@ -1930,7 +1928,7 @@
 {
 "name" : "remotewebsitevideodestinationname",
 "default" : "",
-"description" : "Optional name of the remote video file.  Rarely used.",
+"description" : "Optional name of the remote video file.",
 "label" : "Remote Video File Name",
 "type" : "text",
 "carryforward" : true,
@@ -1940,7 +1938,7 @@
 {
 "name" : "remotewebsitekeogramdestinationname",
 "default" : "",
-"description" : "Optional name of the remote keogram file.  Rarely used.",
+"description" : "Optional name of the remote keogram file.",
 "label" : "Remote Keogram File Name",
 "type" : "text",
 "carryforward" : true,
@@ -1950,7 +1948,7 @@
 {
 "name" : "remotewebsitestartrailsdestinationname",
 "default" : "",
-"description" : "Optional name of the remote startrails file.  Rarely used.",
+"description" : "Optional name of the remote startrails file.",
 "label" : "Remote Startrails File Name",
 "type" : "text",
 "carryforward" : true,
@@ -2156,7 +2154,7 @@
 {
 "name" : "remoteserverimageuploadoriginalname",
 "default" : false,
-"description" : "Enable to upload images using YYYYMMDDHHMMSS naming.  Rarely used.",
+"description" : "Enable to upload images using YYYYMMDDHHMMSS naming.",
 "label" : "Upload With Original Name",
 "type" : "boolean",
 "carryforward" : true,
@@ -2164,8 +2162,8 @@
 },
 {
 "name" : "remoteservervideodestinationname",
-"default" : "allsky.mp4",
-"description" : "Optional name of the remote video file. Usually used.",
+"default" : "",
+"description" : "Optional name of the remote video file.",
 "label" : "Remote Video File Name",
 "type" : "text",
 "carryforward" : true,
@@ -2174,8 +2172,8 @@
 },
 {
 "name" : "remoteserverkeogramdestinationname",
-"default" : "keogram.jpg",
-"description" : "Optional name of the remote keogram file. Usually used.",
+"default" : "",
+"description" : "Optional name of the remote keogram file.",
 "label" : "Remote Keogram File Name",
 "type" : "text",
 "carryforward" : true,
@@ -2184,8 +2182,8 @@
 },
 {
 "name" : "remoteserverstartrailsdestinationname",
-"default" : "startrails.jpg",
-"description" : "Optional name of the remote startrails file. Usually used.",
+"default" : "",
+"description" : "Optional name of the remote startrails file.",
 "label" : "Remote Startrails File Name",
 "type" : "text",
 "carryforward" : true,
@@ -2359,36 +2357,42 @@
 "label" : "Camera Type",
 "type" : "select",
 "options" : [
-	{"value" : "RPi", "label" : "RPi"},
-	{"value" : "ZWO", "label" : "ZWO"},
-	{"value" : "Refresh", "label" : "Refresh"}
+	"cameratype_values"
 ],
 "checkchanges" : true,
 "action" : "restart"
 },
+{ "name" : "x1",
+  "type" : "select",
+  "options" : [
+	{"value" : "RPi", "label" : "RPi"},
+	{"value" : "ZWO", "label" : "ZWO"},
+	{"value" : "Refresh", "label" : "Refresh"}
+],
+"display" : false
+},
 {
 "name" : "cameramodel",
-"display" : true,
 "default" : "",
 "description" : "The model of camera you are using.<br><strong>To change it, change the <span class='WebUISetting'>Camera Type</span> above.</strong>",
 "label" : "Camera Model",
-"type" : "readonly",
+"readonly" : true,
+"type" : "select",
+"options" : [
+	"cameramodel_values"
+],
 "usage" : "capture",
 "action" : "restart"
 },
 {
 "name" : "cameranumber",
-"display" : false,
-"xxxdisplay" : "_display",
-"minimum" : 0,
-"maximum" : "none",
+"settingsonly" : true,
 "default" : 0,
 "description" : "If multiple cameras are connected to the Pi, this is the camera number (starts at 0).",
 "label" : "Camera Number",
 "type" : "integer",
 "usage" : "capture",
 "checkchanges" : true,
-"optional" : true,
 "action" : "restart"
 },
 

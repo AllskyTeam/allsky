@@ -362,10 +362,6 @@ int main(int argc, char *argv[])
 {
 	CG.ME = basename(argv[0]);
 
-	/* getenv() is used for variables that need to be known very early,
-	 * usually before reading the command-line arguments.
-	*/
-
 	CG.allskyHome = getenv("ALLSKY_HOME");
 	if (CG.allskyHome == NULL)
 	{
@@ -414,7 +410,6 @@ int main(int argc, char *argv[])
 	if (! setDefaults(&CG, ASICameraInfo))
 		closeUp(EXIT_ERROR_STOP);
 
-//x	if (! getCommandLineArguments(&CG, argc, argv))
 	if (CG.configFile[0] != '\0' && ! getConfigFileArguments(&CG))
 	{
 		// getConfigFileArguments() outputs error messages

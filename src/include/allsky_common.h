@@ -182,12 +182,12 @@ struct config {			// for configuration variables
 
 	// Camera number, type and model
 	int numCameras						= 0;			// Number of cameras physically connected
-	int cameraNumber					= 0;			// 0 to number-of-cameras-attached minus 1
-	cameraType ct						= ctRPi;
-	char const *cm						= "";
+	cameraType ct						= ctRPi;		// default camera type
+	char const *cm						= "";			// camera model
+	int cameraNumber					= 0;			// camera number index (starts at 0)
 
 	// Settings can be in the config file and/or command-line.
-	char const *allskyHome				= "";			// full pathname to home of Allsky
+	char const *allskyHome				= "XX_ALLSKY_HOME";			// full pathname to home of Allsky
 	char const *configFile				= "";
 	// File with list of connected cameras
 	char const *connectedCamerasFile	= "XX_CONNECTED_CAMERAS_FILE_XX";

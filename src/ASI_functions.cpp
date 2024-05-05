@@ -7,6 +7,8 @@
 #error ERROR: CAMERA_TYPE not defined
 #endif
 
+#define CAMERA_NAME_SIZE	64
+
 // Forward definitions of variables in capture*.cpp.
 extern int iNumOfCtrl;
 
@@ -42,7 +44,7 @@ typedef struct ASI_CAMERA_INFO
 {
 	char Module[MODULE_SENSOR_SIZE];// sensor type; RPi only
 	size_t Module_len;		// strncmp length.  0 for whole Module name
-	char Name[64];			// Name of camera
+	char Name[CAMERA_NAME_SIZE];			// Name of camera
 	int CameraID;
 	long MaxHeight;			// sensor height
 	long MaxWidth;
@@ -896,25 +898,33 @@ char *getSerialNumber(int camNum)
 	return(sn);
 }
 
-// Get the camera model.
-ASI_CAMERA_INFO x_;
-size_t s_ = sizeof(x_.Name);		// is NULL-terminated
-char cameraModel[sizeof(x_.Name) + 1];
-
+// Get the camera model, removing the camera type from the name if it's there.
+// Also, we don't want spaces in the file name - they are a hassle,
+// so replace them with underscores.
 char *getCameraModel(ASI_CAMERA_INFO cameraInfo)
 {
-	// Remove the camera type from the name if it's there.
+	static char cameraModel[CAMERA_NAME_SIZE + 1];
 	char *p = cameraInfo.Name;
-	if (strncmp(CAMERA_TYPE, p, strlen(CAMERA_TYPE)) == 0)
-		p += strlen(CAMERA_TYPE);
+
+	int l = strlen(CAMERA_TYPE);
+	if (strncmp(CAMERA_TYPE, p, l) == 0)
+		p += l;
 	if (*p == ' ') p++;		// skip optional space
-	strncpy(cameraModel, p, s_-1);
-	for (unsigned int i=0; i<s_; i++)
+
+	unsigned int i;
+	for (i=0; i<CAMERA_NAME_SIZE; i++)
 	{
-		// Don't want spaces in the file name - they are a hassle.
-		if (cameraModel[i] == ' ')
+		if (*p == ' ')
+		{
 			cameraModel[i] = '_';
+		}
+		else
+		{
+			cameraModel[i] = *p;
+		}
+		p++;
 	}
+	cameraModel[i] = '\0';
 
 	return(cameraModel);
 }
@@ -943,6 +953,9 @@ void saveCameraInfo(
 	fprintf(f, "\t\"cameraType\" : \"%s\",\n", CAMERA_TYPE);
 	fprintf(f, "\t\"cameraName\" : \"%s\",\n", cameraInfo.Name);
 	fprintf(f, "\t\"cameraModel\" : \"%s\",\n", camModel);
+#ifdef IS_RPi
+	fprintf(f, "\t\"sensor\" : \"%s\",\n", cameraInfo.Sensor);
+#endif
 #ifdef IS_ZWO
 	fprintf(f, "\t\"cameraID\" : \"%s\",\n", hasCameraID ? (char const *)cID : "");
 #endif

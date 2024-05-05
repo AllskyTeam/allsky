@@ -298,25 +298,31 @@ get_connected_cameras()
 	# "true" == ignore errors
 	get_connected_cameras_info "true" > "${CONNECTED_CAMERAS_INFO}" 2>/dev/null
 
-	# Check if there is an RPi camera connected, and if so,
-	# determine what command to use to control it.
+	# Check if there is an RPi camera connected.
 	if [[ -n ${C} ]]; then
-		# Only get the first camera.
-		RPI_MODEL="$( gawk '{if ($1 == "RPi") { print $4; exit 0; }}' "${CONNECTED_CAMERAS_INFO}" )"
+		RPI_MODEL="$( gawk '{if ($1 == "RPi") { print $4; }}' "${CONNECTED_CAMERAS_INFO}" )"
 		if [[ -n ${RPI_MODEL} ]]; then
-			[[ -z ${FUNCTION} ]] && display_msg --log progress "RPi ${RPI_MODEL} camera found."
 			CC="RPi"
+			if [[ -z ${FUNCTION} ]]; then
+				for i in ${RPI_MODEL}
+				do
+					display_msg --log progress "RPi ${i} camera found."
+				done
+			fi
 		fi
 	fi
 
 	# Check if there is a ZWO USB-based camera.
-	# Only get the first camera.
-# TODO: support multiple RPi and ZWO cameras
-	ZWO_MODEL="$( gawk '{if ($1 == "ZWO") { print $4; exit 0; }}' "${CONNECTED_CAMERAS_INFO}" )"
+	ZWO_MODEL="$( gawk '{if ($1 == "ZWO") { print $4; }}' "${CONNECTED_CAMERAS_INFO}" )"
 	if [[ -n ${ZWO_MODEL} ]]; then
-		[[ -z ${FUNCTION} ]] && display_msg --log progress "ZWO ${ZWO_MODEL} camera found."
 		[[ -n ${CC} ]] && CC+=" "
 		CC+="ZWO"
+		if [[ -z ${FUNCTION} ]]; then
+			for i in ${ZWO_MODEL}
+			do
+				display_msg --log progress "ZWO ${i} camera found."
+			done
+		fi
 	fi
 
 	if [[ -z ${CC} ]]; then
@@ -398,12 +404,20 @@ select_camera_type()
 
 	CT=()			# Camera Type array - what to display in whiptail
 	if [[ ${CONNECTED_CAMERAS} =~ "RPi" ]]; then
-		CT+=("${NUM_RPI}_RPi_${RPI_MODEL}" "RPi     ${RPI_MODEL}")
-		((NUM_RPI++))
+		for i in ${RPI_MODEL}
+		do
+			# The camera model may have "_" in it, so separate fields with a different character.
+			CT+=("${NUM_RPI};RPi;${i}" "RPi     ${i}")
+			((NUM_RPI++))
+		done
 	fi
 	if [[ ${CONNECTED_CAMERAS} =~ "ZWO" ]]; then
-		CT+=("${NUM_ZWO}_ZWO_${ZWO_MODEL}" "ZWO     ${ZWO_MODEL}")
-		((NUM_ZWO++))
+		for i in ${ZWO_MODEL}
+		do
+			CT+=( "${NUM_ZWO};ZWO;${i}" "ZWO     ${i}" )
+			((NUM_ZWO++))
+		done
+
 	fi
 	NUM=$(( NUM_RPI + NUM_ZWO ))
 	if [[ ${NUM} -eq 0 ]]; then		# shouldn't happen since we already checked
@@ -430,12 +444,12 @@ select_camera_type()
 		display_msg --log warning "${MSG}"
 		exit_installation 2 "${STATUS_NO_CAMERA}" "User did not select a camera."
 	fi
-	# CAMERA_INFO is:    number_type_model
+	# CAMERA_INFO is:    number;type;model
 # TODO: CAMERA_NUMBER not used yet
-	CAMERA_NUMBER="${CAMERA_INFO%%_*}"				# before first "_"
-	CAMERA_MODEL="${CAMERA_INFO##*_}"				# after last "_"
-	CAMERA_INFO="${CAMERA_INFO/${CAMERA_NUMBER}_/}"	# Now:  type_model
-	CAMERA_TYPE="${CAMERA_INFO%_*}"					# before "_"
+	CAMERA_NUMBER="${CAMERA_INFO%%;*}"				# before first ";"
+	CAMERA_MODEL="${CAMERA_INFO##*;}"				# after last ";"
+	CAMERA_INFO="${CAMERA_INFO/${CAMERA_NUMBER};/}"	# Now:  type;model
+	CAMERA_TYPE="${CAMERA_INFO%;*}"					# before ";"
 
 	display_msg --log progress "Using user-selected ${CAMERA_TYPE} ${CAMERA_MODEL} camera."
 	STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
@@ -497,18 +511,15 @@ do_save_camera_capabilities()
 
 	display_msg --log progress "Making new settings file '${SETTINGS_FILE}'."
 
-	CAMERA_TYPE="${CAMERA_TYPE/_*/}"
-
 	CMD="makeChanges.sh${FORCE}${OPTIONSONLY} --cameraTypeOnly --fromInstall ${DEBUG_ARG}"
 	#shellcheck disable=SC2089
 	CMD+=" cameratype 'Camera Type' '${PRIOR_CAMERA_TYPE}' '${CAMERA_TYPE}'"
 	MSG="Executing ${CMD}"
 	display_msg "${LOG_TYPE}" info "${MSG}"
 
-	ERR="/tmp/makeChanges.errors.txt"
-
+	local TMP="${ALLSKY_LOGS}/makeChanges.log"
 	#shellcheck disable=SC2086,SC2090
-	M="$( eval "${ALLSKY_SCRIPTS}/"${CMD} 2> "${ERR}" )"
+	M="$( eval "${ALLSKY_SCRIPTS}/"${CMD} 2> "${TMP}" )"
 	RET=$?
 	if [[ ${RET} -ne 0 ]]; then
 		if [[ ${RET} -eq ${EXIT_NO_CAMERA} ]]; then
@@ -516,10 +527,10 @@ do_save_camera_capabilities()
 			MSG+="After connecting your camera, re-run the installation."
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 			display_msg --log error "No camera detected - installation aborted."
-			[[ -s ${ERR} ]] && display_msg --log error "$( < "${ERR}" )"
+			[[ -s ${TMP} ]] && display_msg --log error "$( < "${TMP}" )"
 			exit_with_image 1 "${STATUS_ERROR}" "No camera detected"
 		elif [[ ${OPTIONSFILEONLY} == "false" ]]; then
-			[[ -s ${ERR} ]] && display_msg --log error "$( < "${ERR}" )"
+			[[ -s ${TMP} ]] && display_msg --log error "$( < "${TMP}" )"
 			display_msg --log error "Unable to save camera capabilities."
 		fi
 		return 1
@@ -861,28 +872,19 @@ set_permissions()
 {
 	display_msg --log progress "Setting permissions on web-related files."
 
-	# Make sure the currently running user can run sudo on anything and
-	# can write to the webserver root (is in the webserver group).
+	# Make sure the currently running user is in the right groups.
+	# "sudo" allows them to run sudo on anything.
+	# "${WEBSERVER_GROUP}" allows the web server to write files to Allsky directories.
+	# "video" allows the user to access video devices
 	local G="$( id "${ALLSKY_OWNER}" )"
-	#shellcheck disable=SC2076
-	if ! [[ ${G} =~ "(sudo)" ]]; then
-		display_msg --log progress "Adding ${ALLSKY_OWNER} to sudo group."
-
-		### TODO:  Hmmm.  We need to run "sudo" to add to the group,
-		### but we don't have "sudo" permissions yet... so this will likely fail:
-
-		sudo adduser --quiet "${ALLSKY_OWNER}" "sudo"
-	fi
-	#shellcheck disable=SC2076
-	if ! [[ ${G} =~ "(${WEBSERVER_GROUP})" ]]; then
-		display_msg --log progress "Adding ${ALLSKY_OWNER} to ${WEBSERVER_GROUP} group."
-		sudo adduser --quiet "${ALLSKY_OWNER}" "${WEBSERVER_GROUP}"
-
-		# TODO: We had a case where the login shell wasn't in the group after "adduser"
-		# until the user logged out and back in.
-		# And this was AFTER he ran install.sh and rebooted.
-		# Not sure what to do about that...
-	fi
+	for g in "sudo" "${WEBSERVER_GROUP}" "video"
+	do
+		#shellcheck disable=SC2076
+		if ! [[ ${G} =~ "(${g})" ]]; then
+			display_msg --log progress "Adding ${ALLSKY_OWNER} to ${g} group."
+			sudo adduser --quiet "${ALLSKY_OWNER}" "${g}"
+		fi
+	done
 
 	# The web server needs to be able to create and update many of the files in ${ALLSKY_CONFIG}.
 	# Not all, but go ahead and chgrp all of them so we don't miss any new ones.
@@ -2386,7 +2388,7 @@ restore_prior_files()
 
 		DEST_FILE="${MY_OVERLAY_TEMPLATES}/${OVERLAY_NAME}"
 
-		# Add the metadata for th eoverlay manager
+		# Add the metadata for the overlay manager
 		# shellcheck disable=SC2086
 		jq '. += {"metadata": {
 			"camerabrand": "'${CAMERA_TYPE}'",

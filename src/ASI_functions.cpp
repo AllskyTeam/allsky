@@ -16,21 +16,17 @@ char *skipType(char *);
 // +5 for other characters in name
 #define CC_MODEL_SIZE		(CAMERA_NAME_SIZE + MODULE_SENSOR_SIZE + 5)
 
-// Holds camera model names of all connected cameras of the current type.
-// Should never be more than 100 connected cameras.
-char connectedCameraModels[100][CC_MODEL_SIZE] = {};
-
 #define CC_TYPE_SIZE		10
 // Holds connected camera types.
 struct CONNECTED_CAMERAS
 {
 	int cameraID;
 	char Type[CC_TYPE_SIZE];				// ZWO or RPi
-	char Model[CC_MODEL_SIZE];
+	char Name[CAMERA_NAME_SIZE];			// camera name, e.g., "ASI290MC", "HQ"
+	char Sensor[MODULE_SENSOR_SIZE];		// full sensor name (what --list-cameras returns)
+
 	char Module[MODULE_SENSOR_SIZE];		// sensor type
 	size_t Module_len;						// strncmp length.  0 for whole Module name
-	char Sensor[MODULE_SENSOR_SIZE];		// full sensor name (what --list-cameras returns)
-	char Name[CAMERA_NAME_SIZE];			// Name of camera
 };
 CONNECTED_CAMERAS connectedCameras[100];
 int totalNum_connectedCameras = 0;			// num connected cameras of all types
@@ -62,6 +58,12 @@ int getNumOfConnectedCameras()
 		on_line++;
 		Log(5, "     line %d: %s", on_line, line);
 		int num;
+
+		// File format
+		//		camera_type  <TAB>  camera_number   : sensor_name  [width x height] or ZWO code
+		// Sample lines:
+		// 		RPi          <TAB>  0               : imx477       [4056x3040]
+		// 		ZWO          <TAB>  1               : ASI290MM     290b
 		if (sscanf(line, "%s\t%d : %s ", cameraType, &num, cameraModel) == 3)
 		{
 			CONNECTED_CAMERAS *cC = &connectedCameras[totalNum_connectedCameras++];
@@ -70,7 +72,7 @@ int getNumOfConnectedCameras()
 #ifdef IS_ZWO
 			strncpy(cC->Name, cameraModel, CC_MODEL_SIZE);
 #else
-			strncpy(cC->Model, cameraModel, CC_MODEL_SIZE);
+			// cC->Name done later
 			strncpy(cC->Sensor, cameraModel, MODULE_SENSOR_SIZE);
 #endif
 
@@ -537,20 +539,6 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 // Also save the info on each connected camera of the current type.
 int getCameraNumber()
 {
-	// Determine which camera sensor(s) we have by reading the file
-	// created in getNumOfConnectedCameras().
-	FILE *f = fopen(CG.connectedCamerasFile, "r");
-	if (f == NULL)
-	{
-		Log(0, "%s: ERROR: Unable to open CG.connectedCamerasFile '%s': %s\n",
-			CG.ME, CG.connectedCamerasFile, strerror(errno));
-		closeUp(EXIT_ERROR_STOP);
-	}
-
-	char line[512];
-	int num = NOT_SET;
-	char cameraType[CC_TYPE_SIZE];
-	char sensor[MODULE_SENSOR_SIZE];
 	int actualIndex;					// index into ASICameraInfoArray[]
 	int RPiCameraIndex = -1;			// index into RPiCameras[]
 	int thisIndex = -1;					// index of camera found in RPiCameras
@@ -560,82 +548,76 @@ int getCameraNumber()
 	// camera's ASICameraInfoArray[] entry.
 	// Return the index into *RPiCameras[] of the attached camera we're using.
 
-	// File format
-	//					camera_type  <TAB>  camera_number   : sensor_name  [width x height] or ZWO code
-	// Sample lines:
-	// 					RPi          <TAB>  0               : imx477       [4056x3040]
-	// 					ZWO          <TAB>  1               : ASI290MM     290b
-	while (fgets(line, sizeof(line)-1, f) != NULL)
+	for (int cc=0; cc < totalNum_connectedCameras; cc++)
 	{
-		Log(5, "line: %s\n", line);
-
-		if (sscanf(line, "%s\t%d : %s ", cameraType, &num, sensor) == 3 &&
-				strcmp(cameraType, CAMERA_TYPE) == 0)
+		CONNECTED_CAMERAS *cC = &connectedCameras[cc];
+		if (strcmp(cC->Type, CAMERA_TYPE) != 0)
 		{
-			// Found a camera of the right type and number.
+			continue;
+		}
+
+		char *sensor = cC->Sensor;
+
+		// Found a camera of the right type.
 
 // XXX TODO: use RPI_cameraInfoFile instead
 /*
-			FILE *f2 = fopen(CG.RPI_cameraInfoFile, "r");
-			if (f == NULL)
-			{
-				Log(0, "%s: ERROR: Unable to open CG.RPI_cameraInfoFile '%s': %s\n",
-					CG.ME, CG.RPI_cameraInfoFile, strerror(errno));
-				closeUp(EXIT_ERROR_STOP);
-			}
+		FILE *f2 = fopen(CG.RPI_cameraInfoFile, "r");
+		if (f == NULL)
+		{
+			Log(0, "%s: ERROR: Unable to open CG.RPI_cameraInfoFile '%s': %s\n",
+				CG.ME, CG.RPI_cameraInfoFile, strerror(errno));
+			closeUp(EXIT_ERROR_STOP);
+		}
 */
 
-			// Now check all known cameras to make sure it's one we know about.
-			// Unfortunately we don't have anything else to check, like serial number.
-			// I suppose we could also check the Modes are the same, but it's not worth it.
-			for (int i=0; i < ASICameraInfoArraySize; i++)
+		// Check all known cameras to make sure it's one we know about.
+		for (int i=0; i < ASICameraInfoArraySize; i++)
+		{
+			// This code tells us how much of the Module name to compare.
+			size_t len;
+			ASI_CAMERA_INFO *p = &ASICameraInfoArray[i];
+
+			if (p->Module_len > 0)
+				len = p->Module_len;
+			else
+				len = sizeof(p->Module);
+
+			// Now compare the attached sensor name with what's in our list.
+			if (strncmp(sensor, p->Module, len) == 0)
 			{
-				// This code tells us how much of the Module name to compare.
-				size_t len;
-				ASI_CAMERA_INFO *p = &ASICameraInfoArray[i];
+				// The sensor is in our list.
+				actualIndex = i;
+				num_RPiCameras++;
+				thisIndex++;
+				cC->Module_len = p->Module_len;
 
-				if (p->Module_len > 0)
-					len = p->Module_len;
-				else
-					len = sizeof(p->Module);
+				strncpy(p->Sensor, sensor, MODULE_SENSOR_SIZE);
+				RPiCameras[thisIndex].CameraInfo = &ASICameraInfoArray[actualIndex];
+				// There are TWO entries in ControlCapsArray[] for every
+				// entry in ASICameraInfoArray[].
+				// The first of each pair is for libcamera, the second is for raspistill.
+				// We need to return the index into ControlCapsArray[].
+				Log(4, "Saving sensor [%s] from ASICameraInfoArray[%d] to RPiCameras[%d],",
+					sensor, actualIndex, thisIndex);
+				actualIndex = (actualIndex * 2) + (CG.isLibcamera ? 0 : 1);
+				RPiCameras[thisIndex].ControlCaps = &ControlCapsArray[actualIndex][0];
+				Log(4, " ControlCapsArray[%d]", actualIndex);
 
-				// Now compare the attached sensor name with what's in our list.
-				if (strncmp(sensor, p->Module, len) == 0)
+				if (thisIndex == CG.cameraNumber)
 				{
-					// The sensor is in our list.
-					actualIndex = i;
-					num_RPiCameras++;
-					thisIndex++;
-
-					strncpy(p->Sensor, sensor, MODULE_SENSOR_SIZE);
-					RPiCameras[thisIndex].CameraInfo = &ASICameraInfoArray[actualIndex];
-					// There are TWO entries in ControlCapsArray[] for every
-					// entry in ASICameraInfoArray[].
-					// The first of each pair is for libcamera, the second is for raspistill.
-					// We need to return the index into ControlCapsArray[].
-					Log(4, "Saving sensor [%s] from ASICameraInfoArray[%d] to RPiCameras[%d],",
-						sensor, actualIndex, thisIndex);
-					actualIndex = (actualIndex * 2) + (CG.isLibcamera ? 0 : 1);
-					RPiCameras[thisIndex].ControlCaps = &ControlCapsArray[actualIndex][0];
-					Log(4, " ControlCapsArray[%d]", actualIndex);
-
-					if (thisIndex == CG.cameraNumber)
-					{
-						RPiCameraIndex = thisIndex;
-						Log(4, " - MATCH\n");
-					}
-					else
-					{
-						Log(4, ".\n");
-					}
-
-					break;		// exit inner loop
+					RPiCameraIndex = thisIndex;
+					Log(4, " - MATCH\n");
 				}
+				else
+				{
+					Log(4, ".\n");
+				}
+
+				break;		// exit inner loop
 			}
 		}
 	}
-
-	fclose(f);
 
 	// These checks should "never" fail since allsky.sh created the input file
 	// based on what's connected.
@@ -898,6 +880,7 @@ char *getRetCode(ASI_ERROR_CODE code)
 // Get the number of cameras PHYSICALLY connected, making sure there's at least one.
 void processConnectedCameras()
 {
+	// This also sets global totalNum_connectedCameras.
 	CG.numCameras = getNumOfConnectedCameras();
 	if (CG.numCameras <= 0)
 	{
@@ -915,27 +898,44 @@ void processConnectedCameras()
 
 	if (CG.numCameras > 1)
 		printf("\nAttached Cameras:\n");
+
 	ASI_CAMERA_INFO info;
-	for (int i = 0; i < CG.numCameras; i++)
+	int numThisType = 0;
+	for (int cc=0; cc < totalNum_connectedCameras; cc++)
 	{
-		if (ASIGetCameraProperty(&info, i) != ASI_SUCCESS)
+		CONNECTED_CAMERAS *cC = &connectedCameras[cc];
+		if (strcmp(cC->Type, CAMERA_TYPE) != 0)
 		{
-#ifdef IS_ZWO	// RPi version already displayed message.
-			Log(0, "ERROR: unable to get information for camera number %d.\n", i);
-#endif
 			continue;
 		}
+
+		if (ASIGetCameraProperty(&info, numThisType) != ASI_SUCCESS)
+		{
+#ifdef IS_ZWO	// RPi version already displayed message.
+			Log(0, "ERROR: can't get information for camera number %d.\n", numThisType);
+#endif
+			numThisType++;
+			continue;
+		}
+
 		if (CG.numCameras > 1)
-			printf("  - %d", i);
+			printf("  - %d", numThisType);
+
+		char *cm;
 #ifdef IS_RPi
-		snprintf(connectedCameraModels[i], CC_MODEL_SIZE, "%s [%s]", info.Name, info.Sensor);
+		strncpy(cC->Name, info.Name, CC_MODEL_SIZE);
+		snprintf(cC->Sensor, CC_MODEL_SIZE, "%s [%s]", info.Name, info.Sensor);
+		cm = cC->Sensor;
 #else
-		snprintf(connectedCameraModels[i], CC_MODEL_SIZE, "%s", info.Name);
+		cm = info.Name;
 #endif
 		if (CG.numCameras > 1)
 		{
-			printf(" %s %s\n", connectedCameraModels[i], i == CG.cameraNumber ? " (selected)" : "");
+			printf(" %s ", cm);
+			printf(" %s\n", numThisType == CG.cameraNumber ? " (selected)" : "");
 		}
+
+		numThisType++;
 	}
 }
 
@@ -1081,15 +1081,24 @@ void saveCameraInfo(
 	fprintf(f, "\t\"cameraName\" : \"%s\",\n", cameraInfo.Name);
 	fprintf(f, "\t\"cameraModel\" : \"%s\",\n", camModel);
 		fprintf(f, "\t\"cameraModels\" : [\n");
-		for (int camNum = 0; camNum < CG.numCameras; camNum++)
+		int numThisType = 0;
+		for (int cc=0; cc < totalNum_connectedCameras; cc++)
 		{
-			if (camNum > 0)
+			CONNECTED_CAMERAS *cC = &connectedCameras[cc];
+			if (strcmp(cC->Type, CAMERA_TYPE) != 0)
+			{
+				continue;
+			}
+
+			if (numThisType > 0)
 			{
 				fprintf(f, ",");		// comma on all but last one
 				fprintf(f, "\n");
 			}
-			fprintf(f, "\t\t{ \"value\" : %d, \"label\" : \"%s\" }",
-				camNum, skipType(connectedCameraModels[camNum]));
+			fprintf(f, "\t\t{ \"value\" : \"%s\", \"label\" : \"%s\" }",
+				skipType(cC->Name), skipType(cC->Sensor));
+
+			numThisType++;
 		}
 		fprintf(f, "\n\t],\n");
 #ifdef IS_RPi

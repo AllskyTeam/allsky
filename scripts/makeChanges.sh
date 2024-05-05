@@ -310,7 +310,7 @@ do
 			if [[ ${DEBUG} == "true" ]]; then
 				# shellcheck disable=SC2086
 				echo -e "${wDEBUG}Calling:" \
-					"${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
+					"${ALLSKY_SCRIPTS}/createAllskyOptions.php" \
 					${FORCE} ${DEBUG_ARG} \
 					"\n\t--cc-file ${CC_FILE}" \
 					"\n\t--options-file ${OPTIONS_FILE}" \
@@ -318,7 +318,7 @@ do
 					"${wNC}"
 			fi
 			# shellcheck disable=SC2086
-			R="$( "${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
+			R="$( "${ALLSKY_SCRIPTS}/createAllskyOptions.php" \
 				${FORCE} ${DEBUG_ARG} \
 				--cc-file "${CC_FILE}" \
 				--options-file "${OPTIONS_FILE}" \

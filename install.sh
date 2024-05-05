@@ -902,8 +902,8 @@ set_permissions()
 	sudo find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 '{}' \;
 
 	# Exceptions to files at 644:
-	chmod 755	"${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
-				"${ALLSKY_WEBUI}/includes/convertJSON.php"
+	chmod 755	"${ALLSKY_SCRIPTS}/createAllskyOptions.php" \
+				"${ALLSKY_SCRIPTS/convertJSON.php"
 
 	chmod 775 "${ALLSKY_TMP}"
 	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_TMP}"

@@ -170,6 +170,8 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 
 		CAMERA_TYPE="$( jq -r '.cameratype' "${SETTINGS_FILE}" )"
 		CAMERA_MODEL="$( jq -r '.cameramodel' "${SETTINGS_FILE}" )"
+		CAMERA_NUMBER="$( jq -r '.cameranumber' "${SETTINGS_FILE}" )"
+		CAMERA_NUMBER="${CAMERA_NUMBER:-0}"
 
 		# So scripts can conditionally output messages.
 		ALLSKY_DEBUG_LEVEL="$( jq -r '.debuglevel' "${SETTINGS_FILE}" )"

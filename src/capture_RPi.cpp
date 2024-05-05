@@ -375,46 +375,9 @@ int main(int argc, char *argv[])
 
 	if (! getCommandLineArguments(&CG, argc, argv, false))
 	{
-		// getCommandLineArguents outputs an error message.
+		// getCommandLineArguments outputs an error message.
 		exit(EXIT_ERROR_STOP);
 	}
-/*
-
-	char *x;
-	x = getenv("ALLSKY_DEBUG_LEVEL");
-	if (x != NULL) { CG.debugLevel = atoi(x); }
-	x = getenv("CAMERANUMBER");
-	if (x != NULL) { CG.cameraNumber = atoi(x); }
-
-	CG.connectedCamerasFile = getenv("CONNECTED_CAMERAS_INFO");
-	if (CG.connectedCamerasFile == NULL)
-	{
-		Log(0, "*** %s: ERROR: CONNECTED_CAMERAS_INFO not set!\n", CG.ME);
-		exit(EXIT_ERROR_STOP);
-	}
-	CG.RPI_cameraInfoFile = getenv("RPi_SUPPORTED_CAMERAS");
-	if (CG.RPI_cameraInfoFile == NULL)
-	{
-		Log(0, "*** %s: ERROR: RPi_SUPPORTED_CAMERAS not set!\n", CG.ME);
-		exit(EXIT_ERROR_STOP);
-	}
-
-	CG.cmdToUse = getenv("RPi_COMMAND_TO_USE");
-	if (CG.cmdToUse != NULL)
-	{
-		if (strcmp(CG.cmdToUse, "rpicam-still") == 0 ||
-		    strcmp(CG.cmdToUse, "libcamera-still") == 0)
-		{
-			CG.isLibcamera = true;
-		}
-		else
-		{
-			CG.isLibcamera = false;
-		}
-	}
-*/
-	Log(4, "CONNECTED_CAMERAS_INFO=[%s], RPi_SUPPORTED_CAMERAS=[%s], RPi_COMMAND_TO_USE=[%s]\n",
-		CG.connectedCamerasFile, CG.RPI_cameraInfoFile, CG.cmdToUse);
 
 	char bufTime[128]			= { 0 };
 	char bufTemp[1024]			= { 0 };

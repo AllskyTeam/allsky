@@ -2536,13 +2536,6 @@ restore_prior_website_files()
 		cp "${REPO_ENV_FILE}" "${ALLSKY_ENV}"
 	fi
 
-#XXXX TODO: do this in makeChanges.sh when they enable the local Website.
-	if [[ ! -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
-		# No prior config file (this should only happen if there was no prior Website).
-		cp  "${REPO_WEBSITE_CONFIGURATION_FILE}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
-		doV "" "ALLSKY_VERSION" "${WEBSITE_ALLSKY_VERSION}" "text" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
-	fi
-
 	ITEM="${SPACE}Local Website files"
 	if [[ -z ${PRIOR_WEBSITE_DIR} ]]; then
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"

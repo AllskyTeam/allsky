@@ -1723,6 +1723,7 @@ convert_settings()			# prior_file, new_file
 	# text fields
 	for i in "imagessortorder:ascending" "daytimeoverlay:" "nighttimeoverlay:" "computer:"
 	do
+		#shellcheck disable=SC2207
 		ii=( $( tr ":" " " <<<"${i}" ) )
 		s="${ii[0]}"
 		v="${ii[1]}"

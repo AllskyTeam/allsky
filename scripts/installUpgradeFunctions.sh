@@ -774,7 +774,7 @@ function get_lat_long()
 					LAT="${LAT//-/}S"
 				fi
 
-				if [[ $( echo "$LON > 0" | bc ) -eq 1 ]] then
+				if [[ $( echo "$LON > 0" | bc ) -eq 1 ]] ; then
 					LON="${LON}E"
 				else
 					LON="${LON//-/}W"

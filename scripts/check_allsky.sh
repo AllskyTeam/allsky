@@ -73,26 +73,6 @@ done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
-if [[ ${FROM_WEBUI} == "true" ]]; then
-	NL="<br>"
-	TAB="&nbsp; &nbsp; &nbsp;"
-	STRONGs="<strong>"
-	STRONGe="</strong>"
-	WSNs="<span class='WebUISetting'>"		# Web Setting Name start
-	WSNe="</span>"
-	WSVs="<span class='WebUIValue'>"		# Web Setting Value start
-	WSVe="</span>"
-else
-	NL="\n"
-	TAB="    "
-	STRONGs=""
-	STRONGe=""
-	WSNs="'"
-	WSNe="'"
-	WSVs=""
-	WSVe=""
-fi
-
 NUM_INFOS=0
 NUM_WARNINGS=0
 NUM_ERRORS=0
@@ -372,10 +352,10 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 				grep -E --silent "image-expand|-x|font-size|-S|font-line|-L|font-color|-C" ; then
 			heading "Information"
 			echo "${WSNs}Keogram Extra Parameters${WSNe} contains one or more of:"
-			echo "${TAB}${WSVs}--image-expand${WSVe} or ${WSVs}-x${WSVe}"
-			echo "${TAB}${WSVs}--font-size${WSVe} or ${WSVs}-S${WSVe}"
-			echo "${TAB}${WSVs}--font-line${WSVe} or ${WSVs}-L${WSVe}"
-			echo "${TAB}${WSVs}--font-color${WSVe} or ${WSVs}-C${WSVe}"
+			echo "${SPACES}${WSVs}--image-expand${WSVe} or ${WSVs}-x${WSVe}"
+			echo "${SPACES}${WSVs}--font-size${WSVe} or ${WSVs}-S${WSVe}"
+			echo "${SPACES}${WSVs}--font-line${WSVe} or ${WSVs}-L${WSVe}"
+			echo "${SPACES}${WSVs}--font-color${WSVe} or ${WSVs}-C${WSVe}"
 			echo "FIX: These are now separate settings so move them to their own settings."
 		fi
 	fi
@@ -572,12 +552,12 @@ fi
 			echo -n "Your mini-timelapse settings may cause multiple timelapse to"
 			echo    " be created simultaneously."
 			echo    "FIX: Consider increasing the ${WSNs}Delay${WSNe} between pictures,"
-			echo    "${TAB}increasing ${WSNs}Frequency${WSNe},"
-			echo    "${TAB}decreasing ${WSNs}Number Of Images${WSNe},"
-			echo    "${TAB}or a combination of those changes."
-			echo    "${TAB}Expected time to create a mini-timelapse on a Pi 4 is"
-			echo    "${TAB}${EXPECTED_TIME} seconds but with your settings one could be created"
-			echo    "${TAB}as short as every ${MIN_TIME_BETWEEN_TIMELAPSE_SEC} seconds."
+			echo    "${SPACES}increasing ${WSNs}Frequency${WSNe},"
+			echo    "${SPACES}decreasing ${WSNs}Number Of Images${WSNe},"
+			echo    "${SPACES}or a combination of those changes."
+			echo    "${SPACES}Expected time to create a mini-timelapse on a Pi 4 is"
+			echo    "${SPACES}${EXPECTED_TIME} seconds but with your settings one could be created"
+			echo    "${SPACES}as short as every ${MIN_TIME_BETWEEN_TIMELAPSE_SEC} seconds."
 		fi
 	elif [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" ]]; then
 		heading "Warning"
@@ -660,7 +640,7 @@ fi
 		heading "Warning"
 		echo "${WSNs}Remove Bad Images Threshold Low${WSNe} is 0 (disabled)."
 		echo "FIX: Set to a value greater than 0 unless you are debugging issues."
-		echo "${TAB}Try 0.1 and adjust if needed."
+		echo "${SPACES}Try 0.1 and adjust if needed."
 	fi
 	if ! is_number "${BAD_IMAGES_HIGH}" || ! is_within_range "${BAD_IMAGES_HIGH}" ; then
 		heading "Error"
@@ -671,7 +651,7 @@ fi
 		heading "Warning"
 		echo "${WSNs}Remove Bad Images Threshold High${WSNe} is 0 (disabled)."
 		echo "FIX: Set to a value greater than 0 unless you are debugging issues."
-		echo "${TAB}Try 0.9 and adjust if needed."
+		echo "${SPACES}Try 0.9 and adjust if needed."
 	fi
 
 	##### Uploads

@@ -154,13 +154,17 @@ if ($capture_only || $convert || $include_not_in_options || $order ||
 	if ($options_array === null) {
 		exit(3);
 	}
-
 	if ($shell) $label_array = Array();
 	foreach ($options_array as $option) {
 		$name = $option['name'];
 		$type_array[$name] = getVariableOrDefault($option, 'type', "");
-		if ($shell)
-			$label_array[$name] = getVariableOrDefault($option, 'label', "");
+		if ($shell) {
+			$p = getVariableOrDefault($option, 'label_prefix', "");
+			if ($p !== "") {
+				$p .= " ";
+			}
+			$label_array[$name] = $p . getVariableOrDefault($option, 'label', "");
+		}
 	}
 }
 if ($type_to_output !== "") {

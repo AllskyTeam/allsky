@@ -21,6 +21,10 @@
 //		which will have this field in the options file:		"capture" : true
 //		Without this option ALL settings/values in the settings file are output.
 
+// --carryforward
+//		Limit output to only settings whose "carryforward" is true.
+//		Output the setting name and setting type.
+
 // --convert
 //		Convert the field names to all lower case,
 //		boolean values to    true   or   false,
@@ -46,6 +50,7 @@ include_once("functions.php");
 $debug = false;
 $settings_file = null;
 $capture_only = false;
+$carryforward = false;
 $delimiter = "=";
 $convert = false;
 $order = false;
@@ -68,6 +73,7 @@ $longopts = array(
 	// no arguments:
 	"settings-only",
 	"capture-only",
+	"carryforward",
 	"include-not-in-options",
 	"convert",
 	"order",
@@ -98,6 +104,9 @@ foreach ($options as $opt => $val) {
 
 	} else if ($opt === "capture-only") {
 		$capture_only = true;
+
+	} else if ($opt === "carryforward") {
+		$carryforward = true;
 
 	} else if ($opt === "type") {
 		$type_to_output = $val;
@@ -142,7 +151,7 @@ if ($settings_array === null) {
 if ($convert) $shell = false;		// "convert" displays json; the shell needs shell format
 
 $type_array = Array();
-if ($capture_only || $convert || $include_not_in_options || $order ||
+if ($capture_only || $carryforward || $convert || $include_not_in_options || $order ||
 		$shell || $type_to_output !== "") {
 
 	if ($options_file === null) {
@@ -156,8 +165,18 @@ if ($capture_only || $convert || $include_not_in_options || $order ||
 	}
 	if ($shell) $label_array = Array();
 	foreach ($options_array as $option) {
+		$type = getVariableOrDefault($option, 'type', "");
+		if ($type_to_output !== "" && $type_to_output !== $type) {
+			continue;
+		}
+
 		$name = $option['name'];
-		$type_array[$name] = getVariableOrDefault($option, 'type', "");
+		if ($carryforward && getVariableOrDefault($option, 'carryforward', "false") === "true") {
+			echo "$prefix$name\t$type\n";
+			continue;
+		}
+
+		$type_array[$name] = $type;
 		if ($shell) {
 			$p = getVariableOrDefault($option, 'label_prefix', "");
 			if ($p !== "") {
@@ -167,12 +186,14 @@ if ($capture_only || $convert || $include_not_in_options || $order ||
 		}
 	}
 }
+if ($carryforward) {
+	exit(0);
+}
+
 if ($type_to_output !== "") {
 	foreach ($type_array as $name => $type) {
-		if ($type === $type_to_output)
-			echo "$prefix$name\n";
+		echo "$prefix$name\n";
 	}
-
 	exit(0);
 }
 

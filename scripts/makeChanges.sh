@@ -395,7 +395,7 @@ if true; then
 				"${ALLSKY_SCRIPTS}/convertJSON.php" --carryforward |
 				while read -r SETTING TYPE
 				do
-					X="$( settings .${SETTING} "${OLD_SETTINGS_FILE}" )"
+					X="$( settings ".${SETTING}" "${OLD_SETTINGS_FILE}" )"
 					update_json_file ".${SETTING}" "${X}" "${SETTINGS_FILE}" "${TYPE}"
 				done
 else

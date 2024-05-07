@@ -77,9 +77,12 @@ NUM_INFOS=0
 NUM_WARNINGS=0
 NUM_ERRORS=0
 
+NUM_HEADER_CALLS=0
 function heading()
 {
 	local HEADER="${1}"
+
+	((NUM_HEADER_CALLS++))
 	local SUB_HEADER=""
 	local DISPLAY_HEADER="false"
 	case "${HEADER}" in
@@ -113,6 +116,7 @@ function heading()
 	esac
 
 	if [[ ${DISPLAY_HEADER} == "true" ]]; then
+		[[ ${NUM_HEADER_CALLS} -gt 1 ]] && echo -e "${NL}"
 		echo -e "${NL}${STRONGs}---------- ${HEADER}${SUB_HEADER} ----------${STRONGe}${NL}"
 	else
 		echo "${STRONGs}-----${STRONGe}"	# Separates lines within a header group
@@ -145,17 +149,31 @@ function check_for_env_file()
 	else
 		echo "'${ALLSKY_ENV}' is empty!"
 	fi
-	echo "Unable to check any remote server settings."
+	echo "Unable to check any remote Website or server settings."
 	return 1
 }
+if check_for_env_file ; then
+	ENV_EXISTS="true"
+else
+	ENV_EXISTS="false"
+fi
 
-function get_setting()
-{
-	local S="${1}"
-	local F="${2}"
-	local V="$( settings "${S}" "${F}" )" || echo "Problem getting ${S}." >&2
-	echo "${V}"
-}
+# Get all settings.  Give each set a different prefix to avoid name conflicts.
+X="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix S_ --shell )"
+if [[ $? -ne 0 ]]; then
+	echo "${X}"
+	exit 1
+fi
+eval "${X}"
+
+if [[ ${ENV_EXISTS} == "true" ]]; then
+	X="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix E_ --shell --settings-file "${ALLSKY_ENV}" )"
+	eval "${X}"
+fi
+
+# "convertJSON.php" won't work with the CC_FILE since it has arrays.
+C_sensorWidth="$( settings ".sensorWidth" "${CC_FILE}" )"	# Physical sensor size.
+C_sensorHeight="$( settings ".sensorHeight" "${CC_FILE}" )"
 
 # Return 0 if the number is 0.0, else return 1.
 function is_zero()
@@ -174,28 +192,27 @@ function is_within_range()
 		BEGIN {if (n < low || n > high) exit 1; exit 0; }'
 }
 
-DAY_DELAY_MS=$( settings ".daydelay" ) || echo "Problem getting .daydelay"
-NIGHT_DELAY_MS=$( settings ".nightdelay" ) || echo "Problem getting .nightdelay"
-
 # Typical minimum daytime and nighttime exposures.
 DAY_MIN_EXPOSURE_MS=250
 NIGHT_MIN_EXPOSURE_MS=5000
 # Minimum total time spent on each image.
-DAY_MIN_IMAGE_TIME_MS=$(( DAY_MIN_EXPOSURE_MS + DAY_DELAY_MS ))
-NIGHT_MIN_IMAGE_TIME_MS=$(( NIGHT_MIN_EXPOSURE_MS + NIGHT_DELAY_MS ))
+DAY_MIN_IMAGE_TIME_MS=$(( DAY_MIN_EXPOSURE_MS + S_daydelay ))
+NIGHT_MIN_IMAGE_TIME_MS=$(( NIGHT_MIN_EXPOSURE_MS + S_nightdelay ))
 MIN_IMAGE_TIME_MS="$( min "${DAY_MIN_IMAGE_TIME_MS}" "${NIGHT_MIN_IMAGE_TIME_MS}" )"
 
 ##### Check if the delay is so short it's likely to cause problems.
 function check_delay()
 {
 	local DAY_OR_NIGHT="${1}"
-	local DELAY_MS MIN_MS OVERLAY_METHOD
+	local DELAY_MS  MIN_MS  L
 
 	if [[ ${DAY_OR_NIGHT,,} == "daytime" ]]; then
-		DELAY_MS="${DAY_DELAY_MS}"
+		L="${S_daydelay_label}"
+		DELAY_MS="${S_daydelay}"
 		MIN_MS="${DAY_MIN_IMAGE_TIME_MS}"
 	else
-		DELAY_MS="${NIGHT_DELAY_MS}"
+		L="${S_nightdelay_label}"
+		DELAY_MS="${S_nightdelay}"
 		MIN_MS="${NIGHT_MIN_IMAGE_TIME_MS}"
 	fi
 
@@ -204,18 +221,17 @@ function check_delay()
 
 	# With the legacy overlay method it might take up to a couple seconds to save an image.
 	# With the module method it can take up to 5 seconds.
-	OVERLAY_METHOD="$( get_setting ".overlaymethod" )"
-	if [[ ${OVERLAY_METHOD} -eq 1 ]]; then
+	if [[ ${S_overlaymethod} -eq 1 ]]; then
 		MAX_TIME_TO_PROCESS_MS=5000
 	else
 		MAX_TIME_TO_PROCESS_MS=2000
 	fi
 	if [[ ${MIN_MS} -lt ${MAX_TIME_TO_PROCESS_MS} ]]; then
 		heading "Warning"
-		echo "The ${WSNs}${DAY_OR_NIGHT} Delay${WSNe} of ${DELAY_MS} ms may be too short given the"
+		echo "The ${WSNs}${L}${WSNe} of ${DELAY_MS} ms may be too short given the"
 		echo "maximum expected time to save and process an image (${MAX_TIME_TO_PROCESS_MS} ms)."
 		echo "A new image may appear before the prior one has finished processing."
-		echo "FIX: Consider increasing your delay."
+		echo "FIX: Consider increasing ${L}."
 	fi
 }
 
@@ -223,45 +239,9 @@ function check_delay()
 # ====================================================== MAIN PART OF PROGRAM
 #
 
-# Settings used in multiple sections.
-# For the most part we use the names that used to be in config.sh since we're familiar with them.
-
-SENSOR_WIDTH="$( get_setting ".sensorWidth" "${CC_FILE}" )"	# Physical sensor size.
-SENSOR_HEIGHT="$( get_setting ".sensorHeight" "${CC_FILE}" )"
-# User-specified width and height are usually 0 which means use SENSOR size.
-WIDTH="$( get_setting ".width" )"
-HEIGHT="$( get_setting ".height" )"
-
-IMG_RESIZE_WIDTH="$( get_setting ".imageresizewidth" )"
-IMG_RESIZE_HEIGHT="$( get_setting ".imageresizeheight" )"
-IMG_UPLOAD_FREQUENCY="$( get_setting ".imageuploadfrequency" )"
-CROP_TOP="$( get_setting ".imagecroptop" )"
-CROP_RIGHT="$( get_setting ".imagecropright" )"
-CROP_BOTTOM="$( get_setting ".imagecropbottom" )"
-CROP_LEFT="$( get_setting ".imagecropleft" )"
-ANGLE="$( get_setting ".angle" )"
-LATITUDE="$( get_setting ".latitude" )"
-LONGITUDE="$( get_setting ".longitude" )"
-TIMELAPSE="$( get_setting ".timelapsegenerate" )"
-TIMELAPSE_UPLOAD_VIDEO="$( get_setting ".timelapseupload" )"
-TIMELAPSE_UPLOAD_THUMBNAIL="$( get_setting ".timelapseuploadthumbnail" )"
-TIMELAPSE_MINI_UPLOAD_VIDEO="$( get_setting ".minitimelapseupload" )"
-TIMELAPSE_MINI_UPLOAD_THUMBNAIL="$( get_setting ".minitimelapseuploadthumbnail" )"
-KEEP_SEQUENCE="$( get_setting ".timelapsekeepsequence" )"
-KEOGRAM="$( get_setting ".keogramgenerate" )"
-UPLOAD_KEOGRAM="$( get_setting ".keogramupload" )"
-STARTRAILS="$( get_setting ".startrailsgenerate" )"
-UPLOAD_STARTRAILS="$( get_setting ".startrailsupload" )"
-TAKE="$( get_setting ".takedaytimeimages" )"
-SAVE="$( get_setting ".savedaytimeimages" )"
-BRIGHTNESS_THRESHOLD="$( get_setting ".startrailsbrightnessthreshold" )"
-
-USE_LOCAL_WEBSITE="$( get_setting ".uselocalwebsite" )"
-USE_REMOTE_WEBSITE="$( get_setting ".useremotewebsite" )"
-USE_REMOTE_SERVER="$( get_setting ".useremoteserver" )"
-if [[ ${USE_LOCAL_WEBSITE} == "true" ||
-	  ${USE_REMOTE_WEBSITE} == "true" ||
-	  ${USE_REMOTE_SERVER} == "true" ]]; then
+if [[ ${S_uselocalwebsite} == "true" ||
+	  ${S_useremotewebsite} == "true" ||
+	  ${S_useremoteserver} == "true" ]]; then
 	USE_SOMETHING="true"
 else
 	USE_SOMETHING="false"
@@ -274,71 +254,64 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 
 	# Settings used in this section.
 	WEBSITES="$( whatWebsites )"
-	# shellcheck disable=SC2034
-	TAKING_DARKS="$( get_setting ".takedarkframes" )"
-	THUMBNAIL_SIZE_X="$( get_setting ".thumbnailsizex" )"
-	THUMBNAIL_SIZE_Y="$( get_setting ".thumbnailsizey" )"
-	DAYS_TO_KEEP="$( get_setting ".daystokeep" )"
-	LOCAL_WEB_DAYS_TO_KEEP="$( get_setting ".daystokeeplocalwebsite" )"
-	REMOTE_WEB_DAYS_TO_KEEP="$( get_setting ".daystokeepremotewebsite" )"
-	KEOGRAM_EXTRA_PARAMETERS="$( get_setting ".keogramextraparameters" )"
 
 	# Is Allsky set up to take dark frames?  This isn't done often, so if it is, inform the user.
-	if [[ ${TAKING_DARKS} == "true" ]]; then
+	if [[ ${S_takedarkframes} == "true" ]]; then
 		heading "Information"
-		echo "${WSNs}Take Dark Frames${WSNe} is enabled."
+		echo "${WSNs}${S_takedarkframes_label}${WSNe} is enabled."
 		echo "FIX: Unset when you are done taking dark frames."
 	fi
 
-	if [[ ${KEEP_SEQUENCE} == "true" ]]; then
+	if [[ ${S_timelapsekeepsequence} == "true" ]]; then
 		heading "Information"
-		echo    "${WSNs}Keep Sequence${WSNe} in enabled."
+		echo    "${WSNs}${S_timelapsekeepsequence_label}${WSNe} in enabled."
 		echo -n "FIX: If you are not debugging timelapse videos consider disabling this"
 		echo    " to save disk space."
 	fi
 
-	if [[ ${THUMBNAIL_SIZE_X} -ne 100 || ${THUMBNAIL_SIZE_Y} -ne 75 ]]; then
+	if [[ ${S_thumbnailsizex} -ne 100 || ${S_thumbnailsizey} -ne 75 ]]; then
 		heading "Information"
-		echo "You are using a non-standard thumbnail size of ${THUMBNAIL_SIZE_X}x${THUMBNAIL_SIZE_Y}."
+		echo "You are using a non-standard thumbnail size of ${S_thumbnailsizex}x${S_thumbnailsizey}."
 		echo "Please note non-standard sizes have not been thoroughly tested and"
 		echo "FIX: You may need to modify some code to get your thumbnail sizes working."
 	fi
 
 	FOREVER="be kept forever or until you manually delete them"
-	if [[ ${DAYS_TO_KEEP} -eq 0 ]]; then
+	if [[ ${S_daystokeep} -eq 0 ]]; then
 		heading "Information"
-		echo -n "${WSNs}Days To Keep${WSNe} is ${WSVs}0${WSVe}"
+		echo -n "${WSNs}${S_daystokeep_label}${WSNe} is ${WSVs}0${WSVe}"
 		echo    " which means images and videos will ${FOREVER}."
 		echo    "FIX: If this is not what you want, change the setting."
 	fi
 
 	if [[ (${WEBSITES} == "both" || ${WEBSITES} == "local") &&
-			${LOCAL_WEB_DAYS_TO_KEEP} -eq 0 ]]; then
+			${S_daystokeeplocalwebsite} -eq 0 ]]; then
 		heading "Information"
-		echo -n "${WSNs}Days To Keep on Pi Website${WSNe} is ${WSVs}0${WSVe}"
+		echo -n "${WSNs}${S_daystokeeplocalwebsite_label}${WSNe} is ${WSVs}0${WSVe}"
 		echo    " which means local web images and videos will ${FOREVER}."
 		echo    "FIX: If this is not what you want, change the setting."
 	fi
-	# REMOTE_WEB_DAYS_TO_KEEP may not be implemented; if so, ignore.
+	# S_daystokeepremotewebsite may not be implemented; if so, ignore.
 	if [[ (${WEBSITES} == "both" || ${WEBSITES} == "remote") &&
-			-n ${REMOTE_WEB_DAYS_TO_KEEP} && ${REMOTE_WEB_DAYS_TO_KEEP} -eq 0 ]]; then
+			-n ${S_daystokeepremotewebsite} && ${S_daystokeepremotewebsite} -eq 0 ]]; then
 		heading "Information"
-		echo -n "${WSNs}Days To Keep on Remote Website${WSNe} is ${WSVs}0${WSVe}"
+		echo -n "${WSNs}${S_daystokeepremotewebsite_label}${WSNe} is ${WSVs}0${WSVe}"
 		echo    " which means remote web images and videos will ${FOREVER}."
 		echo    "FIX: If this is not what you want, change the setting."
 	fi
 
-	ERR="$( checkResizeValues "${IMG_RESIZE_WIDTH}" "${IMG_RESIZE_HEIGHT}" \
-		"${WSNs}" "${WSNe}" "${WSVs}" "${WSVe}" \
-	 	"${SENSOR_WIDTH}" "${SENSOR_HEIGHT}" 2>&1 )"
+	ERR="$( checkWidthHeight "Resize Image" "image" \
+		"${S_imageresizewidth}" "${S_imageresizeheight}" \
+	 	"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )"
 	if [[ $? -ne 0 || -n ${ERR} ]]; then
 		heading "Information"
 		echo "${ERR}"
 	fi
 
-	if [[ $((CROP_TOP + CROP_RIGHT + CROP_BOTTOM + CROP_LEFT)) -gt 0 ]]; then
-		ERR="$( checkCropValues "${CROP_TOP}" "${CROP_RIGHT}" "${CROP_BOTTOM}" "${CROP_LEFT}" \
-				"${SENSOR_WIDTH}" "${SENSOR_HEIGHT}" )"
+	if [[ $((S_imagecroptop + S_imagecropright + S_imagecropbottom + S_imagecropleft)) -gt 0 ]]; then
+		ERR="$( checkCropValues "${S_imagecroptop}" "${S_imagecropright}" \
+				"${S_imagecropbottom}" "${S_imagecropleft}" \
+				"${C_sensorWidth}" "${C_sensorHeight}" )"
 		if [[ $? -ne 0 || -n ${ERR} ]]; then
 			heading "Information"
 			echo "${ERR}"
@@ -346,12 +319,12 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 		fi
 	fi
 
-	if [[ -n ${KEOGRAM_EXTRA_PARAMETERS} ]]; then
-		# These used to be set in the default KEOGRAM_EXTRA_PARAMETERS.
-		if echo "${KEOGRAM_EXTRA_PARAMETERS}" |
+	if [[ -n ${S_keogramextraparameters} ]]; then
+		# These used to be set in the default S_keogramextraparameters.
+		if echo "${S_keogramextraparameters}" |
 				grep -E --silent "image-expand|-x|font-size|-S|font-line|-L|font-color|-C" ; then
 			heading "Information"
-			echo "${WSNs}Keogram Extra Parameters${WSNe} contains one or more of:"
+			echo "${WSNs}${S_keogramextraparameters_label}${WSNe} contains one or more of:"
 			echo "${SPACES}${WSVs}--image-expand${WSVe} or ${WSVs}-x${WSVe}"
 			echo "${SPACES}${WSVs}--font-size${WSVe} or ${WSVs}-S${WSVe}"
 			echo "${SPACES}${WSVs}--font-line${WSVe} or ${WSVs}-L${WSVe}"
@@ -370,23 +343,7 @@ fi		# end of checking for informational items
 
 if [[ ${CHECK_WARNINGS} == "true" ]]; then
 
-	# Settings used in this section.
-	LAST_CHANGED="$( get_setting ".lastchanged" )"
-	BAD_IMAGES_LOW="$( get_setting ".imageremovebadlow" )"
-	BAD_IMAGES_HIGH="$( get_setting ".imageremovebadhigh" )"
-	TIMELAPSEWIDTH="$( get_setting ".timelapsewidth" )"
-	TIMELAPSEHEIGHT="$( get_setting ".timelapseheight" )"
-	VCODEC="$( get_setting ".timelapsevcodec" )"
-	TIMELAPSE_BITRATE="$( get_setting ".timelapsebitrate" )"
-	TIMELAPSE_MINI_IMAGES="$( get_setting ".minitimelapsenumimages" )"
-	TIMELAPSE_MINI_WIDTH="$( get_setting ".minitimelapsewidth" )"
-	TIMELAPSE_MINI_HEIGHT="$( get_setting ".minitimelapseheight" )"
-	TIMELAPSE_MINI_BITRATE="$( get_setting ".minitimelapsebitrate" )"
-	TIMELAPSE_MINI_FREQUENCY="$( get_setting ".minitimelapsefrequency" )"
-	RESIZE_UPLOADS_WIDTH="$( get_setting ".imageresizeuploadswidth" )"
-	RESIZE_UPLOADS_HEIGHT="$( get_setting ".imageresizeuploadsheight" )"
-
-	if [[ ${LAST_CHANGED} == "" ]]; then
+	if [[ -z ${S_lastchanged} ]]; then
 		heading "Warning"
 		echo "Allsky needs to be configured before it will run."
 		echo "FIX: Go to the ${STRONGs}Allsky Settings${STRONGe} page in the WebUI."
@@ -409,7 +366,7 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 	check_delay "Nighttime"
 
 	##### Timelapse and mini-timelapse
-	if [[ ${VCODEC} == "libx264" ]]; then
+	if [[ ${S_timelapsevcodec} == "libx264" ]]; then
 		# Check if timelapse size is "too big" and will likely cause an error.
 		# This is normally only an issue with the libx264 video codec which has
 		# a dimension limit that we put in PIXEL_LIMIT.
@@ -421,9 +378,8 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 
 		function check_timelapse_size()
 		{
-			local TYPE="${1}"				# type of video
-			local RESIZED_WIDTH="${2}"		# video width
-			local RESIZED_HEIGHT="${3}"
+			local RESIZED_WIDTH="${1}"		; local RESIZED_WIDTH_LABEL="${2}"
+			local RESIZED_HEIGHT="${3}"		; local RESIZED_HEIGHT_LABEL="${4}"
 			local W H
 
 			# Determine the final image size and put in ${W} and ${H}.
@@ -433,24 +389,24 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 			#				else use sensor size minus crop amount(s)
 			if [[ ${RESIZED_WIDTH} -ne 0 ]]; then
 				W="${RESIZED_WIDTH}"
-			elif [[ ${WIDTH} -gt 0 ]]; then
-				W="${WIDTH}"
+			elif [[ ${S_width} -gt 0 ]]; then
+				W="${S_width}"
 			else
-				W=$(( SENSOR_WIDTH - CROP_LEFT - CROP_RIGHT ))
+				W=$(( C_sensorWidth - S_imagecropleft - S_imagecropright ))
 			fi
 			if [[ ${RESIZED_HEIGHT} -ne 0 ]]; then
 				H="${RESIZED_HEIGHT}"
-			elif [[ ${HEIGHT} -gt 0 ]]; then
-				H="${HEIGHT}"
+			elif [[ ${S_height} -gt 0 ]]; then
+				H="${S_height}"
 			else
-				H=$(( SENSOR_HEIGHT - CROP_TOP - CROP_BOTTOM ))
+				H=$(( C_sensorWidth - S_imagecroptop - S_imagecropbottom ))
 			fi
 
 			# W * H == total pixels in timelapse
 			if [[ $(( W * H )) -gt ${PIXEL_LIMIT} ]]; then
 				heading "Warning"
-				echo -n "The ${WSNs}${TYPE} Width${WSNe} of ${WSVs}${W}${WSVe}"
-				echo -n " and ${WSNs}Height${WSNe} of ${WSVs}${H}${WSVe}"
+				echo -n "The ${WSNs}${RESIZED_WIDTH_LABEL}${WSNe} of ${WSVs}${W}${WSVe}"
+				echo -n " and ${WSNs}${RESIZED_HEIGHT_LABEL}${WSNe} of ${WSVs}${H}${WSVe}"
 				echo    " may cause errors while creating the video."
 				echo -n "FIX: Consider either decreasing the video size or decreasing"
 				echo    " each captured image via resizing and/or cropping."
@@ -460,15 +416,17 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 	fi
 
 	# Check generate vs upload as well as the bitrate of a timelapse
-	function check_timelapse_upload_bitrate()
+	function check_timelapse_upload_and_bitrate()
 	{
 		local TYPE="${1}"				# type of timelapse
-		local UPLOAD="${2}"
-		local BITRATE="${3}"
-		local W="${4}"
-		local H="${5}"
+		local UPLOAD="${!2}"	; declare -n UPLOAD_LABEL="${2}_label"
+		local BITRATE="${!3}"	; declare -n BITRATE_LABEL="${3}_label"
+		local W="${!4}"			; declare -n W_LABEL="${4}_label"
+		local H="${!5}"			; declare -n H_LABEL="${5}_label"
 
-		[[ ${VCODEC} == "libx264" ]] && check_timelapse_size "${TYPE}" "${W}" "${H}"
+		if [[ ${S_timelapsevcodec} == "libx264" ]]; then
+			check_timelapse_size "${W}" "${W_LABEL}" "${H}" "${H_LABEL}"
+		fi
 
 		# If the user doesn't have a Website or remote server there's nothing to upload
 		# to so it's not an issue.
@@ -476,44 +434,40 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 			heading "Warning"
 			echo -n "${TYPE} videos are being created"
 			if [[ ${TYPE} == "Daily Timelapse" ]]; then
-				echo -n " (${WSNs}Generate ${TYPE}${WSNe} = Yes)"
+				echo -n " (${WSNs}${S_timelapsegenerate_label}${WSNe} = Yes)"
 			else
-				echo -n " (${WSNs}Number of Images${WSNe} is greater than 0)"
+				echo -n " (${WSNs}${S_minitimelapsenumimages_label}${WSNe} is greater than 0)"
 :
 			fi
-			echo    " but not uploaded anywhere (${WSNs}Upload${WSNe} = No)"
+			echo    " but not uploaded anywhere (${WSNs}${UPLOAD_LABEL}${WSNe} = No)"
 			echo    "FIX: Either disable timelapse generation or (more likely) enable upload."
 		fi
 
 		if [[ ${BITRATE: -1} == "k" ]]; then
 			heading "Warning"
-			echo "${WSNs}${TYPE} Bitrate${WSNe} should be a number with OUT ${WSVs}k${WSVe}."
+			echo "${WSNs}${BITRATE_LABEL}${WSNe} should be a number with OUT ${WSVs}k${WSVe}."
 			echo "FIX: Remove the ${WSVs}k${WSVe} from the bitrate."
 		fi
 	}
 
 	# Timelapse
-	if [[ ${TIMELAPSE} == "true" ]]; then			# Generating timelapse
+	if [[ ${S_timelapsegenerate} == "true" ]]; then	
+		check_timelapse_upload_and_bitrate "Daily Timelapse" \
+			"S_timelapseupload" "S_timelapsebitrate" \
+			"S_timelapsewidth" "S_timelapseheight"
 
-		check_timelapse_upload_bitrate "Daily Timelapse" \
-			"${TIMELAPSE_UPLOAD_VIDEO}" \
-			"${TIMELAPSE_BITRATE}" \
-			"${TIMELAPSEWIDTH}" "${TIMELAPSEHEIGHT}"
-
-	elif [[ ${TIMELAPSE_UPLOAD_VIDEO} == "true" ]]; then
+	elif [[ ${S_timelapseupload} == "true" ]]; then
 		heading "Warning"
-		echo -n "Daily Timelapse videos are not being created (${WSNs}Generate${WSNe} = No)"
-		echo    " but ${WSNs}Upload${WSNe} = Yes."
+		echo -n "Daily Timelapse videos are not being created (${WSNs}${S_timelapsegenerate_label}${WSNe} = No)"
+		echo    " but ${WSNs}${S_timelapseupload_label}${WSNe} = Yes."
 		echo    "FIX: Either create daily timelapse videos or disable upload."
 	fi
 
 	# Mini-timelapse
-	if [[ ${TIMELAPSE_MINI_IMAGES} -gt 0 ]]; then		# Generating mini-timelapse
-
-		check_timelapse_upload_bitrate "Mini-Timelapse" \
-			"${TIMELAPSE_MINI_UPLOAD_VIDEO}" \
-			"${TIMELAPSE_MINI_BITRATE}" \
-			"${TIMELAPSE_MINI_WIDTH}" "${TIMELAPSE_MINI_HEIGHT}"
+	if [[ ${S_minitimelapsenumimages} -gt 0 ]]; then		# Generating mini-timelapse
+		check_timelapse_upload_and_bitrate "Mini-Timelapse" \
+			"S_minitimelapseupload" "S_minitimelapsebitrate" \
+			"S_minitimelapsewidth" "S_minitimelapseheight"
 
 		# See if there's likely to be a problem with mini-timelapse creations
 		# starting before the prior one finishes.
@@ -525,7 +479,7 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 
 		# Minimum total time between start of timelapse creations.
 		MIN_IMAGE_TIME_SEC=$(( MIN_IMAGE_TIME_MS / 1000 ))
-		MIN_TIME_BETWEEN_TIMELAPSE_SEC=$(( TIMELAPSE_MINI_FREQUENCY * MIN_IMAGE_TIME_SEC ))
+		MIN_TIME_BETWEEN_TIMELAPSE_SEC=$(( S_minitimelapsefrequency * MIN_IMAGE_TIME_SEC ))
 
 		TYPICAL_T=50		# A guess at a "typical" number of images in a timelapse.
 
@@ -538,66 +492,58 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 		else
 			S=60
 		fi
-		EXPECTED_TIME=$( echo "scale=0; (${TIMELAPSE_MINI_IMAGES} / ${TYPICAL_T}) * ${S}" | bc -l )
-if false; then		# for testing
-	echo "MIN_IMAGE_TIME_MS=${MIN_IMAGE_TIME_MS}"
-	echo "MIN_IMAGE_TIME_SEC=${MIN_IMAGE_TIME_SEC}"
-	echo "MIN_TIME_BETWEEN_TIMELAPSE_SEC=${MIN_TIME_BETWEEN_TIMELAPSE_SEC}"
-	echo "TIMELAPSE_MINI_IMAGES=${TIMELAPSE_MINI_IMAGES}"
-	echo "CAMERA_TYPE=${CAMERA_TYPE}"
-	echo "EXPECTED_TIME=${EXPECTED_TIME}"
-fi
+		EXPECTED_TIME=$( echo "scale=0; (${S_minitimelapsenumimages} / ${TYPICAL_T}) * ${S}" | bc -l )
 		if [[ ${EXPECTED_TIME} -gt ${MIN_TIME_BETWEEN_TIMELAPSE_SEC} ]]; then
 			heading "Warning"
 			echo -n "Your mini-timelapse settings may cause multiple timelapse to"
 			echo    " be created simultaneously."
 			echo    "FIX: Consider increasing the ${WSNs}Delay${WSNe} between pictures,"
-			echo    "${SPACES}increasing ${WSNs}Frequency${WSNe},"
-			echo    "${SPACES}decreasing ${WSNs}Number Of Images${WSNe},"
+			echo    "${SPACES}increasing ${WSNs}${S_minitimelapsefrequency_label}${WSNe},"
+			echo    "${SPACES}decreasing ${WSNs}${S_minitimelapsenumimages_label}${WSNe},"
 			echo    "${SPACES}or a combination of those changes."
 			echo    "${SPACES}Expected time to create a mini-timelapse on a Pi 4 is"
 			echo    "${SPACES}${EXPECTED_TIME} seconds but with your settings one could be created"
 			echo    "${SPACES}as short as every ${MIN_TIME_BETWEEN_TIMELAPSE_SEC} seconds."
 		fi
-	elif [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" ]]; then
+
+	elif [[ ${S_minitimelapseupload} == "true" ]]; then
 		heading "Warning"
-		echo -n "Mini-timelapse videos are not being created (${WSNs}Number of Images${WSNe} = 0)"
-		echo    " but ${WSNs}Upload${WSNe} = Yes"
+		echo -n "Mini-timelapse videos are not being created"
+		echo -n " (${WSNs}${S_minitimelapsenumimages_label}${WSNe} = 0)"
+		echo    " but ${WSNs}${S_minitimelapseupload_label}${WSNe} = Yes"
 		echo    "FIX: Either create videos or disable upload."
 	fi
 
 	##### Keograms
-	if [[ ${KEOGRAM} == "true" && ${UPLOAD_KEOGRAM} == "false" && ${USE_SOMETHING} == "true" ]]; then
+	if [[ ${S_keogramgenerate} == "true" && ${S_keogramupload} == "false" && ${USE_SOMETHING} == "true" ]]; then
 		heading "Warning"
-		echo -n "Keograms are being created (${WSNs}Generate${WSNe} = Yes)"
-		echo    " but not uploaded (${WSNs}Upload${WSNe} = No)"
+		echo -n "Keograms are being created (${WSNs}${S_keogramgenerate_label}${WSNe} = Yes)"
+		echo    " but not uploaded (${WSNs}${S_keogramupload_label}${WSNe} = No)"
 		echo    "FIX: Either disable keogram generation or (more likely) enable upload."
 	fi
-	if [[ ${KEOGRAM} == "false" && ${UPLOAD_KEOGRAM} == "true" ]]; then
+	if [[ ${S_keogramgenerate} == "false" && ${S_keogramupload} == "true" ]]; then
 		heading "Warning"
-		echo -n "Keograms are not being created (${WSNs}Generate${WSNe} = No)"
-		echo    " but ${WSNs}Upload${WSNe} = Yes"
-		echo    "FIX: Either enable keogram generation of disable upload."
+		echo -n "Keograms are not being created (${WSNs}${S_keogramgenerate_label}${WSNe} = No)"
+		echo    " but ${WSNs}${S_keogramupload_label}${WSNe} = Yes"
+		echo    "FIX: Either enable keogram generation or disable upload."
 	fi
 
 	##### Startrails
-	if [[ ${STARTRAILS} == "true" && ${UPLOAD_STARTRAILS} == "false" && ${USE_SOMETHING} == "true" ]]; then
+	if [[ ${S_startrailsgenerate} == "true" && ${S_startrailsupload} == "false" && ${USE_SOMETHING} == "true" ]]; then
 		heading "Warning"
-		echo -n "Startrails are being created (${WSNs}Generate${WSNe} = Yes)"
-		echo    " but not uploaded (${WSNs}Upload${WSNe} = No)"
+		echo -n "Startrails are being created (${WSNs}${S_startrailsgenerate}${WSNe} = Yes)"
+		echo    " but not uploaded (${WSNs}${S_startrailsupload_label}${WSNe} = No)"
 		echo    "FIX: Either disable startrails generation or (more likely) enable upload."
 	fi
-	if [[ ${STARTRAILS} == "false" && ${UPLOAD_STARTRAILS} == "true" ]]; then
+	if [[ ${S_startrailsgenerate} == "false" && ${S_startrailsupload} == "true" ]]; then
 		heading "Warning"
-		echo -n "Startrails are not being created (${WSNs}Generate${WSNe} = No)"
-		echo    " but ${WSNs}Upload${WSNe} = Yes"
-		echo    "FIX: Either enable startrails generation of disable upload."
+		echo -n "Startrails are not being created (${WSNs}${S_startrailsgenerate}${WSNe} = No)"
+		echo    " but ${WSNs}${S_startrailsupload_label}${WSNe} = Yes"
+		echo    "FIX: Either enable startrails generation or disable upload."
 	fi
 
-	if ! is_number "${BRIGHTNESS_THRESHOLD}" ; then
-		X=2
-	else
-		gawk -v x="${BRIGHTNESS_THRESHOLD}" ' BEGIN {
+	if is_number "${S_startrailsbrightnessthreshold}" ; then
+		gawk -v x="${S_startrailsbrightnessthreshold}" ' BEGIN {
 			if (x == 0.0) exit 0;
 			else if (x == 1.0) exit 1;
 			else if (x < 0.0 || x > 1.0) exit 2;
@@ -605,74 +551,70 @@ fi
 			}'
 		X=$?
 	fi
+	L="${S_startrailsbrightnessthreshold_label}"
 	if [[ ${X} -eq 0 ]]; then
 		heading "Warning"
-		echo -n "${WSNs}Brightness Threshold${WSNe} is 0.0 which means ALL images"
+		echo -n "${WSNs}${L}${WSNe} is 0.0 which means ALL images"
 		echo    " will be IGNORED when creating startrails."
 		echo    "FIX: Increase the value; start off at 0.1 and adjust if needed."
 	elif [[ ${X} -eq 1 ]]; then
 		heading "Warning"
-		echo -n "${WSNs}Brightness Threshold${WSNe} is 1.0 which means ALL images"
+		echo -n "${WSNs}${L}${WSNe} is 1.0 which means ALL images"
 		echo    " will be USED when creating startrails, even daytime images."
 		echo    "FIX: Increase the value; start off at 0.9 and adjust if needed."
-	elif [[ ${X} -eq 2 ]]; then
-		heading "Warning"
-		echo -n "${WSNs}Brightness Threshold${WSNe} is ${BRIGHTNESS_THRESHOLD}"
-		echo    " which is an invalid number."
-		echo    "FIX: See the documenation for valid numbers."
 	fi
 
 	##### Images
-	if [[ ${TAKE} == "false" && ${SAVE} == "true" ]]; then
+	if [[ ${S_takedaytimeimages} == "false" && ${S_savedaytimeimages} == "true" ]]; then
 		heading "Warning"
-		echo -n "${WSNs}Daytime Capture${WSNe} of images is off"
-		echo    " but ${WSNs}Daytime Save${WSNe} is on in the WebUI."
+		echo -n "${WSNs}${S_takedaytimeimages_label}${WSNe} of images is off"
+		echo    " but ${WSNs}${S_savedaytimeimages_label}${WSNe} is on in the WebUI."
 		echo    "FIX: Either enable capture or disable saving."
 	fi
 
 	# These are floats which bash doesn't support, so use gawk to compare.
-	if ! is_number "${BAD_IMAGES_LOW}" || ! is_within_range "${BAD_IMAGES_LOW}" ; then
+	if ! is_number "${S_imageremovebadlow}" || ! is_within_range "${S_imageremovebadlow}" ; then
 		heading "Error"
-		echo -n "${WSNs}Remove Bad Images Threshold Low${WSNe} (${BAD_IMAGES_LOW})"
+		echo -n "${WSNs}${S_imageremovebadlow_label}${WSNe} (${S_imageremovebadlow})"
 		echo    " must be 0.0 - 1.0, although it's normally around ${WSVs}0.1${WSVe}."
 		echo    "FIX: Set to a vaild number.  ${WSVs}0${WSVe} disables the low threshold check."
-	elif is_zero "${BAD_IMAGES_LOW}" ; then
+	elif is_zero "${S_imageremovebadlow}" ; then
 		heading "Warning"
-		echo "${WSNs}Remove Bad Images Threshold Low${WSNe} is 0 (disabled)."
+		echo "${WSNs}${S_imageremovebadlow_label}${WSNe} is 0 (disabled)."
 		echo "FIX: Set to a value greater than 0 unless you are debugging issues."
 		echo "${SPACES}Try 0.1 and adjust if needed."
 	fi
-	if ! is_number "${BAD_IMAGES_HIGH}" || ! is_within_range "${BAD_IMAGES_HIGH}" ; then
+	if ! is_number "${S_imageremovebadhigh}" || ! is_within_range "${S_imageremovebadhigh}" ; then
 		heading "Error"
-		echo -n "${WSNs}Remove Bad Images Threshold High${WSNe} (${BAD_IMAGES_HIGH})"
+		echo -n "${WSNs}${S_imageremovebadhigh_label}${WSNe} (${S_imageremovebadhigh})"
 		echo    " must be 0.0 - 1.0, although it's normally around ${WSVs}0.9${WSVe}."
 		echo    "FIX: Set to a vaild number.  ${WSVs}0${WSVe} disables the high threshold check."
-	elif is_zero "${BAD_IMAGES_HIGH}" ; then
+	elif is_zero "${S_imageremovebadhigh}" ; then
 		heading "Warning"
-		echo "${WSNs}Remove Bad Images Threshold High${WSNe} is 0 (disabled)."
+		echo "${WSNs}${S_imageremovebadhigh_label}${WSNe} is 0 (disabled)."
 		echo "FIX: Set to a value greater than 0 unless you are debugging issues."
 		echo "${SPACES}Try 0.9 and adjust if needed."
 	fi
 
 	##### Uploads
-	if [[ ${RESIZE_UPLOADS_WIDTH} -ne 0 || ${RESIZE_UPLOADS_WIDTH} -ne 0 ]]; then
-		if [[ ${IMG_UPLOAD_FREQUENCY} -eq 0 ]]; then
+	if [[ ${S_imageresizeuploadswidth} -ne 0 || ${S_imageresizeuploadswidth} -ne 0 ]]; then
+		if [[ ${S_imageuploadfrequency} -eq 0 ]]; then
 			heading "Warning"
 			echo -n "${WSNs}Resize Uploaded Images Width/Height${WSNe} is set"
 			echo    " but you aren't uploading images (${WSNs}Upload Every X Images${WSNe} = 0)."
 			echo    "FIX: "
 			echo    "FIX: Either don't resize uploaded images or enable upload."
 		fi
-		if [[ ${RESIZE_UPLOADS_WIDTH} -eq 0 && ${RESIZE_UPLOADS_HEIGHT} -ne 0 ]]; then
+		if [[ ${S_imageresizeuploadswidth} -eq 0 && ${S_imageresizeuploadsheight} -ne 0 ]]; then
 			heading "Warning"
-			echo -n "${WSNs}Resize Uploaded Images Width${WSNe} = 0"
-			echo    " but ${WSNs}Resize Uploaded Images Height${WSNe} is greater than 0."
+			echo -n "${WSNs}${S_imageresizeuploadwidth_label}${WSNe} = 0"
+			echo    " but ${WSNs}${S_imageresizeuploadheight_label}${WSNe} is greater than 0."
 			echo    "If one is set the other one must also be set."
 			echo    "FIX: Set both to 0 to disable resizing uploads or both to some value."
-		elif [[ ${RESIZE_UPLOADS_WIDTH} -ne 0 && ${RESIZE_UPLOADS_HEIGHT} -eq 0 ]]; then
+		elif [[ ${S_imageresizeuploadswidth} -ne 0 && ${S_imageresizeuploadsheight} -eq 0 ]]; then
 			heading "Warning"
-			echo -n "${WSNs}Resize Uploaded Images Height${WSNe} > 0"
-			echo    " but ${WSNs}Resize Uploaded Images Width${WSNe} = 0."
+			echo -n "${WSNs}${S_imageresizeuploadheight_label}${WSNe} > 0"
+			echo    " but ${WSNs}${S_imageresizeuploadwidth_label}${WSNe} = 0."
 			echo    "If one is set the other one must also be set."
 			echo    "FIX: Set both to 0 to disable resizing uploads or both to some value."
 		fi
@@ -708,25 +650,11 @@ fi		# end of checking for warning items
 
 if [[ ${CHECK_ERRORS} == "true" ]]; then
 
-	# Settings used in this section.
-	USING_DARKS="$( get_setting ".usedarkframes" )"
-	UPLOAD_ORIGINAL_NAME_WEBSITE="$( get_setting ".remotewebsiteimageuploadoriginalname" )"
-	UPLOAD_ORIGINAL_NAME_SERVER="$( get_setting ".remoteserverimageuploadoriginalname" )"
-	IMG_CREATE_THUMBNAILS="$( get_setting ".imagecreatethumbnails" )"
-	TIMELAPSE_MINI_FORCE_CREATION="$( get_setting ".minitimelapseforcecreation" )"
-	STRETCH_AMOUNT_DAYTIME="$( get_setting ".imagestretchamountdaytime" )"
-	STRETCH_MIDPOINT_DAYTIME="$( get_setting ".imagestretchmidpointdaytime" )"
-	STRETCH_AMOUNT_NIGHTTIME="$( get_setting ".imagestretchamountnighttime" )"
-	STRETCH_MIDPOINT_NIGHTTIME="$( get_setting ".imagestretchmidpointnighttime" )"
-
-	# shellcheck disable=SC2034
-	LOCALE="$( get_setting ".locale" )"
-
 	##### Make sure it's a know camera type.
 	if [[ ${CAMERA_TYPE} != "ZWO" && ${CAMERA_TYPE} != "RPi" ]]; then
 		heading "Error"
 		echo "INTERNAL ERROR: CAMERA_TYPE (${CAMERA_TYPE}) not valid."
-		echo "Fix: Re-installing Allsky."
+		echo "Fix: Re-install Allsky."
 	fi
 
 	##### Make sure the settings file is properly linked.
@@ -738,72 +666,97 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 	function check_bool()
 	{
 		local B="${1}"
-		local NAME="${2}"
+		local LABEL="${2}"
+		local SETTING_NAME="${3}"
+
 		if [[ ${B,,} != "true" && ${B,,} != "false" ]]; then
 			heading "Error"
-			echo "INTERNAL ERROR: ${WSNs}${NAME}${WSNe} must be either 'true' or 'false'."
-			echo "Fix: Re-installing Allsky."
+			local L="${WSNs}${LABEL}${WSNe} (${SETTING_NAME})."
+			echo "INTERNAL ERROR: ${L} must be either 'true' or 'false'."
+			if [[ -z ${B} ]]; then
+				echo "It is empty."
+			else
+				echo "It is '${B}'."
+			fi
+			echo "Fix: Re-install Allsky."
 		fi
 	}
 
 	##### Make sure these booleans have boolean values.
-		# TODO: use options.json to determine which are type=boolean.
-	check_bool "${USING_DARKS}" "Use Dark Frames"
-	check_bool "${UPLOAD_ORIGINAL_NAME_WEBSITE}" "Upload With Original Name (to website)"
-	check_bool "${UPLOAD_ORIGINAL_NAME_SERVER}" "Upload With Original Name (to server)"
-	check_bool "${IMG_CREATE_THUMBNAILS}" "Create Image Thumbnails"
-	check_bool "${TIMELAPSE}" "Generate Timelapse"
-	check_bool "${TIMELAPSE_UPLOAD_VIDEO}" "Upload Timelapse"
-	check_bool "${KEEP_SEQUENCE}" "Keep Timelapse Sequence"
-	check_bool "${TIMELAPSE_UPLOAD_THUMBNAIL}" "Upload Timelapse Thumbnail"
-	check_bool "${TIMELAPSE_MINI_FORCE_CREATION}" "Force Creation (of mini-timelapse)"
-	check_bool "${TIMELAPSE_MINI_UPLOAD_VIDEO}" "Upload Mini-Timelapse"
-	check_bool "${TIMELAPSE_MINI_UPLOAD_THUMBNAIL}" "Upload Mini-Timelapse Thumbnail"
-	check_bool "${KEOGRAM}" "Generate Keogram"
-	check_bool "${UPLOAD_KEOGRAM}" "Upload Keogram"
-	check_bool "${STARTRAILS}" "Generate Startrails"
-	check_bool "${UPLOAD_STARTRAILS}" "Upload Startrails"
+	for i in $( "${ALLSKY_SCRIPTS}/convertJSON.php" --type "boolean" )
+	do
+		declare -n v="S_${i}"
+		declare -n l="S_${i}_label"
+		check_bool "${v}" "${l}" "${i}"
+	done
+
+	##### Make sure these numbers have number values.
+	for i in \
+		"type=an integer" \
+		$( "${ALLSKY_SCRIPTS}/convertJSON.php" --type "integer" ) \
+		"type=a float" \
+		$( "${ALLSKY_SCRIPTS}/convertJSON.php" --type "float" )
+	do
+		if [[ ${i} =~ "type=" ]]; then
+			T_="${i/type=/}"
+			continue
+		fi
+		declare -n v="S_${i}"
+		declare -n l="S_${i}_label"
+		if ! is_number "${v}" ; then
+			heading "Error"
+			if [[ -z ${v} ]]; then
+				v="empty"
+			else
+				v="'${v}'"
+			fi
+			echo "${WSNs}${l}${WSNe} (${i}) must be ${T_} number.  It is ${v}."
+			echo "FIX: See the documenation for valid numbers."
+		fi
+	done
 
 	##### Check that all required settings are set.  All others are optional.
 	# TODO: determine from options.json file which are required.
-	for i in ANGLE LATITUDE LONGITUDE LOCALE
+	for i in angle latitude longitude locale
 	do
-		if [[ -z ${!i} ]]; then
+		declare -n v="S_${i}"
+		if [[ -z ${v} ]]; then
 			heading "Error"
-			echo "${i} must be set."
+			declare -n l="S_${i}_label"
+			echo "${l} must be set."
 			echo "FIX: Set it in the WebUI then rerun ${ME}."
 		fi
 	done
 
 	##### Check that the required settings' values are valid.
-	if [[ -n ${ANGLE} ]] && ! is_number "${ANGLE}" ; then
+	if [[ -n ${S_angle} ]] && ! is_number "${S_angle}" ; then
 		heading "Error"
-		echo "${WSNs}Angle${WSNe} (${ANGLE}) must be a number."
+		echo "${WSNs}${S_angle_label}${WSNe} (${S_angle}) must be a number."
 		echo "FIX: Set to a number in the WebUI then rerun ${ME}."
 	fi
-	if [[ -n ${LATITUDE} ]] && ! LAT="$( convertLatLong "${LATITUDE}" "latitude" 2>&1 )" ; then
+	if [[ -n ${S_latitude} ]] && ! LAT="$( convertLatLong "${S_latitude}" "latitude" 2>&1 )" ; then
 		heading "Error"
 		echo -e "${LAT}"		# ${LAT} contains the error message
-		echo    "FIX: Correct the latitude then rerun ${ME}."
+		echo    "FIX: Correct the ${S_latitude_label} then rerun ${ME}."
 	fi
-	if [[ -n ${LONGITUDE} ]] && ! LONG="$( convertLatLong "${LONGITUDE}" "longitude" 2>&1 )" ; then
+	if [[ -n ${S_longitude} ]] && ! LONG="$( convertLatLong "${S_longitude}" "longitude" 2>&1 )" ; then
 		heading "Error"
 		echo -e "${LONG}"
-		echo    "FIX: Correct the longitude then rerun ${ME}."
+		echo    "FIX: Correct the ${S_longitude_label} then rerun ${ME}."
 	fi
 
 	##### Check dark frames
-	if [[ ${USING_DARKS} == "true" ]]; then
+	if [[ ${S_usedarkframes} == "true" ]]; then
 		if [[ ! -d ${ALLSKY_DARKS} ]]; then
 			heading "Error"
-			echo -n "${WSNs}Use Dark Frames${WSNe} is set but the '${ALLSKY_DARKS}'"
+			echo -n "${WSNs}${S_usedarkframes_label}${WSNe} is set but the '${ALLSKY_DARKS}'"
 			echo    " directory does not exist."
 			echo    "FIX: Either disable the setting or take dark frames."
 		else
 			NUM_DARKS=$( find "${ALLSKY_DARKS}" -name "*.${EXTENSION}" 2>/dev/null | wc -l)
 			if [[ ${NUM_DARKS} -eq 0 ]]; then
 				heading "Error"
-				echo -n "${WSNs}Use Dark Frames${WSNe} is set but there are no darks"
+				echo -n "${WSNs}${S_usedarkframes_label}${WSNe} is set but there are no darks"
 				echo    " in '${ALLSKY_DARKS}' with extension of '${EXTENSION}'."
 				echo    "FIX: Either disable the setting or take dark frames."
 			fi
@@ -811,31 +764,38 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 	fi
 
 	##### Check for valid numbers.
-	if ! is_number "${IMG_UPLOAD_FREQUENCY}" || [[ ${IMG_UPLOAD_FREQUENCY} -lt 0 ]]; then
+	if ! is_number "${S_imageuploadfrequency}" || [[ ${S_imageuploadfrequency} -lt 0 ]]; then
 		heading "Error"
-		echo "${WSNs}Upload Every X Images${WSNe} (${IMG_UPLOAD_FREQUENCY}) must be 0 or greater."
+		echo "${WSNs}"${S_imageuploadfrequency_label}"${WSNe} (${S_imageuploadfrequency}) must be 0 or greater."
 		echo "FIX: Set to ${WSVs}0${WSVe} to disable image uploads or set to a positive number."
 	fi
 
 	function check_stretch_numbers()
 	{
 		local TYPE="${1}"
-		local AMOUNT="${2}"
-		local MIDPOINT="${3}"
+		local LABEL_AMOUNT="${2}"
+		local AMOUNT="${3}"
+		local LABEL_MIDPOINT="${4}"
+		local MIDPOINT="${5}"
 
 		if ! is_number "${AMOUNT}" || ! is_within_range "${AMOUNT}" 0 100 ; then
 			heading "Error"
-			echo "${WSNs}${TYPE} Stretch Amount${WSNe} (${AMOUNT}) must be 0 - 100."
+			echo "${WSNs}${TYPE} ${LABEL_AMOUNT}${WSNe} (${AMOUNT}) must be 0 - 100."
+			echo "It is '${AMOUNT}'."
 			echo "FIX: Set to a vaild number.  ${WSVs}0${WSVe} disables stretching."
 		elif [[ ${MIDPOINT: -1} == "%" ]]; then
 			heading "Error"
-			echo -n "${WSNs}${TYPE} Stretch mid point${WSNe} (${MIDPOINT})"
+			echo -n "${WSNs}${TYPE} ${LABEL_MIDPOINT}${WSNe} (${MIDPOINT})"
 			echo    " no longer accepts a ${WSVs}%${WSVe}."
 			echo    "FIX: remove the ${WSVs}%${WSVe}."
 		fi
 	}
-	check_stretch_numbers "Daytime" "${STRETCH_AMOUNT_DAYTIME}" "${STRETCH_MIDPOINT_DAYTIME}"
-	check_stretch_numbers "Nighttime" "${STRETCH_AMOUNT_NIGHTTIME}" "${STRETCH_MIDPOINT_NIGHTTIME}"
+	check_stretch_numbers "Daytime" \
+		"${S_imagestretchamountdaytime_label}" "${S_imagestretchamountdaytime}" \
+		"${S_imagestretchmidpointdaytime_label}" "${S_imagestretchmidpointdaytime}"
+	check_stretch_numbers "Nighttime" \
+		"${S_imagestretchamountnighttime_label}" "${S_imagestretchamountnighttime}" \
+		"${S_imagestretchmidpointnighttime_label}" "${S_imagestretchmidpointnighttime}"
 
 fi		# end of checking for error items
 

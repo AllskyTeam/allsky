@@ -531,9 +531,12 @@ if ($settings_file !== "") {
 		$options_array = json_decode($options_str, true);
 		foreach ($options_array as $option) {
 			$type = getVariableOrDefault($option, 'type', "");
-			if (substr($type, 0, 6) == "header") continue;	// don't put in settings file
-			$display = getVariableOrDefault($option, 'display', "true");
-			if ($display == "false") continue;
+
+			if (substr($type, 0, 6) == "header" ||
+					getVariableOrDefault($option, 'source', null) !== null ||
+					getVariableOrDefault($option, 'display', "true") == "false") {
+				continue;	// don't put in settings file
+			}
 
 			$name = $option['name'];
 

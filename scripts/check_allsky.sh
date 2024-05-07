@@ -119,7 +119,7 @@ function heading()
 
 	if [[ ${DISPLAY_HEADER} == "true" ]]; then
 		[[ ${NUM_HEADER_CALLS} -gt 1 ]] && echo -e "${NL}"
-		echo -e "${NL}${STRONGs}---------- ${HEADER}${SUB_HEADER} ----------${STRONGe}${NL}"
+		echo -e "${STRONGs}---------- ${HEADER}${SUB_HEADER} ----------${STRONGe}${NL}"
 	else
 		echo "${STRONGs}-----${STRONGe}"	# Separates lines within a header group
 	fi
@@ -208,7 +208,7 @@ function check_delay()
 	local DAY_OR_NIGHT="${1}"
 	local DELAY_MS  MIN_MS  L
 
-	if [[ ${DAY_OR_NIGHT,,} == "daytime" ]]; then
+	if [[ ${DAY_OR_NIGHT} == "Daytime" ]]; then
 		L="${S_daydelay_label}"
 		DELAY_MS="${S_daydelay}"
 		MIN_MS="${DAY_MIN_IMAGE_TIME_MS}"
@@ -460,7 +460,8 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 
 	elif [[ ${S_timelapseupload} == "true" ]]; then
 		heading "Warning"
-		echo -n "Daily Timelapse videos are not being created (${WSNs}${S_timelapsegenerate_label}${WSNe} = No)"
+		echo -n "Daily Timelapse videos are not being created"
+		echo -n " (${WSNs}${S_timelapsegenerate_label}${WSNe} = No)"
 		echo    " but ${WSNs}${S_timelapseupload_label}${WSNe} = Yes."
 		echo    "FIX: Either create daily timelapse videos or disable upload."
 	fi
@@ -564,6 +565,11 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 		echo -n "${WSNs}${L}${WSNe} is 1.0 which means ALL images"
 		echo    " will be USED when creating startrails, even daytime images."
 		echo    "FIX: Increase the value; start off at 0.9 and adjust if needed."
+	elif [[ ${X} -eq 2 ]]; then
+		heading "Warning"
+		echo -n "${WSNs}${L}${WSNe} is an invalid value:"
+		echo    " ${WSVs}${S_startrailsbrightnessthreshold}${WSVe}."
+		echo    "FIX: The value should be between 0.0 and 1.0."
 	fi
 
 	##### Images
@@ -590,7 +596,7 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 		heading "Error"
 		echo -n "${WSNs}${S_imageremovebadhigh_label}${WSNe} (${S_imageremovebadhigh})"
 		echo    " must be 0.0 - 1.0, although it's normally around ${WSVs}0.9${WSVe}."
-		echo    "FIX: Set to a vaild number.  ${WSVs}0${WSVe} disables the high threshold check."
+		echo    "FIX: Set to a valid number.  ${WSVs}0${WSVe} disables the high threshold check."
 	elif is_zero "${S_imageremovebadhigh}" ; then
 		heading "Warning"
 		echo "${WSNs}${S_imageremovebadhigh_label}${WSNe} is 0 (disabled)."
@@ -602,21 +608,21 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 	if [[ ${S_imageresizeuploadswidth} -ne 0 || ${S_imageresizeuploadswidth} -ne 0 ]]; then
 		if [[ ${S_imageuploadfrequency} -eq 0 ]]; then
 			heading "Warning"
-			echo -n "${WSNs}Resize Uploaded Images Width/Height${WSNe} is set"
-			echo    " but you aren't uploading images (${WSNs}Upload Every X Images${WSNe} = 0)."
-			echo    "FIX: "
+			echo -n "${WSNs}${S_imageresizeuploadswidth_label}${WSNe} and / or "
+			echo -n "${WSNs}${S_imageresizeuploadsheight_label}${WSNe} are set"
+			echo    " but you aren't uploading images (${WSNs}${S_imageuploadfrequency_label}${WSNe} = 0)."
 			echo    "FIX: Either don't resize uploaded images or enable upload."
 		fi
 		if [[ ${S_imageresizeuploadswidth} -eq 0 && ${S_imageresizeuploadsheight} -ne 0 ]]; then
 			heading "Warning"
-			echo -n "${WSNs}${S_imageresizeuploadwidth_label}${WSNe} = 0"
-			echo    " but ${WSNs}${S_imageresizeuploadheight_label}${WSNe} is greater than 0."
+			echo -n "${WSNs}${S_imageresizeuploadswidth_label}${WSNe} = 0"
+			echo    " but ${WSNs}${S_imageresizeuploadsheight_label}${WSNe} is greater than 0."
 			echo    "If one is set the other one must also be set."
 			echo    "FIX: Set both to 0 to disable resizing uploads or both to some value."
 		elif [[ ${S_imageresizeuploadswidth} -ne 0 && ${S_imageresizeuploadsheight} -eq 0 ]]; then
 			heading "Warning"
-			echo -n "${WSNs}${S_imageresizeuploadheight_label}${WSNe} > 0"
-			echo    " but ${WSNs}${S_imageresizeuploadwidth_label}${WSNe} = 0."
+			echo -n "${WSNs}${S_imageresizeuploadsheight_label}${WSNe} > 0"
+			echo    " but ${WSNs}${S_imageresizeuploadswidth_label}${WSNe} = 0."
 			echo    "If one is set the other one must also be set."
 			echo    "FIX: Set both to 0 to disable resizing uploads or both to some value."
 		fi
@@ -692,7 +698,7 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 		check_bool "${v}" "${l}" "${i}"
 	done
 
-	##### Make sure these numbers have number values.
+	##### Make sure these numbers have numeric values.
 	for i in \
 		"type=an integer" \
 		$( "${ALLSKY_SCRIPTS}/convertJSON.php" --type "integer" ) \
@@ -710,7 +716,7 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 			if [[ -z ${v} ]]; then
 				v="empty"
 			else
-				v="'${v}'"
+				v="${WSVs}${v}${WSVe}"
 			fi
 			echo "${WSNs}${l}${WSNe} (${i}) must be ${T_} number.  It is ${v}."
 			echo "FIX: See the documenation for valid numbers."
@@ -718,7 +724,7 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 	done
 
 	##### Check that all required settings are set.  All others are optional.
-	# TODO: determine from options.json file which are required.
+# TODO: determine from options.json file which are required.
 	for i in angle latitude longitude locale
 	do
 		declare -n v="S_${i}"

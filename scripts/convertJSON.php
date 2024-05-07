@@ -5,8 +5,10 @@
 // Output the names and values of each setting.
 
 // --settings-file SETTINGS_FILE
-//		Optional name of the settings file.
-//		If not specified use the standard file.
+//		Optional name of the settings file.  If not specified use the standard file.
+
+// --options-file OPTIONS_FILE
+//		Optional name of the options file.  If not specified use the standard file.
 
 // --delimiter D
 //		Use "D" as the delimiter between the field name and its value.  Default is "=".
@@ -20,12 +22,19 @@
 //		Convert the field names to all lower case,
 //		boolean values to    true   or   false,
 //		and remove any quotes around numbers and booleans.
-//		Output a complete settings file.
+//		Output a complete json file.
 //		Cannot be used with --capture-only.  Ignores --delimiter.
 
 // --order
 //		Order the output settings to be the same as what's in the options file.
 //		Any setting NOT in the options file (e.g., "lastchanged") is added to the end.
+
+// --prefix P
+//		Prepend "P" to the name of each setting.
+//		Useful to ensure setting names don't conflict with bash names.
+
+// --quote
+//		Quote values as needed, e.g., strings.
 
 include_once("functions.php");
 
@@ -35,6 +44,8 @@ $capture_only = false;
 $delimiter = "=";
 $convert = false;
 $order = false;
+$prefix = "";
+$quote = false;
 $options_file = null;
 $include_not_in_options = false;
 $options_array = null;
@@ -45,6 +56,7 @@ $longopts = array(
 	"settings-file:",
 	"options-file:",
 	"delimiter:",
+	"prefix:",
 
 	// no arguments:
 	"settings-only",
@@ -52,6 +64,7 @@ $longopts = array(
 	"include-not-in-options",
 	"convert",
 	"order",
+	"quote",
 	"debug",
 );
 $options = getopt("", $longopts, $rest_index);
@@ -94,6 +107,12 @@ foreach ($options as $opt => $val) {
 	} else if ($opt === "delimiter") {
 		$delimiter = $val;
 
+	} else if ($opt === "quote") {
+		$quote = true;
+
+	} else if ($opt === "prefix") {
+		$prefix = $val;
+
 	} // else: getopt() doesn't return a bad argument
 }
 
@@ -110,22 +129,40 @@ if ($settings_array === null) {
 	exit(2);
 }
 
-if ($options_file === null) {
-	// use default
-	$options_file = getOptionsFile();
-}
-if ($capture_only || $convert || $include_not_in_options || $order) {
+if ($convert) $quote = false;		// "convert" already quotes
+
+$type_array = Array();
+if ($capture_only || $convert || $include_not_in_options || $order || $quote) {
+	if ($options_file === null) {
+		$options_file = getOptionsFile(); // use default
+	}
+
 	$errorMsg = "ERROR: Unable to process options file '$options_file'.";
 	$options_array = get_decoded_json_file($options_file, true, $errorMsg);
 	if ($options_array === null) {
 		exit(3);
 	}
-	$type_array = Array();
+
 	foreach ($options_array as $option) {
 		$type_array[$option['name']] = getVariableOrDefault($option, 'type', "");
 	}
 }
 
+function quoteIt($string, $type)
+{
+	if ($string === "" ||
+			$type === "boolean" || $type === "float" ||
+			$type === "integer" || $type === "percent") {
+		return($string);
+	}
+
+	// Quote using single quotes so the shell doesn't expand anything.
+	// There's no way to quote a single quote so change:
+	//		how's
+	//	to
+	//		'how'"'"'s'
+	return("'" . str_replace("'", "'\"'\"'", $string) . "'");
+}
 
 // =============================== main part of program =====================
 
@@ -141,13 +178,15 @@ if ($capture_only) {
 			$name = $option['name'];
 			$val = getVariableOrDefault($settings_array, $name, null);
 			if ($val !== null) {
-				echo "$name$delimiter$val\n";
+				if ($quote) {
+					$val = quoteIt($val, $type);
+				}
+				echo "$prefix$name$delimiter$val\n";
 			}
 		}
 	}
 	exit(0);
 }
-
 
 
 if ($convert || $order) {
@@ -235,8 +274,10 @@ if ($convert || $order) {
 				$val = "true";
 			else
 				$val = "false";
+		} else if ($quote) {
+			$val = quoteIt($val, $type);
 		}
-		echo "$name$delimiter$val\n";
+		echo "$prefix$name$delimiter$val\n";
 	}
 }
 

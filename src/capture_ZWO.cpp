@@ -804,10 +804,6 @@ int main(int argc, char *argv[])
 {
 	CG.ME = basename(argv[0]);
 	
-	/* getenv() is used for variables that need to be known very early,
-	 * usually before reading the command-line arguments.
-	*/
-
 	CG.allskyHome = getenv("ALLSKY_HOME");
 	if (CG.allskyHome == NULL)
 	{
@@ -815,11 +811,11 @@ int main(int argc, char *argv[])
 		exit(EXIT_ERROR_STOP);
 	}
 
-	char *x;
-	x = getenv("ALLSKY_DEBUG_LEVEL");
-	if (x != NULL) { CG.debugLevel = atoi(x); }
-	x = getenv("CAMERANUMBER");
-	if (x != NULL) { CG.cameraNumber = atoi(x); }
+	if (! getCommandLineArguments(&CG, argc, argv, false))
+	{
+		// getCommandLineArguments outputs an error message.
+		exit(EXIT_ERROR_STOP);
+	}
 
 	pthread_mutex_init(&mtxSaveImg, 0);
 	pthread_cond_init(&condStartSave, 0);
@@ -887,9 +883,9 @@ int main(int argc, char *argv[])
 	if (! setDefaults(&CG, ASICameraInfo))
 		closeUp(EXIT_ERROR_STOP);
 
-	if (! getCommandLineArguments(&CG, argc, argv))
+	if (CG.configFile[0] != '\0' && ! getConfigFileArguments(&CG))
 	{
-		// getCommandLineArguents outputs an error message.
+		// getConfigFileArguments() outputs error messages
 		exit(EXIT_ERROR_STOP);
 	}
 

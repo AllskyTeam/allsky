@@ -178,7 +178,13 @@ function handle_options($f) {
 	global $options_str;
 	global $cc_array;
 
-	if ($f === "bin")
+	if ($f === "cameratype")
+		$cc_field = "cameraTypes";
+	elseif ($f === "cameramodel")
+		$cc_field = "cameraModels";
+	elseif ($f === "cameranumber")
+		$cc_field = "cameraNumbers";
+	elseif ($f === "bin")
 		$cc_field = "supportedBins";
 	elseif ($f === "type")
 		$cc_field = "supportedImageFormats";

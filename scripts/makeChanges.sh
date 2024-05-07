@@ -233,6 +233,9 @@ do
 					export RPi_COMMAND_TO_USE
 					export CONNECTED_CAMERAS_INFO
 					export RPi_SUPPORTED_CAMERAS
+     					OTHER_ARGS="-cmd ${RPi_COMMAND_TO_USE}"
+				else
+					OTHER_ARGS=""
 				fi
 
 				CC_FILE_OLD="${CC_FILE}-OLD"
@@ -246,7 +249,7 @@ do
 				# Create the camera capabilities file for the new camera type.
 				# Use Debug Level 3 to give the user more info on error.
 
-				CMD="capture_${NEW_VALUE} ${CAMERA_NUMBER}"
+				CMD="capture_${NEW_VALUE} ${CAMERA_NUMBER} ${OTHER_ARGS}"
 				if [[ ${DEBUG} == "true" ]]; then
 					echo -e "${wDEBUG}Calling ${CMD} -cc_file '${CC_FILE}'${wNC}"
 				fi
@@ -318,7 +321,7 @@ do
 			if [[ ${DEBUG} == "true" ]]; then
 				# shellcheck disable=SC2086
 				echo -e "${wDEBUG}Calling:" \
-					"${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
+					"${ALLSKY_SCRIPTS}/createAllskyOptions.php" \
 					${FORCE} ${DEBUG_ARG} \
 					"\n\t--cc-file ${CC_FILE}" \
 					"\n\t--options-file ${OPTIONS_FILE}" \
@@ -326,7 +329,7 @@ do
 					"${wNC}"
 			fi
 			# shellcheck disable=SC2086
-			R="$( "${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
+			R="$( "${ALLSKY_SCRIPTS}/createAllskyOptions.php" \
 				${FORCE} ${DEBUG_ARG} \
 				--cc-file "${CC_FILE}" \
 				--options-file "${OPTIONS_FILE}" \

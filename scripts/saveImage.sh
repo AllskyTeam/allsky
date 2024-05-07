@@ -107,8 +107,9 @@ while [[ $# -gt 0 ]]; do
 	export ${VARIABLE}="${VALUE}"	# need "export" to get indirection to work
 done
 # Export other variables so user can use them in overlays
-export AS_CAMERA_TYPE="$( settings ".cameratype" )"
-export AS_CAMERA_MODEL="$( settings ".cameramodel" )"
+export AS_CAMERA_TYPE="${CAMERA_TYPE}"
+export AS_CAMERA_MODEL="${CAMERA_MODEL}"
+export AS_CAMERA_NUMBER="${CAMERA_NUMBER}"
 
 # If ${AS_TEMPERATURE_C} is set, use it as the sensor temperature,
 # otherwise use the temperature in ${TEMPERATURE_FILE}.

@@ -842,7 +842,8 @@
 "default" : false,
 "description" : "Enables dark frame subtraction if you have dark frames.",
 "label" : "Use Dark Frames",
-"type" : "boolean"
+"type" : "boolean",
+"checkchanges" : true
 },
 {
 "name" : "locale",
@@ -1792,6 +1793,7 @@
 "label" : "Use Local Website",
 "type" : "boolean",
 "carryforward" : true,
+"checkchanges" : true,
 "popup-yesno" : "Do you want to remove all saved images, keograms, startrails, and videos in the local Website?",
 "popup-yesno-value" : 0
 },

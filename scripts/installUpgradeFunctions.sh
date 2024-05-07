@@ -401,25 +401,33 @@ function update_json_file()		# [-d] field, new value, file, [type]
 	else
 		NEW_VALUE="${2}"
 		TYPE="${4}"
-		# Numbers and booleans don't need quotes.
-		if [[ -z ${TYPE} && ${NEW_VALUE} != "true" && ${NEW_VALUE} != "false" ]] &&
-			! is_number "${NEW_VALUE}" ; then
-				TYPE="text"
-		fi
-		if [[ ${TYPE} == "text" ]]; then
-			DOUBLE_QUOTE='"'
-		else
+
+		DOUBLE_QUOTE='"'
+
+		if [[ -n ${TYPE} ]]; then
+			# These don't need quotes.
+			if [[ ${TYPE} == "boolean" || ${TYPE} == "percent" ||
+				  ${TYPE} == "integer" || ${TYPE} == "float" ]]; then
+				DOUBLE_QUOTE=""
+			fi
+
+			# If the TYPE wasn't passed to us, do our best to determine if
+			# it's a boolean or number.
+		elif [[ ${NEW_VALUE} == "true" || ${NEW_VALUE} == "false" ]] ||
+				is_number "${NEW_VALUE}" ; then
 			DOUBLE_QUOTE=""
 		fi
 		ACTION="${FIELD} = ${DOUBLE_QUOTE}${NEW_VALUE}${DOUBLE_QUOTE}"
 	fi
+
 	ERR_MSG="$( jq --indent 4 "${ACTION}" "${FILE}" 2>&1 > "${TEMP}" )"
 	RET=$?
 	if [[ ${RET} -eq 0 ]]; then
 		# Have to use "cp" instead of "mv" to keep any hard link.
 		cp "${TEMP}" "${FILE}"
 	else
-		echo "${M}: Unable to update json value of '${FIELD}' to '${NEW_VALUE}' in '${FILE}': ${ERR_MSG}" >&2
+		MSG="Unable to [$ACTION] json value of '${FIELD}' to '${NEW_VALUE}' in '${FILE}': ${ERR_MSG}"
+		echo "${M}: ${MSG}" >&2
 	fi
 	rm "${TEMP}"
 

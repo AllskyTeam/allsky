@@ -1,4 +1,6 @@
 #!/bin/bash
+# shellcheck disable=SC2154		# referenced but not assigned - from convertJSON.php
+
 
 # Check the Allsky installation and settings for missing items,
 # inconsistent items, illegal items, etc.
@@ -766,7 +768,7 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 	##### Check for valid numbers.
 	if ! is_number "${S_imageuploadfrequency}" || [[ ${S_imageuploadfrequency} -lt 0 ]]; then
 		heading "Error"
-		echo "${WSNs}"${S_imageuploadfrequency_label}"${WSNe} (${S_imageuploadfrequency}) must be 0 or greater."
+		echo "${WSNs}${S_imageuploadfrequency_label}${WSNe} (${S_imageuploadfrequency}) must be 0 or greater."
 		echo "FIX: Set to ${WSVs}0${WSVe} to disable image uploads or set to a positive number."
 	fi
 

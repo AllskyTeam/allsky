@@ -780,7 +780,7 @@ function get_lat_long()
 					LON="${LON//-/}W"
 				fi
 			else
-				display_msg --logonly info "'${MY_LOCATION_PARTS}' did not have two fields."
+				display_msg --logonly info "'${RAW_LOCATION}' did not have two fields."
 			fi
 		fi
 	else

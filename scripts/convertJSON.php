@@ -13,6 +13,9 @@
 // --delimiter D
 //		Use "D" as the delimiter between the field name and its value.  Default is "=".
 
+// --type T
+//		Output setting names of the specified type T.
+
 // --capture-only
 //		Limit output to only settings used by the capture_* programs.
 //		which will have this field in the options file:		"capture" : true
@@ -33,8 +36,10 @@
 //		Prepend "P" to the name of each setting.
 //		Useful to ensure setting names don't conflict with bash names.
 
-// --quote
-//		Quote values as needed, e.g., strings.
+// --shell
+//		Output so it can be used in "eval":
+//			- Quote values as needed, e.g., strings.
+//			- Create variable with name of setting.
 
 include_once("functions.php");
 
@@ -45,7 +50,8 @@ $delimiter = "=";
 $convert = false;
 $order = false;
 $prefix = "";
-$quote = false;
+$shell = false;
+$type_to_output = "";
 $options_file = null;
 $include_not_in_options = false;
 $options_array = null;
@@ -57,6 +63,7 @@ $longopts = array(
 	"options-file:",
 	"delimiter:",
 	"prefix:",
+	"type:",
 
 	// no arguments:
 	"settings-only",
@@ -64,7 +71,7 @@ $longopts = array(
 	"include-not-in-options",
 	"convert",
 	"order",
-	"quote",
+	"shell",
 	"debug",
 );
 $options = getopt("", $longopts, $rest_index);
@@ -92,6 +99,9 @@ foreach ($options as $opt => $val) {
 	} else if ($opt === "capture-only") {
 		$capture_only = true;
 
+	} else if ($opt === "type") {
+		$type_to_output = $val;
+
 	} else if ($opt === "include-not-in-options") {
 		$include_not_in_options = true;
 
@@ -107,8 +117,8 @@ foreach ($options as $opt => $val) {
 	} else if ($opt === "delimiter") {
 		$delimiter = $val;
 
-	} else if ($opt === "quote") {
-		$quote = true;
+	} else if ($opt === "shell") {
+		$shell = true;
 
 	} else if ($opt === "prefix") {
 		$prefix = $val;
@@ -129,10 +139,12 @@ if ($settings_array === null) {
 	exit(2);
 }
 
-if ($convert) $quote = false;		// "convert" already quotes
+if ($convert) $shell = false;		// "convert" displays json; the shell needs shell format
 
 $type_array = Array();
-if ($capture_only || $convert || $include_not_in_options || $order || $quote) {
+if ($capture_only || $convert || $include_not_in_options || $order ||
+		$shell || $type_to_output !== "") {
+
 	if ($options_file === null) {
 		$options_file = getOptionsFile(); // use default
 	}
@@ -143,9 +155,21 @@ if ($capture_only || $convert || $include_not_in_options || $order || $quote) {
 		exit(3);
 	}
 
+	if ($shell) $label_array = Array();
 	foreach ($options_array as $option) {
-		$type_array[$option['name']] = getVariableOrDefault($option, 'type', "");
+		$name = $option['name'];
+		$type_array[$name] = getVariableOrDefault($option, 'type', "");
+		if ($shell)
+			$label_array[$name] = getVariableOrDefault($option, 'label', "");
 	}
+}
+if ($type_to_output !== "") {
+	foreach ($type_array as $name => $type) {
+		if ($type === $type_to_output)
+			echo "$prefix$name\n";
+	}
+
+	exit(0);
 }
 
 function quoteIt($string, $type)
@@ -178,8 +202,10 @@ if ($capture_only) {
 			$name = $option['name'];
 			$val = getVariableOrDefault($settings_array, $name, null);
 			if ($val !== null) {
-				if ($quote) {
+				if ($shell) {
 					$val = quoteIt($val, $type);
+					$label = getVariableOrDefault($label_array, $name, "");
+					$val .= "; $prefix${name}_label=" . quoteIt($label, "text");
 				}
 				echo "$prefix$name$delimiter$val\n";
 			}
@@ -270,12 +296,16 @@ if ($convert || $order) {
 
 		$type = getVariableOrDefault($type_array, strtolower($name), "");
 		if ($type == "boolean") {
+			// use "==" to catch numbers and booleans
 			if ($val == 1)
 				$val = "true";
-			else
+			else if ($val == 0)
 				$val = "false";
-		} else if ($quote) {
+		}
+		if ($shell) {
 			$val = quoteIt($val, $type);
+			$label = getVariableOrDefault($label_array, $name, "");
+			$val .= "; $prefix${name}_label=" . quoteIt($label, "text");
 		}
 		echo "$prefix$name$delimiter$val\n";
 	}

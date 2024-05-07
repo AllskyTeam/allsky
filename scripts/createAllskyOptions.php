@@ -450,6 +450,7 @@ foreach ($repo_array as $repo) {
 
 		if (getVariableOrDefault($repo, "settingsonly", "false") === "true") {
 			add_non_null_field($repo, "settingsonly", $name, "boolean");
+			add_non_null_field($repo, "label", $name);
 			add_non_null_field($repo, "type", $name);
 		} else {
 			add_non_null_field($repo, "minimum", $name);

@@ -278,15 +278,16 @@ setup_rpi_supported_cameras()
 }
 
 #######
-CONNECTED_CAMERAS=""
+CONNECTED_CAMERA_MODELS=""
 # TODO: Make arrays and allow multiple cameras of each camera type
-RPI_MODEL="HQ, Module 3, and compatibles"
-ZWO_MODEL="ASI"
+RPI_MODELS="HQ, Module 3, and compatibles"
+ZWO_MODELS="ASI"
+NUM_CONNECTED_CAMERAS=0
+CT=()			# Camera Type array - what to display in whiptail
 
 get_connected_cameras()
 {
-	local C  CC=""  MSG
-	# RPI_MODEL, ZWO_MODEL, and CONNECTED_CAMERAS are global
+	local C  CC=""  MSG   NUM_RPI=0   NUM_ZWO=0
 
 	setup_rpi_supported_cameras
 
@@ -298,61 +299,69 @@ get_connected_cameras()
 	# "true" == ignore errors
 	get_connected_cameras_info "true" > "${CONNECTED_CAMERAS_INFO}" 2>/dev/null
 
-	# Check if there is an RPi camera connected.
+	# Get the RPi connected cameras, if any.
 	if [[ -n ${C} ]]; then
-		RPI_MODEL="$( gawk '{if ($1 == "RPi") { print $4; }}' "${CONNECTED_CAMERAS_INFO}" )"
-		if [[ -n ${RPI_MODEL} ]]; then
+		RPI_MODELS="$( gawk '{if ($1 == "RPi") { print $4; }}' "${CONNECTED_CAMERAS_INFO}" )"
+		if [[ -n ${RPI_MODELS} ]]; then
 			CC="RPi"
 			if [[ -z ${FUNCTION} ]]; then
-				for i in ${RPI_MODEL}
+				for i in ${RPI_MODELS}
 				do
 					display_msg --log progress "RPi ${i} camera found."
+					# The camera model may have "_" in it,
+					# so separate fields with a different character.
+					CT+=("${NUM_RPI};RPi;${i}" "RPi     ${i}")
+					((NUM_RPI++))
 				done
 			fi
 		fi
 	fi
 
-	# Check if there is a ZWO USB-based camera.
-	ZWO_MODEL="$( gawk '{if ($1 == "ZWO") { print $4; }}' "${CONNECTED_CAMERAS_INFO}" )"
-	if [[ -n ${ZWO_MODEL} ]]; then
+	# Get the ZWO connected cameras, if any.
+	ZWO_MODELS="$( gawk '{if ($1 == "ZWO") { print $4; }}' "${CONNECTED_CAMERAS_INFO}" )"
+	if [[ -n ${ZWO_MODELS} ]]; then
 		[[ -n ${CC} ]] && CC+=" "
 		CC+="ZWO"
 		if [[ -z ${FUNCTION} ]]; then
-			for i in ${ZWO_MODEL}
+			for i in ${ZWO_MODELS}
 			do
 				display_msg --log progress "ZWO ${i} camera found."
+				CT+=( "${NUM_ZWO};ZWO;${i}" "ZWO     ${i}" )
+				((NUM_ZWO++))
 			done
 		fi
 	fi
 
-	if [[ -z ${CC} ]]; then
+	NUM_CONNECTED_CAMERAS=$(( NUM_RPI + NUM_ZWO ))
+	if [[ ${NUM_CONNECTED_CAMERAS} -eq 0 ]]; then
 		MSG="No connected cameras were detected.  The installation will exit."
+		MSG+="\nMake sure a camera is plugged in and working prior to restarting"
+		MSG+=" the installation."
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 
 		MSG="No connected cameras were detected."
-		MSG+="\nMake sure a camera is plugged in and working prior to restarting"
-		MSG+=" the installation."
 		display_msg --log error "${MSG}"
 		exit_installation 1 "${STATUS_NO_CAMERA}" ""
 	fi
 
-	if [[ -n ${CONNECTED_CAMERAS} ]]; then
-		# Set from a prior installation.
-		if [[ ${CONNECTED_CAMERAS} != "${CC}" ]]; then
-			MSG="Connected cameras were '${CONNECTED_CAMERAS}' during last installation"
+	declare -n v="${FUNCNAME[0]}";
+	[[ ${v} != "true" ]] && STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+
+	# CONNECTED_CAMERAS_MODELS was set from a prior installation, if any.
+	# If it was set, warn the user if the prior models is different than
+	# the current ones, but it's not an error.
+	if [[ -n ${CONNECTED_CAMERA_MODELS} ]]; then
+		if [[ ${CONNECTED_CAMERA_MODELS} != "${CC}" ]]; then
+			MSG="Connected cameras were '${CONNECTED_CAMERA_MODELS}' during last installation"
 			MSG+=" but are '${CC}' now."
 			display_msg --log info "${MSG}"
-			STATUS_VARIABLES+=("CONNECTED_CAMERAS='${CC}'\n")
+			STATUS_VARIABLES+=("CONNECTED_CAMERA_MODELS='${CC}'\n")
+			CONNECTED_CAMERA_MODELS="${CC}"
 		fi
-		# Else the last one and this one are the same so don't save.
-		CONNECTED_CAMERAS="${CC}"
 		return
 	fi
 
-	CONNECTED_CAMERAS="${CC}"	# Either not set before or is different this time
-
-	declare -n v="${FUNCNAME[0]}";
-	[[ ${v} != "true" ]] && STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+	CONNECTED_CAMERA_MODELS="${CC}"	# Either not set before or is different this time
 }
 
 #
@@ -362,8 +371,9 @@ get_connected_cameras()
 CAMERA_TYPE=""
 select_camera_type()
 {
-	local MSG  CAMERA  NEW  CT  NUM_RPI=0  NUM_ZWO=0  S  CAMERA_INFO  NUM
-	# CAMERA_TYPE is global
+	local MSG  CAMERA  NEW  S  CAMERA_INFO
+	# CAMERA_TYPE and NUM_CONNECTED_CAMERAS are global
+
 	if [[ -n ${PRIOR_ALLSKY_DIR} ]]; then
 		# bash doesn't have ">=" so we have to use "! ... < "
 		if [[ ! ${PRIOR_ALLSKY_VERSION} < "${FIRST_CAMERA_TYPE_BASE_VERSION}" ]]; then
@@ -402,43 +412,13 @@ select_camera_type()
 		fi
 	fi
 
-	CT=()			# Camera Type array - what to display in whiptail
-	if [[ ${CONNECTED_CAMERAS} =~ "RPi" ]]; then
-		for i in ${RPI_MODEL}
-		do
-			# The camera model may have "_" in it, so separate fields with a different character.
-			CT+=("${NUM_RPI};RPi;${i}" "RPi     ${i}")
-			((NUM_RPI++))
-		done
-	fi
-	if [[ ${CONNECTED_CAMERAS} =~ "ZWO" ]]; then
-		for i in ${ZWO_MODEL}
-		do
-			CT+=( "${NUM_ZWO};ZWO;${i}" "ZWO     ${i}" )
-			((NUM_ZWO++))
-		done
-
-	fi
-	NUM=$(( NUM_RPI + NUM_ZWO ))
-	if [[ ${NUM} -eq 0 ]]; then		# shouldn't happen since we already checked
-		MSG="INTERNAL ERROR:"
-		if [[ -z ${CONNECTED_CAMERAS} ]]; then
-			MSG+=" CONNECTED_CAMERAS is empty."
-		else
-			MSG+=" CONNECTED_CAMERAS (${CONNECTED_CAMERAS}) is invalid."
-		fi
-		display_msg --log error "${MSG}"
-		exit_installation 2 "${STATUS_NO_CAMERA}" "${MSG}"
-	fi
-
 	S=" is"
-	[[ ${NUM} -gt 1 ]] && S="s are"
+	[[ ${NUM_CONNECTED_CAMERAS} -gt 1 ]] && S="s are"
 	MSG="\nThe following camera${S} connected to the Pi.\n"
-	[[ ${NUM} -gt 1 ]] && MSG+="Pick the one you want."
+	[[ ${NUM_CONNECTED_CAMERAS} -gt 1 ]] && MSG+="Pick the one you want."
 	MSG+="\nIf it's not in the list, select <Cancel> and determine why."
-	CAMERA_INFO=$( whiptail --title "${TITLE}" --notags --menu "${MSG}" 15 "${WT_WIDTH}" "${NUM}" \
-		"${CT[@]}" 3>&1 1>&2 2>&3 )
-	if [[ $? -ne 0 ]]; then
+	if ! CAMERA_INFO=$( whiptail --title "${TITLE}" --notags --menu "${MSG}" 15 "${WT_WIDTH}" \
+			"${NUM_CONNECTED_CAMERAS}" "${CT[@]}" 3>&1 1>&2 2>&3 ) ; then
 		MSG="Camera selection required."
 		MSG+=" Please re-run the installation and select a camera to continue."
 		display_msg --log warning "${MSG}"
@@ -530,8 +510,9 @@ do_save_camera_capabilities()
 			[[ -s ${TMP} ]] && display_msg --log error "$( < "${TMP}" )"
 			exit_with_image 1 "${STATUS_ERROR}" "No camera detected"
 		elif [[ ${OPTIONSFILEONLY} == "false" ]]; then
-			[[ -s ${TMP} ]] && display_msg --log error "$( < "${TMP}" )"
 			display_msg --log error "Unable to save camera capabilities."
+			[[ -s ${TMP} ]] && display_msg --log error "$( < "${TMP}" )"
+			[[ -n ${M} ]] && display_msg --log error "${M}"
 		fi
 		return 1
 	else
@@ -803,6 +784,13 @@ install_webserver_et_al()
 	# Starting it added an entry so truncate the file so it's 0-length
 	sleep 1; truncate -s 0 "${LIGHTTPD_LOG_FILE}"
 
+	local T="${ALLSKY_SCRIPTS}/functions.php"
+	if [[ ! -f "${T}" ]]; then
+		local F="${ALLSKY_WEBUI}/includes/functions.php"
+		display_msg --logonly info "Creating link to ${F}"
+		ln -s "${F}" "${T}"		|| echo "Unable to ln -s '${F}' '${T}'" >&2
+	fi
+
 	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
 
@@ -902,8 +890,9 @@ set_permissions()
 	sudo find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 '{}' \;
 
 	# Exceptions to files at 644:
-	chmod 755	"${ALLSKY_WEBUI}/includes/createAllskyOptions.php" \
-				"${ALLSKY_WEBUI}/includes/convertJSON.php"
+# TODO: xxxx delete
+	chmod 755	"${ALLSKY_SCRIPTS}/createAllskyOptions.php" \
+				"${ALLSKY_SCRIPTS}/convertJSON.php"
 
 	chmod 775 "${ALLSKY_TMP}"
 	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_TMP}"
@@ -1164,7 +1153,7 @@ display_msg --logonly info "Settings files now:\n${MSG}"
 		do_reboot "${STATUS_LOCALE_REBOOT}" ""		# does not return
 	fi
 
-	display_msg warning "You must reboot before continuing with the installation."
+	display_msg warning "You must reboot to set the locale before continuing with the installation."
 	display_msg --logonly info "User elected not to reboot to update locale."
 
 	exit_installation 0 "${STATUS_NO_REBOOT}" "to update locale."
@@ -1497,6 +1486,15 @@ install_dependencies_etc()
 	check_success $? "Dependency installation failed" "${TMP}" "${DEBUG}" ||
 		exit_with_image 1 "${STATUS_ERROR}" "dependency installation failed"
 
+	# Set some default locations needed by the capture programs so we
+	# don't need to pass them in on the command line - if they are passed in,
+	# those values overwrite the defaults.
+	sed \
+		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+		-e "s;XX_CONNECTED_CAMERAS_FILE_XX;${CONNECTED_CAMERAS_INFO};" \
+		-e "s;XX_RPI_CAMERA_INFO_FILE_XX;${RPi_SUPPORTED_CAMERAS};" \
+		"${ALLSKY_HOME}/src/include/allsky_common.h.repo" > "${ALLSKY_HOME}/src/include/allsky_common.h"
+
 	display_msg --log progress "Preparing Allsky commands."
 	TMP="${ALLSKY_LOGS}/make_all.log"
 	#shellcheck disable=SC2024
@@ -1585,7 +1583,7 @@ convert_settings()			# prior_file, new_file
 	# Don't modify the prior file, so make the changes to a temporary file.
 	# --settings-only  says only output settings that are in the settings file.
 	# The OPTIONS_FILE doesn't exist yet so use REPO_OPTIONS_FILE>
-	"${ALLSKY_WEBUI}/includes/convertJSON.php" \
+	"${ALLSKY_SCRIPTS}/convertJSON.php" \
 		--convert \
 		--settings-only \
 		--settings-file "${PRIOR_FILE}" \
@@ -1603,7 +1601,7 @@ convert_settings()			# prior_file, new_file
 
 	# Output the field name and value as text separated by a tab.
 	# Field names are already lowercase from above.
-	"${ALLSKY_WEBUI}/includes/convertJSON.php" \
+	"${ALLSKY_SCRIPTS}/convertJSON.php" \
 			--delimiter "$( echo -e '\t' )" \
 			--options-file "${REPO_OPTIONS_FILE}" \
 			--include-not-in-options \
@@ -1739,7 +1737,7 @@ convert_settings()			# prior_file, new_file
 	# New fields were added to the bottom of the settings file but the below
 	# command will order them the same as in the options file, which we want.
 
-	"${ALLSKY_WEBUI}/includes/convertJSON.php" \
+	"${ALLSKY_SCRIPTS}/convertJSON.php" \
 		--convert \
 		--settings-only \
 		--settings-file "${NEW_FILE}" \
@@ -3218,7 +3216,8 @@ sort_settings_file()
 
 	display_msg --logonly info "Sorting settings file '${FILE}'."
 
-	"${ALLSKY_WEBUI}/includes/convertJSON.php" \
+	"${ALLSKY_SCRIPTS}/convertJSON.php" \
+		--convert \
 		--order \
 		--settings-file "${FILE}" \
 		--options-file "${OPTIONS_FILE}" \

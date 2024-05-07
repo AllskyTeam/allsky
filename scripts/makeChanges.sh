@@ -1,13 +1,16 @@
 #!/bin/bash
+# shellcheck disable=SC2154		# referenced but not assigned - from convertJSON.php
 
 # Allow this script to be executed manually, which requires several variables to be set.
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"			|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"			|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 function usage_and_exit()
 {
@@ -75,16 +78,8 @@ fi
 
 if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
 	ERROR_PREFIX=""
-	WSNs="<span class='WebUISetting'>"		# Web Setting Name start
-	WSNe="</span>"
-	WSVs="<span class='WebUIValue'>"		# Web Setting Value start
-	WSVe="</span>"
 else
 	ERROR_PREFIX="${ME}: "
-	WSNs="'"
-	WSNe="'"
-	WSVs=""
-	WSVe=""
 fi
 
 RUN_POSTTOMAP="false"
@@ -125,6 +120,15 @@ if [[ -f ${SETTINGS_FILE} ]]; then
 	# check_website requires the settings file to exist.
 	# If it doesn't we are likely called from the install script before the file is created.
 	check_website		# invoke to set variables
+
+	X="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix S_ --shell )"
+	if [[ $? -ne 0 ]]; then
+		echo "${X}"
+		exit 1
+	fi
+	eval "${X}"
+
+# "convertJSON.php" won't work with the CC_FILE since it has arrays.
 fi
 
 # Make sure RAW16 files have a .png extension.
@@ -147,6 +151,10 @@ function check_filename_type()
 
 CAMERA_NUMBER=""
 NUM_CHANGED=0
+
+# Get all settings at once rather than individually via settings().
+C_sensorWidth="$( settings ".sensorWidth" "${CC_FILE}" )"
+C_sensorHeight="$( settings ".sensorHeight" "${CC_FILE}" )"
 
 while [[ $# -gt 0 ]]
 do
@@ -173,21 +181,25 @@ do
 		continue
 	fi
 
-	# Unfortunately, the Allsky configuration file was already updated,
-	# so if we find a bad entry, e.g., a file doesn't exist, all we can do is warn the user.
-	
+	# The Allsky configuration file was already updated.
+	# If we find a bad entry, e.g., a file doesn't exist, all we can do is warn the user.
+
 	((NUM_CHANGED++))
 	case "${KEY}" in
 
-		"cameranumber" | "cameratype")
+		"cameranumber" | "cameratype" | "cameramodel")
 
-			if [[ ${KEY} == "cameranumber" ]]; then
+			if [[ ${KEY} == "cameramodel" ]]; then
+# TODO: update cameranumber in the settings file based on the cameramodel
+:
+			elif [[ ${KEY} == "cameranumber" ]]; then
 				NEW_CAMERA_NUMBER="${NEW_VALUE}"
 				CAMERA_NUMBER=" -cameranumber ${NEW_CAMERA_NUMBER}"
 				# Set NEW_VALUE to the current Camera Type
-				NEW_VALUE="$( settings ".cameratype" )"
+				NEW_VALUE="${S_cameratype}"
 
-				MSG="Re-creating files for cameratype ${NEW_VALUE}, cameranumber ${NEW_CAMERA_NUMBER}"
+				MSG="Re-creating files for cameratype ${NEW_VALUE},"
+				MSG+=" cameranumber ${NEW_CAMERA_NUMBER}"
 				if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
 					echo -e "<script>console.log('${MSG}');</script>"
 				elif [[ ${DEBUG} == "true" ]]; then
@@ -230,10 +242,7 @@ do
 						get_connected_cameras_info "false" > "${CONNECTED_CAMERAS_INFO}"
 					fi
 
-					export RPi_COMMAND_TO_USE
-					export CONNECTED_CAMERAS_INFO
-					export RPi_SUPPORTED_CAMERAS
-     					OTHER_ARGS="-cmd ${RPi_COMMAND_TO_USE}"
+					OTHER_ARGS="-cmd ${RPi_COMMAND_TO_USE}"
 				else
 					OTHER_ARGS=""
 				fi
@@ -249,13 +258,15 @@ do
 				# Create the camera capabilities file for the new camera type.
 				# Use Debug Level 3 to give the user more info on error.
 
-				CMD="capture_${NEW_VALUE} ${CAMERA_NUMBER} ${OTHER_ARGS}"
+				# Can't quote items in ${CMD} or else they get double quoted when executed.
+				CMD="capture_${NEW_VALUE} ${CAMERA_NUMBER}"
+				CMD+=" -debuglevel 3 ${OTHER_ARGS}"
 				if [[ ${DEBUG} == "true" ]]; then
-					echo -e "${wDEBUG}Calling ${CMD} -cc_file '${CC_FILE}'${wNC}"
+					echo -e "${wDEBUG}Calling: ${CMD} -cc_file '${CC_FILE}'${wNC}"
 				fi
 
 				# shellcheck disable=SC2086
-				R="$( "${ALLSKY_BIN}"/${CMD} -debuglevel 3 -cc_file "${CC_FILE}" 2>&1 )"
+				R="$( "${ALLSKY_BIN}"/${CMD} -cc_file "${CC_FILE}" 2>&1 )"
 				RET=$?
 				if [[ ${RET} -ne 0 || ! -f ${CC_FILE} ]]; then
 					# Restore prior cc file if there was one.
@@ -312,7 +323,7 @@ do
 			if [[ -f ${SETTINGS_FILE} ]]; then
 				# Prior settings file exists so save the old TYPE and MODEL
 				OLD_TYPE="${OLD_VALUE}"
-				OLD_MODEL="$( settings .cameramodel )"
+				OLD_MODEL="${S_cameramodel}"
 			else
 				OLD_TYPE=""
 				OLD_MODEL=""
@@ -364,9 +375,6 @@ do
 			# If the latitude isn't set assume it's a new file.
 			if [[ -n ${OLD_TYPE} && -n ${OLD_MODEL} &&
 					-z "$( settings .latitude "${SETTINGS_FILE}" )" ]]; then
-				#shellcheck source-path=scripts
-				source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"
-				[[ $? -ne 0 ]] && exit "${EXIT_ERROR_STOP}"
 
 				# We assume the user wants the non-camera specific settings below
 				# for this camera to be the same as the prior camera.
@@ -382,8 +390,15 @@ do
 				S_EXT="${NAME##*.}"
 				OLD_SETTINGS_FILE="${ALLSKY_CONFIG}/${S_NAME}_${OLD_TYPE}_${OLD_MODEL}.${S_EXT}"
 
-# TODO: Replace these "for" statements with code using the "carryforward" field in
-# in the options file.
+# xxxxxxxxxxxxxxxxxxxxxx test
+if true; then
+				"${ALLSKY_SCRIPTS}/convertJSON.php" --carryforward |
+				while read -r SETTING TYPE
+				do
+					X="$( settings .${SETTING} "${OLD_SETTINGS_FILE}" )"
+					update_json_file ".${SETTING}" "${X}" "${SETTINGS_FILE}" "${TYPE}"
+				done
+else
 				for s in latitude longitude locale websiteurl imageurl \
 					location owner computer imagesortorder temptype
 				do
@@ -406,13 +421,11 @@ do
 					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}" "boolean"
 				done
 			fi
+fi
 
 			#shellcheck source-path=scripts
 			source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"
-			# Globals: SENSOR_WIDTH, SENSOR_HEIGHT, FULL_OVERLAY_NAME, SHORT_OVERLAY_NAME, OVERLAY_NAME
-			SENSOR_WIDTH="$( settings ".sensorWidth" "${CC_FILE}" )"
-			SENSOR_HEIGHT="$( settings ".sensorHeight" "${CC_FILE}" )"
-			FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}_${CAMERA_MODEL}-${SENSOR_WIDTH}x${SENSOR_HEIGHT}-both.json"
+			FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}_${CAMERA_MODEL}-${C_sensorWidth}x${C_sensorHeight}-both.json"
 			SHORT_OVERLAY_NAME="overlay-${CAMERA_TYPE}.json"
 
 			OVERLAY_PATH="${ALLSKY_REPO}/overlay/config/${FULL_OVERLAY_NAME}"
@@ -574,37 +587,76 @@ do
 ###### TODO FIX
 			;;
 
-		"imageresizewidth" | "imageresizeheight")
-			WIDTH="$( settings ".imageresizewidth" )"
-			HEIGHT="$( settings ".imageresizeheight" )"
-			SENSOR_WIDTH="$( get_setting ".sensorWidth" "${CC_FILE}" )"	# Physical sensor size.
-			SENSOR_HEIGHT="$( get_setting ".sensorHeight" "${CC_FILE}" )"
+		"timelapsewidth" | "timelapseheight")
+			DID_TIMELAPSE="${DID_TIMELAPSE:-false}"
+			if [[ ${NEW_VALUE} != "0" ]]; then
+				# Check the KEY by itself then both numbers together.
+				if [[ ${KEY} == "timelapsewidth" ]]; then
+					MAX="${C_sensorWidth}"
+				else
+					MAX="${C_sensorHeight}"
+				fi
+				MIN=2
 
-			ERR="$( checkResizeValues "${WIDTH}" "${HEIGHT}" \
-				"${WSNs}" "${WSNe}" "${WSVs}" "${WSVe}" \
-	 			"${SENSOR_WIDTH}" "${SENSOR_HEIGHT}" 2>&1 )"
-###### TODO TEST
+				OK="true"
+echo "CALLING: checkPixelValue 'Timelapse ${LABEL}' '${NEW_VALUE}' '${MIN}' '${MAX}'"
+				if ! checkPixelValue "Timelapse ${LABEL}" "sensor size" "${NEW_VALUE}" "${MIN}" "${MAX}" ; then
+echo "    FALSE"
+					OK="false"
+				else
+					if [[ ${DID_TIMELAPSE} == "false" ]]; then
+echo "CALLING: checkWidthHeight 'Timelapse' 'timelapse' '${S_timelapsewidth}' '${S_timelapseheight}' '${C_sensorWidth}' '${C_sensorHeight}'"
+						if ! checkWidthHeight "Timelapse" "timelapse" \
+						"${S_timelapsewidth}" "${S_timelapseheight}" \
+	 					"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 ; then
+echo "false"
+							OK="false"
+						fi
+						DID_TIMELAPSE="true"
+					fi
+				fi
+
+				if [[ ${OK} == "false" ]]; then
+					# Restore to old value
+					echo "Setting ${WSNs}Timelapse ${LABEL}${WSNe} back to ${WSVs}${OLD_VALUE}${WSVe}."
+					update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "number"
+				fi
+			fi
+OK=false	#XXXXXXX
+			;;
+
+		"minitimelapsewidth" | "minitimelapseheight")
+			if ! ERR="$( checkWidthHeight "Mini-Timelapse" "mini-timelapse" \
+				"${S_minitimelapsewidth}" "${S_minitimelapseheight}" \
+				"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )" ; then
+
+				# Restore to old value
+				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "number"
+			fi
+			;;
+
+		"imageresizewidth" | "imageresizeheight")
+			if ! ERR="$( checkWidthHeight "Image RESIZE" \
+				"${S_imageresizeWidth}" "${S_imageresizeHeight}" \
+	 			"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )" ; then
+
+				# Restore to old value
+				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "number"
+			fi
 			;;
 
 		"imagecroptop" | "imagecropright" | "imagecropbottom" | "imagecropleft")
-			TOP="$( settings ".imagecroptop" )"
-			RIGHT="$( settings ".imagecropright" )"
-			BOTTOM="$( settings ".imagecropbottom" )"
-			LEFT="$( settings ".imagecropleft" )"
-			SENSOR_WIDTH="$( get_setting ".sensorWidth" "${CC_FILE}" )"	# Physical sensor size.
-			SENSOR_HEIGHT="$( get_setting ".sensorHeight" "${CC_FILE}" )"
 
-###### TODO FIX / TEST
-			if [[ $((TOP + RIGHT + BOTTOM + LEFT)) -gt 0 ]]; then
-				ERR="$( checkCropValues "${TOP}" "${RIGHT}" "${BOTTOM}" "${LEFT}" \
-					"${SENSOR_WIDTH}" "${SENSOR_HEIGHT}" )"
+			if [[ $((S_imagecroptop + S_imagecropright + BOTTOM + LEFT)) -gt 0 ]]; then
+				ERR="$( checkCropValues "${S_imagecroptop}" "${S_imagecropright}" \
+\					"${S_imagecropbottom}" "${S_imagecropleft}" \
+					"${C_sensorWidth}" "${C_sensorHeight}" )"
 				if [[ $? -ne 0 ]]; then
 					echo "${ERR}"
 					echo "FIX: Check the ${WSNs}Image Crop Top/Right/Bottom/Left${WSNe} settings."
 				fi
 			fi
 			;;
-
 
 		"timelapsevcodec")
 			if ! ffmpeg -encoders 2>/dev/null | awk -v codec="${NEW_VALUE}" '

@@ -3,6 +3,12 @@
 # Shell functions used by multiple scripts.
 # This file is "source"d into others, and must be done AFTER source'ing variables.sh.
 
+SUDO_OK="${SUDO_OK:-false}"
+if [[ ${SUDO_OK} == "false" && ${EUID} -eq 0 ]]; then
+	echo -e "\n${RED}${ME}: This script must NOT be run as root, do NOT use 'sudo'.${NC}\n" >&2
+	exit 1
+fi
+
 # Globals
 ZWO_VENDOR="03c3"
 # shellcheck disable=SC2034
@@ -10,12 +16,24 @@ NOT_STARTED_MSG="Can't start Allsky!"
 STOPPED_MSG="Allsky Stopped!"
 ERROR_MSG_PREFIX="*** ERROR ***\n${STOPPED_MSG}\n"
 FATAL_MSG="FATAL ERROR:"
-
-
-SUDO_OK="${SUDO_OK:-false}"
-if [[ ${SUDO_OK} == "false" && ${EUID} -eq 0 ]]; then
-	echo -e "\n${RED}${ME}: This script must NOT be run as root, do NOT use 'sudo'.${NC}\n" >&2
-	exit 1
+if [[ ${ON_TTY} == "true" ]]; then
+	NL="\n"
+	SPACES="    "
+	STRONGs=""
+	STRONGe=""
+	WSNs="'"
+	WSNe="'"
+	WSVs=""
+	WSVe=""
+else
+	NL="<br>"
+	SPACES="&nbsp; &nbsp; &nbsp;"
+	STRONGs="<strong>"
+	STRONGe="</strong>"
+	WSNs="<span class='WebUISetting'>"		# Web Setting Name start
+	WSNe="</span>"
+	WSVs="<span class='WebUIValue'>"		# Web Setting Value start
+	WSVe="</span>"
 fi
 
 ##### Start and Stop Allsky
@@ -537,73 +555,76 @@ function checkAndGetNewerFile()
 
 
 #####
-# Check for valid pixel values.
-function checkPixelValue()	# variable name, variable value, width_or_height, resolution, min
+# Check for a single valid pixel value.
+# Pixel sizes must be even.
+function checkPixelValue()
 {
-	local VAR_NAME="${1}"
-	local VAR_VALUE="${2}"
-	local W_or_H="${3}"
-	local MAX_RESOLUTION="${4}"
-	local MIN=${5:-0}		# optional minimal pixel value
+	local NAME="${1}"
+	local MAX_NAME="${2}"
+	local VALUE="${3}"
+	local MIN=${4}
+	local MAX="${5}"
+
+	local MIN_MSG   MAX_MSG
 	if [[ ${MIN} == "any" ]]; then
 		MIN="-99999999"		# a number we'll never go below
-		MSG="an"
+		MIN_MSG="an integer"
 	else
-		MIN=0
-		MSG="a postive, even"
+		MIN_MSG="an even integer from ${MIN}"
+	fi
+	if [[ ${MAX} == "any" ]]; then
+		MAX="99999999"		# a number we'll never go above
+		MAX_MSG=""
+	else
+		MAX_MSG=" up to the ${MAX_NAME} of ${MAX}"
 	fi
 
-	if [[ ${VAR_VALUE} != +([-+0-9]) || ${VAR_VALUE} -le ${MIN} || $((VAR_VALUE % 2)) -eq 1 ]]; then
-		echo "${VAR_NAME} (${VAR_VALUE}) must be ${MSG} integer up to ${MAX_RESOLUTION}."
-		return 1
-	elif [[ ${VAR_VALUE} -gt ${MAX_RESOLUTION} ]]; then
-		echo "${VAR_NAME} (${VAR_VALUE}) is larger than the image ${W_or_H} (${MAX_RESOLUTION})."
+	if [[ ${VALUE} != +([-+0-9]) ||
+		  $((VALUE % 2)) -eq 1 ||
+		  ${VALUE} -lt ${MIN} ||
+		  ${VALUE} -gt ${MAX} ]]; then
+		echo "${WSNs}${NAME}${WSNe} (${VALUE}) must be ${MIN_MSG}${MAX_MSG}." >&2
 		return 1
 	fi
 	return 0
 }
 
+
 #####
-# Make sure the image resize width/height are valid.
-function checkResizeValues()
+# Make sure the specified width and height are valid.
+# Assume each number has already been checked, e.g., it's not a string.
+function checkWidthHeight()
 {
-	local WIDTH="${1}"
-	local HEIGHT="${2}"
-	local WSNs="${3}"		# Web Setting Name "s"tart and "e"nd
-	local WSNe="${4}"
-	local WSVs="${5}"		# Web Setting Value "s"tart and "e"nd
-	local WSVe="${6}"
-	local MAX_RESOLUTION_X="${7}"
-	local MAX_RESOLUTION_Y="${8}"
-
+	local NAME="${1}"
+	local ITEM="${2}"
+	local WIDTH="${3}"
+	local HEIGHT="${4}"
+	local SENSOR_WIDTH="${5}"
+	local SENSOR_HEIGHT="${6}"
 	local ERR=""
-	if [[ ${WIDTH} -gt 0 && ${HEIGHT} -eq 0 ]]; then
-		ERR+="${WSNs}Image Resize Width${WSNe} is ${WSVs}${WIDTH}${WSVe}"
-		ERR+=" but ${WSNs}Image Resize Height${WSNe} is ${WSVs}0${WSVe}.\n"
-		ERR+="The image will NOT be resized since the width would look unnatural.\n"
-		ERR+="FIX: Either set both numbers to 0 to not resize, or set the height to something.\n"
-	elif [[ ${WIDTH} -eq 0 && ${HEIGHT} -gt 0 ]]; then
-		ERR+="${WSNs}Image Resize Width${WSNe} is ${WSVs}0${WSVe}"
-		ERR+=" but ${WSNs}Image Resize Height${WSNe} is ${WSVs}${HEIGHT}${WSVe}.\n"
-		ERR+="The image will NOT be resized since the height would look unnatural.\n"
-		ERR+="FIX: Either set both numbers to 0 to not resize, or set the width to something.\n"
-	elif [[ ${WIDTH} -gt 0 &&
-			${HEIGHT} -gt 0 &&
-			${MAX_RESOLUTION_X} == "${WIDTH}" &&
-			${MAX_RESOLUTION_Y} == "${HEIGHT}" ]]; then
-		ERR+="Images will be resized to the same size as the sensor; this does nothing useful.\n"
-		ERR+="FIX: Check ${WSNs}Image Resize Width${WSNe} (${WIDTH}) and"
-		ERR+=" ${WSNs}Image Resize Height${WSNe} (${HEIGHT})\n"
-		ERR+=" and set them to something other than the sensor size of"
-		ERR+=" ${WSVs}${MAX_RESOLUTION_X} x ${MAX_RESOLUTION_Y}${WSVe}.\n"
+
+	# Width and height must both be 0 or non-zero.
+	if [[ (${WIDTH} -gt 0 && ${HEIGHT} -eq 0) || (${WIDTH} -eq 0 && ${HEIGHT} -gt 0) ]]; then
+		ERR+="${WSNs}${NAME} Width${WSNe} (${WSVs}${WIDTH}${WSVe})"
+		ERR+=" and ${WSNs}${NAME} Height${WSNe} (${WSVs}${HEIGHT}${WSVe})"
+		ERR+=" must both be either 0 or non-zero.\n"
+		ERR+="The ${ITEM} will NOT be resized since it would look unnatural.\n"
+		ERR+="FIX: Either set both numbers to 0 to not resize,"
+		ERR+=" or set both numbers to something greater than 0."
+
+	elif [[ ${WIDTH} -gt 0 && ${HEIGHT} -gt 0 &&
+			${SENSOR_WIDTH} -eq ${WIDTH} && ${SENSOR_HEIGHT} -eq ${HEIGHT} ]]; then
+		ERR+="Resizing a ${ITEM} to the same size as the sensor does nothing useful.\n"
+		ERR+="FIX: Check ${WSNs}${NAME} Width${WSNe} (${WIDTH}) and"
+		ERR+=" ${WSNs}${NAME} Height${WSNe} (${HEIGHT})"
+		ERR+=" and set them to something other than the sensor size"
+		ERR+=" (${WSVs}${SENSOR_WIDTH} x ${SENSOR_HEIGHT}${WSVe})."
 	fi
 
-	if [[ -z ${ERR} ]]; then
-		return 0
-	else
-		echo -e "${ERR}" >&2
-		return 1
-	fi
+	[[ -z ${ERR} ]] && return 0
+
+	echo -e "${ERR}" >&2
+	return 1
 }
 
 

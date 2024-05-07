@@ -3,7 +3,6 @@
 # Shell variables and functions used by the installation and upgrade scripts.
 # This file is "source"d into others, and must be done AFTER source'ing variables.sh.
 
-
 ######################################### variables
 
 # export to keep shellcheck quiet

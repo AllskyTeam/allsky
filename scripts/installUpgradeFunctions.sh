@@ -760,9 +760,8 @@ function get_lat_long()
 			display_msg --logonly info "${MSG}"
 		else
 			# Lat and Lon are returned as a comma separated string i.e. 52.1234,0.3123
-			# Need the outer "(" and ")".
-			# shellcheck disable=SC2207
-			MY_LOCATION_PARTS=( $( echo "${RAW_LOCATION}" | tr "," "\n" ) )
+			# Setting an array variable needs the items to be space-separated.
+			MY_LOCATION_PARTS=( ${RAW_LOCATION/,/ } )
 			if [[ ${#MY_LOCATION_PARTS[@]} -eq 2 ]]; then
 
 				LAT="${MY_LOCATION_PARTS[0]}"

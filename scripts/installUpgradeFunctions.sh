@@ -761,6 +761,7 @@ function get_lat_long()
 		else
 			# Lat and Lon are returned as a comma separated string i.e. 52.1234,0.3123
 			# Setting an array variable needs the items to be space-separated.
+			# shellcheck disable=SC2206
 			MY_LOCATION_PARTS=( ${RAW_LOCATION/,/ } )
 			if [[ ${#MY_LOCATION_PARTS[@]} -eq 2 ]]; then
 

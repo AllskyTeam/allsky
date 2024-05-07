@@ -3217,6 +3217,7 @@ sort_settings_file()
 	display_msg --logonly info "Sorting settings file '${FILE}'."
 
 	"${ALLSKY_SCRIPTS}/convertJSON.php" \
+		--convert \
 		--order \
 		--settings-file "${FILE}" \
 		--options-file "${OPTIONS_FILE}" \

@@ -116,6 +116,8 @@ function check_website()
 	fi
 	return "${HAS_WEBSITE_RET}"
 }
+
+# Get all settings at once rather than individually via settings().
 if [[ -f ${SETTINGS_FILE} ]]; then
 	# check_website requires the settings file to exist.
 	# If it doesn't we are likely called from the install script before the file is created.
@@ -127,9 +129,13 @@ if [[ -f ${SETTINGS_FILE} ]]; then
 		exit 1
 	fi
 	eval "${X}"
-
-# "convertJSON.php" won't work with the CC_FILE since it has arrays.
 fi
+if [[ -f ${CC_FILE} ]]; then
+	# "convertJSON.php" won't work with the CC_FILE since it has arrays.
+	C_sensorWidth="$( settings ".sensorWidth" "${CC_FILE}" )"
+	C_sensorHeight="$( settings ".sensorHeight" "${CC_FILE}" )"
+fi
+
 
 # Make sure RAW16 files have a .png extension.
 function check_filename_type()
@@ -149,12 +155,9 @@ function check_filename_type()
 	return 0
 }
 
-CAMERA_NUMBER=""
+CAMERA_NUMBER_ARG=""
+CAMERA_NUMBER=0			# default
 NUM_CHANGED=0
-
-# Get all settings at once rather than individually via settings().
-C_sensorWidth="$( settings ".sensorWidth" "${CC_FILE}" )"
-C_sensorHeight="$( settings ".sensorHeight" "${CC_FILE}" )"
 
 while [[ $# -gt 0 ]]
 do
@@ -176,7 +179,9 @@ do
 
 	# Don't skip if it's cameratype since that indicates we need to refresh.
 	if [[ ${KEY} != "cameratype" && ${OLD_VALUE} == "${NEW_VALUE}" ]]; then
-		[[ ${DEBUG} == "true" ]] && echo -e "    ${wDEBUG}Skipping - old and new are equal${wNC}"
+		if [[ ${DEBUG} == "true" ]]; then
+			echo -e "    ${wDEBUG}Skipping - old and new are equal${wNC}"
+		fi
 		shift 4
 		continue
 	fi
@@ -187,26 +192,41 @@ do
 	((NUM_CHANGED++))
 	case "${KEY}" in
 
-		"cameranumber" | "cameratype" | "cameramodel")
-
-			if [[ ${KEY} == "cameramodel" ]]; then
-# TODO: update cameranumber in the settings file based on the cameramodel
-:
-			elif [[ ${KEY} == "cameranumber" ]]; then
-				NEW_CAMERA_NUMBER="${NEW_VALUE}"
-				CAMERA_NUMBER=" -cameranumber ${NEW_CAMERA_NUMBER}"
-				# Set NEW_VALUE to the current Camera Type
-				NEW_VALUE="${S_cameratype}"
-
-				MSG="Re-creating files for cameratype ${NEW_VALUE},"
-				MSG+=" cameranumber ${NEW_CAMERA_NUMBER}"
-				if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
-					echo -e "<script>console.log('${MSG}');</script>"
-				elif [[ ${DEBUG} == "true" ]]; then
-					echo -e "${wDEBUG}${MSG}${wNC}"
-				fi
+		"cameramodel")
+			# For RPi cameras the "model" is actually the sensor name,
+			# so convert it into the "real" model name and save it.
+			if [[ $( settings ".cameratype" ) == "RPi" ]]; then
+				CAMERA_MODEL="$( gawk --field-separator "\t" -v fullSensor="${NEW_VALUE}" '
+					BEGIN { model = ""; }
+					{
+						if (NF == 15) {
+							model = $1;
+							len = $2;
+							if (len == 0)
+								sensor = fullSensor;
+							else
+								sensor = substr(fullSensor, 0, len);
+							if (sensor == model) {
+								print $3;
+								exit 0;
+							}
+						}
+					}' "${RPi_SUPPORTED_CAMERAS}"
+				echo "${CAMERA_MODEL/RPi /}"
+				)"
 			fi
+			;;
 
+		"cameranumber")
+			CAMERA_NUMBER="${NEW_VALUE}"
+			CAMERA_NUMBER_ARG=" -cameranumber ${CAMERA_NUMBER}"
+			# Because the user doesn't change this directly it's not updated
+			# in the settings file, so we have to do it.
+			update_json_file ".${KEY}" "${CAMERA_NUMBER}" "${SETTINGS_FILE}" "integer"
+
+			;;
+
+		"cameratype")
 			if [[ ! -e "${ALLSKY_BIN}/capture_${NEW_VALUE}" ]]; then
 				MSG="Unknown Camera Type: '${NEW_VALUE}'."
 				echo -e "${wERROR}${ERROR_PREFIX}ERROR: ${MSG}${wNC}"
@@ -258,8 +278,18 @@ do
 				# Create the camera capabilities file for the new camera type.
 				# Use Debug Level 3 to give the user more info on error.
 
+				if [[ -n ${CAMERA_NUMBER_ARG} ]]; then
+					MSG="Re-creating files for cameratype ${NEW_VALUE},"
+					MSG+=" cameranumber ${CAMERA_NUMBER}"
+					if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
+						echo -e "<script>console.log('${MSG}');</script>"
+					elif [[ ${DEBUG} == "true" ]]; then
+						echo -e "${wDEBUG}${MSG}${wNC}"
+					fi
+				fi
+
 				# Can't quote items in ${CMD} or else they get double quoted when executed.
-				CMD="capture_${NEW_VALUE} ${CAMERA_NUMBER}"
+				CMD="capture_${NEW_VALUE} ${CAMERA_NUMBER_ARG}"
 				CMD+=" -debuglevel 3 ${OTHER_ARGS}"
 				if [[ ${DEBUG} == "true" ]]; then
 					echo -e "${wDEBUG}Calling: ${CMD} -cc_file '${CC_FILE}'${wNC}"
@@ -439,6 +469,8 @@ fi
 			do
 				update_json_file ".${s}" "${OVERLAY_NAME}" "${SETTINGS_FILE}" "text"
 			done
+			COMPUTER="$( get_computer )"
+			update_json_file ".computer" "${COMPUTER}" "${SETTINGS_FILE}" "text"
 
 			# Don't do anything else if ${CAMERA_TYPE_ONLY} is set.
 			if [[ ${CAMERA_TYPE_ONLY} == "true" ]]; then
@@ -459,6 +491,25 @@ fi
 				check_website && WEBSITE_CONFIG+=("config.imageName" "${LABEL}" "${NEW_VALUE}")
 			else
 				OK="false"
+			fi
+			;;
+
+		"usedarkframes")
+			if [[ ${NEW_VALUE} == "true" ]]; then
+				if [[ ! -d ${ALLSKY_DARKS} ]]; then
+					echo -e "${wWARNING}WARNING: No darks to subtract."
+					echo -e "No '${ALLSKY_DARKS}' directory.${NC}"
+					# Restore to old value
+					echo "Disabling ${WSNs}${LABEL}${WSNe}."
+					update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "boolean"
+				else
+					NUM_DARKS=$( find "${ALLSKY_DARKS}" -name "*.${EXTENSION}" 2>/dev/null | wc -l)
+					if [[ ${NUM_DARKS} -eq 0 ]]; then
+						echo -n "${WSNs}${LABEL}${WSNe} is set but there are no darks"
+						echo    " in '${ALLSKY_DARKS}' with extension of '${EXTENSION}'."
+						echo    "FIX: Either disable the setting or take dark frames."
+					fi
+				fi
 			fi
 			;;
 
@@ -538,6 +589,18 @@ fi
 			check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
 			;;
 
+
+		"uselocalwebsite")
+			if [[ ${NEW_VALUE} == "true" && ! -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
+				# No prior config file.
+				# This should only happen if there was no prior Website.
+				cp \
+					"${REPO_WEBSITE_CONFIGURATION_FILE}" \
+					"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+				update_json_file ".config.AllskyVersion" "${WEBSITE_ALLSKY_VERSION}" \
+					"${ALLSKY_WEBSITE_CONFIGURATION_FILE}" "text"
+			fi
+			;;
 
 		"remotewebsiteurl" | "remotewebsiteimageurl")
 			CHECK_REMOTE_WEBSITE_ACCESS="true"

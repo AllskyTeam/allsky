@@ -51,7 +51,7 @@ if [[ -z ${LAST_CHANGED} ]]; then
 			"Allsky needs\nconfiguration\nand the Pi needs\na reboot" \
 			"Allsky needs to be configured and then the Pi rebooted."
 	else
-		doExit "${EXIT_ERROR_STOP}" "ConfigurationNeeded" "" "Allsky needs to be configured."
+		doExit "${EXIT_ERROR_STOP}" "Info" "" "Allsky needs to be configured."
 	fi
 elif [[ ${NEEDS_REBOOT} == "true" ]]; then
 	set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"

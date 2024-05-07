@@ -17,23 +17,23 @@ STOPPED_MSG="Allsky Stopped!"
 ERROR_MSG_PREFIX="*** ERROR ***\n${STOPPED_MSG}\n"
 FATAL_MSG="FATAL ERROR:"
 if [[ ${ON_TTY} == "true" ]]; then
-	NL="\n"
-	SPACES="    "
-	STRONGs=""
-	STRONGe=""
-	WSNs="'"
-	WSNe="'"
-	WSVs=""
-	WSVe=""
+	export NL="\n"
+	export SPACES="    "
+	export STRONGs=""
+	export STRONGe=""
+	export WSNs="'"
+	export WSNe="'"
+	export WSVs=""
+	export WSVe=""
 else
-	NL="<br>"
-	SPACES="&nbsp; &nbsp; &nbsp;"
-	STRONGs="<strong>"
-	STRONGe="</strong>"
-	WSNs="<span class='WebUISetting'>"		# Web Setting Name start
-	WSNe="</span>"
-	WSVs="<span class='WebUIValue'>"		# Web Setting Value start
-	WSVe="</span>"
+	export NL="<br>"
+	export SPACES="&nbsp; &nbsp; &nbsp;"
+	export STRONGs="<strong>"
+	export STRONGe="</strong>"
+	export WSNs="<span class='WebUISetting'>"		# Web Setting Name start
+	export WSNe="</span>"
+	export WSVs="<span class='WebUIValue'>"		# Web Setting Value start
+	export WSVe="</span>"
 fi
 
 ##### Start and Stop Allsky

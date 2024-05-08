@@ -57,27 +57,32 @@ function doExit()
 
 	local COLOR=""  OUTPUT_A_MSG
 
-	case "${TYPE}" in
-		"Warning")
+	case "${TYPE,,}" in
+		"no-image")
+			COLOR="green"
+			;;
+		"success")
+			COLOR="green"
+			;;
+		"warning" | "info" | "debug")
 			COLOR="yellow"
 			;;
-		"Error")
+		"error")
 			COLOR="red"
 			;;
-		"NotRunning" | *)
+		"notrunning")
 			COLOR="yellow"
+			;;
+		*)
+			# ${TYPE} is the name of a notification image so
+			# assume it's for an error.
+			COLOR="red"
+			TYPE="error"
 			;;
 	esac
 
 	OUTPUT_A_MSG="false"
 	if [[ -n ${WEBUI_MESSAGE} ]]; then
-		if [[ -z ${COLOR} ]]; then
-			# ${TYPE} is the name of a notification image,
-			# assume it's for an error.
-			TYPE="error"
-		elif [[ ${TYPE} == "no-image" ]]; then
-			TYPE="success"
-		fi
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "${TYPE}" "${WEBUI_MESSAGE}"
 		echo -e "Stopping Allsky: ${WEBUI_MESSAGE}" >&2
 		OUTPUT_A_MSG="true"

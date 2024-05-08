@@ -391,7 +391,7 @@ if ($debug) {
 }
 							// updateFile() only returns error messages.
 							$msg = updateFile($settings_file, $content, "settings", true);
-echo "<script>console.log('Updated $settings_file, msg=$msg');</script>";
+echo '<script>console.log("Updated ' . "$settings_file, msg=$msg" . '");</script>';
 							if ($msg === "") {
 								if ($numSettingsChanges > 0) {
 									$msg = "$numSettingsChanges setting";
@@ -418,7 +418,7 @@ if ($debug) {
 	echo "<pre>"; var_dump($content); echo "</pre>";
 }
 								$msg = updateFile($fileName, $content, "source_settings", true);
-echo '<script>console.log("Updated $fileName");</script>';
+echo "<script>console.log('Updated $fileName');</script>";
 								if ($msg === "") {
 									$msg = "Settings in $fileName saved.";
 									$status->addMessage($msg, 'info');
@@ -528,7 +528,7 @@ echo '<script>console.log("Updated $fileName");</script>';
 
 						if ($fromConfiguration) {
 							$cmd = "${CMD}/check_allsky.sh --fromWebUI";
-							echo "<script>console.log('Running: $cmd');</script>";
+							echo '<script>console.log("Running: ' . $cmd . '");</script>';
 							exec("$cmd 2>&1", $result, $return_val);
 							if ($result != null) {
 								$result = implode("<br>", $result);

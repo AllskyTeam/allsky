@@ -3032,10 +3032,9 @@ install_Python()
 		fi
 
 		PACKAGE="   === Package # ${C} of ${NUM_TO_INSTALL}: [${package}]"
-		# Need indirection since the ${STATUS_NAME} is the variable name and we want its value.
 		STATUS_NAME="${NAME}_${COUNT}"
-		eval "STATUS_VALUE=\${${STATUS_NAME}}"
-		if [[ ${STATUS_VALUE} == "true" ]]; then
+		# Need indirection since the ${STATUS_NAME} is the variable name and we want its value.
+		if [[ ${!STATUS_NAME} == "true" ]]; then
 			display_msg --log progress "${PACKAGE} - already installed."
 			continue
 		fi

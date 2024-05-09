@@ -82,7 +82,7 @@ do_initial_heading()
 			update_website_config_file "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" \
 				"${PRIOR_V}" "${NEW_WEB_CONFIG_VERSION}" "remote"
 		else
-			MSG="${SPACE}${SPACE}Remote Website ${WEBSITE_CONFIG_VERSION} is current @ ${NEW_WEB_CONFIG_VERSION}"
+			MSG="Remote Website ${WEBSITE_CONFIG_VERSION} is current @ ${NEW_WEB_CONFIG_VERSION}"
 			display_msg --logonly info "${MSG}"
 		fi
 

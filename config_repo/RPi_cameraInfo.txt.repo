@@ -19,7 +19,7 @@
 
 # All data lines are tab-separated and empty lines and lines that begin with # are ignored.
 
-imx477	0	RPi HQ	0	3040	4056	ASI_TRUE	BAYER_RG	1	2	0	ASI_IMG_RGB24	ASI_IMG_END	1.55	ASI_FALSE	12	ASI_TRUE	ASI_FALSE
+imx477	0	RPi HQ	0	3040	4056	ASI_TRUE	BAYER_RG	1 2 0	ASI_IMG_RGB24 ASI_IMG_END	1.55	ASI_FALSE	12	ASI_TRUE	ASI_FALSE
 
 # libcamera
 Gain	Gain	16.0	1.0	1.0	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_GAIN

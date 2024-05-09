@@ -17,23 +17,23 @@ STOPPED_MSG="Allsky Stopped!"
 ERROR_MSG_PREFIX="*** ERROR ***\n${STOPPED_MSG}\n"
 FATAL_MSG="FATAL ERROR:"
 if [[ ${ON_TTY} == "true" ]]; then
-	NL="\n"
-	SPACES="    "
-	STRONGs=""
-	STRONGe=""
-	WSNs="'"
-	WSNe="'"
-	WSVs=""
-	WSVe=""
+	export NL="\n"
+	export SPACES="    "
+	export STRONGs=""
+	export STRONGe=""
+	export WSNs="'"
+	export WSNe="'"
+	export WSVs=""
+	export WSVe=""
 else
-	NL="<br>"
-	SPACES="&nbsp; &nbsp; &nbsp;"
-	STRONGs="<strong>"
-	STRONGe="</strong>"
-	WSNs="<span class='WebUISetting'>"		# Web Setting Name start
-	WSNe="</span>"
-	WSVs="<span class='WebUIValue'>"		# Web Setting Value start
-	WSVe="</span>"
+	export NL="<br>"
+	export SPACES="&nbsp; &nbsp; &nbsp;"
+	export STRONGs="<strong>"
+	export STRONGe="</strong>"
+	export WSNs="<span class='WebUISetting'>"		# Web Setting Name start
+	export WSNe="</span>"
+	export WSVs="<span class='WebUIValue'>"		# Web Setting Value start
+	export WSVe="</span>"
 fi
 
 ##### Start and Stop Allsky
@@ -57,27 +57,32 @@ function doExit()
 
 	local COLOR=""  OUTPUT_A_MSG
 
-	case "${TYPE}" in
-		"Warning")
+	case "${TYPE,,}" in
+		"no-image")
+			COLOR="green"
+			;;
+		"success")
+			COLOR="green"
+			;;
+		"warning" | "info" | "debug")
 			COLOR="yellow"
 			;;
-		"Error")
+		"error")
 			COLOR="red"
 			;;
-		"NotRunning" | *)
+		"notrunning")
 			COLOR="yellow"
+			;;
+		*)
+			# ${TYPE} is the name of a notification image so
+			# assume it's for an error.
+			COLOR="red"
+			TYPE="error"
 			;;
 	esac
 
 	OUTPUT_A_MSG="false"
 	if [[ -n ${WEBUI_MESSAGE} ]]; then
-		if [[ -z ${COLOR} ]]; then
-			# ${TYPE} is the name of a notification image,
-			# assume it's for an error.
-			TYPE="error"
-		elif [[ ${TYPE} == "no-image" ]]; then
-			TYPE="success"
-		fi
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "${TYPE}" "${WEBUI_MESSAGE}"
 		echo -e "Stopping Allsky: ${WEBUI_MESSAGE}" >&2
 		OUTPUT_A_MSG="true"

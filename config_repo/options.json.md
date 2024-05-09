@@ -50,6 +50,11 @@ Other than the first few fields, fields can be in any order but are usually in t
     * Type: text
     * Default: none
     * Notes: Any setting that's displayed in the WebUI must have a label.  Typically 1 - 3 words.
+* **label_prefix**
+    * A prefix for programs to prepend to the label.
+    * Type: text
+    * Default: none
+    * Notes: Optional.  To improve readability, some labels are short, e.g., "Generate".  The prefix can be used by programs to clarify the label, e.g., "Timelapse Generate".  Typically 1 - 3 words.
 * **type**
     * The setting's type.
     * Type: text
@@ -65,7 +70,6 @@ Other than the first few fields, fields can be in any order but are usually in t
         * _integer_ - a number without a decimal point.
         * _password_ - same as "text" but displayed with "&ast;&ast;&ast;" in the WebUI.
         * _percent_ - a "float" that acts as a percent.  The WebUI should display "%" after the number but the number must be stored in the settings file without the "%".
-        * _readonly_ - a setting that's displayed in the WebUI but isn't editable.  Is displayed as "text".
         * _select_ - a drop-down selection.  Must have an **options** field that defines the choices.
         * _text_ - a single, short line of text - usually a single word.
         * _widetext_ - a longer line of text.  Should fit in a single line in the WebUI to avoid having to scroll right and left.
@@ -74,6 +78,11 @@ Other than the first few fields, fields can be in any order but are usually in t
     * Type: text
     * Default: none
     * Notes: Optional - the only current value is "capture" which means the setting is used by the capture programs.  If "capture" then the **action** field MUST be present.
+* **readonly**
+    * A setting that's displayed in the WebUI but isn't editable.  Is displayed as "text".
+    * Type: boolean
+    * Default: false
+    * Notes: Optional.  Not used often.
 * **carryforward**
     * When a new camera is detected and there's a settings file for another camera, this field determine whether or not the setting's value in the other file should be used in the new settings file.  This minimizes the number of settings the user needs to change.
     * Type: boolean

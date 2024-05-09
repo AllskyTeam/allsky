@@ -356,6 +356,7 @@ if ($repo_array === null) {
 	// default			[string, but usually a number]
 	// description		[string]
 	// label			[string]
+	// label_prefix		[string]
 	// type				[string]
 	// usage			[string]
 	// carryforward		[boolean]
@@ -450,6 +451,8 @@ foreach ($repo_array as $repo) {
 
 		if (getVariableOrDefault($repo, "settingsonly", "false") === "true") {
 			add_non_null_field($repo, "settingsonly", $name, "boolean");
+			add_non_null_field($repo, "label", $name);
+			add_non_null_field($repo, "label_prefix", $name);
 			add_non_null_field($repo, "type", $name);
 		} else {
 			add_non_null_field($repo, "minimum", $name);
@@ -457,6 +460,7 @@ foreach ($repo_array as $repo) {
 			add_non_null_field($repo, "default", $name, $type);
 			add_non_null_field($repo, "description", $name);
 			add_non_null_field($repo, "label", $name);
+			add_non_null_field($repo, "label_prefix", $name);
 			add_non_null_field($repo, "type", $name);
 			add_non_null_field($repo, "usage", $name);
 			add_non_null_field($repo, "carryforward", $name, "boolean");
@@ -527,9 +531,12 @@ if ($settings_file !== "") {
 		$options_array = json_decode($options_str, true);
 		foreach ($options_array as $option) {
 			$type = getVariableOrDefault($option, 'type', "");
-			if (substr($type, 0, 6) == "header") continue;	// don't put in settings file
-			$display = getVariableOrDefault($option, 'display', "true");
-			if ($display == "false") continue;
+
+			if (substr($type, 0, 6) == "header" ||
+					getVariableOrDefault($option, 'source', null) !== null ||
+					getVariableOrDefault($option, 'display', "true") == "false") {
+				continue;	// don't put in settings file
+			}
 
 			$name = $option['name'];
 

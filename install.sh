@@ -70,6 +70,7 @@ PRIOR_ALLSKY_VERSION=""			# The version number of the prior version, if known
 PRIOR_ALLSKY_BASE_VERSION=""	# The base version number of the prior version, if known
 PRIOR_CAMERA_TYPE=""
 PRIOR_CAMERA_MODEL=""
+PRIOR_CAMERA_NUMBER=""
 
 # Holds status of installation if we need to exit and get back in.
 STATUS_FILE="${ALLSKY_LOGS}/install_status.txt"
@@ -425,7 +426,6 @@ select_camera_type()
 		exit_installation 2 "${STATUS_NO_CAMERA}" "User did not select a camera."
 	fi
 	# CAMERA_INFO is:    number;type;model
-# TODO: CAMERA_NUMBER not used yet
 	CAMERA_NUMBER="${CAMERA_INFO%%;*}"				# before first ";"
 	CAMERA_MODEL="${CAMERA_INFO##*;}"				# after last ";"
 	CAMERA_INFO="${CAMERA_INFO/${CAMERA_NUMBER};/}"	# Now:  type;model
@@ -485,13 +485,17 @@ do_save_camera_capabilities()
 		display_msg --log progress "${MSG}"
 	fi
 
-	# Restore the prior settings file or camera-specific settings file(s) so
+	# Restore the prior settings file or camera-specific settings file(s) if present so
 	# the appropriate one can be used by makeChanges.sh.
 	[[ ${PRIOR_ALLSKY_DIR} != "" ]] && restore_prior_settings_file
 
 	display_msg --log progress "Making new settings file '${SETTINGS_FILE}'."
 
 	CMD="makeChanges.sh${FORCE}${OPTIONSONLY} --cameraTypeOnly --fromInstall ${DEBUG_ARG}"
+	#shellcheck disable=SC2089
+	CMD+=" cameranumber 'Camera Number' '${PRIOR_CAMERA_NUMBER}' '${CAMERA_NUMBER}'"
+	#shellcheck disable=SC2089
+	CMD+=" cameramodel 'Camera Model' '${PRIOR_CAMERA_MODEL}' '${CAMERA_MODEL}'"
 	#shellcheck disable=SC2089
 	CMD+=" cameratype 'Camera Type' '${PRIOR_CAMERA_TYPE}' '${CAMERA_TYPE}'"
 	MSG="Executing ${CMD}"
@@ -890,10 +894,6 @@ set_permissions()
 	sudo find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 '{}' \;
 
 	# Exceptions to files at 644:
-# TODO: xxxx delete
-	chmod 755	"${ALLSKY_SCRIPTS}/createAllskyOptions.php" \
-				"${ALLSKY_SCRIPTS}/convertJSON.php"
-
 	chmod 775 "${ALLSKY_TMP}"
 	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_TMP}"
 
@@ -1320,9 +1320,11 @@ does_prior_Allsky_exist()
 			PRIOR_CAMERA_TYPE="$( settings ".cameratype" "${PRIOR_SETTINGS_FILE}" )"
 			if [[ -n ${PRIOR_CAMERA_TYPE} ]]; then
 				PRIOR_CAMERA_MODEL="$( settings ".cameramodel" "${PRIOR_SETTINGS_FILE}" )"
+				PRIOR_CAMERA_NUMBER="$( settings ".cameranumber" "${PRIOR_SETTINGS_FILE}" )"
 			else
 				PRIOR_CAMERA_TYPE="$( settings ".cameraType" "${PRIOR_SETTINGS_FILE}" )"
 				PRIOR_CAMERA_MODEL="$( settings ".cameraModel" "${PRIOR_SETTINGS_FILE}" )"
+				PRIOR_CAMERA_NUMBER="$( settings ".cameraNumber" "${PRIOR_SETTINGS_FILE}" )"
 			fi
 		else
 			# This shouldn't happen...
@@ -1719,20 +1721,22 @@ convert_settings()			# prior_file, new_file
 	done
 
 	# text fields
-	s="imagessortorder"
-	x="$( settings ".${s}" "${PRIOR_FILE}" )"
-	if [[ -z ${x} ]]; then
-		VALUE="ascending"; doV "NEW" "VALUE" "${s}" "text" "${NEW_FILE}"
-	fi
-
-	for s in daytimeoverlay nighttimeoverlay
+	for i in "imagessortorder:ascending" "daytimeoverlay:" "nighttimeoverlay:" "computer:"
 	do
+		#shellcheck disable=SC2207
+		ii=( $( tr ":" " " <<<"${i}" ) )
+		s="${ii[0]}"
+		v="${ii[1]}"
 		x="$( settings ".${s}" "${PRIOR_FILE}" )"
 		if [[ -z ${x} ]]; then
-			VALUE=""; doV "NEW" "VALUE" "${s}" "text" "${NEW_FILE}"
+			# Handle values that need to be calculated.
+			if [[ ${s} == "computer" ]]; then
+				v="$( get_computer )"
+			fi
+
+			VALUE="${v}"; doV "NEW" "VALUE" "${s}" "text" "${NEW_FILE}"
 		fi
 	done
-
 
 	# New fields were added to the bottom of the settings file but the below
 	# command will order them the same as in the options file, which we want.
@@ -2531,13 +2535,6 @@ restore_prior_website_files()
 	if [[ ! -f ${ALLSKY_ENV} ]]; then
 		display_msg --log progress "${SPACE}$( basename "${ALLSKY_ENV}" ) (creating)"
 		cp "${REPO_ENV_FILE}" "${ALLSKY_ENV}"
-	fi
-
-#XXXX TODO: do this in makeChanges.sh when they enable the local Website.
-	if [[ ! -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
-		# No prior config file (this should only happen if there was no prior Website).
-		cp  "${REPO_WEBSITE_CONFIGURATION_FILE}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
-		doV "" "ALLSKY_VERSION" "${WEBSITE_ALLSKY_VERSION}" "text" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 	fi
 
 	ITEM="${SPACE}Local Website files"

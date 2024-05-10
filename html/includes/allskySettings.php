@@ -367,7 +367,7 @@ if ($debug && $s != $s_newValue) {
 
 			if ( $ok && ($changesMade || $fromConfiguration) ) {
 				if ($nonCameraChangesExist || $fromConfiguration) {
-					if ($newCameraType !== "" || $newCameraModel !== "" || $newCameraNumber != "") {
+					if ($cameraChanged) {
 						$msg = "If you change <b>Camera Type</b>, <b>Camera Model</b>,";
 						$msg .= " or <b>Camera Number</b>  you cannot change anything else.";
 						$msg .= "<br>You also changed: $nonCameraChanges.";

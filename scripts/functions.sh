@@ -1171,7 +1171,11 @@ function set_allsky_status()
 
 	local S=".status = \"${STATUS}\""
 	local T=".timestamp = \"$( date +'%Y-%m-%d %H:%M:%S' )\""
-	echo "{ }" | jq --indent 4 "${S} | ${T}" > "${ALLSKY_STATUS}"
+	if which jq >/dev/null ; then
+		echo "{ }" | jq --indent 4 "${S} | ${T}" > "${ALLSKY_STATUS}"
+	else
+		echo "{ \"status\" : \"${S}\", \"timestamp\" : \"${T}\" }" > "${ALLSKY_STATUS}"
+	fi
 }
 function get_allsky_status()
 {

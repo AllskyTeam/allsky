@@ -192,6 +192,11 @@ do
 	((NUM_CHANGED++))
 	case "${KEY}" in
 
+		"cameranumber")
+			CAMERA_NUMBER="${NEW_VALUE}"
+			CAMERA_NUMBER_ARG=" -cameranumber ${CAMERA_NUMBER}"
+			;;
+
 		"cameramodel")
 			# For RPi cameras the "model" is actually the sensor name,
 			# so convert it into the "real" model name and save it.
@@ -215,15 +220,6 @@ do
 				echo "${CAMERA_MODEL/RPi /}"
 				)"
 			fi
-			;;
-
-		"cameranumber")
-			CAMERA_NUMBER="${NEW_VALUE}"
-			CAMERA_NUMBER_ARG=" -cameranumber ${CAMERA_NUMBER}"
-			# Because the user doesn't change this directly it's not updated
-			# in the settings file, so we have to do it.
-			update_json_file ".${KEY}" "${CAMERA_NUMBER}" "${SETTINGS_FILE}" "integer"
-
 			;;
 
 		"cameratype")
@@ -282,7 +278,7 @@ do
 					MSG="Re-creating files for cameratype ${NEW_VALUE},"
 					MSG+=" cameranumber ${CAMERA_NUMBER}"
 					if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
-						echo -e "<script>console.log('${MSG}');</script>"
+						echo -e "<script>console.log(\"${MSG}\");</script>"
 					elif [[ ${DEBUG} == "true" ]]; then
 						echo -e "${wDEBUG}${MSG}${wNC}"
 					fi
@@ -352,7 +348,7 @@ do
 			# values from the prior settings file if it exists.
 			if [[ -f ${SETTINGS_FILE} ]]; then
 				# Prior settings file exists so save the old TYPE and MODEL
-				OLD_TYPE="${OLD_VALUE}"
+				OLD_TYPE="${S_cameratype}"
 				OLD_MODEL="${S_cameramodel}"
 			else
 				OLD_TYPE=""
@@ -420,38 +416,14 @@ do
 				S_EXT="${NAME##*.}"
 				OLD_SETTINGS_FILE="${ALLSKY_CONFIG}/${S_NAME}_${OLD_TYPE}_${OLD_MODEL}.${S_EXT}"
 
-# xxxxxxxxxxxxxxxxxxxxxx test
-if true; then
 				"${ALLSKY_SCRIPTS}/convertJSON.php" --carryforward |
 				while read -r SETTING TYPE
 				do
+					TYPE="${TYPE/select_/}"		# "select" type has the actual type after "select_".
 					X="$( settings ".${SETTING}" "${OLD_SETTINGS_FILE}" )"
 					update_json_file ".${SETTING}" "${X}" "${SETTINGS_FILE}" "${TYPE}"
 				done
-else
-				for s in latitude longitude locale websiteurl imageurl \
-					location owner computer imagesortorder temptype
-				do
-					X="$( settings .${s} "${OLD_SETTINGS_FILE}" )"
-					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}" "text"
-				done
-
-				for s in angle debuglevel dayskipframes nightskipframes quality \
-					overlaymethod daystokeep daystokeepremotewebsite
-				do
-					X="$( settings .${s} "${OLD_SETTINGS_FILE}" )"
-					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}" "number"
-				done
-
-				for s in uselogin displaysettings showonmap showupdatedmessage \
-					consistentdelays uselocalwebsite useremotewebsite useremoteserver \
-					notificationimages
-				do
-					X="$( settings .${s} "${OLD_SETTINGS_FILE}" )"
-					update_json_file ".${s}" "${X}" "${SETTINGS_FILE}" "boolean"
-				done
 			fi
-fi
 
 			#shellcheck source-path=scripts
 			source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"
@@ -471,6 +443,12 @@ fi
 			done
 			COMPUTER="$( get_computer )"
 			update_json_file ".computer" "${COMPUTER}" "${SETTINGS_FILE}" "text"
+
+			if [[ -n ${CAMERA_NUMBER_ARG} ]]; then
+				# Because the user doesn't change this directly it's not updated
+				# in the settings file, so we have to do it.
+				update_json_file ".cameranumber" "${CAMERA_NUMBER}" "${SETTINGS_FILE}" "integer"
+			fi
 
 			# Don't do anything else if ${CAMERA_TYPE_ONLY} is set.
 			if [[ ${CAMERA_TYPE_ONLY} == "true" ]]; then

@@ -348,27 +348,27 @@ if ($repo_array === null) {
 // All entries except the last "$endSetting" name have a "type". 
 // All entries but type=="header*" have a "name".
 // Out of convention, the order of the fields is (a setting may not have all fields):
-	// name				[string]
-	// display			[boolean]	# must be 2nd if present
-	// settingsonly		[boolean]	# must be 3rd if present
-	// minimum			[number]
-	// maximum			[number]
-	// default			[string, but usually a number]
-	// description		[string]
-	// label			[string]
-	// label_prefix		[string]
-	// type				[string]
-	// usage			[string]
-	// carryforward		[boolean]
-	// options			[array with 1 or more entries] (only if "type" == "select")
-	// checkchanges		[boolean]
-	// source			[string]
-	// booldependson	[string]	("name" of other setting)
-	// booldependsoff	[string]	("name" of other setting)
-	// popup-yesno		[string]
+	// name					[string]
+	// display				[boolean]	# must be 2nd if present
+	// settingsonly			[boolean]	# must be 3rd if present
+	// minimum				[number]
+	// maximum				[number]
+	// default				[string, but usually a number]
+	// description			[string]
+	// label				[string]
+	// label_prefix			[string]
+	// type					[string]
+	// usage				[string]
+	// carryforward			[boolean]
+	// options				[array with 1 or more entries] (only if "type" == "select_*")
+	// checkchanges			[boolean]
+	// source				[string]
+	// booldependson		[string]	("name" of other setting)
+	// booldependsoff		[string]	("name" of other setting)
+	// popup-yesno			[string]
 	// popup-yesno-value	[number or string]
-	// optional			[boolean]
-	// action			[string]
+	// optional				[boolean]
+	// action				[string]
 
 
 // ==================   Create options file

@@ -57,12 +57,12 @@ done
 [[ -z ${EXPIRES_IN_SECONDS} ]] && usage_and_exit 2
 
 NOTIFICATION_TYPE="${1}"	# filename, minus the extension, since the extension may vary
-[[ ${NOTIFICATION_TYPE} == "" ]] && usage_and_exit 1
+[[ -z ${NOTIFICATION_TYPE} ]] && usage_and_exit 1
 
 NUM_ARGS=12
 if [[ ${NOTIFICATION_TYPE} == "custom" ]]; then
 	if [[ $# -ne ${NUM_ARGS} ]]; then
-		echo -e "${RED}'custom' notification type requires ${NUM_ARGS} arguments" >&2
+		echo -e "${RED}'custom' notification type requires ${NUM_ARGS} arguments.${NC}" >&2
 		usage_and_exit 1
 	fi
 

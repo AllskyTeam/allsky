@@ -884,9 +884,10 @@ set_permissions()
 	sudo find "${ALLSKY_CONFIG}/" -type d -exec chmod 775 '{}' \;
 	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_CONFIG}"
 
-	sudo mkdir -p "${ALLSKY_MODULE_LOCATION}/modules"
-	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_MODULE_LOCATION}"
-	sudo chmod -R 775 "${ALLSKY_MODULE_LOCATION}"
+	# Modules and overlays
+	sudo mkdir -p "${ALLSKY_MODULE_LOCATION}/modules" "${MY_OVERLAY_TEMPLATES}"
+	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_MODULE_LOCATION}" "${MY_OVERLAY_TEMPLATES}"
+	sudo chmod -R 775 "${ALLSKY_MODULE_LOCATION}" "${MY_OVERLAY_TEMPLATES}"
 
 	# The files should already be the correct permissions/owners, but just in case, set them.
 	# We don't know what permissions may have been on the old website, so use "sudo".
@@ -2360,8 +2361,6 @@ restore_prior_files()
 		cp -ar "${X}" "${MY_OVERLAY_TEMPLATES}"
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-		mkdir -p "${MY_OVERLAY_TEMPLATES}"
-		# The directory will get populated as the user creates templates.
 	fi
 
 	# Globals: SENSOR_WIDTH, SENSOR_HEIGHT, FULL_OVERLAY_NAME, SHORT_OVERLAY_NAME, OVERLAY_NAME
@@ -3032,10 +3031,9 @@ install_Python()
 		fi
 
 		PACKAGE="   === Package # ${C} of ${NUM_TO_INSTALL}: [${package}]"
-		# Need indirection since the ${STATUS_NAME} is the variable name and we want its value.
 		STATUS_NAME="${NAME}_${COUNT}"
-		eval "STATUS_VALUE=\${${STATUS_NAME}}"
-		if [[ ${STATUS_VALUE} == "true" ]]; then
+		# Need indirection since the ${STATUS_NAME} is the variable name and we want its value.
+		if [[ ${!STATUS_NAME} == "true" ]]; then
 			display_msg --log progress "${PACKAGE} - already installed."
 			continue
 		fi

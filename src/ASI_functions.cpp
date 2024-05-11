@@ -73,6 +73,7 @@ int getNumOfConnectedCameras()
 			strncpy(cC->Type, cameraType, CC_TYPE_SIZE);
 #ifdef IS_ZWO
 			strncpy(cC->Name, cameraModel, CAMERA_NAME_SIZE);
+			strncpy(cC->Sensor, cameraModel, CAMERA_NAME_SIZE);
 #else
 			// cC->Name done later
 			strncpy(cC->Sensor, cameraModel, SENSOR_SIZE);
@@ -536,6 +537,38 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 	Some cameras also have additional resolutions for a given mode.
 */
 
+// Find the first occurance of "delimeter" (or null) in "string",
+// and replace it with NULL.
+// Set "next" to the character after "delimeter" if present, otherwise NULL.
+// "string" now points to a null-terminated token,
+// and "next" points to the next (probably non-null terminated) token.
+
+/* xxxxxxxxxxxxxxx
+char *getToken(char *string, char delimeter, char *next)
+{
+	if (string == NULL || *string == '\0')
+	{
+		next = NULL;
+		return(NULL);
+	}
+
+// hi there\0
+	char *p = string;
+	while (*p != delimeter && *p != '\0')
+	{
+		p++;
+	}
+
+	if (*p == '\0')
+	{
+	}
+	if (*p == delimeter || *p == '\0')
+	{
+		if (*p == delimeter)
+			*p = '\0';
+	}
+}
+*/
 
 // Get the cameraNumber for the camera we're using.
 // Also save the info on each connected camera of the current type.
@@ -546,8 +579,9 @@ int getCameraNumber()
 	int thisIndex = -1;					// index of camera found in RPiCameras
 	int num_RPiCameras = 0;
 
-	ASI_CAMERA_INFO *aci = NULL;
-	if ((aci = (ASI_CAMERA_INFO *) realloc(aci, sizeof(ASI_CAMERA_INFO) * CG.numCameras)) == NULL)
+/* xxxxxxxxxxxxxxxxxxx
+	ASI_CAMERA_INFO *aci[CG.numCameras] = { };
+	if ((aci[0] = (ASI_CAMERA_INFO *) realloc(aci[0], sizeof(ASI_CAMERA_INFO) * CG.numCameras)) == NULL)
 	{
 		int e = errno;
 		Log(0, "*** %s: ERROR: Could not realloc() for aci: %s!", CG.ME, strerror(e));
@@ -555,23 +589,7 @@ int getCameraNumber()
 	}
 
 	int on_camera = -1;
-	int num;
-#define TOKEN_SIZE	50
-	char token1[TOKEN_SIZE];
-	char token2[TOKEN_SIZE];
-	char token3[TOKEN_SIZE];
-	char token4[TOKEN_SIZE];
-	char token5[TOKEN_SIZE];
-	char token6[TOKEN_SIZE];
-	char token7[TOKEN_SIZE];
-	char token8[TOKEN_SIZE];
-	char token9[TOKEN_SIZE];
-	char token10[TOKEN_SIZE];
-	char token11[TOKEN_SIZE];
-	char token12[TOKEN_SIZE];
-	char token13[TOKEN_SIZE];
-	char token14[TOKEN_SIZE];
-	char token15[TOKEN_SIZE];
+	char *args[15];		// maximum number
 
 	// Read the whole configuration file into memory so we can create argv with pointers.
 	static char *buf = readFileIntoBuffer(&CG, CG.RPI_cameraInfoFile);
@@ -590,16 +608,46 @@ int getCameraNumber()
 	while ((line = getLine(buf)) != NULL)
 	{
 		on_line++;
-		Log(5, "     line %3d: %s", on_line, line);
-		// sscanf() treats \t as whitespace and the input treats \t as a field separator.
-		num = sscanf(line, "%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]",
-			token1, token2, token3, token4, token5,
-			token6, token7, token8, token9, token10,
-			token11, token12, token13, token14, token15);
+		Log(5, "     line %3d: %s\n", on_line, line);
+
+		int num = 0;
+		char *tab = line;		// beginning of an argument
+
+		int maxNum;
+		if (! inCamera)
+			maxNum = 15;
+		else if (inControlCaps)
+			maxNum = 9;
+		else
+			maxNum = 1;
+
+		while (num < maxNum)
+		{
+			char *argStart = tab;
+			while (*tab != '\t' && *tab != '\0')
+			{
+				tab++;
+			}
+			if (*tab == '\t' || *tab == '\0')
+			{
+				if (*tab == '\t')
+					*tab = '\0';
+printf("<<< setting args[%d] to '%s'\n", num, argStart);
+				args[num] = argStart;
+				num++;
+				tab++;
+				if (*tab == '\0')
+				{
+					// There should be NO empty fields.
+					break;		// No more args on this line.
+				}
+			}
+		}
+
 		if (num == 1)
 		{
 			// End of libcamera or raspistill entries for this camera
-printf("line %3d: End", on_line);
+printf("===== line %3d: End", on_line);
 			if (inLibcamera)
 			{
 				inLibcamera = false;
@@ -617,14 +665,17 @@ printf("line %3d: End", on_line);
 		{
 			// camera entry
 			on_camera++;
+			strncpy(aci[on_camera]->Module, args[0], MODULE_SIZE-1);
+			aci[on_camera]->Module_len = atol(args[1]);
+
 			inCamera = true;
-printf("line %3d: camera %d", on_line, on_camera+1);
+printf("===== line %3d: camera %d", on_line, on_camera+1);
 		}
 
 		else if (num == 9)
 		{
 			// control caps entry
-printf("line %3d: camera %d, control caps", on_line, on_camera+1);
+printf("===== line %3d: camera %d, control caps", on_line, on_camera+1);
 			inControlCaps = true;
 			if (! inLibcamera && CG.isLibcamera)
 			{
@@ -634,11 +685,13 @@ printf("line %3d: camera %d, control caps", on_line, on_camera+1);
 
 		else
 		{
-			Log(1, "WARNING: Skipping invalid line # %d: %s\n", on_line, line);
+			Log(1, "WARNING: Skipping invalid line # %d (%d fields) in %s: %s\n",
+				on_line, num, CG.RPI_cameraInfoFile, line);
 		}
 printf(", inCamera=%s, inControlCaps=%s, inLibcamera=%s\n",
 yesNo(inCamera), yesNo(inControlCaps), yesNo(inLibcamera));
 	}
+*/
 
 	// For each camera found, update the next *RPiCameras[] entry to point to the
 	// camera's ASICameraInfoArray[] entry.
@@ -763,7 +816,10 @@ ASI_ERROR_CODE ASIGetNumOfControls(int iCameraIndex, int *piNumberOfControls)
 
 // Get the camera control at index iControlIndex in the array, and put in pControlCaps.
 // This is typically used in a loop over all the control capabilities.
-ASI_ERROR_CODE ASIGetControlCaps(int iCameraIndex, int iControlIndex, ASI_CONTROL_CAPS *pControlCaps)
+ASI_ERROR_CODE ASIGetControlCaps(
+		int iCameraIndex,
+		int iControlIndex,
+		ASI_CONTROL_CAPS *pControlCaps)
 {
 	if (iCameraIndex < 0 || iCameraIndex >= CG.numCameras)
 		return(ASI_ERROR_INVALID_INDEX);
@@ -1183,7 +1239,12 @@ void saveCameraInfo(
 				fprintf(f, "\n");
 			}
 			fprintf(f, "\t\t{ \"value\" : \"%s\", \"label\" : \"%s\" }",
-				getCameraModel(cC->Name), skipType(cC->Sensor));
+				getCameraModel(cC->Name),
+#ifdef IS_RPi
+				skipType(cC->Sensor));
+#else
+				getCameraModel(cC->Name));
+#endif
 
 			numThisType++;
 		}
@@ -1499,9 +1560,16 @@ void saveCameraInfo(
 			// The camera's values are in microseconds (us), but the WebUI displays in milliseconds (ms).
 			div_by = US_IN_MS;
 		}
-		double min = cc.MinValue / (double) div_by;
-		double max = cc.MaxValue / (double) div_by;
-		double def = cc.DefaultValue / (double) div_by;
+		double min = cc.MinValue / (double)div_by;
+		double max = cc.MaxValue / (double)div_by;
+		double def = cc.DefaultValue / (double)div_by;
+if (strcmp(cc.Name,"Gain") == 0)
+{
+printf("===== cc.MinValue=%1.2f, min=%1.2f   cc.MaxValue=%1.2f, max=%1.2f\n",
+(double) cc.MinValue, min, (double) cc.MaxValue, max);
+printf("MinValue : %s,\n", LorF(min, "%ld", "%.3f"));
+printf("MaxValue : %s,\n", LorF(max, "%ld", "%.3f"));
+}
 
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", cc.Name);

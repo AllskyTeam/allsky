@@ -56,6 +56,7 @@ function doExit()
 	local WEBUI_MESSAGE="${4}"		# optional
 
 	local COLOR=""  OUTPUT_A_MSG
+	local MSG_TYPE="${TYPE}"
 
 	case "${TYPE,,}" in
 		"no-image")
@@ -77,13 +78,13 @@ function doExit()
 			# ${TYPE} is the name of a notification image so
 			# assume it's for an error.
 			COLOR="red"
-			TYPE="error"
+			MSG_TYPE="Error"
 			;;
 	esac
 
 	OUTPUT_A_MSG="false"
 	if [[ -n ${WEBUI_MESSAGE} ]]; then
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "${TYPE}" "${WEBUI_MESSAGE}"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "${MSG_TYPE}" "${WEBUI_MESSAGE}"
 		echo -e "Stopping Allsky: ${WEBUI_MESSAGE}" >&2
 		OUTPUT_A_MSG="true"
 	fi
@@ -1170,7 +1171,11 @@ function set_allsky_status()
 
 	local S=".status = \"${STATUS}\""
 	local T=".timestamp = \"$( date +'%Y-%m-%d %H:%M:%S' )\""
-	echo "{ }" | jq --indent 4 "${S} | ${T}" > "${ALLSKY_STATUS}"
+	if which jq >/dev/null ; then
+		echo "{ }" | jq --indent 4 "${S} | ${T}" > "${ALLSKY_STATUS}"
+	else
+		echo "{ \"status\" : \"${S}\", \"timestamp\" : \"${T}\" }" > "${ALLSKY_STATUS}"
+	fi
 }
 function get_allsky_status()
 {

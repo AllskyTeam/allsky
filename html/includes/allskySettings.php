@@ -145,7 +145,9 @@ function DisplayAllskyConfig() {
 	foreach ($options_array as $option) {
 		$name = $option['name'];
 		$optional_array[$name] = toBool(getVariableOrDefault($option, 'optional', "false"));
-		$type_array[$name] = getVariableOrDefault($option, 'type', "");
+		$t = getVariableOrDefault($option, 'type', "");
+		if (substr($t, 0, 7) == "select_") $t = substr($t, 7);
+		$type_array[$name] = $t;
 	}
 
 	if (isset($_POST['save_settings'])) {
@@ -707,6 +709,8 @@ if (false && $debug) { echo "<br>Option $name"; }
 					$status->addMessage($msg, 'danger');
 					continue;
 				}
+				if (substr($type, 0, 7) === "select_")
+					$type = substr($type, 7);
 
 				// Should this setting be displayed?
 				$display = toBool(getVariableOrDefault($option, 'display', "true"));

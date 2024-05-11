@@ -181,7 +181,7 @@
 "description" : "Binning level. <span class='WebUIValue'>1x1</span> = OFF.",
 "label" : "Binning",
 "label_prefix" : "Daytime",
-"type" : "select",
+"type" : "select_integer",
 "usage" : "capture",
 "options" : [
 	"bin_values"
@@ -447,7 +447,7 @@
 "description" : "Binning level. <span class='WebUIValue'>1x1</span> = OFF.",
 "label" : "Binning",
 "label_prefix" : "Nighttime",
-"type" : "select",
+"type" : "select_integer",
 "usage" : "capture",
 "options" : [
 	"bin_values"
@@ -669,7 +669,7 @@
 "default" : 99,
 "description" : "'auto' uses color if possible, otherwise the best mono mode supported.<br>RAW16 only works with PNG extension.",
 "label" : "Image Type",
-"type" : "select",
+"type" : "select_integer",
 "usage" : "capture",
 "options" : [
 	"type_values"
@@ -729,7 +729,7 @@
 "default" : 0,
 "description" : "Set image rotation to enable proper orientation.",
 "label" : "Rotation",
-"type" : "select",
+"type" : "select_integer",
 "usage" : "capture",
 "options" : [
 	"rotation_values"
@@ -741,7 +741,7 @@
 "default" : 0,
 "description" : "Flips the image along an axis.",
 "label" : "Flip",
-"type" : "select",
+"type" : "select_integer",
 "usage" : "capture",
 "options" : [
 	{"value" : 0, "label" : "None"},
@@ -785,7 +785,7 @@
 "default" : "C",
 "description" : "Unit(s) to display temperature in.",
 "label" : "Temperature Units",
-"type" : "select",
+"type" : "select_text",
 "usage" : "capture",
 "carryforward" : true,
 "options" : [
@@ -861,7 +861,7 @@
 "default" : 0,
 "description" : "Select the type of exposure to use with ZWO cameras.  Use <span class='WebUIValue'>Snapshot</span> if possible since it should fix ASI_ERROR_TIMEOUT problems.  If that doesn't work try <span class='WebUIValue'>Video Off</span>.",
 "label" : "ZWO Exposure Type",
-"type" : "select",
+"type" : "select_integer",
 "usage" : "capture",
 "options" : [
 	{"value" : 0, "label" : "Snapshot"},
@@ -886,7 +886,7 @@
 "default" : 1,
 "description" : "Debug level. <span class='WebUIValue'>0</span> is errors only.  <span class='WebUIValue'>4</span> is for Allsky developers use.",
 "label" : "Debug Level",
-"type" : "select",
+"type" : "select_integer",
 "usage" : "capture",
 "carryforward" : true,
 "options" : [
@@ -916,7 +916,7 @@
 "description" : "Determines how image overlays are done.<br><span class='WebUIValue'>module</span> supports a visual editor.<br><b>When set to <span class='WebUIValue'>module</span>, the overlay settings below do NOT apply.</b>",
 "label" : "Overlay Method",
 "usage" : "capture",
-"type" : "select",
+"type" : "select_integer",
 "options" : [
 	{"value" : 0, "label" : "legacy"},
 	{"value" : 1, "label" : "module"}
@@ -1096,7 +1096,7 @@
 "label" : "Font Name",
 "usage" : "capture",
 "carryforward" : true,
-"type" : "select",
+"type" : "select_integer",
 "options" : [
 	{"value" : 0, "label" : "Simplex"},
 	{"value" : 1, "label" : "Plain"},
@@ -1136,7 +1136,7 @@
 "default" : 0,
 "description" : "Choose between smooth font lines (antialiased), 8-pixel, or 4 pixel connectivity (harder edges).",
 "label" : "Font Smoothness",
-"type" : "select",
+"type" : "select_integer",
 "usage" : "capture",
 "options" : [
 	{"value" : 0, "label" : "Antialiased"},
@@ -1563,7 +1563,7 @@
 "description" : "Amount of information to display while creating a timelapse.  Rarely changed.",
 "label" : "Log Level",
 "label_prefix" : "Timelapse",
-"type" : "select",
+"type" : "select_text",
 "carryforward" : true,
 "options": [
 	{ "value": "quiet",		"label": "No output" },
@@ -1627,7 +1627,7 @@
 "description" : "Font name.",
 "label" : "Font Name",
 "label_prefix" : "Keograms",
-"type" : "select",
+"type" : "select_text",
 "options" : [
 	{"value" : "simplex", "label" : "Simplex"},
 	{"value" : "plain", "label" : "Plain"},
@@ -1853,7 +1853,7 @@
 "description" : "Protocol for remote Website",
 "label" : "Protocol",
 "label_prefix" : "Remote Website",
-"type" : "select",
+"type" : "select_text",
 "options" : [
 	{"value" : "ftps",	"label" : "ftps"},
 	{"value" : "ftp",	"label" : "ftp"},
@@ -2107,7 +2107,7 @@
 "description" : "Protocol for remote server",
 "label" : "Protocol",
 "label_prefix" : "Remote Server",
-"type" : "select",
+"type" : "select_text",
 "options" : [
 	{"value" : "ftps",	"label" : "ftps"},
 	{"value" : "ftp",	"label" : "ftp"},
@@ -2393,7 +2393,7 @@
 "default" : "ascending",
 "description" : "The order the images on the 'Images' page are sorted in.<br>'Ascending' is oldest to newest. 'Descending' is newest to oldest.",
 "label" : "Images Sort Order",
-"type" : "select",
+"type" : "select_text",
 "carryforward" : true,
 "options" : [
 	{"value" : "ascending", "label" : "Ascending"},
@@ -2468,21 +2468,12 @@
 "default" : "",
 "description" : "The type of camera you are using.<br>Select <span class='WebUIValue'>Refresh</span> to reset the Camera Type and Model.",
 "label" : "Camera Type",
-"type" : "select",
+"type" : "select_text",
 "options" : [
 	"cameratype_values"
 ],
 "checkchanges" : true,
 "action" : "restart"
-},
-{ "name" : "x1",
-  "type" : "select",
-  "options" : [
-	{"value" : "RPi", "label" : "RPi"},
-	{"value" : "ZWO", "label" : "ZWO"},
-	{"value" : "Refresh", "label" : "Refresh"}
-],
-"display" : false
 },
 {
 "name" : "cameramodel",
@@ -2490,7 +2481,7 @@
 "description" : "The model of camera you are using.<br><strong>To change it, change the <span class='WebUISetting'>Camera Type</span> above.</strong>",
 "label" : "Camera Model",
 "readonly" : true,
-"type" : "select",
+"type" : "select_text",
 "options" : [
 	"cameramodel_values"
 ],

@@ -788,6 +788,9 @@ b, strong {
 .markdown-body .mediumPadding li {
 	margin-top: 0.25em;
 }
+.markdown-body .minimalPadding {
+	margin-top: -0.8em;
+}
 .markdown-body .minimalPadding li {
 	margin-top: 0em;
 }

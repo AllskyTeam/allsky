@@ -347,19 +347,16 @@ div.dtsp-searchPane div.dtsp-topRow {
     margin-bottom: 10px !important;
   }
 
-
-
-
   #oe-overlay-disable {
     position: absolute;
     width: 100%;
     height: 100%;
+	color: white;
     background-color: rgba(0,0,0,0.5); 
     z-index: 2; 
-    cursor: pointer;
-}
+  }
 
-#oe-overlay-disable .center {
+  #oe-overlay-disable .center {
     display: flex;
     justify-content: center;
     align-items: center;

@@ -29,6 +29,8 @@ if [[ ${TYPE} == "error" ]]; then
 	TYPE="danger"
 elif [[ ${TYPE} == "debug" ]]; then
 	TYPE="warning"
+elif [[ ${TYPE} == "no-image" ]]; then
+	TYPE="success"
 elif [[ ${TYPE} != "warning" && ${TYPE} != "info" && ${TYPE} != "success" ]]; then
 	echo -e "${wWARNING}Warning: unknown message type: '${TYPE}'. Using 'info'.${wNC}" >&2
 	TYPE="info"

@@ -107,8 +107,9 @@ while [[ $# -gt 0 ]]; do
 	export ${VARIABLE}="${VALUE}"	# need "export" to get indirection to work
 done
 # Export other variables so user can use them in overlays
-export AS_CAMERA_TYPE="$( settings ".cameratype" )"
-export AS_CAMERA_MODEL="$( settings ".cameramodel" )"
+export AS_CAMERA_TYPE="${CAMERA_TYPE}"
+export AS_CAMERA_MODEL="${CAMERA_MODEL}"
+export AS_CAMERA_NUMBER="${CAMERA_NUMBER}"
 
 # If ${AS_TEMPERATURE_C} is set, use it as the sensor temperature,
 # otherwise use the temperature in ${TEMPERATURE_FILE}.
@@ -352,20 +353,20 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 
 				"${ALLSKY_SCRIPTS}/timelapse.sh" --Last "$( basename "${FINAL_FILE}" )" \
 					"${D}" --lock --output "${O}" --mini --images "${MINI_TIMELAPSE_FILES}"
-				if [[ $? -eq 0 ]]; then
-					# Remove the oldest files if we haven't reached the limit.
-					if [[ ${LEFT} -le 0 ]]; then
-						KEEP=$((TIMELAPSE_MINI_IMAGES - TIMELAPSE_MINI_FREQUENCY))
-						x="$( tail -${KEEP} "${MINI_TIMELAPSE_FILES}" )"
-						echo -e "${x}" > "${MINI_TIMELAPSE_FILES}"
-						if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-							echo -en "${YELLOW}${ME}: Replaced ${TIMELAPSE_MINI_FREQUENCY} oldest"
-							echo -e " timelapse file(s).${NC}" >&2
-						fi
-					fi
-				else
+				if [[ $? -ne 0 ]]; then
 					# failed so don't try to upload
 					TIMELAPSE_MINI_UPLOAD_VIDEO="false"
+				fi
+
+				# Remove the oldest files if we haven't reached the limit.
+				if [[ ${LEFT} -le 0 ]]; then
+					KEEP=$((TIMELAPSE_MINI_IMAGES - TIMELAPSE_MINI_FREQUENCY))
+					x="$( tail -${KEEP} "${MINI_TIMELAPSE_FILES}" )"
+					echo -e "${x}" > "${MINI_TIMELAPSE_FILES}"
+					if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+						echo -en "${YELLOW}${ME}: Replaced ${TIMELAPSE_MINI_FREQUENCY} oldest, LEFT=$LEFT, KEEP=$KEEP"
+						echo -e " timelapse file(s).${NC}" >&2
+					fi
 				fi
 
 			else

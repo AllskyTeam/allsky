@@ -3,6 +3,12 @@
 # Shell functions used by multiple scripts.
 # This file is "source"d into others, and must be done AFTER source'ing variables.sh.
 
+SUDO_OK="${SUDO_OK:-false}"
+if [[ ${SUDO_OK} == "false" && ${EUID} -eq 0 ]]; then
+	echo -e "\n${RED}${ME}: This script must NOT be run as root, do NOT use 'sudo'.${NC}\n" >&2
+	exit 1
+fi
+
 # Globals
 ZWO_VENDOR="03c3"
 # shellcheck disable=SC2034
@@ -10,12 +16,24 @@ NOT_STARTED_MSG="Can't start Allsky!"
 STOPPED_MSG="Allsky Stopped!"
 ERROR_MSG_PREFIX="*** ERROR ***\n${STOPPED_MSG}\n"
 FATAL_MSG="FATAL ERROR:"
-
-
-SUDO_OK="${SUDO_OK:-false}"
-if [[ ${SUDO_OK} == "false" && ${EUID} -eq 0 ]]; then
-	echo -e "\n${RED}${ME}: This script must NOT be run as root, do NOT use 'sudo'.${NC}\n" >&2
-	exit 1
+if [[ ${ON_TTY} == "true" ]]; then
+	export NL="\n"
+	export SPACES="    "
+	export STRONGs=""
+	export STRONGe=""
+	export WSNs="'"
+	export WSNe="'"
+	export WSVs=""
+	export WSVe=""
+else
+	export NL="<br>"
+	export SPACES="&nbsp; &nbsp; &nbsp;"
+	export STRONGs="<strong>"
+	export STRONGe="</strong>"
+	export WSNs="<span class='WebUISetting'>"		# Web Setting Name start
+	export WSNe="</span>"
+	export WSVs="<span class='WebUIValue'>"		# Web Setting Value start
+	export WSVe="</span>"
 fi
 
 ##### Start and Stop Allsky
@@ -38,29 +56,35 @@ function doExit()
 	local WEBUI_MESSAGE="${4}"		# optional
 
 	local COLOR=""  OUTPUT_A_MSG
+	local MSG_TYPE="${TYPE}"
 
-	case "${TYPE}" in
-		"Warning")
+	case "${TYPE,,}" in
+		"no-image")
+			COLOR="green"
+			;;
+		"success")
+			COLOR="green"
+			;;
+		"warning" | "info" | "debug")
 			COLOR="yellow"
 			;;
-		"Error")
+		"error")
 			COLOR="red"
 			;;
-		"NotRunning" | *)
+		"notrunning")
 			COLOR="yellow"
+			;;
+		*)
+			# ${TYPE} is the name of a notification image so
+			# assume it's for an error.
+			COLOR="red"
+			MSG_TYPE="Error"
 			;;
 	esac
 
 	OUTPUT_A_MSG="false"
 	if [[ -n ${WEBUI_MESSAGE} ]]; then
-		if [[ -z ${COLOR} ]]; then
-			# ${TYPE} is the name of a notification image,
-			# assume it's for an error.
-			TYPE="error"
-		elif [[ ${TYPE} == "no-image" ]]; then
-			TYPE="success"
-		fi
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "${TYPE}" "${WEBUI_MESSAGE}"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" "${MSG_TYPE}" "${WEBUI_MESSAGE}"
 		echo -e "Stopping Allsky: ${WEBUI_MESSAGE}" >&2
 		OUTPUT_A_MSG="true"
 	fi
@@ -246,9 +270,8 @@ function get_connected_cameras_info()
 			echo -e "RPi\t0 : imx477 [4056x3040]"
 
 		else
-			local C="$( LIBCAMERA_LOG_LEVELS=FATAL "${CMD_TO_USE_}" --list-cameras 2>&1 |
-				grep -E '^[0-9] : ' )"
-			echo -e "RPi\t${C}"
+			LIBCAMERA_LOG_LEVELS=FATAL "${CMD_TO_USE_}" --list-cameras 2>&1 |
+				grep -E '^[0-9] : ' | sed 's/^/RPi\t/'
 		fi
 	fi
 
@@ -538,30 +561,76 @@ function checkAndGetNewerFile()
 
 
 #####
-# Check for valid pixel values.
-function checkPixelValue()	# variable name, variable value, width_or_height, resolution, min
+# Check for a single valid pixel value.
+# Pixel sizes must be even.
+function checkPixelValue()
 {
-	local VAR_NAME="${1}"
-	local VAR_VALUE="${2}"
-	local W_or_H="${3}"
-	local MAX_RESOLUTION="${4}"
-	local MIN=${5:-0}		# optional minimal pixel value
+	local NAME="${1}"
+	local MAX_NAME="${2}"
+	local VALUE="${3}"
+	local MIN=${4}
+	local MAX="${5}"
+
+	local MIN_MSG   MAX_MSG
 	if [[ ${MIN} == "any" ]]; then
 		MIN="-99999999"		# a number we'll never go below
-		MSG="an"
+		MIN_MSG="an integer"
 	else
-		MIN=0
-		MSG="a postive, even"
+		MIN_MSG="an even integer from ${MIN}"
+	fi
+	if [[ ${MAX} == "any" ]]; then
+		MAX="99999999"		# a number we'll never go above
+		MAX_MSG=""
+	else
+		MAX_MSG=" up to the ${MAX_NAME} of ${MAX}"
 	fi
 
-	if [[ ${VAR_VALUE} != +([-+0-9]) || ${VAR_VALUE} -le ${MIN} || $((VAR_VALUE % 2)) -eq 1 ]]; then
-		echo "${VAR_NAME} (${VAR_VALUE}) must be ${MSG} integer up to ${MAX_RESOLUTION}."
-		return 1
-	elif [[ ${VAR_VALUE} -gt ${MAX_RESOLUTION} ]]; then
-		echo "${VAR_NAME} (${VAR_VALUE}) is larger than the image ${W_or_H} (${MAX_RESOLUTION})."
+	if [[ ${VALUE} != +([-+0-9]) ||
+		  $((VALUE % 2)) -eq 1 ||
+		  ${VALUE} -lt ${MIN} ||
+		  ${VALUE} -gt ${MAX} ]]; then
+		echo "${WSNs}${NAME}${WSNe} (${VALUE}) must be ${MIN_MSG}${MAX_MSG}." >&2
 		return 1
 	fi
 	return 0
+}
+
+
+#####
+# Make sure the specified width and height are valid.
+# Assume each number has already been checked, e.g., it's not a string.
+function checkWidthHeight()
+{
+	local NAME="${1}"
+	local ITEM="${2}"
+	local WIDTH="${3}"
+	local HEIGHT="${4}"
+	local SENSOR_WIDTH="${5}"
+	local SENSOR_HEIGHT="${6}"
+	local ERR=""
+
+	# Width and height must both be 0 or non-zero.
+	if [[ (${WIDTH} -gt 0 && ${HEIGHT} -eq 0) || (${WIDTH} -eq 0 && ${HEIGHT} -gt 0) ]]; then
+		ERR+="${WSNs}${NAME} Width${WSNe} (${WSVs}${WIDTH}${WSVe})"
+		ERR+=" and ${WSNs}${NAME} Height${WSNe} (${WSVs}${HEIGHT}${WSVe})"
+		ERR+=" must both be either 0 or non-zero.\n"
+		ERR+="The ${ITEM} will NOT be resized since it would look unnatural.\n"
+		ERR+="FIX: Either set both numbers to 0 to not resize,"
+		ERR+=" or set both numbers to something greater than 0."
+
+	elif [[ ${WIDTH} -gt 0 && ${HEIGHT} -gt 0 &&
+			${SENSOR_WIDTH} -eq ${WIDTH} && ${SENSOR_HEIGHT} -eq ${HEIGHT} ]]; then
+		ERR+="Resizing a ${ITEM} to the same size as the sensor does nothing useful.\n"
+		ERR+="FIX: Check ${WSNs}${NAME} Width${WSNe} (${WIDTH}) and"
+		ERR+=" ${WSNs}${NAME} Height${WSNe} (${HEIGHT})"
+		ERR+=" and set them to something other than the sensor size"
+		ERR+=" (${WSVs}${SENSOR_WIDTH} x ${SENSOR_HEIGHT}${WSVe})."
+	fi
+
+	[[ -z ${ERR} ]] && return 0
+
+	echo -e "${ERR}" >&2
+	return 1
 }
 
 
@@ -1042,7 +1111,17 @@ function upload_all()
 # Indent all lines.
 function indent()
 {
-	echo -e "${1}" | sed 's/^/\t/'
+	local INDENT
+	if [[ ${1} == "--spaces" ]]; then
+		INDENT="    "
+		shift
+	elif [[ ${1} == "--html" ]]; then
+		INDENT="&nbsp;&nbsp;&nbsp;&nbsp;"
+		shift
+	else
+		INDENT="	"	# tab
+	fi
+	echo -e "${1}" | sed "s/^/${INDENT}/"
 }
 
 
@@ -1092,7 +1171,11 @@ function set_allsky_status()
 
 	local S=".status = \"${STATUS}\""
 	local T=".timestamp = \"$( date +'%Y-%m-%d %H:%M:%S' )\""
-	echo "{ }" | jq --indent 4 "${S} | ${T}" > "${ALLSKY_STATUS}"
+	if which jq >/dev/null ; then
+		echo "{ }" | jq --indent 4 "${S} | ${T}" > "${ALLSKY_STATUS}"
+	else
+		echo "{ \"status\" : \"${S}\", \"timestamp\" : \"${T}\" }" > "${ALLSKY_STATUS}"
+	fi
 }
 function get_allsky_status()
 {

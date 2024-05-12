@@ -47,7 +47,7 @@ if [[ -z ${LAST_CHANGED} ]]; then
 	echo "*** ===== Allsky needs to be configured before it can be used.  See the WebUI." >&2
 	if [[ ${NEEDS_REBOOT} == "true" ]]; then
 		echo "*** ===== The Pi also needs to be rebooted." >&2
-		doExit "${EXIT_ERROR_STOP}" "Error" \
+		doExit "${EXIT_ERROR_STOP}" "ConfigurationNeeded" \
 			"Allsky needs\nconfiguration\nand the Pi needs\na reboot" \
 			"Allsky needs to be configured and then the Pi rebooted."
 	else
@@ -124,7 +124,6 @@ if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 fi
 
 USE_NOTIFICATION_IMAGES="$( settings ".notificationimages" )"		|| exit "${EXIT_ERROR_STOP}"
-LOCALE="$( settings ".locale" )"									|| exit "${EXIT_ERROR_STOP}"
 
 # Make sure we are not already running.
 pgrep "${ME}" | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
@@ -248,27 +247,16 @@ fi
 
 : > "${ARGS_FILE}"
 
-# If the locale isn't in the settings file, try to determine it.
-if [[ -z ${LOCALE} ]]; then
-	if [[ -n ${LC_ALL} ]]; then
-		echo "locale=${LC_ALL}"
-	elif [[ -n ${LANG} ]]; then
-		echo "locale=${LANG}"
-	elif [[ -n ${LANGUAGE} ]]; then
-		echo "locale=${LANGUAGE}"
-	fi >> "${ARGS_FILE}"
-fi
-
-# We must pass "-config ${ARGS_FILE}" on the command line,
-# and debuglevel we did above, so don't do them again.
 # Only pass settings that are used by the capture program.
-ARGS="$( "${ALLSKY_WEBUI}/includes/convertJSON.php" --capture-only )"
-if [[ $? -ne 0 ]]; then
+if ! ARGS="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --capture-only )" ; then
 	echo "${ME}: ERROR: convertJSON.php returned: ${ARGS}"
 	set_allsky_status "${ALLSKY_STATUS_ERROR}"
 	exit "${EXIT_ERROR_STOP}"
 fi
-echo "${ARGS}" | grep -E -i -v "^config=|^debuglevel=" >> "${ARGS_FILE}"
+# We must pass "-config ${ARGS_FILE}" on the command line and
+# other settings needed at the start of the capture program.
+echo "${ARGS}" |
+	grep -E -i -v "^config=|^debuglevel=^cmd=|^cameramodel|^cameranumber|^locale=" >> "${ARGS_FILE}"
 
 # When using a desktop environment a preview of the capture can be displayed.
 # The preview mode does not work if we are started as a service or
@@ -281,12 +269,11 @@ echo "${ARGS}" | grep -E -i -v "^config=|^debuglevel=" >> "${ARGS_FILE}"
 
 } >> "${ARGS_FILE}"
 
-FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
 # If the user wants images uploaded only every n times, save that number to a file.
 if [[ ${IMG_UPLOAD_FREQUENCY} -ne 1 ]]; then
 	# Save "1" so we upload the first image.
 	# saveImage.sh will write ${IMG_UPLOAD_FREQUENCY} to the file as needed.
-	echo "1" > "${FREQUENCY_FILE}"
+	echo "1" > "${FREQUENCY_FILE}"		# FREQUENCY_FILE is global
 else
 	rm -f "${FREQUENCY_FILE}"
 fi
@@ -298,23 +285,21 @@ activate_python_venv
 python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --cleartimings
 deactivate_python_venv
 
-# Pass some arguments via the environment so they can be used as soon as the program starts.
-export ALLSKY_DEBUG_LEVEL
-if [[ ${CAMERA_TYPE} == "RPi" ]]; then
-	export RPi_COMMAND_TO_USE
-	export CONNECTED_CAMERAS_INFO
-	export RPi_SUPPORTED_CAMERAS
-fi
-C="$( settings ".cameranumber" )"
-[[ -n ${C} ]] && export CAMERANUMBER="${C}"
-
 function catch_signal() { return 0; }
 trap "catch_signal" SIGTERM SIGINT SIGHUP
 
 set_allsky_status "${ALLSKY_STATUS_STARTING}"
 
 # Run the camera-specific capture program - this is the main attraction...
-"${ALLSKY_BIN}/${CAPTURE}" -config "${ARGS_FILE}"
+CAMERA_NUMBER="$( settings ".cameranumber" )"
+CAMERA_NUMBER="${CAMERA_NUMBER:-0}"		# default
+"${ALLSKY_BIN}/${CAPTURE}" \
+	-debuglevel "${ALLSKY_DEBUG_LEVEL}" \
+	-cmd "${RPi_COMMAND_TO_USE}" \
+	-cameramodel "${CAMERA_MODEL}" \
+	-cameranumber "${CAMERA_NUMBER}" \
+	-locale "$( settings ".locale" )" \
+	-config "${ARGS_FILE}"
 RETCODE=$?
 
 if [[ ${RETCODE} -eq ${EXIT_OK} ]]; then

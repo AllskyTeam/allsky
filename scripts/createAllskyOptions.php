@@ -178,7 +178,13 @@ function handle_options($f) {
 	global $options_str;
 	global $cc_array;
 
-	if ($f === "bin")
+	if ($f === "cameratype")
+		$cc_field = "cameraTypes";
+	elseif ($f === "cameramodel")
+		$cc_field = "cameraModels";
+	elseif ($f === "cameranumber")
+		$cc_field = "cameraNumbers";
+	elseif ($f === "bin")
 		$cc_field = "supportedBins";
 	elseif ($f === "type")
 		$cc_field = "supportedImageFormats";
@@ -342,26 +348,27 @@ if ($repo_array === null) {
 // All entries except the last "$endSetting" name have a "type". 
 // All entries but type=="header*" have a "name".
 // Out of convention, the order of the fields is (a setting may not have all fields):
-	// name				[string]
-	// display			[boolean]	# must be 2nd if present
-	// settingsonly		[boolean]	# must be 3rd if present
-	// minimum			[number]
-	// maximum			[number]
-	// default			[string, but usually a number]
-	// description		[string]
-	// label			[string]
-	// type				[string]
-	// usage			[string]
-	// carryforward		[boolean]
-	// options			[array with 1 or more entries] (only if "type" == "select")
-	// checkchanges		[boolean]
-	// source			[string]
-	// booldependson	[string]	("name" of other setting)
-	// booldependsoff	[string]	("name" of other setting)
-	// popup-yesno		[string]
+	// name					[string]
+	// display				[boolean]	# must be 2nd if present
+	// settingsonly			[boolean]	# must be 3rd if present
+	// minimum				[number]
+	// maximum				[number]
+	// default				[string, but usually a number]
+	// description			[string]
+	// label				[string]
+	// label_prefix			[string]
+	// type					[string]
+	// usage				[string]
+	// carryforward			[boolean]
+	// options				[array with 1 or more entries] (only if "type" == "select_*")
+	// checkchanges			[boolean]
+	// source				[string]
+	// booldependson		[string]	("name" of other setting)
+	// booldependsoff		[string]	("name" of other setting)
+	// popup-yesno			[string]
 	// popup-yesno-value	[number or string]
-	// optional			[boolean]
-	// action			[string]
+	// optional				[boolean]
+	// action				[string]
 
 
 // ==================   Create options file
@@ -444,6 +451,8 @@ foreach ($repo_array as $repo) {
 
 		if (getVariableOrDefault($repo, "settingsonly", "false") === "true") {
 			add_non_null_field($repo, "settingsonly", $name, "boolean");
+			add_non_null_field($repo, "label", $name);
+			add_non_null_field($repo, "label_prefix", $name);
 			add_non_null_field($repo, "type", $name);
 		} else {
 			add_non_null_field($repo, "minimum", $name);
@@ -451,6 +460,7 @@ foreach ($repo_array as $repo) {
 			add_non_null_field($repo, "default", $name, $type);
 			add_non_null_field($repo, "description", $name);
 			add_non_null_field($repo, "label", $name);
+			add_non_null_field($repo, "label_prefix", $name);
 			add_non_null_field($repo, "type", $name);
 			add_non_null_field($repo, "usage", $name);
 			add_non_null_field($repo, "carryforward", $name, "boolean");
@@ -521,9 +531,12 @@ if ($settings_file !== "") {
 		$options_array = json_decode($options_str, true);
 		foreach ($options_array as $option) {
 			$type = getVariableOrDefault($option, 'type', "");
-			if (substr($type, 0, 6) == "header") continue;	// don't put in settings file
-			$display = getVariableOrDefault($option, 'display', "true");
-			if ($display == "false") continue;
+
+			if (substr($type, 0, 6) == "header" ||
+					getVariableOrDefault($option, 'source', null) !== null ||
+					getVariableOrDefault($option, 'display', "true") == "false") {
+				continue;	// don't put in settings file
+			}
 
 			$name = $option['name'];
 

@@ -145,7 +145,9 @@ function DisplayAllskyConfig() {
 	foreach ($options_array as $option) {
 		$name = $option['name'];
 		$optional_array[$name] = toBool(getVariableOrDefault($option, 'optional', "false"));
-		$type_array[$name] = getVariableOrDefault($option, 'type', "");
+		$t = getVariableOrDefault($option, 'type', "");
+		if (substr($t, 0, 7) == "select_") $t = substr($t, 7);
+		$type_array[$name] = $t;
 	}
 
 	if (isset($_POST['save_settings'])) {
@@ -352,6 +354,11 @@ if ($debug) {
 	if ($s != $s_newValue) { echo "<br><br>settings_array[$name] = $s, newValue=$s_newValue"; }
 }
 						$settings_array[$name] = $newValue;
+if ($debug && $s != $s_newValue) {
+	echo "<br><pre>====== settings_array['height'] now:<br>";
+	var_dump($settings_array['height']);
+	echo "</pre>";
+}
 					}
 
 					if ($name === $debugLevelName && $newValue >= 4) {
@@ -362,7 +369,7 @@ if ($debug) {
 
 			if ( $ok && ($changesMade || $fromConfiguration) ) {
 				if ($nonCameraChangesExist || $fromConfiguration) {
-					if ($newCameraType !== "" || $newCameraModel !== "" || $newCameraNumber != "") {
+					if ($cameraChanged) {
 						$msg = "If you change <b>Camera Type</b>, <b>Camera Model</b>,";
 						$msg .= " or <b>Camera Number</b>  you cannot change anything else.";
 						$msg .= "<br>You also changed: $nonCameraChanges.";
@@ -386,7 +393,7 @@ if ($debug) {
 }
 							// updateFile() only returns error messages.
 							$msg = updateFile($settings_file, $content, "settings", true);
-echo "<script>console.log('Updated $settings_file, msg=$msg');</script>";
+echo '<script>console.log("Updated ' . "$settings_file, msg=$msg" . '");</script>';
 							if ($msg === "") {
 								if ($numSettingsChanges > 0) {
 									$msg = "$numSettingsChanges setting";
@@ -413,7 +420,7 @@ if ($debug) {
 	echo "<pre>"; var_dump($content); echo "</pre>";
 }
 								$msg = updateFile($fileName, $content, "source_settings", true);
-echo '<script>console.log("Updated $fileName");</script>';
+echo "<script>console.log('Updated $fileName');</script>";
 								if ($msg === "") {
 									$msg = "Settings in $fileName saved.";
 									$status->addMessage($msg, 'info');
@@ -523,7 +530,7 @@ echo '<script>console.log("Updated $fileName");</script>';
 
 						if ($fromConfiguration) {
 							$cmd = "${CMD}/check_allsky.sh --fromWebUI";
-							echo "<script>console.log('Running: $cmd');</script>";
+							echo '<script>console.log("Running: ' . $cmd . '");</script>';
 							exec("$cmd 2>&1", $result, $return_val);
 							if ($result != null) {
 								$result = implode("<br>", $result);
@@ -702,6 +709,8 @@ if (false && $debug) { echo "<br>Option $name"; }
 					$status->addMessage($msg, 'danger');
 					continue;
 				}
+				if (substr($type, 0, 7) === "select_")
+					$type = substr($type, 7);
 
 				// Should this setting be displayed?
 				$display = toBool(getVariableOrDefault($option, 'display', "true"));
@@ -976,30 +985,28 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 						$style="padding: 5px 5px 7px 8px;";
 					}
 
+					if (toBool(getVariableOrDefault($option, 'readonly', "false")))
+						$readonly = "readonly";
+					else
+						$readonly = "";
+					
 					echo "\n\t<td $cspan valign='middle' style='$style' align='center'>";
 					// TODO: The popup can get in the way of seeing the value a little.
 					// May want to consider having a symbol next to the field that has the popup.
 					echo "<span title='$popup'>";
 // TODO: add percent sign for "percent"
 					if (in_array($type, ["text", "password", "integer",
-								"float", "color", "percent", "readonly"])) {
-						if ($type == "readonly") {
-							$readonly = "readonly";
-							$t = "text";
-						} else {
-							$readonly = "";
-							// Browsers put the up/down arrows for numbers which moves the
-							// numbers to the left, and they don't line up with text.
-							// Plus, they don't accept decimal points in "float".
-							// So, display numbers as text.
-							if ($type == "integer" || $type == "float" ||
-								$type == "percent" || $type == "color") {
-									$type = "text";
-							}
-							$t = $type;
+								"float", "color", "percent"])) {
+						// Browsers put the up/down arrows for numbers which moves the
+						// numbers to the left, and they don't line up with text.
+						// Plus, they don't accept decimal points in "float".
+						// So, display numbers as text.
+						if ($type == "integer" || $type == "float" ||
+							$type == "color" || $type == "percent") {
+								$type = "text";
 						}
 						echo "\n\t\t<input class='form-control boxShadow settingInput settingInputTextNumber'" .
-							" type='$t' $readonly $readonlyForm name='$name' value='$value' >";
+							" type='$type' $readonly $readonlyForm name='$name' value='$value' >";
 
 					} else if ($type == "widetext"){
 						echo "\n\t\t<input class='form-control boxShadow settingInputWidetext'" .
@@ -1108,4 +1115,3 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 <?php
 }
 ?>
-

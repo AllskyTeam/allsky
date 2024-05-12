@@ -788,6 +788,9 @@ b, strong {
 .markdown-body .mediumPadding li {
 	margin-top: 0.25em;
 }
+.markdown-body .minimalPadding {
+	margin-top: -0.8em;
+}
 .markdown-body .minimalPadding li {
 	margin-top: 0em;
 }
@@ -964,9 +967,14 @@ b, strong {
 	font-family: "Segoe UI","Noto Sans",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
 }
 
+.module-info {
+	/* What should be here? */
+}
 .module-settings {
 	/* What should be here? */
 }
-.module-settings .img {
-	width: 50%;
+.module-settings img, .module-info img {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
 }

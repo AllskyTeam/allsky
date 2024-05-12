@@ -168,7 +168,7 @@
 				</li>
 				<li>Support for some new third-party RPi cameras was added.
 					<blockquote>
-					Run the 
+					Run the
 					<span class="fileName">show_supported_cameras.sh</span>
 					command to see the supported ZWO and RPi cameras.
 					<p>
@@ -192,65 +192,63 @@
 					or if the lens cover lets in some light, e.g., a plastic lens cap.
 				</li>
 				<li>DHCP on the Pi can be configured via the WebUI's
-					<span class="WebUIWebPage">Configure DHCP</span> page.
+					<span class="WebUILink">Configure DHCP</span> page.
 					This is an advanced option that is not used very often.
 				</li>
-				<li>The overlay module debugging output has been modified to make the
-					logs easier to read.</li>
-				<li>You can now create different overlays for daytime and nighttime captures.
-					The new <span class="managerName">Overlay Manager</span> is available
-					from the main toolbar in the <span class="editorName">Overlay Editor</span>.
-					Several overlay templates for different cameras
-					are provided which can be customised to your requirements.
-					If you have customised the overlay then during the upgrade process
-					a new custom overlay will be created for you and assigned to both
-					day and nighttime captures.
-					If you have not customised the overlay then Allsky will
-					attempt to use the best overlay for your camera.</li>
-				<li>The <span class="editorName">Overlay Editor</span> will display a warning
-					if any of the fields on the overlay are outside the image area.
-					The fields can be "fixed" which will move them into the bounds of the image.
-					See <a href="https://github.com/AllskyTeam/allsky/issues/3317"
-						target="_blank" allsky="true" external="true">
-						[BUG] If a field is outside the image ...</a>
-					</li>
-				<li>If images are not being captured the
-					<span class="editorName">Overlay Editor</span> will not start and
-					will display a message and wait until images are being captured.
-					This prevents a (usually much smaller) notification image from being used
-					as the <span class="editorName">Overlay Editor</span> background.</li>
-				<li>Extra Module Changes.
-					See <a href="/documentation/modules/modules.html" target="_blank"
-						allsky="true" external="true">Modules Documentation</a> for more details.
+				<li>Overlay changes:
+					<ul>
+						<li>The overlay module debugging output is easier to read.</li>
+						<li>You can now create different overlays for daytime and nighttime captures.
+							The new <span class="managerName">Overlay Manager</span>
+							is available from the main toolbar in the <span class="editorName">Overlay Editor</span>.
+							Several overlay templates for different cameras are provided which can be customised to your requirements.
+              If you have customised the overlay then during the
+							upgrade process a new custom overlay will be created for you and assigned to both
+							daytime and nighttime captures.
+              If you have not customised the overlay then Allsky will
+							attempt to use the best overlay for your camera.</li>
+						<li>The <span class="editorName">Overlay Editor</span>
+							will display a warning if any of the fields on the overlay are outside the image area.
+							The fields can be fixed which will move them into the bounds of the image.
+							See <a href="https://github.com/AllskyTeam/allsky/issues/3317"
+								allsky="true" external="true">[BUG] If a field is outside the image ...</a></li>
+						<li>If images are not being captured the
+					    <span class="editorName">Overlay Editor</span> will not start and
+		    			will display a message and wait until images are being captured.
+		    			This prevents a (usually much smaller) notification image from being used
+		    			as the <span class="editorName">Overlay Editor</span> background.</li>
+					</ul>
+				<li>See <a href="/documentation/modules/modules.html" allsky="true" external="true">Modules Documentation</a>
+					for details on Extra Module changes.
 				<li>New Modules:
 					<ul class="minimalPadding">
-						<li><b>Allsky AI</b> - AI detection of cloud cover</li>
-						<li><b>Allsky Fans</b> - Controls a fan based upon cpu temperature</li>
-						<li><b>Allsky Border</b> - Expands an image to include additional borders </li>
-						<li><b>Allsky HDD Temp</b> - Uses SMART to retrive hard drive temperatures</li>
-						<li><b>Allsky ina3221</b> - Allows current and voltage measurements</li>
-						<li><b>Allsky influxdb</b> - Allows data to be written to uinfluxdb</li>
-						<li><b>Allsky light</b> - Determines light levels using a TSL2591</li>
-						<li><b>Allsky LightGraph</b> - Displays a graph of day and night</li>
-						<li><b>Allsky ltr390</b> - Measures UV levels</li>
-						<li><b>Allsky mlx90640</b> - Captures an IR image of the sky (very experimental)</li>
-						<li><b>Allsky Publish Data</b> - Publish AllSKY data to Redis, MQTT or REST</li>
-						<li><b>Allsky Temp</b> - Reads upto three temperature sensors
+						<li><strong>Allsky AI</strong> - Detects cloud cover using AI</li>
+						<li><strong>Allsky Fans</strong> - Controls a fan based upon cpu temperature</li>
+						<li><strong>Allsky Border</strong> - Expands an image to include additional borders </li>
+						<li><strong>Allsky HDD Temp</strong> - Retrives hard drive temperatures using SMART</li>
+						<li><strong>Allsky ina3221</strong> - Allows current and voltage measurements</li>
+						<li><strong>Allsky influxdb</strong> - Allows data to be written to uinfluxdb</li>
+						<li><strong>Allsky light</strong> - Determines light levels using a TSL2591</li>
+						<li><strong>Allsky LightGraph</strong> - Displays a graph of day and night</li>
+						<li><strong>Allsky ltr390</strong> - Measures UV levels</li>
+						<li><strong>Allsky mlx90640</strong> - Captures an IR image of the sky (very experimental)</li>
+						<li><strong>Allsky Publish Data</strong> - Publish Allsky data to Redis, MQTT, or REST</li>
+						<li><strong>Allsky Temp</strong> - Reads up to three temperature sensors
 							and controls a gpio pin based upon the temperature</li>
 					</ul>
-					</li>
+				</li>
 			</ul>
 
 			<h4>New Settings</h4>
 			<ul class="mediumPadding">
 				<li><span class="WebUISetting">Images Sort Order</span>
 					determines the sort order of the images on the
-					WebUI's <span class="WebUIWebPage">Images</span> page.
+					WebUI's <span class="WebUILink">Images</span> page.
 				</li>
 				<li><span class="WebUISetting">Show Updated Message</span>
 					allows hiding the
 					<span class="alert-info">Daytime images updated every...</span>
-					message on the WebUI's <span class="WebUIWebPage">Live View</span> page.
+					message on the WebUI's <span class="WebUILink">Live View</span> page.
 				</li>
 				<li><span class="WebUISetting">Nighttime Capture</span> and
 					<span class="WebUISetting">Nighttime Save</span>
@@ -373,7 +371,7 @@
 						<span class="shSetting">IMAGE_DIR</span> to
 						<code>${ALLSKY_WEBSITE}</code>
 						when only a local Website exists.
-					<li>The WebUI's <span class="WebUIWebPage">Images</span> page
+					<li>The WebUI's <span class="WebUILink">Images</span> page
 						now only shows icons when there is at least one file
 						of the specified type.
 						For example, if there is a keogram for the current date the
@@ -446,8 +444,8 @@
 						<ul>
 							<li>Add <span class="WebUIValue">--metadata &nbsp; /home/pi/allsky/config/overlay/extra/libcamera.json</span>
 								to the <span class="WebUISetting">Extra Arguments</span> setting in the WebUI.</li>
-							<li>In the <span class="WebUIWebPage">Overlay Editor's</span>
-								<span class="ManagerName">Variable Manager</span>,
+							<li>In the <span class="WebUILink">Overlay Editor's</span>
+								<span class="managerName">Variable Manager</span>,
 								look for <span class="variableManagerVariableName">AS_SensorTemperature</span> in the
 								<span class="variableManagerTab">All Variables</span> tab.
 								Click on <span class="btn btn-primary btn-small">+</span>
@@ -495,7 +493,7 @@
 						it may take many images before it gets a good one to save.
 						The new warning image makes it obvious Allsky hasn't hung.
 					</li>
-					<li>In the WebUI's <span class="WebUIWebPage">Editor</span> page,
+					<li>In the WebUI's <span class="WebUILink">Editor</span> page,
 						the buttons (e.g., "Save changes") are now at the top of the page
 						and stay there as you scroll down.
 						A new "Top" button appears at the bottom of the page after you scroll

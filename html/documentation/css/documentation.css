@@ -967,6 +967,8 @@ b, strong {
 .module-settings {
 	/* What should be here? */
 }
-.module-settings .img {
-	width: 50%;
+.module-settings img {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
 }

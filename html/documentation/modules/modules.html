@@ -27,9 +27,7 @@
 		<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
 		<div class="Layout-main markdown-body" id="mainContents">
 
-
-			<p><strong>Modules</strong> provide functionality that can be used to enhance
-				images created by Allsky.
+			<p><strong>Modules</strong> can be used to enhance images created by Allsky.
 				Different modules perform different tasks,
 				and the <span class="managerName">Module Manager</span>
 				allows you to control which modules run and when.
@@ -55,25 +53,22 @@
 				<li>Some modules are shown as <strong>experimental</strong>.
 					Before using these modules you should ensure that you are proficient
 					in analysing Linux log files.
-					Experimental modules can be unstable and as such may "break" Allsky.
-					In the <span class="managerName">Module Manager</span>
-					settings you can enable/disable showing experimental modules.</li>
+					Experimental modules can be unstable and as such may "break" Allsky.</li>
 				<li>Some modules are designed to operate with external hardware,
 					typically connected to the Pi's GPIO pins.
-					Before attempting to use any of these modules you should ensure
-					you have an understanding of interfacing hardware to the PI's GPIO.
+					Before attempting to use any of these modules make sure
+					you have an understanding of interfacing hardware to the PI's GPIO.</li>
 			</ul>
 
-			<p>Please don't be discouraged by the above warnings.
-				The module system is very flexible and allows you to
-				customise the Allsky software to your requirements without having to
-				change any Allsky code.</p>
+			<p>Don't be discouraged by the above warnings -
+				the module system is very flexible and allows you to
+				customise Allsky without having to change any Allsky code.</p>
 
 
 			<h2>Module Flows</h2>
 			<div>
 				<p>Modules are run within <strong>Flows</strong>
-					which determine when the modules are run.
+					which determine when the modules run.
 					Each flow can have a different list of modules that are run
 					and the order in which they are run.
 					The different flows are listed below.
@@ -83,16 +78,16 @@
 					<p>The flows in which modules run are:</p>
 					<ul class="minimalPadding">
 						<li><strong>Daytime Capture</strong> - Modules in this flow
-							are run after every daytime image is captured and saved.
+							are run after every daytime image is captured and initially saved.
 						</li>
 						<li><strong>Nighttime Capture</strong> - Modules in this flow
 							are run after every nighttime image is captured and saved.
 						</li>
 						<li><strong>Day to Night Transition</strong> - Modules in this flow
 							are run when Allsky switches from Daytime to Nighttime capturing per the
-							<span class="WebUISetting">latitude</span>,
-							<span class="WebUISetting">longitude</span>, and
-							<span class="WebUISetting">angle</span>
+							<span class="WebUISetting">Latitude</span>,
+							<span class="WebUISetting">Longitude</span>, and
+							<span class="WebUISetting">Angle</span>
 							you've defined in the WebUI.
 						</li>
 						<li><strong>Night to Day Transition</strong> - Modules in this flow
@@ -110,15 +105,13 @@
 			</div>
 
 
-			<h2>The 'Module Manager'</h2>
+			<h2>The <span class="managerName">Module Manager</span></h2>
 			<div>
-				<p>The <span class="managerName">Module Manager</span>
-					is the main interface for managing the modules and in
-					which flows they are used.</p>
+				<p>Modules are managed via the <span class="managerName">Module Manager</span>.</p>
 				<details>
 					<summary></summary>
-					<img allsky="true" loading="lazy" src="Module-Manager.png" alt="Module Manager" />
-
+					<img allsky="true" class="imgCenter" loading="lazy"
+						src="Module-Manager.png" alt="Module Manager" />
 					<table class="module-info vtop">
 						<thead>
 							<tr>
@@ -131,42 +124,47 @@
 							<tr>
 								<td class="WebUISetting">Save</td>
 								<td><i class="fa fa-save fa-lg"></i></td>
-								<td>This will be enabled when any changes have been made</td>
+								<td>This is enabled when any changes are made.</td>
 							</tr>
 							<tr>
 								<td class="WebUISetting">Upload</td>
 								<td><i class="fa-solid fa-upload"></i></td>
-								<td>This will allow you to upload a zip file containing a new or updated module.
-									Please see the section on uploading a modules for more details on
-									how to use this feature.</td>
+								<td>This allows you to upload a zip file containing
+									a new or updated module.
+									Please see the section on uploading a modules for
+									more details on how to use this feature.</td>
 							</tr>
 							<tr>
 								<td class="WebUISetting">Flow</td>
 								<td></td>
-								<td>The flow you wish to manage. If you have un saved changes from the current
+								<td>The flow you wish to manage.
+									If you have unsaved changes from the current
 									flow you will be prompted to save them before switching</td>
 							</tr>
 							<tr>
 								<td class="WebUISetting">Settings</td>
 								<td><i class="fa-solid fa-gear"></i></td>
-								<td>Displays the settings dialog for the <span class="managerName">Module Manager</span></td>
+								<td>Displays the settings dialog for the
+									<span class="managerName">Module Manager</span>.</td>
 							</tr>
 							<tr>
 								<td class="WebUISetting">Debug</td>
 								<td><i class="fa-solid fa-bug"></i></td>
-								<td>Displays the debug data for modules. This icon is only visible if its been
-									enabled in the settings</td>
+								<td>Displays the debug data for modules.
+									This icon is only visible if its been
+									enabled in the Module Options.</td>
 							</tr>
 							<tr>
 								<td class="WebUISetting">Reset</td>
 								<td><i class="fa-solid fa-rotate-right"></i></td>
-								<td>Resets the selected flow to the installation default</td>
+								<td>Resets the selected flow to the installation default.</td>
 							</tr>
 							<tr>
 								<td class="WebUISetting">Restore</td>
 								<td><i class="fa-solid fa-upload"></i></td>
-								<td>Restores the flow to the last backup. This option will only be visible if there is a
-									restore poitn available</td>
+								<td>Restores the flow to the last backup.
+									This option is only be visible if there is a
+									restore point available.</td>
 							</tr>
 
 
@@ -175,65 +173,81 @@
 
 					<h4>Selecting a flow</h4>
 					<div>
-						<p>From the drop down list select the flow that you wish to amend. If there are unsaved
-							changes for the current flow then you will be prompted to save them before switching
-							to a new flow. The current day/night flow will automatically be selected depending
-							upon the current time of day
+						<p>From the drop down list select the flow that you wish to amend.
+							If there are unsaved changes for the current flow then
+							you will be prompted to save them before switching to a new flow.
+							The current day/night flow will automatically be selected depending
+							upon the current time of day.
 						</p>
 					</div>
 
 					<h4>Uploading a module</h4>
-					<blockquote>WARNING: Please only upload modules from trusted sources. All modules uploaded are done
-						so at your own risk.</blockquote>
-					<p>To upload a module it must be contained within a zip file with the same name as the module. So
-						for example if I have a module called allsk_test.py the zip file must be called allsky_test.zip
+					<blockquote class="warning">Please only upload modules from trusted sources.
+						All modules uploaded are done so at your own risk.</blockquote>
+					<p>To upload a module it must be in a zip file with the same name as the module.
+						For example, if you have a module called
+						<span class="fileName">allsk_test.py</span> the zip file must
+						be called <span class="fileName">allsky_test.zip</span>.
 					</p>
 
 					<h4>Enabling a module</h4>
 					<div>
-						<p>To enable a module drag it from the Available column to the Enabled column. The
-							module will become active after the flow has been saved.</p>
-						<p>Most modules will require some configuration. Modules can only be configured after
-							they have been moved to the Enabled column, clicking the settings button will
-							display any configuration options for the module</p>
-						<p><strong>Don't</strong> forget to ensure the enabled checkbox is selected otherwise
-							the module will not run. You can set modules to be automatically enabled when
-							dragging them to the enabled column by setting the appropriate options in the module
-							editor settings</p>
+						<p>To enable a module drag it from the <strong>Available Modules</strong>
+							column to the <strong>Selected Modules</strong> column
+							and select the "Enabled" checkbox.
+							The module will become active after the flow has been saved.
+							You can set modules to be automatically enabled when dragging
+							them to the <strong>Selected Modules</strong> column in the
+							<span class="editorName">Module Editor</span> Module Options.</p>
+						<p>Most modules require some configuration after they have
+							been moved to the <strong>Selected Modules</strong> column.
+							Clicking the
+							<span class="btn btn-primary btn-not-real btn-small">Settings</span>
+							button will display any configuration options for the module.</p>
 					</div>
 
 					<h4>Disabling a Module</h4>
 					<div>
-						<p>There are two ways to disable a module</p>
-						<ul>
-							<li>Drag the module to the Available column - This will disable the module and lose
-								any settings for it</li>
-							<li>Uncheck the enable checkbox - This will disable the module but retain any
-								settings. This is the preferred method if you just wish to temporarily disable a
-								module</li>
+						<p>There are two ways to disable a module:</p>
+						<ul class="minimalPadding">
+							<li>Drag the module to the <strong>Available Modules</strong> column -
+								this will disable the module and lose any settings for it.</li>
+							<li>Uncheck the "Enabled" checkbox -
+								this will disable the module but retain any settings.
+								This is the preferred method if you just wish
+								to temporarily disable a module.</li>
 						</ul>
 
 						<h4>Setting the Module execution order</h4>
-						<p>The modules will be run in the order they appear in the Enabled column. To change the
-							order simply drag the modules up or down the list.</p>
-						<p>It is <strong>not</strong> possible to move any modules displayed in red</p>
+						<p>The modules are run in the order they appear in the
+							<strong>Selected Modules</strong> column.
+							To change the order simply drag the modules up or down the list.
+							Modules
+							<span style="color: white; background-color: #DF0000;">
+								highlighted in red</span>
+							can not be moved.</p>
 					</div>
 
-					<h3>Module Manager Settings</h3>
+					<h4><span class="managerName">Module Manager</span> Settings</h4>
 					<div>
 						<table class="module-settings vtop">
 							<tr>
-								<td><img allsky="true" loading="lazy" src="module-manager-settings.png"
-										alt="Module manager Settings" /></td>
+								<td class="img">
+									<img allsky="true" loading="lazy" alt="Module manager Settings"
+										src="module-manager-settings.png" /></td>
 								<td>
 									<ul>
-										<li><strong>Auto Enable</strong> - If enabled then when a module is
-											added to the 'Selected' column it is enabled</li>
-										<li><strong>Debug Mode</strong> - When enabled a debug option is
-											available in the toolbar which will show the results and execution
-											time for each module</li>
-										<li><strong>Periodic Timer</strong> - How frequently, in seconds, the periodic
-											flow is run</li>
+										<li><strong>Auto Enable</strong> -
+											Automatically enables modules when added to the
+											<strong>Selected Modules</strong> column.</li>
+										<li><strong>Debug Mode</strong> -
+											When enabled the debug option
+											<i class="fa-solid fa-bug"></i>
+											is available in the toolbar which will show
+											the results and execution time for each module.</li>
+										<li><strong>Periodic Timer</strong> -
+											How frequently, in seconds, the periodic
+											flow is run.</li>
 									</ul>
 								</td>
 							</tr>
@@ -245,13 +259,16 @@
 
 			<h2 id="Modules">Modules</h2>
 			<div>
-				<p>Modules form the heart of the module manager and there is a wide variety available. In this
-					section each module is described in details along with all of the available settings.</p>
-				<h3>Core Modules</h3>
+				<p>Modules form the heart of the module manager and there is a
+				wide variety available.
+				In this section each module is described in details along with all
+				of the available settings.</p>
+
+				<h3>Allsky Modules</h3>
 				<details>
 					<summary></summary>
-					<p>The Core Modules are installed along with the main Allsky installer. The available
-						modules are</p>
+					<p>The Allsky Modules are installed along with the main Allsky installer.
+						The available modules are:</p>
 
 					<h4>Load Image</h4>
 					<table class="module-info vtop">
@@ -1663,7 +1680,6 @@
 				</details>
 			</div>
 
-
 			<h2>Module Performance / Debugging</h2>
 			<div>
 				<p>Its important that modules do not take too much time to run as this will cause load issues on
@@ -1677,7 +1693,7 @@
 					<blockquote><strong>TIP</strong> - When installing a new module ensure debug mode is enabled
 						in the <span class="managerName">Module Manager Settings and monitor how long the new module is taking and what
 						effect its having on the overall flow time</blockquote>
-					<h3>The Module Manager Debug Window</h3>
+					<h3>The <span class="managerName">Module Manager</span> Debug Window</h3>
 					<table class="module-settings vtop">
 						<tr>
 							<td><img allsky="true" loading="lazy" src="Module-Manager-Debug.png"
@@ -2122,7 +2138,7 @@
 		"author": "Alex Greenland",
 		"authorurl": "https://github.com/allskyteam",
 		"changes": "Add AHTx0 i2c sensor"
-	},            
+	},
 	{
 		"author": "Andreas Schminder",
 		"authorurl": "https://github.com/Adler6907",
@@ -2139,7 +2155,7 @@ metaData = {
     "name": "All Sky Boilerplate",
     "description": "Example module for AllSky",
     "module": "allsky_boilerplate",
-    "version": "v1.0.0",    
+    "version": "v1.0.0",
     "events": [
         "day",
         "night",
@@ -2148,11 +2164,11 @@ metaData = {
         "nightday",
         "periodic"
     ],
-    "experimental": "false",    
+    "experimental": "false",
     "arguments":{
         "textfield": "",
         "select": "value1",
-        "checkbox": "",        
+        "checkbox": "",
         "number": "10",
         "gpio": "",
         "image": "",
@@ -2164,7 +2180,7 @@ metaData = {
             "description": "Text Field",
             "help": "Example help for the text field",
             "tab": "Field Types"
-        },  
+        },
         "select" : {
             "required": "false",
             "description": "Select Field",
@@ -2173,7 +2189,7 @@ metaData = {
             "type": {
                 "fieldtype": "select",
                 "values": "None,value1,value2,value3"
-            }                
+            }
         },
         "checkbox" : {
             "required": "false",
@@ -2182,8 +2198,8 @@ metaData = {
             "tab": "Field Types",
             "type": {
                 "fieldtype": "checkbox"
-            }          
-        },        
+            }
+        },
         "number" : {
             "required": "true",
             "description": "Number Field",
@@ -2194,7 +2210,7 @@ metaData = {
                 "min": 0,
                 "max": 1000,
                 "step": 1
-            }          
+            }
         },
         "gpio": {
             "required": "true",
@@ -2203,32 +2219,32 @@ metaData = {
             "tab": "Field Types",
             "type": {
                 "fieldtype": "gpio"
-            }           
+            }
         },
         "image" : {
             "required": "false",
             "description": "Image Field",
             "help": "Example help for the image field",
-            "tab": "Field Types",            
+            "tab": "Field Types",
             "type": {
                 "fieldtype": "image"
-            }                
+            }
         },
         "roi": {
             "required": "true",
             "description": "Region of Interest field",
             "help": "Help for the region of interest field",
-            "tab": "Field Types",            
+            "tab": "Field Types",
             "type": {
                 "fieldtype": "roi"
-            }            
+            }
         },
         "textfield1": {
             "required": "true",
             "description": "Text Field1",
             "help": "Example help for the text field in a new tab",
             "tab": "Another Tab"
-        }                                                              
+        }
     },
     "enabled": "false",
     "changelog": {
@@ -2257,13 +2273,13 @@ metaData = {
                     "Change 1",
                     "Change 2"
                 ]
-            },            
+            },
             {
                 "author": "Andreas Schminder",
                 "authorurl": "https://github.com/Adler6907",
                 "changes": "Change 1"
             }
-        ]                                
+        ]
     },
     "businfo": [
         "i2c"
@@ -2293,7 +2309,7 @@ metaData = {
                 "author": "Alex Greenland",
                 "authorurl": "https://github.com/allskyteam",
                 "changes": "Change 1"
-            },            
+            },
             {
                 "author": "JOhn Doe",
                 "authorurl": "https://github.com/allskyteam",
@@ -2303,8 +2319,8 @@ metaData = {
                     "Change 3"
                 ]
             }
-        ]                                       
-    }                   
+        ]
+    }
 }
 </pre>							
 							</td>
@@ -2478,4 +2494,3 @@ metaData = {
 
 </html>
 <script> includeHTML(); </script>
-

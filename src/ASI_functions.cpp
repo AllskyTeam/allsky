@@ -1039,7 +1039,7 @@ void processConnectedCameras()
 		closeUp(EXIT_NO_CAMERA);
 	}
 
-	if (CG.numCameras > 1)
+	if (CG.numCameras > 1 && CG.debugLevel >= 4)
 		printf("\nAttached Cameras:\n");
 
 	ASI_CAMERA_INFO info;
@@ -1061,7 +1061,7 @@ void processConnectedCameras()
 			continue;
 		}
 
-		if (CG.numCameras > 1)
+		if (CG.numCameras > 1 && CG.debugLevel >= 4)
 			printf("  - %d", numThisType);
 
 		char *cm;
@@ -1072,7 +1072,7 @@ void processConnectedCameras()
 #else
 		cm = info.Name;
 #endif
-		if (CG.numCameras > 1)
+		if (CG.numCameras > 1 && CG.debugLevel >= 4)
 		{
 			printf(" %s ", cm);
 			printf(" %s\n", numThisType == CG.cameraNumber ? " (selected)" : "");

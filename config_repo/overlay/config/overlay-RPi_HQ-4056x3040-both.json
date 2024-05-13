@@ -2,46 +2,47 @@
     "fields": [
         {
             "label": "${DATE}  ${TIME}",
-            "x": 227,
+            "x": 260,
             "y": 46,
             "id": "oe-field-0",
             "format": "%d-%m-%Y,%H:%M:%S",
             "strokewidth": 0,
             "sample": "DATE,TIME",
-            "tlx": 19,
-            "tly": 20,
-            "fill": "#ff0000"
+            "tlx": 20,
+            "tly": 16,
+            "fill": "#ff0000",
+            "fontsize": 60
         },
         {
             "label": "Exposure: ${sEXPOSURE}",
-            "x": 237,
+            "x": 309,
             "y": 98,
             "id": "oe-field-1",
-            "fontsize": 36,
+            "fontsize": 48,
             "strokewidth": 0,
-            "tlx": 19,
-            "tly": 80
+            "tlx": 20,
+            "tly": 74
         },
         {
             "label": "Gain: ${GAIN}",
-            "x": 134,
+            "x": 172,
             "y": 158,
             "id": "oe-field-2",
-            "fontsize": 36,
+            "fontsize": 48,
             "strokewidth": 0,
-            "tlx": 19,
-            "tly": 140,
+            "tlx": 20,
+            "tly": 134,
             "format": "{:.2f}"
         },
         {
-            "label": "${CAMERA_TYPE} ${CAMERA_MODEL}",
-            "x": 279,
+            "label": "${CAMERA_TYPE}  ${CAMERA_MODEL}",
+            "x": 396,
             "y": 214,
             "id": "oe-field-3",
-            "fontsize": 28,
+            "fontsize": 40,
             "strokewidth": 0,
-            "tlx": 19,
-            "tly": 200,
+            "tlx": 20,
+            "tly": 194,
             "sample": "RPi HQ"
         }
     ],

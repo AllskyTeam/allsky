@@ -7,7 +7,6 @@ astral
 pytz
 scipy<=1.11.3
 paho-mqtt
-photutils
 astropy
 suncalc
 Adafruit-Blinka

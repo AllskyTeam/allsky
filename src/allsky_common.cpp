@@ -16,6 +16,7 @@
 #include <fstream>
 #include <stdarg.h>
 #include <sys/types.h>
+#include <typeinfo>
 #include <sys/wait.h>
 #include <stdio.h>
 #include <fcntl.h>
@@ -1995,7 +1996,8 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 	// producing Camera Capabilities info, in which case we need cg->CC_saveFile set so
 	// we know where to put the info.
 	// If we are in "help" mode then we won't take picture AND won't produce CC info.
-	if (cg->saveDir == NULL && cg->CC_saveFile == NULL && ! cg->help) {
+	if (cg->saveDir == NULL && cg->CC_saveFile == NULL &&
+			! cg->help && called_from_getConfigFileArguments) {
 		cg->saveDir = cg->allskyHome;
 		Log(-1, "*** %s: WARNING: No directory to save images was specified. Using: [%s]\n",
 			cg->ME, cg->saveDir);

@@ -821,6 +821,7 @@ function get_lat_long()
 	if [[ -z ${LATITUDE} || -z ${LONGITUDE} ]]; then
 		MSG="Latitude and Longitude need to be set in the WebUI before Allsky can start."
 		display_msg --log warning "${MSG}"
+		return 1
 	fi
 	return 0
 }

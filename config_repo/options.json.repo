@@ -2501,6 +2501,7 @@
 },
 
 {
-"name" : "XX_END_XX"
+"name" : "XX_END_XX",
+"type" : "boolean"
 }
 ]

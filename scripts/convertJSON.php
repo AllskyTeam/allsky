@@ -18,7 +18,7 @@
 
 // --capture-only
 //		Limit output to only settings used by the capture_* programs.
-//		which will have this field in the options file:		"capture" : true
+//		Those settings have this field in the options file:		"capture" : true
 //		Without this option ALL settings/values in the settings file are output.
 
 // --carryforward
@@ -46,6 +46,22 @@
 //			- Create variable with name of setting.
 
 include_once("functions.php");
+
+function quoteIt($string, $type)
+{
+	if ($type === "boolean" || $type === "float" ||
+		$type === "integer" || $type === "percent") {
+
+		return($string);
+	}
+
+	// Quote using single quotes so the shell doesn't expand anything.
+	// There's no way to quote a single quote so change:
+	//		how's
+	//	to
+	//		'how'"'"'s'
+	return("'" . str_replace("'", "'\"'\"'", $string) . "'");
+}
 
 $debug = false;
 $settings_file = null;
@@ -138,6 +154,8 @@ foreach ($options as $opt => $val) {
 if (! $ok || ($convert && $capture_only))
 	exit(1);
 
+// =============================== main part of program =====================
+//
 if ($settings_file === null) {
 	// use default
 	$settings_file = getSettingsFile();
@@ -150,43 +168,44 @@ if ($settings_array === null) {
 
 if ($convert) $shell = false;		// "convert" displays json; the shell needs shell format
 
+if ($options_file === null) {
+	$options_file = getOptionsFile();	// use default file
+}
+
+$errorMsg = "ERROR: Unable to process options file '$options_file'.";
+$options_array = get_decoded_json_file($options_file, true, $errorMsg);
+if ($options_array === null) {
+	exit(3);
+}
+
+if ($shell) $label_array = Array();
+
 $type_array = Array();
-if ($capture_only || $carryforward || $convert || $include_not_in_options || $order ||
-		$shell || $type_to_output !== "") {
 
-	if ($options_file === null) {
-		$options_file = getOptionsFile(); // use default
+foreach ($options_array as $option) {
+	$type = getVariableOrDefault($option, 'type', "");
+	if ($type_to_output !== "" && $type_to_output !== $type) {
+		continue;
 	}
 
-	$errorMsg = "ERROR: Unable to process options file '$options_file'.";
-	$options_array = get_decoded_json_file($options_file, true, $errorMsg);
-	if ($options_array === null) {
-		exit(3);
+	$name = $option['name'];
+	if ($carryforward && getVariableOrDefault($option, 'carryforward', "false") === "true") {
+		echo "$prefix$name\t$type\n";
+		continue;
 	}
-	if ($shell) $label_array = Array();
-	foreach ($options_array as $option) {
-		$type = getVariableOrDefault($option, 'type', "");
-		if ($type_to_output !== "" && $type_to_output !== $type) {
-			continue;
-		}
 
-		$name = $option['name'];
-		if ($carryforward && getVariableOrDefault($option, 'carryforward', "false") === "true") {
-			echo "$prefix$name\t$type\n";
-			continue;
+	$type_array[$name] = $type;
+	if ($shell) {
+		$p = getVariableOrDefault($option, 'label_prefix', "");
+		if ($p !== "") {
+			$p .= " ";
 		}
-
-		$type_array[$name] = $type;
-		if ($shell) {
-			$p = getVariableOrDefault($option, 'label_prefix', "");
-			if ($p !== "") {
-				$p .= " ";
-			}
-			$label_array[$name] = $p . getVariableOrDefault($option, 'label', "");
-		}
+		$label_array[$name] = $p . getVariableOrDefault($option, 'label', "");
 	}
 }
+
 if ($carryforward) {
+	// Did all the work above.
 	exit(0);
 }
 
@@ -197,44 +216,24 @@ if ($type_to_output !== "") {
 	exit(0);
 }
 
-function quoteIt($string, $type)
-{
-	if ($string === "" ||
-			$type === "boolean" || $type === "float" ||
-			$type === "integer" || $type === "percent") {
-		return($string);
-	}
-
-	// Quote using single quotes so the shell doesn't expand anything.
-	// There's no way to quote a single quote so change:
-	//		how's
-	//	to
-	//		'how'"'"'s'
-	return("'" . str_replace("'", "'\"'\"'", $string) . "'");
-}
-
-// =============================== main part of program =====================
-
 if ($capture_only) {
+	// Output only those settings and their values that are used by the capture program.
+	// Order isn't important.
 	foreach ($options_array as $option) {
-		$type = getVariableOrDefault($option, 'type', "");
-
-		// These aren't stored in the settings file.
-		if (substr($type, 0, 6) == "header" || $type == "")
+		if (getVariableOrDefault($option, 'usage', "") != "capture")
 			continue;
 
-		if (getVariableOrDefault($option, 'usage', "") == "capture") {
-			$name = $option['name'];
-			$val = getVariableOrDefault($settings_array, $name, null);
-			if ($val !== null) {
-				if ($shell) {
-					$val = quoteIt($val, $type);
-					$label = getVariableOrDefault($label_array, $name, "");
-					$val .= "; $prefix${name}_label=" . quoteIt($label, "text");
-				}
-				echo "$prefix$name$delimiter$val\n";
-			}
+		$name = $option['name'];
+		$val = getVariableOrDefault($settings_array, $name, null);
+		if ($val === null)
+			continue;
+
+		if ($shell) {
+			$val = quoteIt($val, $type_array[$name]);
+			$label = getVariableOrDefault($label_array, $name, "");
+			$val .= "; $prefix${name}_label=" . quoteIt($label, "text");
 		}
+		echo "$prefix$name$delimiter$val\n";
 	}
 	exit(0);
 }
@@ -243,55 +242,18 @@ if ($capture_only) {
 if ($convert || $order) {
 	$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
 
-	// Current settings my have uppercase so convert to lowercase so the
-	// getVariableOrDefault() below finds the setting.
-
 	if ($convert) {
+		// Convert settings names to lowercase.
+		// Make sure booleans are output without quotes.
+		// $mode handles no quotes around numbers.
+		//
 		$a = Array();
-		foreach ($settings_array as $setting => $value) {
-			if ($setting !== $endSetting)
-				$setting = strtolower($setting);
-			$a[$setting] = $value;
+		foreach ($settings_array as $name => $value) {
+			$name = strtolower($name);
+			$a[$name] = $value;
 		}
 	} else {
 		$a = $settings_array;
-	}
-
-	$new_settings_array = Array();
-	foreach ($options_array as $option) {
-		$name = $option['name'];
-
-		// If needed, skip any option not in the settings file.
-		if ($only_in_settings_file &&
-				getVariableOrDefault($a, $name, null) === null) {
-			continue;
-		}
-
-		$type = getVariableOrDefault($option, 'type', "");
-		if ($type === "boolean") {
-			$val = toBool(getVariableOrDefault($a, $name, "false"));
-		} else {
-			$val = getVariableOrDefault($a, $name, null);
-			if ($val === null) {
-				$val = getVariableOrDefault($option, 'default', "");
-			}
-		}
-		// $mode handles no quotes around numbers.
-
-		if ($debug) { fwrite(STDERR, "$name: type=$type, val=$val\n"); }
-
-		$new_settings_array[$name] = $val;
-	}
-
-	if ($include_not_in_options) {
-		// Process any setting not in the options array,
-		// which means it's not in $new_settings_array.
-		// This will catch old settings.
-		foreach ($a as $setting => $value) {
-			if (getVariableOrDefault($new_settings_array, $setting, null) === null) {
-				$new_settings_array[$setting] = $a[$setting];
-			}
-		}
 	}
 
 	if ($order) {
@@ -300,26 +262,65 @@ if ($convert || $order) {
 		foreach ($options_array as $option) {
 			$name = $option['name'];
 	
-			// Skip any setting not in settings array (e.g., for other camera type).
-			$v = getVariableOrDefault($a, $name, null);
-			if ($v === null) {
+			// Skip any setting not in settings array.
+			$val = getVariableOrDefault($a, $name, null);
+			if ($val === null)
+				continue;
+
+			if ($type_array[$name] === "boolean")
+				$val = toBool($val);
+
+			$sort_array[$name] = $val;
+		}
+
+		echo json_encode($sort_array, $mode);
+
+	} else {
+
+		$new_settings_array = Array();
+		foreach ($options_array as $option) {
+			$name = $option['name'];
+
+			// If needed, skip any option not in the settings file.
+			if ($only_in_settings_file &&
+					getVariableOrDefault($a, $name, null) === null) {
 				continue;
 			}
 
-			$sort_array[$name] = $v;
+			$type = $type_array[$name];
+			if ($type === "boolean") {
+				$val = toBool(getVariableOrDefault($a, $name, "false"));
+			} else {
+				$val = getVariableOrDefault($a, $name, null);
+				if ($val === null) {
+					$val = getVariableOrDefault($option, 'default', "");
+				}
+			}
+			// $mode handles no quotes around numbers.
+
+			if ($debug) { fwrite(STDERR, "$name: type=$type, val=$val\n"); }
+
+			$new_settings_array[$name] = $val;
 		}
 
-		$new_settings_array = $sort_array;
-	}
+		if ($include_not_in_options) {
+			// Process any setting not in the options array,
+			// which means it's not in $new_settings_array.
+			// This will catch old settings.
+			foreach ($a as $setting => $value) {
+				if (getVariableOrDefault($new_settings_array, $setting, null) === null) {
+					$new_settings_array[$setting] = $a[$setting];
+				}
+			}
+		}
 
-	echo json_encode($new_settings_array, $mode);
+		echo json_encode($new_settings_array, $mode);
+	}
 
 } else {
 	// Booleans are either 1 for true, or "" for false, so convert to "true" and "false".
 	foreach ($settings_array as $name => $val) {
-		if ($name === $endSetting) continue;
-
-		$type = getVariableOrDefault($type_array, strtolower($name), "");
+		$type = $type_array[$name];
 		if ($type == "boolean") {
 			// use "==" to catch numbers and booleans
 			if ($val == 1)

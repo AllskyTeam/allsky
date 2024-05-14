@@ -23,7 +23,7 @@
 # The first field in every data entry lists what type of line it is:
 #	camera, libcamera, raspistill
 
-camera	imx477	0	RPi HQ	0	3040	4056	ASI_TRUE	BAYER_RG	1 2 0	ASI_IMG_RGB24 ASI_IMG_END	1.55	ASI_FALSE	12	ASI_TRUE	ASI_FALSE
+camera	imx477	0	HQ	0	3040	4056	ASI_TRUE	BAYER_RG	1 2 0	ASI_IMG_RGB24 ASI_IMG_END	1.55	ASI_FALSE	12	ASI_TRUE	ASI_FALSE
 
 # libcamera
 libcamera	Gain	Gain	16.0	1.0	1.0	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_GAIN
@@ -55,7 +55,7 @@ raspistill	End
 
 # There are many versions of the imx708 (_wide, _wide_noir, _noir, etc.) so just
 # check for imx708 (6 characters).
-camera	imx708	6	RPi Module 3	0	2592	4608	ASI_TRUE	BAYER_RG	1 2 0	ASI_IMG_RGB24 ASI_IMG_END	1.4	ASI_FALSE	10	ASI_TRUE	ASI_TRUE
+camera	imx708	6	Module 3	0	2592	4608	ASI_TRUE	BAYER_RG	1 2 0	ASI_IMG_RGB24 ASI_IMG_END	1.4	ASI_FALSE	10	ASI_TRUE	ASI_TRUE
 
 libcamera	Gain	Gain	16.0	1.122807	1.122807	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_GAIN
 libcamera	Exposure	Exposure Time (us)	112015553	26	10000	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_EXPOSURE
@@ -73,7 +73,7 @@ libcamera	End
 raspistill	End
 
 
-camera	ov5647	0	RPi Version 1	0	1944	2592	ASI_TRUE	BAYER_RG	1 2 0	ASI_IMG_RGB24 ASI_IMG_END	1.4	ASI_FALSE	10	ASI_FALSE	ASI_FALSE
+camera	ov5647	0	Version 1	0	1944	2592	ASI_TRUE	BAYER_RG	1 2 0	ASI_IMG_RGB24 ASI_IMG_END	1.4	ASI_FALSE	10	ASI_FALSE	ASI_FALSE
 
 libcamera	Gain	Gain	63.9375	1.0	1.0	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_GAIN
 libcamera	Exposure	Exposure Time (us)	969249	130	9000	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_EXPOSURE

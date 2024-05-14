@@ -1484,6 +1484,7 @@ bool getConfigFileArguments(config *cg)
 
 	argv[argc++] = (char *) "getConfigFileArguments()";
 	char *line;
+	(void) getLine(NULL);		// resets the buffer pointer
 	while ((line = getLine(buf)) != NULL)
 	{
 		lineNum++;

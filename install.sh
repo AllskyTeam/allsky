@@ -81,6 +81,7 @@ STATUS_NO_FINISH_REBOOT="Did not reboot to finish installation"
 STATUS_NO_REBOOT="User elected not to reboot"
 STATUS_NO_LOCALE="Desired locale not found"			# exiting due to desired locale not installed
 STATUS_NO_CAMERA="No camera found"					# status of exiting due to no camera found
+STATUS_NO_LAT_LONG="Latitude and/or Longitude not entered"
 STATUS_OK="OK"										# Installation was completed.
 STATUS_NOT_CONTINUE="User elected not to continue"	# Exiting, but not an error
 STATUS_CLEAR="Clear"								# Clear the file
@@ -385,6 +386,12 @@ select_camera_type()
 				MSG="Using Camera Type '${CAMERA_TYPE}' from prior Allsky; not prompting user."
 				display_msg --logonly info "${MSG}"
 				STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
+				if [[ -n ${CAMERA_MODEL} ]]; then
+					STATUS_VARIABLES+=("CAMERA_MODEL='${CAMERA_MODEL}'\n")
+				fi
+				if [[ -n ${CAMERA_NUMBER} ]]; then
+					STATUS_VARIABLES+=("CAMERA_NUMBER='${CAMERA_NUMBER}'\n")
+				fi
 				STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 				return
 			else
@@ -404,6 +411,7 @@ select_camera_type()
 				fi
 				display_msg --log progress "Using prior ${CAMERA} camera${NEW}."
 				STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
+				# Old style doesn't have CAMERA_MODEL or CAMERA_NUMBER.
 				STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 				return
 			else
@@ -433,6 +441,8 @@ select_camera_type()
 
 	display_msg --log progress "Using user-selected ${CAMERA_TYPE} ${CAMERA_MODEL} camera."
 	STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
+	STATUS_VARIABLES+=("CAMERA_MODEL='${CAMERA_MODEL}'\n")
+	STATUS_VARIABLES+=("CAMERA_NUMBER='${CAMERA_NUMBER}'\n")
 	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
 
@@ -496,8 +506,11 @@ do_save_camera_capabilities()
 	CMD+=" cameranumber 'Camera Number' '${PRIOR_CAMERA_NUMBER}' '${CAMERA_NUMBER}'"
 	#shellcheck disable=SC2089
 	CMD+=" cameramodel 'Camera Model' '${PRIOR_CAMERA_MODEL}' '${CAMERA_MODEL}'"
+
+	# cameratype needs to come last.
 	#shellcheck disable=SC2089
 	CMD+=" cameratype 'Camera Type' '${PRIOR_CAMERA_TYPE}' '${CAMERA_TYPE}'"
+
 	MSG="Executing ${CMD}"
 	display_msg "${LOG_TYPE}" info "${MSG}"
 
@@ -756,7 +769,7 @@ check_success()
 # Install the web server.
 install_webserver_et_al()
 {
-	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
+	declare -n v="${FUNCNAME[0]}"
 
 	sudo systemctl stop hostapd 2>/dev/null
 	sudo systemctl stop lighttpd 2>/dev/null
@@ -787,13 +800,6 @@ install_webserver_et_al()
 	check_success $? "Unable to start lighttpd" "${TMP}" "${DEBUG}"
 	# Starting it added an entry so truncate the file so it's 0-length
 	sleep 1; truncate -s 0 "${LIGHTTPD_LOG_FILE}"
-
-	local T="${ALLSKY_SCRIPTS}/functions.php"
-	if [[ ! -f "${T}" ]]; then
-		local F="${ALLSKY_WEBUI}/includes/functions.php"
-		display_msg --logonly info "Creating link to ${F}"
-		ln -s "${F}" "${T}"		|| echo "Unable to ln -s '${F}' '${T}'" >&2
-	fi
 
 	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
@@ -1443,7 +1449,6 @@ prompt_for_prior_Allsky()
 			PRIOR_CAMERA_TYPE=""
 			MSG="If you want your old images, darks, settings, etc. from the prior version"
 			MSG+=" of Allsky, you'll need to manually move them to the new version."
-			MSG+="\nThis can take quite a while."
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 			display_msg --logonly info "Will NOT restore from prior version of Allsky."
 		fi
@@ -1483,6 +1488,14 @@ install_dependencies_etc()
 	# They also take a little while, so hide the output and let the user know.
 
 	display_msg --log progress "Installing dependencies."
+
+	local T="${ALLSKY_SCRIPTS}/functions.php"
+	if [[ ! -f "${T}" ]]; then
+		local F="${ALLSKY_WEBUI}/includes/functions.php"
+		display_msg --logonly info "Creating link to ${F}"
+		ln -s "${F}" "${T}"		|| echo "Unable to ln -s '${F}' '${T}'" >&2
+	fi
+
 	TMP="${ALLSKY_LOGS}/make_deps.log"
 	#shellcheck disable=SC2024
 	sudo make deps > "${TMP}" 2>&1
@@ -2281,7 +2294,12 @@ restore_prior_files()
 	fi
 
 	if [[ -z ${PRIOR_ALLSKY_DIR} ]]; then
-		get_lat_long	# prompt for them to put in new settings file
+		# prompt for them to put in new settings file
+		if ! get_lat_long ; then
+			MSG="Latitude and/or Longitude not entered"
+			display_msg --log info "${MSG}"
+			CONFIGURATION_NEEDED="${STATUS_NO_LAT_LONG}"
+		fi
 		mkdir -p "${ALLSKY_EXTRA}"		# default permissions is ok
 
 		STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
@@ -2520,6 +2538,8 @@ restore_prior_files()
 		display_msg --log info "\n${MSG2}\n"
 		echo -e "\n${MSG2}" >> "${POST_INSTALLATION_ACTIONS}"
 	fi
+
+	return 0
 }
 
 
@@ -3244,7 +3264,7 @@ check_restored_settings()
 	  	  ${COPIED_PRIOR_FTP_SH} == "true" ]]; then
 		# We restored all the prior settings so no configuration is needed.
 		# However, check if a reboot is needed.
-		CONFIGURATION_NEEDED="false"	# global variable
+		CONFIGURATION_NEEDED="false"
 		if [[ ${REBOOT_NEEDED} == "true" ]]; then
 			IMG="RebootNeeded"
 		else
@@ -3260,7 +3280,7 @@ check_restored_settings()
 		AFTER="installation is complete"
 	fi
 	if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "false" ]]; then
-		MSG="Default settings were created for your ${CAMERA_TYPE} camera."
+		MSG="Default settings were created for your ${CAMERA_TYPE} ${CAMERA_MODEL} camera."
 		MSG+="\n\nHowever, you must update them by going to the"
 		MSG+=" 'Allsky Settings' page in the WebUI after ${AFTER}."
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
@@ -3785,9 +3805,13 @@ if [[ ${CONFIGURATION_NEEDED} == "false" ]]; then
 	do_allsky_status "ALLSKY_STATUS_NOT_RUNNING"
 	display_image --custom "lime" "Allsky is\nready to start"
 	display_msg --log progress "\nInstallation is done and Allsky is ready to start."
+elif [[ ${CONFIGURATION_NEEDED} != "true" ]]; then
+	exit_installation 0 "${CONFIGURATION_NEEDED}" ""
 else
+	display_image "ConfigurationNeeded"
 	do_allsky_status "ALLSKY_STATUS_SEE_WEBUI"
-	display_msg --log progress "\nInstallation is done" " but Allsky needs to be configured."
+	MSG=" but Allsky needs to be configured before it will start."
+	display_msg --log progress "\nInstallation is done" "${MSG}"
 	display_msg progress "" "Go to the 'Allsky Settings' page of the WebUI to configure Allsky."
 fi
 

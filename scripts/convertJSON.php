@@ -320,7 +320,7 @@ if ($convert || $order) {
 } else {
 	// Booleans are either 1 for true, or "" for false, so convert to "true" and "false".
 	foreach ($settings_array as $name => $val) {
-		$type = $type_array[$name];
+		$type = getVariableOrDefault($type_array, $name, "text");
 		if ($type == "boolean") {
 			// use "==" to catch numbers and booleans
 			if ($val == 1)

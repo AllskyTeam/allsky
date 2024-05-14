@@ -27,27 +27,25 @@ camera	imx477	0	RPi HQ	0	3040	4056	ASI_TRUE	BAYER_RG	1 2 0	ASI_IMG_RGB24 ASI_IMG
 
 # libcamera
 libcamera	Gain	Gain	16.0	1.0	1.0	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_GAIN
-libcamera	Exposure	Exposure Time (us)	230000000	1	10000	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_EXPOSURE
-libcamera	WB_R	White balance: Red component	10.0	0.1	2.5	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_WB_R
-libcamera	WB_B	White balance: Blue component	10.0	0.1	2.0	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_WB_B
-libcamera	Temperature	Sensor Temperature	80	-20	NOT_SET	NOT_SET	ASI_FALSE	ASI_FALSE	ASI_TEMPERATURE
+libcamera	Exposure	Exposure Time (us)	694434742	114	10000	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_EXPOSURE
+libcamera	WB_R	White balance: Red component	32.0	0.0	2.5	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_WB_R
+libcamera	WB_B	White balance: Blue component	32.0	0.0	2.0	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_WB_B
 libcamera	Flip	Flip: 0->None 1->Horiz 2->Vert 3->Both	3	0	0	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_FLIP
 libcamera	AutoExpMaxGain	Auto exposure maximum gain value	16.0	1.0	16.0	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_GAIN
-libcamera	AutoExpMaxExpMS	Auto exposure maximum exposure value (ms)	230 * MS_IN_SEC	1	60 * MS_IN_SEC	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_EXP
-libcamera	ExposureCompensation	Exposure Compensation	10.0	-10.0	0.0	NOT_SET	ASI_FALSE	ASI_TRUE	EV
-libcamera	Saturation	Saturation	15.99	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	SATURATION
-libcamera	Contrast	Contrast	15.99	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	CONTRAST
-libcamera	Sharpness	Sharpness	15.99	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	SHARPNESS
+libcamera	AutoExpMaxExpMS	Auto exposure maximum exposure value (ms)	230000	1	60000	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_EXP
+libcamera	ExposureCompensation	Exposure Compensation	8.0	-8.0	0.0	NOT_SET	ASI_FALSE	ASI_TRUE	EV
+libcamera	Saturation	Saturation	32.0	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	SATURATION
+libcamera	Contrast	Contrast	32.0	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	CONTRAST
+libcamera	Sharpness	Sharpness	16.0	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	SHARPNESS
 libcamera	End
 
 raspistill	Gain	Gain	16.0	1.0	1.0	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_GAIN
-raspistill	Exposure	Exposure Time (us)	230000000	1	10000	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_EXPOSURE
+raspistill	Exposure	Exposure Time (us)	230000000	114	10000	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_EXPOSURE
 raspistill	WB_R	White balance: Red component	10.0	0.1	2.5	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_WB_R
 raspistill	WB_B	White balance: Blue component	10.0	0.1	2.0	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_WB_B
-raspistill	Temperature	Temperature not supported	NOT_SET	NOT_SET	NOT_SET	NOT_SET	ASI_FALSE	ASI_FALSE	ASI_TEMPERATURE
 raspistill	Flip	Flip: 0->None 1->Horiz 2->Vert 3->Both	3	0	0	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_FLIP
 raspistill	AutoExpMaxGain	Auto exposure maximum gain value	16.0	1.0	16.0	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_GAIN
-raspistill	AutoExpMaxExpMS	Auto exposure maximum exposure value (ms)	230 * MS_IN_SEC	1	60 * MS_IN_SEC	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_EXP
+raspistill	AutoExpMaxExpMS	Auto exposure maximum exposure value (ms)	230000	1	60000	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_EXP
 raspistill	ExposureCompensation	Exposure Compensation	10	-10	0.0	NOT_SET	ASI_FALSE	ASI_TRUE	EV
 raspistill	Saturation	Saturation	100	-100	0	NOT_SET	ASI_FALSE	ASI_TRUE	SATURATION
 raspistill	Contrast	Contrast	100	-100	0	NOT_SET	ASI_FALSE	ASI_TRUE	CONTRAST
@@ -63,10 +61,9 @@ libcamera	Gain	Gain	16.0	1.122807	1.122807	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_GAIN
 libcamera	Exposure	Exposure Time (us)	112015553	26	10000	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_EXPOSURE
 libcamera	WB_R	White balance: Red component	32.0	0.0	2.5	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_WB_R
 libcamera	WB_B	White balance: Blue component	32.0	0.0	2.0	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_WB_B
-libcamera	Temperature	Sensor Temperature	80	-20	NOT_SET	NOT_SET	ASI_FALSE	ASI_FALSE	ASI_TEMPERATURE
 libcamera	Flip	Flip: 0->None 1->Horiz 2->Vert 3->Both	3	0	0	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_FLIP
 libcamera	AutoExpMaxGain	Auto exposure maximum gain value	16.0	1.122807	16.0	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_GAIN
-libcamera	AutoExpMaxExpMS	Auto exposure maximum exposure value (ms)	112015553 / US_IN_MS	26.0	60 * MS_IN_SEC	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_EXP
+libcamera	AutoExpMaxExpMS	Auto exposure maximum exposure value (ms)	112015553 / US_IN_MS	26.0	60000	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_EXP
 libcamera	ExposureCompensation	Exposure Compensation	8.0	-8.0	0.0	NOT_SET	ASI_FALSE	ASI_TRUE	EV
 libcamera	Saturation	Saturation	32.0	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	SATURATION
 libcamera	Contrast	Contrast	32.0	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	CONTRAST
@@ -82,10 +79,9 @@ libcamera	Gain	Gain	63.9375	1.0	1.0	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_GAIN
 libcamera	Exposure	Exposure Time (us)	969249	130	9000	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_EXPOSURE
 libcamera	WB_R	White balance: Red component	32.0	0.0	0.0	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_WB_R
 libcamera	WB_B	White balance: Blue component	32.0	0.0	0.0	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_WB_B
-libcamera	Temperature	Temperature not supported	NOT_SET	NOT_SET	NOT_SET	NOT_SET	ASI_FALSE	ASI_FALSE	ASI_TEMPERATURE
 libcamera	Flip	Flip: 0->None 1->Horiz 2->Vert 3->Both	3	0	0	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_FLIP
 libcamera	AutoExpMaxGain	Auto exposure maximum gain value	63.9375	1.0	63.9375	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_GAIN
-libcamera	AutoExpMaxExpMS	Auto exposure maximum exposure value (ms)	969249 / US_IN_MS	1.0	9 * MS_IN_SEC	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_EXP
+libcamera	AutoExpMaxExpMS	Auto exposure maximum exposure value (ms)	969249 / US_IN_MS	1.0	9000	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_EXP
 libcamera	ExposureCompensation	Exposure Compensation	8.0	-8.0	0.0	NOT_SET	ASI_FALSE	ASI_TRUE	EV
 libcamera	Saturation	Saturation	32	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	SATURATION
 libcamera	Contrast	Contrast	32.0	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	CONTRAST
@@ -101,10 +97,9 @@ libcamera	Gain	Gain	16.0	1.0	1.0	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_GAIN
 libcamera	Exposure	Exposure Time (us)	200000000	1	10000	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_EXPOSURE
 libcamera	WB_R	White balance: Red component	10.0	0.1	2.5	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_WB_R
 libcamera	WB_B	White balance: Blue component	10.0	0.1	2.0	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_WB_B
-libcamera	Temperature	Sensor Temperature	80	-20	NOT_SET	NOT_SET	ASI_FALSE	ASI_FALSE	ASI_TEMPERATURE
 libcamera	Flip	Flip: 0->None 1->Horiz 2->Vert 3->Both	3	0	0	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_FLIP
 libcamera	AutoExpMaxGain	Auto exposure maximum gain value	16.0	1.0	16.0	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_GAIN
-libcamera	AutoExpMaxExpMS	Auto exposure maximum exposure value (ms)	200 * MS_IN_SEC	1	60 * MS_IN_SEC	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_EXP
+libcamera	AutoExpMaxExpMS	Auto exposure maximum exposure value (ms)	200000	1	60000	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_EXP
 libcamera	ExposureCompensation	Exposure Compensation	10.0	-10.0	0.0	NOT_SET	ASI_FALSE	ASI_TRUE	EV
 libcamera	Saturation	Saturation	15.99	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	SATURATION
 libcamera	Contrast	Contrast	15.99	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	CONTRAST
@@ -120,10 +115,9 @@ libcamera	Gain	Gain	16.0	1.0	1.0	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_GAIN
 libcamera	Exposure	Exposure Time (us)	200000000	1	10000	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_EXPOSURE
 libcamera	WB_R	White balance: Red component	32.0	0.1	2.5	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_WB_R
 libcamera	WB_B	White balance: Blue component	32.0	0.1	2.0	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_WB_B
-libcamera	Temperature	Sensor Temperature	80	-20	NOT_SET	NOT_SET	ASI_FALSE	ASI_FALSE	ASI_TEMPERATURE
 libcamera	Flip	Flip: 0->None 1->Horiz 2->Vert 3->Both	3	0	0	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_FLIP
 libcamera	AutoExpMaxGain	Auto exposure maximum gain value	16.0	1.0	16.0	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_GAIN
-libcamera	AutoExpMaxExpMS	Auto exposure maximum exposure value (ms)	200 * MS_IN_SEC	1	60 * MS_IN_SEC	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_EXP
+libcamera	AutoExpMaxExpMS	Auto exposure maximum exposure value (ms)	200000	1	60000	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_EXP
 libcamera	ExposureCompensation	Exposure Compensation	10.0	-10.0	0.0	NOT_SET	ASI_FALSE	ASI_TRUE	EV
 libcamera	Saturation	Saturation	32.0	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	SATURATION
 libcamera	Contrast	Contrast	32.0	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	CONTRAST
@@ -138,10 +132,9 @@ camera	arducam_64mp	0	ArduCam 64 MP	0	6944	9152	ASI_TRUE	BAYER_RG	1 2 0	ASI_IMG_
 libcamera	Exposure	Exposure Time (us)	200000000	1	10000	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_EXPOSURE
 libcamera	WB_R	White balance: Red component	10.0	0.1	2.5	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_WB_R
 libcamera	WB_B	White balance: Blue component	10.0	0.1	2.0	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_WB_B
-libcamera	Temperature	Sensor Temperature	80	-20	NOT_SET	NOT_SET	ASI_FALSE	ASI_FALSE	ASI_TEMPERATURE
 libcamera	Flip	Flip: 0->None 1->Horiz 2->Vert 3->Both	3	0	0	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_FLIP
 libcamera	AutoExpMaxGain	Auto exposure maximum gain value	16.0	1.0	16.0	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_GAIN
-libcamera	AutoExpMaxExpMS	Auto exposure maximum exposure value (ms)	200 * MS_IN_SEC	1	60 * MS_IN_SEC	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_EXP
+libcamera	AutoExpMaxExpMS	Auto exposure maximum exposure value (ms)	200000	1	60000	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_EXP
 libcamera	ExposureCompensation	Exposure Compensation	10.0	-10.0	0.0	NOT_SET	ASI_FALSE	ASI_TRUE	EV
 libcamera	Saturation	Saturation	15.99	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	SATURATION
 libcamera	Contrast	Contrast	15.99	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	CONTRAST
@@ -159,7 +152,7 @@ libcamera	WB_R	White balance: Red component	32.0	0.0	1.0	NOT_SET	ASI_TRUE	ASI_TR
 libcamera	WB_B	White balance: Blue component	32.0	0.0	1.0	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_WB_B
 libcamera	Flip	Flip: 0->None 1->Horiz 2->Vert 3->Both	3	0	0	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_FLIP
 libcamera	AutoExpMaxGain	Auto exposure maximum gain value	200.0	1.0	200.0	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_GAIN
-libcamera	AutoExpMaxExpMS	Auto exposure maximum exposure value (ms)	15.5 * MS_IN_SEC	1	15.5 * MS_IN_SEC	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_EXP
+libcamera	AutoExpMaxExpMS	Auto exposure maximum exposure value (ms)	15.5000	1	15.5000	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_EXP
 libcamera	ExposureCompensation	Exposure Compensation	8.0	-8.0	0.0	NOT_SET	ASI_FALSE	ASI_TRUE	EV
 libcamera	Saturation	Saturation	32.0	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	SATURATION
 libcamera	Contrast	Contrast	32.0	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	CONTRAST
@@ -177,9 +170,8 @@ libcamera	WB_R	White balance: Red component	32.0	0.0	1.0	NOT_SET	ASI_TRUE	ASI_TR
 libcamera	WB_B	White balance: Blue component	32.0	0.0	1.0	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_WB_B
 libcamera	Flip	Flip: 0->None 1->Horiz 2->Vert 3->Both	3	0	0	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_FLIP
 libcamera	AutoExpMaxGain	Auto exposure maximum gain value	10.666667	1.0	10.666667	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_GAIN
-libcamera	AutoExpMaxExpMS	Auto exposure maximum exposure value (ms)	11.767556 * MS_IN_SEC	1	11.767556 * MS_IN_SEC	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_EXP
+libcamera	AutoExpMaxExpMS	Auto exposure maximum exposure value (ms)	11.767556000	1	11.767556000	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_EXP
 libcamera	ExposureCompensation	Exposure Compensation	8.0	-8.0	0.0	NOT_SET	ASI_FALSE	ASI_TRUE	EV
-libcamera	Brightness	Brightness	1.0	-1.0	0.0	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_TARGET_BRIGHTNESS
 libcamera	Saturation	Saturation	32.0	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	SATURATION
 libcamera	Contrast	Contrast	32.0	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	CONTRAST
 libcamera	Sharpness	Sharpness	16.0	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	SHARPNESS

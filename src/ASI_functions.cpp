@@ -298,7 +298,7 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 	},
 
 	{ "ov64a40", 0, "Arducam 64MP Owlsight", 0, 6944, 9248, ASI_TRUE,
-		BAYER_BG, {1 2 0}, {ASI_IMG_RGB24 ASI_IMG_END}, 1.008, ASI_FALSE,
+		BAYER_BG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.008, ASI_FALSE,
 		10, ASI_FALSE, ASI_TRUE
 	}
 
@@ -1582,6 +1582,8 @@ void saveCameraInfo(
 		double min = cc.MinValue / (double)div_by;
 		double max = cc.MaxValue / (double)div_by;
 		double def = cc.DefaultValue / (double)div_by;
+
+// XXXXXXXXX this is to help determine why some float settings are being output as integers
 if (strcmp(cc.Name,"Gain") == 0 && CG.debugLevel >= 4)
 {
 printf("===== cc.MinValue=%1.2f, min=%1.2f   cc.MaxValue=%1.2f, max=%1.2f\n",

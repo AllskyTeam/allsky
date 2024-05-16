@@ -287,7 +287,7 @@ do
 				fi
 
 				# Can't quote items in ${CMD} or else they get double quoted when executed.
-				CMD="capture_${CAMERA_TYPE} ${CAMERA_NUMBER_ARG}"
+				CMD="capture_${CAMERA_TYPE} ${CAMERA_NUMBER_ARG} ${CAMERA_MODEL_ARG}"
 				CMD+=" -debuglevel 3 ${OTHER_ARGS}"
 				if [[ ${DEBUG} == "true" ]]; then
 					echo -e "${wDEBUG}Calling: ${CMD} -cc_file '${CC_FILE}'${wNC}"
@@ -431,8 +431,8 @@ do
 
 			#shellcheck source-path=scripts
 			source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"
-			FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}_${CAMERA_MODEL}-"
-			FULL_OVERLAY_NAME+="${C_sensorWidth}x${C_sensorHeight}-both.json"
+			FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}_${CAMERA_MODEL}"
+			FULL_OVERLAY_NAME+="-${C_sensorWidth}x${C_sensorHeight}-both.json"
 			SHORT_OVERLAY_NAME="overlay-${CAMERA_TYPE}.json"
 
 			OVERLAY_PATH="${ALLSKY_REPO}/overlay/config/${FULL_OVERLAY_NAME}"

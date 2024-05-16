@@ -155,8 +155,12 @@ function check_filename_type()
 	return 0
 }
 
-CAMERA_NUMBER_ARG=""
 CAMERA_NUMBER=0			# default
+CAMERA_NUMBER_ARG=""
+CAMERA_MODEL=""
+CAMERA_MODEL_ARG=""
+NEW_CAMERA_TYPE=""
+
 NUM_CHANGED=0
 
 while [[ $# -gt 0 ]]
@@ -197,36 +201,34 @@ do
 			CAMERA_NUMBER_ARG=" -cameranumber ${CAMERA_NUMBER}"
 			;;
 
-		"cameramodel")
+		"cameramodel" | "cameratype")
+			if [[ ${KEY} == "cameramodel" ]]; then
+				CAMERA_MODEL="${NEW_VALUE}"
+
+				if [[ ${FROM_INSTALL} == "true" ]]; then
+					# When called during installation the camera model is
+					# passed in, then the camera type.
+					shift 4
+					continue
+				fi
+				CAMERA_TYPE="$( settings ".cameratype" )"
+
+			else
+				CAMERA_TYPE="${NEW_VALUE}"
+				if [[ ! -e "${ALLSKY_BIN}/capture_${CAMERA_TYPE}" ]]; then
+					MSG="Unknown Camera Type: '${CAMERA_TYPE}'."
+					echo -e "${wERROR}${ERROR_PREFIX}ERROR: ${MSG}${wNC}"
+					exit "${EXIT_NO_CAMERA}"
+				fi
+			fi
+
 			# For RPi cameras the "model" is actually the sensor name,
 			# so convert it into the "real" model name and save it.
-			if [[ $( settings ".cameratype" ) == "RPi" ]]; then
-				CAMERA_MODEL="$( gawk --field-separator "\t" -v fullSensor="${NEW_VALUE}" '
-					BEGIN { model = ""; }
-					{
-						if (NF == 15) {
-							model = $1;
-							len = $2;
-							if (len == 0)
-								sensor = fullSensor;
-							else
-								sensor = substr(fullSensor, 0, len);
-							if (sensor == model) {
-								print $3;
-								exit 0;
-							}
-						}
-					}' "${RPi_SUPPORTED_CAMERAS}"
-				echo "${CAMERA_MODEL/RPi /}"
-				)"
-			fi
-			;;
-
-		"cameratype")
-			if [[ ! -e "${ALLSKY_BIN}/capture_${NEW_VALUE}" ]]; then
-				MSG="Unknown Camera Type: '${NEW_VALUE}'."
-				echo -e "${wERROR}${ERROR_PREFIX}ERROR: ${MSG}${wNC}"
-				exit "${EXIT_NO_CAMERA}"
+			if [[ -n ${CAMERA_MODEL} ]]; then
+				if [[ ${CAMERA_TYPE} == "RPi" ]]; then
+					CAMERA_MODEL="$( get_model_from_sensor "${CAMERA_MODEL}" )"
+				fi
+				CAMERA_MODEL_ARG=" -cameramodel ${CAMERA_MODEL}"
 			fi
 
 			# This requires Allsky to be stopped so we don't
@@ -242,7 +244,7 @@ do
 				# capture the images.
 				# determineCommandToUse either retuns the command with exit code 0,
 				# or an error message with non-zero exit code.
-				if [[ ${NEW_VALUE} == "RPi" ]]; then
+				if [[ ${CAMERA_TYPE} == "RPi" ]]; then
 					RPi_COMMAND_TO_USE="$( determineCommandToUse "false" "" "false" 2>&1 )"
 					RET=$?
 					if [[ ${RET} -ne 0 ]] ; then
@@ -275,7 +277,7 @@ do
 				# Use Debug Level 3 to give the user more info on error.
 
 				if [[ -n ${CAMERA_NUMBER_ARG} ]]; then
-					MSG="Re-creating files for cameratype ${NEW_VALUE},"
+					MSG="Re-creating files for cameratype ${CAMERA_TYPE},"
 					MSG+=" cameranumber ${CAMERA_NUMBER}"
 					if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
 						echo -e "<script>console.log(\"${MSG}\");</script>"
@@ -285,7 +287,7 @@ do
 				fi
 
 				# Can't quote items in ${CMD} or else they get double quoted when executed.
-				CMD="capture_${NEW_VALUE} ${CAMERA_NUMBER_ARG}"
+				CMD="capture_${CAMERA_TYPE} ${CAMERA_NUMBER_ARG}"
 				CMD+=" -debuglevel 3 ${OTHER_ARGS}"
 				if [[ ${DEBUG} == "true" ]]; then
 					echo -e "${wDEBUG}Calling: ${CMD} -cc_file '${CC_FILE}'${wNC}"
@@ -313,13 +315,15 @@ do
 				[[ -n ${R} ]] && echo -e "${R}"
 
 				# Create a link to a file that contains the camera type and model in the name.
-				CAMERA_TYPE="${NEW_VALUE}"		# already know it
-				SETTING_NAME="cameraModel"		# Name is Upper case in CC file
-				CAMERA_MODEL="$( settings ".${SETTING_NAME}" "${CC_FILE}" )"
+
 				if [[ -z ${CAMERA_MODEL} ]]; then
-					echo -e "${wERROR}ERROR: '${SETTING_NAME}' not found in ${CC_FILE}.${wNC}"
-					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
-					exit 1
+					SETTING_NAME="cameraModel"		# Name is Upper case in CC file
+					CAMERA_MODEL="$( settings ".${SETTING_NAME}" "${CC_FILE}" )"
+					if [[ -z ${CAMERA_MODEL} ]]; then
+						echo -e "${wERROR}ERROR: '${SETTING_NAME}' not found in ${CC_FILE}.${wNC}"
+						[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
+						exit 1
+					fi
 				fi
 
 				# ${CC_FILE} is a generic name defined in variables.sh.
@@ -381,21 +385,22 @@ do
 				else
 					echo -e " and '${SETTINGS_FILE}' files."
 				fi
-				echo -e "${wNC}, RET=${RET}:${R}"
+				echo -e "${wNC}, RET=${RET}: ${R}"
 				exit 1
 			fi
 			[[ ${DEBUG} == "true" && -n ${R} ]] && echo -e "${wDEBUG}${R}${wNC}"
 
-			OK="true"
+			ERR=""
 			if [[ ! -f ${OPTIONS_FILE} ]]; then
-				echo -e "${wERROR}${ERROR_PREFIX}ERROR Options file ${OPTIONS_FILE} not created.${wNC}"
-				OK="false"
+				ERR+="\nERROR Options file ${OPTIONS_FILE} not created."
 			fi
 			if [[ ! -f ${SETTINGS_FILE} && ${OPTIONS_FILE_ONLY} == "false" ]]; then
-				echo -e "${wERROR}${ERROR_PREFIX}ERROR Settings file ${SETTINGS_FILE} not created.${wNC}"
-				OK="false"
+				ERR+="\nERROR Settings file ${SETTINGS_FILE} not created."
 			fi
-			[[ ${OK} == "false" ]] && exit 2
+			if [[ -n ${ERR} ]]; then
+				echo -e "${wERROR}${ERROR_PREFIX}${ERR}${wNC}"
+				exit 2
+			fi
 
 			# See if a camera-specific settings file was created.
 			# If the latitude isn't set assume it's a new file.
@@ -419,7 +424,6 @@ do
 				"${ALLSKY_SCRIPTS}/convertJSON.php" --carryforward |
 				while read -r SETTING TYPE
 				do
-					TYPE="${TYPE/select_/}"		# "select" type has the actual type after "select_".
 					X="$( settings ".${SETTING}" "${OLD_SETTINGS_FILE}" )"
 					update_json_file ".${SETTING}" "${X}" "${SETTINGS_FILE}" "${TYPE}"
 				done
@@ -427,7 +431,8 @@ do
 
 			#shellcheck source-path=scripts
 			source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"
-			FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}_${CAMERA_MODEL}-${C_sensorWidth}x${C_sensorHeight}-both.json"
+			FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}_${CAMERA_MODEL}-"
+			FULL_OVERLAY_NAME+="${C_sensorWidth}x${C_sensorHeight}-both.json"
 			SHORT_OVERLAY_NAME="overlay-${CAMERA_TYPE}.json"
 
 			OVERLAY_PATH="${ALLSKY_REPO}/overlay/config/${FULL_OVERLAY_NAME}"

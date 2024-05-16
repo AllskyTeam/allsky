@@ -321,7 +321,7 @@ get_connected_cameras()
 			if [[ -z ${FUNCTION} ]]; then
 				for SENSOR in ${RPI_SENSORS}
 				do
-					MODEL="$( get_module_from_sensor "${SENSOR}" )"
+					MODEL="$( get_model_from_sensor "${SENSOR}" )"
 # TODO: check for $? -ne 0
 					local FULL_NAME="${MODEL} (${SENSOR})"
 					display_msg --log progress "RPi ${FULL_NAME} camera found."

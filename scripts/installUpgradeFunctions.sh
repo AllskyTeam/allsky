@@ -855,36 +855,3 @@ function get_computer()
 	echo "${MODEL}, ${GB} GB"
 }
 
-
-####
-# Get the RPi camera model given its sensor name.
-function get_model_from_sensor()
-{
-	local SENSOR="${1}"
-
-	gawk --field-separator '\t' -v sensor="${SENSOR}" '
-		BEGIN { model = ""; }
-		{
-			if ($1 == "camera") {
-				module = $2;
-				module_len = $3;
-				if ((module_len == 0 && module == sensor) ||
-					(module == substr(sensor, 0, module_len))) {
-
-					model = $4;
-					exit(0);
-				}
-			}
-				
-		}
-		END {
-			if (model != "") {
-				printf("%s", model);
-				exit(0);
-			} else {
-				printf("unknown_model");
-				exit(1);
-			}
-		} ' "${RPi_SUPPORTED_CAMERAS}"
-	return $?
-}

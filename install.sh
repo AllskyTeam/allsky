@@ -321,23 +321,8 @@ get_connected_cameras()
 			if [[ -z ${FUNCTION} ]]; then
 				for SENSOR in ${RPI_SENSORS}
 				do
-					MODEL="$( gawk --field-separator '\t' -v sensor="${SENSOR}" 'BEGIN { model = ""; }
-						{
-							if ($1 == "camera") {
-								module = $2;
-								module_len = $3;
-								if ((module_len == 0 && module == sensor) ||
-									(module == substr(sensor, 0, module_len))) {
-										model = $4;
-										exit(0);
-								}
-							}
-								
-						}
-						END { if (model != "") printf("%s", model);
-							  else printf("unknown_model");
-						} ' "${RPi_SUPPORTED_CAMERAS}" )"
-
+					MODEL="$( get_module_from_sensor "${SENSOR}" )"
+# TODO: check for $? -ne 0
 					local FULL_NAME="${MODEL} (${SENSOR})"
 					display_msg --log progress "RPi ${FULL_NAME} camera found."
 					# The camera model may have "_" in it,

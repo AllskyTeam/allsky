@@ -681,10 +681,10 @@ function check_tmp()
 	fi
 
 	SIZE=75		# MB - should be enough
-	MSG="Making ${ALLSKY_TMP} reside in memory can drastically decrease the amount"
-	MSG+=" of writes to the SD card, increasing its life."
-	MSG+="\n\nDo you want to make it reside in memory?"
-	MSG+="\n\nNote: anything in it will be deleted whenever the Pi is rebooted,"
+	MSG="Putting the ${ALLSKY_TMP} director and its contents into memory drastically"
+	MSG+=" decreases the number of writes to the SD card, increasing its life."
+	MSG+="\n\nDo you want to do this?"
+	MSG+="\n\nNote: anything in that directory will be deleted whenever the Pi is rebooted,"
 	MSG+=" but that's not an issue since the directory only contains temporary files."
 	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 		STRING="${INITIAL_FSTAB_STRING} size=${SIZE}M,noatime,lazytime,nodev,"
@@ -696,7 +696,8 @@ function check_tmp()
 		check_and_mount_tmp
 		display_msg --log progress "${ALLSKY_TMP} is now in memory."
 	else
-		display_msg --log info "${ALLSKY_TMP} will remain on disk."
+		MSG="The ${ALLSKY_TMP} directory and its contnts will remain on the SD card."
+		display_msg --log info "${MSG}"
 		mkdir -p "${ALLSKY_TMP}"
 	fi
 

@@ -272,18 +272,28 @@ CAMERA_to_CAMERA_TYPE()
 # Have separate function so it can be called from "--function".
 setup_rpi_supported_cameras()
 {
+	local CMD="${1}"
+
 	if [[ ! -f ${RPi_SUPPORTED_CAMERAS} ]]; then
 		local B="$( basename "${RPi_SUPPORTED_CAMERAS}" )"
-		# Remove comment and blank lines.
-		grep -v -E '^$|^#' "${ALLSKY_REPO}/${B}.repo" > "${RPi_SUPPORTED_CAMERAS}"
+		if [[ -z ${CMD} ]]; then
+			CMD="xxxxx"		# won't match anything
+		elif [[ ${CMD} == "raspistill" ]]; then
+			CMD="libcamera"
+		else
+			CMD="raspistill"
+		fi
+
+		local MSG="Creating ${RPi_SUPPORTED_CAMERAS} with '${CMD}' entries."
+		display_msg --log progress "${MSG}"
+
+		# Remove comment and blank lines and lines for the command we are NOT using.
+		grep -v -E "^\$|^#|^${CMD}" "${ALLSKY_REPO}/${B}.repo" > "${RPi_SUPPORTED_CAMERAS}"
 	fi
 }
 
 #######
 CONNECTED_CAMERA_MODELS=""
-# TODO: Make arrays and allow multiple cameras of each camera type
-RPI_MODELS="HQ, Module 3, and compatibles"
-ZWO_MODELS="ASI"
 NUM_CONNECTED_CAMERAS=0
 CT=()			# Camera Type array - what to display in whiptail
 
@@ -291,28 +301,33 @@ get_connected_cameras()
 {
 	local C  CC=""  MSG   NUM_RPI=0   NUM_ZWO=0
 
-	setup_rpi_supported_cameras
-
 	# true == ignore errors.  ${C} will be "" if no command found.
 	C="$( determineCommandToUse "false" "" "true" 2> /dev/null )"
 
-	# RPi format:	RPi \t camera_number : camera_model [4056x3050]
-	# ZWO format:	ZWO \t camera_number : camera_model ZWO_camera_ID
+	setup_rpi_supported_cameras "${C}"
+
+	# RPi format:	RPi \t camera_number : camera_sensor	_other_stuff_
+	# ZWO format:	ZWO \t camera_number : camera_model		ZWO_camera_ID
 	# "true" == ignore errors
 	get_connected_cameras_info "true" > "${CONNECTED_CAMERAS_INFO}" 2>/dev/null
 
 	# Get the RPi connected cameras, if any.
+	# It's SENSOR is listed and we need to convert it to the MODEL that's
+	# in ${RPi_SUPPORTED_CAMERAS}.
 	if [[ -n ${C} ]]; then
-		RPI_MODELS="$( gawk '{if ($1 == "RPi") { print $4; }}' "${CONNECTED_CAMERAS_INFO}" )"
-		if [[ -n ${RPI_MODELS} ]]; then
+		local RPI_SENSORS="$( gawk '{if ($1 == "RPi") { print $4; }}' "${CONNECTED_CAMERAS_INFO}" )"
+		if [[ -n ${RPI_SENSORS} ]]; then
 			CC="RPi"
 			if [[ -z ${FUNCTION} ]]; then
-				for i in ${RPI_MODELS}
+				for SENSOR in ${RPI_SENSORS}
 				do
-					display_msg --log progress "RPi ${i} camera found."
+					MODEL="$( get_model_from_sensor "${SENSOR}" )"
+# TODO: check for $? -ne 0
+					local FULL_NAME="${MODEL} (${SENSOR})"
+					display_msg --log progress "RPi ${FULL_NAME} camera found."
 					# The camera model may have "_" in it,
 					# so separate fields with a different character.
-					CT+=("${NUM_RPI};RPi;${i}" "RPi     ${i}")
+					CT+=("${NUM_RPI};RPi;${MODEL}" "RPi     ${FULL_NAME}")
 					((NUM_RPI++))
 				done
 			fi
@@ -320,15 +335,15 @@ get_connected_cameras()
 	fi
 
 	# Get the ZWO connected cameras, if any.
-	ZWO_MODELS="$( gawk '{if ($1 == "ZWO") { print $4; }}' "${CONNECTED_CAMERAS_INFO}" )"
+	local ZWO_MODELS="$( gawk '{if ($1 == "ZWO") { print $4; }}' "${CONNECTED_CAMERAS_INFO}" )"
 	if [[ -n ${ZWO_MODELS} ]]; then
 		[[ -n ${CC} ]] && CC+=" "
 		CC+="ZWO"
 		if [[ -z ${FUNCTION} ]]; then
-			for i in ${ZWO_MODELS}
+			for MODEL in ${ZWO_MODELS}
 			do
-				display_msg --log progress "ZWO ${i} camera found."
-				CT+=( "${NUM_ZWO};ZWO;${i}" "ZWO     ${i}" )
+				display_msg --log progress "ZWO ${MODEL} camera found."
+				CT+=( "${NUM_ZWO};ZWO;${MODEL}" "ZWO     ${MODEL}" )
 				((NUM_ZWO++))
 			done
 		fi
@@ -443,6 +458,7 @@ select_camera_type()
 	STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
 	STATUS_VARIABLES+=("CAMERA_MODEL='${CAMERA_MODEL}'\n")
 	STATUS_VARIABLES+=("CAMERA_NUMBER='${CAMERA_NUMBER}'\n")
+
 	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
 
@@ -497,7 +513,7 @@ do_save_camera_capabilities()
 
 	# Restore the prior settings file or camera-specific settings file(s) if present so
 	# the appropriate one can be used by makeChanges.sh.
-	[[ ${PRIOR_ALLSKY_DIR} != "" ]] && restore_prior_settings_file
+	[[ -n ${PRIOR_SETTINGS_FILE} ]] && restore_prior_settings_file
 
 	display_msg --log progress "Making new settings file '${SETTINGS_FILE}'."
 
@@ -1031,7 +1047,7 @@ get_desired_locale()
 	local MSG2=""
 	if [[ -z ${DESIRED_LOCALE} && -n ${PRIOR_ALLSKY_DIR} && -n ${PRIOR_SETTINGS_FILE} ]]; then
 		# People rarely change locale once set, so assume they still want the prior one.
-		DESIRED_LOCALE="$( settings .locale "${PRIOR_SETTINGS_FILE}" )"
+		DESIRED_LOCALE="$( settings ".locale" "${PRIOR_SETTINGS_FILE}" )"
 		if [[ -n ${DESIRED_LOCALE} ]]; then
 			local X="$( echo "${INSTALLED_LOCALES}" | grep "${DESIRED_LOCALE}" )"
 			if [[ -z ${X} ]]; then
@@ -1287,7 +1303,6 @@ does_prior_Allsky_exist()
 	# If a prior config directory doesn't exist then there's no prior Allsky.
 	if [[ ! -d ${PRIOR_CONFIG_DIR} ]]; then
 		if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
-			MSG="Prior Allsky directory found at '${PRIOR_ALLSKY_DIR}'"
 			MSG+=" but it doesn't appear to have been installed; ignoring it."
 			display_msg --log warning "${MSG}"
 		else
@@ -1298,17 +1313,16 @@ does_prior_Allsky_exist()
 		return 1
 	fi
 
-	display_msg --logonly info "Prior Allsky found in ${PRIOR_ALLSKY_DIR}."
-
 	# All versions back to v0.6 (never checked prior ones) have a "scripts" directory.
 	if [[ ! -d "${PRIOR_ALLSKY_DIR}/scripts" ]]; then
-		MSG="Prior Allsky directory found at '${PRIOR_ALLSKY_DIR}'"
 		MSG+=" but it doesn't appear to be valid; ignoring it."
 		display_msg --log warning "${MSG}"
 		does_prior_Allsky_Website_exist ""
 		PRIOR_ALLSKY_DIR=""
 		return 1
 	fi
+
+	display_msg --logonly info "Prior Allsky found in ${PRIOR_ALLSKY_DIR}."
 
 	# Determine the prior Allsky version and set some PRIOR_* locations.
 	PRIOR_ALLSKY_VERSION="$( get_version "${PRIOR_ALLSKY_DIR}/" )"	# Returns "" if no version file.
@@ -1439,7 +1453,11 @@ prompt_for_prior_Allsky()
 		if whiptail --title "${TITLE}" --yesno "${MSG}" 20 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 			# Set the prior camera type to the new, default camera type.
 			CAMERA_TYPE="${PRIOR_CAMERA_TYPE}"
+			CAMERA_MODEL="${PRIOR_CAMERA_MODEL}"
+			CAMERA_NUMBER="${PRIOR_CAMERA_NUMBER}"
 			STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
+			STATUS_VARIABLES+=("CAMERA_MODEL='${CAMERA_MODEL}'\n")
+			STATUS_VARIABLES+=("CAMERA_NUMBER='${CAMERA_NUMBER}'\n")
 			display_msg --logonly info "Will restore from prior version of Allsky."
 			WILL_USE_PRIOR="true"
 		else
@@ -1447,6 +1465,8 @@ prompt_for_prior_Allsky()
 			PRIOR_SETTINGS_FILE=""
 			CAMERA_TYPE=""
 			PRIOR_CAMERA_TYPE=""
+			PRIOR_CAMERA_MODEL=""
+			PRIOR_CAMERA_NUMBER=""
 			MSG="If you want your old images, darks, settings, etc. from the prior version"
 			MSG+=" of Allsky, you'll need to manually move them to the new version."
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
@@ -2133,7 +2153,7 @@ restore_prior_settings_file()
 		return
 	fi
 
-	local MSG NAME EXT FIRST_ONE CHECK_UPPER
+	local MSG  NAME  EXT  FIRST_ONE  CHECK_UPPER
 
 	if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
 		# The prior settings file SHOULD be a link to a camera-specific file.
@@ -2185,6 +2205,7 @@ restore_prior_settings_file()
 
 			# Try to create one based on ${PRIOR_SETTINGS_FILE}.
 			if [[ ${PRIOR_CAMERA_TYPE} != "${CAMERA_TYPE}" ]]; then
+# TODO: ? check CAMERA_MODEL
 				MSG+="\nand unable to create one: new Camera Type"
 				MSG+=" (${CAMERA_TYPE} different from prior type (${PRIOR_CAMERA_TYPE})."
 				FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"

@@ -854,3 +854,4 @@ function get_computer()
 	local GB="$( get_RAM )"
 	echo "${MODEL}, ${GB} GB"
 }
+

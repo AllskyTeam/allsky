@@ -60,26 +60,26 @@ fi
 if [[ ${DO_RPI} == "true" ]]; then
 	[[ ${DO_ZWO} == "true" ]] && echo -e "===== Supported RPi cameras:"
 	# Format of input file:
-	#	camera_info_line_1
-	#	libcamera_camera_capability_line_1
-	#	libcamera_camera_capability_line_2
-	#	End
-	#	raspistill_camera_capability_line_1
-	#	raspistill_camera_capability_line_2
-	#	End
-	#	camera_info_line_2
+	#	camera  sensor  compare_length  model  other_info_for_camera_1
+	#	libcamera libcamera_camera_capability_line_1
+	#	libcamera libcamera_camera_capability_line_2
+	#	libcamera End
+	#	raspistill raspistill_camera_capability_line_1
+	#	raspistill raspistill_camera_capability_line_2
+	#	raspistill End
+	#	camera  sensor  compare_length  model  other_info_for_camera_2
 	#	...
-	gawk -F'\t' 'BEGIN { on_camera_line=1; }
+	gawk -F'\t' '
 		{
-			if (on_camera_line) {
-				on_camera_line = 0;
-				read_libcamera_lines = 0;
-				print $3;
-			} else if (! read_libcamera_lines) {
-				if ($1 == "End")
-					read_libcamera_lines = 1;
-			} else if ($1 == "End") {
-				on_camera_line = 1;
+			if ($1 == "camera") {
+				sensor = $2;
+				compare_length = $3
+				model = $4;
+				if (compare_length > 0)
+					other = " and related sensors";
+				else
+					other = "";
+				printf("%s (%s%s)\n", model, sensor, other);
 			}
 		}' "${RPi_SUPPORTED_CAMERAS}"
 fi

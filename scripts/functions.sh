@@ -335,11 +335,23 @@ function validate_camera()
 	# Compare the current CAMERA_MODEL to what's in the settings file.
 	SETTINGS_CT="$( settings ".cameratype" )"
 	SETTINGS_CM="$( settings ".cameramodel" )"
-	if [[ ${SETTINGS_CT} != "${CT}" || ${SETTINGS_CM} != "${CM}" ]]; then
-		MSG="You appear to have changed the camera to ${CT} ${CM} without notifying Allsky."
-		MSG+="\nThe last known camera was ${SETTINGS_CT} ${SETTINGS_CM}."
+	if [[ ${SETTINGS_CT} != "${CT}" ]]; then
+		MSG="You appear to have changed the camera type to '${CT}' without notifying Allsky."
+		MSG+="\nThe last known camera type was '${SETTINGS_CT}'."
 		MSG+="\nIf this is correct, go to the 'Allsky Settings' page of the WebUI and"
-		MSG+=" change the 'Camera Type' to 'Refresh' then save the settings."
+		MSG+="\nchange the 'Camera Type' to 'Refresh' then save the settings."
+		if [[ ${ON_TTY} == "true" ]]; then
+			echo -e "\n${RED}${MSG}${NC}\n"
+		else
+			URL="/index.php?page=configuration&_ts=${RANDOM}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${MSG}" "${URL}"
+		fi
+		RET=1
+	elif [[ ${SETTINGS_CM} != "${CM}" ]]; then
+		MSG="You appear to have changed the camera model to '${CM}' without notifying Allsky."
+		MSG+="\nThe last known camera was '${SETTINGS_CT} ${SETTINGS_CM}'."
+		MSG+="\nIf this is correct, go to the 'Allsky Settings' page of the WebUI and"
+		MSG+="\nchange the 'Camera Model' to '${CM}' then save the settings."
 		if [[ ${ON_TTY} == "true" ]]; then
 			echo -e "\n${RED}${MSG}${NC}\n"
 		else
@@ -354,15 +366,15 @@ function validate_camera()
 	if ! "${ALLSKY_SCRIPTS}/show_supported_cameras.sh" "--${CT}" |
 		grep --silent "${CM}" ; then
 
-		MSG="Camera model ${CM} is not supported by Allsky."
+		MSG="${CT} camera model '${CM}' is not supported by Allsky."
 		MSG+="\nTo see the list of supported ${CT} cameras, run"
-		MSG+="\n  show_supported_cameras.sh --${CT}"
+		MSG+="\n    show_supported_cameras.sh --${CT}"
 		[[ ${CT} == "ZWO" ]] && MSG+="\nWARNING: the list is long!"
-		MSG+="\n\nIf you want this camera supported, enter a new Discussion item."
 		if [[ ${ON_TTY} == "true" ]]; then
 			echo -e "\n${RED}${MSG}${NC}\n"
 		else
-			URL="${GITHUB_ROOT}/${GITHUB_ALLSKY_PACKAGE}/discussions"
+			MSG+="\n\nClick this message to ask that Allsky support this camera."
+			URL="/documentation/explanations/requestCameraSupport.html";
 			"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}" "${URL}"
 		fi
 
@@ -1184,4 +1196,38 @@ function get_allsky_status()
 function get_allsky_status_timestamp()
 {
 	settings ".timestamp" "${ALLSKY_STATUS}" 2> /dev/null
+}
+
+
+####
+# Get the RPi camera model given its sensor name.
+function get_model_from_sensor()
+{
+	local SENSOR="${1}"
+
+	gawk --field-separator '\t' -v sensor="${SENSOR}" '
+		BEGIN { model = ""; }
+		{
+			if ($1 == "camera") {
+				module = $2;
+				module_len = $3;
+				if ((module_len == 0 && module == sensor) ||
+					(module == substr(sensor, 0, module_len))) {
+
+					model = $4;
+					exit(0);
+				}
+			}
+				
+		}
+		END {
+			if (model != "") {
+				printf("%s", model);
+				exit(0);
+			} else {
+				printf("unknown_model");
+				exit(1);
+			}
+		} ' "${RPi_SUPPORTED_CAMERAS}"
+	return $?
 }

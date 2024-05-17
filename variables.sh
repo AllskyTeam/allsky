@@ -54,6 +54,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 
 	# Holds all the scripts.
 	ALLSKY_SCRIPTS="${ALLSKY_HOME}/scripts"
+	ALLSKY_UTILITIES="${ALLSKY_SCRIPTS}/utilities"
 
 	# Holds all the binaries.
 	ALLSKY_BIN="${ALLSKY_HOME}/bin"

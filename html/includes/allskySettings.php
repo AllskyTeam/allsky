@@ -529,13 +529,13 @@ echo "<script>console.log('Updated $fileName');</script>";
 						$worked = runCommand($cmd, "", "success", false);
 
 						if ($fromConfiguration) {
-							$cmd = "${CMD}/check_allsky.sh --fromWebUI";
+							$cmd = "${CMD}/checkAllsky.sh --fromWebUI";
 							echo '<script>console.log("Running: ' . $cmd . '");</script>';
 							exec("$cmd 2>&1", $result, $return_val);
 							if ($result != null) {
 								$result = implode("<br>", $result);
 								// Not worth checking if the update worked.
-								updateFile(ALLSKY_CHECK_ALLSKY_LOG, $result, "check_allsky", true);
+								updateFile(ALLSKY_CHECK_ALLSKY_LOG, $result, "checkAllsky", true);
 	
 								$msg = "<div class='errorMsgBig errorMsgBox center-div center-text'>";
 								$msg .= "Suggested changes to your settings<br>";

@@ -38,21 +38,23 @@ done
 usage_and_exit()
 {
 	local RET=${1}
-	echo
-	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-	echo "Usage: ${ME} [--help] --rpi | --zwo"
-	[[ ${RET} -ne 0 ]] && echo -en "${NC}"
-	echo "    where:"
-	echo "      '--help' displays this message and exits."
-	echo "      '--rpi' displays a list of supported Raspberry Pi and compatible cameras."
-	echo "      '--zwo' displays a list of supported ZWO cameras."
+	{
+		echo
+		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
+		echo "Usage: ${ME} [--help] --rpi | --zwo"
+		[[ ${RET} -ne 0 ]] && echo -en "${NC}"
+		echo "    where:"
+		echo "      '--help' displays this message and exits."
+		echo "      '--rpi' displays a list of supported Raspberry Pi and compatible cameras."
+		echo "      '--zwo' displays a list of supported ZWO cameras."
+	} >&2
 	exit "${RET}"
 }
 
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 if [[ ${DO_RPI} == "false" && ${DO_ZWO} == "false" ]]; then
-	echo -e "${RED}You must specify --rpi and/or --zwo${NC}"
+	echo -e "${RED}You must specify --rpi and/or --zwo${NC}" >&2
 	usage_and_exit 2
 fi
 

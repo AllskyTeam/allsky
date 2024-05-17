@@ -22,8 +22,8 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 		RED="\033[0;31m";		wERROR="${RED}"
 		# Can't use DEBUG since lots of scripts use that to enable debugging
 		cDEBUG="${YELLOW}";		wDEBUG="${YELLOW}"
+		BOLD="\033[1m";			wBOLD="["; wNBOLD="]"
 		NC="\033[0m";			wNC="${NC}"
-								wBOLD="["; wNBOLD="]"
 								wBR="\n"
 	else
 		ON_TTY="false"
@@ -31,8 +31,8 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 		YELLOW="";				wWARNING="<span style='color: #FF9800'>"
 		RED="";					wERROR="<span style='color: red'>"
 		cDEBUG="";				wDEBUG="${wWARNING}"
+		BOLD="";				wBOLD="<b>"; wNBOLD="</b>"
 		NC="";					wNC="</span>"
-								wBOLD="<b>"; wNBOLD="</b>"
 								wBR="<br>"
 	fi
 

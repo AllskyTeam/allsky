@@ -363,7 +363,7 @@ function validate_camera()
 
 	# Now make sure the camera is supported.
 	[[ ${CT} == "ZWO" ]] && CM="${CM/ASI/}"		# "ASI" isn't in the names
-	if ! "${ALLSKY_SCRIPTS}/show_supported_cameras.sh" "--${CT}" |
+	if ! "${ALLSKY_UTILITIES}/show_supported_cameras.sh" "--${CT}" |
 		grep --silent "${CM}" ; then
 
 		MSG="${CT} camera model '${CM}' is not supported by Allsky."

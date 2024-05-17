@@ -80,13 +80,13 @@ if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
 	fi
 fi
 
-# If there's some check_allsky.sh output, remind the user.
+# If there's some checkAllsky.sh output, remind the user.
 if [[ -f ${CHECK_ALLSKY_LOG} ]]; then
 	DO_MSG="true"
-	REMINDER="${ALLSKY_LOGS}/check_allsky_reminder.txt"
+	REMINDER="${ALLSKY_LOGS}/checkAllsky_reminder.txt"
 	if [[ -f ${REMINDER} ]]; then
 		CHECK_DATE="$( date -d '1 week ago' +'%Y%m%d%H%M.%S' )"
-		CHECK_FILE="${ALLSKY_TMP}/check_date-check_allsky"
+		CHECK_FILE="${ALLSKY_TMP}/check_date-checkAllsky"
 		touch -t "${CHECK_DATE}" "${CHECK_FILE}"
 		[[ ${REMINDER} -nt "${CHECK_FILE}" ]] && DO_MSG="false"
 		rm -f "${CHECK_FILE}"

@@ -159,7 +159,6 @@ CAMERA_NUMBER=0			# default
 CAMERA_NUMBER_ARG=""
 CAMERA_MODEL=""
 CAMERA_MODEL_ARG=""
-NEW_CAMERA_TYPE=""
 
 NUM_CHANGED=0
 
@@ -196,6 +195,12 @@ do
 	((NUM_CHANGED++))
 	case "${KEY}" in
 
+		# When called from the installer we get cameranumber, cameramodel, and cameratype.
+# TODO: not sure cameranumber is ever needed since it could change if,
+# for example, a user removes a camera.  Seems like cameramodel is a better way
+# to accurately find a camera.
+		# When called from the WebUI we only get what the user changed which is
+		# only cameramodel OR cameratype.
 		"cameranumber")
 			CAMERA_NUMBER="${NEW_VALUE}"
 			CAMERA_NUMBER_ARG=" -cameranumber ${CAMERA_NUMBER}"

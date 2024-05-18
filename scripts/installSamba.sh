@@ -105,8 +105,8 @@ echo "map to your Pi's drive."
 echo "This is a different password than ${LOGNAME}'s password or the root password,"
 echo "although you may elect to make them the same."
 echo
-echo "If this is your first time installing SAMBA on this Pi and
-echo "you are prompted for a CURRENT password, echo "press 'Enter'."
+echo "If this is your first time installing SAMBA on this Pi and"
+echo "you are prompted for a CURRENT password, echo press 'Enter'."
 echo "*************"
 echo -e "${NC}"
 sudo smbpasswd -a "${LOGNAME}"			|| exit 1

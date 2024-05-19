@@ -139,12 +139,12 @@ function verify_CAMERA_TYPE()
 	if [[ -z ${CT} ]]; then
 		OK="false"
 		MSG="'Camera Type' not set in WebUI."
-		IMAGE_MSG="${ERROR_MSG_PREFIX}\nCamera Type\nnot specified\nin the WebUI."
+		IMAGE_MSG="${ERROR_MSG_PREFIX}\nCamera Type\nnot specified."
 
 	elif [[ ${CT} != "RPi" && ${CT} != "ZWO" ]]; then
 		OK="false"
 		MSG="Unknown Camera Type: ${CT}."
-		IMAGE_MSG="${ERROR_MSG_PREFIX}\nCamera Type\nnot specified\nin the WebUI."
+		IMAGE_MSG="${ERROR_MSG_PREFIX}\nCamera Type\nnot specified."
 	fi
 
 	if [[ ${OK} == "false" ]]; then

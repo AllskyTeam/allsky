@@ -1,47 +1,44 @@
 <?php
 
-function DisplayDashboard_WLAN() {
+function DisplayDashboard_WLAN()
+{
 
-	// Get infomation on each interface and store in the $data array.
-	// Stop when the interface isn't found.
-	// This assumes if there are N interfaces there numbers are from 0 to (N-1).
-	// TODO: That assumption needs to be verified.
-
-	$data = Array();
-	for ($i = 0; ; $i++) {
-		$interface = "wlan$i";
-		$interface_output = get_interface_status("ifconfig $interface; iwconfig $interface");
-		if ($interface_output == "") {
-			break;
-		}
-		$data[$interface] = $interface_output;
-	}
 ?>
-	<DIV class="col-lg-12">
+<div class="col-lg-12">
 	<div class="panel panel-primary">
-				<div class="panel-heading">
-					<i class="fa fa-tachometer-alt fa-fw"></i> WLAN Dashboard
-				</div>
+		<div class="panel-heading"><i class="fa fa-tachometer-alt fa-fw"></i> WLAN Dashboard</div>
 <?php
-	$num = 0;
-	foreach ($data as $int => $v) {
-		$num++;
-		if ($num > 1) {
+	$num_interfaces = 0;
+
+	$dq = '"';		// double quote
+	$cmd = "hwinfo --network --short | gawk '{ if ($2 == ${dq}WLAN${dq}) print $1; }' ";
+	if (exec($cmd, $output, $retval) === false || $retval !== 0) {
+		echo "<div class='errorMsgBig'>Unable to get list of network devices</div>";
+		return;
+	}
+
+	foreach($output as $interface) {
+		if ($interface === "") continue;
+		$num_interfaces++;
+		if ($num_interfaces > 1) {
 			echo "<hr class='panel-primary'>";
 		}
-		process_WLAN_data($int, $v);
+		process_WLAN_data($interface);
 	}
+	if ($num_interfaces > 1) echo "<hr class='panel-primary'>";
 ?>
-			</div><!-- /.panel panel-primary -->
-			<div class="panel-footer">Information provided by ifconfig and iwconfig</div>
-			</DIV><!-- /.col-lg-12 -->
+	<div class="panel-footer">Information provided by ifconfig and iwconfig</div>
+	</div><!-- /.panel panel-primary -->
+</div><!-- /.col-lg-12 -->
 <?php
 }
 
-function process_WLAN_data($interface, $interface_output)
+function process_WLAN_data($interface)
 {
 	global $page;
 	$myStatus = new StatusMessages();
+
+	$interface_output = get_interface_status("ifconfig $interface; iwconfig $interface");
 
 	$notSetMsg = "[not set]";
 
@@ -91,59 +88,67 @@ function process_WLAN_data($interface, $interface_output)
 				<div class="panel-body">
 					<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
 					<div class="row">
-						<div class="panel panel-default"> <div class="panel-body">
-							<h4><?php echo $interface ?> Interface Information</h4>
-							<div class="info-item">IP Address</div>     <?php echo $strIPAddress ?><br>
-							<div class="info-item">Subnet Mask</div>    <?php echo $strNetMask ?><br>
-							<div class="info-item">Mac Address</div>    <?php echo $strHWAddress ?><br><br>
+						<div class="panel panel-default">
+							<div class="panel-body">
+								<h4><?php echo $interface ?> Interface Information</h4>
+								<div class="info-item">IP Address</div>     <?php echo $strIPAddress ?><br>
+								<div class="info-item">Subnet Mask</div>    <?php echo $strNetMask ?><br>
+								<div class="info-item">Mac Address</div>    <?php echo $strHWAddress ?><br><br>
 
-							<h4>Interface Statistics</h4>
-							<div class="info-item">Received Packets</div>    <?php echo $strRxPackets ?><br>
-							<div class="info-item">Received Bytes</div>      <?php echo $strRxBytes ?><br><br>
-							<div class="info-item">Transferred Packets</div> <?php echo $strTxPackets ?><br>
-							<div class="info-item">Transferred Bytes</div>   <?php echo $strTxBytes ?><br>
-						</div><!-- /.panel-body --> </div><!-- /.panel panel-default -->
+								<h4>Interface Statistics</h4>
+								<div class="info-item">Received Packets</div>    <?php echo $strRxPackets ?><br>
+								<div class="info-item">Received Bytes</div>      <?php echo $strRxBytes ?><br><br>
+								<div class="info-item">Transferred Packets</div> <?php echo $strTxPackets ?><br>
+								<div class="info-item">Transferred Bytes</div>   <?php echo $strTxBytes ?><br>
+							</div><!-- /.panel-body -->
+						</div><!-- /.panel panel-default -->
 
-						<div class="panel panel-default"> <div class="panel-body wireless">
-							<h4>Wireless Information</h4>
-							<div class="info-item">Connected To</div>   <?php echo $strSSID ?><br>
-							<div class="info-item">AP Mac Address</div> <?php echo $strBSSID ?><br>
-							<div class="info-item">Bitrate</div>        <?php echo $strBitrate ?><br>
-							<div class="info-item">Signal Level</div>   <?php echo $strSignalLevel ?><br>
-							<div class="info-item">Transmit Power</div> <?php echo $strTxPower ?><br>
-							<div class="info-item">Frequency</div>      <?php echo $strFrequency ?><br>
-							<div class="info-item">Link Quality</div>
+						<div class="panel panel-default">
+							<div class="panel-body wireless">
+								<h4>Wireless Information</h4>
+								<div class="info-item">Connected To</div>   <?php echo $strSSID ?><br>
+								<div class="info-item">AP Mac Address</div> <?php echo $strBSSID ?><br>
+								<div class="info-item">Bitrate</div>        <?php echo $strBitrate ?><br>
+								<div class="info-item">Signal Level</div>   <?php echo $strSignalLevel ?><br>
+								<div class="info-item">Transmit Power</div> <?php echo $strTxPower ?><br>
+								<div class="info-item">Frequency</div>      <?php echo $strFrequency ?><br>
+								<div class="info-item">Link Quality</div>
 <?php
 						if ($strLinkQualityPercent == $notSetMsg) echo "$notSetMsg <br>";
 						else {
 ?>
-							<div class="progress">
-								<div class="progress-bar progress-bar-<?php echo $strLinkQuality_status ?>"
-									role="progressbar"
-									aria-valuenow="<?php echo $strLinkQualityPercent ?>"
-									aria-valuemin="0" aria-valuemax="100"
-									style="width: <?php echo $strLinkQualityPercent ?>%;">
-									<?php echo "$strLinkQualityPercent% &nbsp; &nbsp; ";
-								  		echo "($strLinkQualityAbsolute / $strLinkQualityMax)\n";
-									?>
+								<div class="progress">
+									<div class="progress-bar progress-bar-<?php echo $strLinkQuality_status ?>"
+										role="progressbar"
+										aria-valuenow="<?php echo $strLinkQualityPercent ?>"
+										aria-valuemin="0" aria-valuemax="100"
+										style="width: <?php echo $strLinkQualityPercent ?>%;">
+										<?php echo "$strLinkQualityPercent% &nbsp; &nbsp; ";
+								  			echo "($strLinkQualityAbsolute / $strLinkQualityMax)\n";
+										?>
+									</div>
 								</div>
-							</div>
 <?php						} ?>
-						</div><!-- /.panel-body wireless --> </div><!-- /.panel panel-default -->
+							</div><!-- /.panel-body wireless -->
+						</div><!-- /.panel panel-default -->
 					</div><!-- /.row -->
 
-					<div class="col-lg-12"> <div class="row">
+					<div class="col-lg-12">
+						<div class="row">
 						<form action="?page=<?php echo $page ?>" method="POST">
-							<?php if ( !$interface_up ) {
-								echo "<input type='submit' class='btn btn-success' value='Start $interface' name='turn_up' />";
+<?php
+							echo "<input type='submit'";
+							if ( !$interface_up ) {
+								echo " class='btn btn-success' value='Start $interface' name='turn_up' />";
 							} else {
-								echo "<input type='submit' class='btn btn-warning' value='Stop $interface' name='turn_down' />";
+								echo " class='btn btn-warning' value='Stop $interface' name='turn_down' />";
 							}
 							echo "\n";
-							?>
+?>
 							<input type="button" class="btn btn-primary" value="Refresh" onclick="document.location.reload(true)" />
 						</form>
-					</div> </div>
+						</div>
+					</div>
 				</div><!-- /.panel-body -->
 <?php
 }

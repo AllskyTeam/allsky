@@ -57,7 +57,7 @@ but the same thing applies if you want to send the allsky images to remote serve
 that is not an Allsky Website.
 </blockquote>
 
-<h4>Easy case - server directory structure matches URL</h4>
+<h4>Easy case: server directory structure matches URL</h4>
 <p>
 Let's say you have a personal website at <b>https://mysite.com</b>
 where you store family photos.
@@ -83,25 +83,25 @@ to <span class="WebUIValue">/allsky</span>
 </p>
 
 
-<h4>More difficult case - directory structure does not match URL</h4>
+<h4>More difficult case: directory structure does not match URL</h4>
 <p>
 You have the same website URL as above,
 but when you access the remote server you don't see the photos;
-instead, you see a directory called <span class="fileName">html</span>
+instead, you see a directory called <span class="fileName">public_html</span>
 (the actual directory(s) you see will depend on your service provider).
-When you go into the <span class="fileName">html</span>
+When you go into the <span class="fileName">public_html</span>
 directory you see your photos.
 </p>
 <p>
 In this case the web server is mapping the <b>https://mysite.com</b> URL to
-its <span class="fileName">/html</span> directory.
-You create a <span class="fileName">/html/allsky</span> directory on the server and
-install the Allsky Website there.
+your <span class="fileName">/public_html</span> directory.
+You need to create a <span class="fileName">/public_html/allsky</span>
+directory on the server and install the Allsky Website there.
 The URL to the Allsky Website is still <b>https://mysite.com/allsky</b>
 but in the WebUI you'd set the Remote Server's
 <span class="WebUISetting">Image Directory</span>
-to <span class="WebUIValue">/html/allsky</span>
-(or <span class="WebUIValue">html/allsky</span> depending on your service provider).
+to <span class="WebUIValue">/public_html/allsky</span>
+(or <span class="WebUIValue">public_html/allsky</span> depending on your service provider).
 </p>
 <p>
 Mapping URLs to server directories like this is fairly common on remote servers that

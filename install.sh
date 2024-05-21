@@ -741,7 +741,7 @@ check_and_mount_tmp()
 	if [[ -d "${ALLSKY_TMP}" ]]; then
 		mkdir -p "${TMP_DIR}"
 		find "${ALLSKY_TMP}" \( -name '*.jpg' -o -name '*.png' \) -exec mv '{}' "${TMP_DIR}" \;
-		rm -f "${ALLSKY_TMP}"/*
+		rm -fr "${ALLSKY_TMP}"/*
 	else
 		mkdir "${ALLSKY_TMP}"
 	fi
@@ -798,7 +798,8 @@ install_webserver_et_al()
 		TMP="${ALLSKY_LOGS}/lighttpd.install.log"
 		{
 			sudo apt-get update && \
-				sudo apt-get --assume-yes install lighttpd php-cgi php-gd hostapd dnsmasq avahi-daemon
+				sudo apt-get --assume-yes install lighttpd php-cgi \
+					php-gd hostapd dnsmasq avahi-daemon hwinfo
 		} > "${TMP}" 2>&1
 		check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" ||
 			exit_with_image 1 "${STATUS_ERROR}" "lighttpd installation failed"

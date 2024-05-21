@@ -110,9 +110,9 @@ if [[ ${RET} -eq 0 ]]; then
 	else
 		echo "Maximum exposure time for sensor '${SENSOR}' is ${MAX_EXPOSURE} seconds."
 		if gawk -v E="${MAX_EXPOSURE}" 'BEGIN { if (E >= 60) exit 0; else exit 1; }' ; then
-			echo ">> This will make a good allsky camera. <<<"
+			echo ">>> This will make a good allsky camera. <<<"
 		else
-			echo ">> This is a short maximum exposure so may not make a good allsky camera. <<<"
+			echo ">>> This is a short maximum exposure so may not make a good allsky camera. <<<"
 		fi
 
 		echo

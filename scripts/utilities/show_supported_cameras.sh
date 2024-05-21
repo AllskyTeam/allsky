@@ -72,6 +72,10 @@ if [[ ${DO_RPI} == "true" ]]; then
 	#	camera  sensor  compare_length  model  other_info_for_camera_2
 	#	...
 	gawk -F'\t' '
+		BEGIN {
+			printf("%-25s Sensor\n", "Camera Name");
+			printf("%-25s-------\n", "--------------------------");
+		}
 		{
 			if ($1 == "camera") {
 				sensor = $2;
@@ -81,7 +85,7 @@ if [[ ${DO_RPI} == "true" ]]; then
 					other = " and related sensors";
 				else
 					other = "";
-				printf("%s (%s%s)\n", model, sensor, other);
+				printf("%-25s %s%s\n", model, sensor, other);
 			}
 		}' "${RPi_SUPPORTED_CAMERAS}"
 fi

@@ -791,7 +791,7 @@ b, strong {
 .markdown-body .minimalPadding {
 	margin-top: -0.8em;
 }
-.markdown-body .minimalPadding li {
+.markdown-body .minimalPadding li:not(:first-child) {
 	margin-top: 0em;
 }
 .markdown-body .morePadding {

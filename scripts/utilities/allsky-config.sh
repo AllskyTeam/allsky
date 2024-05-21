@@ -56,8 +56,11 @@ usage_and_exit()
 		echo -e "	'--help' displays this message and exits."
 		echo -e "	'command' is a command to execute with optional arguments.  Choices are:"
 		echo -e "		show_supported_cameras  RPi | ZWO"
-		echo -e "		show_connected_cameras  [RPi | ZWO]"
+		echo -e "		show_connected_cameras"
+		echo -e "		recheck_swap"
 		echo -e "		recheck_tmp"
+		echo -e "		samba"
+		echo -e "		new_rpi_camera_info [--camera NUM]"
 		echo -e "	If no 'command' is specified you are prompted for one to execute."
 	} >&2
 	exit "${RET}"
@@ -191,7 +194,7 @@ if [[ -z ${CMD} ]]; then
 	PROMPT="\nSelect a command to run:"
 	CMDS=()
 	CMDS+=("show_supported_cameras"		"Show supported cameras")
-	CMDS+=("show_connected_cameras"		"Show connected cameras")
+	CMDS+=("get_connected_cameras_info"	"Show connected cameras")
 	CMDS+=("recheck_swap"				"Add swap space")
 	CMDS+=("recheck_tmp"				"Move ~/allsky/tmp to memory")
 	CMDS+=("samba"						"Simplify copying files to/from the Pi")

@@ -83,33 +83,39 @@ check your <span class="WebUISetting">Max Auto-Exposure</span>.
 <details><summary></summary>
 <p>
 SD cards have a limited number of writes they can handle before they wear out.
-Although this is usually a very large number you may wish nonetheless to
-minimize writes to the SD card.
-The best way to do this is by making Allsky's <span class="fileName">allsky/tmp</span>
-directory a memory-based filesystem,
-i.e., instead of residing on the SD card it resides in RAM memory.
+Although this is usually a very large number you may want to
+minimize writes to the SD card
+by moving the <span class="fileName">~/allsky/tmp</span>
+directory from the SD card into memory.
+</p>
+<p>
+During Allsky installation you were prompted to do this -
+if you did you can ignore this FAQ item.
+</p>
 
 <blockquote>
-During Allsky installation you were prompted to create
-<span class="fileName">tmp</span> as a memory-based filesystem.
-If you did that you can ignore this tip.
+If you have a Pi 5 or newer you can also replace the SD card with an NVMe SSD disk
+which is much faster, more reliable, and allows significantly more space than an SD card
+(but costs more).
+To do this you'll need to add a board to your Pi
+(called an <strong>NVMe HAT</strong>) as well as an NVMe disk.
+Search for those terms on the Internet to see your options.
 </blockquote>
 
-Note the following:
+Before putting <span class="fileName">~/allsky/tmp</span> into memory
+note the following:
 <ul>
 <li>In order to do this you'll need enough free RAM memory,
 	so this may not work well with systems with very limited memory, for example, 512 MB.
-<li>The contents of the <span class="fileName">tmp</span>
-	directory will be erased every time you reboot your Pi.
-	This should be ok since it's only used for temporary log files and to hold images
-	as they come out of the camera,
-	before they are stored in <span class="fileName">allsky/images/DATE</span>.
+<li>The <span class="fileName">~/allsky/tmp</span> directory and its contents
+	will be erased every time you reboot your Pi.
+	This is ok since that directory is only used for temporary files (hence the same)
+	that are invalid after a reboot.
 </ul>
 <p>
-To create a memory-based filesystem:
+then execute:
 <pre>
-cd ~/allsky
-./install.sh --function check_tmp
+allsky-config  recheck_tmp
 </pre>
 
 You should accept the defaults.

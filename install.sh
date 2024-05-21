@@ -1509,6 +1509,13 @@ install_dependencies_etc()
 
 	display_msg --log progress "Installing dependencies."
 
+	local T="${ALLSKY_SCRIPTS}/allsky-config"
+	if [[ ! -f "${T}" ]]; then
+		local F="${ALLSKY_UTILITIES}/allsky-config.sh"
+		display_msg --logonly info "Creating link to ${F}"
+		ln -s "${F}" "${T}"		|| echo "Unable to ln -s '${F}' '${T}'" >&2
+	fi
+
 	local T="${ALLSKY_SCRIPTS}/functions.php"
 	if [[ ! -f "${T}" ]]; then
 		local F="${ALLSKY_WEBUI}/includes/functions.php"

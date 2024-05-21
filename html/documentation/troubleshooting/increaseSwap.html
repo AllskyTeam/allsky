@@ -32,8 +32,7 @@ there's a good chance you need to increase the amount of swap space you Pi has.
 It's easy to do:
 <pre>
 systemctl stop allsky
-cd ~/allsky
-./install.sh --function recheck_swap
+allsky-config  recheck_swap
 systemctl start allsky
 </pre>
 </p>

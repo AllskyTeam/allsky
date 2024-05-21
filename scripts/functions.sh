@@ -139,12 +139,12 @@ function verify_CAMERA_TYPE()
 	if [[ -z ${CT} ]]; then
 		OK="false"
 		MSG="'Camera Type' not set in WebUI."
-		IMAGE_MSG="${ERROR_MSG_PREFIX}\nCamera Type\nnot specified\nin the WebUI."
+		IMAGE_MSG="${ERROR_MSG_PREFIX}\nCamera Type\nnot specified."
 
 	elif [[ ${CT} != "RPi" && ${CT} != "ZWO" ]]; then
 		OK="false"
 		MSG="Unknown Camera Type: ${CT}."
-		IMAGE_MSG="${ERROR_MSG_PREFIX}\nCamera Type\nnot specified\nin the WebUI."
+		IMAGE_MSG="${ERROR_MSG_PREFIX}\nCamera Type\nnot specified."
 	fi
 
 	if [[ ${OK} == "false" ]]; then
@@ -363,7 +363,7 @@ function validate_camera()
 
 	# Now make sure the camera is supported.
 	[[ ${CT} == "ZWO" ]] && CM="${CM/ASI/}"		# "ASI" isn't in the names
-	if ! "${ALLSKY_SCRIPTS}/show_supported_cameras.sh" "--${CT}" |
+	if ! "${ALLSKY_UTILITIES}/show_supported_cameras.sh" "--${CT}" |
 		grep --silent "${CM}" ; then
 
 		MSG="${CT} camera model '${CM}' is not supported by Allsky."

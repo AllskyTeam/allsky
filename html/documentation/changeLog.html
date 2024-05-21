@@ -104,6 +104,10 @@
 					it would be difficult to find what you want if
 					the sections weren't hidden.
 				</li>
+				<li><span class="fileName">/check_allsky.sh</span> is now called
+					<span class="fileName">/checkAllsky.sh</span>
+					to be consistant with other program names.
+					<br><span class="possibleAction">Possible action: </span> None.
 			</ul>
 
 			<h4>Enhancements / Changes</h4>
@@ -112,7 +116,7 @@
 					the <span class="WebUISetting">Use Local Website</span> setting
 					and optionally set the number of days' images to keep via the
 					<span class="WebUISetting">Days To Keep on Pi Website</span> setting.
-					No more trying to figure out how to specify various directories!
+					No more trying to figure out how to set the variables!
 				</li>
 				<li>Setting up a Website on a remote server is easier since the only
 					directory you have to specify is the top-level
@@ -123,17 +127,25 @@
 					This is useful if you want to include those images in a different website
 					or want to archive them.
 				</li>
+				<li>The new <span class="fileName">allsky-config</span> command
+					is similar to the <span class="fileName">raspi-config</span>
+					but for Allsky information and configuration.
+					This command is mentioned in several documentation pages
+					(as well as below) to easily describe how to do something.
+					<br>
+					Execute <code>allsky-config</code> to see what it can do.
+				</li>
+				<li>Running <code>allsky-config   samba</code>
+					allows you to mount the <span class="fileName">~/allsky</span>
+					directory on a PC or MAC.
+					See <a allsky="true" external="true"
+						href="/documentation/explanations/SAMBA.html">Copy files to / from a Pi</a>
+					for more information.
+				</li>
 				<li>The new <span class="fileName">testUpload.sh</span> command
 					tries to upload a test file to either a remote Website or remote server.
 					If the upload fails, the command
 					<strong>attempts to tell you why it failed and what to do about it</strong>.
-				</li>
-				<li>The new <span class="fileName">installSamba.sh</span> command
-					can be used to mount the <span class="fileName">~/allsky</span>
-					directory on a PC or MAC.
-					See the <a allsky="true" external="true"
-						href="/documentation/explanations/SAMBA.html">Copy files to / from a Pi</a>
-					documentation page.
 				</li>
 				<li>When changing settings, Allsky only restarts if it needs to.
 					Some settings, like the <span class="WebUISetting">Owner</span>
@@ -168,19 +180,24 @@
 				</li>
 				<li>Support for some new third-party RPi cameras was added.
 					<blockquote>
-					Run the
-					<span class="fileName">show_supported_cameras.sh</span>
-					command to see the supported ZWO and RPi cameras.
+					Run
+					<code>allsky-config  show_supported_cameras</code>
+					to see the supported ZWO and RPi cameras.
 					<p>
 					The ZWO list is over 130 entries so if you want to check
 					if a camera you're considering getting is supported, run:
 					</p>
-					<pre>show_supported_cameras.sh --zwo | grep -i "CAMERA_NAME"</pre>
+					<pre>allsky-config  show_supported_cameras --zwo | grep -i "CAMERA_NAME"</pre>
 					replacing <code>CAMERA_NAME</code> with the name with <strong>OUT</strong>
 					<code>ASI</code>, e.g., <code>178mc</code>.
 					<p>Checking for an RPi camera is easier:
-					<pre>show_supported_cameras.sh --rpi</pre>
+					<pre>allsky-config  show_supported_cameras --rpi</pre>
 					</blockquote>
+				</li>
+				<li>The <span class="WebUILink"><strong>LAN</strong> Dashboard</span>
+						and <span class="WebUILink"><strong>WLAN</strong> Dashboard</span>
+						WebUI pages now display <strong>all</strong>
+						network adapters, regardless of their names.
 				</li>
 				<li>The <span class="fileName">endOfNight_additionalSteps.sh</span>
 					file is no longer supported.
@@ -198,25 +215,29 @@
 				<li>Overlay changes:
 					<ul>
 						<li>The overlay module debugging output is easier to read.</li>
-						<li>You can now create different overlays for daytime and nighttime captures.
+						<li>You can now create different overlays for daytime and nighttime.
 							The new <span class="managerName">Overlay Manager</span>
-							is available from the main toolbar in the <span class="editorName">Overlay Editor</span>.
-							Several overlay templates for different cameras are provided which can be customised to your requirements.
-              If you have customised the overlay then during the
-							upgrade process a new custom overlay will be created for you and assigned to both
-							daytime and nighttime captures.
-              If you have not customised the overlay then Allsky will
+							is available from the main toolbar in the
+							<span class="editorName">Overlay Editor</span>.
+							Several overlay templates for different cameras are provided
+							which can be customised to your requirements.
+							If you have customised the overlay then during the upgrade
+							process a new custom overlay will be created for you and assigned
+							to both daytime and nighttime captures.
+							If you have not customised the overlay then Allsky will
 							attempt to use the best overlay for your camera.</li>
 						<li>The <span class="editorName">Overlay Editor</span>
-							will display a warning if any of the fields on the overlay are outside the image area.
+							will display a warning if any of the fields on the overlay
+							are outside the image area.
 							The fields can be fixed which will move them into the bounds of the image.
 							See <a href="https://github.com/AllskyTeam/allsky/issues/3317"
 								allsky="true" external="true">[BUG] If a field is outside the image ...</a></li>
 						<li>If images are not being captured the
-					    <span class="editorName">Overlay Editor</span> will not start and
-		    			will display a message and wait until images are being captured.
-		    			This prevents a (usually much smaller) notification image from being used
-		    			as the <span class="editorName">Overlay Editor</span> background.</li>
+					    	<span class="editorName">Overlay Editor</span> will not start and
+		    				will display a message and wait until images are being captured.
+		    				This prevents a (usually much smaller) notification image
+							from being used as the <span class="editorName">Overlay Editor</span>
+							background.</li>
 					</ul>
 				<li>See <a href="/documentation/modules/modules.html" allsky="true" external="true">Modules Documentation</a>
 					for details on Extra Module changes.

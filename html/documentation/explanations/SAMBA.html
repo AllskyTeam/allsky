@@ -28,7 +28,7 @@
 This page describes how to copy files to and from the Pi.
 </p>
 
-<h3>Small files</h3>
+<h3>Small text files</h3>
 <p>
 If the file you want to copy is a text file and it fits on one screen
 you can simply highlight the text and copy to the clipboard,
@@ -39,7 +39,15 @@ then paste it into a file on your PC or Mac.
 For all other files you can mount the Pi's
 <span class="fileName">/home/pi</span> directory
 (or the user you installed Allsky as) onto your PC or Mac using the SAMBA service.
-To do this, execute <code>installSamba.sh</code> on the Pi and follow the prompts.
+<p>
+</p>
+The first step is to install SAMBA on the Pi:
+<pre>
+allsky-config  samba
+</pre>
+Follow the prompts.
+</p>
+<p>
 When installation is done you should see something like this
 on a PC in Windows File Explorer, where <code>ALLSKY</code> is the name of the Pi:
 <br>

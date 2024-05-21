@@ -741,7 +741,7 @@ check_and_mount_tmp()
 	if [[ -d "${ALLSKY_TMP}" ]]; then
 		mkdir -p "${TMP_DIR}"
 		find "${ALLSKY_TMP}" \( -name '*.jpg' -o -name '*.png' \) -exec mv '{}' "${TMP_DIR}" \;
-		rm -fr "${ALLSKY_TMP}"/*
+		rm -fr "${ALLSKY_TMP:?}"/*
 	else
 		mkdir "${ALLSKY_TMP}"
 	fi

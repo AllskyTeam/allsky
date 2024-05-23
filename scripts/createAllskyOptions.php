@@ -401,9 +401,10 @@ foreach ($repo_array as $repo) {
 
 	$name = getVariableOrDefault($repo, "name", null);
 	$type = getVariableOrDefault($repo, "type", null);
-	if ($type === null && $name === $endSetting) {
+	if ($name === $endSetting) {
 		$options_str .= "{\n";
 		$options_str .= "${q}name${q} : ${q}$name${q},\n";
+		$options_str .= "${q}type${q} : ${q}boolean${q},\n";
 		$options_str .= "${q}display${q} : false\n";
 		$options_str .= "}\n";
 		break;		// hit the end

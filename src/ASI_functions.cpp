@@ -63,6 +63,7 @@ int getNumOfConnectedCameras()
 
 		// File format
 		//		camera_type  <TAB>  camera_number   : sensor_name  [width x height] or ZWO code
+		//		                                      or Model
 		// Sample lines:
 		// 		RPi          <TAB>  0               : imx477       [4056x3040]
 		// 		ZWO          <TAB>  1               : ASI290MM     290b
@@ -254,7 +255,7 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 	// Module (sensor), Module_len, Name, CameraID, MaxHeight, MaxWidth, IsColorCam,
 		// BayerPattern, SupportedBins, SupportedVideoFormat, PixelSize, IsCoolerCam,
 		// BitDepth, SupportsTemperature, SupportAutoFocus
-	{ "imx477", 0, "RPi HQ", 0, 3040, 4056, ASI_TRUE,
+	{ "imx477", 0, "HQ", 0, 3040, 4056, ASI_TRUE,
 		// Need ASI_IMG_END so we know where the end of the list is.
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.55, ASI_FALSE,
 		12, ASI_TRUE, ASI_FALSE
@@ -262,12 +263,12 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 
 	// There are many versions of the imx708 (_wide, _noir, _wide_noir, etc.)
 	// so just check for "imx708" (6 characters).
-	{ "imx708", 6, "RPi Module 3", 0, 2592, 4608, ASI_TRUE,
+	{ "imx708", 6, "Module 3", 0, 2592, 4608, ASI_TRUE,
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.4, ASI_FALSE,
 		10, ASI_TRUE, ASI_TRUE
 	},
 
-	{ "ov5647", 0, "RPi Version 1", 0, 1944, 2592, ASI_TRUE,
+	{ "ov5647", 0, "Version 1", 0, 1944, 2592, ASI_TRUE,
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.4, ASI_FALSE,
 		10, ASI_FALSE, ASI_FALSE
 	},
@@ -556,38 +557,57 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 	Some cameras also have additional resolutions for a given mode.
 */
 
-// Find the first occurance of "delimeter" (or null) in "string",
-// and replace it with NULL.
-// Set "next" to the character after "delimeter" if present, otherwise NULL.
-// "string" now points to a null-terminated token,
-// and "next" points to the next (probably non-null terminated) token.
+// Find the end of the token that begins at "start".
+// The end is either "delimeter" or NULL.
+// If "delimeter", replace with NULL.
 
-/* xxxxxxxxxxxxxxx
-char *getToken(char *string, char delimeter, char *next)
+char *getToken(char *start, char delimeter)
 {
-	if (string == NULL || *string == '\0')
+	// "nextToken" points to the place to look for the next token,
+	// or NULL if we're at the end of the line.
+	static char *nextToken = NULL;
+
+	if (start == NULL || *start == '\0')
 	{
-		next = NULL;
+		// If "start" is NULL we're going to start a new line
+		// so reset "nextToken".
+		nextToken = NULL;
 		return(NULL);
 	}
 
-// hi there\0
-	char *p = string;
-	while (*p != delimeter && *p != '\0')
+	char *startOfToken;
+	char *ptr;
+
+	if (nextToken == NULL)
+		ptr = start;
+	else
+		ptr = nextToken;
+
+	if (*ptr == '\0')
+		return(NULL);
+
+	startOfToken = ptr;
+
+	// Find end of token.
+	while (*ptr != delimeter && *ptr != '\0')
 	{
-		p++;
+		ptr++;
 	}
 
-	if (*p == '\0')
+	if (*ptr == '\0')
 	{
+		// At the end of the line so reset "nextToken".
+		nextToken = ptr;
 	}
-	if (*p == delimeter || *p == '\0')
+	else
 	{
-		if (*p == delimeter)
-			*p = '\0';
+		// at delimeter.  Assume there is at least 1 more character in the line.
+		*ptr = '\0';
+		nextToken = (ptr+1);
 	}
+
+	return(startOfToken);
 }
-*/
 
 // Get the cameraNumber for the camera we're using.
 // Also save the info on each connected camera of the current type.
@@ -598,17 +618,23 @@ int getCameraNumber()
 	int thisIndex = -1;					// index of camera found in RPiCameras
 	int num_RPiCameras = 0;
 
-/* xxxxxxxxxxxxxxxxxxx
-	ASI_CAMERA_INFO *aci[CG.numCameras] = { };
-	if ((aci[0] = (ASI_CAMERA_INFO *) realloc(aci[0], sizeof(ASI_CAMERA_INFO) * CG.numCameras)) == NULL)
+	enum LINE_TYPE {
+		LT_camera, LT_libcamera, LT_raspistill
+	} lineType;
+
+if (0) {
+	ASI_CAMERA_INFO *aci = NULL;
+	size_t size = sizeof(ASI_CAMERA_INFO) * CG.numCameras;
+	if ((aci = (ASI_CAMERA_INFO *) realloc(aci, size)) == NULL)
 	{
 		int e = errno;
 		Log(0, "*** %s: ERROR: Could not realloc() for aci: %s!", CG.ME, strerror(e));
 		closeUp(EXIT_ERROR_STOP);
 	}
 
-	int on_camera = -1;
-	char *args[15];		// maximum number
+	const int cameraTokens = 15, controlCapsTokens = 9;
+	const int maxArgs = cameraTokens;
+	char *args[maxArgs] = {};		// maximum number of arguments
 
 	// Read the whole configuration file into memory so we can create argv with pointers.
 	static char *buf = readFileIntoBuffer(&CG, CG.RPI_cameraInfoFile);
@@ -619,98 +645,193 @@ int getCameraNumber()
 		closeUp(EXIT_ERROR_STOP);
 	}
 
+	bool cameraMatch = false;
 	bool inCamera = false, inControlCaps = false, inLibcamera = false;
-
-	getLine(NULL);		// resets the buffer pointer
+	char full_line[1000];
 	char *line;
 	int on_line = 0;
+	char *token;
+	int max_tokens = 0;
+
+	(void) getLine(NULL);		// resets the buffer pointer
 	while ((line = getLine(buf)) != NULL)
 	{
+		strcpy(full_line, line);		// use full_line in error messages
 		on_line++;
-		Log(5, "     line %3d: %s\n", on_line, line);
+		Log(5, "line %3d: %s\n", on_line, full_line);
 
-		int num = 0;
-		char *tab = line;		// beginning of an argument
+		(void) getToken(NULL, '\t');		// tell getToken() we have a new line.
 
-		int maxNum;
-		if (! inCamera)
-			maxNum = 15;
-		else if (inControlCaps)
-			maxNum = 9;
-		else
-			maxNum = 1;
-
-		while (num < maxNum)
+		char *cameraLength = NULL;
+		char *lt = getToken(line, '\t');	// line type
+		if (lt == NULL)
 		{
-			char *argStart = tab;
-			while (*tab != '\t' && *tab != '\0')
+			Log(0, "%s: ERROR: Line %d: no line type found in %s [%s]\n",
+				CG.ME, on_line, CG.RPI_cameraInfoFile, full_line);
+			continue;
+		}
+
+		if (strcmp(lt, "camera") == 0)
+		{
+			lineType = LT_camera;
+			max_tokens = cameraTokens;
+		}
+		else if (strcmp(lt, "libcamera") == 0)
+		{
+			// Ignore lines not for this command.
+			if (! CG.isLibcamera)
+				continue;
+
+			lineType = LT_libcamera;
+			max_tokens = controlCapsTokens;
+		}
+		else if (strcmp(lt, "raspistill") == 0)
+		{
+			// Ignore lines not for this command.
+			if (CG.isLibcamera)
+				continue;
+
+			lineType = LT_raspistill;
+			max_tokens = controlCapsTokens;
+		}
+		else
+		{
+			Log(0, "%s: ERROR: Line %d: unknown line '%s' type in %s [%s]\n",
+				CG.ME, on_line, lt, CG.RPI_cameraInfoFile, full_line);
+			continue;
+		}
+
+		// Create an array of arguments.
+		int numTokens = 0;
+		while ((token = getToken(line, '\t')) != NULL)
+		{
+			numTokens++;
+// printf("xxxxx token %d: %s\n", numTokens, token);
+
+			if (numTokens == 1)
 			{
-				tab++;
-			}
-			if (*tab == '\t' || *tab == '\0')
-			{
-				if (*tab == '\t')
-					*tab = '\0';
-printf("<<< setting args[%d] to '%s'\n", num, argStart);
-				args[num] = argStart;
-				num++;
-				tab++;
-				if (*tab == '\0')
+				if (strcmp(token, "End") == 0)
 				{
-					// There should be NO empty fields.
-					break;		// No more args on this line.
+					break;
+				}
+
+				if (lineType == LT_camera)
+				{
+					// See if this is one of the connected cameras.
+
+					// Determine how much of the Sensor name to compare.
+					cameraLength = getToken(line, '\t');
+// TODO: check for NULL
+// printf("xxxxx >> token (l) %d: %s\n", numTokens+1, cameraLength);
+					size_t len = atoi(cameraLength);
+					if (len == 0)
+					{
+						len = strlen(token);
+					}
+
+					cameraMatch = false;
+					for (int cc=0; cc < totalNum_connectedCameras; cc++)
+					{
+						CONNECTED_CAMERAS *cC = &connectedCameras[cc];
+						if (strcmp(cC->Type, CAMERA_TYPE) != 0)
+						{
+							continue;
+						}
+
+// printf(">>>> checking %s vs %s for %ld [%s]\n", token, cC->Sensor, len, cameraLength);
+			
+						// Now compare the attached sensor name with what's in our list.
+						if (strncmp(token, cC->Sensor, len) == 0)
+						{
+							cameraMatch = true;
+							num_RPiCameras++;
+							Log(5, "[[[[[[[[[[[[[ MATCH, num_RPiCameras=%d\n", num_RPiCameras);
+							break;
+						}
+					}
+				}
+
+				if (cameraMatch)
+				{
+					if (lineType == LT_camera)
+					{
+						inCamera = true;
+						inLibcamera = false;
+						inControlCaps = false;
+					}
+					else if (lineType == LT_libcamera)
+					{
+						inLibcamera = true;
+						inControlCaps = true;
+					}
+					else if (lineType == LT_raspistill)
+					{
+						inLibcamera = false;
+						inControlCaps = true;
+					}
+				}
+			}
+			else if (numTokens > max_tokens)
+			{
+				Log(5, "Too many tokens (%d vs %d)\n", numTokens, max_tokens);
+				break;
+			}
+
+			if (cameraMatch)
+			{
+				Log(5, "SETTING args[%d] to %s\n", numTokens-1, token);
+				args[numTokens-1] = token;
+				if (lineType == LT_camera && numTokens == 1)
+				{
+					numTokens++;
+					Log(5, ">> SETTING args[%d] to %s\n", numTokens-1, cameraLength);
+					args[numTokens-1] = cameraLength;
 				}
 			}
 		}
 
-		if (num == 1)
+		if (cameraMatch)
 		{
-			// End of libcamera or raspistill entries for this camera
-printf("===== line %3d: End", on_line);
-			if (inLibcamera)
+			if (numTokens == 1)
 			{
+				// End of control capability entries for this camera.
+				inCamera = false;
 				inLibcamera = false;
+				inControlCaps = false;
+			}
+			else if (numTokens == cameraTokens)
+			{
+				// camera entry
+				strncpy(aci[num_RPiCameras - 1].Module, args[0], MODULE_SIZE-1);
+				aci[num_RPiCameras - 1].Module_len = atol(args[1]);
+// TODO: add rest of args.
+
+				inCamera = true;
+			}
+			else if (numTokens == controlCapsTokens)
+			{
+				// control caps entry
+// TODO: add to CC array.
+				inControlCaps = true;
 			}
 			else
 			{
-				// Just finished reading raspistill entries which come
-				// after libcamera entries, so we're done with this camera.
-				inCamera = false;
-			}
-			inControlCaps = false;
-		}
-
-		else if (num == 15)
-		{
-			// camera entry
-			on_camera++;
-			strncpy(aci[on_camera]->Module, args[0], MODULE_SIZE-1);
-			aci[on_camera]->Module_len = atol(args[1]);
-
-			inCamera = true;
-printf("===== line %3d: camera %d", on_line, on_camera+1);
-		}
-
-		else if (num == 9)
-		{
-			// control caps entry
-printf("===== line %3d: camera %d, control caps", on_line, on_camera+1);
-			inControlCaps = true;
-			if (! inLibcamera && CG.isLibcamera)
-			{
-				// can skip these since we're not using raspistill
+				Log(-1, "%s: Ignoring line %d in %s: too many %s tokens (%d) [%s]\n",
+					CG.ME, on_line, CG.RPI_cameraInfoFile,
+					(lineType == LT_camera) ? "camera" : "control caps",
+					numTokens, full_line);
 			}
 		}
+if (numTokens > 1) Log(5, ", inCamera=%s, inControlCaps=%s, inLibcamera=%s\n", yesNo(inCamera), yesNo(inControlCaps), yesNo(inLibcamera));
 
-		else
+		if (num_RPiCameras == CG.numCameras)
 		{
-			Log(1, "WARNING: Skipping invalid line # %d (%d fields) in %s: %s\n",
-				on_line, num, CG.RPI_cameraInfoFile, line);
+			Log(5, "Found %d cameras; skipping rest of file\n", CG.numCameras);
+			break;
 		}
-printf(", inCamera=%s, inControlCaps=%s, inLibcamera=%s\n",
-yesNo(inCamera), yesNo(inControlCaps), yesNo(inLibcamera));
+
 	}
-*/
+}// end of if(1)
 
 	// For each camera found, update the next *RPiCameras[] entry to point to the
 	// camera's ASICameraInfoArray[] entry.
@@ -1185,27 +1306,10 @@ char *skipType(char *cameraName)
 
 
 // Get the camera model, removing the camera type from the name if it's there.
-// Also, we don't want spaces in the file name - they are a hassle,
-// so replace them with underscores.
 char *getCameraModel(char *cameraName)
 {
 	static char cameraModel[CAMERA_NAME_SIZE + 1];
-	char *p = skipType(cameraName);
-
-	unsigned int i;
-	for (i=0; i<CAMERA_NAME_SIZE; i++)
-	{
-		if (*p == ' ')
-		{
-			cameraModel[i] = '_';
-		}
-		else
-		{
-			cameraModel[i] = *p;
-		}
-		p++;
-	}
-	cameraModel[i] = '\0';
+	strcpy(cameraModel, skipType(cameraName));
 
 	return(cameraModel);
 }

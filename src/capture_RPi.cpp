@@ -83,12 +83,14 @@ int RPicapture(config cg, cv::Mat *image)
 	stringstream ss, ss2;
 
 	ss << cg.fullFilename;
-	command += " --output '" + ss.str() + "'";
+	command += " --thumb none --output '" + ss.str() + "'";		// don't include a thumbnail in the file
 
 	if (cg.isLibcamera)
 	{
+		command += " --no-raw 1";
+
 		// libcamera tuning file
-		if (cg.currentTuningFile != NULL && strcmp(cg.currentTuningFile, "") != 0) {
+		if (cg.currentTuningFile != NULL && *cg.currentTuningFile != '\0') {
 			ss.str("");
 			ss << cg.currentTuningFile;
 			command += " --tuning-file '" + ss.str() + "'";
@@ -99,10 +101,11 @@ int RPicapture(config cg, cv::Mat *image)
 	}
 	else
 	{
-		command += " --thumb none --burst -st";
+		command += " --burst -st";
 	}
 
 	// --timeout (in MS) determines how long the video will run before it takes a picture.
+	// Value of 0 runs forever.
 	if (cg.preview)
 	{
 		stringstream wh;
@@ -120,6 +123,8 @@ int RPicapture(config cg, cv::Mat *image)
 			if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 			{
 				// We do our own auto-exposure so no need to wait at all.
+// TODO: --immediate 0   works fine on Bookworm.
+// If it also works on Bullseye then use it when we no longer support Buster.
 				// Tried --immediate, but on Buster (don't know about Bullseye), it hung exposures.
 				ss << 1;
 			}

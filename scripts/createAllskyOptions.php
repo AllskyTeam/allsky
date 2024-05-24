@@ -404,7 +404,7 @@ foreach ($repo_array as $repo) {
 	if ($name === $endSetting) {
 		$options_str .= "{\n";
 		$options_str .= "${q}name${q} : ${q}$name${q},\n";
-		$options_str .= "${q}type${q} : ${q}boolean${q},\n";
+		$options_str .= "${q}type${q} : ${q}$type${q},\n";
 		$options_str .= "${q}display${q} : false\n";
 		$options_str .= "}\n";
 		break;		// hit the end

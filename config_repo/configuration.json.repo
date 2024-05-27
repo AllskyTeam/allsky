@@ -97,7 +97,7 @@
             },
             {
                 "display": true,
-                "url": "videos",
+                "url": "videos/",
                 "title": "Archived Timelapes",
                 "icon": "fa fa-2x fa-fw fa-play-circle",
                 "style": ""
@@ -111,14 +111,14 @@
             },
             {
                 "display": true,
-                "url": "keograms",
+                "url": "keograms/",
                 "title": "Archived Keograms",
                 "icon": "fa fa-2x fa-fw fa-barcode",
                 "style": ""
             },
             {
                 "display": true,
-                "url": "startrails",
+                "url": "startrails/",
                 "title": "Archived Startrails",
                 "icon": "fa fa-2x fa-fw fa-star",
                 "style": ""

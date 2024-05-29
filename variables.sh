@@ -89,7 +89,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	ALLSKY_LOGS="${ALLSKY_CONFIG}/logs"
 	POST_INSTALLATION_ACTIONS="${ALLSKY_LOGS}/post-installation_actions.txt"
 	OLD_ALLSKY_REMINDER="${ALLSKY_LOGS}/allsky-OLD_reminder.txt"
-	CHECK_ALLSKY_LOG="${ALLSKY_LOGS}/check_allsky.html"
+	CHECK_ALLSKY_LOG="${ALLSKY_LOGS}/checkAllsky.html"
 
 	# Holds temporary list of aborted processes since another one was in progress.
 	ALLSKY_ABORTS_DIR="${ALLSKY_TMP}/aborts"

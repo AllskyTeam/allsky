@@ -2486,6 +2486,7 @@
 	"cameramodel_values"
 ],
 "usage" : "capture",
+"checkchanges" : true,
 "action" : "restart"
 },
 {

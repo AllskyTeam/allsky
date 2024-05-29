@@ -211,7 +211,8 @@ if ($carryforward) {
 
 if ($type_to_output !== "") {
 	foreach ($type_array as $name => $type) {
-		echo "$prefix$name\n";
+		if ($name !== $endSetting)
+			echo "$prefix$name\n";
 	}
 	exit(0);
 }

@@ -306,7 +306,8 @@ fi
 					echo -e "${wNC}"
 				fi
 
-				# CAMERA_MODEL may have spaces in it so can
+				# CAMERA_MODEL may have spaces in it so can't put in quotes in
+				# ${OTHER_ARGS} (at least I don't know how).
 				if [[ -n ${CAMERA_MODEL} ]]; then
 					# shellcheck disable=SC2086
 					R="$( "${ALLSKY_BIN}/${CMD}" ${OTHER_ARGS} -cc_file "${CC_FILE}" \
@@ -352,7 +353,8 @@ fi
 				CC="$( basename "${CC_FILE}" )"
 				CC_EXT="${CC##*.}"			# after "."
 				CC_NAME="${CC%.*}"			# before "."
-				SPECIFIC_NAME="${ALLSKY_CONFIG}/${CC_NAME}_${CAMERA_TYPE}_${CAMERA_MODEL}.${CC_EXT}"
+				SPECIFIC_NAME="${ALLSKY_CONFIG}/"
+				SPECIFIC_NAME+="${CC_NAME}_${CAMERA_TYPE}_${CAMERA_MODEL// /_}.${CC_EXT}"
 
 				# Any old and new camera capabilities file should be the same unless Allsky
 				# adds or changes capabilities, so delete the old one just in case.
@@ -439,7 +441,7 @@ fi
 				NAME="$( basename "${SETTINGS_FILE}" )"
 				S_NAME="${NAME%.*}"
 				S_EXT="${NAME##*.}"
-				OLD_SETTINGS_FILE="${ALLSKY_CONFIG}/${S_NAME}_${OLD_TYPE}_${OLD_MODEL}.${S_EXT}"
+				OLD_SETTINGS_FILE="${ALLSKY_CONFIG}/${S_NAME}_${OLD_TYPE}_${OLD_MODEL// /_}.${S_EXT}"
 
 				"${ALLSKY_SCRIPTS}/convertJSON.php" --carryforward |
 				while read -r SETTING TYPE

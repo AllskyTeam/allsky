@@ -500,6 +500,11 @@ if ($settings_file !== "") {
 	$FileName = $pieces[0];		// e.g., "settings"
 	$FileExt = $pieces[1];		// e.g., "json"
 	// e.g., "settings_ZWO_ASI123.json"
+
+	// The camera model may have spaces which is a hassle in file names,
+	// so convert to underscores.
+	$cameraModel = str_replace(" ", "_", $cameraModel);
+
 	$cameraSpecificSettingsName = $FileName . "_$cameraType" . "_$cameraModel.$FileExt";
 	$fullSpecificFileName = dirname($settings_file) . "/$cameraSpecificSettingsName";
 	$specificFileExists =  file_exists($fullSpecificFileName);

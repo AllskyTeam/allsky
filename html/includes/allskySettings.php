@@ -53,7 +53,7 @@ function formatSettingValue($value) {
 }
 
 function checkType($fieldName, $value, $old, $label, $type, &$shortened=null) {
-	if ($type === null || $type === "text" || $value === "") {
+	if ($type === null || $type === "text" || $type == "select_text" || $value === "") {
 		return("");
 	}
 
@@ -111,7 +111,6 @@ function DisplayAllskyConfig() {
 	$cmdDebugArg = "";		// set to --debug for runCommand() debugging
 	$hideHeaderBodies = true;
 	$numErrors = 0;
-	$updatedSettings = false;
 	$fromConfiguration = false;
 	$bullet = "<div class='bullet'>*</div>";
 	$showIcon = "<i class='fa fa-chevron-down fa-fw'></i>";
@@ -146,7 +145,6 @@ function DisplayAllskyConfig() {
 		$name = $option['name'];
 		$optional_array[$name] = toBool(getVariableOrDefault($option, 'optional', "false"));
 		$t = getVariableOrDefault($option, 'type', "");
-		if (substr($t, 0, 7) == "select_") $t = substr($t, 7);
 		$type_array[$name] = $t;
 	}
 
@@ -159,9 +157,9 @@ function DisplayAllskyConfig() {
 			$sourceFiles = array();			// list of files in the "source" field
 			$sourceFilesContents = array();	// contents of each sourceFiles file
 			$changes = "";
-			$nonCameraChanges = "";
 			$restartRequired = false;
 			$stopRequired = false;
+			$reReadSettings = false;
 			$cameraChanged = false;
 			$refreshingCameraType = false;
 			$newCameraType = "";
@@ -184,7 +182,7 @@ function DisplayAllskyConfig() {
 
 			$numSettingsChanges = 0;
 			$numSourceChanges = 0;
-			$nonCameraChangesExist = false;
+			$nonCameraChanges = "";
 			$changesMade = false;
 
 	 		foreach ($_POST as $name => $newValue) {
@@ -273,29 +271,50 @@ function DisplayAllskyConfig() {
 
 					if ($oldValue === $newValue) continue;
 
-					$nonCameraChangesExist = false;
 					if ($isSettingsField) $numSettingsChanges++;
 					else $numSourceChanges++;
 
 					if ($name === $cameraTypeName) {
-						$cameraChanged = true;
 						if ($newValue === "Refresh") {
-							// Refresh the same Camera Type
-							$refreshingCameraType = true;
-							$newCameraType = $oldValue;
-							$newValue = $oldValue;
+							if ($cameraChanged) {
+								$msg = "If you selected <b>Refresh</b> for <b>$label</b>";
+								$msg .= " you cannot change anything else.";
+								$msg .= "<br>You also changed: ";
+								if ($newCameraModel !== "") $msg .= " <b>Camera Model</b>";
+								if ($newCameraNumber !== "") $msg .= " <b>Camera Number</b>";
+								$status->addMessage($msg, 'danger');
+								$ok = false;
+							} else {
+								// Refresh the same Camera Type
+								$refreshingCameraType = true;
+								$newCameraType = $oldValue;
+								$newValue = $oldValue;
+							}
 						} else {
 							$newCameraType = $newValue;
 						}
-					} elseif ($name === $cameraModelName) {
 						$cameraChanged = true;
-						$newCameraModel = $newValue;
-					} elseif ($name === $cameraNumberName) {
-						$cameraChanged = true;
-						$newCameraNumber = $newValue;
+					} elseif ($name === $cameraModelName || $name === $cameraNumberName) {
+						if ($refreshingCameraType) {
+							$msg = "If you selected <b>Refresh</b> for <b>Camera Type</b>";
+							$msg .= " you cannot change anything else.";
+							$msg .= "<br>You also changed: <b>$label</b>";
+							$status->addMessage($msg, 'danger');
+							$ok = false;
+						} else {
+							$cameraChanged = true;
+							if ($name === $cameraModelName)
+								$newCameraModel = $newValue;
+							else
+								$newCameraNumber = $newValue;
+						}
 					} else {
 						// want to know changes other than camera
-						$nonCameraChangesExist = true;
+						if ($nonCameraChanges === "")
+							$nonCameraChanges = "<b>$label</b>";
+						else
+							$nonCameraChanges .= ", <b>$label</b>";
+						$nonCameraChanges .= " (from '$oldValue' to '$newValue')";
 						if ($name === "latitude" ||
 							  $name === "longitude" ||
 							  $name === "angle" ||
@@ -313,14 +332,6 @@ function DisplayAllskyConfig() {
 
 					if ($checkchanges) {		// Changes for makeChanges.sh to check
 						$changes .= "  '$name' '$label' '$oldValue' '$newValue'";
-					}
-
-					if ($nonCameraChangesExist) {
-						if ($nonCameraChanges === "")
-							$nonCameraChanges = "<b>$label</b>";
-						else
-							$nonCameraChanges .= ", <b>$label</b>";
-						$nonCameraChanges .= " (from '$oldValue' to '$newValue')";
 					}
 				}
 
@@ -368,10 +379,10 @@ if ($debug && $s != $s_newValue) {
 			}
 
 			if ( $ok && ($changesMade || $fromConfiguration) ) {
-				if ($nonCameraChangesExist || $fromConfiguration) {
-					if ($cameraChanged) {
-						$msg = "If you change <b>Camera Type</b>, <b>Camera Model</b>,";
-						$msg .= " or <b>Camera Number</b>  you cannot change anything else.";
+				if ($nonCameraChanges !== "" || $fromConfiguration) {
+					if ($cameraChanged && $nonCameraChanges !== "") {
+						$msg = "If you change <b>Camera Type</b> or <b>Camera Model</b>";
+						$msg .= " you cannot change anything else.";
 						$msg .= "<br>You also changed: $nonCameraChanges.";
 						$status->addMessage($msg, 'danger');
 						$ok = false;
@@ -393,7 +404,7 @@ if ($debug) {
 }
 							// updateFile() only returns error messages.
 							$msg = updateFile($settings_file, $content, "settings", true);
-echo '<script>console.log("Updated ' . "$settings_file, msg=$msg" . '");</script>';
+							echo '<script>console.log("Updated ' . "$settings_file, msg=$msg" . '");</script>';
 							if ($msg === "") {
 								if ($numSettingsChanges > 0) {
 									$msg = "$numSettingsChanges setting";
@@ -404,7 +415,7 @@ echo '<script>console.log("Updated ' . "$settings_file, msg=$msg" . '");</script
 									$msg = "Configuration saved and timestamp updated.";
 								}
 								$needsConfiguration = false;
-								$updatedSettings = true;
+								$reReadSettings = true;
 							} else {
 								$msg = "Failed to update settings in '$settings_file': $msg";
 								$status->addMessage($msg, 'danger');
@@ -469,10 +480,19 @@ echo "<script>console.log('Updated $fileName');</script>";
 
 					$CMD = "sudo --user=" . ALLSKY_OWNER;
 					$CMD .= " " . ALLSKY_SCRIPTS . "/makeChanges.sh $cmdDebugArg $moreArgs $changes";
-					# Let makeChanges.sh display any output
-					echo '<script>console.log("Running: ' . $CMD . '");</script>';
-					// false = don't add anything to the message
+					# Let makeChanges.sh display any output.
+					// false = don't add anything to the message.
 					$ok = runCommand($CMD, "", "success", false);
+
+					// If Allsky needs to be configured again, e.g., a new camera type/model,
+					// stop Allsky, don't restart it.
+					$settings_array = readSettingsFile();
+					$reReadSettings = false;	// just re-read it, so don't need to read again
+					if (getVariableOrDefault($settings_array, $lastChangedName, null) === null) {
+						$msg .= "Allsky needs to be re-configured.<br>";
+						$restartRequired = false;
+						$stopRequired = true;
+					}
 				}
 
 				if ($ok) {
@@ -525,7 +545,6 @@ echo "<script>console.log('Updated $fileName');</script>";
 
 						// postData.sh will output necessary messages.
 						$cmd = "${CMD}/postData.sh --fromWebUI $cmdDebugArg $moreArgs";
-						echo '<script>console.log("Running: ' . $cmd . '");</script>';
 						$worked = runCommand($cmd, "", "success", false);
 
 						if ($fromConfiguration) {
@@ -549,6 +568,10 @@ echo "<script>console.log('Updated $fileName');</script>";
 
 			} else {	// not $ok
 				$status->addMessage("Settings NOT saved due to errors above.", 'info');
+			}
+
+			if ($reReadSettings) {
+				$settings_array = readSettingsFile();
 			}
 		} else {
 			$status->addMessage('Unable to save settings - session timeout.', 'danger');
@@ -582,7 +605,6 @@ echo "<script>console.log('Updated $fileName');</script>";
 			$msg = updateFile($settings_file, $content, "settings", true);
 			if ($msg === "") {
 				$status->addMessage("Settings reset to default", 'info');
-				$updatedSettings = true;
 
 				foreach($sourceFilesChanged as $fileName) {
 					$content = json_encode($sourcFilesContents[$fileName], $mode);
@@ -591,6 +613,9 @@ echo "<script>console.log('Updated $fileName');</script>";
 						$status->addMessage("Failed to reset settings in '$fileName': $msg", 'danger');
 					}
 				}
+
+				// The settings file changed so re-read it.
+				$settings_array = readSettingsFile();
 			} else {
 				$status->addMessage("Failed to reset settings: $msg", 'danger');
 			}
@@ -599,15 +624,10 @@ echo "<script>console.log('Updated $fileName');</script>";
 		}
 	}
 
-	// If the settings file changed above, re-read the file.
-	// Also, if $settings_array is null it means we're being called from the Allsky Website,
+	// If $settings_array is null it means we're being called from the Allsky Website,
 	// so read the file.
-	if ($updatedSettings || $settings_array === null) {
-		$errorMsg = "ERROR: Unable to process settings file '$settings_file'.";
-		$settings_array = get_decoded_json_file($settings_file, true, $errorMsg);
-		if ($settings_array === null) {
-			exit(1);
-		}
+	if ($settings_array === null) {
+		$settings_array = readSettingsFile();
 	}
 
 	$cameraType = getVariableOrDefault($settings_array, $cameraTypeName, "");
@@ -709,15 +729,19 @@ if (false && $debug) { echo "<br>Option $name"; }
 					$status->addMessage($msg, 'danger');
 					continue;
 				}
-				if (substr($type, 0, 7) === "select_")
-					$type = substr($type, 7);
+				if (substr($type, 0, 7) === "select_") {
+					$realType = substr($type, 7);
+					$type = "select";
+				} else {
+					$realType = $type;
+				}
 
 				// Should this setting be displayed?
 				$display = toBool(getVariableOrDefault($option, 'display', "true"));
 				if (toBool(getVariableOrDefault($option, 'settingsonly', "false"))) {
 					$display = false;
 				}
-				$isHeader = substr($type, 0, 6) === "header";
+				$isHeader = substr($realType, 0, 6) === "header";
 				if (! $display && ! $isHeader) {
 					if ($formReadonly != "readonly") {
 						$value = getVariableOrDefault($settings_array, $name, "");
@@ -757,7 +781,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 
 					// In read-only mode, getVariableOrDefault() returns booleans differently.
 					// A 0 or 1 is returned.
-					if ($type === "boolean" && $formReadonly == "readonly") {
+					if ($realType === "boolean" && $formReadonly == "readonly") {
 						if ($value === null || $value == 0) {
 							$value = "false";
 						} else {
@@ -941,7 +965,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 					}
 
 					// Show the default in a popup
-					if ($type == "boolean") {
+					if ($realType == "boolean") {
 						// Boolean values are strings: "true" or "false".
 						if ($default == "true") $default = "Yes";
 						else $default = "No";

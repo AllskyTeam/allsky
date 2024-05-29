@@ -453,7 +453,7 @@ fi
 
 			#shellcheck source-path=scripts
 			source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"
-			FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}_${CAMERA_MODEL}"
+			FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}_${CAMERA_MODEL// /_}"
 			FULL_OVERLAY_NAME+="-${C_sensorWidth}x${C_sensorHeight}-both.json"
 			SHORT_OVERLAY_NAME="overlay-${CAMERA_TYPE}.json"
 

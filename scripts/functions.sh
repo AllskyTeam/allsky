@@ -807,7 +807,7 @@ function check_settings_link()
 	FILE="$( basename "${FULL_FILE}" )"
 	F="${FILE%.*}"
 	E="${FILE##*.}"
-	CORRECT_NAME="${F}_${CAMERA_TYPE}_${CAMERA_MODEL}.${E}"
+	CORRECT_NAME="${F}_${CAMERA_TYPE}_${CAMERA_MODEL// /_}.${E}"
 	FULL_CORRECT_NAME="${DIRNAME}/${CORRECT_NAME}"
 	SETTINGS_LINK="$( get_links "${FULL_FILE}" )"
 	RET=$?

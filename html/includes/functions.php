@@ -658,7 +658,8 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 	global $status;
 
 	exec("$cmd 2>&1", $result, $return_val);
-	echo "<script>console.log('[$cmd] returned $return_val, result=" . implode(" ", $result) . "');</script>";
+	$dq = '"';
+	echo "<script>console.log(${dq}[$cmd] returned $return_val, result=" . implode(" ", $result) . "${dq});</script>";
 	if ($return_val === 255) {
 		// This is only a warning so only display the caller's message, if any.
 		if ($result != null) $msg = implode("<br>", $result);

@@ -296,13 +296,13 @@ fi
 				CMD="capture_${CAMERA_TYPE}"
 				OTHER_ARGS+=" -debuglevel 3 ${CAMERA_NUMBER_ARG}"
 				if [[ -n ${CAMERA_MODEL} ]]; then
-					CM=" -cameramodel '${CAMERA_MODEL}'"
+					CAMERA_MODEL_ARG="-cameramodel '${CAMERA_MODEL}'"
 				else
-					CM=""
+					CAMERA_MODEL_ARG=""
 				fi
 				if [[ ${DEBUG} == "true" ]]; then
 					echo -e "${wDEBUG}"
-					echo    "Calling: ${CMD} ${OTHER_ARGS} ${CM} -cc_file '${CC_FILE}'"
+					echo    "Calling: ${CMD} ${OTHER_ARGS} ${CAMERA_MODEL_ARG} -cc_file '${CC_FILE}'"
 					echo -e "${wNC}"
 				fi
 

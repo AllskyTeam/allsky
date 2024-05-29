@@ -196,9 +196,8 @@ do
 	case "${KEY}" in
 
 		# When called from the installer we get cameranumber, cameramodel, and cameratype.
-# TODO: not sure cameranumber is ever needed since it could change if,
-# for example, a user removes a camera.  Seems like cameramodel is a better way
-# to accurately find a camera.
+		# This is the only time cameranumber should be used since it could change if,
+		# for example, a user removes a camera.
 		# When called from the WebUI we only get what the user changed which is
 		# only cameramodel OR cameratype.
 		"cameranumber")
@@ -227,13 +226,15 @@ do
 				fi
 			fi
 
-			# For RPi cameras the "model" is actually the sensor name,
-			# so convert it into the "real" model name and save it.
 			if [[ -n ${CAMERA_MODEL} ]]; then
+if false; then
+# ##### TODO: I'm pretty sure this is NOT true...
 				if [[ ${CAMERA_TYPE} == "RPi" ]]; then
+					# For RPi cameras the "model" is actually the sensor name,
+					# so convert it into the "real" model name and save it.
 					CAMERA_MODEL="$( get_model_from_sensor "${CAMERA_MODEL}" )"
 				fi
-				CAMERA_MODEL_ARG=" -cameramodel ${CAMERA_MODEL}"
+fi
 			fi
 
 			# This requires Allsky to be stopped so we don't
@@ -292,14 +293,28 @@ do
 				fi
 
 				# Can't quote items in ${CMD} or else they get double quoted when executed.
-				CMD="capture_${CAMERA_TYPE} ${CAMERA_NUMBER_ARG} ${CAMERA_MODEL_ARG}"
-				CMD+=" -debuglevel 3 ${OTHER_ARGS}"
+				CMD="capture_${CAMERA_TYPE}"
+				OTHER_ARGS+=" -debuglevel 3 ${CAMERA_NUMBER_ARG}"
+				if [[ -n ${CAMERA_MODEL} ]]; then
+					CM=" -cameramodel '${CAMERA_MODEL}'"
+				else
+					CM=""
+				fi
 				if [[ ${DEBUG} == "true" ]]; then
-					echo -e "${wDEBUG}Calling: ${CMD} -cc_file '${CC_FILE}'${wNC}"
+					echo -e "${wDEBUG}"
+					echo    "Calling: ${CMD} ${OTHER_ARGS} ${CM} -cc_file '${CC_FILE}'"
+					echo -e "${wNC}"
 				fi
 
-				# shellcheck disable=SC2086
-				R="$( "${ALLSKY_BIN}"/${CMD} -cc_file "${CC_FILE}" 2>&1 )"
+				# CAMERA_MODEL may have spaces in it so can
+				if [[ -n ${CAMERA_MODEL} ]]; then
+					# shellcheck disable=SC2086
+					R="$( "${ALLSKY_BIN}/${CMD}" ${OTHER_ARGS} -cc_file "${CC_FILE}" \
+						-cameramodel "${CAMERA_MODEL}" 2>&1 )"
+				else
+					# shellcheck disable=SC2086
+					R="$( "${ALLSKY_BIN}"/${CMD} ${OTHER_ARGS} -cc_file "${CC_FILE}" 2>&1 )"
+				fi
 				RET=$?
 				if [[ ${RET} -ne 0 || ! -f ${CC_FILE} ]]; then
 					# Restore prior cc file if there was one.

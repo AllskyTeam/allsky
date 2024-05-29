@@ -600,7 +600,7 @@ function check_swap()
 		fi
 	else
 		MSG="Size of current swap (${CURRENT_SWAP} MB) is sufficient; no change needed."
-		display_msg --log progress "${MSG}"
+		display_msg --logonly info "${MSG}"
 	fi
 
 	if [[ ${CALLED_FROM} == "install" ]]; then
@@ -652,7 +652,7 @@ function check_tmp()
 	# Check if currently a memory filesystem.
 	if is_tmp_mounted; then
 		MSG="${ALLSKY_TMP} is currently a memory filesystem; no change needed."
-		display_msg --log progress "${MSG}"
+		display_msg --logonly info "${MSG}"
 
 		# If there's a prior Allsky version and it's tmp directory is mounted,
 		# try to unmount it, but that often gives an error that it's busy,
@@ -807,7 +807,7 @@ function get_lat_long()
 	MSG+="\nIt can either have a plus or minus sign (e.g., -20.1)"
 	MSG+="\nor N or S (e.g., 20.1N)"
 	if [[ -n ${LAT} ]]; then
-		MSG+="\n\n*** Your approximate Latitude using your IP Address is below. ***"
+		MSG+="\n\n*** Your APPROXIMATE Latitude using your IP Address is below. ***"
 	fi
 	LATITUDE="$( prompt_for_lat_long "${MSG}" "latitude" "Latitude" "${LAT}" )"
 
@@ -815,7 +815,7 @@ function get_lat_long()
 	MSG+="\nIt can either have a plus or minus sign (e.g., -20.1)"
 	MSG+="\nor E or W (e.g., 20.1W)"
 	if [[ -n ${LON} ]]; then
-		MSG+="\n\n*** Your approximate Longitude using your IP Address is below. ***"
+		MSG+="\n\n*** Your APPROXIMATE Longitude using your IP Address is below. ***"
 	fi
 	LONGITUDE="$( prompt_for_lat_long "${MSG}" "longitude" "Longitude" "${LON}" )"
 

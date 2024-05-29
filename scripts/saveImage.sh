@@ -130,9 +130,11 @@ fi
 
 # TODO: Dark subtract long-exposure images, even if during daytime.
 # TODO: Need a config variable to specify the threshold to dark subtract.
-if [[ ${DAY_OR_NIGHT} == "NIGHT" ]]; then
-	#shellcheck source-path=scripts
-	source "${ALLSKY_SCRIPTS}/darkSubtract.sh"	# It will modify the image but not its name.
+if [[ $( settings ".usedarkframes" ) == "true" ]]; then
+	if [[ ${DAY_OR_NIGHT} == "NIGHT" ]]; then
+		#shellcheck source-path=scripts
+		source "${ALLSKY_SCRIPTS}/darkSubtract.sh"	# It will modify the image but not its name.
+	fi
 fi
 
 # If any of the "convert"s below fail, exit since we won't know if the file was corrupted.

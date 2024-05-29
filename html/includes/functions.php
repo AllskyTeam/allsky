@@ -112,6 +112,16 @@ $hasLocalWebsite = null;
 $hasRemoteWebsite = null;
 $endSetting = "XX_END_XX";
 
+function readSettingsFile() {
+	$settings_file = getSettingsFile();
+	$errorMsg = "ERROR: Unable to process settings file '$settings_file'.";
+	$contents = get_decoded_json_file($settings_file, true, $errorMsg);
+	if ($contents === null) {
+		exit(1);
+	}
+	return($contents);
+}
+
 function initialize_variables($website_only=false) {
 	global $status;
 	global $image_name;
@@ -123,12 +133,7 @@ function initialize_variables($website_only=false) {
 	global $useLocalWebsite, $useRemoteWebsite;
 	global $hasLocalWebsite, $hasRemoteWebsite;
 
-	$settings_file = getSettingsFile();
-	$errorMsg = "ERROR: Unable to process settings file '$settings_file'.";
-	$settings_array = get_decoded_json_file($settings_file, true, $errorMsg);
-	if ($settings_array === null) {
-		exit(1);
-	}
+	$settings_array = readSettingsFile();
 
 	// See if there are any website configuration files.
 	// Assume if there are, that website is in use.

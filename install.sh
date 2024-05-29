@@ -1190,11 +1190,9 @@ set_what_can_be_skipped()
 {
 	if [[ ${PRIOR_ALLSKY_DIR} != "" ]]; then
 		local OLD_VERSION="${1}"
-		local OLD_BASE_VERSION="$( remove_point_release "${OLD_VERSION}" )"
 		local NEW_VERSION="${2}"
-		local NEW_BASE_VERSION="$( remove_point_release "${NEW_VERSION}" )"
-# TODO: compare OLD_VERSION and NEW_VERSION instead, in case a point release changed something?
-		if [[ ${NEW_BASE_VERSION} == "${OLD_BASE_VERSION}" ]]; then
+
+		if [[ ${NEW_VERSION} == "${OLD_VERSION}" ]]; then
 			# No changes to these packages so no need to reinstall.
 			MSG="Skipping installation of: webserver et.al., PHP modules, Truetype fonts, Python"
 			display_msg --logonly info "${MSG}"
@@ -1211,12 +1209,14 @@ set_what_can_be_skipped()
 
 ####
 # Do we need to reboot?
+# Use the prior version's info, even if we won't use its settings.
 is_reboot_needed()
 {
 	local OLD_VERSION="${1}"
 	local OLD_BASE_VERSION="$( remove_point_release "${OLD_VERSION}" )"
 	local NEW_VERSION="${2}"
 	local NEW_BASE_VERSION="$( remove_point_release "${NEW_VERSION}" )"
+
 	if [[ ${NEW_BASE_VERSION} == "${OLD_BASE_VERSION}" ||
 		  (! ${OLD_VERSION} < "${SCRIPTS_PATH_ADDED_VERSION}") ]]; then
 		# Assume just bug fixes between point releases.
@@ -1468,10 +1468,10 @@ prompt_for_prior_Allsky()
 			PRIOR_CAMERA_TYPE=""
 			PRIOR_CAMERA_MODEL=""
 			PRIOR_CAMERA_NUMBER=""
+			display_msg --logonly info "Will NOT restore from prior version of Allsky."
 			MSG="If you want your old images, darks, settings, etc. from the prior version"
 			MSG+=" of Allsky, you'll need to manually move them to the new version."
-			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
-			display_msg --logonly info "Will NOT restore from prior version of Allsky."
+			display_msg info "${MSG}"
 		fi
 	else
 		MSG="No prior version of Allsky found."
@@ -3186,7 +3186,7 @@ check_if_buster()
 display_image()
 {
 	local IMAGE_OR_CUSTOM="${1}"
-	local FULL_FILENAME  FILENAME  EXTENSION  IMAGE_NAME  COLOR  CUSTOM_MESSAGE  MSG  X
+	local FULL_FILENAME  FILENAME  EXTENSION  IMAGE_NAME  COLOR  CUSTOM_MESSAGE  MSG  X  I
 
 	# ${ALLSKY_TMP} may not exist yet, i.e., at the beginning of installation.
 	mkdir -p "${ALLSKY_TMP}"
@@ -3200,9 +3200,10 @@ display_image()
 		EXTENSION="jpg"
 	fi
 
+	I="${ALLSKY_TMP}/${FILENAME}.${EXTENSION}"
 	if [[ -z ${IMAGE_OR_CUSTOM} ]]; then		# No IMAGE_OR_CUSTOM means remove the image
 		display_msg --logonly info "Removing prior notification image."
-		rm -f "${ALLSKY_TMP}/${FILENAME}.${EXTENSION}"
+		rm -f "${I}"
 		return
 	fi
 
@@ -3233,8 +3234,10 @@ display_image()
 			touch "${POST_INSTALLATION_ACTIONS}_initial_message"
 		fi
 
-		display_msg --logonly info "Displaying notification image '${IMAGE_NAME}.${EXTENSION}'"
-		cp "${ALLSKY_NOTIFICATION_IMAGES}/${IMAGE_NAME}.${EXTENSION}" "${I}" 2>/dev/null
+		X="${IMAGE_NAME}.${EXTENSION}"
+		display_msg --logonly info "Displaying notification image '${X}'"
+		cp "${ALLSKY_NOTIFICATION_IMAGES}/${X}" "${I}" ||
+			display_msg --log info "WARNING: unable to copy '${X}' to '${I}'"
 	fi
 }
 

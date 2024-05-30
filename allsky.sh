@@ -128,15 +128,8 @@ USE_NOTIFICATION_IMAGES="$( settings ".notificationimages" )"		|| exit "${EXIT_E
 # Make sure we are not already running.
 pgrep "${ME}" | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
-
-if [[ ${CAMERA_TYPE} == "RPi" ]]; then
-	# "true" means use doExit() on error
-	RPi_COMMAND_TO_USE="$( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" "false" )"
-	# "false" means don't ignore errors (i.e., exit on error).
-	get_connected_cameras_info "false" > "${CONNECTED_CAMERAS_INFO}"
-
-elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
-	RPi_COMMAND_TO_USE=""
+# Get the list of connected cameras and make sure the one we want is connected.
+if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 	RESETTING_USB_LOG="${ALLSKY_TMP}/resetting_USB.txt"
 
 	reset_usb()		# resets the USB bus
@@ -181,28 +174,39 @@ elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 		sudo "${ALLSKY_BIN}/uhubctl" --action cycle --exact --search "${SEARCH}"
 		sleep 3		# give it a few seconds, plus, allow the notification images to be seen
 	}
+fi
 
-	# "true" means ignore errors (i.e., do not exit on error).
-	CAMERAS="$( get_connected_cameras_info "true" 2> /dev/null |
-		tee "${CONNECTED_CAMERAS_INFO}" )"
-	NUM_CAMERAS=$( echo "${CAMERAS}" | wc -l )
+# "true" means ignore errors
+get_connected_cameras_info "true" > "${CONNECTED_CAMERAS_INFO}"
+if grep --silent "^${CAMERA_TYPE}" "${CONNECTED_CAMERAS_INFO}" ; then
+	CAMERA_FOUND="true"
+else
+	CAMERA_FOUND="false"
+fi
 
-	if [[ ${NUM_CAMERAS} -eq 0 ]]; then
+if [[ ${CAMERA_FOUND} == "false" ]]; then
+	if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 		# reset_usb() exits if too many tries
 		reset_usb "looking for a\nZWO camera"
 		set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
 		exit 0	# exit with 0 so the service is restarted
 	fi
-fi
 
-if [[ ! -s ${CONNECTED_CAMERAS_INFO} ]]; then
 	set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
-	MSG="Unable to start Allsky - no connected cameras found!"
-	echo -e "${RED}*** ${MSG}${NC}" >&2
-	IMAGE_MSG="${ERROR_MSG_PREFIX}"
-	IMAGE_MSG+="\nNo connected\ncameras found!"
+	MSG="${NOT_STARTED_MSG}  No connected ${CAMERA_TYPE} cameras found!"
+#xx	echo -e "${RED}*** ${MSG}${NC}" >&2
+	IMAGE_MSG="*** ERROR ***\n"
+	IMAGE_MSG+="${NOT_STARTED_MSG}\n"
+	IMAGE_MSG+="\nNo connected ${CAMERA_TYPE}\ncameras found!"
 	doExit "${EXIT_ERROR_STOP}" "Error" \
 		"${IMAGE_MSG}" "${NOT_STARTED_MSG}: ${MSG}"
+fi
+
+if [[ ${CAMERA_TYPE} == "RPi" ]]; then
+	# "true" means use doExit() on error
+	RPi_COMMAND_TO_USE="$( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" "false" )"
+elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
+	RPi_COMMAND_TO_USE=""
 fi
 
 # Make sure the current camera is supported and hasn't changed unexpectedly.

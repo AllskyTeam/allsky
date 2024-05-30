@@ -3318,7 +3318,6 @@ check_restored_settings()
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 	fi
 
-	display_image "ConfigurationNeeded"
 	CONFIGURATION_NEEDED="true"
 }
 
@@ -3838,8 +3837,10 @@ if [[ ${CONFIGURATION_NEEDED} == "false" ]]; then
 	display_image --custom "lime" "Allsky is\nready to start"
 	display_msg --log progress "\nInstallation is done and Allsky is ready to start."
 elif [[ ${CONFIGURATION_NEEDED} != "true" ]]; then
+	# A status string.
 	exit_installation 0 "${CONFIGURATION_NEEDED}" ""
 else
+	# "true"
 	display_image "ConfigurationNeeded"
 	do_allsky_status "ALLSKY_STATUS_SEE_WEBUI"
 	MSG=" but Allsky needs to be configured before it will start."

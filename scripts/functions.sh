@@ -177,6 +177,12 @@ function test_determineCommandToUse()
 CMD_TO_USE_=""
 function determineCommandToUse()
 {
+	# If we were already called just return the command.
+	if [[ -n ${CMD_TO_USE_} ]]; then
+		echo "${CMD_TO_USE_}"
+		return 0
+	fi
+
 	local USE_doExit="${1:-false}"		# Call doExit() on error?
 	local PREFIX="${2}"					# Only used if calling doExit().
 	local IGNORE_ERRORS="${3:-false}"	# True if just checking

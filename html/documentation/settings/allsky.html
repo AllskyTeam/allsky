@@ -446,6 +446,12 @@ A (partial) typical page is below.
 	If that bothers you, change the latitude and/or longitude values slightly.
 	Allsky itself only uses them to determine when daytime and nighttime begin so
 	you can change the values a fair amount and not impact anything.
+	<br><br>
+	When installing Allsky the first time,
+	the installation script will attempt to determine your rough
+	<span class="WebUISetting">Latitude</span> and
+	<span class="WebUISetting">Longitude</span> based on your IP address.
+	These values may be "close enough" in most cases but you may want to check it anyhow.
 	</blockquote>
 	</td>
 </tr>
@@ -720,9 +726,9 @@ A (partial) typical page is below.
 	<span class="WebUIValue">0</span> disables resizing.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Image Resize Height</span></td>
+<tr><td><span class="WebUISetting">Image Resize<br>Height</span></td>
 	<td>0</td>
-	<td>Same as <span class="WebUISetting">Image Resize Width</span>
+	<td>Same as <span class="WebUISetting">Image Resize<br>Width</span>
 	but for the image height.
 	<br>Typically you'll want the
 	<span class="WebUISetting">Width</span>&nbsp;/&nbsp;<span class="WebUISetting">Height</span>
@@ -730,7 +736,7 @@ A (partial) typical page is below.
 	otherwise images will be distorted.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Image Crop Top</span></td>
+<tr><td><span class="WebUISetting">Image Crop<br>Top</span></td>
 	<td>0</td>
 	<td>Number of pixels to crop off the top of an image.
 	This is often used to remove the dark areas around an image when using a fisheye lens.
@@ -739,15 +745,15 @@ A (partial) typical page is below.
 	or a positive number.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Image Crop Right</span></td>
+<tr><td><span class="WebUISetting">Image Crop<br>Right</span></td>
 	<td>0</td>
 	<td>Number of pixels to crop off the right side of an image.</td>
 </tr>
-<tr><td><span class="WebUISetting">Image Crop Bottom</span></td>
+<tr><td><span class="WebUISetting">Image Crop<br>Bottom</span></td>
 	<td>0</td>
 	<td>Number of pixels to crop off the bottom an image.</td>
 </tr>
-<tr><td><span class="WebUISetting">Image Crop Left</span></td>
+<tr><td><span class="WebUISetting">Image Crop<br>Left</span></td>
 	<td>0</td>
 	<td>Number of pixels to crop off the left side of an image.</td>
 </tr>
@@ -867,7 +873,7 @@ A (partial) typical page is below.
 	there may not be enough time to finish one mini timelapse creation before
 	the next one starts.
 	If this happens the second one will be aborted and you'll see a System Message in the WebUI
-	(you may need to refresh your browser page).
+	(you may need to refresh your browser page to see it).
 	</blockquote>
 	</p>
 	</td>
@@ -1128,21 +1134,27 @@ A (partial) typical page is below.
 <tr><td><span class="WebUISetting">SSH Key File</span></td>
 	<td></td>
 	<td>(scp and rsync protocols only) Path to the SSH key.
-	<br>
+	<p>
 	You need to set up SSH key authentication on your server.
 	First, generate an SSH key on your Pi:
 <pre>ssh-keygen -t rsa</pre>
 	When prompted, leave the default filename, and use an empty passphrase.
+	</p>
 	Then, copy the generated key to your server:
-<pre>ssh-copy-id remote_username@server_ip_address</pre>
+<pre>ssh-copy-id remote_username@remote_server</pre>
+	Replace <code>remote_username</code> with the login name on the remote server
+	and replace <code>remote_server</code> with the name or IP address of the remote server.
+	If you are prompted to <code>...continue connecting...</code>, enter <code>yes</code>.
+	<p>
 	The private SSH key will be stored in
 	<span class="fileName">~/.ssh</span> (default filename is <span class="fileName">id_rsa</span>).
+	</p>
 	<p>
 	If you are using SSH Key with Amazon's Lightsail,
 	copy the <span class="fileName">ssh-key.pem</span> file to your Pi,
 	for example, in <span class="fileName">~</span>,
 	then execute <code class="nowrap">chmod 400 ~/ssh-key.pem</code> and set:
-	<ul class="minimalpadding">
+	<ul class="minimalPadding">
 		<li><span class="WebUISetting">Protocol</span> to <code>sftp</code>
 		<li><span class="WebUISetting">Server Name</span> to <code>remote host name</code>
 		<li><span class="WebUISetting">User Name</span> to <code>remote user name</code>

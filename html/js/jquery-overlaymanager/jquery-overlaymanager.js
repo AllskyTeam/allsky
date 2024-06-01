@@ -682,7 +682,8 @@
             let brand = $('#' + plugin.mmNewDialogBrand).val();
             let fileName = template.replace('{brand}', brand);
 
-            let model = $('#' + plugin.mmNewDialogModel).val();
+            let model = $('#' + plugin.mmNewDialogModel).val().trim();
+            model = model.replace(/ /g, '_');
             fileName = fileName.replace('{model}', model);
 
             let width = $('#' + plugin.mmNewDialogResolutionWidth).val();
@@ -735,8 +736,8 @@
                 $('#' + plugin.mmNewDialogBrand).append($('<option>').val(data.brands[brand]).text(data.brands[brand]));
             }
 
-            $('#' + plugin.mmNewDialogBrand).val(data.brand);
-            $('#' + plugin.mmNewDialogModel).val(data.model);
+            $('#' + plugin.mmNewDialogBrand).val($('#' + plugin.mmMetaBrand).val());
+            $('#' + plugin.mmNewDialogModel).val($('#' + plugin.mmMetaModel).val());
 
             let image = $('#oe-background-image');
             $('#' + plugin.mmNewDialogResolutionWidth).val(image.width()|0);

@@ -711,9 +711,12 @@ class OVERLAYUTIL
 
     }
 
-    private function getSetting($name) {
+    private function getSetting($name, $swapSpaces='') {
         global $settings_array;
         $name = getVariableOrDefault($settings_array, $name, 'overlay.json');
+        if ($swapSpaces !== '') {
+            $name = str_replace(' ',$swapSpaces, $name);
+        }
         return $name;
     }
 

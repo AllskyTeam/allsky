@@ -171,8 +171,9 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 			"WARNING:\n\nResetting USB bus\n${REASON}.\nAttempt ${NUM_USB_RESETS}."
 
 		SEARCH="${ZWO_VENDOR}:${ZWO_CAMERA_ID}"
-		sudo "${ALLSKY_BIN}/uhubctl" --action cycle --exact --search "${SEARCH}"
+		sudo "${ALLSKY_BIN}/uhubctl" --action off --exact --search "${SEARCH}"
 		sleep 3		# give it a few seconds, plus, allow the notification images to be seen
+		sudo "${ALLSKY_BIN}/uhubctl" --action on --exact --search "${SEARCH}"
 	}
 fi
 

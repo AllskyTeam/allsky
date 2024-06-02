@@ -1325,11 +1325,20 @@ void saveCameraInfo(
 	char *camModel = getCameraModel(cameraInfo.Name);
 	char *sn = getSerialNumber(cameraInfo.CameraID);
 
-	FILE *f = fopen(file, "w");
-	if (f == NULL)
+	FILE *f = NULL;
+	if (strcmp(file, "-") == 0)
 	{
-		Log(0, "%s: ERROR: Unable to open '%s': %s\n", CG.ME, file, strerror(errno));
-		closeUp(EXIT_ERROR_STOP);
+		f = stdout;
+		file = "stdout";
+	}
+	else
+	{
+		f = fopen(file, "w");
+		if (f == NULL)
+		{
+			Log(0, "%s: ERROR: Unable to open '%s': %s\n", CG.ME, file, strerror(errno));
+			closeUp(EXIT_ERROR_STOP);
+		}
 	}
 	Log(4, "saveCameraInfo(): saving to %s\n", file);
 
@@ -1364,10 +1373,11 @@ void saveCameraInfo(
 			fprintf(f, "\t\t{ \"value\" : \"%s\", \"label\" : \"%s\" }",
 				getCameraModel(cC->Name),
 #ifdef IS_RPi
-				skipType(cC->Sensor));
+				skipType(cC->Sensor)
 #else
-				getCameraModel(cC->Name));
+				getCameraModel(cC->Name)
 #endif
+			);
 
 			numThisType++;
 		}

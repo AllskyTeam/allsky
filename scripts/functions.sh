@@ -1237,3 +1237,35 @@ function get_model_from_sensor()
 		} ' "${RPi_SUPPORTED_CAMERAS}"
 	return $?
 }
+
+
+####
+# Get the camera number from the specified camera type and model.
+function get_camera_number_from_model()
+{
+	local TYPE="${1}"
+	local MODEL="${2}"
+	local cc_FILE="${3:-${CC_FILE}}"
+
+	local SENSOR
+
+	if [[ ${TYPE} == "ZWO" ]]; then
+		# For ZWO the camera model is the same as the sensor.
+		SENSOR="${MODEL}"
+	else
+		# For RPi it's a two step process since the SENSOR is in the "connected" file
+		# so we first have to get the sensor.
+
+		# First make sure the cc file is for this camera model.
+		if [[ ${MODEL} != "$( settings ".cameraModel" ${cc_FILE} )" ]]; then
+			echo "${FUNCNAME[0]}: unable to find camera model '${MODEL}' in '${cc_FILE}'" >&2
+			return
+		fi
+		SENSOR="$( settings ".sensor" "${cc_FILE}" )"
+		[[ -z ${SENSOR} ]] && return
+	fi
+
+	# File format:    TYPE\tnumber :...
+	grep "^${TYPE}.*${SENSOR}" "${CONNECTED_CAMERAS_INFO}" | \
+		sed -e "s/^${TYPE}\t//" -e 's/ .*//'
+}

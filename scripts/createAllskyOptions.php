@@ -182,8 +182,6 @@ function handle_options($f) {
 		$cc_field = "cameraTypes";
 	elseif ($f === "cameramodel")
 		$cc_field = "cameraModels";
-	elseif ($f === "cameranumber")
-		$cc_field = "cameraNumbers";
 	elseif ($f === "bin")
 		$cc_field = "supportedBins";
 	elseif ($f === "type")

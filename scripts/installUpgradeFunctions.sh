@@ -407,7 +407,7 @@ function update_json_file()		# [-d] field, new value, file, [type]
 		if [[ -n ${TYPE} ]]; then
 			# These don't need quotes.
 			if [[ ${TYPE} == "boolean" || ${TYPE} == "percent" ||
-				  ${TYPE} == "integer" || ${TYPE} == "float" ]]; then
+				  ${TYPE} == "number" || ${TYPE} == "integer" || ${TYPE} == "float" ]]; then
 				DOUBLE_QUOTE=""
 			fi
 

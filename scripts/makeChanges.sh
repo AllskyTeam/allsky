@@ -199,7 +199,7 @@ do
 		# This is the only time cameranumber should be used since it could change if,
 		# for example, a user removes a camera.
 		# When called from the WebUI we only get what the user changed which is
-		# only cameramodel OR cameratype.
+		# either cameramodel OR cameratype.
 		"cameranumber")
 			CAMERA_NUMBER="${NEW_VALUE}"
 			CAMERA_NUMBER_ARG=" -cameranumber ${CAMERA_NUMBER}"
@@ -224,17 +224,6 @@ do
 					echo -e "${wERROR}${ERROR_PREFIX}ERROR: ${MSG}${wNC}"
 					exit "${EXIT_NO_CAMERA}"
 				fi
-			fi
-
-			if [[ -n ${CAMERA_MODEL} ]]; then
-if false; then
-# ##### TODO: I'm pretty sure this is NOT true...
-				if [[ ${CAMERA_TYPE} == "RPi" ]]; then
-					# For RPi cameras the "model" is actually the sensor name,
-					# so convert it into the "real" model name and save it.
-					CAMERA_MODEL="$( get_model_from_sensor "${CAMERA_MODEL}" )"
-				fi
-fi
 			fi
 
 			# This requires Allsky to be stopped so we don't
@@ -271,6 +260,10 @@ fi
 					OTHER_ARGS=""
 				fi
 
+# xxxxxx TODO: if we're changing the CAMERA_MODEL then we need the
+#  CAMERA_NUMBER so we can put it in the settings file.
+# If FROM_INSTALL we'll have it, otherwise we need to determine it based on
+# the model.
 				CC_FILE_OLD="${CC_FILE}-OLD"
 				if [[ -f ${CC_FILE} ]]; then
 					# Save the current file just in case creating a new one fails.

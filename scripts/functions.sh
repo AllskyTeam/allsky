@@ -1257,7 +1257,7 @@ function get_camera_number_from_model()
 		# so we first have to get the sensor.
 
 		# First make sure the cc file is for this camera model.
-		if [[ ${MODEL} != "$( settings ".cameraModel" ${cc_FILE} )" ]]; then
+		if [[ ${MODEL} != "$( settings ".cameraModel" "${cc_FILE}" )" ]]; then
 			echo "${FUNCNAME[0]}: unable to find camera model '${MODEL}' in '${cc_FILE}'" >&2
 			return
 		fi

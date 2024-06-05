@@ -118,7 +118,7 @@
 },
 {
 "name" : "dayautogain",
-"default" : false,
+"default" : "_default",
 "description" : "Enable to use dayime Auto-Gain.",
 "label" : "Auto-Gain",
 "label_prefix" : "Daytime",
@@ -386,7 +386,7 @@
 },
 {
 "name" : "nightautogain",
-"default" : false,
+"default" : "_default",
 "description" : "Enable to use nighttime Auto-Gain.",
 "label" : "Auto-Gain",
 "label_prefix" : "Nighttime",
@@ -1623,7 +1623,7 @@
 },
 {
 "name" : "keogramfontname",
-"default" : "Simplex",
+"default" : "simplex",
 "description" : "Font name.",
 "label" : "Font Name",
 "label_prefix" : "Keograms",

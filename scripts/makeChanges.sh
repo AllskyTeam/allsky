@@ -215,6 +215,8 @@ do
 					shift 4
 					continue
 				fi
+
+				# If only the CAMERA_MODEL changed, it's the same CAMERA_TYPE.
 				CAMERA_TYPE="$( settings ".cameratype" )"
 
 			else
@@ -459,6 +461,7 @@ do
 			done
 			COMPUTER="$( get_computer )"
 			update_json_file ".computer" "${COMPUTER}" "${SETTINGS_FILE}" "text"
+			update_json_file ".camera" "${CAMERA_TYPE} ${CAMERA_MODEL}" "${SETTINGS_FILE}" "text"
 
 			if [[ -z ${CAMERA_NUMBER} ]]; then
 				# This uses the CC_FILE just created.

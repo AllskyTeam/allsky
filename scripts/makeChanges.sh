@@ -155,7 +155,7 @@ function check_filename_type()
 	return 0
 }
 
-CAMERA_NUMBER=0			# default
+CAMERA_NUMBER=""
 CAMERA_NUMBER_ARG=""
 CAMERA_MODEL=""
 CAMERA_MODEL_ARG=""
@@ -260,10 +260,6 @@ do
 					OTHER_ARGS=""
 				fi
 
-# xxxxxx TODO: if we're changing the CAMERA_MODEL then we need the
-#  CAMERA_NUMBER so we can put it in the settings file.
-# If FROM_INSTALL we'll have it, otherwise we need to determine it based on
-# the model.
 				CC_FILE_OLD="${CC_FILE}-OLD"
 				if [[ -f ${CC_FILE} ]]; then
 					# Save the current file just in case creating a new one fails.
@@ -275,11 +271,11 @@ do
 				# Create the camera capabilities file for the new camera type.
 				# Use Debug Level 3 to give the user more info on error.
 
-				if [[ -n ${CAMERA_NUMBER_ARG} ]]; then
+				if [[ -n ${CAMERA_NUMBER} ]]; then
 					MSG="Re-creating files for cameratype ${CAMERA_TYPE},"
 					MSG+=" cameranumber ${CAMERA_NUMBER}"
 					if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
-						echo -e "<script>console.log(\"${MSG}\");</script>"
+						echo -e "<script>console.log('${MSG}');</script>"
 					elif [[ ${DEBUG} == "true" ]]; then
 						echo -e "${wDEBUG}${MSG}${wNC}"
 					fi
@@ -464,11 +460,14 @@ do
 			COMPUTER="$( get_computer )"
 			update_json_file ".computer" "${COMPUTER}" "${SETTINGS_FILE}" "text"
 
-			if [[ -n ${CAMERA_NUMBER_ARG} ]]; then
-				# Because the user doesn't change this directly it's not updated
-				# in the settings file, so we have to do it.
-				update_json_file ".cameranumber" "${CAMERA_NUMBER}" "${SETTINGS_FILE}" "integer"
+			if [[ -z ${CAMERA_NUMBER} ]]; then
+				# This uses the CC_FILE just created.
+				CAMERA_NUMBER="$( get_camera_number_from_model "${CAMERA_TYPE}" "${CAMERA_MODEL}" )"
+				CAMERA_NUMBER=${CAMERA_NUMBER:-0}
 			fi
+			# Because the user doesn't change the camera number directly it's
+			# not updated in the settings file, so we have to do it.
+			update_json_file ".cameranumber" "${CAMERA_NUMBER}" "${SETTINGS_FILE}" "integer"
 
 			# Don't do anything else if ${CAMERA_TYPE_ONLY} is set.
 			if [[ ${CAMERA_TYPE_ONLY} == "true" ]]; then
@@ -645,7 +644,7 @@ do
 
 		"takedaytimeimages" | "takenighttimeimages")
 :
-###### TODO FIX
+###### TODO anything to do for these?
 			;;
 
 		"timelapsewidth" | "timelapseheight")
@@ -660,17 +659,17 @@ do
 				MIN=2
 
 				OK="true"
-echo "CALLING: checkPixelValue 'Timelapse ${LABEL}' '${NEW_VALUE}' '${MIN}' '${MAX}'"
+#XX echo "CALLING: checkPixelValue 'Timelapse ${LABEL}' '${NEW_VALUE}' '${MIN}' '${MAX}'"
 				if ! checkPixelValue "Timelapse ${LABEL}" "sensor size" "${NEW_VALUE}" "${MIN}" "${MAX}" ; then
-echo "    FALSE"
+#XX echo "    FALSE"
 					OK="false"
 				else
 					if [[ ${DID_TIMELAPSE} == "false" ]]; then
-echo "CALLING: checkWidthHeight 'Timelapse' 'timelapse' '${S_timelapsewidth}' '${S_timelapseheight}' '${C_sensorWidth}' '${C_sensorHeight}'"
+#XX echo "CALLING: checkWidthHeight 'Timelapse' 'timelapse' '${S_timelapsewidth}' '${S_timelapseheight}' '${C_sensorWidth}' '${C_sensorHeight}'"
 						if ! checkWidthHeight "Timelapse" "timelapse" \
 						"${S_timelapsewidth}" "${S_timelapseheight}" \
 	 					"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 ; then
-echo "false"
+#XX echo "false"
 							OK="false"
 						fi
 						DID_TIMELAPSE="true"
@@ -683,7 +682,7 @@ echo "false"
 					update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "number"
 				fi
 			fi
-OK=false	#XXXXXXX
+#XX OK=false
 			;;
 
 		"minitimelapsewidth" | "minitimelapseheight")
@@ -710,7 +709,7 @@ OK=false	#XXXXXXX
 
 			if [[ $((S_imagecroptop + S_imagecropright + BOTTOM + LEFT)) -gt 0 ]]; then
 				ERR="$( checkCropValues "${S_imagecroptop}" "${S_imagecropright}" \
-\					"${S_imagecropbottom}" "${S_imagecropleft}" \
+					"${S_imagecropbottom}" "${S_imagecropleft}" \
 					"${C_sensorWidth}" "${C_sensorHeight}" )"
 				if [[ $? -ne 0 ]]; then
 					echo "${ERR}"

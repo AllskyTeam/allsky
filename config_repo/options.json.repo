@@ -1559,7 +1559,7 @@
 },
 {
 "name" : "timelapsefflog",
-"default" : "Warning",
+"default" : "warning",
 "description" : "Amount of information to display while creating a timelapse.  Rarely changed.",
 "label" : "Log Level",
 "label_prefix" : "Timelapse",

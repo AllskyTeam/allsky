@@ -884,7 +884,19 @@ if (numTokens > 1) Log(5, ", inCamera=%s, inControlCaps=%s, inLibcamera=%s\n", y
 				RPiCameras[thisIndex].ControlCaps = &ControlCapsArray[actualIndex][0];
 				Log(4, " ControlCapsArray[%d]", actualIndex);
 
-				if (thisIndex == CG.cameraNumber)
+				// Use camera model if we have it.
+				if (CG.cm[0] != '\0')
+				{
+ 					if (strcmp(RPiCameras[thisIndex].CameraInfo->Name, CG.cm) == 0)
+					{
+						RPiCameraIndex = thisIndex;
+						Log(4, " - MATCH on cm=%s\n", CG.cm);
+					}
+					else
+					{
+						Log(4, ".\n");
+					}
+				} else if (thisIndex == CG.cameraNumber)
 				{
 					RPiCameraIndex = thisIndex;
 					Log(4, " - MATCH\n");

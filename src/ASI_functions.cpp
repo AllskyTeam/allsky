@@ -1325,7 +1325,7 @@ void saveCameraInfo(
 	char *camModel = getCameraModel(cameraInfo.Name);
 	char *sn = getSerialNumber(cameraInfo.CameraID);
 
-	FILE *f = NULL;
+	FILE *f;
 	if (strcmp(file, "-") == 0)
 	{
 		f = stdout;
@@ -1388,6 +1388,8 @@ void saveCameraInfo(
 #ifdef IS_ZWO
 	fprintf(f, "\t\"cameraID\" : \"%s\",\n", hasCameraID ? (char const *)cID : "");
 #endif
+	fprintf(f, "\t\"cameraNumber\" : %d,\n", CG.cameraNumber);
+
 	fprintf(f, "\t\"serialNumber\" : \"%s\",\n", hasSerialNumber ? sn : "");
 	fprintf(f, "\t\"sensorWidth\" : %d,\n", width);
 	fprintf(f, "\t\"sensorHeight\" : %d,\n", height);
@@ -1473,7 +1475,7 @@ void saveCameraInfo(
 
 #ifdef IS_ZWO
 	// Setting the sensor width and height with libcamera does a digital zoom,
-	// the resizes the resulting image back to the original size.
+	// then resizes the resulting image back to the original size.
 
 	// sensor size was also saved above, but this is the size the user can change.
 	fprintf(f, "\t\t{\n");
@@ -1522,6 +1524,62 @@ void saveCameraInfo(
 	fprintf(f, "\t\t\t\"MinValue\" : 0,\n");
 	fprintf(f, "\t\t\t\"MaxValue\" : %d,\n", int(width * maxCropPercent));
 	fprintf(f, "\t\t\t\"DefaultValue\" : 0\n");
+	fprintf(f, "\t\t},\n");
+
+	// Max values for images, timelapse, ...
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"timelapseWidth\",\n");
+	fprintf(f, "\t\t\t\"argumentName\" : \"timelapsewidth\",\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : %d\n", width);
+	fprintf(f, "\t\t},\n");
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"timelapseHeight\",\n");
+	fprintf(f, "\t\t\t\"argumentName\" : \"timelapseheight\",\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : %d\n", height);
+	fprintf(f, "\t\t},\n");
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"minitimelapseWidth\",\n");
+	fprintf(f, "\t\t\t\"argumentName\" : \"minitimelapsewidth\",\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : %d\n", width);
+	fprintf(f, "\t\t},\n");
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"minitimelapseHeight\",\n");
+	fprintf(f, "\t\t\t\"argumentName\" : \"minitimelapseheight\",\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : %d\n", height);
+	fprintf(f, "\t\t},\n");
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"imageresizeuploadsWidth\",\n");
+	fprintf(f, "\t\t\t\"argumentName\" : \"imageresizeuploadswidth\",\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : %d\n", width);
+	fprintf(f, "\t\t},\n");
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"imageresizeuploadsHeight\",\n");
+	fprintf(f, "\t\t\t\"argumentName\" : \"imageresizeuploadsheight\",\n");
+	fprintf(f, "\t\t\t\"MaxValue\" : %d\n", height);
+	fprintf(f, "\t\t},\n");
+
+	// Autogain - RPi should be on, ZWO off (until we implement the RPi autoexposure/gain algorithm on ZWO).
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "dayautogain");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "dayautogain");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n",
+#ifdef IS_ZWO
+		"false"
+#else
+		"true"
+#endif
+		);
+	fprintf(f, "\t\t},\n");
+	fprintf(f, "\t\t{\n");
+	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "nightautogain");
+	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "nightautogain");
+	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n",
+#ifdef IS_ZWO
+		"false"
+#else
+		"true"
+#endif
+		);
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
@@ -1631,12 +1689,6 @@ void saveCameraInfo(
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "ZWOexposureType");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "zwoexposuretype");
 	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", ZWOsnap);
-	fprintf(f, "\t\t},\n");
-
-	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "CameraNumber");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "cameranumber");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", CG.cameraNumber);
 	fprintf(f, "\t\t},\n");
 #endif
 
@@ -1767,7 +1819,9 @@ printf("MaxValue : %s,\n", LorF(max, "%ld", "%.3f"));
 	// End the list
 	fprintf(f, "\t]\n");
 	fprintf(f, "}\n");
-	fclose(f);
+
+	if (f != stdout)
+		fclose(f);
 }
 
 // Output basic camera information.

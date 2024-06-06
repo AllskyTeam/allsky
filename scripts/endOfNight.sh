@@ -3,7 +3,7 @@
 # This script has two main purposes:
 #	1. Optionally create a keogram, startrails, and timelapse video for the specified day.
 #	2. Perform daily housekeeping not related to the specified day, like removing old files.
-
+set -a
 # Allow this script to be executed manually, which requires several variables to be set.
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
 ME="$( basename "${BASH_ARGV0}" )"

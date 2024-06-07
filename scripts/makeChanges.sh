@@ -438,12 +438,16 @@ do
 				S_NAME="${NAME%.*}"
 				S_EXT="${NAME##*.}"
 				OLD_SETTINGS_FILE="${ALLSKY_CONFIG}/${S_NAME}_${OLD_TYPE}_${OLD_MODEL// /_}.${S_EXT}"
-
 				"${ALLSKY_SCRIPTS}/convertJSON.php" --carryforward |
 				while read -r SETTING TYPE
 				do
-					X="$( settings ".${SETTING}" "${OLD_SETTINGS_FILE}" )"
-					update_json_file ".${SETTING}" "${X}" "${SETTINGS_FILE}" "${TYPE}"
+					# Some carried-forward settings may not be in the old settings file,
+					# so check for "null".
+					X="$( settings --null ".${SETTING}" "${OLD_SETTINGS_FILE}" )"
+					[[ ${X} == "null" ]] && continue
+
+					update_json_file ".${SETTING}" "${X}" "${SETTINGS_FILE}" "${TYPE}" ||
+						echo "Unable to update ${SETTING} of type ${TYPE}" >&2
 				done
 			fi
 

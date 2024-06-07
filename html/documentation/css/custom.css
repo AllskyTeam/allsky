@@ -664,6 +664,12 @@ select {
 .dark .thumbBorder { border: 1px solid gray; }
 .left { float: left; }
 
+.manualRestartNeeded {
+	font-size: 200%;
+	font-weight: bold;
+	color: red;
+}
+
 .notConfigured {
 	border: 3px dashed red;
 	padding: 15px;

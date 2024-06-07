@@ -706,13 +706,13 @@ function updateFile($file, $contents, $fileName, $toConsole) {
 
 		// $toConsole tells us whether or not to use console.log() or just echo.
 		if ($toConsole) {
-			$cl1 = "<script>console.log('";
-			$cl2 = "');</script>";
+			$cl1 = '<script>console.log("';
+			$cl2 = '");</script>';
 		} else {
 			$cl1 = "<br>";
 			$cl2 = "";
 		}
-		echo "${cl1}Unable to update $file 1st time: ${e}${cl2}\n";
+		echo "${cl1}Note: Unable to update $file 1st time: ${e}${cl2}\n";
 
 		// Assumed it failed due to lack of permissions,
 		// usually because the file isn't grouped to the web server group.
@@ -721,8 +721,12 @@ function updateFile($file, $contents, $fileName, $toConsole) {
 		$cmd = "sudo touch '$file' && sudo chgrp " . WEBSERVER_GROUP . " '$file' &&";
 		$cmd .= " sudo chmod g+w '$file'";
 		$return = null;
-		exec("$cmd 2>&1", $return, $retval);
-		if ($return !== null || $retval !== 0) {
+		$ret = exec("( $cmd ) 2>&1", $return, $retval);
+		if (gettype($return) === "array")
+			$c = count($return);
+		else
+			$c = 0;
+		if ($ret === false || $c > 0 || $retval !== 0) {
 			$err = implode("\n", $return);
 			return "Unable to update settings: $err";
 		}

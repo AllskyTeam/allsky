@@ -122,6 +122,16 @@ function readSettingsFile() {
 	return($contents);
 }
 
+function readOptionsFile() {
+	$options_file = getOptionsFile();
+	$errorMsg = "ERROR: Unable to process options file '$options_file'.";
+	$contents = get_decoded_json_file($options_file, true, $errorMsg);
+	if ($contents === null) {
+		exit(1);
+	}
+	return($contents);
+}
+
 function initialize_variables($website_only=false) {
 	global $status;
 	global $image_name;

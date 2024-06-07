@@ -367,8 +367,14 @@ function validate_camera()
 		RET=1
 	fi
 
+	if [[ ${CT} == "ZWO" ]]; then
+		# The camera name per the camera may have "-" in it,
+		# but the list of ZWO cameras has "_" instead.
+		CM="${CM/ASI/}"		# "ASI" isn't in the names
+		CM="${CM//-/_}"
+	fi
+
 	# Now make sure the camera is supported.
-	[[ ${CT} == "ZWO" ]] && CM="${CM/ASI/}"		# "ASI" isn't in the names
 	if ! "${ALLSKY_UTILITIES}/show_supported_cameras.sh" "--${CT}" |
 		grep --silent "${CM}" ; then
 

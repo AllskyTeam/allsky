@@ -1415,21 +1415,27 @@ aws configure
 	for more information and an example of this setting.
 	</td></tr>
 
-<tr><td class="settingsHeader" colspan="3">Camera Type</td></tr>
+<tr><td class="settingsHeader" colspan="3">Camera</td></tr>
 <tr><td><span class="WebUISetting">Camera Type</span></td>
 	<td></td>
 	<td>The type of camera you are using: ZWO or RPi.
-	<br>If you have both a ZWO and RPi camera, this setting determines which to use.
-	<br>If you replace a camera with another one of the same <strong>type</strong>
-	(e.g., a ZWO ASI120 with a ZWO ASI290)
-	select <span class="dropdown">Refresh</span> in the drop-down.
+	<br>To select a camera of a different <span class="WebUISetting">Camera Type</span>:
+	<ol class="minimalPadding">
+		<li>Select the Type.
+		<li>Save the change via the
+			<span class="btn btn-primary btn-not-real btn-small">Save changes</span> button.
+		<li>Update the <span class="WebUISetting">Camera Model</span> as desired.
+	</ol>
+	If you connect or disconnect a camera on the Pi,
+	select <span class="dropdown">Refresh</span>
+	to update the list of camera types and models.
 	</td></tr>
 <tr><td><span class="WebUISetting">Camera Model</span></td>
 	<td></td>
-	<td>This <strong>read-only</strong> field displays the model of camera you are using.
-	It is determined automatically based on what camera is connected to your Pi.
-	<br>If more than one camera of the specified type is connected,
-	the first one is used.</td></tr>
+	<td>The model of camera you are using.
+	Note this list is only the models of
+	the current <span class="WebUISetting">Camera Type</span>.
+	</td></tr>
 
 
 </tbody>

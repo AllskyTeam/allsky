@@ -2460,14 +2460,14 @@
 },
 {
 "name" : "cameraheading",
-"label" : "Camera Type",
+"label" : "Camera",
 "type" : "header"
 },
 {
 "name" : "cameratype",
 "default" : "",
-"description" : "The type of camera you are using.<br>Select <span class='WebUIValue'>Refresh</span> to reset the Camera Type and Model.",
-"label" : "Camera Type",
+"description" : "The type of camera you are using.<br>To change to a camera of a different type, first select the new type then press the 'Save changes' button, then select the new <span class='WebUISetting'>Camera Model</span>.",
+"label" : "Camera",
 "type" : "select_text",
 "options" : [
 	"cameratype_values"
@@ -2478,7 +2478,7 @@
 {
 "name" : "cameramodel",
 "default" : "",
-"description" : "The model of camera you are using.<br><strong>To change it, change the <span class='WebUISetting'>Camera Type</span> above.</strong>",
+"description" : "The model of camera you are using.",
 "label" : "Camera Model",
 "readonly" : true,
 "type" : "select_text",

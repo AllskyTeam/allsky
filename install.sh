@@ -273,22 +273,23 @@ CAMERA_to_CAMERA_TYPE()
 setup_rpi_supported_cameras()
 {
 	local CMD="${1}"
+	local notCMD
 
 	if [[ ! -f ${RPi_SUPPORTED_CAMERAS} ]]; then
 		local B="$( basename "${RPi_SUPPORTED_CAMERAS}" )"
 		if [[ -z ${CMD} ]]; then
-			CMD="xxxxx"		# won't match anything
+			notCMD="xxxxx"		# won't match anything
 		elif [[ ${CMD} == "raspistill" ]]; then
-			CMD="libcamera"
+			notCMD="libcamera"
 		else
-			CMD="raspistill"
+			notCMD="raspistill"
 		fi
 
 		local MSG="Creating ${RPi_SUPPORTED_CAMERAS} with '${CMD}' entries."
 		display_msg --log progress "${MSG}"
 
 		# Remove comment and blank lines and lines for the command we are NOT using.
-		grep -v -E "^\$|^#|^${CMD}" "${ALLSKY_REPO}/${B}.repo" > "${RPi_SUPPORTED_CAMERAS}"
+		grep -v -E "^\$|^#|^${notCMD}" "${ALLSKY_REPO}/${B}.repo" > "${RPi_SUPPORTED_CAMERAS}"
 	fi
 }
 

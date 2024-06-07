@@ -391,6 +391,11 @@ do
 				2>&1 )"
 			RET=$?
 
+			if [[ -f ${SETTINGS_FILE} ]]; then
+				# Make sure the web server can update it.
+				chmod 664 "${SETTINGS_FILE}" && sudo chgrp "${WEBSERVER_GROUP}" "${SETTINGS_FILE}"
+			fi
+
 			if [[ ${RET} -ne 0 ]]; then
 				echo -n -e "${wERROR}ERROR: Unable to create '${OPTIONS_FILE}'"
 				if [[ ${OPTIONS_FILE_ONLY} == "true" ]]; then

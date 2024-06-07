@@ -107,6 +107,7 @@ function DisplayAllskyConfig() {
 	$cameraModelName = "cameramodel";		// json setting name
 	$cameraNumberName = "cameranumber";		// json setting name
 	$debugLevelName = "debuglevel";			// json setting name
+
 	$debugArg = "";
 	$cmdDebugArg = "";		// set to --debug for runCommand() debugging
 	$hideHeaderBodies = true;
@@ -118,13 +119,7 @@ function DisplayAllskyConfig() {
 
 	$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
 	$settings_file = getSettingsFile();
-	$options_file = getOptionsFile();
-
-	$errorMsg = "ERROR: Unable to process options file '$options_file'.";
-	$options_array = get_decoded_json_file($options_file, true, $errorMsg);
-	if ($options_array === null) {
-		exit(1);
-	}
+	$options_array = readOptionsFile();
 
 	// If there's no last changed date, they haven't configured Allsky,
 	// which sets $lastChanged.
@@ -469,25 +464,32 @@ echo "<script>console.log('Updated $fileName');</script>";
 			if ($ok) {
 				if (! $changesMade && ! $fromConfiguration) {
 					$msg = "No settings changed";
+
 				} else if ($changes !== "") {
 					$msg = "";
-					// This must run with different permissions so makeChanges.sh can
-					// write to the allsky directory.
 					$moreArgs = "";
 					if ($newCameraType !== "") {
 						$moreArgs .= " --cameraTypeOnly";
 					}
 
+					// This must run with different permissions so makeChanges.sh can
+					// write to the allsky directory.
 					$CMD = "sudo --user=" . ALLSKY_OWNER;
 					$CMD .= " " . ALLSKY_SCRIPTS . "/makeChanges.sh $cmdDebugArg $moreArgs $changes";
 					# Let makeChanges.sh display any output.
 					// false = don't add anything to the message.
 					$ok = runCommand($CMD, "", "success", false);
 
+					if ($cameraChanged) {
+						// If the camera changed so did the options file so re-read it.
+						$options_array = readOptionsFile();
+					}
 					// If Allsky needs to be configured again, e.g., a new camera type/model,
 					// stop Allsky, don't restart it.
+
 					$settings_array = readSettingsFile();
 					$reReadSettings = false;	// just re-read it, so don't need to read again
+
 					if (getVariableOrDefault($settings_array, $lastChangedName, null) === null) {
 						$restartRequired = false;
 						$stopRequired = true;
@@ -505,10 +507,17 @@ echo "<script>console.log('Updated $fileName');</script>";
 						}
 
 					} else if ($stopRequired) {
-						$msg .= "<span class='manualRestartNeeded'>";
-						$msg .= "Allsky needs to be re-configured.<br>";
-						$msg .= "Allsky stopped waiting for a manual restart";
-						$msg .= "</span>.";
+						$msg .= "<div class='important'>";
+						if ($cameraChanged) {
+							$msg .= "The camera changed so you need to check and possibly change the settings below.";
+							$msg .= "<br>";
+							$msg .= "If they look good, just click on the 'Save changes' button.";
+						} else {
+							$msg .= "Allsky needs to be re-configured.";
+							$msg .= "<br>";
+							$msg .= "Allsky stopped waiting for a manual restart.";
+						}
+						$msg .= "</div>";
 
 						// runCommand() displays $msg on success.
 						$CMD = "sudo /bin/systemctl stop allsky.service";

@@ -489,7 +489,6 @@ echo "<script>console.log('Updated $fileName');</script>";
 					$settings_array = readSettingsFile();
 					$reReadSettings = false;	// just re-read it, so don't need to read again
 					if (getVariableOrDefault($settings_array, $lastChangedName, null) === null) {
-						$msg .= "Allsky needs to be re-configured.<br>";
 						$restartRequired = false;
 						$stopRequired = true;
 					}
@@ -498,8 +497,6 @@ echo "<script>console.log('Updated $fileName');</script>";
 				if ($ok) {
 					// The "restart" field is a checkbox.  If not checked it returns nothing.
 					if ($restartRequired && getVariableOrDefault($_POST, 'restart', "") != "") {
-						if ($msg !== "")
-							$msg .= " &nbsp;";
 						$msg .= "Allsky restarted.";
 						// runCommand() displays $msg on success.
 						$CMD = "sudo /bin/systemctl reload-or-restart allsky.service";
@@ -508,12 +505,14 @@ echo "<script>console.log('Updated $fileName');</script>";
 						}
 
 					} else if ($stopRequired) {
-						if ($msg !== "")
-							$msg .= " &nbsp;";
-						$msg .= "<strong>Allsky stopped waiting for a manual restart</strong>.";
+						$msg .= "<span class='manualRestartNeeded'>";
+						$msg .= "Allsky needs to be re-configured.<br>";
+						$msg .= "Allsky stopped waiting for a manual restart";
+						$msg .= "</span>.";
+
 						// runCommand() displays $msg on success.
 						$CMD = "sudo /bin/systemctl stop allsky.service";
-						if (! runCommand($CMD, $msg, "success")) {
+						if (! runCommand($CMD, $msg, "danger")) {
 							$status->addMessage("Unable to stop Allsky.", 'warning');
 						}
 

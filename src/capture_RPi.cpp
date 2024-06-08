@@ -87,8 +87,6 @@ int RPicapture(config cg, cv::Mat *image)
 
 	if (cg.isLibcamera)
 	{
-		command += " --no-raw 1";
-
 		// libcamera tuning file
 		if (cg.currentTuningFile != NULL && *cg.currentTuningFile != '\0') {
 			ss.str("");

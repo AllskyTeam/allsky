@@ -1066,10 +1066,14 @@ char const *argumentNames[][2] = {
 	{ "AntiDewHeater", "" },		// correct Control name?
 	{ "FanAdjust", "" },
 	{ "PwrledBright", "" },
+	{ "USBHubReset", "" },
 	{ "GPSSupport", "" },
 	{ "GPSStartLine", "" },
 	{ "GPSEndLine", "" },
 	{ "RollingInterval", "" },
+	{ "future use 1", "" },		// in case ZWO adds more and we don't realize it
+	{ "future use 2", "" },
+	{ "future use 3", "" },
 };
 int const argumentNamesSize =  sizeof(argumentNames) / sizeof(argumentNames[0]);
 
@@ -1736,8 +1740,8 @@ void saveCameraInfo(
 			continue;
 		}
 
-		if (cc.ControlType > argumentNamesSize) {
-			Log(0, "%s: ccControlType (%d) > argumentNamesSize (%d)\n",
+		if (cc.ControlType >= argumentNamesSize) {
+			Log(0, "%s: ccControlType (%d) >= argumentNamesSize (%d)\n",
 				CG.ME, cc.ControlType, argumentNamesSize);
 // TODO: should we exit ??
 			continue;
@@ -1745,12 +1749,20 @@ void saveCameraInfo(
 
 		// blank names means it's unsupported
 		if (cc.Name[0] == '\0')
+		{
+// printf("cc.Name[0] is null, i=%d\n", i);
 			continue;
+		}
 
 		// blank argument name means we don't have a command-line argument for it
+// printf("getting a for ControlType %d (of %d), i=%d\n", cc.ControlType, argumentNamesSize, i);
 		char const *a =  argumentNames[cc.ControlType][1];
 		if (a == NULL || a[0] == '\0')
+		{
+// if (a == NULL) printf("a is null, i=%d\n", i);
+// else printf("a[0] is null, i=%d\n", i);
 			continue;
+		}
 
 		int div_by = 1;
 		if (strcmp(cc.Name, "Exposure") == 0) {
@@ -1764,8 +1776,8 @@ void saveCameraInfo(
 // XXXXXXXXX this is to help determine why some float settings are being output as integers
 if (strcmp(cc.Name,"Gain") == 0 && CG.debugLevel >= 4)
 {
-printf("===== cc.MinValue=%1.2f, min=%1.2f   cc.MaxValue=%1.2f, max=%1.2f\n",
-(double) cc.MinValue, min, (double) cc.MaxValue, max);
+printf("===== cc.MinValue=%1.2f, min=%1.2f   cc.MaxValue=%1.2f, max=%1.2f, iNumOfCtrl=%d\n",
+(double) cc.MinValue, min, (double) cc.MaxValue, max, iNumOfCtrl);
 printf("MinValue : %s,\n", LorF(min, "%ld", "%.3f"));
 printf("MaxValue : %s,\n", LorF(max, "%ld", "%.3f"));
 }

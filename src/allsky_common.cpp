@@ -40,7 +40,7 @@ static char const *fontnames[]		= {		// Character representation of names for cl
 **/
 void Log(int required_level, const char *fmt, ...)
 {
-	if ((int)abs(CG.debugLevel) >= required_level) {
+	if (CG.debugLevel >= (int)abs(required_level)) {
 		char msg[1000];
 		va_list va;
 		va_start(va, fmt);

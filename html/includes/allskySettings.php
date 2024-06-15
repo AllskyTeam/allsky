@@ -107,7 +107,6 @@ function DisplayAllskyConfig() {
 	$cameraModelName = "cameramodel";		// json setting name
 	$cameraNumberName = "cameranumber";		// json setting name
 	$debugLevelName = "debuglevel";			// json setting name
-
 	$debugArg = "";
 	$cmdDebugArg = "";		// set to --debug for runCommand() debugging
 	$hideHeaderBodies = true;
@@ -117,9 +116,19 @@ function DisplayAllskyConfig() {
 	$showIcon = "<i class='fa fa-chevron-down fa-fw'></i>";
 	$hideIcon = "<i class='fa fa-chevron-up fa-fw'></i>";
 
+	//$hideIcon = "<i class='fa-solid fa-xl fa-toggle-on'></i>";
+	//$showIcon = "<i class='fa-solid fa-xl fa-toggle-off'></i>";
+
+
 	$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
 	$settings_file = getSettingsFile();
-	$options_array = readOptionsFile();
+	$options_file = getOptionsFile();
+
+	$errorMsg = "ERROR: Unable to process options file '$options_file'.";
+	$options_array = get_decoded_json_file($options_file, true, $errorMsg);
+	if ($options_array === null) {
+		exit(1);
+	}
 
 	// If there's no last changed date, they haven't configured Allsky,
 	// which sets $lastChanged.
@@ -464,33 +473,27 @@ echo "<script>console.log('Updated $fileName');</script>";
 			if ($ok) {
 				if (! $changesMade && ! $fromConfiguration) {
 					$msg = "No settings changed";
-
 				} else if ($changes !== "") {
 					$msg = "";
+					// This must run with different permissions so makeChanges.sh can
+					// write to the allsky directory.
 					$moreArgs = "";
 					if ($newCameraType !== "") {
 						$moreArgs .= " --cameraTypeOnly";
 					}
 
-					// This must run with different permissions so makeChanges.sh can
-					// write to the allsky directory.
 					$CMD = "sudo --user=" . ALLSKY_OWNER;
 					$CMD .= " " . ALLSKY_SCRIPTS . "/makeChanges.sh $cmdDebugArg $moreArgs $changes";
 					# Let makeChanges.sh display any output.
 					// false = don't add anything to the message.
 					$ok = runCommand($CMD, "", "success", false);
 
-					if ($cameraChanged) {
-						// If the camera changed so did the options file so re-read it.
-						$options_array = readOptionsFile();
-					}
 					// If Allsky needs to be configured again, e.g., a new camera type/model,
 					// stop Allsky, don't restart it.
-
 					$settings_array = readSettingsFile();
 					$reReadSettings = false;	// just re-read it, so don't need to read again
-
 					if (getVariableOrDefault($settings_array, $lastChangedName, null) === null) {
+						$msg .= "Allsky needs to be re-configured.<br>";
 						$restartRequired = false;
 						$stopRequired = true;
 					}
@@ -499,6 +502,8 @@ echo "<script>console.log('Updated $fileName');</script>";
 				if ($ok) {
 					// The "restart" field is a checkbox.  If not checked it returns nothing.
 					if ($restartRequired && getVariableOrDefault($_POST, 'restart', "") != "") {
+						if ($msg !== "")
+							$msg .= " &nbsp;";
 						$msg .= "Allsky restarted.";
 						// runCommand() displays $msg on success.
 						$CMD = "sudo /bin/systemctl reload-or-restart allsky.service";
@@ -507,21 +512,12 @@ echo "<script>console.log('Updated $fileName');</script>";
 						}
 
 					} else if ($stopRequired) {
-						$msg .= "<div class='important'>";
-						if ($cameraChanged) {
-							$msg .= "The camera changed so you need to check and possibly change the settings below.";
-							$msg .= "<br>";
-							$msg .= "If they look good, just click on the 'Save changes' button.";
-						} else {
-							$msg .= "Allsky needs to be re-configured.";
-							$msg .= "<br>";
-							$msg .= "Allsky stopped waiting for a manual restart.";
-						}
-						$msg .= "</div>";
-
+						if ($msg !== "")
+							$msg .= " &nbsp;";
+						$msg .= "<strong>Allsky stopped waiting for a manual restart</strong>.";
 						// runCommand() displays $msg on success.
 						$CMD = "sudo /bin/systemctl stop allsky.service";
-						if (! runCommand($CMD, $msg, "danger")) {
+						if (! runCommand($CMD, $msg, "success")) {
 							$status->addMessage("Unable to stop Allsky.", 'warning');
 						}
 
@@ -661,19 +657,35 @@ echo "<script>console.log('Updated $fileName');</script>";
 		echo "</p>";
 		echo "<form method='POST' action='$ME?_ts=" . time() . " name='conf_form'>";
 ?>
-		<div class="sticky">
-			<input type="submit" class="btn btn-primary" name="save_settings" value="Save changes">
-			<input type="submit" class="btn btn-warning" name="reset_settings"
-				value="Reset to default values"
-				onclick="return confirm('Really RESET ALL VALUES TO DEFAULT??');">
-			<div title="UNcheck to only save settings without restarting Allsky" style="line-height: 0.3em;">
-				<br>
-				<input type="checkbox" name="restart" value="true" checked>
-					Restart Allsky after saving changes, if needed? <br><br>&nbsp;
+		<div class="sticky settings-nav">
+			<div class="container-fluid">
+				<div class="row">
+					<div class="col-md-11 col-sm-11 col-xs-11">
+						<button type="submit" class="btn btn-primary" name="save_settings" title="Save changes">
+							<i class="fa-solid fa-floppy-disk"></i> Save changes
+						</button>
+						<button type="submit" class="btn ml-3 btn-warning" name="reset_settings" title="Reset to default values" id="settings-reset">
+							<i class="fa-solid fa-rotate-left"></i> Reset to default values
+						</button>
+					</div>
+					
+					<div class="col-md-1 col-sm-1 col-xs-1">
+						<button type="button" class="btn btn-primary ml-5 settings-expand pull-right" id="settings-all-control" title="Expand/Collapse all settings">
+							<?php echo $showIcon ?>
+						</button>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-12">
+						<div title="Uncheck to only save settings without restarting Allsky" class="mt-4">
+							<input type="checkbox" name="restart" value="true" checked>
+							<span class="ml-2">Restart Allsky after saving changes, if needed?</span>
+						</div>						
+					</div>
+				</div>
 			</div>
 		</div>
-		<button onclick="topFunction(); return false;"
-			id="backToTopBtn" title="Go to top of page">Top</button>
+		<button id="backToTopBtn" type="button" title="Go to top of page">Top</button>
 <?php
 	}
 
@@ -710,17 +722,6 @@ CSRFToken();
 					header.style.display = "table-row";
 					h.title = "Click to hide";
 					h.innerHTML = "<?php echo "$hideIcon" ?>";
-				}
-				function toggle(headerNum) {
-					var header = document.getElementById('header' + headerNum);
-					var h = document.getElementById('h' + headerNum);
-					if (header.style.display == "none") {
-						show(headerNum, header, h);
-					} else {
-						header.style.display = "none";
-						h.title = "Click to expand";
-						h.innerHTML = "<?php echo "$showIcon" ?>";
-					}
 				}
 				</script>
 <?php
@@ -882,6 +883,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 				}
 
 				$description = getVariableOrDefault($option, 'description', "");
+				//$description = str_replace('<br>', ' ', $description);
 
 				// "widetext" should have the label spanning 2 rows,
 				// a wide input box on the top row spanning the 2nd and 3rd columns,
@@ -912,7 +914,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 						echo "<tbody class='headingRowPadding'>";
 						echo "<tr>";
 						echo "<td class='headingToggle' title='Click to expand'>";
-						echo "<span id='h$onHeader' onClick='toggle($onHeader);'>$showIcon</span>";
+						echo "<span id='h$onHeader' class='setting-header-toggle' data-settinggroup='$onHeader'>$showIcon</span>";
 						echo "</td>";
 						echo "<td class='headingTitle'>$label</td>";
 						echo "</tr>";
@@ -927,7 +929,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 					echo "</tr>";
 
 					if ($hideHeaderBodies)
-						echo "<tbody style='display: none' id='header$onHeader'>";
+						echo "<tbody style='display: none' id='header$onHeader' class='settings-header'>";
 
 					continue;
 
@@ -1144,6 +1146,9 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 	</form>
 </div><!-- ./ Panel body -->
 </div><!-- /.panel-primary --> </div><!-- /.col-lg-12 --> </div><!-- /.row -->
+
+<script src="js/settings.js"></script>
+
 <?php
 }
 ?>

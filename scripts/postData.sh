@@ -217,7 +217,7 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 fi
 
 if [[ ${FROM_WEBUI} == "true" ]]; then
-	echo "<script>console.log('Uploaded configuration files to ${WHERE_TO}.');</script>"
+	echo "Uploaded configuration files to ${WHERE_TO}."
 fi
 
 exit 0

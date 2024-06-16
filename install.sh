@@ -2485,7 +2485,6 @@ restore_prior_files()
 	if [[ -f ${PRIOR_ALLSKY_DIR}/${E} ]]; then
 		display_msg --log progress "${ITEM} (copying)"
 		cp -ar "${PRIOR_ALLSKY_DIR}/${E}" "${ALLSKY_ENV}"
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
 	# Restore the remote Allsky Website configuration file if it exists.

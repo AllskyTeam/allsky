@@ -798,9 +798,8 @@ install_webserver_et_al()
 		display_msg --log progress "Installing the web server."
 		TMP="${ALLSKY_LOGS}/lighttpd.install.log"
 		{
-			sudo apt-get update && \
-				sudo apt-get --assume-yes install lighttpd php-cgi \
-					php-gd hostapd dnsmasq avahi-daemon hwinfo
+			sudo apt-get --assume-yes install lighttpd php-cgi \
+				php-gd hostapd dnsmasq avahi-daemon hwinfo
 		} > "${TMP}" 2>&1
 		check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" ||
 			exit_with_image 1 "${STATUS_ERROR}" "lighttpd installation failed"
@@ -2378,7 +2377,7 @@ restore_prior_files()
 
 	ITEM="${SPACE}'config/modules' directory"
 	if [[ -d ${PRIOR_CONFIG_DIR}/modules ]]; then
-		display_msg --log progress "${ITEM}"
+		display_msg --log progress "${ITEM} (merging)"
 
 		# Copy the user's prior data to the new file which may contain new fields.
 		activate_python_venv
@@ -2393,11 +2392,13 @@ restore_prior_files()
 	ITEM="${SPACE}'config/overlay' directory"
 	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
 		display_msg --log progress "${ITEM} (copying)"
-		cp -ar "${PRIOR_CONFIG_DIR}/overlay/fonts" "${ALLSKY_OVERLAY}/fonts"
-		cp -ar "${PRIOR_CONFIG_DIR}/overlay/images" "${ALLSKY_OVERLAY}/images"
-		cp -ar "${PRIOR_CONFIG_DIR}/overlay/imagethumbnails" "${ALLSKY_OVERLAY}/imagethumbnails"
-		cp -ar "${PRIOR_CONFIG_DIR}/overlay/config/userfields.json" "${ALLSKY_OVERLAY}/config/"
-		cp -ar "${PRIOR_CONFIG_DIR}/overlay/config/oe-config.json" "${ALLSKY_OVERLAY}/config/"
+# TODO: ALEX: FIX: Copying everying in these 3 directories means we can never release new versions.
+		cp -a -r "${PRIOR_CONFIG_DIR}/overlay/fonts" "${ALLSKY_OVERLAY}/fonts"
+		cp -a -r "${PRIOR_CONFIG_DIR}/overlay/images" "${ALLSKY_OVERLAY}/images"
+		cp -a -r "${PRIOR_CONFIG_DIR}/overlay/imagethumbnails" "${ALLSKY_OVERLAY}/imagethumbnails"
+
+		cp -a    "${PRIOR_CONFIG_DIR}/overlay/config/userfields.json" "${ALLSKY_OVERLAY}/config/"
+		cp -a    "${PRIOR_CONFIG_DIR}/overlay/config/oe-config.json" "${ALLSKY_OVERLAY}/config/"
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
@@ -2413,6 +2414,8 @@ restore_prior_files()
 
 	# Globals: SENSOR_WIDTH, SENSOR_HEIGHT, FULL_OVERLAY_NAME, SHORT_OVERLAY_NAME, OVERLAY_NAME
 
+	# PRIOR_OVERLAY_FILE is no longer used, but if it exists,
+	# convert it to the new name/format.
 	PRIOR_OVERLAY_FILE="${PRIOR_CONFIG_DIR}/overlay/config/overlay.json"
 	PRIOR_OVERLAY_REPO_FILE="${PRIOR_ALLSKY_DIR}/config_repo/overlay/config/overlay.json"
 
@@ -2422,9 +2425,11 @@ restore_prior_files()
 	ITEM="${SPACE}Overlay configuration file"
 	if [[ ! -f ${PRIOR_OVERLAY_FILE} ]] ||
 			cmp -s "${PRIOR_OVERLAY_FILE}" "${PRIOR_OVERLAY_REPO_FILE}" ; then
+# TODO: ALEX: FIX: Are both messages needed?  Where is the "default" created, and is
+# it the same as ${OVERLAY_NAME}?
 		MSG="${ITEM} (creating default)"
-		display_msg progress "${MSG}"
-		MSG="User didn't change prior overlay file; using new '${OVERLAY_NAME}'"
+		display_msg --log progress "${MSG}"
+		MSG="${SPACE}User didn't change prior overlay file; using new '${OVERLAY_NAME}'"
 		display_msg --logonly info "${MSG}"
 	else
 		# The user changed the old overlay file so copy it to the new format and
@@ -3469,6 +3474,7 @@ install_installer_dependencies()
 	{
 		sudo apt-get update && \
 			sudo apt-get --assume-yes install gawk jq
+# TODO: FIX: check for failure
 	} > "${TMP}" 2>&1
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )

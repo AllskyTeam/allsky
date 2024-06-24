@@ -908,9 +908,9 @@ set_permissions()
 	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_CONFIG}"
 
 	# Modules and overlays
-	sudo mkdir -p "${ALLSKY_MODULE_LOCATION}/modules" "${MY_OVERLAY_TEMPLATES}"
-	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_MODULE_LOCATION}" "${MY_OVERLAY_TEMPLATES}"
-	sudo chmod -R 775 "${ALLSKY_MODULE_LOCATION}" "${MY_OVERLAY_TEMPLATES}"
+	sudo mkdir -p "${ALLSKY_MODULE_LOCATION}/modules"
+	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_MODULE_LOCATION}"
+	sudo chmod -R 775 "${ALLSKY_MODULE_LOCATION}"
 
 	# The files should already be the correct permissions/owners, but just in case, set them.
 	# We don't know what permissions may have been on the old website, so use "sudo".
@@ -3147,6 +3147,12 @@ install_overlay()
 	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
+
+	if [[ ! -d ${MY_OVERLAY_TEMPLATES} ]]; then
+		sudo mkdir -p "${MY_OVERLAY_TEMPLATES}"
+	fi
+	sudo chgrp -R "${WEBSERVER_GROUP}" "${MY_OVERLAY_TEMPLATES}"
+	sudo chmod -R 775 "${MY_OVERLAY_TEMPLATES}"	
 }
 
 

@@ -2412,12 +2412,12 @@ restore_prior_files()
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-	# Globals: SENSOR_WIDTH, SENSOR_HEIGHT, FULL_OVERLAY_NAME, SHORT_OVERLAY_NAME, OVERLAY_NAME
+ 	# Globals: SENSOR_WIDTH, SENSOR_HEIGHT, FULL_OVERLAY_NAME, SHORT_OVERLAY_NAME, OVERLAY_NAME, PRIOR_CAMERA_TYPE
 
 	# PRIOR_OVERLAY_FILE is no longer used, but if it exists,
 	# convert it to the new name/format.
 	PRIOR_OVERLAY_FILE="${PRIOR_CONFIG_DIR}/overlay/config/overlay.json"
-	PRIOR_OVERLAY_REPO_FILE="${PRIOR_ALLSKY_DIR}/config_repo/overlay/config/overlay.json"
+	PRIOR_OVERLAY_REPO_FILE="${PRIOR_ALLSKY_DIR}/config_repo/overlay/config/overlay-${PRIOR_CAMERA_TYPE}.json"
 
 	# If no prior overlay.json exists or the user never changed it (i.e., it's the same
 	# as the prior confi_repo file), use the new format.

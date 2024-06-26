@@ -3360,7 +3360,7 @@ update_modules()
 
 	# If a venv isn't already installed then the install/update will create it,
 	# but warn the user to reinstall the extra modules.
-	if [[ ! -d ${ALLSKY_PYTHON_VENV} ]]; then
+	if [[ -d ${ALLSKY_PYTHON_VENV} || ! -d ${PRIOR_PYTHON_VENV} ]]; then
 		MSG="You appear to have the Allsky Extra modules installed."
 		MSG+="\nPlease reinstall these using the normal instructions at"
 		MSG+="\n   https://github.com/AllskyTeam/allsky-modules"

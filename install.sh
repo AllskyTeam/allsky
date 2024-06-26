@@ -3069,6 +3069,14 @@ install_Python()
 		cp -arn "${PRIOR_PYTHON_VENV}" "${ALLSKY_PYTHON_VENV}/"
 	fi
 
+	# Astropy is no longer supported on Buster due to its dependencies requiring later versions of Python
+	# This *hack* will force the require version of astropy onto Buster
+	if [[ ${PI_OS} == "buster" ]]; then
+		display_msg --log warning "Forcing build of Astropy on ${PI_OS}."
+		pip3 install setuptools setuptools_scm wheel cython==0.29.22 jinja2==2.10.3 numpy markupsafe==2.0.1 extension-helpers
+		pip3 install --no-build-isolation astropy==4.3.1	
+	fi
+
 	TMP="${ALLSKY_LOGS}/${NAME}"
 	display_msg --log progress "Installing ${NAME}${M}:"
 	COUNT=0

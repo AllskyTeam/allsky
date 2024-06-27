@@ -81,8 +81,9 @@ usage_and_exit()
 		echo
 		echo "The list of images is determined in one of two ways:"
 		echo "1. Looking in '<INPUT_DIR>' for files with an extension of '${EXTENSION}'."
-		echo "   If <INPUT_DIR> is NOT a full path name it is assumed to be in '${ALLSKY_IMAGES}',"
-		echo "   which allows using images on a USB stick, for example."
+		echo "   If <INPUT_DIR> is a full path name all files ending in '${EXTENSION}' are used,"
+		echo "   otherwise <INPUT_DIR> is assumed to be in '${ALLSKY_IMAGES}' and"
+		echo "   only files begining with '${IMAGE_NAME}' are use."
 		echo "   The timelapse is stored in <INPUT_DIR> and is called 'allsky-<BASENAME_DIR>.mp4',"
 		echo "   where <BASENAME_DIR> is the basename of <INPUT_DIR>."
 		echo
@@ -109,6 +110,7 @@ fi
 
 OUTPUT_DIR=""
 LAST_IMAGE=""
+
 if [[ -n ${IMAGES_FILE} ]]; then
 	if [[ ! -s ${IMAGES_FILE} ]]; then
 		echo -e "${RED}*** ${ME} ERROR: '${IMAGES_FILE}' does not exist or is empty!${NC}"
@@ -123,6 +125,9 @@ else
 	DIRNAME="$( dirname "${INPUT_DIR}" )"
 	if [[ ${DIRNAME} == "." ]]; then
 		INPUT_DIR="${ALLSKY_IMAGES}/${INPUT_DIR}"	# Need full pathname for links
+	else
+		# Full path name - use all images with ${EXTENSION}.
+		IMAGE_NAME=""
 	fi
 	OUTPUT_DIR="${INPUT_DIR}"	# default location
 
@@ -156,7 +161,7 @@ if [[ ${LOCK} == "true" ]]; then
 	if [[ ${IS_MINI} == "true" ]]; then
 		CAUSED_BY="This could be caused by unreasonable TIMELAPSE_MINI_IMAGES and TIMELAPSE_MINI_FREQUENCY settings."
 	else
-		CAUSED_BY="Unknown cause - see /var/log/allsky.log."
+		CAUSED_BY="Unknown cause - see ${ALLSKY_LOG}."
 	fi
 	# We need to use the PID of our parent, not our PID, since our parent
 	# may also upload the timelapse file, and 

@@ -153,7 +153,7 @@ else
 	DIRNAME="$( dirname "${INPUT_DIR}" )"
 	if [[ ${DIRNAME} == "." ]]; then
 		DATE="${INPUT_DIR}"
-		INPUT_DIR="${ALLSKY_IMAGES}/${INPUT_DIR}"	# Need full pathname for links
+		INPUT_DIR="${ALLSKY_IMAGES}/${INPUT_DIR}"	# Need full pathname for links.
 	else
 		DATE="$( basename "${INPUT_DIR}" )"
 	fi
@@ -428,11 +428,16 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 			else
 				N="nice -n ${NICE}"
 			fi
-			CMD="${N} '${ALLSKY_SCRIPTS}/timelapse.sh' ${DEBUG_ARG} --output '${UPLOAD_FILE}' ${DATE}"
+			if [[ -n ${IMAGES_FILE} ]]; then
+				X="--images '${IMAGES_FILE}'"
+			else
+				X="--output '${UPLOAD_FILE}' '${INPUT_DIR}'"
+			fi
+			CMD="${N} '${ALLSKY_SCRIPTS}/timelapse.sh' ${DEBUG_ARG} ${X}"
 			generate "Timelapse" "" "${CMD}"	# it creates the necessary directory
 			RET=$?
 		fi
-		if [[ ${RET} -eq 0 && ${TIMELAPSE_UPLOAD_THUMBNAIL} == "true" ]]; then
+		if [[ ${RET} -eq 0 && ${TIMELAPSE_UPLOAD_THUMBNAIL} == "true" && -s ${UPLOAD_FILE} ]]; then
 			rm -f "${UPLOAD_THUMBNAIL}"
 			# Want the thumbnail to be near the start of the video, but not the first frame
 			# since that can be a lousy frame.

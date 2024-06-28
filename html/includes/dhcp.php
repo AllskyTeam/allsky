@@ -70,7 +70,7 @@ function DisplayDHCPConfig() {
 		}
 	}
 
-	exec( 'pidof dnsmasq > /dev/null', $dnsmasq, $return );
+	exec( 'pidof dnsmasq > /dev/null', $ignored, $return );
 	$dnsmasq_state = ($return == 0);
 
 	if( isset( $_POST['startdhcpd'] ) ) {
@@ -107,12 +107,10 @@ function DisplayDHCPConfig() {
 			error_log('CSRF violation');
 		}
 
+	} else if( $dnsmasq_state ) {
+		$myStatus->addMessage('dnsmasq is running', 'success');
 	} else {
-		if( $dnsmasq_state ) {
-			$myStatus->addMessage('dnsmasq is running', 'success');
-		} else {
-			$myStatus->addMessage('dnsmasq is not running', 'warning');
-		}
+		$myStatus->addMessage('dnsmasq is not running', 'warning');
 	}
 
 	exec( 'cat ' . RASPI_DNSMASQ_CONFIG, $return );
@@ -129,7 +127,7 @@ function DisplayDHCPConfig() {
 		$range = getVariableOrDefault($conf, 'dhcp-range', null);
 		if ($interface === null) {
 			$return = null;
-			$myStatus->addMessage(RASPI_DNSMASQ_CONFIG . ' has no interface', 'danger');
+			$myStatus->addMessage(RASPI_DNSMASQ_CONFIG . ' has no interface', 'warning');
 		}
 		if ($range === null) {
 			$return = null;
@@ -143,7 +141,7 @@ function DisplayDHCPConfig() {
 		// count:	1				 2			 3				4
 		$arrRange = explode( ",", $range );
 		if (count($arrRange) < 3) {
-				$myStatus->addMessage("dhcp-range in '" . RASPI_DNSMASQ_CONFIG . " missing fields: $range", "danger");
+			$myStatus->addMessage("dhcp-range in '" . RASPI_DNSMASQ_CONFIG . " missing fields: $range", "danger");
 		} else {
 			$RangeStart = $arrRange[0];
 			$RangeEnd = $arrRange[1];

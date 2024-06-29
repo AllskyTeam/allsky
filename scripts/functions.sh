@@ -298,13 +298,16 @@ function get_connected_cameras_info()
 				model_id = substr($6, 6);
 				model = $8;
 				if (model != "") {
-					printf("ZWO\t%d : %s %s\n", num++, model, model_id);
+				# The model may have multiple tokens.
+					for (i=9; i<= NF; i++) model = model " " $i
+					printf("ZWO\t%d : %s %s\n", num++, model_id, model);
 					model = "<found>";		# This camera was output
 				}
 			} else if ($1 == "iProduct") {
 				if (model != "<found>") {
 					model = $3;
-					printf("ZWO\t%d : %s %s\n", num++, model, model_id);
+					for (i=4; i<= NF; i++) model = model " " $i
+					printf("ZWO\t%d : %s %s\n", num++, model_id, model);
 				}
 				model = "";		# This camera was output
 			}

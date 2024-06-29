@@ -336,13 +336,18 @@ get_connected_cameras()
 	fi
 
 	# Get the ZWO connected cameras, if any.
-	local ZWO_MODELS="$( gawk '{if ($1 == "ZWO") { print $4; }}' "${CONNECTED_CAMERAS_INFO}" )"
+	local ZWO_MODELS="$( gawk '{if ($1 == "ZWO") {
+			printf("%s", $5);
+			for (i=6; i<= NF; i++) printf(" %s", $i);
+			printf("\n");
+		}}' "${CONNECTED_CAMERAS_INFO}" )"
 	if [[ -n ${ZWO_MODELS} ]]; then
 		[[ -n ${CC} ]] && CC+=" "
 		CC+="ZWO"
 		if [[ -z ${FUNCTION} ]]; then
-			for MODEL in ${ZWO_MODELS}
+			for MODEL in ${ZWO_MODELS// /++}
 			do
+				MODEL="${MODEL//++/ }"
 				display_msg --log progress "ZWO ${MODEL} camera found."
 				CT+=( "${NUM_ZWO};ZWO;${MODEL}" "ZWO     ${MODEL}" )
 				((NUM_ZWO++))

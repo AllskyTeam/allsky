@@ -336,11 +336,7 @@ get_connected_cameras()
 	fi
 
 	# Get the ZWO connected cameras, if any.
-	local ZWO_MODELS="$( gawk '{if ($1 == "ZWO") {
-			printf("%s", $4);
-			for (i=5; i<= NF; i++) printf(" %s", $i);
-			printf("\n");
-		}}' "${CONNECTED_CAMERAS_INFO}" )"
+	local ZWO_MODELS="$( get_ZWO_connected_cameras )"
 	if [[ -n ${ZWO_MODELS} ]]; then
 		[[ -n ${CC} ]] && CC+=" "
 		CC+="ZWO"

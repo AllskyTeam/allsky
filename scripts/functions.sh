@@ -315,6 +315,22 @@ function get_connected_cameras_info()
 
 
 #####
+# Get the ZWO camera models that are connected to the Pi.
+function get_ZWO_connected_cameras()
+{
+	# Input:
+	#	ZWO  <TAB>  camera_number : camera_model
+	gawk '{
+		if ($1 == "ZWO") {
+			printf("%s", $5);
+			for (i=6; i<= NF; i++) printf(" %s", $i);
+			printf("\n");
+		}
+	}' "${CONNECTED_CAMERAS_INFO}"
+}
+
+
+#####
 # This allows testing from the command line without "return" or doExit() killing the shell.
 function test_validate_camera()
 {

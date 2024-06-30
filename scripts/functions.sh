@@ -283,7 +283,7 @@ function get_connected_cameras_info()
 
 	####### Check for ZWO
 	# Keep Output similar to RPi:
-	#		ZWO  <TAB>  camera_number?? : camera_model  ZWO_camera_model_ID
+	#		ZWO  <TAB>  camera_number : camera_model
 	# for each camera found.
 # TODO: Is the order they appear from lsusb the same as the camera number?
 	# lsusb output:
@@ -292,22 +292,21 @@ function get_connected_cameras_info()
 	#	Bus 002 Device 002: ID 03c3:290b ZWO ASI290MM	(newer OS)
 	#	1   2   3       4   5  6         7   8
 	lsusb -d "${ZWO_VENDOR}:" --verbose 2>/dev/null |
-	gawk 'BEGIN { num = 0; model_id = ""; model = ""; }
+	gawk 'BEGIN { num = 0; model = ""; }
 		{
 			if ($1 == "Bus" && $3 == "Device") {
-				model_id = substr($6, 6);
 				model = $8;
 				if (model != "") {
 				# The model may have multiple tokens.
 					for (i=9; i<= NF; i++) model = model " " $i
-					printf("ZWO\t%d : %s %s\n", num++, model_id, model);
+					printf("ZWO\t%d : %s\n", num++, model);
 					model = "<found>";		# This camera was output
 				}
 			} else if ($1 == "iProduct") {
 				if (model != "<found>") {
 					model = $3;
 					for (i=4; i<= NF; i++) model = model " " $i
-					printf("ZWO\t%d : %s %s\n", num++, model_id, model);
+					printf("ZWO\t%d : %s\n", num++, model);
 				}
 				model = "";		# This camera was output
 			}

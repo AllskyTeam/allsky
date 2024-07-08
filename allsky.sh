@@ -61,7 +61,8 @@ fi
 SEE_LOG_MSG="See ${ALLSKY_LOG}"
 ARGS_FILE="${ALLSKY_TMP}/capture_args.txt"
 
-# If a prior copy of Allsky exists, remind the user.
+# If a prior copy of Allsky exists, remind the user if we've never reminded before,
+# or it's been at least a week since the last reminder.
 if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
 	DO_MSG="true"
 	if [[ -f ${OLD_ALLSKY_REMINDER} ]]; then
@@ -105,7 +106,7 @@ fi
 
 # This file contains information the user needs to act upon after an installation.
 if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
-	# If there's an initial message display an image and stop.
+	# If there's an initial message created during installation, display an image and stop.
 	F="${POST_INSTALLATION_ACTIONS}_initial_message"
 	if [[ -f ${F} ]]; then
 		# There is already a message so don't add another,
@@ -180,12 +181,12 @@ fi
 # "true" means ignore errors
 get_connected_cameras_info "true" > "${CONNECTED_CAMERAS_INFO}"
 if grep --silent "^${CAMERA_TYPE}" "${CONNECTED_CAMERAS_INFO}" ; then
-	CAMERA_FOUND="true"
+	CAMERA_TYPE_FOUND="true"
 else
-	CAMERA_FOUND="false"
+	CAMERA_TYPE_FOUND="false"
 fi
 
-if [[ ${CAMERA_FOUND} == "false" ]]; then
+if [[ ${CAMERA_TYPE_FOUND} == "false" ]]; then
 	if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 		# reset_usb() exits if too many tries
 		reset_usb "looking for a\nZWO camera"
@@ -195,7 +196,6 @@ if [[ ${CAMERA_FOUND} == "false" ]]; then
 
 	set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
 	MSG="${NOT_STARTED_MSG}  No connected ${CAMERA_TYPE} cameras found!"
-#xx	echo -e "${RED}*** ${MSG}${NC}" >&2
 	IMAGE_MSG="*** ERROR ***\n"
 	IMAGE_MSG+="${NOT_STARTED_MSG}\n"
 	IMAGE_MSG+="\nNo connected ${CAMERA_TYPE}\ncameras found!"
@@ -203,15 +203,25 @@ if [[ ${CAMERA_FOUND} == "false" ]]; then
 		"${IMAGE_MSG}" "${NOT_STARTED_MSG}: ${MSG}"
 fi
 
+# Determine the camera model we're going to use.
+
+# xxxxxxxxxxxxxxxxxxx TODO: FIX for both types.  If > 1 connected camera of CAMERA_TYPE then
+# see if "${CAMERA_NUMBER} ${CAMERA_MODEL}" from settings is in $CONNECTED_CAMERAS_INFO file.
+# Guess I'm not sure how we determine if the camera changed when
+# there is > 1 connected camera.
+
+CCM="$( get_connected_camera_models "${CAMERA_TYPE}" )"		|| exit "${EXIT_ERROR_STOP}"
 if [[ ${CAMERA_TYPE} == "RPi" ]]; then
 	# "true" means use doExit() on error
 	RPi_COMMAND_TO_USE="$( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" "false" )"
+	CONNECTED_CAMERA_MODEL="${CAMERA_MODEL}"
 elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 	RPi_COMMAND_TO_USE=""
+	CONNECTED_CAMERA_MODEL="${CAMERA_MODEL}"
 fi
 
 # Make sure the current camera is supported and hasn't changed unexpectedly.
-validate_camera "${CAMERA_TYPE}" "${CAMERA_MODEL}"		# exits on error
+validate_camera "${CAMERA_TYPE}" "${CONNECTED_CAMERA_MODEL}"		# exits on error
 
 # Make sure the settings file is linked to the camera-specific file.
 if ! MSG="$( check_settings_link "${SETTINGS_FILE}" )" ; then

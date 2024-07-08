@@ -264,26 +264,28 @@ function get_connected_cameras_info()
 	local IGNORE_ERRORS="${1:-false}"
 
 	####### Check for RPi
-	# Output will be:
-	#		RPi  <TAB>  camera_number   : camera_model  [widthXheight]
+	# Tab-separated output will be:
+	#		RPi  camera_number   camera_sensor
 	# for each camera found.
+	# camera_sensor will be one word.
 	if [[ -z ${CMD_TO_USE_} ]]; then
 		determineCommandToUse "false" "" "${IGNORE_ERRORS}" > /dev/null
 	fi
 	if [[ -n ${CMD_TO_USE_} ]]; then
 		if [[ ${CMD_TO_USE_} == "raspistill" ]]; then
 			# Only supported camera with raspistill
-			echo -e "RPi\t0 : imx477 [4056x3040]"
+			echo -e "RPi\t0\timx477\t[4056x3040]"
 
 		else
+			# Input: camera_number  : sensor  [other stuff]
 			LIBCAMERA_LOG_LEVELS=FATAL "${CMD_TO_USE_}" --list-cameras 2>&1 |
-				grep -E '^[0-9] : ' | sed 's/^/RPi\t/'
+				gawk '{ if ($1 ~ /[0-9]/) print $3; }'
 		fi
 	fi
 
 	####### Check for ZWO
-	# Keep Output similar to RPi:
-	#		ZWO  <TAB>  camera_number : camera_model
+	# Keep output similar to RPi:
+	#		ZWO  camera_number camera_model
 	# for each camera found.
 # TODO: Is the order they appear from lsusb the same as the camera number?
 	# lsusb output:
@@ -299,14 +301,14 @@ function get_connected_cameras_info()
 				if (model != "") {
 				# The model may have multiple tokens.
 					for (i=9; i<= NF; i++) model = model " " $i
-					printf("ZWO\t%d : %s\n", num++, model);
+					printf("ZWO\t%d\t%s\n", num++, model);
 					model = "<found>";		# This camera was output
 				}
 			} else if ($1 == "iProduct") {
 				if (model != "<found>") {
 					model = $3;
 					for (i=4; i<= NF; i++) model = model " " $i
-					printf("ZWO\t%d : %s\n", num++, model);
+					printf("ZWO\t%d\t%s\n", num++, model);
 				}
 				model = "";		# This camera was output
 			}
@@ -315,18 +317,27 @@ function get_connected_cameras_info()
 
 
 #####
-# Get the ZWO camera models that are connected to the Pi.
-function get_ZWO_connected_cameras()
+# Get just the model name(s) of the specified camera type that are connected to the Pi.
+function get_connected_camera_models()
 {
-	# Input:
-	#	ZWO  <TAB>  camera_number : camera_model
-	gawk '{
-		if ($1 == "ZWO") {
-			printf("%s", $5);
-			for (i=6; i<= NF; i++) printf(" %s", $i);
-			printf("\n");
-		}
-	}' "${CONNECTED_CAMERAS_INFO}"
+	local TYPE="${1}"
+
+	# Input (tab-separated):
+	#	ZWO  camera_number  camera_model
+	#	RPi  camera_number  camera_sensor  [widthXheight]
+	#	1    2              3              4
+	local ITEMS="$( gawk -v TYPE="${TYPE}" --field-separator="\t" '{
+			if ($1 == TYPE) print $3;
+		}' "${CONNECTED_CAMERAS_INFO}" )"
+	if [[ ${TYPE} == "ZWO" ]]; then
+		echo "${ITEMS}"
+	else
+		for SENSOR in ${ITEMS}
+		do
+			local MODEL="$( get_model_from_sensor "${SENSOR}" )"
+			echo -e "${MODEL}\t${SENSOR}"
+		done
+	fi
 }
 
 
@@ -1260,36 +1271,4 @@ function get_model_from_sensor()
 			}
 		} ' "${RPi_SUPPORTED_CAMERAS}"
 	return $?
-}
-
-
-####
-# Get the camera number from the specified camera type and model.
-function get_camera_number_from_model()
-{
-	local TYPE="${1}"
-	local MODEL="${2}"
-	local cc_FILE="${3:-${CC_FILE}}"
-
-	local SENSOR
-
-	if [[ ${TYPE} == "ZWO" ]]; then
-		# For ZWO the camera model is the same as the sensor.
-		SENSOR="${MODEL}"
-	else
-		# For RPi it's a two step process since the SENSOR is in the "connected" file
-		# so we first have to get the sensor.
-
-		# First make sure the cc file is for this camera model.
-		if [[ ${MODEL} != "$( settings ".cameraModel" "${cc_FILE}" )" ]]; then
-			echo "${FUNCNAME[0]}: unable to find camera model '${MODEL}' in '${cc_FILE}'" >&2
-			return
-		fi
-		SENSOR="$( settings ".sensor" "${cc_FILE}" )"
-		[[ -z ${SENSOR} ]] && return
-	fi
-
-	# File format:    TYPE\tnumber :...
-	grep "^${TYPE}.*${SENSOR}" "${CONNECTED_CAMERAS_INFO}" | \
-		sed -e "s/^${TYPE}\t//" -e 's/ .*//'
 }

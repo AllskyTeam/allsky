@@ -343,6 +343,7 @@ function get_connected_camera_models()
 	#		1    2              3             4
 
 	# For RPi we have the sensor and need the model.
+	local PATH="${PATH}:${ALLSKY_UTILITIES}"
 	gawk -v TYPE="${TYPE}" -v FULL="${FULL}" --field-separator="\t" '
 		{
 			if ($1 != TYPE) next;

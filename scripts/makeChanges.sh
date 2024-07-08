@@ -472,13 +472,13 @@ do
 			update_json_file ".computer" "${COMPUTER}" "${SETTINGS_FILE}" "text"
 			update_json_file ".camera" "${CAMERA_TYPE} ${CAMERA_MODEL}" "${SETTINGS_FILE}" "text"
 
-			if [[ -z ${CAMERA_NUMBER} ]]; then
-				# This uses the CC_FILE just created.
-				CAMERA_NUMBER="$( get_camera_number_from_model "${CAMERA_TYPE}" "${CAMERA_MODEL}" )"
-				CAMERA_NUMBER=${CAMERA_NUMBER:-0}
-			fi
 			# Because the user doesn't change the camera number directly it's
 			# not updated in the settings file, so we have to do it.
+			if [[ -z ${CAMERA_NUMBER} ]]; then
+				# This uses the CC_FILE just created.
+				CAMERA_NUMBER="$( settings ".cameraNumber" "${CC_FILE}" )"
+				CAMERA_NUMBER=${CAMERA_NUMBER:-0}
+			fi
 			update_json_file ".cameranumber" "${CAMERA_NUMBER}" "${SETTINGS_FILE}" "integer"
 
 			# Don't do anything else if ${CAMERA_TYPE_ONLY} is set.

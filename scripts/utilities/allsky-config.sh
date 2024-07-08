@@ -21,12 +21,17 @@ OK="true"
 DO_HELP="false"
 CMD=""
 CMD_ARGS=""
+DEBUG="false"
 
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in
 		--help)
 			DO_HELP="true"
+			;;
+
+		--debug)
+			DEBUG="true"
 			;;
 
 		-*)
@@ -50,10 +55,11 @@ usage_and_exit()
 	{
 		echo
 		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-		echo "Usage: ${ME} [--help] [command [--help] [arguments ...]]"
+		echo "Usage: ${ME} [--help] [--debug] [command [--help] [arguments ...]]"
 		[[ ${RET} -ne 0 ]] && echo -en "${NC}"
 		echo -e "\n	where:"
 		echo -e "	'--help' displays this message and exits."
+		echo -e "	'--debug' displays debugging information."
 		echo -e "	'command' is a command to execute with optional arguments.  Choices are:"
 		echo -e "		show_supported_cameras  RPi | ZWO"
 		echo -e "		show_connected_cameras"
@@ -69,6 +75,7 @@ usage_and_exit()
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 PATH="${PATH}:${ALLSKY_UTILITIES}"
+
 
 ####################################### Functions - one per command
 
@@ -121,6 +128,8 @@ function samba()
 	installSamba.sh
 }
 
+#####
+# recheck_tmp and recheck_swap are functions defined elsewhere.
 
 ####################################### Helper functions
 
@@ -147,7 +156,7 @@ function needs_arguments()
 
 #####
 # Run a command / function, passing any arguments.
-function do_command()
+function run_command()
 {
 	COMMAND="${1}"
 	shift
@@ -157,8 +166,14 @@ function do_command()
 		return 1
 	fi
 
+	if [[ ${DEBUG} == "true" ]]; then
+		echo -e "${YELLOW}"
+		echo -e "Executing: ${COMMAND} ${ARGUMENTS}:\n"
+		echo -e "${NC}"
+	fi
+
 	#shellcheck disable=SC2086
-	eval "${COMMAND}" ${ARGUMENTS}
+	"${COMMAND}" ${ARGUMENTS}
 }
 
 
@@ -203,7 +218,7 @@ if [[ -z ${CMD} ]]; then
 	# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 	while COMMAND="$( prompt "${PROMPT}" "${CMDS[@]}" )"
 	do
-		do_command "${COMMAND}"
+		run_command "${COMMAND}"
 		RET=$?
 
 		[[ ${ALLOW_MORE_COMMANDS} == "false" ]] && exit ${RET}
@@ -219,6 +234,6 @@ if [[ -z ${CMD} ]]; then
 
 else
 	#shellcheck disable=SC2086
-	do_command "${CMD}" ${CMD_ARGS}
+	run_command "${CMD}" ${CMD_ARGS}
 	exit $?
 fi

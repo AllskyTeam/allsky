@@ -321,23 +321,49 @@ function get_connected_cameras_info()
 function get_connected_camera_models()
 {
 	local TYPE="${1}"
-
-	# Input (tab-separated):
-	#	ZWO  camera_number  camera_model
-	#	RPi  camera_number  camera_sensor  [widthXheight]
-	#	1    2              3              4
-	local ITEMS="$( gawk -v TYPE="${TYPE}" --field-separator="\t" '{
-			if ($1 == TYPE) print $3;
-		}' "${CONNECTED_CAMERAS_INFO}" )"
-	if [[ ${TYPE} == "ZWO" ]]; then
-		echo "${ITEMS}"
-	else
-		for SENSOR in ${ITEMS}
-		do
-			local MODEL="$( get_model_from_sensor "${SENSOR}" )"
-			echo -e "${MODEL}\t${SENSOR}"
-		done
+	if [[ -z ${TYPE} ]]; then
+		echo "Usage: ${FUNCNAME[0]} type" >&2
+		return 1
 	fi
+
+	local FULL="false"
+	[[ ${2} == "--full" ]] && FULL="true"
+
+	# Input:
+	#		ZWO  camera_number  camera_model
+	#		RPi  camera_number  camera_sensor
+
+	# Output (tab-separated):
+	#	Short:
+	#		camera_model
+	#	FULL:
+	#		ZWO  camera_number  camera_model
+	#		RPi  camera_number  camera_model  camera_sensor
+	#		1    2              3             4
+	#		1    2              3             4
+
+	# For RPi we have the sensor and need the model.
+	gawk -v TYPE="${TYPE}" -v FULL="${FULL}" --field-separator="\t" '
+		{
+			if ($1 != TYPE) next;
+
+			if (TYPE == "ZWO") {
+				if (FULL == "true") {
+					print $0;
+				} else {
+					model = $3;
+					print model;
+				}
+			} else {
+				sensor = $3;
+				"get_model_from_sensor.sh " sensor | getline model;
+				if (FULL == "true") {
+					print $1 $2 model sensor;
+				} else {
+					print sensor;
+				}
+			}
+		}' "${CONNECTED_CAMERAS_INFO}"
 }
 
 
@@ -1247,7 +1273,15 @@ function get_model_from_sensor()
 	local SENSOR="${1}"
 
 	gawk --field-separator '\t' -v sensor="${SENSOR}" '
-		BEGIN { model = ""; }
+		BEGIN {
+			if (sensor == "") {
+				printf("ERROR: No sensor specified.\n");
+				ok = "false";
+				exit(1);
+			}
+			model = "";
+			ok = "true";
+		}
 		{
 			if ($1 == "camera") {
 				module = $2;
@@ -1262,13 +1296,16 @@ function get_model_from_sensor()
 				
 		}
 		END {
+			if (ok == "false") {
+				exit(1);
+			}
+
 			if (model != "") {
-				printf("%s", model);
+				print model;
 				exit(0);
 			} else {
-				printf("unknown_model");
+				printf("unknown_sensor_%s\n", sensor);
 				exit(1);
 			}
 		} ' "${RPi_SUPPORTED_CAMERAS}"
-	return $?
 }

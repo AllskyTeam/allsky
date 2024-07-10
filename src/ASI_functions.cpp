@@ -501,7 +501,7 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 	},
 
 
-	{ // Waveshare imx290, libcamera
+	{ // Waveshare imx219, libcamera
 		{ "Gain", "Gain", 10.666667, 1.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
 		{ "Exposure", "Exposure Time (us)", 11.767556 * US_IN_SEC, 75, 10 * US_IN_SEC, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
 		{ "WB_R", "White balance: Red component", 32.0, 0.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },

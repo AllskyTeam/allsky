@@ -131,6 +131,7 @@ pgrep "${ME}" | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
 # Get the list of connected cameras and make sure the one we want is connected.
 if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
+	RPi_COMMAND_TO_USE=""
 	RESETTING_USB_LOG="${ALLSKY_TMP}/resetting_USB.txt"
 
 	reset_usb()		# resets the USB bus
@@ -176,6 +177,10 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 		sleep 3		# give it a few seconds, plus, allow the notification images to be seen
 		sudo "${ALLSKY_BIN}/uhubctl" --action on --exact --search "${SEARCH}"
 	}
+
+else	# RPi
+	# "true" means use doExit() on error
+	RPi_COMMAND_TO_USE="$( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" "false" )"
 fi
 
 # "true" means ignore errors
@@ -196,32 +201,27 @@ if [[ ${CAMERA_TYPE_FOUND} == "false" ]]; then
 
 	set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
 	MSG="${NOT_STARTED_MSG}  No connected ${CAMERA_TYPE} cameras found!"
-	IMAGE_MSG="*** ERROR ***\n"
+	IMAGE_MSG="${ERROR_MSG_PREFIX}"
 	IMAGE_MSG+="${NOT_STARTED_MSG}\n"
 	IMAGE_MSG+="\nNo connected ${CAMERA_TYPE}\ncameras found!"
 	doExit "${EXIT_ERROR_STOP}" "Error" \
-		"${IMAGE_MSG}" "${NOT_STARTED_MSG}: ${MSG}"
-fi
-
-# Determine the camera model we're going to use.
-
-# xxxxxxxxxxxxxxxxxxx TODO: FIX for both types.  If > 1 connected camera of CAMERA_TYPE then
-# see if "${CAMERA_NUMBER} ${CAMERA_MODEL}" from settings is in $CONNECTED_CAMERAS_INFO file.
-# Guess I'm not sure how we determine if the camera changed when
-# there is > 1 connected camera.
-
-CCM="$( get_connected_camera_models "${CAMERA_TYPE}" )"		|| exit "${EXIT_ERROR_STOP}"
-if [[ ${CAMERA_TYPE} == "RPi" ]]; then
-	# "true" means use doExit() on error
-	RPi_COMMAND_TO_USE="$( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" "false" )"
-	CONNECTED_CAMERA_MODEL="${CAMERA_MODEL}"
-elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
-	RPi_COMMAND_TO_USE=""
-	CONNECTED_CAMERA_MODEL="${CAMERA_MODEL}"
+		"${IMAGE_MSG}" "${MSG}"
 fi
 
 # Make sure the current camera is supported and hasn't changed unexpectedly.
-validate_camera "${CAMERA_TYPE}" "${CONNECTED_CAMERA_MODEL}"		# exits on error
+CAM="${CAMERA_TYPE}	${CAMERA_NUMBER}	${CAMERA_MODEL}"	# has TABS
+CCM="$( get_connected_camera_models --full "${CAMERA_TYPE}" )"
+read CC_TYPE CC_NUMBER CC_MODEL <<<"${CCM}"
+if ! echo -e "${CCM}" | grep --silent "${CAM}" ; then
+	# Something changed.  validate_camera() displays the error message.
+	if ! validate_camera "${CC_TYPE}" "${CC_MODEL}" "${CC_NUMBER}" ; then
+		set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
+		IMAGE_MSG="${ERROR_MSG_PREFIX}"
+		IMAGE_MSG+="\nThe camera changed."
+		IMAGE_MSG+="\nCheck Camera Type\n& Model in the WebUI."
+		doExit "${EXIT_ERROR_STOP}" "Error" "${IMAGE_MSG}"
+	fi
+fi
 
 # Make sure the settings file is linked to the camera-specific file.
 if ! MSG="$( check_settings_link "${SETTINGS_FILE}" )" ; then

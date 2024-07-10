@@ -36,14 +36,16 @@ done
 usage_and_exit()
 {
 	local RET=${1}
-	echo
-	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-	echo "Usage: ${ME} [--help] [--camera NUM]"
-	[[ ${RET} -ne 0 ]] && echo -en "${NC}"
-	echo "    where:"
-	echo "      '--help' displays this message and exits."
-	echo "      '--camera NUM' use camera number NUM."
-	exit "${RET}"
+	{
+		echo
+		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
+		echo "Usage: ${ME} [--help] [--camera NUM]"
+		[[ ${RET} -ne 0 ]] && echo -en "${NC}"
+		echo "    where:"
+		echo "      '--help' displays this message and exits."
+		echo "      '--camera NUM' use camera number NUM."
+		exit "${RET}"
+	} >&2
 }
 
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0

@@ -61,7 +61,8 @@ fi
 SEE_LOG_MSG="See ${ALLSKY_LOG}"
 ARGS_FILE="${ALLSKY_TMP}/capture_args.txt"
 
-# If a prior copy of Allsky exists, remind the user.
+# If a prior copy of Allsky exists, remind the user if we've never reminded before,
+# or it's been at least a week since the last reminder.
 if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
 	DO_MSG="true"
 	if [[ -f ${OLD_ALLSKY_REMINDER} ]]; then
@@ -105,7 +106,7 @@ fi
 
 # This file contains information the user needs to act upon after an installation.
 if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
-	# If there's an initial message display an image and stop.
+	# If there's an initial message created during installation, display an image and stop.
 	F="${POST_INSTALLATION_ACTIONS}_initial_message"
 	if [[ -f ${F} ]]; then
 		# There is already a message so don't add another,
@@ -130,6 +131,7 @@ pgrep "${ME}" | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
 # Get the list of connected cameras and make sure the one we want is connected.
 if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
+	RPi_COMMAND_TO_USE=""
 	RESETTING_USB_LOG="${ALLSKY_TMP}/resetting_USB.txt"
 
 	reset_usb()		# resets the USB bus
@@ -175,17 +177,21 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 		sleep 3		# give it a few seconds, plus, allow the notification images to be seen
 		sudo "${ALLSKY_BIN}/uhubctl" --action on --exact --search "${SEARCH}"
 	}
+
+else	# RPi
+	# "true" means use doExit() on error
+	RPi_COMMAND_TO_USE="$( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" "false" )"
 fi
 
 # "true" means ignore errors
 get_connected_cameras_info "true" > "${CONNECTED_CAMERAS_INFO}"
 if grep --silent "^${CAMERA_TYPE}" "${CONNECTED_CAMERAS_INFO}" ; then
-	CAMERA_FOUND="true"
+	CAMERA_TYPE_FOUND="true"
 else
-	CAMERA_FOUND="false"
+	CAMERA_TYPE_FOUND="false"
 fi
 
-if [[ ${CAMERA_FOUND} == "false" ]]; then
+if [[ ${CAMERA_TYPE_FOUND} == "false" ]]; then
 	if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 		# reset_usb() exits if too many tries
 		reset_usb "looking for a\nZWO camera"
@@ -195,23 +201,27 @@ if [[ ${CAMERA_FOUND} == "false" ]]; then
 
 	set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
 	MSG="${NOT_STARTED_MSG}  No connected ${CAMERA_TYPE} cameras found!"
-#xx	echo -e "${RED}*** ${MSG}${NC}" >&2
-	IMAGE_MSG="*** ERROR ***\n"
+	IMAGE_MSG="${ERROR_MSG_PREFIX}"
 	IMAGE_MSG+="${NOT_STARTED_MSG}\n"
 	IMAGE_MSG+="\nNo connected ${CAMERA_TYPE}\ncameras found!"
 	doExit "${EXIT_ERROR_STOP}" "Error" \
-		"${IMAGE_MSG}" "${NOT_STARTED_MSG}: ${MSG}"
-fi
-
-if [[ ${CAMERA_TYPE} == "RPi" ]]; then
-	# "true" means use doExit() on error
-	RPi_COMMAND_TO_USE="$( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" "false" )"
-elif [[ ${CAMERA_TYPE} == "ZWO" ]]; then
-	RPi_COMMAND_TO_USE=""
+		"${IMAGE_MSG}" "${MSG}"
 fi
 
 # Make sure the current camera is supported and hasn't changed unexpectedly.
-validate_camera "${CAMERA_TYPE}" "${CAMERA_MODEL}"		# exits on error
+CAM="${CAMERA_TYPE}	${CAMERA_NUMBER}	${CAMERA_MODEL}"	# has TABS
+CCM="$( get_connected_camera_models --full "${CAMERA_TYPE}" )"
+read -r CC_TYPE CC_NUMBER CC_MODEL <<<"${CCM}"
+if ! echo -e "${CCM}" | grep --silent "${CAM}" ; then
+	# Something changed.  validate_camera() displays the error message.
+	if ! validate_camera "${CC_TYPE}" "${CC_MODEL}" "${CC_NUMBER}" ; then
+		set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
+		IMAGE_MSG="${ERROR_MSG_PREFIX}"
+		IMAGE_MSG+="\nThe camera changed."
+		IMAGE_MSG+="\nCheck Camera Type\n& Model in the WebUI."
+		doExit "${EXIT_ERROR_STOP}" "Error" "${IMAGE_MSG}"
+	fi
+fi
 
 # Make sure the settings file is linked to the camera-specific file.
 if ! MSG="$( check_settings_link "${SETTINGS_FILE}" )" ; then

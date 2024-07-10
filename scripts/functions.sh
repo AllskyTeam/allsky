@@ -264,26 +264,28 @@ function get_connected_cameras_info()
 	local IGNORE_ERRORS="${1:-false}"
 
 	####### Check for RPi
-	# Output will be:
-	#		RPi  <TAB>  camera_number   : camera_model  [widthXheight]
+	# Tab-separated output will be:
+	#		RPi  camera_number   camera_sensor
 	# for each camera found.
+	# camera_sensor will be one word.
 	if [[ -z ${CMD_TO_USE_} ]]; then
 		determineCommandToUse "false" "" "${IGNORE_ERRORS}" > /dev/null
 	fi
 	if [[ -n ${CMD_TO_USE_} ]]; then
 		if [[ ${CMD_TO_USE_} == "raspistill" ]]; then
 			# Only supported camera with raspistill
-			echo -e "RPi\t0 : imx477 [4056x3040]"
+			echo -e "RPi\t0\timx477\t[4056x3040]"
 
 		else
+			# Input: camera_number  : sensor  [other stuff]
 			LIBCAMERA_LOG_LEVELS=FATAL "${CMD_TO_USE_}" --list-cameras 2>&1 |
-				grep -E '^[0-9] : ' | sed 's/^/RPi\t/'
+				gawk '{ if ($1 ~ /[0-9]/) print $3; }'
 		fi
 	fi
 
 	####### Check for ZWO
-	# Keep Output similar to RPi:
-	#		ZWO  <TAB>  camera_number?? : camera_model  ZWO_camera_model_ID
+	# Keep output similar to RPi:
+	#		ZWO  camera_number camera_model
 	# for each camera found.
 # TODO: Is the order they appear from lsusb the same as the camera number?
 	# lsusb output:
@@ -292,19 +294,21 @@ function get_connected_cameras_info()
 	#	Bus 002 Device 002: ID 03c3:290b ZWO ASI290MM	(newer OS)
 	#	1   2   3       4   5  6         7   8
 	lsusb -d "${ZWO_VENDOR}:" --verbose 2>/dev/null |
-	gawk 'BEGIN { num = 0; model_id = ""; model = ""; }
+	gawk 'BEGIN { num = 0; model = ""; }
 		{
 			if ($1 == "Bus" && $3 == "Device") {
-				model_id = substr($6, 6);
 				model = $8;
 				if (model != "") {
-					printf("ZWO\t%d : %s %s\n", num++, model, model_id);
+				# The model may have multiple tokens.
+					for (i=9; i<= NF; i++) model = model " " $i
+					printf("ZWO\t%d\t%s\n", num++, model);
 					model = "<found>";		# This camera was output
 				}
 			} else if ($1 == "iProduct") {
 				if (model != "<found>") {
 					model = $3;
-					printf("ZWO\t%d : %s %s\n", num++, model, model_id);
+					for (i=4; i<= NF; i++) model = model " " $i
+					printf("ZWO\t%d\t%s\n", num++, model);
 				}
 				model = "";		# This camera was output
 			}
@@ -313,11 +317,64 @@ function get_connected_cameras_info()
 
 
 #####
+# Get just the model name(s) of the specified camera type that are connected to the Pi.
+function get_connected_camera_models()
+{
+	local FULL="false"
+	[[ ${1} == "--full" ]] && FULL="true" && shift
+
+	local TYPE="${1}"
+	if [[ -z ${TYPE} ]]; then
+		echo "Usage: ${FUNCNAME[0]} type" >&2
+		return 1
+	fi
+
+
+	# Input:
+	#		ZWO  camera_number  camera_model
+	#		RPi  camera_number  camera_sensor
+
+	# Output (tab-separated):
+	#	Short:
+	#		camera_model
+	#	FULL:
+	#		ZWO  camera_number  camera_model
+	#		RPi  camera_number  camera_model  camera_sensor
+	#		1    2              3             4
+	#		1    2              3             4
+
+	# For RPi we have the sensor and need the model.
+	local PATH="${PATH}:${ALLSKY_UTILITIES}"
+	gawk -v TYPE="${TYPE}" -v FULL="${FULL}" --field-separator="\t" '
+		{
+			if ($1 != TYPE) next;
+
+			if (TYPE == "ZWO") {
+				if (FULL == "true") {
+					print $0;
+				} else {
+					model = $3;
+					print model;
+				}
+			} else {
+				sensor = $3;
+				"get_model_from_sensor.sh " sensor | getline model;
+				if (FULL == "true") {
+					print $1 $2 model sensor;
+				} else {
+					print sensor;
+				}
+			}
+		}' "${CONNECTED_CAMERAS_INFO}"
+}
+
+
+#####
 # This allows testing from the command line without "return" or doExit() killing the shell.
 function test_validate_camera()
 {
 	# true == ignore errors
-	validate_camera "${1}" "${2}" "true" || echo -e "\nvalidate_camera() returned $?"
+	validate_camera "${1}" "${2}" "${3}" "true" || echo -e "\nvalidate_camera() returned $?"
 }
 
 #####
@@ -327,24 +384,26 @@ function validate_camera()
 {
 	local CT="${1}"		# Camera type
 	local CM="${2}"		# Camera model
-	if [[ -z ${CT} || -z ${CM} ]]; then
-		local M="${ME:-${FUNCNAME[0]}}"
-		echo -e "\n${RED}Usage: ${M} camera_type camera_model${NC}\n" >&2
+	local CN="${3}"		# Camera number
+	if [[ $# -lt 3 ]]; then
+		echo -e "\n${RED}Usage: ${FUNCNAME[0]} camera_type camera_model camera_number${NC}\n" >&2
 		return 2
 	fi
-	local IGNORE_ERRORS="${3:-false}"	# True if just checking
+	local IGNORE_ERRORS="${4:-false}"	# True if just checking
 
 	verify_CAMERA_TYPE "${CT}" "${IGNORE_ERRORS}" || return 2
 
-	local MSG  URL  RET=0
+	local MSG  URL  RET
 
-	# Compare the current CAMERA_MODEL to what's in the settings file.
+	# Compare the specified camera to what's in the settings file.
 	SETTINGS_CT="$( settings ".cameratype" )"
 	SETTINGS_CM="$( settings ".cameramodel" )"
+	SETTINGS_CN="$( settings ".cameranumber" )"
+
+	RET=0
 	if [[ ${SETTINGS_CT} != "${CT}" ]]; then
-		MSG="You appear to have changed the camera type to '${CT}' without notifying Allsky."
-		MSG+="\nThe last known camera type was '${SETTINGS_CT}'."
-		MSG+="\nIf this is correct, go to the 'Allsky Settings' page of the WebUI and"
+		MSG="The Camera Type unexpectedly changed from '${SETTINGS_CT}' to '${CT}'."
+		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
 		MSG+="\nchange the 'Camera Type' to 'Refresh' then save the settings."
 		if [[ ${ON_TTY} == "true" ]]; then
 			echo -e "\n${RED}${MSG}${NC}\n"
@@ -354,10 +413,20 @@ function validate_camera()
 		fi
 		RET=1
 	elif [[ ${SETTINGS_CM} != "${CM}" ]]; then
-		MSG="You appear to have changed the camera model to '${CM}' without notifying Allsky."
-		MSG+="\nThe last known camera was '${SETTINGS_CT} ${SETTINGS_CM}'."
-		MSG+="\nIf this is correct, go to the 'Allsky Settings' page of the WebUI and"
+		MSG="The Camera Model unexpectedly changed from '${SETTINGS_CM}' to '${CM}'."
+		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
 		MSG+="\nchange the 'Camera Model' to '${CM}' then save the settings."
+		if [[ ${ON_TTY} == "true" ]]; then
+			echo -e "\n${RED}${MSG}${NC}\n"
+		else
+			URL="/index.php?page=configuration&_ts=${RANDOM}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${MSG}" "${URL}"
+		fi
+		RET=1
+	elif [[ ${SETTINGS_CN} != "${CN}" ]]; then
+		MSG="The camera's number unexpectedly changed from '${SETTINGS_CN}' to '${CN}'."
+		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
+		MSG+="\nchange the 'Camera Type' to 'Refresh' then save the settings."
 		if [[ ${ON_TTY} == "true" ]]; then
 			echo -e "\n${RED}${MSG}${NC}\n"
 		else
@@ -1218,7 +1287,15 @@ function get_model_from_sensor()
 	local SENSOR="${1}"
 
 	gawk --field-separator '\t' -v sensor="${SENSOR}" '
-		BEGIN { model = ""; }
+		BEGIN {
+			if (sensor == "") {
+				printf("ERROR: No sensor specified.\n");
+				ok = "false";
+				exit(1);
+			}
+			model = "";
+			ok = "true";
+		}
 		{
 			if ($1 == "camera") {
 				module = $2;
@@ -1233,45 +1310,16 @@ function get_model_from_sensor()
 				
 		}
 		END {
+			if (ok == "false") {
+				exit(1);
+			}
+
 			if (model != "") {
-				printf("%s", model);
+				print model;
 				exit(0);
 			} else {
-				printf("unknown_model");
+				printf("unknown_sensor_%s\n", sensor);
 				exit(1);
 			}
 		} ' "${RPi_SUPPORTED_CAMERAS}"
-	return $?
-}
-
-
-####
-# Get the camera number from the specified camera type and model.
-function get_camera_number_from_model()
-{
-	local TYPE="${1}"
-	local MODEL="${2}"
-	local cc_FILE="${3:-${CC_FILE}}"
-
-	local SENSOR
-
-	if [[ ${TYPE} == "ZWO" ]]; then
-		# For ZWO the camera model is the same as the sensor.
-		SENSOR="${MODEL}"
-	else
-		# For RPi it's a two step process since the SENSOR is in the "connected" file
-		# so we first have to get the sensor.
-
-		# First make sure the cc file is for this camera model.
-		if [[ ${MODEL} != "$( settings ".cameraModel" "${cc_FILE}" )" ]]; then
-			echo "${FUNCNAME[0]}: unable to find camera model '${MODEL}' in '${cc_FILE}'" >&2
-			return
-		fi
-		SENSOR="$( settings ".sensor" "${cc_FILE}" )"
-		[[ -z ${SENSOR} ]] && return
-	fi
-
-	# File format:    TYPE\tnumber :...
-	grep "^${TYPE}.*${SENSOR}" "${CONNECTED_CAMERAS_INFO}" | \
-		sed -e "s/^${TYPE}\t//" -e 's/ .*//'
 }

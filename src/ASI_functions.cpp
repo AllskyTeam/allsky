@@ -38,7 +38,7 @@ int num_connectedCameraTypes = 0;
 
 // Return the number of cameras PHYSICALLY connected of the correct type.
 // allsky.sh created the file; we just need to count the number of lines in it.
-// Also, save information on all connected cameras.
+// Also, save information on ALL connected cameras.
 int getNumOfConnectedCameras()
 {
 	FILE *f = fopen(CG.connectedCamerasFile, "r");
@@ -50,24 +50,25 @@ int getNumOfConnectedCameras()
 	}
 	int numThisType = 0;
 	char line[512];
-	char cameraType[CC_TYPE_SIZE];
-	char cameraModel[CAMERA_NAME_SIZE];
 
-	Log(5, ">>>>>> getNumOfConnecteeCameras() called:\n");
+	// Input file format (tab-separated):
+	//		camera_type  camera_number   sensor_name_or_Model  optional_other_stuff
+	//		1            2               3                      4
+	// Sample lines:
+	// 		RPi          0               imx477                [4056x3040]
+	// 		ZWO          1               ASI120MC Mini
+	// ZWO Model names may have multiple words.
+
 	int on_line=0;
 	while (fgets(line, sizeof(line)-1, f) != NULL)
 	{
 		on_line++;
 		Log(5, "     line %d: %s", on_line, line);
+		char cameraModel[CAMERA_NAME_SIZE];
 		int num;
+		char cameraType[CC_TYPE_SIZE];
 
-		// File format
-		//		camera_type  <TAB>  camera_number   : sensor_name  [width x height] or ZWO code
-		//		                                      or Model
-		// Sample lines:
-		// 		RPi          <TAB>  0               : imx477       [4056x3040]
-		// 		ZWO          <TAB>  1               : ASI290MM     290b
-		if (sscanf(line, "%s\t%d : %s ", cameraType, &num, cameraModel) == 3)
+		if (sscanf(line, "%s\t%d\t%s", cameraType, &num, cameraModel) == 3)
 		{
 			CONNECTED_CAMERAS *cC = &connectedCameras[totalNum_connectedCameras++];
 			cC->cameraID = num;
@@ -88,7 +89,7 @@ int getNumOfConnectedCameras()
 			int n = num_connectedCameraTypes;
 			for (int i=0; i <= n; i++)
 			{
-//x printf(" checking connectedCameraTypes[%d], num_connectedCameraTypes=%d\n", i, n);
+Log(5, "checking connectedCameraTypes[%d], num_connectedCameraTypes=%d\n", i, n);
 				if (i == num_connectedCameraTypes)
 				{
 					p = "";
@@ -97,16 +98,16 @@ int getNumOfConnectedCameras()
 				{
 					p = connectedCameraTypes[i];
 				}
-//x printf("    p is [%s], cameraType=[%s]\n", *p != '\0' ? p : "NOT SET", cameraType);
+Log(5, "    p is [%s], cameraType=[%s]\n", *p != '\0' ? p : "NOT SET", cameraType);
 				if (strcmp(p, cameraType) == 0)
 				{
-//x printf("  >> %s already in list; skipping\n", p);
+Log(5, "  >> %s already in list; skipping\n", p);
 					break;
 				} else if (num_connectedCameraTypes == 0 || strcmp(p, cameraType) != 0)
 				{
 					connectedCameraTypes[num_connectedCameraTypes] = cC->Type;
 					num_connectedCameraTypes++;
-//x printf("  NEW TYPE [%s], num_connectedCameraTypes=%d\n", cC->Type, num_connectedCameraTypes);
+Log(5, "  NEW TYPE [%s], num_connectedCameraTypes=%d\n", cC->Type, num_connectedCameraTypes);
 					break;
 				}
 			}
@@ -500,14 +501,14 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 	},
 
 
-	{ // Waveshare imx290, libcamera
+	{ // Waveshare imx219, libcamera
 		{ "Gain", "Gain", 10.666667, 1.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
 		{ "Exposure", "Exposure Time (us)", 11.767556 * US_IN_SEC, 75, 10 * US_IN_SEC, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
 		{ "WB_R", "White balance: Red component", 32.0, 0.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
 		{ "WB_B", "White balance: Blue component", 32.0, 0.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
 		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
 		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 10.666667, 1.0, 10.666667, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
-		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 11767.556 * MS_IN_SEC, 1, 11767.556 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
+		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 11.767556 * MS_IN_SEC, 1, 11.767556 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
 		{ "ExposureCompensation", "Exposure Compensation", 8.0, -8.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
 		{ "Brightness", "Brightness", 1.0, -1.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
 		{ "Saturation", "Saturation", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
@@ -831,7 +832,7 @@ if (numTokens > 1) Log(5, ", inCamera=%s, inControlCaps=%s, inLibcamera=%s\n", y
 		}
 
 	}
-}// end of if(1)
+}// end of if(0)
 
 	// For each camera found, update the next *RPiCameras[] entry to point to the
 	// camera's ASICameraInfoArray[] entry.
@@ -1338,8 +1339,9 @@ void saveCameraInfo(
 		double pixelSize,
 		char const *bayer)
 {
-	char *camModel = getCameraModel(cameraInfo.Name);
 	char *sn = getSerialNumber(cameraInfo.CameraID);
+	char camModel[CAMERA_NAME_SIZE + 1];
+	strncpy(camModel, getCameraModel(cameraInfo.Name), CAMERA_NAME_SIZE);
 
 	FILE *f;
 	if (strcmp(file, "-") == 0)
@@ -1373,6 +1375,7 @@ void saveCameraInfo(
 	fprintf(f, "\t\"cameraModel\" : \"%s\",\n", camModel);
 		fprintf(f, "\t\"cameraModels\" : [\n");
 		int numThisType = 0;
+		bool foundThisModel = false;
 		for (int cc=0; cc < totalNum_connectedCameras; cc++)
 		{
 			CONNECTED_CAMERAS *cC = &connectedCameras[cc];
@@ -1386,18 +1389,31 @@ void saveCameraInfo(
 				fprintf(f, ",");		// comma on all but last one
 				fprintf(f, "\n");
 			}
+			char *cm = getCameraModel(cC->Name);
+			if (strcmp(cm, camModel) == 0)
+			{
+				foundThisModel = true;
+			}
 			fprintf(f, "\t\t{ \"value\" : \"%s\", \"label\" : \"%s\" }",
-				getCameraModel(cC->Name),
+				cm,
 #ifdef IS_RPi
 				skipType(cC->Sensor)
 #else
-				getCameraModel(cC->Name)
+				cm
 #endif
 			);
 
 			numThisType++;
 		}
 		fprintf(f, "\n\t],\n");
+		if (! foundThisModel)
+		{
+			Log(0, "%s: ERROR: Currently connected %s %s camera not found in '%s'.\n",
+				CG.ME, CAMERA_TYPE, camModel, CG.connectedCamerasFile);
+			if (f != stdout)
+				fclose(f);
+			closeUp(EXIT_ERROR_STOP);
+		}
 #ifdef IS_RPi
 	fprintf(f, "\t\"sensor\" : \"%s\",\n", cameraInfo.Sensor);
 #endif

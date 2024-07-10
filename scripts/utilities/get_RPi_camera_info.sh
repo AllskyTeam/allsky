@@ -36,25 +36,45 @@ done
 usage_and_exit()
 {
 	local RET=${1}
-	echo
-	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-	echo "Usage: ${ME} [--help] [-camera NUM]"
-	[[ ${RET} -ne 0 ]] && echo -en "${NC}"
-	echo "    where:"
-	echo "      '--help' displays this message and exits."
-	echo "      '--camera NUM' use camera number NUM."
-	exit "${RET}"
+	{
+		echo
+		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
+		echo "Usage: ${ME} [--help] [--camera NUM]"
+		[[ ${RET} -ne 0 ]] && echo -en "${NC}"
+		echo "    where:"
+		echo "      '--help' displays this message and exits."
+		echo "      '--camera NUM' use camera number NUM."
+		exit "${RET}"
+	} >&2
 }
 
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
+CMD="$( determineCommandToUse "false" "" "false" )"		|| exit 1
+if [[ ${CMD} == "raspistill" ]]; then
+	echo "${ME} does not work with raspistill." >&2
+	exit 1
+fi
+
 export LIBCAMERA_LOG_LEVELS=ERROR,FATAL
 CAMERA_DATA="${ALLSKY_TMP}/camera_data.txt"
 {
 	echo -e "===== libcamera-still --list-cameras"
-	libcamera-still --list-cameras
-} > "${CAMERA_DATA}" 2>&1
+	libcamera-still --list-cameras 2>&1
+} > "${CAMERA_DATA}"
+
+if [[ $( wc --lines < "${CAMERA_DATA}" ) -le 2 ]]; then
+	echo "${ME}: No RPi cameras found!" >&2
+	exit 1
+fi
+
+
+# CAMERA_DATA's format:
+#	0 : imx477 [4056x3040] (/base/soc/i2c0mux/i2c@1/imx477@1a)
+#	    Modes: 'SRGGB10_CSI2P' : 1332x990 
+#	           'SRGGB12_CSI2P' : 2028x1080 2028x1520 4056x3040 
+
 SENSOR="$( grep "${CAMERA_NUMBER} :" "${CAMERA_DATA}" | gawk '{ print $3; }' )"
 
 # Determine if this sensor is supported.
@@ -123,7 +143,7 @@ if [[ ${RET} -eq 0 ]]; then
 		echo    "************************"
 	fi
 else
-	echo "ERROR: Unable to determine maximum exposure time for camera ${MODEL} ${SENSOR}." >&2
+	echo "${ME}: ERROR: Unable to determine maximum exposure time for camera ${MODEL} ${SENSOR}." >&2
 fi
 echo
 

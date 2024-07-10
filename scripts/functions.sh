@@ -374,7 +374,7 @@ function get_connected_camera_models()
 function test_validate_camera()
 {
 	# true == ignore errors
-	validate_camera "${1}" "${2}" "true" || echo -e "\nvalidate_camera() returned $?"
+	validate_camera "${1}" "${2}" "${3}" "true" || echo -e "\nvalidate_camera() returned $?"
 }
 
 #####
@@ -384,24 +384,26 @@ function validate_camera()
 {
 	local CT="${1}"		# Camera type
 	local CM="${2}"		# Camera model
-	if [[ -z ${CT} || -z ${CM} ]]; then
-		local M="${ME:-${FUNCNAME[0]}}"
-		echo -e "\n${RED}Usage: ${M} camera_type camera_model${NC}\n" >&2
+	local CN="${3}"		# Camera number
+	if [[ $# -lt 3 ]]; then
+		echo -e "\n${RED}Usage: ${FUNCNAME[0]} camera_type camera_model camera_number${NC}\n" >&2
 		return 2
 	fi
-	local IGNORE_ERRORS="${3:-false}"	# True if just checking
+	local IGNORE_ERRORS="${4:-false}"	# True if just checking
 
 	verify_CAMERA_TYPE "${CT}" "${IGNORE_ERRORS}" || return 2
 
-	local MSG  URL  RET=0
+	local MSG  URL  RET
 
-	# Compare the current CAMERA_MODEL to what's in the settings file.
+	# Compare the specified camera to what's in the settings file.
 	SETTINGS_CT="$( settings ".cameratype" )"
 	SETTINGS_CM="$( settings ".cameramodel" )"
+	SETTINGS_CN="$( settings ".cameranumber" )"
+
+	RET=0
 	if [[ ${SETTINGS_CT} != "${CT}" ]]; then
-		MSG="You appear to have changed the camera type to '${CT}' without notifying Allsky."
-		MSG+="\nThe last known camera type was '${SETTINGS_CT}'."
-		MSG+="\nIf this is correct, go to the 'Allsky Settings' page of the WebUI and"
+		MSG="The Camera Type unexpectedly changed from '${SETTINGS_CT}' to '${CT}'."
+		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
 		MSG+="\nchange the 'Camera Type' to 'Refresh' then save the settings."
 		if [[ ${ON_TTY} == "true" ]]; then
 			echo -e "\n${RED}${MSG}${NC}\n"
@@ -411,10 +413,20 @@ function validate_camera()
 		fi
 		RET=1
 	elif [[ ${SETTINGS_CM} != "${CM}" ]]; then
-		MSG="You appear to have changed the camera model to '${CM}' without notifying Allsky."
-		MSG+="\nThe last known camera was '${SETTINGS_CT} ${SETTINGS_CM}'."
-		MSG+="\nIf this is correct, go to the 'Allsky Settings' page of the WebUI and"
+		MSG="The Camera Model unexpectedly changed from '${SETTINGS_CM}' to '${CM}'."
+		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
 		MSG+="\nchange the 'Camera Model' to '${CM}' then save the settings."
+		if [[ ${ON_TTY} == "true" ]]; then
+			echo -e "\n${RED}${MSG}${NC}\n"
+		else
+			URL="/index.php?page=configuration&_ts=${RANDOM}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${MSG}" "${URL}"
+		fi
+		RET=1
+	elif [[ ${SETTINGS_CN} != "${CN}" ]]; then
+		MSG="The camera's number unexpectedly changed from '${SETTINGS_CN}' to '${CN}'."
+		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
+		MSG+="\nchange the 'Camera Type' to 'Refresh' then save the settings."
 		if [[ ${ON_TTY} == "true" ]]; then
 			echo -e "\n${RED}${MSG}${NC}\n"
 		else

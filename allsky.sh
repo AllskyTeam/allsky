@@ -211,7 +211,7 @@ fi
 # Make sure the current camera is supported and hasn't changed unexpectedly.
 CAM="${CAMERA_TYPE}	${CAMERA_NUMBER}	${CAMERA_MODEL}"	# has TABS
 CCM="$( get_connected_camera_models --full "${CAMERA_TYPE}" )"
-read CC_TYPE CC_NUMBER CC_MODEL <<<"${CCM}"
+read -r CC_TYPE CC_NUMBER CC_MODEL <<<"${CCM}"
 if ! echo -e "${CCM}" | grep --silent "${CAM}" ; then
 	# Something changed.  validate_camera() displays the error message.
 	if ! validate_camera "${CC_TYPE}" "${CC_MODEL}" "${CC_NUMBER}" ; then

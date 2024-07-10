@@ -17,7 +17,7 @@ img.current {
 }
 
 #starmap_container {
-	position: absolute;
+	position: fixed;
 	overflow: hidden;
 }
 

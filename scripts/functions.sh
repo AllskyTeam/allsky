@@ -320,14 +320,15 @@ function get_connected_cameras_info()
 # Get just the model name(s) of the specified camera type that are connected to the Pi.
 function get_connected_camera_models()
 {
+	local FULL="false"
+	[[ ${1} == "--full" ]] && FULL="true" && shift
+
 	local TYPE="${1}"
 	if [[ -z ${TYPE} ]]; then
 		echo "Usage: ${FUNCNAME[0]} type" >&2
 		return 1
 	fi
 
-	local FULL="false"
-	[[ ${2} == "--full" ]] && FULL="true"
 
 	# Input:
 	#		ZWO  camera_number  camera_model

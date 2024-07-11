@@ -670,7 +670,7 @@ echo "<script>console.log('Updated $fileName');</script>";
 					</div>
 					
 					<div class="col-md-1 col-sm-1 col-xs-1">
-						<button type="button" class="btn btn-primary ml-5 settings-expand pull-right" id="settings-all-control" title="Expand/Collapse all settings">
+						<button type="button" class="<?php if (!$hideHeaderBodies) { echo("hidden ") ;}?>btn btn-primary ml-5 settings-expand pull-right" id="settings-all-control" title="Expand/Collapse all settings">
 							<?php echo $showIcon ?>
 						</button>
 					</div>

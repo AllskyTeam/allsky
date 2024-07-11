@@ -764,7 +764,7 @@ div.sticky {
 	top: 5px;
 	margin-top: 10px;
 	padding: 10px;
-	background: rgba(187,187,187, 0.9);
+	background: rgba(187,187,187, 1);
 	border: 2px solid var(--sticky-border-color);
 }
 .dark div.sticky {

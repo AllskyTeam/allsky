@@ -361,9 +361,9 @@ function get_connected_camera_models()
 				sensor = $3;
 				"get_model_from_sensor.sh " sensor | getline model;
 				if (FULL == "true") {
-					print $1 $2 model sensor;
+					printf("%s\t%d\t%s\t%s\n", $1, $2, model, sensor);
 				} else {
-					print sensor;
+					print model;
 				}
 			}
 		}' "${CONNECTED_CAMERAS_INFO}"

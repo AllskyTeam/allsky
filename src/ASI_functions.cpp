@@ -1626,7 +1626,7 @@ void saveCameraInfo(
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "daymean");
 	fprintf(f, "\t\t\t\"MinValue\" : 0.0,\n");
 	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %.3f\n", CG.myModeMeanSetting.dayMean);
+	fprintf(f, "\t\t\t\"DefaultValue\" : %.1f\n", CG.myModeMeanSetting.dayMean);
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
@@ -1634,7 +1634,7 @@ void saveCameraInfo(
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "daymeanthreshold");
 	fprintf(f, "\t\t\t\"MinValue\" : 0.01,\n");
 	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %.3f\n", CG.myModeMeanSetting.dayMean_threshold);
+	fprintf(f, "\t\t\t\"DefaultValue\" : %.2f\n", CG.myModeMeanSetting.dayMean_threshold);
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
@@ -1642,7 +1642,7 @@ void saveCameraInfo(
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "nightmean");
 	fprintf(f, "\t\t\t\"MinValue\" : 0.0,\n");
 	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %.3f\n", CG.myModeMeanSetting.nightMean);
+	fprintf(f, "\t\t\t\"DefaultValue\" : %.1f\n", CG.myModeMeanSetting.nightMean);
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
@@ -1650,7 +1650,7 @@ void saveCameraInfo(
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "nightmeanthreshold");
 	fprintf(f, "\t\t\t\"MinValue\" : 0.01,\n");
 	fprintf(f, "\t\t\t\"MaxValue\" : 1.0,\n");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %.3f\n", CG.myModeMeanSetting.nightMean_threshold);
+	fprintf(f, "\t\t\t\"DefaultValue\" : %.2f\n", CG.myModeMeanSetting.nightMean_threshold);
 	fprintf(f, "\t\t},\n");
 
 	if (CG.isColorCamera) {
@@ -1745,6 +1745,7 @@ void saveCameraInfo(
 #endif
 
 	double minGain=0.0, maxGain=0.0;
+	int div_by;
 
 	for (int i = 0; i < iNumOfCtrl; i++)
 	{
@@ -1780,14 +1781,22 @@ void saveCameraInfo(
 			continue;
 		}
 
-		int div_by = 1;
 		if (strcmp(cc.Name, "Exposure") == 0) {
-			// The camera's values are in microseconds (us), but the WebUI displays in milliseconds (ms).
+			// The camera's values are in microseconds (us),
+			// but the WebUI displays in milliseconds (ms) so convert.
 			div_by = US_IN_MS;
+		} else {
+			div_by = 1;
 		}
 		double min = cc.MinValue / (double)div_by;
 		double max = cc.MaxValue / (double)div_by;
 		double def = cc.DefaultValue / (double)div_by;
+#ifdef IS_ZWO
+		if (strcmp(cc.Name, "AutoExpMaxExpMS") == 0) {
+			// ZWO defaults for this setting are extremely low, so use the max value.
+			def = cc.MaxValue / (double)div_by;
+		}
+#endif
 
 // XXXXXXXXX this is to help determine why some float settings are being output as integers
 if (strcmp(cc.Name,"Gain") == 0 && CG.debugLevel >= 4)
@@ -1831,17 +1840,6 @@ printf("MaxValue : %s,\n", LorF(max, "%ld", "%.3f"));
 	fprintf(f, "\t\t\t\"DefaultValue\" : %d\n", 10 * MS_IN_SEC);
 	fprintf(f, "\t\t},\n");
 
-	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "daymean");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "daymean");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.dayMean);
-	fprintf(f, "\t\t},\n");
-	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "nightmean");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "nightmean");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %f\n", CG.myModeMeanSetting.nightMean);
-	fprintf(f, "\t\t},\n");
-
 	// Set the day gain to the minimum possible.
 	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "daygain");
@@ -1865,7 +1863,8 @@ printf("MaxValue : %s,\n", LorF(max, "%ld", "%.3f"));
 }
 
 // Output basic camera information.
-void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, config cg, long width, long height, double pixelSize, char const *bayer)
+void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, config cg,
+	long width, long height, double pixelSize, char const *bayer)
 {
 	printf(" Camera Information:\n");
 	printf("  - Type: %s\n", CAMERA_TYPE);

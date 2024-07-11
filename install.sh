@@ -1432,60 +1432,63 @@ does_prior_Allsky_exist()
 # ask the user if they want to move stuff from there to the new directory.
 # Look for a directory inside the old one to make sure it's really an old allsky.
 
-WILL_USE_PRIOR="false"
+WILL_USE_PRIOR="true"
 
 prompt_for_prior_Allsky()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 
-	local MSG
+	if [[ ${WILL_USE_PRIOR} == "true" ]]; then
+		local MSG
 
-	if [[ -n ${PRIOR_ALLSKY_DIR} ]]; then
-		MSG="You have a prior version of Allsky in ${PRIOR_ALLSKY_DIR}."
-		MSG+="\n\nDo you want to restore the prior images and other files you've changed?"
-		if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
-			MSG+="\nIf so, your prior settings will be restored as well."
-		else
-			MSG+="\nIf so, we will attempt to use its settings as well, but may not be"
-			MSG+="\nable to use ALL prior settings depending on how old your prior Allsky is."
-			MSG+="\nIn that case, you'll be prompted for required information such as"
-			MSG+="\nthe camera's latitude, logitude, and locale."
-		fi
+		if [[ -n ${PRIOR_ALLSKY_DIR} ]]; then
+			MSG="You have a prior version of Allsky in ${PRIOR_ALLSKY_DIR}."
+			MSG+="\n\nDo you want to restore the prior images and other files you've changed?"
+			if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
+				MSG+="\nIf so, your prior settings will be restored as well."
+			else
+				MSG+="\nIf so, we will attempt to use its settings as well, but may not be"
+				MSG+="\nable to use ALL prior settings depending on how old your prior Allsky is."
+				MSG+="\nIn that case, you'll be prompted for required information such as"
+				MSG+="\nthe camera's latitude, logitude, and locale."
+			fi
 
-		if whiptail --title "${TITLE}" --yesno "${MSG}" 20 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
-			# Set the prior camera type to the new, default camera type.
-			CAMERA_TYPE="${PRIOR_CAMERA_TYPE}"
-			CAMERA_MODEL="${PRIOR_CAMERA_MODEL}"
-			CAMERA_NUMBER="${PRIOR_CAMERA_NUMBER}"
-			STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
-			STATUS_VARIABLES+=("CAMERA_MODEL='${CAMERA_MODEL}'\n")
-			STATUS_VARIABLES+=("CAMERA_NUMBER='${CAMERA_NUMBER}'\n")
-			display_msg --logonly info "Will restore from prior version of Allsky."
-			WILL_USE_PRIOR="true"
+			if whiptail --title "${TITLE}" --yesno "${MSG}" 20 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
+				# Set the prior camera type to the new, default camera type.
+				CAMERA_TYPE="${PRIOR_CAMERA_TYPE}"
+				CAMERA_MODEL="${PRIOR_CAMERA_MODEL}"
+				CAMERA_NUMBER="${PRIOR_CAMERA_NUMBER}"
+				STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
+				STATUS_VARIABLES+=("CAMERA_MODEL='${CAMERA_MODEL}'\n")
+				STATUS_VARIABLES+=("CAMERA_NUMBER='${CAMERA_NUMBER}'\n")
+				display_msg --logonly info "Will restore from prior version of Allsky."
+			else
+				PRIOR_ALLSKY_DIR=""
+				PRIOR_SETTINGS_FILE=""
+				CAMERA_TYPE=""
+				PRIOR_CAMERA_TYPE=""
+				PRIOR_CAMERA_MODEL=""
+				PRIOR_CAMERA_NUMBER=""
+				display_msg --logonly info "Will NOT restore from prior version of Allsky."
+				MSG="If you want your old images, darks, settings, etc. from the prior version"
+				MSG+=" of Allsky, you'll need to manually move them to the new version."
+				display_msg info "${MSG}"
+				WILL_USE_PRIOR="false"
+			fi
 		else
-			PRIOR_ALLSKY_DIR=""
-			PRIOR_SETTINGS_FILE=""
-			CAMERA_TYPE=""
-			PRIOR_CAMERA_TYPE=""
-			PRIOR_CAMERA_MODEL=""
-			PRIOR_CAMERA_NUMBER=""
-			display_msg --logonly info "Will NOT restore from prior version of Allsky."
-			MSG="If you want your old images, darks, settings, etc. from the prior version"
-			MSG+=" of Allsky, you'll need to manually move them to the new version."
-			display_msg info "${MSG}"
-		fi
-	else
-		MSG="No prior version of Allsky found."
-		MSG+="\n\nIf you DO have a prior version and you want images, darks,"
-		MSG+=" and certain settings moved from the prior version to the new one,"
-		MSG+=" rename the prior version to ${PRIOR_ALLSKY_DIR} before running this installation."
-		MSG+="\n\nDo you want to continue?"
-		if ! whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
-			MSG="Rename the directory with your prior version of Allsky to"
-			MSG+="\n '${PRIOR_ALLSKY_DIR}', then run the installation again."
-			display_msg info "${MSG}"
-			display_msg --logonly info "User elected not to continue.  Exiting installation."
-			exit_installation 0 "${STATUS_NOT_CONTINUE}" "after no prior Allsky was found."
+			MSG="No prior version of Allsky found."
+			MSG+="\n\nIf you DO have a prior version and you want images, darks,"
+			MSG+=" and certain settings moved from the prior version to the new one,"
+			MSG+=" rename the prior version to ${PRIOR_ALLSKY_DIR} before running this installation."
+			MSG+="\n\nDo you want to continue?"
+			if ! whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
+				MSG="Rename the directory with your prior version of Allsky to"
+				MSG+="\n '${PRIOR_ALLSKY_DIR}', then run the installation again."
+				display_msg info "${MSG}"
+				display_msg --logonly info "User elected not to continue.  Exiting installation."
+				exit_installation 0 "${STATUS_NOT_CONTINUE}" "after no prior Allsky was found."
+			fi
+			WILL_USE_PRIOR="false"
 		fi
 	fi
 
@@ -3048,7 +3051,6 @@ install_Python()
 	fi
 
 	NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
-	NAME="Python_dependencies"
 
 	if [[ ${PI_OS} == "bookworm" ]]; then
 		PKGs="python3-full libgfortran5 libopenblas0-pthread"
@@ -3070,14 +3072,23 @@ install_Python()
 		cp -arn "${PRIOR_PYTHON_VENV}" "${ALLSKY_PYTHON_VENV}/"
 	fi
 
-	# Astropy is no longer supported on Buster due to its dependencies requiring later versions of Python
-	# This *hack* will force the require version of astropy onto Buster
+	# Astropy is no longer supported on Buster due to its dependencies requiring later versions of Python.
+	# This *hack* will force the require version of Astropy onto Buster.
 	if [[ ${PI_OS} == "buster" ]]; then
-		display_msg --log warning "Forcing build of Astropy on ${PI_OS}."
-		pip3 install setuptools setuptools_scm wheel cython==0.29.22 jinja2==2.10.3 numpy markupsafe==2.0.1 extension-helpers
-		pip3 install --no-build-isolation astropy==4.3.1	
+		NAME="Astrophy"
+		display_msg --log progress "Forcing build of ${NAME} on ${PI_OS}."
+		TMP="${ALLSKY_LOGS}/${NAME}.log"
+		{ 
+			PKGs="setuptools setuptools_scm wheel cython==0.29.22"
+			PKGs+=" jinja2==2.10.3 numpy markupsafe==2.0.1 extension-helpers"
+			# shellcheck disable=SC2086
+			pip3 install ${PKGs} && pip3 install --no-build-isolation astropy==4.3.1	
+		} > "${TMP}" 2>&1
+		check_success $? "${NAME} install failed" "${TMP}" "${DEBUG}" ||
+			exit_with_image 1 "${STATUS_ERROR}" "${NAME} install failed."
 	fi
 
+	NAME="Python_dependencies"
 	TMP="${ALLSKY_LOGS}/${NAME}"
 	display_msg --log progress "Installing ${NAME}${M}:"
 	COUNT=0

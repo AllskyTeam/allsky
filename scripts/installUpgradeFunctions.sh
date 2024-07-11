@@ -851,7 +851,8 @@ function get_RAM()
 function get_computer()
 {
 	# The file has a NULL at the end so to avoid a bash warning, ignore it.
-	local MODEL="$( tr --delete '\0' < /sys/firmware/devicetree/base/model )"
+	local MODEL="$( tr --delete '\0' < /sys/firmware/devicetree/base/model |
+			sed 's/Raspberry Pi/RPi/')"
 	local GB="$( get_RAM )"
 	echo "${MODEL}, ${GB} GB"
 }

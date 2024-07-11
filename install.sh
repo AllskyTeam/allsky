@@ -300,50 +300,50 @@ CT=()			# Camera Type array - what to display in whiptail
 
 get_connected_cameras()
 {
-	local C  CC=""  MSG   NUM_RPI=0   NUM_ZWO=0
+	local CMD  CC  MSG   NUM_RPI=0   NUM_ZWO=0
 
-	# true == ignore errors.  ${C} will be "" if no command found.
-	C="$( determineCommandToUse "false" "" "true" 2> /dev/null )"
+	# true == ignore errors.  ${CMD} will be "" if no command found.
+	CMD="$( determineCommandToUse "false" "" "true" 2> /dev/null )"
 
-	setup_rpi_supported_cameras "${C}"
+	setup_rpi_supported_cameras "${CMD}"
 
-	# RPi format:	RPi \t camera_number : camera_sensor	_other_stuff_
-	# ZWO format:	ZWO \t camera_number : camera_model		ZWO_camera_ID
+	# RPi format:	RPi \t camera_number \t camera_sensor [\t optional_other_stuff]
+	# ZWO format:	ZWO \t camera_number \t camera_model
 	# "true" == ignore errors
 	get_connected_cameras_info "true" > "${CONNECTED_CAMERAS_INFO}" 2>/dev/null
 
 	# Get the RPi connected cameras, if any.
-	# It's SENSOR is listed and we need to convert it to the MODEL that's
-	# in ${RPi_SUPPORTED_CAMERAS}.
-	if [[ -n ${C} ]]; then
-		local RPI_SENSORS="$( gawk '{if ($1 == "RPi") { print $4; }}' "${CONNECTED_CAMERAS_INFO}" )"
-		if [[ -n ${RPI_SENSORS} ]]; then
+	CC=""
+	if [[ -n ${CMD} ]]; then
+		local RPI_MODELS="$( get_connected_camera_models --full "RPi" )"
+		# Output from above is:
+		#	RPi \t camera_number \t camera_model \t camera_sensor
+		if [[ -n ${RPI_MODELS} ]]; then
 			CC="RPi"
 			if [[ -z ${FUNCTION} ]]; then
-				for SENSOR in ${RPI_SENSORS}
+				local CT_ CN_ MODEL SENSOR
+				while read -r CT_ CN_ MODEL SENSOR
 				do
-					MODEL="$( get_model_from_sensor "${SENSOR}" )"
-# TODO: check for $? -ne 0
-					local FULL_NAME="${MODEL} (${SENSOR})"
+					MODEL="${MODEL//++/ }"
+					SENSOR="${SENSOR//++/ }"
+					local FULL_NAME="${MODEL}  (${SENSOR})"
 					display_msg --log progress "RPi ${FULL_NAME} camera found."
-					# The camera model may have "_" in it,
-					# so separate fields with a different character.
 					CT+=("${NUM_RPI};RPi;${MODEL}" "RPi     ${FULL_NAME}")
 					((NUM_RPI++))
-				done
+				done <<<"${RPI_MODELS// /++}"		# replace any spaces
 			fi
 		fi
 	fi
 
 	# Get the ZWO connected cameras, if any.
-	local ZWO_MODELS="$( get_ZWO_connected_cameras )"
+	local ZWO_MODELS="$( get_connected_camera_models "ZWO" )"
 	if [[ -n ${ZWO_MODELS} ]]; then
 		[[ -n ${CC} ]] && CC+=" "
 		CC+="ZWO"
 		if [[ -z ${FUNCTION} ]]; then
-			for MODEL in ${ZWO_MODELS// /++}
+			for X in ${ZWO_MODELS// /++}
 			do
-				MODEL="${MODEL//++/ }"
+				MODEL="${X//++/ }"
 				display_msg --log progress "ZWO ${MODEL} camera found."
 				CT+=( "${NUM_ZWO};ZWO;${MODEL}" "ZWO     ${MODEL}" )
 				((NUM_ZWO++))

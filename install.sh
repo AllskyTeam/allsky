@@ -321,6 +321,7 @@ get_connected_cameras()
 		if [[ -n ${RPI_MODELS} ]]; then
 			CC="RPi"
 			if [[ -z ${FUNCTION} ]]; then
+   				# shellcheck disable=SC2034
 				local CT_ CN_ MODEL SENSOR
 				while read -r CT_ CN_ MODEL SENSOR
 				do

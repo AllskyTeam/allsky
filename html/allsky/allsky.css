@@ -10,6 +10,7 @@ body {
 	background-color: black;
 	max-width: 960px;
 	margin: auto;
+	overflow-y: scroll;
 }
 img.current {
 	width: 100%;
@@ -17,7 +18,7 @@ img.current {
 }
 
 #starmap_container {
-	position: fixed;
+	position: absolute;
 	overflow: hidden;
 }
 

@@ -789,7 +789,7 @@
 "usage" : "capture",
 "carryforward" : true,
 "options" : [
-	{"value" : "C", "label" : "Celcius"},
+	{"value" : "C", "label" : "Celsius"},
 	{"value" : "F", "label" : "Fahrenheit"},
 	{"value" : "B", "label" : "Both"}
 ],

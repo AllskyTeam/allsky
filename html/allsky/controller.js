@@ -129,7 +129,7 @@ function buildOverlay(){
 
 				$("#starmap_container").css("width", icWidth + "px").css("height", icHeight + "px");
 				$("#starmap").css("width", icWidth + "px").css("height", icHeight + "px");
-				$(".starmap_btn_help").css("right", c.overlayOffsetLeft+5 + "px");
+				$(".starmap_btn_help").css("right", -c.overlayOffsetLeft + "px");
 
 				overlayWidth =  c.overlayWidth;
 				overlayHeight =  c.overlayHeight;

@@ -18,7 +18,7 @@ class OVERLAYEDITOR {
     }
 
     buildUI() {
-        this.#checkResolution();
+        //this.#checkResolution();
         $.LoadingOverlay('show');
 
         $.ajax({

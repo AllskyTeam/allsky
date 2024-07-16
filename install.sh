@@ -2240,7 +2240,7 @@ restore_prior_settings_file()
 				convert_settings "${S}" "${S}" "install"
 			done
 		else
-			MSG="No need to update prior settings files - same Allsky version"
+			MSG="No need to update prior settings files - same Allsky version."
 			display_msg --logonly info "${MSG}"
 		fi
 
@@ -2401,9 +2401,9 @@ restore_prior_files()
 	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
 		display_msg --log progress "${ITEM} (copying)"
 # TODO: ALEX: FIX: Copying everying in these 3 directories means we can never release new versions.
-		cp -a -r "${PRIOR_CONFIG_DIR}/overlay/fonts" "${ALLSKY_OVERLAY}/fonts"
-		cp -a -r "${PRIOR_CONFIG_DIR}/overlay/images" "${ALLSKY_OVERLAY}/images"
-		cp -a -r "${PRIOR_CONFIG_DIR}/overlay/imagethumbnails" "${ALLSKY_OVERLAY}/imagethumbnails"
+		cp -a -r "${PRIOR_CONFIG_DIR}/overlay/fonts" "${ALLSKY_OVERLAY}"
+		cp -a -r "${PRIOR_CONFIG_DIR}/overlay/images" "${ALLSKY_OVERLAY}"
+		cp -a -r "${PRIOR_CONFIG_DIR}/overlay/imagethumbnails" "${ALLSKY_OVERLAY}"
 
 		cp -a    "${PRIOR_CONFIG_DIR}/overlay/config/userfields.json" "${ALLSKY_OVERLAY}/config/"
 		cp -a    "${PRIOR_CONFIG_DIR}/overlay/config/oe-config.json" "${ALLSKY_OVERLAY}/config/"

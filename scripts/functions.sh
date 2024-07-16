@@ -280,7 +280,8 @@ function get_connected_cameras_info()
 			# Input:
 			#	camera_number  : sensor  [other stuff]
 			LIBCAMERA_LOG_LEVELS=FATAL "${CMD_TO_USE_}" --list-cameras 2>&1 |
-				gawk '{ if ($1 ~ /^[0-9]/) printf("%s\t%d\t%s\n", "RPi", $2, $3); }'
+				grep -E "^[0-9]" |
+				gawk '{ printf("%s\t%d\t%s\n", "RPi", $2, $3); }'
 		fi
 	fi
 

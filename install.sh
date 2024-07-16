@@ -2883,12 +2883,12 @@ do_restore()
 	create_allsky_logs "false"		# "false" = only create log file
 
 	# If ${ALLSKY_TMP} is a memory filesystem, unmount it.
-	if is_tmp_mounted ; then
+	if is_mounted "${ALLSKY_TMP}" ; then
 		display_msg --log progress "Unmounting '${ALLSKY_TMP}'."
 		umount_tmp "${ALLSKY_TMP}"
-		MOUNTED="true"
+		WAS_MOUNTED="true"
 	else
-		MOUNTED="false"
+		WAS_MOUNTED="false"
 	fi
 
 	display_msg --log progress "Renaming '${ALLSKY_HOME}' to '${RENAMED_DIR}'"
@@ -2908,7 +2908,7 @@ do_restore()
 		exit_installation 1 "${STATUS_ERROR}" "${MSG}"
 	fi
 
-	if [[ ${MOUNTED} == "true" ]]; then
+	if [[ ${WAS_MOUNTED} == "true" ]]; then
 		# Remount ${ALLSKY_TMP}
 		sudo mount -a
 	fi

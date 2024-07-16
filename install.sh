@@ -1185,7 +1185,7 @@ display_msg --logonly info "Settings files now:\n${MSG}"
 # See what steps, if any, can be skipped.
 set_what_can_be_skipped()
 {
-	if [[ ${PRIOR_ALLSKY_DIR} != "" ]]; then
+	if [[ -n ${PRIOR_ALLSKY_DIR} ]]; then
 		local OLD_VERSION="${1}"
 		local NEW_VERSION="${2}"
 
@@ -1304,7 +1304,7 @@ does_prior_Allsky_exist()
 			MSG+=" but it doesn't appear to have been installed; ignoring it."
 			display_msg --log warning "${MSG}"
 		else
-			display_msg --logonly info "No prior Allsky found."
+			display_msg --logonly info "No prior Allsky found in '${PRIOR_ALLSKY_DIR}'."
 		fi
 		does_prior_Allsky_Website_exist ""
 		PRIOR_ALLSKY_DIR=""
@@ -3321,6 +3321,12 @@ check_restored_settings()
 {
 	local IMG  AFTER  MSG
 
+	if [[ ${ALLSKY_VERSION} == "${PRIOR_ALLSKY_VERSION}" ]]; then
+		CONFIGURATION_NEEDED="false"
+		display_msg --logonly info "Re-installed same version; no configuration or reboot needed."
+		return
+	fi
+
 	for s in "${ALLSKY_CONFIG}/settings_"*
 	do
 		[[ -f ${s} ]] && sort_settings_file "${s}"
@@ -3561,7 +3567,7 @@ done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 
 if [[ ${RESTORE} == "true" && ! -d ${PRIOR_ALLSKY_DIR} ]]; then
-	echo -e "\nERROR: You requested a restore but no prior Allsky was found.\n" >&2
+	echo -e "\nERROR: You requested a restore but no prior Allsky was found in '${PRIOR_ALLSKY_DIR}'.\n" >&2
 	exit 1
 fi
 

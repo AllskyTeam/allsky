@@ -2340,6 +2340,13 @@ restore_prior_files()
 		return			# Nothing left to do in this function, so return
 	fi
 
+	# If the prior ${ALLSKY_TMP} is mounted, unmount it so users can
+	# remove the old Allsky.
+	D="${PRIOR_ALLSKY_DIR}/tmp"
+	if is_mounted "${D}" ; then
+		display_msg --logonly info "Unmounting '${D}'."
+		umount_tmp "${D}"
+	fi
 	# Do all the restores, then all the updates.
 	display_msg --log progress "Restoring prior:"
 

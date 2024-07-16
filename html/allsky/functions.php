@@ -187,7 +187,17 @@ function make_thumb($src, $dest, $desired_width)
 	{
 		if ($displayed_thumbnail_error_message == false)
 		{
-			echo "<br><p class='thumbnailError'>Unable to make thumbnail(s); imagecreatefrom{$funcext}() does not exist.<br>If you do NOT have the file '/etc/php/7.3/mods-available/gd.ini' you need to download the latest PHP.</p>";
+			echo "<br><p class='error-msg'>";
+			echo "Unable to make thumbnail(s); <strong>imagecreatefrom{$funcext}()</strong> does not exist.";
+			echo "<br> <br>";
+			echo "If this is on a <strong>remote Allsky Website</strong>, ask the server administrator to";
+			echo " support imagecreatefrom{$funcext}() in PHP.";
+
+			echo "<br> <br>";
+			echo "If this is <strong>on a Pi</strong> and you do not have the file '/etc/php/8.2/mods-available/gd.ini'";
+			echo " (or another php release), you need to download the latest PHP.";
+			echo "</p>";
+
 			$displayed_thumbnail_error_message = true;
 		}
 		return(false);
@@ -275,11 +285,16 @@ function make_thumb_from_video($src, $dest, $desired_width, $attempts)
 		return(true);
 	}
 
-//echo "<br>Attempt $attempts: Failed to make thumbnail for $src using $sec seconds:<br>$command";
 	if ($attempts >= 2) {
-		echo "<br>Failed to make thumbnail for $src after $attempts attempts.<br>";
-		echo "Last command: $command";
-		echo "<br>Output from command: <b>" . $output[0] . "</b>";
+		echo "<p class='error-msg'>";
+		echo "Failed to make thumbnail for <strong>" . basename($src) . "</strong> after $attempts attempts.";
+		echo "<br> <br>If this is on a <strong>remote Allsky Website</strong>, enable the 'Upload Thumbnail' setting in";
+		echo "the 'Timelapse Settings' section of the WebUI.";
+		echo "</p>";
+
+		echo '<script>console.log("Last command: ' . $command . '");</script>';
+		echo '<script>console.log("Output: ' . $output[0] . '");</script>';
+
 		$last_thumbnail_worked = false;
 		return(false);
 	}
@@ -295,7 +310,7 @@ $back_button .= "<i class='fa fa-chevron-left'></i>&nbsp; Back to Live View</a>"
 
 function display_thumbnails($dir, $file_prefix, $title)
 {
-	global $back_button, $webSettings_array;
+	global $back_button, $webSettings_array, $thumbnailsortorder;
 
 	if ($file_prefix === "allsky") {
 		$ext = "/\.(mp4|webm)$/";

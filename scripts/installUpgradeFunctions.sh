@@ -613,9 +613,12 @@ function check_swap()
 
 INITIAL_FSTAB_STRING="tmpfs ${ALLSKY_TMP} tmpfs"
 
-function is_tmp_mounted()
+# Is the tmp directory mounted?
+function is_mounted()
 {
-	grep --quiet "^${INITIAL_FSTAB_STRING}" /etc/fstab
+	local TMP="${1}"
+
+	mount | grep --quiet "${TMP}"
 }
 function umount_tmp()
 {
@@ -649,8 +652,9 @@ function check_tmp()
 	[[ -z ${WT_WIDTH} ]] && WT_WIDTH="$( calc_wt_size )"
 	local STRING  SIZE  D  MSG
 
-	# Check if currently a memory filesystem.
-	if is_tmp_mounted; then
+	# If the prior ${ALLSKY_TMP} was a memory filesystem it will have an entry
+	# in /etc/fstab with ${ALLSKY_TMP} in it, even if it's not currently mounted.
+	if grep --quiet "^${INITIAL_FSTAB_STRING}" /etc/fstab ; then
 		MSG="${ALLSKY_TMP} is currently a memory filesystem; no change needed."
 		display_msg --logonly info "${MSG}"
 

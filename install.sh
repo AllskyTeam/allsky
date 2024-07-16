@@ -304,8 +304,7 @@ get_connected_cameras()
 
 	# true == ignore errors.  ${CMD} will be "" if no command found.
 	CMD="$( determineCommandToUse "false" "" "true" 2> /dev/null )"
-
-	setup_rpi_supported_cameras "${CMD}"
+	setup_rpi_supported_cameras "${CMD}"		# Will create full file is CMD == ""
 
 	# RPi format:	RPi \t camera_number \t camera_sensor [\t optional_other_stuff]
 	# ZWO format:	ZWO \t camera_number \t camera_model
@@ -320,19 +319,17 @@ get_connected_cameras()
 		#	RPi \t camera_number \t camera_model \t camera_sensor
 		if [[ -n ${RPI_MODELS} ]]; then
 			CC="RPi"
-			if [[ -z ${FUNCTION} ]]; then
-				local CT_ CN_ MODEL SENSOR
-   				# shellcheck disable=SC2034
-				while read -r CT_ CN_ MODEL SENSOR
-				do
-					MODEL="${MODEL//++/ }"
-					SENSOR="${SENSOR//++/ }"
-					local FULL_NAME="${MODEL}  (${SENSOR})"
-					display_msg --log progress "RPi ${FULL_NAME} camera found."
-					CT+=("${NUM_RPI};RPi;${MODEL}" "RPi     ${FULL_NAME}")
-					((NUM_RPI++))
-				done <<<"${RPI_MODELS// /++}"		# replace any spaces
-			fi
+			local CT_ CN_ MODEL SENSOR
+   			# shellcheck disable=SC2034
+			while read -r CT_ CN_ MODEL SENSOR
+			do
+				MODEL="${MODEL//++/ }"
+				SENSOR="${SENSOR//++/ }"
+				local FULL_NAME="${MODEL}  (${SENSOR})"
+				[[ -z ${FUNCTION} ]] && display_msg --log progress "RPi ${FULL_NAME} camera found."
+				CT+=("${NUM_RPI};RPi;${MODEL}" "RPi     ${FULL_NAME}")
+				((NUM_RPI++))
+			done <<<"${RPI_MODELS// /++}"		# replace any spaces
 		fi
 	fi
 
@@ -341,15 +338,13 @@ get_connected_cameras()
 	if [[ -n ${ZWO_MODELS} ]]; then
 		[[ -n ${CC} ]] && CC+=" "
 		CC+="ZWO"
-		if [[ -z ${FUNCTION} ]]; then
-			for X in ${ZWO_MODELS// /++}
-			do
-				MODEL="${X//++/ }"
-				display_msg --log progress "ZWO ${MODEL} camera found."
-				CT+=( "${NUM_ZWO};ZWO;${MODEL}" "ZWO     ${MODEL}" )
-				((NUM_ZWO++))
-			done
-		fi
+		for X in ${ZWO_MODELS// /++}
+		do
+			MODEL="${X//++/ }"
+			[[ -z ${FUNCTION} ]] && display_msg --log progress "ZWO ${MODEL} camera found."
+			CT+=( "${NUM_ZWO};ZWO;${MODEL}" "ZWO     ${MODEL}" )
+			((NUM_ZWO++))
+		done
 	fi
 
 	NUM_CONNECTED_CAMERAS=$(( NUM_RPI + NUM_ZWO ))
@@ -2340,6 +2335,14 @@ restore_prior_files()
 		return			# Nothing left to do in this function, so return
 	fi
 
+	# If the prior ${ALLSKY_TMP} is mounted, unmount it so users can
+	# remove the old Allsky.
+	D="${PRIOR_ALLSKY_DIR}/tmp"
+	if is_mounted "${D}" ; then
+		display_msg --logonly info "Unmounting '${D}'."
+		umount_tmp "${D}"
+	fi
+
 	# Do all the restores, then all the updates.
 	display_msg --log progress "Restoring prior:"
 
@@ -2883,12 +2886,12 @@ do_restore()
 	create_allsky_logs "false"		# "false" = only create log file
 
 	# If ${ALLSKY_TMP} is a memory filesystem, unmount it.
-	if is_tmp_mounted ; then
+	if is_mounted "${ALLSKY_TMP}" ; then
 		display_msg --log progress "Unmounting '${ALLSKY_TMP}'."
 		umount_tmp "${ALLSKY_TMP}"
-		MOUNTED="true"
+		WAS_MOUNTED="true"
 	else
-		MOUNTED="false"
+		WAS_MOUNTED="false"
 	fi
 
 	display_msg --log progress "Renaming '${ALLSKY_HOME}' to '${RENAMED_DIR}'"
@@ -2908,7 +2911,7 @@ do_restore()
 		exit_installation 1 "${STATUS_ERROR}" "${MSG}"
 	fi
 
-	if [[ ${MOUNTED} == "true" ]]; then
+	if [[ ${WAS_MOUNTED} == "true" ]]; then
 		# Remount ${ALLSKY_TMP}
 		sudo mount -a
 	fi
@@ -3736,7 +3739,7 @@ set_what_can_be_skipped "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
 ##### Stop Allsky
 stop_Allsky
 
-install_installer_dependencies
+[[ -z ${FUNCTION} ]] && install_installer_dependencies
 
 ##### Determine what camera(s) are connected
 # Re-run every time in case a camera was connected or disconnected.

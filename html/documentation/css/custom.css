@@ -528,7 +528,7 @@ input[type="text"].has-error {
 .dark .settingsHeader {
 	background-color: #333;
 }
-table.settingsHeader {	/* In the WebUI */
+table .settingsHeader {	/* In the WebUI */
 	font-size: 1.25em;
 	padding: 3px 3px 3px 3px;
 }

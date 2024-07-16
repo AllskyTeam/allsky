@@ -2411,8 +2411,9 @@ restore_prior_files()
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-	X="${PRIOR_ALLSKY_DIR}${MY_OVERLAY_TEMPLATES/${ALLSKY_HOME}/}"
-	ITEM="${SPACE}'$( basename "${MY_OVERLAY_TEMPLATES}" )' directory"
+	X="${PRIOR_CONFIG_DIR}${MY_OVERLAY_TEMPLATES/${ALLSKY_CONFIG}/}"
+	local Z="$( dirname "${MY_OVERLAY_TEMPLATES}" )"
+	ITEM="${SPACE}'config/$( basename "${Z}" )/$( basename "${X}" )' directory"
 	if [[ -d ${X} ]]; then
 		display_msg --log progress "${ITEM} (copying)"
 		cp -ar "${X}" "${MY_OVERLAY_TEMPLATES}"

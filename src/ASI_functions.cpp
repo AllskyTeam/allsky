@@ -201,10 +201,10 @@ typedef enum ASI_CONTROL_TYPE{
 	ASI_AUTO_TARGET_BRIGHTNESS,
 
 	// RPI only:
+	EV,
 	SATURATION,
 	CONTRAST,
 	SHARPNESS,
-	EV,
 
 	// Put ZWO ones here - they need to be defined
 	ASI_GAMMA,
@@ -336,10 +336,11 @@ char const *argumentNames[][2] = {
 	{ "Flip", "flip" },
 	{ "AutoExpMaxGain", "maxautogain" },		// day/night
 	{ "AutoExpMaxExpMS", "maxautoexposure" },	// day/night
+	{ "TargetBrightness", "brightness" },		// not used but keep to be consistent with ZWO
+	{ "ExposureCompensation", "ev" },
 	{ "Saturation", "saturation" },
 	{ "Contrast", "contrast" },
 	{ "Sharpness", "sharpness" },
-	{ "ExposureCompensation", "ev" },
 };
 int const argumentNamesSize =  sizeof(argumentNames) / sizeof(argumentNames[0]);
 
@@ -1756,7 +1757,7 @@ void saveCameraInfo(
 				CG.ME, cameraInfo.CameraID, i, getRetCode(ret));
 			continue;
 		}
-
+// printf("iNumOfCtrl=%d, i=%d, cc.ControlType=%d, cc.Name=%s\n", iNumOfCtrl, i, cc.ControlType, cc.Name);
 		if (cc.ControlType >= argumentNamesSize) {
 			Log(0, "%s: ccControlType (%d) >= argumentNamesSize (%d)\n",
 				CG.ME, cc.ControlType, argumentNamesSize);

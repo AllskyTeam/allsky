@@ -1956,8 +1956,8 @@
 },
 {
 "name" : "REMOTEWEBSITE_S3_BUCKET",
-"default" : "",
-"description" : "Name of S3 bucket where files will be upload.<br>Suggested name: <span class='WebUIValue'>allskybucket</span>",
+"default" : "allskybucket",
+"description" : "Name of S3 bucket where files will be upload.",
 "label" : "S3 Bucket",
 "label_prefix" : "Remote Website",
 "type" : "text",
@@ -1982,8 +1982,8 @@
 },
 {
 "name" : "REMOTEWEBSITE_GCS_BUCKET",
-"default" : "",
-"description" : "Name of GCS bucket where files will be upload.<br>Suggested name: <span class='WebUIValue'>allskybucket</span>",
+"default" : "allskybucket",
+"description" : "Name of GCS bucket where files will be upload.",
 "label" : "GCS Bucket",
 "label_prefix" : "Remote Website",
 "type" : "text",
@@ -2210,8 +2210,8 @@
 },
 {
 "name" : "REMOTESERVER_S3_BUCKET",
-"default" : "",
-"description" : "Name of S3 bucket where files will be upload.<br>Suggested name: <span class='WebUIValue'>allskybucket</span>",
+"default" : "allskybucket",
+"description" : "Name of S3 bucket where files will be upload.",
 "label" : "S3 Bucket",
 "label_prefix" : "Remote Server",
 "type" : "text",
@@ -2236,8 +2236,8 @@
 },
 {
 "name" : "REMOTESERVER_GCS_BUCKET",
-"default" : "",
-"description" : "Name of GCS bucket where files will be upload.<br>Suggested name: <span class='WebUIValue'>allskybucket</span>",
+"default" : "allskybucket",
+"description" : "Name of GCS bucket where files will be upload.",
 "label" : "GCS Bucket",
 "label_prefix" : "Remote Server",
 "type" : "text",

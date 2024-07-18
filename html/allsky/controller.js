@@ -28,50 +28,39 @@ var myLatitude = 0, myLongitude = 0;
 
 $(window).resize(function () {
 	if (overlayBuilt) {					// only rebuild if already built once
-		var newW = $("#imageContainer").width();
-		var newH = $("#imageContainer").height()
-//		console.log("#imageContainer newW=" + newW + ", newH=" + newH);
+		var newW = Math.round($("#imageContainer").width(), 0);
+		var newH = Math.round($("#imageContainer").height(), 0);
 
 		$("#starmap_container").css("width", newW + "px").css("height", newH + "px");
 
 		var diffW = newW - icWidth;
 		// Scale the height based on the aspect ratio of the image.
-//		console.log("newW=" + newW + ", icWidth=" + icWidth);
-//x		var diffH = (newH - icHeight) * overlayAspectRatio;
 		var diffH = (newH - icHeight);
 		icWidth = newW;
 		icHeight = newH;
 
 		if (diffW == 0 && diffH == 0) {
 			wasDiff = false;
-//			console.log(">>> No change in image size.");
+			console.log(">>> No change in image size.");
 			return;
 		}
 
 		wasDiff = true;
 
-		// TODO: probably also need to adjust #starmap's margin-left and margin-right.
+		// Refresh the page if there was a difference
+		if (0 && wasDiff) {
+			location.reload();
+		}
 
 		// This holds the starmap button, so needs to resize
 		starmapWidth += diffW;
 		starmapHeight += diffH;
 		$("#starmap").css("width", starmapWidth + "px").css("height", starmapHeight + "px");
 
-		// Shrinking the window makes the overlay shrink too fast for some reason.
-		// Got the fudge factor by trial and error.
-		if (diffW < 0) {
-			var fudge = 0.95;
-			diffW *= fudge;
-// console.log("diffH=" + diffH + ", overlayAspectRatio=" + overlayAspectRatio);
-			diffH = (diffH / overlayAspectRatio) * fudge;
-		}
-
-//		console.log("== diffW= " + diffW + ", diffH= " + diffH);
 		overlayWidth  += diffW;
 			if (overlayWidth > overlayWidthMax) overlayWidth = overlayWidthMax;
 		overlayHeight += diffH;
 			if (overlayHeight > overlayHeightMax) overlayHeight = overlayHeightMax;
-//		console.log("== setting overlayWidth= " + overlayWidth + ", overlayHeight= " + overlayHeight);
 		$("#starmap_inner")
 			.css("width", overlayWidth + "px")
 			.css("height", overlayHeight + "px");
@@ -88,8 +77,6 @@ function buildOverlay(){
 			cache: false,
 			dataType: 'json',
 			error: function(jqXHR, textStatus, errorThrown) {
-				// console.log("jqXHR=", jqXHR);
-				// console.log("textStatus=" + textStatus + ", errorThrown=" + errorThrown);
 				// TODO: Display the message on the screen.
 				if (jqXHR.status == 404) {
 					console.log(configData + " not found!");
@@ -117,67 +104,76 @@ function buildOverlay(){
 				S.virtualsky(virtualSkyData);		// Creates overlay
 				overlayBuilt = true;
 
-				// Offset of overlay
-				$("#starmap")
-					.css("margin-top", c.overlayOffsetTop + "px")
-					.css("margin-left", c.overlayOffsetLeft + "px");
+				// Save overlay offset values
+				overlayOffsetTop = c.overlayOffsetTop;
+				overlayOffsetLeft = c.overlayOffsetLeft;
 
-				// max-width of #imageContainer set in index.php based on width user specified (imageWidth)
+				// max-width of #imageContainer is set in index.php based on
+				// width user specified (imageWidth)
 				icWidth = $("#imageContainer").width();
 				icHeight = $("#imageContainer").height();
 				icImageAspectRatio = icWidth / icHeight;
 
-				$("#starmap_container").css("width", icWidth + "px").css("height", icHeight + "px");
-				$("#starmap").css("width", icWidth + "px").css("height", icHeight + "px");
-				$(".starmap_btn_help").css("right", c.overlayOffsetLeft+5 + "px");
+				$("#starmap_container")
+					.css("width", icWidth + "px")
+					.css("height", icHeight + "px");
 
 				overlayWidth =  c.overlayWidth;
 				overlayHeight =  c.overlayHeight;
 				overlayAspectRatio = overlayWidth / overlayHeight;
-// console.log("overlay aspect ratio=" + overlayAspectRatio);
 
-				overlayHeightMax = overlayHeight;		// never go larger than what user specified
+				// never go larger than what user specified
+				overlayHeightMax = overlayHeight;
 				overlayWidthMax = overlayWidth;
 
 				starmapWidth = $("#starmap").width();
 				starmapHeight = $("#starmap").height();
 
-				// TODO: this assumes the border is 1px on each side.
-				var imageWidth = c.imageWidth - (config.imageBorder ? 2 : 0);
+				var imageWidth = c.imageWidth
 				if (icWidth < imageWidth) {
-					// The actual image on the screen is smaller than the imageWidth requested by the user.
-					// Determine the percent smaller, then make the overlay that percent smaller.
-// console.log("icWidth=" + icWidth + ", imageWidth=" + imageWidth);
+					// The actual image on the screen is smaller than the
+					// imageWidth requested by the user.
+					// Determine the percent smaller, then shrink the overlay that amount.
 					var percentSmaller = icWidth / c.imageWidth;
 
 					// #starmap holds the starmap button, so needs to resize it as well.
 					var w = starmapWidth * percentSmaller;
-					var h = w / overlayAspectRatio;
+					var h = Math.round(w / overlayAspectRatio, 0);
+					w = Math.round(w, 0);
 					$("#starmap")
-						.css("width", Math.round(w, 0) + "px")
-						.css("height", Math.round(h, 0) + "px");
+						.css("width", w + "px")
+						.css("height", h + "px");
 					starmapWidth = w;
 					starmapHeight = h;
 
-		// TODO: probably also need to adjust #stamap's margin-left and margin-right if
+					//  Offset of overlay + New Margins
+					var scalemargins = icWidth / overlayWidthMax;
+					$("#starmap")
+						.css("margin-top", c.overlayOffsetTop * scalemargins + "px")
+						.css("margin-left", c.overlayOffsetLeft * scalemargins + "px");
 
-					// percentSmaller makes the overlay TOO small, so change it.
-					percentSmaller *= 1.04;
-// console.log("== Decreasing overlay by " + percentSmaller*100 + " percent" + " (overlayWidth was " + overlayWidth + ")");
-					overlayWidth = overlayWidth * percentSmaller;
-					overlayHeight = overlayWidth / overlayAspectRatio;
+					overlayWidth = Math.round(overlayWidth * percentSmaller, 0);
+					overlayHeight = Math.round(overlayWidth / overlayAspectRatio, 0);
 					$("#starmap_inner")
-						.css("width", Math.round(overlayWidth, 0) + "px")
-						.css("height", Math.round(overlayHeight, 0) + "px");
+						.css("width", overlayWidth + "px")
+						.css("height", overlayHeight + "px");
+				} else {
+					$("#starmap")
+					.css("margin-top", c.overlayOffsetTop + "px")
+					.css("margin-left", Math.round(c.overlayOffsetLeft, 0) + "px");
 
 				}
 
 				// id="live_container" is where the image goes.
 				var image_w = c.imageWidth;
 				var image_h = Math.round((image_w / icImageAspectRatio), 0);
-// console.log("icHeight=" + icHeight + ", icWidth=" + icWidth);
-// console.log("overlayHeight=" + overlayHeight + ", overlayWidth=" + overlayWidth);
-// console.log("image_h=" + image_h + ", image_w=" + image_w);
+
+				// Put "?" icon on upper right of image. +2 moves off border.
+				var x = w
+						- document.getElementById("imageContainer").offsetWidth
+						- document.getElementById("imageContainer").offsetLeft
+						+ 2;  // 2 to move off border
+				$(".starmap_btn_help").css("right", Math.round(x, 0) + "px");
 
 				// Keep track of the sizes.  virtualsky.js seems to change them,
 				// so we need to change them based on our last known sizes.
@@ -575,7 +571,6 @@ function AppCtrl($scope, $timeout, $http, _) {
 				} else if (! usingDefaultSunrise) {
 					$scope.sunrise = getDefaultSunrise(now);
 					usingDefaultSunrise = true;
-//x					console.log("  ********** WARNING: 'sunrise' not defined in " + sunData);
 				}
 				if (data.data.sunset) {
 					$scope.sunset = moment(data.data.sunset);
@@ -583,7 +578,6 @@ function AppCtrl($scope, $timeout, $http, _) {
 				} else if (! usingDefaultSunset) {
 					$scope.sunset = getDefaultSunset(now);
 					usingDefaultSunset = true;
-//x					console.log("  ********** ERROR: 'sunset' not defined in " + sunData);
 				}
 				if (data.data.takedaytimeimages) {
 					$scope.takedaytimeimages = data.data.takedaytimeimages === "true";
@@ -593,14 +587,12 @@ function AppCtrl($scope, $timeout, $http, _) {
 				} else {
 					$scope.takedaytimeimages = true;
 					usingDefaultTakingDaytime = true;
-//x					console.log("  ********** WARNING: 'takedaytimeimages' not defined in " + sunData);
 				}
 				if (data.data.takenighttimeimages) {
 					$scope.takenighttimeimages = data.data.takenighttimeimages === "true";
 				} else {
 					$scope.takenighttimeimages = true;
 					usingDefaultTakingNighttime = true;
-//x					console.log("  ********** WARNING: 'takenighttimeimages' not defined in " + sunData);
 				}
 
 				dataMissingMsg = "";
@@ -645,7 +637,6 @@ function AppCtrl($scope, $timeout, $http, _) {
 					var duration = moment.duration(moment(now).diff(lastModifiedSunriseSunsetFile));
 					if (duration.days() > oldDataLimit) {
 						dataOldMsg = "WARNING: '" + sunData + "' is " + duration.days() + " days old.";
-//x						console.log(dataOldMsg);
 						if (dataMissingMsg == "") {
 							dataOldMsg += "<br>Check Allsky log file if 'postData.sh' has";
 							dataOldMsg += " been running successfully at the end of nighttime.";
@@ -706,7 +697,8 @@ function AppCtrl($scope, $timeout, $http, _) {
 		$('#starmap_container').fadeToggle();
 	};
 
-	$scope.getScale = function (index) {	// based mostly on https://auroraforecast.is/kp-index/
+	// based mostly on https://auroraforecast.is/kp-index/
+	$scope.getScale = function (index) {
 		var scale = {
 			0: "Extremely_Quiet",
 			1: "Very_Quiet",

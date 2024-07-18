@@ -280,7 +280,7 @@ div.dtsp-searchPane div.dtsp-topRow {
     right: 10px;
     width: 25px;
     height: 25px;
-    background-color: #fff;
+    basckground-color: #fff;
     font-size: 20px;
     border: none;
     outline: none;
@@ -369,6 +369,15 @@ div.dtsp-searchPane div.dtsp-topRow {
     border: 3px solid green;
     background-color: rgba(0,0,0,0.3);
     padding: 15px;    
+  }
+
+  #oe-overlay-disable .center .center-paragraph h2 {
+    font-size: 2vw;
+  }
+
+  #oe-overlay-disable .center .center-paragraph p {
+    font-size: 1.5vw;
+    margin-top: 10px;
   }
 
   .border-left {

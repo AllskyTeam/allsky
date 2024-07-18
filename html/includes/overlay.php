@@ -170,7 +170,7 @@ function DisplayOverlay($image_name)
                             <div id="overlay_container" style="background-color: black; position: relative">
                                 <div id="oe-overlay-disable" class="hidden">
                                     <div class="center">
-                                        <div class="center-paragraph">This overlay is provided by the Allsky team and cannot be edited. <br>Click <a href="#" id="oe-overlay-disable-new">here</a> to create a new editable overlay based upon this one.</div>
+                                        <div class="center-paragraph"><h2>You are using a default overlay.</h2> <p>To create a new overlay click <a href="#" id="oe-overlay-disable-new">here</a></p></div>
                                     </div>
                                 </div> 
                                 <div id="oe-editor-stage"></div>

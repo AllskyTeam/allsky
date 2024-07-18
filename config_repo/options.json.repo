@@ -2369,7 +2369,7 @@
 {
 "name" : "computer",
 "default" : "",
-"description" : "The computer running your allsky camera, for example: <span class='WebUIValue'>Raspberry Pi 3, 4 GB</span>.",
+"description" : "The computer running your allsky camera, for example: <span class='WebUIValue'>Raspberry Pi 3, 4 GB</span>.  Set automatically.",
 "label" : "Computer",
 "type" : "widetext",
 "carryforward" : true,

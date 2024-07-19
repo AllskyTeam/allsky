@@ -503,8 +503,7 @@ function replace_website_placeholders()
 		IMAGE_NAME="${FULL_FILENAME}"
 	fi
 
-
-	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --verbosity silent ${DEBUG_ARG} \
+	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --verbosity silent \
 		--config "${FILE}" \
 		config.imageName			"imageName"			"${IMAGE_NAME}" \
 		config.latitude				"latitude"			"${LATITUDE}" \

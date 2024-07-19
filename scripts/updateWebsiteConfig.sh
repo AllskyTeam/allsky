@@ -24,7 +24,7 @@ function usage_and_exit()
 		echo -en "${C}"
 		echo -n "Usage: ${ME} [--help] [--debug] [--verbosity silent|summary|verbose]"
 		echo -n " [--local | --remote | --config file] key label new_value [...]"
-		echo -en "${wNC}"
+		echo -e "${wNC}"
 		echo "There must be a multiple of 3 arguments."
 	} >&2
 	exit "${RET}"

@@ -128,7 +128,15 @@ You should accept the defaults.
 <blockquote>
 If you have a camera with auto-focus like the RPi Module 3,
 see the camera documentation for how to focus it.
+Once it's focused you'll normally want to disable auto focus since it adds several seconds to each daytime
+image while it's finding focus, and adds minutes to nighttime images.
+If you use the instructions below, replace the phrase "turn the focus ring" with
+"adjust the focus via software".
 </blockquote>
+<p>
+Almost all lenses have a focus ring that you turn to change the focus.
+If you lens does NOT have a focus ring or some other focusing mechanism,
+you can skip this page.
 <p>
 Try to get your camera at least roughly focused during the day.
 It'll be easier to see the focus ring on your lens,
@@ -136,24 +144,41 @@ and exposure duration will be much shorter so you'll get more instant feedback.
 Focusing on slow-moving clouds works well.
 </p>
 <p>
-Enable the <span class="WebUISetting">Show Focus Metric</span>
-setting in the WebUI's <span class="WebUIWebPage">Allsky Settings</span> page.
-If you are using the <strong>module</strong> overlay method,
-in the <span class="editorName">Overlay Editor</span> add the <strong>${FOCUS}</strong>
-variable to the image anywhere you want.
-Use a large font to make it easier to see.
+Make the following temporary changes in the WebUI:
+<ul class="minimalPadding topPadding">
+	<li>Turn off the <span class="WebUISetting">Save</span>
+		setting for the part of the day you are focusing (daytime or nighttime).
+	<li>Set the corresonding <span class="WebUISetting">Delay</span> to
+		<span class="WebUIValue">500</span> ms (1/2 second).
+	<li>If focusing during the day, also set the <span class="WebUISetting">Max Auto-Exposure</span>
+		to <span class="WebUIValue">500</span> ms.
+		<br>
+		These changes will give a short time between images and the WebUI's
+		<span class="WebUILink">Live View</span> will automatically refresh the screen every second.
+	<li>If you are using the <span class="WebUIValue">module</span>
+		<span class="WebUISetting">Overlay Method</span>,
+		enable the <span class="WebUISetting">Show Focus Metric</span>,
+		and in the <span class="WebUILink">Overlay Editor</span> page add the <strong>${FOCUS}</strong>
+		variable to the image anywhere you want.
+		Use a large font to make it easier to see.
+</ul>
 </p>
 <p>
-A focus number will appear on your images - the higher the number, the better focus you have.
-Note that the number can change depending on the brightness,
-so focus when the brightness isn't changing.
+Most lenses have a screw to lock the focus ring - if your's does, loosen the screw.
+A focus number will appear on the images - the higher the number, the better focus.
+The number can change depending on the brightness, so focus when the brightness isn't changing.
+Look at the image and the focus number then turn the lens' focus ring.
+If the image and focus number get worse, turn the ring the other way.
+At some point the image will get worse - that means you've past the best focus,
+so turn the focus ring in very small increments the other direction.
 <p>
-When done focusing, disable the <span class="WebUISetting">Show Focus Metric</span>
-setting since it's no longer needed.
-While this method may be "good enough", the most accurate way to focus is
-at night using stars.
+This method is often "good enough" but the most accurate (and slowest) way to focus is at night using stars.
 Zoom in on the image and look for stars that are bright but not saturated.
 Keep focusing until the stars are as small as possible.
+</p>
+<p>
+When done focusing tighten the focus lock screw (be careful not to move the focus ring)
+and revert all settings back to their original values.
 </p>
 </details>
 

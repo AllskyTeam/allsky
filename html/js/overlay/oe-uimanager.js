@@ -837,6 +837,7 @@ class OEUIMANAGER {
         });
 
         $(document).on('click', '#oe-add-text', (event) => {
+            event.stopPropagation();
             let shape = this.#fieldManager.addField('text');
             this.#overlayLayer.add(shape);
 

@@ -730,6 +730,8 @@ class OVERLAYUTIL
         $overlayData['brands'] = ['RPi', 'ZWO', 'Arducam'];
         $overlayData['brand'] = $this->getSetting('cameratype');
         $overlayData['model'] = $this->getSetting('cameramodel');
+        $overlayData['sensorWidth'] = $this->cc['sensorWidth'];
+        $overlayData['sensorHeight'] = $this->cc['sensorHeight'];
 
         $tod = getenv('DAY_OR_NIGHT');
         if ($tod === false) {

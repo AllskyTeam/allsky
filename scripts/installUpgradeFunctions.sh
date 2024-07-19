@@ -539,7 +539,6 @@ function prepare_local_website()
 
 		# Only want error messages.
 		"${ALLSKY_SCRIPTS}/postData.sh" > /dev/null
-
 }
 
 

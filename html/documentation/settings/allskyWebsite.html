@@ -69,7 +69,7 @@ Steps to configure an Allsky Website are below.
 			<li id="configuration.json">
 				The settings in both files are identical although their values may differ.
 				The files are split into two sections:
-				<ol type="i" class="minimalPadding">
+				<ol type="i" class="minimalPadding topPadding">
 					<li><span class="settings editorSetting">"config"</span> -
 						settings for the liveview image and constellation overlay.</li>
 					<li><span class="settings editorSetting">"homePage"</span> -
@@ -146,7 +146,7 @@ their default values, and a description.
 <details><summary></summary>
 <div class="legend">
 <span class="legendHeader">Legend:</span>
-<ul class="minimalPadding">
+<ul class="minimalPadding topPadding">
 <li>Values for setting names with "<span class="sentToMapServer"></span>" after them
 	are sent to the
 	<a allsky="true" external="true" href="/documentation/allskyMap/index.html">Allsky Map</a>
@@ -533,7 +533,7 @@ Allsky Website so you only have to update them once.
 	<td></td>
 	<td>An optional background image for the Website home page.
 		Sub-settings:
-		<ul class="minimalPadding">
+		<ul class="minimalPadding topPadding">
 		<li><span class="editorSetting">url</span> is
 			the location of the image (a URL or file name).
 		<li><span class="editorSetting">style</span> is
@@ -586,7 +586,7 @@ Allsky Website so you only have to update them once.
 		<br>
 		<span style="color: red;">Click
 		<a href="https://google.com" title="this is a title">here to go to Google.</a></span>
-		<ul class="minimalPadding">
+		<ul class="minimalPadding topPadding">
 		<li><span class="editorSetting">prelink</span> -
 			Text before the link (e.g., "<span style="color: red">Click</span>").
 		<li><span class="editorSetting">message</span> -
@@ -654,20 +654,19 @@ Allsky Website so you only have to update them once.
 	</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">leftSidebar</span></td>
+	<td><a id="leftSidebar"><span class="editorSetting">leftSidebar</span></td>
 	<td></td>
 	<td>Settings that modify the left sidebar's icons.
 		Each icon has the following settings:
-		<ul class="minimalPadding">
+		<ul class="minimalPadding topPadding">
 		<li><span class="editorSetting">display</span> -
 			<span class="editorBool">true</span> to display the icon,
 			<span class="editorBool">false</span> to hide it.
 			<blockquote>
-			The overlay toggle icon's display setting is
-			<span class="editorBool">false</span> by default.
+			This setting is <span class="editorBool">false</span> by default
+			for the constellation overlay icon.
 			If you plan to allow the constellation overlay to be displayed,
-			modify the overlay's size and position so it mostly matches the sky,
-			then set this field to
+			modify its size and position so it mostly matches the sky, then set this field to
 			<span class="editorBool">true</span>.
 			</blockquote>
 		<li><span class="editorSetting">url</span> -
@@ -703,7 +702,7 @@ Allsky Website so you only have to update them once.
 	<td>Settings that modify the information that appears in the popout on the right side.
 		Each entry contains an icon, name of the field, and the field's value,
 		and has the following settings:
-		<ul class="minimalPadding">
+		<ul class="minimalPadding topPadding">
 		<li><span class="editorSetting">display</span> -
 			<span class="editorBool">true</span> to display the entry,
 			<span class="editorBool">false</span> to hide it.

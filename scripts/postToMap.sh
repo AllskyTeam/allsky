@@ -216,7 +216,7 @@ else
 
 	WEBSITE_URL="$( settings ".remotewebsiteurl" )"
 	# Without a trailing "/" we may get a "Moved permanently" message.
-	[[ ${WEBSITE_URL: -1:1} != "/" ]] && WEBSITE_URL="${WEBSITE_URL}/"
+	[[ -n ${WEBSITE_URL} && ${WEBSITE_URL: -1:1} != "/" ]] && WEBSITE_URL="${WEBSITE_URL}/"
 
 	IMAGE_URL="$( settings ".remotewebsiteimageurl" )"
 	CAMERA="$( settings ".camera" )"

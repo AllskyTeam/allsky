@@ -300,9 +300,12 @@
                                         <form id="' + plugin.mmNewDialogForm + '">\
                                             <div class="panel panel-default">\
                                                 <div class="panel-heading">\
-                                                    <h3 class="panel-title">Based on</h3>\
+                                                    <h3 class="panel-title">Select Template</h3>\
                                                 </div>\
                                                 <div class="panel-body">\
+                                                    <div>\
+                                                        <p>Select the template you wish to base your new overlay on. If you wish to create a blank overlay select \'Blank Overlay\'</p>\
+                                                    </div>\
                                                     <div class="form-group ">\
                                                         <select class="select form-control" id="' + plugin.mmNewDialogCopy + '" name="' + plugin.mmNewDialogCopy + '"></select>\
                                                     </div>\
@@ -310,7 +313,7 @@
                                             </div>\
                                             <div class="panel panel-default">\
                                                 <div class="panel-heading">\
-                                                    <h3 class="panel-title">Overlay Details</h3>\
+                                                    <h3 class="panel-title">Overlay Meta Data</h3>\
                                                 </div>\
                                                 <div class="panel-body">\
                                                     <ul class="nav nav-tabs" role="tablist">\
@@ -377,13 +380,13 @@
                                                             <div class="row">\
                                                                 <div class="col-md-6">\
                                                                     <div class="form-group ">\
-                                                                        <label class="control-label " for="' + plugin.mmNewDialogResolutionWidth + '">Resolution Width</label>\
+                                                                        <label class="control-label " for="' + plugin.mmNewDialogResolutionWidth + '">Width</label>\
                                                                         <input class="form-control ' + plugin.mmNewDialogField + ' ' + plugin.mmNewDialogAdvancedField + '" id="' + plugin.mmNewDialogResolutionWidth + '" name="' + plugin.mmNewDialogResolutionWidth + '" type="number"/>\
                                                                     </div>\
                                                                 </div>\
                                                                 <div class="col-md-6">\
                                                                     <div class="form-group ">\
-                                                                        <label class="control-label " for="' + plugin.mmNewDialogResolutionHeight + '">Resolution Height</label>\
+                                                                        <label class="control-label " for="' + plugin.mmNewDialogResolutionHeight + '">Height</label>\
                                                                         <input class="form-control ' + plugin.mmNewDialogField + ' ' + plugin.mmNewDialogAdvancedField + '" id="' + plugin.mmNewDialogResolutionHeight + '" name="' + plugin.mmNewDialogResolutionHeight + '" type="number"/>\
                                                                     </div>\
                                                                 </div>\
@@ -724,6 +727,9 @@
             let data = configManager.overlays;
             for (let overlay in data.coreoverlays) {
                 let name = data.coreoverlays[overlay].metadata.name
+                if (overlay === plugin.selectedOverlay.name) {
+                    name += ' Default';
+                }
                 $('#' + plugin.mmNewDialogCopy).append($('<option>').val(overlay).text('Allsky - ' + name));
             }
             for (let overlay in data.useroverlays) {
@@ -740,13 +746,22 @@
             $('#' + plugin.mmNewDialogModel).val($('#' + plugin.mmMetaModel).val());
 
             let image = $('#oe-background-image');
-            $('#' + plugin.mmNewDialogResolutionWidth).val(image.width()|0);
-            $('#' + plugin.mmNewDialogResolutionHeight).val(image.height()|0);
+            $('#' + plugin.mmNewDialogResolutionWidth).val(image[0].width|0);
+            $('#' + plugin.mmNewDialogResolutionHeight).val(image[0].height|0);
+
+            $('#' + plugin.mmWrapper).removeClass('active');
+            $('.' + plugin.mmTrigger).hide();
 
             $('#' + plugin.mmNewDialog).modal({
                 keyboard: false,
                 width: 800
+            });
+
+            $('#' + plugin.mmNewDialog).on('hidden.bs.modal', function (e) {
+                $('#' + plugin.mmWrapper).addClass('active');
+                $('.' + plugin.mmTrigger).show();
             })
+                          
             updateNewFilename();
         }
 

@@ -2521,6 +2521,9 @@ restore_prior_files()
 		fi
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+
+		# Create a default file.
+		prepare_local_website
 	fi
 
 
@@ -2602,6 +2605,9 @@ restore_prior_website_files()
 	ITEM="${SPACE}Local Website files"
 	if [[ -z ${PRIOR_WEBSITE_DIR} ]]; then
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+
+		# Create a default configuration file in case they decide to use a local Website.
+		prepare_local_website
 		return
 	fi
 
@@ -2695,7 +2701,7 @@ restore_prior_website_files()
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-	# Now deal with the configuration file.
+	# Now deal with the local Website configuration file.
 	if [[ ${PRIOR_WEBSITE_STYLE} == "${OLD_STYLE_ALLSKY}" ]]; then
 		# The format of the old files is too different from the new file,
 		# so force them to manually copy settings.
@@ -2713,6 +2719,9 @@ restore_prior_website_files()
 			echo "then remove the old website:  sudo rm -fr ${PRIOR_WEBSITE_DIR}"
 		} >> "${POST_INSTALLATION_ACTIONS}"
 
+		# Create a default file.
+		prepare_local_website
+
 	else		# NEW_STYLE_WEBSITE
 		ITEM="${SPACE}${SPACE}${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 		if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
@@ -2726,7 +2735,7 @@ restore_prior_website_files()
 
 		if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
 			# If different versions, then update the current one.
-			update_website_config_file "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" \
+			update_old_website_config_file "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" \
 				"${PRIOR_WEB_CONFIG_VERSION}" "${NEW_WEB_CONFIG_VERSION}" "local"
 		else
 			display_msg --log progress "${ITEM} (copying)"

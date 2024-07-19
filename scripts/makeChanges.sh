@@ -603,11 +603,7 @@ do
 			if [[ ${NEW_VALUE} == "true" && ! -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
 				# No prior config file.
 				# This should never happen, but just in case...
-				cp \
-					"${REPO_WEBSITE_CONFIGURATION_FILE}" \
-					"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
-				update_json_file ".${WEBSITE_ALLSKY_VERSION}" "${ALLSKY_VERSION}" \
-					"${ALLSKY_WEBSITE_CONFIGURATION_FILE}" "text"
+				prepare_local_website
 			fi
 			;;
 

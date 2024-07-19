@@ -434,9 +434,20 @@ function update_json_file()		# [-d] field, new value, file, [type]
 	return "${RET}"
 }
 
+
+####
+# Prepare a local Website:
+#	Update the config file by replacing placeholders.
+#	Copy data.json.
+function prepare_local_website()
+{
+		:  # TODO:
+}
+
+
 ####
 # Update a Website configuration file from old to current version.
-function update_website_config_file()
+function update_old_website_config_file()
 {
 	local FILE PRIOR_VERSION CURRENT_VERSION LOCAL_OR_REMOTE
 

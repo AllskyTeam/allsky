@@ -26,7 +26,6 @@ do_initial_heading="false"
 ############################################## functions
 
 ####
-#
 do_initial_heading()
 {
 	if [[ ${UPDATE} == "true" ]]; then
@@ -79,7 +78,7 @@ do_initial_heading()
 			PRIOR_V="1"		# Assume the oldest version
 		fi
 		if [[ ${PRIOR_V} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
-			update_website_config_file "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" \
+			update_old_website_config_file "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" \
 				"${PRIOR_V}" "${NEW_WEB_CONFIG_VERSION}" "remote"
 		else
 			MSG="Remote Website ${WEBSITE_CONFIG_VERSION} is current @ ${NEW_WEB_CONFIG_VERSION}"

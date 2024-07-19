@@ -435,13 +435,110 @@ function update_json_file()		# [-d] field, new value, file, [type]
 }
 
 
+function replace_website_placeholders()
+{
+	local TYPE="${1}"
+	local FILE="${2}"
+	if [[ -z ${FILE} ]]; then
+		if [[ ${TYPE} == "local" ]]; then
+			FILE="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+		else
+			FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
+		fi
+	fi
+
+	# Get the array index for the mini-timelapse.
+	PARENT="homePage.leftSidebar"
+	FIELD="Mini-timelapse"
+	INDEX=$( getJSONarrayIndex "${FILE}" "${PARENT}" "${FIELD}" )
+	if [[ ${INDEX} -ge 0 ]]; then
+		MINI_TLAPSE_DISPLAY="${PARENT}[${INDEX}].display"
+		MINI_TLAPSE_URL="${PARENT}[${INDEX}].url"
+		if [[ ${TIMELAPSE_MINI_IMAGES:-0} -eq 0 ]]; then
+			MINI_TLAPSE_DISPLAY_VALUE="false"
+			MINI_TLAPSE_URL_VALUE=""
+		else
+			MINI_TLAPSE_DISPLAY_VALUE="true"
+			if [[ ${DO_REMOTE_WEBSITE} == "true" ]]; then
+				MINI_TLAPSE_URL_VALUE="mini-timelapse.mp4"
+			else
+				#shellcheck disable=SC2153
+				MINI_TLAPSE_URL_VALUE="/${IMG_DIR}/mini-timelapse.mp4"
+			fi
+		fi
+	else
+		MSG="Unable to update '${FIELD}' in ${FILE}; ignoring."
+		display_msg --log warning "${MSG}"
+		# bogus settings that won't do anything
+		MINI_TLAPSE_DISPLAY="x"
+		MINI_TLAPSE_URL="x"
+		MINI_TLAPSE_DISPLAY_VALUE=""
+		MINI_TLAPSE_URL_VALUE=""
+	fi
+
+	# Convert latitude and longitude to use N, S, E, W.
+	LATITUDE="$( settings ".latitude" )"
+	LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" )"
+	[[ -z ${LATITUDE} ]] && display_msg --log warning "latitude is empty"
+	LONGITUDE="$( settings ".longitude" )"
+	LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )"
+	[[ -z ${LONGITUDE} ]] && display_msg --log warning "longitude is empty"
+
+	if [[ ${LATITUDE:1,-1} == "S" ]]; then			# last character
+		AURORAMAP="south"
+	else
+		AURORAMAP="north"
+	fi
+
+	LOCATION="$( settings ".location" )"
+	OWNER="$( settings ".owner" )"
+	CAMERA_MODEL="$( settings ".cameramodel" )"
+	CAMERA="${CAMERA_TYPE}${CAMERA_MODEL}"
+	LENS="$( settings ".lens" )"
+	COMPUTER="$( settings ".computer" )"
+	if [[ ${TYPE} == "local" ]]; then
+		#shellcheck disable=SC2153
+		IMAGE_NAME="/${IMG_DIR}/${FULL_FILENAME}"
+	else
+		IMAGE_NAME="${FULL_FILENAME}"
+	fi
+
+	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --verbosity silent \
+		--config "${FILE}" \
+		config.imageName			"imageName"			"${IMAGE_NAME}" \
+		config.latitude				"latitude"			"${LATITUDE}" \
+		config.longitude			"longitude"			"${LONGITUDE}" \
+		config.auroraMap			"auroraMap"			"${AURORAMAP}" \
+		config.location				"location"			"${LOCATION}" \
+		config.owner				"owner" 			"${OWNER}" \
+		config.camera				"camera"			"${CAMERA}" \
+		config.lens					"lens"				"${LENS}" \
+		config.computer				"computer"			"${COMPUTER}" \
+		config.AllskyVersion		"AllskyVersion"		"${ALLSKY_VERSION}" \
+		${MINI_TLAPSE_DISPLAY}		"mini_display"		"${MINI_TLAPSE_DISPLAY_VALUE}" \
+		${MINI_TLAPSE_URL}			"mini_url"			"${MINI_TLAPSE_URL_VALUE}"
+}
+
+
 ####
 # Prepare a local Website:
 #	Update the config file by replacing placeholders.
 #	Copy data.json.
 function prepare_local_website()
 {
-		:  # TODO:
+		local FORCE="${1}"
+
+		display_msg --log progress "Creating default ${ALLSKY_WEBSITE_CONFIGURATION_NAME}."
+
+		# The config file normally won't already exist.
+		if [[ ! -s ${ALLSKY_WEBSITE_CONFIGURATION_FILE} || ${FORCE} == "--force" ]]; then
+			cp "${REPO_WEBSITE_CONFIGURATION_FILE}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+
+			replace_website_placeholders "local" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+		fi
+
+		# Only want error messages.
+		"${ALLSKY_SCRIPTS}/postData.sh" > /dev/null
 }
 
 

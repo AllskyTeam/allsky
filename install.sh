@@ -2523,7 +2523,7 @@ restore_prior_files()
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 
 		# Create a default file.
-		prepare_local_website
+		prepare_local_website ""
 	fi
 
 
@@ -2607,7 +2607,7 @@ restore_prior_website_files()
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 
 		# Create a default configuration file in case they decide to use a local Website.
-		prepare_local_website
+		prepare_local_website ""
 		return
 	fi
 
@@ -2720,7 +2720,7 @@ restore_prior_website_files()
 		} >> "${POST_INSTALLATION_ACTIONS}"
 
 		# Create a default file.
-		prepare_local_website
+		prepare_local_website ""
 
 	else		# NEW_STYLE_WEBSITE
 		ITEM="${SPACE}${SPACE}${ALLSKY_WEBSITE_CONFIGURATION_NAME}"

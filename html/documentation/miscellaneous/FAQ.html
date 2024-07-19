@@ -16,6 +16,7 @@
 	</style>
     <link href="../css/documentation.css" rel="stylesheet">
     <link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<script src="../js/all.min.js"></script>
 	<title>Allsky FAQ</title>
 </head>
 <body>
@@ -157,6 +158,20 @@ Keep focusing until the stars are as small as possible.
 </details>
 
 
+<h2>How do I change the icons on the Allsky Website?</h2>
+<details><summary></summary>
+<p>
+The icons on the left side of an Allsky Website page and what happens when you click one are controlled by the
+<a external="true" href="../settings/allskyWebsite.html#leftSidebar">
+	<span class="editorSetting">leftSidebar</span> setting</a>.
+The icon itself is specified via the <span class="editorSetting">icon</span> sub-setting.
+See the <a external="true" href="https://fontawesome.com/search?m=free&o=r">Font Awesome</a> page
+(version 6.2.1) for other choices.
+Note that not all icons work so you'll need to try them.
+</p>
+</details>
+
+
 <h2>The <span class="fileName">/var/log/allsky.log</span> file is gone.  How do I get it back?</h2>
 <details><summary></summary>
 <p>
@@ -172,28 +187,6 @@ Do the following in order, stopping when the log file reappears:
 </ol>
 </p>
 </details>
-
-
-<!--
-<h2>Pro-tip: install <code>gh</code> on your Pi so you can easily collaborate using Github Gists</h2>
-<details><summary></summary>
-<p>
-Click <a href="https://cli.github.com/">here</a>
-for the full details or download the latest release from
-<a href="https://github.com/cli/cli/releases/latest">here</a>.
-Once you have the Command Line Interface (CLI) installed,
-you can easily upload a script you wrote with something like:
-<pre>
-gh gist create -d "a tool to find alien spaceships" < my_awesome_allsky_script.py
-</pre>
-
-or share logs using something like
-<pre>
-journalctl --since 05:00 -u allsky | gh gist create
-gh gist create < log.txt
-</pre>
-</details>
--->
 
 
 </div><!-- Layout-main -->

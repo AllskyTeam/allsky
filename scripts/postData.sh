@@ -90,7 +90,6 @@ done
 # If there are no enabled Websites or an enabled remote server, then exit.
 WEBS=""
 WHERE_TO=""
-USE_REMOTE_SERVER="false"
 if [[ "$( settings ".uselocalwebsite" )" == "true" ]]; then
 	WEBS+=" --local-web"
 	WHERE_TO="local Website"
@@ -101,7 +100,6 @@ if [[ "$( settings ".useremotewebsite" )" == "true" ]]; then
 	WHERE_TO="remote Website"
 fi
 if [[ "$( settings ".useremoteserver" )" == "true" ]]; then
-	USE_REMOTE_SERVER="true"
 	[[ -n ${WHERE_TO} ]] && WHERE_TO+=", "
 	WHERE_TO="remote server"
 fi

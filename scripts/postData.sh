@@ -101,7 +101,6 @@ if [[ "$( settings ".useremotewebsite" )" == "true" ]]; then
 	WHERE_TO+="remote Website"
 fi
 if [[ "$( settings ".useremoteserver" )" == "true" ]]; then
-	USE_REMOTE_SERVER="true"
 	[[ -n ${WHERE_TO} ]] && WHERE_TO+=", "
 	WHERE_TO+="remote server"
 fi

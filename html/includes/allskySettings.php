@@ -534,7 +534,11 @@ echo "<script>console.log('Updated $fileName');</script>";
 					}
 
 					// If there's a website let it know of the changes.
-					if (($changesMade || $fromConfiguration) && ($useLocalWebsite || $useRemoteWebsite)) {
+					// Because postData.sh can take a while to upload files,
+					// and it's called at end of night and uploads the settings file,
+					// only call it here for major changes.
+					if (($twilightDataChanged || $cameraChanged || $fromConfiguration) &&
+							($useLocalWebsite || $useRemoteWebsite)) {
 						$CMD = "sudo --user=" . ALLSKY_OWNER . " " . ALLSKY_SCRIPTS;
 
 						$moreArgs = "";

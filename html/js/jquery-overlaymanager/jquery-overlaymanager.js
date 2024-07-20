@@ -308,7 +308,7 @@
                                                         <p>Select the template you wish to base your new overlay on. If you wish to create a blank overlay select \'Blank Overlay\'</p>\
                                                     </div>\
                                                     <div class="form-group ">\
-                                                        <select class="select form-control" id="' + plugin.mmNewDialogCopy + '" name="' + plugin.mmNewDialogCopy + '"></select>\
+                                                        <select class="select form-control" id="' + plugin.mmNewDialogCopy + '" name="' + plugin.mmNewDialogCopy + '" title="Select the template you wish to base your new overlay on"></select>\
                                                     </div>\
                                                 </div>\
                                             </div>\
@@ -470,7 +470,10 @@
                 event.stopPropagation();
                 plugin.show();
                 plugin.showNew();
-                $('#' + plugin.mmNewDialogCopy).val(plugin.selectedOverlay.name);
+                let configManager = window.oedi.get('config');
+                let overlays = configManager.overlays;
+//                $('#' + plugin.mmNewDialogCopy).val(plugin.selectedOverlay.name);
+                $('#' + plugin.mmNewDialogCopy).val(overlays.current);
             });
 
             $(document).on('oe-startup', (e,data) => {
@@ -535,10 +538,12 @@
                     bootbox.confirm('Are you sure you wish to create a new overlay. You will lose any unsaved changes', (result) => {
                         if (result) {
                             showNewOverlayDialog();
+                            $('#' + plugin.mmNewDialogCopy).val($('#' + plugin.mmEditSelect).val());
                         }
                     });                    
                 } else {
                     showNewOverlayDialog();
+                    $('#' + plugin.mmNewDialogCopy).val($('#' + plugin.mmEditSelect).val());
                 }
             });
 

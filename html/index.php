@@ -86,7 +86,7 @@ if ($useLogin) {
 
 // Get the version of the remote Allsky Website, if it exists.
 $remoteWebsiteVersion = "";
-if ($hasRemoteWebsite) {
+if ($useRemoteWebsite) {
 	$f = getRemoteWebsiteConfigFile(); 
 	$errorMsg = "WARNING: ";
 	$retMsg = "";
@@ -194,7 +194,7 @@ if ($hasRemoteWebsite) {
 <!--
 	<script type="text/javascript" src="lib/codeMirror/shell.js"> </script>
 -->
-<?php if ($hasLocalWebsite || $hasRemoteWebsite) { ?>
+<?php if ($useLocalWebsite || $useRemoteWebsite) { ?>
 	<script type="text/javascript" src="lib/codeMirror/json.js"> </script>
 <?php } ?>
 </head>

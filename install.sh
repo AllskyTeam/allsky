@@ -279,6 +279,7 @@ setup_rpi_supported_cameras()
 		local B="$( basename "${RPi_SUPPORTED_CAMERAS}" )"
 		if [[ -z ${CMD} ]]; then
 			notCMD="xxxxx"		# won't match anything
+			CMD="all"
 		elif [[ ${CMD} == "raspistill" ]]; then
 			notCMD="libcamera"
 		else

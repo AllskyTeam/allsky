@@ -49,7 +49,7 @@ while [[ $# -gt 0 ]]; do
 	shift
 done
 
-usage_and_exit()
+function usage_and_exit()
 {
 	local RET=${1}
 	{
@@ -105,7 +105,21 @@ function show_supported_cameras()
 # Show all the currently connected cameras.
 function show_connected_cameras()
 {
-	get_connected_cameras_info
+	get_connected_cameras_info "true" > "${CONNECTED_CAMERAS_INFO}"
+
+	local CAMERAS="$( get_connected_camera_models --full "both" )"
+	if [[ -z ${CAMERAS} ]]; then
+		echo -e "\nThere are no cameras connected to the Pi."
+	else
+		local FORMAT="%-6s %-8s %s\n"
+		echo
+		printf "${FORMAT}" "Type" "Number" "Model"
+		printf "${FORMAT}" "====" "======" "====="
+		echo -e "${CAMERAS}" | while read -r TYPE NUM MODEL
+			do
+				printf "${FORMAT}" "${TYPE}" "${NUM}" "${MODEL}"
+			done
+	fi
 }
 
 #####
@@ -208,12 +222,12 @@ if [[ -z ${CMD} ]]; then
 
 	PROMPT="\nSelect a command to run:"
 	CMDS=()
-	CMDS+=("show_supported_cameras"		"Show supported cameras")
-	CMDS+=("get_connected_cameras_info"	"Show connected cameras")
-	CMDS+=("recheck_swap"				"Add swap space")
-	CMDS+=("recheck_tmp"				"Move ~/allsky/tmp to memory")
-	CMDS+=("samba"						"Simplify copying files to/from the Pi")
-	CMDS+=("new_rpi_camera_info"		"Collect information for new RPi camera")
+	CMDS+=("show_supported_cameras"		"1. Show supported cameras")
+	CMDS+=("show_connected_cameras"		"2. Show connected cameras")
+	CMDS+=("recheck_swap"				"3. Add swap space")
+	CMDS+=("recheck_tmp"				"4. Move ~/allsky/tmp to memory")
+	CMDS+=("samba"						"5. Simplify copying files to/from the Pi")
+	CMDS+=("new_rpi_camera_info"		"6. Collect information for new RPi camera")
 
 	# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 	while COMMAND="$( prompt "${PROMPT}" "${CMDS[@]}" )"

@@ -92,16 +92,18 @@ WEBS=""
 WHERE_TO=""
 if [[ "$( settings ".uselocalwebsite" )" == "true" ]]; then
 	WEBS+=" --local-web"
-	WHERE_TO="local Website"
+	[[ -n ${WHERE_TO} ]] && WHERE_TO+=", "
+	WHERE_TO+="local Website"
 fi
 if [[ "$( settings ".useremotewebsite" )" == "true" ]]; then
 	WEBS+=" --remote-web"
 	[[ -n ${WHERE_TO} ]] && WHERE_TO+=", "
-	WHERE_TO="remote Website"
+	WHERE_TO+="remote Website"
 fi
 if [[ "$( settings ".useremoteserver" )" == "true" ]]; then
+	USE_REMOTE_SERVER="true"
 	[[ -n ${WHERE_TO} ]] && WHERE_TO+=", "
-	WHERE_TO="remote server"
+	WHERE_TO+="remote server"
 fi
 
 if [[ -z ${WHERE_TO} ]]; then
@@ -208,7 +210,7 @@ if [[ -n ${WEBS} ]]; then
 		done
 	fi
 
-	[[ ${FROM_WEBUI} == "true" ]] && echo "Uploaded configuration files to ${WHERE_TO}."
+	[[ ${FROM_WEBUI} == "true" ]] && echo "Uploaded configuration files to: ${WHERE_TO}."
 fi
 
 exit 0

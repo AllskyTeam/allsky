@@ -354,7 +354,7 @@
                                                         </div>\
                                                         <div role="tabpanel" class="tab-pane mt-2" id="oe-item-list-dialog-all1">\
                                                             <div class="row">\
-                                                                <div class="col-md-6">\
+                                                                <div class="col-md-12">\
                                                                     <div class="form-group ">\
                                                                         <label class="control-label requiredField" for="' + plugin.mmNewDialogFileName + '">Filename <span class="asteriskField">*</span></label>\
                                                                         <input class="form-control ' + plugin.mmNewDialogField + '" id="' + plugin.mmNewDialogFileName + '" name="' + plugin.mmNewDialogFileName + '" type="text"/>\

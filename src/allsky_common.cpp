@@ -236,22 +236,24 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 		strcat(cmd, tmp);
 	}
 
-	snprintf(tmp, s, " AUTOWB=%d", cg.currentAutoAWB ? 1 : 0);
-	strcat(cmd, tmp);
-	snprintf(tmp, s, " sAUTOAWB='%s'", cg.currentAutoAWB ? "(auto)" : "");
-	strcat(cmd, tmp);
-	if (cg.lastWBR >= 0.0) {
-		snprintf(tmp, s, " WBR=%s", LorF(cg.lastWBR, "%d", "%f"));
+	if (cg.isColorCamera)
+	{
+		snprintf(tmp, s, " AUTOWB=%d", cg.currentAutoAWB ? 1 : 0);
 		strcat(cmd, tmp);
-	}
-	if (cg.lastWBB >= 0.0) {
-		snprintf(tmp, s, " WBB=%s", LorF(cg.lastWBB, "%d", "%f"));
+		snprintf(tmp, s, " sAUTOAWB='%s'", cg.currentAutoAWB ? "(auto)" : "");
 		strcat(cmd, tmp);
-	}
-
-	if (cg.lastMean >= 0.0) {
-		snprintf(tmp, s, " MEAN=%f", cg.lastMean);
-		strcat(cmd, tmp);
+		if (cg.lastWBR >= 0.0) {
+			snprintf(tmp, s, " WBR=%s", LorF(cg.lastWBR, "%d", "%f"));
+			strcat(cmd, tmp);
+		}
+		if (cg.lastWBB >= 0.0) {
+			snprintf(tmp, s, " WBB=%s", LorF(cg.lastWBB, "%d", "%f"));
+			strcat(cmd, tmp);
+		}
+		if (cg.lastMean >= 0.0) {
+			snprintf(tmp, s, " MEAN=%f", cg.lastMean);
+			strcat(cmd, tmp);
+		}
 	}
 
 	// Since negative temperatures are valid, check against an impossible temperature.

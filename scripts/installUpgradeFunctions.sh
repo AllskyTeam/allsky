@@ -535,10 +535,12 @@ function prepare_local_website()
 			cp "${REPO_WEBSITE_CONFIGURATION_FILE}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 
 			replace_website_placeholders "local" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+		else
+			# If we had to create a default config file, we're not using the local Website
+			# so don't try to upload anything.
+			# Only want error messages.
+			"${ALLSKY_SCRIPTS}/postData.sh" > /dev/null
 		fi
-
-		# Only want error messages.
-		"${ALLSKY_SCRIPTS}/postData.sh" > /dev/null
 }
 
 

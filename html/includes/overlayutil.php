@@ -666,12 +666,15 @@ class OVERLAYUTIL
             $overlayFilename = $this->getSetting('nighttimeoverlay');
         }
 
+        $template = null;
         $fileName = $this->overlayPath . '/config/' . $overlayFilename;
         if (file_exists($fileName)) {
             $template = file_get_contents($fileName);
         } else {
             $fileName = $this->allskyOverlays . $overlayFilename;
-            $template = file_get_contents($fileName);
+            if (file_exists($fileName)) {            
+                $template = file_get_contents($fileName);
+            }
         }
         $templateData = json_decode($template);      
         $this->fixMetaData($templateData);     
@@ -696,11 +699,14 @@ class OVERLAYUTIL
         }
         $fileName = $this->overlayPath . '/config/' . $overlayName;
 
+        $overlay = null;
         if (file_exists($fileName)) {
             $overlay = file_get_contents($fileName);
         } else {
             $fileName = $this->allskyOverlays . $overlayName;
-            $overlay = file_get_contents($fileName);
+            if (file_exists($fileName)) {
+                $overlay = file_get_contents($fileName);
+            }
         }     
 
         if (!$return) {
@@ -929,20 +935,22 @@ class OVERLAYUTIL
     }
 
     private function fixMetaData(&$overlay) {
-        if (!isset($overlay->metadata)) {
-            $overlay->metadata = (object)null;
-        }
-        if (!isset($overlay->metadata->name)) {
-            $overlay->metadata->name = '???';
-        }
-        if (!isset($overlay->metadata->camerabrand)) {
-            $overlay->metadata->camerabrand = '???';
-        }
-        if (!isset($overlay->metadata->cameramodel)) {
-            $overlay->metadata->cameramodel = '???';
-        }
-        if (!isset($overlay->metadata->tod)) {
-            $overlay->metadata->tod = 'both';
+        if ($overlay !== null) {
+            if (!isset($overlay->metadata)) {
+                $overlay->metadata = (object)null;
+            }
+            if (!isset($overlay->metadata->name)) {
+                $overlay->metadata->name = '???';
+            }
+            if (!isset($overlay->metadata->camerabrand)) {
+                $overlay->metadata->camerabrand = '???';
+            }
+            if (!isset($overlay->metadata->cameramodel)) {
+                $overlay->metadata->cameramodel = '???';
+            }
+            if (!isset($overlay->metadata->tod)) {
+                $overlay->metadata->tod = 'both';
+            }
         }
     }
 

@@ -656,7 +656,7 @@
 					<li>The <strong>working area</strong> contains the overlay and the current image
 						in the background.</li>
 				</ol>
-				<blockquote><strong>NOTE:</strong> The Overlay Manager will only start if Allsky is capturing images. If Allsky is not capturing a warning is displayed and the Overlay Manager will wait until Allsky start capturing.</blockquote>
+				<blockquote><strong>NOTE:</strong> The Overlay Editor will only start if Allsky is capturing images. If Allsky is not capturing a warning is displayed and the Overlay Editor will wait until Allsky start capturing.</blockquote>
 				<details>
 					<summary></summary>
 					<blockquote class="morePadding">
@@ -947,7 +947,7 @@
 									<p class="moduleAnnotation">
 										<span class="moduleToolbarIconNumber">2</span>
 										<span class="moduleToolbar">Config</span>
-										<span>Selects the config options</span>
+										<span>Displays the tab to allow overlays to be activated</span>
 									</p>
 									<p class="moduleAnnotation">
 										<span class="moduleToolbarIconNumber">3</span>
@@ -1000,7 +1000,7 @@
 									</p>
 									<p class="moduleAnnotation">
 										<span class="moduleToolbarIconNumber">12</span>
-										<span class="moduleToolbar">Time of Day</span>
+										<span class="moduleToolbar">Available For</span>
 										<span>The Time of Day the overlay should be used for</span>
 									</p>									
 								</td>
@@ -1038,7 +1038,7 @@
 								<td>
 									<p class="moduleAnnotation">
 										<span class="moduleToolbarIconNumber">1</span>
-										<span class="moduleToolbar">Copy From</span>
+										<span class="moduleToolbar">Select Template</span>
 										<span>Selects the overlay you wish to use as a starting point or select 'Blank Overlay' for an empty overlay</span>
 									</p>
 									<p class="moduleAnnotation">
@@ -1053,9 +1053,15 @@
 									</p>
 									<p class="moduleAnnotation">
 										<span class="moduleToolbarIconNumber">4</span>
-										<span class="moduleToolbar">Time Of Day</span>
+										<span class="moduleToolbar">Available For</span>
 										<span>Select the time of day you wish this overlay to be used in</span>
-									</p>									
+									</p>
+									<p class="moduleAnnotation">
+										<span class="moduleToolbarIconNumber">5</span>
+										<span class="moduleToolbar">Activate After Creation</span>
+										<span>If selected then the overlay will be activated after it has been created. If not selected the overlay will be saved as a draft and you will have to manually activate it.</span>
+									</p>
+									<blockquote>By default when an overlay is created it is activated for day/night or both as defined by the 'Available For' dropdown. If you DO NOT want the overlay to be activated by default then select 'No' in the 'Activate  After Creation' option.</blockquote>
 								</td>
 							</tr>
 							<tr>
@@ -1080,12 +1086,12 @@
 									<p class="moduleAnnotation">
 										<span class="moduleToolbarIconNumber">4</span>
 										<span class="moduleToolbar">Image Width</span>
-										<span>The width of image the overlay applies to</span>
+										<span>The width of image the overlay applies to. This will default to the width of the last captured image</span>
 									</p>
 									<p class="moduleAnnotation">
 										<span class="moduleToolbarIconNumber">5</span>
 										<span class="moduleToolbar">Image Height</span>
-										<span>The height of image the overlay applies to</span>
+										<span>The height of image the overlay applies to. This will default to the width of the last captured image</span>
 									</p>									
 								</td>
 							</tr>
@@ -1096,7 +1102,7 @@
 					
 					<h4>Deleting an overlay</h4>
 					<p>To delete an overlay select the required overlay and click the delete buttton.</p>
-					
+					<blockquote>NOTE: You cannot delete an overlay if it is currenty active. You must activate another overlay before deleting it.</blockquote>
 					<summary></summary>
 
 				</details>

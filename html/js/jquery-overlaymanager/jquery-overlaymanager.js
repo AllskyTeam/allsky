@@ -130,7 +130,7 @@
                                 <a href="#oe-editor-tab1"  role="tab" data-toggle="tab" id="oe-overlay-editor-tab1">Overlay</a>\
                             </li>\
                             <li role="presentation">\
-                                <a href="#oe-exposure-tab2"  role="tab" data-toggle="tab">Options</a>\
+                                <a href="#oe-exposure-tab2"  role="tab" data-toggle="tab">Activate</a>\
                             </li>\
                         </ul>\
                         <div class="tab-content">\
@@ -222,9 +222,9 @@
                                         <div class="row">\
                                             <div class="col-md-12 col-sm-12 col-xs-12">\
                                                 <div class="form-group ">\
-                                                    <label class="control-label ">Time of Day</label>\
+                                                    <label class="control-label ">Available For</label>\
                                                     <select class="form-control ' + plugin.mmMetaData  + '" id="' + plugin.mmMetaTod + '" name="' + plugin.mmMetaTod + '" data-field="tod">\
-                                                        <option value="both">Both</option>\
+                                                        <option value="both">Day and Night</option>\
                                                         <option value="day">Daytime</option>\
                                                         <option value="night">Nighttime</option>\
                                                     </select>\
@@ -237,17 +237,17 @@
                             <div role="tabpanel" class="tab-pane" id="oe-exposure-tab2">\
                                 <div class="panel panel-default">\
                                     <div class="panel-heading">\
-                                        <h3 class="panel-title">Default Overlays</h3>\
+                                        <h3 class="panel-title">Active Overlays</h3>\
                                     </div>\
                                     <div class="panel-body">\
                                         <div class="row mt-2">\
                                             <div class="col-md-12 col-sm-12 col-xs-12">\
                                                 <div class="form-group ">\
-                                                    <label class="control-label " for="select">Daytime Overlay</label>\
+                                                    <label class="control-label " for="select">Daytime</label>\
                                                     <select class="select form-control ' + plugin.mmTODSelect + '" id="' + plugin.mmDaySelect + '" name="' + plugin.mmDaySelect + '"></select>\
                                                 </div>\
                                                 <div class="form-group ">\
-                                                    <label class="control-label " for="select1">Nighttime Overlay</label>\
+                                                    <label class="control-label " for="select1">Nighttime</label>\
                                                     <select class="select form-control ' + plugin.mmTODSelect + '" id="' + plugin.mmNightSelect + '" name="' + plugin.mmNightSelect + '"></select>\
                                                 </div>\
                                             </div>\
@@ -283,6 +283,7 @@
             plugin.mmNewDialogResolutionWidth = pluginPrefix + "-new-dialog-resolutionwidth";
             plugin.mmNewDialogResolutionHeight = pluginPrefix + "-new-dialog-resolutionheight";
             plugin.mmNewDialogTod = pluginPrefix + "-new-dialog-tod";
+            plugin.mmNewDialogActivate = pluginPrefix + "-new-dialog-activate";
             plugin.mmNewDialogSuggest = pluginPrefix + "-new-dialog-suggest";
             plugin.mmNewDialogAdvancedField = pluginPrefix + "-new-dialog-advanced";
 
@@ -340,14 +341,25 @@
                                                                 </div>\
                                                             </div>\
                                                             <div class="row">\
-                                                                <div class="col-md-4">\
+                                                                <div class="col-md-5">\
                                                                     <div class="form-group ">\
-                                                                        <label class="control-label " for="' + plugin.mmNewDialogTod + '">Time of Day</label>\
+                                                                        <label class="control-label " for="' + plugin.mmNewDialogTod + '">Available For</label>\
                                                                         <select class="select form-control ' + plugin.mmNewDialogAdvancedField + '" id="' + plugin.mmNewDialogTod + '" name="' + plugin.mmNewDialogTod + '">\
-                                                                            <option value="both">Both</option>\
+                                                                            <option value="both">Day and Night</option>\
                                                                             <option value="day">Daytime</option>\
                                                                             <option value="night">Nightime</option>\
                                                                         </select>\
+                                                                    </div>\
+                                                                </div>\
+                                                                <div class="col-md-7">\
+                                                                    <div class="form-group form-check">\
+                                                                        <label class="control-label " for="' + plugin.mmNewDialogActivate + '">Activate After Creation</label><br>\
+                                                                        <div class="switch-field boxShadow settingInput settingInputBoolean">\
+                                                                            <input id="' + plugin.mmNewDialogActivate + '-no" class="form-control" type="radio" name="' + plugin.mmNewDialogActivate + '" value="false">\
+                                                                            <label style="margin-bottom: 0px;" for="' + plugin.mmNewDialogActivate + '-no">No</label>\
+                                                                            <input id="' + plugin.mmNewDialogActivate + '-yes" class="form-control" type="radio" name="' + plugin.mmNewDialogActivate + '" value="true" checked="">\
+                                                                            <label style="margin-bottom: 0px;" for="' + plugin.mmNewDialogActivate + '-yes">Yes</label>\
+                                                                        </div>\
                                                                     </div>\
                                                                 </div>\
                                                             </div>\
@@ -600,6 +612,21 @@
                         cache: false,
                         async: false
                     });
+
+                    let activate = $('input[name=' + plugin.mmNewDialogActivate + ']:checked').val();
+                    activate = (activate?.toLowerCase?.() === 'true');
+                    if (activate) {
+                        let tod = $('#' + plugin.mmNewDialogTod).val();
+                        let day = $('#' + plugin.mmDaySelect).val();
+                        let night = $('#' + plugin.mmNightSelect).val();
+                        if (tod === 'day' || tod === 'both') {
+                            day = formData.data.filename + '.json';
+                        }
+                        if (tod === 'night' || tod === 'both') {
+                            night = formData.data.filename + '.json';                            
+                        }
+                        saveSettings(day, night);
+                    }
                     
                     let configManager = window.oedi.get('config');
                     configManager.loadOverlays();
@@ -646,17 +673,7 @@
             });
 
             $(document).on('click', '#' + plugin.mmConfigSave, (e) => {
-                let result = $.ajax({
-                    type: 'POST',
-                    url: 'includes/overlayutil.php?request=SaveSettings',
-                    data: {
-                        daytime: $('#' + plugin.mmDaySelect).val(),
-                        nighttime: $('#' + plugin.mmNightSelect).val()
-                    },
-                    dataType: 'json',
-                    cache: false,
-                    async: false
-                });
+                saveSettings($('#' + plugin.mmDaySelect).val(), $('#' + plugin.mmNightSelect).val());
                 $('#' + plugin.mmConfigSave).addClass('disabled');           
             });
 
@@ -664,6 +681,22 @@
                 updateNewFilename();
             });
 
+        }
+
+        var saveSettings = function(day, night) {
+            let result = $.ajax({
+                type: 'POST',
+                url: 'includes/overlayutil.php?request=SaveSettings',
+                data: {
+                    daytime: day,
+                    nighttime: night
+                },
+                dataType: 'json',
+                cache: false,
+                async: false
+            });
+
+            return result;
         }
 
         var destroyDialog = function() {

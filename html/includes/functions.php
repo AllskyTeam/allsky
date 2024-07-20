@@ -829,4 +829,26 @@ function getVariableOrDefault($a, $v, $d) {
 
 	return($d);
 }
+
+function getTOD() {
+	global $settings_array;
+
+	//$settings_array = readSettingsFile();
+
+	$angle = getVariableOrDefault($settings_array, 'angle', -6);
+	$lat = getVariableOrDefault($settings_array, 'latitude', "");
+	$lon = getVariableOrDefault($settings_array, 'longitude', "");
+	$tod = 'Unknown';
+
+	if ($lat != "" && $lon != "") {
+		exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
+		if ($retval == 2) {
+			$tod = 'day';
+		} else if ($retval == 3) {
+			$tod = 'night';
+		}
+	}
+	
+	return $tod;
+}
 ?>

@@ -125,6 +125,36 @@ class OECONFIG {
                         overlay: this.#selectedOverlay
                     });
                     this.dirty = false;                
+                },
+                error: function(xHR, Status, error) {
+                    if (xHR.responseText.length === 0) {
+                        /**
+                         * Something has gone badly wrong - The active overlay doesnt exist so we will set the active
+                         * overlay to the defaulf for the camera then redirect the user back to the overlay manager
+                         * which will hopefully fix that issue
+                         */
+                        alert(' The active overlay does not exist, was it deleted? The active overlay will be reset to the default for your camera.\n\nPlease click OK to continue');
+                        
+                        let defaultOverlay = 'overlay-ZWO.json';
+                        if (this.overlays !== undefined) {
+                            if (this.overlays.brand !== undefined) {
+                                defaultOverlay = 'overlay-' + this.overlays.brand + '.json';
+                            }
+                        }
+
+                        let result = $.ajax({
+                            type: 'POST',
+                            url: 'includes/overlayutil.php?request=SaveSettings',
+                            data: {
+                                daytime: defaultOverlay,
+                                nighttime: defaultOverlay
+                            },
+                            dataType: 'json',
+                            cache: false,
+                            async: false
+                        });
+                        location.reload();
+                    }
                 }                
             });
         } catch (error) {

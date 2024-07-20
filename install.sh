@@ -2405,8 +2405,8 @@ restore_prior_files()
 		cp -a -r "${PRIOR_CONFIG_DIR}/overlay/images" "${ALLSKY_OVERLAY}"
 		cp -a -r "${PRIOR_CONFIG_DIR}/overlay/imagethumbnails" "${ALLSKY_OVERLAY}"
 
-		cp -a    "${PRIOR_CONFIG_DIR}/overlay/config/userfields.json" "${ALLSKY_OVERLAY}/config/"
-		cp -a    "${PRIOR_CONFIG_DIR}/overlay/config/oe-config.json" "${ALLSKY_OVERLAY}/config/"
+		cp -a    "${PRIOR_CONFIG_DIR}/overlay/config/userfields.json" "${ALLSKY_OVERLAY}/config"
+		cp -a    "${PRIOR_CONFIG_DIR}/overlay/config/oe-config.json" "${ALLSKY_OVERLAY}/config"
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
@@ -2416,7 +2416,7 @@ restore_prior_files()
 	ITEM="${SPACE}'config/$( basename "${Z}" )/$( basename "${X}" )' directory"
 	if [[ -d ${X} ]]; then
 		display_msg --log progress "${ITEM} (copying)"
-		cp -ar "${X}" "${MY_OVERLAY_TEMPLATES}"
+		cp -ar "${X}" "$( dirname "${MY_OVERLAY_TEMPLATES}" )"
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi

@@ -2434,10 +2434,6 @@ restore_prior_files()
 	ITEM="${SPACE}Overlay configuration file"
 	if [[ ! -f ${PRIOR_OVERLAY_FILE} ]] ||
 			cmp -s "${PRIOR_OVERLAY_FILE}" "${PRIOR_OVERLAY_REPO_FILE}" ; then
-# TODO: ALEX: FIX: Are both messages needed?  Where is the "default" created, and is
-# it the same as ${OVERLAY_NAME}?
-		MSG="${ITEM} (creating default)"
-		display_msg --log progress "${MSG}"
 		MSG="${SPACE}User didn't change prior overlay file; using new '${OVERLAY_NAME}'"
 		display_msg --logonly info "${MSG}"
 	else

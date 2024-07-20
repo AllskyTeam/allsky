@@ -2837,8 +2837,9 @@ do_restore()
 	fi
 
 	if [[ -n ${PRIOR_WEBSITE_DIR} ]]; then
+		display_msg --log progress "${SPACE}Local Website files:"
 
-		ITEM="${SPACE}timelapse videos"
+		ITEM="${SPACE}${SPACE}timelapse videos"
 		D="${ALLSKY_WEBSITE}/videos/thumbnails"
 		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/videos"
 		count=$( get_count "${ALLSKY_WEBSITE}/videos" 'allsky-*' )
@@ -2849,7 +2850,7 @@ do_restore()
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		fi
 
-		ITEM="${SPACE}keograms"
+		ITEM="${SPACE}${SPACE}keograms"
 		D="${ALLSKY_WEBSITE}/keograms/thumbnails"
 		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/keograms"
 		count=$( get_count "${ALLSKY_WEBSITE}/keograms" 'keogram-*' )
@@ -2860,7 +2861,7 @@ do_restore()
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		fi
 
-		ITEM="${SPACE}startrails"
+		ITEM="${SPACE}${SPACE}startrails"
 		D="${ALLSKY_WEBSITE}/startrails/thumbnails"
 		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/startrails"
 		count=$( get_count "${ALLSKY_WEBSITE}/startrails" 'startrails-*' )
@@ -2871,7 +2872,7 @@ do_restore()
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		fi
 
-		ITEM="${SPACE}'myFiles' directory"
+		ITEM="${SPACE}${SPACE}'myFiles' directory"
 		D="${ALLSKY_WEBSITE}/myFiles"
 		if [[ -d ${D} ]]; then
 			count=$( get_count "${D}" '*' )
@@ -2883,9 +2884,10 @@ do_restore()
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		fi
 
-		ITEM="${SPACE}Local Website directory"
-		display_msg --log progress "${ITEM} (removing)"
-		rm -fr "${ALLSKY_WEBSITE}"
+#xx TODO: huh? why remove it?
+#xx		ITEM="${SPACE}${SPACE}Local Website directory"
+#xx		display_msg --log progress "${ITEM} (removing)"
+#xx		rm -fr "${ALLSKY_WEBSITE}"
 	fi
 
 	# Since we'll be running a new Allsky, start off with clean log files.
@@ -2919,7 +2921,8 @@ do_restore()
 	fi
 
 	if [[ ${WAS_MOUNTED} == "true" ]]; then
-		# Remount ${ALLSKY_TMP}
+		# Remounts ${ALLSKY_TMP}
+		display_msg --log progress "Re-mounting '${ALLSKY_TMP}'."
 		sudo mount -a
 	fi
 

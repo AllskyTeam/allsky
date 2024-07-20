@@ -94,7 +94,7 @@ function checkType($fieldName, $value, $old, $label, $type, &$shortened=null) {
 // ============================================= The main function.
 function DisplayAllskyConfig() {
 	global $formReadonly, $settings_array;
-	global $hasLocalWebsite, $hasRemoteWebsite;
+	global $useLocalWebsite, $useRemoteWebsite;
 	global $debug;
 	global $lastChangedName;				// name of json setting
 	global $lastChanged;
@@ -115,10 +115,6 @@ function DisplayAllskyConfig() {
 	$bullet = "<div class='bullet'>*</div>";
 	$showIcon = "<i class='fa fa-chevron-down fa-fw'></i>";
 	$hideIcon = "<i class='fa fa-chevron-up fa-fw'></i>";
-
-	//$hideIcon = "<i class='fa-solid fa-xl fa-toggle-on'></i>";
-	//$showIcon = "<i class='fa-solid fa-xl fa-toggle-off'></i>";
-
 
 	$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
 	$settings_file = getSettingsFile();

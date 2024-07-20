@@ -538,13 +538,13 @@ echo "<script>console.log('Updated $fileName');</script>";
 					}
 
 					// If there's a website let it know of the changes.
-					if (($changesMade || $fromConfiguration) && ($hasLocalWebsite || $hasRemoteWebsite)) {
+					if (($changesMade || $fromConfiguration) && ($useLocalWebsite || $useRemoteWebsite)) {
 						$CMD = "sudo --user=" . ALLSKY_OWNER . " " . ALLSKY_SCRIPTS;
 
 						$moreArgs = "";
 						if (! $twilightDataChanged)
 							$moreArgs .= " --settingsOnly";
-						if (! $cameraChanged)
+						if ($cameraChanged)
 							$moreArgs .= " --allFiles";
 
 						// postData.sh will output necessary messages.

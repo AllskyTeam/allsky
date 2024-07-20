@@ -14,7 +14,7 @@ source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 
-usage_and_exit()
+function usage_and_exit()
 {
 	local RET=${1}
 	{
@@ -26,6 +26,26 @@ usage_and_exit()
 		echo "      '--allfiles' causes all 'view settings' files to be uploaded"
 	} >&2
 	exit "${RET}"
+}
+
+function upload_file()
+{
+	local WHERE="${1}"
+	local FILE_TO_UPLOAD="${2}"
+	local DIRECTORY="${3}"		# Directory to put file in
+	if [[ ! -f ${FILE_TO_UPLOAD} ]]; then
+		local MSG="File to upload '${FILE_TO_UPLOAD}' - file not found."
+		echo -e "${RED}${ME}: ERROR: ${MSG}.${NC}" >&2
+		if [[ ${FROM_WEBUI} == "false" ]]; then
+			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${MSG}"
+		fi
+		return 1
+	fi
+
+	[[ ${DEBUG} == "true" ]] && echo "Uploading ${FILE_TO_UPLOAD} to ${WHERE:-everywhere}"
+	#shellcheck disable=SC2086
+	upload_all ${SILENT} ${WHERE} "${FILE_TO_UPLOAD}" "${DIRECTORY}" "" "PostData"
+	return $?
 }
 
 # If called from the WebUI, it displays our output so don't call addMessage.sh.
@@ -86,7 +106,7 @@ if [[ "$( settings ".useremoteserver" )" == "true" ]]; then
 	WHERE_TO="remote server"
 fi
 
-if [[ -z ${WEBS} && ${USE_REMOTE_SERVER} == "false" ]]; then
+if [[ -z ${WHERE_TO} ]]; then
 	if [[ ${ON_TTY} == "true" ]]; then
 		echo -e "\nWARNING: No action taken because no Websites are enabled.\n" >&2
 		exit 1
@@ -149,8 +169,7 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 		today="$( date +%Y-%m-%d )"
 	fi
 
-	FILE="data.json"
-	OUTPUT_FILE="${ALLSKY_TMP}/${FILE}"
+	DATA_FILE="${ALLSKY_TMP}/data.json"
 	{
 		if [[ $( settings ".takedaytimeimages" ) == "true" ]]; then
 			D="true"
@@ -169,55 +188,29 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 		echo "\"takedaytimeimages\": \"${D}\"",
 		echo "\"takenighttimeimages\": \"${N}\""
 		echo "}"
-	} > "${OUTPUT_FILE}"
+	} > "${DATA_FILE}"
+
+	# Some remote servers may want to see this file so upload everywhere.
+	upload_file "" "${DATA_FILE}" ""		# Goes in top-level directory
 fi
-
-
-function upload_file()
-{
-	local WHERE="${1}"
-	local FILE_TO_UPLOAD="${2}"
-	local DIRECTORY="${3}"		# Directory to put file in
-	if [[ ! -f ${FILE_TO_UPLOAD} ]]; then
-		local MSG="File to upload '${FILE_TO_UPLOAD}' not found."
-		echo -e "${RED}${ME}: ERROR: ${MSG}.${NC}" >&2
-		if [[ ${FROM_WEBUI} == "false" ]]; then
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${MSG}"
-		fi
-		return 1
-	fi
-
-	[[ ${DEBUG} == "true" ]] && echo "Uploading ${FILE_TO_UPLOAD} to ${WHERE:-everywhere}"
-	#shellcheck disable=SC2086
-	upload_all ${SILENT} ${WHERE} "${FILE_TO_UPLOAD}" "${DIRECTORY}" "" "PostData"
-	return $?
-}
 
 # These files go in ${VIEW_DIR} so the user can display their settings.
 # This directory is in the root of the Allsky Website.
 # Assume if the first upload fails they all will, so exit.
-[[ -n ${WEBS} ]] && upload_file "${WEBS}" \
-		"${SETTINGS_FILE}" \
-		"${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}" \
-	|| exit $?
+if [[ -n ${WEBS} ]]; then
+	upload_file "${WEBS}" "${SETTINGS_FILE}" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}" || exit $?
 
-if [[ -n ${WEBS} && ${ALL_FILES} == "true" ]]; then
-	for file in \
+	if [[ ${ALL_FILES} == "true" ]]; then
+		for file in \
 			"${OPTIONS_FILE}" \
 			"${ALLSKY_WEBUI}/includes/allskySettings.php" \
 			"${ALLSKY_DOCUMENTATION}/css/custom.css" 
-	do
-		upload_file "${WEBS}" "${file}" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
-	done
-fi
+		do
+			upload_file "${WEBS}" "${file}" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
+		done
+	fi
 
-if [[ ${SETTINGS_ONLY} == "false" ]]; then
-	# Some remote servers may want to see this file so upload everywhere.
-	upload_file "" "${OUTPUT_FILE}" ""		# Goes in top-level directory
-fi
-
-if [[ ${FROM_WEBUI} == "true" ]]; then
-	echo "Uploaded configuration files to ${WHERE_TO}."
+	[[ ${FROM_WEBUI} == "true" ]] && echo "Uploaded configuration files to ${WHERE_TO}."
 fi
 
 exit 0

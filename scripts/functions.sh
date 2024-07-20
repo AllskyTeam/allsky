@@ -348,9 +348,10 @@ function get_connected_camera_models()
 	local PATH="${PATH}:${ALLSKY_UTILITIES}"
 	gawk -v TYPE="${TYPE}" -v FULL="${FULL}" --field-separator="\t" '
 		{
-			if ($1 != TYPE) next;
+			camera_type = $1;
+			if (camera_type != TYPE && TYPE != "both") next;
 
-			if (TYPE == "ZWO") {
+			if (camera_type == "ZWO") {
 				if (FULL == "true") {
 					print $0;
 				} else {

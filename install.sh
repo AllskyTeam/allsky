@@ -883,7 +883,7 @@ prompt_for_hostname()
 # Do every time - doesn't hurt to re-do them.
 set_permissions()
 {
-	display_msg --log progress "Setting permissions on web-related files."
+	display_msg --log progress "Setting permissions on various files."
 
 	# Make sure the currently running user is in the right groups.
 	# "sudo" allows them to run sudo on anything.
@@ -3158,6 +3158,13 @@ install_overlay()
 	# Some of these will get overwritten later if the user has prior versions.
 	cp -ar "${ALLSKY_REPO}/overlay" "${ALLSKY_REPO}/modules" "${ALLSKY_CONFIG}"
 
+	# MY_OVERLAY_TEMPLATES is not in ALLSKY_REPI and we haven't restored
+	# anything yet, so create the directory.
+	mkdir -p "${MY_OVERLAY_TEMPLATES}"
+#xx TODO: these are done in set_permissions, so remove from here:
+#xx	sudo chgrp "${WEBSERVER_GROUP}" "${MY_OVERLAY_TEMPLATES}"
+#xx	sudo chmod 775 "${MY_OVERLAY_TEMPLATES}"	
+
 	# Globals: SENSOR_WIDTH, SENSOR_HEIGHT, FULL_OVERLAY_NAME, SHORT_OVERLAY_NAME, OVERLAY_NAME
 	SENSOR_WIDTH="$( settings ".sensorWidth" "${CC_FILE}" )"
 	SENSOR_HEIGHT="$( settings ".sensorHeight" "${CC_FILE}" )"
@@ -3181,12 +3188,6 @@ install_overlay()
 	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
-
-	if [[ ! -d ${MY_OVERLAY_TEMPLATES} ]]; then
-		sudo mkdir -p "${MY_OVERLAY_TEMPLATES}"
-	fi
-	sudo chgrp -R "${WEBSERVER_GROUP}" "${MY_OVERLAY_TEMPLATES}"
-	sudo chmod -R 775 "${MY_OVERLAY_TEMPLATES}"	
 }
 
 

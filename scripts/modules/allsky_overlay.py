@@ -426,7 +426,7 @@ class ALLSKYOVERLAY:
     def _getFont(self, font, fontSize):
 
         tt = '/usr/share/fonts/truetype/msttcorefonts'
-        systemFontMap = {
+        systemFontMapCased = {
             'Arial':           {'fontpath': f'{tt}/Arial.ttf'},
             'Arial Black':     {'fontpath': f'{tt}/Arial_Black.ttf'},
             'Times New Roman': {'fontpath': f'{tt}/Times_New_Roman.ttf'},
@@ -438,8 +438,22 @@ class ALLSKYOVERLAY:
             'Comic Sans MS':   {'fontpath': f'{tt}/comic.ttf'},
         }
 
+        systemFontMap = {
+            'arial':           {'fontpath': f'{tt}/Arial.ttf'},
+            'arial black':     {'fontpath': f'{tt}/Arial_Black.ttf'},
+            'times new roman': {'fontpath': f'{tt}/Times_New_Roman.ttf'},
+            'courier new':     {'fontpath': f'{tt}/cour.ttf'},
+            'verdana':         {'fontpath': f'{tt}/Verdana.ttf'},
+            'trebuchet ms':    {'fontpath': f'{tt}/trebuc.ttf'},
+            'impact':          {'fontpath': f'{tt}/Impact.ttf'},
+            'georgia':         {'fontpath': f'{tt}/Georgia.ttf'},
+            'comic sans ms':   {'fontpath': f'{tt}/comic.ttf'},
+        }
+        
         preMsg = f"Loading '{font}' font, size {fontSize} pixels"
         fontPath = None
+
+        font = font.lower()
         if font in self._overlayConfig['fonts']:
             fontData = self._overlayConfig['fonts'][font]
             fontConfigPath = fontData['fontPath']
@@ -451,7 +465,7 @@ class ALLSKYOVERLAY:
             if font in systemFontMap:
                 fontPath = systemFontMap[font]['fontpath']
             else:
-                self._log(0, "ERROR: System font '{font}' not found in internal map.", sendToAllsky=True)
+                self._log(0, f"ERROR: System font '{font}' not found in internal map.", sendToAllsky=True)
 
         if fontPath is not None:
             if fontSize is None:

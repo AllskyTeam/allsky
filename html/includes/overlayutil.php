@@ -520,7 +520,12 @@ class OVERLAYUTIL
                                 fwrite($file, $contents);
                                 fclose($file);
 
-                                $configFileName = $this->overlayPath . '/config/overlay.json';
+                                $fontPath = str_replace($this->overlayPath, "", $fileName);
+                                $key = basename($fileName);
+                                $key = str_replace($validExtenstions, "", $key);
+                                $key = str_replace(".", "", $key);
+
+                               /* $configFileName = $this->overlayPath . '/config/overlay.json';
                                 $config = file_get_contents($configFileName);
                                 $config = json_decode($config);
 
@@ -537,6 +542,7 @@ class OVERLAYUTIL
                                 $formattedJSON = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
                                 file_put_contents($configFileName, $formattedJSON);
+                                */
 
                                 $result[] = array(
                                     'key' => $key,

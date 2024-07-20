@@ -138,6 +138,55 @@ class OEUIMANAGER {
     }
 
     resetUI() {
+
+        $(window).off('resize');
+        this.#oeEditorStage.off('dragmove')
+        this.#oeEditorStage.off('wheel');
+        this.#oeEditorStage.off('click tap');
+        this.#overlayLayer.off('dblclick dbltap');
+        this.#overlayLayer.off('dragstart');
+        this.#overlayLayer.off('dragmove');
+        this.#overlayLayer.off('dragend');
+    
+        $(document).off('dblclick', '.draggable');
+        $(document).off('click', '#oe-item-list');
+        $(document).off('click', '.oe-list-delete');
+        $(document).off('click', '.oe-all-list-add');
+        $(document).off('click', '.oe-list-add');
+        $(document).off('click', '#oe-field-dialog-add-field');
+        $(document).off('click', '.oe-list-edit');
+        $(document).off('click', '#oe-field-save');
+        $(document).off('click', '#oe-item-list-dialog-save');
+        $(document).off('click', '#oe-item-list-dialog-close');
+        $(document).off('click', '#oe-save');
+        $(document).off('click', '#oe-test-mode');
+        $(document).off('click', '#oe-delete');
+        $(document).off('click', '#oe-add-text');
+        $(document).off('click', '#oe-add-image');
+        $(document).off('click', '#oe-options');
+        $('#optionsdialog a[data-toggle="tab"]').off('shown.bs.tab');
+        $(document).off('click', '#optionsdialognewoverlay');
+        $(document).off('click', '.oe-options-overlay-edit');
+        $(document).off('click', '#oe-defaults-save');
+        $(document).off('click', '#oe-font-dialog-add-font');
+        $(document).off('click', '#oe-font-dialog-upload-font');
+        $(document).off('click', '#oe-upload-font');
+        $('#fontlisttable').off('click', '.oe-list-font-use');
+        $('#fontlisttable').off('click', '.oe-list-font-remove');
+        $(document).off('click', '.oe-list-font-delete');
+        $(document).off('click', '.oe-zoom');
+        $(document).off('click', '#oe-show-image-manager');
+        $(document).off('oe-imagemanager-add');
+        $(document).off('click', '#oe-toobar-debug-button');
+        $('.modal').off('shown.bs.modal');
+        $(window).off('resize');
+        $(document).off('click', '#oe-field-errors');
+        $(document).off('click', '#oe-field-errors-dialog-close');
+        $(document).off('click', '.oe-field-errors-dialog-delete');
+        $(document).off('click', '.oe-field-errors-dialog-fix');
+        $(document).off('oe-config-updated');
+        $(document).off('click','#oe-show-overlay-manager');
+
         this.#overlayLayer.destroyChildren();
         this.#transformer = new Konva.Transformer({
             resizeEnabled: false
@@ -159,6 +208,10 @@ class OEUIMANAGER {
             visible: false
         });
         this.#overlayLayer.add(this.#snapRectangle);
+
+        this.#transformer.off('transformend');
+
+
     }
 
     buildUI() {
@@ -838,6 +891,7 @@ class OEUIMANAGER {
 
         $(document).on('click', '#oe-add-text', (event) => {
             event.stopPropagation();
+            event.preventDefault();
             let shape = this.#fieldManager.addField('text');
             this.#overlayLayer.add(shape);
 
@@ -1167,7 +1221,9 @@ class OEUIMANAGER {
                 document.fonts.add(fontFace);
                 this.setupFonts();
                 this.#configManager.setValue('fonts.' + fontName.toLowerCase() + '.fontPath', fontPath);
-                $('#fontlisttable').DataTable().ajax.reload( null, false );    
+                $('#fontlisttable').DataTable().ajax.reload( null, false ); 
+                this.#configManager.dirty = true;
+                this.updateToolbar();
             }.bind(this));
         }.bind(this));
 
@@ -1189,6 +1245,8 @@ class OEUIMANAGER {
             this.#fieldManager.switchFontUsed(fontName);
             this.setupFonts();
             $('#fontlisttable').DataTable().ajax.reload( null, false );
+            this.#configManager.dirty = true;
+            this.updateToolbar();            
         }.bind(this));
 
         $(document).on('click', '.oe-list-font-delete', (event) => {
@@ -1198,6 +1256,8 @@ class OEUIMANAGER {
                 if (fontName !== 'undefined') {
                     let uiManager = window.oedi.get('uimanager');
                     uiManager.deleteFont(fontName);
+                    this.#configManager.dirty = true;
+                    this.updateToolbar();
                 }
             }
         });
@@ -1744,7 +1804,8 @@ class OEUIMANAGER {
             }
             $('#fontuploadsubmit').removeClass('disabled');
         });
-
+        
+        $('#fontuploadsubmit').off('click');
         $('#fontuploadsubmit').on('click', (e) => {
             e.preventDefault();
             $.ajax({

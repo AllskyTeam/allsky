@@ -988,11 +988,13 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 							break;
 						}
 					}
-					$popup = "";
-					if ($default == "") $default="[blank]";
-					$popup .= "Default=$default";
+					if ($default == "") $popup="No default";
+					else $popup = "Default=$default";
 					if ($minimum !== "") $popup .= "\nMinimum=$minimum";
-					if ($maximum !== "") $popup .= "\nMaximum=$maximum";
+					if ($maximum !== "") {
+						if ($maximum === "none") $popup .= "\nNo maximum";
+						else $popup .= "\nMaximum=$maximum";
+					}
 
 					$rspan="";
 					$cspan="";

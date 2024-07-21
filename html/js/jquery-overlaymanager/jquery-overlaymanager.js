@@ -141,17 +141,21 @@
                                     </div>\
                                     <div class="panel-body">\
                                         <div class="form-group">\
-                                            <label for="exampleInputEmail1">Overlay To Edit</label>\
+                                            <label for="' + plugin.mmEditSelect + '">Overlay To Edit</label>\
                                             <div class="row">\
-                                                <div class="col-md-8">\
+                                                <div class="col-md-12">\
                                                     <select class="form-control" id="' + plugin.mmEditSelect + '" name="' + plugin.mmEditSelect + '">\
                                                         <option value="day">Daytime Configuration</option>\
                                                         <option value="night">Nighttime Configuration</option>\
                                                     </select>\
                                                 </div>\
-                                                <div class="col-md3">\
-                                                    <div class="btn" id="' + plugin.mmNewDialogNew + '" data-toggle="tooltip" data-container="body" data-placement="top" title="New Overlay"><i class="fa-regular fa-lg fa-square-plus"></i></div>\
-                                                    <div class="btn" id="' + plugin.mmNewDialogDelete + '" data-toggle="tooltip" data-container="body" data-placement="top" title="Delete Overlay"><i class="fa-solid fa-lg fa-trash-can"></i></div>\
+                                            </div>\
+                                            <div class="row mt-3">\
+                                                <div class="col-md-6">\
+                                                    <button type="button" class="btn btn-primary" id="' + plugin.mmNewDialogNew + '"><i class="fa-regular fa-lg fa-square-plus"></i> Add</button>\
+                                                </div>\
+                                                <div class="col-md-6">\
+                                                    <button type="button" class="btn btn-danger pull-right" id="' + plugin.mmNewDialogDelete + '"><i class="fa-solid fa-lg fa-trash-can"></i> Delete</button>\
                                                 </div>\
                                             </div>\
                                         </div>\

@@ -380,7 +380,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 	long timeout = ((cg->currentExposure_us * 2) / US_IN_MS) + 5000;	// timeout is in ms
 
 	// Sanity check.
-	if (cg->HB.useHistogram && cg->currentAutoExposure == ASI_TRUE)
+	if (cg->HB.useHistogram && cg->currentAutoExposure)
 		Log(0, "  > %s: ERROR: HB.useHistogram AND currentAutoExposure are both set\n", cg->ME);
 
 	if (cg->ZWOexposureType != ZWOsnap)
@@ -1232,6 +1232,7 @@ int main(int argc, char *argv[])
 					length_in_units(CG.currentMaxAutoExposure_us, true));
 				CG.currentExposure_us = CG.currentMaxAutoExposure_us;
 			}
+
 			// Don't use camera auto-exposure since we mimic it ourselves.
 			CG.HB.useHistogram = CG.dayAutoExposure;
 			// With the histogram method we NEVER use ZWO auto exposure - either the user said
@@ -1361,13 +1362,21 @@ int main(int argc, char *argv[])
 		{
 			setControl(CG.cameraNumber, ASI_WB_R, CG.currentWBR, CG.currentAutoAWB ? ASI_TRUE : ASI_FALSE);
 			setControl(CG.cameraNumber, ASI_WB_B, CG.currentWBB, CG.currentAutoAWB ? ASI_TRUE : ASI_FALSE);
+
+			if (! CG.currentAutoAWB && ! CG.takeDarkFrames)
+			{
+				// We only read the actual values if in auto white balance; since we're not,
+				// set the "last" values to the user-specified numbers.
+				CG.lastWBR = CG.currentWBR;
+				CG.lastWBB = CG.currentWBB;
+			}
+			else
+			{
+				CG.lastWBR = NOT_SET;
+				CG.lastWBB = NOT_SET;
+			}
 		}
-		else if (! CG.currentAutoAWB && ! CG.takeDarkFrames)
-		{
-			// We only read the actual values if in auto white balance; since we're not, get them now.
-			CG.lastWBR = CG.currentWBR;
-			CG.lastWBB = CG.currentWBB;
-		}
+
 		if (CG.isCooledCamera)
 		{
 			setControl(CG.cameraNumber, ASI_COOLER_ON, CG.currentEnableCooler ? ASI_TRUE : ASI_FALSE, ASI_FALSE);

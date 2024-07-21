@@ -26,7 +26,7 @@ function DisplayLiveView($image_name, $delay, $daydelay, $nightdelay, $darkframe
 			var newImg = new Image();
 			newImg.src = '<?php echo $image_name ?>?_ts=' + new Date().getTime();
 			newImg.id = "current";
-			newImg.style = "width: 100%";
+			newImg.className = "current";
 			newImg.decode().then(() => {
 				$("#live_container").empty().append(newImg);
 			}).catch((err) => {

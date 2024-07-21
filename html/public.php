@@ -34,19 +34,14 @@ initialize_variables();		// sets some variables
 		var newImg = new Image();
 		newImg.src = '<?php echo $image_name ?>?_ts=' + new Date().getTime();
 		newImg.id = "current";
-		newImg.class = "current";
-
+		newImg.className = "current";
 		newImg.decode().then(() => {
-			$("#current").attr('src', newImg.src)
-				.attr("id", "current")
-				.attr("class", "current")
-				.on('load', function () {
-					if (!this.complete || typeof this.naturalWidth == "undefined" || this.naturalWidth == 0) {
-						console.log('broken image!');
-					} else {
-						$("#live_container").empty().append(newImg);
-					}
-				});
+				$("#live_container").empty().append(newImg);
+			}).catch((err) => {
+				if (!this.complete || typeof this.naturalWidth == "undefined" || this.naturalWidth == 0) {
+					console.log('broken image: ', err);
+				}
+			});
 		}).finally(() => {
 			// Use tail recursion to trigger the next invocation after `$delay` milliseconds
 			setTimeout(function () { getImage(); }, <?php echo $delay ?>);

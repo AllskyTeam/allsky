@@ -600,9 +600,11 @@ do
 
 
 		"uselocalwebsite")
-			if [[ ${NEW_VALUE} == "true" && ! -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
-				# No prior config file.  This should never happen, but just in case...
-				prepare_local_website ""
+			if [[ ${NEW_VALUE} == "true" ]]; then
+				if [[ ! -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
+					prepare_local_website ""
+				fi
+				"${ALLSKY_SCRIPTS}/postData.sh" --fromWebUI
 			fi
 			;;
 

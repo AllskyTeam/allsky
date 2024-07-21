@@ -17,7 +17,7 @@ usage_and_exit()
 	local RET=${1}
 	{
 		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-		echo "Usage: ${ME} [--help] --website  and/or  --server"
+		echo "Usage: ${ME} [--help] [--debug] --website  and/or  --server"
 		[[ ${RET} -eq 2 ]] && echo -e "\nMust specify --website and/or --server\n"
 		[[ ${RET} -ne 0 ]] && echo -e "${NC}"
 	} >&2
@@ -58,10 +58,12 @@ done
 [[ ${DO_WEBSITE} == "false" && ${DO_SERVER} == "false" ]] && usage_and_exit 2
 
 
-# Parse the output and provide fixes when possible.
+# Parse the output file and provide fixes when possible.
 parse_output()
-{	local OUTPUT="${1}"
+{	local FILE="${1}"
 	local TYPE="${2}"
+
+	[[ ! -s ${FILE} ]] && return	# empty file - shouldn't happen...
 
 	local PROTOCOL  DIR  HOST  USER  STRING  S  SSL
 
@@ -79,7 +81,7 @@ parse_output()
 
 	# Parse output.
 	STRING="host name resolve timeout"
-	if grep --ignore-case --silent "${STRING}" "${OUTPUT}" ; then
+	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
 		HOST="$( settings ".${HOST}" "${ENV_FILE}" )"
 		echo "* Host name '${HOST}' not found."
 		echo "  FIX: Check the spelling of the server."
@@ -88,13 +90,13 @@ parse_output()
 	fi >&2
 
 	STRING="User cannot log in|Login failed|Login incorrect"
-	if grep -E --ignore-case --silent "${STRING}" "${OUTPUT}" ; then
+	if grep -E --ignore-case --silent "${STRING}" "${FILE}" ; then
 		echo "* Unable to login."
 		echo "  FIX: Make sure the username and password are correct."
 	fi >&2
 
 	STRING="max-retries exceeded"
-	if grep --ignore-case --silent "${STRING}" "${OUTPUT}" ; then
+	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
 		echo "* Unable to login for unknown reason."
 		echo "  FIX: Make sure the port is correct and your network is working."
 		PROTOCOL="$( settings ".${PROTOCOL}" )"
@@ -108,9 +110,9 @@ parse_output()
 	fi >&2
 
 	STRING="The system cannot find the file specified"
-	if grep --ignore-case --silent "${STRING}" "${OUTPUT}" ; then
+	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
 		STRING="is current directory"
-		if grep --ignore-case --silent "${STRING}" "${OUTPUT}" ; then
+		if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
 			echo "* Login succeeded but unknown location found."
 		else
 			# This should never happen.
@@ -130,7 +132,7 @@ parse_output()
 
 	# Certificate-related issues
 	STRING="The authenticity of host"
-	if grep --ignore-case --silent "${STRING}" "${OUTPUT}" ; then
+	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
 		HOST="$( settings ".${HOST}" "${ENV_FILE}" )"
 		USER="$( settings ".${USER}" "${ENV_FILE}" )"
 		PROTOCOL="$( settings ".${PROTOCOL}" )"
@@ -147,7 +149,7 @@ parse_output()
 	fi >&2
 
 	STRING="certificate common name doesn't match requested host name"
-	if grep --ignore-case --silent "${STRING}" "${OUTPUT}" ; then
+	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
 		echo "* Certificate verification issue."
 		echo "  FIX: Do one of the following on your Pi:"
 		echo "    echo 'set ssl:check-hostname' > ~/.lftprc"
@@ -156,7 +158,7 @@ parse_output()
 	fi >&2
 
 	STRING="Not trusted"
-	if grep --ignore-case --silent "${STRING}" "${OUTPUT}" ; then
+	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
 		SSL="set ssl:verify-certificate no"
 		echo "* Certificate verification issue."
 		echo "  FIX: do one of the following on your Pi:"
@@ -166,10 +168,10 @@ parse_output()
 	fi >&2
 
 
-	if [[ -s ${OUTPUT} || ${DEBUG} == "true" ]]; then
-		echo -e "\n==================== OUTPUT:"
-		indent "${YELLOW}$( < "${OUTPUT}" )${NC}\n"
-	fi >&2
+	{
+		echo -e "\n=================== RAW OUTPUT:"
+		indent "${YELLOW}$( < "${FILE}" )${NC}\n"
+	} >&2
 }
 
 
@@ -184,7 +186,7 @@ do_test()
 	bTEST_FILE="$( basename "${TEST_FILE}" )"
 	echo "Test file for ${TYPE}" > "${TEST_FILE}" || return 1
 
-	OUTPUT_FILE="/tmp/${ME}-${TYPE}.txt"
+	OUTPUT_FILE="${ALLSKY_TMP}/${ME}-${TYPE}.txt"
 
 	if [[ ${TYPE} == "REMOTEWEBSITE" ]]; then
 		HUMAN_TYPE="Remote Website"
@@ -282,8 +284,8 @@ if [[ -s ${MSG_FILE} ]]; then
 	else
 		"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${M}"
 	fi
-	rm "${MSG_FILE}"
 fi
+rm -f "${MSG_FILE}"
 
 exit ${RET}
 

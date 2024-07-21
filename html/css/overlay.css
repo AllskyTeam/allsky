@@ -1,5 +1,5 @@
 :root {
-	--dark-text: #aaaaaa;
+    --dark-text: #aaaaaa;
 }
 
 .oe-flash {
@@ -15,7 +15,6 @@
 .oe-help dd {
     margin-bottom: 3px;
 }
-
 
 #oe-background-image {
     display: none;
@@ -112,7 +111,6 @@
 .pgGroupRow {
     background-color: #272727 !important;
 }
-
 
 .tooltip-wrapper {
     display: inline-block; /* display: block works as well */
@@ -251,7 +249,7 @@ div.dtsp-searchPane div.dtsp-topRow {
     margin-top: 20px;
 }
 
-  .oe-mm-wrapper {
+.oe-mm-wrapper {
     position: fixed;
     top: 0px;
     right: 0;
@@ -264,23 +262,22 @@ div.dtsp-searchPane div.dtsp-topRow {
     transition: all 0.1s cubic-bezier(0.7,0,0.3,1);
     transform: translate3d(410px,0,0);
     z-index: 9999;
-  }
-  .oe-mm-wrapper.active {
+}
+.oe-mm-wrapper.active {
     transform: translate3d(0px,0,0);
-  }
+}
   
-  .dark .oe-mm-wrapper {
+.dark .oe-mm-wrapper {
     background-color: #222;
-  }
+}
 
-  /* Buttons */
-  .oe-mm-trigger {
+/* Buttons */
+.oe-mm-trigger {
     position: fixed;
     top: 10px;
     right: 10px;
     width: 25px;
     height: 25px;
-    basckground-color: #fff;
     font-size: 20px;
     border: none;
     outline: none;
@@ -312,75 +309,70 @@ div.dtsp-searchPane div.dtsp-topRow {
     align-items: center;
     height: 25%;
     font-size: 2em;
-  }
+}
 
-  #oe-overlay-not-running .center-full {
+#oe-overlay-not-running .center-full {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100%;
     font-size: 2em;
-  }
+}
 
-  #oe-overlay-not-running .center,.center-full .center-paragraph {
+#oe-overlay-not-running .center,.center-full .center-paragraph {
     text-align: center;
     border: 3px solid green;
     background-color: rgba(0,0,0,0.3);
     padding: 15px;    
-  }
+}
 
-  .border-left {
+.border-left {
     border-left: 1px solid #666;
     margin-left: 5px;
-  }
+}
 
-  #oe-overlay-not-running small {
+#oe-overlay-not-running small {
     font-size: 50% !important;
-  }
+}
 
-  #oe-overlay-not-running p {
+#oe-overlay-not-running p {
     margin: 0px !important;
-  }
+}
 
-  #oe-overlay-not-running h1 {
+#oe-overlay-not-running h1 {
     margin-top: 10px !important;
     margin-bottom: 10px !important;
-  }
+}
 
-  #oe-overlay-disable {
+#oe-overlay-disable {
     position: absolute;
     width: 100%;
     height: 100%;
-	color: white;
+    color: white;
     background-color: rgba(0,0,0,0.5); 
     z-index: 2; 
-  }
+}
 
-  #oe-overlay-disable .center {
+#oe-overlay-disable .center {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 25%;
     font-size: 2em;
-  }
+}
 
-  #oe-overlay-disable .center .center-paragraph {
+#oe-overlay-disable .center .center-paragraph {
     text-align: center;
     border: 3px solid green;
     background-color: rgba(0,0,0,0.3);
     padding: 15px;    
-  }
+}
 
-  #oe-overlay-disable .center .center-paragraph h2 {
+#oe-overlay-disable .center .center-paragraph h2 {
     font-size: 2vw;
-  }
+}
 
-  #oe-overlay-disable .center .center-paragraph p {
+#oe-overlay-disable .center .center-paragraph p {
     font-size: 1.5vw;
     margin-top: 10px;
-  }
-
-  .border-left {
-    border-left: 1px solid #666;
-    margin-left: 5px;
-  }
+}

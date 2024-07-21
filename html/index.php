@@ -175,7 +175,6 @@ if ($useRemoteWebsite) {
 
 	<script src="js/bigscreen.min.js"></script>
 
-	<style> .current { width: 100%; } </style>
 	<script type="text/javascript">
 		// Inititalize theme to light
 		if (!localStorage.getItem("theme")) {
@@ -191,9 +190,6 @@ if ($useRemoteWebsite) {
 	<link rel="stylesheet" href="lib/codeMirror/codemirror.css">
 	<link rel="stylesheet" href="lib/codeMirror/monokai.min.css">
 	<script type="text/javascript" src="lib/codeMirror/codemirror.js"> </script>
-<!--
-	<script type="text/javascript" src="lib/codeMirror/shell.js"> </script>
--->
 <?php if ($useLocalWebsite || $useRemoteWebsite) { ?>
 	<script type="text/javascript" src="lib/codeMirror/json.js"> </script>
 <?php } ?>

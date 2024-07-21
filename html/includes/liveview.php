@@ -26,7 +26,7 @@ function DisplayLiveView($image_name, $delay, $daydelay, $nightdelay, $darkframe
 			var newImg = new Image();
 			newImg.src = '<?php echo $image_name ?>?_ts=' + new Date().getTime();
 			newImg.id = "current";
-			newImg.style = "width: 100%";
+			newImg.className = "current";
 			newImg.decode().then(() => {
 				$("#live_container").empty().append(newImg);
 			}).catch((err) => {
@@ -48,7 +48,7 @@ function DisplayLiveView($image_name, $delay, $daydelay, $nightdelay, $darkframe
 		<div class="panel-body">
 			<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
 			<div id="live_container" class="cursorPointer live_container" title="Click to make full-screen">
-				<img id="current" class="current" src="<?php echo $image_name ?>">
+				<img id="current" src="<?php echo $image_name ?>">
 			</div>
 		</div>
 	</div>

@@ -2330,7 +2330,11 @@ restore_prior_files()
 			display_msg --log info "${MSG}"
 			CONFIGURATION_NEEDED="${STATUS_NO_LAT_LONG}"
 		fi
-		mkdir -p "${ALLSKY_EXTRA}"		# default permissions is ok
+
+		# Default permissions for these are ok.
+		mkdir -p \
+			"${ALLSKY_EXTRA}" \
+			"${ALLSKY_CONFIG}/myFiles"
 
 		STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 		return			# Nothing left to do in this function, so return
@@ -2373,6 +2377,15 @@ restore_prior_files()
 		mv "${PRIOR_ALLSKY_DIR}/darks" "${ALLSKY_HOME}"
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+	fi
+
+	ITEM="${SPACE}'config/myFiles' directory"
+	if [[ -d ${PRIOR_CONFIG_DIR}/myFiles ]]; then
+		display_msg --log progress "${ITEM} (moving)"
+		mv "${PRIOR_CONFIG_DIR}/myFiles" "${ALLSKY_CONFIG}"
+	else
+		# Almost no one has this directory, so don't show to user.
+		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
 	fi
 
 	ITEM="${SPACE}'config/ssl' directory"
@@ -2486,6 +2499,19 @@ restore_prior_files()
 		cp -a "${PRIOR_CONFIG_DIR}/uservariables.sh" "${ALLSKY_CONFIG}"
 	# Don't bother with the "else" part since this file is very rarely used.
 	fi
+
+	ITEM="${SPACE}'myFiles' directory"
+	D="${PRIOR_WEBSITE_DIR}/myFiles"
+	if [[ -d ${D} ]]; then
+		count=$( get_count "${D}" '*' )
+		if [[ ${count} -gt 1 ]]; then
+			display_msg --log progress "${ITEM} (moving)"
+			mv "${D}"   "${ALLSKY_WEBSITE}"
+		fi
+	else
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+	fi
+
 
 
 	########## Website files
@@ -2746,26 +2772,8 @@ restore_prior_website_files()
 
 
 ####
-# High-level view of tasks for restore:
-#	Rename current release to "${ALLSKY_HOME}-${ALLSKY_VERSION}"
-#	Rename prior release to ${ALLSKY_HOME}
-#	Execute old release's installation script telling it it's a restore.
-	# If running in ${ALLSKY_HOME}		# us 1st time through
-	#	Make sure ${PRIOR_ALLSKY_DIR} exists
-	#		If not, warn user and exit:
-	#			"No prior version to restore from: ${PRIOR_ALLSKY_DIR} does not exist".
-	#	cp ${ME} /tmp
-	#	chmod 775 /tmp/${ME}
-	#	exec /tmp/${ME} --restore ${ALL_ARGS} ${ALLSKY_HOME}
-
-	# Else		# running from /tmp - do the actual work
-	#	Stop allsky
-	#	mv ${ALLSKY_HOME} ${ALLSKY_HOME}-new_tmp
-	#	mv ${ALLSKY_HOME}-OLD ${ALLSKY_HOME}
-	#	move images from ${ALLSKY_HOME}-new_tmp to ${ALLSKY_HOME}
-	#	move darks from ${ALLSKY_HOME}-new_tmp to ${ALLSKY_HOME}
-	#	move other stuff that was moved in install.sh from old to new
-
+# Restore the prior version of Allsky, but save this version.
+# Anything moved from the prior version to this version is moved back.
 RENAMED_DIR=""
 
 do_restore()
@@ -2794,13 +2802,11 @@ do_restore()
 		OK="false"
 	fi
 	if [[ ! -d ${PRIOR_ALLSKY_DIR} ]]; then
-		MSG+="no prior version"
-		MSG+=" exists in '${PRIOR_ALLSKY_DIR}'."
+		MSG+="no prior version exists in '${PRIOR_ALLSKY_DIR}'."
 		OK="false"
 	fi
 	if [[ -d ${RENAMED_DIR} ]]; then
-		MSG+="a restored version"
-		MSG+=" already exists in '${RENAMED_DIR}'."
+		MSG+="a restored version already exists in '${RENAMED_DIR}'."
 		OK="false"
 	fi
 	if [[ ${OK} == "false" ]]; then
@@ -2834,6 +2840,15 @@ do_restore()
 		mv "${ALLSKY_HOME}/darks" "${PRIOR_ALLSKY_DIR}"
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+	fi
+
+	ITEM="${SPACE}'config/myFiles' directory"
+	if [[ -d ${ALLSKY_CONFIG}/myFiles ]]; then
+		display_msg --log progress "${ITEM} (moving back)"
+		mv "${ALLSKY_CONFIG}/myFiles" "${PRIOR_CONFIG_DIR}"
+	else
+		# Few people have this directory, so don't show to user.
+		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
 	fi
 
 	if [[ -n ${PRIOR_WEBSITE_DIR} ]]; then

@@ -2173,6 +2173,13 @@ Oct 23 21:08:16 allsky allsky.sh[24948]: INFO: Module allsky_saveimage.py ran ok
 				<p>The module system is designed to be extended by developing custom modules.</p>
 				<details>
 					<summary></summary>
+					<blockquote>
+					Personal modules should be saved in the
+					<span class="fileName">~/allsky/config/myFiles/modules</span> directory
+					which you must create (<code>mkdir -p ~/allsky/config/myFiles/modules</code>).
+					<br>This directory is automatically propogated to new Allsky releases.
+					</blockquote>
+
 					<h2>Python Versions</h2>
 					<p>Modules are developed in
 						<a external="true" href="https://www.python.org/">Python</a>
@@ -2227,7 +2234,7 @@ Oct 23 21:08:16 allsky allsky.sh[24948]: INFO: Module allsky_saveimage.py ran ok
 							Markdown file with any special instructions required for the module.
 							If there are none do not include this file.</li>
 					</ul>
-					<blockquote>When specifying python libraries DO NOT include numpy
+					<blockquote>When specifying python libraries DO NOT include <strong>numpy</strong>
 						in ANY <span class="fileName">requirements.txt</span> file as
 						changing the version could cause issues with Allsky.</blockquote>
 
@@ -2245,14 +2252,14 @@ Oct 23 21:08:16 allsky allsky.sh[24948]: INFO: Module allsky_saveimage.py ran ok
 							is the main function that is called by the
 							<span class="managerName">Module Manager</span>.</li>
 					</ol>
-					<p>Every module MUST import the <strong>allsky_shared</strong> module.
+					<p>Every module MUST import the <a href="#allsky_shared"><strong>allsky_shared</a></strong> module.
 						This module is used to pass data from
 						the flow processor to each module.</p>
 
 					<h3>The Meta Data Variable</h3>
 					<blockquote>Please refer to the Boiler Plate example module for
 						more details on this variable.
-						The Boiler Plate example includes all of the available options.</blockquote>
+						That example includes all of the available options.</blockquote>
 
 					<table class="vtop">
 						<thead>
@@ -2286,8 +2293,8 @@ Oct 23 21:08:16 allsky allsky.sh[24948]: INFO: Module allsky_saveimage.py ran ok
 							<td>Yes</td>
 							<td>The module name.
 								<strong>MUST</strong> be in the format
-								<strong>allsky_{module name}</strong>
-								i.e. allsky_boilerplate.</td>
+								<span class="moduleName">allsky_{module name}</span>
+								i.e., <span class="moduleName">allsky_boilerplate</span>.</td>
 						</tr>
 						<tr>
 							<td>version</td>
@@ -2515,7 +2522,7 @@ Oct 23 21:08:16 allsky allsky.sh[24948]: INFO: Module allsky_saveimage.py ran ok
 ],
 </pre>
 
-					<p>A chnage with multiple authors,
+					<p>A change with multiple authors,
 						not the change can be an array as in the above example:</p>
 
 <pre>
@@ -2718,6 +2725,7 @@ metaData = {
 						</tr>
 					</table>
 
+					<a id="allsky_shared">
 					<h3>The Allsky Shared module</h3>
 					<p>To improve the performance of modules a common shared module
 						called <strong>allsky_shared</strong> is used.
@@ -2740,7 +2748,8 @@ metaData = {
 						</tr>
 						<tr>
 							<td>LOGLEVEL</td>
-							<td>The allsky debug level (not normally ndded).</td>
+							<td>The Allsky <span class="WebUISetting">Debug Level</span>
+								(not normally needed).</td>
 						</tr>
 						<tr>
 							<td>CURRENTIMAGEPATH</td>
@@ -2749,8 +2758,7 @@ metaData = {
 						</tr>
 						<tr>
 							<td>TOD</td>
-							<td>The time of day not available in daynight,
-								nightday or periodic).</td>
+							<td>The time of day not available in daynight, nightday or periodic).</td>
 						</tr>
 						<tr>
 							<td>fullFilename</td>
@@ -2806,7 +2814,7 @@ metaData = {
 						<tr>
 							<td>writeDebugImage(module, fileName, image)</td>
 							<td>Writes a debug image to the
-								<span class="fileName">${ALLSKY}/tmp/debug/{module}</span> folder.
+								<span class="fileName">${ALLSKY_TMP}/debug/{module}</span> folder.
 								This can be useful when debugging a module to check the output
 								at various stages.</td>
 						</tr>
@@ -2840,7 +2848,7 @@ metaData = {
 						</tr>
 						<tr>
 							<td>convertLatLon(input)</td>
-							<td>Converts 52.2N to 52.2 i.e, converts to decimal.</td>
+							<td>Converts the string "52.2S" to decimal -52.2.</td>
 						</tr>
 						<tr>
 							<td>setLastRun(module)</td>

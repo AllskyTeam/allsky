@@ -142,6 +142,9 @@ if ($useRemoteWebsite) {
 		default:					$Title = "Allsky WebUI";		break;
 	}
 ?>
+	</script>	<!-- allows <a external="true" ...> -->
+	<script src="documentation/js/documentation.js" type="application/javascript"></script>
+
 	<title><?php echo "$Title - WebUI"; ?></title>
 
 	<!-- Bootstrap Core CSS -->
@@ -215,17 +218,15 @@ if ($useRemoteWebsite) {
 					&nbsp; &nbsp;
 <?php if ($useLocalWebsite) {
 					echo "<span class='nowrap'>";
-					echo "<a class='version-title-color' href='allsky/index.php' target='_blank' title='Click to go to local Website'>";
-					echo "Local Website <i class='fa fa-external-link-alt fa-fw'></i></a></span>";
+					echo "<a external='true' class='version-title-color' href='allsky/index.php'>";
+					echo "Local Website</a></span>";
 } ?>
 					&nbsp; &nbsp;
 <?php if ($useRemoteWebsite) {
 					echo "<span class='nowrap'>";
 					if ($remoteWebsiteURL !== "") {
-						echo "<a class='version-title-color' href='$remoteWebsiteURL' ";
-						echo " target='_blank' title='Click to go to remote Website'>";
-						echo "Remote Website $remoteWebsiteVersion";
-						echo " <i class='fa fa-external-link-alt fa-fw'></i></a></span>";
+						echo "<a external='true' class='version-title-color' href='$remoteWebsiteURL'>";
+						echo "Remote Website $remoteWebsiteVersion</a></span>";
 					} else {
 						echo "Remote Website $remoteWebsiteVersion (unknown URL)";
 					}
@@ -291,7 +292,7 @@ if ($useRemoteWebsite) {
 						<a id="system" href="index.php?page=system"><i class="fa fa-cube fa-fw"></i> System</a>
 					</li>
 					<li>
-						<a href="/documentation" target="_blank" title="Opens in new window"><i class="fa fa-book fa-fw"></i> Allsky Documentation <i class="fa fa-external-link-alt fa-fw"></i></a>
+						<a external="true" href="/documentation"><i class="fa fa-book fa-fw"></i> Allsky Documentation </a>
 					</li>
 					<li>
 						<span onclick="switchTheme()"><i class="fa fa-moon fa-fw"></i> Light/Dark mode</span>
@@ -351,8 +352,6 @@ if ($useRemoteWebsite) {
 									$m2 = "<span class='externalSmall'>$m2</span>";
 									$message = "$m1 $message $m2</a>";
 								}
-// This makes checkAllsky.sh output all bold
-//								$message = "<strong>$message</strong>";
 								if ($count == 1)
 									$message .= " &nbsp; ($date)";
 								else
@@ -506,3 +505,4 @@ if ($useRemoteWebsite) {
 </script>
 </body>
 </html>
+<script> includeHTML(); </script>

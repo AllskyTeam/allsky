@@ -213,9 +213,16 @@ A (partial) typical page is below.
 </tr>
 <tr><td><a id="daytuningfile"><span class="WebUISetting">Tuning File</span></td>
 	<td>No</td>
-	<td>(RPi on Bookworm and Bullseye only) Name of the optional daytime tuning file.
-	See <a external="true" href="https://www.raspberrypi.com/documentation/accessories/camera.html">
-	this documentation</a> for more information.
+	<td>(RPi on Bookworm and Bullseye only) Full path name of the optional daytime tuning file.
+	See the
+	<a external="true" href="https://www.raspberrypi.com/documentation/computers/camera_software.html#tuning-files">
+	Raspberry Pi Documentation</a> for more information.
+	<blockquote>
+	System-supplied tuning files on Raspberry Pi models prior to 5 are in
+	<span class="fileName">/usr/share/libcamera/ipa/rpi/vc4</span>.
+	New Pi's files are in
+	<span class="fileName">/usr/share/libcamera/ipa/rpi/pisp</span>.
+	</blockquote>
 	</td>
 </tr>
 

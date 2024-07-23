@@ -264,7 +264,7 @@ def log(level, text, preventNewline = False, exitCode=None, sendToAllsky=False):
     if sendToAllsky and level == 0:
         allskyHome = os.environ['ALLSKY_HOME']
         if allskyHome is not None:
-            command = os.path.join(allskyHome, 'scripts', f'addMessage.sh error "{text}"')
+            command = os.path.join(allskyHome, 'scripts', f"addMessage.sh error '{text}'")
             os.system(command)
     
     if exitCode is not None:

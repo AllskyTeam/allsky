@@ -585,12 +585,16 @@ do
 
 		"latitude" | "longitude")
 			# Allow either +/- decimal numbers, OR numbers with N, S, E, W, but not both.
-			if NEW_VALUE="$( convertLatLong "${NEW_VALUE}" "${KEY}" )" ; then
+			if NEW_VALUE="$( convertLatLong "${NEW_VALUE}" "${KEY}" 2>&1 )" ; then
 				check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
+				RUN_POSTTOMAP="true"
 			else
 				echo -e "${wWARNING}WARNING: ${NEW_VALUE}.${wNC}"
+				# Restore to old value
+				echo "Setting ${WSNs}${LABEL}${WSNe} back to ${WSVs}${OLD_VALUE}${WSVe}."
+				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "string"
+				OK="false"
 			fi
-			RUN_POSTTOMAP="true"
 			;;
 
 		"location" | "owner" | "camera" | "lens" | "computer")
@@ -667,11 +671,11 @@ do
 				fi
 				MIN=2
 
-				OK="true"
+				THIS_OK="true"
 #XX echo "CALLING: checkPixelValue 'Timelapse ${LABEL}' '${NEW_VALUE}' '${MIN}' '${MAX}'"
 				if ! checkPixelValue "Timelapse ${LABEL}" "sensor size" "${NEW_VALUE}" "${MIN}" "${MAX}" ; then
 #XX echo "    FALSE"
-					OK="false"
+					THIS_OK="false"
 				else
 					if [[ ${DID_TIMELAPSE} == "false" ]]; then
 #XX echo "CALLING: checkWidthHeight 'Timelapse' 'timelapse' '${S_timelapsewidth}' '${S_timelapseheight}' '${C_sensorWidth}' '${C_sensorHeight}'"
@@ -679,19 +683,19 @@ do
 						"${S_timelapsewidth}" "${S_timelapseheight}" \
 	 					"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 ; then
 #XX echo "false"
-							OK="false"
+							THIS_OK="false"
 						fi
 						DID_TIMELAPSE="true"
 					fi
 				fi
 
-				if [[ ${OK} == "false" ]]; then
+				if [[ ${THIS_OK} == "false" ]]; then
 					# Restore to old value
 					echo "Setting ${WSNs}Timelapse ${LABEL}${WSNe} back to ${WSVs}${OLD_VALUE}${WSVe}."
 					update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "number"
+					OK="false"
 				fi
 			fi
-#XX OK=false
 			;;
 
 		"minitimelapsewidth" | "minitimelapseheight")
@@ -831,7 +835,6 @@ if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 			echo -e "${wDEBUG}Uploading '${FILE_TO_UPLOAD}' to remote Website.${wNC}"
 		fi
 
-# TODO: put in background to return to user faster?
 		if ! "${ALLSKY_SCRIPTS}/upload.sh" --silent --remote-web \
 				"${FILE_TO_UPLOAD}" \
 				"${IMAGE_DIR}" \

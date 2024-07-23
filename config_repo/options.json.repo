@@ -848,7 +848,7 @@
 {
 "name" : "locale",
 "default" : "",
-"description" : "Your locale, used to determine what the thousands and decimal separators are.<br>Type <span class='WebUIValue'>locale</span> at a command prompt to see your choices.",
+"description" : "Your locale, used to determine what the thousands and decimal separators are.<br>Type <code>locale --all-locales</code> at a command prompt to see which locales are configured on your Pi.",
 "label" : "Locale",
 "type" : "text",
 "usage" : "capture",

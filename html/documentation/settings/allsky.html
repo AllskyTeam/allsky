@@ -181,7 +181,7 @@ A (partial) typical page is below.
 	</blockquote>
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Auto White Balance</span></td>
+<tr><td><a id="dayawb"><span class="WebUISetting">Auto White Balance</span></td>
 	<td>No</td>
 	<td>Sets daytime auto white balance.
 	When used, <span class="WebUISetting">Red balance</span> and
@@ -451,7 +451,7 @@ A (partial) typical page is below.
 	the installation script will attempt to determine your rough
 	<span class="WebUISetting">Latitude</span> and
 	<span class="WebUISetting">Longitude</span> based on your IP address.
-	These values may be "close enough" in most cases but you may want to check it anyhow.
+	These values may be "close enough" in most cases but you may want to check them anyhow.
 	</blockquote>
 	</td>
 </tr>
@@ -515,11 +515,11 @@ A (partial) typical page is below.
 <tr><td><span class="WebUISetting">ZWO Exposure Type</span></td>
 	<td>Snapshot</td>
 	<td>(ZWO only) Determines what type of exposures to take:
-	<ol>
+	<ol class="minimalPadding topPadding">
 		<li><span class="WebUIValue">Snapshot</span>
 			takes pictures one at a time like a "normal" camera.
-			If for some reason this doesn't work,
-			try the next type and let the Allsky developers know.
+			Note that <a href="#dayawb"><span class="WebUISetting">Auto White Balance</span></a>
+			does not work when <span class="WebUIValue">Snapshot</span> is used.
 		</li>
 		<li><span class="WebUIValue">Video Off</span>
 			takes pictures like a video camera that is turned off after every picture.
@@ -564,13 +564,14 @@ A (partial) typical page is below.
 	This page only deals with the <u>image overlay</u>.
 </td></tr>
 <tr><td><span class="WebUISetting">Overlay Method</span></td>
-	<td>legacy</td>
-	<td>Set to <span class="WebUIValue">module</span>
-	to have image overlays added by the new, enhanced
-	<a allsky="true" href="/documentation/overlays/overlays.html">overlay</a> program.
-	<br><b>In this mode, the overlay settings below do NOT apply</b>.
+	<td>module</td>
+	<td>The default now uses the new, enhanced
+	<a allsky="true" href="/documentation/overlays/overlays.html">overlay</a>
+	system to add overlays onto your images.
+	<br><b>In <span class="WebUIValue">module</span> mode,
+	the overlay settings below do NOT apply</b>.
 	<blockquote>
-	This setting, as well as the legacy mode and this "Image overlay settings"
+	The legacy mode and this whole "Image overlay Settings"
 	section will be removed in the next Allsky release.
 	</blockquote>
 	<p>

@@ -763,7 +763,7 @@ div.sticky {
 	position: sticky;
 	top: 5px;
 	margin-top: 10px;
-	padding: 10px;
+	padding: 10px 0 10px 0;
 	background: rgba(187,187,187, 1);
 	border: 2px solid var(--sticky-border-color);
 }

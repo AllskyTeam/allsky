@@ -537,19 +537,21 @@ function convertLatLong()
 		return 0
 
 	elif [[ -n ${SIGN} ]]; then
-		echo "'${TYPE}' should contain EITHER a '${SIGN}' OR a '${DIRECTION}', but not both; you entered '${LATLONG}'." >&2
+		EMSG="ERROR: '${TYPE}' should contain EITHER a '${SIGN}' OR a '${DIRECTION}',"
+		EMSG+=" but not both; you entered '${LATLONG}'."
+		echo -e "${EMSG}" >&2
 		return 1
 
 	else
 		# There's a direction - make sure it's valid for the TYPE.
 		if [[ ${TYPE} == "latitude" ]]; then
 			if [[ ${DIRECTION} != "N" && ${DIRECTION} != "S" ]]; then
-				echo "'${TYPE}' should contain a 'N' or 'S' ; you entered '${LATLONG}'." >&2
+				echo "ERROR: '${TYPE}' should contain a 'N' or 'S' ; you entered '${LATLONG}'." >&2
 				return 1
 			fi
 		else
 			if [[ ${DIRECTION} != "E" && ${DIRECTION} != "W" ]]; then
-				echo "'${TYPE}' should contain an 'E' or 'W' ; you entered '${LATLONG}'." >&2
+				echo "ERROR: '${TYPE}' should contain an 'E' or 'W' ; you entered '${LATLONG}'." >&2
 				return 1
 			fi
 		fi

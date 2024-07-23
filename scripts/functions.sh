@@ -497,7 +497,7 @@ function getJSONarrayIndex()
 function convertLatLong()
 {
 	local LATLONG="${1}"
-	local TYPE="${2}"						# "latitude" or "longitude"
+	local TYPE="${2^}"						# "Latitude" or "Longitude"
 	LATLONG="${LATLONG^^[nsew]}"			# convert any character to uppercase for consistency
 	local SIGN="${LATLONG:0:1}"				# First character, may be "-" or "+" or a number
 	local DIRECTION="${LATLONG: -1}"						# May be N, S, E, or W, or a number
@@ -508,27 +508,39 @@ function convertLatLong()
 		# No direction
 		if [[ -z ${SIGN} ]]; then
 			# No sign either
-			EMSG="ERROR: '${TYPE}' should contain EITHER a '+' or '-', OR a"
-			if [[ ${TYPE} == "latitude" ]]; then
+			EMSG="ERROR: ${TYPE} (${LATLONG}) should contain EITHER a '+' or '-', OR a"
+			if [[ ${TYPE} == "Latitude" ]]; then
 				EMSG+=" 'N' or 'S'"
 			else
 				EMSG+=" 'E' or 'W'"
 			fi
-			EMSG+="; you entered '${LATLONG}'."
 			echo -e "${EMSG}" >&2
 			return 1
 		fi
 
-		# A number - convert to character
+		# A number.
+	   
+		# Make sure it's a valid number.
+		if ! is_number "${LATLONG}" ; then
+			EMSG="ERROR: ${TYPE} (${LATLONG}) is an invalid number. It should only contain:"
+			EMSG+="\n  * Zero or one of EITHER '+' OR '-' at the beginning of the number"
+			EMSG+="\n  * One or more of the digits 1 - 9"
+			EMSG+="\n  * Zero or one '.'"
+			[[ ${LATLONG} =~ "," ]] && EMSG+=" (commas (',') are not allowed)"
+			echo -e "${EMSG}" >&2
+			return 1
+		fi
+
+		# Convert to String with NSEW
 		LATLONG="${LATLONG:1}"		# Skip over sign
 		if [[ ${SIGN} == "+" ]]; then
-			if [[ ${TYPE} == "latitude" ]]; then
+			if [[ ${TYPE} == "Latitude" ]]; then
 				echo "${LATLONG}N"
 			else
 				echo "${LATLONG}E"
 			fi
 		else
-			if [[ ${TYPE} == "latitude" ]]; then
+			if [[ ${TYPE} == "Latitude" ]]; then
 				echo "${LATLONG}S"
 			else
 				echo "${LATLONG}W"
@@ -537,21 +549,21 @@ function convertLatLong()
 		return 0
 
 	elif [[ -n ${SIGN} ]]; then
-		EMSG="ERROR: '${TYPE}' should contain EITHER a '${SIGN}' OR a '${DIRECTION}',"
-		EMSG+=" but not both; you entered '${LATLONG}'."
+		EMSG="ERROR: ${TYPE} (${LATLONG}) should contain EITHER a '${SIGN}' OR a '${DIRECTION}',"
+		EMSG+=" but not both."
 		echo -e "${EMSG}" >&2
 		return 1
 
 	else
 		# There's a direction - make sure it's valid for the TYPE.
-		if [[ ${TYPE} == "latitude" ]]; then
+		if [[ ${TYPE} == "Latitude" ]]; then
 			if [[ ${DIRECTION} != "N" && ${DIRECTION} != "S" ]]; then
-				echo "ERROR: '${TYPE}' should contain a 'N' or 'S' ; you entered '${LATLONG}'." >&2
+				echo "ERROR: ${TYPE} (${LATLONG}) should contain a 'N' or 'S'." >&2
 				return 1
 			fi
 		else
 			if [[ ${DIRECTION} != "E" && ${DIRECTION} != "W" ]]; then
-				echo "ERROR: '${TYPE}' should contain an 'E' or 'W' ; you entered '${LATLONG}'." >&2
+				echo "ERROR: ${TYPE} (${LATLONG}) should contain an 'E' or 'W'." >&2
 				return 1
 			fi
 		fi
@@ -1251,7 +1263,7 @@ function is_number()
 	shopt -s extglob
 	local NON_NUMERIC="${VALUE/?([-+])*([0-9])?(.)*([0-9])/}"
 	if [[ -z ${NON_NUMERIC} ]]; then
-		# Nothing but +, -, 0-9, .
+		# Nothing but +, -, 0-9, or .
 		return 0
 	else
 		# Has non-numeric character

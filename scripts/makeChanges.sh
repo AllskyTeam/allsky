@@ -589,7 +589,7 @@ do
 				check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
 				RUN_POSTTOMAP="true"
 			else
-				echo -e "${wERROR}${NEW_VALUE}.${wNC}"
+				echo -e "${wERROR}${NEW_VALUE}${wNC}"
 				# Restore to old value
 				echo "Setting ${WSNs}${LABEL}${WSNe} back to ${WSVs}${OLD_VALUE}${WSVe}."
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "string"

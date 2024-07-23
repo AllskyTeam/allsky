@@ -57,11 +57,11 @@ if [[ ${CMD} == "raspistill" ]]; then
 	exit 1
 fi
 
-export LIBCAMERA_LOG_LEVELS=ERROR,FATAL
+export LIBCAMERA_LOG_LEVELS="ERROR,FATAL"
 CAMERA_DATA="${ALLSKY_TMP}/camera_data.txt"
 {
-	echo -e "===== libcamera-still --list-cameras"
-	libcamera-still --list-cameras 2>&1
+	echo -e "===== ${CMD} --list-cameras"
+	"${CMD}" --list-cameras 2>&1
 } > "${CAMERA_DATA}"
 
 if [[ $( wc --lines < "${CAMERA_DATA}" ) -le 2 ]]; then
@@ -86,9 +86,9 @@ else
 fi
 
 {
-	echo -e "\n===== libcamera-still"
+	echo -e "\n===== ${CMD}"
 	# Do not use --immediate 1 since it causes the max Exposure time to be 0.
-	libcamera-still --camera "${CAMERA_NUMBER}"  -v --metadata - --immediate 0 --nopreview \
+	"${CMD}" --camera "${CAMERA_NUMBER}"  -v --metadata - --immediate 0 --nopreview \
 		--thumb none --timeout 1 --shutter 1 --output /dev/null
 } >> "${CAMERA_DATA}" 2>&1
 
@@ -124,8 +124,8 @@ RET=$?
 echo
 if [[ ${RET} -eq 0 ]]; then
 	if [[ ${SUPPORTED} == "true" ]] ; then
-		echo "Camera model ${MODEL}, sensor ${SENSOR} is already supported by Allsky."
-		echo "Information about the features supported by the camera is in:"
+		echo "Camera model ${MODEL}, sensor ${SENSOR} is supported by Allsky."
+		echo "Information about the camera's features is in:"
 		echo "    ${CAMERA_DATA}"
 	else
 		echo "Maximum exposure time for sensor '${SENSOR}' is ${MAX_EXPOSURE} seconds."

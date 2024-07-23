@@ -19,8 +19,8 @@
 	--WebUI-subSettingNote-background-color: #cce;
 	--dark-text: #aaaaaa;
 	--dark-text-reversed: #eeeeee;
-	--rowSeparator: #d3d3d3;
-	--rowSeparator-dark: #707070;
+	--rowSeparator: #e3e3e3;
+	--rowSeparator-dark: #404040;
 	--btn-hover-color: black;
 	--btn-dark-color: #bfbfbf;
 	--panel-heading-color: #6b6b6b;
@@ -602,10 +602,10 @@ div.subSettingsHeader {
 
 /* separate table rows */
 .rowSeparator {
-	/* border-bottom: 1px solid var(--rowSeparator); */
+	border-bottom: 1px solid var(--rowSeparator);
 }
 .dark .rowSeparator {
-	/* border-bottom-color: var(--rowSeparator-dark); */
+	border-bottom-color: var(--rowSeparator-dark);
 }
 /* used in system.php */
 .progress-bar {

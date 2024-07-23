@@ -273,7 +273,7 @@
 "name" : "daytuningfile",
 "display" : "_display",
 "default" : "",
-"description" : "Name of the optional day camera tuning file to use.<br>See the documentation for a <a allsky='true' external='true' href='/documentation/settings/allsky.html#daytuningfile'>description of this setting</a>",
+"description" : "Name of the optional day camera tuning file to use.<br>See the documentation for a <a allsky='true' external='true' href='/documentation/settings/allsky.html#daytuningfile'>description of this setting</a>.",
 "label" : "Tuning File",
 "label_prefix" : "Daytime",
 "type" : "widetext",
@@ -2429,7 +2429,7 @@
 {
 "name" : "webuidatafiles",
 "default" : "",
-"description" : "See the documentation for a <a allsky='true' external='true' href='/documentation/settings/allsky.html'>description of this setting</a>",
+"description" : "See the documentation for a <a allsky='true' external='true' href='/documentation/settings/allsky.html'>description of this setting</a>.",
 "label" : "System Page Additions",
 "type" : "widetext",
 "carryforward" : true,

@@ -966,8 +966,8 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 					if ($action == "restart") {
 						$popupExtraMsg = "RESTART REQUIRED";
 					} else if ($action == "reload") {
-// TODO: when "reload" is implemented change this message (make lowercase ?)
-						$popupExtraMsg = "RELOAD REQUIRED";
+// TODO: when "reload" is implemented change RESTART to RELOAD.  Or, always say RESTART?  Will the user know the difference?
+						$popupExtraMsg = "RESTART REQUIRED";
 					} else if ($action == "stop") {
 						$popupExtraMsg = "ALLSKY WILL STOP AFTER\nCHANGING THIS SETTING";
 					} else {

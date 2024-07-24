@@ -153,7 +153,7 @@ fi
 
 SHOW_ON_MAP=$( settings ".showonmap" )
 if [[ ${SHOW_ON_MAP} == "true" ]]; then
-	echo -e "${ME}: ===== Posting camera details to allsky map"
+	echo -e "${ME}: ===== Posting camera details to Allsky map."
 	"${ALLSKY_SCRIPTS}/postToMap.sh" --endofnight
 fi
 

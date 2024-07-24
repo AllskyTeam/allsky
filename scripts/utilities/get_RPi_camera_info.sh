@@ -90,7 +90,13 @@ fi
 	# Do not use --immediate 1 since it causes the max Exposure time to be 0.
 	"${CMD}" --camera "${CAMERA_NUMBER}"  -v --metadata - --immediate 0 --nopreview \
 		--thumb none --timeout 1 --shutter 1 --output /dev/null
+	RET=$?
 } >> "${CAMERA_DATA}" 2>&1
+if [[ ${RET} -ne 0 ]]; then
+	echo "${ME}: '${CMD}' failed:"
+	indent "$( "${CAMERA_DATA}" )"
+	exit "${RET}"
+fi
 
 
 # Example output:

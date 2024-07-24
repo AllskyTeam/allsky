@@ -356,7 +356,7 @@ if [[ ${UPLOAD} == "true" ]]; then
 		echo -e "${wOK}${MSG_START}Map data ${RET}.${wNC}"
 
 	elif [[ ${RET:0:7} == "UPDATED" ]]; then
-		echo -en "${wOK}${MSG_START}Map data UPDATED.${wNC}"
+		[[ ${ENDOFNIGHT} == "false" ]] && echo -en "${wOK}${MSG_START}Map data UPDATED.${wNC}"
 		NUMBERS=${RET:8}	# num_updates max
 		if [[ -n ${NUMBERS} ]]; then
 			NUM_UPDATES=${NUMBERS% *}

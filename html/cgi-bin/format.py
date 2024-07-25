@@ -208,14 +208,21 @@ class ALLSKYFORMAT:
 
         if variableType == 'Number':
             if format is not None and format != "":
-                format = "{" + format + "}"
+                if format.startswith(':'):
+                    format = "{" + format + "}"
                 try:
                     try:
                         convertValue = int(fieldValue)
                     except ValueError:
                         convertValue = float(fieldValue)
                     try:
-                        value = format.format(convertValue)
+                        if format.startswith('{'):
+                            value = format.format(convertValue)
+                        else:
+                            if format.startswith('%'):
+                                value = locale.format_string(format, convertValue, grouping=True)
+                            else:
+                                value = convertValue
                     except Exception as err:
                         value = "??"
                 except ValueError as err:

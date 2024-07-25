@@ -20,6 +20,7 @@ import time
 import locale
 import board
 import argparse
+import locale
 
 try:
     locale.setlocale(locale.LC_ALL, '')

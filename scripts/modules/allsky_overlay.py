@@ -35,10 +35,10 @@ from pytz import timezone
 
 import locale
 
-try:
-    locale.setlocale(locale.LC_ALL, '')
-except:
-    pass
+#try:
+#    locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
+#except:
+#    pass
 
 metaData = {
     "name": "Overlays data on the image",
@@ -900,11 +900,12 @@ class ALLSKYOVERLAY:
                             value = time.strftime(Format, timeStamp)
                     else:
                         pass
-
+                
                 if variableType == 'Number':
                     if Format is not None and Format != "":
                         f = Format
-                        Format = "{" + Format + "}"
+                        if Format.startswith(':'):
+                            Format = "{" + Format + "}"
                         convertValue = 0
                         try:
                             try:
@@ -912,7 +913,13 @@ class ALLSKYOVERLAY:
                             except ValueError:
                                 convertValue = float(value)
                             try:
-                                value = Format.format(convertValue)
+                                if Format.startswith('{'):
+                                    value = Format.format(convertValue)
+                                else:
+                                    if Format.startswith('%'):
+                                        value = locale.format_string(Format, convertValue, grouping=True)
+                                    else:
+                                        value = convertValue
                             except Exception as err:
                                 self._log(0, f"ERROR: Cannot use format '{f}' on Number variables like {rawFieldName} (value={value}).", sendToAllsky=True)
                                 value = self._formaterrortext
@@ -1332,6 +1339,10 @@ class ALLSKYOVERLAY:
                                 s.setEnvironmentVariable('AS_' + noradId + 'VISIBLE', 'No')
                         except LookupError:
                             s.log(0, f'ERROR: Norad ID {noradId} Not found.')
+                            
+                        # Skyfield breaks the locale so reset it        
+                        locale.setlocale(locale.LC_ALL, '')
+                            
                 else:
                     self._log(4, 'INFO: Satellites enabled but cannot use due to prior error.')
 
@@ -1342,7 +1353,7 @@ class ALLSKYOVERLAY:
             eType, eObject, eTraceback = sys.exc_info()
             self._log(4, ' ')
             self._log(0, f'ERROR: _initSatellites failed on line {eTraceback.tb_lineno} - {e}')
-
+        
         return True
 
     def _initPlanets(self):

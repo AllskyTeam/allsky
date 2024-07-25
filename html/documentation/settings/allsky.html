@@ -71,24 +71,24 @@ A (partial) typical page is below.
 </tr>
 </thead>
 <tbody>
-<tr><td class="settingsHeader" colspan="3">Daytime Settings</td></tr>
+<tr><td id="daytimesettings" class="settingsHeader" colspan="3">Daytime Settings</td></tr>
 
-<tr><td><span class="WebUISetting">Daytime Capture</span></td>
+<tr><td id="takedaytimeimages"><span class="WebUISetting">Daytime Capture</span></td>
 	<td>Yes</td>
 	<td>Enable to <b>capture</b> images during the day.</td>
 </tr>
-<tr><td><span class="WebUISetting">Daytime Save</span> <span class="AW">AW</span></td>
+<tr><td id="savedaytimeimages"><span class="WebUISetting">Daytime Save</span> <span class="AW">AW</span></td>
 	<td>No</td>
 	<td>Enable to <b>save</b> images during the day (they are always saved at night).
 	Only applies if <span class="WebUISetting">Daytime Capture</span> is enabled.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Auto-Exposure</span></td>
+<tr><td id="dayautoexposure"><span class="WebUISetting">Auto-Exposure</span></td>
 	<td>Yes</td>
 	<td>Turns on/off Auto-Exposure, which delivers properly exposed images even if
 	the overall brightness of the sky changes due to cloud cover, sun, etc.</td>
 </tr>
-<tr><td><span class="WebUISetting">Max Auto-Exposure</span></td>
+<tr><td id="daymaxautoexposure"><span class="WebUISetting">Max Auto-Exposure</span></td>
 	<td><span class="cameraDependent">CD</span></td>
 	<td>The maximum exposure in milliseconds when using 
 	<span class="WebUISetting">Auto-Exposure</span>.
@@ -96,13 +96,13 @@ A (partial) typical page is below.
 	this value will be used as the delay between frames.
 	Ignored if <span class="WebUISetting">Auto-Exposure</span> is off.</td>
 </tr>
-<tr><td><span class="WebUISetting">Manual Exposure</span></td>
+<tr><td id="dayexposure"><span class="WebUISetting">Manual Exposure</span></td>
 	<td>0.5</td>
 	<td>Manual exposure time in milliseconds.
 	If <span class="WebUISetting">Auto-Exposure</span>
 	is on this value is used as a starting exposure.</td>
 </tr>
-<tr><td><span class="WebUISetting">Mean Target</span></td>
+<tr><td id="daymean"><span class="WebUISetting">Mean Target</span></td>
 	<td>0.5</td>
 	<td>The target mean brightness level when
 	<span class="WebUISetting">Auto-Exposure</span> is on.
@@ -110,7 +110,7 @@ A (partial) typical page is below.
 	Best used when both <span class="WebUISetting">Auto-Exposure</span> and
 	<span class="WebUISetting">Auto-Gain</span> are enabled.</td>
 </tr>
-<tr><td><span class="WebUISetting">Mean Threshold</span></td>
+<tr><td id="daymeanthreshold"><span class="WebUISetting">Mean Threshold</span></td>
 	<td>0.1</td>
 	<td>When using <span class="WebUISetting">Mean Target</span>,
 		this specifies how close (plus or minus) the target brightness should be to the
@@ -121,11 +121,11 @@ A (partial) typical page is below.
 		then the target brightness ranges from <code>0.3</code> to <code>0.5</code>
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Delay</span></td>
+<tr><td id="daydelay"><span class="WebUISetting">Delay</span></td>
 	<td>5000</td>
 	<td>Time in milliseconds to wait between the end of one image and the start of the next.</td>
 </tr>
-<tr><td><span class="WebUISetting">Auto-Gain</span></td>
+<tr><td id="dayautogain"><span class="WebUISetting">Auto-Gain</span></td>
 	<td>No</td>
 	<td>Turns on/off Auto-Gain which delivers properly exposed images even if
 	the overall brightness of the sky changes.
@@ -133,12 +133,12 @@ A (partial) typical page is below.
 	With ZWO cameras you'll probably want this off and use the lowest
 	gain possible since daytime images are bright and don't need any gain.</td>
 </tr>
-<tr><td><span class="WebUISetting">Max Auto-Gain</span></td>
+<tr><td id="daymaxautogain"><span class="WebUISetting">Max Auto-Gain</span></td>
 	<td><span class="cameraDependent">CD</span></td>
 	<td>Maximum gain when using <span class="WebUISetting">Auto-Gain</span>.
 	Ignored if <span class="WebUISetting">Auto-Gain</span> is off.</td>
 </tr>
-<tr><td><span class="WebUISetting">Gain</span></td>
+<tr><td id="daygain"><span class="WebUISetting">Gain</span></td>
 	<td><span class="cameraDependent">CD</span></td>
 	<td>Gain is similar to ISO on regular cameras.
 	When <span class="WebUISetting">Auto-Gain</span> is on, this value is used as a starting gain.
@@ -148,7 +148,7 @@ A (partial) typical page is below.
 	daytime images are normally bright and don't need any additional gain.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Stretch Amount</span></td>
+<tr><td id="dayimagestretchamount"><span class="WebUISetting">Stretch Amount</span></td>
 	<td>0</td>
 	<td>Stretching increases the contrast of an image without saturating the bright parts
 		or making the dark parts turn black.
@@ -161,14 +161,14 @@ A (partial) typical page is below.
 	for more information on stretching images.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Stretch Mid Point</span></td>
+<tr><td id="dayimagestretchmidpoint"><span class="WebUISetting">Stretch Mid Point</span></td>
 	<td>10</td>
 	<td>Determines what brightness level in the image should be stretched:
 	0 stretches black pixels, 50 stretches middle-gray, etc.
 	</td>
 </tr>
 
-<tr><td><span class="WebUISetting">Binning</span></td>
+<tr><td id="daybin"><span class="WebUISetting">Binning</span></td>
 	<td>1x1</td>
 	<td>Bin 2x2 collects the light from 4 pixels to form one larger pixel on the image.
 	Bin 3x3 uses 9 pixels, etc.
@@ -187,26 +187,26 @@ A (partial) typical page is below.
 	When used, <span class="WebUISetting">Red balance</span> and
 	<span class="WebUISetting">Blue balance</span> are used as starting points.</td>
 </tr>
-<tr><td><span class="WebUISetting">Red Balance</span></td>
+<tr><td id="daywbr"><span class="WebUISetting">Red Balance</span></td>
 	<td><span class="cameraDependent">CD</span></td>
 	<td>The intensity of the red component of the image.</td>
 </tr>
-<tr><td><span class="WebUISetting">Blue Balance</span></td>
+<tr><td id="daywbb"><span class="WebUISetting">Blue Balance</span></td>
 	<td><span class="cameraDependent">CD</span></td>
 	<td>The intensity of the blue component of the image.</td>
 </tr>
-<tr><td><span class="WebUISetting">Frames To Skip</span></td>
+<tr><td id="dayskipframes"><span class="WebUISetting">Frames To Skip</span></td>
 	<td>5</td>
 	<td>When starting Allsky during the day, skip <i>up to</i> this many images
 	while the auto-exposure software gets to the correct exposure.
 	<br>Only applies if daytime <span class="WebUISetting">Auto-Exposure</span> is enabled.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Cooling</span></td>
+<tr><td id="dayenablecooler"><span class="WebUISetting">Cooling</span></td>
 	<td>No</td>
 	<td>(ZWO cooled cameras only) Enable to use cooling on cameras that support it.</td>
 </tr>
-<tr><td><span class="WebUISetting">Target Temp.</span></td>
+<tr><td id="daytargettemp"><span class="WebUISetting">Target Temp.</span></td>
 	<td>0</td>
 	<td>(ZWO cooled cameras only) Sensor's target temperature <i>when cooler is enabled</i>.
 	In degrees Celsius.</td>
@@ -226,83 +226,83 @@ A (partial) typical page is below.
 	</td>
 </tr>
 
-<tr><td class="settingsHeader" colspan="3">Nighttime Settings</td></tr>
+<tr><td id="nighttimesettings" class="settingsHeader" colspan="3">Nighttime Settings</td></tr>
 <tr><td class="settingsHeader settingsHeaderNote" colspan="3">
 	Unless otherwise specified, these setttings are the same as the daytime ones.</td>
 </tr>
 
-<tr><td><span class="WebUISetting">Auto-Exposure</span></td>
+<tr><td id="nightautoexposure"><span class="WebUISetting">Auto-Exposure</span></td>
 	<td>Yes</td>
 	<td></td>
 </tr>
-<tr><td><span class="WebUISetting">Max Auto-Exposure</span></td>
+<tr><td id="nightmaxautoexposure"><span class="WebUISetting">Max Auto-Exposure</span></td>
 	<td><span class="cameraDependent">CD</span></td>
 	<td></td>
 </tr>
-<tr><td><span class="WebUISetting">Manual Exposure</span></td>
+<tr><td id="nightexposure"><span class="WebUISetting">Manual Exposure</span></td>
 	<td>10000</td>
 	<td></td>
 </tr>
-<tr><td><span class="WebUISetting">Mean Target</span></td>
+<tr><td id="nightmean"><span class="WebUISetting">Mean Target</span></td>
 	<td>0.2</td>
 	<td></td>
 </tr>
-<tr><td><span class="WebUISetting">Mean Threshold</span></td>
+<tr><td id="nightmeanthreshold"><span class="WebUISetting">Mean Threshold</span></td>
 	<td>0.1</td>
 	<td></td>
 </tr>
-<tr><td><span class="WebUISetting">Delay</span></td>
+<tr><td id="nightdelay"><span class="WebUISetting">Delay</span></td>
 	<td>10</td>
 	<td></td>
 </tr>
-<tr><td><span class="WebUISetting">Auto-Gain</span></td>
+<tr><td id="nightautogain"><span class="WebUISetting">Auto-Gain</span></td>
 	<td>No</td>
 	<td>With ZWO cameras enabling <span class="WebUISetting">Auto-Exposure</span> and
 	<span class="WebUISetting">Auto-Gain</span> together
 	can produce unpredictable results so testing is needed.</td>
 </tr>
-<tr><td><span class="WebUISetting">Max Auto-Gain</span></td>
+<tr><td id="nightmaxautogain"><span class="WebUISetting">Max Auto-Gain</span></td>
 	<td><span class="cameraDependent">CD</span></td>
 	<td></td>
 </tr>
-<tr><td><span class="WebUISetting">Gain</span></td>
+<tr><td id="nightgain"><span class="WebUISetting">Gain</span></td>
 	<td><span class="cameraDependent">CD</span></td>
 	<td>The default is one-half the maximum for the camera.</td>
 </tr>
-<tr><td><span class="WebUISetting">Stretch Amount</span></td>
+<tr><td id="nightimagestretchamount"><span class="WebUISetting">Stretch Amount</span></td>
 	<td>0</td>
 	<td></td>
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Stretch Mid Point</span></td>
+<tr><td id="nightimagestretchmidpoint"><span class="WebUISetting">Stretch Mid Point</span></td>
 	<td>10</td>
 	<td></td>
 </tr>
-<tr><td><span class="WebUISetting">Binning</span></td>
+<tr><td id="nightbin"><span class="WebUISetting">Binning</span></td>
 	<td>1x1</td>
 	<td></td>
 </tr>
-<tr><td><span class="WebUISetting">Auto White Balance</span></td>
+<tr><td id="nightawb"><span class="WebUISetting">Auto White Balance</span></td>
 	<td>No</td>
 	<td></td>
 </tr>
-<tr><td><span class="WebUISetting">Red Balance</span></td>
+<tr><td id="nightwbr"><span class="WebUISetting">Red Balance</span></td>
 	<td><span class="cameraDependent">CD</span></td>
 	<td></td>
 </tr>
-<tr><td><span class="WebUISetting">Blue Balance</span></td>
+<tr><td id="nightwbb"><span class="WebUISetting">Blue Balance</span></td>
 	<td><span class="cameraDependent">CD</span></td>
 	<td></td>
 </tr>
-<tr><td><span class="WebUISetting">Frames To Skip</span></td>
+<tr><td id="nightskipframes"><span class="WebUISetting">Frames To Skip</span></td>
 	<td>1</td>
 	<td>Only applies if nighttime <span class="WebUISetting">Auto-Exposure</span> is enabled.</td>
 </tr>
-<tr><td><span class="WebUISetting">Cooling</span></td>
+<tr><td id="nightenablecooler"><span class="WebUISetting">Cooling</span></td>
 	<td>No</td>
 	<td>(ZWO cooled cameras only)</td>
 </tr>
-<tr><td><span class="WebUISetting">Target Temp.</span></td>
+<tr><td id="nighttargettemp"><span class="WebUISetting">Target Temp.</span></td>
 	<td>0</td>
 	<td>(ZWO cooled cameras only)</td>
 </tr>
@@ -312,7 +312,7 @@ A (partial) typical page is below.
 </tr>
 
 <tr><td class="settingsHeader" colspan="3">Both Day and Night Settings</td></tr>
-<tr><td><span class="WebUISetting">Days To Keep</span></td>
+<tr><td id="daystokeep"><span class="WebUISetting">Days To Keep</span></td>
 	<td>14</td>
 	<td>Number of days of images and videos in
 	<span class="fileName">~/allsky/images</span> to keep.
@@ -320,11 +320,11 @@ A (partial) typical page is below.
 	Set to <span class="WebUIValue">0</span> to keep ALL days' data;
 	you will need to manually manage disk space.</td>
 </tr>
-<tr><td><span class="WebUISetting">Configuration File</span></td>
+<tr><td id="config"><span class="WebUISetting">Configuration File</span></td>
 	<td>[none]</td>
 	<td>Configuration file to use for settings.  Not currently used.</td>
 </tr>
-<tr><td><span class="WebUISetting">Extra Parameters</span></td>
+<tr><td id="extraargs"><span class="WebUISetting">Extra Parameters</span></td>
 	<td></td>
 	<td>(RPi only) Any additional parameters to send to the
 		<code>libcamera-still</code> image capture program.
@@ -333,26 +333,26 @@ A (partial) typical page is below.
 		<br>
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Saturation</span></td>
+<tr><td id="saturation"><span class="WebUISetting">Saturation</span></td>
 	<td><span class="cameraDependent">CD</span></td>
 	<td>(RPi only) Sets saturation from black and white to extra saturated.</td>
 </tr>
-<tr><td><span class="WebUISetting">Contrast</span></td>
+<tr><td id="contrast"><span class="WebUISetting">Contrast</span></td>
 	<td><span class="cameraDependent">CD</span></td>
 	<td>(RPi only) Changes the difference between blacks and whites in an image.</td>
 </tr>
-<tr><td><span class="WebUISetting">Sharpness</span></td>
+<tr><td id="sharpness"><span class="WebUISetting">Sharpness</span></td>
 	<td><span class="cameraDependent">CD</span></td>
 	<td>(RPi only) Changes the sharpness of an imgage.
 	Images that are too sharp look unnatural.</td>
 </tr>
-<tr><td><span class="WebUISetting">Aggression</span></td>
+<tr><td id="aggression"><span class="WebUISetting">Aggression</span></td>
 	<td>75%</td>
 	<td>(ZWO only) Specifies how much of a calculated exposure change should be made
 	during auto-exposure. Lower numbers smooth out brightness changes but take longer to
 	react to changes.</td>
 </tr>
-<tr><td><span class="WebUISetting">Gain Transition Time</span></td>
+<tr><td id="gaintransitiontime"><span class="WebUISetting">Gain Transition Time</span></td>
 	<td>15</td>
 	<td>(ZWO only) Number of <b>minutes</b> over which to increase or decrease
 	the gain when going from day-to-night or night-to-day images.
@@ -361,7 +361,7 @@ A (partial) typical page is below.
 	<span class="WebUIValue">0</span> disables transitions.</td>
 </tr>
 <!-- NO LONGER USED
-<tr><td><span class="WebUISetting">Image Width</span></td>
+<tr><td id="width"><span class="WebUISetting">Image Width</span></td>
 	<td>0</td>
 	<td>(ZWO only)
 	This and the <span class="WebUISetting">Image Height</span>
@@ -370,13 +370,13 @@ A (partial) typical page is below.
 	<span class="WebUIValue">0</span> uses the sensor's full width in pixels.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Image Height</span></td>
+<tr><td id="height"><span class="WebUISetting">Image Height</span></td>
 	<td>0</td>
 	<td>(ZWO only)
 		Same as <span class="WebUISetting">Width</span> but for the sensor's height.</td>
 </tr>
 -->
-<tr><td><span class="WebUISetting">Image Type</span></td>
+<tr><td id="type"><span class="WebUISetting">Image Type</span></td>
 	<td>auto</td>
 	<td>Image format: <b>auto</b>:
 	automatically picks the best type of image based on the camera.
@@ -386,7 +386,7 @@ A (partial) typical page is below.
 	<b>RAW8</b>: 8-bit mono. <b>RGB24</b>: color (red, green, blue), 8 bits per channel.
 	<b>RAW16</b>: 16-bit mono.</td>
 </tr>
-<tr><td><span class="WebUISetting">Quality / Compression</span></td>
+<tr><td id="lity"><span class="WebUISetting">Quality / Compression</span></td>
 	<td>95</td>
 	<td>For JPG images, this specifies the quality - 0 (low quality) to 100 (high quality).
 	Larger numbers produce higher-quality, but larger, files.
@@ -395,28 +395,28 @@ A (partial) typical page is below.
 	If you use very short delays between pictures you may want to play with these
 	numbers to get the quickest delay possible.</td>
 </tr>
-<tr><td><span class="WebUISetting">Auto USB Bandwidth</span></td>
+<tr><td id="autousb"><span class="WebUISetting">Auto USB Bandwidth</span></td>
 	<td>Yes</td>
 	<td>(ZWO only) Automatically sets the <span class="WebUISetting">USB bandwidth</span>.</td>
 </tr>
-<tr><td><span class="WebUISetting">USB Bandwidth</span></td>
+<tr><td id="usb"><span class="WebUISetting">USB Bandwidth</span></td>
 	<td><span class="cameraDependent">CD</span></td>
 	<td>(ZWO only) How much of the USB bandwidth to use.</td>
 </tr>
-<tr><td><span class="WebUISetting">Filename</span> <span class="AW">AW</span></td>
+<tr><td id="filename"><span class="WebUISetting">Filename</span> <span class="AW">AW</span></td>
 	<td>image.jpg</td>
 	<td>The name of the image file. Supported extensions are <b>jpg</b> and <b>png</b>.</td>
 </tr>
-<tr><td><span class="WebUISetting">Rotation</span></td>
+<tr><td id="rotation"><span class="WebUISetting">Rotation</span></td>
 	<td>None</td>
 	<td>(RPi on Bookworm and Bullseye only) How to rotate the image.
 	Choices are 0 and 180 degrees.</td>
 </tr>
-<tr><td><span class="WebUISetting">Flip</span></td>
+<tr><td id="flip"><span class="WebUISetting">Flip</span></td>
 	<td>No flip</td>
 	<td>How to flip the image (No flip, Horizontal, Vertical, or Both).</td>
 </tr>
-<tr><td><span class="WebUISetting">Consistent Delays Between Images</span></td>
+<tr><td id="consistentdelays"><span class="WebUISetting">Consistent Delays Between Images</span></td>
 	<td>Yes</td>
 	<td>Enable this to force the time between the start of exposures to be a consistent length
 	(<span class="WebUISetting">Max Auto-Exposure + Delay</span>).
@@ -424,16 +424,16 @@ A (partial) typical page is below.
 	for example, every 90 seconds, regardless of how long an individual frame's exposure is.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Time Format</span></td>
+<tr><td id="timeformat"><span class="WebUISetting">Time Format</span></td>
 	<td>%Y%m%d %H:%M:%S</td>
 	<td>Determines the format of the displayed time.
 	Run <code>man 3 strftime</code> to see the options.</td>
 </tr>
-<tr><td><span class="WebUISetting">Temperature Units</span></td>
+<tr><td id="temptype"><span class="WebUISetting">Temperature Units</span></td>
 	<td>Celsius</td>
 	<td>Determines what unit(s) the temperature will be displayed in (Celsius, Fahrenheit, or Both).</td>
 </tr>
-<tr><td><span class="WebUISetting">Latitude</span> <span class="AW">AW</span></td>
+<tr><td id="latitude"><span class="WebUISetting">Latitude</span> <span class="AW">AW</span></td>
 	<td></td>
 	<td>Latitude of the camera.
 	Formats include: 123.4N, 123.4S, +123.4, or -123.4.
@@ -441,7 +441,7 @@ A (partial) typical page is below.
 	The "+" is needed for positive numbers.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Longitude</span> <span class="AW">AW</span></td>
+<tr><td id="longitude"><span class="WebUISetting">Longitude</span> <span class="AW">AW</span></td>
 	<td></td>
 	<td>Longitude of the camera.
 	Formats include: 123.4E, 123.4W, +123.4, or -123.4.
@@ -462,7 +462,7 @@ A (partial) typical page is below.
 	</blockquote>
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Angle</span> <span class="AW">AW</span></td>
+<tr><td id="angle"><span class="WebUISetting">Angle</span> <span class="AW">AW</span></td>
 	<td>-6</td>
 	<td>Altitude of the Sun above or below the horizon at which daytime and nighttime switch.
 	Can be negative (Sun below horizon) or positive (Sun above horizon).
@@ -476,7 +476,7 @@ A (partial) typical page is below.
 	for a more detailed description of <span class="WebUISetting">Angle</span>.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Take Dark Frames</span></td>
+<tr><td id="takedarkframes"><span class="WebUISetting">Take Dark Frames</span></td>
 	<td>No</td>
 	<td>Enable to take dark frames which are use to decrease noise in images.
 	<br>
@@ -485,14 +485,14 @@ A (partial) typical page is below.
 	of dark frames, including how to take and use them.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Use Dark Frames</span></td>
+<tr><td id="usedarkframes"><span class="WebUISetting">Use Dark Frames</span></td>
 	<td>No</td>
 	<td>Enable to perform dark frame subtraction at night.
 	<br>Requires that you first took dark frames using the
 	<span class="WebUISetting">Take Dark Frames</span> setting.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Locale</span></td>
+<tr><td id="locale"><span class="WebUISetting">Locale</span></td>
 	<td></td>
 	<td>The locale is used to determine what the thousands and decimal separators are
 	as well as the language to use for many non-Allsky commands.
@@ -519,7 +519,7 @@ A (partial) typical page is below.
 	when done, re-run the installation script selecting the locale you just installed.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">ZWO Exposure Type</span></td>
+<tr><td id="zwoexposuretype"><span class="WebUISetting">ZWO Exposure Type</span></td>
 	<td>Snapshot</td>
 	<td>(ZWO only) Determines what type of exposures to take:
 	<ol class="minimalPadding topPadding">
@@ -540,7 +540,7 @@ A (partial) typical page is below.
 	</ol>
 	The first two types decrease the sensor temperature between 5 - 15 degrees Celsius.
 </tr>
-<tr><td><span class="WebUISetting">Histogram Box</span></td>
+<tr><td id="histogrambox"><span class="WebUISetting">Histogram Box</span></td>
 	<td>500 500 50 50</td>
 	<td>(ZWO only) X and Y size of histogram box in pixels and the middle point of
 	the box in percent.
@@ -549,7 +549,7 @@ A (partial) typical page is below.
 	If the Sun goes through the center of your image you may want to move the box.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Debug Level</span></td>
+<tr><td id="debuglevel"><span class="WebUISetting">Debug Level</span></td>
 	<td>1</td>
 	<td>Determines the amount of output in the log file.
 <!--
@@ -570,7 +570,7 @@ A (partial) typical page is below.
 	on top of images in the Allsky Website.</b>
 	This page only deals with the <u>image overlay</u>.
 </td></tr>
-<tr><td><span class="WebUISetting">Overlay Method</span></td>
+<tr><td id="overlaymethod"><span class="WebUISetting">Overlay Method</span></td>
 	<td>module</td>
 	<td>The default now uses the new, enhanced
 	<a allsky="true" external="true" href="/documentation/overlays/overlays.html">overlay</a>
@@ -588,131 +588,131 @@ A (partial) typical page is below.
 	</p>
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Show Time</span></td>
+<tr><td id="showtime"><span class="WebUISetting">Show Time</span></td>
 	<td>Yes</td>
 	<td>Display the time the picture was taken in the overlay?</td>
 </tr>
-<tr><td><span class="WebUISetting">Show Temperature</span></td>
+<tr><td id="showtemp"><span class="WebUISetting">Show Temperature</span></td>
 	<td>Yes</td>
 	<td>(ZWO only) Display the camera sensor temperature in the overlay?</td>
 </tr>
-<tr><td><span class="WebUISetting">Show Exposure</span></td>
+<tr><td id="showexposure"><span class="WebUISetting">Show Exposure</span></td>
 	<td>Yes</td>
 	<td>Display the exposure time in the overlay? If <span class="WebUISetting">Auto-Exposure</span> is enabled,
 	"(auto)" will appear after the exposure.</td>
 </tr>
-<tr><td><span class="WebUISetting">Show Gain</span></td>
+<tr><td id="showgain"><span class="WebUISetting">Show Gain</span></td>
 	<td>Yes</td>
 	<td>Display the gain in the overlay? If <span class="WebUISetting">Auto-Gain</span> is enabled,
 	"(auto)" will appear after the gain.</td>
 </tr>
-<tr><td><span class="WebUISetting">Show USB</span></td>
+<tr><td id="showusb"><span class="WebUISetting">Show USB</span></td>
 	<td>No</td>
 	<td>(ZWO only) Display the USB Bandwidth in the overlay? This is primarily for debugging.</td>
 </tr>
-<tr><td><span class="WebUISetting">Show Mean Brightness</span></td>
+<tr><td id="showmean"><span class="WebUISetting">Show Mean Brightness</span></td>
 	<td>No</td>
 	<td>Display the mean (average) brightness in the overlay?
 	This value is used to determine the correct auto-exposure and auto-gain levels.</td>
 </tr>
-<tr><td><span class="WebUISetting">Show Histogram Box</span></td>
+<tr><td id="showhistogrambox"><span class="WebUISetting">Show Histogram Box</span></td>
 	<td>No</td>
 	<td>(ZWO only) Show the histogram box on the image?</td>
 </tr>
-<tr><td><span class="WebUISetting">Show Focus Metric</span></td>
+<tr><td id="showfocus"><span class="WebUISetting">Show Focus Metric</span></td>
 	<td>No</td>
 	<td>Display a focus metric in the overlay to help you focus the camera?
 		Higher numbers are better, but only use when the brightness isn't changing.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Text Overlay</span></td>
+<tr><td id="text"><span class="WebUISetting">Text Overlay</span></td>
 	<td></td>
 	<td>Text overlay that appears below the time, in the same font.</td>
 </tr>
-<tr><td><span class="WebUISetting">Extra Text File</span></td>
+<tr><td id="extratext"><span class="WebUISetting">Extra Text File</span></td>
 	<td></td>
 	<td>The full path name to a text file which will be displayed under other information.
 	The file can contain multiple lines which will be displayed underneath each other.</td>
 </tr>
-<tr><td><span class="WebUISetting">Max Age Of Extra</span></td>
+<tr><td id="extratextage"><span class="WebUISetting">Max Age Of Extra</span></td>
 	<td>0</td>
 	<td>If you specified an <span class="WebUISetting">Extra Text File</span>
 	then it must be updated within this number of seconds;
 	if not it's contents will not be displayed.
 	Set to <span class="WebUIValue">0</span> to ignore this check and always display the contents of the file.</td>
 </tr>
-<tr><td><span class="WebUISetting">Line Height</span></td>
+<tr><td id="textlineheight"><span class="WebUISetting">Line Height</span></td>
 	<td>30</td>
 	<td>The line height of the text displayed in the image.
 	If you change the font size then adjust this value if required.</td>
 </tr>
-<tr><td><span class="WebUISetting">Text X</span></td>
+<tr><td id="textx"><span class="WebUISetting">Text X</span></td>
 	<td>15</td>
 	<td>Start of text from the left side, in pixels.</td>
 </tr>
-<tr><td><span class="WebUISetting">Text Y</span></td>
+<tr><td id="texty"><span class="WebUISetting">Text Y</span></td>
 	<td>35</td>
 	<td>Start of text from the top, in pixels.</td>
 </tr>
-<tr><td><span class="WebUISetting">Font Name</span></td>
+<tr><td id="fontname"><span class="WebUISetting">Font Name</span></td>
 	<td>Simplex</td>
 	<td>Font type for the overlay.</td>
 </tr>
-<tr><td><span class="WebUISetting">Font Color</span></td>
+<tr><td id="fontcolor"><span class="WebUISetting">Font Color</span></td>
 	<td>255 0 0</td>
 	<td>Font color in Blue, Green, and Red (BGR).
 	NOTE: When using RAW 16 only the first two values are used, i.e., 255 128 0.</td>
 </tr>
-<tr><td><span class="WebUISetting">Small Font Color</span></td>
+<tr><td id="smallfontcolor"><span class="WebUISetting">Small Font Color</span></td>
 	<td>0 0 255</td>
 	<td>Small font color in BGR.
 	NOTE: When using RAW 16 only the first two values are used, i.e., 255 128 0.</td>
 </tr>
-<tr><td><span class="WebUISetting">Font Smoothness</span></td>
+<tr><td id="fonttype"><span class="WebUISetting">Font Smoothness</span></td>
 	<td>Antialiased</td>
 	<td>Controls the smoothness of the fonts.</td>
 </tr>
-<tr><td><span class="WebUISetting">Font Size</span></td>
+<tr><td id="fontsize"><span class="WebUISetting">Font Size</span></td>
 	<td>7</td>
 	<td>Font size.
 	This is impacted by the sensor size so you'll need to experiment with this.</td>
 </tr>
-<tr><td><span class="WebUISetting">Font Weight</span></td>
+<tr><td id="fontline"><span class="WebUISetting">Font Weight</span></td>
 	<td>1</td>
 	<td>Font line thickness.</td>
 </tr>
-<tr><td><span class="WebUISetting">Use Outline Font</span></td>
+<tr><td id="outlinefont"><span class="WebUISetting">Use Outline Font</span></td>
 	<td>No</td>
 	<td>Should an outline to the text overlay be added to improve contrast?</td>
 </tr>
 
 <tr><td class="settingsHeader" colspan="3">Post Capture Settings</td></tr>
-<tr><td><span class="WebUISetting">Remove Bad Images Threshold Low</span></td>
+<tr><td id="imeagesremovebadlow"><span class="WebUISetting">Remove Bad Images Threshold Low</span></td>
 	<td>0.1</td>
 	<td>Images whose mean brightness is below this will be removed.
 	Useful values range from <code>0.01</code> to around <code>0.2</code>.
 	<br>Set to <code>0</code> to disable this check.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Remove Bad Images Threshold High</span></td>
+<tr><td id="imeagesremovebadhigh"><span class="WebUISetting">Remove Bad Images Threshold High</span></td>
 	<td>0.9</td>
 	<td>Images whose mean brightness is above this will be removed.
 	Useful values range from <code>0.8</code> to around <code>0.95</code>.
 	<br>Set to <code>0</code> to disable this check.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Create Image Thumbnails</span></td>
+<tr><td id="imagecreatethumbnails"><span class="WebUISetting">Create Image Thumbnails</span></td>
 	<td>Yes</td>
 	<td>Create thumbnails of the images and save in <span class="fileName">~/allsky/images</span>?
 	If you never look at them via the WebUI's <span class="WebUIWebPage">Images<span> page,
 	consider changing this to "No".
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Thumbnail Width</span></td>
+<tr><td id="thumbnailsizex"><span class="WebUISetting">Thumbnail Width</span></td>
 	<td>100</td>
 	<td>Sets the width of image and video thumbnails.</td>
 </tr>
-<tr><td><span class="WebUISetting">Thumbnail Height</span></td>
+<tr><td id="thumbnailsizey"><span class="WebUISetting">Thumbnail Height</span></td>
 	<td>75</td>
 	<td>Sets the height of image and video thumbnails.
 	<br>These numbers determine the size of the thumbnails in
@@ -724,7 +724,7 @@ A (partial) typical page is below.
 	</blockquote>
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Image Resize Width</span></td>
+<tr><td id="imageresizewidth"><span class="WebUISetting">Image Resize Width</span></td>
 	<td>0</td>
 	<td>The width to resize images to.
 	Large sensor cameras like the RPi HQ may need to be resized (i.e., shrunken)
@@ -734,7 +734,7 @@ A (partial) typical page is below.
 	<span class="WebUIValue">0</span> disables resizing.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Image Resize<br>Height</span></td>
+<tr><td id="imageresizeheight"><span class="WebUISetting">Image Resize<br>Height</span></td>
 	<td>0</td>
 	<td>Same as <span class="WebUISetting">Image Resize<br>Width</span>
 	but for the image height.
@@ -744,7 +744,7 @@ A (partial) typical page is below.
 	otherwise images will be distorted.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Image Crop<br>Top</span></td>
+<tr><td id="imagecroptop"><span class="WebUISetting">Image Crop<br>Top</span></td>
 	<td>0</td>
 	<td>Number of pixels to crop off the top of an image.
 	This is often used to remove the dark areas around an image when using a fisheye lens.
@@ -753,26 +753,26 @@ A (partial) typical page is below.
 	or a positive number.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Image Crop<br>Right</span></td>
+<tr><td id="imagecropright"><span class="WebUISetting">Image Crop<br>Right</span></td>
 	<td>0</td>
 	<td>Number of pixels to crop off the right side of an image.</td>
 </tr>
-<tr><td><span class="WebUISetting">Image Crop<br>Bottom</span></td>
+<tr><td id="imagecropbottom"><span class="WebUISetting">Image Crop<br>Bottom</span></td>
 	<td>0</td>
 	<td>Number of pixels to crop off the bottom an image.</td>
 </tr>
-<tr><td><span class="WebUISetting">Image Crop<br>Left</span></td>
+<tr><td id="imagecropleft"><span class="WebUISetting">Image Crop<br>Left</span></td>
 	<td>0</td>
 	<td>Number of pixels to crop off the left side of an image.</td>
 </tr>
 
-<tr><td class="settingsHeader" colspan="3">Timelapse Settings</td></tr>
-<tr><td class="subSettingsHeader" colspan="3">Daily Timelapse</td></tr>
-<tr><td><span class="WebUISetting">Generate</span></td>
+<tr><td id="timelapse" class="settingsHeader" colspan="3">Timelapse Settings</td></tr>
+<tr><td id=dailytimelapse" class="subSettingsHeader" colspan="3">Daily Timelapse</td></tr>
+<tr><td id="timelapsegenerate"><span class="WebUISetting">Generate</span></td>
 	<td>Yes</td>
 	<td>Enable to generate a timelapse video at the end of the night.</td>
 </tr>
-<tr><td><span class="WebUISetting">Upload</span></td>
+<tr><td id="timelapseupload"><span class="WebUISetting">Upload</span></td>
 	<td>Yes</td>
 	<td>Upload the timelapse video to an Allsky Website and/or remote server?
 	If not set, the timelapse videos can still be viewed via the
@@ -780,7 +780,7 @@ A (partial) typical page is below.
 	<br>Ignored if you you do not have an Allsky Website or remote server.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Upload Thumbnail</span></td>
+<tr><td id="timelapseuploadthumbnail"><span class="WebUISetting">Upload Thumbnail</span></td>
 	<td>Yes</td>
 	<td>Upload the timelapse video's thumbnail to your Allsky Website?
 	Many remote servers don't support thumbnail creation so the thumbnail needs to be
@@ -788,7 +788,7 @@ A (partial) typical page is below.
 	<br>Not needed if your only Allsky Website is on your Pi.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Width</span></td>
+<tr><td id="timelapsewidth"><span class="WebUISetting">Width</span></td>
 	<td>0</td>
 	<td>Changes the width of the generated timelapse; must be an even number.
 	<br><span class="WebUIValue">0</span> uses the images's full size.
@@ -796,7 +796,7 @@ A (partial) typical page is below.
 	in order for timelapses to work (or the individual images need to be shrunk).
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Height</span></td>
+<tr><td id="timelapseheight"><span class="WebUISetting">Height</span></td>
 	<td>0</td>
 	<td>Changes the height of the generated timelapse; must be an even number.
 	<br><span class="WebUIValue">0</span> uses the images's full size.
@@ -804,13 +804,13 @@ A (partial) typical page is below.
 	to match the original images.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Bitrate</span></td>
+<tr><td id="timelapsebitrate"><span class="WebUISetting">Bitrate</span></td>
 	<td>5000</td>
 	<td>Bitrate the timelapse video will be created with.
 	Higher values produce better quality video but larger files.
 	<br>Do NOT add a trailing <span class="WebUIValue">k</span>.</td>
 </tr>
-<tr><td><span class="WebUISetting">FPS</span></td>
+<tr><td id="timelapsefps"><span class="WebUISetting">FPS</span></td>
 	<td>25</td>
 	<td>The timelapse video
 	<span class="WebUISetting">F</span>rames
@@ -819,13 +819,13 @@ A (partial) typical page is below.
 	<br>Higher numbers produce smoother, but shorter, videos.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Keep Sequence</span></td>
+<tr><td id="timelapsekeepsequence"><span class="WebUISetting">Keep Sequence</span></td>
 	<td>No</td>
 	<td>Keep the sequence of symbolic links created when creating a timelapse?
 	<br>Primarily used when debugging.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Extra Parameters</span></td>
+<tr><td id="timelapseextraparameters"><span class="WebUISetting">Extra Parameters</span></td>
 	<td></td>
 	<td>Any additional timelapse parameters.
 	If video quality is poor or videos don't plan on Apple devices,
@@ -841,7 +841,7 @@ A (partial) typical page is below.
 	In those cases, only differences are noted.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Number Of Images</span></td>
+<tr><td id="minitimelapsenumimages"><span class="WebUISetting">Number Of Images</span></td>
 	<td>0</td>
 	<td>A "mini-timelapse" only includes the most recent images and is created often.
 	It's a good way to see "recent" activity.
@@ -853,7 +853,7 @@ A (partial) typical page is below.
 	<br>The following settings only apply if this settings is greater than 0.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Force Creation</span></td>
+<tr><td id="minitimelapseforcecreation"><span class="WebUISetting">Force Creation</span></td>
 	<td>No</td>
 	<td>Should a mini-timelapse be created even if
 	<span class="WebUISetting">Number Of Images</span> images
@@ -862,7 +862,7 @@ A (partial) typical page is below.
 	should a mini-timelapse still be created?
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Frequency</span></td>
+<tr><td id="minitimelapsefrequency"><span class="WebUISetting">Frequency</span></td>
 	<td>5</td>
 	<td>After how many images should the mini-timelapse be created?
 	Slower machines and machines with slow networks should use higher numbers.
@@ -886,47 +886,47 @@ A (partial) typical page is below.
 	</p>
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Upload</span></td>
+<tr><td id="minitimelapseupload"><span class="WebUISetting">Upload</span></td>
 	<td>Yes</td>
 	<td></td>
 </tr>
-<tr><td><span class="WebUISetting">Upload Thumbnail</span></td>
+<tr><td id="minitimelapseuploadthumbnails"><span class="WebUISetting">Upload Thumbnail</span></td>
 	<td>Yes</td>
 	<td></td>
 </tr>
-<tr><td><span class="WebUISetting">Width</span></td>
+<tr><td id="minitimelapsewidth"><span class="WebUISetting">Width</span></td>
 	<td>0</td>
 	<td></td>
 </tr>
-<tr><td><span class="WebUISetting">Height</span></td>
+<tr><td id="minitimelapseheight"><span class="WebUISetting">Height</span></td>
 	<td>0</td>
 	<td></td>
 </tr>
-<tr><td><span class="WebUISetting">Bitrate</span></td>
+<tr><td id="minitimelapsebitrate"><span class="WebUISetting">Bitrate</span></td>
 	<td>2000</td>
 	<td>This is normally smaller than a full timelapse to save on processing time.</td>
 </tr>
-<tr><td><span class="WebUISetting">FPS</span></td>
+<tr><td id="minitimelapsefps"><span class="WebUISetting">FPS</span></td>
 	<td>5</td>
 	<td>Mini-timelapses contain a small number of images so
 	this setting should be low to avoid very short videos.
 	</td>
 </tr>
 
-<tr><td class="subSettingsHeader" colspan="3">Both Timelapses</td></tr>
-<tr><td><span class="WebUISetting">VCODEC</span></td>
+<tr><td id="bothtimelapses" class="subSettingsHeader" colspan="3">Both Timelapses</td></tr>
+<tr><td id="timelapsevcodec"><span class="WebUISetting">VCODEC</span></td>
 	<td>libx264</td>
 	<td>Encoder used to create the timelapse video.
 	Rarely changed.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Pixel format</span></td>
+<tr><td id="timelapsevpixfmt"><span class="WebUISetting">Pixel format</span></td>
 	<td>yuv420p</td>
 	<td>Pixel format.
 	<br>If you don't know what this is, don't change it.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Log Level</span></td>
+<tr><td id="timelapsefflog"><span class="WebUISetting">Log Level</span></td>
 	<td>Warning</td>
 	<td>Level of debugging information output when creating a timelapse.
 	Set to <span class="WebUIValue">Info + Warnings + Errors</span> for more output.
@@ -935,54 +935,54 @@ A (partial) typical page is below.
 </tr>
 
 <tr><td class="settingsHeader" colspan="3">Keogram and Startrails Settings</td></tr>
-<tr><td class="subSettingsHeader" colspan="3">Keograms</td></tr>
-<tr><td><span class="WebUISetting">Generate</span></td>
+<tr><td id="keograms" class="subSettingsHeader" colspan="3">Keograms</td></tr>
+<tr><td id="keogramgenerate"><span class="WebUISetting">Generate</span></td>
 	<td>Yes</td>
 	<td>Enable to generat a keogram image at the end of the night.</td>
 </tr>
-<tr><td><span class="WebUISetting">Upload</span></td>
+<tr><td id="keogramupload"><span class="WebUISetting">Upload</span></td>
 	<td>Yes</td>
 	<td>Upload the keogram image to an Allsky Website and/or remote server?</td>
 </tr>
-<tr><td><span class="WebUISetting">Expand</span></td>
+<tr><td id="keogramexpand"><span class="WebUISetting">Expand</span></td>
 	<td>Yes</td>
 	<td>Enable to expand keograms to the image width.
 	Same as the "--image-expand" and "-x" options.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Font Name</span></td>
+<tr><td id="keogramfontname"><span class="WebUISetting">Font Name</span></td>
 	<td>Simplex</td>
 	<td>Font name.</td>
 </tr>
-<tr><td><span class="WebUISetting">Font Color</span></td>
+<tr><td id="keogramfontcolor"><span class="WebUISetting">Font Color</span></td>
 	<td>#fff (white)</td>
 	<td>Font color.
 	Same as the "--font-color" and "-C" options.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Font Size</span></td>
+<tr><td id="keogramfontsize"><span class="WebUISetting">Font Size</span></td>
 	<td>2</td>
 	<td>Font size.
 	Same as the "--font-size" and "-S" options.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Font Line Thickness</span></td>
+<tr><td id="keogramfontlinethickness"><span class="WebUISetting">Font Line Thickness</span></td>
 	<td>3</td>
 	<td>Thickness of the font's line.
 	Same as the "--font-line" and "-L" options.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Extra Parameters</span></td>
+<tr><td id="keogramextraparameters"><span class="WebUISetting">Extra Parameters</span></td>
 	<td></td>
 	<td>Optional additional keogram creation parameters.
 	Execute <code>~/allsky/bin/keogram --help</code> for a list of options.</td>
 </tr>
-<tr><td class="subSettingsHeader" colspan="3">Startrails</td></tr>
-<tr><td><span class="WebUISetting">Generate</span></td>
+<tr><td id="startrails" class="subSettingsHeader" colspan="3">Startrails</td></tr>
+<tr><td id="startrailsgenerate"><span class="WebUISetting">Generate</span></td>
 	<td>Yes</td>
 	<td>Enable to generate a startrails image at the end of night.</td>
 </tr>
-<tr><td><span class="WebUISetting">Brightness Threshold</span></td>
+<tr><td id="startrailsbrightnessthreshold"><span class="WebUISetting">Brightness Threshold</span></td>
 	<td>0.1</td>
 	<td>Average brightness level above which images are discarded
 	(moon, head lights, aurora, etc.).
@@ -991,24 +991,24 @@ A (partial) typical page is below.
 	to 1.0 (pure white, uses every image).
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Upload</span></td>
+<tr><td id="startrailsupload"><span class="WebUISetting">Upload</span></td>
 	<td>Yes</td>
 	<td>Enable to upload the startrails image to an Allsky Website and/or remote server.</td>
 </tr>
-<tr><td><span class="WebUISetting">Extra Parameters</span></td>
+<tr><td id="startrailsextraparameters"><span class="WebUISetting">Extra Parameters</span></td>
 	<td></td>
 	<td>Optional additional startrails creation parameters.
 	Execute <code>~/allsky/bin/startrails --help</code> for a list of options.</td>
 </tr>
 
-<tr><td class="settingsHeader" colspan="3">Websites and Remote Server Settings</td></tr>
+<tr><td id="websitesandremoteserver" class="settingsHeader" colspan="3">Websites and Remote Server Settings</td></tr>
 <tr><td class="settingsHeader settingsHeaderNote" colspan="3">
 	Allsky supports uploading files to a local (i.e., on your Pi) Website,
 	a remote (i.e., not on your Pi) Website,
 	and/or a remote server that is NOT an Allsky Website.</td>
 </tr>
 
-<tr><td><span class="WebUISetting">Resize Uploaded Images Width</span></td>
+<tr><td id="imagesresizeuploadswidth"><span class="WebUISetting">Resize Uploaded Images Width</span></td>
 	<td>0</td>
 	<td>Set to an even number to resize images that will be uploaded.
 	This decreases the size of uploaded files and saves network bandwidth.
@@ -1017,14 +1017,14 @@ A (partial) typical page is below.
 	Set to <span class="WebUIValue">0</span> to disable resizing.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Resize Uploaded Images Height</span></td>
+<tr><td id="imagesresizeuploadsheight"><span class="WebUISetting">Resize Uploaded Images Height</span></td>
 	<td>0</td>
 	<td>Same as <span class="WebUISetting">Resize Uploaded Images Width</span>
 	but for the height.
 	If that setting is <span class="WebUIValue">0</span> this setting must be as well.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Upload Every X Images</span></td>
+<tr><td id="imageuploadfrequency"><span class="WebUISetting">Upload Every X Images</span></td>
 	<td>1</td>
 	<td>How often should the current image be uploaded?
 	This is useful for slow or costly networks.
@@ -1032,7 +1032,7 @@ A (partial) typical page is below.
 	Note that startrails, keograms, and timelapse videos have their own "upload" settings.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Display Settings</span></td>
+<tr><td id="displaysettings"><span class="WebUISetting">Display Settings</span></td>
 	<td>No</td>
 	<td>People sometimes ask others what settings they are using.
 	Enable this setting to add a link to your Allsky Website's right-side
@@ -1041,8 +1041,8 @@ A (partial) typical page is below.
 	</td>
 </tr>
 
-<tr><td class="subSettingsHeader" colspan="3">Local Website</td></tr>
-<tr><td><span class="WebUISetting">Use Local Website</span></td>
+<tr><td "id=localwebsite" class="subSettingsHeader" colspan="3">Local Website</td></tr>
+<tr><td id="uselocalwebsite"><span class="WebUISetting">Use Local Website</span></td>
 	<td>No</td>
 	<td>Enable to use a <b>local</b> Allsky Website.
 	No other settings are needed for a local Website.
@@ -1053,7 +1053,7 @@ A (partial) typical page is below.
 	easily re-enable it and pick up where you left off.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Days To Keep on Pi Website</span></td>
+<tr><td id="daystokeeplocalwebsite"><span class="WebUISetting">Days To Keep on Pi Website</span></td>
 	<td>14</td>
 	<td>Any image, video, or thumbnail older than this many days
 	will be deleted at each end of night.
@@ -1062,8 +1062,8 @@ A (partial) typical page is below.
 	</td>
 </tr>
 
-<tr><td class="subSettingsHeader" colspan="3">Remote Website</td></tr>
-<tr><td><span class="WebUISetting">Use Remote Website</span></td>
+<tr><td id="remotewebsite" class="subSettingsHeader" colspan="3">Remote Website</td></tr>
+<tr><td id="useremotewebsite"><span class="WebUISetting">Use Remote Website</span></td>
 	<td>No</td>
 	<td>Enable to use a <b>remote</b> Allsky Website.
 	Enable the Website BEFORE you
@@ -1071,7 +1071,7 @@ A (partial) typical page is below.
 	it since the installation needs the settings below.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Image Directory</span></td>
+<tr><td id="remotewebsiteimagedir"><span class="WebUISetting">Image Directory</span></td>
 	<td></td>
 	<td>Name of the directory the current image should be uploaded to.
 		<blockquote>
@@ -1083,7 +1083,7 @@ A (partial) typical page is below.
 		</blockquote>
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Protocol</span></td>
+<tr><td id="remotewebsiteprotocol"><span class="WebUISetting">Protocol</span></td>
 	<td>ftps</td>
 	<td>Specifies how files should be uploaded to the remote Website.
 	<ul class="minimalPadding">
@@ -1110,27 +1110,27 @@ A (partial) typical page is below.
 	</ul>
 	<p>Some of the settings below only apply to certain protocols.</p>
 	</td></tr>
-<tr><td><span class="WebUISetting">Server Name</span></td>
+<tr><td id="REMOTEWEBSITE_HOST"><span class="WebUISetting">Server Name</span></td>
 	<td></td>
 	<td>Name of the remote server.
 		Note that this is normally NOT the same as the URL used to access the server.
 		If you don't know the name of the server,
 		ask the person or company supporting the server.
 	</td></tr>
-<tr><td><span class="WebUISetting">Port</span></td>
+<tr><td id="REMOTEWEBSITE_PORT"><span class="WebUISetting">Port</span></td>
 	<td></td>
 	<td>(ftp protocols only) Optional port required by the server.
 		This is rarely needed as the software can usually determine what port to use.
 	</td></tr>
-<tr><td><span class="WebUISetting">User Name</span></td>
+<tr><td id="REMOTEWEBSITE_USER"><span class="WebUISetting">User Name</span></td>
 	<td></td>
 	<td>The username of the login on the remote Website.
 	</td></tr>
-<tr><td><span class="WebUISetting">Password</span></td>
+<tr><td id="REMOTEWEBSITE_PASSWORD"><span class="WebUISetting">Password</span></td>
 	<td></td>
 	<td>The password of the login on the remote Website.
 	</td></tr>
-<tr><td><span class="WebUISetting">FTP Commands</span></td>
+<tr><td id="REMOTEWEBSITE_LFTP_COMMANDS"><span class="WebUISetting">FTP Commands</span></td>
 	<td></td>
 	<td>(ftp protocols only) Optional colon-separated list of commands to send to the ftp server
 		prior to transfering files.
@@ -1139,7 +1139,7 @@ A (partial) typical page is below.
 		<a allsky="true" external="true" href="/documentation/troubleshooting/uploads.html">Troubleshooting -> Uploads</a>
 		page for more information.
 	</td></tr>
-<tr><td><span class="WebUISetting">SSH Key File</span></td>
+<tr><td id="REMOTEWEBSITE_SSH_KEY_FILE"><span class="WebUISetting">SSH Key File</span></td>
 	<td></td>
 	<td>(scp and rsync protocols only) Path to the SSH key.
 	<p>
@@ -1172,7 +1172,7 @@ A (partial) typical page is below.
 	</ul>
 	</p>
 	</td></tr>
-<tr><td><span class="WebUISetting">AWS CLI Directory</span></td>
+<tr><td id="REMOTEWEBSITE_AWS_CLI_DIR"><span class="WebUISetting">AWS CLI Directory</span></td>
 	<td></td>
 	<td>(s3 protocol only) Directory on the Pi where the AWS Command-Line Interface (CLI)
 	tools are installed,
@@ -1187,7 +1187,7 @@ aws configure
 	for example, "us-west-2".
 	Set the Default output format to "json" when prompted.
 	</td></tr>
-<tr><td><span class="WebUISetting">S3 Bucket</span></td>
+<tr><td id="REMOTEWEBSITE_S3_BUCKET"><span class="WebUISetting">S3 Bucket</span></td>
 	<td></td>
 	<td>(s3 protocol only) Name of the S3 bucket where files will be uploaded to
 	(must be in Default region specified above).
@@ -1195,7 +1195,7 @@ aws configure
 	You may want to turn off or limit bucket versioning to avoid consuming lots of
 	space with multiple versions of the "image.jpg" files.
 	</td></tr>
-<tr><td><span class="WebUISetting">S3 ACL</span></td>
+<tr><td id=REMOTEWEBSITE_S3_ACL""><span class="WebUISetting">S3 ACL</span></td>
 	<td>private</td>
 	<td>(s3 protocol only) S3 Access Control List (ACL).
 	<br>
@@ -1206,7 +1206,7 @@ aws configure
 	<br>You may need to set a CORS policy in S3 if the files are to be accessed by
 	Javascript from a different domain.
 	</td></tr>
-<tr><td><span class="WebUISetting">GCS Bucket</span></td>
+<tr><td id="REMOTEWEBSITE_GCS_BUCKET"><span class="WebUISetting">GCS Bucket</span></td>
 	<td></td>
 	<td>(gcs protocol only) Name of the GCS bucket where files will be uploaded to.
 	Suggested name is <span class="WebUIValue">allskybucket</span>.
@@ -1219,7 +1219,7 @@ aws configure
 	usually in <span class="fileName">/usr/bin</span>.
 	Make sure you authenticate the cli tool with the correct user as well.
 	</td></tr>
-<tr><td><span class="WebUISetting">GCS ACL</span></td>
+<tr><td id="REMOTEWEBSITE_GCS_ACL"><span class="WebUISetting">GCS ACL</span></td>
 	<td>private</td>
 	<td>(gcs protocol only) GCS Access Control List (ACL).
 	You can use any one of the predefined ACL rules found
@@ -1227,7 +1227,7 @@ aws configure
 	To access files over https, set this to <code>publicRead</code>.
 	</td></tr>
 
-<tr><td><span class="WebUISetting">Upload With Original Name</span></td>
+<tr><td id=remotewebsiteverimageuploadoriginalname""><span class="WebUISetting">Upload With Original Name</span></td>
 	<td>No</td>
 	<td>Determines the name of the uploaded image:
 	<span class="fileName">image.jpg</span> (if No)
@@ -1235,25 +1235,25 @@ aws configure
 	<br>This is rarely used since changing the image name will make it unviewable.
 	</td>
 </tr>
-<tr><td><span class="WebUISetting">Remote Video File Name</span></td>
+<tr><td id="remotewebsitevideodestinationname"><span class="WebUISetting">Remote Video File Name</span></td>
 	<td></td>
 	<td>The name to give to the remote timelapse video file.
 		If not specified it's the same as the file on your Pi.
 	<br>This is rarely used since changing the image name will make it unviewable.
 	</td></tr>
-<tr><td><span class="WebUISetting">Remote Keogram File Name</span></td>
+<tr><td id="remotewebsitekeogramdestinationname"><span class="WebUISetting">Remote Keogram File Name</span></td>
 	<td></td>
 	<td>The name to give to the remote keogram file.
 		If not specified it's the same as the file on your Pi.
 	<br>This is rarely used since changing the image name will make it unviewable.
 	</td></tr>
-<tr><td><span class="WebUISetting">Remote Startrails File Name</span></td>
+<tr><td id="remotewebsitestartrailsdestinationname"><span class="WebUISetting">Remote Startrails File Name</span></td>
 	<td></td>
 	<td>The name to give to the remote startrails file.
 		If not specified it's the same as the file on your Pi.
 	<br>This is rarely used since changing the image name will make it unviewable.
 	</td></tr>
-<tr><td><span class="WebUISetting">Website URL</span></td>
+<tr><td id="remotewebsiteurl"><span class="WebUISetting">Website URL</span></td>
 	<td></td>
 	<td>Your website's URL, for example
 	<span class="WebUIValue">https://www.mywebsite.com/allsky</span>.
@@ -1264,7 +1264,7 @@ aws configure
 	<span class="WebUIValue">http</span> or <span class="WebUIValue">https</span>.
 	</blockquote>
 	</td></tr>
-<tr><td><span class="WebUISetting">Image URL</span></td>
+<tr><td id="remotewebsiteimageurl"><span class="WebUISetting">Image URL</span></td>
 	<td></td>
 	<td>The URL to your allsky image, for example
 	<span class="WebUIValue">https://www.mywebsite.com/allsky/image.jpg</span>.
@@ -1273,11 +1273,11 @@ aws configure
 		<br>Use the more secure "https" over "http" if possible.
 	</td></tr>
 
-<tr><td class="subSettingsHeader" colspan="3">Remote Server</td></tr>
+<tr><td id="remoteserver" class="subSettingsHeader" colspan="3">Remote Server</td></tr>
 <tr><td class="subSettingsHeader subSettingsHeaderNote" colspan="3">
 	These settings are the same as for the Remote Website so are not described.</td>
 </tr>
-<tr><td><span class="WebUISetting">Use Remote Server</span></td>
+<tr><td id="useremoteserver"><span class="WebUISetting">Use Remote Server</span></td>
 	<td>No</td>
 	<td>Enable to use a remote server which is NOT running the Allsky Website software.
 		Files will be copied to this server which normally will be a private website
@@ -1286,64 +1286,64 @@ aws configure
 		For example, if you have an observatory website and want to show the latest image,
 		you would use the settings below.
 	</td></tr>
-<tr><td><span class="WebUISetting">Image Directory</span></td>
+<tr><td id="remoteserverimagedir"><span class="WebUISetting">Image Directory</span></td>
 	<td></td>
 	<td></td></tr>
-<tr><td><span class="WebUISetting">Protocol</span></td>
+<tr><td id="remoteserverprotocol"><span class="WebUISetting">Protocol</span></td>
 	<td>ftps</td>
 	<td></td></tr>
-<tr><td><span class="WebUISetting">Server Name</span></td>
+<tr><td id="REMOTESERVER_HOST"><span class="WebUISetting">Server Name</span></td>
 	<td></td>
 	<td></td></tr>
-<tr><td><span class="WebUISetting">Port</span></td>
+<tr><td id="REMOTESERVER_PORT"><span class="WebUISetting">Port</span></td>
 	<td></td>
 	<td></td></tr>
-<tr><td><span class="WebUISetting">User Name</span></td>
+<tr><td id="REMOTESERVER_USER"><span class="WebUISetting">User Name</span></td>
 	<td></td>
 	<td></td></tr>
-<tr><td><span class="WebUISetting">Password</span></td>
+<tr><td id="REMOTESERVER_PASSWORD"><span class="WebUISetting">Password</span></td>
 	<td></td>
 	<td></td></tr>
-<tr><td><span class="WebUISetting">FTP Commands</span></td>
+<tr><td id="REMOTESERVER_LFTP_COMMANDS"><span class="WebUISetting">FTP Commands</span></td>
 	<td></td>
 	<td></td></tr>
-<tr><td><span class="WebUISetting">SSH Key File</span></td>
+<tr><td id="REMOTESERVER_SSH_KEY_FILE"><span class="WebUISetting">SSH Key File</span></td>
 	<td></td>
 	<td></td></tr>
-<tr><td><span class="WebUISetting">AWS CLI Directory</span></td>
+<tr><td id="REMOTESERVER_ASW_CLI_DIR"><span class="WebUISetting">AWS CLI Directory</span></td>
 	<td></td>
 	<td></td></tr>
-<tr><td><span class="WebUISetting">S3 Bucket</span></td>
+<tr><td id="REMOTESERVER_S3_BUCKET"><span class="WebUISetting">S3 Bucket</span></td>
 	<td></td>
 	<td></td></tr>
-<tr><td><span class="WebUISetting">S3 ACL</span></td>
+<tr><td id="REMOTESERVER_S3_ACL"><span class="WebUISetting">S3 ACL</span></td>
 	<td>private</td>
 	<td></td></tr>
-<tr><td><span class="WebUISetting">GCS Bucket</span></td>
+<tr><td id="REMOTESERVER_GCS_BUCKET"><span class="WebUISetting">GCS Bucket</span></td>
 	<td></td>
 	<td></td></tr>
-<tr><td><span class="WebUISetting">GCS ACL</span></td>
+<tr><td id="REMOTESERVER_GCS_ACL"><span class="WebUISetting">GCS ACL</span></td>
 	<td>private</td>
 	<td></td></tr>
-<tr><td><span class="WebUISetting">Upload With Original Name</span></td>
+<tr><td id="remoteserverimageuploadoriginalname"><span class="WebUISetting">Upload With Original Name</span></td>
 	<td>No</td>
 	<td>
 	<br>Unless you are using the remote server as a backup,
 	this is <b>rarely</b> used since changing the image name will make it unviewable.
 	</td></tr>
-<tr><td><span class="WebUISetting">Remote Video File Name</span></td>
+<tr><td id="remoteservervideodestinationname"><span class="WebUISetting">Remote Video File Name</span></td>
 	<td>allsky.mp4</td>
 	<td>
 	<br>Unless you are using the remote server as a backup,
 	this is <b>usually</b> used so the server knows the file name.
 	</td></tr>
-<tr><td><span class="WebUISetting">Remote Keogram File Name</span></td>
+<tr><td id=remoteserverkeogramdestinationname""><span class="WebUISetting">Remote Keogram File Name</span></td>
 	<td>keogram.jpg</td>
 	<td>
 	<br>Unless you are using the remote server as a backup,
 	this is <b>usually</b> used so the server knows the file name.
 	</td></tr>
-<tr><td><span class="WebUISetting">Remote Startrails File Name</span></td>
+<tr><td id=remoteserverstartrailsdestinationname""><span class="WebUISetting">Remote Startrails File Name</span></td>
 	<td>startrails.jpg</td>
 	<td>
 	<br>Unless you are using the remote server as a backup,
@@ -1351,7 +1351,7 @@ aws configure
 	</td></tr>
 
 
-<tr><td class="settingsHeader" colspan="3">Allsky Map Settings</td></tr>
+<tr><td id="allskymap" class="settingsHeader" colspan="3">Allsky Map Settings</td></tr>
 <tr><td class="settingsHeader settingsHeaderNote" colspan="3">
 	If you want your allsky camera's location to display on the
 	<a external="true" href='https://www.thomasjacquin.com/allsky-map'>Allsky map</a>,
@@ -1362,33 +1362,33 @@ aws configure
 	</td>
 </tr>
 
-<tr><td><span class="WebUISetting">Show on Map</span></td>
+<tr><td id="showonmap"><span class="WebUISetting">Show on Map</span></td>
 	<td>No</td>
 	<td>Enable to have your camera appear on the
 	<a external="true" href='https://www.thomasjacquin.com/allsky-map'>Allsky map</a>.
 	<br><b>If off, the following settings are ignored.</b></td></tr>
 
-<tr><td><span class="WebUISetting">Location</span> <span class="AW">AW</span></td>
+<tr><td id="location"><span class="WebUISetting">Location</span> <span class="AW">AW</span></td>
 	<td></td>
 	<td>The location of your camera.
 	You can put any level of detail you want.</td></tr>
-<tr><td><span class="WebUISetting">Owner</span> <span class="AW">AW</span></td>
+<tr><td id="owner"><span class="WebUISetting">Owner</span> <span class="AW">AW</span></td>
 	<td></td>
 	<td>The owner of the camera - your name, an association name, an observatory, etc.</td></tr>
-<tr><td><span class="WebUISetting">Camera</span> <span class="AW">AW</span></td>
+<tr><td id="camera"><span class="WebUISetting">Camera</span> <span class="AW">AW</span></td>
 	<td></td>
 	<td>The type and model of your camera, for example: <b>ZWO ASI224MC</b> or <b>RPi HQ</b>.
 	This field is required and a default value is set during Allsky installation.</td></tr>
-<tr><td><span class="WebUISetting">Lens</span> <span class="AW">AW</span></td>
+<tr><td id="lens"><span class="WebUISetting">Lens</span> <span class="AW">AW</span></td>
 	<td></td>
 	<td>The lens you're using on your camera, for example: <b>Arecont 1.55</b>.</td></tr>
-<tr><td><span class="WebUISetting">Computer</span> <span class="AW">AW</span></td>
+<tr><td id="computer"><span class="WebUISetting">Computer</span> <span class="AW">AW</span></td>
 	<td></td>
 	<td>The computer running your allsky camera, for example: <b>Raspberry Pi 3</b>.
 	This field is required and a default value is set during Allsky installation.</td></tr>
 
-<tr><td class="settingsHeader" colspan="3">WebUI Configuration</td></tr>
-<tr><td><span class="WebUISetting">Images Sort Order</span></td>
+<tr><td id=webusconfiguration" class="settingsHeader" colspan="3">WebUI Configuration</td></tr>
+<tr><td id="imagessortorder"><span class="WebUISetting">Images Sort Order</span></td>
 	<td>Ascending</td>
 	<td>Determines how the images for a day in the
 	the WebUI's <span class="WebUIWebPage">Images</span> page are displayed.
@@ -1397,23 +1397,23 @@ aws configure
 	<br><span class="WebUIValue">Descending</span>
 		sorts newest (i.e., most recent) image to oldest.
 	</td></tr>
-<tr><td><span class="WebUISetting">Show Updated Message</span></td>
+<tr><td id="showupdatedmessage"><span class="WebUISetting">Show Updated Message</span></td>
 	<td>Yes</td>
 	<td>Determines whether or not the
  	<span class='alert-info'>Daytime images updated every...</span>
 	message in the <span class='WebUIWebPage'>Live View</span> page is shown.
 	</td></tr>
-<tr><td><span class="WebUISetting">Require WebUI Login</span></td>
+<tr><td id="uselogin"><span class="WebUISetting">Require WebUI Login</span></td>
 	<td>Yes</td>
 	<td>Determines if you need to log into the WebUI.
 	<b>If you Pi is accessible on the Internet, do NOT disable this!!</b></td>
 </tr>
-<tr><td><span class="WebUISetting">Notification Images</span></td>
+<tr><td id="notificationimages"><span class="WebUISetting">Notification Images</span></td>
 	<td>Yes</td>
 	<td>Displays notification images, e.g., "Camera off during day" when
 	daytime images are not being taken.</td>
 </tr>
-<tr><td><span class="WebUISetting">System Page Additions</span></td>
+<tr><td id="webuidatafiles"><span class="WebUISetting">System Page Additions</span></td>
 	<td></td>
 	<td>One or more colon-separated full path names to text files
 	that contain user-supplied data to display on the WebUI's
@@ -1424,7 +1424,7 @@ aws configure
 	</td></tr>
 
 <tr><td class="settingsHeader" colspan="3">Camera</td></tr>
-<tr><td><span class="WebUISetting">Camera Type</span></td>
+<tr><td id="cameratype"><span class="WebUISetting">Camera Type</span></td>
 	<td></td>
 	<td>The type of camera you are using: ZWO or RPi.
 	<br>To select a camera of a different <span class="WebUISetting">Camera Type</span>:
@@ -1438,7 +1438,7 @@ aws configure
 	select <span class="dropdown">Refresh</span>
 	to update the list of camera types and models.
 	</td></tr>
-<tr><td><span class="WebUISetting">Camera Model</span></td>
+<tr><td id="cameramodel"><span class="WebUISetting">Camera Model</span></td>
 	<td></td>
 	<td>The model of camera you are using.
 	Note this list is only the models of

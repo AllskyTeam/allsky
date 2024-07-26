@@ -125,14 +125,7 @@ You should accept the defaults.
 
 <h2>How do I focus my allsky camera?</h2>
 <details><summary></summary>
-<blockquote>
-If you have a camera with auto-focus like the RPi Module 3,
-see the camera documentation for how to focus it.
-Once it's focused you'll normally want to disable auto focus since it adds several seconds to each daytime
-image while it's finding focus, and adds minutes to nighttime images.
-If you use the instructions below, replace the phrase "turn the focus ring" with
-"adjust the focus via software".
-</blockquote>
+<h3>Manual-focus cameras</h3>
 <p>
 Almost all lenses have a focus ring that you turn to change the focus.
 If you lens does NOT have a focus ring or some other focusing mechanism,
@@ -179,6 +172,30 @@ Keep focusing until the stars are as small as possible.
 <p>
 When done focusing tighten the focus lock screw (be careful not to move the focus ring)
 and revert all settings back to their original values.
+</p>
+
+<h3>Auto-focus cameras</h3>
+<p>
+If you have a camera with an auto-focus lens like the RPi Module 3, see the
+<a external="true" href="https://www.raspberrypi.com/documentation/computers/camera_software.html#autofocus-mode">camera documentation</a>
+for a description of focus-related settings.
+You'll use the <span class="WebUIValue">--lens-position</span> setting
+to determine where the best focus is.
+Run the following (which puts the lens at infinity),
+then as needed, increase the lens position in small increments until you
+find the best focus:
+<pre>
+libcamera-still --timeout 1 -shutter 5000 --lens-position 0.0
+</pre>
+You will likely need to adjust the shutter speed to get a good exposure.
+</p>
+<p>
+Once the camera is focused we suggest <strong>disabling</strong> auto focus
+since it adds several seconds to each daytime image while it's finding focus,
+and adds minutes to nighttime images.
+To do so, add <span class="WebUIValue">--lens-position X</span>
+to the <span class="WebUISetting">Extra Parameters</span> setting in the WebUI,
+replacing <span class="WebUISetting">X</span> with the lens position of best focus.
 </p>
 </details>
 

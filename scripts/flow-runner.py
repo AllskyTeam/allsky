@@ -9,6 +9,12 @@ from collections import deque
 import numpy
 import shutil
 import time
+import locale
+
+try:
+    locale.setlocale(locale.LC_ALL, '')
+except:
+    pass
 
 '''
 NOTE: `valid_module_paths` must be an array, and the order specified dictates the order of search for a named module.

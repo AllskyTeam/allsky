@@ -305,7 +305,7 @@ function get_connected_cameras_info()
 					printf("ZWO\t%d\t%s\n", num++, model);
 					model = "<found>";		# This camera was output
 				}
-			} else if ($1 == "iProduct") {
+			} else if ($1 == "iProduct" && $3 != "(error)") {
 				if (model != "<found>") {
 					model = $3;
 					for (i=4; i<= NF; i++) model = model " " $i

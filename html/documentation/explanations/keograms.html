@@ -17,6 +17,7 @@
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../css/custom.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<script src="../js/all.min.js" type="application/javascript"></script>
 	<title>Keograms</title>
 </head>
 <body>
@@ -55,7 +56,7 @@ and will not display events on the East or West.
 <h2>Creating a keogram</h2>
 <p>
 You specify whether or not you want a keogram automatically created via the
-<a allsky="true" href="/documentation/settings/allsky.html#keograms">
+<a allsky="true" external="true" href="/documentation/settings/allsky.html#keograms">
 	<span class="WebUISetting">Generate</span></a>
 setting in the <span class="subSettingsHeader">Keograms</span> sub-section of the WebUI.
 When enabled, a keogram will be created at the end of night and will contain information
@@ -130,6 +131,31 @@ keogram generation will skip any file that's not that size.
 This eliminates any garbage images that happen to be generated.
 </blockquote>
 -->
+
+<h2>Troubleshooting</h2>
+<p>
+If a keogram isn't being created, make sure the
+<span class="WebUISetting">Generate</span> setting is enabled.
+If that IS enabled, run:
+<pre>generateForDay.sh --keogram DATE</pre>
+and check for errors.
+<blockquote>
+It is extremely rare that a keogram isn't created.
+</blockquote>
+</p>
+<p>
+If a keogram isn't being uploaded, make sure the
+<span class="WebUISetting">Upload</span> setting is enabled.
+If that IS enabled, run:
+<pre>generateForDay.sh --upload --debug --keogram DATE</pre>
+and check for errors.
+If needed, run <code>testUpload.sh</code> to see why the upload fails.
+</p>
+<p>
+If your keograms are tall and skinny you can have them created so they
+look like regular images by enabling the
+<span class="WebUISetting">Expand</span> setting.
+</p>
 
 </div><!-- Layout-main -->
 </div><!-- Layout -->

@@ -15,7 +15,9 @@
 		}
 	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../css/custom.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<script src="../js/all.min.js" type="application/javascript"></script>
 	<title>Startrails</title>
 </head>
 <body>
@@ -25,15 +27,48 @@
 <div class="Layout-main markdown-body" id="mainContents">
 
 <p>
-<b>Startrails</b> are images that contain all the images from a night on top of each other.
+A <b>startrails</b> is an image that contains all the images from a night on top of each other,
+so show the movement of stars.
+<blockquote>
+Only nighttime images that are saved are included in a startrails,
+so if you don't save your nightime images, they won't be included.
+</blockquote>
 </p>
-<img allsky="true" src="startrails.png" title="Sample Startrails" class="imgCenter imgBorder" loading="lazy">
+<img allsky="true" src="startrails.png" title="Sample Startrails"
+	class="imgCenter imgBorder" loading="lazy">
 
-<h2><code>startrails</code> program</h2>
-<details><summary></summary>
+<h2>Creating a startrails image</h2>
 <p>
-The <code>startrails</code> program can take arguments:
+You specify whether or not you want a startrails image automatically created via the
+<a allsky="true" external="true" href="/documentation/settings/allsky.html#startrails">
+	<span class="WebUISetting">Generate</span></a>
+setting in the <span class="subSettingsHeader">Startrails</span> sub-section of the WebUI.
+When enabled, a startrails will be created at the end of night.
 </p>
+<p>
+The easiest way to create and optionally upload a startrails is via the
+<code>generateForDay.sh</code> command.
+For example, to create and then upload a startrails to any Allsky Website and/or remote server 
+you have for July 10, 2024:
+<pre>
+generateForDay.sh --startrails 20240710
+generateForDay.sh --upload --startrails 20240710
+</pre>
+This will use the settings specified in the
+<span class="subSettingsHeader">Startrails</span> sub-section of the WebUI.
+</p>
+<p>
+<code>generateForDay.sh</code> calls the <code>startrails</code> program
+to actually create the startrails, passing it several arguments
+(the <u>underlined</u> ones below),
+plus any others you add to the 
+<span class="WebUISetting">Startrails Extra Parameters</span> setting.
+</p>
+<p>
+You can execute the <code>startrails</code> program manually,
+but will need to specify at least all the required arguments.
+</p>
+
 <pre>
 Usage: startrails [-v] -d &lt;dir&gt; -e &lt;ext&gt; [-b &lt;brightness&gt;] [-o &lt;output&gt;] [-S] [-s &lt;width&gt;x&lt;height&gt;]
 
@@ -41,40 +76,21 @@ Arguments:
 -h : display this help, then exit
 -v : increase log verbosity
 -S : print image directory statistics without producing image.
--d &lt;str&gt; : directory from which to read images
--e &lt;str&gt; : filter images to just this extension
--o &lt;str&gt; : output image filename
+<u>-d &lt;str&gt; : directory from which to read images (required)</u>
+<u>-e &lt;str&gt; : filter images to just this extension (required)</u>
+<u>-o &lt;str&gt; : output image filename</u>
 -s &lt;int&gt;x&lt;int&gt; : restrict processed images to this size
--b &lt;float&gt; : ranges from 0 (black) to 1 (white).
-        A moonless sky may be as low as 0.05 while full moon can be as high as 0.4
+<u>-b &lt;float&gt; : ranges from 0 (black) to 1 (white).</u>
+        A moonless sky may be as low as 0.05 while full moon can be as high as 0.4.
 </pre>
 
 <br><p>
-The only configuration setting for startrails is
-<span class="WebUISetting">Brightness Threshold</span> which defaults to
-<span class="WebUIValue">0.1</span>.
-Any image with an average brightness greater than this will
-be skipped during startrails image generation,
-so <b>almost all daytime images are skipped</b>.
-You may need to play around with this to get the best results,
-as allsky cameras, lenses, and sky brightnesses impact this setting.
-</p>
-
-Example when running the program manually:
+Example of running the <code>startrails</code> program manually:
 <pre>
-cd ~/allsky
-bin/startrails -d images/20240223/ -e jpg -b 0.15 -o images/20240223/startrails/startrails-20240223.jpg
+cd ~/allsky/bin
+./startrails -d images/20240710 -e jpg -b 0.15 -o images/20240710/startrails/startrails.jpg
 </pre>
-
-<br><p>
-You can add any of the arguments above to the
-<span class="WebUISetting">Startrails Extra Parameters</span> setting in the WebUI
-to change how the startrails image looks.
 </p>
-<p>
-The <span class="WebUISetting">Generate Startrails</span> setting in the WebUI
-can be used to disable startrails.
-<p>
 
 <!-- THESE SETTINGS NO LONGER EXIST
 <blockquote>
@@ -89,11 +105,17 @@ This will eliminate any garbage images that happen to be generated.
 </blockquote>
 -->
 
-</details>
-
-
-<h2>Troubleshooting</h2>
-<details><summary></summary>
+<h2 id="brightnessThreshold"><span class="WebUISetting">Brightness Threshold</span></h2>
+<p>
+The only configuration setting for startrails is
+<span class="WebUISetting">Brightness Threshold</span> which defaults to
+<span class="WebUIValue">0.1</span>.
+Any image with an average brightness greater than this will
+be skipped during startrails image generation,
+so <b>almost all daytime images are skipped</b>.
+You need to experiment with this to get the best results,
+as allsky cameras, lenses, and sky brightnesses impact this setting.
+</p>
 <p>
 If your startrails aren't working and you get a message
 <b>No images below threshold 0.100, writing the minimum image only</b>,
@@ -102,47 +124,67 @@ If startrails previously worked, did you recently update the
 <span class="WebUISetting">Brightness Threshold</span> setting?
 If so, set it back to what it used to be.
 </p>
-
-The key to getting startrails to work is making sure
-<span class="WebUISetting">Brightness Threshold</span>
-is correct for your skies.
-To do this you need to know the typical <b>nighttime</b> sky brightness values.
+<p>
+To determine what to use for the
+<span class="WebUISetting">Brightness Threshold</span>,
+you need to know the typical <b>nighttime</b> sky brightness values.
 Do the following (replace "DATE" below with the date of a non-working startrails):
 <ol>
-<li>Create a temporary directory to hold nighttime images:
-	<code>mkdir ~/allsky/images/test</code>.
-<li><code>cd ~/allsky/images/DATE</code>.
-<li>Using the time of each image, move a few hours of <b>nighttime</b> images to
-	<span class="fileName">allsky/images/test</span>.
-	This is easiest if you first open a "File Manager" window on the Pi -
-	you can then select the files with the mouse and
-	drag to the <span class="fileName">test</span> directory.
-	<br>If you aren't logged into the Pi desktop you'll need to use
-	the <code>mv</code> command to move the files.
-	Using the <code>*</code> wildcard in the file names will allow you to move
-	multiple files at a time.
-<li>Run <code>generateForDay.sh --startrails test</code>
-	to create a startrails file in the <span class="fileName">test</span> directory.
-	It should say <b>No images below...</b>.
-<li>Look at the output line showing the minimum and maximum.
-	Set the <span class="WebUISetting">Brightness Threshold</span>
-	to the <strong>maximum</strong>, or slightly below it.
-<li>Run <code>generateForDay.sh --startrails test</code>
-	to create a new startrails - it should give a decent result.
-<li>Adjust <span class="WebUISetting">Brightness Threshold</span>
-	and re-run <code>generateForDay.sh</code> as needed.
-<li>When done move all the images in <span class="fileName">allsky/images/test</span>
-	back to <span class="fileName">allsky/images/DATE</span>.
-<li>Remove the temporary directory: <code>rm -fr ~/allsky/images/test</code>.
-<li>Now, create the final startrails:
-	<ul class="minimalPadding">
-	<li><code>generateForDay.sh --startrails DATE</code>
-	<li>If you want to upload the <span class="fileName">startrails.jpg</span>
-		file you just created, see the note generated by <code>generateForDay.sh</code>.
-	</ul>
+	<li>Create a temporary directory to hold nighttime images:
+		<code>mkdir ~/allsky/images/test</code>.
+	<li><code>cd ~/allsky/images/DATE</code>.
+	<li>Using the time of each image, move a few hours of <b>nighttime</b> images to
+		<span class="fileName">allsky/images/test</span>.
+		This is easiest if you first open a "File Manager" window on the Pi -
+		you can then select the files with the mouse and
+		drag to the <span class="fileName">test</span> directory.
+		<br>If you aren't logged into the Pi desktop you'll need to use
+		the <code>mv</code> command to move the files.
+		Using the <code>*</code> wildcard in the file names will allow you to move
+		multiple files at a time.
+	<li>Run <code>generateForDay.sh --startrails test</code>
+		to create a startrails file in the <span class="fileName">test</span> directory.
+		It should say <b>No images below...</b>.
+	<li>Look at the output line showing the minimum and maximum.
+		Set the <span class="WebUISetting">Brightness Threshold</span>
+		to the <strong>maximum</strong>, or slightly below it.
+	<li>Run <code>generateForDay.sh --startrails test</code>
+		to create a new startrails - it should give a decent result.
+	<li>Adjust <span class="WebUISetting">Brightness Threshold</span>
+		and re-run <code>generateForDay.sh</code> as needed.
+	<li>When done move all the images in <span class="fileName">allsky/images/test</span>
+		back to <span class="fileName">allsky/images/DATE</span>.
+	<li>Remove the temporary directory: <code>rm -fr ~/allsky/images/test</code>.
+	<li>Now, create the final startrails:
+		<ul class="minimalPadding topPadding">
+			<li><code>generateForDay.sh --startrails DATE</code>
+			<li>If you want to upload the <span class="fileName">startrails.jpg</span>
+				file you just created, see the note generated by <code>generateForDay.sh</code>.
+		</ul>
 </ol>
-</details>
+</p>
 
+<h2>Troubleshooting</h2>
+<p>
+If a startrails isn't being created, make sure the
+<span class="WebUISetting">Generate</span> setting is enabled.
+If that IS enabled, run:
+<pre>generateForDay.sh --startrails DATE</pre>
+and check for errors.
+<blockquote>
+It is extremely rare that a startrails isn't created at all.
+It's much more common that only 1 image is used -
+in that case, see the <a href="#brightnessThreshold">Brightness Threshold</a> section above.
+</blockquote>
+</p>
+<p>
+If a startrails isn't being uploaded, make sure the
+<span class="WebUISetting">Upload</span> setting is enabled.
+If that IS enabled, run:
+<pre>generateForDay.sh --upload --debug --startrails DATE</pre>
+and check for errors.
+If needed, run <code>testUpload.sh</code> to see why the upload fails.
+</p>
 
 </div><!-- Layout-main -->
 </div><!-- Layout -->

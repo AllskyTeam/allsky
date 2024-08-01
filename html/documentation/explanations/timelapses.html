@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Timelapses Explained";
+		}
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../css/custom.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<script src="../js/all.min.js" type="application/javascript"></script>
+	<title>Timelapses</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<p>
+A <b>timelapse</b> is a video that contains multiple still image and shows changes over time.
+For example, you can watch the clouds move during the day or the stars move at night.
+</p>
+<p>
+Allsky supports two types of timelapse:
+<ol class="minimalPadding">
+	<li><strong>Daily Timelapse</strong>
+	<li><strong>Mini Timelapse</strong>
+</ol>
+Settings for both types of timelapses are in the
+<a allsky="true" external="true" href="/documentation/settings/allsky.html#timelapse">
+	<span class="settingsHeader">Timelapse Settings</span></a>
+section of the WebUI's <span class="WebUILink">Allsky Settings</span> page.
+Each type of timelapse has its own sub-section in the WebUI,
+and there is a sub-section that applies to both timelapse types.
+</p>
+
+<h2>Daily Timelapse</h2>
+<p>
+You specify whether or not you want a daily timelapse automatically created via the
+<a allsky="true" external="true" href="/documentation/settings/allsky.html#dailytimelapse">
+	<span class="WebUISetting">Generate</span></a>
+setting.
+When enabled, a daily timelapse will be created (and optionally uploaded) at the end of night.
+</p>
+<p>
+The easiest way to <strong>manually</strong> create and optionally upload a
+daily timelapse is via the <code>generateForDay.sh</code> command.
+For example, to create and then upload a daily timelapse to any Allsky Website and/or remote server 
+you have for July 10, 2024:
+<pre>
+generateForDay.sh --timelapse 20240710
+generateForDay.sh --upload --timelapse 20240710
+</pre>
+This will use the settings specified in the
+<span class="subSettingsHeader">Daily Timelapse</span> sub-section of the WebUI.
+</p>
+<p>
+If you have a remote Website you'll most likely need to enable the
+<span class="WebUISetting">Upload Thumbnail</span> setting
+so the timelapse's thumbnail is created on the Pi and uploaded to the Website.
+</p>
+<p>
+If your camera has a lot of pixels you may need to resize the timelapse
+in order to decrease the processing power needed to create it and to reduce the file size.
+If so, update the
+<span class="WebUISetting">Width</span> and <span class="WebUISetting">Height</span>
+settings.
+Cutting each size in half is a good starting point.
+</p>
+
+
+<h2>Mini Timelapse</h2>
+<p>
+A mini timelapse contains a limited number of images and is constantly recreated
+throughout the day.
+For example, you can have a mini timelapse that shows the last 50 of images,
+and is recreated every 5 images.
+Note that every new mini timelapse <strong>replaces</strong> the prior one,
+so there is ever only one mini timelapse.
+</p>
+<p>
+You specify whether or not you want a mini timelapse created via the
+<a allsky="true" external="true" href="/documentation/settings/allsky.html#minitimelapse">
+	<span class="WebUISetting">Number Of Images</span></a>
+setting.
+If greater than <span class="WebUIValue">0</span>,
+mini timelapses will be created (and optionally uploaded) containing
+that number of images.
+You can enter any number you want, but beware:
+<ul class="minimalPadding">
+	<li>A small number of images will produce a very short video.
+		For example, a video with <span class="WebUIValue">5</span> images will
+		usually last less than a second.
+	<li>A large number of images will take longer to create and depending on
+		the speed of your Pi, could cause other things to run slowly.
+	<li>On a Pi 4, try starting with <span class="WebUIValue">50</span> images
+		and adjust as needed.
+</ul>
+</p>
+<p>
+If <span class="WebUISetting">Number Of Images</span> is greater than
+<span class="WebUIValue">0</span>,
+a new mini timelapse will be created after the number of images you specify in
+<span class="WebUISetting">Frequency</span>.
+The smaller the number the more often a mini timelapse will be created,
+and the more processing power needed.
+Try starting off at <span class="WebUIValue">5</span> and adjust as needed.
+</p>
+<p>
+Mini timelapses are not designed to be created manually
+because some configuration files need to be updated after creation.
+</p>
+
+
+<h2>Troubleshooting</h2>
+<p>
+See the <a allsky="true" external="true" href="/documentation/troubleshooting/timelapse.html">
+	Troubleshooting -> Timelapse</a>
+page for troubleshooting information.
+</p>
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>
+

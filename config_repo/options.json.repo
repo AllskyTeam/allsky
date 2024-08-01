@@ -831,7 +831,7 @@
 {
 "name" : "takedarkframes",
 "default" : false,
-"description" : "Enable to capture dark frames, which are used to decrease noise.<br>Continues taking dark frames until Allsky is restarted.",
+"description" : "Enable to capture dark frames, which are used to decrease noise.<br>See the <a allsky='true' external='true' href='/documentation/explanations/darkFrames.html#howtousedarks'>Dark frames</a> documentation on how to take dark frames.",
 "label" : "Take Dark Frames",
 "type" : "boolean",
 "usage" : "capture",

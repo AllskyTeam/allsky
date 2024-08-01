@@ -51,7 +51,7 @@ Here's what's in the directory:
 	<li><span class="lsGreen">allsky.sh</span>
 		<br>
 		This is the program that's executed when you start Allsky.
-		It calls the appropriate program to take pictures (see the next bullet).
+		It calls the appropriate program to take pictures.
 
 	<li><span class="lsBlue">assets</span>
 		<br>
@@ -74,14 +74,9 @@ Here's what's in the directory:
 		<ul>
 			<li><span class="fileName">settings.json</span> is updated via the
 				<span class="WebUIWebPage">Allsky Settings</span> page in the WebUI
-				and contains the settings used to take images.
+				and contains most of the settings used by Allsky.
 				This file is linked to a file that contains your camera type and camera
 				model in the file name.
-			<li>If you have any personal modules, scripts, or other files,
-				put them in <span class="fileName">myFiles</span>.
-				This directory is kept across Allsky upgrades.
-				Personal modules must be stored in 
-				<span class="fileName">myFiles/modules</span> in order for Allsk to use them.
 			<li>The <span class="fileName">modules</span> and
 				<span class="fileName">overlay</span> directories contain the configuration
 				files for the <span class="managerName">Module Manager</span> and
@@ -142,7 +137,7 @@ Here's what's in the directory:
 	<li><span class="lsBlack">LICENSE</span>
 		<br>
 		Holds the Allsky license.
-		People that plan to copy Allsky in part or in whole should be aware of the license.
+		If you plan to copy Allsky in part or in whole you should be aware of the license.
 
 	<li><span class="lsBlack">Makefile</span>
 		<br>
@@ -185,11 +180,6 @@ Here's what's in the directory:
 		<br>
 		Hold temporary files, including most log files, used by Allsky while it's running.
 		The contents of this directory are usually cleaned out after a reboot.
-		<blockquote>
-		Other than the <span class="lsBlue">scripts</span> directory described above,
-		this is the only other directory that you may need to look in,
-		and that's typically only to troubleshoot a problem.
-		</blockquote>
 
 	<li><span class="lsGreen">upgrade.sh</span>
 		<br>
@@ -222,11 +212,13 @@ Here's what's in the directory:
 	<li><span class="lsBlack">version</span>
 		<br>
 		A file that holds the version of Allsky you're running.
-<!--
-		The installation script and the WebUI compare this version to
-		the one in GitHub to determine if an upgrade is available.
--->
 </ul>
+
+<blockquote class="warning">
+Unless instructed to by an Allsky developer,
+you should <strong>never</strong> manually edit any Allsky files;
+instead, use the WebUI.
+</blockquote>
 </p>
 
 <h2>File Explorer View</h2>

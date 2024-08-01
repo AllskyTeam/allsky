@@ -15,6 +15,7 @@
 		} 
 	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../css/custom.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<title>Keograms</title>
 </head>
@@ -25,11 +26,11 @@
 <div class="Layout-main markdown-body" id="mainContents">
 
 <p>
-A <b>Keogram</b> is an image giving a quick view of a day's activity.
+A <b>keogram</b> is an image that gives a quick view of a day's activity.
 A central vertical column 1 pixel wide is extracted from each image
-and added to the Keogram from left to right.
+and added to the keogram from left to right.
 <blockquote>
-Only images that are saved are included in a Keogram,
+Only images that are saved are included in a keogram,
 so if you don't save your daytime and/or nightime images,
 they won't be included.
 </blockquote>
@@ -37,7 +38,7 @@ they won't be included.
 <img allsky="true" src="keogram.png" title="Sample Keogram"
 	class="imgCenter imgBorder" loading="lazy">
 <p>
-To get the best results north should be at the top of the image.
+To get the best results, North should be at the top of the image.
 If it's not, include <span class="WebUIValue">--rotate DEG</span> in the
 <span class="WebUISetting">Keogram Extra Parameters</span> setting in the WebUI,
 where <span class="WebUIValue">DEG</span> is the degrees of rotation.
@@ -46,35 +47,63 @@ being the southern horizon and the top being the northern horizon.
 </p>
 
 <blockquote>
-The keogram will only show what happens at the meridian
-and will not display events on the east or west.
+Keograms only show what happens at the center of the image
+and will not display events on the East or West.
 </blockquote>
 
 
-<h2><code>keogram</code> program</h2>
+<h2>Creating a keogram</h2>
 <p>
-The <code>keogram</code> program takes multiple arguments:
+You specify whether or not you want a keogram automatically created via the
+<a allsky="true" href="/documentation/settings/allsky.html#keograms">
+	<span class="WebUISetting">Generate</span></a>
+setting in the <span class="subSettingsHeader">Keograms</span> sub-section of the WebUI.
+When enabled, a keogram will be created at the end of night and will contain information
+for the prior 24 hours.
+</p>
+<p>
+The easiest way to create and optionally upload a keogram is via the
+<code>generateForDay.sh</code> command.
+For example, to create and then upload a keogram to any Allsky Website and/or remote server 
+you have for July 10, 2024:
+<pre>
+generateForDay.sh --keogram 20240710
+generateForDay.sh --upload --keogram 20240710
+</pre>
+This will use the settings specified in the
+<span class="subSettingsHeader">Keograms</span> sub-section of the WebUI.
+</p>
+<p>
+<code>generateForDay.sh</code> calls the <code>keogram</code> program
+to actually create the keogram, passing it several arguments
+(the <u>underlined</u> ones below),
+plus any others you add to the 
+<span class="WebUISetting">Keogram Extra Parameters</span> setting.
+</p>
+<p>
+You can execute the <code>keogram</code> program manually,
+but will need to specify at least all the required arguments.
 </p>
 <pre>
-Usage:  keogram -d &lt;imagedir&gt; -e &lt;ext&gt; -o &lt;outputfile&gt; [KEOGRAM_EXTRA_PARAMETERS]
+Usage:  keogram -d &lt;imagedir&gt; -e &lt;ext&gt; -o &lt;outputfile&gt; [optional arguments]
 
 Arguments:
--d | --directory &lt;str&gt; : directory from which to load images (required)
--e | --extension &lt;str&gt; : image extension to process (required)
--o | --output-file &lt;str&gt; : name of output file (required)
+<u>-d | --directory &lt;str&gt; : directory from which to load images (required)</u>
+<u>-e | --extension &lt;str&gt; : image extension to process (required)</u>
+<u>-o | --output-file &lt;str&gt; : name of output file (required)</u>
 -r | --rotate &lt;float&gt; : number of degrees to rotate image, counterclockwise (0)
 -s | --image-size &lt;int&gt;x&lt;int&gt; : only process images of a given size, eg. 1280x960
 -h | --help : display this help message
 -v | --verbose : Increase logging verbosity
 -n | --no-label : Disable hour labels
--C | --font-color &lt;str&gt; : label font color, in HTML format (0000ff)
--L | --font-line &lt;int&gt; : font line thickness (3)
--N | --font-name &lt;str&gt; : font name (simplex)
--S | --font-size &lt;float&gt; : font size (2.0)
+<u>-C | --font-color &lt;str&gt; : label font color, in HTML format (0000ff)</u>
+<u>-L | --font-line &lt;int&gt; : font line thickness (3)</u>
+<u>-N | --font-name &lt;str&gt; : font name (simplex)</u>
+<u>-S | --font-size &lt;float&gt; : font size (2.0)</u>
 -T | --font-type &lt;int&gt; : font line type (1)
 -Q | --max-threads &lt;int&gt; : limit maximum number of processing threads. (use all cpus)
 -q | --nice-level &lt;int&gt; : nice(2) level of processing threads (10)
--x | --image-expand : expand image to get the proportions of source - avoids tall and narrow images
+<u>-x | --image-expand : expand image to get the proportions of source - avoids tall and narrow images</u>
 -c | --channel-info : show channel infos - mean value of R/G/B
 -f | --fixed-channel-number &lt;int&gt; : define number of channels 0=auto, 1=mono, 3=rgb (0=auto)
 
@@ -84,24 +113,12 @@ Font Type is an OpenCV line type: 0=antialias, 1=8-connected, 2=4-connected
 </pre>
 
 <br><p>
-Example when running the program manually:
+Example of running the <code>keogram</code> program manually:
 </p>
 <pre>
 cd ~/allsky/bin
-./keogram -d images/20240710/ -e jpg -o images/20240710/keogram/keogram.jpg --rotate 42 --font-size 2
+./keogram -d images/20240710 -e jpg -o images/20240710/keogram/keogram.jpg --rotate 42 --font-size 2
 </pre>
-
-<br><p>
-You can add any of the arguments above to the
-<span class="WebUISetting">Keogram Extra Parameters</span> setting in the WebUI
-to change how the keogram looks.
-Note that some of the arguments have their own setting in the WebUI so should not be
-included in <span class="WebUISetting">Keogram Extra Parameters</span>.
-</p>
-<p>
-The <span class="WebUISetting">Generate Keogram</span> setting in the WebUI
-can be used to disable keograms.
-</p>
 
 <!-- THESE SETTINGS NO LONGER EXIST
 <blockquote>

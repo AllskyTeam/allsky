@@ -935,6 +935,28 @@ set_permissions()
 	sudo find "${ALLSKY_WEBSITE}" -type d -exec chmod 775 '{}' \;
 	sudo find "${ALLSKY_WEBSITE}" -type f -exec chmod 664 '{}' \;
 	sudo chgrp --recursive "${WEBSERVER_GROUP}" "${ALLSKY_WEBSITE}"
+
+	# Get the session handler type from th ephp ini file
+	SESSION_HANDLER="$( get_php_setting "session.save_handler" )"
+	# We need to make changes if the handler is using the filesystem
+	if [[ $SESSION_HANDLER == "files" ]]; then
+		# Get the path to the php sessions
+		SESSION_PATH="$( get_php_setting "session.save_path" )"
+
+		# Loop over all files in the session folder and if any are not owned by the
+		# web server user then changs ALL of the php sessions to be owned by the
+		# web server user
+		sudo find "$SESSION_PATH" -type f -print0 | while read -r -d $'\0' SESSION_FILE
+		do
+			OWNER="$( sudo stat -c '%U' "$SESSION_FILE" )"
+			if [[ $OWNER != "$WEBSERVER_OWNER" ]]; then
+				display_msg --log progress "Found php sessions with wrong owner - fixing them"
+				sudo chown -R "$WEBSERVER_OWNER":"$WEBSERVER_OWNER" "$SESSION_PATH"
+				break        
+			fi
+		done
+	fi
+
 }
 
 

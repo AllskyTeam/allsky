@@ -950,7 +950,7 @@ set_permissions()
 		do
 			OWNER="$( sudo stat -c '%U' "$SESSION_FILE" )"
 			if [[ $OWNER != "$WEBSERVER_OWNER" ]]; then
-				display_msg --log warning "Found php sessions with wrong owner - fixing them"
+				display_msg --log info "Found php sessions with wrong owner - fixing them"
 				sudo chown -R "$WEBSERVER_OWNER":"$WEBSERVER_OWNER" "$SESSION_PATH"
 				break        
 			fi

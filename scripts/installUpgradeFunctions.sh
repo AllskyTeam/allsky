@@ -11,6 +11,7 @@ export ALLSKY_OWNER=$( id --group --name )
 export ALLSKY_GROUP=${ALLSKY_OWNER}
 export WEBSERVER_OWNER="www-data"
 export WEBSERVER_GROUP="${WEBSERVER_OWNER}"
+export NEED_TO_UPDATE="XX_NEED_TO_UPDATE_XX"
 
 	# Central location for all master repository files.
 export ALLSKY_REPO="${ALLSKY_HOME}/config_repo"
@@ -435,9 +436,10 @@ function update_json_file()		# [-d] field, new value, file, [type]
 }
 
 
+# Replace all the ${NEED_TO_UPDATE} placeholders.
 function replace_website_placeholders()
 {
-	local TYPE="${1}"
+	local TYPE="${1}"		# "local" or "remote" Website
 	local FILE="${2}"
 	if [[ -z ${FILE} ]]; then
 		if [[ ${TYPE} == "local" ]]; then
@@ -448,12 +450,16 @@ function replace_website_placeholders()
 	fi
 
 	# Get the array index for the mini-timelapse.
+
+	local PARENT  FIELD  INDEX  MINI_TLAPSE_DISPLAY  MINI_TLAPSE_URL
+	local MINI_TLAPSE_DISPLAY_VALUE  MINI_TLAPSE_URL_VALUE
 	PARENT="homePage.leftSidebar"
 	FIELD="Mini-timelapse"
 	INDEX=$( getJSONarrayIndex "${FILE}" "${PARENT}" "${FIELD}" )
 	if [[ ${INDEX} -ge 0 ]]; then
 		MINI_TLAPSE_DISPLAY="${PARENT}[${INDEX}].display"
 		MINI_TLAPSE_URL="${PARENT}[${INDEX}].url"
+		TIMELAPSE_MINI_IMAGES="$( settings ".minitimelapsenumimages" )"
 		if [[ ${TIMELAPSE_MINI_IMAGES:-0} -eq 0 ]]; then
 			MINI_TLAPSE_DISPLAY_VALUE="false"
 			MINI_TLAPSE_URL_VALUE=""
@@ -476,12 +482,30 @@ function replace_website_placeholders()
 		MINI_TLAPSE_URL_VALUE=""
 	fi
 
-	# Convert latitude and longitude to use N, S, E, W.
-	LATITUDE="$( settings ".latitude" )"
-	LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" )"
+	# For these setting, check if it's == ${NEED_TO_UPDATE}.
+	# If so, and the settings file's value isn't null, update it in the config file.
+	# If the config file has a value, use it, even if it's "".
+
+	local TEMP  LATITUDE  LONGITUDE  AURORAMAP  LOCATION  OWNER  CAMERA
+	local LENS  COMPUTER  IMAGE_NAME
+
+	LATITUDE="$( settings ".config.latitude" "${FILE}" )"
+	if [[ ${LATITUDE} == "${NEED_TO_UPDATE}" ]]; then
+		# Convert latitude and longitude to use N, S, E, W.
+		TEMP="$( settings ".latitude" )"
+		if [[ -n ${TEMP} ]]; then
+			LATITUDE="$( convertLatLong "${TEMP}" "latitude" )"
+		fi
+	fi
 	[[ -z ${LATITUDE} ]] && display_msg --log warning "latitude is empty"
-	LONGITUDE="$( settings ".longitude" )"
-	LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )"
+
+	LONGITUDE="$( settings ".config.longitude" "${FILE}" )"
+	if [[ ${LONGITUDE} == "${NEED_TO_UPDATE}" ]]; then
+		TEMP="$( settings ".longitude" )"
+		if [[ -n ${TEMP} ]]; then
+			LONGITUDE="$( convertLatLong "${TEMP}" "longitude" )"
+		fi
+	fi
 	[[ -z ${LONGITUDE} ]] && display_msg --log warning "longitude is empty"
 
 	if [[ ${LATITUDE:1,-1} == "S" ]]; then			# last character
@@ -490,12 +514,44 @@ function replace_website_placeholders()
 		AURORAMAP="north"
 	fi
 
-	LOCATION="$( settings ".location" )"
-	OWNER="$( settings ".owner" )"
-	CAMERA_MODEL="$( settings ".cameramodel" )"
-	CAMERA="${CAMERA_TYPE}${CAMERA_MODEL}"
-	LENS="$( settings ".lens" )"
-	COMPUTER="$( settings ".computer" )"
+	LOCATION="$( settings ".config.location" "${FILE}" )"
+	if [[ ${LOCATION} == "${NEED_TO_UPDATE}" ]]; then
+		TEMP="$( settings ".location" )"
+		if [[ -n ${TEMP} ]]; then
+			LOCATION="${TEMP}"
+		fi
+	fi
+
+	OWNER="$( settings ".config.owner" "${FILE}" )"
+	if [[ ${OWNER} == "${NEED_TO_UPDATE}" ]]; then
+		TEMP="$( settings ".owner" )"
+		if [[ -n ${TEMP} ]]; then
+			OWNER="${TEMP}"
+		fi
+	fi
+
+	CAMERA="$( settings ".config.camera" "${FILE}" )"
+	if [[ ${CAMERA} == "${NEED_TO_UPDATE}" ]]; then
+		# TYPE and MODEL are already in the environment.
+		CAMERA="${CAMERA_TYPE} ${CAMERA_MODEL}"
+	fi
+
+	LENS="$( settings ".config.lens" "${FILE}" )"
+	if [[ ${LENS} == "${NEED_TO_UPDATE}" ]]; then
+		TEMP="$( settings ".lens" )"
+		if [[ -n ${TEMP} ]]; then
+			LENS="${TEMP}"
+		fi
+	fi
+
+	COMPUTER="$( settings ".config.computer" "${FILE}" )"
+	if [[ ${COMPUTER} == "${NEED_TO_UPDATE}" ]]; then
+		TEMP="$( settings ".computer" )"
+		if [[ -n ${TEMP} ]]; then
+			COMPUTER="${TEMP}"
+		fi
+	fi
+
 	if [[ ${TYPE} == "local" ]]; then
 		#shellcheck disable=SC2153
 		IMAGE_NAME="/${IMG_DIR}/${FULL_FILENAME}"
@@ -527,15 +583,19 @@ function replace_website_placeholders()
 function prepare_local_website()
 {
 		local FORCE="${1}"
+		local CREATED_FILE="false"
 
 		display_msg --log progress "Creating default ${ALLSKY_WEBSITE_CONFIGURATION_NAME}."
 
-		# The config file normally won't already exist.
+		# Make sure there's a config file.
 		if [[ ! -s ${ALLSKY_WEBSITE_CONFIGURATION_FILE} || ${FORCE} == "--force" ]]; then
 			cp "${REPO_WEBSITE_CONFIGURATION_FILE}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+			CREATED_FILE="true"
+		fi
 
-			replace_website_placeholders "local" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
-		else
+		replace_website_placeholders "local" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+
+		if [[ ${CREATED_FILE} == "false" ]]; then
 			# If we had to create a default config file, we're not using the local Website
 			# so don't try to upload anything.
 			# Only want error messages.

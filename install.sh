@@ -1300,7 +1300,7 @@ does_prior_Allsky_Website_exist()
 	fi
 
 	if [[ -z ${PRIOR_WEBSITE_DIR} ]]; then
-		display_msg --logonly info "No prior Allsky Website"
+		display_msg --logonly info "No prior Allsky Website found in '${PRIOR_WEBSITE_DIR}', PRIOR_STYLE=${PRIOR_STYLE}."
 	else
 		display_msg --logonly info "PRIOR_WEBSITE_STYLE=${PRIOR_WEBSITE_STYLE}"
 		display_msg --logonly info "PRIOR_WEBSITE_DIR=${PRIOR_WEBSITE_DIR}"

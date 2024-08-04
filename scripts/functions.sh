@@ -600,14 +600,17 @@ function get_sunrise_sunset()
 	LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" )"		|| return 2
 	LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )"	|| return 2
 
-	echo "Daytime start    Nighttime start   Angle"
+	local FORMAT="%-15s  %-17s  %-7s  %-10s  %-10s\n"
+	printf "${FORMAT}" "Daytime start" "Nighttime start" "Angle" "Latitude" "Longitude"
+	local STARTS=()
 	if [[ ${DO_ZERO} == "true" ]]; then
-		local X="$( sunwait list angle "0" "${LATITUDE}" "${LONGITUDE}" )"
-		# Replace comma by several spaces so the output lines up.
-		echo "${X/,/           }               0"
+		STARTS=( $( sunwait list angle "0" "${LATITUDE}" "${LONGITUDE}" ) )
+		STARTS="${STARTS/,/}"
+		printf "${FORMAT}" "${STARTS[0]}" "${STARTS[1]}" "0" "${LATITUDE}" "${LONGITUDE}"
 	fi
-	X="$( sunwait list angle "${ANGLE}" "${LATITUDE}" "${LONGITUDE}" )"
-	echo "${X/,/           }              ${ANGLE}"
+	STARTS=( $( sunwait list angle "${ANGLE}" "${LATITUDE}" "${LONGITUDE}" ) )
+	STARTS="${STARTS/,/}"
+	printf "${FORMAT}" "${STARTS[0]}" "${STARTS[1]}" "${ANGLE}" "${LATITUDE}" "${LONGITUDE}"
 }
 
 

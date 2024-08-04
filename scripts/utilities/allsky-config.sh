@@ -67,6 +67,7 @@ function usage_and_exit()
 		echo -e "		recheck_tmp"
 		echo -e "		samba"
 		echo -e "		new_rpi_camera_info [--camera NUM]"
+		echo -e "		show_start_times [--zero] [angle [latitude [longitude]]]"
 		echo -e "	If no 'command' is specified you are prompted for one to execute."
 	} >&2
 	exit "${RET}"
@@ -140,6 +141,66 @@ function new_rpi_camera_info()
 function samba()
 {
 	installSamba.sh
+}
+
+#####
+# Show the daytime and nighttime start times
+function show_start_times()
+{
+	local DO_HELP="false"
+	local ZERO=""
+	local ANGLE=""
+	local LATITUDE=""
+	local LONGITUDE=""
+
+	while [[ $# -gt 0 ]]; do
+		ARG="${1}"
+		case "${ARG,,}" in
+			--help)
+				DO_HELP="true"
+				;;
+
+			--zero)
+				ZERO="${ARG}"
+				;;
+
+			--angle)
+				ANGLE="${2}"
+				shift
+				;;
+
+			--latitude)
+				LATITUDE="${2}"
+				shift
+				;;
+
+			--longitude)
+				LONGITUDE="${2}"
+				shift
+				;;
+
+			-*)
+				echo -e "${RED}${ME}: Unknown argument '${ARG}'.${NC}" >&2
+				OK="false"
+				;;
+		esac
+		shift
+	done
+
+	if [[ ${DO_HELP} == "true" ]]; then
+		echo
+		echo "Usage: ${ME}  ${FUNCNAME[0]} [--zero]  [ --angle A]  [--latitude LAT]  [--longitude LONG]"
+		echo "Where:"
+		echo "    '--zero' will also show times for Angle 0."
+		echo "By default, the Angle, Latitude, and Longitude in the WebUI will be use."
+		echo "You can override any of those via the command line."
+		echo
+
+		return
+	fi
+
+	#shellcheck disable=SC2086
+	get_sunrise_sunset ${ZERO} "${ANGLE}" "${LATITUDE}" "${LONGITUDE}"
 }
 
 #####
@@ -228,6 +289,7 @@ if [[ -z ${CMD} ]]; then
 	CMDS+=("recheck_tmp"				"4. Move ~/allsky/tmp to memory")
 	CMDS+=("samba"						"5. Simplify copying files to/from the Pi")
 	CMDS+=("new_rpi_camera_info"		"6. Collect information for new RPi camera")
+	CMDS+=("show_start_times"	 		"7. Show daytime and nighttime start times")
 
 	# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 	while COMMAND="$( prompt "${PROMPT}" "${CMDS[@]}" )"

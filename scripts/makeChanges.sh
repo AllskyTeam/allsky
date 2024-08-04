@@ -605,9 +605,7 @@ do
 
 		"uselocalwebsite")
 			if [[ ${NEW_VALUE} == "true" ]]; then
-				if [[ ! -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
-					prepare_local_website ""
-				fi
+				prepare_local_website ""
 				"${ALLSKY_SCRIPTS}/postData.sh" --fromWebUI
 			fi
 			;;

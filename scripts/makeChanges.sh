@@ -763,6 +763,15 @@ do
 			fi
 			;;
 
+		"uselogin")
+			if [[ ${NEW_VALUE} == "false" ]]; then
+				echo -ne "${wWARNING}"
+				echo -n "WARNING: Disabling '${LABEL}' should NOT be done if your Pi is"
+				echo -n " accessible on the Internet.  It's a HUGE security risk!"
+				echo -e "${wNC}"
+			fi
+			;;
+
 		*)
 			echo -e "${wWARNING}"
 			echo    "WARNING: Unknown key '${KEY}'; ignoring.  Old=${OLD_VALUE}, New=${NEW_VALUE}"

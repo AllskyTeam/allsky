@@ -582,25 +582,16 @@ function replace_website_placeholders()
 #	Copy data.json.
 function prepare_local_website()
 {
-		local FORCE="${1}"
-		local CREATED_FILE="false"
+	local FORCE="${1}"
 
-		display_msg --log progress "Creating default ${ALLSKY_WEBSITE_CONFIGURATION_NAME}."
+	display_msg --log progress "Creating default ${ALLSKY_WEBSITE_CONFIGURATION_NAME}."
 
-		# Make sure there's a config file.
-		if [[ ! -s ${ALLSKY_WEBSITE_CONFIGURATION_FILE} || ${FORCE} == "--force" ]]; then
-			cp "${REPO_WEBSITE_CONFIGURATION_FILE}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
-			CREATED_FILE="true"
-		fi
+	# Make sure there's a config file.
+	if [[ ! -s ${ALLSKY_WEBSITE_CONFIGURATION_FILE} || ${FORCE} == "--force" ]]; then
+		cp "${REPO_WEBSITE_CONFIGURATION_FILE}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+	fi
 
-		replace_website_placeholders "local" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
-
-		if [[ ${CREATED_FILE} == "false" ]]; then
-			# If we had to create a default config file, we're not using the local Website
-			# so don't try to upload anything.
-			# Only want error messages.
-			"${ALLSKY_SCRIPTS}/postData.sh" > /dev/null
-		fi
+	replace_website_placeholders "local" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 }
 
 

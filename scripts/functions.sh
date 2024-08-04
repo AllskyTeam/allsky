@@ -838,7 +838,7 @@ function get_links()
 	local DIRNAME="$( dirname "${FILE}" )"
 
 	# shellcheck disable=SC2012
-	local INODE="$( /bin/ls -l --inode "${FILE}" 2>/dev/null | cut -f1 -d' ' )"
+	local INODE="$( stat --printf="%i" "${FILE}" 2>/dev/null )"
 	if [[ -z ${INODE} ]]; then
 		echo "File '${FILE}' not found."
 		return 2

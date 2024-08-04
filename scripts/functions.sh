@@ -581,6 +581,12 @@ function convertLatLong()
 # to allow testing various configurations.
 function get_sunrise_sunset()
 {
+	local DO_ZERO="false"
+	if [[ ${1} == "--zero" ]]; then
+		DO_ZERO="true"
+		shift
+	fi
+
 	local ANGLE="${1}"
 	local LATITUDE="${2}"
 	local LONGITUDE="${3}"
@@ -595,9 +601,11 @@ function get_sunrise_sunset()
 	LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )"	|| return 2
 
 	echo "Daytime start    Nighttime start   Angle"
-	local X="$( sunwait list angle "0" "${LATITUDE}" "${LONGITUDE}" )"
-	# Replace comma by several spaces so the output lines up.
-	echo "${X/,/           }               0"
+	if [[ ${DO_ZERO} == "true" ]]; then
+		local X="$( sunwait list angle "0" "${LATITUDE}" "${LONGITUDE}" )"
+		# Replace comma by several spaces so the output lines up.
+		echo "${X/,/           }               0"
+	fi
 	X="$( sunwait list angle "${ANGLE}" "${LATITUDE}" "${LONGITUDE}" )"
 	echo "${X/,/           }              ${ANGLE}"
 }

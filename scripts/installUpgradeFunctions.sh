@@ -971,3 +971,13 @@ function get_computer()
 	echo "${MODEL}, ${GB} GB"
 }
 
+
+####
+# Get a value from the php ini file, using php rather than parsing the ini 
+# files directly. This does assume that both the cli and cgi settings files
+# work in the same way.
+#
+get_php_setting() {
+    local SETTING="${1}"
+    php -r "echo ini_get('${SETTING}');"
+}

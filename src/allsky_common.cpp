@@ -413,18 +413,19 @@ std::string calculateDayOrNight(const char *latitude, const char *longitude, flo
 	return("");
 }
 
-// Calculate how long until daytime (forDaytime==true) or nighttime (forDaytime==false).
-int calculateTimeToNextTime(const char *latitude, const char *longitude, float angle, bool forDaytime)
+// Calculate how long until daytime (isDaytime==false) or nighttime (isDaytime==true).
+int calculateTimeToNextTime(const char *latitude, const char *longitude, float angle, bool isDaytime)
 {
 	// We are sleeping UNTIL which time?
-	const char *toTime = "night";
-	if (! forDaytime) toTime = "day";
+	const char *toTime;
+	if (isDaytime) toTime = "night";
+	else toTime = "day";
 
 	std::string t;
 	char sunwaitCommand[128];	// returns "hh:mm, hh:mm"  (daytime begin, nighttime begin)
 	snprintf(sunwaitCommand, sizeof(sunwaitCommand),
 		"sunwait list %s angle %s %s %s",
-		forDaytime ? "rise" : "set",
+		isDaytime ? "set" : "rise",
 		convertCommaToPeriod(angle, "%.4f"), latitude, longitude);
 	t = exec(sunwaitCommand);
 	t.erase(std::remove(t.begin(), t.end(), '\n'), t.end());
@@ -1305,8 +1306,8 @@ void displaySettings(config cg)
 
 // Sleep when we're not taking daytime or nighttime images.
 // Try to be smart about it so we don't sleep a gazillion times.
-// "forDaytime" will be true if we're sleeping during the day, else at night.
-bool day_night_timeSleep(bool displayedMsg, config cg, bool forDaytime)
+// "isDaytime" will be true if we're sleeping during the day, else at night.
+bool day_night_timeSleep(bool displayedMsg, config cg, bool isDaytime)
 {
 	// Only display messages once a day.
 	if (! displayedMsg)
@@ -1314,16 +1315,16 @@ bool day_night_timeSleep(bool displayedMsg, config cg, bool forDaytime)
 		if (cg.notificationImages) {
 			// In case another notification image is being upload, give it time to finish.
 			sleep(5);
-			if (forDaytime)
+			if (isDaytime)
 				(void) displayNotificationImage("--expires 0 CameraOffDuringDay &");
 			else
 				(void) displayNotificationImage("--expires 0 CameraOffDuringNight &");
 		}
-		Log(1, "It's %stime... we're not saving images.\n", forDaytime ? "day" : "night");
+		Log(1, "It's %stime... we're not saving images.\n", isDaytime ? "day" : "night");
 		displayedMsg = true;
 
 		// Sleep until a little before nighttime/daytime, then wake up and sleep more if needed.
-		int secsTillNext = calculateTimeToNextTime(cg.latitude, cg.longitude, cg.angle, forDaytime);
+		int secsTillNext = calculateTimeToNextTime(cg.latitude, cg.longitude, cg.angle, isDaytime);
 		timeval t;
 		t = getTimeval();
 		t.tv_sec += secsTillNext;
@@ -1334,7 +1335,7 @@ bool day_night_timeSleep(bool displayedMsg, config cg, bool forDaytime)
 	{
 		// Shouldn't need to sleep more than a few times before nighttime.
 		int s = 5;
-		Log(2, "Not quite %time; sleeping %'d more seconds\n", forDaytime ? "night" : "day", s);
+		Log(2, "Not quite %time; sleeping %'d more seconds\n", isDaytime ? "night" : "day", s);
 		sleep(s);
 	}
 

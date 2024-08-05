@@ -601,6 +601,7 @@ function get_sunrise_sunset()
 	LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )"	|| return 2
 
 	local FORMAT="%-15s  %-17s  %-7s  %-10s  %-10s\n"
+	# shellcheck disable=SC2059
 	printf "${FORMAT}" "Daytime start" "Nighttime start" "Angle" "Latitude" "Longitude"
 	local STARTS=()
 	# sunwait output:  day_start, night_start

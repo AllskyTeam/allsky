@@ -535,7 +535,6 @@ do
 			# It's possible the user will create/populate the file while Allsky is running,
 			# so it's not an error if the file doesn't exist or is empty.
 			if [[ -n ${NEW_VALUE} ]]; then
-				local X
 				if [[ ! -f ${NEW_VALUE} ]]; then
 					X=" does not exist"
 				elif [[ ! -s ${NEW_VALUE} ]]; then

@@ -549,7 +549,6 @@ do
 			if [[ ${NEW_VALUE} == "" ]]; then
 				NEW_VALUE="[none]"
 			elif [[ ${NEW_VALUE} != "[none]" ]]; then
-				local X
 				if [[ ! -f ${NEW_VALUE} ]]; then
 					X=" does not exist"
 				elif [[ ! -s ${NEW_VALUE} ]]; then

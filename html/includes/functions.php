@@ -708,7 +708,7 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 		//x $status->addMessage(implode("<br>", $result), "message", false);
   		foreach ( $result as $line) {
 			if (strpos($line, "ERROR:") !== false) {
-				$sev = "error";
+				$sev = "danger";
 			} else if (strpos($line, "WARNING:") !== false) {
 				$sev = "warning";
 			} else {

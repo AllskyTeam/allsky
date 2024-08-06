@@ -3217,7 +3217,7 @@ install_overlay()
 
 	if [[ ${WILL_USE_PRIOR} == "false" ]]; then
 		# Set to defaults since there are no prior files.
-		display_msg --log progress "Using overlay ${OVERLAY_NAME}."
+		display_msg --log progress "Using overlay '${OVERLAY_NAME}'."
 		for s in daytimeoverlay nighttimeoverlay
 		do
 			local VALUE=""; doV "" "OVERLAY_NAME" "${s}" "text" "${SETTINGS_FILE}"

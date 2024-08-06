@@ -702,7 +702,21 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 		$status->addMessage($onSuccessMessage, $messageColor, false);
 
 	// Display any output from the command.
-	if ($result != null) $status->addMessage(implode("<br>", $result), "message", false);
+	// If there are any lines that begin with:  ERROR  or  WARNING
+	// then display them in the appropriate format.
+	if ($result != null) {
+		//x $status->addMessage(implode("<br>", $result), "message", false);
+  		foreach ( $result as $line) {
+			if (strpos($line, "ERROR:") !== false) {
+				$sev = "danger";
+			} else if (strpos($line, "WARNING:") !== false) {
+				$sev = "warning";
+			} else {
+				$sev = "message";
+			}
+			$status->addMessage("$line<br>", $sev, false);
+		}
+	}
 
 	return true;
 }

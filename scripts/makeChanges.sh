@@ -69,17 +69,26 @@ while [[ $# -gt 0 ]]; do
 	shift
 done
 
+if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
+	# The WebUI will display our output in an
+	# appropriate style if ERROR: or WARNING: is in the message, so
+	# don't provide our own format.
+	ERROR_PREFIX=""
+	wERROR=""
+	wDEBUG="DEBUG: "
+	wWARNING=""
+	wNC=""
+	BR="<br>"
+else
+	ERROR_PREFIX="${ME}: "
+	BR="\n"
+fi
+
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
 	[[ $# -eq 0 ]] && usage_and_exit 1
 	[[ $(($# % 4)) -ne 0 ]] && usage_and_exit 2
-fi
-
-if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
-	ERROR_PREFIX=""
-else
-	ERROR_PREFIX="${ME}: "
 fi
 
 RUN_POSTTOMAP="false"
@@ -292,8 +301,8 @@ do
 					CAMERA_MODEL_ARG=""
 				fi
 				if [[ ${DEBUG} == "true" ]]; then
-					echo -e "${wDEBUG}"
-					echo    "Calling: ${CMD} ${OTHER_ARGS} ${CAMERA_MODEL_ARG} -cc_file '${CC_FILE}'"
+					echo -en "${wDEBUG}"
+					echo "Calling: ${CMD} ${OTHER_ARGS} ${CAMERA_MODEL_ARG} -cc_file '${CC_FILE}'"
 					echo -e "${wNC}"
 				fi
 
@@ -314,11 +323,11 @@ do
 
 					# Invoker displays error message on EXIT_NO_CAMERA.
 					if [[ ${RET} -ne "${EXIT_NO_CAMERA}" ]]; then
-						echo -en "\n${wERROR}ERROR: "
+						echo -en "${BR}${wERROR}ERROR: "
 						if [[ ${RET} -eq 139 ]]; then
 							echo -en "Segmentation fault in ${CMD}"
 						else
-							echo -en "${R}\nUnable to create cc file '${CC_FILE}'."
+							echo -en "${R}${BR}Unable to create cc file '${CC_FILE}'."
 						fi
 						echo -e "${wNC}"
 					fi
@@ -397,11 +406,11 @@ do
 			fi
 
 			if [[ ${RET} -ne 0 ]]; then
-				echo -n -e "${wERROR}ERROR: Unable to create '${OPTIONS_FILE}'"
+				echo -en "${wERROR}ERROR: Unable to create '${OPTIONS_FILE}'"
 				if [[ ${OPTIONS_FILE_ONLY} == "true" ]]; then
-					echo -e "file."
+					echo -n " file"
 				else
-					echo -e " and '${SETTINGS_FILE}' files."
+					echo -n " and '${SETTINGS_FILE}' files"
 				fi
 				echo -e "${wNC}, RET=${RET}: ${R}"
 				exit 1
@@ -410,10 +419,10 @@ do
 
 			ERR=""
 			if [[ ! -f ${OPTIONS_FILE} ]]; then
-				ERR+="\nERROR Options file ${OPTIONS_FILE} not created."
+				ERR+="${BR}ERROR Options file ${OPTIONS_FILE} not created."
 			fi
 			if [[ ! -f ${SETTINGS_FILE} && ${OPTIONS_FILE_ONLY} == "false" ]]; then
-				ERR+="\nERROR Settings file ${SETTINGS_FILE} not created."
+				ERR+="${BR}ERROR Settings file ${SETTINGS_FILE} not created."
 			fi
 			if [[ -n ${ERR} ]]; then
 				echo -e "${wERROR}${ERROR_PREFIX}${ERR}${wNC}"
@@ -447,7 +456,7 @@ do
 					[[ ${X} == "null" ]] && continue
 
 					update_json_file ".${SETTING}" "${X}" "${SETTINGS_FILE}" "${TYPE}" ||
-						echo "Unable to update ${SETTING} of type ${TYPE}" >&2
+						echo "WARNING: Unable to update ${SETTING} of type ${TYPE}" >&2
 				done
 			fi
 
@@ -506,17 +515,17 @@ do
 		"usedarkframes")
 			if [[ ${NEW_VALUE} == "true" ]]; then
 				if [[ ! -d ${ALLSKY_DARKS} ]]; then
-					echo -e "${wWARNING}WARNING: No darks to subtract."
-					echo -e "No '${ALLSKY_DARKS}' directory.${NC}"
+					echo -en "${wWARNING}"
+					echo -n "WARNING: No darks to subtract.  No '${ALLSKY_DARKS}' directory.${NC}"
 					# Restore to old value
-					echo "Disabling ${WSNs}${LABEL}${WSNe}."
+					echo "${BR}Disabling ${WSNs}${LABEL}${WSNe}."
 					update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "boolean"
 				else
 					NUM_DARKS=$( find "${ALLSKY_DARKS}" -name "*.${EXTENSION}" 2>/dev/null | wc -l)
 					if [[ ${NUM_DARKS} -eq 0 ]]; then
-						echo -n "${WSNs}${LABEL}${WSNe} is set but there are no darks"
-						echo    " in '${ALLSKY_DARKS}' with extension of '${EXTENSION}'."
-						echo    "FIX: Either disable the setting or take dark frames."
+						echo -n "WARNING: ${WSNs}${LABEL}${WSNe} is set but there are no darks"
+						echo -n " in '${ALLSKY_DARKS}' with extension of '${EXTENSION}'."
+						echo    "${BR}FIX: Either disable the setting or take dark frames."
 					fi
 				fi
 			fi
@@ -527,10 +536,11 @@ do
 			# so it's not an error if the file doesn't exist or is empty.
 			if [[ -n ${NEW_VALUE} ]]; then
 				if [[ ! -f ${NEW_VALUE} ]]; then
-					echo -e "${wWARNING}WARNING: '${NEW_VALUE}' does not exist; please change it.${wNC}"
+					X=" does not exist"
 				elif [[ ! -s ${NEW_VALUE} ]]; then
-					echo -e "${wWARNING}WARNING: '${NEW_VALUE}' is empty; please change it.${wNC}"
+					X=" is empty"
 				fi
+				echo -e "${wWARNING}WARNING: '${NEW_VALUE}' ${X}; please change it.${wNC}"
 			fi
 			;;
 
@@ -538,20 +548,19 @@ do
 			if [[ ${NEW_VALUE} == "" ]]; then
 				NEW_VALUE="[none]"
 			elif [[ ${NEW_VALUE} != "[none]" ]]; then
-				echo -e "${wWARNING}WARNING: Configuration file '${NEW_VALUE}'"
 				if [[ ! -f ${NEW_VALUE} ]]; then
-					echo " does not exist; please change it."
+					X=" does not exist"
 				elif [[ ! -s ${NEW_VALUE} ]]; then
-					echo " is empty; please change it."
+					X=" is empty"
 				fi
-				echo -e "${wNC}"
+				echo -e "${wWARNING}WARNING: Configuration file '${NEW_VALUE}' ${X}; please change it.${wNC}"
 			fi
 			;;
 
 		"daytuningfile" | "nighttuningfile")
 			if [[ -n ${NEW_VALUE} && ! -f ${NEW_VALUE} ]]; then
-				echo -e "${wWARNING}"
-				echo    "WARNING: Tuning File '${NEW_VALUE}' does not exist; please change it."
+				echo -ne "${wWARNING}"
+				echo -n "WARNING: Tuning File '${NEW_VALUE}' does not exist; please change it."
 				echo -e "${wNC}"
 			fi
 			;;
@@ -566,7 +575,10 @@ do
 				if [[ ${INDEX} -ge 0 ]]; then
 					WEBSITE_CONFIG+=("${PARENT}[${INDEX}].display" "${LABEL}" "${NEW_VALUE}")
 				else
-					echo -e "${wWARNING}WARNING: Unable to update ${wBOLD}${LABEL}${wNBOLD} in ${WEB_CONFIG_FILE}; ignoring.${wNC}"
+					echo -en "${wWARNING}"
+					echo -en "WARNING: Unable to update ${wBOLD}${LABEL}${wNBOLD}"
+					echo -en " in ${WEB_CONFIG_FILE}; ignoring."
+					echo -e "${wNC}"
 				fi
 			else
 				echo -en "${wWARNING}"
@@ -589,9 +601,9 @@ do
 				check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
 				RUN_POSTTOMAP="true"
 			else
-				echo -e "${wERROR}${NEW_VALUE}${wNC}"
 				# Restore to old value
-				echo "Setting ${WSNs}${LABEL}${WSNe} back to ${WSVs}${OLD_VALUE}${WSVe}."
+				echo -en "${wERROR}ERROR: ${NEW_VALUE}${wNC}"
+				echo "${BR}Setting ${WSNs}${LABEL}${WSNe} back to ${WSVs}${OLD_VALUE}${WSVe}."
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "string"
 				OK="false"
 			fi
@@ -641,7 +653,7 @@ do
 
 		"overlaymethod")
 			if [[ ${NEW_VALUE} -eq 1 ]]; then		# 1 == "overlay" method
-				echo -en "${wWARNING}"
+				echo -en "${wWARNING}WARNING: "
 				echo -en "NOTE: You must enable the ${wBOLD}Overlay Module${wNBOLD} in the"
 				echo -en " ${wBOLD}Daytime Capture${wNBOLD} and/or"
 				echo -en " ${wBOLD}Nighttime Capture${wNBOLD} flows of the"
@@ -723,8 +735,9 @@ do
 					"${S_imagecropbottom}" "${S_imagecropleft}" \
 					"${C_sensorWidth}" "${C_sensorHeight}" )"
 				if [[ $? -ne 0 ]]; then
-					echo "${ERR}"
-					echo "FIX: Check the ${WSNs}Image Crop Top/Right/Bottom/Left${WSNe} settings."
+					MSG="ERROR: ${ERR}${BR}"
+					MSG+="FIX: Check the ${WSNs}Image Crop Top/Right/Bottom/Left${WSNe} settings."
+					echo -e "${MSG}"
 				fi
 			fi
 			;;
@@ -735,11 +748,12 @@ do
 				{ if ($2 == codec) { exit_code = 0; exit 0; } }
 				END { exit exit_code; }' ; then
 
-				echo -e "${wWARNING}"
-				echo    "WARNING: Unknown VCODEC: '${NEW_VALUE}'; resetting to '${OLD_VALUE}'."
-				echo    "Execute: ffmpeg -encoders"
-				echo    "for a list of VCODECs."
-				echo -e "${wNC}"
+				MSG="${wWARNING}WARNING: "
+				MSG+="Unknown VCODEC: '${NEW_VALUE}'; resetting to '${OLD_VALUE}'."
+				MSG+="${BR}Execute: ffmpeg -encoders"
+				MSG+="${BR}for a list of VCODECs."
+				MSG+="${wNC}"
+				echo -e "${MSG}"
 
 				# Restore to old value
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "text"
@@ -752,21 +766,33 @@ do
 				{ if ($2 == fmt) { exit_code = 0; exit 0; } }
 				END { exit exit_code; }' ; then
 
-				echo -e "${wWARNING}"
-				echo    "WARNING: Unknown Pixel Format: '${NEW_VALUE}'; resetting to '${OLD_VALUE}'."
-				echo    "Execute: ffmpeg -pix_fmts"
-				echo    "for a list of formats."
-				echo -e "${wNC}"
+				MSG="${wWARNING}WARNING: "
+				MSG+="Unknown Pixel Format: '${NEW_VALUE}'; resetting to '${OLD_VALUE}'."
+				MSG+="Execute: ffmpeg -pix_fmts"
+				MSG+="for a list of formats."
+				MSG+="${wNC}"
+				echo -e "${MSG}"
 
 				# Restore to old value
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "text"
 			fi
 			;;
 
+		"uselogin")
+			if [[ ${NEW_VALUE} == "false" ]]; then
+				MSG="${wWARNING}WARNING: "
+				MSG+="Disabling '${LABEL}' should NOT be done if your Pi is"
+				MSG+=" accessible on the Internet.  It's a HUGE security risk!"
+				MSG+="${wNC}"
+				echo -e "${MSG}"
+			fi
+			;;
+
 		*)
-			echo -e "${wWARNING}"
-			echo    "WARNING: Unknown key '${KEY}'; ignoring.  Old=${OLD_VALUE}, New=${NEW_VALUE}"
-			echo -e "${wNC}"
+			MSG="${wWARNING}WARNING: "
+			MSG+="Unknown key '${KEY}'; ignoring.  Old=${OLD_VALUE}, New=${NEW_VALUE}"
+			MSG+="${wNC}"
+			echo -e "${MSG}"
 			((NUM_CHANGED--))
 			;;
 
@@ -792,14 +818,15 @@ if [[ ${USE_REMOTE_WEBSITE} == "true" || ${USE_REMOTE_SERVER} == "true" ]]; then
 		# If the remote configuration file doesn't exist assume it's because
 		# the user enabled it but hasn't yet "installed" it (which creates the file).
 		if [[ ! -s ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
-			echo -e "${wWARNING}"
-			echo    "The Remote Website is now enabled but hasn't been installed yet."
-			echo    "Please do so now."
+			MSG="${wWARNING}WARNING: "
+			MSG+="The Remote Website is now enabled but hasn't been installed yet."
+			MSG+="${BR}Please do so now."
 			if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
-				echo -n "See <a allsky='true' external='true'"
-				echo " href='/documentation/installations/AllskyWebsite.html'>See the documentation</a>"
+				MSG+="${BR}See <a allsky='true' external='true'"
+				MSG+=" href='/documentation/installations/AllskyWebsite.html'>the documentation</a>"
 			fi
-			echo -e "${wNC}"
+			MSG+="${wNC}"
+			echo -e "${MSG}"
 			[[ ${WEBSITES} != "local" ]] && WEBSITES=""
 		fi
 	fi

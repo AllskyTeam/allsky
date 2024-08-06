@@ -922,13 +922,13 @@ function get_lat_long()
 	LAT=""
 	LON=""
 	# Check we have an internect connection
-	if wget -q --spider "http://www.google.com" ; then
+	if wget -q --spider "http://www.google.com" 2>/dev/null ; then
 		# Use ipinfo.io to get the user's lat and lon from their IP.
 		RAW_LOCATION="$( curl -s ipinfo.io/loc 2>/dev/null )"
 		# If we got a json response then it's an error.
 		# If "jq" fails we did NOT get json response.
 		if ERR="$( jq -e . 2>&1 <<<"${RAW_LOCATION}" )"; then
-			MSG="Got error response trying to get latitude and longitude from ip address:"
+			MSG="Got error response trying to get latitude and longitude from IP address:"
 			MSG+="\n${ERR}"
 			display_msg --logonly info "${MSG}"
 		else

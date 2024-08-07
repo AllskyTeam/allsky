@@ -320,7 +320,7 @@ function DisplayAllskyConfig() {
 							  $name === "angle" ||
 							  $name === "takedaytimeimages" ||
 							  $name === "takenighttimeimages") {
-							$twilightDataChanged = $newValue;
+							$twilightDataChanged = true;
 						}
 					}
 

@@ -124,14 +124,14 @@ fi
 
 if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	OK="true"
-	if ! latitude="$( convertLatLong "$( settings ".latitude" )" "latitude" )" ; then
+	if ! latitude="$( convertLatLong "$( settings ".latitude" )" "latitude" 2>&1 )" ; then
 		OK="false"
 		echo -e "${RED}${ME}: ERROR: ${latitude}" >&2
 		if [[ ${FROM_WEBUI} == "false" ]]; then
 			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${latitude}"
 		fi
 	fi
-	if ! longitude="$( convertLatLong "$( settings ".longitude" )" "longitude" )" ; then
+	if ! longitude="$( convertLatLong "$( settings ".longitude" )" "longitude" 2>&1 )" ; then
 		OK="false"
 		echo -e "${RED}${ME}: ERROR: ${longitude}" >&2
 		if [[ ${FROM_WEBUI} == "false" ]]; then
@@ -145,9 +145,9 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 
 	# If nighttime happens after midnight, sunwait returns "--:-- (Midnight sun)"
 	# If nighttime happens before noon, sunwait returns "--:-- (Polar night)"
-	sunrise="$( sunwait list rise angle "${angle}" "${latitude}" "${longitude}" )"
+	sunrise="$( sunwait list rise angle "${angle}" "${latitude}" "${longitude}" 2>&1 )"
 	sunrise_hhmm="${sunrise:0:5}"
-	sunset="$( sunwait list set angle "${angle}" "${latitude}" "${longitude}" )"
+	sunset="$( sunwait list set angle "${angle}" "${latitude}" "${longitude}" 2>&1 )"
 	sunset_hhmm="${sunset:0:5}"
 
 	if [[ ${sunrise_hhmm} == "--:--" || ${sunset_hhmm} == "--:--" ]]; then

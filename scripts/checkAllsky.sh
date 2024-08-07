@@ -117,6 +117,11 @@ function heading()
 			;;
 	esac
 
+	if [[ ${FROM_WEBUI} == "true" ]]; then
+		# Don't display the header when run from the WebUI.
+		return
+	fi
+
 	if [[ ${DISPLAY_HEADER} == "true" ]]; then
 		[[ ${NUM_HEADER_CALLS} -gt 1 ]] && echo -e "${NL}"
 		echo -e "${STRONGs}---------- ${HEADER}${SUB_HEADER} ----------${STRONGe}${NL}"

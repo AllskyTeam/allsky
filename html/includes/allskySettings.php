@@ -471,15 +471,16 @@ echo "<script>console.log('Updated $fileName');</script>";
 					$msg = "No settings changed";
 				} else if ($changes !== "") {
 					$msg = "";
-					// This must run with different permissions so makeChanges.sh can
-					// write to the allsky directory.
 					$moreArgs = "";
 					if ($newCameraType !== "") {
 						$moreArgs .= " --cameraTypeOnly";
 					}
 
-					$CMD = "sudo --user=" . ALLSKY_OWNER;
-					$CMD .= " " . ALLSKY_SCRIPTS . "/makeChanges.sh $cmdDebugArg $moreArgs $changes";
+					// This must run with different permissions so makeChanges.sh can
+					// write to the allsky directory.
+					$CMD = "sudo --user=" . ALLSKY_OWNER . " ";
+					$CMD .= ALLSKY_SCRIPTS . "/makeChanges.sh $cmdDebugArg $moreArgs $changes";
+
 					# Let makeChanges.sh display any output.
 					// false = don't add anything to the message.
 					$ok = runCommand($CMD, "", "success", false);
@@ -503,32 +504,34 @@ echo "<script>console.log('Updated $fileName');</script>";
 						$msg .= "Allsky restarted.";
 						// runCommand() displays $msg on success.
 						$CMD = "sudo /bin/systemctl reload-or-restart allsky.service";
-						if (! runCommand($CMD, $msg, "success")) {
+						if (! runCommand($CMD, $msg, "success")) {	// displays $msg on success.
 							$status->addMessage("Unable to restart Allsky.", 'warning');
 						}
 
 					} else if ($stopRequired) {
 						if ($msg !== "")
 							$msg .= " &nbsp;";
+
 						$msg .= "<strong>Allsky stopped waiting for a manual restart</strong>.";
-						// runCommand() displays $msg on success.
 						$CMD = "sudo /bin/systemctl stop allsky.service";
-						if (! runCommand($CMD, $msg, "success")) {
+						if (! runCommand($CMD, $msg, "success")) {	// displays $msg on success.
 							$status->addMessage("Unable to stop Allsky.", 'warning');
 						}
 
 					} else {
-						if ($msg !== "")
-							$msg .= " &nbsp;";
-						$msg .= "Allsky NOT restarted";
-
-						if (! $restartRequired && $changesMade) {
-							$msg .= " - no changes required it";
+						if ($msg !== "") {
+							$status->addMessage($msg, 'info');
 						}
-						$status->addMessage("$msg.", 'info');
+
+						// Don't show the user this message - it can confuse them.
+						$consoleMsg = "Allsky NOT restarted";
+						if (! $restartRequired && $changesMade) {
+							$consoleMsg .= " - no changes required it";
+						}
+						echo "<script>console.log('$consoleMsg');</script>";
 
 						if ($restartRequired) {
-							$msg = "However, a restart is needed for changes to take affect.";
+							$msg = "Allsky needs to be restarted for your changes to take affect.";
 							$status->addMessage($msg, 'warning');
 						}
 					}

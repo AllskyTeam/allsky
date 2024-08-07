@@ -154,26 +154,26 @@
 "action" : "reload"
 },
 {
-"name": "imagestretchamountdaytime",
-"minimum": 0,
-"maximum": 100,
-"default": 0,
-"description": "Amount to stretch daytime images.  <span class='WebUIValue'>0</span> means don't stretch.",
-"label": "Stretch Amount",
+"name" : "imagestretchamountdaytime",
+"minimum" : 0,
+"maximum" : 100,
+"default" : 0,
+"description" : "Amount to stretch daytime images.  <span class='WebUIValue'>0</span> means don't stretch.",
+"label" : "Stretch Amount",
 "label_prefix" : "Daytime",
-"type": "integer",
-"booldependson": "takedaytimeimages"
+"type" : "integer",
+"booldependson" : "takedaytimeimages"
 },
 {
-"name": "imagestretchmidpointdaytime",
-"minimum": 1,
-"maximum": 100,
-"default": 10,
-"description": "Mid point of image stretch.<br>Lower numbers brighten darker parts of image; higher numbers brighten lighter parts.<br>Only applies if <span class='WebUISetting'>Stretch Amount</span> is greater than 0.",
-"label": "Stretch Mid Point",
+"name" : "imagestretchmidpointdaytime",
+"minimum" : 1,
+"maximum" : 100,
+"default" : 10,
+"description" : "Mid point of image stretch.<br>Lower numbers brighten darker parts of image; higher numbers brighten lighter parts.<br>Only applies if <span class='WebUISetting'>Stretch Amount</span> is greater than 0.",
+"label" : "Stretch Mid Point",
 "label_prefix" : "Daytime",
-"type": "percent",
-"booldependson": "takedaytimeimages"
+"type" : "percent",
+"booldependson" : "takedaytimeimages"
 },
 {
 "name" : "daybin",
@@ -420,26 +420,26 @@
 "action" : "reload"
 },
 {
-"name": "imagestretchamountnighttime",
-"minimum": 0,
-"maximum": 100,
-"default": 0,
-"description": "Amount to stretch nighttime images.  <span class='WebUIValue'>0</span> means don't stretch.",
-"label": "Stretch Amount",
+"name" : "imagestretchamountnighttime",
+"minimum" : 0,
+"maximum" : 100,
+"default" : 0,
+"description" : "Amount to stretch nighttime images.  <span class='WebUIValue'>0</span> means don't stretch.",
+"label" : "Stretch Amount",
 "label_prefix" : "Nighttime",
-"type": "integer",
-"booldependson": "takenighttimeimages"
+"type" : "integer",
+"booldependson" : "takenighttimeimages"
 },
 {
-"name": "imagestretchmidpointnighttime",
-"minimum": 1,
-"maximum": 100,
-"default": 10,
-"description": "Mid point of image stretch.<br>Lower numbers brighten darker parts of image; higher numbers brighten lighter parts.<br>Only applies if <span class='WebUISetting'>Stretch Amount</span> is greater than 0.",
-"label": "Stretch mid point",
+"name" : "imagestretchmidpointnighttime",
+"minimum" : 1,
+"maximum" : 100,
+"default" : 10,
+"description" : "Mid point of image stretch.<br>Lower numbers brighten darker parts of image; higher numbers brighten lighter parts.<br>Only applies if <span class='WebUISetting'>Stretch Amount</span> is greater than 0.",
+"label" : "Stretch mid point",
 "label_prefix" : "Nighttime",
-"type": "percent",
-"booldependson": "takenighttimeimages"
+"type" : "percent",
+"booldependson" : "takenighttimeimages"
 },
 {
 "name" : "nightbin",
@@ -1194,23 +1194,23 @@
 "type" : "header"
 },
 {
-"name": "imageremovebadlow",
-"minimum": 0,
-"maximum": 0.5,
-"default": 0.1,
-"description": "Delete images whose mean is below this value.<br><span class='WebUIValue'>0</span> disables this check.",
-"label": "Remove Bad Images Threshold Low",
-"type": "float",
+"name" : "imageremovebadlow",
+"minimum" : 0,
+"maximum" : 0.5,
+"default" : 0.1,
+"description" : "Delete images whose mean is below this value.<br><span class='WebUIValue'>0</span> disables this check.",
+"label" : "Remove Bad Images Threshold Low",
+"type" : "float",
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
-"name": "imageremovebadhigh",
-"minimum": 0,
-"maximum": 0.5,
-"default": 0.9,
-"description": "Delete images whose mean is above this value.<br><span class='WebUIValue'>0</span> disables this check.",
-"label": "Remove Bad Images Threshold High",
-"type": "float",
+"name" : "imageremovebadhigh",
+"minimum" : 0,
+"maximum" : 0.5,
+"default" : 0.9,
+"description" : "Delete images whose mean is above this value.<br><span class='WebUIValue'>0</span> disables this check.",
+"label" : "Remove Bad Images Threshold High",
+"type" : "float",
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
@@ -1274,8 +1274,8 @@
 "description" : "Number of pixels to crop off the top of image.",
 "label" : "Image Crop Top",
 "type" : "integer",
-"checkchanges": true,
-"booldependson": "takedaytimeimages OR takenighttimeimages"
+"checkchanges" : true,
+"booldependson" : "takedaytimeimages OR takenighttimeimages"
 },
 {
 "name" : "imagecropright",
@@ -1285,8 +1285,8 @@
 "description" : "Number of pixels to crop off the right side of image.",
 "label" : "Image Crop Right",
 "type" : "integer",
-"checkchanges": true,
-"booldependson": "takedaytimeimages OR takenighttimeimages"
+"checkchanges" : true,
+"booldependson" : "takedaytimeimages OR takenighttimeimages"
 },
 {
 "name" : "imagecropbottom",
@@ -1296,8 +1296,8 @@
 "description" : "Number of pixels to crop off the bottom of image.",
 "label" : "Image Crop Bottom",
 "type" : "integer",
-"checkchanges": true,
-"booldependson": "takedaytimeimages OR takenighttimeimages"
+"checkchanges" : true,
+"booldependson" : "takedaytimeimages OR takenighttimeimages"
 },
 {
 "name" : "imagecropleft",
@@ -1307,8 +1307,8 @@
 "description" : "Number of pixels to crop off the left side of image.",
 "label" : "Image Crop Left",
 "type" : "integer",
-"checkchanges": true,
-"booldependson": "takedaytimeimages OR takenighttimeimages"
+"checkchanges" : true,
+"booldependson" : "takedaytimeimages OR takenighttimeimages"
 },
 
 {
@@ -1337,77 +1337,77 @@
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
-"name": "timelapseupload",
-"default": true,
-"description": "Enable to upload the timelapse video to an Allsky Website and/or remote server.",
-"label": "Upload",
+"name" : "timelapseupload",
+"default" : true,
+"description" : "Enable to upload the timelapse video to an Allsky Website and/or remote server.",
+"label" : "Upload",
 "label_prefix" : "Daily Timelapse",
-"type": "boolean",
+"type" : "boolean",
 "carryforward" : true,
 "booldependson" : "timelapsegenerate"
 },
 {
-"name": "timelapseuploadthumbnail",
-"default": true,
-"description": "Enable to upload the timelapse video thumbnail.",
-"label": "Upload Thumbnail",
+"name" : "timelapseuploadthumbnail",
+"default" : true,
+"description" : "Enable to upload the timelapse video thumbnail.",
+"label" : "Upload Thumbnail",
 "label_prefix" : "Daily Timelapse",
-"type": "boolean",
+"type" : "boolean",
 "carryforward" : true,
 "booldependson" : "timelapsegenerate AND timelapseupload AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
 },
 {
-"name": "timelapsewidth",
-"minimum": 0,
-"maximum": "_max",
-"default": 0,
-"description": "Width of resized timelapse video. <span class='WebUIValue'>0</span> disables resize.",
-"label": "Width",
-"label_prefix" : "Daily Timelapse",
-"type": "integer",
-"booldependson" : "timelapsegenerate"
-},
-{
-"name": "timelapseheight",
-"minimum": 0,
-"maximum": "_max",
-"default": 0,
-"description": "Height of resized timelapse video. <span class='WebUIValue'>0</span> disables resize.",
-"label": "Height",
-"label_prefix" : "Daily Timelapse",
-"type": "integer",
-"booldependson" : "timelapsegenerate"
-},
-{
-"name": "timelapsebitrate",
-"minimum": 100,
-"maximum": 30000,
-"default": 5000,
-"description": "Bitrate (in K) of timelapse video. Higher values produce higher quality but larger files. Do NOT add <code>k</code>.",
-"label": "Bitrate",
+"name" : "timelapsewidth",
+"minimum" : 0,
+"maximum" : "_max",
+"default" : 0,
+"description" : "Width of resized timelapse video. <span class='WebUIValue'>0</span> disables resize.",
+"label" : "Width",
 "label_prefix" : "Daily Timelapse",
 "type" : "integer",
 "booldependson" : "timelapsegenerate"
 },
 {
-"name": "timelapsefps",
-"minimum": 1,
-"maximum": 200,
-"default": 25,
-"description": "Frames Per Second (FPS) of timelapse video.  Higher values will produce smoother, but faster videos.",
-"label": "FPS",
+"name" : "timelapseheight",
+"minimum" : 0,
+"maximum" : "_max",
+"default" : 0,
+"description" : "Height of resized timelapse video. <span class='WebUIValue'>0</span> disables resize.",
+"label" : "Height",
 "label_prefix" : "Daily Timelapse",
-"type": "integer",
+"type" : "integer",
+"booldependson" : "timelapsegenerate"
+},
+{
+"name" : "timelapsebitrate",
+"minimum" : 100,
+"maximum" : 30000,
+"default" : 5000,
+"description" : "Bitrate (in K) of timelapse video. Higher values produce higher quality but larger files. Do NOT add <code>k</code>.",
+"label" : "Bitrate",
+"label_prefix" : "Daily Timelapse",
+"type" : "integer",
+"booldependson" : "timelapsegenerate"
+},
+{
+"name" : "timelapsefps",
+"minimum" : 1,
+"maximum" : 200,
+"default" : 25,
+"description" : "Frames Per Second (FPS) of timelapse video.  Higher values will produce smoother, but faster videos.",
+"label" : "FPS",
+"label_prefix" : "Daily Timelapse",
+"type" : "integer",
 "carryforward" : true,
 "booldependson" : "timelapsegenerate"
 },
 {
-"name": "timelapsekeepsequence",
-"default": false,
-"description": "Enable to keep the list of files used in creating the timelapse video. Rarely changed.",
-"label": "Keep Sequence",
+"name" : "timelapsekeepsequence",
+"default" : false,
+"description" : "Enable to keep the list of files used in creating the timelapse video. Rarely changed.",
+"label" : "Keep Sequence",
 "label_prefix" : "Daily Timelapse",
-"type": "boolean",
+"type" : "boolean",
 "booldependson" : "timelapsegenerate"
 },
 {
@@ -1450,81 +1450,81 @@
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 {
-"name": "minitimelapsefrequency",
-"minimum": 1,
-"maximum": "none",
-"default": 5,
-"description": "Make a mini-timelapse every X images.<br>If you have a slow Pi or short delays between images, set this to a higher number (i.e., not as often).",
-"label": "Frequency",
+"name" : "minitimelapsefrequency",
+"minimum" : 1,
+"maximum" : "none",
+"default" : 5,
+"description" : "Make a mini-timelapse every X images.<br>If you have a slow Pi or short delays between images, set this to a higher number (i.e., not as often).",
+"label" : "Frequency",
 "label_prefix" : "Mini-Timelapse",
-"type": "integer",
+"type" : "integer",
 "carryforward" : true,
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 {
-"name": "minitimelapseupload",
-"default": false,
-"description": "Enable to upload the mini-timelapse video to an Allsky Website and/or remote server.",
-"label": "Upload",
+"name" : "minitimelapseupload",
+"default" : false,
+"description" : "Enable to upload the mini-timelapse video to an Allsky Website and/or remote server.",
+"label" : "Upload",
 "label_prefix" : "Mini-Timelapse",
-"type": "boolean",
+"type" : "boolean",
 "carryforward" : true,
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 {
-"name": "minitimelapseuploadthumbnail",
-"default": true,
-"description": "Enable to upload the mini-timelapse video thumbnail.",
-"label": "Upload Thumbnail",
+"name" : "minitimelapseuploadthumbnail",
+"default" : true,
+"description" : "Enable to upload the mini-timelapse video thumbnail.",
+"label" : "Upload Thumbnail",
 "label_prefix" : "Mini-Timelapse",
-"type": "boolean",
+"type" : "boolean",
 "carryforward" : true,
 "booldependson" : "minitimelapseupload AND (uselocalwebsite OR useremotewebsite OR useremoteserver)",
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 {
-"name": "minitimelapsewidth",
-"minimum": 0,
-"maximum": "_max",
-"default": 0,
-"description": "Width of resized mini-timelapse video. <span class='WebUIValue'>0</span> disables resize.",
-"label": "Width",
+"name" : "minitimelapsewidth",
+"minimum" : 0,
+"maximum" : "_max",
+"default" : 0,
+"description" : "Width of resized mini-timelapse video. <span class='WebUIValue'>0</span> disables resize.",
+"label" : "Width",
 "label_prefix" : "Mini-Timelapse",
-"type": "integer",
+"type" : "integer",
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 {
-"name": "minitimelapseheight",
-"minimum": 0,
-"maximum": "_max",
-"default": 0,
-"description": "Height of resized mini-timelapse video. <span class='WebUIValue'>0</span> disables resize.",
-"label": "Height",
+"name" : "minitimelapseheight",
+"minimum" : 0,
+"maximum" : "_max",
+"default" : 0,
+"description" : "Height of resized mini-timelapse video. <span class='WebUIValue'>0</span> disables resize.",
+"label" : "Height",
 "label_prefix" : "Mini-Timelapse",
-"type": "integer",
+"type" : "integer",
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 {
-"name": "minitimelapsebitrate",
-"minimum": 100,
-"maximum": 30000,
-"default": 2000,
-"description": "Bitrate (in K) of timelapse video. Higher values produce higher quality but larger files. Do NOT add <code>k</code>.",
-"label": "Bitrate",
+"name" : "minitimelapsebitrate",
+"minimum" : 100,
+"maximum" : 30000,
+"default" : 2000,
+"description" : "Bitrate (in K) of timelapse video. Higher values produce higher quality but larger files. Do NOT add <code>k</code>.",
+"label" : "Bitrate",
 "label_prefix" : "Mini-Timelapse",
-"type": "integer",
+"type" : "integer",
 "carryforward" : true,
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 {
-"name": "minitimelapsefps",
-"minimum": 1,
-"maximum": 200,
-"default": 5,
-"description": "Frames Per Second (FPS) of mini-timelapse video.",
-"label": "FPS",
+"name" : "minitimelapsefps",
+"minimum" : 1,
+"maximum" : 200,
+"default" : 5,
+"description" : "Frames Per Second (FPS) of mini-timelapse video.",
+"label" : "FPS",
 "label_prefix" : "Mini-Timelapse",
-"type": "integer",
+"type" : "integer",
 "carryforward" : true,
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
@@ -1541,9 +1541,9 @@
 "label_prefix" : "Timelapse",
 "type" : "text",
 "carryforward" : true,
-"comment": "check using ffmpeg -encoder looking at argument 2 for ' libxs264  '",
+"comment" : "check using ffmpeg -encoder looking at argument 2 for ' libxs264  '",
 "booldependson" : "timelapsegenerate",
-"checkchanges": true
+"checkchanges" : true
 },
 {
 "name" : "timelapsepixfmt",
@@ -1554,7 +1554,7 @@
 "type" : "text",
 "carryforward" : true,
 "booldependson" : "timelapsegenerate",
-"comment": "check using ffmpeg -pix_fmts looking at argument 2 for ' yuv420p  '",
+"comment" : "check using ffmpeg -pix_fmts looking at argument 2 for ' yuv420p  '",
 "checkchanges" : true
 },
 {
@@ -1565,12 +1565,12 @@
 "label_prefix" : "Timelapse",
 "type" : "select_text",
 "carryforward" : true,
-"options": [
-	{ "value": "quiet",		"label": "No output" },
-	{ "value": "fatal",		"label": "Fatal Errors" },
-	{ "value": "error",		"label": "Errors" },
-	{ "value": "warning",	"label": "Warnings + Errors" },
-	{ "value": "info",		"label": "Info + Warnings + Errors" }
+"options" : [
+	{ "value" : "quiet",		"label" : "No output" },
+	{ "value" : "fatal",		"label" : "Fatal Errors" },
+	{ "value" : "error",		"label" : "Errors" },
+	{ "value" : "warning",	"label" : "Warnings + Errors" },
+	{ "value" : "info",		"label" : "Info + Warnings + Errors" }
 ],
 "booldependson" : "timelapsegenerate"
 },
@@ -1601,12 +1601,12 @@
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
-"name": "keogramupload",
-"default": true,
-"description": "Enable to upload the keogram to an Allsky Website and/or remote server.",
-"label": "Upload",
+"name" : "keogramupload",
+"default" : true,
+"description" : "Enable to upload the keogram to an Allsky Website and/or remote server.",
+"label" : "Upload",
 "label_prefix" : "Keograms",
-"type": "boolean",
+"type" : "boolean",
 "carryforward" : true,
 "booldependson" : "keogramgenerate AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
 },
@@ -1710,12 +1710,12 @@
 "booldependson" : "startrailsgenerate"
 },
 {
-"name": "startrailsupload",
-"default": true,
-"description": "Enable to upload the startrails to an Allsky Website and/or remote server.",
-"label": "Upload",
+"name" : "startrailsupload",
+"default" : true,
+"description" : "Enable to upload the startrails to an Allsky Website and/or remote server.",
+"label" : "Upload",
 "label_prefix" : "Startrails",
-"type": "boolean",
+"type" : "boolean",
 "carryforward" : true,
 "booldependson" : "startrailsgenerate AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
 },

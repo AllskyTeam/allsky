@@ -367,6 +367,23 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 	check_delay "Daytime"
 	check_delay "Nighttime"
 
+	if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
+		if [[ ${S_dayautoexposure} == "true" && ${S_dayautogain} == "true" ]]; then
+			heading "Warning"
+			echo -n "For ZWO cameras we suggest NOT using both '${S_dayautoexposure_label}'"
+			echo    " and '${S_dayautogain_label}' at the same time."
+			echo -n "FIX: Disable '${S_dayautogain_label}' and set '${S_daygain_label}' to"
+			echo    " '${S_daymaxautogain_label}'."
+		fi
+		if [[ ${S_nightautoexposure} == "true" && ${S_nightautogain} == "true" ]]; then
+			heading "Warning"
+			echo -n "For ZWO cameras we suggest NOT using both '${S_nightautoexposure_label}'"
+			echo    " and '${S_nightautogain_label}' at the same time."
+			echo -n "FIX: Disable '${S_nightautogain_label}' and set '${S_nightgain_label}' to"
+			echo    " '${S_nightmaxautogain_label}'."
+		fi
+	fi
+
 	##### Timelapse and mini-timelapse
 	if [[ ${S_timelapsevcodec} == "libx264" ]]; then
 		# Check if timelapse size is "too big" and will likely cause an error.

@@ -814,7 +814,7 @@ install_webserver_et_al()
 	else
 		display_msg --log progress "Installing the web server."
 		TMP="${ALLSKY_LOGS}/lighttpd.install.log"
-		run_aptGet install lighttpd php-cgi \
+		run_aptGet lighttpd php-cgi \
 			php-gd hostapd dnsmasq avahi-daemon hwinfo > "${TMP}" 2>&1
 		check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" ||
 			exit_with_image 1 "${STATUS_ERROR}" "lighttpd installation failed"

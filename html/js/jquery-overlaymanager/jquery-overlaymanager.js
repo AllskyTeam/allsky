@@ -226,7 +226,7 @@
                                         <div class="row">\
                                             <div class="col-md-12 col-sm-12 col-xs-12">\
                                                 <div class="form-group ">\
-                                                    <label class="control-label ">Available For</label>\
+                                                    <label class="control-label " for="' + plugin.mmMetaTod + '">Available For</label>\
                                                     <select class="form-control ' + plugin.mmMetaData  + '" id="' + plugin.mmMetaTod + '" name="' + plugin.mmMetaTod + '" data-field="tod">\
                                                         <option value="both">Day and Night</option>\
                                                         <option value="day">Daytime</option>\
@@ -247,11 +247,11 @@
                                         <div class="row mt-2">\
                                             <div class="col-md-12 col-sm-12 col-xs-12">\
                                                 <div class="form-group ">\
-                                                    <label class="control-label " for="select">Daytime</label>\
+                                                    <label class="control-label " for="' + plugin.mmDaySelect + '">Daytime</label>\
                                                     <select class="select form-control ' + plugin.mmTODSelect + '" id="' + plugin.mmDaySelect + '" name="' + plugin.mmDaySelect + '"></select>\
                                                 </div>\
                                                 <div class="form-group ">\
-                                                    <label class="control-label " for="select1">Nighttime</label>\
+                                                    <label class="control-label " for="' + plugin.mmNightSelect + '">Nighttime</label>\
                                                     <select class="select form-control ' + plugin.mmTODSelect + '" id="' + plugin.mmNightSelect + '" name="' + plugin.mmNightSelect + '"></select>\
                                                 </div>\
                                             </div>\
@@ -357,7 +357,7 @@
                                                                 </div>\
                                                                 <div class="col-md-7">\
                                                                     <div class="form-group form-check">\
-                                                                        <label class="control-label " for="' + plugin.mmNewDialogActivate + '">Activate After Creation</label><br>\
+                                                                        <label class="control-label " for="' + plugin.mmNewDialogActivate + '-yes">Activate After Creation</label><br>\
                                                                         <div class="switch-field boxShadow settingInput settingInputBoolean">\
                                                                             <input id="' + plugin.mmNewDialogActivate + '-no" class="form-control" type="radio" name="' + plugin.mmNewDialogActivate + '" value="false">\
                                                                             <label style="margin-bottom: 0px;" for="' + plugin.mmNewDialogActivate + '-no">No</label>\

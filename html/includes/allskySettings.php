@@ -52,16 +52,32 @@ function formatSettingValue($value) {
 	return("<span class='WebUIValue'>$value</span>");
 }
 
+// Determine the logical type based on the actual type.
+function getLogicalType($type) {
+	if (strpos($type, "text") !== false || $type == "password" || $type === "color") {
+		return("text");
+	} else if (strpos($type, "integer") !== false) {
+		return("integer");
+	} else if ($type == "float" || $type === "percent") {
+		return("float");
+	} else {
+		return($type);
+	}
+}
+
+
+// Check the value for the correct type.
+// Return "" on success and some string on error.
 function checkType($fieldName, $value, $old, $label, $type, &$shortened=null) {
-	if ($type === null || $type === "text" || $type == "select_text" || $value === "") {
+	if ($type === null || $type === "text" || $value === "") {
 		return("");
 	}
 
 	$msg = "";
 
-	// $value will be of type string, even if it's actually a number
+	// $value may be of type string, even if it's actually a number
 	// or a boolean, and only is_numeric() accounts for types of string.
-	if ($type === "integer" || $type === "percent") {
+	if ($type === "integer") {
 		if (! is_numeric($value) || ! is_int($value + 0))
 			$msg = "without a fraction";
 		else
@@ -72,23 +88,37 @@ function checkType($fieldName, $value, $old, $label, $type, &$shortened=null) {
 		else
 			$value += 0.0;
 	}
-	if ($msg !== "") {
-		$msg = "must be a number $msg.";
-		$shortened .= "It $msg";
-		if ($value === $old) {
-			$msg .= " The saved value is: ";
-			$msg .= formatSettingValue($value);
-		} else {
-			$msg .= " You entered: ";
-			$msg .= formatSettingValue($value);
-		}
-
-		if (substr($fieldName, 0, 3) === "day") $label = "Daytime $label";
-		else if (substr($fieldName, 0, 5) == "night") $label = "Nighttime $label";
-		return(formatSettingName($label) . " $msg");
+	if ($msg === "") {
+		return("");
 	}
 
-	return("");
+	$msg = "must be a number $msg.";
+	$shortened .= "It $msg";
+	if ($value === $old) {
+		$msg .= " The saved value is: ";
+		$msg .= formatSettingValue($value);
+	} else {
+		$msg .= " You entered: ";
+		$msg .= formatSettingValue($value);
+	}
+
+	if (substr($fieldName, 0, 3) === "day") $label = "Daytime $label";
+	else if (substr($fieldName, 0, 5) == "night") $label = "Nighttime $label";
+
+	return(formatSettingName($label) . " $msg");
+}
+
+// Return $value as type $type.
+// This eliminates the need for JSON_NUMERIC_CHECK, which converts some
+// strings we want as strings to numbers, e.g., "longitude = +105.0" should stay as a string.
+function setValue($name, $value, $type) {
+	if ($type === "integer") {
+		return (int) $value;
+	} else if ($type === "float") {
+		return (float) $value;
+	} else {
+		return $value;
+	}
 }
 
 // ============================================= The main function.
@@ -116,7 +146,8 @@ function DisplayAllskyConfig() {
 	$showIcon = "<i class='fa fa-chevron-down fa-fw'></i>";
 	$hideIcon = "<i class='fa fa-chevron-up fa-fw'></i>";
 
-	$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
+//x	$mode = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK | JSON_PRESERVE_ZERO_FRACTION;
+	$mode = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION;
 	$settings_file = getSettingsFile();
 	$options_file = getOptionsFile();
 
@@ -217,17 +248,23 @@ function DisplayAllskyConfig() {
 				$checkchanges = false;
 				$label = "??";
 				$found = false;
+				$type = "";
+				$logicalType = "";
 				foreach ($options_array as $option) {
 					if ($option['name'] !== $name) continue;
 
 					$label = getVariableOrDefault($option, 'label', "");
 					$found = true;
 					$shortMsg = "";
+					$type = $type_array[$name];
+					$logicalType = getLogicalType($type);
+					$newValue = setValue($name, $newValue, $logicalType);
+					$oldValue = setValue($name, $oldValue, $logicalType);
 					$e = checkType($name,
 							$newValue,
 							$oldValue,
 							$label,
-							$type_array[$name],
+							$logicalType,
 							$shortMsg);
 					if ($e != "") {
 						$ok = false;
@@ -260,16 +297,20 @@ function DisplayAllskyConfig() {
 				} else {
 					if (toBool(getVariableOrDefault($option, 'settingsonly', "false"))) {
 						// "settingsonly" settings aren't changed in the WebUI
-						$settings_array[$name] = $oldValue;
+						$settings_array[$name] = setValue($name, $oldValue, $logicalType);
 						continue;
 					}
 
-					if ($oldValue !== "")
-						$oldValue = str_replace("'", "&#x27", $oldValue);
-					if ($newValue !== "")
-						$newValue = str_replace("'", "&#x27", $newValue);
+					if ($logicalType === "text") {
+						if ($oldValue !== "")
+							$oldValue = str_replace("'", "&#x27", $oldValue);
+						if ($newValue !== "")
+							$newValue = str_replace("'", "&#x27", $newValue);
+					}
 
-					if ($oldValue === $newValue) continue;
+					if ($oldValue === $newValue) {
+						continue;
+					}
 
 					if ($isSettingsField) $numSettingsChanges++;
 					else $numSourceChanges++;
@@ -294,6 +335,7 @@ function DisplayAllskyConfig() {
 							$newCameraType = $newValue;
 						}
 						$cameraChanged = true;
+
 					} elseif ($name === $cameraModelName || $name === $cameraNumberName) {
 						if ($refreshingCameraType) {
 							$msg = "If you selected <b>Refresh</b> for <b>Camera Type</b>";
@@ -308,6 +350,7 @@ function DisplayAllskyConfig() {
 							else
 								$newCameraNumber = $newValue;
 						}
+
 					} else {
 						// want to know changes other than camera
 						if ($nonCameraChanges === "")
@@ -345,8 +388,9 @@ function DisplayAllskyConfig() {
 						$newValue = false;
 						$s_newValue = "false";
 					} else {
-						// Don't do unless needed - str_replace() changes non-strings like numbers to strings.
-						if (strpos($newValue, "'") !== false)
+						// Don't do unless needed:
+						//	str_replace() changes non-strings like numbers to strings.
+						if ($logicalType === "text")
 							$newValue = str_replace("'", "&#x27", $newValue);
 						$s_newValue = $newValue;
 					}
@@ -360,16 +404,7 @@ if ($debug) {
 						$fileName = $sourceFiles[$name];
 						$sourceFilesChanged[$fileName] = $fileName;
 					} else {
-if ($debug) {
-	$s = toString($settings_array[$name]);
-	if ($s != $s_newValue) { echo "<br><br>settings_array[$name] = $s, newValue=$s_newValue"; }
-}
-						$settings_array[$name] = $newValue;
-if ($debug && $s != $s_newValue) {
-	echo "<br><pre>====== settings_array['height'] now:<br>";
-	var_dump($settings_array['height']);
-	echo "</pre>";
-}
+						$settings_array[$name] = setValue($name, $newValue, $logicalType);
 					}
 
 					if ($name === $debugLevelName && $newValue >= 4) {
@@ -396,11 +431,12 @@ if ($debug && $s != $s_newValue) {
 								$restartRequired = true;
 								unset($settings_array[$endSetting]);
 							}
-							$content = json_encode($settings_array, $mode);
+							$content = str_replace(".0,", ",", json_encode($settings_array, $mode));
 if ($debug) {
 	echo "<br><br>Updating $settings_file, numSettingsChanges = $numSettingsChanges";
+//	echo "<br>settings_array['longitude']=${settings_array['longitude']}";
+	echo "<pre>"; var_dump($settings_array); echo "</pre>";
 	echo "<pre>"; var_dump($content); echo "</pre>";
-	$msg = "";
 }
 							// updateFile() only returns error messages.
 							$msg = updateFile($settings_file, $content, "settings", true);
@@ -431,7 +467,7 @@ if ($debug) {
 	echo "<pre>"; var_dump($content); echo "</pre>";
 }
 								$msg = updateFile($fileName, $content, "source_settings", true);
-echo "<script>console.log('Updated $fileName');</script>";
+// echo "<script>console.log('Updated $fileName');</script>";
 								if ($msg === "") {
 									$msg = "Settings in $fileName saved.";
 									$status->addMessage($msg, 'info');
@@ -468,9 +504,10 @@ echo "<script>console.log('Updated $fileName');</script>";
 
 			if ($ok) {
 				if (! $changesMade && ! $fromConfiguration) {
-					$msg = "No settings changed";
-				} else if ($changes !== "") {
+					$msg = "No settings changed.  Nothing updated.";
+					$status->addMessage($msg, 'warning');
 					$msg = "";
+				} else if ($changes !== "") {
 					$moreArgs = "";
 					if ($newCameraType !== "") {
 						$moreArgs .= " --cameraTypeOnly";
@@ -493,6 +530,8 @@ echo "<script>console.log('Updated $fileName');</script>";
 						$msg .= "Allsky needs to be re-configured.<br>";
 						$restartRequired = false;
 						$stopRequired = true;
+					} else {
+						$msg = "";
 					}
 				}
 
@@ -523,12 +562,14 @@ echo "<script>console.log('Updated $fileName');</script>";
 							$status->addMessage($msg, 'info');
 						}
 
-						// Don't show the user this message - it can confuse them.
-						$consoleMsg = "Allsky NOT restarted";
-						if (! $restartRequired && $changesMade) {
-							$consoleMsg .= " - no changes required it";
+						if ($changesMade || $fromConfiguration) {
+							// Don't show the user this message - it can confuse them.
+							$consoleMsg = "Allsky NOT restarted";
+							if (! $restartRequired && $changesMade) {
+								$consoleMsg .= " - no changes required it";
+							}
+							echo "<script>console.log('$consoleMsg');</script>";
 						}
-						echo "<script>console.log('$consoleMsg');</script>";
 
 						if ($restartRequired) {
 							$msg = "Allsky needs to be restarted for your changes to take affect.";
@@ -594,6 +635,9 @@ echo "<script>console.log('Updated $fileName');</script>";
 				$name = $option['name'];
 				$default = getVariableOrDefault($option, 'default', null);
 				if ($default !== null) {
+					$logicalType = getLogicalType(getVariableOrDefault($option, 'type', "text"));
+					$default = setValue($name, $default, $logicalType);
+
 					$s = getVariableOrDefault($option, 'source', null);
 					if ($s !== null) {
 						$fileName = getFileName($s);
@@ -741,11 +785,10 @@ if (false && $debug) { echo "<br>Option $name"; }
 					$status->addMessage($msg, 'danger');
 					continue;
 				}
+
+				$logicalType = getLogicalType($type);
 				if (substr($type, 0, 7) === "select_") {
-					$realType = substr($type, 7);
 					$type = "select";
-				} else {
-					$realType = $type;
 				}
 
 				// Should this setting be displayed?
@@ -753,7 +796,7 @@ if (false && $debug) { echo "<br>Option $name"; }
 				if (toBool(getVariableOrDefault($option, 'settingsonly', "false"))) {
 					$display = false;
 				}
-				$isHeader = substr($realType, 0, 6) === "header";
+				$isHeader = substr($logicalType, 0, 6) === "header";
 				if (! $display && ! $isHeader) {
 					if ($formReadonly != "readonly") {
 						$value = getVariableOrDefault($settings_array, $name, "");
@@ -769,7 +812,7 @@ if (false && $debug) { echo "<br>Option $name"; }
 					$default = "";
 				} else {
 					$default = getVariableOrDefault($option, 'default', "");
-					if ($default !== "")
+					if ($default !== "" && $logicalType === "text")
 						$default = str_replace("'", "&#x27;", $default);
 
 					$s = getVariableOrDefault($option, 'source', null);
@@ -779,6 +822,7 @@ if (false && $debug) { echo "<br>Option $name"; }
 							// may contain private information.
 							continue;
 						}
+
 						$fileName = getFileName($s);
 						$source_array = &getSourceArray($fileName);
 if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; name=$name, fileName=$fileName"; }
@@ -793,7 +837,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 
 					// In read-only mode, getVariableOrDefault() returns booleans differently.
 					// A 0 or 1 is returned.
-					if ($realType === "boolean" && $formReadonly == "readonly") {
+					if ($logicalType === "boolean" && $formReadonly == "readonly") {
 						if ($value === null || $value == 0) {
 							$value = "false";
 						} else {
@@ -803,7 +847,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 
 					if ($value === null) {
 						$value = "";
-					} else {
+					} else if ($logicalType === "text") {
 						// Allow single quotes in values (for string values).
 						// &apos; isn't supported by all browsers so use &#x27.
 						$value = str_replace("'", "&#x27;", $value);
@@ -827,7 +871,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 								$value,
 								$value,
 								$option['label'],
-								$type_array[$name],
+								$type,
 								$shortMsg);
 						if ($e != "") {
 //x echo "<br>&nbsp; &nbsp; &nbsp; e=$e, shortMsg=$shortMsg";
@@ -886,7 +930,6 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 				}
 
 				$description = getVariableOrDefault($option, 'description', "");
-				//$description = str_replace('<br>', ' ', $description);
 
 				// "widetext" should have the label spanning 2 rows,
 				// a wide input box on the top row spanning the 2nd and 3rd columns,
@@ -978,7 +1021,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 					}
 
 					// Show the default in a popup
-					if ($realType == "boolean") {
+					if ($logicalType == "boolean") {
 						// Boolean values are strings: "true" or "false".
 						if ($default == "true") $default = "Yes";
 						else $default = "No";
@@ -1002,11 +1045,11 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 					$rspan="";
 					$cspan="";
 
-					if ($type == "integer" || $type == "percent") {
+					if ($logicalType == "integer") {
 						$popup .= "\nWhole numbers only";
-					} else if ($type == "float") {
+					} else if ($logicalType == "float") {
 						$popup .= "\nFractions allowed";
-					} else if ($type == "widetext") {
+					} else if ($type == "widetext") {		// check $type, not $logicalType
 						$rspan="rowspan='2'";
 						$cspan="colspan='2'";
 					}
@@ -1034,8 +1077,8 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 					// May want to consider having a symbol next to the field that has the popup.
 					echo "<span title='$popup'>";
 // TODO: add percent sign for "percent"
-					if (in_array($type, ["text", "password", "integer",
-								"float", "color", "percent"])) {
+					if (in_array($type, ["text", "password", "color", "integer",
+								"float", "percent"])) {
 						// Browsers put the up/down arrows for numbers which moves the
 						// numbers to the left, and they don't line up with text.
 						// Plus, they don't accept decimal points in "float".

@@ -762,13 +762,13 @@ run_aptGet()
 {
 	local NUM_FAILS=0
 
-	while !  fuser --silent "/var/lib/dpkg/lock-frontend" ;
+	while fuser --silent "/var/lib/dpkg/lock-frontend" ;
 	do
 		(( NUM_FAILS++ ))
 		if [[ ${NUM_FAILS} -eq 5 ]]; then
 			echo "apt-get is locked.  Tried 5 times." >&2
 			echo "Wait a while and try the Allsky installation again." >&2
-			break
+			return 1
 		fi
 		sleep 3
 	done

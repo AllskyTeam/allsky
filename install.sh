@@ -2539,19 +2539,6 @@ restore_prior_files()
 	# Don't bother with the "else" part since this file is very rarely used.
 	fi
 
-	ITEM="${SPACE}'myFiles' directory"
-	D="${PRIOR_WEBSITE_DIR}/myFiles"
-	if [[ -d ${D} ]]; then
-		count=$( get_count "${D}" '*' )
-		if [[ ${count} -gt 1 ]]; then
-			display_msg --log progress "${ITEM} (moving)"
-			mv "${D}"   "${ALLSKY_WEBSITE}"
-		fi
-	else
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-	fi
-
-
 
 	########## Website files
 	# ALLSKY_ENV is for a remote Website and/or server.
@@ -2587,7 +2574,6 @@ restore_prior_files()
 		# Create a default file.
 		prepare_local_website ""
 	fi
-
 
 	# Do NOT restore options.json - it will be recreated.
 

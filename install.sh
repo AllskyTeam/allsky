@@ -762,7 +762,7 @@ run_aptGet()
 {
 	local NUM_FAILS=0
 
-	while fuser --silent "/var/lib/dpkg/lock-frontend" ;
+	while sudo fuser --silent "/var/lib/dpkg/lock-frontend" ;
 	do
 		(( NUM_FAILS++ ))
 		if [[ ${NUM_FAILS} -eq 5 ]]; then

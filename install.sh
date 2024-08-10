@@ -757,6 +757,25 @@ check_and_mount_tmp()
 
 
 ####
+# Run apt-get, first checking if it's locked.
+run_aptGet()
+{
+	local NUM_FAILS=0
+
+	while sudo fuser --silent "/var/lib/dpkg/lock-frontend" ;
+	do
+		(( NUM_FAILS++ ))
+		if [[ ${NUM_FAILS} -eq 5 ]]; then
+			echo "apt-get is locked.  Tried 5 times." >&2
+			echo "Wait a while and try the Allsky installation again." >&2
+			return 1
+		fi
+		sleep 3
+	done
+	sudo apt-get --assume-yes install "${@}"
+}
+
+####
 # If the return code -ne 0
 check_success()
 {
@@ -795,10 +814,8 @@ install_webserver_et_al()
 	else
 		display_msg --log progress "Installing the web server."
 		TMP="${ALLSKY_LOGS}/lighttpd.install.log"
-		{
-			sudo apt-get --assume-yes install lighttpd php-cgi \
-				php-gd hostapd dnsmasq avahi-daemon hwinfo
-		} > "${TMP}" 2>&1
+		run_aptGet lighttpd php-cgi \
+			php-gd hostapd dnsmasq avahi-daemon hwinfo > "${TMP}" 2>&1
 		check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" ||
 			exit_with_image 1 "${STATUS_ERROR}" "lighttpd installation failed"
 	fi
@@ -1592,7 +1609,7 @@ create_allsky_logs()
 		sudo systemctl stop rsyslog 2> /dev/null
 
 		TMP="${ALLSKY_LOGS}/rsyslog.log"
-		sudo apt-get --assume-yes install rsyslog > "${TMP}" 2>&1
+		run_aptGet rsyslog > "${TMP}" 2>&1
 		check_success $? "rsyslog installation failed" "${TMP}" "${DEBUG}" ||
 			exit_with_image 1 "${STATUS_ERROR}" "rsyslog install failed."
 	fi
@@ -3026,7 +3043,7 @@ install_fonts()
 	display_msg --log progress "Installing Truetype fonts."
 	TMP="${ALLSKY_LOGS}/msttcorefonts.log"
 	local M="Truetype fonts failed"
-	sudo apt-get --assume-yes install msttcorefonts > "${TMP}" 2>&1
+	run_aptGet msttcorefonts > "${TMP}" 2>&1
 	check_success $? "${M}" "${TMP}" "${DEBUG}" || exit_with_image 1 "${STATUS_ERROR}" "${M}"
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
@@ -3043,12 +3060,12 @@ install_PHP_modules()
 
 	display_msg --log progress "Installing PHP modules and dependencies."
 	TMP="${ALLSKY_LOGS}/PHP_modules.log"
-	sudo apt-get --assume-yes install php-zip php-sqlite3 python3-pip > "${TMP}" 2>&1
+	run_aptGet php-zip php-sqlite3 python3-pip > "${TMP}" 2>&1
 	check_success $? "PHP module installation failed" "${TMP}" "${DEBUG}" ||
 		exit_with_image 1 "${STATUS_ERROR}" "PHP module install failed."
 
 	TMP="${ALLSKY_LOGS}/libatlas.log"
-	sudo apt-get --assume-yes install libatlas-base-dev > "${TMP}" 2>&1
+	run_aptGet libatlas-base-dev > "${TMP}" 2>&1
 	check_success $? "PHP dependencies failed" "${TMP}" "${DEBUG}" ||
 		exit_with_image 1 "${STATUS_ERROR}" "PHP dependencies failed."
 
@@ -3108,7 +3125,7 @@ install_Python()
 		display_msg --log progress "Installing ${PKGs}."
 		TMP="${ALLSKY_LOGS}/python3-full.log"
 		# shellcheck disable=SC2086
-		sudo apt-get --assume-yes install ${PKGs} > "${TMP}" 2>&1
+		run_aptGet ${PKGs} > "${TMP}" 2>&1
 		check_success $? "${PKGs} install failed" "${TMP}" "${DEBUG}" ||
 			exit_with_image 1 "${STATUS_ERROR}" "${PKGs} install failed."
 
@@ -3556,10 +3573,10 @@ install_installer_dependencies()
 	display_msg --log progress "Installing installer dependencies."
 	TMP="${ALLSKY_LOGS}/installer.dependencies.log"
 	{
-		sudo apt-get update && \
-			sudo apt-get --assume-yes install gawk jq
-# TODO: FIX: check for failure
+		sudo apt-get update && run_aptGet gawk jq
 	} > "${TMP}" 2>&1
+	check_success $? "gawk,jq installation failed" "${TMP}" "${DEBUG}" ||
+		exit_with_image 1 "${STATUS_ERROR}" "gawk,jq install failed."
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }

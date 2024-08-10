@@ -3572,7 +3572,7 @@ install_installer_dependencies()
 
 	display_msg --log progress "Installing installer dependencies."
 	TMP="${ALLSKY_LOGS}/installer.dependencies.log"
-	sudo apt-get update && run_aptGet gawk jq > "${TMP}" 2>&1
+	{ sudo apt-get update && run_aptGet gawk jq } > "${TMP}" 2>&1
 	check_success $? "gawk,jq installation failed" "${TMP}" "${DEBUG}" ||
 		exit_with_image 1 "${STATUS_ERROR}" "gawk,jq install failed."
 

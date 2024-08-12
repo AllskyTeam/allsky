@@ -597,12 +597,12 @@ do
 
 		"latitude" | "longitude")
 			# Allow either +/- decimal numbers, OR numbers with N, S, E, W, but not both.
-			if NEW_VALUE="$( convertLatLong "${NEW_VALUE}" "${KEY}" 2>&1 )" ; then
-				check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
+			if LAT_LON="$( convertLatLong "${NEW_VALUE}" "${KEY}" 2>&1 )" ; then
+				check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${LAT_LON}")
 				RUN_POSTTOMAP="true"
 			else
 				# Restore to old value
-				echo -en "${wERROR}ERROR: ${NEW_VALUE}${wNC}"
+				echo -en "${wERROR}${LAT_LON}${wNC}"
 				echo "${BR}Setting ${WSNs}${LABEL}${WSNe} back to ${WSVs}${OLD_VALUE}${WSVe}."
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "string"
 				OK="false"

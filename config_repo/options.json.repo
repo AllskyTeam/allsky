@@ -1404,7 +1404,7 @@
 {
 "name" : "timelapsekeepsequence",
 "default" : false,
-"description" : "Enable to keep the list of files used in creating the timelapse video. Rarely changed.",
+"description": "Use for debugging purposes only.  Enable to keep the list of files used in creating the timelapse video.",
 "label" : "Keep Sequence",
 "label_prefix" : "Daily Timelapse",
 "type" : "boolean",

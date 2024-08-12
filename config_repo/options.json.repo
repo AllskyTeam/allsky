@@ -566,6 +566,7 @@
 "label" : "Days To Keep",
 "type" : "integer",
 "carryforward" : true,
+"checkchanges" : true,
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
@@ -1806,6 +1807,7 @@
 "label" : "Days To Keep on Pi Website",
 "type" : "integer",
 "carryforward" : true,
+"checkchanges" : true,
 "booldependson" : "uselocalwebsite"
 },
 {
@@ -1831,6 +1833,7 @@
 "label" : "Days To Keep on Remote Website",
 "type" : "integer",
 "carryforward" : true,
+"checkchanges" : true,
 "booldependson" : "useremotewebsite",
 "display" : false
 },

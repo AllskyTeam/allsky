@@ -778,6 +778,15 @@ do
 			fi
 			;;
 
+		"daystokeep" | "daystokeeplocalwebsite" | "daystokeepremotewebsite")
+			if [[ ${NEW_VALUE} -gt 0 ]]; then
+:	# TODO: Check how many days images there are of the specified type.
+	# For remote website, query the website for the number (to be implemented).
+	# If MORE than NEW_VALUE, warn the user since those images will be deleted
+	# at the next endOfNight.sh run.
+			fi
+			;;
+
 		"uselogin")
 			if [[ ${NEW_VALUE} == "false" ]]; then
 				MSG="${wWARNING}WARNING: "

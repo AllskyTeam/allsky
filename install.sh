@@ -1532,6 +1532,7 @@ prompt_for_prior_Allsky()
 		# so force creating a default settings file.
 		FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
 		STATUS_VARIABLES+=("FORCE_CREATING_DEFAULT_SETTINGS_FILE='true'\n")
+		STATUS_VARIABLES+=("PRIOR_ALLSKY_DIR=''\n")
 	fi
 
 	STATUS_VARIABLES+=("WILL_USE_PRIOR='${WILL_USE_PRIOR}'\n")
@@ -2573,7 +2574,6 @@ restore_prior_files()
 		# Create a default file.
 		prepare_local_website ""
 	fi
-
 
 	# Do NOT restore options.json - it will be recreated.
 

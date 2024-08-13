@@ -24,12 +24,12 @@ metaData = {
     "name": "Clear Sky Alarm",
     "description": "Clear Sky Alarm",
     "module": "allsky_clearsky",
-    "version": "v1.0.0",        
+    "version": "v1.0.1",
     "events": [
         "day",
         "night"
     ],
-    "experimental": "true",    
+    "experimental": "true",
     "arguments":{
         "detectionThreshold": 0.55,
         "distanceThreshold": 20,
@@ -41,8 +41,10 @@ metaData = {
         "roi": "",
         "roifallback": 5,
         "mqttenable": "False",
+        "mqttusesecure": "true",        
         "mqttbroker": "",
         "mqttport": 1883,
+        "mqttloopdelay": "5",        
         "mqttusername": "",
         "mqttpassword": "",
         "mqtttopic": "SKYSTATE",
@@ -55,8 +57,8 @@ metaData = {
             "help": "The area of the image to check for clear skies. Format is x1,y1,x2,y2",
             "type": {
                 "fieldtype": "roi"
-            }            
-        },          
+            }
+        },
         "roifallback" : {
             "required": "true",
             "description": "Fallback %",
@@ -99,7 +101,7 @@ metaData = {
                 "min": 0,
                 "max": 100,
                 "step": 1
-            }          
+            }
         },
         "template1" : {
             "required": "true",
@@ -110,16 +112,16 @@ metaData = {
                 "min": 0,
                 "max": 100,
                 "step": 1
-            }          
-        },               
+            }
+        },
         "mask" : {
             "required": "false",
             "description": "Mask Path",
             "help": "The name of the image mask. THis mask is applied when counting stars bit not visible in the final image",
             "type": {
                 "fieldtype": "image"
-            }                
-        },        
+            }
+        },
         "annotate" : {
             "required": "false",
             "description": "Annotate Stars",
@@ -127,7 +129,7 @@ metaData = {
             "tab": "Debug",
             "type": {
                 "fieldtype": "checkbox"
-            }          
+            }
         },
         "debug" : {
             "required": "false",
@@ -136,14 +138,14 @@ metaData = {
             "tab": "Debug",
             "type": {
                 "fieldtype": "checkbox"
-            }          
+            }
         },
         "debugimage" : {
             "required": "false",
             "description": "Debug Image",
             "help": "Image to use for debugging. DO NOT set this unless you know what you are doing",
-            "tab": "Debug"        
-        },        
+            "tab": "Debug"
+        },
         "mqttenable" : {
             "required": "false",
             "description": "Enable MQTT",
@@ -151,13 +153,21 @@ metaData = {
             "tab": "MQTT",
             "type": {
                 "fieldtype": "checkbox"
-            }          
-        }, 
+            }
+        },
+        "mqttusesecure": {
+            "required": "false",
+            "description": "Use Secure Connection",
+            "tab": "MQTT",
+            "type": {
+                "fieldtype": "checkbox"
+            }
+        },         
         "mqttbroker" : {
             "required": "false",
             "description": "MQTT Broker address",
             "help": "MQTT Broker address",
-            "tab": "MQTT"        
+            "tab": "MQTT"
         },
         "mqttport" : {
             "required": "false",
@@ -169,32 +179,50 @@ metaData = {
                 "min": 1,
                 "max": 65536,
                 "step": 1
-            }                      
+            }
         },
+        "mqttloopdelay": {
+            "required": "false",
+            "description": "Loop Delay(s)",
+            "help": "The loop delay, only increase this if you experience issues with messages missing in the broker",
+            "tab": "MQTT",
+            "type": {
+                "fieldtype": "spinner",
+                "min": 0.5,
+                "max": 10,
+                "step": 0.5
+            }              
+        },        
         "mqttusername" : {
             "required": "false",
             "description": "MQTT Username",
             "help": "MQTT Username",
-            "tab": "MQTT"        
-        },                                                             
+            "tab": "MQTT"
+        },
         "mqttpassword" : {
             "required": "false",
             "description": "MQTT Pasword",
             "help": "MQTT Password",
-            "tab": "MQTT"        
+            "tab": "MQTT"
         },
         "mqtttopic" : {
             "required": "false",
             "description": "MQTT Topic",
             "help": "MQTT Topic the sky state is published to",
-            "tab": "MQTT"        
-        }        
+            "tab": "MQTT"
+        }
     },
-    "enabled": "false"            
+    "enabled": "false"
 }
 
+def MQTTonConnect(client, userdata, flags, rc, properties=None): 
+    s.log(4, f"INFO: MQTT - CONNACK received with code {rc}.")
+
+def MQTTonPublish(client, userdata, mid, properties=None):
+    s.log(4, f"INFO: MQTT - Message published {mid}.")
+    
 def onPublish(client, userdata, mid, properties=None):
-    s.log(4,"INFO: Sky state published to MQTT Broker mid {0}".format(mid))    
+    s.log(4,"INFO: Sky state published to MQTT Broker mid {0}".format(mid))
 
 def clearsky(params, event):
     #ONLY AT NIGHT !
@@ -211,11 +239,13 @@ def clearsky(params, event):
     fallback = s.int(params["roifallback"])
 
     mqttenable = params["mqttenable"]
+    mqttusesecure = params["mqttusesecure"]
     mqttbroker = params["mqttbroker"]
     mqttport = s.int(params["mqttport"])
     mqttusername = params["mqttusername"]
-    mqttpassword = params["mqttpassword"]        
+    mqttpassword = params["mqttpassword"]
     mqtttopic = params["mqtttopic"]
+    mqttloopdelay = params["mqttloopdelay"]
 
     starCount = ""
 
@@ -235,10 +265,10 @@ def clearsky(params, event):
         image = s.image
 
     if mask != "":
-        maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_OVERLAY"),"images",mask)
+        maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_OVERLAY", fatal=True),"images",mask)
         imageMask = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
         if debug:
-            s.writeDebugImage(metaData["module"], "image-mask.png", imageMask)  
+            s.writeDebugImage(metaData["module"], "image-mask.png", imageMask)
 
     if len(image.shape) == 2:
         grayImage = image
@@ -266,10 +296,10 @@ def clearsky(params, event):
         x2 = s.int((imageWidth / 2) + (imageWidth / fallbackAdj))
         y2 = s.int((imageHeight / 2) + (imageHeight / fallbackAdj))
 
-    croppedImage = grayImage[y1:y2, x1:x2] 
+    croppedImage = grayImage[y1:y2, x1:x2]
 
     if debug:
-        s.writeDebugImage(metaData["module"], "cropped.png", croppedImage)  
+        s.writeDebugImage(metaData["module"], "cropped.png", croppedImage)
 
     starTemplateSize = starTemplate1Size * 4
     if (starTemplateSize % 2) != 0:
@@ -322,30 +352,52 @@ def clearsky(params, event):
                 cv2.circle(croppedImage, (star[0] + wOffset, star[1] + hOffset), 10, (255, 255, 255), 1)
 
     if debug:
-        s.writeDebugImage(metaData["module"], "result.png", croppedImage)  
-    
+        s.writeDebugImage(metaData["module"], "result.png", croppedImage)
+
     starCount = len(starList)
 
     if starCount >= clearvalue:
-        s.log(4,"INFO: Sky is clear. {0} Stars found, clear limit is {1}".format(starCount, clearvalue))
+        s.log(4,"INFO: Sky is clear. {0} stars found, clear limit is {1}".format(starCount, clearvalue))
         skyState = "Clear"
     else:
-        s.log(4,"INFO: Sky is NOT clear. {0} Stars found, clear limit is {1}".format(starCount, clearvalue))
+        s.log(4,"INFO: Sky is NOT clear. {0} stars found, clear limit is {1}".format(starCount, clearvalue))
         skyState = "NOT Clear"
 
     if mqttenable:
         s.log(4,"INFO: Sending sky state {0} to MQTT Broker {1} using topic {2}".format(skyState, mqttbroker, mqtttopic))
+
+        channel_topic = mqtttopic
+        if channel_topic == "":
+            s.log(0, "ERROR:MQTT - Please specify a topic to publish")
+            return
+
         client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
-        client.on_publish = onPublish
-        client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
-        client.username_pw_set(mqttusername, mqttpassword)
+        client.on_connect = MQTTonConnect
+        client.on_publish = MQTTonPublish        
+        if mqttusername != "" and mqttpassword!= "":
+            client.username_pw_set(mqttusername, mqttpassword)
+
+        if mqttbroker== "":
+            s.log(0, "ERROR: MQTT - Please specify a MQTT host to publish to")
+            return
+
+        if mqttusesecure:
+            client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
+
         client.connect(mqttbroker, mqttport)
-        result = client.publish(mqtttopic, skyState)
+
+        client.publish(mqtttopic, skyState ,qos=1)
+        s.log(1, f"INFO: MQTT - Published to MQTT on channel: {channel_topic}")
+        delay = int(mqttloopdelay)
+        client.loop(delay)
+        client.disconnect()        
+        
     else:
         s.log(4,"INFO: MQTT disabled")
 
+    s.setEnvironmentVariable("AS_SKYSTATE", skyState)
     os.environ["AS_SKYSTATE"] = skyState
-    os.environ["AS_SKYSTATESTARS"] = str(starCount)
+    s.setEnvironmentVariable("AS_SKYSTATESTARS", str(starCount))
     return "Sky is {0}".format(skyState)
 
 def clearsky_cleanup():

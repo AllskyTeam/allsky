@@ -129,9 +129,6 @@ function new_rpi_camera_info()
 {
 	local ARGS="${@}"		# optional
 
-	# Make sure the user sees the output, so don't allow more commands.
-	ALLOW_MORE_COMMANDS="false"
-
 	#shellcheck disable=SC2086
 	get_RPi_camera_info.sh ${ARGS}
 }
@@ -264,7 +261,7 @@ function prompt()
 	NUM_OPTIONS=$(( (${#OPTIONS[@]} / 2) + 3 ))
 
 	OPT="$( whiptail --title "${TITLE}" --notags --menu "${PROMPT}" \
-		15 "${WT_WIDTH:-80}" "${NUM_OPTIONS}" -- "${OPTIONS[@]}" 3>&1 1>&2 2>&3 )"
+		18 "${WT_WIDTH:-80}" "${NUM_OPTIONS}" -- "${OPTIONS[@]}" 3>&1 1>&2 2>&3 )"
 	RET=$?
 	if [[ ${RET} -eq 255 ]]; then
 		echo -e "\n${RED}${ME}: whiptail failed.${NC}" >&2
@@ -298,13 +295,20 @@ if [[ -z ${CMD} ]]; then
 		RET=$?
 
 		[[ ${ALLOW_MORE_COMMANDS} == "false" ]] && exit ${RET}
-		echo -e "\n\n"
-		echo -e "${YELLOW}${BOLD}"
-		echo    "=========================================="
-		echo -n "Press RETURN to continue or 'q' to quit: "
-		read -r x
-		echo -e "${NC}"
-		[[ ${x:0:1} == "q" ]] && exit 0
+		while true; do
+			echo -e "\n\n"
+			echo -e "${YELLOW}${BOLD}"
+			echo    "=========================================="
+			echo -n "Press RETURN to continue or 'q' to quit: "
+			read -r x
+			echo -e "${NC}"
+			[[ ${x:0:1} == "q" ]] && exit 0
+			if [[ -n ${x} ]]; then
+				echo "'${x}' is not a valid response; try again."
+			else
+				break
+			fi
+		done
 	done
 	exit 0
 

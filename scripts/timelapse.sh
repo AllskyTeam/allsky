@@ -137,6 +137,14 @@ else
 	fi
 fi
 
+if ! KEEP_SEQUENCE="$( settings ".timelapsekeepsequence" 2>&1 )" ; then
+	# The settings file may not exist or may be corrupt.
+	echo -e "${RED}*** ${ME} ERROR: Unable to get .timelapsekeepsequence:"
+	echo "${KEEP_SEQUENCE}"
+	echo -e "${NC}"
+	exit 4
+fi
+
 MY_PID="$$"
 if [[ ${DEBUG} == "true" ]]; then
 	# Output one string so it's all on one line in log file.
@@ -213,7 +221,6 @@ fi
 TMP="${ALLSKY_TMP}/timelapseTMP.txt"
 [[ ${IS_MINI} == "false"  ]] && : > "${TMP}"		# Only create when NOT doing mini-timelapses
 
-KEEP_SEQUENCE="$( settings ".timelapsekeepsequence" )"
 if [[ ${KEEP_SEQUENCE} == "false" || ! -d ${SEQUENCE_DIR} ]]; then
 	rm -fr "${SEQUENCE_DIR}"
 	mkdir -p "${SEQUENCE_DIR}"

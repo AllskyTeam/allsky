@@ -295,13 +295,20 @@ if [[ -z ${CMD} ]]; then
 		RET=$?
 
 		[[ ${ALLOW_MORE_COMMANDS} == "false" ]] && exit ${RET}
-		echo -e "\n\n"
-		echo -e "${YELLOW}${BOLD}"
-		echo    "=========================================="
-		echo -n "Press RETURN to continue or 'q' to quit: "
-		read -r x
-		echo -e "${NC}"
-		[[ ${x:0:1} == "q" ]] && exit 0
+		while true; do
+			echo -e "\n\n"
+			echo -e "${YELLOW}${BOLD}"
+			echo    "=========================================="
+			echo -n "Press RETURN to continue or 'q' to quit: "
+			read -r x
+			echo -e "${NC}"
+			[[ ${x:0:1} == "q" ]] && exit 0
+			if [[ -n ${x} ]]; then
+				echo "'${x}' is not a valid response; try again."
+			else
+				break
+			fi
+		done
 	done
 	exit 0
 

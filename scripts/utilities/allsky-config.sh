@@ -261,7 +261,7 @@ function prompt()
 	NUM_OPTIONS=$(( (${#OPTIONS[@]} / 2) + 3 ))
 
 	OPT="$( whiptail --title "${TITLE}" --notags --menu "${PROMPT}" \
-		15 "${WT_WIDTH:-80}" "${NUM_OPTIONS}" -- "${OPTIONS[@]}" 3>&1 1>&2 2>&3 )"
+		18 "${WT_WIDTH:-80}" "${NUM_OPTIONS}" -- "${OPTIONS[@]}" 3>&1 1>&2 2>&3 )"
 	RET=$?
 	if [[ ${RET} -eq 255 ]]; then
 		echo -e "\n${RED}${ME}: whiptail failed.${NC}" >&2

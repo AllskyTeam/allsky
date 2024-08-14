@@ -57,15 +57,10 @@ CONFIG_FILE="/etc/samba/smb.conf"
 if [[ -f ${CONFIG_FILE} ]] && grep --silent "\[${SHARE_NAME}]" "${CONFIG_FILE}" ; then
 	echo -e "\n${YELLOW}"
 	echo "*************"
-	echo "You Pi is already configured to share files with other network devices"
+	echo "Your Pi is already configured to share files with other network devices"
 	echo "using the '${SHARE_NAME}' share."
-	echo -e "\n"
-	echo -en "${BOLD}"
-	echo "=========================================="
-	echo -n "Press RETURN to continue or 'q' to quit: "
-	read -r x
 	echo -e "${NC}"
-	[[ ${x:0:1} == "q" ]] && exit 0
+	exit 0
 fi
 
 echo -e "\n${YELLOW}"
@@ -78,11 +73,11 @@ echo
 echo "When installation is done you will be prompted for a SAMBA password."
 echo
 echo -en "${BOLD}"
-echo "=========================================="
-echo -n "Press RETURN to continue or 'q' to quit: "
+echo    "============================================="
+echo -n "Press RETURN to continue with installation: "
 read -r x
 echo -e "${NC}"
-[[ ${x:0:1} == "q" ]] && exit 0
+
 
 # Install SAMBA 
 mkdir -p "${ALLSKY_LOGS}"

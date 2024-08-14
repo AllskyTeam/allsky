@@ -129,9 +129,6 @@ function new_rpi_camera_info()
 {
 	local ARGS="${@}"		# optional
 
-	# Make sure the user sees the output, so don't allow more commands.
-	ALLOW_MORE_COMMANDS="false"
-
 	#shellcheck disable=SC2086
 	get_RPi_camera_info.sh ${ARGS}
 }

@@ -643,8 +643,8 @@ if ($debug) {
 						$fileName = getFileName($s);
 						$sourceFilesChanged[$fileName] = $fileName;
 						// Multiple settings will likely have the same source file.
-						$sourceFilesContents[$name] = &getSourceArray($fileName);
-						$sourceFilesContents[$name][$name] = $default;
+						$sourceFilesContents[$fileName] = &getSourceArray($fileName);
+						$sourceFilesContents[$fileName][$name] = $default;
 					} else {
 						$settings_array[$name] = $default;
 					}
@@ -658,7 +658,7 @@ if ($debug) {
 				$status->addMessage("Settings reset to default", 'info');
 
 				foreach($sourceFilesChanged as $fileName) {
-					$content = json_encode($sourcFilesContents[$fileName], $mode);
+					$content = json_encode($sourceFilesContents[$fileName], $mode);
 					$msg = updateFile($fileName, $content, "source_settings", true);
 					if ($msg !== "") {
 						$status->addMessage("Failed to reset settings in '$fileName': $msg", 'danger');

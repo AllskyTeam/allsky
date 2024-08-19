@@ -3,8 +3,8 @@
 <head>
 <?php
 	$vSDir = "viewSettings";
-	$settingsScript = "allskySettings.php";
-	if (file_exists("$vSDir/$settingsScript")) {
+	$settingsScript = "$vSDir/allskySettings.php";
+	if (file_exists($settingsScript)) {
 		$fullMode = true;
 	} else {
 		$fullMode = false;
@@ -24,7 +24,7 @@
 
 		$formReadonly = true;
 		$endSetting = "XX_END_XX";
-		include_once("$vSDir/$settingsScript");
+		include_once($settingsScript);
 	} else {
 		function doBool($b) { if ($b == true) return("Yes"); else return("No"); }
 	}
@@ -35,10 +35,9 @@
 	$favicon = v("favicon", "allsky-favicon.png", $homePage);
 	$ext = pathinfo($favicon, PATHINFO_EXTENSION); if ($ext === "jpg") $ext = "jpeg";
 	$faviconType = "image/$ext";
-	$backgroundImage = v("backgroundImage", "", $homePage);
-	if ($backgroundImage != null) {
+	$backgroundImage = v("backgroundImage", null, $homePage);
+	if ($backgroundImage !== null) {
 		$backgroundImage_url = v("url", "", $backgroundImage);
-		if ($backgroundImage_url == "") $backgroundImage = null;
 		else $backgroundImage_style = v("style", "", $backgroundImage);
 	}
 ?>
@@ -73,7 +72,7 @@
 			echo ".errorMsg { color: red; font-size: 200%; }";
 			echo ".tableHeader { background-color: silver; color: black; }";
 		}
-		if ($backgroundImage !== null) {
+		if ($backgroundImage_url !== "") {
 			echo "		.backgroundImage { background-image: url('$backgroundImage_url');";
 			if ($backgroundImage_style !== "")
 				echo " $backgroundImage_style";
@@ -86,7 +85,7 @@
 		}
 	</style>
 </head>
-<body id="body" <?php if ($backgroundImage !== null) echo "class='.backgroundImage'"; ?>>
+<body id="body" <?php if ($backgroundImage_url !== "") echo "class='.backgroundImage'"; ?>>
 <?php
 	if ($fullMode) {
 		DisplayAllskyConfig();

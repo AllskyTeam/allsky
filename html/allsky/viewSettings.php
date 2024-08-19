@@ -3,31 +3,39 @@
 <head>
 <?php
 	$vSDir = "viewSettings";
+	echo "<link rel='stylesheet' type='text/css' href='$vSDir/custom.css'>";
 	$settingsScript = "$vSDir/allskySettings.php";
-	if (file_exists($settingsScript)) {
-		$fullMode = true;
-	} else {
-		$fullMode = false;
+	if (! file_exists($settingsScript)) {
+		echo "<div class='errorMsgBox errorMsgBig'>";
+		echo "This Allsky Website is not fully configured so its settings cannot be displayed.";
+		echo "<br>It is missing the '$settingsScript' file.";
+		echo "</div>";
+		exit(1);
 	}
 
 	// This gets the web page settings.
 	include_once('functions.php');		// Sets $webSettings_array
 
 	function getSettingsFile() { global $vSDir; return "$vSDir/settings.json"; }
-	if ($fullMode) {
-		// Define simplified functions from the WebUI's includes/functions.php file.
-		function getOptionsFile() { global $vSDir; return "$vSDir/options.json"; }
-		function getVariableOrDefault($a, $v, $d) { return v($v, $d, $a); }
-		function check_if_configured($page, $calledFrom) { return true; }
-		function CSRFToken() { return true; }
-		function toBool($x) { if ($x == "true" || $x == "1" || $x == 1) return true; else return false; }
-
-		$formReadonly = true;
-		$endSetting = "XX_END_XX";
-		include_once($settingsScript);
-	} else {
-		function doBool($b) { if ($b == true) return("Yes"); else return("No"); }
+	// Define simplified functions from the WebUI's includes/functions.php file.
+	function readSettingsFile() {
+		$settings_file = getSettingsFile();
+		$errorMsg = "ERROR: Unable to process settings file '$settings_file'.";
+		$contents = get_decoded_json_file($settings_file, true, $errorMsg);
+		if ($contents === null) {
+			exit(1);
+		}
+		return($contents);
 	}
+	function getOptionsFile() { global $vSDir; return "$vSDir/options.json"; }
+	function getVariableOrDefault($a, $v, $d) { return v($v, $d, $a); }
+	function check_if_configured($page, $calledFrom) { return true; }
+	function CSRFToken() { return true; }
+	function toBool($x) { if ($x == "true" || $x == "1" || $x == 1) return true; else return false; }
+
+	$formReadonly = true;
+	$endSetting = "XX_END_XX";
+	include_once($settingsScript);
 
 	// Get home page options
 	$homePage = v("homePage", null, $webSettings_array);
@@ -35,10 +43,11 @@
 	$favicon = v("favicon", "allsky-favicon.png", $homePage);
 	$ext = pathinfo($favicon, PATHINFO_EXTENSION); if ($ext === "jpg") $ext = "jpeg";
 	$faviconType = "image/$ext";
-	$backgroundImage = v("backgroundImage", null, $homePage);
-	if ($backgroundImage !== null) {
+	$backgroundImage = v("backgroundImage", "", $homePage);
+	if ($backgroundImage !== "") {
 		$backgroundImage_url = v("url", "", $backgroundImage);
-		else $backgroundImage_style = v("style", "", $backgroundImage);
+		if ($backgroundImage_url !== "") 
+			$backgroundImage_style = v("style", "", $backgroundImage);
 	}
 ?>
 	<meta charset="utf-8">
@@ -52,157 +61,28 @@
 		integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx"
 		crossorigin="anonymous">
 
-<?php
-	if ($fullMode) {
-		echo "<link rel='stylesheet' type='text/css' href='$vSDir/custom.css'>";
-	} else {
-		echo "<link rel='stylesheet' type='text/css' href='allsky.css'>";
-	}
-?>
 
 	<style>
+		body { background-color: white; color: black; }
 <?php
-		if ($fullMode) {
-			echo "body { background-color: white; color: black; }";
-			echo ".switch-field label:hover { cursor: default; }";
-
-		} else {
-			echo ".clear { clear: both; }";
-			echo ".title { box-sizing: border-box; }";
-			echo ".errorMsg { color: red; font-size: 200%; }";
-			echo ".tableHeader { background-color: silver; color: black; }";
-		}
 		if ($backgroundImage_url !== "") {
-			echo "		.backgroundImage { background-image: url('$backgroundImage_url');";
+			echo "		body { background-image: url('$backgroundImage_url');";
 			if ($backgroundImage_style !== "")
 				echo " $backgroundImage_style";
 			echo " }";
 		}
 ?>
+		.switch-field label:hover { cursor: default; }
 		.panel-primary>.panel-heading {
 			color: white;
 			padding: 5px 0 5px 5px;
 		}
 	</style>
 </head>
-<body id="body" <?php if ($backgroundImage_url !== "") echo "class='.backgroundImage'"; ?>>
+
+<body id="body">
 <?php
-	if ($fullMode) {
-		DisplayAllskyConfig();
-		echo "</body>";
-		echo "</html>";
-		exit;
-	}
+	DisplayAllskyConfig();
 ?>
-	<div class="header">
-		<div class=title><?php echo $title; ?></div>
-		<div class="clear"></div>
-	</div>
-	<h1 align="center">Image Settings</h1>
-	<br>
-	<?php
-		$settings_file_name = getSettingsFile();
-		if (! file_exists($settings_file_name)) {
-			echo "<p class='errorMsg'>";
-			echo "ERROR: Image settings file '$settings_file_name' not found!  Cannot continue.";
-			echo "</p>";
-			exit;
-		}
-		$image_settings_str = file_get_contents($settings_file_name, true);
-		$settings = json_decode($image_settings_str, true);
-		if ($settings == null) {
-			echo "<p class='errorMsg'>";
-			echo "ERROR: Bad image settings file '$settings_file_name'.  Cannot continue.";
-			echo "<br>Check for missing quotes or commas at the end of every line (except the last one).";
-			echo "</p>";
-			echo "<pre>$image_settings_str</pre>";
-			exit;
-		}
-	?>
-	<table border="1" align="center">
-	<thead>
-		<tr class="tableHeader"> <th>Setting</th> <th>Value</th> </tr>
-	</thead>
-	<tbody>
-		<?php		// Only display certain settings.
-			$cameraType = v("cameratype", "", $settings);
-			echo "<tr> <td>Camera Type</td><td>$cameraType</td> </tr>";
-			$cameraModel = v("cameramodel", "", $settings);
-			echo "<tr> <td>Camera Model</td><td>$cameraModel</td> </tr>";
-			$lens = v("lens", "", $settings);
-			if ($lens !== "") echo "<tr> <td>Lens</td><td>$lens</td> </tr>";
-
-			// daytime
-			$dayAutoExposure = v("dayautoexposure", false, $settings);
-			$value = doBool($dayAutoExposure);
-			echo "<tr> <td>Daytime Auto-Exposure</td><td>$value</td> </tr>";
-			$dayExposure = v("dayexposure", "", $settings);
-			echo "<tr> <td>Daytime Manual Exposure</td><td>$dayExposure</td> </tr>";
-
-			$dayAutoGain = v("dayautogain", false, $settings);
-			$value = doBool($dayAutoGain);
-			echo "<tr> <td>Daytime Auto-Gain</td><td>$value</td> </tr>";
-			$dayGain = v("daygain", "", $settings);
-			echo "<tr> <td>Daytime Manual Gain</td><td>$dayGain</td> </tr>";
-
-			$dayAWB = v("dayawb", "", $settings);
-			if ($dayAWB !== "") {
-				$value = doBool($dayAWB);
-				echo "<tr> <td>Daytime AWB</td><td>$value</td> </tr>";
-			}
-			$dayWBR = v("daywbr", "", $settings);
-			if ($dayWBR !== "") echo "<tr> <td>Daytime Red Balance</td><td>$dayWBR</td> </tr>";
-			$dayWBB = v("daywbb", "", $settings);
-			if ($dayWBB !== "") echo "<tr> <td>Daytime Blue Balance</td><td>$dayWBB</td> </tr>";
-
-			$dayBin = v("daybin", false, $settings);
-			echo "<tr> <td>Daytime Bin</td><td>$dayBin</td> </tr>";
-
-			$dayMean = v("daymean", "", $settings);
-			if ($dayMean !== "") echo "<tr> <td>Daytime Mean Target</td><td>$dayMean</td> </tr>";
-
-			// nighttime
-			$nightAutoExposure = v("nightautoexposure", false, $settings);
-			$value = doBool($nightAutoExposure);
-			echo "<tr> <td>Nighttime Auto-Exposure</td><td>$value</td> </tr>";
-			$nightExposure = v("nightexposure", "", $settings);
-			echo "<tr> <td>Nighttime Manual Exposure</td><td>$nightExposure</td> </tr>";
-
-			$nightAutoGain = v("nightautogain", false, $settings);
-			$value = doBool($nightAutoGain);
-			echo "<tr> <td>Nighttime Auto-Gain</td><td>$value</td> </tr>";
-			$nightGain = v("nightgain", "", $settings);
-			echo "<tr> <td>Nighttime Manual Gain</td><td>$nightGain</td> </tr>";
-
-			$nightAWB = v("nightawb", "", $settings);
-			if ($nightAWB !== "") {
-				$value = doBool($nightAWB);
-				echo "<tr> <td>Nighttime AWB</td><td>$value</td> </tr>";
-			}
-			$nightwbr = v("nightwbr", "", $settings);
-			if ($nightwbr !== "") echo "<tr> <td>Nighttime Red Balance</td><td>$nightwbr</td> </tr>";
-			$nightWBB = v("nightwbb", "", $settings);
-			if ($nightWBB !== "") echo "<tr> <td>Nighttime Blue Balance</td><td>$nightWBB</td> </tr>";
-
-
-			$nightBin = v("nightbin", false, $settings);
-			echo "<tr> <td>Nighttime Bin</td><td>$nightBin</td> </tr>";
-
-			$nightMean = v("nightmean", "", $settings);
-			if ($nightMean !== "") echo "<tr> <td>Nighttime Mean Target</td><td>$nightMean</td> </tr>";
-
-			// both day and night
-			$saturation = v("saturation", "", $settings);
-			if ($saturation !== "") echo "<tr> <td>Saturation</td><td>$saturation</td> </tr>";
-
-			$contrast = v("contrast", "", $settings);
-			if ($contrast !== "") echo "<tr> <td>Contrast</td><td>$contrast</td> </tr>";
-
-			$sharpness = v("sharpness", "", $settings);
-			if ($sharpness !== "") echo "<tr> <td>Sharpness</td><td>$sharpness</td> </tr>";
-
-// TODO: add remaining settings
-		?>
-	</tbody>
 </body>
 </html>

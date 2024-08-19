@@ -1195,8 +1195,10 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 </div><!-- ./ Panel body -->
 </div><!-- /.panel-primary --> </div><!-- /.col-lg-12 --> </div><!-- /.row -->
 
-<script src="js/settings.js"></script>
 
 <?php
+	if (! $formReadonly)
+		echo '<script src="js/settings.js"></script>';
+
 }
 ?>

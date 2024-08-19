@@ -1,41 +1,10 @@
-<?php
-	if (isset($_GET["check"])) {
-		// Check sanity of website and make necessary directories.
-		if (isset($_GET["debug"]))
-			$debug = true;
-		else
-			$debug = false;
-
-		$ok = true;
-		$dirs = array("videos", "keograms", "startrails");
-		foreach ($dirs as $dir) {
-			$thumb_dir = "$dir/thumbnails";
-			if ($debug) echo "\nChecking $thumb_dir.";
-			if (! is_dir($thumb_dir)) {
-				if ($debug) echo "  > Making";
-				if (! mkdir($thumb_dir, 0775, true)) {		// true == recursive
-					$ok = false;
-					$last_error = error_get_last();
-					echo "\nUnable to make '$thumb_dir' directory: " . $last_error["message"];
-				}
-			}
-		}
-
-		// TODO: add other checks here
-
-		if (! $ok) exit;
-
-		if ($debug) echo "\n";	// ends any lines already output
-		echo "SUCCESS\n";
-		exit;
-	}
-?><!DOCTYPE html>
+<!DOCTYPE html>
 <html prefix="og: http://ogp.me/ns#" ng-app="allsky" ng-controller="AppCtrl" lang="en">
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta property="og:title" content="All Sky Camera" />
+	<meta property="og:title" content="Allsky Website" />
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"
 		rel="stylesheet"
@@ -59,29 +28,25 @@
 				// TODO: replace double quotes with &quot; in any variable that
 				// can be in an HTML attribute, which is many of them.
 				$backgroundImage = v("backgroundImage", "", $homePage);
-				if ($backgroundImage != null) {
-					$backgroundImage_url = v("url", "", $backgroundImage);
-					if ($backgroundImage_url == "") $backgroundImage = null;
-					else $backgroundImage_style = v("style", "", $backgroundImage);
+				if ($backgroundImage !== "") {
+					$backgroundImage_url = v("url", null, $backgroundImage);
+					else $backgroundImage_style = v("style", null, $backgroundImage);
 				}
 				$loadingImage = v("loadingImage", "loading.jpg", $homePage);
 				$title = v("title", "Website", $homePage);
 				$og_description = v("og_description", "", $homePage);
 				$og_type = v("og_type", "website", $homePage);
-				$og_url = v("og_url", "http://www.thomasjacquin/allsky/", $homePage);
+				$og_url = v("og_url", "https://github.com/AllskyTeam/allsky", $homePage);
 				$og_image = v("og_image", "image.jpg", $homePage);
 				$ext = pathinfo($og_image, PATHINFO_EXTENSION); if ($ext === "jpg") $ext = "jpeg";
 				$og_image_type = "image/$ext";
 				$favicon = v("favicon", "allsky-favicon.png", $homePage);
 				$ext = pathinfo($favicon, PATHINFO_EXTENSION); if ($ext === "jpg") $ext = "jpeg";
 				$faviconType = "image/$ext";
-				$includeGoogleAnalytics = v("includeGoogleAnalytics", "", $homePage);
-					if ($includeGoogleAnalytics == "") $includeGoogleAnalytics = 0;		// boolean
+				$includeGoogleAnalytics = v("includeGoogleAnalytics", false, $homePage);
 				$imageBorder = v("imageBorder", false, $homePage);
 				$includeLinkToMakeOwn = v("includeLinkToMakeOwn", true, $homePage);
-					if ($includeLinkToMakeOwn == "") $includeLinkToMakeOwn = 0;		// boolean
 				$showOverlayIcon = v("showOverlayIcon", false, $homePage);
-					if ($showOverlayIcon == "") $showOverlayIcon = 0;		// boolean
 				$leftSidebar = v("leftSidebar", null, $homePage);
 				$leftSidebarStyle = v("leftSidebarStyle", null, $homePage);
 				$popoutIcons = v("popoutIcons", null, $homePage);
@@ -159,7 +124,7 @@
 	<style>
 		.clear { clear: both; }
 		<?php
-			if ($backgroundImage !== null) {
+			if ($backgroundImage_url !== null) {
 				echo "		.backgroundImage { background-image: url('$backgroundImage_url');";
 				if ($backgroundImage_style !== "")
 					echo " $backgroundImage_style";

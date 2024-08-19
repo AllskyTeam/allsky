@@ -67,17 +67,16 @@ if ($initializeErrorMessage !== "" && $exitOnInitializationError) {
  * Look for $var in the $a array and return its value.
  * If not found, return $default.
  * If the value is a boolean and is false, an empty string is given to us so return 0;
- * IMHO this isn't very friendly json or PHP - they should give us false.
  * A true boolean value returns 1.
 */
 function v($var, $default, $a) {
 	if (isset($a[$var])) {
 		$value = $a[$var];
-		if (gettype($value) === "boolean" && $value == "")
+		if (gettype($default) === "boolean" && $value == "")
 			return(0);
 		else
 			return($value);
-	} else if (gettype($default) === "boolean" && $default == "") {
+	} else if (gettype($default) === "boolean") {
 		return(0);
 	} else {
 		return($default);

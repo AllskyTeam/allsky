@@ -2470,8 +2470,8 @@
 {
 "name" : "cameratype",
 "default" : "",
-"description" : "The type of camera you are using.<br>To change to a camera of a different type, first select the new type then press the 'Save changes' button, then select the new <span class='WebUISetting'>Camera Model</span>.",
-"label" : "Camera",
+"description" : "The type of camera you are using.<br>To change to a camera of a different type, select the new type then press the 'Save changes' button, THEN select the new <span class='WebUISetting'>Camera Model</span>.",
+"label" : "Camera Type",
 "type" : "select_text",
 "options" : [
 	"cameratype_values"

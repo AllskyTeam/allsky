@@ -10,19 +10,18 @@ This is the source code for the Allsky Camera project described [on Instructable
 <!-- =============================================================================== --> 
 ## Requirements
 
-You will need the following:
+In order to run the Allsky software you need:
 
  * A Raspberry Pi Zero 2, Pi 2, Pi 3, Pi 4, or Pi 5.
- * A camera:
-    * Almost any ZWO camera
-    * A Raspberry Pi HQ, Module 3, or Version 1
-    * An RPi-compatible camera: imx290 60.00 fps, ArduCam 16 MP, ArduCam 64 MP, ArduCam 462, or Waveshare imx219-d160.
+ * One of the following:
+    * Any ZWO camera.
+    * A Raspberry Pi or Pi-compatible camera that is supported by libcamera.
 
 
 &nbsp;  
 > __NOTES:__
->	- Only the Raspberry Pi OS is supported.  Other operating systems like Ubuntu are NOT supported.  If possible use the newest Bookworm 64-bit release. Bullseye will also work. __Buster support will be dropped in the next release__.
->	- The ZWO ASI120-series cameras are __not__ recommended due to their tendency to produce a lot of errors.
+>	- Only the Raspberry Pi OS is supported.  Other operating systems like Ubuntu are NOT supported.  If possible use the newest Bookworm 64-bit release. Bullseye will also work. __Buster support will be dropped in the next major release__.
+>	- The ZWO ASI120-series cameras are __not__ recommended due to their tendency to produce errors and poor-quality images.
 >	- The Pi Zero with its limited memory and _very_ limited CPU power is not recommended.  You probably won't be able to create keograms, startrails, or timelapse videos.
 >	- The Pi Zero 2 with its limited memory and somewhat limited CPU power is not recommended unless cost is the only concern.  Creating keograms, startrails, and timelapse videos may or may not be possible.
 >	- The Le Potato is the only "Pi-compatible" board that we've found to actually be compatible, so buyer beware.
@@ -32,10 +31,12 @@ You will need the following:
 <!-- =============================================================================== --> 
 ## Software Installation
 
+<!--
 PatriotAstro created a great [video](https://www.youtube.com/watch?v=7TGpGz5SeVI) describing the installation steps below.
 __We recommend viewing it before installing the software__, but note that as of March 2024 the video is out of date.
+-->
 
-Detailed installation instructions can be found at [Installing / Upgrading --> Allsky](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/installations/Allsky.html).
+See the [detailed installation instructions](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/installations/Allsky.html).
 
 ---
 
@@ -45,7 +46,7 @@ Detailed installation instructions can be found at [Installing / Upgrading --> A
 ## Web User Interface (WebUI)
 
 <p align="center">
-<img src="https://github.com/AllskyTeam/allsky/blob/master/html/documentation/settings/AllskySettingsPage.png"  width="90%" style="border: 1px solid black;">
+<img src="https://github.com/AllskyTeam/allsky/blob/master/html/documentation/settings/AllskySettingsPage.png" width="90%">
 </p>
 
 The WebUI is used to administer Allsky, and to a lesser extent, your Pi. It can also be used to view the current image as well as all saved images, keograms, startrails, and timelapse videos.
@@ -73,7 +74,7 @@ You can also install the Allsky Website on a remote server so it can be viewable
 
 See [Installation / Upgrading --> Website](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/installations/AllskyWebsite.html) for information on how to install and configure an Allsky Website.
 
-Allsky images, keograms, startrails, and timelapse videos can optionally be uploaded to a remote server __not__ running and Allsky Website.  This is useful if you have a personal website and want to include Allsky images.
+Allsky images, keograms, startrails, and timelapse videos can optionally be uploaded to a remote server __not__ running an Allsky Website.  This is useful if you have a personal website and want to include the most recent Allsky images.
 
 ---
 

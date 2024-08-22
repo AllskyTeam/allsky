@@ -2,7 +2,7 @@
 
 <?php
 // Determine the checksum for the files listed on stdin.
-while (($file = fgets(STDIN))) {
+while (($file = fgets(STDIN)) !== false) {
 	if (! file_exists($file))
 		continue;
 

@@ -2055,7 +2055,7 @@
 {
 "name" : "remotewebsiteurl",
 "default" : "",
-"description" : "The URL of your Allsky Website, for example: https://mywebsite.com/allsky.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
+"description" : "The URL of your Allsky Website, for example: https://mywebsite.com/allsky/.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
 "label" : "Website URL",
 "label_prefix" : "Remote Website",
 "type" : "widetext",
@@ -2320,7 +2320,7 @@
 {
 "name" : "showonmap",
 "default" : false,
-"description" : "Enable to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map' target='_blank' title='Opens in new tab/window'><span class='WebUISetting'>Allsky Map <i class='fa fa-external-link-alt fa-fw'></i></span></a>.",
+"description" : "Enable to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map/' target='_blank' title='Opens in new tab/window'><span class='WebUISetting'>Allsky Map <i class='fa fa-external-link-alt fa-fw'></i></span></a>.",
 "label" : "Show on Map",
 "type" : "boolean",
 "carryforward" : true,

@@ -1028,7 +1028,26 @@ function get_computer()
 # files directly. This does assume that both the cli and cgi settings files
 # work in the same way.
 #
-get_php_setting() {
+function get_php_setting() {
     local SETTING="${1}"
     php -r "echo ini_get('${SETTING}');"
+}
+
+
+####
+# Get the checksum of all Website files, not including the ones the user creates or updates.
+function get_website_checksums()
+{
+	{
+		# Add important image files.
+		echo loading.jpg
+		echo allsky-logo.png
+		echo NoThumbnail.png
+		echo allsky-favicon.png
+
+		# Get all non-image files except for the ones the user creates/updates.
+		find . -type f '!' '(' -name '*.jpg' -or -name '*.png' -or -name '*.mp4' ')' |
+			sed 's;^./;;' |
+			grep -E -v "myFiles/|${ALLSKY_WEBSITE_CONFIGURATION_NAME}|${CHECKSUM_FILE}"
+	} | "${ALLSKY_UTILITIES}/getChecksum.php"
 }

@@ -800,6 +800,20 @@ check_success()
 
 
 ####
+# Get checksums of local Website before the user changes anything.
+# We don't use this but it's used if the user installs a remote Website.
+get_checksums()
+{
+	declare -n v="${FUNCNAME[0]}"
+
+	[[ -s ${ALLSKY_WEBSITE_CHECKSUM_FILE} ]] && return
+	get_website_checksums > "${ALLSKY_WEBSITE_CHECKSUM_FILE}"
+
+	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+}
+
+
+####
 # Install the web server.
 install_webserver_et_al()
 {
@@ -972,7 +986,6 @@ set_permissions()
 			fi
 		done
 	fi
-
 }
 
 
@@ -2423,6 +2436,7 @@ restore_prior_files()
 		display_msg --log progress "${ITEM} (moving)"
 		mv "${PRIOR_CONFIG_DIR}/myFiles" "${ALLSKY_CONFIG}"
 	else
+		mkdir -p "${ALLSKY_CONFIG}/myFiles"
 		# Almost no one has this directory, so don't show to user.
 		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
 	fi
@@ -3850,6 +3864,9 @@ MSG+="\nYou will see progress messages throughout the process."
 MSG+="\nAt the end you will be prompted again for additional steps."
 display_msg "notice" "${MSG}"
 
+
+##### Get Website checksums for optional remote Website.
+get_checksums
 
 ##### Install web server
 # This must come BEFORE save_camera_capabilities, since it installs php.

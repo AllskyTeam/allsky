@@ -1038,7 +1038,9 @@ function get_php_setting() {
 # Get the checksum of all Website files, not including the ones the user creates or updates.
 function get_website_checksums()
 {
-	{
+	(
+		cd "${ALLSKY_WEBSITE}"		|| exit 1
+
 		# Add important image files.
 		echo loading.jpg
 		echo allsky-logo.png
@@ -1048,6 +1050,6 @@ function get_website_checksums()
 		# Get all non-image files except for the ones the user creates/updates.
 		find . -type f '!' '(' -name '*.jpg' -or -name '*.png' -or -name '*.mp4' ')' |
 			sed 's;^./;;' |
-			grep -E -v "myFiles/|${ALLSKY_WEBSITE_CONFIGURATION_NAME}|${CHECKSUM_FILE}"
-	} | "${ALLSKY_UTILITIES}/getChecksum.php"
+			grep -E -v "myFiles/|${ALLSKY_WEBSITE_CONFIGURATION_NAME}|$( basename "${CHECKSUM_FILE}" )"
+	) | "${ALLSKY_UTILITIES}/getChecksum.php"
 }

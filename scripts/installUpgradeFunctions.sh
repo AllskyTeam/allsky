@@ -436,6 +436,31 @@ function update_json_file()		# [-d] field, new value, file, [type]
 }
 
 
+####
+# Update a field in an array or delete the array index the field is at.
+function update_array_field()
+{
+	local FILE="${1}"
+	local ARRAY="${2}"
+	local FIELD="${3}"			# may be ""
+	local VALUE="${4}"
+	local NEW_VALUE="${5}"		# a value or "--delete"
+
+	local I="$( getJSONarrayIndex "${FILE}" "${ARRAY}" "${VALUE}" )"
+	[[ ${I} -eq -1 ]] && return
+
+	if [[ ${NEW_VALUE} == "--delete" ]]; then
+		update_json_file -d ".${ARRAY}[${I}]" "" "${FILE}"
+	else
+		local URL=".${ARRAY}[${I}].${FIELD}"
+		local V="$( settings "${URL}" "${FILE}" )"
+		if [[ ${V} != ${NEW_VALUE} ]]; then
+			update_json_file "${URL}" "${NEW_VALUE}" "${FILE}"
+		fi
+	fi
+}
+
+
 # Replace all the ${NEED_TO_UPDATE} placeholders.
 function replace_website_placeholders()
 {

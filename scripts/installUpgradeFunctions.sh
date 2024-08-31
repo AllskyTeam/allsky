@@ -454,7 +454,7 @@ function update_array_field()
 	else
 		local URL=".${ARRAY}[${I}].${FIELD}"
 		local V="$( settings "${URL}" "${FILE}" )"
-		if [[ ${V} != ${NEW_VALUE} ]]; then
+		if [[ ${V} != "${NEW_VALUE}" ]]; then
 			update_json_file "${URL}" "${NEW_VALUE}" "${FILE}"
 		fi
 	fi

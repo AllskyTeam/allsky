@@ -39,7 +39,7 @@ function check_for_existing_websites()
 	USING_REMOTE_WEBSITE="$( settings ".useremotewebsite" )"
 	if [[ ${USING_REMOTE_WEBSITE} == "true" ]]; then
 		display_msg --log progress "Testing upload to remote Website."
-		if ! RET="$( "${ALLSKY_SCRIPTS}/testUpload.sh" --website )"
+		if ! RET="$( "${ALLSKY_SCRIPTS}/testUpload.sh" --website )" ; then
 			MSG="Unable to upload a test file to your remote Website.\n"
 			display_msg --log error "${MSG}"
 			display_msg --log info "${RET}"

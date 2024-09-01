@@ -22,7 +22,7 @@ DISPLAY_MSG_LOG="${ALLSKY_LOGS}/remote_website_install.sh.log"
 USING_LOCAL_WEBSITE="false"
 USING_REMOTE_WEBSITE="false"
 PRIOR_CONFIG_VERSION=""
-do_initial_heading="false"
+#XXX do_initial_heading="false"
 STATUS_VARIABLES=()
 TAB="\t"
 
@@ -126,7 +126,7 @@ function update_config_file()
 	if [[ ${CURRENT_VERSION} -eq 1 ]]; then
 
 		# Append "/" to the urls
-		$URL="homePage.leftSidebar"
+		URL="homePage.leftSidebar"
 		update_array_field "${CONFIG_FILE}" "${URL}" "url" "videos" "videos/"
 		update_array_field "${CONFIG_FILE}" "${URL}" "url" "startrails" "startrails/"
 		update_array_field "${CONFIG_FILE}" "${URL}" "url" "keograms" "keograms/"
@@ -135,6 +135,7 @@ function update_config_file()
 		update_array_field "${CONFIG_FILE}" "homePage.popoutIcons" "" "Website Version" "--delete"
 
 		# Update/add other fields.
+		# shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${DEBUG_ARG} --config "${CONFIG_FILE}" \
 			--verbosity silent \
 			".homePage.onPi" "onPi" --delete \
@@ -288,7 +289,7 @@ do_initial_heading
 
 # Quick check if runCommands.php is on the server.
 # curl --data-urlencode var=value URL
-REMOTE_HOST="( settings ".REMOTEWEBSITE_HOST" "${ALLSKY_ENV}" )"
+REMOTE_HOST="$( settings ".REMOTEWEBSITE_HOST" "${ALLSKY_ENV}" )"
 if [[ -z ${REMOTE_HOST} ]]; then
 	MSG="No remote Website server specified."
 	display_msg --log error "${MSG}"
@@ -318,6 +319,6 @@ fi
 
 check_for_existing_websites
 usage_and_exit
-do_function
-check_for_older_config_file
+do_function "xxx"
+check_for_older_config_file "xxx"
 get_checksums

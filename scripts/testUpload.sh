@@ -17,8 +17,12 @@ usage_and_exit()
 	local RET=${1}
 	{
 		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-		echo "Usage: ${ME} [--help] [--debug] --website  and/or  --server"
-		[[ ${RET} -eq 2 ]] && echo -e "\nMust specify --website and/or --server\n"
+		[[ ${RET} -eq 2 ]] && echo -e "\nERROR: You must specify --website and/or --server\n"
+
+		echo    "Usage: ${ME} [--help] [--debug] [--silent] [--file f] --website  and/or  --server"
+		echo -e "\nWhere:"
+		echo -e "\t'--silent' only outputs errors."
+		echo -e "\t'--file f' optionally specifies the test file to upload."
 		[[ ${RET} -ne 0 ]] && echo -e "${NC}"
 	} >&2
 	exit "${RET}"
@@ -26,6 +30,9 @@ usage_and_exit()
 
 OK="true"
 DEBUG="false"
+SILENT="false"
+TEST_FILE_SPECIFIED="false"
+TEST_FILE="/tmp/${ME}.txt"
 DO_WEBSITE="false"
 DO_SERVER="false"
 while [[ $# -gt 0 ]]; do
@@ -36,6 +43,14 @@ while [[ $# -gt 0 ]]; do
 			;;
 		--debug)
 			DEBUG="true"
+			;;
+		--silent)
+			SILENT="true"		# only output errors
+			;;
+		--file)
+			TEST_FILE="${2}"
+			TEST_FILE_SPECIFIED="true"
+			shift
 			;;
 		--website)
 			DO_WEBSITE="true"
@@ -179,12 +194,12 @@ parse_output()
 do_test()
 {
 	local TYPE="${1}"
+	local bTEST_FILE OUTPUT_FILE HUMAN_TYPE PROTOCOL DIR REMOTE CMD D
 
-	local TEST_FILE bTEST_FILE OUTPUT_FILE HUMAN_TYPE PROTOCOL DIR REMOTE CMD D
-
-	TEST_FILE="/tmp/${ME}.txt"
 	bTEST_FILE="$( basename "${TEST_FILE}" )"
-	echo "Test file for ${TYPE}" > "${TEST_FILE}" || return 1
+	if [[ ! -f ${TEST_FILE} ]]; then
+		echo "Test file for ${TYPE}" > "${TEST_FILE}" || return 1
+	fi
 
 	OUTPUT_FILE="${ALLSKY_TMP}/${ME}-${TYPE}.txt"
 
@@ -215,14 +230,16 @@ do_test()
 	${CMD} > "${OUTPUT_FILE}" 2>&1
 	RET=$?
 	if [[ ${RET} -eq 0 ]]; then
-		echo -e "${GREEN}Test upload to ${HUMAN_TYPE} succeeded.${NC}"
+		[[ ${SILENT} == false ]] && echo -e "${GREEN}Test upload to ${HUMAN_TYPE} succeeded.${NC}"
 		if [[ -z ${DIR} || ${DIR} == "null" ]]; then
 			D=""
 		else
 			D="${DIR}/"
 		fi
-		echo -en "\t"
-		echo     "Please remove '${D}${bTEST_FILE}' on your server." >> "${MSG_FILE}"
+		if [[ ${SILENT} == false ]]; then
+			echo -en "\t"
+			echo     "Please remove '${D}${bTEST_FILE}' on your server." >> "${MSG_FILE}"
+		fi
 		if [[ -s ${OUTPUT_FILE} && ${DEBUG} == "true" ]]; then
 			echo -e "OUTPUT:"
 			echo -e "${YELLOW}$( < "${OUTPUT_FILE}" )${NC}\n"
@@ -288,4 +305,3 @@ fi
 rm -f "${MSG_FILE}"
 
 exit ${RET}
-

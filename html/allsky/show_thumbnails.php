@@ -9,7 +9,7 @@
 		exit;
 	}
 	$homePage = v("homePage", null, $webSettings_array);
-	$includeGoogleAnalytics = v("includeGoogleAnalyticsx", false, $homePage);
+	$includeGoogleAnalytics = v("includeGoogleAnalytics", false, $homePage);
 ?>
 <!DOCTYPE html>
 <html lang="en">

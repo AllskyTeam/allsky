@@ -436,6 +436,31 @@ function update_json_file()		# [-d] field, new value, file, [type]
 }
 
 
+####
+# Update a field in an array or delete the array index the field is at.
+function update_array_field()
+{
+	local FILE="${1}"
+	local ARRAY="${2}"
+	local FIELD="${3}"			# may be ""
+	local VALUE="${4}"
+	local NEW_VALUE="${5}"		# a value or "--delete"
+
+	local I="$( getJSONarrayIndex "${FILE}" "${ARRAY}" "${VALUE}" )"
+	[[ ${I} -eq -1 ]] && return
+
+	if [[ ${NEW_VALUE} == "--delete" ]]; then
+		update_json_file -d ".${ARRAY}[${I}]" "" "${FILE}"
+	else
+		local URL=".${ARRAY}[${I}].${FIELD}"
+		local V="$( settings "${URL}" "${FILE}" )"
+		if [[ ${V} != "${NEW_VALUE}" ]]; then
+			update_json_file "${URL}" "${NEW_VALUE}" "${FILE}"
+		fi
+	fi
+}
+
+
 # Replace all the ${NEED_TO_UPDATE} placeholders.
 function replace_website_placeholders()
 {
@@ -1028,7 +1053,28 @@ function get_computer()
 # files directly. This does assume that both the cli and cgi settings files
 # work in the same way.
 #
-get_php_setting() {
+function get_php_setting() {
     local SETTING="${1}"
     php -r "echo ini_get('${SETTING}');"
+}
+
+
+####
+# Get the checksum of all Website files, not including the ones the user creates or updates.
+function get_website_checksums()
+{
+	(
+		cd "${ALLSKY_WEBSITE}"		|| exit 1
+
+		# Add important image files.
+		echo loading.jpg
+		echo allsky-logo.png
+		echo NoThumbnail.png
+		echo allsky-favicon.png
+
+		# Get all non-image files except for the ones the user creates/updates.
+		find . -type f '!' '(' -name '*.jpg' -or -name '*.png' -or -name '*.mp4' ')' |
+			sed 's;^./;;' |
+			grep -E -v "myFiles/|${ALLSKY_WEBSITE_CONFIGURATION_NAME}|$( basename "${CHECKSUM_FILE}" )"
+	) | "${ALLSKY_UTILITIES}/getChecksum.php"
 }

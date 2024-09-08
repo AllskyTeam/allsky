@@ -113,6 +113,7 @@ while [[ $# -gt 0 ]]; do
 	FIELD="${1}"
 	LABEL="${2}"
 	NEW_VALUE="${3}"
+
 	# Convert HTML code for apostrophy back to character.
 	apos="&#x27"
 	NEW_VALUE="${NEW_VALUE/${apos}/\'}"
@@ -123,16 +124,21 @@ while [[ $# -gt 0 ]]; do
 
 	# Only put quotes around ${NEW_VALUE} if it's a string,
 	# i.e., not a number or a special name.
-	if  [[ ! (${NEW_VALUE} =~ ${NUMRE}) && ${NEW_VALUE} != "true" &&
-			${NEW_VALUE} != "false" && ${NEW_VALUE} != "null" ]]; then
+	if  [[ ! (${NEW_VALUE} =~ ${NUMRE}) && ${NEW_VALUE} != "true" && ${NEW_VALUE} != "false" &&
+			${NEW_VALUE} != "null" && ${NEW_VALUE} != "--delete" ]]; then
 		Q='"'
 		NEW_VALUE="${Q}${NEW_VALUE}${Q}"
 	fi
-	JQ_STRING+=( "| .${FIELD} = ${NEW_VALUE}" )
+	if [[ ${NEW_VALUE} == "--delete" ]]; then
+		JQ_STRING+=( "| del(${FIELD})" )
+		OUTPUT_MESSAGE+="'${LABEL}' deleted."
+	else
+		JQ_STRING+=( "| .${FIELD} = ${NEW_VALUE}" )
+		OUTPUT_MESSAGE+="'${LABEL}' updated to ${wBOLD}${NEW}${wNBOLD}."
+	fi
 
 	shift 3
 
-	OUTPUT_MESSAGE+="'${LABEL}' updated to ${wBOLD}${NEW}${wNBOLD}."
 	[ $# -gt 0 ] && OUTPUT_MESSAGE+="${wBR}"
 done
 
@@ -151,7 +157,11 @@ if OUTPUT="$( jq "${S}" "${CONFIG_FILE}" 2>&1 > /tmp/x && mv /tmp/x "${CONFIG_FI
 	if [[ ${VERBOSITY} == "verbose" ]]; then
 		echo -e "${wOK}${OUTPUT_MESSAGE}${wNC}"
 	elif [[ ${VERBOSITY} == "summary" ]]; then
-		echo -e "${wOK}${LorR}Allsky Website ${ALLSKY_WEBSITE_CONFIGURATION_NAME} UPDATED${wNC}"
+		if [[ -n ${CONFIG_FILE} ]]; then
+			echo -e "${wOK}'${CONFIG_FILE}' UPDATED${wNC}"
+		else
+			echo -e "${wOK}${LorR}Allsky Website ${ALLSKY_WEBSITE_CONFIGURATION_NAME} UPDATED${wNC}"
+		fi
 	fi		# nothing if "silent"
 	exit 0
 else

@@ -31,7 +31,6 @@ usage_and_exit()
 OK="true"
 DEBUG="false"
 SILENT="false"
-TEST_FILE_SPECIFIED="false"
 TEST_FILE="/tmp/${ME}.txt"
 DO_WEBSITE="false"
 DO_SERVER="false"
@@ -49,7 +48,6 @@ while [[ $# -gt 0 ]]; do
 			;;
 		--file)
 			TEST_FILE="${2}"
-			TEST_FILE_SPECIFIED="true"
 			shift
 			;;
 		--website)

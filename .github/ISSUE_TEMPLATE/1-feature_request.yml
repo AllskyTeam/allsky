@@ -3,17 +3,17 @@ description: Suggest an idea for Allsky
 title: "[FEATURE REQUEST]"
 labels: "enhancement"
 body:
-  - type markdown
+  - type: markdown
     attributes:
       value: |
         If you have a QUESTION, enter a GitHub [Discussion](https://github.com/AllskyTeam/allsky/discussions).  Do NOT create an Issue.
-  - type markdown
+  - type: markdown
     attributes:
       value: |
         First look in the GitHub [Issues](https://github.com/AllskyTeam/allsky/issues) and [Discussions](https://github.com/AllskyTeam/allsky/discussions) pages.
         Make sure no one else has already requested this feature.
         If someone has and you have additional information, add it to the existing request.
-  - type textarea
+  - type: textarea
     id: request
       attributes:
         label: If this is a new feature, describe what you would like.

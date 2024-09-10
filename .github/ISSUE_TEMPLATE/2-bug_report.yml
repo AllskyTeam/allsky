@@ -1,4 +1,4 @@
-name: Bug report
+name: Bug Report
 description: Let us know of an Allsky problem.
 title: "[BUG] "
 body:
@@ -36,7 +36,7 @@ body:
     id: allsky_version
     attributes:
       label: Allsky version
-      placeholder: "[see the file ~/allsky/version]"
+      placeholder: "[see:  ~/allsky/version]"
     validations:
       required: true
   - type: input
@@ -50,10 +50,10 @@ body:
     attributes:
       label: Bug Description
       description: |
-        * Include a clear and concise description of what the problem is.
-        * Include a screenshot of any error message(s).
-        * Can you reproduce it?  If so, how?
-        * Did any settings or anything else change?
+        \*  Include a clear and concise description of what the problem is.
+        \*  Include a screenshot of any error message(s).
+        \*  Can you reproduce it?  If so, how?
+        \*  Did any settings or anything else change?
     validations:
       required: true
   - type: textarea
@@ -61,10 +61,12 @@ body:
     attributes:
       label: Log / configuration files
       description: |
-        Attach `~/allsky/config/settings.json`, appending `.txt` to its name first.
-        If your problem is with an **Allsky Website**, also attach:
-          * ~/allsky/html/allsky/configuration.json (local Website)
-          * ~/allsky/config/remote_configuration.json (remote Website)
+        ATTACH files, do NOT copy/paste them:
         &nbsp;
-        Follow the instructions for Reporting Issues in the Wiki, then ATTACH a copy of the file(s) above.
-        Do NOT copy/paste them.
+        Follow the instructions for "Reporting Issues" in the Wiki, then attach `/var/log/allsky.log`.
+        &nbsp;
+        Attach `~/allsky/config/settings.json`, appending `.txt` to its name first.
+        &nbsp;
+        If your problem is with an **Allsky Website**, also attach:
+          \*  `~/allsky/html/allsky/configuration.json` (local Website)
+          \*  `~/allsky/config/remote_configuration.json` (remote Website)

@@ -42,7 +42,7 @@ body:
   - type: input
     id: pi
     attributes:
-      label: Pi and amount of memory (512 MB, 1, 2, 4, or 8 GB): 
+      label: "Pi and amount of memory (512 MB, 1, 2, 4, or 8 GB)" 
     validations:
       required: true
   - type: textarea

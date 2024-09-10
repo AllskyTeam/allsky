@@ -68,5 +68,5 @@ body:
         Attach `~/allsky/config/settings.json`, appending `.txt` to its name first.
         &nbsp;
         If your problem is with an **Allsky Website**, also attach:
-          1. `~/allsky/html/allsky/configuration.json` (local Website)
-          2. `~/allsky/config/remote_configuration.json` (remote Website)
+          \* `~/allsky/html/allsky/configuration.json` (local Website)
+          \* `~/allsky/config/remote_configuration.json` (remote Website)

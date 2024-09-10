@@ -30,8 +30,8 @@ body:
         - Bullseye
         - Bookworm
         - Not a Pi
-      validations:
-        required: true
+    validations:
+      required: true
   - type: input
     id: allsky_version
     attributes:

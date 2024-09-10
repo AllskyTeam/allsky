@@ -15,6 +15,8 @@ body:
         If someone has and you have additional information, add it to the existing request.
   - type: textarea
     id: request
-      attributes:
-        label: If this is a new feature, describe what you would like.
-        description: Screenshots of examples are helpful.
+    attributes:
+      label: If this is a new feature, describe what you would like.
+      description: Screenshots of examples are helpful.
+    validations:
+      required: true

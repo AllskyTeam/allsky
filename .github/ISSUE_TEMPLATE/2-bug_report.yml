@@ -55,6 +55,7 @@ body:
         \*  Can you reproduce it?  If so, how?
         \*  Did any settings or anything else change?
       placeholder: "[enter description here]"
+      value: ""
     validations:
       required: true
   - type: textarea

@@ -6,13 +6,15 @@ body:
   - type: markdown
     attributes:
       value: |
-        If you have a QUESTION, enter a GitHub [Discussion](https://github.com/AllskyTeam/allsky/discussions).  Do NOT create an Issue.
+        > [!IMPORTANT]
+        > If you have a QUESTION, enter a GitHub [Discussion](https://github.com/AllskyTeam/allsky/discussions).  Do NOT create an Issue.
   - type: markdown
     attributes:
       value: |
-        First look in the GitHub [Issues](https://github.com/AllskyTeam/allsky/issues) and [Discussions](https://github.com/AllskyTeam/allsky/discussions) pages.
-        Make sure no one else has already requested this feature.
-        If someone has and you have additional information, add it to the existing request.
+        > [!IMPORTANT]
+        > First look in the GitHub [Issues](https://github.com/AllskyTeam/allsky/issues) and [Discussions](https://github.com/AllskyTeam/allsky/discussions) pages.
+        > Make sure no one else has already requested this feature.
+        > If someone has and you have additional information, add it to the existing request.
   - type: textarea
     id: request
     attributes:

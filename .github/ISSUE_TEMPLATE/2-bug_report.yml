@@ -50,10 +50,10 @@ body:
     attributes:
       label: Bug Description
       description: |
-      * Include a clear and concise description of what the problem is.
-      * Include a screenshot of any error message(s).
-      * Can you reproduce it?  If so, how?
-      * Did any settings or anything else change?
+        * Include a clear and concise description of what the problem is.
+        * Include a screenshot of any error message(s).
+        * Can you reproduce it?  If so, how?
+        * Did any settings or anything else change?
     validations:
       required: true
   - type: textarea

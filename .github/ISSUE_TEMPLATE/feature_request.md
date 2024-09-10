@@ -4,22 +4,18 @@ about: Suggest an idea for Allsky
 title: "[FEATURE REQUEST]"
 labels: enhancement
 ---
-
-
-<!-- =========================================================== -->
-
-# Is this a QUESTION?
-If yes, enter a Discussion using the link above.  Do NOT create an Issue. 
-
-
-
-<!-- =========================================================== -->
 &nbsp; 
-## First look in the Issues and Discussions links on the Allsky GitHub page.
+
+
+## Is this a QUESTION?
+If yes, enter a GitHub [Discussion](https://github.com/AllskyTeam/allsky/discussions).  Do NOT create an Issue. 
+
+
+
+## First look in the GitHub [Issues](https://github.com/AllskyTeam/allsky/issues) and [Discussions](https://github.com/AllskyTeam/allsky/discussions) pages.
 Make sure no one else has already requested this feature.
 If someone has and you have additional information, add it to the existing request.
 
 
-## Describe the feature you would like.
-A clear and concise description of what you want to happen.
+## If this is a new feature, describe what you would like.
 Screenshots of examples are helpful.

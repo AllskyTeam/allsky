@@ -54,8 +54,7 @@ body:
         \*  Include a screenshot of any error message(s).
         \*  Can you reproduce it?  If so, how?
         \*  Did any settings or anything else change?
-      placeholder: "[enter description here]"
-      value: " "
+      value: "[enter description here]"
     validations:
       required: true
   - type: textarea

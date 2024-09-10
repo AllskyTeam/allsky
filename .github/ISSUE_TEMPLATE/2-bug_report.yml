@@ -50,10 +50,11 @@ body:
     attributes:
       label: Bug Description
       description: |
-        \- Include a clear and concise description of what the problem is.
-        \- Include a screenshot of any error message(s).
-        \- Can you reproduce it?  If so, how?
-        \- Did any settings or anything else change?
+        \*  Include a clear and concise description of what the problem is.
+        \*  Include a screenshot of any error message(s).
+        \*  Can you reproduce it?  If so, how?
+        \*  Did any settings or anything else change?
+      placeholder: "[enter description here]"
     validations:
       required: true
   - type: textarea
@@ -68,5 +69,5 @@ body:
         Attach `~/allsky/config/settings.json`, appending `.txt` to its name first.
         &nbsp;
         If your problem is with an **Allsky Website**, also attach:
-          \* `~/allsky/html/allsky/configuration.json` (local Website)
-          \* `~/allsky/config/remote_configuration.json` (remote Website)
+          \*  `~/allsky/html/allsky/configuration.json` (local Website)
+          \*  `~/allsky/config/remote_configuration.json` (remote Website)

@@ -1,6 +1,10 @@
 <?php
 
 include_once('functions.php');
+initialize_variables();
+define('RASPI_ADMIN_DETAILS', RASPI_CONFIG . '/raspap.auth');
+include_once('raspap.php');
+include_once('authenticate.php');
 
 // On success, return a string that starts with "S\t" (for Success).
 // On failure, return a string that starts with "E\t" (for Error).

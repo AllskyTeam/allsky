@@ -5,7 +5,11 @@
 
 $status = null;
 include_once('functions.php');
-initialize_variables(true);		// "true" to only get website stuff
+initialize_variables();
+
+define('RASPI_ADMIN_DETAILS', RASPI_CONFIG . '/raspap.auth');
+include_once('raspap.php');
+include_once('authenticate.php');
 
 $debug = false;
 $Success = "S"; $Warning = "W"; $Error = "E";

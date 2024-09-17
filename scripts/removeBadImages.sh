@@ -149,7 +149,7 @@ num_bad=0
 
 # If we're processing a whole directory assume it's done in the background so "nice" it.
 # If we're only processing one file we want it done quickly.
-if [[ ${FILE} == "" ]]; then
+if [[ -z ${FILE} ]]; then
 		NICE="nice"
 else
 		NICE=""
@@ -210,15 +210,15 @@ for f in ${IMAGE_FILES} ; do
 			fi
 
 			# An image can't be both HIGH and LOW so if it was HIGH don't check for LOW.
-			if [[ ${BAD} == "" && ${LOW_CHECK} -ne 0 ]]; then
+			if [[ -z ${BAD} && ${LOW_CHECK} -ne 0 ]]; then
 				if [[ ${MEAN_CHECK} -lt ${LOW_CHECK} ]]; then
 					BAD="'${f}' (MEAN of ${MEAN} is below low threshold of ${LOW})"
-				elif [[ ${DEBUG} == "true" && ${MSG} == "" ]]; then
+				elif [[ ${DEBUG} == "true" && -z ${MSG} ]]; then
 					MSG="===== OK: ${f}, MEAN=${MEAN}, HIGH=${HIGH}, LOW=${LOW}"
 				fi
 			fi
 
-			if [[ ${DEBUG} == "true" && ${BAD} == "" && -n ${MSG} ]]; then
+			if [[ ${DEBUG} == "true" && -z ${BAD} && -n ${MSG} ]]; then
 				echo "${MSG}" >&2
 			fi
 		fi
@@ -253,7 +253,9 @@ else
 		BAD_COUNT="$( wc -l < "${ALLSKY_BAD_IMAGE_COUNT}" )"
 		if [[ $((BAD_COUNT % BAD_LIMIT)) -eq 0 ]]; then
 			MSG="Multiple consecutive bad images."
-			MSG+="\nCheck the values of 'Remove Bad Images Threshold Low' and 'Remove Bad Images Threshold High' in the WebUI"
+			MSG+="\nCheck the values of 'Remove Bad Images Threshold Low',"
+			MSG+=" 'Remove Bad Images Threshold High',"
+			MSG+=" and 'Max Auto-Exposure' in the WebUI."
 			"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}" >&2
 		fi
 		if [[ ${BAD_COUNT} -ge "${BAD_LIMIT}" ]]; then

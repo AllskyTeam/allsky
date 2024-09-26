@@ -98,7 +98,7 @@ function verifyNumber($num) {
 
 // Globals
 $image_name = null;
-$showUpdatedMessage = true; $delay=null; $daydelay=null; $nightdelay=null;
+$showUpdatedMessage = true; $delay=null; $daydelay=null; $daydelay_postMsg=""; $nightdelay=null; $nightdelay_postMsg="";
 $imagesSortOrder = null;
 $darkframe = null;
 $useLogin = null;
@@ -135,7 +135,7 @@ function readOptionsFile() {
 function initialize_variables($website_only=false) {
 	global $status;
 	global $image_name;
-	global $showUpdatedMessage, $delay, $daydelay, $nightdelay;
+	global $showUpdatedMessage, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg;
 	global $imagesSortOrder;
 	global $darkframe, $useLogin, $temptype, $lastChanged, $lastChangedName;
 	global $remoteWebsiteURL;
@@ -205,12 +205,25 @@ function initialize_variables($website_only=false) {
 
 	$dayautoexposure = toBool(getVariableOrDefault($settings_array, 'dayautoexposure', "true"));
 	$nightautoexposure = toBool(getVariableOrDefault($settings_array, 'nightautoexposure', "true"));
-	$maxDayExposure = ($dayautoexposure ? $dayexposure : $daymaxautoexposure);
-	$maxNightExposure = ($nightautoexposure ?  $nightexposure : $nightmaxautoexposure);
 	$consistentDelays = toBool(getVariableOrDefault($settings_array, 'consistentdelays', "true"));
 
-	$daydelay += ($consistentDelays ? $maxDayExposure : $dayexposure);
-	$nightdelay += ($consistentDelays ? $maxNightExposure : $nightexposure);
+	if ($consistentDelays) {
+		$daydelay += $dayautoexposure ?  $daymaxautoexposure : $dayexposure;
+		$daydelay_postMsg = "";
+		$nightdelay += $nightautoexposure ?   $nightmaxautoexposure : $nightexposure;
+		$nightdelay_postMsg = "";
+	} else {
+		// Using $daymaxautoexposure and $nightmaxautoexposure isn't
+		// accurate since they are fixed numbers.
+		// If the ACTUAL exposure was, e.g., 1 us, then the actual delay is effectively just the delay,
+		// but if $dayexposure was 10 seconds, we'd set the delay to $delay + 10 seconds.
+		// Daytime exposure are normally under a second, so use 1 second for the auto-exposure amount.
+		// Daytime exposure are normally at least 10 seconds so use that.
+		$daydelay += $dayautoexposure ?  (1 * $ms_per_sec) : $dayexposure;
+		$daydelay_postMsg = " minimum";
+		$nightdelay += $nightautoexposure ?   (10 * $ms_per_sec) : $nightexposure;
+		$nightdelay_postMsg = " minimum";
+	}
 
 	// Determine if it's day or night so we know which delay to use.
 	$angle = getVariableOrDefault($settings_array, 'angle', -6);

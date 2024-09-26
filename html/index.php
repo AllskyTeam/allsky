@@ -457,7 +457,7 @@ if ($useRemoteWebsite) {
 					case "live_view":
 					default:
 						include_once('includes/liveview.php');
-						DisplayLiveView($image_name, $delay, $daydelay, $nightdelay, $darkframe);
+						DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg, $darkframe);
 				}
 				?>
 			</div>

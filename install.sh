@@ -3865,9 +3865,6 @@ MSG+="\nAt the end you will be prompted again for additional steps."
 display_msg "notice" "${MSG}"
 
 
-##### Get Website checksums for optional remote Website.
-get_checksums
-
 ##### Install web server
 # This must come BEFORE save_camera_capabilities, since it installs php.
 install_webserver_et_al
@@ -3894,6 +3891,10 @@ install_fonts
 install_PHP_modules
 install_Python
 install_overlay
+
+##### Get Website checksums for optional remote Website.
+# Do this before we change the local Website files.
+get_checksums
 
 ##### Restore prior files if needed.
 # This MUST be called even if we know we're not using an OLD directory.

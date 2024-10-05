@@ -1,4 +1,4 @@
-# Allsky Camera ![Release](https://img.shields.io/badge/Version-v2023.05.01_04-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
+# Allsky Camera ![Release](https://img.shields.io/badge/Version-v2023.05.01_05-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
 
 This is the source code for the Allsky Camera project described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/).
 &nbsp;  
@@ -15,8 +15,8 @@ This is the source code for the Allsky Camera project described [on Instructable
 
 You will need the following:
 
- * A Raspberry Pi (Zero 2, 2, 3, 4) running Pi OS.
- * A camera (Raspberry Pi HQ, Module 3, or RPi compatible, or ZWO ASI)
+ * A Raspberry Pi (Zero 2, 2, 3, 4, or 5) running Pi OS.
+ * A camera (Raspberry Pi HQ, Module 3, or RPi compatible, or ZWO ASI released before October 2023)
 
 
 &nbsp;  
@@ -33,10 +33,10 @@ You will need the following:
 &nbsp;
 <!-- =============================================================================== --> 
 ## Software Installation
-
+<!-- HIDE - VIDEO IS OLD
 PatriotAstro created a great [video](https://www.youtube.com/watch?v=7TGpGz5SeVI) describing the installation steps below.
 **We highly suggest viewing it before installing the software.**
-
+-->
 Detailed installation instructions can be found at [Installing / Upgrading --> Allsky](https://htmlpreview.github.io/?https://raw.githubusercontent.com/thomasjacquin/allsky/master/html/documentation/installations/Allsky.html).
 
 ---

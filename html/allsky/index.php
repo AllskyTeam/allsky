@@ -30,7 +30,7 @@
 				$backgroundImage = v("backgroundImage", "", $homePage);
 				if ($backgroundImage !== "") {
 					$backgroundImage_url = v("url", null, $backgroundImage);
-                                        if ($backgroundImage_url == "") $backgroundImage = null;
+					if ($backgroundImage_url == "") $backgroundImage = null;
 					else $backgroundImage_style = v("style", null, $backgroundImage);
 				}
 				$loadingImage = v("loadingImage", "loading.jpg", $homePage);

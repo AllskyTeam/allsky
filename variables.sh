@@ -17,6 +17,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	# The "w" colors are for when output may go to a web page.
 	if tty --silent ; then
 		ON_TTY="true"
+        DIALOG_RED="\Z1";   DIALOG_NORMAL="\Zn"
 		GREEN="\033[0;32m";		wOK="${GREEN}"
 		YELLOW="\033[0;33m";	wWARNING="${YELLOW}"
 		RED="\033[0;31m";		wERROR="${RED}"
@@ -27,6 +28,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 								wBR="\n"
 	else
 		ON_TTY="false"
+        DIALOG_RED="";          DIALOG_NORMAL=""        
 		GREEN="";				wOK="<span style='color: green'>"
 		YELLOW="";				wWARNING="<span style='color: #FF9800'>"
 		RED="";					wERROR="<span style='color: red'>"

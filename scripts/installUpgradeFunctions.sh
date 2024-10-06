@@ -248,7 +248,7 @@ function display_msg()
 
 		# Outer "echo -e" handles "\n" (2 characters) in input.
 		# No "-e" needed on inner "echo".
-		echo -e "$( echo "${LOGMSG}${MESSAGE2}" |
+		echo -e "$( echo "$(date) ${LOGMSG}${MESSAGE2}" |
 			sed -e "s/${ESC}/033/g" -e "s/033\[/033X/g" \
 				-e "s/${G}//g" \
 				-e "s/${Y}//g" \
@@ -257,7 +257,7 @@ function display_msg()
 				-e "s/${N}//g" \
 		)"
 	else
-		echo "${LOGMSG}${MESSAGE2}"
+		echo "$(date) ${LOGMSG}${MESSAGE2}"
 	fi >>  "${DISPLAY_MSG_LOG}"
 }
 

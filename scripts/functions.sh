@@ -294,14 +294,24 @@ function get_connected_cameras_info()
 	#		iProduct 2 ASI290MM
 	#	Bus 002 Device 002: ID 03c3:290b ZWO ASI290MM	(newer OS)
 	#	1   2   3       4   5  6         7   8
+	# or, for really old cameras:
+	#	Bus 001 Device 002: ID 03c3:120b ZWOptical company   ASI120MC
+	#	1   2   3       4   5  6         7         8         9
 	lsusb -d "${ZWO_VENDOR}:" --verbose 2>/dev/null |
 	gawk 'BEGIN { num = 0; model = ""; }
 		{
 			if ($1 == "Bus" && $3 == "Device") {
-				model = $8;
+				ZWO = $7;
+				if (ZWO == "ZWOptical" && $8 == "company") {
+					model = $9;
+					model_cont = 10;
+				} else {
+					model = $8;
+					model_cont = 9;
+				}
 				if (model != "") {
-				# The model may have multiple tokens.
-					for (i=9; i<= NF; i++) model = model " " $i
+					# The model may have multiple tokens.
+					for (i=model_cont; i<= NF; i++) model = model " " $i
 					printf("ZWO\t%d\t%s\n", num++, model);
 					model = "<found>";		# This camera was output
 				}

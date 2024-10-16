@@ -310,6 +310,10 @@ else # sftp/ftp/ftps
 	fi
 
 	{
+		if [[ ${DEBUG} == "true" ]]; then
+			echo "debug 5"
+		fi
+
 		LFTP_COMMANDS="$( settings ".${PREFIX}_LFTP_COMMANDS" "${ALLSKY_ENV}" )"
 		[[ -n ${LFTP_COMMANDS} ]] && echo "${LFTP_COMMANDS}"
 
@@ -333,7 +337,6 @@ else # sftp/ftp/ftps
 			# but if it works it returns "xxx is current directory" so only output that.
 			echo "quote PWD | grep current "
 			echo "ls"
-			echo "debug 5"
 		fi
 		if [[ -n ${DIRECTORY} ]]; then
 			# lftp outputs error message so we don't have to.

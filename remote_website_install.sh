@@ -498,15 +498,18 @@ function remove_remote_file()
 		check_if_files_exist "${REMOTE_URL}" "false" "${FILENAME}" || return
 	fi
 
-# TODO: This assumes ftp is used to upload files
-	lftp -u "${REMOTE_USER},${REMOTE_PASSWORD}" "${REMOTE_PORT}" "${REMOTE_PROTOCOL}://${REMOTE_HOST}" -e "
-		cd '${REMOTE_DIR}'
-		rm '${FILENAME}'
-		bye" > /dev/null 2>&1
+# TODO: FIX: This assumes ftp is used to upload files
+# TODO: upload.sh should accept "--remove FILE" option.
+	local CMDS="cd '${REMOTE_DIR}' ; rm -r '${FILENAME}' ; bye"
+	local ERR="$( lftp -u "${REMOTE_USER},${REMOTE_PASSWORD}" "${REMOTE_PORT}" "${REMOTE_PROTOCOL}://${REMOTE_HOST}" -e "${CMDS}" 2>&1 )"
 
-	#TODO: Check response code
+	if [[ $? -eq 0 ]] ; then
+		MSG="Deleted remote file '${FILENAME}'"
+	else
+		MSG="Unable to delete remote file '${FILENAME}': ${ERR}"
+	fi
 
-	display_msg --logonly info "Deleted file ${FILENAME} from ${REMOTE_HOST}"
+	display_msg --logonly info "${MSG}"
 }
 
 # Check if a remote Website exists. The check is done by looking for the following files:
@@ -587,7 +590,7 @@ function upload_config_file()
 {
 	local MSG="\nUploading remote Allsky configuration file"
 	display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${MSG}"
-	display_msg --log progress "Starting Website configuration file upload"
+	display_msg --log progress "Uploading Website configuration file."
 	local REMOTE_DIR="$( settings ".remotewebsiteimagedir" "${SETTINGS_FILE}" )"
 
 	local RESULT="$( "${ALLSKY_SCRIPTS}/upload.sh" --remote-web \
@@ -598,9 +601,8 @@ function upload_config_file()
 		MSG="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} uploaded to"
 		MSG+="${REMOTE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 		show_debug_message "${MSG}"
-		display_msg --logonly info "Completed Website configuration file upload."
 	else
-		display_msg --logonly info " Failed: ${RESULTS}"
+		display_msg --logonly info " Failed: ${RESULT}"
 		display_aborted "at the configuration file upload" "true"
 	fi
 }

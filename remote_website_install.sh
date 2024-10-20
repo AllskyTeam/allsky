@@ -361,7 +361,7 @@ function display_aborted()
 	local ERROR_MSG="\nThe installation of the remote Website has been aborted ${EXTRA_TEXT}."
 
 	if [[ ${SHOW_LOG} == "true" ]]; then
-		MSG="\n\nWould you like to view the installation log?" ; then
+		MSG="\n\nWould you like to view the installation log?"
 		if display_prompt_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${ERROR_MSG}\n\n${MSG}" ; then
 			display_log_file "${DIALOG_BACK_TITLE}" "${DIALOG_TITLE_LOG}" "${DISPLAY_MSG_LOG}"
 		fi

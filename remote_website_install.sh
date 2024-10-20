@@ -49,7 +49,7 @@ DIALOG_INSTALL="Installing Remote Website"
 DIALOG_TITLE_LOG="Allsky Remote Website Installation Log"
 
 # Old Allksy Website files that should be remoevd if they exist
-OLD_FILES_TO_REMOVE=("config.js" "configuration.json" "virtualsky.json")
+OLD_FILES_TO_REMOVE=("config.js" "configuration.json" "virtualsky.json" "README.md")
 
 ############################################## functions
 
@@ -235,7 +235,7 @@ function pre_install_checks()
 		local REALLY_OLD_CONFIG_FILES=("config.js")
 		if check_if_files_exist "${REMOTE_URL}" "false" "${REALLY_OLD_CONFIG_FILES[@]}" ; then
 			HAVE_REALLY_OLD_REMOTE_CONFIG="true"
-			MSG="Found really old format Website configuration file on the remote Website."
+			MSG="Found old-format config.js file on the remote Website."
 			display_msg --logonly info "${MSG}"
 		fi
 	fi
@@ -335,13 +335,12 @@ function display_aborted()
 	if [[ ${SHOW_LOG} == "true" ]]; then
 # TODO: Instead of displaying the log file, which is very detailed,
 # how about if we tell the user to attach the log file to any GitHub message they post?
-		MSG="${ERROR_MSG}\n\nWould you like to view the installation log?"
+		MSG="${ERROR_MSG}\n\n${DIALOG_UNDERLINE}Would you like to view the installation log?${DIALOG_NORMAL}"
 		if display_prompt_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${MSG}" ; then
 			display_log_file "${DIALOG_BACK_TITLE}" "${DIALOG_TITLE_LOG}" "${DISPLAY_MSG_LOG}"
 		fi
 	else
-		display_box "--msgbox" "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${ERROR_MSG}" "--clear"
-		clear	# to get rid of background color for 'dialog' command
+		clear	# Gets rid of background color from last 'dialog' command.
 		display_msg info "${ERROR_MSG}"
 	fi
 
@@ -352,19 +351,20 @@ function display_aborted()
 function display_complete()
 {
 	local EXTRA_TEXT=""
+	local E=" Please use the WebUI's 'Editor' page to replace any '${NEED_TO_UPDATE}' with the correct values."
 	if [[ ${CONFIG_TO_USE} == "new"  ]]; then
-		EXTRA_TEXT="\nA new configuration file was created for the Website."
-		EXTRA_TEXT+=" Please use the WebUI editor and replace any '${NEED_TO_UPDATE}' with the correct values"
+		EXTRA_TEXT="\nA new configuration file was created for your remote Website."
+		EXTRA_TEXT+="${E}"
 	elif [[ ${CONFIG_TO_USE} == "remotereallyold" ]]; then
-		EXTRA_TEXT="\nYou have a very old Allsky Website so a new configuration file was created."
-		EXTRA_TEXT+=" Please use the WebUI 'Editor' page to replace any '${NEED_TO_UPDATE}' with the correct values."
+		EXTRA_TEXT="\nYou have a very old remote Allsky Website so a new configuration file was created."
+		EXTRA_TEXT+="${E}"
 	fi
 
 	display_msg --logonly info "INSTALLATON COMPLETED.\n"
 
 	MSG="\n\
-  The installation of the remote Website has been completed.\n\n\
-  Please use the 'Editor' page in the Allsky WebUI to manage any changes to the Website.${EXTRA_TEXT}"
+  The installation of the remote Website is complete.\n\n\
+  Please use the WebUI's 'Editor' page to manage any changes to your Website.${EXTRA_TEXT}"
 	display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${MSG}"
 }
 
@@ -381,7 +381,7 @@ function check_connectivity()
 		show_debug_message "${TEST_FILE} deleted from the remote server"
 	else
 		local ERROR_MSG="\nERROR: The remote Website connectivity check failed."
-		ERROR_MSG+="\n\nPlease check the 'Websites and Remote Server Settings' in the WebUI.\n\n\
+		ERROR_MSG+="\n\nPlease check the 'Websites and Remote Server Settings' section of the WebUI.\n\n\
  HOST: ${REMOTE_HOST}\n\
  PROTOCOL: ${REMOTE_PROTOCOL}\n\
  USER: ${REMOTE_USER}\n\
@@ -459,7 +459,7 @@ function check_if_files_exist()
 
 	for FILE in "$@"; do
 		url="${URL}/${FILE}"
-		HTTP_STATUS="$( curl -o /dev/null --silent --write-out "%{http_code}" "$url" )"
+		HTTP_STATUS="$( curl -o /dev/null --head --silent --write-out "%{http_code}" "$url" )"
 
 		local PRE_MSG="File ${FILE} ${url}"
 		if [[ ${HTTP_STATUS} == "200" ]] ; then
@@ -543,7 +543,7 @@ function upload_remote_website()
 	if [[ ${AUTO_CONFIRM} == "false" ]]; then
 		MSG="\nTo continue the Allsky Website must be uploaded."
 		MSG+=" This will overwrite ALL remote Website source files and REMOVE any old Allsky files."
-		MSG+="\n\nAre you sure you wish to continue? "
+ 		MSG+="\n\n${DIALOG_UNDERLINE}Are you sure you wish to continue?${DIALOG_NORMAL}"
 		if ! display_prompt_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${MSG}" ; then
 			display_aborted "at the Website upload" "false"
 		fi

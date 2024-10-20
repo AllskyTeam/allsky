@@ -46,6 +46,7 @@ DIALOG_BACK_TITLE="Allsky Remote Website Installer"
 DIALOG_WELCOME_TITLE="Allsky Remote Website Installer"
 DIALOG_PRE_CHECK="Pre Installation Checks"
 DIALOG_INSTALL="Installing Remote Website"
+DIALOG_DONE="Remote Website Installation Completed"
 DIALOG_TITLE_LOG="Allsky Remote Website Installation Log"
 
 # Old Allksy Website files that should be remoevd if they exist
@@ -173,10 +174,10 @@ function display_log_file()
 	local BACK_TITLE="${1}"
 	local DIALOG_TITLE="${2}"
 	dialog \
-		--clear\
-		--colors\
-		--backtitle "${BACK_TITLE}"\
-		--title "${DIALOG_TITLE}"\
+		--clear \
+		--colors \
+		--backtitle "${BACK_TITLE}" \
+		--title "${DIALOG_TITLE}" \
 		--textbox "${FILENAME}" 22 77
 }
 
@@ -200,7 +201,7 @@ function pre_install_checks()
 
 	DIALOG_TEXT+="\n1 - Checking for local files"
 	display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
-	display_msg --logonly progress "Start pre installation checks."
+	display_msg --logonly info "Start pre installation checks."
 
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
 		MSG="Found current remote configuration file: ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}."
@@ -295,7 +296,7 @@ function display_welcome()
 	fi
 
 	if [[ ${AUTO_CONFIRM} == "false" ]]; then
-		display_msg --logonly info "Displaying the welcome dialog"
+		display_msg --logonly info "Displaying the welcome dialog."
 		local DIALOG_MSG="\n\
  Welcome to the Allsky Remote Website Installer!\n\n\
  This script will perform the following tasks:\n\n\
@@ -333,7 +334,7 @@ function display_aborted()
 	local EXTRA_TEXT="${1}"
 	local SHOW_LOG="${2}"
 
-	display_msg --logonly info "${ABORT_MSG} ${EXTRA_TEXT}."
+	display_msg --logonly info "${ABORT_MSG} at $( date ) ${EXTRA_TEXT}.\n"
 	local ERROR_MSG="\nThe installation of the remote Website was aborted ${EXTRA_TEXT}."
 
 	if [[ ${SHOW_LOG} == "true" ]]; then
@@ -365,14 +366,15 @@ function display_complete()
 		EXTRA_TEXT+="${E}"
 	fi
 
-	display_msg --logonly info "INSTALLATON COMPLETED.\n"
+	display_msg --logonly info "INSTALLATON COMPLETED at $( date ).\n"
 
-	MSG="\n\
+	local DIALOG_TEXT="\n\
   The installation of the remote Website is complete.\n\n\
   Please use the WebUI's 'Editor' page to manage any changes to your Website.${EXTRA_TEXT}"
-#xx	display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${MSG}"
+	display_box "--msgbox" "${DIALOG_BACK_TITLE}" "${DIALOG_DONE}" "${DIALOG_TEXT}"
+
 	clear	# Gets rid of background color from last 'dialog' command.
-	display_msg progress "${MSG}"
+	display_msg info "\nEnjoy your remote Allsky Website!\n"
 }
 
 # Check connectivity to the remote Website.
@@ -493,7 +495,10 @@ function remove_remote_file()
 	local CHECK="${2}"
 
 	if [[ ${CHECK} == "check" ]]; then
-		check_if_files_exist "${REMOTE_URL}" "false" "${FILENAME}" || return
+		if ! check_if_files_exist "${REMOTE_URL}" "false" "${FILENAME}" ; then
+			show_debug_message "===== not on server"
+			return
+		fi
 	fi
 
 # TODO: FIX: This assumes ftp is used to upload files
@@ -525,7 +530,7 @@ function check_if_website_exists()
 		show_debug_message "Found remote website config file"
 
 		if check_if_files_exist "${REMOTE_URL}" "and" "${WEBSITE_FILES[@]}" ; then
-			display_msg --log progress "Found remote Allsky Website at ${REMOTE_URL}"
+			display_msg --logonly info "Found remote Allsky Website at ${REMOTE_URL}"
 			WEBSITE_EXISTS="true"
 			return
 		fi
@@ -554,7 +559,7 @@ function upload_remote_website()
 		EXCLUDE_FOLDERS="--exclude keograms --exclude startrails --exclude videos"
 		MSG+=", excluding videos, startrails, and keograms"
 	fi
-	display_msg --log progress "${MSG}${EXTRA_TEXT}."
+	display_msg --logonly info "${MSG}${EXTRA_TEXT}."
 
 	MSG="\n${MESSAGE}\n\nPlease wait as uploading files could take several minutes..."
 	display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${MSG}"
@@ -570,7 +575,7 @@ function upload_remote_website()
 			set net:max-retries 2
 			set net:timeout 10
 			mirror --reverse --verbose --overwrite --ignore-time --transfer-all ${EXCLUDE_FOLDERS}
-			quit"
+			quit" 2>&1 | grep -v -i "operation not supported"
 
 # TODO: check return code
 
@@ -588,7 +593,7 @@ function upload_config_file()
 {
 	local MSG="\nUploading remote Allsky configuration file"
 	display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${MSG}"
-	display_msg --log progress "Uploading Website configuration file."
+	display_msg --logonly info "Uploading Website configuration file."
 	local REMOTE_DIR="$( settings ".remotewebsiteimagedir" "${SETTINGS_FILE}" )"
 
 	local RESULT="$( "${ALLSKY_SCRIPTS}/upload.sh" --remote-web \
@@ -639,7 +644,7 @@ function enable_remote_website()
 {
 	display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "\nEnabling remote Website"
 	update_json_file ".useremotewebsite" "true" "${SETTINGS_FILE}"
-	display_msg --log info "Remote Website enabled.\n"
+	display_msg --logonly info "Remote Website enabled."
 }
 
 ############################################## main body
@@ -680,7 +685,7 @@ done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
-display_msg --logonly info "STARTING INSTALLATON AT $( date ).\n"
+display_msg --logonly info "STARTING INSTALLATION AT $( date ).\n"
 
 pre_install_checks
 display_welcome

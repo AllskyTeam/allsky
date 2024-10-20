@@ -49,7 +49,7 @@ DIALOG_INSTALL="Installing Remote Website"
 DIALOG_TITLE_LOG="Allsky Remote Website Installation Log"
 
 # Old Allksy Website files that should be remoevd if they exist
-OLD_FILES_TO_REMOVE=("config.js" "configuration.json" "virtualsky.json" "README.md")
+OLD_FILES_TO_REMOVE=("config.js" "configuration.json" "virtualsky.json" "README.md" "myImages")
 
 ############################################## functions
 
@@ -221,7 +221,6 @@ function pre_install_checks()
 	if [[ ${WEBSITE_EXISTS} == "true" ]]; then
 		DIALOG_TEXT+="\n3 - Checking for remote Website configuration file"
 		display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
-
 		local NEW_CONFIG_FILES=("configuration.json")
 		if check_if_files_exist "${REMOTE_URL}" "false" "${NEW_CONFIG_FILES[@]}" ; then
 			HAVE_NEW_REMOTE_CONFIG="true"
@@ -229,9 +228,8 @@ function pre_install_checks()
 			display_msg --logonly info "${MSG}"
 		fi
 
-		DIALOG_TEXT+="\n4 - Checking for old remote Website configuration file"
+		DIALOG_TEXT+="\n4 - Checking for old-style remote Website configuration file"
 		display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
-
 		local REALLY_OLD_CONFIG_FILES=("config.js")
 		if check_if_files_exist "${REMOTE_URL}" "false" "${REALLY_OLD_CONFIG_FILES[@]}" ; then
 			HAVE_REALLY_OLD_REMOTE_CONFIG="true"
@@ -314,7 +312,7 @@ function display_welcome()
  ${DIALOG_UNDERLINE}Are you sure you wish to continue?${DIALOG_NORMAL}"
 
 		if ! display_prompt_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_WELCOME_TITLE}" "${DIALOG_MSG}" ; then
-			display_aborted "at the Welcome dialog" "false"
+			display_aborted "--user" "at the Welcome dialog" "false"
 		fi
 	else
 		display_msg --logonly info "Ignored welcome prompt as auto confirm option specified."
@@ -326,23 +324,30 @@ function display_welcome()
 # ${2} - "true"/"false" - Flag to indicate if the user should be prompted to show the installation log
 function display_aborted()
 {
+	if [[ ${1} == "--user" ]]; then
+		local ABORT_MSG="USER ABORTED INSTALLATION"
+		shift
+	else
+		local ABORT_MSG="INSTALLATION ABORTED"
+	fi
 	local EXTRA_TEXT="${1}"
 	local SHOW_LOG="${2}"
 
-	display_msg --logonly info "USER ABORTED INSTALLATION ${EXTRA_TEXT}."
-	local ERROR_MSG="\nThe installation of the remote Website has been aborted ${EXTRA_TEXT}."
+	display_msg --logonly info "${ABORT_MSG} ${EXTRA_TEXT}."
+	local ERROR_MSG="\nThe installation of the remote Website was aborted ${EXTRA_TEXT}."
 
 	if [[ ${SHOW_LOG} == "true" ]]; then
 # TODO: Instead of displaying the log file, which is very detailed,
 # how about if we tell the user to attach the log file to any GitHub message they post?
-		MSG="${ERROR_MSG}\n\n${DIALOG_UNDERLINE}Would you like to view the installation log?${DIALOG_NORMAL}"
+		MSG="${ERROR_MSG}\n\n"
+		MSG+="${DIALOG_UNDERLINE}Would you like to view the installation log?${DIALOG_NORMAL}"
 		if display_prompt_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${MSG}" ; then
 			display_log_file "${DIALOG_BACK_TITLE}" "${DIALOG_TITLE_LOG}" "${DISPLAY_MSG_LOG}"
 		fi
-	else
-		clear	# Gets rid of background color from last 'dialog' command.
-		display_msg info "${ERROR_MSG}"
 	fi
+
+	clear	# Gets rid of background color from last 'dialog' command.
+	display_msg info "${ERROR_MSG}"
 
 	exit 1
 }
@@ -365,7 +370,9 @@ function display_complete()
 	MSG="\n\
   The installation of the remote Website is complete.\n\n\
   Please use the WebUI's 'Editor' page to manage any changes to your Website.${EXTRA_TEXT}"
-	display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${MSG}"
+#xx	display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${MSG}"
+	clear	# Gets rid of background color from last 'dialog' command.
+	display_msg progress "${MSG}"
 }
 
 # Check connectivity to the remote Website.
@@ -525,12 +532,13 @@ function check_if_website_exists()
 	WEBSITE_EXISTS="false"
 }
 
-# Uploads the Website code. The code is copied from ${ALLSKY_WEBSITE} and removes any old
-# Allsky files that will no longer be needed.
+# Uploads the Website code from ${ALLSKY_WEBSITE} and removes any old
+# Allsky files that are no longer needed.
 function upload_remote_website()
 {
 	if [[ ${SKIP_UPLOAD} == "true" ]]; then
-		display_msg --logonly info "Skipping upload as --skipupload provided on command line\n"
+		display_msg --logonly info "Skipping upload as --skipupload provided on command line.\n"
+		return
 	fi
 
 	local EXTRA_TEXT=""
@@ -540,19 +548,6 @@ function upload_remote_website()
 		REMOTE_PORT="-p ${REMOTE_PORT}"
 	fi
 
-	if [[ ${AUTO_CONFIRM} == "false" ]]; then
-		MSG="\nTo continue the Allsky Website must be uploaded."
-		MSG+=" This will overwrite ALL remote Website source files and REMOVE any old Allsky files."
- 		MSG+="\n\n${DIALOG_UNDERLINE}Are you sure you wish to continue?${DIALOG_NORMAL}"
-		if ! display_prompt_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${MSG}" ; then
-			display_aborted "at the Website upload" "false"
-		fi
-		EXTRA_TEXT=", user agreed to upload and remove all old Allsky files"
-	else
-		show_debug_message "Ignored confirm Website upload as auto confirm option specified"
-		EXTRA_TEXT=", auto confirm option specified"
-	fi
-
 	local MSG="Starting upload to the remote Website"
 	if [[ ${WEBSITE_EXISTS} == "true" ]]; then
 		EXCLUDE_FOLDERS="--exclude keograms --exclude startrails --exclude videos"
@@ -560,12 +555,14 @@ function upload_remote_website()
 	fi
 	display_msg --log progress "${MSG}${EXTRA_TEXT}."
 
-	MSG="\n${MESSAGE}\n\nPlease wait as this process could take several minutes..."
+	MSG="\n${MESSAGE}\n\nPlease wait as uploading files could take several minutes..."
 	display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${MSG}"
 		
 	{
 # TODO: upload.sh should have a "--mirror directory" option.
-		lftp -u "${REMOTE_USER},${REMOTE_PASSWORD}" "${REMOTE_PORT}" "${REMOTE_PROTOCOL}://${REMOTE_HOST}" -e "
+# This would also fix the problem that we're assuming the "ftp" protocol is used.
+		# shellcheck disable=SC2086
+		lftp -u "${REMOTE_USER},${REMOTE_PASSWORD}" ${REMOTE_PORT} "${REMOTE_PROTOCOL}://${REMOTE_HOST}" -e "
 			lcd '${ALLSKY_WEBSITE}'
 			cd '${REMOTE_DIR}'
 			set dns:fatal-timeout 10
@@ -573,6 +570,8 @@ function upload_remote_website()
 			set net:timeout 10
 			mirror --reverse --verbose --overwrite --ignore-time --transfer-all ${EXCLUDE_FOLDERS}
 			quit"
+
+# TODO: check return code
 
 		# Remove any old core files no longer required
 		for FILE_TO_DELETE in "${OLD_FILES_TO_REMOVE[@]}"; do
@@ -591,12 +590,17 @@ function upload_config_file()
 	display_msg --log progress "Starting Website configuration file upload"
 	local REMOTE_DIR="$( settings ".remotewebsiteimagedir" "${SETTINGS_FILE}" )"
 
-	local RESULT="$( "${ALLSKY_SCRIPTS}/upload.sh" --remote-web "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" "${REMOTE_DIR}" "${ALLSKY_WEBSITE_CONFIGURATION_NAME}" )"
-# TODO: Is this checking the return code from upload.sh?
-	if [[ ! ${RESULT} ]]; then
-		show_debug_message "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} uploaded to ${REMOTE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
-		display_msg --logonly progress "Completed Website configuration file upload"
+	local RESULT="$( "${ALLSKY_SCRIPTS}/upload.sh" --remote-web \
+		"${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" "${REMOTE_DIR}" \
+		"${ALLSKY_WEBSITE_CONFIGURATION_NAME}" 2>&1
+	)"
+	if [[ $? -eq 0 ]]; then
+		MSG="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} uploaded to"
+		MSG+="${REMOTE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
+		show_debug_message "${MSG}"
+		display_msg --logonly info "Completed Website configuration file upload."
 	else
+		display_msg --logonly info " Failed: ${RESULTS}"
 		display_aborted "at the configuration file upload" "true"
 	fi
 }

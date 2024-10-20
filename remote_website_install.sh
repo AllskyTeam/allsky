@@ -31,9 +31,6 @@ CONFIG_MESSAGE=""
 DIALOG_WIDTH=70
 DIALOG_HEIGHT=25
 
-# Logging options
-LOG_TYPE="--logonly"
-
 # Remote connectivity variables
 REMOTE_URL="$( settings ".remotewebsiteurl" "${SETTINGS_FILE}" )"
 REMOTE_USER="$( settings ".REMOTEWEBSITE_USER" "${ALLSKY_ENV}" )"
@@ -61,7 +58,7 @@ OLD_FILES_TO_REMOVE=("config.js" "configuration.json" "virtualsky.json")
 function enter_yes_no()
 {
 	local TEXT="${1}"
-	local RESULT
+	local RESULT=1
 	local ANSWER
 
 	while true; do
@@ -69,14 +66,12 @@ function enter_yes_no()
 		read -r -p "Do you want to continue? (y/n): " ANSWER
 		ANSWER="${ANSWER,,}"	# convert to lowercase
 
-		if [[ "${ANSWER}" == "y" || "${ANSWER}" == "yes" ]]; then
-			RESULT=0
-			break
-		elif [[ "${ANSWER}" == "n" || "${ANSWER}" == "no" ]]; then
-			RESULT=1
-			break
+		if [[ ${ANSWER} == "y" || ${ANSWER} == "yes" ]]; then
+			return 0
+		elif [[ ${ANSWER} == "n" || ${ANSWER} == "no" ]]; then
+			return 1
 		else
-			echo "Invalid response. Please enter y/yes or n/no."
+			echo -e "\nInvalid response. Please enter y/yes or n/no."
 		fi
 	done
 
@@ -92,6 +87,9 @@ function press_any_key()
 }
 
 # Adds the remote Website URL to the dialog text.
+
+# TODO FIX: Eric thinks seeing the remote URL confusing.
+
 function add_dialog_heading()
 {
 	local DIALOG_TEXT="${1}"
@@ -101,87 +99,58 @@ function add_dialog_heading()
 	fi
 
 	local PADDING=$(( ((DIALOG_WIDTH-6) - ${#REMOTE_URL}) / 2 ))
-	local URL=$(printf "%${PADDING}s%s" "" "$REMOTE_URL")
+	local URL=$(printf "%${PADDING}s%s" "" "${REMOTE_URL}")
 	
 	echo -e "\n${DIALOG_RED}${URL}${DIALOG_NORMAL}\n${DIALOG_TEXT}"
 }
 
-# Displays an info Dialog, or in text mode just displays the text.
-# ${1} - The backtitle for the dialog
-# ${2} - The title for the dialog
-# ${3} - The text to disply in the dialog
+# Displays the specified type of Dialog, or in text mode just displays the text.
+# ${1} - The box type
+# ${2} - The backtitle for the dialog
+# ${3} - The title for the dialog
+# ${4} - The text to disply in the dialog
+# ${5} - Optional additional arguments to dialog
 #
-# Returns - Nothing
-function display_info_dialog()
+# Return - 1 if the user selected "No"; 0 otherwise
+function display_box()
 {
-	local DIALOG_TEXT="${3}"
+	local DIALOG_TYPE="${1}"
+	local DIALOG_TEXT="${4}"
 
 	DIALOG_TEXT="$( add_dialog_heading "${DIALOG_TEXT}" )"
 	if [[ ${TEXT_ONLY} == "true" ]]; then
-		echo -e "${DIALOG_TEXT}"
-		return
+		local RET=0
+		if [[ ${DIALOG_TYPE} == "--msgbox" ]]; then
+			press_any_key "${DIALOG_TEXT}"
+		elif [[ ${DIALOG_TYPE} == "--yesno" ]]; then
+			enter_yes_no "${DIALOG_TEXT}"
+			RET=$?
+		else
+			echo -e "${DIALOG_TEXT}"
+		fi
+		return ${RET}
 	fi
 
-	local BACK_TITLE="${1}"
-	local DIALOG_TITLE="${2}"
+	local BACK_TITLE="${2}"
+	local DIALOG_TITLE="${3}"
+	local MORE_ARGS="${5}"
 	dialog \
 		--colors \
 		--backtitle "${BACK_TITLE}" \
 		--title "${DIALOG_TITLE}" \
-		--infobox "${DIALOG_TEXT}" ${DIALOG_HEIGHT} ${DIALOG_WIDTH}
-}
-
-# Displays an prompt Dialog, or in text mode just displays the text
-# and prompts the user to enter y or n.
-# ${1} - The backtitle for the dialog
-# ${2} - The title for the dialog
-# ${3} - The text to disply in the dialog
-#
-# Returns - The exiit code (0 - Yes, >0 No)
-function display_prompt_dialog()
-{
-	local DIALOG_TEXT="${3}"
-
-	DIALOG_TEXT="$( add_dialog_heading "${DIALOG_TEXT}" )"
-	if [[ ${TEXT_ONLY} == "text" ]]; then
-		enter_yes_no "${DIALOG_TEXT}"
-		return
-	fi
-
-	local BACK_TITLE="${1}"
-	local DIALOG_TITLE="${2}"
-	dialog \
-		--colors\
-		--backtitle "${BACK_TITLE}" \
-		--title "${DIALOG_TITLE}" \
-		--yesno "${DIALOG_TEXT}" ${DIALOG_HEIGHT} ${DIALOG_WIDTH}
+		"${DIALOG_TYPE}" ${MORE_ARGS} "${DIALOG_TEXT}" ${DIALOG_HEIGHT} ${DIALOG_WIDTH}
 	return $?
 }
 
-# Displays an message Dialog, or in text mode just displays the text
-# and prompts the user to press any key.
-# ${1} - The backtitle for the dialog
-# ${2} - The title for the dialog
-# ${3} - The text to disply in the dialog
-#
-# Returns - Nothing
-function display_message_box()
+function display_info_box()
 {
-	local DIALOG_TEXT="${3}"
+	display_box "--infobox" "${1}" "${2}" "${3}"
+}
 
-	DIALOG_TEXT="$( add_dialog_heading "${DIALOG_TEXT}" )"
-	if [[ ${TEXT_ONLY} == "true" ]]; then
-		press_any_key "${DIALOG_TEXT}"
-		return
-	fi
-
-	local BACK_TITLE="${1}"
-	local DIALOG_TITLE="${2}"
-	dialog \
-		--colors \
-		--backtitle "${BACK_TITLE}" \
-		--title "${DIALOG_TITLE}" \
-		--msgbox "${DIALOG_TEXT}" ${DIALOG_HEIGHT} ${DIALOG_WIDTH}
+function display_prompt_dialog()
+{
+	display_box "--yesno" "${1}" "${2}" "${3}"
+	# Returns - The exit code (0 - Yes, >0 No)
 }
 
 # Displays a file Dialog, or in text mode just displays the file.
@@ -228,92 +197,93 @@ function pre_install_checks()
 	DIALOG_TEXT+="\n\nPlease wait as this can take a few minutes to complete.\n\n"
 
 	DIALOG_TEXT+="\n1 - Checking for local files"
-	display_info_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
-	display_msg "${LOG_TYPE}" info "Start pre installation checks."
+	display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
+	display_msg --logonly progress "Start pre installation checks."
 
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
 		MSG="Found current remote configuration file: ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}."
-		display_msg "${LOG_TYPE}" progress "${MSG}"
+		display_msg --logonly info "${MSG}"
 		HAVE_NEW_CONFIG="true"
 	fi
 
 	if [[ -f ${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
 		MSG="Found -OLD configuration file: ${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE}."
-		display_msg "${LOG_TYPE}" progress "${MSG}"
+		display_msg --logonly info "${MSG}"
 		HAVE_OLD_CONFIG="true"
 	fi
 
 	DIALOG_TEXT+="\n2 - Checking if remote Website exists"
-	display_info_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
+	display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
 	check_if_website_exists		# Sets ${WEBSITE_EXISTS}
 	if [[ ${WEBSITE_EXISTS} == "true" ]]; then
-
 		DIALOG_TEXT+="\n3 - Checking for remote Website configuration file"
-		display_info_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
+		display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
 		local NEW_CONFIG_FILES=("configuration.json")
 		if check_if_files_exist "${REMOTE_URL}" "false" "${NEW_CONFIG_FILES[@]}" ; then
 			HAVE_NEW_REMOTE_CONFIG="true"
-			MSG="Found current configuration on the remote server."
-			display_msg "${LOG_TYPE}" progress "${MSG}"
+			MSG="Found current configuration file on the remote server."
+			display_msg --logonly info "${MSG}"
 		fi
 
 		DIALOG_TEXT+="\n4 - Checking for old remote Website configuration file"
-		display_info_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
+		display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
 		local REALLY_OLD_CONFIG_FILES=("config.js")
 		if check_if_files_exist "${REMOTE_URL}" "false" "${REALLY_OLD_CONFIG_FILES[@]}" ; then
 			HAVE_REALLY_OLD_REMOTE_CONFIG="true"
 			MSG="Found really old format Website configuration file on the remote Website."
-			display_msg "${LOG_TYPE}" progress "${MSG}"
+			display_msg --logonly info "${MSG}"
 		fi
 	fi
 
-	if [[ "${HAVE_NEW_CONFIG}" == "true" ]]; then
+	if [[ ${HAVE_NEW_CONFIG} == "true" ]]; then
 		MSG="Using the local remote configuration file"
-		if [[ "${HAVE_NEW_REMOTE_CONFIG}" == "true" ]]; then
+		if [[ ${HAVE_NEW_REMOTE_CONFIG} == "true" ]]; then
 			MSG+=", a remote configuration file was found but using the local version instead"
 		fi
-		display_msg "${LOG_TYPE}" progress "${MSG}."
+		display_msg --logonly info "${MSG}."
 		CONFIG_TO_USE="current"
-		CONFIG_MESSAGE="Current"
-	else
-		if [[ "${HAVE_OLD_CONFIG}" == "true" ]]; then
-			MSG="Using the -OLD configuration file; placeholders will be updated."
-			display_msg "${LOG_TYPE}" progress "${MSG}"
-			CONFIG_TO_USE="old"
-			CONFIG_MESSAGE="$( basename "${PRIOR_ALLSKY_DIR}" )"
+		CONFIG_MESSAGE="the current remote"
+
+	elif [[ ${HAVE_OLD_CONFIG} == "true" ]]; then
+		MSG="Using the -OLD configuration file; placeholders will be updated."
+		display_msg --logonly info "${MSG}"
+		CONFIG_TO_USE="old"
+		CONFIG_MESSAGE="the $( basename "${PRIOR_ALLSKY_DIR}" )"
+
+	elif [[ ${WEBSITE_EXISTS} == "true" ]]; then
+		if [[ ${HAVE_NEW_REMOTE_CONFIG} == "true" ]]; then
+			MSG="Using new format Website configuration file on the remote Website;"
+			MSG+=" it will be downloaded and saved locally."
+			display_msg --logonly info "${MSG}"
+			CONFIG_TO_USE="remotenew"
+			CONFIG_MESSAGE="the remote Website's"
 		else
-			if [[ "${WEBSITE_EXISTS}" == "true" ]]; then
-				if [[ "${HAVE_NEW_REMOTE_CONFIG}" == "true" ]]; then
-					MSG="Using new format Website configuration file on the remote Website;"
-					MSG+=" it will be downloaded and saved locally."
-					display_msg "${LOG_TYPE}" progress "${MSG}"
-					CONFIG_TO_USE="remotenew"
-					CONFIG_MESSAGE="Remote new"
-				else
-					if [[ "${HAVE_REALLY_OLD_REMOTE_CONFIG}" == "true" ]]; then
-						MSG="Old config.js found."
-						MSG+=" Creating a new configuration file that the user must manually update."
-						display_msg "${LOG_TYPE}" progress "${MSG}"
-						CONFIG_TO_USE="remotereallyold"
-						CONFIG_MESSAGE=" repos config i.e. a new config"
-					fi
-				fi
+			if [[ ${HAVE_REALLY_OLD_REMOTE_CONFIG} == "true" ]]; then
+				MSG="Old config.js found."
+				MSG+=" Creating a new configuration file that the user must manually update."
+				display_msg --logonly info "${MSG}"
+				CONFIG_TO_USE="remotereallyold"
+				CONFIG_MESSAGE="a new"
 			fi
 		fi
 	fi
 
-	if [[ "${CONFIG_TO_USE}" == "" ]]; then
+	if [[ -z ${CONFIG_TO_USE} ]]; then
 		MSG="Unable to determine the configuration file to use. A new one will be created."
-		display_msg "${LOG_TYPE}" progress "${MSG}"
+		display_msg --logonly info "${MSG}"
 		CONFIG_TO_USE="new"
 	fi
 
 	check_connectivity
 
-	display_msg "${LOG_TYPE}" info "Completed pre installation checks."
+	display_msg --logonly info "Completed pre installation checks."
+
+	# Prompt the user to continue.  This is so they can see the above messages.
+	DIALOG_TEXT+="\n\n\nPress OK to continue"
+	display_box "--msgbox" "${DIALOG_BACK_TITLE}" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 }
 
 # Displays the welcome dialog indicating what steps will be taken
@@ -325,16 +295,16 @@ function display_welcome()
 	fi
 
 	if [[ ${AUTO_CONFIRM} == "false" ]]; then
-		display_msg "${LOG_TYPE}" progress "Displayed the welcome dialog"
+		display_msg --logonly info "Displaying the welcome dialog"
 		local DIALOG_MSG="\n\
- Welcome the the Allsky Remote Website Installer!\n\n\
+ Welcome to the Allsky Remote Website Installer!\n\n\
  This script will perform the following tasks:\n\n\
  \
   1) Check the remote Website connectivity - PASSED\n\
-   2) Use the ${CONFIG_MESSAGE} configuration file\n\
+   2) Use ${CONFIG_MESSAGE} configuration file\n\
    3) Upload the remote Website code\n\
-   4) Upload the remote Website configuration file\n
-   5) Enable the remote Website in the WebUI settings\n\n\
+   4) Upload the remote Website configuration file\n\
+   5) Enable the remote Website\n\n\
  \
  ${DIALOG_RED}WARNING:${DIALOG_NORMAL}\n\
   - This will overwrite files on the remote server, and\n\
@@ -345,7 +315,7 @@ function display_welcome()
 			display_aborted "at the Welcome dialog" "false"
 		fi
 	else
-		display_msg "${LOG_TYPE}" progress "Ignored welcome prompt as auto confirm option specified."
+		display_msg --logonly info "Ignored welcome prompt as auto confirm option specified."
 	fi
 }
 
@@ -357,16 +327,19 @@ function display_aborted()
 	local EXTRA_TEXT="${1}"
 	local SHOW_LOG="${2}"
 
-	display_msg "${LOG_TYPE}" warning "USER ABORTED INSTALLATION ${EXTRA_TEXT}."
+	display_msg --logonly info "USER ABORTED INSTALLATION ${EXTRA_TEXT}."
 	local ERROR_MSG="\nThe installation of the remote Website has been aborted ${EXTRA_TEXT}."
 
 	if [[ ${SHOW_LOG} == "true" ]]; then
-		MSG="\n\nWould you like to view the installation log?"
-		if display_prompt_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${ERROR_MSG}\n\n${MSG}" ; then
+# TODO: Instead of displaying the log file, which is very detailed,
+# how about if we tell the user to attach the log file to any GitHub message they post?
+		MSG="${ERROR_MSG}\n\nWould you like to view the installation log?"
+		if display_prompt_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${MSG}" ; then
 			display_log_file "${DIALOG_BACK_TITLE}" "${DIALOG_TITLE_LOG}" "${DISPLAY_MSG_LOG}"
 		fi
 	else
-		display_info_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${ERROR_MSG}"
+		display_box "--msgbox" "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${ERROR_MSG}" "--clear"
+		display_msg info "${ERROR_MSG}"
 	fi
 
 	exit 1
@@ -384,12 +357,12 @@ function display_complete()
 		EXTRA_TEXT+=" Please use the WebUI 'Editor' page to replace any '${NEED_TO_UPDATE}' with the correct values."
 	fi
 
-	display_msg "${LOG_TYPE}" info "INSTALLATON COMPLETED.\n"
+	display_msg --logonly info "INSTALLATON COMPLETED.\n"
 
 	MSG="\n\
   The installation of the remote Website has been completed.\n\n\
   Please use the 'Editor' page in the Allsky WebUI to manage any changes to the Website.${EXTRA_TEXT}"
-	display_info_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "%{MSG}"
+	display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "%{MSG}"
 }
 
 # Check connectivity to the remote Website.
@@ -397,21 +370,22 @@ function check_connectivity()
 {
 	local TEST_FILE="${ME}.txt"
 
-	display_msg "${LOG_TYPE}" info "Checking remote Website connectivity."
-	if "${ALLSKY_SCRIPTS}/testUpload.sh" --website --silent --file "${TEST_FILE}" >> "${DISPLAY_MSG_LOG}" 2>&1 ; then
-		local ERROR_MSG="\nERROR: The remote Website connectivity check failed. Result code ${RESULT}"
-		ERROR_MSG+="\n\nPlease check the 'Websites and Remote Server Settings' in the WebUI.\n\n\
- HOST: ${REMOTE_HOST} PROTOCOL: ${REMOTE_PROTOCOL}\n\
- USER: ${REMOTE_USER}\n\
- PASSWORD: ${REMOTE_PASSWORD}\n\
- FOLDER: ${REMOTE_DIR}"
-
-		display_aborted "${ERROR_MSG}" "true"
-	else
+	display_msg --logonly info "Checking remote Website connectivity."
+	if ERR="$( "${ALLSKY_SCRIPTS}/testUpload.sh" --website --silent --file "${TEST_FILE}" 2>&1 )" ; then
 		local MSG="The remote Website connectivity test succeeded."
-		display_msg "${LOG_TYPE}" info "${MSG}"
+		display_msg --logonly info "${MSG}"
 		remove_remote_file "${TEST_FILE}"
 		show_debug_message "${TEST_FILE} deleted from the remote server"
+	else
+		local ERROR_MSG="\nERROR: The remote Website connectivity check failed."
+		ERROR_MSG+="\n\nPlease check the 'Websites and Remote Server Settings' in the WebUI.\n\n\
+ HOST: ${REMOTE_HOST}\n\
+ PROTOCOL: ${REMOTE_PROTOCOL}\n\
+ USER: ${REMOTE_USER}\n\
+ REMOTE FOLDER: ${REMOTE_DIR}\n\n\
+ ${ERR}"
+
+		display_aborted "${ERROR_MSG}" "true"
 	fi
 }
 
@@ -419,7 +393,7 @@ function check_connectivity()
 function show_debug_message()
 {
 	if [[ ${DEBUG} == "true" ]]; then
-		display_msg "${LOG_TYPE}" debug "${1}"
+		display_msg --logonly debug "${1}"
 	fi
 }
 
@@ -428,8 +402,8 @@ function show_debug_message()
 function create_website_config()
 {
 	local MSG="\nCreating configuration file from ${CONFIG_MESSAGE}"
-	display_info_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${MSG}"
-	display_msg "${LOG_TYPE}" info "Creating remote Website configuration file"
+	display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${MSG}"
+	display_msg --logonly info "Creating remote Website configuration file"
 
 	if [[ ${CONFIG_TO_USE} == "new" || ${CONFIG_TO_USE} == "remotereallyold" ]]; then
 		# We need a new config file so copy it from the repo and replace as many
@@ -438,12 +412,12 @@ function create_website_config()
 		cp "${REPO_WEBCONFIG_FILE}" "${DEST_FILE}"
 		replace_website_placeholders "remote"
 		MSG="Created a new ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} from repo and updated placeholders."
-		display_msg "${LOG_TYPE}" info "${MSG}"
+		display_msg --logonly info "${MSG}"
 
 	elif [[ ${CONFIG_TO_USE} == "current" ]]; then
 		# Use the current config file so do nothing
 		MSG="Using existing ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} so nothing created."
-		display_msg "${LOG_TYPE}" info "${MSG}"
+		display_msg --logonly info "${MSG}"
 
 	elif [[ ${CONFIG_TO_USE} == "old" ]]; then
 		# Use the config file from allsky-OLD, copy it and replace as many of the placeholders as we can
@@ -451,7 +425,7 @@ function create_website_config()
 		replace_website_placeholders "remote"
 		MSG="Copying ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} from the"
 		MSG+=" $( basename "${PRIOR_ALLSKY_DIR}" ) directory and updating placeholders."
-		display_msg "${LOG_TYPE}" info "${MSG}"
+		display_msg --logonly info "${MSG}"
 
 	elif [[ ${CONFIG_TO_USE} == "remotenew" ]]; then
 		# Use the new remote config file since none were found locally
@@ -459,7 +433,7 @@ function create_website_config()
 			replace_website_placeholders "remote"
 			MSG="Downloading ${ALLSKY_WEBSITE_CONFIGURATION_FILE} from ${REMOTE_URL},"
 			MSG+=" and creating a new ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}."
-			display_msg "${LOG_TYPE}" info "${MSG}"
+			display_msg --logonly info "${MSG}"
 		else
 			MSG="Failed to download ${ALLSKY_WEBSITE_CONFIGURATION_FILE} from ${REMOTE_URL}"
 			display_aborted "${MSG}" "true"
@@ -522,7 +496,7 @@ function remove_remote_file()
 
 	#TODO: Check response code
 
-	display_msg "${LOG_TYPE}" info "Deleted file ${FILENAME} from ${REMOTE_HOST}"
+	display_msg --logonly info "Deleted file ${FILENAME} from ${REMOTE_HOST}"
 }
 
 # Check if a remote Website exists. The check is done by looking for the following files:
@@ -540,7 +514,7 @@ function check_if_website_exists()
 		show_debug_message "Found remote website config file"
 
 		if check_if_files_exist "${REMOTE_URL}" "and" "${WEBSITE_FILES[@]}" ; then
-			display_msg "${LOG_TYPE}" progress "Found remote Allsky Website at ${REMOTE_URL}"
+			display_msg --log progress "Found remote Allsky Website at ${REMOTE_URL}"
 			WEBSITE_EXISTS="true"
 			return
 		fi
@@ -553,7 +527,7 @@ function check_if_website_exists()
 function upload_remote_website()
 {
 	if [[ ${SKIP_UPLOAD} == "true" ]]; then
-		display_msg "${LOG_TYPE}" info "Skipping upload as --skipupload provided on command line\n"
+		display_msg --logonly info "Skipping upload as --skipupload provided on command line\n"
 	fi
 
 	local EXTRA_TEXT=""
@@ -581,10 +555,10 @@ function upload_remote_website()
 		EXCLUDE_FOLDERS="--exclude keograms --exclude startrails --exclude videos"
 		MSG+=", excluding videos, startrails, and keograms"
 	fi
-	display_msg "${LOG_TYPE}" progress "${MSG}${EXTRA_TEXT}."
+	display_msg --log progress "${MSG}${EXTRA_TEXT}."
 
 	MSG="\n${MESSAGE}\n\nPlease wait as this process could take several minutes..."
-	display_info_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${MSG}"
+	display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${MSG}"
 		
 	{
 # TODO: upload.sh should have a "--mirror directory" option.
@@ -603,22 +577,22 @@ function upload_remote_website()
 		done
 	} >> "$DISPLAY_MSG_LOG" 2>&1
 
-	display_msg "${LOG_TYPE}" progress "Website upload complete"
+	display_msg --logonly info "Website upload complete"
 }
 
 # Uploads the configuration file for the remote Website.
 function upload_config_file()
 {
 	local MSG="\nUploading remote Allsky configuration file"
-	display_info_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${MSG}"
-	display_msg "${LOG_TYPE}" progress "Starting Website configuration file upload"
+	display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${MSG}"
+	display_msg --log progress "Starting Website configuration file upload"
 	local REMOTE_DIR="$( settings ".remotewebsiteimagedir" "${SETTINGS_FILE}" )"
 
 	local RESULT="$( "${ALLSKY_SCRIPTS}/upload.sh" --remote-web "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" "${REMOTE_DIR}" "${ALLSKY_WEBSITE_CONFIGURATION_NAME}" )"
 # TODO: Is this checking the return code from upload.sh?
 	if [[ ! ${RESULT} ]]; then
 		show_debug_message "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} uploaded to ${REMOTE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
-		display_msg "${LOG_TYPE}" progress "Completed Website configuration file upload"
+		display_msg --logonly progress "Completed Website configuration file upload"
 	else
 		display_aborted "at the configuration file upload" "true"
 	fi
@@ -656,9 +630,9 @@ usage_and_exit()
 # Enable the remote Website.
 function enable_remote_website()
 {
-	display_info_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "\nEnabling remote Website"
+	display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "\nEnabling remote Website"
 	update_json_file ".useremotewebsite" "true" "${SETTINGS_FILE}"
-	display_msg "${LOG_TYPE}" info "Remote Website enabled.\n"
+	display_msg --log info "Remote Website enabled.\n"
 }
 
 ############################################## main body
@@ -699,7 +673,7 @@ done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
-display_msg "${LOG_TYPE}" info "STARTING INSTALLATON AT $( date ).\n"
+display_msg --logonly info "STARTING INSTALLATON AT $( date ).\n"
 
 pre_install_checks
 display_welcome

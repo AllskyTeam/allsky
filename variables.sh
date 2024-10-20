@@ -18,7 +18,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	if tty --silent ; then
 		ON_TTY="true"
 		DIALOG_RED="\Z1";		DIALOG_NORMAL="\Zn"
-		DIALOG_BOLD="\Zb"
+		DIALOG_UNDERLINE="\Zu"
 		GREEN="\033[0;32m";		wOK="${GREEN}"
 		YELLOW="\033[0;33m";	wWARNING="${YELLOW}"
 		RED="\033[0;31m";		wERROR="${RED}"
@@ -30,7 +30,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	else
 		ON_TTY="false"
 		DIALOG_RED="";			DIALOG_NORMAL=""		
-		DIALOG_BOLD=""
+		DIALOG_UNDERLINE=""
 		GREEN="";				wOK="<span style='color: green'>"
 		YELLOW="";				wWARNING="<span style='color: #FF9800'>"
 		RED="";					wERROR="<span style='color: red'>"

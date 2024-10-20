@@ -87,22 +87,27 @@ function press_any_key()
 	read -r -n1 -s
 }
 
-# Adds the remote Website URL to the dialog text.
-
-# TODO FIX: Eric thinks seeing the remote URL confusing.
-
+# Add a common heading to the dialog text.
 function add_dialog_heading()
 {
 	local DIALOG_TEXT="${1}"
+
+	## We no longer add the remote URL but have left this code in case we want
+	## to add something else in the future.
+	## Only the:   ITEM_TO_ADD=xxx   line should need changing.
+	echo "${DIALOG_TEXT}"
+	return
+
 	if [[ ${TEXT_ONLY} == "true" ]]; then
 		DIALOG_RED="${RED}"
 		DIALOG_NORMAL="${NC}"
 	fi
 
-	local PADDING=$(( ((DIALOG_WIDTH-6) - ${#REMOTE_URL}) / 2 ))
-	local URL=$(printf "%${PADDING}s%s" "" "${REMOTE_URL}")
+	local ITEM_TO_ADD="${REMOTE_URL}"
+	local PADDING=$(( ((DIALOG_WIDTH-6) - ${#ITEM_TO_ADD}) / 2 ))
+	local ITEM_TO_ADD="$( printf "%${PADDING}s%s" "" "${ITEM_TO_ADD}" )"
 	
-	echo -e "\n${DIALOG_RED}${URL}${DIALOG_NORMAL}\n${DIALOG_TEXT}"
+	echo -e "\n${DIALOG_RED}${ITEM_TO_ADD}${DIALOG_NORMAL}\n${DIALOG_TEXT}"
 }
 
 # Displays the specified type of Dialog, or in text mode just displays the text.

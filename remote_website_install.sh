@@ -139,7 +139,8 @@ function display_box()
 		--colors \
 		--backtitle "${BACK_TITLE}" \
 		--title "${DIALOG_TITLE}" \
-		"${DIALOG_TYPE}" ${MORE_ARGS} "${DIALOG_TEXT}" ${DIALOG_HEIGHT} ${DIALOG_WIDTH}
+		${MORE_ARGS} \
+		"${DIALOG_TYPE}" "${DIALOG_TEXT}" ${DIALOG_HEIGHT} ${DIALOG_WIDTH}
 	return $?
 }
 
@@ -283,7 +284,7 @@ function pre_install_checks()
 	display_msg --logonly info "Completed pre installation checks."
 
 	# Prompt the user to continue.  This is so they can see the above messages.
-	DIALOG_TEXT+="\n\n\nPress OK to continue"
+	DIALOG_TEXT+="\n\n\n${DIALOG_BOLD}Press OK to continue${DIALOG_NORMAL}"
 	display_box "--msgbox" "${DIALOG_BACK_TITLE}" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 }
 
@@ -309,8 +310,8 @@ function display_welcome()
  \
  ${DIALOG_RED}WARNING:${DIALOG_NORMAL}\n\
   - This will overwrite files on the remote server, and\n\
-  - REMOVE any old Allsky files on the remote server.\n\n\
- Are you sure you wish to continue?"
+  - REMOVE any old Allsky files on the remote server.\n\n\n\
+ ${DIALOG_BOLD}Are you sure you wish to continue?${DIALOG_NORMAL}"
 
 		if ! display_prompt_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_WELCOME_TITLE}" "${DIALOG_MSG}" ; then
 			display_aborted "at the Welcome dialog" "false"
@@ -340,6 +341,7 @@ function display_aborted()
 		fi
 	else
 		display_box "--msgbox" "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${ERROR_MSG}" "--clear"
+		clear	# to get rid of background color for 'dialog' command
 		display_msg info "${ERROR_MSG}"
 	fi
 
@@ -363,7 +365,7 @@ function display_complete()
 	MSG="\n\
   The installation of the remote Website has been completed.\n\n\
   Please use the 'Editor' page in the Allsky WebUI to manage any changes to the Website.${EXTRA_TEXT}"
-	display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "%{MSG}"
+	display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${MSG}"
 }
 
 # Check connectivity to the remote Website.

@@ -232,7 +232,7 @@ function pre_install_checks()
 	display_msg "${LOG_TYPE}" info "Start pre installation checks."
 
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
-		MSG="Found current configuration file: ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}."
+		MSG="Found current remote configuration file: ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}."
 		display_msg "${LOG_TYPE}" progress "${MSG}"
 		HAVE_NEW_CONFIG="true"
 	fi
@@ -283,7 +283,7 @@ function pre_install_checks()
 			MSG="Using the -OLD configuration file; placeholders will be updated."
 			display_msg "${LOG_TYPE}" progress "${MSG}"
 			CONFIG_TO_USE="old"
-			CONFIG_MESSAGE="$( basename '${PRIOR_ALLSKY_DIR}' )"
+			CONFIG_MESSAGE="$( basename "${PRIOR_ALLSKY_DIR}" )"
 		else
 			if [[ "${WEBSITE_EXISTS}" == "true" ]]; then
 				if [[ "${HAVE_NEW_REMOTE_CONFIG}" == "true" ]]; then
@@ -450,10 +450,10 @@ function create_website_config()
 		cp "${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 		replace_website_placeholders "remote"
 		MSG="Copying ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} from the"
-		MSG+=" $( basename '${PRIOR_ALLSKY_DIR}' ) directory and updating placeholders."
+		MSG+=" $( basename "${PRIOR_ALLSKY_DIR}" ) directory and updating placeholders."
 		display_msg "${LOG_TYPE}" info "${MSG}"
 
-	elif [[ "${CONFIG_TO_USE}" == "remotenew" ]]; then
+	elif [[ ${CONFIG_TO_USE} == "remotenew" ]]; then
 		# Use the new remote config file since none were found locally
 		if wget -O "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" "${REMOTE_URL}/${ALLSKY_WEBSITE_CONFIGURATION_FILE}" ; then
 			replace_website_placeholders "remote"
@@ -482,16 +482,16 @@ function check_if_files_exist()
 
 	for FILE in "$@"; do
 		url="${URL}/${FILE}"
-		http_status=$(curl -o /dev/null -s -w "%{http_code}" "$url")
+		HTTP_STATUS="$( curl -o /dev/null --silent --write-out "%{http_code}" "$url" )"
 
-		if [ ${http_status} -eq 200 ]; then
-			show_debug_message "File ${FILE} ${url} exists on the remote server"
+		local PRE_MSG="File ${FILE} ${url}"
+		if [ ${HTTP_STATUS} == "200" ]; then
+			show_debug_message "${PRE_MSG} exists on the remote server"
 			RESULT=0
 		else
-			show_debug_message "File ${FILE} ${url} doesnt exists on the remote server"
+			show_debug_message "${PRE_MSG} does not exists on the remote server"
 			if [[ ${AND} == "true" ]]; then
-				RESULT=1
-				break
+				return 1
 			fi
 		fi
 	done
@@ -650,7 +650,7 @@ usage_and_exit()
 		echo "'--text' Text only mode, do not use any dialogs"
 		echo
 	} >&2
-	exit ${RET}
+	exit "${RET}"
 }
 
 # Enable the remote Website.

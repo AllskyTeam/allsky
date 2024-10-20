@@ -384,8 +384,7 @@ function check_connectivity()
 	if ERR="$( "${ALLSKY_SCRIPTS}/testUpload.sh" --website --silent --file "${TEST_FILE}" 2>&1 )" ; then
 		local MSG="The remote Website connectivity test succeeded."
 		display_msg --logonly info "${MSG}"
-		remove_remote_file "${TEST_FILE}"
-		show_debug_message "${TEST_FILE} deleted from the remote server"
+		remove_remote_file "${TEST_FILE}" "do not check"
 	else
 		local ERROR_MSG="\nERROR: The remote Website connectivity check failed."
 		ERROR_MSG+="\n\nPlease check the 'Websites and Remote Server Settings' section of the WebUI.\n\n\
@@ -484,17 +483,16 @@ function check_if_files_exist()
 }
 
 # Deletes a file from the remote server.
-# If a URL is specified then the file is first checked to make sure it exists.
 # ${1} - The name of the file to delete
-# ${2} - The url of the remote Website, used to check if a file exists
+# ${2} - If set to "check", first check if the file exists
 #
 # Returns - Nothing
 function remove_remote_file()
 {
 	local FILENAME="${1}"
-	local URL="${2}"
+	local CHECK="${2}"
 
-	if [[ -n ${URL} ]]; then
+	if [[ ${CHECK} == "check" ]]; then
 		check_if_files_exist "${REMOTE_URL}" "false" "${FILENAME}" || return
 	fi
 
@@ -578,7 +576,7 @@ function upload_remote_website()
 
 		# Remove any old core files no longer required
 		for FILE_TO_DELETE in "${OLD_FILES_TO_REMOVE[@]}"; do
-			remove_remote_file "${FILE_TO_DELETE}" "${REMOTE_URL}"
+			remove_remote_file "${FILE_TO_DELETE}" "check"
 		done
 	} >> "$DISPLAY_MSG_LOG" 2>&1
 

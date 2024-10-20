@@ -134,6 +134,7 @@ function display_box()
 	local BACK_TITLE="${2}"
 	local DIALOG_TITLE="${3}"
 	local MORE_ARGS="${5}"
+	# shellcheck disable=SC2086
 	dialog \
 		--colors \
 		--backtitle "${BACK_TITLE}" \
@@ -459,7 +460,7 @@ function check_if_files_exist()
 		HTTP_STATUS="$( curl -o /dev/null --silent --write-out "%{http_code}" "$url" )"
 
 		local PRE_MSG="File ${FILE} ${url}"
-		if [ ${HTTP_STATUS} == "200" ]; then
+		if [[ ${HTTP_STATUS} == "200" ]] ; then
 			show_debug_message "${PRE_MSG} exists on the remote server"
 			RESULT=0
 		else

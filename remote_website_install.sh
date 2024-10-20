@@ -284,7 +284,7 @@ function pre_install_checks()
 	display_msg --logonly info "Completed pre installation checks."
 
 	# Prompt the user to continue.  This is so they can see the above messages.
-	DIALOG_TEXT+="\n\n\n${DIALOG_BOLD}Press OK to continue${DIALOG_NORMAL}"
+	DIALOG_TEXT+="\n\n\n${DIALOG_UNDERLINE}Press OK to continue${DIALOG_NORMAL}"
 	display_box "--msgbox" "${DIALOG_BACK_TITLE}" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 }
 
@@ -311,7 +311,7 @@ function display_welcome()
  ${DIALOG_RED}WARNING:${DIALOG_NORMAL}\n\
   - This will overwrite files on the remote server, and\n\
   - REMOVE any old Allsky files on the remote server.\n\n\n\
- ${DIALOG_BOLD}Are you sure you wish to continue?${DIALOG_NORMAL}"
+ ${DIALOG_UNDERLINE}Are you sure you wish to continue?${DIALOG_NORMAL}"
 
 		if ! display_prompt_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_WELCOME_TITLE}" "${DIALOG_MSG}" ; then
 			display_aborted "at the Welcome dialog" "false"

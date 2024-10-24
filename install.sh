@@ -3210,7 +3210,7 @@ EOF
 if [[ ${pimodel:0:1} == "5" ]]; then
     display_msg --log progress "Updating GPIO to lgpio"
     activate_python_venv
-    pip3 install rpi-lgpio 2>&1
+    pip3 install rpi-lgpio > /dev/null 2>&1
 fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )

@@ -3199,6 +3199,20 @@ install_Python()
 	# Add the status back in.
 	update_status_from_temp_file
 
+    # On pi 5 models we need to replace rpi.gpi with lgpio
+pimodel=$(python3 <<EOF
+from gpiozero import Device
+Device.ensure_pin_factory()
+print(Device.pin_factory.board_info.model)
+EOF
+)
+
+if [[ ${pimodel:0:1} == "5" ]]; then
+    display_msg --log progress "Updating GPIO to lgpio"
+    activate_python_venv
+    pip3 install rpi-lgpio 2>&1
+fi
+
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }
 

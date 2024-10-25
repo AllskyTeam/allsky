@@ -3199,7 +3199,14 @@ install_Python()
 	# Add the status back in.
 	update_status_from_temp_file
 
-    # On pi 5 models we need to replace rpi.gpi with lgpio
+    # On pi 5 models we need to replace rpi.gpi with lgpio. This should be done by adafruit-blinka
+    # the code is in setup.py to do this but it doesnt appear to work hence we are forcing it here
+    # gpiozero decodes the pi revision number to calculate the pi version so until the pi 6 is 
+    # release this code will detect all future versions of the pi 5
+    #
+    # NOTE: rpi-gpi and rpi-lgpio cannot co exist but since blinka is not installing either we don't
+    #       currently have to worry about removing rpi-gpio before installing rpi-lgpio
+    #
 pimodel=$(python3 <<EOF
 from gpiozero import Device
 Device.ensure_pin_factory()
@@ -3207,11 +3214,13 @@ print(Device.pin_factory.board_info.model)
 EOF
 )
 
-if [[ ${pimodel:0:1} == "5" ]]; then
-    display_msg --log progress "Updating GPIO to lgpio"
-    activate_python_venv
-    pip3 install rpi-lgpio > /dev/null 2>&1
-fi
+    # if we are on the pi 5 then install lgpio, using the virtual environment which will always
+    # exist on the pi 5
+    if [[ ${pimodel:0:1} == "5" ]]; then
+        display_msg --log progress "Updating GPIO to lgpio"
+        activate_python_venv
+        pip3 install rpi-lgpio > /dev/null 2>&1
+    fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }

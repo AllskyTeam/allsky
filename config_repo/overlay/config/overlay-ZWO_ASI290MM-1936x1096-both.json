@@ -5,7 +5,7 @@
             "x": 259,
             "y": 50,
             "id": "oe-field-0",
-            "format": "%d-%m-%Y,%H:%M:%S",
+            "format": "{%d-%m-%Y}{%H:%M:%S}",
             "strokewidth": 0,
             "sample": "DATE,TIME",
             "tlx": 19,
@@ -16,7 +16,7 @@
         {
             "label": "Exposure: ${sEXPOSURE}",
             "x": 237,
-            "y": 108,
+            "y": 115,
             "id": "oe-field-1",
             "fontsize": 36,
             "strokewidth": 0,
@@ -26,12 +26,36 @@
         {
             "label": "Gain: ${GAIN}",
             "x": 134,
-            "y": 158,
+            "y": 180,
             "id": "oe-field-2",
+            "format": "{:n}",
             "fontsize": 36,
             "strokewidth": 0,
             "tlx": 19,
-            "tly": 140
+            "tly": 155
+        },
+        {
+            "label": "Sensor: ${TEMPERATURE_C} C",
+            "x": 157,
+            "y": 245,
+            "id": "oe-field-3",
+            "format": "{:.1f}",
+            "fontsize": 36,
+            "strokewidth": 0,
+            "tlx": 19,
+            "tly": 220,
+            "sample": "20.1"
+        },
+        {
+            "label": "${CAMERA_TYPE} ${CAMERA_MODEL}",
+            "x": 159,
+            "y": 310,
+            "id": "oe-field-4",
+            "fontsize": 24,
+            "strokewidth": 0,
+            "sample": "ZWO some_model",
+            "tlx": 19,
+            "tly": 285
         }
     ],
     "images": [],
@@ -69,3 +93,4 @@
         "name": "ASI290MM"
     }
 }
+

@@ -420,7 +420,7 @@ function validate_camera()
 		if [[ ${ON_TTY} == "true" ]]; then
 			echo -e "\n${RED}${MSG}${NC}\n"
 		else
-			URL="/index.php?page=configuration&_ts=${RANDOM}"
+			URL="/index.php?page=configuration"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${MSG}" "${URL}"
 		fi
 		RET=1
@@ -431,7 +431,7 @@ function validate_camera()
 		if [[ ${ON_TTY} == "true" ]]; then
 			echo -e "\n${RED}${MSG}${NC}\n"
 		else
-			URL="/index.php?page=configuration&_ts=${RANDOM}"
+			URL="/index.php?page=configuration"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${MSG}" "${URL}"
 		fi
 		RET=1
@@ -442,7 +442,7 @@ function validate_camera()
 		if [[ ${ON_TTY} == "true" ]]; then
 			echo -e "\n${RED}${MSG}${NC}\n"
 		else
-			URL="/index.php?page=configuration&_ts=${RANDOM}"
+			URL="/index.php?page=configuration"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${MSG}" "${URL}"
 		fi
 		RET=1

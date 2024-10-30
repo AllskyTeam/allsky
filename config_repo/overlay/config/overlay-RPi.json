@@ -43,7 +43,7 @@
             "strokewidth": 0,
             "tlx": 20,
             "tly": 194,
-            "sample": "RPi HQ"
+            "sample": "RPi some_model"
         }
     ],
     "images": [],
@@ -76,6 +76,6 @@
         "cameraresolutionwidth": "4056",
         "cameraresolutionheight": "3040",
         "tod": "both",
-        "name": "RPI"
+        "name": "RPI generic"
     }
 }

@@ -2,58 +2,59 @@
     "fields": [
         {
             "label": "${DATE}  ${TIME}",
-            "x": 122,
+            "x": 132,
             "y": 24,
             "id": "oe-field-0",
-            "format": "%d-%m-%Y,%H:%M:%S",
+            "format": "{%d-%m-%Y}{%H:%M:%S}",
             "strokewidth": 0,
             "sample": "DATE,TIME",
-            "tlx": 10,
+            "tlx": 19,
             "tly": 10,
             "fontsize": 28,
             "fill": "#ff0000"
         },
         {
             "label": "Exposure: ${sEXPOSURE}",
-            "x": 131,
+            "x": 141,
             "y": 50,
             "id": "oe-field-1",
             "fontsize": 20,
             "strokewidth": 0,
-            "tlx": 10,
+            "tlx": 19,
             "tly": 40
         },
         {
             "label": "Gain: ${GAIN}",
-            "x": 73,
+            "x": 83,
             "y": 75,
             "id": "oe-field-2",
+            "format": "{:n}",
             "fontsize": 20,
             "strokewidth": 0,
-            "tlx": 10,
+            "tlx": 19,
             "tly": 65
         },
         {
             "label": "Sensor: ${TEMPERATURE_C} C",
-            "x": 157,
+            "x": 167,
             "y": 100,
             "id": "oe-field-3",
             "format": "{:.1f}",
             "fontsize": 20,
             "strokewidth": 0,
-            "tlx": 10,
+            "tlx": 19,
             "tly": 90,
             "sample": "20.1"
         },
         {
             "label": "${CAMERA_TYPE} ${CAMERA_MODEL}",
-            "x": 159,
+            "x": 169,
             "y": 128,
             "id": "oe-field-4",
             "fontsize": 16,
             "strokewidth": 0,
-            "sample": "ZWO ASI174MC",
-            "tlx": 10,
+            "sample": "ZWO some_model",
+            "tlx": 19,
             "tly": 120
         }
     ],
@@ -83,9 +84,9 @@
     },
     "metadata": {
         "camerabrand": "ZWO",
-        "cameramodel": "ASI178MM",
-        "cameraresolutionwidth": "2048",
-        "cameraresolutionheight": "1376",
+        "cameramodel": "generic",
+        "cameraresolutionwidth": "1920",
+        "cameraresolutionheight": "960",
         "tod": "both",
         "name": "ZWO"
     }

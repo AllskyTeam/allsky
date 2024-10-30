@@ -5,7 +5,7 @@
             "x": 259,
             "y": 50,
             "id": "oe-field-0",
-            "format": "%d-%m-%Y,%H:%M:%S",
+            "format": "{%d-%m-%Y}{%H:%M:%S}",
             "strokewidth": 0,
             "sample": "DATE,TIME",
             "tlx": 19,
@@ -28,10 +28,34 @@
             "x": 134,
             "y": 158,
             "id": "oe-field-2",
+            "format": "{:n}",
             "fontsize": 36,
             "strokewidth": 0,
             "tlx": 19,
             "tly": 140
+        },
+        {
+            "label": "Sensor: ${TEMPERATURE_C} C",
+            "x": 284,
+            "y": 178,
+            "id": "oe-field-3",
+            "format": "{:.1f}",
+            "fontsize": 36,
+            "strokewidth": 0,
+            "tlx": 19,
+            "tly": 160,
+            "sample": "20.1"
+        },
+        {
+            "label": "${CAMERA_TYPE} ${CAMERA_MODEL}",
+            "x": 242,
+            "y": 220,
+            "id": "oe-field-4",
+            "fontsize": 24,
+            "strokewidth": 0,
+            "sample": "ZWO some_model",
+            "tlx": 19,
+            "tly": 208
         }
     ],
     "images": [],

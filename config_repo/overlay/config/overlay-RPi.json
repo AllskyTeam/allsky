@@ -5,7 +5,7 @@
             "x": 260,
             "y": 46,
             "id": "oe-field-0",
-            "format": "%d-%m-%Y,%H:%M:%S",
+            "format": "{%d-%m-%Y}{%H:%M:%S}",
             "strokewidth": 0,
             "sample": "DATE,TIME",
             "tlx": 20,
@@ -28,11 +28,11 @@
             "x": 172,
             "y": 158,
             "id": "oe-field-2",
+            "format": "{:.2f}",
             "fontsize": 48,
             "strokewidth": 0,
             "tlx": 20,
-            "tly": 134,
-            "format": "{:.2f}"
+            "tly": 134
         },
         {
             "label": "${CAMERA_TYPE}  ${CAMERA_MODEL}",
@@ -43,7 +43,7 @@
             "strokewidth": 0,
             "tlx": 20,
             "tly": 194,
-            "sample": "RPi HQ"
+            "sample": "RPi some_model"
         }
     ],
     "images": [],
@@ -76,6 +76,6 @@
         "cameraresolutionwidth": "4056",
         "cameraresolutionheight": "3040",
         "tod": "both",
-        "name": "RPI"
+        "name": "RPI generic"
     }
 }

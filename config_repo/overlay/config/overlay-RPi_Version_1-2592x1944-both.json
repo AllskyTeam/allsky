@@ -5,7 +5,7 @@
             "x": 122,
             "y": 24,
             "id": "oe-field-0",
-            "format": "%d-%m-%Y,%H:%M:%S",
+            "format": "{%d-%m-%Y}{%H:%M:%S}",
             "strokewidth": 0,
             "sample": "DATE,TIME",
             "tlx": 10,
@@ -28,6 +28,7 @@
             "x": 73,
             "y": 75,
             "id": "oe-field-2",
+            "format": "{:.2f}",
             "fontsize": 20,
             "strokewidth": 0,
             "tlx": 10,
@@ -42,7 +43,7 @@
             "strokewidth": 0,
             "tlx": 10,
             "tly": 90,
-            "sample": "RPi HQ"
+            "sample": "RPi some_model"
         }
     ],
     "images": [],

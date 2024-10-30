@@ -5,7 +5,7 @@
             "x": 259,
             "y": 50,
             "id": "oe-field-0",
-            "format": "%d-%m-%Y,%H:%M:%S",
+            "format": "{%d-%m-%Y}{%H:%M:%S}",
             "strokewidth": 0,
             "sample": "DATE,TIME",
             "tlx": 19,
@@ -14,35 +14,44 @@
             "fill": "#ff0000"
         },
         {
-            "label": "Exposure: ${sEXPOSURE}",
-            "x": 237,
-            "y": 108,
+            "label": "Exposure: ${sEXPOSURE} ${sAUTOEXPOSURE}",
+            "x": 601,
+            "y": 116,
             "id": "oe-field-1",
-            "fontsize": 52,
             "strokewidth": 0,
-            "tlx": 19,
+            "tlx": 20,
             "tly": 90
         },
         {
-            "label": "Gain: ${GAIN}",
-            "x": 134,
-            "y": 158,
+            "label": "Gain: ${GAIN} ${sAUTOGAIN}",
+            "x": 372.1298828125,
+            "y": 176,
             "id": "oe-field-2",
-            "fontsize": 52,
             "strokewidth": 0,
+            "tlx": 20,
+            "tly": 150
+        },
+        {
+            "label": "Sensor: ${TEMPERATURE_C} C, ${TEMPERATURE_F} F",
+            "x": 696,
+            "y": 236,
+            "id": "oe-field-3",
+            "format": "{:.1f},{:.1f}",
+            "strokewidth": 0,
+            "sample": "32.2",
             "tlx": 19,
-            "tly": 140
+            "tly": 200
         },
         {
             "label": "${CAMERA_TYPE} ${CAMERA_MODEL}",
-            "x": 157,
-            "y": 100,
-            "id": "oe-field-3",
-            "fontsize": 16,
+            "x": 354.1337890625,
+            "y": 296,
+            "id": "oe-field-4",
+            "fontsize": 36,
             "strokewidth": 0,
-            "tlx": 10,
-            "tly": 90,
-            "sample": "RPi HQ"
+            "tlx": 20,
+            "tly": 278,
+            "sample": "ZWO ASI585MC"
         }
     ],
     "images": [],

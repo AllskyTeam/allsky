@@ -2,59 +2,60 @@
     "fields": [
         {
             "label": "${DATE}  ${TIME}",
-            "x": 122,
+            "x": 132,
             "y": 24,
             "id": "oe-field-0",
-            "format": "%d-%m-%Y,%H:%M:%S",
+            "format": "{%d-%m-%Y}{%H:%M:%S}",
             "strokewidth": 0,
             "sample": "DATE,TIME",
-            "tlx": 10,
+            "tlx": 19,
             "tly": 10,
             "fontsize": 28,
             "fill": "#ff0000"
         },
         {
             "label": "Exposure: ${sEXPOSURE}",
-            "x": 131,
-            "y": 50,
+            "x": 141,
+            "y": 60,
             "id": "oe-field-1",
             "fontsize": 20,
             "strokewidth": 0,
-            "tlx": 10,
-            "tly": 40
+            "tlx": 19,
+            "tly": 50
         },
         {
             "label": "Gain: ${GAIN}",
-            "x": 73,
-            "y": 75,
+            "x": 83,
+            "y": 85,
             "id": "oe-field-2",
+            "format": "{:n}",
             "fontsize": 20,
             "strokewidth": 0,
-            "tlx": 10,
-            "tly": 65
+            "tlx": 19,
+            "tly": 75
         },
         {
             "label": "Sensor: ${TEMPERATURE_C} C",
-            "x": 157,
-            "y": 100,
+            "x": 167,
+            "y": 110,
             "id": "oe-field-3",
             "format": "{:.1f}",
             "fontsize": 20,
             "strokewidth": 0,
-            "tlx": 10,
-            "tly": 90,
+            "tlx": 19,
+            "tly": 100,
             "sample": "20.1"
         },
         {
             "label": "${CAMERA_TYPE} ${CAMERA_MODEL}",
-            "x": 159,
-            "y": 128,
+            "x": 169,
+            "y": 135,
             "id": "oe-field-4",
             "fontsize": 16,
             "strokewidth": 0,
-            "sample": "ZWO ASI174MC",
-            "tlx": 10,
-            "tly": 120
+            "sample": "ZWO some_model",
+            "tlx": 19,
+            "tly": 125
         }
     ],
     "images": [],

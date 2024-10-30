@@ -76,6 +76,6 @@
         "cameraresolutionwidth": "4056",
         "cameraresolutionheight": "3040",
         "tod": "both",
-        "name": "RPI"
+        "name": "RPI generic"
     }
 }

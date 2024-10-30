@@ -217,7 +217,7 @@ if ! echo -e "${CCM}" | grep --silent "${CAM}" ; then
 	if ! validate_camera "${CC_TYPE}" "${CC_MODEL}" "${CC_NUMBER}" ; then
 		set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
 		IMAGE_MSG="${ERROR_MSG_PREFIX}"
-		IMAGE_MSG+="\nThe camera changed."
+		IMAGE_MSG+="The camera changed."
 		IMAGE_MSG+="\nCheck Camera Type\n& Model in the WebUI."
 		doExit "${EXIT_ERROR_STOP}" "Error" "${IMAGE_MSG}"
 	fi

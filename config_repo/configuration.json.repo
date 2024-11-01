@@ -47,18 +47,18 @@
         "gradient": false,
         "transparent": true,
         "lang": "en",
-        "colours" : {
+        "colours": {
             "comment": "See the Wiki for how to change colors on the constellation overlay.",
-            "normal" : {
+            "normal": {
                 "XXX_cardinal": "rgba(0,255,0,1)"
             },
-            "negative" : {
+            "negative": {
                 "XXX_cardinal": "rgba(255,255,255,1)"
             }
         },
         "live": true,
         "id": "starmap",
-        "AllskyVersion" : "XX_ALLSKY_VERSION_XX"
+        "AllskyVersion": "XX_ALLSKY_VERSION_XX"
     },
     "homePage": {
         "comment": "These settings impact the look and feel of the Website home page.",
@@ -221,5 +221,5 @@
             }
         ]
     },
-    "ConfigVersion" : "2"
+    "ConfigVersion": "2"
 }

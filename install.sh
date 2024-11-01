@@ -2925,7 +2925,7 @@ do_restore()
 		fi
 
 		ITEM="${SPACE}${SPACE}${ALLSKY_MYFILES_NAME}"
-		if [[ -d ${ALLSKY_MYWEBSITE_MYFILES_DIR} ]]; then
+		if [[ -d ${ALLSKY_WEBSITE_MYFILES_DIR} ]]; then
 			display_msg --log progress "${ITEM} (moving)"
 			mv "${ALLSKY_WEBSITE_MYFILES_DIR}"   "${PRIOR_WEBSITE_DIR}"
 		else

@@ -3676,11 +3676,6 @@ fi
 
 #shellcheck disable=SC2119
 if [[ $( get_branch ) != "${GITHUB_MAIN_BRANCH}" ]]; then
-	IN_TESTING="true"
-else
-	IN_TESTING="false"
-fi
-if [[ ${IN_TESTING} == "true" ]]; then
 	DEBUG=1; DEBUG_ARG="--debug"; LOG_TYPE="--log"
 
 	T="${ALLSKY_HOME}/told"

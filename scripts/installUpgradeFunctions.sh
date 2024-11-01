@@ -25,7 +25,7 @@ export REPO_OPTIONS_FILE="${ALLSKY_REPO}/$( basename "${OPTIONS_FILE}" ).repo"
 export REPO_ENV_FILE="${ALLSKY_REPO}/$( basename "${ALLSKY_ENV}" ).repo"
 export REPO_WEBSITE_CONFIGURATION_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
 
-##### Information on prior Allsky versions
+##### Information on prior Allsky versions and files.
 	# Location of old-style WebUI and Website.
 export OLD_WEBUI_LOCATION="/var/www/html"
 export OLD_WEBSITE_LOCATION="${OLD_WEBUI_LOCATION}/allsky"
@@ -35,6 +35,7 @@ export PRIOR_ALLSKY_DIR="$( dirname "${ALLSKY_HOME}" )/${ALLSKY_INSTALL_DIR}-OLD
 export PRIOR_CONFIG_DIR="${PRIOR_ALLSKY_DIR}/$( basename "${ALLSKY_CONFIG}" )"
 export PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE="${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
 export PRIOR_PYTHON_VENV="${PRIOR_ALLSKY_DIR}/venv/lib"
+export PRIOR_MYFILES_DIR="${ALLSKY_MYFILES_DIR/${ALLSKY_HOME}/${PRIOR_ALLSKY_DIR}}"
 
 	# Name of setting that determines version of Website config file.
 export WEBSITE_CONFIG_VERSION="ConfigVersion"

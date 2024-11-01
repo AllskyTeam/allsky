@@ -929,6 +929,11 @@ set_permissions()
 		fi
 	done
 
+	# These directories aren't in GitHub so need to be manually created.
+	mkdir -p \
+		"${ALLSKY_EXTRA}" \
+		"${ALLSKY_MYFILES_DIR}"
+
 	# The web server needs to be able to create and update many of the files in ${ALLSKY_CONFIG}.
 	# Not all, but go ahead and chgrp all of them so we don't miss any new ones.
 	sudo find "${ALLSKY_CONFIG}/" -type f -exec chmod 664 '{}' \;
@@ -956,6 +961,7 @@ set_permissions()
 
 	# These directories aren't in GitHub so need to be manually created.
 	mkdir -p \
+		"${ALLSKY_WEBSITE_MYFILES_DIR}" \
 		"${ALLSKY_WEBSITE}/videos/thumbnails" \
 		"${ALLSKY_WEBSITE}/keograms/thumbnails" \
 		"${ALLSKY_WEBSITE}/startrails/thumbnails"
@@ -2383,11 +2389,6 @@ restore_prior_files()
 			CONFIGURATION_NEEDED="${STATUS_NO_LAT_LONG}"
 		fi
 
-		# Default permissions for these are ok.
-		mkdir -p \
-			"${ALLSKY_EXTRA}" \
-			"${ALLSKY_CONFIG}/myFiles"
-
 		STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 		return			# Nothing left to do in this function, so return
 	fi
@@ -2431,12 +2432,11 @@ restore_prior_files()
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-	ITEM="${SPACE}'config/myFiles' directory"
-	if [[ -d ${PRIOR_CONFIG_DIR}/myFiles ]]; then
+	ITEM="${SPACE}'$( basename "$( dirname "${ALLSKY_MYFILES_DIR}" )" )/${ALLSKY_MYFILES_NAME}' directory"
+	if [[ -d ${PRIOR_MYFILES_DIR} ]]; then
 		display_msg --log progress "${ITEM} (moving)"
-		mv "${PRIOR_CONFIG_DIR}/myFiles" "${ALLSKY_CONFIG}"
+		mv "${PRIOR_MYFILES_DIR}" "${ALLSKY_MYFILES_DIR}"
 	else
-		mkdir -p "${ALLSKY_CONFIG}/myFiles"
 		# Almost no one has this directory, so don't show to user.
 		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
 	fi
@@ -2711,16 +2711,13 @@ restore_prior_website_files()
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-	ITEM="${SPACE}${SPACE}'myFiles' directory"
-	D="${PRIOR_WEBSITE_DIR}/myFiles"
+	ITEM="${SPACE}${SPACE}'${ALLSKY_MYFILES_NAME}' directory"
+	D="${PRIOR_WEBSITE_DIR}/${ALLSKY_MYFILES_NAME}"
 	if [[ -d ${D} ]]; then
-		count=$( get_count "${D}" '*' )
-		if [[ ${count} -gt 1 ]]; then
-			display_msg --log progress "${ITEM} (moving)"
-			mv "${D}"   "${ALLSKY_WEBSITE}"
-		fi
+		display_msg --log progress "${ITEM} (moving)"
+		mv "${D}"   "${ALLSKY_WEBSITE_MYFILES_DIR}"
 	else
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
 	fi
 
 	# This is the old name.
@@ -2730,9 +2727,10 @@ restore_prior_website_files()
 	if [[ -d ${D} ]]; then
 		count=$( get_count "${D}" '*' )
 		if [[ ${count} -gt 1 ]]; then
-			local MSG2="  Please use 'myFiles' going forward."
-			display_msg --log progress "${ITEM} (copying to '${ALLSKY_WEBSITE}/myFiles')" "${MSG2}"
-			cp "${D}"/*   "${ALLSKY_WEBSITE}/myFiles"
+			local MSG2="  Please use '${ALLSKY_WEBSITE_MYFILES_DIR}' going forward."
+			display_msg --log progress "${ITEM} (copying to '${ALLSKY_WEBSITE_MYFILES_DIR}')" "${MSG2}"
+			# TODO: This won't copy dot files.
+			cp "${D}"/*   "${ALLSKY_WEBSITE_MYFILES_DIR}"
 		fi
 	else
 		# Since this is obsolete only add to log file.
@@ -2777,7 +2775,7 @@ restore_prior_website_files()
 			echo -e "${MSG}"
 			echo "When done, check in '${PRIOR_WEBSITE_DIR}' for any files"
 			echo "you may have added; if there are any, store them in"
-			echo -e "\n   ${ALLSKY_WEBSITE}/myFiles"
+			echo -e "\n   ${ALLSKY_WEBSITE_MYFILES_DIR}"
 			echo "then remove the old website:  sudo rm -fr ${PRIOR_WEBSITE_DIR}"
 		} >> "${POST_INSTALLATION_ACTIONS}"
 
@@ -2881,10 +2879,10 @@ do_restore()
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-	ITEM="${SPACE}'config/myFiles' directory"
-	if [[ -d ${ALLSKY_CONFIG}/myFiles ]]; then
+	ITEM="${SPACE}'$( basename "$( dirname "${ALLSKY_MYFILES_DIR}" )" )/${ALLSKY_MYFILES_NAME}' directory"
+	if [[ -d ${ALLSKY_MYFILES_DIR} ]]; then
 		display_msg --log progress "${ITEM} (moving back)"
-		mv "${ALLSKY_CONFIG}/myFiles" "${PRIOR_CONFIG_DIR}"
+		mv "${ALLSKY_MYFILES_DIR}" "${PRIOR_MYFILES_DIR}"
 	else
 		# Few people have this directory, so don't show to user.
 		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
@@ -2926,22 +2924,13 @@ do_restore()
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		fi
 
-		ITEM="${SPACE}${SPACE}'myFiles' directory"
-		D="${ALLSKY_WEBSITE}/myFiles"
-		if [[ -d ${D} ]]; then
-			count=$( get_count "${D}" '*' )
-			if [[ ${count} -gt 1 ]]; then
-				display_msg --log progress "${ITEM} (moving)"
-				mv "${D}"   "${PRIOR_WEBSITE_DIR}"
-			fi
+		ITEM="${SPACE}${SPACE}${ALLSKY_MYFILES_NAME}"
+		if [[ -d ${ALLSKY_MYWEBSITE_MYFILES_DIR} ]]; then
+			display_msg --log progress "${ITEM} (moving)"
+			mv "${ALLSKY_WEBSITE_MYFILES_DIR}"   "${PRIOR_WEBSITE_DIR}"
 		else
-			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+			display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
 		fi
-
-#xx TODO: huh? why remove it?
-#xx		ITEM="${SPACE}${SPACE}Local Website directory"
-#xx		display_msg --log progress "${ITEM} (removing)"
-#xx		rm -fr "${ALLSKY_WEBSITE}"
 	fi
 
 	# Since we'll be running a new Allsky, start off with clean log files.

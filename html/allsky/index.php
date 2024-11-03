@@ -27,10 +27,11 @@
 			$homePage = v("homePage", null, $webSettings_array);
 				// TODO: replace double quotes with &quot; in any variable that
 				// can be in an HTML attribute, which is many of them.
+				$backgroundImage_style = "";
 				$backgroundImage = v("backgroundImage", "", $homePage);
 				if ($backgroundImage !== "") {
 					$backgroundImage_url = v("url", null, $backgroundImage);
-                                        if ($backgroundImage_url == "") $backgroundImage = null;
+					if ($backgroundImage_url == "") $backgroundImage = null;
 					else $backgroundImage_style = v("style", null, $backgroundImage);
 				}
 				$loadingImage = v("loadingImage", "loading.jpg", $homePage);

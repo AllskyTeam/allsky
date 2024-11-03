@@ -72,8 +72,8 @@ function check_URL()
 		E="ERROR: ${FIELD_NAME} '${URL}' must begin with 'http:' or 'https:'.${BR}${E}"
 
 	else
-		# Make sure it's a valid URL
-		local CONTENT="$( curl --location --head --silent --show-error --connect-timeout ${TIMEOUT} "${URL}" 2>&1 )"
+		# Make sure it's a valid URL.  Some servers don't return anything if the user agent is "curl".
+		local CONTENT="$( curl --user-agent Allsky --location --head --silent --show-error --connect-timeout ${TIMEOUT} "${URL}" 2>&1 )"
 		local RET=$?
 		[[ ${DEBUG} == "true" ]] && echo -e "\n${wDEBUG}check_URL() RET=${RET}:\n${CONTENT}${wNC}.\n"
 		if [[ ${RET} -eq 6 ]]; then

@@ -302,7 +302,12 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 	{ "ov64a40", 0, "Arducam 64MP Owlsight", 0, 6944, 9248, ASI_TRUE,
 		BAYER_BG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.008, ASI_FALSE,
 		10, ASI_FALSE, ASI_TRUE
-	}
+	},
+
+	{ "imx283", 0, "OneInchEye IMX283", 0, 3648, 5472, ASI_TRUE,
+		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 2.4, ASI_FALSE,
+		12, ASI_FALSE, ASI_FALSE
+	},
 
 	// FUTURE CAMERAS GO HERE...
 };
@@ -539,6 +544,27 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
 	{ // raspistill.  Not supported.
+		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
+	},
+
+
+	{ // OneInchEye IMX283, libcamera
+		{ "Gain", "Gain", 22.505495, 1.0, 4.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
+		{ "Exposure", "Exposure Time (us)", 129373756, 58, 10 * US_IN_SEC, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
+		{ "WB_R", "White balance: Red component", 32.0, 0.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
+		{ "WB_B", "White balance: Blue component", 32.0, 0.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
+		{ "Flip", "Flip: 0->None 1->Horiz 2->Vert 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
+		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 22.505495, 1.0, 4.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
+		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 129374, .0580, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
+		{ "ExposureCompensation", "Exposure Compensation", 8.0, -8.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
+		{ "Brightness", "Brightness", 1.0, -1.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
+		{ "Saturation", "Saturation", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
+		{ "Contrast", "Contrast", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
+		{ "Sharpness", "Sharpness", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
+
+		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
+	},
+	{ // OneInchEye IMX283, raspistill.  Not supported.
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
 

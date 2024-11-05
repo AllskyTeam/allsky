@@ -196,3 +196,21 @@ libcamera	Sharpness	Sharpness	16.0	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	SHARPNESS
 libcamera	End
 
 raspistill	End
+
+
+camera	imx283	0	OneInchEye IMX283	0	3648	5472	ASI_TRUE	BAYER_RG	1 2 0	ASI_IMG_RGB24 ASI_IMG_END	2.4	ASI_FALSE	12	ASI_FALSE	ASI_FALSE
+
+libcamera	Gain	Gain	22.505495	1.0	4.0	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_GAIN
+libcamera	Exposure	Exposure Time (us)	129373756	58	10000000	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_EXPOSURE
+libcamera	WB_R	White balance: Red component	32.0	0.0	1.0	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_WB_R
+libcamera	WB_B	White balance: Blue component	32.0	0.0	1.0	NOT_SET	ASI_TRUE	ASI_TRUE	ASI_WB_B
+libcamera	Flip	Flip: 0->None 1->Horiz 2->Vert 3->Both	3	0	0	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_FLIP
+libcamera	AutoExpMaxGain	Auto exposure maximum gain value	22.505495	1.0	4.0	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_GAIN
+libcamera	AutoExpMaxExpMS	Auto exposure maximum exposure value (ms)	129374	0.058	60000	NOT_SET	ASI_FALSE	ASI_TRUE	ASI_AUTO_MAX_EXP
+libcamera	ExposureCompensation	Exposure Compensation	8.0	-8.0	0.0	NOT_SET	ASI_FALSE	ASI_TRUE	EV
+libcamera	Saturation	Saturation	32.0	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	SATURATION
+libcamera	Contrast	Contrast	32.0	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	CONTRAST
+libcamera	Sharpness	Sharpness	16.0	0.0	1.0	NOT_SET	ASI_FALSE	ASI_TRUE	SHARPNESS
+libcamera	End
+
+raspistill	End

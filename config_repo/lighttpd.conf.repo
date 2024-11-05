@@ -12,7 +12,6 @@ server.tag                  = "Allsky"
 dir-listing.activate = "enable"
 setenv.add-response-header += ( "X-Content-Type-Options" => "nosniff" )
 
-
 setenv.add-environment = (
   "LANG" => env.LANG,
   "ALLSKY_HOME" => "XX_ALLSKY_HOME_XX/"
@@ -27,29 +26,26 @@ alias.url		    += ("/overlayTemplates" => "XX_MY_OVERLAY_TEMPLATES_XX/")
 alias.url		    += ("/overlay" => "XX_ALLSKY_OVERLAY_XX/")
 
 $HTTP["url"] =~ "^/cgi-bin/" {
-        cgi.assign = ( ".py" => "/usr/bin/python3" )
-        alias.url += ( "/cgi-bin/" => "XX_ALLSKY_HOME_XX/html/cgi-bin/" )
+	cgi.assign = ( ".py" => "/usr/bin/python3" )
+	alias.url += ( "/cgi-bin/" => "/home/Olivier/allsky/html/cgi-bin/" )
+} else $HTTP["url"] =~ "^/overlay/config/" {
+     url.access-deny = ("")
+} else $HTTP["url"] =~ "allsky/videos|allsky/startrails|allsky/keograms" {
+	# Output web pages with thumbnails as each thumbnail is read (or created) so the thumbnails appear quickly,
+	# rather than not outputing anything until the last thumbnail is created, which can be tens of seconds.
+	server.stream-response-body = 1
 }
 
-
-$HTTP["url"] =~ "^/current|.json$" {
+$HTTP["url"] =~ "^/current|.json$|videos/$|startrails/$|keograms/$" {
 	# Don't cache the "current" image since it is constantly changing.
 	# Also don't cache .json files since they are configuration files that can change.
+	# And don't cache the videos, startrails, and keograms files since they will normally
+	# change every day by adding another thumbnail.
 	# This eliminates the need to add timestamps to URLs.
 	setenv.add-response-header += ( "Cache-Control" => "no-cache, proxy-revalidate" )
 } else {
-	$HTTP["url"] =~ "thumbnails|allsky/videos|allsky/startrails|allsky/keograms" {
-		# Output web pages with thumbnails as each thumbnail is read (or created) so the thumbnails appear quickly,
-		# rather than not outputing anything until the last thumbnail is created, which can be tens of seconds.
-		server.stream-response-body = 1
-	}
-
 	# Cache pages
-	setenv.add-response-header += ( "Cache-Control" => "max-age=31536000, immutable" )
-}
-
-$HTTP["url"] =~ "^/overlay/config/" {
-     url.access-deny = ("")
+	setenv.add-response-header += ( "Cache-Control" => "max-age=31536001, immutable" )
 }
 
 # strict parsing and normalization of URL for consistency and security

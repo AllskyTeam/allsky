@@ -633,18 +633,27 @@ function update_old_website_config_file()
 
 	# Current version: 2
 	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
-		# Version 2 removed AllskyWebsiteVersion.
+		# Deletions:
 		update_json_file -d ".AllskyWebsiteVersion" "" "${FILE}"
+		update_json_file -d ".homePage.onPi" "" "${FILE}"
+		update_array_field "${FILE}" "homePage.popoutIcons" "variable" "AllskyWebsiteVersion" "--delete"
+
+		# Additions:
+		# Add in same place as new file
+		local NEW='      \"thumbnailsizex\": 100,\
+        \"thumbnailsizey\": 75,\
+        \"thumbnailsortorder\": \"ascending\",'
+		sed -i "/\"leftSidebar\"/i\ ${NEW}" "${FILE}"
+
+		# Changes:
+		for i in "videos" "keograms" "startrails"; do
+			update_array_field "${FILE}" "homePage.leftSidebar" "url" "${i}" "${i}/"
+		done
 	fi
 
-	# Set to current version.
+	# Set to current config and Allsky versions.
 	update_json_file ".${WEBSITE_CONFIG_VERSION}" "${CURRENT_VERSION}" "${FILE}"
-
-	if [[ ${LOCAL_OR_REMOTE} == "local" ]]; then
-		# Since we're installing a new Allsky, update the Allsky version.
-		# For remote Websites it'll be updated when the user updates the Website.
-		update_json_file ".${WEBSITE_ALLSKY_VERSION}" "${ALLSKY_VERSION}" "${FILE}"
-	fi
+	update_json_file ".${WEBSITE_ALLSKY_VERSION}" "${ALLSKY_VERSION}" "${FILE}"
 }
 
 ####

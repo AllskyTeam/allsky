@@ -21,7 +21,7 @@ DISPLAY_MSG_LOG="${ALLSKY_LOGS}/${ME/.sh/}.log"
 
 # Config variables
 HAVE_NEW_CONFIG="false"
-HAVE_OLD_CONFIG="false"
+HAVE_PRIOR_CONFIG="false"
 HAVE_NEW_REMOTE_CONFIG="false"
 HAVE_REALLY_OLD_REMOTE_CONFIG="false"
 CONFIG_TO_USE=""
@@ -39,7 +39,6 @@ REMOTE_PORT="$( settings ".REMOTEWEBSITE_PORT" "${ALLSKY_ENV}" )"
 REMOTE_PASSWORD="$( settings ".REMOTEWEBSITE_PASSWORD" "${ALLSKY_ENV}" )"
 REMOTE_DIR="$( settings ".remotewebsiteimagedir" "${SETTINGS_FILE}" )"
 REMOTE_PROTOCOL="$( settings ".remotewebsiteprotocol" )"
-WEBSITE_EXISTS="false"
 
 # Titles for various dialogs
 DIALOG_BACK_TITLE="Allsky Remote Website Installer"
@@ -50,7 +49,14 @@ DIALOG_DONE="Remote Website Installation Completed"
 DIALOG_TITLE_LOG="Allsky Remote Website Installation Log"
 
 # Old Allksy Website files that should be remoevd if they exist
-OLD_FILES_TO_REMOVE=("config.js" "configuration.json" "virtualsky.json" "README.md" "myImages")
+OLD_CONFIG_NAME="config.js"
+OLD_FILES_TO_REMOVE=( \
+	"${OLD_CONFIG_NAME}" \
+	"${ALLSKY_WEBSITE_CONFIGURATION_NAME}" \
+	"getTime.php" \
+	"virtualsky.json" \
+	"README.md" \
+	"myImages")
 
 ############################################## functions
 
@@ -186,22 +192,28 @@ function display_log_file()
 		--textbox "${FILENAME}" 22 77
 }
 
-# Runs the pre installation checks. This function will determine the following:
-# - Is there a remote Website
-# - Which configuration file to use for the remote Website
+# Runs the pre installation checks to determine the following:
+# - Is there a remote Website?
+# - Which configuration file to use for the remote Website?
 #
 # The configuration file to use is decided using the following, in order:
 #
-# If there is a remote-configuration.json in the /config folder then use it.
-# If there is a remote-configuration.json in the allsky-OLD/config folder then use it.
-# Otherwise:
-# If there is a remote Website with a configuration.json file then save it in /config.
-# If there is a remote Website and it has an old configuration file (config.js) then
-# create a new remote-configuration.json in /config.
+# 1a. If ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} exists, use it.
+#
+# 1b. If ${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE} exists,
+#     copy it to ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} and use it.
+#
+# 2a. If there's a remote Website with a ${ALLSKY_WEBSITE_CONFIGURATION_NAME} file,
+#     save it locally as ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} and use it.
+#
+# 2b. If there is a remote Website with an old-style configuration file (${OLD_CONFIG_NAME}),
+#     create a NEW ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} and use it.
+#     Don't bother trying to convert from old-style files.
 function pre_install_checks()
 {
 	local MSG=""
-	local DIALOG_TEXT="\nRunning pre installation checks."
+	local DIALOG_TEXT
+	DIALOG_TEXT="\nRunning pre installation checks."
 	DIALOG_TEXT+="\n\nPlease wait as this can take a few minutes to complete.\n\n"
 
 	DIALOG_TEXT+="\n1 - Checking for local files"
@@ -209,37 +221,40 @@ function pre_install_checks()
 	display_msg --logonly info "Start pre installation checks."
 
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
+		# 1a.
 		MSG="Found current remote configuration file: ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}."
 		display_msg --logonly info "${MSG}"
 		HAVE_NEW_CONFIG="true"
-	fi
 
-	if [[ -f ${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
-		MSG="Found -OLD configuration file: ${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE}."
+	elif [[ -f ${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
+		# 1b.
+		MSG="Found $( basename "${PRIOR_ALLSKY_DIR}" ) remote configuration file: ${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE}."
 		display_msg --logonly info "${MSG}"
-		HAVE_OLD_CONFIG="true"
+		HAVE_PRIOR_CONFIG="true"
 	fi
 
-	DIALOG_TEXT+="\n2 - Checking if remote Website exists"
+	DIALOG_TEXT+="\n2 - Checking if an existing remote Website exists"
 	display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
-	check_if_website_exists		# Sets ${WEBSITE_EXISTS}
+	local WEBSITE_EXISTS="$( check_if_website_exists )"
 	if [[ ${WEBSITE_EXISTS} == "true" ]]; then
-		DIALOG_TEXT+="\n3 - Checking for remote Website configuration file"
+		# 2a.
+		DIALOG_TEXT+="\n2a - Checking for remote Website configuration file"
 		display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
-		local NEW_CONFIG_FILES=("configuration.json")
-		if check_if_files_exist "${REMOTE_URL}" "false" "${NEW_CONFIG_FILES[@]}" ; then
+		local NEW_CONFIG_FILES=("${ALLSKY_WEBSITE_CONFIGURATION_NAME}")
+		if check_if_files_exist "${REMOTE_URL}" "or" "${NEW_CONFIG_FILES[@]}" ; then
 			HAVE_NEW_REMOTE_CONFIG="true"
 			MSG="Found current configuration file on the remote server."
 			display_msg --logonly info "${MSG}"
 		fi
 
-		DIALOG_TEXT+="\n4 - Checking for old-style remote Website configuration file"
+		# 2b.
+		DIALOG_TEXT+="\n2b - Checking for old-style remote Website configuration file"
 		display_info_box "${DIALOG_BACK_TITLE}" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
-		local REALLY_OLD_CONFIG_FILES=("config.js")
-		if check_if_files_exist "${REMOTE_URL}" "false" "${REALLY_OLD_CONFIG_FILES[@]}" ; then
+		local REALLY_OLD_CONFIG_FILES=("${OLD_CONFIG_NAME}")
+		if check_if_files_exist "${REMOTE_URL}" "or" "${REALLY_OLD_CONFIG_FILES[@]}" ; then
 			HAVE_REALLY_OLD_REMOTE_CONFIG="true"
-			MSG="Found old-format config.js file on the remote Website."
+			MSG="Found old-format ${OLD_CONFIG_NAME} file on the remote Website."
 			display_msg --logonly info "${MSG}"
 		fi
 	fi
@@ -253,28 +268,24 @@ function pre_install_checks()
 		CONFIG_TO_USE="current"
 		CONFIG_MESSAGE="the current remote"
 
-	elif [[ ${HAVE_OLD_CONFIG} == "true" ]]; then
-		MSG="Using the -OLD configuration file; placeholders will be updated."
+	elif [[ ${HAVE_PRIOR_CONFIG} == "true" ]]; then
+		MSG="Using the $( basename "${PRIOR_ALLSKY_DIR}" ) configuration file; placeholders will be updated."
 		display_msg --logonly info "${MSG}"
 		CONFIG_TO_USE="old"
 		CONFIG_MESSAGE="the $( basename "${PRIOR_ALLSKY_DIR}" )"
 
-	elif [[ ${WEBSITE_EXISTS} == "true" ]]; then
-		if [[ ${HAVE_NEW_REMOTE_CONFIG} == "true" ]]; then
-			MSG="Using new format Website configuration file on the remote Website;"
-			MSG+=" it will be downloaded and saved locally."
-			display_msg --logonly info "${MSG}"
-			CONFIG_TO_USE="remotenew"
-			CONFIG_MESSAGE="the remote Website's"
-		else
-			if [[ ${HAVE_REALLY_OLD_REMOTE_CONFIG} == "true" ]]; then
-				MSG="Old config.js found."
-				MSG+=" Creating a new configuration file that the user must manually update."
-				display_msg --logonly info "${MSG}"
-				CONFIG_TO_USE="remotereallyold"
-				CONFIG_MESSAGE="a new"
-			fi
-		fi
+	elif [[ ${HAVE_NEW_REMOTE_CONFIG} == "true" ]]; then
+		MSG="Using new format Website configuration file on the remote Website;"
+		MSG+=" it will be downloaded and saved locally."
+		display_msg --logonly info "${MSG}"
+		CONFIG_TO_USE="remotenew"
+		CONFIG_MESSAGE="the remote Website's"
+	elif [[ ${HAVE_REALLY_OLD_REMOTE_CONFIG} == "true" ]]; then
+		MSG="Old ${OLD_CONFIG_NAME} found."
+		MSG+=" Creating a new configuration file that the user must manually update."
+		display_msg --logonly info "${MSG}"
+		CONFIG_TO_USE="remotereallyold"
+		CONFIG_MESSAGE="a new"
 	fi
 
 	if [[ -z ${CONFIG_TO_USE} ]]; then
@@ -318,7 +329,7 @@ function display_welcome()
  ${DIALOG_UNDERLINE}Are you sure you wish to continue?${DIALOG_NORMAL}"
 
 		if ! display_prompt_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_WELCOME_TITLE}" "${DIALOG_MSG}" ; then
-			display_aborted "--user" "at the Welcome dialog" "false"
+			display_aborted "--user" "at the Welcome dialog" ""
 		fi
 	else
 		display_msg --logonly info "Ignored welcome prompt as auto confirm option specified."
@@ -327,7 +338,7 @@ function display_welcome()
 
 # Displays the aborted dialog. This is used when an error is encountered or the user cancels.
 # ${1} - Extra text to display in the dialog
-# ${2} - "true"/"false" - Flag to indicate if the user should be prompted to show the installation log
+# ${2} - Error message (or "" if no error)
 function display_aborted()
 {
 	if [[ ${1} == "--user" ]]; then
@@ -337,18 +348,19 @@ function display_aborted()
 		local ABORT_MSG="INSTALLATION ABORTED"
 	fi
 	local EXTRA_TEXT="${1}"
-	local SHOW_LOG="${2}"
+	local ERROR_MSG="${2}"
 
 	display_msg --logonly info "${ABORT_MSG} at $( date ) ${EXTRA_TEXT}.\n"
-	local ERROR_MSG="\nThe installation of the remote Website was aborted ${EXTRA_TEXT}."
+	local MSG="\nThe installation of the remote Website was aborted ${EXTRA_TEXT}."
 
-	if [[ ${SHOW_LOG} == "true" ]]; then
-# TODO: Instead of displaying the log file, which is very detailed,
-# how about if we tell the user to attach the log file to any GitHub message they post?
-		MSG="${ERROR_MSG}\n\n"
-		MSG+="${DIALOG_UNDERLINE}Would you like to view the installation log?${DIALOG_NORMAL}"
-		if display_prompt_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${MSG}" ; then
+	if [[ -n ${ERROR_MSG} ]]; then
+		local DIALOG_PROMPT="${MSG}\n\n"
+		DIALOG_PROMPT+="${DIALOG_UNDERLINE}Would you like to view the error message?${DIALOG_NORMAL}"
+		if display_prompt_dialog "${DIALOG_BACK_TITLE}" "${DIALOG_INSTALL}" "${DIALOG_PROMPT}" ; then
+			display_box "--msgbox" "${DIALOG_BACK_TITLE}" "${DIALOG_TITLE_LOG}" "${ERROR_MSG}" "--scrollbar"
+if false; then
 			display_log_file "${DIALOG_BACK_TITLE}" "${DIALOG_TITLE_LOG}" "${DISPLAY_MSG_LOG}"
+fi
 		fi
 	fi
 
@@ -389,19 +401,11 @@ function check_connectivity()
 
 	display_msg --logonly info "Checking remote Website connectivity."
 	if ERR="$( "${ALLSKY_SCRIPTS}/testUpload.sh" --website --silent --file "${TEST_FILE}" 2>&1 )" ; then
-		local MSG="The remote Website connectivity test succeeded."
-		display_msg --logonly info "${MSG}"
+		show_debug_message "The remote Website connectivity test succeeded."
 		remove_remote_file "${TEST_FILE}" "do not check"
 	else
 		local ERROR_MSG="\nERROR: The remote Website connectivity check failed."
-		ERROR_MSG+="\n\nPlease check the 'Websites and Remote Server Settings' section of the WebUI.\n\n\
- HOST: ${REMOTE_HOST}\n\
- PROTOCOL: ${REMOTE_PROTOCOL}\n\
- USER: ${REMOTE_USER}\n\
- REMOTE FOLDER: ${REMOTE_DIR}\n\n\
- ${ERR}"
-
-		display_aborted "${ERROR_MSG}" "true"
+		display_aborted "${ERROR_MSG}" "${ERR}"
 	fi
 }
 
@@ -445,30 +449,30 @@ function create_website_config()
 
 	elif [[ ${CONFIG_TO_USE} == "remotenew" ]]; then
 		# Use the new remote config file since none were found locally
-		if wget -O "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" "${REMOTE_URL}/${ALLSKY_WEBSITE_CONFIGURATION_FILE}" ; then
+		if ERR="$( wget -O "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" "${REMOTE_URL}/${ALLSKY_WEBSITE_CONFIGURATION_FILE}" 2>&1 )"; then
 			replace_website_placeholders "remote"
 			MSG="Downloading ${ALLSKY_WEBSITE_CONFIGURATION_FILE} from ${REMOTE_URL},"
 			MSG+=" and creating a new ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}."
 			display_msg --logonly info "${MSG}"
 		else
 			MSG="Failed to download ${ALLSKY_WEBSITE_CONFIGURATION_FILE} from ${REMOTE_URL}"
-			display_aborted "${MSG}" "true"
+			display_aborted "${MSG}" "${ERR}"
 		fi
 	fi
 }
 
 # Check if a remote file, or array of files, exist.
 # ${1} - The base url
-# ${2} - "true"/"false" If true then all files must exist, if "false" then any of the files can exist.
+# ${2} - "and"/"or" If "and" then all files must exist, if "or" then any of the files can exist.
 # ${3}... - the files
 #
 # Returns - 0 if the file(s) exist, 1 if ANY file doesn't exist.
 function check_if_files_exist()
 {
 	local URL="${1}"
-	local AND="${2}"
+	local AND_OR="${2}"
 	shift 2
-	local RESULT=1
+	local RET_CODE=1
 
 	for FILE in "$@"; do
 		url="${URL}/${FILE}"
@@ -477,16 +481,16 @@ function check_if_files_exist()
 		local PRE_MSG="File ${FILE} ${url}"
 		if [[ ${HTTP_STATUS} == "200" ]] ; then
 			show_debug_message "${PRE_MSG} exists on the remote server"
-			RESULT=0
+			RET_CODE=0
 		else
 			show_debug_message "${PRE_MSG} does not exists on the remote server"
-			if [[ ${AND} == "true" ]]; then
+			if [[ ${AND_OR} == "and" ]]; then
 				return 1
 			fi
 		fi
 	done
 
-	return ${RESULT}
+	return ${RET_CODE}
 }
 
 # Deletes a file from the remote server.
@@ -500,14 +504,14 @@ function remove_remote_file()
 	local CHECK="${2}"
 
 	if [[ ${CHECK} == "check" ]]; then
-		if ! check_if_files_exist "${REMOTE_URL}" "false" "${FILENAME}" ; then
+		if ! check_if_files_exist "${REMOTE_URL}" "or" "${FILENAME}" ; then
 			show_debug_message "===== not on server"
 			return
 		fi
 	fi
 
 # TODO: FIX: This assumes ftp is used to upload files
-# TODO: upload.sh should accept "--remove FILE" option.
+# upload.sh should accept "--remove FILE" option.
 	local CMDS="cd '${REMOTE_DIR}' ; rm -r '${FILENAME}' ; bye"
 	local ERR="$( lftp -u "${REMOTE_USER},${REMOTE_PASSWORD}" "${REMOTE_PORT}" "${REMOTE_PROTOCOL}://${REMOTE_HOST}" -e "${CMDS}" 2>&1 )"
 
@@ -520,27 +524,28 @@ function remove_remote_file()
 	display_msg --logonly info "${MSG}"
 }
 
-# Check if a remote Website exists. The check is done by looking for the following files:
+# Check if a remote Website exists.
+# The check is done by looking for the following files:
+#	If any of the ${CONFIG_FILES} files exist AND
+#	all of the ${WEBSITE_FILES} exist then assume we have a remote Website.
 #
-# If any of the ${CONFIG_FILES} files exist and
-# all of the ${WEBSITE_FILES} exist then assume we have a remote Website.
-#
-# Returns - Nothing, but set the global variable ${WEBSITE_EXISTS}.
+# Returns - echo "true" if it exists, else "false"
 function check_if_website_exists()
 {
-	local CONFIG_FILES=("config.json" "configuration.json"  "remote_configuration.json")
+	local CONFIG_FILES=("${OLD_CONFIG_NAME}" "${ALLSKY_WEBSITE_CONFIGURATION_NAME}")
 	local WEBSITE_FILES=("index.php" "functions.php")
 
-	if check_if_files_exist "${REMOTE_URL}" "false" "${CONFIG_FILES[@]}" ; then
+	if check_if_files_exist "${REMOTE_URL}" "or" "${CONFIG_FILES[@]}" ; then
 		show_debug_message "Found remote website config file"
 
 		if check_if_files_exist "${REMOTE_URL}" "and" "${WEBSITE_FILES[@]}" ; then
 			display_msg --logonly info "Found remote Allsky Website at ${REMOTE_URL}"
-			WEBSITE_EXISTS="true"
-			return
+			echo "true"
+			return 0
 		fi
 	fi
-	WEBSITE_EXISTS="false"
+	echo "false"
+	return 1
 }
 
 # Uploads the Website code from ${ALLSKY_WEBSITE} and removes any old
@@ -601,17 +606,16 @@ function upload_config_file()
 	display_msg --logonly info "Uploading Website configuration file."
 	local REMOTE_DIR="$( settings ".remotewebsiteimagedir" "${SETTINGS_FILE}" )"
 
-	local RESULT="$( "${ALLSKY_SCRIPTS}/upload.sh" --remote-web \
+	local ERR="$( "${ALLSKY_SCRIPTS}/upload.sh" --remote-web \
 		"${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" "${REMOTE_DIR}" \
-		"${ALLSKY_WEBSITE_CONFIGURATION_NAME}" 2>&1
-	)"
+		"${ALLSKY_WEBSITE_CONFIGURATION_NAME}" 2>&1 )"
 	if [[ $? -eq 0 ]]; then
 		MSG="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} uploaded to"
 		MSG+="${REMOTE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 		show_debug_message "${MSG}"
 	else
-		display_msg --logonly info " Failed: ${RESULT}"
-		display_aborted "at the configuration file upload" "true"
+		display_msg --logonly info " Failed: ${ERR}"
+		display_aborted "at the configuration file upload" "${ERR}"
 	fi
 }
 

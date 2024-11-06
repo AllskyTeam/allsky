@@ -54,7 +54,8 @@ export LIGHTTPD_CONFIG_FILE="/etc/lighttpd/lighttpd.conf"
 
 #####
 # Display a header surrounded by stars.
-function display_header() {
+function display_header()
+{
 	local HEADER="${1}"
 	local LEN
 	((LEN = ${#HEADER} + 8))		# 8 for leading and trailing "*** "
@@ -81,7 +82,8 @@ function calc_wt_size()
 #####
 # Get a Git version, stripping any trailing newline.
 # Return "" if none, or on error.
-function get_Git_version() {
+function get_Git_version()
+{
 	local BRANCH="${1}"
 	local PACKAGE="${2}"
 	local VF="$( basename "${ALLSKY_VERSION_FILE}" )"
@@ -98,7 +100,8 @@ function get_Git_version() {
 
 #####
 # Get the version from a local file, if it exists.  If not, get from default file.
-function get_version() {
+function get_version()
+{
 	local F="${1}"
 	if [[ -z ${F} ]]; then
 		F="${ALLSKY_VERSION_FILE}"		# default
@@ -115,7 +118,8 @@ function get_version() {
 
 #####
 # Get the branch using git.
-function get_branch() {
+function get_branch()
+{
 	local H="${1:-${ALLSKY_HOME}}"
 	echo "$( cd "${H}" || exit; git rev-parse --abbrev-ref HEAD )"
 }
@@ -124,7 +128,8 @@ function get_branch() {
 #####
 # Get a shell variable's value.  The variable can have optional spaces and tabs before it.
 # This function is useful when we can't "source" the file.
-function get_variable() {
+function get_variable()
+{
 	local VARIABLE="${1}"
 	local FILE="${2}"
 	local LINE=""
@@ -1062,7 +1067,8 @@ function get_computer()
 # files directly. This does assume that both the cli and cgi settings files
 # work in the same way.
 #
-function get_php_setting() {
+function get_php_setting()
+{
     local SETTING="${1}"
     php -r "echo ini_get('${SETTING}');"
 }

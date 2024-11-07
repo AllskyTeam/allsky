@@ -613,7 +613,7 @@ function upload_remote_website()
 		return
 	fi
 
-	local EXTRA_TEXT=""  local EXCLUDE_FOLDERS=""
+	local EXTRA_TEXT=""  EXCLUDE_FOLDERS=""
 	local MSG  RET  RD
 
 	if [[ -n ${REMOTE_PORT} ]]; then
@@ -643,6 +643,7 @@ function upload_remote_website()
 	else
 		RD="cd '${REMOTE_DIR}'"
 	fi
+	# shellcheck disable=SC2086
 	RET="$( lftp -u "${REMOTE_USER},${REMOTE_PASSWORD}" \
 			${REMOTE_PORT} "${REMOTE_PROTOCOL}://${REMOTE_HOST}" \
 			-e "lcd '${ALLSKY_WEBSITE}'

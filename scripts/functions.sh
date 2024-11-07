@@ -37,11 +37,11 @@ else
 fi
 
 ##### Start and Stop Allsky
-start_Allsky()
+function start_Allsky()
 {
 	sudo systemctl start allsky 2> /dev/null
 }
-stop_Allsky()
+function stop_Allsky()
 {
 	sudo systemctl stop allsky 2> /dev/null
 }
@@ -1260,7 +1260,8 @@ function indent()
 
 # Python virtual environment
 PYTHON_VENV_ACTIVATED="false"
-activate_python_venv() {
+function activate_python_venv()
+{
 
 # TODO: will need to change when the OS after bookworm is released
 # If our next release is out, it won't support buster so may be check  != bullseye  ?
@@ -1274,7 +1275,8 @@ activate_python_venv() {
 	return 1
 }
 
-deactivate_python_venv() {
+function deactivate_python_venv()
+{
 	[[ ${PYTHON_VENV_ACTIVATED} == "true" ]] && deactivate
 }
 

@@ -2796,7 +2796,7 @@ restore_prior_website_files()
 		if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
 			# If different versions, then update the current one.
 			update_old_website_config_file "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" \
-				"${PRIOR_WEB_CONFIG_VERSION}" "${NEW_WEB_CONFIG_VERSION}" "local"
+				"${PRIOR_WEB_CONFIG_VERSION}" "${NEW_WEB_CONFIG_VERSION}"
 		else
 			display_msg --log progress "${ITEM} (copying)"
 			MSG="${ALLSKY_WEBSITE_CONFIGURATION_NAME}: Already current @ version ${NEW_WEB_CONFIG_VERSION}"

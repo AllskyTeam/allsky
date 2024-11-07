@@ -634,7 +634,6 @@ function update_old_website_config_file()
 	FILE="${1}"
 	PRIOR_VERSION="${2}"
 	CURRENT_VERSION="${3}"
-	LOCAL_OR_REMOTE="${4}"
 
 	# Current version: 2
 	if [[ ${PRIOR_VERSION} -eq 1 ]]; then

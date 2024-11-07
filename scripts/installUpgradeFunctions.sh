@@ -629,7 +629,7 @@ function prepare_local_website()
 # Update a Website configuration file from old to current version.
 function update_old_website_config_file()
 {
-	local FILE PRIOR_VERSION CURRENT_VERSION LOCAL_OR_REMOTE
+	local FILE PRIOR_VERSION CURRENT_VERSION
 
 	FILE="${1}"
 	PRIOR_VERSION="${2}"

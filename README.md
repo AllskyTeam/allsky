@@ -12,10 +12,20 @@ This is the source code for the Allsky Camera project described [on Instructable
 
 In order to run the Allsky software you need:
 
- * A Raspberry Pi Zero 2, Pi 2, Pi 3, Pi 4, or Pi 5.
- * One of the following:
+ * A Raspberry Pi Zero 2, Pi 2, Pi 3, Pi 4, Pi 5 or Le Potato.
+ * A camera:
     * Any ZWO camera sold before October 2024.
-    * A Raspberry Pi or Pi-compatible camera that is supported by libcamera.
+    * One of the following Raspberry Pi cameras:
+       * RPi HQ (IMX477 sensor)
+       * RPi Module 3 (IMX708 sensor)
+       * RPi Version 1 (OV5647 sensor; NOT RECOMMENDED: 0.9 second maximum exposure)
+       * IMX290 60.00 fps
+       * ArduCam 16 MP (IMX519 sensor)
+       * ArduCam 64 MP (arducam_64mp sensor)
+       * ArduCam 462 (arducam-pivariety sensor)
+       * Waveshare imx219-d160 (IMX290 sensor)
+       * ArduCam 64 MP Owlsight (OV64a40 sensor)
+       * OneInchEye IMX283 (IMX283 sensor)
 
 
 &nbsp;  

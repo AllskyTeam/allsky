@@ -275,7 +275,7 @@
             "name": "${SUN_SUNSET}",
             "description": "Sunset",
             "format": "%d-%m-%Y %H:%M:%S",
-            "sample": 10-07-2024 18:59:28",
+            "sample": "10-07-2024 18:59:28",
             "type": "Date",
             "source": "System"
         },

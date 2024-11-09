@@ -40,6 +40,9 @@ import locale
 #except:
 #    pass
 
+formatErrorPlaceholder = "??"
+missingTypePlaceholder = "???"
+
 metaData = {
     "name": "Overlays data on the image",
     "description": "Overlays data fields on the image",
@@ -96,6 +99,9 @@ class ALLSKYOVERLAY:
     _enableSkyfield = True
     _formaterrortext = ""
     _notEnabled = ""
+    _errorType = "XX_ERROR_XX"
+    _checkVariableType = True
+    _displayedTypeError = False
 
     _errors = ''
     _oeConfig = None
@@ -115,9 +121,21 @@ class ALLSKYOVERLAY:
         self._createTempDir(self._OVERLAYTLEFOLDER)
 
         with open(fieldsFile) as file:
-            self._systemfields = json.load(file)['data']
+            try:
+                self._systemfields = json.load(file)['data']
+            except Exception as err:
+                # This will cause errors for each variable in the overlay since its 'type'
+                # will be unknown.  _checkVariableType=False indicates not to check.
+                self._checkVariableType = False
+                s.log(0, f"ERROR: Unable to read '{fieldsFile}' {err}", sendToAllsky=True)
+                self._systemfields = []
         with open(userFieldsFile) as file:
-            self._userfields = json.load(file)['data']
+            try:
+                self._userfields = json.load(file)['data']
+            except Exception as err:
+                s.log(0, f"ERROR: Unable to read '{userFieldsFile}' {err}", sendToAllsky=True)
+                self._userfields = []
+                self._checkVariableType = False
 
         self._fields = self._systemfields + self._userfields
 
@@ -601,6 +619,8 @@ class ALLSKYOVERLAY:
         for matchNum, match in enumerate(matches, start=1):
             variable = match.group()
             variableType = self._getFieldType(variable)
+            if variableType is None and self._checkVariableType == False:
+                variableType = self._errorType
 
             fieldFormat = None
             if Format is not None:
@@ -862,10 +882,9 @@ class ALLSKYOVERLAY:
                 if envCheck in os.environ:
                     value = os.environ[envCheck]
                     fieldFound = True
-                else:
-                    if placeHolder.upper() in os.environ:
-                        value = os.environ[placeHolder.upper()]
-                        fieldFound = True
+                elif placeHolder.upper() in os.environ:
+                    value = os.environ[placeHolder.upper()]
+                    fieldFound = True
 
             if fieldFound:
                 if variableType == 'Date':
@@ -890,7 +909,7 @@ class ALLSKYOVERLAY:
                         self._log(0, f"ERROR: Cannot use format '{internalFormat}' from Allsky settings. Please check the date/time format in the main Allsky Settings", sendToAllsky=True)
                             
 
-                if variableType == 'Time':
+                elif variableType == 'Time':
                     if envCheck == 'AS_TIME' or envCheck == 'TIME':
                         timeStamp = time.localtime(self._imageDate)
                         if Format is None:
@@ -901,7 +920,7 @@ class ALLSKYOVERLAY:
                     else:
                         pass
                 
-                if variableType == 'Number':
+                elif variableType == 'Number':
                     if Format is not None and Format != "":
                         f = Format
                         if Format.startswith(':'):
@@ -926,7 +945,7 @@ class ALLSKYOVERLAY:
                         except ValueError as err:
                             self._log(0, f"ERROR: Cannot use format '{f}' on Number variables like {rawFieldName} (value={value}).", sendToAllsky=True)
 
-                if variableType == 'Bool':
+                elif variableType == 'Bool':
                     if Format is None or Format == '':
                         Format = "%yes"
                     value = self._doBoolFormat(rawFieldName, value, Format)
@@ -936,8 +955,18 @@ class ALLSKYOVERLAY:
                     if empty != '' and empty is not None:
                         value = empty
             elif variableType is None or variableType == '':
-                value = '???'
-                self._log(0, f"ERROR: {rawFieldName} has no variable type; check 'userfields.json'.  Using '{value}' instead.", sendToAllsky=True)
+                value = missingTypePlaceholder
+                msg = f"ERROR: No 'Type' defined for '{rawFieldName}'; check in the Variable Manager in the WebUI's Overlay Editor page."
+                msg += f"  Using '{value}' instead."
+                self._log(0, msg, sendToAllsky=True)
+            elif variableType == self._errorType:
+                if self._displayedTypeError == False:
+                    value = 'OVERLAY ERROR: See WebUI'
+                    # Only display once
+                    self._displayedTypeError = True
+                else:
+                    # Don't display the value so the error message above is easier to see.
+                    value = ""
 
         return value, x, y, fill, font, fontsize, rotate, scale, opacity, stroke, strokewidth
 
@@ -1459,18 +1488,19 @@ class ALLSKYOVERLAY:
         self._timer("Annotation Complete", showIntermediate=False)
 
 def overlay(params, event):
+    global formatErrorPlaceholder
+
     enabled = s.int(s.getEnvironmentVariable("AS_eOVERLAY"))
     if enabled == 1:
         if "formaterrortext" in params:
             formaterrortext = params["formaterrortext"]
         else:
-            formaterrortext = "??"
+            formaterrortext = formatErrorPlaceholder
         annotater = ALLSKYOVERLAY(formaterrortext)
         annotater.annotate()
-        #result = "Overlay Complete"
-        return
+        result = ""
     else:
-        result = "External Overlay Disabled"
+        result = "Module Overlay Method Disabled"
+        s.log(4, f"INFO: {result}.")
 
-    s.log(4, f"INFO: {result}.")
     return result

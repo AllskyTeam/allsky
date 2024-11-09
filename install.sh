@@ -2799,7 +2799,7 @@ restore_prior_website_files()
 				"${PRIOR_WEB_CONFIG_VERSION}" "${NEW_WEB_CONFIG_VERSION}"
 		else
 			display_msg --log progress "${ITEM} (copying)"
-			MSG="${ALLSKY_WEBSITE_CONFIGURATION_NAME}: Already current @ version ${NEW_WEB_CONFIG_VERSION}"
+			MSG="${SPACE}${SPACE}${SPACE}Already current @ version ${NEW_WEB_CONFIG_VERSION}"
 			display_msg --logonly info "${MSG}"
 		fi
 	fi

@@ -44,6 +44,7 @@ def getEnvironmentVariable(name, fatal=False):
 # These must exist and are used in several places.
 ALLSKYPATH = getEnvironmentVariable("ALLSKY_HOME", fatal=True)
 ALLSKY_TMP = getEnvironmentVariable("ALLSKY_TMP", fatal=True)
+ALLSKY_SCRIPTS = getEnvironmentVariable("ALLSKY_SCRIPTS", fatal=True)
 SETTINGS_FILE = getEnvironmentVariable("SETTINGS_FILE", fatal=True)
 ALLSKY_OVERLAY = getEnvironmentVariable("ALLSKY_OVERLAY", fatal=True)
 
@@ -243,6 +244,8 @@ def writeSettings():
         json.dump(SETTINGS, fp, indent=4)
 
 def updateSetting(values):
+    global SETTINGS
+
     readSettings()
     for value in values:
         SETTINGS.update(value)
@@ -256,7 +259,7 @@ def var_dump(variable):
 
 def log(level, text, preventNewline = False, exitCode=None, sendToAllsky=False):
     """ Very simple method to log data if in verbose mode """
-    global LOGLEVEL
+    global LOGLEVEL, ALLSKY_SCRIPTS
 
     if LOGLEVEL >= level:
         if preventNewline:
@@ -265,10 +268,11 @@ def log(level, text, preventNewline = False, exitCode=None, sendToAllsky=False):
             print(text)
 
     if sendToAllsky and level == 0:
-        allskyHome = os.environ['ALLSKY_HOME']
-        if allskyHome is not None:
-            command = os.path.join(allskyHome, 'scripts', f"addMessage.sh error '{text}'")
-            os.system(command)
+        # Need to escape single quotes in {text}.
+        doubleQuote = '"'
+        text = text.replace("'", f"'{doubleQuote}'{doubleQuote}'")
+        command = os.path.join(ALLSKY_SCRIPTS, f"addMessage.sh error '{text}'")
+        os.system(command)
     
     if exitCode is not None:
         sys.exit(exitCode)

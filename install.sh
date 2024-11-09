@@ -2496,40 +2496,45 @@ restore_prior_files()
 	PRIOR_OVERLAY_REPO_FILE="${PRIOR_ALLSKY_DIR}/config_repo/overlay/config/overlay-${PRIOR_CAMERA_TYPE}.json"
 
 	# If no prior overlay.json exists or the user never changed it (i.e., it's the same
-	# as the prior confi_repo file), use the new format.
+	# as the prior confi_repo file), use the new format if its not been setup before.
 
-	ITEM="${SPACE}Overlay configuration file"
-	if [[ ! -f ${PRIOR_OVERLAY_FILE} ]] ||
-			cmp -s "${PRIOR_OVERLAY_FILE}" "${PRIOR_OVERLAY_REPO_FILE}" ; then
-		MSG="${SPACE}User didn't change prior overlay file; using new '${OVERLAY_NAME}'"
-		display_msg --logonly info "${MSG}"
-	else
-		# The user changed the old overlay file so copy it to the new format and
-		# save its location in the settings file.
-		# NOTE: we add a 1 to the overlay name here so that the overay manager can
-		# pick it up and increment it as new overlays are created.
-		OVERLAY_NAME="${FULL_OVERLAY_NAME/overlay/overlay1}"
-		OVERLAY_NAME="${OVERLAY_NAME:-unknown.json}"
-		display_msg --log progress "${ITEM} (renamed to '${OVERLAY_NAME}')"
+    local DAYTIME_OVERLAY="$( settings ".daytimeoverlay" )"
+    local NIGHTTIME_OVERLAY="$( settings ".nighttimeoverlay" )"
 
-		DEST_FILE="${MY_OVERLAY_TEMPLATES}/${OVERLAY_NAME}"
+    if [[ -z "${DAYTIME_OVERLAY}" && -z "${NIGHTTIME_OVERLAY}" ]]; then
+        ITEM="${SPACE}Overlay configuration file"
+        if [[ ! -f ${PRIOR_OVERLAY_FILE} ]] ||
+                cmp -s "${PRIOR_OVERLAY_FILE}" "${PRIOR_OVERLAY_REPO_FILE}" ; then
+            MSG="${SPACE}User didn't change prior overlay file; using new '${OVERLAY_NAME}'"
+            display_msg --logonly info "${MSG}"
+        else
+            # The user changed the old overlay file so copy it to the new format and
+            # save its location in the settings file.
+            # NOTE: we add a 1 to the overlay name here so that the overay manager can
+            # pick it up and increment it as new overlays are created.
+            OVERLAY_NAME="${FULL_OVERLAY_NAME/overlay/overlay1}"
+            OVERLAY_NAME="${OVERLAY_NAME:-unknown.json}"
+            display_msg --log progress "${ITEM} (renamed to '${OVERLAY_NAME}')"
 
-		# Add the metadata for the overlay manager
-		# shellcheck disable=SC2086
-		jq '. += {"metadata": {
-			"camerabrand": "'${CAMERA_TYPE}'",
-			"cameramodel": "'${CAMERA_MODEL}'",
-			"cameraresolutionwidth": "'${SENSOR_WIDTH}'",
-			"cameraresolutionheight": "'${SENSOR_HEIGHT}'",
-			"tod": "both",
-			"name": "'${CAMERA_TYPE}' '${CAMERA_MODEL}'"
-		}}' "${PRIOR_OVERLAY_FILE}"  > "${DEST_FILE}"
-	fi
+            DEST_FILE="${MY_OVERLAY_TEMPLATES}/${OVERLAY_NAME}"
 
-	for s in daytimeoverlay nighttimeoverlay
-	do
-		doV "" "OVERLAY_NAME" "${s}" "text" "${SETTINGS_FILE}"
-	done
+            # Add the metadata for the overlay manager
+            # shellcheck disable=SC2086
+            jq '. += {"metadata": {
+                "camerabrand": "'${CAMERA_TYPE}'",
+                "cameramodel": "'${CAMERA_MODEL}'",
+                "cameraresolutionwidth": "'${SENSOR_WIDTH}'",
+                "cameraresolutionheight": "'${SENSOR_HEIGHT}'",
+                "tod": "both",
+                "name": "'${CAMERA_TYPE}' '${CAMERA_MODEL}'"
+            }}' "${PRIOR_OVERLAY_FILE}"  > "${DEST_FILE}"
+        fi
+
+        for s in daytimeoverlay nighttimeoverlay
+        do
+            doV "" "OVERLAY_NAME" "${s}" "text" "${SETTINGS_FILE}"
+        done
+    fi
 
 	if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
 		D="${PRIOR_CONFIG_DIR}"

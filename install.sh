@@ -2498,8 +2498,8 @@ restore_prior_files()
 	# If no prior overlay.json exists or the user never changed it (i.e., it's the same
 	# as the prior confi_repo file), use the new format if its not been setup before.
 
-    local DAYTIME_OVERLAY="$( settings ".daytimeoverlay" )"
-    local NIGHTTIME_OVERLAY="$( settings ".nighttimeoverlay" )"
+    local DAYTIME_OVERLAY="$( settings ".daytimeoverlay" "${PRIOR_SETTINGS_FILE}" )"
+    local NIGHTTIME_OVERLAY="$( settings ".nighttimeoverlay" "${PRIOR_SETTINGS_FILE}" )"
 
     if [[ -z "${DAYTIME_OVERLAY}" && -z "${NIGHTTIME_OVERLAY}" ]]; then
         ITEM="${SPACE}Overlay configuration file"
@@ -2534,6 +2534,8 @@ restore_prior_files()
         do
             doV "" "OVERLAY_NAME" "${s}" "text" "${SETTINGS_FILE}"
         done
+    else
+        display_msg --log info "Not converting overlays as daytimeoverlay and nighttimeoverlay are set"
     fi
 
 	if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then

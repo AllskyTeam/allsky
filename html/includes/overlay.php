@@ -21,46 +21,46 @@ function DisplayOverlay($image_name)
 	}
 ?>
 
-    <script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js"></script>
+    <script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <script src="/js/moment/moment-min.js"></script>
+    <script src="/js/moment/moment-min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <script src="/js/overlay/oe-overlayeditor.js"></script>
-    <script src="/js/overlay/oe-config.js"></script>
-    <script src="/js/overlay/oe-uimanager.js"></script>
+    <script src="/js/overlay/oe-overlayeditor.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+    <script src="/js/overlay/oe-config.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+    <script src="/js/overlay/oe-uimanager.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <script src="/js/overlay/fields/oe-fieldmanager.js"></script>
-    <script src="/js/overlay/fields/oe-field.js"></script>
-    <script src="/js/overlay/fields/oe-text.js"></script>
-    <script src="/js/overlay/fields/oe-image.js"></script>
-    <script src="/js/overlay/oe-exposure.js"></script>
+    <script src="/js/overlay/fields/oe-fieldmanager.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+    <script src="/js/overlay/fields/oe-field.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+    <script src="/js/overlay/fields/oe-text.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+    <script src="/js/overlay/fields/oe-image.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+    <script src="/js/overlay/oe-exposure.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <script src="/js/bootbox/bootbox.all.js"></script>
-    <script src="/js/bootbox/bootbox.locales.min.js"></script>
+    <script src="/js/bootbox/bootbox.all.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+    <script src="/js/bootbox/bootbox.locales.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <link rel='stylesheet' href='/js/jquery-ui-1.13.1.custom/jquery-ui.min.css' />
-    <script src="/js/jquery-ui-1.13.1.custom/jquery-ui.min.js"></script>
+    <link rel='stylesheet' href='/js/jquery-ui-1.13.1.custom/jquery-ui.min.css?c=<?php echo ALLSKY_VERSION; ?>' />
+    <script src="/js/jquery-ui-1.13.1.custom/jquery-ui.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <link rel='stylesheet' href='/js/spectrum/dist/spectrum.css' />
-    <script src="/js/spectrum/dist/spectrum.js"></script>
+    <link rel='stylesheet' href='/js/spectrum/dist/spectrum.css?c=<?php echo ALLSKY_VERSION; ?>' />
+    <script src="/js/spectrum/dist/spectrum.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <link rel='stylesheet' href='/js/jqPropertyGrid/jqPropertyGrid.css' />
-    <script src="/js/jqPropertyGrid/jqPropertyGrid.js"></script>
+    <link rel='stylesheet' href='/js/jqPropertyGrid/jqPropertyGrid.css?c=<?php echo ALLSKY_VERSION; ?>' />
+    <script src="/js/jqPropertyGrid/jqPropertyGrid.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <link rel="stylesheet" type="text/css" href="/js/datatables/datatables.min.css" />
-    <script type="text/javascript" src="/js/datatables/datatables.js"></script>
+    <link rel="stylesheet" type="text/css" href="/js/datatables/datatables.min.css?c=<?php echo ALLSKY_VERSION; ?>" />
+    <script type="text/javascript" src="/js/datatables/datatables.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <link rel="stylesheet" type="text/css" href="/js/overlay/imagemanager/oe-imagemanager.css" />
-    <script type="text/javascript" src="/js/overlay/imagemanager/oe-imagemanager.js"></script>
+    <link rel="stylesheet" type="text/css" href="/js/overlay/imagemanager/oe-imagemanager.css?c=<?php echo ALLSKY_VERSION; ?>" />
+    <script type="text/javascript" src="/js/overlay/imagemanager/oe-imagemanager.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <script type="text/javascript" src="/js/jquery-overlaymanager/jquery-overlaymanager.js"></script>
+    <script type="text/javascript" src="/js/jquery-overlaymanager/jquery-overlaymanager.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <link href="/js/dropzone/dropzone.css" type="text/css" rel="stylesheet" />
-    <script src="/js/dropzone/dropzone-min.js"></script>
+    <link href="/js/dropzone/dropzone.css?c=<?php echo ALLSKY_VERSION; ?>" type="text/css" rel="stylesheet" />
+    <script src="/js/dropzone/dropzone-min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <script src="/js/konva/konva.min.js"></script>
+    <script src="/js/konva/konva.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <link href="/css/overlay.css" rel="stylesheet">
+    <link href="/css/overlay.css?c=<?php echo ALLSKY_VERSION; ?>" rel="stylesheet">
 
     <div id="oeeditor">
         <div id="oe-overlay-manager"></div>     

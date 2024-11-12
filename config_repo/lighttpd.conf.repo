@@ -27,7 +27,7 @@ alias.url		    += ("/overlay" => "XX_ALLSKY_OVERLAY_XX/")
 
 $HTTP["url"] =~ "^/cgi-bin/" {
 	cgi.assign = ( ".py" => "/usr/bin/python3" )
-	alias.url += ( "/cgi-bin/" => "/home/Olivier/allsky/html/cgi-bin/" )
+        alias.url += ( "/cgi-bin/" => "XX_ALLSKY_HOME_XX/html/cgi-bin/" )
 } else $HTTP["url"] =~ "^/overlay/config/" {
      url.access-deny = ("")
 } else $HTTP["url"] =~ "allsky/videos|allsky/startrails|allsky/keograms" {

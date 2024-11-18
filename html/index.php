@@ -86,7 +86,7 @@ if ($useLogin) {
 
 // Get the version of the remote Allsky Website, if it exists.
 $remoteWebsiteVersion = "";
-if ($hasRemoteWebsite && $useRemoteWebsite) {
+if ($useRemoteWebsite) {
 	$f = getRemoteWebsiteConfigFile(); 
 	$errorMsg = "WARNING: ";
 	$retMsg = "";

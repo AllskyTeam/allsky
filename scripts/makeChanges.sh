@@ -16,7 +16,7 @@ function usage_and_exit()
 {
 	{
 		echo -en "${wERROR}"
-		echo     "Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly] [--fromInstall]"
+		echo     "Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly] [--fromInstall] [--addNewSettings]"
 		echo -en "\tkey label old_value new_value [...]"
 		echo -e  "${wNC}"
 		echo "There must be a multiple of 4 key/label/old_value/new_value arguments"
@@ -33,6 +33,7 @@ HELP="false"
 OPTIONS_FILE_ONLY="false"
 CAMERA_TYPE_ONLY="false"	# Only update the cameratype?
 FROM_INSTALL="false"		# Called from install.sh ?
+ADD_NEW_SETTINGS="false"
 FORCE=""					# Passed to createAllskyOptions.php
 
 while [[ $# -gt 0 ]]; do
@@ -54,6 +55,9 @@ while [[ $# -gt 0 ]]; do
 			;;
 		--frominstall)
 			FROM_INSTALL="true"
+			;;
+		--addnewsettings)
+			ADD_NEW_SETTINGS="true"
 			;;
 		--force)
 			FORCE="${ARG}"
@@ -432,7 +436,7 @@ do
 			# See if a camera-specific settings file was created.
 			# If the latitude isn't set assume it's a new file.
 			if [[ -n ${OLD_TYPE} && -n ${OLD_MODEL} &&
-					-z "$( settings .latitude "${SETTINGS_FILE}" )" ]]; then
+					-z "$( settings ".latitude" "${SETTINGS_FILE}" )" ]]; then
 
 				# We assume the user wants the non-camera specific settings below
 				# for this camera to be the same as the prior camera.
@@ -462,13 +466,11 @@ do
 
 			FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}_${CAMERA_MODEL// /_}"
 			FULL_OVERLAY_NAME+="-${C_sensorWidth}x${C_sensorHeight}-both.json"
-			SHORT_OVERLAY_NAME="overlay-${CAMERA_TYPE}.json"
-
 			OVERLAY_PATH="${ALLSKY_REPO}/overlay/config/${FULL_OVERLAY_NAME}"
 			if [[ -f ${OVERLAY_PATH} ]]; then
 				OVERLAY_NAME=${FULL_OVERLAY_NAME}
 			else
-				OVERLAY_NAME=${SHORT_OVERLAY_NAME}
+				OVERLAY_NAME="overlay-${CAMERA_TYPE}.json"
 			fi
 			# Set to defaults since there are no prior files.
 			for s in daytimeoverlay nighttimeoverlay
@@ -487,6 +489,10 @@ do
 				CAMERA_NUMBER=${CAMERA_NUMBER:-0}
 			fi
 			update_json_file ".cameranumber" "${CAMERA_NUMBER}" "${SETTINGS_FILE}" "integer"
+
+			if [[ ${ADD_NEW_SETTINGS} == "true" ]]; then
+				add_new_settings "${SETTINGS_FILE}" "${OPTIONS_FILE}" "${FROM_INSTALL}"
+			fi
 
 			# Don't do anything else if ${CAMERA_TYPE_ONLY} is set.
 			if [[ ${CAMERA_TYPE_ONLY} == "true" ]]; then

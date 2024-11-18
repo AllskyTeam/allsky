@@ -601,10 +601,10 @@ get_count()
 update_php_defines()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
-	local FILE
+	[[ ${SKIP} == "true" ]] && return
 
 	display_msg --log progress "Modifying variables for WebUI and Website."
-	FILE="${ALLSKY_WEBUI}/includes/${ALLSKY_DEFINES_INC}"
+	local FILE="${ALLSKY_WEBUI}/includes/${ALLSKY_DEFINES_INC}"
 	sed		-e "s;XX_HOME_XX;${HOME};g" \
 			-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};g" \
 			-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};g" \
@@ -658,6 +658,7 @@ recreate_options_file()
 do_sudoers()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
+	[[ ${SKIP} == "true" ]] && return
 
 	display_msg --log progress "Creating/updating sudoers file."
 	sed -e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" "${REPO_SUDOERS_FILE}"  >  "${TMP_FILE}"
@@ -818,6 +819,7 @@ get_checksums()
 install_webserver_et_al()
 {
 	declare -n v="${FUNCNAME[0]}"
+	[[ ${SKIP} == "true" ]] && return
 
 	sudo systemctl stop hostapd 2>/dev/null
 	sudo systemctl stop lighttpd 2>/dev/null
@@ -1563,6 +1565,7 @@ prompt_for_prior_Allsky()
 install_dependencies_etc()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
+	[[ ${SKIP} == "true" ]] && return
 
 	# These commands produce a TON of output that's not needed unless there's a problem.
 	# They also take a little while, so hide the output and let the user know.
@@ -1662,11 +1665,17 @@ convert_settings()			# prior_file, new_file
 	local NEW_FILE="${2}"
 	local CALLED_FROM="${3}"
 
-	[[ ${ALLSKY_VERSION} == "${PRIOR_ALLSKY_VERSION}" ]] && return
+	if [[ ${ALLSKY_VERSION} == "${PRIOR_ALLSKY_VERSION}" ]]; then
+		display_msg --logonly info "Not converting '${PRIOR_FILE}'; same ALLSKY_VERSION."
+		return
+	fi
 
 	# If we're upgrading a version >= COMBINED_BASE_VERSION then return.
 	# bash doesn't have >= so use   ! <
-	[[ ! (${PRIOR_ALLSKY_BASE_VERSION} < "${COMBINED_BASE_VERSION}") ]] && return
+	if [[ ! (${PRIOR_ALLSKY_BASE_VERSION} < "${COMBINED_BASE_VERSION}") ]]; then
+		display_msg --logonly info "Not converting '${PRIOR_FILE}'; >= COMBINED_BASE_VERSION."
+		return
+	fi
 
 	local MSG="Converting '$( basename "${PRIOR_FILE}" )' to new format:"
 	display_msg --log progress "${MSG}"
@@ -3036,6 +3045,7 @@ install_fonts()
 		display_msg --logonly info "Fonts already installed"
 		return
 	fi
+	[[ ${SKIP} == "true" ]] && return
 
 	display_msg --log progress "Installing Truetype fonts."
 	TMP="${ALLSKY_LOGS}/msttcorefonts.log"
@@ -3054,6 +3064,7 @@ install_PHP_modules()
 		display_msg --logonly info "PHP modules already installed"
 		return
 	fi
+	[[ ${SKIP} == "true" ]] && return
 
 	display_msg --log progress "Installing PHP modules and dependencies."
 	TMP="${ALLSKY_LOGS}/PHP_modules.log"
@@ -3078,6 +3089,7 @@ install_Python()
 		display_msg --logonly info "Python and related packages already installed"
 		return
 	fi
+	[[ ${SKIP} == "true" ]] && return
 
 	local PREFIX  REQUIREMENTS_FILE  M  R  NUM_TO_INSTALL
 	local NAME  PKGs  TMP  COUNT  C  PACKAGE  STATUS_NAME  L  M  MSG
@@ -3196,28 +3208,30 @@ install_Python()
 	# Add the status back in.
 	update_status_from_temp_file
 
-    # On pi 5 models we need to replace rpi.gpi with lgpio. This should be done by adafruit-blinka
-    # the code is in setup.py to do this but it doesnt appear to work hence we are forcing it here
-    # gpiozero decodes the pi revision number to calculate the pi version so until the pi 6 is 
-    # release this code will detect all future versions of the pi 5
-    #
-    # NOTE: rpi-gpi and rpi-lgpio cannot co exist but since blinka is not installing either we don't
-    #       currently have to worry about removing rpi-gpio before installing rpi-lgpio
-    #
-pimodel=$(python3 <<EOF
-from gpiozero import Device
-Device.ensure_pin_factory()
-print(Device.pin_factory.board_info.model)
-EOF
-)
+	# On Pi 5 models we need to replace rpi.gpi with lgpio.
+	# This should be done by adafruit-blinka.
+	# The code is in setup.py to do this but it
+	# doesn't appear to work hence we are forcing it here.
+	# gpiozero decodes the Pi revision number to calculate the Pi version so until the Pi 6 is 
+	# released this code will detect all future versions of the Pi 5
+	#
+	# NOTE: rpi-gpi and rpi-lgpio cannot co-exist but since blinka is not installing either we
+	# don't currently have to worry about removing rpi-gpio before installing rpi-lgpio
+	#
+	pimodel=$(python3 <<-EOF
+		from gpiozero import Device
+		Device.ensure_pin_factory()
+		print(Device.pin_factory.board_info.model)
+	EOF
+	2>/dev/null )	# hide error since it only applies to Pi 5.
 
-    # if we are on the pi 5 then install lgpio, using the virtual environment which will always
-    # exist on the pi 5
-    if [[ ${pimodel:0:1} == "5" ]]; then
-        display_msg --log progress "Updating GPIO to lgpio"
-        activate_python_venv
-        pip3 install rpi-lgpio > /dev/null 2>&1
-    fi
+	# if we are on the pi 5 then install lgpio, using the virtual environment which will always
+	# exist on the pi 5
+	if [[ ${pimodel:0:1} == "5" ]]; then
+		display_msg --log progress "Updating GPIO to lgpio"
+		activate_python_venv
+		pip3 install rpi-lgpio > /dev/null 2>&1
+	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }
@@ -3582,13 +3596,14 @@ handle_interrupts()
 do_allsky_status()
 {
 	local STATUS="${1}"
-	display_msg --logonly info "Setting Allsky status to ${!STATUS}."
+	display_msg --logonly info "Setting Allsky status to '${!STATUS}'."
 	set_allsky_status "${!STATUS}"
 }
 
 install_installer_dependencies()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
+	[[ ${SKIP} == "true" ]] && return
 
 	display_msg --log progress "Installing installer dependencies."
 	TMP="${ALLSKY_LOGS}/installer.dependencies.log"
@@ -3636,6 +3651,9 @@ while [ $# -gt 0 ]; do
 			;;
 		--restore)
 			RESTORE="true"
+			;;
+		--skip)
+			SKIP="true"
 			;;
 		--function)
 			FUNCTION="${2}"

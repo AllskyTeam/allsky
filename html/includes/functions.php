@@ -145,8 +145,7 @@ function initialize_variables($website_only=false) {
 
 	$settings_array = readSettingsFile();
 
-	// See if there are any website configuration files.
-	// Assume if there are, that website is in use.
+	// See if there are any Website configuration files.
 	if (file_exists(getLocalWebsiteConfigFile())) {
 		$hasLocalWebsite = true;
 	} else {

@@ -2537,7 +2537,6 @@ restore_prior_files()
     else
 		doV "" "DAYTIME_OVERLAY" "daytimeoverlay" "text" "${SETTINGS_FILE}"
 		doV "" "NIGHTTIME_OVERLAY" "nighttimeoverlay" "text" "${SETTINGS_FILE}"
-        display_msg --log info "Not converting overlays as daytimeoverlay and nighttimeoverlay are set"
     fi
 
 	if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then

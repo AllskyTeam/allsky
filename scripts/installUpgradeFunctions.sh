@@ -1113,12 +1113,12 @@ doV()
 	if [[ ${TYPE} == "boolean" ]]; then
 		# Some booleans used "true/false" and some used "1/0".
 		if [[ ${VAL_} == "true" || ${VAL_} == "1" ]]; then
-			VAL="true"
+			VAL_="true"
 		else
-			VAL="false"
+			VAL_="false"
 		fi
 	elif [[ ${TYPE} == "number" && -z ${VAL_} ]]; then
-		VAL=0		# give it a default
+		VAL_=0		# give it a default
 	fi
 
 	local ERR  MSG

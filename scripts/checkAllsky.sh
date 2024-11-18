@@ -775,6 +775,20 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 		echo    "FIX: Correct the ${S_longitude_label} then rerun ${ME}."
 	fi
 
+	##### Make sure required files exist
+	f="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+	if [[ ${S_uselocalwebsite} == "true" && ! -f ${f} ]]; then
+		heading "Error"
+		echo "${WSNs}${S_uselocalwebsite_label}${WSNe} is enabled but '${f}' does not exist."
+		echo "FIX: Either disable ${WSNs}${S_uselocalwebsite_label}${WSNe} or create '${f}."
+	fi
+	f="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
+	if [[ ${S_useremotewebsite} == "true" && ! -f ${f} ]]; then
+		heading "Error"
+		echo "${WSNs}${S_useremotewebsite_label}${WSNe} is enabled but '${f}' does not exist."
+		echo "FIX: Either disable ${WSNs}${S_useremotewebsite_label}${WSNe} or run 'cd ~/allsky; ./remote_website_install.sh'."
+	fi
+
 	##### Check dark frames
 	if [[ ${S_usedarkframes} == "true" ]]; then
 		if [[ ! -d ${ALLSKY_DARKS} ]]; then

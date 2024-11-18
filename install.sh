@@ -41,6 +41,7 @@ CONFIGURATION_NEEDED="true"				# Does Allsky need to be configured at end of ins
 SPACE="    "
 NOT_RESTORED="NO PRIOR VERSION"
 TMP_FILE="/tmp/x"						# temporary file used by many functions
+TAB="$( echo -e '\t' )"
 
 # Overlay variables
 SENSOR_WIDTH=""
@@ -108,6 +109,7 @@ STATUS_VARIABLES=()									# Holds all the variables and values to save
 #
 do_initial_heading()
 {
+	[[ ${SKIP} == "true" ]] && return
 	if [[ ${UPDATE} == "true" ]]; then
 		display_header "Updating Allsky"
 		return
@@ -516,7 +518,8 @@ do_save_camera_capabilities()
 
 	display_msg --log progress "Making new settings file '${SETTINGS_FILE}'."
 
-	CMD="makeChanges.sh${FORCE}${OPTIONSONLY} --cameraTypeOnly --fromInstall ${DEBUG_ARG}"
+	CMD="makeChanges.sh${FORCE}${OPTIONSONLY}"
+	CMD+=" --cameraTypeOnly --fromInstall --addNewSettings ${DEBUG_ARG}"
 	#shellcheck disable=SC2089
 	CMD+=" cameranumber 'Camera Number' '${PRIOR_CAMERA_NUMBER}' '${CAMERA_NUMBER}'"
 	#shellcheck disable=SC2089
@@ -889,7 +892,7 @@ prompt_for_hostname()
 
 	if [[ ${CURRENT_HOSTNAME} != "${NEW_HOST_NAME}" ]]; then
 		echo "${NEW_HOST_NAME}" | sudo tee /etc/hostname > /dev/null
-		sudo sed -i "s/127.0.1.1.*${CURRENT_HOSTNAME}/127.0.1.1\t${NEW_HOST_NAME}/" /etc/hosts
+		sudo sed -i "s/127.0.1.1.*${CURRENT_HOSTNAME}/127.0.1.1${TAB}${NEW_HOST_NAME}/" /etc/hosts
 
 	# else, they didn't change the default name, but that's their problem...
 	fi
@@ -1657,8 +1660,6 @@ DISPLAYED_BRIGHTNESS_MSG="/tmp/displayed_brightness_msg"
 DISPLAYED_OFFSET_MSG="/tmp/displayed_offset_msg"
 rm -f "${DISPLAYED_BRIGHTNESS_MSG}" "${DISPLAYED_OFFSET_MSG}"
 
-CONVERTED_SETTINGS=0
-
 convert_settings()			# prior_file, new_file
 {
 	local PRIOR_FILE="${1}"
@@ -1680,15 +1681,9 @@ convert_settings()			# prior_file, new_file
 	local MSG="Converting '$( basename "${PRIOR_FILE}" )' to new format:"
 	display_msg --log progress "${MSG}"
 
-	local DIR  TEMP_PRIOR  TEMP_NEW
-
-	((CONVERTED_SETTINGS++))
 	DIR="/tmp/converted_settings"
-	if [[ ${CONVERTED_SETTINGS} -eq 1 ]]; then
-		mkdir -p "${DIR}"
-	fi
-	TEMP_PRIOR="${DIR}/old-${CONVERTED_SETTINGS}.json"
-	TEMP_NEW="${DIR}/new-${CONVERTED_SETTINGS}.json"
+	mkdir -p "${DIR}"
+	local TEMP_PRIOR="${DIR}/old-${PRIOR_CAMERA_TYPE}_${PRIOR_CAMERA_MODEL}.json"
 
 	# Older version had uppercase letters in setting names and "1" and "0" for booleans
 	# and quotes around numbers. Change that.
@@ -1714,7 +1709,7 @@ convert_settings()			# prior_file, new_file
 	# Output the field name and value as text separated by a tab.
 	# Field names are already lowercase from above.
 	"${ALLSKY_SCRIPTS}/convertJSON.php" \
-			--delimiter "$( echo -e '\t' )" \
+			--delimiter "${TAB}" \
 			--options-file "${REPO_OPTIONS_FILE}" \
 			--include-not-in-options \
 			--settings-file "${TEMP_PRIOR}" |
@@ -1722,9 +1717,15 @@ convert_settings()			# prior_file, new_file
 		do
 			case "${FIELD}" in
 				"lastchanged")
-					# Update the value
+					# Update the value.
 					VALUE="$( date +'%Y-%m-%d %H:%M:%S' )"
-					doV "${FIELD}" "VALUE" "lastchanged" "text" "${NEW_FILE}"
+					doV "${FIELD}" "VALUE" "${FIELD}" "text" "${NEW_FILE}"
+					;;
+
+				"computer")
+					# We now compute the value.
+					VALUE="$( get_computer )"
+					doV "${FIELD}" "VALUE" "${FIELD}" "text" "${NEW_FILE}"
 					;;
 
 				# Don't carry this forward:
@@ -1740,8 +1741,7 @@ convert_settings()			# prior_file, new_file
 				"brightness" | "daybrightness" | "nightbrightness")
 					if [[ ! -f ${DISPLAYED_BRIGHTNESS_MSG} ]]; then
 						touch "${DISPLAYED_BRIGHTNESS_MSG}"
-						MSG="The 'Brightness' settings were removed."
-						MSG+="\nUse the 'Target Mean' settings to adjust brightness."
+						MSG="The 'Brightness' settings were removed. Use 'Target Mean' instead."
 						display_msg --log notice "${MSG}"
 					fi
 					;;
@@ -1809,101 +1809,9 @@ convert_settings()			# prior_file, new_file
 					;;
 			esac
 		done
-
-	##### New fields not already handled in loop above.
-	# If they are already in PRIOR_FILE then they are also in NEW_FILE.
-
-	for s in takenighttimeimages savenighttimeimages determinefocus showupdatedmessage
-	do
-		x="$( settings ".${s}" "${PRIOR_FILE}" )"
-		if [[ -z ${x} ]]; then
-			VALUE="true"; doV "NEW" "VALUE" "${s}" "boolean" "${NEW_FILE}"
-		fi
-	done
-
-	#shellcheck disable=SC2043
-	for s in zwoexposuretype
-	do
-		x="$( settings ".${s}" "${PRIOR_FILE}" )"
-		if [[ -z ${x} ]]; then
-			VALUE=0; doV "NEW" "VALUE" "${s}" "number" "${NEW_FILE}"
-		fi
-	done
-
-	# text fields
-	for i in "imagessortorder:ascending" "daytimeoverlay:" "nighttimeoverlay:" "computer:"
-	do
-		#shellcheck disable=SC2207
-		ii=( $( tr ":" " " <<<"${i}" ) )
-		s="${ii[0]}"
-		v="${ii[1]}"
-		x="$( settings ".${s}" "${PRIOR_FILE}" )"
-		if [[ -z ${x} ]]; then
-			# Handle values that need to be calculated.
-			if [[ ${s} == "computer" ]]; then
-				v="$( get_computer )"
-			fi
-
-			VALUE="${v}"; doV "NEW" "VALUE" "${s}" "text" "${NEW_FILE}"
-		fi
-	done
-
-	# New fields were added to the bottom of the settings file but the below
-	# command will order them the same as in the options file, which we want.
-
-	"${ALLSKY_SCRIPTS}/convertJSON.php" \
-		--convert \
-		--settings-only \
-		--settings-file "${NEW_FILE}" \
-		--options-file "${REPO_OPTIONS_FILE}" \
-		> "${TEMP_NEW}" 2>&1
-	if [[ $? -ne 0 ]]; then
-		local M="Unable to convert from old settings file"
-		MSG="${M}: $( < "${TEMP_NEW}" )"
-		display_msg --log error "${MSG}"
-		exit_installation 1 "${STATUS_ERROR}" "${M}."
-	fi
-	cp "${TEMP_NEW}" "${NEW_FILE}"
 }
 
-# Update the specified file with the specified new value.
-# ${V} must be a legal shell variable name.
-doV()
-{
-	local oldV="${1}"		# Optional name of old variable; if "" then use ${V}.
-	local V="${2}"			# name of the variable that holds the new value
-	local VAL="${!V}"		# value of the variable
-	local jV="${3}"			# new json variable name
-	local TYPE="${4}"
-	local FILE="${5}"
 
-	[[ -z ${oldV} ]] && oldV="${V}"
-
-	if [[ ${TYPE} == "boolean" ]]; then
-		# Some booleans used "true/false" and some used "1/0".
-		if [[ ${VAL} == "true" || ${VAL} == "1" ]]; then
-			VAL="true"
-		else
-			VAL="false"
-		fi
-	elif [[ ${TYPE} == "number" && -z ${VAL} ]]; then
-		VAL=0		# give it a default
-	fi
-
-	local ERR  MSG
-	if ERR="$( update_json_file ".${jV}" "${VAL}" "${FILE}" "${TYPE}" 2>&1 )" ; then
-		if [[ ${oldV} == "${jV}" ]]; then
-			oldV=""
-		else
-			oldV="${oldV}: "
-		fi
-		MSG="${SPACE}${oldV}${jV} = ${VAL}"
-		display_msg --logonly info "${MSG}"
-	else
-		# update_json_file() returns error message.
-		display_msg --log info "${ERR}"
-	fi
-}
 
 # Copy everything from old config.sh to the settings file.
 convert_config_sh()
@@ -3297,6 +3205,7 @@ log_info()
 check_if_buster()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
+	[[ ${SKIP} == "true" ]] && return
 	local MSG
 
 	[[ ${PI_OS} != "buster" ]] && return
@@ -3466,6 +3375,8 @@ check_restored_settings()
 # Do every time as a reminder.
 remind_old_version()
 {
+	[[ ${SKIP} == "true" ]] && return
+
 	if [[ -n ${PRIOR_ALLSKY_DIR} ]]; then
 		MSG="When you are sure everything is working with the new Allsky release,"
 		MSG+=" remove your old version in '${PRIOR_ALLSKY_DIR}' to save disk space."
@@ -3563,7 +3474,7 @@ exit_installation()
 		fi
 	fi
 
-	[[ -z ${FUNCTION} ]] && display_msg --logonly info "\nENDING ${IorR} AT $( date ).\n"
+	[[ -z ${FUNCTION} ]] && display_msg --logonly info "ENDING ${IorR}.\n"
 
 	# Don't exit for negative numbers.
 	[[ ${RET} -ge 0 ]] && exit "${RET}"
@@ -3694,7 +3605,7 @@ else
 	else
 		V="${ALLSKY_VERSION}"
 	fi
-	MSG="STARTING ${IorR} OF ${V} AT $( date ).\n"
+	MSG="STARTING ${IorR} OF ${V}.\n"
 	display_msg --logonly info "${MSG}"
 fi
 
@@ -3979,7 +3890,7 @@ fi
 if [[ ${CONFIGURATION_NEEDED} == "false" ]]; then
 	do_allsky_status "ALLSKY_STATUS_NOT_RUNNING"
 	display_image --custom "lime" "Allsky is\nready to start"
-	display_msg --log progress "\nInstallation is done and Allsky is ready to start."
+	display_msg --log progress "\nInstallation is done."  "You must manually restart Allsky."
 elif [[ ${CONFIGURATION_NEEDED} != "true" ]]; then
 	# A status string.
 	exit_installation 0 "${CONFIGURATION_NEEDED}" ""

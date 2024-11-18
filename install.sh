@@ -2535,6 +2535,8 @@ restore_prior_files()
             doV "" "OVERLAY_NAME" "${s}" "text" "${SETTINGS_FILE}"
         done
     else
+		doV "" "DAYTIME_OVERLAY" "daytimeoverlay" "text" "${SETTINGS_FILE}"
+		doV "" "NIGHTTIME_OVERLAY" "nighttimeoverlay" "text" "${SETTINGS_FILE}"
         display_msg --log info "Not converting overlays as daytimeoverlay and nighttimeoverlay are set"
     fi
 

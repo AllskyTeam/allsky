@@ -224,12 +224,8 @@ if ($useRemoteWebsite) {
 					&nbsp; &nbsp;
 <?php if ($useRemoteWebsite) {
 					echo "<span class='nowrap'>";
-					if ($remoteWebsiteURL !== "") {
-						echo "<a external='true' class='version-title-color' href='$remoteWebsiteURL'>";
-						echo "Remote Website $remoteWebsiteVersion</a></span>";
-					} else {
-						echo "Remote Website $remoteWebsiteVersion (unknown URL)";
-					}
+					echo "<a external='true' class='version-title-color' href='$remoteWebsiteURL'>";
+					echo "Remote Website $remoteWebsiteVersion</a></span>";
 } ?>
 				</div>
 		</div> <!-- /.navbar-header -->

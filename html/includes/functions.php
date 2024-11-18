@@ -106,10 +106,10 @@ $temptype = null;
 $lastChanged = null;
 $remoteWebsiteURL = null;
 $settings_array = null;
-$useLocalWebsite = null;
-$useRemoteWebsite = null;
-$hasLocalWebsite = null;
-$hasRemoteWebsite = null;
+$useLocalWebsite = false;
+$useRemoteWebsite = false;
+$hasLocalWebsite = false;
+$hasRemoteWebsite = false;
 $endSetting = "XX_END_XX";
 
 function readSettingsFile() {
@@ -145,20 +145,18 @@ function initialize_variables($website_only=false) {
 
 	$settings_array = readSettingsFile();
 
-	// See if there are any website configuration files.
-	// Assume if there are, that website is in use.
+	// See if there are any Website configuration files.
+	// The "has" variables just mean the associated configuration file exists,
+	// and in the case of a remote Website, that it also has a URL.
+	// The "use" variables means we're actually using the Website.
 	if (file_exists(getLocalWebsiteConfigFile())) {
 		$hasLocalWebsite = true;
-	} else {
-		$hasLocalWebsite = false;
+		$useLocalWebsite = toBool(getVariableOrDefault($settings_array, 'uselocalwebsite', "false"));
 	}
-	if (file_exists(getRemoteWebsiteConfigFile())) {
+	if (file_exists(getRemoteWebsiteConfigFile()) && getVariableOrDefault($settings_array, "remotewebsiteurl", "") !== "") {
 		$hasRemoteWebsite = true;
-	} else {
-		$hasRemoteWebsite = false;
+		$useRemoteWebsite = toBool(getVariableOrDefault($settings_array, 'useremotewebsite', "false"));
 	}
-	$useLocalWebsite = toBool(getVariableOrDefault($settings_array, 'uselocalwebsite', "false"));
-	$useRemoteWebsite = toBool(getVariableOrDefault($settings_array, 'useremotewebsite', "false"));
 
 	if ($website_only) return;
 

@@ -68,8 +68,13 @@ int getNumOfConnectedCameras()
 		int num;
 		char cameraType[CC_TYPE_SIZE];
 
-		if (sscanf(line, "%s\t%d\t%s", cameraType, &num, cameraModel) == 3)
+		// Not sure how to get sscanf() to honor the tabs and no other whitespace.
+		// If there is a space in cameraModel, %s only returns up to the space.
+		// %c returns the newline, though.
+		if (sscanf(line, "%s\t%d\t%60c", cameraType, &num, cameraModel) == 3)
 		{
+			cameraModel[strlen(cameraModel)-1] = '\0';
+			Log(5, "       cameraType=%s, num=%d, cameraModel=%s\n", cameraType, num, cameraModel);
 			CONNECTED_CAMERAS *cC = &connectedCameras[totalNum_connectedCameras++];
 			cC->cameraID = num;
 			strncpy(cC->Type, cameraType, CC_TYPE_SIZE);
@@ -1417,6 +1422,7 @@ void saveCameraInfo(
 				fprintf(f, "\n");
 			}
 			char *cm = getCameraModel(cC->Name);
+			Log(5, "cC->Name=%s, cm=%s, camModel=%s\n", cC->Name, cm, camModel);
 			if (strcmp(cm, camModel) == 0)
 			{
 				foundThisModel = true;
@@ -1435,7 +1441,7 @@ void saveCameraInfo(
 		fprintf(f, "\n\t],\n");
 		if (! foundThisModel)
 		{
-			Log(0, "%s: ERROR: Currently connected %s %s camera not found in '%s'.\n",
+			Log(0, "%s: ERROR: Currently connected '%s %s' camera not found in '%s'.\n",
 				CG.ME, CAMERA_TYPE, camModel, CG.connectedCamerasFile);
 			if (f != stdout)
 				fclose(f);

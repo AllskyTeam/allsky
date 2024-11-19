@@ -36,20 +36,74 @@ int totalNum_connectedCameras = 0;			// num connected cameras of all types
 char *connectedCameraTypes[100] = {};		// points to connectedCameras.Type
 int num_connectedCameraTypes = 0;
 
+// Find the end of the token that begins at "start".
+// The end is either "delimeter" or NULL.
+// If "delimeter", replace with NULL.
+
+char *getToken(char *start, char delimeter)
+{
+	// "nextToken" points to the place to look for the next token,
+	// or NULL if we're at the end of the line.
+	static char *nextToken = NULL;
+
+	if (start == NULL || *start == '\0')
+	{
+		// If "start" is NULL we're going to start a new line
+		// so reset "nextToken".
+		nextToken = NULL;
+		return(NULL);
+	}
+
+	char *startOfToken;
+	char *ptr;
+
+	if (nextToken == NULL)
+		ptr = start;
+	else
+		ptr = nextToken;
+
+	if (*ptr == '\0')
+		return(NULL);
+
+	startOfToken = ptr;
+
+	// Find end of token.
+	while (*ptr != delimeter && *ptr != '\0')
+	{
+		ptr++;
+	}
+
+	if (*ptr == '\0')
+	{
+		// At the end of the line so reset "nextToken".
+		nextToken = ptr;
+	}
+	else
+	{
+		// at delimeter.  Assume there is at least 1 more character in the line.
+		*ptr = '\0';
+		nextToken = (ptr+1);
+	}
+
+	return(startOfToken);
+}
+
 // Return the number of cameras PHYSICALLY connected of the correct type.
 // allsky.sh created the file; we just need to count the number of lines in it.
 // Also, save information on ALL connected cameras.
 int getNumOfConnectedCameras()
 {
-	FILE *f = fopen(CG.connectedCamerasFile, "r");
-	if (f == NULL)
+	// Read the whole file into memory so we can easily parse it.
+	static char *buf = readFileIntoBuffer(&CG, CG.connectedCamerasFile);
+	if (buf == NULL)
 	{
-		Log(0, "%s: ERROR: Unable to open CG.connectedCamerasFile '%s': %s\n",
-			CG.ME, CG.connectedCamerasFile, strerror(errno));
+		Log(0, "%s: ERROR: Unable to read from CG.RPI_cameraInfoFile '%s': %s\n",
+			CG.ME, CG.RPI_cameraInfoFile, strerror(errno));
 		closeUp(EXIT_ERROR_STOP);
 	}
+
 	int numThisType = 0;
-	char line[512];
+	char *line;
 
 	// Input file format (tab-separated):
 	//		camera_type  camera_number   sensor_name_or_Model  optional_other_stuff
@@ -60,21 +114,20 @@ int getNumOfConnectedCameras()
 	// ZWO Model names may have multiple words.
 
 	int on_line=0;
-	while (fgets(line, sizeof(line)-1, f) != NULL)
+	(void) getLine(NULL);		// resets the buffer pointer
+	while ((line = getLine(buf)) != NULL)
 	{
 		on_line++;
-		Log(5, "     line %d: %s", on_line, line);
-		char cameraModel[CAMERA_NAME_SIZE];
-		int num;
-		char cameraType[CC_TYPE_SIZE];
+		Log(5, "Line %d: [%s]\n", on_line, line);
+		(void) getToken(NULL, '\t');		// tell getToken() we have a new line.
 
-		// Not sure how to get sscanf() to honor the tabs and no other whitespace.
-		// If there is a space in cameraModel, %s only returns up to the space.
-		// %c returns the newline, though.
-		if (sscanf(line, "%s\t%d\t%60c", cameraType, &num, cameraModel) == 3)
+		char *cameraType = getToken(line, '\t');
+		char *numStr = getToken(line, '\t');
+		char *cameraModel = getToken(line, '\t');
+		if (cameraModel != NULL)
 		{
-			cameraModel[strlen(cameraModel)-1] = '\0';
-			Log(5, "       cameraType=%s, num=%d, cameraModel=%s\n", cameraType, num, cameraModel);
+			int num = atoi(numStr);
+			Log(5, "  cameraType=[%s], num=%d, cameraModel=[%s]\n", cameraType, num, cameraModel);
 			CONNECTED_CAMERAS *cC = &connectedCameras[totalNum_connectedCameras++];
 			cC->cameraID = num;
 			strncpy(cC->Type, cameraType, CC_TYPE_SIZE);
@@ -120,11 +173,11 @@ Log(5, "  NEW TYPE [%s], num_connectedCameraTypes=%d\n", cC->Type, num_connected
 		else
 		{
 			// "line" ends with newline
-			Log(1, "%s: WARNING: skipping invalid line %d in '%s': %s",
+			Log(1, "%s: WARNING: skipping invalid line %d in '%s': [%s]",
 				CG.ME, on_line, basename(CG.connectedCamerasFile), line);
 		}
 	}
-	fclose(f);
+
 	Log(4, "Connected camera types: %d, connected %s cameras: %d\n",
 		num_connectedCameraTypes, CAMERA_TYPE, numThisType);
 
@@ -590,58 +643,6 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 	Some cameras also have additional resolutions for a given mode.
 */
 
-// Find the end of the token that begins at "start".
-// The end is either "delimeter" or NULL.
-// If "delimeter", replace with NULL.
-
-char *getToken(char *start, char delimeter)
-{
-	// "nextToken" points to the place to look for the next token,
-	// or NULL if we're at the end of the line.
-	static char *nextToken = NULL;
-
-	if (start == NULL || *start == '\0')
-	{
-		// If "start" is NULL we're going to start a new line
-		// so reset "nextToken".
-		nextToken = NULL;
-		return(NULL);
-	}
-
-	char *startOfToken;
-	char *ptr;
-
-	if (nextToken == NULL)
-		ptr = start;
-	else
-		ptr = nextToken;
-
-	if (*ptr == '\0')
-		return(NULL);
-
-	startOfToken = ptr;
-
-	// Find end of token.
-	while (*ptr != delimeter && *ptr != '\0')
-	{
-		ptr++;
-	}
-
-	if (*ptr == '\0')
-	{
-		// At the end of the line so reset "nextToken".
-		nextToken = ptr;
-	}
-	else
-	{
-		// at delimeter.  Assume there is at least 1 more character in the line.
-		*ptr = '\0';
-		nextToken = (ptr+1);
-	}
-
-	return(startOfToken);
-}
-
 // Get the cameraNumber for the camera we're using.
 // Also save the info on each connected camera of the current type.
 int getCameraNumber()
@@ -691,7 +692,7 @@ if (0) {
 	{
 		strcpy(full_line, line);		// use full_line in error messages
 		on_line++;
-		Log(5, "line %3d: %s\n", on_line, full_line);
+		Log(5, "Line %3d: %s\n", on_line, full_line);
 
 		(void) getToken(NULL, '\t');		// tell getToken() we have a new line.
 

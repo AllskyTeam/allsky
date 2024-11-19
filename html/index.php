@@ -190,10 +190,10 @@ if ($useRemoteWebsite) {
 	<script src="documentation/js/sb-admin-2.js"></script>
 
 	<!-- Code Mirror editor -->
+<?php if ($page === "editor") { ?>
 	<link rel="stylesheet" href="lib/codeMirror/codemirror.css">
 	<link rel="stylesheet" href="lib/codeMirror/monokai.min.css">
 	<script type="text/javascript" src="lib/codeMirror/codemirror.js"> </script>
-<?php if ($useLocalWebsite || $useRemoteWebsite) { ?>
 	<script type="text/javascript" src="lib/codeMirror/json.js"> </script>
 <?php } ?>
 </head>

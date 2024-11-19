@@ -1152,7 +1152,6 @@ function add_new_settings()
 		function display_msg() { return; }
 	fi
 
-
 	display_msg --logonly info "Checking for new settings in options file."
 
 	local TAB="$( echo -e '\t' )"
@@ -1173,10 +1172,16 @@ function add_new_settings()
 			return 1
 		fi
 	fi
+	if [[ -z ${NEW} ]]; then
+		display_msg --logonly info "  >> No new settings in options file."
+		return 0
+	fi
 
 	IFS="${TAB}"
 	echo -e "${NEW}" | while read -r SETTING VALUE TYPE
 		do
+			[[ -z ${SETTING} ]] && continue
+
 			# "read" doesn't work with empty fields.
 			if [[ -z ${TYPE} ]]; then
 				TYPE="${VALUE}"

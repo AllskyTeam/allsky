@@ -1093,3 +1093,102 @@ function get_website_checksums()
 			grep -E -v "myFiles/|${ALLSKY_WEBSITE_CONFIGURATION_NAME}|$( basename "${CHECKSUM_FILE}" )"
 	) | "${ALLSKY_UTILITIES}/getChecksum.php"
 }
+
+
+####
+# Update the specified file with the specified new value.
+# ${V_} must be a legal shell variable name.
+# Use V_ and VAL_ in case the caller uses V or VAL
+doV()
+{
+	local oldV="${1}"		# Optional name of old variable; if "" then use ${V_}.
+	local V_="${2}"			# name of the variable that holds the new value
+	local VAL_="${!V_}"		# value of the variable
+	local jV="${3}"			# new json variable name
+	local TYPE="${4}"
+	local FILE="${5}"
+
+	[[ -z ${oldV} ]] && oldV="${V_}"
+
+	if [[ ${TYPE} == "boolean" ]]; then
+		# Some booleans used "true/false" and some used "1/0".
+		if [[ ${VAL_} == "true" || ${VAL_} == "1" ]]; then
+			VAL_="true"
+		else
+			VAL_="false"
+		fi
+	elif [[ ${TYPE} == "number" && -z ${VAL_} ]]; then
+		VAL_=0		# give it a default
+	fi
+
+	local ERR  MSG
+	if ERR="$( update_json_file ".${jV}" "${VAL_}" "${FILE}" "${TYPE}" 2>&1 )" ; then
+		if [[ ${oldV} == "${jV}" ]]; then
+			oldV=""
+		else
+			oldV+=": "
+		fi
+		MSG="${SPACE}${oldV}${jV} = ${VAL_}"
+		[[ -n ${oldV} ]] && MSG+=", TYPE=${TYPE}"
+		display_msg --logonly info "${MSG}"
+	else
+		# update_json_file() returns error message.
+		display_msg --log warning "${ERR}"
+	fi
+}
+
+
+####
+# Check for settings in the options file that aren't in the settings file.
+# These are new settings.
+# This has to come after the new settings and options files are created.
+function add_new_settings()
+{
+	local SETTINGS="${1}"
+	local OPTIONS="${2}"
+	local FROM_INSTALL="${3}"
+
+	if [[ ${FROM_INSTALL} == "false" ]]; then
+		function display_msg() { return; }
+	fi
+
+	display_msg --logonly info "Checking for new settings in options file."
+
+	local TAB="$( echo -e '\t' )"
+	local NEW="$( "${ALLSKY_SCRIPTS}/convertJSON.php" \
+		--options-only \
+		--settings-file "${SETTINGS}" \
+		--options-file "${OPTIONS}" \
+		--delimiter "${TAB}" \
+		2>&1 )"
+	if [[ $? -ne 0 ]]; then
+		local M="Unable to get new settings"
+		MSG="${M}: $( < "${NEW}" )"
+		if [[ ${FROM_INSTALL} == "true" ]]; then
+			display_msg --log error "${MSG}"
+			exit_installation 1 "${STATUS_ERROR}" "${M}."
+		else
+			echo "ERROR: ${MSG}" >&2
+			return 1
+		fi
+	fi
+	if [[ -z ${NEW} ]]; then
+		display_msg --logonly info "  >> No new settings in options file."
+		return 0
+	fi
+
+	IFS="${TAB}"
+	echo -e "${NEW}" | while read -r SETTING VALUE TYPE
+		do
+			[[ -z ${SETTING} ]] && continue
+
+			# "read" doesn't work with empty fields.
+			if [[ -z ${TYPE} ]]; then
+				TYPE="${VALUE}"
+				VALUE=""
+			fi
+			doV "NEW" "VALUE" "${SETTING}" "${TYPE}" "${SETTINGS}"
+		done
+
+	return 0
+}

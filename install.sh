@@ -41,6 +41,7 @@ CONFIGURATION_NEEDED="true"				# Does Allsky need to be configured at end of ins
 SPACE="    "
 NOT_RESTORED="NO PRIOR VERSION"
 TMP_FILE="/tmp/x"						# temporary file used by many functions
+TAB="$( echo -e '\t' )"
 
 # Overlay variables
 SENSOR_WIDTH=""
@@ -65,6 +66,7 @@ FIRST_VERSION_VERSION="v2022.03.01"
 PRE_FIRST_VERSION_VERSION="old"
 
 ##### Information on the prior Allsky version, if used
+USE_PRIOR_ALLSKY="false"
 PRIOR_ALLSKY_STYLE=""			# Set to the style if they have a prior version
 PRIOR_ALLSKY_VERSION=""			# The version number of the prior version, if known
 PRIOR_ALLSKY_BASE_VERSION=""	# The base version number of the prior version, if known
@@ -108,6 +110,7 @@ STATUS_VARIABLES=()									# Holds all the variables and values to save
 #
 do_initial_heading()
 {
+	[[ ${SKIP} == "true" ]] && return
 	if [[ ${UPDATE} == "true" ]]; then
 		display_header "Updating Allsky"
 		return
@@ -134,7 +137,7 @@ do_initial_heading()
 			MSG+="\nYou will manually need to restart Allsky after checking that"
 			MSG+=" the settings are correct in the WebUI."
 
-		elif [[ -n ${PRIOR_ALLSKY_DIR} ]]; then
+		elif [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
 			MSG+="\nYou will be asked if you want to use the images and darks"
 			MSG+=" from your prior version of Allsky."
 
@@ -390,7 +393,7 @@ select_camera_type()
 	local MSG  CAMERA  NEW  S  CAMERA_INFO
 	# CAMERA_TYPE and NUM_CONNECTED_CAMERAS are global
 
-	if [[ -n ${PRIOR_ALLSKY_DIR} ]]; then
+	if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
 		# bash doesn't have ">=" so we have to use "! ... < "
 		if [[ ! ${PRIOR_ALLSKY_VERSION} < "${FIRST_CAMERA_TYPE_BASE_VERSION}" ]]; then
 			# New style Allsky using ${CAMERA_TYPE}.
@@ -516,7 +519,8 @@ do_save_camera_capabilities()
 
 	display_msg --log progress "Making new settings file '${SETTINGS_FILE}'."
 
-	CMD="makeChanges.sh${FORCE}${OPTIONSONLY} --cameraTypeOnly --fromInstall ${DEBUG_ARG}"
+	CMD="makeChanges.sh${FORCE}${OPTIONSONLY}"
+	CMD+=" --cameraTypeOnly --fromInstall --addNewSettings ${DEBUG_ARG}"
 	#shellcheck disable=SC2089
 	CMD+=" cameranumber 'Camera Number' '${PRIOR_CAMERA_NUMBER}' '${CAMERA_NUMBER}'"
 	#shellcheck disable=SC2089
@@ -601,10 +605,10 @@ get_count()
 update_php_defines()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
-	local FILE
+	[[ ${SKIP} == "true" ]] && return
 
 	display_msg --log progress "Modifying variables for WebUI and Website."
-	FILE="${ALLSKY_WEBUI}/includes/${ALLSKY_DEFINES_INC}"
+	local FILE="${ALLSKY_WEBUI}/includes/${ALLSKY_DEFINES_INC}"
 	sed		-e "s;XX_HOME_XX;${HOME};g" \
 			-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};g" \
 			-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};g" \
@@ -658,6 +662,7 @@ recreate_options_file()
 do_sudoers()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
+	[[ ${SKIP} == "true" ]] && return
 
 	display_msg --log progress "Creating/updating sudoers file."
 	sed -e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" "${REPO_SUDOERS_FILE}"  >  "${TMP_FILE}"
@@ -818,6 +823,7 @@ get_checksums()
 install_webserver_et_al()
 {
 	declare -n v="${FUNCNAME[0]}"
+	[[ ${SKIP} == "true" ]] && return
 
 	sudo systemctl stop hostapd 2>/dev/null
 	sudo systemctl stop lighttpd 2>/dev/null
@@ -887,7 +893,7 @@ prompt_for_hostname()
 
 	if [[ ${CURRENT_HOSTNAME} != "${NEW_HOST_NAME}" ]]; then
 		echo "${NEW_HOST_NAME}" | sudo tee /etc/hostname > /dev/null
-		sudo sed -i "s/127.0.1.1.*${CURRENT_HOSTNAME}/127.0.1.1\t${NEW_HOST_NAME}/" /etc/hosts
+		sudo sed -i "s/127.0.1.1.*${CURRENT_HOSTNAME}/127.0.1.1${TAB}${NEW_HOST_NAME}/" /etc/hosts
 
 	# else, they didn't change the default name, but that's their problem...
 	fi
@@ -1101,7 +1107,7 @@ get_desired_locale()
 	# let the user know.
 	# This can happen if they use the settings file from a different Pi or different OS.
 	local MSG2=""
-	if [[ -z ${DESIRED_LOCALE} && -n ${PRIOR_ALLSKY_DIR} && -n ${PRIOR_SETTINGS_FILE} ]]; then
+	if [[ -z ${DESIRED_LOCALE} && ${USE_PRIOR_ALLSKY} == "true" && -n ${PRIOR_SETTINGS_FILE} ]]; then
 		# People rarely change locale once set, so assume they still want the prior one.
 		DESIRED_LOCALE="$( settings ".locale" "${PRIOR_SETTINGS_FILE}" )"
 		if [[ -n ${DESIRED_LOCALE} ]]; then
@@ -1243,7 +1249,7 @@ display_msg --logonly info "Settings files now:\n${MSG}"
 # See what steps, if any, can be skipped.
 set_what_can_be_skipped()
 {
-	if [[ -n ${PRIOR_ALLSKY_DIR} ]]; then
+	if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
 		local OLD_VERSION="${1}"
 		local NEW_VERSION="${2}"
 
@@ -1335,7 +1341,7 @@ does_prior_Allsky_Website_exist()
 	fi
 
 	if [[ -z ${PRIOR_WEBSITE_DIR} ]]; then
-		display_msg --logonly info "No prior Allsky Website found in '${PRIOR_WEBSITE_DIR}', PRIOR_STYLE=${PRIOR_STYLE}."
+		display_msg --logonly info "No prior Allsky Website found."
 	else
 		display_msg --logonly info "PRIOR_WEBSITE_STYLE=${PRIOR_WEBSITE_STYLE}"
 		display_msg --logonly info "PRIOR_WEBSITE_DIR=${PRIOR_WEBSITE_DIR}"
@@ -1362,23 +1368,24 @@ does_prior_Allsky_exist()
 			MSG+=" but it doesn't appear to have been installed; ignoring it."
 			display_msg --log warning "${MSG}"
 		else
-			display_msg --logonly info "No prior Allsky found in '${PRIOR_ALLSKY_DIR}'."
+			display_msg --logonly info "No prior Allsky found at '${PRIOR_ALLSKY_DIR}'."
 		fi
 		does_prior_Allsky_Website_exist ""
-		PRIOR_ALLSKY_DIR=""
+		USE_PRIOR_ALLSKY="false"
 		return 1
 	fi
 
 	# All versions back to v0.6 (never checked prior ones) have a "scripts" directory.
 	if [[ ! -d "${PRIOR_ALLSKY_DIR}/scripts" ]]; then
-		MSG+=" but it doesn't appear to be valid; ignoring it."
+		MSG+=" but it doesn't appear to be valid or it too old; ignoring it."
 		display_msg --log warning "${MSG}"
 		does_prior_Allsky_Website_exist ""
-		PRIOR_ALLSKY_DIR=""
+		USE_PRIOR_ALLSKY="false"
 		return 1
 	fi
 
-	display_msg --logonly info "Prior Allsky found in ${PRIOR_ALLSKY_DIR}."
+	display_msg --logonly info "Prior Allsky found at '${PRIOR_ALLSKY_DIR}'."
+	USE_PRIOR_ALLSKY="true"		# may be set to false after user is prompted to use it
 
 	# Determine the prior Allsky version and set some PRIOR_* locations.
 	PRIOR_ALLSKY_VERSION="$( get_version "${PRIOR_ALLSKY_DIR}/" )"	# Returns "" if no version file.
@@ -1448,7 +1455,7 @@ does_prior_Allsky_exist()
 			if [[ ! -f ${CAPTURE} ]]; then
 				MSG="Cannot find prior 'capture*.cpp' program in '${DIR}'".
 				display_msg --log "warning" "${MSG}${MSG2}"
-				PRIOR_ALLSKY_DIR=""
+				USE_PRIOR_ALLSKY="false"
 				return 1
 			fi
 			STRING="Camera Software"
@@ -1456,7 +1463,7 @@ does_prior_Allsky_exist()
 					gawk '{print $6}' )" ; then
 				MSG="Unable to determine version of prior Allsky: '${STRING}' not in '${CAPTURE}'."
 				display_msg --log "warning" "${MSG}${MSG2}"
-				PRIOR_ALLSKY_DIR=""
+				USE_PRIOR_ALLSKY="false"
 				return 1
 			fi
 		fi
@@ -1495,7 +1502,7 @@ prompt_for_prior_Allsky()
 	if [[ ${WILL_USE_PRIOR} == "true" ]]; then
 		local MSG
 
-		if [[ -n ${PRIOR_ALLSKY_DIR} ]]; then
+		if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
 			MSG="You have a prior version of Allsky in ${PRIOR_ALLSKY_DIR}."
 			MSG+="\n\nDo you want to restore the prior images and other files you've changed?"
 			if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
@@ -1517,7 +1524,7 @@ prompt_for_prior_Allsky()
 				STATUS_VARIABLES+=("CAMERA_NUMBER='${CAMERA_NUMBER}'\n")
 				display_msg --logonly info "Will restore from prior version of Allsky."
 			else
-				PRIOR_ALLSKY_DIR=""
+				USE_PRIOR_ALLSKY="false"
 				PRIOR_SETTINGS_FILE=""
 				CAMERA_TYPE=""
 				PRIOR_CAMERA_TYPE=""
@@ -1551,7 +1558,7 @@ prompt_for_prior_Allsky()
 		# so force creating a default settings file.
 		FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
 		STATUS_VARIABLES+=("FORCE_CREATING_DEFAULT_SETTINGS_FILE='true'\n")
-		STATUS_VARIABLES+=("PRIOR_ALLSKY_DIR=''\n")
+		STATUS_VARIABLES+=("USE_PRIOR_ALLSKY='${USE_PRIOR_ALLSKY}'\n")
 	fi
 
 	STATUS_VARIABLES+=("WILL_USE_PRIOR='${WILL_USE_PRIOR}'\n")
@@ -1563,6 +1570,7 @@ prompt_for_prior_Allsky()
 install_dependencies_etc()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
+	[[ ${SKIP} == "true" ]] && return
 
 	# These commands produce a TON of output that's not needed unless there's a problem.
 	# They also take a little while, so hide the output and let the user know.
@@ -1654,32 +1662,30 @@ DISPLAYED_BRIGHTNESS_MSG="/tmp/displayed_brightness_msg"
 DISPLAYED_OFFSET_MSG="/tmp/displayed_offset_msg"
 rm -f "${DISPLAYED_BRIGHTNESS_MSG}" "${DISPLAYED_OFFSET_MSG}"
 
-CONVERTED_SETTINGS=0
-
 convert_settings()			# prior_file, new_file
 {
 	local PRIOR_FILE="${1}"
 	local NEW_FILE="${2}"
 	local CALLED_FROM="${3}"
 
-	[[ ${ALLSKY_VERSION} == "${PRIOR_ALLSKY_VERSION}" ]] && return
+	if [[ ${ALLSKY_VERSION} == "${PRIOR_ALLSKY_VERSION}" ]]; then
+		display_msg --logonly info "Not converting '${PRIOR_FILE}'; same ALLSKY_VERSION."
+		return
+	fi
 
 	# If we're upgrading a version >= COMBINED_BASE_VERSION then return.
 	# bash doesn't have >= so use   ! <
-	[[ ! (${PRIOR_ALLSKY_BASE_VERSION} < "${COMBINED_BASE_VERSION}") ]] && return
+	if [[ ! (${PRIOR_ALLSKY_BASE_VERSION} < "${COMBINED_BASE_VERSION}") ]]; then
+		display_msg --logonly info "Not converting '${PRIOR_FILE}'; >= COMBINED_BASE_VERSION."
+		return
+	fi
 
 	local MSG="Converting '$( basename "${PRIOR_FILE}" )' to new format:"
 	display_msg --log progress "${MSG}"
 
-	local DIR  TEMP_PRIOR  TEMP_NEW
-
-	((CONVERTED_SETTINGS++))
 	DIR="/tmp/converted_settings"
-	if [[ ${CONVERTED_SETTINGS} -eq 1 ]]; then
-		mkdir -p "${DIR}"
-	fi
-	TEMP_PRIOR="${DIR}/old-${CONVERTED_SETTINGS}.json"
-	TEMP_NEW="${DIR}/new-${CONVERTED_SETTINGS}.json"
+	mkdir -p "${DIR}"
+	local TEMP_PRIOR="${DIR}/old-${PRIOR_CAMERA_TYPE}_${PRIOR_CAMERA_MODEL}.json"
 
 	# Older version had uppercase letters in setting names and "1" and "0" for booleans
 	# and quotes around numbers. Change that.
@@ -1705,7 +1711,7 @@ convert_settings()			# prior_file, new_file
 	# Output the field name and value as text separated by a tab.
 	# Field names are already lowercase from above.
 	"${ALLSKY_SCRIPTS}/convertJSON.php" \
-			--delimiter "$( echo -e '\t' )" \
+			--delimiter "${TAB}" \
 			--options-file "${REPO_OPTIONS_FILE}" \
 			--include-not-in-options \
 			--settings-file "${TEMP_PRIOR}" |
@@ -1713,9 +1719,15 @@ convert_settings()			# prior_file, new_file
 		do
 			case "${FIELD}" in
 				"lastchanged")
-					# Update the value
+					# Update the value.
 					VALUE="$( date +'%Y-%m-%d %H:%M:%S' )"
-					doV "${FIELD}" "VALUE" "lastchanged" "text" "${NEW_FILE}"
+					doV "${FIELD}" "VALUE" "${FIELD}" "text" "${NEW_FILE}"
+					;;
+
+				"computer")
+					# We now compute the value.
+					VALUE="$( get_computer )"
+					doV "${FIELD}" "VALUE" "${FIELD}" "text" "${NEW_FILE}"
 					;;
 
 				# Don't carry this forward:
@@ -1731,8 +1743,7 @@ convert_settings()			# prior_file, new_file
 				"brightness" | "daybrightness" | "nightbrightness")
 					if [[ ! -f ${DISPLAYED_BRIGHTNESS_MSG} ]]; then
 						touch "${DISPLAYED_BRIGHTNESS_MSG}"
-						MSG="The 'Brightness' settings were removed."
-						MSG+="\nUse the 'Target Mean' settings to adjust brightness."
+						MSG="The 'Brightness' settings were removed. Use 'Target Mean' instead."
 						display_msg --log notice "${MSG}"
 					fi
 					;;
@@ -1800,101 +1811,9 @@ convert_settings()			# prior_file, new_file
 					;;
 			esac
 		done
-
-	##### New fields not already handled in loop above.
-	# If they are already in PRIOR_FILE then they are also in NEW_FILE.
-
-	for s in takenighttimeimages savenighttimeimages determinefocus showupdatedmessage
-	do
-		x="$( settings ".${s}" "${PRIOR_FILE}" )"
-		if [[ -z ${x} ]]; then
-			VALUE="true"; doV "NEW" "VALUE" "${s}" "boolean" "${NEW_FILE}"
-		fi
-	done
-
-	#shellcheck disable=SC2043
-	for s in zwoexposuretype
-	do
-		x="$( settings ".${s}" "${PRIOR_FILE}" )"
-		if [[ -z ${x} ]]; then
-			VALUE=0; doV "NEW" "VALUE" "${s}" "number" "${NEW_FILE}"
-		fi
-	done
-
-	# text fields
-	for i in "imagessortorder:ascending" "daytimeoverlay:" "nighttimeoverlay:" "computer:"
-	do
-		#shellcheck disable=SC2207
-		ii=( $( tr ":" " " <<<"${i}" ) )
-		s="${ii[0]}"
-		v="${ii[1]}"
-		x="$( settings ".${s}" "${PRIOR_FILE}" )"
-		if [[ -z ${x} ]]; then
-			# Handle values that need to be calculated.
-			if [[ ${s} == "computer" ]]; then
-				v="$( get_computer )"
-			fi
-
-			VALUE="${v}"; doV "NEW" "VALUE" "${s}" "text" "${NEW_FILE}"
-		fi
-	done
-
-	# New fields were added to the bottom of the settings file but the below
-	# command will order them the same as in the options file, which we want.
-
-	"${ALLSKY_SCRIPTS}/convertJSON.php" \
-		--convert \
-		--settings-only \
-		--settings-file "${NEW_FILE}" \
-		--options-file "${REPO_OPTIONS_FILE}" \
-		> "${TEMP_NEW}" 2>&1
-	if [[ $? -ne 0 ]]; then
-		local M="Unable to convert from old settings file"
-		MSG="${M}: $( < "${TEMP_NEW}" )"
-		display_msg --log error "${MSG}"
-		exit_installation 1 "${STATUS_ERROR}" "${M}."
-	fi
-	cp "${TEMP_NEW}" "${NEW_FILE}"
 }
 
-# Update the specified file with the specified new value.
-# ${V} must be a legal shell variable name.
-doV()
-{
-	local oldV="${1}"		# Optional name of old variable; if "" then use ${V}.
-	local V="${2}"			# name of the variable that holds the new value
-	local VAL="${!V}"		# value of the variable
-	local jV="${3}"			# new json variable name
-	local TYPE="${4}"
-	local FILE="${5}"
 
-	[[ -z ${oldV} ]] && oldV="${V}"
-
-	if [[ ${TYPE} == "boolean" ]]; then
-		# Some booleans used "true/false" and some used "1/0".
-		if [[ ${VAL} == "true" || ${VAL} == "1" ]]; then
-			VAL="true"
-		else
-			VAL="false"
-		fi
-	elif [[ ${TYPE} == "number" && -z ${VAL} ]]; then
-		VAL=0		# give it a default
-	fi
-
-	local ERR  MSG
-	if ERR="$( update_json_file ".${jV}" "${VAL}" "${FILE}" "${TYPE}" 2>&1 )" ; then
-		if [[ ${oldV} == "${jV}" ]]; then
-			oldV=""
-		else
-			oldV="${oldV}: "
-		fi
-		MSG="${SPACE}${oldV}${jV} = ${VAL}"
-		display_msg --logonly info "${MSG}"
-	else
-		# update_json_file() returns error message.
-		display_msg --log info "${ERR}"
-	fi
-}
 
 # Copy everything from old config.sh to the settings file.
 convert_config_sh()
@@ -2381,7 +2300,7 @@ restore_prior_files()
 		echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	fi
 
-	if [[ -z ${PRIOR_ALLSKY_DIR} ]]; then
+	if [[ ${USE_PRIOR_ALLSKY} == "false" ]]; then
 		# prompt for them to put in new settings file
 		if ! get_lat_long ; then
 			MSG="Latitude and/or Longitude not entered"
@@ -2831,7 +2750,7 @@ do_restore()
 	MSG="Unable to restore Allsky - "
 
 	OK="true"
-	if [[ -z ${PRIOR_ALLSKY_DIR} ]]; then
+	if [[ ${USE_PRIOR_ALLSKY} == "false" ]]; then
 		MSG+="No valid prior Allsky to restore."
 		OK="false"
 	fi
@@ -3036,6 +2955,7 @@ install_fonts()
 		display_msg --logonly info "Fonts already installed"
 		return
 	fi
+	[[ ${SKIP} == "true" ]] && return
 
 	display_msg --log progress "Installing Truetype fonts."
 	TMP="${ALLSKY_LOGS}/msttcorefonts.log"
@@ -3054,6 +2974,7 @@ install_PHP_modules()
 		display_msg --logonly info "PHP modules already installed"
 		return
 	fi
+	[[ ${SKIP} == "true" ]] && return
 
 	display_msg --log progress "Installing PHP modules and dependencies."
 	TMP="${ALLSKY_LOGS}/PHP_modules.log"
@@ -3078,6 +2999,7 @@ install_Python()
 		display_msg --logonly info "Python and related packages already installed"
 		return
 	fi
+	[[ ${SKIP} == "true" ]] && return
 
 	local PREFIX  REQUIREMENTS_FILE  M  R  NUM_TO_INSTALL
 	local NAME  PKGs  TMP  COUNT  C  PACKAGE  STATUS_NAME  L  M  MSG
@@ -3196,28 +3118,30 @@ install_Python()
 	# Add the status back in.
 	update_status_from_temp_file
 
-    # On pi 5 models we need to replace rpi.gpi with lgpio. This should be done by adafruit-blinka
-    # the code is in setup.py to do this but it doesnt appear to work hence we are forcing it here
-    # gpiozero decodes the pi revision number to calculate the pi version so until the pi 6 is 
-    # release this code will detect all future versions of the pi 5
-    #
-    # NOTE: rpi-gpi and rpi-lgpio cannot co exist but since blinka is not installing either we don't
-    #       currently have to worry about removing rpi-gpio before installing rpi-lgpio
-    #
-pimodel=$(python3 <<EOF
-from gpiozero import Device
-Device.ensure_pin_factory()
-print(Device.pin_factory.board_info.model)
-EOF
-)
+	# On Pi 5 models we need to replace rpi.gpi with lgpio.
+	# This should be done by adafruit-blinka.
+	# The code is in setup.py to do this but it
+	# doesn't appear to work hence we are forcing it here.
+	# gpiozero decodes the Pi revision number to calculate the Pi version so until the Pi 6 is 
+	# released this code will detect all future versions of the Pi 5
+	#
+	# NOTE: rpi-gpi and rpi-lgpio cannot co-exist but since blinka is not installing either we
+	# don't currently have to worry about removing rpi-gpio before installing rpi-lgpio
+	#
+	pimodel=$(python3 <<-EOF
+		from gpiozero import Device
+		Device.ensure_pin_factory()
+		print(Device.pin_factory.board_info.model)
+	EOF
+	2>/dev/null )	# hide error since it only applies to Pi 5.
 
-    # if we are on the pi 5 then install lgpio, using the virtual environment which will always
-    # exist on the pi 5
-    if [[ ${pimodel:0:1} == "5" ]]; then
-        display_msg --log progress "Updating GPIO to lgpio"
-        activate_python_venv
-        pip3 install rpi-lgpio > /dev/null 2>&1
-    fi
+	# if we are on the pi 5 then install lgpio, using the virtual environment which will always
+	# exist on the pi 5
+	if [[ ${pimodel:0:1} == "5" ]]; then
+		display_msg --log progress "Updating GPIO to lgpio"
+		activate_python_venv
+		pip3 install rpi-lgpio > /dev/null 2>&1
+	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }
@@ -3283,6 +3207,7 @@ log_info()
 check_if_buster()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
+	[[ ${SKIP} == "true" ]] && return
 	local MSG
 
 	[[ ${PI_OS} != "buster" ]] && return
@@ -3452,7 +3377,9 @@ check_restored_settings()
 # Do every time as a reminder.
 remind_old_version()
 {
-	if [[ -n ${PRIOR_ALLSKY_DIR} ]]; then
+	[[ ${SKIP} == "true" ]] && return
+
+	if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
 		MSG="When you are sure everything is working with the new Allsky release,"
 		MSG+=" remove your old version in '${PRIOR_ALLSKY_DIR}' to save disk space."
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
@@ -3549,7 +3476,7 @@ exit_installation()
 		fi
 	fi
 
-	[[ -z ${FUNCTION} ]] && display_msg --logonly info "\nENDING ${IorR} AT $( date ).\n"
+	[[ -z ${FUNCTION} ]] && display_msg --logonly info "ENDING ${IorR}.\n"
 
 	# Don't exit for negative numbers.
 	[[ ${RET} -ge 0 ]] && exit "${RET}"
@@ -3582,13 +3509,14 @@ handle_interrupts()
 do_allsky_status()
 {
 	local STATUS="${1}"
-	display_msg --logonly info "Setting Allsky status to ${!STATUS}."
+	display_msg --logonly info "Setting Allsky status to '${!STATUS}'."
 	set_allsky_status "${!STATUS}"
 }
 
 install_installer_dependencies()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
+	[[ ${SKIP} == "true" ]] && return
 
 	display_msg --log progress "Installing installer dependencies."
 	TMP="${ALLSKY_LOGS}/installer.dependencies.log"
@@ -3637,6 +3565,9 @@ while [ $# -gt 0 ]; do
 		--restore)
 			RESTORE="true"
 			;;
+		--skip)
+			SKIP="true"
+			;;
 		--function)
 			FUNCTION="${2}"
 			shift
@@ -3652,7 +3583,7 @@ done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 
 if [[ ${RESTORE} == "true" && ! -d ${PRIOR_ALLSKY_DIR} ]]; then
-	echo -e "\nERROR: You requested a restore but no prior Allsky was found in '${PRIOR_ALLSKY_DIR}'.\n" >&2
+	echo -e "\nERROR: You requested a restore but no prior Allsky was found at '${PRIOR_ALLSKY_DIR}'.\n" >&2
 	exit 1
 fi
 
@@ -3676,7 +3607,7 @@ else
 	else
 		V="${ALLSKY_VERSION}"
 	fi
-	MSG="STARTING ${IorR} OF ${V} AT $( date ).\n"
+	MSG="STARTING ${IorR} OF ${V}.\n"
 	display_msg --logonly info "${MSG}"
 fi
 
@@ -3817,7 +3748,7 @@ does_prior_Allsky_exist
 [[ -z ${FUNCTION} ]] && do_initial_heading
 
 ##### See if we need to reboot at end of installation
-[[ -n ${PRIOR_ALLSKY_DIR} ]] && is_reboot_needed "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
+[[ ${USE_PRIOR_ALLSKY} == "true" ]] && is_reboot_needed "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
 
 ##### Determine what steps, if any, can be skipped.
 set_what_can_be_skipped "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
@@ -3961,7 +3892,7 @@ fi
 if [[ ${CONFIGURATION_NEEDED} == "false" ]]; then
 	do_allsky_status "ALLSKY_STATUS_NOT_RUNNING"
 	display_image --custom "lime" "Allsky is\nready to start"
-	display_msg --log progress "\nInstallation is done and Allsky is ready to start."
+	display_msg --log progress "\nInstallation is done."  "You must manually restart Allsky."
 elif [[ ${CONFIGURATION_NEEDED} != "true" ]]; then
 	# A status string.
 	exit_installation 0 "${CONFIGURATION_NEEDED}" ""

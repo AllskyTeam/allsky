@@ -10,16 +10,24 @@
 // --options-file OPTIONS_FILE
 //		Optional name of the options file.  If not specified use the standard file.
 
+$default_delimiter = "=";
 // --delimiter D
-//		Use "D" as the delimiter between the field name and its value.  Default is "=".
+//		Use "D" as the delimiter between the field name and its value.
 
 // --type T
 //		Output setting names of the specified type T.
+
+// --settings-only
+//		Only include settings that are in the settings file.
 
 // --capture-only
 //		Limit output to only settings used by the capture_* programs.
 //		Those settings have this field in the options file:		"capture" : true
 //		Without this option ALL settings/values in the settings file are output.
+
+// --options-only
+//		Include settings only in the options file, which are usually new settings.
+//		Doesn't make sense to use this and --settings-only.
 
 // --carryforward
 //		Limit output to only settings whose "carryforward" is true.
@@ -67,7 +75,7 @@ $debug = false;
 $settings_file = null;
 $capture_only = false;
 $carryforward = false;
-$delimiter = "=";
+$delimiter = $default_delimiter;
 $convert = false;
 $order = false;
 $prefix = "";
@@ -75,6 +83,7 @@ $shell = false;
 $type_to_output = "";
 $options_file = null;
 $include_not_in_options = false;
+$options_only = false;
 $options_array = null;
 $only_in_settings_file = false;	// use only settings that are in settings file?
 
@@ -91,6 +100,7 @@ $longopts = array(
 	"capture-only",
 	"carryforward",
 	"include-not-in-options",
+	"options-only",
 	"convert",
 	"order",
 	"shell",
@@ -126,6 +136,9 @@ foreach ($options as $opt => $val) {
 
 	} else if ($opt === "type") {
 		$type_to_output = $val;
+
+	} else if ($opt === "options-only") {
+		$options_only = true;
 
 	} else if ($opt === "include-not-in-options") {
 		$include_not_in_options = true;
@@ -226,8 +239,13 @@ if ($capture_only) {
 
 		$name = $option['name'];
 		$val = getVariableOrDefault($settings_array, $name, null);
-		if ($val === null)
-			continue;
+		if ($val === null) {
+			if ($options_only) {
+				$val = getVariableOrDefault($option, "default", "");
+			} else {
+				continue;
+			}
+		}
 
 		if ($shell) {
 			$val = quoteIt($val, $type_array[$name]);
@@ -262,11 +280,16 @@ if ($convert || $order) {
 		$sort_array = Array();
 		foreach ($options_array as $option) {
 			$name = $option['name'];
-	
-			// Skip any setting not in settings array.
 			$val = getVariableOrDefault($a, $name, null);
-			if ($val === null)
-				continue;
+
+			// If needed, skip any option not in the settings file.
+			if ($val === null) {
+				if ($options_only) {
+					$val = getVariableOrDefault($option, "default", "");
+				} else {
+					continue;
+				}
+			}
 
 			if ($type_array[$name] === "boolean")
 				$val = toBool($val);
@@ -318,7 +341,37 @@ if ($convert || $order) {
 		echo json_encode($new_settings_array, $mode);
 	}
 
+} else if ($options_only) {
+	foreach ($options_array as $option) {
+		$name = $option['name'];
+		if ($name === $endSetting) {
+			continue;
+		}
+		if (getVariableOrDefault($option, "source", null) !== null) {
+			continue;	// this setting isn't stored in the settings file.
+		}
+		$type = getVariableOrDefault($type_array, $name, "text");
+		if (substr($type, 0, 6) === "header") {
+			continue;	// not a setting
+		}
+		if (getVariableOrDefault($settings_array, $name, null) === null) {
+			$default = getVariableOrDefault($option, "default", "");
+			// Convert $type to a generic name
+			if ($type === "color" || $type === "select_text" || $type === "widetext") {
+				$type = "text";
+			} else if  ($type === "float" || $type === "integer" ||
+						$type === "select_integer" || $type === "percent") {
+				$type = "number";
+			}
+			echo "$prefix$name$delimiter$default";
+			if ($delimiter === $default_delimiter)
+				echo "; $prefix${name}_type";
+			echo "$delimiter$type\n";
+		}
+	}
+
 } else {
+
 	// Booleans are either 1 for true, or "" for false, so convert to "true" and "false".
 	foreach ($settings_array as $name => $val) {
 		$type = getVariableOrDefault($type_array, $name, "text");

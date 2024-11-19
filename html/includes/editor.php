@@ -14,6 +14,7 @@ function DisplayEditor()
 
 	// See what files there are to edit.
 	$numFiles = 0;
+
 	if ($hasLocalWebsite) {
 		$fullN = $fullLocalN;
 		$numFiles++;
@@ -37,6 +38,19 @@ function DisplayEditor()
 	} else {
 		$remoteN = null;
 	}
+
+if (true) {
+	$envN = null;	// Don't allow users to edit - they should use the Allsky Settings page.
+} else {
+	$envN = basename(ALLSKY_ENV);
+	$fullenvN = "current/$envN";
+	if (file_exists(ALLSKY_ENV)) {
+		if ($fullN === null) $fullN = $fullenvN;
+		$numFiles++;
+	} else {
+		$envN = null;
+	}
+}
 
 	if ($numFiles > 0) {
 		if ($fullN === null) {
@@ -191,6 +205,12 @@ function DisplayEditor()
 								// A copy of the remote website's config file is on the Pi.
 								echo "<option value='{REMOTE}$fullRemoteN'>";
 								echo "$remoteN (remote Allsky Website)";
+								echo "</option>";
+							}
+
+							if ($envN !== null) {
+								echo "<option value='$fullenvN'>";
+								echo "$envN";
 								echo "</option>";
 							}
 				?>

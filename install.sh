@@ -66,6 +66,7 @@ FIRST_VERSION_VERSION="v2022.03.01"
 PRE_FIRST_VERSION_VERSION="old"
 
 ##### Information on the prior Allsky version, if used
+USE_PRIOR_ALLSKY="false"
 PRIOR_ALLSKY_STYLE=""			# Set to the style if they have a prior version
 PRIOR_ALLSKY_VERSION=""			# The version number of the prior version, if known
 PRIOR_ALLSKY_BASE_VERSION=""	# The base version number of the prior version, if known
@@ -136,7 +137,7 @@ do_initial_heading()
 			MSG+="\nYou will manually need to restart Allsky after checking that"
 			MSG+=" the settings are correct in the WebUI."
 
-		elif [[ -n ${PRIOR_ALLSKY_DIR} ]]; then
+		elif [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
 			MSG+="\nYou will be asked if you want to use the images and darks"
 			MSG+=" from your prior version of Allsky."
 
@@ -392,7 +393,7 @@ select_camera_type()
 	local MSG  CAMERA  NEW  S  CAMERA_INFO
 	# CAMERA_TYPE and NUM_CONNECTED_CAMERAS are global
 
-	if [[ -n ${PRIOR_ALLSKY_DIR} ]]; then
+	if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
 		# bash doesn't have ">=" so we have to use "! ... < "
 		if [[ ! ${PRIOR_ALLSKY_VERSION} < "${FIRST_CAMERA_TYPE_BASE_VERSION}" ]]; then
 			# New style Allsky using ${CAMERA_TYPE}.
@@ -1106,7 +1107,7 @@ get_desired_locale()
 	# let the user know.
 	# This can happen if they use the settings file from a different Pi or different OS.
 	local MSG2=""
-	if [[ -z ${DESIRED_LOCALE} && -n ${PRIOR_ALLSKY_DIR} && -n ${PRIOR_SETTINGS_FILE} ]]; then
+	if [[ -z ${DESIRED_LOCALE} && ${USE_PRIOR_ALLSKY} == "true" && -n ${PRIOR_SETTINGS_FILE} ]]; then
 		# People rarely change locale once set, so assume they still want the prior one.
 		DESIRED_LOCALE="$( settings ".locale" "${PRIOR_SETTINGS_FILE}" )"
 		if [[ -n ${DESIRED_LOCALE} ]]; then
@@ -1248,7 +1249,7 @@ display_msg --logonly info "Settings files now:\n${MSG}"
 # See what steps, if any, can be skipped.
 set_what_can_be_skipped()
 {
-	if [[ -n ${PRIOR_ALLSKY_DIR} ]]; then
+	if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
 		local OLD_VERSION="${1}"
 		local NEW_VERSION="${2}"
 
@@ -1340,7 +1341,7 @@ does_prior_Allsky_Website_exist()
 	fi
 
 	if [[ -z ${PRIOR_WEBSITE_DIR} ]]; then
-		display_msg --logonly info "No prior Allsky Website found in '${PRIOR_WEBSITE_DIR}', PRIOR_STYLE=${PRIOR_STYLE}."
+		display_msg --logonly info "No prior Allsky Website found."
 	else
 		display_msg --logonly info "PRIOR_WEBSITE_STYLE=${PRIOR_WEBSITE_STYLE}"
 		display_msg --logonly info "PRIOR_WEBSITE_DIR=${PRIOR_WEBSITE_DIR}"
@@ -1367,23 +1368,24 @@ does_prior_Allsky_exist()
 			MSG+=" but it doesn't appear to have been installed; ignoring it."
 			display_msg --log warning "${MSG}"
 		else
-			display_msg --logonly info "No prior Allsky found in '${PRIOR_ALLSKY_DIR}'."
+			display_msg --logonly info "No prior Allsky found at '${PRIOR_ALLSKY_DIR}'."
 		fi
 		does_prior_Allsky_Website_exist ""
-		PRIOR_ALLSKY_DIR=""
+		USE_PRIOR_ALLSKY="false"
 		return 1
 	fi
 
 	# All versions back to v0.6 (never checked prior ones) have a "scripts" directory.
 	if [[ ! -d "${PRIOR_ALLSKY_DIR}/scripts" ]]; then
-		MSG+=" but it doesn't appear to be valid; ignoring it."
+		MSG+=" but it doesn't appear to be valid or it too old; ignoring it."
 		display_msg --log warning "${MSG}"
 		does_prior_Allsky_Website_exist ""
-		PRIOR_ALLSKY_DIR=""
+		USE_PRIOR_ALLSKY="false"
 		return 1
 	fi
 
-	display_msg --logonly info "Prior Allsky found in ${PRIOR_ALLSKY_DIR}."
+	display_msg --logonly info "Prior Allsky found at '${PRIOR_ALLSKY_DIR}'."
+	USE_PRIOR_ALLSKY="true"		# may be set to false after user is prompted to use it
 
 	# Determine the prior Allsky version and set some PRIOR_* locations.
 	PRIOR_ALLSKY_VERSION="$( get_version "${PRIOR_ALLSKY_DIR}/" )"	# Returns "" if no version file.
@@ -1453,7 +1455,7 @@ does_prior_Allsky_exist()
 			if [[ ! -f ${CAPTURE} ]]; then
 				MSG="Cannot find prior 'capture*.cpp' program in '${DIR}'".
 				display_msg --log "warning" "${MSG}${MSG2}"
-				PRIOR_ALLSKY_DIR=""
+				USE_PRIOR_ALLSKY="false"
 				return 1
 			fi
 			STRING="Camera Software"
@@ -1461,7 +1463,7 @@ does_prior_Allsky_exist()
 					gawk '{print $6}' )" ; then
 				MSG="Unable to determine version of prior Allsky: '${STRING}' not in '${CAPTURE}'."
 				display_msg --log "warning" "${MSG}${MSG2}"
-				PRIOR_ALLSKY_DIR=""
+				USE_PRIOR_ALLSKY="false"
 				return 1
 			fi
 		fi
@@ -1500,7 +1502,7 @@ prompt_for_prior_Allsky()
 	if [[ ${WILL_USE_PRIOR} == "true" ]]; then
 		local MSG
 
-		if [[ -n ${PRIOR_ALLSKY_DIR} ]]; then
+		if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
 			MSG="You have a prior version of Allsky in ${PRIOR_ALLSKY_DIR}."
 			MSG+="\n\nDo you want to restore the prior images and other files you've changed?"
 			if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
@@ -1522,7 +1524,7 @@ prompt_for_prior_Allsky()
 				STATUS_VARIABLES+=("CAMERA_NUMBER='${CAMERA_NUMBER}'\n")
 				display_msg --logonly info "Will restore from prior version of Allsky."
 			else
-				PRIOR_ALLSKY_DIR=""
+				USE_PRIOR_ALLSKY="false"
 				PRIOR_SETTINGS_FILE=""
 				CAMERA_TYPE=""
 				PRIOR_CAMERA_TYPE=""
@@ -1556,7 +1558,7 @@ prompt_for_prior_Allsky()
 		# so force creating a default settings file.
 		FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
 		STATUS_VARIABLES+=("FORCE_CREATING_DEFAULT_SETTINGS_FILE='true'\n")
-		STATUS_VARIABLES+=("PRIOR_ALLSKY_DIR=''\n")
+		STATUS_VARIABLES+=("USE_PRIOR_ALLSKY='${USE_PRIOR_ALLSKY}'\n")
 	fi
 
 	STATUS_VARIABLES+=("WILL_USE_PRIOR='${WILL_USE_PRIOR}'\n")
@@ -2298,7 +2300,7 @@ restore_prior_files()
 		echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
 	fi
 
-	if [[ -z ${PRIOR_ALLSKY_DIR} ]]; then
+	if [[ ${USE_PRIOR_ALLSKY} == "false" ]]; then
 		# prompt for them to put in new settings file
 		if ! get_lat_long ; then
 			MSG="Latitude and/or Longitude not entered"
@@ -2748,7 +2750,7 @@ do_restore()
 	MSG="Unable to restore Allsky - "
 
 	OK="true"
-	if [[ -z ${PRIOR_ALLSKY_DIR} ]]; then
+	if [[ ${USE_PRIOR_ALLSKY} == "false" ]]; then
 		MSG+="No valid prior Allsky to restore."
 		OK="false"
 	fi
@@ -3377,7 +3379,7 @@ remind_old_version()
 {
 	[[ ${SKIP} == "true" ]] && return
 
-	if [[ -n ${PRIOR_ALLSKY_DIR} ]]; then
+	if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
 		MSG="When you are sure everything is working with the new Allsky release,"
 		MSG+=" remove your old version in '${PRIOR_ALLSKY_DIR}' to save disk space."
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
@@ -3581,7 +3583,7 @@ done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 
 if [[ ${RESTORE} == "true" && ! -d ${PRIOR_ALLSKY_DIR} ]]; then
-	echo -e "\nERROR: You requested a restore but no prior Allsky was found in '${PRIOR_ALLSKY_DIR}'.\n" >&2
+	echo -e "\nERROR: You requested a restore but no prior Allsky was found at '${PRIOR_ALLSKY_DIR}'.\n" >&2
 	exit 1
 fi
 
@@ -3746,7 +3748,7 @@ does_prior_Allsky_exist
 [[ -z ${FUNCTION} ]] && do_initial_heading
 
 ##### See if we need to reboot at end of installation
-[[ -n ${PRIOR_ALLSKY_DIR} ]] && is_reboot_needed "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
+[[ ${USE_PRIOR_ALLSKY} == "true" ]] && is_reboot_needed "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
 
 ##### Determine what steps, if any, can be skipped.
 set_what_can_be_skipped "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"

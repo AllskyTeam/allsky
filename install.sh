@@ -3128,12 +3128,10 @@ install_Python()
 	# NOTE: rpi-gpi and rpi-lgpio cannot co-exist but since blinka is not installing either we
 	# don't currently have to worry about removing rpi-gpio before installing rpi-lgpio
 	#
-	pimodel=$(python3 <<-EOF
-		from gpiozero import Device
-		Device.ensure_pin_factory()
-		print(Device.pin_factory.board_info.model)
-	EOF
-	2>/dev/null )	# hide error since it only applies to Pi 5.
+	local CMD="from gpiozero import Device"
+	CMD+="\nDevice.ensure_pin_factory()"
+	CMD+="\nprint(Device.pin_factory.board_info.model)"
+	pimodel="$( echo -e "${CMD}" | python3 2>/dev/null )"	# hide error since it only applies to Pi 5.
 
 	# if we are on the pi 5 then install lgpio, using the virtual environment which will always
 	# exist on the pi 5

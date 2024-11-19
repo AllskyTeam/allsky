@@ -274,13 +274,13 @@ function get_connected_cameras_info()
 	if [[ -n ${CMD_TO_USE_} ]]; then
 		if [[ ${CMD_TO_USE_} == "raspistill" ]]; then
 			# Only supported camera with raspistill
-			echo -e "RPi\t0\timx477\t[4056x3040]"
+			echo -e "RPi\t0\timx477"
 
 		else
 			# Input:
 			#	camera_number  : sensor  [other stuff]
 			LIBCAMERA_LOG_LEVELS=FATAL "${CMD_TO_USE_}" --list-cameras 2>&1 |
-				gawk '/^[0-9]/ { printf("%s\t%d\t%s\n", "RPi", $2, $3); }'
+				gawk '/^[0-9]/ { printf("%s\t%d\t%s\n", "RPi", $1, $3); }'
 		fi
 	fi
 

@@ -1902,11 +1902,13 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, config cg,
 {
 	printf(" Camera Information:\n");
 	printf("  - Type: %s\n", CAMERA_TYPE);
-	printf("  - Model: %s\n", getCameraModel(cameraInfo.Name));
+	printf("  - Model: %s (%s)\n", getCameraModel(cameraInfo.Name), cg.cm);
 #ifdef IS_ZWO
-	printf("  - Camera ID: %s\n", cID);
+	printf("  - ID: %s\n", cID);
 #endif
-	printf("  - Camera Serial Number: %s\n", getSerialNumber(cameraInfo.CameraID));
+	printf("  - Serial Number: %s\n", getSerialNumber(cameraInfo.CameraID));
+	if (cg.cameraNumber > 0)
+		printf("   Camera number: %d\n", cg.cameraNumber);
 	printf("  - Native Resolution: %ldx%ld\n", width, height);
 	printf("  - Pixel Size: %1.2f microns\n", pixelSize);
 	printf("  - Supported Bins: ");
@@ -2496,3 +2498,4 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 
 	return(ok);
 }
+

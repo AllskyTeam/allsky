@@ -1594,13 +1594,20 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 		else if (strcmp(a, "cmd") == 0)
 		{
 			cg->cmdToUse = argv[++i];
-			if (strcmp(cg->cmdToUse, "raspistill") == 0)
+			if (cg->cmdToUse[0] == '\0')
 			{
-				cg->isLibcamera = false;
+				cg->cmdToUse = NULL;		// usually with ZWO, which doesn't use this
 			}
 			else
 			{
-				cg->isLibcamera = true;
+				if (strcmp(cg->cmdToUse, "raspistill") == 0)
+				{
+					cg->isLibcamera = false;
+				}
+				else
+				{
+					cg->isLibcamera = true;
+				}
 			}
 		}
 		else if (strcmp(a, "tty") == 0)	// overrides what was automatically determined

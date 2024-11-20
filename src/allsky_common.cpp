@@ -1167,9 +1167,6 @@ void displaySettings(config cg)
 	printf("%s", c(KGRN));
 	printf("\nSettings:\n");
 
-	printf("   Camera model: %s\n", cg.cm);
-	if (cg.cameraNumber > 0)
-		printf("   Camera number: %d\n", cg.cameraNumber);
 	if (cg.cmdToUse != NULL)
 		printf("   Command: %s\n", cg.cmdToUse);
 	printf("   Image Type: %s (%ld)\n", cg.sType, cg.imageType);
@@ -1597,13 +1594,20 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 		else if (strcmp(a, "cmd") == 0)
 		{
 			cg->cmdToUse = argv[++i];
-			if (strcmp(cg->cmdToUse, "raspistill") == 0)
+			if (cg->cmdToUse[0] == '\0')
 			{
-				cg->isLibcamera = false;
+				cg->cmdToUse = NULL;		// usually with ZWO, which doesn't use this
 			}
 			else
 			{
-				cg->isLibcamera = true;
+				if (strcmp(cg->cmdToUse, "raspistill") == 0)
+				{
+					cg->isLibcamera = false;
+				}
+				else
+				{
+					cg->isLibcamera = true;
+				}
 			}
 		}
 		else if (strcmp(a, "tty") == 0)	// overrides what was automatically determined
@@ -2128,3 +2132,4 @@ void doLocale(config *cg)
 		Log(-1, "*** %s: WARNING: Could not set locale to %s.\n", cg->ME, cg->locale);
 	}
 }
+

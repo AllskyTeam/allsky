@@ -1167,9 +1167,6 @@ void displaySettings(config cg)
 	printf("%s", c(KGRN));
 	printf("\nSettings:\n");
 
-	printf("   Camera model: %s\n", cg.cm);
-	if (cg.cameraNumber > 0)
-		printf("   Camera number: %d\n", cg.cameraNumber);
 	if (cg.cmdToUse != NULL)
 		printf("   Command: %s\n", cg.cmdToUse);
 	printf("   Image Type: %s (%ld)\n", cg.sType, cg.imageType);
@@ -2128,3 +2125,4 @@ void doLocale(config *cg)
 		Log(-1, "*** %s: WARNING: Could not set locale to %s.\n", cg->ME, cg->locale);
 	}
 }
+

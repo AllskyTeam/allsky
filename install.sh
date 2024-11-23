@@ -53,7 +53,7 @@ OVERLAY_NAME=""
 ##### Allsky versions.   ${ALLSKY_VERSION} is set in variables.sh
 ##xxx TODO: uncomment:    ALLSKY_BASE_VERSION="$( remove_point_release "${ALLSKY_VERSION}" )"
 	# Base of first version with combined configuration files and all lowercase setting names.
-COMBINED_BASE_VERSION="v2024.xx.xy"				#xxxxxxx TODO: update when release name is final
+COMBINED_BASE_VERSION="v2024.12.06"
 	# Base of first version with CAMERA_TYPE instead of CAMERA in config.sh and
 	# "cameratype" in the settings file.
 FIRST_CAMERA_TYPE_BASE_VERSION="v2023.05.01"

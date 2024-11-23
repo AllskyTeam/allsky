@@ -1278,8 +1278,7 @@ is_reboot_needed()
 	local NEW_VERSION="${2}"
 	local NEW_BASE_VERSION="$( remove_point_release "${NEW_VERSION}" )"
 
-	if [[ ${NEW_BASE_VERSION} == "${OLD_BASE_VERSION}" ||
-		  (! ${OLD_VERSION} < "${SCRIPTS_PATH_ADDED_VERSION}") ]]; then
+	if [[ ${NEW_BASE_VERSION} == "${OLD_BASE_VERSION}" ]]; then
 		# Assume just bug fixes between point releases.
 # TODO: this may not always be true.
 		REBOOT_NEEDED="false"

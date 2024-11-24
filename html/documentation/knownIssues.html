@@ -72,8 +72,8 @@ list of <em>possible</em> changes to future Allsky versions</a>.
 		and <span class="WebUISetting">Auto White Balance</span> do not not work.
 
 		<br><span class="wa">Workaround</span>:
-		<span class="WebUISetting">Auto Gain</span> should normally not be used
-		since it conflicts with the Allsky span class="WebUISetting">Auto Exposure</span> algorithm.
+		<span class="WebUISetting">Auto Gain</span> should normally not be used since
+		it conflicts with the Allsky <span class="WebUISetting">Auto Exposure</span> algorithm.
 		<br>If you need <span class="WebUISetting">Auto White Balance</span>, try a different
 		<span class="WebUISetting">ZWO Exposure Method</span>.
 
@@ -134,6 +134,31 @@ list of <em>possible</em> changes to future Allsky versions</a>.
 		Will fix in the next release.
 </ul>
 
+
+<h4>Other</h4>
+<ul>
+	<li><span class="lim">Limitation</span>:
+		If you have three or more cameras connected to a single Pi
+		(very rare except while testing) including at least one RPi and one ZWO,
+		if you switch from the current camera type to the other type which has at least
+		two cameras, which of those cameras is used is undefined.
+		<br>
+		For example, assume you have one ZWO camera and two RPi cameras and
+		the ZWO camera is the current one and you switch to
+		the RPi <span class="WebUISetting">Camera Type</span> in the WebUI.
+		Which RPi camera becomes current is undefined, and you'll likely see several
+		errors about missing or empty fields.
+
+		<br><span class="wa">Workaround</span>: Click on the
+		<span class="WebUILink">Allsky Settings</span> link to refresh the page.
+
+		<br><span class="fp">Future Plans</span>:
+		The <span class="WebUISetting">Camera Type</span> and
+		<span class="WebUISetting">Camera Model</span>
+		settings will be merged into one setting that contains both items.
+		You will then be able to select exactly which camera to change to,
+		which will eliminate this problem.
+</ul>
 
 <!--
 <h4>Other</h4>

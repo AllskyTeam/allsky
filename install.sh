@@ -51,14 +51,12 @@ SHORT_OVERLAY_NAME=""
 OVERLAY_NAME=""
 
 ##### Allsky versions.   ${ALLSKY_VERSION} is set in variables.sh
-##xxx TODO: uncomment:    ALLSKY_BASE_VERSION="$( remove_point_release "${ALLSKY_VERSION}" )"
+#xxx currently not used:    ALLSKY_BASE_VERSION="$( remove_point_release "${ALLSKY_VERSION}" )"
 	# Base of first version with combined configuration files and all lowercase setting names.
-COMBINED_BASE_VERSION="v2024.xx.xy"				#xxxxxxx TODO: update when release name is final
+COMBINED_BASE_VERSION="v2024.12.06"
 	# Base of first version with CAMERA_TYPE instead of CAMERA in config.sh and
 	# "cameratype" in the settings file.
 FIRST_CAMERA_TYPE_BASE_VERSION="v2023.05.01"
-	# When ALLSKY_SCRIPTS was added to PATH, requiring a reboot:
-SCRIPTS_PATH_ADDED_VERSION="v2023.05.01_04"
 	# First Allsky version that used the "version" file.
 	# It's also when ftp-settings.sh moved to ${ALLSKY_CONFIG}
 FIRST_VERSION_VERSION="v2022.03.01"

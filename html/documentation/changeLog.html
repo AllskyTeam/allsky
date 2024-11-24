@@ -43,7 +43,7 @@
 
 		<!-- =========================================== -->
 
-		<h2>v2024.xx.xx</h2>
+		<h2>v2024.12.06</h2>
 		<details open> <summary></summary>
 
 			<h4>Changes that may require action (upgrades only)</h4>
@@ -104,8 +104,8 @@
 					it would be difficult to find what you want if
 					the sections weren't hidden.
 				</li>
-				<li><span class="fileName">check_allsky.sh</span> is now called
-					<span class="fileName">checkAllsky.sh</span>
+				<li><code>check_allsky.sh</code> is now called
+					<code>checkAllsky.sh</code>
 					to be consistant with other program names.
 					<br><span class="possibleAction">Possible action: </span> None.
 			</ul>
@@ -120,15 +120,23 @@
 				</li>
 				<li>Setting up a Website on a remote server is easier since the only
 					directory you have to specify is the top-level
-					<span class="WebUISetting">Image Directory</span>.
+					<span class="WebUISetting">Image Directory</span> in the WebUI.
+				</li>
+				<li>Installing a Website on a remote server is significantly easier as well.
+					Use the new <code>remote_website_install.sh</code> command;
+					it will upload the Allsky Website files for you and remove any
+					old, unneeded files.
+					If this is a new remote Website,
+					<code>remote_website_install.sh</code> will ask you whether or not to
+					also upload any startrails, keograms, and timelapse videos on your Pi.
 				</li>
 				<li>Images, timelapse, keograms, and startrails can now be written
 					to a <u>remote server</u> in addition to, or instead of, a remote Website.
 					This is useful if you want to include those images in a different website
 					or want to archive them.
 				</li>
-				<li>The new <span class="fileName">allsky-config</span> command
-					is similar to the <span class="fileName">raspi-config</span>
+				<li>The new <code>allsky-config</code> command
+					is similar to the <code>raspi-config</code> command
 					but for Allsky information and configuration.
 					This command is mentioned in several documentation pages
 					(as well as below) to easily describe how to do something.
@@ -142,7 +150,7 @@
 						href="/documentation/explanations/SAMBA.html">Copy files to / from a Pi</a>
 					for more information.
 				</li>
-				<li>The new <span class="fileName">testUpload.sh</span> command
+				<li>The new <code>testUpload.sh</code> command
 					tries to upload a test file to either a remote Website or remote server.
 					If the upload fails, the command
 					<strong>attempts to tell you why it failed and what to do about it</strong>.
@@ -826,7 +834,8 @@
 
 				<h4>Allsky Website</h4>
 				<ul>
-					<li> The Allsky Website is now installed in <span class="fileName">~/allsky/html/allsky</span>.
+					<li> The Allsky Website is now installed in
+						<span class="fileName">~/allsky/html/allsky</span>.
 					<li> If an older version of the Website is found during Website installation you'll be prompted
 						to have its images and settings moved to the new location.
 					<li> The home page can be customized:
@@ -1029,7 +1038,8 @@
 								This helps decrease problems when creating startrails, keograms, and timelapse videos.
 							<li><span class="shSetting">IMG_PREFIX</span>: no longer used - the name of the image used
 								by the websites is now
-								whatever you specify in the WebUI (default: <span class="fileName">image.jpg</span>).
+								whatever you specify in the WebUI (default:
+								<span class="fileName">image.jpg</span>).
 							<li>
 								<blockquote>When upgrading to 0.8.3 you MUST follow the steps listed
 									<a external="true"
@@ -1039,15 +1049,18 @@
 					<li>Replaced <code>saveImageDay.sh</code> and <code>saveImageNight.sh</code> with
 						<code>saveImage.sh</code> that has improved functionality,
 						including passing the sensor temperature to the dark subtraction commands,
-						thereby eliminating the need for the <span class="fileName">temperature.txt</span> file.
-					<li>The image used by the websites (default: <span class="fileName">image.jpg</span>)
-						as well as all temporary files are now written to <span class="fileName">allsky/tmp</span>.
+						thereby eliminating the need for the
+						<span class="fileName">temperature.txt</span> file.
+					<li>The image used by the websites (default:
+						<span class="fileName">image.jpg</span>)
+						as well as all temporary files are now written to
+						<span class="fileName">allsky/tmp</span>.
 						<blockquote>If you are using the Allsky Website you will need to change the
 							<span class="editorSetting">imageName</span> variable in
 							<span class="fileName">/var/www/html/allsky/config.js</span> to
 							<span class="fileName">"/current/tmp/image.jpg"</span>.
 						</blockquote>
-					<li>You can <strong>significanly</strong> reduce wear on your SD card by making <span
+					<li>You can <strong>significantly</strong> reduce wear on your SD card by making <span
 							class="fileName">allsky/tmp</span>
 						a <a external="true"
 							href="https://github.com/AllskyTeam/allsky/wiki/Miscellaneous-Tips">memory-based

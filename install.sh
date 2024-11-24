@@ -57,8 +57,6 @@ COMBINED_BASE_VERSION="v2024.12.06"
 	# Base of first version with CAMERA_TYPE instead of CAMERA in config.sh and
 	# "cameratype" in the settings file.
 FIRST_CAMERA_TYPE_BASE_VERSION="v2023.05.01"
-	# When ALLSKY_SCRIPTS was added to PATH, requiring a reboot:
-SCRIPTS_PATH_ADDED_VERSION="v2023.05.01_04"
 	# First Allsky version that used the "version" file.
 	# It's also when ftp-settings.sh moved to ${ALLSKY_CONFIG}
 FIRST_VERSION_VERSION="v2022.03.01"

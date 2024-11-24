@@ -75,7 +75,11 @@ function check_URL()
 		# Make sure it's a valid URL.  Some servers don't return anything if the user agent is "curl".
 		local CONTENT="$( curl --user-agent Allsky --location --head --silent --show-error --connect-timeout ${TIMEOUT} "${URL}" 2>&1 )"
 		local RET=$?
-		[[ ${DEBUG} == "true" ]] && echo -e "\n${wDEBUG}check_URL() RET=${RET}:\n${CONTENT}${wNC}.\n"
+		if [[ ${DEBUG} == "true" ]]; then
+			echo -e "\n${wDEBUG}"
+			echo -e "check_URL(${URL}, ${URL_TYPE}, ${FIELD_NAME}) RET=${RET}:\n${CONTENT}"
+			echo -e "${wNC}.\n"
+		fi
 		if [[ ${RET} -eq 6 ]]; then
 			E="ERROR: ${FIELD_NAME} '${URL}' not found - check spelling and network connectivity.${BR}${E}"
 		elif [[ ${RET} -eq 28 ]]; then
@@ -334,14 +338,14 @@ if [[ ${UPLOAD} == "true" ]]; then
 		[[ ${WHISPER} == "false" ]] && echo "${ME}: Uploading map data."
 	fi
 	# shellcheck disable=SC2089
-	CMD="curl -i -H 'Accept: application/json' -H 'Content-Type:application/json'"
+	CMD="curl --silent --show-error -i -H 'Accept: application/json' -H 'Content-Type:application/json'"
 	# shellcheck disable=SC2089
 	CMD+=" --data '$( generate_post_data )'"
 	CMD+=" https://www.thomasjacquin.com/allsky-map/postToMap.php"
 	[[ ${DEBUG} == "true" ]] && echo -e "\n${wDEBUG}Executing:\n${CMD}${wNC}\n"
 
 	# shellcheck disable=SC2090,SC2086
-	RETURN="$( echo ${CMD} | bash 2>&1 )"
+	RETURN="$( eval ${CMD} 2>&1 )"
 	RETURN_CODE=$?
 	[[ ${DEBUG} == "true" ]] && echo -e "\n${wDEBUG}Returned:\n${RETURN}${wNC}.\n"
 	if [[ ${RETURN_CODE} -ne 0 ]]; then
@@ -368,9 +372,9 @@ if [[ ${UPLOAD} == "true" ]]; then
 			MAX_UPDATES=${NUMBERS##* }
 			NUM_LEFT=$((MAX_UPDATES - NUM_UPDATES))
 			if [[ ${NUM_LEFT} -eq 0 ]]; then
-				echo "  This is your last update allowed today."
+				echo "  This is your last update allowed today.  You made ${MAX_UPDATES}."
 			else
-				echo "  You can make ${NUM_LEFT} more today."
+				echo "  You can make ${NUM_LEFT} more updates today."
 			fi
 		else
 			echo	# terminating newline
@@ -389,8 +393,8 @@ if [[ ${UPLOAD} == "true" ]]; then
 		RETURN_CODE=2
 
 	elif [[ ${RET:0:15} == "ALREADY UPDATED" ]]; then
-		MAX_UPDATES=${RET:17}
-		W="NOTICE: You have already updated your map data the maximum times per day (${MAX_UPDATES}).  Try again tomorrow."
+		MAX_UPDATES=${RET:16}
+		W="NOTICE: You have already updated your map data the maximum of ${MAX_UPDATES} times per day.  Try again tomorrow."
 		echo -e "${WARNING_MSG_START}${W}${wNC}"
 		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${ME}: ${W}"
 

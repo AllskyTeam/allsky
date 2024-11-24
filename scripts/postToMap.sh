@@ -337,7 +337,7 @@ if [[ ${UPLOAD} == "true" ]]; then
 	CMD="curl -i -H 'Accept: application/json' -H 'Content-Type:application/json'"
 	# shellcheck disable=SC2089
 	CMD+=" --data '$( generate_post_data )'"
-	CMD+=" 'https://www.thomasjacquin.com/allsky-map/postToMap.php'"
+	CMD+=" https://www.thomasjacquin.com/allsky-map/postToMap.php"
 	[[ ${DEBUG} == "true" ]] && echo -e "\n${wDEBUG}Executing:\n${CMD}${wNC}\n"
 
 	# shellcheck disable=SC2090,SC2086

@@ -64,7 +64,7 @@ void Log(int required_level, const char *fmt, ...)
 			}
 
 			char command[sizeof(msg) + 100];
-			snprintf(command, sizeof(command)-1, "%s/scripts/addMessage.sh %s '%s'",
+			snprintf(command, sizeof(command)-1, "%s/scripts/addMessage.sh --type %s '%s'",
 				CG.allskyHome, severity, msg);
 			Log(4, "Executing %s\n", command);
 			(void) system(command);

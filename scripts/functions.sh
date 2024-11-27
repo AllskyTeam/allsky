@@ -84,7 +84,7 @@ function doExit()
 
 	OUTPUT_A_MSG="false"
 	if [[ -n ${WEBUI_MESSAGE} ]]; then
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "${MSG_TYPE}" "${WEBUI_MESSAGE}"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --type "${MSG_TYPE}" --msg "${WEBUI_MESSAGE}"
 		echo -e "Stopping Allsky: ${WEBUI_MESSAGE}" >&2
 		OUTPUT_A_MSG="true"
 	fi
@@ -274,13 +274,13 @@ function get_connected_cameras_info()
 	if [[ -n ${CMD_TO_USE_} ]]; then
 		if [[ ${CMD_TO_USE_} == "raspistill" ]]; then
 			# Only supported camera with raspistill
-			echo -e "RPi\t0\timx477"
+			echo -e "RPi\t0\timx477\t[4056x3040]"
 
 		else
 			# Input:
 			#	camera_number  : sensor  [other stuff]
 			LIBCAMERA_LOG_LEVELS=FATAL "${CMD_TO_USE_}" --list-cameras 2>&1 |
-				gawk '/^[0-9]/ { printf("%s\t%d\t%s\n", "RPi", $1, $3); }'
+				gawk '/^[0-9]/ { printf("%s\t%d\t%s\n", "RPi", $2, $3); }'
 		fi
 	fi
 
@@ -421,7 +421,7 @@ function validate_camera()
 			echo -e "\n${RED}${MSG}${NC}\n"
 		else
 			URL="/index.php?page=configuration"
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${MSG}" "${URL}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${MSG}" --url "${URL}"
 		fi
 		RET=1
 	elif [[ ${SETTINGS_CM} != "${CM}" ]]; then
@@ -432,7 +432,7 @@ function validate_camera()
 			echo -e "\n${RED}${MSG}${NC}\n"
 		else
 			URL="/index.php?page=configuration"
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${MSG}" "${URL}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${MSG}" --url "${URL}"
 		fi
 		RET=1
 	elif [[ ${SETTINGS_CN} != "${CN}" ]]; then
@@ -443,7 +443,7 @@ function validate_camera()
 			echo -e "\n${RED}${MSG}${NC}\n"
 		else
 			URL="/index.php?page=configuration"
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${MSG}" "${URL}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${MSG}" --url "${URL}"
 		fi
 		RET=1
 	fi
@@ -468,7 +468,8 @@ function validate_camera()
 		else
 			MSG+="\n\nClick this message to ask that Allsky support this camera."
 			URL="/documentation/explanations/requestCameraSupport.html";
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}" "${URL}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --id AM_NOT_SUPPORTED --type warning --msg "${MSG}" --url "${URL}" \
+				--cmd "${CT}:Click here to see the list of supported ${CT} cameras."
 		fi
 
 		return 2
@@ -1108,7 +1109,7 @@ function one_instance()
 				SEVERITY="warning"
 				MSG+="\nOnce you have resolved the cause, reset the aborted counter:"
 				MSG+="\n&nbsp; &nbsp; <code>rm -f '${AF}'</code>"
-				"${ALLSKY_SCRIPTS}/addMessage.sh" "${SEVERITY}" "${MSG}"
+				"${ALLSKY_SCRIPTS}/addMessage.sh" --type ${SEVERITY} --msg "${MSG}"
 			fi
 
 			return 2

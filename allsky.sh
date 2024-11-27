@@ -74,10 +74,10 @@ if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
 	fi
 	if [[ ${DO_MSG} == "true" ]]; then
 		MSG="Reminder: your prior Allsky is still in '${PRIOR_ALLSKY_DIR}'."
-		MSG+="\nIf you are no longer using it, it can be removed to save disk space:"
-		MSG+="\n&nbsp; &nbsp;<code>rm -fr '${PRIOR_ALLSKY_DIR}'</code>\n"
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
-		touch "${OLD_ALLSKY_REMINDER}"		# last time we displayed the message
+		MSG+="\nIf you are no longer using it, it can be removed to save disk space."
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --id AM_RM_PRIOR --type info --msg "${MSG}" \
+			--cmd "Click here to remove."
+		touch "${OLD_ALLSKY_REMINDER}"		# Sets the last time we displayed the message.
 	fi
 fi
 
@@ -97,9 +97,8 @@ if [[ -f ${CHECK_ALLSKY_LOG} ]]; then
 		MSG+="Reminder to make these changes to your settings"
 		MSG+="</div>"
 		MSG+="$( < "${CHECK_ALLSKY_LOG}" )"
-		MSG+="<hr><span class='errorMsgBig'>If you made the changes run:</span>"
-		MSG+="\n&nbsp; &nbsp;<code>rm -f '${CHECK_ALLSKY_LOG}'</code>\n"
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --id AM_RM_CHECK --type warning --msg "${MSG}" \
+			--cmd "<hr><span class='errorMsgBig'>If you made the changes click here.</span>"
 		touch "${REMINDER}"		# last time we displayed the message
 	fi
 fi
@@ -117,10 +116,9 @@ if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 		doExit "${EXIT_ERROR_STOP}" "no-image" "" ""
 	else
 		MSG="Reminder: Click here to see the action(s) that need to be performed."
-		MSG+="\nOnce you perform them run the following to remove this message:"
-		MSG+="\n &nbsp; &nbsp;<code>rm -f '${POST_INSTALLATION_ACTIONS}'</code>"
 		PIA="${POST_INSTALLATION_ACTIONS/${ALLSKY_HOME}/}"
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}" "${PIA}"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --id AM_RM_POST --type warning --msg "${MSG}" --url "${PIA}" \
+			--cmd "\nOnce you perform them, click here to remove this message."
 	fi
 fi
 
@@ -225,7 +223,7 @@ fi
 
 # Make sure the settings file is linked to the camera-specific file.
 if ! MSG="$( check_settings_link "${SETTINGS_FILE}" )" ; then
-	"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${MSG}"
+	"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --cmd "${MSG}"
 	echo "ERROR: ${MSG}" >&2
 fi
 
@@ -241,7 +239,7 @@ else
 	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_TMP}"
 	MSG="Had to create '${ALLSKY_TMP}'."
 	MSG="${MSG}\nIf this happens again, contact the Allsky developers."
-	"${ALLSKY_SCRIPTS}/addMessage.sh" warning "${ME}: ${MSG}"
+	"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${ME}: ${MSG}"
 fi
 
 rm -f "${ALLSKY_BAD_IMAGE_COUNT}"	# Start with no bad images

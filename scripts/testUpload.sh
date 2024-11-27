@@ -281,14 +281,14 @@ if [[ -n ${ERR_MSG} ]]; then
 	if [[ ${ON_TTY} == "true" ]]; then
 		echo -e "\n${ERR_MSG}" >&2
 	else
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ERR_MSG}"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ERR_MSG}"
 	fi
 fi
 if [[ -n ${OK_MSG} ]]; then
 	if [[ ${ON_TTY} == "true" ]]; then
 		echo -e "\n${OK_MSG}" >&2
 	else
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "success" "${OK_MSG}"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --type success --msg "${OK_MSG}"
 	fi
 fi
 
@@ -297,7 +297,7 @@ if [[ -s ${MSG_FILE} ]]; then
 	if [[ ${ON_TTY} == "true" ]]; then
 		echo -e "\n${M}"
 	else
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${M}"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --type info --msg "${M}"
 	fi
 fi
 rm -f "${MSG_FILE}"

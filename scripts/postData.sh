@@ -37,7 +37,7 @@ function upload_file()
 		local MSG="File to upload '${FILE_TO_UPLOAD}' - file not found."
 		echo -e "${RED}${ME}: ERROR: ${MSG}.${NC}" >&2
 		if [[ ${FROM_WEBUI} == "false" ]]; then
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${MSG}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${MSG}"
 		fi
 		return 1
 	fi
@@ -128,14 +128,14 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 		OK="false"
 		echo -e "${RED}${ME}: ERROR: ${latitude}" >&2
 		if [[ ${FROM_WEBUI} == "false" ]]; then
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${latitude}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${latitude}"
 		fi
 	fi
 	if ! longitude="$( convertLatLong "$( settings ".longitude" )" "longitude" 2>&1 )" ; then
 		OK="false"
 		echo -e "${RED}${ME}: ERROR: ${longitude}" >&2
 		if [[ ${FROM_WEBUI} == "false" ]]; then
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${longitude}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${longitude}"
 		fi
 	fi
 	[[ ${OK} == "false" ]] && exit 1

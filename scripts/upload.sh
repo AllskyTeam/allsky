@@ -236,7 +236,7 @@ elif [[ ${PROTOCOL} == "gcs" ]] ; then
 	else
 		OUTPUT="${ME}: ERROR: 'gsutil' command not found; cannot upload."
 		OUTPUT+="\nIt should be in one of these directories: ${PATH}"
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${OUTPUT}"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${OUTPUT}"
 		OUTPUT="${RED}*** ${OUTPUT}${NC}"
 		RET=1
 	fi

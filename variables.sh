@@ -209,12 +209,6 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
 	EXIT_NO_CAMERA=101		# cannot find camera
 
-	# addMessage.sh message numbers.
-	AM_RM_PRIOR=1
-	AM_RM_CHECK=2
-	AM_RM_POST=3
-	AM_NOT_SUPPORTED=4
-
 	# Name of the Pi's OS in lowercase.
 	PI_OS="$( grep VERSION_CODENAME /etc/os-release )"; PI_OS="${PI_OS/VERSION_CODENAME=/}"
 	PI_OS="${PI_OS,,}"

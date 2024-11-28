@@ -55,6 +55,28 @@ it tries to determine why it failed and display how to fix it.
 If that doesn't help, look at the sections below for additional information.
 </p>
 
+<h3>Using encryption for FTP</h3>
+<p>FTP sends your credentials (username and password) without encryption, so anybody can potentially read it and grant access to your server. To encrypt your username and password you can use the following options:</p>
+<h4>FTPiS - FTP with Implicit SSL</h4>
+<p>Data- and control-connection between ftp-client and -server are split to different tcp-ports and ssl encrypted. To activate FTPiS set protocol to "ftps":
+<pre>
+protocol = "ftps"
+</pre>
+FTPiS is outdated and shouldn't be used any longer. Please use FTPeS or SFTP instead.
+</p>
+<h4>FTPeS - FTP with Explicite SSL</h4>
+<p>FTPeS uses FTP for the initiation of the ftp session (without encryption). Then it activates TLS/SSL encryption and sends username/password encrypted. So you have to set "ftp" as protocol (not "ftps") for using encrypted FTPeS. It is important to set "ftp:ssl-force on" as parameter for lftp, so credentials are only transfered, if the encryption has been established:
+<pre>
+LFTP_COMMANDS = "set ftp:ssl-force yes"
+</pre>
+</p>
+<h4>SFTP - SSH File Transfer Protocol</h4>
+<p>FTP uses SSH to encrypt payload and credentials. You have to set the protocol parameter to "sftp":
+<pre>
+protocol = "sftp"
+</pre>
+</p>
+
 <h3>Incorrect WebUI settings or URL mapping</h3>
 <p>
 <blockquote>

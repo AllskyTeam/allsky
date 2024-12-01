@@ -207,7 +207,7 @@ else
 	# Local Websites don't have directory or file name choices.
 
 	if [[ ${R_WEB_USE} == "true" ]]; then
-		R_WEB_DEST_DIR="$( settings ".remotewebimagedir" )"
+		R_WEB_DEST_DIR="$( settings ".remotewebsiteimagedir" )"
 		if [[ -n ${R_WEB_DEST_DIR} && ${R_WEB_DEST_DIR: -1:1} != "" ]]; then
 			R_WEB_DEST_DIR="${R_WEB_DEST_DIR}/"
 		fi

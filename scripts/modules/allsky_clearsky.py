@@ -24,7 +24,7 @@ metaData = {
     "name": "Clear Sky Alarm",
     "description": "Clear Sky Alarm",
     "module": "allsky_clearsky",
-    "version": "v1.0.0",
+    "version": "v1.0.1",
     "events": [
         "day",
         "night"
@@ -41,8 +41,10 @@ metaData = {
         "roi": "",
         "roifallback": 5,
         "mqttenable": "False",
+        "mqttusesecure": "true",        
         "mqttbroker": "",
         "mqttport": 1883,
+        "mqttloopdelay": "5",        
         "mqttusername": "",
         "mqttpassword": "",
         "mqtttopic": "SKYSTATE",
@@ -153,6 +155,14 @@ metaData = {
                 "fieldtype": "checkbox"
             }
         },
+        "mqttusesecure": {
+            "required": "false",
+            "description": "Use Secure Connection",
+            "tab": "MQTT",
+            "type": {
+                "fieldtype": "checkbox"
+            }
+        },         
         "mqttbroker" : {
             "required": "false",
             "description": "MQTT Broker address",
@@ -171,6 +181,18 @@ metaData = {
                 "step": 1
             }
         },
+        "mqttloopdelay": {
+            "required": "false",
+            "description": "Loop Delay(s)",
+            "help": "The loop delay, only increase this if you experience issues with messages missing in the broker",
+            "tab": "MQTT",
+            "type": {
+                "fieldtype": "spinner",
+                "min": 0.5,
+                "max": 10,
+                "step": 0.5
+            }              
+        },        
         "mqttusername" : {
             "required": "false",
             "description": "MQTT Username",
@@ -193,6 +215,12 @@ metaData = {
     "enabled": "false"
 }
 
+def MQTTonConnect(client, userdata, flags, rc, properties=None): 
+    s.log(4, f"INFO: MQTT - CONNACK received with code {rc}.")
+
+def MQTTonPublish(client, userdata, mid, properties=None):
+    s.log(4, f"INFO: MQTT - Message published {mid}.")
+    
 def onPublish(client, userdata, mid, properties=None):
     s.log(4,"INFO: Sky state published to MQTT Broker mid {0}".format(mid))
 
@@ -211,11 +239,13 @@ def clearsky(params, event):
     fallback = s.int(params["roifallback"])
 
     mqttenable = params["mqttenable"]
+    mqttusesecure = params["mqttusesecure"]
     mqttbroker = params["mqttbroker"]
     mqttport = s.int(params["mqttport"])
     mqttusername = params["mqttusername"]
     mqttpassword = params["mqttpassword"]
     mqtttopic = params["mqtttopic"]
+    mqttloopdelay = params["mqttloopdelay"]
 
     starCount = ""
 
@@ -335,12 +365,33 @@ def clearsky(params, event):
 
     if mqttenable:
         s.log(4,"INFO: Sending sky state {0} to MQTT Broker {1} using topic {2}".format(skyState, mqttbroker, mqtttopic))
+
+        channel_topic = mqtttopic
+        if channel_topic == "":
+            s.log(0, "ERROR:MQTT - Please specify a topic to publish")
+            return
+
         client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
-        client.on_publish = onPublish
-        client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
-        client.username_pw_set(mqttusername, mqttpassword)
+        client.on_connect = MQTTonConnect
+        client.on_publish = MQTTonPublish        
+        if mqttusername != "" and mqttpassword!= "":
+            client.username_pw_set(mqttusername, mqttpassword)
+
+        if mqttbroker== "":
+            s.log(0, "ERROR: MQTT - Please specify a MQTT host to publish to")
+            return
+
+        if mqttusesecure:
+            client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
+
         client.connect(mqttbroker, mqttport)
-        result = client.publish(mqtttopic, skyState)
+
+        client.publish(mqtttopic, skyState ,qos=1)
+        s.log(1, f"INFO: MQTT - Published to MQTT on channel: {channel_topic}")
+        delay = int(mqttloopdelay)
+        client.loop(delay)
+        client.disconnect()        
+        
     else:
         s.log(4,"INFO: MQTT disabled")
 

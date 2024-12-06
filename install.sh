@@ -2503,7 +2503,7 @@ restore_prior_files()
 			MSG="Your remote Website needs to be updated to this newest version."
 			MSG+="\nIt is at version ${PRIOR_V}"
 			# This command will update the version.
-			MSG+="\n\nRun:  cd ~/allsky;  ./remote_website_install.sh"
+			MSG+="\n\nRun:  cd ~/allsky;  ./remoteWebsiteInstall.sh"
 			display_msg --log notice "${MSG}"
 		fi
 	else

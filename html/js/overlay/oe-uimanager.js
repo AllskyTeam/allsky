@@ -20,6 +20,8 @@ class OEUIMANAGER {
     #stageScale = 0.6;
     #stageMode = 'fit';   
     #imageCache = null;
+    #errorFields = [];
+    #errorsTable = null;
 
     #fieldTable = null;
     #allFieldTable = null;
@@ -60,27 +62,6 @@ class OEUIMANAGER {
         this.#oeEditorStage.add(this.#overlayLayer);
         this.#oeEditorStage.add(this.#gridLayer);
 
-        this.#transformer = new Konva.Transformer({
-            resizeEnabled: false
-        });
-        this.#overlayLayer.add(this.#transformer);
-
-        this.setZoom('oe-zoom-fit');
-
-        this.#snapRectangle = new Konva.Rect({
-            x: 0,
-            y: 0,
-            name: 'snapRectangle',
-            width: 100,
-            height: 50,
-            fill: '#cccccc',
-            opacity: 0.6,
-            stroke: '#333',
-            strokeWidth: 1,
-            visible: false
-        });
-        this.#overlayLayer.add(this.#snapRectangle);
-
         this.#oeEditorStage.on('mousemove', (e) => {
             let mousePos = this.#oeEditorStage.getPointerPosition();
             this.updateDebugWindowMousePos(mousePos.x, mousePos.y);
@@ -91,16 +72,22 @@ class OEUIMANAGER {
 
         if (params.hasOwnProperty('debug')) {
             if (params.debug == 'true') {
-                this.#debugMode = true;
+                localStorage.setItem('debugMode', 'true');
+            } else {
+                localStorage.setItem('debugMode', 'false');
             }
         }
 
         if (params.hasOwnProperty('debugpos')) {
             if (params.debugpos == 'true') {
-                this.#debugPosMode = true;
+                localStorage.setItem('debugpos', 'true');
+            } else {
+                localStorage.setItem('debugpos', 'false');
             }
         }
 
+        this.#debugMode = localStorage.getItem('debugMode') === 'true' ? true: false;
+        this.#debugPosMode = localStorage.getItem('debugpos') === 'true' ? true: false;
     }
 
     getQueryParams(url) {
@@ -111,6 +98,15 @@ class OEUIMANAGER {
             params[key] = decodeURIComponent(val);
         })
         return params;
+    }
+
+    get dirty() {
+        let result = false;
+        if (this.#fieldManager.dirty || this.#configManager.dirty) {
+            result = true;
+        }
+
+        return result;
     }
 
     get selected() {
@@ -141,8 +137,88 @@ class OEUIMANAGER {
         }
     }
 
+    resetUI() {
+
+        $(window).off('resize');
+        this.#oeEditorStage.off('dragmove')
+        this.#oeEditorStage.off('wheel');
+        this.#oeEditorStage.off('click tap');
+        this.#overlayLayer.off('dblclick dbltap');
+        this.#overlayLayer.off('dragstart');
+        this.#overlayLayer.off('dragmove');
+        this.#overlayLayer.off('dragend');
+    
+        $(document).off('dblclick', '.draggable');
+        $(document).off('click', '#oe-item-list');
+        $(document).off('click', '.oe-list-delete');
+        $(document).off('click', '.oe-all-list-add');
+        $(document).off('click', '.oe-list-add');
+        $(document).off('click', '#oe-field-dialog-add-field');
+        $(document).off('click', '.oe-list-edit');
+        $(document).off('click', '#oe-field-save');
+        $(document).off('click', '#oe-item-list-dialog-save');
+        $(document).off('click', '#oe-item-list-dialog-close');
+        $(document).off('click', '#oe-save');
+        $(document).off('click', '#oe-test-mode');
+        $(document).off('click', '#oe-delete');
+        $(document).off('click', '#oe-add-text');
+        $(document).off('click', '#oe-add-image');
+        $(document).off('click', '#oe-options');
+        $('#optionsdialog a[data-toggle="tab"]').off('shown.bs.tab');
+        $(document).off('click', '#optionsdialognewoverlay');
+        $(document).off('click', '.oe-options-overlay-edit');
+        $(document).off('click', '#oe-defaults-save');
+        $(document).off('click', '#oe-font-dialog-add-font');
+        $(document).off('click', '#oe-font-dialog-upload-font');
+        $(document).off('click', '#oe-upload-font');
+        $('#fontlisttable').off('click', '.oe-list-font-use');
+        $('#fontlisttable').off('click', '.oe-list-font-remove');
+        $(document).off('click', '.oe-list-font-delete');
+        $(document).off('click', '.oe-zoom');
+        $(document).off('click', '#oe-show-image-manager');
+        $(document).off('oe-imagemanager-add');
+        $(document).off('click', '#oe-toobar-debug-button');
+        $('.modal').off('shown.bs.modal');
+        $(window).off('resize');
+        $(document).off('click', '#oe-field-errors');
+        $(document).off('click', '#oe-field-errors-dialog-close');
+        $(document).off('click', '.oe-field-errors-dialog-delete');
+        $(document).off('click', '.oe-field-errors-dialog-fix');
+        $(document).off('oe-config-updated');
+        $(document).off('click','#oe-show-overlay-manager');
+
+        this.#overlayLayer.destroyChildren();
+        this.#transformer = new Konva.Transformer({
+            resizeEnabled: false
+        });
+        this.#overlayLayer.add(this.#transformer);        
+
+        this.setZoom('oe-zoom-fit');
+
+        this.#snapRectangle = new Konva.Rect({
+            x: 0,
+            y: 0,
+            name: 'snapRectangle',
+            width: 100,
+            height: 50,
+            fill: '#cccccc',
+            opacity: 0.6,
+            stroke: '#333',
+            strokeWidth: 1,
+            visible: false
+        });
+        this.#overlayLayer.add(this.#snapRectangle);
+
+        this.#transformer.off('transformend');
+
+
+    }
+
     buildUI() {
+        this.resetUI();
         this.setupFonts();
+
+        window.oedi.get('fieldmanager').parseConfig();
 
         let fields = this.#fieldManager.fields;
         for (let [fieldName, field] of fields.entries()) {
@@ -155,8 +231,19 @@ class OEUIMANAGER {
             this.#resizeWindow();
         });
 
+        if (!this.#debugMode) {
+            let selectedOverlay = this.#configManager.selectedOverlay;
+            if (selectedOverlay.type === 'allsky') {
+                $('#oe-overlay-disable').removeClass('hidden');
+            } else {
+                $('#oe-overlay-disable').addClass('hidden');
+            }
+        } else {
+            $('#oe-overlay-disable').addClass('hidden');
+        }
+
         jQuery(window).bind('beforeunload', ()=> {
-            if (this.#fieldManager.dirty) {
+            if (this.#fieldManager.dirty || this.#configManager.dirty) {
                 return ' ';
             } else {
                 return undefined;
@@ -328,6 +415,7 @@ class OEUIMANAGER {
                 this.#snapRectangle.visible(false);
             }
             this.#movingField = null;
+            this.checkFields();
             this.updateToolbar();
         });
 
@@ -366,6 +454,7 @@ class OEUIMANAGER {
 
             this.#fieldTable = $('#itemlisttable').DataTable({
                 data: this.#configManager.dataFields,
+                retrieve: true,
                 autoWidth: false,
                 pagingType: 'simple_numbers',
                 paging: true,
@@ -426,6 +515,7 @@ class OEUIMANAGER {
                 $('#oe-item-list-dialog-all-error').hide();
                 this.#allFieldTable = $('#allitemlisttable').DataTable({
                     data: this.#configManager.allDataFields,
+                    retrieve: true,
                     autoWidth: false,
                     pagingType: 'simple_numbers',
                     paging: true,
@@ -768,8 +858,9 @@ class OEUIMANAGER {
         });
 
         $(document).on('click', '#oe-save', (event) => {
-            if (this.#fieldManager.dirty) {
+            if (this.#fieldManager.dirty || this.#configManager.dirty) {
                 this.#saveConfig();
+                $(document).trigger('oe-overlay-saved');
             }
         });
 
@@ -799,6 +890,8 @@ class OEUIMANAGER {
         });
 
         $(document).on('click', '#oe-add-text', (event) => {
+            event.stopPropagation();
+            event.preventDefault();
             let shape = this.#fieldManager.addField('text');
             this.#overlayLayer.add(shape);
 
@@ -876,6 +969,9 @@ class OEUIMANAGER {
             $('#oe-app-options-background-opacity').val(this.#configManager.backgroundImageOpacity);
             $('#oe-app-options-grid-colour').val(this.#configManager.gridColour);
 
+            $('#oe-app-options-show-errors').prop('checked', this.#configManager.overlayErrors);
+            $('#oe-app-options-show-errors-text').val(this.#configManager.overlayErrorsText);
+
             $('#oe-app-options-grid-colour').spectrum({
                 type: 'color',
                 showInput: true,
@@ -884,12 +980,82 @@ class OEUIMANAGER {
                 preferredFormat: 'hex'
             });            
             
+
+            $('#overlaytablelist').DataTable().destroy();
+            $('#overlaytablelist').DataTable({
+                ajax: 'includes/overlayutil.php?request=OverlayList',
+                dom: '<"toolbar">frtip',
+                autoWidth: false,
+                pagingType: 'simple_numbers',
+                paging: true,
+                pageLength: 20,
+                info: false,
+                searching: false,
+                order: [[0, 'asc']],
+                ordering: false,
+                columns: [
+                    {
+                        data: 'type',
+                        width: '80px'
+                    }, {
+                        data: 'name',
+                        width: '300px'
+                    }, {
+                        data: 'brand',
+                        width: '80px'
+                    }, {
+                        data: 'model',
+                        width: '80px'
+                    }, {
+                        data: 'tod',
+                        width: '80px',
+                        render: function (item, type, row, meta) {
+                            return item.charAt(0).toUpperCase() + item.slice(1);
+                        }                        
+                    }, {
+                        data: null,
+                        width: '50px',
+                        render: function (item, type, row, meta) {
+                            let icon = 'fa-pen-to-square'
+                            if (item.type === 'Allsky') {
+                                icon = 'fa-file-circle-plus';
+                            }
+
+                            let buttons = '<button type="button" class="btn btn-primary btn-sms oe-options-overlay-edit" data-filename="' + item.filename + '"><i class="fa-solid ' + icon + '"></i></button>';
+                            return buttons;
+                        }
+                    }
+                ]
+            });
+
             $('#optionsdialog').modal({
                 keyboard: false
             });
 
             $('a[href="#configoptions"]').tab('show');
 
+        });
+
+        $('#optionsdialog a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            var target = $(e.target).attr('href')
+            if (target === '#oeeditoroverlays') {
+                $('#optionsdialognewoverlay').removeClass('hidden');
+            } else {
+                $('#optionsdialognewoverlay').addClass('hidden');
+            }
+        });
+
+        $(document).on('click', '#optionsdialognewoverlay', (event) => {
+            $('#oe-overlay-manager').data('allskyMM').show();
+            $('#oe-overlay-manager').data('allskyMM').showNew();            
+            $('#optionsdialog').modal('hide');
+        });
+
+        $(document).on('click', '.oe-options-overlay-edit', (event) => {
+            let fileName = $(event.currentTarget).data('filename');
+            $('#oe-overlay-manager').data('allskyMM').show();
+            $('#oe-overlay-manager').data('allskyMM').setSelected(fileName);
+            $('#optionsdialog').modal('hide');
         });
 
         $(document).on('click', '#oe-defaults-save', (event) => {
@@ -909,7 +1075,6 @@ class OEUIMANAGER {
             let defaultStrokeColour = $('#oe-default-stroke-colour').val();
             let defaultStrokeSize = $('#oe-default-stroke-size').val();
 
-            this.#configManager.backupConfig();
             this.#configManager.setValue('settings.defaultimagetopacity', defaultImagOpacity);
             this.#configManager.setValue('settings.defaultimagerotation', defaultImagRotation);
             this.#configManager.setValue('settings.defaultfontsize', defaultFontSize);
@@ -925,7 +1090,6 @@ class OEUIMANAGER {
             this.#configManager.setValue('settings.defaultincludesun', defaultincludesun);
             this.#configManager.setValue('settings.defaultstrokecolour', defaultStrokeColour);
 
-
             this.#configManager.gridVisible = $('#oe-app-options-show-grid').prop('checked');
             this.#configManager.gridSize = $("#oe-app-options-grid-size option").filter(":selected").val();
             this.#configManager.gridOpacity = $('#oe-app-options-grid-opacity').val() | 0;
@@ -936,6 +1100,9 @@ class OEUIMANAGER {
             this.#configManager.selectFieldOpacity = $('#oe-app-options-select-field-opacity').val() | 0;
             this.#configManager.mouseWheelZoom = $('#oe-app-options-mousewheel-zoom').prop('checked');
             this.#configManager.backgroundImageOpacity = $('#oe-app-options-background-opacity').val() | 0;
+
+            this.#configManager.overlayErrors = $('#oe-app-options-show-error').prop('checked');
+            this.#configManager.overlayErrorsText = $('#oe-app-options-show-error').val();
 
             this.#fieldManager.updateFieldDefaults();
             this.drawGrid();
@@ -986,10 +1153,10 @@ class OEUIMANAGER {
                 columns: [
                     {
                         data: 'name',
-                        width: '150px'
+                        width: '250px'
                     }, {
                         data: 'path',
-                        width: '150px',
+                        width: '250px',
                         render: function (item, type, row, meta) {
                             if (item.includes('msttcorefonts')) {
                                 return 'System Font';
@@ -1007,8 +1174,30 @@ class OEUIMANAGER {
 
                             let buttons = '';
                             if (item.name !== 'moon_phases' && item.name !== defaultFont && !item.path.includes('msttcorefonts')) {
-                                buttons += '&nbsp; <button type="button" class="btn btn-danger btn-xs oe-list-font-delete" data-fontname="' + item.name + '"><i class="fa-solid fa-trash"></i></button>';
-                                buttons += '</div>';
+
+
+                                let fonts = config.getValue('fonts');
+                                let extPos = item.name.indexOf('.');
+    
+                                let fontName = item.name;
+                                if (extPos > -1) {
+                                    let parts = item.name.split('.');
+                                    fontName = parts[0];
+                                }
+                                let fontLCName = fontName.toLowerCase();
+
+                                let enabled = false;
+                                if (fonts[fontLCName] !== undefined) {
+                                    enabled = true;
+                                }
+
+
+                                buttons += '<button type="button" class="btn btn-danger btn-xs oe-list-font-delete" data-fontname="' + item.name + '"><i class="fa-solid fa-trash"></i></button>';
+                                if (!enabled) {
+                                    buttons += '&nbsp; <button type="button" class="btn btn-primary btn-xs oe-list-font-use" data-fontname="' + fontName + '" data-path="' + item.path + '">Use</button>';
+                                } else {
+                                    buttons += '&nbsp; <button type="button" class="btn btn-danger btn-xs oe-list-font-remove" data-fontname="' + fontName + '" data-path="' + item.path + '">Remove</button>';
+                                }
                             }
                             return buttons;
                         }
@@ -1023,6 +1212,43 @@ class OEUIMANAGER {
             })
         });
 
+        $('#fontlisttable').on('click', '.oe-list-font-use', function(e) {
+            let fontName = $(e.currentTarget).data('fontname');
+            let fontPath = $(e.currentTarget).data('path');
+
+            let fontFace = new FontFace(fontName, 'url(' + window.oedi.get('BASEDIR') + fontPath + ')');
+            fontFace.load().then(function(font) {
+                document.fonts.add(fontFace);
+                this.setupFonts();
+                this.#configManager.setValue('fonts.' + fontName.toLowerCase() + '.fontPath', fontPath);
+                $('#fontlisttable').DataTable().ajax.reload( null, false ); 
+                this.#configManager.dirty = true;
+                this.updateToolbar();
+            }.bind(this));
+        }.bind(this));
+
+        $('#fontlisttable').on('click', '.oe-list-font-remove', function(e) {
+            let fontName = $(e.currentTarget).data('fontname');
+            let fontToDelete = null;
+            for (let fontFace of document.fonts.values()) {
+                if (fontFace.family == fontName) {
+                    fontToDelete = fontFace;
+                    break;
+                }
+            }
+    
+            if (fontToDelete !== null) {
+                document.fonts.delete(fontToDelete);
+            }
+            
+            this.#configManager.deleteValue('fonts.' + fontName.toLowerCase());
+            this.#fieldManager.switchFontUsed(fontName);
+            this.setupFonts();
+            $('#fontlisttable').DataTable().ajax.reload( null, false );
+            this.#configManager.dirty = true;
+            this.updateToolbar();            
+        }.bind(this));
+
         $(document).on('click', '.oe-list-font-delete', (event) => {
             event.stopPropagation();
             if (window.confirm('Are you sure you wish to delete this font? If the font is in use then all fields will be set to the default font.')) {
@@ -1030,6 +1256,8 @@ class OEUIMANAGER {
                 if (fontName !== 'undefined') {
                     let uiManager = window.oedi.get('uimanager');
                     uiManager.deleteFont(fontName);
+                    this.#configManager.dirty = true;
+                    this.updateToolbar();
                 }
             }
         });
@@ -1095,11 +1323,148 @@ class OEUIMANAGER {
 
         $('[data-toggle="tooltip"]').tooltip();
 
+        $(document).on('click', '#oe-field-errors', (event) => {
+
+            this.#errorsTable = $('#fielderrorstable').DataTable({
+                data: this.#errorFields,
+                retrieve: true,
+                autoWidth: false,
+                pagingType: 'simple_numbers',
+                paging: true,
+                info: true,
+                ordering: false,
+                searching: true,
+                rowId: 'id',
+                pageLength: parseInt(this.#configManager.addListPageSize),
+                lengthMenu: [ [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, -1], [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 'All']],
+                order: [[0, 'asc']],
+                columns: [
+                    {
+                        data: 'name',
+                        width: '600px'
+                    }, {
+                        data: 'type',
+                        width: '100px'
+                    }, {
+                        data: null,
+                        width: '100px',
+                        render: function (item, type, row, meta) {
+                            let buttons = '';
+                            buttons += '<button type="button" class="btn btn-primary btn-xs oe-field-errors-dialog-fix" data-id="' + item.id + '" data-type="' + item.type + '">Fix</button>';
+                            buttons += '<button style="margin-left:10px;" type="button" class="btn btn-danger btn-xs oe-field-errors-dialog-delete" data-id="' + item.id + '"><i class="fa-solid fa-trash oe-field-errors-dialog-delete" data-id="' + item.id + '"></i></button>';
+                            buttons += '</div>';
+                            return buttons;
+                        }
+                    }
+
+                ],
+                fnDrawCallback: function (oSettings) {
+                    if (oSettings._iDisplayLength >= oSettings.aoData.length) {
+                        $(oSettings.nTableWrapper).find('.dataTables_paginate').hide();
+                        $(oSettings.nTableWrapper).children('div').first().hide();
+                        $(oSettings.nTableWrapper).children('div').last().hide();
+                    } else {
+                        $(oSettings.nTableWrapper).find('.dataTables_paginate').show();
+                        $(oSettings.nTableWrapper).children('div').first().show();
+                        $(oSettings.nTableWrapper).children('div').last().show();
+                    }
+                }
+            });
+
+            if ($('#oe-field-errors-dialog').data('bs.modal') === undefined) {
+                $('#oe-field-errors-dialog').modal({
+                    keyboard: false,
+                    width: 800
+                })
+            } else {
+                $('#oe-field-errors-dialog').modal('show');
+            }
+
+            $('#oe-field-errors-dialog').on('hidden.bs.modal', (event) => {
+                this.checkFields();
+                $('#fielderrorstable').DataTable().destroy();
+            });            
+        });
+
+        $(document).on('click', '#oe-field-errors-dialog-close', (event) => {
+            $('#oe-field-errors-dialog').modal('hide');            
+        });
+
+        $(document).on('click', '.oe-field-errors-dialog-delete', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            let fieldId = $(event.currentTarget).data('id');
+            let field = this.#fieldManager.findField(fieldId);
+
+            let shape = field.shape;
+            this.#fieldManager.deleteField(shape.id());
+            shape.destroy();
+            this.#errorsTable.rows('#' + fieldId).remove().draw();
+
+            if (this.#errorsTable .rows().count() == 0) {
+                $('#oe-field-errors-dialog').modal('hide');
+            }    
+
+            this.#configManager.dirty = true;
+            this.updateToolbar();            
+        });
+
+        $(document).on('click', '.oe-field-errors-dialog-fix', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            let fieldId = $(event.currentTarget).data('id');
+            let field = this.#fieldManager.findField(fieldId);
+
+            let stageWidth = this.#oeEditorStage.width();
+            let stageHeight = this.#oeEditorStage.height();
+            
+            field.x = (stageWidth / 2)|0;
+            field.y = (stageHeight / 3)|0;
+
+            this.#errorsTable.rows('#' + fieldId).remove().draw();
+
+            if (this.#errorsTable .rows().count() == 0) {
+                $('#oe-field-errors-dialog').modal('hide');
+            }
+
+            this.#configManager.dirty = true;
+            this.updateToolbar();            
+        });
+             
+        $(document).on('oe-config-updated', (e) => {
+            this.updateToolbar();
+        });
+
+        $(document).on('click','#oe-show-overlay-manager', (e) => {
+            $(document).trigger('oe-show-overlay-manager');
+        });
+
         this.updateDebugWindow();
         this.drawGrid();
         this.updateBackgroundImage();
         this.setupDebug();
         this.updateToolbar();
+        this.checkFieldstimer();
+    }
+
+    checkFieldstimer() {
+        let checkFunction = function() {
+            let allLoaded = true;
+            let fields = this.#fieldManager.fields;
+            for (let [fieldName, field] of fields.entries()) {
+                if (!field.loaded) {
+                    allLoaded = false;
+                    break;
+                }
+            }
+            if (!allLoaded) {
+                setTimeout(checkFunction, 100);
+            } else {
+                this.checkFields();
+            }
+        }.bind(this);
+
+        setTimeout(checkFunction, 100);
     }
 
     moveField(event) {
@@ -1136,13 +1501,91 @@ class OEUIMANAGER {
         this.checkFieldBounds(shape, this.#oeEditorStage, this.#transformer);
     }
 
-    checkFieldBounds(shape, oeEditorStage, transformer) {
-        if (transformer.borderStroke() !== '#00a1ff') {
-            transformer.borderStroke('#00a1ff');
-            transformer.borderStrokeWidth(1);
+    checkFields() {
+        this.#errorFields = [];
+        let fields = this.#fieldManager.fields;
+        for (let [fieldName, field] of fields.entries()) {
+  
+            let result = this.isFieldOutsideViewport(field);
+            if (result.outOfBounds) {
+                let name = 'Unknown';
+                if (field instanceof OEIMAGEFIELD) {
+                    name = field.image;
+                } else {
+                    name = field.label;
+                }
+                this.#errorFields.push({
+                    'id': fieldName,
+                    'name': name,
+                    'field': field,
+                    'type': result.type
+                });
+            }
         }
 
-      
+        if (this.#errorFields.length > 0) {
+            $('#oe-field-errors').removeClass('hidden');
+            $('#oe-field-errors').addClass('red pulse');
+        } else {
+            $('#oe-field-errors').addClass('hidden');
+            $('#oe-field-errors').removeClass('red pulse');
+        }
+    }
+
+    isFieldOutsideViewport(field) {
+        let result = false;
+        let type = '';
+        let stageWidth = this.#oeEditorStage.width();
+        let stageHeight = this.#oeEditorStage.height();
+
+        let x = field.tlx;
+        let y = field.tly;
+
+        /** Nasty hack to fix tlx and tly being wrong on scaled images */
+        if (field instanceof OEIMAGEFIELD) {
+            let tx = field.shape.getWidth()* field.scale/2;
+            let ty = field.shape.getHeight()* field.scale/2;
+            x = field.x - tx;
+            y = field.y - ty;
+        }
+
+        if (x < 0) {
+            result = true;
+            type = 'left';
+        }
+        if (y < 0) {
+            result = true;
+            type = 'top';
+        }
+
+        if (x > stageWidth) {
+            result = true;
+            type = 'right';
+        }
+        if (y > stageHeight) {
+            result = true;
+            type = 'bottom';
+        }
+
+        if ((x < 0 && y < 0) || (x > stageWidth && y > stageHeight)) {
+            result = true;
+            type = 'all';
+        }
+
+        return {
+            outOfBounds: result, 
+            type: type
+        };
+    }
+
+    checkFieldBounds(shape, oeEditorStage, transformer=null) {
+        if (transformer !== null) {
+            if (transformer.borderStroke() !== '#00a1ff') {
+                transformer.borderStroke('#00a1ff');
+                transformer.borderStrokeWidth(1);
+            }
+        }
+
         let stageWidth = oeEditorStage.width();
         let stageHeight = oeEditorStage.height();
 
@@ -1171,17 +1614,19 @@ class OEUIMANAGER {
             outOfBounds = true;
         }
 
-        if (outOfBounds) {
+        if (outOfBounds && transformer !== null) {
             transformer.borderStrokeWidth(3);
             transformer.borderStroke('red');    
         }
 
+        return outOfBounds;
     }
 
     #saveConfig() {
         this.#fieldManager.buildJSON();
         this.#configManager.saveConfig1();
         this.#fieldManager.clearDirty();
+        this.#configManager.dirty = false;
         this.updateToolbar();
     }
 
@@ -1261,28 +1706,56 @@ class OEUIMANAGER {
     }
 
     updateToolbar() {
-        if (this.#selected === null) {
+
+        let selectedOverlay = this.#configManager.selectedOverlay;
+        if (selectedOverlay.type === 'allsky' && !this.#debugMode)  {
             $('#oe-delete').addClass('disabled');
-            $('#oe-delete').removeClass('green');
-        } else {
-            $('#oe-delete').removeClass('disabled');
-            $('#oe-delete').addClass('green');
-        }
-
-        if (this.#fieldManager.dirty) {
-            $('#oe-save').removeClass('disabled');
-            $('#oe-save').addClass('green pulse');
-            $('#oe-overlay-editor-tab').addClass('oe-overlay-editor-tab-modified');            
-        } else {
             $('#oe-save').addClass('disabled');
-            $('#oe-save').removeClass('green pulse');
-            $('#oe-overlay-editor-tab').removeClass('oe-overlay-editor-tab-modified');
-        }
+            $('#oe-add-text').addClass('disabled');
+            $('#oe-add-image').addClass('disabled');
+            $('#oe-item-list').addClass('disabled');
+            $('#oe-test-mode').addClass('disabled');
+            $('#oe-field-errors').addClass('disabled');
+            $('#oe-toobar-debug-button').addClass('disabled');
+            $('#oe-upload-font').addClass('disabled');
+            $('#oe-show-image-manager').addClass('disabled');
+            $('#oe-options').addClass('disabled');            
+        } else {        
+            $('#oe-delete').removeClass('disabled');
+            $('#oe-save').removeClass('disabled');
+            $('#oe-add-text').removeClass('disabled');
+            $('#oe-add-image').removeClass('disabled');
+            $('#oe-item-list').removeClass('disabled');
+            $('#oe-test-mode').removeClass('disabled');
+            $('#oe-field-errors').removeClass('disabled');
+            $('#oe-toobar-debug-button').removeClass('disabled');
+            $('#oe-upload-font').removeClass('disabled');
+            $('#oe-show-image-manager').removeClass('disabled');
+            $('#oe-options').removeClass('disabled');            
 
-        if (this.#debugMode) {
-            $('#oe-toolbar-debug').removeClass('hidden')
-        } else {
-            $('#oe-toolbar-debug').addClass('hidden')
+            if (this.#selected === null) {
+                $('#oe-delete').addClass('disabled');
+                $('#oe-delete').removeClass('green');
+            } else {
+                $('#oe-delete').removeClass('disabled');
+                $('#oe-delete').addClass('green');
+            }
+
+            if (this.#fieldManager.dirty || this.#configManager.dirty) {
+                $('#oe-save').removeClass('disabled');
+                $('#oe-save').addClass('green pulse');
+                $('#oe-overlay-editor-tab').addClass('oe-overlay-editor-tab-modified');            
+            } else {
+                $('#oe-save').addClass('disabled');
+                $('#oe-save').removeClass('green pulse');
+                $('#oe-overlay-editor-tab').removeClass('oe-overlay-editor-tab-modified');
+            }
+
+            if (this.#debugMode) {
+                $('#oe-toolbar-debug').removeClass('hidden')
+            } else {
+                $('#oe-toolbar-debug').addClass('hidden')
+            }
         }
     }
 
@@ -1331,7 +1804,8 @@ class OEUIMANAGER {
             }
             $('#fontuploadsubmit').removeClass('disabled');
         });
-
+        
+        $('#fontuploadsubmit').off('click');
         $('#fontuploadsubmit').on('click', (e) => {
             e.preventDefault();
             $.ajax({

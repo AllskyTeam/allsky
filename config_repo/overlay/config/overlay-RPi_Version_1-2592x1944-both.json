@@ -1,0 +1,82 @@
+{
+    "fields": [
+        {
+            "label": "${DATE}  ${TIME}",
+            "x": 122,
+            "y": 24,
+            "id": "oe-field-0",
+            "format": "{%d-%m-%Y}{%H:%M:%S}",
+            "strokewidth": 0,
+            "sample": "DATE,TIME",
+            "tlx": 10,
+            "tly": 10,
+            "fontsize": 28,
+            "fill": "#ff0000"
+        },
+        {
+            "label": "Exposure: ${sEXPOSURE}",
+            "x": 131,
+            "y": 50,
+            "id": "oe-field-1",
+            "fontsize": 20,
+            "strokewidth": 0,
+            "tlx": 10,
+            "tly": 40
+        },
+        {
+            "label": "Gain: ${GAIN}",
+            "x": 73,
+            "y": 75,
+            "id": "oe-field-2",
+            "format": "{:.2f}",
+            "fontsize": 20,
+            "strokewidth": 0,
+            "tlx": 10,
+            "tly": 65
+        },
+        {
+            "label": "${CAMERA_TYPE} ${CAMERA_MODEL}",
+            "x": 157,
+            "y": 100,
+            "id": "oe-field-3",
+            "fontsize": 16,
+            "strokewidth": 0,
+            "tlx": 10,
+            "tly": 90,
+            "sample": "RPi some_model"
+        }
+    ],
+    "images": [],
+    "settings": {
+        "defaultdatafileexpiry": "550",
+        "defaultincludeplanets": false,
+        "defaultincludesun": false,
+        "defaultincludemoon": false,
+        "defaultimagetopacity": 0.63,
+        "defaultimagerotation": 0,
+        "defaulttextrotation": 0,
+        "defaultfontopacity": 1,
+        "defaultfontcolour": "white",
+        "defaultfont": "Arial",
+        "defaultfontsize": 52,
+        "defaultimagescale": 1,
+        "defaultnoradids": ""
+    },
+    "fonts": {
+        "moon_phases": {
+            "fontPath": "fonts\/moon_phases.ttf",
+            "fonttcolour": "red",
+            "backgroundcolor": "white",
+            "fontopacity": 0.5
+        }
+    },
+    "metadata": {
+        "camerabrand": "RPi",
+        "cameramodel": "Module 1",
+        "cameraresolutionwidth": "2592",
+        "cameraresolutionheight": "1944",
+        "tod": "both",
+        "name": "RPI Module 1"
+    }    
+}
+

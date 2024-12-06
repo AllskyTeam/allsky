@@ -1,28 +1,57 @@
 <?php
 
-function DisplayDashboard_LAN($interface) {
+function DisplayDashboard_LAN()
+{
+
+?>
+<div class="col-lg-12">
+	<div class="panel panel-primary">
+		<div class="panel-heading"><i class="fa fa-network-wired fa-fw"></i> LAN Dashboard</div>
+<?php
+	$num_interfaces = 0;
+
+	$dq = '"';		// double quote
+	$cmd = "hwinfo --network --short | gawk '{ if ($2 == ${dq}Ethernet${dq}) print $1; }' ";
+	if (exec($cmd, $output, $retval) === false || $retval !== 0) {
+		echo "<div class='errorMsgBig'>Unable to get list of network devices</div>";
+		return;
+	}
+
+	foreach($output as $interface) {
+		if ($interface === "") continue;
+		$num_interfaces++;
+		if ($num_interfaces > 1) {
+			echo "<hr class='panel-primary'>";
+		}
+		process_LAN_data($interface);
+	}
+	if ($num_interfaces > 1) echo "<hr class='panel-primary'>";
+?>
+		<div class="panel-footer">Information provided by ifconfig</div>
+	</div><!-- /.panel-primary -->
+</div><!-- /.col-lg-12 -->
+<?php
+}
+
+function process_LAN_data($interface)
+{
 	global $page;
+	$myStatus = new StatusMessages();
 
 	// Unlike with WLAN where when it's UP it's also RUNNING,
 	// with the LAN, the port can be up but nothing connected, i.e., not "RUNNING".
-
-	$status = new StatusMessages();
 
 	$interface_output = get_interface_status("ifconfig $interface");
 
 	// $interface_output is sent and the other variables are returned.
 	parse_ifconfig($interface_output, $strHWAddress, $strIPAddress, $strNetMask, $strRxPackets, $strTxPackets, $strRxBytes, $strTxBytes);
 
-	// $interface and $interface_output are sent, $status is returned.
-	$interface_up = handle_interface_POST_and_status($interface, $interface_output, $status);
+	// $interface and $interface_output are sent, $myStatus is returned.
+	$interface_up = handle_interface_POST_and_status($interface, $interface_output, $myStatus);
 ?>
 
-<div class="row">
-<div class="col-lg-12">
-	<div class="panel panel-primary">
-		<div class="panel-heading"><i class="fa fa-network-wired fa-fw"></i> LAN Dashboard</div>
 		<div class="panel-body">
-			<?php if ($status->isMessage()) echo "<p>" . $status->showMessages() . "</p>"; ?>
+			<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
 			<div class="row">
 				<div class="panel panel-default">
 					<div class="panel-body">
@@ -45,10 +74,11 @@ function DisplayDashboard_LAN($interface) {
 				<div class="row">
 				<form action="?page=<?php echo $page ?>" method="POST">
 <?php
+					echo "<input type='submit'";
 					if ( ! $interface_up ) {
-						echo "<input type='submit' class='btn btn-success' value='Start $interface' name='turn_up' />";
+						echo " class='btn btn-success' value='Start $interface' name='turn_up' />";
 					} else {
-						echo "<input type='submit' class='btn btn-warning' value='Stop $interface' name='turn_down' />";
+						echo " class='btn btn-warning' value='Stop $interface' name='turn_down' />";
 					}
 ?>
 					<input type="button" class="btn btn-primary" value="Refresh" onclick="document.location.reload(true)" />
@@ -57,10 +87,6 @@ function DisplayDashboard_LAN($interface) {
 			</div>
 
 		</div><!-- /.panel-body -->
-		<div class="panel-footer">Information provided by ifconfig</div>
-	</div><!-- /.panel-primary -->
-</div><!-- /.col-lg-12 -->
-</div><!-- /.row -->
 <?php 
 }
 ?>

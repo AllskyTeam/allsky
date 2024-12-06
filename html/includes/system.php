@@ -8,6 +8,19 @@
 
 function RPiVersion()
 {
+	exec('cat /sys/firmware/devicetree/base/model', $model);
+	$RPI = getVariableOrDefault($model, 0, null);
+	if ($RPI !== null) {
+		// Input example: total_mem=4096
+		exec('sudo vcgencmd get_config total_mem | cut -d= -f2', $mem);		// in MB
+		$mem = getVariableOrDefault($mem, 0, null);
+		if ($mem !== null) {
+			$mem = formatSize($mem * 1024 * 1024);
+			$RPI = "$RPI ($mem)";
+		}
+		return($RPI);
+	}
+
 	// Lookup table from https://www.raspberrypi.org/documentation/hardware/raspberrypi/revision-codes/README.md
 	// Last updated December 2023 with Pi 5
 	$revisions = array(
@@ -70,12 +83,7 @@ function RPiVersion()
 	if (array_key_exists($rev, $revisions)) {
 		return $revisions[$rev];
 	} else {
-		exec('cat /proc/device-tree/model', $model);
-		if (isset($model[0])) {
-			return $model[0];
-		} else {
-			return 'Unknown Pi, rev=' . $rev;
-		}
+		return 'Unknown Pi, rev=' . $rev;
 	}
 }
 
@@ -138,17 +146,17 @@ function checkNumFields($num_required, $num_have, $type, $line_num, $line, $file
 function displayProgress($x, $label, $data, $min, $current, $max, $danger, $warning, $status_override)
 {
 	if ($status_override !== "") {
-		$status = $status_override;
+		$myStatus = $status_override;
 	} else if ($current >= $danger) {
-		$status = "danger";
+		$myStatus = "danger";
 	} elseif ($current >= $warning) {
-		$status = "warning";
+		$myStatus = "warning";
 	} else {
-		$status = "success";
+		$myStatus = "success";
 	}
 	echo "<tr><td colspan='2' style='height: 5px'></td></tr>\n";
 	echo "<tr><td $x>$label</td>\n";
-	echo "    <td style='width: 100%' class='progress'><div class='progress-bar progress-bar-$status'\n";
+	echo "    <td style='width: 100%' class='progress'><div class='progress-bar progress-bar-$myStatus'\n";
 	echo "    role='progressbar'\n";
 
 	echo "    title='current: $current, min: $min, max: $max'";
@@ -272,8 +280,7 @@ function displayUserData($file, $displayType)
  */
 function DisplaySystem()
 {
-	global $status, $temptype, $page;
-	$status = new StatusMessages();
+	global $temptype, $page, $settings_array, $status;
 
 	$top_dir = dirname(ALLSKY_WEBSITE, 1);
 
@@ -301,12 +308,12 @@ function DisplaySystem()
 	}
 
 	// mem used
-	exec("free -m | awk '/Mem:/ { total=$2 } /buffers\/cache/ { used=$3 } END { print used/total*100}'", $memarray);
+	exec("free -m | gawk '/Mem:/ { total=$2 } /buffers\/cache/ { used=$3 } END { print used/total*100}'", $memarray);
 	$memused = floor($memarray[0]);
 	// check for memused being unreasonably low, if so repeat expecting modern output of "free" command
 	if ($memused < 0.1) {
 		unset($memarray);
-		exec("free -m | awk '/Mem:/ { total=$2 } /Mem:/ { used=$3 } END { print used/total*100}'", $memarray);
+		exec("free -m | gawk '/Mem:/ { total=$2 } /Mem:/ { used=$3 } END { print used/total*100}'", $memarray);
 		$memused = floor($memarray[0]);
 	}
 
@@ -401,7 +408,7 @@ function DisplaySystem()
 
 	// Optional user-specified data.
 	// TODO: read each file once and populate arrays for "data", "progress", and "button".
-	$udf = get_variable(ALLSKY_CONFIG .'/config.sh', 'WEBUI_DATA_FILES=', '');
+	$udf = getVariableOrDefault($settings_array, 'webuidatafiles', '');
 	if ($udf !== "") {
 		$user_data_files = explode(':', $udf);
 		$user_data_files_count = count($user_data_files);
@@ -440,8 +447,7 @@ function DisplaySystem()
 						$e .= displayUserData($user_data_files[$i], "button-action");
 					}
 
-					if ($status->isMessage()) 
-						echo "<P>" . $status->showMessages() . "</p>";
+					if ($status->isMessage()) echo "<p>" . $status->showMessages() . "</p>";
 					?>
 
 					<div class="row">

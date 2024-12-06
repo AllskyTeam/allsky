@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Mapping Server Locations to URLs";
+		} 
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<script src="../js/all.min.js" type="application/javascript"></script>
+	<title>Mapping Server Locations to URLs</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<blockquote>
+The concept of determining a URL or
+<span class="WebUISetting">Image Directory</span>
+based on a file location on a server is very important,
+but not very intuitive to most people.
+You may need to read this section multiple times.
+</blockquote>
+<p>
+When you enter a URL into a browser, how does the web server know where the file is?
+It typically starts looking in the root of the website,
+which is usually specified by the web server administrator.
+When you go to the Allsky WebUI, for example via <b>http://allsky</b>,
+Allsky looks in <span class="fileName">~/allsky/html</span>
+since that's what the Allsky developers specified as the root of the WebUI.
+</p>
+<p>There are two paths to a web file - one via a URL and another
+via the filesystem on the server.
+The web server maps a URL to a file location on the server.
+In our example above your Pi mapped <b>http://allsky</b> to
+<span class="fileName">~/allsky/html</span>.
+Sometimes that mapping is easy, and other times it's more difficult.
+In both cases, it impacts what you enter into the
+<span class="WebUISetting">Image Directory</span> setting for the remote
+Website or Server.
+</p>
+
+<blockquote>
+The cases below assume you want to send your allsky images to a remote Allsky Website
+but the same thing applies if you want to send the allsky images to remote server
+that is not an Allsky Website.
+</blockquote>
+
+<h4>Easy case: server directory structure matches URL</h4>
+<p>
+Let's say you have a personal website at <b>https://mysite.com</b>
+where you store family photos.
+When you access the server (usually via FTP) you see the family photos
+without having to navigate anywhere.
+This means your website URL maps to the top-most directory of the remote
+server's directory structure, called the "root" directory.
+</p>
+<p>
+To use that server as an Allsky Website you create a directory in
+the root of the server called <span class="fileName">allsky</span>
+and install an Allsky Website there.
+(Visit the <a allsky="true" external="true"
+	href="/documentation/installations/AllskyWebsite.html#onRemoteServer">
+	Allsky Website Installation</a> page to see how).
+</p>
+<p>
+The URL to your remote Allsky Website would be <b>https://mysite.com/allsky</b>.
+In the WebUI you'd set the Remote Server's
+<span class="WebUISetting">Image Directory</span>
+to <span class="WebUIValue">/allsky</span>
+(or <span class="WebUIValue">allsky</span> depending on your service provider).
+</p>
+
+
+<h4>More difficult case: directory structure does not match URL</h4>
+<p>
+You have the same website URL as above,
+but when you access the remote server you don't see the photos;
+instead, you see a directory called <span class="fileName">public_html</span>
+(the actual directory(s) you see will depend on your service provider).
+When you go into the <span class="fileName">public_html</span>
+directory you see your photos.
+</p>
+<p>
+In this case the web server is mapping the <b>https://mysite.com</b> URL to
+your <span class="fileName">/public_html</span> directory.
+You need to create a <span class="fileName">/public_html/allsky</span>
+directory on the server and install the Allsky Website there.
+The URL to the Allsky Website is still <b>https://mysite.com/allsky</b>
+but in the WebUI you'd set the Remote Server's
+<span class="WebUISetting">Image Directory</span>
+to <span class="WebUIValue">/public_html/allsky</span>
+(or <span class="WebUIValue">public_html/allsky</span> depending on your service provider).
+</p>
+<p>
+Mapping URLs to server directories like this is fairly common on remote servers that
+are shared by many people.
+</p>
+</details>
+
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>

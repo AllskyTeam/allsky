@@ -3,9 +3,6 @@
 include_once('functions.php');
 initialize_variables();		// sets some variables
 
-define('RASPI_ADMIN_DETAILS', RASPI_CONFIG . '/raspap.auth');
-
-include_once('raspap.php');
 include_once('authenticate.php');
 
 class MODULEUTIL
@@ -18,7 +15,7 @@ class MODULEUTIL
 
     function __construct() {
         $this->allskyModules = ALLSKY_SCRIPTS . '/modules';
-        $this->userModules = '/opt/allsky/modules';
+        $this->userModules = ALLSKY_MODULE_LOCATION . '/modules';
     }
 
     public function run()
@@ -77,7 +74,7 @@ class MODULEUTIL
     private function readModuleData($moduleDirectory, $type, $event) {
         $arrFiles = array();
         $handle = opendir($moduleDirectory);
- 
+
         if ($handle) {
             while (($entry = readdir($handle)) !== FALSE) {
                 if (preg_match('/^allsky_/', $entry)) {
@@ -90,13 +87,13 @@ class MODULEUTIL
                         foreach ($fileContents as $sourceLine) {
                             $line = str_replace(" ", "", $sourceLine);
                             $line = str_replace("\n", "", $line);
-                            $line = str_replace("\r", "", $line);                            
+                            $line = str_replace("\r", "", $line);
                             $line = strtolower($line);
                             if ($line == "metadata={") {
                                 $found = true;
                                 $sourceLine = str_ireplace("metadata","", $sourceLine);
                                 $sourceLine = str_ireplace("=","", $sourceLine);
-                                $sourceLine = str_ireplace(" ","", $sourceLine);                                
+                                $sourceLine = str_ireplace(" ","", $sourceLine);
                             }
 
                             if ($found) {
@@ -147,7 +144,7 @@ class MODULEUTIL
     }
 
     private function changeOwner($filename) {
-        $user = get_current_user();        
+        $user = get_current_user();
         exec("sudo chown " . $user . " " . $filename);
     }
 
@@ -160,16 +157,16 @@ class MODULEUTIL
 
     public function getRestore() {
         $flow = $_GET['flow'];
-                
+
         $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($flow) . '.json';
         $backupConfigFileName = $configFileName . '-last';
         copy($backupConfigFileName, $configFileName);
         $this->changeOwner($configFileName);
-        $this->sendResponse();        
+        $this->sendResponse();
     }
 
     public function postModulesSettings() {
-        $configFileName = ALLSKY_MODULES . '/module-settings.json';        
+        $configFileName = ALLSKY_MODULES . '/module-settings.json';
         $settings = $_POST['settings'];
         $formattedJSON = json_encode(json_decode($settings), JSON_PRETTY_PRINT);
 
@@ -182,16 +179,15 @@ class MODULEUTIL
     }
 
     public function getModuleBaseData() {
-        $cam_type = getCameraType();
-        $settings_file = getSettingsFile($cam_type);
-        $camera_settings_str = file_get_contents($settings_file, true);
-        $camera_settings_array = json_decode($camera_settings_str, true);
-        $angle = $camera_settings_array['angle'];
-        $lat = $camera_settings_array['latitude'];
-        $lon = $camera_settings_array['longitude'];
+        global $settings_array;		// defined in initialize_variables()
+        $angle = $settings_array['angle'];
+        $lat = $settings_array['latitude'];
+        $lon = $settings_array['longitude'];
 
         $result['lat'] = $lat;
         $result['lon'] = $lon;
+        $imageDir = get_variable(ALLSKY_HOME . '/variables.sh', "IMG_DIR=", 'current/tmp');
+        $result['filename'] = $imageDir . '/' . $settings_array['filename'];
 
         exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
         if ($retval == 2) {
@@ -203,7 +199,7 @@ class MODULEUTIL
         }
 
         $result['version'] = ALLSKY_VERSION;
-        
+
         $configFileName = ALLSKY_MODULES . '/module-settings.json';
         $rawConfigData = file_get_contents($configFileName);
         $configData = json_decode($rawConfigData);
@@ -215,8 +211,8 @@ class MODULEUTIL
 
     public function getModules() {
         $result = $this->readModules();
-        $result = json_encode($result, JSON_FORCE_OBJECT);     
-        $this->sendResponse($result);       
+        $result = json_encode($result, JSON_FORCE_OBJECT);
+        $this->sendResponse($result);
     }
 
     private function readModules() {
@@ -226,6 +222,7 @@ class MODULEUTIL
 
         $event = $_GET['event'];
         $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($event) . '.json';
+        $debugFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($event) . '-debug.json';
         $rawConfigData = file_get_contents($configFileName);
         $configData = json_decode($rawConfigData);
 
@@ -243,7 +240,7 @@ class MODULEUTIL
         foreach ($allModules as $moduleData) {
             $module = str_replace('allsky_', '', $moduleData["module"]);
             $module = str_replace('.py', '', $module);
-            
+
             if (!isset($configData->{$module})) {
                 $moduleData["enabled"] = false;
                 $availableResult[$module] = $moduleData;
@@ -282,12 +279,12 @@ class MODULEUTIL
             if (isset($data->lastexecutiontime)) {
                 $moduleData['lastexecutiontime'] = $data->lastexecutiontime;
             } else {
-                $moduleData['lastexecutiontime'] = '0';                
+                $moduleData['lastexecutiontime'] = '0';
             }
             if (isset($data->lastexecutionresult)) {
                 $moduleData['lastexecutionresult'] = $data->lastexecutionresult;
             } else {
-                $moduleData['lastexecutionresult'] = '';                
+                $moduleData['lastexecutionresult'] = '';
             }
 
             $selectedResult[$selectedName] = $moduleData;
@@ -297,11 +294,19 @@ class MODULEUTIL
         if (file_exists($configFileName . '-last')) {
             $restore = true;
         }
+
+        $debugInfo = null;
+        if (file_exists($debugFileName)) {
+            $debugInfo = file_get_contents($debugFileName);
+            $debugInfo = json_decode($debugInfo);
+        }
+
         $result = [
             'available' => $availableResult,
             'selected'=> $selectedResult,
             'corrupted' => $corrupted,
-            'restore' => $restore
+            'restore' => $restore,
+            'debug' => $debugInfo
         ];
 
         return $result;
@@ -335,7 +340,7 @@ class MODULEUTIL
 
         foreach ($oldModules as $key=>$module) {
             $moduleList[$key] = $module->module;
-        } 
+        }
 
         foreach ($newModules as $key=>$module) {
             if (isset($moduleList[$key])) {
@@ -382,7 +387,7 @@ class MODULEUTIL
 
     public function getReset() {
         $flow = $_GET['flow'];
-        
+
         $sourceConfigFileName = ALLSKY_REPO . '/modules/postprocessing_' . strtolower($flow) . '.json';
         $rawConfigData = file_get_contents($sourceConfigFileName);
         $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($flow) . '.json';

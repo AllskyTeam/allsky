@@ -1,6 +1,5 @@
 images/*
 darks/*
-scripts/endOfNight_additionalSteps.sh
 
 # development artifacts
 src/*.a

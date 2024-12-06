@@ -3,9 +3,6 @@
 include_once('functions.php');
 initialize_variables();		// sets some variables
 
-define('RASPI_ADMIN_DETAILS', RASPI_CONFIG . '/raspap.auth');
-
-include_once('raspap.php');
 include_once('authenticate.php');
 
 class OVERLAYUTIL
@@ -14,7 +11,9 @@ class OVERLAYUTIL
     private $method;
     private $jsonResponse = false;
     private $overlayPath;
+    private $allskyOverlays;
     private $allskyTmp;
+    private $allskyStatus;    
     private $cc = "";
     private $excludeVariables = array(
         "\${TEMPERATURE_C}" => array(
@@ -24,13 +23,15 @@ class OVERLAYUTIL
         "\${TEMPERATURE_F}" => array(
             "ccfield" => "hasSensorTemperature",
             "value" => false,
-        )            
+        )
     );
 
     public function __construct()
     {
         $this->overlayPath = ALLSKY_OVERLAY;
+        $this->allskyOverlays = MY_OVERLAY_TEMPLATES . '/';
         $this->allskyTmp = ALLSKY_HOME . '/tmp';
+        $this->allskyStatus = ALLSKY_CONFIG . '/status.json';
 
         $ccFile = ALLSKY_CONFIG . "/cc.json";
         $ccJson = file_get_contents($ccFile, true);
@@ -147,8 +148,15 @@ class OVERLAYUTIL
 
     public function postConfig()
     {
-        $fileName = $this->overlayPath . '/config/overlay.json';
-        $config = $_POST["config"];
+        $overlayName = $_POST['overlay']['name'];
+        $overlayType = $_POST['overlay']['type'];
+
+        if ($overlayType === 'user') {
+            $fileName = $this->allskyOverlays . $overlayName;
+        } else {
+            $fileName = $this->overlayPath . '/config/' . $overlayName;
+        }
+        $config = $_POST['config'];
         $formattedJSON = json_encode(json_decode($config), JSON_PRETTY_PRINT);
         $bytesWritten = file_put_contents($fileName, $formattedJSON);
         if ($bytesWritten === false) {
@@ -158,24 +166,39 @@ class OVERLAYUTIL
         }
     }
 
-    public function getAppConfig()
+    public function getAppConfig($returnResult=false)
     {
         $fileName = $this->overlayPath . '/config/oe-config.json';
         $config = file_get_contents($fileName);
         if ($config === false) {
             $config = '{
-        "gridVisible": true,
-        "gridSize": 10,
-        "gridOpacity": 30,
-        "snapBackground": true,
-        "addlistpagesize": 20,
-        "addfieldopacity": 15,
-        "selectfieldopacity": 30,
-        "mousewheelzoom": false,
-        "backgroundopacity": 40
-      }';
+                "gridVisible": true,
+                "gridSize": 10,
+                "gridOpacity": 30,
+                "snapBackground": true,
+                "addlistpagesize": 20,
+                "addfieldopacity": 15,
+                "selectfieldopacity": 30,
+                "mousewheelzoom": false,
+                "backgroundopacity": 40
+            }';
         }
-        $this->sendResponse($config);
+
+        $config = json_decode($config);
+        if (!isset($config->overlayErrors)) {
+            $config->overlayErrors = true;
+        }
+        if (!isset($config->overlayErrorsText)) {
+            $config->overlayErrorsText = 'Error found; see the WebU';
+        }
+        $config = json_encode($config);
+
+        if (!$config) {
+            $this->sendResponse($config);
+        } else {
+            $config = json_decode($config);
+            return $config;
+        }
     }
 
     public function postAppConfig()
@@ -201,12 +224,12 @@ class OVERLAYUTIL
         return $result;
     }
 
-    public function getData()
+    public function getData($returnResult=false)
     {
         $fileName = $this->overlayPath . '/config/fields.json';
         $fields = file_get_contents($fileName);
         $systemData = json_decode($fields);
-        
+
         $fileName = $this->overlayPath . '/config/userfields.json';
         $fields = file_get_contents($fileName);
         $userData = json_decode($fields);
@@ -215,7 +238,7 @@ class OVERLAYUTIL
         $mergedFields = array();
 
         foreach($systemData->data as $systemField) {
-            if ($this->includeField($systemField->name)) { 
+            if ($this->includeField($systemField->name)) {
                 $field = array(
                     "id" => $counter,
                     "name" => $systemField->name,
@@ -232,7 +255,7 @@ class OVERLAYUTIL
 
         foreach($userData->data as $userField) {
 
-            if ($this->includeField($systemField->name)) {          
+            if ($this->includeField($systemField->name)) {
                 $field = array(
                     "id" => $counter,
                     "name" => $userField->name,
@@ -251,8 +274,13 @@ class OVERLAYUTIL
             "data" => $mergedFields
         );
         $jsonFields = json_encode($fields);
-        
-        $this->sendResponse($jsonFields);
+
+        if (!$returnResult) {
+            $jsonFields = json_encode($fields);
+            $this->sendResponse($jsonFields);
+        } else {
+            return $fields;
+        }
     }
 
     public function postData()
@@ -285,7 +313,7 @@ class OVERLAYUTIL
         $this->sendResponse();
     }
 
-    public function getOverlayData() {
+    public function getOverlayData($returnResult=false) {
         $result = [];
         $fileName = ALLSKY_HOME . '/tmp/overlaydebug.txt';
 
@@ -323,8 +351,13 @@ class OVERLAYUTIL
                 $result['data'] = $fieldData;
             }
         }
-        $data = json_encode($result, JSON_PRETTY_PRINT);
-        $this->sendResponse($data);
+
+        if (!$returnResult) {
+            $data = json_encode($result, JSON_PRETTY_PRINT);
+            $this->sendResponse($data);
+        } else {
+            return $result;
+        }        
     }
 
     public function getAutoExposure()
@@ -373,24 +406,9 @@ class OVERLAYUTIL
         return $exampleData;
     }
 
-    public function getFonts()
-    {
-        $fileName = $this->overlayPath . '/config/overlay.json';
-        $config = file_get_contents($fileName);
-        $config = json_decode($config);
+    public function getFonts() {
 
-        $fields = [];
         $count = 1;
-        foreach ($config->fonts as $name => $font) {
-            $obj = (object) [
-                'id' => $count,
-                'name' => $name,
-                'path' => $font->fontPath,
-            ];
-            $fields[] = $obj;
-            $count++;
-        }
-
         $usableFonts = array(
             'Arial' => array('fontpath' => '/usr/share/fonts/truetype/msttcorefonts/Arial.ttf'),
             'Arial Black' => array('fontpath' => '/usr/share/fonts/truetype/msttcorefonts/Arial_Black.ttf'),
@@ -413,12 +431,26 @@ class OVERLAYUTIL
             $count++;
         }
 
+        $fontDir = $this->overlayPath . '/fonts/';
+        $fontList = scandir($fontDir);
+        foreach ($fontList as $font) {
+            if ($font !== '.' && $font !== '..') {
+                $obj = (object) [
+                    'id' => $count,
+                    'name' => basename($font),
+                    'path' => '/fonts/' . $font,
+                ];
+            }
+            $fields[] = $obj;
+            $count++;
+        }
+
         $data = array(
             'data' => $fields,
         );
 
         $data = json_encode($data, JSON_PRETTY_PRINT);
-        $this->sendResponse($data);
+        $this->sendResponse($data);        
     }
 
     public function postFonts()
@@ -452,7 +484,7 @@ class OVERLAYUTIL
         }
 
         if ($proceed) {
-            $saveFolder = $this->overlayPath . "/fonts/";          
+            $saveFolder = $this->overlayPath . "/fonts/";
             $result = array();
             $zipArchive = new ZipArchive();
             $zipArchive->open($downloadPath);
@@ -488,7 +520,12 @@ class OVERLAYUTIL
                                 fwrite($file, $contents);
                                 fclose($file);
 
-                                $configFileName = $this->overlayPath . '/config/overlay.json';
+                                $fontPath = str_replace($this->overlayPath, "", $fileName);
+                                $key = basename($fileName);
+                                $key = str_replace($validExtenstions, "", $key);
+                                $key = str_replace(".", "", $key);
+
+                               /* $configFileName = $this->overlayPath . '/config/overlay.json';
                                 $config = file_get_contents($configFileName);
                                 $config = json_decode($config);
 
@@ -505,6 +542,7 @@ class OVERLAYUTIL
                                 $formattedJSON = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
                                 file_put_contents($configFileName, $formattedJSON);
+                                */
 
                                 $result[] = array(
                                     'key' => $key,
@@ -621,6 +659,380 @@ class OVERLAYUTIL
         $this->sendResponse($data);
     }
 
+    public function getConfigs() {
+        $result = [];
+
+        $tod = getenv('DAY_OR_NIGHT');
+        if ($tod === false) {
+            $tod = 'night';
+        }
+        if ($tod == 'day') {
+            $overlayFilename = $this->getSetting('daytimeoverlay');
+        } else {
+            $overlayFilename = $this->getSetting('nighttimeoverlay');
+        }
+
+        $template = null;
+        $fileName = $this->overlayPath . '/config/' . $overlayFilename;
+        if (file_exists($fileName)) {
+            $template = file_get_contents($fileName);
+        } else {
+            $fileName = $this->allskyOverlays . $overlayFilename;
+            if (file_exists($fileName)) {            
+                $template = file_get_contents($fileName);
+            }
+        }
+        $templateData = json_decode($template);      
+        $this->fixMetaData($templateData);     
+        $result['config'] = $templateData;
+
+        $data = $this->getData(true);
+        $result['data'] = $data;
+
+        $data = $this->getOverlayData(true);
+        $result['overlaydata'] = $data;        
+
+        $data = $this->getAppConfig(true);
+        $result['appconfig'] = $data;        
+        
+        $result = json_encode($result);
+        $this->sendResponse($result);
+    }
+
+    public function getLoadOverlay($overlayName=null, $return=false) {
+        if ($overlayName === null) {
+            $overlayName = $_GET['overlay'];
+        }
+        $fileName = $this->overlayPath . '/config/' . $overlayName;
+
+        $overlay = null;
+        if (file_exists($fileName)) {
+            $overlay = file_get_contents($fileName);
+        } else {
+            $fileName = $this->allskyOverlays . $overlayName;
+            if (file_exists($fileName)) {
+                $overlay = file_get_contents($fileName);
+            }
+        }     
+
+        if (!$return) {
+            $this->sendResponse($overlay);
+        } else {
+            return $overlay;
+        }
+
+    }
+
+    private function getSetting($name, $swapSpaces='') {
+        global $settings_array;
+        $name = getVariableOrDefault($settings_array, $name, 'overlay.json');
+        if ($swapSpaces !== '') {
+            $name = str_replace(' ',$swapSpaces, $name);
+        }
+        return $name;
+    }
+
+    public function getOverlays() {
+        $overlayData = [];
+        $overlayData['coreoverlays'] = [];
+        $overlayData['useroverlays'] = [];
+        $overlayData['config'] = [];
+        $overlayData['config']['daytime'] = $this->getSetting('daytimeoverlay');
+        $overlayData['config']['nighttime'] = $this->getSetting('nighttimeoverlay');
+        $overlayData['brands'] = ['RPi', 'ZWO', 'Arducam'];
+        $overlayData['brand'] = $this->getSetting('cameratype');
+        $overlayData['model'] = $this->getSetting('cameramodel');
+        $overlayData['sensorWidth'] = $this->cc['sensorWidth'];
+        $overlayData['sensorHeight'] = $this->cc['sensorHeight'];
+
+        $tod = getTOD();
+        if ($tod == 'day') {
+            $overlayData['current'] = $overlayData['config']['daytime'];
+        } else {
+            $overlayData['current'] = $overlayData['config']['nighttime'];
+        }
+
+        $defaultDir = $this->overlayPath . '/config/';
+        $entries = scandir($defaultDir);
+        foreach ($entries as $entry) {
+            if ($entry !== '.' && $entry !== '..') {
+                if (substr($entry,0, 7) === 'overlay') {
+                    $templatePath = $defaultDir . $entry;
+                    $template = file_get_contents($templatePath);
+                    $templateData = json_decode($template);
+                    $this->fixMetaData($templateData);
+                    if (!isset($templateData->metadata)) {
+                        $name = 'Unknown';
+                        switch ($entry) {
+                            case 'overlay.json':
+                                $name = 'Default Overlay';
+                                break;
+
+                            case 'overlay-RPi.json':
+                                $name = 'Default RPi Overlay';
+                                break;
+
+                            case 'overlay-ZWO.json':
+                                $name = 'Default ZWO Overlay';
+                                break;
+                        }
+                        $templateData->metadata = [];
+                        $templateData->metadata['name'] = $name;
+                    }
+                    $overlayData['coreoverlays'][$entry] = $templateData;
+                    
+                }
+            }
+        }
+
+
+        $userDir = $this->allskyOverlays;
+        $entries = scandir($userDir);
+        foreach ($entries as $entry) {
+            if ($entry !== '.' && $entry !== '..') {
+                if (substr($entry,0, 7) === 'overlay') {
+                    $templatePath = $userDir . $entry;
+                    if (is_file($templatePath)) {
+                        $template = file_get_contents($templatePath);
+                        $templateData = json_decode($template);
+                        $this->fixMetaData($templateData);
+                        $overlayData['useroverlays'][$entry] = $templateData;
+                    }
+                }
+            }
+        }
+
+        $settingsFile = ALLSKY_CONFIG . '/settings.json';
+        $settings = file_get_contents($settingsFile);
+        $settings = json_decode($settings);
+        $overlayData['settings'] = $settings;
+
+        $overlayData = json_encode($overlayData);
+        $this->sendResponse($overlayData);
+    }
+
+    public function getValidateFilename() {
+        $fileName = $_GET['filename'];
+        $userDir = $this->allskyOverlays;
+        $filePath = $userDir . $fileName;
+        $fileExists = false;
+
+        if (is_file($filePath)) {
+            $fileExists = true;
+        }
+
+        $result = [
+            'error' => $fileExists
+        ];
+        $result = json_encode($result);
+        $this->sendResponse($result);
+    }
+
+    public function getSuggest() {
+        $userDir = $this->allskyOverlays;
+        $maxFound = 0;
+
+        $entries = scandir($userDir);
+        foreach ($entries as $entry) {
+            if ($entry !== '.' && $entry !== '..') {
+                $entryBits = explode('-', $entry);
+                if (count($entryBits) > 0) {
+                    if (substr($entryBits[0],0,7) === 'overlay') {
+                        $num = intval(substr($entryBits[0],7));
+                        if ($num > $maxFound) {
+                            $maxFound = $num;
+                        }
+
+                    }
+                }
+            }
+        }
+        $maxFound++;
+
+        $this->sendResponse($maxFound);        
+    }
+
+    public function postNewOverlay() {
+
+        if (!file_exists($this->allskyOverlays)) {
+            mkdir($this->allskyOverlays);
+        }
+
+        $copyOverlay = $_POST['data']['copy'];
+        if ($copyOverlay !== 'none') {
+            $newOverlay = $this->getLoadOverlay($copyOverlay, true);
+            $newOverlay = json_decode($newOverlay);
+        } else {
+            $newOverlay = (object)null;
+            $this->fixMetaData($newOverlay);
+        }
+
+        $newOverlay->metadata = $_POST['fields'];
+
+        if (!isset($newOverlay->fields)) {
+            $newOverlay->fields = [];
+        }
+        if (!isset($newOverlay->images)) {
+            $newOverlay->images = [];
+        }
+        if (!isset($newOverlay->fonts)) {
+            $newOverlay->fonts = [
+                'moon_phases' => [
+                    'fontPath' => 'fonts/moon_phases.ttf'
+                ]
+            ];
+        }
+        if (!isset($newOverlay->settings)) {
+            $newOverlay->settings = [
+                'defaultdatafileexpiry' => '550',
+                'defaultincludeplanets' => false,
+                'defaultincludesun' => false,
+                'defaultincludemoon' => false,
+                'defaultimagetopacity' => 0.63,
+                'defaultimagerotation' => 0,
+                'defaulttextrotation' => 0,
+                'defaultfontopacity' => 1,
+                'defaultfontcolour' => 'white',
+                'defaultfont' => 'Arial',
+                'defaultfontsize' => 52,
+                'defaultimagescale' => 1,
+                'defaultnoradids' => ''                
+            ];
+        }            
+                
+        $newOverlay = json_encode($newOverlay, JSON_PRETTY_PRINT);
+
+        $overlayFile = $this->allskyOverlays . $_POST['data']['filename'] . '.json';
+        file_put_contents($overlayFile, $newOverlay);
+        chmod($overlayFile, 0775);
+        $this->sendResponse();
+    }
+
+    public function getDeleteOverlay() {
+        $fileName = $_GET['filename'];        
+        $overlayFile = $this->allskyOverlays . $fileName;
+        if (file_exists($overlayFile)) {
+            unlink($overlayFile);
+        }
+        $this->sendResponse();
+    }
+
+    public function postSaveSettings() {
+        $dayTime = $_POST['daytime'];
+        $nightTime = $_POST['nighttime'];
+
+        $settingsFile = getSettingsFile();
+        $data = file_get_contents($settingsFile, true);
+        $settingsData = json_decode($data, true);
+        $settingsData['daytimeoverlay'] = $dayTime;
+        $settingsData['nighttimeoverlay'] = $nightTime;
+
+        $mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
+        $data = json_encode($settingsData, $mode);
+
+        $result = file_put_contents($settingsFile, $data);
+                
+        $this->sendResponse($result);
+
+    }
+
+    private function fixMetaData(&$overlay) {
+        if ($overlay !== null) {
+            if (!isset($overlay->metadata)) {
+                $overlay->metadata = (object)null;
+            }
+            if (!isset($overlay->metadata->name)) {
+                $overlay->metadata->name = '???';
+            }
+            if (!isset($overlay->metadata->camerabrand)) {
+                $overlay->metadata->camerabrand = '???';
+            }
+            if (!isset($overlay->metadata->cameramodel)) {
+                $overlay->metadata->cameramodel = '???';
+            }
+            if (!isset($overlay->metadata->tod)) {
+                $overlay->metadata->tod = 'both';
+            }
+        }
+    }
+
+    public function getOverlayList() {
+        
+        $overlays = [];
+
+        $defaultDir = $this->overlayPath . '/config/';
+        $entries = scandir($defaultDir);
+        foreach ($entries as $entry) {
+            if ($entry !== '.' && $entry !== '..') {
+                if (substr($entry,0, 7) === 'overlay') {
+                    $templatePath = $defaultDir . $entry;
+                    $template = file_get_contents($templatePath);
+                    $templateData = json_decode($template);
+                    $this->fixMetaData($templateData);
+                    $overlays[] = [
+                        'type' => 'Allsky',
+                        'name' => $templateData->metadata->name,
+                        'brand' => $templateData->metadata->camerabrand,
+                        'model' => $templateData->metadata->cameramodel,
+                        'tod' => $templateData->metadata->tod,
+                        'filename' => $entry
+                    ];
+                }
+            }
+        }
+
+        $userDir = $this->allskyOverlays;
+        $entries = scandir($userDir);
+        foreach ($entries as $entry) {
+            if ($entry !== '.' && $entry !== '..') {
+                if (substr($entry,0, 7) === 'overlay') {
+                    $templatePath = $userDir . $entry;
+                    $template = file_get_contents($templatePath);
+                    $templateData = json_decode($template);
+                    $this->fixMetaData($templateData);
+                    $overlays[] = [
+                        'type' => 'User',
+                        'name' => $templateData->metadata->name,
+                        'brand' => $templateData->metadata->camerabrand,
+                        'model' => $templateData->metadata->cameramodel,
+                        'tod' => $templateData->metadata->tod,
+                        'filename' => $entry
+                    ];
+                }
+            }
+        }
+
+        $data = array(
+            'data' => $overlays
+        );
+        
+        $data = json_encode($data, JSON_PRETTY_PRINT);
+        $this->sendResponse($data);            
+    }
+
+    public function getStatus() {
+        $running = [
+            'running' => true,
+            'status' => 'Unknown'
+        ];
+        if (is_file($this->allskyStatus)) {
+            try {
+                $statusTxt = file_get_contents($this->allskyStatus, true);
+                $status = json_decode($statusTxt, true);
+                if ($status !== null) {
+                    if (isset($status['status'])) {
+                        $running['status'] = $status['status'];
+                        if (strtolower($status['status']) != 'running') {
+                            $running['running'] = false;
+                        }
+                    }
+                }
+            } catch(Exception $e) {
+            }
+        }
+
+        $this->sendResponse(json_encode($running));
+    }
 }
 
 $overlayUtil = new OVERLAYUTIL();

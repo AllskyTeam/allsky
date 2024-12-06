@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="../js/documentation.js" type="application/javascript"></script>
+    <link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Copy files to/from a Pi";
+		} 
+	</style>
+    <link href="../css/documentation.css" rel="stylesheet">
+    <link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>SAMBA</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<p>
+This page describes how to copy files to and from the Pi.
+</p>
+
+<h3>Small text files</h3>
+<p>
+If the file you want to copy is a text file and it fits on one screen
+you can simply highlight the text and copy to the clipboard,
+then paste it into a file on your PC or Mac.
+</p>
+<h3>Other files</h3>
+<p>
+For all other files you can mount the Pi's
+<span class="fileName">/home/pi</span> directory
+(or the user you installed Allsky as) onto your PC or Mac using the SAMBA service.
+<p>
+</p>
+The first step is to install SAMBA on the Pi:
+<pre>
+allsky-config  samba
+</pre>
+Follow the prompts.
+</p>
+<p>
+When installation is done you should see something like this
+on a PC in Windows File Explorer, where <code>ALLSKY</code> is the name of the Pi:
+<br>
+<img src="Pi_network_drive.png" title="Pi network drive" class="imgBorder imgCenter">
+</p>
+<p>
+To mount this directory on a PC:
+<ol>
+	<li>Right-click the "pi_home" icon and select <strong>Map network drive...</strong>.
+		<br>You'll see something like:
+		<br>
+		<img src="Map_network_drive.png" title="Map network drive" class="imgBorder imgCenter">
+	<li>Pick any drive letter you want.
+	<li>Check the <strong>Connect using different credentials</strong> box.
+	<li>Click the <code>Finish</code> button.
+		You'll then see a dialog box like this:
+		<br>
+		<img src="EnterNetworkCredentials.png" title="Enter network credentials" class="imgBorder imgCenter">
+	<li>For the <code>User name</code>,
+		enter <code>WORKGROUP\pi</code>
+		(replacing <code>pi</code> with the login you installed Allsky as).
+		<br>
+	<li>Use the SAMBA password you entered during installation.
+	<li>Check the <code>Remember my credentials</code> box so you don't have
+		to manually log in every time.
+	<li>Click OK.
+</ol>
+
+<p>
+SAMBA only needs to be installed once unless you reimage your SD card.
+</p>
+
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>

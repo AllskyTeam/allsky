@@ -1,0 +1,93 @@
+{
+    "fields": [
+        {
+            "label": "${DATE}  ${TIME}",
+            "x": 132,
+            "y": 24,
+            "id": "oe-field-0",
+            "format": "{%d-%m-%Y}{%H:%M:%S}",
+            "strokewidth": 0,
+            "sample": "DATE,TIME",
+            "tlx": 19,
+            "tly": 10,
+            "fontsize": 28,
+            "fill": "#ff0000"
+        },
+        {
+            "label": "Exposure: ${sEXPOSURE}",
+            "x": 141,
+            "y": 60,
+            "id": "oe-field-1",
+            "fontsize": 20,
+            "strokewidth": 0,
+            "tlx": 19,
+            "tly": 50
+        },
+        {
+            "label": "Gain: ${GAIN}",
+            "x": 83,
+            "y": 85,
+            "id": "oe-field-2",
+            "format": "{:n}",
+            "fontsize": 20,
+            "strokewidth": 0,
+            "tlx": 19,
+            "tly": 75
+        },
+        {
+            "label": "Sensor: ${TEMPERATURE_C} C",
+            "x": 167,
+            "y": 110,
+            "id": "oe-field-3",
+            "format": "{:.1f}",
+            "fontsize": 20,
+            "strokewidth": 0,
+            "tlx": 19,
+            "tly": 100,
+            "sample": "20.1"
+        },
+        {
+            "label": "${CAMERA_TYPE} ${CAMERA_MODEL}",
+            "x": 169,
+            "y": 135,
+            "id": "oe-field-4",
+            "fontsize": 16,
+            "strokewidth": 0,
+            "sample": "ZWO some_model",
+            "tlx": 19,
+            "tly": 125
+        }
+    ],
+    "images": [],
+    "settings": {
+        "defaultdatafileexpiry": "550",
+        "defaultincludeplanets": false,
+        "defaultincludesun": false,
+        "defaultincludemoon": false,
+        "defaultimagetopacity": 0.63,
+        "defaultimagerotation": 0,
+        "defaulttextrotation": 0,
+        "defaultfontopacity": 1,
+        "defaultfontcolour": "white",
+        "defaultfont": "Arial",
+        "defaultfontsize": 52,
+        "defaultimagescale": 1,
+        "defaultnoradids": ""
+    },
+    "fonts": {
+        "moon_phases": {
+            "fontPath": "fonts\/moon_phases.ttf",
+            "fonttcolour": "red",
+            "backgroundcolor": "white",
+            "fontopacity": 0.5
+        }
+    },
+    "metadata": {
+        "camerabrand": "ZWO",
+        "cameramodel": "ASII120MC-S",
+        "cameraresolutionwidth": "1280",
+        "cameraresolutionheight": "960",
+        "tod": "both",
+        "name": "ASII120MC-S"
+    }
+}

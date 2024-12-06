@@ -1,51 +1,49 @@
 {
     "fields": [
         {
-            "label": "${DATE} ${TIME}",
-            "x": 330,
-            "y": 50,
+            "label": "${DATE}  ${TIME}",
+            "x": 260,
+            "y": 46,
             "id": "oe-field-0",
-            "format": "%d-%m-%Y,%H:%M:%S",
+            "format": "{%d-%m-%Y}{%H:%M:%S}",
             "strokewidth": 0,
             "sample": "DATE,TIME",
-            "tlx": 10,
-            "tly": 10,
-            "font": "Arial",
-            "fontsize": 80,
-            "fill": "#ff0000"
+            "tlx": 20,
+            "tly": 16,
+            "fill": "#ff0000",
+            "fontsize": 60
         },
         {
             "label": "Exposure: ${sEXPOSURE}",
-            "x": 421,
-            "y": 124,
+            "x": 309,
+            "y": 98,
             "id": "oe-field-1",
-            "font": "Arial",
-            "fontsize": 68,
+            "fontsize": 48,
             "strokewidth": 0,
-            "tlx": 10,
-            "tly": 90
+            "tlx": 20,
+            "tly": 74
         },
         {
             "label": "Gain: ${GAIN}",
-            "x": 226,
-            "y": 194,
+            "x": 172,
+            "y": 158,
             "id": "oe-field-2",
-            "font": "Arial",
-            "fontsize": 68,
+            "format": "{:.2f}",
+            "fontsize": 48,
             "strokewidth": 0,
-            "tlx": 10,
-            "tly": 160
+            "tlx": 20,
+            "tly": 134
         },
         {
-            "label": "${CAMERA_TYPE} ${CAMERA_MODEL}",
-            "x": 419,
-            "y": 3002,
+            "label": "${CAMERA_TYPE}  ${CAMERA_MODEL}",
+            "x": 396,
+            "y": 214,
             "id": "oe-field-3",
-            "fontsize": 44,
+            "fontsize": 40,
             "strokewidth": 0,
-            "sample": "RPi HQ",
-            "tlx": 10,
-            "tly": 2980
+            "tlx": 20,
+            "tly": 194,
+            "sample": "RPi some_model"
         }
     ],
     "images": [],
@@ -71,5 +69,13 @@
             "backgroundcolor": "white",
             "fontopacity": 0.5
         }
+    },
+    "metadata": {
+        "camerabrand": "RPi",
+        "cameramodel": "HQ",
+        "cameraresolutionwidth": "4056",
+        "cameraresolutionheight": "3040",
+        "tod": "both",
+        "name": "RPI generic"
     }
 }

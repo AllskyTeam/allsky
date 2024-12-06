@@ -4,31 +4,31 @@ function DisplayModule() {
 
 ?>
 
-<script src="/documentation/js/all.min.js" type="application/javascript"></script>
+<script src="/documentation/js/all.min.js?c=<?php echo ALLSKY_VERSION; ?>" type="application/javascript"></script>
 
-<script src="/js/sortable/sortable.js"></script>
-<script src="/js/sortable/jquery-sortable.js"></script>
+<script src="/js/sortable/sortable.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+<script src="/js/sortable/jquery-sortable.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-<link rel='stylesheet' href='/css/modules.css' />
-<script src="/js/modules/modules.js"></script>
+<link rel='stylesheet' href='/css/modules.css?c=<?php echo ALLSKY_VERSION; ?>' />
+<script src="/js/modules/modules.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-<script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js"></script>
+<script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-<script src="/js/bootbox/bootbox.all.js"></script>
-<script src="/js/bootbox/bootbox.locales.min.js"></script>
+<script src="/js/bootbox/bootbox.all.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+<script src="/js/bootbox/bootbox.locales.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-<link rel='stylesheet' href='/js/jquery-ui-1.13.1.custom/jquery-ui.min.css' />
-<script src="/js/jquery-ui-1.13.1.custom/jquery-ui.min.js"></script>
+<link rel='stylesheet' href='/js/jquery-ui-1.13.1.custom/jquery-ui.min.css?c=<?php echo ALLSKY_VERSION; ?>' />
+<script src="/js/jquery-ui-1.13.1.custom/jquery-ui.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-<link rel="stylesheet" type="text/css" href="/js/overlay/imagemanager/oe-imagemanager.css" />
-<script type="text/javascript" src="/js/overlay/imagemanager/oe-imagemanager.js"></script>
+<link rel="stylesheet" type="text/css" href="/js/overlay/imagemanager/oe-imagemanager.css?c=<?php echo ALLSKY_VERSION; ?>" />
+<script type="text/javascript" src="/js/overlay/imagemanager/oe-imagemanager.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-<link href="/js/dropzone/dropzone.css" type="text/css" rel="stylesheet" />
-<script src="/js/dropzone/dropzone-min.js"></script>
+<link href="/js/dropzone/dropzone.css?c=<?php echo ALLSKY_VERSION; ?>" type="text/css" rel="stylesheet" />
+<script src="/js/dropzone/dropzone-min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-<script src="/js/jquery-gpio/jquery-gpio.js"></script>
-<script src="/js/jquery-roi/jquery-roi.js"></script>
-<script src="/js/konva/konva.min.js"></script>
+<script src="/js/jquery-gpio/jquery-gpio.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+<script src="/js/jquery-roi/jquery-roi.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+<script src="/js/konva/konva.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
 <div class="row">
     <div class="col-lg-12">
@@ -141,7 +141,7 @@ function DisplayModule() {
             </div>
             <div class="modal-body">
                 <form id="oe-debug-dialog-form" class="form-horizontal">
-                    <div class="form-group">
+                    <!-- <div class="form-group">
                         <label for="checkbox" class="control-label col-xs-4"></label> 
                         <div class="col-xs-8">
                             <label class="checkbox-inline">
@@ -159,7 +159,7 @@ function DisplayModule() {
                             </div>
                             <p class="help-block">The maximum time a module can run for, in seconds. After this amount of time it will be disabled</p>
                         </div>
-                    </div>
+                    </div> -->
                     <div class="form-group">
                         <label for="checkbox" class="control-label col-xs-4"></label> 
                         <div class="col-xs-8">

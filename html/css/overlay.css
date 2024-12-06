@@ -1,3 +1,7 @@
+:root {
+    --dark-text: #aaaaaa;
+}
+
 .oe-flash {
     padding: 10px;
 }
@@ -11,7 +15,6 @@
 .oe-help dd {
     margin-bottom: 3px;
 }
-
 
 #oe-background-image {
     display: none;
@@ -50,7 +53,7 @@
 
 .dark .modal-content {
     background-color: #222222 !important;
-    color: #888888 !important;    
+    color: var(--dark-text) !important;    
 }
 
 .dark .modal-header {
@@ -109,34 +112,33 @@
     background-color: #272727 !important;
 }
 
-
 .tooltip-wrapper {
     display: inline-block; /* display: block works as well */
-  }
+}
   
-  .tooltip-wrapper .btn[disabled] {
+.tooltip-wrapper .btn[disabled] {
     /* don't let button block mouse events from reaching wrapper */
     pointer-events: none;
-  }
+}
   
-  .tooltip-wrapper.disabled {
+.tooltip-wrapper.disabled {
     /* OPTIONAL pointer-events setting above blocks cursor setting, so set it here */
     cursor: not-allowed;
-  }
+}
 
-  .green {
+.green {
     color: green;
-  }
+}
 
-  .red {
+.red {
     color: red;
-  }
+}
 
-  .pulse {
+.pulse {
     animation: pulse 1s infinite ease-out;
-  }
+}
 
-  @keyframes pulse {
+@keyframes pulse {
     25% {
       transform: scale(1.25);
     }
@@ -149,86 +151,228 @@
     100% {
       transform: scale(1); 
     }
-  }
+}
 
-  #oe-item-list-dialog-allsky, #oe-item-list-dialog-all {
+#oe-item-list-dialog-allsky, #oe-item-list-dialog-all {
     padding-top: 20px;
-  }
+}
 
-  .datatable td {
+.datatable td {
     overflow: hidden;
-  }
+}
 
-  div.dataTables_wrapper div.dataTables_paginate {
+div.dataTables_wrapper div.dataTables_paginate {
     padding-top: 10px;
-  }
+}
 
-  table.dataTable td {
+table.dataTable td {
     padding-top: 2px;
-  }
+}
 
-  .sp-replacer {
+.sp-replacer {
     height: 2.5rem !important;
     width: 4rem !important;
-  }
+}
 
-  .sp-dd {
+.sp-dd {
     padding: 3px 2px !important;
-  }
+}
 
-  .oe-overlay-editor-tab-modified:after {
+.oe-overlay-editor-tab-modified:after {
     content: " - Modified";
     color: red;
     font-weight: 700;
-  }
+}
 
-  .dark #oe-debug-dialog-form textarea {
+.dark #oe-debug-dialog-form textarea {
     color: black;
-  }
+}
 
-  .modal-dialog {
-    width: 770px !important;
-  }
-
-  .dtsp-panesContainer, .dtsp-collapseAll {
+.dtsp-panesContainer, .dtsp-collapseAll {
     background-color: black !important;
-  }
+}
 
-  .dtsp-collapseAll, .dtsp-clearAll, .dtsp-showAll  {
+.dtsp-collapseAll, .dtsp-clearAll, .dtsp-showAll  {
     background-color: #121212 !important;
-  } 
+} 
 
-  .dtsp-name, .dtb-popover-close {
+.dtsp-name, .dtb-popover-close {
     color: black !important;
     text-transform: capitalize;
-  }
+}
 
-  #formatlisttable_filter, .dtsp-searchCont {
+#formatlisttable_filter, .dtsp-searchCont {
     display: none !important;
-  }
-  div.dtsp-topRow {
+}
+div.dtsp-topRow {
     height: 0px !important;
     min-height: 0px !important;
-  }
+}
 
-  div.dtsp-searchPane div.dataTables_scrollBody {
+div.dtsp-searchPane div.dataTables_scrollBody {
     height: 91px !important;	/* good for 3 lines */
-  }
-  div.dtsp-searchPane div.dtsp-topRow {
+}
+div.dtsp-searchPane div.dtsp-topRow {
     margin: 0px !important;
-  }
+}
 
-  .dtsp-searchPane .odd, .dtsp-searchPane .even {
+.dtsp-searchPane .odd, .dtsp-searchPane .even {
     background: #bbb !important;
-  }
+}
 
-  .dataTables_length {
+.dataTables_length {
     display: none;
-  }
-  #formatdialog {
+}
+#formatdialog {
     margin: 5px;
-  }
+}
 
-  .oe-format-replace {
+.oe-format-replace {
     margin-right: 5px;
-  }
+}
+
+.btn-lg {
+    padding-right: 10px !important;
+    padding-left: 10px !important;
+}
+
+.panel {
+    border: none !important;
+}
+
+/** Remove after BS4 upgrade **/
+.mt-1 {
+    margin-top: 10px;
+}
+
+.mt-2 {
+    margin-top: 20px;
+}
+
+.oe-mm-wrapper {
+    position: fixed;
+    top: 0px;
+    right: 0;
+    z-index: 1001;
+    width: 400px;
+    height: 100%;
+    padding: 10px;
+    background-color: white;    
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    transition: all 0.1s cubic-bezier(0.7,0,0.3,1);
+    transform: translate3d(410px,0,0);
+    z-index: 9999;
+}
+.oe-mm-wrapper.active {
+    transform: translate3d(0px,0,0);
+}
+  
+.dark .oe-mm-wrapper {
+    background-color: #222;
+}
+
+/* Buttons */
+.oe-mm-trigger {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    width: 25px;
+    height: 25px;
+    font-size: 20px;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    z-index: 9999;
+}
+
+.asteriskField{
+    color: red;
+}
+
+#oe-overlay-not-running {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5); 
+    z-index: 2; 
+    cursor: pointer;
+}
+
+#oe-overlay-not-running.big {
+    height: 80vh;
+}
+
+#oe-overlay-not-running .center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 25%;
+    font-size: 2em;
+}
+
+#oe-overlay-not-running .center-full {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    font-size: 2em;
+}
+
+#oe-overlay-not-running .center,.center-full .center-paragraph {
+    text-align: center;
+    border: 3px solid green;
+    background-color: rgba(0,0,0,0.3);
+    padding: 15px;    
+}
+
+.border-left {
+    border-left: 1px solid #666;
+    margin-left: 5px;
+}
+
+#oe-overlay-not-running small {
+    font-size: 50% !important;
+}
+
+#oe-overlay-not-running p {
+    margin: 0px !important;
+}
+
+#oe-overlay-not-running h1 {
+    margin-top: 10px !important;
+    margin-bottom: 10px !important;
+}
+
+#oe-overlay-disable {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    color: white;
+    background-color: rgba(0,0,0,0.5); 
+    z-index: 2; 
+}
+
+#oe-overlay-disable .center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 25%;
+    font-size: 2em;
+}
+
+#oe-overlay-disable .center .center-paragraph {
+    text-align: center;
+    border: 3px solid green;
+    background-color: rgba(0,0,0,0.3);
+    padding: 15px;    
+}
+
+#oe-overlay-disable .center .center-paragraph h2 {
+    font-size: 2vw;
+}
+
+#oe-overlay-disable .center .center-paragraph p {
+    font-size: 1.5vw;
+    margin-top: 10px;
+}

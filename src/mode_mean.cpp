@@ -122,13 +122,26 @@ float aegCalcMean(cv::Mat image, bool useMask)
 	// Only create the destination image and mask the first time we're called.
 	static cv::Mat mask;
 	static bool maskCreated = false;
+
+	if (image.cols != mask.cols || image.rows != mask.rows)
+	{
+		// If the image size changed we need a new mask or else we get a cv::exception.
+		maskCreated = false;
+		if (mask.rows > 0)
+		{
+			mask.release();
+		}
+	}
+
 	if (! maskCreated)
 	{
 		maskCreated = true;
 
+		Log(4, ">=>= Creating new mask @ cols=%d, rows=%d\n", image.cols, image.rows);
+
 // TODO: Allow user to specify a mask file
 
-		// Create a circular mask at the center of the image with
+		// Create a white circular mask at the center of the image with
 		// a radius of 1/3 the height of the image (diameter == 2/3 height).
 
 		const cv::Scalar white = cv::Scalar(255, 255, 255);

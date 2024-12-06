@@ -122,9 +122,8 @@ foreach ($days as $day) {
 
 	echo "\t\t\t<td style='padding: 5px'>
 				<button type='submit' data-toggle='confirmation'
-					class='btn btn-danger' style='text-align: center, color:white'
-					name='delete_directory' value='$day'>
-					<i class='fa fa-trash text-danger' style='color:white'></i> <span class='hidden-xs'>Delete</span>
+					class='btn btn-delete' name='delete_directory' value='$day'>
+					<i class='fa fa-trash'></i> <span class='hidden-xs'>Delete</span>
 				</button>
 			</td>
 		</tr>";

@@ -1,233 +1,225 @@
 {
-	"comment": "See https://github.com/AllskyTeam/allsky/wiki/allsky-website-Settings for a description of these settings.",
-	"config": {
-		"comment": "These settings impact what appears in the popout and the constellation overlay",
-		"imageName": "/current/tmp/image.jpg",
-		"location": "XX_NEED_TO_UPDATE_XX",
-		"latitude": "XX_NEED_TO_UPDATE_XX",
-		"longitude": "XX_NEED_TO_UPDATE_XX",
-		"camera": "XX_NEED_TO_UPDATE_XX",
-		"lens": "XX_NEED_TO_UPDATE_XX",
-		"computer": "XX_NEED_TO_UPDATE_XX",
-		"owner": "XX_NEED_TO_UPDATE_XX",
-		"auroraForecast": false,
-		"auroraMap": "XX_NEED_TO_UPDATE_XX",
-		"intervalSeconds": 5,
-		"showOverlayAtStartup": false,
-		"overlayWidth": 875,
-		"overlayHeight": 875,
-		"overlayOffsetLeft": 0,
-		"overlayOffsetTop": 0,
-		"az": 0,
-		"imageWidth": 900,
-		"opacity": 0.5,
-		"objectsComment": "If you want the Messier objects on the overlay, remove the 'XXX_' below.",
-		"XXX_objects": "virtualsky/messier.json",
-		"meridian": false,
-		"ecliptic": false,
-		"fontsize": "14px",
-		"cardinalpoints": true,
-		"cardinalpoints_fontsize": "18px",
-		"showstarlabels": true,
-		"projection": "fisheye",
-		"constellations": true,
-		"constellationwidth": 0.75,
-		"constellationlabels": false,
-		"constellationboundaries": false,
-		"constellationboundarieswidth": 0.75,
-		"gridlines_eq": false,
-		"gridlineswidth": 0.75,
-		"showgalaxy": false,
-		"galaxywidth": 0.75,
-		"mouse": false,
-		"keyboard": true,
-		"showdate": false,
-		"showposition": false,
-		"sky_gradient": false,
-		"gradient": false,
-		"transparent": true,
-		"lang": "en",
-		"colours" : {
-			"comment": "See the Wiki for how to change colors on the constellation overlay.",
-			"normal" : {
-				"XXX_cardinal": "rgba(0,255,0,1)"
-			},
-			"negative" : {
-				"XXX_cardinal": "rgba(255,255,255,1)"
-			}
-		},
-		"live": true,
-		"id": "starmap",
-		"AllskyVersion" : "XX_ALLSKY_VERSION_XX",
-		"AllskyWebsiteVersion" : "XX_ALLSKY_WEBSITE_VERSION_XX"
-	},
-	"homePage": {
-		"comment": "These settings impact the look and feel of the Website home page.",
-		"onPi": true,
-		"title": "XX_NEED_TO_UPDATE_XX",
-		"og_description": "XX_NEED_TO_UPDATE_XX",
-		"backgroundImage": {
-			"url": "",
-			"style": ""
-		},
-		"loadingImage": "loading.jpg",
-		"imageBorder": false,
-		"includeGoogleAnalytics": false,
-		"includeLinkToMakeOwn": true,
-		"personalLink": {
-			"prelink": "",
-			"message": "",
-			"url": "",
-			"title": "",
-			"style": ""
-		},
-		"og_type": "website",
-		"og_url": "http://www.thomasjacquin/allsky/",
-		"og_image": "image.jpg",
-		"favicon": "allsky-favicon.png",
-		"leftSidebar": [
-			{
-				"comment": "Once you have modified the settings so the overlay fits, set 'display' to true.",
-				"display": false,
-				"title": "Show constellation overlay",
-				"icon": "fa fa-2x fa-fw allsky-constellation",
-				"other": "id='overlayBtn' ng-click='toggleOverlay()' ng-class=\"{'active': showOverlay}\"",
-				"style": ""
-			},
-			{
-				"display": true,
-				"url": "videos",
-				"title": "Archived Timelapes",
-				"icon": "fa fa-2x fa-fw fa-play-circle",
-				"style": ""
-			},
-			{
-				"display": false,
-				"url": "/current/tmp/mini-timelapse.mp4",
-				"title": "Mini-timelapse",
-				"icon": "fa fa-2x fa-fw icon-mini-timelapse",
-				"style": ""
-			},
-			{
-				"display": true,
-				"url": "keograms",
-				"title": "Archived Keograms",
-				"icon": "fa fa-2x fa-fw fa-barcode",
-				"style": ""
-			},
-			{
-				"display": true,
-				"url": "startrails",
-				"title": "Archived Startrails",
-				"icon": "fa fa-2x fa-fw fa-star",
-				"style": ""
-			},
-			{
-				"display": true,
-				"variable": "imageName",
-				"title": "Full-sized image",
-				"icon": "fa fa-2x fa-fw fa-expand-arrows-alt",
-				"style": ""
-			},
-			{
-				"display": true,
-				"title": "Display information about the camera and other settings",
-				"icon": "fa fa-2x fa-fw fa-info-circle",
-				"other": "ng-click='toggleInfo()' ng-class=\"{'active': showInfo}\"",
-				"style": ""
-			},
-			{
-				"display": false,
-				"comment": "Add leftSidebar items above."
-			}
-		],
-		"leftSidebarStyle": "",
-		"popoutIcons": [
-			{
-				"display": true,
-				"label": "Location",
-				"icon": "fa fa-fw fa-map-marker-alt",
-				"variable": "location",
-				"value": "",
-				"style": ""
-			},
-			{
-				"display": true,
-				"label": "Latitude",
-				"icon": "fa fa-fw fa-map-marker",
-				"variable": "s_latitude",
-				"value": "",
-				"style": ""
-			},
-			{
-				"display": true,
-				"label": "Longitude",
-				"icon": "fa fa-fw fa-map-marker",
-				"variable": "s_longitude",
-				"value": "",
-				"style": ""
-			},
-			{
-				"display": true,
-				"label": "Camera",
-				"icon": "fa fa-fw fa-camera-retro",
-				"variable": "camera",
-				"value": "",
-				"style": ""
-			},
-			{
-				"display": true,
-				"label": "Lens",
-				"icon": "fa fa-fw fa-dot-circle",
-				"variable": "lens",
-				"value": "",
-				"style": ""
-			},
-			{
-				"display": true,
-				"label": "Computer",
-				"icon": "fa fa-fw fa-microchip",
-				"variable": "computer",
-				"value": "",
-				"style": ""
-			},
-			{
-				"display": true,
-				"label": "Owner",
-				"icon": "fa fa-fw fa-user",
-				"variable": "owner",
-				"value": "",
-				"style": ""
-			},
-			{
-				"display": false,
-				"label": "Allsky Settings",
-				"icon": "fa fa-fw fa-cogs",
-				"variable": "",
-				"value": "<a href='viewSettings.php' target='_blank'>Click to view</a>",
-				"style": ""
-			},
-			{
-				"display": true,
-				"label": "Allsky Version",
-				"icon": "fa fa-fw fa-file-alt",
-				"variable": "AllskyVersion",
-				"value": "",
-				"style": ""
-			},
-			{
-				"display": true,
-				"label": "Website Version",
-				"icon": "fa fa-fw fa-file-alt",
-				"variable": "AllskyWebsiteVersion",
-				"value": "",
-				"style": ""
-			},
-			{
-				"comment": "Add popout items above.",
-				"display": false
-			}
-		]
-	},
-	"ConfigVersion" : "1"
+    "comment": "See the 'Settings -> Allsky Website' documentation page for a description of these settings.",
+    "config": {
+        "comment": "These settings impact what appears in the popout and the constellation overlay",
+        "imageName": "/current/tmp/image.jpg",
+        "location": "XX_NEED_TO_UPDATE_XX",
+        "latitude": "XX_NEED_TO_UPDATE_XX",
+        "longitude": "XX_NEED_TO_UPDATE_XX",
+        "camera": "XX_NEED_TO_UPDATE_XX",
+        "lens": "XX_NEED_TO_UPDATE_XX",
+        "computer": "XX_NEED_TO_UPDATE_XX",
+        "owner": "XX_NEED_TO_UPDATE_XX",
+        "auroraForecast": false,
+        "auroraMap": "XX_NEED_TO_UPDATE_XX",
+        "intervalSeconds": 5,
+        "showOverlayAtStartup": false,
+        "overlayWidth": 875,
+        "overlayHeight": 875,
+        "overlayOffsetLeft": 0,
+        "overlayOffsetTop": 0,
+        "az": 0,
+        "imageWidth": 900,
+        "opacity": 0.5,
+        "objectsComment": "If you want the Messier objects on the overlay remove the 'XXX_' below.",
+        "XXX_objects": "virtualsky/messier.json",
+        "meridian": false,
+        "ecliptic": false,
+        "fontsize": "14px",
+        "cardinalpoints": true,
+        "cardinalpoints_fontsize": "18px",
+        "showstarlabels": true,
+        "projection": "fisheye",
+        "constellations": true,
+        "constellationwidth": 0.75,
+        "constellationlabels": false,
+        "constellationboundaries": false,
+        "constellationboundarieswidth": 0.75,
+        "gridlines_eq": false,
+        "gridlineswidth": 0.75,
+        "showgalaxy": false,
+        "galaxywidth": 0.75,
+        "mouse": false,
+        "keyboard": true,
+        "showdate": false,
+        "showposition": false,
+        "sky_gradient": false,
+        "gradient": false,
+        "transparent": true,
+        "lang": "en",
+        "colours": {
+            "comment": "See the Wiki for how to change colors on the constellation overlay.",
+            "normal": {
+                "XXX_cardinal": "rgba(0,255,0,1)"
+            },
+            "negative": {
+                "XXX_cardinal": "rgba(255,255,255,1)"
+            }
+        },
+        "live": true,
+        "id": "starmap",
+        "AllskyVersion": "XX_ALLSKY_VERSION_XX"
+    },
+    "homePage": {
+        "comment": "These settings impact the look and feel of the Website home page.",
+        "title": "XX_NEED_TO_UPDATE_XX",
+        "og_description": "XX_NEED_TO_UPDATE_XX",
+        "backgroundImage": {
+            "url": "",
+            "style": ""
+        },
+        "loadingImage": "loading.jpg",
+        "imageBorder": false,
+        "includeGoogleAnalytics": false,
+        "includeLinkToMakeOwn": true,
+        "personalLink": {
+            "prelink": "",
+            "message": "",
+            "url": "",
+            "title": "",
+            "style": ""
+        },
+        "og_type": "website",
+        "og_url": "https://github.com/AllskyTeam/allsky/",
+        "og_image": "image.jpg",
+        "favicon": "allsky-favicon.png",
+        "thumbnailsizex": 100,
+        "thumbnailsizey": 75,
+        "thumbnailsortorder": "ascending",
+        "leftSidebar": [
+            {
+                "comment": "Once you have modified the settings so the overlay fits, set 'display' to true.",
+                "display": false,
+                "title": "Show constellation overlay",
+                "icon": "fa fa-2x fa-fw allsky-constellation",
+                "other": "id='overlayBtn' ng-click='toggleOverlay()' ng-class=\"{'active': showOverlay}\"",
+                "style": ""
+            },
+            {
+                "display": true,
+                "url": "videos/",
+                "title": "Archived Timelapes",
+                "icon": "fa fa-2x fa-fw fa-play-circle",
+                "style": ""
+            },
+            {
+                "display": false,
+                "url": "/current/tmp/mini-timelapse.mp4",
+                "title": "Mini-timelapse",
+                "icon": "fa fa-2x fa-fw icon-mini-timelapse",
+                "style": ""
+            },
+            {
+                "display": true,
+                "url": "keograms/",
+                "title": "Archived Keograms",
+                "icon": "fa fa-2x fa-fw fa-barcode",
+                "style": ""
+            },
+            {
+                "display": true,
+                "url": "startrails/",
+                "title": "Archived Startrails",
+                "icon": "fa fa-2x fa-fw fa-star",
+                "style": ""
+            },
+            {
+                "display": true,
+                "variable": "imageName",
+                "title": "Full-sized image",
+                "icon": "fa fa-2x fa-fw fa-expand-arrows-alt",
+                "style": ""
+            },
+            {
+                "display": true,
+                "title": "Display information about the camera and other settings",
+                "icon": "fa fa-2x fa-fw fa-info-circle",
+                "other": "ng-click='toggleInfo()' ng-class=\"{'active': showInfo}\"",
+                "style": ""
+            },
+            {
+                "display": false,
+                "comment": "Add leftSidebar items above."
+            }
+        ],
+        "leftSidebarStyle": "",
+        "popoutIcons": [
+            {
+                "display": true,
+                "label": "Location",
+                "icon": "fa fa-fw fa-map-marker-alt",
+                "variable": "location",
+                "value": "",
+                "style": ""
+            },
+            {
+                "display": true,
+                "label": "Latitude",
+                "icon": "fa fa-fw fa-map-marker",
+                "variable": "s_latitude",
+                "value": "",
+                "style": ""
+            },
+            {
+                "display": true,
+                "label": "Longitude",
+                "icon": "fa fa-fw fa-map-marker",
+                "variable": "s_longitude",
+                "value": "",
+                "style": ""
+            },
+            {
+                "display": true,
+                "label": "Camera",
+                "icon": "fa fa-fw fa-camera-retro",
+                "variable": "camera",
+                "value": "",
+                "style": ""
+            },
+            {
+                "display": true,
+                "label": "Lens",
+                "icon": "fa fa-fw fa-dot-circle",
+                "variable": "lens",
+                "value": "",
+                "style": ""
+            },
+            {
+                "display": true,
+                "label": "Computer",
+                "icon": "fa fa-fw fa-microchip",
+                "variable": "computer",
+                "value": "",
+                "style": ""
+            },
+            {
+                "display": true,
+                "label": "Owner",
+                "icon": "fa fa-fw fa-user",
+                "variable": "owner",
+                "value": "",
+                "style": ""
+            },
+            {
+                "display": false,
+                "label": "Allsky Settings",
+                "icon": "fa fa-fw fa-cogs",
+                "variable": "",
+                "value": "<a href='viewSettings.php' target='_blank'>Click to view</a>",
+                "style": ""
+            },
+            {
+                "display": true,
+                "label": "Allsky Version",
+                "icon": "fa fa-fw fa-file-alt",
+                "variable": "AllskyVersion",
+                "value": "",
+                "style": ""
+            },
+            {
+                "comment": "Add popout items above."
+            }
+        ]
+    },
+    "ConfigVersion": "2"
 }

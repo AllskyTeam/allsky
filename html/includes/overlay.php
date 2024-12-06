@@ -1,447 +1,507 @@
 <?php
-
 function DisplayOverlay($image_name)
 {
+	global $settings_array;
 	$displayMaskTab = false;		// Should the "Mask" tab appear?
+	$numTabs = 1 + ($displayMaskTab ? 1 : 0);
+	$myStatus = new StatusMessages();
 
+	// TODO: can remove in next major release when Overlay Method is deleted
+	if (getVariableOrDefault($settings_array, 'overlaymethod', 0) === 0) {
+		$msg = "<br>The <span class='WebUISetting'>Overlay Method</span>";
+		$msg .= " on the <span class='WebUILink'>Allsky Settings</span> page is set to";
+		$msg .= " <span class='WebUIValue'>legacy</span>";
+		$msg .=" so the overlay below will NOT be used.";
+		$msg .= " To change that, change the setting to";
+		$msg .= " <span class='WebUIValue'>module</span>.";
+		$msg .= "<br>Also, the &nbsp;";
+		$msg .= " <i class='fa-regular fa-square-check navbar-default btn btn-lg navbar-btn'";
+		$msg .=	" style='color: black; padding: 0 !important; margin: 0; border: 0;'></i>";
+		$msg .= "  &nbsp; icon below will not work until you change the setting.<br><br>";
+		$myStatus->addMessage($msg, 'danger');
+	}
 ?>
 
-    <script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js"></script>
+    <script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <script src="/js/moment/moment-min.js"></script>
+    <script src="/js/moment/moment-min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <script src="/js/overlay/oe-overlayeditor.js"></script>
-    <script src="/js/overlay/oe-config.js"></script>
-    <script src="/js/overlay/oe-uimanager.js"></script>
+    <script src="/js/overlay/oe-overlayeditor.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+    <script src="/js/overlay/oe-config.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+    <script src="/js/overlay/oe-uimanager.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <script src="/js/overlay/fields/oe-fieldmanager.js"></script>
-    <script src="/js/overlay/fields/oe-field.js"></script>
-    <script src="/js/overlay/fields/oe-text.js"></script>
-    <script src="/js/overlay/fields/oe-image.js"></script>
-    <script src="/js/overlay/oe-exposure.js"></script>
+    <script src="/js/overlay/fields/oe-fieldmanager.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+    <script src="/js/overlay/fields/oe-field.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+    <script src="/js/overlay/fields/oe-text.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+    <script src="/js/overlay/fields/oe-image.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+    <script src="/js/overlay/oe-exposure.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <script src="/js/bootbox/bootbox.all.js"></script>
-    <script src="/js/bootbox/bootbox.locales.min.js"></script>
+    <script src="/js/bootbox/bootbox.all.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+    <script src="/js/bootbox/bootbox.locales.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <link rel='stylesheet' href='/js/jquery-ui-1.13.1.custom/jquery-ui.min.css' />
-    <script src="/js/jquery-ui-1.13.1.custom/jquery-ui.min.js"></script>
+    <link rel='stylesheet' href='/js/jquery-ui-1.13.1.custom/jquery-ui.min.css?c=<?php echo ALLSKY_VERSION; ?>' />
+    <script src="/js/jquery-ui-1.13.1.custom/jquery-ui.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <link rel='stylesheet' href='/js/spectrum/dist/spectrum.css' />
-    <script src="/js/spectrum/dist/spectrum.js"></script>
+    <link rel='stylesheet' href='/js/spectrum/dist/spectrum.css?c=<?php echo ALLSKY_VERSION; ?>' />
+    <script src="/js/spectrum/dist/spectrum.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <link rel='stylesheet' href='/js/jqPropertyGrid/jqPropertyGrid.css' />
-    <script src="/js/jqPropertyGrid/jqPropertyGrid.js"></script>
+    <link rel='stylesheet' href='/js/jqPropertyGrid/jqPropertyGrid.css?c=<?php echo ALLSKY_VERSION; ?>' />
+    <script src="/js/jqPropertyGrid/jqPropertyGrid.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <link rel="stylesheet" type="text/css" href="/js/datatables/datatables.min.css" />
-    <script type="text/javascript" src="/js/datatables/datatables.js"></script>
+    <link rel="stylesheet" type="text/css" href="/js/datatables/datatables.min.css?c=<?php echo ALLSKY_VERSION; ?>" />
+    <script type="text/javascript" src="/js/datatables/datatables.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <link rel="stylesheet" type="text/css" href="/js/overlay/imagemanager/oe-imagemanager.css" />
-    <script type="text/javascript" src="/js/overlay/imagemanager/oe-imagemanager.js"></script>
+    <link rel="stylesheet" type="text/css" href="/js/overlay/imagemanager/oe-imagemanager.css?c=<?php echo ALLSKY_VERSION; ?>" />
+    <script type="text/javascript" src="/js/overlay/imagemanager/oe-imagemanager.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
+    <script type="text/javascript" src="/js/jquery-overlaymanager/jquery-overlaymanager.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <link href="/js/dropzone/dropzone.css" type="text/css" rel="stylesheet" />
-    <script src="/js/dropzone/dropzone-min.js"></script>
+    <link href="/js/dropzone/dropzone.css?c=<?php echo ALLSKY_VERSION; ?>" type="text/css" rel="stylesheet" />
+    <script src="/js/dropzone/dropzone-min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <script src="/js/konva/konva.min.js"></script>
+    <script src="/js/konva/konva.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <link href="/css/overlay.css" rel="stylesheet">
+    <link href="/css/overlay.css?c=<?php echo ALLSKY_VERSION; ?>" rel="stylesheet">
 
     <div id="oeeditor">
+        <div id="oe-overlay-manager"></div>     
         <div class="row">
-            <div id="oe-viewport" class="panel panel-primary">
-                <div class="panel-heading"><i class="fa fa-code fa-edit"></i> Overlay Editor</div>
-
-
-                <div>
-
-                    <ul class="nav nav-tabs" role="tablist">
-                        <li role="presentation" class="active">
-							<a href="#oe-editor-tab" aria-controls="oe-editor-tab" role="tab" data-toggle="tab" id="oe-overlay-editor-tab">Overlay Editor</a></li>
+        <div id="oe-viewport" class="panel panel-primary">
+            <div id="oe-overlay-not-running" class="oe-not-running big hidden">
+                <div class="center-full">
+                    <div class="center-paragraph">
+                        <h1>Allsky is not currently capturing images</h1>
+                        <p>Please wait for Allsky to begin capturing before using the Overlay Editor</p>
+                        <small>You can stay on this page and the Overlay Editor will start automatically once Allsky is running. <span id="oe-overlay-not-running-status"></span></small>
+                    </div>
+                </div>
+            </div> 
+            <div class="panel-heading"><i class="fa fa-code fa-edit"></i> Overlay Editor</div>
+                <p id="editor-messages"><?php $myStatus->showMessages(); ?></p>
+            <div>
+<?php if ($numTabs > 1) { // don't show just a single tab ?>
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active">
+                            <a href="#oe-editor-tab" aria-controls="oe-editor-tab" role="tab" data-toggle="tab" id="oe-overlay-editor-tab">Overlay Editor</a></li>
 <?php if ($displayMaskTab) { ?>
-                        <li role="presentation"><a href="#oe-exposure-tab" aria-controls="oe-exposure-tab" role="tab" data-toggle="tab">Auto Exposure Mask</a></li>
+                    <li role="presentation">
+                            <a href="#oe-exposure-tab" aria-controls="oe-exposure-tab" role="tab" data-toggle="tab">Auto Exposure Mask</a></li>
 <?php } ?>
-                    </ul>
-
-                    <div class="tab-content">
-                        <div role="tabpanel" class="tab-pane active" id="oe-editor-tab">
-                            <nav class="navbar navbar-default">
-                                <div class="container-fluid">
-                                    <div class="navbar-header">
-                                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#oe-main-navbar" aria-expanded="false">
-                                            <span class="sr-only">Toggle navigation</span>
-                                            <span class="icon-bar"></span>
-                                            <span class="icon-bar"></span>
-                                            <span class="icon-bar"></span>                                            
-                                        </button>
-                                    </div>
-    
-                                    <div class="collapse navbar-collapse" id="oe-main-navbar">
-                                        <ul class="nav navbar-nav">
-                                            <li>
-                                                <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Save The Current Configuration">
-                                                    <div class="btn btn-lg navbar-btn disabled" id="oe-save"><i class="fa-solid fa-floppy-disk"></i></div>
-                                                </div>
-                                            </li>
-                                            <li>
-                                                <div class="btn btn-lg navbar-btn" id="oe-add-text" data-toggle="tooltip" data-container="body" data-placement="top" title="Add New Text Field"><i class="fa-solid fa-font"></i></div>
-                                            </li>
-                                            <li>
-                                                <div class="btn btn-lg navbar-btn" id="oe-add-image" data-toggle="tooltip" data-container="body" data-placement="top" title="Add Existing Image Field"><i class="fa-regular fa-image"></i></div>
-                                            </li>
-                                            <li>
-                                                <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Delete The Selected Field">
-                                                    <div class="btn btn-lg navbar-btn disabled" id="oe-delete"><i class="fa-solid fa-xmark"></i></div>
-                                                </div>
-                                            </li>
-                                            <li>
-                                                <div class="btn btn-lg navbar-btn" id="oe-item-list" data-toggle="tooltip" data-container="body" data-placement="top" title="Variable Manager"><i class="fa-regular fa-rectangle-list"></i></div>
-                                            </li>
-                                            <li>
-                                                <div class="btn btn-lg navbar-btn" id="oe-test-mode" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Sample Data"><i class="fa-regular fa-square-check"></i></div>
-                                            </li>
-
-                                            <li>
-                                                <div class="btn btn-lg navbar-btn oe-zoom" id="oe-zoom-in" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
-                                            </li>
-                                            <li>
-                                                <div class="btn btn-lg navbar-btn oe-zoom" id="oe-zoom-out" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></div>
-                                            </li>
-                                            <li>
-                                                <div class="btn btn-lg navbar-btn oe-zoom" id="oe-zoom-full" data-toggle="tooltip" data-container="body" data-placement="top" title="View Full Size"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></div>
-                                            </li>
-                                            <li>
-                                                <div class="btn btn-lg navbar-btn oe-zoom" id="oe-zoom-fit" data-toggle="tooltip" data-container="body" data-placement="top" title="Fit to Window"><i class="fa-solid fa-down-left-and-up-right-to-center"></i></div>
-                                            </li>
-                                        </ul>
-                                        <ul class="nav navbar-nav navbar-right">
-                                            <li id="oe-toolbar-debug" class="hidden">
-                                                <div id="oe-toobar-debug-button" class="btn btn-lg navbar-btn" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"><i class="fa-solid fa-bug"></i></div>
-                                            </li>
-                                            <li>
-                                                <div id="oe-upload-font" class="btn btn-lg navbar-btn" data-toggle="tooltip" data-container="body" data-placement="top" title="Font Manager">
-                                                    <i class="fa-solid fa-download"></i>
-                                                </div>
-                                            </li>
-                                            <li>
-                                                <div id="oe-show-image-manager" class="btn btn-lg navbar-btn" data-toggle="tooltip" data-container="body" data-placement="top" title="Image Manager"><i class="fa-regular fa-images"></i></div>
-                                            </li>
-                                            <li>
-                                                <div class="btn btn-lg navbar-btn" id="oe-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Layout and App Options"><i class="fa-solid fa-gear"></i>
-                                                </div>
-                                            </li>
-                                        </ul>
-                                    </div>
+                </ul>
+<?php } ?>
+                <div class="tab-content">
+                    <div role="tabpanel" class="tab-pane active" id="oe-editor-tab">
+                        <nav class="navbar navbar-default">
+                            <div class="container-fluid">
+                                <div class="navbar-header">
+                                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#oe-main-navbar" aria-expanded="false">
+                                        <span class="sr-only">Toggle navigation</span>
+                                        <span class="icon-bar"></span>
+                                        <span class="icon-bar"></span>
+                                        <span class="icon-bar"></span>
+                                    </button>
                                 </div>
-                            </nav>
-                            <div class="oe-editor panel-body">
-                                <div id="overlay_container" style="background-color: black; position: relative">
-                                    <div id="oe-editor-stage"></div>
+
+                                <div class="collapse navbar-collapse" id="oe-main-navbar">
+                                    <ul class="nav navbar-nav" id="oe-editor-toolbar">
+                                        <li>
+                                            <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Save The Current Configuration">
+                                                <div class="btn btn-lg navbar-btn oe-button disabled" id="oe-save"><i class="fa-solid fa-floppy-disk"></i></div>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="btn btn-lg navbar-btn oe-button" id="oe-add-text" data-toggle="tooltip" data-container="body" data-placement="top" title="Add New Text Field"><i class="fa-solid fa-font"></i></div>
+                                        </li>
+                                        <li>
+                                            <div class="btn btn-lg navbar-btn oe-button" id="oe-add-image" data-toggle="tooltip" data-container="body" data-placement="top" title="Add Existing Image Field"><i class="fa-regular fa-image"></i></div>
+                                        </li>
+                                        <li>
+                                            <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Delete The Selected Field">
+                                                <div class="btn btn-lg navbar-btn oe-button disabled" id="oe-delete"><i class="fa-solid fa-xmark"></i></div>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="btn btn-lg navbar-btn oe-button" id="oe-item-list" data-toggle="tooltip" data-container="body" data-placement="top" title="Variable Manager"><i class="fa-regular fa-rectangle-list"></i></div>
+                                        </li>
+                                        <li>
+                                            <div class="btn btn-lg navbar-btn oe-button" id="oe-test-mode" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Sample Data"><i class="fa-regular fa-square-check"></i></div>
+                                        </li>
+
+                                        <li>
+                                            <div class="btn btn-lg navbar-btn oe-zoom oe-button border-left" id="oe-zoom-in" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
+                                        </li>
+                                        <li>
+                                            <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-zoom-out" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></div>
+                                        </li>
+                                        <li>
+                                            <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-zoom-full" data-toggle="tooltip" data-container="body" data-placement="top" title="View Full Size"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></div>
+                                        </li>
+                                        <li>
+                                            <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-zoom-fit" data-toggle="tooltip" data-container="body" data-placement="top" title="Fit to Window"><i class="fa-solid fa-down-left-and-up-right-to-center"></i></div>
+                                        </li>
+                                        <li>
+                                            <div class="btn btn-lg navbar-btn border-left" id="oe-show-overlay-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Overlay Manager"><i class="fa-solid fa-gears"></i></div>
+                                        </li>
+                                        <li>
+                                            <div class="btn btn-lg navbar-btn oe-field-errors hidden" id="oe-field-errors" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Field Errors"><i class="fa-solid fa-circle-exclamation"></i></div>
+                                        </li>
+                                    </ul>
+                                    <ul class="nav navbar-nav navbar-right">
+                                        <li id="oe-toolbar-debug" class="hidden">
+                                            <div id="oe-toobar-debug-button" class="btn btn-lg navbar-btn oe-button" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"><i class="fa-solid fa-bug"></i></div>
+                                        </li>
+                                        <li>
+                                            <div id="oe-upload-font" class="btn btn-lg navbar-btn oe-button" data-toggle="tooltip" data-container="body" data-placement="top" title="Font Manager">
+                                                <i class="fa-solid fa-download"></i>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div id="oe-show-image-manager" class="btn btn-lg navbar-btn oe-button" data-toggle="tooltip" data-container="body" data-placement="top" title="Image Manager"><i class="fa-regular fa-images"></i></div>
+                                        </li>
+                                        <li>
+                                            <div class="btn btn-lg navbar-btn oe-button" id="oe-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Layout and App Options"><i class="fa-solid fa-gear"></i>
+                                            </div>
+                                        </li>
+                                    </ul>
                                 </div>
                             </div>
+                        </nav>                        
+                        <div class="oe-editor panel-body">
+                            <div id="overlay_container" style="background-color: black; position: relative">
+                                <div id="oe-overlay-disable" class="hidden">
+                                    <div class="center">
+                                        <div class="center-paragraph"><h2>You are using a default <?php echo(getTOD()); ?> time overlay.</h2> <p>To create a new overlay click <a href="#" id="oe-overlay-disable-new">here</a></p></div>
+                                    </div>
+                                </div> 
+                                <div id="oe-editor-stage"></div>
+                            </div>
                         </div>
+                    </div>
 <?php if ($displayMaskTab) { ?>
-                        <div role="tabpanel" class="tab-pane" id="oe-exposure-tab">
-                            <nav class="navbar navbar-default">
-                                <div class="container-fluid">
+                    <div role="tabpanel" class="tab-pane" id="oe-exposure-tab">
+                        <nav class="navbar navbar-default">
+                            <div class="container-fluid">
 
-                                    <div class="navbar-header">
-                                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#oe-autoexposure-navbar" aria-expanded="false">
-                                            <span class="sr-only">Toggle navigation</span>
-                                            <span class="icon-bar"></span>
-                                            <span class="icon-bar"></span>
-                                            <span class="icon-bar"></span>                                            
-                                        </button>
-                                    </div>
-
-                                    <div class="collapse navbar-collapse" id="oe-autoexposure-navbar">
-                                        <ul class="nav navbar-nav">
-                                            <li>
-                                                <div class="btn btn-lg navbar-btn glyphicon" id="oe-autoexposure-save" data-toggle="tooltip" data-placement="top" data-container="body" title="Save The AutoExposure Mask"><i class="fa-solid fa-floppy-disk"></i></div>
-                                            </li>
-                                            <li>
-                                                <div class="btn btn-lg navbar-btn" id="oe-autoexposure-reset" data-toggle="tooltip" data-placement="top" data-container="body" title="Reset The AutoExposure Mask"><i class="fa-solid fa-rotate-right"></i></div>
-                                            </li>
-
-
-
-                                            <li>
-                                                <div class="btn btn-lg navbar-btn oe-autoexposure-zoom" id="oe-autoexposure-zoom-in" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
-                                            </li>
-                                            <li>
-                                                <div class="btn btn-lg navbar-btn oe-autoexposure-zoom" id="oe-autoexposure-zoom-out" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></div>
-                                            </li>
-                                            <li>
-                                                <div class="btn btn-lg navbar-btn oe-autoexposure-zoom" id="oe-autoexposure-zoom-full" data-toggle="tooltip" data-container="body" data-placement="top" title="View Full Size"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></div>
-                                            </li>
-                                            <li>
-                                                <div class="btn btn-lg navbar-btn oe-autoexposure-zoom" id="oe-autoexposure-zoom-fit" data-toggle="tooltip" data-container="body" data-placement="top" title="Fit to Window"><i class="fa-solid fa-down-left-and-up-right-to-center"></i></div>
-                                            </li>
-
-
-
-                                        </ul>
-                                    </div>
+                                <div class="navbar-header">
+                                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#oe-autoexposure-navbar" aria-expanded="false">
+                                        <span class="sr-only">Toggle navigation</span>
+                                        <span class="icon-bar"></span>
+                                        <span class="icon-bar"></span>
+                                        <span class="icon-bar"></span>
+                                    </button>
                                 </div>
-                            </nav>
-                            <div class="oe-maskeditor panel-body">
-                                <div id="mask_container" style="background-color: black; margin-bottom: 15px; position: relative">
-                                    <div id="oe-exposure-stage"></div>
+
+                                <div class="collapse navbar-collapse" id="oe-autoexposure-navbar">
+                                    <ul class="nav navbar-nav">
+                                        <li>
+                                            <div class="btn btn-lg navbar-btn glyphicon" id="oe-autoexposure-save" data-toggle="tooltip" data-placement="top" data-container="body" title="Save The AutoExposure Mask"><i class="fa-solid fa-floppy-disk"></i></div>
+                                        </li>
+                                        <li>
+                                            <div class="btn btn-lg navbar-btn" id="oe-autoexposure-reset" data-toggle="tooltip" data-placement="top" data-container="body" title="Reset The AutoExposure Mask"><i class="fa-solid fa-rotate-right"></i></div>
+                                        </li>
+                                        <li>
+                                            <div class="btn btn-lg navbar-btn oe-autoexposure-zoom" id="oe-autoexposure-zoom-in" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
+                                        </li>
+                                        <li>
+                                            <div class="btn btn-lg navbar-btn oe-autoexposure-zoom" id="oe-autoexposure-zoom-out" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></div>
+                                        </li>
+                                        <li>
+                                            <div class="btn btn-lg navbar-btn oe-autoexposure-zoom" id="oe-autoexposure-zoom-full" data-toggle="tooltip" data-container="body" data-placement="top" title="View Full Size"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></div>
+                                        </li>
+                                        <li>
+                                            <div class="btn btn-lg navbar-btn oe-autoexposure-zoom" id="oe-autoexposure-zoom-fit" data-toggle="tooltip" data-container="body" data-placement="top" title="Fit to Window"><i class="fa-solid fa-down-left-and-up-right-to-center"></i></div>
+                                        </li>
+
+
+
+                                    </ul>
                                 </div>
                             </div>
+                        </nav>
+                        <div class="oe-maskeditor panel-body">
+                            <div id="mask_container" style="background-color: black; margin-bottom: 15px; position: relative">
+                                <div id="oe-exposure-stage"></div>
+                            </div>
                         </div>
+                    </div>
 <?php } ?>
-                    </div>
                 </div>
             </div>
+        </div>
 
-            <div id="textdialog" title="Text Properties">
-                <div id="textpropgrid"></div>
-            </div>
+        <div id="textdialog" title="Text Properties">
+            <div id="textpropgrid"></div>
+        </div>
 
-            <div id="imagedialog" title="Image Properties">
-                <div id="imagepropgrid"></div>
-            </div>
+        <div id="imagedialog" title="Image Properties">
+            <div id="imagepropgrid"></div>
+        </div>
 
-            <div id="debugdialog" title="Debug Info">
-                <div id="debugpropgrid"></div>
-            </div>
+        <div id="debugdialog" title="Debug Info">
+            <div id="debugpropgrid"></div>
+        </div>
 
-            <div id="formatdialog" title="Format Help">
-                <table id="formatlisttable" class="hidden" style="width:100%">
-                    <thead>
-                        <tr>
-                            <th>Format</th>
-                            <th>Description</th>
-                            <th>Sample</th>
-                            <th>Type</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                </table>                
-            </div>
+        <div id="formatdialog" title="Format Help">
+            <table id="formatlisttable" class="hidden" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Format</th>
+                        <th>Description</th>
+                        <th>Sample</th>
+                        <th>Type</th>
+                        <th></th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
 
-            <div class="modal" role="dialog" id="oe-item-list-dialog">
-                <div class="modal-dialog modal-lg" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                            <h4 class="modal-title">Variable Manager</h4>
-                        </div>
-                        <div class="modal-body">
-                            <ul class="nav nav-tabs" role="tablist">
-                                <li role="presentation" class="active"><a href="#oe-item-list-dialog-allsky" role="tab" data-toggle="tab">AllSky Variables</a></li>
-                                <li role="presentation"><a href="#oe-item-list-dialog-all" aria-controls="profile" role="tab" data-toggle="tab">All Variables</a></li>
-                            </ul>
-
-                            <div class="tab-content">
-                                <div role="tabpanel" class="tab-pane active" id="oe-item-list-dialog-allsky">
-                                    <table id="itemlisttable" class="display compact" style="width:98%">
-                                        <thead>
-                                            <tr>
-                                                <th>id</th>
-                                                <th>Variable Name</th>
-                                                <th>Description</th>
-                                                <th>Format</th>
-                                                <th>Type</th>
-                                                <th>&nbsp;</th>
-                                            </tr>
-                                        </thead>
-                                    </table>
-                                </div>
-                                <div role="tabpanel" class="tab-pane" id="oe-item-list-dialog-all">
-                                    <div id="oe-item-list-dialog-all-table">
-                                        <table id="allitemlisttable" class="display compact" style="width:98%">
-                                            <thead>
-                                                <tr>
-                                                    <th>id</th>
-                                                    <th>Name</th>
-                                                    <th>Value</th>
-                                                    <th>&nbsp;</th>
-                                                </tr>
-                                            </thead>
-                                        </table>
-                                    </div>
-                                    <div id="oe-item-list-dialog-all-error">
-                                        <h1>Data Unavailable</h1>
-                                        <p>To display data here please ensure that the Overlay module is enabled and that the 'Enable debug mode' option is enabled within it.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-primary pull-left" id="oe-field-dialog-add-field">Add Variable</button>
-                            <button type="button" class="btn btn-default" id="oe-item-list-dialog-close">Close</button>
-                            <button type="button" class="btn btn-primary hidden" id="oe-item-list-dialog-save">Save Changes</button>
-                        </div>
+        <div class="modal" role="dialog" id="oe-field-errors-dialog">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Field Errors</h4>
                     </div>
-                </div>
-            </div>
-
-            <div class="modal" id="oe-item-list-edit-dialog">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                            <h4 class="modal-title" id="oe-variable-edit-title">Edit Item</h4>
-                        </div>
-                        <div class="modal-body">
-                            <p class="bg-danger oe-flash" id="oe-variable-edit-fash">You are editing a system field. You may only change the description, format and sample data values.</p>
-                            <form id="oe-item-list-edit-dialog-form" class="form-horizontal">
-                                <input type="hidden" id="oe-item-list-edit-dialog-id" name="oe-item-list-edit-dialog-id">
-                                <div class="form-group">
-                                    <label for="oe-item-list-edit-dialog-name" class="control-label col-xs-4">Variable Name</label>
-                                    <div class="col-xs-8">
-                                        <div class="input-group">
-                                            <input id="oe-item-list-edit-dialog-name" name="oe-item-list-edit-dialog-name" class="form-control">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label for="oe-item-list-edit-dialog-description" class="control-label col-xs-4">Description</label>
-                                    <div class="col-xs-8">
-                                        <div class="input-group">
-                                            <input id="oe-item-list-edit-dialog-description" name="oe-item-list-edit-dialog-description" class="form-control">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label for="oe-item-list-edit-dialog-format" class="control-label col-xs-4">Format</label>
-                                    <div class="col-xs-8">
-                                        <div class="input-group">
-                                            <input id="oe-item-list-edit-dialog-format" name="oe-item-list-edit-dialog-format" class="form-control">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label for="oe-item-list-edit-dialog-sample" class="control-label col-xs-4">Sample Data</label>
-                                    <div class="col-xs-8">
-                                        <div class="input-group">
-                                            <input id="oe-item-list-edit-dialog-sample" name="oe-item-list-edit-dialog-sample" class="form-control">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label for="oe-item-list-edit-dialog-type" class="col-sm-4 control-label">Type</label>
-                                    <div class="col-sm-8">
-                                        <div class="input-group">
-                                            <select class="form-control" id="oe-item-list-edit-dialog-type" name="oe-item-list-edit-dialog-type">
-                                                <option value="Date">Date</option>
-                                                <option value="Time">Time</option>
-                                                <option value="Number">Number</option>
-                                                <option value="Text">Text</option>
-                                                <option value="Bool">Bool</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group hidden">
-                                    <label for="oe-item-list-edit-dialog-source" class="col-sm-4 control-label">Source</label>
-                                    <div class="col-sm-8">
-                                        <div class="input-group">
-                                            <select class="form-control" id="oe-item-list-edit-dialog-source" name="oe-item-list-edit-dialog-source" disabled="disabled">
-                                                <option value="System">System</option>
-                                                <option value="User">User</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                            <button type="button" id="oe-field-save" class="btn btn-primary">Save changes</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal" role="dialog" id="fontlistdialog">
-                <div class="modal-dialog modal-lg" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                            <h4 class="modal-title">Font Manager</h4>
-                        </div>
-                        <div class="modal-body">
-                            <table id="fontlisttable" class="display compact" style="width:98%">
+                    <div class="modal-body">
+                        <div role="tabpanel" class="tab-pane active" id="oe-field-errors-dialog-fields">
+                            <table id="fielderrorstable" class="display compact" style="width:98%">
                                 <thead>
                                     <tr>
-                                        <th>Name</th>
-                                        <th>Path</th>
+                                        <th>Field Name</th>
+                                        <th>Type</th>
                                         <th>&nbsp;</th>
                                     </tr>
                                 </thead>
                             </table>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-primary pull-left" id="oe-font-dialog-add-font">Add Font</button>
-                            <button type="button" class="btn btn-primary pull-left" id="oe-font-dialog-upload-font">Upload Font</button>
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" id="oe-field-errors-dialog-close">Close</button>
                     </div>
                 </div>
             </div>
-
-            <div class="modal" role="dialog" id="oe-file-manager-dialog">
-                <div class="modal-dialog modal-lg" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                            <h4 class="modal-title">Image Manager</h4>
-                        </div>
-                        <div class="modal-body">
-                            <div id="oe-image-manager"></div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-default" id="oe-file-manager-dialog-close" data-dismiss="modal">Close</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal" role="dialog" id="oe-debug-dialog">
-                <div class="modal-dialog modal-lg" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                            <h4 class="modal-title">Debug Info</h4>
-                        </div>
-                        <div class="modal-body">
-                            <form id="oe-debug-dialog-form" class="form-horizontal">
-                                <div class="form-group">
-                                    <label for="oe-debug-dialog-overlay" class="col-sm-2 control-label">Overlay Data</label>
-                                    <div class="col-sm-10">
-                                        <div class="input-group">
-                                            <textarea id="oe-debug-dialog-overlay" name="oe-debug-dialog-overlay" rows="10" cols="80" disabled="disabled"></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label for="oe-debug-dialog-fields" class="col-sm-2 control-label">Field Data</label>
-                                    <div class="col-sm-10">
-                                        <div class="input-group">
-                                            <textarea id="oe-debug-dialog-fields" name="oe-debug-dialog-fields" rows="10" cols="80" disabled="disabled"></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label for="oe-debug-dialog-config" class="col-sm-2 control-label">Editor Config</label>
-                                    <div class="col-sm-10">
-                                        <div class="input-group">
-                                            <textarea id="oe-debug-dialog-config" name="oe-debug-dialog-config" rows="10" cols="80" disabled="disabled"></textarea>
-                                        </div>
-                                    </div>
-                                </div>                                
-                            </form>                          
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
         </div>
+
+        <div class="modal" role="dialog" id="oe-item-list-dialog">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Variable Manager</h4>
+                    </div>
+                    <div class="modal-body">
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li role="presentation" class="active"><a href="#oe-item-list-dialog-allsky" role="tab" data-toggle="tab">AllSky Variables</a></li>
+                            <li role="presentation"><a href="#oe-item-list-dialog-all" aria-controls="profile" role="tab" data-toggle="tab">All Variables</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                            <div role="tabpanel" class="tab-pane active" id="oe-item-list-dialog-allsky">
+                                <table id="itemlisttable" class="display compact" style="width:98%">
+                                    <thead>
+                                        <tr>
+                                            <th>id</th>
+                                            <th>Variable Name</th>
+                                            <th>Description</th>
+                                            <th>Format</th>
+                                            <th>Type</th>
+                                            <th>&nbsp;</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                            <div role="tabpanel" class="tab-pane" id="oe-item-list-dialog-all">
+                                <div id="oe-item-list-dialog-all-table">
+                                    <table id="allitemlisttable" class="display compact" style="width:98%">
+                                        <thead>
+                                            <tr>
+                                                <th>id</th>
+                                                <th>Name</th>
+                                                <th>Value</th>
+                                                <th>&nbsp;</th>
+                                            </tr>
+                                        </thead>
+                                    </table>
+                                </div>
+                                <div id="oe-item-list-dialog-all-error">
+                                    <h1>Data Unavailable</h1>
+                                    <p>To display data here please ensure that the Overlay module is enabled and that the 'Enable debug mode' option is enabled within it.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary pull-left" id="oe-field-dialog-add-field">Add Variable</button>
+                        <button type="button" class="btn btn-default" id="oe-item-list-dialog-close">Close</button>
+                        <button type="button" class="btn btn-primary hidden" id="oe-item-list-dialog-save">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="oe-item-list-edit-dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="oe-variable-edit-title">Edit Item</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p class="bg-danger oe-flash" id="oe-variable-edit-fash">You are editing a system field. You may only change the description, format and sample data values.</p>
+                        <form id="oe-item-list-edit-dialog-form" class="form-horizontal">
+                            <input type="hidden" id="oe-item-list-edit-dialog-id" name="oe-item-list-edit-dialog-id">
+                            <div class="form-group">
+                                <label for="oe-item-list-edit-dialog-name" class="control-label col-xs-4">Variable Name</label>
+                                <div class="col-xs-8">
+                                    <div class="input-group">
+                                        <input id="oe-item-list-edit-dialog-name" name="oe-item-list-edit-dialog-name" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="oe-item-list-edit-dialog-description" class="control-label col-xs-4">Description</label>
+                                <div class="col-xs-8">
+                                    <div class="input-group">
+                                        <input id="oe-item-list-edit-dialog-description" name="oe-item-list-edit-dialog-description" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="oe-item-list-edit-dialog-format" class="control-label col-xs-4">Format</label>
+                                <div class="col-xs-8">
+                                    <div class="input-group">
+                                        <input id="oe-item-list-edit-dialog-format" name="oe-item-list-edit-dialog-format" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="oe-item-list-edit-dialog-sample" class="control-label col-xs-4">Sample Data</label>
+                                <div class="col-xs-8">
+                                    <div class="input-group">
+                                        <input id="oe-item-list-edit-dialog-sample" name="oe-item-list-edit-dialog-sample" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="oe-item-list-edit-dialog-type" class="col-sm-4 control-label">Type</label>
+                                <div class="col-sm-8">
+                                    <div class="input-group">
+                                        <select class="form-control" id="oe-item-list-edit-dialog-type" name="oe-item-list-edit-dialog-type">
+                                            <option value="Date">Date</option>
+                                            <option value="Time">Time</option>
+                                            <option value="Number">Number</option>
+                                            <option value="Text">Text</option>
+                                            <option value="Bool">Bool</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group hidden">
+                                <label for="oe-item-list-edit-dialog-source" class="col-sm-4 control-label">Source</label>
+                                <div class="col-sm-8">
+                                    <div class="input-group">
+                                        <select class="form-control" id="oe-item-list-edit-dialog-source" name="oe-item-list-edit-dialog-source" disabled="disabled">
+                                            <option value="System">System</option>
+                                            <option value="User">User</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="button" id="oe-field-save" class="btn btn-primary">Save changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" role="dialog" id="fontlistdialog">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Font Manager</h4>
+                    </div>
+                    <div class="modal-body">
+                        <table id="fontlisttable" class="display compact" style="width:98%">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Path</th>
+                                    <th>&nbsp;</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary pull-left" id="oe-font-dialog-add-font">Add Font</button>
+                        <button type="button" class="btn btn-primary pull-left" id="oe-font-dialog-upload-font">Upload Font</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" role="dialog" id="oe-file-manager-dialog">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Image Manager</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div id="oe-image-manager"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" id="oe-file-manager-dialog-close" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" role="dialog" id="oe-debug-dialog">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Debug Info</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form id="oe-debug-dialog-form" class="form-horizontal">
+                            <div class="form-group">
+                                <label for="oe-debug-dialog-overlay" class="col-sm-2 control-label">Overlay Data</label>
+                                <div class="col-sm-10">
+                                    <div class="input-group">
+                                        <textarea id="oe-debug-dialog-overlay" name="oe-debug-dialog-overlay" rows="10" cols="80" disabled="disabled"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="oe-debug-dialog-fields" class="col-sm-2 control-label">Field Data</label>
+                                <div class="col-sm-10">
+                                    <div class="input-group">
+                                        <textarea id="oe-debug-dialog-fields" name="oe-debug-dialog-fields" rows="10" cols="80" disabled="disabled"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="oe-debug-dialog-config" class="col-sm-2 control-label">Editor Config</label>
+                                <div class="col-sm-10">
+                                    <div class="input-group">
+                                        <textarea id="oe-debug-dialog-config" name="oe-debug-dialog-config" rows="10" cols="80" disabled="disabled"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- ./row --> </div> <!-- /.oeeditor -->
 
         <div class="modal" tabindex="-1" id="optionsdialog">
             <div class="modal-dialog modal-lg" role="document">
@@ -458,8 +518,9 @@ function DisplayOverlay($image_name)
 
                             <!-- Nav tabs -->
                             <ul class="nav nav-tabs" role="tablist">
-                                <li role="presentation" class="active"><a href="#configoptions" aria-controls="configoptions" role="tab" data-toggle="tab">Layout Defaults</a></li>
+                                <li role="presentation" class="active"><a href="#configoptions" aria-controls="configoptions" role="tab" data-toggle="tab" id="oe-editor-layout-defaults">Layout Defaults</a></li>
                                 <li role="presentation"><a href="#oeeditoroptions" aria-controls="oeeditoroptions" role="tab" data-toggle="tab">Editor Settings</a></li>
+                                <li role="presentation"><a href="#oeeditoroverlays" aria-controls="oeeditoroverlays" role="tab" data-toggle="tab">Overlays</a></li>                                
                             </ul>
 
                             <!-- Tab panes -->
@@ -473,7 +534,7 @@ function DisplayOverlay($image_name)
                                                 Opacity</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <input id="defaultimagetopacity" name="defaultimagetopacity" type="number" min="0" max="100" step="1" class="form-control">
+                                                    <input id="defaultimagetopacity" name="defaultimagetopacity" type="number" min="0" max="100" step="1" class="form-control layoutfield">
                                                 </div>
                                             </div>
                                         </div>
@@ -482,7 +543,7 @@ function DisplayOverlay($image_name)
                                                 Rotation</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <input id="defaultimagerotation" name="defaultimagerotation" type="number" min="0" max="359" step="1" class="form-control">
+                                                    <input id="defaultimagerotation" name="defaultimagerotation" type="number" min="0" max="359" step="1" class="form-control layoutfield">
                                                 </div>
                                             </div>
                                         </div>
@@ -490,7 +551,7 @@ function DisplayOverlay($image_name)
                                             <label for="defaultfont" class="control-label col-xs-4">Default Font</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <select id="defaultfont" name="defaultfont" class="form-control">
+                                                    <select id="defaultfont" name="defaultfont" class="form-control layoutfield">
                                                     </select>
                                                 </div>
                                             </div>
@@ -500,7 +561,7 @@ function DisplayOverlay($image_name)
                                                 Size</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <input id="defaultfontsize" name="defaultfontsize" type="number" min="8" max="64" step="1" class="form-control">
+                                                    <input id="defaultfontsize" name="defaultfontsize" type="number" min="8" max="64" step="1" class="form-control layoutfield">
                                                 </div>
                                             </div>
                                         </div>
@@ -509,7 +570,7 @@ function DisplayOverlay($image_name)
                                                 Opacity</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <input id="defaultfontopacity" name="defaultfontopacity" type="number" min="0" max="100" step="1" class="form-control">
+                                                    <input id="defaultfontopacity" name="defaultfontopacity" type="number" min="0" max="100" step="1" class="form-control layoutfield">
                                                 </div>
                                             </div>
                                         </div>
@@ -518,7 +579,7 @@ function DisplayOverlay($image_name)
                                                 Colour</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <input id="oe-default-font-colour" name="oe-default-font-colour" type="input" class="form-control">
+                                                    <input id="oe-default-font-colour" name="oe-default-font-colour" type="input" class="form-control layoutfield">
                                                 </div>
                                             </div>
                                         </div>
@@ -527,7 +588,7 @@ function DisplayOverlay($image_name)
                                                 Rotation</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <input id="defaulttextrotation" name="defaulttextrotation" type="number" min="0" max="359" step="1" class="form-control">
+                                                    <input id="defaulttextrotation" name="defaulttextrotation" type="number" min="0" max="359" step="1" class="form-control layoutfield">
                                                 </div>
                                             </div>
                                         </div>
@@ -536,25 +597,25 @@ function DisplayOverlay($image_name)
                                                 Colour</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <input id="oe-default-stroke-colour" name="oe-default-stroke-colour" type="input" class="form-control">
+                                                    <input id="oe-default-stroke-colour" name="oe-default-stroke-colour" type="input" class="form-control layoutfield">
                                                 </div>
                                             </div>
-                                        </div>                                                                          
+                                        </div>
                                         <div class="form-group">
                                             <label for="defaultdatafileexpiry" class="control-label col-xs-4">Default Extra Data Expiry</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <input id="defaultdatafileexpiry" name="defaultdatafileexpiry" type="number" min="0" max="60000" step="10" class="form-control">
+                                                    <input id="defaultdatafileexpiry" name="defaultdatafileexpiry" type="number" min="0" max="60000" step="10" class="form-control layoutfield">
                                                 </div>
                                                 <p class="help-block">This is the default expiry time in seconds for the extra data files. This can be overriden for each variable in the data files, see the documentation for more details</p>
                                             </div>
                                         </div>
 
                                         <div class="form-group">
-                                            <label for="defaultdatafileexpiry" class="control-label col-xs-4">Expiry Text</label>
+                                            <label for="defaultexpirytext" class="control-label col-xs-4">Expiry Text</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <input id="defaultexpirytext" name="defaultexpirytext" type="text" class="form-control">
+                                                    <input id="defaultexpirytext" name="defaultexpirytext" type="text" class="form-control layoutfield">
                                                 </div>
                                                 <p class="help-block">If blank then any expired fields will be removed. If non blank the value of an expired field will be replaced with this text</p>
                                             </div>
@@ -564,7 +625,7 @@ function DisplayOverlay($image_name)
                                             <label for="defaultnoradids" class="control-label col-xs-4">Norad ID's</label>
                                             <div class="col-xs-8">
                                                 <div class="input-group">
-                                                    <input id="defaultnoradids" name="defaultnoradids" type="text" class="form-control">
+                                                    <input id="defaultnoradids" name="defaultnoradids" type="text" class="form-control layoutfield">
                                                 </div>
                                                 <p class="help-block">List of NORAD Id's to calculate satellite positions for, satellite Id's can be found on the <a href="https://celestrak.org/satcat/search.php" target="_blank">Celestrak</a> website. See the documentaiton for more details</p>
                                             </div>
@@ -573,25 +634,25 @@ function DisplayOverlay($image_name)
                                             <div class="col-sm-offset-4 col-sm-2">
                                                 <div class="checkbox">
                                                     <label>
-                                                        <input type="checkbox" id="defaultincludeplanets"> Include Planets
+                                                        <input type="checkbox" id="defaultincludeplanets" class="layoutfield"> Include Planets
                                                     </label>
                                                 </div>
                                             </div>
                                             <div class="col-sm-2">
                                                 <div class="checkbox">
                                                     <label>
-                                                        <input type="checkbox" id="defaultincludesun"> Include Sun
+                                                        <input type="checkbox" id="defaultincludesun" class="layoutfield"> Include Sun
                                                     </label>
                                                 </div>
-                                            </div>  
+                                            </div>
                                             <div class="col-sm-4">
                                                 <div class="checkbox">
                                                     <label>
-                                                        <input type="checkbox" id="defaultincludemoon"> Include Moon
+                                                        <input type="checkbox" id="defaultincludemoon" class="layoutfield" class="layoutfield"> Include Moon
                                                     </label>
                                                 </div>
-                                            </div>                                                                                         
-                                        </div>                                                                             
+                                            </div>
+                                        </div>
                                     </form>
 
                                 </div>
@@ -636,7 +697,7 @@ function DisplayOverlay($image_name)
                                                     <input id="oe-app-options-grid-colour" name="oe-app-options-grid-colour" type="input" class="form-control">
                                                 </div>
                                             </div>
-                                        </div>                                        
+                                        </div>
                                         <div class="form-group">
                                             <label for="oe-app-options-grid-opacity" class="col-sm-4 control-label">Grid Brightness</label>
                                             <div class="col-sm-8">
@@ -713,10 +774,28 @@ function DisplayOverlay($image_name)
                                                 </div>
                                                 <p class="help-block">0 = Lowest, 100 = Brightest</p>
                                             </div>
-                                        </div>                                       
+                                        </div>
                                     </form>
 
                                 </div>
+
+                                <div role="tabpanel" class="tab-pane" id="oeeditoroverlays">
+                                    <div class="mt-2">
+                                        <table id="overlaytablelist" style="width:100%">
+                                            <thead>
+                                                <tr>
+                                                    <th>Type</th>                                                
+                                                    <th>Name</th>
+                                                    <th>Brand</th>
+                                                    <th>Model</th>
+                                                    <th>TOD</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                        </table> 
+                                    </div>
+                                </div>
+                                
                             </div>
                         </div>
 
@@ -762,22 +841,50 @@ function DisplayOverlay($image_name)
             </div>
         </div>
 
-        <img id="oe-background-image" class="oe-background-image" src="<?php echo $image_name ?>" style="width:100%">
+        <img id="oe-background-image" class="oe-background-image" alt="Overlay Image" src="<?php echo $image_name ?>" style="width:100%">
 
-        <script type="module">
-            var imageObj = new Image();
-            imageObj.src = $('#oe-background-image').attr('src');
+        <script>
+            startOverlayManager();
 
-            let that = this;
-            imageObj.onload = function() {
-                var overlayEditor = new OVERLAYEDITOR($("#overlay_container"), this);
-                overlayEditor.buildUI();
+            function startOverlayManager() {
+                let result = $.ajax({
+                    url: 'includes/overlayutil.php?request=Status',
+                    type: 'GET',
+                    dataType: 'json',
+                    cache: false,
+                    async: false,                
+                    context: this
+                });
 
-<?php if ($displayMaskTab) { ?>
-                var exposureEditor = new OEEXPOSURE();
-                exposureEditor.start();
-<?php } ?>
-            };
+                let startOverlay = true;
+                if (result.responseJSON !== undefined) {
+                    if (result.responseJSON.running !== undefined) {
+                        startOverlay = result.responseJSON.running;
+                        $('#oe-overlay-not-running-status').html('Status: <em>' + result.responseJSON.status + '</em>');
+                    }
+                }
+                
+                if (startOverlay) {
+                    $('#oe-overlay-not-running').addClass('hidden');
+                    var imageObj = new Image();
+                        imageObj.src = $('#oe-background-image').attr('src') + '?_ts=' + new Date().getTime();
+
+                        let that = this;
+                        imageObj.onload = function() {
+                            var overlayEditor = new OVERLAYEDITOR($("#overlay_container"), this);
+                            overlayEditor.buildUI();
+
+                            <?php if ($displayMaskTab) { ?>
+                                var exposureEditor = new OEEXPOSURE();
+                                exposureEditor.start();
+                            <?php } ?>
+                        };                    
+                } else {
+                    $('#oe-overlay-not-running').removeClass('hidden');
+                    setTimeout(startOverlayManager, 1000);
+                }
+            }
+           
         </script>
 
     <?php

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="../js/documentation.js" type="application/javascript"></script>
+    <link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Request support for camera"
+		} 
+	</style>
+    <link href="../css/documentation.css" rel="stylesheet">
+    <link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<script src="../js/all.min.js" type="application/javascript"></script>
+	<title>Request camera support</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<p>
+This page describes how to request that Allsky support a camera.
+</p>
+
+<h1>ZWO Cameras</h1>
+<p>
+Open a new
+<a external="true" href="https://github.com/AllskyTeam/allsky/discussions">Discussion</a>
+in GitHub using the <strong>New feature requests</strong> category.
+Let us know what model of ZWO camera it is, and if you know it, when the camera came out.
+</p>
+<p>
+Allsky uses a library provided by ZWO, and that library determines what cameras are supported.
+ZWO comes out with a new library every few months, so if your camera isn't supported that
+means the camera is newer than the library Allsky is using.
+We normally update the library when we release a new Allsky version.
+</p>
+
+<h4>Advanced users</h4>
+<p>
+If you can't wait for the next Allsky version you can download the newest ZWO library
+and install it yourself.
+Search for "zwo downloads" on the Web and go to the ZWO site.
+Look for the "Developer" page and download the Linux/Windows/Mac SDK to your Pi.
+Unzip the file and copy the <span class="fileName">libASICamera2.a</span> files from the
+library to the various <span class="fileName">~/allsky/src/lib/arm*</span> directories
+on the Pi,
+then execute:
+<pre>
+cd ~/allsky/src
+make capture_ZWO
+sudo systemctl stop allsky
+cp capture_ZWO ../bin
+sudo systemctl start allsky
+</pre>
+Allsky should now recognize your camera.
+</p>
+<h1>RPi and Compatible Cameras</h1>
+<h3>Step 1: Check if the camera is good for allsky</h3>
+<p>
+Connect the camera(s) to the Pi.
+If you have a single RPi camera connected to your Pi, run:
+<pre>
+allsky-config  new_rpi_camera_info
+</pre>
+If you have <u>multiple</u> RPi cameras connected,
+run the following, replacing <code>NUM</code> with the camera number -
+0 is the first camera and 1 is the second camera.
+<pre>
+allsky-config  new_rpi_camera_info --camera NUM
+</pre>
+</p>
+<p>
+Either way, after a few seconds you'll see something like:
+<pre>
+
+Maximum exposure time for sensor 'imx708_wide_noir' is 220.5 seconds.
+&gt;&gt;&gt; This will make a good allsky camera. &lt;&lt;&lt;
+
+************************
+When requesting support for this camera, please attach
+    /home/pi/allsky/tmp/camera_data.txt
+to your request.
+************************
+
+</pre>
+</p>
+<p>
+<blockquote class="warning">
+The maximum exposure times of many RPi and compatible cameras are very short,
+e.g., 15 seconds, so do not make very good allsky cameras.
+Before requesting that Allsky support a camera
+(and ideally before you purchase the camera),
+make sure it'll make a good allsky camera.
+</blockquote>
+If the second line in the output is:
+<pre>
+&gt;&gt;&gt;This is a short maximum exposure so may not make a good allsky camera.&lt;&lt;&lt;
+</pre>
+you may want to consider a different camera.
+Nighttime exposures are typicall around 60 seconds,
+so any camera with a shorter maximum may not properly expose nighttime shots.
+Do NOT request support for the camera since it's likely no one else will use it either.
+</p>
+
+<h3>Step 2: Request support</h3>
+If the longest exposure the camera supports is enough for you, open a new
+<a external="true" href="https://github.com/AllskyTeam/allsky/discussions">Discussion</a>
+in GitHub with a <strong>New feature requests</strong> category.
+Attach the <span class="fileName">/home/pi/allsky/tmp/camera_data.txt</span>
+file from above as well as a URL for information on the camera
+(often a URL of where you bought the camera).
+</p>
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>

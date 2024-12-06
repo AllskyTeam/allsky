@@ -6,6 +6,7 @@
             fallbackValue: 5,
             dirty: false,
             roi: null,
+            imageFile: '',
             roiSelected: function (roi) { }
         }
 
@@ -212,7 +213,8 @@
                   }
 
             };
-            imageObj.src = 'current/tmp/image.jpg?_ts=1662585950244';
+            let srcImage = plugin.settings.imageFile + '?_ts=' + Date.now();
+            imageObj.src = srcImage;
 
             $('#' + plugin.rioId).modal({
                 keyboard: false

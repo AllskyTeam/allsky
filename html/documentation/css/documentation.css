@@ -1,6 +1,12 @@
 :root {
 	--main-body-padding: 12px;
 	--Layout-sidebar-width: 250px;
+	--WebUI-setting-color: #00009b;
+	--WebUI-setting-color-dark: #68a0ff;
+	--WebUI-value-color: #555;
+	--WebUI-value-background-color: #e4e4e4;
+	--WebUI-link-color: #4b4a4b;
+	--WebUI-link-background-color: #f8f8f8;
 }
 
 body {
@@ -138,12 +144,10 @@ body {
 	font-size: inherit;
 }
 .markdown-body h1 {
-	padding-bottom: .3em;
 	font-size: 2em;
 	border-bottom: 1px solid var(--color-border-muted);
 }
 .markdown-body h2 {
-	padding-bottom: .3em;
 	font-size: 1.75em;
 	border-bottom: 1px solid var(--color-border-muted);
 }
@@ -155,6 +159,42 @@ body {
 }
 .markdown-body h5 {
 	font-size: .875em;
+}
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3 {
+	padding-bottom: .15em;
+	padding-left: .2em;
+}
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
+	margin-top: 1.5em;
+	margin-bottom: 10px;
+	line-height: 1.25;
+	background-color: var(--color-accent-muted);
+}
+.markdown-body h2,
+.markdown-body h3 {
+	background-color: var(--color-accent-subtle);
+}
+.markdown-body h1 {
+	border: 1px solid var(--color-accent-emphasis);
+}
+.markdown-body h2 {
+	border: 1px solid var(--color-accent-muted);
+}
+/* TODO: want a lighter shade of blue than h2, but there isn't one defined in light.css */
+.markdown-body h3 {
+	opacity: 0.7;
+	margin-right: 5em;
+	border: 2px solid var(--color-accent-muted);
+}
+.markdown-body h4 {
+	background-color: transparent;
+	padding-left: 0;
+	text-decoration: underline;
 }
 .markdown-body summary h1,
 .markdown-body summary h2,
@@ -256,37 +296,6 @@ body {
 	padding: 0 16px;
 	margin-bottom: 16px;
 }
-.markdown-body h1,
-.markdown-body h2,
-.markdown-body h3,
-.markdown-body h4 {
-	margin-top: 1.5em;
-	margin-bottom: 10px;
-	line-height: 1.25;
-	background-color: var(--color-accent-muted);
-	padding: 3px 0 3px 5px;
-}
-.markdown-body h2,
-.markdown-body h3 {
-	background-color: var(--color-accent-subtle);
-}
-.markdown-body h1 {
-	border: 1px solid var(--color-accent-emphasis);
-}
-.markdown-body h2 {
-	border: 1px solid var(--color-accent-muted);
-}
-/* TODO: want a lighter shade of blue than h2, but there isn't one defined in light.css */
-.markdown-body h3 {
-	opacity: 0.7;
-	margin-right: 5em;
-	border: 2px solid var(--color-accent-muted);
-}
-.markdown-body h4 {
-	background-color: transparent;
-	padding-left: 0;
-	text-decoration: underline;
-}
 
 .markdown-body table {
 	width: 100%;
@@ -341,6 +350,14 @@ body {
 	font-weight: normal;
 	margin-top: 5px;
 	margin-bottom: 5px;
+}
+.markdown-body .subnote {
+	background-color: var(--color-accent-muted);
+	color: var(--color-accent-emphasis);
+	text-align: center;
+}
+.markdown-body table td.subnote {
+	margin: 0 3em 0 3em;
 }
 .markdown-body table img {
 	background-color: transparent;
@@ -455,7 +472,7 @@ body {
 }
 .markdown-body pre {
 	word-wrap: normal;
-	margin-left: 10px;
+	margin-left: 0px;
 	margin-right: 10px;
 }
 .markdown-body pre code {
@@ -481,7 +498,7 @@ body {
 .markdown-body pre {
 	margin-top: 6px;
 	margin-bottom: 8px;
-	padding: 10px;
+	padding: 4px 10px;
 	overflow: auto;
 	font-size: 85%;
 	line-height: 1.45;
@@ -617,6 +634,7 @@ b, strong {
 	grid-auto-flow: column;
 	grid-gap: var(--Layout-gutter);
 	margin-top: 24px !important;
+	margin-bottom: 3em;
 }
 .Layout .Layout-main {
 	grid-column: 1;
@@ -668,27 +686,25 @@ b, strong {
 }
 .WebUIWebPage, /* old name */
 .WebUILink {	/* link on the WebUI to one of its pages */
-	padding: 0 .2em;
-	color: #4b4a4b;
 	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-	background-color: #f8f8f8;
+	padding: 0 .2em;
+	color: var(--WebUI-link-color);
+	background-color: var(--WebUI-link-background-color);
 	border-bottom: 1px solid #e7e7e7;
 }
 .WebUISetting {	/* Matches what's in the WebUI */
 	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-	color: #333;
-	color:#00009b;
+	color: var(--WebUI-setting-color);
 	font-weight: bold;
 	font-size: 95%;
 }
 .WebUIValue {
 	padding: 0 3px 0 3px;
 	font-size: 14px;
-	font-family: "Helvetica Neue", Helvetica, Arial;
 	font-family: inherit;
-	color: #555;
+	color: var(--WebUI-value-color);
+	background-color: var(--WebUI-value-background-color);
 	border: 1px solid #ccc;
-	background-color: #e4e4e4;
 	border-radius: 4px;
 }
 .shSetting {	/* Matches what's in the WebUI's "Editor" page for *.sh files. */
@@ -769,8 +785,17 @@ b, strong {
 .position-relative {
 	position: relative !important;
 }
-.markdown-body .minimalPadding li {
-	margin-top: 0;
+.markdown-body .mediumPadding li {
+	margin-top: 0.25em;
+}
+.markdown-body .minimalPadding {
+	margin-top: -0.8em;
+}
+.markdown-body .minimalPadding.topPadding li:first-child {
+	padding-top: 0.75em;
+}
+.markdown-body .minimalPadding li:not(:first-child) {
+	margin-top: 0em;
 }
 .markdown-body .morePadding {
 	margin-top: 1.75em !important;
@@ -928,4 +953,31 @@ b, strong {
 }
 .green {
 	color: green;
+}
+
+.possibleAction {
+	font-weight: bold;
+	text-decoration-line: underline;
+	margin-right: 10px;
+}
+
+.gitHubLink {
+	color: rgb(31, 25, 40);
+	background-color: #f7f8fa;
+	border: 1px solid #d0d7de;
+	border-radius: 3px;
+	padding: 0 3px 0 3px;
+	font-family: "Segoe UI","Noto Sans",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+}
+
+.module-info {
+	/* What should be here? */
+}
+.module-settings {
+	/* What should be here? */
+}
+.module-settings img, .module-info img {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
 }

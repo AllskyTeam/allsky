@@ -1,12 +1,14 @@
 <?php
 
 // These values are updated during installation.
+define('HOME',    'XX_HOME_XX');
 define('ALLSKY_HOME',    'XX_ALLSKY_HOME_XX');
 define('ALLSKY_CONFIG',  'XX_ALLSKY_CONFIG_XX');
 define('ALLSKY_SCRIPTS', 'XX_ALLSKY_SCRIPTS_XX');
 define('ALLSKY_TMP', 'XX_ALLSKY_TMP_XX');
 define('ALLSKY_IMAGES',  'XX_ALLSKY_IMAGES_XX');
 define('ALLSKY_MESSAGES',  'XX_ALLSKY_MESSAGES_XX');
+define('ALLSKY_CHECK_ALLSKY_LOG',  'XX_ALLSKY_CHECK_ALLSKY_LOG_XX');
 define('ALLSKY_WEBUI',  'XX_ALLSKY_WEBUI_XX');
 define('ALLSKY_WEBSITE',  'XX_ALLSKY_WEBSITE_XX');
 define('ALLSKY_WEBSITE_LOCAL_CONFIG_NAME',  'XX_ALLSKY_WEBSITE_LOCAL_CONFIG_NAME_XX');
@@ -14,26 +16,30 @@ define('ALLSKY_WEBSITE_REMOTE_CONFIG_NAME',  'XX_ALLSKY_WEBSITE_REMOTE_CONFIG_NA
 define('ALLSKY_WEBSITE_LOCAL_CONFIG',  'XX_ALLSKY_WEBSITE_LOCAL_CONFIG_XX');
 define('ALLSKY_WEBSITE_REMOTE_CONFIG',  'XX_ALLSKY_WEBSITE_REMOTE_CONFIG_XX');
 define('ALLSKY_OVERLAY',  'XX_ALLSKY_OVERLAY_XX');
+define('ALLSKY_ENV',  'XX_ALLSKY_ENV_XX');
+define('MY_OVERLAY_TEMPLATES',  'XX_MY_OVERLAY_TEMPLATES_XX');
 define('ALLSKY_MODULES',  'XX_ALLSKY_MODULES_XX');
+define('ALLSKY_MODULE_LOCATION',  'XX_ALLSKY_MODULE_LOCATION_XX');
 define('ALLSKY_OWNER', 'XX_ALLSKY_OWNER_XX');
 define('ALLSKY_GROUP', 'XX_ALLSKY_GROUP_XX');
+define('WEBSERVER_OWNER', 'XX_WEBSERVER_OWNER_XX');
 define('WEBSERVER_GROUP', 'XX_WEBSERVER_GROUP_XX');
 define('ALLSKY_REPO',  'XX_ALLSKY_REPO_XX');
 define('ALLSKY_VERSION',  'XX_ALLSKY_VERSION_XX');
+define('ALLSKY_STATUS',   'XX_ALLSKY_STATUS_XX');
 define('RASPI_CONFIG',   'XX_RASPI_CONFIG_XX');
+define('RASPI_ADMIN_DETAILS', 'XX_RASPI_CONFIG_XX/raspap.auth');
 
 // Split the placeholder so it doesn't get replaced.
 if (ALLSKY_HOME == "XX_ALLSKY_HOME" . "_XX") {
 	// This file hasn't been updated yet after installation.
 	// This would only happen if they updated this file and not the whole Allsky release,
 	// which is hard since we only come out with releases.
-	echo "<div style='font-size: 200%;'>";
-	echo "<span style='color: red'>";
+	echo "<div class='errorMsgBig errorMsgBox'>";
 	echo "Please run the following from the 'allsky' directory before using the WebUI:";
-	echo "</span>";
-	echo "<code>   ./install.sh --update</code>";
+	echo "<br><br>";
+	echo "<code>   ./install.sh --fix</code>";
 	echo "</div>";
-	exit;
+	exit(1);
 }
-
 ?>

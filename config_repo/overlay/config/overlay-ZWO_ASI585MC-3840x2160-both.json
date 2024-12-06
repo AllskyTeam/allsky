@@ -1,0 +1,91 @@
+{
+    "fields": [
+        {
+            "label": "${DATE}  ${TIME}",
+            "x": 259,
+            "y": 50,
+            "id": "oe-field-0",
+            "format": "{%d-%m-%Y}{%H:%M:%S}",
+            "strokewidth": 0,
+            "sample": "DATE,TIME",
+            "tlx": 19,
+            "tly": 20,
+            "fontsize": 60,
+            "fill": "#ff0000"
+        },
+        {
+            "label": "Exposure: ${sEXPOSURE} ${sAUTOEXPOSURE}",
+            "x": 601,
+            "y": 116,
+            "id": "oe-field-1",
+            "strokewidth": 0,
+            "tlx": 20,
+            "tly": 90
+        },
+        {
+            "label": "Gain: ${GAIN} ${sAUTOGAIN}",
+            "x": 372.1298828125,
+            "y": 176,
+            "id": "oe-field-2",
+            "strokewidth": 0,
+            "tlx": 20,
+            "tly": 150
+        },
+        {
+            "label": "Sensor: ${TEMPERATURE_C} C, ${TEMPERATURE_F} F",
+            "x": 696,
+            "y": 236,
+            "id": "oe-field-3",
+            "format": "{:.1f},{:.1f}",
+            "strokewidth": 0,
+            "sample": "32.2",
+            "tlx": 19,
+            "tly": 200
+        },
+        {
+            "label": "${CAMERA_TYPE} ${CAMERA_MODEL}",
+            "x": 354.1337890625,
+            "y": 296,
+            "id": "oe-field-4",
+            "fontsize": 36,
+            "strokewidth": 0,
+            "tlx": 20,
+            "tly": 278,
+            "sample": "ZWO ASI585MC"
+        }
+    ],
+    "images": [],
+    "settings": {
+        "defaultdatafileexpiry": "600",
+        "defaultincludeplanets": true,
+        "defaultincludesun": true,
+        "defaultincludemoon": true,
+        "defaultimagetopacity": 0.63,
+        "defaultimagerotation": 0,
+        "defaulttextrotation": 0,
+        "defaultfontopacity": 1,
+        "defaultfontcolour": "white",
+        "defaultfont": "Arial",
+        "defaultfontsize": 52,
+        "defaultimagescale": 1,
+        "defaultnoradids": "25544",
+        "defaultstrokecolour": "",
+        "defaultexpirytext": ""
+    },
+    "fonts": {
+        "moon_phases": {
+            "fontPath": "fonts\/moon_phases.ttf",
+            "fonttcolour": "red",
+            "backgroundcolor": "white",
+            "fontopacity": 0.5
+        }
+    },
+    "metadata": {
+        "camerabrand": "ZWO",
+        "cameramodel": "ASI585MC",
+        "cameraresolutionwidth": "3840",
+        "cameraresolutionheight": "2160",
+        "tod": "both",
+        "name": "ASI585MC"
+    }
+}

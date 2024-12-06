@@ -29,6 +29,7 @@ class OEIMAGEFIELD extends OEFIELD {
     super('images', id);
     this.config = window.oedi.get('config');
     this.fieldData = fieldData;
+    this.loaded = false;
 
     this.setDefaults();
 
@@ -53,6 +54,7 @@ class OEIMAGEFIELD extends OEFIELD {
     this.setImage(this.fieldData.image).then((imageObj) => {
       this.shape.image(imageObj);      
       this.dirty = false;
+      this.loaded = true;
     });
 
 

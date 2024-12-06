@@ -6,7 +6,8 @@ class OEFIELD {
   #dirty = false;
   shape = null;
   id = null;
-
+  loaded = true;
+  
   OVERLAYFIELDSELECTOR = ".overlayfield";
 
   constructor(type, id) {
@@ -44,6 +45,10 @@ class OEFIELD {
         }
       }      
     }
+  }
+
+  get loaded() {
+    return this.loaded;
   }
 
   get id() {
@@ -169,6 +174,15 @@ class OEFIELD {
     this.rotatePoint()
     this.dirty = true;
   }
+
+  get tlx() {
+    return this.fieldData.tlx;
+  }
+
+  get tly() {
+    return this.fieldData.tly;
+  }
+
 
   get rotation() {
     return this.fieldData.rotate;

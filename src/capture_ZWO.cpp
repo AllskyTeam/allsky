@@ -25,8 +25,6 @@ config CG;
 #define IS_ZWO
 #include "ASI_functions.cpp"
 
-bool useSnapshotMode = false;	// XXXXXX use the ZWO snapshot exposure mode or vide mode?
-
 // Forward definitions
 char *getRetCode(ASI_ERROR_CODE);
 void closeUp(int);
@@ -39,13 +37,7 @@ bool checkMaxErrors(int *, int);
 // These are global so they can be used by other routines.
 // Variables for command-line settings are first and are "long" so we can use validateLong().
 
-// In version 0.8 we introduced a different way to take exposures. Instead of turning video mode on at
-// the beginning of the program and off at the end (which kept the camera running all the time, heating it up),
-// version 0.8 turned video mode on, then took a picture, then turned it off. This helps cool the camera,
-// but some users (seems hit or miss) get ASI_ERROR_TIMEOUTs when taking exposures with the new method.
-// So, we added the ability for them to use the 0.7 video-always-on method, or the 0.8 "new exposure" method.
 timeval exposureStartDateTime;									// date/time an image started
-
 cv::Mat pRgb;
 std::vector<int> compressionParameters;
 bool bMain						= true;
@@ -56,14 +48,16 @@ bool bSavingImg					= false;
 pthread_mutex_t mtxSaveImg;
 pthread_cond_t condStartSave;
 ASI_CONTROL_CAPS ControlCaps;
-int numErrors					= 0;				// Number of errors in a row.
+int numTotalErrors				= 0;				// Total number of errors, fyi
+int numConsecutiveErrors		= 0;				// Number of consecutive errors
 int maxErrors					= 5;				// Max number of errors in a row before we exit
-bool gotSignal					= false;			// did we get a SIGINT (from keyboard), or SIGTERM/SIGHUP (from service)?
+bool gotSignal					= false;			// Did we get a signal?
 int iNumOfCtrl					= NOT_SET;			// Number of camera control capabilities
 pthread_t threadDisplay			= 0;
 pthread_t hthdSave				= 0;
 int numExposures				= 0;				// how many valid pictures have we taken so far?
 int currentBpp					= NOT_SET;			// bytes per pixel: 1, 2, or 3
+bool capturingVideo				= false;			// are we capturing video?
 
 // Make sure we don't try to update a non-updateable control, and check for errors.
 ASI_ERROR_CODE setControl(int camNum, ASI_CONTROL_TYPE control, long value, ASI_BOOL makeAuto)
@@ -140,7 +134,7 @@ void *Display(void *params)
 		// default preview size usually fills whole screen, so shrink.
 		cv::resize(*pImg, *pImg2, cv::Size((int)w/2, (int)h/2));
 		cv::imshow("Preview", *pImg2);
-		cv::waitKey(500);	// TODO: wait for exposure time instead of hard-coding value
+		cv::waitKey(500);
 	}
 	cv::destroyWindow("Preview");
 	Log(4, "Display thread over\n");
@@ -161,7 +155,6 @@ void *SaveImgThd(void *para)
 			break;
 		}
 
-		bSavingImg = true;
 
 		// I don't know how to cast "st" to 0, so call now() and ignore it.
 		auto st = std::chrono::high_resolution_clock::now();
@@ -170,49 +163,52 @@ void *SaveImgThd(void *para)
 		bool result = false;
 		if (pRgb.data)
 		{
+			bSavingImg = true;
+
 			char cmd[1100+strlen(CG.allskyHome)];
-			Log(4, "  > Saving %s image '%s'\n", CG.takeDarkFrames ? "dark" : dayOrNight.c_str(), CG.finalFileName);
-			snprintf(cmd, sizeof(cmd), "%s/scripts/saveImage.sh %s '%s'", CG.allskyHome, dayOrNight.c_str(), CG.fullFilename);
+			Log(4, "  > Saving %s image '%s'\n",
+				CG.takeDarkFrames ? "dark" : dayOrNight.c_str(), CG.finalFileName);
+			snprintf(cmd, sizeof(cmd), "%s/scripts/saveImage.sh %s '%s'",
+				CG.allskyHome, dayOrNight.c_str(), CG.fullFilename);
 			add_variables_to_command(CG, cmd, exposureStartDateTime);
 			strcat(cmd, " &");
 
-			st = std::chrono::high_resolution_clock::now();
 			try
 			{
+				st = std::chrono::high_resolution_clock::now();
 				result = imwrite(CG.fullFilename, pRgb, compressionParameters);
+				et = std::chrono::high_resolution_clock::now();
 			}
 			catch (const cv::Exception& ex)
 			{
 				Log(0, "*** %s: ERROR: Exception saving image: %s\n", CG.ME, ex.what());
 			}
-			et = std::chrono::high_resolution_clock::now();
 
 			if (result)
+			{
 				system(cmd);
+
+				static int totalSaves = 0;
+				static double totalTime_ms = 0;
+
+				totalSaves++;
+				long long diff_us = std::chrono::duration_cast<std::chrono::microseconds>(et - st).count();
+				double diff_ms = diff_us / US_IN_MS;
+				totalTime_ms += diff_ms;
+
+				Log(4, "  > Image took %'.1f ms to save (average %'.1f ms).\n",
+					diff_ms, totalTime_ms / totalSaves);
+			}
 			else
+			{
 				Log(0, "*** %s: ERROR: Unable to save image '%s'.\n", CG.ME, CG.fullFilename);
+			}
+
+			bSavingImg = false;
 
 		} else {
 			// This can happen if the program is closed before the first picture.
 			Log(0, "----- SaveImgThd(): pRgb.data is null\n");
-		}
-		bSavingImg = false;
-
-		if (result)
-		{
-			static int totalSaves = 0;
-			static double totalTime_ms = 0;
-			totalSaves++;
-// FIX: should be / ?
-			long long diff_us = std::chrono::duration_cast<std::chrono::microseconds>(et - st).count();
-			double diff_ms = diff_us / US_IN_MS;
-			totalTime_ms += diff_ms;
-			char const *x;
-			if (diff_ms > 1 * MS_IN_SEC)
-				x = "  > *****\n";	// indicate when it takes a REALLY long time to save
-			else
-				x = "";
-			Log(4, "%s  > Image took %'.1f ms to save (average %'.1f ms).\n%s", x, diff_ms, totalTime_ms / totalSaves, x);
 		}
 
 		pthread_mutex_unlock(&mtxSaveImg);
@@ -231,7 +227,7 @@ void *SaveImgThd(void *para)
 // eg. box size 0x0, box size WxW, box crosses image edge, ... basically
 // anything that would read/write out-of-bounds
 
-int computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox)
+double computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox)
 {
 	unsigned char *buf = imageBuffer;
 	const int histogramEntries = 256;
@@ -265,8 +261,6 @@ int computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox
 	// For RGB24, data for each pixel is stored in 3 consecutive bytes: blue, green, red.
 	// For all image types, each row in the image contains one row of pixels.
 	// currentBpp doesn't apply to rows, just columns.
-//x int on = 0;
-//x static int did = 0; did++;
 	switch (cg.imageType) {
 	case IMG_RGB24:
 	case IMG_RAW8:
@@ -281,7 +275,6 @@ int computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox
 					avg += buf[i+1] + buf[i+2];
 					avg /= currentBpp;
 				}
-//x if (useHistogramBox && did <=5) { printf("avg[%d]=%d\n", ++on, avg); }
 				histogram[avg]++;
 			}
 		}
@@ -294,7 +287,6 @@ int computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox
 				// Use the least significant byte.
 				// This assumes the image data is laid out in big endian format.
 				pixelValue = buf[i+1];
-//x if (useHistogramBox && did <=5) { printf("pixel[%d]=0x%02x%02x, pixelValue=%'d\n", ++on, buf[i], buf[i+1], pixelValue); }
 				histogram[pixelValue]++;
 			}
 		}
@@ -304,12 +296,10 @@ int computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox
 	}
 
 	// Now calculate the mean.
-	int meanBin = 0;
 	int a = 0, b = 0;
 	for (int i = 0; i < histogramEntries; i++) {
 		a += (i+1) * histogram[i];
 		b += histogram[i];
-//x if (useHistogramBox && histogram[i] > 0 && did <=5) { printf("histogram[%d]=%'d, a=%'d, b=%'d\n", i, histogram[i], a, b); }
 	}
 
 	if (b == 0)
@@ -318,8 +308,8 @@ int computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogramBox
 		return(0);
 	}
 
-	meanBin = a/b - 1;
-	return meanBin;
+	// Need to normalize from 0.0 to 1.0.
+	return ((a/b - 1) / (double)histogramEntries);
 }
 
 // This is based on code from PHD2.
@@ -340,25 +330,32 @@ ASI_ERROR_CODE flushBufferedImages(config *cg, unsigned char *buf, long size)
 
 	for (int i = 0; i < NUM_IMAGE_BUFFERS; i++)
 	{
-		status = ASIGetVideoData(cg->cameraNumber, buf, size, 10);
+		status = ASIGetVideoData(cg->cameraNumber, buf, size, 500 + (2 * cg->cameraMinExposure_us));
 		if (status == ASI_SUCCESS)
 		{
 			Log(3, "  > [Cleared buffer frame]: %s\n", getRetCode(status));
 		}
-		else if (status != ASI_ERROR_TIMEOUT)
+		else if (status == ASI_ERROR_TIMEOUT)
 		{
-			Log(0, "*** %s: ERROR: flushBufferedImages() got %s\n", cg->ME, getRetCode(status));
+			// No more frames left in buffer.
+			return(status);
 		}
 		else
 		{
-			// ASI_ERROR_TIMEOUT.  No more left.
-			return(status);
+			Log(1, "%s: WARNING: flushBufferedImages() got %s\n", cg->ME, getRetCode(status));
 		}
 	}
 
-	return(ASI_SUCCESS);
+	return(status);
 }
 
+
+// In version 0.8 we introduced a different way to take exposures. Instead of turning video mode on at
+// the beginning of the program and off at the end (which kept the camera running all the time, heating it up),
+// version 0.8 turned video mode on, then took a picture, then turned it off. This helps cool the camera,
+// but some users (seems hit or miss) get ASI_ERROR_TIMEOUTs when taking exposures with the new method.
+// So, we added the ability for them to use the 0.7 video-always-on method, or the 0.8 "new exposure" method.
+// In the 2024 version we added "snapshot" mode to overcome the ASI_ERROR_TIMEOUTs.
 
 // Next exposure suggested by the camera.
 long suggestedNextExposure_us = 0;
@@ -382,188 +379,270 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 	// USB contention, such as that caused by heavy USB disk IO
 	long timeout = ((cg->currentExposure_us * 2) / US_IN_MS) + 5000;	// timeout is in ms
 
-	// This debug message isn't typcally needed since we already displayed a message about
-	// starting a new exposure, and below we display the result when the exposure is done.
-	Log(3, "    > %s to %s\n",
-		cg->HB.useHistogram ? "Histogram set exposure" :
-			(wasAutoExposure == ASI_TRUE ? "Camera set auto-exposure" : "Manual exposure set"),
-		length_in_units(cg->currentExposure_us, true));
-
-	if (! useSnapshotMode)
-		flushBufferedImages(cg, imageBuffer, bufferSize);
-
 	// Sanity check.
-	if (cg->HB.useHistogram && cg->currentAutoExposure == ASI_TRUE)
-		Log(0, "*** %s: ERROR: HB.useHistogram AND currentAutoExposure are both set\n", cg->ME);
+	if (cg->HB.useHistogram && cg->currentAutoExposure)
+		Log(0, "  > %s: ERROR: HB.useHistogram AND currentAutoExposure are both set\n", cg->ME);
+
+	if (cg->ZWOexposureType != ZWOsnap)
+		flushBufferedImages(cg, imageBuffer, bufferSize);
 
 	setControl(cg->cameraNumber, ASI_EXPOSURE, cg->currentExposure_us, cg->currentAutoExposure ? ASI_TRUE : ASI_FALSE);
 
-	if (! useSnapshotMode && cg->videoOffBetweenImages)
+	if (cg->ZWOexposureType == ZWOvideoOff && ! capturingVideo)
 	{
 		status = ASIStartVideoCapture(cg->cameraNumber);
-	} else {
-		status = ASI_SUCCESS;
+		if (status != ASI_SUCCESS) {
+			Log(0, "  > %s: ERROR: ASIStartVideoCapture() failed: %s.\n", cg->ME, getRetCode(status));
+			Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
+			return(status);
+		}
+		capturingVideo = true;
 	}
 
-	if (status == ASI_SUCCESS) {
-		// Make sure the actual time to take the picture is "close" to the requested time.
-		auto tStart = std::chrono::high_resolution_clock::now();
+	// Make sure the actual time to take the picture is "close" to the requested time.
+	auto tStart = std::chrono::high_resolution_clock::now();
+	int exitCode;
 
-		if (useSnapshotMode)
-		{
-// xxxxxxxxxxxxxxxxxx start exposure, sleep for 95% of cg->currentExposure_us, then check every 5 us.
-		} else {
-			status = ASIGetVideoData(cg->cameraNumber, imageBuffer, bufferSize, timeout);
-			if (cg->videoOffBetweenImages)
-			{
-				ret = ASIStopVideoCapture(cg->cameraNumber);
-				if (ret != ASI_SUCCESS)
-				{
-					Log(1, "  > %s: WARNING: ASIStopVideoCapture() failed: %s\n", cg->ME, getRetCode(ret));
-				}
-			}
-		}
-
+	if (cg->ZWOexposureType == ZWOsnap)
+	{
+		status = ASIStartExposure(cg->cameraNumber, ASI_FALSE);
 		if (status != ASI_SUCCESS)
 		{
-			int exitCode;
-			Log(0, "  > %s: ERROR: Failed getting image: %s\n", cg->ME, getRetCode(status));
+			Log(0, "  > %s: ERROR: ASIStartExposure() failed: %s.\n", cg->ME, getRetCode(status));
+			Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
+			if (! checkMaxErrors(&exitCode, maxErrors))
+				closeUp(exitCode);
+			return(status);
+		}
 
+		// Do an initial sleep of the exposure time + 500 ms for overhead,
+		// then go into a check_status / sleep loop where
+		// we sleep for 5% of the exposure time.
+		// The total sleep time will be longer than exposure time due to overhead starting the exposure.
+		long initial_sleep_us = cg->currentExposure_us + 500 * US_IN_MS;
+		long sleep_us = std::max(cg->currentExposure_us * 0.05, 1.0);
+		Log(4, "      > Doing initial usleep(%'ld) for exposure time %'ld.\n", initial_sleep_us, cg->currentExposure_us);
+		usleep(initial_sleep_us);
+
+		// We should be fairly close to the end of the exposure so now go
+		// into a loop until the exposure is done.
+		ASI_EXPOSURE_STATUS s = ASI_EXP_WORKING;
+		int num_sleeps = 0;
+		while (s == ASI_EXP_WORKING)
+		{
+			status = ASIGetExpStatus(cg->cameraNumber, &s);
+			if (status != ASI_SUCCESS)
+			{
+				Log(0, "  > %s: ERROR: ASIGetExpStatus() failed after %d sleeps: %s.\n",
+					cg->ME, num_sleeps, getRetCode(status));
+				Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
+				if (! checkMaxErrors(&exitCode, maxErrors))
+					closeUp(exitCode);
+				return(status);
+			}
+			usleep(sleep_us);
+			num_sleeps++;
+		}
+		Log(4, "      > Did usleep(%'ld) %d times in loop for total usleep() of %'ldus\n",
+			sleep_us, num_sleeps, initial_sleep_us + (sleep_us * num_sleeps));
+
+		// Exposure done, if it worked get the image
+		if (s != ASI_EXP_SUCCESS)
+		{
+			// This error DOES happen sometimes.
+			// Unfortunately "s" is either success or failure - not much help.
+			Log(1, "    > ERROR: Exposure failed after %d sleeps, s=%d.\n", num_sleeps, s);
+			Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
+			if (! checkMaxErrors(&exitCode, maxErrors))
+				closeUp(exitCode);
+			return(ASI_ERROR_END);
+		}
+
+		status = ASIGetDataAfterExp(cg->cameraNumber,  imageBuffer, bufferSize);
+		if (status != ASI_SUCCESS)
+		{
+			// For whatever reason this does fail sometimes, so to avoid having
+			// every failure appear in the WebUI message center, log with level 1.
+			Log(1, "  > ERROR: ASIGetDataAfterExp() failed after %d sleeps: %s.\n",
+				num_sleeps, getRetCode(status));
+			Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
+			if (! checkMaxErrors(&exitCode, maxErrors))
+				closeUp(exitCode);
+			return(status);
+		}
+
+	} else {	// some video mode
+		status = ASIGetVideoData(cg->cameraNumber, imageBuffer, bufferSize, timeout);
+		if (status != ASI_SUCCESS)
+		{
+			Log(0, "  > %s: ERROR: Failed getting image: %s.\n",
+				cg->ME, getRetCode(status));
+			Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
+	
 			// Check if we reached the maximum number of consective errors
 			if (! checkMaxErrors(&exitCode, maxErrors))
-			{
 				closeUp(exitCode);
+			return(status);
+		}
+		if (cg->ZWOexposureType == ZWOvideoOff)
+		{
+			ret = ASIStopVideoCapture(cg->cameraNumber);
+			if (ret != ASI_SUCCESS)
+			{
+				Log(1, "  > WARNING: ASIStopVideoCapture() failed: %s\n", getRetCode(ret));
+				// continue
 			}
+			capturingVideo = false;
+		}
+	}
+
+	// We successfully got the image so reset the global error counter;
+	numConsecutiveErrors = 0;
+
+	// The timeToTakeImage_us should never be less than what was requested.
+	// and shouldn't be less then the time taken plus overhead of setting up the shot.
+
+	auto tElapsed = std::chrono::high_resolution_clock::now() - tStart;
+	long timeToTakeImage_us = std::chrono::duration_cast<std::chrono::microseconds>(tElapsed).count();
+	long diff_us = timeToTakeImage_us - cg->currentExposure_us;
+	long threshold_us = 0;
+
+	bool tooShort = false;
+	if (diff_us < 0)
+	{
+		// This "should" never happen but actually does sometimes.
+		tooShort = true;
+	}
+	else if (cg->currentExposure_us > (5 * US_IN_SEC))
+	{
+		// There is too much variance in the overhead of taking pictures to
+		// accurately determine the actual time to take an image at short exposures,
+		// so only check for long ones.
+		// Testing shows there's about this much us overhead (at least for video mode),
+		// so subtract it to get our best estimate of the "actual" time.
+		const int OVERHEAD_us = (int) (340 * US_IN_MS);
+
+		// Don't subtract if it would have made timeToTakeImage_us negative.
+		if (timeToTakeImage_us > OVERHEAD_us)
+			diff_us -= OVERHEAD_us;
+
+		float t;
+		// These seem like good numbers.
+		// snapshot mode seems more consistent so use a lower threshold.
+		if (cg->ZWOexposureType == ZWOsnap)
+			t = 0.2;
+		else
+			t = 0.5;
+		threshold_us = cg->currentExposure_us * t;
+		if (abs(diff_us) > threshold_us)
+			tooShort = true;
+	}
+
+	if (tooShort)
+	{
+		Log(1, "   *** WARNING: Time to take exposure (%s) ",
+			length_in_units(timeToTakeImage_us, true));
+		Log(1, "differs from requested exposure time (%s) by %s, threshold=%s\n",
+			length_in_units(cg->currentExposure_us, true),
+			length_in_units(diff_us, true),
+			length_in_units(threshold_us, true));
+	}
+	else
+	{
+		Log(4, "      > Time to take exposure=%'ld us, diff_us=%'ld", timeToTakeImage_us, diff_us);
+		if (threshold_us > 0)
+			Log(4, ", threshold_us=%'ld", threshold_us);
+		Log(4, "\n");
+	}
+
+	// Get some metadata on the image.
+
+	long l;
+	ret = ASIGetControlValue(cg->cameraNumber, ASI_GAIN, &l, &bAuto);
+	if (ret != ASI_SUCCESS)
+	{
+		Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_GAIN) failed: %s\n", cg->ME, getRetCode(ret));
+	}
+	else
+	{
+		cg->lastGain = (double) l;
+	}
+
+	char tempBuf[500] = { 0 };
+	char *tb = tempBuf;
+
+	cg->lastMean = computeHistogram(imageBuffer, *cg, true);
+	sprintf(tb, " @ mean %.3f, %sgain %ld",
+		cg->lastMean, cg->currentAutoGain ? "(auto) " : "", (long) cg->lastGain);
+	cg->lastExposure_us = cg->currentExposure_us;
+
+	// Per ZWO, when in manual-exposure mode, the returned exposure length
+	// should always be equal to the requested length;
+	// they said, "there's no need to call ASIGetControlValue()".
+	// When in auto-exposure mode the returned exposure length is what the driver thinks the
+	// next exposure should be, and will eventually converge on the correct exposure.
+
+	Log(2, "  > GOT IMAGE%s.", tb);
+	ret = ASIGetControlValue(cg->cameraNumber, ASI_EXPOSURE, &suggestedNextExposure_us, &wasAutoExposure);
+	if (ret != ASI_SUCCESS)
+	{
+		Log(1, "  > WARNING: ASIGetControlValue(ASI_EXPOSURE) failed: %s\n",
+			cg->ME, getRetCode(ret));
+	}
+	else if (cg->ZWOexposureType != ZWOsnap)
+	{
+		Log(3, cg->HB.useHistogram ? " Ignoring suggested next exposure of %s." : "  Suggested next exposure: %s.",
+			length_in_units(suggestedNextExposure_us, true));
+	}
+	Log(2, "\n");
+
+	long temp;
+	ret = ASIGetControlValue(cg->cameraNumber, ASI_TEMPERATURE, &temp, &bAuto);
+	if (ret != ASI_SUCCESS)
+	{
+		Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_TEMPERATURE) failed: %s\n",
+			cg->ME, getRetCode(ret));
+	}
+	else
+	{
+		cg->lastSensorTemp = (long) ((double)temp / cg->divideTemperatureBy);
+	}
+
+	if (cg->isColorCamera)
+	{
+		ret = ASIGetControlValue(cg->cameraNumber, ASI_WB_R, &l, &bAuto);
+		if (ret != ASI_SUCCESS)
+		{
+			Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_WB_R) failed: %s\n",
+				cg->ME, getRetCode(ret));
 		}
 		else
 		{
-			// The timeToTakeImage_us should never be less than what was requested.
-			// and shouldn't be less then the time taked plus overhead of setting up the shot.
+			cg->lastWBR = (double) l;
+		}
 
-			auto tElapsed = std::chrono::high_resolution_clock::now() - tStart;
-			long timeToTakeImage_us = std::chrono::duration_cast<std::chrono::microseconds>(tElapsed).count();
-			long diff_us = timeToTakeImage_us - cg->currentExposure_us;
-			long threshold_us = 0;
-
-			bool tooShort = false;
-			if (diff_us < 0)
-			{
-				tooShort = true;			// WAY too short
-			}
-			else if (cg->currentExposure_us > (5 * US_IN_SEC))
-			{
-				// There is too much variance in the overhead of taking pictures to
-				// accurately determine the actual time to take an image at short exposures,
-				// so only check for long ones.
-				// Testing shows there's about this much us overhead,
-				// so subtract it to get our best estimate of the "actual" time.
-				const int OVERHEAD_us = (int) (0.34 * US_IN_SEC);
-
-				// Don't subtract if it would have made timeToTakeImage_us negative.
-				if (timeToTakeImage_us > OVERHEAD_us)
-					diff_us -= OVERHEAD_us;
-
-				threshold_us = cg->currentExposure_us * 0.5;	// 50% seems like a good number
-				if (abs(diff_us) > threshold_us)
-					tooShort = true;
-			}
-
-			if (tooShort)
-			{
-				Log(1, "   *** WARNING: Time to take exposure (%s) ",
-					length_in_units(timeToTakeImage_us, true));
-				Log(1, "differs from requested exposure time (%s) by %s, threshold=%s\n",
-					length_in_units(cg->currentExposure_us, true),
-					length_in_units(diff_us, true),
-					length_in_units(threshold_us, true));
-			}
-			else
-			{
-// XXXXXXXXXXXXX set to 4 after testing
-				Log(3, "    > Time to take exposure=%'ld us, diff_us=%'ld", timeToTakeImage_us, diff_us);
-				if (threshold_us > 0)
-					Log(3, ", threshold_us=%'ld", threshold_us);
-				Log(3, "\n");
-			}
-
-			numErrors = 0;
-			long l;
-			ret = ASIGetControlValue(cg->cameraNumber, ASI_GAIN, &l, &bAuto);
-			if (ret != ASI_SUCCESS)
-			{
-				Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_GAIN) failed: %s\n", cg->ME, getRetCode(ret));
-			}
-			cg->lastGain = (double) l;
-
-			char tempBuf[500];
-			tempBuf[0] = '\0';
-			char *tb = tempBuf;
-
-			cg->lastMean = (double)computeHistogram(imageBuffer, *cg, true);
-
-// xxxxxx for testing.  Get the mean of the whole image so we can compare to what removeBadImages.sh calculates.
-//	If it's the same, then the algorithms are the same and removeBadImages.sh can use MEAN.
-cg->lastMeanFull = (double)computeHistogram(imageBuffer, *cg, false);
-
-			sprintf(tb, " @ mean %d, %sgain %ld, fullMean %d",
-				(int) cg->lastMean, cg->currentAutoGain ? "(auto) " : "",
-				(long) cg->lastGain, (int) cg->lastMeanFull);
-			cg->lastExposure_us = cg->currentExposure_us;
-
-			// Per ZWO, when in manual-exposure mode, the returned exposure length should always
-			// be equal to the requested length; in fact, "there's no need to call ASIGetControlValue()".
-			// When in auto-exposure mode, the returned exposure length is what the driver thinks the
-			// next exposure should be, and will eventually converge on the correct exposure.
-			ret = ASIGetControlValue(cg->cameraNumber, ASI_EXPOSURE, &suggestedNextExposure_us, &wasAutoExposure);
-			if (ret != ASI_SUCCESS)
-			{
-				Log(1, "  > WARNING: ASIGetControlValue(ASI_EXPOSURE) failed: %s\n", cg->ME, getRetCode(ret));
-			}
-			Log(2, "  > GOT IMAGE%s.", tb);
-			Log(3, cg->HB.useHistogram ? " Ignoring suggested next exposure of %s." : "  Suggested next exposure: %s.",
-				length_in_units(suggestedNextExposure_us, true));
-			Log(2, "\n");
-
-			long temp;
-			ret = ASIGetControlValue(cg->cameraNumber, ASI_TEMPERATURE, &temp, &bAuto);
-			if (ret != ASI_SUCCESS)
-			{
-				Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_TEMPERATURE) failed: %s\n", cg->ME, getRetCode(ret));
-			}
-			cg->lastSensorTemp = (long) ((double)temp / cg->divideTemperatureBy);
-			if (cg->isColorCamera)
-			{
-				ret = ASIGetControlValue(cg->cameraNumber, ASI_WB_R, &l, &bAuto);
-				if (ret != ASI_SUCCESS)
-				{
-					Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_WB_R) failed: %s\n", cg->ME, getRetCode(ret));
-				}
-				cg->lastWBR = (double) l;
-
-				ret = ASIGetControlValue(cg->cameraNumber, ASI_WB_B, &l, &bAuto);
-				if (ret != ASI_SUCCESS)
-				{
-					Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_WB_B) failed: %s\n", cg->ME, getRetCode(ret));
-				}
-				cg->lastWBB = (double) l;
-			}
-
-			if (cg->asiAutoBandwidth)
-			{
-				ret = ASIGetControlValue(cg->cameraNumber, ASI_BANDWIDTHOVERLOAD, &cg->lastAsiBandwidth, &wasAutoExposure);
-				if (ret != ASI_SUCCESS)
-				{
-					Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_BANDWIDTHOVERLOAD) failed: %s\n", cg->ME, getRetCode(ret));
-				}
-			}
+		ret = ASIGetControlValue(cg->cameraNumber, ASI_WB_B, &l, &bAuto);
+		if (ret != ASI_SUCCESS)
+		{
+			Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_WB_B) failed: %s\n",
+				cg->ME, getRetCode(ret));
+		}
+		else
+		{
+			cg->lastWBB = (double) l;
 		}
 	}
-	else {
-		Log(0, "  > %s: ERROR: Not fetching exposure data because status is %s\n", cg->ME, getRetCode(status));
+
+	if (cg->asiAutoBandwidth)
+	{
+		ret = ASIGetControlValue(cg->cameraNumber, ASI_BANDWIDTHOVERLOAD, &cg->lastAsiBandwidth, &wasAutoExposure);
+		if (ret != ASI_SUCCESS)
+		{
+			Log(1, "  > %s: WARNING: ASIGetControlValue(ASI_BANDWIDTHOVERLOAD) failed: %s\n", cg->ME, getRetCode(ret));
+		}
 	}
 
-//x Log(4, "xxxxxx takeOneExposure() returning %d\n", status);
-	return status;
+	return ASI_SUCCESS;
 }
 
 bool adjustGain = false;	// Should we adjust the gain? Set by user on command line.
@@ -593,10 +672,12 @@ bool resetGainTransitionVariables(config cg)
 	// Determine the amount to adjust gain per image.
 	// Do this once per day/night or night/day transition (i.e., numGainChanges == 0).
 	// First determine how long an exposure and delay is, in seconds.
-	// The user specifies the transition period in seconds,
-	// but day exposure is in microseconds, night max is in milliseconds,
-	// and delays are in milliseconds, so convert to seconds.
+	// The transition period is in seconds, the max exposures and delays are in milliseconds,
+	// so convert to seconds to compare to transition period.
 	float totalTimeInSec;
+	totalTimeInSec = ((float) cg.currentMaxAutoExposure_us / US_IN_SEC) +
+		((float) cg.currentDelay_ms / MS_IN_SEC);
+/* xxxx remove after we know new gain algorithm works
 	if (dayOrNight == "DAY")
 	{
 		totalTimeInSec = (cg.dayExposure_us / US_IN_SEC) + (cg.dayDelay_ms / MS_IN_SEC);
@@ -607,27 +688,32 @@ bool resetGainTransitionVariables(config cg)
 		// so use it instead of the exposure time.
 		totalTimeInSec = (cg.nightMaxAutoExposure_us / US_IN_SEC) + (cg.nightDelay_ms / MS_IN_SEC);
 	}
+*/
 
 	gainTransitionImages = ceil(cg.gainTransitionTime / totalTimeInSec);
+	Log(4, " gainTransitionImages=%d, gainTransitionTime=%d, totalTimeInSec=%f\n",
+		gainTransitionImages, cg.gainTransitionTime, totalTimeInSec);
 	if (gainTransitionImages == 0)
 	{
-		Log(-1, "*** INFORMATION: Not adjusting gain - your 'gaintransitiontime' (%d seconds) is less than the time to take one image plus its delay (%.1f seconds).\n", cg.gainTransitionTime, totalTimeInSec);
+		Log(-1, "*** INFORMATION: Not adjusting gain - your 'Gain Transition Time' (%d seconds) is less than the time to take one image plus its delay (%.1f seconds).\n", cg.gainTransitionTime, totalTimeInSec);
 		return(false);
 	}
 
 	totalAdjustGain = cg.nightGain - cg.dayGain;
-	perImageAdjustGain = ceil(totalAdjustGain / gainTransitionImages);	// spread evenly
+	perImageAdjustGain = ceil((float) totalAdjustGain / gainTransitionImages);	// spread evenly
 	if (perImageAdjustGain == 0)
 		perImageAdjustGain = totalAdjustGain;
 	else
 	{
-		// Since we can't adust gain by fractions, see if there's any "left over" after gainTransitionImages.
+		// Since we can't adust gain by fractions,
+		// see if there's any "left over" after gainTransitionImages.
 		// For example, if totalAdjustGain is 7 and we're adjusting by 3 each of 2 times,
 		// we need an extra transition to get the remaining 1 ((7 - (3 * 2)) == 1).
 		if (gainTransitionImages * perImageAdjustGain < totalAdjustGain)
 			gainTransitionImages++;		// this one will get the remaining amount
 	}
-	Log(4, " totalAdjustGain=%d, gainTransitionImages=%d\n", totalAdjustGain, gainTransitionImages);
+	Log(4, " totalAdjustGain=%d, gainTransitionImages=%d, perImageAdjustGain=%d\n",
+		totalAdjustGain, gainTransitionImages, perImageAdjustGain);
 
 	return(true);
 }
@@ -653,11 +739,16 @@ int determineGainChange(config cg)
 	int amt;	// amount to adjust gain on next picture
 	if (dayOrNight == "DAY")
 	{
-		// During DAY, want to start out adding the full gain adjustment minus the increment on the first image,
-		// then DECREASE by totalAdjustGain each exposure.
+		// When DAY begins the last image was at nightGain but the first day
+		// image (ignoring transition) is dayGain so we want to go down
+		// from nightGain to dayGain.
+		// Increase the first image's gain by perImageAdjustGain - totalAdjustGain (which
+		// will be a big positive number), then increase the next image less,
+		// and so on until we get to dayGain.
+
 		// This assumes night gain is > day gain.
+//x Log(4, ">> DAY: amt=%d, perImageAdjustGain=%d, numGainChanges=%d\n", amt, perImageAdjustGain, numGainChanges);
 		amt = totalAdjustGain - (perImageAdjustGain * numGainChanges);
-Log(4, ">> DAY: amt=%d, totalAdjustGain=%d, perImageAdjustGain=%d, numGainChanges=%d\n", amt, totalAdjustGain, perImageAdjustGain, numGainChanges);
 		if (amt < 0)
 		{
 			amt = 0;
@@ -666,9 +757,12 @@ Log(4, ">> DAY: amt=%d, totalAdjustGain=%d, perImageAdjustGain=%d, numGainChange
 	}
 	else	// NIGHT
 	{
-		// During NIGHT, want to start out (nightGain-perImageAdjustGain),
-		// then DECREASE by perImageAdjustGain each time, until we get to "nightGain".
-		// This last image was at dayGain and we wen't to increase each image.
+		// When NIGHT begins the last image was at dayGain but the first night
+		// image (ignoring transition) is nightGain so we want to go up
+		// from dayGain to nightGain.
+		// Decrease the first image's gain by perImageAdjustGain - totalAdjustGain (which
+		// will be a big negative number), then decrease the next image less,
+		// and so on until we get to nightGain.
 		amt = (perImageAdjustGain * numGainChanges) - totalAdjustGain;
 		if (amt > 0)
 		{
@@ -677,8 +771,10 @@ Log(4, ">> DAY: amt=%d, totalAdjustGain=%d, perImageAdjustGain=%d, numGainChange
 		}
 	}
 
-	Log(4, "Adjusting %s gain by %d on next picture to %d (currentGain=%2f); will be gain change # %d of %d.\n",
-		dayOrNight.c_str(), amt, amt+(int)cg.currentGain, cg.currentGain, numGainChanges, gainTransitionImages);
+	Log(4, "Adjusting %s gain on next image by %d to %d (currentGain=%d); will be gain change # %d of %d.\n",
+		dayOrNight.c_str(), amt, amt+(int)cg.currentGain,
+		(int) cg.currentGain, numGainChanges, gainTransitionImages);
+
 	return(amt);
 }
 
@@ -687,12 +783,15 @@ bool checkMaxErrors(int *e, int maxErrors)
 {
 	// Once takeOneExposure() fails with a timeout, it seems to always fail,
 	// even with extremely large timeout values, so apparently ASI_ERROR_TIMEOUT doesn't
-	// necessarily mean it's timing out. Exit which will cause us to be restarted.
-	numErrors++; sleep(2);
-	if (numErrors >= maxErrors)
+	// necessarily mean it's timing out. Exit forcing us to be restarted.
+	numTotalErrors++;
+	numConsecutiveErrors++; sleep(2);
+	if (numConsecutiveErrors >= maxErrors)
 	{
 		*e = EXIT_RESET_USB;		// exit code. Need to reset USB bus
-		Log(0, "*** %s: ERROR: Maximum number of consecutive errors of %d reached; capture program exited.\n", CG.ME, maxErrors);
+		Log(0, "*** %s: ERROR: Maximum number of consecutive errors of %d reached; capture program exited.\n",
+			CG.ME, maxErrors);
+		Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
 		return(false);	// gets us out of inner and outer loop
 	}
 	return(true);
@@ -703,17 +802,19 @@ bool checkMaxErrors(int *e, int maxErrors)
 
 int main(int argc, char *argv[])
 {
-	CG.ME = argv[0];
+	CG.ME = basename(argv[0]);
 	
-	static char *a = getenv("ALLSKY_HOME");		// This must come before anything else
-	if (a == NULL)
+	CG.allskyHome = getenv("ALLSKY_HOME");
+	if (CG.allskyHome == NULL)
 	{
 		Log(0, "*** %s: ERROR: ALLSKY_HOME not set!\n", CG.ME);
 		exit(EXIT_ERROR_STOP);
 	}
-	else
+
+	if (! getCommandLineArguments(&CG, argc, argv, false))
 	{
-		CG.allskyHome = a;
+		// getCommandLineArguments outputs an error message.
+		exit(EXIT_ERROR_STOP);
 	}
 
 	pthread_mutex_init(&mtxSaveImg, 0);
@@ -776,16 +877,15 @@ int main(int argc, char *argv[])
 		Log(0, "*** %s: ERROR: ASIGetNumOfControls() returned: %s\n", CG.ME, getRetCode(asiRetCode));
 		exit(EXIT_ERROR_STOP);
 	}
-	Log(4, "iNumOfCtrl=%d\n", iNumOfCtrl);
 	CG.ASIversion = ASIGetSDKVersion();
 
 	// Set defaults that depend on the camera type.
 	if (! setDefaults(&CG, ASICameraInfo))
 		closeUp(EXIT_ERROR_STOP);
 
-	if (! getCommandLineArguments(&CG, argc, argv))
+	if (CG.configFile[0] != '\0' && ! getConfigFileArguments(&CG))
 	{
-		// getCommandLineArguents outputs an error message.
+		// getConfigFileArguments() outputs error messages
 		exit(EXIT_ERROR_STOP);
 	}
 
@@ -973,8 +1073,6 @@ int main(int argc, char *argv[])
 		setControl(CG.cameraNumber, ASI_BANDWIDTHOVERLOAD, CG.asiBandwidth, CG.asiAutoBandwidth ? ASI_TRUE : ASI_FALSE);
 	if (CG.gamma != NOT_CHANGED)
 		setControl(CG.cameraNumber, ASI_GAMMA, CG.gamma, ASI_FALSE);
-	if (CG.offset != NOT_CHANGED)
-		setControl(CG.cameraNumber, ASI_OFFSET, CG.offset, ASI_FALSE);
 	if (CG.flip != NOT_CHANGED)
 		setControl(CG.cameraNumber, ASI_FLIP, CG.flip, ASI_FALSE);
 
@@ -988,9 +1086,10 @@ int main(int argc, char *argv[])
 	int originalITextY		= CG.overlay.iTextY;
 	int originalFontsize	= CG.overlay.fontsize;
 	int originalLinewidth	= CG.overlay.linewidth;
-	// Have we displayed "not taking picture during day" message, if applicable?
-	bool displayedNoDaytimeMsg	= false;
-	int gainChange				= 0;		// how much to change gain up or down
+	// Have we displayed "not taking picture during day/night" message, if applicable?
+	bool displayedNoDaytimeMsg		= false;
+	bool displayedNoNighttimeMsg	= false;
+	int gainChange					= 0;		// how much to change gain up or down
 
 	// Display one-time messages.
 
@@ -1013,16 +1112,16 @@ int main(int argc, char *argv[])
 		Log(4, "Extra Text File Age Disabled So Displaying Anyway\n");
 	}
 
-	// Start taking pictures
-
-	if (! CG.videoOffBetweenImages)
+	if (CG.ZWOexposureType == ZWOvideo && ! capturingVideo)
 	{
+		// Start video capture; we'll stop when exiting.
 		asiRetCode = ASIStartVideoCapture(CG.cameraNumber);
 		if (asiRetCode != ASI_SUCCESS)
 		{
 			Log(0, "*** %s: ERROR: Unable to start video capture: %s\n", CG.ME, getRetCode(asiRetCode));
 			closeUp(EXIT_ERROR_STOP);
 		}
+		capturingVideo = true;
 	}
 
 	while (bMain)
@@ -1031,13 +1130,10 @@ int main(int argc, char *argv[])
 		dayOrNight = calculateDayOrNight(CG.latitude, CG.longitude, CG.angle);
 		std::string lastDayOrNight = dayOrNight;
 
-		if (! CG.takeDarkFrames)
-			currentAdjustGain = resetGainTransitionVariables(CG);
-
 		if (CG.takeDarkFrames)
 		{
 			// We're doing dark frames so turn off autoexposure and autogain, and use
-			// nightime gain, delay, max exposure, bin, and brightness to mimic a nightime shot.
+			// nightime gain, delay, max exposure, and bin to mimic a nightime shot.
 			CG.currentSkipFrames = 0;
 			CG.currentAutoExposure = false;
 			CG.nightAutoExposure = false;
@@ -1051,7 +1147,6 @@ int main(int argc, char *argv[])
 			CG.currentDelay_ms = CG.nightDelay_ms;
 			CG.currentMaxAutoExposure_us = CG.currentExposure_us = CG.nightMaxAutoExposure_us;
 			CG.currentBin = CG.nightBin;
-			CG.currentBrightness = CG.nightBrightness;
 			if (CG.isColorCamera)
 			{
 				CG.currentAutoAWB = false;
@@ -1089,7 +1184,8 @@ int main(int argc, char *argv[])
 
 			if (! CG.daytimeCapture)
 			{
-				displayedNoDaytimeMsg = daytimeSleep(displayedNoDaytimeMsg, CG);
+				// true == for daytime
+				displayedNoDaytimeMsg = day_night_timeSleep(displayedNoDaytimeMsg, CG, true);
 
 				// No need to do any of the code below so go back to the main loop.
 				continue;
@@ -1136,17 +1232,12 @@ int main(int argc, char *argv[])
 					length_in_units(CG.currentMaxAutoExposure_us, true));
 				CG.currentExposure_us = CG.currentMaxAutoExposure_us;
 			}
+
 			// Don't use camera auto-exposure since we mimic it ourselves.
 			CG.HB.useHistogram = CG.dayAutoExposure;
-			if (CG.HB.useHistogram)
-			{
-				// Only need to display this once, not every night-to-day transition...
-				Log(4, "Turning off daytime ZWO auto-exposure to use Allsky auto-exposure.\n");
-			}
 			// With the histogram method we NEVER use ZWO auto exposure - either the user said
 			// not to, or we turn it off ourselves.
 			CG.currentAutoExposure = false;
-			CG.currentBrightness = CG.dayBrightness;
 			if (CG.isColorCamera)
 			{
 				CG.currentAutoAWB = CG.dayAutoAWB;
@@ -1157,6 +1248,8 @@ int main(int argc, char *argv[])
 			CG.currentBin = CG.dayBin;
 			CG.currentGain = CG.dayGain;	// must come before determineGainChange() below
 			CG.currentMaxAutoGain = CG.dayMaxAutoGain;
+			CG.currentAutoGain = CG.dayAutoGain;
+			currentAdjustGain = resetGainTransitionVariables(CG);
 			if (currentAdjustGain)
 			{
 				// we did some nightime images so adjust gain
@@ -1167,7 +1260,6 @@ int main(int argc, char *argv[])
 			{
 				gainChange = 0;
 			}
-			CG.currentAutoGain = CG.dayAutoGain;
 			CG.myModeMeanSetting.currentMean = CG.myModeMeanSetting.dayMean;
 			CG.myModeMeanSetting.currentMean_threshold = CG.myModeMeanSetting.dayMean_threshold;
 			if (CG.isCooledCamera)
@@ -1188,6 +1280,15 @@ int main(int argc, char *argv[])
 				justTransitioned = false;
 			}
 
+			if (! CG.nighttimeCapture)
+			{
+				// false == for nighttime
+				displayedNoNighttimeMsg = day_night_timeSleep(displayedNoNighttimeMsg, CG, false);
+
+				// No need to do any of the code below so go back to the main loop.
+				continue;
+			}
+
 			Log(1, "==========\n=== Starting nighttime capture ===\n==========\n");
 
 			// We only skip initial frames if we are starting in nighttime and using auto-exposure.
@@ -1200,19 +1301,9 @@ int main(int argc, char *argv[])
 				CG.currentExposure_us = CG.nightExposure_us;
 			}
 
-if (CG.HB.useExperimentalExposure) {
 			// Don't use camera auto-exposure since we mimic it ourselves.
 			CG.HB.useHistogram = CG.nightAutoExposure;
-			if (CG.HB.useHistogram)
-			{
-				Log(4, "Turning off nighttime ZWO auto-exposure to use Allsky auto-exposure.\n");
-			}
 			CG.currentAutoExposure = false;
-} else {
-			CG.currentAutoExposure = CG.nightAutoExposure;
-			CG.HB.useHistogram = false;		// only used during day
-}
-			CG.currentBrightness = CG.nightBrightness;
 			if (CG.isColorCamera)
 			{
 				CG.currentAutoAWB = CG.nightAutoAWB;
@@ -1224,6 +1315,8 @@ if (CG.HB.useExperimentalExposure) {
 			CG.currentMaxAutoExposure_us = CG.nightMaxAutoExposure_us;
 			CG.currentGain = CG.nightGain;	// must come before determineGainChange() below
 			CG.currentMaxAutoGain = CG.nightMaxAutoGain;
+			CG.currentAutoGain = CG.nightAutoGain;
+			currentAdjustGain = resetGainTransitionVariables(CG);
 			if (currentAdjustGain)
 			{
 				// we did some daytime images so adjust gain
@@ -1234,7 +1327,6 @@ if (CG.HB.useExperimentalExposure) {
 			{
 				gainChange = 0;
 			}
-			CG.currentAutoGain = CG.nightAutoGain;
 			CG.myModeMeanSetting.currentMean = CG.myModeMeanSetting.nightMean;
 			CG.myModeMeanSetting.currentMean_threshold = CG.myModeMeanSetting.nightMean_threshold;
 			if (CG.isCooledCamera)
@@ -1247,9 +1339,6 @@ if (CG.HB.useExperimentalExposure) {
 
 		CG.myModeMeanSetting.minMean = CG.myModeMeanSetting.currentMean - CG.myModeMeanSetting.currentMean_threshold;
 		CG.myModeMeanSetting.maxMean = CG.myModeMeanSetting.currentMean + CG.myModeMeanSetting.currentMean_threshold;
-
-		CG.myModeMeanSetting.minMean *= 255;	// our algorithm compares to 0 - 255
-		CG.myModeMeanSetting.maxMean *= 255;
 
 		Log(3, "minMean=%.3f, maxMean=%.3f\n", CG.myModeMeanSetting.minMean, CG.myModeMeanSetting.maxMean);
 
@@ -1273,13 +1362,21 @@ if (CG.HB.useExperimentalExposure) {
 		{
 			setControl(CG.cameraNumber, ASI_WB_R, CG.currentWBR, CG.currentAutoAWB ? ASI_TRUE : ASI_FALSE);
 			setControl(CG.cameraNumber, ASI_WB_B, CG.currentWBB, CG.currentAutoAWB ? ASI_TRUE : ASI_FALSE);
+
+			if (! CG.currentAutoAWB && ! CG.takeDarkFrames)
+			{
+				// We only read the actual values if in auto white balance; since we're not,
+				// set the "last" values to the user-specified numbers.
+				CG.lastWBR = CG.currentWBR;
+				CG.lastWBB = CG.currentWBB;
+			}
+			else
+			{
+				CG.lastWBR = NOT_SET;
+				CG.lastWBB = NOT_SET;
+			}
 		}
-		else if (! CG.currentAutoAWB && ! CG.takeDarkFrames)
-		{
-			// We only read the actual values if in auto white balance; since we're not, get them now.
-			CG.lastWBR = CG.currentWBR;
-			CG.lastWBB = CG.currentWBB;
-		}
+
 		if (CG.isCooledCamera)
 		{
 			setControl(CG.cameraNumber, ASI_COOLER_ON, CG.currentEnableCooler ? ASI_TRUE : ASI_FALSE, ASI_FALSE);
@@ -1293,7 +1390,6 @@ if (CG.HB.useExperimentalExposure) {
 		if (CG.currentAutoExposure)
 		{
 			setControl(CG.cameraNumber, ASI_AUTO_MAX_EXP, CG.currentMaxAutoExposure_us / US_IN_MS, ASI_FALSE);
-			setControl(CG.cameraNumber, ASI_AUTO_TARGET_BRIGHTNESS, CG.currentBrightness, ASI_FALSE);
 		}
 
 		if (numExposures == 0 || CG.dayBin != CG.nightBin)
@@ -1311,7 +1407,12 @@ if (CG.HB.useExperimentalExposure) {
 
 			bufferSize = (long) (CG.width * CG.height * currentBpp);
 
-// TODO: if not the first time, should we free the old pRgb?
+			if (numExposures > 0)
+			{
+				// If not the first time, free the prior pRgb.
+				pRgb.release();
+			}
+
 			if (CG.imageType == IMG_RAW16)
 			{
 				pRgb.create(cv::Size(CG.width, CG.height), CV_16UC1);
@@ -1354,7 +1455,6 @@ if (CG.HB.useExperimentalExposure) {
 		// Wait for switch day time -> night time or night time -> day time
 		while (bMain && lastDayOrNight == dayOrNight)
 		{
-//x Log(4, "xxx just entered outside 'while' loop\n");
 			// date/time is added to many log entries to make it easier to associate them
 			// with an image (which has the date/time in the filename).
 			exposureStartDateTime = getTimeval();
@@ -1363,7 +1463,8 @@ if (CG.HB.useExperimentalExposure) {
 			// Unfortunately our histogram method only does exposure, not gain, so we
 			// can't say what gain we are going to use.
 			Log(2, "-----\n");
-			Log(1, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(CG.currentExposure_us, true));
+			Log(1, "STARTING EXPOSURE at: %s   @ %s\n",
+				exposureStart, length_in_units(CG.currentExposure_us, true));
 
 			// Get start time for overlay. Make sure it has the same time as exposureStart.
 			if (CG.overlay.showTime)
@@ -1371,16 +1472,14 @@ if (CG.HB.useExperimentalExposure) {
 				sprintf(bufTime, "%s", formatTime(exposureStartDateTime, CG.timeFormat));
 			}
 
-//x Log(4, "xxx calling takeOneExposure() from outside 'while' loop\n");
 			asiRetCode = takeOneExposure(&CG, pRgb.data);
-//x Log(4, "xxx >> takeOneExposure() returned %s\n", getRetCode(asiRetCode));
 			if (asiRetCode == ASI_SUCCESS)
 			{
-				numErrors = 0;
+				numConsecutiveErrors = 0;
 				numExposures++;
 				bool hitMinOrMax = false;
 
-				CG.lastFocusMetric = CG.overlay.showFocus ? (int)round(get_focus_metric(pRgb)) : -1;
+				CG.lastFocusMetric = CG.determineFocus ? (int)round(get_focus_metric(pRgb)) : -1;
 
 				if (numExposures == 0 && CG.preview)
 				{
@@ -1395,60 +1494,20 @@ if (CG.HB.useExperimentalExposure) {
 
 					attempts = 0;
 
-					int minAcceptableMean = CG.myModeMeanSetting.minMean;
-					int maxAcceptableMean = CG.myModeMeanSetting.maxMean;
+					double minAcceptableMean = CG.myModeMeanSetting.minMean;
+					double maxAcceptableMean = CG.myModeMeanSetting.maxMean;
 					long tempMinExposure_us = CG.cameraMinExposure_us;
 					long tempMaxExposure_us = CG.cameraMaxExposure_us;
 					long newExposure_us = 0;
-
-// TODO: dump Brightness - user can adjust Target Mean or Manual Exposure.
-					if (CG.currentBrightness != CG.defaultBrightness)
-					{
-						// Adjust brightness based on Brightness.
-						// The default value has no adjustment.
-						// The only way we can do this easily is via adjusting the exposure.
-						// We could apply a stretch to the image, but that's more difficult.
-						// Sure would be nice to see how ZWO handles this variable.
-						// We asked but got a useless reply.
-						// Values below the default make the image darker; above make it brighter.
-						float exposureAdjustment = 1.0;
-
-						// Adjustments of DEFAULT_BRIGHTNESS up or down make the image this much darker/lighter.
-						// Don't want the max brightness to give pure white.
-						//xxx May have to play with this number, but it seems to work ok.
-						// 100 * this number is the percent to change.
-						const float adjustmentAmountPerMultiple = 0.12;
-
-						// The amount doesn't change after being set, so only display once.
-						static bool showedMessage = false;
-						if (! showedMessage)
-						{
-							float numMultiples;
-
-							// Determine the adjustment amount - only done once.
-							// See how many multiples we're different.
-							// If currentBrightness < default then numMultiples will be negative,
-							// which is ok - it just means the multiplier will be less than 1.
-
-							numMultiples = (float)(CG.currentBrightness - CG.defaultBrightness) / CG.defaultBrightness;
-							exposureAdjustment = 1 + (numMultiples * adjustmentAmountPerMultiple);
-							Log(4, "  > >>> Adjusting exposure x %.2f (%.1f%%) for brightness\n", exposureAdjustment, (exposureAdjustment - 1) * 100);
-							showedMessage = true;
-						}
-
-						// Now adjust the variables
-						minAcceptableMean *= exposureAdjustment;
-						maxAcceptableMean *= exposureAdjustment;
-					}
 
 					// Keep track of whether or not we're bouncing around, for example,
 					// one exposure is less than the min and the second is greater than the max.
 					// When that happens we don't want to set the min to the second exposure
 					// or else we'll never get low enough.
 					// Negative is below lower limit, positive is above upper limit.
-					int priorMean = NOT_SET;		// The mean for the image before the last one.
-					int priorMeanDiff = 0;
-					int lastMeanDiff = 0;	// like priorMeanDiff but for next exposure
+					double priorMean = NOT_SET;		// The mean for the image before the last one.
+					double priorMeanDiff = 0.0;
+					double lastMeanDiff = 0.0;	// like priorMeanDiff but for next exposure
 					int numPingPongs = 0;
 
 					if (CG.lastMean < minAcceptableMean)
@@ -1464,38 +1523,46 @@ if (CG.HB.useExperimentalExposure) {
 					while ((CG.lastMean < minAcceptableMean || CG.lastMean > maxAcceptableMean) &&
 						    ++attempts <= maxHistogramAttempts)
 					{
-						int acceptableMean;
-						float multiplier = 1.10;
+						double acceptableMean;
+						double multiplier = 1.10;
 						char const *acceptableType;
 						if (CG.lastMean < minAcceptableMean) {
 							acceptableMean = minAcceptableMean;
+// acceptableMean = 0.270
 							acceptableType = "min";
 						} else {
 							acceptableMean = maxAcceptableMean;
 							acceptableType = "max";
-							multiplier = 1 / multiplier;
+							multiplier = 1.0 / multiplier;
 						}
 
 						// If lastMean/acceptableMean is 9/90, it's 1/10th of the way there,
 						// so multiple exposure by 90/9 (10).
 						// ZWO cameras don't appear to be linear so increase the multiplier amount some.
-						float multiply;
-						if (CG.lastMean == 0) {
-							// TODO: is this correct?
-							multiply = ((double)acceptableMean) * multiplier;
+						double multiply;
+						if (CG.lastMean == 0.0) {
+							// means are less than 1 so force "multiply" to be > 1.
+							multiply = (1 + acceptableMean) * multiplier;
+// multiple = 0.270 * 1.1    0.297
 						} else {
-							multiply = ((double)acceptableMean / CG.lastMean) * multiplier;
+							multiply = (acceptableMean / CG.lastMean) * multiplier;
+/// multiply = (0.478 / 0.473) * 1.1     (1.0105708) * 1.1          1.112
 						}
+// TODO FIX: xxxxxxxxxxxxxxxxxx
 						long exposureDiff_us = (CG.lastExposure_us * multiply) - CG.lastExposure_us;
+// exposureDiff_us = (100,000 * 0.297) - 100,000      (29,700) - 100,000      -70,300
 						long exposureDiffBeforeAgression_us = exposureDiff_us;
+// exposureDiffBeforeAgression_us = -70,300
 
 						// Adjust by aggression setting.
-						if (CG.aggression != 100 && CG.currentSkipFrames <= 0 && exposureDiff_us != 0)
+						if (CG.aggression != 100 && exposureDiff_us != 0)
 						{
 							exposureDiff_us *= (float)CG.aggression / 100;
+// exposureDiff_us = -70,300 * (85/100)     -70,300 * .85     -59,755
 						}
 
 						newExposure_us = CG.lastExposure_us + exposureDiff_us;
+// newExposure_us = 100,000 + -59,755       40,245
 						// Assume max auto exposure is <= max camera exposure.
 						if (newExposure_us > CG.currentMaxAutoExposure_us) {
 							hitMinOrMax = true;
@@ -1503,27 +1570,37 @@ if (CG.HB.useExperimentalExposure) {
 								newExposure_us, CG.currentMaxAutoExposure_us);
 							newExposure_us = CG.currentMaxAutoExposure_us;
 						} else {
-							Log(3, "    > Next exposure change: %'ld us (%'ld pre agression) to %'ld (* %.3f) [CG.lastExposure_us=%'ld, %sAcceptableMean=%d, CG.lastMean=%d]\n",
+							Log(3, "    > Next exposure change: %'ld us (%'ld pre agression) to %'ld (* %.3f) [CG.lastExposure_us=%'ld, %sAcceptableMean=%.3f, CG.lastMean=%.3f]\n",
 								exposureDiff_us, exposureDiffBeforeAgression_us,
 								newExposure_us, multiply, CG.lastExposure_us,
-								acceptableType, acceptableMean, (int)CG.lastMean);
+								acceptableType, acceptableMean, CG.lastMean);
+// -59.755, -70,300
+// 40,245, 0.297, 100,000,
+// min, 0.270, 0
+// Next exposure change: -59,755 us (-70,300 pre agression) to 40,245 (* 0.297) [CG.lastExposure_us=100,000, minAcceptableMean=0.270, CG.lastMean=0.000]
+
+/// > GOT IMAGE @ mean 0.473, gain 0.
+/// > Next exposure change: 207 us (244 pre agression) to 2,379 (* 1.112) [CG.lastExposure_us=2,172, minAcceptableMean=0.478, CG.lastMean=0.473]
+/// >> Retry 1 @ 2,379 us, min=2,172 us, max=2,000,000,000 us
+/// > GOT IMAGE @ mean 0.516, gain 0.
+/// > Good image: mean 0.516 within range of 0.478 to 0.526 +++++++++
 						}
 
-						if (priorMeanDiff > 0 && lastMeanDiff < 0)
+						if (priorMeanDiff > 0.0 && lastMeanDiff < 0.0)
 						{ 
 							++numPingPongs;
-							Log(2, "    > xxx lastMean was %d and went from %d above max of %d to %d below min of %d, is now at %d;\n",
+							Log(2, "    > xxx lastMean was %.3f and went from %.3f above max of %.3f to %.3f below min of %.3f, is now at %.3f;\n",
 								priorMean, priorMeanDiff, maxAcceptableMean, -lastMeanDiff,
-									minAcceptableMean, (int)CG.lastMean);
+									minAcceptableMean, CG.lastMean);
 						} 
 						else
 						{
-							if (priorMeanDiff < 0 && lastMeanDiff > 0)
+							if (priorMeanDiff < 0.0 && lastMeanDiff > 0.0)
 							{
 								++numPingPongs;
-								Log(2, "    > xxx lastMean was %d and went from %d below min of %d to %d above max of %d, is now at %d;\n",
+								Log(2, "    > xxx lastMean was %.3f and went from %.3f below min of %.3f to %.3f above max of %.3f, is now at %.3f;\n",
 									priorMean, -priorMeanDiff, minAcceptableMean, lastMeanDiff,
-									maxAcceptableMean, (int)CG.lastMean);
+									maxAcceptableMean, CG.lastMean);
 							}
 							else
 							{
@@ -1533,6 +1610,7 @@ if (CG.HB.useExperimentalExposure) {
 							if (CG.lastMean < minAcceptableMean)
 							{
 								tempMinExposure_us = CG.currentExposure_us;
+// TODO: ???? set tempMaxExposure_us to ???
 							} 
 							else if (CG.lastMean > maxAcceptableMean)
 							{
@@ -1542,18 +1620,19 @@ if (CG.HB.useExperimentalExposure) {
 
 						if (numPingPongs >= 3)
 						{
-printf(" > xxx newExposure_us=%s, CG.lastExposure_us=%s, CG.currentExposure_us=%s,",
-	length_in_units(newExposure_us, true), length_in_units(CG.lastExposure_us, true),
+Log(3, "     > xxx newExposure_us=%s, CG.lastExposure_us=%s, CG.currentExposure_us=%s,",
+	length_in_units(newExposure_us, true),
+	length_in_units(CG.lastExposure_us, true),
 	length_in_units(CG.currentExposure_us, true));
 							newExposure_us = (newExposure_us + CG.lastExposure_us) / 2;
-printf(" new newExposure_us=%s\n", length_in_units(newExposure_us, true));
+Log(3, " new newExposure_us=%s\n", length_in_units(newExposure_us, true));
 							Log(3, " > Ping-Ponged %d times, setting exposure to mid-point of %s\n", numPingPongs, length_in_units(newExposure_us, true));
 
 // XXXX testing
 							// To try and help, add (or subtract) the numPingPongs percent to the exposure.
 							// For example, if newExposure_us == 200 and numPingPongs == 4, add 4% (8 us = 4% * 200).
 							long us = (long) (newExposure_us * ((double)numPingPongs / 100.0));
-Log(3, "================ Adding %'ld us\n", us);
+							Log(3, "================ Adding %'ld us\n", us);
 							newExposure_us += us;
 							if (tempMaxExposure_us < newExposure_us)
 								tempMaxExposure_us = newExposure_us;
@@ -1564,11 +1643,13 @@ Log(3, "================ Adding %'ld us\n", us);
 long saved_newExposure_us = newExposure_us;
 						newExposure_us = std::max(tempMinExposure_us, newExposure_us);
 						newExposure_us = std::min(tempMaxExposure_us, newExposure_us);
-if (saved_newExposure_us != newExposure_us)
-{
-	Log(3, "> xxx newExposure_us changed from %s to %s due to tempMin/tempMax\n",
-		length_in_units(saved_newExposure_us, true), length_in_units(newExposure_us, true));
-}
+						if (saved_newExposure_us != newExposure_us)
+						{
+							Log(3, "    > xxx newExposure_us changed from %s to %s due to tempMin/tempMax",
+								length_in_units(saved_newExposure_us, true), length_in_units(newExposure_us, true));
+							Log(3, " (%s/%s)\n",
+								length_in_units(tempMinExposure_us, true), length_in_units(tempMaxExposure_us, true));
+						}
 
 						if (newExposure_us == CG.currentExposure_us)
 						{
@@ -1588,9 +1669,7 @@ if (saved_newExposure_us != newExposure_us)
 						priorMean = CG.lastMean;
 						priorMeanDiff = lastMeanDiff;
 
-//x Log(4, "xxxxxx inside 'Retry' loop, calling takeOneExposure()\n");
 						asiRetCode = takeOneExposure(&CG, pRgb.data);
-//x Log(4, "xxxxxx >> takeOneExposure() returned %s\n", getRetCode(asiRetCode));
 						if (asiRetCode == ASI_SUCCESS)
 						{
 							if (CG.lastMean < minAcceptableMean)
@@ -1598,7 +1677,7 @@ if (saved_newExposure_us != newExposure_us)
 							else if (CG.lastMean > maxAcceptableMean)
 								lastMeanDiff = CG.lastMean - maxAcceptableMean;
 							else
-								lastMeanDiff = 0;
+								lastMeanDiff = 0.0;
 
 							continue;
 						}
@@ -1610,9 +1689,11 @@ if (saved_newExposure_us != newExposure_us)
 
 					if (asiRetCode != ASI_SUCCESS)
 					{
-						Log(2,"  > Sleeping %s from failed exposure\n",
-							length_in_units(CG.currentDelay_ms * US_IN_MS, false));
-						usleep(CG.currentDelay_ms * US_IN_MS);
+						// Sleep half the normal time.
+						long s = (CG.currentDelay_ms / 2 * US_IN_MS) * 0.5;
+						Log(2,"  > Sleeping %s us from failed exposure\n",
+							length_in_units(s, false));
+						usleep(s);
 						// Don't save the file or do anything below.
 						continue;
 					}
@@ -1620,13 +1701,13 @@ if (saved_newExposure_us != newExposure_us)
 					if (CG.lastMean >= minAcceptableMean && CG.lastMean <= maxAcceptableMean)
 					{
 						// +++ at end makes it easier to see in log file
-						Log(2, "  > Good image: mean %d within range of %d to %d ++++++++++\n",
-							(int)CG.lastMean, minAcceptableMean, maxAcceptableMean);
+						Log(2, "  > Good image: mean %.3f within range of %.3f to %.3f +++++++++\n",
+							CG.lastMean, minAcceptableMean, maxAcceptableMean);
 					}
 					else if (attempts > maxHistogramAttempts)
 					{
-						 Log(2, "  > max attempts reached - using exposure of %s with mean %d\n",
-							length_in_units(CG.currentExposure_us, true), (int)CG.lastMean);
+						 Log(2, "  > max attempts reached - using exposure of %s with mean %.3f\n",
+							length_in_units(CG.currentExposure_us, true), CG.lastMean);
 					}
 					else if (attempts >= 1)
 					{
@@ -1680,21 +1761,21 @@ if (saved_newExposure_us != newExposure_us)
 						}
 						else
 						{
-							Log(2, "  > Stopped trying, using exposure of %s with mean %d, min=%d, max=%d\n",
+							Log(2, "  > Stopped trying, using exposure of %s with mean %.3f, min=%.3f, max=%.3f\n",
 								length_in_units(CG.currentExposure_us, false),
-								(int)CG.lastMean, minAcceptableMean, maxAcceptableMean);
+								CG.lastMean, minAcceptableMean, maxAcceptableMean);
 						}
 						 
 					}
 					else if (CG.currentExposure_us == CG.cameraMinExposure_us)
 					{
-						Log(3, "  > Did not make any additional attempts - at min exposure limit of %s, mean %d\n",
-							length_in_units(CG.cameraMinExposure_us, false), (int)CG.lastMean);
+						Log(3, "  > Did not make any additional attempts - at min exposure limit of %s, mean %.3f\n",
+							length_in_units(CG.cameraMinExposure_us, false), CG.lastMean);
 					}
 					else if (CG.currentExposure_us == CG.cameraMaxExposure_us)
 					{
-						Log(3, "  > Did not make any additional attempts - at max exposure limit of %s, mean %d\n",
-							length_in_units(CG.cameraMaxExposure_us, false), (int)CG.lastMean);
+						Log(3, "  > Did not make any additional attempts - at max exposure limit of %s, mean %.3f\n",
+							length_in_units(CG.cameraMaxExposure_us, false), CG.lastMean);
 					}
 
 				} else {
@@ -1831,3 +1912,4 @@ if (saved_newExposure_us != newExposure_us)
 
 	closeUp(EXIT_OK);
 }
+

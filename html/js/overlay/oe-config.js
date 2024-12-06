@@ -5,11 +5,35 @@ class OECONFIG {
     #appConfig = {};
     #dataFields = {};
     #overlayDataFields = {};
+    #selectedOverlay = {
+        type: null,
+        name: null
+    };
     #BASEDIR = 'annotater/';
+    #dirty = false;
+    #overlays = {};
 
     #lastConfig = [];
 
     constructor() {
+    }
+
+    get selectedOverlay() {
+        return this.#selectedOverlay;
+    }
+
+    get overlays() {
+        return this.#overlays;
+    }
+    set overlays(value) {
+        this.#overlays = value;
+    }
+
+    get dirty() {
+        return this.#dirty;
+    }
+    set dirty(value) {
+        this.#dirty = value;
     }
 
     get config() {
@@ -19,66 +43,124 @@ class OECONFIG {
         this.#config = config;
     }
 
+    
     get appConfig() {
         return this.#appConfig;
     }
 
-    /**
-     * 
-     * Loads a configuration(s)
-     * 
-     * @returns 
-     */
-    async loadConfig() {
-        let result;
+    loadOverlays() {
+        $.ajax({
+            url: 'includes/overlayutil.php?request=Overlays',
+            type: 'GET',
+            dataType: 'json',
+            cache: false,
+            async: false,                
+            context: this
+        }).done((overlays) => {
+            this.overlays = overlays;
+        }); 
+    }
 
+    loadConfig() {
         try {
-            result = await $.ajax({
+            let result = $.ajax({
                 type: "GET",
-                url: "includes/overlayutil.php?request=Config",
+                url: "includes/overlayutil.php?request=Configs",
                 data: "",
                 dataType: 'json',
-                cache: false
+                cache: false,
+                async: false,
+                context: this,
+                success: function (result) {
+                    this.#config = result.config
+                    this.#dataFields = result.data;
+                    this.#overlayDataFields = result.overlaydata;
+                    this.#appConfig = result.appconfig;
+                }                
             });
-
-            this.#config = result;
-            if (this.validateConfig()) {
-
-                result = await $.ajax({
-                    type: "GET",
-                    url: "includes/overlayutil.php?request=Data",
-                    data: "",
-                    dataType: 'json',
-                    cache: false
-                });
-                this.#dataFields = result;
-
-                result = await $.ajax({
-                    type: "GET",
-                    url: "includes/overlayutil.php?request=OverlayData",
-                    data: "",
-                    dataType: 'json',
-                    cache: false
-                });
-                this.#overlayDataFields = result;
-
-                this.#appConfig = await $.ajax({
-                    type: "GET",
-                    url: "includes/overlayutil.php?request=AppConfig",
-                    data: "",
-                    dataType: 'json',
-                    cache: false
-                });
-
-                return true;
-            } else {
-                return false;
-            }
-
         } catch (error) {
             confirm('A fatal error has occureed loading the application configuration.')
             return false;
-        }
+        }            
+    }
+
+    loadOverlay(overlay, type) {
+        this.#selectedOverlay.type = type;
+        this.#selectedOverlay.name = overlay;
+        try {
+            let result = $.ajax({
+                type: "GET",
+                url: "includes/overlayutil.php?request=LoadOverlay&overlay=" + overlay,
+                data: "",
+                dataType: 'json',
+                cache: false,
+                async: false,
+                context: this,
+                success: function (result) {    
+                    this.#config = result;
+  
+                    let fontList = Array.from(document.fonts);
+                    for (let i in fontList) {
+                        document.fonts.delete(fontList[i]);
+                    }
+
+                    const promises = [];
+                    let fonts = this.getValue('fonts', {});
+                    for (let font in fonts) {
+                        let fontData = this.getValue('fonts.' + font, {});
+                        let fontFace = new FontFace(font, 'url(' + window.oedi.get('BASEDIR') + fontData.fontPath + ')');
+                        promises.push(
+                            fontFace.load()
+                        );
+                    }
+
+                    Promise.all(promises).then(function(loadedFonts) {
+                        for (let font in loadedFonts) {
+                            document.fonts.add(loadedFonts[font]);
+                        }
+                        window.oedi.get('uimanager').buildUI();
+                    });
+
+                    $(document).trigger('oe-overlay-loaded', {
+                        overlay: this.#selectedOverlay
+                    });
+                    this.dirty = false;                
+                },
+                error: function(xHR, Status, error) {
+                    if (xHR.responseText.length === 0) {
+                        /**
+                         * Something has gone badly wrong - The active overlay doesnt exist so we will set the active
+                         * overlay to the defaulf for the camera then redirect the user back to the overlay manager
+                         * which will hopefully fix that issue
+                         */
+                        alert(' The active overlay does not exist, was it deleted? The active overlay will be reset to the default for your camera.\n\nPlease click OK to continue');
+                        
+                        let defaultOverlay = 'overlay-ZWO.json';
+                        if (this.overlays !== undefined) {
+                            if (this.overlays.brand !== undefined) {
+                                defaultOverlay = 'overlay-' + this.overlays.brand + '.json';
+                            }
+                        }
+
+                        let result = $.ajax({
+                            type: 'POST',
+                            url: 'includes/overlayutil.php?request=SaveSettings',
+                            data: {
+                                daytime: defaultOverlay,
+                                nighttime: defaultOverlay
+                            },
+                            dataType: 'json',
+                            cache: false,
+                            async: false
+                        });
+                        location.reload();
+                    }
+                }                
+            });
+        } catch (error) {
+            confirm('A fatal error has occureed loading the application configuration.')
+            return false;
+        }         
     }
 
     get gridVisible() {
@@ -164,6 +246,39 @@ class OECONFIG {
     }
     set dataFields(dataFields) {
         return this.#dataFields = dataFields;
+    }
+
+    get overlayErrors() {
+        return this.#appConfig.overlayErrors;
+    }
+    set overlayErrors(overlayErrors) {
+        return this.#appConfig.overlayErrors = overlayErrors;
+    }
+
+    get overlayErrorsText() {
+        return this.#appConfig.overlayErrorsText;
+    }
+    set overlayErrorsText(overlayErrorsText) {
+        return this.#appConfig.overlayErrorsText = overlayErrorsText;
+    }
+
+    getMetaField(field) {
+        let result = null;
+
+        if (this.#config.metadata !== undefined) {
+            if (this.#config.metadata[field] !== undefined) {
+                result = this.#config.metadata[field];
+            }
+        }
+        return result;
+    }
+
+    setMetaField(field, value) {
+        if (this.#config.metadata === undefined) {
+            this.#config.metadata = {};
+        }
+        this.#config.metadata[field] = value;
+        this.dirty = true;
     }
 
     backupConfig() {
@@ -258,21 +373,27 @@ class OECONFIG {
         }
     }
 
-    async saveConfig() {
-        result = await $.ajax({
+    saveConfig() {
+        debugger;
+        /*
+        result =  $.ajax({
             type: 'POST',
             url: 'includes/overlayutil.php?request=Config',
             data: { config: JSON.stringify(this.#config) },
+            async: false,
             dataType: 'json',
             cache: false
-        });
+        });*/
     }
 
     saveConfig1() {
         $.ajax({
             type: 'POST',
             url: 'includes/overlayutil.php?request=Config',
-            data: { config: JSON.stringify(this.#config) },
+            data: {
+                overlay: this.#selectedOverlay,
+                config: JSON.stringify(this.#config)
+            },
             cache: false
         }).done(function() {
         }).fail(function() {

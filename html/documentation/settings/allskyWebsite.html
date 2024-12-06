@@ -14,6 +14,7 @@
 			content: "Allsky Website Settings";
 		} 
 	</style>
+	<link href="../css/custom.css" rel="stylesheet">
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
 	<script src="../js/all.min.js"></script>
@@ -26,361 +27,118 @@
 <div class="Layout-main markdown-body" id="mainContents">
 
 <p>
-The Allsky Website allows you to display your most recent captured image on a website,
-either on your Pi or on another machine.
+The Allsky Website allows you to display your most recent captured image on a website
+on your Pi, on another machine, or on both.
 Saved timelapse videos, keograms, and startrails can also be viewed.
 Constellations and other objects can be overlayed on the image,
 and aurora activity can be listed.
 </p>
 <p>
-Make sure you follow the
-<a allsky="true" href=../installations/AllskyWebsite.html">Allsky Website Installation Instructions</a>
-exactly to install the Allsky Website on your Pi and/or a remote server.
+For a <strong>local</strong> Allsky Website you only need to
+configure and enable it as described below; no installation is needed.
 </p>
 <p>
-To configure the Website:
+Before you configure a <strong>remote</strong> Website you must
+first install it - see the
+<a allsky="true" external="true"
+	href="../installations/AllskyWebsite.html">Allsky Website Installation Instructions</a>.
+Then return to this page.
+</p>
+
+Steps to configure an Allsky Website are below.
+
+<h2>Configure Website settings</h2>
 <ol>
-<li>In the WebUI, click on the <span class="WebUIWebPage">Editor</span> link in the menu.
-
-<li>If you have not already done so while installing the Website,
-	in the drop-down at the bottom of the page, select
-	<span class="dropdown">ftp-settings.sh</span>
-	to specify the settings to upload image,
-	keogram, startrails, and timelapse 
-	files to your local and/or remote Allsky Website.
-	<br>See the <a href="#ftp-settings">ftp-settings.sh file</a> section below
-	for the various settings and their meanings.
-
-<li>In the drop-down at the bottom of the page, select
-	one of the following, depending on which Website you want to configure:
-	<ul>
-	<li><span class="dropdown">configuration.json (local Allsky Website)</span> or
-	<li><span class="dropdown">remote_configuration.json (remote Allsky Website)</span>
-		(only if you have a remote Website)
-	</ul>
-	See the <a href="#configuration.json">configuration.json files</a> section below
-	for a description of the settings in those files.
+	<li>In the WebUI, click on the <span class="WebUILink">Editor</span> link.
+	<li>In the drop-down at the bottom of the page, select
+		one of the following, depending on which Website you want to configure:
+		<ul>
+			<li><span class="dropdown">configuration.json (local Allsky Website)</span> or
+			<li><span class="dropdown">remote_configuration.json (remote Allsky Website)</span>
+				(only if you installed a remote Website)
+			<li>You will then see something like this:
+				<img allsky="true" src="EditorPageNotEnabled.png" class="imgBorder imgCenter"
+					title="Typical Editor page" alt="Editor" loading="lazy">
+			<li>Information on the color scheme used by the Editor in the screenshot above is
+				<a allsky="true" external="true" href="EditorColors.html"
+					target="_blank" title="Opens in new tab">here </a>.
+		</ul>
+	<li>Ignore any message about the Website not being enabled - 
+		you will do that in the next step.
+		<ul>
+			<li id="configuration.json">
+				The settings in both files are identical although their values may differ.
+				The files are split into two sections:
+				<ol type="i" class="minimalPadding topPadding">
+					<li><span class="settings editorSetting">"config"</span> -
+						settings for the liveview image and constellation overlay.</li>
+					<li><span class="settings editorSetting">"homePage"</span> -
+						settings to change the look and feel
+						of the Website's home page including the icons on the left side,
+						the information popout on the right side,
+						an optional background image, etc.</li>
+				</ol>
+				See the two sections at the bottom of this page for information
+				on each section.
+				</li>
+			<li>Each setting has a <strong>name</strong> and <strong>value</strong>,
+				separated by a colon (<code>:</code>).
+				Setting <strong>names</strong> in the file look like
+				<span class="editorSetting">this</span>
+				and should generally NOT be changed unless, for example,
+				you are adding a new icon on the left side of the screen.
+				<br>Setting names MUST always be enclosed in double quotes.
+				</li>
+			<li>You should change setting <strong>values</strong> as desired -
+				they have different colors depending on their types,
+				as described <a allsky="true" external="true" href="EditorColors.html"
+					target="_blank" title="Opens in new tab">here</a>.
+				<blockquote class="warning">
+				Make sure all <span class="editorString">XX_NEED_TO_UPDATE_XX</span>
+				values are updated.
+				</blockquote>
+				</li>
+			<li>Some settings like the
+				<span class="editorSetting">latitude</span>
+				are also in the WebUI and should already be filled in.
+				Those settings should only be changed in the WebUI,
+				not in the file itself.
+				The WebUI will ensure any changes are propogated to the
+				appropriate file(s).
+				</li>
+			<li><blockquote>
+					<strong>Tip:</strong>
+					You can add comments to yourself by adding a new
+					setting name and value, e.g., 
+					<br><span class="editorSpecial">
+					<span class="editorSetting">"myComment1"</span> :
+					<span class="editorString">"Need to check the next setting"</span>,
+					</span>
+					<br>Be sure all setting names are unique.
+				</blockquote>
+		</ul>
+	</li>
 </ol>
-</p>
-<p>
-The sections below list all the settings, their default values, and a description.
-Information on the color scheme used by the Editor is
-<a allsky="true" external="true" href="EditorColors.html" target="_blank" title="Opens in new tab">here</a>.
-</p>
 
-
-<h2 id="ftp-settings">ftp-settings.sh file</h2>
-<p>
-In order to upload files to your Allsky Website (on the Pi and/or a remote server),
-connection details must be specified by clicking on the WebUI's 
-<span class="WebUIWebPage">Editor</span> page, then selecting
-<span class="dropdown">ftp-settings.sh</span> in the drop-down list at the bottom of the page.
-</p>
-<details><summary></summary>
-<p>
-Notes:
-<ul>
-<li>
-	In the text below, "local" refers to an Allsky Website that's on the Pi
-	and "remote" refers to an Allsky Website <b>not</b> on the Pi.
-	<blockquote class="warning">
-	<br>
-	Directories on the <strong>Pi</strong> are created during Allsky Website installation, but
-	<strong>YOU</strong> must create the <strong>remote</strong> directories.
-	<br>&nbsp;
-	</blockquote>
-<li>
-	The <span class="shSetting">WEB_*_DIR</span>
-	settings below (e.g., <span class="shSetting">WEB_VIDEOS_DIR</span>)
-	are <strong>only</strong> used if you have an Allsky Website on the Pi
-	<strong>AND</strong> a remote Allsky Website, and you want files copied to both locations.
-	In this case, see the
-	<a href="#upload-combinations">example at the end of the table below</a>
-	for what settings to use.
-<li>
-	By default, the destination file name is the same as the file being uploaded.
-	The <span class="shSetting">*_DESTINATION_NAME</span> settings below are used
-	to specify a DIFFERENT destination name.
-	For example, if the file being uploaded is
-	<span class="fileName">allsky-20210710.mp4</span> you may want it
-	called <span class="fileName">allsky.mp4</span> on the remote web server
-	so the name is always the same.
-	In that case, set
-	<span class="shSetting">VIDEOS_DESTINATION_NAME</span><span class="editorSpecial">=</span><span class="editorString">"allsky.mp4"</span>
-	(don't forget the file name extension like .mp4, .jpg, etc.).
-	If you want the destination file name to be the <b>same</b> as what's being uploaded,
-	leave the <span class="shSetting">*_DESTINATION_NAME</span> blank.
-</ul>
-</p>
-<br>
-
-<table role="table">
-<thead>
-<tr><th>Setting</th><th>Default</th><th>Description</th></tr>
-</thead>
-<tbody>
-<tr><td><span class="shSetting">PROTOCOL</span></td> <td></td>
-	<td>How the file should be uploaded:
-	<ul class="minimalPadding">
-	<li><span class="editorString">local</span> -
-		copies the file to a local Allsky Website.
-	<li><span class="editorString">ftps</span> -
-		uses secure File Transfer Protocol (FTPs) to upload to a remote server.
-	<li><span class="editorString">sftp</span> -
-		uses SSH file transfer to upload to a remote server.
-	<li><span class="editorString">ftp</span> -
-		uses (insecure) File Transfer Protocol (FTP) to upload to a remote server.
-		<blockquote class="warning">
-			<span class="editorString">ftp</span> is unsecure;
-			please use 
-			<span class="editorString">ftps</span> or
-			<span class="editorString">sftp</span> instead.
-		</blockquote>
-	<li><span class="editorString">scp</span> -
-		uses secure cp (copy) to copy the file to a remote server.
-	<li><span class="editorString">s3</span> -
-		copies the file to an Amazon Web Services (AWS) server.
-	<li><span class="editorString">gcs</span> -
-		copies the file to a Google Cloud Storage (GCS) server.
-	</ul>
-	</td>
-</tr>
-
-<tr><td class="note" colspan="3">image.jpg Settings</td></tr>
-<tr><td><span class="shSetting">IMAGE_DIR</span></td> <td></td>
-	<td>The remote directory where the current image should go.</td>
-</tr>
-<tr><td><span class="shSetting">WEB_IMAGE_DIR</span></td> <td></td>
-	<td>The local directory where the current image should go.</td>
-</tr>
-
-<tr><td class="note" colspan="3">Timelapse Settings</td></tr>
-<tr><td><span class="shSetting">VIDEOS_DIR</span></td> <td></td>
-	<td>The remote directory where the timelapse video should go.</td>
-</tr>
-<tr><td><span class="shSetting">VIDEOS_DESTINATION_NAME</span></td> <td></td>
-	<td>Remote name of the timelapse video file.
-	If not specified it's the same name as the file being uploaded.</td>
-</tr>
-<tr><td><span class="shSetting">WEB_VIDEOS_DIR</span></td> <td></td>
-	<td>Location on the Pi to copy the timelapse video to.</td>
-</tr>
-
-<tr><td class="note" colspan="3">Keogram Settings</td></tr>
-<tr><td><span class="shSetting">KEOGRAM_DIR</span></td> <td></td>
-	<td>The remote directory where the keogram image should go.</td>
-</tr>
-<tr><td><span class="shSetting">KEOGRAM_DESTINATION_NAME</span></td> <td></td>
-	<td>Remote name of the keogram image file.
-	If not specified it's the same name as the file being uploaded.</td>
-</tr>
-<tr><td><span class="shSetting">WEB_KEOGRAM_DIR</span></td> <td></td>
-	<td>Location on the Pi to copy the keogram file to.</td>
-</tr>
-
-<tr><td class="note" colspan="3">Startrails Settings</td></tr>
-<tr><td><span class="shSetting">STARTRAILS_DIR</span></td> <td></td>
-	<td>The remote directory where the startrails image should go.</td>
-</tr>
-<tr><td><span class="shSetting">STARTRAILS_DESTINATION_NAME</span></td> <td></td>
-	<td>Remote name of the startrails file.
-	If not specified it's the same name as the file being uploaded.</td>
-</tr>
-<tr><td><span class="shSetting">WEB_STARTRAILS_DIR</span></td> <td></td>
-	<td>Location on the Pi to copy the startrails file to.</td>
-</tr>
-
-<tr><td class="note" colspan="3">ftp, ftps, sftp, and scp Settings</td></tr>
-<tr><td><span class="shSetting">REMOTE_HOST</span></td> <td></td>
-	<td>Remote server DNS name or IP address.
-	If you don't know it, ask your service provider.
-	</td>
-</tr>
-
-<tr><td class="note" colspan="3">ftp, ftps, and sftp Settings</td></tr>
-<tr><td><span class="shSetting">REMOTE_USER</span></td> <td></td>
-	<td>Your remote user name.</td>
-</tr>
-<tr><td><span class="shSetting">REMOTE_PASSWORD</span></td> <td></td>
-	<td>Your ftp / ftps / sftp password.</td>
-</tr>
-<tr><td><span class="shSetting">REMOTE_PORT</span></td> <td></td>
-	<td>An optional port number for <code>ftp</code> and <code>ftps</code>. Is rarely needed.</td>
-</tr>
-<tr><td><span class="shSetting">LFTP_COMMANDS</span></td> <td></td>
-	<td>An optional colon-separated (;) list of commands needed by the <code>lftp</code> command.
-	See <a allsky="true" href="/documentation/troubleshooting/uploads.html">this page</a>
-	for example commands to enter into <span class="shSetting">LFTP_COMMANDS</span>.
-	</td>
-</tr>
-
-<tr><td class="note" colspan="3">scp Settings</td></tr>
-<tr><td><span class="shSetting">REMOTE_USER</span></td> <td></td>
-	<td>Your remote user name.
-		This is the same setting as above.
-	</td>
-</tr>
-<tr><td><span class="shSetting">SSH_KEY_FILE</span></td> <td></td>
-	<td>Path to the SSH key file.
-	<br>
-	You need to set up SSH key authentication on your server.
-	First, generate an SSH key on your Pi:
-<pre>ssh-keygen -t rsa</pre>
-	When prompted, leave the default filename, and use an empty passphrase.
-	Then, copy the generated key to your server:
-<pre>ssh-copy-id remote_username@server_ip_address</pre>
-	The private SSH key will be stored in
-	<span class="fileName">~/.ssh</span> (default filename is <span class="fileName">id_rsa</span>)
-	</td>
-</tr>
-
-<tr><td class="note" colspan="3">s3 Settings</td></tr>
-<tr><td colspan="3">
-	You need to install the AWS Command-Line Interface (CLI):
-<pre>
-sudo apt-get install python3-pip
-pip3 install awscli --upgrade --user
-export PATH=/home/pi/.local/bin:$PATH
-aws configure
-</pre>
-	When prompted, enter a valid access key ID, Secret Access Key, and Default region name,
-	for example, (e.g. "us-west-2").
-	Set the Default output format to "json" when prompted.
-	</td>
-</tr>
-<tr><td><span class="shSetting">AWS_CLI_DIR</span></td>
-	<td><span class="editorString">/home/pi/.local/bin</span></td>
-	<td>Directory on the Pi where the AWS tools are installed.
-	<br>If you used a different PATH setting above, change this setting to match it.
-	</td>
-</tr>
-<tr><td><span class="shSetting">S3_BUCKET</span></td>
-	<td><span class="editorString">allskybucket</span></td>
-	<td>Name of S3 Bucket where the files will be uploaded
-	(must be in Default region specified above).
-	You may want to turn off or limit bucket versioning to avoid consuming lots of
-	space with multiple versions of the "image.jpg" files.
-	</td>
-</tr>
-<tr><td><span class="shSetting">S3_ACL</span></td>
-	<td><span class="editorString">private</span></td>
-	<td>S3 Access Control List (ACL).
-	If you want to serve your uploaded files vis http(s),
-	change this to <span class="editorString">public-read</span>.
-	You will need to ensure the S3 bucket policy is configured to allow public access to
-	objects with a <span class="editorString">public-read</span> ACL.
-	<br>You may need to set a CORS policy in S3 if the files are to be accessed by
-	Javascript from a different domain.
-	</td>
-</tr>
-
-<tr><td class="note" colspan="3">GCS Settings</td></tr>
-<tr><td colspan="3">
-	You need to install the <code>gsutil</code> command which is part of the Google Cloud SDK.
-	See installation instructions
-	<a href="https://cloud.google.com/storage/docs/gsutil_install">here</a>.
-	<br>
-	NOTE: The <code>gsutil</code> command must be installed somewhere in the standard $PATH,
-	usually in <span class="fileName">/usr/bin</span>.
-	Make sure you authenticate the cli tool with the correct user as well.
-<tr><td><span class="shSetting">GCS_BUCKET</span></td>
-	<td><span class="editorString">allskybucket</span></td>
-	<td>Name of S3 Bucket where the files will be uploaded.</td>
-</tr>
-<tr><td><span class="shSetting">GCS_ACL</span></td>
-	<td><span class="editorString">private</span></td>
-	<td>GCS Access Control List.
-	You can use any one of the predefined ACL rules found
-	<a href="https://cloud.google.com/storage/docs/access-control/lists#predefined-acl">here</a>.
-	To access files over https, set this to <span class="editorString">publicRead</span>.
-	</td>
-</tr>
-</tbody>
-</table>
-
-<hr class="separatorSmall">
-<h3 id="upload-combinations">Settings for various combinations</h3>
+<h2>Enable the Website</h2>
 <ol>
-<li>If you have the Allsky Website <b>only</b> on your Pi, use these settings:
-<pre>
-PROTOCOL="local"
-IMAGE_DIR="${ALLSKY_WEBSITE}"
-VIDEOS_DIR="${IMAGE_DIR}/videos"
-KEOGRAM_DIR="${IMAGE_DIR}/keograms"
-STARTRAILS_DIR="${IMAGE_DIR}/startrails"
-</pre>
-
-<li>
-	If you have an Allsky Website <b>only</b> on a remote server, use these settings.
-	For the sake of this example, assume your top-level directory on the server is
-	<span class="fileName">/allsky</span>:
-<pre>
-PROTOCOL="sftp"		<span class="shellComment"># or another PROTOCOL</span>
-IMAGE_DIR="/allsky"
-VIDEOS_DIR="/allsky/videos"
-KEOGRAM_DIR="/allsky/keogram"
-STARTRAILS_DIR="/allsky/startrails"
-</pre>
-
-<li>
-	If you have an Allsky Website on your Pi <b>AND</b> on a remote server, use these settings.
-	For the sake of this example, assume your top-level directory on the server is
-	<span class="fileName">/allsky</span>:
-<pre>
-PROTOCOL="sftp"		<span class="shellComment"># or another PROTOCOL</span>
-IMAGE_DIR="/allsky"
-WEB_IMAGE_DIR=""
-VIDEOS_DIR="/allsky/videos"
-WEB_VIDEOS_DIR="${ALLSKY_WEBSITE}/videos"
-KEOGRAM_DIR="/allsky/keogram"
-WEB_KEOGRAM_DIR="${ALLSKY_WEBSITE}/keograms"
-STARTRAILS_DIR="/allsky/startrails"
-WEB_STARTRAILS_DIR="${ALLSKY_WEBSITE}/startrails"
-</pre>
+	<li>On the WebUI's <span class="WebUILink">Allsky Settings</span> page display the
+		<span class="settingsHeader">Website and Remote Server Settings</span> section.
+		</li>
+	<li>Enable the Website in either the
+		<span class="subSettingsHeader">Local Website Settings</span>
+		or
+		<span class="subSettingsHeader">Remote Website Settings</span> subsection,
+		depending on which Website you are configuring.
+		</li>
+	<li>Change the other settings in that subsection as needed.
+		Remote Websites need to know the server name, login, etc.
+		</li>
 </ol>
-<hr class="separatorSmall">
 
-
-<h3>Amazon Lightsail</h3>
-If you are using SSH Key with Amazon's Lightsail,
-copy the <span class="fileName">ssh-key.pem</span> file to your Pi,
-for example, in <span class="fileName">~</span>,
-then execute
-<pre>chmod 400 ~/ssh-key.pem</pre>
-and set:
-<pre>
-PROTOCOL="sftp"
-REMOTE_HOST="remote host name"
-REMOTE_USER="remote user name"
-REMOTE_PASSWORD="n/a"
-LFTP_COMMANDS="set sftp:connect-program 'ssh -a -x -i /home/pi/ssh-key.pem'"
-</pre>
-<hr class="separator">
-</details>
-<!-- ========================================================== -->
-
-<h2>configuration.json files</h2>
 <p>
-This section describes the settings in the 
-<span class="dropdown">configuration.json (local Allsky Website)</span> and
-<span class="dropdown">remote_configuration.json (remote Allsky Website)</span> files.
-</p>
-<details><summary></summary>
-<p id="configuration.json">
-The settings in both files are identical (although their values may differ)
-and they are split into two sections:
-<ol>
-<li><span class="settings editorSetting">"config"</span> -
-	settings for the liveview image and constellation overlay.
-<li><span class="settings editorSetting">"homePage"</span> -
-	settings to change the look and feel
-	of the Website's home page including the icons on the left side,
-	the information popout on the right side, an optional background image, etc.
-</ol>
-</p>
-<p>
-Any setting whose value is <b>XX_need_to_update_XX</b>
-needs to be updated prior to using the Website.
+The subsections below describe the settings in the json files,
+their default values, and a description.
 </p>
 
 
@@ -388,19 +146,20 @@ needs to be updated prior to using the Website.
 <details><summary></summary>
 <div class="legend">
 <span class="legendHeader">Legend:</span>
-<ul class="minimalPadding">
+<ul class="minimalPadding topPadding">
 <li>Values for setting names with "<span class="sentToMapServer"></span>" after them
-	are sent to the <a allsky="true" href="/documentation/allskyMap/index.html">Allsky Map</a>
-	server if you camera is on the map.
+	are sent to the
+	<a allsky="true" external="true" href="/documentation/allskyMap/index.html">Allsky Map</a>
+	server if your camera is on the map.
 <li>Setting names with "<span class="vsOverlay"></span>" after them
 	impact the virtual sky overlay.
 	A complete list of virtual-sky based options is
-	<a href="https://slowe.github.io/VirtualSky/#options">here</a>.
+	<a external="true" href="https://slowe.github.io/VirtualSky/#options">here</a>.
 <li>Values marked with <span class="autoSet"></span> are automatically set during
 	installation based on your WebUI settings and your Pi model, but can be overridden.
 </ul>
 <blockquote>
-It's important to update your settings in the WebUI <b>before</b> installing the
+It's important to update your settings in the WebUI <b>before</b> configuring the
 Allsky Website so you only have to update them once.
 </blockquote>
 </div>
@@ -425,7 +184,7 @@ Allsky Website so you only have to update them once.
 		<span class="editorString">image.jpg</span> (remote)
 	</td>
 	<td>The image uploaded from your allsky camera.
-		<br>Normally should not be changed.
+		<br><strong>Normally should not be changed.</strong>
 	</td>
 </tr>
 <tr>
@@ -512,7 +271,7 @@ Allsky Website so you only have to update them once.
 	<td><span class="editorSetting">showOverlayAtStartup</span></td>
 	<td><span class="editorBool">false</span></td>
 	<td>Set to <span class="editorBool">true</span>
-		to have the overlay displayed when the page is loaded.
+		to have the constellation overlay displayed when the page is loaded.
 	</td>
 </tr>
 <tr>
@@ -528,14 +287,14 @@ Allsky Website so you only have to update them once.
 <tr>
 	<td><span class="editorSetting">overlayOffsetLeft</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorNum">0</span></td>
-	<td>Horizontal adjustment of the overlay in pixels.
+	<td>Enter a positive number of pixels to move the constellation overlay to the right.
 		Use negative numbers to move left.
 	</td>
 </tr>
 <tr>
 	<td><span class="editorSetting">overlayOffsetTop</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorNum">0</span></td>
-	<td>Vertical adjustment of the overlay in pixels.
+	<td>Enter a positive number of pixels to move the constellation overlay down.
 		Use negative numbers to move up.
 	</td>
 </tr>
@@ -549,7 +308,7 @@ Allsky Website so you only have to update them once.
 <tr>
 	<td><span class="editorSetting">imageWidth</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorNum">900</span></td>
-	<td>Maximum width of the captured image in pixels.
+	<td>Width of the captured image in pixels.
 		The image height will be calculated automatically to keep the aspect ratio constant.
 	</td>
 </tr>
@@ -574,12 +333,12 @@ Allsky Website so you only have to update them once.
 <tr>
 	<td><span class="editorSetting">meridian</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">false</span></td>
-	<td>Displays the meridian line.</td>
+	<td>Display the meridian line?</td>
 </tr>
 <tr>
 	<td><span class="editorSetting">ecliptic</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">false</span></td>
-	<td>Displays the ecliptic line.</td>
+	<td>Display the ecliptic line?</td>
 </tr>
 <tr>
 	<td><span class="editorSetting">fontsize</span> <span class="vsOverlay"></span></td>
@@ -602,7 +361,7 @@ Allsky Website so you only have to update them once.
 <tr>
 	<td><span class="editorSetting">showstarlabels</span> <span class="vsOverlay"></span></td>
 	<td><span class="editorBool">true</span></td>
-	<td>Display the star names.</td>
+	<td>Display the star names?</td>
 </tr>
 <tr>
 	<td><span class="editorSetting">projection</span> <span class="vsOverlay"></span></td>
@@ -666,7 +425,7 @@ Allsky Website so you only have to update them once.
 	<td><span class="editorBool">true</span></td>
 	<td>Allow keyboard controls?
 		If set to <span class="editorBool">true</span>,
-		type "?" when over the image for a list of keyboard commands.
+		type <code>?</code> when over the image for a list of keyboard commands.
 	</td>
 </tr>
 <tr>
@@ -731,11 +490,6 @@ Allsky Website so you only have to update them once.
 	<td></td>
 	<td><b>Do not change</b>.</td>
 </tr>
-<tr>
-	<td><span class="editorSetting">AllskyWebsiteVersion</span></td>
-	<td></td>
-	<td><b>Do not change</b>.</td>
-</tr>
 </tbody>
 </table>
 <hr class="separator">
@@ -760,16 +514,6 @@ Allsky Website so you only have to update them once.
 	<td>This line is describes what this section is for and can be deleted if desired.</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">onPi</span></td>
-	<td><span class="editorBool">true</span> (local) or
-		<br><span class="editorBool">false</span> (remote)
-	</td>
-	<td>Automatically set to indicate if the Website is running locally on the Pi
-		or on a remote server.
-		Should normally not need to change.
-	</td>
-</tr>
-<tr>
 	<td><span class="editorSetting">title</span></td>
 	<td>XX_NEED_TO_UPDATE_XX</td>
 	<td>Text displayed next to the Allsky logo on the upper left.
@@ -787,9 +531,9 @@ Allsky Website so you only have to update them once.
 <tr>
 	<td><span class="editorSetting">backgroundImage</span></td>
 	<td></td>
-	<td>An optional background image for the home page.
+	<td>An optional background image for the Website home page.
 		Sub-settings:
-		<ul class="minimalPadding">
+		<ul class="minimalPadding topPadding">
 		<li><span class="editorSetting">url</span> is
 			the location of the image (a URL or file name).
 		<li><span class="editorSetting">style</span> is
@@ -808,8 +552,8 @@ Allsky Website so you only have to update them once.
 		Can be a URL or a file name.
 		<blockquote>
 		If this is a file on your Pi or remote server,
-		it's suggested to put it in the Website's <span class="fileName">myImages</span>
-		directory which is backed up and restored when upgrading the Allsky Website.
+		put it in the Website's <span class="fileName">myFiles</span>
+		directory which is restored when upgrading the Allsky Website.
 		</blockquote>
 	</td>
 </tr>
@@ -842,11 +586,11 @@ Allsky Website so you only have to update them once.
 		<br>
 		<span style="color: red;">Click
 		<a href="https://google.com" title="this is a title">here to go to Google.</a></span>
-		<ul class="minimalPadding">
+		<ul class="minimalPadding topPadding">
 		<li><span class="editorSetting">prelink</span> -
 			Text before the link (e.g., "<span style="color: red">Click</span>").
 		<li><span class="editorSetting">message</span> -
-			What the link says (<span style="color: blue">here to go to Google</span>).
+			What the link says (<span style="color: blue">"here to go to Google"</span>).
 		<li><span class="editorSetting">url</span> -
 			The location the user is taken to when clicking on the link ("https://google.com").
 		<li><span class="editorSetting">title</span> -
@@ -884,26 +628,45 @@ Allsky Website so you only have to update them once.
 	<td>Location of the "favorite icon" which is displayed in the browser title bar.
 		<blockquote>
 		If this is a file on your Pi or remote server,
-		it's suggested to put it in the <span class="fileName">myImages</span> directory which is
-		backed up and restored when upgrading the Allsky Website.
+		put it in the <span class="fileName">myFiles</span> directory which is
+		restored when upgrading the Allsky Website.
 		</blockquote>
 	</td>
 </tr>
 <tr>
-	<td><span class="editorSetting">leftSidebar</span></td>
+	<td><span class="editorSetting">thumbnailsizex</span></td>
+	<td><span class="editorNumber">100</span></td>
+	<td>Horizontal size of keogram, startrails, and timelapse thumbnails.
+	</td>
+</tr>
+<tr>
+	<td><span class="editorSetting">thumbnailsizey</span></td>
+	<td><span class="editorNumber">75</span></td>
+	<td>Vertical size of keogram, startrails, and timelapse thumbnails.
+	</td>
+</tr>
+<tr>
+	<td><span class="editorSetting">thumbnailsortorder</span></td>
+	<td><span class="editorString">ascending</span></td>
+	<td>How the keogram, startrails, and timelapse thumbnails should be sorted.
+	<span class="editorString">ascending</span> means newest to oldest.
+	<span class="editorString">descending</span> means oldest to newest.
+	</td>
+</tr>
+<tr>
+	<td><a id="leftSidebar"><span class="editorSetting">leftSidebar</span></td>
 	<td></td>
 	<td>Settings that modify the left sidebar's icons.
 		Each icon has the following settings:
-		<ul class="minimalPadding">
+		<ul class="minimalPadding topPadding">
 		<li><span class="editorSetting">display</span> -
 			<span class="editorBool">true</span> to display the icon,
 			<span class="editorBool">false</span> to hide it.
 			<blockquote>
-			The overlay toggle icon's display setting is
-			<span class="editorBool">false</span> by default.
-			If you plan to allow the overlay to be displayed,
-			modify its size and position so it mostly matches the sky,
-			then set this field to
+			This setting is <span class="editorBool">false</span> by default
+			for the constellation overlay icon.
+			If you plan to allow the constellation overlay to be displayed,
+			modify its size and position so it mostly matches the sky, then set this field to
 			<span class="editorBool">true</span>.
 			</blockquote>
 		<li><span class="editorSetting">url</span> -
@@ -911,9 +674,10 @@ Allsky Website so you only have to update them once.
 		<li><span class="editorSetting">title</span> -
 			Text displayed when hovering over the icon.
 		<li><span class="editorSetting">icon</span> -
-			A list of <a href="https://fontawesome.com/v5/search?o=r&m=free">Font Awesome</a>
-			version 5.14.5 classes that determine which icon is used.
+			A list of <a href="https://fontawesome.com/search?m=free&o=r">Font Awesome</a>
+			version 6.2.1 classes that determine which icon is used.
 			Note that not all icons work.
+			Look at another sidebar entry for an example.
 		<li><span class="editorSetting">other</span> -
 			Text to add to the link <b>in place of a url</b>.
 			Typically used to take an action, like display a popup, when the icon is clicked.
@@ -928,7 +692,7 @@ Allsky Website so you only have to update them once.
 	<td><span class="editorSetting">leftSidebarStyle</span></td>
 	<td></td>
 	<td>CSS for the left sidebar itself, not the icons in it.
-		To change the sidebar background yellow:
+		To change the sidebar background to yellow:
 			<span class="editorString">background-color: yellow;</span>.
 	</td>
 </tr>
@@ -938,16 +702,17 @@ Allsky Website so you only have to update them once.
 	<td>Settings that modify the information that appears in the popout on the right side.
 		Each entry contains an icon, name of the field, and the field's value,
 		and has the following settings:
-		<ul class="minimalPadding">
+		<ul class="minimalPadding topPadding">
 		<li><span class="editorSetting">display</span> -
 			<span class="editorBool">true</span> to display the entry,
 			<span class="editorBool">false</span> to hide it.
-			<blockquote>
+			<blockquote class="warning">
 			The <span class="editorString">Allsky Settings</span>'s
 			<span class="editorSetting">display</span> setting
-			should NOT be changed in the <span class="WebUIPage">Editor</span> page;
-			instead, it should be changed in the WebUI's
-			<span class="WebUIPage">Allsky Settings</span> page.
+			should NOT be changed in the <span class="WebUILink">Editor</span> page;
+			instead, it should be changed using the
+			<span class="WebUISetting">Display Settings</span> setting
+			in the WebUI's <span class="WebUILink">Allsky Settings</span> page.
 			</blockquote>
 		<li><span class="editorSetting">label</span> -
 			The name of the field for the entry.
@@ -955,7 +720,7 @@ Allsky Website so you only have to update them once.
 			The same as with <span class="editorSetting">leftSidebar</span> above.
 		<li><span class="editorSetting">variable</span> - A setting name from the
 			<span class="editorSetting">config</span>
-			section whose value should be displayed.
+			section of the configuration file whose value should be displayed.
 			For example, if you set the <span class="editorSetting">owner</span>
 			to <span class="editorString">Eric</span>,
 			entering <span class="editorSetting">owner</span> for this setting will display
@@ -977,11 +742,8 @@ Allsky Website so you only have to update them once.
 </table>
 </details>
 
-</details>
-
 </div><!-- Layout-main -->
 </div><!-- Layout -->
 </body>
 </html>
 <script> includeHTML(); </script>
-

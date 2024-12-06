@@ -1,21 +1,26 @@
 :root {
 	--navbar-background-color: #f8f8f8;
+	--sticky-background-color: #bbb;
 	--navbar-border-color: #e7e7e7;
 	--navbar-background-color-dark: #272727;
+	--sticky-background-color-dark: #222;
 	--navbar-border-color-dark: #333333;
 	--WebUI-setting-color: #00009b;
 	--WebUI-setting-color-dark: #68a0ff;
+	--sticky-border-color: #888;	
+	--sticky-border-color-dark: #888;	
 	--WebUI-value-color: #555;
 	--WebUI-value-background-color: #e4e4e4;
 	--WebUI-link-color: #4b4a4b;
 	--WebUI-link-background-color: #f8f8f8;
 	--WebUI-subSetting-color: black;
-	--WebUI-subSetting-background-color: #aac;
-	--WebUI-subSetting-background-color-dark: #339;
+	--WebUI-subSetting-background-color: #bbb;
+	--WebUI-subSetting-background-color-dark: #555;
+	--WebUI-subSettingNote-background-color: #cce;
 	--dark-text: #aaaaaa;
 	--dark-text-reversed: #eeeeee;
-	--rowSeparator: 1px solid #d3d3d3;
-	--rowSeparator-dark: 1px solid #707070;
+	--rowSeparator: #e3e3e3;
+	--rowSeparator-dark: #404040;
 	--btn-hover-color: black;
 	--btn-dark-color: #bfbfbf;
 	--panel-heading-color: #6b6b6b;
@@ -252,7 +257,7 @@ body.dark {
 }
 
 .highlightedBox {
-	border: 4px dashed red;
+	border: 2px dashed red;
 	margin-top: 30px;
 	margin-bottom: 30px;
 	padding: 10px 5px 10px 5px;
@@ -274,7 +279,7 @@ button.close {
 	margin-top: -2px;
 }
 .alert td {
-	padding: 5px 10px 5px 5px;
+	padding: 0 10px 0 3px;
 }
 .alert td .important {
 	font-weight: bold;
@@ -302,6 +307,8 @@ table .alert-dismissable {
 }
 .dark .alert-message, .dark .alert-info {
 	color: #23485a;
+	border-color: #99ccdd;
+	background-color: #8b989f;
 }
 .dark .alert-success {
 	color: #95bb85;
@@ -321,16 +328,6 @@ table .alert-dismissable {
 .alert-danger, .alert-warning {
 	border-top-width: 3px;
 	border-bottom-width: 3px;
-}
-.dark .alert-info {
-	color: #888888 !important;
-	background-color: #111111 !important;
-	border: 1px solid green !important;
-}
-.dark .alert-warning {
-	color: #888888 !important;
-	background-color: #111111 !important;
-	border: 1px solid green !important;
 }
 
 .dark .form-control,
@@ -523,17 +520,28 @@ input[type="text"].has-error {
 
 /* Headers in Allsky settings */
 .settingsHeader {
-	background-color: #aaa;
+	background-color: #ddd;
 	text-align: center;
 	font-weight: bold;
 	padding: 1px 3px 1px 3px;
 }
 .dark .settingsHeader {
-	background-color: #555;
+	background-color: #333;
 }
-table.settingsHeader {
+table .settingsHeader {	/* In the WebUI */
 	font-size: 1.25em;
 	padding: 3px 3px 3px 3px;
+}
+.settingsHeaderNote {
+	background-color: #ccc;
+	font-weight: normal;
+	font-size: 0.95em;
+}
+.dark .settingsHeaderNote {
+	background-color: #777;
+}
+td:has(.subSettingsHeader) {
+	padding: 1px 0px 0px 0px;
 }
 .subSettingsHeader {
 	color: var(--WebUI-subSetting-color);
@@ -544,17 +552,19 @@ table.settingsHeader {
 }
 div.subSettingsHeader {
 	font-size: 1.05em;
-	margin: 0 3em 0 3em;
+	//margin: 0 3em 0 3em;
 	padding: 3px 0px;
 }
 .dark .subSettingsHeader {
-	margin: 0 3em 0 0em;
+	background-color: var(--WebUI-subSetting-background-color-dark);
+	color: var(--dark-text);
 }
-.dark .subSettingsHeader {
-	background-color: #111111;
-	color: green;
-	margin-top: 10px;
+.subSettingsHeaderNote {
+	background-color: var(--WebUI-subSettingNote-background-color);
+	font-weight: normal;
+	font-size: 0.95em;
 }
+
 .headingRow {
 	font-size: 110%;
 	border-top: 10px solid transparent;
@@ -581,6 +591,8 @@ div.subSettingsHeader {
 }
 .headingTitle {
 	width: 100%;
+	text-align: left;
+	padding-left: 20px;
 }
 
 .boxShadow {
@@ -648,10 +660,7 @@ select {
 /* Error messages */
 .errorMsg, .errorMsgBig { color: red; }
 .errorMsgBig { font-size: 200%; }
-.errorMsgBox { 
-	padding-left: 5px; 
-	padding-right: 5px
-}
+.errorMsgBox { border: 2px solid red; padding-left: 5px; padding-right: 5px}
 
 .EXPIRED { color: red; font-weight: bold; }
 .systemPageAdditionsLineType {
@@ -711,7 +720,7 @@ select {
 	font-weight: bold;
 }
 .dark .WebUISetting {
-	color: #5cb85c;
+	color: var(--WebUI-setting-color-dark);
 }
 .WebUIValue {
 	padding: 0 3px 0 3px;
@@ -752,15 +761,15 @@ select {
 div.sticky {
 	position: -webkit-sticky;
 	position: sticky;
-	top: 0;
+	top: 5px;
 	margin-top: 10px;
-	padding: 10px;
-	background-color: var(--navbar-background-color);
-	border: 2px solid var(--WebUI-setting-color);
+	padding: 10px 0 10px 0;
+	background: rgba(187,187,187, 1);
+	border: 2px solid var(--sticky-border-color);
 }
 .dark div.sticky {
-	background-color: #111111;
-	border: 1px solid green;
+	background: rgba(34,34,34, 0.9);
+	border-color: var(--sticky-border-color-dark);
 }
 #backToTopBtn {
 	display: none; /* Hidden by default */
@@ -832,8 +841,50 @@ div.sticky {
 }
 .imagesSortOrder {
 	font-size: 60%;
-
+}
 .as-nav-toggle {
 	float: left !important;
 	margin-left: 5px;
+}
+
+/* Settings Navigation */
+
+
+/* Boostrap 5 emulation (Assumes $spacer as 1rem) */
+.mt-0 {
+	margin-top: 0 !important;
+}
+.mt-1 {
+	margin-top: 0.25rem !important;
+}
+.mt-2 {
+	margin-top: 0.5rem !important;
+}
+.mt-3 {
+	margin-top: 1rem !important;
+}
+.mt-4 {
+	margin-top: 1.5rem !important;
+}
+.mt-5 {
+	margin-top: 3rem !important;
+}
+
+.ml-0 {
+	margin-left: 0 !important;
+}
+.ml-1 {
+	margin-left: 0.25rem !important;
+}
+.ml-2 {
+	margin-left: 0.5rem !important;
+}
+.ml-3 {
+	margin-left: 1rem !important;
+}
+.ml-4 {
+	margin-left: 1.5rem !important;
+}
+.ml-5 {
+	margin-left: 3rem !important;
 }

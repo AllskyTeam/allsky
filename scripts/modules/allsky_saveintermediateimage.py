@@ -54,21 +54,21 @@ def saveintermediateimage(params, event):
     quality = s.getSetting("quality")
     if quality is not None:
         quality = s.int(quality)
-        path = params["imagefolder"]
-        path = s.convertPath(path)
+        savedPath = params["imagefolder"]
+        path = s.convertPath(savedPath)
         if path is not None:
             path = os.path.join(path, os.path.basename(s.CURRENTIMAGEPATH))
             if not writeImage(s.image, path, quality):
-                result = "Failed to save {}".format(path) 
-                s.log(0, "ERROR: Failed to save image {}".format(path))
+                result = f"Failed to save {path}"
+                s.log(0, f"ERROR: Failed to save image {path}")
             else:
-                result = "Image {} Saved".format(path)
-                s.log(1, "INFO: {}".format(result))
+                result = f"Image {path} Saved"
+                s.log(1, f"INFO: {result}")
         else:
-            result = "Invalid path {0}".format(params["imagefolder"])
-            s.log(0, "ERROR: {}".format(result))
+            result = "Invalid path {savedPath}"
+            s.log(0, f"ERROR: {result}")
     else:
-        result = "Cannot determine the image quality. Intermediate image NOT saved"
-        s.log(0, "ERROR: {}".format(result))
+        result = "Cannot determine the image quality. Intermediate image NOT saved."
+        s.log(0, f"ERROR: {result}")
 
     return result

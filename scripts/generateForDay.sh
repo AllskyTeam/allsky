@@ -3,15 +3,13 @@
 # This script allows users to manually generate or upload keograms, startrails, and timelapses.
 
 # Allow this script to be executed manually, which requires several variables to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"	|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086 source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit ${ALLSKY_ERROR_STOP}
-#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-source "${ALLSKY_CONFIG}/config.sh"		|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck source-path=.
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 
 DO_HELP="false"
 DEBUG_ARG=""
@@ -27,10 +25,11 @@ DO_STARTRAILS="false"
 DO_TIMELAPSE="false"
 THUMBNAIL_ONLY="false"
 THUMBNAIL_ONLY_ARG=""
+IMAGES_FILE=""
 
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
-	case "${ARG}" in
+	case "${ARG,,}" in
 			--help)
 				DO_HELP="true"
 				;;
@@ -55,6 +54,10 @@ while [[ $# -gt 0 ]]; do
 				MSG2="uploaded"
 				# On uploads, we should let upload.sh output messages since it has more details.
 				UPLOAD_SILENT=""
+				;;
+			--images)
+				IMAGES_FILE="${2}"
+				shift
 				;;
 			-k | --keogram)
 				DO_KEOGRAM="true"
@@ -82,40 +85,84 @@ done
 
 usage_and_exit()
 {
-	retcode=${1}
+	local RET=${1}
 	echo
-	[[ ${retcode} -ne 0 ]] && echo -en "${RED}"
+	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
 	echo "Usage: ${ME} [--help] [--silent] [--debug] [--nice n] [--upload] \\"
-	echo "    [--thumbnail-only] [--keogram] [--startrails] [--timelapse] DATE"
-	[[ ${retcode} -ne 0 ]] && echo -en "${NC}"
+	echo "    [--thumbnail-only] [--keogram] [--startrails] [--timelapse] \\"
+	echo "    {--images file | <INPUT_DIR>}"
+	[[ ${RET} -ne 0 ]] && echo -en "${NC}"
 	echo "    where:"
 	echo "      '--help' displays this message and exits."
 	echo "      '--debug' runs upload.sh in debug mode."
 	echo "      '--nice' runs with nice level n."
 	echo "      '--upload' uploads previously-created files instead of creating them."
 	echo "      '--thumbnail-only' creates or uploads video thumbnails only."
-	echo "      'DATE' is the day in '${ALLSKY_IMAGES}' to process."
+	echo "      'INPUT_DIR' is the day in '${ALLSKY_IMAGES}' to process."
 	echo "      '--keogram' will ${MSG1} a keogram."
 	echo "      '--startrails' will ${MSG1} a startrail."
 	echo "      '--timelapse' will ${MSG1} a timelapse."
 	echo "    If you don't specify --keogram, --startrails, or --timelapse, all three will be ${MSG2}."
-	# shellcheck disable=SC2086
-	exit ${retcode}
+	echo
+	echo "The list of images is determined in one of two ways:"
+	echo "1. Looking in '<INPUT_DIR>' for files with an extension of '${EXTENSION}'."
+	echo "   If <INPUT_DIR> is NOT a full path name it is assumed to be in '${ALLSKY_IMAGES}',"
+	echo "   which allows using images on a USB stick, for example."
+	echo "   The output file(s) are stored in <INPUT_DIR>."
+	echo
+	echo "2. Specifying '--images file' uses the images listed in 'file'; <INPUT_DIR> is not used."
+	echo "   The output file is stored in the same directory as the first image."
+	exit "${RET}"
 }
 
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
-[[ $# -eq 0 ]] && usage_and_exit 1
 
-if [[ ${TYPE} == "UPLOAD" ]]; then
-	#shellcheck disable=SC2086,SC1091		# file doesn't exist in GitHub
-	source "${ALLSKY_CONFIG}/ftp-settings.sh" || exit ${ALLSKY_ERROR_STOP}
+if [[ -n ${IMAGES_FILE} ]]; then
+	# If IMAGES_FILE is specified there should be no other arguments.
+	[[ $# -ne 0 ]] && usage_and_exit 1
+elif [[ $# -eq 0 || $# -gt 1 ]]; then
+	usage_and_exit 2
 fi
 
-DATE="${1}"
-OUTPUT_DIR="${ALLSKY_IMAGES}/${DATE}"
-if [[ ! -d ${OUTPUT_DIR} ]]; then
-	echo -e "${RED}${ME}: ERROR: '${OUTPUT_DIR}' not found!${NC}"
-	exit 2
+if [[ -n ${IMAGES_FILE} ]]; then
+	if [[ ! -s ${IMAGES_FILE} ]]; then
+		echo -e "${RED}*** ${ME} ERROR: '${IMAGES_FILE}' does not exist or is empty!${NC}"
+		exit 3
+	fi
+	INPUT_DIR=""		# Not used
+
+	# Use the directory the images are in.  Only look at the first one.
+	I="$( head -1 "${IMAGES_FILE}" )"
+	OUTPUT_DIR="$( dirname "${I}" )"
+
+	# In case the filename doesn't include a path, put in a default location.
+	if [[ ${OUTPUT_DIR} == "." ]]; then
+		OUTPUT_DIR="${ALLSKY_TMP}"
+		echo -en "${ME}: ${YELLOW}"
+		echo "Can't determine where to put files so putting in '${OUTPUT_DIR}'."
+		echo -e "${NC}"
+	fi
+
+	# Use the basename of the directory.
+	DATE="$( basename "${OUTPUT_DIR}" )"
+
+else
+	INPUT_DIR="${1}"
+
+	# If not a full pathname, ${DIRNAME} will be "." so look in ${ALLSKY_IMAGES}.
+	DIRNAME="$( dirname "${INPUT_DIR}" )"
+	if [[ ${DIRNAME} == "." ]]; then
+		DATE="${INPUT_DIR}"
+		INPUT_DIR="${ALLSKY_IMAGES}/${INPUT_DIR}"	# Need full pathname for links.
+	else
+		DATE="$( basename "${INPUT_DIR}" )"
+	fi
+	if [[ ! -d ${INPUT_DIR} ]]; then
+		echo -e "${RED}*** ${ME} ERROR: '${INPUT_DIR}' does not exist!${NC}"
+		exit 4
+	fi
+
+	OUTPUT_DIR="${INPUT_DIR}"	# Put output file(s) in same location as input files.
 fi
 
 if [[ ${GOT} -eq 0 ]]; then
@@ -147,32 +194,51 @@ if [[ ${TYPE} == "GENERATE" ]]; then
 	}
 
 else
-	upload()
-	{
-		FILE_TYPE="${1}"
-		UPLOAD_FILE="${2}"
-		DIRECTORY="${3}"
-		DESTINATION_NAME="${4}"
-		OVERRIDE_DESTINATION_NAME="${5}"	# optional
-		WEB_DIRECTORY="${6}"				# optional
-		if [[ -f ${UPLOAD_FILE} ]]; then
-			# If the user specified a different name for the destination file, use it.
-			if [[ ${OVERRIDE_DESTINATION_NAME} != "" ]]; then
-				DESTINATION_NAME="${OVERRIDE_DESTINATION_NAME}"
-			fi
-			[[ ${SILENT} == "false" ]] && echo "===== Uploading '${UPLOAD_FILE}'"
-			# shellcheck disable=SC2086
-			"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} \
-				"${UPLOAD_FILE}" "${DIRECTORY}" "${DESTINATION_NAME}" \
-				"${FILE_TYPE}" "${WEB_DIRECTORY}"
-			return $?
-		else
-			echo -en "${YELLOW}"
-			echo -n "WARNING: '${UPLOAD_FILE}' not found; skipping."
-			echo -e "${NC}"
-			return 1
+	L_WEB_USE="$( settings ".uselocalwebsite" )"
+	R_WEB_USE="$( settings ".useremotewebsite" )"
+	R_SERVER_USE="$( settings ".useremoteserver" )"
+	if [[ ${L_WEB_USE} == "false" &&
+		  ${R_WEB_USE} == "false" &&
+		  ${R_SERVER_USE} == "false" ]]; then
+		echo -e "${RED}*** ${ME} ERROR: '--upload' specified but nowhere to upload!${NC}"
+		exit 5
+	fi
+
+	# Local Websites don't have directory or file name choices.
+
+	if [[ ${R_WEB_USE} == "true" ]]; then
+		R_WEB_DEST_DIR="$( settings ".remotewebsiteimagedir" )"
+		if [[ -n ${R_WEB_DEST_DIR} && ${R_WEB_DEST_DIR: -1:1} != "" ]]; then
+			R_WEB_DEST_DIR="${R_WEB_DEST_DIR}/"
 		fi
-	}
+
+		if [[ ${DO_KEOGRAM} == "true" ]]; then
+			R_WEB_KEOGRAM_NAME="$( settings ".remotewebsitekeogramdestinationname" )"
+		fi
+		if [[ ${DO_STARTRAILS} == "true" ]]; then
+			R_WEB_STARTRAILS_NAME="$( settings ".remotewebsitestartrailsdestinationname" )"
+		fi
+		if [[ ${DO_TIMELAPSE} == "true" ]]; then
+			R_WEB_VIDEO_NAME="$( settings ".remotewebsitevideodestinationname" )"
+		fi
+	fi
+
+	if [[ ${R_SERVER_USE} == "true" ]]; then
+		R_SERVER_DEST_DIR="$( settings ".remoteserverimagedir" )"
+		if [[ -n ${R_SERVER_DEST_DIR} && ${R_SERVER_DEST_DIR: -1:1} != "" ]]; then
+			R_SERVER_DEST_DIR="${R_SERVER_DEST_DIR}/"
+		fi
+
+		if [[ ${DO_KEOGRAM} == "true" ]]; then
+			R_SERVER_KEOGRAM_NAME="$( settings ".remoteserverkeogramdestinationname" )"
+		fi
+		if [[ ${DO_STARTRAILS} == "true" ]]; then
+			R_SERVER_STARTRAILS_NAME="$( settings ".remoteserverstartrailsdestinationname" )"
+		fi
+		if [[ ${DO_TIMELAPSE} == "true" ]]; then
+			R_SERVER_VIDEO_NAME="$( settings ".remoteservervideodestinationname" )"
+		fi
+	fi
 fi
 
 EXIT_CODE=0
@@ -184,7 +250,7 @@ if [[ ${DO_KEOGRAM} == "true" || ${DO_STARTRAILS} == "true" ]]; then
 	# a non-empty string (eg. IMGSIZE="1280x960") will be produced and later
 	# parts of this script so startrail and keogram generation can use it
 	# to reject incorrectly-sized images.
-	IMGSIZE=$(settings 'if .width != null and .height != null and .width != "0" and .height != "0" and .width != 0 and .height != 0 then "\(.width)x\(.height)" else empty end')
+	IMGSIZE=$( settings 'if .width != null and .height != null and .width != "0" and .height != "0" and .width != 0 and .height != 0 then "\(.width)x\(.height)" else empty end' )
 	if [[ ${IMGSIZE} != "" ]]; then
 		SIZE_FILTER="-s ${IMGSIZE//\"}"
 	else
@@ -196,51 +262,157 @@ fi
 if [[ ${DO_KEOGRAM} == "true" ]]; then
 	KEOGRAM_FILE="keogram-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${OUTPUT_DIR}/keogram/${KEOGRAM_FILE}"
+
 	if [[ ${TYPE} == "GENERATE" ]]; then
-		if [[ -z "${NICE}" ]]; then
+		if [[ -z ${NICE} ]]; then
 			N=""
 		else
 			N="--nice-level ${NICE}"
 		fi
+		KEOGRAM_EXTRA_PARAMETERS="$( settings ".keogramextraparameters" )"
+		MORE=""
+		EXPAND="$( settings ".keogramexpand" )"
+			[[ ${EXPAND} == "true" ]] && MORE="${MORE} --image-expand"
+		NAME="$( settings ".keogramfontname" )"
+			[[ ${NAME} != "" ]] && MORE="${MORE} --font-name ${NAME}"
+		COLOR="$( settings ".keogramfontcolor" )"
+			[[ ${COLOR} != "" ]] && MORE="${MORE} --font-color '${COLOR}'"
+		SIZE="$( settings ".keogramfontsize" )"
+			[[ ${SIZE} != "" ]] && MORE="${MORE} --font-size ${SIZE}"
+		THICKNESS="$( settings ".keogramlinethickness" )"
+			[[ ${THICKNESS} != "" ]] && MORE="${MORE} --font-type ${THICKNESS}"
 		CMD="'${ALLSKY_BIN}/keogram' ${N} ${SIZE_FILTER} -d '${OUTPUT_DIR}' \
-			-e ${EXTENSION} -o '${UPLOAD_FILE}' ${KEOGRAM_EXTRA_PARAMETERS}"
+			-e ${EXTENSION} -o '${UPLOAD_FILE}' ${MORE} ${KEOGRAM_EXTRA_PARAMETERS}"
 		generate "Keogram" "keogram" "${CMD}"
+
+		if [[ $? -gt 90 && (${DO_STARTRAILS} == "true" || ${DO_TIMELAPSE} == "true") ]]; then
+			DO_STARTRAILS="false"
+			DO_TIMELAPSE="false"
+			# -gt 90 means either no files or unable to read initial file, and
+			# keograms will have the same problem, so don't bother running.
+			echo "Keogram creation unable to read files; will not run startrails or timelapse."
+		fi
+
 	else
-		upload "Keogram" "${UPLOAD_FILE}" "${KEOGRAM_DIR}" "${KEOGRAM_FILE}" \
-			 "${KEOGRAM_DESTINATION_NAME}" "${WEB_KEOGRAM_DIR}"
+		if [[ ! -f ${UPLOAD_FILE} ]]; then
+			echo -en "${YELLOW}"
+			echo -n "WARNING: '${UPLOAD_FILE}' not found; skipping."
+			echo -e "${NC}"
+			((EXIT_CODE++))
+		else
+			DEST_DIR="keograms"
+
+			if [[ ${L_WEB_USE} == "true" ]]; then
+				DEST_NAME="${KEOGRAM_FILE}"
+				#shellcheck disable=SC2086
+				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--local-web" \
+					"${UPLOAD_FILE}" "${DEST_DIR}" "${DEST_NAME}"
+				((EXIT_CODE+=$?))
+			fi
+			if [[ ${R_WEB_USE} == "true" ]]; then
+				if [[ -n ${R_WEB_KEOGRAM_NAME} ]]; then
+					DEST_NAME="${R_WEB_KEOGRAM_NAME}"
+				else
+					DEST_NAME="${KEOGRAM_FILE}"
+				fi
+
+				#shellcheck disable=SC2086
+				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--remote-web" \
+					"${UPLOAD_FILE}" "${R_WEB_DEST_DIR}${DEST_DIR}" "${DEST_NAME}" "Keogram"
+				((EXIT_CODE+=$?))
+			fi
+			if [[ ${R_SERVER_USE} == "true" ]]; then
+				if [[ -n ${R_SERVER_KEOGRAM_NAME} ]]; then
+					DEST_NAME="${R_SERVER_KEOGRAM_NAME}"
+				else
+					DEST_NAME="${KEOGRAM_FILE}"
+				fi
+
+				#shellcheck disable=SC2086
+				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--remote-server" \
+					"${UPLOAD_FILE}" "${R_SERVER_DEST_DIR}${DEST_DIR}" "${DEST_NAME}" "Keogram"
+				((EXIT_CODE+=$?))
+			fi
+		fi
 	fi
-	[[ $? -ne 0 ]] && ((EXIT_CODE++))
 fi
 
 if [[ ${DO_STARTRAILS} == "true" ]]; then
 	STARTRAILS_FILE="startrails-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${OUTPUT_DIR}/startrails/${STARTRAILS_FILE}"
 	if [[ ${TYPE} == "GENERATE" ]]; then
-		if [[ -z "${NICE}" ]]; then
+		if [[ -z ${NICE} ]]; then
 			N=""
 		else
 			N="--nice ${NICE}"
 		fi
+		BRIGHTNESS_THRESHOLD="$( settings ".startrailsbrightnessthreshold" )"
+		STARTRAILS_EXTRA_PARAMETERS="$( settings ".startrailsextraparameters" )"
 		CMD="'${ALLSKY_BIN}/startrails' ${N} ${SIZE_FILTER} -d '${OUTPUT_DIR}' \
 			-e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o '${UPLOAD_FILE}' \
 			${STARTRAILS_EXTRA_PARAMETERS}"
 		generate "Startrails, threshold=${BRIGHTNESS_THRESHOLD}" "startrails" "${CMD}"
+
+		if [[ $? -gt 90 && (${DO_KEOGRAM} == "true" || ${DO_TIMELAPSE} == "true") ]]; then
+			DO_STARTRAILS="false"
+			# -gt 90 means either no files or unable to read initial file, and
+			# startrails will have the same problem, so don't bother running.
+			echo "Startrails creation unable to read files; will not run keogram or timelapse."
+		fi
+
 	else
-		upload "Startrails" "${UPLOAD_FILE}" "${STARTRAILS_DIR}" "${STARTRAILS_FILE}" \
-			"${STARTRAILS_DESTINATION_NAME}" "${WEB_STARTRAILS_DIR}"
+		if [[ ! -f ${UPLOAD_FILE} ]]; then
+			echo -en "${YELLOW}"
+			echo -n "WARNING: '${UPLOAD_FILE}' not found; skipping."
+			echo -e "${NC}"
+			((EXIT_CODE++))
+		else
+			DEST_DIR="startrails"
+
+			if [[ ${L_WEB_USE} == "true" ]]; then
+				DEST_NAME="${STARTRAILS_FILE}"
+				#shellcheck disable=SC2086
+				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--local-web" \
+					"${UPLOAD_FILE}" "${DEST_DIR}" "${DEST_NAME}"
+				((EXIT_CODE+=$?))
+			fi
+			if [[ ${R_WEB_USE} == "true" ]]; then
+				if [[ -n ${R_WEB_STARTRAILS_NAME} ]]; then
+					DEST_NAME="${R_WEB_STARTRAILS_NAME}"
+				else
+					DEST_NAME="${STARTRAILS_FILE}"
+				fi
+
+				#shellcheck disable=SC2086
+				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--remote-web" \
+					"${UPLOAD_FILE}" "${R_WEB_DEST_DIR}${DEST_DIR}" "${DEST_NAME}" "Startrails"
+				((EXIT_CODE+=$?))
+			fi
+			if [[ ${R_SERVER_USE} == "true" ]]; then
+				if [[ -n ${R_SERVER_STARTRAILS_NAME} ]]; then
+					DEST_NAME="${R_SERVER_STARTRAILS_NAME}"
+				else
+					DEST_NAME="${STARTRAILS_FILE}"
+				fi
+
+				#shellcheck disable=SC2086
+				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--remote-server" \
+					"${UPLOAD_FILE}" "${R_SERVER_DEST_DIR}${DEST_DIR}" "${DEST_NAME}" "Startrails"
+				((EXIT_CODE+=$?))
+			fi
+		fi
 	fi
-	[[ $? -ne 0 ]] && ((EXIT_CODE++))
 fi
 
 if [[ ${DO_TIMELAPSE} == "true" ]]; then
-	VIDEOS_FILE="allsky-${DATE}.mp4"
+	VIDEO_FILE="allsky-${DATE}.mp4"
 	# Need a different name for the file so it's not mistaken for a regular image in the WebUI.
 	THUMBNAIL_FILE="thumbnail-${DATE}.jpg"
 
-	UPLOAD_THUMBNAIL_NAME="allsky-${DATE}.jpg"
 	UPLOAD_THUMBNAIL="${OUTPUT_DIR}/${THUMBNAIL_FILE}"
-	UPLOAD_FILE="${OUTPUT_DIR}/${VIDEOS_FILE}"
+	UPLOAD_FILE="${OUTPUT_DIR}/${VIDEO_FILE}"
 
+	TIMELAPSE_UPLOAD_THUMBNAIL="$( settings ".timelapseuploadthumbnail" )"
 	if [[ ${TYPE} == "GENERATE" ]]; then
 		if [[ ${THUMBNAIL_ONLY} == "true" ]]; then
 			if [[ -f ${UPLOAD_FILE} ]]; then
@@ -251,16 +423,21 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 				RET=1
 			fi
 		else
-			if [[ -z "${NICE}" ]]; then
+			if [[ -z ${NICE} ]]; then
 				N=""
 			else
 				N="nice -n ${NICE}"
 			fi
-			CMD="${N} '${ALLSKY_SCRIPTS}/timelapse.sh' --output '${UPLOAD_FILE}' ${DATE}"
+			if [[ -n ${IMAGES_FILE} ]]; then
+				X="--images '${IMAGES_FILE}'"
+			else
+				X="--output '${UPLOAD_FILE}' '${INPUT_DIR}'"
+			fi
+			CMD="${N} '${ALLSKY_SCRIPTS}/timelapse.sh' ${DEBUG_ARG} ${X}"
 			generate "Timelapse" "" "${CMD}"	# it creates the necessary directory
 			RET=$?
 		fi
-		if [[ ${RET} -eq 0 && ${TIMELAPSE_UPLOAD_THUMBNAIL} == "true" ]]; then
+		if [[ ${RET} -eq 0 && ${TIMELAPSE_UPLOAD_THUMBNAIL} == "true" && -s ${UPLOAD_FILE} ]]; then
 			rm -f "${UPLOAD_THUMBNAIL}"
 			# Want the thumbnail to be near the start of the video, but not the first frame
 			# since that can be a lousy frame.
@@ -273,25 +450,80 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 				echo -e "${RED}${ME}: ERROR: video thumbnail not created!${NC}"
 			fi
 		fi
+
+	elif [[ ! -f ${UPLOAD_FILE} ]]; then
+		echo -en "${YELLOW}"
+		echo -n "WARNING: '${UPLOAD_FILE}' not found; skipping."
+		echo -e "${NC}"
+		((EXIT_CODE++))
 	else
-		if [[ ${THUMBNAIL_ONLY} == "true" ]]; then
-			RET=0
-		else
-			upload "Timelapse" "${UPLOAD_FILE}" "${VIDEOS_DIR}" "${VIDEOS_FILE}" \
-				"${VIDEOS_DESTINATION_NAME}" "${WEB_VIDEOS_DIR}"
-			RET=$?
-		fi
-		if [[ ${RET} -eq 0 && ${TIMELAPSE_UPLOAD_THUMBNAIL} == "true" && -f ${UPLOAD_THUMBNAIL} ]]; then
-			if [[ -n ${WEB_VIDEOS_DIR} ]]; then
-				W="${WEB_VIDEOS_DIR}/thumbnails"
+		DEST_DIR="videos"
+
+		if [[ ${L_WEB_USE} == "true" ]]; then
+			DEST_NAME="${VIDEO_FILE}"		# no name choice for local Website
+			D="${DEST_DIR}"
+			if [[ ${THUMBNAIL_ONLY} != "true" ]]; then
+				#shellcheck disable=SC2086
+				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--local-web" \
+					"${UPLOAD_FILE}" "${D}" "${DEST_NAME}"
+				RET=$?
+				((EXIT_CODE+=RET))
 			else
-				W=""
+				RET=0
 			fi
-			upload "TimelapseThumbnail" "${UPLOAD_THUMBNAIL}" "${VIDEOS_DIR}/thumbnails" \
-				"${UPLOAD_THUMBNAIL_NAME}" "" "${W}"
+			if [[ ${RET} -eq 0 && ${TIMELAPSE_UPLOAD_THUMBNAIL} == "true" && -f ${UPLOAD_THUMBNAIL} ]]; then
+				#shellcheck disable=SC2086
+				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--local-web" \
+					"${UPLOAD_THUMBNAIL}" "${D}/thumbnails" "${DEST_NAME/mp4/jpg}"
+			fi
+		fi
+		if [[ ${R_WEB_USE} == "true" ]]; then
+			if [[ -n ${R_WEB_VIDEO_NAME} ]]; then
+				DEST_NAME="${R_WEB_VIDEO_NAME}"
+			else
+				DEST_NAME="${VIDEO_FILE}"
+			fi
+
+			D="${R_WEB_DEST_DIR}${DEST_DIR}"
+			if [[ ${THUMBNAIL_ONLY} != "true" ]]; then
+				#shellcheck disable=SC2086
+				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--remote-web" \
+					"${UPLOAD_FILE}" "${D}" "${DEST_NAME}" "Timelapse"
+				RET=$?
+				((EXIT_CODE+=RET))
+			else
+				RET=0
+			fi
+			if [[ ${RET} -eq 0 && ${TIMELAPSE_UPLOAD_THUMBNAIL} == "true" && -f ${UPLOAD_THUMBNAIL} ]]; then
+				#shellcheck disable=SC2086
+				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--remote-web" \
+					"${UPLOAD_THUMBNAIL}" "${D}/thumbnails" "${DEST_NAME/mp4/jpg}" "TimelapseThumbnail"
+			fi
+		fi
+		if [[ ${R_SERVER_USE} == "true" ]]; then
+			if [[ -n ${R_SERVER_VIDEO_NAME} ]]; then
+				DEST_NAME="${R_SERVER_VIDEO_NAME}"
+			else
+				DEST_NAME="${VIDEO_FILE}"
+			fi
+
+			D="${R_SERVER_DEST_DIR}${DEST_DIR}"
+			if [[ ${THUMBNAIL_ONLY} != "true" ]]; then
+				#shellcheck disable=SC2086
+				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--remote-server" \
+					"${UPLOAD_FILE}" "${D}" "${DEST_NAME}" "Timelapse"
+				RET=$?
+				((EXIT_CODE+=RET))
+			else
+				RET=0
+			fi
+			if [[ ${RET} -eq 0 && ${TIMELAPSE_UPLOAD_THUMBNAIL} == "true" && -f ${UPLOAD_THUMBNAIL} ]]; then
+				#shellcheck disable=SC2086
+				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--remote-server" \
+					"${UPLOAD_THUMBNAIL}" "${D}/thumbnails" "${DEST_NAME/mp4/jpg}" "TimelapseThumbnail"
+			fi
 		fi
 	fi
-	[[ ${RET} -ne 0 ]] && ((EXIT_CODE++))
 fi
 
 
@@ -306,5 +538,4 @@ if [[ ${TYPE} == "GENERATE" && ${SILENT} == "false" && ${EXIT_CODE} -eq 0 ]]; th
 	echo "================"
 fi
 
-#shellcheck disable=SC2086
-exit ${EXIT_CODE}
+exit "${EXIT_CODE}"

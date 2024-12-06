@@ -16,6 +16,7 @@
 	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<script src="../js/all.min.js" type="application/javascript"></script>
 	<title>Nomenclature</title>
 </head>
 <body>
@@ -24,70 +25,86 @@
 <div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
 <div class="Layout-main markdown-body" id="mainContents">
 
-<h2>Allsky Suite</h2>
-The AllSky suite of software consists of two GitHub packages:
+<h2>Allsky Software</h2>
+The GitHub <a href="https://github.com/AllskyTeam/allsky" external="true"><code>allsky</code></a>
+repository consists of two main parts which are both
+included when installing Allsky.
 <ol>
-<li><a href="https://github.com/AllskyTeam/allsky"><code>allsky</code></a>
-is the main program that captures and saves images.
-This also includes the Web User Interface (<b>WebUI</b>)
-used to administer AllSky and parts of your Pi.
-In addition to taking pictures, you can also:
-<ul>
-	<li>Display the most recent image, called a <b>Liveview</b>.
-	<li>View all saved prior images, timelapse, keograms, and startrails.
-	<li>Configure Allsky settings via a web form and a built-in color text editor.
-	<li>See the status of the LAN and WLAN (Wireless LAN).
-	<li>Configure Wi-Fi.
-	<li>Change the WebUI login name and password.
-	<li>View information about the Pi such as amount of free disk space, CPU temperature, etc.
-	<li>Optionally view user-generated data such as ambient temperature or fan speed.
-	<li>View Allsky Documentation, of which this page is part of.
-</ul>
+	<li><strong>Allsky</strong>
+		is the main program that captures and saves images
+		and includes the Web User Interface (<b>WebUI</b>)
+		used to administer Allsky and parts of your Pi.
+		You can also:
+		<ul class="minimalPadding topPadding">
+			<li>Display the most recent image, called a <b>Liveview</b>.
+			<li>View all saved prior images, timelapses, keograms, and startrails.
+			<li>Configure Allsky settings via the WebUI.
+			<li>See the status of the LAN and WLAN (Wireless LAN).
+			<li>Configure Wi-Fi.
+			<li>View information about the Pi such as amount of free disk space,
+				CPU temperature, etc.
+			<li>Optionally view user-generated data such as ambient temperature or fan speed.
+			<li>View Allsky Documentation, of which this page is part of.
+		</ul>
 
-<li><a href="https://github.com/AllskyTeam/allsky-website"><code>allsky-website</code></a>
-is an optional simple web interface that displays:
-<ul>
-	<li>The most recent image.
-	<li>An optional constellation overlay on the image.
-	<li>Saved startrails, keograms, and/or timelapse videos.
-	<li>Optionally the most recent "mini" timelapse video.
-	<li>Information about your camera (location, owner, Pi version, camera type, etc.).
-	<li>Optional information about your settings.
-</ul>
-<p>
-The <b>Allsky Website</b> can run on your Pi and/or one or more remote computers.
-</p>
+	<li><strong>Allsky Website</strong> is a simple web interface that
+		can run on your Pi and/or a remote server and displays:
+		<ul class="minimalPadding topPadding">
+			<li>The most recent image.
+			<li>An optional constellation overlay on the image.
+			<li>Saved startrails, keograms, and/or timelapse videos.
+			<li>Optionally the most recent "mini" timelapse video.
+			<li>Information about your camera like location, owner,
+				Pi version, camera type, etc.
+			<li>Optional information about your settings.
+		</ul>
 </ol>
+<p>
+The GitHub
+<a href="https://github.com/AllskyTeam/allsky-modules" external="true">
+<code>user-modules</code></a>
+repository contains additional, user-developed
+modules that can be used with Allsky as explained on the
+<a allsky="true" external="true" href="../modules/modules.html">Modules page</a>.
+</p>
 
 <h2>Terms</h2>
 <ul>
-<li>When a page says "AllSky Software" or just "software" it's referring to
-	the main Allsky software that's running on your Pi from the
-	<span class="fileName">~/allsky</span> directory.
-<li>The <code>allsky-website</code> package is usually referred to as the
-<b>Allsky Website</b> or just the <b>Website</b> (with a capital W).
-<li>The <span class="fileName">config.sh</span> file holds a lot of the Allsky settings
-and must be edited via the <span class="WebUIWebPage">Editor</span> link in the WebUI,
-NOT by manually editting it.
-<li>The <span class="fileName">ftp-settings.sh</span> file holds the upload-related settings and
-must also be edited using the <span class="WebUIWebPage">Editor</span> page.
+	<li>The <b>WebUI</b> is the Web User Interface used to administer Allsky.
+	<li>When a page says "Allsky Software" or just "software" it's referring to
+		the main Allsky software that's running on your Pi and resides in the
+		<span class="fileName">~/allsky</span> directory.
+	<li>A <b>server</b>, as in "remote server", is a computer that often sits
+		in a datacenter and has a dedicated purpose such as hosting web pages or returning
+		search results like Google.
+	<li>The term <b>Allsky Website</b> is often shortened to
+		<b>Website</b> - always with a capital <b>W</b>.
+	<li>A <b>local</b> Allsky Website runs on the same Pi that Allsky runs on.
+		<br>A <b>remote</b> Website runs somewhere else.
+		Allsky doesn't care if the remote machine is a true "server" or
+		simply a 10-year old PC sitting under your desk.
+		The Allsky documentation considers both of them a "remote server".
 </ul>
 
 
 <h2>Documentation Conventions</h2>
-Commands that are to be executed look like this: <code>systemctl start allsky</code>.
-When multiple commands are to be executed they are usually displayed like this:
+<ul>
+	<li>Commands that are to be executed on the Pi
+		look like this: <code>systemctl start allsky</code>.
+		When multiple commands are to be executed they are usually displayed like this
+		and can typically be copied from the documenation and pasted into a Pi terminal window:
 <pre>
 systemctl start allsky
 date
 </pre>
 
-File names are shown as: <span class="fileName">config.sh</span>.
-<br>
-Menu items on the WebUI are shown as: <span class="WebUIWebPage">Editor</span>.
-<br>
-Settings in the WebUI appear as: <span class="WebUISetting">Debug Level</span>.
-
+	<li>File and directory names are shown as:
+		<span class="fileName">configuration.json</span>.
+	<li>Links on the WebUI to its various pages are shown as:
+		<span class="WebUILink">Editor</span>.
+	<li>Settings in the WebUI appear as: <span class="WebUISetting">Debug Level</span>.
+		Settings' values in the WebUI appear as: <span class="WebUIValue">3</span>.
+</ul>
 
 </div><!-- Layout-main -->
 </div><!-- Layout -->

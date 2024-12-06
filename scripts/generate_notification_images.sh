@@ -6,11 +6,11 @@
 # This is quick - on a Pi 4 it takes about one second per image.
 
 # Allow this script to be executed manually, which requires several variables to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$(realpath "$(dirname "${BASH_ARGV0}")/..")"
-ME="$(basename "${BASH_ARGV0}")"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+ME="$( basename "${BASH_ARGV0}" )"
 
-#shellcheck disable=SC2086 source-path=.
-source "${ALLSKY_HOME}/variables.sh"	|| exit ${ALLSKY_ERROR_STOP}
+#shellcheck disable=SC1091 source-path=.
+source "${ALLSKY_HOME}/variables.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 readonly ALL_EXTS="jpg png"		# all the image filename extensions we support
 
@@ -22,21 +22,23 @@ DEFAULT_IMAGE_SIZE="959x719"
 
 function usage_and_exit()
 {
-	RET=${1}
-	(
+	local RET=${1}
+	{
 		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
 		echo -e "\nUsage: ${ME} [--help] [--directory dir] [--size XxY]"
-		echo -e "    [type TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderWidth BorderColor Extensions ImageSize 'Message']\n"
+		echo -e "    [type TextColor Font FontSize StrokeColor StrokeWidth BgColor"
+		echo -e "     BorderWidth BorderColor Extensions ImageSize Message]\n"
 		[[ ${RET} -ne 0 ]] && echo -en "${NC}"
-		echo "When run with no arguments, all notification types are created with extensions: ${ALL_EXTS/ /, }."
-		echo "Arguments:"
-		echo "  '--help' displays this message and exits."
-		echo "  '--directory dir' creates the file(s) in that directory, otherwise in \${PWD}."
-		echo "  '--size XxY' creates images that are X by Y pixels.  Default: ${DEFAULT_IMAGE_SIZE} pixels."
+		echo -n "When run with no arguments, all notification types are created with extensions:"
+		echo    "  ${ALL_EXTS/ /, }."
+		echo    "Arguments:"
+		echo    "  '--help' displays this message and exits."
+		echo    "  '--directory dir' creates the file(s) in that directory, otherwise in \${PWD}."
+		echo -n "  '--size XxY' creates images that are X by Y pixels."
+		echo    "  Default: ${DEFAULT_IMAGE_SIZE} pixels."
 		echo
-	) >&2
-	# shellcheck disable=SC2086
-	exit ${RET}
+	} >&2
+	exit "${RET}"
 }
 
 # Check arguments
@@ -46,7 +48,7 @@ DIRECTORY=""
 IMAGE_SIZE="${DEFAULT_IMAGE_SIZE}"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
-	case "${ARG}" in
+	case "${ARG,,}" in
 		--help)
 			HELP="true"
 			;;
@@ -83,8 +85,12 @@ done
 MAX_ARGS=12
 
 if [[ $# -ne 0 && $# -ne ${MAX_ARGS} ]]; then
-	echo -e "${RED}${ME}: ERROR: Either specify ALL ${MAX_ARGS} arguments, or don't specify any.${NC}" >&2
-	echo "You specified $# arguments." >&2
+	{
+		echo -e "${RED}"
+		echo    "${ME}: ERROR: Either specify ALL ${MAX_ARGS} arguments, or don't specify any."
+		echo -e "${NC}"
+		echo "You specified $# arguments."
+	} >&2
 	usage_and_exit 1
 fi
 
@@ -108,7 +114,7 @@ function make_image()
 	TEXTCOLOR="${2:-"white"}"
 	FONT="${3:-"Helvetica-Bold"}"
 	FONT_SIZE="${4:-128}"
-	INTERLINE_SPACING=$(echo "${FONT_SIZE} / 3" | bc)
+	INTERLINE_SPACING=$( echo "${FONT_SIZE} / 3" | bc )
 	STROKE_COLOR="${5:-"black"}"
 	STROKE_WIDTH="${6:-2}"
 	BGCOLOR="${7:-"#404040"}"
@@ -130,8 +136,11 @@ function make_image()
 		BORDER=""
 	fi
 
-	[[ ${ON_TTY} -eq 1 ]] && echo "Creating '${BASENAME}' in ${PWD}."
+	[[ ${ON_TTY} == "true" ]] && echo "Creating '${BASENAME}' in ${PWD}."
 	for EXT in ${EXTS} ; do
+		# In case ${EXT} starts with a ".", remove it.
+		EXT="${EXT/./}"
+
 		# Make highest quality for jpg and highest loss-less compression for png.
 		# jpg files at 95% produce somewhat bad artifacts.  Even 100% produces some artifacts.
 
@@ -155,17 +164,22 @@ function make_image()
 			-depth 8 \
 			-size "${IM_SIZE}" \
 			label:"${MSG}" \
-			"${BASENAME}.${EXT}"
+			"${BASENAME}.${EXT}" || echo "${ME}: Unable to create image for '${MSG}'" >&2
 	done
+
+	return 0
 }
 
-which mogrify > /dev/null
-if [[ $? -ne 0 ]]; then
+if ! which mogrify > /dev/null ; then
 	# Testing for mogrify which seems like a much more distinctive executable
 	# name than "convert". I assume that if "mogrify" is in the path, then
 	# ImageMagick is installed and "convert" will run ImageMagick and not some
 	# other tool.
-	echo -e "${RED}${ME}: ERROR: ImageMagick does not appear to be installed. Please install it.${NC}" >&2
+	{
+		echo -e "${RED}"
+		echo -e "${ME}: ERROR: ImageMagick does not appear to be installed. Please install it."
+		echo -e "${NC}"
+	} >&2
 	exit 2
 fi
 
@@ -182,23 +196,26 @@ fi
 # If the arguments were specified on the command line, use them instead of the list below.
 if [[ $# -eq ${MAX_ARGS} ]]; then
 	make_image "${@}"
-
-elif [[ $# -eq 0 ]]; then
-#            #1                   #2         #3                 #4     #5        #6      #7         #8      #9        #10         #11       #12
-#            Basename             Text       Font               Font   Stroke    Stroke  Background Border  Border    Extensions  Image     Message
-#                                 Color      Name               Size   Color     Width   Color      Width   Color                 Size
-#            ""                   "white"    "Helvetica-Bold"   128    "black"   2       "#404040"  0       "white"   ${ALL_EXTS} "959x719" ""
-#            +--------------------+----------+------------------+------+---------+-------+----------+-------+---------+-----------+---------+--------------------------------------
-  make_image NotRunning           "red"      ""                 ""     ""        ""      ""         ""      ""        ""          ""        "Allsky\nis not\nrunning"
-  make_image DarkFrames           "green"    ""                 ""     "white"    1      "black"    ""      ""        ""          ""        "Camera\nis taking\ndark frames"
-  make_image StartingUp           "lime"     ""                 150    ""        ""      ""         10      "lime"    ""          ""        "Allsky\nis starting\nup"
-  make_image Restarting           "lime"     ""                 ""     ""        ""      ""          7      "lime"    ""          ""        "Allsky\nis restarting"
-  make_image CameraOffDuringDay   "#ffff4a"  ""                 ""     ""        ""      "gray"      5      "yellow"  ""          ""        "Camera\nis off\nduring the day"
-  make_image Error                "red"      ""                 80     ""        ""      ""         10      "red"     ""          ""        "ERROR\n\nSee\n/var/log/allsky.log\nfor details"
-
-  make_image ConfigurationNeeded  "yellow"   ""                 80     ""        ""      ""         ""      ""        ""          ""        "***\nUse the WebUI\n'Allsky Settings'\nlink to\nconfigure Allsky\n***"
-  make_image InstallationFailed   "red"      ""                 ""     ""        ""      ""         10      "red"     ""          ""        "***\nInstallation\nfailed\n***"
-  make_image InstallationInProgress "yellow" ""                 80     ""        ""      ""         ""      ""        ""          ""        "***\nAllsky installation\nin progress.\nDo NOT\nchange anything.\n***"
-  make_image RebootNeeded         "yellow"   ""                 ""     ""        ""      ""          7      "yellow"  ""          ""        "***\nReboot\nNeeded\n***"
-
+	exit $?
 fi
+
+
+#          #1                   #2         #3                 #4     #5        #6      #7         #8      #9        #10         #11       #12
+#          Basename             Text       Font               Font   Stroke    Stroke  Background Border  Border    Extensions  Image     Message
+#                               Color      Name               Size   Color     Width   Color      Width   Color                 Size
+#          ""                   "white"    "Helvetica-Bold"   128    "black"   2       "#404040"  0       "white"   ${ALL_EXTS} "959x719" ""
+#          +--------------------+----------+------------------+------+---------+-------+----------+-------+---------+-----------+---------+--------------------------------------
+make_image NotRunning           "red"      ""                 ""     ""        ""      ""         ""      ""        ""          ""        "Allsky\nis not\nrunning"
+make_image DarkFrames           "green"    ""                 ""     "white"    1      "black"    ""      ""        ""          ""        "Camera\nis taking\ndark frames"
+make_image StartingUp           "lime"     ""                 150    ""        ""      ""         10      "lime"    ""          ""        "Allsky\nis starting\nup"
+make_image Restarting           "lime"     ""                 ""     ""        ""      ""          7      "lime"    ""          ""        "Allsky\nis restarting"
+make_image CameraOffDuringDay   "#ffff4a"  ""                 ""     ""        ""      "gray"      5      "yellow"  ""          ""        "Camera\nis off\nduring the day"
+make_image CameraOffDuringNight "#ffff4a"  ""                 ""     ""        ""      "gray"      5      "yellow"  ""          ""        "Camera\nis off\nat night"
+make_image Error                "red"      ""                 80     ""        ""      ""         10      "red"     ""          ""        "ERROR\n\nSee the WebUI\nfor details"
+
+make_image ConfigurationNeeded  "yellow"   ""                 80     ""        ""      ""         ""      ""        ""          ""        "***\nUse the WebUI\n'Allsky Settings'\npage to\nconfigure Allsky\n***"
+make_image InstallationFailed   "red"      ""                 ""     ""        ""      ""         10      "red"     ""          ""        "***\nInstallation\nfailed\n***"
+make_image InstallationInProgress "yellow" ""                 80     ""        ""      ""         ""      ""        ""          ""        "***\nAllsky installation\nin progress.\nDo NOT\nchange anything.\n***"
+make_image RebootNeeded         "yellow"   ""                 ""     ""        ""      ""          7      "yellow"  ""          ""        "***\nReboot\nNeeded\n***"
+
+exit 0

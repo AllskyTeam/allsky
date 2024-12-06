@@ -161,10 +161,10 @@ def starcount(params, event):
                 image = cv2.imread(debugimage)
                 if image is None:
                     image = s.image
-                    s.log(4, "WARNING: Debug image set to {0} but cannot be found, using latest allsky image".format(debugimage))
+                    s.log(4, f"WARNING: Debug image set to {debugimage} but cannot be found, using latest allsky image")
                 else:
                     usingDebugImage = True
-                    s.log(4, "WARNING: Using debug image {0}".format(debugimage))
+                    s.log(4, f"WARNING: Using debug image {debugimage}")
             else:
                 image = s.image
 
@@ -181,7 +181,7 @@ def starcount(params, event):
 
             imageMask = None
             if mask != "":
-                maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_OVERLAY"),"images",mask)
+                maskPath = os.path.join(s.ALLSKY_OVERLAY, "images", mask)
                 imageMask = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
                 if debug:
                     s.writeDebugImage(metaData["module"], "b-image-mask.png", imageMask) 
@@ -195,7 +195,7 @@ def starcount(params, event):
                     if debug:
                         s.writeDebugImage(metaData["module"], "h-masked-image.png", gray_image)                   
                 else:
-                    s.log(0,"ERROR: Source image and mask dimensions do not match")
+                    s.log(0,"ERROR: Source image and mask dimensions do not match.")
                     imageLoaded = False
 
             detectedImageClean = gray_image.copy()
@@ -235,20 +235,20 @@ def starcount(params, event):
                 s.writeDebugImage(metaData["module"], "final.png", image)
 
             starCount = len(starList)
-            os.environ["AS_STARCOUNT"] = str(starCount)
+            s.setEnvironmentVariable("AS_STARCOUNT", str(starCount))
 
-            result = "Total stars found {0}".format(starCount)
-            s.log(4,"INFO: {0}".format(result))
+            result = f"Total stars found {starCount}"
+            s.log(4, f"INFO: {result}")
         else:
-            result = "Sky is not clear so ignoring starcount"
-            s.log(4,"INFO: {0}".format(result))                 
-            os.environ["AS_STARCOUNT"] = "Disabled"
+            result = "Sky is not clear so ignoring starcount."
+            s.log(4, f"INFO: {result}")
+            s.setEnvironmentVariable("AS_STARCOUNT", "Disabled")
     else:
-        result = "Its raining so ignorning starcount"
-        s.log(4,"INFO: {0}".format(result))
-        os.environ["AS_STARCOUNT"] = "Disabled"
+        result = "Its raining so ignorning starcount."
+        s.log(4, f"INFO: {result}")
+        s.setEnvironmentVariable("AS_STARCOUNT", "Disabled")
 
-    return "{}".format(result)
+    return "{result}"
 
 def starcount_cleanup():
     moduleData = {

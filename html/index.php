@@ -14,7 +14,7 @@
  */
 
 // Globals
-$lastChangedName = "lastChanged";	// json setting name
+$lastChangedName = "lastchanged";	// json setting name
 $formReadonly = false;				// The WebUI isn't readonly
 $ME = htmlspecialchars($_SERVER["PHP_SELF"]);
 
@@ -23,55 +23,41 @@ $ME = htmlspecialchars($_SERVER["PHP_SELF"]);
 include_once('includes/functions.php');
 include_once('includes/status_messages.php');
 $status = new StatusMessages();
-$needToDisplayMessages = false;
 initialize_variables();		// sets some variables
 
 // Constants for configuration file paths.
 // These are typical for default RPi installs. Modify if needed.
-define('RASPI_ADMIN_DETAILS', RASPI_CONFIG . '/raspap.auth');
-define('RASPI_DNSMASQ_CONFIG', '/etc/dnsmasq.conf');
-define('RASPI_DNSMASQ_LEASES', '/var/lib/misc/dnsmasq.leases');
-define('RASPI_HOSTAPD_CONFIG', '/etc/hostapd/hostapd.conf');
+include_once('includes/authenticate.php');
 define('RASPI_WPA_SUPPLICANT_CONFIG', '/etc/wpa_supplicant/wpa_supplicant.conf');
-define('RASPI_HOSTAPD_CTRL_INTERFACE', '/var/run/hostapd');
 define('RASPI_WPA_CTRL_INTERFACE', '/var/run/wpa_supplicant');
 
 // Optional services, set to true to enable.
+define('DHCP_ENABLED', true);
+define('APD_ENABLED', false);
 define('RASPI_OPENVPN_ENABLED', false);
 define('RASPI_TORPROXY_ENABLED', false);
 
-if (RASPI_OPENVPN_ENABLED) {
-	define('RASPI_OPENVPN_CLIENT_CONFIG', '/etc/openvpn/client.conf');
-	define('RASPI_OPENVPN_SERVER_CONFIG', '/etc/openvpn/server.conf');
+if (DHCP_ENABLED) {
+	define('RASPI_DNSMASQ_CONFIG', '/etc/dnsmasq.conf');
+	define('RASPI_DNSMASQ_LEASES', '/var/lib/misc/dnsmasq.leases');
 } else {
-	function DisplayOpenVPNConfig() {}
+	function DisplayDHCPConfig() {}
 }
-if (RASPI_TORPROXY_ENABLED) {
-	define('RASPI_TORPROXY_CONFIG', '/etc/tor/torrc');
+if (APD_ENABLED) {
+	define('RASPI_HOSTAPD_CONFIG', '/etc/hostapd/hostapd.conf');
+	define('RASPI_HOSTAPD_CTRL_INTERFACE', '/var/run/hostapd');
 } else {
-	function DisplayTorProxyConfig() {}
+	function DisplayHostAPDConfig() {}
 }
-
-include_once('includes/raspap.php');
-include_once('includes/dashboard_WLAN.php');
-include_once('includes/dashboard_LAN.php');
-include_once('includes/liveview.php');
-include_once('includes/authenticate.php');
-include_once('includes/admin.php');
-include_once('includes/dhcp.php');
-include_once('includes/hostapd.php');
-include_once('includes/system.php');
-include_once('includes/configureWiFi.php');
-include_once('includes/allskySettings.php');
-include_once('includes/days.php');
-include_once('includes/images.php');
-include_once('includes/editor.php');
-include_once('includes/overlay.php');
-include_once('includes/module.php');
 if (RASPI_OPENVPN_ENABLED || RASPI_TORPROXY_ENABLED) {
 	include_once('includes/torAndVPN.php');
+	define('RASPI_OPENVPN_CLIENT_CONFIG', '/etc/openvpn/client.conf');
+	define('RASPI_OPENVPN_SERVER_CONFIG', '/etc/openvpn/server.conf');
+	define('RASPI_TORPROXY_CONFIG', '/etc/tor/torrc');
 } else {
 	function SaveTORAndVPNConfig() {}
+	function DisplayOpenVPNConfig() {}
+	function DisplayTorProxyConfig() {}
 }
 
 $output = $return = 0;
@@ -98,26 +84,27 @@ if ($useLogin) {
 	$csrf_token = $_SESSION['csrf_token'];
 }
 
-// Get the version of the Allsky Website on the Pi, if it exists.
-$websiteFile = ALLSKY_WEBSITE . "/version";
-if (file_exists($websiteFile)) {
-	$localWebsiteVersion = file_get_contents($websiteFile);
-} else {
-	$localWebsiteVersion = "";
-}
-// Ditto for a remote Allsky Website.
+// Get the version of the remote Allsky Website, if it exists.
 $remoteWebsiteVersion = "";
-$f = ALLSKY_WEBSITE_REMOTE_CONFIG;
-if (file_exists($f)) {
-	$errorMsg = "WARNING: Unable to process '$f'.";
+if ($useRemoteWebsite) {
+	$f = getRemoteWebsiteConfigFile(); 
+	$errorMsg = "WARNING: ";
 	$retMsg = "";
 	$a_array = get_decoded_json_file($f, true, $errorMsg, $retMsg);
 	if ($a_array === null) {
-		echo "$retMsg";
+		$status->addMessage($retMsg, 'warning');
 	} else {
 		$c = getVariableOrDefault($a_array, 'config', '');
-		if ($c !== "")
-			$remoteWebsiteVersion = getVariableOrDefault($c, 'AllskyWebsiteVersion', '<span class="errorMsg">[unknown]</span>');
+		if ($c !== "") {
+			$remoteWebsiteVersion = getVariableOrDefault($c, 'AllskyVersion', null);
+			if ($remoteWebsiteVersion === null) {
+				$remoteWebsiteVersion = '<span class="errorMsg">[version unknown]</span>';
+			} else if ($remoteWebsiteVersion == ALLSKY_VERSION) {
+				$remoteWebsiteVersion = "";		// don't display if same version as Allsky
+			} else {
+				$remoteWebsiteVersion = "&nbsp; (version $remoteWebsiteVersion)";
+			}
+		}
 	}
 }
 ?>
@@ -137,9 +124,10 @@ if (file_exists($f)) {
 		case "LAN_info":			$Title = "LAN Dashboard";		break;
 		case "configuration":		$Title = "Allsky Settings";		break;
 		case "wifi":				$Title = "Configure Wi-Fi";		break;
+		case "dhcp_conf":			$Title = "Configure DHCP";		break;
+		case "hostapd_conf":		$Title = "Configure Hotspot";	break;
 		case "openvpn_conf":		$Title = "Configure OpenVPN";	break;
 		case "torproxy_conf":		$Title = "Configure TOR proxy";	break;
-		case "save_hostapd_conf":	$Title = "Configure Hotspot";	break;
 		case "auth_conf":			$Title = "Change password";		break;
 		case "system":				$Title = "System";				break;
 		case "list_days":			$Title = "Images";				break;
@@ -154,6 +142,9 @@ if (file_exists($f)) {
 		default:					$Title = "Allsky WebUI";		break;
 	}
 ?>
+	</script>	<!-- allows <a external="true" ...> -->
+	<script src="documentation/js/documentation.js" type="application/javascript"></script>
+
 	<title><?php echo "$Title - WebUI"; ?></title>
 
 	<!-- Bootstrap Core CSS -->
@@ -161,9 +152,6 @@ if (file_exists($f)) {
 
 	<!-- MetisMenu CSS -->
 	<link href="documentation/bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
-
-	<!-- Timeline CSS -->
-	<link href="documentation/css/timeline.css" rel="stylesheet">
 
 	<!-- Custom CSS -->
 	<link href="documentation/css/sb-admin-2.css" rel="stylesheet">
@@ -191,30 +179,6 @@ if (file_exists($f)) {
 	<script src="js/bigscreen.min.js"></script>
 
 	<script type="text/javascript">
-		function getImage() {
-			var newImg = new Image();
-			newImg.src = '<?php echo $image_name ?>?_ts=' + new Date().getTime();
-			newImg.id = "current";
-			newImg.class = "current";
-			newImg.style = "width: 100%";
-			newImg.decode().then(() => {
-				$("#current").attr('src', newImg.src)
-					.attr("id", "current")
-					.attr("class", "current")
-					.css("width", "100%")
-					.on('load', function () {
-						if (!this.complete || typeof this.naturalWidth == "undefined" || this.naturalWidth == 0) {
-							console.log('broken image!');
-						} else {
-							$("#live_container").empty().append(newImg);
-						}
-					});
-			}).finally(() => {
-				// Use tail recursion to trigger the next invocation after `$delay` milliseconds
-				setTimeout(function () { getImage(); }, <?php echo $delay ?>);
-			});
-		}
-
 		// Inititalize theme to light
 		if (!localStorage.getItem("theme")) {
 			localStorage.setItem("theme", "light")
@@ -226,11 +190,10 @@ if (file_exists($f)) {
 	<script src="documentation/js/sb-admin-2.js"></script>
 
 	<!-- Code Mirror editor -->
+<?php if ($page === "editor") { ?>
 	<link rel="stylesheet" href="lib/codeMirror/codemirror.css">
 	<link rel="stylesheet" href="lib/codeMirror/monokai.min.css">
 	<script type="text/javascript" src="lib/codeMirror/codemirror.js"> </script>
-	<script type="text/javascript" src="lib/codeMirror/shell.js"> </script>
-<?php if ($localWebsiteVersion !== "" || $remoteWebsiteVersion !== "") { ?>
 	<script type="text/javascript" src="lib/codeMirror/json.js"> </script>
 <?php } ?>
 </head>
@@ -239,7 +202,7 @@ if (file_exists($f)) {
 	<!-- Navigation -->
 	<nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
 		<div class="navbar-header">
-			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+			<button type="button" class="navbar-toggle as-nav-toggle" data-toggle="collapse" data-target=".navbar-collapse">
 				<span class="sr-only">Toggle navigation</span>
 				<span class="icon-bar"></span>
 				<span class="icon-bar"></span>
@@ -253,18 +216,16 @@ if (file_exists($f)) {
 				<div class="version-title version-title-color">
 					<span class="nowrap">Version: <?php echo ALLSKY_VERSION; ?></span>
 					&nbsp; &nbsp;
-<?php if ($localWebsiteVersion !== "") {
+<?php if ($useLocalWebsite) {
 					echo "<span class='nowrap'>";
-					echo "<a class='version-title-color' href='allsky/index.php' target='_blank' title='Click to go to local Website'>";
-					echo "Local Website: $localWebsiteVersion";
-					echo " <i class='fa fa-external-link-alt fa-fw'></i></a></span>";
+					echo "<a external='true' class='version-title-color' href='allsky/index.php'>";
+					echo "Local Website</a></span>";
 } ?>
 					&nbsp; &nbsp;
-<?php if ($remoteWebsiteVersion !== "") {
+<?php if ($useRemoteWebsite) {
 					echo "<span class='nowrap'>";
-					echo "<a class='version-title-color' href='$websiteURL' target='_blank' title='Click to go to remote Website'>";
-					echo "Remote Website: $remoteWebsiteVersion";
-					echo " <i class='fa fa-external-link-alt fa-fw'></i></a></span>";
+					echo "<a external='true' class='version-title-color' href='$remoteWebsiteURL'>";
+					echo "Remote Website $remoteWebsiteVersion</a></span>";
 } ?>
 				</div>
 		</div> <!-- /.navbar-header -->
@@ -300,6 +261,16 @@ if (file_exists($f)) {
 					<li>
 						<a id="wifi" href="index.php?page=wifi"><i class="fa fa-wifi fa-fw"></i> Configure Wifi</a>
 					</li>
+					<?php if (DHCP_ENABLED) : ?>
+						<li>
+							<a id="vpn" href="index.php?page=dhcp_conf"><i class="fa fa-exchange fa-fw"></i> Configure DHCP</a>
+						</li>
+					<?php endif; ?>
+					<?php if (APD_ENABLED) : ?>
+						<li>
+							<a id="vpn" href="index.php?page=hostapd_conf"><i class="fa fa-dot-circle fa-fw"></i> Configure Hotspot</a>
+						</li>
+					<?php endif; ?>
 					<?php if (RASPI_OPENVPN_ENABLED) : ?>
 						<li>
 							<a id="vpn" href="index.php?page=openvpn_conf"><i class="fa fa-lock fa-fw"></i> Configure OpenVPN</a>
@@ -317,7 +288,7 @@ if (file_exists($f)) {
 						<a id="system" href="index.php?page=system"><i class="fa fa-cube fa-fw"></i> System</a>
 					</li>
 					<li>
-						<a href="/documentation" target="_blank" title="Opens in new window"><i class="fa fa-book fa-fw"></i> Allsky Documentation <i class="fa fa-external-link-alt fa-fw"></i></a>
+						<a external="true" href="/documentation"><i class="fa fa-book fa-fw"></i> Allsky Documentation </a>
 					</li>
 					<li>
 						<span onclick="switchTheme()"><i class="fa fa-moon fa-fw"></i> Light/Dark mode</span>
@@ -332,11 +303,7 @@ if (file_exists($f)) {
 		<div class="row right-panel">
 			<div class="col-lg-12">
 				<?php
-				// Check if the settings are configured.
-				check_if_configured($page, "main");
-
-				if ($needToDisplayMessages)
-					$status->showMessages(true, false, true);
+				check_if_configured($page, "main");	// It calls addMessage() on error.
 
 				if (isset($_POST['clear'])) {
 					$t = @filemtime(ALLSKY_MESSAGES);
@@ -347,31 +314,40 @@ if (file_exists($f)) {
 						if ($t == $newT) {
 							exec("sudo rm -f " . ALLSKY_MESSAGES, $result, $retcode);
 							if ($retcode !== 0) {
-								$status->addMessage("Unable to clear messages: " . $result[0], 'danger', true);
+								$status->addMessage("Unable to clear messages: " . $result[0], 'danger');
 								$status->showMessages();
 							}
 						} else {
-							// If the messages changed after the user did a "clear",
-							// and then the user refreshed the browser,
+							// If the messages changed after the user viewed the last page
+							// and before they clicked the "Clear" button,
 							// we'll have the old time in $filetime, but the timestamp of the file
 							// won't match so we'll get here, and then display the messages below.
-							$status->addMessage("System Messages changed.  New content is:", "warning", false);
+							$status->addMessage("System Messages changed.  New content is:", "warning");
 						}
 					}
 				}
-				if (file_exists(ALLSKY_MESSAGES) && filesize(ALLSKY_MESSAGES) > 0) {
+				clearstatcache();
+				$size = @filesize(ALLSKY_MESSAGES);
+				if ($size !== false && $size > 0) {
 					$contents_array = file(ALLSKY_MESSAGES, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-					echo "<div class='row'>";
-					echo "<div class='system-message'>";
+					echo "<div class='row'>"; echo "<div class='system-message'>";
 						echo "<div class='title'>System Messages</div>";
 						foreach ($contents_array as $line) {
-							// Format: level (i.e., CSS class), date, count, message
+							// Format: level (i.e., CSS class), date, count, message [, url]
+							//         0                        1     2      3          4
 							$message_array = explode("\t", $line);
-							if (isset($message_array[3])) {
+							$message = getVariableOrDefault($message_array, 3, null);
+							if ($message !== null) {
 								$level = $message_array[0];
 								$date = $message_array[1];
 								$count = $message_array[2];
-								$message = "<strong>" . $message_array[3] . "</strong>";
+								$url = getVariableOrDefault($message_array, 4, "");
+								if ($url !== "") {
+									$m1 = "<a href='$url' title='Click for more information' target='_messages'>";
+									$m2 = "<i class='fa fa-external-link-alt fa-fw'></i>";
+									$m2 = "<span class='externalSmall'>$m2</span>";
+									$message = "$m1 $message $m2</a>";
+								}
 								if ($count == 1)
 									$message .= " &nbsp; ($date)";
 								else
@@ -380,55 +356,73 @@ if (file_exists($f)) {
 								$level = "error";	// badly formed message
 								$message = "INTERNAL ERROR: Poorly formatted message: $line";
 							}
-							$status->addMessage($message, $level, false);
+							$status->addMessage($message, $level);
 						}
 						$status->showMessages();
-						echo "<div class='message-button'>";
+						echo "<br><div class='message-button'>";
 							$ts = time();
 							echo "<form action='$ME?_ts=$ts' method='POST'>";
 							echo "<input type='hidden' name='page' value='$page'>";
 							echo "<input type='hidden' name='clear' value='true'>";
 							$t = @filemtime(ALLSKY_MESSAGES);
 							echo "<input type='hidden' name='filetime' value='$t'>";
-							echo "<input type='submit' class='btn btn-primary' value='Clear all messages' />";
+							echo "<input type='submit' class='btn btn-primary' value='Clear messages' />";
 							echo "</form>";
 						echo "</div>";
-					echo "</div>";
-					echo "</div>";
+					echo "</div>"; echo "</div>";// /.system-message and /.row
 				}
 
 				switch ($page) {
 					case "WLAN_info":
+						include_once('includes/dashboard_WLAN.php');
 						DisplayDashboard_WLAN();
 						break;
 					case "LAN_info":
-						DisplayDashboard_LAN("eth0");
+						include_once('includes/dashboard_LAN.php');
+						DisplayDashboard_LAN();
 						break;
 					case "configuration":
+						include_once('includes/allskySettings.php');
 						DisplayAllskyConfig();
 						break;
 					case "wifi":
+						include_once('includes/configureWiFi.php');
 						DisplayWPAConfig();
 						break;
+					case "dhcp_conf":
+						include_once('includes/dhcp.php');
+						DisplayDHCPConfig();
+						break;
+					case "hostapd_conf":
+						include_once('includes/hostapd.php');
+						DisplayHostAPDConfig();
+						break;
 					case "openvpn_conf":
+						include_once('includes/torAndVPN.php');
+						DisplayTorProxyConfig();
 						DisplayOpenVPNConfig();
 						break;
 					case "torproxy_conf":
+						include_once('includes/torAndVPN.php');
 						DisplayTorProxyConfig();
 						break;
 					case "save_hostapd_conf":
 						SaveTORAndVPNConfig();
 						break;
 					case "auth_conf":
+						include_once('includes/admin.php');
 						DisplayAuthConfig($config['admin_user'], $config['admin_pass']);
 						break;
 					case "system":
+						include_once('includes/system.php');
 						DisplaySystem();
 						break;
 					case "list_days":
+						include_once('includes/days.php');
 						ListDays();
 						break;
 					case "list_images":
+						include_once('includes/images.php');
 						ListImages();
 						break;
 					case "list_videos":
@@ -444,18 +438,22 @@ if (file_exists($f)) {
 						ListFileType("startrails/", "startrails", "Startrails", "picture");
 						break;
 					case "editor":
+						include_once('includes/editor.php');
 						DisplayEditor();
 						break;
 					case "overlay":
+						include_once('includes/overlay.php');
 						DisplayOverlay($image_name);
 						break;
 					case "module":
+						include_once('includes/module.php');
 						DisplayModule();
 						break;
 
 					case "live_view":
 					default:
-						DisplayLiveView($image_name, $delay, $daydelay, $nightdelay, $darkframe);
+						include_once('includes/liveview.php');
+						DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg, $darkframe);
 				}
 				?>
 			</div>
@@ -500,38 +498,7 @@ if (file_exists($f)) {
 	addTimestamp("wifi");
 	addTimestamp("auth_conf");
 	addTimestamp("system");
-
-
-
-<?php
-// Only include the sticky buttons on the settings page
-if ($page == "configuration") {
-?>
-	// The remaining code is to keep the "Save changes" button at the top of the "settings" page.
-	// Get the button:
-	let mybutton = document.getElementById("backToTopBtn");
-
-	if (mybutton !== null) {
-		// When the user scrolls down 20px from the top of the document, show the button
-		window.onscroll = function() {scrollFunction()};
-
-		function scrollFunction() {
-			if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
-				mybutton.style.display = "block";
-			} else {
-				mybutton.style.display = "none";
-			}
-		}
-
-		// When the user clicks on the button, scroll to the top of the document
-		function topFunction() {
-			document.body.scrollTop = 0; // For Safari
-			document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
-		}
-	}
-<?php
-	}
-?>
 </script>
 </body>
 </html>
+<script> includeHTML(); </script>

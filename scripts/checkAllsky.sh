@@ -786,7 +786,7 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 	if [[ ${S_useremotewebsite} == "true" && ! -f ${f} ]]; then
 		heading "Error"
 		echo "${WSNs}${S_useremotewebsite_label}${WSNe} is enabled but '${f}' does not exist."
-		echo "FIX: Either disable ${WSNs}${S_useremotewebsite_label}${WSNe} or run 'cd ~/allsky; ./remote_website_install.sh'."
+		echo "FIX: Either disable ${WSNs}${S_useremotewebsite_label}${WSNe} or run 'cd ~/allsky; ./remoteWebsiteInstall.sh'."
 	fi
 
 	##### Check dark frames

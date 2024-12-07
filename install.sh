@@ -310,8 +310,9 @@ get_connected_cameras()
 
 	# RPi format:	RPi \t camera_number \t camera_sensor [\t optional_other_stuff]
 	# ZWO format:	ZWO \t camera_number \t camera_model
+	# "--dctu" means determineCommandToUse() was already run
 	# "true" == ignore errors
-	get_connected_cameras_info "true" > "${CONNECTED_CAMERAS_INFO}" 2>/dev/null
+	get_connected_cameras_info --dctu "true" > "${CONNECTED_CAMERAS_INFO}" 2>/dev/null
 
 	# Get the RPi connected cameras, if any.
 	CC=""

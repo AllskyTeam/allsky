@@ -302,10 +302,11 @@ CT=()			# Camera Type array - what to display in whiptail
 
 get_connected_cameras()
 {
-	local CMD  CC  MSG   NUM_RPI=0   NUM_ZWO=0
+	local CMD   CMD_RET  CC  MSG   NUM_RPI=0   NUM_ZWO=0
 
 	# true == ignore errors.  ${CMD} will be "" if no command found.
 	CMD="$( determineCommandToUse "false" "" "true" 2> /dev/null )"
+	CMD_RET=$?		# return of 2 means no command was found
 	setup_rpi_supported_cameras "${CMD}"		# Will create full file is CMD == ""
 
 	# RPi format:	RPi \t camera_number \t camera_sensor [\t optional_other_stuff]
@@ -357,7 +358,12 @@ get_connected_cameras()
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 
 		MSG="No connected cameras were detected."
-		display_msg --log error "${MSG}"
+		local MSG2=""
+		if [[ ${CMD_RET} -eq 2 ]]; then
+			MSG2="No command to take RPi images was found"
+			MSG2+=" - make sure 'libcamera-apps' is installed if you have an RPi camera."
+		fi
+		display_msg --log error "${MSG}" "${MSG2}"
 		exit_installation 1 "${STATUS_NO_CAMERA}" ""
 	fi
 
@@ -540,6 +546,7 @@ do_save_camera_capabilities()
 			MSG="No camera was found; one must be connected and working for the installation to succeed.\n"
 			MSG+="After connecting your camera, re-run the installation."
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+
 			display_msg --log error "No camera detected - installation aborted."
 			[[ -s ${TMP} ]] && display_msg --log error "$( < "${TMP}" )"
 			exit_with_image 1 "${STATUS_ERROR}" "No camera detected"
@@ -3518,8 +3525,8 @@ install_installer_dependencies()
 	{
 		sudo apt-get update && run_aptGet gawk jq dialog
 	} > "${TMP}" 2>&1
-	check_success $? "gawk,jq installation failed" "${TMP}" "${DEBUG}" ||
-		exit_with_image 1 "${STATUS_ERROR}" "gawk,jq install failed."
+	check_success $? "gawk,jq,dialog installation failed" "${TMP}" "${DEBUG}" ||
+		exit_with_image 1 "${STATUS_ERROR}" "gawk,jq,dialog install failed."
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }

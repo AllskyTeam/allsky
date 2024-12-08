@@ -10,12 +10,21 @@
 // This file sets all the define() variables.
 $defs = 'allskyDefines.inc';
 if ((include $defs) == false) {
-	echo "<br><div class='errorMsgBig errorMsgBox'>";
-	echo "The installation of the WebUI is incomplete.<br>";
+	echo "<br><div style='font-size: 200%; color: red;'>";
+	echo "The installation of Allsky is incomplete.<br>";
 	echo "File '$defs' not found.<br>";
-	echo "Please run the following to fix:";
+	echo "</div>";
+
 	echo "<br><br>";
-	echo "<code>   cd ~/allsky; ./install.sh --function create_webui_defines</code>";
+	echo "<div style='font-size: 125%;'>";
+	echo "If you have NOT installed Allsky please install it by running:";
+	echo "<br>";
+	echo "<pre>   cd ~/allsky; ./install.sh</pre>";
+	echo "The WebUI will not work until Allsky is installed.";
+
+	echo "<br><br><br>";
+	echo "If you HAVE successfully installed Allsky, run the following to fix this problem:";
+	echo "<pre>   cd ~/allsky; ./install.sh --function create_webui_defines</pre>";
 	echo "</div>";
 	exit(1);
 }

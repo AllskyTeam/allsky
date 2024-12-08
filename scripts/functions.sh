@@ -187,7 +187,7 @@ function determineCommandToUse()
 	local PREFIX="${2}"					# Only used if calling doExit().
 	local IGNORE_ERRORS="${3:-false}"	# True if just checking
 
-	local CRET  RET  MSG  EXIT_MSG
+	local CRET  RET  MSG  EXIT_MSG   CMD_FOUND="false"
 
 	# If libcamera is installed and works, use it.
 	# If it's not installed, or IS installed but doesn't work (the user may not have it configured),
@@ -203,7 +203,9 @@ function determineCommandToUse()
 		CRET=$?
 	fi
 	if [[ ${CRET} -eq 0 ]]; then
-		# Found the command - see if it works.
+		CMD_FOUND="true"	# one of the commands were found.
+
+		# Found a command - see if it works.
 		"${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1
 		RET=$?
 		if [[ ${RET} -eq 137 ]]; then
@@ -230,8 +232,14 @@ function determineCommandToUse()
 				fi
 			fi
 
-			return 1
+			if [[ ${CMD_FOUND} == "true" ]]; then
+				return 1
+			else
+				return 2		# no command was found
+			fi
 		fi
+
+		CMD_FOUND="true"	# some command was found.
 
 		# On Buster, raspistill sometimes hangs if no camera is found,
 		# so work around that.

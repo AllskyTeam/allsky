@@ -119,14 +119,19 @@ function heading()
 
 	if [[ ${FROM_WEBUI} == "true" ]]; then
 		# Don't display the header when run from the WebUI.
-		return
+		DISPLAY_HEADER="false"
 	fi
 
 	if [[ ${DISPLAY_HEADER} == "true" ]]; then
 		[[ ${NUM_HEADER_CALLS} -gt 1 ]] && echo -e "${NL}"
 		echo -e "${STRONGs}---------- ${HEADER}${SUB_HEADER} ----------${STRONGe}${NL}"
 	else
-		echo "${STRONGs}-----${STRONGe}"	# Separates lines within a header group
+		# Separate entries within a header group
+		if [[ ${FROM_WEBUI} == "true" ]]; then
+			echo
+		else
+			echo "${STRONGs}-----${STRONGe}"
+		fi
 	fi
 }
 

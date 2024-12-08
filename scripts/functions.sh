@@ -269,6 +269,12 @@ function determineCommandToUse()
 # Prepend each line with the CAMERA_TYPE.
 function get_connected_cameras_info()
 {
+	local RUN_dCTU="true"		# determine Command To Use
+	if [[ ${1} == "--cmd" ]]; then
+		RUN_dCTU="false"
+		CMD_TO_USE_="${2}"
+		shift 2
+	fi
 	local IGNORE_ERRORS="${1:-false}"
 
 	####### Check for RPi
@@ -276,7 +282,8 @@ function get_connected_cameras_info()
 	#		RPi  camera_number   camera_sensor
 	# for each camera found.
 	# camera_sensor will be one word.
-	if [[ -z ${CMD_TO_USE_} ]]; then
+	# Only run determineCommandToUse() if it wasn't already run.
+	if [[ -z ${CMD_TO_USE_} && ${RUN_dCTU} == "true" ]]; then
 		determineCommandToUse "false" "" "${IGNORE_ERRORS}" > /dev/null
 	fi
 	if [[ -n ${CMD_TO_USE_} ]]; then

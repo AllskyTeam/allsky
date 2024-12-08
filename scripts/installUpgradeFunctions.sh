@@ -228,6 +228,10 @@ function display_msg()
 	# ${DISPLAY_MSG_LOG} <should> be set if ${LOG_IT} is true, but just in case, check.
 
 	[[ ${LOG_IT} == "false" || -z ${DISPLAY_MSG_LOG} ]] && return
+	if [[ ! -f ${DISPLAY_MSG_LOG} ]]; then
+		mkdir -p "$( dirname "${DISPLAY_MSG_LOG}" )"
+		touch "${DISPLAY_MSG_LOG}"
+	fi
 
 	# Strip out all color escape sequences before adding to log file.
 	# The message may have an actual escape character or may have the

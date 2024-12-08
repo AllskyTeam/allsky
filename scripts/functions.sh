@@ -317,7 +317,8 @@ function get_connected_cameras_info()
 		{
 			if ($1 == "Bus" && $3 == "Device") {
 				ZWO = $7;
-				if (ZWO == "ZWOptical" && $8 == "company") {
+				if ((ZWO == "ZWOptical" && $8 == "company") ||
+					(ZWO == "Planetary" && $8 == "Camera")) {
 					model = $9;
 					model_cont = 10;
 				} else {

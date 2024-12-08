@@ -3525,8 +3525,8 @@ install_installer_dependencies()
 	{
 		sudo apt-get update && run_aptGet gawk jq dialog
 	} > "${TMP}" 2>&1
-	check_success $? "gawk,jq installation failed" "${TMP}" "${DEBUG}" ||
-		exit_with_image 1 "${STATUS_ERROR}" "gawk,jq install failed."
+	check_success $? "gawk,jq,dialog installation failed" "${TMP}" "${DEBUG}" ||
+		exit_with_image 1 "${STATUS_ERROR}" "gawk,jq,dialog install failed."
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }

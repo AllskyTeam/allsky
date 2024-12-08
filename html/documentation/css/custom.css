@@ -269,6 +269,12 @@ body.dark {
 	vertical-align: top;
 }
 
+.noChanges {
+	font-weight: bold;
+	font-size: 110%;
+	padding: 5px 0 5px 2px;
+}
+
 .alert {
 	padding: 5px;
 	margin-bottom: 3px;

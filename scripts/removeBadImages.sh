@@ -21,7 +21,8 @@ usage_and_exit()
 	local RET="${1}"
 	{
 		echo
-		echo "Remove images with corrupt data which might mess up startrails and keograms."
+		echo "Remove images with corrupt data which might mess up startrails, keograms, and timelapse."
+		echo
 		[ "${RET}" -ne 0 ] && echo -en "${RED}"
 		echo -n "Usage: ${ME} [--help] [--debug]  directory  [file]"
 		[ "${RET}" -ne 0 ] && echo -e "${NC}"

@@ -621,8 +621,7 @@ do
 
 		"uselocalwebsite")
 			if [[ ${NEW_VALUE} == "true" ]]; then
-				prepare_local_website ""
-				"${ALLSKY_SCRIPTS}/postData.sh" --fromWebUI --allfiles
+				prepare_local_website "" "postData"
 			fi
 			;;
 

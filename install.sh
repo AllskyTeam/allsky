@@ -2509,15 +2509,16 @@ restore_prior_files()
 		else
 			MSG="Your remote Website needs to be updated to this newest version."
 			MSG+="\nIt is at version ${PRIOR_V}"
-			# This command will update the version.
 			MSG+="\n\nRun:  cd ~/allsky;  ./remoteWebsiteInstall.sh"
 			display_msg --log notice "${MSG}"
 		fi
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 
-		# Create a default file.
+## FIX: TODO:  why prepare the LOCAL website - the code above is for the REMOTE website.
+		# Create a default file
 		prepare_local_website ""
+
 	fi
 
 	# Do NOT restore options.json - it will be recreated.
@@ -2584,7 +2585,7 @@ restore_prior_files()
 
 ####
 # If a prior local Website exists move its data to the new location.
-# If using a remote website, copy it's config file.
+# If using a remote website, copy its config file.
 restore_prior_website_files()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
@@ -2707,11 +2708,11 @@ restore_prior_website_files()
 			echo "When done, check in '${PRIOR_WEBSITE_DIR}' for any files"
 			echo "you may have added; if there are any, store them in"
 			echo -e "\n   ${ALLSKY_WEBSITE_MYFILES_DIR}"
-			echo "then remove the old website:  sudo rm -fr ${PRIOR_WEBSITE_DIR}"
+			echo "then remove the old Website:  sudo rm -fr ${PRIOR_WEBSITE_DIR}"
 		} >> "${POST_INSTALLATION_ACTIONS}"
 
 		# Create a default file.
-		prepare_local_website ""
+		prepare_local_website "" "postData"
 
 	else		# NEW_STYLE_WEBSITE
 		ITEM="${SPACE}${SPACE}${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
@@ -2733,6 +2734,9 @@ restore_prior_website_files()
 			MSG="${SPACE}${SPACE}${SPACE}Already current @ version ${NEW_WEB_CONFIG_VERSION}"
 			display_msg --logonly info "${MSG}"
 		fi
+
+		# Since the config file already exists, this will just run postData.sh:
+		prepare_local_website "" "postData"
 	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )

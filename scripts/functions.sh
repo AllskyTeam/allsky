@@ -317,8 +317,8 @@ function get_connected_cameras_info()
 		{
 			if ($1 == "Bus" && $3 == "Device") {
 				ZWO = $7;
-				if ((ZWO == "ZWOptical" && $8 == "company") ||
-					(ZWO == "Planetary" && $8 == "Camera")) {
+				# Check for "ZWOptical company" instead of ZWO on some older cameras
+				if (ZWO == "ZWOptical" && $8 == "company") {
 					model = $9;
 					model_cont = 10;
 				} else {
@@ -327,7 +327,12 @@ function get_connected_cameras_info()
 				}
 				if (model != "") {
 					# The model may have multiple tokens.
-					for (i=model_cont; i<= NF; i++) model = model " " $i
+					for (i=model_cont; i<= NF; i++) {
+						# Check for "ASI120 Planetary Camera" on some older cameras.
+						if ($i == "Planetary")
+							break;
+						model = model " " $i;
+					}
 					printf("ZWO\t%d\t%s\n", num++, model);
 					model = "<found>";		# This camera was output
 				}

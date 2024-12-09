@@ -618,6 +618,7 @@ function replace_website_placeholders()
 function prepare_local_website()
 {
 	local FORCE="${1}"
+	local POST_DATA="${2}"
 
 	display_msg --log progress "Creating default ${ALLSKY_WEBSITE_CONFIGURATION_NAME}."
 
@@ -627,6 +628,16 @@ function prepare_local_website()
 	fi
 
 	replace_website_placeholders "local" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+
+	if [[ ${POST_DATA} == "postData" && "$( settings ".uselocalwebsite" )" == "true" ]]; then
+		# --fromWebUI tells it to be mostly silent.
+		local MSG="$( "${ALLSKY_SCRIPTS}/postData.sh" --fromWebUI --allfiles 2>&1 )"
+		if [[ $? -eq 0 ]]; then
+			display_msg --log progress "${MSG}"
+		else
+			display_msg --log warning "${MSG}"
+		fi
+	fi
 }
 
 

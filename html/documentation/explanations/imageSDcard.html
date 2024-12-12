@@ -44,40 +44,49 @@ This scenario can also be used if you want to start over with a clean install
 but keep your Allsky files.
 </p>
 <p>
-If you have <strong>two SD cards</strong>, the process is straightforward:
-<ol class="minimalPadding">
-	<li>Image the second SD card using the
-		<a href="#install">instructions below.</a>
-	<li>Plug the newly-imaged SD card into your Pi and turn it on.
-	<li>Using an SD card-to-USB adapter, plug it into a USB port on your Pi
-		and copy whatever files you want from it to the main SD card.
-		<blockquote>
-		Copy the <span class="fileName">~/allsky</span> directory on the saved SD card
-		to <span class="fileName">~/allsky-OLD</span> on the main SD card.
-		</blockquote>
+<ol style="list-style-type:upper-alpha">
+<li>If you have <strong>two SD cards</strong>, the process is straightforward:
+	<ol class="minimalPadding">
+		<li>Image the second SD card using the
+			<a href="#install">instructions below.</a>
+		<li>Plug the newly-imaged SD card into your Pi and turn it on.
+		<li>Using an SD card-to-USB adapter, plug it into a USB port on your Pi and
+			copy the <span class="fileName">~/allsky</span> directory on the saved SD card
+			to <span class="fileName">~/allsky-OLD</span> on the new SD card.
+			<br>If you have modules in the old card's <span class="fileName">/opt/allsky</span>
+			directory, copy that directory to the new SD card using <code>sudo</code>.
+			<br>Copy whatever other files you want from the old SD card to the new one.
+	</ol>
+
+<li> If you only have <strong>one SD card</strong>, consider getting another one
+	and use the instructions above.
+	It's always good to have a spare SD card anyway in case the first one goes bad.
+	<br>If you can't obtain a second card, do the following:
+	<ol class="minimalPadding">
+		<li>Copy <span class="fileName">~/allsky</span> plus any other
+			files, images, etc. you want to keep from your SD card to a
+			USB drive, PC, Mac, or another device.
+			<br>If you have modules in <span class="fileName">/opt/allsky</span>,
+			copy that directory as well.
+			Suggestion: name its backup directory
+			<span class="fileName">opt-allsky</span>,
+		<li>Image the SD card using the
+			<a href="#install">instructions below.</a>
+		<li>Plug the newly-imaged SD card into your Pi and turn it on.
+		<li>Restore your files to the SD card.
+			<br>
+			Copy the saved <span class="fileName">~/allsky</span> directory to
+			<span class="fileName">~/allsky-OLD</span> on the new SD card.
+			<br>If you saved <span class="fileName">/opt/allsky</span>,
+			copy that directory to the new SD card using <code>sudo</code>.
+	</ol>
 </ol>
-</p>
-<p>
-If you only have <strong>one SD card</strong>, consider getting another one
-and use the instructions above.
-It's always good to have a spare SD card anyway in case the first one goes bad.
-<br>If you can't obtain a second card, do the following:
-<ol class="minimalPadding">
-	<li>Copy <span class="fileName">~/allsky</span> plus any other
-		files, images, etc. you want to keep from your SD card to a
-		USB drive, PC, Mac, or another device.
-	<li>Image the SD card using the
-		<a href="#install">instructions below.</a>
-	<li>Plug the newly-imaged SD card into your Pi and turn it on.
-	<li>Restore your files to the SD card.
-		<blockquote>
-		Copy the saved <span class="fileName">~/allsky</span> directory to
-		<span class="fileName">~/allsky-OLD</span> on the new SD card.
-		</blockquote>
-	<li><a href="../installations/allsky.html" external="true">Install Allsky</a>
-		and tell the installation you want to use the prior version of Allsky;
-		it will then restore your saved images, darks, and configuration files.
-</ol>
+Now
+<a allsky="true" external="true" href="../installations/allsky.html">install Allsky</a>
+and tell the installation you want to use the prior version of Allsky;
+it will then restore your saved images, darks, and configuration files.
+You may want to leave your 2nd SD card or USB drive attached to the Pi in case you
+missed some files.
 </p>
 
 <h2 id="install">2. First install or "starting over"</h2>

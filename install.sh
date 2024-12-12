@@ -3133,20 +3133,18 @@ install_Python()
 	# gpiozero decodes the Pi revision number to calculate the Pi version so until the Pi 6 is 
 	# released this code will detect all future versions of the Pi 5
 	#
-	# NOTE: rpi-gpi and rpi-lgpio cannot co-exist but since blinka is not installing either we
-	# don't currently have to worry about removing rpi-gpio before installing rpi-lgpio
-	#
 	local CMD="from gpiozero import Device"
 	CMD+="\nDevice.ensure_pin_factory()"
 	CMD+="\nprint(Device.pin_factory.board_info.model)"
 	pimodel="$( echo -e "${CMD}" | python3 2>/dev/null )"	# hide error since it only applies to Pi 5.
 
-	# if we are on the pi 5 then install lgpio, using the virtual environment which will always
-	# exist on the pi 5
+	# if we are on the pi 5 then uninstall rpi.gpio, using the virtual environment which will always
+	# exist on the pi 5. lgpio is installed globally so will be used after rpi.gpio is removed
+    # Adafruits blinka reinstalls rpi.gpio so we need to ensure its removed
 	if [[ ${pimodel:0:1} == "5" ]]; then
 		display_msg --log progress "Updating GPIO to lgpio"
 		activate_python_venv
-		pip3 install rpi-lgpio > /dev/null 2>&1
+		pip3 uninstall -y rpi.gpio > /dev/null 2>&1
 	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )

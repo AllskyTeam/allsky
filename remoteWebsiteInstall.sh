@@ -39,6 +39,7 @@ REMOTE_URL="$( settings ".remotewebsiteurl" "${SETTINGS_FILE}" )"
 REMOTE_USER="$( settings ".REMOTEWEBSITE_USER" "${ALLSKY_ENV}" )"
 REMOTE_HOST="$( settings ".REMOTEWEBSITE_HOST" "${ALLSKY_ENV}" )"
 REMOTE_PORT="$( settings ".REMOTEWEBSITE_PORT" "${ALLSKY_ENV}" )"
+[[ -n ${REMOTE_PORT} ]] && REMOTE_PORT="-p ${REMOTE_PORT}"
 REMOTE_PASSWORD="$( settings ".REMOTEWEBSITE_PASSWORD" "${ALLSKY_ENV}" )"
 REMOTE_DIR="$( settings ".remotewebsiteimagedir" "${SETTINGS_FILE}" )"
 REMOTE_PROTOCOL="$( settings ".remotewebsiteprotocol" "${SETTINGS_FILE}" )"
@@ -612,8 +613,9 @@ function remove_remote_file()
 	[[ -n ${REMOTE_DIR} ]] && CMDS="cd '${REMOTE_DIR}' ;"
 	CMDS+=" rm -r '${FILENAME}' ; bye"
 
+	# shellcheck disable=SC2086
 	ERR="$( lftp -u "${REMOTE_USER},${REMOTE_PASSWORD}" \
-					"${REMOTE_PORT}" \
+					${REMOTE_PORT} \
 					"${REMOTE_PROTOCOL}://${REMOTE_HOST}" \
 				-e "${CMDS}" 2>&1 )"
 	if [[ $? -eq 0 ]] ; then
@@ -659,10 +661,6 @@ function upload_remote_website()
 	fi
 
 	local EXTRA_TEXT=""  EXCLUDE_FOLDERS=""  MSG
-
-	if [[ -n ${REMOTE_PORT} ]]; then
-		REMOTE_PORT="-p ${REMOTE_PORT}"
-	fi
 
 	MSG="Starting upload to the remote Website"
 	[[ -n ${REMOTE_DIR} ]] && MSG+=" in ${REMOTE_DIR}"

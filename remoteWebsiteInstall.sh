@@ -77,6 +77,7 @@ OLD_FILES_TO_REMOVE=( \
 	"getTime.php" \
 	"virtualsky.json" \
 	"README.md" \
+	"version" \
 	"myImages")
 
 ############################################## functions

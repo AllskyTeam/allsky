@@ -388,7 +388,7 @@ function display_welcome()
    4) Enable the remote Website.\n\n\
  \n\
  Any existing startrails, keograms, and/or timelapse will NOT be touched.\n\
-\
+\n\
  ${DIALOG_RED}WARNING! This will:${DIALOG_NORMAL}\n\
   - Overwrite the old Allsky web files on the remote server.\n\
   - Remove any old Allsky files from the remote server.\n\n\n\

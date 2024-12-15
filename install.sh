@@ -2585,7 +2585,6 @@ restore_prior_files()
 
 ####
 # If a prior local Website exists move its data to the new location.
-# If using a remote website, copy its config file.
 restore_prior_website_files()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return

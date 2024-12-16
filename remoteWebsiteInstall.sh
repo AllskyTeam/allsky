@@ -505,8 +505,7 @@ function update_old()
 # See 'pre_install_checks' for details on which configuration file is used.
 function create_website_config()
 {
-	local MSG="Creating configuration file from ${CONFIG_MESSAGE}"
-	display_msg --logonly info "${MSG}"
+	local MSG
 
 	if [[ ${CONFIG_TO_USE} == "new" || ${CONFIG_TO_USE} == "remoteReallyOld" ]]; then
 		# Need a new config file so copy it from the repo and replace as many
@@ -519,7 +518,10 @@ function create_website_config()
 		MSG+=" from repo and updated placeholders."
 		display_msg --logonly info "${MSG}"
 
-	elif [[ ${CONFIG_TO_USE} == "local" ]]; then
+		return
+	fi
+
+	if [[ ${CONFIG_TO_USE} == "local" ]]; then
 		# Using the remote config file on the Pi which may be new or old format.
 		MSG="Using existing ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
 		if update_old "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" ; then
@@ -557,6 +559,9 @@ function create_website_config()
 			display_aborted "${MSG}" "${ERR}"
 		fi
 	fi
+
+	display_msg --logonly info "Updated remote configuration file to ${ALLSKY_VERSION}"
+	update_json_file ".${WEBSITE_ALLSKY_VERSION}" "${ALLSKY_VERSION}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 }
 
 # Check if a remote file, or array of files, exist.
@@ -672,7 +677,7 @@ function upload_remote_website()
 		# However, we must upload the index.php files.
 		EXCLUDE_FOLDERS="--exclude keograms --exclude startrails --exclude videos"
 
-# FIX: the --include doesn't work - the files aren't uploaded.
+# ALEX: FIX: the --include doesn't work - the files aren't uploaded.
 # Do we need to do a second lftp mirror to upload them?
 		EXCLUDE_FOLDERS+=" --include keograms/index.php"
 		EXCLUDE_FOLDERS+=" --include startrails/index.php"

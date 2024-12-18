@@ -77,8 +77,8 @@ OLD_FILES_TO_REMOVE=( \
 	"getTime.php" \
 	"virtualsky.json" \
 	"README.md" \
-	"version" \
-	"myImages")
+	"version" )
+OLD_FILES_TO_WARN=( "myImages" )
 
 ############################################## functions
 
@@ -726,6 +726,22 @@ function upload_remote_website()
 	# Remove any old core files no longer required
 	for FILE_TO_DELETE in "${OLD_FILES_TO_REMOVE[@]}"; do
 		remove_remote_file "${FILE_TO_DELETE}" "check"
+	done
+
+	for FILE_TO_WARN in "${OLD_FILES_TO_WARN[@]}"; do
+		if check_if_files_exist "${REMOTE_URL}" "or" "${FILE_TO_WARN}" ; then
+			display_msg --logonly info "Old file '${FILE_TO_WARN}' exists."
+			if [[ ${FILE_TO_WARN} == "myImages" ]]; then
+# TODO: move the files for the user
+				MSG="NOTE: move any files in '${FILE_TO_WARN}' on the remote Website to 'myFiles',"
+				MSG+=" then remove '${FILE_TO_WARN}'.  It is no longer used."
+			else
+				MSG="NOTE: Please remove '${FILE_TO_WARN}' on the remote Website.   It is no longer used."
+			fi
+			display_box "--infobox" "${DIALOG_INSTALL}" "${MSG}"
+		else
+			display_msg --logonly info "Old file '${FILE_TO_WARN}' does not exist."
+		fi
 	done
 
 	display_msg --logonly info "Website upload complete"

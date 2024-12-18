@@ -22,13 +22,13 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP
 DISPLAY_MSG_LOG="${ALLSKY_LOGS}/${ME/.sh/}.log"
 
 # Config variables
-HAVE_NEW_CONFIG="false"
+HAVE_LOCAL_CONFIG="false"
 HAVE_PRIOR_CONFIG="false"
-HAVE_NEW_REMOTE_CONFIG="false"
+HAVE_NEW_STYLE_REMOTE_CONFIG="false"
 HAVE_REALLY_OLD_REMOTE_CONFIG="false"
 CONFIG_TO_USE=""		# which Website configuration file to use?
 CONFIG_MESSAGE=""
-REMOTE_WEBSITE_EXISTS="false"
+REMOTE_WEBSITE_IS_VALID="false"
 
 # Dialog size variables
 DIALOG_WIDTH="$( tput cols )"; ((DIALOG_WIDTH -= 10 ))
@@ -232,7 +232,7 @@ function pre_install_checks()
 		DT="FOUND"
 		MSG="Found ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}."
 		display_msg --logonly info "${MSG}"
-		HAVE_NEW_CONFIG="true"
+		HAVE_LOCAL_CONFIG="true"
 
 ### FIX / TODO: Should this be used?
 # During Allsky upgrades, if the OLD directory exists users are asked if
@@ -256,8 +256,8 @@ function pre_install_checks()
 	DIALOG_TEXT+="\n2  - Checking for existing remote Website: "
 	display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 	local INDENT="     "
-	REMOTE_WEBSITE_EXISTS="$( check_if_website_exists )"
-	if [[ ${REMOTE_WEBSITE_EXISTS} == "true" ]]; then
+	REMOTE_WEBSITE_IS_VALID="$( check_if_website_exists )"
+	if [[ ${REMOTE_WEBSITE_IS_VALID} == "true" ]]; then
 
 		# If we didn't find a remote Website configuration file on the Pi,
 		# it's "should be" an old-style Website since the user wasn't
@@ -271,7 +271,7 @@ function pre_install_checks()
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 		local NEW_CONFIG_FILES=("${ALLSKY_WEBSITE_CONFIGURATION_NAME}")
 		if check_if_files_exist "${REMOTE_URL}" "or" "${NEW_CONFIG_FILES[@]}" ; then
-			HAVE_NEW_REMOTE_CONFIG="true"
+			HAVE_NEW_STYLE_REMOTE_CONFIG="true"
 			DIALOG_TEXT+="Found."
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 			MSG="Found a current configuration file on the remote server."
@@ -302,7 +302,7 @@ function pre_install_checks()
 		DIALOG_TEXT+="NOT FOUND."
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
-		if [[ ${HAVE_NEW_CONFIG} == "true" || ${HAVE_PRIOR_CONFIG} == "true" ]]; then
+		if [[ ${HAVE_LOCAL_CONFIG} == "true" || ${HAVE_PRIOR_CONFIG} == "true" ]]; then
 			DIALOG_TEXT+="${DIALOG_RED}"
 			DIALOG_TEXT+="\n${INDENT}WARNING: a remote configuration file exists"
 			DIALOG_TEXT+="\n${INDENT}but a remote Website wasn't found."
@@ -313,8 +313,8 @@ function pre_install_checks()
 
 	fi
 
-	if [[ ${HAVE_NEW_CONFIG} == "true" ]]; then
-		if [[ ${HAVE_NEW_REMOTE_CONFIG} == "true" ]]; then
+	if [[ ${HAVE_LOCAL_CONFIG} == "true" ]]; then
+		if [[ ${HAVE_NEW_STYLE_REMOTE_CONFIG} == "true" ]]; then
 			MSG="A remote configuration file was found but using the local version instead."
 		else
 			MSG="Using the local remote configuration file (no remote file found)."
@@ -330,7 +330,7 @@ function pre_install_checks()
 		CONFIG_TO_USE="prior"	# it may be old or current format
 		CONFIG_MESSAGE="the ${B}"
 
-	elif [[ ${HAVE_NEW_REMOTE_CONFIG} == "true" ]]; then
+	elif [[ ${HAVE_NEW_STYLE_REMOTE_CONFIG} == "true" ]]; then
 		MSG="Using new-style Website configuration file on the remote Website;"
 		MSG+=" it will be downloaded and saved locally."
 		display_msg --logonly info "${MSG}"
@@ -670,7 +670,7 @@ function upload_remote_website()
 
 	MSG="Starting upload to the remote Website"
 	[[ -n ${REMOTE_DIR} ]] && MSG+=" in ${REMOTE_DIR}"
-	if [[ ${REMOTE_WEBSITE_EXISTS} == "true" ]]; then
+	if [[ ${REMOTE_WEBSITE_IS_VALID} == "true" ]]; then
 
 		# Don't upload images if the remote Website exists (we assume it already
 		# has the images).

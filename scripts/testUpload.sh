@@ -302,4 +302,4 @@ if [[ -s ${MSG_FILE} ]]; then
 fi
 rm -f "${MSG_FILE}"
 
-exit ${RET}
+exit "${RET}"

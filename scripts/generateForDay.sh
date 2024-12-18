@@ -183,14 +183,14 @@ if [[ ${TYPE} == "GENERATE" ]]; then
 		[[ -n ${DEBUG_ARG} ]] && echo "${ME}: Executing: ${CMD}"
 		# shellcheck disable=SC2086
 		eval ${CMD}
-		RET=$?
+		local RET=$?
 		if [[ ${RET} -ne 0 ]]; then
 			echo -e "${RED}${ME}: Command Failed: ${CMD}${NC}"
 		elif [[ ${SILENT} == "false" ]]; then
 			echo -e "\tDone"
 		fi
 
-		return ${RET}
+		return "${RET}"
 	}
 
 else

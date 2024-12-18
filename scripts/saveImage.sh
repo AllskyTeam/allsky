@@ -363,7 +363,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 				# Remove the oldest files if we haven't reached the limit.
 				if [[ ${LEFT} -le 0 ]]; then
 					KEEP=$((TIMELAPSE_MINI_IMAGES - TIMELAPSE_MINI_FREQUENCY))
-					x="$( tail -${KEEP} "${MINI_TIMELAPSE_FILES}" )"
+					x="$( tail "-${KEEP}" "${MINI_TIMELAPSE_FILES}" )"
 					echo -e "${x}" > "${MINI_TIMELAPSE_FILES}"
 					if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 						echo -en "${YELLOW}${ME}: Replaced ${TIMELAPSE_MINI_FREQUENCY} oldest, LEFT=$LEFT, KEEP=$KEEP"

@@ -75,6 +75,7 @@ echo
 echo -en "${BOLD}"
 echo    "============================================="
 echo -n "Press RETURN to continue with installation: "
+# shellcheck disable=SC2034
 read -r x
 echo -e "${NC}"
 

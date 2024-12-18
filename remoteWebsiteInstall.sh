@@ -226,7 +226,6 @@ function pre_install_checks()
 
 	DIALOG_TEXT+="\n1  - Checking for remote Website configuration file on Pi: "
 	display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
-
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
 		# 1a.
 		DT="FOUND"
@@ -234,11 +233,12 @@ function pre_install_checks()
 		display_msg --logonly info "${MSG}"
 		HAVE_LOCAL_CONFIG="true"
 
-### FIX / TODO: Should this be used?
+### FIX: ALEX: I don't think this "elif" part should be used.
 # During Allsky upgrades, if the OLD directory exists users are asked if
 # it should be used.  If "yes", then the prior remote Website config file was
 # copied to the new Allsky, so 1a should match.
 # If the user answered "no", don't use OLD Allsky, we probably shouldn't either.
+# HAVE_PRIOR_CONFIG should also be deleted.
 	elif [[ -f ${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
 		# 1b.
 		DT="FOUND ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} in '${PRIOR_CONFIG_DIR}'"

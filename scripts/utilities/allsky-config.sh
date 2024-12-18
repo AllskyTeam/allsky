@@ -268,7 +268,7 @@ function prompt()
 		exit 2
 	else
 		echo "${OPT}"
-		return ${RET}
+		return "${RET}"
 	fi
 }
 

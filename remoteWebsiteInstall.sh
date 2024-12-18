@@ -256,7 +256,7 @@ function pre_install_checks()
 	DIALOG_TEXT+="\n2  - Checking for existing remote Website: "
 	display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 	local INDENT="     "
-	REMOTE_WEBSITE_IS_VALID="$( check_if_website_exists )"
+	REMOTE_WEBSITE_IS_VALID="$( check_if_website_is_valid )"
 	if [[ ${REMOTE_WEBSITE_IS_VALID} == "true" ]]; then
 
 		# If we didn't find a remote Website configuration file on the Pi,
@@ -635,7 +635,7 @@ function remove_remote_file()
 #	all of the ${WEBSITE_FILES} exist then assume we have a remote Website.
 #
 # Returns - echo "true" if it exists, else "false"
-function check_if_website_exists()
+function check_if_website_is_valid()
 {
 	local CONFIG_FILES=("${OLD_CONFIG_NAME}" "${ALLSKY_WEBSITE_CONFIGURATION_NAME}")
 	local WEBSITE_FILES=("index.php" "functions.php")

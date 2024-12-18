@@ -241,7 +241,7 @@ function pre_install_checks()
 # HAVE_PRIOR_CONFIG should also be deleted.
 	elif [[ -f ${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
 		# 1b.
-		DT="FOUND ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} in '${PRIOR_CONFIG_DIR}'"
+		DT="FOUND ${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE}."
 		MSG="Found ${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE}."
 		display_msg --logonly info "${MSG}"
 		HAVE_PRIOR_CONFIG="true"
@@ -263,7 +263,7 @@ function pre_install_checks()
 		# it's "should be" an old-style Website since the user wasn't
 		# using the WebUI to configure it.
 
-		DIALOG_TEXT+="FOUND."
+		DIALOG_TEXT+="WORKING."
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
 		# 2a.
@@ -272,13 +272,13 @@ function pre_install_checks()
 		local NEW_CONFIG_FILES=("${ALLSKY_WEBSITE_CONFIGURATION_NAME}")
 		if check_if_files_exist "${REMOTE_URL}" "or" "${NEW_CONFIG_FILES[@]}" ; then
 			HAVE_NEW_STYLE_REMOTE_CONFIG="true"
-			DIALOG_TEXT+="Found."
+			DIALOG_TEXT+="FOUND."
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 			MSG="Found a current configuration file on the remote server."
 			display_msg --logonly info "${MSG}"
 		else
 			# 2b.
-			DIALOG_TEXT+="Not found."
+			DIALOG_TEXT+="NOT FOUND."
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
 			DIALOG_TEXT+="\n${INDENT}* Checking it for old-style configuration file:"
@@ -286,20 +286,20 @@ function pre_install_checks()
 			local REALLY_OLD_CONFIG_FILES=("${OLD_CONFIG_NAME}")
 			if check_if_files_exist "${REMOTE_URL}" "or" "${REALLY_OLD_CONFIG_FILES[@]}" ; then
 				HAVE_REALLY_OLD_REMOTE_CONFIG="true"
-				DT="FOUND"
+				DT="FOUND."
 				MSG="Found old-style ${OLD_CONFIG_NAME} file on the remote Website."
 				display_msg --logonly info "${MSG}"
 			else
 				# This "shouldn't" happen - the remote Website should have SOME type
 				# of configuration file.
-				DT="NOT FOUND"
+				DT="NOT FOUND."
 			fi
-			DIALOG_TEXT+="${DT}."
+			DIALOG_TEXT+="${DT}"
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 		fi
 	else
 		# No remote Website found.
-		DIALOG_TEXT+="NOT FOUND."
+		DIALOG_TEXT+="NOT WORKING."
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
 		if [[ ${HAVE_LOCAL_CONFIG} == "true" || ${HAVE_PRIOR_CONFIG} == "true" ]]; then
@@ -315,9 +315,9 @@ function pre_install_checks()
 
 	if [[ ${HAVE_LOCAL_CONFIG} == "true" ]]; then
 		if [[ ${HAVE_NEW_STYLE_REMOTE_CONFIG} == "true" ]]; then
-			MSG="A remote configuration file was found but using the local version instead."
+			MSG="A new-style remote configuration file was found but using the local version instead."
 		else
-			MSG="Using the local remote configuration file (no remote file found)."
+			MSG="Using the remote configuration file on the Pi (no remote file found)."
 		fi
 		display_msg --logonly info "${MSG}"
 		CONFIG_TO_USE="local"	# it may be old or current format
@@ -345,9 +345,10 @@ function pre_install_checks()
 		CONFIG_MESSAGE="a new"
 
 	else
-		MSG="Unable to determine the configuration file to use. A new one will be created."
+		MSG="No configuration file found - a new one will be created."
 		display_msg --logonly info "${MSG}"
 		CONFIG_TO_USE="new"
+		CONFIG_MESSAGE="a new"
 	fi
 
 	DIALOG_TEXT+="\n     * Checking ability to upload to it: "
@@ -381,20 +382,17 @@ function display_welcome()
 	if [[ ${AUTO_CONFIRM} == "false" ]]; then
 		display_msg --logonly info "Displaying the welcome dialog."
 		local DIALOG_TEXT="\n\
- This script will now:\n\n\
- \
-  1) Use ${CONFIG_MESSAGE} configuration file.\n\
+This script will now:\n\n\
+   1) Use ${CONFIG_MESSAGE} configuration file.\n\
    2) Upload the new remote Website code.\n\
    3) Upload the remote Website configuration file.\n\
-   4) Enable the remote Website.\n\n\
- \n\
- Any existing startrails, keograms, and/or timelapse will NOT be touched.\n\
+   4) Enable the remote Website.\n\
+   5) Any existing startrails, keograms, and/or timelapse will NOT be touched.\n\
 \n\
- ${DIALOG_RED}WARNING! This will:${DIALOG_NORMAL}\n\
+ ${DIALOG_RED}NOTE: This will:${DIALOG_NORMAL}\n\
   - Overwrite the old Allsky web files on the remote server.\n\
   - Remove any old Allsky files from the remote server.\n\n\n\
  ${DIALOG_UNDERLINE}Are you sure you wish to continue?${DIALOG_NORMAL}"
-
 		if ! display_box "--yesno" "${DIALOG_WELCOME_TITLE}" "${DIALOG_TEXT}" ; then
 			display_aborted "--user" "at the Welcome dialog" ""
 		fi
@@ -425,9 +423,6 @@ function display_aborted()
 		DIALOG_PROMPT+="${DIALOG_UNDERLINE}Would you like to view the error message?${DIALOG_NORMAL}"
 		if display_box "--yesno" "${DIALOG_INSTALL}" "${DIALOG_PROMPT}" ; then
 			display_box "--msgbox" "${DIALOG_TITLE_LOG}" "${ERROR_MSG}" "--scrollbar"
-if false; then
-			display_log_file "${DIALOG_TITLE_LOG}" "${DISPLAY_MSG_LOG}"
-fi
 		fi
 	fi
 
@@ -440,27 +435,28 @@ fi
 # Displays the completed dialog, used at the end of the installation process.
 function display_complete()
 {
-	local EXTRA_TEXT=""
-	local E=" Please use the WebUI's 'Editor' page to replace any '${NEED_TO_UPDATE}' with the correct values."
+	local EXTRA_TEXT  E  E2
+	E="Use the WebUI's 'Editor' page to edit the"
+	E+=" '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)' file"
+	E2=", replacing any '${NEED_TO_UPDATE}' strings with the correct values."
 	if [[ ${CONFIG_TO_USE} == "new"  ]]; then
-		EXTRA_TEXT="\nA new configuration file was created for your remote Website."
-		EXTRA_TEXT+="${E}"
+		EXTRA_TEXT="A new configuration file was created."
+		EXTRA_TEXT+="\n  ${E}${E2}"
 	elif [[ ${CONFIG_TO_USE} == "remoteReallyOld" ]]; then
-		EXTRA_TEXT="\nYou have a very old remote Allsky Website so a new configuration file was created."
-		EXTRA_TEXT+="${E}"
+		EXTRA_TEXT="You had a very old remote Allsky Website so a new configuration file was created."
+		EXTRA_TEXT+="\n  ${E}${E2}"
+	else
+		EXTRA_TEXT="${E} to change settings for your remote Website."
 	fi
 
-	display_msg --logonly info "INSTALLATION COMPLETED.\n"
-
-	local DIALOG_TEXT="\n\
-  The installation of the remote Website is complete\n\
-  and the remote Website should be working.\n\n\
-  Please check it.\n\n\
-  Use the WebUI's 'Editor' page to change settings for your Website.${EXTRA_TEXT}"
+	local DIALOG_TEXT="\n  The installation of the remote Website is complete.\n\n  Please check it."
+	DIALOG_TEXT+="\n\n  ${EXTRA_TEXT}"
 	display_box "--msgbox" "${DIALOG_DONE}" "${DIALOG_TEXT}"
 
 	clear	# Gets rid of background color from last 'dialog' command.
-	display_msg info "\nEnjoy your remote Allsky Website!\n"
+	display_msg --log success "\nEnjoy your remote Allsky Website!\n\n${EXTRA_TEXT}"
+
+	display_msg --logonly info "INSTALLATION COMPLETED.\n"
 }
 
 # Check connectivity to the remote Website by trying to upload a file to it.

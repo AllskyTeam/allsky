@@ -104,7 +104,7 @@ function enter_yes_no()
 		fi
 	done
 
-	return ${RESULT}
+	return "${RESULT}"
 }
 
 # prompt the user to press any key.
@@ -163,7 +163,7 @@ function display_box()
 		else
 			echo -e "${DIALOG_TEXT}"
 		fi
-		return ${RET}
+		return "${RET}"
 	fi
 
 	# Don't use: it's redundant most of the time	--backtitle "${DIALOG_BACK_TITLE}" \
@@ -591,7 +591,7 @@ function check_if_files_exist()
 		fi
 	done
 
-	return ${RET_CODE}
+	return "${RET_CODE}"
 }
 
 # Deletes a file from the remote server.

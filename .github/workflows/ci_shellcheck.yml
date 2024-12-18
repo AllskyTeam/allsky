@@ -7,8 +7,8 @@ on:
   push:
     paths:
       - '*.sh'
-      - '*/*.sh'
-      - '*/*/*.sh'
+      - 'scripts/*.sh'
+      - 'scripts/utilities/*.sh'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:

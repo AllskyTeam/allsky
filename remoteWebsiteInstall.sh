@@ -248,19 +248,19 @@ function pre_install_checks()
 
 	else
 		DT="NOT FOUND"
-		display_msg --logonly info "No local config files found."
+		display_msg --logonly info "No local config file found."
 	fi
 	DIALOG_TEXT+="${DT}."
 	display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
-	DIALOG_TEXT+="\n2  - Checking for existing remote Website: "
+	DIALOG_TEXT+="\n2  - Checking for working remote Website: "
 	display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 	local INDENT="     "
 	REMOTE_WEBSITE_IS_VALID="$( check_if_website_is_valid )"
 	if [[ ${REMOTE_WEBSITE_IS_VALID} == "true" ]]; then
 
 		# If we didn't find a remote Website configuration file on the Pi,
-		# it's "should be" an old-style Website since the user wasn't
+		# it "should be" an old-style Website since the user wasn't
 		# using the WebUI to configure it.
 
 		DIALOG_TEXT+="WORKING."
@@ -298,7 +298,7 @@ function pre_install_checks()
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 		fi
 	else
-		# No remote Website found.
+		# No working remote Website found.
 		DIALOG_TEXT+="NOT WORKING."
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
@@ -351,7 +351,7 @@ function pre_install_checks()
 		CONFIG_MESSAGE="a new"
 	fi
 
-	DIALOG_TEXT+="\n     * Checking ability to upload to it: "
+	DIALOG_TEXT+="\n     * Checking ability to upload to Website: "
 	display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 	display_msg --logonly info "Checking remote Website connectivity."
 	local ERR="$( check_connectivity )"
@@ -382,7 +382,7 @@ function display_welcome()
 	if [[ ${AUTO_CONFIRM} == "false" ]]; then
 		display_msg --logonly info "Displaying the welcome dialog."
 		local DIALOG_TEXT="\n\
-This script will now:\n\n\
+ This script will now:\n\n\
    1) Use ${CONFIG_MESSAGE} configuration file.\n\
    2) Upload the new remote Website code.\n\
    3) Upload the remote Website configuration file.\n\
@@ -427,7 +427,6 @@ function display_aborted()
 	fi
 
 	clear	# Gets rid of background color from last 'dialog' command.
-	# Not needed:   display_msg info "${ERROR_MSG}"
 
 	exit 1
 }
@@ -540,24 +539,23 @@ function create_website_config()
 		# Use the new remote config file since none were found locally.
 		# Replace placeholders and convert it to the newest format.
 		# Remember that the remote file name is different than what we store on the Pi.
-		if ERR="$( wget -O "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" "${REMOTE_URL}/${ALLSKY_WEBSITE_CONFIGURATION_FILE}" 2>&1 )"; then
+		local FILE="${REMOTE_URL}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
+		if ERR="$( wget -O "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" "${FILE}" 2>&1 )"; then
 			replace_website_placeholders "remote"
 			update_old "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
-			MSG="Downloaded ${ALLSKY_WEBSITE_CONFIGURATION_FILE} from ${REMOTE_URL},"
-			MSG+=" to ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}."
+			MSG="Downloaded '${FILE}' to '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}'."
 			display_msg --logonly info "${MSG}"
 		else
-			# This "shouldn't" happen since we either already checked the file exists,
+			# This "shouldn't" happen since we either already checked that the file exists,
 			# or we uploaded it.
-			MSG="Failed to download ${ALLSKY_WEBSITE_CONFIGURATION_FILE} from ${REMOTE_URL}."
-			MSG+=" Where did it go?"
+			MSG="Failed to download '${FILE}'. Where did it go?"
 			display_aborted "${MSG}" "${ERR}"
 		fi
 	fi
 
-	display_msg --logonly info "Updated remote configuration file to ${ALLSKY_VERSION}"
 	update_json_file ".${WEBSITE_ALLSKY_VERSION}" "${ALLSKY_VERSION}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
+	display_msg --logonly info "Updated remote configuration file to ${ALLSKY_VERSION}."
 }
 
 # Check if a remote file, or array of files, exist.
@@ -566,6 +564,10 @@ function create_website_config()
 # ${3}... - the files
 #
 # Returns - 0 if the file(s) exist, 1 if ANY file doesn't exist.
+
+# TODO: FIX: This doesn't work for "version" or "README.md" or probably any file whose
+# type is unknown to the server.
+
 function check_if_files_exist()
 {
 	local URL="${1}"
@@ -575,14 +577,14 @@ function check_if_files_exist()
 
 	for FILE in "$@"; do
 		url="${URL}/${FILE}"
-		HTTP_STATUS="$( curl -o /dev/null --head --silent --write-out "%{http_code}" "$url" )"
+		HTTP_STATUS="$( curl -o /dev/null --head --silent --location --write-out "%{http_code}" "$url" )"
 
-		local PRE_MSG="File ${FILE} ${url}"
+		local PRE_MSG="File '${FILE}'"
 		if [[ ${HTTP_STATUS} == "200" ]] ; then
 			show_debug_message "${PRE_MSG} exists on the remote server"
 			RET_CODE=0
 		else
-			show_debug_message "${PRE_MSG} does not exists on the remote server"
+			show_debug_message "${PRE_MSG} does not exist on the remote server (HTTP_STATUS=${HTTP_STATUS})"
 			if [[ ${AND_OR} == "and" ]]; then
 				return 1
 			fi
@@ -604,7 +606,6 @@ function remove_remote_file()
 
 	if [[ ${CHECK} == "check" ]]; then
 		if ! check_if_files_exist "${REMOTE_URL}" "or" "${FILENAME}" ; then
-			show_debug_message "===== not on server"
 			return
 		fi
 	fi
@@ -622,17 +623,20 @@ function remove_remote_file()
 				-e "${CMDS}" 2>&1 )"
 	if [[ $? -eq 0 ]] ; then
 		MSG="Deleted remote file '${FILENAME}'"
-	else
+	elif [[ ! ${ERR} =~ "550" ]]; then		# does not exist
 		MSG="Unable to delete remote file '${FILENAME}': ${ERR}"
+	else
+		show_debug_message "'${FILENAME}' not on remote Website."
+		return
 	fi
 
 	display_msg --logonly info "${MSG}"
 }
 
-# Check if a remote Website exists.
-# The check is done by looking for the following files:
-#	If any of the ${CONFIG_FILES} files exist AND
-#	all of the ${WEBSITE_FILES} exist then assume we have a remote Website.
+# Check if a valid remote Website exists.
+#
+# If any of the ${CONFIG_FILES} files exist AND
+# all of the ${WEBSITE_FILES} exist then assume the remote Website is valid.
 #
 # Returns - echo "true" if it exists, else "false"
 function check_if_website_is_valid()
@@ -640,15 +644,21 @@ function check_if_website_is_valid()
 	local CONFIG_FILES=("${OLD_CONFIG_NAME}" "${ALLSKY_WEBSITE_CONFIGURATION_NAME}")
 	local WEBSITE_FILES=("index.php" "functions.php")
 
+	display_msg --logonly info "Looking for a config file at ${REMOTE_URL}"
 	if check_if_files_exist "${REMOTE_URL}" "or" "${CONFIG_FILES[@]}" ; then
-		show_debug_message "Found a remote Website config file"
+		local MSG="   Found a config file"
 
 		if check_if_files_exist "${REMOTE_URL}" "and" "${WEBSITE_FILES[@]}" ; then
-			display_msg --logonly info "Found a remote Allsky Website at ${REMOTE_URL}"
+			display_msg --logonly info "${MSG} and a valid Website."
 			echo "true"
 			return 0
+		else
+			display_msg --logonly info "${MSG} but NOT a valid Website."
 		fi
+	else
+		display_msg --logonly info "   Did not find a config file; assuming invalid site"
 	fi
+
 	echo "false"
 	return 1
 }
@@ -669,7 +679,7 @@ function upload_remote_website()
 	if [[ ${REMOTE_WEBSITE_IS_VALID} == "true" ]]; then
 
 		# Don't upload images if the remote Website exists (we assume it already
-		# has the images).
+		# has the images).  "VALID" assumes "EXISTS".
 		# However, we must upload the index.php files.
 		EXCLUDE_FOLDERS="--exclude keograms --exclude startrails --exclude videos"
 
@@ -679,6 +689,8 @@ function upload_remote_website()
 		EXCLUDE_FOLDERS+=" --include startrails/index.php"
 		EXCLUDE_FOLDERS+=" --include videos/index.php"
 		MSG+=" (without videos, images, and their thumbnails)."
+	else
+		MSG+=" (including any videos, images, and their thumbnails)."
 	fi
 	display_msg --logonly info "${MSG}${EXTRA_TEXT}."
 
@@ -721,7 +733,7 @@ function upload_remote_website()
 
 	# Remove any old core files no longer required
 	for FILE_TO_DELETE in "${OLD_FILES_TO_REMOVE[@]}"; do
-		remove_remote_file "${FILE_TO_DELETE}" "check"
+		remove_remote_file "${FILE_TO_DELETE}" "do not check"
 	done
 
 	for FILE_TO_WARN in "${OLD_FILES_TO_WARN[@]}"; do
@@ -744,19 +756,31 @@ function upload_remote_website()
 }
 
 # Uploads the configuration file for the remote Website.
-function upload_config_file()
+function upload_remote_config_file()
 {
-	local MSG="\nUploading remote Allsky configuration file"
+	local MSG
+
+	if [[ ! -f "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" ]]; then
+		MSG="'${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}' not found!"
+		display_msg --logonly info " ${MSG}"
+		display_aborted "at the configuration file upload" "${MSG}"
+		return 1
+	fi
+
+	MSG="\nUploading remote Allsky configuration file"
 	display_box "--infobox" "${DIALOG_INSTALL}" "${MSG}"
 	display_msg --logonly info "Uploading Website configuration file."
 
-	local ERR="$( "${ALLSKY_SCRIPTS}/upload.sh" --remote-web \
+	local ERR="$( "${ALLSKY_SCRIPTS}/upload.sh" --remote-web --silent \
 		"${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" "${REMOTE_DIR}" \
-		"${ALLSKY_WEBSITE_CONFIGURATION_NAME}" 2>&1 )"
+		"${ALLSKY_WEBSITE_CONFIGURATION_NAME}" "remoteWebsiteInstall" 2>&1 )"
 	if [[ $? -eq 0 ]]; then
-		MSG="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} uploaded to"
-		MSG+="${REMOTE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
-		show_debug_message "${MSG}"
+		local R="${REMOTE_DIR}"
+		[[ -n ${R} ]] && R+="/"
+		MSG="'${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}' uploaded to"
+		MSG+=" '${R}${ALLSKY_WEBSITE_CONFIGURATION_NAME}'"
+		[[ ${DEBUG} == "true" && -n ${ERR} ]] && MSG+="  (${ERR})"
+		display_msg --logonly info "${MSG}"
 	else
 		display_msg --logonly info " Failed: ${ERR}"
 		display_aborted "at the configuration file upload" "${ERR}"
@@ -851,6 +875,6 @@ display_welcome
 create_website_config
 disable_remote_website
 upload_remote_website
-upload_config_file
+upload_remote_config_file
 enable_remote_website
 display_complete

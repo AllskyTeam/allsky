@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2034		# variable unused
+# shellcheck disable=SC2034,SC2317		# variable unused, statement unreached
 
 # This file is source'd into other files to set some variables used by scripts.
 # This allows us to easily add and change directory names.

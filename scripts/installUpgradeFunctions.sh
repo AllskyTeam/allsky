@@ -500,11 +500,11 @@ function replace_website_placeholders()
 			MINI_TLAPSE_URL_VALUE=""
 		else
 			MINI_TLAPSE_DISPLAY_VALUE="true"
-			if [[ ${DO_REMOTE_WEBSITE} == "true" ]]; then
-				MINI_TLAPSE_URL_VALUE="mini-timelapse.mp4"
-			else
+			if [[ ${TYPE} == "local" ]]; then
 				#shellcheck disable=SC2153
 				MINI_TLAPSE_URL_VALUE="/${IMG_DIR}/mini-timelapse.mp4"
+			else
+				MINI_TLAPSE_URL_VALUE="mini-timelapse.mp4"
 			fi
 		fi
 	else

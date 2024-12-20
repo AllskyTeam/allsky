@@ -42,6 +42,7 @@ while [[ $# -gt 0 ]]; do
 		*)
 			CMD="${ARG}"
 			shift
+			# shellcheck disable=SC2124
 			CMD_ARGS="${@}"
 			break;
 			;;
@@ -84,6 +85,7 @@ PATH="${PATH}:${ALLSKY_UTILITIES}"
 # Show all the supported cameras.
 function show_supported_cameras()
 {
+	# shellcheck disable=SC2124
 	local ARGS="${@}"
 
 	#shellcheck disable=SC2086
@@ -98,7 +100,7 @@ function show_supported_cameras()
 		ARGS="$( prompt "${PROMPT}" "${OPTS[@]}" )"
 	fi
 
-	#shellcheck disable=SC2086
+	# shellcheck disable=SC2086
 	show_supported_cameras.sh ${ARGS}
 }
 
@@ -114,10 +116,13 @@ function show_connected_cameras()
 	else
 		local FORMAT="%-6s %-8s %s\n"
 		echo
+		# shellcheck disable=SC2059
 		printf "${FORMAT}" "Type" "Number" "Model"
+		# shellcheck disable=SC2059
 		printf "${FORMAT}" "====" "======" "====="
 		echo -e "${CAMERAS}" | while read -r TYPE NUM MODEL
 			do
+				# shellcheck disable=SC2059
 				printf "${FORMAT}" "${TYPE}" "${NUM}" "${MODEL}"
 			done
 	fi
@@ -127,9 +132,10 @@ function show_connected_cameras()
 # Show all the currently connected cameras.
 function new_rpi_camera_info()
 {
+	# shellcheck disable=SC2124
 	local ARGS="${@}"		# optional
 
-	#shellcheck disable=SC2086
+	# shellcheck disable=SC2086
 	get_RPi_camera_info.sh ${ARGS}
 }
 
@@ -232,6 +238,7 @@ function run_command()
 {
 	COMMAND="${1}"
 	shift
+	# shellcheck disable=SC2124
 	ARGUMENTS="${@}"
 	if ! type "${COMMAND}" > /dev/null 2>&1 ; then
 		echo -e "\n${RED}${ME}: Unknown command '${COMMAND}'.${NC}" >&2
@@ -268,7 +275,7 @@ function prompt()
 		exit 2
 	else
 		echo "${OPT}"
-		return ${RET}
+		return "${RET}"
 	fi
 }
 
@@ -294,7 +301,7 @@ if [[ -z ${CMD} ]]; then
 		run_command "${COMMAND}"
 		RET=$?
 
-		[[ ${ALLOW_MORE_COMMANDS} == "false" ]] && exit ${RET}
+		[[ ${ALLOW_MORE_COMMANDS} == "false" ]] && exit "${RET}"
 		while true; do
 			echo -e "\n\n"
 			echo -e "${YELLOW}${BOLD}"

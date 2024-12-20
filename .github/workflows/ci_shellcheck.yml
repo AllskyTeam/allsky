@@ -7,8 +7,8 @@ on:
   push:
     paths:
       - '*.sh'
-      - '*/*.sh'
-      - '*/*/*.sh'
+      - 'scripts/*.sh'
+      - 'scripts/utilities/*.sh'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -27,7 +27,7 @@ jobs:
         run: |
           # check bash files (bash -n, shellcheck -x)
           err=0
-          for i in $(find . -maxdepth 2 -name '*.sh'); do
+          for i in $(find . -maxdepth 3 -name '*.sh'); do
             echo "==================== $i"
             bash -n $i
             if [ $? -ne 0 ]; then

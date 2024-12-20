@@ -90,19 +90,23 @@ function enter_yes_no()
 	local RESULT=1
 	local ANSWER
 
-	while true; do
-		echo -e "${TEXT}"
-		read -r -p "Do you want to continue? (y/n): " ANSWER
-		ANSWER="${ANSWER,,}"	# convert to lowercase
+    if [[ ${AUTO_CONFIRM} == "false" ]]; then
+        while true; do
+            echo -e "${TEXT}"
+            read -r -p "Do you want to continue? (y/n): " ANSWER
+            ANSWER="${ANSWER,,}"	# convert to lowercase
 
-		if [[ ${ANSWER} == "y" || ${ANSWER} == "yes" ]]; then
-			return 0
-		elif [[ ${ANSWER} == "n" || ${ANSWER} == "no" ]]; then
-			return 1
-		else
-			echo -e "\nInvalid response. Please enter y/yes or n/no."
-		fi
-	done
+            if [[ ${ANSWER} == "y" || ${ANSWER} == "yes" ]]; then
+                return 0
+            elif [[ ${ANSWER} == "n" || ${ANSWER} == "no" ]]; then
+                return 1
+            else
+                echo -e "\nInvalid response. Please enter y/yes or n/no."
+            fi
+        done
+    else
+        return 0
+    fi
 
 	return "${RESULT}"
 }
@@ -111,8 +115,10 @@ function enter_yes_no()
 # This function is only used when running in text (--text) mode.
 function press_any_key()
 {
-	echo -e "${1}\nPress any key to continue..."
-	read -r -n1 -s
+    if [[ ${AUTO_CONFIRM} == "false" ]]; then
+	    echo -e "${1}\nPress any key to continue..."
+	    read -r -n1 -s
+    fi
 }
 
 # Add a common heading to the dialog text.
@@ -565,9 +571,6 @@ function create_website_config()
 #
 # Returns - 0 if the file(s) exist, 1 if ANY file doesn't exist.
 
-# TODO: FIX: This doesn't work for "version" or "README.md" or probably any file whose
-# type is unknown to the server.
-
 function check_if_files_exist()
 {
 	local URL="${1}"
@@ -672,7 +675,7 @@ function upload_remote_website()
 		return
 	fi
 
-	local EXTRA_TEXT=""  EXCLUDE_FOLDERS=""  MSG
+	local EXTRA_TEXT=""  EXCLUDE_FILES=""  MSG
 
 	MSG="Starting upload to the remote Website"
 	[[ -n ${REMOTE_DIR} ]] && MSG+=" in ${REMOTE_DIR}"
@@ -681,13 +684,8 @@ function upload_remote_website()
 		# Don't upload images if the remote Website exists (we assume it already
 		# has the images).  "VALID" assumes "EXISTS".
 		# However, we must upload the index.php files.
-		EXCLUDE_FOLDERS="--exclude keograms --exclude startrails --exclude videos"
+		EXCLUDE_FILES="--exclude-glob=*.jpg  --exclude-glob=*.mp4"
 
-# ALEX: FIX: the --include doesn't work - the files aren't uploaded.
-# Do we need to do a second lftp mirror to upload them?
-		EXCLUDE_FOLDERS+=" --include keograms/index.php"
-		EXCLUDE_FOLDERS+=" --include startrails/index.php"
-		EXCLUDE_FOLDERS+=" --include videos/index.php"
 		MSG+=" (without videos, images, and their thumbnails)."
 	else
 		MSG+=" (including any videos, images, and their thumbnails)."
@@ -709,7 +707,7 @@ function upload_remote_website()
 		CMDS+="${NL}cd ."		# for debugging
 	fi
 	CMDS+="${NL}mirror --reverse --no-perms --verbose --overwrite --ignore-time --transfer-all"
-	[[ -n ${EXCLUDE_FOLDERS} ]] && CMDS+=" ${EXCLUDE_FOLDERS}"
+	[[ -n ${EXCLUDE_FILES} ]] && CMDS+=" ${EXCLUDE_FILES}"
 	CMDS+="${NL}bye"
 
 	local TMP="${ALLSKY_TMP}/remote_upload.txt"

@@ -23,7 +23,6 @@ DISPLAY_MSG_LOG="${ALLSKY_LOGS}/${ME/.sh/}.log"
 
 # Config variables
 HAVE_LOCAL_CONFIG="false"
-HAVE_PRIOR_CONFIG="false"
 HAVE_NEW_STYLE_REMOTE_CONFIG="false"
 HAVE_REALLY_OLD_REMOTE_CONFIG="false"
 CONFIG_TO_USE=""		# which Website configuration file to use?
@@ -212,8 +211,8 @@ function display_log_file()
 #
 # 1a. If ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} exists, use it.
 #
-# 1b. If ${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE} exists,
-#     copy it to ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} and use it.
+# 1b. No longer used, assume upgrade of Allsky will copy the configuration file
+#     to the new installation
 #
 # 2a. If there's a remote Website with a ${ALLSKY_WEBSITE_CONFIGURATION_NAME} file,
 #     save it locally as ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} and use it.
@@ -238,20 +237,6 @@ function pre_install_checks()
 		MSG="Found ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}."
 		display_msg --logonly info "${MSG}"
 		HAVE_LOCAL_CONFIG="true"
-
-### FIX: ALEX: I don't think this "elif" part should be used.
-# During Allsky upgrades, if the OLD directory exists users are asked if
-# it should be used.  If "yes", then the prior remote Website config file was
-# copied to the new Allsky, so 1a should match.
-# If the user answered "no", don't use OLD Allsky, we probably shouldn't either.
-# HAVE_PRIOR_CONFIG should also be deleted.
-	elif [[ -f ${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
-		# 1b.
-		DT="FOUND ${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE}."
-		MSG="Found ${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE}."
-		display_msg --logonly info "${MSG}"
-		HAVE_PRIOR_CONFIG="true"
-
 	else
 		DT="NOT FOUND"
 		display_msg --logonly info "No local config file found."
@@ -308,13 +293,17 @@ function pre_install_checks()
 		DIALOG_TEXT+="NOT WORKING."
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
-		if [[ ${HAVE_LOCAL_CONFIG} == "true" || ${HAVE_PRIOR_CONFIG} == "true" ]]; then
+		if [[ ${HAVE_LOCAL_CONFIG} == "true" ]]; then
 			DIALOG_TEXT+="${DIALOG_RED}"
 			DIALOG_TEXT+="\n${INDENT}WARNING: a remote configuration file exists"
 			DIALOG_TEXT+="\n${INDENT}but a remote Website wasn't found."
 			DIALOG_TEXT+="\n${INDENT}What is the configuration file for?"
 			DIALOG_TEXT+="${DIALOG_NORMAL}"
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
+        else
+			DIALOG_TEXT+="${DIALOG_RED}"
+			DIALOG_TEXT+="\n${INDENT}WARNING: No configuration file found a new one will be created."
+			DIALOG_TEXT+="${DIALOG_NORMAL}"        
 		fi
 
 	fi
@@ -328,13 +317,6 @@ function pre_install_checks()
 		display_msg --logonly info "${MSG}"
 		CONFIG_TO_USE="local"	# it may be old or current format
 		CONFIG_MESSAGE="the current remote"
-
-	elif [[ ${HAVE_PRIOR_CONFIG} == "true" ]]; then
-		local B="$( basename "${PRIOR_ALLSKY_DIR}" )"
-		MSG="Using the ${B} configuration file."
-		display_msg --logonly info "${MSG}"
-		CONFIG_TO_USE="prior"	# it may be old or current format
-		CONFIG_MESSAGE="the ${B}"
 
 	elif [[ ${HAVE_NEW_STYLE_REMOTE_CONFIG} == "true" ]]; then
 		MSG="Using new-style Website configuration file on the remote Website;"
@@ -528,17 +510,6 @@ function create_website_config()
 		if update_old "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" ; then
 			MSG+=" and converting to newest format."
 		fi
-		display_msg --logonly info "${MSG}"
-
-	elif [[ ${CONFIG_TO_USE} == "prior" ]]; then
-		# Use the config file from the prior Allsky, replacing as many placeholders as we can.
-		# If the file is an older version, convert to the newest format.
-		cp "${PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
-		replace_website_placeholders "remote"
-		update_old "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
-
-		MSG="Copied ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} from the"
-		MSG+=" $( basename "${PRIOR_ALLSKY_DIR}" ) directory and updated placeholders."
 		display_msg --logonly info "${MSG}"
 
 	elif [[ ${CONFIG_TO_USE} == "remoteNew" ]]; then

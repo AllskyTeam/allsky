@@ -89,23 +89,23 @@ function enter_yes_no()
 	local RESULT=1
 	local ANSWER
 
-    if [[ ${AUTO_CONFIRM} == "false" ]]; then
-        while true; do
-            echo -e "${TEXT}"
-            read -r -p "Do you want to continue? (y/n): " ANSWER
-            ANSWER="${ANSWER,,}"	# convert to lowercase
+	if [[ ${AUTO_CONFIRM} == "false" ]]; then
+		while true; do
+			echo -e "${TEXT}"
+			read -r -p "Do you want to continue? (y/n): " ANSWER
+			ANSWER="${ANSWER,,}"	# convert to lowercase
 
-            if [[ ${ANSWER} == "y" || ${ANSWER} == "yes" ]]; then
-                return 0
-            elif [[ ${ANSWER} == "n" || ${ANSWER} == "no" ]]; then
-                return 1
-            else
-                echo -e "\nInvalid response. Please enter y/yes or n/no."
-            fi
-        done
-    else
-        return 0
-    fi
+			if [[ ${ANSWER} == "y" || ${ANSWER} == "yes" ]]; then
+				return 0
+			elif [[ ${ANSWER} == "n" || ${ANSWER} == "no" ]]; then
+				return 1
+			else
+				echo -e "\nInvalid response. Please enter y/yes or n/no."
+			fi
+		done
+	else
+		return 0
+	fi
 
 	return "${RESULT}"
 }
@@ -114,10 +114,10 @@ function enter_yes_no()
 # This function is only used when running in text (--text) mode.
 function press_any_key()
 {
-    if [[ ${AUTO_CONFIRM} == "false" ]]; then
-	    echo -e "${1}\nPress any key to continue..."
-	    read -r -n1 -s
-    fi
+	if [[ ${AUTO_CONFIRM} == "false" ]]; then
+		echo -e "${1}\nPress any key to continue..."
+		read -r -n1 -s
+	fi
 }
 
 # Add a common heading to the dialog text.
@@ -300,10 +300,10 @@ function pre_install_checks()
 			DIALOG_TEXT+="\n${INDENT}What is the configuration file for?"
 			DIALOG_TEXT+="${DIALOG_NORMAL}"
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
-        else
+		else
 			DIALOG_TEXT+="${DIALOG_RED}"
 			DIALOG_TEXT+="\n${INDENT}WARNING: No configuration file found a new one will be created."
-			DIALOG_TEXT+="${DIALOG_NORMAL}"        
+			DIALOG_TEXT+="${DIALOG_NORMAL}"
 		fi
 
 	fi

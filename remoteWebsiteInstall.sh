@@ -555,10 +555,10 @@ function check_if_files_exist()
 
 		local PRE_MSG="File '${FILE}'"
 		if [[ ${HTTP_STATUS} == "200" ]] ; then
-			show_debug_message "${PRE_MSG} exists on the remote server"
+			show_debug_message "${PRE_MSG} EXISTS on the remote server"
 			RET_CODE=0
 		else
-			show_debug_message "${PRE_MSG} does not exist on the remote server (HTTP_STATUS=${HTTP_STATUS})"
+			show_debug_message "${PRE_MSG} DOES NOT EXIST on the remote server (HTTP_STATUS=${HTTP_STATUS})"
 			if [[ ${AND_OR} == "and" ]]; then
 				return 1
 			fi
@@ -804,6 +804,13 @@ function enable_remote_website()
 	display_msg --logonly info "Remote Website enabled."
 }
 
+function post_data()
+{
+	local MSG
+	MSG="$( "${ALLSKY_SCRIPTS}/postData.sh" --allfiles 2>&1 )"
+	display_msg --logonly info "${MSG}"
+}
+
 ############################################## main body
 OK="true"
 HELP="false"
@@ -851,4 +858,5 @@ disable_remote_website
 upload_remote_website
 upload_remote_config_file
 enable_remote_website
+post_data
 display_complete

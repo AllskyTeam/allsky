@@ -32,6 +32,7 @@ REMOTE_WEBSITE_IS_VALID="false"
 # Dialog size variables
 DIALOG_WIDTH="$( tput cols )"; ((DIALOG_WIDTH -= 10 ))
 DIALOG_HEIGHT=25
+INDENT="  "		# indent each line so it's easier to read
 
 # Remote connectivity variables
 REMOTE_URL="$( settings ".remotewebsiteurl" "${SETTINGS_FILE}" )"
@@ -246,7 +247,7 @@ function pre_install_checks()
 
 	DIALOG_TEXT+="\n2  - Checking for working remote Website: "
 	display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
-	local INDENT="     "
+	local SPACES="${INDENT}${INDENT}"
 	REMOTE_WEBSITE_IS_VALID="$( check_if_website_is_valid )"
 	if [[ ${REMOTE_WEBSITE_IS_VALID} == "true" ]]; then
 # FIX: TODO: we only get here if there's SOME config file.
@@ -261,7 +262,7 @@ function pre_install_checks()
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
 		# 2a.
-		DIALOG_TEXT+="\n${INDENT}* Checking it for new-style configuration file: "
+		DIALOG_TEXT+="\n${SPACES}* Checking it for new-style configuration file: "
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 		local NEW_CONFIG_FILES=("${ALLSKY_WEBSITE_CONFIGURATION_NAME}")
 		if check_if_files_exist "${REMOTE_URL}" "or" "${NEW_CONFIG_FILES[@]}" ; then
@@ -275,7 +276,7 @@ function pre_install_checks()
 			DIALOG_TEXT+="NOT FOUND."
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
-			DIALOG_TEXT+="\n${INDENT}* Checking it for old-style configuration file:"
+			DIALOG_TEXT+="\n${SPACES}* Checking it for old-style configuration file:"
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 			local REALLY_OLD_CONFIG_FILES=("${OLD_CONFIG_NAME}")
 			if check_if_files_exist "${REMOTE_URL}" "or" "${REALLY_OLD_CONFIG_FILES[@]}" ; then
@@ -298,14 +299,14 @@ function pre_install_checks()
 
 		if [[ ${HAVE_LOCAL_CONFIG} == "true" ]]; then
 			DIALOG_TEXT+="${DIALOG_RED}"
-			DIALOG_TEXT+="\n${INDENT}WARNING: a remote configuration file exists"
-			DIALOG_TEXT+="\n${INDENT}but a remote Website wasn't found."
-			DIALOG_TEXT+="\n${INDENT}What is the configuration file for?"
+			DIALOG_TEXT+="\n${SPACES}WARNING: a remote configuration file exists"
+			DIALOG_TEXT+="\n${SPACES}but a remote Website wasn't found."
+			DIALOG_TEXT+="\n${SPACES}What is the configuration file for?"
 			DIALOG_TEXT+="${DIALOG_NORMAL}"
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 		else
 			DIALOG_TEXT+="${DIALOG_RED}"
-			DIALOG_TEXT+="\n${INDENT}WARNING: No configuration file found a new one will be created."
+			DIALOG_TEXT+="\n${SPACES}WARNING: No configuration file found a new one will be created."
 			DIALOG_TEXT+="${DIALOG_NORMAL}"
 		fi
 
@@ -342,7 +343,7 @@ function pre_install_checks()
 		CONFIG_MESSAGE="a new"
 	fi
 
-	DIALOG_TEXT+="\n     * Checking ability to upload to Website: "
+	DIALOG_TEXT+="\n${SPACES} * Checking ability to upload to Website: "
 	display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 	display_msg --logonly info "Checking remote Website connectivity."
 	local ERR="$( check_connectivity )"
@@ -374,15 +375,15 @@ function display_welcome()
 		display_msg --logonly info "Displaying the welcome dialog."
 		local DIALOG_TEXT="\n\
  This script will now:\n\n\
-   1) Use ${CONFIG_MESSAGE} configuration file.\n\
-   2) Upload the new remote Website code.\n\
-   3) Upload the remote Website configuration file.\n\
-   4) Enable the remote Website.\n\
-   5) Any existing startrails, keograms, and/or timelapse will NOT be touched.\n\
+${INDENT} 1) Use ${CONFIG_MESSAGE} configuration file.\n\
+${INDENT} 2) Upload the new remote Website code.\n\
+${INDENT} 3) Upload the remote Website configuration file.\n\
+${INDENT} 4) Enable the remote Website.\n\
+${INDENT} 5) Any existing startrails, keograms, and/or timelapse will NOT be touched.\n\
 \n\
  ${DIALOG_RED}NOTE: This will:${DIALOG_NORMAL}\n\
-  - Overwrite the old Allsky web files on the remote server.\n\
-  - Remove any old Allsky files from the remote server.\n\n\n\
+${INDENT}- Overwrite the old Allsky web files on the remote server.\n\
+${INDENT}- Remove any old Allsky files from the remote server.\n\n\n\
  ${DIALOG_UNDERLINE}Are you sure you wish to continue?${DIALOG_NORMAL}"
 		if ! display_box "--yesno" "${DIALOG_WELCOME_TITLE}" "${DIALOG_TEXT}" ; then
 			display_aborted "--user" "at the Welcome dialog" ""
@@ -427,21 +428,21 @@ function display_complete()
 {
 	local EXTRA_TEXT  E  E2
 	E="Use the WebUI's 'Editor' page to edit the"
-	E+="\n     '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)'"
-	E+="\n  file"
+	E+="\n${INDENT}    '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)'"
+	E+="\n${INDENT}file"
 	E2=", replacing any '${NEED_TO_UPDATE}' strings with the correct values."
 	if [[ ${CONFIG_TO_USE} == "new"  ]]; then
 		EXTRA_TEXT="A new configuration file was created."
-		EXTRA_TEXT+="\n  ${E}${E2}"
+		EXTRA_TEXT+="\n${INDENT}${E}${E2}"
 	elif [[ ${CONFIG_TO_USE} == "remoteReallyOld" ]]; then
 		EXTRA_TEXT="You had a very old remote Allsky Website so a new configuration file was created."
-		EXTRA_TEXT+="\n  ${E}${E2}"
+		EXTRA_TEXT+="\n${INDENT}${E}${E2}"
 	else
 		EXTRA_TEXT="${E} to change settings for your remote Website."
 	fi
 
-	local DIALOG_TEXT="\n  The installation of the remote Website is complete.\n\n  Please check it."
-	DIALOG_TEXT+="\n\n  ${EXTRA_TEXT}"
+	local DIALOG_TEXT="\n${INDENT}The installation of the remote Website is complete.\n\n${INDENT}Please check it."
+	DIALOG_TEXT+="\n\n${INDENT}${EXTRA_TEXT}"
 	display_box "--msgbox" "${DIALOG_DONE}" "${DIALOG_TEXT}"
 
 	clear	# Gets rid of background color from last 'dialog' command.
@@ -721,15 +722,17 @@ function upload_remote_website()
 
 	for FILE_TO_WARN in "${OLD_FILES_TO_WARN[@]}"; do
 		if check_if_files_exist "${REMOTE_URL}" "or" "${FILE_TO_WARN}" ; then
-			display_msg --logonly info "Old file '${FILE_TO_WARN}' exists."
+			display_msg --logonly info "Old file '${FILE_TO_WARN}' exists on server."
+ 			MSG="\n${INDENT}${DIALOG_RED}NOTE:${DIALOG_NORMAL}"
 			if [[ ${FILE_TO_WARN} == "myImages" ]]; then
 # TODO: move the files for the user
-				MSG="NOTE: move any files in '${FILE_TO_WARN}' on the remote Website to 'myFiles',"
-				MSG+=" then remove '${FILE_TO_WARN}'.  It is no longer used."
+				MSG+="\n${INDENT}Move any files in '${FILE_TO_WARN}' on the remote Website to 'myFiles',"
+				MSG+="\n${INDENT}then remove '${FILE_TO_WARN}'."
 			else
-				MSG="NOTE: Please remove '${FILE_TO_WARN}' on the remote Website.   It is no longer used."
+				MSG+="\n${INDENT}Please remove '${FILE_TO_WARN}' on the remote Website."
 			fi
-			display_box "--infobox" "${DIALOG_INSTALL}" "${MSG}"
+			MSG+="\n${INDENT}It is no longer used."
+			display_box "--msgbox" "${DIALOG_INSTALL}" "${MSG}"
 		else
 			display_msg --logonly info "Old file '${FILE_TO_WARN}' does not exist."
 		fi

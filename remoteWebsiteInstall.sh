@@ -650,12 +650,17 @@ function upload_remote_website()
 
 	MSG="Starting upload to the remote Website"
 	[[ -n ${REMOTE_DIR} ]] && MSG+=" in ${REMOTE_DIR}"
+
+# TODO: for == "false", should prompt user if they want the files uploaded.
+
 	if [[ ${REMOTE_WEBSITE_IS_VALID} == "true" ]]; then
 
 		# Don't upload images if the remote Website exists (we assume it already
 		# has the images).  "VALID" assumes "EXISTS".
 		# However, we must upload the index.php files.
-		EXCLUDE_FILES="--exclude-glob=*.jpg  --exclude-glob=*.mp4"
+		EXCLUDE_FILES="--exclude-glob=videos/*.mp4"
+		EXCLUDE_FILES+="--exclude-glob=keograms/*.jpg"
+		EXCLUDE_FILES+="--exclude-glob=startrails/*.jpg"
 
 		MSG+=" (without videos, images, and their thumbnails)."
 	else

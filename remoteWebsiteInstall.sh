@@ -77,8 +77,8 @@ OLD_FILES_TO_REMOVE=( \
 	"getTime.php" \
 	"virtualsky.json" \
 	"README.md" \
-	"version" )
-OLD_FILES_TO_WARN=( "myImages" )
+	"version" \
+	".git/" )
 
 ############################################## functions
 
@@ -724,23 +724,20 @@ function upload_remote_website()
 		remove_remote_file "${FILE_TO_DELETE}" "do not check"
 	done
 
-	for FILE_TO_WARN in "${OLD_FILES_TO_WARN[@]}"; do
-		if check_if_files_exist "${REMOTE_URL}" "or" "${FILE_TO_WARN}" ; then
-			display_msg --logonly info "Old file '${FILE_TO_WARN}' exists on server."
- 			MSG="\n${INDENT}${DIALOG_RED}NOTE:${DIALOG_NORMAL}"
-			if [[ ${FILE_TO_WARN} == "myImages" ]]; then
-# TODO: move the files for the user
-				MSG+="\n${INDENT}Move any files in '${FILE_TO_WARN}' on the remote Website to 'myFiles',"
-				MSG+="\n${INDENT}then remove '${FILE_TO_WARN}'."
-			else
-				MSG+="\n${INDENT}Please remove '${FILE_TO_WARN}' on the remote Website."
-			fi
-			MSG+="\n${INDENT}It is no longer used."
-			display_box "--msgbox" "${DIALOG_INSTALL}" "${MSG}"
-		else
-			display_msg --logonly info "Old file '${FILE_TO_WARN}' does not exist."
-		fi
-	done
+	local DIR="myImages"
+	if check_if_files_exist "${REMOTE_URL}" "or" "${DIR}" ; then
+		display_msg --logonly info "Old directory '${DIR}' exists on server."
+
+		# It would be nice to move the files for the user,
+		# but almost no one has a "myImages" directory.
+ 		MSG="\n${INDENT}${DIALOG_RED}NOTE:${DIALOG_NORMAL}"
+		MSG+="\n${INDENT}Move any files in '${DIR}' on the remote Website to"
+		MSG+="\n${INDENT}the 'myFiles' directory, then remove '${DIR}'."
+		MSG+="\n${INDENT}It is no longer used."
+		display_box "--msgbox" "${DIALOG_INSTALL}" "${MSG}"
+	else
+		display_msg --logonly info "Old file '${DIR}' does not exist."
+	fi
 
 	display_msg --logonly info "Website upload complete"
 }

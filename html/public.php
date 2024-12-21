@@ -46,7 +46,7 @@ initialize_variables();		// sets some variables
 			// Use tail recursion to trigger the next invocation after `$delay` milliseconds
 			setTimeout(function () { getImage(); }, <?php echo $delay ?>);
 		});
-	}
+	};
 
 	getImage();
 </script>

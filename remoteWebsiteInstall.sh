@@ -22,7 +22,7 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP
 DISPLAY_MSG_LOG="${ALLSKY_LOGS}/${ME/.sh/}.log"
 
 # Config variables
-HAVE_LOCAL_CONFIG="false"
+HAVE_LOCAL_REMOTE_CONFIG="false"
 HAVE_NEW_STYLE_REMOTE_CONFIG="false"
 HAVE_REALLY_OLD_REMOTE_CONFIG="false"
 CONFIG_TO_USE=""		# which Website configuration file to use?
@@ -237,7 +237,7 @@ function pre_install_checks()
 		DT="FOUND"
 		MSG="Found ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}."
 		display_msg --logonly info "${MSG}"
-		HAVE_LOCAL_CONFIG="true"
+		HAVE_LOCAL_REMOTE_CONFIG="true"
 	else
 		DT="NOT FOUND"
 		display_msg --logonly info "No local config file found."
@@ -250,13 +250,7 @@ function pre_install_checks()
 	local SPACES="${INDENT}${INDENT}"
 	REMOTE_WEBSITE_IS_VALID="$( check_if_website_is_valid )"
 	if [[ ${REMOTE_WEBSITE_IS_VALID} == "true" ]]; then
-# FIX: TODO: we only get here if there's SOME config file.
-# check_if_website_is_valid() should set HAVE_NEW_STYLE_REMOTE_CONFIG and
-# HAVE_REALLY_OLD_REMOTE_CONFIG so we don't do it again below.
-
-		# If we didn't find a remote Website configuration file on the Pi,
-		# it "should be" an old-style Website since the user wasn't
-		# using the WebUI to configure it.
+		# There is at least one config file.
 
 		DIALOG_TEXT+="WORKING."
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
@@ -264,13 +258,9 @@ function pre_install_checks()
 		# 2a.
 		DIALOG_TEXT+="\n${SPACES}* Checking it for new-style configuration file: "
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
-		local NEW_CONFIG_FILES=("${ALLSKY_WEBSITE_CONFIGURATION_NAME}")
-		if check_if_files_exist "${REMOTE_URL}" "or" "${NEW_CONFIG_FILES[@]}" ; then
-			HAVE_NEW_STYLE_REMOTE_CONFIG="true"
+		if [[ ${HAVE_NEW_STYLE_REMOTE_CONFIG} == "true" ]]; then
 			DIALOG_TEXT+="FOUND."
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
-			MSG="Found a current configuration file on the remote server."
-			display_msg --logonly info "${MSG}"
 		else
 			# 2b.
 			DIALOG_TEXT+="NOT FOUND."
@@ -278,16 +268,12 @@ function pre_install_checks()
 
 			DIALOG_TEXT+="\n${SPACES}* Checking it for old-style configuration file:"
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
-			local REALLY_OLD_CONFIG_FILES=("${OLD_CONFIG_NAME}")
-			if check_if_files_exist "${REMOTE_URL}" "or" "${REALLY_OLD_CONFIG_FILES[@]}" ; then
-				HAVE_REALLY_OLD_REMOTE_CONFIG="true"
+			if [[ ${HAVE_REALLY_OLD_REMOTE_CONFIG} == "true" ]]; then
 				DT="FOUND."
-				MSG="Found old-style ${OLD_CONFIG_NAME} file on the remote Website."
-				display_msg --logonly info "${MSG}"
 			else
 				# This "shouldn't" happen - the remote Website should have SOME type
 				# of configuration file.
-				DT="NOT FOUND."
+				DT="ERROR: NOT FOUND."
 			fi
 			DIALOG_TEXT+="${DT}"
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
@@ -297,16 +283,21 @@ function pre_install_checks()
 		DIALOG_TEXT+="NOT WORKING."
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
-		if [[ ${HAVE_LOCAL_CONFIG} == "true" ]]; then
+		if [[ ${HAVE_LOCAL_REMOTE_CONFIG} == "true" ]]; then
+			# The remote's config file is on the Pi but the remote Website doesn't have a
+			# config file and/or the Website source files.
+			# This could happen if the user HAD a working remote Website but moved all the files to,
+			# for example, "allsky/OLD", before upgrading.
 			DIALOG_TEXT+="${DIALOG_RED}"
 			DIALOG_TEXT+="\n${SPACES}WARNING: a remote configuration file exists"
-			DIALOG_TEXT+="\n${SPACES}but a remote Website wasn't found."
-			DIALOG_TEXT+="\n${SPACES}What is the configuration file for?"
+			DIALOG_TEXT+="\n${SPACES}but a working remote Website wasn't found."
+			DIALOG_TEXT+="\n${SPACES}If you moved the remote Website before upgrading, ignore this message."
+			DIALOG_TEXT+="\n\n${SPACES}Either way, a new Website will be created."
 			DIALOG_TEXT+="${DIALOG_NORMAL}"
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 		else
 			DIALOG_TEXT+="${DIALOG_RED}"
-			DIALOG_TEXT+="\n${SPACES}WARNING: No configuration file found a new one will be created."
+			DIALOG_TEXT+="\n${SPACES}WARNING: No configuration file found so a new one will be created."
 			DIALOG_TEXT+="${DIALOG_NORMAL}"
 		fi
 
@@ -625,12 +616,23 @@ function remove_remote_file()
 # Returns - echo "true" if it exists, else "false"
 function check_if_website_is_valid()
 {
-	local CONFIG_FILES=("${OLD_CONFIG_NAME}" "${ALLSKY_WEBSITE_CONFIGURATION_NAME}")
+	local FOUND="false"
 	local WEBSITE_FILES=("index.php" "functions.php")
 
-	display_msg --logonly info "Looking for a config file at ${REMOTE_URL}"
-	if check_if_files_exist "${REMOTE_URL}" "or" "${CONFIG_FILES[@]}" ; then
-		local MSG="   Found a config file"
+	display_msg --logonly info "Looking for old and new config files at ${REMOTE_URL}"
+	if check_if_files_exist "${REMOTE_URL}" "or" "${OLD_CONFIG_NAME}" ; then
+		HAVE_REALLY_OLD_REMOTE_CONFIG="true"
+		FOUND="true"
+	fi
+	if check_if_files_exist "${REMOTE_URL}" "or" "${ALLSKY_WEBSITE_CONFIGURATION_NAME}" ; then
+		HAVE_NEW_STYLE_REMOTE_CONFIG="true"
+		FOUND="true"
+	fi
+
+	if [[ ${FOUND} == "true" ]]; then
+		local MSG="   config files found:"
+		[[ ${HAVE_REALLY_OLD_REMOTE_CONFIG} == "true" ]] && MSG+=" ${OLD_CONFIG_NAME}"
+		[[ ${HAVE_NEW_STYLE_REMOTE_CONFIG} == "true" ]] && MSG+=" ${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 
 		if check_if_files_exist "${REMOTE_URL}" "and" "${WEBSITE_FILES[@]}" ; then
 			display_msg --logonly info "${MSG} and a valid Website."
@@ -640,7 +642,9 @@ function check_if_website_is_valid()
 			display_msg --logonly info "${MSG} but NOT a valid Website."
 		fi
 	else
-		display_msg --logonly info "   Did not find a config file; assuming invalid site"
+		# If the user just created the "allsky" directory on the Website but nothing else,
+		# we'll get here.
+		display_msg --logonly info "   Did not find a config file; assuming new, unpopulated Website."
 	fi
 
 	echo "false"

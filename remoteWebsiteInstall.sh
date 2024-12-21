@@ -249,6 +249,9 @@ function pre_install_checks()
 	local INDENT="     "
 	REMOTE_WEBSITE_IS_VALID="$( check_if_website_is_valid )"
 	if [[ ${REMOTE_WEBSITE_IS_VALID} == "true" ]]; then
+# FIX: TODO: we only get here if there's SOME config file.
+# check_if_website_is_valid() should set HAVE_NEW_STYLE_REMOTE_CONFIG and
+# HAVE_REALLY_OLD_REMOTE_CONFIG so we don't do it again below.
 
 		# If we didn't find a remote Website configuration file on the Pi,
 		# it "should be" an old-style Website since the user wasn't
@@ -424,7 +427,8 @@ function display_complete()
 {
 	local EXTRA_TEXT  E  E2
 	E="Use the WebUI's 'Editor' page to edit the"
-	E+=" '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)' file"
+	E+="\n     '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)'"
+	E+="\n  file"
 	E2=", replacing any '${NEED_TO_UPDATE}' strings with the correct values."
 	if [[ ${CONFIG_TO_USE} == "new"  ]]; then
 		EXTRA_TEXT="A new configuration file was created."
@@ -531,8 +535,13 @@ function create_website_config()
 		fi
 	fi
 
-	update_json_file ".${WEBSITE_ALLSKY_VERSION}" "${ALLSKY_VERSION}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
-	display_msg --logonly info "Updated remote configuration file to ${ALLSKY_VERSION}."
+	local VER="$( settings ".${WEBSITE_ALLSKY_VERSION}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
+	if [[ ${VER} == "${ALLSKY_VERSION}" ]]; then
+		display_msg --logonly info "'${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}' already at ${ALLSKY_VERSION}."
+	else
+		update_json_file ".${WEBSITE_ALLSKY_VERSION}" "${ALLSKY_VERSION}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
+		display_msg --logonly info "Updated '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}' to ${ALLSKY_VERSION}."
+	fi
 }
 
 # Check if a remote file, or array of files, exist.
@@ -659,9 +668,9 @@ function upload_remote_website()
 		# has the images).  "VALID" assumes "EXISTS".
 		# However, we must upload the index.php files.
 		EXCLUDE_FILES="--exclude-glob=videos/*.mp4"
-		EXCLUDE_FILES+="--exclude-glob=keograms/*.jpg"
-		EXCLUDE_FILES+="--exclude-glob=startrails/*.jpg"
-
+		EXCLUDE_FILES+=" --exclude-glob=keograms/*.jpg"
+		EXCLUDE_FILES+=" --exclude-glob=startrails/*.jpg"
+		EXCLUDE_FILES+=" --exclude-glob=*/thumbnails/*.jpg"
 		MSG+=" (without videos, images, and their thumbnails)."
 	else
 		MSG+=" (including any videos, images, and their thumbnails)."
@@ -807,7 +816,8 @@ function enable_remote_website()
 function post_data()
 {
 	local MSG
-	MSG="$( "${ALLSKY_SCRIPTS}/postData.sh" --allfiles 2>&1 )"
+	# --fromWebUI only displays summary.
+	MSG="$( "${ALLSKY_SCRIPTS}/postData.sh" --fromWebUI --allfiles 2>&1 )"
 	display_msg --logonly info "${MSG}"
 }
 

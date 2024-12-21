@@ -41,7 +41,7 @@ initialize_variables();		// sets some variables
 				if (!this.complete || typeof this.naturalWidth == "undefined" || this.naturalWidth == 0) {
 					console.log('broken image: ', err);
 				}
-			});
+			}
 		}).finally(() => {
 			// Use tail recursion to trigger the next invocation after `$delay` milliseconds
 			setTimeout(function () { getImage(); }, <?php echo $delay ?>);

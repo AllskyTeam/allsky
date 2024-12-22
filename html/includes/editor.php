@@ -97,7 +97,7 @@ function DisplayEditor()
                         clearInterval(clearTimer);
                         clearTimer = null;
                         document.getElementById("editor-messages").innerHTML = '';
-                    }, 2000);
+                    }, 5000);
                 }
 
                 $.get("<?php echo $fullN; ?>", function (data) {

@@ -192,7 +192,9 @@ function DisplayEditor()
                                 var m = '<div class="alert alert-' + c + '">' + returnMsg + '</div>';
                                 messages.innerHTML = m;
                                 $(".panel-body").LoadingOverlay('hide');
-                                startTimer();
+                                if (c !== "danger") {
+                                    startTimer();
+                                }
                             },
                             error: function (XMLHttpRequest, textStatus, errorThrown) {
                                 $(".panel-body").LoadingOverlay('hide');

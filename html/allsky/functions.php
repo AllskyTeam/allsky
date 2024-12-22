@@ -16,7 +16,6 @@ function initialize() {
 	global $webSettings_array;
 	global $configFilePrefix;
 
-	$needToUpdateString = "XX_NEED_TO_UPDATE_XX";
 	$configurationFileName = "configuration.json";
 	$retMsg = "";
 
@@ -32,11 +31,11 @@ function initialize() {
 		return($retMsg);
 	}
 	$webSettings_str = file_get_contents($configuration_file, true);
-	if (strpos($webSettings_str, $needToUpdateString) !== false) {
+	if (strpos($webSettings_str, CONFIG_UPDATE_STRING) !== false) {
 		$retMsg .= "<p class='warning-msg'>";
 			$retMsg .= "The '$configurationFileName' file needs to be updated via";
 			$retMsg .= " the 'Editor' page in the WebUI.";
-			$retMsg .= "<br><br>Update fields with '$needToUpdateString'";
+			$retMsg .= "<br><br>Update fields with '".CONFIG_UPDATE_STRING."'";
 			$retMsg .= " and check all other entries.";
 			$retMsg .= "<br><br>This Allsky Website will not work until updated.";
 		$retMsg .= "</p>";

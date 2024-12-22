@@ -193,8 +193,21 @@ if ($useRemoteWebsite) {
 <?php if ($page === "editor") { ?>
 	<link rel="stylesheet" href="lib/codeMirror/codemirror.css">
 	<link rel="stylesheet" href="lib/codeMirror/monokai.min.css">
+	<link rel="stylesheet" href="lib/codeMirror/lint.css">
 	<script type="text/javascript" src="lib/codeMirror/codemirror.js"> </script>
 	<script type="text/javascript" src="lib/codeMirror/json.js"> </script>
+	<script type="text/javascript" src="lib/codeMirror/jsonlint.js"> </script>
+	<script type="text/javascript" src="lib/codeMirror/lint.js"> </script>
+	<script type="text/javascript" src="lib/codeMirror/json-lint.js"> </script>
+
+    <script src="lib/codeMirror/matchesonscrollbar.js"></script>
+    <script src="lib/codeMirror/searchcursor.js"></script>
+    <script src="lib/codeMirror/match-highlighter.js"></script>
+
+    <script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+    <script src="/js/bootbox/bootbox.all.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+    <script src="/js/bootbox/bootbox.locales.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+
 <?php } ?>
 </head>
 <body>

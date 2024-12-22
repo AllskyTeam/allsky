@@ -61,6 +61,7 @@ function DisplayEditor()
         }
         ?>
         <script type="text/javascript">
+            let CONFIG_UPDATE_STRING = "<?php echo CONFIG_UPDATE_STRING ?>"
             $(document).ready(function () {
                 let clearTimer = null;
                 let currentMarks = [];
@@ -118,10 +119,10 @@ function DisplayEditor()
                     });
 
                     editor.on("change", (instance, changeObj) => {
-                        highlightText('XX_NEED_TO_UPDATE_XX');
+                        highlightText(CONFIG_UPDATE_STRING);
                     });
 
-                    highlightText('XX_NEED_TO_UPDATE_XX');
+                    highlightText(CONFIG_UPDATE_STRING);
                 });
 
                 $("#save_file").click(function () {
@@ -234,7 +235,7 @@ function DisplayEditor()
                     $.get(fileName + "?_ts=" + new Date().getTime(), function (data) {
                         data = JSON.stringify(data, null, "\t");
                         editor.getDoc().setValue(data);
-                        highlightText('XX_NEED_TO_UPDATE_XX')
+                        highlightText(CONFIG_UPDATE_STRING)
                     }).fail(function (x) {
                         if (x.status == 200) {	// json files can fail but actually work
                             editor.getDoc().setValue(x.responseText);

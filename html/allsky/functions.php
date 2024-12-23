@@ -344,7 +344,6 @@ function display_thumbnails($dir, $file_prefix, $title)
 		asort($files);
 		$sortOrder = "Sorted oldest to newest (ascending)";
 	}
-	$sortOrder = "<span class='imagesSortOrder'>$sortOrder</span>";
 	
 	$thumb_dir = "$dir/thumbnails";
 	if (! is_dir($thumb_dir)) {
@@ -353,10 +352,15 @@ function display_thumbnails($dir, $file_prefix, $title)
 			print_r(error_get_last());
 	}
 
-	echo "<table class='imagesHeader'><tr>";
-		echo "<td class='headerButton'>$back_button</td>";
-		echo "<td class='headerTitle'>$title</td>";
-	echo "</tr></table>";
+	echo "<table class='imagesHeader'>";
+		echo "<tr>";
+			echo "<td class='headerButton'>$back_button</td>";
+			echo "<td class='headerTitle'>$title</td>";
+		echo "</tr>";
+		echo "<tr>";
+			echo "<td colspan='2'><div class='imagesSortOrder'>$sortOrder</div></td>";
+		echo "</tr>";
+	echo "</table>";
 	echo "<div class='archived-files'>\n";
 
 	$thumbnailSizeX = v("thumbnailsizex", 100, $webSettings_array['homePage']);

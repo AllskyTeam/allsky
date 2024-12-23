@@ -12,6 +12,8 @@ $initializeErrorMessage = null;				// Invoker can check this.
 $webSettings_array = null;
 if (! isset($configFilePrefix)) $configFilePrefix = "";
 
+define('CONFIG_UPDATE_STRING', 'XX_NEED_TO_UPDATE_XX');
+
 function initialize() {
 	global $webSettings_array;
 	global $configFilePrefix;

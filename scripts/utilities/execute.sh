@@ -66,7 +66,7 @@ function rm_msg()
 	else
 		echo "Unable to remove '${FILE}': ${R}" >&2
 	fi
-	return ${RET_CODE}
+	return "${RET_CODE}"
 }
 
 RET=0
@@ -97,7 +97,7 @@ case "${CMD}" in
 	"AM_NOT_SUPPORTED")		# Not supported camera
 		CT="$2"
 		shift
-		"${ALLSKY_UTILITIES}/show_supported_cameras.sh" --${CT}
+		"${ALLSKY_UTILITIES}/show_supported_cameras.sh" "--${CT}"
 
 		"${ALLSKY_SCRIPTS}/addMessage.sh" --id "${CMD}" --delete
 		;;
@@ -113,9 +113,9 @@ case "${CMD}" in
 		if [[ ${RET} -eq 0 ]]; then
 			echo "Executed ${*}"
 		else
-			echo "Unable to execute ${*}"
+			echo "Unable to execute ${*}" >^2
 		fi
 		;;
 esac
 
-exit ${RET}
+exit "${RET}"

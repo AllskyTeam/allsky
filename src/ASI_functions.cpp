@@ -337,17 +337,17 @@ ASI_CAMERA_INFO ASICameraInfoArray[] =
 		12, ASI_FALSE, ASI_FALSE
 	},
 
-	{ "imx519", 0, "ArduCam 16 MP", 0, 3496, 4656, ASI_TRUE,
+	{ "imx519", 0, "Arducam 16 MP", 0, 3496, 4656, ASI_TRUE,
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.22, ASI_FALSE,
 		10, ASI_FALSE, ASI_TRUE
 	},
 
-	{ "arducam_64mp", 0, "ArduCam 64 MP", 0, 6944, 9152, ASI_TRUE,
+	{ "arducam_64mp", 0, "Arducam 64 MP", 0, 6944, 9152, ASI_TRUE,
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 0.8, ASI_FALSE,
 		10, ASI_FALSE, ASI_TRUE
 	},
 
-	{ "arducam-pivariety", 0, "ArduCam 462", 0, 1080, 1920, ASI_TRUE,
+	{ "arducam-pivariety", 0, "Arducam 462", 0, 1080, 1920, ASI_TRUE,
 		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 2.9, ASI_FALSE,
 		10, ASI_FALSE, ASI_TRUE
 	},

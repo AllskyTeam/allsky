@@ -302,16 +302,17 @@ CT=()			# Camera Type array - what to display in whiptail
 
 get_connected_cameras()
 {
-	local CMD  CC  MSG   NUM_RPI=0   NUM_ZWO=0
+	local CMD   CMD_RET  CC  MSG   NUM_RPI=0   NUM_ZWO=0
 
 	# true == ignore errors.  ${CMD} will be "" if no command found.
 	CMD="$( determineCommandToUse "false" "" "true" 2> /dev/null )"
+	CMD_RET=$?		# return of 2 means no command was found
 	setup_rpi_supported_cameras "${CMD}"		# Will create full file is CMD == ""
 
 	# RPi format:	RPi \t camera_number \t camera_sensor [\t optional_other_stuff]
 	# ZWO format:	ZWO \t camera_number \t camera_model
 	# "true" == ignore errors
-	get_connected_cameras_info "true" > "${CONNECTED_CAMERAS_INFO}" 2>/dev/null
+	get_connected_cameras_info --cmd "${CMD}" "true" > "${CONNECTED_CAMERAS_INFO}" 2>/dev/null
 
 	# Get the RPi connected cameras, if any.
 	CC=""
@@ -357,7 +358,12 @@ get_connected_cameras()
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 
 		MSG="No connected cameras were detected."
-		display_msg --log error "${MSG}"
+		local MSG2=""
+		if [[ ${CMD_RET} -eq 2 ]]; then
+			MSG2="No command to take RPi images was found"
+			MSG2+=" - make sure 'libcamera-apps' is installed if you have an RPi camera."
+		fi
+		display_msg --log error "${MSG}" "${MSG2}"
 		exit_installation 1 "${STATUS_NO_CAMERA}" ""
 	fi
 
@@ -540,6 +546,7 @@ do_save_camera_capabilities()
 			MSG="No camera was found; one must be connected and working for the installation to succeed.\n"
 			MSG+="After connecting your camera, re-run the installation."
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+
 			display_msg --log error "No camera detected - installation aborted."
 			[[ -s ${TMP} ]] && display_msg --log error "$( < "${TMP}" )"
 			exit_with_image 1 "${STATUS_ERROR}" "No camera detected"
@@ -2503,15 +2510,16 @@ restore_prior_files()
 		else
 			MSG="Your remote Website needs to be updated to this newest version."
 			MSG+="\nIt is at version ${PRIOR_V}"
-			# This command will update the version.
-			MSG+="\n\nRun:  cd ~/allsky;  ./remote_website_install.sh"
+			MSG+="\n\nRun:  cd ~/allsky;  ./remoteWebsiteInstall.sh"
 			display_msg --log notice "${MSG}"
 		fi
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 
-		# Create a default file.
+## FIX: TODO:  why prepare the LOCAL website - the code above is for the REMOTE website.
+		# Create a default file
 		prepare_local_website ""
+
 	fi
 
 	# Do NOT restore options.json - it will be recreated.
@@ -2578,7 +2586,6 @@ restore_prior_files()
 
 ####
 # If a prior local Website exists move its data to the new location.
-# If using a remote website, copy it's config file.
 restore_prior_website_files()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
@@ -2701,11 +2708,11 @@ restore_prior_website_files()
 			echo "When done, check in '${PRIOR_WEBSITE_DIR}' for any files"
 			echo "you may have added; if there are any, store them in"
 			echo -e "\n   ${ALLSKY_WEBSITE_MYFILES_DIR}"
-			echo "then remove the old website:  sudo rm -fr ${PRIOR_WEBSITE_DIR}"
+			echo "then remove the old Website:  sudo rm -fr ${PRIOR_WEBSITE_DIR}"
 		} >> "${POST_INSTALLATION_ACTIONS}"
 
 		# Create a default file.
-		prepare_local_website ""
+		prepare_local_website "" "postData"
 
 	else		# NEW_STYLE_WEBSITE
 		ITEM="${SPACE}${SPACE}${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
@@ -2727,6 +2734,9 @@ restore_prior_website_files()
 			MSG="${SPACE}${SPACE}${SPACE}Already current @ version ${NEW_WEB_CONFIG_VERSION}"
 			display_msg --logonly info "${MSG}"
 		fi
+
+		# Since the config file already exists, this will just run postData.sh:
+		prepare_local_website "" "postData"
 	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
@@ -3123,20 +3133,18 @@ install_Python()
 	# gpiozero decodes the Pi revision number to calculate the Pi version so until the Pi 6 is 
 	# released this code will detect all future versions of the Pi 5
 	#
-	# NOTE: rpi-gpi and rpi-lgpio cannot co-exist but since blinka is not installing either we
-	# don't currently have to worry about removing rpi-gpio before installing rpi-lgpio
-	#
 	local CMD="from gpiozero import Device"
 	CMD+="\nDevice.ensure_pin_factory()"
 	CMD+="\nprint(Device.pin_factory.board_info.model)"
 	pimodel="$( echo -e "${CMD}" | python3 2>/dev/null )"	# hide error since it only applies to Pi 5.
 
-	# if we are on the pi 5 then install lgpio, using the virtual environment which will always
-	# exist on the pi 5
+	# if we are on the pi 5 then uninstall rpi.gpio, using the virtual environment which will always
+	# exist on the pi 5. lgpio is installed globally so will be used after rpi.gpio is removed
+    # Adafruits blinka reinstalls rpi.gpio so we need to ensure its removed
 	if [[ ${pimodel:0:1} == "5" ]]; then
 		display_msg --log progress "Updating GPIO to lgpio"
 		activate_python_venv
-		pip3 install rpi-lgpio > /dev/null 2>&1
+		pip3 uninstall -y rpi.gpio > /dev/null 2>&1
 	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
@@ -3517,10 +3525,10 @@ install_installer_dependencies()
 	display_msg --log progress "Installing installer dependencies."
 	TMP="${ALLSKY_LOGS}/installer.dependencies.log"
 	{
-		sudo apt-get update && run_aptGet gawk jq
+		sudo apt-get update && run_aptGet gawk jq dialog
 	} > "${TMP}" 2>&1
-	check_success $? "gawk,jq installation failed" "${TMP}" "${DEBUG}" ||
-		exit_with_image 1 "${STATUS_ERROR}" "gawk,jq install failed."
+	check_success $? "gawk,jq,dialog installation failed" "${TMP}" "${DEBUG}" ||
+		exit_with_image 1 "${STATUS_ERROR}" "gawk,jq,dialog install failed."
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }

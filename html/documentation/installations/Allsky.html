@@ -28,7 +28,21 @@
 <p>
 This page describes how to install and upgrade Allsky.
 </p>
-<blockquote>
+<blockquote class="warning">
+Your camera must be connected to the Pi prior to installation.
+<p>
+If you have an RPi camera, run the following to make sure the camera can be seen by Allsky:
+<pre>
+libcamera-still --list-cameras
+</pre>
+If camera number <code>0</code> (the first camera) is in the list, you're good to go.
+<br>
+Note that some non-Raspberry Pi brand cameras may need special software installed and/or operating system
+configuration changes - read the camera manual.
+</p>
+</blockquote>
+
+<p>
 We highly suggest installing the current version of Allsky on a clean SD card
 since a lot of files have changed and using a clean card will ensure a clutter-free environment
 with the most recent commands.
@@ -36,7 +50,7 @@ with the most recent commands.
 See the instructions on
 <a allsky="true" href="../explanations/imageSDcard.html" external="true">
 how to image an SD card for use by Allsky.</a>
-</blockquote>
+</p>
 
 <h2>If a version of Allsky already exists</h2>
 <details><summary></summary>

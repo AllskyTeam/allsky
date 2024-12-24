@@ -9,6 +9,9 @@
 		echo "<div class='errorMsgBox errorMsgBig'>";
 		echo "This Allsky Website is not fully configured so its settings cannot be displayed.";
 		echo "<br>It is missing the '$settingsScript' file.";
+		echo "<br><br>";
+		echo "To fix: make sure the Website is enabled in the <b>Websites and Remote Server Settings</b>";
+		echo "section of the WebUI's <b>Allsky Settings</b> page.";
 		echo "</div>";
 		exit(1);
 	}

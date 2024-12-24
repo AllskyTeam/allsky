@@ -43,7 +43,7 @@ In order to run the Allsky software you need:
 
 <!-- HIDE FOR NOW - THE VIDEO IS A COUPLE RELEASES OLD
 PatriotAstro created a great [video](https://www.youtube.com/watch?v=7TGpGz5SeVI) describing the installation steps below.
-__We recommend viewing it before installing the software__, but note that as of March 2024 the video is out of date.
+__We recommend viewing it before installing the software__.
 -->
 
 See the [detailed installation instructions](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/installations/Allsky.html).
@@ -79,7 +79,7 @@ It should be used before requesting support on GitHub.
 <!-- =============================================================================== --> 
 ## Allsky Website and remote server
 
-The local Allsky Website (i.e., on the Pi) in installed with Allsky but must be enabled in the WebUI in order to use it.
+The local Allsky Website (i.e., on the Pi) is installed with Allsky but must be enabled in the WebUI in order to use it.
 You can also install the Allsky Website on a remote server so it can be viewable via the Internet.
 
 See [Installation / Upgrading --> Website](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/installations/AllskyWebsite.html) for information on how to install and configure an Allsky Website.
@@ -208,4 +208,3 @@ for a list of changes in this release and all prior releases.
 If you found this project useful, here's a link to send Thomas a cup of coffee :)
 
 [![](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
-

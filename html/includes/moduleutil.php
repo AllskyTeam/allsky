@@ -385,42 +385,6 @@ class MODULEUTIL
         }
     }
 
-    public function postUpload() {
-        $data = $_FILES['module-file'];
-        $sourcePath = $_FILES['module-file']['tmp_name'];
-        $scriptName = str_replace("zip","py",$_FILES['module-file']['name']);
-
-        $targetPath = $this->userModules . '/' . $scriptName ;
-
-        $zipArchive = new ZipArchive();
-        $zipArchive->open($sourcePath);
-        for ($i = 0; $i < $zipArchive->numFiles; $i++) {
-            $stat = $zipArchive->statIndex($i);
-
-            $nameInArchive = $stat['name'];
-
-            if ($scriptName == $nameInArchive) {
-                $fp = $zipArchive->getStream($nameInArchive);
-                if (!$fp) {
-                    $this->send500('Unable to extract module from zip file');
-                }
-
-                $contents = '';
-                while (!feof($fp)) {
-                  $contents .= fread($fp, 1024);
-                }
-                fclose($fp);
-
-                $file = fopen($targetPath, 'wb');
-                fwrite($file, $contents);
-                fclose($file);
-                $this->sendResponse();
-                break;
-            }
-        }
-        $this->send500('Unable to locate module in zip file');
-    }
-
     public function getReset() {
         $flow = $_GET['flow'];
 

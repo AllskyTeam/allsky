@@ -3,7 +3,6 @@
 include_once('functions.php');
 initialize_variables();		// sets some variables
 
-include_once('raspap.php');
 include_once('authenticate.php');
 
 class DATAUTIL

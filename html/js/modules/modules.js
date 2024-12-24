@@ -851,27 +851,6 @@ class MODULESEDITOR {
         }
     }
 
-    #uploadFile(form) {
-        $.LoadingOverlay('show');
-        $('#module-upload-dialog').modal('hide');
-
-        $.ajax({
-            type: 'POST',
-            url: 'includes/moduleutil.php?request=Upload',
-            data: new FormData(form),
-            contentType: false,
-            cache: false,
-            processData: false,
-            context: this
-        }).done(function () {
-            this.#buildUI();
-        }).fail(function () {
-            bootbox.alert('Failed to upload the plugin. Unable to move the file');
-        }).always(function () {
-            $.LoadingOverlay('hide');
-        });
-    }
-
     #showDebug() {
         $.ajax({
             url: 'includes/moduleutil.php?request=Modules&event=' + this.#eventName,
@@ -1044,15 +1023,6 @@ class MODULESEDITOR {
                 $(e.target).val(oldVal);
                 return false;
             }
-        });
-
-        $(document).on('click', '#module-editor-new', () => {
-            $('#module-upload-dialog').modal('show');
-        });
-
-        $('#module-upload-dialog-form').on('submit', (e) => {
-            e.preventDefault();
-            this.#uploadFile(e.target);
         });
 
         this.#buildUI();

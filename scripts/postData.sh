@@ -83,7 +83,7 @@ while [[ $# -gt 0 ]]; do
 	esac
 	shift
 done
-[[ ${RET} -ne 0 ]] && usage_and_exit ${RET}
+[[ ${RET} -ne 0 ]] && usage_and_exit "${RET}"
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 
 

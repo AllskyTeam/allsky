@@ -119,14 +119,19 @@ function heading()
 
 	if [[ ${FROM_WEBUI} == "true" ]]; then
 		# Don't display the header when run from the WebUI.
-		return
+		DISPLAY_HEADER="false"
 	fi
 
 	if [[ ${DISPLAY_HEADER} == "true" ]]; then
 		[[ ${NUM_HEADER_CALLS} -gt 1 ]] && echo -e "${NL}"
 		echo -e "${STRONGs}---------- ${HEADER}${SUB_HEADER} ----------${STRONGe}${NL}"
 	else
-		echo "${STRONGs}-----${STRONGe}"	# Separates lines within a header group
+		# Separate entries within a header group
+		if [[ ${FROM_WEBUI} == "true" ]]; then
+			echo
+		else
+			echo "${STRONGs}-----${STRONGe}"
+		fi
 	fi
 }
 
@@ -786,7 +791,7 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 	if [[ ${S_useremotewebsite} == "true" && ! -f ${f} ]]; then
 		heading "Error"
 		echo "${WSNs}${S_useremotewebsite_label}${WSNe} is enabled but '${f}' does not exist."
-		echo "FIX: Either disable ${WSNs}${S_useremotewebsite_label}${WSNe} or run 'cd ~/allsky; ./remote_website_install.sh'."
+		echo "FIX: Either disable ${WSNs}${S_useremotewebsite_label}${WSNe} or run 'cd ~/allsky; ./remoteWebsiteInstall.sh'."
 	fi
 
 	##### Check dark frames
@@ -863,4 +868,4 @@ else
 	fi
 fi
 
-exit ${RET}
+exit "${RET}"

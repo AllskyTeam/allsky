@@ -315,7 +315,6 @@ X="$( ffmpeg -y -f image2 \
 	${EXTRA} \
 	"${OUTPUT_FILE}" 2>&1 )"
 RET=$?
-
 # The "deprecated..." message is useless and only confuses users, so hide it.
 X="$( echo "${X}" | grep -E -v "deprecated pixel format used|Processed " )"
 [[ -n ${X} ]] && echo "${X}" >> "${TMP}"		# a warning/error message
@@ -326,6 +325,10 @@ if [[ ${RET} -ne -0 ]]; then
 	# Check for common, known errors.
 	if X="$( echo "${TMP}" | grep -E -i "Killed ffmpeg|malloc of size" )" ; then
 		indent --spaces "${X}"
+		echo -e "See the 'Troubleshooting -> Timelapse' documentation page for a fix.\n"
+	elif [[ ${RET} -eq 137 ]]; then
+		# Sometimes the process is killed but we don't get a Killed message.
+		indent --spaces "Killed ffmpeg\n${X}"
 		echo -e "See the 'Troubleshooting -> Timelapse' documentation page for a fix.\n"
 	fi
 

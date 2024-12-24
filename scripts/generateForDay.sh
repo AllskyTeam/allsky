@@ -183,14 +183,14 @@ if [[ ${TYPE} == "GENERATE" ]]; then
 		[[ -n ${DEBUG_ARG} ]] && echo "${ME}: Executing: ${CMD}"
 		# shellcheck disable=SC2086
 		eval ${CMD}
-		RET=$?
+		local RET=$?
 		if [[ ${RET} -ne 0 ]]; then
 			echo -e "${RED}${ME}: Command Failed: ${CMD}${NC}"
 		elif [[ ${SILENT} == "false" ]]; then
 			echo -e "\tDone"
 		fi
 
-		return ${RET}
+		return "${RET}"
 	}
 
 else
@@ -207,7 +207,7 @@ else
 	# Local Websites don't have directory or file name choices.
 
 	if [[ ${R_WEB_USE} == "true" ]]; then
-		R_WEB_DEST_DIR="$( settings ".remotewebimagedir" )"
+		R_WEB_DEST_DIR="$( settings ".remotewebsiteimagedir" )"
 		if [[ -n ${R_WEB_DEST_DIR} && ${R_WEB_DEST_DIR: -1:1} != "" ]]; then
 			R_WEB_DEST_DIR="${R_WEB_DEST_DIR}/"
 		fi
@@ -289,7 +289,7 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 			DO_STARTRAILS="false"
 			DO_TIMELAPSE="false"
 			# -gt 90 means either no files or unable to read initial file, and
-			# keograms will have the same problem, so don't bother running.
+			# keograms and timelapse will have the same problem, so don't bother running.
 			echo "Keogram creation unable to read files; will not run startrails or timelapse."
 		fi
 
@@ -353,11 +353,11 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 			${STARTRAILS_EXTRA_PARAMETERS}"
 		generate "Startrails, threshold=${BRIGHTNESS_THRESHOLD}" "startrails" "${CMD}"
 
-		if [[ $? -gt 90 && (${DO_KEOGRAM} == "true" || ${DO_TIMELAPSE} == "true") ]]; then
-			DO_STARTRAILS="false"
+		if [[ $? -gt 90 && ${DO_TIMELAPSE} == "true" ]]; then
+			DO_TIMELAPSE="false"
 			# -gt 90 means either no files or unable to read initial file, and
-			# startrails will have the same problem, so don't bother running.
-			echo "Startrails creation unable to read files; will not run keogram or timelapse."
+			# timelapse will have the same problem, so don't bother running.
+			echo "Startrails creation unable to read files; will not run timelapse."
 		fi
 
 	else
@@ -406,6 +406,7 @@ fi
 
 if [[ ${DO_TIMELAPSE} == "true" ]]; then
 	VIDEO_FILE="allsky-${DATE}.mp4"
+
 	# Need a different name for the file so it's not mistaken for a regular image in the WebUI.
 	THUMBNAIL_FILE="thumbnail-${DATE}.jpg"
 
@@ -414,6 +415,9 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 
 	TIMELAPSE_UPLOAD_THUMBNAIL="$( settings ".timelapseuploadthumbnail" )"
 	if [[ ${TYPE} == "GENERATE" ]]; then
+		# If the thumbnail file exists it will used and produce errors, so delete it.
+		rm -f "${UPLOAD_THUMBNAIL}"
+
 		if [[ ${THUMBNAIL_ONLY} == "true" ]]; then
 			if [[ -f ${UPLOAD_FILE} ]]; then
 				RET=0
@@ -438,7 +442,6 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 			RET=$?
 		fi
 		if [[ ${RET} -eq 0 && ${TIMELAPSE_UPLOAD_THUMBNAIL} == "true" && -s ${UPLOAD_FILE} ]]; then
-			rm -f "${UPLOAD_THUMBNAIL}"
 			# Want the thumbnail to be near the start of the video, but not the first frame
 			# since that can be a lousy frame.
 			# If the video is less than 5 seconds, make_thumbnail won't work, so try again.

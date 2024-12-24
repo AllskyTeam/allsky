@@ -7,8 +7,6 @@ $status = null;
 include_once('functions.php');
 initialize_variables();
 
-define('RASPI_ADMIN_DETAILS', RASPI_CONFIG . '/raspap.auth');
-include_once('raspap.php');
 include_once('authenticate.php');
 
 $debug = false;

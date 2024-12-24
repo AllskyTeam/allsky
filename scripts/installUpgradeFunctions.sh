@@ -228,6 +228,10 @@ function display_msg()
 	# ${DISPLAY_MSG_LOG} <should> be set if ${LOG_IT} is true, but just in case, check.
 
 	[[ ${LOG_IT} == "false" || -z ${DISPLAY_MSG_LOG} ]] && return
+	if [[ ! -f ${DISPLAY_MSG_LOG} ]]; then
+		mkdir -p "$( dirname "${DISPLAY_MSG_LOG}" )"
+		touch "${DISPLAY_MSG_LOG}"
+	fi
 
 	# Strip out all color escape sequences before adding to log file.
 	# The message may have an actual escape character or may have the
@@ -496,11 +500,11 @@ function replace_website_placeholders()
 			MINI_TLAPSE_URL_VALUE=""
 		else
 			MINI_TLAPSE_DISPLAY_VALUE="true"
-			if [[ ${DO_REMOTE_WEBSITE} == "true" ]]; then
-				MINI_TLAPSE_URL_VALUE="mini-timelapse.mp4"
-			else
+			if [[ ${TYPE} == "local" ]]; then
 				#shellcheck disable=SC2153
 				MINI_TLAPSE_URL_VALUE="/${IMG_DIR}/mini-timelapse.mp4"
+			else
+				MINI_TLAPSE_URL_VALUE="mini-timelapse.mp4"
 			fi
 		fi
 	else
@@ -601,9 +605,9 @@ function replace_website_placeholders()
 		config.camera				"camera"			"${CAMERA}" \
 		config.lens					"lens"				"${LENS}" \
 		config.computer				"computer"			"${COMPUTER}" \
-		config.AllskyVersion		"AllskyVersion"		"${ALLSKY_VERSION}" \
-		${MINI_TLAPSE_DISPLAY}		"mini_display"		"${MINI_TLAPSE_DISPLAY_VALUE}" \
-		${MINI_TLAPSE_URL}			"mini_url"			"${MINI_TLAPSE_URL_VALUE}"
+		"${WEBSITE_ALLSKY_VERSION}"	"AllskyVersion"		"${ALLSKY_VERSION}" \
+		"${MINI_TLAPSE_DISPLAY}"	"mini_display"		"${MINI_TLAPSE_DISPLAY_VALUE}" \
+		"${MINI_TLAPSE_URL}"		"mini_url"			"${MINI_TLAPSE_URL_VALUE}"
 }
 
 
@@ -614,6 +618,7 @@ function replace_website_placeholders()
 function prepare_local_website()
 {
 	local FORCE="${1}"
+	local POST_DATA="${2}"
 
 	display_msg --log progress "Creating default ${ALLSKY_WEBSITE_CONFIGURATION_NAME}."
 
@@ -623,6 +628,16 @@ function prepare_local_website()
 	fi
 
 	replace_website_placeholders "local" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+
+	if [[ ${POST_DATA} == "postData" && "$( settings ".uselocalwebsite" )" == "true" ]]; then
+		# --fromWebUI tells it to be mostly silent.
+		local MSG="$( "${ALLSKY_SCRIPTS}/postData.sh" --fromWebUI --allfiles 2>&1 )"
+		if [[ $? -eq 0 ]]; then
+			display_msg --log progress "${MSG}"
+		else
+			display_msg --log warning "${MSG}"
+		fi
+	fi
 }
 
 

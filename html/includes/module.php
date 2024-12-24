@@ -52,9 +52,6 @@ function DisplayModule() {
                                         <div class="btn btn-lg navbar-btn" id="module-editor-save"><i class="fa-solid fa-floppy-disk"></i></div>
                                     </div>
                                 </li>
-                                <li>
-                                    <div class="btn btn-lg navbar-btn" id="module-editor-new" data-toggle="tooltip" data-placement="top" data-container="body" title="Add A New Module"><i class="fa-solid fa-upload"></i></div>
-                                </li>
                                 <li class="btn-lg">
                                     <form id="oe-item-list-edit-dialog-form" class="form-horizontal">
                                         <div class="form-group">

@@ -504,8 +504,8 @@ if ($debug) {
 
 			if ($ok) {
 				if (! $changesMade && ! $fromConfiguration) {
-					$msg = "No settings changed.  Nothing updated.";
-					$status->addMessage($msg, 'warning');
+					$msg = "<div class='noChanges'>No settings changed.  Nothing updated.</div>";
+					$status->addMessage($msg, 'message');
 					$msg = "";
 				} else if ($changes !== "") {
 					$moreArgs = "";

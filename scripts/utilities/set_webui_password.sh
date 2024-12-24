@@ -181,13 +181,12 @@ function display_prompt()
 
 function display_input()
 {
-    local DIALOG_TYPE DIALOG_MESSAGE DIALOG_HEIGHT DIALOG_WIDTH INPUT_VALUE ALLOW_EMPTY PROMPT
+    local DIALOG_TYPE DIALOG_MESSAGE DIALOG_HEIGHT DIALOG_WIDTH INPUT_VALUE PROMPT
     DIALOG_TYPE="${1}"
     DIALOG_MESSAGE="${2}"
     DIALOG_HEIGHT="${3}"
     DIALOG_WIDTH="${4}"
     INPUT_VALUE="${5}"
-    ALLOW_EMPTY="${6}"
 
     if [[ "${TEXTMODE}" == false ]]; then
         LAST_INPUT=$(dialog "${DIALOG_TYPE}" "${DIALOG_MESSAGE}" "${DIALOG_HEIGHT}" "${DIALOG_WIDTH}" "${INPUT_VALUE}" 3>&1 1>&2 2>&3)
@@ -211,13 +210,12 @@ function display_input()
 
 function get_input() 
 {
-    local DIALOG_TYPE DIALOG_MESSAGE DIALOG_HEIGHT DIALOG_WIDTH INPUT_VALUE ALLOW_EMPTY PASSWORD CONFIRM_PASSWORD FORCE_DIALOG_TYPE
+    local DIALOG_TYPE DIALOG_MESSAGE DIALOG_HEIGHT DIALOG_WIDTH INPUT_VALUE PASSWORD CONFIRM_PASSWORD FORCE_DIALOG_TYPE
     DIALOG_TYPE="${1}"
     DIALOG_MESSAGE="${2}"
     DIALOG_HEIGHT="${3}"
     DIALOG_WIDTH="${4}"
     INPUT_VALUE="${5}"    
-    ALLOW_EMPTY="${6}"
 
     if [[ -z "$3" ]]; then
         DIALOG_HEIGHT=10
@@ -454,6 +452,7 @@ check_and_update_auth_method() {
 function check_allsky_version()
 {
     TITLE_INVALID_VERSION="Incompatability Error"
+    # shellcheck disable=SC2119
     CURRENT_VERSION=$(get_version)
     dpkg --compare-versions "${CURRENT_VERSION:1}" ge "${MIN_ALLSKY_VERSION}"
     OK_TO_PROCEED=$?

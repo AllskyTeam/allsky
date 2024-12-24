@@ -22,10 +22,13 @@ function DisplayAuthConfig($username, $password) {
 				} else if ($new_username == '') {
 					$myStatus->addMessage('Username must not be empty.', 'danger');
 				} else {
-					$contents = $new_username.PHP_EOL;
-					$contents .= password_hash($new1, PASSWORD_BCRYPT).PHP_EOL;
-					$ret = updateFile(RASPI_ADMIN_DETAILS, $contents, "admin password file", true);
-					if ($ret === "") {
+
+                    $privateVars = get_decoded_json_file(ALLSKY_ENV, true, "");
+                    $privateVars["WEBUI_USERNAME"] = $new_username;
+                    $privateVars["WEBUI_PASSWORD"] = password_hash($new1, PASSWORD_BCRYPT);
+
+                    $ret = file_put_contents(ALLSKY_ENV, json_encode($privateVars, JSON_PRETTY_PRINT));
+					if ($ret !== false) {
 						$username = $new_username;
 						$myStatus->addMessage("$new_username password updated.", 'success');
 					} else {

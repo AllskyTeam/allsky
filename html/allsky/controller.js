@@ -581,9 +581,6 @@ function AppCtrl($scope, $timeout, $http, _) {
 				}
 				if (data.data.takedaytimeimages) {
 					$scope.takedaytimeimages = data.data.takedaytimeimages === "true";
-// TODO: streamDaytime is old name - delete in next release
-				} else if (data.data.streamDaytime) {
-					$scope.takedaytimeimages = data.data.streamDaytime === "true";
 				} else {
 					$scope.takedaytimeimages = true;
 					usingDefaultTakingDaytime = true;

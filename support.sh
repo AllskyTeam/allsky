@@ -26,6 +26,9 @@ into a discussion or issue as it makes the issue/discussion very difficult to re
 # Install prerequisits
 function init() 
 {
+    clear
+    echo -e "Initialising support system. Please wait ..."
+
     sudo apt install tree > /dev/null 2>&1
     sudo apt install i2c-tools > /dev/null 2>&1
 }
@@ -108,7 +111,9 @@ function get_info()
     else
         ALLSKY_FILES=""
     fi
-    source ${ALLSKY_HOME}/venv/bin/activate
+
+    # shellcheck source=/dev/null
+    source "${ALLSKY_HOME}/venv/bin/activate"
     PYTHON_VERSION="$(python3 -V)"
     PYTHON_MODULES="$(pip list)"
     ###
@@ -141,7 +146,7 @@ function get_info()
 
     ### get installed package information
     PYTHON_PACKAGES="$(dpkg -l | grep python)"
-    REPOS=$(grep -rE '^deb|^deb-src' /etc/apt/sources.list /etc/apt/sources.list.d/)
+    #REPOS=$(grep -rE '^deb|^deb-src' /etc/apt/sources.list /etc/apt/sources.list.d/)
     APT_INSTALLED=$(sudo dpkg-query -l)
     ###
 }
@@ -206,16 +211,18 @@ function display_info()
     print "${PYTHON_PACKAGES}"
     print "${APT_INSTALLED}"
 
-    print_heading "Allsky - Supported Cameras"
-    print_sub_heading "Raspberry Pi Cameras"
-    ./scripts/utilities/show_supported_cameras.sh --rpi
+    if [[ "$INCLUDE_ALLSKY_SCRIPTS" == "true" ]]; then
+        print_heading "Allsky - Supported Cameras"
+        print_sub_heading "Raspberry Pi Cameras"
+        ./scripts/utilities/show_supported_cameras.sh --rpi
 
-    print_sub_heading "Raspberry Pi Cameras Attached"
-    ./scripts/utilities/get_RPi_camera_info.sh
-    cat ./tmp/camera_data.txt
+        print_sub_heading "Raspberry Pi Cameras Attached"
+        ./scripts/utilities/get_RPi_camera_info.sh
+        cat ./tmp/camera_data.txt
 
-    print_sub_heading "ZWO Cameras"
-    ./scripts/utilities/show_supported_cameras.sh --zwo
+        print_sub_heading "ZWO Cameras"
+        ./scripts/utilities/show_supported_cameras.sh --zwo
+    fi
 
     print_heading "Allsky Log File - $LOG_LINES lines"
     if [[ "${LOG_LINES}" == "all" ]]; then
@@ -247,7 +254,7 @@ function add_config_files() {
         find "${TEMP_DIR}"/config/modules -type f -exec truncate -s 0 {} +
 
         cd "${TEMP_DIR}" || exit 1
-        zip -r support.zip *
+        zip -r support.zip ./*
         mv "${TEMP_DIR}/support.zip" "${ALLSKY_HOME}"
         trap 'rm -rf "${TEMP_DIR}"' EXIT
         ZIPPED="true"

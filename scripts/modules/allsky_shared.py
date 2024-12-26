@@ -21,6 +21,7 @@ import locale
 import board
 import argparse
 import locale
+import tempfile
 
 try:
     locale.setlocale(locale.LC_ALL, '')
@@ -390,14 +391,31 @@ def validateExtraFileName(params, module, fileKey):
     params[fileKey] = extraDataFilename
             
 
-def saveExtraData(fileName, extraData):
-    extraDataPath = getExtraDir()
-    if extraDataPath is not None:               # it should never be None
-        checkAndCreateDirectory(extraDataPath)
-        extraDataFilename = os.path.join(extraDataPath, fileName)
-        with open(extraDataFilename, "w") as file:
-            formattedJSON = json.dumps(extraData, indent=4)
-            file.write(formattedJSON)
+def save_extra_data(file_name, extra_data):
+    saveExtraData(file_name, extra_data)
+
+def saveExtraData(file_name, extra_data):
+    """
+    Save extra data to allows the overlay module to disdplay it.
+
+    Args:
+        file_name (string): The name of the file to save.
+        extra_data (object): The data to save.
+
+    Returns:
+        Nothing
+    """
+    extra_data_path = getExtraDir()
+    if extra_data_path is not None:               # it should never be None
+        checkAndCreateDirectory(extra_data_path)
+        extra_data_filename = os.path.join(extra_data_path, file_name)
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
+            formatted_json = json.dumps(extra_data, indent=4)
+            temp_file.write(formatted_json)
+            temp_file_name = temp_file.name
+            os.chmod(temp_file_name, 0o644)
+            
+        shutil.move(temp_file_name, extra_data_filename)
 
 def deleteExtraData(fileName):
     extraDataPath = getExtraDir()

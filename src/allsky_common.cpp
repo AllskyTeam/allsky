@@ -969,68 +969,89 @@ void displayHeader(config cg)
 }
 
 
+// Return the string if it exists, or "[none]"
+char const *stringORnone(char const *s)
+{
+	if (s == NULL || *s == '\0')
+		return("[none]");
+	else
+		return(s);
+}
+
+
 // Display the help message.
 int const n = 25;		// width of argument name
 void displayHelp(config cg)
 {
-	printf("%sUsage:\n", c(KRED));
-	printf(" capture%s -width 0 -height 0 -nightexposure 5000000 -daybin 1 -nightbin 2\n\n", cg.ct == ctRPi ? "_RPiHQ" : "");
+	printf("%sTypical usage:\n", c(KRED));
+	printf(" capture_%s -config config_file_path\n\n", cg.ct == ctRPi ? "RPiHQ" : "ZWO");
 	printf("%s", c(KNRM));
-	printf("%sAvailable Arguments (see the WebUI for more details):\n", c(KYEL));
-	printf("     'b' is a boolean (0 or 1), 'n' is a number, 's' is a string\n");
-	printf("     %'d ms (milli-seconds) = 1 second.  %'d us (micro-seconds) = 1 second.\n", 1000, 1000000);
-	printf("     See the Allsky WebUI for camera-dependent defaults.\n");
-	printf("     Non camera-dependent defaults are in [brackets].\n");
+	printf("%sAlternate usage:\n", c(KRED));
+	printf(" capture_%s -nightexposure 5000000 -daybin 1 -nightbin 2 ...\n\n", cg.ct == ctRPi ? "RPiHQ" : "ZWO");
+	printf("%s", c(KNRM));
 
-	printf(" -%-*s - Optional configuration file to use instead of, or in addition to,\n", n, "config s");
-	printf("  %-*s   command-line arguments.  The file is read when seen on the command line [none].\n", n, "");
+	printf("Notes on command-line arguments:\n");
+	printf("     'b' is a boolean ('true' or 'false')\n");
+	printf("     'n' is a number\n");
+	printf("     's' is a string\n");
+	printf("     %'d ms (milli-seconds) = 1 second.  %'d us (micro-seconds) = 1 second.\n", 1000, 1000000);
+	printf("     Non camera-dependent defaults are in [brackets].\n");
+	printf("     See the WebUI for camera-dependent defaults.\n\n");
+
+	printf("%sAvailable arguments (see the WebUI for more details):\n", c(KYEL));
 
 	printf("\nDaytime settings:\n");
-	printf(" -%-*s - 1 enables capturing of daytime images [%s].\n", n, "takedaytimeimages b", yesNo(cg.daytimeCapture));
-	printf(" -%-*s - 1 enables saving of daytime images [%s].\n", n, "savedaytimeimages b", yesNo(cg.daytimeSave));
-	printf(" -%-*s - 1 enables daytime auto-exposure [%s].\n", n, "dayautoexposure b", yesNo(cg.dayAutoExposure));
+	printf(" -%-*s - 'true' enables capturing of daytime images [%s].\n", n, "takedaytimeimages b", yesNo(cg.daytimeCapture));
+	printf(" -%-*s - 'true' enables saving of daytime images [%s].\n", n, "savedaytimeimages b", yesNo(cg.daytimeSave));
+	printf(" -%-*s - 'true' enables daytime auto-exposure [%s].\n", n, "dayautoexposure b", yesNo(cg.dayAutoExposure));
 	printf(" -%-*s - Maximum daytime auto-exposure in ms.\n", n, "daymaxexposure n");
 	printf(" -%-*s - Daytime exposure in us [%'ld].\n", n, "dayexposure n", cg.dayExposure_us);
 	printf(" -%-*s - Daytime mean target brightness [%.2f].\n", n, "daymean", cg.myModeMeanSetting.dayMean);
 	printf(" -%-*s - Daytime mean target threshold [%.2f].\n", n, "daymeanthreshold n", cg.myModeMeanSetting.dayMean_threshold);
-	printf("  %-*s   NOTE: Daytime auto-gain and auto-exposure should be on for best results.\n", n, "");
+	if (cg.ct == ctRPi) {
+		printf("  %-*s   NOTE: Enable daytime auto-gain and auto-exposure for best results.\n", n, "");
+	}
 	printf(" -%-*s - Delay between daytime images in ms [%'ld].\n", n, "daydelay n", cg.dayDelay_ms);
-	printf(" -%-*s - 1 enables daytime auto gain [%s].\n", n, "dayautogain b", yesNo(cg.dayAutoGain));
+	printf(" -%-*s - 'true' enables daytime auto gain [%s].\n", n, "dayautogain b", yesNo(cg.dayAutoGain));
 	printf(" -%-*s - Daytime maximum auto gain.\n", n, "daymaxautogain n");
 	printf(" -%-*s - Daytime gain.\n", n, "daygain n");
 	printf(" -%-*s - 1 = binning OFF (1x1), 2 = 2x2 binning, etc. [%ld]\n", n, "daybin n", cg.dayBin);
-	printf(" -%-*s - 1 enables auto White Balance [%s].\n", n, "dayautowhitebalance b", yesNo(cg.dayAutoAWB));
+	printf(" -%-*s - 'true' enables auto White Balance [%s].\n", n, "dayautowhitebalance b", yesNo(cg.dayAutoAWB));
 	printf(" -%-*s - Manual White Balance Red.\n", n, "daywbr n");
 	printf(" -%-*s - Manual White Balance Blue.\n", n, "daywbb n");
-	printf(" -%-*s - Number of auto-exposure frames to skip when starting software during daytime [%ld].\n", n, "dayskipframes n", cg.daySkipFrames);
+	printf(" -%-*s - Number of auto-exposure frames to skip when starting\n", n, "dayskipframes n");
+		printf("  %-*s   Allsky in daytime [%ld].\n", n, "", cg.daySkipFrames);
 	if (cg.ct == ctZWO) {
-		printf(" -%-*s - 1 enables cooler (cooled cameras only) [%s].\n", n, "dayenablecooler b", yesNo(cg.dayEnableCooler));
+		printf(" -%-*s - 'true' enables cooler (cooled cameras only) [%s].\n", n, "dayenablecooler b", yesNo(cg.dayEnableCooler));
 		printf(" -%-*s - Target temperature in degrees C (cooled cameras only).\n", n, "daytargettemp n");
 	}
 	if (cg.ct == ctRPi && cg.isLibcamera) {
-		printf(" -%-*s - Name of the day camera tuning file to use [%s].\n", n, "daytuningfile s", "none");
+		printf(" -%-*s - Name of the daytime camera tuning file to use [%s].\n", n, "daytuningfile s", "none");
 	}
 
 	printf("\nNighttime settings:\n");
-	printf(" -%-*s - 1 enables capturing of nighttime images [%s].\n", n, "takenighttimeimages b", yesNo(cg.nighttimeCapture));
-	printf(" -%-*s - 1 enables saving of nighttime images [%s].\n", n, "savenighttimeimages b", yesNo(cg.nighttimeSave));
-	printf(" -%-*s - 1 enables nighttime auto-exposure [%s].\n", n, "nightautoexposure b", yesNo(cg.nightAutoExposure));
+	printf(" -%-*s - 'true' enables capturing of nighttime images [%s].\n", n, "takenighttimeimages b", yesNo(cg.nighttimeCapture));
+	printf(" -%-*s - 'true' enables saving of nighttime images [%s].\n", n, "savenighttimeimages b", yesNo(cg.nighttimeSave));
+	printf(" -%-*s - 'true' enables nighttime auto-exposure [%s].\n", n, "nightautoexposure b", yesNo(cg.nightAutoExposure));
 	printf(" -%-*s - Maximum nighttime auto-exposure in ms.\n", n, "nightmaxexposure n");
 	printf(" -%-*s - Nighttime exposure in us [%'ld].\n", n, "nightexposure n", cg.nightExposure_us);
 	printf(" -%-*s - Nighttime mean target brightness [%.2f].\n", n, "nightmean n", cg.myModeMeanSetting.nightMean);
-	printf("  %-*s   NOTE: Nighttime auto-gain and auto-exposure should be on for best results.\n", n, "");
+	if (cg.ct == ctRPi) {
+		printf("  %-*s   NOTE: Enable nighttime auto-gain and auto-exposure for best results.\n", n, "");
+	}
 	printf(" -%-*s - Nighttime mean target threshold [%.2f].\n", n, "nightmeanthreshold n", cg.myModeMeanSetting.nightMean_threshold);
 	printf(" -%-*s - Delay between nighttime images in ms [%'ld].\n", n, "nightdelay n", cg.nightDelay_ms);
-	printf(" -%-*s - 1 enables nighttime auto gain [%s].\n", n, "nightautogain b", yesNo(cg.nightAutoGain));
+	printf(" -%-*s - 'true' enables nighttime auto gain [%s].\n", n, "nightautogain b", yesNo(cg.nightAutoGain));
 	printf(" -%-*s - Nighttime maximum auto gain.\n", n, "nightmaxautogain n");
 	printf(" -%-*s - Nighttime gain.\n", n, "nightgain n");
 	printf(" -%-*s - Same as daybin but for night [%ld].\n", n, "nightbin n", cg.nightBin);
-	printf(" -%-*s - 1 enables auto White Balance [%s].\n", n, "nightautowhitebalance n", yesNo(cg.nightAutoAWB));
+	printf(" -%-*s - 'true' enables auto White Balance [%s].\n", n, "nightautowhitebalance n", yesNo(cg.nightAutoAWB));
 	printf(" -%-*s - Manual White Balance Red.\n", n, "nightwbr n");
 	printf(" -%-*s - Manual White Balance Blue.\n", n, "nightwbb n");
-	printf(" -%-*s - Number of auto-exposure frames to skip when starting software during nighttime [%ld].\n", n, "nightskipframes n", cg.nightSkipFrames);
+	printf(" -%-*s - Number of auto-exposure frames to skip when starting\n", n, "nightskipframes n");
+		printf("  %-*s   Allsky in nighttime [%ld].\n", n, "", cg.nightSkipFrames);
 	if (cg.ct == ctZWO) {
-		printf(" -%-*s - 1 enables cooler (cooled cameras only) [%s]\n", n, "nightenablecooler b", yesNo(cg.nightEnableCooler));
+		printf(" -%-*s - 'true' enables cooler (cooled cameras only) [%s]\n", n, "nightenablecooler b", yesNo(cg.nightEnableCooler));
 		printf(" -%-*s - Target temperature in degrees C (cooled cameras only).\n", n, "nighttargettemp n");
 	}
 	if (cg.ct == ctRPi && cg.isLibcamera) {
@@ -1038,24 +1059,29 @@ void displayHelp(config cg)
 	}
 
 	printf("\nDay and nighttime settings:\n");
+	printf(" -%-*s - Optional configuration file to use instead of,\n", n, "config s");
+	printf("  %-*s   or in addition to, command-line arguments.\n", n, "");
+	printf("  %-*s   The file is read when seen on the command line [none].\n", n, "");
 	if (cg.ct == ctRPi) {
 		printf(" -%-*s - Image saturation.\n", n, "saturation n");
-		printf(" -%-*s - Image contrast..\n", n, "contrast n");
+		printf(" -%-*s - Image contrast.\n", n, "contrast n");
 		printf(" -%-*s - Image sharpness.\n", n, "sharpness n");
 	}
 	if (cg.ct == ctZWO) {
 		printf(" -%-*s - Gamma level.\n", n, "gamma n");
 		printf(" -%-*s - Percent of exposure change to make, similar to PHD2 [%ld%%].\n", n, "aggression n", cg.aggression);
-		printf(" -%-*s - Seconds to transition gain from day-to-night or night-to-day.  0 disable it [%'ld].\n", n, "gaintransitiontime n", cg.gainTransitionTime);
+		printf(" -%-*s - Seconds to transition gain between daytime and nighttime [%'ld].\n", n, "gaintransitiontime n", cg.gainTransitionTime);
+		printf("  %-*s   0 disable it.\n", n, "");
 	}
 	printf(" -%-*s - Camera maximum width [%ld].\n", n, "width n", cg.width);
 	printf(" -%-*s - Camera maximum height [%ld].\n", n, "height n", cg.height);
-	printf(" -%-*s - Type of image: 99 = auto,  0 = RAW8,  1 = RGB24 [%ld]", n, "type n", cg.imageType);
+	printf(" -%-*s - Type of image: 99 = auto, 0 = RAW8, 1 = RGB24 [%ld]", n, "type n", cg.imageType);
 	if (cg.ct == ctZWO) {
-		printf(",  2 = RAW16,  3 = Y8");
+		printf(", 2 = RAW16, 3 = Y8");
 	}
 	printf("\n");
-	printf(" -%-*s - Quality (JPG, 0-100) or compression (PNG, 0-9) of image [JPG=%ld, PNG=%ld].\n", n, "quality n", cg.qualityJPG, cg.qualityPNG);
+	printf(" -%-*s - Quality of image: JPG, 0-100 [%ld].\n", n, "quality n", cg.qualityJPG);
+		printf("  %-*s                     PNG (compression), 0-9 [PNG=%ld].\n", n, "", cg.qualityPNG);
 	printf(" -%-*s - Name of image file to create [%s].\n", n, "filename s", cg.fileName);
 	if (cg.ct == ctRPi) {
 		if (cg.isLibcamera)
@@ -1064,63 +1090,76 @@ void displayHelp(config cg)
 			printf(" -%-*s - Amount to rotate image in degrees - 0, 90, 180, or 270 [%ld].\n", n, "rotation n", cg.rotation);
 	}
 	printf(" -%-*s - 0 = No flip, 1 = Horizontal, 2 = Vertical, 3 = Both [%ld].\n", n, "flip n", cg.flip);
-	printf(" -%-*s - 1 enables focus mode [%s].\n", n, "determinefocus b", yesNo(cg.determineFocus));
-	printf(" -%-*s - 1 enables consistent delays between images [%s].\n", n, "consistentdelays b", yesNo(cg.consistentDelays));
+	printf(" -%-*s - 'true' enables focus mode [%s].\n", n, "determinefocus b", yesNo(cg.determineFocus));
+	printf(" -%-*s - 'true' enables consistent delays between images [%s].\n", n, "consistentdelays b", yesNo(cg.consistentDelays));
 	printf(" -%-*s - Format the time is displayed in [%s].\n", n, "timeformat s", cg.timeFormat);
-	printf(" -%-*s - 1 enables notification images, for example, 'Camera is off during day' [%s].\n", n, "notificationimages b", yesNo(cg.notificationImages));
+	printf(" -%-*s - 'true' enables notification images like 'Camera is off during day' [%s].\n",
+		n, "notificationimages b", yesNo(cg.notificationImages));
 	printf(" -%-*s - Latitude of the camera [no default - you must set it].\n", n, "latitude s");
 	printf(" -%-*s - Longitude of the camera [no default - you must set it].\n", n, "longitude s");
-	printf(" -%-*s - Angle of the sun below the horizon [%.2f].\n", n, "angle n", cg.angle);
-	printf("  %-*s   -6 = civil twilight   -12 = nautical twilight   -18 = astronomical twilight.\n", n, "");
-	printf(" -%-*s - 1 takes dark frames [%s].\n", n, "takeDarkFrames b", yesNo(cg.takeDarkFrames));
-	printf(" -%-*s - Your locale - to determine thousands separator and decimal point [%s].\n", n, "locale s", "locale on Pi");
+	printf(" -%-*s - Angle of the sun below the horizon [%.2f]:\n", n, "angle n", cg.angle);
+		printf("  %-*s      -6 = civil twilight\n", n, "");
+		printf("  %-*s     -12 = nautical twilight\n", n, "");
+		printf("  %-*s     -18 = astronomical twilight.\n", n, "");
+	printf(" -%-*s - 'true' takes dark frames [%s].\n", n, "takeDarkFrames b", yesNo(cg.takeDarkFrames));
+	printf(" -%-*s - Your locale; determines thousands separator and decimal point [%s].\n", n, "locale s", "locale on Pi");
 	printf("  %-*s   Type 'locale' at a command prompt to determine yours.\n", n, "");
 	if (cg.ct == ctZWO) {
-		printf(" -%-*s - Default = %d %d %0.2f %0.2f (box width X, box width y, X offset percent (0-100), Y offset (0-100))\n", n, "histogrambox n n n n", cg.HB.histogramBoxSizeX, cg.HB.histogramBoxSizeY, cg.HB.histogramBoxPercentFromLeft * 100.0, cg.HB.histogramBoxPercentFromTop * 100.0);
-		printf(" -%-*s - 1 enables auto USB Speed.\n", n, "autousb b");
+		printf(" -%-*s - Default = %d %d %0.2f %0.2f\n",
+			n, "histogrambox n n n n", cg.HB.histogramBoxSizeX, cg.HB.histogramBoxSizeY,
+			cg.HB.histogramBoxPercentFromLeft * 100.0, cg.HB.histogramBoxPercentFromTop * 100.0);
+			printf("  %-*s   box width X, box width y, X offset percent (0-100), Y offset (0-100)\n", n, "");
+		printf(" -%-*s - 'true' enables auto USB speed [true].\n", n, "autousb b");
 		printf(" -%-*s - USB bandwidth percent.\n", n, "usb n");
 		printf(" -%-*s - Determines what type of exposure ZWO cameras should use [%s].\n", n, "zwoexposuretype n", getZWOexposureType(ZWOsnap));
 	}
 	if (cg.ct == ctRPi) {
-		printf(" -%-*s - Extra arguments pass to image capture program [%s].\n", n, "extraargs s", cg.extraArgs);
+		printf(" -%-*s - Extra arguments pass to image capture program [%s].\n", n, "extraargs s", stringORnone(cg.extraArgs));
 	}
 	printf(" -%-*s - Set to 1, 2, 3, or 4 for more debugging information [%ld].\n", n, "debuglevel n", cg.debugLevel);
 
 	printf("\nOverlay settings:\n");
-	printf(" -%-*s - Set to %d to use the new, enhanced 'module' overlay program [%s].\n", n, "overlaymethod n", OVERLAY_METHOD_LEGACY, getOverlayMethod(cg.overlay.overlayMethod).c_str());
-	printf(" -%-*s - Set to 1 to display the time [%s].\n", n, "showtime b", yesNo(cg.overlay.showTime));
-	printf(" -%-*s - Units to display temperature in: 'C'elsius, 'F'ahrenheit, or 'B'oth [%s].\n", n, "temptype s", cg.tempType);
-	printf(" -%-*s - 1 displays the exposure length [%s].\n", n, "showexposure b", yesNo(cg.overlay.showExposure));
-	printf(" -%-*s - 1 displays the camera sensor temperature [%s].\n", n, "showtemp b", yesNo(cg.overlay.showTemp));
-	printf(" -%-*s - 1 displays the gain [%s].\n", n, "showgain b", yesNo(cg.overlay.showGain));
-	printf(" -%-*s - 1 displays the mean brightness used in auto-exposure [%s].\n", n, "showmean b", yesNo(cg.overlay.showMean));
-	printf(" -%-*s - 1 displays a focus metric - the higher the number the better focus [%s].\n", n, "showfocus b", yesNo(cg.overlay.showFocus));
+	printf(" -%-*s - Set to %d to use the new, enhanced 'module' overlay method [%d].\n",
+		n, "overlaymethod n", OVERLAY_METHOD_MODULE, OVERLAY_METHOD_MODULE);
+	printf(" -%-*s - 'true' displays the time [%s].\n", n, "showtime b", yesNo(cg.overlay.showTime));
+	printf(" -%-*s - Units to display temperature in [%s]:\n", n, "temptype s", cg.tempType);
+	printf("  %-*s        'C'elsius,   'F'ahrenheit,   or 'B'oth.\n", n, "temptype s");
+	printf(" -%-*s - 'true' displays the exposure time [%s].\n", n, "showexposure b", yesNo(cg.overlay.showExposure));
+	printf(" -%-*s - 'true' displays the camera sensor temperature [%s].\n", n, "showtemp b", yesNo(cg.overlay.showTemp));
+	printf(" -%-*s - 'true' displays the gain [%s].\n", n, "showgain b", yesNo(cg.overlay.showGain));
+	printf(" -%-*s - 'true' displays the mean image brightness [%s].\n", n, "showmean b", yesNo(cg.overlay.showMean));
+	printf(" -%-*s - 'true' displays a focus metric - higher numbers are better focus [%s].\n", n, "showfocus b", yesNo(cg.overlay.showFocus));
 	if (cg.ct == ctZWO) {
-		printf(" -%-*s - 1 displays an outline of the histogram box.\n", n, "showhistogrambox b");
+		printf(" -%-*s - 'true' displays an outline of the histogram box.\n", n, "showhistogrambox b");
 		printf("  %-*s   Useful to determine what parameters to use with -histogrambox.\n", n, "");
 	}
 	printf(" -%-*s - Text Overlay [\"\"].\n", n, "text s");
 	printf(" -%-*s - Full Path to extra text to display [\"\"].\n", n, "extratext s");
-	printf(" -%-*s - If the extra file is not updated after this many seconds its contents will not be displayecg. 0 disables it [0].\n", n, "extratextage n");
-	printf(" -%-*s - Text Line Height in pixels [%ld].\n", n, "textlineheight n", cg.overlay.iTextLineHeight);
-	printf(" -%-*s - Text Placement Horizontal from LEFT in pixels [%'ld].\n", n, "textx n", cg.overlay.iTextX);
-	printf(" -%-*s - Text Placement Vertical from TOP in pixels [%'ld].\n", n, "texty n", cg.overlay.iTextY);
-	printf(" -%-*s - Font Types (0-7), Ex. 0 = simplex, 4 = triplex, 7 = script [%ld]\n", n, "fontname n", cg.overlay.fontnumber);
+	printf(" -%-*s - If the extra file is not updated after this many seconds its\n", n, "extratextage n");
+		printf("  %-*s   contents will not be displayed. 0 disables it [0].\n", n, "");
+	printf(" -%-*s - Text line height in pixels [%ld].\n", n, "textlineheight n", cg.overlay.iTextLineHeight);
+	printf(" -%-*s - Text placement horizontal from LEFT in pixels [%'ld].\n", n, "textx n", cg.overlay.iTextX);
+	printf(" -%-*s - Text placement vertical from TOP in pixels [%'ld].\n", n, "texty n", cg.overlay.iTextY);
+	printf(" -%-*s - Font types (0-7), Ex. 0 = simplex, 4 = triplex, 7 = script [%ld]\n", n, "fontname n", cg.overlay.fontnumber);
 	printf(" -%-*s - Text font color (BGR) [255 0 0].\n", n, "fontcolor n n n");
 	printf(" -%-*s - Small text font color (BGR) [0 0 255].\n", n, "smallfontcolor n n n");
-	printf(" -%-*s - Font Line Type: 0=AA, 1=8, 2=4 [%ld].\n", n, "fonttype n", cg.overlay.linenumber);
-	printf(" -%-*s - Text Font Size [%.2f].\n", n, "fontsize n", cg.overlay.fontsize);
-	printf(" -%-*s - Text Font Line Thickness [%ld].\n", n, "fontline n", cg.overlay.linewidth);
-	printf(" -%-*s - 1 enables outline font [%s].\n", n, "outlinefont b", yesNo(cg.overlay.outlinefont));
+	printf(" -%-*s - Font line type: 0=AA, 1=8, 2=4 [%ld].\n", n, "fonttype n", cg.overlay.linenumber);
+	printf(" -%-*s - Text font size [%.2f].\n", n, "fontsize n", cg.overlay.fontsize);
+	printf(" -%-*s - Text font line Thickness [%ld].\n", n, "fontline n", cg.overlay.linewidth);
+	printf(" -%-*s - 'true' enables outline font [%s].\n", n, "outlinefont b", yesNo(cg.overlay.outlinefont));
 
 	printf("\nMisc. settings:\n");
 	printf(" -%-*s - Last camera model [no default].\n", n, "cameramodel s");
 	printf(" -%-*s - Camera number [%d].\n", n, "cameranumber n", cg.cameraNumber);
 	printf(" -%-*s - Where to save 'filename' [%s].\n", n, "save_dir s", cg.saveDir);
-	printf(" -%-*s - 1 previews the captured images. Only works with a Desktop Environment [%s]\n", n, "preview", yesNo(cg.preview));
-	printf(" -%-*s - Outputs the camera's capabilities to the specified file and exists.\n", n, "cc_file s");
+	printf(" -%-*s - 'true' previews the captured images [%s].\n", n, "preview", yesNo(cg.preview));
+	printf("  %-*s   Only works with a Desktop Environment.\n", n, "");
+	printf(" -%-*s - Outputs the camera's capabilities to the specified file and exits.\n", n, "cc_file s");
 	if (cg.ct == ctRPi) {
-		printf(" -%-*s - Command being used to take pictures (Buster: raspistill, Bullseye: libcamera-still\n", n, "cmd s");
+		printf(" -%-*s - Command to take pictures [\"\"]:\n", n, "cmd s");
+		printf("  %-*s     Buster: raspistill\n", n, "");
+		printf("  %-*s     Bullseye: libcamera-still\n", n, "");
+		printf("  %-*s     Bookworm: rpicam-still\n", n, "");
 	}
 /* These are too advanced for anyone other than developers.
 	printf(" -%-*s - Be careful changing these values, ExposureChange (Steps) = p0 + (p1*diff) + (p2*diff)^2 [%.1f].\n", n, "mean-p0 n", cg.myModeMeanSetting.dayMean_threshold);
@@ -1150,16 +1189,6 @@ char *LorF(double num, char const *L, char const *F)
 	if (++on == NUM_BUFS) on = 0;
 	return(n[o]);
 }
-
-// Return the string if it exists, or "[none]"
-char const *stringORnone(char const *s)
-{
-	if (s == NULL || *s == '\0')
-		return("[none]");
-	else
-		return(s);
-}
-
 
 // Display settings.
 void displaySettings(config cg)

@@ -58,6 +58,33 @@ function print_heading(){
     printf "%-20s\n" "============================"
 }
 
+############################################## functions
+
+# Prompt the user to enter (y)/(yes) or (n)/(no).
+# This function is only used when running in text (--text) mode.
+function enter_yes_no()
+{
+	local TEXT="${1}"
+	local RESULT=1
+	local ANSWER
+
+    while true; do
+        echo -e "${TEXT}"
+        read -r -p "Do you want to continue? (y/n): " ANSWER
+        ANSWER="${ANSWER,,}"	# convert to lowercase
+
+        if [[ ${ANSWER} == "y" || ${ANSWER} == "yes" ]]; then
+            return 0
+        elif [[ ${ANSWER} == "n" || ${ANSWER} == "no" ]]; then
+            return 1
+        else
+            echo -e "\nInvalid response. Please enter y/yes or n/no."
+        fi
+    done
+
+	return "${RESULT}"
+}
+
 function print_sub_heading(){
     local LABEL=$1
 
@@ -368,9 +395,16 @@ display_complete_dialog()
 
 display_start_dialog()
 {
-    dialog --title "Generate Support Information" --yesno "${SUPPORT_TCS}" 25 80
-    response=$?
-    if [ $response -eq 1 ]; then
+    clear
+    if [[ "${TEXT_MODE}" == "false" ]]; then
+        dialog --title "Generate Support Information" --yesno "${SUPPORT_TCS}" 25 80
+        RESULT=$?
+    else
+        enter_yes_no "${SUPPORT_TCS}"
+        RESULT=$?
+    fi
+
+    if [[ "${RESULT}" -eq 1 ]]; then
         exit 1
     fi
 }
@@ -396,7 +430,7 @@ function usage_and_exit()
 		echo -e "\n	where:"
 		echo -e "	'--help' displays this message and exits."
 		echo -e "	'--text' Use text mode. Options must be specified on the command line."        
-		echo -e "	'--issue' Include the Githuib issue number."        
+		echo -e "	'--issue' Include the Github issue number."        
 		echo -e "	'--loglines' Number of lines to include from log files, defaults to 'all'. Use 'all' for entire file"
 
 	} >&2

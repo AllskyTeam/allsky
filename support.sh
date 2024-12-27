@@ -7,6 +7,9 @@
 #            issues with the Allsky installation from interfering with the data collection
 #            Some 'standard' variables are hard coded in this script.
 #
+
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
+
 LOG_LINES="all"
 SUPPORT_DATETIME_SHORT=$(date +"%Y%m%d%H%M%S")
 SUPPORT_ZIP_NAME="support-ISSUE-${SUPPORT_DATETIME_SHORT}.zip"
@@ -33,8 +36,10 @@ Select 'Yes' to agree or 'No' to abort this script
 # Install prerequisites
 function init() 
 {
-    clear
-    echo -e "Initialising support system. Please wait ..."
+    if [[ "${AUTO_MODE}" == "false" ]]; then    
+        clear
+        echo -e "Initialising support system. Please wait ..."
+    fi
 
     sudo apt install -y tree > /dev/null 2>&1
     sudo apt install -y i2c-tools > /dev/null 2>&1
@@ -144,7 +149,7 @@ function collect_support_info()
     ### Allsky file information
     ALLSKY_VERSION="$( head -1 "./version" )"
     DEBUG_LEVEL=$(jq .debuglevel ./config/settings.json)
-    ALLSKY_FILES="$(tree -ugp --gitignore --prune -I '.git|__pycache__')"
+    ALLSKY_FILES="$(tree -ugp --gitignore --prune -I '.git|__pycache__' "${ALLSKY_HOME}")"
 
     # shellcheck source=/dev/null
     source "${ALLSKY_HOME}/venv/bin/activate"
@@ -154,12 +159,13 @@ function collect_support_info()
 
     ### Devices
     DEV=$(sudo ls -alh  /dev)
-
     USB="$(sudo lsusb -v)"
     I2C_ENABLED=$(sudo raspi-config nonint get_i2c)
     I2C_DEVICES=""
     if [[ ${I2C_ENABLED} == "0" ]]; then
-        I2C_DEVICES="$(i2cdetect -y -a 1)"
+        I2C_DEVICES="$(sudo i2cdetect -y -a 1)"
+    else
+        I2C_DEVICES="i2c interface is disabled"
     fi
     ###
 
@@ -168,7 +174,7 @@ function collect_support_info()
     ###
 
     ### pi Camera stuff
-    PI_CAMERAS="$(libcamera-still --list-cameras)"
+    PI_CAMERAS="$(sudo libcamera-still --list-cameras)"
     ###
 
     ### get installed package information
@@ -232,13 +238,11 @@ function generate_support_info()
         print "${FILE_SYSTEMS}"
     } >> "${FILESYSTEM_FILE}"
 
-    if [[ "${DEVICES}" == "true" ]]; then
-        DEVICES_FILE="${TEMP_DIR}/devices.txt"
-        {
-            print_heading "Devices"
-            print "${DEV}"
-        } >> "${DEVICES_FILE}"
-    fi
+    DEVICES_FILE="${TEMP_DIR}/devices.txt"
+    {
+        print_heading "Devices"
+        print "${DEV}"
+    } >> "${DEVICES_FILE}"
 
     USB_FILE="${TEMP_DIR}/usb.txt"
     {
@@ -289,15 +293,37 @@ function generate_support_info()
     CAMERA_INFO_FILE="${TEMP_DIR}/camera_info.txt"
     {
         print_heading "Allsky - Supported Cameras"
-        print_sub_heading "Raspberry Pi Cameras"
-        ./scripts/utilities/show_supported_cameras.sh --rpi 
 
-        print_sub_heading "Raspberry Pi Cameras Attached"
-        ./scripts/utilities/get_RPi_camera_info.sh
-        cat ./tmp/camera_data.txt
+        #print_sub_heading "Raspberry Pi Cameras Attached"
+        #sudo ./scripts/utilities/get_RPi_camera_info.sh
+        #sudo cat ./tmp/camera_data.txt
+        
+        print_sub_heading "Pi Cameras"        
+        RPi_SUPPORTED_CAMERAS="${ALLSKY_HOME}/config/RPi_cameraInfo.txt"
+        gawk -F'\t' '
+            BEGIN {
+                printf("%-25s Sensor\n", "Camera Name");
+                printf("%-25s-------\n", "--------------------------");
+            }
+            {
+                if ($1 == "camera") {
+                    sensor = $2;
+                    compare_length = $3
+                    model = $4;
+                    if (compare_length > 0)
+                        other = " and related sensors";
+                    else
+                        other = "";
+                    printf("%-25s %s%s\n", model, sensor, other);
+                }
+            }' "${RPi_SUPPORTED_CAMERAS}"
 
         print_sub_heading "ZWO Cameras"
-        ./scripts/utilities/show_supported_cameras.sh --zwo
+	    strings "${ALLSKY_HOME}/src/lib/armv7/libASICamera2.a" |
+		    grep '_SetResolutionEv$' | \
+		    sed -e 's/^.*CameraS//' -e 's/17Cam//' -e 's/_SetResolutionEv//' | \
+		    sort -u
+
     } >> "${CAMERA_INFO_FILE}"
 
     ALLSKY_LOG_FILE="${TEMP_DIR}/allsky_log.txt"
@@ -329,91 +355,98 @@ function generate_support_info()
     cd "${TEMP_DIR}" || exit 1
     zip -r "${SUPPORT_ZIP_NAME}" ./* > /dev/null 2>&1
     sudo chown pi:www-data "${TEMP_DIR}/${SUPPORT_ZIP_NAME}"
-    chmod g+wx "${TEMP_DIR}/${SUPPORT_ZIP_NAME}"
-    chmod u+wx "${TEMP_DIR}/${SUPPORT_ZIP_NAME}"
+    sudo chmod g+wx "${TEMP_DIR}/${SUPPORT_ZIP_NAME}"
+    sudo chmod u+wx "${TEMP_DIR}/${SUPPORT_ZIP_NAME}"
     sudo mv "${TEMP_DIR}/${SUPPORT_ZIP_NAME}" "${SUPPORT_DIR}"
-    trap 'rm -rf "${TEMP_DIR}"' EXIT
+    #trap 'rm -rf "${TEMP_DIR}"' EXIT
 }
 
 ####
 # Allows the user to enter the Github discussion id
 function get_github_discussion_id()
 {
-    if [[ "${ISSUE_NUMBER}" == "none" ]]; then
-        while true; do
-            if [[ "${TEXT_MODE}" == "false" ]]; then
-                ISSUE_NUMBER_TEMP=$(dialog --inputbox "Github Discussion Number:\nIf you don't know this just hit Enter." 8 50 2>&1 >/dev/tty)
-            else
-                echo -e "Enter the Github Discussion Number:\nIf you don't know this just hit Enter.\n"
-                read -r -p "Github discussion number " ISSUE_NUMBER_TEMP
-            fi
-
-            if [[ -n "${ISSUE_NUMBER_TEMP}" ]]; then
-                if [[ "${ISSUE_NUMBER_TEMP}" =~ ^[+-]?[0-9]+$ ]]; then
-                    ISSUE_NUMBER="${ISSUE_NUMBER_TEMP}"
-                    break
+    if [[ "${AUTO_MODE}" == "false" ]]; then
+        if [[ "${ISSUE_NUMBER}" == "none" ]]; then
+            while true; do
+                if [[ "${TEXT_MODE}" == "false" ]]; then
+                    ISSUE_NUMBER_TEMP=$(dialog --inputbox "Github Discussion Number:\nIf you don't know this just hit Enter." 8 50 2>&1 >/dev/tty)
                 else
-                    if [[ "${TEXT_MODE}" == "false" ]]; then
-                        dialog --msgbox "${GITHUB_ERROR}" 15 70
-                    else
-                        echo -e "${GITHUB_ERROR}\n\n"
-                    fi
+                    echo -e "Enter the Github Discussion Number:\nIf you don't know this just hit Enter.\n"
+                    read -r -p "Github discussion number " ISSUE_NUMBER_TEMP
                 fi
-            else
-                break
-            fi
-        done    
-    fi    
+
+                if [[ -n "${ISSUE_NUMBER_TEMP}" ]]; then
+                    if [[ "${ISSUE_NUMBER_TEMP}" =~ ^[+-]?[0-9]+$ ]]; then
+                        ISSUE_NUMBER="${ISSUE_NUMBER_TEMP}"
+                        break
+                    else
+                        if [[ "${TEXT_MODE}" == "false" ]]; then
+                            dialog --msgbox "${GITHUB_ERROR}" 15 70
+                        else
+                            echo -e "${GITHUB_ERROR}\n\n"
+                        fi
+                    fi
+                else
+                    break
+                fi
+            done    
+        fi
+    fi
 }
 
 display_running_dialog()
 {
+    if [[ "${AUTO_MODE}" == "false" ]]; then
+        if [[ "${TEXT_MODE}" == "false" ]]; then
+            (
+                dialog --title "Processing" --msgbox "\n\n\nPlease wait while the support info is collected..." 10 60
+            ) &
 
-    if [[ "${TEXT_MODE}" == "false" ]]; then
-        (
-            dialog --title "Processing" --msgbox "\n\n\nPlease wait while the support info is collected..." 10 60
-        ) &
-
-        PROCESS_DIALOG=$!
-    else
-        echo "Please wait while the support info is collected..."
+            PROCESS_DIALOG=$!
+        else
+            echo "Please wait while the support info is collected..."
+        fi
     fi
 }
 
 display_complete_dialog()
 {
+    if [[ "${AUTO_MODE}" == "false" ]]; then
+        DIALOG_MESSAGE="${DIALOG_COMPLETE_MESSAGE}"
+        DIALOG_HEIGHT=20
 
-    DIALOG_MESSAGE="${DIALOG_COMPLETE_MESSAGE}"
-    DIALOG_HEIGHT=20
-
-    if [[ "${TEXT_MODE}" == "false" ]]; then
-        dialog --title "Complete" --msgbox "${DIALOG_MESSAGE}" "${DIALOG_HEIGHT}" 70
-    else
-        echo -e "${DIALOG_MESSAGE}"
+        if [[ "${TEXT_MODE}" == "false" ]]; then
+            dialog --title "Complete" --msgbox "${DIALOG_MESSAGE}" "${DIALOG_HEIGHT}" 70
+        else
+            echo -e "${DIALOG_MESSAGE}"
+        fi
     fi
 }
 
 display_start_dialog()
 {
-    clear
-    if [[ "${TEXT_MODE}" == "false" ]]; then
-        dialog --title "Generate Support Information" --yesno "${SUPPORT_TCS}" 25 80
-        RESULT=$?
-    else
-        enter_yes_no "${SUPPORT_TCS}"
-        RESULT=$?
-    fi
+    if [[ "${AUTO_MODE}" == "false" ]]; then
+        clear
+        if [[ "${TEXT_MODE}" == "false" ]]; then
+            dialog --title "Generate Support Information" --yesno "${SUPPORT_TCS}" 25 80
+            RESULT=$?
+        else
+            enter_yes_no "${SUPPORT_TCS}"
+            RESULT=$?
+        fi
 
-    if [[ "${RESULT}" -eq 1 ]]; then
-        exit 1
+        if [[ "${RESULT}" -eq 1 ]]; then
+            exit 1
+        fi
     fi
 }
 
-
 kill_running_dialog()
 {
-    if [[ "${TEXT_MODE}" == "false" ]]; then
-        kill "${PROCESS_DIALOG}"
+    if [[ "${AUTO_MODE}" == "false" ]]; then
+        if [[ "${TEXT_MODE}" == "false" ]]; then
+            kill "${PROCESS_DIALOG}"
+        fi
     fi
 }
 
@@ -429,7 +462,8 @@ function usage_and_exit()
 		[[ ${RET} -ne 0 ]] && echo -en "${NC}"
 		echo -e "\n	where:"
 		echo -e "	'--help' displays this message and exits."
-		echo -e "	'--text' Use text mode. Options must be specified on the command line."        
+		echo -e "	'--text' Use text mode. Options must be specified on the command line."
+		echo -e "	'--auto' Auto accept any prompts and no output."
 		echo -e "	'--issue' Include the Github issue number."        
 		echo -e "	'--loglines' Number of lines to include from log files, defaults to 'all'. Use 'all' for entire file"
 
@@ -440,6 +474,7 @@ function usage_and_exit()
 OK="true"
 TEXT_MODE="false"
 ISSUE_NUMBER="none"
+AUTO_MODE="false"
 
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
@@ -450,6 +485,10 @@ while [[ $# -gt 0 ]]; do
 
 		--text)
 			TEXT_MODE="true"
+			;;
+
+		--auto)
+			AUTO_MODE="true"
 			;;
 
         --issue)

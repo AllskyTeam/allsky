@@ -18,7 +18,7 @@ class SUPPORTUTIL
 
     public function run()
     {
-       // $this->checkXHRRequest();
+        $this->checkXHRRequest();
         $this->sanitizeRequest();
         $this->runRequest();
     }
@@ -155,6 +155,14 @@ class SUPPORTUTIL
         }
         $this->sendResponse(json_encode($data));
     }
+
+    public function getGenerateLog() {
+        $command = 'export ALLSKY_HOME=' . ALLSKY_HOME . '; export SUDO_OK="true"; ' . ALLSKY_HOME . '/support.sh --auto';
+        $output = shell_exec($command);
+
+        $this->sendResponse(json_encode("ok"));        
+    }
+
 }
 
 

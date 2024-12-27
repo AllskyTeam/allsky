@@ -5,9 +5,18 @@
         border: 1px solid transparent !important;
         border-radius: 4px !important;
     }
+    
+    #as-support-files th {
+        font-size: 1.3em;
+    }
 
     #as-support-files td {
         padding-bottom: 10px;
+        font-size: 1.2em;        
+    }
+
+    table tbody tr:first-child {
+        color: green;
     }
 
     .mr-10 {
@@ -41,11 +50,11 @@
 
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <h3>Support Logs <small>previously generated log files</small></h3>
+                    <h3>Support Logs <small>previously generated log files</small><div class="pull-right"><button type="button" class="btn btn-danger" id="as-support-generate">Generate</button></div></h3>
                 </div>
                 <div class="panel-body">
                     <div class="alert alert-warning" role="alert">
-                        <p>When requesting support please generate a log file by logging into your pi as the SAME user you installed Allsky as and from the Allsky home directory run</p>
+                        <p>When requesting support please generate a log file by either clicking the 'Generate' button on the right or logging into your pi as the SAME user you installed Allsky as and from the Allsky home directory run</p>
                         <p>./support.sh</p>
                         <p>Once complete return to this page and refresh it. The generated log will be available below to download.</p>
                     </div>

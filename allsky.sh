@@ -1,13 +1,9 @@
 #!/bin/bash
 
-# Make it easy to find the beginning of this run in the log file.
-echo "     ***** Starting AllSky *****"
-
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
 ME="$( basename "${BASH_ARGV0}" )"
 
 # NOT_STARTED_MSG, STOPPED_MSG, ERROR_MSG_PREFIX, and ZWO_VENDOR are globals
-
 
 #shellcheck source-path=.
 source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
@@ -27,6 +23,65 @@ if [[ ! -d ${ALLSKY_CONFIG} ]]; then
 	set_allsky_status "${ALLSKY_STATUS_NEVER_RUN}"
 	doExit "${EXIT_ERROR_STOP}" "no-image" "" ""
 fi
+
+####
+usage_and_exit()
+{
+	local RET C MSG
+
+	RET=${1}
+	if [[ ${RET} -eq 0 ]]; then
+		C="${YELLOW}"
+	else
+		C="${RED}"
+	fi
+	{
+		echo -en "\n${C}"
+		echo -n  "Usage: ${ME} [--help] [--preview]"
+		echo -e  "${NC}"
+		echo
+		echo "'--help' displays this message and the help message from the capture program, then exits."
+		echo
+		echo "'--preview' displays images on your screen as they are taken."
+		echo
+	} >&2
+	[[ ${RET} -ne 0 ]] && exit "${RET}"
+}
+
+CAPTURE="capture_${CAMERA_TYPE}"
+
+##### Check arguments
+OK="true"
+HELP="false"
+PREVIEW="false"
+while [[ $# -gt 0 ]]; do
+	ARG="${1}"
+	case "${ARG,,}" in
+		--help)
+			HELP="true"
+			;;
+		--preview)
+			PREVIEW="true"
+			;;
+		-*)
+			echo -e "${RED}Unknown argument: '${ARG}'${NC}." >&2
+			OK="false"
+			;;
+		*)
+			break;		# end of arguments
+			;;
+	esac
+	shift
+done
+[[ ${OK} == "false" ]] && usage_and_exit 1
+if [[ ${HELP} == "true" ]]; then
+	usage_and_exit 0
+	"${ALLSKY_BIN}/${CAPTURE}" --help
+	exit 0
+fi
+
+# Make it easy to find the beginning of this run in the log file.
+echo "     ***** Starting AllSky *****"
 
 # Make sure ${CAMERA_TYPE} is valid; if not, exit with a message.
 verify_CAMERA_TYPE "${CAMERA_TYPE}"
@@ -260,29 +315,23 @@ if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
 	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 0 "StartingUp" 2>&1 &
 fi
 
-: > "${ARGS_FILE}"
-
 # Only pass settings that are used by the capture program.
 if ! ARGS="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --capture-only )" ; then
 	echo "${ME}: ERROR: convertJSON.php returned: ${ARGS}"
 	set_allsky_status "${ALLSKY_STATUS_ERROR}"
 	exit "${EXIT_ERROR_STOP}"
 fi
+
 # We must pass "-config ${ARGS_FILE}" on the command line and
 # other settings needed at the start of the capture program.
-echo "${ARGS}" |
-	grep -E -i -v "^config=|^debuglevel=^cmd=|^cameramodel|^cameranumber|^locale=" >> "${ARGS_FILE}"
-
-# When using a desktop environment a preview of the capture can be displayed.
-# The preview mode does not work if we are started as a service or
-# if the debian distribution has no desktop environment.
 {
-	[[ $1 == "preview" ]] && echo "preview=true"
+	echo "${ARGS}" |
+		grep -E -i -v "^config=|^debuglevel=^cmd=|^cameramodel|^cameranumber|^locale="
 
 	echo "version=${ALLSKY_VERSION}"
 	echo "save_dir=${CAPTURE_SAVE_DIR}"
-
-} >> "${ARGS_FILE}"
+	[[ ${PREVIEW} == "true" ]] && echo "preview=true"
+} > "${ARGS_FILE}"
 
 # If the user wants images uploaded only every n times, save that number to a file.
 if [[ ${IMG_UPLOAD_FREQUENCY} -ne 1 ]]; then
@@ -292,8 +341,6 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -ne 1 ]]; then
 else
 	rm -f "${FREQUENCY_FILE}"
 fi
-
-CAPTURE="capture_${CAMERA_TYPE}"
 
 # Clear up any flow timings
 activate_python_venv

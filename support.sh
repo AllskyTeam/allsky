@@ -5,22 +5,22 @@
 #
 # IMPORTANT: This script does not rely on ANY Allsky functions to gather data. This is to prevent any
 #            issues with the Allsky installation from interfering with the data collection
+#            Some 'standard' variables are hard coded in this script.
 #
-LOG_LINES=1000
-SUPPORT_LOG_FILE="support.log"
-ZIPPED="false"
-MAX_UNZIPPED=512000
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
+
+LOG_LINES="all"
+SUPPORT_DATETIME=$(date +"%Y-%m-%d-%H:%M:%S")
+SUPPORT_DATETIME_SHORT=$(date +"%Y%m%d%H%M%S")
+SUPPORT_ZIP_NAME="support-ISSUE-${SUPPORT_DATETIME_SHORT}.zip"
+SUPPORT_DIR="${ALLSKY_HOME}/html/support"
 DIALOG_COMPLETE_MESSAGE="The support information has now been generated and can be found in\n\n
-${ALLSKY_HOME}/${SUPPORT_LOG_FILE}\n\n
-This file should be attached to the relevant issue/discussion in Github. Please ATTACH as a file do not paste it
-into a discussion or issue as it makes the issue/discussion very difficult to read
+${ALLSKY_HOME}/html/support/ZIPNAME\n\n
+Due to the size of the support information the file has been compressed.\n\n
+This file should be attached to the relevant discussion in Github.\n\nIf your webui is functioning the the file can be downloaded using the support menu option
 "
-DIALOG_COMPLETE_MESSAGE_ARCHIVE="The support information has now been generated and can be found in\n\n
-${ALLSKY_HOME}/${SUPPORT_LOG_FILE}.zip\n\n
-Due to the size of the support information the file has been compressed.\n
-This file should be attached to the relevant issue/discussion in Github. Please ATTACH as a file do not paste it
-into a discussion or issue as it makes the issue/discussion very difficult to read
-"
+GITHUB_ERROR="Error\n\nThe Discussion number must be numberic\n\nIt can be found in the URL of the github issue, 
+for example in this case\n\nhttps://github.com/AllskyTeam/allsky/discussions/4119\n\nThe discussion number would be 4119"
 
 ####
 # Install prerequisits
@@ -29,8 +29,8 @@ function init()
     clear
     echo -e "Initialising support system. Please wait ..."
 
-    sudo apt install tree > /dev/null 2>&1
-    sudo apt install i2c-tools > /dev/null 2>&1
+    sudo apt install -y tree > /dev/null 2>&1
+    sudo apt install -y i2c-tools > /dev/null 2>&1
 }
 
 function print_info() {
@@ -47,7 +47,7 @@ function print() {
 function print_heading(){
     local LABEL=$1
 
-    printf "\n\n%-20s\n" "${LABEL}"
+    printf "\n\n%-20s\n" "${LABEL}  - $(date)"
     printf "%-20s\n" "============================"
 }
 
@@ -57,8 +57,6 @@ function print_sub_heading(){
     printf "\n%-20s\n" "${LABEL}"
     printf "%-20s\n" "----------------------------"    
 }
-
-#sudo apt install -y tree
 
 function get_info()
 {
@@ -151,125 +149,138 @@ function get_info()
     ###
 }
 
-function display_info() 
+function generate_support_info()
 {
-    if [[ -f "${SUPPORT_LOG_FILE}" ]]; then
-        rm "${SUPPORT_LOG_FILE}"
-    fi
+    TEMP_FOLDER="${TMPDIR:-/tmp}"
+    TEMP_DIR=$(mktemp -d "${TEMP_FOLDER}"/allskyXXXXX)
 
-    exec > "${SUPPORT_LOG_FILE}" 2>&1
+    BASIC_FILE="${TEMP_DIR}/system.txt"
+    print_heading "Misc Info" > "${BASIC_FILE}"
+    print_info "Date and Time": "$(date)" >> "${BASIC_FILE}"
+    print_info "Allsky Version:" "${ALLSKY_VERSION}" >> "${BASIC_FILE}"
+    print_info "Allsky Debug Level:" "${DEBUG_LEVEL}" >> "${BASIC_FILE}"
+    print_info "Uptime:" "${UPTIME}" >> "${BASIC_FILE}"
+    print_info "OS Id:" "${ID}" >> "${BASIC_FILE}"
+    print_info "OS Version:" "${VERSION_ID}" >> "${BASIC_FILE}"
+    print_info "Pi Revision:" "${PI_REVISION}" >> "${BASIC_FILE}"
+    print_info "Pi Model:" "${PI_MODEL}" >> "${BASIC_FILE}"
+    print_info "Total CPU Cores:" "${CPU_TOTAL}" >> "${BASIC_FILE}"
+    print_info "CPU Architecture:" "${CPU_ARCH}" >> "${BASIC_FILE}"
+    print_info "CPU Bits:" "${CPU_BITS}" >> "${BASIC_FILE}"
+    print_info "Total RAM:" "${MEM_TOTAL}" >> "${BASIC_FILE}"
+    print_info "User Name:" "${USER_NAME}" >> "${BASIC_FILE}"
+    print_info "User ID:" "${USER_ID}" >> "${BASIC_FILE}"
 
-    print_heading "Misc Info"
-    print_info "Date and Time": "$(date)"
-    print_info "Allsky Version:" "${ALLSKY_VERSION}"
-    print_info "Allsky Debug Level:" "${DEBUG_LEVEL}"
-    print_info "Uptime:" "${UPTIME}"
-    print_info "OS Id:" "${ID}"
-    print_info "OS Version:" "${VERSION_ID}"
-    print_info "Pi Revision:" "${PI_REVISION}"
-    print_info "Pi Model:" "${PI_MODEL}"
-    print_info "Total CPU Cores:" "${CPU_TOTAL}"
-    print_info "CPU Architecture:" "${CPU_ARCH}"
-    print_info "CPU Bits:" "${CPU_BITS}"
-    print_info "Total RAM:" "${MEM_TOTAL}"
-    print_info "User Name:" "${USER_NAME}"
-    print_info "User ID:" "${USER_ID}"
+    ISSUE_FILE="${TEMP_DIR}/issue.txt"
+    print_heading "Github Issue" > "${ISSUE_FILE}"
+    print "${ISSUE_NUMBER}" >> "${ISSUE_FILE}"
 
-    
-    print_heading "Memory Info"
-    print "${MEMORY_INFO}"
+    OS_FILE="${TEMP_DIR}/ps.txt"
+    print_heading "Process Information" > "${OS_FILE}"
+    print "${PS}" >> "${OS_FILE}"
 
+    MEMORY_FILE="${TEMP_DIR}/memory.txt"
+    print_heading "Memory Info" > "${MEMORY_FILE}"
+    print "${MEMORY_INFO}" >> "${MEMORY_FILE}"
 
-    print_heading "Network Info"
-    print "${NETWORKS}"
-    print_heading "File Systems"
-    print "${FILE_SYSTEMS}"
+    NETWORK_FILE="${TEMP_DIR}/network.txt"
+    print_heading "Network Info" > "${NETWORK_FILE}"
+    print "${NETWORKS}" >> "${NETWORK_FILE}"
+
+    FILESYSTEM_FILE="${TEMP_DIR}/filesystem.txt"
+    print_heading "File Systems" > "${FILESYSTEM_FILE}"
+    print "${FILE_SYSTEMS}" >> "${FILESYSTEM_FILE}"
 
     if [[ "${DEVICES}" == "true" ]]; then
-        print_heading "Devices"
-        print "${DEV}"
+        DEVICES_FILE="${TEMP_DIR}/devices.txt"
+        print_heading "Devices" > "${DEVICES_FILE}"
+        print "${DEV}" >> "${DEVICES_FILE}"
     fi
-    print_heading "USB Devices"
-    print "${USB}"
-    print_heading "Libcamera Devices"
-    print "${PI_CAMERAS}"
-    print_heading "I2C Devices"
-    if [[ ${I2C_ENABLED} == "0" ]]; then
-        print "${I2C_DEVICES}"
-    else
-        print "i2c is not enabled"
+
+    USB_FILE="${TEMP_DIR}/usb.txt"
+    print_heading "USB Devices" > "${USB_FILE}"
+    print "${USB}" >> "${USB_FILE}"
+
+    LIBCAMERA_FILE="${TEMP_DIR}/libcamera.txt"
+    print_heading "Libcamera Devices" > "${LIBCAMERA_FILE}"
+    print "${PI_CAMERAS}" >> "${LIBCAMERA_FILE}"
+
+    i2C_FILE="${TEMP_DIR}/i2c.txt"
+    print_heading "I2C Devices" > "${i2C_FILE}"
+    print "${I2C_DEVICES}" >> "${i2C_FILE}"
+
+    ALLSKYFILES_FILE="${TEMP_DIR}/allsky_files.txt"
+    print_heading "Allsky Files" > "${ALLSKYFILES_FILE}"
+    print_info "Allsky Version:" "${ALLSKY_VERSION}" >> "${ALLSKYFILES_FILE}"
+    print "${ALLSKY_FILES}" >> "${ALLSKYFILES_FILE}"
+
+    ALLSKYVENV_FILE="${TEMP_DIR}/allsky_venv.txt"
+    print_heading "Allsky Venv information" > "${ALLSKYVENV_FILE}"
+    print_info "Python Version:" "${PYTHON_VERSION}" >> "${ALLSKYVENV_FILE}"
+    print "${PYTHON_MODULES}" >> "${ALLSKYVENV_FILE}"
+    print_heading "Package Information" >> "${ALLSKYVENV_FILE}"
+    print "${PYTHON_PACKAGES}" >> "${ALLSKYVENV_FILE}"
+
+    APT_FILE="${TEMP_DIR}/apt.txt"
+    print_heading "APT installed packages" > "${APT_FILE}"
+    print "${APT_INSTALLED}" >> "${APT_FILE}"
+
+    LIGHTTPD_ERROR_LOG_FILE="${TEMP_DIR}/lighttpd_error.txt"
+    LIGHTTPD_ERROR_LOG="/var/log/lighttpd/error.log"
+    if [[ -f "${LIGHTTPD_ERROR_LOG}" ]]; then
+        cp "${LIGHTTPD_ERROR_LOG}" "${LIGHTTPD_ERROR_LOG_FILE}"
     fi
-    print_heading "Process Information"
-    print "${PS}"
-    print_heading "Allsky Files"
-    print_info "Allsky Version:" "${ALLSKY_VERSION}"
-    print "${ALLSKY_FILES}"
-    print_heading "Allsky Venv information"
-    print_info "Python Version:" "${PYTHON_VERSION}"
-    print "${PYTHON_MODULES}"
-    print_heading "Package Information"
-    print "${PYTHON_PACKAGES}"
-    print "${APT_INSTALLED}"
 
     if [[ "$INCLUDE_ALLSKY_SCRIPTS" == "true" ]]; then
-        print_heading "Allsky - Supported Cameras"
-        print_sub_heading "Raspberry Pi Cameras"
-        ./scripts/utilities/show_supported_cameras.sh --rpi
+        CAMERA_INFO_FILE="${TEMP_DIR}/camera_info.txt"
+        print_heading "Allsky - Supported Cameras" > "${CAMERA_INFO_FILE}"
+        print_sub_heading "Raspberry Pi Cameras" >> "${CAMERA_INFO_FILE}"
+        ./scripts/utilities/show_supported_cameras.sh --rpi >> "${CAMERA_INFO_FILE}"
 
-        print_sub_heading "Raspberry Pi Cameras Attached"
-        ./scripts/utilities/get_RPi_camera_info.sh
-        cat ./tmp/camera_data.txt
+        print_sub_heading "Raspberry Pi Cameras Attached" >> "${CAMERA_INFO_FILE}"
+        ./scripts/utilities/get_RPi_camera_info.sh >> "${CAMERA_INFO_FILE}"
+        cat ./tmp/camera_data.txt >> "${CAMERA_INFO_FILE}"
 
-        print_sub_heading "ZWO Cameras"
-        ./scripts/utilities/show_supported_cameras.sh --zwo
+        print_sub_heading "ZWO Cameras" >> "${CAMERA_INFO_FILE}"
+        ./scripts/utilities/show_supported_cameras.sh --zwo >> "${CAMERA_INFO_FILE}"
     fi
 
-    print_heading "Allsky Log File - $LOG_LINES lines"
+    ALLSKY_LOG_FILE="${TEMP_DIR}/allsky_log.txt"
     if [[ "${LOG_LINES}" == "all" ]]; then
-        cat /var/log/allsky.log
+        cp /var/log/allsky.log "${ALLSKY_LOG_FILE}"
     else
-        tail -n "${LOG_LINES}" /var/log/allsky.log
+        touch "${ALLSKY_LOG_FILE}"
+        tail -n "${LOG_LINES}" /var/log/allsky.log > "${ALLSKY_LOG_FILE}"
     fi
-    print_heading "Allsky Periodic Log File - $LOG_LINES lines"
+
+    ALLSKYPERIODIC_LOG_FILE="${TEMP_DIR}/allskyperiodic_log.txt"
     if [[ "${LOG_LINES}" == "all" ]]; then
-        cat /var/log/allskyperiodic.log
-    else    
-        tail -n "${LOG_LINES}" /var/log/allskyperiodic.log
+        cp /var/log/allskyperiodic.log "${ALLSKYPERIODIC_LOG_FILE}"
+    else
+        touch "${ALLSKYPERIODIC_LOG_FILE}"    
+        tail -n "${LOG_LINES}" /var/log/allskyperiodic.log > "${ALLSKYPERIODIC_LOG_FILE}"
     fi
 
-
-    exec 1>/dev/tty 2>/dev/tty
-}
-
-function add_config_files() {
     if [[ "${INCLUDE_ALLSKY_CONFIG}" == "true" ]]; then
-        TEMP_FOLDER="${TMPDIR:-/tmp}"
-        TEMP_DIR=$(mktemp -d "${TEMP_FOLDER}"/allskyXXXXX)
-        cp "${SUPPORT_LOG_FILE}" "${TEMP_DIR}"
         cp -ar "${ALLSKY_HOME}"/config "${TEMP_DIR}"
 
         # Truncate the JPL ephemeris files as its hughe and not needed for support
         truncate -s 0 "${TEMP_DIR}/config/overlay/config/tmp/overlay/de421.bsp"
         # Truncate all of the module configs until we can obfuscate any sensitive data
         find "${TEMP_DIR}"/config/modules -type f -exec truncate -s 0 {} +
-
-        cd "${TEMP_DIR}" || exit 1
-        zip -r support.zip ./*
-        mv "${TEMP_DIR}/support.zip" "${ALLSKY_HOME}"
-        trap 'rm -rf "${TEMP_DIR}"' EXIT
-        ZIPPED="true"
     fi
-}
 
-function manage_support_log_size() {
-    if [[ "${INCLUDE_ALLSKY_CONFIG}" == "false" ]]; then
-        FILE_SIZE=$(stat --format=%s "${SUPPORT_LOG_FILE}")
-        if [[ "${FILE_SIZE}" -gt "${MAX_UNZIPPED}" ]]; then
-            zip -r support.zip "${SUPPORT_LOG_FILE}" > /dev/null 2>&1
-            rm "${SUPPORT_LOG_FILE}" > /dev/null 2>&1
-            ZIPPED="true"
-        fi
-    fi
+    SUPPORT_ZIP_NAME="${SUPPORT_ZIP_NAME//ISSUE/${ISSUE_NUMBER}}"
+    DIALOG_COMPLETE_MESSAGE="${DIALOG_COMPLETE_MESSAGE//ZIPNAME/${SUPPORT_ZIP_NAME}}"
+
+    cd "${TEMP_DIR}" || exit 1
+    zip -r "${SUPPORT_ZIP_NAME}" ./* > /dev/null 2>&1
+    sudo chown pi:www-data "${TEMP_DIR}/${SUPPORT_ZIP_NAME}"
+    chmod g+wx "${TEMP_DIR}/${SUPPORT_ZIP_NAME}"
+    chmod u+wx "${TEMP_DIR}/${SUPPORT_ZIP_NAME}"
+    sudo mv "${TEMP_DIR}/${SUPPORT_ZIP_NAME}" "${SUPPORT_DIR}"
+    trap 'rm -rf "${TEMP_DIR}"' EXIT
+
 }
 
 ####
@@ -306,6 +317,32 @@ function get_options()
             fi
         fi
     fi
+
+    if [[ "${ISSUE_NUMBER}" == "none" ]]; then
+        while true; do
+            if [[ "${TEXT_MODE}" == "false" ]]; then
+                ISSUE_NUMBER_TEMP=$(dialog --inputbox "Github Discussion Number:\nIf you don't know this just hit Enter." 8 50 2>&1 >/dev/tty)
+            else
+                echo -e "Enter the Github Discussion Number:\nIf you don't know this just hit Enter.\n"
+                read -r -p "Github discussion number " ISSUE_NUMBER_TEMP
+            fi
+
+            if [[ -n "${ISSUE_NUMBER_TEMP}" ]]; then
+                if [[ "${ISSUE_NUMBER_TEMP}" =~ ^[+-]?[0-9]+$ ]]; then
+                    ISSUE_NUMBER="${ISSUE_NUMBER_TEMP}"
+                    break
+                else
+                    if [[ "${TEXT_MODE}" == "false" ]]; then
+                        dialog --msgbox "${GITHUB_ERROR}" 15 70
+                    else
+                        echo -e "${GITHUB_ERROR}\n\n"
+                    fi
+                fi
+            else
+                break
+            fi
+        done    
+    fi    
 }
 
 display_running_dialog()
@@ -325,17 +362,11 @@ display_running_dialog()
 display_complete_dialog()
 {
 
-    if [[ "${ZIPPED}" == "false" ]]; then
-        DIALOG_MESSAGE="${DIALOG_COMPLETE_MESSAGE}"
-        DIALOG_HEIGHT=20
-    else
-        DIALOG_MESSAGE="${DIALOG_COMPLETE_MESSAGE_ARCHIVE}"
-        DIALOG_HEIGHT=20
-
-    fi
+    DIALOG_MESSAGE="${DIALOG_COMPLETE_MESSAGE}"
+    DIALOG_HEIGHT=20
 
     if [[ "${TEXT_MODE}" == "false" ]]; then
-        dialog --title "Complete" --msgbox "${DIALOG_MESSAGE}" "${DIALOG_HEIGHT}" 50
+        dialog --title "Complete" --msgbox "${DIALOG_MESSAGE}" "${DIALOG_HEIGHT}" 70
     else
         echo -e "${DIALOG_MESSAGE}"
     fi
@@ -361,13 +392,14 @@ function usage_and_exit()
 		echo -e "\n	where:"
 		echo -e "	'--help' displays this message and exits."
 		echo -e "	'--text' Use text mode. Options must be specified on the command line."        
+		echo -e "	'--issue' Include the Githuib issue number."        
 		echo -e "	'--tree' Include full list of ALL Allsky files."
 		echo -e "	'--fullusb' Include full USB device details."
 		echo -e "	'--devices' Include /dev listing."
 		echo -e "	'--config' Include Allsky configuration files."
 		echo -e "	'--showoptions' Allow data to be included to be selected."
 		echo -e "	'--excludeallskyscript' DO not include the Allsky camera scripts output."
-		echo -e "	'--loglines' Number of lines to include from log files, defaults to 1000. Use 'all' for entire file"
+		echo -e "	'--loglines' Number of lines to include from log files, defaults to 'all'. Use 'all' for entire file"
 
 	} >&2
 	exit "${RET}"
@@ -381,7 +413,7 @@ INCLUDE_ALLSKY_CONFIG="false"
 INCLUDE_ALLSKY_SCRIPTS="true"
 SHOW_OPTIONS="false"
 TEXT_MODE="false"
-
+ISSUE_NUMBER="none"
 
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
@@ -418,6 +450,11 @@ while [[ $# -gt 0 ]]; do
 			INCLUDE_ALLSKY_SCRIPTS="false"
 			;;
 
+        --issue)
+        	ISSUE_NUMBER="${2}"
+			shift
+        ;;
+
 		--loglines)
         	LOG_LINES_TEMP="${2}"
             if [[ "${LOG_LINES_TEMP}" =~ ^[0-9]+$ ]]; then
@@ -444,8 +481,6 @@ init
 get_options
 display_running_dialog
 get_info
-display_info
-add_config_files
-manage_support_log_size
+generate_support_info
 kill_running_dialog
 display_complete_dialog

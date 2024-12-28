@@ -2954,26 +2954,6 @@ do_update()
 }
 
 ####
-# Install the Truetype fonts
-install_fonts()
-{
-	declare -n v="${FUNCNAME[0]}"
-	if [[ ${v} == "true" ]]; then
-		display_msg --logonly info "Fonts already installed"
-		return
-	fi
-	[[ ${SKIP} == "true" ]] && return
-
-	display_msg --log progress "Installing Truetype fonts."
-	TMP="${ALLSKY_LOGS}/msttcorefonts.log"
-	local M="Truetype fonts failed"
-	run_aptGet msttcorefonts > "${TMP}" 2>&1
-	check_success $? "${M}" "${TMP}" "${DEBUG}" || exit_with_image 1 "${STATUS_ERROR}" "${M}"
-
-	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
-}
-
-####
 # Install the overlay and modules system
 install_PHP_modules()
 {
@@ -3836,7 +3816,6 @@ set_locale
 create_allsky_logs "true"			# "true" == do everything
 
 ##### Install the overlay and modules system and things it needs
-install_fonts
 install_PHP_modules
 install_Python
 install_overlay

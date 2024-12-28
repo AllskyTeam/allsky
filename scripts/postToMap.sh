@@ -265,12 +265,8 @@ else
 			OK="false"
 		fi
 		# check_URL() may set ${E}.
-		if [[ -n ${WEBSITE_URL} ]]; then
-			check_URL "${WEBSITE_URL}" remotewebsiteurl "Website URL" || OK="false"
-		fi
-		if [[ -n ${IMAGE_URL} ]]; then
-			check_URL "${IMAGE_URL}" remotewebsiteimageurl "Image URL" || OK="false"
-		fi
+		check_URL "${WEBSITE_URL}" remotewebsiteurl "Website URL" || OK="false"
+		check_URL "${IMAGE_URL}" remotewebsiteimageurl "Image URL" || OK="false"
 	fi
 
 	if [[ -n ${W} ]]; then
@@ -292,12 +288,6 @@ else
 			done
 		fi
 		exit 2
-	fi
-
-	if [[ -f ${ALLSKY_HOME}/version ]]; then
-		ALLSKY_VERSION="$( < "${ALLSKY_HOME}/version" )"
-	else
-		ALLSKY_VERSION="unknown"		# This really should be an error
 	fi
 
 	generate_post_data()

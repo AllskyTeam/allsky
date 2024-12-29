@@ -2765,20 +2765,15 @@ do_restore()
 
 	if [[ -d ${RENAMED_DIR} ]]; then
 		MSG+="'${RENAMED_DIR}' already exists."
-		MSG+="\nDid you already restore Allsky?"
+		MSG+="\nDid you already restore Allsky?\n"
 		OK="false"
 	fi
 
 	if [[ ! -d ${ALLSKY_CONFIG} ]]; then
 		MSG+="Allsky isn't installed."
 		OK="false"
-	fi
-	if [[ ! -d ${PRIOR_ALLSKY_DIR} ]]; then
-		MSG+="no prior version exists in '${PRIOR_ALLSKY_DIR}'."
-		OK="false"
-	fi
-	if [[ -d ${RENAMED_DIR} ]]; then
-		MSG+="a restored version already exists in '${RENAMED_DIR}'."
+	elif [[ ! -d ${PRIOR_ALLSKY_DIR} ]]; then
+		MSG+="No prior version exists in '${PRIOR_ALLSKY_DIR}'."
 		OK="false"
 	fi
 	if [[ ${OK} == "false" ]]; then

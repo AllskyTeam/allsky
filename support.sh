@@ -367,7 +367,7 @@ function generate_support_info()
     sudo chmod g+wx "${TEMP_DIR}/${SUPPORT_ZIP_NAME}"
     sudo chmod u+wx "${TEMP_DIR}/${SUPPORT_ZIP_NAME}"
     sudo mv "${TEMP_DIR}/${SUPPORT_ZIP_NAME}" "${SUPPORT_DIR}"
-    #trap 'rm -rf "${TEMP_DIR}"' EXIT
+    trap 'rm -rf "${TEMP_DIR}"' EXIT
 }
 
 ####

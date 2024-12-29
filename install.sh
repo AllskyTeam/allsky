@@ -618,6 +618,7 @@ update_php_defines()
 			-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};g" \
 			-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};g" \
 			-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};g" \
+			-e "s;XX_ALLSKY_UTILITIES_XX;${ALLSKY_UTILITIES};g" \
 			-e "s;XX_ALLSKY_TMP_XX;${ALLSKY_TMP};g" \
 			-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};g" \
 			-e "s;XX_ALLSKY_MESSAGES_XX;${ALLSKY_MESSAGES};g" \
@@ -729,7 +730,7 @@ ask_reboot()
 		MSG="If you have not already rebooted your Pi, please do so now.\n"
 		MSG+="You can then connect to the WebUI at:\n"
 		MSG+="${AT}"
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --type info --msg "${MSG}"
 	fi
 }
 do_reboot()
@@ -3256,7 +3257,7 @@ display_image()
 			# Add a message the user will see in the WebUI.
 			MSG="Actions needed.  See ${POST_INSTALLATION_ACTIONS}."
 			X="${POST_INSTALLATION_ACTIONS/${ALLSKY_HOME}/}"
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}" "${X}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning "--msg ${MSG}" --url "${X}"
 
 			# This tells allsky.sh not to display a message about actions since we just did.
 			touch "${POST_INSTALLATION_ACTIONS}_initial_message"

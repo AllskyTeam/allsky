@@ -257,7 +257,7 @@ else
 			MSG+="\nCheck the values of 'Remove Bad Images Threshold Low',"
 			MSG+=" 'Remove Bad Images Threshold High',"
 			MSG+=" and 'Max Auto-Exposure' in the WebUI."
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}" >&2
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${MSG}" >&2
 		fi
 		if [[ ${BAD_COUNT} -ge "${BAD_LIMIT}" ]]; then
 			# Split the long file name so it fits in the message.

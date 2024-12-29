@@ -2519,11 +2519,6 @@ restore_prior_files()
 		fi
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-
-## FIX: TODO:  why prepare the LOCAL website - the code above is for the REMOTE website.
-		# Create a default file
-		prepare_local_website ""
-
 	fi
 
 	# Do NOT restore options.json - it will be recreated.

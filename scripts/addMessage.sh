@@ -10,21 +10,93 @@ ME="$( basename "${BASH_ARGV0}" )"
 #shellcheck disable=SC1091 source=variables.sh
 source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 
-if [ $# -lt 2 ]; then
-	# shellcheck disable=SC2154
+usage_and_exit()
+{
+	local RET=${1}
 	{
-		echo -e "${wERROR}"
-		echo    "Usage: ${ME}  message_type  message  [url]"
-		echo -e "${wNC}"
+		echo
+		[[ ${RET} -ne 0 ]] && echo -en "${wERROR}"
+		echo "Usage: ${ME} [--id ID [--cmd TEXT]] [--delete] --type message_type  --msg message  [--url url]"
+		[[ ${RET} -ne 0 ]] && echo -en "${wNC}"
 		echo -e "\n'message_type' is 'success', 'warning', 'error', 'info', or 'debug'."
 		echo -e "\n'url' is a URL to (normally) a documentation page."
 	} >&2
-	exit 1
+	exit "${RET}"
+}
+
+OK="true"
+DO_HELP="false"
+DEBUG="false"
+ID=""
+CMD_TEXT=""
+TYPE=""
+MESSAGE=""
+URL=""
+while [[ $# -gt 0 ]]; do
+	ARG="${1}"
+	case "${ARG,,}" in
+		"--help")
+			DO_HELP="true"
+			;;
+		"--debug")
+			DEBUG="true"
+			;;
+		"--id")
+			ID="${2}"
+			shift
+			;;
+		"--delete")
+			DELETE="true"
+			shift
+			;;
+		"--cmd")
+			CMD_TEXT="${2}"
+			shift
+			;;
+		"--type")
+			TYPE="${2,,}"
+			shift
+			;;
+		"--msg")
+			MESSAGE="${2}"
+			shift
+			;;
+		"--url")
+			URL="true"
+			shift
+			;;
+		-*)
+			echo -e "${wERROR}Unknown argument '${ARG}' ignoring.${wNC}" >&2
+			OK="false"
+			;;
+		*)
+			break
+			;;
+	esac
+	shift
+done
+
+[[ ${DO_HELP} == "true" ]] && usage_and_exit 0
+[[ ${OK} == "false" ]] && usage_and_exit 1
+
+if [[ ${DELETE} == "true" ]]; then
+	[[ ! -f ${ALLSKY_MESSAGES} ]] && exit 0
+	if [[ -z ${ID} ]]; then
+		echo "${ME}: ERROR: delete specified but no message id given." >&2
+		exit 1
+	fi
+
+	REST="$( grep -v "^${ID}${TAB}" "${ALLSKY_MESSAGES}" )"
+	if [[ -z ${REST} ]]; then
+		rm -f "${ALLSKY_MESSAGES}"		# was only message
+	else
+		echo -e "${REST}" > "${ALLSKY_MESSAGES}"
+	fi
+	exit 0
 fi
 
 # The CSS classes are all lower case, so convert.
 # Our "error" and "debug" message types have a different CSS class name, so map them.
-TYPE="${1,,}"
 if [[ ${TYPE} == "error" ]]; then
 	TYPE="danger"
 elif [[ ${TYPE} == "debug" ]]; then
@@ -35,34 +107,33 @@ elif [[ ${TYPE} != "warning" && ${TYPE} != "info" && ${TYPE} != "success" ]]; th
 	echo -e "${wWARNING}Warning: unknown message type: '${TYPE}'. Using 'info'.${wNC}" >&2
 	TYPE="info"
 fi
-MESSAGE="${2}"
-URL="${3}"
 DATE="$( date '+%B %d, %r' )"
 
 # The file is tab-separated:    type  date  count  message  url
 TAB="$( echo -e "\t" )"
 
-# Convert newlines to HTML breaks.
-MESSAGE="$( echo -en "${MESSAGE}" |
-	awk 'BEGIN { l=0; } { if (++l > 1) printf("<br>"); printf("%s", $0); }' )"
+if [[ -n ${MESSAGE} ]]; then
+	# Convert newlines to HTML breaks.
+	MESSAGE="$( echo -en "${MESSAGE}" |
+		awk 'BEGIN { l=0; } { if (++l > 1) printf("<br>"); printf("%s", $0); }' )"
 
-# Make 2 spaces in a row viewable in HTML.
-MESSAGE="${MESSAGE//  /\&nbsp;\&nbsp;}"
+	# Make 2 spaces in a row viewable in HTML.
+	MESSAGE="${MESSAGE//  /\&nbsp;\&nbsp;}"
 
-# Convert tabs to spaces because we use tabs as field separators.
-# Tabs in the input can either be an actual tab or \t
-MESSAGE="${MESSAGE//${TAB}/\&nbsp;\&nbsp;\&nbsp;\&nbsp;}"
-MESSAGE="${MESSAGE//\\t/\&nbsp;\&nbsp;\&nbsp;\&nbsp;}"
+	# Convert tabs to spaces because we use tabs as field separators.
+	# Tabs in the input can either be an actual tab or \t
+	MESSAGE="${MESSAGE//${TAB}/\&nbsp;\&nbsp;\&nbsp;\&nbsp;}"
+	MESSAGE="${MESSAGE//\\t/\&nbsp;\&nbsp;\&nbsp;\&nbsp;}"
 
-# Messages may have "/" in them so we can't use that to search in sed,
-# so use "%" instead, but because it could be in a message (although unlikely),
-# convert all "%" to the ASCII code.
-# The pound sign in escaped only to make gvim look nicer.
-MESSAGE="${MESSAGE//%/\&\#37;}"
+	# Messages may have "/" in them so we can't use that to search in sed,
+	# so use "%" instead, but because it could be in a message (although unlikely),
+	# convert all "%" to the ASCII code.
+	# The pound sign in escaped only to make gvim look nicer.
+	MESSAGE="${MESSAGE//%/\&\#37;}"
 
-# If ${MESSAGE} contains "*" it hoses up the grep and sed regular expression, so escape it.
-ESCAPED_MESSAGE="${MESSAGE//\*/\\*}"
-
+	# If ${MESSAGE} contains "*" it hoses up the grep and sed regular expression, so escape it.
+	ESCAPED_MESSAGE="${MESSAGE//\*/\\*}"
+fi
 
 if [[ -f ${ALLSKY_MESSAGES} ]] &&  M="$( grep "${TAB}${ESCAPED_MESSAGE}${TAB}" "${ALLSKY_MESSAGES}" )" ; then
 	COUNT=0
@@ -82,4 +153,4 @@ else
 	COUNT=1
 fi
 
-echo -e "${TYPE}${TAB}${DATE}${TAB}${COUNT}${TAB}${MESSAGE}${TAB}${URL}"  >>  "${ALLSKY_MESSAGES}"
+echo -e "${ID}${TAB}${CMD_TEXT}${TAB}${TYPE}${TAB}${DATE}${TAB}${COUNT}${TAB}${MESSAGE}${TAB}${URL}"  >>  "${ALLSKY_MESSAGES}"

@@ -26,7 +26,7 @@
 
 <div class="row">
 	<div class="panel panel-primary">
-		<div class="panel-heading"><i class="fa fa-code fa-question"></i> Support Information</div>
+		<div class="panel-heading"><i class="fa fa-code fa-question"></i> Getting Support</div>
 		<div class="panel-body as-support-loading">
 
 
@@ -39,6 +39,7 @@
                     <div class="alert alert-success" role="alert">
                         <p>If you have a <b>QUESTION</b> or want to suggest a <b>NEW FEATURE</b>, add a new <a external="true" href="https://github.com/AllskyTeam/allsky/discussions">Discussion</a> item via the link at the top of any GitHub page; do <u>not</u> submit an Issue.</p>
                         <p>If you found a <b>BUG</b> or something isn't working right, first look in the <a external="true" href="https://github.com/AllskyTeam/allsky/discussions">Discussions</a> area and at existing <a external="true" href="https://github.com/AllskyTeam/allsky/issues">Issues</a>. If no one has already reported the problem, create a new Issue.</p>                    
+                        <p>Further information can be found in the Allsky documentation <a external="true" href="/documentation/troubleshooting/reportingIssues.html">Reporting Issues</a></p>
                     </div>
 
                     <div class="alert alert-danger" role="alert">

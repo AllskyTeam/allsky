@@ -43,20 +43,25 @@ function init()
 
     sudo apt install -y tree > /dev/null 2>&1
     sudo apt install -y i2c-tools > /dev/null 2>&1
+    sudo systemctl enable pigpiod 2>&1
+    sudo systemctl start pigpiod 2>&1
 }
 
-function print_info() {
+function print_info() 
+{
     local LABEL=$1
     local VALUE=$2
     printf "%-20s : %-20s\n" "${LABEL}" "${VALUE}"
 }
 
-function print() {
+function print() 
+{
     local LABEL=$1
     echo "${LABEL}"
 }
 
-function print_heading(){
+function print_heading()
+{
     local LABEL=$1
 
     printf "\n\n%-20s\n" "${LABEL}  - $(date)"
@@ -147,6 +152,7 @@ function collect_support_info()
     ###
 
     ### Allsky file information
+    cd "${ALLSKY_HOME}"
     ALLSKY_VERSION="$( head -1 "./version" )"
     DEBUG_LEVEL=$(jq .debuglevel ./config/settings.json)
     ALLSKY_FILES="$(tree -ugp --gitignore --prune -I '.git|__pycache__' "${ALLSKY_HOME}")"
@@ -348,6 +354,9 @@ function generate_support_info()
     truncate -s 0 "${TEMP_DIR}/config/overlay/config/tmp/overlay/de421.bsp"
     # Truncate all of the module configs until we can obfuscate any sensitive data
     find "${TEMP_DIR}"/config/modules -type f -exec truncate -s 0 {} +
+    # Truncate the font files
+    find "${TEMP_DIR}"/config/overlay/system_fonts -type f -exec truncate -s 0 {} +
+
 
     SUPPORT_ZIP_NAME="${SUPPORT_ZIP_NAME//ISSUE/${ISSUE_NUMBER}}"
     DIALOG_COMPLETE_MESSAGE="${DIALOG_COMPLETE_MESSAGE//ZIPNAME/${SUPPORT_ZIP_NAME}}"
@@ -358,7 +367,7 @@ function generate_support_info()
     sudo chmod g+wx "${TEMP_DIR}/${SUPPORT_ZIP_NAME}"
     sudo chmod u+wx "${TEMP_DIR}/${SUPPORT_ZIP_NAME}"
     sudo mv "${TEMP_DIR}/${SUPPORT_ZIP_NAME}" "${SUPPORT_DIR}"
-    trap 'rm -rf "${TEMP_DIR}"' EXIT
+    #trap 'rm -rf "${TEMP_DIR}"' EXIT
 }
 
 ####

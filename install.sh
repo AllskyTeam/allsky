@@ -1007,6 +1007,9 @@ set_permissions()
 			fi
 		done
 	fi
+
+    # Ensure the support folder has the correct owner and group
+    chown "${ALLSKY_OWNER}":"${WEBSERVER_GROUP}" "${ALLSKY_WEBUI}/support"    
 }
 
 

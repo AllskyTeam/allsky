@@ -40,7 +40,29 @@ area and at existing
 If no one has already reported the problem, create a new Issue.
 </p>
 
-<h4>How to report an Issue</h4>
+<h3>How to report an Issue</h3>
+<h4>The automated method</h4>
+<blockquote>This id the preferred method and should be used if you have access to the WebUI</blockquote>
+<p>Select the 'Getting Support' menu option from the WebUI. This will display the support log generation page</p>
+<p>Towards the bottom of the page is a button that will generate a support file that you can attach to your discussion</p>
+<p>Clicking the button will display a message describing what data will be included. Click ok and the newly generated
+support log will be displayed, you can generate multiple logs and the latest one is displayed in green if there is more than one log<p>
+<p>If you know the discussion number from GitHub then clicking on the GitHub icon will allow you to add this, this will then
+provide a quick link to the discussion for you</p>
+
+<p>Once you have created the support log create a new <a external="true" href="https://github.com/AllskyTeam/allsky/discussions">Discussion</a> 
+in GitHub and <strong>attach</strong> the zip file you downloaded. You can now added the GitHub reference in the WebUI if you wish
+</p>
+
+<blockquote>This GitHub discussion number can be found fromt the URL in github - Its the number at the end so in the following examle<br>
+https://github.com/AllskyTeam/allsky/discussions/4001
+<br>
+the discussion number is 4001
+</blockquote>
+
+
+<h4>The manual method</h4>
+<blockquote>This method should only be used if you are unable to use the automated method</blockquote>
 <p>
 The first step is to create a log file
 (<span class="fileName">/var/log/allsky.log</span>)
@@ -65,7 +87,7 @@ cp  ~/allsky/config/settings.json  /tmp/settings.json.txt
 </p>
 <p>
 Create a new
-<a external="true" href="https://github.com/AllskyTeam/allsky/issues">Issue</a>
+<a external="true" href="https://github.com/AllskyTeam/allsky/discussions">Discussion</a>
 in GitHub and <strong>attach</strong>
 <span class="fileName">/tmp/allsky.log</span>
 and <span class="fileName">/tmp/settings.json.txt</span> to it
@@ -74,16 +96,16 @@ and <span class="fileName">/tmp/settings.json.txt</span> to it
 <br>
 <p>
 <blockquote>
-GitHub only accepts files ending in <span class="fileName">.txt</span>
-and <span class="fileName">.log</span>.
+GitHub only accepts certain file types. See this 
+<a external="true" href="https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/attaching-files">URL</a> 
+for details of the file types supported
+
 If your file has a different extension,
 append a <span class="fileName">.txt</span> to it, e.g.,
 <span class="fileName">settings.json.txt</span>.
 </blockquote>
 </p>
 <p>
-Do NOT zip your files; it makes it hard to read on a phone.
-If you feel you need to zip a file you probably didn't follow the instructions above.
 </p>
 
 

@@ -139,6 +139,7 @@ if ($useRemoteWebsite) {
 		case "overlay":				$Title = "Overlay Editor";		break;
 		case "module":				$Title = "Module Manager";		break;
 		case "live_view":			$Title = "Liveview";			break;
+		case "support": 			$Title = "Getting Support";	    break;
 		default:					$Title = "Allsky WebUI";		break;
 	}
 ?>
@@ -304,7 +305,7 @@ if ($useRemoteWebsite) {
 						<a external="true" href="/documentation"><i class="fa fa-book fa-fw"></i> Allsky Documentation </a>
 					</li>
 					<li>
-						<a href="index.php?page=support"><i class="fa fa-question fa-fw"></i> Support Information</a>
+						<a href="index.php?page=support"><i class="fa fa-question fa-fw"></i> Getting Support</a>
 					</li>                    
 					<li>
 						<span onclick="switchTheme()"><i class="fa fa-moon fa-fw"></i> Light/Dark mode</span>
@@ -349,31 +350,21 @@ if ($useRemoteWebsite) {
 					echo "<div class='row'>"; echo "<div class='system-message'>";
 						echo "<div class='title'>System Messages</div>";
 						foreach ($contents_array as $line) {
-							// Format: id, cmd_txt, level (i.e., CSS class), date, count, message [, url]
-							//         0   1        2                        3     4      5          6
-							$cmd = "";
+							// Format: level (i.e., CSS class), date, count, message [, url]
+							//         0                        1     2      3          4
 							$message_array = explode("\t", $line);
-							$message = getVariableOrDefault($message_array, 5, null);
+							$message = getVariableOrDefault($message_array, 3, null);
 							if ($message !== null) {
-								$id = getVariableOrDefault($message_array, 0, "");
-								$cmd_txt = getVariableOrDefault($message_array, 1, "");
-								$level = $message_array[2];
-								$date = $message_array[3];
-								$count = $message_array[4];
-								$url = getVariableOrDefault($message_array, 6, "");
+								$level = $message_array[0];
+								$date = $message_array[1];
+								$count = $message_array[2];
+								$url = getVariableOrDefault($message_array, 4, "");
 								if ($url !== "") {
 									$m1 = "<a href='$url' title='Click for more information' target='_messages'>";
 									$m2 = "<i class='fa fa-external-link-alt fa-fw'></i>";
 									$m2 = "<span class='externalSmall'>$m2</span>";
-									$message = "${m1}${message}${m2}</a>";
+									$message = "$m1 $message $m2</a>";
 								}
-
-								if ($id !== "") {
-									$m1 = "<br><a href='/execute.php?cmd=" . urlencode($id) . "'";
-									$m1 .= " class='executeAction' title='Click to perform action' target='_actions'>";
-									$message .= "${m1}${cmd_txt}</a>";
-								}
-
 								if ($count == 1)
 									$message .= " &nbsp; ($date)";
 								else
@@ -383,9 +374,6 @@ if ($useRemoteWebsite) {
 								$message = "INTERNAL ERROR: Poorly formatted message: $line";
 							}
 							$status->addMessage($message, $level);
-							if ($cmd !== "") {
-								$status->addMessage($cmd, $level);
-							}
 						}
 						$status->showMessages();
 						echo "<br><div class='message-button'>";

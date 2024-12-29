@@ -58,9 +58,9 @@ COMBINED_BASE_VERSION="v2024.12.06"
 	# "cameratype" in the settings file.
 FIRST_CAMERA_TYPE_BASE_VERSION="v2023.05.01"
 	# First Allsky version that used the "version" file.
-	# It's also when ftp-settings.sh moved to ${ALLSKY_CONFIG}
+	# It's also when ftp-settings.sh moved to the ${ALLSKY_CONFIG} directory.
 FIRST_VERSION_VERSION="v2022.03.01"
-	# Versions before ${FIRST_VERSION_VERSION} that didn't have version numbers.
+	# Versions before ${FIRST_VERSION_VERSION} didn't have version numbers.
 PRE_FIRST_VERSION_VERSION="old"
 
 ##### Information on the prior Allsky version, if used
@@ -288,7 +288,7 @@ setup_rpi_supported_cameras()
 		fi
 
 		local MSG="Creating ${RPi_SUPPORTED_CAMERAS} with '${CMD}' entries."
-		display_msg --log progress "${MSG}"
+		display_msg --logonly info "${MSG}"
 
 		# Remove comment and blank lines and lines for the command we are NOT using.
 		grep -v -E "^\$|^#|^${notCMD}" "${ALLSKY_REPO}/${B}.repo" > "${RPi_SUPPORTED_CAMERAS}"
@@ -618,6 +618,7 @@ update_php_defines()
 			-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};g" \
 			-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};g" \
 			-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};g" \
+			-e "s;XX_ALLSKY_UTILITIES_XX;${ALLSKY_UTILITIES};g" \
 			-e "s;XX_ALLSKY_TMP_XX;${ALLSKY_TMP};g" \
 			-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};g" \
 			-e "s;XX_ALLSKY_MESSAGES_XX;${ALLSKY_MESSAGES};g" \
@@ -670,7 +671,10 @@ do_sudoers()
 	[[ ${SKIP} == "true" ]] && return
 
 	display_msg --log progress "Creating/updating sudoers file."
-	sed -e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" "${REPO_SUDOERS_FILE}"  >  "${TMP_FILE}"
+	sed \
+		-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
+		-e "s;XX_ALLSKY_UTILITIES_XX;${ALLSKY_UTILITIES};" \
+		"${REPO_SUDOERS_FILE}"  >  "${TMP_FILE}"
 	sudo install -m 0644 "${TMP_FILE}" "${FINAL_SUDOERS_FILE}" && rm -f "${TMP_FILE}"
 
 	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
@@ -729,7 +733,7 @@ ask_reboot()
 		MSG="If you have not already rebooted your Pi, please do so now.\n"
 		MSG+="You can then connect to the WebUI at:\n"
 		MSG+="${AT}"
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "info" "${MSG}"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --type info --msg "${MSG}"
 	fi
 }
 do_reboot()
@@ -1664,7 +1668,8 @@ create_allsky_logs()
 # runs in a subshell.
 DISPLAYED_BRIGHTNESS_MSG="/tmp/displayed_brightness_msg"
 DISPLAYED_OFFSET_MSG="/tmp/displayed_offset_msg"
-rm -f "${DISPLAYED_BRIGHTNESS_MSG}" "${DISPLAYED_OFFSET_MSG}"
+DISPLAYED_CHANGE_NAMES_MSG="/tmp/displayed_change_names_msg"
+rm -f "${DISPLAYED_BRIGHTNESS_MSG}" "${DISPLAYED_OFFSET_MSG}" "${DISPLAYED_CHANGE_NAMES_MSG}"
 
 convert_settings()			# prior_file, new_file
 {
@@ -1677,14 +1682,10 @@ convert_settings()			# prior_file, new_file
 		return
 	fi
 
-	# If we're upgrading a version >= COMBINED_BASE_VERSION then return.
-	# bash doesn't have >= so use   ! <
-	if [[ ! (${PRIOR_ALLSKY_BASE_VERSION} < "${COMBINED_BASE_VERSION}") ]]; then
-		display_msg --logonly info "Not converting '${PRIOR_FILE}'; >= COMBINED_BASE_VERSION."
-		return
-	fi
+# TODO: Keep track somehow of which upgrades added, deleted, and/or changed names of
+# settings so we know if the settings file needs to be updated.
 
-	local MSG="Converting '$( basename "${PRIOR_FILE}" )' to new format:"
+	local MSG="Converting '$( basename "${PRIOR_FILE}" )' to new format if needed:"
 	display_msg --log progress "${MSG}"
 
 	DIR="/tmp/converted_settings"
@@ -1695,7 +1696,7 @@ convert_settings()			# prior_file, new_file
 	# and quotes around numbers. Change that.
 	# Don't modify the prior file, so make the changes to a temporary file.
 	# --settings-only  says only output settings that are in the settings file.
-	# The OPTIONS_FILE doesn't exist yet so use REPO_OPTIONS_FILE>
+	# The OPTIONS_FILE doesn't exist yet so use REPO_OPTIONS_FILE.
 	"${ALLSKY_SCRIPTS}/convertJSON.php" \
 		--convert \
 		--settings-only \
@@ -1729,7 +1730,7 @@ convert_settings()			# prior_file, new_file
 					;;
 
 				"computer")
-					# We now compute the value.
+					# As of ${COMBINED_BASE_VERSION}, we compute the value.
 					VALUE="$( get_computer )"
 					doV "${FIELD}" "VALUE" "${FIELD}" "text" "${NEW_FILE}"
 					;;
@@ -1738,12 +1739,11 @@ convert_settings()			# prior_file, new_file
 				"XX_END_XX")
 					;;
 
-				# These don't exist anymore:
+				# ===== Deleted in ${COMBINED_BASE_VERSION}.
 				"autofocus" | "background" | "alwaysshowadvanced" | \
 				"newexposure" | "experimentalexposure" | "showbrightness")
 					;;
 
-				# These two were deleted in ${COMBINED_BASE_VERSION}:
 				"brightness" | "daybrightness" | "nightbrightness")
 					if [[ ! -f ${DISPLAYED_BRIGHTNESS_MSG} ]]; then
 						touch "${DISPLAYED_BRIGHTNESS_MSG}"
@@ -1761,7 +1761,19 @@ convert_settings()			# prior_file, new_file
 					fi
 					;;
 
-				# These changed names:
+				# ===== Deleted after ${COMBINED_BASE_VERSION}.
+				"remotewebsitevideodestinationname" | \
+				"remotewebsitekeogramdestinationname" | \
+				"remotewebsitestartrailsdestinationname")
+					if [[ -n ${VALUE} && ! -f ${DISPLAYED_CHANGE_NAMES_MSG} ]]; then
+						touch "${DISPLAYED_CHANGE_NAMES_MSG}"
+						MSG="Changing timelapse, keogram, and/or startrails names"
+						MSG+="\nfor remote Websites is no longer allowed."
+						display_msg --log notice "${MSG}"
+					fi
+					;;
+
+				# ===== Names changed in ${COMBINED_BASE_VERSION}
 				"darkframe")
 					doV "${FIELD}" "VALUE" "takedarkframes" "boolean" "${NEW_FILE}"
 					;;
@@ -1781,7 +1793,7 @@ convert_settings()			# prior_file, new_file
 					doV "${FIELD}" "VALUE" "remotewebsiteimageurl" "text" "${NEW_FILE}"
 					;;
 
-				# These now have day and night versions:
+				# ===== Now have day and night versions as of ${COMBINED_BASE_VERSION}
 				"awb" | "autowhitebalance")
 					FIELD="awb"
 					doV "${FIELD}" "VALUE" "day${FIELD}" "boolean" "${NEW_FILE}"
@@ -2087,9 +2099,6 @@ convert_ftp_sh()
 		doV "NEW" "X" "useremotewebsite" "boolean" "${NEW_FILE}"
 
 		doV "" "IMG_UPLOAD_ORIGINAL_NAME" "remotewebsiteimageuploadoriginalname" "boolean" "${NEW_FILE}"
-		doV "" "VIDEOS_DESTINATION_NAME" "remotewebsitevideodestinationname" "text" "${NEW_FILE}"
-		doV "" "KEOGRAM_DESTINATION_NAME" "remotewebsitekeogramdestinationname" "text" "${NEW_FILE}"
-		doV "" "STARTRAILS_DESTINATION_NAME" "remotewebsitestartrailsdestinationname" "text" "${NEW_FILE}"
 		doV "" "REMOTE_HOST" "REMOTEWEBSITE_HOST" "text" "${ALLSKY_ENV}"
 		doV "" "REMOTE_PORT" "REMOTEWEBSITE_PORT" "text" "${ALLSKY_ENV}"
 
@@ -2514,11 +2523,6 @@ restore_prior_files()
 		fi
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-
-## FIX: TODO:  why prepare the LOCAL website - the code above is for the REMOTE website.
-		# Create a default file
-		prepare_local_website ""
-
 	fi
 
 	# Do NOT restore options.json - it will be recreated.
@@ -2764,20 +2768,15 @@ do_restore()
 
 	if [[ -d ${RENAMED_DIR} ]]; then
 		MSG+="'${RENAMED_DIR}' already exists."
-		MSG+="\nDid you already restore Allsky?"
+		MSG+="\nDid you already restore Allsky?\n"
 		OK="false"
 	fi
 
 	if [[ ! -d ${ALLSKY_CONFIG} ]]; then
 		MSG+="Allsky isn't installed."
 		OK="false"
-	fi
-	if [[ ! -d ${PRIOR_ALLSKY_DIR} ]]; then
-		MSG+="no prior version exists in '${PRIOR_ALLSKY_DIR}'."
-		OK="false"
-	fi
-	if [[ -d ${RENAMED_DIR} ]]; then
-		MSG+="a restored version already exists in '${RENAMED_DIR}'."
+	elif [[ ! -d ${PRIOR_ALLSKY_DIR} ]]; then
+		MSG+="No prior version exists in '${PRIOR_ALLSKY_DIR}'."
 		OK="false"
 	fi
 	if [[ ${OK} == "false" ]]; then
@@ -2951,26 +2950,6 @@ do_update()
 	do_allsky_status "ALLSKY_STATUS_NOT_RUNNING"
 
 	exit_installation 0 "${STATUS_OK}" "Update completed."
-}
-
-####
-# Install the Truetype fonts
-install_fonts()
-{
-	declare -n v="${FUNCNAME[0]}"
-	if [[ ${v} == "true" ]]; then
-		display_msg --logonly info "Fonts already installed"
-		return
-	fi
-	[[ ${SKIP} == "true" ]] && return
-
-	display_msg --log progress "Installing Truetype fonts."
-	TMP="${ALLSKY_LOGS}/msttcorefonts.log"
-	local M="Truetype fonts failed"
-	run_aptGet msttcorefonts > "${TMP}" 2>&1
-	check_success $? "${M}" "${TMP}" "${DEBUG}" || exit_with_image 1 "${STATUS_ERROR}" "${M}"
-
-	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }
 
 ####
@@ -3276,7 +3255,7 @@ display_image()
 			# Add a message the user will see in the WebUI.
 			MSG="Actions needed.  See ${POST_INSTALLATION_ACTIONS}."
 			X="${POST_INSTALLATION_ACTIONS/${ALLSKY_HOME}/}"
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}" "${X}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning "--msg ${MSG}" --url "${X}"
 
 			# This tells allsky.sh not to display a message about actions since we just did.
 			touch "${POST_INSTALLATION_ACTIONS}_initial_message"
@@ -3617,7 +3596,7 @@ fi
 [[ ${FIX} == "true" ]] && do_fix				# does not return
 
 #shellcheck disable=SC2119
-if [[ $( get_branch ) != "${GITHUB_MAIN_BRANCH}" ]]; then
+if false && [[ $( get_branch ) != "${GITHUB_MAIN_BRANCH}" ]]; then
 	DEBUG=1; DEBUG_ARG="--debug"; LOG_TYPE="--log"
 
 	T="${ALLSKY_HOME}/told"
@@ -3627,11 +3606,7 @@ if [[ $( get_branch ) != "${GITHUB_MAIN_BRANCH}" ]]; then
 		MSG+="\n"
 
 		MSG+="\nMajor changes from prior release:"
-		MSG+="\n * ftp-settings.sh and config.sh are gone and"
-		MSG+="\n   their settings are in the WebUI's 'Allsky Settings' page."
-		MSG+="\n * ZWO library 1.33 included and supports newest cameras."
-		MSG+="\n * Setting names are now lowercase."
-		MSG+="\n * WebUI sections are hidden by default."
+		MSG+="\n * xxxxxx."
 
 		MSG+="\n\nIf you want to continue with the installation, enter:    yes"
 		title="*** MESSAGE FOR TESTERS ***"
@@ -3836,7 +3811,6 @@ set_locale
 create_allsky_logs "true"			# "true" == do everything
 
 ##### Install the overlay and modules system and things it needs
-install_fonts
 install_PHP_modules
 install_Python
 install_overlay

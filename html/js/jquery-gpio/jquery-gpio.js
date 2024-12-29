@@ -327,7 +327,7 @@
                         labelBack: '#cfe7f5',
                         labelColour: 'black',
                         selectable: true,
-                        pin: 18
+                        pin: 10
                     },
                     '21': {
                         stroke: '#3333ff',

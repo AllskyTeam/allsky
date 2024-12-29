@@ -153,6 +153,11 @@ img.current {
 	font-size: 150%;
 }
 
+.imagesSortOrder {
+	text-align: center;
+	padding-top: 10px;
+}
+
 .back-button {
 	text-decoration: none;
 	margin: 5px;

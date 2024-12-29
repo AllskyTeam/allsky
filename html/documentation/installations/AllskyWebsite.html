@@ -27,19 +27,53 @@
 <div class="Layout-main markdown-body" id="mainContents">
 
 <p>
-The code for the Allsky Website is installed as part of the Allsky installation on your Pi,
-so no installation is necessary on the Pi,
-although it needs to be configured before it can be used.
-Make sure you have Allsky configured and working the way you want it before
-configuring a Website since some of the Allsky settings are also used by the Website
-and you don't want to have to change them twice.
+This page describes how to install a new Allsky Website
+or upgrade an existing Website.
+</p>
+<p>
+An Allsky Website running on your Pi is called a <strong>local Allsky Website</strong>
+because it is local to your Pi.
+<br>
+An Allsky Website running on anywhere else is called a <strong>remote Allsky Website</strong>.
 </p>
 
+<h2>A local Allsky Website</h2>
+<details><summary></summary>
 <p>
-If you have an <b>existing</b> Allsky Website on your Pi,
-the installation of Allsky will move images and videos from the prior Website's directory
-to the new Website's directory.
-If the prior Website was version <b>v2022.03.01+</b> or earlier you need to:
+The code for a local Website is already on your Pi so getting it to work is easy:
+</p>
+
+<h3>New Allsky installations or upgrades with no prior local Website</h3>
+The new local Website needs to be <strong>enabled</strong> and
+<strong>configured</strong> before it can be used.
+If you go to the Website prior to that you'll get an error message telling you what to do.
+<ol>
+	<li><strong>Enable</strong> the Website by going to the
+	<span class="WebUIWebPage">Allsky Settings</span> page in the WebUI and enabling
+	the <span class="WebUISetting">Use Local Website</span> setting in the
+	<span class="settingsHeader">Websites and Remote Server Settings</span> section.
+	This will create a default configuration file you'll use in the next step.
+<li><strong>Configure</strong> the Website in the
+	<span class="WebUIWebPage">Editor</span> page in the WebUI by selecting
+	<code class="noWrap">configuration.json (local Allsky Website).</code>
+	from the drop-down.
+	You will see one or more
+	<span class="cm-string highlight">XX_NEED_TO_UPDATE_XX</span>
+	entries that need changing.
+	Set the remaining entries to your liking.
+	<br>See the
+	<a allsky="true" external="true" href="../settings/allskyWebsite.html">
+	Website Settings
+	</a> page for a description of the settings.
+</ol>
+
+<h3>Allsky Upgrades with an existing local Website</h3>
+The Allsky upgrade will use your prior local Website configuration 
+and automatically enable the new Website.
+Any existing images and videos from the prior Website will be moved to
+to the new Website.
+You are done unless the prior Website was version <b>v2022.03.01+</b> or earlier,
+in which case you need to:
 <ol>
 	<li><em>Manually</em> copy your prior settings from 
 		<span class="fileName">/var/www/html/allsky/config.js</span> to
@@ -50,18 +84,19 @@ If the prior Website was version <b>v2022.03.01+</b> or earlier you need to:
 		but it should be straightforward to map settings from the old file to the new file.
 	<li>After configuring the local Website,
 		check in <span class="fileName">/var/www/html/allsky</span>
-		for any files you manually added and store them in
+		for any files you may have manually added and store them in
 		<span class="fileName">~/allsky/html/allsky/myFiles</span>.
 	<li>Save <span class="fileName">config.js</span> somewhere in case you need it later.
 	<li>Remove the old Website: <pre> rm -fr /var/www/html/allsky </pre>
 </ol>
 </p>
+</details>
 
 
-
-<h2>Install a remote Allsky Website</h2>
+<h2>A remote Allsky Website</h2>
+<details><summary></summary>
 <p>
-Most people have their Pi behind a firewall where it's not accessible on the Internet,
+Most people have their Pi on a home network where it's not accessible from the Internet,
 so they install the Allsky Website on a different
 machine that <u>is</u> accessible on the Internet.
 <!--
@@ -74,8 +109,13 @@ If you want to make your Pi available on the Internet, see
 -->
 </p>
 <p>
-Prior to installing the Website on a remote server,
-make sure Allsky is working on your Pi, then do the following:
+Prior to installing a remote Website, make sure Allsky is working on your Pi.
+If you will also have a local Website,
+get it working to your liking before enabling the remote Website
+so you don't have to update settings in both places.
+</p>
+<p>
+Do the following:
 <ol>
 	<li>On the remote server:
 		<ul>
@@ -87,22 +127,17 @@ make sure Allsky is working on your Pi, then do the following:
 		</ul>
 	<li>On the Pi:
 		<ol type="A">
-		<li>Copy ALL files and directories in
-			<span class="fileName">~/allsky/html/allsky</span>
-			to the <span class="fileName">allsky</span>
-			directory on your remote Website.
-			<br>Do this using whatever procedure you use to copy other files there.
 		<li>Go to the <span class="settingsHeader">Websites and Remote Server Settings</span>
 			section in the WebUI's <span class="WebUIWebPage">Allsky Settings</span> page.
 			Update the settings in the
 			<span class="subSettingsHeader">Remote Website</span> subsection.
-			Make sure to enable <span class="WebUISetting">Use Remote Website</span>
-			as well as enough other settings so Allsky can upload a file to the Website.
+			Do NOT enable <span class="WebUISetting">Use Remote Website</span> yet,
+			but update the other settings so Allsky knows how to upload a file to the Website.
 		<li>Run <code>cd ~/allsky;  ./remoteWebsiteInstall.sh</code>
-			to upload a default configuration file to your server,
-			leaving the master copy on the Pi.
-			<ul>
-			<li>If the upload fails, see the
+			to upload the Website code and create a default remote configuration file.
+			<ul class="minimalPadding">
+			<li>The installation will try to upload a file to the server;
+				If that fails it should tell you why.  If not, see the
 				<a allsky="true" href="../troubleshooting/uploads.html">Troubleshooting uploads</a>
 				page on how to debug the problem.
 			<li>If you previously enabled the <u>local</u> Allsky Website,
@@ -120,7 +155,7 @@ make sure Allsky is working on your Pi, then do the following:
 				<li>In the drop-down at the bottom of the page, select
 					<code class="noWrap">remote_configuration.json (remote Allsky Website).</code>
 				<li>See the
-					<a allsky="true" href="/documentation/settings/allskyWebsite.html">
+					<a allsky="true" external="true" href="/documentation/settings/allskyWebsite.html">
 					Settings -> Allsky Website</a>
 					page for details on the settings.
 				<li>A copy of the remote Website configuration
@@ -146,7 +181,7 @@ The remote server needs to support the following:
 		If that function does not exist (which is rare),
 		you'll see a thumbnail that says "No thumbnail".
 		Everything else will still work.
-	<li>The <code>ffmpeg</code> command and <code>exec</code> function in PHP
+	<li>Optionally, the <code>ffmpeg</code> command and <code>exec</code> function in PHP
 		to create thumbnails of the timelapse videos.
 		<blockquote>
 		Most hosting solutions don't support those commands for security reasons.
@@ -159,8 +194,10 @@ The remote server needs to support the following:
 		</blockquote>
 </ul>
 
+</details>
 
 <h2>Post installation</h2>
+<details><summary></summary>
 <p>
 Change
 <a allsky="true" href="/documentation/settings/allskyWebsite.html">Allsky Website Settings</a>
@@ -175,6 +212,7 @@ accessible via the WebUI's <span class="WebUIWebPage">Editor</span> page.
 They are NOT automatically kept in sync so if you change something, for example,
 the lens, you'll need to change it in both files.
 </blockquote>
+</details>
 
 
 </div><!-- Layout-main -->

@@ -349,21 +349,31 @@ if ($useRemoteWebsite) {
 					echo "<div class='row'>"; echo "<div class='system-message'>";
 						echo "<div class='title'>System Messages</div>";
 						foreach ($contents_array as $line) {
-							// Format: level (i.e., CSS class), date, count, message [, url]
-							//         0                        1     2      3          4
+							// Format: id, cmd_txt, level (i.e., CSS class), date, count, message [, url]
+							//         0   1        2                        3     4      5          6
+							$cmd = "";
 							$message_array = explode("\t", $line);
-							$message = getVariableOrDefault($message_array, 3, null);
+							$message = getVariableOrDefault($message_array, 5, null);
 							if ($message !== null) {
-								$level = $message_array[0];
-								$date = $message_array[1];
-								$count = $message_array[2];
-								$url = getVariableOrDefault($message_array, 4, "");
+								$id = getVariableOrDefault($message_array, 0, "");
+								$cmd_txt = getVariableOrDefault($message_array, 1, "");
+								$level = $message_array[2];
+								$date = $message_array[3];
+								$count = $message_array[4];
+								$url = getVariableOrDefault($message_array, 6, "");
 								if ($url !== "") {
 									$m1 = "<a href='$url' title='Click for more information' target='_messages'>";
 									$m2 = "<i class='fa fa-external-link-alt fa-fw'></i>";
 									$m2 = "<span class='externalSmall'>$m2</span>";
-									$message = "$m1 $message $m2</a>";
+									$message = "${m1}${message}${m2}</a>";
 								}
+
+								if ($id !== "") {
+									$m1 = "<br><a href='/execute.php?cmd=" . urlencode($id) . "'";
+									$m1 .= " class='executeAction' title='Click to perform action' target='_actions'>";
+									$message .= "${m1}${cmd_txt}</a>";
+								}
+
 								if ($count == 1)
 									$message .= " &nbsp; ($date)";
 								else
@@ -373,6 +383,9 @@ if ($useRemoteWebsite) {
 								$message = "INTERNAL ERROR: Poorly formatted message: $line";
 							}
 							$status->addMessage($message, $level);
+							if ($cmd !== "") {
+								$status->addMessage($cmd, $level);
+							}
 						}
 						$status->showMessages();
 						echo "<br><div class='message-button'>";

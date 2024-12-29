@@ -152,7 +152,7 @@ function collect_support_info()
     ###
 
     ### Allsky file information
-    cd "${ALLSKY_HOME}"
+    cd "${ALLSKY_HOME}" || null
     ALLSKY_VERSION="$( head -1 "./version" )"
     DEBUG_LEVEL=$(jq .debuglevel ./config/settings.json)
     ALLSKY_FILES="$(tree -ugp --gitignore --prune -I '.git|__pycache__' "${ALLSKY_HOME}")"

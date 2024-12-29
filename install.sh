@@ -3593,7 +3593,7 @@ fi
 [[ ${FIX} == "true" ]] && do_fix				# does not return
 
 #shellcheck disable=SC2119
-if [[ $( get_branch ) != "${GITHUB_MAIN_BRANCH}" ]]; then
+if false && [[ $( get_branch ) != "${GITHUB_MAIN_BRANCH}" ]]; then
 	DEBUG=1; DEBUG_ARG="--debug"; LOG_TYPE="--log"
 
 	T="${ALLSKY_HOME}/told"
@@ -3603,11 +3603,7 @@ if [[ $( get_branch ) != "${GITHUB_MAIN_BRANCH}" ]]; then
 		MSG+="\n"
 
 		MSG+="\nMajor changes from prior release:"
-		MSG+="\n * ftp-settings.sh and config.sh are gone and"
-		MSG+="\n   their settings are in the WebUI's 'Allsky Settings' page."
-		MSG+="\n * ZWO library 1.33 included and supports newest cameras."
-		MSG+="\n * Setting names are now lowercase."
-		MSG+="\n * WebUI sections are hidden by default."
+		MSG+="\n * xxxxxx."
 
 		MSG+="\n\nIf you want to continue with the installation, enter:    yes"
 		title="*** MESSAGE FOR TESTERS ***"

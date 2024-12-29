@@ -1009,7 +1009,8 @@ set_permissions()
 	fi
 
     # Ensure the support folder has the correct owner and group
-    sudo chown "${ALLSKY_OWNER}":"${WEBSERVER_GROUP}" "${ALLSKY_WEBUI}/support"    
+    sudo chown "${ALLSKY_OWNER}":"${WEBSERVER_GROUP}" "${ALLSKY_WEBUI}/support"
+    sudo chmod 774 "${ALLSKY_WEBUI}/support"
 }
 
 

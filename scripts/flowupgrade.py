@@ -9,6 +9,8 @@ class CONFIGMANAGER:
     _priorPath = None
     _configPath = None
     _configFiles = None
+    _oldFilePath = None
+    _currentFilePath = None
     
     def __init__(self, args):
         self._args = args
@@ -39,7 +41,6 @@ class CONFIGMANAGER:
     def _loadModule(self, module):
         moduleName = module.replace('.py','')
         method = moduleName.replace('.py','').replace('allsky_','')
-        
         _temp = importlib.import_module(moduleName)
         return _temp
           
@@ -95,7 +96,8 @@ class CONFIGMANAGER:
     def _updateParams(self, oldJson, currentJson):
         for module in currentJson:
             try:
-                modObject = self._loadModule(currentJson[module]["module"])
+                file = currentJson[module]["module"]
+                modObject = self._loadModule(file)
                 currentJson[module]["metadata"] = getattr(modObject,"metaData")
                 
                 if "arguments" in oldJson[module]["metadata"]:
@@ -103,23 +105,22 @@ class CONFIGMANAGER:
                         if argument in currentJson[module]["metadata"]["arguments"]:
                             currentJson[module]["metadata"]["arguments"][argument] = oldJson[module]["metadata"]["arguments"][argument]
             except Exception as e:
-                eType, eObject, eTraceback = sys.exc_info()
-                print(f"ERROR: _updateParams failed on line {eTraceback.tb_lineno} - {e}")
+                print(f"ERROR: {__file__} -> _updateParams() failed with file '{file}' while processing\n\t'{self._currentFilePath}' and the prior version: {e}.")
                 
         return currentJson
     
     def _processFile(self, file):
-        oldFilePath = os.path.join(self._priorPath, "modules", file)
-        currentFilePath = os.path.join(self._configPath, "modules", file)
+        self._oldFilePath = os.path.join(self._priorPath, "modules", file)
+        self._currentFilePath = os.path.join(self._configPath, "modules", file)
         
-        oldJson = self._loadJsonFile(oldFilePath)
+        oldJson = self._loadJsonFile(self._oldFilePath)
         if oldJson is not None:
-            currentJson = self._loadJsonFile(currentFilePath)
+            currentJson = self._loadJsonFile(self._currentFilePath)
                         
             currentJson = self._copyModules(oldJson, currentJson)
             currentJson = self._updateParams(oldJson, currentJson)
 
-            self._saveJsonFile(currentFilePath, currentJson)
+            self._saveJsonFile(self._currentFilePath, currentJson)
     
     def _mergeModuleSettings(self, file):
         oldFilePath = os.path.join(self._priorPath, "modules", file)

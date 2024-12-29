@@ -811,6 +811,9 @@ div.sticky {
 	font-size: 90%;
 }
 
+.executeAction {
+	color: red;
+}
 .removeMessage {
 	color: red;
 	font-weight: bold;

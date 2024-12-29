@@ -671,7 +671,10 @@ do_sudoers()
 	[[ ${SKIP} == "true" ]] && return
 
 	display_msg --log progress "Creating/updating sudoers file."
-	sed -e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" "${REPO_SUDOERS_FILE}"  >  "${TMP_FILE}"
+	sed \
+		-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
+		-e "s;XX_ALLSKY_UTILITIES_XX;${ALLSKY_UTILITIES};" \
+		"${REPO_SUDOERS_FILE}"  >  "${TMP_FILE}"
 	sudo install -m 0644 "${TMP_FILE}" "${FINAL_SUDOERS_FILE}" && rm -f "${TMP_FILE}"
 
 	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")

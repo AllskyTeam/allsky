@@ -6,13 +6,15 @@
 # is one of its IDs, e.g., ${AM_...}.
 
 # Allow this script to be executed manually, which requires several variables to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/../.." )"
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 OK="true"
 DO_HELP="false"
@@ -36,12 +38,11 @@ done
 usage_and_exit()
 {
 	local RET=${1}
-	{
-		echo
-		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-		echo "Usage: ${ME} [--help] command [arguments...]"
-		[[ ${RET} -ne 0 ]] && echo -en "${NC}"
-	} >&2
+	exec 2>&1
+	echo
+	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
+	echo "Usage: ${ME} [--help] command [arguments...]"
+	[[ ${RET} -ne 0 ]] && echo -en "${NC}"
 	exit "${RET}"
 }
 
@@ -49,19 +50,24 @@ usage_and_exit()
 [[ ${OK} == "false" || $# -eq 0 ]] && usage_and_exit 1
 
 
+# Remove a message from the messages DB.
 function rm_msg()
 {
-	local FILE="$1"
+	local ID="$1"
+	"${ALLSKY_SCRIPTS}/addMessage.sh" --id "${ID}" --delete
+}
 
-	local R   RET_CODE
+function rm_object()
+{
+	local ITEM="$1"
 
-	R="$( rm -r "${FILE}" 2>&1 )"	# -r in case it's a directory
-	RET_CODE=$?
+	local R="$( rm -r "${ITEM}" 2>&1 )"	# -r in case it's a directory
+	local RET_CODE=$?
 
 	if [[ ${RET_CODE} -eq 0 ]]; then
-		echo "Removed '${FILE}'"
+		echo "Removed '${ITEM}'"
 	else
-		echo "Unable to remove '${FILE}': ${R}" >&2
+		echo "Unable to remove '${ITEM}': ${R}" >&2
 	fi
 	return "${RET_CODE}"
 }
@@ -70,25 +76,25 @@ RET=0
 CMD="${1}"
 case "${CMD}" in
 	"AM_RM_PRIOR")		# Remove prior version of Allsky
-		rm_msg "${PRIOR_ALLSKY_DIR}" 
+		rm_object "${PRIOR_ALLSKY_DIR}" 
 		RET=$?
 		rm -f "${OLD_ALLSKY_REMINDER}"
 
-		"${ALLSKY_SCRIPTS}/addMessage.sh" --id "${CMD}" --delete
+		rm_msg "${CMD}"
 		;;
 
 	"AM_RM_CHECK")		# Remove log from checkAllsky.sh
-		rm_msg "${CHECK_ALLSKY_LOG}"
+		rm_object "${CHECK_ALLSKY_LOG}"
 		RET=$?
 
-		"${ALLSKY_SCRIPTS}/addMessage.sh" --id "${CMD}" --delete
+		rm_msg "${CMD}"
 		;;
 
 	"AM_RM_POST")		# Remove log from checkAllsky.sh
-		rm_msg "${POST_INSTALLATION_ACTIONS}"
+		rm_object "${POST_INSTALLATION_ACTIONS}"
 		RET=$?
 
-		"${ALLSKY_SCRIPTS}/addMessage.sh" --id "${CMD}" --delete
+		rm_msg "${CMD}"
 		;;
 
 	"AM_NOT_SUPPORTED")		# Not supported camera
@@ -96,7 +102,7 @@ case "${CMD}" in
 		shift
 		"${ALLSKY_UTILITIES}/show_supported_cameras.sh" "--${CT}"
 
-		"${ALLSKY_SCRIPTS}/addMessage.sh" --id "${CMD}" --delete
+		rm_msg "${CMD}"
 		;;
 
 	AM_*)

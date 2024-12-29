@@ -366,9 +366,9 @@ if ($useRemoteWebsite) {
 								}
 
 								if ($id !== "") {
-									$m1 = "<a href='/execute.php?cmd=" . urlencode($id) . "'";
-									$m1 .= "title='Click to perform action' target='_actions'>";
-									$message = "${m1}${cmd_txt}</a>";
+									$m1 = "<br><a href='/execute.php?cmd=" . urlencode($id) . "'";
+									$m1 .= " class='executeAction' title='Click to perform action' target='_actions'>";
+									$message .= "${m1}${cmd_txt}</a>";
 								}
 
 								if ($count == 1)

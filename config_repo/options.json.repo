@@ -2012,7 +2012,7 @@
 {
 "name" : "remotewebsiteimageuploadoriginalname",
 "default" : false,
-"description" : "Enable to upload images using YYYYMMDDHHMMSS naming.",
+"description" : "Enable to upload images using YYYYMMDDHHMMSS naming.  <strong>Rarely used.</strong>",
 "label" : "Upload With Original Name",
 "label_prefix" : "Remote Website",
 "type" : "boolean",
@@ -2020,42 +2020,9 @@
 "valuedependson" : "imageuploadfrequency=[1-9]*"
 },
 {
-"name" : "remotewebsitevideodestinationname",
-"default" : "",
-"description" : "Optional name of the remote video file.",
-"label" : "Remote Video File Name",
-"label_prefix" : "Remote Website",
-"type" : "text",
-"carryforward" : true,
-"booldependson" : "useremotewebsite",
-"optional" : true
-},
-{
-"name" : "remotewebsitekeogramdestinationname",
-"default" : "",
-"description" : "Optional name of the remote keogram file.",
-"label" : "Remote Keogram File Name",
-"label_prefix" : "Remote Website",
-"type" : "text",
-"carryforward" : true,
-"booldependson" : "useremotewebsite",
-"optional" : true
-},
-{
-"name" : "remotewebsitestartrailsdestinationname",
-"default" : "",
-"description" : "Optional name of the remote startrails file.",
-"label" : "Remote Startrails File Name",
-"label_prefix" : "Remote Website",
-"type" : "text",
-"carryforward" : true,
-"booldependson" : "useremotewebsite",
-"optional" : true
-},
-{
 "name" : "remotewebsiteurl",
 "default" : "",
-"description" : "The URL of your Allsky Website, for example: https://mywebsite.com/allsky/.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
+"description" : "The URL of your Allsky Website, for example: <span class='WebUIValue'>https://mywebsite.com/allsky/</span>.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
 "label" : "Website URL",
 "label_prefix" : "Remote Website",
 "type" : "widetext",
@@ -2067,7 +2034,7 @@
 {
 "name" : "remotewebsiteimageurl",
 "default" : "",
-"description" : "The URL of the image on your Allsky Website, for example: https://mywebsite.com/allsky/image.jpg.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
+"description" : "The URL of the image on your Allsky Website, for example: <span class='WebUIValue'>https://mywebsite.com/allsky/image.jpg</span>.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
 "label" : "Image URL",
 "label_prefix" : "Remote Website",
 "type" : "widetext",
@@ -2275,7 +2242,7 @@
 },
 {
 "name" : "remoteservervideodestinationname",
-"default" : "",
+"default" : "allsky.mp4",
 "description" : "Optional name of the remote video file.",
 "label" : "Remote Video File Name",
 "label_prefix" : "Remote Server",
@@ -2286,7 +2253,7 @@
 },
 {
 "name" : "remoteserverkeogramdestinationname",
-"default" : "",
+"default" : "keogram.jpg",
 "description" : "Optional name of the remote keogram file.",
 "label" : "Remote Keogram File Name",
 "label_prefix" : "Remote Server",
@@ -2297,7 +2264,7 @@
 },
 {
 "name" : "remoteserverstartrailsdestinationname",
-"default" : "",
+"default" : "startrails.jpg",
 "description" : "Optional name of the remote startrails file.",
 "label" : "Remote Startrails File Name",
 "label_prefix" : "Remote Server",

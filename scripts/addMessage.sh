@@ -26,7 +26,6 @@ usage_and_exit()
 
 OK="true"
 DO_HELP="false"
-DEBUG="false"
 ID=""
 CMD_TEXT=""
 TYPE=""
@@ -37,9 +36,6 @@ while [[ $# -gt 0 ]]; do
 	case "${ARG,,}" in
 		"--help")
 			DO_HELP="true"
-			;;
-		"--debug")
-			DEBUG="true"
 			;;
 		"--id")
 			ID="${2}"

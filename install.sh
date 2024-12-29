@@ -58,9 +58,9 @@ COMBINED_BASE_VERSION="v2024.12.06"
 	# "cameratype" in the settings file.
 FIRST_CAMERA_TYPE_BASE_VERSION="v2023.05.01"
 	# First Allsky version that used the "version" file.
-	# It's also when ftp-settings.sh moved to ${ALLSKY_CONFIG}
+	# It's also when ftp-settings.sh moved to the ${ALLSKY_CONFIG} directory.
 FIRST_VERSION_VERSION="v2022.03.01"
-	# Versions before ${FIRST_VERSION_VERSION} that didn't have version numbers.
+	# Versions before ${FIRST_VERSION_VERSION} didn't have version numbers.
 PRE_FIRST_VERSION_VERSION="old"
 
 ##### Information on the prior Allsky version, if used
@@ -1664,7 +1664,8 @@ create_allsky_logs()
 # runs in a subshell.
 DISPLAYED_BRIGHTNESS_MSG="/tmp/displayed_brightness_msg"
 DISPLAYED_OFFSET_MSG="/tmp/displayed_offset_msg"
-rm -f "${DISPLAYED_BRIGHTNESS_MSG}" "${DISPLAYED_OFFSET_MSG}"
+DISPLAYED_CHANGE_NAMES_MSG="/tmp/displayed_change_names_msg"
+rm -f "${DISPLAYED_BRIGHTNESS_MSG}" "${DISPLAYED_OFFSET_MSG}" "${DISPLAYED_CHANGE_NAMES_MSG}"
 
 convert_settings()			# prior_file, new_file
 {
@@ -1677,14 +1678,10 @@ convert_settings()			# prior_file, new_file
 		return
 	fi
 
-	# If we're upgrading a version >= COMBINED_BASE_VERSION then return.
-	# bash doesn't have >= so use   ! <
-	if [[ ! (${PRIOR_ALLSKY_BASE_VERSION} < "${COMBINED_BASE_VERSION}") ]]; then
-		display_msg --logonly info "Not converting '${PRIOR_FILE}'; >= COMBINED_BASE_VERSION."
-		return
-	fi
+# TODO: Keep track somehow of which upgrades added, deleted, and/or changed names of
+# settings so we know if the settings file needs to be updated.
 
-	local MSG="Converting '$( basename "${PRIOR_FILE}" )' to new format:"
+	local MSG="Converting '$( basename "${PRIOR_FILE}" )' to new format if needed:"
 	display_msg --log progress "${MSG}"
 
 	DIR="/tmp/converted_settings"
@@ -1695,7 +1692,7 @@ convert_settings()			# prior_file, new_file
 	# and quotes around numbers. Change that.
 	# Don't modify the prior file, so make the changes to a temporary file.
 	# --settings-only  says only output settings that are in the settings file.
-	# The OPTIONS_FILE doesn't exist yet so use REPO_OPTIONS_FILE>
+	# The OPTIONS_FILE doesn't exist yet so use REPO_OPTIONS_FILE.
 	"${ALLSKY_SCRIPTS}/convertJSON.php" \
 		--convert \
 		--settings-only \
@@ -1729,7 +1726,7 @@ convert_settings()			# prior_file, new_file
 					;;
 
 				"computer")
-					# We now compute the value.
+					# As of ${COMBINED_BASE_VERSION}, we compute the value.
 					VALUE="$( get_computer )"
 					doV "${FIELD}" "VALUE" "${FIELD}" "text" "${NEW_FILE}"
 					;;
@@ -1738,12 +1735,11 @@ convert_settings()			# prior_file, new_file
 				"XX_END_XX")
 					;;
 
-				# These don't exist anymore:
+				# ===== Deleted in ${COMBINED_BASE_VERSION}.
 				"autofocus" | "background" | "alwaysshowadvanced" | \
 				"newexposure" | "experimentalexposure" | "showbrightness")
 					;;
 
-				# These two were deleted in ${COMBINED_BASE_VERSION}:
 				"brightness" | "daybrightness" | "nightbrightness")
 					if [[ ! -f ${DISPLAYED_BRIGHTNESS_MSG} ]]; then
 						touch "${DISPLAYED_BRIGHTNESS_MSG}"
@@ -1761,7 +1757,19 @@ convert_settings()			# prior_file, new_file
 					fi
 					;;
 
-				# These changed names:
+				# ===== Deleted after ${COMBINED_BASE_VERSION}.
+				"remotewebsitevideodestinationname" | \
+				"remotewebsitekeogramdestinationname" | \
+				"remotewebsitestartrailsdestinationname")
+					if [[ -n ${VALUE} && ! -f ${DISPLAYED_CHANGE_NAMES_MSG} ]]; then
+						touch "${DISPLAYED_CHANGE_NAMES_MSG}"
+						MSG="Changing timelapse, keogram, and/or startrails names"
+						MSG+="\nfor remote Websites is no longer allowed."
+						display_msg --log notice "${MSG}"
+					fi
+					;;
+
+				# ===== Names changed in ${COMBINED_BASE_VERSION}
 				"darkframe")
 					doV "${FIELD}" "VALUE" "takedarkframes" "boolean" "${NEW_FILE}"
 					;;
@@ -1781,7 +1789,7 @@ convert_settings()			# prior_file, new_file
 					doV "${FIELD}" "VALUE" "remotewebsiteimageurl" "text" "${NEW_FILE}"
 					;;
 
-				# These now have day and night versions:
+				# ===== Now have day and night versions as of ${COMBINED_BASE_VERSION}
 				"awb" | "autowhitebalance")
 					FIELD="awb"
 					doV "${FIELD}" "VALUE" "day${FIELD}" "boolean" "${NEW_FILE}"
@@ -2087,9 +2095,6 @@ convert_ftp_sh()
 		doV "NEW" "X" "useremotewebsite" "boolean" "${NEW_FILE}"
 
 		doV "" "IMG_UPLOAD_ORIGINAL_NAME" "remotewebsiteimageuploadoriginalname" "boolean" "${NEW_FILE}"
-		doV "" "VIDEOS_DESTINATION_NAME" "remotewebsitevideodestinationname" "text" "${NEW_FILE}"
-		doV "" "KEOGRAM_DESTINATION_NAME" "remotewebsitekeogramdestinationname" "text" "${NEW_FILE}"
-		doV "" "STARTRAILS_DESTINATION_NAME" "remotewebsitestartrailsdestinationname" "text" "${NEW_FILE}"
 		doV "" "REMOTE_HOST" "REMOTEWEBSITE_HOST" "text" "${ALLSKY_ENV}"
 		doV "" "REMOTE_PORT" "REMOTEWEBSITE_PORT" "text" "${ALLSKY_ENV}"
 

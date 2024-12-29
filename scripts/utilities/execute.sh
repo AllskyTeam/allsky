@@ -1,7 +1,4 @@
 #!/bin/bash
-# variables.sh
-# addMessage.sh
-# execute.sh (needs to be 755).
 
 # Execute the specified command.
 # Normally the command is built-in, but allow for an arbitrary command.

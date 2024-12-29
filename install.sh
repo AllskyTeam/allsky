@@ -288,7 +288,7 @@ setup_rpi_supported_cameras()
 		fi
 
 		local MSG="Creating ${RPi_SUPPORTED_CAMERAS} with '${CMD}' entries."
-		display_msg --log progress "${MSG}"
+		display_msg --logonly info "${MSG}"
 
 		# Remove comment and blank lines and lines for the command we are NOT using.
 		grep -v -E "^\$|^#|^${notCMD}" "${ALLSKY_REPO}/${B}.repo" > "${RPi_SUPPORTED_CAMERAS}"

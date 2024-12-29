@@ -97,7 +97,7 @@ if [[ ${CROP_IMAGE} -gt 0 ]]; then
 	RESOLUTION_Y=${RESOLUTION##*x}	# everything after  the "x"
 fi
 
-# Get passed-in variables.
+# Get passed-in variables and export as AS_* so overlays can use them.
 while [[ $# -gt 0 ]]; do
 	VARIABLE="AS_${1%=*}"		# everything before the "="
 	VALUE="${1##*=}"			# everything after  the "="
@@ -161,18 +161,16 @@ function display_error_and_exit()	# error message, notification string
 }
 
 # Resize the image if required
-RESIZE_W="$( settings ".imageresizewidth" )"
-RESIZE_H="$( settings ".imageresizeheight" )"
-export AS_RESIZE_WIDTH="${RESIZE_W}"
-export AS_RESIZE_HEIGHT="${RESIZE_H}"
-if [[ ${RESIZE_W} -gt 0 && ${RESIZE_H} -gt 0 ]]; then
+export AS_RESIZE_WIDTH="$( settings ".imageresizewidth" )"
+export AS_RESIZE_HEIGHT="$( settings ".imageresizeheight" )"
+if [[ ${AS_RESIZE_WIDTH} -gt 0 && ${AS_RESIZE_HEIGHT} -gt 0 ]]; then
 	# Make sure we were given numbers.
 	ERROR_MSG=""
-	if [[ ${RESIZE_W} != +([+0-9]) ]]; then		# no negative numbers allowed
-		ERROR_MSG+="\n'Image Resize Height' (${RESIZE_W}) must be a number."
+	if [[ ${AS_RESIZE_WIDTH} != +([+0-9]) ]]; then		# no negative numbers allowed
+		ERROR_MSG+="\n'Image Resize Height' (${AS_RESIZE_WIDTH}) must be a number."
 	fi
-	if [[ ${RESIZE_H} != +([+0-9]) ]]; then
-		ERROR_MSG+="\n'Image Resize Width' (${RESIZE_H}) must be a number."
+	if [[ ${AS_RESIZE_HEIGHT} != +([+0-9]) ]]; then
+		ERROR_MSG+="\n'Image Resize Width' (${AS_RESIZE_HEIGHT}) must be a number."
 	fi
 	if [[ -n ${ERROR_MSG} ]]; then
 		echo -e "${RED}*** ${ME}: ERROR: Image resize number(s) invalid.${NC}"
@@ -180,17 +178,17 @@ if [[ ${RESIZE_W} -gt 0 && ${RESIZE_H} -gt 0 ]]; then
 	fi
 
 	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		echo "${ME}: Resizing '${CURRENT_IMAGE}' to ${RESIZE_W}x${RESIZE_H}"
+		echo "${ME}: Resizing '${CURRENT_IMAGE}' to ${AS_RESIZE_WIDTH}x${AS_RESIZE_HEIGHT}"
 	fi
-	if ! convert "${CURRENT_IMAGE}" -resize "${RESIZE_W}x${RESIZE_H}" "${CURRENT_IMAGE}" ; then
+	if ! convert "${CURRENT_IMAGE}" -resize "${AS_RESIZE_WIDTH}x${AS_RESIZE_HEIGHT}" "${CURRENT_IMAGE}" ; then
 		echo -e "${RED}*** ${ME}: ERROR: image resize failed; not saving${NC}"
 		exit 4
 	fi
 
 	if [[ ${CROP_IMAGE} -gt 0 ]]; then
 		# The image was just resized and the resolution changed, so reset the variables.
-		RESOLUTION_X=${RESIZE_W}
-		RESOLUTION_Y=${RESIZE_H}
+		RESOLUTION_X=${AS_RESIZE_WIDTH}
+		RESOLUTION_Y=${AS_RESIZE_HEIGHT}
 	fi
 fi
 
@@ -224,16 +222,14 @@ if [[ ${CROP_IMAGE} -gt 0 ]]; then
 fi
 
 # Stretch the image if required.
-STRETCH_AMOUNT="$( settings ".imagestretchamount${DAY_OR_NIGHT,,}time" )"
-STRETCH_MIDPOINT="$( settings ".imagestretchmidpoint${DAY_OR_NIGHT,,}time" )"
-export AS_STRETCH_AMOUNT="${STRETCH_AMOUNT}"
-export AS_STRETCH_MIDPOINT="${STRETCH_MIDPOINT}"
-if [[ ${STRETCH_AMOUNT} -gt 0 ]]; then
+export AS_STRETCH_AMOUNT="$( settings ".imagestretchamount${DAY_OR_NIGHT,,}time" )"
+export AS_STRETCH_MIDPOINT="$( settings ".imagestretchmidpoint${DAY_OR_NIGHT,,}time" )"
+if [[ ${AS_STRETCH_AMOUNT} -gt 0 ]]; then
 	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		echo "${ME}: Stretching '${CURRENT_IMAGE}' by ${STRETCH_AMOUNT} @ ${STRETCH_MIDPOINT}%"
+		echo "${ME}: Stretching '${CURRENT_IMAGE}' by ${AS_STRETCH_AMOUNT} @ ${AS_STRETCH_MIDPOINT}%"
 	fi
- 	convert "${CURRENT_IMAGE}" -sigmoidal-contrast "${STRETCH_AMOUNT}x${STRETCH_MIDPOINT}%" "${CURRENT_IMAGE}"
-
+ 	convert "${CURRENT_IMAGE}" -sigmoidal-contrast \
+		"${AS_STRETCH_AMOUNT}x${AS_STRETCH_MIDPOINT}%" "${CURRENT_IMAGE}"
 	if [[ $? -ne 0 ]]; then
 		echo -e "${RED}*** ${ME}: ERROR: AUTO_STRETCH failed; not saving${NC}"
 		exit 4

@@ -76,7 +76,7 @@ class SUPPORTUTIL
     }
 
     public function postDownloadLog() {
-        $logId = $config = $_POST['logId'];
+        $logId = $_POST['logId'];
         $logId = basename($logId);
         $fromFile = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
 
@@ -94,10 +94,10 @@ class SUPPORTUTIL
     }
 
     public function postChangeGithubId() {
-        $logId = $config = $_POST['logId'];
+        $logId = $_POST['logId'];
         $logId = basename($logId);
 
-        $githubId = $config = $_POST['githubid'];
+        $githubId = $_POST['githubid'];
 
         $nameParts = explode('-', $logId);
         $newLogId = $nameParts[0] . '-' . $githubId . '-' . $nameParts[2];
@@ -111,7 +111,7 @@ class SUPPORTUTIL
     }
 
     public function postDeleteLog() {
-        $logId = $config = $_POST['logId'];
+        $logId = $_POST['logId'];
         $logId = basename($logId);
         
         $fileToDelete = $this->issueDir . DIRECTORY_SEPARATOR . $logId;

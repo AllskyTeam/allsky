@@ -91,45 +91,16 @@ function check_password_match()
 #
 function validate_password() 
 {
-    local PASSWORD="$1"
+    local MESSAGE RESULT OPTION
 
-    if [ -z "${PASSWORD}" ]; then
-        echo "Password cannot be blank."
-        return 1
-    elif [[ "${NOSECURE}" == "false" ]]; then
-        # Check length (at least 8 characters)
-        if [[ ${#PASSWORD} -lt 8 ]]; then
-            echo "Password must be at least 8 characters long."
-            return 1
-        fi
-
-        # Check for at least one uppercase letter
-        if [[ ! "$PASSWORD" =~ [A-Z] ]]; then
-            echo "Password must contain at least one uppercase letter."
-            return 1
-        fi
-
-        # Check for at least one lowercase letter
-        if [[ ! "$PASSWORD" =~ [a-z] ]]; then
-            echo "Password must contain at least one lowercase letter."
-            return 1
-        fi
-
-        # Check for at least one digit
-        if [[ ! "$PASSWORD" =~ [0-9] ]]; then
-            echo "Password must contain at least one digit."
-            return 1
-        fi
-
-        # Check for at least one special character
-        if [[ ! "$PASSWORD" =~ [\@\#\$\%\^\&\*\(\)\_\+\!\~] ]]; then
-            echo "Password must contain at least one special character. @#$%^&*()_+!~"
-            return 1
-        fi
+    OPTION=""
+    if [[ "${NOSECURE}" == "true" ]]; then
+        OPTION="--nosecure"
     fi
-
-    echo "Password is secure."
-    return 0
+    MESSAGE=$(./validatePassword.sh --password "$1" "${OPTION}")
+    RESULT=$?
+    echo "${MESSAGE}"
+    return "${RESULT}"
 }
 
 function display_prompt()
@@ -151,8 +122,8 @@ function display_prompt()
 
         dialog --title "${DIALOG_TITLE}" "${DIALOG_TYPE}" "${DIALOG_MESSAGE}" "${DIALOG_HEIGHT}" "${DIALOG_WIDTH}" 3>&1 1>&2 2>&3
     else
+        DIALOG_MESSAGE="${DIALOG_MESSAGE//Press \'Ok\'/Press Enter}"
         if [[ "${DIALOG_TYPE}" == "--msgbox" ]]; then
-            DIALOG_MESSAGE="${DIALOG_MESSAGE//Press 'Ok'/Press Enter}"
             echo -e "${DIALOG_MESSAGE}"
             if [[ -z "${USE_ECHO}" ]]; then
                 read -n 1 -s -r
@@ -192,12 +163,14 @@ function display_input()
         LAST_INPUT=$(dialog "${DIALOG_TYPE}" "${DIALOG_MESSAGE}" "${DIALOG_HEIGHT}" "${DIALOG_WIDTH}" "${INPUT_VALUE}" 3>&1 1>&2 2>&3)
         STATUS=$?
     else
+        DIALOG_MESSAGE="${DIALOG_MESSAGE//Press \'Ok\'/Press Enter}"
         if [[ -n "${INPUT_VALUE}" ]]; then
-            PROMPT="${DIALOG_MESSAGE} (${INPUT_VALUE}) :"
+            PROMPT="${DIALOG_MESSAGE} (${INPUT_VALUE})"
         else
-            PROMPT="${DIALOG_MESSAGE} :"
+            PROMPT="${DIALOG_MESSAGE}"
         fi
-        read -r -p "${PROMPT} " LAST_INPUT
+        echo -e "${PROMPT} "
+        read -r LAST_INPUT
 
         if [[ -z "${LAST_INPUT}" ]]; then
             LAST_INPUT="${INPUT_VALUE}"
@@ -233,7 +206,7 @@ function get_input()
     if [[ "${DIALOG_TYPE}" == "--passwordbox" && "${DOUBLE_ENTRY_PASSWORD}" == "true" ]]; then
         while true; do
             while true; do
-                display_input "${FORCE_DIALOG_TYPE}" "${DIALOG_MESSAGE}" "${DIALOG_HEIGHT}" "${DIALOG_WIDTH}" "${INPUT_VALUE}"
+                display_input "${FORCE_DIALOG_TYPE}" "${DIALOG_MESSAGE}\n${PASSWORD_FORMAT}" "${DIALOG_HEIGHT}" "${DIALOG_WIDTH}" ""
                 STATUS=$?
                 PASSWORD="${LAST_INPUT}"
                 if [[ "${STATUS}" -ne 0 ]]; then
@@ -241,7 +214,6 @@ function get_input()
                 fi
 
                 PASSWORD_STATUS=$(validate_password "${PASSWORD}")
-                # shellcheck disable=SC2181
                 if [[ $? -eq 0 ]]; then
                     break
                 fi
@@ -249,7 +221,7 @@ function get_input()
                 INPUT_VALUE="${PASSWORD}"
             done
 
-            display_input "${FORCE_DIALOG_TYPE}" "${MSG_PASSWORD_REENTER}" "${DIALOG_HEIGHT}" "${DIALOG_WIDTH}" ""
+            display_input "${FORCE_DIALOG_TYPE}" "${MSG_PASSWORD_REENTER}\n${PASSWORD_FORMAT}" "${DIALOG_HEIGHT}" "${DIALOG_WIDTH}" ""
             STATUS=$?
             CONFIRM_PASSWORD="${LAST_INPUT}"
             if [[ "${STATUS}" -ne 0 ]]; then
@@ -273,7 +245,6 @@ function get_input()
             fi            
             if [[ "${DIALOG_TYPE}" == "--passwordbox" ]]; then
                 PASSWORD_STATUS=$(validate_password "${LAST_INPUT}")
-                # shellcheck disable=SC2181
                 if [[ $? -eq 0 ]]; then
                     break
                 fi
@@ -310,7 +281,6 @@ set_admin_password()
 
     if [[ "$USE_LOGIN" != "true" ]]; then
         display_prompt "--yesno" "${TITLE_LOGIN_DISABLED}" "${MSG_LOGIN_DISABLED}" 15
-        # shellcheck disable=SC2181
         if [[ $? -eq 0 ]]; then
             # shellcheck disable=SC2034
             USE_WEBUI_LOGIN=true; doV "" "USE_WEBUI_LOGIN" "uselogin" "boolean" "${SETTINGS_FILE}"
@@ -325,7 +295,6 @@ set_admin_password()
     if [[ "${HAVE_NO_SECURE}" == "false" ]]; then
         if [[ "${IGNORE_ONLINE}" == "false" ]]; then
             display_prompt "--yesno" "${TITLE_USE_ONLINE}" "${MSG_USE_ONLINE}" 10
-            # shellcheck disable=SC2181
             if [[ $? -eq 0 ]]; then
                 # shellcheck disable=SC2034
                 NOSECURE="false"
@@ -335,6 +304,7 @@ set_admin_password()
                 display_msg --logonly info "User has selected 'No' to having online access to the Pi"
                 display_msg --logonly info "Allowing insecure passwords"
                 NOSECURE="true"
+                PASSWORD_FORMAT=""                
             fi
         fi
     fi
@@ -346,16 +316,18 @@ set_admin_password()
     get_input "--inputbox" "${MSG_USERNAME}" 8 40 "${ADMIN_USER}" false
     STATUS=$?
     NEW_ADMIN_USER="${LAST_INPUT}"
-    # shellcheck disable=SC2181
     if [[ "${STATUS}" -ne 0 ]]; then
         display_msg --logonly info "User canceled at username prompt"
         exit 99
     fi
 
-    get_input "--passwordbox" "${MSG_PASSWORD}" 8 40 "" false
+    HEIGHT=15
+    if [[ "${NOSECURE}" == "true" ]]; then
+        HEIGHT=8
+    fi
+    get_input "--passwordbox" "${MSG_PASSWORD}" "${HEIGHT}" 50 "" false
     STATUS=$?
     NEW_ADMIN_PASSWORD="${LAST_INPUT}"        
-    # shellcheck disable=SC2181
     if [[ "${STATUS}" -ne 0 ]]; then
         display_msg --logonly info "User canceled at password prompt"
         exit 98
@@ -367,6 +339,11 @@ set_admin_password()
 
     doV "" "NEW_ADMIN_USER" "WEBUI_USERNAME" "text" "${ALLSKY_ENV}"
     doV "" "PASSWORD_HASH" "WEBUI_PASSWORD" "text" "${ALLSKY_ENV}"
+
+	if [[ "${ENABLELOGIN}" == "true" ]]; then
+        # shellcheck disable=SC2034	
+		USE_WEBUI_LOGIN=true; doV "" "USE_WEBUI_LOGIN" "uselogin" "boolean" "${SETTINGS_FILE}"
+	fi
 
     show_debug_message "Password details updated" "info"
     show_debug_message "Old Admin User: ${ADMIN_USER}"
@@ -454,6 +431,8 @@ function check_allsky_version()
     TITLE_INVALID_VERSION="Incompatability Error"
     # shellcheck disable=SC2119
     CURRENT_VERSION=$(get_version)
+    # Remove any minor revisions
+    CURRENT_VERSION="${CURRENT_VERSION%_*}"
     dpkg --compare-versions "${CURRENT_VERSION:1}" ge "${MIN_ALLSKY_VERSION}"
     OK_TO_PROCEED=$?
 
@@ -486,6 +465,7 @@ function usage_and_exit()
 		echo -e "	'--nodouble' Don't require password confirmation."            
 		echo -e "	'--ignoreonline' Don't ask question regarding online use."    
         echo -e "   '--frominstaller' Forces certain operations to happen by default (DO NOT USE)."
+		echo -e "	'--enablelogin' Enable the webUI login if the password is set."				
 	} >&2
 	exit "${RET}"
 }
@@ -497,6 +477,8 @@ TEXTMODE="false"
 DOUBLE_ENTRY_PASSWORD="true"
 IGNORE_ONLINE=false
 FROM_INSTALLER="false"
+ENABLELOGIN="false"
+PASSWORD_FORMAT=$(./validate_password.sh --getformat)
 
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
@@ -512,6 +494,10 @@ while [[ $# -gt 0 ]]; do
 		--nosecure)
 			NOSECURE="true"
             HAVE_NO_SECURE="true"
+			;;
+
+		--enablelogin)
+			ENABLELOGIN="true"
 			;;
 
 		--text)

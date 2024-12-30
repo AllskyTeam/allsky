@@ -1,89 +1,97 @@
 <?php
-
-function DisplayAuthConfig($username, $password) {
-	global $page;
-	$myStatus = new StatusMessages();
-
-	if (isset($_POST['UpdateAdminPassword'])) {
-		// Update the password
-		if (CSRFValidate()) {
-			$new_username=trim($_POST['username']);
-			$old = $_POST['oldpass'];
-			$new1 = $_POST['newpass'];
-			$new2 = $_POST['newpassagain'];
-			if ($new_username == "") {
-				$myStatus->addMessage('You must enter the username.', 'danger');
-			}
-			if ($old == "" || $new1 == "" || $new2 == "") {
-				$myStatus->addMessage('You must enter the old (current) password, and the new password twice.', 'danger');
-			} else if (password_verify($old, $password)) {
-				if ($new1 != $new2) {
-					$myStatus->addMessage('New passwords do not match.', 'danger');
-				} else if ($new_username == '') {
-					$myStatus->addMessage('Username must not be empty.', 'danger');
-				} else {
-
-                    $privateVars = get_decoded_json_file(ALLSKY_ENV, true, "");
-                    $privateVars["WEBUI_USERNAME"] = $new_username;
-                    $privateVars["WEBUI_PASSWORD"] = password_hash($new1, PASSWORD_BCRYPT);
-
-                    $ret = file_put_contents(ALLSKY_ENV, json_encode($privateVars, JSON_PRETTY_PRINT));
-					if ($ret !== false) {
-						$username = $new_username;
-						$myStatus->addMessage("$new_username password updated.", 'success');
-					} else {
-						$myStatus->addMessage($ret, 'danger');
-					}
-				}
-			} else {
-				$myStatus->addMessage('Old password does not match.', 'danger');
-			}
-		} else {
-			error_log('CSRF violation');
-		}
-	}
 ?>
 
-<div class="row">
-	<div class="col-lg-12">
-		<div class="panel panel-primary">
-			<div class="panel-heading"><i class="fa fa-lock fa-fw"></i> Change Admin Username and/or Password</div>
-			<div class="panel-body">
-				<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
+<style>
+    .as-admin-error {
+        font-size: 2rem;
+    }
+</style>
 
-				<form role="form" action="?page=<?php echo $page ?>" method="POST">
-					<?php CSRFToken() ?>
-					<div class="row">
-						<div class="form-group col-md-4">
-							<label for="username">Username</label>
-							<input type="text" class="form-control" name="username" value="<?php echo $username; ?>"/>
+<div class="container">
+    <div class="col-md-6 col-md-offset-2 panel-style">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <strong>
+                        <i class="fa fa-lock fa-fw"></i> Update WebUI User/Password
+                    </strong>
+                </h3>
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="alert alert-success" role="alert">If you intend to allow access to this Pi from the internet please select the checkbox below. This will enusre that a more secure password is used for the WebUI.</div>
+                    </div>
+                </div>
+                <form role="form" action="includes/adminutils.php?request=Validate" method="POST" id="as-admin-user-password">
+                    <?php CSRFToken() ?>
+                    <div class="form-group">
+                        <div class="checkbox">
+							<div class="row">
+								<div class="col-md-7">Enable WebUI login</div>								
+								<div class="col-md-5">
+									<div class='switch-field boxShadow as-enable-webui-login-wrapper'>
+										<input id='switch_no_as-enable-webui-login' class='form-control' type='radio' name='as-enable-webui-login' value='false' <?php echo ($useLogin==false)?'checked':'' ?> >
+										<label style='margin-bottom: 0px;' for='switch_no_as-enable-webui-login'>No</label>
+										<input id='switch_yes_as-enable-webui-login' class='form-control' type='radio' name='as-enable-webui-login' value='true' <?php echo ($useLogin==true)?'checked':'' ?> >
+										<label style='margin-bottom: 0px;' for='switch_yes_as-enable-webui-login'>Yes</label>
+									</div>
+								</div>								
+							</div>							
+                        </div>
+                    </div>
+					<div id="as-admin-user-password-fields-container">					
+						<div id="as-admin-user-password-fields">
+							<div class="form-group">
+								<div class="checkbox">
+									<div class="row">
+										<div class="col-md-7">Will this Pi will have remote access from the internet?</div>								
+										<div class="col-md-5">
+											<div class='switch-field boxShadow as-use-online-wrapper'>
+												<input id='switch_no_as-use-online' class='form-control' type='radio' name='as-use-online' value='false' checked>
+												<label style='margin-bottom: 0px;' for='switch_no_as-use-online'>No</label>
+												<input id='switch_yes_as-use-online' class='form-control' type='radio' name='as-use-online' value='true'>
+												<label style='margin-bottom: 0px;' for='switch_yes_as-use-online'>Yes</label>
+											</div>
+										</div>								
+									</div>							
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="username">Username</label>
+								<input type="text" name="username" id="username" class="form-control" required="required" value="<?php echo $adminUser; ?>">
+							</div>
+							<div class="form-group">
+								<label for="oldpass">Old Password</label>
+								<input type="password" name="oldpass" id="oldpass" class="form-control" required="required">
+							</div>
+							<div class="form-group">
+								<label for="newpass">New Password</label>
+								<input type="password" name="newpass" id="newpass" class="form-control" required="required">
+								<div class="alert alert-info mt-3" role="alert" id="as-admin-password-format">Loading Password Format</div>
+							</div>
+							<div class="form-group">
+								<label for="newpassagain">Confirm Password</label>
+								<input type="password" name="newpassagain" id="newpassagain" class="form-control" required="required">
+							</div>                  
+							<div class="form-group">
+								<button type="submit" class="btn btn-primary btn-block"><i class="fa-regular fa-paper-plane"></i> Update Username/Password</button>
+							</div>
 						</div>
+						<div id="as-admin-user-password-fields-overlay"></div>
 					</div>
-					<div class="row">
-						<div class="form-group col-md-4">
-							<label for="password">Old password</label>
-							<input type="password" class="form-control" name="oldpass"/>
-						</div>
-					</div>
-					<div class="row">
-						<div class="form-group col-md-4">
-							<label for="password">New password</label>
-							<input type="password" class="form-control" name="newpass"/>
-						</div>
-					</div>
-					<div class="row">
-						<div class="form-group col-md-4">
-							<label for="password">Repeat new password</label>
-							<input type="password" class="form-control" name="newpassagain"/>
-						</div>
-					</div>
-					<input type="submit" class="btn btn-primary" name="UpdateAdminPassword" value="Save settings" />
-				</form>
-			</div><!-- /.panel-body -->
-		</div><!-- /.panel panel-primary -->
-	</div><!-- /.col-lg-12 -->
-</div><!-- /.row -->
+                </form> 
+            </div>
+        </div>
+    </div>
 
-<?php 
-}
-?>
+<script>
+    $(document).ready(function() {
+        let adminManager = new ALLSKYADMIN()
+    });
+</script>
+
+<script src="/js/allsky-admin/allsky-admin.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+<script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+<script src="/js/bootbox/bootbox.all.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+<script src="/js/bootbox/bootbox.locales.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>

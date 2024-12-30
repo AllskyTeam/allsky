@@ -558,7 +558,7 @@ td:has(.subSettingsHeader) {
 }
 div.subSettingsHeader {
 	font-size: 1.05em;
-	//margin: 0 3em 0 3em;
+	margin: 0 3em 0 3em;
 	padding: 3px 0px;
 }
 .dark .subSettingsHeader {
@@ -811,6 +811,9 @@ div.sticky {
 	font-size: 90%;
 }
 
+.executeAction {
+	color: red;
+}
 .removeMessage {
 	color: red;
 	font-weight: bold;
@@ -949,4 +952,45 @@ div.sticky {
 #as-overlay h1 {
     margin-top: 10px !important;
     margin-bottom: 10px !important;
+}
+
+.dark .modal-dialog, .dark .modal-content {
+	background-color: #000000;
+	border-radius: 10px;
+}
+
+.dark .modal-body {
+	background-color: #111111;
+}
+
+.dark .modal-header {
+	border-bottom: 1px solid #444444;
+}
+
+.dark .modal-footer {
+	border-top: 1px solid #444444;
+}
+
+/* Admin css */
+#as-admin-user-password-fields-container {
+	position: relative;
+	padding: 5px;
+}
+
+#as-admin-user-password-fields {
+}
+
+#as-admin-user-password-fields-overlay {
+	position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 10;
+    display: none; 
+}
+
+#as-admin-user-password-fields-overlay.active {
+    display: block;
 }

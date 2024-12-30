@@ -53,24 +53,27 @@ done
 function usage_and_exit()
 {
 	local RET=${1}
-	{
-		echo
-		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-		echo "Usage: ${ME} [--help] [--debug] [command [--help] [arguments ...]]"
-		[[ ${RET} -ne 0 ]] && echo -en "${NC}"
-		echo -e "\n	where:"
-		echo -e "	'--help' displays this message and exits."
-		echo -e "	'--debug' displays debugging information."
-		echo -e "	'command' is a command to execute with optional arguments.  Choices are:"
-		echo -e "		show_supported_cameras  RPi | ZWO"
-		echo -e "		show_connected_cameras"
-		echo -e "		recheck_swap"
-		echo -e "		recheck_tmp"
-		echo -e "		samba"
-		echo -e "		new_rpi_camera_info [--camera NUM]"
-		echo -e "		show_start_times [--zero] [angle [latitude [longitude]]]"
-		echo -e "	If no 'command' is specified you are prompted for one to execute."
-	} >&2
+	
+	exec 2>&1
+	echo
+	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
+	echo "Usage: ${ME} [--help] [--debug] [command [--help] [arguments ...]]"
+	[[ ${RET} -ne 0 ]] && echo -en "${NC}"
+	echo -e "\n	where:"
+	echo -e "	'--help' displays this message and exits."
+	echo -e "	'--debug' displays debugging information."
+	echo -e "	'command' is a command to execute with optional arguments.  Choices are:"
+	echo -e "		show_supported_cameras  RPi | ZWO"
+	echo -e "		show_connected_cameras"
+	echo -e "		prepare_logs"
+	echo -e "		recheck_swap"
+	echo -e "		recheck_tmp"
+	echo -e "		samba"
+	echo -e "		new_rpi_camera_info [--camera NUM]"
+	echo -e "		show_start_times [--zero] [angle [latitude [longitude]]]"
+	echo -e "	If no 'command' is specified you are prompted for one to execute."
+	echo
+
 	exit "${RET}"
 }
 
@@ -126,6 +129,27 @@ function show_connected_cameras()
 				printf "${FORMAT}" "${TYPE}" "${NUM}" "${MODEL}"
 			done
 	fi
+}
+
+#####
+# Prepare Allsky for troubleshooting.
+# Stop it, then truncate the log files and restart Allsky.
+function prepare_logs()
+{
+	local NEW_DEBUG=3
+
+	stop_Allsky
+	sudo truncate -s 0 "${ALLSKY_LOG}"
+	sudo truncate -s 0 "${ALLSKY_PERIODIC_LOG}"
+	local OLD_DEBUG=$( settings ".debuglevel" )
+	local MSG=""
+	if [[ ${OLD_DEBUG} -ne ${NEW_DEBUG} ]]; then
+		update_json_file ".debuglevel"  "${NEW_DEBUG}"  "${SETTINGS_FILE}"  "number"
+		MSG=" and Debug Level of ${NEW_DEBUG} (prior level was ${OLD_DEBUG})"
+	fi
+	start_Allsky
+
+	echo -e "\nAllsky restarted with empty log files${MSG}."
 }
 
 #####
@@ -286,14 +310,15 @@ if [[ -z ${CMD} ]]; then
 	# No command given on command line so prompt for one.
 
 	PROMPT="\nSelect a command to run:"
-	CMDS=()
-	CMDS+=("show_supported_cameras"		"1. Show supported cameras")
-	CMDS+=("show_connected_cameras"		"2. Show connected cameras")
-	CMDS+=("recheck_swap"				"3. Add swap space")
-	CMDS+=("recheck_tmp"				"4. Move ~/allsky/tmp to memory")
-	CMDS+=("samba"						"5. Simplify copying files to/from the Pi")
-	CMDS+=("new_rpi_camera_info"		"6. Collect information for new RPi camera")
-	CMDS+=("show_start_times"	 		"7. Show daytime and nighttime start times")
+	CMDS=(); N=1
+	CMDS+=("show_supported_cameras"		"${N}. Show supported cameras"); ((N++))
+	CMDS+=("show_connected_cameras"		"${N}. Show connected cameras"); ((N++))
+	CMDS+=("prepare_logs"				"${N}. Prepare log files for troubleshooting"); ((N++))
+	CMDS+=("recheck_swap"				"${N}. Add swap space"); ((N++))
+	CMDS+=("recheck_tmp"				"${N}. Move ~/allsky/tmp to memory"); ((N++))
+	CMDS+=("samba"						"${N}. Simplify copying files to/from the Pi"); ((N++))
+	CMDS+=("new_rpi_camera_info"		"${N}. Collect information for new RPi camera"); ((N++))
+	CMDS+=("show_start_times"	 		"${N}. Show daytime and nighttime start times"); ((N++))
 
 	# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 	while COMMAND="$( prompt "${PROMPT}" "${CMDS[@]}" )"

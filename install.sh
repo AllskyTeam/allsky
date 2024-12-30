@@ -2672,22 +2672,12 @@ restore_prior_website_files()
 		display_msg --logonly progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-	A="data.json"
-	ITEM="${SPACE}${SPACE}${A}"
-	D="${PRIOR_WEBSITE_DIR}/${A}"
-	if [[ -f ${D} ]]; then
-		if ! cmp --silent "${D}" "${ALLSKY_WEBSITE}/${A}" ; then
-			display_msg --log progress "${ITEM} (copying)"
-			cp "${D}" "${ALLSKY_WEBSITE}"
-		fi
-	else
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-	fi
-
 	A="analyticsTracking.js"
 	ITEM="${SPACE}${SPACE}${A}"
 	D="${PRIOR_WEBSITE_DIR}/${A}"
 	if [[ -f ${D} ]]; then
+		# Few people use this file, so only copy prior version if it's
+		# different than the current one.
 		if ! cmp --silent "${D}" "${ALLSKY_WEBSITE}/${A}" ; then
 			display_msg --log progress "${ITEM} (copying)"
 			cp "${D}" "${ALLSKY_WEBSITE}"
@@ -2725,22 +2715,26 @@ restore_prior_website_files()
 		fi
 
 		# Copy the old file to the current location.
+		display_msg --log progress "${ITEM} (copying)"
 		cp "${PRIOR_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}" \
 			"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 
+		MSG="${SPACE}${SPACE}${SPACE}"
 		if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
 			# If different versions, then update the current one.
+			MSG+="Updating version from ${PRIOR_WEB_CONFIG_VERSION} to ${NEW_WEB_CONFIG_VERSION}."
 			update_old_website_config_file "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" \
 				"${PRIOR_WEB_CONFIG_VERSION}" "${NEW_WEB_CONFIG_VERSION}"
 		else
-			display_msg --log progress "${ITEM} (copying)"
-			MSG="${SPACE}${SPACE}${SPACE}Already current @ version ${NEW_WEB_CONFIG_VERSION}"
-			display_msg --logonly info "${MSG}"
+			MSG+="Already current @ version ${NEW_WEB_CONFIG_VERSION}"
 		fi
+		display_msg --logonly info "${MSG}"
 
 		# Since the config file already exists, this will just run postData.sh:
 		prepare_local_website "" "postData"
 	fi
+
+	# data.json was updated above so don't copy it.
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }

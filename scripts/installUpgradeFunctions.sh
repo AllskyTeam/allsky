@@ -594,6 +594,8 @@ function replace_website_placeholders()
 		IMAGE_NAME="${FULL_FILENAME}"
 	fi
 
+	# Keep track if the file changed.
+	local OLD_SUM="$( sum "${FILE}" )"
 	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --verbosity silent \
 		--config "${FILE}" \
 		config.imageName			"imageName"			"${IMAGE_NAME}" \
@@ -608,6 +610,13 @@ function replace_website_placeholders()
 		"${WEBSITE_ALLSKY_VERSION}"	"AllskyVersion"		"${ALLSKY_VERSION}" \
 		"${MINI_TLAPSE_DISPLAY}"	"mini_display"		"${MINI_TLAPSE_DISPLAY_VALUE}" \
 		"${MINI_TLAPSE_URL}"		"mini_url"			"${MINI_TLAPSE_URL_VALUE}"
+
+	local NEW_SUM="$( sum "${FILE}" )"
+	if [[ ${NEW_SUM} != "${OLD_SUM}" ]]; then
+		return 0		# File changed
+	else
+		return 1
+	fi
 }
 
 
@@ -619,19 +628,23 @@ function prepare_local_website()
 {
 	local FORCE="${1}"
 	local POST_DATA="${2}"
-
-	display_msg --log progress "Creating default ${ALLSKY_WEBSITE_CONFIGURATION_NAME}."
+	local MSG=""
 
 	# Make sure there's a config file.
 	if [[ ! -s ${ALLSKY_WEBSITE_CONFIGURATION_FILE} || ${FORCE} == "--force" ]]; then
+		MSG="Creating default ${ALLSKY_WEBSITE_CONFIGURATION_NAME}."
+		display_msg --log progress "${MSG}"
 		cp "${REPO_WEBSITE_CONFIGURATION_FILE}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 	fi
 
-	replace_website_placeholders "local" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+	if replace_website_placeholders "local" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" ; then
+		MSG="Replaced placeholders in ${ALLSKY_WEBSITE_CONFIGURATION_NAME}."
+		display_msg --logonly progress "${MSG}"
+	fi
 
 	if [[ ${POST_DATA} == "postData" && "$( settings ".uselocalwebsite" )" == "true" ]]; then
 		# --fromWebUI tells it to be mostly silent.
-		local MSG="$( "${ALLSKY_SCRIPTS}/postData.sh" --fromWebUI --allfiles 2>&1 )"
+		MSG="$( "${ALLSKY_SCRIPTS}/postData.sh" --fromWebUI --allfiles 2>&1 )"
 		if [[ $? -eq 0 ]]; then
 			display_msg --log progress "${MSG}"
 		else

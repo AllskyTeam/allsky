@@ -139,6 +139,7 @@ if ($useRemoteWebsite) {
 		case "overlay":				$Title = "Overlay Editor";		break;
 		case "module":				$Title = "Module Manager";		break;
 		case "live_view":			$Title = "Liveview";			break;
+		case "support": 			$Title = "Getting Support";		break;
 		default:					$Title = "Allsky WebUI";		break;
 	}
 ?>
@@ -200,13 +201,13 @@ if ($useRemoteWebsite) {
 	<script type="text/javascript" src="lib/codeMirror/lint.js"> </script>
 	<script type="text/javascript" src="lib/codeMirror/json-lint.js"> </script>
 
-    <script src="lib/codeMirror/matchesonscrollbar.js"></script>
-    <script src="lib/codeMirror/searchcursor.js"></script>
-    <script src="lib/codeMirror/match-highlighter.js"></script>
+	<script src="lib/codeMirror/matchesonscrollbar.js"></script>
+	<script src="lib/codeMirror/searchcursor.js"></script>
+	<script src="lib/codeMirror/match-highlighter.js"></script>
 
-    <script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-    <script src="/js/bootbox/bootbox.all.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-    <script src="/js/bootbox/bootbox.locales.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+	<script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+	<script src="/js/bootbox/bootbox.all.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+	<script src="/js/bootbox/bootbox.locales.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
 <?php } ?>
 </head>
@@ -302,6 +303,9 @@ if ($useRemoteWebsite) {
 					</li>
 					<li>
 						<a external="true" href="/documentation"><i class="fa fa-book fa-fw"></i> Allsky Documentation </a>
+					</li>
+					<li>
+						<a href="index.php?page=support"><i class="fa fa-question fa-fw"></i> Getting Support</a>
 					</li>
 					<li>
 						<span onclick="switchTheme()"><i class="fa fa-moon fa-fw"></i> Light/Dark mode</span>
@@ -474,6 +478,9 @@ if ($useRemoteWebsite) {
 					case "module":
 						include_once('includes/module.php');
 						DisplayModule();
+						break;
+					case "support":
+						include_once('includes/support.php');
 						break;
 
 					case "live_view":

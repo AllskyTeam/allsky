@@ -464,6 +464,12 @@ input[type="text"].has-error {
 .dark .btn-delete {
 	color: black;
 }
+.btn-fake {		/* Looks like a button but isn't one - used in documentation */
+	pointer-events: none;
+	font-size: 80%;
+	padding: 3px 6px;
+}
+
 
 .btn.focus.navbar-btn,
 .btn:focus.navbar-btn,

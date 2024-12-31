@@ -116,7 +116,7 @@ case "${CMD}" in
 		if [[ ${RET} -eq 0 ]]; then
 			echo "Executed ${*}"
 		else
-			echo "Unable to execute ${*}" >^2
+			echo "Unable to execute ${*}" >&2
 		fi
 		;;
 esac

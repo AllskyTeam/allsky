@@ -4,9 +4,15 @@ $V = ALLSKY_VERSION;
 ?>
 
 <style>
+	.panel-heading h3 {
+		margin-top: 0;
+	}
+	.panel-body {
+		padding-bottom: 0px;
+	}
 	.alert {
-		padding: 10px !important;
-		margin-bottom: 10px !important;
+		padding: 8px !important;
+		margin-bottom: 15px !important;
 		border: 1px solid transparent !important;
 		border-radius: 4px !important;
 	}
@@ -104,13 +110,14 @@ $V = ALLSKY_VERSION;
 								but do <strong>NOT</strong> submit it yet.
 							<li>Attach the support log file to the GitHub Discussion.
 							<li>Click the
-								<span class="btn btn-primary btn-fake">Start discussion</span> button in GitHub.
+								<span class="btn btn-primary btn-fake">Start discussion</span>
+								button in GitHub.
 							<li>Come back to this page.
 							<li>Add the GitHub discussion number by clicking on the
 								<span class="btn btn-primary btn-fake">
-									<i class="fa-brands fa-github"></i> icon
+									<i class="fa-brands fa-github"></i>
 								</span>
-								associated with the new support log below.
+								icon associated with the new support log below.
 						</ol>
 						</p>
 						<br>
@@ -123,14 +130,14 @@ $V = ALLSKY_VERSION;
 					</div>
 
 					<div class="alert alert-danger" role="alert">
-						<p><strong>NOTE:</strong> The Allsky developers do not actively monitor
+						<strong>NOTE:</strong> The Allsky developers do not actively monitor
 						other social media channels such as Facebook,
 						so please use GitHub for support.
-						</p>
 					</div> 
 				</div>
 			</div>
 
+			<br>
 			<div class="panel panel-default">
 				<div class="panel-heading">
 					<h3>Support Logs <small>&nbsp; &nbsp; previously generated log files</small>

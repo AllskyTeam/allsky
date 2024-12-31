@@ -2421,6 +2421,12 @@ VirtualSky.prototype.drawImmediate = function(proj, whofrom){
 		c.closePath();
 		c.beginPath();
 		c.arc(this.wide/2,this.tall/2,-0.5+this.tall/2,0,Math.PI*2,true);
+if (false) {		// ALLSKY ADDED this block to add a dot at the overlay center
+  var dot_size = 5;
+  c.moveTo(this.wide/2 +dot_size,this.tall/2);
+  c.arc(this.wide/2,this.tall/2,-0.5+dot_size,0,Math.PI*2,true);
+  c.strokeStyle = this.col.polaroutline;
+}
 		c.closePath();
 		if(!this.transparent){
 			c.fillStyle = (this.hasGradient()) ? "rgba(0,15,30, 1)" : ((this.negative) ? white : black);

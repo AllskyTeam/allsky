@@ -860,6 +860,7 @@ this.credit = false;	// ALLSKY set to false
 	// Define the colours that we will use
 	this.colours = {
 		'normal' : {
+			'polaroutline' : "rgb(0,0,0)",	// ALLSKY ADDED
 			'txt' : "rgb(255,255,255)",
 			'black':"rgb(0,0,0)",
 			'white':"rgb(255,255,255)",
@@ -880,6 +881,7 @@ this.credit = false;	// ALLSKY set to false
 			'pointers':'rgb(200,200,200)'
 		},
 		'negative':{
+			'polaroutline' : "rgb(255,255,255)",	// ALLSKY ADDED
 			'txt' : "rgb(0,0,0)",
 			'black':"rgb(0,0,0)",
 			'white':"rgb(255,255,255)",
@@ -2425,7 +2427,7 @@ VirtualSky.prototype.drawImmediate = function(proj, whofrom){
 			c.fill();
 		}
 		c.lineWidth = 0.5;
-		c.strokeStyle = black;
+		c.strokeStyle = this.col.polaroutline;		// ALLSKY: this is circle outline color
 		c.stroke();
 	}else if(typeof this.projection.draw==="function") this.projection.draw.call(this);
 

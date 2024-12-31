@@ -21,12 +21,15 @@ class ALLSKYADMIN {
                 success: function (response) {
                     bootbox.dialog({
                         title: 'Details updated',
-                        message: 'Username / Password updated',
+                        message: response,
                         size: 'large',
                         buttons: {
                             ok: {
                                 label: 'Ok',
-                                className: 'btn-info'
+                                className: 'btn-info',
+								callback: function(){
+									location.reload()
+								}
                             }
                         }                        
                     })

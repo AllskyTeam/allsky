@@ -186,7 +186,7 @@ class ADMINUTIL
 								}
 							}							
 							$username = $new_username;
-							$this->sendResponse("$new_username password updated.");
+							$this->sendResponse("$new_username password updated. Click ok to refresh the page and enable the user/password.");
 						} else {
 							$this->send400('Failed to update password saving to file failed.');
 						}

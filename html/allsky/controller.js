@@ -25,6 +25,7 @@ var icHeight = 0;
 var icImageAspectRatio = 0;
 var overlayAspectRatio = 0;
 var myLatitude = 0, myLongitude = 0;
+var imageBorder = 0;
 
 $(window).resize(function () {
 	if (overlayBuilt) {					// only rebuild if already built once
@@ -104,10 +105,6 @@ function buildOverlay(){
 				S.virtualsky(virtualSkyData);		// Creates overlay
 				overlayBuilt = true;
 
-				// Save overlay offset values
-				overlayOffsetTop = c.overlayOffsetTop;
-				overlayOffsetLeft = c.overlayOffsetLeft;
-
 				// max-width of #imageContainer is set in index.php based on
 				// width user specified (imageWidth)
 				icWidth = $("#imageContainer").width();
@@ -129,15 +126,19 @@ function buildOverlay(){
 				starmapWidth = $("#starmap").width();
 				starmapHeight = $("#starmap").height();
 
+				var percentSmallerHeight = 1;
+				var percentSmallerWidth = 1;
 				var imageWidth = c.imageWidth
-				if (icWidth < imageWidth) {
+				var checkWidth = icWidth + (imageBorder ? 2 : 0);	// border is 1px
+				if (checkWidth < imageWidth) {
 					// The actual image on the screen is smaller than the
 					// imageWidth requested by the user.
 					// Determine the percent smaller, then shrink the overlay that amount.
-					var percentSmaller = icWidth / c.imageWidth;
+					percentSmallerWidth = icWidth / c.imageWidth;
+					percentSmallerHeight = percentSmallerWidth;
 
 					// #starmap holds the starmap button, so needs to resize it as well.
-					var w = starmapWidth * percentSmaller;
+					w = starmapWidth * percentSmallerWidth;
 					var h = Math.round(w / overlayAspectRatio, 0);
 					w = Math.round(w, 0);
 					$("#starmap")
@@ -152,28 +153,68 @@ function buildOverlay(){
 						.css("margin-top", c.overlayOffsetTop * scalemargins + "px")
 						.css("margin-left", c.overlayOffsetLeft * scalemargins + "px");
 
-					overlayWidth = Math.round(overlayWidth * percentSmaller, 0);
+					overlayWidth = Math.round(overlayWidth * percentSmallerWidth, 0);
 					overlayHeight = Math.round(overlayWidth / overlayAspectRatio, 0);
 					$("#starmap_inner")
 						.css("width", overlayWidth + "px")
 						.css("height", overlayHeight + "px");
 				} else {
 					$("#starmap")
-					.css("margin-top", c.overlayOffsetTop + "px")
-					.css("margin-left", Math.round(c.overlayOffsetLeft, 0) + "px");
-
+						.css("margin-top", c.overlayOffsetTop + "px")
+						.css("margin-left", Math.round(c.overlayOffsetLeft, 0) + "px");
 				}
 
 				// id="live_container" is where the image goes.
 				var image_w = c.imageWidth;
 				var image_h = Math.round((image_w / icImageAspectRatio), 0);
 
-				// Put "?" icon on upper right of image. +2 moves off border.
-				var x = w
-						- document.getElementById("imageContainer").offsetWidth
-						- document.getElementById("imageContainer").offsetLeft
-						+ 2;  // 2 to move off border
+				// The "?" icon is in the "starmap" container,
+				// which is part of the (usually larger) "starmap_container".
+				// Since the optional border goes around the "starmap_container",
+				// put "?" icon on upper right of that container, 3 pixels inside the border.
+
+				// Determine how far apart the right sides of the
+				// "starmap" and "starmap_container" are.
+
+				var i = "starmap_container";
+				var starmap_containerWidth = $("#"+i).width();
+				var diffWidth = Math.round((starmap_containerWidth - starmapWidth) * percentSmallerWidth, 0) - c.overlayOffsetLeft;
+				let x = -diffWidth + 3;
+				var y = -c.overlayOffsetTop + 3;
+
+//console.log("x BEFORE=", x);
+				if (checkWidth < imageWidth) {
+// This doesn't work very well - when the browser window is larger than the image,
+// the "?" icon is in the correct place, but when the browser window is smaller than the image,
+// which it is when (checkWidth < imageWidth), the icon is slightly too far to the right
+// when checkWidth is slightly < imageWidth, then as checkWidth decreases, the icon
+// move farther and farther left.
+// The "percentSmallerWidth" tries unsuccessfully to take that movement into account.
+					if (c.overlayOffsetLeft != 0) {
+						// TODO: I have no idea why this is needed.
+						// I got the number by trial and error but
+						// they aren't great.
+						var change =  ((percentSmallerWidth * 0.95 * x) - x) / 2;
+//console.log("CHANGE=", change);
+						x += change + 20;
+						x = Math.round(x, 0);
+					}
+
+					if (c.overlayOffsetTop > 0) {
+						y *= percentSmallerHeight * 1.3;
+						y = Math.round(y, 0);
+					} else if (c.overlayOffsetTop < 0) {
+						y *= percentSmallerHeight * 1.5;
+						y = Math.round(y, 0);
+					}
+				}
 				$(".starmap_btn_help").css("right", Math.round(x, 0) + "px");
+				$(".starmap_btn_help").css("top", Math.round(y, 0) + "px");
+//console.log("percentSmallerWidth="+percentSmallerWidth +", adjusted="+(percentSmallerWidth * 1.001));
+//console.log("===========");
+//console.log("putting at x="+x +", y="+y, $("#"+i));
+//console.log("starmapWidth="+starmapWidth +", starmap_containerWidth="+starmap_containerWidth +", diff width="+diffWidth);
+//console.log("oL="+c.overlayOffsetLeft +", oT="+c.overlayOffsetTop);
 
 				// Keep track of the sizes.  virtualsky.js seems to change them,
 				// so we need to change them based on our last known sizes.
@@ -285,6 +326,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 	myLongitude = $scope.longitude;
 
 	$scope.imageURL = config.loadingImage;
+	imageBorder = config.imageBorder;
 	$scope.showInfo = false;
 	$scope.showOverlay = config.showOverlayAtStartup;
 	if ($scope.showOverlay) {

@@ -329,7 +329,7 @@ get_connected_cameras()
 				MODEL="${MODEL//++/ }"
 				SENSOR="${SENSOR//++/ }"
 				local FULL_NAME="${MODEL}  (${SENSOR})"
-				[[ -z ${FUNCTION} ]] && display_msg --log progress "RPi ${FULL_NAME} camera found."
+				[[ -z ${FUNCTION} ]] && display_msg --log progress "Found" " RPi ${FULL_NAME}"
 				CT+=("${NUM_RPI};RPi;${MODEL}" "RPi     ${FULL_NAME}")
 				((NUM_RPI++))
 			done <<<"${RPI_MODELS// /++}"		# replace any spaces
@@ -344,7 +344,7 @@ get_connected_cameras()
 		for X in ${ZWO_MODELS// /++}
 		do
 			MODEL="${X//++/ }"
-			[[ -z ${FUNCTION} ]] && display_msg --log progress "ZWO ${MODEL} camera found."
+			[[ -z ${FUNCTION} ]] && display_msg --log progress "Found" " ZWO ${MODEL}"
 			CT+=( "${NUM_ZWO};ZWO;${MODEL}" "ZWO     ${MODEL}" )
 			((NUM_ZWO++))
 		done
@@ -772,11 +772,11 @@ check_and_mount_tmp()
 
 ####
 # Run apt-get, first checking if it's locked.
+FIRST_CALL="true"
 run_aptGet()
 {
 	local NUM_FAILS=0
-
-	while sudo fuser --silent "/var/lib/dpkg/lock-frontend" ;
+	while sudo fuser --silent /var/lib/dpkg/lock* 2>/dev/null ;
 	do
 		(( NUM_FAILS++ ))
 		if [[ ${NUM_FAILS} -eq 5 ]]; then
@@ -786,7 +786,25 @@ run_aptGet()
 		fi
 		sleep 3
 	done
-	sudo apt-get --assume-yes install "${@}"
+
+	# TODO: the above check doesn't seem to work very well, if at all.
+	# When we fail due to apt being locked, it's almost always on the
+	# first call to apt-get.
+	# If the first call fails, try it again.
+
+	local OUTPUT="$( sudo apt-get --assume-yes install "${@}" 2>&1 )"
+	local RET=$?
+	if [[ $? -ne 0 && ${FIRST_CALL} == "true" ]]; then
+		display_msg --logonly info "First call to apt-get failed; trying again."
+		sleep 3
+		sudo apt-get --assume-yes install "${@}"
+		RET=$?
+	elif [[ -n ${OUTPUT} ]]; then
+		echo -e "${OUTPUT}"
+	fi
+
+	FIRST_CALL="false"
+	return "${RET}"
 }
 
 ####
@@ -2197,7 +2215,7 @@ restore_prior_settings_file()
 						display_msg --log progress "Restoring camera-specific settings files:"
 						FIRST_ONE="false"
 					fi
-					display_msg --log progress "\t$( basename "${FILE}" )"
+					display_msg --log progress "" "\t$( basename "${FILE}" )"
 					cp -a "${FILE}" "${ALLSKY_CONFIG}"
 				done
 			RESTORED_PRIOR_SETTINGS_FILE="true"
@@ -2357,7 +2375,7 @@ restore_prior_files()
 		mv "${PRIOR_ALLSKY_DIR}/images" "${ALLSKY_HOME}"
 	else
 		# This is probably very rare so let the user know
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}.  This is unusual."
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}."  " This is unusual."
 	fi
 
 	ITEM="${SPACE}'darks' directory"
@@ -2392,9 +2410,10 @@ restore_prior_files()
 
 		# Copy the user's prior data to the new file which may contain new fields.
 		activate_python_venv
-		if ! python3 "${ALLSKY_SCRIPTS}"/flowupgrade.py \
-				--prior "${PRIOR_CONFIG_DIR}" --config "${ALLSKY_CONFIG}" ; then
-			display_msg --log error "Copying 'modules' directory had problems."
+		local MSG="$( python3 "${ALLSKY_SCRIPTS}"/flowupgrade.py \
+				--prior "${PRIOR_CONFIG_DIR}" --config "${ALLSKY_CONFIG}" )"
+		if [[ $? -ne 0 ]]; then
+			display_msg --log error "Copying 'modules' directory failed: ${RET}"
 		fi
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
@@ -2799,7 +2818,7 @@ do_restore()
 		mv "${ALLSKY_HOME}/images" "${PRIOR_ALLSKY_DIR}"
 	else
 		# This is probably very rare so let the user know
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}.  This is unusual."
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}." " This is unusual."
 	fi
 
 	ITEM="${SPACE}'darks' directory"
@@ -3025,7 +3044,7 @@ install_Python()
 
 	if [[ ${PI_OS} == "bookworm" ]]; then
 		PKGs="python3-full libgfortran5 libopenblas0-pthread"
-		display_msg --log progress "Installing ${PKGs}."
+		display_msg --logonly progress "Installing ${PKGs}."
 		TMP="${ALLSKY_LOGS}/python3-full.log"
 		# shellcheck disable=SC2086
 		run_aptGet ${PKGs} > "${TMP}" 2>&1

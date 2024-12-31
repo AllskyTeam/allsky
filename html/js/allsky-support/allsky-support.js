@@ -100,17 +100,20 @@ class ALLSKYSUPPORT {
         $(document).on('click', '#as-support-generate', (event) => {
             var logTable = this.#supportFilesTable
 
-let message="This script will collect data from your Raspberry Pi to assist in supporting any issues.<br>\
-No personal information is collected by this script. The following data is collected<br><br>\
-- Basic system information\<br>\
-- Filesystem/Memory/Network Information (IPV4/6/MAC details are obfuscated)<br>\
-- Installed system and python packages<br>\
-- Allsky/lighttpd logs and error logs<br>\
-- Connected camera details<br>\
-- i2c bus details<br>\
-- Running processes<br>\
-- Allsky config files (obfuscated where required to hide any credentials)<br><br>\
-Select 'Ok' to agree or 'Cancel' to cncel"
+let message="This script will collect data from your Raspberry Pi to assist in reporting a problem.<br>\
+<strong>No personal information is collected</strong>.\
+The following data is collected:<br><br>\
+<ul>\
+<li>Basic system information</li>\
+<li>Filesystem / Memory / Network Information (IPV4/6/MAC details are obfuscated)</li>\
+<li>Installed system and python packages</li>\
+<li>Allsky and web server logs and error logs</li>\
+<li>Connected camera details</li>\
+<li>i2c bus details</li>\
+<li>Running processes</li>\
+<li>Allsky config files (obfuscated where required to hide any credentials)</li>\
+</ul><br>\
+Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
 
             bootbox.confirm(message, function(result){              
                 if (result) {

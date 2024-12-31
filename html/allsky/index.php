@@ -212,6 +212,7 @@
 ?>
 	</ul>
 
+	<div id="messages"></div>
 	<div id="imageContainer" <?php if ($imageBorder) echo "class='imageContainer'"; ?> style="max-width: <?php echo $imageWidth ?>px">
 		<div id="starmap_container" ng-show="showOverlay==true">
 			<div id="starmap"></div>

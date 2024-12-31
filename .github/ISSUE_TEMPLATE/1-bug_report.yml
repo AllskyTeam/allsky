@@ -1,6 +1,6 @@
 name: Bug Report
 description: How to report an Allsky problem.
-title: ""
+title: "Problem Report"
 body:
   - type: markdown
     attributes:

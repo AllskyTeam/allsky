@@ -1,0 +1,17 @@
+name: Bug Report
+description: How to report an Allsky problem.
+title: ""
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!IMPORTANT]
+        > First look in the GitHub [Issues](https://github.com/AllskyTeam/allsky/issues) and [Discussions](https://github.com/AllskyTeam/allsky/discussions) pages.
+        > Most problems have already been reported by other people, so add to their post instead of creating a new one.
+  - type: markdown
+    attributes:
+      value: |
+        > [!IMPORTANT]
+        > If you have a QUESTION, enter a GitHub [Q&A Discussion](https://github.com/AllskyTeam/allsky/discussions/new?category=q-a). 
+        > If this is a FEATURE REQUEST, enter a GitHub [New Feature Discussion](https://github.com/AllskyTeam/allsky/discussions/new?category=new-feature-requests).
+        > In this is a problem with the Allsky Software, see the [Reporting Problems](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/troubleshooting/reportingProblems.html) documentation page.

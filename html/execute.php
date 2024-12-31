@@ -19,7 +19,7 @@
 		exit(1);
 	}
 
-	$CMD = "sudo --user=" . ALLSKY_OWNER . " " . ALLSKY_UTILITIES . "/execute.sh '$cmd'";
+	$CMD = "sudo --user=" . ALLSKY_OWNER . " " . ALLSKY_UTILITIES . "/execute.sh $cmd";
 	exec("$CMD 2>&1", $result, $return_val);
 	$dq = '"';
 	echo "<script>console.log(${dq}[$CMD] returned $return_val, result=" . implode(" ", $result) . "${dq});</script>";
@@ -28,7 +28,9 @@
 		echo "<p class='errorMsgBig>Unable to execute '$CMD'</p>";
 	}
 	if ($result != null) {
+		echo "<pre>";
 		echo implode("<br>", $result);
+		echo "</pre>";
 	}
 
 ?>

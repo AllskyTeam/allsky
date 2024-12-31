@@ -306,7 +306,7 @@ if ($useRemoteWebsite) {
 					</li>
 					<li>
 						<a href="index.php?page=support"><i class="fa fa-question fa-fw"></i> Getting Support</a>
-					</li>                    
+					</li>
 					<li>
 						<span onclick="switchTheme()"><i class="fa fa-moon fa-fw"></i> Light/Dark mode</span>
 					</li>
@@ -441,7 +441,7 @@ if ($useRemoteWebsite) {
 						break;
 					case "auth_conf":
 						include_once('includes/admin.php');
-						DisplayAuthConfig($adminUser, $adminPassword);
+						DisplayAuthConfig($config['admin_user'], $config['admin_pass']);
 						break;
 					case "system":
 						include_once('includes/system.php');
@@ -479,7 +479,7 @@ if ($useRemoteWebsite) {
 						include_once('includes/module.php');
 						DisplayModule();
 						break;
-                    case "support":
+					case "support":
 						include_once('includes/support.php');
 						break;
 

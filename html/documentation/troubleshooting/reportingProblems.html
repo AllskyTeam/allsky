@@ -26,78 +26,96 @@
 <div class="Layout-main markdown-body" id="mainContents">
 
 <p>
-If you have a <b>QUESTION</b> or want to suggest a <b>NEW FEATURE</b>,
-add a new GitHub
-<a external="true" href="https://github.com/AllskyTeam/allsky/discussions">Discussion</a>
-item; do <u>not</u> submit an Issue.
-</p>
-<p>
-If you found a <b>BUG</b> or something isn't working right,
-first look at the existing
+Regardless of what you want to ask or report,
+first look at the existing GitHub
 <a external="true" href="https://github.com/AllskyTeam/allsky/discussions">Discussions</a>
 and
 <a external="true" href="https://github.com/AllskyTeam/allsky/issues">Issues</a>.
-If the problem hasn't already been reported, follow the instructions below.
+<br>
+If someone else has reported it, add to their post; do not create a new one.
+</p>
+<p>
+A <strong>problem</strong> is something that isn't working correctly
+<i>and likely is caused by the Allsky Software</i>.
+<br>
+Misconfigured settings and other user errors are not problems
+since the Allsky Software won't need to change.
+</p>
+<p>
+A <strong>bug</strong> is something that isn't working correctly
+<i>and you are pretty sure it's caused by the Allsky Software</i>.
 </p>
 
-<h1>How to report a problem</h1>
+<h2>Reporting something that isn't a problem or bug</h2>
+If you have a new item and it's:
+<ul>
+	<li>a <strong>QUESTION</strong>,
+		<a external="true"
+			href="https://github.com/AllskyTeam/allsky/discussions/new?category=q-a">
+			create a GitHub Q&amp;A Discussion
+		</a>.
+	<li>a request for a <strong>NEW FEATURE</strong>,
+		<a external="true"
+			href=https://github.com/AllskyTeam/allsky/discussions/new?category=new-feature-requests">
+			create a GitHub feature request
+		</a>.
+	<li><strong>anything else that's not a problem or bug</strong>,
+		<a external="true"
+			href="https://github.com/AllskyTeam/allsky/discussions/new">
+			create a GitHub Discussion
+		</a>.
+</ul>
 
-<h2>The automated method</h2>
+
+<h2>Reporting problems and bugs</h2>
+
+
+<h4 id="automatedMethod">The automated method</h4>
 <p>
 <blockquote>
-This is the preferred method and should be used if you have access to the WebUI.
+This is the preferred method to report problems
+and should be used if your WebUI is working.
 </blockquote>
 </p>
 
-<p>Go to the
-<span class="WebUIWebPage"> <a external="true" href="/?page=support">Getting Support</a></span>
-page in the WebUI to generage a troubleshooting log
-which you will attach to a GitHub discussion.
-</p>
-<p>
-Follow the instructions on that page.
+<p>Follow the instructions on the WebUI's
+<span class="WebUIWebPage"><a external="true" href="/?page=support">Getting Support</a></span>
+page.
 </p>
 
 
-<h2>The manual method</h2>
-<p>
-This method should only be used if you are unable to use the automated method,
-for example, if Allsky didn't install and the WebUI isn't working.
-</p>
+<br><br>
+<h4 id="manualMethod">The manual method</h4>
+<blockquote class="warning">
+Only use this method if you are unable to use the automated method above,
+for example, if Allsky didn't install or the WebUI isn't working.
+</blockquote>
+
 <details><summary></summary>
-
 <p>
 <strong>If you can easily reproduce the problem</strong>,
 even if it means waiting until tomorrow for it to occur again,
 do the following:
 <ol>
-	<li>Run the following command to prepare Allsky for troubleshooting.
-		It truncates the Allsky log files and makes sure the
-		<span class="WebUISetting">Debug Level</span> is set to produce
+	<li>Run the following command to make sure Allsky will produce
 		the necessary information to help the Allsky Team troubleshoot your problem:
-<pre>
-allsky-config   prepare_logs
-</pre>
-		If the <span class="WebUISetting">Debug Level</span> changed you are told what
-		its prior value was so you can restore it when troubleshooting is over.
+		<pre>allsky-config   prepare_logs</pre>
+		If the command changed the <span class="WebUISetting">Debug Level</span>
+		you are told what its prior value was so you
+		can restore it when troubleshooting is over.
 	<li>Wait until the problem occurs, then follow the steps below.
 </ol>
 </p>
 
 <p>
-Now:
+Either way:
 <ol>
-	<li>Run the following to create files to attach to a GitHub post:
-<pre>
-cp  /var/log/allsky.log  /tmp/allsky.log
-cp  ~/allsky/config/settings.json  /tmp/settings.json.txt
-</pre>
+	<li>Run the following to create a support log file in
+		<span class="fileName">~/allsky/html/support</span>:
+		<pre>cd ~/allsky; ./support.sh</pre>
 	<li>Create a new
-		<a external="true" href="https://github.com/AllskyTeam/allsky/discussions">Discussion</a>
-		in GitHub and <strong>attach</strong>
-		<span class="fileName">/tmp/allsky.log</span>
-		and <span class="fileName">/tmp/settings.json.txt</span> to it
-		(<strong>do <u>not</u> copy/paste their text</strong>).
+		<a external="true" href="https://github.com/AllskyTeam/allsky/discussions/new?category=problems">Problem Discussion</a>
+		in GitHub and <strong>attach</strong> the support log file to it.
 	<li>Attach screenshots of any error messages
 		or copy/paste their text and surround them with three tildas in the Discussion,
 		for example:
@@ -107,7 +125,8 @@ ERROR: error message line 1
 ~~~</pre>
 		This makes the message format properly.
 	<li>If there are any other files you think would be helpful,
-		<strong>attach</strong> those as well.
+		<strong>attach</strong> those as well
+		(<strong>do <u>not</u> copy/paste their text</strong>).
 		<blockquote class="warning">
 		GitHub only accepts certain file types.
 		See
@@ -119,7 +138,6 @@ ERROR: error message line 1
 		</blockquote>
 </ol>
 </p>
-
 </details>
 
 </div><!-- Layout-main -->

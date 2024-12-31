@@ -125,6 +125,7 @@
 
 	<style>
 		.clear { clear: both; }
+		.content { max-width: <?php echo $imageWidth ?>px; margin: auto; }
 		<?php
 			if ($backgroundImage_url !== null) {
 				echo "		.backgroundImage { background-image: url('$backgroundImage_url');";
@@ -139,7 +140,10 @@
 		?>
 	</style>
 </head>
+
 <body id="body" <?php if ($backgroundImage !== null) echo "class='.backgroundImage'"; ?>>
+
+<div class="content">
 	<div class="header">
 		<div class="title"><?php echo $title; ?></div>
 		<div ng-show="auroraForecast === true && forecast" class="forecast float-end">
@@ -159,6 +163,9 @@
 ?>
 
 	</div>
+	<span class="notification" compile="notification"></span>
+	<span id="messages"></span>
+
 <?php
 	if (count($popoutIcons) > 0) {
 		echo "\t<div class='info animated slideInRight' ng-show='showInfo==true'>\n";
@@ -184,8 +191,6 @@
 		echo "\t</div>\n";
 	}
 ?>
-	<span class="notification" compile="notification"></span>
-
 	<ul id="leftSidebar" class="animated slideInLeft">
 <?php
 	if (count($leftSidebar) > 0) {
@@ -212,8 +217,7 @@
 ?>
 	</ul>
 
-	<div id="messages"></div>
-	<div id="imageContainer" <?php if ($imageBorder) echo "class='imageContainer'"; ?> style="max-width: <?php echo $imageWidth ?>px">
+	<div id="imageContainer" <?php if ($imageBorder) echo "class='imageContainer'"; ?>>
 		<div id="starmap_container" ng-show="showOverlay==true">
 			<div id="starmap"></div>
 		</div>
@@ -221,11 +225,12 @@
 			<img title="allsky image" alt="allsky image" id="current" class="current" src="<?php echo $loadingImage ?>">
 		</div>
 	</div>
-	
+<div>
 <?php
 	if ($includeLinkToMakeOwn) {
 		echo "<div class='diy'>";
-		echo "<i class='fa fa-tools'></i><a href='http://thomasjacquin.com/make-your-own-allsky-camera' title='A guide to build you own allsky camera' target='_blank'>Build your own</a>";
+		echo "<i class='fa fa-tools'></i> ";
+		echo "<a href='http://thomasjacquin.com/make-your-own-allsky-camera' title='A guide to build an allsky camera' target='_blank'>Build your own</a>";
 		echo "</div>";
 	}
 

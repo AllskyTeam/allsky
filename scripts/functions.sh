@@ -295,7 +295,7 @@ function get_connected_cameras_info()
 			# Input:
 			#	camera_number  : sensor  [other stuff]
 			LIBCAMERA_LOG_LEVELS=FATAL "${CMD_TO_USE_}" --list-cameras 2>&1 |
-				gawk '/^[0-9]/ { printf("%s\t%d\t%s\n", "RPi", $2, $3); }'
+				gawk '/^[0-9]/ { printf("%s\t%d\t%s\n", "RPi", $1, $3); }'
 		fi
 	fi
 
@@ -437,7 +437,7 @@ function validate_camera()
 	if [[ ${SETTINGS_CT} != "${CT}" ]]; then
 		MSG="The Camera Type unexpectedly changed from '${SETTINGS_CT}' to '${CT}'."
 		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
-		MSG+="\nchange the 'Camera Type' to 'Refresh' then save the settings."
+		MSG+=" change the 'Camera Type' to 'Refresh' then save the settings."
 		if [[ ${ON_TTY} == "true" ]]; then
 			echo -e "\n${RED}${MSG}${NC}\n"
 		else
@@ -448,7 +448,7 @@ function validate_camera()
 	elif [[ ${SETTINGS_CM} != "${CM}" ]]; then
 		MSG="The Camera Model unexpectedly changed from '${SETTINGS_CM}' to '${CM}'."
 		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
-		MSG+="\nchange the 'Camera Model' to '${CM}' then save the settings."
+		MSG+=" change the 'Camera Model' to '${CM}' then save the settings."
 		if [[ ${ON_TTY} == "true" ]]; then
 			echo -e "\n${RED}${MSG}${NC}\n"
 		else
@@ -459,7 +459,7 @@ function validate_camera()
 	elif [[ ${SETTINGS_CN} != "${CN}" ]]; then
 		MSG="The camera's number unexpectedly changed from '${SETTINGS_CN}' to '${CN}'."
 		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
-		MSG+="\nchange the 'Camera Type' to 'Refresh' then save the settings."
+		MSG+=" change the 'Camera Type' to 'Refresh' then save the settings."
 		if [[ ${ON_TTY} == "true" ]]; then
 			echo -e "\n${RED}${MSG}${NC}\n"
 		else
@@ -480,17 +480,20 @@ function validate_camera()
 	if ! "${ALLSKY_UTILITIES}/show_supported_cameras.sh" "--${CT}" |
 		grep --silent "${CM}" ; then
 
-		MSG="${CT} camera model '${CM}' is not supported by Allsky."
-		MSG+="\nTo see the list of supported ${CT} cameras, run"
-		MSG+="\n    show_supported_cameras.sh --${CT}"
-		[[ ${CT} == "ZWO" ]] && MSG+="\nWARNING: the list is long!"
+		MSG="${CT} camera '${CM}' is not supported by Allsky."
 		if [[ ${ON_TTY} == "true" ]]; then
 			echo -e "\n${RED}${MSG}${NC}\n"
 		else
 			MSG+="\n\nClick this message to ask that Allsky support this camera."
 			URL="/documentation/explanations/requestCameraSupport.html";
-			"${ALLSKY_SCRIPTS}/addMessage.sh" --id "AM_NOT_SUPPORTED ${CT}" --type warning --msg "${MSG}" --url "${URL}" \
-				--cmd "Click here to see the supported ${CT} cameras."
+			local CMD_MSG="Click here to see the supported ${CT} cameras."
+			[[ ${CT} == "ZWO" ]] && CMD_MSG+=" WARNING: the list is long!"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" \
+				--id "AM_NOT_SUPPORTED ${CT}" \
+				--type warning \
+				--msg "${MSG}" \
+				--url "${URL}" \
+				--cmd "${CMD_MSG}"
 		fi
 
 		return 2

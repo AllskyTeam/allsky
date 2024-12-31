@@ -300,6 +300,8 @@ function AppCtrl($scope, $timeout, $http, _) {
 	$scope.auroraForecast = config.auroraForecast;
 	$scope.imageName = config.imageName;
 	$scope.AllskyVersion = config.AllskyVersion;
+	$scope.messages = document.getElementById("messages");
+	$scope.messages.innerHTML = "";
 
 	function getHiddenProp() {
 		var prefixes = ['webkit', 'moz', 'ms', 'o'];
@@ -506,20 +508,33 @@ function AppCtrl($scope, $timeout, $http, _) {
 				console.log("  afterSunsetTime = " + afterSunsetTime);
 			}
 
-// TODO: Is there a way to specify not to cache this without using "?_ts" ?
 			var img = $("<img title='allsky image' />")
-				.attr('src', url + '?_ts=' + new Date().getTime())
 				.addClass(imageClass)
 				.on('load', function() {
-					if (!this.complete || typeof this.naturalWidth === "undefined" || this.naturalWidth === 0) {
-						alert('broken image!');
-						$timeout(function(){
-							$scope.getImage();
-						}, 500);
-					} else {
-						$("#live_container").empty().append(img);
+					$("#live_container").empty().append(img);
+					$scope.messages.innerHTML = "";
+				}).on('error', function(e) {
+					if ($scope.messages.innerHTML == "") {
+						console.log("GOT ERROR reading image");
+
+						let message = "<div class='warning-msg'>";
+						message += "Image [";
+						message += $scope.imageName;
+// TODO: is there a way to determine "not found" from "corrupted" ?
+						message += "] not found or corrupted.";
+						message += "<br><strong>Check the 'imageName' setting.</strong>";
+						// If it contains "current" say that's only for remote Websites
+						if ($scope.imageName.search("/current") >= 0) {
+							message += "<br>If this is a remote Allsky Website,";
+							message += " the 'imageName' setting is usually something like '";
+							message += "image.jpg'.";
+						}
+						message += "</div>";
+						$scope.messages.innerHTML = message;
 					}
-				});
+				})
+// TODO: Is there a way to specify not to cache this without using "?_ts" ?
+				.attr('src', url + '?_ts=' + new Date().getTime());
 
 			// Don't re-read after the 1st image of this period since we read it right before the image.
 			if (rereadSunriseSunset && numImagesRead > 1) {

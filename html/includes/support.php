@@ -106,8 +106,11 @@ $V = ALLSKY_VERSION;
 							<li>Click the
 								<span class="btn btn-primary btn-fake">Start discussion</span> button in GitHub.
 							<li>Come back to this page.
-							<li>Add the GitHub discussion number by clicking on the GitHub icon associated
-								with the support log below.
+							<li>Add the GitHub discussion number by clicking on the
+								<span class="btn btn-primary btn-fake">
+									<i class="fa-brands fa-github"></i> icon
+								</span>
+								associated with the new support log below.
 						</ol>
 						</p>
 						<br>

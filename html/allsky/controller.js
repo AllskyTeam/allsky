@@ -517,8 +517,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 					if ($scope.messages.innerHTML == "") {
 						console.log("GOT ERROR reading image");
 
-						let message = "<div class='warning-msg'>";
-						message += "Image [";
+						let message = "Image [";
 						message += $scope.imageName;
 // TODO: is there a way to determine "not found" from "corrupted" ?
 						message += "] not found or corrupted.";
@@ -529,8 +528,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 							message += " the 'imageName' setting is usually something like '";
 							message += "image.jpg'.";
 						}
-						message += "</div>";
-						$scope.messages.innerHTML = message;
+						$scope.messages.innerHTML = formatMessage(message, "warning");
 					}
 				})
 // TODO: Is there a way to specify not to cache this without using "?_ts" ?

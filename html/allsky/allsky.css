@@ -8,13 +8,14 @@ body {
 	color:white;
 	font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
 	background-color: black;
-	max-width: 960px;
 	margin: auto;
 	overflow-y: scroll;
 }
+#live_container, #starmap {
+	text-align: center;
+}
 img.current {
 	width: 100%;
-	max-width: 960px;
 }
 
 #starmap_container {
@@ -31,16 +32,14 @@ img.current {
 	float: left;
 	color: #DDD;
 	font-size: 20px;
-	padding-left: 65px;
-	padding-top: 4px;
-	margin-left: 5px;
-	margin-top: 2px;
-	background: url('allsky-logo.png') left center;
-	background-size: 57px;
-	background-repeat: no-repeat;
 	font-family: 'Ubuntu', sans-serif;
 	font-weight: 400;
-	height: 35px;
+	padding-left: 90px;
+	padding-top: 12px;
+	background: url('allsky-logo.png') left center;
+	background-size: 75px;
+	background-repeat: no-repeat;
+	height: 55px;
 }
 
 .personalLink {

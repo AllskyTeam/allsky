@@ -489,8 +489,8 @@ function validate_camera()
 		else
 			MSG+="\n\nClick this message to ask that Allsky support this camera."
 			URL="/documentation/explanations/requestCameraSupport.html";
-			"${ALLSKY_SCRIPTS}/addMessage.sh" --id AM_NOT_SUPPORTED --type warning --msg "${MSG}" --url "${URL}" \
-				--cmd "${CT}:Click here to see the list of supported ${CT} cameras."
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --id "AM_NOT_SUPPORTED ${CT}" --type warning --msg "${MSG}" --url "${URL}" \
+				--cmd "Click here to see the supported ${CT} cameras."
 		fi
 
 		return 2

@@ -297,6 +297,7 @@ function VirtualSky(input){
 	this.transparent = false;			// Show the sky background or not
 	this.fps = 10;						// Number of frames per second when animating
 	this.credit = (location.host == "lco.global" && location.href.indexOf("/embed") < 0) ? false : true;
+this.credit = false;	// ALLSKY set to false
 	this.callback = { geo:'', mouseenter:'', mouseout:'', contextmenu: '', cursor: '', click:'', draw: '' };
 	this.lookup = {};
 	this.keys = [];
@@ -859,6 +860,7 @@ function VirtualSky(input){
 	// Define the colours that we will use
 	this.colours = {
 		'normal' : {
+			'polaroutline' : "rgb(0,0,0)",	// ALLSKY ADDED
 			'txt' : "rgb(255,255,255)",
 			'black':"rgb(0,0,0)",
 			'white':"rgb(255,255,255)",
@@ -879,6 +881,7 @@ function VirtualSky(input){
 			'pointers':'rgb(200,200,200)'
 		},
 		'negative':{
+			'polaroutline' : "rgb(255,255,255)",	// ALLSKY ADDED
 			'txt' : "rgb(0,0,0)",
 			'black':"rgb(0,0,0)",
 			'white':"rgb(255,255,255)",
@@ -2418,13 +2421,19 @@ VirtualSky.prototype.drawImmediate = function(proj, whofrom){
 		c.closePath();
 		c.beginPath();
 		c.arc(this.wide/2,this.tall/2,-0.5+this.tall/2,0,Math.PI*2,true);
+if (false) {		// ALLSKY ADDED this block to add a dot at the overlay center
+  var dot_size = 5;
+  c.moveTo(this.wide/2 +dot_size,this.tall/2);
+  c.arc(this.wide/2,this.tall/2,-0.5+dot_size,0,Math.PI*2,true);
+  c.strokeStyle = this.col.polaroutline;
+}
 		c.closePath();
 		if(!this.transparent){
 			c.fillStyle = (this.hasGradient()) ? "rgba(0,15,30, 1)" : ((this.negative) ? white : black);
 			c.fill();
 		}
 		c.lineWidth = 0.5;
-		c.strokeStyle = black;
+		c.strokeStyle = this.col.polaroutline;		// ALLSKY: this is circle outline color
 		c.stroke();
 	}else if(typeof this.projection.draw==="function") this.projection.draw.call(this);
 

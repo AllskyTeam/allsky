@@ -690,6 +690,8 @@ function upload_remote_website()
 	local NL="$( echo -e "\n " )"		# Need space otherwise it doesn't work - not sure why
 	local CMDS=" lcd '${ALLSKY_WEBSITE}'"
 	CMDS+="${NL}set dns:fatal-timeout 10; set net:max-retries 2; set net:timeout 10"
+	LFTP_COMMANDS="$( settings ".REMOTEWEBSITE_LFTP_COMMANDS" "${ALLSKY_ENV}" )"
+	[[ -n ${LFTP_COMMANDS} ]] && CMDS+="; ${LFTP_COMMANDS}"
 	# shellcheck disable=SC2086
 	if [[ -n "${REMOTE_DIR}" ]]; then
 		CMDS+="${NL}cd '${REMOTE_DIR}'"

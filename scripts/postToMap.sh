@@ -17,16 +17,18 @@ source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 function usage_and_exit()
 {
 	local RET=${1}
+	exec >&2
 	[[ ${RET} -ne 0 ]] && echo -en "${wERROR}"
 	echo
-	echo -e "Usage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug] [--machineid id] [--endofnight]"
+	echo -e "Usage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug] [--machineid id] [--endofnight] [--fromWebUI]"
 	echo
-	echo "--help: Print this usage message and exit immediately."
-	echo "--whisper: Be quiet with non-error related output - only display results."
-	echo "--delete: Delete map data; all fields except machine_id are ignored."
-	echo "--force: Force updates, even if not scheduled automatically for today."
-	echo "--debug: Output debugging statements."
-	echo "--endofnight: Indicates how ${ME} was invoked."
+	echo "--help:       Print this usage message and exit immediately."
+	echo "--whisper:    Be quiet with non-error related output - only display results."
+	echo "--delete:     Delete map data; all fields except machine_id are ignored."
+	echo "--force:      Force updates, even if not scheduled automatically for today."
+	echo "--debug:      Output debugging statements."
+	echo "--endofnight: ${ME} was called from endOfNight.sh."
+	echo "--fromWebUI:  ${ME} was called from the WebUI (use html)."
 	echo
 	[[ ${RET} -ne 0 ]] && echo -e "${wNC}"
 	exit "${RET}"
@@ -54,8 +56,8 @@ function check_URL()
 	local URL_TYPE="${2}"
 	local FIELD_NAME="${3}"
 
-	# ${E} is a global variable we may set.
 	local TIMEOUT=30		# seconds to wait when trying to reach a URL
+	local E=""				# holds error message
 
 	local D="$( get_domain "${URL}" )"
 	if [[ "${D:0:7}"  == "192.168"		||
@@ -66,10 +68,13 @@ function check_URL()
 		  "${D:0:10}" == "198.51.100"	||
 		  "${D:0:9}"  == "203.0.113"	||
 		  "${D:0:3}"  == "240" ]]; then
-		E="ERROR: ${FIELD_NAME} '${URL}' is not reachable from the Internet.${BR}${E}"
+		E+="ERROR: ${FIELD_NAME} '${URL}' is not reachable from the Internet.${BR}"
 
 	elif [[ ${URL:0:5} != "http:" && ${URL:0:6} != "https:" ]]; then
-		E="ERROR: ${FIELD_NAME} '${URL}' must begin with 'http:' or 'https:'.${BR}${E}"
+		E+="ERROR: ${FIELD_NAME} '${URL}' must begin with 'http:' or 'https:'.${BR}"
+
+	elif [[ ${URL_TYPE} == "remotewebsiteurl" && "$( basename "${URL}" )" == "index.php" ]]; then
+		E+="ERROR: ${FIELD_NAME} '${URL}' should not end with '/index.php'.${BR}"
 
 	else
 		# Make sure it's a valid URL.  Some servers don't return anything if the user agent is "curl".
@@ -81,11 +86,11 @@ function check_URL()
 			echo -e "${wNC}.\n"
 		fi
 		if [[ ${RET} -eq 6 ]]; then
-			E="ERROR: ${FIELD_NAME} '${URL}' not found - check spelling and network connectivity.${BR}${E}"
+			E+="ERROR: ${FIELD_NAME} '${URL}' not found - check spelling and network connectivity.${BR}"
 		elif [[ ${RET} -eq 28 ]]; then
-			E="ERROR: Could not connect to ${FIELD_NAME} '${URL}' after ${TIMEOUT} seconds.${BR}${E}"
+			E+="ERROR: Could not connect to ${FIELD_NAME} '${URL}' after ${TIMEOUT} seconds.${BR}"
 		elif [[ ${RET} -ne 0 ]]; then
-				E="ERROR: ${FIELD_NAME} '${URL}' cannot be reached (${CONTENT}).${BR}${E}"
+				E+="ERROR: ${FIELD_NAME} '${URL}' cannot be reached (${CONTENT}).${BR}"
 		else
 			local TYPE T
 			if [[ ${URL_TYPE} == "remotewebsiteurl" ]]; then
@@ -96,12 +101,14 @@ function check_URL()
 				T="image"
 			fi
 			if [[ -z ${TYPE} ]]; then
-				E="ERROR: ${FIELD_NAME} '${URL}' does not appear to be a valid ${T}.${BR}${E}"
+				E+="ERROR: ${FIELD_NAME} '${URL}' does not appear to be a valid ${T}.${BR}"
 			else
 				return 0
 			fi
 		fi
 	fi
+
+	echo "${E}"		# NO -e
 	return 1
 }
 
@@ -111,6 +118,7 @@ UPLOAD="false"
 WHISPER="false"
 ENDOFNIGHT="false"
 MACHINE_ID=""
+FROM_WEBUI="false"
 while [[ $# -ne 0 ]]; do
 	case "${1,,}" in
 		--help)
@@ -136,6 +144,9 @@ while [[ $# -ne 0 ]]; do
 			MACHINE_ID="${2}"
 			shift
 			;;
+		--fromwebui)
+			FROM_WEBUI="true"
+			;;
 		*)
 			usage_and_exit 1;
 			;;
@@ -144,8 +155,7 @@ while [[ $# -ne 0 ]]; do
 done
 
 
-# If not on a tty, then we're either called from the endOfNight.sh script (plain text), or the WebUI (html).
-if [[ ${ON_TTY} == "false" && ${ENDOFNIGHT} == "false" ]]; then
+if [[ ${FROM_WEBUI} == "true" ]]; then
 	BR="<br>"		# Line break
 else
 	BR="\n"
@@ -166,38 +176,46 @@ else
 	MSG_START="${ME}: "
 	ERROR_MSG_START="${wERROR}*** ${ME}: "
 	WARNING_MSG_START="${wWARNING}*** ${ME}: "
+	if [[ ${FROM_WEBUI} == "true" ]]; then
+		ERROR_MSG_START+="${BR}"
+		WARNING_MSG_START+="${BR}"
+	fi
 fi
 
 
 if [[ -z ${MACHINE_ID} ]]; then
 	MACHINE_ID="$( < /etc/machine-id )"
 	if [[ -z ${MACHINE_ID} ]]; then
-		E="ERROR: Unable to get 'machine_id': check /etc/machine-id."
-		echo -e "${ERROR_MSG_START}${E}${wNC}"
-		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
+		ERR="ERROR: Unable to get 'machine_id': check /etc/machine-id."
+		echo -e "${ERROR_MSG_START}${ERR}${wNC}" >&2
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${ERR}"
 		exit 3
 	fi
 fi
 
-OK="true"
-E=""			# Global variable
+E=""
 LATITUDE="$( settings ".latitude" )"
 if [[ -z ${LATITUDE} ]]; then
-	E="ERROR: 'Latitude' is required.${BR}${E}"
-	OK="false"
+	E+="ERROR: 'Latitude' is required.${BR}"
 fi
 LONGITUDE="$( settings ".longitude" )"
 if [[ -z ${LONGITUDE} ]]; then
-	E="ERROR: 'Longitude' is required.${BR}${E}"
-	OK="false"
+	E+="ERROR: 'Longitude' is required.${BR}"
 fi
-[[ ${OK} == "false" ]] && echo -e "${ERROR_MSG_START}${E}${wNC}" && exit 1
+if [[ -n ${E} ]]; then
+	echo -e "${ERROR_MSG_START}${E}${wNC}"
+	exit 1
+fi
 
-LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" )" || OK="false"
-LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )" || OK="false"
+OK="true"
+LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" )" >&2 || OK="false"
+LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )" >&2 || OK="false"
 [[ ${OK} == "false" ]] && exit 1	# convertLatLong output error message
 
+
 if false; then
+	# TODO: in the future, include part of the latitude and longitude with the machine id
+	# to REALLY guarantee it's unique (we've seen cases where two Pi's have the same machine id.
 	LA=${LATITUDE%.*}
 	LO=${LONGITUDE%.*}
 	MACHINE_ID="${LA:0:2}${LO:0:2}${MACHINE_ID:4}"
@@ -217,60 +235,55 @@ if [[ ${DELETE} == "true" ]]; then
 else
 	LOCATION="$( settings ".location" )"
 	OWNER="$( settings ".owner" )"
-
 	WEBSITE_URL="$( settings ".remotewebsiteurl" )"
-	# Without a trailing "/" we may get a "Moved permanently" message.
-	[[ -n ${WEBSITE_URL} && ${WEBSITE_URL: -1:1} != "/" ]] && WEBSITE_URL="${WEBSITE_URL}/"
-
 	IMAGE_URL="$( settings ".remotewebsiteimageurl" )"
 	CAMERA="$( settings ".camera" )"
 	LENS="$( settings ".lens" )"
 	COMPUTER="$( settings ".computer" )"
 
-	OK="true"
 	E=""
 	W=""
 	# Check for required fields
 	if [[ -z ${CAMERA} ]]; then
-		E="ERROR: 'Camera' is required.${BR}${E}"
-		OK="false"
+		E+="ERROR: 'Camera' is required.${BR}"
 	fi
 	if [[ -z ${COMPUTER} ]]; then
-		E="ERROR: 'Computer' is required.${BR}${E}"
-		OK="false"
+		E+="ERROR: 'Computer' is required.${BR}"
 	fi
 
 	# Check for optional, but suggested fields
 	if [[ -z ${LOCATION} ]]; then
-		W="WARNING: 'Location' not set; continuing.${BR}${W}"
+		W+="WARNING: 'Location' not set; continuing.${BR}"
 	fi
 	if [[ -z ${OWNER} ]]; then
-		W="WARNING: 'Owner' not set; continuing.${BR}${W}"
+		W+="WARNING: 'Owner' not set; continuing.${BR}"
 	fi
 	if [[ -z ${LENS} ]]; then
-		W="WARNING: 'Lens' not set; continuing.${BR}${W}"
+		W+="WARNING: 'Lens' not set; continuing.${BR}"
 	fi
 
 	# website_url and image_url are optional
 
 	if [[ (-n ${WEBSITE_URL} && -z ${IMAGE_URL}) || (-z ${WEBSITE_URL} && -n ${IMAGE_URL}) ]]; then
-		E="ERROR: If you specify the Website URL or Image URL, you must specify both URLs.${BR}${E}"
-		OK="false"
+		E+="ERROR: If you specify the Website URL or Image URL, you must specify both URLs.${BR}"
 	elif [[ -n ${WEBSITE_URL} ]]; then		# they specified both
 		# The domain names (or IP addresses) must be the same.
 		Wurl="$( get_domain "${WEBSITE_URL}" )"
 		Iurl="$( get_domain "${IMAGE_URL}" )"
 		if [[ ${Wurl} != "${Iurl}" ]]; then
-			E="ERROR: The Website and Image URLs must have the same domain name or IP address.${BR}${E}"
-			OK="false"
+			E+="ERROR: The Website and Image URLs must have the same domain name or IP address.${BR}"
 		fi
-		# check_URL() may set ${E}.
-		check_URL "${WEBSITE_URL}" remotewebsiteurl "Website URL" || OK="false"
-		check_URL "${IMAGE_URL}" remotewebsiteimageurl "Image URL" || OK="false"
+
+		ERR="$( check_URL "${WEBSITE_URL}" remotewebsiteurl "Website URL" )"  || E+="${ERR}"
+		ERR="$( check_URL "${IMAGE_URL}" remotewebsiteimageurl "Image URL" )" || E+="${ERR}"
+
+		# Without a trailing "/" we may get a "Moved permanently" message.
+		# This check needs to come after check_URL() above.
+		[[ -n ${E} && -n ${WEBSITE_URL} && ${WEBSITE_URL: -1:1} != "/" ]] && WEBSITE_URL+="/"
 	fi
 
 	if [[ -n ${W} ]]; then
-		echo -e "${WARNING_MSG_START}${W%%"${BR}"}${NC}"
+		echo -e "${WARNING_MSG_START}${W%%"${BR}"}${NC}" >&2
 		# Want each message to have its own addMessage.sh entry.
 		if [[ ${ENDOFNIGHT} == "true" ]]; then
 			echo "${W}" | while read -r MSG
@@ -279,8 +292,8 @@ else
 			done
 		fi
 	fi
-	if [[ ${OK} == "false" ]]; then
-		echo -e "${ERROR_MSG_START}${E%%"${BR}"}${NC}"
+	if [[ -n ${E} ]]; then
+		echo -e "${ERROR_MSG_START}${E%%"${BR}"}${NC}" >&2
 		if [[ ${ENDOFNIGHT} == "true" ]]; then
 			echo "${E}" | while read -r MSG
 			do
@@ -339,12 +352,12 @@ if [[ ${UPLOAD} == "true" ]]; then
 	RETURN_CODE=$?
 	[[ ${DEBUG} == "true" ]] && echo -e "\n${wDEBUG}Returned:\n${RETURN}${wNC}.\n"
 	if [[ ${RETURN_CODE} -ne 0 ]]; then
-		E="ERROR while uploading map data with curl: ${RETURN}, CMD=${CMD}."
+		ERR="ERROR while uploading map data with curl: ${RETURN}, CMD=${CMD}."
 		if [[ ${ENDOFNIGHT} == "true" ]]; then
-			echo -e "${ME}: ${E}"		# goes in log file
-			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
+			echo -e "${ME}: ${ERR}"		# goes in log file
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${ERR}"
 		else
-			echo -e "${ERROR_MSG_START}${E}${wNC}"
+			echo -e "${ERROR_MSG_START}${ERR}${wNC}" >&2
 		fi
 		exit "${RETURN_CODE}"
 	fi
@@ -371,32 +384,32 @@ if [[ ${UPLOAD} == "true" ]]; then
 		fi
 
 	elif [[ -z ${RET} ]]; then
-		E="ERROR: Unknown reply from server: ${RETURN}."
-		echo -e "${ERROR_MSG_START}${E}${wNC}"
-		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
+		MSG="ERROR: Unknown reply from server: ${RETURN}."
+		echo -e "${ERROR_MSG_START}${MSG}${wNC}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${MSG}"
 		RETURN_CODE=2
 
 	elif [[ ${RET:0:6} == "ERROR " ]]; then
-		E="ERROR returned while uploading map data: ${RET:6}."
-		echo -e "${ERROR_MSG_START}${E}${wNC}"
-		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
+		MSG="ERROR returned while uploading map data: ${RET:6}."
+		echo -e "${ERROR_MSG_START}${MSG}${wNC}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${MSG}"
 		RETURN_CODE=2
 
 	elif [[ ${RET:0:15} == "ALREADY UPDATED" ]]; then
 		MAX_UPDATES=${RET:16}
-		W="NOTICE: You have already updated your map data the maximum of ${MAX_UPDATES} times per day.  Try again tomorrow."
-		echo -e "${WARNING_MSG_START}${W}${wNC}"
-		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${ME}: ${W}"
+		MSG="NOTICE: You have already updated your map data the maximum of ${MAX_UPDATES} times per day.  Try again tomorrow."
+		echo -e "${WARNING_MSG_START}${MSG}${wNC}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${ME}: ${MSG}"
 
 	else
-		E="ERROR returned while uploading map data: ${RET}."
-		echo -e "${ERROR_MSG_START}${E}${wNC}"
-		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
+		MSG="ERROR returned while uploading map data: ${RET}."
+		echo -e "${ERROR_MSG_START}${MSG}${wNC}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${MSG}"
 		RETURN_CODE=2
 	fi
 
 elif [[ ( ${ON_TTY} == "true" || ${ALLSKY_DEBUG_LEVEL} -ge 4) && ${ENDOFNIGHT} == "false"  ]]; then
-	echo "${ME}: Week day doesn't match Machine ID ending - don't upload."
+	echo "${ME}: Not time to upload - wait until tomorrow."
 fi
 
 exit "${RETURN_CODE}"

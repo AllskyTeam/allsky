@@ -266,7 +266,7 @@ function pre_install_checks()
 			DIALOG_TEXT+="NOT FOUND."
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
-			DIALOG_TEXT+="\n${SPACES}* Checking it for old-style configuration file:"
+			DIALOG_TEXT+="\n${SPACES}* Checking it for old-style configuration file: "
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 			if [[ ${HAVE_REALLY_OLD_REMOTE_CONFIG} == "true" ]]; then
 				DT="FOUND."

@@ -73,7 +73,8 @@ while [[ $# -gt 0 ]]; do
 	shift
 done
 
-if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
+if [[ ${ON_TTY} == "false" ]]; then
+	FROM_WEBUI="--fromWebUI"
 	# The WebUI will display our output in an
 	# appropriate style if ERROR: or WARNING: is in the message, so
 	# don't provide our own format.
@@ -84,6 +85,7 @@ if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
 	wNC=""
 	BR="<br>"
 else
+	FROM_WEBUI=""
 	ERROR_PREFIX="${ME}: "
 	BR="\n"
 fi
@@ -888,7 +890,7 @@ if [[ ${RUN_POSTTOMAP} == "true" ]]; then
 		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postToMap.sh${wNC}"
 # TODO: put in background to return to user faster?
 		# shellcheck disable=SC2086
-		"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${POSTTOMAP_ACTION}
+		"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${FROM_WEBUI} ${POSTTOMAP_ACTION}
 	fi
 fi
 

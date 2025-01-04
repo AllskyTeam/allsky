@@ -1243,13 +1243,16 @@ aws configure
 </tr>
 <tr><td id="remotewebsiteurl"><span class="WebUISetting">Website URL</span></td>
 	<td></td>
-	<td>Your website's URL, for example
-	<span class="WebUIValue">https://www.mywebsite.com/allsky</span>.
+	<td>Your remote Website's URL, for example
+	<span class="WebUIValue">https://www.mywebsite.com/allsky/</span>.
+	It should end with <span class="WebUIValue">/</span> and NOT include
+	<span class="WebUIValue">index.php</span>.
 	<blockquote>
 	If a <span class="WebUISetting">Website URL</span> is specified,
 	the <span class="WebUISetting">Image URL</span> must also be specified, and vice versa.
 	<br>Both URLs must begin with
 	<span class="WebUIValue">http</span> or <span class="WebUIValue">https</span>.
+	(Use the more secure "https" over "http" if possible.)
 	</blockquote>
 	</td></tr>
 <tr><td id="remotewebsiteimageurl"><span class="WebUISetting">Image URL</span></td>
@@ -1258,7 +1261,6 @@ aws configure
 	<span class="WebUIValue">https://www.mywebsite.com/allsky/image.jpg</span>.
 		Normally this will be the <span class="WebUISetting">Website URL</span> followed by
 		<code>image.jpg</code>.
-		<br>Use the more secure "https" over "http" if possible.
 	</td></tr>
 
 <tr><td id="remoteserver" class="subSettingsHeader" colspan="3">Remote Server</td></tr>

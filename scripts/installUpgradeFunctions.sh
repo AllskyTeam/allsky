@@ -1135,7 +1135,7 @@ function doV()
 	local jV="${3}"				# new json variable name
 	local TYPE="${4}"
 	local FILE="${5}"
-	local HIDE="${6:-false}"	# hide value in log file
+	local HIDE="${6:-show}"		# "hide" to hide value in log file
 
 	[[ -z ${oldV} ]] && oldV="${V_}"
 
@@ -1159,10 +1159,10 @@ function doV()
 		fi
 		MSG="${SPACE}${oldV}${jV} = ${VAL_}"
 		[[ -n ${oldV} ]] && MSG+=", TYPE=${TYPE}"
-		[[ ${HIDE} == "true" ]] && MSG="${MSG/${VAL_}/<HIDDEN>}"
+		[[ ${HIDE} == "hide" ]] && MSG="${MSG/${VAL_}/<HIDDEN>}"
 		display_msg --logonly info "${MSG}"
 	else
-		[[ ${HIDE} == "true" ]] && ERR="${ERR/${VAL_}/<HIDDEN>}"
+		[[ ${HIDE} == "hide" ]] && ERR="${ERR/${VAL_}/<HIDDEN>}"
 		# update_json_file() returns error message.
 		display_msg --log warning "${ERR}"
 	fi

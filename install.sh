@@ -2121,11 +2121,11 @@ convert_ftp_sh()
 		doV "NEW" "X" "useremotewebsite" "boolean" "${NEW_FILE}"
 
 		doV "" "IMG_UPLOAD_ORIGINAL_NAME" "remotewebsiteimageuploadoriginalname" "boolean" "${NEW_FILE}"
-		doV "" "REMOTE_HOST" "REMOTEWEBSITE_HOST" "text" "${ALLSKY_ENV}"
+		doV "" "REMOTE_HOST" "REMOTEWEBSITE_HOST" "text" "${ALLSKY_ENV}" "hide"
 		doV "" "REMOTE_PORT" "REMOTEWEBSITE_PORT" "text" "${ALLSKY_ENV}"
 
-		doV "" "REMOTE_USER" "REMOTEWEBSITE_USER" "text" "${ALLSKY_ENV}"
-		doV "" "REMOTE_PASSWORD" "REMOTEWEBSITE_PASSWORD" "text" "${ALLSKY_ENV}"
+		doV "" "REMOTE_USER" "REMOTEWEBSITE_USER" "text" "${ALLSKY_ENV}" "hide"
+		doV "" "REMOTE_PASSWORD" "REMOTEWEBSITE_PASSWORD" "text" "${ALLSKY_ENV}" "hide"
 		doV "" "LFTP_COMMANDS" "REMOTEWEBSITE_LFTP_COMMANDS" "text" "${ALLSKY_ENV}"
 		doV "" "SSH_KEY_FILE" "REMOTEWEBSITE_SSH_KEY_FILE" "text" "${ALLSKY_ENV}"
 

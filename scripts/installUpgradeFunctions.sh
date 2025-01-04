@@ -1127,14 +1127,15 @@ function get_website_checksums()
 # Update the specified file with the specified new value.
 # ${V_} must be a legal shell variable name.
 # Use V_ and VAL_ in case the caller uses V or VAL
-doV()
+function doV()
 {
-	local oldV="${1}"		# Optional name of old variable; if "" then use ${V_}.
-	local V_="${2}"			# name of the variable that holds the new value
-	local VAL_="${!V_}"		# value of the variable
-	local jV="${3}"			# new json variable name
+	local oldV="${1}"			# Optional name of old variable; if "" then use ${V_}.
+	local V_="${2}"				# name of the variable that holds the new value
+	local VAL_="${!V_}"			# value of the variable
+	local jV="${3}"				# new json variable name
 	local TYPE="${4}"
 	local FILE="${5}"
+	local HIDE="${6:-show}"		# "hide" to hide value in log file
 
 	[[ -z ${oldV} ]] && oldV="${V_}"
 
@@ -1158,8 +1159,10 @@ doV()
 		fi
 		MSG="${SPACE}${oldV}${jV} = ${VAL_}"
 		[[ -n ${oldV} ]] && MSG+=", TYPE=${TYPE}"
+		[[ ${HIDE} == "hide" ]] && MSG="${MSG/${VAL_}/<HIDDEN>}"
 		display_msg --logonly info "${MSG}"
 	else
+		[[ ${HIDE} == "hide" ]] && ERR="${ERR/${VAL_}/<HIDDEN>}"
 		# update_json_file() returns error message.
 		display_msg --log warning "${ERR}"
 	fi

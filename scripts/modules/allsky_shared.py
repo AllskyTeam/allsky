@@ -267,7 +267,7 @@ def log(level, text, preventNewline = False, exitCode=None, sendToAllsky=False):
         # Need to escape single quotes in {text}.
         doubleQuote = '"'
         text = text.replace("'", f"'{doubleQuote}'{doubleQuote}'")
-        command = os.path.join(ALLSKY_SCRIPTS, f"addMessage.sh error '{text}'")
+        command = os.path.join(ALLSKY_SCRIPTS, f"addMessage.sh --type error --msg '{text}'")
         os.system(command)
     
     if exitCode is not None:

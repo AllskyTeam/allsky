@@ -28,6 +28,9 @@ HAVE_REALLY_OLD_REMOTE_CONFIG="false"
 CONFIG_TO_USE=""		# which Website configuration file to use?
 CONFIG_MESSAGE=""
 REMOTE_WEBSITE_IS_VALID="false"
+LFTP_CMDS="set dns:fatal-timeout 10; set net:max-retries 2; set net:timeout 10"
+X="$( settings ".REMOTEWEBSITE_LFTP_COMMANDS" "${ALLSKY_ENV}" )"
+[[ -n ${X} ]] && LFTP_CMDS+="; ${X}"
 
 # Dialog size variables
 DIALOG_WIDTH="$( tput cols )"; ((DIALOG_WIDTH -= 10 ))
@@ -248,7 +251,12 @@ function pre_install_checks()
 	DIALOG_TEXT+="\n2  - Checking for working remote Website: "
 	display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 	local SPACES="${INDENT}${INDENT}"
-	REMOTE_WEBSITE_IS_VALID="$( check_if_website_is_valid )"
+	check_if_website_is_valid		# Sets global variables so can't be in subshell
+	if [[ $? -eq 0 ]]; then
+		REMOTE_WEBSITE_IS_VALID="true"
+	else
+		REMOTE_WEBSITE_IS_VALID="false"
+	fi
 	if [[ ${REMOTE_WEBSITE_IS_VALID} == "true" ]]; then
 		# There is at least one config file.
 
@@ -337,14 +345,13 @@ function pre_install_checks()
 	DIALOG_TEXT+="\n${SPACES} * Checking ability to upload to Website: "
 	display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 	display_msg --logonly info "Checking remote Website connectivity."
-	local ERR="$( check_connectivity )"
-	if [[ -z ${ERR} ]]; then
-		DIALOG_TEXT+="PASSED."
+	if MSG="$( check_connectivity )" ; then
+		DIALOG_TEXT+="${MSG}."
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 		show_debug_message "The remote Website connectivity test succeeded."
 	else
-		local ERROR_MSG="\nERROR: The remote Website connectivity check failed."
-		display_aborted "${ERROR_MSG}" "${ERR}"
+		local ERROR_MSG="\nThe remote Website connectivity check failed."
+		display_aborted "${ERROR_MSG}" "${MSG}"
 	fi
 
 	display_msg --logonly info "Completed pre installation checks."
@@ -399,7 +406,7 @@ function display_aborted()
 	local ERROR_MSG="${2}"
 
 	display_msg --logonly info "${ABORT_MSG} ${EXTRA_TEXT}.\n"
-	local MSG="\nInstallation of the remote Website aborted ${EXTRA_TEXT}."
+	local MSG="\nInstallation of the remote Website aborted ${EXTRA_TEXT}"
 
 	if [[ -n ${ERROR_MSG} ]]; then
 		local DIALOG_PROMPT="${MSG}\n\n"
@@ -419,17 +426,23 @@ function display_complete()
 {
 	local EXTRA_TEXT  E  E2
 	E="Use the WebUI's 'Editor' page to edit the"
-	E+="\n${INDENT}    '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)'"
-	E+="\n${INDENT}file"
+	E+="\n\n${INDENT}    '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)'"
+	E+="\n\n${INDENT}file"
 	E2=", replacing any '${NEED_TO_UPDATE}' strings with the correct values."
+
 	if [[ ${CONFIG_TO_USE} == "new"  ]]; then
 		EXTRA_TEXT="A new configuration file was created."
-		EXTRA_TEXT+="\n${INDENT}${E}${E2}"
+		EXTRA_TEXT+="\n\n${INDENT}${E}${E2}"
 	elif [[ ${CONFIG_TO_USE} == "remoteReallyOld" ]]; then
 		EXTRA_TEXT="You had a very old remote Allsky Website so a new configuration file was created."
-		EXTRA_TEXT+="\n${INDENT}${E}${E2}"
+		EXTRA_TEXT+="\n\n${INDENT}${E}${E2}"
 	else
-		EXTRA_TEXT="${E} to change settings for your remote Website."
+		EXTRA_TEXT="${E} to change settings for your remote Website"
+		if grep --silent "${NEED_TO_UPDATE}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" ; then
+			EXTRA_TEXT+="\n\n${INDENT}${E}${E2}."
+		else
+			EXTRA_TEXT+="."
+		fi
 	fi
 
 	local DIALOG_TEXT="\n${INDENT}The installation of the remote Website is complete.\n\n${INDENT}Please check it."
@@ -447,14 +460,27 @@ function display_complete()
 function check_connectivity()
 {
 	local TEST_FILE="${ME}.txt"
-	local ERR
+	local ERR  MSG  RET  SECS=30
 
-	if ERR="$( "${ALLSKY_SCRIPTS}/testUpload.sh" --website --silent --file "${TEST_FILE}" 2>&1 )" ; then
-		remove_remote_file "${TEST_FILE}" "do not check"
-		echo ""
+	# Some user reported this hanging, so add a timeout.
+	if ERR="$( timeout --signal=KILL "${SECS}" \
+			"${ALLSKY_SCRIPTS}/testUpload.sh" --website --silent --file "${TEST_FILE}" 2>&1 )" ; then
+		echo "PASSED"
+
+		# Assume if we didn't time out on the test upload we won't time out here.
+		ERR="$( remove_remote_file "${TEST_FILE}" "do not check" 2>&1 )"
+		RET=$?
+		if [[ ${RET} -ne 0 ]]; then
+			MSG="Unable to remove test file: ${ERR:-unknown reason}, RET=${RET}"
+			display_msg --logonly info "${MSG}"
+		fi
+		return 0
+	elif [[ $? -eq 137 ]]; then
+		echo "TIMED OUT after ${SECS} seconds"
 	else
 		echo "${ERR}"
 	fi
+	return 1
 }
 
 # Displays a debug message in the log if the debug flag has been specified on the command line.
@@ -579,33 +605,40 @@ function remove_remote_file()
 	local FILENAME="${1}"
 	local CHECK="${2}"
 
+	local CMDS  ERR  MSG
 	if [[ ${CHECK} == "check" ]]; then
 		if ! check_if_files_exist "${REMOTE_URL}" "or" "${FILENAME}" ; then
-			return
+			return 0
 		fi
 	fi
 
 # TODO: This assumes ftp is used to upload files
 # upload.sh should accept "--remove FILE" option.
-	local CMDS=""  ERR
-	[[ -n ${REMOTE_DIR} ]] && CMDS="cd '${REMOTE_DIR}' ;"
-	CMDS+=" rm -r '${FILENAME}' ; bye"
+	CMDS="${LFTP_CMDS}; "
+	[[ -n ${REMOTE_DIR} ]] && CMDS+="cd '${REMOTE_DIR}' ;"
+	CMDS+="rm -r '${FILENAME}' ; bye"
 
 	# shellcheck disable=SC2086
-	ERR="$( lftp -u "${REMOTE_USER},${REMOTE_PASSWORD}" \
-					${REMOTE_PORT} \
-					"${REMOTE_PROTOCOL}://${REMOTE_HOST}" \
-				-e "${CMDS}" 2>&1 )"
+	ERR="$( lftp \
+		-u "${REMOTE_USER},${REMOTE_PASSWORD}" \
+		${REMOTE_PORT} \
+		"${REMOTE_PROTOCOL}://${REMOTE_HOST}" \
+		-e "${CMDS}" 2>&1 )"
+
 	if [[ $? -eq 0 ]] ; then
 		MSG="Deleted remote file '${FILENAME}'"
+		[[ ${CHECK} != "check" ]] && MSG+=" (if it existed)"
+
+		display_msg --logonly info "${MSG}"
 	elif [[ ! ${ERR} =~ "550" ]]; then		# does not exist
 		MSG="Unable to delete remote file '${FILENAME}': ${ERR}"
+		return 1
+
 	else
 		show_debug_message "'${FILENAME}' not on remote Website."
-		return
 	fi
 
-	display_msg --logonly info "${MSG}"
+	return 0
 }
 
 # Check if a valid remote Website exists.
@@ -621,25 +654,22 @@ function check_if_website_is_valid()
 
 	display_msg --logonly info "Looking for old and new config files at ${REMOTE_URL}"
 	if check_if_files_exist "${REMOTE_URL}" "or" "${OLD_CONFIG_NAME}" ; then
+		display_msg --logonly info "   Found old-style '${OLD_CONFIG_NAME}."
 		HAVE_REALLY_OLD_REMOTE_CONFIG="true"
 		FOUND="true"
 	fi
 	if check_if_files_exist "${REMOTE_URL}" "or" "${ALLSKY_WEBSITE_CONFIGURATION_NAME}" ; then
+		display_msg --logonly info "   Found new-style '${ALLSKY_WEBSITE_CONFIGURATION_NAME}."
 		HAVE_NEW_STYLE_REMOTE_CONFIG="true"
 		FOUND="true"
 	fi
 
 	if [[ ${FOUND} == "true" ]]; then
-		local MSG="   config files found:"
-		[[ ${HAVE_REALLY_OLD_REMOTE_CONFIG} == "true" ]] && MSG+=" ${OLD_CONFIG_NAME}"
-		[[ ${HAVE_NEW_STYLE_REMOTE_CONFIG} == "true" ]] && MSG+=" ${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
-
 		if check_if_files_exist "${REMOTE_URL}" "and" "${WEBSITE_FILES[@]}" ; then
-			display_msg --logonly info "${MSG} and a valid Website."
-			echo "true"
+			display_msg --logonly info "    Website valid."
 			return 0
 		else
-			display_msg --logonly info "${MSG} but NOT a valid Website."
+			display_msg --logonly info "    Website NOT valid."
 		fi
 	else
 		# If the user just created the "allsky" directory on the Website but nothing else,
@@ -647,7 +677,6 @@ function check_if_website_is_valid()
 		display_msg --logonly info "   Did not find a config file; assuming new, unpopulated Website."
 	fi
 
-	echo "false"
 	return 1
 }
 
@@ -668,7 +697,6 @@ function upload_remote_website()
 # TODO: for == "false", should prompt user if they want the files uploaded.
 
 	if [[ ${REMOTE_WEBSITE_IS_VALID} == "true" ]]; then
-
 		# Don't upload images if the remote Website exists (we assume it already
 		# has the images).  "VALID" assumes "EXISTS".
 		# However, we must upload the index.php files.
@@ -688,15 +716,12 @@ function upload_remote_website()
 # TODO: upload.sh should have a "--mirror from_directory to_directory" option.
 # This would also fix the problem that we're assuming the "ftp" protocol is used.
 	local NL="$( echo -e "\n " )"		# Need space otherwise it doesn't work - not sure why
-	local CMDS=" lcd '${ALLSKY_WEBSITE}'"
-	CMDS+="${NL}set dns:fatal-timeout 10; set net:max-retries 2; set net:timeout 10"
-	LFTP_COMMANDS="$( settings ".REMOTEWEBSITE_LFTP_COMMANDS" "${ALLSKY_ENV}" )"
-	[[ -n ${LFTP_COMMANDS} ]] && CMDS+="; ${LFTP_COMMANDS}"
+	local CMDS="${LFTP_CMDS}${NL}lcd '${ALLSKY_WEBSITE}'"
 	# shellcheck disable=SC2086
 	if [[ -n "${REMOTE_DIR}" ]]; then
 		CMDS+="${NL}cd '${REMOTE_DIR}'"
 	else
-		CMDS+="${NL}cd ."		# for debugging
+		CMDS+="${NL}cd ."		# for debugging - it lists the current directory
 	fi
 	CMDS+="${NL}mirror --reverse --no-perms --verbose --overwrite --ignore-time --transfer-all"
 	[[ -n ${EXCLUDE_FILES} ]] && CMDS+=" ${EXCLUDE_FILES}"

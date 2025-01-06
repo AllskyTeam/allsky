@@ -62,17 +62,14 @@ followed by a description of the color scheme.
 <img allsky="true" src="EditorPage-json.png" title="Editing .json file - click to show full version" alt=".json file" loading="lazy">
 </a>
 
-<h2>Color Scheme</h2>
+<h2>Color scheme</h2>
 <ul>
 <li>Setting <strong>names</strong> look different depending on the file type:
 	<ul>
 	<li>In <span class="fileName">.json</span> files they look
 		<span class="editorSetting">likeThis</span>.
-		By convention if the name includes multiple words,
-		the first letter of the first word is lowercase and subsequent word's first characters
-		are Upper case.
-		Settings names in the file MUST be enclosed in double quotes,
-		but quotes around setting names are omitted in the Allsky documentation for readability.
+	</li>Settings names MUST be enclosed in double quotes,
+		but quotes around them are omitted in the Allsky documentation for readability.
 <!--
 	<li>In <span class="fileName">.sh</span> files the names look
 		<span class="editorShell">LIKE_THIS</span>.
@@ -86,12 +83,12 @@ followed by a description of the color scheme.
 	<li><strong>Text</strong> (anything surrounded by quotes):
 		<span class="editorString">"sample text"</span>.
 		Note that a number surrounded by quotes like
-		<span class="editorString">"41.79"</span> is actually a string.
-		Numbers-as-strings may work in some cases,
-		but when entering a number it's safest to NOT use quotes.
+		<span class="editorString">"41.79"</span> is treated as text
+		and is confusing to people looking at the value.
+		If a value is supposed to be a number, don't add quotes.
 	<li><strong>Numbers</strong> (when not quoted):
 		<span class="editorNum">41.79</span>,
-		<span class="editorSign">-</span><span class="editorNum">88.1</span>,
+		<span class="editorSign">-</span><span class="editorNum">88.1</span>.
 	<li><strong>Booleans</strong> (when not quoted):
 		<span class="editorBool">true</span>,
 		<span class="editorBool">false</span>.
@@ -110,13 +107,32 @@ followed by a description of the color scheme.
 -->
 </ul>
 
-<h2>Debugging</h2>
-If you see different colors than above while editing a file, check for syntax errors:
+<h2>Problems in the file</h2>
+<p>
+If there's a formatting error in the file a small red "x" will appear to the left of
+a the line number.
+Hover your cursor over it to see the error.
+<br>In the example below, a comma is missing from the end of line 37.
+The message is somewhat cryptic but is telling you it was expecting to see
+one of the listed characters at the end of the line.
+</p>
+<a allsky="true" class="img" href="EditorPage-json.png">
+<img allsky="true" src="jsonSyntaxError.png" title="Error in file" alt="Error in file" loading="lazy">
+</a>
+<p>
+You will not be able to save the file until all errors are resolved.
+</p>
+
+<p>
+If the page doesn't indicate there's an error
+but you get an error when you try to view the page,
+check if the colors on the page are different than what was described above.
+The most common errors are below:
 <ul>
-<li>JSON files
+<li>In JSON files:
 	<ul>
-	<li>Missing commas are needed after each value except the last one in a sub-section.
-		This is the most common syntax error.
+	<li><strong>Missing commas</strong>
+		are needed after each value except the last one in a sub-section.
 		<br>
 		<span class="editorSpecial">{</span>
 		<br>
@@ -128,7 +144,7 @@ If you see different colors than above while editing a file, check for syntax er
 			<span style="color: red">&nbsp; &nbsp; &lt; missing comma</span>
 		<br>
 		<span class="editorSpecial">
-		<span class="editorSetting">"setting2</span>
+		<span class="editorSetting">"setting2"</span>
 		:
 		<span class="editorString">"value 2"</span>
 		</span>
@@ -136,13 +152,15 @@ If you see different colors than above while editing a file, check for syntax er
 		<br>
 		<span class="editorSpecial">}</span>
 
-	<li>Missing quotes - setting names and string values must be surrounded by double quotes.
+	<li><strong>Missing quotes</strong>
+		- setting names and string values must be surrounded by double quotes.
 		<br>
 		<span class="editorSpecial">
 		<span class="editorSetting">setting1</span>:<span class="editorString">"value 1"</span>
 		</span>
 			<span style="color: red">&nbsp; &nbsp; &lt; missing quotes around name</span>
-	<li>Missing colons - one must separate each setting name from its value.
+	<li><strong>Missing colons</strong>
+		- one must separate each setting name from its value.
 		There can be 0 or more spaces before and/or after the colon.
 		<span class="editorSpecial">
 		<span class="editorSetting">setting1</span>

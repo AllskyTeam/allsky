@@ -90,17 +90,26 @@ A typical page is below.
 </tr>
 <tr><td id="daymaxautoexposure"><span class="WebUISetting">Max Auto-Exposure</span></td>
 	<td><span class="cameraDependent">CD</span></td>
-	<td>The maximum exposure in milliseconds when using 
-	<span class="WebUISetting">Auto-Exposure</span>.
-	When <span class="WebUISetting">Auto-Exposure</span> is on,
-	this value will be used as the delay between frames.
-	Ignored if <span class="WebUISetting">Auto-Exposure</span> is off.</td>
+	<td>The maximum exposure in milliseconds when
+	<span class="WebUISetting">Auto-Exposure</span> is enabled.
+	Ignored if <span class="WebUISetting">Auto-Exposure</span> is disabled.
+	<br>
+	When <span class="WebUISetting">Auto-Exposure</span> and
+	<span class="WebUISetting">Consistent Delays Between Images</span> are both on,
+	the time between the start of one image and the start of the next images is
+	the <span class="WebUISetting">Max Auto-Exposure + Delay</span>.
 </tr>
 <tr><td id="dayexposure"><span class="WebUISetting">Manual Exposure</span></td>
 	<td>0.5</td>
 	<td>Manual exposure time in milliseconds.
 	If <span class="WebUISetting">Auto-Exposure</span>
-	is on this value is used as a starting exposure.</td>
+	is on this value is used as a starting exposure.
+	<br>
+	The time between the start of one image and the start of the next images will be
+	the <span class="WebUISetting">Manual Exposure + Delay</span>,
+	regardless of the status of 
+	<span class="WebUISetting">Consistent Delays Between Images</span>.
+	</td>
 </tr>
 <tr><td id="daymean"><span class="WebUISetting">Mean Target</span></td>
 	<td>0.5</td>

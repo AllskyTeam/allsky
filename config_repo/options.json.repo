@@ -55,7 +55,8 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
-"description" : "Maximum daytime Auto-Exposure time in milliseconds (1000ms = 1 sec).",
+"description" : "Maximum daytime Auto-Exposure time in milliseconds (1000ms = 1 sec).<br>Click <a allsky='true' external='true' href='/documentation/settings/allsky.html#daymaxautoexposure'>here</a> to see how this setting impacts the time between exposures.",
+
 "label" : "Max Auto-Exposure",
 "label_prefix" : "Daytime",
 "type" : "float",
@@ -68,7 +69,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "day_default",
-"description" : "Manual exposure time in milliseconds (1000ms = 1 sec). Can be a fraction.<br>If using daytime <span class='WebUISetting'>Auto-Exposure</span>, this number is used as a starting point.",
+"description" : "Manual exposure time in milliseconds (1000ms = 1 sec). Can be a fraction.<br>If using daytime <span class='WebUISetting'>Auto-Exposure</span>, this number is used as a starting point.<br>Click <a allsky='true' external='true' href='/documentation/settings/allsky.html#dayexposure'>here</a> to see how this setting impacts the time between exposures.",
 "label" : "Manual Exposure",
 "label_prefix" : "Daytime",
 "type" : "float",
@@ -764,7 +765,7 @@
 {
 "name" : "consistentdelays",
 "default" : true,
-"description" : "Enable to have the delays between images be a consistent length.<br>The time between the start of exposures will always be (max exposure + delay).",
+"description" : "Enable to have the delays between images be a consistent length.<br>The time between the start of exposures will always be <span class='WebUISetting'>Max Auto-Exposure + Delay</span>.",
 "label" : "Consistent Delays Between Images",
 "type" : "boolean",
 "usage" : "capture",

@@ -535,14 +535,11 @@ input[type="text"].has-error {
 	background-color: #ddd;
 	text-align: center;
 	font-weight: bold;
-	padding: 1px 3px 1px 3px;
+	font-size: 1.25em;
+	padding: 3px 3px 3px 3px;
 }
 .dark .settingsHeader {
 	background-color: #333;
-}
-table .settingsHeader {	/* In the WebUI */
-	font-size: 1.25em;
-	padding: 3px 3px 3px 3px;
 }
 .settingsHeaderNote {
 	background-color: #ccc;

@@ -330,7 +330,7 @@ else # sftp/ftp/ftps
 		# lftp doesn't actually try to open the connection until the first command is executed,
 		# and if it fails the error message isn't always clear.
 		# So, do a simple command first so we get a better error message.
-		echo "cd . || exit 99"
+		echo "cd . || exit ${EXIT_ERROR_STOP}"
 
 		if [[ ${DEBUG} == "true" ]]; then
 			# PWD not supported by all servers,

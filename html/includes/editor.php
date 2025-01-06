@@ -19,7 +19,8 @@ function DisplayEditor()
         $fullN = $fullLocalN;
         $numFiles++;
         if (!$useLocalWebsite) {
-            $msg = "<span class='WebUISetting'>Use Local Website</span> is not enabled. Your changes won't take effect until you enable that setting.</span>";
+            $msg =  "<span class='WebUISetting'>Use Local Website</span> is not enabled.";
+			$msg .= "<br>Your changes won't take effect until you enable that setting.</span>";
             $myStatus->addMessage($msg, 'danger');
         }
     } else {
@@ -31,7 +32,8 @@ function DisplayEditor()
             $fullN = $fullRemoteN;
         $numFiles++;
         if (!$useRemoteWebsite) {
-            $msg = "<span class='WebUISetting'>Use Remote Website</span> is not enabled. Your changes won't take effect until you enable that setting.</span>";
+            $msg = "<span class='WebUISetting'>Use Remote Website</span> is not enabled.";
+			$msg .= "<br>Your changes won't take effect until you enable that setting.</span>";
             $myStatus->addMessage($msg, 'danger');
         }
     } else {

@@ -629,18 +629,6 @@
 "action" : "reload"
 },
 {
-"name" : "gamma",
-"display" : "_display",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "_default",
-"description" : "Changes the difference between light and dark areas.<br>Higher numbers increase contrast.",
-"label" : "Gamma",
-"type" : "integer",
-"usage" : "capture",
-"action" : "reload"
-},
-{
 "name" : "aggression",
 "display" : "_display",
 "minimum" : "_min",

@@ -1068,7 +1068,6 @@ void displayHelp(config cg)
 		printf(" -%-*s - Image sharpness.\n", n, "sharpness n");
 	}
 	if (cg.ct == ctZWO) {
-		printf(" -%-*s - Gamma level.\n", n, "gamma n");
 		printf(" -%-*s - Percent of exposure change to make, similar to PHD2 [%ld%%].\n", n, "aggression n", cg.aggression);
 		printf(" -%-*s - Seconds to transition gain between daytime and nighttime [%'ld].\n", n, "gaintransitiontime n", cg.gainTransitionTime);
 		printf("  %-*s   0 disable it.\n", n, "");
@@ -1259,7 +1258,6 @@ void displaySettings(config cg)
 		printf("\n");
 	}
 	if (cg.ct == ctZWO) {
-		if (cg.gamma != NOT_CHANGED) printf("   Gamma: %ld\n", cg.gamma);
 		if (cg.asiBandwidth != NOT_CHANGED) printf("   USB Speed: %ld, auto: %s\n", cg.asiBandwidth, yesNo(cg.asiAutoBandwidth));
 	}
 	if (cg.ct == ctRPi) {
@@ -1816,10 +1814,6 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 		else if (strcmp(a, "sharpness") == 0)
 		{
 			cg->sharpness = atof(argv[++i]);
-		}
-		else if (strcmp(a, "gamma") == 0)
-		{
-			cg->gamma = atol(argv[++i]);
 		}
 		else if (strcmp(a, "aggression") == 0)
 		{

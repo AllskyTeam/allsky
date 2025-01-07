@@ -1071,8 +1071,6 @@ int main(int argc, char *argv[])
 	// Other calls to setControl() are done after we know if we're in daytime or nighttime.
 	if (CG.asiBandwidth != NOT_CHANGED)
 		setControl(CG.cameraNumber, ASI_BANDWIDTHOVERLOAD, CG.asiBandwidth, CG.asiAutoBandwidth ? ASI_TRUE : ASI_FALSE);
-	if (CG.gamma != NOT_CHANGED)
-		setControl(CG.cameraNumber, ASI_GAMMA, CG.gamma, ASI_FALSE);
 	if (CG.flip != NOT_CHANGED)
 		setControl(CG.cameraNumber, ASI_FLIP, CG.flip, ASI_FALSE);
 

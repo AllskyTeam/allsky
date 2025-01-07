@@ -2450,18 +2450,6 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 		}
 	}
 	else if (cg->ct == ctZWO) {
-		ret = getControlCapForControlType(cg->cameraNumber, ASI_GAMMA, &cc);
-		if (ret == ASI_SUCCESS)
-		{
-			if (cg->gamma == NOT_CHANGED)
-				cg->gamma = cc.DefaultValue;
-			else
-				validateLong(&cg->gamma, cc.MinValue, cc.MaxValue, "gamma", true);
-		} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
-			Log(0, "*** %s ERROR: ASI_GAMMA failed with %s\n", cg->ME, getRetCode(ret));
-			ok = false;
-		}
-
 		if (cg->isCooledCamera && (cg->dayEnableCooler || cg->nightEnableCooler)) {
 			ret = getControlCapForControlType(cg->cameraNumber, ASI_TARGET_TEMP, &cc);
 			if (ret == ASI_SUCCESS)

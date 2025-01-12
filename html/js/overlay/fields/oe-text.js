@@ -109,6 +109,14 @@ class OETEXTFIELD extends OEFIELD {
     this.dirty = true;
   }
 
+  get type() {
+    return this.fieldData.type;
+  }
+  set type(type) {
+    this.fieldData.type = type;  
+    this.dirty = true;
+  }
+
   getLabel() {
     return this.shape.text();
   }

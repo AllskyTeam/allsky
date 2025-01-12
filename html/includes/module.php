@@ -30,6 +30,16 @@ function DisplayModule() {
 <script src="/js/jquery-roi/jquery-roi.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 <script src="/js/konva/konva.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
+<link rel="stylesheet" href="/js/jquery-i2c/jquery-i2c.css?c=<?php echo ALLSKY_VERSION; ?>">
+<script src="/js/jquery-i2c/jquery-i2c.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+
+<link rel="stylesheet" href="/js/jquery-variable/jquery-variable.css">
+<script src="/js/jquery-variable/jquery-variable.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+
+<link rel="stylesheet" type="text/css" href="/js/datatables/datatables.min.css?c=<?php echo ALLSKY_VERSION; ?>" />
+<script type="text/javascript" src="/js/datatables/datatables.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+
+
 <div class="row">
     <div class="col-lg-12">
 		<div class="panel panel-primary">
@@ -232,6 +242,68 @@ function DisplayModule() {
             </div>
         </div>
     </div>
+</div>
+
+<div class="modal" role="dialog" id="mm-i2c-dialog">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title">i2c Selector</h4>
+			</div>
+			<div class="modal-body">
+				<ul class="nav nav-tabs" role="tablist">
+					<li role="presentation" class="active"><a href="#mm-i2c-dialog-tab-detected" role="tab" data-toggle="tab">Detected Devices</a></li>
+					<li role="presentation"><a href="#mm-i2c-dialog-tab-library" aria-controls="profile" role="tab" data-toggle="tab">i2c Library</a></li>
+					<li role="presentation"><a href="#mm-i2c-dialog-tab-help" aria-controls="profile" role="tab" data-toggle="tab">Help</a></li>
+				</ul>
+
+				<div class="tab-content">
+					<div role="tabpanel" class="tab-pane active" id="mm-i2c-dialog-tab-detected">
+						<table id="mm-i2c-dialog-tab-detected-devices" class="display i2ctable" style="width:98%">
+							<thead>
+								<tr>
+									<th>Address</th>
+									<th>Possible Devices</th>
+									<th></th>                                        
+								</tr>
+							</thead>
+						</table>
+					</div>
+					<div role="tabpanel" class="tab-pane" id="mm-i2c-dialog-tab-library">
+						<div id="oe-item-list-dialog-all-table">
+							<table id="mm-i2c-dialog-tab-library-library" class="display compact i2ctable" style="width:98%">
+								<thead>
+									<tr>
+										<th>Address</th>
+										<th>Devices</th>
+										<th>Address Range</th>
+										<th>Link</th>
+									</tr>
+								</thead>
+							</table>
+						</div>
+					</div>
+					<div role="tabpanel" class="tab-pane" id="mm-i2c-dialog-tab-help">
+						<h3>Information</h3>
+						<p>This dialog allows you to select the required i2c address by providing a list of devices addresses detected on your Pi and a list of possible devices.</p>
+						<p><strong>NOTE:</strong> The devices listed are only possible devices. If you are sure you know the address you require but your device is not listed please select the address anyway.</p>
+						<p>The hardware and address data used in this dialog has been provided by Adafruit, see <a href="https://github.com/adafruit/I2C_Addresses" target="_blank">Adafruit i2c list</a></p>
+						<br>
+						<h4>Detected Devices</h4>
+						<p>Since multiple hardware devices can share the same i2c address This tab displays the devices that have been detected on the FIRST i2c bus and a list of possible devices</p>
+						<p>Select the relevant address by clicking on the row.</p>
+						<h4>i2c Library</h4>
+						<p>This tab shows a list of knows i2c hardware devices and the addresses they occupy. Given that new devices are released frequntly this list may not be uptodate</p>
+					</div>                        
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-danger" data-dismiss="modal" id="mm-i2c-dialog-cancel">Close</button>
+				<button type="submit" class="btn btn-primary" id="mm-i2c-dialog-select">Select</button>
+			</div>
+		</div>
+	</div>
 </div>
 
 <script type="module">

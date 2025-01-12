@@ -81,7 +81,27 @@ class OECONFIG {
         } catch (error) {
             confirm('A fatal error has occureed loading the application configuration.')
             return false;
-        }            
+        }
+        
+		//TODO: Should this be async?
+        try {
+            let result = $.ajax({
+                type: "GET",
+                url: "includes/moduleutil.php?request=VariableList&showempty=yes",
+                data: "",
+                dataType: 'json',
+                cache: false,
+                //async: false,
+                context: this,
+                success: function (result) {
+                    this.#dataFields = result;
+                }                
+            });
+        } catch (error) {
+            confirm('A fatal error has occureed loading the application configuration.')
+            return false;
+        }
+
     }
 
     loadOverlay(overlay, type) {
@@ -300,12 +320,32 @@ class OECONFIG {
         }
     }
 
+	getTypes(forSelect=false) {
+		let types = [...new Set(Object.values(this.#dataFields).map(item => item.type))];
+
+		if (forSelect) {
+			let result = []
+			result.push({
+				value: '',
+				text: 'None'
+			})
+			for (let type of types) {
+				result.push({
+					value: type,
+					text: type.charAt(0).toUpperCase() + type.slice(1)
+				})
+			}
+			types = result
+		}
+		return types
+	}
+
     findFieldByName(name) {
         let result = null;
 
-        for (let key in this.#dataFields.data) {
-            if (this.#dataFields.data[key].name === name) {
-                result = this.#dataFields.data[key];
+        for (let key in this.#dataFields) {
+            if (this.#dataFields[key].name === name) {
+                result = this.#dataFields[key];
                 break;
             }
         }

@@ -4,223 +4,436 @@
             "format": "%d-%m-%y",
             "description": "Short date",
             "example": "25-12-23",
+            "stackable": false,
             "type": "date"
         },
         {
             "format": "%d-%m-%y %H:%m",
             "description": "Short date and time",
             "example": "25-12-23 23:10",
+            "stackable": false,
             "type": "date"
         },        
         {
             "format": "%m-%d-%y",
             "description": "Short US date",
             "example": "12-25-23",
+            "stackable": false,
             "type": "date"
         },
         {
             "format": "%m-%d-%y %H:%m",
             "description": "Short US date and time",
             "example": "12-25-23 23:10",
+            "stackable": false,
             "type": "date"
         },        
         {
             "format": "%a",
             "description": "Abbreviated weekday name.",
             "example": "Sun, Mon, ...",
+            "stackable": true,
             "type": "date"
         },
         {
             "format": "%A",
             "description": "Full weekday name.",
             "example": "Sunday, Monday, ...",
+            "stackable": true,
             "type": "date"
         },
         {
             "format": "%w",
             "description": "Weekday as a decimal number.",
             "example": "0, 1, ..., 6",
+            "stackable": true,
             "type": "date"
         },  
         {
             "format": "%d",
             "description": "Day of the month as a zero added decimal.",
             "example": "01, 02, ..., 31",
+            "stackable": true,
             "type": "date"
         },         
         {
             "format": "%-d",
             "description": "Day of the month as a decimal number.",
             "example": "1, 2, ..., 31",
+            "stackable": true,
             "type": "date"
         },        
         {
             "format": "%b",
             "description": "Abbreviated month name.",
             "example": "Jan, Feb, ..., Dec",
+            "stackable": true,
             "type": "date"
         }, 
         {
             "format": "%B",
             "description": "Full month name.",
             "example": "January, February, ...",
+            "stackable": true,
             "type": "date"
         }, 
         {
             "format": "%m",
             "description": "Month as a zero added decimal number.",
             "example": "01, 02, ..., 12",
+            "stackable": true,
             "type": "date"
         }, 
         {
             "format": "%-m",
             "description": "Month as a decimal number.",
             "example": "1, 2, ..., 12",
+            "stackable": true,
             "type": "date"
         }, 
         {
             "format": "%y",
             "description": "Year without century as a zero added decimal number.",
             "example": "00, 01, ..., 99",
+            "stackable": true,
             "type": "date"
         }, 
         {
             "format": "%-y",
             "description": "Year without century as a decimal number.",
             "example": "0, 1, ..., 99",
+            "stackable": true,
             "type": "date"
         }, 
         {
             "format": "%Y",
             "description": "Year with century as a decimal number.",
             "example": "2013, 2019 etc.",
+            "stackable": true,
             "type": "date"
         },
         {
             "format": "%H",
             "description": "Hour (24-hour clock) as a zero added decimal number.",
             "example": "00, 01, ..., 23",
+            "stackable": true,
             "type": "date"
         },
         {
             "format": "%-H",
             "description": "Hour (24-hour clock) as a decimal number.",
             "example": "0, 1, ..., 23",
+            "stackable": true,
             "type": "date"
         },
         {
             "format": "%I",
             "description": "Hour (12-hour clock) as a zero added decimal number.",
             "example": "01, 02, ..., 12",
+            "stackable": true,
             "type": "date"
         },
         {
             "format": "%-I",
             "description": "Hour (12-hour clock) as a decimal number.",
             "example": "1, 2, ..., 12",
+            "stackable": true,
             "type": "date"
         },
         {
             "format": "%p",
             "description": "Locale's AM or PM.",
             "example": "AM, PM",
+            "stackable": true,
             "type": "date"
         },
         {
             "format": "%M",
             "description": "Minute as a zero added decimal number.",
             "example": "00, 01, ..., 59",
+            "stackable": true,
             "type": "date"
         },
         {
             "format": "%-M",
             "description": "Minute as a decimal number.",
             "example": "0, 1, ..., 59",
+            "stackable": true,
             "type": "date"
         },
         {
             "format": "%S",
             "description": "Second as a zero added decimal number.",
             "example": "00, 01, ..., 59",
+            "stackable": true,
             "type": "date"
         },
         {
             "format": "%-S",
             "description": "Second as a decimal number.",
             "example": "0, 1, ..., 59",
+            "stackable": true,
             "type": "date"
         },
         {
             "format": "%z",
             "description": "UTC offset in the form +HHMM or -HHMM.",
             "example": "+0100",
+            "stackable": true,
             "type": "date"
         },
         {
             "format": "%Z",
             "description": "Time zone name.",
             "example": "Europe/London",
+            "stackable": true,            
             "type": "date"
         },
         {
             "format": "%j",
             "description": "Day of the year as a zero added decimal number.",
             "example": "001, 002, ..., 366",
+            "stackable": true,
             "type": "date"
         },
         {
             "format": "%-j",
             "description": "Day of the year as a decimal number.",
             "example": "1, 2, ..., 366",
+            "stackable": true,
             "type": "date"
         },
         {
             "format": "{:.0f}",            
-            "description": "Floating point zero decimal places",
+            "description": "Number to zero decimal places",
             "example": "52",
+            "stackable": true,
             "type": "number"
         },
         {
             "format": "{:.2f}",            
-            "description": "Floating point 2 decimal places",
+            "description": "Number to 2 decimal places",
             "example": "52.00",
+            "stackable": false,
             "type": "number"
         },        
         {
             "format": "{:,}",
             "description": "Comma for thousands separator",
             "example": "800,000",
+            "stackable": false,
             "type": "number"
         },
         {
             "format": "{:n}",
             "description": "Use locale thousands separator",
             "example": "800.000",
+            "stackable": false,
             "type": "number"
         },
         {
             "format": "%yes",
             "description": "Output Yes (if input is 1) or No",
             "example": "Yes, No",
+            "stackable": false,
             "type": "bool"
         },
         {
             "format": "%on",
             "description": "Output On (if input is 1) or Off",
             "example": "On, Off",
+            "stackable": false,
             "type": "bool"
         },
         {
             "format": "%true",
             "description": "Output True (if input is 1) of False",
             "example": "True, False",
+            "stackable": false,
             "type": "bool"
         },
         {
             "format": "%1",
             "description": "Output 1 (if input is 1) or 0",
             "example": "1, 0",
+            "stackable": false,
             "type": "bool"
+        },
+        {
+            "format": "int",
+            "description": "Elevation integered",
+            "example": "123",
+            "function": "int",
+            "stackable": false,
+            "type": "elevation"
+        },
+        {
+            "format": "1dp",
+            "description": "Elevation to 1 decimal place",
+            "example": "123.1",
+            "function": "dp-1",            
+            "stackable": false,
+            "type": "elevation"
+        },
+        {
+            "format": "2dp",
+            "description": "Elevation to 2 decimal places",
+            "example": "123.12",
+            "function": "dp-2",             
+            "stackable": false,
+            "type": "elevation"
+        },				
+        {
+            "format": "int",
+            "description": "Azimuth integered",
+            "example": "123",
+            "function": "int",
+            "stackable": false,
+            "type": "azimuth"
+        },
+        {
+            "format": "1dp",
+            "description": "Azimuth to 1 decimal place",
+            "example": "123.1",
+            "function": "dp-1",            
+            "stackable": false,
+            "type": "azimuth"
+        },
+        {
+            "format": "2dp",
+            "description": "Azimuth to 2 decimal places",
+            "example": "123.12",
+            "function": "dp-2",             
+            "stackable": false,
+            "type": "azimuth"
+        },
+        {
+            "format": "dms",
+            "description": "Azimuth to Degrees, Minutes and Seconds",
+            "example": "123",
+            "function": "dms",             
+            "stackable": false,
+            "type": "azimuth"
+        },
+        {
+            "format": "Auto",
+            "description": "Auto Filesize",
+            "example": "12",       
+            "stackable": false,
+            "type": "filesize"
+        },        
+        {
+            "format": "TB",
+            "description": "Filesize in Tb",
+            "example": "12",             
+            "stackable": false,
+            "type": "filesize"
+        },
+		{
+            "format": "GB",
+            "description": "Filesize in Gb",
+            "example": "12",             
+            "stackable": false,
+            "type": "filesize"
+        },
+        {
+            "format": "MB",
+            "description": "Filesize in Mb",
+            "example": "1.2",            
+            "stackable": false,
+            "type": "filesize"
+        },
+        {
+            "format": "B",
+            "description": "Filesize in B",
+            "example": "102400",            
+            "stackable": false,
+            "type": "filesize"
+        },		
+        {
+            "format": "deg",
+            "description": "Degrees 2DP",
+            "example": "23.50",          
+            "stackable": false,
+            "type": "temperature"
+        },
+        {
+            "format": "degint",
+            "description": "Degrees Integer",
+            "example": "23",           
+            "stackable": false,
+            "type": "temperature"
+        },
+        {
+            "format": "degctof",
+            "description": "Degrees C to F to 2DP",
+            "example": "86.50",            
+            "stackable": false,
+            "type": "temperature"
+        },
+        {
+            "format": "degctofint",
+            "description": "Degrees C to F integer",
+            "example": "86",            
+            "stackable": false,
+            "type": "temperature"
+        },
+        {
+            "format": "degftoc",
+            "description": "Degrees F to C to 2DP",
+            "example": "23.50",           
+            "stackable": false,
+            "type": "temperature"
+        },
+        {
+            "format": "degftocint",
+            "description": "Degrees F to C integer",
+            "example": "23",          
+            "stackable": false,
+            "type": "temperature"
+        },
+        {
+            "format": "onoff",
+            "description": "Show as On or Off",
+            "example": "On",           
+            "stackable": false,
+            "type": "gpio"
+        },
+        {
+            "format": "bool",
+            "description": "Show as True or False",
+            "example": "False",           
+            "stackable": false,
+            "type": "gpio"
+        },
+        {
+            "format": "none",
+            "description": "No chnage to the string",
+            "example": "",           
+            "stackable": false,
+            "type": "string"
+        },
+        {
+            "format": "upper",
+            "description": "Convert string to upper case",
+            "example": "",           
+            "stackable": false,
+            "type": "string"
+        },
+        {
+            "format": "lower",
+            "description": "Convert string to lower case",
+            "example": "",           
+            "stackable": false,
+            "type": "string"
+        },
+        {
+            "format": "camel",
+            "description": "Convert string to camel case",
+            "example": "",           
+            "stackable": false,
+            "type": "string"
         }
+
     ]
 }

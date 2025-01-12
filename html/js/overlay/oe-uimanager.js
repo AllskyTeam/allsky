@@ -452,6 +452,54 @@ class OEUIMANAGER {
 
         $(document).on('click', '#oe-item-list', (event) => {
 
+
+            let el = $(event.target).data('source');
+            let data = $('#' + el).val();
+
+            $.allskyVariable({
+                id: 'var',
+                variable: '',
+				stateKey: 'as-oe',
+                variableSelected: (variable) => {
+
+                    
+
+                    let name = '${' + variable.replace('AS_', '') + '}'
+
+
+                    let field = this.#configManager.findFieldByName(name);
+        
+                    let shape = this.#fieldManager.addField('text', field.name, null, field.format, field.sample);
+        
+                    this.setFieldOpacity(true);
+        
+                    this.#overlayLayer.add(shape);
+        
+                    $('#itemlisttable').DataTable().destroy();
+                    $('#oe-item-list-dialog').modal('hide');
+        
+                    this.#selected = this.#fieldManager.findField(shape);
+                    this.#transformer.nodes([shape]);
+                    this.showPropertyEditor();
+                    this.updatePropertyEditor();
+                    this.updateToolbar();
+                    //this.#fieldManager.buildJSON();
+                    if (this.testMode) {
+                        this.enableTestMode();
+                    }
+
+
+
+
+
+
+
+
+
+                }
+            });
+
+/*
             this.#fieldTable = $('#itemlisttable').DataTable({
                 data: this.#configManager.dataFields,
                 retrieve: true,
@@ -625,6 +673,7 @@ class OEUIMANAGER {
                 $('#itemlisttable').DataTable().destroy();
                 $('#allitemlisttable').DataTable().destroy();
             });
+            */
         });
 
         $(document).on('click', '.oe-list-delete', (event) => {
@@ -2022,6 +2071,28 @@ class OEUIMANAGER {
     updatePropertyEditor() {
         if (this.#selected !== null) {
 
+			let label  = this.#selected.fieldData.label
+			const regex = /\${([^}]+)}/;
+			const match = label.match(regex);
+			let source = ''
+			if (match !== null) {
+				let configManager = window.oedi.get('config');
+				let name = match[0]
+				let field = configManager.findFieldByName(name)
+				if (field !== null) {
+					source = field.source
+				}
+			}
+
+			let tableRow = $('#pgtexttype').prev('.pgRow')
+
+			tableRow = $('#pgtexttype').closest('.pgRow')
+			if (source === 'user') {
+				tableRow.css('display', 'table-row')
+			} else {
+				tableRow.css('display', 'none')
+			}
+
             let textVisible = false;
             if ($('#textdialog').closest('.ui-dialog').is(':visible')) {
                 textVisible = true;
@@ -2043,6 +2114,7 @@ class OEUIMANAGER {
                // }
                 $('#textpropgrid').jqPropertyGrid('set', {
                     'label': this.#selected.label,
+					'type': this.#selected.type,
                     'format': this.#selected.format,
                     'sample': this.#selected.sample,
                     'empty': this.#selected.empty,
@@ -2151,6 +2223,7 @@ class OEUIMANAGER {
     #createTextPropertyEditor() {
         var textData = {
             label: '',
+			type: '',
             format: '',
             sample: '',
             empty: '',
@@ -2175,11 +2248,32 @@ class OEUIMANAGER {
             gridSizeY = 1;
         }
 
-        var textConfig = {
+		let configManager = window.oedi.get('config')
+		let types = configManager.getTypes(true)
+
+		var textConfig = {
             label: { group: 'Label', name: 'Item', type: 'text' },
+            type: { group: 'Label', name: 'type', type: 'options', options: types },
             format: { group: 'Label', name: 'Format', type: 'text', helpcallback: function (name) {
-                let uiManager = window.oedi.get('uimanager'); 
-                uiManager.#createFormatHelpWindow();
+                let uiManager = window.oedi.get('uimanager')
+				let selected = uiManager.#selected
+				let type = ''				
+				if (selected.fieldData.type === '' || selected.fieldData.type === undefined) {
+					let label  = selected.fieldData.label
+					const regex = /\${([^}]+)}/;
+					const match = label.match(regex);
+					if (match !== null) {
+						let configManager = window.oedi.get('config');
+						let name = match[0]
+						let field = configManager.findFieldByName(name)
+						if (field !== null) {
+							type = field.type
+						}
+					}
+				} else {
+					type = selected.fieldData.type
+				}
+                uiManager.#createFormatHelpWindow(type);
             }},
             sample: { group: 'Label', name: 'Sample', type: 'text' },
             empty: { group: 'Label', name: 'Empty Value', type: 'text' },
@@ -2487,75 +2581,126 @@ class OEUIMANAGER {
         });
     }
 
-    #createFormatHelpWindow() {
-        $('#formatlisttable').DataTable().destroy();
-        $('#formatlisttable').removeClass('hidden');
-        $(document).off('click', '.oe-format-replace');
-        $(document).off('click', '.oe-format-add');
-        $('#formatlisttable').DataTable({
-            ajax: {
-                url: "includes/overlayutil.php?request=Formats",
-                contentType: "application/json; charset=utf-8",
-                dataType: "json",
-            },
-            pagingType: 'simple_numbers',
-            paging: true,
-            info: true,
-            autoWidth: false,
-            aaSorting: [],
-            searchPanes: {
-                controls: false              
-            },
-            dom: 'Plfrtip',                        
-            columns: [
-                { 
-                    data: 'format',
-                    width: '200px'
-                },
-                { 
-                    data: 'description',
-                    width: '400px'
-                },
-                { 
-                    data: 'example',
-                    width: '200px'
-                },
-                { 
-                    data: 'type',
-                    width: '0px',
-                    visible: false
-                },
-                {
-                    data: null,
-                    width: '50px',
-                    render: function (item, type, row, meta) {
-                        let buttonReplace = '<button type="button" title="Replace Format" class="btn btn-primary btn-xs oe-format-replace" data-format="' + item.format + '"><i class="fa-solid fa-right-to-bracket"></i></button>';
-                        let buttonAdd = '<button type="button" title="Add to format" class="btn btn-primary btn-xs oe-format-add" data-format="' + item.format + '"><i class="fa-solid fa-plus"></i></button>';
-                        
-                        let buttons = '<div class="btn-group">' + buttonReplace + buttonAdd + '</div>';                        
-                        return buttons;
-                    }
-                }                
-            ]
-        });
+    #createFormatHelpWindow(type) {
+		var filterType = type
+        $('#formatlisttable').DataTable().destroy()
+        $('#formatlisttable').removeClass('hidden')
+        $(document).off('click', '.oe-format-replace')
+        $(document).off('click', '.oe-format-add')
+        var formatTable = $('#formatlisttable')
+			.on('preXhr.dt', function (e, settings, data) {	
+			})			
+			.on('xhr.dt', function (e, settings, json, xhr) {
+				let filters = []
+				for (let i = 0; i < json.data.length; i++) {
+					let key = json.data[i].type
+					if (filters[key] === undefined) {
+						filters[key] = 0
+					}
+					filters[key] = filters[key] + 1
+				}
+				$('#oe-format-filters').empty()
+				$('#oe-format-filters').html('<option value="all">Show All</option>');
+				Object.entries(filters).forEach(([filter, total]) => {
+					let opt = filter.charAt(0).toUpperCase() + filter.slice(1)
+					$('#oe-format-filters').append('<option value="' + filter + '">' + opt + '</option>')
+				});
+
+				$('#oe-format-filters').off('change')			
+				$('#oe-format-filters').on('change', function() {
+					if (this.value === 'all') {
+						formatTable.column(3).search('').draw()
+					} else {
+						formatTable.column(3).search(this.value).draw()
+					}
+				});
+
+				if (filterType !== '') {
+					formatTable.column(3).search(filterType).draw()
+					$('#oe-format-filters').val(filterType)
+					filterType = ''
+				}
+				let t = 56				
+			})
+			.DataTable({
+				ajax: {
+					url: 'includes/overlayutil.php?request=Formats',
+					dataType: 'json'
+				},
+                ordering: false,
+                paging: false,
+				scrollY: '25vh',
+				scrollCollapse: true,
+                autoWidth: false,                 
+				columns: [
+					{ 
+						data: 'format',
+						width: '20%'
+					},
+					{ 
+						data: 'description',
+						width: '40%'					
+					},
+					{ 
+						data: 'example',
+						width: '20%'					
+					},
+					{ 
+						data: 'type',
+						visible: false
+					},
+					{
+						data: null,
+						width: '10%',
+						render: function (item, type, row, meta) {
+							let buttonReplace = '<button type="button" title="Replace Format" class="btn btn-primary btn-xs oe-format-replace" data-format="' + item.format + '"><i class="fa-solid fa-right-to-bracket"></i></button>';
+							let buttonAdd = ''
+
+							if (row.stackable) {
+								buttonAdd = '<button type="button" title="Add to format" class="btn btn-primary btn-xs oe-format-add" data-format="' + item.format + '"><i class="fa-solid fa-plus"></i></button>';
+							}
+							
+							let buttons = '<div class="btn-group">' + buttonReplace + buttonAdd + '</div>';                        
+							return buttons;
+						}
+					}                
+				]
+			})
       
         $('#formatdialog').dialog({
             resizable: false,
             closeOnEscape: false,
-            width: 900
-        });
-        
-        $(document).on('click', '.oe-format-replace', (event) => {
-            let uiManager = window.oedi.get('uimanager');          
-            let format = $(event.currentTarget).data('format');
-            uiManager.updateFormat(format, 'replace');
-        });
-
-        $(document).on('click', '.oe-format-add', (event) => {
-            let uiManager = window.oedi.get('uimanager');
-            let format = $(event.currentTarget).data('format');
-            uiManager.updateFormat(format, 'add');
+            width: 900,
+            close: function(event, ui) {
+				$(document).off('click', '.oe-format-replace')
+				$(document).off('click', '.oe-format-add')
+				$(document).off('click', '#oe-format-filters-close')
+				$('#oe-format-filters').off('change')
+				$('#formatlisttable').off('preXhr.dt')
+				$('#formatlisttable').off('xhr.dt')					
+				$('#formatlisttable').DataTable().destroy()
+			}			
         })
+        
+		$(document).off('click', '.oe-format-replace')
+        $(document).on('click', '.oe-format-replace', (event) => {
+            let uiManager = window.oedi.get('uimanager')
+            let format = '{' + $(event.currentTarget).data('format') + '}'
+            uiManager.updateFormat(format, 'replace')
+        })
+
+        $(document).off('click', '.oe-format-add')		
+        $(document).on('click', '.oe-format-add', (event) => {
+            let uiManager = window.oedi.get('uimanager')
+            let format = $(event.currentTarget).data('format')
+            uiManager.updateFormat(format, 'add')
+        })
+
+        $(document).off('click', '#oe-format-filters-close')		
+        $(document).on('click', '#oe-format-filters-close', (event) => {
+			$('#formatdialog').dialog('close')
+        })
+		
     }
 
     updateFormat(format, type) {

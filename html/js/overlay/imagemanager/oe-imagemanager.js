@@ -8,22 +8,13 @@
             usedImages: [],
             bind: null,
             allowDoubleClick: false,
+            validate: null,
             msgInUse: 'This image is in use and cannot be deleted',
-            // if your plugin is event-driven, you may provide callback capabilities
-            // for its events. execute these functions before or after events of your 
-            // plugin, so that users may customize those particular events without 
-            // changing the plugin's code
             onFoo: function () { }
 
         }
 
         var plugin = this;
-
-        // this will hold the merged default, and user-provided options
-        // plugin's properties will be available through this object like:
-        // plugin.settings.propertyName from inside the plugin or
-        // element.data('pluginName').settings.propertyName from outside the plugin, 
-        // where "element" is the element the plugin is attached to;
         plugin.settings = {}
 
         var $element = $(element); // reference to the jQuery version of DOM element
@@ -191,20 +182,65 @@
                 if (plugin.settings.allowDoubleClick) {
                     $('#' + plugin.imagesId).on('dblclick', '.oe-image-manager-image', (event) => {
                         let imageName = $(event.currentTarget).data('filename');
-                        if (plugin.settings.bind !== null) {
-                            $(plugin.settings.bind).val(imageName);
-                            $(document).trigger('oe-imagemanager-add', [imageName]);
-                        } else {
-                            $(document).trigger('oe-imagemanager-add', [imageName]);
-                        }                        
+                        if (validateMask(imageName)) {
+                            if (plugin.settings.bind !== null) {
+                                $(plugin.settings.bind).val(imageName);
+                                $(document).trigger('oe-imagemanager-add', [imageName]);
+                            } else {
+                                $(document).trigger('oe-imagemanager-add', [imageName]);
+                            }
+                        }    
                     });
                 }
 
             }).fail((jqXHR, textStatus, errorThrown) => {
             });            
         }
-        // fire up the plugin!
-        // call the "constructor" method
+
+        var validateMask = function(filename) {
+            let result = true
+
+            if (plugin.settings.validate !== null) {
+
+                $('body').LoadingOverlay('show', {
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    imageColor: '#a94442',
+                    textColor: '#a94442',
+                    text: 'Validating Image'
+                });  
+
+                $.ajax({
+                    url: plugin.settings.validate,
+                    type: 'POST',
+                    data: {
+                        filename: filename
+                    },
+                    dataType: 'json',
+                    cache: false                
+                }).done((result) => {
+                    if (result.error) {
+                        bootbox.dialog({
+                            title: 'Error validating image',
+                            message: result.message,
+                            size: 'large',
+                            buttons: {
+                                ok: {
+                                    label: 'Ok',
+                                    className: 'btn-success'
+                                }
+                            }
+                        });
+                    }
+                }).fail((result) => {
+
+                }).always(() => {
+                    $('body').LoadingOverlay('hide')
+                })
+            }
+
+            return result
+        }
+
         plugin.init();
 
     }

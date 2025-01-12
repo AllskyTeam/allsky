@@ -267,7 +267,7 @@ def log(level, text, preventNewline = False, exitCode=None, sendToAllsky=False):
         # Need to escape single quotes in {text}.
         doubleQuote = '"'
         text = text.replace("'", f"'{doubleQuote}'{doubleQuote}'")
-        command = os.path.join(ALLSKY_SCRIPTS, f"addMessage.sh --type error --msg '{text}'")
+        command = os.path.join(ALLSKY_SCRIPTS, f"addMessage.sh error '{text}'")
         os.system(command)
     
     if exitCode is not None:
@@ -387,7 +387,7 @@ def validateExtraFileName(params, module, fileKey):
 def save_extra_data(file_name, extra_data):
     saveExtraData(file_name, extra_data)
 
-def saveExtraData(file_name, extra_data):
+def saveExtraData(file_name, extra_data, source='', structure={}):
     """
     Save extra data to allows the overlay module to disdplay it.
 
@@ -399,16 +399,96 @@ def saveExtraData(file_name, extra_data):
         Nothing
     """
     extra_data_path = getExtraDir()
-    if extra_data_path is not None:               # it should never be None
+    if extra_data_path is not None:        
         checkAndCreateDirectory(extra_data_path)
+
+        file_extension = Path(file_name).suffix
         extra_data_filename = os.path.join(extra_data_path, file_name)
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
-            formatted_json = json.dumps(extra_data, indent=4)
-            temp_file.write(formatted_json)
+            if file_extension == '.json':
+                extra_data = format_extra_data(extra_data, structure, source)
+                extra_data = json.dumps(extra_data, indent=4)
+            temp_file.write(extra_data)
             temp_file_name = temp_file.name
             os.chmod(temp_file_name, 0o644)
-            
+
         shutil.move(temp_file_name, extra_data_filename)
+
+
+def format_extra_data(extra_data, structure, source):
+    result = extra_data
+
+    if structure:
+        result = {}
+        counter = 2
+        blank_first_entry = False
+        if 'info' in structure:
+            if 'count' in structure['info']:
+                counter = structure['info']['count']
+            if 'firstblank' in structure['info']:
+                blank_first_entry = structure['info']['firstblank']
+
+        for valueItr in range(1, counter):
+            index = valueItr
+            if blank_first_entry and valueItr == 1:
+                index = ''
+            else:
+                index = index - 1
+
+            for raw_key, value in structure['values'].items():
+                key = raw_key.replace('${COUNT}', str(index))
+                if key in extra_data:
+
+                    result[key] = dict(structure['values'][raw_key])
+                    result[key]['source'] = source
+                    result[key]["value"] = extra_data[key]
+
+                    description = structure['values'][raw_key]['description']
+                    description = description.replace('${COUNT}', str(index))
+                    result[key]["description"] = description
+
+                    if 'name' in result[key]:
+                        result[key]['name'] = result[key]['name'].replace('${COUNT}', str(index))
+
+                    regex = r"\$\{.*?\}"
+                    matches = re.finditer(regex, description, re.MULTILINE | re.IGNORECASE)
+                    placeHolder = ''
+                    for matchNum, match in enumerate(matches, start=1):
+                        replacement = ""
+                        raw_matched = match.group()
+
+                        placeHolder = raw_matched.replace("${", "")
+                        placeHolder = placeHolder.replace("}", "")
+
+                    if placeHolder in extra_data:
+                        replacement = extra_data[placeHolder]
+                        result[key]["description"] = description.replace(raw_matched, replacement)
+                else:
+                    pass
+                    #log(0, f"ERROR: {key} not found in module config")
+    return result
+
+
+def load_extra_data_file(file_name):
+    result = {}
+    extra_data_path = getExtraDir()
+    if extra_data_path is not None:               # it should never be None
+        extra_data_filename = os.path.join(extra_data_path, file_name)
+        file_path = Path(extra_data_filename)
+        if file_path.is_file() and isFileReadable(file_path):
+            file_extension = Path(file_path).suffix
+
+            if file_extension == '.json':
+                try:
+                    with open(extra_data_filename, 'r') as file:
+                        result = json.load(file)
+                except json.JSONDecodeError:
+                    log(0, f'Error reading extra_data_filename')
+            
+            if file_extension == '.txt':
+                pass
+            
+    return result
 
 def deleteExtraData(fileName):
     extraDataPath = getExtraDir()
@@ -547,7 +627,6 @@ def getGPIOPin(pin):
         result = board.D27
 
     return result
-
 
 def _get_value_from_json_file(file_path, variable):
     """

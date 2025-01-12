@@ -63,6 +63,9 @@ function DisplayOverlay($image_name)
 
     <link href="/css/overlay.css?c=<?php echo ALLSKY_VERSION; ?>" rel="stylesheet">
 
+    <link rel="stylesheet" href="/js/jquery-variable/jquery-variable.css">
+    <script src="/js/jquery-variable/jquery-variable.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+        
     <div id="oeeditor">
         <div id="oe-overlay-manager"></div>     
         <div class="row">
@@ -242,6 +245,18 @@ function DisplayOverlay($image_name)
         </div>
 
         <div id="formatdialog" title="Format Help">
+            <div id="oe-format-filters-wrapper">
+                <form class="form-horizontal">
+                    <div class="form-group-temp mb-3">
+                        <label for="oe-format-filters" class="col-sm-1 control-label">Filter</label>
+                        <div class="col-sm-3">
+                            <select class="form-control" id="oe-format-filters">
+                                <option value="all">Show All</option>
+                            </select>                
+                        </div>
+                    </div>
+                </form>
+            </div>
             <table id="formatlisttable" class="hidden" style="width:100%">
                 <thead>
                     <tr>
@@ -253,6 +268,15 @@ function DisplayOverlay($image_name)
                     </tr>
                 </thead>
             </table>
+
+            <div class="modal-footer">
+                <div class="pull-right">
+                    <button type="button" id="oe-format-filters-close" class="btn btn-success">Close</button>
+                </div>
+            </div>            
+
+
+
         </div>
 
         <div class="modal" role="dialog" id="oe-field-errors-dialog">

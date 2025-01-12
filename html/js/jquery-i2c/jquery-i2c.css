@@ -1,0 +1,11 @@
+#mm-i2c-dialog {
+    z-index: 99999;
+}
+
+#mm-i2c-dialog .tab-pane {
+    margin-top: 10px;
+}
+
+#mm-i2c-dialog td {
+    vertical-align: top;
+}

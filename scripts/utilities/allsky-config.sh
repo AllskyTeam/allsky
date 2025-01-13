@@ -71,6 +71,8 @@ function usage_and_exit()
 	echo -e "		samba"
 	echo -e "		new_rpi_camera_info [--camera NUM]"
 	echo -e "		show_start_times [--zero] [angle [latitude [longitude]]]"
+	echo -e "		encoders"
+	echo -e "		pix_fmts"
 	echo -e "	If no 'command' is specified you are prompted for one to execute."
 	echo
 
@@ -171,6 +173,23 @@ function samba()
 }
 
 #####
+# recheck_tmp and recheck_swap are functions defined elsewhere.
+
+#####
+# List encoders available to timelapses.
+function encoders()
+{
+	ffmpeg -loglevel error -encoders
+}
+
+#####
+# List pixel formats available to timelapses.
+function pix_fmts()
+{
+	ffmpeg -loglevel error -pix_fmts
+}
+
+#####
 # Show the daytime and nighttime start times
 function show_start_times()
 {
@@ -230,8 +249,6 @@ function show_start_times()
 	get_sunrise_sunset ${ZERO} "${ANGLE}" "${LATITUDE}" "${LONGITUDE}"
 }
 
-#####
-# recheck_tmp and recheck_swap are functions defined elsewhere.
 
 ####################################### Helper functions
 
@@ -319,6 +336,8 @@ if [[ -z ${CMD} ]]; then
 	CMDS+=("samba"						"${N}. Simplify copying files to/from the Pi"); ((N++))
 	CMDS+=("new_rpi_camera_info"		"${N}. Collect information for new RPi camera"); ((N++))
 	CMDS+=("show_start_times"	 		"${N}. Show daytime and nighttime start times"); ((N++))
+	CMDS+=("encoders"			 		"${N}. Show list of timelapse encoders available"); ((N++))
+	CMDS+=("pix_fmts"			 		"${N}. Show list of timelapse pixel formats available"); ((N++))
 
 	# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 	while COMMAND="$( prompt "${PROMPT}" "${CMDS[@]}" )"

@@ -945,13 +945,13 @@ void displayHeader(config cg)
 	for (size_t i=0; i<strlen(v); i++) printf("*");
 	printf("\n\n");
 
+	printf("Capture images of the sky with a Raspberry Pi and ");
 	if (cg.ct == ctZWO)
-		printf("Capture images of the sky with a Raspberry Pi and a ZWO ASI camera\n");
+		printf(" a ZWO ASI camera\n");
 	else
-		printf("Capture images of the sky with a Raspberry Pi and an RPi camera\n");
+		printf(" an RPi camera\n");
 	printf("%s\n", c(KNRM));
 
-	if (! cg.help) printf("%sAdd --help for available options%s\n\n", c(KYEL), c(KNRM));
 	printf("Author: Thomas Jacquin - <jacquin.thomas@gmail.com>\n\n");
 	printf("Contributors:\n");
 	printf(" -Knut Olav Klo\n");

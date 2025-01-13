@@ -764,7 +764,7 @@ select {
 	background-color: black;
 }
 .current {
-	width: 100%;
+	max-width: 100%;
 }
 
 div.sticky {

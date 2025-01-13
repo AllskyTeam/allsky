@@ -763,7 +763,7 @@
 {
 "name" : "timeformat",
 "default" : "%Y%m%d %H:%M:%S",
-"description" : "Determines the format of the displayed time. Run 'man 3 strftime' to see the options.",
+"description" : "Determines the format of the displayed date and time. Run <code>man 3 strftime</code> to see the options.",
 "label" : "Time Format",
 "type" : "text",
 "usage" : "capture",
@@ -987,7 +987,7 @@
 "name" : "showhistogrambox",
 "display" : "_display",
 "default" : false,
-"description" : "Enable to show an outline of the histogram box, useful for determining what the 'Histogram Box' numbers should be.",
+"description" : "Enable to show an outline of the histogram box, useful for determining what the <span class='WebUISetting'>Histogram Box</span> numbers should be.",
 "label" : "Show Histogram Box",
 "type" : "boolean",
 "usage" : "capture",
@@ -1531,7 +1531,6 @@
 "label_prefix" : "Timelapse",
 "type" : "text",
 "carryforward" : true,
-"comment" : "check using ffmpeg -encoder looking at argument 2 for ' libxs264  '",
 "booldependson" : "timelapsegenerate",
 "checkchanges" : true
 },
@@ -1544,7 +1543,6 @@
 "type" : "text",
 "carryforward" : true,
 "booldependson" : "timelapsegenerate",
-"comment" : "check using ffmpeg -pix_fmts looking at argument 2 for ' yuv420p  '",
 "checkchanges" : true
 },
 {
@@ -2350,7 +2348,7 @@
 {
 "name" : "imagessortorder",
 "default" : "ascending",
-"description" : "The order the images on the 'Images' page are sorted in.<br>'Ascending' is oldest to newest. 'Descending' is newest to oldest.",
+"description" : "The order the images on the <span class='WebUIWebPage'>Images</span> page are sorted in.<br><strong>Ascending</strong> is oldest to newest. <strong>Descending</strong> is newest to oldest.",
 "label" : "Images Sort Order",
 "type" : "select_text",
 "carryforward" : true,

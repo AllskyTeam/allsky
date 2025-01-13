@@ -54,9 +54,14 @@ if [[ $( settings ".keogramgenerate" ) == "true" ]]; then
 	#shellcheck disable=SC2086
 	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent --keogram "${DATE}"
 	RET=$?
-	echo -e "${ME}: ===== Keogram complete"
-	if [[ $( settings ".keogramupload" ) == "true" && ${RET} = 0 ]] ; then
-		"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload --keogram "${DATE}"
+	MSG="${ME}: ===== Keogram completed"
+	if [[ ${RET} -eq 0 ]]; then
+		echo -e "${MSG} successfully"
+		if [[ $( settings ".keogramupload" ) == "true" ]] ; then
+			"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload --keogram "${DATE}"
+		fi
+	else
+		echo -e "${MSG} with error"
 	fi
 fi
 
@@ -67,9 +72,14 @@ if [[ $( settings ".startrailsgenerate" ) == "true" ]]; then
 	#shellcheck disable=SC2086
 	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent --startrails "${DATE}"
 	RET=$?
-	echo -e "${ME}: ===== Startrails complete"
-	if [[ $( settings ".startrailsupload" ) == "true" && ${RET} = 0 ]] ; then
-		"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload --startrails "${DATE}"
+	MSG="${ME}: ===== Startrails completed"
+	if [[ ${RET} -eq 0 ]]; then
+		echo -e "${MSG} successfully"
+		if [[ $( settings ".startrailsupload" ) == "true" ]] ; then
+			"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload --startrails "${DATE}"
+		fi
+	else
+		echo -e "${MSG} with error"
 	fi
 fi
 
@@ -81,9 +91,14 @@ if [[ $( settings ".timelapsegenerate" ) == "true" ]]; then
 	#shellcheck disable=SC2086
 	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent --timelapse "${DATE}"
 	RET=$?
-	echo -e "${ME}: ===== Timelapse complete"
-	if [[ $( settings ".timelapseupload" ) == "true" && ${RET} = 0 ]] ; then
-		"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload --timelapse "${DATE}"
+	MSG="${ME}: ===== Timelapse completed"
+	if [[ ${RET} -eq 0 ]]; then
+		echo -e "${MSG} successfully"
+		if [[ $( settings ".timelapseupload" ) == "true" ]] ; then
+			"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload --timelapse "${DATE}"
+		fi
+	else
+		echo -e "${MSG} with error"
 	fi
 fi
 

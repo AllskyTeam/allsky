@@ -1660,7 +1660,7 @@ create_allsky_logs()
 {
 	local DO_ALL="${1}"
 
-	display_msg --log progress "Setting permissions on ${ALLSKY_LOG} and ${ALLSKY_PERIODIC_LOG}."
+	display_msg --logonly progress "Setting permissions on ${ALLSKY_LOG} and ${ALLSKY_PERIODIC_LOG}."
 
 	if [[ ${DO_ALL} == "true" ]]; then
 		sudo systemctl stop rsyslog 2> /dev/null
@@ -3517,7 +3517,7 @@ install_installer_dependencies()
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 	[[ ${SKIP} == "true" ]] && return
 
-	display_msg --log progress "Installing installer dependencies."
+	display_msg --log progress "Installing initial dependencies."
 	TMP="${ALLSKY_LOGS}/installer.dependencies.log"
 	{
 		sudo apt-get update && run_aptGet gawk jq dialog

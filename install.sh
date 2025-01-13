@@ -2889,7 +2889,7 @@ do_restore()
 
 	# If ${ALLSKY_TMP} is a memory filesystem, unmount it.
 	if is_mounted "${ALLSKY_TMP}" ; then
-		display_msg --log progress "Unmounting '${ALLSKY_TMP}'."
+		display_msg --logonly progress "Unmounting '${ALLSKY_TMP}'."
 		umount_tmp "${ALLSKY_TMP}"
 		WAS_MOUNTED="true"
 	else
@@ -2915,7 +2915,7 @@ do_restore()
 
 	if [[ ${WAS_MOUNTED} == "true" ]]; then
 		# Remounts ${ALLSKY_TMP}
-		display_msg --log progress "Re-mounting '${ALLSKY_TMP}'."
+		display_msg --logonly progress "Re-mounting '${ALLSKY_TMP}'."
 		sudo mount -a
 	fi
 
@@ -3272,7 +3272,7 @@ display_image()
 			# Add a message the user will see in the WebUI.
 			MSG="Actions needed.  See ${POST_INSTALLATION_ACTIONS}."
 			X="${POST_INSTALLATION_ACTIONS/${ALLSKY_HOME}/}"
-			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning "--msg ${MSG}" --url "${X}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${MSG}" --url "${X}"
 
 			# This tells allsky.sh not to display a message about actions since we just did.
 			touch "${POST_INSTALLATION_ACTIONS}_initial_message"

@@ -13,14 +13,15 @@ source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 usage_and_exit()
 {
 	local RET=${1}
-	{
-		echo
-		[[ ${RET} -ne 0 ]] && echo -en "${wERROR}"
-		echo "Usage: ${ME} [--id ID [--cmd TEXT]] [--delete] --type message_type  --msg message  [--url url]"
-		[[ ${RET} -ne 0 ]] && echo -en "${wNC}"
-		echo -e "\n'message_type' is 'success', 'warning', 'error', 'info', or 'debug'."
-		echo -e "\n'url' is a URL to (normally) a documentation page."
-	} >&2
+	exec >&2
+	echo
+	[[ ${RET} -ne 0 ]] && echo -en "${wERROR}"
+	echo "Usage: ${ME} [--id ID [--cmd TEXT]] [--delete] [--url url]  --type message_type  --msg message"
+	[[ ${RET} -ne 0 ]] && echo -en "${wNC}"
+	echo
+	echo "'message_type' is 'success', 'warning', 'error', 'info', or 'debug'."
+	echo "'url' is a URL to (normally) a documentation page."
+	echo
 	exit "${RET}"
 }
 
@@ -74,6 +75,7 @@ done
 
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
+[[ -z ${TYPE} || -z ${MESSAGE} ]] && usage_and_exit 1
 
 if [[ ${DELETE} == "true" ]]; then
 	[[ ! -f ${ALLSKY_MESSAGES} ]] && exit 0
@@ -100,8 +102,8 @@ elif [[ ${TYPE} == "debug" ]]; then
 elif [[ ${TYPE} == "no-image" ]]; then
 	TYPE="success"
 elif [[ ${TYPE} != "warning" && ${TYPE} != "info" && ${TYPE} != "success" ]]; then
-	echo -e "${wWARNING}Warning: unknown message type: '${TYPE}'. Using 'info'.${wNC}" >&2
-	TYPE="info"
+	echo -e "${wERROR}ERROR: unknown message type: '${TYPE}'.${wNC}" >&2
+	echo 2
 fi
 DATE="$( date '+%B %d, %r' )"
 

@@ -694,7 +694,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
-"description" : "USB bandwidth.<br>If you get ASI_ERROR_TIMEOUT errors in the log file, try changing this number.",
+"description" : "USB bandwidth.<br>If you get ASI_ERROR_TIMEOUT errors in the log file, try changing this number up and/or down.",
 "label" : "USB Bandwidth",
 "type" : "integer",
 "usage" : "capture",

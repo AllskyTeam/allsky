@@ -33,8 +33,8 @@ COPIED_PRIOR_FTP_SH="false"				# prior ftp-settings.sh's settings copied to sett
 SUGGESTED_NEW_HOST_NAME="allsky"		# Suggested new host name
 NEW_HOST_NAME=""						# User-specified host name
 BRANCH="${GITHUB_MAIN_BRANCH}"			# default branch
-# shellcheck disable=SC2034
-DISPLAY_MSG_LOG="${ALLSKY_LOGS}/install.log"		# display_msg() sends log entries to this file.
+# shellcheck disable=SC2034		display_msg() sends log entries here.
+DISPLAY_MSG_LOG="${DISPLAY_MSG_LOG:-${ALLSKY_LOGS}/install.log}"
 LONG_BITS=$( getconf LONG_BIT ) # Size of a long, 32 or 64
 REBOOT_NEEDED="true"					# Is a reboot needed at end of installation?
 CONFIGURATION_NEEDED="true"				# Does Allsky need to be configured at end of installation?
@@ -2947,6 +2947,18 @@ do_fix()
 {
 	update_php_defines
 	set_permissions
+	exit 0
+}
+
+####
+# Change the ALLSKY_IMAGES folder.
+do_change_images()
+{
+	# just update web server
+	install_webserver_et_al="true" install_webserver_et_al
+
+	update_php_defines
+
 	exit 0
 }
 

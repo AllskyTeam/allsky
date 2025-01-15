@@ -69,6 +69,7 @@ function usage_and_exit()
 	echo -e "		recheck_swap"
 	echo -e "		recheck_tmp"
 	echo -e "		samba"
+	echo -e "		move_images"
 	echo -e "		new_rpi_camera_info [--camera NUM]"
 	echo -e "		show_start_times [--zero] [angle [latitude [longitude]]]"
 	echo -e "		encoders"
@@ -170,6 +171,13 @@ function new_rpi_camera_info()
 function samba()
 {
 	installSamba.sh
+}
+
+#####
+# Move ALLSKY_IMAGES to a new location.
+function move_images()
+{
+	moveImages.sh
 }
 
 #####
@@ -309,7 +317,7 @@ function prompt()
 	NUM_OPTIONS=$(( (${#OPTIONS[@]} / 2) + 3 ))
 
 	OPT="$( whiptail --title "${TITLE}" --notags --menu "${PROMPT}" \
-		18 "${WT_WIDTH:-80}" "${NUM_OPTIONS}" -- "${OPTIONS[@]}" 3>&1 1>&2 2>&3 )"
+		$((NUM_OPTIONS + 10)) "${WT_WIDTH:-80}" "${NUM_OPTIONS}" -- "${OPTIONS[@]}" 3>&1 1>&2 2>&3 )"
 	RET=$?
 	if [[ ${RET} -eq 255 ]]; then
 		echo -e "\n${RED}${ME}: whiptail failed.${NC}" >&2
@@ -334,6 +342,7 @@ if [[ -z ${CMD} ]]; then
 	CMDS+=("recheck_swap"				"${N}. Add swap space"); ((N++))
 	CMDS+=("recheck_tmp"				"${N}. Move ~/allsky/tmp to memory"); ((N++))
 	CMDS+=("samba"						"${N}. Simplify copying files to/from the Pi"); ((N++))
+	CMDS+=("move_images"				"${N}. Move ~/allsky/images to a different location"); ((N++))
 	CMDS+=("new_rpi_camera_info"		"${N}. Collect information for new RPi camera"); ((N++))
 	CMDS+=("show_start_times"	 		"${N}. Show daytime and nighttime start times"); ((N++))
 	CMDS+=("encoders"			 		"${N}. Show list of timelapse encoders available"); ((N++))

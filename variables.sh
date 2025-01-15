@@ -216,12 +216,8 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	# If a user wants to define new variables or assign variables differently,
 	# then load their file if it exists.
 	ALLSKY_USER_VARIABLES="${ALLSKY_CONFIG}/uservariables.sh"
-	if [[ -f ${ALLSKY_USER_VARIABLES} ]]; then
-		# shellcheck disable=SC1090,SC1091
-		source "${ALLSKY_USER_VARIABLES}"
-	else
-		ALLSKY_USER_VARIABLES=""
-	fi
+	# shellcheck disable=SC1090,SC1091
+	[[ -f ${ALLSKY_USER_VARIABLES} ]] && source "${ALLSKY_USER_VARIABLES}"
 fi
 
 return 0

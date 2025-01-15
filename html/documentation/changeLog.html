@@ -60,10 +60,16 @@
 								will work are highlighted like
 								<span class="cm-string highlight">XX_NEED_TO_UPDATE_XX</span>.
 						</ul>
-					<li>Displaying image previews is now done via <code>allsky.sh --preview</code>.
-						It was previously <code>allsky.sh preview</code>.
-					<li>The remote <span class="WebUISetting">Website URL</span>span> can no longer end in <code>index.php</code>.
-						The URL should point to the directory where the Allsky Website code is.
+					<li>Running <code>allsky-config   move_images</code> lets you
+						specify a different location to store Allsky's images,
+						i.e., a different location for the contents of
+						<span class="fileName">~/allsky/images</span>.
+						This is typically used to store images on an SSD or a similar
+						larger, faster, more reliable media than the SD card.
+					<li>The remote <span class="WebUISetting">Website URL</span>
+						can no longer end in <code>index.php</code>.
+						The URL should point to the <i>directory</i> where the
+						Allsky Website code is, not to a file.
 				</ul>
 				<h4>New Settings</h4>
 				<ul>
@@ -88,6 +94,9 @@
 				<ul>
 					<li><code>allsky.sh --help</code> now works and displays all the
 						options to the capture programs.
+					<li><code>allsky.sh --preview</code> now works and displays
+						a real-time preview of each image if you are on
+						the Pi desktop or connected via a remote desktop application.
 				</ul>
 				<hr class="separator"><!-- =========================================== -->
 			</details>

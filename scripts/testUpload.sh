@@ -15,16 +15,15 @@ source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 usage_and_exit()
 {
 	local RET=${1}
-	{
-		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-		[[ ${RET} -eq 2 ]] && echo -e "\nERROR: You must specify --website and/or --server\n"
+	exec >&2
+	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
+	[[ ${RET} -eq 2 ]] && echo -e "\nERROR: You must specify --website and/or --server\n"
 
-		echo    "Usage: ${ME} [--help] [--debug] [--silent] [--file f] --website  and/or  --server"
-		echo -e "\nWhere:"
-		echo -e "\t'--silent' only outputs errors."
-		echo -e "\t'--file f' optionally specifies the test file to upload."
-		[[ ${RET} -ne 0 ]] && echo -e "${NC}"
-	} >&2
+	echo    "Usage: ${ME} [--help] [--debug] [--silent] [--file f] --website  and/or  --server"
+	echo -e "\nWhere:"
+	echo -e "\t'--silent' only outputs errors."
+	echo -e "\t'--file f' optionally specifies the test file to upload."
+	[[ ${RET} -ne 0 ]] && echo -e "${NC}"
 	exit "${RET}"
 }
 
@@ -78,7 +77,7 @@ parse_output()
 
 	[[ ! -s ${FILE} ]] && return	# empty file - shouldn't happen...
 
-	local PROTOCOL  DIR  HOST  USER  STRING  S  SSL
+	local PROTOCOL  DIR  HOST  USER  STRING  S  SSL  CMD
 
 	if [[ ${TYPE} == "REMOTEWEBSITE" ]]; then
 		PROTOCOL="remotewebsiteprotocol"
@@ -104,13 +103,13 @@ parse_output()
 
 	STRING="User cannot log in|Login failed|Login incorrect"
 	if grep -E --ignore-case --silent "${STRING}" "${FILE}" ; then
-		echo "* Unable to login."
+		echo "* Unable to log in."
 		echo "  FIX: Make sure the username and password are correct."
 	fi >&2
 
 	STRING="max-retries exceeded"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
-		echo "* Unable to login for unknown reason."
+		echo "* Unable to log in for unknown reason."
 		echo "  FIX: Make sure the port is correct and your network is working."
 		PROTOCOL="$( settings ".${PROTOCOL}" )"
 		if [[ ${PROTOCOL} == "sftp" ]]; then
@@ -143,6 +142,17 @@ parse_output()
 		fi
 	fi >&2
 
+	STRING="An unexpected TLS packet was received"
+	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
+# TODO
+		CMD="set TBD"
+		echo "* Authentication protocol issue."
+		echo "  FIX: Do one of the following on your Pi:"
+		echo "    echo '${CMD}' > ~/.lftprc"
+		echo "  or"
+		echo "    In the WebUI's '${S}' section add '${CMD}' to 'FTP Commands'."
+	fi >&2
+
 	# Certificate-related issues
 	STRING="The authenticity of host"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
@@ -163,27 +173,29 @@ parse_output()
 
 	STRING="certificate common name doesn't match requested host name"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
-		echo "* Certificate verification issue."
+		CMD="set ssl:check-hostname"
+		echo "* Certificate host verification issue."
 		echo "  FIX: Do one of the following on your Pi:"
-		echo "    echo 'set ssl:check-hostname' > ~/.lftprc"
+		echo "    echo '${CMD}' > ~/.lftprc"
 		echo "  or"
-		echo "    In the WebUI's '${S}' section set 'FTP Commands' to 'set ssl:check-hostname'."
+		echo "    In the WebUI's '${S}' section add '${CMD}' to 'FTP Commands'."
 	fi >&2
 
-	STRING="Not trusted"
+	# Ignore the WARNING messages for this; it continues to work.
+	STRING="ERROR.*Not trusted"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
-		SSL="set ssl:verify-certificate no"
+		CMD="set ssl:verify-certificate no"
 		echo "* Certificate verification issue."
 		echo "  FIX: do one of the following on your Pi:"
-		echo "    echo '${SSL}' > ~/.lftprc"
+		echo "    echo '${CMD}' > ~/.lftprc"
 		echo "  or"
-		echo "    In the WebUI's '${S}' section set 'FTP Commands' to '${SSL}'."
+		echo "    In the WebUI's '${S}' section add '${CMD}' to 'FTP Commands'."
 	fi >&2
 
 
 	{
 		echo -e "\n=================== RAW OUTPUT:"
-		indent "${YELLOW}$( < "${FILE}" )${NC}\n"
+		indent --spaces "${YELLOW}$( < "${FILE}" )${NC}\n"
 	} >&2
 }
 
@@ -192,13 +204,12 @@ parse_output()
 do_test()
 {
 	local TYPE="${1}"
-	local bTEST_FILE OUTPUT_FILE HUMAN_TYPE PROTOCOL DIR REMOTE CMD D
+	local bTEST_FILE  OUTPUT_FILE  HUMAN_TYPE  PROTOCOL  DIR  REMOTE  CMD  D
 
 	bTEST_FILE="$( basename "${TEST_FILE}" )"
 	if [[ ! -f ${TEST_FILE} ]]; then
 		echo "Test file for ${TYPE}" > "${TEST_FILE}" || return 1
 	fi
-
 	OUTPUT_FILE="${ALLSKY_TMP}/${ME}-${TYPE}.txt"
 
 	if [[ ${TYPE} == "REMOTEWEBSITE" ]]; then
@@ -223,28 +234,42 @@ do_test()
 	DIR="${DIR:=null}"
 
 	CMD="${ALLSKY_SCRIPTS}/upload.sh --debug --remote-${REMOTE}"
+	if [[ ${DEBUG} == "true" ]]; then
+		OUT="${ALLSKY_TMP}/upload-${TYPE}.txt"
+		CMD+=" --output ${OUT}"
+	fi
 	CMD+=" ${TEST_FILE} ${DIR} ${bTEST_FILE} ${ME}"
-	[[ ${DEBUG} == "true" ]] && echo -e "Executing:\n\t${CMD}"
+
+	if [[ ${DEBUG} == "true" ]]; then
+		echo -e "Executing:\n    ${CMD}\n"
+		: > "${OUT}"
+		tail -f "${OUT}" 2>/dev/null &
+	fi
 	${CMD} > "${OUTPUT_FILE}" 2>&1
 	RET=$?
+
+	if [[ ${DEBUG} == "true" ]]; then
+		kill %1
+		echo
+	fi
 	if [[ ${RET} -eq 0 ]]; then
-		[[ ${SILENT} == false ]] && echo -e "${GREEN}Test upload to ${HUMAN_TYPE} succeeded.${NC}"
+		[[ ${SILENT} == "false" ]] && echo -e "${GREEN}Test upload to ${HUMAN_TYPE} succeeded.${NC}"
 		if [[ -z ${DIR} || ${DIR} == "null" ]]; then
 			D=""
 		else
 			D="${DIR}/"
 		fi
-		if [[ ${SILENT} == false ]]; then
+		if [[ ${SILENT} == "false" ]]; then
 			echo -en "\t"
 			echo     "Please remove '${D}${bTEST_FILE}' on your server." >> "${MSG_FILE}"
 		fi
-		if [[ -s ${OUTPUT_FILE} && ${DEBUG} == "true" ]]; then
-			echo -e "OUTPUT:"
-			echo -e "${YELLOW}$( < "${OUTPUT_FILE}" )${NC}\n"
-		fi
+#		if [[ -s ${OUTPUT_FILE} && ${DEBUG} == "true" ]]; then
+#			echo -e "OUTPUT:"
+#			echo -e "${YELLOW}$( < "${OUTPUT_FILE}" )${NC}\n"
+#		fi
 	else
 		echo -ne "${RED}"
-		echo -n  "Test upload to ${HUMAN_TYPE} FAILED with RET=${RET}."
+		echo -n  "Test upload to ${HUMAN_TYPE} FAILED."	# with RET=${RET}."
 		echo -e  "${NC}"
 		parse_output "${OUTPUT_FILE}" "${TYPE}"
 	fi
@@ -295,7 +320,7 @@ fi
 if [[ -s ${MSG_FILE} ]]; then
 	M="$( < "${MSG_FILE}" )"
 	if [[ ${ON_TTY} == "true" ]]; then
-		echo -e "\n${M}"
+		echo -e "${M}"
 	else
 		"${ALLSKY_SCRIPTS}/addMessage.sh" --type info --msg "${M}"
 	fi

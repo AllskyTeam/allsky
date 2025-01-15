@@ -77,7 +77,7 @@ parse_output()
 
 	[[ ! -s ${FILE} ]] && return	# empty file - shouldn't happen...
 
-	local PROTOCOL  DIR  HOST  USER  STRING  S  SSL  CMD
+	local PROTOCOL  DIR  HOST  USER  STRING  S  CMD
 
 	if [[ ${TYPE} == "REMOTEWEBSITE" ]]; then
 		PROTOCOL="remotewebsiteprotocol"

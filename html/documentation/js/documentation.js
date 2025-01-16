@@ -48,7 +48,7 @@ function convertURL() {
 		var elmnt = allTags[i];
 
 		if (elmnt.getAttribute("external")) {
-			elmnt.innerHTML += " <i class='fa fa-external-link-alt fa_external'></i>";
+			elmnt.innerHTML += " <i class='fa fa-external-link-alt fa_external'></i>&nbsp;";
 			if (debug) console.log("elmnt=", elmnt);
 
 			elmnt["target"] = "_blank";

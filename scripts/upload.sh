@@ -396,7 +396,7 @@ else # sftp/ftp/ftps
 			# shellcheck disable=SC2153
 			OUTPUT="$(
 				echo "${HEADER} unable to log in to ${REMOTE_USER} @ ${REMOTE_HOST}."
-				[[ -z ${OUTPUT_FILE} ]] && echo -e "${OUTPUT}"
+				echo -e "${OUTPUT}"
 			)"
 		else
 			OUTPUT="$(

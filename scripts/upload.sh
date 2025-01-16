@@ -407,7 +407,7 @@ else # sftp/ftp/ftps
 	if [[ -n ${OUTPUT_FILE} ]]; then
 		lftp -f "${LFTP_CMDS}" > "${OUTPUT_FILE}" 2>&1
 		RET=$?
-		OUTPUT="$( < "${OUTPUT_FILE}" )"
+		OUTPUT=""		# Let invoker display OUTPUT_FILE if they want
 	else
 		OUTPUT="$( lftp -f "${LFTP_CMDS}" 2>&1 )"
 		RET=$?
@@ -418,7 +418,7 @@ else # sftp/ftp/ftps
 			# shellcheck disable=SC2153
 			OUTPUT="$(
 				echo "${HEADER} unable to log in to ${REMOTE_USER} @ ${REMOTE_HOST}."
-				echo -e "${OUTPUT}"
+				[[ -n ${OUTPUT} ]] && echo -e "${OUTPUT}"
 			)"
 		else
 			OUTPUT="$(
@@ -430,8 +430,7 @@ else # sftp/ftp/ftps
 				echo "TEMP_NAME='${TEMP_NAME}'"
 				echo "DESTINATION_NAME='${DESTINATION_NAME}'"
 				echo -en "${NC}"
-				echo
-				echo -e "${OUTPUT}"
+				[[ -n ${OUTPUT} ]] && echo -e "\n${OUTPUT}"
 			)"
 		fi
 

@@ -181,11 +181,37 @@ fi
 if [[ ${REMOTE_WEB} == "true" ]]; then
 	prefix="remotewebsite"
 	PREFIX="REMOTEWEBSITE"
+	Prefix="Remote Website"
 else	# "server"
 	prefix="remoteserver"
 	PREFIX="REMOTESERVER"
+	Prefix="Remote Server"
 fi
 PROTOCOL="$( settings ".${prefix}protocol" )"
+if [[ -z ${PROTOCOL} ]]; then
+	echo "${ME}: ERROR: 'Protocol' not specified for ${Prefix}." >&2
+	exit 2
+fi
+
+# Get some variables and check for "".
+function get_REMOTE_USER_HOST_PORT()
+{
+	local OK="true"
+	REMOTE_USER="$( settings ".${PREFIX}_USER" "${ALLSKY_ENV}" )"
+	if [[ -z ${REMOTE_USER} ]]; then
+		OK="false"
+		echo "${ME}: ERROR: 'User Name' not specified for ${Prefix}." >&2
+	fi
+	REMOTE_HOST="$( settings ".${PREFIX}_HOST" "${ALLSKY_ENV}" )"
+	if [[ -z ${REMOTE_HOST} ]]; then
+		OK="false"
+		echo "${ME}: ERROR: 'Server Name' not specified for ${Prefix}." >&2
+	fi
+	[[ ${OK} == "false" ]] && exit 3
+
+	# Ok to be null
+	REMOTE_PORT="$( settings ".${PREFIX}_PORT" "${ALLSKY_ENV}" )"
+}
 
 # SIGTERM is sent by systemctl to stop Allsky.
 # SIGHUP is sent to have the capture program reload its arguments.
@@ -208,9 +234,7 @@ if [[ ${PROTOCOL} == "s3" ]] ; then
 
 
 elif [[ "${PROTOCOL}" == "scp" || "${PROTOCOL}" == "rsync" ]] ; then
-	REMOTE_USER="$( settings ".${PREFIX}_USER" "${ALLSKY_ENV}" )"
-	REMOTE_HOST="$( settings ".${PREFIX}_HOST" "${ALLSKY_ENV}" )"
-	REMOTE_PORT="$( settings ".${PREFIX}_PORT" "${ALLSKY_ENV}" )"
+	get_REMOTE_USER_HOST_PORT
 	SSH_KEY_FILE="$( settings ".${PREFIX}_SSH_KEY_FILE" "${ALLSKY_ENV}" )"
 
 	DEST="${REMOTE_USER}@${REMOTE_HOST}:${DIRECTORY}/${DESTINATION_NAME}"
@@ -271,7 +295,7 @@ else # sftp/ftp/ftps
 			[[ ${IMAGE_DIR: -1:1} != "/" ]] && IMAGE_DIR+="/"
 			DIRECTORY="${IMAGE_DIR}"
 		fi
-		
+
 	elif [[ ${DIRECTORY: -1:1} != "/" ]]; then
 		# If DIRECTORY doesn't already have a trailing "/", append one.
 		DIRECTORY+="/"
@@ -292,9 +316,7 @@ else # sftp/ftp/ftps
 
 	set +H	# This keeps "!!" from being processed in REMOTE_PASSWORD
 
-	REMOTE_USER="$( settings ".${PREFIX}_USER" "${ALLSKY_ENV}" )"
-	REMOTE_HOST="$( settings ".${PREFIX}_HOST" "${ALLSKY_ENV}" )"
-	REMOTE_PORT="$( settings ".${PREFIX}_PORT" "${ALLSKY_ENV}" )"
+	get_REMOTE_USER_HOST_PORT
 	# The export LFTP_PASSWORD has to be OUTSIDE the ( ) below.
 	REMOTE_PASSWORD="$( settings ".${PREFIX}_PASSWORD" "${ALLSKY_ENV}" )"
 

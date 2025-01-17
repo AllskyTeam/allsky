@@ -100,9 +100,7 @@ fi
 RUN_POSTTOMAP="false"
 POSTTOMAP_ACTION=""
 WEBSITE_CONFIG=()
-WEB_CONFIG_FILE=""
-HAS_WEBSITE_RET=""
-WEBSITES=""		# local, remote, both, none
+WEBSITE_VALUE_CHANGED="false"
 GOT_WARNING="false"
 SHOW_ON_MAP=""
 CHECK_REMOTE_WEBSITE_ACCESS="false"
@@ -110,10 +108,11 @@ CHECK_REMOTE_SERVER_ACCESS="false"
 USE_REMOTE_WEBSITE=""
 USE_REMOTE_SERVER=""
 
-# Several of the fields are in the Allsky Website configuration file,
-# so check if the IS a file before trying to update it.
-# Return 0 on found and 1 on not found.
-# The first time we're called, set ${WEBSITES}
+# Return 0 if at least one Website is found, otherwise 1.
+# The first time we're called, set some global variables.
+WEB_CONFIG_FILE=""
+HAS_WEBSITE_RET=""
+WEBSITES=""				# local, remote, both, none
 function check_website()
 {
 	[[ -n ${HAS_WEBSITE_RET} ]] && return "${HAS_WEBSITE_RET}"		# already checked
@@ -134,17 +133,18 @@ function check_website()
 
 # Get all settings at once rather than individually via settings().
 if [[ -f ${SETTINGS_FILE} ]]; then
-	# check_website requires the settings file to exist.
-	# If it doesn't we are likely called from the install script before the file is created.
+	# If the settings file doesn't exist, check_website() won't find a website and
+	# we are likely called from the install script before the file is created.
+
 	check_website		# invoke to set variables
 
-	X="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix S_ --shell )"
-	if [[ $? -ne 0 ]]; then
+	if ! X="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix S_ --shell 2>&1 )" ; then
 		echo "${X}"
 		exit 1
 	fi
 	eval "${X}"
 fi
+
 if [[ -f ${CC_FILE} ]]; then
 	# "convertJSON.php" won't work with the CC_FILE since it has arrays.
 	C_sensorWidth="$( settings ".sensorWidth" "${CC_FILE}" )"
@@ -513,6 +513,7 @@ do
 		"filename")
 			if check_filename_type "${NEW_VALUE}" "$( settings '.type' )" ; then
 				check_website && WEBSITE_CONFIG+=("config.imageName" "${LABEL}" "${NEW_VALUE}")
+				WEBSITE_VALUE_CHANGED="true"
 			else
 				OK="false"
 			fi
@@ -574,7 +575,7 @@ do
 		"displaysettings")
 			[[ ${NEW_VALUE} != "false" ]] && NEW_VALUE="true"
 			if check_website; then
-				# If there are two Websites, this gets the index in the first one.
+				# If there are TWO Websites, this gets the index in the first one.
 				# Let's hope it's the same index in the second one...
 				PARENT="homePage.popoutIcons"
 				INDEX=$( getJSONarrayIndex "${WEB_CONFIG_FILE}" "${PARENT}" "Allsky Settings" )
@@ -589,7 +590,7 @@ do
 			else
 				echo -en "${wWARNING}"
 				echo -en "Change to ${wBOLD}${LABEL}${wNBOLD} not relevant - "
-				echo -en "No local or remote Allsky Website found."
+				echo -en "No local or remote Allsky Website enabled."
 				echo -e "${wNC}"
 				GOT_WARNING="true"
 			fi
@@ -605,6 +606,7 @@ do
 			# Allow either +/- decimal numbers, OR numbers with N, S, E, W, but not both.
 			if LAT_LON="$( convertLatLong "${NEW_VALUE}" "${KEY}" 2>&1 )" ; then
 				check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${LAT_LON}")
+				WEBSITE_VALUE_CHANGED="true"
 				RUN_POSTTOMAP="true"
 			else
 				# Restore to old value
@@ -618,6 +620,7 @@ do
 		"location" | "owner" | "camera" | "lens" | "computer")
 			RUN_POSTTOMAP="true"
 			check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
+			WEBSITE_VALUE_CHANGED="true"
 			;;
 
 
@@ -850,6 +853,8 @@ if [[ ${USE_REMOTE_WEBSITE} == "true" || ${USE_REMOTE_SERVER} == "true" ]]; then
 	fi
 fi
 
+CHANGED_LOCAL_WEBSITE="false"
+CHANGED_REMOTE_WEBSITE="false"
 # shellcheck disable=SC2128
 if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 	# Update the local and/or Website remote config file
@@ -859,13 +864,16 @@ if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 		fi
 		# shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${DEBUG_ARG} --local "${WEBSITE_CONFIG[@]}"
+		CHANGED_LOCAL_WEBSITE="true"
 	fi
+
 	if [[ ${WEBSITES} == "remote" || ${WEBSITES} == "both" ]]; then
 		if [[ ${DEBUG} == "true" ]]; then
 			echo -e "${wDEBUG}Executing updateWebsiteConfig.sh remote${wNC}"
 		fi
 		# shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${DEBUG_ARG} --remote "${WEBSITE_CONFIG[@]}"
+		CHANGED_REMOTE_WEBSITE="true"
 
 		FILE_TO_UPLOAD="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
@@ -881,6 +889,22 @@ if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 				"RemoteWebsite" ; then
 			echo -e "${wERROR}${ERROR_PREFIX}Unable to upload '${FILE_TO_UPLOAD}' to Website ${NUM}.${wNC}"
 		fi
+	fi
+fi
+
+if [[ ${WEBSITE_VALUE_CHANGED} == "true" ]]; then
+	# TODO: A default local configuration.json file is created during installation
+	# if one didn't already exist.
+	# We have no way of knowing if what's there is the default file or was modified or
+	# was copied from the prior Allsky.
+	# Until we do, no't display this message:
+#	if [[ ${CHANGED_LOCAL_WEBSITE} == "false" && -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
+#		echo -n "WARNING: ${ALLSKY_WEBSITE_CONFIGURATION_NAME} not updated"
+#		echo    " because the local Website is not enabled."
+#	fi
+	if [[ ${CHANGED_REMOTE_WEBSITE} == "false" && -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
+		echo -n "WARNING: ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} not updated"
+		echo    " because the remote Website is not enabled."
 	fi
 fi
 

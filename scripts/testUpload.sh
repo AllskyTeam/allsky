@@ -273,7 +273,7 @@ do_test()
 		: > "${OUT}"
 		${CMD} > "${OUTPUT_FILE}" 2>&1 &
 		PID=$( jobs -p )
-		[[ -n ${PID} ]] && tail -f "${OUT}" --pid=${PID} >&3
+		[[ -n ${PID} ]] && tail -f "${OUT}" --pid="${PID}" >&3
 		wait -n
 		RET=$?		# return code from ${CMD}
 	else

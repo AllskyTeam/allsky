@@ -898,10 +898,11 @@ if [[ ${WEBSITE_VALUE_CHANGED} == "true" ]]; then
 	# We have no way of knowing if what's there is the default file or was modified or
 	# was copied from the prior Allsky.
 	# Until we do, no't display this message:
-#	if [[ ${CHANGED_LOCAL_WEBSITE} == "false" && -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
+	if [[ ${CHANGED_LOCAL_WEBSITE} == "false" && -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
+:
 #		echo -n "WARNING: ${ALLSKY_WEBSITE_CONFIGURATION_NAME} not updated"
 #		echo    " because the local Website is not enabled."
-#	fi
+	fi
 	if [[ ${CHANGED_REMOTE_WEBSITE} == "false" && -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
 		echo -n "WARNING: ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} not updated"
 		echo    " because the remote Website is not enabled."

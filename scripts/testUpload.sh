@@ -70,9 +70,32 @@ done
 [[ ${DO_WEBSITE} == "false" && ${DO_SERVER} == "false" ]] && usage_and_exit 2
 
 
+function error_type()
+{
+	local TYPE="$1"
+	echo -n "${BOLD}"
+	echo -ne "${TYPE}"
+	echo -e "${NC}"
+	echo
+}
+
+# Display a "FIX" message.
+function fix()
+{
+	local C="$1"		# Command name
+	local S="$2"		# Section name
+	local F="$3"		# Fix string
+
+	echo -e "  ${F}Do one of the following on your Pi:"
+	echo    "    In the WebUI's '${S}' section add '${C}' to 'FTP Commands'."
+	echo    "  or"
+	echo    "    echo '${C}' > ~/.lftprc"
+}
+
 # Parse the output file and provide fixes when possible.
 parse_output()
-{	local FILE="${1}"
+{
+	local FILE="${1}"
 	local TYPE="${2}"
 
 	[[ ! -s ${FILE} ]] && return	# empty file - shouldn't happen...
@@ -95,7 +118,7 @@ parse_output()
 	STRING="host name resolve timeout"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
 		HOST="$( settings ".${HOST}" "${ENV_FILE}" )"
-		echo "* Host name '${HOST}' not found."
+		error_type "* Host name '${HOST}' not found."
 		echo "  FIX: Check the spelling of the server."
 	   	echo "       Make sure your network is up."
 	   	echo "       Make sure the network the server is on is up."
@@ -103,13 +126,13 @@ parse_output()
 
 	STRING="User cannot log in|Login failed|Login incorrect"
 	if grep -E --ignore-case --silent "${STRING}" "${FILE}" ; then
-		echo "* Unable to log in."
+		error_type "* Unable to log in."
 		echo "  FIX: Make sure the username and password are correct."
 	fi >&2
 
 	STRING="max-retries exceeded"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
-		echo "* Unable to log in for unknown reason."
+		error_type "* Unable to log in for unknown reason."
 		echo "  FIX: Make sure the port is correct and your network is working."
 		PROTOCOL="$( settings ".${PROTOCOL}" )"
 		if [[ ${PROTOCOL} == "sftp" ]]; then
@@ -125,11 +148,11 @@ parse_output()
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
 		STRING="is current directory"
 		if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
-			echo "* Login succeeded but unknown location found."
+			error_type "* Login succeeded but unknown location found."
 		else
 			# This should never happen.
 			# If we can't login we wouldn't know if the location was there.
-			echo "* Login failed and unknown location found."
+			error_type "* Login failed and unknown location found."
 		fi
 		DIR="$( settings ".${DIR}" )"
 		if [[ -n ${DIR} ]]; then
@@ -144,13 +167,9 @@ parse_output()
 
 	STRING="An unexpected TLS packet was received"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
-# TODO
-		CMD="set TBD"
-		echo "* Authentication protocol issue."
-		echo "  FIX: Do one of the following on your Pi:"
-		echo "    echo '${CMD}' > ~/.lftprc"
-		echo "  or"
-		echo "    In the WebUI's '${S}' section add '${CMD}' to 'FTP Commands'."
+		CMD="set ftp:ssl-force true"
+		error_type "* Authentication protocol issue."
+		fix "${CMD}" "${S}" "FIX: Switch to the 'ftp' Protocol, then\n  "
 	fi >&2
 
 	# Certificate-related issues
@@ -159,7 +178,7 @@ parse_output()
 		HOST="$( settings ".${HOST}" "${ENV_FILE}" )"
 		USER="$( settings ".${USER}" "${ENV_FILE}" )"
 		PROTOCOL="$( settings ".${PROTOCOL}" )"
-		echo "* The remote machine doesn't know about your Pi."
+		error_type "* The remote machine doesn't know about your Pi."
 		if [[ ${PROTOCOL} == "sftp" ]]; then
 			echo "  This happens the first time you use Protocol 'sftp' on a new Pi."
 			echo "  FIX: On your Pi, run:  ssh ${USER}@${HOST}"
@@ -174,29 +193,28 @@ parse_output()
 	STRING="certificate common name doesn't match requested host name"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
 		CMD="set ssl:check-hostname"
-		echo "* Certificate host verification issue."
-		echo "  FIX: Do one of the following on your Pi:"
-		echo "    echo '${CMD}' > ~/.lftprc"
-		echo "  or"
-		echo "    In the WebUI's '${S}' section add '${CMD}' to 'FTP Commands'."
+		error_type "* Certificate host verification issue."
+		fix "${CMD}" "${S}" "FIX: "
 	fi >&2
 
 	# Ignore the WARNING messages for this; it continues to work.
-	STRING="ERROR.*Not trusted"
+	STRING="ERROR.*NOT trusted"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
 		CMD="set ssl:verify-certificate no"
-		echo "* Certificate verification issue."
-		echo "  FIX: do one of the following on your Pi:"
-		echo "    echo '${CMD}' > ~/.lftprc"
-		echo "  or"
-		echo "    In the WebUI's '${S}' section add '${CMD}' to 'FTP Commands'."
+		error_type "* Certificate verification issue."
+		fix "${CMD}" "${S}" "FIX: "
 	fi >&2
 
+	STRING="No space left on device"
+	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
+		error_type "* Server is out of disk space."
+		echo "  FIX: Remove unused files on server."
+	fi >&2
 
-	{
-		echo -e "\n=================== RAW OUTPUT:"
-		indent --spaces "${YELLOW}$( < "${FILE}" )${NC}\n"
-	} >&2
+	# Output already displayed in DEBUG mode.
+	if [[ ${DEBUG} == "false" ]]; then
+		echo -e "\n${YELLOW}Raw output is in '${FILE}'.${NC}\n\n" >&2
+	fi
 }
 
 
@@ -235,23 +253,34 @@ do_test()
 
 	CMD="${ALLSKY_SCRIPTS}/upload.sh --debug --remote-${REMOTE}"
 	if [[ ${DEBUG} == "true" ]]; then
-		OUT="${ALLSKY_TMP}/upload-${TYPE}.txt"
+		# Tell upload.sh to send output of its upload commands to 
+		# the specified file.
+		# We'll "tail -f" the file below so the user sees the output
+		# as it appears.
+		# Otherwise, they have to wait until the command completes
+		# before they see anything, which can be tens of seconds.
+		OUT="${ALLSKY_TMP}/test_raw_file-${TYPE}.txt"
 		CMD+=" --output ${OUT}"
+	else
+		OUT="${OUTPUT_FILE}"
 	fi
 	CMD+=" ${TEST_FILE} ${DIR} ${bTEST_FILE} ${ME}"
 
 	if [[ ${DEBUG} == "true" ]]; then
-		echo -e "Executing:\n    ${CMD}\n"
-		: > "${OUT}"
-		tail -f "${OUT}" 2>/dev/null &
-	fi
-	${CMD} > "${OUTPUT_FILE}" 2>&1
-	RET=$?
+		# Need to send the debugging output to file descriptor 3.
+		echo -e "Executing:\n    ${CMD}\n" >&3
 
-	if [[ ${DEBUG} == "true" ]]; then
-		kill %1
-		echo
+		: > "${OUT}"
+		${CMD} > "${OUTPUT_FILE}" 2>&1 &
+		PID=$( jobs -p )
+		[[ -n ${PID} ]] && tail -f "${OUT}" --pid=${PID} >&3
+		wait -n
+		RET=$?		# return code from ${CMD}
+	else
+		${CMD} > "${OUTPUT_FILE}" 2>&1
+		RET=$?
 	fi
+
 	if [[ ${RET} -eq 0 ]]; then
 		[[ ${SILENT} == "false" ]] && echo -e "${GREEN}Test upload to ${HUMAN_TYPE} succeeded.${NC}"
 		if [[ -z ${DIR} || ${DIR} == "null" ]]; then
@@ -263,24 +292,32 @@ do_test()
 			echo -en "\t"
 			echo     "Please remove '${D}${bTEST_FILE}' on your server." >> "${MSG_FILE}"
 		fi
-#		if [[ -s ${OUTPUT_FILE} && ${DEBUG} == "true" ]]; then
-#			echo -e "OUTPUT:"
-#			echo -e "${YELLOW}$( < "${OUTPUT_FILE}" )${NC}\n"
-#		fi
 	else
 		echo -ne "${RED}"
-		echo -n  "Test upload to ${HUMAN_TYPE} FAILED."	# with RET=${RET}."
-		echo -e  "${NC}"
-		parse_output "${OUTPUT_FILE}" "${TYPE}"
+		echo -n  "Test upload to ${HUMAN_TYPE} FAILED."
+		echo -e  "${NC}\n"
+		if [[ -s ${OUT} ]]; then
+			parse_output "${OUT}" "${TYPE}"
+		elif [[ -s ${OUTPUT_FILE} ]]; then
+			indent --spaces "$( < "${OUTPUT_FILE}" )"
+		fi
 	fi
 
 	rm -f "${TEST_FILE}"
 	[[ ! -s ${OUTPUT_FILE} ]] && rm -f "${OUTPUT_FILE}"
+	[[ ${DEBUG} == "true" && ! -s ${OUT} ]] && rm -f "${OUT}"
 
 	return "${RET}"
 }
 
 # ========================= main body of program
+
+# In debug mode, do_test() outputs the commands run by upload.sh in real time.
+# Because do_test() is run below in sub-shells that capture stdout and stderr,
+# it has to write to file descriptor 3 for the user to see the output
+# in real time.
+[[ ${DEBUG} == "true" ]] && exec 3>&2
+
 MSG_FILE="/tmp/$$"
 ERR_MSG=""
 OK_MSG=""

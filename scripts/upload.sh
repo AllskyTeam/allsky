@@ -15,25 +15,27 @@ source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 
 usage_and_exit() {
 	RET=$1
+	exec >&2
 	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-	echo "*** Usage: ${ME} [--help] [--wait] [--silent] [--debug] \\"
+	echo "*** Usage: ${ME} [--help] [--wait] [--silent] [--debug] [--output f] \\"
 	echo "               { --local-web | --remote-web | --remote-server } \\"
-	echo "               file_to_upload  directory  destination_file_name \\"
+	echo "               file_to_upload  directory  destination_name \\"
 	echo "               [file_type]"
 	[[ ${RET} -ne 0 ]] && echo -e "${NC}"
 
 	echo
 	echo "Where:"
-	echo "   '--help'    displays this message and exits."
-	echo "   '--wait'    waits for any upload of the same type to finish."
-	echo "   '--silent'  doesn't display any status messages."
+	echo "   '--help'           displays this message and exits."
+	echo "   '--wait'           waits for any upload of the same type to finish."
+	echo "   '--silent'         doesn't display any status messages."
+	echo "   '--output f'       saves the upload output in the specified file."
 	echo "   '--local-web'      copy to local Website."
-	echo "   '--remote-web'     upload to the remote Website"
+	echo "   '--remote-web'     upload to the remote Website."
 	echo "   '--remote-server'  upload to the remote server."
-	echo "   'file_to_upload' is the path name of the file to upload."
-	echo "   'directory' is the directory ON THE SERVER the file should be uploaded to."
-	echo "   'destination_file_name' is the name the file should be called ON THE SERVER."
-	echo "   'file_type' is an optional, temporary name to use when uploading the file."
+	echo "   'file_to_upload'   is the path name of the file to upload."
+	echo "   'directory'        is the directory ON THE SERVER the file should be uploaded to."
+	echo "   'destination_name' is the name the file should be called ON THE SERVER."
+	echo "   'file_type'        is an optional, temporary name to use when uploading the file."
 	echo
 	echo "For example: ${ME}  keogram-20240710.jpg  /keograms  keogram.jpg"
 
@@ -44,6 +46,7 @@ usage_and_exit() {
 HELP="false"
 WAIT="false"
 SILENT="false"
+OUTPUT_FILE=""
 DEBUG="false"
 LOCAL="false"
 REMOTE_WEB="false"
@@ -61,6 +64,10 @@ while [[ $# -gt 0 ]]; do
 			;;
 		--silent)
 			SILENT="true"
+			;;
+		--output)
+			OUTPUT_FILE="$2"
+			shift
 			;;
 		--debug)
 			DEBUG="true"
@@ -120,7 +127,7 @@ function check_for_error_messages()
 	local ERROR_MESSAGES="${1}"
 	# Output any error messages
 	if [[ -n ${ERROR_MESSAGES} ]]; then
-		echo -e "Upload output from '${FILE_TO_UPLOAD}:\n   ${ERROR_MESSAGES}\n" >&2
+		echo -e "Upload output from '${FILE_TO_UPLOAD}':\n   ${ERROR_MESSAGES}\n" >&2
 		echo -e "${ERROR_MESSAGES}" > "${LOG}"
 	fi
 }
@@ -174,11 +181,37 @@ fi
 if [[ ${REMOTE_WEB} == "true" ]]; then
 	prefix="remotewebsite"
 	PREFIX="REMOTEWEBSITE"
+	Prefix="Remote Website"
 else	# "server"
 	prefix="remoteserver"
 	PREFIX="REMOTESERVER"
+	Prefix="Remote Server"
 fi
 PROTOCOL="$( settings ".${prefix}protocol" )"
+if [[ -z ${PROTOCOL} ]]; then
+	echo "${ME}: ERROR: 'Protocol' not specified for ${Prefix}." >&2
+	exit 2
+fi
+
+# Get some variables and check for "".
+function get_REMOTE_USER_HOST_PORT()
+{
+	local OK="true"
+	REMOTE_USER="$( settings ".${PREFIX}_USER" "${ALLSKY_ENV}" )"
+	if [[ -z ${REMOTE_USER} ]]; then
+		OK="false"
+		echo "${ME}: ERROR: 'User Name' not specified for ${Prefix}." >&2
+	fi
+	REMOTE_HOST="$( settings ".${PREFIX}_HOST" "${ALLSKY_ENV}" )"
+	if [[ -z ${REMOTE_HOST} ]]; then
+		OK="false"
+		echo "${ME}: ERROR: 'Server Name' not specified for ${Prefix}." >&2
+	fi
+	[[ ${OK} == "false" ]] && exit 3
+
+	# Ok to be null
+	REMOTE_PORT="$( settings ".${PREFIX}_PORT" "${ALLSKY_ENV}" )"
+}
 
 # SIGTERM is sent by systemctl to stop Allsky.
 # SIGHUP is sent to have the capture program reload its arguments.
@@ -201,9 +234,7 @@ if [[ ${PROTOCOL} == "s3" ]] ; then
 
 
 elif [[ "${PROTOCOL}" == "scp" || "${PROTOCOL}" == "rsync" ]] ; then
-	REMOTE_USER="$( settings ".${PREFIX}_USER" "${ALLSKY_ENV}" )"
-	REMOTE_HOST="$( settings ".${PREFIX}_HOST" "${ALLSKY_ENV}" )"
-	REMOTE_PORT="$( settings ".${PREFIX}_PORT" "${ALLSKY_ENV}" )"
+	get_REMOTE_USER_HOST_PORT
 	SSH_KEY_FILE="$( settings ".${PREFIX}_SSH_KEY_FILE" "${ALLSKY_ENV}" )"
 
 	DEST="${REMOTE_USER}@${REMOTE_HOST}:${DIRECTORY}/${DESTINATION_NAME}"
@@ -264,7 +295,7 @@ else # sftp/ftp/ftps
 			[[ ${IMAGE_DIR: -1:1} != "/" ]] && IMAGE_DIR+="/"
 			DIRECTORY="${IMAGE_DIR}"
 		fi
-		
+
 	elif [[ ${DIRECTORY: -1:1} != "/" ]]; then
 		# If DIRECTORY doesn't already have a trailing "/", append one.
 		DIRECTORY+="/"
@@ -285,9 +316,7 @@ else # sftp/ftp/ftps
 
 	set +H	# This keeps "!!" from being processed in REMOTE_PASSWORD
 
-	REMOTE_USER="$( settings ".${PREFIX}_USER" "${ALLSKY_ENV}" )"
-	REMOTE_HOST="$( settings ".${PREFIX}_HOST" "${ALLSKY_ENV}" )"
-	REMOTE_PORT="$( settings ".${PREFIX}_PORT" "${ALLSKY_ENV}" )"
+	get_REMOTE_USER_HOST_PORT
 	# The export LFTP_PASSWORD has to be OUTSIDE the ( ) below.
 	REMOTE_PASSWORD="$( settings ".${PREFIX}_PASSWORD" "${ALLSKY_ENV}" )"
 
@@ -374,26 +403,22 @@ else # sftp/ftp/ftps
 
 		echo exit 0
 	} > "${LFTP_CMDS}"
-	if [[ $? -ne 0 ]]; then
-		echo -e "${RED}"
-		echo -e "*** ERROR: Unable to create '${LFTP_CMDS}'."
-		echo -e "${NC}"
-		# Do ls of parent and grandparent.
-		PARENT="$( dirname "${LFTP_CMDS}" )"
-		GRANDPARENT="$( dirname "${PARENT}" )"
-		ls -ld "${PARENT}" "${GRANDPARENT}"
-		exit 1
-	fi
 
-	OUTPUT="$( lftp -f "${LFTP_CMDS}" 2>&1 )"
-	RET=$?
+	if [[ -n ${OUTPUT_FILE} ]]; then
+		lftp -f "${LFTP_CMDS}" > "${OUTPUT_FILE}" 2>&1
+		RET=$?
+		OUTPUT=""		# Let invoker display OUTPUT_FILE if they want
+	else
+		OUTPUT="$( lftp -f "${LFTP_CMDS}" 2>&1 )"
+		RET=$?
+	fi
 	if [[ ${RET} -ne 0 ]]; then
 		HEADER="${RED}*** ${ME}: ERROR,"
 		if [[ ${RET} -eq ${EXIT_ERROR_STOP} ]]; then
 			# shellcheck disable=SC2153
 			OUTPUT="$(
-				echo "${HEADER} unable to log in to '${REMOTE_HOST}', user ${REMOTE_USER}'."
-				echo -e "${OUTPUT}"
+				echo "${HEADER} unable to log in to ${REMOTE_USER} @ ${REMOTE_HOST}."
+				[[ -n ${OUTPUT} ]] && echo -e "${OUTPUT}"
 			)"
 		else
 			OUTPUT="$(
@@ -405,12 +430,11 @@ else # sftp/ftp/ftps
 				echo "TEMP_NAME='${TEMP_NAME}'"
 				echo "DESTINATION_NAME='${DESTINATION_NAME}'"
 				echo -en "${NC}"
-				echo
-				echo -e "${OUTPUT}"
+				[[ -n ${OUTPUT} ]] && echo -e "\n${OUTPUT}"
 			)"
 		fi
 
-		echo -e "\n${YELLOW}Commands used${NC} are in: ${GREEN}${LFTP_CMDS}${NC}"
+		echo -e "\nCommands used are in '${LFTP_CMDS}'"
 	else
 		if [[ ${SILENT} == "false" && ${ALLSKY_DEBUG_LEVEL} -ge 3 && ${ON_TTY} == "false" ]]; then
 			echo "${ME}: FTP '${FILE_TO_UPLOAD}' finished"

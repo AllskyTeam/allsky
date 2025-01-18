@@ -376,9 +376,11 @@ function deleteDirectory($dir) {
 // Except for testing, the file should be deleted.
 function delete_commands_file()
 {
-	global $delete_commands;
-	if ($delete_commands)
+	global $delete_commands, $commandFile;
+
+	if ($delete_commands) {
 		unlink($commandFile);
+	}
 }
 
 ?>

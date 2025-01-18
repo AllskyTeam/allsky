@@ -1,230 +1,226 @@
 "use strict";
 
 class OEFIELD {
-  fieldData = null;
-  config = null;
-  #dirty = false;
-  shape = null;
-  id = null;
-  loaded = true;
-  
-  OVERLAYFIELDSELECTOR = ".overlayfield";
+	fieldData = null;
+	config = null;
+	#dirty = false;
+	shape = null;
+	id = null;
+	loaded = true;
 
-  constructor(type, id) {
-    //this.type = type;
-    this.id = 'oe-field-' + id;
-  }
+	OVERLAYFIELDSELECTOR = ".overlayfield";
 
-  setDefaults() {
-    for (let defaultName in this.DEFAULTS) {
-      let path = this.DEFAULTS[defaultName].path;
-      let defaultPath = this.DEFAULTS[defaultName].defaultpath;
-      let defaultValue = this.DEFAULTS[defaultName].default;
+	constructor(type, id) {
+		//this.type = type;
+		this.id = 'oe-field-' + id;
+	}
 
-      if (!(path in this.fieldData)) {
-        if (defaultPath !== '') {
-          this.fieldData[path] = this.config.getValue(defaultPath, defaultValue);
-        } else {
-          this.fieldData[path] = defaultValue;
-        }
-      }
-    }
-  }
+	setDefaults() {
+		for (let defaultName in this.DEFAULTS) {
+			let path = this.DEFAULTS[defaultName].path;
+			let defaultPath = this.DEFAULTS[defaultName].defaultpath;
+			let defaultValue = this.DEFAULTS[defaultName].default;
 
-  updateDefaults() {
-    for (let defaultName in this.DEFAULTS) {
-      let path = this.DEFAULTS[defaultName].path;
-      let defaultPath = this.DEFAULTS[defaultName].defaultpath;
-      let defaultValue = this.DEFAULTS[defaultName].default;
+			if (!(path in this.fieldData)) {
+				if (defaultPath !== '') {
+					this.fieldData[path] = this.config.getValue(defaultPath, defaultValue);
+				} else {
+					this.fieldData[path] = defaultValue;
+				}
+			}
+		}
+	}
 
-      if (path in this.fieldData) {
-        let oldDefault = this.config.getBackupValue(defaultPath, defaultValue);
-        if (this.fieldData[path] == oldDefault) {
-          this.fieldData[path] = this.config.getValue(defaultPath, defaultValue);
-          this[path] = this.fieldData[path] ;
-        }
-      }      
-    }
-  }
+	updateDefaults() {
+		for (let defaultName in this.DEFAULTS) {
+			let path = this.DEFAULTS[defaultName].path;
+			let defaultPath = this.DEFAULTS[defaultName].defaultpath;
+			let defaultValue = this.DEFAULTS[defaultName].default;
 
-  get loaded() {
-    return this.loaded;
-  }
+			if (path in this.fieldData) {
+				let oldDefault = this.config.getBackupValue(defaultPath, defaultValue);
+				if (this.fieldData[path] == oldDefault) {
+					this.fieldData[path] = this.config.getValue(defaultPath, defaultValue);
+					this[path] = this.fieldData[path];
+				}
+			}
+		}
+	}
 
-  get id() {
-    return this.id;
-  }
+	get loaded() {
+		return this.loaded;
+	}
 
-  get shape() {
-    return this.shape;
-  }
+	get id() {
+		return this.id;
+	}
 
-  getValue(path, defaultValue = null) {
-    return path.split('.').reduce((o, p) => o ? o[p] : defaultValue, this.fieldData);
-  }
+	get shape() {
+		return this.shape;
+	}
 
-  setValue(path, value) {
-    return path.split('.').reduce((o, p, i) => o[p] = path.split('.').length === ++i ? value : o[p] || {}, this.fieldData);
-  }
+	getValue(path, defaultValue = null) {
+		return path.split('.').reduce((o, p) => o ? o[p] : defaultValue, this.fieldData);
+	}
 
-  deleteValue(path) {
-    let currentObject = this.fieldData
-    const parts = path.split(".")
-    const last = parts.pop()
-    for (const part of parts) {
-      currentObject = currentObject[part]
-      if (!currentObject) {
-        return
-      }
-    }
-    delete currentObject[last]
-  }
+	setValue(path, value) {
+		return path.split('.').reduce((o, p, i) => o[p] = path.split('.').length === ++i ? value : o[p] || {}, this.fieldData);
+	}
 
-  getJSON() {
-    this.saveFieldData = JSON.parse(JSON.stringify(this.fieldData));
-    for (let defaultName in this.DEFAULTS) {
-      let path = this.DEFAULTS[defaultName].path;
-      let defaultPath = this.DEFAULTS[defaultName].defaultpath;
-      let defaultClassValue = this.DEFAULTS[defaultName].default;
+	deleteValue(path) {
+		let currentObject = this.fieldData
+		const parts = path.split(".")
+		const last = parts.pop()
+		for (const part of parts) {
+			currentObject = currentObject[part]
+			if (!currentObject) {
+				return
+			}
+		}
+		delete currentObject[last]
+	}
 
-      let defaultValue = '';
-      if (defaultPath !== '') {
-        defaultValue = this.config.getValue(defaultPath, defaultClassValue);
-      }
+	getJSON() {
+		this.saveFieldData = JSON.parse(JSON.stringify(this.fieldData));
+		for (let defaultName in this.DEFAULTS) {
+			let path = this.DEFAULTS[defaultName].path;
+			let defaultPath = this.DEFAULTS[defaultName].defaultpath;
+			let defaultClassValue = this.DEFAULTS[defaultName].default;
 
-      if (path in this.saveFieldData) {
-        if (this.saveFieldData[path] === defaultValue) {
-          delete this.saveFieldData[path];
-        }
-      }
-    }
-    
-    return this.saveFieldData;
-  }
+			let defaultValue = '';
+			if (defaultPath !== '') {
+				defaultValue = this.config.getValue(defaultPath, defaultClassValue);
+			}
 
-  rotatePoint(){
+			if (path in this.saveFieldData) {
+				if (this.saveFieldData[path] === defaultValue) {
+					delete this.saveFieldData[path];
+				}
+			}
+		}
 
-    let tlx = this.shape.x() - this.shape.offsetX();
-    let tly = this.shape.y() - this.shape.offsetY();
-    let pt = {
-      x: tlx, 
-      y: tly
-    };
+		return this.saveFieldData;
+	}
 
-    let o = {
-      x: this.shape.x(), 
-      y: this.shape.y()
-    };
+	rotatePoint() {
 
-    let a = this.shape.rotation();
+		let tlx = this.shape.x() - this.shape.offsetX();
+		let tly = this.shape.y() - this.shape.offsetY();
+		let pt = {
+			x: tlx,
+			y: tly
+		};
 
-    var angle = a * (Math.PI/180);
-    var rotatedX = Math.cos(angle) * (pt.x - o.x) - Math.sin(angle) * (pt.y - o.y) + o.x;
-    var rotatedY = Math.sin(angle) * (pt.x - o.x) + Math.cos(angle) * (pt.y - o.y) + o.y;  
-  
-    this.fieldData.tlx = rotatedX | 0;
-    this.fieldData.tly = rotatedY | 0;
-  }
+		let o = {
+			x: this.shape.x(),
+			y: this.shape.y()
+		};
 
-  get sample() {
-    return this.fieldData.sample;
-  }
-  set sample(sample) {
-    this.fieldData.sample = sample;
-  }
+		let a = this.shape.rotation();
 
-  get dirty() {
-    return this.#dirty;
-  }
-  set dirty(value) {
-    this.#dirty = value
-  }
+		var angle = a * (Math.PI / 180);
+		var rotatedX = Math.cos(angle) * (pt.x - o.x) - Math.sin(angle) * (pt.y - o.y) + o.x;
+		var rotatedY = Math.sin(angle) * (pt.x - o.x) + Math.cos(angle) * (pt.y - o.y) + o.y;
 
-  get name() {
-    return this.fieldName;
-  }
+		this.fieldData.tlx = rotatedX | 0;
+		this.fieldData.tly = rotatedY | 0;
+	}
 
-  get position() {
-    return this.getValue('position');
-  }
+	get sample() {
+		return this.fieldData.sample;
+	}
+	set sample(sample) {
+		this.fieldData.sample = sample;
+	}
 
-  get calcX() {
-    return this.fieldData.x -  this.shape.offsetX();
-  }
-  get calcY() {
-    return this.fieldData.y -  this.shape.offsetY();
-  }
+	get dirty() {
+		return this.#dirty;
+	}
+	set dirty(value) {
+		this.#dirty = value
+	}
 
-  get x() {
-    return this.fieldData.x;
-  }
-  set x(x) {
-    this.fieldData.x = x;
-    this.shape.x(x);
-    this.rotatePoint()
-    this.dirty = true;
-  }
+	get name() {
+		return this.fieldName;
+	}
 
-  get y() {
-    return this.fieldData.y;
-  }
-  set y(y) {
-    this.fieldData.y = y;
-    this.shape.y(y);;
-    this.rotatePoint()
-    this.dirty = true;
-  }
+	get position() {
+		return this.getValue('position');
+	}
 
-  get tlx() {
-    return this.fieldData.tlx;
-  }
+	get calcX() {
+		return this.fieldData.x - this.shape.offsetX();
+	}
+	get calcY() {
+		return this.fieldData.y - this.shape.offsetY();
+	}
 
-  get tly() {
-    return this.fieldData.tly;
-  }
+	get x() {
+		return this.fieldData.x;
+	}
+	set x(x) {
+		this.fieldData.x = x;
+		this.shape.x(x);
+		this.rotatePoint()
+		this.dirty = true;
+	}
+
+	get y() {
+		return this.fieldData.y;
+	}
+	set y(y) {
+		this.fieldData.y = y;
+		this.shape.y(y);;
+		this.rotatePoint()
+		this.dirty = true;
+	}
+
+	get tlx() {
+		return this.fieldData.tlx;
+	}
+
+	get tly() {
+		return this.fieldData.tly;
+	}
 
 
-  get rotation() {
-    return this.fieldData.rotate;
-  }
-  set rotation(rotation) {
-    this.fieldData.rotate = rotation;
-    this.shape.rotation(rotation);
-    this.rotatePoint()
-    this.dirty = true;
-  }
+	get rotation() {
+		return this.fieldData.rotate;
+	}
+	set rotation(rotation) {
+		this.fieldData.rotate = rotation;
+		this.shape.rotation(rotation);
+		this.rotatePoint()
+		this.dirty = true;
+	}
 
-  get opacity() {
-    return this.fieldData.opacity;
-  }
-  set opacity(opacity) {
-    this.fieldData.opacity = opacity;
-    this.shape.opacity(opacity);
-    this.dirty = true;
-  }
+	get opacity() {
+		return this.fieldData.opacity;
+	}
+	set opacity(opacity) {
+		this.fieldData.opacity = opacity;
+		this.shape.opacity(opacity);
+		this.dirty = true;
+	}
 
-  get fill() {
-    return this.fieldData.fill;
-  }
-  set fill(fill) {
-    this.fieldData.fill = fill;
-    this.shape.fill(fill);
-    this.dirty = true;
-  }
+	get fill() {
+		return this.fieldData.fill;
+	}
+	set fill(fill) {
+		this.fieldData.fill = fill;
+		this.shape.fill(fill);
+		this.dirty = true;
+	}
 
-  //enableTestMode(name, sample) {
-  enableTestMode(value) {
-      if (this instanceof OETEXTFIELD) {
-      //let label = this.getLabel();
-      //label = label.replace(name, sample);
-      //this.setLabel(label);
-      this.setLabel(value);
-    }
-  }
+	enableTestMode(value) {
+		if (this instanceof OETEXTFIELD) {
+			this.setLabel(value);
+		}
+	}
 
-  disableTestMode() {
-    if ('label' in this.fieldData) {
-      this.label = this.label;
-    }
-  }
+	disableTestMode() {
+		if ('label' in this.fieldData) {
+			this.label = this.label;
+		}
+	}
 }

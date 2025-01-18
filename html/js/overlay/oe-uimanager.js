@@ -451,8 +451,6 @@ class OEUIMANAGER {
         });
 
         $(document).on('click', '#oe-item-list', (event) => {
-
-
             let el = $(event.target).data('source');
             let data = $('#' + el).val();
 
@@ -461,23 +459,13 @@ class OEUIMANAGER {
                 variable: '',
 				stateKey: 'as-oe',
                 variableSelected: (variable) => {
-
-                    
-
                     let name = '${' + variable.replace('AS_', '') + '}'
-
-
                     let field = this.#configManager.findFieldByName(name);
-        
                     let shape = this.#fieldManager.addField('text', field.name, null, field.format, field.sample);
-        
                     this.setFieldOpacity(true);
-        
                     this.#overlayLayer.add(shape);
-        
                     $('#itemlisttable').DataTable().destroy();
                     $('#oe-item-list-dialog').modal('hide');
-        
                     this.#selected = this.#fieldManager.findField(shape);
                     this.#transformer.nodes([shape]);
                     this.showPropertyEditor();
@@ -487,193 +475,9 @@ class OEUIMANAGER {
                     if (this.testMode) {
                         this.enableTestMode();
                     }
-
-
-
-
-
-
-
-
-
                 }
             });
 
-/*
-            this.#fieldTable = $('#itemlisttable').DataTable({
-                data: this.#configManager.dataFields,
-                retrieve: true,
-                autoWidth: false,
-                pagingType: 'simple_numbers',
-                paging: true,
-                info: true,
-                searching: true,
-                pageLength: parseInt(this.#configManager.addListPageSize),
-                lengthMenu: [ [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, -1], [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 'All']],
-                order: [[0, 'asc']],
-                columns: [
-                    {
-                        data: 'id',
-                        width: '0px',
-                        visible: false
-                    }, {
-                        data: 'name',
-                        width: '265px'
-                    }, {
-                        data: 'description',
-                        width: '200px'
-                    }, {
-                        data: 'format',
-                        width: '100px'
-                    }, {
-                        data: 'type',
-                        width: '60px'
-                    }, {
-                        data: null,
-                        width: '100px',
-                        render: function (item, type, row, meta) {
-                            let buttons = '<div class="btn-group"> <button type="button" class="btn btn-primary btn-xs oe-list-add" data-id="' + item.id + '">';
-                            buttons += '<i class="fa-solid fa-plus oe-list-add" data-id="' + item.id + '"></i></button>';
-                            buttons += '<button style="margin-left:5px;" type="button" class="btn btn-warning btn-xs oe-list-edit" data-id="' + item.id + '">';
-                            buttons += '<i class="fa-solid fa-pen-to-square oe-list-edit" data-id="' + item.id + '"></i></button>';
-                            if (item.source == 'User') {
-                                buttons += '<button style="margin-left:5px;" type="button" class="btn btn-danger btn-xs oe-list-delete" data-id="' + item.id + '"><i class="fa-solid fa-trash oe-list-delete" data-id="' + item.id + '"></i></button>';
-                            }
-                            buttons += '</div>';
-                            return buttons;
-                        }
-                    }
-
-                ],
-                fnDrawCallback: function (oSettings) {
-                    if (oSettings._iDisplayLength >= oSettings.aoData.length) {
-                        $(oSettings.nTableWrapper).find('.dataTables_paginate').hide();
-                        $(oSettings.nTableWrapper).children('div').first().hide();
-                        $(oSettings.nTableWrapper).children('div').last().hide();
-                    } else {
-                        $(oSettings.nTableWrapper).find('.dataTables_paginate').show();
-                        $(oSettings.nTableWrapper).children('div').first().show();
-                        $(oSettings.nTableWrapper).children('div').last().show();
-                    }
-                }
-            });
-
-            if (this.#configManager.allDataFields != undefined) {
-                $('#oe-item-list-dialog-all-table').show();
-                $('#oe-item-list-dialog-all-error').hide();
-                this.#allFieldTable = $('#allitemlisttable').DataTable({
-                    data: this.#configManager.allDataFields,
-                    retrieve: true,
-                    autoWidth: false,
-                    pagingType: 'simple_numbers',
-                    paging: true,
-                    info: true,
-                    searching: true,
-                    pageLength: parseInt(this.#configManager.addListPageSize),
-                    lengthMenu: [ [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, -1], [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 'All']],
-                    order: [[0, 'asc']],
-                    columns: [
-                        {
-                            data: 'id',
-                            width: '0px',
-                            visible: false
-                        }, {
-                            data: 'name',
-                            width: '350px'
-                        }, {
-                            data: 'value',
-                            width: '200px',
-                            render: function (item, type, row, meta) {
-                                if ( type !== 'display' ) {
-                                    return item;
-                                }
-                                if ( typeof item !== 'number' && typeof item !== 'string' ) {
-                                    return item;
-                                }
-                                item = item.toString();
-                                if ( item.length <= 30 ) {
-                                    return item;
-                                }
-                                
-                                let shortened = item.substr(0, 20-1);
-
-                                let escaped = item
-                                    .replace( /&/g, '&amp;' )
-                                    .replace( /</g, '&lt;' )
-                                    .replace( />/g, '&gt;' )
-                                    .replace( /"/g, '&quot;' );
-
-                                return '<span class="ellipsis" title="'+escaped+'">'+shortened+'&#8230;</span>';
-                            }                        
-                        }, {
-                            data: null,
-                            width: '100px',
-                            render: function (item, type, row, meta) {
-
-                                let config = window.oedi.get('config');
-                                let fields = config.dataFields;
-                                let check = '${' + item.name.replace('AS_', '') + '}'
-                                let found = false;
-                                for (let key in fields) {
-                                    if (fields[key].name == check) {
-                                        found = true;
-                                        break;
-                                    }
-                                }
-
-
-                                let tableData = $('#itemlisttable').DataTable().data();
-                                for (let key in tableData) {
-                                    if (tableData[key].name == check) {
-                                        found = true;
-                                        break;
-                                    }
-                                }
-
-                                let disabled = '';
-                                let dataId = 'data-id="' + item.id + '"';
-                                if (found) {
-                                    disabled = 'disabled="disabled"';
-                                    dataId = '';
-                                }
-                                let buttons = '<div class="btn-group"> <button ' + disabled + ' type="button" class="btn btn-primary btn-xs oe-all-list-add" ' + dataId + '>';
-                                buttons += '<i class="fa-solid fa-plus oe-all-list-add" ' + dataId + '></i></button>';
-                                buttons += '</div>';
-                                
-                                return buttons;
-                            }
-                        }
-
-                    ],
-                    fnDrawCallback: function (oSettings) {
-                        if (oSettings._iDisplayLength >= oSettings.aoData.length) {
-                            $(oSettings.nTableWrapper).find('.dataTables_paginate').hide();
-                            $(oSettings.nTableWrapper).children('div').first().hide();
-                            $(oSettings.nTableWrapper).children('div').last().hide();
-                        } else {
-                            $(oSettings.nTableWrapper).find('.dataTables_paginate').show();
-                            $(oSettings.nTableWrapper).children('div').first().show();
-                            $(oSettings.nTableWrapper).children('div').last().show();
-                        }
-                    }
-                });
-            } else {
-                $('#oe-item-list-dialog-all-table').hide();
-                $('#oe-item-list-dialog-all-error').show();
-            }
-
-
-            $('#oe-item-list-dialog-close').html('Close');
-            $('#oe-item-list-dialog-save').addClass('hidden');
-            $('#oe-item-list-dialog').modal({
-                keyboard: false,
-                width: 800
-            })
-            $('#oe-item-list-dialog').on('hidden.bs.modal', function () {
-                $('#itemlisttable').DataTable().destroy();
-                $('#allitemlisttable').DataTable().destroy();
-            });
-            */
         });
 
         $(document).on('click', '.oe-list-delete', (event) => {
@@ -974,10 +778,6 @@ class OEUIMANAGER {
             $('#defaultexpirytext').val(this.#configManager.getValue('settings.defaultexpirytext'));
             $('#oe-default-font-colour').val(this.#configManager.getValue('settings.defaultfontcolour'));
             $('#oe-default-stroke-colour').val(this.#configManager.getValue('settings.defaultstrokecolour'));
-            $('#defaultnoradids').val(this.#configManager.getValue('settings.defaultnoradids'));
-            $('#defaultincludeplanets').prop('checked', this.#configManager.getValue('settings.defaultincludeplanets'));
-            $('#defaultincludesun').prop('checked', this.#configManager.getValue('settings.defaultincludesun'));
-            $('#defaultincludemoon').prop('checked', this.#configManager.getValue('settings.defaultincludemoon'));
 
 
             $('#oe-default-font-colour').spectrum({
@@ -1117,10 +917,6 @@ class OEUIMANAGER {
             let defaultFontColour = $('#oe-default-font-colour').val();
             let defaultdatafileexpiry = $('#defaultdatafileexpiry').val();
             let defaultexpirytext = $('#defaultexpirytext').val();            
-            let defaultnoradids = $('#defaultnoradids').val();
-            let defaultincludeplanets = $('#defaultincludeplanets').prop('checked');
-            let defaultincludesun = $('#defaultincludesun').prop('checked');
-            let defaultincludemoon = $('#defaultincludemoon').prop('checked');
             let defaultStrokeColour = $('#oe-default-stroke-colour').val();
             let defaultStrokeSize = $('#oe-default-stroke-size').val();
 
@@ -1133,10 +929,6 @@ class OEUIMANAGER {
             this.#configManager.setValue('settings.defaultfontcolour', defaultFontColour);
             this.#configManager.setValue('settings.defaultdatafileexpiry', defaultdatafileexpiry);
             this.#configManager.setValue('settings.defaultexpirytext', defaultexpirytext);
-            this.#configManager.setValue('settings.defaultnoradids', defaultnoradids);
-            this.#configManager.setValue('settings.defaultincludeplanets', defaultincludeplanets);
-            this.#configManager.setValue('settings.defaultincludemoon', defaultincludemoon);
-            this.#configManager.setValue('settings.defaultincludesun', defaultincludesun);
             this.#configManager.setValue('settings.defaultstrokecolour', defaultStrokeColour);
 
             this.#configManager.gridVisible = $('#oe-app-options-show-grid').prop('checked');

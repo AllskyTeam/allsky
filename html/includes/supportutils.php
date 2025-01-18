@@ -14,9 +14,6 @@ class SUPPORTUTIL
 
     function __construct() {
         $this->issueDir = ALLSKY_WEBUI . "/support";
-		if (! is_dir($this->issueDir)) {
-			$this->send500("Directory '" . $this->issueDir . "' not found!\n");
-		}
     }
 
     public function run()
@@ -28,16 +25,8 @@ class SUPPORTUTIL
 
     private function checkXHRRequest()
     {
-        $var = "HTTP_X_REQUESTED_WITH";
-		$val = "";
-        if (empty($_SERVER[$var])) {
-            $this->send404("$var not set");
-		} else {
-			$val = strtolower($_SERVER[$var]);
-			$v = "xmlhttprequest";
-			if ($val != $v) {
-            	$this->send404("$var ($val) != $v");
-			}
+        if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) != 'xmlhttprequest') {
+            $this->send404();
         }
     }
 
@@ -52,23 +41,15 @@ class SUPPORTUTIL
         }
     }
 
-    private function send404($msg = null)
+    private function send404()
     {
         header('HTTP/1.0 404 Not Found');
-		if ($msg !== null) {
-// TODO: Is this the correct way to pass it back?
-			echo $msg;
-		}
         die();
     }
 
-    private function send500($msg = null)
+    private function send500()
     {
         header('HTTP/1.0 500 Internal Server Error');
-		if ($msg !== null) {
-// TODO: Is this the correct way to pass it back?
-			echo $msg;
-		}
         die();
     }
 
@@ -84,7 +65,7 @@ class SUPPORTUTIL
         if (is_callable(array('SUPPORTUTIL', $action))) {
             call_user_func(array($this, $action));
         } else {
-            $this->send404("SUPPORTUTIL is not callable.");
+            $this->send404();
         }
     }
 
@@ -108,8 +89,8 @@ class SUPPORTUTIL
         header('Pragma: public');
         header('Content-Length: ' . filesize($fromFile));
         readfile($fromFile);
-// TODO: handle error in readfile()
         exit;
+    
     }
 
     public function postChangeGithubId() {
@@ -125,7 +106,7 @@ class SUPPORTUTIL
         $newFile = $this->issueDir . DIRECTORY_SEPARATOR . $newLogId;
 
         rename($fromFile, $newFile);
-// TODO: handle failure
+
         $this->sendResponse(json_encode("ok"));
     }
 
@@ -135,7 +116,6 @@ class SUPPORTUTIL
         
         $fileToDelete = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
         unlink($fileToDelete);
-// TODO: handle failure in unlink()
         $this->sendResponse(json_encode("ok"));
     }
 
@@ -144,7 +124,6 @@ class SUPPORTUTIL
         $data=array();
         
         $files = scandir($this->issueDir);
-// TODO: handle error in scandir()
         foreach ($files as $file) {
             if (strpos($file, '.') !== 0) {
 
@@ -178,10 +157,8 @@ class SUPPORTUTIL
     }
 
     public function getGenerateLog() {
-        $command = 'export ALLSKY_HOME=' . ALLSKY_HOME . '; export SUDO_OK="true"; ';
-		$command .= ALLSKY_HOME . '/support.sh --auto';
+        $command = 'export ALLSKY_HOME=' . ALLSKY_HOME . '; export SUDO_OK="true"; ' . ALLSKY_HOME . '/support.sh --auto';
         $output = shell_exec($command);
-// TODO: handle errors from shell_exec
 
         $this->sendResponse(json_encode("ok"));        
     }

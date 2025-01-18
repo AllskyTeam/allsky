@@ -220,35 +220,23 @@ class OEFIELDMANAGER {
 
         $.ajax({
             type: "POST",
-            //url: "includes/overlayutil.php?request=Sample",
-            url: "cgi-bin/format.py",
-            data: { config: JSON.stringify(config), fields: JSON.stringify(this.#config.dataFields) },
+            url: "includes/overlayutil.php?request=Sample",
+            data: { 
+				overlay: JSON.stringify(config),
+			},
             dataType: 'json',
             cache: false,
             context: this
         }).done((data) => {
             $.LoadingOverlay('hide');
             clearTimeout(loadingTimer);
-// console.log("data", data);
-            if (data.result === "OK") {
-                for (let key in data.fields) {
-                    let field = this.findField(key);
-                    if (field !== null) {
-                        field.enableTestMode(data.fields[key]);
-                    }
-                }
-            } else {
-                this.disableTestMode();
-                var msg;
-                if (data.result === "LEGACY_MODE") {
-                    msg = 'The WebUI "Overlay Method" setting is set to "legacy" so overlays will not work.';
-                } else if (data.result === "FILE_MISSING") {
-                    msg = 'Error generating sample data. Missing file: ' + data.missingFile + ',  Try later';
-                } else {    // should be data.result == "ERROR"
-                    msg = 'Error generating sample data: ' + data.error;
-                }
-                bootbox.alert(msg);
-            }
+			for (let key in data) {
+				let field = this.findField(data[key].id);
+				if (field !== null) {
+					field.enableTestMode(data[key].label);
+				}
+			}
+
         }).fail((jqXHR, textStatus, errorThrown) => {
             console.log("in .fail:  errorThrown=", errorThrown, ", jqXHR=", jqXHR);
         }).always(() => {
@@ -261,12 +249,9 @@ class OEFIELDMANAGER {
         let uiManager = window.oedi.get('uimanager');
         uiManager.testMode = false;
         $('#oe-test-mode').removeClass('red pulse');
-        let dataFields = this.#config.dataFields;
-        for (let dataField in dataFields) {
-            for (let [fieldName, field] of this.#fields.entries()) {
-                field.disableTestMode();
-            }
-        }
+		for (let [fieldName, field] of this.#fields.entries()) {
+			field.disableTestMode();
+		}
     }
 
 }

@@ -29,3 +29,12 @@
 div.dt-container div.dt-scroll-body {
 	border-bottom: none !important;
 }
+
+table.dataTable .selected {
+	background-color: rgb(0, 136, 204);
+	color: white !important;
+}
+
+table.dataTable .selected .as-variable-has-value {
+	color: white !important;
+}

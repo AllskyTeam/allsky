@@ -181,7 +181,7 @@ class MODULESEDITOR {
                             enabledButton.prop('disabled', true);
                             enabledButton.prop('checked', false);  
                             deleteButton.prop('disabled', false);
-							addButton.css('display', 'inline-block')
+							addButton.removeClass('hidden')
 
 							this.#checkDependencies()
                         }
@@ -244,7 +244,7 @@ class MODULESEDITOR {
 		enabledButton.prop('disabled', false)
 		enabledButton.prop('checked', $.moduleeditor.settings.autoenable)
 		deleteButton.prop('disabled', true)
-		addButton.css('display', 'none')
+		addButton.addClass('hidden')
 		let element = $(item).find('.moduleenabler')
 		let checked = $(element).prop('checked')
 		let moduleName = $(element).data('module')
@@ -365,12 +365,13 @@ class MODULESEDITOR {
             }
         }*/
 
-		let addHTML = ''
-		if (element == '#modules-available') {
-			let popover = 'data-toggle="popover" data-delay=\'{"show": 1000, "hide": 200}\' data-placement="top" data-trigger="hover" title="Add Module" data-content="Adds the ' + data.metadata.name + ' to the selected modules"'
-			addHTML = '<button type="button" class="btn btn-sm btn-success module-add-button ml-2" id="' + moduleKey + 'add" data-module="' + moduleKey + '" ' + popover + '>>></button>';
+		let hidden = ''
+		if (element != '#modules-available') {
+			hidden = 'hidden';
 		}
-
+		let popover = 'data-toggle="popover" data-delay=\'{"show": 1000, "hide": 200}\' data-placement="top" data-trigger="hover" title="Add Module" data-content="Adds the ' + data.metadata.name + ' to the selected modules"'
+		let addHTML = '<button type="button" class="btn btn-sm btn-success module-add-button ml-2 ' + hidden + '" id="' + moduleKey + 'add" data-module="' + moduleKey + '" ' + popover + '>>></button>';
+		
         let disabled = '';
         if (element == '#modules-available') {
             disabled = 'disabled="disabled"';
@@ -481,7 +482,19 @@ class MODULESEDITOR {
                         disabled = ' disabled="disabled" '
                     }
                 }
-				let inputHTML = '<input ' + disabled + ' id="' + key + '" name="' + key + '" class="form-control" value="' + fieldValue + '"' + required + fieldDescription + '>';
+
+				let inputHTML = ''
+				let fieldPostHTML = ''
+				if (fieldType === null || fieldType == 'text') {
+					let fieldBaseType = 'text'
+					if ('secret' in fieldData) {
+						if (fieldData.secret) {
+							fieldBaseType = 'password'
+							fieldPostHTML = '<span class="form-control noborder as-secret-toggle" data-secretid="' + key + '"><i class="fa-regular fa-lg fa-eye" id="' + key + '-eye"></i><i class="fa-regular fa-lg fa-eye-slash hidden" id="' + key + '-eye-slash"></i></span>'
+						}
+					}
+					inputHTML = '<input ' + disabled + ' id="' + key + '" type="' + fieldBaseType + '" name="' + key + '" class="form-control" value="' + fieldValue + '"' + required + fieldDescription + '>';
+				}
 				if (fieldType !== null) {
 					let fieldTypeData = fieldData.type;
 					if (fieldType == 'spinner') {
@@ -729,11 +742,14 @@ class MODULESEDITOR {
 				fieldHTML = '\
 					<div class="form-group" id="' + key + '-wrapper">\
 						<label for="' + key + '" class="control-label col-xs-4">' + fieldData.description + '</label>\
-						<div class="col-xs-8">\
+						<div class="col-xs-7">\
 							<div class="'+ extraClass + '">\
 								' + inputHTML + '\
 							</div>\
 							' + helpText + '\
+						</div>\
+						<div class="col-xs-1">\
+						' + fieldPostHTML + '\
 						</div>\
 					</div>\
 				';
@@ -821,6 +837,10 @@ class MODULESEDITOR {
                 moduleSettingsHtml += '<li role="presentation"><a href="#as-module-var-list" role="tab" data-toggle="tab">Variables</a></li>';
             }
 
+			if ('changelog' in moduleData.metadata) {
+                moduleSettingsHtml += '<li role="presentation"><a href="#as-module-var-changelog" role="tab" data-toggle="tab">Change Log</a></li>';
+			}
+
             if (moduleShortName in this.#configData.help) {
                 moduleSettingsHtml += '<li role="presentation"><a href="#as-module-var-help" role="tab" data-toggle="tab">Help</a></li>';
             }
@@ -854,6 +874,75 @@ class MODULESEDITOR {
                         </table>\
                     </div>'
             }
+
+            if ('changelog' in moduleData.metadata) {
+				let metaDataHTML = ''
+				let changeLog = moduleData.metadata.changelog
+
+				let state = ' in'
+				let idCounter = 0
+				metaDataHTML = '<div class="panel-group" id="changelog" role="tablist">'
+				Object.entries(changeLog)
+				.reverse()
+				.forEach(([version, versionChangeData]) => {
+
+					let changeHTML = ''
+					Object.entries(versionChangeData).forEach(([index, changeList]) => {
+						let firstChange = ''
+						let subsequentChangesHTML = ''
+						if (typeof changeList.changes === 'string') {
+							firstChange = '&bull; ' + changeList.changes
+						} else {
+							const [key, value] = Object.entries(changeList.changes)[0]
+							firstChange = '&bull; ' + value
+							let changeArray = Object.values(changeList.changes);
+							for (let i = 1; i < changeArray.length; i++) {
+								subsequentChangesHTML += '\
+								<div class="row">\
+									<div class="col-md-7 col-md-offset-4">&bull; ' + changeArray[i] + '</div>\
+								</div>'
+							}
+						}
+
+						let author = 'Unknown Author'
+						if (changeList.author !== undefined) {
+							author = changeList.author
+						}
+						
+						if (changeList.authorurl !== undefined) {
+							author = '<a href="' + changeList.authorurl + '" target="_blank">' + author + '</a>'
+						}
+						changeHTML += '\
+						<div class="row">\
+							<div class="col-md-3 col-md-offset-1">' + author + '</div>\
+							<div class="col-md-7">' + firstChange + '</div>\
+						</div>\
+						' + subsequentChangesHTML
+					})
+
+					let id = 'chanelog' + idCounter++
+					metaDataHTML += '\
+						<div class="panel panel-default">\
+							<div class="panel-heading" role="tab" id="headingOne">\
+								<h4 class="panel-title">\
+									<a role="button" data-toggle="collapse" data-parent="#changelog" href="#' + id + '">Version - ' + version + '</a>\
+								</h4>\
+							</div>\
+							<div id="' + id + '" class="panel-collapse collapse' + state + '" role="tabpanel">\
+								<div class="panel-body">\
+									' + changeHTML + '\
+								</div>\
+							</div>\
+						</div>'
+					state = ''
+				})
+				metaDataHTML += '</div>'
+
+				moduleSettingsHtml += '\
+				<div role="tabpanel" style="margin-top:10px" class="tab-pane" id="as-module-var-changelog">\
+				' + metaDataHTML + '\
+				</div>'
+			}
 
             if (moduleShortName in this.#configData.help) {
                 moduleSettingsHtml += '\
@@ -985,6 +1074,24 @@ class MODULESEDITOR {
         $(window).on('resize', (event) => {
             $('.modal:visible').each(this.alignModal);
         });
+
+		
+        $(document).off('click', '.as-secret-toggle')        
+		$(document).on('click', '.as-secret-toggle', (e) => {
+			let elId = $(e.currentTarget).data('secretid')
+			let inputEl = $('#' + elId)
+			let eyeEl = $('#' + elId + '-eye')
+			let eyeSlashEl = $('#' + elId + '-eye-slash')
+			if (eyeEl.hasClass('hidden')) {
+				inputEl.attr('type', 'password')
+				eyeSlashEl.addClass('hidden')
+				eyeEl.removeClass('hidden')
+			} else {
+				inputEl.attr('type', 'text')
+				eyeEl.addClass('hidden')
+				eyeSlashEl.removeClass('hidden')
+			}
+		})
 
         $(document).off('click', '#module-settings-dialog-save')        
 		$(document).on('click', '#module-settings-dialog-save', () => {

@@ -116,6 +116,26 @@ def get_module_variable_list(folder, module='', isExtra=False):
 
 	return variables
 
+def get_variable(variables, search_variable):
+	variable = None
+
+	for raw_variable_data in variables:
+		variable_label = raw_variable_data['name']
+		variable_label = variable_label.replace('${', '').replace('}', '')
+		if variable_label == search_variable:
+			variable = raw_variable_data
+			break
+
+	if variable is None:
+		for raw_variable_data in variables:
+			variable_label = raw_variable_data['name']
+			variable_label = 'AS_' + variable_label.replace('${', '').replace('}', '')
+			if variable_label == search_variable:
+				variable = raw_variable_data
+				break
+
+	return variable
+
 def get_variables(show_empty=True, module=''):
 	ALLSKY_CONFIG = getEnvironmentVariable('ALLSKY_CONFIG')
 	ALLSKY_SCRIPTS = getEnvironmentVariable('ALLSKY_SCRIPTS')
@@ -203,11 +223,13 @@ def get_variables(show_empty=True, module=''):
 				'source': 'user'		
 			})
 
+	#result = sorted(result, key=lambda item: item['group'])
+
 	return result
 
 if __name__ == "__main__":
 
-	parser = argparse.ArgumentParser(description="Return all avaialble Allsky variables")
+	parser = argparse.ArgumentParser(description="Return all available Allsky variables")
 
 	parser.add_argument("--empty", action="store_true", help="Show all Variables (default: yes)")
 	parser.add_argument("--allskyhome", type=str, default="/home/pi/allsky", help="Allsky home directory")

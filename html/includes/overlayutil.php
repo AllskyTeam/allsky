@@ -26,8 +26,7 @@ class OVERLAYUTIL
         )
     );
 
-    public function __construct()
-    {
+    public function __construct() {
         $this->overlayPath = ALLSKY_OVERLAY;
         $this->allskyOverlays = MY_OVERLAY_TEMPLATES . '/';
         $this->allskyTmp = ALLSKY_HOME . '/tmp';
@@ -38,22 +37,19 @@ class OVERLAYUTIL
         $this->cc = json_decode($ccJson, true);
     }
 
-    public function run()
-    {
+    public function run() {
         $this->checkXHRRequest();
         $this->sanitizeRequest();
         $this->runRequest();
     }
 
-    private function checkXHRRequest()
-    {
+    private function checkXHRRequest() {
         if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) != 'xmlhttprequest') {
             $this->send404();
         }
     }
 
-    private function sanitizeRequest()
-    {
+    private function sanitizeRequest() {
         $this->request = $_GET['request'];
         $this->method = strtolower($_SERVER['REQUEST_METHOD']);
 
@@ -63,26 +59,22 @@ class OVERLAYUTIL
         }
     }
 
-    private function send404()
-    {
+    private function send404() {
         header('HTTP/1.0 404 Not Found');
         die();
     }
 
-    private function send500()
-    {
+    private function send500() {
         header('HTTP/1.0 500 Internal Server Error');
         die();
     }
 
-    private function sendResponse($response = 'ok')
-    {
+    private function sendResponse($response = 'ok') {
         echo ($response);
         die();
     }
 
-    private function runRequest()
-    {
+    private function runRequest() {
         $action = $this->method . $this->request;
         if (is_callable(array('OVERLAYUTIL', $action))) {
             call_user_func(array($this, $action));
@@ -91,8 +83,7 @@ class OVERLAYUTIL
         }
     }
 
-    private function createThumbnail($sourceImagePath, $destImagePath, $thumbWidth = 90, $thumbHeight = 90, $background = false)
-    {
+    private function createThumbnail($sourceImagePath, $destImagePath, $thumbWidth = 90, $thumbHeight = 90, $background = false) {
         list($original_width, $original_height, $original_type) = getimagesize($sourceImagePath);
         if ($original_width > $original_height) {
             $new_width = $thumbWidth;
@@ -139,15 +130,13 @@ class OVERLAYUTIL
         return file_exists($destImagePath);
     }
 
-    public function getConfig()
-    {
+    public function getConfig() {
         $fileName = $this->overlayPath . '/config/overlay.json';
         $config = file_get_contents($fileName);
         $this->sendResponse($config);
     }
 
-    public function postConfig()
-    {
+    public function postConfig() {
         $overlayName = $_POST['overlay']['name'];
         $overlayType = $_POST['overlay']['type'];
 
@@ -166,8 +155,7 @@ class OVERLAYUTIL
         }
     }
 
-    public function getAppConfig($returnResult=false)
-    {
+    public function getAppConfig($returnResult=false) {
         $fileName = $this->overlayPath . '/config/oe-config.json';
         $config = file_get_contents($fileName);
         if ($config === false) {
@@ -201,8 +189,7 @@ class OVERLAYUTIL
         }
     }
 
-    public function postAppConfig()
-    {
+    public function postAppConfig() {
         $fileName = $this->overlayPath . '/config/oe-config.json';
         $settings = $_POST["settings"];
         $formattedJSON = json_encode(json_decode($settings), JSON_PRETTY_PRINT);
@@ -211,7 +198,7 @@ class OVERLAYUTIL
         $this->sendResponse();
     }
 
-    private function includeField($field) {
+    private function includeField($field)  {
         $result = true;
         if (isset($this->excludeVariables[$field])) {
             $modifier = $this->excludeVariables[$field];
@@ -224,8 +211,7 @@ class OVERLAYUTIL
         return $result;
     }
 
-    public function getData($returnResult=false)
-    {
+    public function getData($returnResult=false) {
         $fileName = $this->overlayPath . '/config/fields.json';
         $fields = file_get_contents($fileName);
         $systemData = json_decode($fields);
@@ -283,8 +269,7 @@ class OVERLAYUTIL
         }
     }
 
-    public function postData()
-    {
+    public function postData() {
         $fileName = $this->overlayPath . '/config/userfields.json';
         $fields = $_POST["data"];
         $fields = json_decode($fields);
@@ -313,7 +298,7 @@ class OVERLAYUTIL
         $this->sendResponse();
     }
 
-    public function getOverlayData($returnResult=false) {
+    public function getOverlayData($returnResult=false)  {
         $result = [];
         $fileName = ALLSKY_HOME . '/tmp/overlaydebug.txt';
 
@@ -360,14 +345,12 @@ class OVERLAYUTIL
         }        
     }
 
-    public function getAutoExposure()
-    {
+    public function getAutoExposure() {
         $data = file_get_contents($this->overlayPath . "/config/autoexposure.json");
         $this->sendResponse($data);
     }
 
-    public function postAutoExposure()
-    {
+    public function postAutoExposure() {
         $data = $_POST["data"];
         $data = json_decode($data);
         if ($data !== null) {
@@ -389,7 +372,7 @@ class OVERLAYUTIL
         }
     }
 
-    private function processDebugData() {
+    private function processDebugData()  {
         $file = ALLSKY_HOME . "/tmp/overlaydebug.txt";
 
         $exampleData = array();
@@ -406,7 +389,7 @@ class OVERLAYUTIL
         return $exampleData;
     }
 
-    public function getFonts() {
+    public function getFonts()  {
 
         $count = 1;
         $usableFonts = array(
@@ -453,8 +436,7 @@ class OVERLAYUTIL
         $this->sendResponse($data);        
     }
 
-    public function postFonts()
-    {
+    public function postFonts() {
         $proceed = true;
 
         if (isset($_POST['fontURL'])) {
@@ -565,8 +547,7 @@ class OVERLAYUTIL
         die();
     }
 
-    public function deleteFont()
-    {
+    public function deleteFont() {
         $fontName = strtolower($_GET['fontName']);
         $fileName = $this->overlayPath . '/overlay.json';
         $config = json_decode(file_get_contents($fileName));
@@ -584,8 +565,7 @@ class OVERLAYUTIL
         }
     }
 
-    public function postImages()
-    {
+    public function postImages() {
         $result = false;
         $imageFolder = $this->overlayPath . '/images/';
         $thumbnailFolder = $this->overlayPath . '/imagethumbnails/';
@@ -606,8 +586,7 @@ class OVERLAYUTIL
         }
     }
 
-    public function getImages()
-    {
+    public function getImages() {
         $validFileTypes = array('png', 'jpg', 'jpeg');
 
         $baseThumbnailURL = '//' . $_SERVER['SERVER_NAME'] . '/overlay/imagethumbnails';
@@ -633,8 +612,7 @@ class OVERLAYUTIL
         $this->sendResponse($formattedJSON);
     }
 
-    public function deleteImage()
-    {
+    public function deleteImage() {
         $imageName = strtolower($_GET['imageName']);
 
         $imageThumbnailFolder = $this->overlayPath . "/imagethumbnails/";
@@ -653,8 +631,7 @@ class OVERLAYUTIL
 
     }
 
-    public function getFormats()
-    {
+    public function getFormats() {
         $data = file_get_contents($this->overlayPath . "/config/formats.json");
         $this->sendResponse($data);
     }
@@ -1033,6 +1010,53 @@ class OVERLAYUTIL
 
         $this->sendResponse(json_encode($running));
     }
+
+	private function runShellCommand($command) {
+		$descriptors = [
+			1 => ['pipe', 'w'],
+			2 => ['pipe', 'w'],
+		];
+		$process = proc_open($command, $descriptors, $pipes);
+		
+		if (is_resource($process)) {
+			$stdout = stream_get_contents($pipes[1]);
+			$stderr = stream_get_contents($pipes[2]);
+			fclose($pipes[1]);
+			fclose($pipes[2]);
+		
+			$returnCode = proc_close($process);
+			if ($returnCode > 0) {
+				$result = [
+					'error' => true,
+					'message' =>  $stdout . $stderr					
+				];
+			} else {
+				$result = [
+					'error' => false,
+					'message' => $stdout					
+				];				
+			}
+		}
+
+		return $result;
+	}
+
+	public function postSample() {
+		$overlay = $_POST['overlay'];
+
+        $fileName = ALLSKY_TMP . '/test_overlay.json';
+        file_put_contents($fileName,  $overlay);
+
+        $command = 'sudo bash -c "source /home/pi/allsky/venv/bin/activate; export ALLSKY_HOME=/home/pi/allsky; source /home/pi/allsky/variables.sh; python3 ' . ALLSKY_SCRIPTS . '/modules/allskyoverlay/overlaydata.py --overlay=' . ALLSKY_TMP . '/test_overlay.json --print"';
+        $result = $this->runShellCommand($command);
+        if ($result['error']) {
+            die($result['message']);
+            $this->send500();
+        } else {
+		    $this->sendResponse($result['message']);
+        }
+
+	}
 }
 
 $overlayUtil = new OVERLAYUTIL();

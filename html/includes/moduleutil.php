@@ -117,7 +117,6 @@ class MODULEUTIL
                             } else {
                                 $experimental = false;
                             }
-
                             $arrFiles[$entry] = [
                                 'module' => $entry,
                                 'metadata' => $decoded,
@@ -225,6 +224,8 @@ class MODULEUTIL
         $rawConfigData = file_get_contents($configFileName);
         $moduleConfig = json_decode($rawConfigData);
 
+		$secrets = json_decode(file_get_contents(ALLSKY_ENV));
+
         $event = $_GET['event'];
         $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($event) . '.json';
         $debugFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($event) . '-debug.json';
@@ -260,9 +261,22 @@ class MODULEUTIL
             if (isset($data->metadata->arguments)) {
                 if (isset($moduleData['metadata']->arguments)) {
                     foreach ((array)$moduleData['metadata']->arguments as $argument=>$value) {
-                        if (!isset($data->metadata->arguments->$argument)){
-                            $data->metadata->arguments->$argument = $value;
+
+                        if (!isset($data->metadata->arguments->$argument)) {
+							$data->metadata->arguments->$argument = $value;
                         }
+						
+						# If field is a 'secret' field then get the value from the env file
+						if ($moduleData["metadata"]->argumentdetails->$argument->secret !== null) {
+							if ($moduleData["metadata"]->argumentdetails->$argument->secret === 'true') {
+								$secretKey = strtoupper($data->metadata->module) . '.' . strtoupper($argument);
+								if (isset($secrets->$secretKey)) {
+									$data->metadata->arguments->$argument = $secrets->$secretKey;
+								}
+							}
+						}
+
+
                     }
                 }
                 $moduleData["metadata"]->arguments = $data->metadata->arguments;
@@ -372,6 +386,25 @@ class MODULEUTIL
         $rawConfigData = file_get_contents($configFileName);
         $oldModules = json_decode($rawConfigData);
 
+		$configDataJson = json_decode($configData);
+		$envData = null;
+		foreach ($configDataJson as $module=>&$moduleConfig) {
+			foreach ($moduleConfig->metadata->argumentdetails as $argument=>$argumentSettings) {
+				if (isset($argumentSettings->secret)) {
+					if ($envData === null) {
+						$envData = json_decode(file_get_contents(ALLSKY_ENV));
+					}
+					$secretKey = strtoupper($moduleConfig->metadata->module) . '.' . strtoupper($argument);
+					$envData->$secretKey = $moduleConfig->metadata->arguments->$argument;
+					$moduleConfig->metadata->arguments->$argument = '';
+				}
+			}
+		}
+		$configData = json_encode($configDataJson, JSON_PRETTY_PRINT);
+		if ($envData !== null) {
+			file_put_contents(ALLSKY_ENV, json_encode($envData, JSON_PRETTY_PRINT));
+		}
+		 
         $result = file_put_contents($configFileName, $configData);
         $this->changeOwner($configFileName);
         $backupFilename = $configFileName . '-last';
@@ -478,10 +511,33 @@ class MODULEUTIL
 		return $result;
 	}
 
+	private function addSecretsToFlow($configData) {
+		$configDataJson = json_decode($configData);
+		$envData = null;
+		foreach ($configDataJson as $module=>&$moduleConfig) {
+			foreach ($moduleConfig->metadata->argumentdetails as $argument=>$argumentSettings) {
+				if (isset($argumentSettings->secret)) {
+					if ($envData === null) {
+						$envData = json_decode(file_get_contents(ALLSKY_ENV));
+					}
+					$secretKey = strtoupper($moduleConfig->metadata->module) . '.' . strtoupper($argument);
+					if (isset($envData->$secretKey)) {
+						$moduleConfig->metadata->arguments->$argument = $envData->$secretKey;
+					} 
+				}
+			}
+		}
+		$configData = json_encode($configDataJson, JSON_PRETTY_PRINT);
+		return $configData;
+	}
+
 	public function postTestModule() {
         $module=trim(filter_input(INPUT_POST, 'module', FILTER_SANITIZE_STRING));
         $dayNight=trim(filter_input(INPUT_POST, 'dayNight', FILTER_SANITIZE_STRING));        
         $flow = $_POST['flow'];
+
+		$flow = $this->addSecretsToFlow($flow);
+
         $fileName = ALLSKY_MODULES . '/test_flow.json';
         file_put_contents($fileName,  $flow);
 

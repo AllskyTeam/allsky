@@ -210,7 +210,7 @@
                     }
                 },
                 colReorder: true,
-                ordering: false,
+				order: [[1, 'asc']],
                 paging: false,
                 select: {
                     style: 'single'
@@ -231,7 +231,7 @@
                         width: '30%'                       
                     },{
                         data: 'group',
-                        visible: false
+                        visible: true
                     },{
                         data: 'source',                        
                         visible: false
@@ -281,7 +281,7 @@
                             .toggleClass('collapsed', collapsed);
                     }
                 }                
-            });
+            })
             
             if (plugin.settings.columns.length > 0) {
                 plugin.variableTable .columns().every(function (index) {

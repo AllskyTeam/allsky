@@ -119,7 +119,7 @@ class AllskyFormatters:
 		return value
 
 	def as_number(self, value, variable_name, format, variable_type):
-		print(variable_type)
+
 		if format is not None and format != "":
 			original_format = format
 			if format.startswith(':'):

@@ -644,39 +644,6 @@ function DisplayOverlay($image_name)
                                                 <p class="help-block">If blank then any expired fields will be removed. If non blank the value of an expired field will be replaced with this text</p>
                                             </div>
                                         </div>
-
-                                        <div class="form-group">
-                                            <label for="defaultnoradids" class="control-label col-xs-4">Norad ID's</label>
-                                            <div class="col-xs-8">
-                                                <div class="input-group">
-                                                    <input id="defaultnoradids" name="defaultnoradids" type="text" class="form-control layoutfield">
-                                                </div>
-                                                <p class="help-block">List of NORAD Id's to calculate satellite positions for, satellite Id's can be found on the <a href="https://celestrak.org/satcat/search.php" target="_blank">Celestrak</a> website. See the documentaiton for more details</p>
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <div class="col-sm-offset-4 col-sm-2">
-                                                <div class="checkbox">
-                                                    <label>
-                                                        <input type="checkbox" id="defaultincludeplanets" class="layoutfield"> Include Planets
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-2">
-                                                <div class="checkbox">
-                                                    <label>
-                                                        <input type="checkbox" id="defaultincludesun" class="layoutfield"> Include Sun
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-4">
-                                                <div class="checkbox">
-                                                    <label>
-                                                        <input type="checkbox" id="defaultincludemoon" class="layoutfield" class="layoutfield"> Include Moon
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </form>
 
                                 </div>

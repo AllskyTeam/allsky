@@ -1118,7 +1118,7 @@ function get_website_checksums()
 		# Get all non-image files except for the ones the user creates/updates.
 		find . -type f '!' '(' -name '*.jpg' -or -name '*.png' -or -name '*.mp4' ')' |
 			sed 's;^./;;' |
-			grep -E -v "myFiles/|${ALLSKY_WEBSITE_CONFIGURATION_NAME}|$( basename "${CHECKSUM_FILE}" )"
+			grep -E -v "myFiles/|${ALLSKY_WEBSITE_CONFIGURATION_NAME}|$( basename "${ALLSKY_WEBSITE_CHECKSUM_FILE}" )"
 	) | "${ALLSKY_UTILITIES}/getChecksum.php"
 }
 

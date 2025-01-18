@@ -15,6 +15,7 @@
 */
 
 $commandFile = "commands.txt";
+$delete_commands = true;
 
 // Check sanity of Website and make necessary directories.
 // This file is normally accessed via curl, not a web page,
@@ -37,17 +38,16 @@ if (isset($_GET["debug"])) {
 }
 
 if (! file_exists($commandFile)) {
-	do_error("Command file '$commandFile' not found.");
+	do_error("", "Command file '$commandFile' not found.");
 	exit(1);
 }
 $lines = file($commandFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-//x	unlink($commandFile);
-
 if ($lines === false) {
 	$last_error = error_get_last();
-	do_error("Unable to read '$commandFile': ${last_error["message"]}.");
+	do_error("", "Unable to read '$commandFile': ${last_error["message"]}.");
 	exit(1);
 }
+//echo "<pre>"; var_dump($lines);echo "</pre>";
 
 $startrails_glob = "startrails-*.jpg";
 $keogram_glob = "keogram-*.jpg";
@@ -56,23 +56,12 @@ $timelapse_glob = "allsky-*.mp4";
 $ok = true;
 
 foreach ($lines AS $line) {
-	$command = strtok($line, $TAB);
+	if ($debug) do_debug($command, "line=[$line]");
+	$command = strtok($line, "\t");
 	if (substr($command, 0, 1) === "#")
 		continue;
 
 	switch ($command) {
-		case "set":
-			if (($args = get_args(2, $command)) === null)
-				break;
-
-			$variable = $args[0];
-			if ($variable === "debug") {
-				$debug = $args[1];
-			} else {
-				do_warning("'$command' variable '$variable' unknown; ignoring.");
-			}
-			break;
-
 
 		case "mkdir":
 			// The arguments are the directories to create.
@@ -83,10 +72,10 @@ foreach ($lines AS $line) {
 			$c = 0;
 			foreach ($args as $dir) {
 				if (is_dir($dir)) {
-					if ($debug) do_debug("'$dir' already exists.");
+					if ($debug) do_debug($command, "'$dir' already exists.");
 
 				} else {
-					if ($debug) do_debug("Making $dir.");
+					if ($debug) do_debug($command, "Making $dir.");
 					if (mkdir($dir, 0775, true)) {		// "true" == recursive
 						$c++;
 						if ($dirsCreated !== "") $dirsCreated .= ", ";
@@ -94,7 +83,7 @@ foreach ($lines AS $line) {
 					} else {
 						$last_error = error_get_last();
 						$err = $last_error["message"];
-						do_error("Unable to make '$dir' directory: $err.");
+						do_error($command, "Unable to make '$dir' directory: $err.");
 					}
 				}
 			}
@@ -137,7 +126,7 @@ foreach ($lines AS $line) {
 //x this is redundant with displaying individual file names that were deleted.
 //x					do_return($command, $args, "Deleted $deleted old '$parent' files.");
 				}
-			} else if ($debug) do_debug("Only $c '$parent' files - not deleting any.");
+			} else if ($debug) do_debug($command, "Only $c '$parent' files - not deleting any.");
 			break;
 
 
@@ -154,7 +143,7 @@ foreach ($lines AS $line) {
 			}
 			if (crc32($file) !== $checksum) {
 				do_return($command, $args, "'$file' is different.");
-			} else if ($debug) do_debug("'$file' is same.");
+			} else if ($debug) do_debug($command, "'$file' is same.");
 			break;
 
 
@@ -166,7 +155,7 @@ foreach ($lines AS $line) {
 					if (unlink($file))
 						do_return($command, "", "Deleted: $file");
 					else
-						do_error("Unable to delete '$file'.");
+						do_error($command, "Unable to delete '$file'.");
 				}
 			}
 
@@ -179,13 +168,59 @@ foreach ($lines AS $line) {
 			break;
 
 
+		case "info":
+			// TODO: add more info going forward
+			$info = "In directory " . getcwd();
+			do_return($command, "", $info);
+			break;
+
+
+		// These are directives that tell us how to behave.
+
+		case "set":
+			// Set a variable to something.
+
+			if (($args = get_args(2, $command)) === null)
+				break;
+
+			$variable = $args[0];
+			switch ($variable) {
+				case "debug":
+					$debug = $args[1];
+					break;
+
+				case "delete-commands":
+					// Don't delete the commands file when done.
+					$delete_commands = $args[1];
+					break;
+
+				default:
+					do_warning($command, " variable '$variable' unknown; ignoring.");
+					break;
+			}
+			break;
+
+
+		case "raw":
+			// Output as normal text
+			$TAB = "\t";
+			$NL = "\n";
+			break;
+
+		case "html":
+			// Output as html
+			$TAB = "&nbsp;&nbsp;&nbsp;&nbsp;";
+			$NL = "<br>";
+			break;
+
+
 		case "xxx":
 // TODO: add other checks here
 			break;
 
 
 		default:
-			do_warning("Ignoring unknown command '$command'.");
+			do_warning($command, "Ignoring unknown command '$command'.");
 			break;
 
 		}
@@ -195,15 +230,25 @@ if (! $ok) exit(1);
 
 
 // Helper functions.
-function do_error($msg) { global $NL, $TAB; echo "ERROR${TAB}${msg}${NL}"; }
-function do_warning($msg) { global $NL, $TAB; echo "WARNING${TAB}${msg}${NL}"; }
-function do_debug($msg) { global $NL, $TAB; echo "DEBUG${TAB}${msg}${NL}"; }
-function do_return($cmd, $a, $msg) {
+function do_return($cmd, $a, $msg, $severity="RETURN")
+{
 	global $NL, $TAB;
-	echo "RETURN${TAB}${cmd}";
+	static $deleted = false;
+
+	echo "${severity}${TAB}${cmd}";
+
 	if (gettype($a) === "array") echo " " . implode(" ", $a);
 	echo "${TAB}${msg}${NL}";
+
+	if (! $deleted) {
+		delete_commands_file();
+		$deleted = true;
+	}
 }
+
+function do_error($cmd, $msg)		{ do_return($cmd, "", $msg, "ERROR"); }
+function do_warning($cmd, $msg)		{ do_return($cmd, "", $msg, "WARNING"); }
+function do_debug($cmd, $msg)		{ do_return($cmd, "", $msg, "DEBUG"); }
 
 // Get all the arguments and put in an array.
 // Make sure there is at least $num arguments:
@@ -233,7 +278,7 @@ function get_args($num, $cmd) {
 		else
 			$x = "exactly";
 		
-		do_error("'$cmd' requires $x $num arguments; $found were given.");
+		do_error($cmd, " requires $x $num argument(s); $found were given.");
 		return(null);
 	}
 	return($args);
@@ -325,6 +370,15 @@ function deleteDirectory($dir) {
 	}
 
 	return($ret);
+}
+
+// Optionally delete the commands file.
+// Except for testing, the file should be deleted.
+function delete_commands_file()
+{
+	global $delete_commands;
+	if ($delete_commands)
+		unlink($commandFile);
 }
 
 ?>

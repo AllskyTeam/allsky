@@ -17,7 +17,6 @@
 	<link rel="stylesheet" type="text/css" href="allsky-font.css">
 
 	<?php
-		echo "<!-- DEBUGGING: getcwd() = " . getcwd() . " -->\n";
 		// This gets the settings.
 		// Some settings impact this page, some impact the constellation overlay.
 		$exitOnInitializationError = false;

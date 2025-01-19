@@ -189,10 +189,10 @@ foreach ($lines AS $line) {
 			break;
 
 
-		case "info":
-			// TODO: add more info going forward
-			$info = "In directory " . getcwd();
-			do_return($command, "", $info);
+		case "pwd":
+			// Return current directory on server.
+			$dir = "In directory " . getcwd();
+			do_return($command, "", $dir);
 			break;
 
 

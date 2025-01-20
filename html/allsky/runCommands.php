@@ -191,8 +191,7 @@ foreach ($lines AS $line) {
 
 		case "pwd":
 			// Return current directory on server.
-			$dir = "In directory " . getcwd();
-			do_return($command, "", $dir);
+			do_return($command, "", getcwd());
 			break;
 
 

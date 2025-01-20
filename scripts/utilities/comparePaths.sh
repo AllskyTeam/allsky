@@ -105,7 +105,7 @@ function checkVariables()
 	local ENABLED
 	ENABLED="$( settings ."useremote${type}" )"
 	if [[ ${ENABLED} != "true" ]]; then
-		echo "WARNING: the remote ${TYPE} is not enabled; will attempt test anyway."
+		echo -e "\nWARNING: the remote ${TYPE} is not enabled; will attempt test anyway.\n"
 	fi
 
 	if [[ ${DO_WEBSITE} == "true" ]]; then
@@ -172,7 +172,8 @@ function sendCommandsFile()
 				if (in_info++ == 1) {
 					printf("Contents:\n");
 				}
-				print $0;
+				if ($1 != "WARNING:")
+					print $0;
 			}
 		}
 		END {
@@ -191,29 +192,32 @@ function sendCommandsFile()
 # Set global WEB_LS to the name of a file that contains the "ls" output.
 WEB_DIR=""
 WEB_LS="${OUTPUT_DIR}/web-ls.txt"
+rm -f "${WEB_LS}"
 function getWebPath()
 {
-	WEB_DIR="$( curl --silent --location "${URL}/runCommands.php" 2>&1 )"
-	if [[ $? -eq 0 ]]; then
-# RETURN	pwd	DIR
-# INFO	ls	FILE1
-# INFO	ls	FILE2
-# ...
-		WEB_DIR="$( echo "${WEB_DIR}" |
-			nawk -v F="${WEB_LS}" 'BEGIN { }
+	local OUTPUT="$( curl --silent --location "${URL}/runCommands.php" 2>&1 )"
+	local RET=$?
+	if [[ ${RET} -eq 0 && -n ${OUTPUT} ]]; then
+		# Typical output:
+			# RETURN	pwd	DIRECTORY_NAME
+			# INFO	ls	FILE_1_NAME
+			# INFO	ls	FILE_2_NAME
+			# ...
+		WEB_DIR="$( echo "${OUTPUT}" |
+			nawk -v F="${WEB_LS}" '
 				{
 					if ($2 == "pwd") {
 						print $3;
 					} else if ($2 == "ls") {
-						print $3; > F
-					} else {
-						printf("WARNING: Unknown line: %s\n", $0); > F
+						print $3 > F
+					} else if ($0 != "") {
+						printf("WARNING: Unknown line: [%s]\n", $0) > F
 					}
 				}'
 		)"
 	else
-		WEB_DIR="ERROR: Unable to run commands on server."
-		WEB_DIR+="\n${WEB_DIR}"
+		OUTPUT="${OUTPUT:-unknown reason}"
+		WEB_DIR="ERROR: Unable to run commands on server: ${OUTPUT}."
 		# Do not exit - print the info we currently have.
 	fi
 }
@@ -222,9 +226,9 @@ function getWebPath()
 function outputInfo()
 {
 	echo "UPLOAD directory = ${UPLOAD_DIR}"
-		[[ -f ${UPLOAD_LS} ]] && echo "A list of files is in '${UPLOAD_LS}'."
 	echo "WEB    directory = ${WEB_DIR}"
-		[[ -f ${WEB_LS} ]] && echo "A list of files is in '${WEB_LS}'."
+	[[ -f ${UPLOAD_LS} ]] && echo -e "\tA list of files is in '${UPLOAD_LS}'."
+	[[ -f ${WEB_LS} ]] && echo -e "\tA list of files is in '${WEB_LS}'."
 }
 
 checkProtocol

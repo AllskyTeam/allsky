@@ -74,6 +74,8 @@ fi
 if [[ ${DO_WEBSITE} == "true" && ${DO_SERVER} == "true" ]]; then
 	usage_and_exit 2 "ERROR: Only of of '--website' or '--server' should be specified."
 fi
+
+# TODO: FIX in future when "remoteserverurl" is implemented.
 if [[ ${DO_SERVER} == "true" && -z ${URL} ]]; then
 	usage_and_exit 2 "ERROR: '--server' requires the server's URL"
 fi
@@ -115,7 +117,17 @@ function checkVariables()
 			exit 3
 		fi
 	fi
-	# for DO_SERVER, the URL was specified on command line (no 'remoteserverurl' setting).
+	if [[ ${DO_SERVER} == "true" ]]; then
+# TODO: FIX in future when "remoteserverurl" is implemented.
+# For now, the URL was specified on command line.
+SAVED_URL="${URL}"
+		URL="$( settings ".remote${type}url" )"
+		if [[ -z ${URL} ]]; then
+URL="${SAVED_URL}"
+#x			echo "ERROR: No remote Website URL given." >&2
+#x			exit 3
+		fi
+	fi
 
 	DIR="$( settings ".remote${type}imagedir" )"
 	DIR="${DIR:-null}"
@@ -227,8 +239,8 @@ function outputInfo()
 {
 	echo "UPLOAD directory = ${UPLOAD_DIR}"
 	echo "WEB    directory = ${WEB_DIR}"
-	[[ -f ${UPLOAD_LS} ]] && echo -e "\tA list of files is in '${UPLOAD_LS}'."
-	[[ -f ${WEB_LS} ]] && echo -e "\tA list of files is in '${WEB_LS}'."
+	[[ -f ${UPLOAD_LS} ]] && echo -e "A list of files on the UPLOAD site is in '${UPLOAD_LS}'."
+	[[ -f ${WEB_LS} ]] && echo -e "A list of files on the WEB server is in '${WEB_LS}'."
 }
 
 checkProtocol

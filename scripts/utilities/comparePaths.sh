@@ -99,7 +99,6 @@ function checkProtocol()
 }
 
 # Check that the variable we need exist, and set their values.
-HOST=""
 DIR=""
 function checkVariables()
 {
@@ -118,7 +117,6 @@ function checkVariables()
 	fi
 	# for DO_SERVER, the URL was specified on command line (no 'remoteserverurl' setting).
 
-	HOST="$( settings ".REMOTE${TYPE}_HOST" )"
 	DIR="$( settings ".remote${type}imagedir" )"
 	DIR="${DIR:-null}"
 }
@@ -156,7 +154,7 @@ function sendCommandsFile()
 
 	# Get the UPLOAD login directory on the server.
 	# Sample line (not sure if this is the same for all servers):
-	#	<--- 257 "/acc462961444" is current directory.
+	#	<--- 257 "/directory_name" is current directory.
 	UPLOAD_DIR="$( grep " 257 " "${OUT}" | cut -d'"' -f2 )"
 	if [[ -z ${UPLOAD_DIR} ]]; then
 		echo "ERROR: Unable to get UPLOAD directory - return code 257 not found." >&2

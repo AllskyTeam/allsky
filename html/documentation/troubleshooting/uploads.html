@@ -48,41 +48,55 @@ testUpload.sh --server
 </p>
 
 <p>
-This attempts to upload a file and if it fails,
-it tries to determine why it failed and display how to fix it.
+This attempts to upload a file to the server,
+and if it fails, it often tells you how to fix it.
 </p>
 <p>
 If that doesn't help, look at the sections below for additional information.
 </p>
 
-<h3>Incorrect WebUI settings or URL mapping</h3>
+
+<h3>Incorrect WebUI connection settings</h3>
 <p>
-<blockquote>
-Most people use <code>ftp</code> or <code>sftp</code> to transfer files to another machine,
-so this section will assume that.
-The term "remote Website" means an Allsky Website not on your Pi,
-but on a remote server, possibly one you pay for services on.
-</blockquote>
+A <strong>common mistake</strong> is having incorrect values for the
+<span class="WebUISetting">Server Name</span>
+and associated <span class="WebUISetting">URL</span> settings in the WebUI.
 </p>
+<p>
+<ul>
+	<li>A <span class="WebUISetting">Server Name</span>
+		looks like <span class="WebUIValue">myserver.com</span>
+		and is the address FTP and other file transfer programs use to connect to the server.
+		<br>
+		It is NOT a URL so generally shouldn't have "http", "https", or "/" in its value.
+	<li>A <span class="WebUISetting">Website URL</span>
+		or <span class="WebUISetting">Server URL</span>
+		look like <span class="WebUIValue">http://mywebsite.com/allsky/</span>
+		and is the address web browsers use to connect to the server.
+		<br>
+		It MUST begin with "http://" or "https://".
+</ul>
+See
+<a allsky="true" external="true" href="/documentation/explanations/serverLocationToURL.html">
+Mapping server locations to URLs</a>
+for tips on what values to use for these settings,
+especially if you get messages like "Not found" or "404".
+</p>
+
+
+<h3>Incorrect WebUI settings</h3>
 <p>
 The <span class="WebUISetting">Server Name</span>,
 <span class="WebUISetting">User Name</span>,
-and <span class="WebUISetting">Password</span>
-settings in WebUI must be correct.
-If you can't log into to your remote server with that information,
-Allsky won't be able to either.
-Single quotes in the password can cause a problem for Allsky.
+and other connection settings in the WebUI for the remote Website or remote server
+must be correct.
+If YOU can't log in to the server, Allsky won't be able to either.
 </p>
 <p>
-The directory structure on your remote server must match the Allsky standard;
-changing locations and/or names of files and directories on the remote Website
-will cause uploads to fail.
-</p>
-<p>
-If you don't know the difference in a file location on a server and
-its associated URL, check out the
-<a allsky="true" external="true" href="/documentation/explanations/serverLocationToURL.html">
-Mapping server locations to URLs</a> page.
+The directory structure for a <em>remote Website</em> must match the Allsky standard;
+changing locations and/or names of files and directories will cause uploads to fail.
+For a <em>remote server</em> you can use use any directory structure you want;
+Allsky only writes to the <span class="WebUISetting">Image Directory</span> location.
 </p>
 
 

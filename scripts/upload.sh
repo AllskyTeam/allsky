@@ -362,7 +362,7 @@ else # sftp/ftp/ftps
 		# lftp doesn't open the connection until the first command is executed,
 		# and if it fails the error message isn't always clear.
 		# So, do a simple command first so we get a better error message.
-		echo "glob --not-exist 'DoEsNoTeXiSt*'" || exit "${EXIT_ERROR_STOP}"
+		echo "cd . || exit ${EXIT_ERROR_STOP}"
 
 		if [[ ${DEBUG} == "true" ]]; then
 			echo "debug 0"

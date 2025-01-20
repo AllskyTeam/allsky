@@ -1824,6 +1824,42 @@
 "display" : false
 },
 {
+"name" : "REMOTEWEBSITE_HOST",
+"default" : "",
+"description" : "Name of server hosting the remote Allsky Website.  NOT a URL.",
+"label" : "Server Name",
+"label_prefix" : "Remote Website",
+"type" : "widetext",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremotewebsite",
+"optional" : true
+},
+{
+"name" : "remotewebsiteurl",
+"default" : "",
+"description" : "The URL of your Allsky Website, for example: <span class='WebUIValue'>https://mywebsite.com/allsky/</span>.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
+"label" : "Website URL",
+"label_prefix" : "Remote Website",
+"type" : "widetext",
+"carryforward" : true,
+"checkchanges" : true,
+"booldependson" : "showonmap OR useremotewebsite OR remotewebsiteimageurl",
+"optional" : true
+},
+{
+"name" : "remotewebsiteimageurl",
+"default" : "",
+"description" : "The URL of the image on your Allsky Website, for example: <span class='WebUIValue'>https://mywebsite.com/allsky/image.jpg</span>.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
+"label" : "Image URL",
+"label_prefix" : "Remote Website",
+"type" : "widetext",
+"carryforward" : true,
+"checkchanges" : true,
+"booldependson" : "showonmap OR useremotewebsite OR remotewebsiteurl",
+"optional" : true
+},
+{
 "name" : "remotewebsiteimagedir",
 "default" : "allsky",
 "description" : "Name of the top-level remote Website directory where images go.",
@@ -1855,18 +1891,6 @@
 "carryforward" : true,
 "checkchanges" : true,
 "booldependson" : "useremotewebsite"
-},
-{
-"name" : "REMOTEWEBSITE_HOST",
-"default" : "",
-"description" : "Name of server hosting the remote Allsky Website.",
-"label" : "Server Name",
-"label_prefix" : "Remote Website",
-"type" : "widetext",
-"checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremotewebsite",
-"optional" : true
 },
 {
 "name" : "REMOTEWEBSITE_PORT",
@@ -1910,7 +1934,7 @@
 "description" : "Special commands needed when connecting to an FTP server.",
 "label" : "FTP Commands",
 "label_prefix" : "Remote Website",
-"type" : "text",
+"type" : "widetext",
 "checkchanges" : true,
 "source" : "${ALLSKY_ENV}",
 "booldependson" : "useremotewebsite",
@@ -2005,30 +2029,6 @@
 "carryforward" : true,
 "valuedependson" : "imageuploadfrequency=[1-9]*"
 },
-{
-"name" : "remotewebsiteurl",
-"default" : "",
-"description" : "The URL of your Allsky Website, for example: <span class='WebUIValue'>https://mywebsite.com/allsky/</span>.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
-"label" : "Website URL",
-"label_prefix" : "Remote Website",
-"type" : "widetext",
-"carryforward" : true,
-"checkchanges" : true,
-"booldependson" : "showonmap OR useremotewebsite OR remotewebsiteimageurl",
-"optional" : true
-},
-{
-"name" : "remotewebsiteimageurl",
-"default" : "",
-"description" : "The URL of the image on your Allsky Website, for example: <span class='WebUIValue'>https://mywebsite.com/allsky/image.jpg</span>.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
-"label" : "Image URL",
-"label_prefix" : "Remote Website",
-"type" : "widetext",
-"carryforward" : true,
-"checkchanges" : true,
-"booldependson" : "showonmap OR useremotewebsite OR remotewebsiteurl",
-"optional" : true
-},
 
 
 {
@@ -2044,6 +2044,31 @@
 "type" : "boolean",
 "carryforward" : true,
 "checkchanges" : true
+},
+{
+"name" : "REMOTESERVER_HOST",
+"default" : "",
+"description" : "Name of remote server NOT hosting an Allsky Website.  NOT a URL.",
+"label" : "Server Name",
+"label_prefix" : "Remote Server",
+"type" : "widetext",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremoteserver",
+"optional" : true
+},
+{
+"name" : "remoteserverurl",
+"default" : "",
+"description" : "Optional URL of remote server, for example: <span class='WebUIValue'>https://myserver.com/</span>.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
+"label" : "Server URL",
+"label_prefix" : "Remote Server",
+"type" : "widetext",
+"carryforward" : true,
+"checkchanges" : true,
+"booldependson" : "useremoteserver",
+"optional" : true,
+"display" : false
 },
 {
 "name" : "remoteserverimagedir",
@@ -2076,18 +2101,6 @@
 "carryforward" : true,
 "checkchanges" : true,
 "booldependson" : "useremoteserver"
-},
-{
-"name" : "REMOTESERVER_HOST",
-"default" : "",
-"description" : "Name of remote server NOT hosting an Allsky Website.",
-"label" : "Server Name",
-"label_prefix" : "Remote Server",
-"type" : "widetext",
-"checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremoteserver",
-"optional" : true
 },
 {
 "name" : "REMOTESERVER_PORT",
@@ -2131,7 +2144,7 @@
 "description" : "Special commands needed when connecting to an FTP server.",
 "label" : "FTP Commands",
 "label_prefix" : "Remote Server",
-"type" : "text",
+"type" : "widetext",
 "checkchanges" : true,
 "source" : "${ALLSKY_ENV}",
 "booldependson" : "useremoteserver",

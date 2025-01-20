@@ -20,7 +20,7 @@ $on64 = (PHP_INT_MAX !== 2147483647);	// are we using 64-bit?
 
 if (isset($_SERVER['HTTP_USER_AGENT']) &&
 		strpos($_SERVER['HTTP_USER_AGENT'], "curl") === false) {
-	$NL = "<br>";
+	setHTML();
 }
 
 if (isset($_GET["debug"])) {
@@ -38,7 +38,8 @@ if (! file_exists($commandFile)) {
 $lines = file($commandFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 if ($lines === false) {
 	$last_error = error_get_last();
-	do_error("", "Unable to read '$commandFile': ${last_error["message"]}.");
+	$err = $last_error["message"];
+	do_error("", "Unable to read '$commandFile': $err.");
 	exit(1);
 }
 // echo "<pre>"; var_dump($lines);echo "</pre>";
@@ -64,6 +65,23 @@ foreach ($lines AS $line) {
 	$numArgs = count($args);
 
 	switch ($command) {
+
+		case "ls":
+			// List the files/directories in the current directory.
+			$files = @scandir(".");
+			if ($files === false) {
+				$last_error = error_get_last();
+				$err = $last_error["message"];
+				do_error($command, "Unable to scandir($dir): $err.");
+			}
+
+			$files = array_diff($files, array(".", ".."));
+			foreach ($files as $file) {
+				do_info($command, "$file");
+			}
+
+			break;
+
 
 		case "mkdir":
 			// The arguments are the directories to create.
@@ -143,13 +161,19 @@ foreach ($lines AS $line) {
 				break;
 			}
 			$files = file($checksumsFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+			if ($files === false) {
+				$last_error = error_get_last();
+				$err = $last_error['message'];
+				do_error($command, "Can't read checksums file '$checksumsFile': $err.");
+				break;
+			}
 			$numSame = 0;
 			$numDifferent = 0;
 			$allErrors = "";
 			foreach ($files AS $info) {
 				$i = explode("\t", $info);
 				// false == don't output result; we'll do a summary below.
-				if (compareChecksum($command, $i, count($i), false, $error)) {
+				if (compareChecksum($command, $i, false, $error)) {
 					$numSame++;
 				} else {
 					$numDifferent++;
@@ -164,7 +188,7 @@ foreach ($lines AS $line) {
 
 		case "check_checksum":		// file  TAB  checksum
 			// Check the checksum of the specified file.  true == output result
-			compareChecksum($command, $args, $numArgs, true, $not_used);
+			compareChecksum($command, $args, true, $not_used);
 			break;
 
 
@@ -173,10 +197,13 @@ foreach ($lines AS $line) {
 			$files = array("version", "README.md", "config.js");
 			foreach ($files AS $file) {
 				if (file_exists($file)) {
-					if (unlink($file))
+					if (unlink($file)) {
 						do_return($command, "", "Deleted: $file");
-					else
-						do_error($command, "Unable to delete '$file'.");
+					} else {
+						$last_error = error_get_last();
+						$err = $last_error['message'];
+						do_error($command, "Unable to delete '$file': $err");
+					}
 				}
 			}
 
@@ -223,12 +250,10 @@ foreach ($lines AS $line) {
 				case "html":
 					if (intval($value)) {
 						// Output as html
-						$TAB = "&nbsp;&nbsp;&nbsp;&nbsp;";
-						$NL = "<br>";
+						setHTML();
 					} else {
 						// Output as normal text
-						$TAB = "\t";
-						$NL = "\n";
+						setRAW();
 					}
 					break;
 
@@ -239,23 +264,18 @@ foreach ($lines AS $line) {
 			break;
 
 
-		case "xxx":
-// TODO: add other checks here
-			break;
-
-
 		default:
 			do_warning($command, "Ignoring unknown command '$command'.");
 			break;
-
-		}
+	}
 }
 
 if (! $ok) exit(1);
 
 
-// Helper functions.
-function do_return($cmd, $a, $msg, $severity="RETURN", $exit=false)
+/////////////////////// Helper functions
+
+function do_return($cmd, $a, $msg, $severity="RETURN")
 {
 	global $NL, $TAB;
 	static $deleted = false;
@@ -274,14 +294,12 @@ function do_return($cmd, $a, $msg, $severity="RETURN", $exit=false)
 		delete_commands_file($cmd);
 		$deleted = true;
 	}
-	if ($exit)
-		exit;
 }
 
-function do_error($cmd, $msg, $exit=false)		{ do_return($cmd, "", $msg, "ERROR", $exit); }
-function do_warning($cmd, $msg, $exit=false)	{ do_return($cmd, "", $msg, "WARNING", $exit); }
-function do_info($cmd, $msg, $exit=false)		{ do_return($cmd, "", $msg, "INFO", $exit); }
-function do_debug($cmd, $msg, $exit=false)		{ do_return($cmd, "", $msg, "DEBUG", $exit); }
+function do_error($cmd, $msg)	{ do_return($cmd, "", $msg, "ERROR"); }
+function do_warning($cmd, $msg)	{ do_return($cmd, "", $msg, "WARNING"); }
+function do_info($cmd, $msg)	{ do_return($cmd, "", $msg, "INFO"); }
+function do_debug($cmd, $msg)	{ do_return($cmd, "", $msg, "DEBUG"); }
 
 // Return the number of file of the specified type.
 function count_files($filetype) {
@@ -312,7 +330,8 @@ function delete_files($filesToDelete, $deleteNum, $cmd, $a, $delete_thumbnail) {
 		} else {
 			if (! unlink($file)) {
 				$last_error = error_get_last();
-				do_warning("Unable to remove '$file': ${last_error["message"]}.");
+				$err = $last_error["message"];
+				do_warning("Unable to remove '$file': $err");
 			} else {
 				$c++;
 				$msg = "'$file'";
@@ -350,7 +369,7 @@ function deleteDirectory($dir) {
 	if ($files === false) {
 		$last_error = error_get_last();
 		$err = $last_error["message"];
-		do_error("Unable to scandir($dir): $err.");
+		do_error("", "Unable to scandir($dir): $err.");
 		return(false);
 	}
 
@@ -363,7 +382,7 @@ function deleteDirectory($dir) {
 			if (! @unlink($filePath)) {
 				$last_error = error_get_last();
 				$err = $last_error["message"];
-				do_error($err);
+				do_error("", "Unable to delete '$filePath': $err");
 			}
 		}
 	}
@@ -372,7 +391,7 @@ function deleteDirectory($dir) {
 	if (! $ret) {
 		$last_error = error_get_last();
 		$err = $last_error["message"];
-		do_error($err);
+		do_error("", "Unable to rmdir($dir): $err");
 	}
 
 	return($ret);
@@ -385,21 +404,22 @@ function delete_commands_file($cmd)
 	global $delete_commands, $commandFile;
 
 	if ($delete_commands) {
-		if (! @unlink($commandFile)) {
+		if (file_exists($commandFile) && ! @unlink($commandFile)) {
 			$delete_commands = false;	// to keep from going in infinate loop
 			$last_error = error_get_last();
 			$err = $last_error["message"];
-			do_warning($cmd, $err, true);
+			do_warning($cmd, $err);
 		}
 	}
 }
 
-function compareChecksum($cmd, $a, $num, $outputResult, &$error)
+// For the specified file, compare its current checksum to the stored checksum.
+function compareChecksum($cmd, $a, $outputResult, &$error)
 {
 	global $debug, $debug2, $TAB, $on64;
 
-	if ($num != 2) {
-		// checksum, file
+	if (count($a) != 2) {
+		// args: stored_checksum, file
 		do_error($command, "Expected 2 arguments.");
 		return(false);
 	}
@@ -458,4 +478,18 @@ function compareChecksum($cmd, $a, $num, $outputResult, &$error)
 	return($ret);
 }
 
+function setHTML()
+{
+	global $TAB, $NL;
+
+	$TAB = "&nbsp;&nbsp;&nbsp;&nbsp;";
+	$NL = "<br>";
+}
+function setRAW()
+{
+	global $TAB, $NL;
+
+	$TAB = "\t";
+	$NL = "\n";
+}
 ?>

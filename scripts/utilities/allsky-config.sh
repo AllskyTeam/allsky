@@ -17,12 +17,13 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP
 # allow user to select additional commands after 1st one?
 ALLOW_MORE_COMMANDS="true"
 
+TITLE="*** Allsky Configuration ***"
+
 OK="true"
 DO_HELP="false"
 CMD=""
 CMD_ARGS=""
 DEBUG="false"
-
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in
@@ -71,6 +72,7 @@ function usage_and_exit()
 	echo -e "		samba"
 	echo -e "		new_rpi_camera_info [--camera NUM]"
 	echo -e "		show_start_times [--zero] [angle [latitude [longitude]]]"
+	echo -e "		compare_paths"
 	echo -e "		encoders"
 	echo -e "		pix_fmts"
 	echo -e "	If no 'command' is specified you are prompted for one to execute."
@@ -170,6 +172,38 @@ function new_rpi_camera_info()
 function samba()
 {
 	installSamba.sh
+}
+
+#####
+# Display the path on the server of an Allsky Website and
+# display the path on the server give a URL.
+function compare_paths()
+{
+	# shellcheck disable=SC2124
+	local ARGS="${@}"
+
+	#shellcheck disable=SC2086
+	if needs_arguments ${ARGS} ; then
+		PROMPT="\nSelect the machine you want to check:"
+		OPTS=()
+# TODO: change message and don't prompt when "remoteserverurl" setting is implemented.
+		OPTS+=("--website"			"Remote Allsky Website (uses remote 'Website URL')")
+		OPTS+=("--server"			"Remote server (you will be prompted for the server's URL)")
+
+		# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
+		ARGS="$( prompt "${PROMPT}" "${OPTS[@]}" )"
+
+		if [[ ${ARGS} == "--server" ]]; then
+			PROMPT="\nEnter the URL of the server (must begin with 'http' or 'https'):"
+			while ! A="$( getInput "${PROMPT}" )" ; do
+				echo "\nYou must enter a URL."
+			done
+			ARGS+=" ${A}"
+		fi
+	fi
+
+	# shellcheck disable=SC2086
+	comparePaths.sh ${ARGS}
 }
 
 #####
@@ -297,20 +331,33 @@ function run_command()
 }
 
 
+
 #####
-# Prompt for a command or argument
+# Prompt for a command or argument from a list.
+WT_LINES=$( tput lines )
 function prompt()
 {
 	PROMPT="${1}"
 	shift
 	OPTIONS=("${@}")
 
-	TITLE="*** Allsky Configuration ***"
-	NUM_OPTIONS=$(( (${#OPTIONS[@]} / 2) + 3 ))
+	local NUM_OPTIONS=$(( ${#OPTIONS[@]} / 2 ))
+# whiptail's menubox has:
+# 2 lines at top
+# then the menu (NUM_OPTIONS lines)
+# 2 blank lines
+# 1 "<Ok> / <Cancel>" line
+# 2 blank lines
+# If all that doesn't fit in the terminal windows, whiptail does NOT scroll.
+	local LINES=$(( 2 + NUM_OPTIONS + 2 + 1 + 2 ))
+	if [[ ${LINES} -ge ${WT_LINES} ]]; then
+		echo "Please resize you window to at least $(( LINES + 1 )) lines."
+		echo "It is only ${WT_LINES} lines now."
+	fi >&2
 
-	OPT="$( whiptail --title "${TITLE}" --notags --menu "${PROMPT}" \
-		18 "${WT_WIDTH:-80}" "${NUM_OPTIONS}" -- "${OPTIONS[@]}" 3>&1 1>&2 2>&3 )"
-	RET=$?
+	local OPT="$( whiptail --title "${TITLE}" --notags --menu "${PROMPT}" \
+		"${LINES}" "${WT_WIDTH:-80}" "${NUM_OPTIONS}" -- "${OPTIONS[@]}" 3>&1 1>&2 2>&3 )"
+	local RET=$?
 	if [[ ${RET} -eq 255 ]]; then
 		echo -e "\n${RED}${ME}: whiptail failed.${NC}" >&2
 		exit 2
@@ -320,6 +367,33 @@ function prompt()
 	fi
 }
 
+#####
+# Prompt for a line of input.
+function getInput()
+{
+	local PROMPT="${1}"
+
+	local LINE="$( whiptail --title "${TITLE}" --inputbox "${PROMPT}" 15 "${WT_WIDTH:-80}" \
+		"" 3>&1 1>&2 2>&3 )"
+	local RET=$?
+	if [[ ${RET} -eq 255 ]]; then
+		echo -e "\n${RED}${ME}: whiptail failed.${NC}" >&2
+		exit 2
+	else
+		echo "${LINE}"
+		return "${RET}"
+	fi
+}
+
+# Output a list item.
+# Uses global ${N}.
+function L()
+{
+	local NAME="${1}"
+
+	local NUM="$( printf "%2d" ${N} )"
+	echo -e "${NUM}.  ${NAME}"
+}
 
 ####################################### Main part of program
 
@@ -328,20 +402,23 @@ if [[ -z ${CMD} ]]; then
 
 	PROMPT="\nSelect a command to run:"
 	CMDS=(); N=1
-	CMDS+=("show_supported_cameras"		"${N}. Show supported cameras"); ((N++))
-	CMDS+=("show_connected_cameras"		"${N}. Show connected cameras"); ((N++))
-	CMDS+=("prepare_logs"				"${N}. Prepare log files for troubleshooting"); ((N++))
-	CMDS+=("recheck_swap"				"${N}. Add swap space"); ((N++))
-	CMDS+=("recheck_tmp"				"${N}. Move ~/allsky/tmp to memory"); ((N++))
-	CMDS+=("samba"						"${N}. Simplify copying files to/from the Pi"); ((N++))
-	CMDS+=("new_rpi_camera_info"		"${N}. Collect information for new RPi camera"); ((N++))
-	CMDS+=("show_start_times"	 		"${N}. Show daytime and nighttime start times"); ((N++))
-	CMDS+=("encoders"			 		"${N}. Show list of timelapse encoders available"); ((N++))
-	CMDS+=("pix_fmts"			 		"${N}. Show list of timelapse pixel formats available"); ((N++))
+	CMDS+=("show_supported_cameras"		"$( L "Show supported cameras" )"); ((N++))
+	CMDS+=("show_connected_cameras"		"$( L "Show connected cameras" )"); ((N++))
+	CMDS+=("prepare_logs"				"$( L "Prepare log files for troubleshooting" )"); ((N++))
+	CMDS+=("recheck_swap"				"$( L "Add swap space" )"); ((N++))
+	CMDS+=("recheck_tmp"				"$( L "Move ~/allsky/tmp to memory") "); ((N++))
+	CMDS+=("samba" 						"$( L "Simplify copying files to/from the Pi" )"); ((N++))
+	CMDS+=("new_rpi_camera_info"		"$( L "Collect information for new RPi camera" )"); ((N++))
+	CMDS+=("show_start_times"			"$( L "Show daytime and nighttime start times" )"); ((N++))
+	CMDS+=("compare_paths"				"$( L "Compare upload and Website paths" )"); ((N++))
+	CMDS+=("encoders"					"$( L "Show list of timelapse encoders available" )"); ((N++))
+	CMDS+=("pix_fmts"					"$( L "Show list of timelapse pixel formats available" )"); ((N++))
 
 	# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 	while COMMAND="$( prompt "${PROMPT}" "${CMDS[@]}" )"
 	do
+		[[ -z ${COMMAND} ]] && exit 0
+
 		run_command "${COMMAND}"
 		RET=$?
 

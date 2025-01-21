@@ -196,7 +196,7 @@ function compare_paths()
 		if [[ ${ARGS} == "--server" ]]; then
 			PROMPT="\nEnter the URL of the server (must begin with 'http' or 'https'):"
 			while ! A="$( getInput "${PROMPT}" )" ; do
-				echo "\nYou must enter a URL."
+				echo -e "\nYou must enter a URL."
 			done
 			ARGS+=" ${A}"
 		fi
@@ -391,7 +391,7 @@ function L()
 {
 	local NAME="${1}"
 
-	local NUM="$( printf "%2d" ${N} )"
+	local NUM="$( printf "%2d" "${N}" )"
 	echo -e "${NUM}.  ${NAME}"
 }
 

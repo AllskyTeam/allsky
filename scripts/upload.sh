@@ -72,11 +72,11 @@ while [[ $# -gt 0 ]]; do
 		--debug)
 			DEBUG="true"
 			;;
-		--local-web)
+		--local-web | --local-website)
 			LOCAL="true"
 			(( NUM++ ))
 			;;
-		--remote-web)
+		--remote-web | --remote-website)
 			REMOTE_WEB="true"
 			(( NUM++ ))
 			;;
@@ -108,10 +108,12 @@ if [[ ! -f ${FILE_TO_UPLOAD} ]]; then
 fi
 
 DIRECTORY="${2}"
-# Allow explicit empty directory.
+# Allow explicit empty directory and destination file name.
 [[ ${DIRECTORY} == "null" ]] && DIRECTORY=""
 DESTINATION_NAME="${3}"
-[[ -z ${DESTINATION_NAME} ]] && DESTINATION_NAME="$( basename "${FILE_TO_UPLOAD}" )"
+if [[ -z ${DESTINATION_NAME} || ${DESTINATION_NAME} == "null" ]]; then
+	DESTINATION_NAME="$( basename "${FILE_TO_UPLOAD}" )"
+fi
 # When run manually, the FILE_TYPE normally won't be given.
 FILE_TYPE="${4:-x}"		# A unique identifier for this type of file
 COPY_TO="${5}"
@@ -339,8 +341,9 @@ else # sftp/ftp/ftps
 	fi
 
 	{
+		FTP_DEBUG=5
 		if [[ ${DEBUG} == "true" ]]; then
-			echo "debug 5"
+			echo "debug ${FTP_DEBUG}"
 		fi
 
 		LFTP_COMMANDS="$( settings ".${PREFIX}_LFTP_COMMANDS" "${ALLSKY_ENV}" )"
@@ -356,17 +359,19 @@ else # sftp/ftp/ftps
 		# shellcheck disable=SC2153,SC2086
 		echo "open --user '${REMOTE_USER}' ${PW} ${REMOTE_PORT} '${PROTOCOL}://${REMOTE_HOST}'"
 
-		# lftp doesn't actually try to open the connection until the first command is executed,
+		# lftp doesn't open the connection until the first command is executed,
 		# and if it fails the error message isn't always clear.
 		# So, do a simple command first so we get a better error message.
 		echo "cd . || exit ${EXIT_ERROR_STOP}"
 
 		if [[ ${DEBUG} == "true" ]]; then
-			# PWD not supported by all servers,
-			# but if it works it returns "xxx is current directory" so only output that.
-			echo "quote PWD | grep current "
+			echo "debug 0"
+			echo "echo 'START info'"	# Helps invoker determine where the info begins
 			echo "ls"
+			echo "echo 'END info'"
+			echo "debug ${FTP_DEBUG}"
 		fi
+
 		if [[ -n ${DIRECTORY} ]]; then
 			# lftp outputs error message so we don't have to.
 			echo "cd '${DIRECTORY}' || exit 1"

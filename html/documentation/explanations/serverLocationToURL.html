@@ -13,6 +13,7 @@
 		#pageTitle::before {
 			content: "Mapping Server Locations to URLs";
 		} 
+		.cars { color: blue; font-weight: bold; }
 	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
@@ -26,78 +27,122 @@
 <div class="Layout-main markdown-body" id="mainContents">
 
 <blockquote>
-The concept of determining a URL or
-<span class="WebUISetting">Image Directory</span>
-based on a file location on a server is very important,
-but not very intuitive to most people.
-You may need to read this section multiple times.
-</blockquote>
+If you have a remote Allsky Website or a remote Server,
+the <span class="WebUISetting">Server Name</span>,
+<span class="WebUISetting">URL</span>,
+and <span class="WebUISetting">Image Directory</span>
+settings in the WebUI can be very confusing.
 <p>
-When you enter a URL into a browser, how does the web server know where the file is?
-It typically starts looking in the root of the website,
-which is usually specified by the web server administrator.
-When you go to the Allsky WebUI, for example via <b>http://allsky</b>,
-Allsky looks in <span class="fileName">~/allsky/html</span>
+<strong>Read this page carefully</strong>.
+<p>
+It may take 5 or 10 minutes,
+but it's important that you understand <strong>what</strong>
+you are doing and <strong>why</strong>
+so that you can fix any future problems quickly.
+</p>
+</blockquote>
+
+<p>
+At a high level, a website is a collection of files
+sitting in a directory on some computer's disk drive.
+If a company called <span class="cars">Classic Cars</span> has a website at
+<code>https://classiccars.com</code>,
+the directory on its computer that contains that website
+might be called <span class="fileName">cars</span>.
+It may have sub-directories containing related files like
+<span class="fileName">wheels</span> and
+<span class="fileName">seats</span>.
+</p>
+
+<p>
+If you want to get information on red wheels you enter
+<code>https://classiccars.com/wheels/red.pdf</code> into your browser,
+and software called the "web server" on the <code>classiccars.com</code> computer
+starts in the <span class="fileName">cars</span> directory,
+then goes to the <span class="fileName">wheels</span> directory,
+then gets the <span class="fileName">red.pdf</span> file
+and sends it to your browser.
+The web server mapped the
+<code>https://classiccars.com/wheels/red.pdf</code> URL to the
+<span class="fileName">cars/wheels/red.info</span> file on the server.
+</p>
+
+<p>
+Likewise,
+when you go to the Allsky WebUI, for example via <code>http://allsky</code>,
+your Pi's web server looks in <span class="fileName">~/allsky/html</span>
 since that's what the Allsky developers specified as the root of the WebUI.
 </p>
-<p>There are two paths to a web file - one via a URL and another
-via the filesystem on the server.
-The web server maps a URL to a file location on the server.
-In our example above your Pi mapped <b>http://allsky</b> to
-<span class="fileName">~/allsky/html</span>.
-Sometimes that mapping is easy, and other times it's more difficult.
-In both cases, it impacts what you enter into the
-<span class="WebUISetting">Image Directory</span> setting for the remote
-Website or Server.
+
+<p>
+We now know there are TWO paths to a file in a website:
+<ol class="minimalPadding">
+	<li>a URL used in a browser
+	<li>a file path name used when logged into the server
+</ol>
+As a user, you only care about the first path.
+If you work for <span class="cars">Classic Cars</span> and need to update the
+<span class="fileName">red.pdf</span> file, you only care about the second path.
+</p>
+<p>
+Allsky needs to know about BOTH paths to files on your remote Website.
+Sometimes mapping a URL to file location on a server is easy,
+and other times it's more difficult.
 </p>
 
+
+<h3>1. Easy case: server directory structure matches URL</h3>
+<p>
 <blockquote>
-The cases below assume you want to send your allsky images to a remote Allsky Website
-but the same thing applies if you want to send the allsky images to remote server
-that is not an Allsky Website.
+If you are having a problem with your remote Website settings,
+this case probably doesn't apply to you unless you know almost nothing about computers.
+Read it anyhow because it will give you a better understanding of the problem.
 </blockquote>
-
-<h4>Easy case: server directory structure matches URL</h4>
-<p>
-Let's say you have a personal website at <b>https://mysite.com</b>
-where you store family photos.
-When you access the server (usually via FTP) you see the family photos
-without having to navigate anywhere.
-This means your website URL maps to the top-most directory of the remote
-server's directory structure, called the "root" directory.
 </p>
 <p>
-To use that server as an Allsky Website you create a directory in
-the root of the server called <span class="fileName">allsky</span>
-and install an Allsky Website there.
+You want to create a remote Allsky Website so you purchase a plan with a hosting provider
+for a website with a URL of <code>https://mysite.com</code>.
+The provider gives you a login on their server and tells you the:
+<ul class="minimalPadding">
+	<li><span class="WebUISetting">Server Name</span>
+	<li><span class="WebUISetting">User Name</span>
+	<li><span class="WebUISetting">Password</span>
+</ul>
+so you enter those into the WebUI.
+The provider also tells you that whatever you upload to the
+server will be visible via the URL using the same name.
+You use an FTP program like
+<a external="true" href="https://filezilla-project.org/">FileZilla</a>
+to log into the server and create a directory called <span class="fileName">allsky</span>
+for the remote Website.
 (Visit the <a allsky="true" external="true"
-	href="/documentation/installations/AllskyWebsite.html#onRemoteServer">
-	Allsky Website Installation</a> page to see how).
+	href="/documentation/installations/AllskyWebsite.html">
+	Allsky Website Installation</a> for the rest of the steps for creating a remote Website).
 </p>
 <p>
-The URL to your remote Allsky Website would be <b>https://mysite.com/allsky</b>.
-In the WebUI you'd set the Remote Server's
-<span class="WebUISetting">Image Directory</span>
+In the WebUI you set the Remote Website's
+<span class="WebUISetting">Website URL</span>
+to <code>https://mysite.com/allsky</code>
+and <span class="WebUISetting">Image Directory</span>
 to <span class="WebUIValue">/allsky</span>
-(or <span class="WebUIValue">allsky</span> depending on your service provider).
+(or <span class="WebUIValue">allsky</span>, depending on your service provider).
 </p>
 
 
-<h4>More difficult case: directory structure does not match URL</h4>
+<h3>2. More difficult case: directory structure does NOT match URL</h3>
 <p>
 You have the same website URL as above,
-but when you access the remote server you don't see the photos;
-instead, you see a directory called <span class="fileName">public_html</span>
-(the actual directory(s) you see will depend on your service provider).
-When you go into the <span class="fileName">public_html</span>
-directory you see your photos.
+but when you log into the server you
+see a directory called <span class="fileName">public_html</span>.
+The hosting provider tells you that you need to put file into that directory
+in order to see them via the <code>https://mysite.com</code> URL.
 </p>
 <p>
-In this case the web server is mapping the <b>https://mysite.com</b> URL to
-your <span class="fileName">/public_html</span> directory.
+In this case the web server is mapping the <code>https://mysite.com</code> URL to
+the <span class="fileName">/public_html</span> directory on the server.
 You need to create a <span class="fileName">/public_html/allsky</span>
 directory on the server and install the Allsky Website there.
-The URL to the Allsky Website is still <b>https://mysite.com/allsky</b>
+The URL to the Allsky Website is still <code>https://mysite.com/allsky</code>
 but in the WebUI you'd set the Remote Server's
 <span class="WebUISetting">Image Directory</span>
 to <span class="WebUIValue">/public_html/allsky</span>
@@ -107,8 +152,92 @@ to <span class="WebUIValue">/public_html/allsky</span>
 Mapping URLs to server directories like this is fairly common on remote servers that
 are shared by many people.
 </p>
-</details>
 
+<h3>3. Hardest case: you are totally lost</h3>
+<p>
+If the hosting provider didn't tell you where to put your files on their server,
+you'll need to figure it out.
+When you log into the server you see
+a directory called <span class="fileName">users</span>
+and inside it is a directory called <span class="fileName">your_login_name</span>.
+Inside that directory is a <span class="fileName">public_html</span> directory.
+</p>
+<p>
+You first try creating the
+<span class="fileName">allsky</span> directory in
+<span class="fileName">users</span> but it gives you an
+"<strong>Access Denied</strong>" message.
+</p>
+<p>
+You then try creating the <span class="fileName">allsky</span> directory in
+<span class="fileName">users/your_login_name</span>
+and it works, so in the WebUI you set the remote Website's
+<span class="WebUISetting">Image&nbsp;Directory</span>
+to <span class="WebUIValue">users/your_login_name/allsky</span>.
+After
+<a allsky="true" external="true" href="/documentation/installations/AllskyWebsite.html">
+	installing the remote Allsky Website</a>
+you go to <code>https://mysite.com/allsky</code> in your browser
+but get a "<strong>404 - Not Found</strong>" message.
+<br>
+Frustrated, you create an <span class="fileName">allsky</span> directory in the
+<span class="WebUIValue">users/your_login_name/public_html</span>
+directory on the server.
+It's late so you go to bed.
+</p>
+<p>
+The next day you go to <code>https://mysite.com/allsky</code> and see your Website,
+but notice the startrails, keogram, and timelapse files aren't there.
+</p>
+<p>
+To help determine what's happening you run the following on your Pi:
+<pre>allsky-config  compare_paths  --website</pre>
+</p>
+<p>
+This command tries to determine both paths to the
+<span class="fileName">allsky</span> directory -
+the location on the server where the <code>https://mysite.com/allsky</code> points to,
+and the location of the directory on the server when you log into it.
+<br>
+It returns:
+<pre>
+UPLOAD directory = /users
+WEB    directory = C:\www\users\your_login_name\public_html\allsky
+A list of files on the UPLOAD site is in '/home/pi/allsky/tmp/comparePaths.sh-WEBSITE/upload-ls.txt'.
+A list of files on the WEB server is in '/home/pi/allsky/tmp/comparePaths.sh-WEBSITE/web-ls.txt'.
+</pre>
+</p>
+<p class="morePadding">
+The <code>UPLOAD</code> directory is what you see when you log into the server.
+The <code>WEB</code> directory is where the <span class="fileName">allsky</span>
+directory is on the server when you log into it, i.e.,
+it's the directory on the server that the <code>https://mysite.com/allsky</code> URL maps to.
+</p>
+
+<p>
+You notice that both directories have <code>users</code> in them
+so you (correctly) determine the <code>/users</code> UPLOAD directory
+is the same as the <code>C:\www\users</code> directory on the server.
+That means the files that are being displayed in a browser are in
+<span class="fileName">users/your_login_name/public_html/allsky</span>
+on the server.
+<br>
+Allsky uploads files to the location specified in the
+<span class="WebUISetting">Image Directory</span> setting,
+which is still <span class="WebUIValue">users/your_login_name/allsky</span>.
+You look at that directory on the server and see the
+startrails, keogram, and timelapse files.
+</p>
+<p>
+You fix the problem by changing 
+<span class="WebUISetting">Image Directory</span> to
+<span class="WebUIValue">users/your_login_name/public_html/allsky</span>
+and deleting the <span class="WebUIValue">users/your_login_name/allsky</span> directory
+on the server since it's not used.
+You then run <code>generateForDay.sh --upload</code> on the Pi
+to have Allsky upload the startrails, keogram, and timelapse files
+from last night to the correct place.
+</p>
 
 </div><!-- Layout-main -->
 </div><!-- Layout -->

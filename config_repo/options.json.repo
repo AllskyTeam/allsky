@@ -1735,6 +1735,7 @@
 "description" : "Resized width of uploaded images. <span class='WebUIValue'>0</span> means don't resize.",
 "label" : "Resize Uploaded Images Width",
 "type" : "integer",
+"checkchanges" : true,
 "booldependson" : "imageupload"
 },
 {
@@ -1745,6 +1746,7 @@
 "description" : "Resized height of uploaded images. <span class='WebUIValue'>0</span> means don't resize.",
 "label" : "Resize Uploaded Images Height",
 "type" : "integer",
+"checkchanges" : true,
 "booldependson" : "imageupload"
 },
 {

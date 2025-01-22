@@ -196,7 +196,7 @@ function restoreSettings()
 	(( NUM_CHANGED-- ))
 
 	if [[ -n ${KEYS["${OTHER_KEY}"]} ]]; then
-		MSG+="or ${WSNs}${PREFIX}${LABELS["${OTHER_KEY}"]}${WSNe}"
+		MSG+=" or ${WSNs}${PREFIX}${LABELS["${OTHER_KEY}"]}${WSNe}"
 		RESTORES+=( "${OTHER_KEY}" "${LABELS["${OTHER_KEY}"]}" "${OLD_VALUES["${OTHER_KEY}"]}" )
 		(( NUM_CHANGED-- ))
 	fi
@@ -520,24 +520,32 @@ do
 				S_NAME="${NAME%.*}"
 				S_EXT="${NAME##*.}"
 				OLD_SETTINGS_FILE="${ALLSKY_CONFIG}/${S_NAME}_${OLD_TYPE}_${OLD_MODEL// /_}.${S_EXT}"
-				"${ALLSKY_SCRIPTS}/convertJSON.php" \
-					--carryforward \
-					--null \
-					--settings-file "${OLD_SETTINGS_FILE}" |
-				CHANGES=()
+				{
+					echo "_START_"
+					"${ALLSKY_SCRIPTS}/convertJSON.php" \
+						--carryforward \
+						--null \
+						--settings-file "${OLD_SETTINGS_FILE}"
+					echo "_END_"
+				} |
 				while read -r SETTING TYPE VALUE
 				do
-					# Some carried-forward settings may not be in the old settings file,
-					# so check for "null".
-					[[ ${VALUE} == "null" ]] && continue
+					if [[ ${SETTINGS} == "_START_" ]]; then
+						CHANGES=()
+					elif [[ ${SETTINGS} == "_END_" ]]; then
+						if [[ ${#CHANGES[@]} -gt 0 ]]; then
+							# shellcheck disable=SC2086
+							"${ALLSKY_SCRIPTS}/updateJsonFile.sh" \
+								--verbosity silent --file "${SETTINGS_FILE}" "${CHANGES[@]}"
+						fi
+					else
+						# Some carried-forward settings may not be in the old settings file,
+						# so check for "null".
+						[[ ${VALUE} == "null" ]] && continue
 
-					CHANGES+=( "${SETTING}" "${SETTING,,}" "${VALUE}" )
+						CHANGES+=( "${SETTING}" "${SETTING,,}" "${VALUE}" )
+					fi
 				done
-				if [[ ${#CHANGES[@]} -gt 0 ]]; then
-					# shellcheck disable=SC2086
-					"${ALLSKY_SCRIPTS}/updateJsonFile.sh" \
-						--verbosity silent --file "${SETTINGS_FILE}" "${CHANGES[@]}"
-				fi
 			fi
 
 			FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}_${CAMERA_MODEL// /_}"
@@ -787,7 +795,7 @@ do
 					restoreSettings "${KEY}" "${LABEL}" "${OLD_VALUE}" "${O}" "Timelapse "
 				fi
 
-				unset KEYS["${KEY}"];  unset KEYS["${O}"]
+				unset 'KEYS["${KEY}"]';  unset 'KEYS["${O}"]'
 			fi
 			;;
 
@@ -809,7 +817,8 @@ do
 				# Restore the old values
 				restoreSettings "${KEY}" "${LABEL}" "${OLD_VALUE}" "${O}" ""
 			fi
-			unset KEYS["${KEY}"];  unset KEYS["${O}"]
+
+			unset 'KEYS["${KEY}"]';  unset 'KEYS["${O}"]'
 			;;
 
 		"imageresizeuploadwidth" | "imageresizeuploadheight")
@@ -826,7 +835,8 @@ do
 				# Restore the old values
 				restoreSettings "${KEY}" "${LABEL}" "${OLD_VALUE}" "${O}" ""
 			fi
-			unset KEYS["${KEY}"];  unset KEYS["${O}"]
+
+			unset 'KEYS["${KEY}"]';  unset 'KEYS["${O}"]'
 			;;
 
 		"imageresizewidth" | "imageresizeheight")
@@ -843,7 +853,8 @@ do
 				# Restore to old values
 				restoreSettings "${KEY}" "${LABEL}" "${OLD_VALUE}" "${O}" ""
 			fi
-			unset KEYS["${KEY}"];  unset KEYS["${O}"]
+
+			unset 'KEYS["${KEY}"]';  unset 'KEYS["${O}"]'
 			;;
 
 		"imagecroptop" | "imagecropright" | "imagecropbottom" | "imagecropleft")

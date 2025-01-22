@@ -596,8 +596,7 @@ function replace_website_placeholders()
 
 	# Keep track if the file changed.
 	local OLD_SUM="$( sum "${FILE}" )"
-	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --verbosity silent \
-		--config "${FILE}" \
+	"${ALLSKY_SCRIPTS}/updateJsonFile.sh" --verbosity silent --file "${FILE}" \
 		config.imageName			"imageName"			"${IMAGE_NAME}" \
 		config.latitude				"latitude"			"${LATITUDE}" \
 		config.longitude			"longitude"			"${LONGITUDE}" \

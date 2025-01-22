@@ -1354,6 +1354,7 @@
 "label" : "Width",
 "label_prefix" : "Daily Timelapse",
 "type" : "integer",
+"checkchanges" : true,
 "booldependson" : "timelapsegenerate"
 },
 {
@@ -1365,6 +1366,7 @@
 "label" : "Height",
 "label_prefix" : "Daily Timelapse",
 "type" : "integer",
+"checkchanges" : true,
 "booldependson" : "timelapsegenerate"
 },
 {
@@ -1376,6 +1378,7 @@
 "label" : "Bitrate",
 "label_prefix" : "Daily Timelapse",
 "type" : "integer",
+"checkchanges" : true,
 "booldependson" : "timelapsegenerate"
 },
 {
@@ -1480,6 +1483,7 @@
 "label" : "Width",
 "label_prefix" : "Mini-Timelapse",
 "type" : "integer",
+"checkchanges" : true,
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 {
@@ -1491,6 +1495,7 @@
 "label" : "Height",
 "label_prefix" : "Mini-Timelapse",
 "type" : "integer",
+"checkchanges" : true,
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 {
@@ -1735,6 +1740,7 @@
 "description" : "Resized width of uploaded images. <span class='WebUIValue'>0</span> means don't resize.",
 "label" : "Resize Uploaded Images Width",
 "type" : "integer",
+"checkchanges" : true,
 "booldependson" : "imageupload"
 },
 {
@@ -1745,6 +1751,7 @@
 "description" : "Resized height of uploaded images. <span class='WebUIValue'>0</span> means don't resize.",
 "label" : "Resize Uploaded Images Height",
 "type" : "integer",
+"checkchanges" : true,
 "booldependson" : "imageupload"
 },
 {

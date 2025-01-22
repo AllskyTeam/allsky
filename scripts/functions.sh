@@ -36,6 +36,13 @@ else
 	export WSVe="</span>"
 fi
 
+##### output messages with appropriate color strings
+o_() { echo -e "${wOK}${1}${wNC}" ; }
+w_() { echo -e "${wWARNING}${1}${wNC}" ; }
+e_() { echo -e "${wERROR}${1}${wNC}" ; }
+d_() { echo -e "${wDEBUG}DEBUG: ${1}${wNC}" ; }
+
+
 ##### Start and Stop Allsky
 function start_Allsky()
 {

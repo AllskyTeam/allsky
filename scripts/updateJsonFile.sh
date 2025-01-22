@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Update the specified Allsky Website configuration file.
-# If no file is specified, use the local one if it exists, else use the remote one.
+# Update the specified JSON file.
+# The "--local" and "--remote" arguments just tell us that we're updating
+# the local or remote Website config file so we can say that in output messages.
 
 # Allow this script to be executed manually, which requires several variables to be set.
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
@@ -14,19 +15,18 @@ source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 
 function usage_and_exit()
 {
-	RET=${1}
+	local RET=${1}
+	exec >&2
+
+	local MSG="\nUsage: ${ME} [--help] [--debug] [--verbosity silent|summary|verbose]"
+	MSG+="\n   --local | --remote | --file file"
+	MSG+="\n   key  label  new_value  [...]"
 	if [[ ${RET} -eq 0 ]]; then
-		C="${wWARNING}"
+		w_ "${MSG}"
 	else
-		C="${wERROR}"
+		e_ "${MSG}"
 	fi
-	{
-		echo -en "${C}"
-		echo -n "Usage: ${ME} [--help] [--debug] [--verbosity silent|summary|verbose]"
-		echo -n " [--local | --remote | --config file] key label new_value [...]"
-		echo -e "${wNC}"
-		echo "There must be a multiple of 3 arguments."
-	} >&2
+	echo "There must be a multiple of 3 arguments."
 	exit "${RET}"
 }
 
@@ -35,8 +35,8 @@ OK="true"
 HELP="false"
 DEBUG="false"
 VERBOSITY="summary"
-CONFIG_FILE=""
-WEBSITE_TYPE="local and remote"
+FILE=""
+WEBSITE_TYPE=""
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in
@@ -51,23 +51,20 @@ while [[ $# -gt 0 ]]; do
 			shift
 			;;
 		--local)
-			CONFIG_FILE="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"	# local website
-			WEBSITE_TYPE="Local "
+			FILE="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+			WEBSITE_TYPE="Local"
 			;;
 		--remote)
-			CONFIG_FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"	# remote website
-			WEBSITE_TYPE="Remote "
+			FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
+			WEBSITE_TYPE="Remote"
 			;;
-		--config)
-			CONFIG_FILE="${2}"
-			if [[ ${CONFIG_FILE} == "" ]]; then
-				OK="false"
-			else
-				shift	# skip over CONFIG_FILE
-			fi
+		--file)
+			FILE="${2}"
+			[[ -z ${FILE} ]] && OK="false"
+			shift
 			;;
 		-*)
-			echo -e "${wERROR}ERROR: Unknown argument: '${ARG}'${wNC}" >&2
+			e_ "ERROR: Unknown argument: '${ARG}'" >&2
 			OK="false"
 			;;
 		*)
@@ -79,29 +76,12 @@ done
 
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
-[[ $# -eq 0 ]] && usage_and_exit 1
+[[ $# -eq 0 || -z ${FILE} ]] && usage_and_exit 1
 [[ $(($# % 3)) -ne 0 ]] && usage_and_exit 2
 
-if [[ ${CONFIG_FILE} != "" ]]; then
-	if [[ ! -f ${CONFIG_FILE} ]]; then
-		echo -e "${wERROR}ERROR: Configuration file not found: '${CONFIG_FILE}'.${wNC}" >&2
-		exit 1
-	fi
-	LorR="${WEBSITE_TYPE}"
-else
-	# Look for the configuration file.
-	CONFIG_FILE="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"	# local website
-	if [[ -f ${CONFIG_FILE} ]]; then
-		LorR="Local "
-	else
-		CONFIG_FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"	# remote website
-		if [ ! -f "${CONFIG_FILE}" ]; then
-			# Can't find the configuration file on the Pi or for remote.
-			echo -e "${wWARNING}WARNING: No configuration file found.${wNC}" >&2
-			exit 99
-		fi
-		LorR="Remote "
-	fi
+if [[ ! -f ${FILE} ]]; then
+	e_ "ERROR: Configuration file not found: '${FILE}'." >&2
+	exit 1
 fi
 
 #shellcheck disable=SC2191
@@ -120,7 +100,7 @@ while [[ $# -gt 0 ]]; do
 	NEW="${NEW_VALUE}"
 	NEW_VALUE="${NEW_VALUE//\"/\\\"}"	# Handle double quotes
 
-	[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}DEBUG: update '${LABEL}' to [${NEW_VALUE}].${wNC}"
+	[[ ${DEBUG} == "true" ]] && d_ "Update '${LABEL}' to [${NEW_VALUE}]."
 
 	# Only put quotes around ${NEW_VALUE} if it's a string,
 	# i.e., not a number or a special name.
@@ -146,26 +126,24 @@ done
 # shellcheck disable=SC2124
 S="${JQ_STRING[@]}"
 
-if [[ ${DEBUG} == "true" ]]; then
-	echo -en "${wDEBUG}"
-	echo -en "DEBUG: Executing:   jq '${S}' ${CONFIG_FILE}"
-	echo -e "${wNC}"
-fi
+[[ ${DEBUG} == "true" ]] && d_ "Executing:   jq '${S}' ${FILE}"
 
 # Need to use "jq", not "settings".
-if OUTPUT="$( jq "${S}" "${CONFIG_FILE}" 2>&1 > /tmp/x && mv /tmp/x "${CONFIG_FILE}" )"; then
+if OUTPUT="$( jq "${S}" "${FILE}" 2>&1 > /tmp/x && mv /tmp/x "${FILE}" )"; then
 	if [[ ${VERBOSITY} == "verbose" ]]; then
-		echo -e "${wOK}${OUTPUT_MESSAGE}${wNC}"
+		o_ "${OUTPUT_MESSAGE}"
 	elif [[ ${VERBOSITY} == "summary" ]]; then
-		if [[ -n ${CONFIG_FILE} ]]; then
-			echo -e "${wOK}'${CONFIG_FILE}' UPDATED${wNC}"
+		if [[ -n ${WEBSITE_TYPE} ]]; then
+			o_ "${WEBSITE_TYPE} Allsky Website ${ALLSKY_WEBSITE_CONFIGURATION_NAME} UPDATED"
 		else
-			echo -e "${wOK}${LorR}Allsky Website ${ALLSKY_WEBSITE_CONFIGURATION_NAME} UPDATED${wNC}"
+			o_ "'${FILE}' UPDATED"
 		fi
 	fi		# nothing if "silent"
 	exit 0
 else
-	echo -e "${wERROR}ERROR: unable to update data in '${CONFIG_FILE}':${wNC}" >&2
-	echo "   ${OUTPUT}" >&2
+	{
+		e_ "ERROR: unable to update data in '${FILE}':"
+		echo "   ${OUTPUT}"
+	} >&2
 	exit 1
 fi

@@ -728,7 +728,7 @@ do
 
 		"imageresizewidth" | "imageresizeheight")
 			if ! ERR="$( checkWidthHeight "Image RESIZE" \
-				"${S_imageresizeWidth}" "${S_imageresizeHeight}" \
+				"${S_imageresizewidth}" "${S_imageresizeheight}" \
 	 			"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )" ; then
 
 				# Restore to old value

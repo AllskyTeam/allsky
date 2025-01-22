@@ -135,17 +135,26 @@ function check_website()
 }
 
 # Get all settings at once rather than individually via settings().
+function getAllSettings()
+{
+	local X
+
+	if ! X="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix S_ --shell 2>&1 )" ; then
+		echo "${X}"
+		return 1
+	fi
+
+	eval "${X}"
+	return 0
+}
+
 if [[ -f ${SETTINGS_FILE} ]]; then
 	# If the settings file doesn't exist, check_website() won't find a website and
 	# we are likely called from the install script before the file is created.
 
 	check_website		# invoke to set variables
 
-	if ! X="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix S_ --shell 2>&1 )" ; then
-		echo "${X}"
-		exit 1
-	fi
-	eval "${X}"
+	getAllSettings || exit 1
 fi
 
 if [[ -f ${CC_FILE} ]]; then
@@ -172,26 +181,50 @@ function check_filename_type()
 	return 0
 }
 
+# Restore a pair of settings.
+function restoreSettings()
+{
+	local KEY="${1}"
+	local LABEL="${2}"
+	local VALUE="${3}"
+	local OTHER_KEY="${4}"
+	local PREFIX="${5}"
+
+	local MSG
+	MSG="Not changing ${WSNs}${PREFIX}${LABEL}${WSNe}"
+	local RESTORES=( "${KEY}" "${LABEL}" "${VALUE}" )
+	(( NUM_CHANGED-- ))
+
+	if [[ -n ${KEYS["${OTHER_KEY}"]} ]]; then
+		MSG+="or ${WSNs}${PREFIX}${LABELS["${OTHER_KEY}"]}${WSNe}"
+		RESTORES+=( "${OTHER_KEY}" "${LABELS["${OTHER_KEY}"]}" "${OLD_VALUES["${OTHER_KEY}"]}" )
+		(( NUM_CHANGED-- ))
+	fi
+
+	echo "${MSG}."
+
+	# shellcheck disable=SC2086
+		"${ALLSKY_SCRIPTS}/updateJsonFile.sh" \
+			--verbosity silent --file "${SETTINGS_FILE}" "${RESTORES[@]}" ||
+			echo "Failed with KEYs '${KEY}' and '${OTHER_KEY}'."
+}
+
 CAMERA_NUMBER=""
 CAMERA_NUMBER_ARG=""
 CAMERA_MODEL=""
 CAMERA_MODEL_ARG=""
 
-NUM_CHANGED=0
-
 # Read all the arguments into array.
-# Some settings, like imageresizewidth and imageresizeheight are usually
-# updated at the same time.
-# Having an array of all changes allows us to check that a second value
-# is being updated while we're looking at the first one.
-# For example, if we are working on "imageresizewidth" we can check if "imageresizeheight"
-# is also updated, and work on both at the same time.
+# Several settings like image size related ones are usually updated at the same time.
+# Having an array of all changes allows us to check both values at once,
+# and if either is invalid, restore both values.
 
 declare -A KEYS=()
 declare -A LABELS=()
 declare -A OLD_VALUES=()
 declare -A NEW_VALUES=()
 
+NUM_CHANGED=0
 while [[ $# -gt 0 ]]
 do
 	KEY="${1,,}" ;	 KEY="${KEY/#_/}"	# convert to lowercase and remove any leading "_"
@@ -215,6 +248,7 @@ do
 	OLD_VALUES[${KEY}]="${OLD_VALUE}"
 	NEW_VALUES[${KEY}]="${NEW_VALUE}"
 done
+
 
 # shellcheck disable=SC2302
 for KEY in "${KEYS[@]}"
@@ -490,17 +524,20 @@ do
 					--carryforward \
 					--null \
 					--settings-file "${OLD_SETTINGS_FILE}" |
+				CHANGES=()
 				while read -r SETTING TYPE VALUE
 				do
 					# Some carried-forward settings may not be in the old settings file,
 					# so check for "null".
 					[[ ${VALUE} == "null" ]] && continue
 
-# TODO: use updateJsonFile.sh   key   label   new_value
-# SETTING  SETTING  VALUE
-					update_json_file ".${SETTING}" "${VALUE}" "${SETTINGS_FILE}" "${TYPE}" ||
-					w_ "WARNING: Unable to update ${SETTING} of type ${TYPE}" >&2
+					CHANGES+=( "${SETTING}" "${SETTING,,}" "${VALUE}" )
 				done
+				if [[ ${#CHANGES[@]} -gt 0 ]]; then
+					# shellcheck disable=SC2086
+					"${ALLSKY_SCRIPTS}/updateJsonFile.sh" \
+						--verbosity silent --file "${SETTINGS_FILE}" "${CHANGES[@]}"
+				fi
 			fi
 
 			FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}_${CAMERA_MODEL// /_}"
@@ -511,14 +548,16 @@ do
 			else
 				OVERLAY_NAME="overlay-${CAMERA_TYPE}.json"
 			fi
+
+			CHANGES=()
 			# Set to defaults since there are no prior files.
 			for s in daytimeoverlay nighttimeoverlay
 			do
-				update_json_file ".${s}" "${OVERLAY_NAME}" "${SETTINGS_FILE}" "text"
+				CHANGES+=( "${s}" "${s}" "${OVERLAY_NAME}" )
 			done
 			COMPUTER="$( get_computer )"
-			update_json_file ".computer" "${COMPUTER}" "${SETTINGS_FILE}" "text"
-			update_json_file ".camera" "${CAMERA_TYPE} ${CAMERA_MODEL}" "${SETTINGS_FILE}" "text"
+			CHANGES+=( "computer" "Computer" "${COMPUTER}" )
+			CHANGES+=( "camera" "Camera Type" "${CAMERA_TYPE} ${CAMERA_MODEL}" )
 
 			# Because the user doesn't change the camera number directly it's
 			# not updated in the settings file, so we have to do it.
@@ -527,7 +566,11 @@ do
 				CAMERA_NUMBER="$( settings ".cameraNumber" "${CC_FILE}" )"
 				CAMERA_NUMBER=${CAMERA_NUMBER:-0}
 			fi
-			update_json_file ".cameranumber" "${CAMERA_NUMBER}" "${SETTINGS_FILE}" "integer"
+			CHANGES+=( "cameranumber" "Camera Number" "${CAMERA_NUMBER}" )
+
+			# shellcheck disable=SC2086
+			"${ALLSKY_SCRIPTS}/updateJsonFile.sh" \
+				--verbosity silent --file "${SETTINGS_FILE}" "${CHANGES[@]}"
 
 			if [[ ${ADD_NEW_SETTINGS} == "true" ]]; then
 				add_new_settings "${SETTINGS_FILE}" "${OPTIONS_FILE}" "${FROM_INSTALL}"
@@ -646,6 +689,7 @@ do
 				RUN_POSTTOMAP="true"
 			else
 				# Restore to old value
+				# Don't restore the "other" KEY since the two keys don't depend on each other.
 				e_ "${LAT_LON}"
 				echo "${BR}Setting ${WSNs}${LABEL}${WSNe} back to ${WSVs}${OLD_VALUE}${WSVe}."
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "string"
@@ -662,9 +706,7 @@ do
 
 
 		"uselocalwebsite")
-			if [[ ${NEW_VALUE} == "true" ]]; then
-				prepare_local_website "" "postData"
-			fi
+			[[ ${NEW_VALUE} == "true" ]] && prepare_local_website "" "postData"
 			;;
 
 		"remotewebsiteurl" | "remotewebsiteimageurl")
@@ -710,96 +752,110 @@ do
 			;;
 
 		"takedaytimeimages" | "takenighttimeimages")
-:
-###### TODO anything to do for these?
+:	###### TODO anything to do for these?
 			;;
 
 		"timelapsewidth" | "timelapseheight")
+# TODO: DID_TIMELAPSE probably isn't needed anymore
 			DID_TIMELAPSE="${DID_TIMELAPSE:-false}"
-			if [[ ${NEW_VALUE} != "0" ]]; then
+			if [[ ${NEW_VALUE} -ne 0 ]]; then
 				# Check the KEY by itself then both numbers together.
 				if [[ ${KEY} == "timelapsewidth" ]]; then
 					MAX="${C_sensorWidth}"
+					O="timelapseheight"
 				else
 					MAX="${C_sensorHeight}"
+					O="timelapsewidth"
 				fi
 				MIN=2
 
 				THIS_OK="true"
-#XX echo "CALLING: checkPixelValue 'Timelapse ${LABEL}' '${NEW_VALUE}' '${MIN}' '${MAX}'"
 				if ! checkPixelValue "Timelapse ${LABEL}" "sensor size" "${NEW_VALUE}" "${MIN}" "${MAX}" ; then
-#XX echo "    FALSE"
 					THIS_OK="false"
-				else
-					if [[ ${DID_TIMELAPSE} == "false" ]]; then
-#XX echo "CALLING: checkWidthHeight 'Timelapse' 'timelapse' '${S_timelapsewidth}' '${S_timelapseheight}' '${C_sensorWidth}' '${C_sensorHeight}'"
-						if ! checkWidthHeight "Timelapse" "timelapse" \
-						"${S_timelapsewidth}" "${S_timelapseheight}" \
-	 					"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 ; then
-#XX echo "false"
-							THIS_OK="false"
-						fi
-						DID_TIMELAPSE="true"
+				elif [[ ${DID_TIMELAPSE} == "false" ]]; then	# Only run checkWidthHeight once.
+					if ! checkWidthHeight "Timelapse" "timelapse" \
+							"${S_timelapsewidth}" "${S_timelapseheight}" \
+	 						"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 ; then
+						THIS_OK="false"
 					fi
+					DID_TIMELAPSE="true"
 				fi
 
 				if [[ ${THIS_OK} == "false" ]]; then
-					# Restore to old value
-					echo "Setting ${WSNs}Timelapse ${LABEL}${WSNe} back to ${WSVs}${OLD_VALUE}${WSVe}."
-					update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "number"
-					(( NUM_CHANGED-- ))
 					OK="false"
+					# Restore the old values
+					restoreSettings "${KEY}" "${LABEL}" "${OLD_VALUE}" "${O}" "Timelapse "
 				fi
+
+				unset KEYS["${KEY}"];  unset KEYS["${O}"]
 			fi
 			;;
 
 		"minitimelapsewidth" | "minitimelapseheight")
+# TODO: check for pixel size like above.  Put the check in a function so only 1 code.
+# Pass: KEY, DID_TIMELAPSE, O, "Mini-" or "", S_width, S_height
+# Also run checkPixelValue
+# if KEY has "width" use C_sensorWidth, if "height" use C_sensorHeight.
+			if [[ ${KEY} == "minitimelapsewidth" ]]; then
+				O="minitimelapseheight"
+			else
+				O="minitimelapsewidth"
+			fi
 			if ! ERR="$( checkWidthHeight "Mini-Timelapse" "mini-timelapse" \
 				"${S_minitimelapsewidth}" "${S_minitimelapseheight}" \
 				"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )" ; then
 
-# Only display the "both must be 0 or not 0" msg once
 				echo -e "ERROR: ${ERR}"
-				# Restore to old value
-				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "number"
-				(( NUM_CHANGED-- ))
+				# Restore the old values
+				restoreSettings "${KEY}" "${LABEL}" "${OLD_VALUE}" "${O}" ""
 			fi
+			unset KEYS["${KEY}"];  unset KEYS["${O}"]
 			;;
 
 		"imageresizeuploadwidth" | "imageresizeuploadheight")
-			if ! ERR="$( checkWidthHeight "Image RESIZE" \
-				"${S_imageresizewidth}" "${S_imageresizeheight}" \
+			if [[ ${KEY} == "imageresizeupladwidth" ]]; then
+				O="imageresizeuploadheight"
+			else
+				O="imageresizeuploadwidth"
+			fi
+			if ! ERR="$( checkWidthHeight "Resize Uploaded Images" "uploaded image" \
+				"${S_imageresizeuploadwidth}" "${S_imageresizeuploadheight}" \
 	 			"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )" ; then
 
-# Only display the "both must be 0 or not 0" msg once
 				echo -e "ERROR: ${ERR}"
-				# Restore to old value
-				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "number"
-				(( NUM_CHANGED-- ))
+				# Restore the old values
+				restoreSettings "${KEY}" "${LABEL}" "${OLD_VALUE}" "${O}" ""
 			fi
+			unset KEYS["${KEY}"];  unset KEYS["${O}"]
 			;;
 
 		"imageresizewidth" | "imageresizeheight")
-			if ! ERR="$( checkWidthHeight "Image RESIZE" \
+			if [[ ${KEY} == "imageresizewidth" ]]; then
+				O="imageresizeheight"
+			else
+				O="imageresizewidth"
+			fi
+			if ! ERR="$( checkWidthHeight "Image Resize" "image" \
 				"${S_imageresizewidth}" "${S_imageresizeheight}" \
 	 			"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )" ; then
 
-# Only display the "both must be 0 or not 0" msg once
 				echo -e "ERROR: ${ERR}"
-				# Restore to old value
-				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "number"
-				(( NUM_CHANGED-- ))
+				# Restore to old values
+				restoreSettings "${KEY}" "${LABEL}" "${OLD_VALUE}" "${O}" ""
 			fi
+			unset KEYS["${KEY}"];  unset KEYS["${O}"]
 			;;
 
 		"imagecroptop" | "imagecropright" | "imagecropbottom" | "imagecropleft")
-
+# TODO FIX ?  Where are BOTTOM and LEFT defined?
+			# Only check if at least one value isn't 0.
 			if [[ $((S_imagecroptop + S_imagecropright + BOTTOM + LEFT)) -gt 0 ]]; then
 				ERR="$( checkCropValues "${S_imagecroptop}" "${S_imagecropright}" \
 					"${S_imagecropbottom}" "${S_imagecropleft}" \
 					"${C_sensorWidth}" "${C_sensorHeight}" )"
 				if [[ $? -ne 0 ]]; then
 					MSG="ERROR: ${ERR}${BR}"
+# TODO: restore them?  Why is this different than other image sizes?
 					MSG+="FIX: Check the ${WSNs}Image Crop Top/Right/Bottom/Left${WSNe} settings."
 					echo -e "${MSG}"
 				fi
@@ -845,7 +901,8 @@ do
 		"daystokeep" | "daystokeeplocalwebsite" | "daystokeepremotewebsite")
 			if [[ ${NEW_VALUE} -gt 0 ]]; then
 :	# TODO: Check how many days images there are of the specified type.
-	# For remote website, query the website for the number (to be implemented).
+	# Create a "getNumImages() ${KEY}" function to return the number.
+	#	(For remote Website, query the Website for the number.)
 	# If MORE than NEW_VALUE, warn the user since those images will be deleted
 	# at the next endOfNight.sh run.
 			fi

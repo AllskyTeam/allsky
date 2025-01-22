@@ -821,7 +821,7 @@ do
 		"timelapsewidth" | "timelapseheight")
 			if [[ $((S_timelapsewidth + S_timelapseheight)) -gt 0 ]]; then
 				if ! checkTimelapse "${KEY}" "" \
-						${S_timelapsewidth} ${S_timelapseheight} ; then
+						"${S_timelapsewidth}" "${S_timelapseheight}" ; then
 					OK="false"
 				fi
 			fi
@@ -830,7 +830,7 @@ do
 		"minitimelapsewidth" | "minitimelapseheight")
 			if [[ $((S_minitimelapsewidth + S_minitimelapseheight)) -gt 0 ]]; then
 				if ! checkTimelapse "${KEY}" "Mini-" \
-						${S_minitimelapsewidth} ${S_minitimelapseheight} ; then
+						"${S_minitimelapsewidth}" "${S_minitimelapseheight}" ; then
 					OK="false"
 				fi
 			fi

@@ -14,14 +14,12 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP
 
 function usage_and_exit()
 {
-	{
-		echo -en "${wERROR}"
-		echo     "Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly] [--fromInstall] [--addNewSettings]"
-		echo -en "\tkey label old_value new_value [...]"
-		echo -e  "${wNC}"
-		echo "There must be a multiple of 4 key/label/old_value/new_value arguments"
-		echo "unless the --optionsOnly argument is given."
-	} >&2
+	exec >&2
+	echo -en "${wERROR}"
+	echo     "Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly] [--fromInstall] [--addNewSettings]"
+	echo -en "\tkey label old_value new_value [...]"
+	echo -e  "${wNC}"
+	echo "There must be a multiple of 4 key/label/old_value/new_value arguments."
 	exit "${1}"
 }
 
@@ -177,12 +175,50 @@ CAMERA_MODEL_ARG=""
 
 NUM_CHANGED=0
 
+# Read all the arguments into array.
+# Some settings, like imageresizewidth and imageresizeheight are usually
+# updated at the same time.
+# Having an array of all changes allows us to check that a second value
+# is being updated while we're looking at the first one.
+# For example, if we are working on "imageresizewidth" we can check if "imageresizeheight"
+# is also updated, and work on both at the same time.
+
+declare -A KEYS=()
+declare -A LABELS=()
+declare -A OLD_VALUES=()
+declare -A NEW_VALUES=()
+
 while [[ $# -gt 0 ]]
 do
-	KEY="${1}"
+	KEY="${1,,}" ;	 KEY="${KEY/#_/}"	# convert to lowercase and remove any leading "_"
 	LABEL="${2}"
 	OLD_VALUE="${3}"
 	NEW_VALUE="${4}"
+
+	shift 4
+
+	# Don't skip if it's cameratype since that indicates we need to refresh.
+	if [[ ${KEY} != "cameratype" && ${OLD_VALUE} == "${NEW_VALUE}" ]]; then
+		if [[ ${DEBUG} == "true" ]]; then
+			echo -e " ${wDEBUG}Skipping - old and new are equal${wNC}"
+		fi
+		continue
+	fi
+
+	(( NUM_CHANGED++ ))
+	KEYS[${KEY}]="${KEY}"
+	LABELS[${KEY}]="${LABEL}"
+	OLD_VALUES[${KEY}]="${OLD_VALUE}"
+	NEW_VALUES[${KEY}]="${NEW_VALUE}"
+done
+
+for KEY in ${KEYS[@]}
+do
+	[[ -z ${KEYS[${KEY}]} ]] && continue		# setting already processed
+
+	LABEL="${LABELS[${KEY}]}"
+	OLD_VALUE="${OLD_VALUES[${KEY}]}"
+	NEW_VALUE="${NEW_VALUES[${KEY}]}"
 
 	if [[ ${DEBUG} == "true" ]]; then
 		MSG="${KEY}: Old=[${OLD_VALUE}], New=[${NEW_VALUE}]"
@@ -192,22 +228,9 @@ do
 		fi
 	fi
 
-	KEY="${KEY,,}"		# convert to lowercase
-	KEY="${KEY/#_/}"	# Remove any leading "_"
-
-	# Don't skip if it's cameratype since that indicates we need to refresh.
-	if [[ ${KEY} != "cameratype" && ${OLD_VALUE} == "${NEW_VALUE}" ]]; then
-		if [[ ${DEBUG} == "true" ]]; then
-			echo -e "    ${wDEBUG}Skipping - old and new are equal${wNC}"
-		fi
-		shift 4
-		continue
-	fi
-
 	# The Allsky configuration file was already updated.
-	# If we find a bad entry, e.g., a file doesn't exist, all we can do is warn the user.
+	# If we find a bad entry, e.g., a file doesn't exist, warn the user and reset the value.
 
-	((NUM_CHANGED++))
 	case "${KEY}" in
 
 		# When called from the installer we get cameranumber, cameramodel, and cameratype.
@@ -225,9 +248,9 @@ do
 				CAMERA_MODEL="${NEW_VALUE}"
 
 				if [[ ${FROM_INSTALL} == "true" ]]; then
+# TODO: Use the KEYS[] array so the settings can be passed in either order.
 					# When called during installation the camera model is
 					# passed in, then the camera type.
-					shift 4
 					continue
 				fi
 
@@ -237,7 +260,7 @@ do
 			else
 				CAMERA_TYPE="${NEW_VALUE}"
 				if [[ ! -e "${ALLSKY_BIN}/capture_${CAMERA_TYPE}" ]]; then
-					MSG="Unknown Camera Type: '${CAMERA_TYPE}'."
+					MSG="Unknown '${LABEL}': '${CAMERA_TYPE}'."
 					echo -e "${wERROR}${ERROR_PREFIX}ERROR: ${MSG}${wNC}"
 					exit "${EXIT_NO_CAMERA}"
 				fi
@@ -337,6 +360,7 @@ do
 						fi
 						echo -e "${wNC}"
 					fi
+# TODO: rest settings to prior values?
 					exit "${RET}"		# the actual exit code is important
 				fi
 				[[ -n ${R} ]] && echo -e "${R}"
@@ -349,6 +373,7 @@ do
 					if [[ -z ${CAMERA_MODEL} ]]; then
 						echo -e "${wERROR}ERROR: '${SETTING_NAME}' not found in ${CC_FILE}.${wNC}"
 						[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
+# TODO: rest settings to prior values?
 						exit 1
 					fi
 				fi
@@ -419,6 +444,7 @@ do
 					echo -n " and '${SETTINGS_FILE}' files"
 				fi
 				echo -e "${wNC}, RET=${RET}: ${R}"
+# TODO: rest settings to prior values?
 				exit 1
 			fi
 			[[ ${DEBUG} == "true" && -n ${R} ]] && echo -e "${wDEBUG}${R}${wNC}"
@@ -432,6 +458,7 @@ do
 			fi
 			if [[ -n ${ERR} ]]; then
 				echo -e "${wERROR}${ERROR_PREFIX}${ERR}${wNC}"
+# TODO: rest settings to prior values?
 				exit 2
 			fi
 
@@ -453,13 +480,15 @@ do
 				S_NAME="${NAME%.*}"
 				S_EXT="${NAME##*.}"
 				OLD_SETTINGS_FILE="${ALLSKY_CONFIG}/${S_NAME}_${OLD_TYPE}_${OLD_MODEL// /_}.${S_EXT}"
-				"${ALLSKY_SCRIPTS}/convertJSON.php" --carryforward |
-				while read -r SETTING TYPE
+				"${ALLSKY_SCRIPTS}/convertJSON.php" \
+					--carryforward \
+					--null \
+					--settings-file "${OLD_SETTINGS_FILE}" |
+				while read -r SETTING TYPE VALUE
 				do
 					# Some carried-forward settings may not be in the old settings file,
 					# so check for "null".
-					X="$( settings --null ".${SETTING}" "${OLD_SETTINGS_FILE}" )"
-					[[ ${X} == "null" ]] && continue
+					[[ ${VALUE} == "null" ]] && continue
 
 					update_json_file ".${SETTING}" "${X}" "${SETTINGS_FILE}" "${TYPE}" ||
 						echo "WARNING: Unable to update ${SETTING} of type ${TYPE}" >&2
@@ -721,6 +750,20 @@ do
 				"${S_minitimelapsewidth}" "${S_minitimelapseheight}" \
 				"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )" ; then
 
+# On display the "both must be 0 or not 0" msg once
+				echo -e "ERROR: ${ERR}"
+				# Restore to old value
+				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "number"
+			fi
+			;;
+
+		"imageresizeuploadwidth" | "imageresizeuploadheight")
+			if ! ERR="$( checkWidthHeight "Image RESIZE" \
+				"${S_imageresizewidth}" "${S_imageresizeheight}" \
+	 			"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )" ; then
+
+# On display the "both must be 0 or not 0" msg once
+				echo -e "ERROR: ${ERR}"
 				# Restore to old value
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "number"
 			fi
@@ -731,6 +774,8 @@ do
 				"${S_imageresizewidth}" "${S_imageresizeheight}" \
 	 			"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )" ; then
 
+# Only display the "both must be 0 or not 0" msg once
+				echo -e "ERROR: ${ERR}"
 				# Restore to old value
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "number"
 			fi
@@ -810,11 +855,10 @@ do
 			MSG+="Unknown key '${KEY}'; ignoring.  Old=${OLD_VALUE}, New=${NEW_VALUE}"
 			MSG+="${wNC}"
 			echo -e "${MSG}"
-			((NUM_CHANGED--))
+			(( NUM_CHANGED-- ))
 			;;
 
 		esac
-		shift 4
 done
 
 [[ ${OK} == "false" ]] && exit 1
@@ -860,19 +904,19 @@ if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 	# Update the local and/or Website remote config file
 	if [[ ${WEBSITES} == "local" || ${WEBSITES} == "both" ]]; then
 		if [[ ${DEBUG} == "true" ]]; then
-			echo -e "${wDEBUG}Executing updateWebsiteConfig.sh local${wNC}"
+			echo -e "${wDEBUG}Executing updateJsonFile.sh --local${wNC}"
 		fi
 		# shellcheck disable=SC2086
-		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${DEBUG_ARG} --local "${WEBSITE_CONFIG[@]}"
+		"${ALLSKY_SCRIPTS}/updateJsonFile.sh" ${DEBUG_ARG} --local "${WEBSITE_CONFIG[@]}"
 		CHANGED_LOCAL_WEBSITE="true"
 	fi
 
 	if [[ ${WEBSITES} == "remote" || ${WEBSITES} == "both" ]]; then
 		if [[ ${DEBUG} == "true" ]]; then
-			echo -e "${wDEBUG}Executing updateWebsiteConfig.sh remote${wNC}"
+			echo -e "${wDEBUG}Executing updateJsonFile.sh --remote${wNC}"
 		fi
 		# shellcheck disable=SC2086
-		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${DEBUG_ARG} --remote "${WEBSITE_CONFIG[@]}"
+		"${ALLSKY_SCRIPTS}/updateJsonFile.sh" ${DEBUG_ARG} --remote "${WEBSITE_CONFIG[@]}"
 		CHANGED_REMOTE_WEBSITE="true"
 
 		FILE_TO_UPLOAD="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"

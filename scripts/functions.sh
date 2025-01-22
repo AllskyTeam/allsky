@@ -16,6 +16,7 @@ NOT_STARTED_MSG="Can't start Allsky!"
 STOPPED_MSG="Allsky Stopped!"
 ERROR_MSG_PREFIX="*** ERROR ***\n${STOPPED_MSG}\n"
 FATAL_MSG="FATAL ERROR:"
+
 if [[ ${ON_TTY} == "true" ]]; then
 	export NL="\n"
 	export SPACES="    "
@@ -817,23 +818,23 @@ function checkCropValues()
 	local ERR=""
 	if [[ ${CROP_TOP} -lt 0 || ${CROP_RIGHT} -lt 0 ||
 			${CROP_BOTTOM} -lt 0 || ${CROP_LEFT} -lt 0 ]]; then
-		ERR+="\nCrop numbers must all be positive."
+		ERR+="${wBR}Crop numbers must all be positive."
 	fi
 	if [[ $((CROP_TOP % 2)) -eq 1 || $((CROP_RIGHT % 2)) -eq 1 ||
 			$((CROP_BOTTOM % 2)) -eq 1 || $((CROP_LEFT % 2)) -eq 1 ]]; then
-		ERR+="\nCrop numbers must all be even."
+		ERR+="${wBR}Crop numbers must all be even."
 	fi
 	if [[ ${CROP_TOP} -gt $((MAX_RESOLUTION_Y -2)) ]]; then
-		ERR+="\nCropping on top (${CROP_TOP}) is larger than the image height (${MAX_RESOLUTION_Y})."
+		ERR+="${wBR}Cropping on top (${CROP_TOP}) is larger than the image height (${MAX_RESOLUTION_Y})."
 	fi
 	if [[ ${CROP_RIGHT} -gt $((MAX_RESOLUTION_X - 2)) ]]; then
-		ERR+="\nCropping on right (${CROP_RIGHT}) is larger than the image width (${MAX_RESOLUTION_X})."
+		ERR+="${wBR}Cropping on right (${CROP_RIGHT}) is larger than the image width (${MAX_RESOLUTION_X})."
 	fi
 	if [[ ${CROP_BOTTOM} -gt $((MAX_RESOLUTION_Y - 2)) ]]; then
-		ERR+="\nCropping on bottom (${CROP_BOTTOM}) is larger than the image height (${MAX_RESOLUTION_Y})."
+		ERR+="${wBR}Cropping on bottom (${CROP_BOTTOM}) is larger than the image height (${MAX_RESOLUTION_Y})."
 	fi
 	if [[ ${CROP_LEFT} -gt $((MAX_RESOLUTION_X - 2)) ]]; then
-		ERR+="\nCropping on left (${CROP_LEFT}) is larger than the image width (${MAX_RESOLUTION_X})."
+		ERR+="${wBR}Cropping on left (${CROP_LEFT}) is larger than the image width (${MAX_RESOLUTION_X})."
 	fi
 
 	if [[ -z ${ERR} ]]; then

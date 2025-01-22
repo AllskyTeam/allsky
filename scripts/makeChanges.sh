@@ -94,6 +94,11 @@ if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
 	[[ $# -eq 0 ]] && usage_and_exit 1
 	[[ $(($# % 4)) -ne 0 ]] && usage_and_exit 2
 fi
+if [[ ${DEBUG} == "true" ]]; then
+	debug() { return 0 ; }
+else
+	debug() { return 1 ; }
+fi
 
 RUN_POSTTOMAP="false"
 POSTTOMAP_ACTION=""
@@ -198,7 +203,7 @@ do
 
 	# Don't skip if it's cameratype since that indicates we need to refresh.
 	if [[ ${KEY} != "cameratype" && ${OLD_VALUE} == "${NEW_VALUE}" ]]; then
-		if [[ ${DEBUG} == "true" ]]; then
+		if debug ; then
 			d_ "Skipping - old and new are equal."
 		fi
 		continue
@@ -223,7 +228,7 @@ do
 	OLD_VALUE="${OLD_VALUES[${KEY}]}"
 	NEW_VALUE="${NEW_VALUES[${KEY}]}"
 
-	if [[ ${DEBUG} == "true" ]]; then
+	if debug ; then
 		MSG="${KEY}: Old=[${OLD_VALUE}], New=[${NEW_VALUE}]"
 		d_ "${ME}: ${MSG}"
 		if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
@@ -320,7 +325,7 @@ do
 					MSG+=" cameranumber ${CAMERA_NUMBER}"
 					if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
 						echo -e "<script>console.log('${MSG}');</script>"
-					elif [[ ${DEBUG} == "true" ]]; then
+					elif debug ; then
 						d_ "${MSG}"
 					fi
 				fi
@@ -333,7 +338,7 @@ do
 				else
 					CAMERA_MODEL_ARG=""
 				fi
-				if [[ ${DEBUG} == "true" ]]; then
+				if debug ; then
 					d_ "Calling: ${CMD} ${OTHER_ARGS} ${CAMERA_MODEL_ARG} -cc_file '${CC_FILE}'"
 				fi
 
@@ -414,7 +419,7 @@ do
 				OLD_MODEL=""
 			fi
 
-			if [[ ${DEBUG} == "true" ]]; then
+			if debug ; then
 				# shellcheck disable=SC2086
 				d_ "Calling:" \
 					"${ALLSKY_SCRIPTS}/createAllskyOptions.php" \
@@ -448,7 +453,7 @@ do
 # TODO: re-set settings to prior values?
 				exit 1
 			fi
-			[[ ${DEBUG} == "true" && -n ${R} ]] && d_ "${R}"
+			debug && [[ -n ${R} ]] && d_ "${R}"
 
 			ERR=""
 			if [[ ! -f ${OPTIONS_FILE} ]]; then
@@ -471,7 +476,7 @@ do
 				# We assume the user wants the non-camera specific settings below
 				# for this camera to be the same as the prior camera.
 
-				if [[ ${DEBUG} == "true" ]]; then
+				if debug ; then
 					MSG="Updating user-defined settings in new settings file."
 					d_ "${MSG}"
 				fi
@@ -908,14 +913,14 @@ CHANGED_REMOTE_WEBSITE="false"
 if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 	# Update the local and/or Website remote config file
 	if [[ ${WEBSITES} == "local" || ${WEBSITES} == "both" ]]; then
-		[[ ${DEBUG} == "true" ]] && d_ "Executing updateJsonFile.sh --local"
+		debug && d_ "Executing updateJsonFile.sh --local"
 		# shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/updateJsonFile.sh" ${DEBUG_ARG} --local "${WEBSITE_CONFIG[@]}"
 		CHANGED_LOCAL_WEBSITE="true"
 	fi
 
 	if [[ ${WEBSITES} == "remote" || ${WEBSITES} == "both" ]]; then
-		[[ ${DEBUG} == "true" ]] && d_ "Executing updateJsonFile.sh --remote"
+		debug && d_ "Executing updateJsonFile.sh --remote"
 		# shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/updateJsonFile.sh" ${DEBUG_ARG} --remote "${WEBSITE_CONFIG[@]}"
 		CHANGED_REMOTE_WEBSITE="true"
@@ -924,7 +929,7 @@ if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 
 # TODO: Use  ${S_remotewebsiteimagedir}  ??
 		IMAGE_DIR="$( settings ".remotewebsiteimagedir" )"
-		[[ ${DEBUG} == "true" ]] && d_ "Uploading '${FILE_TO_UPLOAD}' to remote Website."
+		debug && d_ "Uploading '${FILE_TO_UPLOAD}' to remote Website."
 
 		if ! "${ALLSKY_SCRIPTS}/upload.sh" --silent --remote-web \
 				"${FILE_TO_UPLOAD}" \
@@ -954,10 +959,10 @@ if [[ ${WEBSITE_VALUE_CHANGED} == "true" ]]; then
 fi
 
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
-# TODO: Use  ${S_showonmap}  ??
-	[[ -z ${SHOW_ON_MAP} ]] && SHOW_ON_MAP="$( settings ".showonmap" )"
+	# Only run postToMap.sh if: 1) we turned off showonmap,  2) showonmap is on
+	[[ -z ${SHOW_ON_MAP} ]] && SHOW_ON_MAP="${S_showonmap}"
 	if [[ ${SHOW_ON_MAP} == "true" ]]; then
-		[[ ${DEBUG} == "true" ]] && d_ "Executing postToMap.sh"
+		debug && d_ "Executing postToMap.sh"
 		# shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${FROM_WEBUI} ${POSTTOMAP_ACTION}
 	fi

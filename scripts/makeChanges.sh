@@ -17,7 +17,7 @@ function usage_and_exit()
 	exec >&2
 	local E="\n"
 	E+="Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly] [--fromInstall] [--addNewSettings]"
-	E+=\n"\tkey  label  old_value  new_value  [...]"
+	E+="\n\tkey  label  old_value  new_value  [...]"
 	e_ "${E}"
 	echo "There must be a multiple of 4 key/label/old_value/new_value arguments."
 	exit "${1}"
@@ -258,6 +258,7 @@ do
 				fi
 
 				# If only the CAMERA_MODEL changed, it's the same CAMERA_TYPE.
+# TODO: use   CAMERA_TYPE="${S_cameratype}"
 				CAMERA_TYPE="$( settings ".cameratype" )"
 
 			else
@@ -361,7 +362,7 @@ do
 						fi
 						e_ "${E}"
 					fi
-# TODO: rest settings to prior values?
+# TODO: re-set settings to prior values?
 					exit "${RET}"		# the actual exit code is important
 				fi
 				[[ -n ${R} ]] && echo -e "${R}"
@@ -374,7 +375,7 @@ do
 					if [[ -z ${CAMERA_MODEL} ]]; then
 						e_ "ERROR: '${SETTING_NAME}' not found in ${CC_FILE}."
 						[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
-# TODO: rest settings to prior values?
+# TODO: re-set settings to prior values?
 						exit 1
 					fi
 				fi
@@ -437,14 +438,14 @@ do
 			fi
 
 			if [[ ${RET} -ne 0 ]]; then
-				e="ERROR: Unable to create '${OPTIONS_FILE}'"
+				E="ERROR: Unable to create '${OPTIONS_FILE}'"
 				if [[ ${OPTIONS_FILE_ONLY} == "true" ]]; then
 					E+=" file"
 				else
 					E+=" and '${SETTINGS_FILE}' files"
 				fi
 				e_ "${E}, RET=${RET}: ${R}"
-# TODO: rest settings to prior values?
+# TODO: re-set settings to prior values?
 				exit 1
 			fi
 			[[ ${DEBUG} == "true" && -n ${R} ]] && d_ "${R}"
@@ -458,7 +459,7 @@ do
 			fi
 			if [[ -n ${ERR} ]]; then
 				e_ "${ERROR_PREFIX}${ERR}"
-# TODO: rest settings to prior values?
+# TODO: re-set settings to prior values?
 				exit 2
 			fi
 
@@ -490,8 +491,10 @@ do
 					# so check for "null".
 					[[ ${VALUE} == "null" ]] && continue
 
-					update_json_file ".${SETTING}" "${X}" "${SETTINGS_FILE}" "${TYPE}" ||
-						w_ "WARNING: Unable to update ${SETTING} of type ${TYPE}" >&2
+# TODO: use updateJsonFile.sh   key   label   new_value
+# SETTING  SETTING  VALUE
+					update_json_file ".${SETTING}" "${VALUE}" "${SETTINGS_FILE}" "${TYPE}" ||
+					w_ "WARNING: Unable to update ${SETTING} of type ${TYPE}" >&2
 				done
 			fi
 
@@ -536,10 +539,12 @@ do
 			;;
 
 		"type")
+# TODO: Use  ${S_filename}  ??
 			check_filename_type "$( settings '.filename' )" "${NEW_VALUE}" || OK="false"
 			;;
 
 		"filename")
+# TODO: Use  ${S_type}  ??
 			if check_filename_type "${NEW_VALUE}" "$( settings '.type' )" ; then
 				check_website && WEBSITE_CONFIG+=("config.imageName" "${LABEL}" "${NEW_VALUE}")
 				WEBSITE_VALUE_CHANGED="true"
@@ -555,6 +560,7 @@ do
 					# Restore to old value
 					echo "${BR}Disabling ${WSNs}${LABEL}${WSNe}."
 					update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "boolean"
+					(( NUM_CHANGED-- ))
 				else
 					NUM_DARKS=$( find "${ALLSKY_DARKS}" -name "*.${EXTENSION}" 2>/dev/null | wc -l)
 					if [[ ${NUM_DARKS} -eq 0 ]]; then
@@ -638,6 +644,7 @@ do
 				e_ "${LAT_LON}"
 				echo "${BR}Setting ${WSNs}${LABEL}${WSNe} back to ${WSVs}${OLD_VALUE}${WSVe}."
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "string"
+				(( NUM_CHANGED-- ))
 				OK="false"
 			fi
 			;;
@@ -734,8 +741,8 @@ do
 				if [[ ${THIS_OK} == "false" ]]; then
 					# Restore to old value
 					echo "Setting ${WSNs}Timelapse ${LABEL}${WSNe} back to ${WSVs}${OLD_VALUE}${WSVe}."
-# TODO: rest settings to prior values?
 					update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "number"
+					(( NUM_CHANGED-- ))
 					OK="false"
 				fi
 			fi
@@ -746,10 +753,11 @@ do
 				"${S_minitimelapsewidth}" "${S_minitimelapseheight}" \
 				"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )" ; then
 
-# On display the "both must be 0 or not 0" msg once
+# Only display the "both must be 0 or not 0" msg once
 				echo -e "ERROR: ${ERR}"
 				# Restore to old value
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "number"
+				(( NUM_CHANGED-- ))
 			fi
 			;;
 
@@ -758,10 +766,11 @@ do
 				"${S_imageresizewidth}" "${S_imageresizeheight}" \
 	 			"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )" ; then
 
-# On display the "both must be 0 or not 0" msg once
+# Only display the "both must be 0 or not 0" msg once
 				echo -e "ERROR: ${ERR}"
 				# Restore to old value
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "number"
+				(( NUM_CHANGED-- ))
 			fi
 			;;
 
@@ -774,6 +783,7 @@ do
 				echo -e "ERROR: ${ERR}"
 				# Restore to old value
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "number"
+				(( NUM_CHANGED-- ))
 			fi
 			;;
 
@@ -797,7 +807,7 @@ do
 				{ if ($2 == codec) { exit_code = 0; exit 0; } }
 				END { exit exit_code; }' ; then
 
-				MSG="WARNING}WARNING: "
+				MSG="WARNING: "
 				MSG+="Unknown VCODEC: '${NEW_VALUE}'; resetting to '${OLD_VALUE}'."
 				MSG+="${BR}Execute: ffmpeg -encoders"
 				MSG+="${BR}for a list of VCODECs."
@@ -805,6 +815,7 @@ do
 
 				# Restore to old value
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "text"
+				(( NUM_CHANGED-- ))
 			fi
 			;;
 
@@ -822,6 +833,7 @@ do
 
 				# Restore to old value
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "text"
+				(( NUM_CHANGED-- ))
 			fi
 			;;
 
@@ -858,6 +870,7 @@ done
 
 [[ ${NUM_CHANGED} -le 0 ]] && exit 0		# Nothing changed
 
+# TODO: Use  ${S_useremotewebsite} and ${S_useremoteserver}  ??
 USE_REMOTE_WEBSITE="$( settings ".useremotewebsite" )"
 USE_REMOTE_SERVER="$( settings ".useremoteserver" )"
 if [[ ${USE_REMOTE_WEBSITE} == "true" || ${USE_REMOTE_SERVER} == "true" ]]; then
@@ -909,6 +922,7 @@ if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 
 		FILE_TO_UPLOAD="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
+# TODO: Use  ${S_remotewebsiteimagedir}  ??
 		IMAGE_DIR="$( settings ".remotewebsiteimagedir" )"
 		[[ ${DEBUG} == "true" ]] && d_ "Uploading '${FILE_TO_UPLOAD}' to remote Website."
 
@@ -940,10 +954,10 @@ if [[ ${WEBSITE_VALUE_CHANGED} == "true" ]]; then
 fi
 
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
+# TODO: Use  ${S_showonmap}  ??
 	[[ -z ${SHOW_ON_MAP} ]] && SHOW_ON_MAP="$( settings ".showonmap" )"
 	if [[ ${SHOW_ON_MAP} == "true" ]]; then
 		[[ ${DEBUG} == "true" ]] && d_ "Executing postToMap.sh"
-# TODO: put in background to return to user faster?
 		# shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${FROM_WEBUI} ${POSTTOMAP_ACTION}
 	fi

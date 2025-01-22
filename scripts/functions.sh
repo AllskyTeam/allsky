@@ -737,6 +737,8 @@ function checkPixelValue()
 	local MIN=${4}
 	local MAX="${5}"
 
+	[[ ${VALUE} -eq 0 ]] && return 0
+
 	local MIN_MSG   MAX_MSG
 	if [[ ${MIN} == "any" ]]; then
 		MIN="-99999999"		# a number we'll never go below
@@ -773,26 +775,18 @@ function checkWidthHeight()
 	local HEIGHT="${4}"
 	local SENSOR_WIDTH="${5}"
 	local SENSOR_HEIGHT="${6}"
-	local ERR=""
+	local ERR
 
 	# Width and height must both be 0 or non-zero.
 	if [[ (${WIDTH} -gt 0 && ${HEIGHT} -eq 0) || (${WIDTH} -eq 0 && ${HEIGHT} -gt 0) ]]; then
-		ERR+="${WSNs}${NAME_PREFIX} Width${WSNe} (${WSVs}${WIDTH}${WSVe})"
+		ERR="${WSNs}${NAME_PREFIX} Width${WSNe} (${WSVs}${WIDTH}${WSVe})"
 		ERR+=" and ${WSNs}Height${WSNe} (${WSVs}${HEIGHT}${WSVe})"
-		ERR+=" must both be either 0 or non-zero.\n"
-		ERR+="The ${ITEM} will NOT be resized since it would look unnatural.\n"
-#x isn't the FIX obvious given the error message?
-#x		ERR+="FIX: Either set both numbers to 0 to not resize,"
-#x		ERR+=" or set both numbers to something greater than 0."
+		ERR+=" must both be either 0 or non-zero.${wBR}"
+		ERR+="The ${ITEM} will NOT be resized since it would look unnatural."
 
 	elif [[ ${WIDTH} -gt 0 && ${HEIGHT} -gt 0 &&
 			${SENSOR_WIDTH} -eq ${WIDTH} && ${SENSOR_HEIGHT} -eq ${HEIGHT} ]]; then
-		ERR+="Resizing a ${ITEM} to the same size as the sensor does nothing useful.\n"
-#x isn't the FIX obvious given the error message?
-#x		ERR+="FIX: Check ${WSNs}${NAME_PREFIX} Width${WSNe} (${WIDTH}) and"
-#x		ERR+=" ${WSNs}Height${WSNe} (${HEIGHT})"
-#x		ERR+=" and set them to something other than the sensor size"
-#x		ERR+=" (${WSVs}${SENSOR_WIDTH} x ${SENSOR_HEIGHT}${WSVe})."
+		ERR="Resizing a ${ITEM} to the same size as the sensor does nothing useful."
 	fi
 
 	[[ -z ${ERR} ]] && return 0

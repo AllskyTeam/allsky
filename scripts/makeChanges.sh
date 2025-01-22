@@ -81,11 +81,9 @@ if [[ ${ON_TTY} == "false" ]]; then
 	wDEBUG="DEBUG: "
 	wWARNING=""
 	wNC=""
-	BR="<br>"
 else
 	FROM_WEBUI=""
 	ERROR_PREFIX="${ME}: "
-	BR="\n"
 fi
 
 [[ ${HELP} == "true" ]] && usage_and_exit 0
@@ -181,6 +179,63 @@ function check_filename_type()
 	return 0
 }
 
+# Check width and height for daily or mini timelapse
+function checkTimelapse()
+{
+	local KEY="${1}"
+	local TYPE="${2}";		local type="${TYPE,,}"; type="${type/-/}"
+	local WIDTH="${3}"
+	local HEIGHT="${4}"
+
+	local MAX  O  MIN  THIS_OK  W  H
+
+	if [[ ${KEY} == "${type}timelapsewidth" ]]; then
+		MAX="${C_sensorWidth}"
+		O="${type}timelapseheight"
+	else
+		MAX="${C_sensorHeight}"
+		O="${type}timelapsewidth"
+	fi
+	MIN=2
+
+	THIS_OK="true"
+
+	if [[ -z ${TYPE} ]]; then
+		W="${S_timelapsewidth}"
+		H="${S_timelapseheight}"
+	else
+		W="${S_minitimelapsewidth}"
+		H="${S_minitimelapseheight}"
+	fi
+
+	# Check for only 1 value of 0.
+	if ! checkWidthHeight "${TYPE}Timelapse" "${TYPE}timelapse" \
+			"${W}" "${H}" "${C_sensorWidth}" "${C_sensorHeight}" 2>&1 ; then
+		THIS_OK="false"
+	fi
+	if ! checkPixelValue "${TYPE}Timelapse ${LABELS["${KEY}"]}" "sensor size" \
+			"${NEW_VALUES["${KEY}"]}" "${MIN}" "${MAX}" ; then
+		THIS_OK="false"
+	fi
+	if [[ -n ${KEYS["${O}"]} ]]; then
+		if ! checkPixelValue "${TYPE}Timelapse ${LABELS["${O}"]}" "sensor size" \
+				"${NEW_VALUES["${O}"]}" "${MIN}" "${MAX}" ; then
+			THIS_OK="false"
+		fi
+	fi
+
+	unset 'KEYS["${KEY}"]';  unset 'KEYS["${O}"]'
+
+	if [[ ${THIS_OK} == "false" ]]; then
+		# Restore the old values
+		restoreSettings "${KEY}" "${LABELS["${KEY}"]}" \
+			"${OLD_VALUES["${KEY}"]}" "${O}" "${TYPE}Timelapse "
+		return 1
+	fi
+
+	return 0
+}
+
 # Restore a pair of settings.
 function restoreSettings()
 {
@@ -191,12 +246,12 @@ function restoreSettings()
 	local PREFIX="${5}"
 
 	local MSG
-	MSG="Not changing ${WSNs}${PREFIX}${LABEL}${WSNe}"
+	MSG="Not changing ${PREFIX}${LABEL}"
 	local RESTORES=( "${KEY}" "${LABEL}" "${VALUE}" )
 	(( NUM_CHANGED-- ))
 
 	if [[ -n ${KEYS["${OTHER_KEY}"]} ]]; then
-		MSG+=" or ${WSNs}${PREFIX}${LABELS["${OTHER_KEY}"]}${WSNe}"
+		MSG+=" or ${PREFIX}${LABELS["${OTHER_KEY}"]}"
 		RESTORES+=( "${OTHER_KEY}" "${LABELS["${OTHER_KEY}"]}" "${OLD_VALUES["${OTHER_KEY}"]}" )
 		(( NUM_CHANGED-- ))
 	fi
@@ -393,11 +448,11 @@ do
 
 					# Invoker displays error message on EXIT_NO_CAMERA.
 					if [[ ${RET} -ne "${EXIT_NO_CAMERA}" ]]; then
-						E="${BR}ERROR: "
+						E="${wBR}ERROR: "
 						if [[ ${RET} -eq 139 ]]; then
 							E+="Segmentation fault in ${CMD}"
 						else
-							E+="${R}${BR}Unable to create cc file '${CC_FILE}'."
+							E+="${R}${wBR}Unable to create cc file '${CC_FILE}'."
 						fi
 						e_ "${E}"
 					fi
@@ -491,10 +546,10 @@ do
 
 			ERR=""
 			if [[ ! -f ${OPTIONS_FILE} ]]; then
-				ERR+="${BR}ERROR Options file ${OPTIONS_FILE} not created."
+				ERR+="${wBR}ERROR Options file ${OPTIONS_FILE} not created."
 			fi
 			if [[ ! -f ${SETTINGS_FILE} && ${OPTIONS_FILE_ONLY} == "false" ]]; then
-				ERR+="${BR}ERROR Settings file ${SETTINGS_FILE} not created."
+				ERR+="${wBR}ERROR Settings file ${SETTINGS_FILE} not created."
 			fi
 			if [[ -n ${ERR} ]]; then
 				e_ "${ERROR_PREFIX}${ERR}"
@@ -614,7 +669,7 @@ do
 				if [[ ! -d ${ALLSKY_DARKS} ]]; then
 					w_ "WARNING: No darks to subtract.  No '${ALLSKY_DARKS}' directory."
 					# Restore to old value
-					echo "${BR}Disabling ${WSNs}${LABEL}${WSNe}."
+					echo "${wBR}Disabling ${WSNs}${LABEL}${WSNe}."
 					update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "boolean"
 					(( NUM_CHANGED-- ))
 				else
@@ -623,7 +678,7 @@ do
 						W="WARNING: ${WSNs}${LABEL}${WSNe} is set but there are no darks"
 						W+=" in '${ALLSKY_DARKS}' with extension of '${EXTENSION}'."
 						w_ "${W}"
-						echo    "${BR}FIX: Either disable the setting or take dark frames."
+						echo    "${wBR}FIX: Either disable the setting or take dark frames."
 					fi
 				fi
 			fi
@@ -699,7 +754,7 @@ do
 				# Restore to old value
 				# Don't restore the "other" KEY since the two keys don't depend on each other.
 				e_ "${LAT_LON}"
-				echo "${BR}Setting ${WSNs}${LABEL}${WSNe} back to ${WSVs}${OLD_VALUE}${WSVe}."
+				echo "${wBR}Setting ${WSNs}${LABEL}${WSNe} back to ${WSVs}${OLD_VALUE}${WSVe}."
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "string"
 				(( NUM_CHANGED-- ))
 				OK="false"
@@ -764,61 +819,21 @@ do
 			;;
 
 		"timelapsewidth" | "timelapseheight")
-# TODO: DID_TIMELAPSE probably isn't needed anymore
-			DID_TIMELAPSE="${DID_TIMELAPSE:-false}"
-			if [[ ${NEW_VALUE} -ne 0 ]]; then
-				# Check the KEY by itself then both numbers together.
-				if [[ ${KEY} == "timelapsewidth" ]]; then
-					MAX="${C_sensorWidth}"
-					O="timelapseheight"
-				else
-					MAX="${C_sensorHeight}"
-					O="timelapsewidth"
-				fi
-				MIN=2
-
-				THIS_OK="true"
-				if ! checkPixelValue "Timelapse ${LABEL}" "sensor size" "${NEW_VALUE}" "${MIN}" "${MAX}" ; then
-					THIS_OK="false"
-				elif [[ ${DID_TIMELAPSE} == "false" ]]; then	# Only run checkWidthHeight once.
-					if ! checkWidthHeight "Timelapse" "timelapse" \
-							"${S_timelapsewidth}" "${S_timelapseheight}" \
-	 						"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 ; then
-						THIS_OK="false"
-					fi
-					DID_TIMELAPSE="true"
-				fi
-
-				if [[ ${THIS_OK} == "false" ]]; then
+			if [[ $((S_timelapsewidth + S_timelapseheight)) -gt 0 ]]; then
+				if ! checkTimelapse "${KEY}" "" \
+						${S_timelapsewidth} ${S_timelapseheight} ; then
 					OK="false"
-					# Restore the old values
-					restoreSettings "${KEY}" "${LABEL}" "${OLD_VALUE}" "${O}" "Timelapse "
 				fi
-
-				unset 'KEYS["${KEY}"]';  unset 'KEYS["${O}"]'
 			fi
 			;;
 
 		"minitimelapsewidth" | "minitimelapseheight")
-# TODO: check for pixel size like above.  Put the check in a function so only 1 code.
-# Pass: KEY, DID_TIMELAPSE, O, "Mini-" or "", S_width, S_height
-# Also run checkPixelValue
-# if KEY has "width" use C_sensorWidth, if "height" use C_sensorHeight.
-			if [[ ${KEY} == "minitimelapsewidth" ]]; then
-				O="minitimelapseheight"
-			else
-				O="minitimelapsewidth"
+			if [[ $((S_minitimelapsewidth + S_minitimelapseheight)) -gt 0 ]]; then
+				if ! checkTimelapse "${KEY}" "Mini-" \
+						${S_minitimelapsewidth} ${S_minitimelapseheight} ; then
+					OK="false"
+				fi
 			fi
-			if ! ERR="$( checkWidthHeight "Mini-Timelapse" "mini-timelapse" \
-				"${S_minitimelapsewidth}" "${S_minitimelapseheight}" \
-				"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )" ; then
-
-				echo -e "ERROR: ${ERR}"
-				# Restore the old values
-				restoreSettings "${KEY}" "${LABEL}" "${OLD_VALUE}" "${O}" ""
-			fi
-
-			unset 'KEYS["${KEY}"]';  unset 'KEYS["${O}"]'
 			;;
 
 		"imageresizeuploadwidth" | "imageresizeuploadheight")
@@ -858,19 +873,19 @@ do
 			;;
 
 		"imagecroptop" | "imagecropright" | "imagecropbottom" | "imagecropleft")
-# TODO FIX ?  Where are BOTTOM and LEFT defined?
 			# Only check if at least one value isn't 0.
-			if [[ $((S_imagecroptop + S_imagecropright + BOTTOM + LEFT)) -gt 0 ]]; then
+			if [[ $((S_imagecroptop + S_imagecropright + S_imagecropbottom + S_imagecropleft)) -gt 0 ]]; then
 				ERR="$( checkCropValues "${S_imagecroptop}" "${S_imagecropright}" \
 					"${S_imagecropbottom}" "${S_imagecropleft}" \
-					"${C_sensorWidth}" "${C_sensorHeight}" )"
+					"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )"
 				if [[ $? -ne 0 ]]; then
-					MSG="ERROR: ${ERR}${BR}"
+					echo -e "ERROR: ${ERR}"
 # TODO: restore them?  Why is this different than other image sizes?
-					MSG+="FIX: Check the ${WSNs}Image Crop Top/Right/Bottom/Left${WSNe} settings."
-					echo -e "${MSG}"
 				fi
 			fi
+
+			unset 'KEYS["imagecroptop"]';  unset 'KEYS["imagecropright"]'
+			unset 'KEYS["imagecropbottom"]';  unset 'KEYS["imagecropleft"]'
 			;;
 
 		"timelapsevcodec")
@@ -881,8 +896,8 @@ do
 
 				MSG="WARNING: "
 				MSG+="Unknown VCODEC: '${NEW_VALUE}'; resetting to '${OLD_VALUE}'."
-				MSG+="${BR}Execute: ffmpeg -encoders"
-				MSG+="${BR}for a list of VCODECs."
+				MSG+="${wBR}Execute: ffmpeg -encoders"
+				MSG+="${wBR}for a list of VCODECs."
 				w_ "${MSG}"
 
 				# Restore to old value
@@ -960,9 +975,9 @@ if [[ ${USE_REMOTE_WEBSITE} == "true" || ${USE_REMOTE_SERVER} == "true" ]]; then
 		if [[ ! -s ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
 			W="WARNING: "
 			W+="The Remote Website is now enabled but hasn't been installed yet."
-			W+="${BR}Please do so now."
+			W+="${wBR}Please do so now."
 			if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
-				W+="${BR}See <a allsky='true' external='true'"
+				W+="${wBR}See <a allsky='true' external='true'"
 				W+=" href='/documentation/installations/AllskyWebsite.html'>the documentation</a>"
 			fi
 			w_ "${W}"

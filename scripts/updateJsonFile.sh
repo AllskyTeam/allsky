@@ -128,22 +128,30 @@ S="${JQ_STRING[@]}"
 
 [[ ${DEBUG} == "true" ]] && d_ "Executing:   jq '${S}' ${FILE}"
 
+# Have to edit the file itself rather than create a temporary one and move it back,
+# because the file might be a hard link to another one.
+
 # Need to use "jq", not "settings".
-if OUTPUT="$( jq "${S}" "${FILE}" 2>&1 > /tmp/x && mv /tmp/x "${FILE}" )"; then
-	if [[ ${VERBOSITY} == "verbose" ]]; then
-		o_ "${OUTPUT_MESSAGE}"
-	elif [[ ${VERBOSITY} == "summary" ]]; then
-		if [[ -n ${WEBSITE_TYPE} ]]; then
-			o_ "${WEBSITE_TYPE} Allsky Website ${ALLSKY_WEBSITE_CONFIGURATION_NAME} UPDATED"
-		else
-			o_ "'${FILE}' UPDATED"
-		fi
-	fi		# nothing if "silent"
-	exit 0
-else
-	{
-		e_ "ERROR: unable to update data in '${FILE}':"
-		echo "   ${OUTPUT}"
-	} >&2
+if ! NEW="$( jq "${S}" "${FILE}" 2>&1 )" ; then
+	e_ "ERROR: unable to create new data for '${FILE}':" >&2
+	echo "   ${OUTPUT}" >&2
 	exit 1
 fi
+
+if ! RET="$( echo -e "${NEW}" > "${FILE}" 2>&1 )" ; then
+	e_ "ERROR: unable to overwrite '${FILE}':" >&2
+	echo "   ${RET}" >&2
+	exit 1
+fi
+
+if [[ ${VERBOSITY} == "verbose" ]]; then
+	o_ "${OUTPUT_MESSAGE}"
+elif [[ ${VERBOSITY} == "summary" ]]; then
+	if [[ -n ${WEBSITE_TYPE} ]]; then
+		o_ "${WEBSITE_TYPE} Allsky Website ${ALLSKY_WEBSITE_CONFIGURATION_NAME} UPDATED"
+	else
+		o_ "'${FILE}' UPDATED"
+	fi
+fi		# nothing if "silent"
+
+exit 0

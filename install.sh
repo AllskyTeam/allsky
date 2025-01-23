@@ -2326,6 +2326,8 @@ restore_prior_settings_file()
 		fi
 	fi
 
+	check_for_required_settings		# Make sure the required settings are there.
+
 	STATUS_VARIABLES+=( "RESTORED_PRIOR_SETTINGS_FILE='${RESTORED_PRIOR_SETTINGS_FILE}'\n" )
 }
 
@@ -3556,6 +3558,32 @@ install_installer_dependencies()
 		exit_with_image 1 "${STATUS_ERROR}" "gawk,jq,dialog install failed."
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
+}
+
+
+# Make sure the required settings have a value.
+# If latitude or longitude are missing, prompt for them.
+check_for_required_settings()
+{
+	local lat  long angle  MSG
+
+	lat="$( settings ".latitude" )"
+	long="$( settings ".latitude" )"
+	if [[ -z ${lat} || -z ${long} ]]; then
+		MSG="Latitude is ${lat:-missing}, Longitude is ${long:-missing}; prompting."
+		display_msg --logonly info "${MSG}"
+
+		if ! get_lat_long ; then
+			display_msg --log info "Latitude and/or Longitude not entered"
+			CONFIGURATION_NEEDED="${STATUS_NO_LAT_LONG}"	# global
+		fi
+	fi
+
+	angle="$( settings ".angle" )"
+	if [[ -z ${angle} ]]; then
+		MSG="Angle is not set; update in WebUI after installation completes"
+		display_msg --log warning "${MSG}"
+	fi
 }
 
 ############################################## Main part of program

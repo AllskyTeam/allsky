@@ -294,7 +294,7 @@ function pre_install_checks()
 		DT="FOUND"
 		MSG="All WebUI settings exist."
 	else
-		MSG="ERROR: Remote Website setting(s) missing:\n${SPACES}${SPACES}${MSG}"
+		MSG="ERROR: Missing setting(s) in WebUI:\n${SPACES}${SPACES}${MSG}"
 		DIALOG_TEXT+="${DIALOG_RED}"
 		DIALOG_TEXT+="${MSG}"
 		DIALOG_TEXT+="${DIALOG_NORMAL}"
@@ -325,7 +325,8 @@ function pre_install_checks()
 	display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 	local SPACES="${INDENT}${INDENT} "
 	check_if_website_is_valid		# Sets global variables so can't be in subshell
-	if [[ $? -eq 0 ]]; then
+	local VALID_RET=$?
+	if [[ ${VALID_RET} -eq 0 ]]; then
 		REMOTE_WEBSITE_IS_VALID="true"
 	else
 		REMOTE_WEBSITE_IS_VALID="false"
@@ -364,7 +365,15 @@ function pre_install_checks()
 		DIALOG_TEXT+="NOT WORKING."
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
-		if [[ ${HAVE_LOCAL_REMOTE_CONFIG} == "true" ]]; then
+		if [[ ${VALID_RET} -eq ${EXIT_ERROR_STOP} ]]; then
+			MSG="ERROR: Can't connect to remote Website @ ${REMOTE_WEBSITE_URL}"
+			DIALOG_TEXT+="${DIALOG_RED}"
+			DIALOG_TEXT+="\n\n${MSG}\nCannot continue."
+			DIALOG_TEXT+="${DIALOG_NORMAL}"
+			display_box "--msgbox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}" "--ok-label Exit"
+			display_aborted "${MSG}"
+
+		elif [[ ${HAVE_LOCAL_REMOTE_CONFIG} == "true" ]]; then
 			# The remote's config file is on the Pi but the remote Website doesn't have a
 			# config file and/or the Website source files.
 			# This could happen if the user HAD a working remote Website but moved all the files to,
@@ -538,7 +547,8 @@ function check_connectivity()
 
 	# Some user reported this hanging, so add a timeout.
 	if ERR="$( timeout --signal=KILL "${SECS}" \
-			"${ALLSKY_SCRIPTS}/testUpload.sh" --website --silent --file "${TEST_FILE}" 2>&1 )" ; then
+			"${ALLSKY_SCRIPTS}/testUpload.sh" --frominstall --website --silent \
+			--file "${TEST_FILE}" 2>&1 )" ; then
 		echo "PASSED"
 
 		# Assume if we didn't time out on the test upload we won't time out here.
@@ -650,19 +660,28 @@ function check_if_files_exist()
 	shift 2
 	local RET_CODE=1
 
-	for FILE in "$@"; do
-		url="${URL}/${FILE}"
-		HTTP_STATUS="$( curl -o /dev/null --head --silent --location --write-out "%{http_code}" "$url" )"
+	local url   HTTP_STATUS   PRE_MSG   RET_CODE
 
-		local PRE_MSG="File '${FILE}'"
-		if [[ ${HTTP_STATUS} == "200" ]] ; then
-			show_debug_message "${PRE_MSG} EXISTS on the remote server"
-			RET_CODE=0
+	for FILE in "$@"; do
+		if [[ ${FILE} == "<website>" ]]; then
+			PRE_MSG="Website connectivity"
+			url="${URL}"
 		else
+			url="${URL}/${FILE}"
+			PRE_MSG="File '${FILE}'"
+		fi
+		HTTP_STATUS="$( curl -o /dev/null --head --silent --location --write-out "%{http_code}" "$url" )"
+		RET=$?
+
+		PRE_MSG="File '${FILE}'"
+		if [[ ${RET} -ne 0 || ${HTTP_STATUS} != "200" ]] ; then
 			show_debug_message "${PRE_MSG} DOES NOT EXIST on the remote server (HTTP_STATUS=${HTTP_STATUS})"
 			if [[ ${AND_OR} == "and" ]]; then
 				return 1
 			fi
+		else
+			show_debug_message "${PRE_MSG} EXISTS on the remote server"
+			RET_CODE=0
 		fi
 	done
 
@@ -725,6 +744,12 @@ function check_if_website_is_valid()
 {
 	local FOUND="false"
 	local WEBSITE_FILES=("index.php" "functions.php")
+
+	display_msg --logonly info "Checking connectivity to ${REMOTE_WEBSITE_URL}"
+	if ! check_if_files_exist "${REMOTE_WEBSITE_URL}" "and" "<website>" ; then
+		display_msg --logonly info "   Unable to connect to Website @ '${REMOTE_WEBSITE_URL}'"
+		return "${EXIT_ERROR_STOP}"
+	fi
 
 	display_msg --logonly info "Looking for old and new config files at ${REMOTE_WEBSITE_URL}"
 	if check_if_files_exist "${REMOTE_WEBSITE_URL}" "or" "${OLD_CONFIG_NAME}" ; then

@@ -20,7 +20,7 @@ usage_and_exit()
 	[[ ${RET} -eq 2 ]] && echo -e "\nERROR: You must specify --website and/or --server\n"
 
 	echo    "Usage: ${ME} [--help] [--debug] [--silent] [--file f] [--frominstall]] \\"
-	echo    "\t--website  and/or  --server"
+	echo -e "\t--website  and/or  --server"
 	echo -e "\nWhere:"
 	echo -e "\t'--silent' only outputs errors."
 	echo -e "\t'--file f' optionally specifies the test file to upload."
@@ -83,7 +83,7 @@ if [[ ${FROM_INSTALL} == "true" ]]; then
 	e_() { echo -e "${1}" ; }
 	d_() { echo -e "DEBUG: ${1}" ; }
 else
-	function error_type() { echo -n "${BOLD}${1}${NC}\n"; }
+	function error_type() { echo -e "${BOLD}${1}${NC}"; }
 fi
 
 # Display a "FIX" message.

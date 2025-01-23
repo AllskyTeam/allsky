@@ -289,10 +289,10 @@ do
 
 	shift 4
 
-	# Don't skip if it's cameratype since that indicates we need to refresh.
+	# Don't skip if it's cameratype since that indicates we need to refresh the camera info.
 	if [[ ${KEY} != "cameratype" && ${OLD_VALUE} == "${NEW_VALUE}" ]]; then
 		if debug ; then
-			d_ "Skipping - old and new are equal."
+			d_ "Skipping ${LABEL} - old and new are equal."
 		fi
 		continue
 	fi
@@ -366,7 +366,7 @@ do
 
 			# This requires Allsky to be stopped so we don't
 			# try to call the capture program while it's already running.
-			stop_Allsky
+			[[ ${FROM_INSTALL} == "false" ]] && stop_Allsky
 
 			if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
 
@@ -509,13 +509,11 @@ do
 			fi
 
 			if debug ; then
-				# shellcheck disable=SC2086
-				d_ "Calling:" \
-					"${ALLSKY_SCRIPTS}/createAllskyOptions.php" \
-					${FORCE} ${DEBUG_ARG} \
-					"\n\t--cc-file ${CC_FILE}" \
-					"\n\t--options-file ${OPTIONS_FILE}" \
-					"\n\t--settings-file ${SETTINGS_FILE}"
+				MSG="Calling: ${ALLSKY_SCRIPTS}/createAllskyOptions.php ${FORCE} ${DEBUG_ARG}"
+				MSG+="\n\t--cc-file ${CC_FILE}"
+				MSG+="\n\t--options-file ${OPTIONS_FILE}"
+				MSG+="\n\t--settings-file ${SETTINGS_FILE}"
+				d_ "${MSG}"
 			fi
 			# shellcheck disable=SC2086
 			R="$( "${ALLSKY_SCRIPTS}/createAllskyOptions.php" \

@@ -73,6 +73,7 @@ function usage_and_exit()
 	echo -e "		new_rpi_camera_info [--camera NUM]"
 	echo -e "		show_start_times [--zero] [angle [latitude [longitude]]]"
 	echo -e "		compare_paths"
+	echo -e "		get_brightness_info"
 	echo -e "		encoders"
 	echo -e "		pix_fmts"
 	echo -e "	If no 'command' is specified you are prompted for one to execute."
@@ -204,6 +205,67 @@ function compare_paths()
 
 	# shellcheck disable=SC2086
 	comparePaths.sh ${ARGS}
+}
+
+#####
+# Display brightness information from the startrails command.
+get_brightness_info()
+{
+	if [[ "$( settings ".startrailsgenerate" )" != "true" ]]; then
+		w_ "\nWARNING: The startrails 'Generate' setting is not enabled."
+	fi
+
+	# Input format:
+	# 2025-01-17T06:20:45.240112-06:00 \
+	#	Minimum: 0.0840083   maximum: 0.145526   mean: 0.103463   median: 0.104839
+	#	$2       $3          $4       $5         $6    $7         $8      $9
+
+	grep --no-filename "startrails: Minimum" "${ALLSKY_LOG}"* 2> /dev/null |
+		sed "s/$(uname -n).*startrails: //" |
+		nawk 'BEGIN {
+				print; t_min=0; t_max=0; t_mean=0; t_median=0; t_num=0
+				numFmt = "%-20s   %.3f      %.3f      %.3f      %.3f\n";
+			}
+			{
+				if (++num == 1) {
+					header = sprintf("%-20s  %8s   %8s   %5s       %-s\n",
+						"Date", "Minimum", "Maximum", "Mean", "Median");
+					printf(header);
+					dashes = "-";
+					l = length(header) - 2;
+					for (i=1; i<=l; i++) {
+						dashes = dashes "-";
+					}
+					printf("%s\n", dashes);
+				}
+
+				date = substr($1, 0, 10) "  "  substr($1, 12, 8);
+				min = $3;		t_min+= min;
+				max = $5;		t_max+= max;
+				mean = $7;		t_mean+= mean;
+				median = $9;	t_median+= median;
+				printf(numFmt, date, min, max, mean, median);
+			}
+			END {
+				if (num == 0) {
+					exit 1;
+				} else if (num > 1) {
+					printf("%s\n", dashes);
+					printf(numFmt, "Total average", t_min/num, t_max/num, t_mean/num, t_median/num);
+				}
+				exit 0;
+			}'
+	if [[ $? -ne 0 ]]; then
+		echo -n "No information found.  "
+		local STATUS="$( get_allsky_status )"
+		if [[ -z ${STATUS} ]]; then
+			echo "Is Allsky running?"
+		else
+			local TIMESTAMP="$( get_allsky_status_timestamp )"
+			echo "Allsky is ${STATUS} as of ${TIMESTAMP:-unknown time}."
+		fi
+	fi
+	echo
 }
 
 #####
@@ -411,6 +473,7 @@ if [[ -z ${CMD} ]]; then
 	CMDS+=("new_rpi_camera_info"		"$( L "Collect information for new RPi camera" )"); ((N++))
 	CMDS+=("show_start_times"			"$( L "Show daytime and nighttime start times" )"); ((N++))
 	CMDS+=("compare_paths"				"$( L "Compare upload and Website paths" )"); ((N++))
+	CMDS+=("get_brightness_info"		"$( L "Get information on image brightness" )"); ((N++))
 	CMDS+=("encoders"					"$( L "Show list of timelapse encoders available" )"); ((N++))
 	CMDS+=("pix_fmts"					"$( L "Show list of timelapse pixel formats available" )"); ((N++))
 

@@ -973,8 +973,8 @@ function prompt_for_lat_long()
 }
 
 ####
-# Try to 't automatically determine the latitude and longitude.
-# If we can't prompt for them.
+# Try to automatically determine the latitude and longitude.
+# If we can't, prompt for them.
 function get_lat_long()
 {
 	# Global: SETTINGS_FILE

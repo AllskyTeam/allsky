@@ -15,7 +15,7 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP
 chmod 755 "${HOME}" "${ALLSKY_HOME}"					|| exit "${EXIT_ERROR_STOP}"
 cd "${ALLSKY_HOME}"  									|| exit "${EXIT_ERROR_STOP}"
 
-# The POST_INSTALLATION_ACTIONS contains information the user needs to act upon after the reboot.
+# The POST_INSTALLATION_ACTIONS contains information the user needs to act upon after installation.
 rm -f "${POST_INSTALLATION_ACTIONS}"		# Shouldn't be there, but just in case.
 rm -f "${ALLSKY_MESSAGES}"					# Start out with no messages.
 
@@ -1086,7 +1086,7 @@ check_old_WebUI_location()
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 15 "${WT_WIDTH}"   3>&1 1>&2 2>&3
 			display_msg --log notice "${MSG}"
 
-			echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+			add_to_post_actions "${MSG}"
 		fi
 		return
 	fi
@@ -1097,7 +1097,7 @@ check_old_WebUI_location()
 	MSG+="\n\n they will no longer be accessible via the web server."
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 15 "${WT_WIDTH}"   3>&1 1>&2 2>&3
 	display_msg --log notice "${MSG}"
-	echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+	add_to_post_actions "${MSG}"
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }
@@ -2272,7 +2272,7 @@ restore_prior_settings_file()
 					MSG+="\n\nCheck your settings in the WebUI's 'Allsky Settings' page."
 					whiptail --title "${TITLE}" --msgbox "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 					display_msg info "\n${MSG}\n"
-					echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+					add_to_post_actions "${MSG}"
 					display_msg --logonly info "Settings from ${PRIOR_ALLSKY_VERSION} copied over."
 					;;
 
@@ -2299,7 +2299,7 @@ restore_prior_settings_file()
 					MSG+=" to re-enter everything via the WebUI's 'Allsky Settings' page."
 					whiptail --title "${TITLE}" --msgbox "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 					display_msg info "\n${MSG}\n"
-					echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+					add_to_post_actions "${MSG}"
 
 					MSG="Only a few settings from very old ${PRIOR_ALLSKY_VERSION} copied over."
 					display_msg --logonly info "${MSG}"
@@ -2332,7 +2332,7 @@ restore_prior_files()
 		MSG+="When installation is done you may remove it by executing:\n"
 		MSG+="    sudo rm -fr '${OLD_RASPAP_DIR}'\n"
 		display_msg --log info "${MSG}"
-		echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+		add_to_post_actions "${MSG}"
 	fi
 
 	if [[ ${USE_PRIOR_ALLSKY} == "false" ]]; then
@@ -2366,7 +2366,7 @@ restore_prior_files()
 		MSG+="\nthe 'Night to Day Transition Flow' of the Module Manager."
 		MSG+="\nSee the 'Explanations --> Module' documentation for more details."
 		display_msg --log warning "\n${MSG}\n"
-		echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+		add_to_post_actions "${MSG}"
 	fi
 
 	ITEM="${SPACE}'images' directory"
@@ -2600,10 +2600,10 @@ restore_prior_files()
 	whiptail --title "${TITLE}" --msgbox "${MSG}${MSGb}" 20 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 
 	display_msg --log info "\n${MSG}${MSGb}\n"
-	echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+	add_to_post_actions "${MSG}"
 	if [[ -n ${MSG2} ]]; then
 		display_msg --log info "\n${MSG2}\n"
-		echo -e "\n${MSG2}" >> "${POST_INSTALLATION_ACTIONS}"
+		add_to_post_actions "${MSG}"
 	fi
 
 	return 0
@@ -2718,14 +2718,12 @@ restore_prior_website_files()
 		MSG+="\nto '${ALLSKY_WEBSITE_CONFIGURATION_NAME}' in the"
 		MSG+=" WebUI's 'Editor' page."
 		display_msg --log info "${MSG}"
-		{
-			echo -e "\n\n========== ACTION NEEDED:"
-			echo -e "${MSG}"
-			echo "When done, check in '${PRIOR_WEBSITE_DIR}' for any files"
-			echo "you may have added; if there are any, store them in"
-			echo -e "\n   ${ALLSKY_WEBSITE_MYFILES_DIR}"
-			echo "then remove the old Website:  sudo rm -fr ${PRIOR_WEBSITE_DIR}"
-		} >> "${POST_INSTALLATION_ACTIONS}"
+
+		MSG+="When done, check in '${PRIOR_WEBSITE_DIR}' for any files"
+		MSG+="you may have added; if there are any, store them in"
+		MSG+="\n   ${ALLSKY_WEBSITE_MYFILES_DIR}"
+		MSG+="then remove the old Website:  sudo rm -fr ${PRIOR_WEBSITE_DIR}"
+		add_to_post_actions "${MSG}"
 
 		# Create a default file.
 		prepare_local_website "" "postData"
@@ -2924,11 +2922,10 @@ do_restore()
 	MSG="\nRestoration is done and"
 	MSG2=" Allsky needs its settings checked."
 	display_msg --log progress "${MSG}" "${MSG2}"
-	echo -e "\n\n========== ACTION NEEDED:\n${MSG}${MSG2}" >> "${POST_INSTALLATION_ACTIONS}"
 
-	MSG="Restoration is done.  Go to the 'Allsky Settings' page of the WebUI and"
-	MSG+="\nmake any necessary changes, then press the 'Save changes' button."
-	echo -e "${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+	MSG2+="Go to the 'Allsky Settings' page of the WebUI and"
+	MSG2+="\nmake any necessary changes, then press the 'Save changes' button."
+	add_to_post_actions "${MSG}${MSG2}"
 
 	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 	display_image "ConfigurationNeeded"
@@ -3422,7 +3419,7 @@ update_modules()
 
 		display_msg info "Don't forget to re-install your Allsky extra modules."
 		display_msg --logonly info "Reminded user to re-install the extra modules."
-		echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+		add_to_post_actions "${MSG}"
 	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
@@ -3523,6 +3520,17 @@ do_allsky_status()
 	display_msg --logonly info "Setting Allsky status to '${!STATUS}'."
 	set_allsky_status "${!STATUS}"
 }
+
+
+
+####
+# Set the current Allsky status and log a message.
+add_to_post_actions()
+{
+	local MSG="${1}"
+	echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+}
+
 
 install_installer_dependencies()
 {

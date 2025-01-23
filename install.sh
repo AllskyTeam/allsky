@@ -2539,10 +2539,11 @@ restore_prior_files()
 		if [[ ${PRIOR_V} == "${ALLSKY_VERSION}" ]]; then
 			display_msg --log progress "Remote Website already at latest Allsky version ${PRIOR_V}."
 		else
-			MSG="Your remote Website needs to be updated to this newest version."
+			MSG="Your remote Website needs to be updated to version ${ALLSKY_VERSION}."
 			MSG+="\nIt is at version ${PRIOR_V}"
 			MSG+="\n\nRun:  cd ~/allsky;  ./remoteWebsiteInstall.sh"
 			display_msg --log notice "${MSG}"
+			add_to_post_actions "${MSG}"
 		fi
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"

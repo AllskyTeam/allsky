@@ -1340,6 +1340,8 @@ does_prior_Allsky_Website_exist()
 {
 	local PRIOR_STYLE="${1}"
 
+# TODO: The Website moved to ~/allsky/html/allsky in v2023.05.01
+# In next major release if that directory doesn't exist, no prior Website exists.
 	if [[ ${PRIOR_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
 		PRIOR_WEBSITE_DIR="${PRIOR_ALLSKY_DIR}${ALLSKY_WEBSITE/${ALLSKY_HOME}/}"
 		if [[ -d ${PRIOR_WEBSITE_DIR} ]]; then
@@ -1392,7 +1394,7 @@ does_prior_Allsky_exist()
 	# Make sure it's there and is valid.
 
 	MSG="Prior Allsky directory found at '${PRIOR_ALLSKY_DIR}'"
-	# If a prior config directory doesn't exist then there's no prior Allsky.
+	# If a prior config directory doesn't exist then there's no prior Allsky,
 	if [[ ! -d ${PRIOR_CONFIG_DIR} ]]; then
 		if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
 			MSG+=" but it doesn't appear to have been installed; ignoring it."
@@ -1405,6 +1407,7 @@ does_prior_Allsky_exist()
 		return 1
 	fi
 
+# TODO: Remove this check when only looking back 2 major releases.
 	# All versions back to v0.6 (never checked prior ones) have a "scripts" directory.
 	if [[ ! -d "${PRIOR_ALLSKY_DIR}/scripts" ]]; then
 		MSG+=" but it doesn't appear to be valid or it too old; ignoring it."
@@ -1430,7 +1433,7 @@ does_prior_Allsky_exist()
 		# and that file will have the camera type and model.
 		PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}"
 		if [[ -f ${PRIOR_SETTINGS_FILE} ]]; then
-			# Look for newer, lowercase setting names
+			# Look for newer, lowercase setting names starting in v2024.12.06.
 			PRIOR_CAMERA_TYPE="$( settings ".cameratype" "${PRIOR_SETTINGS_FILE}" )"
 			if [[ -n ${PRIOR_CAMERA_TYPE} ]]; then
 				PRIOR_CAMERA_MODEL="$( settings ".cameramodel" "${PRIOR_SETTINGS_FILE}" )"
@@ -1447,6 +1450,7 @@ does_prior_Allsky_exist()
 			display_msg --log warning "${MSG}"
 		fi
 
+# TODO: Remove "else" block check when only looking back 2 major releases.
 	else		# pre-${FIRST_VERSION_VERSION}
 		# V0.6, v0.7, and v0.8:
 		#	"allsky" directory contained capture.cpp, config.sh.
@@ -1521,7 +1525,6 @@ does_prior_Allsky_exist()
 ####
 # If there's a prior version of the software,
 # ask the user if they want to move stuff from there to the new directory.
-# Look for a directory inside the old one to make sure it's really an old allsky.
 
 WILL_USE_PRIOR="true"
 
@@ -1714,8 +1717,8 @@ convert_settings()			# prior_file, new_file
 	mkdir -p "${DIR}"
 	local TEMP_PRIOR="${DIR}/old-${PRIOR_CAMERA_TYPE}_${PRIOR_CAMERA_MODEL}.json"
 
-	# Older version had uppercase letters in setting names and "1" and "0" for booleans
-	# and quotes around numbers. Change that.
+	# Pre-v2024.12.06 version had uppercase letters in setting names and
+	# "1" and "0" for booleans and quotes around numbers. Change that.
 	# Don't modify the prior file, so make the changes to a temporary file.
 	# --settings-only  says only output settings that are in the settings file.
 	# The OPTIONS_FILE doesn't exist yet so use REPO_OPTIONS_FILE.
@@ -1783,7 +1786,7 @@ convert_settings()			# prior_file, new_file
 					fi
 					;;
 
-				# ===== Deleted after ${COMBINED_BASE_VERSION}.
+				# ===== Deleted in ${COMBINED_BASE_VERSION}_01.
 				"remotewebsitevideodestinationname" | \
 				"remotewebsitekeogramdestinationname" | \
 				"remotewebsitestartrailsdestinationname")
@@ -2192,9 +2195,14 @@ restore_prior_settings_file()
 
 		# shellcheck disable=SC2086
 		MSG="$( check_settings_link ${CHECK_UPPER} "${PRIOR_SETTINGS_FILE}" )"
-		if [[ $? -eq "${EXIT_ERROR_STOP}" ]]; then
-			display_msg --log error "${MSG}"
-			FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
+		RET=$?
+		if [[ ${RET} -ne 0 ]]; then
+			if [[ ${RET} -eq "${EXIT_ERROR_STOP}" ]]; then
+				display_msg --log error "${MSG}"
+				FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
+			else
+				display_msg --log warning "${MSG}"
+			fi
 		fi
 
 		# Camera-specific settings file names are:
@@ -2360,6 +2368,7 @@ restore_prior_files()
 
 	local E  D  R  ITEM  X
 
+# TODO: delete in major release after v2024.12.06
 	if [[ -f ${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh ]]; then
 		MSG="The ${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh file is no longer supported."
 		MSG+="\nPlease move your code in that file to the 'Script' module in"

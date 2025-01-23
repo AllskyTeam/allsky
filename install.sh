@@ -574,6 +574,8 @@ do_save_camera_capabilities()
 		return 1
 	fi
 
+	check_for_required_settings		# Make sure the required settings are there.
+
 	return 0
 }
 
@@ -1246,7 +1248,7 @@ MSG="$( /bin/ls -l "${ALLSKY_CONFIG}/settings"*.json 2>/dev/null | sed 's/^/    
 display_msg --logonly info "Settings files now:\n${MSG}"
 
 		else
-			MSG+=" CONTAINED .locale = '${L}'."
+			MSG+=" CONTAINED .locale:  ${L}"
 			display_msg --logonly info "${MSG}"
 		fi
 		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
@@ -2326,8 +2328,6 @@ restore_prior_settings_file()
 		fi
 	fi
 
-	check_for_required_settings		# Make sure the required settings are there.
-
 	STATUS_VARIABLES+=( "RESTORED_PRIOR_SETTINGS_FILE='${RESTORED_PRIOR_SETTINGS_FILE}'\n" )
 }
 
@@ -2548,7 +2548,8 @@ restore_prior_files()
 		PRIOR_V="$( settings ".${WEBSITE_ALLSKY_VERSION}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
 # TODO: if not using remote Website, change messages below.
 		if [[ ${PRIOR_V} == "${ALLSKY_VERSION}" ]]; then
-			display_msg --log progress "Remote Website already at latest Allsky version ${PRIOR_V}."
+			MSG="${SPACE}${SPACE}Remote Website already at latest Allsky version ${PRIOR_V}."
+			display_msg --log progress "${MSG}"
 		else
 			MSG="Your remote Website needs to be updated to version ${ALLSKY_VERSION}."
 			MSG+="\nIt is at version ${PRIOR_V}"
@@ -3567,7 +3568,7 @@ check_for_required_settings()
 {
 	local lat  long angle  MSG
 
-	lat="$( settings ".latitude" )"
+	lat="$( settings ".latitude" )"			|| return 1
 	long="$( settings ".latitude" )"
 	if [[ -z ${lat} || -z ${long} ]]; then
 		MSG="Latitude is ${lat:-missing}, Longitude is ${long:-missing}; prompting."

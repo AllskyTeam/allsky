@@ -543,7 +543,8 @@ do_save_camera_capabilities()
 	RET=$?
 	if [[ ${RET} -ne 0 ]]; then
 		if [[ ${RET} -eq ${EXIT_NO_CAMERA} ]]; then
-			MSG="No camera was found; one must be connected and working for the installation to succeed.\n"
+			MSG="No camera was found;"
+			MSG+=" one must be connected and working for the installation to succeed.\n"
 			MSG+="After connecting your camera, re-run the installation."
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 
@@ -568,13 +569,26 @@ do_save_camera_capabilities()
 	#shellcheck disable=SC2012
 	MSG="$( /bin/ls -l "${ALLSKY_CONFIG}/settings"*.json 2>/dev/null | sed 's/^/    /' )"
 	display_msg --logonly info "Settings files:\n${MSG}"
+
+	# Make sure the settings file is linked to the camera-specific one.
+	MSG="$( check_settings_link "${SETTINGS_FILE}" )"
+	RET=$?
+	if [[ ${RET} -ne 0 ]]; then
+		if [[ ${RET} -eq "${EXIT_ERROR_STOP}" ]]; then
+			display_msg --log error "${MSG}"
+			return 1
+		else
+			display_msg --logonly info "${MSG}"
+		fi
+	fi
+
+	check_for_required_settings		# Make sure the required settings are there.
+
 	CAMERA_MODEL="$( settings ".cameramodel" "${SETTINGS_FILE}" )"
 	if [[ -z ${CAMERA_MODEL} ]]; then
 		display_msg --log error "cameramodel not found in settings file."
 		return 1
 	fi
-
-	check_for_required_settings		# Make sure the required settings are there.
 
 	return 0
 }

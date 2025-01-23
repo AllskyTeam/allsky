@@ -19,10 +19,12 @@ usage_and_exit()
 	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
 	[[ ${RET} -eq 2 ]] && echo -e "\nERROR: You must specify --website and/or --server\n"
 
-	echo    "Usage: ${ME} [--help] [--debug] [--silent] [--file f] --website  and/or  --server"
+	echo    "Usage: ${ME} [--help] [--debug] [--silent] [--file f] [--frominstall]] \\"
+	echo    "\t--website  and/or  --server"
 	echo -e "\nWhere:"
 	echo -e "\t'--silent' only outputs errors."
 	echo -e "\t'--file f' optionally specifies the test file to upload."
+	echo -e "\t'--frominstall' outputs text without colors or other escape sequences."
 	[[ ${RET} -ne 0 ]] && echo -e "${NC}"
 	exit "${RET}"
 }
@@ -33,6 +35,7 @@ SILENT="false"
 TEST_FILE="/tmp/${ME}.txt"
 DO_WEBSITE="false"
 DO_SERVER="false"
+FROM_INSTALL="false"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in
@@ -44,6 +47,9 @@ while [[ $# -gt 0 ]]; do
 			;;
 		--silent)
 			SILENT="true"		# only output errors
+			;;
+		--frominstall)
+			FROM_INSTALL="true"
 			;;
 		--file)
 			TEST_FILE="${2}"
@@ -70,14 +76,15 @@ done
 [[ ${DO_WEBSITE} == "false" && ${DO_SERVER} == "false" ]] && usage_and_exit 2
 
 
-function error_type()
-{
-	local TYPE="$1"
-	echo -n "${BOLD}"
-	echo -ne "${TYPE}"
-	echo -e "${NC}"
-	echo
-}
+if [[ ${FROM_INSTALL} == "true" ]]; then
+	function error_type() { return 0; }
+	o_() { echo -e "${1}" ; }
+	w_() { echo -e "${1}" ; }
+	e_() { echo -e "${1}" ; }
+	d_() { echo -e "DEBUG: ${1}" ; }
+else
+	function error_type() { echo -n "${BOLD}${1}${NC}\n"; }
+fi
 
 # Display a "FIX" message.
 function fix()
@@ -213,7 +220,7 @@ parse_output()
 
 	# Output already displayed in DEBUG mode.
 	if [[ ${DEBUG} == "false" ]]; then
-		echo -e "\n${YELLOW}Raw output is in '${FILE}'.${NC}\n\n" >&2
+		d_ "\nRaw output is in '${FILE}'.\n\n" >&2
 	fi
 }
 
@@ -244,7 +251,7 @@ do_test()
 
 	PROTOCOL="$( settings ".${PROTOCOL}" )"
 	if [[ $? -ne 0 || -z ${PROTOCOL} ]]; then
-		echo -e "${RED}${ME}: could not find protocol for ${HUMAN_TYPE}; unable to test.${NC}" >&2
+		e_ "${ME}: could not find protocol for ${HUMAN_TYPE}; unable to test." >&2
 		return 1
 	fi
 
@@ -293,9 +300,7 @@ do_test()
 			echo     "Please remove '${D}${bTEST_FILE}' on your server." >> "${MSG_FILE}"
 		fi
 	else
-		echo -ne "${RED}"
-		echo -n  "Test upload to ${HUMAN_TYPE} FAILED."
-		echo -e  "${NC}\n"
+		e_ "Test upload to ${HUMAN_TYPE} FAILED."
 		if [[ -s ${OUT} ]]; then
 			parse_output "${OUT}" "${TYPE}"
 		elif [[ -s ${OUTPUT_FILE} ]]; then

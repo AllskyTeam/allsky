@@ -19,12 +19,12 @@ usage_and_exit()
 	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
 	[[ ${RET} -eq 2 ]] && echo -e "\nERROR: You must specify --website and/or --server\n"
 
-	echo    "Usage: ${ME} [--help] [--debug] [--silent] [--file f] [--frominstall]] \\"
+	echo    "Usage: ${ME} [--help] [--debug] [--silent] [--file f] [--fromInstall]] \\"
 	echo -e "\t--website  and/or  --server"
 	echo -e "\nWhere:"
 	echo -e "\t'--silent' only outputs errors."
 	echo -e "\t'--file f' optionally specifies the test file to upload."
-	echo -e "\t'--frominstall' outputs text without colors or other escape sequences."
+	echo -e "\t'--fromInstall' outputs text without colors or other escape sequences."
 	[[ ${RET} -ne 0 ]] && echo -e "${NC}"
 	exit "${RET}"
 }
@@ -83,7 +83,7 @@ if [[ ${FROM_INSTALL} == "true" ]]; then
 	e_() { echo -e "${1}" ; }
 	d_() { echo -e "DEBUG: ${1}" ; }
 else
-	function error_type() { echo -e "${BOLD}${1}${NC}"; }
+	function error_type() { echo -e "${BOLD:-${wBOLD}}${1}${NC:-${wNBOLD}}"; }
 fi
 
 # Display a "FIX" message.
@@ -125,7 +125,7 @@ parse_output()
 	STRING="host name resolve timeout"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
 		HOST="$( settings ".${HOST}" "${ENV_FILE}" )"
-		error_type "* Host name '${HOST}' not found."
+		error_type "* ${WSNs}Server Name${WSNe} ${WSVs}${HOST}${WSVe} not found."
 		echo "  FIX: Check the spelling of the server."
 	   	echo "       Make sure your network is up."
 	   	echo "       Make sure the network the server is on is up."
@@ -134,13 +134,13 @@ parse_output()
 	STRING="User cannot log in|Login failed|Login incorrect"
 	if grep -E --ignore-case --silent "${STRING}" "${FILE}" ; then
 		error_type "* Unable to log in."
-		echo "  FIX: Make sure the username and password are correct."
+		echo "  FIX: Make sure the ${WSNs}User Name${WSNe} and ${WSNs}Password${WSNe} are correct."
 	fi >&2
 
 	STRING="max-retries exceeded"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
 		error_type "* Unable to log in for unknown reason."
-		echo "  FIX: Make sure the port is correct and your network is working."
+		echo "  FIX: Make sure the ${WSNs}Port${WSNe} is correct and your network is working."
 		PROTOCOL="$( settings ".${PROTOCOL}" )"
 		if [[ ${PROTOCOL} == "sftp" ]]; then
 			HOST="$( settings ".${HOST}" "${ENV_FILE}" )"
@@ -163,10 +163,10 @@ parse_output()
 		fi
 		DIR="$( settings ".${DIR}" )"
 		if [[ -n ${DIR} ]]; then
-			echo "  The 'Image Directory' in the WebUI's '${S}' section is '${DIR}'."
+			echo "  The ${WSNs}Image Directory${WSNe} in the WebUI's '${S}' section is ${WSVs}${DIR}${WSVe}."
 			echo "  FIX: make sure that directory exists on the server."
 		else
-			echo "  The 'Image Directory' in the WebUI's '${S}' section is empty."
+			echo "  The ${WSNs}Image Directory${WSNe} in the WebUI's '${S}' section is empty."
 			# TODO: can this ever happen?
 			echo "  FIX: unknown - not sure why this failed."
 		fi
@@ -176,7 +176,8 @@ parse_output()
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
 		CMD="set ftp:ssl-force true"
 		error_type "* Authentication protocol issue."
-		fix "${CMD}" "${S}" "FIX: Switch to the 'ftp' Protocol, then\n  "
+		MSG="FIX: Change ${WSNs}Protocol${WSNe} to ${WSVs}ftp${WSVe}, then\n  "
+		fix "${CMD}" "${S}" "${MSG}"
 	fi >&2
 
 	# Certificate-related issues
@@ -187,13 +188,13 @@ parse_output()
 		PROTOCOL="$( settings ".${PROTOCOL}" )"
 		error_type "* The remote machine doesn't know about your Pi."
 		if [[ ${PROTOCOL} == "sftp" ]]; then
-			echo "  This happens the first time you use Protocol 'sftp' on a new Pi."
+			echo "  This happens the first time you use ${WSNs}Protocol${WSNe} 'sftp' on a new Pi."
 			echo "  FIX: On your Pi, run:  ssh ${USER}@${HOST}"
 			echo "       When prompted to enter 'yes' or 'no', enter 'yes'."
 			echo "       You may need to do this if the IP address of your Pi changed."
 		else
 			echo "  This error usually only happens when using Protocol 'sftp' on a new Pi."
-			echo "  You are using Protocol '${PROTOCOL}', so no know fix exists."
+			echo "  You are using ${WSNs}Protocol${WSNe} '${PROTOCOL}', so no known fix exists."
 		fi
 	fi >&2
 
@@ -220,7 +221,7 @@ parse_output()
 
 	# Output already displayed in DEBUG mode.
 	if [[ ${DEBUG} == "false" ]]; then
-		d_ "\nRaw output is in '${FILE}'.\n\n" >&2
+		echo; d_ "Raw output is in '${FILE}'.\n\n" >&2
 	fi
 }
 
@@ -251,7 +252,7 @@ do_test()
 
 	PROTOCOL="$( settings ".${PROTOCOL}" )"
 	if [[ $? -ne 0 || -z ${PROTOCOL} ]]; then
-		e_ "${ME}: could not find protocol for ${HUMAN_TYPE}; unable to test." >&2
+		e_ "${ME}: could not find ${WSNs}Protocol${WSNe} for ${HUMAN_TYPE}; unable to test." >&2
 		return 1
 	fi
 
@@ -348,14 +349,14 @@ if [[ -n ${ERR_MSG} ]]; then
 	if [[ ${ON_TTY} == "true" ]]; then
 		echo -e "\n${ERR_MSG}" >&2
 	else
-		"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ERR_MSG}"
+		echo -e "ERROR:: ${ERR_MSG}" >&2		# Must have "::" for class=error
 	fi
 fi
 if [[ -n ${OK_MSG} ]]; then
 	if [[ ${ON_TTY} == "true" ]]; then
 		echo -e "\n${OK_MSG}" >&2
 	else
-		"${ALLSKY_SCRIPTS}/addMessage.sh" --type success --msg "${OK_MSG}"
+		echo -e "SUCCESS:: ${OK_MSG}" >&2		# Must have "::" for class=success
 	fi
 fi
 
@@ -364,7 +365,7 @@ if [[ -s ${MSG_FILE} ]]; then
 	if [[ ${ON_TTY} == "true" ]]; then
 		echo -e "${M}"
 	else
-		"${ALLSKY_SCRIPTS}/addMessage.sh" --type info --msg "${M}"
+		echo -e "INFO:: ${M}"					# Must have "::" for class=info
 	fi
 fi
 rm -f "${MSG_FILE}"

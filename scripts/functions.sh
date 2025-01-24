@@ -643,18 +643,18 @@ function get_sunrise_sunset()
 	LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" )"		|| return 2
 	LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )"	|| return 2
 
-	local FORMAT="%-15s  %-17s  %-7s  %-10s  %-10s\n"
-	# shellcheck disable=SC2059
-	printf "${FORMAT}" "Daytime start" "Nighttime start" "Angle" "Latitude" "Longitude"
+	local FORMAT="%-15s  %-17s  %6s   %-10s  %-10s\n"
+	echo "Daytime start    Nighttime start     Angle   Latitude    Longitude"
 	local STARTS=()
 	# sunwait output:  day_start, night_start
 	# Need to get rid of the comma.
 	if [[ ${DO_ZERO} == "true" ]]; then
 		read -r -a STARTS <<< "$( sunwait list angle "0" "${LATITUDE}" "${LONGITUDE}" )"
 		# shellcheck disable=SC2059
-		printf "${FORMAT}" "${STARTS[0]/,/}" "${STARTS[1]}" "0" "${LATITUDE}" "${LONGITUDE}"
+		printf "${FORMAT}" "${STARTS[0]/,/}" "${STARTS[1]}" " 0.00" "${LATITUDE}" "${LONGITUDE}"
 	fi
 	read -r -a STARTS <<< "$( sunwait list angle "${ANGLE}" "${LATITUDE}" "${LONGITUDE}" )"
+	ANGLE="$( printf "% 2.2f" "${ANGLE}" )"
 	# shellcheck disable=SC2059
 	printf "${FORMAT}" "${STARTS[0]/,/}" "${STARTS[1]}" "${ANGLE}" "${LATITUDE}" "${LONGITUDE}"
 }

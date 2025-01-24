@@ -78,7 +78,6 @@ if [[ ${ON_TTY} == "false" ]]; then
 	# don't provide our own format.
 	ERROR_PREFIX=""
 	wERROR=""
-	wDEBUG="DEBUG: "
 	wWARNING=""
 	wNC=""
 else

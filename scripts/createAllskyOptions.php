@@ -3,7 +3,10 @@
 
 // Create a camera type/model-specific "options" file for the new camera.
 
-include_once('functions.php');
+if (! include_once('functions.php')) {
+	echo "\nERROR during 'include_once(functions.php)\n";
+	exit(1);
+}
 
 $q = '"';	// This make it easier than escaping all the quotes in output.
 

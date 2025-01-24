@@ -944,7 +944,6 @@ do
 		*)
 			W="WARNING: "
 			W+="Unknown key '${KEY}'; ignoring.  Old=${OLD_VALUE}, New=${NEW_VALUE}"
-			W+="${wNC}"
 			w_ "${W}"
 			(( NUM_CHANGED-- ))
 			;;

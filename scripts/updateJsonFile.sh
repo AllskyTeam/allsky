@@ -84,8 +84,9 @@ if [[ ! -f ${FILE} ]]; then
 	exit 1
 fi
 
-#shellcheck disable=SC2191
-JQ_STRING=(.comment = .comment)
+# Initialize JQ_STRING with a command that doesn't change anything.
+# This is needed because each addition to JQ_STRING starts with "|".
+JQ_STRING=( ".${1} = .${1}" )
 OUTPUT_MESSAGE=""
 NUMRE="^[+-]?[0-9]+([.][0-9]+)?$"
 

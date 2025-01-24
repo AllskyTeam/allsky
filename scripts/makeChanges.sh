@@ -259,9 +259,9 @@ function restoreSettings()
 	echo "${MSG}."
 
 	# shellcheck disable=SC2086
-		"${ALLSKY_SCRIPTS}/updateJsonFile.sh" \
-			--verbosity silent --file "${SETTINGS_FILE}" "${RESTORES[@]}" ||
-			echo "Failed with KEYs '${KEY}' and '${OTHER_KEY}'."
+	"${ALLSKY_SCRIPTS}/updateJsonFile.sh" \
+		--verbosity silent --file "${SETTINGS_FILE}" "${RESTORES[@]}" ||
+		echo "Failed with KEYs '${KEY}' and '${OTHER_KEY}'."
 }
 
 CAMERA_NUMBER=""

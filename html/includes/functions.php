@@ -274,9 +274,9 @@ function check_if_configured($page, $calledFrom) {
 
 	if ($lastChanged === "") {
 		// The settings aren't configured - probably right after an installation.
-		$msg = "Allsky must be configured before using it.<br>";
+		$msg = "Please verify the Allsky settings and update where needed.<br>";
 		if ($page === "configuration")
-			$msg .= "If it's already configured, just click on the 'Save changes' button.";
+			$msg .= "When done, click on the 'Save changes' button.";
 		else
 			$msg .= "Go to the 'Allsky Settings' page to do so.";
 		$status->addMessage("<div id='mustConfigure' class='important'>$msg</div>", 'danger');

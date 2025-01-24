@@ -358,7 +358,7 @@ do
 			else
 				CAMERA_TYPE="${NEW_VALUE}"
 				if [[ ! -e "${ALLSKY_BIN}/capture_${CAMERA_TYPE}" ]]; then
-					MSG="Unknown '${LABEL}': '${CAMERA_TYPE}'."
+					MSG="Unknown ${WSNs}${LABEL}${WSNe}: '${CAMERA_TYPE}'."
 					e_ "${ERROR_PREFIX}ERROR: ${MSG}"
 					exit "${EXIT_NO_CAMERA}"
 				fi
@@ -724,12 +724,12 @@ do
 				if [[ ${INDEX} -ge 0 ]]; then
 					WEBSITE_CONFIG+=("${PARENT}[${INDEX}].display" "${LABEL}" "${NEW_VALUE}")
 				else
-					W="WARNING: Unable to update ${wBOLD}${LABEL}${wNBOLD}"
+					W="WARNING: Unable to update ${WSNs}${LABEL}${WSNe}"
 					W+=" in ${WEB_CONFIG_FILE}; ignoring."
 					w_ "${W}"
 				fi
 			else
-				W="Change to ${wBOLD}${LABEL}${wNBOLD} not relevant - "
+				W="Change to ${WSNs}${LABEL}${WSNe} not relevant - "
 				W+="\nNo local or remote Allsky Website enabled."
 				w_ "${W}"
 				GOT_WARNING="true"
@@ -801,11 +801,11 @@ do
 
 		"overlaymethod")
 			if [[ ${NEW_VALUE} -eq 1 ]]; then		# 1 == "overlay" method
-				W="NOTE: You must enable the ${wBOLD}Overlay Module${wNBOLD} in the"
-				W+="\n ${wBOLD}Daytime Capture${wNBOLD} and/or"
-				W+="\n ${wBOLD}Nighttime Capture${wNBOLD} flows of the"
-				W+="\n ${wBOLD}Module Manager${wNBOLD}"
-				W+="\n for the '${LABEL}' to take effect."
+				W="NOTE: You must enable the ${WSNs}Overlay Module${WSNe} in the"
+				W+="\n ${WSNs}Daytime Capture${WSNe} and/or"
+				W+="\n ${WSNs}Nighttime Capture${WSNe} flows of the"
+				W+="\n ${WSNs}Module Manager${WSNe}"
+				W+="\n for the ${WSNs}${LABEL}${WSNe} to take effect."
 				w "${W}"
 			else
 				rm -f "${ALLSKY_TMP}/overlaydebug.txt"
@@ -935,7 +935,7 @@ do
 		"uselogin")
 			if [[ ${NEW_VALUE} == "false" ]]; then
 				W="WARNING: "
-				W+="Disabling '${LABEL}' should NOT be done if your Pi is"
+				W+="Disabling ${WSNs}${LABEL}${WSNe} should NOT be done if your Pi is"
 				W+=" accessible on the Internet.  It's a HUGE security risk!"
 				w_ "${W}"
 			fi

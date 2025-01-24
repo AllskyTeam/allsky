@@ -306,7 +306,7 @@ table .alert-dismissable {
 	opacity: .6;
 	top: -1px;
 }
-.alert-message {
+.alert-message, .alert-info {
 	color: #31708f;
 	background-color: #d9edf7;
 	border-color: #92b5bd;

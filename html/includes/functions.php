@@ -729,9 +729,21 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 			if (strpos($line, "ERROR:") !== false) {
 				$line = str_replace("ERROR", "<strong>ERROR</strong>", $line);
 				$sev = "danger";
+			} else if (strpos($line, "ERROR::") !== false) {
+				$line = str_replace("ERROR:", "<strong>ERROR</strong>", $line);
+				$sev = "danger";
 			} else if (strpos($line, "WARNING:") !== false) {
 				$line = str_replace("WARNING", "<strong>WARNING</strong>", $line);
 				$sev = "warning";
+			} else if (strpos($line, "WARNING::") !== false) {
+				$line = str_replace("WARNING:", "<strong>WARNING</strong>", $line);
+				$sev = "warning";
+			} else if (strpos($line, "SUCCESS::") !== false) {
+				$line = str_replace("SUCCESS::", "", $line);
+				$sev = "success";
+			} else if (strpos($line, "INFO::") !== false) {
+				$line = str_replace("INFO::", "", $line);
+				$sev = "info";
 			} else {
 				$sev = "message";
 			}

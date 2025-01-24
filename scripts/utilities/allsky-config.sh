@@ -321,9 +321,17 @@ function show_start_times()
 				shift
 				;;
 
+			--)
+				break	# End of arguments
+				;;
+
 			--*)
 				echo -e "${RED}${ME}: Unknown argument '${ARG}'.${NC}" >&2
 				OK="false"
+				;;
+
+			*)
+				break	# Assume angle
 				;;
 		esac
 		shift
@@ -332,6 +340,8 @@ function show_start_times()
 	if [[ ${DO_HELP} == "true" ]]; then
 		echo
 		echo "Usage: ${ME}  ${FUNCNAME[0]} [--zero]  [ --angle A]  [--latitude LAT]  [--longitude LONG]"
+		echo "or"
+		echo "Usage: ${ME}  ${FUNCNAME[0]} [--zero]  [ angle  [latitude  [longitude]"
 		echo "Where:"
 		echo "    '--zero' will also show times for Angle 0."
 		echo "By default, the Angle, Latitude, and Longitude in the WebUI will be use."
@@ -339,6 +349,19 @@ function show_start_times()
 		echo
 
 		return
+	fi
+
+	if [[ $# -gt 0 ]]; then
+		ANGLE="$1"
+		shift
+		if [[ $# -gt 0 ]]; then
+			LATITUDE="$1"
+			shift
+			if [[ $# -gt 0 ]]; then
+				LONGITUDE="$1"
+				shift
+			fi
+		fi
 	fi
 
 	#shellcheck disable=SC2086

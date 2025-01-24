@@ -321,7 +321,7 @@ function show_start_times()
 				shift
 				;;
 
-			-*)
+			--*)
 				echo -e "${RED}${ME}: Unknown argument '${ARG}'.${NC}" >&2
 				OK="false"
 				;;

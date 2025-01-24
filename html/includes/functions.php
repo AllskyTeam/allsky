@@ -725,11 +725,12 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 	// If there are any lines that begin with:  ERROR  or  WARNING
 	// then display them in the appropriate format.
 	if ($result != null) {
-		//x $status->addMessage(implode("<br>", $result), "message", false);
   		foreach ( $result as $line) {
 			if (strpos($line, "ERROR:") !== false) {
+				$line = str_replace("ERROR", "<strong>ERROR</strong>", $line);
 				$sev = "danger";
 			} else if (strpos($line, "WARNING:") !== false) {
+				$line = str_replace("WARNING", "<strong>WARNING</strong>", $line);
 				$sev = "warning";
 			} else {
 				$sev = "message";

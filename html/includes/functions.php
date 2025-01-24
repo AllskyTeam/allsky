@@ -744,6 +744,9 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 			} else if (strpos($line, "INFO::") !== false) {
 				$line = str_replace("INFO::", "", $line);
 				$sev = "info";
+			} else if (strpos($line, "DEBUG:") !== false) {
+				$line = str_replace("DEBUG", "", $line);
+				$sev = "debug";
 			} else {
 				$sev = "message";
 			}

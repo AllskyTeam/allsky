@@ -214,29 +214,34 @@ class ALLSKYOVERLAYDATA:
 				if variable in self.extra_fields:
 					variable_definition = allskyvariables.get_variable(self.variables, variable)
 
+					variable_group = 'text'
 					if variable_definition is not None:
-						self.__debug(f'Formatting variable {variable}, value {self.extra_fields[variable]["value"]}, using format "{formats}"')
-						format_list = formats.split(' ')
-						for index, format in enumerate(format_list):
-			
-							variable_group = variable_definition['type']
-							if index > 0:
-								variable_group = 'number'
-							format_function = 'as_' + variable_group.lower()
-							if hasattr(allskyformatters.allsky_formatters, format_function):
-								self.__debug(f'Formatter "{format_function}" found for variable "{variable}". Value = "{value}", format = "{format}"')        
-								try:
-									if variable == 'DATE' or variable == 'AS_DATE' or variable == 'AS_TIME' or variable == 'TIME':
-										value = time.time()
-						
-									value = getattr(allskyformatters.allsky_formatters, format_function)(value, variable, format, '')
-								except AllskyFormatError as e:
-									self.__log(e.log_level, e.message, e.send_to_allsky)
-								#except Exception as e:
-								#	print(e)
-								#	pass
-							else:
-								self.__log(4, f'Formatter {format_function} NOT found')	
+						variable_group = variable_definition['type']
+
+					if 'type' in field_data:
+						variable_group = field_data['type']
+          
+					self.__debug(f'Formatting variable {variable}, value {self.extra_fields[variable]["value"]}, using format "{formats}"')
+					format_list = formats.split('#')
+					for index, format in enumerate(format_list):
+		
+						if index > 0:
+							variable_group = 'number'
+						format_function = 'as_' + variable_group.lower()
+						if hasattr(allskyformatters.allsky_formatters, format_function):
+							self.__debug(f'Formatter "{format_function}" found for variable "{variable}". Value = "{value}", format = "{format}"')        
+							try:
+								if variable == 'DATE' or variable == 'AS_DATE' or variable == 'AS_TIME' or variable == 'TIME':
+									value = time.time()
+					
+								value = getattr(allskyformatters.allsky_formatters, format_function)(value, variable, format, '')
+							except AllskyFormatError as e:
+								self.__log(e.log_level, e.message, e.send_to_allsky)
+							#except Exception as e:
+							#	print(e)
+							#	pass
+						else:
+							self.__log(4, f'Formatter {format_function} NOT found')	
 					else:
 						self.__debug(f'ERROR: No variable defintion found for {variable}')
 				else:

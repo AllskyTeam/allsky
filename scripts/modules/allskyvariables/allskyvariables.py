@@ -97,7 +97,7 @@ def get_module_variable_list(folder, module='', isExtra=False):
 					data = json.load(f)
 				variables.update(data)
 		else:
-			if entry.startswith('allsky_') and entry != 'allsky_shared.py':
+			if entry.startswith('allsky_') and entry != 'allsky_shared.py' and entry != 'allsky_base.py':
 				include = True
 				if module:
 					include = False

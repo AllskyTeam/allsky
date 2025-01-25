@@ -384,36 +384,43 @@ def validateExtraFileName(params, module, fileKey):
                     
     params[fileKey] = extraDataFilename
             
-def save_extra_data(file_name, extra_data):
-    saveExtraData(file_name, extra_data)
+def save_extra_data(file_name, extra_data, source='', structure={}, custom_fields={}):
+    saveExtraData(file_name, extra_data, source, structure, custom_fields)
 
-def saveExtraData(file_name, extra_data, source='', structure={}):
-    """
-    Save extra data to allows the overlay module to disdplay it.
+def saveExtraData(file_name, extra_data, source='', structure={}, custom_fields={}):
+	"""
+	Save extra data to allows the overlay module to disdplay it.
 
-    Args:
-        file_name (string): The name of the file to save.
-        extra_data (object): The data to save.
+	Args:
+		file_name (string): The name of the file to save.
+		extra_data (object): The data to save.
 
-    Returns:
-        Nothing
-    """
-    extra_data_path = getExtraDir()
-    if extra_data_path is not None:        
-        checkAndCreateDirectory(extra_data_path)
+	Returns:
+		Nothing
+	"""
+	try:
+		extra_data_path = getExtraDir()
+		if extra_data_path is not None:        
+			checkAndCreateDirectory(extra_data_path)
 
-        file_extension = Path(file_name).suffix
-        extra_data_filename = os.path.join(extra_data_path, file_name)
-        with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
-            if file_extension == '.json':
-                extra_data = format_extra_data(extra_data, structure, source)
-                extra_data = json.dumps(extra_data, indent=4)
-            temp_file.write(extra_data)
-            temp_file_name = temp_file.name
-            os.chmod(temp_file_name, 0o644)
+			file_extension = Path(file_name).suffix
+			extra_data_filename = os.path.join(extra_data_path, file_name)
+			with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
+				if file_extension == '.json':
+					extra_data = format_extra_data(extra_data, structure, source)
+					if len(custom_fields) > 0:
+						for key, value in custom_fields.items():
+							extra_data[key] = value
+					extra_data = json.dumps(extra_data, indent=4)
+					temp_file.write(extra_data)
+				temp_file_name = temp_file.name
+				os.chmod(temp_file_name, 0o644)
 
-        shutil.move(temp_file_name, extra_data_filename)
-
+			shutil.move(temp_file_name, extra_data_filename)
+	except Exception as e:
+		eType, eObject, eTraceback = sys.exc_info()            
+		log(0, f'ERROR: Module saveExtraData failed on line {eTraceback.tb_lineno} - {e}')
+         
 
 def format_extra_data(extra_data, structure, source):
     result = extra_data
@@ -513,6 +520,9 @@ def createTempDir(path):
         umask = os.umask(0o000)
         os.makedirs(path, mode=0o777)
         os.umask(umask)
+
+def get_gpio_pin_details(pin):
+    return getGPIOPin(pin)
             
 def getGPIOPin(pin):
     result = None

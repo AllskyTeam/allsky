@@ -107,7 +107,7 @@ class MODULEUTIL
         if ($handle) {
             while (($entry = readdir($handle)) !== FALSE) {
                 if (preg_match('/^allsky_/', $entry)) {
-                    if ($entry !== 'allsky_shared.py') {
+                    if ($entry !== 'allsky_shared.py' && $entry !== 'allsky_base.py') {
                         $fileName = $moduleDirectory . '/' . $entry;
                         $metaData = $this->getMetaDataFromFile($fileName);
                         $decoded = json_decode($metaData);
@@ -926,6 +926,22 @@ class MODULEUTIL
 				}
 			}
 		}
+		$this->sendResponse(json_encode($results));
+	}
+
+	public function getOnewire() {
+		$folderPath = '/sys/bus/w1/devices/';
+		$files = glob($folderPath . '[0-9a-fA-F]*-*');
+				  
+		$results = array();
+		$results['results'] = array();
+		foreach ($files as $file) {
+			$results['results'][] = [
+				'id' => basename($file),
+				'text' => basename($file)
+			];
+		}
+		
 		$this->sendResponse(json_encode($results));
 	}
 }

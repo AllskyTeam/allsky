@@ -428,11 +428,46 @@ class MODULESEDITOR {
         return moduleData;
     }
 
+	#rgbtohex(rgbString) {
+		let result = rgbString
+		if (rgbString.includes(',')) {
+			const rgbArray = rgbString.split(',').map(value => parseInt(value.trim(), 10))
+			if (rgbArray.length === 3 && rgbArray.every(val => !isNaN(val) && val >= 0 && val <= 255)) {
+				result = '#' + 
+					((1 << 24) | (rgbArray[0] << 16) | (rgbArray[1] << 8) | rgbArray[2])
+					.toString(16)
+					.slice(1)
+					.toUpperCase()
+			}
+		}
+
+		return result
+	}
+
+	#hexToRgb(hex) {
+		let result = '0,0,0'
+		hex = hex.replace(/^#/, '')
+	
+		if (hex.length === 6) {
+			const r = parseInt(hex.slice(0, 2), 16)
+			const g = parseInt(hex.slice(2, 4), 16)
+			const b = parseInt(hex.slice(4, 6), 16)
+	
+			result = `${r},${g},${b}`
+		}
+
+		return result
+	}
+
     #createSettingsDialog(target) {
         var events = []
         this.#events = []
         let tabs = []
 		this.#dialogFilters = []
+		var controls = {
+			'spectrum': [],
+			'select2': []
+		}
 
         target = $(target)
         let module = target.data('module')
@@ -616,6 +651,29 @@ class MODULESEDITOR {
 						});
 					}
 
+					if (fieldType == 'colour') {
+						let colourValue = this.#rgbtohex(fieldValue)
+						inputHTML = '<input id="' + key + '" name="' + key + '" class="form-control" data-convert="rgb" value="' + colourValue + '"' + required + fieldDescription + '>';
+						extraClass = 'input-group';
+						inputHTML = '\
+							<div class="row">\
+								<div class="col-xs-8">\
+								' + inputHTML + '\
+								</div>\
+							</div>\
+						';
+						controls['spectrum'].push({
+							'id': '#' + key,
+							'config': {
+								type: 'color',
+								showInput: true,
+								showInitial: true,
+								showAlpha: false,
+								preferredFormat: 'hex3'	
+							}
+						})
+					}
+
 					if (fieldType == 'gpio') {
 						inputHTML = '<input id="' + key + '" name="' + key + '" class="form-control" disabled="disabled" value="' + fieldValue + '"' + required + fieldDescription + '>';
 						extraClass = 'input-group';
@@ -736,7 +794,20 @@ class MODULESEDITOR {
 							inputHTML += '<option value="' + optionValue + '"' + selected + '>' + optionValue + '</option>';
 						}
 						inputHTML += '</select>';
+					}
+
+					if (fieldType == 'ajaxselect') {
+						inputHTML = '<select name="' + key + '" id="' + key + '"' + required + fieldDescription + '>';
+						inputHTML += '</select>'
+						controls['select2'].push({
+							'id': '#' + key,
+							'config': {
+								url: fieldData.type.url,
+								placeholder: fieldData.type.placeholder
+							}
+						})						
 					}					
+					
 				}
 
 				fieldHTML = '\
@@ -817,6 +888,12 @@ class MODULESEDITOR {
         }
         let moduleSettingsHtml = '';
         let numberOfTabs = Object.keys(tabs).length;
+		if ('extradata' in moduleData.metadata) {
+			numberOfTabs += 1
+		}
+		if ('changelog' in moduleData.metadata) {
+			numberOfTabs += 1
+		}		
         if (numberOfTabs === 1 && moduleData.metadata.extradata === undefined) {
             for (let tabName in tabs) {
                 for (let field in tabs[tabName]) {
@@ -1016,6 +1093,20 @@ class MODULESEDITOR {
 			}
 		}
 
+		Object.entries(controls['spectrum']).forEach(([key, value]) => {
+			$(value['id']).spectrum(value['config'])
+		})
+
+		Object.entries(controls['select2']).forEach(([key, value]) => {
+			$(value['id']).select2({
+				placeholder: value['config']['placeholder'],
+				ajax: {
+					url: value['config']['url'],
+					dataType: 'json'
+				}
+			})
+		})
+		
 		let centerModal = true
 		if ('centersettings' in moduleData.metadata) {
 			if (moduleData.metadata.centersettings === 'false') {
@@ -1124,6 +1215,10 @@ class MODULESEDITOR {
                 this.#saveFormData(this.#configData.selected, formValues, module);
                 this.#saveFormData(this.#configData.available, formValues, module);
 
+				Object.entries(controls['spectrum']).forEach(([key, value]) => {
+					$(value['id']).spectrum('destroy')
+				})
+
                 $('#module-settings-dialog').modal('hide');
                 $(document).trigger('module:dirty');
             }
@@ -1139,15 +1234,23 @@ class MODULESEDITOR {
 
 	#getFormValues() {
 		let formValues = {};
-		$('#module-editor-settings-form :input:not([type=button])').each(function() {
-			if (this.type == 'checkbox') {
-				if ($(this).prop('checked')) {
-					formValues[$(this).attr('name')] = true;
+		$('#module-editor-settings-form :input:not([type=button])').each((index, element) => {
+			let el = $(element)
+			if (element.type == 'checkbox') {
+				if (el.prop('checked')) {
+					formValues[el.attr('name')] = true
 				} else {
-					formValues[$(this).attr('name')] = false;
+					formValues[el.attr('name')] = false
 				}
 			} else {
-				formValues[$(this).attr('name')] = $(this).val();
+				let value = el.val()
+				let convert = el.data('convert')
+				if (convert !== undefined) {
+					if (convert === 'rgb') {
+						value = this.#hexToRgb(value)
+					}
+				}
+				formValues[el.attr('name')] = value
 			}
 		});
 

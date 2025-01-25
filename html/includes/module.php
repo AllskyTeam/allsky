@@ -39,6 +39,12 @@ function DisplayModule() {
 <link rel="stylesheet" type="text/css" href="/js/datatables/datatables.min.css?c=<?php echo ALLSKY_VERSION; ?>" />
 <script type="text/javascript" src="/js/datatables/datatables.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
+<link rel='stylesheet' href='/js/spectrum/dist/spectrum.css?c=<?php echo ALLSKY_VERSION; ?>' />
+<script src="/js/spectrum/dist/spectrum.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+
+<link rel='stylesheet' href='/js/jquery-select2/dist/css/select2.min.css?c=<?php echo ALLSKY_VERSION; ?>' />
+<link rel='stylesheet' href='/js/jquery-select2-bootstrap-theme/dist/select2-bootstrap.min.css?c=<?php echo ALLSKY_VERSION; ?>' />
+<script src="js/jquery-select2/dist/js/select2.full.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
 <div class="row">
     <div class="col-lg-12">

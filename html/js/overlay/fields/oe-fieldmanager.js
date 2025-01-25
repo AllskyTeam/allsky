@@ -212,9 +212,10 @@ class OEFIELDMANAGER {
         let config ={
             fields: this.buildTestJSON()
         };
-        let loadingTimer = setTimeout(() => {
-            $.LoadingOverlay('show', {text : 'Sorry this is taking longer than expected ...'});
-        }, 1000);
+		$.LoadingOverlay('show', {text : 'Calculating field values'});
+		let loadingTimer = setTimeout(() => {
+            $.LoadingOverlay('text', 'Sorry this is taking longer than expected ...');
+        }, 3000);
 
         $('#oe-test-mode').addClass('red pulse');
 

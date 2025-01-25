@@ -274,14 +274,16 @@
             $('#mm-i2c-dialog').on('hidden.bs.modal', function () {
                 plugin.settings.deviceTable.off('click', 'tbody tr');
 
-                $('#mm-i2c-dialog-tab-detected-devices').DataTable().destroy();
-                $('#mm-i2c-dialog-tab-library-library').DataTable().destroy();
+                $('#mm-i2c-dialog-tab-detected-devices').DataTable().destroy()
+                $('#mm-i2c-dialog-tab-library-library').DataTable().destroy()
             });
 
         }
 
         plugin.destroy = function () {
-            $(document).removeData('allskyI2C');
+			$('#mm-i2c-dialog-tab-library-library').DataTable().destroy()
+			$('#mm-i2c-dialog-tab-detected-devices').DataTable().destroy()
+            $(document).removeData('allskyI2C')
         }
 
         plugin.init();       

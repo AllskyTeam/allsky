@@ -1882,7 +1882,7 @@ class OEUIMANAGER {
 			if (source === 'user') {
 				tableRow.css('display', 'table-row')
 			} else {
-				tableRow.css('display', 'none')
+		//		tableRow.css('display', 'none')
 			}
 
             let textVisible = false;

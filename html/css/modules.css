@@ -186,3 +186,50 @@
 .module-error-dialog > .modal-dialog {
   width:50% !important;
 }
+
+.module-test-results {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+#module-editor-settings-form .alert {
+  margin-bottom: 10px;
+}
+
+.warning {
+	color: yellow;
+	margin-right: 1em;
+	display: none;
+}
+
+.noborder {
+	border: none !important;
+	background: transparent !important;
+}
+
+#module-editor-settings-form {
+	user-select: none;
+}
+
+.sp-replacer {
+	height: 2.5rem !important;
+    width: 4rem !important;
+}
+
+.dark .select2-container--default .select2-selection--single {
+	background: #171717 !important;
+}
+
+.dark .select2-container--default .select2-selection--single .select2-selection__rendered {
+	color: #aaaaaa !important;	
+}
+
+.dark .select2-container--default .select2-selection--single {
+	border-color: #555555 !important;
+	border-radius: 0px !important;
+}
+
+.dark .select2-dropdown {
+	background: #171717 !important;
+	color: #aaaaaa !important;
+}

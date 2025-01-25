@@ -81,7 +81,49 @@ class AllskyFormatters:
 		"""
 		return str(value).strip().lower() in ('true', '1', 'yes', 'y', 'on')
 
+	def as_bool(self, value, variable_name, format, variable_type):
+		
+		if format == '%yes':
+			if type(value) is bool:
+				if value:
+					value = 'Yes'
+				else:
+					value = 'No'        
+		
+		if format == '%on':
+			if type(value) is bool:
+				if value:
+					value = 'On'
+				else:
+					value = 'Off'        
+          
+		return value
+
 	def as_string(self, value, variable_name, format, variable_type):
+		return value
+
+	def as_timestamp(self, value, variable_name, format, variable_type):
+		try:
+			internalFormat = allsky_shared.getSetting('timeformat')
+			if variable_name == 'DATE' or variable_name == 'AS_DATE':
+				timeStamp = datetime.fromtimestamp(value)
+				value = timeStamp.strftime(internalFormat)
+			else:
+				isUnixTimestamp, value = self._isUnixTimestamp(value)
+				if isUnixTimestamp:
+					timeStamp = datetime.fromtimestamp(value)
+					value = timeStamp.strftime(internalFormat)
+
+			tempDate = datetime.strptime(value, internalFormat)
+			if format is not None:
+				try:
+					value = tempDate.strftime(format)
+				except Exception:
+					pass
+		except Exception as e:
+			error =  f"ERROR: Cannot use format '{internalFormat}' from Allsky settings. Please check the date/time format in the main Allsky Settings"
+			raise AllskyFormatError(error, 0, True)
+		
 		return value
 
 	def as_date(self, value, variable_name, format, variable_type):
@@ -381,5 +423,18 @@ class AllskyFormatters:
 			value = value.strip().capitalize()
 
 		return value
-  
+
+	def as_altitude(self, value, variable_name, format, variable_type):
+		''' Converts an altitude in meters to a flight level
+		'''
+		
+		if format == 'flightlevel':
+			value = int(value)
+			if value < 1000:
+				value = f'{value}ft'
+			else: 
+				value = f'FL{int(value / 100):03}'
+			
+		return value
+     
 allsky_formatters = AllskyFormatters()

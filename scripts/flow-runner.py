@@ -64,7 +64,7 @@ if __name__ == "__main__":
     parser.add_argument("-e", "--event",  type=str, help="The event we are running modules for (defaults to postcapture).", default="postcapture", choices=["postcapture","daynight", "nightday", "periodic"])
     parser.add_argument("-f", "--flowtimerframes",  type=int, help="Number of frames to capture for the flow timing averages.", default=10)
     parser.add_argument("-c", "--cleartimings", action="store_true", help="Clear any flow average timing data.")
-    parser.add_argument("-t", "--test", action="store_true", help="Run tet test module flow")
+    parser.add_argument("-t", "--test", action="store_true", help="Run the test module flow")
     shared.args = parser.parse_args()
     #ignoreWatchdogMsg = ""
 
@@ -84,6 +84,8 @@ if __name__ == "__main__":
     testMode = False
     if shared.args.test:
         testMode = True
+    else:
+        shared.write_env_to_db()
   
     if (shared.args.event == "postcapture"):
         try:

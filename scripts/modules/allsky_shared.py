@@ -32,17 +32,36 @@ except:
 
 ABORT = True
 
-def getEnvironmentVariable(name, fatal=False):
-    result = None
+def getEnvironmentVariable(name, fatal=False, debug=False):
+	global ALLSKY_TMP
 
-    try:
-        result = os.environ[name]
-    except KeyError:
-        if fatal:
-            log(0, f"ERROR: Environment variable '{name}' not found.", exitCode=98)
+	result = None
 
-    return result
+	if not debug:
+		try:
+			result = os.environ[name]
+		except KeyError:
+			if fatal:
+				log(0, f"ERROR: Environment variable '{name}' not found.", exitCode=98)
+	else:
+		db_file = os.path.join(ALLSKY_TMP, 'allskydebugdb.py')
+		if not os.path.isfile(db_file):
+			file = open(db_file, 'w+')
+			file.write('DataBase = {}')
+			file.close()
 
+		try:
+			sys.path.insert(1, ALLSKY_TMP)
+			database = __import__('allskydebugdb')
+			DBDEBUGDATA = database.DataBase
+		except:
+			DBDEBUGDATA = {}
+			log(0, f"ERROR: Resetting corrupted Allsky database '{db_file}'")
+
+		if name in DBDEBUGDATA['os']:
+			result = DBDEBUGDATA['os'][name]
+
+	return result
 
 # These must exist and are used in several places.
 ALLSKYPATH = getEnvironmentVariable("ALLSKY_HOME", fatal=True)
@@ -317,6 +336,32 @@ def dbGet(key):
     else:
         return None
 
+def write_env_to_db():
+	global ALLSKY_TMP
+
+	dbFile = os.path.join(ALLSKY_TMP, 'allskydebugdb.py')
+	if not os.path.isfile(dbFile):
+		file = open(dbFile, 'w+')
+		file.write('DataBase = {}')
+		file.close()
+
+	try:
+		sys.path.insert(1, ALLSKY_TMP)
+		database = __import__('allskydebugdb')
+		DBDEBUGDATA = database.DataBase
+	except:
+		DBDEBUGDATA = {}
+		log(0, f"ERROR: Resetting corrupted Allsky database '{dbFile}'")
+
+	DBDEBUGDATA['os'] = {}	
+	for key, value in os.environ.items():            
+		DBDEBUGDATA['os'][key] = value
+
+	file = open(dbFile, 'w+')
+	file.write('DataBase = ')
+	file.write(str(DBDEBUGDATA))
+	file.close()
+    
 def writeDB():
     global DBDATA, ALLSKY_TMP
 
@@ -420,7 +465,6 @@ def saveExtraData(file_name, extra_data, source='', structure={}, custom_fields=
 	except Exception as e:
 		eType, eObject, eTraceback = sys.exc_info()            
 		log(0, f'ERROR: Module saveExtraData failed on line {eTraceback.tb_lineno} - {e}')
-         
 
 def format_extra_data(extra_data, structure, source):
     result = extra_data
@@ -445,7 +489,6 @@ def format_extra_data(extra_data, structure, source):
             for raw_key, value in structure['values'].items():
                 key = raw_key.replace('${COUNT}', str(index))
                 if key in extra_data:
-
                     result[key] = dict(structure['values'][raw_key])
                     result[key]['source'] = source
                     result[key]["value"] = extra_data[key]
@@ -473,8 +516,8 @@ def format_extra_data(extra_data, structure, source):
                 else:
                     pass
                     #log(0, f"ERROR: {key} not found in module config")
+                    
     return result
-
 
 def load_extra_data_file(file_name):
     result = {}

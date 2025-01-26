@@ -8,7 +8,7 @@ This module will load the last captured image into the shared module
 allowing it to be passed between modules
 
 '''
-import allsky_shared as s
+import allsky_shared as allsky_shared
 import cv2
 
 metaData = {
@@ -23,14 +23,14 @@ metaData = {
 }
 
 def loadimage(params, event):
-	result = "Image {0} Loaded".format(s.CURRENTIMAGEPATH)
-	    
+	result = f'Image {allsky_shared.CURRENTIMAGEPATH} Loaded'
+		
 	try:
-	    s.image = cv2.imread(s.CURRENTIMAGEPATH)
-	    if s.image is None:
-	        s.log(0, "ERROR: Cannot read {0}...".format(s.CURRENTIMAGEPATH), exitCode=1)
+		allsky_shared.image = cv2.imread(allsky_shared.CURRENTIMAGEPATH)
+		if allsky_shared.image is None:
+			allsky_shared.log(0, f'ERROR: Cannot read {allsky_shared.CURRENTIMAGEPATH}...', exitCode=1)
 	except Exception as e:
-	    s.log(0, "ERROR: Cannot load {0}: {1}".format(s.CURRENTIMAGEPATH, e), exitCode=1)
+		allsky_shared.log(0, f'ERROR: Cannot load {allsky_shared.CURRENTIMAGEPATH}: {e}', exitCode=1)
 
-	s.log(4, "INFO: {}".format(result))
+	allsky_shared.log(4, f'INFO: {result}')
 	return result        

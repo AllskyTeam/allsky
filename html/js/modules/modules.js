@@ -354,17 +354,6 @@ class MODULESEDITOR {
             enabledHTML = '<div class="pull-right module-enable"><span class="module-enable-text">Enabled</span> <input type="checkbox" class="moduleenabler" ' + enabled + ' id="' + moduleKey + 'enabled" data-module="' + data.module + '"></div>';
         }
 
-        let deleteHtml = '';
-       /* if (data.type !== undefined) {
-            if (data.type == 'user') {
-                let disabled = '';
-                if (element == '#modules-selected') {
-                    disabled = 'disabled="disabled"';
-                }
-                deleteHtml = '<button type="button" class="btn btn-sm btn-danger module-delete-button" id="' + moduleKey + 'delete" data-module="' + data.module + '" ' + disabled + '>Delete</button>';
-            }
-        }*/
-
 		let hidden = ''
 		if (element != '#modules-available') {
 			hidden = 'hidden';
@@ -386,12 +375,16 @@ class MODULESEDITOR {
         if (data.metadata.version !== undefined) {
             version = data.metadata.version;
         }
-        version = '<span><small class="module-version">' + version + '</small><span>';
+        let deprecatedHTML = ''
+		if (data.metadata.deprecation !== undefined) {
+			deprecatedHTML = '<strong class="text-danger">DEPRECATED</strong> '
+		}
+        version = deprecatedHTML + '<span><small class="module-version">' + version + '</small><span>';
 		let template = '\
             <div id="' + moduleKey + '" data-id="' + data.module + '" class="list-group-item ' + locked + '"> \
                 <div class="panel panel-default"> \
                     <div class="panel-heading"><span class="warning" data-toggle="popover" data-delay=\'{"show": 1000, "hide": 200}\' data-placement="top" data-trigger="hover" data-placement="top" title="" data-content=""><i class="fa-solid fa-2x fa-triangle-exclamation"></i> </span>' + data.metadata.name + ' ' + version + ' ' + enabledHTML + '</div> \
-                    <div class="panel-body">' + experimental + data.metadata.description + ' <div class="pull-right">' + deleteHtml + ' ' + settingsHtml + addHTML + '</div></div> \
+                    <div class="panel-body">' + experimental + data.metadata.description + ' <div class="pull-right">' + settingsHtml + addHTML + '</div></div> \
                 </div> \
             </div>';
 
@@ -893,7 +886,10 @@ class MODULESEDITOR {
 		}
 		if ('changelog' in moduleData.metadata) {
 			numberOfTabs += 1
-		}		
+		}
+		if ('deprecation' in moduleData.metadata) {
+			numberOfTabs += 1
+		}				
         if (numberOfTabs === 1 && moduleData.metadata.extradata === undefined) {
             for (let tabName in tabs) {
                 for (let field in tabs[tabName]) {
@@ -921,6 +917,10 @@ class MODULESEDITOR {
             if (moduleShortName in this.#configData.help) {
                 moduleSettingsHtml += '<li role="presentation"><a href="#as-module-var-help" role="tab" data-toggle="tab">Help</a></li>';
             }
+
+			if ('deprecation' in moduleData.metadata) {
+                moduleSettingsHtml += '<li role="presentation"><a href="#as-module-var-deprecation" role="tab" data-toggle="tab" class="text-danger">IMPORTANT</a></li>';
+			}
 
             moduleSettingsHtml += ' </ul>'
 
@@ -1027,6 +1027,28 @@ class MODULESEDITOR {
                     ' + this.#configData.help[moduleShortName].html + '\
                     </div>'
             }
+
+            if ('deprecation' in moduleData.metadata) {
+                moduleSettingsHtml += '\
+				<div role="tabpanel" style="margin-top:10px" class="tab-pane" id="as-module-var-deprecation">\
+					<div class="well">\
+						<h3 class="text-center">THIS MODULE HAS BEEN MARKED FOR DEPRECATION</h3>\
+					</div>\
+					<div class="row">\
+						<div class="col-md-4"><h4>Deprecated from Version:</h4></div>\
+						<div class="col-md-8"><h4>' + moduleData.metadata.deprecation.fromversion + '</h4></div>\
+					</div>\
+					<div class="row">\
+						<div class="col-md-4"><h4>Removed from Version:</h4></div>\
+						<div class="col-md-8"><h4>' + moduleData.metadata.deprecation.removein + '</h4></div>\
+					</div>\
+					<div class="row">\
+						<div class="col-md-4"><h4>Deprecation Reason:</h4></div>\
+						<div class="col-md-8"><h4>' + moduleData.metadata.deprecation.notes + '</h4></div>\
+					</div>\
+				</div>'
+			}			
+			
 
             moduleSettingsHtml += '</div>';
             moduleSettingsHtml += '</div>';

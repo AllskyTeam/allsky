@@ -399,7 +399,7 @@ function get_connected_camera_models()
 				}
 			} else {
 				sensor = $3;
-				"get_model_from_sensor.sh " sensor | getline model;
+				"getModelFromSensor.sh " sensor | getline model;
 				if (FULL == "true") {
 					printf("%s\t%d\t%s\t%s\n", $1, $2, model, sensor);
 				} else {
@@ -485,7 +485,7 @@ function validate_camera()
 	fi
 
 	# Now make sure the camera is supported.
-	if ! "${ALLSKY_UTILITIES}/show_supported_cameras.sh" "--${CT}" |
+	if ! "${ALLSKY_UTILITIES}/showSupportedCameras.sh" "--${CT}" |
 		grep --silent "${CM}" ; then
 
 		MSG="${CT} camera '${CM}' is not supported by Allsky."

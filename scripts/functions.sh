@@ -485,7 +485,7 @@ function validate_camera()
 	fi
 
 	# Now make sure the camera is supported.
-	if ! "${ALLSKY_UTILITIES}/show_supported_cameras.sh" "--${CT}" |
+	if ! "${ALLSKY_UTILITIES}/showSupportedCameras.sh" "--${CT}" |
 		grep --silent "${CM}" ; then
 
 		MSG="${CT} camera '${CM}' is not supported by Allsky."

@@ -109,7 +109,7 @@ function show_supported_cameras()
 	fi
 
 	# shellcheck disable=SC2086
-	show_supported_cameras.sh ${ARGS}
+	showSupportedCameras.sh ${ARGS}
 }
 
 #####
@@ -165,7 +165,7 @@ function new_rpi_camera_info()
 	local ARGS="${@}"		# optional
 
 	# shellcheck disable=SC2086
-	get_RPi_camera_info.sh ${ARGS}
+	getRPiCameraInfo.sh ${ARGS}
 }
 
 #####

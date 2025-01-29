@@ -459,7 +459,7 @@ ${INDENT} 1) Use ${CONFIG_MESSAGE} configuration file.\n\
 ${INDENT} 2) Upload the new remote Website code.\n\
 ${INDENT} 3) Upload the remote Website configuration file.\n\
 ${INDENT} 4) Enable the remote Website.\n\
-${INDENT} 5) Any existing startrails, keograms, and/or timelapse will NOT be touched.\n\
+${INDENT} 5) Any existing startrails, keograms, meteors, and/or timelapse will NOT be touched.\n\
 \n\
  ${DIALOG_RED}NOTE: This will:${DIALOG_NORMAL}\n\
 ${INDENT}- Overwrite the old Allsky web files on the remote server.\n\
@@ -802,6 +802,7 @@ function upload_remote_website()
 		EXCLUDE_FILES="--exclude-glob=videos/*.mp4"
 		EXCLUDE_FILES+=" --exclude-glob=keograms/*.jpg"
 		EXCLUDE_FILES+=" --exclude-glob=startrails/*.jpg"
+		EXCLUDE_FILES+=" --exclude-glob=meteors/*.jpg"
 		EXCLUDE_FILES+=" --exclude-glob=*/thumbnails/*.jpg"
 		MSG+=" (without videos, images, and their thumbnails)."
 	else

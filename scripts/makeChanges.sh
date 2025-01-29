@@ -274,6 +274,7 @@ CAMERA_MODEL_ARG=""
 # and if either is invalid, restore both values.
 
 declare -A KEYS=()
+declare -a KEY_NUMS=()
 declare -A LABELS=()
 declare -A OLD_VALUES=()
 declare -A NEW_VALUES=()
@@ -288,8 +289,9 @@ do
 
 	shift 4
 
-	# Don't skip if it's cameratype since that indicates we need to refresh the camera info.
-	if [[ ${KEY} != "cameratype" && ${OLD_VALUE} == "${NEW_VALUE}" ]]; then
+	# Don't skip if it's a camera* settings since that means we need to refresh the camera info.
+	if [[ ${KEY} != "cameratype" && ${KEY} != "cameranumber" && ${KEY} != "cameramodel" &&
+			${OLD_VALUE} == "${NEW_VALUE}" ]]; then
 		if debug ; then
 			d_ "Skipping ${LABEL} - old and new are equal."
 		fi
@@ -297,15 +299,16 @@ do
 	fi
 
 	(( NUM_CHANGED++ ))
-	KEYS[${KEY}]="${KEY}"
+	N="$( printf "%03d" "${NUM_CHANGED}" )"
+	KEY_NUMS[${N}]="${KEY}"		# new ones added to the end
+	KEYS[${KEY}]="${KEY}"		# new ones appear to be added in random order
 	LABELS[${KEY}]="${LABEL}"
 	OLD_VALUES[${KEY}]="${OLD_VALUE}"
 	NEW_VALUES[${KEY}]="${NEW_VALUE}"
 done
 
-
 # shellcheck disable=SC2302
-for KEY in "${KEYS[@]}"
+for KEY in "${KEY_NUMS[@]}"
 do
 	# See if the setting was already processed and hence removed from the array.
 	# Can't check for empty ${KEY} since the items in the "for" line were set once.

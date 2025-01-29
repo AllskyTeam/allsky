@@ -1013,7 +1013,8 @@ set_permissions()
 		"${ALLSKY_WEBSITE_MYFILES_DIR}" \
 		"${ALLSKY_WEBSITE}/videos/thumbnails" \
 		"${ALLSKY_WEBSITE}/keograms/thumbnails" \
-		"${ALLSKY_WEBSITE}/startrails/thumbnails"
+		"${ALLSKY_WEBSITE}/startrails/thumbnails" \
+		"${ALLSKY_WEBSITE}/meteors/thumbnails"
 
 	# Not everything in the Website needs to be writable by the web server,
 	# but make them all that way so we don't worry about missing something.
@@ -2696,6 +2697,17 @@ restore_prior_website_files()
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
+	ITEM="${SPACE}${SPACE}meteors"
+	D="${PRIOR_WEBSITE_DIR}/meteors/thumbnails"
+	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/meteors"
+	count=$( get_count "${PRIOR_WEBSITE_DIR}/meteors" 'meteors-*' )
+	if [[ ${count} -ge 1 ]]; then
+		display_msg --log progress "${ITEM} (moving)"
+		mv "${PRIOR_WEBSITE_DIR}"/meteors/meteors-*   "${ALLSKY_WEBSITE}/meteors"
+	else
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+	fi
+
 	ITEM="${SPACE}${SPACE}'${ALLSKY_MYFILES_NAME}' directory"
 	D="${PRIOR_WEBSITE_DIR}/${ALLSKY_MYFILES_NAME}"
 	if [[ -d ${D} ]]; then
@@ -2895,6 +2907,17 @@ do_restore()
 		if [[ ${count} -ge 1 ]]; then
 			display_msg --log progress "${ITEM} (moving back)"
 			mv "${ALLSKY_WEBSITE}"/startrails/startrails-*   "${PRIOR_WEBSITE_DIR}/startrails"
+		else
+			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+		fi
+
+		ITEM="${SPACE}${SPACE}meteors"
+		D="${ALLSKY_WEBSITE}/meteors/thumbnails"
+		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/meteors"
+		count=$( get_count "${ALLSKY_WEBSITE}/meteors" 'meteors-*' )
+		if [[ ${count} -ge 1 ]]; then
+			display_msg --log progress "${ITEM} (moving back)"
+			mv "${ALLSKY_WEBSITE}"/meteors/meteors-*   "${PRIOR_WEBSITE_DIR}/meteors"
 		else
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		fi

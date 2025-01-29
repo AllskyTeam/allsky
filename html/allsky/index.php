@@ -5,16 +5,15 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta property="og:title" content="Allsky Website" />
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"
-		rel="stylesheet"
-		integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx"
-		crossorigin="anonymous">
-
-	<link href='https://fonts.googleapis.com/css?family=Ubuntu:400,300' rel='stylesheet' type='text/css'>
+	<!-- From: https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css -->
+	<link rel="stylesheet" href="font-awesome/css/all.min.css" type="text/css">
+	<!-- https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css -->
+	<link rel="stylesheet" type="text/css" href="bootstrap.min.css">
+<!--
+	<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Ubuntu:400,300">
+-->
 	<link rel="stylesheet" type="text/css" href="animate.min.css">
 	<link rel="stylesheet" type="text/css" href="allsky.css">
-	<link rel="stylesheet" type="text/css" href="allsky-font.css">
 
 	<?php
 		// This gets the settings.

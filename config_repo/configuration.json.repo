@@ -124,6 +124,13 @@
                 "style": ""
             },
             {
+                "display": false,
+                "url": "meteors/",
+                "title": "Archived Meteors",
+                "icon": "fa fa-2x fa-fw fa-meteor",
+                "style": ""
+            },
+            {
                 "display": true,
                 "variable": "imageName",
                 "title": "Full-sized image",

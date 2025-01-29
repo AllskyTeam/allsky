@@ -2697,15 +2697,17 @@ restore_prior_website_files()
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-	ITEM="${SPACE}${SPACE}meteors"
-	D="${PRIOR_WEBSITE_DIR}/meteors/thumbnails"
-	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/meteors"
-	count=$( get_count "${PRIOR_WEBSITE_DIR}/meteors" 'meteors-*' )
-	if [[ ${count} -ge 1 ]]; then
-		display_msg --log progress "${ITEM} (moving)"
-		mv "${PRIOR_WEBSITE_DIR}"/meteors/meteors-*   "${ALLSKY_WEBSITE}/meteors"
-	else
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+	if [[ -d "${PRIOR_WEBSITE_DIR}/meteors" ]]; then
+		ITEM="${SPACE}${SPACE}meteors"
+		D="${PRIOR_WEBSITE_DIR}/meteors/thumbnails"
+		[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/meteors"
+		count=$( get_count "${PRIOR_WEBSITE_DIR}/meteors" 'meteors-*' )
+		if [[ ${count} -ge 1 ]]; then
+			display_msg --log progress "${ITEM} (moving)"
+			mv "${PRIOR_WEBSITE_DIR}"/meteors/meteors-*   "${ALLSKY_WEBSITE}/meteors"
+		else
+			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+		fi
 	fi
 
 	ITEM="${SPACE}${SPACE}'${ALLSKY_MYFILES_NAME}' directory"
@@ -2911,15 +2913,17 @@ do_restore()
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		fi
 
-		ITEM="${SPACE}${SPACE}meteors"
-		D="${ALLSKY_WEBSITE}/meteors/thumbnails"
-		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/meteors"
-		count=$( get_count "${ALLSKY_WEBSITE}/meteors" 'meteors-*' )
-		if [[ ${count} -ge 1 ]]; then
-			display_msg --log progress "${ITEM} (moving back)"
-			mv "${ALLSKY_WEBSITE}"/meteors/meteors-*   "${PRIOR_WEBSITE_DIR}/meteors"
-		else
-			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+		if [[ -d "${PRIOR_WEBSITE_DIR}/meteors" ]]; then
+			ITEM="${SPACE}${SPACE}meteors"
+			D="${ALLSKY_WEBSITE}/meteors/thumbnails"
+			[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/meteors"
+			count=$( get_count "${ALLSKY_WEBSITE}/meteors" 'meteors-*' )
+			if [[ ${count} -ge 1 ]]; then
+				display_msg --log progress "${ITEM} (moving back)"
+				mv "${ALLSKY_WEBSITE}"/meteors/meteors-*   "${PRIOR_WEBSITE_DIR}/meteors"
+			else
+				display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+			fi
 		fi
 
 		ITEM="${SPACE}${SPACE}${ALLSKY_MYFILES_NAME}"

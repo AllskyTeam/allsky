@@ -82,6 +82,7 @@ OLD_FILES_TO_REMOVE=( \
 	"virtualsky.json" \
 	"README.md" \
 	"version" \
+	"allsky-font.css" \
 	".git/" )
 
 ############################################## functions

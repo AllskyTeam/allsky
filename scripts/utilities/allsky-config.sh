@@ -75,7 +75,7 @@ function usage_and_exit()
 	echo -e "      samba"
 	echo -e "      new_rpi_camera_info [--camera NUM]"
 	echo -e "      show_start_times [--zero] [angle [latitude [longitude]]]"
-	echo -e "      compare_paths"
+	echo -e "      compare_paths --website | --server"
 	echo -e "      get_brightness_info"
 	echo -e "      encoders"
 	echo -e "      pix_fmts"
@@ -532,3 +532,4 @@ else
 	run_command "${CMD}" ${CMD_ARGS}
 	exit $?
 fi
+

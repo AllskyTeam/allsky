@@ -896,9 +896,9 @@ function umount_tmp()
 
 	sudo umount -f "${TMP}" 2> /dev/null ||
 		{
-			sudo systemctl restart smbd 2> /dev/null
-			sudo umount -f "${TMP}" 2> /dev/null
-		}
+			sudo systemctl restart smbd
+			sudo umount -f "${TMP}"
+		} 2> /dev/null
 }
 
 ####

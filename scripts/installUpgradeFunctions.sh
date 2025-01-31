@@ -659,19 +659,26 @@ function update_old_website_config_file()
 {
 	local FILE PRIOR_VERSION CURRENT_VERSION
 
+# TODO: create a .php file that reads the prior file into an array,
+# then reads the repo file into another array, then copies from prior array to repo array,
+# deleting / changing as needed.
+
 	FILE="${1}"
 	PRIOR_VERSION="${2}"
 	CURRENT_VERSION="${3}"
 
-	# Current version: 2
+	# Version: 1 from v2023.05.01*
+	# Version: 2 from v2024.12.06
+	# Current version: 3 from v2024.12.06_01
 	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
+		# These steps bring version 1 up to 2.
 		# Deletions:
 		update_json_file -d ".AllskyWebsiteVersion" "" "${FILE}"
 		update_json_file -d ".homePage.onPi" "" "${FILE}"
 		update_array_field "${FILE}" "homePage.popoutIcons" "variable" "AllskyWebsiteVersion" "--delete"
 
 		# Additions:
-		# Add in same place as new file
+		# Add in same place as in repo file.
 		local NEW='      \"thumbnailsizex\": 100,\
         \"thumbnailsizey\": 75,\
         \"thumbnailsortorder\": \"ascending\",'
@@ -681,6 +688,42 @@ function update_old_website_config_file()
 		for i in "videos" "keograms" "startrails"; do
 			update_array_field "${FILE}" "homePage.leftSidebar" "url" "${i}" "${i}/"
 		done
+	fi
+
+	# Try to determine what future changes are needed,
+	# rather than compare version numbers as above.
+	if ! grep --silent "meteors/" "${FILE}" ; then
+		# Added in version 3.
+		# Add after "startrails/" entry.
+		TEMP="/tmp/$$"
+		gawk 'BEGIN { found_startrails = 0; }
+			{
+				print $0;
+
+				if (found_startrails == 1) {
+					if ($1 == "},") {
+						spaces6 = "      ";
+						spaces8 = "        ";
+						printf("%s{\n", spaces6);
+						printf("%s\"display\": false,\n", spaces8)
+						printf("%s\"url\": \"meteors/\",\n", spaces8)
+						printf("%s\"title\": \"Archived Meteors/\",\n", spaces8)
+						printf("%s\"icon\": \"fa fa-2x fa-fw fa-meteor\",\n", spaces8)
+						printf("%s\"style\": \"\"\n", spaces8)
+						printf("%s},\n", spaces6);
+	
+						while (getline) {
+							print $0;
+						}
+						exit(0);
+					}
+				} else if ($0 ~ /"startrails\/"/) {
+					found_startrails = 1;
+				}
+			}' "${FILE}" > "${TEMP}"
+		if [[ $? -eq 0 ]]; then
+			# cp so it keeps ${FILE}'s attributes
+			cp "${TEMP}" "${FILE}" && rm -f "${TEMP}"
 	fi
 
 	# Set to current config and Allsky versions.
@@ -1224,3 +1267,4 @@ function add_new_settings()
 
 	return 0
 }
+

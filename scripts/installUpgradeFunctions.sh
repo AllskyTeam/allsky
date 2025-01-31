@@ -1108,17 +1108,19 @@ function get_website_checksums()
 	(
 		cd "${ALLSKY_WEBSITE}"		|| exit 1
 
-		# Add important image files.
-		echo loading.jpg
-		echo allsky-logo.png
-		echo NoThumbnail.png
-		echo allsky-favicon.png
+		{
+			# Add important image files.
+			echo loading.jpg
+			echo allsky-logo.png
+			echo NoThumbnail.png
+			echo allsky-favicon.png
 
-		# Get all non-image files except for the ones the user creates/updates.
-		find . -type f '!' '(' -name '*.jpg' -or -name '*.png' -or -name '*.mp4' ')' |
-			sed 's;^./;;' |
-			grep -E -v "myFiles/|${ALLSKY_WEBSITE_CONFIGURATION_NAME}|$( basename "${ALLSKY_WEBSITE_CHECKSUM_FILE}" )"
-	) | "${ALLSKY_UTILITIES}/getChecksum.php"
+			# Get all non-image files except for the ones the user creates/updates.
+			find . -type f '!' '(' -name '*.jpg' -or -name '*.png' -or -name '*.mp4' ')' |
+				sed 's;^./;;' |
+				grep -E -v "myFiles/|${ALLSKY_WEBSITE_CONFIGURATION_NAME}|$( basename "${ALLSKY_WEBSITE_CHECKSUM_FILE}" )"
+		} | "${ALLSKY_UTILITIES}/getChecksum.php"
+	)
 }
 
 

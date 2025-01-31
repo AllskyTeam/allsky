@@ -2569,8 +2569,10 @@ restore_prior_files()
 			display_msg --log progress "${MSG}"
 		else
 			MSG="Your remote Website needs to be updated to version ${ALLSKY_VERSION}."
-			MSG+="\nIt is at version ${PRIOR_V}"
-			MSG+="\n\nRun:  cd ~/allsky;  ./remoteWebsiteInstall.sh"
+			MSG+="\nIt is at version ${PRIOR_V}.     Run:"
+			MSG+="\n\n  cd ~/allsky;  ./remoteWebsiteInstall.sh"
+			MSG+="\n\nNote that you do NOT need to manually copy files to the Website;"
+			MSG+="\nthe installation does that for you."
 			display_msg --log notice "${MSG}"
 			add_to_post_actions "${MSG}"
 		fi

@@ -926,7 +926,12 @@ function check_tmp()
 	# in /etc/fstab with ${ALLSKY_TMP} in it, even if it's not currently mounted.
 	if grep --quiet "^${INITIAL_FSTAB_STRING}" /etc/fstab ; then
 		MSG="${ALLSKY_TMP} is currently a memory filesystem; no change needed."
-		display_msg --logonly info "${MSG}"
+		if [[ ${CALLED_FROM} == "install" ]]; then
+			display_msg --logonly info "${MSG}"
+		else
+			o_ "\n${MSG}\n"
+			return 0
+		fi
 
 		# If there's a prior Allsky version and it's tmp directory is mounted,
 		# try to unmount it, but that often gives an error that it's busy,

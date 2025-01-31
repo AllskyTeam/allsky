@@ -772,11 +772,10 @@ function create_lighttpd_log_file()
 ####
 # Check for size of RAM+swap during installation (Issue # 969)
 # and ask the user to increase if not "big enough".
-# recheck_swap() is is referenced in the Allsky Documentation and can
-# optionally be called after installation to adjust swap space.
+# recheck_swap() can be called after installation to adjust swap space.
 function recheck_swap()
 {
-	check_swap "after_install" "prompt"
+	check_swap "after_install" "true"
 }
 function check_swap()
 {

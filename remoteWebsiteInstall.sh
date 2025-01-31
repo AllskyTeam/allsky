@@ -131,10 +131,11 @@ function add_dialog_heading()
 {
 	local DIALOG_TEXT="${1}"
 
+	echo "${DIALOG_TEXT}"
+
 	## We no longer add the remote URL but have left this code in case we want
 	## to add something else in the future.
-	## Only the:   ITEM_TO_ADD=xxx   line should need changing.
-	echo "${DIALOG_TEXT}"
+	## Only the:   ITEM_TO_ADD=...   line should need changing.
 	return
 
 	if [[ ${TEXT_ONLY} == "true" ]]; then
@@ -722,10 +723,11 @@ function remove_remote_file()
 	if [[ $? -eq 0 ]] ; then
 		MSG="Deleted remote file '${FILENAME}'"
 		[[ ${CHECK} != "check" ]] && MSG+=" (if it existed)"
-
 		display_msg --logonly info "${MSG}"
+
 	elif [[ ! ${ERR} =~ "550" ]]; then		# does not exist
 		MSG="Unable to delete remote file '${FILENAME}': ${ERR}"
+		display_msg --logonly info "${MSG}"
 		return 1
 
 	else
@@ -829,14 +831,17 @@ function upload_remote_website()
 	CMDS+="${NL}bye"
 
 	local TMP="${ALLSKY_TMP}/remote_upload.txt"
-	echo -e "CMDS=${CMDS}\n======" > "${TMP}"
+	echo -e "CMDS=\n${CMDS}\n====== END OF CMDS" > "${TMP}"
 	# shellcheck disable=SC2086
 	lftp -u "${REMOTE_USER},${REMOTE_PASSWORD}" \
 		 ${REMOTE_PORT} "${REMOTE_PROTOCOL}://${REMOTE_HOST}" -e "${CMDS}" >> "${TMP}" 2>&1
 	local RET_CODE=$?
 
 	# Ignore stuff not supported by all FTP servers and stuff we don't want to see.
-	local IGNORE="operation not supported|command not understood|hostname checking disabled|Overwriting old file"
+	local IGNORE="operation not supported"
+	IGNORE+="|command not understood"
+	IGNORE+="|hostname checking disabled"
+	IGNORE+="|Overwriting old file"
 	MSG="$( grep -v -i -E "${IGNORE}" "${TMP}" )"
 	# If the "mirror" command causes any of the messages above,
 	# they are counted as errors.

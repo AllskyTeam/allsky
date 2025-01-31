@@ -36,7 +36,7 @@ while [[ $# -gt 0 ]]; do
 			;;
 
 		-*)
-			echo -e "${RED}${ME}: Unknown argument '${ARG}'.${NC}" >&2
+			e_ "\nUnknown argument '${ARG}'." >&2
 			OK="false"
 			;;
 
@@ -57,26 +57,29 @@ function usage_and_exit()
 	
 	exec 2>&1
 	echo
-	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-	echo "Usage: ${ME} [--help] [--debug] [command [--help] [arguments ...]]"
-	[[ ${RET} -ne 0 ]] && echo -en "${NC}"
-	echo -e "\n	where:"
-	echo -e "	'--help' displays this message and exits."
-	echo -e "	'--debug' displays debugging information."
-	echo -e "	'command' is a command to execute with optional arguments.  Choices are:"
-	echo -e "		show_supported_cameras  RPi | ZWO"
-	echo -e "		show_connected_cameras"
-	echo -e "		prepare_logs"
-	echo -e "		recheck_swap"
-	echo -e "		recheck_tmp"
-	echo -e "		samba"
-	echo -e "		new_rpi_camera_info [--camera NUM]"
-	echo -e "		show_start_times [--zero] [angle [latitude [longitude]]]"
-	echo -e "		compare_paths"
-	echo -e "		get_brightness_info"
-	echo -e "		encoders"
-	echo -e "		pix_fmts"
-	echo -e "	If no 'command' is specified you are prompted for one to execute."
+	local MSG="Usage: ${ME} [--help] [--debug] [command [--help] [arguments ...]]"
+	if [[ ${RET} -ne 0 ]]; then
+		e_ "${MSG}"
+	else
+		echo -e "${MSG}"
+	fi
+	echo -e "\nwhere:"
+	echo -e "  '--help' displays this message and exits."
+	echo -e "  '--debug' displays debugging information."
+	echo -e "  'command' is a command to execute with optional arguments.  Choices are:"
+	echo -e "      show_supported_cameras  RPi | ZWO"
+	echo -e "      show_connected_cameras"
+	echo -e "      prepare_logs"
+	echo -e "      recheck_swap"
+	echo -e "      recheck_tmp"
+	echo -e "      samba"
+	echo -e "      new_rpi_camera_info [--camera NUM]"
+	echo -e "      show_start_times [--zero] [angle [latitude [longitude]]]"
+	echo -e "      compare_paths"
+	echo -e "      get_brightness_info"
+	echo -e "      encoders"
+	echo -e "      pix_fmts"
+	echo -e "  If no 'command' is specified you are prompted for one to execute."
 	echo
 
 	exit "${RET}"
@@ -326,7 +329,7 @@ function show_start_times()
 				;;
 
 			--*)
-				echo -e "${RED}${ME}: Unknown argument '${ARG}'.${NC}" >&2
+				e_ "${ME}: Unknown argument '${ARG}'." >&2
 				OK="false"
 				;;
 
@@ -380,7 +383,7 @@ function needs_arguments()
 {
 	if [[ $# -eq 0 ]]; then
 		if [[ -n ${CMD} ]]; then		# CMD is global
-			echo -e "\n${RED}'${FUNCNAME[1]}' requires an argument.${NC}" >&2
+			e_ "\n'${FUNCNAME[1]}' requires an argument." >&2
 			usage_and_exit 1
 		else
 			echo "${@}"
@@ -401,14 +404,12 @@ function run_command()
 	# shellcheck disable=SC2124
 	ARGUMENTS="${@}"
 	if ! type "${COMMAND}" > /dev/null 2>&1 ; then
-		echo -e "\n${RED}${ME}: Unknown command '${COMMAND}'.${NC}" >&2
+		e_ "\n${ME}: Unknown command '${COMMAND}'." >&2
 		return 1
 	fi
 
 	if [[ ${DEBUG} == "true" ]]; then
-		echo -e "${YELLOW}"
-		echo -e "Executing: ${COMMAND} ${ARGUMENTS}:\n"
-		echo -e "${NC}"
+		d_ "Executing: ${COMMAND} ${ARGUMENTS}\n"
 	fi
 
 	#shellcheck disable=SC2086
@@ -444,7 +445,7 @@ function prompt()
 		"${LINES}" "${WT_WIDTH:-80}" "${NUM_OPTIONS}" -- "${OPTIONS[@]}" 3>&1 1>&2 2>&3 )"
 	local RET=$?
 	if [[ ${RET} -eq 255 ]]; then
-		echo -e "\n${RED}${ME}: whiptail failed.${NC}" >&2
+		e_ "\n${ME}: whiptail failed." >&2
 		exit 2
 	else
 		echo "${OPT}"
@@ -462,7 +463,7 @@ function getInput()
 		"" 3>&1 1>&2 2>&3 )"
 	local RET=$?
 	if [[ ${RET} -eq 255 ]]; then
-		echo -e "\n${RED}${ME}: whiptail failed.${NC}" >&2
+		e_ "\n${ME}: whiptail failed." >&2
 		exit 2
 	else
 		echo "${LINE}"

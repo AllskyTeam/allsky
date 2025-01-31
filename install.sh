@@ -1,6 +1,8 @@
 #!/bin/bash
 # shellcheck disable=SC2154		# referenced but not assigned
 
+unset ALLSKY_VARIABLE_SET		# To force variables.sh to be read
+
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
 ME="$( basename "${BASH_ARGV0}" )"
 

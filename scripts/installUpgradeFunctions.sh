@@ -724,6 +724,7 @@ function update_old_website_config_file()
 		if [[ $? -eq 0 ]]; then
 			# cp so it keeps ${FILE}'s attributes
 			cp "${TEMP}" "${FILE}" && rm -f "${TEMP}"
+		fi
 	fi
 
 	# Set to current config and Allsky versions.

@@ -263,7 +263,7 @@ read -r CC_TYPE CC_NUMBER CC_MODEL <<<"${CCM}"
 if ! echo -e "${CCM}" | grep --silent "${CAM}" ; then
 	# Something changed.  validate_camera() displays the error message.
 	if ! validate_camera "${CC_TYPE}" "${CC_MODEL}" "${CC_NUMBER}" ; then
-		set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
+		set_allsky_status "${ALLSKY_STATUS_CAMERA_CHANGED}"
 		IMAGE_MSG="${ERROR_MSG_PREFIX}"
 		IMAGE_MSG+="The camera changed."
 		IMAGE_MSG+="\nCheck Camera Type\n& Model in the WebUI."
@@ -370,7 +370,7 @@ if [[ ${RETCODE} -eq ${EXIT_RESTARTING} ]]; then
 	else
 		NOTIFICATION_TYPE="Restarting"
 	fi
-	set_allsky_status "${ALLSKY_STATUS_STOPPED}"
+	set_allsky_status "${ALLSKY_STATUS_RESTARTING}"
 	doExit 0 "${NOTIFICATION_TYPE}"		# use 0 so the service is restarted
 fi
 

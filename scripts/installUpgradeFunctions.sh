@@ -814,13 +814,80 @@ function get_ram_tmp_swap()
 }
 
 ####
-# Check for size of RAM+swap during installation (Issue # 969)
-# and ask the user to increase if not "big enough".
+# Prompt for either a 0 or a positive number.
+function get_0_or_positive()
+{
+	local CURRENT_NUM="${1}"
+	local WHAT="${2}"
+	local MSG="${3}"
+
+	local NEW_NUM=""
+	local ERR_MSG="\nERROR: You must enter a number, either:"
+	ERR_MSG+="\n    a '0' to ${WHAT} (NOT RECOMMENDED)"
+	ERR_MSG+="\nor"
+	ERR_MSG+="\n    a size in MB\n"
+
+	while [[ -z ${NEW_NUM} ]] ; do
+		NEW_NUM=$( whiptail --title "${TITLE}" --inputbox "${MSG}\n" 20 "${WT_WIDTH}" \
+		 	"${CURRENT_NUM}"  3>&1 1>&2 2>&3 )
+		local RET=$?
+		if [[ ${RET} -eq 1 ]]; then		# Cancel button
+			NEW_NUM="${CURRENT_NUM}"
+		elif [[ -z ${NEW_NUM} ]]; then
+			MSG="${ERR_MSG}"
+		elif ! is_number "${NEW_NUM}" ; then
+			MSG="${ERR_MSG}"
+			MSG+="\nYou entered: ${NEW_NUM}\n"
+			NEW_NUM=""
+		elif [[ "${NEW_NUM}" -lt 0 ]]; then
+			MSG="${ERR_MSG}"
+			MSG+="\nYou entered a negative number: ${NEW_NUM}\n"
+			NEW_NUM=""
+		fi
+		[[ -z ${NEW_NUM} ]] && MSG+="\nTry again.\n"
+	done
+
+	# If the suggested number was 0 and the user added a number but didn't
+	# first delete the 0, do it now so we don't have numbers like "0256".
+	[[ ${NEW_NUM} != "0" && ${NEW_NUM:0:1} == "0" ]] && NEW_NUM="${NEW_NUM:1}"
+
+	echo "${NEW_NUM}"
+}
+
+####
+# Output a message based on ${FROM}.
+function m()
+{
+	local MSG="${1}"
+	local MSG2="${2}"
+	local LOG="${3}"
+	local LEVEL="${4}"
+	local FROM="${5}"
+
+	if [[ ${FROM} == "install" ]]; then
+		display_msg "${LOG}" log "${LEVEL}" "${MSG}" "${MSG2}"
+	else
+		if [[ ${LEVEL} == "error" ]]; then
+			e_ "\nERROR: ${MSG}${MSG2}\n"
+		elif [[ ${LEVEL} == "warning" ]]; then
+			w_ "\nWARNING: ${MSG}${MSG2}\n"
+		elif [[ ${LEVEL} == "progress" ]]; then
+			o_ "\n${MSG}${MSG2}\n"
+		else
+			echo -e "\n${MSG}${MSG2}\n"
+		fi
+	fi
+}
+
+####
 # Called from allsky-config after installation to adjust amount.
 function recheck_swap()
 {
-	check_swap "after_install" "true"
+	check_swap "after_install"  "true"
 }
+
+####
+# Allow the user to change the amount of swap space used.
 function check_swap()
 {
 	local CALLED_FROM="${1}"
@@ -828,7 +895,7 @@ function check_swap()
 
 	# global: TITLE  WT_WIDTH
 	local SWAP_CONFIG_FILE="/etc/dphys-swapfile"
-	local CURRENT_SWAP  AMT  M  MSG  SWAP_SIZE  CURRENT_MAX
+	local CURRENT_SWAP  AMT  M  MSG  NEW_SIZE  CURRENT_MAX  CHANGE_SUGGESTED
 
 	if [[ ${CALLED_FROM} == "install" ]]; then
 		declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" && ${PROMPT} == "false" ]] && return
@@ -837,80 +904,90 @@ function check_swap()
 	[[ -z ${WT_WIDTH} ]] && WT_WIDTH="$( calc_wt_size )"
 
 	get_ram_tmp_swap		# Sets ${RAM_SIZE} and ${SUGGESTED_SWAP_SIZE}
-	if [[ ${CALLED_FROM} == "install" ]]; then
-		MSG="RAM_SIZE=${RAM_SIZE}, SUGGESTED_SWAP_SIZE=${SUGGESTED_SWAP_SIZE}."
-		display_msg --logonly info "${MSG}"
-	fi
+	MSG="RAM_SIZE=${RAM_SIZE}, SUGGESTED_SWAP_SIZE=${SUGGESTED_SWAP_SIZE}."
+	# /dev/null so no ouput when not called from installer
+	m "${MSG}" "" "--log" "info" "${CALLED_FROM}" > /dev/null
 
-	# Not sure why, but displayed swap is often 1 MB less than what's in /etc/dphys-swapfile
-	CURRENT_SWAP=$( free --mebi |
+	# With "free -mebi" the displayed swap is often 1 MB less than what's in
+	# /etc/dphys-swapfile, I think because "free -mebi" rounds down to an int.
+	# Fix by gettting size in kibi (kilo) and divide by 1024 and convert to an int.
+	CURRENT_SWAP=$( free --kibi |
 			gawk 'BEGIN { swap = 0; }
 			{
 				if ($1 == "Swap:") {
-					swap = $2 + 1;
+					swap = $2 / 1024;
 					exit 0;
 				}
 			}
-			END { print swap }'
+			END { printf("%.f", swap); }'
 		)	# in MB
-	CURRENT_SWAP=${CURRENT_SWAP:-0}
-	if [[ ${CURRENT_SWAP} -lt ${SUGGESTED_SWAP_SIZE} || ${PROMPT} == "true" ]]; then
 
-		[[ -z ${FUNCTION} ]] && sleep 2		# give user time to read prior messages
-		if [[ ${CURRENT_SWAP} -eq 1 ]]; then
-			CURRENT_SWAP=0
+	if [[ ${CURRENT_SWAP} -lt ${SUGGESTED_SWAP_SIZE} || ${PROMPT} == "true" ]]; then
+		if [[ ${CURRENT_SWAP} -eq 0 ]]; then
 			AMT="no"
-			M="added"
 		else
 			AMT="${CURRENT_SWAP} MB of"
-			M="increased"
 		fi
 		MSG="\nYour Pi currently has ${AMT} swap space."
 		MSG+="\nBased on your memory size of ${RAM_SIZE} MB,"
 		if [[ ${CURRENT_SWAP} -ge ${SUGGESTED_SWAP_SIZE} ]]; then
+			CHANGE_SUGGESTED="false"
 			SUGGESTED_SWAP_SIZE=${CURRENT_SWAP}
 			MSG+=" there is no need to change anything, but you can if you would like."
 		else
-			MSG+=" we suggest ${SUGGESTED_SWAP_SIZE} MB of swap"
-			MSG+=" to decrease the chance of timelapse and other failures."
-			MSG+="\n\nDo you want swap space ${M}?"
+			CHANGE_SUGGESTED="true"
+			MSG+=" the recommended swap size is ${SUGGESTED_SWAP_SIZE} MB."
+			MSG+=" which will decrease the chance of timelapse and other failures."
 			MSG+="\n\nYou may change the amount of swap space by changing the number below."
 		fi
 
-		SWAP_SIZE=$( whiptail --title "${TITLE}" --inputbox "${MSG}" 18 "${WT_WIDTH}" \
-			"${SUGGESTED_SWAP_SIZE}" 3>&1 1>&2 2>&3 )
-		# If the suggested swap was 0 and the user added a number but didn't first delete the 0,
-		# do it now so we don't have numbers like "0256".
-		[[ ${SWAP_SIZE:0:1} == "0" ]] && SWAP_SIZE="${SWAP_SIZE:1}"
-
-# TODO: handle [[ ${CALLED_FROM} == "install" ]]
-		if [[ -z ${SWAP_SIZE} || ${SWAP_SIZE} == "0" ]]; then
-			if [[ ${CURRENT_SWAP} -eq 0 && ${SUGGESTED_SWAP_SIZE} -gt 0 ]]; then
-				display_msg --log warning "With no swap space you run the risk of programs failing."
-			else
-				display_msg --log info "Swap will remain at ${CURRENT_SWAP}."
+		NEW_SIZE="$( get_0_or_positive "${SUGGESTED_SWAP_SIZE}" "disable swap space" "${MSG}" )"
+		if [[ ${NEW_SIZE} -eq 0 ]]; then
+			if [[ ${CHANGE_SUGGESTED} == "true" && ${SUGGESTED_SWAP_SIZE} -gt 0 ]]; then
+				MSG="With no swap space you run the risk of programs failing."
+				m "${MSG}" "" "--log" "warning" "${CALLED_FROM}"
 			fi
-		else
-			display_msg --log progress "Setting swap space to ${SWAP_SIZE} MB."
-			sudo dphys-swapfile swapoff					# Stops the swap file
-			sudo sed -i "/CONF_SWAPSIZE/ c CONF_SWAPSIZE=${SWAP_SIZE}" "${SWAP_CONFIG_FILE}"
 
+			if [[ ${CURRENT_SWAP} -gt 0 ]]; then
+				MSG="Swap space disabled."
+				m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
+
+				sudo dphys-swapfile swapoff				# Stop using swap file
+				sudo dphys-swapfile uninstall			# Remove the swap file
+				sudo sed -i "/CONF_SWAPSIZE=/ c CONF_SWAPSIZE=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
+			else
+				MSG="Swap space remaining disabled."
+				m "${MSG}" "" "--logonly" "info" "${CALLED_FROM}"
+			fi
+		elif [[ ${NEW_SIZE} -eq ${CURRENT_SWAP} && ${CHANGE_SUGGESTED} == "false" ]]; then
+			# User didn't change, and CURRENT_SWAP is sufficient.
+			MSG="Swap size will remain at ${CURRENT_SWAP} MB."
+			m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
+		else
+			MSG="Swap size set to ${NEW_SIZE} MB."
+			m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
+
+			sudo dphys-swapfile swapoff					# Stop using swap file
+			sudo sed -i "/CONF_SWAPSIZE=/ c CONF_SWAPSIZE=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
+
+			# If NEW_SIZE is greater than the current max, increase the max.
 			CURRENT_MAX="$( get_variable "CONF_MAXSWAP" "${SWAP_CONFIG_FILE}" )"
 			# TODO: Can we determine the default max rather than hard-code it?
 			CURRENT_MAX="${CURRENT_MAX:-2048}"
-			if [[ ${CURRENT_MAX} -lt ${SWAP_SIZE} ]]; then
+			if [[ ${CURRENT_MAX} -lt ${NEW_SIZE} ]]; then
 				if [[ ${DEBUG} -gt 0 ]]; then
-					display_msg --log debug "Increasing max swap size to ${SWAP_SIZE} MB."
+					MSG="Max swap size increased to ${NEW_SIZE} MB."
+					m "${MSG}" "" "--logonly" "debug" "${CALLED_FROM}"
 				fi
-				sudo sed -i "/CONF_MAXSWAP/ c CONF_MAXSWAP=${SWAP_SIZE}" "${SWAP_CONFIG_FILE}"
+				sudo sed -i "/CONF_MAXSWAP/ c CONF_MAXSWAP=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
 			fi
 
-			sudo dphys-swapfile setup  > /dev/null		# Sets up new swap file
-			sudo dphys-swapfile swapon					# Turns on new swap file
+			sudo dphys-swapfile setup  > /dev/null		# Set up new swap file
+			sudo dphys-swapfile swapon					# Turn on new swap file
 		fi
 	else
 		MSG="Size of current swap (${CURRENT_SWAP} MB) is sufficient; no change needed."
-		display_msg --logonly info "${MSG}"
+		m "${MSG}" "" "--log" "info" "${CALLED_FROM}"
 	fi
 
 	if [[ ${CALLED_FROM} == "install" ]]; then
@@ -936,17 +1013,10 @@ function mount_dir()
 	local FROM="${2}"
 
 	local ERR_MSG
-# TODO: Delete these commented-out lines after we're sure this works.
-#echo "MMM mounting $DIR, df:"; df -h|grep allsky;echo "fstab:";grep allsky /etc/fstab; echo "mount:"; mount|grep allsky
 	if ! ERR_MSG="$( sudo mount "${DIR}" )" ; then
 		local MSG="Unable to mount '${DIR}': ${ERR_MSG}."
-		if [[ ${FROM} == "install" ]]; then
-			display_msg --log warning "${MSG}"
-		else
-			e_ "ERROR: ${MSG}"
-		fi
+		m "${MSG}" "" "--log" "warning" "${FROM}"
 	fi
-#echo -e "\nMMM after, df:"; df -h|grep allsky;echo "fstab:";grep allsky /etc/fstab; echo "mount:"; mount|grep allsky
 }
 
 ####
@@ -955,8 +1025,6 @@ function umount_dir()
 {
 	local DIR="${1}"
 	local FROM="${2}"
-
-#echo "UUU unmounting $DIR, df:"; df -h|grep allsky;echo "fstab:";grep allsky /etc/fstab; echo "mount:"; mount|grep allsky
 
 	# Make sure we're not anywhere in ${DIR} - that can cause the umount to fail.
 	# shellcheck disable=SC2103,SC2164
@@ -973,23 +1041,15 @@ function umount_dir()
 				local WHO="$( lsof "${DIR}" )"		# lists open files on ${DIR}
 				if [[ -n ${WHO} ]]; then
 					local ERR_MSG="Unable to unmount '${DIR}'"
-					if [[ ${FROM} == "install" ]]; then
-						display_msg --logonly info "${ERR_MSG}" "${WHO}"
-					else
-						w_ "\nWARNING: ${ERR_MSG}:\n$( indent "${WHO}" )" >&2
-					fi
+					m "${ERR_MSG}" "${WHO}" "--logonly" "info" "${FROM}"
 				fi
 			fi
 		}
-#echo -e "\nUUU after, RET=$RET, df:"; df -h|grep allsky;echo "fstab:";grep allsky /etc/fstab; echo "mount:"; mount|grep allsky
+
 	if [[ ${OLDPWD} == "${DIR}" ]]; then
 		MSG="WARNING: You are in the '${DIR}' directory;"
 		local MSG2=" run 'cd ${OLDPWD}'"
-		if [[ ${FROM} == "install" ]]; then
-			display_msg --log warning "${MSG}" "${MSG2}"
-		else
-			w_ "\n${MSG} ${MSG2}\n" >&2
-		fi
+		m "${MSG}" "${MSG2}" "--log" "warning" "${FROM}"
 	fi
 	# shellcheck disable=SC2103,SC2164
 	cd "${OLDPWD}" 2>/dev/null
@@ -1121,7 +1181,7 @@ function check_tmp()
 			MSG+="\nYou can:"
 			MSG+="\n    adjust the size in MB,"
 			MSG+="\nor"
-			MSG+="\n    set to '0' to remove it from memory (not recommended)."
+			MSG+="\n    set to '0' to remove it from memory (NOT RECOMMENDED)."
 			if [[ ${SIZE} != "${SUGGESTED_TMP_SIZE}" ]]; then
 				MSG+="\n\nThe recommended size for your Pi is ${SUGGESTED_TMP_SIZE} MB."
 			fi
@@ -1135,29 +1195,7 @@ function check_tmp()
 			MSG+=" but that's not an issue since the directory only contains temporary files."
 		fi
 
-		NEW_SIZE=""
-		ERR_MSG="\nERROR: You must enter a number, either:"
-		ERR_MSG+="\n    a '0' to disable the feature (not recommended)"
-		ERR_MSG+="\nor"
-		ERR_MSG+="\n    a size in MB\n"
-		while [[ -z ${NEW_SIZE} ]] ; do
-			NEW_SIZE=$( whiptail --title "${TITLE}" --inputbox "${MSG}\n" 20 "${WT_WIDTH}" \
-			 	"${SIZE}"  3>&1 1>&2 2>&3 )
-			local RET=$?
-			if [[ ${RET} -eq 1 ]]; then		# Cancel button
-				NEW_SIZE="${SIZE}"
-			elif [[ -z ${NEW_SIZE} ]]; then
-				MSG="${ERR_MSG}"
-			elif ! is_number "${NEW_SIZE}" ; then
-				MSG="${ERR_MSG}"
-				MSG+="\nYou entered: ${NEW_SIZE}\n"
-				NEW_SIZE=""
-			elif [[ "${NEW_SIZE}" -lt 0 ]]; then
-				MSG="${ERR_MSG}"
-				MSG+="\nYou entered a negative number: ${NEW_SIZE}\n"
-				NEW_SIZE=""
-			fi
-		done
+		NEW_SIZE="$( get_0_or_positive "${SIZE}" "remove ${ALLSKY_TMP} from memory" "${MSG}" )"
 	else
 		NEW_SIZE="${SIZE}"	# Not prompting, so go with default size
 	fi
@@ -1173,11 +1211,9 @@ function check_tmp()
 		QUIT="true"
 	fi
 	if [[ ${QUIT} == "true" ]]; then
+		m "${MSG}" "" "--log" "info" "${CALLED_FROM}"
 		if [[ ${CALLED_FROM} == "install" ]]; then
 			STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
-			display_msg --log info "${MSG}"
-		else
-			echo -e "\n${MSG}\n"
 		fi
 		return 0
 	fi
@@ -1191,22 +1227,14 @@ function check_tmp()
 
 		if [[ -n ${CURRENT_STRING} ]]; then
 			if ! sudo sed -i -e "s;${CURRENT_STRING};${STRING};" ${FSTAB} ; then
-				ERR_MSG="Unable to update ${FSTAB}."
-				if [[ ${CALLED_FROM} == "install" ]]; then
-					display_msg --log error "${ERR_MSG}"
-				else
-					e_ "\nERROR: ${MSG}\n"
-				fi
+				MSG="Unable to update ${FSTAB}."
+				m "${MSG}" "" "--log" "error" "${CALLED_FROM}"
 				return 1
 			fi
 		else
 			if ! echo "${STRING}" | sudo tee -a ${FSTAB} > /dev/null ; then
-				ERR_MSG="Unable to add to ${FSTAB}."
-				if [[ ${CALLED_FROM} == "install" ]]; then
-					display_msg --log error "${ERR_MSG}"
-				else
-					e_ "\nERROR: ${MSG}\n"
-				fi
+				MSG="Unable to add to ${FSTAB}."
+				m "${MSG}" "" "--log" "error" "${CALLED_FROM}"
 				return 1
 			fi
 		fi
@@ -1229,12 +1257,8 @@ function check_tmp()
 	else	# is 0, i.e., do not put in memory
 		if [[ -n ${CURRENT_STRING} ]]; then
 			if ! sudo sed -i -e "\;${CURRENT_STRING};d" ${FSTAB} ; then
-				ERR_MSG="Unable to remove '${ALLSKY_TMP}' from ${FSTAB}"
-				if [[ ${CALLED_FROM} == "install" ]]; then
-					display_msg --log error "${ERR_MSG}"
-				else
-					e_ "\nERROR: ${MSG}.\n"
-				fi
+				MSG="Unable to remove '${ALLSKY_TMP}' from ${FSTAB}"
+				m "${MSG}" "" "--log" "error" "${CALLED_FROM}"
 				return 1
 			fi
 		fi

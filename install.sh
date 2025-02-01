@@ -2951,7 +2951,7 @@ do_restore()
 	if [[ ${WAS_MOUNTED} == "true" ]]; then
 		# Remounts ${ALLSKY_TMP}
 		display_msg --logonly progress "Re-mounting '${ALLSKY_TMP}'."
-		sudo mount -a
+		mount_tmp "${ALLSKY_TMP}"
 	fi
 
 	mkdir -p "$( dirname "${POST_INSTALLATION_ACTIONS}" )"

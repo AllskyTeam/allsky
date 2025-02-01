@@ -17,6 +17,8 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP
 chmod 755 "${HOME}" "${ALLSKY_HOME}"					|| exit "${EXIT_ERROR_STOP}"
 cd "${ALLSKY_HOME}"  									|| exit "${EXIT_ERROR_STOP}"
 
+[[ ! -d ${ALLSKY_TMP} ]] && mkdir -p "${ALLSKY_TMP}"
+
 # The POST_INSTALLATION_ACTIONS contains information the user needs to act upon after installation.
 rm -f "${POST_INSTALLATION_ACTIONS}"		# Shouldn't be there, but just in case.
 rm -f "${ALLSKY_MESSAGES}"					# Start out with no messages.
@@ -3275,9 +3277,6 @@ display_image()
 {
 	local IMAGE_OR_CUSTOM="${1}"
 	local FULL_FILENAME  FILENAME  EXTENSION  IMAGE_NAME  COLOR  CUSTOM_MESSAGE  MSG  X  I
-
-	# ${ALLSKY_TMP} may not exist yet, i.e., at the beginning of installation.
-	mkdir -p "${ALLSKY_TMP}"
 
 	if [[ -s ${SETTINGS_FILE} ]]; then		# The file may not exist yet.
 		FULL_FILENAME="$( settings ".filename" )"

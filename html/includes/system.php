@@ -355,19 +355,30 @@ function DisplaySystem()
 				<div class="panel-body">
 
 					<?php
+					$s = false;		// Update Allsky Status ?
+
 					if (isset($_POST['system_reboot'])) {
 						$status->addMessage("System Rebooting Now!", "warning", true);
 						$result = shell_exec("sudo /sbin/reboot");
-					}
-					if (isset($_POST['system_shutdown'])) {
+					} else if (isset($_POST['system_shutdown'])) {
 						$status->addMessage("System Shutting Down Now!", "warning", true);
 						$result = shell_exec("sudo /sbin/shutdown -h now");
+					} else if (isset($_POST['service_start'])) {
+						// Sleep to let Allsky status get updated.
+						// Starting Allsky takes longer to update status.
+						runCommand("sudo /bin/systemctl start allsky && sleep 4", "Allsky started", "success");
+						$s = true;
+					} else if (isset($_POST['service_stop'])) {
+						runCommand("sudo /bin/systemctl stop allsky && sleep 3", "Allsky stopped", "success");
+						$s = true;
 					}
-					if (isset($_POST['service_start'])) {
-						runCommand("sudo /bin/systemctl start allsky", "Allsky started", "success");
-					}
-					if (isset($_POST['service_stop'])) {
-						runCommand("sudo /bin/systemctl stop allsky", "Allsky stopped", "success");
+					if ($s) {
+// TODO: Make output_allsky_status() a javascript function that updates the status every x seconds
+// and if it hasn't change in y checks, increase the delay.
+						$new_status = output_allsky_status();
+						echo "<script>";
+						echo 'document.getElementById("allskyStatus").innerHTML = "' . $new_status . '";';
+						echo "</script>";
 					}
 
 					$e = "";

@@ -783,7 +783,7 @@ function get_ram_tmp_swap()
 	RAM_SIZE="$( get_RAM "MB" )"
 	if [[ ${RAM_SIZE} == "unknown" ]]; then
 		# Note: This doesn't produce exact results.  On a 4 GB Pi, it returns 3.74805.
-		RAM_SIZE=$( free --mebi | awk '{if ($1 == "Mem:") {print $2; exit 0} }' )		# in MB
+		RAM_SIZE=$( free --mebi | gawk '{if ($1 == "Mem:") {print $2; exit 0} }' )		# in MB
 	fi
 
 	declare -A TMP_SIZES=()
@@ -823,24 +823,36 @@ function recheck_swap()
 }
 function check_swap()
 {
+	local CALLED_FROM="${1}"
+	local PROMPT="${2:-false}"
+
 	# global: TITLE  WT_WIDTH
 	local SWAP_CONFIG_FILE="/etc/dphys-swapfile"
-	local CALLED_FROM PROMPT
-	CALLED_FROM="${1}"
-	PROMPT="${2:-false}"
+	local CURRENT_SWAP  AMT  M  MSG  SWAP_SIZE  CURRENT_MAX
 
 	if [[ ${CALLED_FROM} == "install" ]]; then
 		declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" && ${PROMPT} == "false" ]] && return
 	fi
 
 	[[ -z ${WT_WIDTH} ]] && WT_WIDTH="$( calc_wt_size )"
-	local CURRENT_SWAP  AMT  M  MSG  SWAP_SIZE  CURRENT_MAX
 
 	get_ram_tmp_swap		# Sets ${RAM_SIZE} and ${SUGGESTED_SWAP_SIZE}
-	display_msg --logonly info "RAM_SIZE=${RAM_SIZE}, SUGGESTED_SWAP_SIZE=${SUGGESTED_SWAP_SIZE}."
+	if [[ ${CALLED_FROM} == "install" ]]; then
+		MSG="RAM_SIZE=${RAM_SIZE}, SUGGESTED_SWAP_SIZE=${SUGGESTED_SWAP_SIZE}."
+		display_msg --logonly info "${MSG}"
+	fi
 
 	# Not sure why, but displayed swap is often 1 MB less than what's in /etc/dphys-swapfile
-	CURRENT_SWAP=$( free --mebi | awk '{if ($1 == "Swap:") {print $2 + 1; exit 0} }' )	# in MB
+	CURRENT_SWAP=$( free --mebi |
+			gawk 'BEGIN { swap = 0; }
+			{
+				if ($1 == "Swap:") {
+					swap = $2 + 1;
+					exit 0;
+				}
+			}
+			END { print swap }'
+		)	# in MB
 	CURRENT_SWAP=${CURRENT_SWAP:-0}
 	if [[ ${CURRENT_SWAP} -lt ${SUGGESTED_SWAP_SIZE} || ${PROMPT} == "true" ]]; then
 
@@ -871,6 +883,7 @@ function check_swap()
 		# do it now so we don't have numbers like "0256".
 		[[ ${SWAP_SIZE:0:1} == "0" ]] && SWAP_SIZE="${SWAP_SIZE:1}"
 
+# TODO: handle [[ ${CALLED_FROM} == "install" ]]
 		if [[ -z ${SWAP_SIZE} || ${SWAP_SIZE} == "0" ]]; then
 			if [[ ${CURRENT_SWAP} -eq 0 && ${SUGGESTED_SWAP_SIZE} -gt 0 ]]; then
 				display_msg --log warning "With no swap space you run the risk of programs failing."
@@ -917,7 +930,7 @@ function is_mounted()
 
 ####
 # Mount the specified directory.
-function mount_tmp()
+function mount_dir()
 {
 	local DIR="${1}"
 	local FROM="${2}"
@@ -938,15 +951,18 @@ function mount_tmp()
 
 ####
 # Unmount the specified directory.
-function umount_tmp()
+function umount_dir()
 {
 	local DIR="${1}"
 	local FROM="${2}"
 
-	local RET=0
 #echo "UUU unmounting $DIR, df:"; df -h|grep allsky;echo "fstab:";grep allsky /etc/fstab; echo "mount:"; mount|grep allsky
+
+	# Make sure we're not anywhere in ${DIR} - that can cause the umount to fail.
 	# shellcheck disable=SC2103,SC2164
-	cd /		# Make sure we're not in ${DIR}"
+	cd / 2>/dev/null
+
+	local RET=0
 	sudo umount --force "${DIR}" 2> /dev/null ||
 		{
 			# The Samba daemon is one known cause of "target busy".
@@ -966,8 +982,18 @@ function umount_tmp()
 			fi
 		}
 #echo -e "\nUUU after, RET=$RET, df:"; df -h|grep allsky;echo "fstab:";grep allsky /etc/fstab; echo "mount:"; mount|grep allsky
+	if [[ ${OLDPWD} == "${DIR}" ]]; then
+		MSG="WARNING: You are in the '${DIR}' directory;"
+		local MSG2=" run 'cd ${OLDPWD}'"
+		if [[ ${FROM} == "install" ]]; then
+			display_msg --log warning "${MSG}" "${MSG2}"
+		else
+			w_ "\n${MSG} ${MSG2}\n" >&2
+		fi
+	fi
 	# shellcheck disable=SC2103,SC2164
-	cd - >/dev/null 2>&1
+	cd "${OLDPWD}" 2>/dev/null
+
 	return "${RET}"
 }
 
@@ -1005,11 +1031,11 @@ function check_and_mount_tmp()
 
 	save_tmp
 
-	is_mounted "${ALLSKY_TMP}" && umount_tmp "${ALLSKY_TMP}" "${FROM}"
+	is_mounted "${ALLSKY_TMP}" && umount_dir "${ALLSKY_TMP}" "${FROM}"
 
 	# Now mount and restore any images that were there before
 	sudo systemctl daemon-reload 2> /dev/null
-	mount_tmp "${ALLSKY_TMP}" "${FROM}"
+	mount_dir "${ALLSKY_TMP}" "${FROM}"
 
 	restore_tmp
 }
@@ -1018,7 +1044,7 @@ function check_and_mount_tmp()
 # Called from allsky-config after installation to adjust amount.
 function recheck_tmp()
 {
-	check_tmp "after_install"
+	check_tmp "after_install" "true"
 }
 
 ####
@@ -1027,6 +1053,8 @@ function recheck_tmp()
 function check_tmp()
 {
 	local CALLED_FROM="${1}"
+# TODO: default to "false" so we don't prompt during installation
+	local PROMPT="${2:-true}"
 
 	# global: TITLE  WT_WIDTH
 	local CURRENT_STRING  STRING  MSG  D  SIZE  NEW_SIZE  ERR_MSG
@@ -1054,7 +1082,7 @@ function check_tmp()
 			# but the mount point is currently in the PRIOR Allsky.
 			D="${PRIOR_ALLSKY_DIR}/tmp"
 			if [[ -d "${D}" ]] && is_mounted "${D}" ; then
-				if ! umount_tmp "${D}" "${CALLED_FROM}" ; then
+				if ! umount_dir "${D}" "${CALLED_FROM}" ; then
 					set_reboot_needed		# Will force the unmount
 				fi
 			fi
@@ -1074,58 +1102,82 @@ function check_tmp()
 	fi
 
 	get_ram_tmp_swap		# Sets ${RAM_SIZE} and ${SUGGESTED_TMP_SIZE}
+
 	if [[ -n ${CURRENT_STRING} ]]; then
-		SIZE="$( echo "${CURRENT_STRING}" | sed -e "s;^.* size=;;" -e "s;M.*;;" )"
-		MSG="\nThe ${ALLSKY_TMP} directory is already in memory.\n"
-		MSG+="\nYou can:"
-		MSG+="\n    adjust the size in MB,"
-		MSG+="\nor"
-		MSG+="\n    set to 0 to remove it from memory (not recommended)."
-		if [[ ${SIZE} != "${SUGGESTED_TMP_SIZE}" ]]; then
-			MSG+="\n\nThe recommended size for your Pi is ${SUGGESTED_TMP_SIZE} MB."
+		if [[ ${PROMPT} != "true" ]]; then
+			if [[ ${CALLED_FROM} == "install" ]]; then
+				STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+			fi
+			return 0	# Not prompting, so leave as is.
 		fi
+		SIZE="$( echo "${CURRENT_STRING}" | sed -e "s;^.* size=;;" -e "s;M.*;;" )"
 	else
 		SIZE=${SUGGESTED_TMP_SIZE}
-		MSG="Putting the ${ALLSKY_TMP} directory into memory drastically"
-		MSG+=" decreases the number of writes to the SD card, increasing its life."
-		MSG+=" It also speeds up processing."
-		MSG+="\n\nIf you want to do this, either leave the default MB below or adjust it."
-		MSG+="\nIf you do NOT want to do this, set the size to 0."
-		MSG+="\n\nNote: anything in that directory will be deleted whenever the Pi is rebooted,"
-		MSG+=" but that's not an issue since the directory only contains temporary files."
 	fi
 
-	NEW_SIZE=""
-	ERR_MSG="\nERROR: You must enter a number, either:"
-	ERR_MSG+="\n    '0' to disable the feature (not recommended)"
-	ERR_MSG+="\nor"
-	ERR_MSG+="\n    a size in MB\n"
-	while [[ -z ${NEW_SIZE} ]] ; do
-		NEW_SIZE=$( whiptail --title "${TITLE}" --inputbox "${MSG}\n" 20 "${WT_WIDTH}" \
-			 "${SIZE}"  3>&1 1>&2 2>&3 )
-		local RET=$?
-		if [[ ${RET} -eq 1 ]]; then		# Cancel button
-			NEW_SIZE="${SIZE}"
-		elif [[ -z ${NEW_SIZE} ]]; then
-			MSG="${ERR_MSG}"
-		elif ! is_number "${NEW_SIZE}" ; then
-			MSG="${ERR_MSG}"
-			MSG+="\nYou entered: ${NEW_SIZE}\n"
-			NEW_SIZE=""
-		elif [[ "${NEW_SIZE}" -lt 0 ]]; then
-			MSG="${ERR_MSG}"
-			MSG+="\nYou entered a negative number: ${NEW_SIZE}\n"
-			NEW_SIZE=""
+	if [[ ${PROMPT} == "true" ]]; then
+		if [[ -n ${CURRENT_STRING} ]]; then
+			MSG="\nThe ${ALLSKY_TMP} directory is already in memory.\n"
+			MSG+="\nYou can:"
+			MSG+="\n    adjust the size in MB,"
+			MSG+="\nor"
+			MSG+="\n    set to '0' to remove it from memory (not recommended)."
+			if [[ ${SIZE} != "${SUGGESTED_TMP_SIZE}" ]]; then
+				MSG+="\n\nThe recommended size for your Pi is ${SUGGESTED_TMP_SIZE} MB."
+			fi
+		else
+			MSG="Putting the ${ALLSKY_TMP} directory into memory drastically"
+			MSG+=" decreases the number of writes to the SD card, increasing its life."
+			MSG+=" It also speeds up processing."
+			MSG+="\n\nIf you want to do this, either leave the default MB below or adjust it."
+			MSG+="\nIf you do NOT want to do this, set the size to 0."
+			MSG+="\n\nNote: anything in that directory will be deleted whenever the Pi is rebooted,"
+			MSG+=" but that's not an issue since the directory only contains temporary files."
 		fi
-	done
 
-	if [[ -n ${CURRENT_STRING} && ${NEW_SIZE} == "${SIZE}" ]]; then
+		NEW_SIZE=""
+		ERR_MSG="\nERROR: You must enter a number, either:"
+		ERR_MSG+="\n    a '0' to disable the feature (not recommended)"
+		ERR_MSG+="\nor"
+		ERR_MSG+="\n    a size in MB\n"
+		while [[ -z ${NEW_SIZE} ]] ; do
+			NEW_SIZE=$( whiptail --title "${TITLE}" --inputbox "${MSG}\n" 20 "${WT_WIDTH}" \
+			 	"${SIZE}"  3>&1 1>&2 2>&3 )
+			local RET=$?
+			if [[ ${RET} -eq 1 ]]; then		# Cancel button
+				NEW_SIZE="${SIZE}"
+			elif [[ -z ${NEW_SIZE} ]]; then
+				MSG="${ERR_MSG}"
+			elif ! is_number "${NEW_SIZE}" ; then
+				MSG="${ERR_MSG}"
+				MSG+="\nYou entered: ${NEW_SIZE}\n"
+				NEW_SIZE=""
+			elif [[ "${NEW_SIZE}" -lt 0 ]]; then
+				MSG="${ERR_MSG}"
+				MSG+="\nYou entered a negative number: ${NEW_SIZE}\n"
+				NEW_SIZE=""
+			fi
+		done
+	else
+		NEW_SIZE="${SIZE}"	# Not prompting, so go with default size
+	fi
+
+	local QUIT="false"
+	if [[ -n ${CURRENT_STRING} ]]; then
+		if [[ ${NEW_SIZE} -eq ${SIZE} ]]; then
+			MSG="No changes to the size of '${ALLSKY_TMP}' made."
+			QUIT="true"
+		fi
+	elif [[ ${NEW_SIZE} -eq 0 ]]; then
+		MSG="The ${ALLSKY_TMP} directory will remain on the SD card."
+		QUIT="true"
+	fi
+	if [[ ${QUIT} == "true" ]]; then
 		if [[ ${CALLED_FROM} == "install" ]]; then
 			STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
-			MSG="The ${ALLSKY_TMP} directory and its contents will remain on the SD card."
 			display_msg --log info "${MSG}"
 		else
-			echo -e "\nNo changes to '${ALLSKY_TMP}' made."
+			echo -e "\n${MSG}\n"
 		fi
 		return 0
 	fi
@@ -1189,7 +1241,7 @@ function check_tmp()
 
 		if is_mounted "${ALLSKY_TMP}" ; then
 			save_tmp
-			umount_tmp "${ALLSKY_TMP}" "${CALLED_FROM}"
+			umount_dir "${ALLSKY_TMP}" "${CALLED_FROM}"
 
 			# in case it wasn't already
 			chmod 775 "${ALLSKY_TMP}"

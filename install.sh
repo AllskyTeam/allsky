@@ -17,6 +17,8 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP
 chmod 755 "${HOME}" "${ALLSKY_HOME}"					|| exit "${EXIT_ERROR_STOP}"
 cd "${ALLSKY_HOME}"  									|| exit "${EXIT_ERROR_STOP}"
 
+[[ ! -d ${ALLSKY_TMP} ]] && mkdir -p "${ALLSKY_TMP}"
+
 # The POST_INSTALLATION_ACTIONS contains information the user needs to act upon after installation.
 rm -f "${POST_INSTALLATION_ACTIONS}"		# Shouldn't be there, but just in case.
 rm -f "${ALLSKY_MESSAGES}"					# Start out with no messages.
@@ -764,34 +766,6 @@ do_reboot()
 	exit_installation -1 "${1}" "${2}"		# -1 means just log ending statement but don't exit.
 	sudo reboot now
 }
-
-
-####
-# Check if ${ALLSKY_TMP} exists, and if it does,
-# save any *.jpg files (which we probably created), then remove everything else,
-# then mount it.
-check_and_mount_tmp()
-{
-	local TMP_DIR="/tmp/IMAGES"
-
-	if [[ -d "${ALLSKY_TMP}" ]]; then
-		mkdir -p "${TMP_DIR}"
-		find "${ALLSKY_TMP}" \( -name '*.jpg' -o -name '*.png' \) -exec mv '{}' "${TMP_DIR}" \;
-		rm -fr "${ALLSKY_TMP:?}"/*
-	else
-		mkdir "${ALLSKY_TMP}"
-	fi
-
-	# Now mount and restore any images that were there before
-	sudo systemctl daemon-reload 2> /dev/null
-	sudo mount -a || display_msg --log warning "Unable to mount '${ALLSKY_TMP}'."
-
-	if [[ -d ${TMP_DIR} ]]; then
-		mv "${TMP_DIR}"/* "${ALLSKY_TMP}" 2>/dev/null
-		rmdir "${TMP_DIR}"
-	fi
-}
-
 
 ####
 # Run apt-get, first checking if it's locked.
@@ -2977,7 +2951,7 @@ do_restore()
 	if [[ ${WAS_MOUNTED} == "true" ]]; then
 		# Remounts ${ALLSKY_TMP}
 		display_msg --logonly progress "Re-mounting '${ALLSKY_TMP}'."
-		sudo mount -a
+		mount_tmp "${ALLSKY_TMP}"
 	fi
 
 	mkdir -p "$( dirname "${POST_INSTALLATION_ACTIONS}" )"
@@ -3303,9 +3277,6 @@ display_image()
 {
 	local IMAGE_OR_CUSTOM="${1}"
 	local FULL_FILENAME  FILENAME  EXTENSION  IMAGE_NAME  COLOR  CUSTOM_MESSAGE  MSG  X  I
-
-	# ${ALLSKY_TMP} may not exist yet, i.e., at the beginning of installation.
-	mkdir -p "${ALLSKY_TMP}"
 
 	if [[ -s ${SETTINGS_FILE} ]]; then		# The file may not exist yet.
 		FULL_FILENAME="$( settings ".filename" )"

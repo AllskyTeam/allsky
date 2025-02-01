@@ -966,6 +966,7 @@ function umount_tmp()
 			fi
 		}
 #echo -e "\nUUU after, RET=$RET, df:"; df -h|grep allsky;echo "fstab:";grep allsky /etc/fstab; echo "mount:"; mount|grep allsky
+	# shellcheck disable=SC2103,SC2164
 	cd - >/dev/null 2>&1
 	return "${RET}"
 }

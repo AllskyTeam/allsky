@@ -21,6 +21,8 @@ cd "${ALLSKY_HOME}"  									|| exit "${EXIT_ERROR_STOP}"
 rm -f "${POST_INSTALLATION_ACTIONS}"		# Shouldn't be there, but just in case.
 rm -f "${ALLSKY_MESSAGES}"					# Start out with no messages.
 
+# In case it's left over from a prior install.
+rm -f "${ALLSKY_REBOOT_NEEDED}"
 
 SHORT_TITLE="Allsky Installer"
 TITLE="${SHORT_TITLE} - ${ALLSKY_VERSION}"
@@ -723,6 +725,7 @@ ask_reboot()
 			return 0
 		else
 			REBOOT_NEEDED="true"
+			WILL_REBOOT="false"
 			return 1
 		fi
 	fi
@@ -746,10 +749,12 @@ ask_reboot()
 		WILL_REBOOT="true"
 		display_msg --logonly info "Pi will reboot after installation completes."
 	else
+		WILL_REBOOT="false"
 		display_msg --logonly info "User elected not to reboot."
 
-		MSG="If you have not already rebooted your Pi, please do so now.\n"
-		MSG+="You can then connect to the WebUI at:\n"
+		MSG="If you have not already rebooted your Pi, please do so now"
+		MSG+=" by going to the <span class='WebUILink'>System</span> page."
+		MSG+="\n\nYou can then connect to the WebUI at:\n"
 		MSG+="${AT}"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" --type info --msg "${MSG}"
 	fi
@@ -3031,7 +3036,7 @@ do_update()
 	save_camera_capabilities "false"
 	do_fix
 
-	do_allsky_status "ALLSKY_STATUS_NOT_RUNNING"
+	do_allsky_status "${ALLSKY_STATUS_NOT_RUNNING}"
 
 	exit_installation 0 "${STATUS_OK}" "Update completed."
 }
@@ -3533,11 +3538,8 @@ exit_installation()
 			# If the time is different the user rebooted.
 			if [[ ${STATUS_CODE} == "${STATUS_NO_FINISH_REBOOT}" ||
 				  ${STATUS_CODE} == "${STATUS_NO_REBOOT}" ]]; then
-				uptime --since > "${ALLSKY_REBOOT_NEEDED}"
+				set_reboot_needed
 				display_image "RebootNeeded"
-			else
-				# Just in case it's left over from a prior install.
-				rm -f "${ALLSKY_REBOOT_NEEDED}"
 			fi
 		fi
 	fi
@@ -3575,8 +3577,8 @@ handle_interrupts()
 do_allsky_status()
 {
 	local STATUS="${1}"
-	display_msg --logonly info "Setting Allsky status to '${!STATUS}'."
-	set_allsky_status "${!STATUS}"
+	display_msg --logonly info "Setting Allsky status to '${STATUS}'."
+	set_allsky_status "${STATUS}"
 }
 
 
@@ -3828,7 +3830,7 @@ if [[ -z ${FUNCTION} && ${RESTORE} == "false" ]]; then
 
 	##### Keep track of current Allsky status
 	mkdir -p "$( dirname "${ALLSKY_STATUS}" )"		# location of status file
-	do_allsky_status "ALLSKY_STATUS_INSTALLING"
+	do_allsky_status "${ALLSKY_STATUS_INSTALLING}"
 
 	##### Log some info to help in troubleshooting.
 	log_info
@@ -3960,7 +3962,10 @@ do_sudoers
 check_old_WebUI_location
 
 ##### See if we should reboot when installation is done.
-[[ ${REBOOT_NEEDED} == "true" ]] && ask_reboot "full"			# prompts
+# Call reboot_needed() in case an external function said we need to reboot.
+if [[ ${REBOOT_NEEDED} == "true" ]] || reboot_needed ; then
+	ask_reboot "full"			# prompts
+fi
 
 ##### Display any necessary messaged about restored / not restored settings
 # Re-run every time to possibly remind them to update their settings.
@@ -3977,18 +3982,18 @@ remind_old_version
 ######## All done
 
 if [[ ${WILL_REBOOT} == "true" ]]; then
-	do_allsky_status "ALLSKY_STATUS_SEE_WEBUI"
+	do_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
 	do_reboot "${STATUS_FINISH_REBOOT}" ""		# does not return
 fi
 
 if [[ ${REBOOT_NEEDED} == "true" ]]; then
 	display_msg --log progress "\nInstallation is done" " but the Pi needs a reboot.\n"
-	do_allsky_status "ALLSKY_STATUS_SEE_WEBUI"
+	do_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
 	exit_installation 0 "${STATUS_NO_FINISH_REBOOT}" ""
 fi
 
 if [[ ${CONFIGURATION_NEEDED} == "false" ]]; then
-	do_allsky_status "ALLSKY_STATUS_NOT_RUNNING"
+	do_allsky_status "${ALLSKY_STATUS_NOT_RUNNING}"
 	display_image --custom "lime" "Allsky is\nready to start"
 	display_msg --log progress "\nInstallation is done."  "You must manually restart Allsky."
 elif [[ ${CONFIGURATION_NEEDED} != "true" ]]; then
@@ -3997,7 +4002,7 @@ elif [[ ${CONFIGURATION_NEEDED} != "true" ]]; then
 else
 	# "true"
 	display_image "ConfigurationNeeded"
-	do_allsky_status "ALLSKY_STATUS_SEE_WEBUI"
+	do_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
 	MSG=" but Allsky needs to be configured before it will start."
 	display_msg --log progress "\nInstallation is done" "${MSG}"
 	display_msg progress "" "Go to the 'Allsky Settings' page of the WebUI to configure Allsky."

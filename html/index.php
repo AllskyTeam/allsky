@@ -25,14 +25,6 @@ include_once('includes/status_messages.php');
 $status = new StatusMessages();
 initialize_variables();		// sets some variables
 
-$allsky_status = get_allsky_status();
-if ($allsky_status !== null) {
-	$allsky_status_timestamp = getVariableOrDefault($allsky_status, 'timestamp', null);
-	$allsky_status = getVariableOrDefault($allsky_status, 'status', null);
-} else {
-	$allsky_status_timestamp = null;
-}
-
 // Constants for configuration file paths.
 // These are typical for default RPi installs. Modify if needed.
 include_once('includes/authenticate.php');
@@ -236,26 +228,7 @@ if ($useRemoteWebsite) {
 					<div class="navbar-title nowrap">Web User Interface (WebUI)</div>
 				</a>
 				<div class="version-title version-title-color">
-<?php if ($allsky_status !== null) {
-					if ($allsky_status_timestamp === null) {
-						$title = "";
-						$class = "";
-					} else if ($allsky_status == "Unknown") {
-						$allsky_status_timestamp = str_replace("<b>", "", $allsky_status_timestamp);
-						$allsky_status_timestamp = str_replace("</b>","", $allsky_status_timestamp);
-						$title = " title='$allsky_status_timestamp'";
-						$class = "alert-danger";
-					} else {
-						$title = "title='Since $allsky_status_timestamp'";
-						if ($allsky_status == "Running") {
-							$class = "alert-success";
-						} else {
-							$class = "alert-warning";
-						}
-					}
-					echo "<span class='nowrap $class' $title>Status: $allsky_status</span>";
-					echo "<br>";
-} ?>
+					<span id="allskyStatus"><?php echo output_allsky_status(); ?></span>
 					<span class="nowrap">Version: <?php echo ALLSKY_VERSION; ?></span>
 <?php if ($useLocalWebsite) {
 					echo "<br>";

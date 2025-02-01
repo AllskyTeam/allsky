@@ -92,7 +92,7 @@ else
 fi
 
 if [[ ${ALLSKY_IMAGES_MOVED} == "true" ]]; then
-	if [[ ${NEW_ALLSKY_IMAGES} =~ "${ALLSKY_HOME}" ]]; then
+	if [[ ${NEW_ALLSKY_IMAGES} =~ ${ALLSKY_HOME} ]]; then
 		# Restoring to standard location.
 		sed -i -e '/^ALLSKY_IMAGES=/d' "${ALLSKY_USER_VARIABLES}"
 		RET=$?

@@ -930,6 +930,32 @@ function umount_tmp()
 }
 
 ####
+# Check if ${ALLSKY_TMP} exists, and if it does,
+# save any *.jpg files (which we probably created), then remove everything else,
+# then mount it.
+function check_and_mount_tmp()
+{
+	local TMP_DIR="/tmp/IMAGES"
+
+	if [[ -d "${ALLSKY_TMP}" ]]; then
+		mkdir -p "${TMP_DIR}"
+		find "${ALLSKY_TMP}" \( -name '*.jpg' -o -name '*.png' \) -exec mv '{}' "${TMP_DIR}" \;
+		rm -fr "${ALLSKY_TMP:?}"/*
+	else
+		mkdir "${ALLSKY_TMP}"
+	fi
+
+	# Now mount and restore any images that were there before
+	sudo systemctl daemon-reload 2> /dev/null
+	sudo mount -a || display_msg --log warning "Unable to mount '${ALLSKY_TMP}'."
+
+	if [[ -d ${TMP_DIR} ]]; then
+		mv "${TMP_DIR}"/* "${ALLSKY_TMP}" 2>/dev/null
+		rmdir "${TMP_DIR}"
+	fi
+}
+
+####
 # Called from allsky-config after installation to adjust amount.
 function recheck_tmp()
 {
@@ -997,7 +1023,7 @@ function check_tmp()
 		MSG+="\n    adjust the size in MB,"
 		MSG+="\nor"
 		MSG+="\n    set to 0 to remove it from memory (not recommended)."
-		if [[ ${SIZE} != ${SUGGESTED_TMP_SIZE} ]]; then
+		if [[ ${SIZE} != "${SUGGESTED_TMP_SIZE}" ]]; then
 			MSG+="\n\nThe recommended size for your Pi is ${SUGGESTED_TMP_SIZE} MB."
 		fi
 	else
@@ -1031,7 +1057,6 @@ function check_tmp()
 		fi
 	done
 
-echo NEW_SIZE: $NEW_SIZE
 	if [[ -n ${CURRENT_STRING} && ${NEW_SIZE} == "${SIZE}" ]]; then
 		if [[ ${CALLED_FROM} == "install" ]]; then
 			STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
@@ -1043,7 +1068,6 @@ echo NEW_SIZE: $NEW_SIZE
 		STRING="tmpfs ${ALLSKY_TMP} tmpfs size=${SIZE}M,noatime,lazytime,nodev,"
 		STRING+="nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${WEBSERVER_GROUP}"
 		if [[ -n ${CURRENT_STRING} ]]; then
-:
 			if ! sudo sed -i -e "s;${CURRENT_STRING};${STRING};" ${FSTAB} ; then
 				display_msg --log error "Unable to update ${FSTAB}"
 				return 1

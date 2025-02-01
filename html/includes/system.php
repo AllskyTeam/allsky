@@ -451,15 +451,22 @@ function DisplaySystem()
 					<div class="row">
 					<form action="?page=<?php echo $page ?>" method="POST">
 					<div style="margin-bottom: 15px">
-						<button type="button" class="btn btn-primary" onclick="document.location.reload(true)"><i class="fa fa-sync-alt"></i> Refresh</button>
+						<button type="button" class="btn btn-primary" onclick="document.location.reload(true)">
+							<i class="fa fa-sync-alt"></i> Refresh</button>
 					</div>
 					<div style="margin-bottom: 15px">
-						<button type="submit" class="btn btn-success" name="service_start"/><i class="fa fa-play"></i> Start Allsky</button>
-						<button type="submit" class="btn btn-danger" name="service_stop"/><i class="fa fa-stop"></i> Stop Allsky</button>
+						<button type="submit" class="btn btn-success" name="service_start"/>
+							<i class="fa fa-play"></i> Start Allsky</button>
+						&nbsp;
+						<button type="submit" class="btn btn-danger" name="service_stop"/>
+							<i class="fa fa-stop"></i> Stop Allsky</button>
 					</div>
-					<div style="margin-bottom: 15px">
-						<button type="submit" class="btn btn-warning" name="system_reboot"/><i class="fa fa-power-off"></i> Reboot Raspberry Pi</button>
-						<button type="submit" class="btn btn-warning" name="system_shutdown"/><i class="fa fa-plug"></i> Shutdown Raspberry Pi</button>
+					<div style="line-height: 40px">
+						<button type="submit" class="btn btn-warning" name="system_reboot"/>
+							<i class="fa fa-power-off"></i> Reboot Raspberry Pi</button>
+						&nbsp;
+						<button type="submit" class="btn btn-warning" name="system_shutdown"/>
+							<i class="fa fa-plug"></i> Shutdown Raspberry Pi</button>
 					</div>
 					<?php // Optional user-specified data.
 						$e = "";

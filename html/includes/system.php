@@ -6,85 +6,12 @@
  *
  */
 
-function RPiVersion()
+function RPiModel()
 {
-	exec('cat /sys/firmware/devicetree/base/model', $model);
-	$RPI = getVariableOrDefault($model, 0, null);
-	if ($RPI !== null) {
-		// Input example: total_mem=4096
-		exec('sudo vcgencmd get_config total_mem | cut -d= -f2', $mem);		// in MB
-		$mem = getVariableOrDefault($mem, 0, null);
-		if ($mem !== null) {
-			$mem = formatSize($mem * 1024 * 1024);
-			$RPI = "$RPI ($mem)";
-		}
-		return($RPI);
-	}
+	global $settings_array;
 
-	// Lookup table from https://www.raspberrypi.org/documentation/hardware/raspberrypi/revision-codes/README.md
-	// Last updated December 2023 with Pi 5
-	$revisions = array(
-	'0002' => 'Model B Revision 1.0',
-	'0003' => 'Model B Revision 1.0 + ECN0001',
-	'0004' => 'Model B Revision 2.0 (256 MB)',
-	'0005' => 'Model B Revision 2.0 (256 MB)',
-	'0006' => 'Model B Revision 2.0 (256 MB)',
-	'0007' => 'Model A',
-	'0008' => 'Model A',
-	'0009' => 'Model A',
-	'000d' => 'Model B Revision 2.0 (512 MB)',
-	'000e' => 'Model B Revision 2.0 (512 MB)',
-	'000f' => 'Model B Revision 2.0 (512 MB)',
-	'0010' => 'Model B+',
-	'0013' => 'Model B+',
-	'0011' => 'Compute Module',
-	'0012' => 'Model A+',
-	'a01040' => 'Pi 2 Model B Revision 1.0 (1 GB)',
-	'a01041' => 'Pi 2 Model B Revision 1.1 (1 GB)',
-	'a02042' => 'Pi 2 Model B (with BCM2837) Revision 1.2 (1 GB)',
-	'a21041' => 'Pi 2 Model B Revision 1.1 (1 GB)',
-	'a22042' => 'Pi 2 Model B (with BCM2837) Revision 1.2 (1 GB)',
-	'a020a0' => 'Compute Module 3 Revision 1.0 (1 GB)',
-	'a220a0' => 'Compute Module 3 Revision 1.0 (1 GB)',
-	'a02100' => 'Compute Module 3+',
-	'900021' => 'Model A+ Revision 1.1 (512 MB)',
-	'900032' => 'Model B+ Revision 1.2 (512 MB)',
-	'900062' => 'Compute Module Revision 1.1 (512 MB)',
-	'900092' => 'PiZero 1.2 (512 MB)',
-	'900093' => 'PiZero 1.3 (512 MB)',
-	'9000c1' => 'PiZero W 1.1 (512 MB)',
-	'920092' => 'PiZero Revision 1.2 (512 MB)',
-	'920093' => 'PiZero Revision 1.3 (512 MB)',
-	'9020e0' => 'Pi 3 Model A+ Revision 1.0 (512 MB)',
-	'a02082' => 'Pi 3 Model B Revision 1.2 (1 GB)',
-	'a22082' => 'Pi 3 Model B Revision 1.2 (1 GB)',
-	'a32082' => 'Pi 3 Model B Revision 1.2 (1 GB)',
-	'a52082' => 'Pi 3 Model B Revision 1.2 (1 GB)',
-	'a22083' => 'Pi 3 Model B Revision 1.3 (1 GB)',
-	'a020d3' => 'Pi 3 Model B+ Revision 1.3 (1 GB)',
-	'a03111' => 'Model 4B Revision 1.1 (1 GB)',
-	'b03111' => 'Model 4B Revision 1.1 (2 GB)',
-	'c03111' => 'Model 4B Revision 1.1 (4 GB)',
-	'b03112' => 'Model 4B Revision 1.2 (2 GB)',
-	'c03112' => 'Model 4B Revision 1.2 (4 GB)',
-	'b03114' => 'Model 4B Revision 1.4 (2 GB)',
-	'c03114' => 'Model 4B Revision 1.4 (4 GB)',
-	'd03114' => 'Model 4B Revision 1.4 (8 GB)',
-	'c03130' => 'Pi 400 Revision 1.0 (4 GB)',
-	'c04170' => 'Raspberry Pi 5 Model B Rev 1.0 (4 GB)',
-	'd04170' => 'Raspberry Pi 5 Model B Rev 1.0 (8 GB)'
-	);
-
-	$cpuinfo_array = '';
-	exec('grep "^Revision" /proc/cpuinfo', $cpuinfo_array);
-	// We need to split this into two pieces to avoid a PHP Notice message
-	$x = explode(':', array_pop($cpuinfo_array));
-	$rev = trim(array_pop($x));
-	if (array_key_exists($rev, $revisions)) {
-		return $revisions[$rev];
-	} else {
-		return 'Unknown Pi, rev=' . $rev;
-	}
+	$model = getVariableOrDefault($settings_array, 'computer', "Unknown");
+	return(str_replace("RPi", "Raspberry Pi", $model));
 }
 
 function formatSize($bytes)
@@ -310,7 +237,7 @@ function DisplaySystem()
 	// mem used
 	exec("free -m | gawk '/Mem:/ { total=$2 } /buffers\/cache/ { used=$3 } END { print used/total*100}'", $memarray);
 	$memused = floor($memarray[0]);
-	// check for memused being unreasonably low, if so repeat expecting modern output of "free" command
+	// check if memused is unreasonably low, if so repeat
 	if ($memused < 0.1) {
 		unset($memarray);
 		exec("free -m | gawk '/Mem:/ { total=$2 } /Mem:/ { used=$3 } END { print used/total*100}'", $memarray);
@@ -318,18 +245,16 @@ function DisplaySystem()
 	}
 
 
-	// Disk usage
-	// File Usage
-	/* get disk space free (in bytes) */
-	$df = @disk_free_space($top_dir);
+	// Disk and File usage
+	$df = @disk_free_space($top_dir);		// returns bytes
 	if ($df === false) {
 		$dp = -1;	// signals an error
 	} else {
-		/* and get disk space total (in bytes)  */
+		// and get disk space total (in bytes)
 		$dt = disk_total_space($top_dir);
-		/* now we calculate the disk space used (in bytes) */
+		// now we calculate the disk space used (in bytes)
 		$du = $dt - $df;
-		/* percentage of disk used - this will be used to also set the width % of the progress bar */
+		// percentage of disk used - this will be used to also set the width % of the progress bar
 		$dp = sprintf('%d', ($du / $dt) * 100);
 
 		/* and we format the size from bytes to MB, GB, etc. */
@@ -343,10 +268,10 @@ function DisplaySystem()
 	if (preg_match("/^throttled=/", $x) == false) {
 			$throttle_status = "danger";
 			$throttle = "Not able to get throttle status:<br>$x";
-			$throttle .= "<br><span style='font-size: 150%'>Run '~/allsky/install.sh --update' to try and resolve.</style>";
+			$throttle .= "<br><span class='errorMsgBig'>";
+			$throttle .= "Run '~/allsky/install.sh --update' to try and resolve.</span>";
 	} else {
 		$x = explode("x", $x);	// Output: throttled=0x12345...
-//FOR TESTING: $x[1] = "50001";
 		if ($x[1] == "0") {
 				$throttle_status = "success";
 				$throttle = "No throttling";
@@ -387,12 +312,14 @@ function DisplaySystem()
 
 	// cpu load
 	$secs = 2; $q = '"';
-	$cpuload = exec("(grep -m 1 'cpu ' /proc/stat; sleep $secs; grep -m 1 'cpu ' /proc/stat) | awk '{u=$2+$4; t=$2+$4+$5; if (NR==1){u1=u; t1=t;} else printf($q%.0f$q, (($2+$4-u1) * 100 / (t-t1))); }'");
+	$cmd = "(grep -m 1 'cpu ' /proc/stat; sleep $secs; grep -m 1 'cpu ' /proc/stat)";
+	$cmd .= " | gawk '{u=$2+$4; t=$2+$4+$5; if (NR==1){u1=u; t1=t;} else printf($q%.0f$q, (($2+$4-u1) * 100 / (t-t1))); }'";
+	$cpuload = exec($cmd);
 	if ($cpuload < 0 || $cpuload > 100) echo "<p class='errorMsgBig'>Invalid cpuload value: $cpuload</p>";
 
 	// temperature
-	$temperature = round(exec("awk '{print $1/1000}' /sys/class/thermal/thermal_zone0/temp"), 2);
-	// additional checks for temperature
+	$temperature = file_get_contents("/sys/class/thermal/thermal_zone0/temp");
+	$temperature = round($temperature / 1000, 2);
 	if ($temperature < 0) {
 		$temperature_status = "danger";
 	} elseif ($temperature < 10) {
@@ -401,10 +328,14 @@ function DisplaySystem()
 		$temperature_status = "";
 	}
 	$display_temperature = "";
-	if ($temptype == "C" || $temptype == "B")
+	if ($temptype == "C" || $temptype == "B") {
 		$display_temperature = number_format($temperature, 1, '.', '') . "&deg;C";
-	if ($temptype == "F" || $temptype == "B")
-		$display_temperature = $display_temperature . "&nbsp; &nbsp;" . number_format((($temperature * 1.8) + 32), 1, '.', '') . "&deg;F";
+	}
+	if ($temptype == "F" || $temptype == "B") {
+		$t = (($temperature * 1.8) + 32) / 1000;
+		$t = number_format($t, 1, '.', '');
+		$display_temperature .= "&nbsp; &nbsp; $t &deg;F";
+	}
 
 	// Optional user-specified data.
 	// TODO: read each file once and populate arrays for "data", "progress", and "button".
@@ -424,19 +355,30 @@ function DisplaySystem()
 				<div class="panel-body">
 
 					<?php
+					$s = false;		// Update Allsky Status ?
+
 					if (isset($_POST['system_reboot'])) {
 						$status->addMessage("System Rebooting Now!", "warning", true);
 						$result = shell_exec("sudo /sbin/reboot");
-					}
-					if (isset($_POST['system_shutdown'])) {
+					} else if (isset($_POST['system_shutdown'])) {
 						$status->addMessage("System Shutting Down Now!", "warning", true);
 						$result = shell_exec("sudo /sbin/shutdown -h now");
+					} else if (isset($_POST['service_start'])) {
+						// Sleep to let Allsky status get updated.
+						// Starting Allsky takes longer to update status.
+						runCommand("sudo /bin/systemctl start allsky && sleep 4", "Allsky started", "success");
+						$s = true;
+					} else if (isset($_POST['service_stop'])) {
+						runCommand("sudo /bin/systemctl stop allsky && sleep 3", "Allsky stopped", "success");
+						$s = true;
 					}
-					if (isset($_POST['service_start'])) {
-						runCommand("sudo /bin/systemctl start allsky", "Allsky started", "success");
-					}
-					if (isset($_POST['service_stop'])) {
-						runCommand("sudo /bin/systemctl stop allsky", "Allsky stopped", "success");
+					if ($s) {
+// TODO: Make output_allsky_status() a javascript function that updates the status every x seconds
+// and if it hasn't change in y checks, increase the delay.
+						$new_status = output_allsky_status();
+						echo "<script>";
+						echo 'document.getElementById("allskyStatus").innerHTML = "' . $new_status . '";';
+						echo "</script>";
 					}
 
 					$e = "";
@@ -459,7 +401,7 @@ function DisplaySystem()
 								<table>
 								<!-- <colgroup> doesn't seem to support "width", so set on 1st line -->
 								<tr><td style="padding-right: 90px;">Hostname</td><td><?php echo $hostname ?></td></tr>
-								<tr><td>Pi Revision</td><td><?php echo RPiVersion() ?></td></tr>
+								<tr><td>Pi Model</td><td><?php echo RPiModel() ?></td></tr>
 								<tr><td>Uptime</td><td><?php echo $uptime ?></td></tr>
 								<?php if ($dp === -1) $x = "<span class='errorMsg'>ERROR: unable to read '$top_dir' to get data.</span>";
 									  else $x = "$dt ($df free)";
@@ -509,15 +451,22 @@ function DisplaySystem()
 					<div class="row">
 					<form action="?page=<?php echo $page ?>" method="POST">
 					<div style="margin-bottom: 15px">
-						<button type="button" class="btn btn-primary" onclick="document.location.reload(true)"><i class="fa fa-sync-alt"></i> Refresh</button>
+						<button type="button" class="btn btn-primary" onclick="document.location.reload(true)">
+							<i class="fa fa-sync-alt"></i> Refresh</button>
 					</div>
 					<div style="margin-bottom: 15px">
-						<button type="submit" class="btn btn-success" name="service_start"/><i class="fa fa-play"></i> Start Allsky</button>
-						<button type="submit" class="btn btn-danger" name="service_stop"/><i class="fa fa-stop"></i> Stop Allsky</button>
+						<button type="submit" class="btn btn-success" name="service_start"/>
+							<i class="fa fa-play"></i> Start Allsky</button>
+						&nbsp;
+						<button type="submit" class="btn btn-danger" name="service_stop"/>
+							<i class="fa fa-stop"></i> Stop Allsky</button>
 					</div>
-					<div style="margin-bottom: 15px">
-						<button type="submit" class="btn btn-warning" name="system_reboot"/><i class="fa fa-power-off"></i> Reboot Raspberry Pi</button>
-						<button type="submit" class="btn btn-warning" name="system_shutdown"/><i class="fa fa-plug"></i> Shutdown Raspberry Pi</button>
+					<div style="line-height: 40px">
+						<button type="submit" class="btn btn-warning" name="system_reboot"/>
+							<i class="fa fa-power-off"></i> Reboot Raspberry Pi</button>
+						&nbsp;
+						<button type="submit" class="btn btn-warning" name="system_shutdown"/>
+							<i class="fa fa-plug"></i> Shutdown Raspberry Pi</button>
 					</div>
 					<?php // Optional user-specified data.
 						$e = "";

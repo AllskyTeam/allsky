@@ -60,20 +60,55 @@
 								will work are highlighted like
 								<span class="cm-string highlight">XX_NEED_TO_UPDATE_XX</span>.
 						</ul>
-					<li>Running <code>allsky-config   move_images</code> lets you
-						specify a different location to store Allsky's images,
+					<li>The WebUI now displays the status of Allsky (Running, Stopped, etc.).
+						The status is determined every time a WebUI page is displayed,
+						so if the status changes while you are on a page it won't be
+						updated until the page is refreshed.
+					<li>The new <code>allsky-config   move_images</code> command
+						lets you specify a different location to store Allsky's images,
 						i.e., a different location for the contents of
 						<span class="fileName">~/allsky/images</span>.
-						This is typically used to store images on an SSD or a similar
-						larger, faster, more reliable media than the SD card.
+						This command is typically used to store images on an SSD or a
+						similar larger, faster, more reliable media than the SD card.
+					<li>The new <code>allsky-config &nbsp;get_brightness_info</code> command
+						displays information on image brightness determined during
+						startrails generation.
+						It can be used to help determine what to put in the
+						<span class="WebUISetting">Brightness Threshold</span> setting.
+						See <a allsky="true" external="true"
+							href="/documentation/explanations/startrails.html#brightnessthreshold">
+							Startrails settings</a>
+						for details.
+					<li>The new <code>allsky-config &nbsp;compare_paths</code> command
+						helps the <strong>many people</strong> who struggle determining
+						where to upload their remote Website files and what URL to use.
+						If you struggle, read the
+						<a allsky="true" external="true"
+							href="/documentation/explanations/serverLocationToURL.html">
+							Mapping Server Locations to URLs</a>
+							page where it explains how to use this new command.
+					<li>The Allsky Website now has a directory called
+						<span class="fileName">meteors</span> that's used to
+						store images with meteors.
+						A new "Archived Meteors" icon can be added to the list of icons
+						on the left side of an Allsky Website by
+						setting the "display" line in the "Archived Meteors" section
+						of the associated <span class="fileName">configuration.json</span>
+						file to "true".
+						<br><strong>Support for saving and uploading images with
+						meteors will be added in a future Allsky release.</strong>
+					<li>The Allsky Website no longer downloads any third-party files;
+						instead, those files are included with the Website.
+						This helps address European privacy rules.
 					<li>The remote <span class="WebUISetting">Website URL</span>
-						can no longer end in <code>index.php</code>.
-						The URL should point to the <i>directory</i> where the
-						Allsky Website code is, not to a file.
+						setting can no longer end in <code>index.php</code>.
+						The URL should point to the <em>directory</em>
+						where the Allsky Website code is, not to any particular <em>file</em>
+						in the directory.
 				</ul>
 				<h4>New Settings</h4>
 				<ul>
-					<li><span class="WebUISetting">xxx</span>
+					<li><span class="WebUISetting">None</span>
 				</ul>
 				<h4>Deleted Settings</h4>
 				<ul>
@@ -94,9 +129,6 @@
 				<ul>
 					<li><code>allsky.sh --help</code> now works and displays all the
 						options to the capture programs.
-					<li><code>allsky.sh --preview</code> now works and displays
-						a real-time preview of each image if you are on
-						the Pi desktop or connected via a remote desktop application.
 				</ul>
 				<hr class="separator"><!-- =========================================== -->
 			</details>

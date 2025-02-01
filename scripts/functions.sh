@@ -16,6 +16,7 @@ NOT_STARTED_MSG="Can't start Allsky!"
 STOPPED_MSG="Allsky Stopped!"
 ERROR_MSG_PREFIX="*** ERROR ***\n${STOPPED_MSG}\n"
 FATAL_MSG="FATAL ERROR:"
+
 if [[ ${ON_TTY} == "true" ]]; then
 	export NL="\n"
 	export SPACES="    "
@@ -35,6 +36,13 @@ else
 	export WSVs="<span class='WebUIValue'>"		# Web Setting Value start
 	export WSVe="</span>"
 fi
+
+##### output messages with appropriate color strings
+o_() { echo -e "${wOK}${1}${wNC}" ; }
+w_() { echo -e "${wWARNING}${1}${wNC}" ; }
+e_() { echo -e "${wERROR}${1}${wNC}" ; }
+d_() { echo -e "${wDEBUG}DEBUG: ${1}${wNC}" ; }
+
 
 ##### Start and Stop Allsky
 function start_Allsky()
@@ -391,7 +399,7 @@ function get_connected_camera_models()
 				}
 			} else {
 				sensor = $3;
-				"get_model_from_sensor.sh " sensor | getline model;
+				"getModelFromSensor.sh " sensor | getline model;
 				if (FULL == "true") {
 					printf("%s\t%d\t%s\t%s\n", $1, $2, model, sensor);
 				} else {
@@ -477,7 +485,7 @@ function validate_camera()
 	fi
 
 	# Now make sure the camera is supported.
-	if ! "${ALLSKY_UTILITIES}/show_supported_cameras.sh" "--${CT}" |
+	if ! "${ALLSKY_UTILITIES}/showSupportedCameras.sh" "--${CT}" |
 		grep --silent "${CM}" ; then
 
 		MSG="${CT} camera '${CM}' is not supported by Allsky."
@@ -635,18 +643,18 @@ function get_sunrise_sunset()
 	LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" )"		|| return 2
 	LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )"	|| return 2
 
-	local FORMAT="%-15s  %-17s  %-7s  %-10s  %-10s\n"
-	# shellcheck disable=SC2059
-	printf "${FORMAT}" "Daytime start" "Nighttime start" "Angle" "Latitude" "Longitude"
+	local FORMAT="%-15s  %-17s  %6s   %-10s  %-10s\n"
+	echo "Daytime start    Nighttime start     Angle   Latitude    Longitude"
 	local STARTS=()
 	# sunwait output:  day_start, night_start
 	# Need to get rid of the comma.
 	if [[ ${DO_ZERO} == "true" ]]; then
 		read -r -a STARTS <<< "$( sunwait list angle "0" "${LATITUDE}" "${LONGITUDE}" )"
 		# shellcheck disable=SC2059
-		printf "${FORMAT}" "${STARTS[0]/,/}" "${STARTS[1]}" "0" "${LATITUDE}" "${LONGITUDE}"
+		printf "${FORMAT}" "${STARTS[0]/,/}" "${STARTS[1]}" " 0.00" "${LATITUDE}" "${LONGITUDE}"
 	fi
 	read -r -a STARTS <<< "$( sunwait list angle "${ANGLE}" "${LATITUDE}" "${LONGITUDE}" )"
+	ANGLE="$( printf "% 2.2f" "${ANGLE}" )"
 	# shellcheck disable=SC2059
 	printf "${FORMAT}" "${STARTS[0]/,/}" "${STARTS[1]}" "${ANGLE}" "${LATITUDE}" "${LONGITUDE}"
 }
@@ -729,6 +737,8 @@ function checkPixelValue()
 	local MIN=${4}
 	local MAX="${5}"
 
+	[[ ${VALUE} -eq 0 ]] && return 0
+
 	local MIN_MSG   MAX_MSG
 	if [[ ${MIN} == "any" ]]; then
 		MIN="-99999999"		# a number we'll never go below
@@ -759,30 +769,24 @@ function checkPixelValue()
 # Assume each number has already been checked, e.g., it's not a string.
 function checkWidthHeight()
 {
-	local NAME="${1}"
+	local NAME_PREFIX="${1}"
 	local ITEM="${2}"
 	local WIDTH="${3}"
 	local HEIGHT="${4}"
 	local SENSOR_WIDTH="${5}"
 	local SENSOR_HEIGHT="${6}"
-	local ERR=""
+	local ERR
 
 	# Width and height must both be 0 or non-zero.
 	if [[ (${WIDTH} -gt 0 && ${HEIGHT} -eq 0) || (${WIDTH} -eq 0 && ${HEIGHT} -gt 0) ]]; then
-		ERR+="${WSNs}${NAME} Width${WSNe} (${WSVs}${WIDTH}${WSVe})"
-		ERR+=" and ${WSNs}${NAME} Height${WSNe} (${WSVs}${HEIGHT}${WSVe})"
-		ERR+=" must both be either 0 or non-zero.\n"
-		ERR+="The ${ITEM} will NOT be resized since it would look unnatural.\n"
-		ERR+="FIX: Either set both numbers to 0 to not resize,"
-		ERR+=" or set both numbers to something greater than 0."
+		ERR="${WSNs}${NAME_PREFIX} Width${WSNe} (${WSVs}${WIDTH}${WSVe})"
+		ERR+=" and ${WSNs}Height${WSNe} (${WSVs}${HEIGHT}${WSVe})"
+		ERR+=" must both be either 0 or non-zero.${wBR}"
+		ERR+="The ${ITEM} will NOT be resized since it would look unnatural."
 
 	elif [[ ${WIDTH} -gt 0 && ${HEIGHT} -gt 0 &&
 			${SENSOR_WIDTH} -eq ${WIDTH} && ${SENSOR_HEIGHT} -eq ${HEIGHT} ]]; then
-		ERR+="Resizing a ${ITEM} to the same size as the sensor does nothing useful.\n"
-		ERR+="FIX: Check ${WSNs}${NAME} Width${WSNe} (${WIDTH}) and"
-		ERR+=" ${WSNs}${NAME} Height${WSNe} (${HEIGHT})"
-		ERR+=" and set them to something other than the sensor size"
-		ERR+=" (${WSVs}${SENSOR_WIDTH} x ${SENSOR_HEIGHT}${WSVe})."
+		ERR="Resizing a ${ITEM} to the same size as the sensor does nothing useful."
 	fi
 
 	[[ -z ${ERR} ]] && return 0
@@ -808,23 +812,23 @@ function checkCropValues()
 	local ERR=""
 	if [[ ${CROP_TOP} -lt 0 || ${CROP_RIGHT} -lt 0 ||
 			${CROP_BOTTOM} -lt 0 || ${CROP_LEFT} -lt 0 ]]; then
-		ERR+="\nCrop numbers must all be positive."
+		ERR+="${wBR}Crop numbers must all be positive."
 	fi
 	if [[ $((CROP_TOP % 2)) -eq 1 || $((CROP_RIGHT % 2)) -eq 1 ||
 			$((CROP_BOTTOM % 2)) -eq 1 || $((CROP_LEFT % 2)) -eq 1 ]]; then
-		ERR+="\nCrop numbers must all be even."
+		ERR+="${wBR}Crop numbers must all be even."
 	fi
 	if [[ ${CROP_TOP} -gt $((MAX_RESOLUTION_Y -2)) ]]; then
-		ERR+="\nCropping on top (${CROP_TOP}) is larger than the image height (${MAX_RESOLUTION_Y})."
+		ERR+="${wBR}Cropping on top (${CROP_TOP}) is larger than the image height (${MAX_RESOLUTION_Y})."
 	fi
 	if [[ ${CROP_RIGHT} -gt $((MAX_RESOLUTION_X - 2)) ]]; then
-		ERR+="\nCropping on right (${CROP_RIGHT}) is larger than the image width (${MAX_RESOLUTION_X})."
+		ERR+="${wBR}Cropping on right (${CROP_RIGHT}) is larger than the image width (${MAX_RESOLUTION_X})."
 	fi
 	if [[ ${CROP_BOTTOM} -gt $((MAX_RESOLUTION_Y - 2)) ]]; then
-		ERR+="\nCropping on bottom (${CROP_BOTTOM}) is larger than the image height (${MAX_RESOLUTION_Y})."
+		ERR+="${wBR}Cropping on bottom (${CROP_BOTTOM}) is larger than the image height (${MAX_RESOLUTION_Y})."
 	fi
 	if [[ ${CROP_LEFT} -gt $((MAX_RESOLUTION_X - 2)) ]]; then
-		ERR+="\nCropping on left (${CROP_LEFT}) is larger than the image width (${MAX_RESOLUTION_X})."
+		ERR+="${wBR}Cropping on left (${CROP_LEFT}) is larger than the image width (${MAX_RESOLUTION_X})."
 	fi
 
 	if [[ -z ${ERR} ]]; then
@@ -1162,19 +1166,32 @@ function make_thumbnail()
 
 
 #####
+# Create the reboot-is-needed file.
+function set_reboot_needed()
+{
+	uptime --since > "${ALLSKY_REBOOT_NEEDED}"
+}
+
+#####
 # Check if the user was supposed to reboot, and if so, if they did.
 # Return 0 if a reboot is needed.
 function reboot_needed()
 {
 	[[ ! -f ${ALLSKY_REBOOT_NEEDED} ]] && return 1
 
-	# The file exists so they were supposed to reboot.
-	BEFORE="$( < "${ALLSKY_REBOOT_NEEDED}" )"
-	NOW="$( uptime --since )"
-	if [[ ${BEFORE} == "${NOW}" ]]; then
+	# The file exists and has the uptime as of when the file was created.
+	# If the Pi has rebooted since the file was created,
+	# the current uptime and saved uptime will be different,
+	# so the file is outdated so delete it.
+
+	local PRIOR_UPTIME="$( < "${ALLSKY_REBOOT_NEEDED}" )"
+	local CURRENT_UPTIME="$( uptime --since )"
+	if [[ ${PRIOR_UPTIME} == "${CURRENT_UPTIME}" ]]; then
+		# No reboot; still need to reboot.
 		return 0
 	else
-		rm -f "${ALLSKY_REBOOT_NEEDED}"		# different times so they rebooted
+		# Different uptimes so they rebooted.
+		rm -f "${ALLSKY_REBOOT_NEEDED}"
 		return 1
 	fi
 }

@@ -10,6 +10,32 @@ ME="$( basename "${BASH_ARGV0}" )"
 #shellcheck disable=SC1091 source=variables.sh
 source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 
+# The file is tab-separated:    type  date  count  message  url
+TAB="$( echo -e "\t" )"
+
+function convert_string()
+{
+	local STRING="${1}"
+
+	# Convert newlines to HTML breaks.
+	STRING="$( echo -en "${STRING}" |
+		gawk 'BEGIN { l=0; } { if (++l > 1) printf("<br>"); printf("%s", $0); }' )"
+
+	# Make 2 spaces in a row viewable in HTML.
+	STRING="${STRING//  /\&nbsp;\&nbsp;}"
+
+	# Convert tabs to spaces because we use tabs as field separators.
+	# Tabs in the input can either be an actual tab or \t
+	STRING="${STRING//${TAB}/\&nbsp;\&nbsp;\&nbsp;\&nbsp;}"
+	STRING="${STRING//\\t/\&nbsp;\&nbsp;\&nbsp;\&nbsp;}"
+
+	# Messages may have "/" in them so we can't use that to search in sed,
+	# so use "%" instead, but because it could be in a message (although unlikely),
+	# convert all "%" to the ASCII code.
+	# The pound sign in escaped only to make gvim look nicer.
+	echo "${STRING//%/\&\#37;}"
+}
+
 usage_and_exit()
 {
 	local RET=${1}
@@ -31,6 +57,7 @@ ID=""
 CMD_TEXT=""
 TYPE=""
 MESSAGE=""
+ESCAPED_MESSAGE=""
 URL=""
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
@@ -47,7 +74,7 @@ while [[ $# -gt 0 ]]; do
 			shift
 			;;
 		"--cmd")
-			CMD_TEXT="${2}"
+			CMD_TEXT="$( convert_string "${2}" )"
 			shift
 			;;
 		"--type")
@@ -55,7 +82,10 @@ while [[ $# -gt 0 ]]; do
 			shift
 			;;
 		"--msg")
-			MESSAGE="${2}"
+			MESSAGE="$( convert_string "${2}" )"
+			# If ${MESSAGE} contains "*" it hoses up the grep and sed regular expression,
+			# so escape it.
+			ESCAPED_MESSAGE="${MESSAGE//\*/\\*}"
 			shift
 			;;
 		"--url")
@@ -106,32 +136,6 @@ elif [[ ${TYPE} != "warning" && ${TYPE} != "info" && ${TYPE} != "success" ]]; th
 	echo 2
 fi
 DATE="$( date '+%B %d, %r' )"
-
-# The file is tab-separated:    type  date  count  message  url
-TAB="$( echo -e "\t" )"
-
-if [[ -n ${MESSAGE} ]]; then
-	# Convert newlines to HTML breaks.
-	MESSAGE="$( echo -en "${MESSAGE}" |
-		awk 'BEGIN { l=0; } { if (++l > 1) printf("<br>"); printf("%s", $0); }' )"
-
-	# Make 2 spaces in a row viewable in HTML.
-	MESSAGE="${MESSAGE//  /\&nbsp;\&nbsp;}"
-
-	# Convert tabs to spaces because we use tabs as field separators.
-	# Tabs in the input can either be an actual tab or \t
-	MESSAGE="${MESSAGE//${TAB}/\&nbsp;\&nbsp;\&nbsp;\&nbsp;}"
-	MESSAGE="${MESSAGE//\\t/\&nbsp;\&nbsp;\&nbsp;\&nbsp;}"
-
-	# Messages may have "/" in them so we can't use that to search in sed,
-	# so use "%" instead, but because it could be in a message (although unlikely),
-	# convert all "%" to the ASCII code.
-	# The pound sign in escaped only to make gvim look nicer.
-	MESSAGE="${MESSAGE//%/\&\#37;}"
-
-	# If ${MESSAGE} contains "*" it hoses up the grep and sed regular expression, so escape it.
-	ESCAPED_MESSAGE="${MESSAGE//\*/\\*}"
-fi
 
 if [[ -f ${ALLSKY_MESSAGES} ]] &&  M="$( grep "${TAB}${ESCAPED_MESSAGE}${TAB}" "${ALLSKY_MESSAGES}" )" ; then
 	COUNT=0

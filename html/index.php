@@ -225,21 +225,24 @@ if ($useRemoteWebsite) {
 			<div class="navbar-brand valign-center">
 				<a id="index" class="navbar-brand valign-center" href="index.php">
 					<img src="documentation/img/allsky-logo.png" title="Allsky logo">
-					<div class="navbar-title">Web User Interface (WebUI)</div>
+					<div class="navbar-title nowrap">Web User Interface (WebUI)</div>
 				</a>
 				<div class="version-title version-title-color">
+					<span id="allskyStatus"><?php echo output_allsky_status(); ?></span>
 					<span class="nowrap">Version: <?php echo ALLSKY_VERSION; ?></span>
-					&nbsp; &nbsp;
 <?php if ($useLocalWebsite) {
+					echo "<br>";
 					echo "<span class='nowrap'>";
 					echo "<a external='true' class='version-title-color' href='allsky/index.php'>";
-					echo "Local Website</a></span>";
+					echo "Local Website</a>";
+					echo "</span>";
 } ?>
-					&nbsp; &nbsp;
 <?php if ($useRemoteWebsite) {
+					echo "&nbsp;&nbsp;&nbsp;&nbsp; ";
 					echo "<span class='nowrap'>";
 					echo "<a external='true' class='version-title-color' href='$remoteWebsiteURL'>";
-					echo "Remote Website $remoteWebsiteVersion</a></span>";
+					echo "Remote Website $remoteWebsiteVersion</a>";
+					echo "</span>";
 } ?>
 				</div>
 		</div> <!-- /.navbar-header -->

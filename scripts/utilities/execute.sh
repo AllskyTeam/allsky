@@ -100,7 +100,7 @@ case "${CMD}" in
 	"AM_NOT_SUPPORTED")		# Not supported camera
 		CT="$2"
 		shift
-		"${ALLSKY_UTILITIES}/show_supported_cameras.sh" "--${CT}"
+		"${ALLSKY_UTILITIES}/showSupportedCameras.sh" "--${CT}"
 
 		rm_msg "${CMD}"
 		;;

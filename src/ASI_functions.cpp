@@ -2014,13 +2014,13 @@ bool checkExposureValues(config *cg)
 	}
 	else if (cg->dayExposure_us > cg->cameraMaxExposure_us)
 	{
-	 	Log(1, "*** %s: WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
+	 	Log(-1, "*** %s: WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
 			cg->ME, cg->dayExposure_us, cg->cameraMaxExposure_us);
 	 	cg->dayExposure_us = cg->cameraMaxExposure_us;
 	}
 	else if (cg->dayAutoExposure && cg->dayExposure_us > cg->cameraMaxAutoExposure_us)
 	{
-	 	Log(1, "*** %s: WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
+	 	Log(-1, "*** %s: WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
 			cg->ME, cg->dayExposure_us, cg->cameraMaxAutoExposure_us);
 	 	cg->dayExposure_us = cg->cameraMaxAutoExposure_us;
 	}
@@ -2033,13 +2033,13 @@ bool checkExposureValues(config *cg)
 	}
 	else if (cg->nightExposure_us > cg->cameraMaxExposure_us)
 	{
-	 	Log(1, "*** %s: WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
+	 	Log(-1, "*** %s: WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
 			cg->ME, cg->nightExposure_us, cg->cameraMaxExposure_us);
 	 	cg->nightExposure_us = cg->cameraMaxExposure_us;
 	}
 	else if (cg->nightAutoExposure && cg->nightExposure_us > cg->cameraMaxAutoExposure_us)
 	{
-	 	Log(1, "*** %s: WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
+	 	Log(-1, "*** %s: WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
 			cg->ME, cg->nightExposure_us, cg->cameraMaxAutoExposure_us);
 	 	cg->nightExposure_us = cg->cameraMaxAutoExposure_us;
 	}

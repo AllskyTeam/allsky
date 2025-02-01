@@ -301,7 +301,7 @@ function generate_support_info()
         print_heading "Allsky - Supported Cameras"
 
         #print_sub_heading "Raspberry Pi Cameras Attached"
-        #sudo ./scripts/utilities/get_RPi_camera_info.sh
+        #sudo ./scripts/utilities/getRPiCameraInfo.sh
         #sudo cat ./tmp/camera_data.txt
         
         print_sub_heading "Pi Cameras"        

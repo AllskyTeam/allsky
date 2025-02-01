@@ -141,6 +141,40 @@ function readOptionsFile() {
 	return($contents);
 }
 
+$allsky_status = null;
+$allsky_status_timestamp = null;
+function output_allsky_status() {
+	global $allsky_status, $allsky_status_timestamp;
+
+	$retMsg = "";
+	$s = get_decoded_json_file(ALLSKY_STATUS, true, "", $retMsg);
+	if ($s === null) {
+		$allsky_status = "Unknown";
+		$allsky_status_timestamp = $retMsg;
+	} else {
+		$allsky_status = getVariableOrDefault($s, 'status', "Unknown");
+		$allsky_status_timestamp = getVariableOrDefault($s, 'timestamp', null);
+	}
+
+	if ($allsky_status_timestamp === null) {
+		$title = "";
+		$class = "";
+	} else if ($allsky_status == "Unknown") {
+		$allsky_status_timestamp = str_replace("<b>", "", $allsky_status_timestamp);
+		$allsky_status_timestamp = str_replace("</b>","", $allsky_status_timestamp);
+		$title = " title='$allsky_status_timestamp'";
+		$class = "alert-danger";
+	} else {
+		$title = "title='Since $allsky_status_timestamp'";
+		if ($allsky_status == "Running") {
+			$class = "alert-success";
+		} else {
+			$class = "alert-warning";
+		}
+	}
+	return("<span class='nowrap $class' $title>Status: $allsky_status</span><br>");
+}
+
 function initialize_variables($website_only=false) {
 	global $status;
 	global $image_name;
@@ -274,9 +308,9 @@ function check_if_configured($page, $calledFrom) {
 
 	if ($lastChanged === "") {
 		// The settings aren't configured - probably right after an installation.
-		$msg = "Allsky must be configured before using it.<br>";
+		$msg = "Please verify the Allsky settings and update where needed.<br>";
 		if ($page === "configuration")
-			$msg .= "If it's already configured, just click on the 'Save changes' button.";
+			$msg .= "When done, click on the 'Save changes' button.";
 		else
 			$msg .= "Go to the 'Allsky Settings' page to do so.";
 		$status->addMessage("<div id='mustConfigure' class='important'>$msg</div>", 'danger');
@@ -725,12 +759,28 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 	// If there are any lines that begin with:  ERROR  or  WARNING
 	// then display them in the appropriate format.
 	if ($result != null) {
-		//x $status->addMessage(implode("<br>", $result), "message", false);
   		foreach ( $result as $line) {
 			if (strpos($line, "ERROR:") !== false) {
+				$line = str_replace("ERROR", "<strong>ERROR</strong>", $line);
+				$sev = "danger";
+			} else if (strpos($line, "ERROR::") !== false) {
+				$line = str_replace("ERROR:", "<strong>ERROR</strong>", $line);
 				$sev = "danger";
 			} else if (strpos($line, "WARNING:") !== false) {
+				$line = str_replace("WARNING", "<strong>WARNING</strong>", $line);
 				$sev = "warning";
+			} else if (strpos($line, "WARNING::") !== false) {
+				$line = str_replace("WARNING:", "<strong>WARNING</strong>", $line);
+				$sev = "warning";
+			} else if (strpos($line, "SUCCESS::") !== false) {
+				$line = str_replace("SUCCESS::", "", $line);
+				$sev = "success";
+			} else if (strpos($line, "INFO::") !== false) {
+				$line = str_replace("INFO::", "", $line);
+				$sev = "info";
+			} else if (strpos($line, "DEBUG:") !== false) {
+				$line = str_replace("DEBUG", "", $line);
+				$sev = "debug";
 			} else {
 				$sev = "message";
 			}

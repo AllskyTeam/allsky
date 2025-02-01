@@ -387,6 +387,7 @@ class OECONFIG {
     }
 
     saveConfig1() {
+        let fileName = this.#selectedOverlay.name;
         $.ajax({
             type: 'POST',
             url: 'includes/overlayutil.php?request=Config',
@@ -397,7 +398,9 @@ class OECONFIG {
             cache: false
         }).done(function() {
         }).fail(function() {
-            bootbox.alert('Failed to save the overlay config. Please check the permissions on the ~/allsky/config/overlay/config/overlay.json file');
+			let msg = "Failed to save the overlay config.";
+            msg += " Please check the permissions on the '~/allsky/config/overlay/config/" + fileName + "' file.";
+            bootbox.alert(msg);
         });
     }
 

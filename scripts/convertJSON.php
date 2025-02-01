@@ -33,6 +33,9 @@ $default_delimiter = "=";
 //		Limit output to only settings whose "carryforward" is true.
 //		Output the setting name and setting type.
 
+// --null
+//		Output "null" for any null setting value.  Normally "" would be output.
+
 // --convert
 //		Convert the field names to all lower case,
 //		boolean values to    true   or   false,
@@ -86,6 +89,7 @@ $include_not_in_options = false;
 $options_only = false;
 $options_array = null;
 $only_in_settings_file = false;	// use only settings that are in settings file?
+$default_setting_value="";
 
 $rest_index;
 $longopts = array(
@@ -103,6 +107,7 @@ $longopts = array(
 	"options-only",
 	"convert",
 	"order",
+	"null",
 	"shell",
 	"debug",
 );
@@ -152,6 +157,9 @@ foreach ($options as $opt => $val) {
 	} else if ($opt === "order") {
 		$order = true;
 
+	} else if ($opt === "null") {
+		$default_setting_value = $opt;
+
 	} else if ($opt === "delimiter") {
 		$delimiter = $val;
 
@@ -196,14 +204,15 @@ if ($shell) $label_array = Array();
 $type_array = Array();
 
 foreach ($options_array as $option) {
-	$type = getVariableOrDefault($option, 'type', "");
+	$type = getVariableOrDefault($option, 'type', "null");
 	if ($type_to_output !== "" && $type_to_output !== $type) {
 		continue;
 	}
 
 	$name = $option['name'];
 	if ($carryforward && getVariableOrDefault($option, 'carryforward', "false") === "true") {
-		echo "$prefix$name\t$type\n";
+		$value = getVariableOrDefault($settings_array, $name, $default_setting_value);
+		echo "$prefix$name\t$type\t$value\n";
 		continue;
 	}
 
@@ -265,7 +274,7 @@ if ($convert || $order) {
 		// Convert settings names to lowercase.
 		// Make sure booleans are output without quotes.
 		// $mode handles no quotes around numbers.
-		//
+
 		$a = Array();
 		foreach ($settings_array as $name => $value) {
 			$name = strtolower($name);

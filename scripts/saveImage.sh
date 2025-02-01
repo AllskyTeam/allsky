@@ -510,6 +510,8 @@ fi
 # We create ${WEBSITE_FILE} as late as possible to avoid it being overwritten.
 mv "${SAVED_FILE}" "${WEBSITE_FILE}"
 
-set_allsky_status "${ALLSKY_STATUS_RUNNING}"
+# Only update if different so we don't loose original timestamp
+STATUS="$( get_allsky_status )"
+[[ ${STATUS} != "${ALLSKY_STATUS_RUNNING}" ]] && set_allsky_status "${ALLSKY_STATUS_RUNNING}"
 
 exit 0

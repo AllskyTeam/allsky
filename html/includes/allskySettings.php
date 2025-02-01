@@ -702,22 +702,27 @@ if ($debug) {
 		echo "<p id='messages'>";
 			if ($status->isMessage()) echo $status->showMessages();
 		echo "</p>";
-		echo "<form method='POST' action='$ME?_ts=" . time() . " name='conf_form'>";
+		$t = time();
+		echo "<form method='POST' action='${ME}?_ts=${t}' name='conf_form'>";
 ?>
 		<div class="sticky settings-nav">
-			<div class="container-fluid">
+			<div class="settings-buttons container-fluid">
 				<div class="row">
-					<div class="col-md-11 col-sm-11 col-xs-11">
-						<button type="submit" class="btn btn-primary" name="save_settings" title="Save changes">
+					<div class="col-md-11 col-sm-11 col-xs-11 nowrap">
+						<button type="submit" class="btn btn-primary"
+								name="save_settings" title="Save changes">
 							<i class="fa-solid fa-floppy-disk"></i> Save changes
 						</button>
-						<button type="submit" class="btn ml-3 btn-warning" name="reset_settings" title="Reset to default values" id="settings-reset">
+						<button type="submit" class="btn ml-3 btn-warning"
+								name="reset_settings" title="Reset to default values"
+								id="settings-reset">
 							<i class="fa-solid fa-rotate-left"></i> Reset to default values
 						</button>
 					</div>
 					
 					<div class="col-md-1 col-sm-1 col-xs-1">
-						<button type="button" class="<?php if (!$hideHeaderBodies) { echo("hidden ") ;}?>btn btn-primary ml-5 settings-expand pull-right" id="settings-all-control" title="Expand/Collapse all settings">
+						<button type="button" class="<?php if (!$hideHeaderBodies) { echo("hidden ") ;}?>btn btn-primary ml-5 settings-expand pull-right"
+								id="settings-all-control" title="Expand/Collapse all settings">
 							<?php echo $showIcon ?>
 						</button>
 					</div>

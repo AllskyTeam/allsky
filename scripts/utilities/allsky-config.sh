@@ -501,7 +501,7 @@ if [[ -z ${CMD} ]]; then
 	CMDS+=("recheck_swap"				"$( L "Add swap space" )"); ((N++))
 	CMDS+=("recheck_tmp"				"$( L "Move ~/allsky/tmp to memory") "); ((N++))
 	CMDS+=("samba" 						"$( L "Simplify copying files to/from the Pi" )"); ((N++))
-	CMDS+=("move_images"				"$( L "Move ~/allsky/images to a different location" )"; ((N++))
+	CMDS+=("move_images"				"$( L "Move ~/allsky/images to a different location" )"); ((N++))
 	CMDS+=("new_rpi_camera_info"		"$( L "Collect information for new RPi camera" )"); ((N++))
 	CMDS+=("show_start_times"			"$( L "Show daytime and nighttime start times" )"); ((N++))
 	CMDS+=("compare_paths"				"$( L "Compare upload and Website paths" )"); ((N++))

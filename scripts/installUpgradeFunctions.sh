@@ -916,17 +916,81 @@ function is_mounted()
 }
 
 ####
+# Mount the specified directory.
+function mount_tmp()
+{
+	local DIR="${1}"
+	local FROM="${2}"
+
+	local ERR_MSG
+# TODO: Delete these commented-out lines after we're sure this works.
+#echo "MMM mounting $DIR, df:"; df -h|grep allsky;echo "fstab:";grep allsky /etc/fstab; echo "mount:"; mount|grep allsky
+	if ! ERR_MSG="$( sudo mount "${DIR}" )" ; then
+		local MSG="Unable to mount '${DIR}': ${ERR_MSG}."
+		if [[ ${FROM} == "install" ]]; then
+			display_msg --log warning "${MSG}"
+		else
+			e_ "ERROR: ${MSG}"
+		fi
+	fi
+#echo -e "\nMMM after, df:"; df -h|grep allsky;echo "fstab:";grep allsky /etc/fstab; echo "mount:"; mount|grep allsky
+}
+
+####
 # Unmount the specified directory.
 function umount_tmp()
 {
-	local TMP="${1}"
+	local DIR="${1}"
+	local FROM="${2}"
 
-	sudo umount -f "${TMP}" 2> /dev/null ||
+	local RET=0
+#echo "UUU unmounting $DIR, df:"; df -h|grep allsky;echo "fstab:";grep allsky /etc/fstab; echo "mount:"; mount|grep allsky
+	cd /	# Make sure we're not in ${DIR}"
+	sudo umount --force "${DIR}" 2> /dev/null ||
 		{
 			# The Samba daemon is one known cause of "target busy".
-			sudo systemctl restart smbd
-			sudo umount -f "${TMP}"
-		} 2> /dev/null
+			sudo systemctl restart smbd 2> /dev/null
+
+			if ! sudo umount --lazy "${DIR}" 2> /dev/null ; then
+				RET=1
+				local WHO="$( lsof "${DIR}" )"		# lists open files on ${DIR}
+				if [[ -n ${WHO} ]]; then
+					local ERR_MSG="Unable to unmount '${DIR}'"
+					if [[ ${FROM} == "install" ]]; then
+						display_msg --logonly info "${ERR_MSG}" "${WHO}"
+					else
+						w_ "\nWARNING: ${ERR_MSG}:\n$( indent "${WHO}" )" >&2
+					fi
+				fi
+			fi
+		}
+#echo -e "\nUUU after, RET=$RET, df:"; df -h|grep allsky;echo "fstab:";grep allsky /etc/fstab; echo "mount:"; mount|grep allsky
+	cd - >/dev/null 2>&1
+	return "${RET}"
+}
+
+
+####
+# Save important files in ${ALLSKY_TMP}.
+TMP_DIR_="/tmp/IMAGES"
+function save_tmp()
+{
+	if [[ -d "${ALLSKY_TMP}" ]]; then
+		mkdir -p "${TMP_DIR_}"
+		find "${ALLSKY_TMP}" -maxdepth 1 \! \
+			\( -wholename "${ALLSKY_TMP}" -o -name '*.jpg' -o -name '*.png' \) \
+			 -exec mv '{}' "${TMP_DIR_}" \;
+		rm -fr "${ALLSKY_TMP:?}"/*
+	else
+		mkdir "${ALLSKY_TMP}"
+	fi
+}
+# And restore the files
+function restore_tmp()
+{
+	[[ ! -d ${TMP_DIR_} ]] && return
+	find "${TMP_DIR_}" -maxdepth 1 \! -wholename "${TMP_DIR_}" -exec mv '{}' "${ALLSKY_TMP}" \;
+	rmdir "${TMP_DIR_}" 2>/dev/null
 }
 
 ####
@@ -935,24 +999,17 @@ function umount_tmp()
 # then mount it.
 function check_and_mount_tmp()
 {
-	local TMP_DIR="/tmp/IMAGES"
+	local FROM="${1:-install}"
 
-	if [[ -d "${ALLSKY_TMP}" ]]; then
-		mkdir -p "${TMP_DIR}"
-		find "${ALLSKY_TMP}" \( -name '*.jpg' -o -name '*.png' \) -exec mv '{}' "${TMP_DIR}" \;
-		rm -fr "${ALLSKY_TMP:?}"/*
-	else
-		mkdir "${ALLSKY_TMP}"
-	fi
+	save_tmp
+
+	is_mounted "${ALLSKY_TMP}" && umount_tmp "${ALLSKY_TMP}" "${FROM}"
 
 	# Now mount and restore any images that were there before
 	sudo systemctl daemon-reload 2> /dev/null
-	sudo mount -a || display_msg --log warning "Unable to mount '${ALLSKY_TMP}'."
+	mount_tmp "${ALLSKY_TMP}" "${FROM}"
 
-	if [[ -d ${TMP_DIR} ]]; then
-		mv "${TMP_DIR}"/* "${ALLSKY_TMP}" 2>/dev/null
-		rmdir "${TMP_DIR}"
-	fi
+	restore_tmp
 }
 
 ####
@@ -971,7 +1028,7 @@ function check_tmp()
 
 	# global: TITLE  WT_WIDTH
 	local CURRENT_STRING  STRING  MSG  D  SIZE  NEW_SIZE  ERR_MSG
-	local FSTAB="/tmp/fstab"
+	local FSTAB="/etc/fstab"
 
 	if [[ ${CALLED_FROM} == "install" ]]; then
 		declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
@@ -995,8 +1052,7 @@ function check_tmp()
 			# but the mount point is currently in the PRIOR Allsky.
 			D="${PRIOR_ALLSKY_DIR}/tmp"
 			if [[ -d "${D}" ]] && is_mounted "${D}" ; then
-				if ! umount_tmp "${D}" ; then
-					display_msg --logonly info "Unable to unmount '${D}'"
+				if ! umount_tmp "${D}" "${CALLED_FROM}" ; then
 					set_reboot_needed		# Will force the unmount
 				fi
 			fi
@@ -1010,7 +1066,7 @@ function check_tmp()
 				return 0
 			fi
 
-			check_and_mount_tmp		# works on new ${ALLSKY_TMP}
+			check_and_mount_tmp "${CALLED_FROM}"		# works on new ${ALLSKY_TMP}
 			return 0
 		fi
 	fi
@@ -1052,7 +1108,11 @@ function check_tmp()
 			MSG="${ERR_MSG}"
 		elif ! is_number "${NEW_SIZE}" ; then
 			MSG="${ERR_MSG}"
-			MSG+="\nYou entered: '${NEW_SIZE}'.\n"
+			MSG+="\nYou entered: ${NEW_SIZE}\n"
+			NEW_SIZE=""
+		elif [[ "${NEW_SIZE}" -lt 0 ]]; then
+			MSG="${ERR_MSG}"
+			MSG+="\nYou entered a negative number: ${NEW_SIZE}\n"
 			NEW_SIZE=""
 		fi
 	done
@@ -1060,51 +1120,97 @@ function check_tmp()
 	if [[ -n ${CURRENT_STRING} && ${NEW_SIZE} == "${SIZE}" ]]; then
 		if [[ ${CALLED_FROM} == "install" ]]; then
 			STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
-		fi
 			MSG="The ${ALLSKY_TMP} directory and its contents will remain on the SD card."
 			display_msg --log info "${MSG}"
+		else
+			echo -e "\nNo changes to '${ALLSKY_TMP}' made."
+		fi
+		return 0
 	fi
+
+	# Allsky isn't running when called from the installer.
+	[[ ${NEW_SIZE} -ge 0 && ${CALLED_FROM} != "install" ]] && stop_Allsky
+
 	if [[ ${NEW_SIZE} -gt 0 ]]; then
-		STRING="tmpfs ${ALLSKY_TMP} tmpfs size=${SIZE}M,noatime,lazytime,nodev,"
+		STRING="tmpfs ${ALLSKY_TMP} tmpfs size=${NEW_SIZE}M,noatime,lazytime,nodev,"
 		STRING+="nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${WEBSERVER_GROUP}"
+
 		if [[ -n ${CURRENT_STRING} ]]; then
 			if ! sudo sed -i -e "s;${CURRENT_STRING};${STRING};" ${FSTAB} ; then
-				display_msg --log error "Unable to update ${FSTAB}"
+				ERR_MSG="Unable to update ${FSTAB}."
+				if [[ ${CALLED_FROM} == "install" ]]; then
+					display_msg --log error "${ERR_MSG}"
+				else
+					e_ "\nERROR: ${MSG}\n"
+				fi
 				return 1
 			fi
 		else
 			if ! echo "${STRING}" | sudo tee -a ${FSTAB} > /dev/null ; then
-				display_msg --log error "Unable to update ${FSTAB}"
+				ERR_MSG="Unable to add to ${FSTAB}."
+				if [[ ${CALLED_FROM} == "install" ]]; then
+					display_msg --log error "${ERR_MSG}"
+				else
+					e_ "\nERROR: ${MSG}\n"
+				fi
 				return 1
 			fi
 		fi
-		check_and_mount_tmp
-		display_msg --log progress "${ALLSKY_TMP} is now in memory."
 
-	elif [[ ${NEW_SIZE} -eq 0 ]]; then
-		[[ ${CALLED_FROM} != "install" ]] && stop_Allsky
-		is_mounted "${ALLSKY_TMP}" && umount_tmp "${ALLSKY_TMP}"
+		check_and_mount_tmp "${CALLED_FROM}"
+
+		MSG="${ALLSKY_TMP} is now in memory, size=${NEW_SIZE} MB."
+		if [[ ${CALLED_FROM} == "install" ]]; then
+			display_msg --log progress "${MSG}"
+		else
+			if [[ -n ${CURRENT_STRING} ]]; then
+				o_ "\n${ALLSKY_TMP} is now ${NEW_SIZE} MB.\n"
+			else
+				o_ "\n${MSG}\n"
+			fi
+
+			start_Allsky
+		fi
+
+	else	# is 0, i.e., do not put in memory
 		if [[ -n ${CURRENT_STRING} ]]; then
 			if ! sudo sed -i -e "\;${CURRENT_STRING};d" ${FSTAB} ; then
-				display_msg --log error "Unable to remove '${ALLSKY_TMP}' from ${FSTAB}"
+				ERR_MSG="Unable to remove '${ALLSKY_TMP}' from ${FSTAB}"
+				if [[ ${CALLED_FROM} == "install" ]]; then
+					display_msg --log error "${ERR_MSG}"
+				else
+					e_ "\nERROR: ${MSG}.\n"
+				fi
 				return 1
 			fi
+		fi
+
+		if is_mounted "${ALLSKY_TMP}" ; then
+			save_tmp
+			umount_tmp "${ALLSKY_TMP}" "${CALLED_FROM}"
+
+			# in case it wasn't already
+			chmod 775 "${ALLSKY_TMP}"
+			sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_TMP}"
+
+			restore_tmp
 		fi
 
 		if [[ ${CALLED_FROM} == "install" ]]; then
 			MSG="The ${ALLSKY_TMP} directory and its contents will remain on the SD card."
 			display_msg --log info "${MSG}"
-			mkdir -p "${ALLSKY_TMP}"
 		else
 			start_Allsky
-			MSG="${ALLSKY_TMP} is no longer in memory."
-			echo -e "${MSG}"
+			MSG="\n${ALLSKY_TMP} is no longer in memory.\n"
+			o_ "${MSG}"
 		fi
 	fi
 
 	if [[ ${CALLED_FROM} == "install" ]]; then
 		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 	fi
+
+	return 0
 }
 
 ####

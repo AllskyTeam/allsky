@@ -945,7 +945,8 @@ function umount_tmp()
 
 	local RET=0
 #echo "UUU unmounting $DIR, df:"; df -h|grep allsky;echo "fstab:";grep allsky /etc/fstab; echo "mount:"; mount|grep allsky
-	cd /	# Make sure we're not in ${DIR}"
+	# shellcheck disable=SC2103,SC2164
+	cd /		# Make sure we're not in ${DIR}"
 	sudo umount --force "${DIR}" 2> /dev/null ||
 		{
 			# The Samba daemon is one known cause of "target busy".

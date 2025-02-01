@@ -12,12 +12,15 @@ source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
+# Output from this script goes either to the log file or a tty,
+# so can't use "w*" colors.
+
 if [[ ! -d ${ALLSKY_CONFIG} ]]; then
-	{
-		echo "*** ====="
-		echo "Allsky needs to be installed.  Run:  cd ~/allsky; ./install.sh"
-		echo "*** ====="
-	} >&2
+	MSG="*** ====="
+	MSG+="\nAllsky needs to be installed.  Run:  cd ~/allsky; ./install.sh"
+	MSG+="\n*** ====="
+	echo -e "${RED}${MSG}${NC}" >&2
+
 	# Can't call addMessage.sh or copy_notification_image.sh or almost anything
 	# since they use ${ALLSKY_CONIG} and/or ${ALLSKY_TMP} which don't exist yet.
 	set_allsky_status "${ALLSKY_STATUS_NEVER_RUN}"
@@ -27,25 +30,17 @@ fi
 ####
 usage_and_exit()
 {
-	local RET C MSG
-
-	RET=${1}
+	local RET=${1}
+	local MSG="\nUsage: ${ME} [--help] [--preview]"
+	MSG+="\nWhere:"
+	MSG+="\n    '--help' displays this message and the help message from the capture program, then exits."
+	MSG+="\n    '--preview' displays images on your screen as they are taken."
 	if [[ ${RET} -eq 0 ]]; then
-		C="${YELLOW}"
+		echo -e "${YELLOW}${MSG}${NC}"
 	else
-		C="${RED}"
+		echo -e "${RED}${MSG}${NC}"
+		exit "${RET}"
 	fi
-	{
-		echo -en "\n${C}"
-		echo -n  "Usage: ${ME} [--help] [--preview]"
-		echo -e  "${NC}"
-		echo
-		echo "'--help' displays this message and the help message from the capture program, then exits."
-		echo
-		echo "'--preview' displays images on your screen as they are taken."
-		echo
-	} >&2
-	[[ ${RET} -ne 0 ]] && exit "${RET}"
 }
 
 CAPTURE="capture_${CAMERA_TYPE}"
@@ -64,7 +59,7 @@ while [[ $# -gt 0 ]]; do
 			PREVIEW="true"
 			;;
 		-*)
-			echo -e "${RED}Unknown argument: '${ARG}'${NC}." >&2
+			echo -e "${RED}ERROR: Unknown argument: '${ARG}'${NC}." >&2
 			OK="false"
 			;;
 		*)
@@ -96,9 +91,10 @@ else
 fi
 
 # Make sure the settings have been configured after an installation or upgrade.
+# If the "lastchanged" setting is missing, the user needs to review/change the settings.
 LAST_CHANGED="$( settings ".lastchanged" )"
 if [[ -z ${LAST_CHANGED} ]]; then
-	set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
+	set_allsky_status "${ALLSKY_STATUS_NEEDS_CONFIGURATION}"
 	echo "*** ===== Allsky needs to be configured before it can be used.  See the WebUI." >&2
 	if [[ ${NEEDS_REBOOT} == "true" ]]; then
 		echo "*** ===== The Pi also needs to be rebooted." >&2
@@ -109,7 +105,7 @@ if [[ -z ${LAST_CHANGED} ]]; then
 		doExit "${EXIT_ERROR_STOP}" "ConfigurationNeeded" "" "Allsky needs to be configured."
 	fi
 elif [[ ${NEEDS_REBOOT} == "true" ]]; then
-	set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
+	set_allsky_status "${ALLSKY_STATUS_REBOOT_NEEDED}"
 	doExit "${EXIT_ERROR_STOP}" "RebootNeeded" "" "The Pi needs to be rebooted."
 fi
 
@@ -167,7 +163,7 @@ if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 		# and there's already an image, so don't overwrite it.
 		# shellcheck disable=SC2154
 		rm -f "${F}"		# so next time we'll remind them.
-		set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
+		set_allsky_status "${ALLSKY_STATUS_ACTIONS_NEEDED}"
 		doExit "${EXIT_ERROR_STOP}" "no-image" "" ""
 	else
 		MSG="Reminder: Click here to see the action(s) that need to be performed."
@@ -245,14 +241,13 @@ else
 fi
 
 if [[ ${CAMERA_TYPE_FOUND} == "false" ]]; then
+	set_allsky_status "${ALLSKY_STATUS_NO_CAMERA}"
 	if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 		# reset_usb() exits if too many tries
 		reset_usb "looking for a\nZWO camera"
-		set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
 		exit 0	# exit with 0 so the service is restarted
 	fi
 
-	set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
 	MSG="${NOT_STARTED_MSG}  No connected ${CAMERA_TYPE} cameras found!"
 	IMAGE_MSG="${ERROR_MSG_PREFIX}"
 	IMAGE_MSG+="${NOT_STARTED_MSG}\n"

@@ -355,19 +355,30 @@ function DisplaySystem()
 				<div class="panel-body">
 
 					<?php
+					$s = false;		// Update Allsky Status ?
+
 					if (isset($_POST['system_reboot'])) {
 						$status->addMessage("System Rebooting Now!", "warning", true);
 						$result = shell_exec("sudo /sbin/reboot");
-					}
-					if (isset($_POST['system_shutdown'])) {
+					} else if (isset($_POST['system_shutdown'])) {
 						$status->addMessage("System Shutting Down Now!", "warning", true);
 						$result = shell_exec("sudo /sbin/shutdown -h now");
+					} else if (isset($_POST['service_start'])) {
+						// Sleep to let Allsky status get updated.
+						// Starting Allsky takes longer to update status.
+						runCommand("sudo /bin/systemctl start allsky && sleep 4", "Allsky started", "success");
+						$s = true;
+					} else if (isset($_POST['service_stop'])) {
+						runCommand("sudo /bin/systemctl stop allsky && sleep 3", "Allsky stopped", "success");
+						$s = true;
 					}
-					if (isset($_POST['service_start'])) {
-						runCommand("sudo /bin/systemctl start allsky", "Allsky started", "success");
-					}
-					if (isset($_POST['service_stop'])) {
-						runCommand("sudo /bin/systemctl stop allsky", "Allsky stopped", "success");
+					if ($s) {
+// TODO: Make output_allsky_status() a javascript function that updates the status every x seconds
+// and if it hasn't change in y checks, increase the delay.
+						$new_status = output_allsky_status();
+						echo "<script>";
+						echo 'document.getElementById("allskyStatus").innerHTML = "' . $new_status . '";';
+						echo "</script>";
 					}
 
 					$e = "";
@@ -440,15 +451,22 @@ function DisplaySystem()
 					<div class="row">
 					<form action="?page=<?php echo $page ?>" method="POST">
 					<div style="margin-bottom: 15px">
-						<button type="button" class="btn btn-primary" onclick="document.location.reload(true)"><i class="fa fa-sync-alt"></i> Refresh</button>
+						<button type="button" class="btn btn-primary" onclick="document.location.reload(true)">
+							<i class="fa fa-sync-alt"></i> Refresh</button>
 					</div>
 					<div style="margin-bottom: 15px">
-						<button type="submit" class="btn btn-success" name="service_start"/><i class="fa fa-play"></i> Start Allsky</button>
-						<button type="submit" class="btn btn-danger" name="service_stop"/><i class="fa fa-stop"></i> Stop Allsky</button>
+						<button type="submit" class="btn btn-success" name="service_start"/>
+							<i class="fa fa-play"></i> Start Allsky</button>
+						&nbsp;
+						<button type="submit" class="btn btn-danger" name="service_stop"/>
+							<i class="fa fa-stop"></i> Stop Allsky</button>
 					</div>
-					<div style="margin-bottom: 15px">
-						<button type="submit" class="btn btn-warning" name="system_reboot"/><i class="fa fa-power-off"></i> Reboot Raspberry Pi</button>
-						<button type="submit" class="btn btn-warning" name="system_shutdown"/><i class="fa fa-plug"></i> Shutdown Raspberry Pi</button>
+					<div style="line-height: 40px">
+						<button type="submit" class="btn btn-warning" name="system_reboot"/>
+							<i class="fa fa-power-off"></i> Reboot Raspberry Pi</button>
+						&nbsp;
+						<button type="submit" class="btn btn-warning" name="system_shutdown"/>
+							<i class="fa fa-plug"></i> Shutdown Raspberry Pi</button>
 					</div>
 					<?php // Optional user-specified data.
 						$e = "";

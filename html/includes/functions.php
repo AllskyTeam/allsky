@@ -141,15 +141,38 @@ function readOptionsFile() {
 	return($contents);
 }
 
-function get_allsky_status() {
+$allsky_status = null;
+$allsky_status_timestamp = null;
+function output_allsky_status() {
+	global $allsky_status, $allsky_status_timestamp;
+
 	$retMsg = "";
-	$status = get_decoded_json_file(ALLSKY_STATUS, true, "", $retMsg);
-	if ($status === null) {
-		$status = Array();
-		$status['status'] = "Unknown";
-		$status['timestamp'] = $retMsg;
+	$s = get_decoded_json_file(ALLSKY_STATUS, true, "", $retMsg);
+	if ($s === null) {
+		$allsky_status = "Unknown";
+		$allsky_status_timestamp = $retMsg;
+	} else {
+		$allsky_status = getVariableOrDefault($s, 'status', "Unknown");
+		$allsky_status_timestamp = getVariableOrDefault($s, 'timestamp', null);
 	}
-	return($status);
+
+	if ($allsky_status_timestamp === null) {
+		$title = "";
+		$class = "";
+	} else if ($allsky_status == "Unknown") {
+		$allsky_status_timestamp = str_replace("<b>", "", $allsky_status_timestamp);
+		$allsky_status_timestamp = str_replace("</b>","", $allsky_status_timestamp);
+		$title = " title='$allsky_status_timestamp'";
+		$class = "alert-danger";
+	} else {
+		$title = "title='Since $allsky_status_timestamp'";
+		if ($allsky_status == "Running") {
+			$class = "alert-success";
+		} else {
+			$class = "alert-warning";
+		}
+	}
+	return("<span class='nowrap $class' $title>Status: $allsky_status</span><br>");
 }
 
 function initialize_variables($website_only=false) {

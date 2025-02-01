@@ -60,9 +60,13 @@
 								will work are highlighted like
 								<span class="cm-string highlight">XX_NEED_TO_UPDATE_XX</span>.
 						</ul>
+					<li>The WebUI now displays the status of Allsky (Running, Stopped, etc.).
+						The status is determined every time a WebUI page is displayed,
+						so if the status changes while you are on a page it won't be
+						updated until the page is refreshed.
 					<li>The new <code>allsky-config &nbsp;get_brightness_info</code> command
-						displays information on image brightness saved when startrails
-						are created.
+						displays information on image brightness determined during
+						startrails generation.
 						It can be used to help determine what to put in the
 						<span class="WebUISetting">Brightness Threshold</span> setting.
 						See <a allsky="true" external="true"
@@ -86,15 +90,15 @@
 						of the associated <span class="fileName">configuration.json</span>
 						file to "true".
 						<br><strong>Support for saving and uploading images with
-						meteors will be added in a future release.</strong>
+						meteors will be added in a future Allsky release.</strong>
 					<li>The Allsky Website no longer downloads any third-party files;
 						instead, those files are included with the Website.
 						This helps address European privacy rules.
-					<li>Displaying image previews is now done via <code>allsky.sh --preview</code>.
-						It was previously <code>allsky.sh preview</code>.
 					<li>The remote <span class="WebUISetting">Website URL</span>
 						setting can no longer end in <code>index.php</code>.
-						The URL should point to the directory where the Allsky Website code is.
+						The URL should point to the <em>directory</em>
+						where the Allsky Website code is, not to any particular <em>file</em>
+						in the directory.
 				</ul>
 				<h4>New Settings</h4>
 				<ul>

@@ -141,6 +141,17 @@ function readOptionsFile() {
 	return($contents);
 }
 
+function get_allsky_status() {
+	$retMsg = "";
+	$status = get_decoded_json_file(ALLSKY_STATUS, true, "", $retMsg);
+	if ($status === null) {
+		$status = Array();
+		$status['status'] = "Unknown";
+		$status['timestamp'] = $retMsg;
+	}
+	return($status);
+}
+
 function initialize_variables($website_only=false) {
 	global $status;
 	global $image_name;

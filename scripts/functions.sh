@@ -1166,19 +1166,32 @@ function make_thumbnail()
 
 
 #####
+# Create the reboot-is-needed file.
+function set_reboot_needed()
+{
+	uptime --since > "${ALLSKY_REBOOT_NEEDED}"
+}
+
+#####
 # Check if the user was supposed to reboot, and if so, if they did.
 # Return 0 if a reboot is needed.
 function reboot_needed()
 {
 	[[ ! -f ${ALLSKY_REBOOT_NEEDED} ]] && return 1
 
-	# The file exists so they were supposed to reboot.
-	BEFORE="$( < "${ALLSKY_REBOOT_NEEDED}" )"
-	NOW="$( uptime --since )"
-	if [[ ${BEFORE} == "${NOW}" ]]; then
+	# The file exists and has the uptime as of when the file was created.
+	# If the Pi has rebooted since the file was created,
+	# the current uptime and saved uptime will be different,
+	# so the file is outdated so delete it.
+
+	local PRIOR_UPTIME="$( < "${ALLSKY_REBOOT_NEEDED}" )"
+	local CURRENT_UPTIME="$( uptime --since )"
+	if [[ ${PRIOR_UPTIME} == "${CURRENT_UPTIME}" ]]; then
+		# No reboot; still need to reboot.
 		return 0
 	else
-		rm -f "${ALLSKY_REBOOT_NEEDED}"		# different times so they rebooted
+		# Different uptimes so they rebooted.
+		rm -f "${ALLSKY_REBOOT_NEEDED}"
 		return 1
 	fi
 }

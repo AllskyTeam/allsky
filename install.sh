@@ -44,6 +44,7 @@ DISPLAY_MSG_LOG="${DISPLAY_MSG_LOG:-${ALLSKY_LOGS}/install.log}"	# send log entr
 LONG_BITS=$( getconf LONG_BIT ) # Size of a long, 32 or 64
 REBOOT_NEEDED="true"					# Is a reboot needed at end of installation?
 CONFIGURATION_NEEDED="true"				# Does Allsky need to be configured at end of installation?
+ALLSKY_IMAGES_MOVED="false"				# Did the user move ALLSKY_IMAGES, e.g., to an SSD?
 SPACE="    "
 NOT_RESTORED="NO PRIOR VERSION"
 TMP_FILE="/tmp/x"						# temporary file used by many functions
@@ -980,9 +981,9 @@ set_permissions()
 	sudo find "${ALLSKY_WEBUI}/" -type f -exec chmod 644 '{}' \;
 	sudo find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 '{}' \;
 
-	# Exceptions to files at 644:
 	chmod 775 "${ALLSKY_TMP}"
 	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_TMP}"
+
 
 	#### Website files
 
@@ -1003,7 +1004,7 @@ set_permissions()
 	sudo find "${ALLSKY_WEBSITE}" -type f -exec chmod 664 '{}' \;
 	sudo chgrp --recursive "${WEBSERVER_GROUP}" "${ALLSKY_WEBSITE}"
 
-	# Get the session handler type from th ephp ini file
+	# Get the session handler type from the php ini file
 	SESSION_HANDLER="$( get_php_setting "session.save_handler" )"
 	# We need to make changes if the handler is using the filesystem
 	if [[ ${SESSION_HANDLER} == "files" ]]; then
@@ -1448,6 +1449,24 @@ does_prior_Allsky_exist()
 			display_msg --log warning "${MSG}"
 		fi
 
+		# Check for prior ALLSKY_USER_VARIABLES file.
+		local PRIOR_ALLSKY_USER_VARIABLES="${ALLSKY_USER_VARIABLES/${ALLSKY_HOME}/${PRIOR_ALLSKY_DIR}}"
+		if [[ -s ${PRIOR_ALLSKY_USER_VARIABLES} ]]; then
+			display_msg --logonly info "User has ${PRIOR_ALLSKY_USER_VARIABLES}"
+			# Check if ALLSKY_IMAGES was changed.
+			local SAVED_ALLSKY_IMAGES="${ALLSKY_IMAGES}"
+			local X="$(
+				# shellcheck disable=SC1090,SC1091
+				source "${PRIOR_ALLSKY_USER_VARIABLES}"
+				[[ ${ALLSKY_IMAGES} != "${SAVED_ALLSKY_IMAGES}" ]] && echo "${ALLSKY_IMAGES}"
+			)"
+			if [[ -n ${X} ]]; then
+				ALLSKY_IMAGES="${X}"
+				ALLSKY_IMAGES_MOVED="true"
+				display_msg --logonly info "ALLSKY_IMAGES updated to '${ALLSKY_IMAGES}'"
+			fi
+		fi
+
 # TODO: Remove "else" block check when only looking back 2 major releases.
 	else		# pre-${FIRST_VERSION_VERSION}
 		# V0.6, v0.7, and v0.8:
@@ -1531,11 +1550,16 @@ prompt_for_prior_Allsky()
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 
 	if [[ ${WILL_USE_PRIOR} == "true" ]]; then
-		local MSG
+		local MSG  M
 
 		if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
 			MSG="You have a prior version of Allsky in ${PRIOR_ALLSKY_DIR}."
-			MSG+="\n\nDo you want to restore the prior images and other files you've changed?"
+			if [[ ${ALLSKY_IMAGES_MOVED} == "true" ]]; then
+				M=""
+			else
+				M=" images and other "
+			fi
+			MSG+="\n\nDo you want to restore the prior ${M}files you've changed?"
 			if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
 				MSG+="\nIf so, your prior settings will be restored as well."
 			else
@@ -1562,7 +1586,12 @@ prompt_for_prior_Allsky()
 				PRIOR_CAMERA_MODEL=""
 				PRIOR_CAMERA_NUMBER=""
 				display_msg --logonly info "Will NOT restore from prior version of Allsky."
-				MSG="If you want your old images, darks, settings, etc. from the prior version"
+				if [[ ${ALLSKY_IMAGES_MOVED} == "true" ]]; then
+					M=""
+				else
+					M="images, "
+				fi
+				MSG="If you want your old ${M}darks, settings, etc. from the prior version"
 				MSG+=" of Allsky, you'll need to manually move them to the new version."
 				display_msg info "${MSG}"
 				WILL_USE_PRIOR="false"
@@ -2377,12 +2406,16 @@ restore_prior_files()
 	fi
 
 	ITEM="${SPACE}'images' directory"
-	if [[ -d ${PRIOR_ALLSKY_DIR}/images ]]; then
-		display_msg --log progress "${ITEM} (moving)"
-		mv "${PRIOR_ALLSKY_DIR}/images" "${ALLSKY_HOME}"
+	if [[ ${ALLSKY_IMAGES_MOVED} == "true" ]]; then
+		display_msg --log progress "${ITEM} (leaving '${ALLSKY_IMAGES}' as is)"
 	else
-		# This is probably very rare so let the user know
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}."  " This is unusual."
+		if [[ -d ${PRIOR_ALLSKY_DIR}/images ]]; then
+			display_msg --log progress "${ITEM} (moving)"
+			mv "${PRIOR_ALLSKY_DIR}/images" "${ALLSKY_HOME}"
+		else
+			# This is probably very rare so let the user know
+			display_msg --log progress "${ITEM}: ${NOT_RESTORED}."  " This is unusual."
+		fi
 	fi
 
 	ITEM="${SPACE}'darks' directory"
@@ -2835,12 +2868,16 @@ do_restore()
 	display_msg --log progress "Restoring files:"
 
 	ITEM="${SPACE}'images' directory"
-	if [[ -d ${ALLSKY_HOME}/images ]]; then
-		display_msg --log progress "${ITEM} (moving back)"
-		mv "${ALLSKY_HOME}/images" "${PRIOR_ALLSKY_DIR}"
+	if [[ ${ALLSKY_IMAGES_MOVED} == "true" ]]; then
+		display_msg --log progress "${ITEM} (leaving '${ALLSKY_IMAGES}' as is)"
 	else
-		# This is probably very rare so let the user know
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}." " This is unusual."
+		if [[ -d ${ALLSKY_HOME}/images ]]; then
+			display_msg --log progress "${ITEM} (moving back)"
+			mv "${ALLSKY_HOME}/images" "${PRIOR_ALLSKY_DIR}"
+		else
+			# This is probably very rare so let the user know
+			display_msg --log progress "${ITEM}: ${NOT_RESTORED}." " This is unusual."
+		fi
 	fi
 
 	ITEM="${SPACE}'darks' directory"
@@ -2988,6 +3025,9 @@ do_fix()
 # Change the ALLSKY_IMAGES folder.
 do_change_images()
 {
+	# ALLSKY_IMAGES point to a different location.
+	# Make sure everything knows the location.
+
 	# just update web server
 	install_webserver_et_al="true" install_webserver_et_al
 
@@ -3747,7 +3787,7 @@ if [[ -z ${FUNCTION} && -s ${STATUS_FILE} && ${RESTORE} == "false" ]]; then
 		MSG3="\n\nHave you already performed those steps?"
 		if whiptail --title "${TITLE}" --yesno "${MSG}${MSG2}${MSG3}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 			MSG="\nCongratulations, you successfully installed Allsky version ${ALLSKY_VERSION}!"
-			MSG+="\nAllsky is starting.  Look in the 'Live View' page of the WebUI to ensure"
+			MSG+="\nAllsky is starting.  Look in the WebUI's 'Live View' page to ensure"
 			MSG+="\nimages are being taken.\n"
 			display_msg --log progress "${MSG}"
 			start_Allsky

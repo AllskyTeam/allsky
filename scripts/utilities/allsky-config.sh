@@ -179,6 +179,13 @@ function samba()
 }
 
 #####
+# Move ALLSKY_IMAGES to a new location.
+function move_images()
+{
+	moveImages.sh
+}
+
+#####
 # Display the path on the server of an Allsky Website and
 # display the path on the server give a URL.
 function compare_paths()
@@ -491,9 +498,10 @@ if [[ -z ${CMD} ]]; then
 	CMDS+=("show_supported_cameras"		"$( L "Show supported cameras" )"); ((N++))
 	CMDS+=("show_connected_cameras"		"$( L "Show connected cameras" )"); ((N++))
 	CMDS+=("prepare_logs"				"$( L "Prepare log files for troubleshooting" )"); ((N++))
-	CMDS+=("recheck_swap"				"$( L "Add swap space or change size" )"); ((N++))
-	CMDS+=("recheck_tmp"				"$( L "Move ~/allsky/tmp to memory or change size") "); ((N++))
+	CMDS+=("recheck_swap"				"$( L "Add swap space" )"); ((N++))
+	CMDS+=("recheck_tmp"				"$( L "Move ~/allsky/tmp to memory") "); ((N++))
 	CMDS+=("samba" 						"$( L "Simplify copying files to/from the Pi" )"); ((N++))
+	CMDS+=("move_images"				"$( L "Move ~/allsky/images to a different location" )"); ((N++))
 	CMDS+=("new_rpi_camera_info"		"$( L "Collect information for new RPi camera" )"); ((N++))
 	CMDS+=("show_start_times"			"$( L "Show daytime and nighttime start times" )"); ((N++))
 	CMDS+=("compare_paths"				"$( L "Compare upload and Website paths" )"); ((N++))
@@ -511,7 +519,8 @@ if [[ -z ${CMD} ]]; then
 
 		[[ ${ALLOW_MORE_COMMANDS} == "false" ]] && exit "${RET}"
 		while true; do
-			echo -e "\n${YELLOW}${BOLD}"
+			echo -e "\n\n"
+			echo -e "${YELLOW}${BOLD}"
 			echo    "=========================================="
 			echo -n "Press RETURN to continue or 'q' to quit: "
 			read -r x

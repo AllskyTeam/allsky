@@ -161,7 +161,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	ALLSKY_STATUS_STOPPED="Stopped"
 	ALLSKY_STATUS_ERROR="Stopped - error detected"
 	ALLSKY_STATUS_NO_CAMERA="Stopped - camera not found"
-	ALLSKY_STATUS_CAMERA_CHANGE="Stopped - camera changed"
+	ALLSKY_STATUS_CAMERA_CHANGED="Stopped - camera changed"
 	ALLSKY_STATUS_REBOOT_NEEDED="Stopped - reboot needed"
 	ALLSKY_STATUS_ACTIONS_NEEDED="Stopped - actions needed"
 	ALLSKY_STATUS_NEEDS_CONFIGURATION="Allsky needs configuring"

@@ -25,6 +25,14 @@ include_once('includes/status_messages.php');
 $status = new StatusMessages();
 initialize_variables();		// sets some variables
 
+$allsky_status = get_allsky_status();
+if ($allsky_status !== null) {
+	$allsky_status_timestamp = getVariableOrDefault($allsky_status, 'timestamp', null);
+	$allsky_status = getVariableOrDefault($allsky_status, 'status', null);
+} else {
+	$allsky_status_timestamp = null;
+}
+
 // Constants for configuration file paths.
 // These are typical for default RPi installs. Modify if needed.
 include_once('includes/authenticate.php');
@@ -225,21 +233,43 @@ if ($useRemoteWebsite) {
 			<div class="navbar-brand valign-center">
 				<a id="index" class="navbar-brand valign-center" href="index.php">
 					<img src="documentation/img/allsky-logo.png" title="Allsky logo">
-					<div class="navbar-title">Web User Interface (WebUI)</div>
+					<div class="navbar-title nowrap">Web User Interface (WebUI)</div>
 				</a>
 				<div class="version-title version-title-color">
+<?php if ($allsky_status !== null) {
+					if ($allsky_status_timestamp === null) {
+						$title = "";
+						$class = "";
+					} else if ($allsky_status == "Unknown") {
+						$allsky_status_timestamp = str_replace("<b>", "", $allsky_status_timestamp);
+						$allsky_status_timestamp = str_replace("</b>","", $allsky_status_timestamp);
+						$title = " title='$allsky_status_timestamp'";
+						$class = "alert-danger";
+					} else {
+						$title = "title='Since $allsky_status_timestamp'";
+						if ($allsky_status == "Running") {
+							$class = "alert-success";
+						} else {
+							$class = "alert-warning";
+						}
+					}
+					echo "<span class='nowrap $class' $title>Status: $allsky_status</span>";
+					echo "<br>";
+} ?>
 					<span class="nowrap">Version: <?php echo ALLSKY_VERSION; ?></span>
-					&nbsp; &nbsp;
 <?php if ($useLocalWebsite) {
+					echo "<br>";
 					echo "<span class='nowrap'>";
 					echo "<a external='true' class='version-title-color' href='allsky/index.php'>";
-					echo "Local Website</a></span>";
+					echo "Local Website</a>";
+					echo "</span>";
 } ?>
-					&nbsp; &nbsp;
 <?php if ($useRemoteWebsite) {
+					echo "&nbsp;&nbsp;&nbsp;&nbsp; ";
 					echo "<span class='nowrap'>";
 					echo "<a external='true' class='version-title-color' href='$remoteWebsiteURL'>";
-					echo "Remote Website $remoteWebsiteVersion</a></span>";
+					echo "Remote Website $remoteWebsiteVersion</a>";
+					echo "</span>";
 } ?>
 				</div>
 		</div> <!-- /.navbar-header -->

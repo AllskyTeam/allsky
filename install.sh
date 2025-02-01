@@ -3982,13 +3982,13 @@ remind_old_version
 ######## All done
 
 if [[ ${WILL_REBOOT} == "true" ]]; then
-	do_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
+	do_allsky_status "${ALLSKY_STATUS_REBOOT_NEEDED}"
 	do_reboot "${STATUS_FINISH_REBOOT}" ""		# does not return
 fi
 
 if [[ ${REBOOT_NEEDED} == "true" ]]; then
 	display_msg --log progress "\nInstallation is done" " but the Pi needs a reboot.\n"
-	do_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
+	do_allsky_status "${ALLSKY_STATUS_REBOOT_NEEDED}"
 	exit_installation 0 "${STATUS_NO_FINISH_REBOOT}" ""
 fi
 
@@ -4002,7 +4002,7 @@ elif [[ ${CONFIGURATION_NEEDED} != "true" ]]; then
 else
 	# "true"
 	display_image "ConfigurationNeeded"
-	do_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
+	do_allsky_status "${ALLSKY_STATUS_NEEDS_CONFIGURATION}"
 	MSG=" but Allsky needs to be configured before it will start."
 	display_msg --log progress "\nInstallation is done" "${MSG}"
 	display_msg progress "" "Go to the 'Allsky Settings' page of the WebUI to configure Allsky."

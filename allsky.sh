@@ -122,10 +122,10 @@ if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
 	DO_MSG="true"
 	if [[ -f ${OLD_ALLSKY_REMINDER} ]]; then
 		CHECK_DATE="$( date -d '1 week ago' +'%Y%m%d%H%M.%S' )"
-		CHECK_FILE="${ALLSKY_TMP}/check_date"
-		touch -t "${CHECK_DATE}" "${CHECK_FILE}"
-		[[ ${OLD_ALLSKY_REMINDER} -nt "${CHECK_FILE}" ]] && DO_MSG="false"
-		rm -f "${CHECK_FILE}"
+		CHECK_TMP_FILE="${ALLSKY_TMP}/check_date"
+		touch -t "${CHECK_DATE}" "${CHECK_TMP_FILE}"
+		[[ ${OLD_ALLSKY_REMINDER} -nt "${CHECK_TMP_FILE}" ]] && DO_MSG="false"
+		rm -f "${CHECK_TMP_FILE}"
 	fi
 	if [[ ${DO_MSG} == "true" ]]; then
 		MSG="Reminder: your prior Allsky is still in '${PRIOR_ALLSKY_DIR}'."
@@ -142,10 +142,10 @@ if [[ -f ${CHECK_ALLSKY_LOG} ]]; then
 	REMINDER="${ALLSKY_LOGS}/checkAllsky_reminder.txt"
 	if [[ -f ${REMINDER} ]]; then
 		CHECK_DATE="$( date -d '1 week ago' +'%Y%m%d%H%M.%S' )"
-		CHECK_FILE="${ALLSKY_TMP}/check_date-checkAllsky"
-		touch -t "${CHECK_DATE}" "${CHECK_FILE}"
-		[[ ${REMINDER} -nt "${CHECK_FILE}" ]] && DO_MSG="false"
-		rm -f "${CHECK_FILE}"
+		CHECK_TMP_FILE="${ALLSKY_TMP}/check_date-checkAllsky"
+		touch -t "${CHECK_DATE}" "${CHECK_TMP_FILE}"
+		[[ ${REMINDER} -nt "${CHECK_TMP_FILE}" ]] && DO_MSG="false"
+		rm -f "${CHECK_TMP_FILE}"
 	fi
 	if [[ ${DO_MSG} == "true" ]]; then
 		MSG="<div class='errorMsgBig errorMsgBox center-div center-text'>"

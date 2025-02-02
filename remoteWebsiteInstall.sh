@@ -31,6 +31,9 @@ REMOTE_WEBSITE_IS_VALID="false"
 LFTP_CMDS="set dns:fatal-timeout 10; set net:max-retries 2; set net:timeout 10"
 X="$( settings ".REMOTEWEBSITE_LFTP_COMMANDS" "${ALLSKY_ENV}" )"
 [[ -n ${X} ]] && LFTP_CMDS+="; ${X}"
+TEST_FILE="commands.txt"
+TEST_FILE_UPLOADED="false"
+GLOBAL_ERROR_MSG=""			# a global error message
 
 # Dialog size variables
 DIALOG_WIDTH="$( tput cols )"; ((DIALOG_WIDTH -= 10 ))
@@ -52,6 +55,7 @@ REMOTE_PROTOCOL="${REMOTE_PROTOCOL,,}"		# convert to lowercase
 #### TODO: this script needs to support ALL protocols, not just *ftp*.
 # When it does, remove this check.
 if [[ ${REMOTE_PROTOCOL} != "sftp" && ${REMOTE_PROTOCOL} != "ftp" && ${REMOTE_PROTOCOL} != "ftps" ]]; then
+	exec >&2
 	echo -e "\n\n"
 	echo    "************* NOTICE *************"
 	echo    "This script currently only supports ftp protocols."
@@ -87,6 +91,20 @@ OLD_FILES_TO_REMOVE=( \
 
 ############################################## functions
 
+# Return a string surrounded by the "OK" color.
+function O_()
+{
+	local MSG="${1}"
+	echo "${DIALOG_GREEN}${MSG}${DIALOG_NORMAL}"		# Do NOT use "-e".
+}
+
+# Return a string surrounded by the error color.
+function E_()
+{
+	local MSG="${1}"
+	echo "${DIALOG_RED}${MSG}${DIALOG_NORMAL}"		# Do NOT use "-e".
+}
+
 # Prompt the user to enter (y)/(yes) or (n)/(no).
 # This function is only used when running in text (--text) mode.
 function enter_yes_no()
@@ -106,7 +124,7 @@ function enter_yes_no()
 			elif [[ ${ANSWER} == "n" || ${ANSWER} == "no" ]]; then
 				return 1
 			else
-				echo -e "\nInvalid response. Please enter y/yes or n/no."
+				e_ "\nInvalid response. Please enter y/yes or n/no."
 			fi
 		done
 	else
@@ -137,11 +155,6 @@ function add_dialog_heading()
 	## to add something else in the future.
 	## Only the:   ITEM_TO_ADD=...   line should need changing.
 	return
-
-	if [[ ${TEXT_ONLY} == "true" ]]; then
-		DIALOG_RED="${RED}"
-		DIALOG_NORMAL="${NC}"
-	fi
 
 	local ITEM_TO_ADD="${REMOTE_WEBSITE_URL}"
 	local PADDING=$(( ((DIALOG_WIDTH-6) - ${#ITEM_TO_ADD}) / 2 ))
@@ -293,13 +306,11 @@ function pre_install_checks()
 	fi
 
 	if [[ ${MISSING} -eq 0 ]]; then
-		DT="FOUND"
+		DT="$( O_ "PASSED" )"
 		MSG="All WebUI settings exist."
 	else
 		MSG="ERROR: Missing setting(s) in WebUI:\n${SPACES}${SPACES}${MSG}"
-		DIALOG_TEXT+="${DIALOG_RED}"
-		DIALOG_TEXT+="${MSG}"
-		DIALOG_TEXT+="${DIALOG_NORMAL}"
+		DIALOG_TEXT+="$( E_ "${MSG}" )"
 		display_box "--msgbox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}" "--ok-label Exit"
 		display_aborted "${MSG}"
 	fi
@@ -311,12 +322,12 @@ function pre_install_checks()
 	DIALOG_TEXT+="\n2  - Checking for remote Website configuration file on Pi: "
 	display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
-		DT="FOUND"
+		DT="$( O_ "PASSED" )"
 		MSG="Found ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}."
 		display_msg --logonly info "${MSG}"
 		HAVE_LOCAL_REMOTE_CONFIG="true"
 	else
-		DT="NOT FOUND"
+		DT="NOT FOUND"		# Do not color - this isn't an error
 		display_msg --logonly info "No local config file found."
 	fi
 	DIALOG_TEXT+="${DT}."
@@ -326,6 +337,7 @@ function pre_install_checks()
 	DIALOG_TEXT+="\n3  - Checking for working remote Website: "
 	display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 	local SPACES="${INDENT}${INDENT} "
+
 	check_if_website_is_valid		# Sets global variables so can't be in subshell
 	local VALID_RET=$?
 	if [[ ${VALID_RET} -eq 0 ]]; then
@@ -336,42 +348,45 @@ function pre_install_checks()
 	if [[ ${REMOTE_WEBSITE_IS_VALID} == "true" ]]; then
 		# There is at least one config file.
 
-		DIALOG_TEXT+="WORKING."
+		DIALOG_TEXT+="$( O_ "PASSED" )."
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
 		# 3a.
 		DIALOG_TEXT+="\n${SPACES}* Checking for new-style configuration file: "
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 		if [[ ${HAVE_NEW_STYLE_REMOTE_CONFIG} == "true" ]]; then
-			DIALOG_TEXT+="FOUND."
+			DIALOG_TEXT+="$( O_ "PASSED" )."
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 		else
 			# 3b.
-			DIALOG_TEXT+="NOT FOUND."
+			DIALOG_TEXT+="NOT FOUND."		# Do not color - this isn't an error
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
 			DIALOG_TEXT+="\n${SPACES}* Checking it for old-style configuration file: "
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 			if [[ ${HAVE_REALLY_OLD_REMOTE_CONFIG} == "true" ]]; then
-				DT="FOUND."
+				DT="$( O_ "PASSED" )."
 			else
 				# This "shouldn't" happen - the remote Website should have SOME type
 				# of configuration file.
-				DT="ERROR: NOT FOUND."
+				DT="NOT FOUND."		# Do not color - this isn't an error
 			fi
 			DIALOG_TEXT+="${DT}"
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 		fi
 	else
 		# No working remote Website found.
-		DIALOG_TEXT+="NOT WORKING."
+		DIALOG_TEXT+="$( E_ "NOT WORKING." )"
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
 		if [[ ${VALID_RET} -eq ${EXIT_ERROR_STOP} ]]; then
-			MSG="ERROR: Can't connect to remote Website @ ${REMOTE_WEBSITE_URL}"
-			DIALOG_TEXT+="${DIALOG_RED}"
-			DIALOG_TEXT+="\n\n${MSG}\nCannot continue."
-			DIALOG_TEXT+="${DIALOG_NORMAL}"
+			if [[ -n ${GLOBAL_ERROR_MSG} ]]; then
+				MSG="\nERROR: ${GLOBAL_ERROR_MSG}"
+			else
+				MSG="ERROR: Can't connect to remote Website @ ${REMOTE_WEBSITE_URL}"
+			fi
+
+			DIALOG_TEXT+="$( E_ "\n\n${MSG}\nCannot continue." )"
 			display_box "--msgbox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}" "--ok-label Exit"
 			display_aborted "${MSG}"
 
@@ -380,17 +395,13 @@ function pre_install_checks()
 			# config file and/or the Website source files.
 			# This could happen if the user HAD a working remote Website but moved all the files to,
 			# for example, "allsky/OLD", before upgrading.
-			DIALOG_TEXT+="${DIALOG_RED}"
-			DIALOG_TEXT+="\n${SPACES}WARNING: a remote configuration file exists"
-			DIALOG_TEXT+="\n${SPACES}but a working remote Website wasn't found."
+			DIALOG_TEXT+="\n${SPACES}NOTE:"
+			DIALOG_TEXT+="\n${SPACES}A remote configuration file exists but a working remote Website wasn't found."
 			DIALOG_TEXT+="\n${SPACES}If you moved the remote Website before upgrading, ignore this message."
-			DIALOG_TEXT+="\n\n${SPACES}Either way, a new Website will be created."
-			DIALOG_TEXT+="${DIALOG_NORMAL}"
+			DIALOG_TEXT+="\n${SPACES}Either way, a new Website will be created.\n"
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 		else
-			DIALOG_TEXT+="${DIALOG_RED}"
-			DIALOG_TEXT+="\n${SPACES}WARNING: No configuration file found so a new one will be created."
-			DIALOG_TEXT+="${DIALOG_NORMAL}"
+			DIALOG_TEXT+="$( E_ "\n${SPACES}WARNING: No configuration file found so a new one will be created." )"
 		fi
 
 	fi
@@ -426,15 +437,15 @@ function pre_install_checks()
 		CONFIG_MESSAGE="a new"
 	fi
 
-	DIALOG_TEXT+="\n${SPACES}* Checking ability to upload to Website: "
+	DIALOG_TEXT+="\n${SPACES}* Checking ability to upload to server: "
 	display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
-	display_msg --logonly info "Checking remote Website connectivity."
-	if MSG="$( check_connectivity )" ; then
-		DIALOG_TEXT+="${MSG}."
+	display_msg --logonly info "Checking upload to server."
+	if MSG="$( check_upload )" ; then
+		DIALOG_TEXT+="$( O_ "${MSG}" )."
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
-		show_debug_message "The remote Website connectivity test succeeded."
+		show_debug_message "Uploading to the server worked."
 	else
-		ERROR_MSG="\nThe remote Website connectivity check failed."
+		ERROR_MSG="\nUnable to upload a file to the server."
 		display_aborted "${ERROR_MSG}" "${MSG}"
 	fi
 
@@ -448,11 +459,6 @@ function pre_install_checks()
 # Displays the welcome dialog indicating what steps will be taken
 function display_welcome()
 {
-	if [[ ${TEXT_ONLY} == "true" ]]; then
-		DIALOG_RED="${RED}"
-		DIALOG_NORMAL="${NC}"
-	fi
-
 	if [[ ${AUTO_CONFIRM} == "false" ]]; then
 		display_msg --logonly info "Displaying the welcome dialog."
 		local DIALOG_TEXT="\n\
@@ -461,12 +467,15 @@ ${INDENT} 1) Use ${CONFIG_MESSAGE} configuration file.\n\
 ${INDENT} 2) Upload the new remote Website code.\n\
 ${INDENT} 3) Upload the remote Website configuration file.\n\
 ${INDENT} 4) Enable the remote Website.\n\
-${INDENT} 5) Any existing startrails, keograms, meteors, and/or timelapse will NOT be touched.\n\
+${INDENT} 5) NOTE: Any existing startrails, keograms, meteors, and/or\n\
+${INDENT}          timelapse images will NOT be touched.\n\
 \n\
- ${DIALOG_RED}NOTE: This will:${DIALOG_NORMAL}\n\
-${INDENT}- Overwrite the old Allsky web files on the remote server.\n\
-${INDENT}- Remove any old Allsky files from the remote server.\n\n\n\
- ${DIALOG_UNDERLINE}Are you sure you wish to continue?${DIALOG_NORMAL}"
+ $( E_ "IMPORTANT NOTES:" )\n\
+${INDENT}- Step 2) will overwrite the old Allsky web files on the remote server.\n\
+${INDENT}  They are no longer needed, but if you want to save them,\n\
+${INDENT}  select '< $( E_ "N" )o  >' below, save them, and rerun this installation.\n\
+${INDENT}- Any old Allsky files that are no longer needed will be removed from the server.\n\n\n\
+ ${DIALOG_UNDERLINE}Continue?${DIALOG_NORMAL}"
 		if ! display_box "--yesno" "${DIALOG_WELCOME_TITLE}" "${DIALOG_TEXT}" ; then
 			display_aborted "--user" "at the Welcome dialog" ""
 		fi
@@ -499,6 +508,8 @@ function display_aborted()
 			display_box "--msgbox" "${DIALOG_TITLE_LOG}" "${ERROR_MSG}" "--scrollbar"
 		fi
 	fi
+
+	remove_upload_file
 
 	clear	# Gets rid of background color from last 'dialog' command.
 
@@ -540,33 +551,50 @@ function display_complete()
 	display_msg --logonly info "INSTALLATION COMPLETED.\n"
 }
 
-# Check connectivity to the remote Website by trying to upload a file to it.
+# Check if we can upload a file to the server.
 # Return "" for success, else the error message.
-function check_connectivity()
+function check_upload()
 {
-	local TEST_FILE="${ME}.txt"
 	local ERR  MSG  RET  SECS=30
 
-	# Some user reported this hanging, so add a timeout.
-	if ERR="$( timeout --signal=KILL "${SECS}" \
-			"${ALLSKY_SCRIPTS}/testUpload.sh" --frominstall --website --silent \
-			--file "${TEST_FILE}" 2>&1 )" ; then
-		echo "PASSED"
+	# Put command to test basic functionality.
+	{
+		echo "set	delete-commands	0"		# We'll delete the file when we're done.
+		echo "pwd"
+		echo "ls"
+	} > "${TEST_FILE}"
 
-		# Assume if we didn't time out on the test upload we won't time out here.
-		ERR="$( remove_remote_file "${TEST_FILE}" "do not check" 2>&1 )"
-		RET=$?
-		if [[ ${RET} -ne 0 ]]; then
-			MSG="Unable to remove test file: ${ERR:-unknown reason}, RET=${RET}"
-			display_msg --logonly info "${MSG}"
-		fi
+	# Some user reported this hanging, so add a timeout.
+	ERR="$( timeout --signal=KILL "${SECS}" \
+		"${ALLSKY_SCRIPTS}/testUpload.sh" --frominstall --website --silent \
+		--file "${TEST_FILE}" 2>&1 )"
+	RET=$?
+	if [[ ${RET} -eq 0 ]]; then
+		TEST_FILE_UPLOADED="true"
+		echo "PASSED"
 		return 0
-	elif [[ $? -eq 137 ]]; then
+	elif [[ ${RET} -eq 137 ]]; then
 		echo "TIMED OUT after ${SECS} seconds"
 	else
 		echo "${ERR}"
 	fi
+
 	return 1
+}
+
+# And remove the test file
+function remove_upload_file()
+{
+	[[ ${TEST_FILE_UPLOAD} == "true" ]] && return
+
+	local ERR  RET  MSG
+	# Assume since we didn't time out on the test upload we won't time out here.
+	ERR="$( remove_remote_file "${TEST_FILE}" "do not check" 2>&1 )"
+	RET=$?
+	if [[ ${RET} -ne 0 ]]; then
+		MSG="Unable to remove test file: ${ERR:-unknown reason}, RET=${RET}"
+		display_msg --logonly info "${MSG}"
+	fi
 }
 
 # Displays a debug message in the log if the debug flag has been specified on the command line.
@@ -648,6 +676,32 @@ function create_website_config()
 	fi
 }
 
+# Check if we can connect to the Website via URL.
+function check_web_connectivity()
+{
+	local URL="${1}"
+
+	local HTTP_STATUS  RET
+
+	HTTP_STATUS="$( curl -o /dev/null --head --silent --location --write-out "%{http_code}" "${URL}" )"
+	RET=$?
+	if [[ ${HTTP_STATUS} == "200" ]] ; then
+		return 0
+	fi
+
+	# If this is a brand new Website with no files yet,
+	# there won't be a default web file so in most cases we'll get a "403 Forbidden".
+	# That means connectivity DOES work.
+	if [[ ${HTTP_STATUS} == "403" || ${HTTP_STATUS} == "404" ]] ; then
+		display_msg --logonly info "Got HTTP_STATUS ${HTTP_STATUS} connecting to ${URL}; connectivity worked."
+		return 0
+	else
+# TODO: There are probably other HTTP_STATUS that indicate we connected...
+		GLOBAL_ERROR_MSG="Unable to connect to ${URL}: code ${HTTP_STATUS:-unknown}."
+		return 1
+	fi
+}
+
 # Check if a remote file, or array of files, exist.
 # ${1} - The base url
 # ${2} - "and"/"or" If "and" then all files must exist, if "or" then any of the files can exist.
@@ -660,29 +714,23 @@ function check_if_files_exist()
 	local URL="${1}"
 	local AND_OR="${2}"
 	shift 2
+
+	local url   HTTP_STATUS   RET   MSG
 	local RET_CODE=1
 
-	local url   HTTP_STATUS   PRE_MSG   RET_CODE
-
 	for FILE in "$@"; do
-		if [[ ${FILE} == "<website>" ]]; then
-			PRE_MSG="Website connectivity"
-			url="${URL}"
-		else
-			url="${URL}/${FILE}"
-			PRE_MSG="File '${FILE}'"
-		fi
-		HTTP_STATUS="$( curl -o /dev/null --head --silent --location --write-out "%{http_code}" "$url" )"
+		url="${URL}/${FILE}"
+
+		HTTP_STATUS="$( curl -o /dev/null --head --silent --location --write-out "%{http_code}" "${url}" )"
 		RET=$?
 
-		PRE_MSG="File '${FILE}'"
 		if [[ ${RET} -ne 0 || ${HTTP_STATUS} != "200" ]] ; then
-			show_debug_message "${PRE_MSG} DOES NOT EXIST on the remote server (HTTP_STATUS=${HTTP_STATUS})"
-			if [[ ${AND_OR} == "and" ]]; then
-				return 1
-			fi
+			MSG="'${FILE}' DOES NOT EXIST on the remote server (HTTP_STATUS=${HTTP_STATUS})"
+			show_debug_message "${MSG}"
+
+			[[ ${AND_OR} == "and" ]] && return 1
 		else
-			show_debug_message "${PRE_MSG} EXISTS on the remote server"
+			show_debug_message "'${FILE}' EXISTS on the remote server"
 			RET_CODE=0
 		fi
 	done
@@ -745,12 +793,13 @@ function remove_remote_file()
 # Returns - echo "true" if it exists, else "false"
 function check_if_website_is_valid()
 {
-	local FOUND="false"
+	local FILE_FOUND="false"
 	local WEBSITE_FILES=("index.php" "functions.php")
+	GLOBAL_ERROR_MSG=""
 
 	display_msg --logonly info "Checking connectivity to ${REMOTE_WEBSITE_URL}"
-	if ! check_if_files_exist "${REMOTE_WEBSITE_URL}" "and" "<website>" ; then
-		display_msg --logonly info "   Unable to connect to Website @ '${REMOTE_WEBSITE_URL}'"
+	if ! check_web_connectivity "${REMOTE_WEBSITE_URL}" ; then
+		display_msg --logonly info "${GLOBAL_ERROR_MSG}"
 		return "${EXIT_ERROR_STOP}"
 	fi
 
@@ -758,20 +807,20 @@ function check_if_website_is_valid()
 	if check_if_files_exist "${REMOTE_WEBSITE_URL}" "or" "${OLD_CONFIG_NAME}" ; then
 		display_msg --logonly info "   Found old-style '${OLD_CONFIG_NAME}."
 		HAVE_REALLY_OLD_REMOTE_CONFIG="true"
-		FOUND="true"
+		FILE_FOUND="true"
 	fi
 	if check_if_files_exist "${REMOTE_WEBSITE_URL}" "or" "${ALLSKY_WEBSITE_CONFIGURATION_NAME}" ; then
 		display_msg --logonly info "   Found new-style '${ALLSKY_WEBSITE_CONFIGURATION_NAME}."
 		HAVE_NEW_STYLE_REMOTE_CONFIG="true"
-		FOUND="true"
+		FILE_FOUND="true"
 	fi
 
-	if [[ ${FOUND} == "true" ]]; then
+	if [[ ${FILE_FOUND} == "true" ]]; then
 		if check_if_files_exist "${REMOTE_WEBSITE_URL}" "and" "${WEBSITE_FILES[@]}" ; then
 			display_msg --logonly info "    Website valid."
-			return 0
 		else
 			display_msg --logonly info "    Website NOT valid."
+			return 1
 		fi
 	else
 		# If the user just created the "allsky" directory on the Website but nothing else,
@@ -779,7 +828,7 @@ function check_if_website_is_valid()
 		display_msg --logonly info "   Did not find a config file; assuming new, unpopulated Website."
 	fi
 
-	return 1
+	return 0
 }
 
 # Uploads the Website code from ${ALLSKY_WEBSITE} and removes any old Allsky
@@ -863,7 +912,7 @@ function upload_remote_website()
 
 		# It would be nice to move the files for the user,
 		# but almost no one has a "myImages" directory.
- 		MSG="\n${INDENT}${DIALOG_RED}NOTE:${DIALOG_NORMAL}"
+ 		MSG="\n${INDENT}$( E_ "NOTE:" )"
 		MSG+="\n${INDENT}Move any files in '${DIR}' on the remote Website to"
 		MSG+="\n${INDENT}the 'myFiles' directory, then remove '${DIR}'."
 		MSG+="\n${INDENT}It is no longer used."
@@ -910,30 +959,27 @@ function upload_remote_config_file()
 # Displays the script's help.
 usage_and_exit()
 {
-	local RET C MSG
+	local RET=${1}
 
-	RET=${1}
+	local C MSG
+
+	exec >&2
 	if [[ ${RET} -eq 0 ]]; then
 		C="${YELLOW}"
 	else
 		C="${RED}"
 	fi
+
 	MSG="Usage: ${ME} [--help] [--debug] [--skipupload] [-auto] [--text]"
-	{
-		echo -e "\n${C}${MSG}${NC}"
-		echo
-		echo "'--help' displays this message and exits."
-		echo
-		echo "'--debug' adds addtional debugging information to the installation log."
-		echo
-		echo "'--skipupload' Skips uploading of the remote Website code."
-		echo "   Must only be used if advised by Allsky support."
-		echo
-		echo "'--auto' Accepts all prompts by default"
-		echo
-		echo "'--text' Text only mode, do not use any dialogs"
-		echo
-	} >&2
+	echo -e "\n${C}${MSG}${NC}"
+	echo "where:"
+	echo "    '--help' displays this message and exits."
+	echo "    '--debug' adds addtional debugging information to the installation log."
+	echo "    '--skipupload' Skips uploading of the remote Website code."
+	echo "       Must only be used if advised by Allsky support."
+	echo "    '--auto' Accepts all prompts by default"
+	echo "    '--text' Text only mode, do not use any dialogs"
+	echo
 	exit "${RET}"
 }
 
@@ -957,6 +1003,15 @@ function post_data()
 	MSG="$( "${ALLSKY_SCRIPTS}/postData.sh" --fromWebUI --allfiles 2>&1 )"
 	display_msg --logonly info "${MSG}"
 }
+
+function set_colors()
+{
+	if [[ ${TEXT_ONLY} == "true" ]]; then
+		DIALOG_RED="${RED}"
+		DIALOG_NORMAL="${NC}"
+	fi
+}
+
 
 ############################################## main body
 OK="true"
@@ -983,15 +1038,17 @@ while [[ $# -gt 0 ]]; do
 			;;
 		--text)
 			TEXT_ONLY="true"
-			LOG_TYPE="--log"
 			;;
 		*)
-			display_msg --log error "Unknown argument: '${ARG}'."
+			MSG="Unknown argument: '${ARG}'."
+			echo -e "\n${RED}${MSG}${NC}"
 			OK="false"
 			;;
 	esac
 	shift
 done
+
+set_colors
 
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
@@ -1006,4 +1063,5 @@ upload_remote_website
 upload_remote_config_file
 enable_remote_website
 post_data
+remove_upload_file
 display_complete

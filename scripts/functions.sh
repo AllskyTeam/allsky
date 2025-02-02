@@ -1407,3 +1407,14 @@ function get_model_from_sensor()
 			}
 		} ' "${RPi_SUPPORTED_CAMERAS}"
 }
+
+
+####
+# Get the RPi camera model given its sensor name.
+function execute_web_commands()
+{
+	local URL="${1}"
+
+	curl --silent --location "${URL}/runCommands.php"
+}
+

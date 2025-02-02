@@ -33,6 +33,7 @@ X="$( settings ".REMOTEWEBSITE_LFTP_COMMANDS" "${ALLSKY_ENV}" )"
 [[ -n ${X} ]] && LFTP_CMDS+="; ${X}"
 TEST_FILE="commands.txt"
 TEST_FILE_UPLOADED="false"
+UPLOAD_IMAGE_FILES="false"
 GLOBAL_ERROR_MSG=""			# a global error message
 
 # Dialog size variables
@@ -244,7 +245,7 @@ function pre_install_checks()
 
 	display_msg --logonly info "Start pre installation checks."
 
- 	DIALOG_TEXT="\nWelcome to the Allsky Remote Website Installer!\n\n"
+ 	DIALOG_TEXT="\n${DIALOG_BOLD}${DIALOG_BLUE}Welcome to the Allsky Remote Website Installer!${DIALOG_NORMAL}\n\n"
 	DIALOG_TEXT+="\nRunning pre installation checks.\n\n"
 
 	DIALOG_TEXT+="\n1  - Checking that WebUI settings exist: "
@@ -345,6 +346,7 @@ function pre_install_checks()
 	else
 		REMOTE_WEBSITE_IS_VALID="false"
 	fi
+
 	if [[ ${REMOTE_WEBSITE_IS_VALID} == "true" ]]; then
 		# There is at least one config file.
 
@@ -406,6 +408,7 @@ function pre_install_checks()
 
 	fi
 
+
 	if [[ ${HAVE_LOCAL_CONFIG} == "true" ]]; then
 		if [[ ${HAVE_NEW_STYLE_REMOTE_CONFIG} == "true" ]]; then
 			MSG="A new-style remote configuration file was found but using the local version instead."
@@ -456,6 +459,58 @@ function pre_install_checks()
 	display_box "--msgbox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 }
 
+function prompt_to_upload()
+{
+	# Global: UPLOAD_IMAGE_FILES
+
+	if [[ ${AUTO_CONFIRM} == "true" ]]; then
+		display_msg --logonly info "Not prompting to upload - AUTO_CONFIRM enabled."
+		UPLOAD_IMAGE_FILES="true"
+		return
+	fi
+
+	# See if there are any local images or timelapse.
+	local C  DIR  DIALOG_TEXT  X  DEFAULT  COUNT=0
+	for i in startrails keograms meteors videos
+	do
+		DIR="${ALLSKY_WEBSITE}/${i}"
+		C=$( find "${DIR}" -type f \( -name '*.jpg' -o -name '*.png' -o -name '*.mp4' \) | wc -l )
+		display_msg --logonly info "FOUND ${C} ${i} file(s)."
+		(( COUNT += C ))
+	done
+	if [[ ${COUNT} -gt 0 ]]; then
+		display_msg --logonly info "Prompting to upload the local images and videos."
+
+		DIALOG_TEXT="\nTheir are ${COUNT} startrails, keograms, meteor,"
+		DIALOG_TEXT+=" and/or timelapse files on your Allsky Website in the Pi."
+		X=""
+		if [[ "$( settings ".uselocalwebsite" )" != "true" ]]; then
+ 			X="NOTE: your local Allsky Website is NOT enabled so those file may be old."
+ 			DIALOG_TEXT+="\n\n$( E_ "(${X})" )"
+		fi
+ 		DIALOG_TEXT+="\n\n${DIALOG_UNDERLINE}Do you want to upload them to the remote server?${DIALOG_NORMAL}"
+		DIALOG_TEXT+="\n\nThey will overwrite any files already there."
+		if [[ -n ${X} ]]; then
+			# Possibly old images - set default answer to "No".
+			DEFAULT="--defaultno"
+		else
+			# Current images - set default answer to "Yes" (which is the default).
+			DEFAULT=""
+		fi
+
+		# shellcheck disable=SC2086
+		if display_box "--yesno" "${DIALOG_WELCOME_TITLE}" "${DIALOG_TEXT}" ${DEFAULT} ; then
+			UPLOAD_IMAGE_FILES="true"		# default is "false"
+			display_msg --logonly info "User DOES want to upload local images and videos."
+		else
+			display_msg --logonly info "User does NOT want to upload local images and videos."
+		fi
+	else
+		display_msg --logonly info "Not prompting to upload images and videos - no local files."
+	fi
+}
+
+
 # Displays the welcome dialog indicating what steps will be taken
 function display_welcome()
 {
@@ -466,10 +521,17 @@ function display_welcome()
 ${INDENT} 1) Use ${CONFIG_MESSAGE} configuration file.\n\
 ${INDENT} 2) Upload the new remote Website code.\n\
 ${INDENT} 3) Upload the remote Website configuration file.\n\
-${INDENT} 4) Enable the remote Website.\n\
+${INDENT} 4) Enable the remote Website.\n"
+		if [[ ${UPLOAD_IMAGE_FILES} == "true" ]]; then
+			DIALOG_TEXT+="\
+${INDENT} 5) Upload the local startrails, keograms, meteors, and/or\n\
+${INDENT}          timelapse images.\n"
+		else
+			DIALOG_TEXT+="\
 ${INDENT} 5) NOTE: Any existing startrails, keograms, meteors, and/or\n\
-${INDENT}          timelapse images will NOT be touched.\n\
-\n\
+${INDENT}          timelapse images will NOT be touched.\n"
+		fi
+		DIALOG_TEXT+="\n\
  $( E_ "IMPORTANT NOTES:" )\n\
 ${INDENT}- Step 2) will overwrite the old Allsky web files on the remote server.\n\
 ${INDENT}  They are no longer needed, but if you want to save them,\n\
@@ -519,29 +581,28 @@ function display_aborted()
 # Displays the completed dialog, used at the end of the installation process.
 function display_complete()
 {
-	local EXTRA_TEXT  E  E2  DIALOG_TEXT
-	E="Use the WebUI's 'Editor' page to edit the"
+	local EXTRA_TEXT  E  DIALOG_TEXT
+	E="Go to the WebUI's 'Editor' page to confirm the settings in the"
 	E+="\n\n${INDENT}    '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)'"
-	E+="\n\n${INDENT}file"
-	E2=", replacing any '${NEED_TO_UPDATE}' strings with the correct values."
+	E+="\n\n${INDENT}file are correct, and update as needed."
 
 	if [[ ${CONFIG_TO_USE} == "new"  ]]; then
 		EXTRA_TEXT="A new configuration file was created."
-		EXTRA_TEXT+="\n\n${INDENT}${E}${E2}"
+		EXTRA_TEXT+="\n\n${INDENT}${E}"
 	elif [[ ${CONFIG_TO_USE} == "remoteReallyOld" ]]; then
 		EXTRA_TEXT="You had a very old remote Allsky Website so a new configuration file was created."
-		EXTRA_TEXT+="\n\n${INDENT}${E}${E2}"
+		EXTRA_TEXT+="\n\n${INDENT}${E}"
 	else
-		EXTRA_TEXT="${E} to change settings for your remote Website"
-		if grep --silent "${NEED_TO_UPDATE}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" ; then
-			EXTRA_TEXT+="\n\n${INDENT}${E2}"
-		else
-			EXTRA_TEXT+="."
-		fi
+		EXTRA_TEXT+="${E}"
 	fi
 
-	DIALOG_TEXT="\n${INDENT}The installation of the remote Website is complete."
-	DIALOG_TEXT+="\n\n${INDENT}Please check it."
+	if [[ "$( settings ".showonmap" )" != "true" ]]; then
+		EXTRA_TEXT+="$( E_ "\n\n${INDENT}Please consider adding your camera to the Allsky Map." )"
+		EXTRA_TEXT+="\n${INDENT}See the 'Allsky Map Settings' in the WebUI's 'Allsky Settings' page.\n"
+	fi
+
+	DIALOG_TEXT="\n${INDENT}${DIALOG_BLUE}${DIALOG_BOLD}"
+	DIALOG_TEXT+="The installation of the remote Website is complete.${DIALOG_NORMAL}"
 	DIALOG_TEXT+="\n\n${INDENT}${EXTRA_TEXT}"
 	display_box "--msgbox" "${DIALOG_DONE}" "${DIALOG_TEXT}"
 
@@ -589,12 +650,20 @@ function remove_upload_file()
 
 	local ERR  RET  MSG
 	# Assume since we didn't time out on the test upload we won't time out here.
-	ERR="$( remove_remote_file "${TEST_FILE}" "do not check" 2>&1 )"
-	RET=$?
-	if [[ ${RET} -ne 0 ]]; then
-		MSG="Unable to remove test file: ${ERR:-unknown reason}, RET=${RET}"
-		display_msg --logonly info "${MSG}"
-	fi
+	# Put in background since it can take a few seconds and other things can go on
+	# at the same time.
+	{
+		(
+			ERR="$( remove_remote_file "${TEST_FILE}" "do not check" 2>&1 )"
+			RET=$?
+			if [[ ${RET} -eq 0 ]]; then
+				display_msg --logonly info "Test upload file deleted from server."
+			else
+				MSG="Unable to delete test upload file: ${ERR:-unknown reason}, RET=${RET}"
+				display_msg --logonly info "${MSG}"
+			fi
+		) &
+	} 2>/dev/null	# so the job ID isn't displayed
 }
 
 # Displays a debug message in the log if the debug flag has been specified on the command line.
@@ -817,9 +886,9 @@ function check_if_website_is_valid()
 
 	if [[ ${FILE_FOUND} == "true" ]]; then
 		if check_if_files_exist "${REMOTE_WEBSITE_URL}" "and" "${WEBSITE_FILES[@]}" ; then
-			display_msg --logonly info "    Website valid."
+			display_msg --logonly info "     Website is valid."
 		else
-			display_msg --logonly info "    Website NOT valid."
+			display_msg --logonly info "     Website is NOT valid."
 			return 1
 		fi
 	else
@@ -840,14 +909,15 @@ function upload_remote_website()
 		return
 	fi
 
-	local EXTRA_TEXT=""  EXCLUDE_FILES=""  MSG
+	local EXTRA_TEXT=""  EXCLUDE_FILES=""  MSG  DIALOG_TEXT
 
-	MSG="Starting upload to the remote Website"
-	[[ -n ${REMOTE_DIR} ]] && MSG+=" in ${REMOTE_DIR}"
+	DIALOG_TEXT="Starting upload to the remote Website"
+	[[ -n ${REMOTE_DIR} ]] && DIALOG_TEXT+=" in ${REMOTE_DIR}"
 
-# TODO: for == "false", should prompt user if they want the files uploaded.
-
-	if [[ ${REMOTE_WEBSITE_IS_VALID} == "true" ]]; then
+	if [[ ${UPLOAD_IMAGE_FILES} == "true" ]]; then
+		DIALOG_TEXT+=" (including videos, images, and their thumbnails)."
+		MSG="This may take several minutes"
+	else
 		# Don't upload images if the remote Website exists (we assume it already
 		# has the images).  "VALID" assumes "EXISTS".
 		# However, we must upload the index.php files.
@@ -856,14 +926,13 @@ function upload_remote_website()
 		EXCLUDE_FILES+=" --exclude-glob=startrails/*.jpg"
 		EXCLUDE_FILES+=" --exclude-glob=meteors/*.jpg"
 		EXCLUDE_FILES+=" --exclude-glob=*/thumbnails/*.jpg"
-		MSG+=" (without videos, images, and their thumbnails)."
-	else
-		MSG+=" (including any videos, images, and their thumbnails)."
+		DIALOG_TEXT+=" (without videos, images, and their thumbnails)."
+		MSG="This may take a couple minutes"
 	fi
-	display_msg --logonly info "${MSG}${EXTRA_TEXT}."
+	display_msg --logonly info "${DIALOG_TEXT}${EXTRA_TEXT}."
 
-	MSG="\n${MSG}\n\nThis may take several minutes..."
-	display_box "--infobox" "${DIALOG_INSTALL}" "${MSG}"
+	DIALOG_TEXT="\n${DIALOG_TEXT}\n\n${MSG}..."
+	display_box "--infobox" "${DIALOG_INSTALL}" "${DIALOG_TEXT}"
 
 # TODO: upload.sh should have a "--mirror from_directory to_directory" option.
 # This would also fix the problem that we're assuming the "ftp" protocol is used.
@@ -899,6 +968,9 @@ function upload_remote_website()
 		display_aborted "while uploading Website" "${MSG}"
 	fi
 
+	DIALOG_TEXT+="$( O_ "DONE" )"
+	display_box "--infobox" "${DIALOG_INSTALL}" "${DIALOG_TEXT}"
+
 	display_msg --logonly info "$( indent --spaces "${MSG}" )"
 
 	# Remove any old core files no longer required
@@ -912,11 +984,11 @@ function upload_remote_website()
 
 		# It would be nice to move the files for the user,
 		# but almost no one has a "myImages" directory.
- 		MSG="\n${INDENT}$( E_ "NOTE:" )"
-		MSG+="\n${INDENT}Move any files in '${DIR}' on the remote Website to"
-		MSG+="\n${INDENT}the 'myFiles' directory, then remove '${DIR}'."
-		MSG+="\n${INDENT}It is no longer used."
-		display_box "--msgbox" "${DIALOG_INSTALL}" "${MSG}"
+ 		DIALOG_TEXT="\n${INDENT}$( E_ "NOTE:" )"
+		DIALOG_TEXT+="\n${INDENT}Move any files in '${DIR}' on the remote Website to"
+		DIALOG_TEXT+="\n${INDENT}the 'myFiles' directory, then remove '${DIR}'."
+		DIALOG_TEXT+="\n${INDENT}It is no longer used."
+		display_box "--msgbox" "${DIALOG_INSTALL}" "${DIALOG_TEXT}"
 	else
 		display_msg --logonly info "Old file '${DIR}' does not exist."
 	fi
@@ -927,7 +999,7 @@ function upload_remote_website()
 # Uploads the configuration file for the remote Website.
 function upload_remote_config_file()
 {
-	local MSG
+	local MSG  DIALOG_TEXT  ERR  R
 
 	if [[ ! -f "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" ]]; then
 		MSG="'${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}' not found!"
@@ -936,15 +1008,15 @@ function upload_remote_config_file()
 		return 1
 	fi
 
-	MSG="\nUploading remote Allsky configuration file"
-	display_box "--infobox" "${DIALOG_INSTALL}" "${MSG}"
+	DIALOG_TEXT="\nUploading remote Allsky configuration file..."
+	display_box "--infobox" "${DIALOG_INSTALL}" "${DIALOG_TEXT}"
 	display_msg --logonly info "Uploading Website configuration file."
 
-	local ERR="$( "${ALLSKY_SCRIPTS}/upload.sh" --remote-web --silent \
+	ERR="$( "${ALLSKY_SCRIPTS}/upload.sh" --remote-web --silent \
 		"${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" "${REMOTE_DIR}" \
 		"${ALLSKY_WEBSITE_CONFIGURATION_NAME}" "remoteWebsiteInstall" 2>&1 )"
 	if [[ $? -eq 0 ]]; then
-		local R="${REMOTE_DIR}"
+		R="${REMOTE_DIR}"
 		[[ -n ${R} ]] && R+="/"
 		MSG="'${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}' uploaded to"
 		MSG+=" '${R}${ALLSKY_WEBSITE_CONFIGURATION_NAME}'"
@@ -954,6 +1026,9 @@ function upload_remote_config_file()
 		display_msg --logonly info " Failed: ${ERR}"
 		display_aborted "at the configuration file upload" "${ERR}"
 	fi
+
+	DIALOG_TEXT+="$( O_ "DONE" )"
+	display_box "--infobox" "${DIALOG_INSTALL}" "${DIALOG_TEXT}"
 }
 
 # Displays the script's help.
@@ -1031,7 +1106,7 @@ while [[ $# -gt 0 ]]; do
 			DEBUG="true"
 			;;
 		--skipupload)
-			SKIP_UPLOAD="true"
+			SKIP_UPLOAD="true"		# Don't upload ANY files except test file
 			;;
 		--auto)
 			AUTO_CONFIRM="true"
@@ -1056,6 +1131,7 @@ set_colors
 display_msg --logonly info "STARTING INSTALLATION.\n"
 
 pre_install_checks
+prompt_to_upload
 display_welcome
 create_website_config
 disable_remote_website

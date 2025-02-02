@@ -12,7 +12,7 @@
 	<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 	<style>
 		#pageTitle::before {
-			content: "Version Change Log";
+			content: "Allsky Version Change Log";
 		}
 	</style>
 	<link href="css/documentation.css" rel="stylesheet">
@@ -28,18 +28,12 @@
 	<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
 	<div class="Layout-main markdown-body" id="mainContents">
 		<p>
-			This page lists the changes to all Allsky releases.
+			This page lists the major changes to all Allsky releases.
 			You can also see the
 			<a allsky="true" external="true"
 				href="knownIssues.html">Known Issues and Limitations</a>
 			of the current release.
 		</p>
-
-		<blockquote>
-			Wonder what all the colors below mean?
-			Check out
-			<a allsky="true" external="true" href="settings/EditorColors.html">this page</a>.
-		</blockquote>
 
 
 		<!-- =========================================== -->
@@ -51,8 +45,17 @@
 			<details sub open> <summary></summary>
 				<h4>Enhancements / Changes</h4>
 				<ul>
+					<li>You can no longer enter <strong>Issues</strong> in GitHub
+						(you can still enter <strong>Discussions</strong>).
+						Instead, use the new <span class="WebUILink">Getting Support</span>
+						page in the WebUI to automatically collect the information
+						needed to troubleshoot your problem.
+						Simply following the instructions on that page.
+						<br>NO private information is sent; that information is kept in
+						the <span class="fileName">~/allsky/env.json</span> file which
+						should never be uploaded.
 					<li>The WebUI's <span class="WebUILink">Editor</span> page now:
-						<ul>
+						<ul class="minimalPadding">
 							<li>Tells you if there is a formatting error on the page,
 								for example, if you are missing a comma.
 								You will not be able to save the file until the error(s) are fixed.
@@ -64,47 +67,46 @@
 						The status is determined every time a WebUI page is displayed,
 						so if the status changes while you are on a page it won't be
 						updated until the page is refreshed.
-					<li>The new <code>allsky-config   move_images</code> command
-						lets you specify a different location to store Allsky's images,
-						i.e., a different location for the contents of
-						<span class="fileName">~/allsky/images</span>.
-						This command is typically used to store images on an SSD or a
-						similar larger, faster, more reliable media than the SD card.
-					<li>The new <code>allsky-config &nbsp;get_brightness_info</code> command
-						displays information on image brightness determined during
+					<li>You can now easily specify a location to store Allsky's image
+						other than in <span class="fileName">~/allsky/images</span>.
+						This is typically done to store images on an SSD or a
+						similar larger, faster, and more reliable media than an SD card.
+						See the <code>allsky-config &nbsp;move_images</code> command.
+					<li>If you are having problems getting startrails to show the trails,
+						the new <code>allsky-config &nbsp;get_brightness_info</code> command
+						helps by displaying information on image brightness determined during
 						startrails generation.
-						It can be used to help determine what to put in the
+						That information helps determine what to put in the
 						<span class="WebUISetting">Brightness Threshold</span> setting.
 						See <a allsky="true" external="true"
 							href="/documentation/explanations/startrails.html#brightnessthreshold">
 							Startrails settings</a>
 						for details.
-					<li>The new <code>allsky-config &nbsp;compare_paths</code> command
-						helps the <strong>many people</strong> who struggle determining
-						where to upload their remote Website files and what URL to use.
-						If you struggle, read the
-						<a allsky="true" external="true"
+					<li>The new <code>allsky-config &nbsp;compare_paths</code> command helps
+						determine where to upload your remote Website files and what URL to use.
+						See the <a allsky="true" external="true"
 							href="/documentation/explanations/serverLocationToURL.html">
 							Mapping Server Locations to URLs</a>
-							page where it explains how to use this new command.
-					<li>The Allsky Website now has a directory called
-						<span class="fileName">meteors</span> that's used to
-						store images with meteors.
-						A new "Archived Meteors" icon can be added to the list of icons
-						on the left side of an Allsky Website by
-						setting the "display" line in the "Archived Meteors" section
-						of the associated <span class="fileName">configuration.json</span>
-						file to "true".
-						<br><strong>Support for saving and uploading images with
+						page for details.
+					<li>The <code>allsky-config</code> command can do more,
+						including lettings you change the size of the
+						<span class="fileName">~/allsky/tmp</span> directory
+						and the amount of swap space.
+						Run <code>allsky-config</code> for a full list of what it can do.
+					<li>The new <span class="fileName">meteors</span> directory in
+						Allsky Websites is to upload images with meteors.
+						A meteor icon can be displayed to the list of icons
+						on the left side of a Website page by
+						setting the "display" line to "true" in the "Archived Meteors" section
+						of the associated <span class="fileName">configuration.json</span> file.
+						<br><strong>NOTE: Support for saving and uploading images with
 						meteors will be added in a future Allsky release.</strong>
-					<li>The Allsky Website no longer downloads any third-party files;
-						instead, those files are included with the Website.
-						This helps address European privacy rules.
-					<li>The remote <span class="WebUISetting">Website URL</span>
-						setting can no longer end in <code>index.php</code>.
-						The URL should point to the <em>directory</em>
-						where the Allsky Website code is, not to any particular <em>file</em>
-						in the directory.
+					<li>The <code>remoteWebsiteInstall.sh</code> command now prompts
+						to upload any local startrails, keograms, and timelapse files.
+						It's also more "polished", doesn't fail as often,
+						and provides better messages.
+					<li>Allsky Websites now give a detailed message when they can't
+						find the image, instead of just the "Loading..." picture forever.
 				</ul>
 				<h4>New Settings</h4>
 				<ul>
@@ -114,7 +116,7 @@
 				<ul>
 					<li>To further simplify configuring a remote Website and
 						remove a source of user error,
-						changing the name of the timelapse, keogram, and startrails files
+						changing the names of the timelapse, keogram, and startrails files
 						uploaded to a remote Website is no longer allowed
 						(these already couldn't be changed for local Websites).
 						Hence, the
@@ -127,8 +129,13 @@
 				</ul>
 				<h4>Bug Fixes</h4>
 				<ul>
+					<li>Allsky Website icon sorting by date now works.
+					<li><code>remoteWebsiteInstall.sh</code> no longer fails if you have
+						commands in the <span class="WebUISetting">FTP Commands</span> setting.
+					<li>Changes to the image resize settings in the WebUI are now saved.
 					<li><code>allsky.sh --help</code> now works and displays all the
 						options to the capture programs.
+					<li>Many others including with modules and overlays.
 				</ul>
 				<hr class="separator"><!-- =========================================== -->
 			</details>
@@ -330,9 +337,9 @@
 							See <a href="https://github.com/AllskyTeam/allsky/issues/3317"
 								allsky="true" external="true">[BUG] If a field is outside the image ...</a></li>
 						<li>If images are not being captured the
-					    	<span class="editorName">Overlay Editor</span> will not start and
-		    				will display a message and wait until images are being captured.
-		    				This prevents a (usually much smaller) notification image
+							<span class="editorName">Overlay Editor</span> will not start and
+							will display a message and wait until images are being captured.
+							This prevents a (usually much smaller) notification image
 							from being used as the <span class="editorName">Overlay Editor</span>
 							background.</li>
 					</ul>

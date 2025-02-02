@@ -23,6 +23,18 @@ if (isset($_SERVER['HTTP_USER_AGENT']) &&
 	setHTML();
 }
 
+$test_mode = false;
+if (isset($_GET["t"])) {
+	$test_mode = true;
+} else if (isset($_POST["t"])) {
+	$test_mode = true;
+}
+if ($test_mode) {
+	do_return("test", "", "test");
+	exit(0);
+}
+
+
 if (isset($_GET["debug"])) {
 	$debug = true;
 } else {
@@ -65,6 +77,12 @@ foreach ($lines AS $line) {
 	$numArgs = count($args);
 
 	switch ($command) {
+
+		case "pwd":
+			// Return current directory on server.
+			do_return($command, "", getcwd());
+			break;
+
 
 		case "ls":
 			// List the files/directories in the current directory.
@@ -211,13 +229,6 @@ foreach ($lines AS $line) {
 					}
 				}
 			}
-			}
-			break;
-
-
-		case "pwd":
-			// Return current directory on server.
-			do_return($command, "", getcwd());
 			break;
 
 

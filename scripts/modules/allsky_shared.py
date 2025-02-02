@@ -32,6 +32,8 @@ except:
 
 ABORT = True
 
+def get_environment_variable(name, fatal=False, debug=False):
+    return getEnvironmentVariable(name, fatal, debug)
 def getEnvironmentVariable(name, fatal=False, debug=False):
 	global ALLSKY_TMP
 
@@ -69,12 +71,15 @@ ALLSKY_TMP = getEnvironmentVariable("ALLSKY_TMP", fatal=True)
 ALLSKY_SCRIPTS = getEnvironmentVariable("ALLSKY_SCRIPTS", fatal=True)
 SETTINGS_FILE = getEnvironmentVariable("SETTINGS_FILE", fatal=True)
 ALLSKY_OVERLAY = getEnvironmentVariable("ALLSKY_OVERLAY", fatal=True)
+ALLSKY_WEBUI = getEnvironmentVariable("ALLSKY_WEBUI", fatal=True)
 
 LOGLEVEL = 0
 SETTINGS = {}
 TOD = ''
 DBDATA = {}
 
+def should_run(module, period):
+    return shouldRun(module, period)
 def shouldRun(module, period):
     result = False
     diff = 0
@@ -91,6 +96,8 @@ def shouldRun(module, period):
 
     return result, diff
 
+def set_last_run(module):
+	setLastRun(module)
 def setLastRun(module):
     dbKey = module + "_lastrun"
     now = time.time()
@@ -102,6 +109,8 @@ def convertLatLonOld(input):
     multiplier = 1 if input[-1] in ['N', 'E'] else -1
     return multiplier * sum(float(x) / 60 ** n for n, x in enumerate(input[:-1].split('-')))
 
+def convert_lat_lon(input):
+	return convertLatLon(input)
 def convertLatLon(input):
     """ lat and lon can either be a positive or negative float, or end with N, S, E,or W. """
     """ If in  N, S, E, W format, 0.2E becomes -0.2 """
@@ -192,9 +201,9 @@ def startModuleDebug(module):
         log(0, f"ERROR: Unable to create {moduleTmpDir}")
 
 def writeDebugImage(module, fileName, image):
-    global ALLSKY_TMP
+    global ALLSKY_WEBUI
 
-    debugDir = os.path.join(ALLSKY_TMP, "debug", module)
+    debugDir = os.path.join(ALLSKY_WEBUI, "debug", module)
     os.makedirs(debugDir, mode = 0o777, exist_ok = True)
     moduleTmpFile = os.path.join(debugDir, fileName)
     cv2.imwrite(moduleTmpFile, image, params=None)
@@ -240,6 +249,8 @@ def readSettings():
 
     LOGLEVEL = int(getSetting("debuglevel"))
 
+def get_setting(settingName):
+    return getSetting(settingName)
 def getSetting(settingName):
     global SETTINGS
 
@@ -309,26 +320,36 @@ def initDB():
         DBDATA = {}
         log(0, f"ERROR: Resetting corrupted Allsky database '{dbFile}'")
 
+def db_add(key, value):
+    dbAdd(key, value) 
 def dbAdd(key, value):
     global DBDATA
     DBDATA[key] = value
     writeDB()
 
+def db_update(key, value):
+    return dbUpdate(key, value)
 def dbUpdate(key, value):
     global DBDATA
     DBDATA[key] = value
     writeDB()
 
+def db_delete_key(key):
+    dbDeleteKey(key)
 def dbDeleteKey(key):
     global DBDATA
     if dbHasKey(key):
         del DBDATA[key]
         writeDB()
 
+def db_has_key(key):
+	return dbHasKey(key)
 def dbHasKey(key):
     global DBDATA
     return (key in DBDATA)
 
+def db_get(key):
+    return dbGet(key)
 def dbGet(key):
     global DBDATA
     if dbHasKey(key):
@@ -431,7 +452,6 @@ def validateExtraFileName(params, module, fileKey):
             
 def save_extra_data(file_name, extra_data, source='', structure={}, custom_fields={}):
     saveExtraData(file_name, extra_data, source, structure, custom_fields)
-
 def saveExtraData(file_name, extra_data, source='', structure={}, custom_fields={}):
 	"""
 	Save extra data to allows the overlay module to disdplay it.
@@ -540,6 +560,8 @@ def load_extra_data_file(file_name):
             
     return result
 
+def delete_extra_data(fileName):
+	deleteExtraData(fileName)
 def deleteExtraData(fileName):
     extraDataPath = getExtraDir()
     if extraDataPath is not None:               # it should never be None
@@ -548,6 +570,8 @@ def deleteExtraData(fileName):
             if isFileWriteable(extraDataFilename):
                 os.remove(extraDataFilename)
 
+def cleanup_module(moduleData):
+    cleanupModule(moduleData)
 def cleanupModule(moduleData):
     if "cleanup" in moduleData:
         if "files" in moduleData["cleanup"]:
@@ -566,7 +590,9 @@ def createTempDir(path):
 
 def get_gpio_pin_details(pin):
     return getGPIOPin(pin)
-            
+
+def get_gpio_pin(pin):
+	return getGPIOPin(pin)
 def getGPIOPin(pin):
     result = None
     if pin == 0:

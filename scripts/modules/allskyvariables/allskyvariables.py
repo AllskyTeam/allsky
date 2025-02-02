@@ -136,7 +136,7 @@ def get_variable(variables, search_variable):
 
 	return variable
 
-def get_variables(show_empty=True, module=''):
+def get_variables(show_empty=True, module='', indexed=False):
 	ALLSKY_CONFIG = getEnvironmentVariable('ALLSKY_CONFIG')
 	ALLSKY_SCRIPTS = getEnvironmentVariable('ALLSKY_SCRIPTS')
 	ALLSKY_OVERLAY = getEnvironmentVariable('ALLSKY_OVERLAY')
@@ -218,13 +218,24 @@ def get_variables(show_empty=True, module=''):
 				'variable': variable,
 				'group': 'user',
 				'description': '',
-				'value': value,
+				'value': config,
 				'type': 'string',
 				'source': 'user'		
 			})
 
 	#result = sorted(result, key=lambda item: item['group'])
-
+	if indexed:
+		new_result = {}
+		for variable_data in result:
+			raw_var_name = variable_data['name']
+			var_name = raw_var_name.replace('${', '').replace('}', '')
+			if var_name.startswith('AS_'):
+				var_name = var_name[3:]
+    
+			new_result[var_name] = variable_data
+   
+		result = new_result
+  
 	return result
 
 if __name__ == "__main__":
@@ -236,11 +247,12 @@ if __name__ == "__main__":
 	parser.add_argument("--module", type=str, default="", help="Only return variables for a specific module")
 	parser.add_argument("--print", action="store_true", help="Print the results to stdout")
 	parser.add_argument("--prettyprint", action="store_true", help="Pretty Print the results to stdout")
-
+	parser.add_argument("--indexed", action="store_true", help="Return idata indexed by variable name")
+ 
 	args = parser.parse_args()
  
 	setupForCommandLine(args.allskyhome)
-	variables = get_variables(args.empty, args.module)
+	variables = get_variables(args.empty, args.module, args.indexed)
 
 	if args.print:
 		print(json.dumps(variables))

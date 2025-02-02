@@ -214,6 +214,21 @@ class MODULESEDITOR {
                         }
                     }
                 });
+				
+				$(document).on('keyup', '#module-module-filter', () => {
+					var searchText = $("#module-module-filter").val()
+					$("#modules-available .allskymodule").each(function () {
+						this.style.display = this.id.includes(searchText) ? 'block' : 'none'
+					});
+				}) 
+				$(document).on('click', '#module-module-filter-clear', () => {
+					$("#module-module-filter").val('')
+					$("#modules-available .allskymodule").each(function () {
+						this.style.display = 'block'
+					});					
+				}) 
+
+				
 
                 $(document).on('module:dirty', () => {
                     this.#dirty = true;
@@ -377,11 +392,15 @@ class MODULESEDITOR {
         }
         let deprecatedHTML = ''
 		if (data.metadata.deprecation !== undefined) {
-			deprecatedHTML = '<strong class="text-danger">DEPRECATED</strong> '
+			if (data.metadata.deprecation.partial !== undefined) {
+				deprecatedHTML = '<strong class="text-warning">PARTIAL DEPRECATED</strong> '
+			} else {
+				deprecatedHTML = '<strong class="text-danger">DEPRECATED</strong> '
+			}
 		}
         version = deprecatedHTML + '<span><small class="module-version">' + version + '</small><span>';
 		let template = '\
-            <div id="' + moduleKey + '" data-id="' + data.module + '" class="list-group-item ' + locked + '"> \
+            <div id="' + moduleKey + '" data-id="' + data.module + '" class="list-group-item allskymodule ' + locked + '"> \
                 <div class="panel panel-default"> \
                     <div class="panel-heading"><span class="warning" data-toggle="popover" data-delay=\'{"show": 1000, "hide": 200}\' data-placement="top" data-trigger="hover" data-placement="top" title="" data-content=""><i class="fa-solid fa-2x fa-triangle-exclamation"></i> </span>' + data.metadata.name + ' ' + version + ' ' + enabledHTML + '</div> \
                     <div class="panel-body">' + experimental + data.metadata.description + ' <div class="pull-right">' + settingsHtml + addHTML + '</div></div> \
@@ -705,15 +724,17 @@ class MODULESEDITOR {
 
 					if (fieldType == 'variable') {
 						inputHTML = '<input id="' + key + '" name="' + key + '" class="form-control" disabled="disabled" value="' + fieldValue + '"' + required + fieldDescription + '>';
-						extraClass = 'input-group';
+						extraClass = 'input-group1';
 						inputHTML = '\
 							<div class="row">\
-								<div class="col-xs-8">\
+								<div class="col-xs-4">\
 								' + inputHTML + '\
 								</div>\
-								<div class="col-xs-4">\
+								<div class="col-xs-2">\
 									<button type="button" class="btn btn-default" id="open-var-' + key + '" data-source="' + key + '">...</button>\
 									<button type="button" class="btn btn-default" id="reset-var-' + key + '" data-source="' + key + '"><i class="fa-solid fa-rotate-right"></i></button>\
+								</div>\
+								<div class="col-xs-4" id="' + key + '_value">\
 								</div>\
 							</div>\
 						';
@@ -732,12 +753,12 @@ class MODULESEDITOR {
 							$.allskyVariable({
 								id: key,
 								variable: data,
+								valueDiv: key + '_value',
 								variableSelected: function(variable) {
-									$('#' + key).val(variable)                                
+									$('#' + key).val(variable)
 								}
 							});
-						});
-                                              
+						});                                              
 					}
 
 					if (fieldType == 'i2c') {
@@ -777,14 +798,20 @@ class MODULESEDITOR {
 
 					if (fieldType == 'select') {
 						inputHTML = '<select name="' + key + '" id="' + key + '"' + required + fieldDescription + '>';
-						let values = fieldData.type.values.split(',');
+						let values = fieldData.type.values.split(',')
 						for (let value in values) {
-							let optionValue = values[value];
+							let optionValue = values[value]						
+							let optiontext = optionValue						
+							if (optionValue.includes('|')) {
+								let fieldData = optionValue.split('|')
+								optionValue = fieldData[0]
+								optiontext = fieldData[1]
+							}
 							let selected = "";
 							if (fieldValue == optionValue) {
 								selected = ' selected="selected" ';
 							}
-							inputHTML += '<option value="' + optionValue + '"' + selected + '>' + optionValue + '</option>';
+							inputHTML += '<option value="' + optionValue + '"' + selected + '>' + optiontext + '</option>';
 						}
 						inputHTML += '</select>';
 					}
@@ -806,7 +833,7 @@ class MODULESEDITOR {
 				fieldHTML = '\
 					<div class="form-group" id="' + key + '-wrapper">\
 						<label for="' + key + '" class="control-label col-xs-4">' + fieldData.description + '</label>\
-						<div class="col-xs-7">\
+						<div class="col-xs-8">\
 							<div class="'+ extraClass + '">\
 								' + inputHTML + '\
 							</div>\
@@ -919,7 +946,12 @@ class MODULESEDITOR {
             }
 
 			if ('deprecation' in moduleData.metadata) {
-                moduleSettingsHtml += '<li role="presentation"><a href="#as-module-var-deprecation" role="tab" data-toggle="tab" class="text-danger">IMPORTANT</a></li>';
+				let type = 'danger'
+				if (moduleData.metadata.deprecation.partial !== undefined) {
+					type = 'warning'
+				}
+                moduleSettingsHtml += '<li role="presentation"><a href="#as-module-var-deprecation" role="tab" data-toggle="tab" class="text-' + type + '">IMPORTANT</a></li>';
+
 			}
 
             moduleSettingsHtml += ' </ul>'
@@ -1029,10 +1061,14 @@ class MODULESEDITOR {
             }
 
             if ('deprecation' in moduleData.metadata) {
+				let heading = 'THIS MODULE HAS BEEN MARKED FOR DEPRECATION'
+				if (moduleData.metadata.deprecation.partial !== undefined) {
+					heading = 'PORTIONS OF THIS MODULE HAS BEEN MARKED FOR DEPRECATION'
+				}
                 moduleSettingsHtml += '\
 				<div role="tabpanel" style="margin-top:10px" class="tab-pane" id="as-module-var-deprecation">\
 					<div class="well">\
-						<h3 class="text-center">THIS MODULE HAS BEEN MARKED FOR DEPRECATION</h3>\
+						<h3 class="text-center">' + heading + '</h3>\
 					</div>\
 					<div class="row">\
 						<div class="col-md-4"><h4>Deprecated from Version:</h4></div>\
@@ -1180,7 +1216,6 @@ class MODULESEDITOR {
 
         $('#module-settings-dialog').off('hidden.bs.modal')
         $('#module-settings-dialog').on('hidden.bs.modal', () => {
-
         });
 
         $(window).off('resize')
@@ -1302,28 +1337,69 @@ class MODULESEDITOR {
 		}		
 	}
 
-    #createTestResultsMessage(message) {
-        let messageHtml = this.#convertLineBreaksToBr(message)
+    #createTestResultsMessage(response, runModule) {
+		let messageHtml = response
+		if (typeof response !== 'string') {
+			if ('message' in response) {
+        		messageHtml = this.#convertLineBreaksToBr(response.message)
+			}
+		} else {
+			messageHtml = this.#convertLineBreaksToBr(response)
+		}
         let html = '<div class="module-test-results">' + messageHtml + '</div>'
+
         return html
     }
 
-    #displayTestResultsDialog(response, title) {
+    #displayTestResultsDialog(response, title, runModule) {
+		let dialogHtml = ''
+		let results = this.#createTestResultsMessage(response, runModule)
+
+		dialogHtml = '\
+			<ul class="nav nav-tabs" role="tablist">\
+				<li class="active">\
+					<a href="#testresult" role="tab" data-toggle="tab">Test Results</a>\
+				</li>\
+				<li>\
+					<a href="#testextradata" role="tab" data-toggle="tab">Extra Data</a>\
+				</li>\
+			</ul>\
+			<div class="tab-content">\
+				<div role="tabpanel" class="tab-pane fade in active" id="testresult">\
+					' + results + '\
+				</div>\
+				<div role="tabpanel" class="tab-pane fade" id="testextradata">\
+					<div id="resultjsonnotice" class="mt-4 mb-2">\
+					</div>\
+					<div id="resultjson" style="max-height: 500px; overflow-y: scroll;">\
+					</div>\
+				</div>\
+			</div>\
+		'
+
         var runInfo = bootbox.dialog({
             title: title,
-            message: this.#createTestResultsMessage(response),
+			message: dialogHtml,
             size: 'large',
             buttons: {
                 ok: {
                     label: 'Close',
                     className: 'btn-success',
                     callback: function(){
-                        //runInfo.remove()
 						runInfo.modal('hide').remove();
                     }
                 }
             }
         });
+
+		if (runModule.metadata.extradatafilename !== undefined) {
+			$('#resultjsonnotice').html('<div class="alert alert-success" role="alert">This is the extra data that was generated by the module and available for use in the overlay manager.</div>')
+			$('#resultjson').JVC(response.extradata);
+		} else {
+			$('#resultjsonnotice').html('<div class="alert alert-warning" role="alert">This module does not provide any extra data for use in the overlay.</div>')
+		}
+
+			
     }
 
 	#testModule() {
@@ -1333,17 +1409,17 @@ class MODULESEDITOR {
 		module = module.replace('.py', '')
 		let formValues = this.#getFormValues()
         
-        let moduleTemp = {}
+        var runModule = {}
         if (module in this.#configData.selected) {
-            moduleTemp = Object.assign({}, this.#configData.selected[module]);
+            runModule = Object.assign({}, this.#configData.selected[module]);
         } else {
             if (module in this.#configData.available) {
-                moduleTemp = Object.assign({}, this.#configData.available[module]);
+                runModule = Object.assign({}, this.#configData.available[module]);
             }
         }
 
         this.#testData = {}
-        this.#testData[module] = moduleTemp        
+        this.#testData[module] = runModule        
         this.#saveFormData(this.#testData, formValues, moduleFilename);
         
         let jsonData = JSON.stringify(this.#testData, null, 4);
@@ -1362,18 +1438,19 @@ class MODULESEDITOR {
 			data: {
 				module: module,
                 dayNight: daynight,
-				flow: jsonData
+				flow: jsonData,
+				extraDataFilename: runModule.metadata.extradatafilename
 			},
             cache: false,
 			dataType: 'json'
 		})
 		.then((response) => {
             let title = 'Module <b>' + module + '</b> run result'
-            this.#displayTestResultsDialog(response, title)
+            this.#displayTestResultsDialog(response, title, runModule)
 		})
 		.catch((error) => {
             let title = 'ERROR Running Module <b>' + module + '</b> run result'
-            this.#displayTestResultsDialog(error.responseText, title)
+            this.#displayTestResultsDialog(error.responseText, title, runModule)
 		}).always(() => {
             $('#module-settings-dialog .modal-content').LoadingOverlay('hide')
         })

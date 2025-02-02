@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="uk" xml:lang="uk">
+<head>
+
+<title>JVC v2</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<meta name="description" content="jQuery JSON Viewer With Callback Support (JVC) v2.0.0
+ * @Link: https://github.com/andronick83/jquery.json-viewer-callback
+ * @License: Released under the MIT license
+ * @Author: andronick83 <andronick.mail@gmail.com>">
+<meta name="viewport" content="width=device-width, initial-scale=0.5">
+<meta name="theme-color" content="#161616"/>
+<meta name="google" content="notranslate"/>
+
+<link rel=stylesheet href="/page-jvc.css"/>
+<script src="/page.js" defer></script>
+<script src="/page-logging.js" defer></script>
+<script src="/page-jvc.js" defer></script>
+<script src="https://ajax.googleapis.com/ajax/libs/webfont/1.5.10/webfont.js" defer></script>
+
+
+
+<!-- JVC Example -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js" defer></script>
+
+<link rel=stylesheet href="jvc.css"/>
+<script src="jvc.js" defer></script>
+
+</head>
+<body translate=no>
+
+<div class="page jvc-scroll"><div class=content>
+	<span>// JVC with Console and Callback Ajax-loader</span>
+	<div id=jvc></div>
+</div></div>
+
+<script>
+
+// Test Object:
+let json = {
+	testObj: {
+		null: null,
+		bool: true,
+		und: undefined,
+		url: "http://example.com/?br=<br>",
+		str: "text&nbsp;'text'\t\`text\`<br>\n\"text\" "+`${String("text")}`,
+		date: new Date(),
+		reg: /^[^"'`]*$/i,
+		err: new Error('Message'),
+		arr: [0, 0.1, 2, Infinity, NaN, [], {}],
+		arrObj: [1, 2],
+		//
+		funcArrow: a=>'"'+a+'"',
+		funcNative: document.close,
+		funcObj: function(a, b){},
+		//
+		set: new Set([5, 6]),
+		map: new Map([['a', 7], ['b', 8]]),
+		//
+		node: null,
+	},
+	ajaxCb: {'§Callback': "/ajax"},
+	failCb: {'§Callback': "/fail"},
+	slowCb: {'§Callback': "/slow"},
+	nodeCb: {'§Callback': "/node"},
+	longCb: {'§Callback': "/long"},
+};
+
+// Test Recursion:
+let test=json.testObj;
+test.loop = test;
+
+// Test NonEnumerabled/Symbols:
+Object.defineProperties(test, {
+	nonEnum: {enumerable: false, value: true},
+	[Symbol.toPrimitive]: {enumerable: false, value: '<TestObject>'}
+});
+
+// Test Node:
+document.addEventListener('DOMContentLoaded',_=>{
+	test.node = $('<span id=ID class=CLASS><span class="className"></span>TEXT<!--COMMENT--></span>').get(0);
+	test.node.testProp = true; });
+
+// Test Prototype:
+Object.setPrototypeOf(test, {testProp: true});
+
+// Test Properties:
+test.arrObj.testProp = test.funcObj.testProp = true;
+
+// JVC Callback:
+let jvcCb = function(ev){
+	// Get JVC and Data:
+	let jvc = ev.JVC, data = ev.data;
+	// Return Obj:
+	     if(data == '/slow') return setTimeout(jvc, 3*1000, 'json-slow');
+	else if(data == '/node') return jvc($('#jvc').get(0));
+	else{ // Ajax Obj:
+		if(data == '/ajax') data="/ajax.json";
+		else if(data == '/long') data="https://cdn.jsdelivr.net/gh/herrstrietzel/fonthelpers@main/json/gfontsAPI.json";
+		$.ajax(data).done(jvc)
+		.fail((xhr, status, err)=>{
+			jvc(Error("jvc-"+status+' '+(err? err :xhr.status)));
+		});
+	}};
+
+// JVC Conf:
+let conf={showJSON: true, showConsole: ['json', 'JVC', '$("#jvc")[0]'], callback: jvcCb};
+
+// Sync JVC loader:
+//$('#jvc').JVC(json, conf);
+
+// Defer/Async JVC loader `<script src="jvc.js" defer>`:
+document.addEventListener('DOMContentLoaded',_=>{
+	$('#jvc').JVC(json, conf);
+});
+/*// OR:
+var JVC=window.JVC||{onload:new Set()};
+JVC.onload.add(JVC=>{
+	$('#jvc').JVC(json, conf);
+});
+*/
+
+/*
+
+// JVC Default Conf:
+JVC.defConf={
+	expand:			2,
+	showMenu:		true,
+	showQuotes:		false,
+	showCommas:		true,
+	showJSON:		false,
+	showConsole:		false,
+	logger:			console,
+	change:			ƒ e=>(…),
+	callback:		ƒ e=>(…),
+	//
+	keyPrefix:		'§',
+	keyLoop:		'§Loop',
+	keyCallback:		'§Callback',
+	//
+	keysArrGroup:		true,
+	keysNonEnum:		true,
+	keysSymbols:		true,
+	keysProto:		true,
+};
+
+// JVC Getters/Setters: 
+JVC.getJSON($('#jvc'));		// Get JSON String
+JVC.setTabSize(4);		// Set Tab-Size Spaces
+JVC.setFontFamily('monospace');	// Set Font-Family String
+JVC.setFontSize(14);		// Set Font-Size Pixels
+JVC.setStyle('night-owl');	// Set Highlight-Style String: no-style, jvc-default, night-owl, etc.
+				//	See: https://cdnjs.com/libraries/highlight.js
+*/
+
+</script>
+
+</body>
+</html>

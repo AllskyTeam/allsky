@@ -46,6 +46,9 @@ function DisplayModule() {
 <link rel='stylesheet' href='/js/jquery-select2-bootstrap-theme/dist/select2-bootstrap.min.css?c=<?php echo ALLSKY_VERSION; ?>' />
 <script src="js/jquery-select2/dist/js/select2.full.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
+<script src="/js/jvc/jvc.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+<link rel='stylesheet' href='/js/jvc/jvc.min.css?c=<?php echo ALLSKY_VERSION; ?>' />
+
 <div class="row">
     <div class="col-lg-12">
 		<div class="panel panel-primary">
@@ -103,6 +106,21 @@ function DisplayModule() {
                 <div class="row module-lists">
                     <div class="col-sm-6 col-md-6 col-lg-6 module-column">
                         <h4 class="text-center">Available Modules</h4>
+
+
+
+						<form class="form-horizontal">
+							<div class="form-group">
+								<label for="module-module-filter" class="col-sm-2 control-label">Search</label>
+								<div class="col-sm-6">
+									<input type="text" class="form-control" id="module-module-filter">
+								</div>
+								<button type="button" class="btn btn-primary btn-sm" id="module-module-filter-clear"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+							</div>
+						</form>
+
+
+
                         <div class="module-container">
                             <div id="modules-available" class="list-group"></div>
                             <div id="modules-available-empty"><span>No modules available</span></div>

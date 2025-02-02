@@ -30,10 +30,38 @@
 
 	<script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js"></script>
 
+
+	<link  href="/js/viewerjs/dist/viewer.css" rel="stylesheet">
+	<script src="/js/viewerjs/dist/viewer.js"></script>
+
+  <style>
+    .pictures {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .pictures > li {
+      border: 1px solid transparent;
+      float: left;
+      height: calc(100% / 3);
+      margin: 0 -1px -1px 0;
+      overflow: hidden;
+      width: calc(100% / 3);
+    }
+
+    .pictures > li > img {
+      cursor: zoom-in;
+      width: 100%;
+    }
+  </style>
+
     <script>
         $(document).ready(function() {
-            $('#oe-test').on('click', () => {
-                $.allskyVariable({
+    
+	
+	       // $('#oe-test').on('click', () => {
+            /*    $.allskyVariable({
                     variable: '',
                     columns: [],
 					stateKey: 'as-variables-test',
@@ -41,16 +69,60 @@
                         alert(variable);
                     }
                 });
-            });
+            });*/
 
-            $('#oe-test').trigger('click')
+            //$('#oe-test').trigger('click')
+	
+			var viewer
+			$('#modalimages').on('shown.bs.modal', function (e) {
+				// WARNING: should ignore Viewer's `shown` event here.
+				if(e.namespace === 'bs.modal') {
+					viewer = new Viewer(document.getElementById('pictures'), {			
+					});
+				}
+			}).on('hidden.bs.modal', function (e) {
+				// WARNING: should ignore Viewer's `hidden` event here.
+				if(e.namespace === 'bs.modal') {
+				viewer.destroy();
+				}
+			});
+
+
         });
     </script>
 </head>
 
 <body class="dark">
-
     <button id="oe-test">Test</button>
+
+    <button type="button" class="btn btn-primary" data-target="#modalimages" data-toggle="modal">Launch the demo</button>
+    <div class="modal" role="dialog" id="modalimages">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Image Viewr</h4>
+                </div>
+                <div class="modal-body">
+
+					<div id="galley">
+						<ul id="pictures" class="pictures">
+							<li><img src="/debug/allsky_starcount/final.png" width=256 alt="Picture 1"></li>
+							<li><img src="/debug/allsky_starcount/star-template-6.png" width=256 alt="Picture 1"></li>
+							<li><img src="/debug/allsky_starcount/a-greyscale-image.png" width=256 alt="Picture 1"></li>
+						</ul>
+					</div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
     <div id="oe-test1"></div>
     <div class="modal" role="dialog" id="mm-i2c-dialog">
         <div class="modal-dialog modal-lg" role="document">

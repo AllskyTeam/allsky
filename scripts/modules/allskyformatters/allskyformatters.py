@@ -161,17 +161,16 @@ class AllskyFormatters:
 		return value
 
 	def as_number(self, value, variable_name, format, variable_type):
-
 		if format is not None and format != "":
 			original_format = format
 			if format.startswith(':'):
 				format = "{" + format + "}"
-			convertValue = 0
+			convertValue = value
 			try:
-				try:
-					convertValue = int(value)
-				except ValueError:
-					convertValue = float(value)
+				#try:
+				#	convertValue = int(value)
+				#except ValueError:
+				#	convertValue = float(value)
 				try:
 					if format.startswith('{'):
 						value = format.format(convertValue)
@@ -181,10 +180,10 @@ class AllskyFormatters:
 						else:
 							value = convertValue
 				except Exception as err:
-					error =  f"ERROR: Cannot use format '{original_format}' on Number variables like {variable_type.variable} (value={value})."
+					error =  f"ERROR: Cannot use format '{original_format}' on Number variable (value={value})."
 					raise AllskyFormatError(error, 0, True)        
 			except ValueError as err:
-					error =  f"ERROR: Cannot use format '{original_format}' on Number variables like {variable_type.variable} (value={value})."
+					error =  f"ERROR: Cannot use format '{original_format}' on Number variable (value={value})."
 					raise AllskyFormatError(error, 0, True)          
 
 		return value

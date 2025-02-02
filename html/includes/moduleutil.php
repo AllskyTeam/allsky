@@ -12,10 +12,12 @@ class MODULEUTIL
     private $jsonResponse = false;
     private $allskyModules;
     private $userModules;
+	private $extraDataFolder;
 
     function __construct() {
         $this->allskyModules = ALLSKY_SCRIPTS . '/modules';
         $this->userModules = ALLSKY_MODULE_LOCATION . '/modules';
+		$this->extraDataFolder = ALLSKY_OVERLAY . '/extra';
     }
 
     public function run()
@@ -541,16 +543,30 @@ class MODULEUTIL
         $fileName = ALLSKY_MODULES . '/test_flow.json';
         file_put_contents($fileName,  $flow);
 
-        //$command = 'SUDO_OK="true"; ' . ALLSKY_SCRIPTS . "/testModule.sh " . $dayNight;
         #TODO add bash to sudoers
-        $command = 'sudo bash -c "source /home/pi/allsky/venv/bin/activate; export ALLSKY_HOME=/home/pi/allsky; export CURRENT_IMAGE=""; export DAY_OR_NIGHT="' . $dayNight . '"; source /home/pi/allsky/variables.sh; python3 ' . ALLSKY_SCRIPTS . '/flow-runner.py --test"';
-        //echo($command);
+        $command = 'sudo bash -c "source /home/pi/allsky/venv/bin/activate; export ALLSKY_HOME=/home/pi/allsky; source /home/pi/allsky/variables.sh; export CURRENT_IMAGE=""; export DAY_OR_NIGHT="' . $dayNight . '"; source /home/pi/allsky/variables.sh; python3 ' . ALLSKY_SCRIPTS . '/flow-runner.py --test"';
         $result = $this->runShellCommand($command);
+
+		$jsonFlow = json_decode($flow, true);
+		
+		$extraData = '';
+		$moduleKey = array_key_first($jsonFlow);
+		if (isset($jsonFlow[$moduleKey]['metadata']['extradatafilename'])) {
+			$filePath = $this->extraDataFolder . '/' . $jsonFlow[$moduleKey]['metadata']['extradatafilename'];
+			if (file_exists($filePath)) {
+				$extraData = file_get_contents($filePath);
+			}			
+		}
+
         if ($result['error']) {
             die($result['message']);
             $this->send500();
         } else {
-		    $this->sendResponse(json_encode($result['message']));
+			$result = [
+				'message' => $result['message'],
+				'extradata' => json_decode($extraData)
+			];
+		    $this->sendResponse(json_encode($result));
         }
 	}
 
@@ -943,6 +959,17 @@ class MODULEUTIL
 		}
 		
 		$this->sendResponse(json_encode($results));
+	}
+
+	public function postGetExtraDataFile() {
+		$extraDataFilename = basename($_POST['extradatafilename']);
+		$filePath = $this->extraDataFolder . '/' . $extraDataFilename;
+		$result = [];
+		if (file_exists($filePath)) {
+			$result = file_get_contents($filePath);
+		}
+
+		$this->sendResponse(json_encode($result));		
 	}
 }
 

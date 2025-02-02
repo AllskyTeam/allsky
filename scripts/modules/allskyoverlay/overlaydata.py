@@ -183,7 +183,7 @@ class ALLSKYOVERLAYDATA:
 				self.__read_data(extra_data_file_name)
 
 		self.__add_core_allsky_variables()
-		
+
 		return self.format()
 
 	def __format_field(self, field_data):
@@ -207,12 +207,18 @@ class ALLSKYOVERLAYDATA:
 			if variable in self.extra_fields:
 				value = self.extra_fields[variable]['value']
 			pre_formatted_value = value
-       
+		
+			variable_definition = allskyvariables.get_variable(self.variables, variable)
+			if variable_definition is not None:
+				if isinstance(variable_definition['value'] , dict):
+					for (def_key, def_value) in variable_definition['value'].items():
+						if def_key != 'value':
+							field_data[def_key] = def_value
+
 			if format_matches is not None:
 				formats = format_matches[variable_pos]
     
 				if variable in self.extra_fields:
-					variable_definition = allskyvariables.get_variable(self.variables, variable)
 
 					variable_group = 'text'
 					if variable_definition is not None:
@@ -221,15 +227,14 @@ class ALLSKYOVERLAYDATA:
 					if 'type' in field_data:
 						variable_group = field_data['type']
           
-					self.__debug(f'Formatting variable {variable}, value {self.extra_fields[variable]["value"]}, using format "{formats}"')
-					format_list = formats.split('#')
+					self.__debug(f'INFO: Formatting variable {variable}, value {self.extra_fields[variable]["value"]}, using format "{formats}"')
+					format_list = formats.split('|')
 					for index, format in enumerate(format_list):
-		
 						if index > 0:
 							variable_group = 'number'
 						format_function = 'as_' + variable_group.lower()
 						if hasattr(allskyformatters.allsky_formatters, format_function):
-							self.__debug(f'Formatter "{format_function}" found for variable "{variable}". Value = "{value}", format = "{format}"')        
+							self.__debug(f'INFO: Formatter "{format_function}" found for variable "{variable}". Value = "{value}", format = "{format}"')        
 							try:
 								if variable == 'DATE' or variable == 'AS_DATE' or variable == 'AS_TIME' or variable == 'TIME':
 									value = time.time()
@@ -248,13 +253,29 @@ class ALLSKYOVERLAYDATA:
 					self.__debug(f'ERROR: Variable {variable} not found in extra fields')
         
 			self.__debug(f'INFO: pre formatted value = "{pre_formatted_value}", value after formatting = "{value}"')
-   
-			field_label = field_label.replace('&deg;', '\u00B0')
-   
-   
+
+			if not value:
+				if 'empty' in field_data:
+					if field_data['empty']:
+						value = field_data['empty']
+						self.__debug(f'INFO: Field value is empty and default value "{field_data["empty"]}" provided')
+					else:
+						self.__debug('INFO: Field value is empty but no empty value provided')
+				else:
+					self.__debug('INFO: Field value is empty but no empty value provided')
+
+			if value:
+				field_label = field_label.replace('&deg;', '\u00B0')
+			else:
+				field_label = field_label.replace('&deg;', '')
+    
 			field_label = field_label.replace(raw_variable, str(value))
+
+		field_data['label'] = field_label
+
 		self.__debug(f'INFO: Final formatted label "{field_label}"')
 		self.__debug('')
+
 		return field_label
 
 	def format(self):

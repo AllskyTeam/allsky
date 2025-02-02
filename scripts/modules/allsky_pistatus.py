@@ -6,7 +6,8 @@ Part of allsky postprocess.py modules.
 https://github.com/AllskyTeam/allsky
 
 '''
-import allsky_shared as s
+import allsky_shared as allsky_shared
+from allsky_base import ALLSKYMODULEBASE
 import os
 import shutil
 from vcgencmd import Vcgencmd
@@ -25,6 +26,7 @@ metaData = {
 	"experimental": "false",
 	"testable": "true",  
 	"centersettings": "false",
+	"extradatafilename": "allsky_pistatus.json", 
 	"extradata": {
 		"values": {
 			"AS_CPUTEMP": {
@@ -94,9 +96,7 @@ metaData = {
 		}
 	},
 	"arguments":{
-		"period": 60,
-		"includeclocks": "false",
-		"includevoltages": "false"
+		"period": 60
 	},
 	"argumentdetails": {
 		"period" : {
@@ -125,93 +125,83 @@ tstats = {
 	'19': 'Soft temperature limit has occurred'
 }
 
-def formatSize(Bytes):
-	try:
-		Bytes = float(Bytes)
-		kb = Bytes / 1024
-	except:
-		return "Error"
-	if kb >= 1024:
-		M = kb / 1024
-		if M >= 1024:
-			G = M / 1024
-			return "%.2fG" % (G)
-		else:
-			return "%.2fM" % (M)
-	else:
-		return "%.2fkb" % (kb)
 
-def pistatus(params, event):
-	result = ''
-	period = int(params['period'])
-	includeclocks = params["includeclocks"]
-	includevoltages = params["includevoltages"]        
-	shouldRun, diff = s.shouldRun('pistatus', period)
+class ALLSKYPISTATUS(ALLSKYMODULEBASE):
+	__params = []
+	__event = ''
+ 
+	def run(self):
+		result = ''
+		self.debugmode = self.get_param('ALLSKYTESTMODE', False, bool) 
+		period = self.get_param('period', 60, int) 
+			
+		shouldRun, diff = allsky_shared.shouldRun('pistatus', period)
+				
+		if shouldRun or self.debugmode:
+			extra_data = {}
+			usage = shutil.disk_usage("/")
+			size = usage[0]
+			used = usage[1]
+			free = usage[2]
 
-	try:
-		debugMode = params["ALLSKYTESTMODE"]
-	except ValueError:
-		debugMode = False
-            
-	if shouldRun or debugMode:
-		data = {}
-		usage = shutil.disk_usage("/")
-		size = usage[0]
-		used = usage[1]
-		free = usage[2]
+			extra_data['AS_DISKSIZE'] = size
+			extra_data['AS_DISKUSAGE'] = used
+			extra_data['AS_DISKFREE'] = free
 
-		data['AS_DISKSIZE'] = size
-		data['AS_DISKUSAGE'] = used
-		data['AS_DISKFREE'] = free
-
-		s.log(4, f'INFO: Disk Size {size}, Disk Used {used}, Disk Free {free}')
-		vcgm = Vcgencmd()
-		temp = CPUTemperature().temperature
-		temp = round(temp,1)
-        
-		tempUnits = s.getSetting("temptype")
-		if tempUnits == 'B':
-			data['AS_CPUTEMP_C'] = str(temp)
-			temp = (temp * (9/5)) + 32
+			allsky_shared.log(4, f'INFO: Disk Size {size}, Disk Used {used}, Disk Free {free}')
+			vcgm = Vcgencmd()
+			temp = CPUTemperature().temperature
 			temp = round(temp,1)
-			data['AS_CPUTEMP_F'] = str(temp)
-			s.log(4, f"CPU Temp (C) {data['AS_CPUTEMP_C']}, CPU Temp (F) {data['AS_CPUTEMP_F']}")
-		else:
-			if tempUnits == 'F':
+			
+			tempUnits = allsky_shared.getSetting('temptype')
+			if tempUnits == 'B':
+				extra_data['AS_CPUTEMP_C'] = str(temp)
 				temp = (temp * (9/5)) + 32
 				temp = round(temp,1)
-			data['AS_CPUTEMP'] = str(temp)
-			s.log(4, f"INFO: CPU Temp ({tempUnits}) {data['AS_CPUTEMP']}")
+				extra_data['AS_CPUTEMP_F'] = str(temp)
+				allsky_shared.log(4, f"CPU Temp (C) {extra_data['AS_CPUTEMP_C']}, CPU Temp (F) {extra_data['AS_CPUTEMP_F']}")
+			else:
+				if tempUnits == 'F':
+					temp = (temp * (9/5)) + 32
+					temp = round(temp,1)
+				extra_data['AS_CPUTEMP'] = str(temp)
+				allsky_shared.log(4, f"INFO: CPU Temp ({tempUnits}) {extra_data['AS_CPUTEMP']}")
 
-		Device.ensure_pin_factory()
-		board_info = Device.pin_factory.board_info
-		data['AS_PIMODEL'] = board_info.model
-		s.log(4, f"INFO: Pi Model {board_info.model}")
+			Device.ensure_pin_factory()
+			board_info = Device.pin_factory.board_info
+			extra_data['AS_PIMODEL'] = board_info.model
+			allsky_shared.log(4, f'INFO: Pi Model {board_info.model}')
 
-		throttled = vcgm.get_throttled()
-		text = []
-		for bit in tstats:
-			if throttled['breakdown'][bit]:
-				text.append(tstats[bit])
+			throttled = vcgm.get_throttled()
+			text = []
+			for bit in tstats:
+				if throttled['breakdown'][bit]:
+					text.append(tstats[bit])
 
-		if not text:
-			tstatText = "No Errors"
+			if not text:
+				tstatText = 'No Errors'
+			else:
+				tstatText = ', '.join(text)
+			extra_data['AS_TSTATSUMARYTEXT'] = tstatText
+
+				
+			allsky_shared.setLastRun('pistatus')
+			allsky_shared.dbUpdate('pistatus', extra_data)
+			result = 'PI Status Data Written'
 		else:
-			tstatText = ", ".join(text)
-		data['AS_TSTATSUMARYTEXT'] = tstatText
+			extra_data = allsky_shared.dbGet('pistatus')
+			result = 'Will run in ' + str(period - diff) + ' seconds'
+			
+		if extra_data:
+			allsky_shared.saveExtraData(metaData["extradatafilename"], extra_data, metaData['module'], metaData['extradata'])
+		
+		allsky_shared.log(4, f'INFO: {result}')
+		return result
 
-            
-		s.setLastRun('pistatus')
-		s.dbUpdate('pistatus', data)
-		result = 'PI Status Data Written'
-	else:
-		data = s.dbGet('pistatus')
-		result = 'Will run in ' + str(period - diff) + ' seconds'
-        
-	if data:
-		s.saveExtraData("pistatus.json", data, metaData["module"], metaData["extradata"])
-    
-	s.log(4, f'INFO: {result}')
+def pistatus(params, event):
+	allsky_pistatus = ALLSKYPISTATUS(params, event)
+	result = allsky_pistatus.run()
+
 	return result
 
 def pistatus_cleanup():
@@ -219,9 +209,9 @@ def pistatus_cleanup():
 		"metaData": metaData,
 		"cleanup": {
 			"files": {
-				"pistatus.json"
+				metaData["extradatafilename"]
 			},
 		"env": {}
 		}
 	}
-	s.cleanupModule(moduleData)
+	allsky_shared.cleanupModule(moduleData)

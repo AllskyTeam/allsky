@@ -10,6 +10,7 @@
             collapseall: false,
             collapseallsky: true,
 			stateKey: 'as-variables',
+			valueDiv: null,
             variableSelected: function (variable) { }
         }
 
@@ -34,11 +35,10 @@
         plugin.resetButton = pluginPrefix + 'as-variable-reset'		
 		
         plugin.init = function () {
-            buildUI();
-            updateUI();
-            setupEvents();
+            buildUI()
+            updateUI()
+            setupEvents()
         }
-
 
         var setupEvents = function() {
 
@@ -50,6 +50,8 @@
                 let rowData = $('#' + plugin.mmId + '-table').DataTable().row('.selected').data()
                 if (rowData !== undefined) {
 				    let selectedVariable = rowData.variable
+					plugin.settings.variable = selectedVariable
+					updateSample(selectedVariable)
                     plugin.settings.variableSelected.call(this, selectedVariable);
                 }
                 plugin.destroy()
@@ -153,6 +155,7 @@
             });
 
 			$('[data-toggle="tooltip"]').tooltip()
+
         }
 
 		var buildTable = function() {

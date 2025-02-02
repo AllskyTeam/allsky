@@ -585,7 +585,7 @@ function check_upload()
 # And remove the test file
 function remove_upload_file()
 {
-	[[ ${TEST_FILE_UPLOAD} == "true" ]] && return
+	[[ ${TEST_FILE_UPLOADED} == "true" ]] && return
 
 	local ERR  RET  MSG
 	# Assume since we didn't time out on the test upload we won't time out here.

@@ -194,24 +194,23 @@ foreach ($lines AS $line) {
 
 		case "delete_prior_files":
 			// Delete files left over from prior Allsky releases.
-			$files = array("version", "README.md", "config.js");
-			foreach ($files AS $file) {
-				if (file_exists($file)) {
-					if (unlink($file)) {
-						do_return($command, "", "Deleted: $file");
+			$items = array("getTime.php", "virtualsky.json", "README.md", "version", "allsky-font.css",
+						"config.js", ".git");
+			foreach ($items AS $item) {
+					if (is_dir($item)) {
+						if (deleteDirectory($item)) {	// recursively deletes
+							do_return($command, "", "Deleted: $dir/");
+						}
+				} else if (file_exists($item)) {
+					if (unlink($item)) {
+						do_return($command, "", "Deleted: $item");
 					} else {
 						$last_error = error_get_last();
 						$err = $last_error['message'];
-						do_error($command, "Unable to delete '$file': $err");
+						do_error($command, "Unable to delete '$item': $err");
 					}
 				}
 			}
-
-			$dirs = array(".git");
-			foreach ($dirs AS $dir) {
-				if (is_dir($dir) && deleteDirectory($dir)) {	// recursively deletes
-					do_return($command, "", "Deleted: $dir/");
-				}
 			}
 			break;
 

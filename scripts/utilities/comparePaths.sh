@@ -207,9 +207,14 @@ WEB_LS="${OUTPUT_DIR}/web-ls.txt"
 rm -f "${WEB_LS}"
 function getWebPath()
 {
-	local OUTPUT="$( curl --silent --location "${URL}/runCommands.php" 2>&1 )"
+	local OUTPUT="$( execute_web_commands "${URL}" 2>&1 )"
 	local RET=$?
-	if [[ ${RET} -eq 0 && -n ${OUTPUT} ]]; then
+	if [[ ${RET} -eq 0 ]]; then
+		if [[ -z ${OUTPUT} ]]; then
+			WEB_DIR="ERROR: No output from server."
+			return
+		fi
+
 		# Typical output:
 			# RETURN	pwd	DIRECTORY_NAME
 			# INFO	ls	FILE_1_NAME

@@ -22,6 +22,7 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP
 DISPLAY_MSG_LOG="${ALLSKY_LOGS}/${ME/.sh/}.log"
 
 # Config variables
+BASIC_CONNECTIVITY_ONLY="false"
 HAVE_LOCAL_REMOTE_CONFIG="false"
 HAVE_NEW_STYLE_REMOTE_CONFIG="false"
 HAVE_REALLY_OLD_REMOTE_CONFIG="false"
@@ -113,9 +114,9 @@ function pre_install_checks()
 
 	display_msg --logonly info "Start pre installation checks."
 
- 	DIALOG_TEXT="\n${DIALOG_BOLD}${DIALOG_BLUE}"
+ 	DIALOG_TEXT="\n\n\n${DIALOG_BOLD}${DIALOG_BLUE}"
  	DIALOG_TEXT+="Welcome to the Allsky Remote Website Installer!${DIALOG_NORMAL}\n\n"
-	DIALOG_TEXT+="\nRunning pre installation checks.\n\n"
+	DIALOG_TEXT+="\nRunning pre installation checks:\n"
 
 	DIALOG_TEXT+="\n1  - Checking that WebUI settings exist: "
 	display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
@@ -209,6 +210,7 @@ function pre_install_checks()
 	local SPACES="${INDENT}${INDENT} "
 
 	check_if_website_is_valid		# Sets global variables so can't be in subshell
+
 	local VALID_RET=$?
 	if [[ ${VALID_RET} -eq 0 ]]; then
 		REMOTE_WEBSITE_IS_VALID="true"
@@ -351,7 +353,7 @@ function prompt_to_upload()
 	if [[ ${COUNT} -gt 0 ]]; then
 		display_msg --logonly info "Prompting to upload the local images and videos."
 
-		DIALOG_TEXT="\nTheir are ${COUNT} startrails, keograms, meteor,"
+		DIALOG_TEXT="\n\n\nThere are ${COUNT} startrails, keograms, meteor,"
 		DIALOG_TEXT+=" and/or timelapse files on your Allsky Website in the Pi."
 		X=""
 		if [[ "$( settings ".uselocalwebsite" )" != "true" ]]; then
@@ -439,9 +441,7 @@ function display_aborted()
 	if [[ -n ${ERROR_MSG} ]]; then
 		display_msg --logonly info "Asking user if they want to view error message."
 
-		MSG="$( dE_ "Installation of the remote Website aborted" ) - ${EXTRA_TEXT}"
-display_msg --logonly info "$MSG"
-		DIALOG_PROMPT="\n${MSG}\n\n"
+		DIALOG_PROMPT="\n$( dE_ "Installation of the remote Website aborted" ) - ${EXTRA_TEXT}\n\n"
 		DIALOG_PROMPT+="${DIALOG_UNDERLINE}Would you like to view the error message?${DIALOG_NORMAL}"
 		if display_box "--yesno" "${DIALOG_ABORT}" "${DIALOG_PROMPT}" ; then
 # TODO: remove terminal screen escape sequences from ${ERROR_MSG}.
@@ -468,9 +468,9 @@ display_msg --logonly info "$MSG"
 function display_complete()
 {
 	local EXTRA_TEXT  E  DIALOG_TEXT
-	E="Go to the WebUI's 'Editor' page to confirm the settings in the"
+	E="Go to the WebUI's 'Editor' page to confirm the settings in this file are correct,"
+	E+="\n${INDENT}and update as needed:"
 	E+="\n\n${INDENT}    '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)'"
-	E+="\n\n${INDENT}file are correct, and update as needed."
 
 	if [[ ${CONFIG_TO_USE} == "new"  ]]; then
 		EXTRA_TEXT="A new configuration file was created."
@@ -483,11 +483,14 @@ function display_complete()
 	fi
 
 	if [[ "$( settings ".showonmap" )" != "true" ]]; then
-		EXTRA_TEXT+="$( dE_ "\n\n${INDENT}Please consider adding your camera to the Allsky Map." )"
-		EXTRA_TEXT+="\n${INDENT}See the 'Allsky Map Settings' in the WebUI's 'Allsky Settings' page.\n"
+		local X="***************************************************************"
+		EXTRA_TEXT+="\n\n\n${INDENT}${X}"
+		EXTRA_TEXT+="$( dE_ "\n${INDENT}Please consider adding your camera to the Allsky Map." )"
+		EXTRA_TEXT+="\n${INDENT}See the 'Allsky Map Settings' in the WebUI's 'Allsky Settings' page."
+		EXTRA_TEXT+="\n${INDENT}${X}"
 	fi
 
-	DIALOG_TEXT="\n${INDENT}${DIALOG_BLUE}${DIALOG_BOLD}"
+	DIALOG_TEXT="\n\n\n${INDENT}${DIALOG_BLUE}${DIALOG_BOLD}"
 	DIALOG_TEXT+="The installation of the remote Website is complete.${DIALOG_NORMAL}"
 	DIALOG_TEXT+="\n\n${INDENT}${EXTRA_TEXT}"
 	display_box "--msgbox" "${DIALOG_DONE}" "${DIALOG_TEXT}"
@@ -596,7 +599,9 @@ function create_website_config()
 		MSG+=" from repo file and updating placeholders."
 		display_msg --logonly info "${MSG}"
 
-		if ! ERR="$( replace_website_placeholders "remote" )" ; then
+		ERR="$( replace_website_placeholders "remote" )"
+		RET=$?
+		if [[ ${RET} -eq "${EXIT_ERROR_STOP}" ]]; then
 			MSG="Unable to replace placeholders in new configuration file"
 			display_aborted "${MSG}" "${ERR}"
 		fi
@@ -622,7 +627,9 @@ function create_website_config()
 			MSG+=" from repo and updating placeholders."
 			display_msg --logonly info "${MSG}"
 
-			if ! ERR="$( replace_website_placeholders "remote" )" ; then
+			ERR="$( replace_website_placeholders "remote" )"
+			RET=$?
+			if [[ ${RET} -eq "${EXIT_ERROR_STOP}" ]]; then
 				MSG="Unable to replace placeholders in new configuration file"
 				display_aborted "${MSG}" "${ERR}"
 			fi
@@ -653,11 +660,12 @@ function check_web_connectivity()
 {
 	local URL="${1}"
 
-	local HTTP_STATUS  RET
+	local HTTP_STATUS  RET  MSG
 
 	HTTP_STATUS="$( curl -o /dev/null --head --silent --location --write-out "%{http_code}" "${URL}" )"
 	RET=$?
 	if [[ ${HTTP_STATUS} == "200" ]] ; then
+		BASIC_CONNECTIVITY_ONLY="false"
 		return 0
 	fi
 
@@ -665,7 +673,10 @@ function check_web_connectivity()
 	# there won't be a default web file so in most cases we'll get a "403 Forbidden".
 	# That means connectivity DOES work.
 	if [[ ${HTTP_STATUS} == "403" || ${HTTP_STATUS} == "404" ]] ; then
-		display_msg --logonly info "Got HTTP_STATUS ${HTTP_STATUS} connecting to ${URL}; connectivity worked."
+		BASIC_CONNECTIVITY_ONLY="true"
+
+		MSG="Got HTTP_STATUS ${HTTP_STATUS} connecting to ${URL}; connectivity worked."
+		display_msg --logonly info "${MSG}"
 		return 0
 	else
 # TODO: There are probably other HTTP_STATUS that indicate we connected...
@@ -694,6 +705,8 @@ function check_if_files_exist()
 	for FILE in "$@"; do
 		url="${URL}/${FILE}"
 
+# MSG="curl -o /dev/null --head --silent --location --write-out %{http_code} ${url}"
+# show_debug_message "Executing: ${MSG}"
 		HTTP_STATUS="$( curl -o /dev/null --head --silent --location --write-out "%{http_code}" "${url}" )"
 		RET=$?
 
@@ -777,6 +790,14 @@ function check_if_website_is_valid()
 		return "${EXIT_ERROR_STOP}"
 	fi
 
+	# If we only have basic connectivity, the site is probably empty
+	# so the following checks for files will fail.
+	if [[ ${BASIC_CONNECTIVITY_ONLY} == "true" ]]; then
+		local MSG="Skipping remaining validity checks due to Basic Connectivity."
+		display_msg --logonly info "${MSG}"
+		return 0
+	fi
+
 	display_msg --logonly info "Looking for old and new config files at ${REMOTE_WEBSITE_URL}"
 	if check_if_files_exist "${REMOTE_WEBSITE_URL}" "or" "${OLD_CONFIG_NAME}" ; then
 		display_msg --logonly info "   Found old-style '${OLD_CONFIG_NAME}."
@@ -815,7 +836,7 @@ function upload_remote_website()
 		return
 	fi
 
-	local EXTRA_TEXT=""  EXCLUDE_FILES=""  MSG  DIALOG_TEXT
+	local EXTRA_TEXT=""  EXCLUDE_FILES=""  MSG  DIALOG_TEXT  ERR  R
 
 	DIALOG_TEXT="Starting upload to the remote Website"
 	[[ -n ${REMOTE_DIR} ]] && DIALOG_TEXT+=" in ${REMOTE_DIR}"
@@ -874,7 +895,7 @@ function upload_remote_website()
 		display_aborted "while uploading Website" "${MSG}"
 	fi
 
-	DIALOG_TEXT+="$( dO_ "DONE" )"
+	DIALOG_TEXT+="$( dO_ " DONE" )"
 	display_box "--infobox" "${DIALOG_INSTALL}" "${DIALOG_TEXT}"
 
 	display_msg --logonly info "$( indent --spaces "${MSG}" )"
@@ -900,13 +921,8 @@ function upload_remote_website()
 	fi
 
 	display_msg --logonly info "Website upload complete"
-}
 
-####
-# Uploads the configuration file for the remote Website.
-function upload_remote_config_file()
-{
-	local MSG  DIALOG_TEXT  ERR  R
+	# Now upload the configuration file.
 
 	if [[ ! -f "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" ]]; then
 		MSG="'${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}' not found!"
@@ -915,7 +931,7 @@ function upload_remote_config_file()
 		return 1
 	fi
 
-	DIALOG_TEXT="\nUploading remote Allsky configuration file..."
+	DIALOG_TEXT+="\n\n\nUploading remote Allsky configuration file..."
 	display_box "--infobox" "${DIALOG_INSTALL}" "${DIALOG_TEXT}"
 	display_msg --logonly info "Uploading Website configuration file."
 
@@ -934,7 +950,7 @@ function upload_remote_config_file()
 		display_aborted "at the configuration file upload" "${ERR}"
 	fi
 
-	DIALOG_TEXT+="$( dO_ "DONE" )"
+	DIALOG_TEXT+="$( dO_ " DONE" )"
 	display_box "--infobox" "${DIALOG_INSTALL}" "${DIALOG_TEXT}"
 }
 
@@ -1001,6 +1017,9 @@ function set_colors()
 
 
 ############################################## main body
+
+set_colors
+
 OK="true"
 HELP="false"
 SKIP_UPLOAD="false"
@@ -1027,15 +1046,12 @@ while [[ $# -gt 0 ]]; do
 			TEXT_ONLY="true"
 			;;
 		*)
-			MSG="Unknown argument: '${ARG}'."
-			echo -e "\n${RED}${MSG}${NC}"
+			E_ "\nUnknown argument: '${ARG}'."
 			OK="false"
 			;;
 	esac
 	shift
 done
-
-set_colors
 
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
@@ -1048,7 +1064,6 @@ display_welcome
 create_website_config
 disable_remote_website
 upload_remote_website
-upload_remote_config_file
 enable_remote_website
 post_data
 remove_upload_file

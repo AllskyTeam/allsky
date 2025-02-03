@@ -1417,6 +1417,9 @@ function get_lat_long()
 # Return the amount of RAM in GB.
 function get_RAM()
 {
+	# vcgencmd doesn't exist on many non-Pi computers, so return 0 on them.
+	type vcgencmd 2>/dev/null || { echo 0; return; }
+
 	local UNITS="${1:-GB}"
 
 	# Input example: total_mem=4096

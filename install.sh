@@ -3369,7 +3369,7 @@ install_Python()
 	CMD+="\nprint(Device.pin_factory.board_info.model)"
 	pimodel="$( echo -e "${CMD}" | python3 2>/dev/null )"	# hide error since it only applies to Pi 5.
 
-	echo "${pimodel}" >> "${ALLSKY_CONFIG}/piversion"
+	echo "${pimodel}" > "${ALLSKY_CONFIG}/piversion"
 
 	# if we are on the pi 5 then uninstall rpi.gpio, using the virtual environment which will always
 	# exist on the pi 5. lgpio is installed globally so will be used after rpi.gpio is removed

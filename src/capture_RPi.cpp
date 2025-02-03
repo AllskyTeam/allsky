@@ -231,7 +231,7 @@ int RPicapture(config cg, cv::Mat *image)
 			command += " --analoggain 1";	// 1 makes it autogain
 		}
 	}
-	else if (cg.currentGain != cg.defaultGain)	// Is manual gain
+	else 	// Is manual gain
 	{
 		ss.str("");
 		ss << cg.currentGain;

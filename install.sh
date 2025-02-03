@@ -125,6 +125,7 @@ return		# Currently this is disabled - not sure it's worth doing.
 
 	local TOLD_FILE  MSG  A
 
+	# shellcheck disable=SC2119
 	if [[ $( get_branch ) != "${GITHUB_MAIN_BRANCH}" ]]; then
 		DEBUG=1; DEBUG_ARG="--debug"; LOG_TYPE="--log"
 

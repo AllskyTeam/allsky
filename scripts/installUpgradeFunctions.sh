@@ -72,6 +72,7 @@ function display_header()
 	echo
 }
 
+
 #####
 function calc_wt_size()
 {
@@ -486,11 +487,12 @@ function replace_website_placeholders()
 
 	# Get the array index for the mini-timelapse.
 
-	local PARENT  FIELD  INDEX  MINI_TLAPSE_DISPLAY  MINI_TLAPSE_URL
+	local RET  PARENT  FIELD  INDEX  MINI_TLAPSE_DISPLAY  MINI_TLAPSE_URL
 	local MINI_TLAPSE_DISPLAY_VALUE  MINI_TLAPSE_URL_VALUE
+
 	PARENT="homePage.leftSidebar"
 	FIELD="Mini-timelapse"
-	INDEX=$( getJSONarrayIndex "${FILE}" "${PARENT}" "${FIELD}" )
+	INDEX=$( getJSONarrayIndex "${FILE}" "${PARENT}" "${FIELD}" 2>&1 )
 	if [[ ${INDEX} -ge 0 ]]; then
 		MINI_TLAPSE_DISPLAY="${PARENT}[${INDEX}].display"
 		MINI_TLAPSE_URL="${PARENT}[${INDEX}].url"
@@ -508,13 +510,14 @@ function replace_website_placeholders()
 			fi
 		fi
 	else
-		MSG="Unable to update '${FIELD}' in ${FILE}; ignoring."
-		display_msg --log warning "${MSG}"
+		MSG="Unable to update '${FIELD}' in ${FILE}:\n${INDEX}"
+		display_msg --log error "${MSG}"
 		# bogus settings that won't do anything
 		MINI_TLAPSE_DISPLAY="x"
 		MINI_TLAPSE_URL="x"
 		MINI_TLAPSE_DISPLAY_VALUE=""
 		MINI_TLAPSE_URL_VALUE=""
+		return 1
 	fi
 
 	# For these setting, check if it's == ${NEED_TO_UPDATE}.
@@ -522,7 +525,7 @@ function replace_website_placeholders()
 	# If the config file has a value, use it, even if it's "".
 
 	local TEMP  LATITUDE  LONGITUDE  AURORAMAP  LOCATION  OWNER  CAMERA
-	local LENS  COMPUTER  IMAGE_NAME
+	local LENS  COMPUTER  IMAGE_NAME  OLD_SUM  NEW_SUM
 
 	LATITUDE="$( settings ".config.latitude" "${FILE}" )"
 	if [[ ${LATITUDE} == "${NEED_TO_UPDATE}" ]]; then
@@ -595,7 +598,7 @@ function replace_website_placeholders()
 	fi
 
 	# Keep track if the file changed.
-	local OLD_SUM="$( sum "${FILE}" )"
+	OLD_SUM="$( sum "${FILE}" )"
 	"${ALLSKY_SCRIPTS}/updateJsonFile.sh" --verbosity silent --file "${FILE}" \
 		config.imageName			"imageName"			"${IMAGE_NAME}" \
 		config.latitude				"latitude"			"${LATITUDE}" \
@@ -609,12 +612,20 @@ function replace_website_placeholders()
 		"${WEBSITE_ALLSKY_VERSION}"	"AllskyVersion"		"${ALLSKY_VERSION}" \
 		"${MINI_TLAPSE_DISPLAY}"	"mini_display"		"${MINI_TLAPSE_DISPLAY_VALUE}" \
 		"${MINI_TLAPSE_URL}"		"mini_url"			"${MINI_TLAPSE_URL_VALUE}"
+	RET=$?
+	if [[ ${RET} -ne 0 ]]; then
+		MSG="updateJsonFile.sh failed with RET ${RET}"
+		display_msg --logonly info "${MSG}"
+		return "${EXIT_ERROR_STOP}"		# this is a "real" error
+	fi
 
-	local NEW_SUM="$( sum "${FILE}" )"
+	NEW_SUM="$( sum "${FILE}" )"
 	if [[ ${NEW_SUM} != "${OLD_SUM}" ]]; then
 		return 0		# File changed
 	else
-		return 1
+		MSG="updateJsonFile.sh didn't change anything!"
+		display_msg --logonly info "${MSG}"
+		return 1						# this is NOT an error
 	fi
 }
 
@@ -1592,3 +1603,120 @@ function add_new_settings()
 	return 0
 }
 
+
+#########
+# Functions for interacting with a dialog box.
+
+#####
+# Get the usable screen for the "dialog" command.
+function calc_d_sizes()
+{
+	# Globals: DIALOG_WIDTH, DIALOG_HEIGHT
+
+	DIALOG_WIDTH=$( tput cols )
+	(( DIALOG_WIDTH -= 10 ))
+
+	DIALOG_HEIGHT=$( tput lines )
+	(( DIALOG_HEIGHT -= 4 ))
+}
+
+####
+# Prompt the user to enter (y)/(yes) or (n)/(no).
+# This function is only used when running in text (--text) mode.
+function enter_yes_no()
+{
+	local TEXT="${1}"
+	local RET=1
+	local ANSWER
+
+	if [[ ${AUTO_CONFIRM} == "false" ]]; then
+		while true; do
+			echo -e "${TEXT}"
+			read -r -p "Do you want to continue? (y/n): " ANSWER
+			ANSWER="${ANSWER,,}"	# convert to lowercase
+
+			if [[ ${ANSWER} == "y" || ${ANSWER} == "yes" ]]; then
+				return 0
+			elif [[ ${ANSWER} == "n" || ${ANSWER} == "no" ]]; then
+				return 1
+			else
+				E_ "\nInvalid response. Please enter y/yes or n/no."
+			fi
+		done
+	else
+		return 0
+	fi
+
+	return "${RET}"
+}
+
+# prompt the user to press any key.
+# This function is only used when running in text (--text) mode.
+function press_any_key()
+{
+	if [[ ${AUTO_CONFIRM} == "false" ]]; then
+		echo -e "${1}\nPress any key to continue..."
+		read -r -n1 -s
+	fi
+}
+
+
+# Displays the specified type of Dialog, or in text mode just displays the text.
+# ${1} - The box type
+# ${2} - The title for the dialog
+# ${3} - The text to disply in the dialog
+# ${4} - Optional additional arguments to dialog
+#
+# Return - 1 if the user selected "No"; 0 otherwise
+function display_box()
+{
+	local DIALOG_TYPE="${1}"
+	local DIALOG_TITLE="${2}"
+	local DIALOG_TEXT="${3}"
+	local MORE_ARGS="${4}"
+
+	if [[ ${TEXT_ONLY} == "true" ]]; then
+		local RET=0
+		if [[ ${DIALOG_TYPE} == "--msgbox" ]]; then
+			press_any_key "${DIALOG_TEXT}"
+		elif [[ ${DIALOG_TYPE} == "--yesno" ]]; then
+			enter_yes_no "${DIALOG_TEXT}"
+			RET=$?
+		else
+			echo -e "${DIALOG_TEXT}"
+		fi
+		return "${RET}"
+	fi
+
+	# shellcheck disable=SC2086
+	dialog \
+		--colors \
+		--title "${DIALOG_TITLE}" \
+		${MORE_ARGS} \
+		"${DIALOG_TYPE}" "${DIALOG_TEXT}" ${DIALOG_HEIGHT} ${DIALOG_WIDTH}
+	return $?
+}
+
+# Displays a file Dialog, or in text mode just displays the file.
+# ${1} - The title for the dialog
+# ${2} - The filename to display
+#
+# Returns - Nothing
+function display_file()
+{
+	local DIALOG_TITLE="${1}"
+	local FILENAME="${2}"
+
+	if [[ ${TEXT_ONLY} == "true" ]]; then
+		cat "${FILENAME}"
+		return
+	fi
+
+	dialog \
+		--clear \
+		--colors \
+		--title "${DIALOG_TITLE}" \
+		--textbox "${FILENAME}" 22 77
+}
+
+#########

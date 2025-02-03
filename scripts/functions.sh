@@ -48,10 +48,10 @@ function wW_() { echo -e "${wWARNING}${1}${wNC}" ; }
 function wE_() { echo -e "${wERROR}${1}${wNC}" ; }
 function wD_() { echo -e "${wDEBUG}DEBUG: ${1}${wNC}" ; }
 # If the output may go to the "dialog" command (no "-e"):
-function wO_() { echo "${DIALOG_GREEN}${1}${DIALOG_NORMAL}" ; }
-function wW_() { echo "${DIALOG_RED}${1}${DIALOG_NORMAL}" ; }	# No DIALOG_YELLOW
-function wE_() { echo "${DIALOG_RED}${1}${DIALOG_NORMAL}" ; }
-function wD_() { echo "${DIALOG_BOLD}DEBUG: ${1}${DIALOG_NORMAL}" ; }
+function dO_() { echo "${DIALOG_GREEN}${1}${DIALOG_NORMAL}" ; }
+function dW_() { echo "${DIALOG_RED}${1}${DIALOG_NORMAL}" ; }	# No DIALOG_YELLOW
+function dE_() { echo "${DIALOG_RED}${1}${DIALOG_NORMAL}" ; }
+function dD_() { echo "${DIALOG_BOLD}DEBUG: ${1}${DIALOG_NORMAL}" ; }
 
 
 ##### Start and Stop Allsky

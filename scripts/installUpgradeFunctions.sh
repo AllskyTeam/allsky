@@ -487,11 +487,12 @@ function replace_website_placeholders()
 
 	# Get the array index for the mini-timelapse.
 
-	local PARENT  FIELD  INDEX  MINI_TLAPSE_DISPLAY  MINI_TLAPSE_URL
+	local RET  PARENT  FIELD  INDEX  MINI_TLAPSE_DISPLAY  MINI_TLAPSE_URL
 	local MINI_TLAPSE_DISPLAY_VALUE  MINI_TLAPSE_URL_VALUE
+
 	PARENT="homePage.leftSidebar"
 	FIELD="Mini-timelapse"
-	INDEX=$( getJSONarrayIndex "${FILE}" "${PARENT}" "${FIELD}" )
+	INDEX=$( getJSONarrayIndex "${FILE}" "${PARENT}" "${FIELD}" 2>&1 )
 	if [[ ${INDEX} -ge 0 ]]; then
 		MINI_TLAPSE_DISPLAY="${PARENT}[${INDEX}].display"
 		MINI_TLAPSE_URL="${PARENT}[${INDEX}].url"
@@ -509,13 +510,14 @@ function replace_website_placeholders()
 			fi
 		fi
 	else
-		MSG="Unable to update '${FIELD}' in ${FILE}; ignoring."
-		display_msg --log warning "${MSG}"
+		MSG="Unable to update '${FIELD}' in ${FILE}:\n${INDEX}"
+		display_msg --log error "${MSG}"
 		# bogus settings that won't do anything
 		MINI_TLAPSE_DISPLAY="x"
 		MINI_TLAPSE_URL="x"
 		MINI_TLAPSE_DISPLAY_VALUE=""
 		MINI_TLAPSE_URL_VALUE=""
+		return 1
 	fi
 
 	# For these setting, check if it's == ${NEED_TO_UPDATE}.
@@ -523,7 +525,7 @@ function replace_website_placeholders()
 	# If the config file has a value, use it, even if it's "".
 
 	local TEMP  LATITUDE  LONGITUDE  AURORAMAP  LOCATION  OWNER  CAMERA
-	local LENS  COMPUTER  IMAGE_NAME
+	local LENS  COMPUTER  IMAGE_NAME  OLD_SUM  NEW_SUM
 
 	LATITUDE="$( settings ".config.latitude" "${FILE}" )"
 	if [[ ${LATITUDE} == "${NEED_TO_UPDATE}" ]]; then
@@ -596,7 +598,7 @@ function replace_website_placeholders()
 	fi
 
 	# Keep track if the file changed.
-	local OLD_SUM="$( sum "${FILE}" )"
+	OLD_SUM="$( sum "${FILE}" )"
 	"${ALLSKY_SCRIPTS}/updateJsonFile.sh" --verbosity silent --file "${FILE}" \
 		config.imageName			"imageName"			"${IMAGE_NAME}" \
 		config.latitude				"latitude"			"${LATITUDE}" \
@@ -610,8 +612,10 @@ function replace_website_placeholders()
 		"${WEBSITE_ALLSKY_VERSION}"	"AllskyVersion"		"${ALLSKY_VERSION}" \
 		"${MINI_TLAPSE_DISPLAY}"	"mini_display"		"${MINI_TLAPSE_DISPLAY_VALUE}" \
 		"${MINI_TLAPSE_URL}"		"mini_url"			"${MINI_TLAPSE_URL_VALUE}"
+	RET=$?
+	[[ ${RET} -ne 0 ]] && return 1
 
-	local NEW_SUM="$( sum "${FILE}" )"
+	NEW_SUM="$( sum "${FILE}" )"
 	if [[ ${NEW_SUM} != "${OLD_SUM}" ]]; then
 		return 0		# File changed
 	else

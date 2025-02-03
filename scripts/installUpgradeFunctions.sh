@@ -72,19 +72,6 @@ function display_header()
 	echo
 }
 
-#####
-# Get the usable screen for the "dialog" command.
-function calc_d_sizes()
-{
-	# Globals: DIALOG_WIDTH, DIALOG_HEIGHT
-
-	DIALOG_WIDTH=$( tput cols )
-	[[ ${DIALOG_WIDTH} -gt 80 ]] && DIALOG_WIDTH=80
-	(( DIALOG_WIDTH -= 10 ))
-
-	DIALOG_HEIGHT=$( tput lines )
-	(( DIALOG_HEIGHT -= 4 ))
-}
 
 #####
 function calc_wt_size()
@@ -1606,8 +1593,22 @@ function add_new_settings()
 	return 0
 }
 
+
 #########
 # Functions for interacting with a dialog box.
+
+#####
+# Get the usable screen for the "dialog" command.
+function calc_d_sizes()
+{
+	# Globals: DIALOG_WIDTH, DIALOG_HEIGHT
+
+	DIALOG_WIDTH=$( tput cols )
+	(( DIALOG_WIDTH -= 10 ))
+
+	DIALOG_HEIGHT=$( tput lines )
+	(( DIALOG_HEIGHT -= 4 ))
+}
 
 ####
 # Prompt the user to enter (y)/(yes) or (n)/(no).

@@ -446,7 +446,6 @@ function display_aborted()
 		if display_box "--yesno" "${DIALOG_ABORT}" "${DIALOG_PROMPT}" ; then
 # TODO: remove terminal screen escape sequences from ${ERROR_MSG}.
 			display_box "--msgbox" "${DIALOG_TITLE_LOG}" "${ERROR_MSG}" "--scrollbar"
-		else
 		fi
 	fi
 

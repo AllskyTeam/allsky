@@ -987,7 +987,7 @@ function check_swap()
 		fi
 	else
 		MSG="Size of current swap (${CURRENT_SWAP} MB) is sufficient; no change needed."
-		m "${MSG}" "" "--log" "info" "${CALLED_FROM}"
+		m "${MSG}" "" "--logonly" "info" "${CALLED_FROM}"
 	fi
 
 	if [[ ${CALLED_FROM} == "install" ]]; then

@@ -1951,8 +1951,8 @@
 {
 "name" : "REMOTEWEBSITE_SSH_KEY_FILE",
 "default" : "",
-"description" : "Path on the Pi to the SSH key file.",
-"label" : "SSH Key File",
+"description" : "Path on the Pi to the SSH public key file.",
+"label" : "SSH Public Key File",
 "label_prefix" : "Remote Website",
 "type" : "widetext",
 "checkchanges" : true,
@@ -2161,8 +2161,8 @@
 {
 "name" : "REMOTESERVER_SSH_KEY_FILE",
 "default" : "",
-"description" : "Path on the Pi to the SSH key file.",
-"label" : "SSH Key File",
+"description" : "Path on the Pi to the SSH public key file.",
+"label" : "SSH Public Key File",
 "label_prefix" : "Remote Server",
 "type" : "widetext",
 "checkchanges" : true,

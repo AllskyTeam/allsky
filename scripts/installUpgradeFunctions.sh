@@ -613,13 +613,19 @@ function replace_website_placeholders()
 		"${MINI_TLAPSE_DISPLAY}"	"mini_display"		"${MINI_TLAPSE_DISPLAY_VALUE}" \
 		"${MINI_TLAPSE_URL}"		"mini_url"			"${MINI_TLAPSE_URL_VALUE}"
 	RET=$?
-	[[ ${RET} -ne 0 ]] && return 1
+	if [[ ${RET} -ne 0 ]]; then
+		MSG="updateJsonFile.sh failed with RET ${RET}"
+		display_msg --logonly info "${MSG}"
+		return "${EXIT_ERROR_STOP}"		# this is a "real" error
+	fi
 
 	NEW_SUM="$( sum "${FILE}" )"
 	if [[ ${NEW_SUM} != "${OLD_SUM}" ]]; then
 		return 0		# File changed
 	else
-		return 1
+		MSG="updateJsonFile.sh didn't change anything!"
+		display_msg --logonly info "${MSG}"
+		return 1						# this is NOT an error
 	fi
 }
 

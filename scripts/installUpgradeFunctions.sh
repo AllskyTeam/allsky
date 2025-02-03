@@ -1418,7 +1418,7 @@ function get_lat_long()
 function get_RAM()
 {
 	# vcgencmd doesn't exist on many non-Pi computers, so return 0 on them.
-	type vcgencmd 2>/dev/null || { echo 0; return; }
+	type vcgencmd >/dev/null 2>&1 || { echo 0; return; }
 
 	local UNITS="${1:-GB}"
 

@@ -35,11 +35,10 @@ TEST_FILE="commands.txt"
 TEST_FILE_UPLOADED="false"
 UPLOAD_IMAGE_FILES="false"
 GLOBAL_ERROR_MSG=""			# a global error message
-
-# Dialog size variables
-DIALOG_WIDTH="$( tput cols )"; ((DIALOG_WIDTH -= 10 ))
-DIALOG_HEIGHT=25
 INDENT="  "		# indent each line so it's easier to read
+
+# Get DIALOG_WIDTH and DIALOG_HEIGHT
+calc_d_sizes
 
 # Remote connectivity variables
 REMOTE_WEBSITE_URL="$( settings ".remotewebsiteurl" "${SETTINGS_FILE}" )"
@@ -61,7 +60,7 @@ if [[ ${REMOTE_PROTOCOL} != "sftp" && ${REMOTE_PROTOCOL} != "ftp" && ${REMOTE_PR
 	echo    "************* NOTICE *************"
 	echo    "This script currently only supports ftp protocols."
 	echo    "Support for the '${REMOTE_PROTOCOL}' protocol will be added in"
-	echo    "the first point release."
+	echo    "a future release."
 	echo -e "\n"
 	echo    "In the meantime, if you have an existing remote Allsky Website,"
 	echo    "it should continue to work."
@@ -79,6 +78,7 @@ DIALOG_DONE="Remote Website Installation Completed"
 DIALOG_TITLE_LOG="Allsky Remote Website Installation Log"
 
 # Old Allksy Website files that should be removed if they exist.
+# These were removed in v2024.12.06:
 OLD_CONFIG_NAME="config.js"
 OLD_FILES_TO_REMOVE=( \
 	"${OLD_CONFIG_NAME}" \
@@ -92,150 +92,17 @@ OLD_FILES_TO_REMOVE=( \
 
 ############################################## functions
 
-# Return a string surrounded by the "OK" color.
-function dO_()
-{
-	local MSG="${1}"
-	echo "${DIALOG_GREEN}${MSG}${DIALOG_NORMAL}"		# Do NOT use "-e".
-}
 
-# Return a string surrounded by the error color.
-function dE_()
-{
-	local MSG="${1}"
-	echo "${DIALOG_RED}${MSG}${DIALOG_NORMAL}"		# Do NOT use "-e".
-}
 
-# Prompt the user to enter (y)/(yes) or (n)/(no).
-# This function is only used when running in text (--text) mode.
-function enter_yes_no()
-{
-	local TEXT="${1}"
-	local RESULT=1
-	local ANSWER
-
-	if [[ ${AUTO_CONFIRM} == "false" ]]; then
-		while true; do
-			echo -e "${TEXT}"
-			read -r -p "Do you want to continue? (y/n): " ANSWER
-			ANSWER="${ANSWER,,}"	# convert to lowercase
-
-			if [[ ${ANSWER} == "y" || ${ANSWER} == "yes" ]]; then
-				return 0
-			elif [[ ${ANSWER} == "n" || ${ANSWER} == "no" ]]; then
-				return 1
-			else
-				E_ "\nInvalid response. Please enter y/yes or n/no."
-			fi
-		done
-	else
-		return 0
-	fi
-
-	return "${RESULT}"
-}
-
-# prompt the user to press any key.
-# This function is only used when running in text (--text) mode.
-function press_any_key()
-{
-	if [[ ${AUTO_CONFIRM} == "false" ]]; then
-		echo -e "${1}\nPress any key to continue..."
-		read -r -n1 -s
-	fi
-}
-
-# Add a common heading to the dialog text.
-function add_dialog_heading()
-{
-	local DIALOG_TEXT="${1}"
-
-	echo "${DIALOG_TEXT}"
-
-	## We no longer add the remote URL but have left this code in case we want
-	## to add something else in the future.
-	## Only the:   ITEM_TO_ADD=...   line should need changing.
-	return
-
-	local ITEM_TO_ADD="${REMOTE_WEBSITE_URL}"
-	local PADDING=$(( ((DIALOG_WIDTH-6) - ${#ITEM_TO_ADD}) / 2 ))
-	local ITEM_TO_ADD="$( printf "%${PADDING}s%s" "" "${ITEM_TO_ADD}" )"
-
-	echo -e "\n${DIALOG_RED}${ITEM_TO_ADD}${DIALOG_NORMAL}\n${DIALOG_TEXT}"
-}
-
-# Displays the specified type of Dialog, or in text mode just displays the text.
-# ${1} - The box type
-# ${2} - The title for the dialog
-# ${3} - The text to disply in the dialog
-# ${4} - Optional additional arguments to dialog
-#
-# Return - 1 if the user selected "No"; 0 otherwise
-function display_box()
-{
-	local DIALOG_TYPE="${1}"
-	local DIALOG_TITLE="${2}"
-	local DIALOG_TEXT="${3}"
-	local MORE_ARGS="${4}"
-
-	DIALOG_TEXT="$( add_dialog_heading "${DIALOG_TEXT}" )"
-	if [[ ${TEXT_ONLY} == "true" ]]; then
-		local RET=0
-		if [[ ${DIALOG_TYPE} == "--msgbox" ]]; then
-			press_any_key "${DIALOG_TEXT}"
-		elif [[ ${DIALOG_TYPE} == "--yesno" ]]; then
-			enter_yes_no "${DIALOG_TEXT}"
-			RET=$?
-		else
-			echo -e "${DIALOG_TEXT}"
-		fi
-		return "${RET}"
-	fi
-
-	# shellcheck disable=SC2086
-	dialog \
-		--colors \
-		--title "${DIALOG_TITLE}" \
-		${MORE_ARGS} \
-		"${DIALOG_TYPE}" "${DIALOG_TEXT}" ${DIALOG_HEIGHT} ${DIALOG_WIDTH}
-	return $?
-}
-
-# Displays a file Dialog, or in text mode just displays the file.
-# ${1} - The title for the dialog
-# ${2} - The filename to display
-#
-# Returns - Nothing
-function display_log_file()
-{
-	local DIALOG_TITLE="${1}"
-	local FILENAME="${2}"
-
-	if [[ ${TEXT_ONLY} == "true" ]]; then
-		cat "${FILENAME}"
-		return
-	fi
-
-	dialog \
-		--clear \
-		--colors \
-		--title "${DIALOG_TITLE}" \
-		--textbox "${FILENAME}" 22 77
-}
-
-# Runs the pre installation checks to determine the following:
+# Runs the pre installation checks to determine:
 # - Is there a remote Website?
 # - Which configuration file to use for the remote Website?
-#
 # The configuration file to use is decided using the following, in order:
-#
+
 # 1.  Make sure all the WebUI settings for the remote Website are set.
-#
 # 2.  If ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} exists, use it.
-#
 # 3a. If there's a remote Website with a ${ALLSKY_WEBSITE_CONFIGURATION_NAME} file,
 #     save it locally as ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} and use it.
-#
 # 3b. If there is a remote Website with an old-style configuration file (${OLD_CONFIG_NAME}),
 #     create a NEW ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} and use it.
 #     Don't bother trying to convert from old-style files.
@@ -245,7 +112,8 @@ function pre_install_checks()
 
 	display_msg --logonly info "Start pre installation checks."
 
- 	DIALOG_TEXT="\n${DIALOG_BOLD}${DIALOG_BLUE}Welcome to the Allsky Remote Website Installer!${DIALOG_NORMAL}\n\n"
+ 	DIALOG_TEXT="\n${DIALOG_BOLD}${DIALOG_BLUE}"
+ 	DIALOG_TEXT+="Welcome to the Allsky Remote Website Installer!${DIALOG_NORMAL}\n\n"
 	DIALOG_TEXT+="\nRunning pre installation checks.\n\n"
 
 	DIALOG_TEXT+="\n1  - Checking that WebUI settings exist: "
@@ -459,6 +327,7 @@ function pre_install_checks()
 	display_box "--msgbox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 }
 
+####
 function prompt_to_upload()
 {
 	# Global: UPLOAD_IMAGE_FILES
@@ -511,6 +380,7 @@ function prompt_to_upload()
 }
 
 
+####
 # Displays the welcome dialog indicating what steps will be taken
 function display_welcome()
 {
@@ -546,6 +416,7 @@ ${INDENT}- Any old Allsky files that are no longer needed will be removed from t
 	fi
 }
 
+####
 # Displays the aborted dialog. This is used when an error is encountered or the user cancels.
 # ${1} - Extra text to display in the dialog
 # ${2} - Error message (or "" if no error)
@@ -578,6 +449,7 @@ function display_aborted()
 	exit 1
 }
 
+####
 # Displays the completed dialog, used at the end of the installation process.
 function display_complete()
 {
@@ -612,6 +484,7 @@ function display_complete()
 	display_msg --logonly info "INSTALLATION COMPLETED.\n"
 }
 
+####
 # Check if we can upload a file to the server.
 # Return "" for success, else the error message.
 function check_upload()
@@ -643,6 +516,7 @@ function check_upload()
 	return 1
 }
 
+####
 # And remove the test file
 function remove_upload_file()
 {
@@ -666,6 +540,7 @@ function remove_upload_file()
 	} 2>/dev/null	# so the job ID isn't displayed
 }
 
+####
 # Displays a debug message in the log if the debug flag has been specified on the command line.
 function show_debug_message()
 {
@@ -674,6 +549,7 @@ function show_debug_message()
 	fi
 }
 
+####
 # Update a Website config file if it's an old version.
 function update_old()
 {
@@ -689,6 +565,7 @@ function update_old()
 	return 1
 }
 
+####
 # Creates the remote Website configuration file if needed.
 # See 'pre_install_checks' for details on which configuration file is used.
 function create_website_config()
@@ -745,6 +622,7 @@ function create_website_config()
 	fi
 }
 
+####
 # Check if we can connect to the Website via URL.
 function check_web_connectivity()
 {
@@ -778,6 +656,7 @@ function check_web_connectivity()
 #
 # Returns - 0 if the file(s) exist, 1 if ANY file doesn't exist.
 
+####
 function check_if_files_exist()
 {
 	local URL="${1}"
@@ -807,6 +686,7 @@ function check_if_files_exist()
 	return "${RET_CODE}"
 }
 
+####
 # Deletes a file from the remote server.
 # ${1} - The name of the file to delete
 # ${2} - If set to "check", first check if the file exists
@@ -854,11 +734,11 @@ function remove_remote_file()
 	return 0
 }
 
+####
 # Check if a valid remote Website exists.
-#
 # If any of the ${CONFIG_FILES} files exist AND
 # all of the ${WEBSITE_FILES} exist then assume the remote Website is valid.
-#
+
 # Returns - echo "true" if it exists, else "false"
 function check_if_website_is_valid()
 {
@@ -900,6 +780,7 @@ function check_if_website_is_valid()
 	return 0
 }
 
+####
 # Uploads the Website code from ${ALLSKY_WEBSITE} and removes any old Allsky
 # files that are no longer used.
 function upload_remote_website()
@@ -996,6 +877,7 @@ function upload_remote_website()
 	display_msg --logonly info "Website upload complete"
 }
 
+####
 # Uploads the configuration file for the remote Website.
 function upload_remote_config_file()
 {
@@ -1031,8 +913,9 @@ function upload_remote_config_file()
 	display_box "--infobox" "${DIALOG_INSTALL}" "${DIALOG_TEXT}"
 }
 
+####
 # Displays the script's help.
-usage_and_exit()
+function usage_and_exit()
 {
 	local RET=${1}
 
@@ -1058,12 +941,14 @@ usage_and_exit()
 	exit "${RET}"
 }
 
+####
 # Disable the remote Website.
 function disable_remote_website()
 {
 	update_json_file ".useremotewebsite" "false" "${SETTINGS_FILE}"
 	display_msg --logonly info "Remote Website temporarily disabled."
 }
+####
 # Enable the remote Website.
 function enable_remote_website()
 {
@@ -1071,6 +956,7 @@ function enable_remote_website()
 	display_msg --logonly info "Remote Website enabled."
 }
 
+####
 function post_data()
 {
 	local MSG
@@ -1079,6 +965,7 @@ function post_data()
 	display_msg --logonly info "${MSG}"
 }
 
+####
 function set_colors()
 {
 	if [[ ${TEXT_ONLY} == "true" ]]; then

@@ -1178,12 +1178,12 @@ A typical page is below.
 		<br>
 		If you need to add multiple commands, separate them with a semi-colon.
 	</td></tr>
-<tr><td id="REMOTEWEBSITE_SSH_KEY_FILE"><span class="WebUISetting">SSH Key File</span></td>
+<tr><td id="REMOTEWEBSITE_SSH_KEY_FILE"><span class="WebUISetting">SSH Public Key File</span></td>
 	<td></td>
-	<td>(scp and rsync protocols only) Path to the SSH key.
+	<td>(scp and rsync protocols only) Path to the SSH public key file.
 	<p>
 	You need to set up SSH key authentication on your server.
-	First, generate an SSH key on your Pi:
+	First, generate a public SSH key on your Pi:
 <pre>ssh-keygen -t rsa</pre>
 	When prompted, leave the default filename, and use an empty passphrase.
 	</p>
@@ -1194,7 +1194,7 @@ A typical page is below.
 	If you are prompted to <code>...continue connecting...</code>, enter <code>yes</code>.
 	<p>
 	The private SSH key will be stored in
-	<span class="fileName">~/.ssh</span> (default filename is <span class="fileName">id_rsa</span>).
+	<span class="fileName">~/.ssh/id_rsa</span>).
 	</p>
 	<p>
 	If you are using SSH Key with Amazon's Lightsail,
@@ -1330,7 +1330,7 @@ aws configure
 <tr><td id="REMOTESERVER_LFTP_COMMANDS"><span class="WebUISetting">FTP Commands</span></td>
 	<td></td>
 	<td></td></tr>
-<tr><td id="REMOTESERVER_SSH_KEY_FILE"><span class="WebUISetting">SSH Key File</span></td>
+<tr><td id="REMOTESERVER_SSH_KEY_FILE"><span class="WebUISetting">SSH Public Key File</span></td>
 	<td></td>
 	<td></td></tr>
 <tr><td id="REMOTESERVER_ASW_CLI_DIR"><span class="WebUISetting">AWS CLI Directory</span></td>

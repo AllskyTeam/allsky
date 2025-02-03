@@ -93,14 +93,14 @@ OLD_FILES_TO_REMOVE=( \
 ############################################## functions
 
 # Return a string surrounded by the "OK" color.
-function O_()
+function dO_()
 {
 	local MSG="${1}"
 	echo "${DIALOG_GREEN}${MSG}${DIALOG_NORMAL}"		# Do NOT use "-e".
 }
 
 # Return a string surrounded by the error color.
-function E_()
+function dE_()
 {
 	local MSG="${1}"
 	echo "${DIALOG_RED}${MSG}${DIALOG_NORMAL}"		# Do NOT use "-e".
@@ -125,7 +125,7 @@ function enter_yes_no()
 			elif [[ ${ANSWER} == "n" || ${ANSWER} == "no" ]]; then
 				return 1
 			else
-				e_ "\nInvalid response. Please enter y/yes or n/no."
+				E_ "\nInvalid response. Please enter y/yes or n/no."
 			fi
 		done
 	else
@@ -311,7 +311,7 @@ function pre_install_checks()
 		MSG="All WebUI settings exist."
 	else
 		MSG="ERROR: Missing setting(s) in WebUI:\n${SPACES}${SPACES}${MSG}"
-		DIALOG_TEXT+="$( E_ "${MSG}" )"
+		DIALOG_TEXT+="$( dE_ "${MSG}" )"
 		display_box "--msgbox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}" "--ok-label Exit"
 		display_aborted "${MSG}"
 	fi
@@ -378,7 +378,7 @@ function pre_install_checks()
 		fi
 	else
 		# No working remote Website found.
-		DIALOG_TEXT+="$( E_ "NOT WORKING." )"
+		DIALOG_TEXT+="$( dE_ "NOT WORKING." )"
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
 		if [[ ${VALID_RET} -eq ${EXIT_ERROR_STOP} ]]; then
@@ -388,7 +388,7 @@ function pre_install_checks()
 				MSG="ERROR: Can't connect to remote Website @ ${REMOTE_WEBSITE_URL}"
 			fi
 
-			DIALOG_TEXT+="$( E_ "\n\n${MSG}\nCannot continue." )"
+			DIALOG_TEXT+="$( dE_ "\n\n${MSG}\nCannot continue." )"
 			display_box "--msgbox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}" "--ok-label Exit"
 			display_aborted "${MSG}"
 
@@ -403,7 +403,7 @@ function pre_install_checks()
 			DIALOG_TEXT+="\n${SPACES}Either way, a new Website will be created.\n"
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 		else
-			DIALOG_TEXT+="$( E_ "\n${SPACES}WARNING: No configuration file found so a new one will be created." )"
+			DIALOG_TEXT+="$( dE_ "\n${SPACES}WARNING: No configuration file found so a new one will be created." )"
 		fi
 
 	fi
@@ -486,7 +486,7 @@ function prompt_to_upload()
 		X=""
 		if [[ "$( settings ".uselocalwebsite" )" != "true" ]]; then
  			X="NOTE: your local Allsky Website is NOT enabled so those file may be old."
- 			DIALOG_TEXT+="\n\n$( E_ "(${X})" )"
+ 			DIALOG_TEXT+="\n\n$( dE_ "(${X})" )"
 		fi
  		DIALOG_TEXT+="\n\n${DIALOG_UNDERLINE}Do you want to upload them to the remote server?${DIALOG_NORMAL}"
 		DIALOG_TEXT+="\n\nThey will overwrite any files already there."
@@ -532,10 +532,10 @@ ${INDENT} 5) NOTE: Any existing startrails, keograms, meteors, and/or\n\
 ${INDENT}          timelapse images will NOT be touched.\n"
 		fi
 		DIALOG_TEXT+="\n\
- $( E_ "IMPORTANT NOTES:" )\n\
+ $( dE_ "IMPORTANT NOTES:" )\n\
 ${INDENT}- Step 2) will overwrite the old Allsky web files on the remote server.\n\
 ${INDENT}  They are no longer needed, but if you want to save them,\n\
-${INDENT}  select '< $( E_ "N" )o  >' below, save them, and rerun this installation.\n\
+${INDENT}  select '< $( dE_ "N" )o  >' below, save them, and rerun this installation.\n\
 ${INDENT}- Any old Allsky files that are no longer needed will be removed from the server.\n\n\n\
  ${DIALOG_UNDERLINE}Continue?${DIALOG_NORMAL}"
 		if ! display_box "--yesno" "${DIALOG_WELCOME_TITLE}" "${DIALOG_TEXT}" ; then
@@ -597,7 +597,7 @@ function display_complete()
 	fi
 
 	if [[ "$( settings ".showonmap" )" != "true" ]]; then
-		EXTRA_TEXT+="$( E_ "\n\n${INDENT}Please consider adding your camera to the Allsky Map." )"
+		EXTRA_TEXT+="$( dE_ "\n\n${INDENT}Please consider adding your camera to the Allsky Map." )"
 		EXTRA_TEXT+="\n${INDENT}See the 'Allsky Map Settings' in the WebUI's 'Allsky Settings' page.\n"
 	fi
 
@@ -984,7 +984,7 @@ function upload_remote_website()
 
 		# It would be nice to move the files for the user,
 		# but almost no one has a "myImages" directory.
- 		DIALOG_TEXT="\n${INDENT}$( E_ "NOTE:" )"
+ 		DIALOG_TEXT="\n${INDENT}$( dE_ "NOTE:" )"
 		DIALOG_TEXT+="\n${INDENT}Move any files in '${DIR}' on the remote Website to"
 		DIALOG_TEXT+="\n${INDENT}the 'myFiles' directory, then remove '${DIR}'."
 		DIALOG_TEXT+="\n${INDENT}It is no longer used."

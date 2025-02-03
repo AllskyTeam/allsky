@@ -38,15 +38,20 @@ else
 fi
 
 ##### output messages with appropriate color strings
-O_() { echo -e "${GREEN}${1}${NC}" ; }
-W_() { echo -e "${YELLOW}${1}${NC}" ; }
-E_() { echo -e "${RED}${1}${NC}" ; }
-D_() { echo -e "${cDEBUG}DEBUG: ${1}${NC}" ; }
+function O_() { echo -e "${GREEN}${1}${NC}" ; }
+function W_() { echo -e "${YELLOW}${1}${NC}" ; }
+function E_() { echo -e "${RED}${1}${NC}" ; }
+function D_() { echo -e "${cDEBUG}DEBUG: ${1}${NC}" ; }
 # If the output may go to the WebUI:
-wO_() { echo -e "${wOK}${1}${wNC}" ; }
-wW_() { echo -e "${wWARNING}${1}${wNC}" ; }
-wE_() { echo -e "${wERROR}${1}${wNC}" ; }
-wD_() { echo -e "${wDEBUG}DEBUG: ${1}${wNC}" ; }
+function wO_() { echo -e "${wOK}${1}${wNC}" ; }
+function wW_() { echo -e "${wWARNING}${1}${wNC}" ; }
+function wE_() { echo -e "${wERROR}${1}${wNC}" ; }
+function wD_() { echo -e "${wDEBUG}DEBUG: ${1}${wNC}" ; }
+# If the output may go to the "dialog" command (no "-e"):
+function wO_() { echo "${DIALOG_GREEN}${1}${DIALOG_NORMAL}" ; }
+function wW_() { echo "${DIALOG_RED}${1}${DIALOG_NORMAL}" ; }	# No DIALOG_YELLOW
+function wE_() { echo "${DIALOG_RED}${1}${DIALOG_NORMAL}" ; }
+function wD_() { echo "${DIALOG_BOLD}DEBUG: ${1}${DIALOG_NORMAL}" ; }
 
 
 ##### Start and Stop Allsky

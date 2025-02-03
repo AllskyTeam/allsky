@@ -175,7 +175,7 @@ function pre_install_checks()
 	fi
 
 	if [[ ${MISSING} -eq 0 ]]; then
-		DT="$( O_ "PASSED" )"
+		DT="$( dO_ "PASSED" )"
 		MSG="All WebUI settings exist."
 	else
 		MSG="ERROR: Missing setting(s) in WebUI:\n${SPACES}${SPACES}${MSG}"
@@ -191,7 +191,7 @@ function pre_install_checks()
 	DIALOG_TEXT+="\n2  - Checking for remote Website configuration file on Pi: "
 	display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 	if [[ -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
-		DT="$( O_ "PASSED" )"
+		DT="$( dO_ "PASSED" )"
 		MSG="Found ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}."
 		display_msg --logonly info "${MSG}"
 		HAVE_LOCAL_REMOTE_CONFIG="true"
@@ -218,14 +218,14 @@ function pre_install_checks()
 	if [[ ${REMOTE_WEBSITE_IS_VALID} == "true" ]]; then
 		# There is at least one config file.
 
-		DIALOG_TEXT+="$( O_ "PASSED" )."
+		DIALOG_TEXT+="$( dO_ "PASSED" )."
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
 		# 3a.
 		DIALOG_TEXT+="\n${SPACES}* Checking for new-style configuration file: "
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 		if [[ ${HAVE_NEW_STYLE_REMOTE_CONFIG} == "true" ]]; then
-			DIALOG_TEXT+="$( O_ "PASSED" )."
+			DIALOG_TEXT+="$( dO_ "PASSED" )."
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 		else
 			# 3b.
@@ -235,7 +235,7 @@ function pre_install_checks()
 			DIALOG_TEXT+="\n${SPACES}* Checking it for old-style configuration file: "
 			display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 			if [[ ${HAVE_REALLY_OLD_REMOTE_CONFIG} == "true" ]]; then
-				DT="$( O_ "PASSED" )."
+				DT="$( dO_ "PASSED" )."
 			else
 				# This "shouldn't" happen - the remote Website should have SOME type
 				# of configuration file.
@@ -312,7 +312,7 @@ function pre_install_checks()
 	display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 	display_msg --logonly info "Checking upload to server."
 	if MSG="$( check_upload )" ; then
-		DIALOG_TEXT+="$( O_ "${MSG}" )."
+		DIALOG_TEXT+="$( dO_ "${MSG}" )."
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 		show_debug_message "Uploading to the server worked."
 	else
@@ -849,7 +849,7 @@ function upload_remote_website()
 		display_aborted "while uploading Website" "${MSG}"
 	fi
 
-	DIALOG_TEXT+="$( O_ "DONE" )"
+	DIALOG_TEXT+="$( dO_ "DONE" )"
 	display_box "--infobox" "${DIALOG_INSTALL}" "${DIALOG_TEXT}"
 
 	display_msg --logonly info "$( indent --spaces "${MSG}" )"
@@ -909,7 +909,7 @@ function upload_remote_config_file()
 		display_aborted "at the configuration file upload" "${ERR}"
 	fi
 
-	DIALOG_TEXT+="$( O_ "DONE" )"
+	DIALOG_TEXT+="$( dO_ "DONE" )"
 	display_box "--infobox" "${DIALOG_INSTALL}" "${DIALOG_TEXT}"
 }
 

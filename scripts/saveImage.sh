@@ -14,11 +14,14 @@ source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 usage_and_exit()
 {
 	local RET=${1}
-	{
-		[[ ${RET} -ne 0 ]] && echo -ne "${RED}"
-		echo -n "Usage: ${ME} DAY|NIGHT  full_path_to_image  [variable=value [...]]"
-		[[ ${RET} -ne 0 ]] && echo -e "${NC}"
-	} >&2
+	exec >&2
+	local MSG="Usage: ${ME} DAY|NIGHT  full_path_to_image  [variable=value [...]]"
+	if [[ ${RET} -ne 0 ]]; then
+		echo -e "${RED}${MSG}${NC}"
+	else
+		echo -e "${MSG}"
+	fi
+
 	exit "${RET}"
 }
 [[ $# -lt 2 ]] && usage_and_exit 1
@@ -65,6 +68,20 @@ if ! one_instance --pid-file "${PID_FILE}" --sleep "3s" --max-checks 3 \
 	exit 1
 fi
 
+# Get passed-in variables and export as AS_* so overlays can use them.
+while [[ $# -gt 0 ]]; do
+	VARIABLE="AS_${1%=*}"		# everything before the "="
+	VALUE="${1##*=}"			# everything after  the "="
+	shift
+	# Export the variable so other scripts we call can use it.
+	# shellcheck disable=SC2086
+	export ${VARIABLE}="${VALUE}"	# need "export" to get indirection to work
+done
+# Export other variables so user can use them in overlays
+export AS_CAMERA_TYPE="${CAMERA_TYPE}"
+export AS_CAMERA_MODEL="${CAMERA_MODEL}"
+export AS_CAMERA_NUMBER="${CAMERA_NUMBER}"
+
 # The image may be in a memory filesystem, so do all the processing there and
 # leave the image used by the website(s) in that directory.
 IMAGE_NAME=$( basename "${CURRENT_IMAGE}" )		# just the file name
@@ -96,20 +113,6 @@ if [[ ${CROP_IMAGE} -gt 0 ]]; then
 	RESOLUTION_X=${RESOLUTION%x*}	# everything before the "x"
 	RESOLUTION_Y=${RESOLUTION##*x}	# everything after  the "x"
 fi
-
-# Get passed-in variables and export as AS_* so overlays can use them.
-while [[ $# -gt 0 ]]; do
-	VARIABLE="AS_${1%=*}"		# everything before the "="
-	VALUE="${1##*=}"			# everything after  the "="
-	shift
-	# Export the variable so other scripts we call can use it.
-	# shellcheck disable=SC2086
-	export ${VARIABLE}="${VALUE}"	# need "export" to get indirection to work
-done
-# Export other variables so user can use them in overlays
-export AS_CAMERA_TYPE="${CAMERA_TYPE}"
-export AS_CAMERA_MODEL="${CAMERA_MODEL}"
-export AS_CAMERA_NUMBER="${CAMERA_NUMBER}"
 
 # If ${AS_TEMPERATURE_C} is set, use it as the sensor temperature,
 # otherwise use the temperature in ${TEMPERATURE_FILE}.

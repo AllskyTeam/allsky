@@ -114,8 +114,8 @@ function collect_support_info()
     CPU_BITS=$(getconf LONG_BIT)
     CPU_TOTAL=$(nproc)
     MEM_TOTAL=$(free -h | grep Mem | awk '{print $2}')
-    VERSION_FILE="${ALLSKY_CONFIG}/piversion"
-    PI_MODEL="$(<"$VERSION_FILE")"
+    VERSION_FILE="${ALLSKY_HOME}/config/piversion"
+    PI_MODEL="$( < "${VERSION_FILE}" )"
     ###
 
     ### Memry Info

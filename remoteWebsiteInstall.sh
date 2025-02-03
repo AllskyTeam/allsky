@@ -75,6 +75,7 @@ DIALOG_WELCOME_TITLE="Allsky Remote Website Installer"
 DIALOG_PRE_CHECK="${DIALOG_WELCOME_TITLE} - Pre Installation Checks"
 DIALOG_INSTALL="Installing Remote Website"
 DIALOG_DONE="Remote Website Installation Completed"
+DIALOG_ABORT="${DIALOG_WELCOME_TITLE} - Aborting"
 DIALOG_TITLE_LOG="Allsky Remote Website Installation Log"
 
 # Old Allksy Website files that should be removed if they exist.
@@ -422,29 +423,42 @@ ${INDENT}- Any old Allsky files that are no longer needed will be removed from t
 # ${2} - Error message (or "" if no error)
 function display_aborted()
 {
+	local ABORT_MSG  MSG  DIALOG_PROMPT  VIEWED_ERROR
+
 	if [[ ${1} == "--user" ]]; then
-		local ABORT_MSG="USER ABORTED INSTALLATION"
+		ABORT_MSG="USER ABORTED INSTALLATION"
 		shift
 	else
-		local ABORT_MSG="INSTALLATION ABORTED"
+		ABORT_MSG="INSTALLATION ABORTED"
 	fi
 	local EXTRA_TEXT="${1}"
 	local ERROR_MSG="${2}"
 
 	display_msg --logonly info "${ABORT_MSG} ${EXTRA_TEXT}.\n"
-	local MSG="\nInstallation of the remote Website aborted ${EXTRA_TEXT}"
 
 	if [[ -n ${ERROR_MSG} ]]; then
-		local DIALOG_PROMPT="${MSG}\n\n"
+		display_msg --logonly info "Asking user if they want to view error message."
+
+		MSG="$( dE_ "Installation of the remote Website aborted" ) - ${EXTRA_TEXT}"
+display_msg --logonly info "$MSG"
+		DIALOG_PROMPT="\n${MSG}\n\n"
 		DIALOG_PROMPT+="${DIALOG_UNDERLINE}Would you like to view the error message?${DIALOG_NORMAL}"
-		if display_box "--yesno" "${DIALOG_INSTALL}" "${DIALOG_PROMPT}" ; then
+		if display_box "--yesno" "${DIALOG_ABORT}" "${DIALOG_PROMPT}" ; then
+# TODO: remove terminal screen escape sequences from ${ERROR_MSG}.
 			display_box "--msgbox" "${DIALOG_TITLE_LOG}" "${ERROR_MSG}" "--scrollbar"
+			VIEWED_ERROR="true"
+		else
+			VIEWED_ERROR="false"
 		fi
 	fi
 
 	remove_upload_file
 
 	clear	# Gets rid of background color from last 'dialog' command.
+
+	if [[ -n ${ERROR_MSG} ]]; then
+		display_msg -log error "${ERROR_MSG}"
+	fi
 
 	exit 1
 }
@@ -570,18 +584,22 @@ function update_old()
 # See 'pre_install_checks' for details on which configuration file is used.
 function create_website_config()
 {
-	local MSG
+	local MSG  ERR
 
 	if [[ ${CONFIG_TO_USE} == "new" || ${CONFIG_TO_USE} == "remoteReallyOld" ]]; then
 		# Need a new config file so copy it from the repo and replace as many
 		# placeholders as we can.
 		local DEST_FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 		cp "${REPO_WEBCONFIG_FILE}" "${DEST_FILE}"
-		replace_website_placeholders "remote"
 
-		MSG="Created a new ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
-		MSG+=" from repo and updated placeholders."
+		MSG="Creating a new ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
+		MSG+=" from repo file and updating placeholders."
 		display_msg --logonly info "${MSG}"
+
+		if ! ERR="$( replace_website_placeholders "remote" )" ; then
+			MSG="Unable to replace placeholders in new configuration file"
+			display_aborted "${MSG}" "${ERR}"
+		fi
 
 		return
 	fi
@@ -600,7 +618,14 @@ function create_website_config()
 		# Remember that the remote file name is different than what we store on the Pi.
 		local FILE="${REMOTE_WEBSITE_URL}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 		if ERR="$( wget -O "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" "${FILE}" 2>&1 )"; then
-			replace_website_placeholders "remote"
+			MSG="Creating a new ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
+			MSG+=" from repo and updating placeholders."
+			display_msg --logonly info "${MSG}"
+
+			if ! ERR="$( replace_website_placeholders "remote" )" ; then
+				MSG="Unable to replace placeholders in new configuration file"
+				display_aborted "${MSG}" "${ERR}"
+			fi
 			update_old "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
 			MSG="Downloaded '${FILE}' to '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}'."

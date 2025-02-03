@@ -38,6 +38,11 @@ else
 fi
 
 ##### output messages with appropriate color strings
+O_() { echo -e "${GREEN}${1}${NC}" ; }
+W_() { echo -e "${YELLOW}${1}${NC}" ; }
+E_() { echo -e "${RED}${1}${NC}" ; }
+D_() { echo -e "${cDEBUG}DEBUG: ${1}${NC}" ; }
+# If the output may go to the WebUI:
 wO_() { echo -e "${wOK}${1}${wNC}" ; }
 wW_() { echo -e "${wWARNING}${1}${wNC}" ; }
 wE_() { echo -e "${wERROR}${1}${wNC}" ; }

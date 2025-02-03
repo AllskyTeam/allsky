@@ -2528,6 +2528,8 @@ restore_prior_files()
 		umount_tmp "${D}"
 	fi
 
+	[[ ${USE_PRIOR_ALLSKY} == "false" ]] && return
+
 	# Do all the restores, then all the updates.
 	display_msg --log progress "Restoring prior:"
 

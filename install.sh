@@ -3832,7 +3832,26 @@ display_wait_message()
 	MSG="The following steps can take up to an hour depending on the speed of"
 	MSG+="\nyour Pi and how many of the necessary dependencies are already installed."
 	MSG+="\nYou will see progress messages throughout the process."
-	display_msg "notice" "${MSG}"
+	display_msg notice "${MSG}"
+}
+
+
+####
+# Request that the user add their camera to the Allsky Map.
+request_map()
+{
+	[[ "$( settings ".showonmap" )" == "true" ]] && return
+
+	local MSG
+
+	MSG+="\nPlease consider adding your camera to the Allsky Map."
+	if [[ "$( settings ".useremotewebsite" )" == "false" ]]; then
+		MSG+="\nYou don't need to have a remote Website to do this."
+	fi
+	MSG+="\nSee the 'Allsky Map Settings' section of the WebUI's 'Allsky Settings' page."
+	display_msg --log notice "${MSG}"
+
+	add_to_post_actions "${MSG}"
 }
 
 
@@ -3840,6 +3859,8 @@ display_wait_message()
 # Perform actions after the installation completes.
 do_done()
 {
+	request_map
+
 	if [[ ${WILL_REBOOT} == "true" ]]; then
 		do_allsky_status "${ALLSKY_STATUS_REBOOT_NEEDED}"
 		do_reboot "${STATUS_FINISH_REBOOT}" ""		# does not return

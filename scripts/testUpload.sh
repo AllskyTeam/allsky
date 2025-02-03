@@ -289,7 +289,7 @@ do_test()
 	fi
 
 	if [[ ${RET} -eq 0 ]]; then
-		[[ ${SILENT} == "false" ]] && wO "Test upload to ${HUMAN_TYPE} succeeded."
+		[[ ${SILENT} == "false" ]] && wO_ "Test upload to ${HUMAN_TYPE} succeeded."
 		if [[ -z ${DIR} || ${DIR} == "null" ]]; then
 			D=""
 		else

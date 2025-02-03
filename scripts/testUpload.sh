@@ -14,18 +14,21 @@ source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 
 usage_and_exit()
 {
-	local RET=${1}
 	exec >&2
-	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
+	local RET=${1}
+	local MSG="Usage: ${ME} [--help] [--debug] [--silent] [--file f] [--fromInstall]] \\"
 	[[ ${RET} -eq 2 ]] && echo -e "\nERROR: You must specify --website and/or --server\n"
 
-	echo    "Usage: ${ME} [--help] [--debug] [--silent] [--file f] [--fromInstall]] \\"
+	if [[ ${RET} -ne 0 ]]; then
+		wE_ -en "${MSG}"
+	else
+		echo "${MSG}"
+	fi
 	echo -e "\t--website  and/or  --server"
 	echo -e "\nWhere:"
 	echo -e "\t'--silent' only outputs errors."
 	echo -e "\t'--file f' optionally specifies the test file to upload."
 	echo -e "\t'--fromInstall' outputs text without colors or other escape sequences."
-	[[ ${RET} -ne 0 ]] && echo -e "${NC}"
 	exit "${RET}"
 }
 
@@ -62,7 +65,7 @@ while [[ $# -gt 0 ]]; do
 			DO_SERVER="true"
 			;;
 		-*)
-			echo -e "${RED}Unknown argument '${ARG}'.${NC}" >&2
+			wE "Unknown argument '${ARG}'." >&2
 			OK="false"
 			;;
 		*)
@@ -78,10 +81,6 @@ done
 
 if [[ ${FROM_INSTALL} == "true" ]]; then
 	function error_type() { return 0; }
-	o_() { echo -e "${1}" ; }
-	w_() { echo -e "${1}" ; }
-	e_() { echo -e "${1}" ; }
-	d_() { echo -e "DEBUG: ${1}" ; }
 else
 	function error_type() { echo -e "${BOLD:-${wBOLD}}${1}${NC:-${wNBOLD}}"; }
 fi
@@ -221,7 +220,7 @@ parse_output()
 
 	# Output already displayed in DEBUG mode.
 	if [[ ${DEBUG} == "false" ]]; then
-		echo; d_ "Raw output is in '${FILE}'.\n\n" >&2
+		echo; wD_ "Raw output is in '${FILE}'.\n\n" >&2
 	fi
 }
 
@@ -252,7 +251,7 @@ do_test()
 
 	PROTOCOL="$( settings ".${PROTOCOL}" )"
 	if [[ $? -ne 0 || -z ${PROTOCOL} ]]; then
-		e_ "${ME}: could not find ${WSNs}Protocol${WSNe} for ${HUMAN_TYPE}; unable to test." >&2
+		wE_ "${ME}: could not find ${WSNs}Protocol${WSNe} for ${HUMAN_TYPE}; unable to test." >&2
 		return 1
 	fi
 
@@ -290,7 +289,7 @@ do_test()
 	fi
 
 	if [[ ${RET} -eq 0 ]]; then
-		[[ ${SILENT} == "false" ]] && echo -e "${GREEN}Test upload to ${HUMAN_TYPE} succeeded.${NC}"
+		[[ ${SILENT} == "false" ]] && wO "Test upload to ${HUMAN_TYPE} succeeded."
 		if [[ -z ${DIR} || ${DIR} == "null" ]]; then
 			D=""
 		else
@@ -298,10 +297,10 @@ do_test()
 		fi
 		if [[ ${SILENT} == "false" ]]; then
 			echo -en "\t"
-			echo     "Please remove '${D}${bTEST_FILE}' on your server." >> "${MSG_FILE}"
+			echo "Please remove '${D}${bTEST_FILE}' on your server." >> "${MSG_FILE}"
 		fi
 	else
-		e_ "Test upload to ${HUMAN_TYPE} FAILED."
+		wE_ "Test upload to ${HUMAN_TYPE} FAILED."
 		if [[ -s ${OUT} ]]; then
 			parse_output "${OUT}" "${TYPE}"
 		elif [[ -s ${OUTPUT_FILE} ]]; then

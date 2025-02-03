@@ -1654,26 +1654,6 @@ function press_any_key()
 	fi
 }
 
-# Add a common heading to the dialog text.
-function add_dialog_heading()
-{
-	local DIALOG_TEXT="${1}"
-
-	echo "${DIALOG_TEXT}"
-
-	## We no longer add the remote URL but have left this code in case we want
-	## to add something else in the future.
-	## Only the:   ITEM_TO_ADD=...   line should need changing.
-	return
-
-	local ITEM_TO_ADD="${REMOTE_WEBSITE_URL}"
-	local PADDING=$(( ((DIALOG_WIDTH-6) - ${#ITEM_TO_ADD}) / 2 ))
-	local ITEM_TO_ADD="$( printf "%${PADDING}s%s" "" "${ITEM_TO_ADD}" )"
-
-	echo -e "\n${DIALOG_RED}${ITEM_TO_ADD}${DIALOG_NORMAL}\n${DIALOG_TEXT}"
-}
-
-
 
 # Displays the specified type of Dialog, or in text mode just displays the text.
 # ${1} - The box type
@@ -1689,7 +1669,6 @@ function display_box()
 	local DIALOG_TEXT="${3}"
 	local MORE_ARGS="${4}"
 
-	DIALOG_TEXT="$( add_dialog_heading "${DIALOG_TEXT}" )"
 	if [[ ${TEXT_ONLY} == "true" ]]; then
 		local RET=0
 		if [[ ${DIALOG_TYPE} == "--msgbox" ]]; then

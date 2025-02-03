@@ -868,11 +868,11 @@ function m()
 		display_msg "${LOG}" log "${LEVEL}" "${MSG}" "${MSG2}"
 	else
 		if [[ ${LEVEL} == "error" ]]; then
-			e_ "\nERROR: ${MSG}${MSG2}\n"
+			wE_ "\nERROR: ${MSG}${MSG2}\n"
 		elif [[ ${LEVEL} == "warning" ]]; then
-			w_ "\nWARNING: ${MSG}${MSG2}\n"
+			wW_ "\nWARNING: ${MSG}${MSG2}\n"
 		elif [[ ${LEVEL} == "progress" ]]; then
-			o_ "\n${MSG}${MSG2}\n"
+			wO_ "\n${MSG}${MSG2}\n"
 		else
 			echo -e "\n${MSG}${MSG2}\n"
 		fi
@@ -1246,9 +1246,9 @@ function check_tmp()
 			display_msg --log progress "${MSG}"
 		else
 			if [[ -n ${CURRENT_STRING} ]]; then
-				o_ "\n${ALLSKY_TMP} is now ${NEW_SIZE} MB.\n"
+				wO_ "\n${ALLSKY_TMP} is now ${NEW_SIZE} MB.\n"
 			else
-				o_ "\n${MSG}\n"
+				wO_ "\n${MSG}\n"
 			fi
 
 			start_Allsky
@@ -1280,7 +1280,7 @@ function check_tmp()
 		else
 			start_Allsky
 			MSG="\n${ALLSKY_TMP} is no longer in memory.\n"
-			o_ "${MSG}"
+			wO_ "${MSG}"
 		fi
 	fi
 

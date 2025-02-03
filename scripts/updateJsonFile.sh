@@ -22,9 +22,9 @@ function usage_and_exit()
 	MSG+="\n   --local | --remote | --file file"
 	MSG+="\n   key  label  new_value  [...]"
 	if [[ ${RET} -eq 0 ]]; then
-		w_ "${MSG}"
+		W_ "${MSG}"
 	else
-		e_ "${MSG}"
+		E_ "${MSG}"
 	fi
 	echo "There must be a multiple of 3 arguments."
 	exit "${RET}"
@@ -64,7 +64,7 @@ while [[ $# -gt 0 ]]; do
 			shift
 			;;
 		-*)
-			e_ "ERROR: Unknown argument: '${ARG}'" >&2
+			E_ "ERROR: Unknown argument: '${ARG}'" >&2
 			OK="false"
 			;;
 		*)
@@ -80,7 +80,7 @@ done
 [[ $(($# % 3)) -ne 0 ]] && usage_and_exit 2
 
 if [[ ! -f ${FILE} ]]; then
-	e_ "ERROR: Configuration file not found: '${FILE}'." >&2
+	E_ "ERROR: Configuration file not found: '${FILE}'." >&2
 	exit 1
 fi
 
@@ -101,7 +101,7 @@ while [[ $# -gt 0 ]]; do
 	NEW="${NEW_VALUE}"
 	NEW_VALUE="${NEW_VALUE//\"/\\\"}"	# Handle double quotes
 
-	[[ ${DEBUG} == "true" ]] && d_ "Update '${LABEL}' to [${NEW_VALUE}]."
+	[[ ${DEBUG} == "true" ]] && D_ "Update '${LABEL}' to [${NEW_VALUE}]."
 
 	# Only put quotes around ${NEW_VALUE} if it's a string,
 	# i.e., not a number or a special name.
@@ -127,31 +127,31 @@ done
 # shellcheck disable=SC2124
 S="${JQ_STRING[@]}"
 
-[[ ${DEBUG} == "true" ]] && d_ "Executing:   jq '${S}' ${FILE}"
+[[ ${DEBUG} == "true" ]] && D_ "Executing:   jq '${S}' ${FILE}"
 
 # Have to edit the file itself rather than create a temporary one and move it back,
 # because the file might be a hard link to another one.
 
 # Need to use "jq", not "settings".
 if ! NEW="$( jq "${S}" "${FILE}" 2>&1 )" ; then
-	e_ "ERROR: unable to create new data for '${FILE}':" >&2
+	E_ "ERROR: unable to create new data for '${FILE}':" >&2
 	echo "   ${OUTPUT}" >&2
 	exit 1
 fi
 
 if ! RET="$( echo -e "${NEW}" > "${FILE}" 2>&1 )" ; then
-	e_ "ERROR: unable to overwrite '${FILE}':" >&2
+	E_ "ERROR: unable to overwrite '${FILE}':" >&2
 	echo "   ${RET}" >&2
 	exit 1
 fi
 
 if [[ ${VERBOSITY} == "verbose" ]]; then
-	o_ "${OUTPUT_MESSAGE}"
+	O_ "${OUTPUT_MESSAGE}"
 elif [[ ${VERBOSITY} == "summary" ]]; then
 	if [[ -n ${WEBSITE_TYPE} ]]; then
-		o_ "${WEBSITE_TYPE} Allsky Website ${ALLSKY_WEBSITE_CONFIGURATION_NAME} UPDATED"
+		O_ "${WEBSITE_TYPE} Allsky Website ${ALLSKY_WEBSITE_CONFIGURATION_NAME} UPDATED"
 	else
-		o_ "'${FILE}' UPDATED"
+		O_ "'${FILE}' UPDATED"
 	fi
 fi		# nothing if "silent"
 

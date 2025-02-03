@@ -833,7 +833,7 @@ do_sudoers()
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 	[[ ${SKIP} == "true" ]] && return
 
-	display_msg --log progress "Creating/updating sudoers file."
+	display_msg --logonly info "Creating/updating sudoers file."
 	sed \
 		-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
 		-e "s;XX_ALLSKY_UTILITIES_XX;${ALLSKY_UTILITIES};" \
@@ -1374,7 +1374,7 @@ set_locale()
 	# ${DESIRED_LOCALE} and ${CURRENT_LOCALE} are already set
 
 	if [[ ${CURRENT_LOCALE} == "${DESIRED_LOCALE}" ]]; then
-		display_msg --log progress "Keeping '${DESIRED_LOCALE}' locale."
+		display_msg --logonly info "Keeping '${DESIRED_LOCALE}' locale."
 		L="$( settings ".locale" )"
 		MSG="Settings file '${SETTINGS_FILE}'"
 		if [[ -z ${L} ]]; then
@@ -3373,7 +3373,7 @@ install_Python()
 	# exist on the pi 5. lgpio is installed globally so will be used after rpi.gpio is removed
     # Adafruits blinka reinstalls rpi.gpio so we need to ensure its removed
 	if [[ ${pimodel:0:1} == "5" ]]; then
-		display_msg --log progress "Updating GPIO to lgpio"
+		display_msg --logonly info "Updating GPIO to lgpio"
 		activate_python_venv
 		pip3 uninstall -y rpi.gpio > /dev/null 2>&1
 	fi

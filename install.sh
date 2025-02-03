@@ -2520,18 +2520,6 @@ restore_prior_files()
 		add_to_post_actions "${MSG}"
 	fi
 
-	if [[ ${USE_PRIOR_ALLSKY} == "false" ]]; then
-		# prompt for them to put in new settings file
-		if ! get_lat_long ; then
-			MSG="Latitude and/or Longitude not entered"
-			display_msg --log info "${MSG}"
-			CONFIGURATION_NEEDED="${STATUS_NO_LAT_LONG}"
-		fi
-
-		STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
-		return			# Nothing left to do in this function, so return
-	fi
-
 	# If the prior ${ALLSKY_TMP} is mounted, unmount it so users can
 	# remove the old Allsky.
 	D="${PRIOR_ALLSKY_DIR}/tmp"
@@ -2811,10 +2799,13 @@ restore_prior_website_files()
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 	local ITEM  D  count  A  MSG
 
+	# Do this even if we're not restoring Website files.
 	if [[ ! -f ${ALLSKY_ENV} ]]; then
 		display_msg --log progress "${SPACE}$( basename "${ALLSKY_ENV}" ) (creating)"
 		cp "${REPO_ENV_FILE}" "${ALLSKY_ENV}"
 	fi
+
+	[[ ${USE_PRIOR_ALLSKY} == "false" ]] && return
 
 	ITEM="${SPACE}Local Website files"
 	if [[ -z ${PRIOR_WEBSITE_DIR} ]]; then
@@ -4101,6 +4092,7 @@ restore_prior_files
 
 ##### Restore prior Website files if needed.
 # This has to come after restore_prior_files() since it may set some variables we need.
+# This MUST be called even if we know we're not using an OLD directory.
 restore_prior_website_files
 
 ##### Set permissions.  Want this at the end so we make sure we get all files.

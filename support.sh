@@ -41,8 +41,6 @@ function init()
         echo -e "Initialising support system. Please wait ..."
     fi
 
-    sudo apt install -y tree > /dev/null 2>&1
-    sudo apt install -y i2c-tools > /dev/null 2>&1
     sudo systemctl enable pigpiod 2>&1
     sudo systemctl start pigpiod 2>&1
 }

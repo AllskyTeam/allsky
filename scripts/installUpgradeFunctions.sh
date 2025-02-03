@@ -73,6 +73,20 @@ function display_header()
 }
 
 #####
+# Get the usable screen for the "dialog" command.
+function calc_d_sizes()
+{
+	# Globals: DIALOG_WIDTH, DIALOG_HEIGHT
+
+	DIALOG_WIDTH=$( tput cols )
+	[[ ${DIALOG_WIDTH} -gt 80 ]] && DIALOG_WIDTH=80
+	(( DIALOG_WIDTH -= 10 ))
+
+	DIALOG_HEIGHT=$( tput lines )
+	(( DIALOG_HEIGHT -= 4 ))
+}
+
+#####
 function calc_wt_size()
 {
 	local WT_WIDTH=$( tput cols )
@@ -1592,3 +1606,127 @@ function add_new_settings()
 	return 0
 }
 
+#########
+# Functions for interacting with a dialog box.
+
+####
+# Prompt the user to enter (y)/(yes) or (n)/(no).
+# This function is only used when running in text (--text) mode.
+function enter_yes_no()
+{
+	local TEXT="${1}"
+	local RET=1
+	local ANSWER
+
+	if [[ ${AUTO_CONFIRM} == "false" ]]; then
+		while true; do
+			echo -e "${TEXT}"
+			read -r -p "Do you want to continue? (y/n): " ANSWER
+			ANSWER="${ANSWER,,}"	# convert to lowercase
+
+			if [[ ${ANSWER} == "y" || ${ANSWER} == "yes" ]]; then
+				return 0
+			elif [[ ${ANSWER} == "n" || ${ANSWER} == "no" ]]; then
+				return 1
+			else
+				E_ "\nInvalid response. Please enter y/yes or n/no."
+			fi
+		done
+	else
+		return 0
+	fi
+
+	return "${RET}"
+}
+
+# prompt the user to press any key.
+# This function is only used when running in text (--text) mode.
+function press_any_key()
+{
+	if [[ ${AUTO_CONFIRM} == "false" ]]; then
+		echo -e "${1}\nPress any key to continue..."
+		read -r -n1 -s
+	fi
+}
+
+# Add a common heading to the dialog text.
+function add_dialog_heading()
+{
+	local DIALOG_TEXT="${1}"
+
+	echo "${DIALOG_TEXT}"
+
+	## We no longer add the remote URL but have left this code in case we want
+	## to add something else in the future.
+	## Only the:   ITEM_TO_ADD=...   line should need changing.
+	return
+
+	local ITEM_TO_ADD="${REMOTE_WEBSITE_URL}"
+	local PADDING=$(( ((DIALOG_WIDTH-6) - ${#ITEM_TO_ADD}) / 2 ))
+	local ITEM_TO_ADD="$( printf "%${PADDING}s%s" "" "${ITEM_TO_ADD}" )"
+
+	echo -e "\n${DIALOG_RED}${ITEM_TO_ADD}${DIALOG_NORMAL}\n${DIALOG_TEXT}"
+}
+
+
+
+# Displays the specified type of Dialog, or in text mode just displays the text.
+# ${1} - The box type
+# ${2} - The title for the dialog
+# ${3} - The text to disply in the dialog
+# ${4} - Optional additional arguments to dialog
+#
+# Return - 1 if the user selected "No"; 0 otherwise
+function display_box()
+{
+	local DIALOG_TYPE="${1}"
+	local DIALOG_TITLE="${2}"
+	local DIALOG_TEXT="${3}"
+	local MORE_ARGS="${4}"
+
+	DIALOG_TEXT="$( add_dialog_heading "${DIALOG_TEXT}" )"
+	if [[ ${TEXT_ONLY} == "true" ]]; then
+		local RET=0
+		if [[ ${DIALOG_TYPE} == "--msgbox" ]]; then
+			press_any_key "${DIALOG_TEXT}"
+		elif [[ ${DIALOG_TYPE} == "--yesno" ]]; then
+			enter_yes_no "${DIALOG_TEXT}"
+			RET=$?
+		else
+			echo -e "${DIALOG_TEXT}"
+		fi
+		return "${RET}"
+	fi
+
+	# shellcheck disable=SC2086
+	dialog \
+		--colors \
+		--title "${DIALOG_TITLE}" \
+		${MORE_ARGS} \
+		"${DIALOG_TYPE}" "${DIALOG_TEXT}" ${DIALOG_HEIGHT} ${DIALOG_WIDTH}
+	return $?
+}
+
+# Displays a file Dialog, or in text mode just displays the file.
+# ${1} - The title for the dialog
+# ${2} - The filename to display
+#
+# Returns - Nothing
+function display_file()
+{
+	local DIALOG_TITLE="${1}"
+	local FILENAME="${2}"
+
+	if [[ ${TEXT_ONLY} == "true" ]]; then
+		cat "${FILENAME}"
+		return
+	fi
+
+	dialog \
+		--clear \
+		--colors \
+		--title "${DIALOG_TITLE}" \
+		--textbox "${FILENAME}" 22 77
+}
+
+#########

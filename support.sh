@@ -32,18 +32,6 @@ No personal information is collected by this script. The following data is colle
 - Allsky config files (obfuscated where required to hide any credentials)\n\n
 Select 'Yes' to agree or 'No' to abort this script
 "
-####
-# Install prerequisites
-function init() 
-{
-    if [[ "${AUTO_MODE}" == "false" ]]; then    
-        clear
-        echo -e "Initialising support system. Please wait ..."
-    fi
-
-    sudo systemctl enable pigpiod 2>&1
-    sudo systemctl start pigpiod 2>&1
-}
 
 function print_info() 
 {
@@ -126,10 +114,8 @@ function collect_support_info()
     CPU_BITS=$(getconf LONG_BIT)
     CPU_TOTAL=$(nproc)
     MEM_TOTAL=$(free -h | grep Mem | awk '{print $2}')
-    local CMD="from gpiozero import Device"
-	CMD+="\nDevice.ensure_pin_factory()"
-	CMD+="\nprint(Device.pin_factory.board_info.model)"
-	PI_MODEL="$( echo -e "${CMD}" | python3 2>/dev/null )"
+    VERSION_FILE="${ALLSKY_CONFIG}/piversion"
+    PI_MODEL="$(<"$VERSION_FILE")"
     ###
 
     ### Memry Info
@@ -526,7 +512,6 @@ done
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
 display_start_dialog
-init
 get_github_discussion_id
 display_running_dialog
 collect_support_info

@@ -3369,9 +3369,11 @@ install_Python()
 	CMD+="\nprint(Device.pin_factory.board_info.model)"
 	pimodel="$( echo -e "${CMD}" | python3 2>/dev/null )"	# hide error since it only applies to Pi 5.
 
+	echo "${pimodel}" >> "${ALLSKY_CONFIG}/piversion"
+
 	# if we are on the pi 5 then uninstall rpi.gpio, using the virtual environment which will always
 	# exist on the pi 5. lgpio is installed globally so will be used after rpi.gpio is removed
-    # Adafruits blinka reinstalls rpi.gpio so we need to ensure its removed
+	# Adafruits blinka reinstalls rpi.gpio so we need to ensure its removed
 	if [[ ${pimodel:0:1} == "5" ]]; then
 		display_msg --logonly info "Updating GPIO to lgpio"
 		activate_python_venv

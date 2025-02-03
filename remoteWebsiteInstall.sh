@@ -425,7 +425,7 @@ ${INDENT}- Any old Allsky files that are no longer needed will be removed from t
 # ${2} - Error message (or "" if no error)
 function display_aborted()
 {
-	local ABORT_MSG  MSG  DIALOG_PROMPT  VIEWED_ERROR
+	local ABORT_MSG  MSG  DIALOG_PROMPT
 
 	if [[ ${1} == "--user" ]]; then
 		ABORT_MSG="USER ABORTED INSTALLATION"
@@ -446,9 +446,7 @@ function display_aborted()
 		if display_box "--yesno" "${DIALOG_ABORT}" "${DIALOG_PROMPT}" ; then
 # TODO: remove terminal screen escape sequences from ${ERROR_MSG}.
 			display_box "--msgbox" "${DIALOG_TITLE_LOG}" "${ERROR_MSG}" "--scrollbar"
-			VIEWED_ERROR="true"
 		else
-			VIEWED_ERROR="false"
 		fi
 	fi
 

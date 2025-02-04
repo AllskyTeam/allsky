@@ -1449,7 +1449,7 @@ VirtualSky.prototype.createSky = function(){
 		ctx.fillStyle = 'rgb(0,0,0)';
 		ctx.lineWidth = 1.5;
 		var loading = 'Loading sky...';
-		ctx.fillText(loading,(ctx.wide-ctx.measureText(loading).width)/2,(this.tall-fs)/2);
+		ctx.fillText(loading,(this.wide-ctx.measureText(loading).width)/2,(this.tall-fs)/2);
 		ctx.fill();
 
 		// ALLSKY 0.7.3 PR added touchClickHandler and deleted contextManuHandler

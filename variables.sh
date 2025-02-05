@@ -212,7 +212,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	# These EXIT codes from the capture programs must match what's in src/include/allsky_common.h
 	# Anything at or above EXIT_ERROR_STOP is unrecoverable and the service must be stopped
 	EXIT_OK=0
-	EXIT_PARTIAL_OK=1		# command partially worked
+	EXIT_PARTIAL_OK=90		# command partially worked
 	EXIT_RESTARTING=98		# process is restarting, i.e., stop, then start
 	EXIT_RESET_USB=99		# need to reset USB bus; cannot continue
 	EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service

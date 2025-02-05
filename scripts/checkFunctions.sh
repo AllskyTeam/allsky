@@ -35,24 +35,26 @@ function _check_web_connectivity()
 		shift
 	done
 	if [[ ${OK} == "false" || -z ${URL} ]]; then
-		echo -e "${ERR}Usage: ${FUNCNAME[0]}: [--from f] --website w | --server s | --url u"
+		# NO "-e"; let caller do it.
+		echo "${ERR}Usage: ${FUNCNAME[0]}: [--from f] --website w | --server s | --url u"
 		return 1
 	fi
 
-	local HTTP_STATUS  RET  MSG  WHY  HOST
+	local HTTP_STATUS  RET  MSG  WHY
 
-	HTTP_STATUS="$( curl -o /dev/null --head --silent --location --write-out "%{http_code}" "${URL}" )"
+	HTTP_STATUS="$( curl -o /dev/null --head --silent --location \
+		--write-out "%{http_code}" "${URL}" )"
 	RET=$?
 	if [[ ${RET} -ne 0 ]] ; then
 		case "${RET}" in
-			# Just do common ones
+			# Just do common return codes - there are too many to do them all.
 			3)
 				WHY="The URL appears bad: ${URL}"
 				;;
 			6)
-				# Only should the host name.
-				HOST="${URL/*\/\//}"
-				WHY="Unknown host:   ${HOST/\/*/}"
+				# Only whow the host name, not the full URL.
+				WHY="${URL/*\/\//}"
+				WHY="Unknown host:   ${WHY/\/*/}"
 				;;
 			*)
 				WHY="Return code ${RET} from curl"
@@ -96,6 +98,6 @@ function _check_web_connectivity()
 		esac
 	fi
 
-	echo -e "Unable to connect to ${URL}\n   ${WHY}"
+	echo "Unable to connect to ${URL}\n   ${WHY}"		# NO "-e"; let caller do it
 	return 1
 }

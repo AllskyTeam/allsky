@@ -166,6 +166,7 @@ function remove_colors()
 	local G="${GREEN/\\/}"							; G="${G/033\[/033X}"
 	local Y="${YELLOW/\\/}"		; Y="${Y:-abcxyz}"	; Y="${Y/033\[/033X}"
 	local R="${RED/\\/}"		; R="${R:-abcxyz}"	; R="${R/033\[/033X}"
+	#shellcheck disable=SC2154
 	local D="${cDEBUG/\\/}"		; D="${D:-abcxyz}"	; D="${D/033\[/033X}"
 	local N="${NC/\\/}"			; N="${N:-abcxyz}"	; N="${N/033\[/033X}"
 

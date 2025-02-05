@@ -17,9 +17,14 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	# The "w" colors are for when output may go to a web page.
 	if tty --silent ; then
 		ON_TTY="true"
-		DIALOG_RED="\Z1";		DIALOG_NORMAL="\Zn"
-		DIALOG_GREEN="\Z2";		DIALOG_UNDERLINE="\Zu"
-		DIALOG_BLUE="\Z4";		DIALOG_BOLD="\Zb"
+
+		# Dialog colors:  0-7: black, red, green, yellow, blue, magenta, cyan, white
+		# Reverse: \Zr	 reverse off: \ZR
+		DIALOG_RED="\Z1";		DIALOG_YELLOW="\Z3"
+		DIALOG_GREEN="\Z2";		DIALOG_UNDERLINE="\Zu"	# underline off: \ZU
+		DIALOG_BLUE="\Z4";		DIALOG_BOLD="\Zb"		# bold off: \ZB
+		DIALOG_NC="\Zn"			DIALOG_DEBUG="${DIALOG_YELLOW}"
+
 		GREEN="\033[0;32m";		wOK="${GREEN}"
 		YELLOW="\033[0;33m";	wWARNING="${YELLOW}"
 		RED="\033[0;31m";		wERROR="${RED}"
@@ -30,9 +35,12 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 								wBR="\n"
 	else
 		ON_TTY="false"
-		DIALOG_RED="";			DIALOG_NORMAL=""		
+
+		DIALOG_RED="";			DIALOG_YELLOW=""
 		DIALOG_GREEN="";		DIALOG_UNDERLINE=""
 		DIALOG_BLUE="";			DIALOG_BOLD=""
+		DIALOG_NC="";			DIALOG_DEBUG=""
+
 		GREEN="";				wOK="<span style='color: green'>"
 		YELLOW="";				wWARNING="<span style='color: #FF9800'>"
 		RED="";					wERROR="<span style='color: red'>"

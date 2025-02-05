@@ -481,7 +481,9 @@ function update_array_field()
 }
 
 
-# Replace all the ${NEED_TO_UPDATE} placeholders.
+####
+# Replace all the ${NEED_TO_UPDATE} placeholders and
+# update mini-timelapse URL.
 function replace_website_placeholders()
 {
 	local TYPE="${1}"		# "local" or "remote" Website
@@ -521,11 +523,6 @@ function replace_website_placeholders()
 	else
 		MSG="Unable to update '${FIELD}' in ${FILE}:\n${INDEX}"
 		display_msg --log error "${MSG}"
-		# bogus settings that won't do anything
-		MINI_TLAPSE_DISPLAY="x"
-		MINI_TLAPSE_URL="x"
-		MINI_TLAPSE_DISPLAY_VALUE=""
-		MINI_TLAPSE_URL_VALUE=""
 		return 1
 	fi
 
@@ -606,8 +603,6 @@ function replace_website_placeholders()
 		IMAGE_NAME="${FULL_FILENAME}"
 	fi
 
-	# Keep track if the file changed.
-	OLD_SUM="$( sum "${FILE}" )"
 	"${ALLSKY_SCRIPTS}/updateJsonFile.sh" --verbosity silent --file "${FILE}" \
 		config.imageName			"imageName"			"${IMAGE_NAME}" \
 		config.latitude				"latitude"			"${LATITUDE}" \
@@ -625,17 +620,10 @@ function replace_website_placeholders()
 	if [[ ${RET} -ne 0 ]]; then
 		MSG="updateJsonFile.sh failed with RET ${RET}"
 		display_msg --logonly info "${MSG}"
-		return "${EXIT_ERROR_STOP}"		# this is a "real" error
+		return 1
 	fi
 
-	NEW_SUM="$( sum "${FILE}" )"
-	if [[ ${NEW_SUM} != "${OLD_SUM}" ]]; then
-		return 0		# File changed
-	else
-		MSG="updateJsonFile.sh didn't change anything!"
-		display_msg --logonly info "${MSG}"
-		return 1						# this is NOT an error
-	fi
+	return 0
 }
 
 

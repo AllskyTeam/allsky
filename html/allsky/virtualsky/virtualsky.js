@@ -1381,24 +1381,17 @@ VirtualSky.prototype.createSky = function(){
 
 	// Add named objects to the display
 	if(this.objects){
-		// To stop lookUp being hammered, we'll only lookup a maximum of 5 objects
-		// If you need more objects (e.g. for the Messier catalogue) build a JSON
-		// file containing all the results one time only.
 		var ob = this.objects.split(';');
 
 		// Build the array of JSON requests
-		// ALLSKY CHANGE: Stuart's lookup no longer works.
+		// ALLSKY CHANGE: Stuart's lookup no longer works so remove all the "lookup" code.
 		// ALLSKY CHANGE: for(o = 0; o < ob.length ; o++) ob[o] = ((ob[o].search(/\.json$/) >= 0) ? {'url':ob[o], 'src':'file', 'type':'json' } : {'url': 'https://www.strudel.org.uk/lookUP/json/?name='+ob[o],'src':'lookup','type':'jsonp'});
 		for(o = 0; o < ob.length ; o++) ob[o] = ((ob[o].search(/\.json$/) >= 0) ? {'url':ob[o], 'src':'file', 'type':'json' } : {'src':''});
 
 		// Loop over the requests
-		var lookups = 0;
-		var ok = true;
 		for(o = 0; o < ob.length ; o++){
-			if(ob[o].src == "") continue;	// ALLSKY CHANGE: was a lookup
-			if(ob[o].src == "lookup") lookups++;
-			if(lookups > 5) ok = false;
-			if(ok || ob[o].src != "lookup"){
+			if(ob[o].src == "") continue;			// ALLSKY CHANGE: was a lookup
+			{  // ALLSKY CHANGE: was a lookup "if"
 				S(document).ajax(ob[o].url, { dataType: ob[o].type, "this": this, success: function(data){
 					// If we don't have a length property, we only have one result so make it an array
 					if(typeof data.length === "undefined") data = [data];
@@ -1438,7 +1431,6 @@ VirtualSky.prototype.createSky = function(){
 	// For excanvas we need to initialise the newly created <canvas>
 	if(this.excanvas)
 		this.c = G_vmlCanvasManager.initElement(this.c);
-
 	if(this.c && this.c.getContext){
 		this.setWH(this.wide,this.tall);
 		var ctx = this.ctx = this.c.getContext('2d');

@@ -1553,9 +1553,9 @@ function add_new_settings()
 {
 	local SETTINGS="${1}"
 	local OPTIONS="${2}"
-	local FROM_INSTALL="${3}"
+	local FROM="${3}"
 
-	if [[ ${FROM_INSTALL} == "false" ]]; then
+	if [[ ${FROM} != "install" ]]; then
 		function display_msg() { return; }
 	fi
 
@@ -1571,7 +1571,7 @@ function add_new_settings()
 	if [[ $? -ne 0 ]]; then
 		local M="Unable to get new settings"
 		MSG="${M}: $( < "${NEW}" )"
-		if [[ ${FROM_INSTALL} == "true" ]]; then
+		if [[ ${FROM} == "install" ]]; then
 			display_msg --log error "${MSG}"
 			exit_installation 1 "${STATUS_ERROR}" "${M}."
 		else

@@ -30,7 +30,7 @@ DEBUG_ARG=""
 HELP="false"
 OPTIONS_FILE_ONLY="false"
 CAMERA_TYPE_ONLY="false"	# Only update the cameratype?
-FROM_INSTALL="false"		# Called from install.sh ?
+FROM=""						# Where are we called from?
 ADD_NEW_SETTINGS="false"
 FORCE=""					# Passed to createAllskyOptions.php
 
@@ -52,7 +52,7 @@ while [[ $# -gt 0 ]]; do
 			CAMERA_TYPE_ONLY="true"
 			;;
 		--frominstall)
-			FROM_INSTALL="true"
+			FROM="install"
 			;;
 		--addnewsettings)
 			ADD_NEW_SETTINGS="true"
@@ -346,7 +346,7 @@ do
 			if [[ ${KEY} == "cameramodel" ]]; then
 				CAMERA_MODEL="${NEW_VALUE}"
 
-				if [[ ${FROM_INSTALL} == "true" ]]; then
+				if [[ ${FROM} == "install" ]]; then
 # TODO: Use the KEYS[] array so the settings can be passed in either order.
 					# When called during installation the camera model is
 					# passed in, then the camera type.
@@ -368,7 +368,7 @@ do
 
 			# This requires Allsky to be stopped so we don't
 			# try to call the capture program while it's already running.
-			[[ ${FROM_INSTALL} == "false" ]] && stop_Allsky
+			[[ ${FROM} == "install" ]] && stop_Allsky
 
 			if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
 
@@ -387,7 +387,7 @@ do
 						exit "${RET}"
 					fi
 
-					if [[ ${FROM_INSTALL} == "false" ]]; then
+					if [[ ${FROM} != "install" ]]; then
 						# Installation routine already did this,
 						# otherwise do it again in case the list of cameras changed.
 
@@ -636,7 +636,7 @@ do
 				--verbosity silent --file "${SETTINGS_FILE}" "${CHANGES[@]}"
 
 			if [[ ${ADD_NEW_SETTINGS} == "true" ]]; then
-				add_new_settings "${SETTINGS_FILE}" "${OPTIONS_FILE}" "${FROM_INSTALL}"
+				add_new_settings "${SETTINGS_FILE}" "${OPTIONS_FILE}" "${FROM}"
 			fi
 
 			# Don't do anything else if ${CAMERA_TYPE_ONLY} is set.
@@ -966,7 +966,10 @@ if [[ ${USE_REMOTE_WEBSITE} == "true" || ${USE_REMOTE_SERVER} == "true" ]]; then
 	fi
 
 	if [[ ${USE_REMOTE_WEBSITE} == "true" && ${CHECK_REMOTE_WEBSITE_ACCESS} == "true" ]]; then
+# TODO:   ERR="$( _check_web_connectivity --website --from "${FROM}" 2>&1 )"
+
 		# testUpload.sh displays error messages
+# TODO: check return code.
 		"${ALLSKY_SCRIPTS}/testUpload.sh" --website
 
 		# If the remote configuration file doesn't exist assume it's because
@@ -985,6 +988,8 @@ if [[ ${USE_REMOTE_WEBSITE} == "true" || ${USE_REMOTE_SERVER} == "true" ]]; then
 	fi
 
 	if [[ ${USE_REMOTE_SERVER} == "true" && ${CHECK_REMOTE_SERVER_ACCESS} == "true" ]]; then
+# TODO:   ERR="$( _check_web_connectivity --server --from "${FROM}" 2>&1 )"
+# TODO: check return code.
 		"${ALLSKY_SCRIPTS}/testUpload.sh" --server
 	fi
 fi

@@ -65,7 +65,7 @@ while [[ $# -gt 0 ]]; do
 			DO_SERVER="true"
 			;;
 		-*)
-			wE "Unknown argument '${ARG}'." >&2
+			wE_ "Unknown argument '${ARG}'." >&2
 			OK="false"
 			;;
 		*)

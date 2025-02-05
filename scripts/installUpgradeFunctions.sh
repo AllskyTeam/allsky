@@ -146,6 +146,44 @@ function get_variable()
 
 
 #####
+# Strip out all color escape sequences.
+# The message may have an actual escape character or may have the
+# four characters "\033" which represent an escape character.
+
+# I don't know how to replace "\n" with an actual newline in sed,
+# and there HAS to be a better way to strip the escape sequences.
+# I simply replace actual escape characters in the input with "033" then
+# replace "033[" with "033X".
+# Feel free to improve...
+function remove_colors()
+{
+	local MSG="${1}"
+
+	local ESC="$( echo -en '\033' )"
+
+	# Ignore any initial "\" in the colors.
+	# In case a variable isn't defined, set it to a string that won't be found.
+	local G="${GREEN/\\/}"							; G="${G/033\[/033X}"
+	local Y="${YELLOW/\\/}"		; Y="${Y:-abcxyz}"	; Y="${Y/033\[/033X}"
+	local R="${RED/\\/}"		; R="${R:-abcxyz}"	; R="${R/033\[/033X}"
+	#shellcheck disable=SC2154
+	local D="${cDEBUG/\\/}"		; D="${D:-abcxyz}"	; D="${D/033\[/033X}"
+	local N="${NC/\\/}"			; N="${N:-abcxyz}"	; N="${N/033\[/033X}"
+
+	# Outer "echo -e" handles "\n" (2 characters) in input.
+	# No "-e" needed on inner "echo".
+	echo -e "$( echo "${MSG}" |
+		sed -e "s/${ESC}/033/g" \
+			-e "s/033\[/033X/g" \
+			-e "s/${G}//g" \
+			-e "s/${Y}//g" \
+			-e "s/${R}//g" \
+			-e "s/${D}//g" \
+			-e "s/${N}//g" \
+	)"
+}
+
+#####
 # Display a message of various types in appropriate colors.
 # Used primarily in installation scripts.
 function display_msg()
@@ -234,41 +272,12 @@ function display_msg()
 		touch "${DISPLAY_MSG_LOG}"
 	fi
 
-	# Strip out all color escape sequences before adding to log file.
-	# The message may have an actual escape character or may have the
-	# four characters "\033" which represent an escape character.
-
-	# I don't know how to replace "\n" with an
-	# actual newline in sed, and there HAS to be a better way to strip the
-	# escape sequences.
-	# I simply replace actual escape characters in the input with "033" then
-	# replace "033[" with "033X".
-	# Feel free to improve...
-
 	# Assume if GREEN isn't defined then no colors are defined.
+	local MSG="$(date) ${LOGMSG}${MESSAGE2}"
 	if [[ -n ${GREEN} ]]; then
-		local ESC="$( echo -en '\033' )"
-
-		# Ignore any initial "\" in the colors.
-		# In case a variable isn't defined, set it to a string that won't be found.
-		local G="${GREEN/\\/}"							; G="${G/033\[/033X}"
-		local Y="${YELLOW/\\/}"		; Y="${Y:-abcxyz}"	; Y="${Y/033\[/033X}"
-		local R="${RED/\\/}"		; R="${R:-abcxyz}"	; R="${R/033\[/033X}"
-		local D="${cDEBUG/\\/}"		; D="${D:-abcxyz}"	; D="${D/033\[/033X}"
-		local N="${NC/\\/}"			; N="${N:-abcxyz}"	; N="${N/033\[/033X}"
-
-		# Outer "echo -e" handles "\n" (2 characters) in input.
-		# No "-e" needed on inner "echo".
-		echo -e "$( echo "$(date) ${LOGMSG}${MESSAGE2}" |
-			sed -e "s/${ESC}/033/g" -e "s/033\[/033X/g" \
-				-e "s/${G}//g" \
-				-e "s/${Y}//g" \
-				-e "s/${R}//g" \
-				-e "s/${D}//g" \
-				-e "s/${N}//g" \
-		)"
+		remove_colors "${MSG}"
 	else
-		echo "$(date) ${LOGMSG}${MESSAGE2}"
+		echo "${MSG}"
 	fi >>  "${DISPLAY_MSG_LOG}"
 }
 
@@ -472,7 +481,9 @@ function update_array_field()
 }
 
 
-# Replace all the ${NEED_TO_UPDATE} placeholders.
+####
+# Replace all the ${NEED_TO_UPDATE} placeholders and
+# update mini-timelapse URL.
 function replace_website_placeholders()
 {
 	local TYPE="${1}"		# "local" or "remote" Website
@@ -512,11 +523,6 @@ function replace_website_placeholders()
 	else
 		MSG="Unable to update '${FIELD}' in ${FILE}:\n${INDEX}"
 		display_msg --log error "${MSG}"
-		# bogus settings that won't do anything
-		MINI_TLAPSE_DISPLAY="x"
-		MINI_TLAPSE_URL="x"
-		MINI_TLAPSE_DISPLAY_VALUE=""
-		MINI_TLAPSE_URL_VALUE=""
 		return 1
 	fi
 
@@ -525,7 +531,7 @@ function replace_website_placeholders()
 	# If the config file has a value, use it, even if it's "".
 
 	local TEMP  LATITUDE  LONGITUDE  AURORAMAP  LOCATION  OWNER  CAMERA
-	local LENS  COMPUTER  IMAGE_NAME  OLD_SUM  NEW_SUM
+	local LENS  COMPUTER  IMAGE_NAME
 
 	LATITUDE="$( settings ".config.latitude" "${FILE}" )"
 	if [[ ${LATITUDE} == "${NEED_TO_UPDATE}" ]]; then
@@ -597,8 +603,6 @@ function replace_website_placeholders()
 		IMAGE_NAME="${FULL_FILENAME}"
 	fi
 
-	# Keep track if the file changed.
-	OLD_SUM="$( sum "${FILE}" )"
 	"${ALLSKY_SCRIPTS}/updateJsonFile.sh" --verbosity silent --file "${FILE}" \
 		config.imageName			"imageName"			"${IMAGE_NAME}" \
 		config.latitude				"latitude"			"${LATITUDE}" \
@@ -616,17 +620,10 @@ function replace_website_placeholders()
 	if [[ ${RET} -ne 0 ]]; then
 		MSG="updateJsonFile.sh failed with RET ${RET}"
 		display_msg --logonly info "${MSG}"
-		return "${EXIT_ERROR_STOP}"		# this is a "real" error
+		return 1
 	fi
 
-	NEW_SUM="$( sum "${FILE}" )"
-	if [[ ${NEW_SUM} != "${OLD_SUM}" ]]; then
-		return 0		# File changed
-	else
-		MSG="updateJsonFile.sh didn't change anything!"
-		display_msg --logonly info "${MSG}"
-		return 1						# this is NOT an error
-	fi
+	return 0
 }
 
 
@@ -1556,9 +1553,9 @@ function add_new_settings()
 {
 	local SETTINGS="${1}"
 	local OPTIONS="${2}"
-	local FROM_INSTALL="${3}"
+	local FROM="${3}"
 
-	if [[ ${FROM_INSTALL} == "false" ]]; then
+	if [[ ${FROM} != "install" ]]; then
 		function display_msg() { return; }
 	fi
 
@@ -1574,7 +1571,7 @@ function add_new_settings()
 	if [[ $? -ne 0 ]]; then
 		local M="Unable to get new settings"
 		MSG="${M}: $( < "${NEW}" )"
-		if [[ ${FROM_INSTALL} == "true" ]]; then
+		if [[ ${FROM} == "install" ]]; then
 			display_msg --log error "${MSG}"
 			exit_installation 1 "${STATUS_ERROR}" "${M}."
 		else

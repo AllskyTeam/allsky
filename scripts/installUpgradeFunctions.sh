@@ -531,7 +531,7 @@ function replace_website_placeholders()
 	# If the config file has a value, use it, even if it's "".
 
 	local TEMP  LATITUDE  LONGITUDE  AURORAMAP  LOCATION  OWNER  CAMERA
-	local LENS  COMPUTER  IMAGE_NAME  OLD_SUM  NEW_SUM
+	local LENS  COMPUTER  IMAGE_NAME
 
 	LATITUDE="$( settings ".config.latitude" "${FILE}" )"
 	if [[ ${LATITUDE} == "${NEED_TO_UPDATE}" ]]; then

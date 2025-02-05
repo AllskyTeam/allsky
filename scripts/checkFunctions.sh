@@ -98,6 +98,7 @@ function _check_web_connectivity()
 		esac
 	fi
 
+	# shellcheck disable=SC2028
 	echo "Unable to connect to ${URL}\n   ${WHY}"		# NO "-e"; let caller do it
 	return 1
 }

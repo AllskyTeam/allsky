@@ -73,6 +73,7 @@ function usage_and_exit()
 	echo -e "      recheck_swap"
 	echo -e "      recheck_tmp"
 	echo -e "      samba"
+	echo -e "      move_images"
 	echo -e "      new_rpi_camera_info [--camera NUM]"
 	echo -e "      show_start_times [--zero] [angle [latitude [longitude]]]"
 	echo -e "      compare_paths --website | --server"

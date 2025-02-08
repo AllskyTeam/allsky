@@ -4023,7 +4023,7 @@ does_prior_Allsky_exist
 [[ -z ${FUNCTION} ]] && do_initial_heading
 
 ##### See if we need to reboot at end of installation
-if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
+if [[ -z ${FUNCTION} && ${USE_PRIOR_ALLSKY} == "true" ]]; then
 	is_reboot_needed "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
 fi
 

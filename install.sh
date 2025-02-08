@@ -3851,7 +3851,7 @@ request_map()
 		MSG+="\nYou don't need to have a remote Website to do this."
 	fi
 	MSG+="\nSee the 'Allsky Map Settings' section of the WebUI's 'Allsky Settings' page."
-	display_msg --log notice "${MSG}"
+	display_msg notice "${MSG}"
 
 	add_to_post_actions "${MSG}"
 }

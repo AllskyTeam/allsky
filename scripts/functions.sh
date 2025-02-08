@@ -1429,3 +1429,29 @@ function execute_web_commands()
 	curl --silent --location "${URL}/runCommands.php"
 }
 
+####
+# Get everthing in between "START info" and "END info".
+# Ignore any WARNING messages (we'll often have a certificate warning).
+# Return 0 if we found the start, even if nothing's there.
+function get_ls_contents()
+{
+	local FILE="${1}"
+
+	nawk 'BEGIN { in_info = 0; dir = ""; }
+		{
+			if ($0 == "START info") {
+				in_info = 1;
+			} else if ($0 == "END info") {
+				exit(0);
+			} else if (in_info >= 1) {
+				if (in_info++ == 1) {
+					printf("Contents:\n");
+				}
+				if ($1 != "WARNING:")
+					print $0;
+			}
+		}
+		END {
+			exit(! in_info);
+		}' "${FILE}"
+}

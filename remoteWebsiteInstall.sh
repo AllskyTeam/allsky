@@ -24,6 +24,7 @@ source "${ALLSKY_SCRIPTS}/checkFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 DISPLAY_MSG_LOG="${ALLSKY_LOGS}/${ME/.sh/}.log"
 
 # Config variables
+TESTUPLOAD_OUTPUT_FILE="${ALLSKY_TMP}/${ME}.txt"
 BASIC_CONNECTIVITY_ONLY="false"
 HAVE_LOCAL_REMOTE_CONFIG="false"
 HAVE_NEW_STYLE_REMOTE_CONFIG="false"
@@ -308,8 +309,20 @@ function pre_install_checks()
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 		show_debug_message "Uploading to the server worked."
 	else
-		DIALOG_TEXT+="$( dE_ "FAILED" )."
+		MSG="$( remove_colors "${MSG}" )"
+		display_msg --logonly info "Upload failed: ${MSG}"
+		DIALOG_TEXT+="$( dE_ "FAILED" ):"
+		# If the first line is empty, delete it.
+		# Otherwise, add "\n" string to end of each line so it displays as
+		# multi-line output in dialog box.
+		MSG="$( echo "${MSG}" |
+			gawk '{ if (NR==1 && $0=="") next; printf("%s\\n\n", $0); }')"
+		# Add:  dE_ ""
+		# because dialog colors don't work if there's a leading or trailing newline.
+		DIALOG_TEXT+="\n\n$( dE_ "${MSG}" ; dE_ "" )"
+
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
+		MSG="$( < "${TESTUPLOAD_OUTPUT_FILE}" )"
 
 		ERROR_MSG="Unable to upload a file to the server."
 	fi
@@ -511,7 +524,7 @@ function check_upload()
 	# Some user reported this hanging, so add a timeout.
 	ERR="$( timeout --signal=KILL "${SECS}" \
 		"${ALLSKY_SCRIPTS}/testUpload.sh" --frominstall --website --silent \
-		--file "${TEST_FILE}" 2>&1 )"
+		--output "${TESTUPLOAD_OUTPUT_FILE}" --file "${TEST_FILE}" 2>&1 )"
 	RET=$?
 	if [[ ${RET} -eq 0 ]]; then
 		echo "PASSED"

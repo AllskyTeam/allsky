@@ -15,6 +15,7 @@ OK="true"
 DO_HELP="false"
 DO_ZWO="false"
 DO_RPI="false"
+ZWO_FILE="${ALLSKY_HOME}/src/lib/armv7/libASICamera2.a"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in
@@ -27,8 +28,15 @@ while [[ $# -gt 0 ]]; do
 		--zwo)
 			DO_ZWO="true"
 			;;
+		--zwo-file)
+			ZWO_FILE="${2}"
+			if [[ ! -f ${ZWO_FILE} ]]; then
+				E_ "File '${ZWO_FILE}' not found." >&2
+				OK="false"
+			fi
+			;;
 		-*)
-			echo -e "${RED}Unknown argument '${ARG}' ignoring.${NC}" >&2
+			E_ "Unknown argument '${ARG}'." >&2
 			OK="false"
 			;;
 	esac
@@ -38,23 +46,26 @@ done
 usage_and_exit()
 {
 	local RET=${1}
-	{
-		echo
-		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-		echo "Usage: ${ME} [--help] --rpi | --zwo"
-		[[ ${RET} -ne 0 ]] && echo -en "${NC}"
-		echo "    where:"
-		echo "      '--help' displays this message and exits."
-		echo "      '--rpi' displays a list of supported Raspberry Pi and compatible cameras."
-		echo "      '--zwo' displays a list of supported ZWO cameras."
-	} >&2
+	exec 2>&1
+	echo
+	local MSG="Usage: ${ME} [--help] [--zwo-file f] --rpi | --zwo"
+	if [[ ${RET} -ne 0 ]]; then
+		E_ "${MSG}"
+	else
+		echo -e "${MSG}"
+	fi
+	echo "where:"
+	echo "    '--help' displays this message and exits."
+	echo "    '--zwo-file f' looks in this file for list of supported ZWO cameras."
+	echo "    '--rpi' displays a list of supported Raspberry Pi and compatible cameras."
+	echo "    '--zwo' displays a list of supported ZWO cameras."
 	exit "${RET}"
 }
 
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 if [[ ${DO_RPI} == "false" && ${DO_ZWO} == "false" ]]; then
-	echo -e "${RED}You must specify --rpi and/or --zwo${NC}" >&2
+	E_  "You must specify --rpi and/or --zwo" >&2
 	usage_and_exit 2
 fi
 
@@ -94,7 +105,7 @@ if [[ ${DO_ZWO} == "true" ]]; then
 	[[ ${DO_RPI} == "true" ]] && echo -e "\n===== Supported ZWO cameras:"
 
 	# Any of the libraries should work.
-	strings "${ALLSKY_HOME}/src/lib/armv7/libASICamera2.a" |
+	strings "${ZWO_FILE}" |
 		grep '_SetResolutionEv$' | \
 		sed -e 's/^.*CameraS//' -e 's/17Cam//' -e 's/_SetResolutionEv//' | \
 		sort -u

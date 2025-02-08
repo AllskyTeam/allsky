@@ -177,11 +177,11 @@ parse_output()
 		fi
 
 		local CONTENTS="$( get_ls_contents "${FILE}" )"
-		if [[ -z ${CONTENT} ]]; then
+		if [[ -z ${CONTENTS} ]]; then
 			echo "  There appears to be no files or directories in the server's root directory."
 		else
 			echo "  The following files and/or directories are in the server's root directory:"
-			indent --spaces "${CONTENT}"
+			indent --spaces "${CONTENTS}"
 		fi
 		echo "${FIX}"
 	fi >&2

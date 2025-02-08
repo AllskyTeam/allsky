@@ -24,8 +24,8 @@ if [[ ${ON_TTY} == "true" ]]; then
 	export STRONGe=""
 	export WSNs="'"
 	export WSNe="'"
-	export WSVs=""
-	export WSVe=""
+	export WSVs="'"
+	export WSVe="'"
 else
 	export NL="<br>"
 	export SPACES="&nbsp; &nbsp; &nbsp;"

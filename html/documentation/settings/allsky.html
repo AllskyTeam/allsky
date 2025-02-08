@@ -43,7 +43,7 @@ you hover over a value,
 and only displays settings the camera supports, like cooler temperature for cooled cameras.
 </p>
 <p>
-A (partial) typical page is below.
+A typical page is below.
 </p>
 <img allsky="true" src="AllskySettingsPage.png" class="imgBorder imgCenter" title="Typical Allsky Settings page" alt="AllskySettings" loading="lazy">
 
@@ -54,7 +54,7 @@ A (partial) typical page is below.
 	indicates the setting's default is
 	<span class="cameraDependent">C</span>amera
 	<span class="cameraDependent">D</span>ependent
-	and is displayed in the WebUI.
+	and is displayed in the WebUI by hovering your cursor over the value.
 <li><span class="AW">AW</span>
 	indicates a setting who's value is uploaded to your
 	<span class="cameraDependent">A</span>llsky
@@ -64,7 +64,7 @@ A (partial) typical page is below.
 
 <table role="table">
 <thead>
-<tr>
+<tr class="tableHeader">
 	<th>WebUI Setting</th>
 	<th>Default</th>
 	<th>Description</th>
@@ -90,17 +90,26 @@ A (partial) typical page is below.
 </tr>
 <tr><td id="daymaxautoexposure"><span class="WebUISetting">Max Auto-Exposure</span></td>
 	<td><span class="cameraDependent">CD</span></td>
-	<td>The maximum exposure in milliseconds when using 
-	<span class="WebUISetting">Auto-Exposure</span>.
-	When <span class="WebUISetting">Auto-Exposure</span> is on,
-	this value will be used as the delay between frames.
-	Ignored if <span class="WebUISetting">Auto-Exposure</span> is off.</td>
+	<td>The maximum exposure in milliseconds when
+	<span class="WebUISetting">Auto-Exposure</span> is enabled.
+	Ignored if <span class="WebUISetting">Auto-Exposure</span> is disabled.
+	<br>
+	When <span class="WebUISetting">Auto-Exposure</span> and
+	<span class="WebUISetting">Consistent Delays Between Images</span> are both on,
+	the time between the start of one image and the start of the next images is
+	the <span class="WebUISetting">Max Auto-Exposure + Delay</span>.
 </tr>
 <tr><td id="dayexposure"><span class="WebUISetting">Manual Exposure</span></td>
 	<td>0.5</td>
 	<td>Manual exposure time in milliseconds.
 	If <span class="WebUISetting">Auto-Exposure</span>
-	is on this value is used as a starting exposure.</td>
+	is on this value is used as a starting exposure.
+	<br>
+	The time between the start of one image and the start of the next images will be
+	the <span class="WebUISetting">Manual Exposure + Delay</span>,
+	regardless of the status of 
+	<span class="WebUISetting">Consistent Delays Between Images</span>.
+	</td>
 </tr>
 <tr><td id="daymean"><span class="WebUISetting">Mean Target</span></td>
 	<td>0.5</td>
@@ -423,10 +432,29 @@ A (partial) typical page is below.
 </tr>
 <tr><td id="consistentdelays"><span class="WebUISetting">Consistent Delays Between Images</span></td>
 	<td>Yes</td>
-	<td>Enable this to force the time between the start of exposures to be a consistent length
+	<td>Enabling this makes the time between the <strong>start</strong> of one auto-exposure
+	and the <strong>start</strong> of the next exposure a consistent length
 	(<span class="WebUISetting">Max Auto-Exposure + Delay</span>).
-	Doing this will result in timelapse video frames being equally spaced,
-	for example, every 90 seconds, regardless of how long an individual frame's exposure is.
+	Timelapse video frames will be equally spaced.
+	<br>
+	For example, if the <span class="WebUISetting">Max Auto-Exposure</span> is
+	60 seconds and the <span class="WebUISetting">Delay</span> is 30 seconds,
+	the start of an exposure will be exactly 90 after the prior exposure's start time,
+	regardless of how long an individual frame's exposure is.
+	So if the first exposure was only 3 seconds,
+	the second exposure will still start 90 seconds after the first one.
+	<p>
+	Disabling this means the time between exposure starts varies depending on
+	the actual length of each exposure.
+	At nighttime when most exposure are at their maximum length this setting
+	doesn't make a difference,
+	but during the day or at twilight the exposure length is usually not at the maximum.
+	</p>
+	<p>
+	Note that if manual exposure is used this setting doesn't apply
+	since the time between exposures
+	(<span class="WebUISetting">Manual Exposure + Delay</span>) is always the same.
+	</p>
 	</td>
 </tr>
 <tr><td id="timeformat"><span class="WebUISetting">Time Format</span></td>
@@ -812,7 +840,7 @@ A (partial) typical page is below.
 </tr>
 <tr><td id="timelapsebitrate"><span class="WebUISetting">Bitrate</span></td>
 	<td>5000</td>
-	<td>Bitrate the timelapse video will be created with.
+	<td>Bitrate the timelapse video will be created with, in kilobytes.
 	Higher values produce better quality video but larger files.
 	<br>Do NOT add a trailing <span class="WebUIValue">k</span>.</td>
 </tr>
@@ -924,12 +952,16 @@ A (partial) typical page is below.
 	<td>libx264</td>
 	<td>Encoder used to create the timelapse video.
 	Rarely changed.
+	<br>
+	Run <code>allsky-config encoders</code> for a (long) list.
 	</td>
 </tr>
 <tr><td id="timelapsevpixfmt"><span class="WebUISetting">Pixel format</span></td>
 	<td>yuv420p</td>
 	<td>Pixel format.
-	<br>If you don't know what this is, don't change it.
+	Rarely changed.
+	<br>
+	Run <code>allsky-config pix_fmts</code> for a (long) list.
 	</td>
 </tr>
 <tr><td id="timelapsefflog"><span class="WebUISetting">Log Level</span></td>
@@ -1138,19 +1170,20 @@ A (partial) typical page is below.
 	</td></tr>
 <tr><td id="REMOTEWEBSITE_LFTP_COMMANDS"><span class="WebUISetting">FTP Commands</span></td>
 	<td></td>
-	<td>(ftp protocols only) Optional colon-separated list of commands to send to the ftp server
-		prior to transfering files.
+	<td>(ftp protocols only) Optional command(s) to send to the ftp server prior to transfering files.
 		If you have problems uploading to an ftp server you'll often need to add
 		something to this field - see the
 		<a allsky="true" external="true" href="/documentation/troubleshooting/uploads.html">Troubleshooting -> Uploads</a>
 		page for more information.
+		<br>
+		If you need to add multiple commands, separate them with a semi-colon.
 	</td></tr>
-<tr><td id="REMOTEWEBSITE_SSH_KEY_FILE"><span class="WebUISetting">SSH Key File</span></td>
+<tr><td id="REMOTEWEBSITE_SSH_KEY_FILE"><span class="WebUISetting">SSH Public Key File</span></td>
 	<td></td>
-	<td>(scp and rsync protocols only) Path to the SSH key.
+	<td>(scp and rsync protocols only) Path to the SSH public key file.
 	<p>
 	You need to set up SSH key authentication on your server.
-	First, generate an SSH key on your Pi:
+	First, generate a public SSH key on your Pi:
 <pre>ssh-keygen -t rsa</pre>
 	When prompted, leave the default filename, and use an empty passphrase.
 	</p>
@@ -1161,7 +1194,7 @@ A (partial) typical page is below.
 	If you are prompted to <code>...continue connecting...</code>, enter <code>yes</code>.
 	<p>
 	The private SSH key will be stored in
-	<span class="fileName">~/.ssh</span> (default filename is <span class="fileName">id_rsa</span>).
+	<span class="fileName">~/.ssh/id_rsa</span>).
 	</p>
 	<p>
 	If you are using SSH Key with Amazon's Lightsail,
@@ -1241,33 +1274,17 @@ aws configure
 	<br>This is rarely used since changing the image name will make it unviewable.
 	</td>
 </tr>
-<tr><td id="remotewebsitevideodestinationname"><span class="WebUISetting">Remote Video File Name</span></td>
-	<td></td>
-	<td>The name to give to the remote timelapse video file.
-		If not specified it's the same as the file on your Pi.
-	<br>This is rarely used since changing the image name will make it unviewable.
-	</td></tr>
-<tr><td id="remotewebsitekeogramdestinationname"><span class="WebUISetting">Remote Keogram File Name</span></td>
-	<td></td>
-	<td>The name to give to the remote keogram file.
-		If not specified it's the same as the file on your Pi.
-	<br>This is rarely used since changing the image name will make it unviewable.
-	</td></tr>
-<tr><td id="remotewebsitestartrailsdestinationname"><span class="WebUISetting">Remote Startrails File Name</span></td>
-	<td></td>
-	<td>The name to give to the remote startrails file.
-		If not specified it's the same as the file on your Pi.
-	<br>This is rarely used since changing the image name will make it unviewable.
-	</td></tr>
 <tr><td id="remotewebsiteurl"><span class="WebUISetting">Website URL</span></td>
 	<td></td>
 	<td>Your website's URL, for example
 	<span class="WebUIValue">https://www.mywebsite.com/allsky</span>.
 	<blockquote>
-	If a <span class="WebUISetting">Website URL</span> is specified,
-	the <span class="WebUISetting">Image URL</span> must also be specified, and vice versa.
-	<br>Both URLs must begin with
-	<span class="WebUIValue">http</span> or <span class="WebUIValue">https</span>.
+	<ul>
+		<li>If a <span class="WebUISetting">Website URL</span> is specified,
+			the <span class="WebUISetting">Image URL</span> must also be specified, and vice versa.
+		<li>Both URLs must begin with
+			<span class="WebUIValue">http</span> or <span class="WebUIValue">https</span>.
+	</ul>
 	</blockquote>
 	</td></tr>
 <tr><td id="remotewebsiteimageurl"><span class="WebUISetting">Image URL</span></td>
@@ -1313,7 +1330,7 @@ aws configure
 <tr><td id="REMOTESERVER_LFTP_COMMANDS"><span class="WebUISetting">FTP Commands</span></td>
 	<td></td>
 	<td></td></tr>
-<tr><td id="REMOTESERVER_SSH_KEY_FILE"><span class="WebUISetting">SSH Key File</span></td>
+<tr><td id="REMOTESERVER_SSH_KEY_FILE"><span class="WebUISetting">SSH Public Key File</span></td>
 	<td></td>
 	<td></td></tr>
 <tr><td id="REMOTESERVER_ASW_CLI_DIR"><span class="WebUISetting">AWS CLI Directory</span></td>

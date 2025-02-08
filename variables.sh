@@ -17,8 +17,14 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	# The "w" colors are for when output may go to a web page.
 	if tty --silent ; then
 		ON_TTY="true"
-		DIALOG_RED="\Z1";		DIALOG_NORMAL="\Zn"
-		DIALOG_UNDERLINE="\Zu"
+
+		# Dialog colors:  0-7: black, red, green, yellow, blue, magenta, cyan, white
+		# Reverse: \Zr	 reverse off: \ZR
+		DIALOG_RED="\Z1";		DIALOG_YELLOW="\Z3"
+		DIALOG_GREEN="\Z2";		DIALOG_UNDERLINE="\Zu"	# underline off: \ZU
+		DIALOG_BLUE="\Z4";		DIALOG_BOLD="\Zb"		# bold off: \ZB
+		DIALOG_NC="\Zn"			DIALOG_DEBUG="${DIALOG_YELLOW}"
+
 		GREEN="\033[0;32m";		wOK="${GREEN}"
 		YELLOW="\033[0;33m";	wWARNING="${YELLOW}"
 		RED="\033[0;31m";		wERROR="${RED}"
@@ -29,8 +35,12 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 								wBR="\n"
 	else
 		ON_TTY="false"
-		DIALOG_RED="";			DIALOG_NORMAL=""		
-		DIALOG_UNDERLINE=""
+
+		DIALOG_RED="";			DIALOG_YELLOW=""
+		DIALOG_GREEN="";		DIALOG_UNDERLINE=""
+		DIALOG_BLUE="";			DIALOG_BOLD=""
+		DIALOG_NC="";			DIALOG_DEBUG=""
+
 		GREEN="";				wOK="<span style='color: green'>"
 		YELLOW="";				wWARNING="<span style='color: #FF9800'>"
 		RED="";					wERROR="<span style='color: red'>"
@@ -154,11 +164,17 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	ALLSKY_STATUS_INSTALLING="Installing..."
 	ALLSKY_STATUS_NEVER_RUN="Never Run"
 	ALLSKY_STATUS_NOT_RUNNING="Not Running"
-	ALLSKY_STATUS_STARTING="Starting..."
+	ALLSKY_STATUS_SEE_WEBUI="Not Running - see the WebUI"
+	ALLSKY_STATUS_STARTING="Starting"
+	ALLSKY_STATUS_RESTARTING="Restarting"
 	ALLSKY_STATUS_RUNNING="Running"
-	ALLSKY_STATUS_STOPPED="Stopped (normal)"
-	ALLSKY_STATUS_ERROR="Stopped (error detected)"
-	ALLSKY_STATUS_SEE_WEBUI="See the WebUI"
+	ALLSKY_STATUS_STOPPED="Stopped"
+	ALLSKY_STATUS_ERROR="Stopped - error detected"
+	ALLSKY_STATUS_NO_CAMERA="Stopped - camera not found"
+	ALLSKY_STATUS_CAMERA_CHANGED="Stopped - camera changed"
+	ALLSKY_STATUS_REBOOT_NEEDED="Stopped - reboot needed"
+	ALLSKY_STATUS_ACTIONS_NEEDED="Stopped - actions needed"
+	ALLSKY_STATUS_NEEDS_CONFIGURATION="Allsky needs configuring"
 
 	# GitHub information - package names, repository, and contents of a file.
 	GITHUB_ROOT="https://github.com/AllskyTeam"
@@ -204,6 +220,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	# These EXIT codes from the capture programs must match what's in src/include/allsky_common.h
 	# Anything at or above EXIT_ERROR_STOP is unrecoverable and the service must be stopped
 	EXIT_OK=0
+	EXIT_PARTIAL_OK=90		# command partially worked
 	EXIT_RESTARTING=98		# process is restarting, i.e., stop, then start
 	EXIT_RESET_USB=99		# need to reset USB bus; cannot continue
 	EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
@@ -215,8 +232,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 
 	# If a user wants to define new variables or assign variables differently,
 	# then load their file if it exists.
+	ALLSKY_USER_VARIABLES="${ALLSKY_CONFIG}/uservariables.sh"
 	# shellcheck disable=SC1090,SC1091
-	[[ -f ${ALLSKY_CONFIG}/uservariables.sh ]] && source "${ALLSKY_CONFIG}/uservariables.sh"
+	[[ -f ${ALLSKY_USER_VARIABLES} ]] && source "${ALLSKY_USER_VARIABLES}"
 fi
 
 return 0

@@ -72,6 +72,7 @@ function display_header()
 	echo
 }
 
+
 #####
 function calc_wt_size()
 {
@@ -143,6 +144,44 @@ function get_variable()
 	return 0
 }
 
+
+#####
+# Strip out all color escape sequences.
+# The message may have an actual escape character or may have the
+# four characters "\033" which represent an escape character.
+
+# I don't know how to replace "\n" with an actual newline in sed,
+# and there HAS to be a better way to strip the escape sequences.
+# I simply replace actual escape characters in the input with "033" then
+# replace "033[" with "033X".
+# Feel free to improve...
+function remove_colors()
+{
+	local MSG="${1}"
+
+	local ESC="$( echo -en '\033' )"
+
+	# Ignore any initial "\" in the colors.
+	# In case a variable isn't defined, set it to a string that won't be found.
+	local G="${GREEN/\\/}"							; G="${G/033\[/033X}"
+	local Y="${YELLOW/\\/}"		; Y="${Y:-abcxyz}"	; Y="${Y/033\[/033X}"
+	local R="${RED/\\/}"		; R="${R:-abcxyz}"	; R="${R/033\[/033X}"
+	#shellcheck disable=SC2154
+	local D="${cDEBUG/\\/}"		; D="${D:-abcxyz}"	; D="${D/033\[/033X}"
+	local N="${NC/\\/}"			; N="${N:-abcxyz}"	; N="${N/033\[/033X}"
+
+	# Outer "echo -e" handles "\n" (2 characters) in input.
+	# No "-e" needed on inner "echo".
+	echo -e "$( echo "${MSG}" |
+		sed -e "s/${ESC}/033/g" \
+			-e "s/033\[/033X/g" \
+			-e "s/${G}//g" \
+			-e "s/${Y}//g" \
+			-e "s/${R}//g" \
+			-e "s/${D}//g" \
+			-e "s/${N}//g" \
+	)"
+}
 
 #####
 # Display a message of various types in appropriate colors.
@@ -233,41 +272,12 @@ function display_msg()
 		touch "${DISPLAY_MSG_LOG}"
 	fi
 
-	# Strip out all color escape sequences before adding to log file.
-	# The message may have an actual escape character or may have the
-	# four characters "\033" which represent an escape character.
-
-	# I don't know how to replace "\n" with an
-	# actual newline in sed, and there HAS to be a better way to strip the
-	# escape sequences.
-	# I simply replace actual escape characters in the input with "033" then
-	# replace "033[" with "033X".
-	# Feel free to improve...
-
 	# Assume if GREEN isn't defined then no colors are defined.
+	local MSG="$(date) ${LOGMSG}${MESSAGE2}"
 	if [[ -n ${GREEN} ]]; then
-		local ESC="$( echo -en '\033' )"
-
-		# Ignore any initial "\" in the colors.
-		# In case a variable isn't defined, set it to a string that won't be found.
-		local G="${GREEN/\\/}"							; G="${G/033\[/033X}"
-		local Y="${YELLOW/\\/}"		; Y="${Y:-abcxyz}"	; Y="${Y/033\[/033X}"
-		local R="${RED/\\/}"		; R="${R:-abcxyz}"	; R="${R/033\[/033X}"
-		local D="${cDEBUG/\\/}"		; D="${D:-abcxyz}"	; D="${D/033\[/033X}"
-		local N="${NC/\\/}"			; N="${N:-abcxyz}"	; N="${N/033\[/033X}"
-
-		# Outer "echo -e" handles "\n" (2 characters) in input.
-		# No "-e" needed on inner "echo".
-		echo -e "$( echo "$(date) ${LOGMSG}${MESSAGE2}" |
-			sed -e "s/${ESC}/033/g" -e "s/033\[/033X/g" \
-				-e "s/${G}//g" \
-				-e "s/${Y}//g" \
-				-e "s/${R}//g" \
-				-e "s/${D}//g" \
-				-e "s/${N}//g" \
-		)"
+		remove_colors "${MSG}"
 	else
-		echo "$(date) ${LOGMSG}${MESSAGE2}"
+		echo "${MSG}"
 	fi >>  "${DISPLAY_MSG_LOG}"
 }
 
@@ -410,7 +420,7 @@ function update_json_file()		# [-d] field, new value, file, [type]
 		NEW_VALUE="(delete)"	# only used in error message below.
 		ACTION="del(${FIELD})"
 	else
-		NEW_VALUE="${2}"
+		NEW_VALUE="${2/"/\\\\"}"
 		TYPE="${4}"
 
 		DOUBLE_QUOTE='"'
@@ -471,7 +481,9 @@ function update_array_field()
 }
 
 
-# Replace all the ${NEED_TO_UPDATE} placeholders.
+####
+# Replace all the ${NEED_TO_UPDATE} placeholders and
+# update mini-timelapse URL.
 function replace_website_placeholders()
 {
 	local TYPE="${1}"		# "local" or "remote" Website
@@ -486,11 +498,12 @@ function replace_website_placeholders()
 
 	# Get the array index for the mini-timelapse.
 
-	local PARENT  FIELD  INDEX  MINI_TLAPSE_DISPLAY  MINI_TLAPSE_URL
+	local RET  PARENT  FIELD  INDEX  MINI_TLAPSE_DISPLAY  MINI_TLAPSE_URL
 	local MINI_TLAPSE_DISPLAY_VALUE  MINI_TLAPSE_URL_VALUE
+
 	PARENT="homePage.leftSidebar"
 	FIELD="Mini-timelapse"
-	INDEX=$( getJSONarrayIndex "${FILE}" "${PARENT}" "${FIELD}" )
+	INDEX=$( getJSONarrayIndex "${FILE}" "${PARENT}" "${FIELD}" 2>&1 )
 	if [[ ${INDEX} -ge 0 ]]; then
 		MINI_TLAPSE_DISPLAY="${PARENT}[${INDEX}].display"
 		MINI_TLAPSE_URL="${PARENT}[${INDEX}].url"
@@ -508,13 +521,9 @@ function replace_website_placeholders()
 			fi
 		fi
 	else
-		MSG="Unable to update '${FIELD}' in ${FILE}; ignoring."
-		display_msg --log warning "${MSG}"
-		# bogus settings that won't do anything
-		MINI_TLAPSE_DISPLAY="x"
-		MINI_TLAPSE_URL="x"
-		MINI_TLAPSE_DISPLAY_VALUE=""
-		MINI_TLAPSE_URL_VALUE=""
+		MSG="Unable to update '${FIELD}' in ${FILE}:\n${INDEX}"
+		display_msg --log error "${MSG}"
+		return 1
 	fi
 
 	# For these setting, check if it's == ${NEED_TO_UPDATE}.
@@ -594,8 +603,7 @@ function replace_website_placeholders()
 		IMAGE_NAME="${FULL_FILENAME}"
 	fi
 
-	"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" --verbosity silent \
-		--config "${FILE}" \
+	"${ALLSKY_SCRIPTS}/updateJsonFile.sh" --verbosity silent --file "${FILE}" \
 		config.imageName			"imageName"			"${IMAGE_NAME}" \
 		config.latitude				"latitude"			"${LATITUDE}" \
 		config.longitude			"longitude"			"${LONGITUDE}" \
@@ -608,6 +616,14 @@ function replace_website_placeholders()
 		"${WEBSITE_ALLSKY_VERSION}"	"AllskyVersion"		"${ALLSKY_VERSION}" \
 		"${MINI_TLAPSE_DISPLAY}"	"mini_display"		"${MINI_TLAPSE_DISPLAY_VALUE}" \
 		"${MINI_TLAPSE_URL}"		"mini_url"			"${MINI_TLAPSE_URL_VALUE}"
+	RET=$?
+	if [[ ${RET} -ne 0 ]]; then
+		MSG="updateJsonFile.sh failed with RET ${RET}"
+		display_msg --logonly info "${MSG}"
+		return 1
+	fi
+
+	return 0
 }
 
 
@@ -619,19 +635,23 @@ function prepare_local_website()
 {
 	local FORCE="${1}"
 	local POST_DATA="${2}"
-
-	display_msg --log progress "Creating default ${ALLSKY_WEBSITE_CONFIGURATION_NAME}."
+	local MSG=""
 
 	# Make sure there's a config file.
 	if [[ ! -s ${ALLSKY_WEBSITE_CONFIGURATION_FILE} || ${FORCE} == "--force" ]]; then
+		MSG="Creating default ${ALLSKY_WEBSITE_CONFIGURATION_NAME}."
+		display_msg --log progress "${MSG}"
 		cp "${REPO_WEBSITE_CONFIGURATION_FILE}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 	fi
 
-	replace_website_placeholders "local" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+	if replace_website_placeholders "local" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" ; then
+		MSG="Replaced placeholders in ${ALLSKY_WEBSITE_CONFIGURATION_NAME}."
+		display_msg --logonly progress "${MSG}"
+	fi
 
 	if [[ ${POST_DATA} == "postData" && "$( settings ".uselocalwebsite" )" == "true" ]]; then
 		# --fromWebUI tells it to be mostly silent.
-		local MSG="$( "${ALLSKY_SCRIPTS}/postData.sh" --fromWebUI --allfiles 2>&1 )"
+		MSG="$( "${ALLSKY_SCRIPTS}/postData.sh" --fromWebUI --allfiles 2>&1 )"
 		if [[ $? -eq 0 ]]; then
 			display_msg --log progress "${MSG}"
 		else
@@ -647,19 +667,26 @@ function update_old_website_config_file()
 {
 	local FILE PRIOR_VERSION CURRENT_VERSION
 
+# TODO: create a .php file that reads the prior file into an array,
+# then reads the repo file into another array, then copies from prior array to repo array,
+# deleting / changing as needed.
+
 	FILE="${1}"
 	PRIOR_VERSION="${2}"
 	CURRENT_VERSION="${3}"
 
-	# Current version: 2
+	# Version: 1 from v2023.05.01*
+	# Version: 2 from v2024.12.06
+	# Current version: 3 from v2024.12.06_01
 	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
+		# These steps bring version 1 up to 2.
 		# Deletions:
 		update_json_file -d ".AllskyWebsiteVersion" "" "${FILE}"
 		update_json_file -d ".homePage.onPi" "" "${FILE}"
 		update_array_field "${FILE}" "homePage.popoutIcons" "variable" "AllskyWebsiteVersion" "--delete"
 
 		# Additions:
-		# Add in same place as new file
+		# Add in same place as in repo file.
 		local NEW='      \"thumbnailsizex\": 100,\
         \"thumbnailsizey\": 75,\
         \"thumbnailsortorder\": \"ascending\",'
@@ -669,6 +696,43 @@ function update_old_website_config_file()
 		for i in "videos" "keograms" "startrails"; do
 			update_array_field "${FILE}" "homePage.leftSidebar" "url" "${i}" "${i}/"
 		done
+	fi
+
+	# Try to determine what future changes are needed,
+	# rather than compare version numbers as above.
+	if ! grep --silent "meteors/" "${FILE}" ; then
+		# Added in version 3.
+		# Add after "startrails/" entry.
+		TEMP="/tmp/$$"
+		gawk 'BEGIN { found_startrails = 0; }
+			{
+				print $0;
+
+				if (found_startrails == 1) {
+					if ($1 == "},") {
+						spaces6 = "      ";
+						spaces8 = "        ";
+						printf("%s{\n", spaces6);
+						printf("%s\"display\": false,\n", spaces8)
+						printf("%s\"url\": \"meteors/\",\n", spaces8)
+						printf("%s\"title\": \"Archived Meteors/\",\n", spaces8)
+						printf("%s\"icon\": \"fa fa-2x fa-fw fa-meteor\",\n", spaces8)
+						printf("%s\"style\": \"\"\n", spaces8)
+						printf("%s},\n", spaces6);
+	
+						while (getline) {
+							print $0;
+						}
+						exit(0);
+					}
+				} else if ($0 ~ /"startrails\/"/) {
+					found_startrails = 1;
+				}
+			}' "${FILE}" > "${TEMP}"
+		if [[ $? -eq 0 ]]; then
+			# cp so it keeps ${FILE}'s attributes
+			cp "${TEMP}" "${FILE}" && rm -f "${TEMP}"
+		fi
 	fi
 
 	# Set to current config and Allsky versions.
@@ -714,108 +778,224 @@ function create_lighttpd_log_file()
 }
 
 ####
-# Check for size of RAM+swap during installation (Issue # 969)
-# and ask the user to increase if not "big enough".
-# recheck_swap() is is referenced in the Allsky Documentation and can
-# optionally be called after installation to adjust swap space.
+# Determine the RAM size in MB and a suggested swap and tmp size.
+# If already determined, just return.
+SUGGESTED_SWAP_SIZE=""
+SUGGESTED_TMP_SIZE=""
+RAM_SIZE=""
+function get_ram_tmp_swap()
+{
+	[[ -n ${RAM_SIZE} ]] && return	# already determined numbers
+
+	# This can return "total_mem is unknown" if the OS is REALLY old.
+	RAM_SIZE="$( get_RAM "MB" )"
+	if [[ ${RAM_SIZE} == "unknown" ]]; then
+		# Note: This doesn't produce exact results.  On a 4 GB Pi, it returns 3.74805.
+		RAM_SIZE=$( free --mebi | gawk '{if ($1 == "Mem:") {print $2; exit 0} }' )		# in MB
+	fi
+
+	declare -A TMP_SIZES=()
+	TMP_SIZES["512"]=75
+	TMP_SIZES["1024"]=150
+	TMP_SIZES["2048"]=200
+	TMP_SIZES["4096"]=300
+	local TMP_MAX=400
+	TMP_SIZES["8192"]=${TMP_MAX}
+
+	SUGGESTED_SWAP_SIZE=0
+	SUGGESTED_TMP_SIZE=0
+	local DESIRED_SWAP_COMBINATION=$((1024 * 5))	# desired minimum memory + swap in GB
+	for i in 512 1024 2048 4096 8192
+	do
+		if [[ ${RAM_SIZE} -le ${i} ]]; then
+			local SWAP=$(( DESIRED_SWAP_COMBINATION - i ))
+			if [[ ${SWAP} -gt 0 ]]; then
+				SUGGESTED_SWAP_SIZE="${SWAP}"
+			fi		# Will be < 0 at 8192 and above.
+			SUGGESTED_TMP_SIZE=${TMP_SIZES["${i}"]}
+			break
+		fi
+	done
+	if [[ ${SUGGESTED_TMP_SIZE} -eq 0 ]]; then
+		SUGGESTED_TMP_SIZE=${TMP_MAX}
+	fi
+}
+
+####
+# Prompt for either a 0 or a positive number.
+function get_0_or_positive()
+{
+	local CURRENT_NUM="${1}"
+	local WHAT="${2}"
+	local MSG="${3}"
+
+	local NEW_NUM=""
+	local ERR_MSG="\nERROR: You must enter a number, either:"
+	ERR_MSG+="\n    a '0' to ${WHAT} (NOT RECOMMENDED)"
+	ERR_MSG+="\nor"
+	ERR_MSG+="\n    a size in MB\n"
+
+	while [[ -z ${NEW_NUM} ]] ; do
+		NEW_NUM=$( whiptail --title "${TITLE}" --inputbox "${MSG}\n" 20 "${WT_WIDTH}" \
+		 	"${CURRENT_NUM}"  3>&1 1>&2 2>&3 )
+		local RET=$?
+		if [[ ${RET} -eq 1 ]]; then		# Cancel button
+			NEW_NUM="${CURRENT_NUM}"
+		elif [[ -z ${NEW_NUM} ]]; then
+			MSG="${ERR_MSG}"
+		elif ! is_number "${NEW_NUM}" ; then
+			MSG="${ERR_MSG}"
+			MSG+="\nYou entered: ${NEW_NUM}\n"
+			NEW_NUM=""
+		elif [[ "${NEW_NUM}" -lt 0 ]]; then
+			MSG="${ERR_MSG}"
+			MSG+="\nYou entered a negative number: ${NEW_NUM}\n"
+			NEW_NUM=""
+		fi
+		[[ -z ${NEW_NUM} ]] && MSG+="\nTry again.\n"
+	done
+
+	# If the suggested number was 0 and the user added a number but didn't
+	# first delete the 0, do it now so we don't have numbers like "0256".
+	[[ ${NEW_NUM} != "0" && ${NEW_NUM:0:1} == "0" ]] && NEW_NUM="${NEW_NUM:1}"
+
+	echo "${NEW_NUM}"
+}
+
+####
+# Output a message based on ${FROM}.
+function m()
+{
+	local MSG="${1}"
+	local MSG2="${2}"
+	local LOG="${3}"
+	local LEVEL="${4}"
+	local FROM="${5}"
+
+	if [[ ${FROM} == "install" ]]; then
+		display_msg "${LOG}" log "${LEVEL}" "${MSG}" "${MSG2}"
+	else
+		if [[ ${LEVEL} == "error" ]]; then
+			wE_ "\nERROR: ${MSG}${MSG2}\n"
+		elif [[ ${LEVEL} == "warning" ]]; then
+			wW_ "\nWARNING: ${MSG}${MSG2}\n"
+		elif [[ ${LEVEL} == "progress" ]]; then
+			wO_ "\n${MSG}${MSG2}\n"
+		else
+			echo -e "\n${MSG}${MSG2}\n"
+		fi
+	fi
+}
+
+####
+# Called from allsky-config after installation to adjust amount.
 function recheck_swap()
 {
-	check_swap "after_install" "prompt"
+	check_swap "after_install"  "true"
 }
+
+####
+# Allow the user to change the amount of swap space used.
 function check_swap()
 {
+	local CALLED_FROM="${1}"
+	local PROMPT="${2:-false}"
+
 	# global: TITLE  WT_WIDTH
 	local SWAP_CONFIG_FILE="/etc/dphys-swapfile"
-	local CALLED_FROM PROMPT
-	CALLED_FROM="${1}"
-	PROMPT="${2:-false}"
+	local CURRENT_SWAP  AMT  M  MSG  NEW_SIZE  CURRENT_MAX  CHANGE_SUGGESTED
 
 	if [[ ${CALLED_FROM} == "install" ]]; then
 		declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" && ${PROMPT} == "false" ]] && return
 	fi
 
 	[[ -z ${WT_WIDTH} ]] && WT_WIDTH="$( calc_wt_size )"
-	local RAM_SIZE  DESIRED_COMBINATION  SUGGESTED_SWAP_SIZE  CURRENT_SWAP
-	local AMT  M  MSG  SWAP_SIZE  CURRENT_MAX
 
-	# This can return "total_mem is unknown" if the OS is REALLY old.
-	RAM_SIZE="$( vcgencmd get_config total_mem )"
-	if [[ ${RAM_SIZE} =~ "unknown" ]]; then
-		# Note: This doesn't produce exact results.  On a 4 GB Pi, it returns 3.74805.
-		RAM_SIZE=$( free --mebi | awk '{if ($1 == "Mem:") {print $2; exit 0} }' )		# in MB
-	else
-		RAM_SIZE="${RAM_SIZE//total_mem=/}"
-	fi
-	DESIRED_COMBINATION=$((1024 * 5))		# desired minimum memory + swap
-	SUGGESTED_SWAP_SIZE=0
-	for i in 512 1024 2048 4096		# 8192 and above don't need any swap
-	do
-		if [[ ${RAM_SIZE} -le ${i} ]]; then
-			SUGGESTED_SWAP_SIZE=$((DESIRED_COMBINATION - i))
-			break
-		fi
-	done
-	display_msg --logonly info "RAM_SIZE=${RAM_SIZE}, SUGGESTED_SWAP_SIZE=${SUGGESTED_SWAP_SIZE}."
+	get_ram_tmp_swap		# Sets ${RAM_SIZE} and ${SUGGESTED_SWAP_SIZE}
+	MSG="RAM_SIZE=${RAM_SIZE}, SUGGESTED_SWAP_SIZE=${SUGGESTED_SWAP_SIZE}."
+	# /dev/null so no ouput when not called from installer
+	m "${MSG}" "" "--log" "info" "${CALLED_FROM}" > /dev/null
 
-	# Not sure why, but displayed swap is often 1 MB less than what's in /etc/dphys-swapfile
-	CURRENT_SWAP=$( free --mebi | awk '{if ($1 == "Swap:") {print $2 + 1; exit 0} }' )	# in MB
-	CURRENT_SWAP=${CURRENT_SWAP:-0}
+	# With "free -mebi" the displayed swap is often 1 MB less than what's in
+	# /etc/dphys-swapfile, I think because "free -mebi" rounds down to an int.
+	# Fix by gettting size in kibi (kilo) and divide by 1024 and convert to an int.
+	CURRENT_SWAP=$( free --kibi |
+			gawk 'BEGIN { swap = 0; }
+			{
+				if ($1 == "Swap:") {
+					swap = $2 / 1024;
+					exit 0;
+				}
+			}
+			END { printf("%.f", swap); }'
+		)	# in MB
+
 	if [[ ${CURRENT_SWAP} -lt ${SUGGESTED_SWAP_SIZE} || ${PROMPT} == "true" ]]; then
-
-		[[ -z ${FUNCTION} ]] && sleep 2		# give user time to read prior messages
-		if [[ ${CURRENT_SWAP} -eq 1 ]]; then
-			CURRENT_SWAP=0
+		if [[ ${CURRENT_SWAP} -eq 0 ]]; then
 			AMT="no"
-			M="added"
 		else
 			AMT="${CURRENT_SWAP} MB of"
-			M="increased"
 		fi
 		MSG="\nYour Pi currently has ${AMT} swap space."
 		MSG+="\nBased on your memory size of ${RAM_SIZE} MB,"
 		if [[ ${CURRENT_SWAP} -ge ${SUGGESTED_SWAP_SIZE} ]]; then
+			CHANGE_SUGGESTED="false"
 			SUGGESTED_SWAP_SIZE=${CURRENT_SWAP}
 			MSG+=" there is no need to change anything, but you can if you would like."
 		else
-			MSG+=" we suggest ${SUGGESTED_SWAP_SIZE} MB of swap"
-			MSG+=" to decrease the chance of timelapse and other failures."
-			MSG+="\n\nDo you want swap space ${M}?"
+			CHANGE_SUGGESTED="true"
+			MSG+=" the recommended swap size is ${SUGGESTED_SWAP_SIZE} MB."
+			MSG+=" which will decrease the chance of timelapse and other failures."
 			MSG+="\n\nYou may change the amount of swap space by changing the number below."
 		fi
 
-		SWAP_SIZE=$( whiptail --title "${TITLE}" --inputbox "${MSG}" 18 "${WT_WIDTH}" \
-			"${SUGGESTED_SWAP_SIZE}" 3>&1 1>&2 2>&3 )
-		# If the suggested swap was 0 and the user added a number but didn't first delete the 0,
-		# do it now so we don't have numbers like "0256".
-		[[ ${SWAP_SIZE:0:1} == "0" ]] && SWAP_SIZE="${SWAP_SIZE:1}"
-
-		if [[ -z ${SWAP_SIZE} || ${SWAP_SIZE} == "0" ]]; then
-			if [[ ${CURRENT_SWAP} -eq 0 && ${SUGGESTED_SWAP_SIZE} -gt 0 ]]; then
-				display_msg --log warning "With no swap space you run the risk of programs failing."
-			else
-				display_msg --log info "Swap will remain at ${CURRENT_SWAP}."
+		NEW_SIZE="$( get_0_or_positive "${SUGGESTED_SWAP_SIZE}" "disable swap space" "${MSG}" )"
+		if [[ ${NEW_SIZE} -eq 0 ]]; then
+			if [[ ${CHANGE_SUGGESTED} == "true" && ${SUGGESTED_SWAP_SIZE} -gt 0 ]]; then
+				MSG="With no swap space you run the risk of programs failing."
+				m "${MSG}" "" "--log" "warning" "${CALLED_FROM}"
 			fi
-		else
-			display_msg --log progress "Setting swap space to ${SWAP_SIZE} MB."
-			sudo dphys-swapfile swapoff					# Stops the swap file
-			sudo sed -i "/CONF_SWAPSIZE/ c CONF_SWAPSIZE=${SWAP_SIZE}" "${SWAP_CONFIG_FILE}"
 
+			if [[ ${CURRENT_SWAP} -gt 0 ]]; then
+				MSG="Swap space disabled."
+				m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
+
+				sudo dphys-swapfile swapoff				# Stop using swap file
+				sudo dphys-swapfile uninstall			# Remove the swap file
+				sudo sed -i "/CONF_SWAPSIZE=/ c CONF_SWAPSIZE=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
+			else
+				MSG="Swap space remaining disabled."
+				m "${MSG}" "" "--logonly" "info" "${CALLED_FROM}"
+			fi
+		elif [[ ${NEW_SIZE} -eq ${CURRENT_SWAP} && ${CHANGE_SUGGESTED} == "false" ]]; then
+			# User didn't change, and CURRENT_SWAP is sufficient.
+			MSG="Swap size will remain at ${CURRENT_SWAP} MB."
+			m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
+		else
+			MSG="Swap size set to ${NEW_SIZE} MB."
+			m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
+
+			sudo dphys-swapfile swapoff					# Stop using swap file
+			sudo sed -i "/CONF_SWAPSIZE=/ c CONF_SWAPSIZE=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
+
+			# If NEW_SIZE is greater than the current max, increase the max.
 			CURRENT_MAX="$( get_variable "CONF_MAXSWAP" "${SWAP_CONFIG_FILE}" )"
 			# TODO: Can we determine the default max rather than hard-code it?
 			CURRENT_MAX="${CURRENT_MAX:-2048}"
-			if [[ ${CURRENT_MAX} -lt ${SWAP_SIZE} ]]; then
+			if [[ ${CURRENT_MAX} -lt ${NEW_SIZE} ]]; then
 				if [[ ${DEBUG} -gt 0 ]]; then
-					display_msg --log debug "Increasing max swap size to ${SWAP_SIZE} MB."
+					MSG="Max swap size increased to ${NEW_SIZE} MB."
+					m "${MSG}" "" "--logonly" "debug" "${CALLED_FROM}"
 				fi
-				sudo sed -i "/CONF_MAXSWAP/ c CONF_MAXSWAP=${SWAP_SIZE}" "${SWAP_CONFIG_FILE}"
+				sudo sed -i "/CONF_MAXSWAP/ c CONF_MAXSWAP=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
 			fi
 
-			sudo dphys-swapfile setup  > /dev/null		# Sets up new swap file
-			sudo dphys-swapfile swapon					# Turns on new swap file
+			sudo dphys-swapfile setup  > /dev/null		# Set up new swap file
+			sudo dphys-swapfile swapon					# Turn on new swap file
 		fi
 	else
 		MSG="Size of current swap (${CURRENT_SWAP} MB) is sufficient; no change needed."
-		display_msg --logonly info "${MSG}"
+		m "${MSG}" "" "--logonly" "info" "${CALLED_FROM}"
 	fi
 
 	if [[ ${CALLED_FROM} == "install" ]]; then
@@ -825,104 +1005,298 @@ function check_swap()
 
 
 ####
-
-INITIAL_FSTAB_STRING="tmpfs ${ALLSKY_TMP} tmpfs"
-
-# Is the tmp directory mounted?
+# Is the specified directory mounted?
 function is_mounted()
 {
 	local TMP="${1}"
 
-	mount | grep --quiet "${TMP}"
-}
-function umount_tmp()
-{
-	local TMP="${1}"
-
-	sudo umount -f "${TMP}" 2> /dev/null ||
-		{
-			sudo systemctl restart smbd 2> /dev/null
-			sudo umount -f "${TMP}" 2> /dev/null
-		}
+	grep --quiet "${TMP}" "/proc/mounts"
 }
 
 ####
+# Mount the specified directory.
+function mount_dir()
+{
+	local DIR="${1}"
+	local FROM="${2}"
+
+	local ERR_MSG
+	if ! ERR_MSG="$( sudo mount "${DIR}" )" ; then
+		local MSG="Unable to mount '${DIR}': ${ERR_MSG}."
+		m "${MSG}" "" "--log" "warning" "${FROM}"
+	fi
+}
+
+####
+# Unmount the specified directory.
+function umount_dir()
+{
+	local DIR="${1}"
+	local FROM="${2}"
+
+	# Make sure we're not anywhere in ${DIR} - that can cause the umount to fail.
+	# shellcheck disable=SC2103,SC2164
+	cd / 2>/dev/null
+
+	local RET=0
+	sudo umount --force "${DIR}" 2> /dev/null ||
+		{
+			# The Samba daemon is one known cause of "target busy".
+			sudo systemctl restart smbd 2> /dev/null
+
+			if ! sudo umount --lazy "${DIR}" 2> /dev/null ; then
+				RET=1
+				local WHO="$( lsof "${DIR}" )"		# lists open files on ${DIR}
+				if [[ -n ${WHO} ]]; then
+					local ERR_MSG="Unable to unmount '${DIR}'"
+					m "${ERR_MSG}" "${WHO}" "--logonly" "info" "${FROM}"
+				fi
+			fi
+		}
+
+	if [[ ${OLDPWD} == "${DIR}" ]]; then
+		MSG="WARNING: You are in the '${DIR}' directory;"
+		local MSG2=" run 'cd ${OLDPWD}'"
+		m "${MSG}" "${MSG2}" "--log" "warning" "${FROM}"
+	fi
+	# shellcheck disable=SC2103,SC2164
+	cd "${OLDPWD}" 2>/dev/null
+
+	return "${RET}"
+}
+
+
+####
+# Save important files in ${ALLSKY_TMP}.
+TMP_DIR_="/tmp/IMAGES"
+function save_tmp()
+{
+	if [[ -d "${ALLSKY_TMP}" ]]; then
+		mkdir -p "${TMP_DIR_}"
+		find "${ALLSKY_TMP}" -maxdepth 1 \! \
+			\( -wholename "${ALLSKY_TMP}" -o -name '*.jpg' -o -name '*.png' \) \
+			 -exec mv '{}' "${TMP_DIR_}" \;
+		rm -fr "${ALLSKY_TMP:?}"/*
+	else
+		mkdir "${ALLSKY_TMP}"
+	fi
+}
+# And restore the files
+function restore_tmp()
+{
+	[[ ! -d ${TMP_DIR_} ]] && return
+	find "${TMP_DIR_}" -maxdepth 1 \! -wholename "${TMP_DIR_}" -exec mv '{}' "${ALLSKY_TMP}" \;
+	rmdir "${TMP_DIR_}" 2>/dev/null
+}
+
+####
+# Check if ${ALLSKY_TMP} exists, and if it does,
+# save any *.jpg files (which we probably created), then remove everything else,
+# then mount it.
+function check_and_mount_tmp()
+{
+	local FROM="${1:-install}"
+
+	save_tmp
+
+	is_mounted "${ALLSKY_TMP}" && umount_dir "${ALLSKY_TMP}" "${FROM}"
+
+	# Now mount and restore any images that were there before
+	sudo systemctl daemon-reload 2> /dev/null
+	mount_dir "${ALLSKY_TMP}" "${FROM}"
+
+	restore_tmp
+}
+
+####
+# Called from allsky-config after installation to adjust amount.
 function recheck_tmp()
 {
-	check_tmp "after_install"
+	check_tmp "after_install" "true"
 }
+
 ####
-# Check if prior ${ALLSKY_TMP} was a memory filesystem.
+# Check if ${ALLSKY_TMP} is a memory filesystem.
 # If not, offer to make it one.
 function check_tmp()
 {
+	local CALLED_FROM="${1}"
+# TODO: default to "false" so we don't prompt during installation
+	local PROMPT="${2:-true}"
+
 	# global: TITLE  WT_WIDTH
-	local PROMPT  CALLED_FROM
-	CALLED_FROM="${1}"
+	local CURRENT_STRING  STRING  MSG  D  SIZE  NEW_SIZE  ERR_MSG
+	local FSTAB="/etc/fstab"
 
 	if [[ ${CALLED_FROM} == "install" ]]; then
 		declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 	fi
 
 	[[ -z ${WT_WIDTH} ]] && WT_WIDTH="$( calc_wt_size )"
-	local STRING  SIZE  D  MSG
 
-	# If the prior ${ALLSKY_TMP} was a memory filesystem it will have an entry
-	# in /etc/fstab with ${ALLSKY_TMP} in it, even if it's not currently mounted.
-	if grep --quiet "^${INITIAL_FSTAB_STRING}" /etc/fstab ; then
-		MSG="${ALLSKY_TMP} is currently a memory filesystem; no change needed."
-		display_msg --logonly info "${MSG}"
+	# If ${ALLSKY_TMP} is a memory filesystem it will have an entry in ${FSTAB},
+	# even if it's not currently mounted.
+	if CURRENT_STRING="$( grep " ${ALLSKY_TMP} " "${FSTAB}" )" ; then
+		if [[ ${CALLED_FROM} == "install" ]]; then
+			# During installation, don't give the user the option of changing.
+			# They can do it afterwards via "allsky-config".
+			MSG="${ALLSKY_TMP} is currently a memory filesystem; no change needed."
+			display_msg --logonly info "${MSG}"
 
-		# If there's a prior Allsky version and it's tmp directory is mounted,
-		# try to unmount it, but that often gives an error that it's busy,
-		# which isn't really a problem since it'll be unmounted at the reboot.
-		# We know from the grep above that /etc/fstab has ${ALLSKY_TMP}
-		# but the mount point is currently in the PRIOR Allsky.
-		D="${PRIOR_ALLSKY_DIR}/tmp"
-		if [[ -d "${D}" ]] && mount | grep --silent "${D}" ; then
-			# The Samba daemon is one known cause of "target busy".
-			umount_tmp "${D}"
+			# If there's a prior Allsky version and its tmp directory is mounted,
+			# try to unmount it, but that often gives an error that it's busy,
+			# which isn't a problem since it'll be unmounted at the next reboot.
+			# We know from the grep above that ${FSTAB} has ${ALLSKY_TMP}
+			# but the mount point is currently in the PRIOR Allsky.
+			D="${PRIOR_ALLSKY_DIR}/tmp"
+			if [[ -d "${D}" ]] && is_mounted "${D}" ; then
+				if ! umount_dir "${D}" "${CALLED_FROM}" ; then
+					set_reboot_needed		# Will force the unmount
+				fi
+			fi
+
+			STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+
+			# If the new Allsky's ${ALLSKY_TMP} is already mounted, don't do anything.
+			# This would be the case during an upgrade.
+			if is_mounted "${ALLSKY_TMP}" ; then
+				display_msg --logonly info "${ALLSKY_TMP} already mounted."
+				return 0
+			fi
+
+			check_and_mount_tmp "${CALLED_FROM}"		# works on new ${ALLSKY_TMP}
+			return 0
+		fi
+	fi
+
+	get_ram_tmp_swap		# Sets ${RAM_SIZE} and ${SUGGESTED_TMP_SIZE}
+
+	if [[ -n ${CURRENT_STRING} ]]; then
+		if [[ ${PROMPT} != "true" ]]; then
+			if [[ ${CALLED_FROM} == "install" ]]; then
+				STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+			fi
+			return 0	# Not prompting, so leave as is.
+		fi
+		SIZE="$( echo "${CURRENT_STRING}" | sed -e "s;^.* size=;;" -e "s;M.*;;" )"
+	else
+		SIZE=${SUGGESTED_TMP_SIZE}
+	fi
+
+	if [[ ${PROMPT} == "true" ]]; then
+		if [[ -n ${CURRENT_STRING} ]]; then
+			MSG="\nThe ${ALLSKY_TMP} directory is already in memory.\n"
+			MSG+="\nYou can:"
+			MSG+="\n    adjust the size in MB,"
+			MSG+="\nor"
+			MSG+="\n    set to '0' to remove it from memory (NOT RECOMMENDED)."
+			if [[ ${SIZE} != "${SUGGESTED_TMP_SIZE}" ]]; then
+				MSG+="\n\nThe recommended size for your Pi is ${SUGGESTED_TMP_SIZE} MB."
+			fi
+		else
+			MSG="Putting the ${ALLSKY_TMP} directory into memory drastically"
+			MSG+=" decreases the number of writes to the SD card, increasing its life."
+			MSG+=" It also speeds up processing."
+			MSG+="\n\nIf you want to do this, either leave the default MB below or adjust it."
+			MSG+="\nIf you do NOT want to do this, set the size to 0."
+			MSG+="\n\nNote: anything in that directory will be deleted whenever the Pi is rebooted,"
+			MSG+=" but that's not an issue since the directory only contains temporary files."
 		fi
 
+		NEW_SIZE="$( get_0_or_positive "${SIZE}" "remove ${ALLSKY_TMP} from memory" "${MSG}" )"
+	else
+		NEW_SIZE="${SIZE}"	# Not prompting, so go with default size
+	fi
+
+	local QUIT="false"
+	if [[ -n ${CURRENT_STRING} ]]; then
+		if [[ ${NEW_SIZE} -eq ${SIZE} ]]; then
+			MSG="No changes to the size of '${ALLSKY_TMP}' made."
+			QUIT="true"
+		fi
+	elif [[ ${NEW_SIZE} -eq 0 ]]; then
+		MSG="The ${ALLSKY_TMP} directory will remain on the SD card."
+		QUIT="true"
+	fi
+	if [[ ${QUIT} == "true" ]]; then
+		m "${MSG}" "" "--log" "info" "${CALLED_FROM}"
 		if [[ ${CALLED_FROM} == "install" ]]; then
 			STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 		fi
-
-		# If the new Allsky's ${ALLSKY_TMP} is already mounted, don't do anything.
-		# This would be the case during an upgrade.
-		if mount | grep --silent "${ALLSKY_TMP}" ; then
-			display_msg --logonly info "${ALLSKY_TMP} already mounted."
-			return 0
-		fi
-
-		check_and_mount_tmp		# works on new ${ALLSKY_TMP}
 		return 0
 	fi
 
-	SIZE=75		# MB - should be enough
-	MSG="Putting the ${ALLSKY_TMP} director and its contents into memory drastically"
-	MSG+=" decreases the number of writes to the SD card, increasing its life."
-	MSG+="\n\nDo you want to do this?"
-	MSG+="\n\nNote: anything in that directory will be deleted whenever the Pi is rebooted,"
-	MSG+=" but that's not an issue since the directory only contains temporary files."
-	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
-		STRING="${INITIAL_FSTAB_STRING} size=${SIZE}M,noatime,lazytime,nodev,"
+	# Allsky isn't running when called from the installer.
+	[[ ${NEW_SIZE} -ge 0 && ${CALLED_FROM} != "install" ]] && stop_Allsky
+
+	if [[ ${NEW_SIZE} -gt 0 ]]; then
+		STRING="tmpfs ${ALLSKY_TMP} tmpfs size=${NEW_SIZE}M,noatime,lazytime,nodev,"
 		STRING+="nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${WEBSERVER_GROUP}"
-		if ! echo "${STRING}" | sudo tee -a /etc/fstab > /dev/null ; then
-			display_msg --log error "Unable to update /etc/fstab"
-			return 1
+
+		if [[ -n ${CURRENT_STRING} ]]; then
+			if ! sudo sed -i -e "s;${CURRENT_STRING};${STRING};" ${FSTAB} ; then
+				MSG="Unable to update ${FSTAB}."
+				m "${MSG}" "" "--log" "error" "${CALLED_FROM}"
+				return 1
+			fi
+		else
+			if ! echo "${STRING}" | sudo tee -a ${FSTAB} > /dev/null ; then
+				MSG="Unable to add to ${FSTAB}."
+				m "${MSG}" "" "--log" "error" "${CALLED_FROM}"
+				return 1
+			fi
 		fi
-		check_and_mount_tmp
-		display_msg --log progress "${ALLSKY_TMP} is now in memory."
-	else
-		MSG="The ${ALLSKY_TMP} directory and its contnts will remain on the SD card."
-		display_msg --log info "${MSG}"
-		mkdir -p "${ALLSKY_TMP}"
+
+		check_and_mount_tmp "${CALLED_FROM}"
+
+		MSG="${ALLSKY_TMP} is now in memory, size=${NEW_SIZE} MB."
+		if [[ ${CALLED_FROM} == "install" ]]; then
+			display_msg --log progress "${MSG}"
+		else
+			if [[ -n ${CURRENT_STRING} ]]; then
+				wO_ "\n${ALLSKY_TMP} is now ${NEW_SIZE} MB.\n"
+			else
+				wO_ "\n${MSG}\n"
+			fi
+
+			start_Allsky
+		fi
+
+	else	# is 0, i.e., do not put in memory
+		if [[ -n ${CURRENT_STRING} ]]; then
+			if ! sudo sed -i -e "\;${CURRENT_STRING};d" ${FSTAB} ; then
+				MSG="Unable to remove '${ALLSKY_TMP}' from ${FSTAB}"
+				m "${MSG}" "" "--log" "error" "${CALLED_FROM}"
+				return 1
+			fi
+		fi
+
+		if is_mounted "${ALLSKY_TMP}" ; then
+			save_tmp
+			umount_dir "${ALLSKY_TMP}" "${CALLED_FROM}"
+
+			# in case it wasn't already
+			chmod 775 "${ALLSKY_TMP}"
+			sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_TMP}"
+
+			restore_tmp
+		fi
+
+		if [[ ${CALLED_FROM} == "install" ]]; then
+			MSG="The ${ALLSKY_TMP} directory and its contents will remain on the SD card."
+			display_msg --log info "${MSG}"
+		else
+			start_Allsky
+			MSG="\n${ALLSKY_TMP} is no longer in memory.\n"
+			wO_ "${MSG}"
+		fi
 	fi
 
 	if [[ ${CALLED_FROM} == "install" ]]; then
 		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 	fi
+
+	return 0
 }
 
 ####
@@ -961,8 +1335,8 @@ function prompt_for_lat_long()
 }
 
 ####
-# Try to 't automatically determine the latitude and longitude.
-# If we can't prompt for them.
+# Try to automatically determine the latitude and longitude.
+# If we can't, prompt for them.
 function get_lat_long()
 {
 	# Global: SETTINGS_FILE
@@ -1051,17 +1425,30 @@ function get_lat_long()
 # Return the amount of RAM in GB.
 function get_RAM()
 {
+	# vcgencmd doesn't exist on many non-Pi computers, so return 0 on them.
+	type vcgencmd >/dev/null 2>&1 || { echo 0; return; }
+
+	local UNITS="${1:-GB}"
+
 	# Input example: total_mem=4096
 	# Pi's have either 0.5 GB or an integer number of GB.
-	sudo vcgencmd get_config total_mem | gawk --field-separator "=" '
+	sudo vcgencmd get_config total_mem | gawk --field-separator "=" -v UNITS="${UNITS}" '
 		{
-			if ($2 < 1024)
-				printf("%.1f", $2 / 1024);
-			else
-				printf("%d", $2 / 1024);
+			if ($0 ~ /unknown/) {
+				printf("unknown");
+				exit 0;
+			}
+
+			amt = $2;		# in MB
+			if (UNITS == "MB") {
+				printf("%d", amt);
+			} else if (amt < 1024) {
+				printf("%.1f", amt / 1024);
+			} else {
+				printf("%d", amt / 1024);
+			}
 			exit 0;
 		}'
-
 }
 
 
@@ -1096,17 +1483,19 @@ function get_website_checksums()
 	(
 		cd "${ALLSKY_WEBSITE}"		|| exit 1
 
-		# Add important image files.
-		echo loading.jpg
-		echo allsky-logo.png
-		echo NoThumbnail.png
-		echo allsky-favicon.png
+		{
+			# Add important image files.
+			echo loading.jpg
+			echo allsky-logo.png
+			echo NoThumbnail.png
+			echo allsky-favicon.png
 
-		# Get all non-image files except for the ones the user creates/updates.
-		find . -type f '!' '(' -name '*.jpg' -or -name '*.png' -or -name '*.mp4' ')' |
-			sed 's;^./;;' |
-			grep -E -v "myFiles/|${ALLSKY_WEBSITE_CONFIGURATION_NAME}|$( basename "${CHECKSUM_FILE}" )"
-	) | "${ALLSKY_UTILITIES}/getChecksum.php"
+			# Get all non-image files except for the ones the user creates/updates.
+			find . -type f '!' '(' -name '*.jpg' -or -name '*.png' -or -name '*.mp4' ')' |
+				sed 's;^./;;' |
+				grep -E -v "myFiles/|${ALLSKY_WEBSITE_CONFIGURATION_NAME}|$( basename "${ALLSKY_WEBSITE_CHECKSUM_FILE}" )"
+		} | "${ALLSKY_UTILITIES}/getChecksum.php"
+	)
 }
 
 
@@ -1114,14 +1503,15 @@ function get_website_checksums()
 # Update the specified file with the specified new value.
 # ${V_} must be a legal shell variable name.
 # Use V_ and VAL_ in case the caller uses V or VAL
-doV()
+function doV()
 {
-	local oldV="${1}"		# Optional name of old variable; if "" then use ${V_}.
-	local V_="${2}"			# name of the variable that holds the new value
-	local VAL_="${!V_}"		# value of the variable
-	local jV="${3}"			# new json variable name
+	local oldV="${1}"			# Optional name of old variable; if "" then use ${V_}.
+	local V_="${2}"				# name of the variable that holds the new value
+	local VAL_="${!V_}"			# value of the variable
+	local jV="${3}"				# new json variable name
 	local TYPE="${4}"
 	local FILE="${5}"
+	local HIDE="${6:-show}"		# "hide" to hide value in log file
 
 	[[ -z ${oldV} ]] && oldV="${V_}"
 
@@ -1145,8 +1535,10 @@ doV()
 		fi
 		MSG="${SPACE}${oldV}${jV} = ${VAL_}"
 		[[ -n ${oldV} ]] && MSG+=", TYPE=${TYPE}"
+		[[ ${HIDE} == "hide" ]] && MSG="${MSG/${VAL_}/<HIDDEN>}"
 		display_msg --logonly info "${MSG}"
 	else
+		[[ ${HIDE} == "hide" ]] && ERR="${ERR/${VAL_}/<HIDDEN>}"
 		# update_json_file() returns error message.
 		display_msg --log warning "${ERR}"
 	fi
@@ -1161,9 +1553,9 @@ function add_new_settings()
 {
 	local SETTINGS="${1}"
 	local OPTIONS="${2}"
-	local FROM_INSTALL="${3}"
+	local FROM="${3}"
 
-	if [[ ${FROM_INSTALL} == "false" ]]; then
+	if [[ ${FROM} != "install" ]]; then
 		function display_msg() { return; }
 	fi
 
@@ -1179,7 +1571,7 @@ function add_new_settings()
 	if [[ $? -ne 0 ]]; then
 		local M="Unable to get new settings"
 		MSG="${M}: $( < "${NEW}" )"
-		if [[ ${FROM_INSTALL} == "true" ]]; then
+		if [[ ${FROM} == "install" ]]; then
 			display_msg --log error "${MSG}"
 			exit_installation 1 "${STATUS_ERROR}" "${M}."
 		else
@@ -1207,3 +1599,121 @@ function add_new_settings()
 
 	return 0
 }
+
+
+#########
+# Functions for interacting with a dialog box.
+
+#####
+# Get the usable screen for the "dialog" command.
+function calc_d_sizes()
+{
+	# Globals: DIALOG_WIDTH, DIALOG_HEIGHT
+
+	DIALOG_WIDTH=$( tput cols )
+	(( DIALOG_WIDTH -= 10 ))
+
+	DIALOG_HEIGHT=$( tput lines )
+	(( DIALOG_HEIGHT -= 4 ))
+}
+
+####
+# Prompt the user to enter (y)/(yes) or (n)/(no).
+# This function is only used when running in text (--text) mode.
+function enter_yes_no()
+{
+	local TEXT="${1}"
+	local RET=1
+	local ANSWER
+
+	if [[ ${AUTO_CONFIRM} == "false" ]]; then
+		while true; do
+			echo -e "${TEXT}"
+			read -r -p "Do you want to continue? (y/n): " ANSWER
+			ANSWER="${ANSWER,,}"	# convert to lowercase
+
+			if [[ ${ANSWER} == "y" || ${ANSWER} == "yes" ]]; then
+				return 0
+			elif [[ ${ANSWER} == "n" || ${ANSWER} == "no" ]]; then
+				return 1
+			else
+				E_ "\nInvalid response. Please enter y/yes or n/no."
+			fi
+		done
+	else
+		return 0
+	fi
+
+	return "${RET}"
+}
+
+# prompt the user to press any key.
+# This function is only used when running in text (--text) mode.
+function press_any_key()
+{
+	if [[ ${AUTO_CONFIRM} == "false" ]]; then
+		echo -e "${1}\nPress any key to continue..."
+		read -r -n1 -s
+	fi
+}
+
+
+# Displays the specified type of Dialog, or in text mode just displays the text.
+# ${1} - The box type
+# ${2} - The title for the dialog
+# ${3} - The text to disply in the dialog
+# ${4} - Optional additional arguments to dialog
+#
+# Return - 1 if the user selected "No"; 0 otherwise
+function display_box()
+{
+	local DIALOG_TYPE="${1}"
+	local DIALOG_TITLE="${2}"
+	local DIALOG_TEXT="${3}"
+	local MORE_ARGS="${4}"
+
+	if [[ ${TEXT_ONLY} == "true" ]]; then
+		local RET=0
+		if [[ ${DIALOG_TYPE} == "--msgbox" ]]; then
+			press_any_key "${DIALOG_TEXT}"
+		elif [[ ${DIALOG_TYPE} == "--yesno" ]]; then
+			enter_yes_no "${DIALOG_TEXT}"
+			RET=$?
+		else
+			echo -e "${DIALOG_TEXT}"
+		fi
+		return "${RET}"
+	fi
+
+	# shellcheck disable=SC2086
+	dialog \
+		--colors \
+		--title "${DIALOG_TITLE}" \
+		${MORE_ARGS} \
+		"${DIALOG_TYPE}" "${DIALOG_TEXT}" ${DIALOG_HEIGHT} ${DIALOG_WIDTH}
+	return $?
+}
+
+# Displays a file Dialog, or in text mode just displays the file.
+# ${1} - The title for the dialog
+# ${2} - The filename to display
+#
+# Returns - Nothing
+function display_file()
+{
+	local DIALOG_TITLE="${1}"
+	local FILENAME="${2}"
+
+	if [[ ${TEXT_ONLY} == "true" ]]; then
+		cat "${FILENAME}"
+		return
+	fi
+
+	dialog \
+		--clear \
+		--colors \
+		--title "${DIALOG_TITLE}" \
+		--textbox "${FILENAME}" 22 77
+}
+
+#########

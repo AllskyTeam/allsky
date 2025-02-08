@@ -14,11 +14,14 @@ source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 usage_and_exit()
 {
 	local RET=${1}
-	{
-		[[ ${RET} -ne 0 ]] && echo -ne "${RED}"
-		echo -n "Usage: ${ME} DAY|NIGHT  full_path_to_image  [variable=value [...]]"
-		[[ ${RET} -ne 0 ]] && echo -e "${NC}"
-	} >&2
+	exec >&2
+	local MSG="Usage: ${ME} DAY|NIGHT  full_path_to_image  [variable=value [...]]"
+	if [[ ${RET} -ne 0 ]]; then
+		echo -e "${RED}${MSG}${NC}"
+	else
+		echo -e "${MSG}"
+	fi
+
 	exit "${RET}"
 }
 [[ $# -lt 2 ]] && usage_and_exit 1
@@ -65,6 +68,20 @@ if ! one_instance --pid-file "${PID_FILE}" --sleep "3s" --max-checks 3 \
 	exit 1
 fi
 
+# Get passed-in variables and export as AS_* so overlays can use them.
+while [[ $# -gt 0 ]]; do
+	VARIABLE="AS_${1%=*}"		# everything before the "="
+	VALUE="${1##*=}"			# everything after  the "="
+	shift
+	# Export the variable so other scripts we call can use it.
+	# shellcheck disable=SC2086
+	export ${VARIABLE}="${VALUE}"	# need "export" to get indirection to work
+done
+# Export other variables so user can use them in overlays
+export AS_CAMERA_TYPE="${CAMERA_TYPE}"
+export AS_CAMERA_MODEL="${CAMERA_MODEL}"
+export AS_CAMERA_NUMBER="${CAMERA_NUMBER}"
+
 # The image may be in a memory filesystem, so do all the processing there and
 # leave the image used by the website(s) in that directory.
 IMAGE_NAME=$( basename "${CURRENT_IMAGE}" )		# just the file name
@@ -96,20 +113,6 @@ if [[ ${CROP_IMAGE} -gt 0 ]]; then
 	RESOLUTION_X=${RESOLUTION%x*}	# everything before the "x"
 	RESOLUTION_Y=${RESOLUTION##*x}	# everything after  the "x"
 fi
-
-# Get passed-in variables.
-while [[ $# -gt 0 ]]; do
-	VARIABLE="AS_${1%=*}"		# everything before the "="
-	VALUE="${1##*=}"			# everything after  the "="
-	shift
-	# Export the variable so other scripts we call can use it.
-	# shellcheck disable=SC2086
-	export ${VARIABLE}="${VALUE}"	# need "export" to get indirection to work
-done
-# Export other variables so user can use them in overlays
-export AS_CAMERA_TYPE="${CAMERA_TYPE}"
-export AS_CAMERA_MODEL="${CAMERA_MODEL}"
-export AS_CAMERA_NUMBER="${CAMERA_NUMBER}"
 
 # If ${AS_TEMPERATURE_C} is set, use it as the sensor temperature,
 # otherwise use the temperature in ${TEMPERATURE_FILE}.
@@ -161,18 +164,16 @@ function display_error_and_exit()	# error message, notification string
 }
 
 # Resize the image if required
-RESIZE_W="$( settings ".imageresizewidth" )"
-RESIZE_H="$( settings ".imageresizeheight" )"
-export AS_RESIZE_WIDTH="${RESIZE_W}"
-export AS_RESIZE_HEIGHT="${RESIZE_H}"
-if [[ ${RESIZE_W} -gt 0 && ${RESIZE_H} -gt 0 ]]; then
+export AS_RESIZE_WIDTH="$( settings ".imageresizewidth" )"
+export AS_RESIZE_HEIGHT="$( settings ".imageresizeheight" )"
+if [[ ${AS_RESIZE_WIDTH} -gt 0 && ${AS_RESIZE_HEIGHT} -gt 0 ]]; then
 	# Make sure we were given numbers.
 	ERROR_MSG=""
-	if [[ ${RESIZE_W} != +([+0-9]) ]]; then		# no negative numbers allowed
-		ERROR_MSG+="\n'Image Resize Height' (${RESIZE_W}) must be a number."
+	if [[ ${AS_RESIZE_WIDTH} != +([+0-9]) ]]; then		# no negative numbers allowed
+		ERROR_MSG+="\n'Image Resize Height' (${AS_RESIZE_WIDTH}) must be a number."
 	fi
-	if [[ ${RESIZE_H} != +([+0-9]) ]]; then
-		ERROR_MSG+="\n'Image Resize Width' (${RESIZE_H}) must be a number."
+	if [[ ${AS_RESIZE_HEIGHT} != +([+0-9]) ]]; then
+		ERROR_MSG+="\n'Image Resize Width' (${AS_RESIZE_HEIGHT}) must be a number."
 	fi
 	if [[ -n ${ERROR_MSG} ]]; then
 		echo -e "${RED}*** ${ME}: ERROR: Image resize number(s) invalid.${NC}"
@@ -180,17 +181,17 @@ if [[ ${RESIZE_W} -gt 0 && ${RESIZE_H} -gt 0 ]]; then
 	fi
 
 	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		echo "${ME}: Resizing '${CURRENT_IMAGE}' to ${RESIZE_W}x${RESIZE_H}"
+		echo "${ME}: Resizing '${CURRENT_IMAGE}' to ${AS_RESIZE_WIDTH}x${AS_RESIZE_HEIGHT}"
 	fi
-	if ! convert "${CURRENT_IMAGE}" -resize "${RESIZE_W}x${RESIZE_H}" "${CURRENT_IMAGE}" ; then
+	if ! convert "${CURRENT_IMAGE}" -resize "${AS_RESIZE_WIDTH}x${AS_RESIZE_HEIGHT}" "${CURRENT_IMAGE}" ; then
 		echo -e "${RED}*** ${ME}: ERROR: image resize failed; not saving${NC}"
 		exit 4
 	fi
 
 	if [[ ${CROP_IMAGE} -gt 0 ]]; then
 		# The image was just resized and the resolution changed, so reset the variables.
-		RESOLUTION_X=${RESIZE_W}
-		RESOLUTION_Y=${RESIZE_H}
+		RESOLUTION_X=${AS_RESIZE_WIDTH}
+		RESOLUTION_Y=${AS_RESIZE_HEIGHT}
 	fi
 fi
 
@@ -224,16 +225,14 @@ if [[ ${CROP_IMAGE} -gt 0 ]]; then
 fi
 
 # Stretch the image if required.
-STRETCH_AMOUNT="$( settings ".imagestretchamount${DAY_OR_NIGHT,,}time" )"
-STRETCH_MIDPOINT="$( settings ".imagestretchmidpoint${DAY_OR_NIGHT,,}time" )"
-export AS_STRETCH_AMOUNT="${STRETCH_AMOUNT}"
-export AS_STRETCH_MIDPOINT="${STRETCH_MIDPOINT}"
-if [[ ${STRETCH_AMOUNT} -gt 0 ]]; then
+export AS_STRETCH_AMOUNT="$( settings ".imagestretchamount${DAY_OR_NIGHT,,}time" )"
+export AS_STRETCH_MIDPOINT="$( settings ".imagestretchmidpoint${DAY_OR_NIGHT,,}time" )"
+if [[ ${AS_STRETCH_AMOUNT} -gt 0 ]]; then
 	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		echo "${ME}: Stretching '${CURRENT_IMAGE}' by ${STRETCH_AMOUNT} @ ${STRETCH_MIDPOINT}%"
+		echo "${ME}: Stretching '${CURRENT_IMAGE}' by ${AS_STRETCH_AMOUNT} @ ${AS_STRETCH_MIDPOINT}%"
 	fi
- 	convert "${CURRENT_IMAGE}" -sigmoidal-contrast "${STRETCH_AMOUNT}x${STRETCH_MIDPOINT}%" "${CURRENT_IMAGE}"
-
+ 	convert "${CURRENT_IMAGE}" -sigmoidal-contrast \
+		"${AS_STRETCH_AMOUNT}x${AS_STRETCH_MIDPOINT}%" "${CURRENT_IMAGE}"
 	if [[ $? -ne 0 ]]; then
 		echo -e "${RED}*** ${ME}: ERROR: AUTO_STRETCH failed; not saving${NC}"
 		exit 4
@@ -514,6 +513,8 @@ fi
 # We create ${WEBSITE_FILE} as late as possible to avoid it being overwritten.
 mv "${SAVED_FILE}" "${WEBSITE_FILE}"
 
-set_allsky_status "${ALLSKY_STATUS_RUNNING}"
+# Only update if different so we don't loose original timestamp
+STATUS="$( get_allsky_status )"
+[[ ${STATUS} != "${ALLSKY_STATUS_RUNNING}" ]] && set_allsky_status "${ALLSKY_STATUS_RUNNING}"
 
 exit 0

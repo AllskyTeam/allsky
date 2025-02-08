@@ -10,6 +10,7 @@
 	}
 	$homePage = v("homePage", null, $webSettings_array);
 	$includeGoogleAnalytics = v("includeGoogleAnalytics", false, $homePage);
+	$thumbnailsortorder = v("thumbnailsortorder", "ascending", $homePage);
 ?>
 <!DOCTYPE html>
 <html lang="en">

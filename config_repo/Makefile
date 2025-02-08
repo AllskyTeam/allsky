@@ -61,7 +61,7 @@ createDirs:
 $(ENVFILE):
 	@if [ ! -e $(DESTDIR)$(sysconfdir)/allsky/$@ ]; then \
 	  echo `date +%F\ %R:%S` Copying default $@; \
-	  sed -e "s|XX_HOME_XX|$(HOMEDIR)|" $@.repo > env; \
+	  cp $@.repo > env; \
 	  install -m 0664 env $(HOMEDIR)/$@; \
 	  rm -f env; \
 	fi

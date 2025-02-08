@@ -37,7 +37,7 @@ function upload_file()
 		local MSG="File to upload '${FILE_TO_UPLOAD}' - file not found."
 		echo -e "${RED}${ME}: ERROR: ${MSG}.${NC}" >&2
 		if [[ ${FROM_WEBUI} == "false" ]]; then
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${MSG}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${MSG}"
 		fi
 		return 1
 	fi
@@ -128,14 +128,14 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 		OK="false"
 		echo -e "${RED}${ME}: ERROR: ${latitude}" >&2
 		if [[ ${FROM_WEBUI} == "false" ]]; then
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${latitude}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${latitude}"
 		fi
 	fi
 	if ! longitude="$( convertLatLong "$( settings ".longitude" )" "longitude" 2>&1 )" ; then
 		OK="false"
 		echo -e "${RED}${ME}: ERROR: ${longitude}" >&2
 		if [[ ${FROM_WEBUI} == "false" ]]; then
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${ME}: ${longitude}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${longitude}"
 		fi
 	fi
 	[[ ${OK} == "false" ]] && exit 1
@@ -183,7 +183,6 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 		echo "{"
 		echo "\"sunrise\": \"${today}T${sunrise_hhmm}:00.000${timezone}\","
 		echo "\"sunset\": \"${today}T${sunset_hhmm}:00.000${timezone}\","
-		echo "\"streamDaytime\": \"${D}\"",		# TODO: old name - remove in next release
 		echo "\"takedaytimeimages\": \"${D}\"",
 		echo "\"takenighttimeimages\": \"${N}\""
 		echo "}"

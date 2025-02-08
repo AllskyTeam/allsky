@@ -139,6 +139,7 @@ if ($useRemoteWebsite) {
 		case "overlay":				$Title = "Overlay Editor";		break;
 		case "module":				$Title = "Module Manager";		break;
 		case "live_view":			$Title = "Liveview";			break;
+		case "support": 			$Title = "Getting Support";		break;
 		default:					$Title = "Allsky WebUI";		break;
 	}
 ?>
@@ -193,8 +194,21 @@ if ($useRemoteWebsite) {
 <?php if ($page === "editor") { ?>
 	<link rel="stylesheet" href="lib/codeMirror/codemirror.css">
 	<link rel="stylesheet" href="lib/codeMirror/monokai.min.css">
+	<link rel="stylesheet" href="lib/codeMirror/lint.css">
 	<script type="text/javascript" src="lib/codeMirror/codemirror.js"> </script>
 	<script type="text/javascript" src="lib/codeMirror/json.js"> </script>
+	<script type="text/javascript" src="lib/codeMirror/jsonlint.js"> </script>
+	<script type="text/javascript" src="lib/codeMirror/lint.js"> </script>
+	<script type="text/javascript" src="lib/codeMirror/json-lint.js"> </script>
+
+	<script src="lib/codeMirror/matchesonscrollbar.js"></script>
+	<script src="lib/codeMirror/searchcursor.js"></script>
+	<script src="lib/codeMirror/match-highlighter.js"></script>
+
+	<script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+	<script src="/js/bootbox/bootbox.all.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+	<script src="/js/bootbox/bootbox.locales.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+
 <?php } ?>
 </head>
 <body>
@@ -211,21 +225,24 @@ if ($useRemoteWebsite) {
 			<div class="navbar-brand valign-center">
 				<a id="index" class="navbar-brand valign-center" href="index.php">
 					<img src="documentation/img/allsky-logo.png" title="Allsky logo">
-					<div class="navbar-title">Web User Interface (WebUI)</div>
+					<div class="navbar-title nowrap">Web User Interface (WebUI)</div>
 				</a>
 				<div class="version-title version-title-color">
+					<span id="allskyStatus"><?php echo output_allsky_status(); ?></span>
 					<span class="nowrap">Version: <?php echo ALLSKY_VERSION; ?></span>
-					&nbsp; &nbsp;
 <?php if ($useLocalWebsite) {
+					echo "<br>";
 					echo "<span class='nowrap'>";
 					echo "<a external='true' class='version-title-color' href='allsky/index.php'>";
-					echo "Local Website</a></span>";
+					echo "Local Website</a>";
+					echo "</span>";
 } ?>
-					&nbsp; &nbsp;
 <?php if ($useRemoteWebsite) {
+					echo "&nbsp;&nbsp;&nbsp;&nbsp; ";
 					echo "<span class='nowrap'>";
 					echo "<a external='true' class='version-title-color' href='$remoteWebsiteURL'>";
-					echo "Remote Website $remoteWebsiteVersion</a></span>";
+					echo "Remote Website $remoteWebsiteVersion</a>";
+					echo "</span>";
 } ?>
 				</div>
 		</div> <!-- /.navbar-header -->
@@ -291,6 +308,9 @@ if ($useRemoteWebsite) {
 						<a external="true" href="/documentation"><i class="fa fa-book fa-fw"></i> Allsky Documentation </a>
 					</li>
 					<li>
+						<a href="index.php?page=support"><i class="fa fa-question fa-fw"></i> Getting Support</a>
+					</li>
+					<li>
 						<span onclick="switchTheme()"><i class="fa fa-moon fa-fw"></i> Light/Dark mode</span>
 					</li>
 
@@ -333,21 +353,31 @@ if ($useRemoteWebsite) {
 					echo "<div class='row'>"; echo "<div class='system-message'>";
 						echo "<div class='title'>System Messages</div>";
 						foreach ($contents_array as $line) {
-							// Format: level (i.e., CSS class), date, count, message [, url]
-							//         0                        1     2      3          4
+							// Format: id, cmd_txt, level (i.e., CSS class), date, count, message [, url]
+							//         0   1        2                        3     4      5          6
+							$cmd = "";
 							$message_array = explode("\t", $line);
-							$message = getVariableOrDefault($message_array, 3, null);
+							$message = getVariableOrDefault($message_array, 5, null);
 							if ($message !== null) {
-								$level = $message_array[0];
-								$date = $message_array[1];
-								$count = $message_array[2];
-								$url = getVariableOrDefault($message_array, 4, "");
+								$id = getVariableOrDefault($message_array, 0, "");
+								$cmd_txt = getVariableOrDefault($message_array, 1, "");
+								$level = $message_array[2];
+								$date = $message_array[3];
+								$count = $message_array[4];
+								$url = getVariableOrDefault($message_array, 6, "");
 								if ($url !== "") {
 									$m1 = "<a href='$url' title='Click for more information' target='_messages'>";
 									$m2 = "<i class='fa fa-external-link-alt fa-fw'></i>";
 									$m2 = "<span class='externalSmall'>$m2</span>";
-									$message = "$m1 $message $m2</a>";
+									$message = "${m1}${message}${m2}</a>";
 								}
+
+								if ($id !== "") {
+									$m1 = "<br><a href='/execute.php?cmd=" . urlencode($id) . "'";
+									$m1 .= " class='executeAction' title='Click to perform action' target='_actions'>";
+									$message .= "${m1}${cmd_txt}</a>";
+								}
+
 								if ($count == 1)
 									$message .= " &nbsp; ($date)";
 								else
@@ -357,6 +387,9 @@ if ($useRemoteWebsite) {
 								$message = "INTERNAL ERROR: Poorly formatted message: $line";
 							}
 							$status->addMessage($message, $level);
+							if ($cmd !== "") {
+								$status->addMessage($cmd, $level);
+							}
 						}
 						$status->showMessages();
 						echo "<br><div class='message-button'>";
@@ -448,6 +481,9 @@ if ($useRemoteWebsite) {
 					case "module":
 						include_once('includes/module.php');
 						DisplayModule();
+						break;
+					case "support":
+						include_once('includes/support.php');
 						break;
 
 					case "live_view":

@@ -69,9 +69,7 @@
 }
 
 .navbar-toggle { float: left; margin-left: 10px; }
-@media (max-width: 450px) {.version-title { font-size: 75%; }}
-@media (max-width: 400px) {.version-title { font-size: 65%; }}
-@media (min-width: 796px) {	/* was 768px */
+@media (min-width: 796px) {
 	.sidebar { width: 210px; }
 	.navbar-title { display: inline-block; }
 	#page-wrapper { margin-left: 210px; }
@@ -84,8 +82,12 @@
 	.navbar-toggle { display: block; }
 	#page-wrapper { margin: 0; }
 	.navbar-collapse { display: none; }
-	.navbar-brand { float: none; }
+	.navbar-brand { float: none; line-height: 18px; }
 	.version-title { margin-left: 0; }
+}
+@media (max-width: 465px) {
+	.version-title { font-size: 65%; }
+	.navbar-brand { line-height: 15px; }
 }
 
 .right-panel .panel:first-of-type {
@@ -311,10 +313,30 @@ table .alert-dismissable {
 	background-color: #d9edf7;
 	border-color: #92b5bd;
 }
-.dark .alert-message, .dark .alert-info {
+.dark .alert-message {
 	color: #23485a;
 	border-color: #99ccdd;
 	background-color: #8b989f;
+}
+.alert-info {
+	color: #31708f;
+	background-color: #effaff;
+	border-color: #92b5bd;
+}
+.dark .alert-info {	/* TODO: change from .alert-info */
+	color: #23485a;
+	border-color: #99ccdd;
+	background-color: #8b989f;
+}
+.alert-debug {
+	color: #db8300;
+	background-color: white;
+	border-color: #db8300;
+}
+.dark .alert-debug {
+	color: #e9a846;
+	background-color: black;
+	border-color: #e9a846#db8300;
 }
 .dark .alert-success {
 	color: #95bb85;
@@ -397,6 +419,11 @@ input[type="text"].has-error {
 }
 
 /* Buttons */
+@media (max-width: 465px) {
+	.settings-buttons .btn { padding: 1px 5px; }
+	.settings-buttons.container-fluid { padding: 0; }
+}
+
 .btn-primary {
 	border: 2px solid #00527c;
 }
@@ -464,6 +491,12 @@ input[type="text"].has-error {
 .dark .btn-delete {
 	color: black;
 }
+.btn-fake {		/* Looks like a button but isn't one - used in documentation */
+	pointer-events: none;
+	font-size: 80%;
+	padding: 3px 6px;
+}
+
 
 .btn.focus.navbar-btn,
 .btn:focus.navbar-btn,
@@ -501,13 +534,13 @@ input[type="text"].has-error {
 }
 
 
-@media screen and (max-width: 795px) {	/* was 767 */
+@media screen and (max-width: 795px) {
 	.dark .table-responsive {
 		border-color: transparent;
 	}
 
 	.navbar {
-		height: 52px;
+		height: 60px;
 	}
 
 	.navbar-brand img {
@@ -516,7 +549,6 @@ input[type="text"].has-error {
 
 	.switch-field {
 		display: block;
-		/* height: 40px; /* was 50 */
 	}
 	
 	form thead {
@@ -529,14 +561,15 @@ input[type="text"].has-error {
 	background-color: #ddd;
 	text-align: center;
 	font-weight: bold;
-	padding: 1px 3px 1px 3px;
+	font-size: 1.25em;
+	padding: 3px 3px 3px 3px;
+}
+.markdown-body .settingsHeader {
+	font-size: 1em;
+	border-radius: 4px;
 }
 .dark .settingsHeader {
 	background-color: #333;
-}
-table .settingsHeader {	/* In the WebUI */
-	font-size: 1.25em;
-	padding: 3px 3px 3px 3px;
 }
 .settingsHeaderNote {
 	background-color: #ccc;
@@ -558,7 +591,7 @@ td:has(.subSettingsHeader) {
 }
 div.subSettingsHeader {
 	font-size: 1.05em;
-	//margin: 0 3em 0 3em;
+	margin: 0 3em 0 3em;
 	padding: 3px 0px;
 }
 .dark .subSettingsHeader {
@@ -811,6 +844,9 @@ div.sticky {
 	font-size: 90%;
 }
 
+.executeAction {
+	color: red;
+}
 .removeMessage {
 	color: red;
 	font-weight: bold;
@@ -893,4 +929,60 @@ div.sticky {
 }
 .ml-5 {
 	margin-left: 3rem !important;
+}
+
+/* Code Editor */
+
+.cm-string.highlight {
+    background-color: lightgreen;
+    color: black !important;
+}
+
+#as-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5); 
+    z-index: 2; 
+    cursor: pointer;
+}
+
+#as-overlay.big {
+    height: 80vh;
+}
+
+#as-overlay .center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 25%;
+    font-size: 2em;
+}
+
+#as-overlay .center-full {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    font-size: 2em;
+}
+
+#as-overlay .center,.center-full .center-paragraph {
+    text-align: center;
+    border: 3px solid green;
+    background-color: rgba(0,0,0,0.3);
+    padding: 15px;    
+}
+
+#as-overlay small {
+    font-size: 50% !important;
+}
+
+#as-overlay p {
+    margin: 0px !important;
+}
+
+#as-overlay h1 {
+    margin-top: 10px !important;
+    margin-bottom: 10px !important;
 }

@@ -10,21 +10,121 @@ ME="$( basename "${BASH_ARGV0}" )"
 #shellcheck disable=SC1091 source=variables.sh
 source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 
-if [ $# -lt 2 ]; then
-	# shellcheck disable=SC2154
-	{
-		echo -e "${wERROR}"
-		echo    "Usage: ${ME}  message_type  message  [url]"
-		echo -e "${wNC}"
-		echo -e "\n'message_type' is 'success', 'warning', 'error', 'info', or 'debug'."
-		echo -e "\n'url' is a URL to (normally) a documentation page."
-	} >&2
-	exit 1
+# The file is tab-separated:    type  date  count  message  url
+TAB="$( echo -e "\t" )"
+
+function convert_string()
+{
+	local STRING="${1}"
+
+	# Convert newlines to HTML breaks.
+	STRING="$( echo -en "${STRING}" |
+		gawk 'BEGIN { l=0; } { if (++l > 1) printf("<br>"); printf("%s", $0); }' )"
+
+	# Make 2 spaces in a row viewable in HTML.
+	STRING="${STRING//  /\&nbsp;\&nbsp;}"
+
+	# Convert tabs to spaces because we use tabs as field separators.
+	# Tabs in the input can either be an actual tab or \t
+	STRING="${STRING//${TAB}/\&nbsp;\&nbsp;\&nbsp;\&nbsp;}"
+	STRING="${STRING//\\t/\&nbsp;\&nbsp;\&nbsp;\&nbsp;}"
+
+	# Messages may have "/" in them so we can't use that to search in sed,
+	# so use "%" instead, but because it could be in a message (although unlikely),
+	# convert all "%" to the ASCII code.
+	# The pound sign in escaped only to make gvim look nicer.
+	echo "${STRING//%/\&\#37;}"
+}
+
+usage_and_exit()
+{
+	local RET=${1}
+	exec >&2
+	echo
+	[[ ${RET} -ne 0 ]] && echo -en "${wERROR}"
+	echo "Usage: ${ME} [--id ID [--cmd TEXT]] [--delete] [--url url]  --type message_type  --msg message"
+	[[ ${RET} -ne 0 ]] && echo -en "${wNC}"
+	echo
+	echo "'message_type' is 'success', 'warning', 'error', 'info', or 'debug'."
+	echo "'url' is a URL to (normally) a documentation page."
+	echo
+	exit "${RET}"
+}
+
+OK="true"
+DO_HELP="false"
+ID=""
+CMD_TEXT=""
+TYPE=""
+MESSAGE=""
+ESCAPED_MESSAGE=""
+URL=""
+while [[ $# -gt 0 ]]; do
+	ARG="${1}"
+	case "${ARG,,}" in
+		"--help")
+			DO_HELP="true"
+			;;
+		"--id")
+			ID="${2}"
+			shift
+			;;
+		"--delete")
+			DELETE="true"
+			shift
+			;;
+		"--cmd")
+			CMD_TEXT="$( convert_string "${2}" )"
+			shift
+			;;
+		"--type")
+			TYPE="${2,,}"
+			shift
+			;;
+		"--msg")
+			MESSAGE="$( convert_string "${2}" )"
+			# If ${MESSAGE} contains "*" it hoses up the grep and sed regular expression,
+			# so escape it.
+			ESCAPED_MESSAGE="${MESSAGE//\*/\\*}"
+			shift
+			;;
+		"--url")
+			URL="${2}"
+			shift
+			;;
+		-*)
+			echo -e "${wERROR}Unknown argument '${ARG}' ignoring.${wNC}" >&2
+			OK="false"
+			;;
+		*)
+			break
+			;;
+	esac
+	shift
+done
+
+[[ ${DO_HELP} == "true" ]] && usage_and_exit 0
+[[ ${OK} == "false" ]] && usage_and_exit 1
+[[ -z ${TYPE} || -z ${MESSAGE} ]] && usage_and_exit 1
+
+if [[ ${DELETE} == "true" ]]; then
+	[[ ! -f ${ALLSKY_MESSAGES} ]] && exit 0
+	if [[ -z ${ID} ]]; then
+		echo "${ME}: ERROR: delete specified but no message id given." >&2
+		exit 1
+	fi
+
+	REST="$( grep -v "^${ID}${TAB}" "${ALLSKY_MESSAGES}" )"
+	if [[ -z ${REST} ]]; then
+		rm -f "${ALLSKY_MESSAGES}"		# was only message
+	else
+		echo -e "${REST}" > "${ALLSKY_MESSAGES}"
+	fi
+	exit 0
 fi
 
 # The CSS classes are all lower case, so convert.
 # Our "error" and "debug" message types have a different CSS class name, so map them.
-TYPE="${1,,}"
 if [[ ${TYPE} == "error" ]]; then
 	TYPE="danger"
 elif [[ ${TYPE} == "debug" ]]; then
@@ -32,37 +132,10 @@ elif [[ ${TYPE} == "debug" ]]; then
 elif [[ ${TYPE} == "no-image" ]]; then
 	TYPE="success"
 elif [[ ${TYPE} != "warning" && ${TYPE} != "info" && ${TYPE} != "success" ]]; then
-	echo -e "${wWARNING}Warning: unknown message type: '${TYPE}'. Using 'info'.${wNC}" >&2
-	TYPE="info"
+	echo -e "${wERROR}ERROR: unknown message type: '${TYPE}'.${wNC}" >&2
+	echo 2
 fi
-MESSAGE="${2}"
-URL="${3}"
 DATE="$( date '+%B %d, %r' )"
-
-# The file is tab-separated:    type  date  count  message  url
-TAB="$( echo -e "\t" )"
-
-# Convert newlines to HTML breaks.
-MESSAGE="$( echo -en "${MESSAGE}" |
-	awk 'BEGIN { l=0; } { if (++l > 1) printf("<br>"); printf("%s", $0); }' )"
-
-# Make 2 spaces in a row viewable in HTML.
-MESSAGE="${MESSAGE//  /\&nbsp;\&nbsp;}"
-
-# Convert tabs to spaces because we use tabs as field separators.
-# Tabs in the input can either be an actual tab or \t
-MESSAGE="${MESSAGE//${TAB}/\&nbsp;\&nbsp;\&nbsp;\&nbsp;}"
-MESSAGE="${MESSAGE//\\t/\&nbsp;\&nbsp;\&nbsp;\&nbsp;}"
-
-# Messages may have "/" in them so we can't use that to search in sed,
-# so use "%" instead, but because it could be in a message (although unlikely),
-# convert all "%" to the ASCII code.
-# The pound sign in escaped only to make gvim look nicer.
-MESSAGE="${MESSAGE//%/\&\#37;}"
-
-# If ${MESSAGE} contains "*" it hoses up the grep and sed regular expression, so escape it.
-ESCAPED_MESSAGE="${MESSAGE//\*/\\*}"
-
 
 if [[ -f ${ALLSKY_MESSAGES} ]] &&  M="$( grep "${TAB}${ESCAPED_MESSAGE}${TAB}" "${ALLSKY_MESSAGES}" )" ; then
 	COUNT=0
@@ -82,4 +155,4 @@ else
 	COUNT=1
 fi
 
-echo -e "${TYPE}${TAB}${DATE}${TAB}${COUNT}${TAB}${MESSAGE}${TAB}${URL}"  >>  "${ALLSKY_MESSAGES}"
+echo -e "${ID}${TAB}${CMD_TEXT}${TAB}${TYPE}${TAB}${DATE}${TAB}${COUNT}${TAB}${MESSAGE}${TAB}${URL}"  >>  "${ALLSKY_MESSAGES}"

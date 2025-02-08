@@ -26,8 +26,8 @@
 <div class="Layout-main markdown-body" id="mainContents">
 
 <p>
-Timelapse video creation can fail for a number of reasons.
-The steps below, which apply to both the daily timelapse as well as mini timelapse,
+Timelapse video creation can fail or result in poor quality videos for a number of reasons.
+The steps below, which apply to both the daily- and mini-timelapse,
 will almost always fix it.
 <p>
 
@@ -100,7 +100,6 @@ To fix, do the following:
 	high resolution camera.
 	The default video codec (<span class="WebUISetting">VCODEC</span>) setting
 	is <span class="WebUIValue">libx264</span>
-<!--- 4096 x 2304 is the max for Buster -->
 	which has a stated maximum resolution of 4096 x 2304.
 	However, the RPi HQ, ZWO ASI183, and other cameras have resolutions higher than that.
 	If you saw the <code>malloc</code> error do one of the following:
@@ -124,6 +123,76 @@ To fix, do the following:
 	</ul>
 </ol>
 
+</details>
+
+
+<h2 id="poorquality">Timelapse video is poor quality and/or "blocky"</h2>
+<details><summary></summary>
+<p>
+If you timelapse videos have poor quality,
+typically more noticable in fast-moving areas like clouds,
+and/or the videos are "blocky", as seen in the image blow,
+try the steps below.
+</p>
+<blockquote>
+A timelapse video made up of 1000 images, each one 2 MB, isn't 2000 MB (2 GB) in size.
+Instead, the software reduces the file size in various ways,
+which also reduces the quality of the video.
+However, you have control over how much the video quality is reduced.
+<br><strong>The key is to find a happy medium between quality and size.</strong>
+</blockquote>
+<p>
+<img allsky="true" src="blockyTimelapseVideo.png" class="imgCenter" width="854" height="614" loading="lazy">
+<ol>
+	<li>If you have a high-resolution camera like the RPi HQ (4056 x 3040 pixels)
+		or many ZWO cameras, try decreasing the resolution of the video.
+		Many people have "High Definition" monitors with a width of 1920 pixels,
+		so you can probably reduce your video to that around that size without anyone noticing.
+		Using half the camera's resolution is a good place to start
+		(2028 x 1520 for the RPi HQ).
+		Make sure to reduce the width and height by the same <em>percent</em>,
+		not the same <em>number</em>.
+		<br>
+		Decreasing resolution also decreases timelapse creation failures,
+		speeds up processing, and results in faster uploads and less disk space used.
+		<br>
+		There are two ways to reduce the resolution.
+		<ol>
+			<li><strong>Decrease the resolution of <em>each image</em>.</strong><br>
+				Decrease the <span class="WebUISetting">Image Resize Width</span> and
+				<span class="WebUISetting">Image Resize Height</span>
+				in the <span class="settingsHeader">Post Capture Settings</span>
+				section of the WebUI.
+				<br>
+				Note that decreasing the <em>image</em> resolution may make the images in
+				the WebUI and in an Allsky Website appear smaller.
+				It will also reduce that amount you can "zoom in" to the images.
+			<li><strong>Decrease the resolution of only <em>the timelapse video</em>.</strong><br>
+				Decrease the timelapse <span class="WebUISetting">Width</span> and
+				<span class="WebUISetting">Height</span>
+				in the <span class="settingsHeader">Timelapse Settings</span>
+				section of the WebUI.
+				This has no impact on the resolution of each individual image.
+	<li>Add a 
+		<a external="true"
+			href="https://en.wikipedia.org/wiki/Advanced_Video_Coding#Levels">
+			Video Coding Level</a>
+		to the timelapse <span class="WebUISetting">Extra Parameters</span> setting.
+		Start with <span class="WebUIValue">-level 3.1</span>;
+		if that doesn't help enough try level 3.2, 4, 4.1, or 4.2.
+		Higher levels may also work but have not been tested.
+	<li>Increase the <span class="WebUISetting">Bitrate</span>.
+		This setting determines how much data is included in the video,
+		and hence, how much data is left out.
+		The more data that's left out, the smaller the file is.
+		<br>
+		The default is around 5000 kilobits/second (5 Mb/second) and is
+		typically sufficient.
+		Increasing the value too high, e.g., 25000 (25 Mb/second)
+		could cause problems viewing the video - not all network connections and devices
+		can support that speed and you may get pauses.
+</ol>
+</p>
 </details>
 
 
@@ -154,7 +223,7 @@ When it's done you can re-create the timelapse by executing:
 </details>
 
 
-<h2>Message in log file: "deprecated pixel format used, make sure you did set range correctly"</h2>
+<h2>"deprecated pixel format used, make sure you did set range correctly"</h2>
 <p>
 You can safely ignore this message.
 </p>

@@ -19,18 +19,21 @@ source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 usage_and_exit()
 {
 	local RET="${1}"
-	{
-		echo
-		echo "Remove images with corrupt data which might mess up startrails, keograms, and timelapse."
-		echo
-		[ "${RET}" -ne 0 ] && echo -en "${RED}"
-		echo -n "Usage: ${ME} [--help] [--debug]  directory  [file]"
-		[ "${RET}" -ne 0 ] && echo -e "${NC}"
-		echo
-		echo "Turning on debug will indicate bad images but will not remove them."
-		echo "If 'file' is specified, only that file in 'directory' will be checked,"
-		echo "otherwise all files in 'directory' will be checked."
-	} >&2
+	exec >&2
+	echo
+	echo "Remove images with corrupt data which might mess up startrails, keograms, and timelapse."
+	echo
+	local MSG="Usage: ${ME} [--help] [--debug]  directory  [file]"
+	if [[ "${RET}" -ne 0 ]]; then
+		echo -e "${RED}${MSG}${NC}"
+	else
+		echo -e "${MSG}"
+	fi
+	echo
+	echo "Turning on debug will indicate bad images but will not remove them."
+	echo "If 'file' is specified, only that file in 'directory' will be checked,"
+	echo "otherwise all files in 'directory' will be checked."
+
 	exit "${RET}"
 }
 
@@ -113,7 +116,7 @@ cd "${DIRECTORY}" || exit 99
 
 # If the LOW threshold is 0 or < 0 it's disabled.
 # If the HIGH threshold is 0 or 1.0 (nothing can be brighter than 1.0) it's disabled.
-if awk -v l="${LOW}" -v h="${HIGH}" '{
+if gawk -v l="${LOW}" -v h="${HIGH}" 'BEGIN {
 		if (l < 0) l=0;
 		if (h > 1) h=0;
 		if ((l + h) == 0) {
@@ -166,13 +169,13 @@ for f in ${IMAGE_FILES} ; do
 			MEAN="${AS_MEAN}"		# single image: mean passed to us
 		elif ! MEAN=$( ${NICE} convert "${f}" -colorspace Gray -format "%[fx:image.mean]" info: 2>&1 ) ; then
 			# Do NOT set BAD since this isn't necessarily a problem with the file.
-			echo -e "${RED}***${ME}: ERROR: 'convert ${f}' failed; leaving file.${NC}" >&2
+			echo -e "${RED}***${ME} ERROR: 'convert ${f}' failed; leaving file.${NC}" >&2
 			echo -e "Message=${MEAN}" >&2
 			continue
 		fi
 		if [[ -z ${MEAN} ]]; then
 			# Do NOT set BAD since this isn't necessarily a problem with the file.
-			echo -e "${RED}***${ME}: ERROR: 'convert ${f}' returned nothing; leaving file.${NC}" >&2
+			echo -e "${RED}***${ME} ERROR: 'convert ${f}' returned nothing; leaving file.${NC}" >&2
 			continue
 		fi
 
@@ -186,19 +189,19 @@ for f in ${IMAGE_FILES} ; do
 		else
 			# MEAN is a number between 0.0 and 1.0, but it may have format:
 			#	6.90319e-06
-			# which "bc" doesn't accept so use awk.
+			# which "bc" doesn't accept so use gawk.
 			# LOW and HIGH are also between 0.0 and 1.0.
 
 			# Since the shell doesn't do floating point math and we want up to
 			# 5 digits precision, multiple everything by 100000 and convert to integer.
 			# We can then use bash math with the *_CHECK values.
 			# Awk handles the "e-" format.
-			MEAN_CHECK=$( awk -v x="${MEAN}" '{ printf("%d", x * 100000); }' )
-			HIGH_CHECK=$( awk -v x="${HIGH}" '{ printf("%d", x * 100000); }' )
-			LOW_CHECK=$(  awk -v x="${LOW}"  '{ printf("%d", x * 100000); }' )
+			MEAN_CHECK=$( gawk -v x="${MEAN}" 'BEGIN { printf("%d", x * 100000); }' )
+			HIGH_CHECK=$( gawk -v x="${HIGH}" 'BEGIN { printf("%d", x * 100000); }' )
+			LOW_CHECK=$(  gawk -v x="${LOW}"  'BEGIN { printf("%d", x * 100000); }' )
 
 			if [[ ${DEBUG} == "true" ]]; then
-				echo -n "${ME}: ${FILE}: MEAN=${MEAN}, MEAN_CHECK=${MEAN_CHECK},"
+				echo -n "${ME} ${FILE}: MEAN=${MEAN}, MEAN_CHECK=${MEAN_CHECK},"
 				echo " LOW_CHECK=${LOW_CHECK}, HIGH_CHECK=${HIGH_CHECK}"
 			fi
 			MSG=""
@@ -257,7 +260,7 @@ else
 			MSG+="\nCheck the values of 'Remove Bad Images Threshold Low',"
 			MSG+=" 'Remove Bad Images Threshold High',"
 			MSG+=" and 'Max Auto-Exposure' in the WebUI."
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}" >&2
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${MSG}" >&2
 		fi
 		if [[ ${BAD_COUNT} -ge "${BAD_LIMIT}" ]]; then
 			# Split the long file name so it fits in the message.

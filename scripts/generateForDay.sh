@@ -86,6 +86,7 @@ done
 usage_and_exit()
 {
 	local RET=${1}
+	exec >&2
 	echo
 	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
 	echo "Usage: ${ME} [--help] [--silent] [--debug] [--nice n] [--upload] \\"
@@ -126,7 +127,7 @@ fi
 
 if [[ -n ${IMAGES_FILE} ]]; then
 	if [[ ! -s ${IMAGES_FILE} ]]; then
-		echo -e "${RED}*** ${ME} ERROR: '${IMAGES_FILE}' does not exist or is empty!${NC}"
+		echo -e "${RED}*** ${ME} ERROR: '${IMAGES_FILE}' does not exist or is empty!${NC}" >&2
 		exit 3
 	fi
 	INPUT_DIR=""		# Not used
@@ -138,9 +139,9 @@ if [[ -n ${IMAGES_FILE} ]]; then
 	# In case the filename doesn't include a path, put in a default location.
 	if [[ ${OUTPUT_DIR} == "." ]]; then
 		OUTPUT_DIR="${ALLSKY_TMP}"
-		echo -en "${ME}: ${YELLOW}"
-		echo "Can't determine where to put files so putting in '${OUTPUT_DIR}'."
-		echo -e "${NC}"
+		echo -en "${ME}: ${YELLOW}" >&2
+		echo "Can't determine where to put files so putting in '${OUTPUT_DIR}'." >&2
+		echo -e "${NC}" >&2
 	fi
 
 	# Use the basename of the directory.
@@ -158,7 +159,7 @@ else
 		DATE="$( basename "${INPUT_DIR}" )"
 	fi
 	if [[ ! -d ${INPUT_DIR} ]]; then
-		echo -e "${RED}*** ${ME} ERROR: '${INPUT_DIR}' does not exist!${NC}"
+		echo -e "${RED}*** ${ME} ERROR: '${INPUT_DIR}' does not exist!${NC}" >&2
 		exit 4
 	fi
 
@@ -178,14 +179,14 @@ if [[ ${TYPE} == "GENERATE" ]]; then
 		DIRECTORY="${2}"
 		CMD="${3}"
 		[[ ${SILENT} == "false" ]] && echo "===== Generating ${GENERATING_WHAT}"
-		[[ ${DIRECTORY} != "" ]] && mkdir -p "${OUTPUT_DIR}/${DIRECTORY}"
+		[[ -n ${DIRECTORY} ]] && mkdir -p "${OUTPUT_DIR}/${DIRECTORY}"
 
 		[[ -n ${DEBUG_ARG} ]] && echo "${ME}: Executing: ${CMD}"
 		# shellcheck disable=SC2086
 		eval ${CMD}
 		local RET=$?
 		if [[ ${RET} -ne 0 ]]; then
-			echo -e "${RED}${ME}: Command Failed: ${CMD}${NC}"
+			echo -e "${RED}${ME}: Command Failed: ${CMD}${NC}" >&2
 		elif [[ ${SILENT} == "false" ]]; then
 			echo -e "\tDone"
 		fi
@@ -200,7 +201,7 @@ else
 	if [[ ${L_WEB_USE} == "false" &&
 		  ${R_WEB_USE} == "false" &&
 		  ${R_SERVER_USE} == "false" ]]; then
-		echo -e "${RED}*** ${ME} ERROR: '--upload' specified but nowhere to upload!${NC}"
+		echo -e "${RED}*** ${ME} ERROR: '--upload' specified but nowhere to upload!${NC}" >&2
 		exit 5
 	fi
 
@@ -208,25 +209,15 @@ else
 
 	if [[ ${R_WEB_USE} == "true" ]]; then
 		R_WEB_DEST_DIR="$( settings ".remotewebsiteimagedir" )"
-		if [[ -n ${R_WEB_DEST_DIR} && ${R_WEB_DEST_DIR: -1:1} != "" ]]; then
-			R_WEB_DEST_DIR="${R_WEB_DEST_DIR}/"
-		fi
-
-		if [[ ${DO_KEOGRAM} == "true" ]]; then
-			R_WEB_KEOGRAM_NAME="$( settings ".remotewebsitekeogramdestinationname" )"
-		fi
-		if [[ ${DO_STARTRAILS} == "true" ]]; then
-			R_WEB_STARTRAILS_NAME="$( settings ".remotewebsitestartrailsdestinationname" )"
-		fi
-		if [[ ${DO_TIMELAPSE} == "true" ]]; then
-			R_WEB_VIDEO_NAME="$( settings ".remotewebsitevideodestinationname" )"
+		if [[ -n ${R_WEB_DEST_DIR} && ${R_WEB_DEST_DIR: -1:1} != "/" ]]; then
+			R_WEB_DEST_DIR+="/"
 		fi
 	fi
 
 	if [[ ${R_SERVER_USE} == "true" ]]; then
 		R_SERVER_DEST_DIR="$( settings ".remoteserverimagedir" )"
-		if [[ -n ${R_SERVER_DEST_DIR} && ${R_SERVER_DEST_DIR: -1:1} != "" ]]; then
-			R_SERVER_DEST_DIR="${R_SERVER_DEST_DIR}/"
+		if [[ -n ${R_SERVER_DEST_DIR} && ${R_SERVER_DEST_DIR: -1:1} != "/" ]]; then
+			R_SERVER_DEST_DIR+="/"
 		fi
 
 		if [[ ${DO_KEOGRAM} == "true" ]]; then
@@ -290,14 +281,14 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 			DO_TIMELAPSE="false"
 			# -gt 90 means either no files or unable to read initial file, and
 			# keograms and timelapse will have the same problem, so don't bother running.
-			echo "Keogram creation unable to read files; will not run startrails or timelapse."
+			echo "Keogram creation unable to read files; will not run startrails or timelapse." >&2
 		fi
 
 	else
 		if [[ ! -f ${UPLOAD_FILE} ]]; then
-			echo -en "${YELLOW}"
-			echo -n "WARNING: '${UPLOAD_FILE}' not found; skipping."
-			echo -e "${NC}"
+			echo -en "${YELLOW}" >&2
+			echo -n "WARNING: '${UPLOAD_FILE}' not found; skipping." >&2
+			echo -e "${NC}" >&2
 			((EXIT_CODE++))
 		else
 			DEST_DIR="keograms"
@@ -310,12 +301,6 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 				((EXIT_CODE+=$?))
 			fi
 			if [[ ${R_WEB_USE} == "true" ]]; then
-				if [[ -n ${R_WEB_KEOGRAM_NAME} ]]; then
-					DEST_NAME="${R_WEB_KEOGRAM_NAME}"
-				else
-					DEST_NAME="${KEOGRAM_FILE}"
-				fi
-
 				#shellcheck disable=SC2086
 				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--remote-web" \
 					"${UPLOAD_FILE}" "${R_WEB_DEST_DIR}${DEST_DIR}" "${DEST_NAME}" "Keogram"
@@ -357,14 +342,14 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 			DO_TIMELAPSE="false"
 			# -gt 90 means either no files or unable to read initial file, and
 			# timelapse will have the same problem, so don't bother running.
-			echo "Startrails creation unable to read files; will not run timelapse."
+			echo "Startrails creation unable to read files; will not run timelapse." >&2
 		fi
 
 	else
 		if [[ ! -f ${UPLOAD_FILE} ]]; then
-			echo -en "${YELLOW}"
-			echo -n "WARNING: '${UPLOAD_FILE}' not found; skipping."
-			echo -e "${NC}"
+			echo -en "${YELLOW}" >&2
+			echo -n "WARNING: '${UPLOAD_FILE}' not found; skipping." >&2
+			echo -e "${NC}" >&2
 			((EXIT_CODE++))
 		else
 			DEST_DIR="startrails"
@@ -377,12 +362,6 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 				((EXIT_CODE+=$?))
 			fi
 			if [[ ${R_WEB_USE} == "true" ]]; then
-				if [[ -n ${R_WEB_STARTRAILS_NAME} ]]; then
-					DEST_NAME="${R_WEB_STARTRAILS_NAME}"
-				else
-					DEST_NAME="${STARTRAILS_FILE}"
-				fi
-
 				#shellcheck disable=SC2086
 				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--remote-web" \
 					"${UPLOAD_FILE}" "${R_WEB_DEST_DIR}${DEST_DIR}" "${DEST_NAME}" "Startrails"
@@ -422,8 +401,8 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 			if [[ -f ${UPLOAD_FILE} ]]; then
 				RET=0
 			else
-				echo -e "${RED}${ME}: ERROR: video file '${UPLOAD_FILE}' not found!"
-				echo -e "Cannot create thumbnail.${NC}"
+				echo -e "${RED}${ME}: ERROR: video file '${UPLOAD_FILE}' not found!" >&2
+				echo -e "Cannot create thumbnail.${NC}" >&2
 				RET=1
 			fi
 		else
@@ -450,14 +429,14 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 				make_thumbnail "00" "${UPLOAD_FILE}" "${UPLOAD_THUMBNAIL}"
 			fi
 			if [[ ! -f ${UPLOAD_THUMBNAIL} ]]; then
-				echo -e "${RED}${ME}: ERROR: video thumbnail not created!${NC}"
+				echo -e "${RED}${ME}: ERROR: video thumbnail not created!${NC}" >&2
 			fi
 		fi
 
 	elif [[ ! -f ${UPLOAD_FILE} ]]; then
-		echo -en "${YELLOW}"
-		echo -n "WARNING: '${UPLOAD_FILE}' not found; skipping."
-		echo -e "${NC}"
+		echo -en "${YELLOW}" >&2
+		echo -n "WARNING: '${UPLOAD_FILE}' not found; skipping." >&2
+		echo -e "${NC}" >&2
 		((EXIT_CODE++))
 	else
 		DEST_DIR="videos"
@@ -481,12 +460,6 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 			fi
 		fi
 		if [[ ${R_WEB_USE} == "true" ]]; then
-			if [[ -n ${R_WEB_VIDEO_NAME} ]]; then
-				DEST_NAME="${R_WEB_VIDEO_NAME}"
-			else
-				DEST_NAME="${VIDEO_FILE}"
-			fi
-
 			D="${R_WEB_DEST_DIR}${DEST_DIR}"
 			if [[ ${THUMBNAIL_ONLY} != "true" ]]; then
 				#shellcheck disable=SC2086

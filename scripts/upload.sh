@@ -347,7 +347,10 @@ else # sftp/ftp/ftps
 		fi
 
 		LFTP_COMMANDS="$( settings ".${PREFIX}_LFTP_COMMANDS" "${ALLSKY_ENV}" )"
-		[[ -n ${LFTP_COMMANDS} ]] && echo "${LFTP_COMMANDS}"
+		if [[ -n ${LFTP_COMMANDS} ]]; then
+			echo "${LFTP_COMMANDS}"
+			echo "echo '${LFTP_COMMANDS}'	# From FTP Commands"
+		fi
 
 		# Sometimes have problems with "max-reties 1", so make it 2
 		echo set dns:fatal-timeout 10

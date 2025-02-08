@@ -17,18 +17,19 @@ usage_and_exit()
 	exec >&2
 	local RET=${1}
 	local MSG="Usage: ${ME} [--help] [--debug] [--silent] [--file f] [--fromInstall]] \\"
+	MSG+="\n\t[[--output o]] --website  and/or  --server"
 	[[ ${RET} -eq 2 ]] && echo -e "\nERROR: You must specify --website and/or --server\n"
 
 	if [[ ${RET} -ne 0 ]]; then
-		wE_ -en "${MSG}"
+		wE_ "${MSG}"
 	else
 		echo "${MSG}"
 	fi
-	echo -e "\t--website  and/or  --server"
 	echo -e "\nWhere:"
 	echo -e "\t'--silent' only outputs errors."
 	echo -e "\t'--file f' optionally specifies the test file to upload."
 	echo -e "\t'--fromInstall' outputs text without colors or other escape sequences."
+	echo -e "\t'--output o' puts detailed output in the specified file."
 	exit "${RET}"
 }
 
@@ -36,6 +37,7 @@ OK="true"
 DEBUG="false"
 SILENT="false"
 TEST_FILE="/tmp/${ME}.txt"
+OUT_FILE=""
 DO_WEBSITE="false"
 DO_SERVER="false"
 FROM_INSTALL="false"
@@ -56,6 +58,10 @@ while [[ $# -gt 0 ]]; do
 			;;
 		--file)
 			TEST_FILE="${2}"
+			shift
+			;;
+		--output)
+			OUT_FILE="${2}"
 			shift
 			;;
 		--website)
@@ -106,7 +112,7 @@ parse_output()
 
 	[[ ! -s ${FILE} ]] && return	# empty file - shouldn't happen...
 
-	local PROTOCOL  DIR  HOST  USER  STRING  S  CMD
+	local PROTOCOL  DIR  HOST  USER  STRING  S  CMD  FIX
 
 	if [[ ${TYPE} == "REMOTEWEBSITE" ]]; then
 		PROTOCOL="remotewebsiteprotocol"
@@ -163,12 +169,21 @@ parse_output()
 		DIR="$( settings ".${DIR}" )"
 		if [[ -n ${DIR} ]]; then
 			echo "  The ${WSNs}Image Directory${WSNe} in the WebUI's '${S}' section is ${WSVs}${DIR}${WSVe}."
-			echo "  FIX: make sure that directory exists on the server."
+			FIX="  FIX: Make sure the ${WSVs}${DIR}${WSVe} directory exists on the server."
 		else
 			echo "  The ${WSNs}Image Directory${WSNe} in the WebUI's '${S}' section is empty."
 			# TODO: can this ever happen?
-			echo "  FIX: unknown - not sure why this failed."
+			FIX="  FIX: unknown - not sure why this failed."
 		fi
+
+		local CONTENTS="$( get_ls_contents "${FILE}" )"
+		if [[ -z ${CONTENT} ]]; then
+			echo "  There appears to be no files or directories in the server's root directory."
+		else
+			echo "  The following files and/or directories are in the server's root directory:"
+			indent --spaces "${CONTENT}"
+		fi
+		echo "${FIX}"
 	fi >&2
 
 	STRING="An unexpected TLS packet was received"
@@ -219,7 +234,7 @@ parse_output()
 	fi >&2
 
 	# Output already displayed in DEBUG mode.
-	if [[ ${DEBUG} == "false" ]]; then
+	if [[ ${DEBUG} == "false" && -z ${OUT_FILE} ]]; then
 		echo; wD_ "Raw output is in '${FILE}'.\n\n" >&2
 	fi
 }
@@ -229,13 +244,17 @@ parse_output()
 do_test()
 {
 	local TYPE="${1}"
-	local bTEST_FILE  OUTPUT_FILE  HUMAN_TYPE  PROTOCOL  DIR  REMOTE  CMD  D
+	local bTEST_FILE  HUMAN_TYPE  PROTOCOL  DIR  REMOTE  CMD  D
 
 	bTEST_FILE="$( basename "${TEST_FILE}" )"
 	if [[ ! -f ${TEST_FILE} ]]; then
 		echo "Test file for ${TYPE}" > "${TEST_FILE}" || return 1
 	fi
-	OUTPUT_FILE="${ALLSKY_TMP}/${ME}-${TYPE}.txt"
+	if [[ -n ${OUT_FILE} ]]; then
+		OUTPUT_FILE="${OUT_FILE}"
+	else
+		OUTPUT_FILE="${ALLSKY_TMP}/${ME}-${TYPE}.txt"
+	fi
 
 	if [[ ${TYPE} == "REMOTEWEBSITE" ]]; then
 		HUMAN_TYPE="Remote Website"

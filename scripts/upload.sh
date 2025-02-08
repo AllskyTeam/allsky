@@ -349,7 +349,9 @@ else # sftp/ftp/ftps
 		LFTP_COMMANDS="$( settings ".${PREFIX}_LFTP_COMMANDS" "${ALLSKY_ENV}" )"
 		if [[ -n ${LFTP_COMMANDS} ]]; then
 			echo "${LFTP_COMMANDS}"
-			echo "echo '${LFTP_COMMANDS}'	# From FTP Commands"
+			if [[ ${DEBUG} == "true" ]]; then
+				echo "echo '${LFTP_COMMANDS}'	# From FTP Commands"
+			fi
 		fi
 
 		# Sometimes have problems with "max-reties 1", so make it 2

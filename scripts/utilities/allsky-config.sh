@@ -36,7 +36,7 @@ while [[ $# -gt 0 ]]; do
 			;;
 
 		-*)
-			e_ "\nUnknown argument '${ARG}'." >&2
+			E_ "\nUnknown argument '${ARG}'." >&2
 			OK="false"
 			;;
 
@@ -59,7 +59,7 @@ function usage_and_exit()
 	echo
 	local MSG="Usage: ${ME} [--help] [--debug] [command [--help] [arguments ...]]"
 	if [[ ${RET} -ne 0 ]]; then
-		e_ "${MSG}"
+		E_ "${MSG}"
 	else
 		echo -e "${MSG}"
 	fi
@@ -336,7 +336,7 @@ function show_start_times()
 				;;
 
 			--*)
-				e_ "${ME}: Unknown argument '${ARG}'." >&2
+				E_ "${ME}: Unknown argument '${ARG}'." >&2
 				OK="false"
 				;;
 
@@ -390,7 +390,7 @@ function needs_arguments()
 {
 	if [[ $# -eq 0 ]]; then
 		if [[ -n ${CMD} ]]; then		# CMD is global
-			e_ "\n'${FUNCNAME[1]}' requires an argument." >&2
+			E_ "\n'${FUNCNAME[1]}' requires an argument." >&2
 			usage_and_exit 1
 		else
 			echo "${@}"
@@ -411,7 +411,7 @@ function run_command()
 	# shellcheck disable=SC2124
 	ARGUMENTS="${@}"
 	if ! type "${COMMAND}" > /dev/null 2>&1 ; then
-		e_ "\n${ME}: Unknown command '${COMMAND}'." >&2
+		E_ "\n${ME}: Unknown command '${COMMAND}'." >&2
 		return 1
 	fi
 
@@ -452,7 +452,7 @@ function prompt()
 		"${LINES}" "${WT_WIDTH:-80}" "${NUM_OPTIONS}" -- "${OPTIONS[@]}" 3>&1 1>&2 2>&3 )"
 	local RET=$?
 	if [[ ${RET} -eq 255 ]]; then
-		e_ "\n${ME}: whiptail failed." >&2
+		E_ "\n${ME}: whiptail failed." >&2
 		exit 2
 	else
 		echo "${OPT}"
@@ -470,7 +470,7 @@ function getInput()
 		"" 3>&1 1>&2 2>&3 )"
 	local RET=$?
 	if [[ ${RET} -eq 255 ]]; then
-		e_ "\n${ME}: whiptail failed." >&2
+		E_ "\n${ME}: whiptail failed." >&2
 		exit 2
 	else
 		echo "${LINE}"

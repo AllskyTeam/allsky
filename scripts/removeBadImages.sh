@@ -166,7 +166,7 @@ for f in ${IMAGE_FILES} ; do
 		BAD="'${f}' (zero length)"
 	else
 		if [[ -n ${AS_MEAN} ]]; then
-			MEAN="${AS_MEAN}"		# single image: mean passed to us
+			MEAN="${AS_MEAN/,/.}"		# single image: mean passed to us.  Allow commas
 		elif ! MEAN=$( ${NICE} convert "${f}" -colorspace Gray -format "%[fx:image.mean]" info: 2>&1 ) ; then
 			# Do NOT set BAD since this isn't necessarily a problem with the file.
 			echo -e "${RED}***${ME} ERROR: 'convert ${f}' failed; leaving file.${NC}" >&2

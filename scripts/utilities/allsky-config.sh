@@ -48,6 +48,7 @@ function usage_and_exit()
 	echo -e "      recheck_tmp"
 	echo -e "      samba"
 	echo -e "      move_images"
+	echo -e "      bad_images_info"
 	echo -e "      new_rpi_camera_info [--camera NUM]"
 	echo -e "      show_start_times [--zero] [angle [latitude [longitude]]]"
 	echo -e "      compare_paths --website | --server"
@@ -217,6 +218,107 @@ function move_images()
 	moveImages.sh
 }
 
+#####
+# Move ALLSKY_IMAGES to a new location.
+function bad_images_info()
+{
+	if [[ ${1} == "--help" ]]; then
+		W_ "Usage: ${ME}  ${ME_F}"
+		echo
+		echo "Display information on 'bad' images, which are ones that are too dark or too light,"
+		echo "and hence have been deleted."
+		echo "This information can be used to determine what the low and high 'Remove Bad Images Threshold'"
+		echo "settings should be."
+		return
+	fi
+
+	# Log entry format:
+	#	2025-02-09T10:44:17.594698-07:00 new-allsky allsky[905780]: removeBadImages.sh: File is bad: \
+	#		removed 'image-20250209104345.jpg' (MEAN of 0.167969 is below low threshold of 0.5)
+	local INFO="$( grep "File is bad:.*MEAN of" "${ALLSKY_LOG}"* | sed -e 's/.*(MEAN/MEAN/' -e 's/)//' )"
+	if [[ -z ${INFO} ]]; then
+		W_ "\nNo bad file information found in the Allsky log (${ALLSKY_LOG}).  Cannot continue.\n"
+		return
+	fi
+
+	#	MEAN of 0.167969 is below low threshold of 0.5
+	#	$1   $2 $3       $4 $5    $6  $7        $8 $9
+	echo "$INFO" | gawk '
+		BEGIN {
+			low_count = 0; low_min = 1; low_max = 0; low_threshold = 0; low_mean_total = 0;
+			high_count = 0; high_min = 0; high_max = 0; high_threshold = 0; high_mean_total = 0;
+		}
+		{
+			mean = $3;
+			below_above = $5;
+			threshold = $9;
+			if (below_above == "below") {	# below low
+				if (threshold != low_threshold) {
+					if (low_threshold != 0) {
+						# Start over with numbers
+						# printf("Low threshold changed from %f to %f; summary may not be accurate\n",
+						# 	low_threshold, threshold);
+						low_max = 0;
+						low_count = 0;
+						low_mean_total = 0;
+					}
+					low_threshold = threshold;
+				}
+				low_count++;
+				low_mean_total += mean;
+				if (mean < low_min)
+					low_min = mean;
+				else if (mean > low_max)
+					low_max = mean;
+
+			} else {				# above high
+				if (threshold != high_threshold) {
+					if (high_threshold != 0) {
+						# printf("High threshold changed from %f to %f; summary may not be accurate\n",
+						# 	high_threshold, threshold);
+						high_min = 1;
+						high_count = 0;
+						high_mean_total = 0;
+					}
+					high_threshold = threshold;
+				}
+				high_count++;
+				high_mean_total += mean;
+				if (mean < high_min)
+					high_min = mean;
+				else if (mean > high_max)
+					high_max = mean;
+			}
+		}
+		END {
+			if (low_count > 0) {
+				printf("%d images had a mean below the Low Threshold of %f\n", low_count, low_threshold);
+				if (low_min == low_max) {
+					printf("The lowest mean was %f\n", low_min);
+					printf("\nConsider lowering your Low Threshold to less than %f\n", low_min);
+					printf("or increasing your exposure and/or gain.\n");
+				} else {
+					ave = low_mean_total / low_count;
+					printf("The lowest mean was %f and the highest %f with and average of %f\n",
+						low_min, low_max, ave);
+					printf("\nConsider lowering your Low Threshold to around %f\n", ave);
+				}
+			}
+			if (high_count > 0) {
+				printf("%d images had a mean above the High Threshold of %f\n", high_count, high_threshold);
+				if (high_min == high_max) {
+					printf("The highest mean was %f\n", high_min);
+					printf("\nConsider raising your High Threshold to more than %f\n", high_min);
+					printf("or decreasing your exposure and/or gain.\n");
+				} else {
+					ave = high_mean_total / high_count;
+					printf("The lowest mean was %f and the highest %f with and average of %f\n",
+						high_min, high_max, ave);
+					printf("\nConsider raising your High Threshold to around %f\n", ave);
+				}
+			}
+		}'
+}
 
 #####
 # Display the path on the server of an Allsky Website and
@@ -622,7 +724,7 @@ if [[ -z ${CMD} ]]; then
 	CMDS+=("recheck_tmp"				"$( L "Move ~/allsky/tmp to memory or change size") "); ((N++))
 	CMDS+=("samba" 						"$( L "Simplify copying files to/from the Pi" )"); ((N++))
 	CMDS+=("move_images"				"$( L "Move ~/allsky/images to a different location" )"); ((N++))
-	CMDS+=("show_bad_images"			"$( L "Display information on 'bad' images." )"); ((N++))
+	CMDS+=("bad_images_info"			"$( L "Display information on 'bad' images." )"); ((N++))
 	CMDS+=("new_rpi_camera_info"		"$( L "Collect information for new RPi camera" )"); ((N++))
 	CMDS+=("show_start_times"			"$( L "Show daytime and nighttime start times" )"); ((N++))
 	CMDS+=("compare_paths"				"$( L "Compare upload and Website paths" )"); ((N++))
@@ -661,3 +763,4 @@ else
 	run_command "${CMD}" ${CMD_ARGS}
 	exit $?
 fi
+

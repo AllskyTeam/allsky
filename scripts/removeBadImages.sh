@@ -258,9 +258,9 @@ else
 		BAD_COUNT="$( wc -l < "${ALLSKY_BAD_IMAGE_COUNT}" )"
 		if [[ $((BAD_COUNT % BAD_LIMIT)) -eq 0 ]]; then
 			MSG="Multiple consecutive bad images."
-			MSG+="\nCheck the values of 'Remove Bad Images Threshold Low',"
-			MSG+=" 'Remove Bad Images Threshold High',"
-			MSG+=" and 'Max Auto-Exposure' in the WebUI."
+			MSG+="\nCheck the values of ${WSNs}Remove Bad Images Threshold Low${WSNe},"
+			MSG+=" ${WSNs}Remove Bad Images Threshold High${WSNe},"
+			MSG+=" and ${WSNs}Max Auto-Exposure${WSNe} in the WebUI."
 			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${MSG}" >&2
 		fi
 		if [[ ${BAD_COUNT} -ge "${BAD_LIMIT}" ]]; then

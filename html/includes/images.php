@@ -4,7 +4,13 @@ function ListImages() {
 	global $imagesSortOrder;
 
 	$images = array();
-	$chosen_day = $_GET['day'];
+	$chosen_day = getVariableOrDefault($_GET, 'day', null);
+	if ($chosen_day === null) {
+		echo "<br><br><br>";
+		echo "<h2 class='alert-danger'>ERROR: No 'day' specified in URL.</h2>";
+		return;
+	}
+
 	$num = 0;	// Keep track of count so we can tell user when no files exist.
 	$dir = ALLSKY_IMAGES . "/$chosen_day";
 

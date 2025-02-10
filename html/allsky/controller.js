@@ -559,16 +559,18 @@ function AppCtrl($scope, $timeout, $http, _) {
 					if ($scope.messages.innerHTML == "") {
 						console.log("GOT ERROR reading image");
 
-						let message = "Image [";
+						let message = "Image <span style='color: white;'>";
 						message += $scope.imageName;
 // TODO: is there a way to determine "not found" from "corrupted" ?
-						message += "] not found or corrupted.";
-						message += "<br><strong>Check the 'imageName' setting.</strong>";
+						message += "</span> not found or is corrupted.";
+						message += "<br><br>";
+						message += "Check the <span style='color: #a6e22e;'>imageName</span>";
+						message += " setting in the WebUI's 'Editor' page.";
+						message += "<br><br>";
 						// If it contains "current" say that's only for remote Websites
 						if ($scope.imageName.search("/current") >= 0) {
-							message += "<br>If this is a remote Allsky Website,";
-							message += " the 'imageName' setting is usually something like '";
-							message += "image.jpg'.";
+							message += "If this is a <u>remote</u> Allsky Website,<br>";
+							message += " the setting is usually something like 'image.jpg'.";
 						}
 						$scope.messages.innerHTML = formatMessage(message, "warning");
 					}

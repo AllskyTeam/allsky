@@ -6,6 +6,15 @@ body:
     attributes:
       value: |
         > [!IMPORTANT]
+        > DO NOT USE THIS PAGE!
+        > It is for the Allsky Team's use only.
+        >
+        > If you are having a problem, see the "Getting Support" Documentation page in the WebUI.
+        >
+  - type: markdown
+    attributes:
+      value: |
+        > [!IMPORTANT]
         > First look in the GitHub [Issues](https://github.com/AllskyTeam/allsky/issues) and [Discussions](https://github.com/AllskyTeam/allsky/discussions) pages.
         > Most problems have already been reported by other people, so add to their post instead of creating a new one.
   - type: markdown

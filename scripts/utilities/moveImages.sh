@@ -11,11 +11,11 @@ source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 # shellcheck disable=SC2034
-DISPLAY_MSG_LOG="${ALLSKY_LOGS}/moveImages.log"		# display_msg() sends log entries here.
-display_msg --logonly info "STARTING moveImages"
+export DISPLAY_MSG_LOG="${ALLSKY_LOGS}/moveImages.log"		# display_msg() logs here
+display_msg --logonly info "\nSTARTING moveImages"
 
 ALLSKY_IMAGES_ALREADY_MOVED="false"					# Did the user already move the images?
-SAVED_ALLSKY_IMAGES="${ALLSKY_IMAGES}"				# Where images are currently kept.
+OLD_ALLSKY_IMAGES="${ALLSKY_IMAGES}"				# Where images are currently kept.
 
 function do_exit()
 {
@@ -114,7 +114,7 @@ fi
 
 if [[ ${ALLSKY_RUNNING} == "true" ]]; then
 	stop_Allsky
-	display_msg --logonly info "Allsky stopped."
+	display_msg --log progress "Allsky stopped."
 fi
 
 # Reset everything that points to old location.
@@ -142,28 +142,25 @@ else
 	chmod 664 "${ALLSKY_USER_VARIABLES}"
 fi
 
-# If the new location is in ${ALLSKY_HOME}, assume
+# Re-read variables.  ${ALLSKY_IMAGES} will be the NEW location.
+# ${OLD_ALLSKY_IMAGES} are where they currently are.
 unset ALLSKY_VARIABLE_SET		# forces variables.sh to be re-read
 #shellcheck source-path=.
 source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 
 display_msg --logonly info "Making configuration changes."
-
 "${ALLSKY_HOME}/install.sh" --function do_change_images
 
-if [[ ${ALLSKY_RUNNING} == "true" ]]; then
-	start_Allsky
-	display_msg --log success "Allsky restarted."
-fi
+# For some reason, the yellow color being reset, so reset them.
+O_ ""
 
-# If there are any existing files, ask the user what to do.
-NUM=$( find "${SAVED_ALLSKY_IMAGES}" -maxdepth 1 2>/dev/null | wc -l )
-((NUM--))
+# If there are any existing files or directories, ask the user what to do with them.
+NUM=$( find "${OLD_ALLSKY_IMAGES}" -maxdepth 1 2>/dev/null | wc -l )
+(( NUM-- ))		# Don't count the top directory
 if [[ ${NUM} -gt 0 ]]; then
-	display_msg --logonly info "${NUM} item(s) found in '${SAVED_ALLSKY_IMAGES}'."
+	display_msg --logonly info "${NUM} item(s) found in '${OLD_ALLSKY_IMAGES}'; prompting user."
 	while true; do
-		echo
-		echo "There are ${NUM} objects in '${SAVED_ALLSKY_IMAGES}'.  Should they be:"
+		echo "There are ${NUM} objects in '${OLD_ALLSKY_IMAGES}'.  Should they be:"
 		echo "1. MOVED to the new location,"
 		echo "2. COPIED to the new location,"
 		echo "3. or left as is?"
@@ -171,30 +168,31 @@ if [[ ${NUM} -gt 0 ]]; then
 		read -r -p "Enter number: " ans
 		case "${ans}" in
 			1)
-				display_msg --logonly info "  User elected to MOVE items to new location."
-				ERR="$( mv "${SAVED_ALLSKY_IMAGES}"/* "${ALLSKY_IMAGES}" 2>&1 )"
+				display_msg --logonly info "  > User elected to MOVE items to new location."
+				ERR="$( mv "${OLD_ALLSKY_IMAGES}"/* "${ALLSKY_IMAGES}" 2>&1 )"
 				if [[ $? -ne 0 ]]; then
 					MSG="WARNING: some images didn't get copied;"
 					MSG+=" you must copy them manually:\n${ERR}"
 					W_ "${MSG}"
 				fi
 
+				# This won't remove ${ALLSKY_IMAGES}.  Leave it, even if empty.
 				if [[ ${ALLSKY_IMAGES_ALREADY_MOVED} == "true" ]]; then
-					sudo rmdir "${SAVED_ALLSKY_IMAGES}"
+					sudo rmdir "${OLD_ALLSKY_IMAGES}"
 				fi
 				break
 				;;
 			2)
-				display_msg --logonly info "  User elected to COPY items to new location."
-				cp -a -r "${SAVED_ALLSKY_IMAGES}"/* "${ALLSKY_IMAGES}"
+				display_msg --logonly info "  > User elected to COPY items to new location."
+				cp -a -r "${OLD_ALLSKY_IMAGES}"/* "${ALLSKY_IMAGES}"
 				break
 				;;
 			3)
-				display_msg --logonly info "  User elected to LEAVE items as is."
+				display_msg --logonly info "  > User elected to LEAVE items as is."
 				break
 				;;
 			"q")
-				display_msg --logonly info "  User elected not to continue."
+				display_msg --logonly info "  > User elected not to continue."
 				do_exit 0
 				;;
 			*)
@@ -203,21 +201,21 @@ if [[ ${NUM} -gt 0 ]]; then
 		esac
 	done
 else
-	display_msg --logonly info "No items found in '${SAVED_ALLSKY_IMAGES}'."
+	display_msg --logonly info "No items found in '${OLD_ALLSKY_IMAGES}'."
 fi
+
 
 MSG="Move completed."
 if [[ ${ALLSKY_RUNNING} == "true" ]]; then
+	start_Allsky
 	MSG2=" Allsky restarted."
 else
 	MSG2=""
 fi
-display_msg --log success "${MSG}" "${MSG2}"
+display_msg --log progress "\n${MSG}" "${MSG2}"
 
-echo
-echo "In order for the change to be visible, go to the WebUI in your browser and press"
-echo "    SHIFT-F5"
-echo "to force it to re-read the new settings."
-echo
+MSG="In order for the change to be visible, go to the WebUI and press"
+MSG+="\n    SHIFT-F5 in your browser to force it to re-read the new settings."
+display_msg info "${MSG}\n"
 
 do_exit 0

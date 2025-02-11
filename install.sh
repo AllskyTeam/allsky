@@ -39,8 +39,11 @@ COPIED_PRIOR_FTP_SH="false"				# prior ftp-settings.sh's settings copied to sett
 SUGGESTED_NEW_HOST_NAME="allsky"		# Suggested new host name
 NEW_HOST_NAME=""						# User-specified host name
 BRANCH="${GITHUB_MAIN_BRANCH}"			# default branch
+
+PASSED_DISPLAY_MSG_LOG="${DISPLAY_MSG_LOG}"		# if set, we were given the log file name
 # shellcheck disable=SC2034
 DISPLAY_MSG_LOG="${DISPLAY_MSG_LOG:-${ALLSKY_LOGS}/install.log}"	# send log entries here
+
 LONG_BITS=$( getconf LONG_BIT ) # Size of a long, 32 or 64
 REBOOT_NEEDED="true"					# Is a reboot needed at end of installation?
 CONFIGURATION_NEEDED="true"				# Does Allsky need to be configured at end of installation?
@@ -380,6 +383,9 @@ do_function()
 {
 	local FUNCTION="${1}"
 	shift
+
+	# If we were passed a log file location, use it.
+	[[ -n ${PASSED_DISPLAY_MSG_LOG} ]] && DISPLAY_MSG_LOG="${PASSED_DISPLAY_MSG_LOG}"
 
 	if ! type "${FUNCTION}" > /dev/null; then
 		display_msg error "Unknown function: '${FUNCTION}'."
@@ -2603,7 +2609,9 @@ restore_prior_files()
 	ITEM="${SPACE}'config/overlay' directory"
 	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
 		display_msg --log progress "${ITEM} (copying)"
-# TODO: ALEX: FIX: Copying everying in these 3 directories means we can never release new versions.
+# TODO: ALEX: FIX:
+# Copying everying in these 3 directories means we can never release new versions, correct?
+
 		cp -a -r "${PRIOR_CONFIG_DIR}/overlay/fonts" "${ALLSKY_OVERLAY}"
 		cp -a -r "${PRIOR_CONFIG_DIR}/overlay/images" "${ALLSKY_OVERLAY}"
 		cp -a -r "${PRIOR_CONFIG_DIR}/overlay/imagethumbnails" "${ALLSKY_OVERLAY}"
@@ -3954,7 +3962,8 @@ done
 IorR="INSTALLATION"		# Installation (default) or Restoration
 
 if [[ -n ${FUNCTION} || ${FIX} == "true" ]]; then
-	# Don't log when a single function is executed or we're fixing things.
+	# If we were passed a log file name, use it, otherwise
+	# don't log when a single function is executed or we're fixing things.
 	DISPLAY_MSG_LOG=""
 else
 	if [[ ${RESTORE} == "true" ]]; then

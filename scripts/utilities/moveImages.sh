@@ -11,8 +11,8 @@ source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 # shellcheck disable=SC2034
-DISPLAY_MSG_LOG="${ALLSKY_LOGS}/changeImages.log"		# display_msg() sends log entries here
-display_msg --logonly info "STARTING changeImages"
+DISPLAY_MSG_LOG="${ALLSKY_LOGS}/moveImages.log"		# display_msg() sends log entries here
+display_msg --logonly info "STARTING moveImages"
 
 ALLSKY_IMAGES_MOVED="false"
 SAVED_ALLSKY_IMAGES="${ALLSKY_IMAGES}"
@@ -207,6 +207,6 @@ echo "In order for the change to be visible, go to the WebUI in your browser and
 echo "    SHIFT-F5"
 echo "to force it to re-read the new settings."
 echo
-display_msg --logonly info "ENDING changeImages"
+display_msg --logonly info "ENDING moveImages"
 
 exit 0

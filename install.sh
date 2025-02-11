@@ -1141,7 +1141,6 @@ set_permissions()
 
 	# These directories aren't in GitHub so need to be manually created.
 	mkdir -p \
-		"${ALLSKY_WEBSITE_MYFILES_DIR}" \
 		"${ALLSKY_WEBSITE}/videos/thumbnails" \
 		"${ALLSKY_WEBSITE}/keograms/thumbnails" \
 		"${ALLSKY_WEBSITE}/startrails/thumbnails" \
@@ -2902,20 +2901,6 @@ restore_prior_website_files()
 	else
 		# Since this is obsolete only add to log file.
 		display_msg --logonly progress "${ITEM}: ${NOT_RESTORED}"
-	fi
-
-	A="analyticsTracking.js"
-	ITEM="${SPACE}${SPACE}${A}"
-	D="${PRIOR_WEBSITE_DIR}/${A}"
-	if [[ -f ${D} ]]; then
-		# Few people use this file, so only copy prior version if it's
-		# different than the current one.
-		if ! cmp --silent "${D}" "${ALLSKY_WEBSITE}/${A}" ; then
-			display_msg --log progress "${ITEM} (copying)"
-			cp "${D}" "${ALLSKY_WEBSITE}"
-		fi
-	else
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
 	# Now deal with the local Website configuration file.

@@ -36,7 +36,7 @@ img.current {
 	font-weight: 400;
 	padding-left: 90px;
 	padding-top: 12px;
-	background: url('allsky-logo.png') left center;
+	background: url('../allsky-logo.png') left center;
 	background-size: 75px;
 	background-repeat: no-repeat;
 	height: 55px;
@@ -303,11 +303,11 @@ img.current {
 
 @font-face {
   font-family: 'allsky';
-  src:  url('fonts/allsky.eot?thds7v');
-  src:  url('fonts/allsky.eot?thds7v#iefix') format('embedded-opentype'),
-    url('fonts/allsky.ttf?thds7v') format('truetype'),
-    url('fonts/allsky.woff?thds7v') format('woff'),
-    url('fonts/allsky.svg?thds7v#allsky') format('svg');
+  src:  url('../fonts/allsky.eot?thds7v');
+  src:  url('../fonts/allsky.eot?thds7v#iefix') format('embedded-opentype'),
+    url('../fonts/allsky.ttf?thds7v') format('truetype'),
+    url('../fonts/allsky.woff?thds7v') format('woff'),
+    url('../fonts/allsky.svg?thds7v#allsky') format('svg');
   font-weight: normal;
   font-style: normal;
 }
@@ -333,11 +333,11 @@ img.current {
 
 @font-face {
   font-family: 'mini-timelapse';
-  src:  url('fonts/mini-timelapse.eot?dynh3c');
-  src:  url('fonts/mini-timelapse.eot?dynh3c#iefix') format('embedded-opentype'),
-    url('fonts/mini-timelapse.ttf?dynh3c') format('truetype'),
-    url('fonts/mini-timelapse.woff?dynh3c') format('woff'),
-    url('fonts/mini-timelapse.svg?dynh3c#mini-timelapse') format('svg');
+  src:  url('../fonts/mini-timelapse.eot?dynh3c');
+  src:  url('../fonts/mini-timelapse.eot?dynh3c#iefix') format('embedded-opentype'),
+    url('../fonts/mini-timelapse.ttf?dynh3c') format('truetype'),
+    url('../fonts/mini-timelapse.woff?dynh3c') format('woff'),
+    url('../fonts/mini-timelapse.svg?dynh3c#mini-timelapse') format('svg');
   font-weight: normal;
   font-style: normal;
   font-display: block;

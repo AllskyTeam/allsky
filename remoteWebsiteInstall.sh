@@ -92,6 +92,12 @@ OLD_FILES_TO_REMOVE=( \
 	"version" \
 	"allsky-font.css" \
 	".git/" )
+# These moved in v2024.12.06_02 to separate directories:
+OLD_FILES_TO_REMOVE+=( \
+	"allsky.css" "animate.min.css" "bootstrap.min.css" \
+	"controller.js" "moment.js" "ng-lodash.min.js")
+# Tab separated the "to" and "from"
+FILES_TO_MOVE=( "analyticsTracking.js	myFiles" )
 
 ############################################## functions
 
@@ -502,7 +508,7 @@ function display_complete()
 	display_box "--msgbox" "${DIALOG_DONE}" "${DIALOG_TEXT}"
 
 	clear	# Gets rid of background color from last 'dialog' command.
-	display_msg --log success "\nEnjoy your remote Allsky Website!\n\n${EXTRA_TEXT}"
+	display_msg progress "\nEnjoy your remote Allsky Website!\n\n${EXTRA_TEXT}"
 
 	display_msg --logonly info "INSTALLATION COMPLETED.\n"
 }
@@ -517,8 +523,14 @@ function check_upload()
 	# Put command to test basic functionality.
 	{
 		echo "set	delete-commands	0"		# We'll delete the file when we're done.
-		echo "pwd"
-		echo "ls"
+		MSG="delete_files"
+		for FILE_TO_DELETE in "${OLD_FILES_TO_REMOVE[@]}"; do
+			MSG+="\t${FILE_TO_DELETE}"
+		done
+		echo -e "${MSG}"
+		for FILE_TO_MOVE in "${FILES_TO_MOVE[@]}"; do
+			echo -e "move_files\t${FILE_TO_MOVE}"
+		done
 	} > "${TEST_FILE}"
 
 	# Some user reported this hanging, so add a timeout.
@@ -552,10 +564,12 @@ function remove_upload_file()
 		(
 			ERR="$( remove_remote_file "${TEST_FILE}" "do not check" 2>&1 )"
 			RET=$?
-			if [[ ${RET} -eq 0 ]]; then
-				display_msg --logonly info "Test upload file deleted from server."
-			else
-				MSG="Unable to delete test upload file: ${ERR:-unknown reason}, RET=${RET}"
+			if [[ ${RET} -ne 0 ]]; then
+				if [[ -n ${ERR} ]]; then
+					MSG="${ERR}, RET=${RET}"
+				else
+					MSG="Unable to delete test upload file for unknown reason, RET=${RET}"
+				fi
 				display_msg --logonly info "${MSG}"
 			fi
 		) &
@@ -701,7 +715,7 @@ function remove_remote_file()
 	local FILENAME="${1}"
 	local CHECK="${2}"
 
-	local CMDS  ERR  MSG
+	local CMDS  ERR  MSG  RET
 	if [[ ${CHECK} == "check" ]]; then
 		if ! check_if_web_files_exist "${REMOTE_WEBSITE_URL}" "or" "${FILENAME}" ; then
 			return 0
@@ -720,22 +734,22 @@ function remove_remote_file()
 		${REMOTE_PORT} \
 		"${REMOTE_PROTOCOL}://${REMOTE_HOST}" \
 		-e "${CMDS}" 2>&1 )"
-
-	if [[ $? -eq 0 ]] ; then
+	RET=$?
+	if [[ ${RET} -eq 0 ]] ; then
 		MSG="Deleted remote file '${FILENAME}'"
 		[[ ${CHECK} != "check" ]] && MSG+=" (if it existed)"
 		display_msg --logonly info "${MSG}"
+		return 0
 
 	elif [[ ! ${ERR} =~ "550" ]]; then		# does not exist
 		MSG="Unable to delete remote file '${FILENAME}': ${ERR}"
+		echo "${MSG}"
 		display_msg --logonly info "${MSG}"
 		return 1
-
-	else
-		show_debug_message "'${FILENAME}' not on server."
 	fi
 
-	return 0
+	show_debug_message "'${FILENAME}' not on server."
+	return "${RET}"
 }
 
 ####
@@ -912,10 +926,13 @@ function upload_remote_website()
 
 	display_msg --logonly info "$( indent --spaces "${MSG}" )"
 
-	# Remove any old core files no longer required
-	for FILE_TO_DELETE in "${OLD_FILES_TO_REMOVE[@]}"; do
-		remove_remote_file "${FILE_TO_DELETE}" "do not check"
-	done
+	# Tell the server to remove files no longer required and move others.
+	# The files are in the commands file that's on the server.
+	# If no RESULTS, then the files didn't exist.
+	local RESULTS="$( execute_web_commands "${REMOTE_WEBSITE_URL}" )"
+	if [[ -n ${RESULTS} ]]; then
+		display_msg --logonly info "Moved/Removed:\n${RESULTS}"
+	fi
 
 	local DIR="myImages"
 	if check_if_web_files_exist "${REMOTE_WEBSITE_URL}" "or" "${DIR}" ; then

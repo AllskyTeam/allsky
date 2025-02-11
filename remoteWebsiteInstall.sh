@@ -529,7 +529,7 @@ function check_upload()
 		done
 		echo -e "${MSG}"
 		for FILE_TO_MOVE in "${FILES_TO_MOVE[@]}"; do
-			echo -e "move_files\t${FILES_TO_MOVE}"
+			echo -e "move_files\t${FILE_TO_MOVE}"
 		done
 	} > "${TEST_FILE}"
 

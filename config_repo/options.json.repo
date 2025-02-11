@@ -1195,7 +1195,7 @@
 {
 "name" : "imageremovebadhigh",
 "minimum" : 0,
-"maximum" : 0.5,
+"maximum" : 0.999,
 "default" : 0.9,
 "description" : "Delete images whose mean is above this value.<br><span class='WebUIValue'>0</span> disables this check.",
 "label" : "Remove Bad Images Threshold High",

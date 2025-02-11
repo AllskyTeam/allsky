@@ -19,61 +19,36 @@ ALLOW_MORE_COMMANDS="true"
 
 TITLE="*** Allsky Configuration ***"
 
-OK="true"
-DO_HELP="false"
-CMD=""
-CMD_ARGS=""
-DEBUG="false"
-while [[ $# -gt 0 ]]; do
-	ARG="${1}"
-	case "${ARG,,}" in
-		--help)
-			DO_HELP="true"
-			;;
 
-		--debug)
-			DEBUG="true"
-			;;
+####################################### Functions - one per command
 
-		-*)
-			E_ "\nUnknown argument '${ARG}'." >&2
-			OK="false"
-			;;
-
-		*)
-			CMD="${ARG}"
-			shift
-			# shellcheck disable=SC2124
-			CMD_ARGS="${@}"
-			break;
-			;;
-	esac
-	shift
-done
-
+####
+# Display the usage message.
 function usage_and_exit()
 {
 	local RET=${1}
 	
 	exec 2>&1
 	echo
-	local MSG="Usage: ${ME} [--help] [--debug] [command [--help] [arguments ...]]"
+	local MSG="Usage: ${ME} [--debug] [--help] [command [arguments ...]]"
 	if [[ ${RET} -ne 0 ]]; then
 		E_ "${MSG}"
 	else
-		echo -e "${MSG}"
+		W_ "${MSG}"
 	fi
 	echo -e "\nwhere:"
 	echo -e "  '--help' displays this message and exits."
+	echo -e "  '--help command' displays a help message for the specified command, then exits."
 	echo -e "  '--debug' displays debugging information."
 	echo -e "  'command' is a command to execute with optional arguments.  Choices are:"
-	echo -e "      show_supported_cameras  RPi | ZWO"
+	echo -e "      show_supported_cameras  --RPi | --ZWO"
 	echo -e "      show_connected_cameras"
 	echo -e "      prepare_logs"
 	echo -e "      recheck_swap"
 	echo -e "      recheck_tmp"
 	echo -e "      samba"
 	echo -e "      move_images"
+	echo -e "      bad_images_info"
 	echo -e "      new_rpi_camera_info [--camera NUM]"
 	echo -e "      show_start_times [--zero] [angle [latitude [longitude]]]"
 	echo -e "      compare_paths --website | --server"
@@ -86,17 +61,19 @@ function usage_and_exit()
 	exit "${RET}"
 }
 
-[[ ${DO_HELP} == "true" ]] && usage_and_exit 0
-[[ ${OK} == "false" ]] && usage_and_exit 1
-PATH="${PATH}:${ALLSKY_UTILITIES}"
-
-
-####################################### Functions - one per command
 
 #####
 # Show all the supported cameras.
 function show_supported_cameras()
 {
+	if [[ ${1} == "--help" ]]; then
+		W_ "Usage: ${ME}  ${ME_F} --RPi | --ZWO"
+		echo
+		echo "Display all the cameras of the specified type that Allsky supports."
+		echo "Note that the ZWO list is very long."
+		return
+	fi
+
 	# shellcheck disable=SC2124
 	local ARGS="${@}"
 
@@ -120,6 +97,15 @@ function show_supported_cameras()
 # Show all the currently connected cameras.
 function show_connected_cameras()
 {
+	if [[ ${1} == "--help" ]]; then
+		W_ "Usage: ${ME}  ${ME_F}"
+		echo
+		echo "Display all the cameras currently connected to the Pi."
+		echo "The Type of camera (ZWO or RPi), Number, and Model are displayed for each camera."
+		echo "If there is only one camera of a given Type, its Number will always be 0."
+		return
+	fi
+
 	get_connected_cameras_info "true" > "${CONNECTED_CAMERAS_INFO}"
 
 	local CAMERAS="$( get_connected_camera_models --full "both" )"
@@ -145,6 +131,17 @@ function show_connected_cameras()
 # Stop it, then truncate the log files and restart Allsky.
 function prepare_logs()
 {
+	if [[ ${1} == "--help" ]]; then
+		W_ "Usage: ${ME}  ${ME_F}"
+		echo
+		echo "Configure Allsky to collect the proper information for troubleshooting problems."
+		echo "Allsky is stopped, the Debug Level set to the appropriate value if needed,"
+		echo "the log files are truncated, and Allsky is restarted."
+		echo "After the problem appears, see the 'Getting Help' page in the WebUI for details"
+		echo "on how to report the problem."
+		return
+	fi
+
 	local NEW_DEBUG=3
 
 	stop_Allsky
@@ -162,9 +159,23 @@ function prepare_logs()
 }
 
 #####
-# Show all the currently connected cameras.
+# Request support for an RPi camera.
 function new_rpi_camera_info()
 {
+	if [[ ${1} == "--help" ]]; then
+		W_ "Usage: ${ME}  ${ME_F}  [--camera NUM]"
+		echo
+		W_ "NOTE: This command only works if you have an RPi camera connected to the Pi."
+		echo
+		echo "Saves detailed information on the attached RPi camera to a file."
+		echo "This file MUST be attached to your GitHub Discussion requesting support for the camera."
+		echo
+		echo "If there is more than one RPi camera connected to the Pi,"
+		echo "by default, information on the first camera (number 0) is displayed."
+		echo "Use the '--camera NUM' argument to specify a different camera."
+		return
+	fi
+
 	# shellcheck disable=SC2124
 	local ARGS="${@}"		# optional
 
@@ -176,6 +187,15 @@ function new_rpi_camera_info()
 # Install SAMBA.
 function samba()
 {
+	if [[ ${1} == "--help" ]]; then
+		W_ "Usage: ${ME}  ${ME_F}"
+		echo
+		echo "Configure your Pi using the Samba protocol to allow easy file transfers to and from PCs and MACs."
+		echo "The HOME directory of the login you use on the Pi will be available to connect to a PC or MAC,"
+		echo "where it will be treated like any other disk.  You can then drag and drop files."
+		return
+	fi
+
 	installSamba.sh
 }
 
@@ -183,7 +203,121 @@ function samba()
 # Move ALLSKY_IMAGES to a new location.
 function move_images()
 {
+	if [[ ${1} == "--help" ]]; then
+		W_ "Usage: ${ME}  ${ME_F}"
+		echo
+		echo "Configure Allsky to save images in the location you specify, rather than in ~/allsky/images."
+		echo "You are prompted for the new location, and if there are images in the current location,"
+		echo "you'll be prompted for what you want to do with them (typically move them to the new location)."
+		echo
+		echo "The new location is typically an SSD or other higher-capacity, more reliable media"
+		echo "than an SD card."
+		return
+	fi
+
 	moveImages.sh
+}
+
+#####
+# Move ALLSKY_IMAGES to a new location.
+function bad_images_info()
+{
+	if [[ ${1} == "--help" ]]; then
+		W_ "Usage: ${ME}  ${ME_F}"
+		echo
+		echo "Display information on 'bad' images, which are ones that are too dark or too light,"
+		echo "and hence have been deleted."
+		echo "This information can be used to determine what the low and high 'Remove Bad Images Threshold'"
+		echo "settings should be."
+		return
+	fi
+
+	# Log entry format:
+	#	2025-02-09T10:44:17.594698-07:00 new-allsky allsky[905780]: removeBadImages.sh: File is bad: \
+	#		removed 'image-20250209104345.jpg' (MEAN of 0.167969 is below low threshold of 0.5)
+	local INFO="$( grep "File is bad:.*MEAN of" "${ALLSKY_LOG}"* | sed -e 's/.*(MEAN/MEAN/' -e 's/)//' )"
+	if [[ -z ${INFO} ]]; then
+		W_ "\nNo bad file information found in the Allsky log (${ALLSKY_LOG}).  Cannot continue.\n"
+		return
+	fi
+
+	#	MEAN of 0.167969 is below low threshold of 0.5
+	#	$1   $2 $3       $4 $5    $6  $7        $8 $9
+	echo "$INFO" | gawk '
+		BEGIN {
+			low_count = 0; low_min = 1; low_max = 0; low_threshold = 0; low_mean_total = 0;
+			high_count = 0; high_min = 0; high_max = 0; high_threshold = 0; high_mean_total = 0;
+		}
+		{
+			mean = $3;
+			below_above = $5;
+			threshold = $9;
+			if (below_above == "below") {	# below low
+				if (threshold != low_threshold) {
+					if (low_threshold != 0) {
+						# Start over with numbers
+						# printf("Low threshold changed from %f to %f; summary may not be accurate\n",
+						# 	low_threshold, threshold);
+						low_max = 0;
+						low_count = 0;
+						low_mean_total = 0;
+					}
+					low_threshold = threshold;
+				}
+				low_count++;
+				low_mean_total += mean;
+				if (mean < low_min)
+					low_min = mean;
+				else if (mean > low_max)
+					low_max = mean;
+
+			} else {				# above high
+				if (threshold != high_threshold) {
+					if (high_threshold != 0) {
+						# printf("High threshold changed from %f to %f; summary may not be accurate\n",
+						# 	high_threshold, threshold);
+						high_min = 1;
+						high_count = 0;
+						high_mean_total = 0;
+					}
+					high_threshold = threshold;
+				}
+				high_count++;
+				high_mean_total += mean;
+				if (mean < high_min)
+					high_min = mean;
+				else if (mean > high_max)
+					high_max = mean;
+			}
+		}
+		END {
+			if (low_count > 0) {
+				printf("%d images had a mean below the Low Threshold of %f\n", low_count, low_threshold);
+				if (low_min == low_max) {
+					printf("The lowest mean was %f\n", low_min);
+					printf("\nConsider lowering your Low Threshold to less than %f\n", low_min);
+					printf("or increasing your exposure and/or gain.\n");
+				} else {
+					ave = low_mean_total / low_count;
+					printf("The lowest mean was %f and the highest %f with and average of %f\n",
+						low_min, low_max, ave);
+					printf("\nConsider lowering your Low Threshold to around %f\n", ave);
+				}
+			}
+			if (high_count > 0) {
+				printf("%d images had a mean above the High Threshold of %f\n", high_count, high_threshold);
+				if (high_min == high_max) {
+					printf("The highest mean was %f\n", high_min);
+					printf("\nConsider raising your High Threshold to more than %f\n", high_min);
+					printf("or decreasing your exposure and/or gain.\n");
+				} else {
+					ave = high_mean_total / high_count;
+					printf("The lowest mean was %f and the highest %f with and average of %f\n",
+						high_min, high_max, ave);
+					printf("\nConsider raising your High Threshold to around %f\n", ave);
+				}
+			}
+		}'
 }
 
 #####
@@ -191,6 +325,18 @@ function move_images()
 # display the path on the server give a URL.
 function compare_paths()
 {
+	if [[ ${1} == "--help" ]]; then
+		W_ "Usage: ${ME}  ${ME_F}  --website | --server"
+		echo
+		echo "Helps determine what to put in the 'Image Directory' and 'Website URL' settings in"
+		the "'Remote Server' section of the WebUI."
+		echo "It does this by displaying information from a remote Website's server via FTP and via a URL,"
+		echo "such as the directory name (they should match) and a list of files in those directories."
+		echo
+		echo "If you did not specify either '--website' or '--server', you will be prompted for which to use."
+		return
+	fi
+
 	# shellcheck disable=SC2124
 	local ARGS="${@}"
 
@@ -198,13 +344,13 @@ function compare_paths()
 	if needs_arguments ${ARGS} ; then
 		PROMPT="\nSelect the machine you want to check:"
 		OPTS=()
-# TODO: change message and don't prompt when "remoteserverurl" setting is implemented.
-		OPTS+=("--website"			"Remote Allsky Website (uses remote 'Website URL')")
-		OPTS+=("--server"			"Remote server (you will be prompted for the server's URL)")
+		OPTS+=("--website"			"Remote Allsky Website (uses the remote Website's 'Website URL' setting)")
+		OPTS+=("--server"			"Remote server (uses for the remote server's 'Website URL' setting)")
 
 		# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 		ARGS="$( prompt "${PROMPT}" "${OPTS[@]}" )"
 
+# TODO: Remove this check once "remoteserverurl" is implemented.
 		if [[ ${ARGS} == "--server" ]]; then
 			PROMPT="\nEnter the URL of the server (must begin with 'http' or 'https'):"
 			while ! A="$( getInput "${PROMPT}" )" ; do
@@ -222,6 +368,14 @@ function compare_paths()
 # Display brightness information from the startrails command.
 get_brightness_info()
 {
+	if [[ ${1} == "--help" ]]; then
+		W_ "Usage: ${ME}  ${ME_F}"
+		echo
+		echo "Displays brightness information used when updating the 'Threshold' startrails setting."
+		echo "Typically this is needed when startrails images don't show any trails."
+		return
+	fi
+
 	if [[ "$( settings ".startrailsgenerate" )" != "true" ]]; then
 		w_ "\nWARNING: The startrails 'Generate' setting is not enabled."
 	fi
@@ -286,6 +440,14 @@ get_brightness_info()
 # List encoders available to timelapses.
 function encoders()
 {
+	if [[ ${1} == "--help" ]]; then
+		W_ "Usage: ${ME}  ${ME_F}"
+		echo
+		echo "Displays a list of possible video encoders you can use in the Timelapse 'VCODEC' setting."
+		echo "This setting is rarely changed, and should only be changed if you know what you're doing."
+		return
+	fi
+
 	ffmpeg -loglevel error -encoders
 }
 
@@ -293,6 +455,14 @@ function encoders()
 # List pixel formats available to timelapses.
 function pix_fmts()
 {
+	if [[ ${1} == "--help" ]]; then
+		W_ "Usage: ${ME}  ${ME_F}"
+		echo
+		echo "Displays a list of possible video encoders you can use in the Timelapse 'Pixel format' setting."
+		echo "This setting is rarely changed, and should only be changed if you know what you're doing."
+		return
+	fi
+
 	ffmpeg -loglevel error -pix_fmts
 }
 
@@ -300,6 +470,24 @@ function pix_fmts()
 # Show the daytime and nighttime start times
 function show_start_times()
 {
+	if [[ ${1} == "--help" ]]; then
+		W_ "Usage:"
+		W_ "    ${ME}  ${ME_F} [--zero] [angle [latitude [longitude]]]"
+		echo "OR"
+		W_ "    ${ME}  ${ME_F} [--zero] [--angle A] [--latitude LAT] [--longitude LONG]"
+		echo
+		echo "Show the daytime and nighttime start times for the specified angle, latitude, and longitude."
+		echo "If you don't specify those values, your current values are used."
+		echo "'--zero' also displays information for an angle of 0."
+		echo
+		echo "This information is useful when determining what to put in the 'Angle' setting in the WebUI."
+		echo "Typically you would adjust the angle until you got the start time you wanted."
+		echo
+		echo "This is also useful when troubleshooting when the daytime and nighttime start times"
+		echo "aren't what you expected."
+		return
+	fi
+
 	local DO_HELP="false"
 	local ZERO=""
 	local ANGLE=""
@@ -348,20 +536,6 @@ function show_start_times()
 		shift
 	done
 
-	if [[ ${DO_HELP} == "true" ]]; then
-		echo
-		echo "Usage: ${ME}  ${FUNCNAME[0]} [--zero]  [ --angle A]  [--latitude LAT]  [--longitude LONG]"
-		echo "or"
-		echo "Usage: ${ME}  ${FUNCNAME[0]} [--zero]  [ angle  [latitude  [longitude]"
-		echo "Where:"
-		echo "    '--zero' will also show times for Angle 0."
-		echo "By default, the Angle, Latitude, and Longitude in the WebUI will be use."
-		echo "You can override any of those via the command line."
-		echo
-
-		return
-	fi
-
 	if [[ $# -gt 0 ]]; then
 		ANGLE="$1"
 		shift
@@ -409,6 +583,7 @@ function run_command()
 {
 	COMMAND="${1}"
 	shift
+
 	# shellcheck disable=SC2124
 	ARGUMENTS="${@}"
 	if ! type "${COMMAND}" > /dev/null 2>&1 ; then
@@ -417,9 +592,10 @@ function run_command()
 	fi
 
 	if [[ ${DEBUG} == "true" ]]; then
-		d_ "Executing: ${COMMAND} ${ARGUMENTS}\n"
+		D_ "Executing: ${COMMAND} ${ARGUMENTS}\n"
 	fi
 
+	ME_F="${COMMAND}"		# global
 	#shellcheck disable=SC2086
 	"${COMMAND}" ${ARGUMENTS}
 }
@@ -491,6 +667,51 @@ function L()
 
 ####################################### Main part of program
 
+OK="true"
+DO_HELP="false"
+CMD=""
+CMD_ARGS=""
+DEBUG="false"
+while [[ $# -gt 0 ]]; do
+	ARG="${1}"
+	case "${ARG,,}" in
+		--help)
+			DO_HELP="true"
+			;;
+
+		--debug)
+			DEBUG="true"
+			;;
+
+		-*)
+			E_ "\nUnknown argument '${ARG}'." >&2
+			OK="false"
+			;;
+
+		*)
+			CMD="${ARG}"
+			shift
+			# shellcheck disable=SC2124
+			CMD_ARGS="${@}"
+			break;
+			;;
+	esac
+	shift
+done
+
+if [[ ${DO_HELP} == "true" ]]; then
+	if [[ -n ${CMD} ]]; then
+		echo
+		run_command "${CMD}" "--help"
+		echo
+		exit 0
+	else
+		usage_and_exit 0
+	fi
+fi
+[[ ${OK} == "false" ]] && usage_and_exit 1
+PATH="${PATH}:${ALLSKY_UTILITIES}"
+
 if [[ -z ${CMD} ]]; then
 	# No command given on command line so prompt for one.
 
@@ -503,6 +724,7 @@ if [[ -z ${CMD} ]]; then
 	CMDS+=("recheck_tmp"				"$( L "Move ~/allsky/tmp to memory or change size") "); ((N++))
 	CMDS+=("samba" 						"$( L "Simplify copying files to/from the Pi" )"); ((N++))
 	CMDS+=("move_images"				"$( L "Move ~/allsky/images to a different location" )"); ((N++))
+	CMDS+=("bad_images_info"			"$( L "Display information on 'bad' images." )"); ((N++))
 	CMDS+=("new_rpi_camera_info"		"$( L "Collect information for new RPi camera" )"); ((N++))
 	CMDS+=("show_start_times"			"$( L "Show daytime and nighttime start times" )"); ((N++))
 	CMDS+=("compare_paths"				"$( L "Compare upload and Website paths" )"); ((N++))

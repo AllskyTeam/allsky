@@ -244,21 +244,20 @@ function display_msg()
 		STARS=false
 
 	else
-		LOGMSG=""
-		MSG="${YELLOW}"
+		LOGMSG="${NL}* ${MESSAGE}"
+		MSG="${LOGMSG}"
 		STARS=false
 	fi
 
 	if [[ ${STARS} == "true" ]]; then
-		MSG+="\n"
-		MSG+="**********\n"
-		MSG+="${MESSAGE}\n"
-		MSG+="**********${NC}\n"
-
-		LOGMSG+="\n"
-		LOGMSG+="**********\n"
-		LOGMSG+="${MESSAGE}\n"
-		LOGMSG+="**********\n"
+		local M=""
+		M+="\n"
+		M+="**********\n"
+		M+="${MESSAGE}\n"
+		M+="**********\n"
+	
+		MSG+="${M}${NC}"
+		LOGMSG+="${M}"
 	fi
 
 	[[ ${LOG_ONLY} == "false" ]] && echo -e "${MSG}${MESSAGE2}"
@@ -273,7 +272,7 @@ function display_msg()
 	fi
 
 	# Assume if GREEN isn't defined then no colors are defined.
-	local MSG="$(date) ${LOGMSG}${MESSAGE2}"
+	MSG="$(date) ${LOGMSG}${MESSAGE2}"
 	if [[ -n ${GREEN} ]]; then
 		remove_colors "${MSG}"
 	else

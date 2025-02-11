@@ -214,7 +214,7 @@ parse_output()
 
 	STRING="certificate common name doesn't match requested host name"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
-		CMD="set ssl:check-hostname"
+		CMD="set ssl:check-hostname false"
 		error_type "* Certificate host verification issue."
 		fix "${CMD}" "${S}" "FIX: "
 	fi >&2

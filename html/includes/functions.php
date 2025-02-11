@@ -636,7 +636,13 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
 	$num = 0;	// Let the user know when there are no images for the specified day
 	// "/images" is an alias in the web server for ALLSKY_IMAGES
 	$images_dir = "/images";
-	$chosen_day = $_GET['day'];
+	$chosen_day = getVariableOrDefault($_GET, 'day', null);
+	if ($chosen_day === null) {
+		echo "<br><br><br>";
+		echo "<h2 class='alert-danger'>ERROR: No 'day' specified in URL.</h2>";
+		return;
+	}
+
 	echo "<h2>$formalImageTypeName - $chosen_day</h2>\n";
 	echo "<div class='row'>\n";
 	if ($chosen_day === 'All'){
@@ -717,7 +723,7 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
 			}
 		}
 	}
-        echo "</div>";
+	echo "</div>";
 }
 
 // Run a command and display the appropriate status message.

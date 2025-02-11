@@ -55,7 +55,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
-"description" : "Maximum daytime <span class='WebUISetting'>Auto-Exposure<span> time in milliseconds (1000ms = 1 sec).<br>Click <a allsky='true' external='true' href='/documentation/settings/allsky.html#daymaxautoexposure'>here</a> to see how this setting impacts the time between exposures.",
+"description" : "Maximum daytime <span class='WebUISetting'>Auto-Exposure</span> time in milliseconds (1000ms = 1 sec).<br>Click <a allsky='true' external='true' href='/documentation/settings/allsky.html#daymaxautoexposure'>here</a> to see how this setting impacts the time between exposures.",
 "label" : "Max Auto-Exposure",
 "label_prefix" : "Daytime",
 "type" : "float",

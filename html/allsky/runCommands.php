@@ -232,6 +232,7 @@ foreach ($lines AS $line) {
 					}
 				}
 			}
+			break;
 
 		case "move_files":
 			// Move the specified files and/or directories.

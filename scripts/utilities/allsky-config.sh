@@ -266,6 +266,30 @@ get_brightness_info()
 }
 
 
+#####
+# Help determine some timelapse settings.
+config_timelapse()
+{
+	if [[ ${1} == "--help" ]]; then
+		echo
+		W_ "Usage: ${ME}  ${ME_F}"
+		echo
+		echo "Create multiple timelapse videos with different settings to help determine"
+		echo "what settings to ultimately use.  You are prompted for:"
+		echo "    - which day's images to use (default is yesterday's images)"
+		echo "    - how many images to include (default is 200 to minimize the processing time)"
+		echo "    - one or more 'Bitrate' values"
+		echo "    - one or more 'FPS' values"
+		echo
+		echo "A timelapse video is created for each combination of values you specified."
+		echo "The list of videos created is displayed for you to compare."
+		return
+	fi
+
+	configTimelapse.sh
+}
+
+
 
 #####
 # Allow the user to change the size of ${ALLSKY_TMP}.
@@ -412,6 +436,7 @@ function usage_and_exit()
 	echo -e "      show_supported_cameras  --RPi | --ZWO"
 	echo -e "      show_connected_cameras"
 	echo -e "      prepare_logs"
+	echo -e "      config_timelapse"
 	echo -e "      change_swap"
 	echo -e "      change_tmp"
 	echo -e "      samba"
@@ -596,6 +621,7 @@ if [[ -z ${CMD} ]]; then
 	CMDS+=("show_supported_cameras"		"$( L "Show supported cameras" )"); ((N++))
 	CMDS+=("show_connected_cameras"		"$( L "Show connected cameras" )"); ((N++))
 	CMDS+=("prepare_logs"				"$( L "Prepare log files for troubleshooting" )"); ((N++))
+	CMDS+=("config_timelapse"			"$( L "Create timelapse videos with different settings" )"); ((N++))
 	CMDS+=("change_swap"				"$( L "Add swap space or change size" )"); ((N++))
 	CMDS+=("change_tmp" 				"$( L "Move ~/allsky/tmp to memory or change size") "); ((N++))
 	CMDS+=("samba" 						"$( L "Simplify copying files to/from the Pi" )"); ((N++))

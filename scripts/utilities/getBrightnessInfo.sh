@@ -55,11 +55,11 @@ grep --no-filename "startrails: Minimum" "${ALLSKY_LOG}"* 2> /dev/null |
 		}'
 if [[ $? -ne 0 ]]; then
 	echo -n "No information found.  "
-	local STATUS="$( get_allsky_status )"
+	STATUS="$( get_allsky_status )"
 	if [[ -z ${STATUS} ]]; then
 		echo "Is Allsky running?"
 	else
-		local TIMESTAMP="$( get_allsky_status_timestamp )"
+		TIMESTAMP="$( get_allsky_status_timestamp )"
 		echo "Allsky is ${STATUS} as of ${TIMESTAMP:-unknown time}."
 	fi
 fi

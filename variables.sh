@@ -21,17 +21,23 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 		# Dialog colors:  0-7: black, red, green, yellow, blue, magenta, cyan, white
 		# Reverse: \Zr	 reverse off: \ZR
 		# bold off: \ZB			underline off: \ZU
-		DIALOG_BOLD="\Zb";		DIALOG_UNDERLINE="\Zu"
-		DIALOG_RED="\Z1";		DIALOG_YELLOW="\Z3"
-		DIALOG_GREEN="\Z2";		DIALOG_BLUE="\Z4";		
-		DIALOG_NC="\Zn"			DIALOG_DEBUG="${DIALOG_YELLOW}"
+		DIALOG_BOLD="\Zb";
+		DIALOG_UNDERLINE="\Zu";	DIALOG_INFO="${DIALOG_UNDERLINE}"
+		DIALOG_GREEN="\Z2";		DIALOG_OK="${DIALOG_GREEN}"
+		DIALOG_YELLOW="\Z3"		DIALOG_WARNING="${DIALOG_YELLOW}"
+		DIALOG_RED="\Z1";		DIALOG_ERROR="${DIALOG_RED}"
+		DIALOG_BLUE="\Z4";		DIALOG_HIGHLIGHT="${DIALOG_BLUE}"
+								DIALOG_DEBUG="${DIALOG_YELLOW}"
+		DIALOG_NC="\Zn"
 
-		BOLD="\033[1m";			wBOLD="["; wNBOLD="]"
-		UNDERLINE="\033[4m";	wUNDERLINE="${UNDERLINE}"
-		GREEN="\033[0;32m";		wOK="${GREEN}"
+		BOLD="\033[1m"; 		wBOLD="[";  wNBOLD="]"
+		UNDERLINE="\033[4m"; 	wUNDERLINE="${UNDERLINE}"
+
 		INFO="${UNDERLINE}";	wINFO="${INFO}"
+		GREEN="\033[0;32m";		wOK="${GREEN}"
 		YELLOW="\033[0;33m";	wWARNING="${YELLOW}"
 		RED="\033[0;31m";		wERROR="${RED}"
+		BLUE="\033[01;34m"		wHIGHLIGHT="${BLUE}"
 		# Can't use DEBUG since scripts use that to enable debugging.
 		cDEBUG="${YELLOW}";		wDEBUG="${YELLOW}"
 		NC="\033[0m";			wNC="${NC}"
@@ -39,10 +45,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	else
 		ON_TTY="false"
 
-		DIALOG_RED="";			DIALOG_YELLOW=""
-		DIALOG_GREEN="";		DIALOG_UNDERLINE=""
-		DIALOG_BLUE="";			DIALOG_BOLD=""
-		DIALOG_NC="";			DIALOG_DEBUG=""
+		# The "dialog" command is always run on a tty, so don't need to set DIALOG_*.
 
 						# Not on a tty usually means we're called from the WebUI, so use HTML.
 		BOLD="";				wBOLD="<span style='font-weight: bold'>";  wNBOLD="</span>"

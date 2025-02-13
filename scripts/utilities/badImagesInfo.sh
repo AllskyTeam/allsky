@@ -29,10 +29,9 @@ echo "$INFO" | gawk '
 		below_above = $5;
 		threshold = $9;
 		if (below_above == "below") {	# below low
-			if (threshold != low_thresjjhold) {
+			if (threshold != low_threshold) {
 				if (low_threshold != 0) {
 					# Start over with numbers
-					# printf("Low threshold changed from %f to %f; summary may not1GO
 					low_mean_total = 0;
 				}
 				low_threshold = threshold;
@@ -47,8 +46,6 @@ echo "$INFO" | gawk '
 		} else {				# above high
 			if (threshold != high_threshold) {
 				if (high_threshold != 0) {
-					# printf("High threshold changed from %f to %f; summary may not be accurate\n",
-					# 	high_threshold, threshold);
 					high_min = 1;
 					high_count = 0;
 					high_mean_total = 0;
@@ -64,30 +61,35 @@ echo "$INFO" | gawk '
 		}
 	}
 	END {
+		name = "Remove Bad Images Threshold"
 		if (low_count > 0) {
-			printf("%d images had a mean below the Low Threshold of %f\n", low_count, low_threshold);
+			printf("%d image", low_count);
+			if (low_count > 1) printf("s");
+			printf(" had a mean below the Low %s of %f.\n", name, low_threshold);
 			if (low_min == low_max) {
-				printf("The lowest mean was %f\n", low_min);
-				printf("\nConsider lowering your Low Threshold to less than %f\n", low_min);
+				printf("The lowest mean was %f.\n", low_min);
+				printf("\nConsider lowering your Low %s to less than %f\n", name, low_min);
 				printf("or increasing your exposure and/or gain.\n");
 			} else {
 				ave = low_mean_total / low_count;
 				printf("The lowest mean was %f and the highest %f with and average of %f\n",
 					low_min, low_max, ave);
-				printf("\nConsider lowering your Low Threshold to around %f\n", ave);
+				printf("\nConsider lowering your Low %s to around %f\n", name, ave);
 			}
 		}
 		if (high_count > 0) {
-			printf("%d images had a mean above the High Threshold of %f\n", high_count, high_threshold);
+			printf("%d image", high_count);
+			if (high_count > 1) printf("s");
+			printf(" had a mean above the High %s of %f.\n", name high_threshold);
 			if (high_min == high_max) {
-				printf("The highest mean was %f\n", high_min);
-				printf("\nConsider raising your High Threshold to more than %f\n", high_min);
+				printf("The highest mean was %f.\n", high_min);
+				printf("\nConsider raising your High %s to more than %f\n", name, high_min);
 				printf("or decreasing your exposure and/or gain.\n");
 			} else {
 				ave = high_mean_total / high_count;
-				printf("The lowest mean was %f and the highest %f with and average of %f\n",
+				printf("The lowest mean was %f and the highest %f with and average of %f.\n",
 					high_min, high_max, ave);
-				printf("\nConsider raising your High Threshold to around %f\n", ave);
+				printf("\nConsider raising your High %s to around %f.\n", name, ave);
 			}
 		}
 	}'

@@ -9,7 +9,6 @@ source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 
 OK="true"
-DO_HELP="false"
 ZERO=""
 ANGLE=""
 LATITUDE=""
@@ -18,10 +17,6 @@ LONGITUDE=""
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in
-		--help)
-			DO_HELP="true"
-			;;
-
 		--zero)
 			ZERO="${ARG}"
 			;;

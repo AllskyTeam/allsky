@@ -70,6 +70,7 @@ echo
 echo "How many images in '${DIR}' should be use?"
 echo "If you don't enter anything, ${NUM_IMAGES} will be used,"
 echo "which is usually sufficient to compare videos."
+echo "Entering 'all' will use all the images, which will be slow and isn't usually needed."
 
 echo -e "${cYELLOW}${cBOLD}"
 echo -en "Enter the number of images to use: ${cNC}"
@@ -103,7 +104,69 @@ echo
 
 
 #### Create the videos.
-echo "DIR=${DIR}"
-echo "NUM_IMAGES=${NUM_IMAGES}"
-echo "BITRATE_VALUES=${BITRATE_VALUES}"
-echo "FPS_VALUES=${FPS_VALUES}"
+
+IMAGES_FILE="${ALLSKY_TMP}/config_timelapse_images.txt"
+
+find "${DIR}" -maxdepth 1 -type f -name "${FILENAME}-*.${EXTENSION}" > "${IMAGES_FILE}"
+if [[ $? -ne 0 || ! -s ${IMAGES_FILE} ]]; then
+	E_ "\nUnable to find images in '${DIR}\n"
+	rm -f "${IMAGES_FILE}"
+	exit 1
+fi
+
+
+if [[ ${NUM_IMAGES} == "all" ]]; then
+	NUM_IMAGES=$( wc -l < "${IMAGES_FILE}" )
+else
+	# Get the first ${NUM_IMAGES} files.
+	FILES="$( sort "${IMAGES_FILE}" | head "-${NUM_IMAGES}" )"
+	echo "${FILES}" > "${IMAGES_FILE}"
+fi
+
+
+# Get some stats.
+NUM_BITRATE=$( echo ${BITRATE_VALUES} | wc -w )
+NUM_FPS=$( echo ${FPS_VALUES} | wc -w )
+NUM_TIMELAPSES=$(( NUM_BITRATE * NUM_FPS ))
+ON_TIMELAPSE=0
+
+I_ "================ Creating timelapses with ${NUM_IMAGES} from '${DIR}'."
+FILES=()
+for BITRATE in ${BITRATE_VALUES}
+do
+	for FPS in ${FPS_VALUES}
+	do
+		(( ON_TIMELAPSE++ ))
+		OUTPUT_FILE="${DIR}/timelapse-fps_${FPS}-bitrate_${BITRATE}.mp4"
+
+# TODO: determine time to create first timelapse,
+# then tell user estimate remaining time.
+
+		MSG="  Starting timelapse ${ON_TIMELAPSE} of ${NUM_TIMELAPSES} using"
+		MSG+=" FPS ${FPS} and bitrate ${BITRATE}."
+		I_ "${MSG}"
+
+		ERR="$( "${ALLSKY_SCRIPTS}/timelapse.sh" \
+			--fps "${FPS}" \
+			--bitrate "${BITRATE}" \
+			--images "${IMAGES_FILE}" \
+			--output "${OUTPUT_FILE}" \
+			2>&1 )"
+		if [[ $? -eq 0 ]]; then
+			FILES+=( "${OUTPUT_FILE}" )
+		else
+			E_ "Unable to make timelapse for FPS ${FPS} and bitrate ${BITRATE}:\n${ERR}"
+		fi
+	done
+done
+
+if [[ ${#FILES[@]} -gt 0 ]]; then
+	I_ "\nThe following videos were created:"
+	for F in ${FILES[@]}
+	do
+		echo "    ${F}"
+	done
+	echo
+fi
+
+rm -f "${IMAGES_FILE}"

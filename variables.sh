@@ -5,7 +5,7 @@
 # This allows us to easily add and change directory names.
 # It should only be called after ${ALLSKY_HOME} is set.
 
-if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
+if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	set -a	# automatically export all variables
 
 	ALLSKY_VARIABLE_SET="true"	# so we only do the following once
@@ -14,46 +14,89 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 
 	# Set colors used by many scripts in output.
 	# If we're not on a tty output is likely being written to a file, so don't use colors.
-	# The "w" colors are for when output may go to a web page.
+	# The "w" colors are for when output may go to a web page (not on tty) or tty.
 	if tty --silent ; then
 		ON_TTY="true"
 
 		# Dialog colors:  0-7: black, red, green, yellow, blue, magenta, cyan, white
 		# Reverse: \Zr	 reverse off: \ZR
-		DIALOG_RED="\Z1";		DIALOG_YELLOW="\Z3"
-		DIALOG_GREEN="\Z2";		DIALOG_UNDERLINE="\Zu"	# underline off: \ZU
-		DIALOG_BLUE="\Z4";		DIALOG_BOLD="\Zb"		# bold off: \ZB
-		DIALOG_NC="\Zn"			DIALOG_DEBUG="${DIALOG_YELLOW}"
+		# bold off: \ZB			underline off: \ZU
+		DIALOG_BOLD="\Zb";
+		DIALOG_UNDERLINE="\Zu";
+		DIALOG_GREEN="\Z2";		DIALOG_OK="${DIALOG_GREEN}"
+		DIALOG_YELLOW="\Z3"		DIALOG_WARNING="${DIALOG_YELLOW}"
+		DIALOG_RED="\Z1";		DIALOG_ERROR="${DIALOG_RED}"
+		DIALOG_BLUE="\Z4";		DIALOG_INFO="${DIALOG_BLUE}"
+								DIALOG_DEBUG="${DIALOG_YELLOW}"
+		DIALOG_NC="\Zn"
 
-		GREEN="\033[0;32m";		wOK="${GREEN}"
-		YELLOW="\033[0;33m";	wWARNING="${YELLOW}"
-		RED="\033[0;31m";		wERROR="${RED}"
-		# Can't use DEBUG since lots of scripts use that to enable debugging
-		cDEBUG="${YELLOW}";		wDEBUG="${YELLOW}"
-		BOLD="\033[1m";			wBOLD="["; wNBOLD="]"
-		NC="\033[0m";			wNC="${NC}"
+# Black       0;30     Dark Gray     1;30
+# Blue        0;34     Light Blue    1;34
+# Green       0;32     Light Green   1;32
+# Cyan        0;36     Light Cyan    1;36
+# Red         0;31     Light Red     1;31
+# Purple      0;35     Light Purple  1;35
+# Brown       0;33     Yellow        1;33
+# Light Gray  0;37     White         1;37
+# Bold        1
+# Dim         2
+# Italics     3
+# Underline   4
+# Blink       5 and 6 ?
+# Inverse     7
+		cRED="\033[0;31m";
+		cGREEN="\033[0;32m";
+		cBLUE="\033[0;34m"
+		cYELLOW="\033[0;33m";
+
+		cOK="${cGREEN}";		wOK="${cOK}"
+		cINFO="${cBLUE}"		wINFO="${cINFO}"
+		cWARNING="${cYELLOW}";	wWARNING="${cWARNING}"
+		cERROR="${cRED}";		wERROR="${cERROR}"
+		cDEBUG="${cYELLOW}";	wDEBUG="${cDEBUG}"
+		cBOLD="\033[1m"; 		wBOLD="["
+		cNBOLD="\033[22m"; 		wNBOLD="]"		# Disable only bold (N == NO)
+		cUNDERLINE="\033[4m"; 	wUNDERLINE="${cUNDERLINE}"
+		cNUNDERLINE="\033[24m";	wNUNDERLINE="${cNUNDERLINE}"	# Disable only underline
+		cNC="\033[0m";			wNC="${cNC}"
 								wBR="\n"
+
+# TODO: change all to non-"c*" names in all other scripts, then get rid of these old names:
+		BOLD="${cBOLD}"
+		GREEN="${cGREEN}"
+		YELLOW="${cYELLOW}"
+		RED="${cRED}"
+		NC="${cNC}"
+
 	else
 		ON_TTY="false"
 
-		DIALOG_RED="";			DIALOG_YELLOW=""
-		DIALOG_GREEN="";		DIALOG_UNDERLINE=""
-		DIALOG_BLUE="";			DIALOG_BOLD=""
-		DIALOG_NC="";			DIALOG_DEBUG=""
+		# The "dialog" command is always run on a tty, so don't need to set DIALOG_*.
 
-		GREEN="";				wOK="<span style='color: green'>"
-		YELLOW="";				wWARNING="<span style='color: #FF9800'>"
-		RED="";					wERROR="<span style='color: red'>"
+						# Not on a tty usually means we're called from the WebUI, so use HTML.
+		cOK="";					wOK="<span style='color: green'>"
+		cINFO="";				wINFO="<span style='color: blue'>"
+		cWARNING="";			wWARNING="<span style='color: #FF9800'>"	# darker yellow
+		cERROR="";				wERROR="<span style='color: red'>"
 		cDEBUG="";				wDEBUG="${wWARNING}"
-		BOLD="";				wBOLD="<b>"; wNBOLD="</b>"
-		NC="";					wNC="</span>"
+		cBOLD="";				wBOLD="<span style='font-weight: bold'>"
+		cNBOLD="";				wNBOLD="</span>"
+		cUNDERLINE="";			wUNDERLINE="<span style='text-decoration: underline;'>"
+		cNUNDERLINE="";			wUNNDERLINE="</span>"
+		cNC="";					wNC="</span>"
 								wBR="<br>"
+# TODO: change all to non-"c*" names in all other scripts, then get rid of these old names:
+		BOLD=""
+		GREEN=""
+		YELLOW=""
+		RED=""
+		NC=""
 	fi
 
 	if [[ -z "${ALLSKY_HOME}" ]] ; then	# This must come after setting colors above
-		echo -en "${RED}"
+		echo -en "${cRED}"
 		echo -n "${ME2}: ERROR: ALLSKY_HOME not set!"
-		echo -e "${NC}"
+		echo -e "${cNC}"
 		return 1
 	fi
 
@@ -85,7 +128,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	ALLSKY_MESSAGES="${ALLSKY_CONFIG}/messages.txt"
 
 	# Holds a count of continuous "bad" images
-	ALLSKY_BAD_IMAGE_COUNT="${ALLSKY_TMP}/bad_image_count.txt"
+	ALLSKY_BAD_IMAGE_COUNT="${ALLSKY_TMP}/bad_images.txt"
 
 	# Holds the number of images left until uploading.
 	FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"

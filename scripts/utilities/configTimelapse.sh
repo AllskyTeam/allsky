@@ -125,7 +125,10 @@ fi
 
 
 # Get some stats.
+
+# shellcheck disable=SC2086
 NUM_BITRATE=$( echo ${BITRATE_VALUES} | wc -w )
+# shellcheck disable=SC2086
 NUM_FPS=$( echo ${FPS_VALUES} | wc -w )
 NUM_TIMELAPSES=$(( NUM_BITRATE * NUM_FPS ))
 ON_TIMELAPSE=0
@@ -162,7 +165,7 @@ done
 
 if [[ ${#FILES[@]} -gt 0 ]]; then
 	I_ "\nThe following videos were created:"
-	for F in ${FILES[@]}
+	for F in "${FILES[@]}"
 	do
 		echo "    ${F}"
 	done

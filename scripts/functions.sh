@@ -38,21 +38,29 @@ else
 fi
 
 ##### output messages with appropriate color strings
-function O_() { echo -e "${GREEN}${1}${NC}" ; }
-function W_() { echo -e "${YELLOW}${1}${NC}" ; }
-function E_() { echo -e "${RED}${1}${NC}" ; }
-function D_() { echo -e "${cDEBUG}DEBUG: ${1}${NC}" ; }
+function O_() { echo -e "${cOK}${1}${cNC}" ; }
+function I_() { echo -e "${cINFO}${1}${cNC}" ; }
+function W_() { echo -e "${cWARNING}${1}${cNC}" ; }
+function E_() { echo -e "${cERROR}${1}${cNC}" ; }
+function D_() { echo -e "${cDEBUG}DEBUG: ${1}${cNC}" ; }
+function U_() { echo -e "${cUNDERLINE}${1}${cNC}" ; }
+function B_() { echo -e "${cBOLD}${1}${cNC}" ; }
 # If the output may go to the WebUI:
 function wO_() { echo -e "${wOK}${1}${wNC}" ; }
+function wI_() { echo -e "${wINFO}${1}${wNC}" ; }
 function wW_() { echo -e "${wWARNING}${1}${wNC}" ; }
 function wE_() { echo -e "${wERROR}${1}${wNC}" ; }
 function wD_() { echo -e "${wDEBUG}DEBUG: ${1}${wNC}" ; }
+function wU_() { echo -e "${wUNDERLINE}${1}${wNC}" ; }
+function wB_() { echo -e "${wBOLD}${1}${wNBOLD}" ; }
 # If the output may go to the "dialog" command (no "-e"):
-function dO_() { echo "${DIALOG_GREEN}${1}${DIALOG_NC}" ; }
-function dW_() { echo "${DIALOG_YELLOW}${1}${DIALOG_NC}" ; }
-function dE_() { echo "${DIALOG_RED}${1}${DIALOG_NC}" ; }
+function dO_() { echo "${DIALOG_OK}${1}${DIALOG_NC}" ; }
+function dI_() { echo "${DIALOG_INFO}${1}${DIALOG_NC}" ; }
+function dW_() { echo "${DIALOG_WARNING}${1}${DIALOG_NC}" ; }
+function dE_() { echo "${DIALOG_ERROR}${1}${DIALOG_NC}" ; }
 function dD_() { echo "${DIALOG_DEBUG}DEBUG: ${1}${DIALOG_NC}" ; }
 function dU_() { echo "${DIALOG_UNDERLINE}${1}${DIALOG_NC}" ; }
+function dB_() { echo "${DIALOG_BOLD}${1}${DIALOG_NC}" ; }
 
 
 ##### Start and Stop Allsky

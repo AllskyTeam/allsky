@@ -20,17 +20,20 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 
 		# Dialog colors:  0-7: black, red, green, yellow, blue, magenta, cyan, white
 		# Reverse: \Zr	 reverse off: \ZR
+		# bold off: \ZB			underline off: \ZU
+		DIALOG_BOLD="\Zb";		DIALOG_UNDERLINE="\Zu"
 		DIALOG_RED="\Z1";		DIALOG_YELLOW="\Z3"
-		DIALOG_GREEN="\Z2";		DIALOG_UNDERLINE="\Zu"	# underline off: \ZU
-		DIALOG_BLUE="\Z4";		DIALOG_BOLD="\Zb"		# bold off: \ZB
+		DIALOG_GREEN="\Z2";		DIALOG_BLUE="\Z4";		
 		DIALOG_NC="\Zn"			DIALOG_DEBUG="${DIALOG_YELLOW}"
 
+		BOLD="\033[1m";			wBOLD="["; wNBOLD="]"
+		UNDERLINE="\033[4m";	wUNDERLINE="${UNDERLINE}"
 		GREEN="\033[0;32m";		wOK="${GREEN}"
+		INFO="${UNDERLINE}";	wINFO="${INFO}"
 		YELLOW="\033[0;33m";	wWARNING="${YELLOW}"
 		RED="\033[0;31m";		wERROR="${RED}"
-		# Can't use DEBUG since lots of scripts use that to enable debugging
+		# Can't use DEBUG since scripts use that to enable debugging.
 		cDEBUG="${YELLOW}";		wDEBUG="${YELLOW}"
-		BOLD="\033[1m";			wBOLD="["; wNBOLD="]"
 		NC="\033[0m";			wNC="${NC}"
 								wBR="\n"
 	else
@@ -41,11 +44,14 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 		DIALOG_BLUE="";			DIALOG_BOLD=""
 		DIALOG_NC="";			DIALOG_DEBUG=""
 
+						# Not on a tty usually means we're called from the WebUI, so use HTML.
+		BOLD="";				wBOLD="<span style='font-weight: bold'>";  wNBOLD="</span>"
+		UNDERLINE="";			wUNDERLINE="<span style='text-decoration: underline;'>"
 		GREEN="";				wOK="<span style='color: green'>"
+		INFO="";				wINFO="${wUNDERLINE}"
 		YELLOW="";				wWARNING="<span style='color: #FF9800'>"
 		RED="";					wERROR="<span style='color: red'>"
 		cDEBUG="";				wDEBUG="${wWARNING}"
-		BOLD="";				wBOLD="<b>"; wNBOLD="</b>"
 		NC="";					wNC="</span>"
 								wBR="<br>"
 	fi
@@ -85,7 +91,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" ]]; then
 	ALLSKY_MESSAGES="${ALLSKY_CONFIG}/messages.txt"
 
 	# Holds a count of continuous "bad" images
-	ALLSKY_BAD_IMAGE_COUNT="${ALLSKY_TMP}/bad_image_count.txt"
+	ALLSKY_BAD_IMAGE_COUNT="${ALLSKY_TMP}/bad_images.txt"
 
 	# Holds the number of images left until uploading.
 	FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"

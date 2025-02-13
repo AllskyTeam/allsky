@@ -379,7 +379,11 @@ function show_start_times()
 		return
 	fi
 
-	showStartTimes.sh
+	# shellcheck disable=SC2124
+	local ARGS="${@}"		# optional
+
+	# shellcheck disable=SC2086
+	showStartTimes.sh ${ARGS}
 }
 
 
@@ -419,7 +423,7 @@ function usage_and_exit()
 	echo -e "      get_brightness_info"
 	echo -e "      encoders"
 	echo -e "      pix_fmts"
-	echo -e "  If no 'command' is specified you are prompted for one to execute."
+	echo -e "  If no 'command' is specified you are prompted for one."
 	echo
 
 	exit "${RET}"

@@ -9,106 +9,82 @@ ME="$( basename "${BASH_ARGV0}" )"
 
 # shellcheck source-path=..
 source "${ALLSKY_HOME}/variables.sh"	|| exit 1
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+
 
 if [[ -z ${LOGNAME} ]]; then
-	echo "${RED}${ME}: Unknown LOGNAME; cannot continue.${NC}" >&2
+	E_ "${ME}: Unknown LOGNAME; cannot continue." >&2
 	exit 1
 fi
 
+mkdir -p "${ALLSKY_LOGS}"
+DISPLAY_MSG_LOG="${ALLSKY_LOGS}/SAMBA.log"
 
-OK="true"
-while [[ $# -gt 0 ]]; do
-	ARG="${1}"
-	case "${ARG,,}" in
-		--help)
-			DO_HELP="true"
-			;;
-# TODO: allow some customization like SHARE_NAME
-		-*)
-			echo -e "${RED}Unknown argument '${ARG}' ignoring.${NC}" >&2
-			OK="false"
-			;;
-	esac
-	shift
-done
+display_msg --logonly info "STARTING SAMBA INSTALLATION"
 
-usage_and_exit()
-{
-	local RET=${1}
-	{
-		echo
-		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-		echo "Usage: ${ME} [--help]"
-		[[ ${RET} -ne 0 ]] && echo -en "${NC}"
-		echo "    where:"
-		echo "      '--help' displays this message and exits."
-	} >&2
-	exit "${RET}"
-}
-[[ ${DO_HELP} == "true" ]] && usage_and_exit 0
-[[ ${OK} == "false" ]] && usage_and_exit 1
+# TODO: Allow some customization, like SHARE_NAME.
+# TODO: Allow sharing more than one directory.
 
 CAP="${LOGNAME:0:1}"
 CAP="${CAP^^}${LOGNAME:1}"
 SHARE_NAME="${SHARE_NAME:-${LOGNAME}_home}"
+STARS="*************"
 
 # Check if SAMBA is already installed and configured
 CONFIG_FILE="/etc/samba/smb.conf"
 if [[ -f ${CONFIG_FILE} ]] && grep --silent "\[${SHARE_NAME}]" "${CONFIG_FILE}" ; then
-	echo -e "\n${YELLOW}"
-	echo "*************"
-	echo "Your Pi is already configured to share files with other network devices"
-	echo "using the '${SHARE_NAME}' share."
-	echo -e "${NC}"
+	MSG="The Pi is already using SAMBA with '${SHARE_NAME}' share."
+	display_msg --logonly info "${MSG}"
+
+	MSG="Your Pi is already configured to share files with other network devices"
+	MSG+=" using the '${cBOLD}${SHARE_NAME}${cNBOLD}' share."
+	W_ "\n${STARS}\n${MSG}\n"
+# TODO: Allow un-sharing the directory ?
 	exit 0
 fi
 
-echo -e "\n${YELLOW}"
-echo "*************"
-echo "This script will install SAMBA which lets remote devices mount"
-echo "your Pi as a network drive."
-echo "The '${HOME}' directory on the Pi will appear as '${SHARE_NAME}' on remote devices."
-echo "You can then copy files to and from the Pi as you would from any other drive."
+MSG="This script will install the SAMBA package which lets remote devices"
+MSG+=" mount your Pi as a network drive."
+MSG+="\nThe '${cBOLD}${HOME}${cNBOLD}' directory on the Pi will appear"
+MSG+=" as '${cBOLD}${SHARE_NAME}${cNBOLD}' on remote devices."
+MSG+="\nOnce the installation completes, you can copy files to and from the Pi"
+MSG+=" as you would from any other drive."
+I_ "${STARS}\n${MSG}\n"
+
 echo
-echo "When installation is done you will be prompted for a SAMBA password."
-echo
-echo -en "${BOLD}"
+echo -en "${cYELLOW}${cBOLD}"
 echo    "============================================="
-echo -n "Press RETURN to continue with installation: "
+echo -en "Press RETURN to continue the installation: ${cNC}"
 # shellcheck disable=SC2034
 read -r x
-echo -e "${NC}"
+echo
 
 
-# Install SAMBA 
-mkdir -p "${ALLSKY_LOGS}"
-LOG="${ALLSKY_LOGS}/SAMBA.log"
-
-echo -e "${GREEN}..... Installing SAMBA.${NC}"
-sudo apt install samba -y > "${LOG}" 2>&1
+display_msg --log progress "Installing SAMBA"
+ERR="$( sudo apt install samba -y 2>&1 )"
 if [[ $? -ne 0 ]]; then
-	echo -e "\n${RED}"
-	echo "Installation of SAMBA failed:"
-	echo "$( < "${LOG}" )"
-	echo -e "${NC}"
+	MSG="Installation of SAMBA failed: ${ERR}"
+	display_msg --log error "${MSG}"
 	exit 1
 fi
 
 # Add the user to SAMBA and prompt for their SAMBA password.
-echo -e "\n${YELLOW}"
-echo "You will be prompted for a SAMBA password which remote machines will use to"
-echo "map to your Pi's drive."
-echo "This is a different password than ${LOGNAME}'s password or the root password,"
-echo "although you may elect to make them the same."
-echo
-echo "If this is your first time installing SAMBA on this Pi and"
-echo "you are prompted for a CURRENT password, echo press 'Enter'."
-echo "*************"
-echo -e "${NC}"
+MSG="\n${STARS}"
+MSG+="\nYou will now be prompted for a SAMBA password which remote machines will use to"
+MSG+=" map to your Pi's drive."
+MSG+="\nThis is a different password than the ${LOGNAME} login's password or the root password,"
+MSG+="\nalthough you may elect to make them the same."
+MSG+="\n"
+MSG+="\nIf this is your first time installing SAMBA on this Pi and"
+MSG+="\nyou are prompted for a CURRENT password, press '${cBOLD}Enter${cNBOLD}'."
+I_ "${MSG}\n"
 sudo smbpasswd -a "${LOGNAME}"			|| exit 1
 
 WORKGROUP="WORKGROUP"
-echo -e "${GREEN}..... Configuring SAMBA.${NC}"
+display_msg --log progress "Configuring SAMBA"
 
 sudo mv -f "${CONFIG_FILE}" "${CONFIG_FILE}.bak"
 
@@ -152,15 +128,15 @@ directory mask = 0775
 ### end Config ###
 EOF
 
-echo -e "${GREEN}..... Restarting SAMBA.${NC}"
+display_msg --log progress "Restarting SAMBA."
 sudo /etc/init.d/smbd restart
 
-echo -e "${YELLOW}"
-echo "*************"
-echo "You can now mount '${SHARE_NAME}' on your remote device using"
-echo "workgroup '${WORKGROUP}' and login name '${LOGNAME}'."
-echo "If you don't know how to do that, see your remote device's operating system documentation."
-echo "*************"
-echo -e "${NC}"
+MSG="\n${STARS}"
+MSG+="\nYou can now mount '${cBOLD}${SHARE_NAME}${cNBOLD}' on your remote device using"
+MSG+="workgroup '${cBOLD}${WORKGROUP}${cNBOLD}' and login name '${cBOLD}${LOGNAME}${cNBOLD}'."
+MSG+="\nIf you don't know how to do that, see your remote device's operating system documentation."
+MSG+="\n${STARS}"
+I_ "${MSG}"
 
+display_msg --logonly info "ENDING SAMBA INSTALLATION"
 exit 0

@@ -10,19 +10,21 @@ source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 
 
-ENTERED="$*"
 DEBUG="false"
-HELP="false"
+DO_HELP="false"
 IS_MINI="false"
 LOCK="false"
 IMAGES_FILE=""
+INPUT_DIR=""
 IMAGE_NAME="${FILENAME}"
 OUTPUT_FILE=""
+FPS=""
+TIMELAPSE_BITRATE=""
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in
 			-h | --help)
-				HELP="true"
+				DO_HELP="true"
 				;;
 			-d | --debug)
 				DEBUG="true"
@@ -45,17 +47,27 @@ while [[ $# -gt 0 ]]; do
 				IMAGES_FILE="${2}"
 				shift
 				;;
-			-L | --last)			# this is just so the last image name appears in "ps" output
+			-L | --last)		# this is just so the last image name appears in "ps" output
 				shift
 				;;
 			-m | --mini)
 				IS_MINI="true"
 				;;
+			--fps)
+				FPS="${2}"
+				shift
+				;;
+			--bitrate)
+				TIMELAPSE_BITRATE="${2}"
+				shift
+				;;
 			-*)
-				echo -e "${RED}${ME}: Unknown argument '${ARG}' ignoring.${NC}" >&2
-				HELP="true"
+				E_ "${ME}: Unknown argument '${ARG}' ignoring." >&2
+				DO_HELP="true"
 				;;
 			*)
+				# Assume it's the input directory.
+				INPUT_DIR="${1}"
 				break
 				;;
 	esac
@@ -65,62 +77,58 @@ done
 usage_and_exit()
 {
 	RET=$1
-	XD="/some_nonstandard_path"
-	TODAY="$( date +%Y%m%d )"
-	{
-		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-		echo -n "Usage: ${ME} [--debug] [--help] [--lock] [--output file]"
-		echo -en "\t[--mini] [--filename file] {--images file | <INPUT_DIR> }"
-		echo -e "${NC}"
-		echo "    example: ${ME} ${TODAY}"
-		echo "    or:      ${ME} --output '${XD}' ${TODAY}"
-		echo
-		echo -en "${YELLOW}"
-		echo
-		echo "You entered: ${ME} ${ENTERED}"
-		echo
-		echo "The list of images is determined in one of two ways:"
-		echo "1. Looking in '<INPUT_DIR>' for files with an extension of '${EXTENSION}'."
-		echo "   If <INPUT_DIR> is a full path name all files ending in '${EXTENSION}' are used,"
-		echo "   otherwise <INPUT_DIR> is assumed to be in '${ALLSKY_IMAGES}' and"
-		echo "   only files begining with '${IMAGE_NAME}' are use."
-		echo "   The timelapse is stored in <INPUT_DIR> and is called 'allsky-<BASENAME_DIR>.mp4',"
-		echo "   where <BASENAME_DIR> is the basename of <INPUT_DIR>."
-		echo
-		echo "2. Specifying '--images file' uses the images listed in 'file'; <INPUT_DIR> is not used."
-		echo "   The timelapse file is stored in the same directory as the first image."
-		echo
-		echo "'--lock' ensures only one instance of ${ME} runs at a time."
-		echo "'--output file' overrides the default storage location and file name."
-		echo "'--mini' uses the MINI_TIMELAPSE settings and the timelapse file is"
-		echo "   called 'mini-timelapse.mp4' if '--output' isn't used."
-		echo "'--filename file' uses 'file' as the begininning of the file names." 
-		echo "'  This is useful if creating timelapse of non-allsky files."
-		echo -en "${NC}"
-	} >&2
+	exec >&2
+
+	local MSG="\nUsage: ${ME} [--help] [--debug] [--lock] [--output file]"
+	MSG+="\n    [--mini] [--filename file]"
+	MSG+="\n    [--fps s] [--bitrate b]"
+	MSG+="\n    --images file | <INPUT_DIR>"
+	if [[ ${RET} -ne 0 ]]; then
+		E_ "${MSG}"
+	else
+		echo -e "${MSG}"
+	fi
+
+	echo
+	echo "where:"
+	echo "    '--help' prints this message and exists."
+	echo "    '--debug' outputs debugging information."
+	echo "    '--lock' ensures only one instance of ${ME} runs at a time."
+	echo "    '--output file' overrides the default storage location and file name."
+	echo "    '--mini' uses the Mini-Timelapse settings and the timelapse file is"
+	echo "       called 'mini-timelapse.mp4' (unless '--output' is used)."
+	echo "    '--filename file' uses 'file' as the beginning of the file names." 
+	echo "       This is useful if creating a timelapse of non-Allsky files."
+	echo
+	echo "The list of images to use is determined in one of two ways:"
+	echo "1. Looking in '<INPUT_DIR>' for files with an extension of '${EXTENSION}'."
+	echo "   If <INPUT_DIR> is a full path name all files ending in '${EXTENSION}' are used,"
+	echo "   otherwise <INPUT_DIR> is assumed to be in '${ALLSKY_IMAGES}' and"
+	echo "   only files begining with '${IMAGE_NAME}' are use."
+	echo "   The timelapse is stored in <INPUT_DIR> and is called 'allsky-<BASENAME_DIR>.mp4',"
+	echo "   where <BASENAME_DIR> is the basename of <INPUT_DIR>."
+	echo
+	echo "2. Specifying '--images file' uses the images listed in 'file'; <INPUT_DIR> is not used."
+	echo "   The timelapse video is stored in the same directory as the first image."
+
 	exit "${RET}"
 }
-if [[ -n ${IMAGES_FILE} ]]; then
-	# If IMAGES_FILE is specified there should be no other arguments.
-	[[ $# -ne 0 ]] && usage_and_exit 1
-elif [[ $# -eq 0 || $# -gt 1 ]]; then
-	usage_and_exit 2
-fi
-[[ ${HELP} == "true" ]] && usage_and_exit 0
+
+# Either IMAGES_FILE or INPUT_DIR must be specified.
+[[ -z ${IMAGES_FILE} && -z ${INPUT_DIR} ]] && usage_and_exit 1
+[[ -n ${IMAGES_FILE} && -n ${INPUT_DIR} ]] && usage_and_exit 1
+[[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 
 OUTPUT_DIR=""
 LAST_IMAGE=""
 
 if [[ -n ${IMAGES_FILE} ]]; then
 	if [[ ! -s ${IMAGES_FILE} ]]; then
-		echo -e "${RED}*** ${ME} ERROR: '${IMAGES_FILE}' does not exist or is empty!${NC}"
+		E_ "*** ${ME} ERROR: '${IMAGES_FILE}' does not exist or is empty!"
 		exit 3
 	fi
 	LAST_IMAGE="$( tail -1 "${IMAGES_FILE}" )"
-	INPUT_DIR=""		# Not used
 else
-	INPUT_DIR="${1}"
-
 	# If not a full pathname, ${DIRNAME} will be "." so look in ${ALLSKY_IMAGES}.
 	DIRNAME="$( dirname "${INPUT_DIR}" )"
 	if [[ ${DIRNAME} == "." ]]; then
@@ -132,35 +140,33 @@ else
 	OUTPUT_DIR="${INPUT_DIR}"	# default location
 
 	if [[ ! -d ${INPUT_DIR} ]]; then
-		echo -e "${RED}*** ${ME} ERROR: '${INPUT_DIR}' does not exist!${NC}"
+		E_ "*** ${ME} ERROR: '${INPUT_DIR}' does not exist!"
 		exit 4
 	fi
 fi
 
 if ! KEEP_SEQUENCE="$( settings ".timelapsekeepsequence" 2>&1 )" ; then
 	# The settings file may not exist or may be corrupt.
-	echo -e "${RED}*** ${ME} ERROR: Unable to get .timelapsekeepsequence:"
-	echo "${KEEP_SEQUENCE}"
-	echo -e "${NC}"
+	E_ "*** ${ME} ERROR: Unable to get .timelapsekeepsequence: ${KEEP_SEQUENCE}"
 	exit 4
 fi
 
 MY_PID="$$"
 if [[ ${DEBUG} == "true" ]]; then
 	# Output one string so it's all on one line in log file.
-	MSG="${ME}: ${GREEN}Starting"
+	MSG="${ME}: Starting"
 	[[ ${IS_MINI} == "true" ]] && MSG+=" mini "
 	MSG+="timelapse"
 	[[ -n ${LAST_IMAGE} ]] && MSG+=", last image = $( basename "${LAST_IMAGE}" )"
-	echo -e "${MSG}, my PID=${MY_PID}.${NC}"
+	D_ "${MSG}, my PID=${MY_PID}."
 fi
 
 if [[ ${LOCK} == "true" ]]; then
 	if [[ ${DEBUG} == "true" ]]; then
 		if [[ -s ${ALLSKY_TIMELAPSE_PID_FILE} ]]; then
-			echo "  > ALLSKY_TIMELAPSE_PID_FILE contains $( < "${ALLSKY_TIMELAPSE_PID_FILE}" )"
+			D_ "  > ALLSKY_TIMELAPSE_PID_FILE contains $( < "${ALLSKY_TIMELAPSE_PID_FILE}" )"
 		else
-			echo "  > No ALLSKY_TIMELAPSE_PID_FILE"
+			D_ "  > No ALLSKY_TIMELAPSE_PID_FILE"
 		fi
 	fi
 	ABORTED_MSG1="Another timelapse creation is in progress so this one (${PPID}) was aborted."
@@ -181,7 +187,7 @@ if [[ ${LOCK} == "true" ]]; then
 		exit 5
 	fi
 	if [[ ${DEBUG} == "true" ]]; then
-		echo "  > Got lock, new PID=$( < "${ALLSKY_TIMELAPSE_PID_FILE}" )"
+		D_ "  > Got lock, new PID=$( < "${ALLSKY_TIMELAPSE_PID_FILE}" )"
 	fi
 	SEQUENCE_DIR="${ALLSKY_TMP}/sequence-lock-timelapse"
 else
@@ -206,9 +212,7 @@ if [[ -z ${OUTPUT_FILE} ]]; then
 			# In case the filename doesn't include a path, put in a default location.
 			if [[ ${OUTPUT_DIR} == "." ]]; then
 				OUTPUT_DIR="${ALLSKY_TMP}"
-				echo -en "${ME}: ${YELLOW}"
-				echo "Can't determine where to put timelapse file so putting in '${OUTPUT_DIR}'."
-				echo -e "${NC}"
+				W_ "${ME}: Can't determine where to put the timelapse video so putting in '${OUTPUT_DIR}'."
 			fi
 		fi
 
@@ -268,28 +272,26 @@ if [[ ${KEEP_SEQUENCE} == "false" || ! -d ${SEQUENCE_DIR} ]]; then
 			fi
 	done
 	if [[ $? -ne 0 ]]; then
-		echo -e "${RED}*** ${ME} ERROR: No images found in '${INPUT_DIR}'!${NC}"
+		E_ "*** ${ME} ERROR: No images found in '${INPUT_DIR}'!"
 		rm -fr "${SEQUENCE_DIR}"
 		[[ -n ${ALLSKY_TIMELAPSE_PID_FILE} ]] && rm -f "${ALLSKY_TIMELAPSE_PID_FILE}"
 		exit 98		# this number should match what's in {startrails|keogram}.cpp
 	fi
 else
-	echo -en "${ME} ${YELLOW}"
-	echo -n "Not regenerating sequence because 'Keep Timelapse Sequence' is enabled."
-	echo -e "${NC}"
+	W_ "${ME} Not regenerating sequence because 'Keep Timelapse Sequence' is enabled."
 fi
 
 # "-loglevel warning" gets rid of the dozens of lines of garbage output
 # but doesn't get rid of "deprecated pixel format" message when -pix_ftm is "yuv420p".
 # Bitrate settings are integers so do NOT include the "k", so add below.
 if [[ ${IS_MINI} == "true" ]]; then
-	FPS="$( settings ".minitimelapsefps" )"
-	TIMELAPSE_BITRATE="$( settings ".minitimelapsebitrate" )"
+	[[ -z ${FPS} ]] && FPS="$( settings ".minitimelapsefps" )"
+	[[ -z ${TIMELAPSE_BITRATE} ]] && TIMELAPSE_BITRATE="$( settings ".minitimelapsebitrate" )"
 	W="$( settings ".minitimelapsewidth" )"
 	H="$( settings ".minitimelapseheight" )"
 else
-	FPS="$( settings ".timelapsefps" )"
-	TIMELAPSE_BITRATE="$( settings ".timelapsebitrate" )"
+	[[ -z ${FPS} ]] && FPS="$( settings ".timelapsefps" )"
+	[[ -z ${TIMELAPSE_BITRATE} ]] && TIMELAPSE_BITRATE="$( settings ".timelapsebitrate" )"
 	W="$( settings ".timelapsewidth" )"
 	H="$( settings ".timelapseheight" )"
 fi
@@ -320,7 +322,7 @@ X="$( echo "${X}" | grep -E -v "deprecated pixel format used|Processed " )"
 [[ -n ${X} ]] && echo "${X}" >> "${TMP}"		# a warning/error message
 
 if [[ ${RET} -ne -0 ]]; then
-	echo -e "\n${RED}*** ${ME}: ERROR: ffmpeg failed."
+	E_ "\n*** ${ME}: ERROR: ffmpeg failed."
 
 	# Check for common, known errors.
 	if X="$( echo "${TMP}" | grep -E -i "Killed ffmpeg|malloc of size" )" ; then
@@ -354,11 +356,11 @@ fi
 
 if [[ ${DEBUG} == "true" ]]; then
 	# Output one string so it's all on one line in log file.
-	MSG="${ME}: ${GREEN}"
+	MSG="${ME}: "
 	[[ ${IS_MINI} == "true" ]] && MSG+="mini "
 	MSG+="timelapse creation finished"
 	[[ -n ${LAST_IMAGE} ]] && MSG+=", last image = $( basename "${LAST_IMAGE}" )"
-	echo -e "${MSG}, my PID=${MY_PID}.${NC}"
+	D_ "${MSG}, my PID=${MY_PID}."
 fi
 
 # Let our parent remove ${ALLSKY_TIMELAPSE_PID_FILE} when done.

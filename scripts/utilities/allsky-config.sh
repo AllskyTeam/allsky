@@ -22,51 +22,13 @@ TITLE="*** Allsky Configuration ***"
 
 ####################################### Functions - one per command
 
-####
-# Display the usage message.
-function usage_and_exit()
-{
-	local RET=${1}
-	
-	exec 2>&1
-	echo
-	local MSG="Usage: ${ME} [--debug] [--help] [command [arguments ...]]"
-	if [[ ${RET} -ne 0 ]]; then
-		E_ "${MSG}"
-	else
-		W_ "${MSG}"
-	fi
-	echo -e "\nwhere:"
-	echo -e "  '--help' displays this message and exits."
-	echo -e "  '--help command' displays a help message for the specified command, then exits."
-	echo -e "  '--debug' displays debugging information."
-	echo -e "  'command' is a command to execute with optional arguments.  Choices are:"
-	echo -e "      show_supported_cameras  --RPi | --ZWO"
-	echo -e "      show_connected_cameras"
-	echo -e "      prepare_logs"
-	echo -e "      recheck_swap"
-	echo -e "      recheck_tmp"
-	echo -e "      samba"
-	echo -e "      move_images"
-	echo -e "      bad_images_info"
-	echo -e "      new_rpi_camera_info [--camera NUM]"
-	echo -e "      show_start_times [--zero] [angle [latitude [longitude]]]"
-	echo -e "      compare_paths --website | --server"
-	echo -e "      get_brightness_info"
-	echo -e "      encoders"
-	echo -e "      pix_fmts"
-	echo -e "  If no 'command' is specified you are prompted for one to execute."
-	echo
-
-	exit "${RET}"
-}
-
 
 #####
 # Show all the supported cameras.
 function show_supported_cameras()
 {
 	if [[ ${1} == "--help" ]]; then
+		echo
 		W_ "Usage: ${ME}  ${ME_F} --RPi | --ZWO"
 		echo
 		echo "Display all the cameras of the specified type that Allsky supports."
@@ -93,11 +55,13 @@ function show_supported_cameras()
 	showSupportedCameras.sh ${ARGS}
 }
 
+
 #####
 # Show all the currently connected cameras.
 function show_connected_cameras()
 {
 	if [[ ${1} == "--help" ]]; then
+		echo
 		W_ "Usage: ${ME}  ${ME_F}"
 		echo
 		echo "Display all the cameras currently connected to the Pi."
@@ -126,12 +90,14 @@ function show_connected_cameras()
 	fi
 }
 
+
 #####
 # Prepare Allsky for troubleshooting.
 # Stop it, then truncate the log files and restart Allsky.
 function prepare_logs()
 {
 	if [[ ${1} == "--help" ]]; then
+		echo
 		W_ "Usage: ${ME}  ${ME_F}"
 		echo
 		echo "Configure Allsky to collect the proper information for troubleshooting problems."
@@ -158,11 +124,13 @@ function prepare_logs()
 	echo -e "\nAllsky restarted with empty log files${MSG}."
 }
 
+
 #####
 # Request support for an RPi camera.
 function new_rpi_camera_info()
 {
 	if [[ ${1} == "--help" ]]; then
+		echo
 		W_ "Usage: ${ME}  ${ME_F}  [--camera NUM]"
 		echo
 		W_ "NOTE: This command only works if you have an RPi camera connected to the Pi."
@@ -183,11 +151,13 @@ function new_rpi_camera_info()
 	getRPiCameraInfo.sh ${ARGS}
 }
 
+
 #####
 # Install SAMBA.
 function samba()
 {
 	if [[ ${1} == "--help" ]]; then
+		echo
 		W_ "Usage: ${ME}  ${ME_F}"
 		echo
 		echo "Configure your Pi using the Samba protocol to allow easy file transfers to and from PCs and MACs."
@@ -199,11 +169,13 @@ function samba()
 	installSamba.sh
 }
 
+
 #####
 # Move ALLSKY_IMAGES to a new location.
 function move_images()
 {
 	if [[ ${1} == "--help" ]]; then
+		echo
 		W_ "Usage: ${ME}  ${ME_F}"
 		echo
 		echo "Configure Allsky to save images in the location you specify, rather than in ~/allsky/images."
@@ -218,11 +190,13 @@ function move_images()
 	moveImages.sh
 }
 
+
 #####
 # Move ALLSKY_IMAGES to a new location.
 function bad_images_info()
 {
 	if [[ ${1} == "--help" ]]; then
+		echo
 		W_ "Usage: ${ME}  ${ME_F}"
 		echo
 		echo "Display information on 'bad' images, which are ones that are too dark or too light,"
@@ -320,12 +294,14 @@ function bad_images_info()
 		}'
 }
 
+
 #####
 # Display the path on the server of an Allsky Website and
 # display the path on the server give a URL.
 function compare_paths()
 {
 	if [[ ${1} == "--help" ]]; then
+		echo
 		W_ "Usage: ${ME}  ${ME_F}  --website | --server"
 		echo
 		echo "Helps determine what to put in the 'Image Directory' and 'Website URL' settings in"
@@ -364,11 +340,13 @@ function compare_paths()
 	comparePaths.sh ${ARGS}
 }
 
+
 #####
 # Display brightness information from the startrails command.
 get_brightness_info()
 {
 	if [[ ${1} == "--help" ]]; then
+		echo
 		W_ "Usage: ${ME}  ${ME_F}"
 		echo
 		echo "Displays brightness information used when updating the 'Threshold' startrails setting."
@@ -433,14 +411,65 @@ get_brightness_info()
 	echo
 }
 
+
 #####
-# recheck_tmp and recheck_swap are functions defined elsewhere.
+# Allow the user to change the size of ${ALLSKY_TMP}.
+function change_tmp()
+{
+	if [[ ${1} == "--help" ]]; then
+		echo
+		W_ "Usage: ${ME}  ${ME_F}"
+		echo
+		echo "Many files are writen to the 'allsky/tmp' directory, so putting it in memory"
+		echo "instead of on an SD card will speed up file reads and writes."
+		echo "It also significantly reduces wear on your SD card."
+		echo
+		echo "If 'allsky/tmp' is is already in memory, you can change its size."
+		echo "If it's NOT in memory, you can move it to memory."
+		return
+	fi
+
+	recheck_tmp			# defined elsewhere
+}
+
+
+#####
+# Allow the user to change the size of ${ALLSKY_TMP}.
+function change_swap()
+{
+	if [[ ${1} == "--help" ]]; then
+		echo
+		W_ "Usage: ${ME}  ${ME_F}"
+		echo
+		echo "All computer programs need physical memory to run in."
+		echo "The more programs running on a computer, or the bigger those programs are,"
+		echo "the more memory that's needed."
+		echo
+		echo "If the programs need more memory than the computer physically has,"
+		echo "programs might be killed or the computer may crash."
+		echo "To avoid this, disk space can be used to act as 'virtual memory'."
+		echo "This disk space is called 'swap space'."
+		echo
+		echo "If your Pi has 1 GB of physical memory and you add 4 GB of swap space,"
+		echo "it's similar to having a Pi with 5 GB of memory."
+		echo "A Pi 512 MB of memory needs more swap space than one with 8 GB of memory."
+		echo
+		echo "This script lets you change the amount of swap space."
+		echo "A suggested amount is displayed for your Pi and is usually enough,"
+		echo "but if you use your Pi for a lot of things, you may want to increase swap space."
+		return
+	fi
+
+	recheck_swap			# defined elsewhere
+}
+
 
 #####
 # List encoders available to timelapses.
 function encoders()
 {
 	if [[ ${1} == "--help" ]]; then
+		echo
 		W_ "Usage: ${ME}  ${ME_F}"
 		echo
 		echo "Displays a list of possible video encoders you can use in the Timelapse 'VCODEC' setting."
@@ -451,11 +480,13 @@ function encoders()
 	ffmpeg -loglevel error -encoders
 }
 
+
 #####
 # List pixel formats available to timelapses.
 function pix_fmts()
 {
 	if [[ ${1} == "--help" ]]; then
+		echo
 		W_ "Usage: ${ME}  ${ME_F}"
 		echo
 		echo "Displays a list of possible video encoders you can use in the Timelapse 'Pixel format' setting."
@@ -466,11 +497,13 @@ function pix_fmts()
 	ffmpeg -loglevel error -pix_fmts
 }
 
+
 #####
 # Show the daytime and nighttime start times
 function show_start_times()
 {
 	if [[ ${1} == "--help" ]]; then
+		echo
 		W_ "Usage:"
 		W_ "    ${ME}  ${ME_F} [--zero] [angle [latitude [longitude]]]"
 		echo "OR"
@@ -556,6 +589,45 @@ function show_start_times()
 
 ####################################### Helper functions
 
+####
+# Display the usage message.
+function usage_and_exit()
+{
+	local RET=${1}
+	
+	exec 2>&1
+	echo
+	local MSG="Usage: ${ME} [--debug] [--help] [command [arguments ...]]"
+	if [[ ${RET} -ne 0 ]]; then
+		E_ "${MSG}"
+	else
+		W_ "${MSG}"
+	fi
+	echo -e "\nwhere:"
+	echo -e "  '--help' displays this message and exits."
+	echo -e "  '--help command' displays a help message for the specified command, then exits."
+	echo -e "  '--debug' displays debugging information."
+	echo -e "  'command' is a command to execute with optional arguments.  Choices are:"
+	echo -e "      show_supported_cameras  --RPi | --ZWO"
+	echo -e "      show_connected_cameras"
+	echo -e "      prepare_logs"
+	echo -e "      change_swap"
+	echo -e "      change_tmp"
+	echo -e "      samba"
+	echo -e "      move_images"
+	echo -e "      bad_images_info"
+	echo -e "      new_rpi_camera_info [--camera NUM]"
+	echo -e "      show_start_times [--zero] [angle [latitude [longitude]]]"
+	echo -e "      compare_paths --website | --server"
+	echo -e "      get_brightness_info"
+	echo -e "      encoders"
+	echo -e "      pix_fmts"
+	echo -e "  If no 'command' is specified you are prompted for one to execute."
+	echo
+
+	exit "${RET}"
+}
+
 # Check if the required argument(s) were given to this command.
 # If called via the command line it's an error if no arguments
 # were given, so exit since we can't prompt (we may be called by another program).
@@ -576,6 +648,7 @@ function needs_arguments()
 		return 1
 	fi
 }
+
 
 #####
 # Run a command / function, passing any arguments.
@@ -599,7 +672,6 @@ function run_command()
 	#shellcheck disable=SC2086
 	"${COMMAND}" ${ARGUMENTS}
 }
-
 
 
 #####
@@ -637,6 +709,7 @@ function prompt()
 	fi
 }
 
+
 #####
 # Prompt for a line of input.
 function getInput()
@@ -655,6 +728,7 @@ function getInput()
 	fi
 }
 
+
 # Output a list item.
 # Uses global ${N}.
 function L()
@@ -664,6 +738,7 @@ function L()
 	local NUM="$( printf "%2d" "${N}" )"
 	echo -e "${NUM}.  ${NAME}"
 }
+
 
 ####################################### Main part of program
 
@@ -720,8 +795,8 @@ if [[ -z ${CMD} ]]; then
 	CMDS+=("show_supported_cameras"		"$( L "Show supported cameras" )"); ((N++))
 	CMDS+=("show_connected_cameras"		"$( L "Show connected cameras" )"); ((N++))
 	CMDS+=("prepare_logs"				"$( L "Prepare log files for troubleshooting" )"); ((N++))
-	CMDS+=("recheck_swap"				"$( L "Add swap space or change size" )"); ((N++))
-	CMDS+=("recheck_tmp"				"$( L "Move ~/allsky/tmp to memory or change size") "); ((N++))
+	CMDS+=("change_swap"				"$( L "Add swap space or change size" )"); ((N++))
+	CMDS+=("change_tmp" 				"$( L "Move ~/allsky/tmp to memory or change size") "); ((N++))
 	CMDS+=("samba" 						"$( L "Simplify copying files to/from the Pi" )"); ((N++))
 	CMDS+=("move_images"				"$( L "Move ~/allsky/images to a different location" )"); ((N++))
 	CMDS+=("bad_images_info"			"$( L "Display information on 'bad' images." )"); ((N++))

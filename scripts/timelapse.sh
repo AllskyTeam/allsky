@@ -10,7 +10,6 @@ source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 
 
-ENTERED="$*"
 DEBUG="false"
 DO_HELP="false"
 IS_MINI="false"
@@ -79,8 +78,6 @@ usage_and_exit()
 {
 	RET=$1
 	exec >&2
-	XD="/some_nonstandard_path"
-	TODAY="$( date +%Y%m%d )"
 
 	local MSG="\nUsage: ${ME} [--help] [--debug] [--lock] [--output file]"
 	MSG+="\n    [--mini] [--filename file]"

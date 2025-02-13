@@ -47,7 +47,11 @@ grep --no-filename "startrails: Minimum" "${ALLSKY_LOG}"* 2> /dev/null |
 		END {
 			if (num == 0) {
 				exit 1;
-			} else if (num > 1) {
+			} else if (num == 1) {
+				printf("\n");
+				printf("Data for only 1 startrails was found.\n");
+				printf("Consider running this command in a few days to get more information.\n");
+			} else {
 				printf("%s\n", dashes);
 				printf(numFmt, "Total average", t_min/num, t_max/num, t_mean/num, t_median/num);
 			}

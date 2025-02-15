@@ -144,7 +144,7 @@ parse_output()
 
 	STRING="max-retries exceeded"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
-		error_type "* Unable to log in for unknown reason."
+		error_type "* Unable to log: max-retries exceeded."
 		echo "  FIX: Make sure the ${WSNs}Port${WSNe} is correct and your network is working."
 		PROTOCOL="$( settings ".${PROTOCOL}" )"
 		if [[ ${PROTOCOL} == "sftp" ]]; then

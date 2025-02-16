@@ -11,6 +11,8 @@ ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck disable=SC1091 source-path=.
 source "${ALLSKY_HOME}/variables.sh"	|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 
 readonly ALL_EXTS="jpg png"		# all the image filename extensions we support
 
@@ -57,7 +59,7 @@ while [[ $# -gt 0 ]]; do
 		--directory)
 			DIRECTORY="${2}"
 			if [[ ! -d ${DIRECTORY} ]]; then
-				E_ "\nERROR: Directory '${DIRECTORY}' not found!\n" >&2
+				E_ "ERROR: Directory '${DIRECTORY}' not found!" >&2
 				OK="false"
 			fi
 			shift
@@ -175,9 +177,7 @@ if ! which mogrify > /dev/null ; then
 	# name than "convert". I assume that if "mogrify" is in the path, then
 	# ImageMagick is installed and "convert" will run ImageMagick and not some
 	# other tool.
-	{
-		E_ "${ME}: ERROR: ImageMagick does not appear to be installed. Please install it."
-	} >&2
+	E_ "${ME}: ERROR: ImageMagick does not appear to be installed. Please install it." >&2
 	exit 2
 fi
 

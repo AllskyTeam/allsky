@@ -720,13 +720,19 @@ function checkAndGetNewerFile()
 	else
 		local BRANCH="${GITHUB_MAIN_BRANCH}"
 	fi
+
+	if [[ $# -ne 3 ]]; then
+		echo "Usage: ${FUNCNAME[0]} [--branch b] current_file git_file downloaded_file" >&2
+		return 1
+	fi
+
 	local CURRENT_FILE="${1}"
 	local GIT_FILE="${GITHUB_RAW_ROOT}/allsky/${BRANCH}/${2}"
 	local DOWNLOADED_FILE="${3}"
 	# Download the file and put in DOWNLOADED_FILE
 	X="$( curl --show-error --silent "${GIT_FILE}" )"
 	RET=$?
-	if [[ ${RET} -eq 0 && ${X} != "404: Not Found" ]]; then
+	if [[ ${RET} -eq 0 && ${X} != "400: Invalid request" && ${X} != "404: Not Found" ]]; then
 		# We really just check if the files are different.
 		echo "${X}" > "${DOWNLOADED_FILE}"
 		DOWNLOADED_CHECKSUM="$( sum "${DOWNLOADED_FILE}" )"
@@ -740,7 +746,7 @@ function checkAndGetNewerFile()
 			return 1
 		fi
 	else
-		echo "ERROR: '${GIT_FILE} not found!"
+		echo "ERROR: '${GIT_FILE}' not found!"
 		return 2
 	fi
 }

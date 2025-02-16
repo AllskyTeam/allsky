@@ -318,7 +318,13 @@ if __name__ == '__main__':
 		
 	allsky_data = ALLSKYOVERLAYDATA(True, args.valuesonly, args.debug, args.overlay)
 	allsky_data.setup_for_command_line(args.allskyhome)
-             
+
+	try:
+		allsky_my_files_folder = os.environ["ALLSKY_MYFILES_DIR"]
+	except KeyError:
+		print("ERROR: $ALLSKY_MYFILES_DIR not found - Aborting.")
+		sys.exit(1)
+                 
 	try:
 		allsky_modules = os.environ['ALLSKY_MODULE_LOCATION']
 	except KeyError:
@@ -333,7 +339,7 @@ if __name__ == '__main__':
 		sys.exit(1)
 	allsky_modules_path = os.path.join(allsky_scripts, 'modules')
 
-	valid_module_paths = [allsky_modules_location, allsky_modules_path]
+	valid_module_paths = [allsky_my_files_folder, allsky_modules_location, allsky_modules_path]
             
 	for valid_module_path in valid_module_paths:
 		sys.path.append(os.path.abspath(valid_module_path))

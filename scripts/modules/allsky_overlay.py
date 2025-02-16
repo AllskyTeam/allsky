@@ -5,6 +5,7 @@ import numpy as np
 import time
 
 import allsky_shared as shared
+from allsky_base import ALLSKYMODULEBASE
 
 from datetime import datetime, timedelta, date
 from PIL import ImageFont
@@ -27,30 +28,31 @@ from allskyoverlay.overlaydata import ALLSKYOVERLAYDATA
 formatErrorPlaceholder = "??"
 missingTypePlaceholder = "???"
 
-metaData = {
-	"name": "Overlays data on the image",
-	"description": "Overlays data fields on the image",
-	"module": "allsky_overlay",
-	"events": [
-		"day",
-		"night"
-	],
-	"arguments":{
-		"formaterrortext": "??",
-		"suntimeformat": "",
-		"nonighttext": ""
-	},
-	"argumentdetails": {
-			"formaterrortext" : {
-			"required": "false",
-			"tab": "Overlays",
-			"description": "Format Error Text",
-			"help": "Value to place in a variable when the provided format is invalid. defaults to ??"
+class ALLSKYOVERLAY(ALLSKYMODULEBASE):
+    
+	meta_data = {
+		"name": "Overlays data on the image",
+		"description": "Overlays data fields on the image",
+		"module": "allsky_overlay",
+		"events": [
+			"day",
+			"night"
+		],
+		"arguments":{
+			"formaterrortext": "??",
+			"suntimeformat": "",
+			"nonighttext": ""
+		},
+		"argumentdetails": {
+				"formaterrortext" : {
+				"required": "false",
+				"tab": "Overlays",
+				"description": "Format Error Text",
+				"help": "Value to place in a variable when the provided format is invalid. defaults to ??"
+			}
 		}
 	}
-}
-
-class ALLSKYOVERLAY:
+    
 	_OVERLAYCONFIGFILE = 'overlay.json'
 	_OVERLAYOECONFIG = 'oe-config.json'
 	_OVERLAYTMPFOLDER = ''
@@ -70,7 +72,8 @@ class ALLSKYOVERLAY:
 	_errors = ''
 	_overlay_editor_config = None
 	
-	def __init__(self, formaterrortext):
+	def __init__(self, params, event, formaterrortext):
+		super().__init__(params, event)
 		config_folder = os.path.join(shared.ALLSKY_OVERLAY, 'config')
 		self._overlay_config_file = os.path.join(config_folder, self._OVERLAYCONFIGFILE)
 		self._load_overlay()
@@ -599,7 +602,7 @@ def overlay(params, event):
 			formaterrortext = params["formaterrortext"]
 		else:
 			formaterrortext = formatErrorPlaceholder
-		annotater = ALLSKYOVERLAY(formaterrortext)
+		annotater = ALLSKYOVERLAY(params, event, formaterrortext)
 		annotater.annotate()
 		result = ""
 	else:

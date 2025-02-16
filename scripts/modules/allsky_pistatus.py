@@ -13,122 +13,123 @@ import shutil
 from vcgencmd import Vcgencmd
 from gpiozero import CPUTemperature, Device
 
-metaData = {
-	"name": "Reads Pi Status",
-	"description": "Reads Pi Data",
-	"module": "allsky_pistatus",    
-	"version": "v1.0.0",    
-	"events": [
-		"periodic",
-        "day",
-        "night"
-    ],
-	"experimental": "false",
-	"testable": "true",  
-	"centersettings": "false",
-	"extradatafilename": "allsky_pistatus.json", 
-	"extradata": {
-		"values": {
-			"AS_CPUTEMP": {
-				"name": "${CPUTEMP}",
-				"format": "float",
-				"sample": "43.2",
-				"group": "Pi",
-				"description": "CPU Temperature (In C or F)",
-				"type": "temperature"
-			},              
-			"AS_CPUTEMP_C": {
-				"name": "${CPUTEMP_C}",
-				"format": "float",
-				"sample": "43.2",              
-				"group": "Pi",
-				"description": "CPU Temperature (In Centigrade)",
-				"type": "temperature"
-			},
-			"AS_CPUTEMP_F": {
-				"name": "${CPUTEMP_F}",
-				"format": "float",
-				"sample": "76.2",              
-				"group": "Pi",
-				"description": "CPU Temperature (In Farenheight)",
-				"type": "temperature"
-			},
-			"AS_PIMODEL": {
-				"name": "${PIMODEL}",
-				"format": "string",
-				"sample": "5B",              
-				"group": "Pi",
-				"description": "The model of Pi",
-				"type": "string"
-			},
-			"AS_TSTATSUMARYTEXT": {
-				"name": "${TSTATSUMARYTEXT}",
-				"format": "text",
-				"sample": "",               
-				"group": "Pi",
-				"description": "Throttling/overvoltage issues",
-				"type": "string"
-			},
-			"AS_DISKSIZE": {
-				"name": "${DISKSIZE}",
-				"format": "filesize",
-				"sample": "100000",
-				"group": "Pi",
-				"description": "Storage size",
-				"type": "filesize"
-			},
-			"AS_DISKUSAGE": {
-				"name": "${DISKUSAGE}",
-				"format": "filesize",
-				"sample": "100000",              
-				"group": "Pi",
-				"description": "Storage used size",
-				"type": "filesize"
-			},
-			"AS_DISKFREE": {
-				"name": "${DISKFREE}",
-				"format": "filesize",
-				"sample": "100000",              
-				"group": "Pi",
-				"description": "Storage free size",
-				"type": "filesize"
-			}
-		}
-	},
-	"arguments":{
-		"period": 60
-	},
-	"argumentdetails": {
-		"period" : {
-			"required": "true",
-			"description": "Read Every",
-			"help": "Reads data every x seconds.",                
-			"type": {
-				"fieldtype": "spinner",
-				"min": 60,
-				"max": 1440,
-				"step": 1
-			}          
-		}                                 
-	},
-	"enabled": "false"
-}
 
-tstats = {
-	'0': 'Under-voltage detected',
-	'1': 'Arm frequency capped',
-	'2': 'Currently throttled',
-	'3': 'Soft temperature limit active',
-	'16': 'Under-voltage has occurred',
-	'17': 'Arm frequency capping has occurred',
-	'18': 'Throttling has occurred',
-	'19': 'Soft temperature limit has occurred'
-}
 
 
 class ALLSKYPISTATUS(ALLSKYMODULEBASE):
-	__params = []
-	__event = ''
+ 
+	meta_data = {
+		"name": "Reads Pi Status",
+		"description": "Reads Pi Data",
+		"module": "allsky_pistatus",    
+		"version": "v1.0.0",
+		"events": [
+			"periodic",
+			"day",
+			"night"
+		],
+		"experimental": "false",
+		"testable": "true",  
+		"centersettings": "false",
+		"extradatafilename": "allsky_pistatus.json", 
+		"extradata": {
+			"values": {
+				"AS_CPUTEMP": {
+					"name": "${CPUTEMP}",
+					"format": "float",
+					"sample": "43.2",
+					"group": "Pi",
+					"description": "CPU Temperature (In C or F)",
+					"type": "temperature"
+				},              
+				"AS_CPUTEMP_C": {
+					"name": "${CPUTEMP_C}",
+					"format": "float",
+					"sample": "43.2",              
+					"group": "Pi",
+					"description": "CPU Temperature (In Centigrade)",
+					"type": "temperature"
+				},
+				"AS_CPUTEMP_F": {
+					"name": "${CPUTEMP_F}",
+					"format": "float",
+					"sample": "76.2",              
+					"group": "Pi",
+					"description": "CPU Temperature (In Farenheight)",
+					"type": "temperature"
+				},
+				"AS_PIMODEL": {
+					"name": "${PIMODEL}",
+					"format": "string",
+					"sample": "5B",              
+					"group": "Pi",
+					"description": "The model of Pi",
+					"type": "string"
+				},
+				"AS_TSTATSUMARYTEXT": {
+					"name": "${TSTATSUMARYTEXT}",
+					"format": "text",
+					"sample": "",               
+					"group": "Pi",
+					"description": "Throttling/overvoltage issues",
+					"type": "string"
+				},
+				"AS_DISKSIZE": {
+					"name": "${DISKSIZE}",
+					"format": "filesize",
+					"sample": "100000",
+					"group": "Pi",
+					"description": "Storage size",
+					"type": "filesize"
+				},
+				"AS_DISKUSAGE": {
+					"name": "${DISKUSAGE}",
+					"format": "filesize",
+					"sample": "100000",              
+					"group": "Pi",
+					"description": "Storage used size",
+					"type": "filesize"
+				},
+				"AS_DISKFREE": {
+					"name": "${DISKFREE}",
+					"format": "filesize",
+					"sample": "100000",              
+					"group": "Pi",
+					"description": "Storage free size",
+					"type": "filesize"
+				}
+			}
+		},
+		"arguments":{
+			"period": 60
+		},
+		"argumentdetails": {
+			"period" : {
+				"required": "true",
+				"description": "Read Every",
+				"help": "Reads data every x seconds.",                
+				"type": {
+					"fieldtype": "spinner",
+					"min": 60,
+					"max": 1440,
+					"step": 1
+				}          
+			}                                 
+		},
+		"enabled": "false"
+	}
+
+ 
+	tstats = {
+		'0': 'Under-voltage detected',
+		'1': 'Arm frequency capped',
+		'2': 'Currently throttled',
+		'3': 'Soft temperature limit active',
+		'16': 'Under-voltage has occurred',
+		'17': 'Arm frequency capping has occurred',
+		'18': 'Throttling has occurred',
+		'19': 'Soft temperature limit has occurred'
+	}
  
 	def run(self):
 		result = ''
@@ -155,16 +156,16 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 			
 			tempUnits = allsky_shared.getSetting('temptype')
 			if tempUnits == 'B':
-				extra_data['AS_CPUTEMP_C'] = str(temp)
+				extra_data['AS_CPUTEMP_C'] = temp
 				temp = (temp * (9/5)) + 32
 				temp = round(temp,1)
-				extra_data['AS_CPUTEMP_F'] = str(temp)
+				extra_data['AS_CPUTEMP_F'] = temp
 				allsky_shared.log(4, f"CPU Temp (C) {extra_data['AS_CPUTEMP_C']}, CPU Temp (F) {extra_data['AS_CPUTEMP_F']}")
 			else:
 				if tempUnits == 'F':
 					temp = (temp * (9/5)) + 32
 					temp = round(temp,1)
-				extra_data['AS_CPUTEMP'] = str(temp)
+				extra_data['AS_CPUTEMP'] = temp
 				allsky_shared.log(4, f"INFO: CPU Temp ({tempUnits}) {extra_data['AS_CPUTEMP']}")
 
 			Device.ensure_pin_factory()
@@ -174,9 +175,9 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 
 			throttled = vcgm.get_throttled()
 			text = []
-			for bit in tstats:
+			for bit in self.tstats:
 				if throttled['breakdown'][bit]:
-					text.append(tstats[bit])
+					text.append(self.tstats[bit])
 
 			if not text:
 				tstatText = 'No Errors'

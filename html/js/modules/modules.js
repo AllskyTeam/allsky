@@ -171,17 +171,19 @@ class MODULESEDITOR {
                         $(document).trigger('module:dirty');
 
                         if ($(evt.to).is($('#modules-available'))) {
-                            let settingsButton = $('#' + $(evt.item).attr("id") + 'settings');
-                            let enabledButton = $('#' + $(evt.item).attr("id") + 'enabled');
-                            let deleteButton = $('#' + $(evt.item).attr("id") + 'delete');
+                            let settingsButton = $('#' + $(evt.item).attr("id") + 'settings')
+                            let enabledButton = $('#' + $(evt.item).attr("id") + 'enabled')
+                            let enabledButtonWrapper = $('#' + $(evt.item).attr("id") + 'enablewrapper')
+                            let deleteButton = $('#' + $(evt.item).attr("id") + 'delete')
 							let addButton = $('#' + $(evt.item).attr("id") + 'add')
 							if (settingsButton.length) {
-                                settingsButton.css('display', 'none');
+                                settingsButton.css('display', 'none')
                             }
                             enabledButton.prop('disabled', true);
                             enabledButton.prop('checked', false);  
                             deleteButton.prop('disabled', false);
 							addButton.removeClass('hidden')
+							enabledButtonWrapper.css('display', 'none')
 
 							this.#checkDependencies()
                         }
@@ -215,20 +217,43 @@ class MODULESEDITOR {
                     }
                 });
 				
-				$(document).on('keyup', '#module-module-filter', () => {
-					var searchText = $("#module-module-filter").val()
+				$(document).on('keyup', '#module-available-filter', () => {
+					var searchText = $("#module-available-filter").val()
 					$("#modules-available .allskymodule").each(function () {
-						this.style.display = this.id.includes(searchText) ? 'block' : 'none'
+						let text = $(`#${this.id}`).data('search')
+						if (text !== undefined) {
+							text = text.toLowerCase()
+							searchText = searchText.toLowerCase()
+							this.style.display = text.includes(searchText) ? 'block' : 'none'
+						}
 					});
 				}) 
-				$(document).on('click', '#module-module-filter-clear', () => {
-					$("#module-module-filter").val('')
+				$(document).on('click', '#module-available-filter-clear', () => {
+					$("#module-available-filter").val('')
 					$("#modules-available .allskymodule").each(function () {
 						this.style.display = 'block'
 					});					
 				}) 
 
-				
+				$(document).on('keyup', '#module-selected-filter', () => {
+					var searchText = $("#module-selected-filter").val()
+					$("#modules-selected .allskymodule").each(function () {
+						if (!$(`#${this.id}`).hasClass('locked')) {
+						let text = $(`#${this.id}`).data('search')
+							if (text !== undefined) {
+								text = text.toLowerCase()
+								searchText = searchText.toLowerCase()
+								this.style.display = text.includes(searchText) ? 'block' : 'none'
+							}
+						}
+					});
+				}) 
+				$(document).on('click', '#module-selected-filter-clear', () => {
+					$("#module-selected-filter").val('')
+					$("#modules-selected .allskymodule").each(function () {
+						this.style.display = 'block'
+					});					
+				}) 				
 
                 $(document).on('module:dirty', () => {
                     this.#dirty = true;
@@ -251,6 +276,7 @@ class MODULESEDITOR {
 		$(document).trigger('module:dirty');
 		let settingsButton = $('#' + $(item).attr("id") + 'settings')
 		let enabledButton = $('#' + $(item).attr("id") + 'enabled')
+		let enabledButtonWrapper = $('#' + $(item).attr("id") + 'enablewrapper')
 		let deleteButton = $('#' + $(item).attr("id") + 'delete')
 		let addButton = $('#' + $(item).attr("id") + 'add')
 		if (settingsButton.length) {
@@ -260,6 +286,7 @@ class MODULESEDITOR {
 		enabledButton.prop('checked', $.moduleeditor.settings.autoenable)
 		deleteButton.prop('disabled', true)
 		addButton.addClass('hidden')
+		enabledButtonWrapper.css('display', 'flex')
 		let element = $(item).find('.moduleenabler')
 		let checked = $(element).prop('checked')
 		let moduleName = $(element).data('module')
@@ -346,19 +373,24 @@ class MODULESEDITOR {
         let settingsHtml = '';
         if (data.metadata.arguments !== undefined) {
             if (Object.entries(data.metadata.arguments).length != 0) {
-                let disabled = '';
+                let disabled = ''
                 if (element == '#modules-available') {
-                    disabled = 'disabled="disabled"';
 					disabled = 'style="display: none"'
-                }
+                } else {
+					if (data.corrupt !== undefined) {
+						disabled = 'disabled="disabled"'					
+					}
+				}
                 settingsHtml = '<button type="button" class="btn btn-sm btn-primary module-settings-button" id="' + moduleKey + 'settings" data-module="' + data.module + '" ' + disabled + '>Settings</button>';
             }
         }
 
-        let locked = '';
-        let enabledHTML = '';
+        let locked = ''
+        let enabledHTML = ''
+		let lockedHTML = ''
         if (data.position !== undefined) {
             locked = 'filtered locked ' + data.position;
+			lockedHTML = '<i class="fa-solid fa-lock" title="Module cannot be moved"></i> '
         } else {
             let enabled = '';
             if (data.enabled !== undefined) {
@@ -366,7 +398,15 @@ class MODULESEDITOR {
                     enabled = 'checked="checked"';
                 }
             }
-            enabledHTML = '<div class="pull-right module-enable"><span class="module-enable-text">Enabled</span> <input type="checkbox" class="moduleenabler" ' + enabled + ' id="' + moduleKey + 'enabled" data-module="' + data.module + '"></div>';
+			let disabled = ''
+			if (element == '#modules-available') {
+				disabled = 'style="display: none"'
+			}
+			let cb = '	<label class="el-switch el-switch-sm el-switch-green">\
+  							<input type="checkbox" name="switch" class="moduleenabler" ' + enabled + ' id="' + moduleKey + 'enabled" data-module="' + data.module + '">\
+  							<span class="el-switch-style"></span>\
+						</label>'
+            enabledHTML = '<div class="pull-right module-enable " ' + disabled + ' id="' + moduleKey + 'enablewrapper"><span class="module-enable-text">Enabled</span> ' + cb + ' </div>';
         }
 
 		let hidden = ''
@@ -399,11 +439,15 @@ class MODULESEDITOR {
 			}
 		}
         version = deprecatedHTML + '<span><small class="module-version">' + version + '</small><span>';
+		let nameData = experimental + data.metadata.description;
+		if (data.corrupt !== undefined) {
+			nameData = 'WARNING: This modules metaData is corrupt. Please contact Allsky support'
+		}
 		let template = '\
-            <div id="' + moduleKey + '" data-id="' + data.module + '" class="list-group-item allskymodule ' + locked + '"> \
+            <div id="' + moduleKey + '" data-id="' + data.module + '" class="list-group-item allskymodule ' + locked + '" data-search="' + data.metadata.description + ' ' + data.metadata.name + '"> \
                 <div class="panel panel-default"> \
-                    <div class="panel-heading"><span class="warning" data-toggle="popover" data-delay=\'{"show": 1000, "hide": 200}\' data-placement="top" data-trigger="hover" data-placement="top" title="" data-content=""><i class="fa-solid fa-2x fa-triangle-exclamation"></i> </span>' + data.metadata.name + ' ' + version + ' ' + enabledHTML + '</div> \
-                    <div class="panel-body">' + experimental + data.metadata.description + ' <div class="pull-right">' + settingsHtml + addHTML + '</div></div> \
+                    <div class="panel-heading"><span class="warning" data-toggle="popover" data-delay=\'{"show": 1000, "hide": 200}\' data-placement="top" data-trigger="hover" data-placement="top" title="" data-content=""><i class="fa-solid fa-2x fa-triangle-exclamation"></i></span> ' + lockedHTML + data.metadata.name + ' ' + version + ' ' + enabledHTML + '</div> \
+                    <div class="panel-body">' + nameData + ' <div class="pull-right">' + settingsHtml + addHTML + '</div></div> \
                 </div> \
             </div>';
 
@@ -478,7 +522,9 @@ class MODULESEDITOR {
 		this.#dialogFilters = []
 		var controls = {
 			'spectrum': [],
-			'select2': []
+			'select2': [],
+			'position': [],
+			'urlcheck': []
 		}
 
         target = $(target)
@@ -546,16 +592,16 @@ class MODULESEDITOR {
 					let fieldTypeData = fieldData.type;
 					if (fieldType == 'spinner') {
 						let min = '';
-						if (fieldType.min !== undefined) {
-							min = 'min="' + fieldType.min + '"';
+						if (fieldTypeData.min !== undefined) {
+							min = 'min="' + fieldTypeData.min + '"';
 						}
 						let max = '';
-						if (fieldType.max !== undefined) {
-							max = 'max="' + fieldType.max + '"';
+						if (fieldTypeData.max !== undefined) {
+							max = 'max="' + fieldTypeData.max + '"';
 						}
 						let step = '';
-						if (fieldType.step !== undefined) {
-							step = 'step="' + fieldType.step + '"';
+						if (fieldTypeData.step !== undefined) {
+							step = 'step="' + fieldTypeData.step + '"';
 						}
 						inputHTML = '<input id="' + key + '" name="' + key + '" type="number" ' + min + ' ' + max + ' ' + step + ' class="form-control" value="' + fieldValue + '"' + required + fieldDescription + '>'
 						extraClass = 'input-group';
@@ -730,7 +776,7 @@ class MODULESEDITOR {
 								<div class="col-xs-4">\
 								' + inputHTML + '\
 								</div>\
-								<div class="col-xs-2">\
+								<div class="col-xs-3">\
 									<button type="button" class="btn btn-default" id="open-var-' + key + '" data-source="' + key + '">...</button>\
 									<button type="button" class="btn btn-default" id="reset-var-' + key + '" data-source="' + key + '"><i class="fa-solid fa-rotate-right"></i></button>\
 								</div>\
@@ -749,7 +795,6 @@ class MODULESEDITOR {
                             $(document).on('click', '#open-var-' + key, (event) => {
 							let el = $(event.target).data('source');
 							let data = $('#' + el).val();
-
 							$.allskyVariable({
 								id: key,
 								variable: data,
@@ -817,23 +862,127 @@ class MODULESEDITOR {
 					}
 
 					if (fieldType == 'ajaxselect') {
-						inputHTML = '<select name="' + key + '" id="' + key + '"' + required + fieldDescription + '>';
-						inputHTML += '</select>'
-						controls['select2'].push({
-							'id': '#' + key,
-							'config': {
-								url: fieldData.type.url,
-								placeholder: fieldData.type.placeholder
+
+						let result = $.ajax({
+							type: "GET",
+							url: fieldData.type.url,
+							data: "",
+							dataType: 'json',
+							cache: false,
+							async: false,
+							context: this              
+						})
+
+						let values = result.responseJSON.results
+						inputHTML = '<select name="' + key + '" id="' + key + '"' + required + fieldDescription + '>'
+						for (const [key, value] of Object.entries(values)) {
+							let selected = ''
+							if (fieldValue == value.id) {
+								selected = 'selected'
 							}
-						})						
+							inputHTML += `<option value="${value.id}" ${selected}>${value.text}</option>`
+						}						
+						inputHTML += '</select>'
+					
 					}					
 					
+					if (fieldType == 'position') {
+						let latId = false
+						let lonId = false
+						let heightId = false
+
+						if (fieldData.lat !== undefined) {
+							latId = fieldData.lat.id
+						}
+						if (fieldData.lon !== undefined) {
+							lonId = fieldData.lon.id
+						}
+						if (fieldData.height !== undefined) {
+							heightId = fieldData.height.id
+						}
+
+						inputHTML = '<div class="row">'
+						if (latId !== false) {
+							fieldValue = moduleData.metadata.arguments[latId];
+							if (fieldValue === undefined) {
+								fieldValue = ''
+							}
+							inputHTML += `	<div class="col-md-3"><input class="form-control" id="${latId}" name="${latId}" value="${fieldValue}"></div>`
+						}
+						if (latId !== false) {
+							fieldValue = moduleData.metadata.arguments[lonId];
+							if (fieldValue === undefined) {
+								fieldValue = ''
+							}
+							inputHTML += `	<div class="col-md-3"><input class="form-control" id="${lonId}" name="${lonId}" value="${fieldValue}"></div>`
+						}
+						if (heightId !== false) {
+							fieldValue = moduleData.metadata.arguments[heightId];
+							if (fieldValue === undefined) {
+								fieldValue = ''
+							}
+							inputHTML += `	<div class="col-md-3"><input class="form-control" id="${heightId}" name="${heightId}" value="${fieldValue}" type="number" min="-100" max="99999" stap="1"></div>`
+						}
+						inputHTML += '	<div class="col-md-2">'
+						inputHTML += `	  <button type="button" id="${key}" class="btn btn-primary allsky-position" data-lat="${latId}" data-lon="${lonId}" data-height="${heightId}" title="Select location on a map">`
+						inputHTML += '	    <i class="fa-solid fa-map-location-dot"></i>'
+						inputHTML += '	  </button>'
+						inputHTML += '  </div>'
+						inputHTML += '</div>'
+											
+					}
+
+					if (fieldType == 'url') {
+						inputHTML =  '<div class="row">'
+						inputHTML += '	<div class="col-md-8">'
+						inputHTML += `		<input id="${key}" name="${key}" class="form-control" value="${fieldValue}">`
+						inputHTML += '  </div>'						
+						inputHTML += '	<div class="col-md-2">'
+						inputHTML += `	  <button type="button" id="${key}-urlcheck" class="btn btn-primary allsky-url-check" data-urlel="${key}" title="Test URL">`
+						inputHTML += '	    <i class="fa-solid fa-globe"></i>'
+						inputHTML += '	  </button>'
+						inputHTML += '  </div>'						
+						inputHTML += '</div>'
+						
+						controls['urlcheck'].push({
+							'id': `#${key}-urlcheck`
+						})						
+					}
+					
+					if (fieldType == 'host') {
+						let urlId = false
+						let portId = false
+
+						if (fieldData.url !== undefined) {
+							urlId = fieldData.url.id
+						}
+						if (fieldData.port !== undefined) {
+							portId = fieldData.port.id
+						}
+
+						inputHTML = '<div class="row">'
+						if (urlId !== false) {
+							fieldValue = moduleData.metadata.arguments[urlId];
+							if (fieldValue === undefined) {
+								fieldValue = ''
+							}
+							inputHTML += `	<div class="col-md-9"><input class="form-control" id="${urlId}" name="${urlId}" value="${fieldValue}"></div>`
+						}
+						if (portId !== false) {
+							fieldValue = moduleData.metadata.arguments[portId];
+							if (fieldValue === undefined) {
+								fieldValue = ''
+							}
+							inputHTML += `	<div class="col-md-3"><input class="form-control" type="number" min="1" max="65535" id="${portId}" name="${portId}" value="${fieldValue}"></div>`
+						}
+						inputHTML += '</div>'						
+					}					
 				}
 
 				fieldHTML = '\
 					<div class="form-group" id="' + key + '-wrapper">\
 						<label for="' + key + '" class="control-label col-xs-4">' + fieldData.description + '</label>\
-						<div class="col-xs-8">\
+						<div class="col-xs-7">\
 							<div class="'+ extraClass + '">\
 								' + inputHTML + '\
 							</div>\
@@ -898,12 +1047,28 @@ class MODULESEDITOR {
 				if (this.#dialogFilters[filters.filter] === undefined) {
 					this.#dialogFilters[filters.filter] = {}
 				}
-				for (let [filterkey, value] of Object.entries(filters.values)) {
-					if (this.#dialogFilters[filters.filter][value] === undefined) {
-						this.#dialogFilters[filters.filter][value] = {}
+				let sourceField = moduleData.metadata
+.				argumentdetails[filters.filter]
+				let sourceFieldType = 'text'
+				if (sourceField.type !== undefined) {
+					if (sourceField.type.fieldtype !== undefined) {
+						sourceFieldType = sourceField.type.fieldtype
 					}
-					this.#dialogFilters[filters.filter][value][key] = filters.filtertype
 				}
+				if (sourceFieldType === 'select') {
+					for (let [filterkey, value] of Object.entries(filters.values)) {
+						if (this.#dialogFilters[filters.filter][value] === undefined) {
+							this.#dialogFilters[filters.filter][value] = {}
+						}
+						this.#dialogFilters[filters.filter][value][key] = filters.filtertype
+					}
+				}
+				if (sourceFieldType === 'checkbox') {
+					if (this.#dialogFilters[filters.filter][true] === undefined) {
+						this.#dialogFilters[filters.filter][true] = {}
+					}
+					this.#dialogFilters[filters.filter][true][key] = filters.filtertype
+				}				
 			}			
         }
         let moduleSettingsHtml = '';
@@ -940,10 +1105,6 @@ class MODULESEDITOR {
 			if ('changelog' in moduleData.metadata) {
                 moduleSettingsHtml += '<li role="presentation"><a href="#as-module-var-changelog" role="tab" data-toggle="tab">Change Log</a></li>';
 			}
-
-            if (moduleShortName in this.#configData.help) {
-                moduleSettingsHtml += '<li role="presentation"><a href="#as-module-var-help" role="tab" data-toggle="tab">Help</a></li>';
-            }
 
 			if ('deprecation' in moduleData.metadata) {
 				let type = 'danger'
@@ -1053,13 +1214,6 @@ class MODULESEDITOR {
 				</div>'
 			}
 
-            if (moduleShortName in this.#configData.help) {
-                moduleSettingsHtml += '\
-                    <div role="tabpanel" style="margin-top:10px" class="tab-pane" id="as-module-var-help">\
-                    ' + this.#configData.help[moduleShortName].html + '\
-                    </div>'
-            }
-
             if ('deprecation' in moduleData.metadata) {
 				let heading = 'THIS MODULE HAS BEEN MARKED FOR DEPRECATION'
 				if (moduleData.metadata.deprecation.partial !== undefined) {
@@ -1163,8 +1317,21 @@ class MODULESEDITOR {
 					dataType: 'json'
 				}
 			})
+
+			$(value['id']).val(value['config']['value'])
+
 		})
-		
+
+        $('.allsky-position').allskyPOSITION({
+            onClick: () => {
+            }
+        });
+
+		Object.entries(controls['urlcheck']).forEach(([key, value]) => {
+			$(value['id']).allskyURLCHECK({});
+		})
+
+
 		let centerModal = true
 		if ('centersettings' in moduleData.metadata) {
 			if (moduleData.metadata.centersettings === 'false') {
@@ -1276,15 +1443,22 @@ class MODULESEDITOR {
 					$(value['id']).spectrum('destroy')
 				})
 
+				//$('.allsky-position').destroy()
+
                 $('#module-settings-dialog').modal('hide');
                 $(document).trigger('module:dirty');
             }
         });
 
-        $(document).off('change', 'select')
-        $(document).on('change', 'select', (event) => {
+		$(document).off('change', 'select')
+		$(document).on('change', 'select', (event) => {
 			this.#setFormState()
-        });
+		})
+
+        $(document).off('change', 'input[type="checkbox"]')
+        $(document).on('change', 'input[type="checkbox"]', (event) => {
+			this.#setFormState()
+        })		
 
 		this.#setFormState()
     }
@@ -1326,9 +1500,17 @@ class MODULESEDITOR {
 
 		// Show just the fields based upon the select value
 		for (let [selectField, selectValues] of Object.entries(this.#dialogFilters)) {
-			let selectValue = $('#' + selectField).val()
+			let fieldType = $(`#${selectField}`).prop('type');
+			let selectValue = ''
+			if (fieldType === 'checkbox') {
+				selectValue= $(`#${selectField}`).prop('checked')
+			}
+			if (fieldType === 'select-one') {
+				selectValue = $(`#${selectField}`).val()
+			}
+
 			for (let [selectOption, fields] of Object.entries(selectValues)) {
-				if (selectValue == selectOption) {
+				if ((selectValue == selectOption) || (fieldType === 'checkbox' && selectValue)) {
 					for (let [fieldToManage, filterType] of Object.entries(fields)) {
 						$('#' + fieldToManage + '-wrapper').show()
 					}					

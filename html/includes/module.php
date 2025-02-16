@@ -49,6 +49,16 @@ function DisplayModule() {
 <script src="/js/jvc/jvc.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 <link rel='stylesheet' href='/js/jvc/jvc.min.css?c=<?php echo ALLSKY_VERSION; ?>' />
 
+<link rel="stylesheet" href="/js/leaflet/leaflet.css?c=<?php echo ALLSKY_VERSION; ?>">
+<script src="/js/leaflet/leaflet.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+<script src="/js/jquery-position/jquery-position.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+
+<link rel="stylesheet" href="/js/jquery-urlcheck/jquery-urlcheck.css?c=<?php echo ALLSKY_VERSION; ?>">
+<script src="/js/jquery-urlcheck/jquery-urlcheck.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+
+<link rel='stylesheet' href='/css/checkbox.css?c=<?php echo ALLSKY_VERSION; ?>' />
+
+
 <div class="row">
     <div class="col-lg-12">
 		<div class="panel panel-primary">
@@ -71,7 +81,7 @@ function DisplayModule() {
                                         <div class="btn btn-lg navbar-btn" id="module-editor-save"><i class="fa-solid fa-floppy-disk"></i></div>
                                     </div>
                                 </li>
-                                <li class="btn-lg">
+                                <li class="btn">
                                     <form id="oe-item-list-edit-dialog-form" class="form-horizontal">
                                         <div class="form-group">
                                             <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Sselect the Flow to manage">
@@ -105,20 +115,19 @@ function DisplayModule() {
                 </nav>
                 <div class="row module-lists">
                     <div class="col-sm-6 col-md-6 col-lg-6 module-column">
-                        <h4 class="text-center">Available Modules</h4>
-
-
-
-						<form class="form-horizontal">
-							<div class="form-group">
-								<label for="module-module-filter" class="col-sm-2 control-label">Search</label>
-								<div class="col-sm-6">
-									<input type="text" class="form-control" id="module-module-filter">
+                        <h4 class="text-center">Available Modules
+							<form class="form-horizontal mt-3">
+								<div class="form-group">
+									<label for="module-module-filter" class="col-sm-2 control-label">Search</label>
+									<div class="col-sm-6">
+										<input type="text" class="form-control" id="module-available-filter">
+									</div>
+									<div class="col-sm-4">
+										<button type="button" class="btn btn-primary btn-sm pull-left" id="module-available-filter-clear"><i class="fa-solid fa-xmark"></i></button>
+									</div>
 								</div>
-								<button type="button" class="btn btn-primary btn-sm" id="module-module-filter-clear"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
-							</div>
-						</form>
-
+							</form>
+						</h4>
 
 
                         <div class="module-container">
@@ -127,7 +136,20 @@ function DisplayModule() {
                         </div>
                     </div>
                     <div class="col-sm-6 col-md-6 col-lg-6 module-column">
-                        <h4 class="text-center">Selected Modules</h4>
+                        <h4 class="text-center">Selected Modules
+							<form class="form-horizontal mt-3">
+								<div class="form-group">
+									<label for="module-module-filter" class="col-sm-2 control-label">Search</label>
+									<div class="col-sm-6">
+										<input type="text" class="form-control" id="module-selected-filter">
+									</div>
+									<div class="col-sm-4">
+										<button type="button" class="btn btn-primary btn-sm pull-left" id="module-selected-filter-clear"><i class="fa-solid fa-xmark"></i></button>
+									</div>
+								</div>
+							</form>
+						</h4>
+
                         <div class="module-container">
                             <div id="modules-selected" class="list-group"></div>
                             <div id="modules-selected-empty"><span>Drag modules here to enable them</span></div>

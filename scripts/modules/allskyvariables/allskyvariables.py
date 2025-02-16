@@ -68,22 +68,38 @@ def get_debug_variables():
 
 	return result
 
-def get_meta_data_from_file(file_name):
-	with open(file_name, 'r') as file:
-		file_contents = file.readlines()
-	meta_data = ""
-	found = False
+#TODO: Fix to ensure formatting of metadata parses i.e. spaces and tabs
 
+def get_meta_data_from_file(file_name):
+	meta_data = get_meta_data_from_file_by_name(file_name, 'meta_data')
+	if not meta_data:
+		meta_data = get_meta_data_from_file_by_name(file_name, 'metaData')
+  
+	return meta_data
+ 
+def get_meta_data_from_file_by_name(file_name, meta_variable_name):
+	with open(file_name, 'r', encoding='utf-8') as file:
+		file_contents = file.readlines()
+	meta_data = ''
+	found = False
+	level = 0
+ 
 	for source_line in file_contents:
-		line = source_line.replace(" ", "").replace("\n", "").replace("\r", "").lower()
-		if line == "metadata={":
+     
+		if source_line.rstrip().endswith('{'):
+			level += 1
+
+		if source_line.lstrip().startswith('}'):
+			level -= 1
+        
+		if source_line.lstrip().startswith(meta_variable_name):
 			found = True
-			source_line = source_line.replace("metaData", "").replace("=", "").replace(" ", "")
+			source_line = source_line.replace(f"{meta_variable_name}", "").replace("=", "").replace(" ", "")
 		if found:
 			meta_data += source_line
-		if line.startswith("}") and found:
+		if source_line.lstrip().rstrip() == '}' and found and level == 0:
 			break
-
+		
 	return meta_data
 
 def get_module_variable_list(folder, module='', isExtra=False):
@@ -136,18 +152,19 @@ def get_variable(variables, search_variable):
 
 	return variable
 
-def get_variables(show_empty=True, module='', indexed=False):
+def get_variables(show_empty=True, module='', indexed=False, raw_index=False):
 	ALLSKY_CONFIG = getEnvironmentVariable('ALLSKY_CONFIG')
 	ALLSKY_SCRIPTS = getEnvironmentVariable('ALLSKY_SCRIPTS')
 	ALLSKY_OVERLAY = getEnvironmentVariable('ALLSKY_OVERLAY')
 	ALLSKY_MODULE_LOCATION = getEnvironmentVariable('ALLSKY_MODULE_LOCATION')
+	ALLSKY_MY_FILES_FOLDER = getEnvironmentVariable('ALLSKY_MYFILES_DIR')
 	
 	base_allsky_variable_list = os.path.join(ALLSKY_CONFIG, 'variables.json')
 	core_module_directory = os.path.join(ALLSKY_SCRIPTS, 'modules')
 	extra_module_directory = os.path.join(ALLSKY_MODULE_LOCATION, 'modules')
 	extra_files = os.path.join(ALLSKY_OVERLAY, 'extra')
 
-	valid_module_paths = [extra_module_directory, core_module_directory]
+	valid_module_paths = [ALLSKY_MY_FILES_FOLDER, extra_module_directory, core_module_directory]
 
 	for valid_module_path in valid_module_paths:
 		sys.path.append(os.path.abspath(valid_module_path))
@@ -227,10 +244,11 @@ def get_variables(show_empty=True, module='', indexed=False):
 	if indexed:
 		new_result = {}
 		for variable_data in result:
-			raw_var_name = variable_data['name']
+			raw_var_name = variable_data['variable']
 			var_name = raw_var_name.replace('${', '').replace('}', '')
-			if var_name.startswith('AS_'):
-				var_name = var_name[3:]
+			if not raw_index:
+				if var_name.startswith('AS_'):
+					var_name = var_name[3:]
     
 			new_result[var_name] = variable_data
    
@@ -247,12 +265,13 @@ if __name__ == "__main__":
 	parser.add_argument("--module", type=str, default="", help="Only return variables for a specific module")
 	parser.add_argument("--print", action="store_true", help="Print the results to stdout")
 	parser.add_argument("--prettyprint", action="store_true", help="Pretty Print the results to stdout")
-	parser.add_argument("--indexed", action="store_true", help="Return idata indexed by variable name")
+	parser.add_argument("--indexed", action="store_true", help="Return data indexed by variable name")
+	parser.add_argument("--raw", action="store_true", help="Do not strip AS_ from indexed data")
  
 	args = parser.parse_args()
  
 	setupForCommandLine(args.allskyhome)
-	variables = get_variables(args.empty, args.module, args.indexed)
+	variables = get_variables(args.empty, args.module, args.indexed, args.raw)
 
 	if args.print:
 		print(json.dumps(variables))

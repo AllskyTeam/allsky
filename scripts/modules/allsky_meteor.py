@@ -7,6 +7,7 @@ https://github.com/AllskyTeam/allsky
 This module will attempt to locate meteors in captured images
 """
 import allsky_shared as allsky_shared
+from allsky_base import ALLSKYMODULEBASE
 import os
 import json
 import cv2
@@ -15,82 +16,76 @@ from scipy.spatial import distance as dist
 from astropy.io import fits
 from astride import Streak
 
-metaData = {
-	"name": "AllSKY Meteor Detection",
-	"description": "Detects meteors in images",
-	"events": [
-		"night",
-		"day"
-	],
-	"experimental": "true",
-	"module": "allsky_meteor",
-	"arguments": {
-		"mask": "",
-		"length": "100",
-		"annotate": "false",
-		"debug": "false",
-		"useclearsky": "false"
-	},
-	"argumentdetails": {
-		"mask": {
-			"required": "false",
-			"description": "Mask Path",
-			"help": "The name of the image mask. This mask is applied when detecting meteors bit not visible in the final image",
-			"type": {
-				"fieldtype": "mask"
-			}
+class ALLSKYMETEOR(ALLSKYMODULEBASE):
+
+	meta_data = {
+		"name": "AllSKY Meteor Detection",
+		"description": "Detects meteors in images",
+		"events": [
+			"night",
+			"day"
+		],
+		"experimental": "true",
+		"module": "allsky_meteor",
+		"arguments": {
+			"mask": "",
+			"length": "100",
+			"annotate": "false",
+			"debug": "false",
+			"useclearsky": "false"
 		},
-		"length": {
-			"required": "true",
-			"description": "Minimum Length",
-			"help": "The minimum length of a detected meteor trail in pixels",
-			"type": {
-				"fieldtype": "spinner",
-				"min": 0,
-				"max": 500,
-				"step": 1
-			}
-		},
-		"useclearsky": {
-			"required": "false",
-			"description": "Use Clear Sky",
-			"help": "If available use the results of the clear sky module. If the sky is not clear meteor detection will be skipped",
-			"type": {
-				"fieldtype": "checkbox"
-			}
-		},
-		"annotate": {
-			"required": "false",
-			"description": "Annotate Meteors",
-			"help": "If selected the identified meteors in the image will be highlighted",
-			"tab": "Debug",
-			"type": {
-				"fieldtype": "checkbox"
-			}
-		},
-		"debug": {
-			"required": "false",
-			"description": "Enable debug mode",
-			"help": "If selected each stage of the detection will generate images in the allsky tmp debug folder",
-			"tab": "Debug",
-			"type": {
-				"fieldtype": "checkbox"
+		"argumentdetails": {
+			"mask": {
+				"required": "false",
+				"description": "Mask Path",
+				"help": "The name of the image mask. This mask is applied when detecting meteors bit not visible in the final image",
+				"type": {
+					"fieldtype": "mask"
+				}
+			},
+			"length": {
+				"required": "true",
+				"description": "Minimum Length",
+				"help": "The minimum length of a detected meteor trail in pixels",
+				"type": {
+					"fieldtype": "spinner",
+					"min": 0,
+					"max": 500,
+					"step": 1
+				}
+			},
+			"useclearsky": {
+				"required": "false",
+				"description": "Use Clear Sky",
+				"help": "If available use the results of the clear sky module. If the sky is not clear meteor detection will be skipped",
+				"type": {
+					"fieldtype": "checkbox"
+				}
+			},
+			"annotate": {
+				"required": "false",
+				"description": "Annotate Meteors",
+				"help": "If selected the identified meteors in the image will be highlighted",
+				"tab": "Debug",
+				"type": {
+					"fieldtype": "checkbox"
+				}
+			},
+			"debug": {
+				"required": "false",
+				"description": "Enable debug mode",
+				"help": "If selected each stage of the detection will generate images in the allsky tmp debug folder",
+				"tab": "Debug",
+				"type": {
+					"fieldtype": "checkbox"
+				}
 			}
 		}
 	}
-}
 
-
-class ALLSKYMETEOR:
-	__params = []
-	__event = ''
 	__fits_data = None
 	__fits_file = '/tmp/meteors.fits'
  
-	def __init__(self, params, event):
-		self.__params = params
-		self.__event = event
-
 	def __create_fits(self):
 		image_array = np.array(allsky_shared.image)
 

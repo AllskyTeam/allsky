@@ -15,29 +15,29 @@ import os
 import cv2
 import pathlib
 
-metaData = {
-	"name": "Saves an intermediate image",
-	"description": "Saves an intermediate image",
-	"module": "allsky_saveintermediateimage",      
-	"events": [
-	    "day",
-	    "night"
-	],
-	"arguments":{
-	    "imagefolder": "${ALLSKY_IMAGES}/${DATE}-clean"
-	},
-	"argumentdetails": {
-	    "imagefolder" : {
-	        "required": "true",
-	        "description": "Image folder",
-	        "help": "The folder to save the image in. The folder will be created if it does not exist. You can use AllSky Variables in the path"
-	    }
-	}      
-}
 
 class ALLSKYSAVEINTERMMEDIATEIMAGE(ALLSKYMODULEBASE):
-	params = []
-	event = ''
+
+	meta_data = {
+		"name": "Saves an intermediate image",
+		"description": "Saves an intermediate image",
+		"module": "allsky_saveintermediateimage",      
+		"events": [
+			"day",
+			"night"
+		],
+		"arguments":{
+			"imagefolder": "${ALLSKY_IMAGES}/${DATE}-clean"
+		},
+		"argumentdetails": {
+			"imagefolder" : {
+				"required": "true",
+				"description": "Image folder",
+				"help": "The folder to save the image in. The folder will be created if it does not exist. You can use AllSky Variables in the path"
+			}
+		}      
+	}
+
  
 	def __write_image(self, image, path, quality):
 		file_extension = pathlib.Path(path).suffix

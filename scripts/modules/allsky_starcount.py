@@ -18,121 +18,120 @@ import json
 import numpy as np
 from math import sqrt
 
-metaData = {
-	"name": "Star Count",
-	"description": "Counts stars in an image",
-	"events": [
-	    "night"
-	],
-	"experimental": "true",
-	"module": "allsky_starcount",
-	"testable": "true",
-	"testableresult": "images",
-	"centersettings": "false",
-	"extradatafilename": "allsky_starcount.json",  
-	"extradata": {
-		"values": {
-			"AS_STARCOUNT": {
-				"name": "${STARCOUNT}",
-				"format": "",
-				"sample": "",                
-				"group": "Stars",
-				"description": "Number of stars",
-				"type": "Number"
-			}
-		}
-	},     
-	"arguments":{
-	    "detectionThreshold": 0.55,
-	    "distanceThreshold": 20,
-	    "annotate": "false",
-	    "template1": 6,
-	    "mask": "",
-	    "debug": "false",
-	    "debugimage": "",
-	    "useclearsky": "False"
-	},
-	"argumentdetails": {
-	    "detectionThreshold" : {
-	        "required": "true",
-	        "description": "Detection Threshold",
-	        "help": "The limit at which stars will be detected",
-	        "type": {
-	            "fieldtype": "spinner",
-	            "min": 0.05,
-	            "max": 1,
-	            "step": 0.01
-	        }
-	    },
-	    "distanceThreshold" : {
-	        "required": "true",
-	        "description": "Distance Threshold",
-	        "help": "Stars within this number of pixels of another star will not be counted. Helps to reduce errors in the count",
-	        "type": {
-	            "fieldtype": "spinner",
-	            "min": 0,
-	            "max": 100,
-	            "step": 1
-	        }          
-	    },
-	    "template1" : {
-	        "required": "true",
-	        "description": "Star Template size",
-	        "help": "Size in pixels of the first star template",
-	        "type": {
-	            "fieldtype": "spinner",
-	            "min": 0,
-	            "max": 100,
-	            "step": 1
-	        }          
-	    },          
-	    "mask" : {
-	        "required": "false",
-	        "description": "Mask Path",
-	        "help": "The name of the image mask. This mask is applied when counting stars bit not visible in the final image. <span class=\"text-danger\">NOTE: It is highly recommened you create a mask to improve the detection performance</span>",
-	        "type": {
-	            "fieldtype": "image"
-	        }                
-	    },
-	    "useclearsky" : {
-	        "required": "false",
-	        "description": "Use Clear Sky",
-	        "help": "If available use the results of the clear sky module. If the sky is not clear meteor detection will be skipped",         
-	        "type": {
-	            "fieldtype": "checkbox"
-	        }          
-	    },              
-	    "annotate" : {
-	        "required": "false",
-	        "description": "Annotate Stars",
-	        "help": "If selected the identified stars in the image will be highlighted",
-	        "tab": "Debug",
-	        "type": {
-	            "fieldtype": "checkbox"
-	        }          
-	    },
-	    "debug" : {
-	        "required": "false",
-	        "description": "Enable debug mode",
-	        "help": "If selected each stage of the detection will generate images in the allsky tmp debug folder",
-	        "tab": "Debug",
-	        "type": {
-	            "fieldtype": "checkbox"
-	        }          
-	    },
-	    "debugimage" : {
-	        "required": "false",
-	        "description": "Debug Image",
-	        "help": "Image to use for debugging. DO NOT set this unless you know what you are doing",
-	        "tab": "Debug"        
-	    }                  
-	}          
-}
 
 class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
-	params = []
-	event = ''
-	debug_mode = False
+
+	meta_data = {
+		"name": "Star Count",
+		"description": "Counts stars in an image",
+		"events": [
+			"night"
+		],
+		"experimental": "true",
+		"module": "allsky_starcount",
+		"testable": "true",
+		"testableresult": "images",
+		"centersettings": "false",
+		"extradatafilename": "allsky_starcount.json",  
+		"extradata": {
+			"values": {
+				"AS_STARCOUNT": {
+					"name": "${STARCOUNT}",
+					"format": "",
+					"sample": "",                
+					"group": "Stars",
+					"description": "Number of stars",
+					"type": "Number"
+				}
+			}
+		},     
+		"arguments":{
+			"detectionThreshold": 0.55,
+			"distanceThreshold": 20,
+			"annotate": "false",
+			"template1": 6,
+			"mask": "",
+			"debug": "false",
+			"debugimage": "",
+			"useclearsky": "False"
+		},
+		"argumentdetails": {
+			"detectionThreshold" : {
+				"required": "true",
+				"description": "Detection Threshold",
+				"help": "The limit at which stars will be detected",
+				"type": {
+					"fieldtype": "spinner",
+					"min": 0.05,
+					"max": 1,
+					"step": 0.01
+				}
+			},
+			"distanceThreshold" : {
+				"required": "true",
+				"description": "Distance Threshold",
+				"help": "Stars within this number of pixels of another star will not be counted. Helps to reduce errors in the count",
+				"type": {
+					"fieldtype": "spinner",
+					"min": 0,
+					"max": 100,
+					"step": 1
+				}          
+			},
+			"template1" : {
+				"required": "true",
+				"description": "Star Template size",
+				"help": "Size in pixels of the first star template",
+				"type": {
+					"fieldtype": "spinner",
+					"min": 0,
+					"max": 100,
+					"step": 1
+				}          
+			},          
+			"mask" : {
+				"required": "false",
+				"description": "Mask Path",
+				"help": "The name of the image mask. This mask is applied when counting stars bit not visible in the final image. <span class=\"text-danger\">NOTE: It is highly recommened you create a mask to improve the detection performance</span>",
+				"type": {
+					"fieldtype": "image"
+				}                
+			},
+			"useclearsky" : {
+				"required": "false",
+				"description": "Use Clear Sky",
+				"help": "If available use the results of the clear sky module. If the sky is not clear meteor detection will be skipped",         
+				"type": {
+					"fieldtype": "checkbox"
+				}          
+			},              
+			"annotate" : {
+				"required": "false",
+				"description": "Annotate Stars",
+				"help": "If selected the identified stars in the image will be highlighted",
+				"tab": "Debug",
+				"type": {
+					"fieldtype": "checkbox"
+				}          
+			},
+			"debug" : {
+				"required": "false",
+				"description": "Enable debug mode",
+				"help": "If selected each stage of the detection will generate images in the allsky tmp debug folder",
+				"tab": "Debug",
+				"type": {
+					"fieldtype": "checkbox"
+				}          
+			},
+			"debugimage" : {
+				"required": "false",
+				"description": "Debug Image",
+				"help": "Image to use for debugging. DO NOT set this unless you know what you are doing",
+				"tab": "Debug"        
+			}                  
+		}          
+	}
+
  
 	def __create_star_template(self, star_size, debug):
 		star_template_size = star_size * 4
@@ -160,7 +159,6 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 
 	def run(self):
 		star_count = 0
-		self.debug_mode = self.get_param('ALLSKYTESTMODE', False, bool) 
        
 		raining, rain_flag = allsky_shared.raining()
 		sky_state, sky_clear = allsky_shared.skyClear()

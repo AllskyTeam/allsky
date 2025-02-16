@@ -39,20 +39,26 @@ Get the locations of the modules and scripts and add them to the path.
 '''
 # Can't use log() or getEnvironmentVariable() yet.
 try:
-    allSkyModules = os.environ["ALLSKY_MODULE_LOCATION"]
+    allsky_my_files_folder = os.environ["ALLSKY_MYFILES_DIR"]
+except KeyError:
+    print("ERROR: $ALLSKY_MYFILES_DIR not found - Aborting.")
+    sys.exit(1)
+
+try:
+    all_sky_modules = os.environ["ALLSKY_MODULE_LOCATION"]
 except KeyError:
     print("ERROR: $ALLSKY_MODULE_LOCATION not found - Aborting.")
     sys.exit(1)
-allSkyModulesLocation = os.path.join(allSkyModules, "modules")
+allsky_modules_location = os.path.join(all_sky_modules, "modules")
 
 try:
-    allSkyScripts = os.environ["ALLSKY_SCRIPTS"]
+    allsky_scripts = os.environ["ALLSKY_SCRIPTS"]
 except KeyError:
     print("ERROR: $ALLSKY_SCRIPTS not found - Aborting")
     sys.exit(1)
-allSkyModulesPath = os.path.join(allSkyScripts, "modules")
+allsky_modules_path = os.path.join(allsky_scripts, "modules")
 
-valid_module_paths = [allSkyModulesLocation, allSkyModulesPath]
+valid_module_paths = [allsky_my_files_folder, allsky_modules_location, allsky_modules_path]
 
 for vmp in valid_module_paths:
     sys.path.append(os.path.abspath(vmp))

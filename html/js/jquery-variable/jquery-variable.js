@@ -11,6 +11,7 @@
             collapseallsky: true,
 			stateKey: 'as-variables',
 			valueDiv: null,
+			selectStyle: 'single',
             variableSelected: function (variable) { }
         }
 
@@ -216,7 +217,7 @@
 				order: [[1, 'asc']],
                 paging: false,
                 select: {
-                    style: 'single'
+                    style: plugin.settings.selectStyle
                 },
 				scrollY: '50vh',
 				scrollCollapse: true,

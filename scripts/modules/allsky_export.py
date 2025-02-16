@@ -13,37 +13,35 @@ import os
 import json
 import re
 
-metaData = {
-	"name": "AllSKY Export",
-	"description": "Exports AllSKY data to json",
-	"module": "allsky_export",
-	"testable": "true",
-	"centersettings": "false",        
-	"events": [
-	    "day",
-	    "night"
-	],
-	"arguments":{
-	    "filelocation": "${ALLSKY_TMP}/allskydata.json",
-	    "extradata": "CAMERA_TYPE,DAY_OR_NIGHT,CURRENT_IMAGE,FULL_FILENAME,ALLSKY_VERSION"
-	},
-	"argumentdetails": {
-	    "filelocation" : {
-	        "required": "true",
-	        "description": "File Location",
-	        "help": "The location to save the json date"
-	    },
-	    "extradata" : {
-	        "required": "false",
-	        "description": "Extra data to export",
-	        "help": "Comma seperated list of additional variables to export to json"
-	    }        
-	}          
-}
-
 class ALLSKYEXPORT(ALLSKYMODULEBASE):
-	params = []
-	event = ''
+
+	meta_data = {
+		"name": "AllSKY Export",
+		"description": "Exports AllSKY data to json",
+		"module": "allsky_export",
+		"testable": "true",
+		"centersettings": "false",        
+		"events": [
+			"day",
+			"night"
+		],
+		"arguments":{
+			"filelocation": "${ALLSKY_TMP}/allskydata.json",
+			"extradata": "CAMERA_TYPE,DAY_OR_NIGHT,CURRENT_IMAGE,FULL_FILENAME,ALLSKY_VERSION"
+		},
+		"argumentdetails": {
+			"filelocation" : {
+				"required": "true",
+				"description": "File Location",
+				"help": "The location to save the json date"
+			},
+			"extradata" : {
+				"required": "false",
+				"description": "Extra data to export",
+				"help": "Comma seperated list of additional variables to export to json"
+			}        
+		}          
+	}
 
 	def run(self):
 		""" Generates the json file and saves it 

@@ -25,6 +25,8 @@ import tempfile
 import pathlib
 from pathlib import Path
 
+from allskyvariables import allskyvariables
+
 try:
     locale.setlocale(locale.LC_ALL, '')
 except:
@@ -77,6 +79,31 @@ LOGLEVEL = 0
 SETTINGS = {}
 TOD = ''
 DBDATA = {}
+
+def get_lat_lon():
+	lat = None
+	lon = None
+
+	temp_lat = get_setting('latitude')
+	if temp_lat != '':
+		lat = convert_lat_lon(temp_lat)
+	temp_lon = get_setting('longitude')
+	if temp_lon != '':
+		lon = convert_lat_lon(temp_lon)
+
+	return lat, lon
+
+def obfuscate_secret(secret, visible_chars=3):
+    return secret[:visible_chars] + '*' * (len(secret) - visible_chars)
+
+def create_cardinal(degrees):
+	try:
+		cardinals = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW','W', 'WNW', 'NW', 'NNW', 'N']
+		cardinal = cardinals[round(degrees / 22.5)]
+	except Exception:
+		cardinal = 'N/A'
+
+	return cardinal
 
 def should_run(module, period):
     return shouldRun(module, period)
@@ -200,6 +227,9 @@ def startModuleDebug(module):
     except:
         log(0, f"ERROR: Unable to create {moduleTmpDir}")
 
+def write_debug_image(module, fileName, image):
+	writeDebugImage(module, fileName, image)
+ 
 def writeDebugImage(module, fileName, image):
     global ALLSKY_WEBUI
 
@@ -757,6 +787,9 @@ def _get_value_from_text_file(file_path, variable):
 
     return result   
 
+def get_all_allsky_variables(show_empty=True, module='', indexed=False, raw=False):
+    return allskyvariables.get_variables(show_empty, module, indexed, raw)
+    
 def get_allsky_variable(variable):
     """
     Gets an Allsky variable either from the environment or extra data files

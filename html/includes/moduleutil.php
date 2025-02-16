@@ -13,11 +13,14 @@ class MODULEUTIL
     private $allskyModules;
     private $userModules;
 	private $extraDataFolder;
+	private $myFiles;
 
     function __construct() {
         $this->allskyModules = ALLSKY_SCRIPTS . '/modules';
         $this->userModules = ALLSKY_MODULE_LOCATION . '/modules';
 		$this->extraDataFolder = ALLSKY_OVERLAY . '/extra';
+		$this->myFiles = ALLSKY_MYFILES_DIR;
+
     }
 
     public function run()
@@ -74,6 +77,49 @@ class MODULEUTIL
     }
 
     private function getMetaDataFromFile($fileName) {
+		$metaData = $this->getMetaDataFromFileByName($fileName, 'meta_data');
+		if ($metaData === "") {
+			$metaData = $this->getMetaDataFromFileByName($fileName, 'metaData');
+		}
+
+		return $metaData;
+	}
+
+    private function getMetaDataFromFileByName($fileName, $metaName) {
+        $fileContents = file($fileName);
+        $found = False;
+
+		$level = 0;
+		$metaData = "";
+		foreach ($fileContents as $source_line) {
+    
+			if (rtrim($source_line) !== '' && str_ends_with(rtrim($source_line), '{')) {
+				$level++;
+			}
+		
+			if (ltrim($source_line) !== '' && str_starts_with(ltrim($source_line), '}')) {
+				$level--;
+			}
+		
+			if (ltrim($source_line) !== '' && str_starts_with(ltrim($source_line), $metaName)) {
+				$found = true;
+				$source_line = str_replace([$metaName, "=", " "], "", $source_line);
+			}
+		
+			if ($found) {
+				$metaData .= $source_line;
+			}
+		
+			if (trim($source_line) === '}' && $found && $level === 0) {
+				break;
+			}
+		}
+		
+
+        return $metaData;
+    }
+
+    private function getMetaDataFromFileByName1($fileName, $metaName) {
         $fileContents = file($fileName);
         $metaData = "";
         $found = False;
@@ -112,20 +158,29 @@ class MODULEUTIL
                     if ($entry !== 'allsky_shared.py' && $entry !== 'allsky_base.py') {
                         $fileName = $moduleDirectory . '/' . $entry;
                         $metaData = $this->getMetaDataFromFile($fileName);
-                        $decoded = json_decode($metaData);
-                        if (in_array($event, $decoded->events)) {
-                            if (isset($decoded->experimental)) {
-                                $experimental = strtolower($decoded->experimental) == "true"? true: false;
-                            } else {
-                                $experimental = false;
-                            }
-                            $arrFiles[$entry] = [
-                                'module' => $entry,
-                                'metadata' => $decoded,
-                                'type' => $type
-                            ];
-                            $arrFiles[$entry]['metadata']->experimental = $experimental;
-                        }
+                        $decoded = json_decode($metaData);		
+						if ($decoded !== Null) {
+							if (in_array($event, $decoded->events)) {
+								if (isset($decoded->experimental)) {
+									$experimental = strtolower($decoded->experimental) == "true"? true: false;
+								} else {
+									$experimental = false;
+								}
+								$arrFiles[$entry] = [
+									'module' => $entry,
+									'metadata' => $decoded,
+									'type' => $type
+								];
+								$arrFiles[$entry]['metadata']->experimental = $experimental;
+							}
+						} else {
+							$arrFiles[$entry] = [
+								'module' => $entry,
+								'metadata' => (object)[],
+								'type' => $type
+							];
+							$arrFiles[$entry] = null;
+						}
                     }
                 }
             }
@@ -242,74 +297,97 @@ class MODULEUTIL
 
         $coreModules = $this->readModuleData($this->allskyModules, "system", $event);
         $userModules = $this->readModuleData($this->userModules, "user", $event);
-        $allModules = array_merge($coreModules, $userModules);
+        $myModules = $this->readModuleData($this->myFiles, "user", $event);
+
+        $allModules = array_merge($coreModules, $userModules, $myModules);
 
         $availableResult = [];
-        foreach ($allModules as $moduleData) {
-            $module = str_replace('allsky_', '', $moduleData["module"]);
+        foreach ($allModules as $key=>$moduleData) {
+			if (isset($moduleData["module"])) {
+				$moduleName = $moduleData["module"];
+			} else {
+				$moduleName = $key;
+			}
+            $module = str_replace('allsky_', '', $moduleName);
             $module = str_replace('.py', '', $module);
-
+			
             if (!isset($configData->{$module})) {
-                $moduleData["enabled"] = false;
+				if ($moduleData === null) { // Corrupt module metaData
+					$moduleData = [
+						"metadata" => [
+							"name" => "Reads Pi Status",
+							"description" => "Reads Pi Data",
+							"module" => "allsky_pistatus",    
+							"version" => "v1.0.0",							
+							"arguments" => []
+						],
+						"corrupt" => true
+					];
+				}
                 $availableResult[$module] = $moduleData;
             }
         }
 
-        $selectedResult = [];
+		$selectedResult = [];
         foreach($configData as $selectedName=>$data) {
             $moduleName = "allsky_" . $selectedName . ".py";
             $moduleData = $allModules[$moduleName];
 
-            if (isset($data->metadata->arguments)) {
-                if (isset($moduleData['metadata']->arguments)) {
-                    foreach ((array)$moduleData['metadata']->arguments as $argument=>$value) {
+			if ($moduleData === null) { // Corrupt module metaData
+				$moduleData = (array)$configData->$selectedName;
+				$moduleData["corrupt"] = true;
+			}
 
-                        if (!isset($data->metadata->arguments->$argument)) {
+			if (isset($data->metadata->arguments)) {
+				if (isset($moduleData['metadata']->arguments)) {
+					foreach ((array)$moduleData['metadata']->arguments as $argument=>$value) {
+
+						if (!isset($data->metadata->arguments->$argument)) {
 							$data->metadata->arguments->$argument = $value;
-                        }
+						}
 						
 						# If field is a 'secret' field then get the value from the env file
-						if ($moduleData["metadata"]->argumentdetails->$argument->secret !== null) {
-							if ($moduleData["metadata"]->argumentdetails->$argument->secret === 'true') {
-								$secretKey = strtoupper($data->metadata->module) . '.' . strtoupper($argument);
-								if (isset($secrets->$secretKey)) {
-									$data->metadata->arguments->$argument = $secrets->$secretKey;
+						if (isset($moduleData["metadata"]->argumentdetails->$argument->secret)) {
+							if ($moduleData["metadata"]->argumentdetails->$argument->secret !== null) {
+								if ($moduleData["metadata"]->argumentdetails->$argument->secret === 'true') {
+									$secretKey = strtoupper($data->metadata->module) . '.' . strtoupper($argument);
+									if (isset($secrets->$secretKey)) {
+										$data->metadata->arguments->$argument = $secrets->$secretKey;
+									}
 								}
 							}
 						}
+					}
+				}
+				$moduleData["metadata"]->arguments = $data->metadata->arguments;
+			} else {
+				$moduleData["metadata"]->arguments = [];
+			}
+			if (isset($data->enabled)) {
+				$moduleData["enabled"] = $data->enabled;
+			} else {
+				$moduleData["enabled"] = false;
+			}
+			if ($selectedName == 'loadimage') {
+				$moduleData['position'] = 'first';
+			}
+			if ($selectedName == 'saveimage') {
+				$moduleData['position'] = 'last';
+			}
 
+			if (isset($data->lastexecutiontime)) {
+				$moduleData['lastexecutiontime'] = $data->lastexecutiontime;
+			} else {
+				$moduleData['lastexecutiontime'] = '0';
+			}
+			if (isset($data->lastexecutionresult)) {
+				$moduleData['lastexecutionresult'] = $data->lastexecutionresult;
+			} else {
+				$moduleData['lastexecutionresult'] = '';
+			}
 
-                    }
-                }
-                $moduleData["metadata"]->arguments = $data->metadata->arguments;
-            } else {
-                $moduleData["metadata"]->arguments = [];
-            }
-            if (isset($data->enabled)) {
-                $moduleData["enabled"] = $data->enabled;
-            } else {
-                $moduleData["enabled"] = false;
-            }
-            if ($selectedName == 'loadimage') {
-                $moduleData['position'] = 'first';
-            }
-            if ($selectedName == 'saveimage') {
-                $moduleData['position'] = 'last';
-            }
-
-            if (isset($data->lastexecutiontime)) {
-                $moduleData['lastexecutiontime'] = $data->lastexecutiontime;
-            } else {
-                $moduleData['lastexecutiontime'] = '0';
-            }
-            if (isset($data->lastexecutionresult)) {
-                $moduleData['lastexecutionresult'] = $data->lastexecutionresult;
-            } else {
-                $moduleData['lastexecutionresult'] = '';
-            }
-
-            $selectedResult[$selectedName] = $moduleData;
-        };
+			$selectedResult[$selectedName] = $moduleData;
+	};
 
         $restore = false;
         if (file_exists($configFileName . '-last')) {
@@ -327,8 +405,7 @@ class MODULEUTIL
             'selected'=> $selectedResult,
             'corrupted' => $corrupted,
             'restore' => $restore,
-            'debug' => $debugInfo,
-            'help' => $this->getModuleHelp()
+            'debug' => $debugInfo
         ];
 
         return $result;
@@ -961,6 +1038,21 @@ class MODULEUTIL
 		$this->sendResponse(json_encode($results));
 	}
 
+	public function getSerialPorts() {
+		$files = glob('/dev/serial*');
+				  
+		$results = array();
+		$results['results'] = array();
+		foreach ($files as $file) {
+			$results['results'][] = [
+				'id' => basename($file),
+				'text' => basename($file)
+			];
+		}
+		
+		$this->sendResponse(json_encode($results));
+	}
+
 	public function postGetExtraDataFile() {
 		$extraDataFilename = basename($_POST['extradatafilename']);
 		$filePath = $this->extraDataFolder . '/' . $extraDataFilename;
@@ -970,6 +1062,17 @@ class MODULEUTIL
 		}
 
 		$this->sendResponse(json_encode($result));		
+	}
+
+	public function getUrlCheck() {
+        $url=trim(filter_input(INPUT_GET, 'url', FILTER_SANITIZE_STRING));
+		$headers = @get_headers($url);
+		if(strpos($headers[0], '200') !== false) {
+			$result = true;
+		} else {
+			$result = false;
+		}
+		$this->sendResponse(json_encode($result));
 	}
 }
 

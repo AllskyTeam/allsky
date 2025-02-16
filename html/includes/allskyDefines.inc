@@ -31,6 +31,7 @@ define('ALLSKY_STATUS',   '/home/pi/allsky/config/status.json');
 define('RASPI_CONFIG',   '/home/pi/allsky/config');
 define('RASPI_ADMIN_DETAILS', '/home/pi/allsky/config/raspap.auth');
 define('CONFIG_UPDATE_STRING', 'XX_NEED_TO_UPDATE_XX');
+define('ALLSKY_MYFILES_DIR', '/home/pi/allsky/config/myFiles');
 
 // Split the placeholder so it doesn't get replaced.
 if (ALLSKY_HOME == "XX_ALLSKY_HOME" . "_XX") {

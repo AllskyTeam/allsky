@@ -120,7 +120,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_IMAGES="${ALLSKY_HOME}/images"
 
 	# Holds all the notification images.
-	ALLSKY_NOTIFICATION_IMAGES="${ALLSKY_HOME}/notification_images"
+	ALLSKY_NOTIFICATION_IMAGES="${ALLSKY_HOME}/notificationImages"
 	# Holds log of notifications displayed during this session.
 	ALLSKY_NOTIFICATION_LOG="${ALLSKY_TMP}/notification_log.txt"
 

@@ -19,7 +19,7 @@ if [[ ! -d ${ALLSKY_CONFIG} ]]; then
 	MSG="*** ====="
 	MSG+="\nAllsky needs to be installed.  Run:  cd ~/allsky; ./install.sh"
 	MSG+="\n*** ====="
-	echo -e "${RED}${MSG}${NC}" >&2
+	E_ "${MSG}" >&2
 
 	# Can't call addMessage.sh or copyNotificationImage.sh or almost anything
 	# since they use ${ALLSKY_CONIG} and/or ${ALLSKY_TMP} which don't exist yet.
@@ -36,9 +36,9 @@ usage_and_exit()
 	MSG+="\n    '--help' displays this message and the help message from the capture program, then exits."
 	MSG+="\n    '--preview' displays images on your screen as they are taken."
 	if [[ ${RET} -eq 0 ]]; then
-		echo -e "${YELLOW}${MSG}${NC}"
+		W_ "${MSG}" >&2
 	else
-		echo -e "${RED}${MSG}${NC}"
+		E_ "${MSG}" >&2
 		exit "${RET}"
 	fi
 }
@@ -59,7 +59,7 @@ while [[ $# -gt 0 ]]; do
 			PREVIEW="true"
 			;;
 		-*)
-			echo -e "${RED}ERROR: Unknown argument: '${ARG}'${NC}." >&2
+			E_ "ERROR: Unknown argument: '${ARG}'." >&2
 			OK="false"
 			;;
 		*)
@@ -76,7 +76,7 @@ if [[ ${HELP} == "true" ]]; then
 fi
 
 # Make it easy to find the beginning of this run in the log file.
-echo "     ***** Starting AllSky *****"
+echo "     ***** Starting Allsky *****"
 
 # Make sure ${CAMERA_TYPE} is valid; if not, exit with a message.
 verify_CAMERA_TYPE "${CAMERA_TYPE}"
@@ -194,7 +194,7 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 				rm -f "${RESETTING_USB_LOG}"
 
 				MSG="Too many consecutive USB bus resets done (${NUM_USB_RESETS})."
-				echo -e "${RED}*** ${FATAL_MSG} ${MSG} Stopping Allsky.${NC}" >&2
+				E_ "*** ${FATAL_MSG} ${MSG} Stopping Allsky." >&2
 				IMAGE_MSG="${ERROR_MSG_PREFIX}"
 				IMAGE_MSG+="\nToo many consecutive\nUSB bus resets done!\n${SEE_LOG_MSG}"
 				doExit "${EXIT_ERROR_STOP}" "Error" 
@@ -206,7 +206,7 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 
 		MSG="WARNING: Resetting USB ports ${REASON/\\n/ }"
 		if [[ ${ON_TTY} == "true" ]]; then
-			echo "${YELLOW}${MSG}; restart ${ME} when done.${NC}" >&2
+			W_ "${MSG}; restart ${ME} when done." >&2
 		else
 			echo "${MSG}, then restarting." >&2
 			# The service will automatically restart this script.
@@ -274,7 +274,7 @@ fi
 # Make sure the settings file is linked to the camera-specific file.
 if ! MSG="$( check_settings_link "${SETTINGS_FILE}" )" ; then
 	"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --cmd "${MSG}"
-	echo "ERROR: ${MSG}" >&2
+	E_ "ERROR: ${MSG}" >&2
 fi
 
 # Make directories that need to exist.
@@ -310,7 +310,7 @@ fi
 
 # Only pass settings that are used by the capture program.
 if ! ARGS="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --capture-only )" ; then
-	echo "${ME}: ERROR: convertJSON.php returned: ${ARGS}"
+	E_ "${ME}: ERROR: convertJSON.php returned: ${ARGS}"
 	set_allsky_status "${ALLSKY_STATUS_ERROR}"
 	exit "${EXIT_ERROR_STOP}"
 fi
@@ -360,6 +360,8 @@ RETCODE=$?
 if [[ ${RETCODE} -eq ${EXIT_OK} ]]; then
 	[[ ${CAMERA_TYPE} == "ZWO" ]] && rm -f "${RESETTING_USB_LOG}"
 	set_allsky_status "${ALLSKY_STATUS_STOPPED}"
+	# The user probably stopped Allsky, and the WebUI's status will show "Stopped".
+	# In case the user wants to see the last image, do NOT call copyNotificationImage.sh.
 	doExit "${EXIT_OK}" ""
 fi
 
@@ -369,6 +371,9 @@ if [[ ${RETCODE} -eq ${EXIT_RESTARTING} ]]; then
 		NOTIFICATION_TYPE="NotRunning"
 	else
 		NOTIFICATION_TYPE="Restarting"
+	fi
+	if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
+		"${ALLSKY_SCRIPTS}/copyNotificationImage.sh" "${NOTIFICATION_TYPE}"
 	fi
 	set_allsky_status "${ALLSKY_STATUS_RESTARTING}"
 	doExit 0 "${NOTIFICATION_TYPE}"		# use 0 so the service is restarted

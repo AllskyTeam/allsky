@@ -11,6 +11,7 @@ class OVERLAYUTIL
     private $method;
     private $jsonResponse = false;
     private $overlayPath;
+    private $overlayConfigPath;
     private $allskyOverlays;
     private $allskyTmp;
     private $allskyStatus;    
@@ -29,9 +30,10 @@ class OVERLAYUTIL
     public function __construct()
     {
         $this->overlayPath = ALLSKY_OVERLAY;
+        $this->overlayConfigPath = $this->overlayPath . "/config";
         $this->allskyOverlays = MY_OVERLAY_TEMPLATES . '/';
-        $this->allskyTmp = ALLSKY_HOME . '/tmp';
-        $this->allskyStatus = ALLSKY_CONFIG . '/status.json';
+        $this->allskyTmp = ALLSKY_TMP;
+        $this->allskyStatus = ALLSKY_STATUS;
 
         $ccFile = ALLSKY_CONFIG . "/cc.json";
         $ccJson = file_get_contents($ccFile, true);
@@ -141,7 +143,7 @@ class OVERLAYUTIL
 
     public function getConfig()
     {
-        $fileName = $this->overlayPath . '/config/overlay.json';
+        $fileName = $this->overlayConfigPath . '/overlay.json';
         $config = file_get_contents($fileName);
         $this->sendResponse($config);
     }
@@ -154,7 +156,7 @@ class OVERLAYUTIL
         if ($overlayType === 'user') {
             $fileName = $this->allskyOverlays . $overlayName;
         } else {
-            $fileName = $this->overlayPath . '/config/' . $overlayName;
+            $fileName = $this->overlayConfigPath . '/' . $overlayName;
         }
         $config = $_POST['config'];
         $formattedJSON = json_encode(json_decode($config), JSON_PRETTY_PRINT);
@@ -168,7 +170,7 @@ class OVERLAYUTIL
 
     public function getAppConfig($returnResult=false)
     {
-        $fileName = $this->overlayPath . '/config/oe-config.json';
+        $fileName = $this->overlayConfigPath . '/oe-config.json';
         $config = file_get_contents($fileName);
         if ($config === false) {
             $config = '{
@@ -203,7 +205,7 @@ class OVERLAYUTIL
 
     public function postAppConfig()
     {
-        $fileName = $this->overlayPath . '/config/oe-config.json';
+        $fileName = $this->overlayConfigPath . '/oe-config.json';
         $settings = $_POST["settings"];
         $formattedJSON = json_encode(json_decode($settings), JSON_PRETTY_PRINT);
 
@@ -226,11 +228,11 @@ class OVERLAYUTIL
 
     public function getData($returnResult=false)
     {
-        $fileName = $this->overlayPath . '/config/fields.json';
+        $fileName = $this->overlayConfigPath . '/fields.json';
         $fields = file_get_contents($fileName);
         $systemData = json_decode($fields);
 
-        $fileName = $this->overlayPath . '/config/userfields.json';
+        $fileName = $this->overlayConfigPath . '/userfields.json';
         $fields = file_get_contents($fileName);
         $userData = json_decode($fields);
 
@@ -285,7 +287,7 @@ class OVERLAYUTIL
 
     public function postData()
     {
-        $fileName = $this->overlayPath . '/config/userfields.json';
+        $fileName = $this->overlayConfigPath . '/userfields.json';
         $fields = $_POST["data"];
         $fields = json_decode($fields);
 
@@ -315,7 +317,7 @@ class OVERLAYUTIL
 
     public function getOverlayData($returnResult=false) {
         $result = [];
-        $fileName = ALLSKY_HOME . '/tmp/overlaydebug.txt';
+        $fileName = $this->allskyTmp . '/overlaydebug.txt';
 
         if (file_exists($fileName)) {
             $fields = file($fileName);
@@ -362,7 +364,7 @@ class OVERLAYUTIL
 
     public function getAutoExposure()
     {
-        $data = file_get_contents($this->overlayPath . "/config/autoexposure.json");
+        $data = file_get_contents($this->overlayConfigPath . "/autoexposure.json");
         $this->sendResponse($data);
     }
 
@@ -372,7 +374,7 @@ class OVERLAYUTIL
         $data = json_decode($data);
         if ($data !== null) {
             $data = json_encode($data, JSON_PRETTY_PRINT);
-            file_put_contents($this->overlayPath . "/config/autoexposure.json", $data);
+            file_put_contents($this->overlayConfigPath . "/autoexposure.json", $data);
             $data = json_decode($data);
 
             $image = imagecreate($data->stagewidth, $data->stageheight);
@@ -390,7 +392,7 @@ class OVERLAYUTIL
     }
 
     private function processDebugData() {
-        $file = ALLSKY_HOME . "/tmp/overlaydebug.txt";
+        $file = $this->allskyTmp . "/overlaydebug.txt";
 
         $exampleData = array();
         if (is_readable($file)) {
@@ -525,7 +527,7 @@ class OVERLAYUTIL
                                 $key = str_replace($validExtenstions, "", $key);
                                 $key = str_replace(".", "", $key);
 
-                               /* $configFileName = $this->overlayPath . '/config/overlay.json';
+                               /* $configFileName = $this->overlayConfigPath . '/overlay.json';
                                 $config = file_get_contents($configFileName);
                                 $config = json_decode($config);
 
@@ -655,7 +657,7 @@ class OVERLAYUTIL
 
     public function getFormats()
     {
-        $data = file_get_contents($this->overlayPath . "/config/formats.json");
+        $data = file_get_contents($this->overlayConfigPath . "/formats.json");
         $this->sendResponse($data);
     }
 
@@ -673,7 +675,7 @@ class OVERLAYUTIL
         }
 
         $template = null;
-        $fileName = $this->overlayPath . '/config/' . $overlayFilename;
+        $fileName = $this->overlayConfigPath . '/' . $overlayFilename;
         if (file_exists($fileName)) {
             $template = file_get_contents($fileName);
         } else {
@@ -703,7 +705,7 @@ class OVERLAYUTIL
         if ($overlayName === null) {
             $overlayName = $_GET['overlay'];
         }
-        $fileName = $this->overlayPath . '/config/' . $overlayName;
+        $fileName = $this->overlayConfigPath . '/' . $overlayName;
 
         $overlay = null;
         if (file_exists($fileName)) {
@@ -752,7 +754,7 @@ class OVERLAYUTIL
             $overlayData['current'] = $overlayData['config']['nighttime'];
         }
 
-        $defaultDir = $this->overlayPath . '/config/';
+        $defaultDir = $this->overlayConfigPath . '/';
         $entries = scandir($defaultDir);
         foreach ($entries as $entry) {
             if ($entry !== '.' && $entry !== '..') {
@@ -960,7 +962,7 @@ class OVERLAYUTIL
         
         $overlays = [];
 
-        $defaultDir = $this->overlayPath . '/config/';
+        $defaultDir = $this->overlayConfigPath . '/';
         $entries = scandir($defaultDir);
         foreach ($entries as $entry) {
             if ($entry !== '.' && $entry !== '..') {

@@ -165,7 +165,7 @@ if ! mv -f "${CURRENT_IMAGE}" "${FINAL_IMAGE}" ; then
 	if [[ -f ${CURRENT_IMAGE} ]]; then
 		MSG+="\nCannot mv '${CURRENT_IMAGE}' to '${FINAL_IMAGE}'"
 	else
-		MSG+= "\n'${CURRENT_IMAGE}' does not exist!"
+		MSG+="\n'${CURRENT_IMAGE}' does not exist!"
 	fi
 	E_ "${MSG}"
 	exit 4

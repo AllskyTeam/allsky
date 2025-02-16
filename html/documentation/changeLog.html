@@ -45,23 +45,26 @@
 			<details sub open> <summary></summary>
 				<h4>Enhancements / Changes</h4>
 				<ul>
-					<li>If you want to see what impact changing the Timelapse
-						<span class="WebUISetting">FPS</span> and/or
-						<span class="WebUISetting">Bitrate</span> settings have, run
-						the new <code>allsky-config &nbsp;config_timelapse</code> command.
-						<br>
-						You can enter multiple FPS and/or bitrates and timelapse
-						videos will be created for all combinations.
-						<br>
-						For more help, enter
-						<code>allsky-config &nbsp;config_timelapse --help</code>.
 					<li>If you are seeing a "Multiple consecutive bad images"
 						message in the WebUI, run
 						the new <code>allsky-config &nbsp;bad_image_info</code> command.
 						It will suggest how to fix the problem.
 					<li>The <code>allsky-config &nbsp;move_images</code> command
 						is more robust and allows you to move the images back to
-						the <span class="fileName">~/allsky/images</span> folder.
+						the <span class="fileName">~/allsky/images</span> folder if desired.
+					<li>You can now have custom "notification images" like
+						"Allsky is starting up".
+						To do so, create a
+						<span class="fileName">~/allsky/config/myFiles/notificationImages</span>
+						directory, then put your custom images there using the exact same names
+						as the Allsky files in 
+						<span class="fileName">~/allsky/notificationImages</span>.
+				</ul>
+
+				<h4>Bug Fixes</h4>
+				<ul>
+					<li><code>removeBadImages.sh</code> now works with mean values
+						that have a comma in them.
 				</ul>
 
 				<h4>New Settings</h4>
@@ -72,11 +75,6 @@
 				<ul>
 					<li><span class="WebUISetting">None</span>
 				</ul>
-
-				<h4>Bug Fixes</h4>
-				<ul>
-					<li><code>removeBadImages.sh</code> now works with mean values
-						that have a comma in them.
 			</details>
 
 
@@ -1334,4 +1332,3 @@
 
 </html>
 <script> includeHTML(); </script>
-

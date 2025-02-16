@@ -3505,7 +3505,7 @@ display_image()
 
 		MSG="Displaying custom notification image: $( echo -e "${CUSTOM_MESSAGE}" | tr '\n' ' ' )"
 		display_msg --logonly info "${MSG}"
-		MSG="$( "${ALLSKY_SCRIPTS}/generate_notification_images.sh" \
+		MSG="$( "${ALLSKY_SCRIPTS}/generateNotificationImages.sh" \
 			--directory "${ALLSKY_TMP}" \
 			"${FILENAME}" "${COLOR}" "" "" "" "" \
 			"" "10" "${COLOR}" "${EXTENSION}" "" "${CUSTOM_MESSAGE}"  2>&1 >/dev/null )"

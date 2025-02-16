@@ -21,7 +21,7 @@ if [[ ! -d ${ALLSKY_CONFIG} ]]; then
 	MSG+="\n*** ====="
 	echo -e "${RED}${MSG}${NC}" >&2
 
-	# Can't call addMessage.sh or copy_notification_image.sh or almost anything
+	# Can't call addMessage.sh or copyNotificationImage.sh or almost anything
 	# since they use ${ALLSKY_CONIG} and/or ${ALLSKY_TMP} which don't exist yet.
 	set_allsky_status "${ALLSKY_STATUS_NEVER_RUN}"
 	doExit "${EXIT_ERROR_STOP}" "no-image" "" ""
@@ -216,7 +216,7 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 		echo "${NUM_USB_RESETS}" > "${RESETTING_USB_LOG}"
 
 		# Display a warning message
-		"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" \
+		"${ALLSKY_SCRIPTS}/generateNotificationImages.sh" --directory "${ALLSKY_TMP}" \
 			"${FILENAME}" "yellow" "" "85" "" "" \
 			"" "5" "yellow" "${EXTENSION}" "" \
 			"WARNING:\n\nResetting USB bus\n${REASON}.\nAttempt ${NUM_USB_RESETS}."
@@ -305,7 +305,7 @@ rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 # Optionally display a notification image.
 if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
 	# Can do this in the background to speed up startup.
-	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 0 "StartingUp" 2>&1 &
+	"${ALLSKY_SCRIPTS}/copyNotificationImage.sh" --expires 0 "StartingUp" 2>&1 &
 fi
 
 # Only pass settings that are used by the capture program.
@@ -384,7 +384,7 @@ if [[ ${RETCODE} -eq ${EXIT_RESET_USB} ]]; then
 		NOTIFICATION_TYPE="Restarting"
 	fi
 	if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
-		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "${NOTIFICATION_TYPE}"
+		"${ALLSKY_SCRIPTS}/copyNotificationImage.sh" "${NOTIFICATION_TYPE}"
 	fi
 	set_allsky_status "${ALLSKY_STATUS_ERROR}"
 	doExit 0 ""		# use 0 so the service is restarted

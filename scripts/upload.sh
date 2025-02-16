@@ -350,7 +350,7 @@ else # sftp/ftp/ftps
 		if [[ -n ${LFTP_COMMANDS} ]]; then
 			echo "${LFTP_COMMANDS}"
 			if [[ ${DEBUG} == "true" ]]; then
-				echo "echo '${LFTP_COMMANDS}'	# From FTP Commands"
+				echo "echo '${LFTP_COMMANDS}    # From FTP Commands'"
 			fi
 		fi
 

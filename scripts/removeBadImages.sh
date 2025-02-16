@@ -112,7 +112,7 @@ BAD_LIMIT=5
 
 set +a		# turn off auto-export since ${IMAGE_FILES} might be huge and produce errors
 
-cd "${DIRECTORY}" || exit 99
+cd "${DIRECTORY}" || exit "${EXIT_ERROR_STOP}"
 
 # If the LOW threshold is 0 or < 0 it's disabled.
 # If the HIGH threshold is 0 or 1.0 (nothing can be brighter than 1.0) it's disabled.
@@ -268,20 +268,18 @@ else
 			DIR="$( dirname "${ALLSKY_BAD_IMAGE_COUNT}" )"
 			FILE="$( basename "${ALLSKY_BAD_IMAGE_COUNT}" )"
 
-			"${ALLSKY_SCRIPTS}/generate_notification_images.sh" \
+			"${ALLSKY_SCRIPTS}/generateNotificationImages.sh" \
 				--directory "${ALLSKY_TMP}" \
 				"${FILENAME}" "yellow" "" "85" "" "" \
 	 			"" "5" "yellow" "${EXTENSION}" "" \
 				"WARNING:\n${BAD_COUNT} consecutive\nbad images. See:\n${DIR}/\n  ${FILE}" >&2
-
 		fi
-
 	fi
 fi
 
 if [[ ${num_bad} -eq 0 ]]; then
 	exit 0
 else
-	exit 99		# "99" means we deleted at least one file.
+	exit "${EXIT_PARTIAL_OK}"		# partially ok because we deleted at least one file.
 fi
 

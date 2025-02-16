@@ -61,6 +61,7 @@ done
 
 NOTIFICATION_TYPE="${1}"	# filename, minus the extension, since the extension may vary
 [[ -z ${NOTIFICATION_TYPE} ]] && usage_and_exit 1
+NOTIFICATION_NAME="${NOTIFICATION_TYPE}.${EXTENSION}"
 
 NUM_ARGS=12
 if [[ ${NOTIFICATION_TYPE} == "custom" ]]; then
@@ -77,9 +78,13 @@ if [[ ${NOTIFICATION_TYPE} == "custom" ]]; then
 			"${7}" "${8}" "${9}" "${10:-${EXTENSION}}" "${11}" "${12}" ; then
 		exit 2			# it output error messages
 	fi
-	NOTIFICATION_FILE="${CAPTURE_SAVE_DIR}/${NOTIFICATION_TYPE}.${EXTENSION}"
+	NOTIFICATION_FILE="${CAPTURE_SAVE_DIR}/${NOTIFICATION_NAME}"
 else
-	NOTIFICATION_FILE="${ALLSKY_NOTIFICATION_IMAGES}/${NOTIFICATION_TYPE}.${EXTENSION}"
+	# Check if the user has a custom image.
+	NOTIFICATION_FILE="${USER_NOTIFICATION_IMAGES}/${NOTIFICATION_NAME}"
+	if [[ ! -e ${NOTIFICATION_FILE} ]]; then
+		NOTIFICATION_FILE="${ALLSKY_NOTIFICATION_IMAGES}/${NOTIFICATION_NAME}"
+	fi
 	if [[ ! -e ${NOTIFICATION_FILE} ]]; then
 		# TODO: Create a custom image?
 		E_ "${ME}: ERROR: File '${NOTIFICATION_FILE}' does not exist!" >&2

@@ -727,7 +727,7 @@ function checkAndGetNewerFile()
 	fi
 
 	local CURRENT_FILE="${1}"
-	local GIT_FILE="${GITHUB_RAW_ROOT}/allsky/${BRANCH}/${2}"
+	local GIT_FILE="${GITHUB_RAW_ROOT}/${GITHUB_ALLSKY_PACKAGE}/${BRANCH}/${2}"
 	local DOWNLOADED_FILE="${3}"
 	# Download the file and put in DOWNLOADED_FILE
 	X="$( curl --show-error --silent "${GIT_FILE}" )"

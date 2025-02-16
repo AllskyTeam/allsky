@@ -3,12 +3,6 @@
 # Shell functions used by multiple scripts.
 # This file is "source"d into others, and must be done AFTER source'ing variables.sh.
 
-SUDO_OK="${SUDO_OK:-false}"
-if [[ ${SUDO_OK} == "false" && ${EUID} -eq 0 ]]; then
-	echo -e "\n${RED}${ME}: This script must NOT be run as root, do NOT use 'sudo'.${NC}\n" >&2
-	exit 1
-fi
-
 # Globals
 ZWO_VENDOR="03c3"
 # shellcheck disable=SC2034
@@ -61,6 +55,12 @@ function dE_() { echo "${DIALOG_ERROR}${1}${DIALOG_NC}" ; }
 function dD_() { echo "${DIALOG_DEBUG}DEBUG: ${1}${DIALOG_NC}" ; }
 function dU_() { echo "${DIALOG_UNDERLINE}${1}${DIALOG_NC}" ; }
 function dB_() { echo "${DIALOG_BOLD}${1}${DIALOG_NC}" ; }
+
+SUDO_OK="${SUDO_OK:-false}"
+if [[ ${SUDO_OK} == "false" && ${EUID} -eq 0 ]]; then
+	E_ "\n${ME}: This script must NOT be run as root, do NOT use 'sudo'.\n" >&2
+	exit 1
+fi
 
 
 ##### Start and Stop Allsky
@@ -123,18 +123,19 @@ function doExit()
 			# Create a custom error message.
 			# If we error out before variables.sh is sourced in,
 			# ${FILENAME} and ${EXTENSION} won't be set so guess at what they are.
-			"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" \
+			"${ALLSKY_SCRIPTS}/generateNotificationImages.sh" --directory "${ALLSKY_TMP}" \
 				"${FILENAME:-"image"}" \
 				"${COLOR}" "" "85" "" "" \
 				"" "10" "${COLOR}" "${EXTENSION:-"jpg"}" "" "${CUSTOM_MESSAGE}"
 			echo "Stopping Allsky: ${CUSTOM_MESSAGE}"
+
 		elif [[ ${TYPE} != "no-image" ]]; then
 			[[ ${OUTPUT_A_MSG} == "false" && ${TYPE} == "RebootNeeded" ]] && echo "Reboot needed"
-			"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 0 "${TYPE}" 2>&1
+			"${ALLSKY_SCRIPTS}/copyNotificationImage.sh" --expires 0 "${TYPE}" 2>&1
 		fi
 	fi
 
-	echo "     ***** AllSky Stopped *****" >&2
+	echo "     ***** Allsky Stopped *****" >&2
 
 	# Don't let the service restart us because we'll likely get the same error again.
 	# Stop here so the message above is output first.
@@ -175,7 +176,7 @@ function verify_CAMERA_TYPE()
 	fi
 
 	if [[ ${OK} == "false" ]]; then
-		echo -e "${RED}${FATAL_MSG} ${MSG}${NC}" >&2
+		E_ "${FATAL_MSG} ${MSG}" >&2
 
 		if [[ ${IGNORE_ERRORS} != "true" ]]; then
 			doExit "${EXIT_NO_CAMERA}" "Error" "${IMAGE_MSG}" "${MSG}"
@@ -446,7 +447,7 @@ function validate_camera()
 	local CM="${2}"		# Camera model
 	local CN="${3}"		# Camera number
 	if [[ $# -lt 3 ]]; then
-		echo -e "\n${RED}Usage: ${FUNCNAME[0]} camera_type camera_model camera_number${NC}\n" >&2
+		E_ "\nUsage: ${FUNCNAME[0]} camera_type camera_model camera_number\n" >&2
 		return 2
 	fi
 	local IGNORE_ERRORS="${4:-false}"	# True if just checking
@@ -466,7 +467,7 @@ function validate_camera()
 		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
 		MSG+=" change the 'Camera Type' to 'Refresh' then save the settings."
 		if [[ ${ON_TTY} == "true" ]]; then
-			echo -e "\n${RED}${MSG}${NC}\n"
+			E_ "\n${MSG}\n"
 		else
 			URL="/index.php?page=configuration"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${MSG}" --url "${URL}"
@@ -477,7 +478,7 @@ function validate_camera()
 		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
 		MSG+=" change the 'Camera Model' to '${CM}' then save the settings."
 		if [[ ${ON_TTY} == "true" ]]; then
-			echo -e "\n${RED}${MSG}${NC}\n"
+			E_ "\n${MSG}\n"
 		else
 			URL="/index.php?page=configuration"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${MSG}" --url "${URL}"
@@ -488,7 +489,7 @@ function validate_camera()
 		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
 		MSG+=" change the 'Camera Type' to 'Refresh' then save the settings."
 		if [[ ${ON_TTY} == "true" ]]; then
-			echo -e "\n${RED}${MSG}${NC}\n"
+			E_ "\n${MSG}\n"
 		else
 			URL="/index.php?page=configuration"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${MSG}" --url "${URL}"
@@ -509,7 +510,7 @@ function validate_camera()
 
 		MSG="${CT} camera '${CM}' is not supported by Allsky."
 		if [[ ${ON_TTY} == "true" ]]; then
-			echo -e "\n${RED}${MSG}${NC}\n"
+			E_ "\n${MSG}\n"
 		else
 			MSG+="\n\nClick this message to ask that Allsky support this camera."
 			URL="/documentation/explanations/requestCameraSupport.html";
@@ -1108,7 +1109,7 @@ function one_instance()
 	# CAUSED_BY and PID aren't required
 
 	if [[ ${OK} == "false" ]]; then
-		echo -e "${RED}${ME}: ERROR: ${ERRORS}.${NC}" >&2
+		E_ "${ME}: ERROR: ${ERRORS}." >&2
 		return 1
 	fi
 
@@ -1132,16 +1133,15 @@ function one_instance()
 		# that means another process grabbed the lock.
 		# Since there may be several processes waiting, exit.
 		if [[ ${NUM_CHECKS} -eq ${MAX_CHECKS} || ${CURRENT_PID} -ne ${INITIAL_PID} ]]; then
-			echo -en "${YELLOW}" >&2
-			echo -e  "${ABORTED_MSG1}" >&2
+			local MSG="${ABORTED_MSG1}"
 			if [[ ${CURRENT_PID} -ne ${INITIAL_PID} ]]; then
-				echo -n  "Another process (PID=${CURRENT_PID}) got the lock." >&2
+				MSG+="Another process (PID=${CURRENT_PID}) got the lock."
 			else
-				echo -n  "Made ${NUM_CHECKS} attempts at waiting." >&2
-				echo -n  " Process ${CURRENT_PID} still has lock." >&2
+				MSG+="Made ${NUM_CHECKS} attempts at waiting."
+				MSG+=" Process ${CURRENT_PID} still has lock."
 			fi
-			echo -n  " If this happens often, check your settings. PID=${PID}" >&2
-			echo -e  "${NC}" >&2
+			MSG+=" If this happens often, check your settings. PID=${PID}"
+			E_ "${MSG}"
 			ps -fp "${CURRENT_PID}" >&2
 
 			# Keep track of aborts so user can be notified.

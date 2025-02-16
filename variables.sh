@@ -119,8 +119,14 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	# Holds all the images on a per-day basis.
 	ALLSKY_IMAGES="${ALLSKY_HOME}/images"
 
+	# Areas for users' Allsky-related files that get propogated to new releases.
+	ALLSKY_MYFILES_NAME="myFiles"
+	ALLSKY_MYFILES_DIR="${ALLSKY_CONFIG}/${ALLSKY_MYFILES_NAME}"
+	ALLSKY_WEBSITE_MYFILES_DIR="${ALLSKY_WEBSITE}/${ALLSKY_MYFILES_NAME}"
+
 	# Holds all the notification images.
-	ALLSKY_NOTIFICATION_IMAGES="${ALLSKY_HOME}/notification_images"
+	ALLSKY_NOTIFICATION_IMAGES="${ALLSKY_HOME}/notificationImages"
+	USER_NOTIFICATION_IMAGES="${ALLSKY_MYFILES_DIR}/notificationImages"
 	# Holds log of notifications displayed during this session.
 	ALLSKY_NOTIFICATION_LOG="${ALLSKY_TMP}/notification_log.txt"
 
@@ -185,11 +191,6 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_WEBSITE_CONFIGURATION_FILE="${ALLSKY_WEBSITE}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 	ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME="remote_${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 	ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE="${ALLSKY_CONFIG}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
-
-	# Areas for users' Allsky-related files that get propogated to new releases.
-	ALLSKY_MYFILES_NAME="myFiles"
-	ALLSKY_MYFILES_DIR="${ALLSKY_CONFIG}/${ALLSKY_MYFILES_NAME}"
-	ALLSKY_WEBSITE_MYFILES_DIR="${ALLSKY_WEBSITE}/${ALLSKY_MYFILES_NAME}"
 
 	# Holds all the Allsky documentation.
 	ALLSKY_DOCUMENTATION="${ALLSKY_WEBUI}/documentation"

@@ -11,16 +11,19 @@ source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 
 function usage_and_exit
 {
-	RET=${1}
-	(
-		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-		echo -e "\nUsage: ${ME} [--help] [--expires seconds] notification_type [custom_args]\n"
-		echo "'--expires seconds' specifies how many seconds before the notification expires."
-		echo "If 'notification_type' is 'custom' then a custom message is created and"
-		echo "'custeom_args' must be given to specify arguments for the message:"
-		echo "  TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderWidth BorderColor Extensions ImageSize 'Message'"
-		[[ ${RET} -ne 0 ]] && echo -e "${NC}"
-	) >&2
+	local RET=${1}
+	exec >&2
+	local MSG="\nUsage: ${ME} [--help] [--expires seconds] notification_type [custom_args]\n"
+	if [[ ${RET} -ne 0 ]]; then
+		E_ "${MSG}"
+	else
+		echo -e "${MSG}"
+	fi
+	echo "where:"
+	echo "  '--expires seconds' specifies how many seconds before the notification expires."
+	echo "  If 'notification_type' is 'custom' then a custom message is created and"
+	echo "  'custeom_args' must be given to specify arguments for the message:"
+	echo "      TextColor Font FontSize StrokeColor StrokeWidth BgColor BorderWidth BorderColor Extensions ImageSize 'Message'"
 	exit "${RET}"
 }
 
@@ -42,7 +45,7 @@ while [[ $# -gt 0 ]]; do
 				shift 
 				;;
 			-*)
-				echo -e "${RED}${ME}: Unknown argument '${ARG}' ignoring.${NC}" >&2
+				E_ "Unknown argument '${ARG}'." >&2
 				OK="false"
 				;;
 			*)
@@ -58,28 +61,33 @@ done
 
 NOTIFICATION_TYPE="${1}"	# filename, minus the extension, since the extension may vary
 [[ -z ${NOTIFICATION_TYPE} ]] && usage_and_exit 1
+NOTIFICATION_NAME="${NOTIFICATION_TYPE}.${EXTENSION}"
 
 NUM_ARGS=12
 if [[ ${NOTIFICATION_TYPE} == "custom" ]]; then
 	if [[ $# -ne ${NUM_ARGS} ]]; then
-		echo -e "${RED}'custom' notification type requires ${NUM_ARGS} arguments.${NC}" >&2
+		E_ "'custom' notification_type requires ${NUM_ARGS} arguments." >&2
 		usage_and_exit 1
 	fi
 
 	# Create a custom message.
 	# Extensions ($10) will normally be null since the invoker may not know what to use.
-	if ! "${ALLSKY_SCRIPTS}/generate_notification_images.sh" \
+	if ! "${ALLSKY_SCRIPTS}/generateNotificationImages.sh" \
 			--directory "${CAPTURE_SAVE_DIR}" "${NOTIFICATION_TYPE}" \
 			"${2}" "${3}" "${4}" "${5}" "${6}" \
 			"${7}" "${8}" "${9}" "${10:-${EXTENSION}}" "${11}" "${12}" ; then
 		exit 2			# it output error messages
 	fi
-	NOTIFICATION_FILE="${CAPTURE_SAVE_DIR}/${NOTIFICATION_TYPE}.${EXTENSION}"
+	NOTIFICATION_FILE="${CAPTURE_SAVE_DIR}/${NOTIFICATION_NAME}"
 else
-	NOTIFICATION_FILE="${ALLSKY_NOTIFICATION_IMAGES}/${NOTIFICATION_TYPE}.${EXTENSION}"
+	# Check if the user has a custom image.
+	NOTIFICATION_FILE="${USER_NOTIFICATION_IMAGES}/${NOTIFICATION_NAME}"
+	if [[ ! -e ${NOTIFICATION_FILE} ]]; then
+		NOTIFICATION_FILE="${ALLSKY_NOTIFICATION_IMAGES}/${NOTIFICATION_NAME}"
+	fi
 	if [[ ! -e ${NOTIFICATION_FILE} ]]; then
 		# TODO: Create a custom image?
-		echo -e "${RED}*** ${ME}: ERROR: File '${NOTIFICATION_FILE}' does not exist!${NC}" >&2
+		E_ "${ME}: ERROR: File '${NOTIFICATION_FILE}' does not exist!" >&2
 		exit 2
 	fi
 fi
@@ -112,7 +120,7 @@ else
 	# Don't overwrite notification images so create a temporary copy and use that.
 	CURRENT_IMAGE="${CAPTURE_SAVE_DIR}/notification-${FULL_FILENAME}"
 	if ! cp "${NOTIFICATION_FILE}" "${CURRENT_IMAGE}" ; then
-		echo -e "${RED}*** ${ME}: ERROR: Cannot copy '${NOTIFICATION_FILE}' to '${CURRENT_IMAGE}'${NC}"
+		E_ "*** ${ME}: ERROR: Cannot copy '${NOTIFICATION_FILE}' to '${CURRENT_IMAGE}'."
 		exit 3
 	fi
 fi
@@ -122,7 +130,7 @@ RESIZE_W="$( settings ".imageresizewidth" )"
 if [[ ${RESIZE_W} -gt 0 ]]; then
 	RESIZE_H="$( settings ".imageresizeheight" )"
 	if ! convert "${CURRENT_IMAGE}" -resize "${RESIZE_W}x${RESIZE_H}" "${CURRENT_IMAGE}" ; then
-		echo -e "${RED}*** ${ME}: ERROR: IMG_RESIZE failed${NC}"
+		E_ "*** ${ME}: ERROR: IMG_RESIZE failed."
 		exit 3
 	fi
 fi
@@ -148,7 +156,7 @@ if [[ $( settings ".takedaytimeimages" ) == "true" && \
 		X="$( settings ".thumbnailsizex" )"
 		Y="$( settings ".thumbnailsizey" )"
 		if ! convert "${CURRENT_IMAGE}" -resize "${X}x${Y}" "${THUMB}" ; then
-			echo -e "${YELLOW}*** ${ME}: WARNING: THUMBNAIL resize failed; continuing.${NC}"
+			W_ "*** ${ME}: WARNING: THUMBNAIL resize failed; continuing."
 		fi
 	fi
 fi
@@ -158,13 +166,13 @@ fi
 # The "mv" may be a rename or an actual move.
 FINAL_IMAGE="${CAPTURE_SAVE_DIR}/${FULL_FILENAME}"
 if ! mv -f "${CURRENT_IMAGE}" "${FINAL_IMAGE}" ; then
-	echo -e "${RED}*** ${ME}: ERROR: "
+	MSG="*** ${ME}: ERROR: "
 	if [[ -f ${CURRENT_IMAGE} ]]; then
-		echo "Cannot mv '${CURRENT_IMAGE}' to '${FINAL_IMAGE}'"
+		MSG+="\nCannot mv '${CURRENT_IMAGE}' to '${FINAL_IMAGE}'"
 	else
-		echo "'${CURRENT_IMAGE}' does not exist!"
+		MSG+="\n'${CURRENT_IMAGE}' does not exist!"
 	fi
-	echo -e "${NC}"
+	E_ "${MSG}"
 	exit 4
 fi
 
@@ -176,43 +184,43 @@ echo "${NOTIFICATION_TYPE},${EXPIRES_IN_SECONDS},${EXPIRE_TIME}" >> "${ALLSKY_NO
 touch --date="${EXPIRE_TIME}" "${ALLSKY_NOTIFICATION_LOG}"
 
 # If upload is true, optionally create a smaller version of the image, either way, upload it.
-if [[ $( settings ".imageuploadfrequency" ) -gt 0 ]]; then
-	RESIZE_UPLOADS_WIDTH="$( settings ".imageresizeuploadswidth" )"
-	if [[ ${RESIZE_UPLOADS_WIDTH} == "true" ]]; then
-		RESIZE_UPLOADS_HEIGHT="$( settings ".imageresizeuploadsheight" )"
-		# Don't overwrite FINAL_IMAGE since the web server(s) may be looking at it.
-		TEMP_FILE="${CAPTURE_SAVE_DIR}/resize-${FULL_FILENAME}"
-
-		# create temporary copy to resize
-		if ! cp "${FINAL_IMAGE}" "${TEMP_FILE}" ; then
-			echo -e "${RED}*** ${ME}: ERROR: Cannot copy to TEMP_FILE: '${FINAL_IMAGE}' to '${TEMP_FILE}'${NC}"
-			exit 5
-		fi
-		if ! convert "${TEMP_FILE}" \
-				-resize "${RESIZE_UPLOADS_WIDTH}x${RESIZE_UPLOADS_HEIGHT}" \
-				-gravity East \
-				-chop 2x0 "${TEMP_FILE}" ; then
-			echo -e "${RED}*** ${ME}: ERROR: Unable to resize '${TEMP_FILE}' - file left for debugging.${NC}"
-			exit 6
-		fi
-		UPLOAD_FILE="${TEMP_FILE}"
-	else
-		UPLOAD_FILE="${FINAL_IMAGE}"
-		TEMP_FILE=""
-	fi
-
-	# We're actually uploading ${UPLOAD_FILE}, but show ${NOTIFICATION_FILE} in the message since it's more descriptive.
-	# If an existing notification is being uploaded, wait for it to finish then upload this one.
-	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
-		echo -e "${ME}: Uploading $( basename "${NOTIFICATION_FILE}" )"
-	fi
-	upload_all --local-web --remote-web --wait --silent "${UPLOAD_FILE}" "" "${FULL_FILENAME}" "NotificationImage"
-	RET=$?
-
-	# If we created a temporary copy, delete it.
-	[[ ${TEMP_FILE} != "" ]] && rm -f "${TEMP_FILE}"
-
-	exit "${RET}"
+if [[ $( settings ".imageuploadfrequency" ) -eq 0 ]]; then
+	exit 0
 fi
 
-exit 0
+RESIZE_UPLOADS_WIDTH="$( settings ".imageresizeuploadswidth" )"
+if [[ ${RESIZE_UPLOADS_WIDTH} == "true" ]]; then
+	RESIZE_UPLOADS_HEIGHT="$( settings ".imageresizeuploadsheight" )"
+	# Don't overwrite FINAL_IMAGE since the web server(s) may be looking at it.
+	TEMP_FILE="${CAPTURE_SAVE_DIR}/resize-${FULL_FILENAME}"
+
+	# create temporary copy to resize
+	if ! cp "${FINAL_IMAGE}" "${TEMP_FILE}" ; then
+		E_ "*** ${ME}: ERROR: Cannot copy to TEMP_FILE: '${FINAL_IMAGE}' to '${TEMP_FILE}'."
+		exit 5
+	fi
+	if ! convert "${TEMP_FILE}" \
+			-resize "${RESIZE_UPLOADS_WIDTH}x${RESIZE_UPLOADS_HEIGHT}" \
+			-gravity East \
+			-chop 2x0 "${TEMP_FILE}" ; then
+		E_ "*** ${ME}: ERROR: Unable to resize '${TEMP_FILE}' - file left for debugging."
+		exit 6
+	fi
+	UPLOAD_FILE="${TEMP_FILE}"
+else
+	UPLOAD_FILE="${FINAL_IMAGE}"
+	TEMP_FILE=""
+fi
+
+# We're actually uploading ${UPLOAD_FILE}, but show ${NOTIFICATION_FILE} in the message since it's more descriptive.
+# If an existing notification is being uploaded, wait for it to finish then upload this one.
+if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
+	echo -e "${ME}: Uploading $( basename "${NOTIFICATION_FILE}" )"
+fi
+upload_all --local-web --remote-web --wait --silent "${UPLOAD_FILE}" "" "${FULL_FILENAME}" "NotificationImage"
+RET=$?
+
+# If we created a temporary copy, delete it.
+[[ ${TEMP_FILE} != "" ]] && rm -f "${TEMP_FILE}"
+
+exit "${RET}"

@@ -68,7 +68,7 @@ if [[ ${NOTIFICATION_TYPE} == "custom" ]]; then
 
 	# Create a custom message.
 	# Extensions ($10) will normally be null since the invoker may not know what to use.
-	if ! "${ALLSKY_SCRIPTS}/generate_notification_images.sh" \
+	if ! "${ALLSKY_SCRIPTS}/generateNotificationImages.sh" \
 			--directory "${CAPTURE_SAVE_DIR}" "${NOTIFICATION_TYPE}" \
 			"${2}" "${3}" "${4}" "${5}" "${6}" \
 			"${7}" "${8}" "${9}" "${10:-${EXTENSION}}" "${11}" "${12}" ; then

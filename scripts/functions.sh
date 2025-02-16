@@ -128,13 +128,14 @@ function doExit()
 				"${COLOR}" "" "85" "" "" \
 				"" "10" "${COLOR}" "${EXTENSION:-"jpg"}" "" "${CUSTOM_MESSAGE}"
 			echo "Stopping Allsky: ${CUSTOM_MESSAGE}"
+
 		elif [[ ${TYPE} != "no-image" ]]; then
 			[[ ${OUTPUT_A_MSG} == "false" && ${TYPE} == "RebootNeeded" ]] && echo "Reboot needed"
 			"${ALLSKY_SCRIPTS}/copyNotificationImage.sh" --expires 0 "${TYPE}" 2>&1
 		fi
 	fi
 
-	echo "     ***** AllSky Stopped *****" >&2
+	echo "     ***** Allsky Stopped *****" >&2
 
 	# Don't let the service restart us because we'll likely get the same error again.
 	# Stop here so the message above is output first.

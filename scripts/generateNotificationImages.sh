@@ -23,21 +23,23 @@ DEFAULT_IMAGE_SIZE="959x719"
 function usage_and_exit()
 {
 	local RET=${1}
-	{
-		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-		echo -e "\nUsage: ${ME} [--help] [--directory dir] [--size XxY]"
-		echo -e "    [type TextColor Font FontSize StrokeColor StrokeWidth BgColor"
-		echo -e "     BorderWidth BorderColor Extensions ImageSize Message]\n"
-		[[ ${RET} -ne 0 ]] && echo -en "${NC}"
-		echo -n "When run with no arguments, all notification types are created with extensions:"
-		echo    "  ${ALL_EXTS/ /, }."
-		echo    "Arguments:"
-		echo    "  '--help' displays this message and exits."
-		echo    "  '--directory dir' creates the file(s) in that directory, otherwise in \${PWD}."
-		echo -n "  '--size XxY' creates images that are X by Y pixels."
-		echo    "  Default: ${DEFAULT_IMAGE_SIZE} pixels."
-		echo
-	} >&2
+	exec >&2
+	local MSG="\nUsage: ${ME} [--help] [--directory dir] [--size XxY]"
+	MSG+="\n    [type TextColor Font FontSize StrokeColor StrokeWidth BgColor"
+	MSG+="\n     BorderWidth BorderColor Extensions ImageSize Message]\n"
+	if [[ ${RET} -ne 0 ]]; then
+		E_ "${MSG}"
+	else
+		echo -e "${MSG}"
+	fi
+	echo -n "When run with no arguments, all notification types are created with extensions:"
+	echo    "  ${ALL_EXTS/ /, }."
+	echo    "Arguments:"
+	echo    "  '--help' displays this message and exits."
+	echo    "  '--directory dir' creates the file(s) in that directory, otherwise in \${PWD}."
+	echo -n "  '--size XxY' creates images that are X by Y pixels."
+	echo    "  Default: ${DEFAULT_IMAGE_SIZE} pixels."
+	echo
 	exit "${RET}"
 }
 
@@ -55,7 +57,7 @@ while [[ $# -gt 0 ]]; do
 		--directory)
 			DIRECTORY="${2}"
 			if [[ ! -d ${DIRECTORY} ]]; then
-				echo -e "\n${RED}*** ${ME} ERROR: Directory '${DIRECTORY}' not found!\n${NC}" >&2
+				E_ "\nERROR: Directory '${DIRECTORY}' not found!\n" >&2
 				OK="false"
 			fi
 			shift
@@ -70,7 +72,7 @@ while [[ $# -gt 0 ]]; do
 			shift
 			;;
 		-*)
-			echo "${RED}${ME}: ERROR: Unknown argument: '${ARG}'${NC}." >&2
+			E_ "ERROR: Unknown argument: '${ARG}'." >&2
 			OK="false"
 			;;
 		*)
@@ -86,9 +88,7 @@ MAX_ARGS=12
 
 if [[ $# -ne 0 && $# -ne ${MAX_ARGS} ]]; then
 	{
-		echo -e "${RED}"
-		echo    "${ME}: ERROR: Either specify ALL ${MAX_ARGS} arguments, or don't specify any."
-		echo -e "${NC}"
+		E_ "ERROR: Either specify ALL ${MAX_ARGS} arguments, or don't specify any."
 		echo "You specified $# arguments."
 	} >&2
 	usage_and_exit 1
@@ -98,11 +98,11 @@ declare LAST_ARG="${MAX_ARGS}"
 if [[ $# -eq ${MAX_ARGS} ]]; then
 	OK="true"
 	if [[ -z ${1} ]]; then
-		echo -e "${RED}${ME}: ERROR: Basename must be specified.${NC}" >&2
+		E_ "ERROR: Basename must be specified." >&2
 		OK="false"
 	fi
 	if [[ -z ${LAST_ARG} ]]; then
-		echo -e "${RED}${ME}: ERROR: message must be specified.${NC}" >&2
+		E_ "ERROR: message must be specified." >&2
 		OK="false"
 	fi
 	[[ ${OK} == "false" ]] && usage_and_exit 1
@@ -126,7 +126,7 @@ function make_image()
 
 	echo "${BASENAME}" | grep -qEi "[.](${ALL_EXTS/ /|})"
 	if [[ $? -ne 1 ]]; then
-		echo -e "${RED}${ME}: ERROR: Do not add an extension to the basename${NC}." >&2
+		E_ "ERROR: Do not add an extension to the basename." >&2
 		usage_and_exit 1
 	fi
 
@@ -176,9 +176,7 @@ if ! which mogrify > /dev/null ; then
 	# ImageMagick is installed and "convert" will run ImageMagick and not some
 	# other tool.
 	{
-		echo -e "${RED}"
-		echo -e "${ME}: ERROR: ImageMagick does not appear to be installed. Please install it."
-		echo -e "${NC}"
+		E_ "${ME}: ERROR: ImageMagick does not appear to be installed. Please install it."
 	} >&2
 	exit 2
 fi
@@ -187,7 +185,7 @@ fi
 # If not specified, create in current directory.
 if [[ -n ${DIRECTORY} ]]; then
 	if [[ ! -d ${DIRECTORY} ]]; then
-		echo -e "\n${RED}*** ${ME} ERROR: Directory '${DIRECTORY}' not found!\n${NC}" >&2
+		E_ "${ME}: ERROR: Directory '${DIRECTORY}' not found!" >&2
 		exit 2
 	fi
 	cd "${DIRECTORY}" || exit 3

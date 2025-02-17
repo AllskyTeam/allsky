@@ -46,19 +46,21 @@ usage_and_exit()
 	local MSG
 	exec >&2
 	echo
-	MSG="Usage: ${ME} [--id ID [--cmd TEXT]] [--delete] [--url url]  --type message_type  --msg message"
+	MSG="Usage: ${ME} [--id ID [--cmd TEXT]] [--delete] [--no-date] [--url url]  --type message_type  --msg message"
 	if [[ ${RET} -eq 0 ]]; then
 		echo -e "${MSG}"
 	else
 		wE_ "${MSG}"
 	fi
 	echo
-	echo "'message_type' is 'success', 'warning', 'error', 'info', or 'debug'."
-	echo "'url' is a URL to (normally) a documentation page."
+	echo "    '--no-date' does not add the current date to the message."
+	echo "    'message_type' is 'success', 'warning', 'error', 'info', or 'debug'."
+	echo "    'url' is a URL to (normally) a documentation page."
 	echo
 	exit "${RET}"
 }
 
+ADD_DATE="true"
 OK="true"
 DO_HELP="false"
 ID=""
@@ -80,6 +82,9 @@ while [[ $# -gt 0 ]]; do
 		"--delete")
 			DELETE="true"
 			shift
+			;;
+		"--no-date")
+			ADD_DATE="false"
 			;;
 		"--cmd")
 			CMD_TEXT="$( convert_string "${2}" )"
@@ -147,7 +152,12 @@ elif [[ ${TYPE} != "warning" && ${TYPE} != "info" && ${TYPE} != "success" ]]; th
 	wE_ "ERROR: unknown message type: '${TYPE}'." >&2
 	exit 2
 fi
-DATE="$( date '+%B %d, %r' )"
+
+if [[ ${ADD_DATE} == "true" ]]; then
+	DATE="$( date '+%B %d, %r' )"
+else
+	DATE=""
+fi
 
 if [[ -f ${ALLSKY_MESSAGES} ]] &&  M="$( grep "${TAB}${ESCAPED_MESSAGE}${TAB}" "${ALLSKY_MESSAGES}" )" ; then
 	COUNT=0

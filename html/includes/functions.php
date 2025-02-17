@@ -923,8 +923,6 @@ function getVariableOrDefault($a, $v, $d) {
 function getTOD() {
 	global $settings_array;
 
-	//$settings_array = readSettingsFile();
-
 	$angle = getVariableOrDefault($settings_array, 'angle', -6);
 	$lat = getVariableOrDefault($settings_array, 'latitude', "");
 	$lon = getVariableOrDefault($settings_array, 'longitude', "");
@@ -940,5 +938,72 @@ function getTOD() {
 	}
 	
 	return $tod;
+}
+
+// Get the newest Allsky version string.
+// For efficiency, only check every other day.
+function getNewestAllskyVersion(&$changed=null)
+{
+	$versionFile = ALLSKY_CONFIG . "/newestversion.json";
+	$version_array = null;
+	$priorVersion = null;
+	$changed = false;
+	$date = date_create("now");
+	$compareDate = date_timestamp_get($date) - (24 * 60 * 60 * 2);		// 2 days
+	$exists = file_exists($versionFile);
+
+	if ($exists) {
+		$str = file_get_contents($versionFile, true);
+		$err = "";
+		if ($str === false) {
+			// TODO: should these errors set addMessage() ?
+			$err = "Error reading of $versionFile.";
+		} else if ($str === "") {
+			$err = "$versionFile is empty!";
+		} else {
+			$version_array = json_decode($str, true);
+			if ($version_array === null) {
+				$err = "$versionFile has no json!";
+			} else {
+				$priorVersion = $version_array['version'];
+			}
+		}
+		if ($err !== "") {
+			unlink($versionFile);
+			$exists = false;
+		}
+	}
+
+	if ($version_array === null || ($exists && filemtime($versionFile) < $compareDate)) {
+		// Need to (re)get the data.
+
+		$cmd = ALLSKY_UTILITIES . "/getNewestAllskyVersion.sh";
+		exec("$cmd 2>&1", $newest, $return_val);
+
+		// 90 == newest is newer than current.
+		if (($return_val !== 0 && $return_val !== 90) || $newest === null) {
+			// some error
+			if ($exists) unlink($versionFile);
+			return($version_array);		// may be null...
+		}
+
+		$version_array = array();
+		$version_array['version'] = implode(" ", $newest);
+		$version_array['timestamp'] = date_format($date, "c");	// NOTE: Does not use timezone
+
+		// Has the version changed?
+		if ($priorVersion === null || $priorVersion !== $version_array['version']) {
+			$changed = true;
+		}
+
+		$msg = "[$cmd] returned $return_val, version=${version_array['version']}, changed=$changed";
+		echo "<script>console.log('$msg');</script>";
+
+		// Save new info.
+		@file_put_contents($versionFile, json_encode($version_array, JSON_PRETTY_PRINT));
+		@chmod($versionFile, 0664);		// so the user can remove it if desired
+	}
+
+	return($version_array);
 }
 ?>

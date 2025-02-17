@@ -20,13 +20,13 @@ fi
 
 GIT_FILE="${GITHUB_RAW_ROOT}/${GITHUB_ALLSKY_PACKAGE}/${BRANCH}/version"
 if ! NEWEST_VERSION="$( curl --show-error --silent "${GIT_FILE}" 2>&1 )" ; then
-	echo "ERROR: Unable to get newest Allsky version: ${NEWEST_VERSION}."
+	echo "${ME}: ERROR: Unable to get newest Allsky version: ${NEWEST_VERSION}."
 	exit 1
 fi
 if [[ ${NEWEST_VERSION:0:1} != "v" ||
 		${NEWEST_VERSION} == "400: Invalid request" ||
 		${NEWEST_VERSION} == "404: Not Found" ]]; then
-	echo "ERROR: Got unknown newest Allsky version: ${NEWEST_VERSION}."
+	echo "${ME}: ERROR: Got unknown newest Allsky version: ${NEWEST_VERSION}."
 	exit 1
 fi
 

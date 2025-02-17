@@ -942,10 +942,12 @@ function getTOD() {
 
 // Get the newest Allsky version string.
 // For efficiency, only check every other day.
-function getNewestAllskyVersion(&$changed)
+function getNewestAllskyVersion(&$changed=null)
 {
 	$versionFile = ALLSKY_CONFIG . "/newestversion.json";
 	$version_array = null;
+	$priorVersion = null;
+	$changed = false;
 	$date = date_create("now");
 	$compareDate = date_timestamp_get($date) - (24 * 60 * 60 * 2);		// 2 days
 	$exists = file_exists($versionFile);
@@ -962,6 +964,8 @@ function getNewestAllskyVersion(&$changed)
 			$version_array = json_decode($str, true);
 			if ($version_array === null) {
 				$err = "$versionFile has no json!";
+			} else {
+				$priorVersion = $version_array['version'];
 			}
 		}
 		if ($err !== "") {
@@ -987,7 +991,12 @@ function getNewestAllskyVersion(&$changed)
 		$version_array['version'] = implode(" ", $newest);
 		$version_array['timestamp'] = date_format($date, "c");	// NOTE: Does not use timezone
 
-		$msg = "[$cmd] returned $return_val, version=${version_array['version']}";
+		// Has the version changed?
+		if ($priorVersion === null || $priorVersion !== $version_array['version']) {
+			$changed = true;
+		}
+
+		$msg = "[$cmd] returned $return_val, version=${version_array['version']}, changed=$changed";
 		echo "<script>console.log('$msg');</script>";
 
 		// Save new info.

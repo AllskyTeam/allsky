@@ -230,20 +230,21 @@ if ($useRemoteWebsite) {
 				<div class="version-title version-title-color">
 					<span id="allskyStatus"><?php echo output_allsky_status(); ?></span>
 <?php
-					$newest = getNewestAllskyVersion($changed);
-					if ($newest !== null && $newest['version'] > ALLSKY_VERSION) {
+					$newest = getNewestAllskyVersion();
+					if ($newest !== null)
+						$newest = $newest['version'];
+					if ($newest !== null && $newest > ALLSKY_VERSION) {
 						$more = "title='New Version $newest Available'";
 						$more .= " style='background-color: red; color: white;'";
-					} else {
-						$more = "";
-					}
-					if ($changed) {
+
 						$msg = "<br>&nbsp; &nbsp; <strong>";
-						$msg .= "A new release of Allsky is available: ${newest['version']}";
+						$msg .= "A new release of Allsky is available: $newest";
 						$msg .= "</strong><br><br>";
 						$cmd = ALLSKY_SCRIPTS . "/addMessage.sh";
 						$cmd .= " --no-date --type success --msg '${msg}'";
 						runCommand($cmd, "", "");
+					} else {
+						$more = "";
 					}
 					echo "<span $more class='nowrap'>Version: " . ALLSKY_VERSION . "</span>";
 if ($useLocalWebsite) {

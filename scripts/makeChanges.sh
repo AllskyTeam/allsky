@@ -338,7 +338,7 @@ do
 		# When called from the WebUI we only get what the user changed which is
 		# either cameramodel OR cameratype.
 		"cameranumber")
-			CAMERA_NUMBER="${NEW_VALUE}"
+			CAMERA_NUMBER="${NEW_VALUE:-0}"
 			CAMERA_NUMBER_ARG=" -cameranumber ${CAMERA_NUMBER}"
 			;;
 

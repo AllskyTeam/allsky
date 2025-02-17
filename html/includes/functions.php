@@ -923,8 +923,6 @@ function getVariableOrDefault($a, $v, $d) {
 function getTOD() {
 	global $settings_array;
 
-	//$settings_array = readSettingsFile();
-
 	$angle = getVariableOrDefault($settings_array, 'angle', -6);
 	$lat = getVariableOrDefault($settings_array, 'latitude', "");
 	$lon = getVariableOrDefault($settings_array, 'longitude', "");
@@ -940,5 +938,26 @@ function getTOD() {
 	}
 	
 	return $tod;
+}
+
+function getNewestAllskyRelease()
+{
+	$cmd = ALLSKY_UTILITIES . "/getNewestAllskyVersion.sh";
+	exec("$cmd 2>&1", $newest, $return_val);
+	if ($newest !== null) {
+		// Version or an error message.
+		$newest = implode(" ", $newest);
+	} else {
+		$newest = "";
+	}
+
+	echo "<script>console.log('[$cmd] returned $return_val, newest=$newest');</script>";
+
+	// 90 == newest is newer than current.
+	if ($return_val !== 0 && $return_val !== 90) {
+		// some error
+		return("");
+	}
+	return($newest);
 }
 ?>

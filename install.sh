@@ -723,8 +723,8 @@ do_save_camera_capabilities()
 			exit_with_image 1 "${STATUS_ERROR}" "No camera detected"
 		elif [[ ${OPTIONSFILEONLY} == "false" ]]; then
 			display_msg --log error "Unable to save camera capabilities."
-			[[ -s ${TMP} ]] && display_msg --log info "$( < "${TMP}" )"
-			[[ -n ${M} ]] && display_msg --log info "${M}"
+			[[ -s ${TMP} ]] && display_msg --log info "TMP=$( < "${TMP}" )"
+			[[ -n ${M} ]] && display_msg --log info "M=${M}"
 		fi
 		return 1
 	else

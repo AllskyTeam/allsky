@@ -898,7 +898,7 @@ do
 				MSG+="Unknown VCODEC: '${NEW_VALUE}'; resetting to '${OLD_VALUE}'."
 				MSG+="${wBR}Execute: ffmpeg -encoders"
 				MSG+="${wBR}for a list of VCODECs."
-				sW_ "${MSG}"
+				wW_ "${MSG}"
 
 				# Restore to old value
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "text"
@@ -916,7 +916,7 @@ do
 				MSG+="Unknown Pixel Format: '${NEW_VALUE}'; resetting to '${OLD_VALUE}'."
 				MSG+="Execute: ffmpeg -pix_fmts"
 				MSG+="for a list of formats."
-				sW_ "${MSG}"
+				wW_ "${MSG}"
 
 				# Restore to old value
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "text"
@@ -939,14 +939,14 @@ do
 				W="WARNING: "
 				W+="Disabling ${WSNs}${LABEL}${WSNe} should NOT be done if your Pi is"
 				W+=" accessible on the Internet.  It's a HUGE security risk!"
-				sW_ "${W}"
+				wW_ "${W}"
 			fi
 			;;
 
 		*)
 			W="WARNING: "
 			W+="Unknown key '${KEY}'; ignoring.  Old=${OLD_VALUE}, New=${NEW_VALUE}"
-			sW_ "${W}"
+			wW_ "${W}"
 			(( NUM_CHANGED-- ))
 			;;
 
@@ -982,7 +982,7 @@ if [[ ${USE_REMOTE_WEBSITE} == "true" || ${USE_REMOTE_SERVER} == "true" ]]; then
 				W+="${wBR}See <a allsky='true' external='true'"
 				W+=" href='/documentation/installations/AllskyWebsite.html'>the documentation</a>"
 			fi
-			sW_ "${W}"
+			wW_ "${W}"
 			[[ ${WEBSITES} != "local" ]] && WEBSITES=""
 		fi
 	fi

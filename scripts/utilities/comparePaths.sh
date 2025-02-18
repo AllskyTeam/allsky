@@ -21,11 +21,14 @@ usage_and_exit()
 	local RET=${1}
 	local MSG="${2}"
 	exec 2>&1
-	echo
-	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-	[[ -n ${MSG} ]] && echo -e "${MSG}\n"
-	echo "Usage: ${ME} [--help] [--debug]  --website | --server URL"
-	[[ ${RET} -ne 0 ]] && echo -en "${NC}"
+	local USAGE="\n"
+	[[ -n ${MSG} ]] && USAGE+="${MSG}\n"
+	USAGE+="Usage: ${ME} [--help] [--debug]  --website | --server URL"
+	if [[ ${RET} -ne 0 ]]; then
+		E_ "${USAGE}"
+	else
+		echo -e "${USAGE}"
+	fi
 	exit "${RET}"
 }
 
@@ -56,7 +59,7 @@ while [[ $# -gt 0 ]]; do
 			shift
 			;;
 		-*)
-			echo -e "${RED}Unknown argument '${ARG}' ignoring.${NC}" >&2
+			E_ "Unknown argument '${ARG}' ignoring." >&2
 			OK="false"
 			;;
 		*)
@@ -91,11 +94,11 @@ function checkProtocol()
 	local PROTOCOL
 	PROTOCOL="$( settings ".remote${type}protocol" )"
 	if [[ -z ${PROTOCOL} ]]; then
-		echo "ERROR: No Protocol found for the remote ${TYPE}." >&2
+		E_ "ERROR: No Protocol found for the remote ${TYPE}." >&2
 		exit 3
 	fi
 	if [[ ! ${PROTOCOL,,} =~ ftp ]]; then
-		echo "ERROR: Protocol '${PROTOCOL}' not supported; only *FTP* supported." >&2
+		E_ "ERROR: Protocol '${PROTOCOL}' not supported; only *FTP* supported." >&2
 		exit 3
 	fi
 }
@@ -107,13 +110,13 @@ function checkVariables()
 	local ENABLED
 	ENABLED="$( settings ."useremote${type}" )"
 	if [[ ${ENABLED} != "true" ]]; then
-		echo -e "\nWARNING: the remote ${TYPE} is not enabled; will attempt test anyway.\n"
+		W_ "WARNING: the remote ${TYPE} is not enabled; will attempt test anyway.\n"
 	fi
 
 	if [[ ${DO_WEBSITE} == "true" ]]; then
 		URL="$( settings ".remote${type}url" )"
 		if [[ -z ${URL} ]]; then
-			echo "ERROR: No remote Website URL given." >&2
+			E_ "ERROR: No remote Website URL given." >&2
 			exit 3
 		fi
 	fi
@@ -124,7 +127,7 @@ SAVED_URL="${URL}"
 		URL="$( settings ".remote${type}url" )"
 		if [[ -z ${URL} ]]; then
 URL="${SAVED_URL}"
-#x			echo "ERROR: No remote Website URL given." >&2
+#x			E_ "ERROR: No remote Website URL given." >&2
 #x			exit 3
 		fi
 	fi
@@ -156,7 +159,7 @@ function sendCommandsFile()
 	CMD+=" ${COMMANDS_FILE} ${DIR} null ${ME}"
 	[[ ${DEBUG} == "true" ]] && echo -e "DEBUG: Executing\n${TAB}${CMD}"
 	if ! OUTPUT="$( ${CMD} 2>&1 )" ; then
-		echo -e "ERROR: Upload of commands failed:\n${OUTPUT}" >&2
+		E_ -e "ERROR: Upload of commands failed:\n${OUTPUT}" >&2
 		echo -e "\nAdditional details are in '${OUT}'." >&2
 		exit 3
 	fi
@@ -169,30 +172,14 @@ function sendCommandsFile()
 	#	<--- 257 "/directory_name" is current directory.
 	UPLOAD_DIR="$( grep " 257 " "${OUT}" | cut -d'"' -f2 )"
 	if [[ -z ${UPLOAD_DIR} ]]; then
-		echo "ERROR: Unable to get UPLOAD directory - return code 257 not found." >&2
+		E_ "ERROR: Unable to get UPLOAD directory - return code 257 not found." >&2
 		echo -e "\nAdditional details are in '${OUT}'." >&2
 		exit 3
 	fi
 
-	nawk 'BEGIN { in_info = 0; dir = ""; }
-		{
-			if ($0 == "START info") {
-				in_info = 1;
-			} else if ($0 == "END info") {
-				exit(0);
-			} else if (in_info >= 1) {
-				if (in_info++ == 1) {
-					printf("Contents:\n");
-				}
-				if ($1 != "WARNING:")
-					print $0;
-			}
-		}
-		END {
-			exit(! in_info);
-		}' "${OUT}"  >  "${UPLOAD_LS}"
+	get_ls_contents "${OUT}"  >  "${UPLOAD_LS}"
 	if [[ $? -ne 0 ]]; then
-		echo "ERROR: Unable to get UPLOAD information." >&2
+		E_ "ERROR: Unable to get UPLOAD information." >&2
 		echo -e "\nAdditional details are in '${OUT}'." >&2
 		exit 3
 	fi
@@ -211,7 +198,11 @@ function getWebPath()
 	local RET=$?
 	if [[ ${RET} -eq 0 ]]; then
 		if [[ -z ${OUTPUT} ]]; then
-			WEB_DIR="ERROR: No output from server."
+			WEB_DIR="[ERROR: No output from server.]"
+			return
+		fi
+		if [[ ${OUTPUT} =~ "404 Not Found" ]]; then
+			WEB_DIR="[ERROR: ${URL} Not Found]"
 			return
 		fi
 
@@ -234,7 +225,7 @@ function getWebPath()
 		)"
 	else
 		OUTPUT="${OUTPUT:-unknown reason}"
-		WEB_DIR="ERROR: Unable to run commands on server: ${OUTPUT}."
+		WEB_DIR="[ERROR: Unable to run commands on server: ${OUTPUT}.]"
 		# Do not exit - print the info we currently have.
 	fi
 }

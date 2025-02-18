@@ -38,7 +38,8 @@ usage_and_exit()
 OK="true"
 DEBUG="false"
 SILENT="false"
-TEST_FILE="/tmp/${ME}.txt"
+DEFAULT_TEST_FILE="/tmp/${ME}.txt"
+TEST_FILE="${DEFAULT_TEST_FILE}"
 OUT_FILE=""
 DO_WEBSITE="false"
 DO_SERVER="false"
@@ -329,7 +330,9 @@ do_test()
 		fi
 	fi
 
-	rm -f "${TEST_FILE}"
+	if [[ ${TEST_FILE} == "${DEFAULT_TEST_FILE}" ]]; then
+		rm -f "${TEST_FILE}"
+	fi
 	[[ ! -s ${OUTPUT_FILE} ]] && rm -f "${OUTPUT_FILE}"
 	[[ ${DEBUG} == "true" && ! -s ${OUT} ]] && rm -f "${OUT}"
 

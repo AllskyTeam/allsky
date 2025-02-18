@@ -16,20 +16,22 @@ usage_and_exit()
 {
 	exec >&2
 	local RET=${1}
-	local MSG="Usage: ${ME} [--help] [--debug] [--silent] [--file f] [--fromInstall]] \\"
+	local MSG="Usage: ${ME} [--help] [--debug] [--silent] [--file f] [--fromInstall]] \\\\"
 	MSG+="\n\t[[--output o]] --website  and/or  --server"
 	[[ ${RET} -eq 2 ]] && echo -e "\nERROR: You must specify --website and/or --server\n"
 
 	if [[ ${RET} -ne 0 ]]; then
 		wE_ "${MSG}"
 	else
-		echo "${MSG}"
+		echo -e "${MSG}"
 	fi
-	echo -e "\nWhere:"
-	echo -e "\t'--silent' only outputs errors."
-	echo -e "\t'--file f' optionally specifies the test file to upload."
-	echo -e "\t'--fromInstall' outputs text without colors or other escape sequences."
-	echo -e "\t'--output o' puts detailed output in the specified file."
+	echo
+	echo "Where:"
+	echo "    '--silent' only outputs errors."
+	echo "    '--file f' optionally specifies the test file to upload."
+	echo "    '--fromInstall' outputs text without colors or other escape sequences."
+	echo "    '--output o' puts detailed output in the specified file."
+
 	exit "${RET}"
 }
 

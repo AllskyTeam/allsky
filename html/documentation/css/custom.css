@@ -472,13 +472,13 @@ input[type="text"].has-error {
 	color: var(--dark-text);
 	border: 1px solid var(--dark-text);
 }
-.dark .btn.focus.navbar-btn,
+/*.dark .btn.focus.navbar-btn,
 .dark .btn:focus.navbar-btn,
 .dark .btn:hover.navbar-btn,
 .dark .help-block
 {
 	color: var(--dark-text-reversed);
-}
+}*/
 .advanced, .btn-advanced { /* "advanced" options are highlighted in same color as button */
 	background-color: #fffcc0;
 }

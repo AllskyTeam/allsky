@@ -332,7 +332,7 @@ function DisplaySystem()
 		$display_temperature = number_format($temperature, 1, '.', '') . "&deg;C";
 	}
 	if ($temptype == "F" || $temptype == "B") {
-		$t = (($temperature * 1.8) + 32) / 1000;
+		$t = (($temperature * 1.8) + 32);
 		$t = number_format($t, 1, '.', '');
 		$display_temperature .= "&nbsp; &nbsp; $t &deg;F";
 	}

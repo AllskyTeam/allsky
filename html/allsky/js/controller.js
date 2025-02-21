@@ -9,6 +9,8 @@ var dateTimeF = "YYYY-MM-DD HH:mm:ss";
 var dateF = "YYYY-MM-DD";
 var timeF = "HH:mm";
 var userTimeF = "h:mm a";				// Time the user sees.
+var spanOn  = "<span style='color: white'>";
+var spanOff = "</span>";
 
 // This returns the height INCLUDING the border:      $("#imageContainer").css('height')
 // This returns the height NOT including the border:  $("#imageContainer").height()
@@ -704,10 +706,13 @@ function AppCtrl($scope, $timeout, $http, _) {
 					lastModifiedSunriseSunsetFile = moment(x);
 					var duration = moment.duration(moment(now).diff(lastModifiedSunriseSunsetFile));
 					if (duration.days() > oldDataLimit) {
-						dataOldMsg = "WARNING: '" + sunData + "' is " + duration.days() + " days old.";
+						var file = spanOn + sunData + spanOff;
+						dataOldMsg = "WARNING: '" + file + "'";
+						dataOldMsg += " is " + duration.days() + " days old.";
 						if (dataMissingMsg == "") {
-							dataOldMsg += "Run 'allsky-config check_post_data'";
-							dataOldMsg += " on the Pi to determine why data is missing.";
+							var cmd = spanOn + "allsky-config check_post_data" + spanOff;
+							dataOldMsg += "<br>Run '" + cmd + "'";
+							dataOldMsg += " on the Pi to troubleshoot.";
 						}
 					}
 
@@ -726,11 +731,13 @@ function AppCtrl($scope, $timeout, $http, _) {
 				$scope.takedaytimeimages = true;; usingDefaultTakingDaytime = true;
 				$scope.takenighttimeimages = true;; usingDefaultTakingDaytime = true;
 
-				dataMissingMsg = "ERROR: '" + sunData + " file not found.";
+				var file = spanOn + sunData + spanOff;
+				dataMissingMsg = "ERROR: '" + file + "' file not found.";
 				dataMissingMsg += "<br>Using " + $scope.sunrise.format(userTimeF) + " for sunrise";
 				dataMissingMsg += " and " + $scope.sunset.format(userTimeF) + " for sunset.";
-				dataMissingMsg += "<br>Run 'allsky-config check_post_data'"
-				dataMissingMsg += " on the Pi to create the file,";
+				var cmd = spanOn + "allsky-config check_post_data" + spanOff;
+				dataMissingMsg += "<br>Run '" + cmd + "'";
+				dataMissingMsg += " on the Pi to troubleshoot,";
 				dataMissingMsg += " then refresh this browser window.";
 				console.log("  *** Unable to read '" + sunData + "' file");
 				writeSunriseSunsetToConsole();

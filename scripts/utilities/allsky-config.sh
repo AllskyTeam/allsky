@@ -411,6 +411,24 @@ function show_start_times()
 }
 
 
+#####
+# Determine why the user gets the message:
+#	data.json is X days old. Check ... postData.sh
+function check_post_data()
+{
+	if [[ ${1} == "--help" ]]; then
+		echo
+		W_ "Usage: ${ME}  ${ME_F}"
+		echo
+		echo "This command helps determine why you get the"
+		echo "    data.json is X days old"
+		echo "message.  If possible, a solution is proposed"
+		return
+	fi
+
+	checkPostData.sh
+}
+
 
 ####################################### Helper functions
 
@@ -446,6 +464,7 @@ function usage_and_exit()
 	echo -e "      show_start_times [--zero] [angle [latitude [longitude]]]"
 	echo -e "      compare_paths --website | --server"
 	echo -e "      get_brightness_info"
+	echo -e "      check_post_data"
 	echo -e "      encoders"
 	echo -e "      pix_fmts"
 	echo -e "  If no 'command' is specified you are prompted for one."
@@ -633,6 +652,7 @@ if [[ -z ${CMD} ]]; then
 	CMDS+=("get_brightness_info"		"$( L "Get information on image brightness" )"); ((N++))
 	CMDS+=("encoders"					"$( L "Show list of timelapse encoders available" )"); ((N++))
 	CMDS+=("pix_fmts"					"$( L "Show list of timelapse pixel formats available" )"); ((N++))
+	CMDS+=("check_post_data"			"$( L "Helps resolve the 'data.json is X days old' message" )"); ((N++))
 
 	# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 	while COMMAND="$( prompt "${PROMPT}" "${CMDS[@]}" )"

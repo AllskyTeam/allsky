@@ -649,9 +649,8 @@ function prepare_local_website()
 	fi
 
 	if [[ ${POST_DATA} == "postData" && "$( settings ".uselocalwebsite" )" == "true" ]]; then
-		# --fromWebUI tells it to be mostly silent.
-		MSG="$( "${ALLSKY_SCRIPTS}/postData.sh" --fromWebUI --allfiles 2>&1 )"
-		if [[ $? -eq 0 ]]; then
+		# "--from install" tells it to be mostly silent.
+		if MSG="$( "${ALLSKY_SCRIPTS}/postData.sh" --from install --allfiles 2>&1 )" ; then
 			display_msg --log progress "${MSG}"
 		else
 			display_msg --log warning "${MSG}"

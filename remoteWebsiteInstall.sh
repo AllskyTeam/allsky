@@ -999,8 +999,8 @@ function enable_remote_website()
 function post_data()
 {
 	local MSG
-	# --fromWebUI only displays summary.
-	MSG="$( "${ALLSKY_SCRIPTS}/postData.sh" --fromWebUI --allfiles 2>&1 )"
+	# "--from install" only displays summary.
+	MSG="$( "${ALLSKY_SCRIPTS}/postData.sh" --from install --allfiles 2>&1 )"
 	display_msg --logonly info "${MSG}"
 }
 

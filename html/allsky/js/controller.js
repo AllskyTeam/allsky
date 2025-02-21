@@ -8,7 +8,9 @@ var configData = "configuration.json";	// contains web configuration data
 var dateTimeF = "YYYY-MM-DD HH:mm:ss";
 var dateF = "YYYY-MM-DD";
 var timeF = "HH:mm";
-var timeAmPmF = "h:mm a";
+var userTimeF = "h:mm a";				// Time the user sees.
+var spanOn  = "<span style='color: white'>";
+var spanOff = "</span>";
 
 // This returns the height INCLUDING the border:      $("#imageContainer").css('height')
 // This returns the height NOT including the border:  $("#imageContainer").height()
@@ -48,7 +50,10 @@ $(window).resize(function () {
 
 		wasDiff = true;
 
-		// Refresh the page if there was a difference
+		// Refresh the page if there was a difference.
+		// TODO: reloading the page causes it to flash,
+		// and if the overlay is showing, it becomes hidden,
+		// so don't reload it.
 		if (0 && wasDiff) {
 			location.reload();
 		}
@@ -182,7 +187,6 @@ function buildOverlay(){
 				let x = -diffWidth + 3;
 				var y = -c.overlayOffsetTop + 3;
 
-//console.log("x BEFORE=", x);
 				if (checkWidth < imageWidth) {
 // This doesn't work very well - when the browser window is larger than the image,
 // the "?" icon is in the correct place, but when the browser window is smaller than the image,
@@ -195,7 +199,6 @@ function buildOverlay(){
 						// I got the number by trial and error but
 						// they aren't great.
 						var change =  ((percentSmallerWidth * 0.95 * x) - x) / 2;
-//console.log("CHANGE=", change);
 						x += change + 20;
 						x = Math.round(x, 0);
 					}
@@ -382,16 +385,22 @@ function AppCtrl($scope, $timeout, $http, _) {
 	// it'll be a day old so use a value at least greater than 1.
 	const oldDataLimit = 2;
 
-	// The defaultInterval should ideally be based on the time between day and night images - why
-	// check every 5 seconds if new images only appear once a minute?
-	var defaultInterval = (config.intervalSeconds * 1000);		// Time to wait between normal images.
-	var intervalTimer = defaultInterval;		// Amount of time we're currently waiting
+	// The defaultInterval should ideally be based on the time between day and
+	// night images - why check every 5 seconds if new images only appear once a minute?
 
-	// If we're not taking pictures during the day, we don't need to check for updated images as often.
+	// Time to wait between normal images.
+	var defaultInterval = (config.intervalSeconds * 1000);
+	// Amount of time we're currently waiting
+	var intervalTimer = defaultInterval;
+
+	// If we're not taking pictures during the day,
+	// we don't need to check for updated images as often.
 	// If we're displaying an aurora picture, it's only updated every 5 mintutes.
 	// If we're not displaying an aurora picture the picture we ARE displaying doesn't change so
 	// there's no need to check until nightfall.
-	// However, in case the image DOES change, check every minute.  Seems like a good compromise.
+	// However, in case the image DOES change, check every minute.
+	// Seems like a good compromise.
+
 	// Also, in both cases, if we wait too long, when the user returns to the web page after
 	// it's been hidden, they'll have to wait a long time for the page to update.
 	var auroraIntervalTimer = (60 * 1000);			// seconds
@@ -461,7 +470,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 			if (is_nighttime) {
 				// Only add to the console log once per message type
 				if (lastType !== "nighttime") {
-					console.log("=== Night Time imaging starts at " + m_now.format(timeAmPmF));
+					console.log("=== Night Time imaging starts at " + m_now.format(userTimeF));
 					lastType = "nighttime";
 					loggedTimes = false;
 					rereadSunriseSunset = true;
@@ -472,7 +481,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 
 			} else if ($scope.takedaytimeimages) {
 				if (lastType !== "daytime") {
-					console.log("=== Day Time imaging starts at " + m_now.format(timeAmPmF));
+					console.log("=== Day Time imaging starts at " + m_now.format(userTimeF));
 					lastType = "daytime";
 					loggedTimes = false;
 					rereadSunriseSunset = true;
@@ -483,7 +492,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 
 			} else {	// daytime but we're not taking pictures
 				if (lastType !== "daytimeoff") {
-					console.log("=== Camera turned off during Day Time at " + m_now.format(timeAmPmF));
+					console.log("=== Camera turned off during Day Time at " + m_now.format(userTimeF));
 					lastType = "daytimeoff";
 					loggedTimes = false;
 					rereadSunriseSunset = true;
@@ -503,7 +512,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 				// long nighttime exposures, so add 2.5 minutes.
 				const add = 2.5 * 60 * 1000;
 				ms += add;
-				const time_to_come_back = moment($scope.sunset + add).format(timeAmPmF);
+				const time_to_come_back = moment($scope.sunset + add).format(userTimeF);
 
 				var d = moment.duration(ms);
 				var hours = Math.floor(d.asHours());
@@ -661,10 +670,10 @@ function AppCtrl($scope, $timeout, $http, _) {
 					dataMissingMsg = "ERROR: Data missing from '" + sunData + "':";
 					dataMissingMsg += "<div><ul style='text-align: left; display: inline-block; '>";
 					if (usingDefaultSunrise) {
-						dataMissingMsg += "<li>'sunrise' (using " + $scope.sunrise.format(timeAmPmF) + ")";
+						dataMissingMsg += "<li>'sunrise' (using " + $scope.sunrise.format(userTimeF) + ")";
 					}
 					if (usingDefaultSunset) {
-						dataMissingMsg += "<li>'sunset' (using " + $scope.sunset.format(timeAmPmF) + ")";
+						dataMissingMsg += "<li>'sunset' (using " + $scope.sunset.format(userTimeF) + ")";
 					}
 					if (usingDefaultTakingDaytime) {
 						dataMissingMsg += "<li>'takedaytimeimages' (using " + $scope.takedaytimeimages + ")";
@@ -673,10 +682,11 @@ function AppCtrl($scope, $timeout, $http, _) {
 						dataMissingMsg += "<li>'takenighttimeimages' (using " + $scope.takenighttimeimages + ")";
 					}
 					dataMissingMsg += "</ul></div>";
-					dataMissingMsg += "Run 'postData.sh' to determine why data is missing.";
+					dataMissingMsg += "Run 'allsky-config check_post_data'";
+					dataMissingMsg += " on the Pi to determine why data is missing.";
 				}
 
-				// Get when the file was last modified so we can warn if it's old
+				// Get when the file was last modified so we can warn if it's old.
 				function fetchHeader(url, wch) {
 					try {
 						var req=new XMLHttpRequest();
@@ -696,10 +706,13 @@ function AppCtrl($scope, $timeout, $http, _) {
 					lastModifiedSunriseSunsetFile = moment(x);
 					var duration = moment.duration(moment(now).diff(lastModifiedSunriseSunsetFile));
 					if (duration.days() > oldDataLimit) {
-						dataOldMsg = "WARNING: '" + sunData + "' is " + duration.days() + " days old.";
+						var file = spanOn + sunData + spanOff;
+						dataOldMsg = "WARNING: '" + file + "'";
+						dataOldMsg += " is " + duration.days() + " days old.";
 						if (dataMissingMsg == "") {
-							dataOldMsg += "<br>Check Allsky log file if 'postData.sh' has";
-							dataOldMsg += " been running successfully at the end of nighttime.";
+							var cmd = spanOn + "allsky-config check_post_data" + spanOff;
+							dataOldMsg += "<br>Run '" + cmd + "'";
+							dataOldMsg += " on the Pi to troubleshoot.";
 						}
 					}
 
@@ -718,10 +731,13 @@ function AppCtrl($scope, $timeout, $http, _) {
 				$scope.takedaytimeimages = true;; usingDefaultTakingDaytime = true;
 				$scope.takenighttimeimages = true;; usingDefaultTakingDaytime = true;
 
-				dataMissingMsg = "ERROR: '" + sunData + " file not found.";
-				dataMissingMsg += "<br>Using " + $scope.sunrise.format("h:mm a") + " for sunrise";
-				dataMissingMsg += " and " + $scope.sunset.format("h:mm a") + " for sunset.";
-				dataMissingMsg += "<br>Run 'postData.sh' to create the file,";
+				var file = spanOn + sunData + spanOff;
+				dataMissingMsg = "ERROR: '" + file + "' file not found.";
+				dataMissingMsg += "<br>Using " + $scope.sunrise.format(userTimeF) + " for sunrise";
+				dataMissingMsg += " and " + $scope.sunset.format(userTimeF) + " for sunset.";
+				var cmd = spanOn + "allsky-config check_post_data" + spanOff;
+				dataMissingMsg += "<br>Run '" + cmd + "'";
+				dataMissingMsg += " on the Pi to troubleshoot,";
 				dataMissingMsg += " then refresh this browser window.";
 				console.log("  *** Unable to read '" + sunData + "' file");
 				writeSunriseSunsetToConsole();
@@ -749,7 +765,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 
 		if (! overlayBuilt && $scope.showOverlay) {
 			console.log("@@@@ Building overlay from toggle...");
-			// Version 0.7.7 of VirtualSky doesn't show the overlay unless buildOverlay() is called.
+			// Version 0.7.7 of VirtualSky only shows the overlay if buildOverlay() is called.
 			buildOverlay();
 		}
 

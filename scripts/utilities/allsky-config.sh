@@ -429,6 +429,23 @@ function check_post_data()
 	checkPostData.sh
 }
 
+#####
+# Get a list of filesystems to help the user determine where a devices is mounted.
+function get_filesystems()
+{
+	if [[ ${1} == "--help" ]]; then
+		echo
+		W_ "Usage: ${ME}  ${ME_F}"
+		echo
+		echo "This command helps determine the path to a storage device like an SSD."
+		return
+	fi
+
+	getFilesystems.sh
+}
+
+
+####################################### Helper functions
 
 ####################################### Helper functions
 
@@ -465,6 +482,7 @@ function usage_and_exit()
 	echo -e "      compare_paths --website | --server"
 	echo -e "      get_brightness_info"
 	echo -e "      check_post_data"
+	echo -e "      get_filesystems"
 	echo -e "      encoders"
 	echo -e "      pix_fmts"
 	echo -e "  If no 'command' is specified you are prompted for one."
@@ -653,6 +671,7 @@ if [[ -z ${CMD} ]]; then
 	CMDS+=("encoders"					"$( L "Show list of timelapse encoders available" )"); ((N++))
 	CMDS+=("pix_fmts"					"$( L "Show list of timelapse pixel formats available" )"); ((N++))
 	CMDS+=("check_post_data"			"$( L "Helps resolve the 'data.json is X days old' message" )"); ((N++))
+	CMDS+=("get_filesystems"			"$( L "Helps determine where a storage device is" )"); ((N++))
 
 	# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 	while COMMAND="$( prompt "${PROMPT}" "${CMDS[@]}" )"

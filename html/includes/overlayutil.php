@@ -565,6 +565,46 @@ class OVERLAYUTIL
         }
     }
 
+    public function postBase64Image() {
+        $base64Image = $_POST['image'];
+        $filename = basename($_POST['filename']);
+
+        // Check if the string contains the "data:image" prefix and remove it if needed.
+        if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+            // Extract the image type (jpg, png, gif, etc.)
+            $base64Image = substr($base64Image, strpos($base64Image, ',') + 1);
+            $imageType = strtolower($type[1]); // e.g., "jpg", "png"
+        
+            // Validate the image type if needed
+            if (!in_array($imageType, ['jpg', 'jpeg', 'png'])) {
+                die('Unsupported image type.');
+            }
+        } else {
+            die('unknown image type');
+        }
+        
+        $imageData = base64_decode($base64Image);
+        if ($imageData === false) {
+            die('Base64 decoding failed.');
+        }
+        
+        $imageFolder = $this->overlayPath . '/images/';
+        $thumbnailFolder = $this->overlayPath . '/imagethumbnails/';
+
+        $filename = $filename . "." . $imageType;
+        $targetFile = $imageFolder . $filename;
+
+        // Save the image to the server
+        if (file_put_contents($targetFile, $imageData)) {
+            $thumbnailPath = $thumbnailFolder . $filename;
+            $this->createThumbnail($targetFile, $thumbnailPath, 90);            
+            echo "Image saved successfully as $filename";
+        } else {
+            echo "Failed to save the image.";
+        }
+    }
+
+
     public function postImages() {
         $result = false;
         $imageFolder = $this->overlayPath . '/images/';

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bootstrap 3 Toolbar Example</title>
+  <!-- Bootstrap 3 CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <style>
+    .toolbar {
+      margin: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Toolbar Example</h1>
+  
+  <div class="toolbar">
+    <div class="btn-toolbar" role="toolbar">
+      
+      <!-- Dropdown Button Group for Drawing Tools -->
+      <div class="btn-group">
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+          Select Tool <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+          <li><a href="#" data-tool="Pencil">Pencil</a></li>
+          <li><a href="#" data-tool="Eraser">Eraser</a></li>
+          <li><a href="#" data-tool="Rectangle">Rectangle</a></li>
+          <li><a href="#" data-tool="Circle">Circle</a></li>
+        </ul>
+      </div>
+      
+      <!-- Toggle Button Group: only one button active at any time -->
+      <div class="btn-group" role="group">
+        <button type="button" class="btn btn-default">Button 1</button>
+        <button type="button" class="btn btn-default">Button 2</button>
+        <button type="button" class="btn btn-default">Button 3</button>
+      </div>
+      
+    </div>
+  </div>
+  
+</div>
+
+<!-- jQuery -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<!-- Bootstrap 3 JS -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<script>
+$(document).ready(function(){
+  // Update the dropdown button label when a tool is selected.
+  $('.dropdown-menu a').click(function(e) {
+    e.preventDefault();
+    var tool = $(this).data('tool');
+    $(this).closest('.btn-group').find('.dropdown-toggle').html(tool + ' <span class="caret"></span>');
+  });
+  
+  // Ensure only one button is active at a time in the button group.
+  $('.btn-group[role="group"] button').click(function(){
+    $(this).addClass('active').siblings().removeClass('active');
+  });
+});
+</script>
+
+</body>
+</html>

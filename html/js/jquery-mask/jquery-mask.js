@@ -1,576 +1,603 @@
 "use strict";
 ; (function ($) {
 
-    $.allskyMASK = function (el, options) {
-        var defaults = {
-            dirty: false,
+	$.allskyMASK = function (el, options) {
+		var defaults = {
+			dirty: false,
 			id: 'mask',
-            onClick: function (latlon) { }
-        }
+			modalId: 'allsky-mask-drawingModal',
+			image: '/current/tmp/image.jpg',
+			saveURL: 'includes/overlayutil.php?request=Base64Image',
+			onClick: function (latlon) { }
+		}
 
-        var plugin = this;
-        var el = $(el);
-        plugin.settings = {}
+		var plugin = this;
+		var el = $(el);
+		plugin.settings = {}
 
-        plugin.init = function () {
-            plugin.settings = $.extend({}, defaults, options);
+		plugin.init = function () {
+			plugin.settings = $.extend({}, defaults, options)
 
-			let pluginPrefix = plugin.settings.id + '-' + Math.random().toString(36).substring(2, 9);
+			let pluginPrefix = plugin.settings.id + '-' + Math.random().toString(36).substring(2, 9)
 
-			plugin.undo = []
-			plugin.tempUndo = []
-			plugin.redo = []			
-            plugin.modalid = `${pluginPrefix}-modal`
-            plugin.modaliddialog = `${pluginPrefix}-modal-dialog`
-            plugin.modaliddialogel = `.${pluginPrefix}-modal-dialog`
-            plugin.modalidbody = `${pluginPrefix}-modal-body`
-			plugin.modalidel = `#${plugin.modalid}`
-            plugin.modalidbodyel = `#${pluginPrefix}-modal-body`
-		
-			plugin.drawMode = 'paint'
-			plugin.shape = 'circle'
-
+			plugin.stage = null
+			plugin.drawingLayer = null
+			plugin.drawnGroup = null
+			plugin.transformer = null			
+			plugin.originalImageWidth = 0
+			plugin.originalImageHeight = 0
+			plugin.imageScaleFactor = 1
+			plugin.displayedImageWidth = 0
+			plugin.mode = "easy"
+			plugin.currentTool = "circle"
 			plugin.isDrawing = false
-			plugin.brushSize = 80
-			plugin.brushColor = 'black'
-			plugin.brushStyle = 'solid'
+			plugin.currentLine = null
+			plugin.currentShape = null
+			plugin.startPos = null
+			plugin.easyCircle = null
+			plugin.drawnObjects = []
+			plugin.undoneObjects = []
 
 			createUI()
-			createKonva()
-			createKonvaNavEvents()
-			createKonvaDrawEvents()
-			createToolbarEvents()
-			updateToolbar()	
-        }
+			addFilters()
+			createEditor()
+			showMaskEditor()
 
-		var createUI = function() {
+		}
 
-			let maskDialog = `\
-				<div id="${plugin.modalid}" class="modal fade allsky-mask-editor" role="dialog">
-					<div class="modal-dialog allsky-mask-modal ${plugin.modaliddialog}">
-						<div class="modal-content">
-						<div class="modal-header">
-							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-							<h4 class="modal-title" id="myModalLabel">Allsky Mask Editor</h4>
-						</div>
-						<div class="modal-body">
-							<div class="navbar navbar-default">
-								<div class="container-fluid">
-									<ul class="nav navbar-nav navbar-left">
-										<li><button class="btn btn-default navbar-btn" id="allsky-mask-new"><i class="fa-solid fa-file"></i></button></li>
+		var addFilters = function () {
+			Konva.Filters.DarkAreaBrighten = function (imageData) {
+				var brightness = this.brightness()
+				var data = imageData.data
+				var threshold = 128
+				var addValue = brightness > 0 ? brightness * 100 : 0
+				for (var i = 0; i < data.length; i += 4) {
+					var avg = (data[i] + data[i + 1] + data[i + 2]) / 3
+					if (avg < threshold) {
+						data[i] = Math.min(255, data[i] + addValue)
+						data[i + 1] = Math.min(255, data[i + 1] + addValue)
+						data[i + 2] = Math.min(255, data[i + 2] + addValue)
+					}
+				}
+			}
+		}
 
-										<li>
-<div class="dropdown ml-3">
-  <button class="btn btn-default dropdown-toggle navbar-btn" type="button" data-toggle="dropdown">
-    <i class="fa-solid fa-brush mr-2"></i>
-    <span class="caret"></span>
-  </button>
-  <ul class="dropdown-menu allsky-mask-brush-dropdown-background">
-    <li><div id="allsky-mask-brush-soft" class="allsky-mask-brush" data-brush="soft"></li>
-    <li><div id="allsky-mask-brush-hard" class="allsky-mask-brush" data-brush="solid"></li>
-  </ul>
-</div>
-										</li>
-
-										<li>
-<div class="dropdown ml-3">
-  <button class="btn btn-default dropdown-toggle navbar-btn" type="button" data-toggle="dropdown">
-    <i class="fa-solid fa-palette"></i>
-    <span class="caret"></span>
-  </button>
-  <ul class="dropdown-menu allsky-mask-colour-dropdown-background">
-    <li><div id="allsky-mask-tool-colour-black" class="allsky-mask-tool-colour" data-colour="black"><span>Mask<span></li>
-    <li><div id="allsky-mask-tool-colour-white" class="allsky-mask-tool-colour" data-colour="white"><span>Keep<span></li>
-  </ul>
-</div>										
-										</li>
-										
-
-										<li>
-<div class="dropdown ml-3">
-  <button class="btn btn-default dropdown-toggle navbar-btn" type="button" data-toggle="dropdown">
-    <i class="fa-solid fa-up-right-and-down-left-from-center mr-2"></i>
-    <span class="caret"></span>
-  </button>
-  <ul class="dropdown-menu allsky-mask-brush-dropdown-background">
-    <li class="ml-4 mr-4">
-		<input id="brushsize" data-slider-id='brushsizeslider' type="text" data-slider-min="0" data-slider-max="400" data-slider-step="1" data-slider-value="14"/>
-	</li>
-  </ul>
-</div>											
-										</li>
-
-
-										<li>
-<div class="dropdown ml-3">
-  <button class="btn btn-default dropdown-toggle navbar-btn" type="button" data-toggle="dropdown">
-    <i class="fa-solid fa-magnifying-glass mr-2"></i>
-    <span class="caret"></span>
-  </button>
-  <ul class="dropdown-menu allsky-mask-zoom-dropdown-background">
-    <li class="ml-4 mr-4">
-		<input id="allsky-mask-tool-zoom" data-slider-id='allsky-mask-tool-zoom-slider' type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="14"/>
-	</li>
-  </ul>
-</div>											
-										</li>
-
-										<li>
-
-<div class="dropdown ml-3">
-  <button class="btn btn-default dropdown-toggle navbar-btn" type="button" data-toggle="dropdown">
-    <span id="allsky-mask-toolbar-shape"><i class="fa-solid fa-palette"></i></span>
-    <span class="caret"></span>
-  </button>
-  <ul class="dropdown-menu allsky-mask-shape-dropdown-background">
-    <li><button type="button" class="btn btn-default ml-1 allsky-mask-tool-shape" data-shape="rectangle"><i class="fa-solid fa-square"></i></button></li>
-    <li><button type="button" class="btn btn-default ml-1 allsky-mask-tool-shape" data-shape="circle"><i class="fa-solid fa-circle"></i></button></li>
-    <li><button type="button" class="btn btn-default ml-1 allsky-mask-tool-shape" data-shape="path"><i class="fa-solid fa-draw-polygon"></i></button></li>
-  </ul>
-</div>	
-
-										</li>
-										<li><button class="btn btn-default navbar-btn ml-1 allsky-mask-tool-drawing" id="allsky-mask-tool-paint"><i class="fa-solid fa-brush"></i></button></li>
-										<li><button class="btn btn-default navbar-btn ml-1 allsky-mask-tool-drawing" id="allsky-mask-tool-erase"><i class="fa-solid fa-eraser"></i></button></li>
-
-
-										<li><button class="btn btn-default navbar-btn ml-3" id="allsky-mask-undo"><i class="fa-solid fa-arrow-rotate-left"></i></button></li>
-										<li><button class="btn btn-default navbar-btn ml-1" id="allsky-mask-redo"><i class="fa-solid fa-rotate-right"></i></button></li>
-										<li>
-
-<div class="dropdown ml-3">
-	<button class="btn btn-default dropdown-toggle navbar-btn" type="button" data-toggle="dropdown">
-		<img class="allsky-mask-tool-opacity-black">
-		<span class="caret"></span>
-  	</button>
-	<ul class="dropdown-menu allsky-mask-brush-dropdown-background">
-		<li class="ml-4 mr-4">
-			<input id="maskopacity" data-slider-id='maskopacityslider' type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="14"/>
-		</li>
-  	</ul>
-</div>	
-										</li>
-									</ul>
+		var createUI = function () {
+			let dialogHTML = `
+				<div id="allsky-mask">
+					<div class="modal fade" id="${plugin.settings.modalId}" tabindex="-1" role="dialog" aria-labelledby="allsky-mask-drawingModalLabel">
+						<div class="modal-dialog" role="document">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+										<span>&times;</span>
+									</button>
+									<h4 class="modal-title" id="allsky-mask-drawingModalLabel">Allsky Mask Editor</h4>
+								</div>
+								<div class="modal-body">
+									<div id="allsky-mask-toolbar">
+										<button class="allsky-mask-tool-button btn btn-default" id="allsky-mask-newBtn"><i class="fa-solid fa-file"></i></button>
+										<div class="btn-group" role="group">
+											<button type="button" class="btn btn-default active" id="allsky-mask-easyModeBtn">Easy</button>
+											<button type="button" class="btn btn-default" id="allsky-mask-expertModeBtn">Expert</button>
+										</div>                
+										<div class="dropdown" style="display:inline-block;">
+										<button id="drawingToolDropdown" class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
+											<i class="fas fa-brush"></i> <span class="caret"></span>
+										</button>
+										<ul class="dropdown-menu">
+											<li><a href="#" data-tool="freehand"><i class="fas fa-brush"></i></a></li>
+											<li><a href="#" data-tool="feather"><i class="fa-solid fa-feather"></i></a></li>
+											<li><a href="#" data-tool="square"><i class="fa-solid fa-square"></i></a></li>
+											<li><a href="#" data-tool="filledPath"><i class="fa-solid fa-draw-polygon"></i></a></li>
+											<li><a href="#" data-tool="circle"><i class="fa-solid fa-circle"></i></a></li>
+										</ul>
+									</div>
+									<button class="allsky-mask-tool-button btn btn-default mr-0" id="allsky-mask-undoBtn"><i class="fa-solid fa-rotate-left"></i></button>
+									<button class="allsky-mask-tool-button btn btn-default" id="allsky-mask-redoBtn"><i class="fa-solid fa-rotate-right"></i></button>
+									<div class="dropdown mr-0" style="display:inline-block;">
+										<button class="btn btn-default dropdown-toggle navbar-btn" type="button" data-toggle="dropdown">
+											<i class="fa-solid fa-filter"></i>
+											<span class="caret"></span>
+										</button>
+										<ul class="dropdown-menu allsky-mask-brush-dropdown-background">
+											<li class="ml-4 mr-4">
+												<input type="text" id="allsky-mask-opacitySlider" type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="100" />
+											</li>
+										</ul>
+									</div>	
+									<div class="dropdown mr-0" style="display:inline-block;">
+										<button class="btn btn-default dropdown-toggle navbar-btn" type="button" data-toggle="dropdown">
+											<i class="fa-solid fa-lightbulb"></i>
+											<span class="caret"></span>
+										</button>
+										<ul class="dropdown-menu allsky-mask-brush-dropdown-background">
+											<li class="ml-4 mr-4">
+												<input type="text" id="allsky-mask-brightnessSlider" type="text" data-slider-min="0" data-slider-max="1" data-slider-step="0.1" data-slider-value="0" />
+											</li>
+										</ul>
+									</div>	                
+									<div class="dropdown mr-0" style="display:inline-block;">
+										<button class="btn btn-default dropdown-toggle navbar-btn" type="button" data-toggle="dropdown">
+											<i class="fa-solid fa-expand"></i>
+											<span class="caret"></span>
+										</button>
+										<ul class="dropdown-menu allsky-mask-brush-dropdown-background">
+											<li class="ml-4 mr-4">
+												<input type="text" id="allsky-mask-brushSizeSlider" type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="10" />
+											</li>
+										</ul>
+									</div>	   
+									<div class="dropdown mr-0" style="display:inline-block;">
+										<button class="btn btn-default dropdown-toggle navbar-btn" type="button" data-toggle="dropdown">
+											<i class="fa-solid fa-magnifying-glass"></i>
+											<span class="caret"></span>
+										</button>
+										<ul class="dropdown-menu allsky-mask-brush-dropdown-background">
+											<li class="ml-4 mr-4">
+												<input type="text" id="allsky-mask-zoomSlider" type="text" data-slider-min="0.5" data-slider-max="3" data-slider-step="0.05" data-slider-value="1" />
+											</li>
+										</ul>
+									</div>	   
+								</div>
+								<div id="allsky-mask-container"></div>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default" id="allsky-mask-saveBtn">Save</button>
+									<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 								</div>
 							</div>
-							<div id="${plugin.modalidbody}">
-								<p>This is the content of the modal.</p>
-							</div>
-						</div>
-						<div class="modal-footer">
-							<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-							<button type="button" class="btn btn-primary">Save changes</button>
-						</div>
 						</div>
 					</div>
-				</div>
+				</div>		
 			`
-			$('body').append(maskDialog)
-			
-			plugin.dialogHeight = $(plugin.modaliddialogel).height()
-			plugin.dialogWidth = $(plugin.modaliddialogel).width()
-			plugin.dialogHeight = plugin.dialogHeight * 0.85
-			plugin.dialogWidth = plugin.dialogWidth * 0.98
-
-            $(plugin.modalidel).modal({
-                keyboard: false
-            });
-
-			$(plugin.modalidel).off('hidden.bs.modal')
-			$(plugin.modalidel).on('hidden.bs.modal', () => {
-				plugin.destroy()
-			});
-
+			$(`#${plugin.settings.modalId}`).remove()
+			$('body').append(dialogHTML)
 		}
 
-		var createKonva = function() {
-			plugin.stage = new Konva.Stage({
-				container: plugin.modalidbody,
-				width: plugin.dialogWidth,
-				height: plugin.dialogHeight,
+		var showMaskEditor = function () {
+			$(`#${plugin.settings.modalId}`).modal({
+				keyboard: false
 			});
+		}
 
-			plugin.imageLayer = new Konva.Layer();
-			plugin.maskLayer = new Konva.Layer();
-			plugin.mouseLayer = new Konva.Layer();
-			plugin.checkLayer = new Konva.Layer();			
-			plugin.stage.add(plugin.imageLayer);
-			plugin.stage.add(plugin.maskLayer);
-			plugin.stage.add(plugin.mouseLayer);
-			plugin.stage.add(plugin.checkLayer);
-			
-			// Load Image as Background
-			Konva.Image.fromURL('current/tmp/image.jpg', function(image) {
-		
-				plugin.image = plugin.imageLayer.add(image)
-				plugin.imageLayer.draw()
+		var createEditor = function () {
 
-				plugin.clipRect = new Konva.Rect({
+			$('#allsky-mask-brushSizeSlider').slider({
+				value: 10
+			}).on('slide', (e) => {
+				brushSize = parseInt(e.value, 10);
+			})
+			var brushSize = parseInt($("#allsky-mask-brushSizeSlider").slider('getValue'), 10);
+
+
+			$("#drawingToolDropdown").next(".dropdown-menu").on("click", "a", function (e) {
+				e.preventDefault()
+				var tool = $(this).data("tool")
+				plugin.currentTool = tool
+
+				if (tool === "freehand") {
+					$("#drawingToolDropdown").html('<i class="fas fa-brush"></i> <span class="caret"></span>')
+				}
+				if (tool === "feather") {
+					$("#drawingToolDropdown").html('<i class="fas fa-feather"></i> <span class="caret"></span>')
+				}
+				if (tool === "square") {
+					$("#drawingToolDropdown").html('<i class="fas fa-square"></i> <span class="caret"></span>')
+				}
+				if (tool === "circle") {
+					$("#drawingToolDropdown").html('<i class="fas fa-circle"></i> <span class="caret"></span>')
+				}
+				if (tool === "filledPath") {
+					$("#drawingToolDropdown").html('<i class="fas fa-draw-polygon"></i> <span class="caret"></span>')
+				}
+			})
+
+			$("#allsky-mask-easyModeBtn").click(function () {
+				plugin.mode = "easy"
+				plugin.currentTool = "circle"
+				$(this).addClass("active")
+				$("#allsky-mask-expertModeBtn").removeClass("active")
+			})
+			$("#allsky-mask-expertModeBtn").click(function () {
+				plugin.mode = "expert"
+				$(this).addClass("active")
+				$("#allsky-mask-easyModeBtn").removeClass("active")
+			})
+
+			$("#allsky-mask-newBtn").click(function () {
+				plugin.drawnGroup.destroyChildren()
+				plugin.drawnObjects = []
+				plugin.undoneObjects = []
+				plugin.drawingLayer.draw()
+				plugin.easyCircle = null
+			})
+
+			$("#allsky-mask-undoBtn").click(function () {
+				if (plugin.mode === "easy") return
+				if (plugin.drawnObjects.length > 0) {
+					var node = plugin.drawnObjects.pop()
+					node.remove()
+					plugin.undoneObjects.push(node)
+					plugin.drawingLayer.draw()
+				}
+			})
+
+			$("#allsky-mask-redoBtn").click(function () {
+				if (mode === "easy") return
+				if (plugin.undoneObjects.length > 0) {
+					var node = plugin.undoneObjects.pop()
+					plugin.drawnGroup.add(node)
+					plugin.drawnObjects.push(node)
+					plugin.drawingLayer.draw()
+				}
+			})
+
+			$("#allsky-mask-saveBtn").click(function () {
+				plugin.transformer.hide()
+				plugin.drawingLayer.opacity(1)
+				plugin.drawingLayer.draw()
+				var pixelRatio = 1 / plugin.imageScaleFactor
+				var dataURL = plugin.drawingLayer.toDataURL({
+					pixelRatio: pixelRatio,
 					x: 0,
 					y: 0,
-					width: image.width(),
-					height: image.height(),
-					stroke: 'black',
-					strokeWidth: 2
-				  })
-				  
-				  plugin.maskLayer.add(plugin.clipRect)
+					width: plugin.stage.width(),
+					height: plugin.stage.height(),
+					backgroundColor: "transparent"
+				})
+				plugin.transformer.show()
+				plugin.drawingLayer.draw()
+				var tempCanvas = document.createElement("canvas")
+				tempCanvas.width = plugin.originalImageWidth
+				tempCanvas.height = plugin.originalImageHeight
+				var ctx = tempCanvas.getContext("2d")
+				ctx.fillStyle = "black"
+				ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height)
+				var drawingImg = new Image()
+				drawingImg.onload = function () {
+					ctx.drawImage(drawingImg, 0, 0, plugin.originalImageWidth, plugin.originalImageHeight)
+					var finalDataURL = tempCanvas.toDataURL()
+					$("<img>").attr("src", finalDataURL).css({
+						"max-width": "100%",
+						"display": "block",
+						"margin": "10px auto"
+					}).appendTo("body")
+					plugin.finalDataURL = finalDataURL
+					saveImage()
+				}
 
-				  plugin.maskLayer.clipFunc(function (ctx) {
-					ctx.rect(plugin.clipRect.x(), plugin.clipRect.y(), plugin.clipRect.width(), plugin.clipRect.height())
-				  })
-
-				  let stageHeight = plugin.stage.height()
-				  let scale = stageHeight / image.height()
-				  
-				  plugin.stage.scale({ x: scale, y: scale })
-				  $('#allsky-mask-tool-zoom').slider('setValue', Math.floor(scale * 100))
-			})
-
-			var scaleFactor = 0.25
-			plugin.stage.scale({ x: scaleFactor, y: scaleFactor });
-			plugin.stage.draw();
-		}
-
-		var createKonvaNavEvents = function() {
-			plugin.stage.on('wheel', function (e) {
-				e.evt.preventDefault();
-				let scaleBy = 1.1;
-				let oldScale = plugin.stage.scaleX();
-				let scaleFactor = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
 				
-				plugin.stage.scale({ x: scaleFactor, y: scaleFactor });
-				plugin.stage.draw();
+				drawingImg.src = dataURL;
 			})
 
-		}
+			$(`#${plugin.settings.modalId}`).on("shown.bs.modal", function () {
+				var container = document.getElementById("allsky-mask-container")
+				var rect = container.getBoundingClientRect()
+				var containerWidth = rect.width
+				var containerHeight = rect.height
 
-		var createKonvaDrawEvents = function() {
+				plugin.stage = new Konva.Stage({
+					container: "allsky-mask-container",
+					width: containerWidth,
+					height: containerHeight
+				})
 
-			plugin.stage.on('mousedown touchstart', () => {
-				plugin.isDrawing = true
-				plugin.tempUndo = []
-				plugin.redo = []
+				var imageLayer = new Konva.Layer()
+				plugin.drawingLayer = new Konva.Layer()
+				plugin.stage.add(imageLayer)
+				plugin.stage.add(plugin.drawingLayer)
 
+				plugin.drawnGroup = new Konva.Group({ id: "allsky-mask-plugin.drawnGroup" })
+				plugin.drawingLayer.add(plugin.drawnGroup)
 
-				if (plugin.shape == 'rectangle') {
-					let pos = plugin.stage.getPointerPosition()
-					let scale = plugin.stage.scaleX()
-					plugin.drawRect = new Konva.Rect({
-						x: pos.x / scale,
-						y: pos.y / scale,
-						width: 1,
-						height: 1,
-						fill: plugin.brushColor,
-						draggable: true
+				plugin.transformer = new Konva.Transformer()
+				plugin.drawingLayer.add(plugin.transformer)
+
+				var imageObj = new Image()
+				imageObj.onload = function () {
+					plugin.originalImageWidth = imageObj.naturalWidth
+					plugin.originalImageHeight = imageObj.naturalHeight
+					plugin.imageScaleFactor = Math.min(containerWidth / plugin.originalImageWidth, containerHeight / plugin.originalImageHeight)
+					plugin.displayedImageWidth = plugin.originalImageWidth * plugin.imageScaleFactor
+					var displayedImageHeight = plugin.originalImageHeight * plugin.imageScaleFactor
+
+					plugin.stage.width(plugin.displayedImageWidth)
+					plugin.stage.height(displayedImageHeight)
+
+					var konvaImage = new Konva.Image({
+						image: imageObj,
+						x: 0,
+						y: 0,
+						width: plugin.displayedImageWidth,
+						height: displayedImageHeight,
+						draggable: false
 					})
-					plugin.maskLayer.add(plugin.drawRect)
+					konvaImage.filters([Konva.Filters.DarkAreaBrighten])
+					konvaImage.brightness(0)
+					konvaImage.cache({ x: 0, y: 0, width: plugin.displayedImageWidth, height: displayedImageHeight })
+					konvaImage.listening(false)
+					imageLayer.add(konvaImage)
+					imageLayer.draw()
+
+					$("#allsky-mask .modal-dialog").css("width", plugin.displayedImageWidth + "px")
+
+					setTimeout(function () {
+						var newRect = container.getBoundingClientRect()
+						var newWidth = newRect.width
+						var newHeight = newRect.height
+						plugin.imageScaleFactor = Math.min(newWidth / plugin.originalImageWidth, newHeight / plugin.originalImageHeight)
+						plugin.displayedImageWidth = plugin.originalImageWidth * plugin.imageScaleFactor
+						var newDisplayedHeight = plugin.originalImageHeight * plugin.imageScaleFactor
+						plugin.stage.width(plugin.displayedImageWidth)
+						plugin.stage.height(newDisplayedHeight)
+						konvaImage.width(plugin.displayedImageWidth)
+						konvaImage.height(newDisplayedHeight)
+						konvaImage.cache({ x: 0, y: 0, width: plugin.displayedImageWidth, height: newDisplayedHeight })
+						imageLayer.batchDraw()
+					}, 100)
 				}
-
-				if (plugin.shape == 'path') {
-					plugin.points = []
-					let pos = plugin.stage.getPointerPosition();
-					let scale = plugin.stage.scaleX()
-					plugin.points.push(pos.x / scale, pos.y / scale);
-				
-					plugin.drawLine = new Konva.Line({
-						points: plugin.points,
-						stroke: 'black',
-						strokeWidth: 2,
-						fill: plugin.brushColor,
-						closed: false
-					});
-					plugin.maskLayer.add(plugin.drawLine)
+				imageObj.onerror = function () {
+					console.error("Error loading image at /current/tmp/i.jpg")
 				}
+				//imageObj.src = "/current/tmp/i.jpg?noCache=" + new Date().getTime()
+				imageObj.src = `${plugin.settings.image}?noCache=` + new Date().getTime()
 
-			})
-			
-			plugin.stage.on('mouseup touchend', () => {
+				$("#allsky-mask-zoomSlider").on("input", function () {
+					var newScale = parseFloat($(this).val())
+					plugin.stage.scale({ x: newScale, y: newScale })
+					plugin.stage.batchDraw()
+				})
 
-				plugin.isDrawing = false
+				$('#allsky-mask-zoomSlider').slider({
+					value: 1
+				}).on('slide', (e) => {
+					var newScale = parseFloat(e.value);
+					plugin.stage.scale({ x: newScale, y: newScale });
+					plugin.stage.batchDraw();
+				})
 
-				if (plugin.tempUndo.length > 0) {
-					plugin.undo.push(plugin.tempUndo)
-				}
+				plugin.stage.on("wheel", function (e) {
+					e.evt.preventDefault()
+					var oldScale = plugin.stage.scaleX()
+					var scaleBy = 1.05
+					var newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy
+					plugin.stage.scale({ x: newScale, y: newScale })
+					$("#allsky-mask-zoomSlider").val(newScale)
+					plugin.stage.batchDraw()
+				})
 
-				if (plugin.shape == 'path') {
-					plugin.drawLine.strokeWidth(0)
-					plugin.drawLine.closed(true)
-					plugin.maskLayer.batchDraw()
-				}
-				updateToolbar()
-			})
-			
-			plugin.stage.on('mousemove touchmove', (e) => {
-				let scale = plugin.stage.scaleX()
-			
-				var pointerPos = plugin.stage.getPointerPosition();
-				var circleRect = plugin.image.getClientRect()
-				
-				if (pointerPos.x >= circleRect.x && pointerPos.x <= circleRect.x + circleRect.width &&
-					pointerPos.y >= circleRect.y && pointerPos.y <= circleRect.y + circleRect.height) {
-				} else {
-					plugin.isDrawing = false
-					return
-				}
-
-				if (pointerPos) {
-					if (plugin.shape == 'circle' || plugin.drawMode == 'erase') {
-						plugin.brushCircle.radius(plugin.brushSize)
-						plugin.brushCircle.position({
-							x: pointerPos.x / scale,
-							y: pointerPos.y / scale 
-						})
-						plugin.brushCircle.visible(true)
-					} else {
-						plugin.brushCircle.visible(false)
+				$('#allsky-mask-brightnessSlider').slider({
+					value: 0
+				}).on('slide', (e) => {
+					var value = parseFloat(e.value);
+					var bgImage = imageLayer.findOne("Image");
+					if (bgImage) {
+						bgImage.brightness(value);
+						bgImage.cache({ x: 0, y: 0, width: plugin.displayedImageWidth, height: plugin.stage.height() });
+						imageLayer.batchDraw();
 					}
-				}
+				})
 
-				if (!plugin.isDrawing) return;
 
-				if (plugin.drawMode == 'paint') {
+				$('#allsky-mask-opacitySlider').slider({
+					value: 0
+				}).on('slide', (e) => {
+					var opac = parseFloat(e.value) / 100;
+					console.log(opac)
+					plugin.drawingLayer.opacity(opac);
+					plugin.drawingLayer.draw();
+				})
 
-					if (plugin.shape == 'path') {
-						plugin.points.push(pointerPos.x / scale, pointerPos.y / scale);
-						plugin.drawLine.points(plugin.points)
-						plugin.maskLayer.draw()
-					}
-
-					if (plugin.shape == 'rectangle') {
-
-						let newWidth = (pointerPos.x / scale) - plugin.drawRect.x()
-						let newHeight = (pointerPos.y / scale) - plugin.drawRect.y()
-					
-						plugin.drawRect.width(newWidth)
-						plugin.drawRect.height(newHeight)
-					}
-
-					if (plugin.shape == 'circle') {
-						if (plugin.brushStyle == 'solid') {
-							let col = 'black'
-							if (plugin.brushColor == 'white') {
-								col = 'white'
+				// Separate event handling for easy and expert plugin.modes.
+				plugin.stage.on("mousedown touchstart", function (e) {
+					if (plugin.mode === "easy") {
+						// In easy plugin.mode, only allow a single circle.
+						if (e.target === plugin.stage) {
+							if (!plugin.easyCircle) {
+								var circle = new Konva.Circle({
+									x: plugin.stage.width() / 2,
+									y: plugin.stage.height() / 2,
+									radius: 50,
+									fill: "white",
+									draggable: true
+								});
+								plugin.drawnGroup.add(circle)
+								plugin.transformer.nodes([circle])
+								plugin.drawingLayer.draw()
+								plugin.drawnObjects.push(circle)
+								plugin.easyCircle = circle
+							} else {
+								plugin.transformer.nodes([plugin.easyCircle])
+								plugin.drawingLayer.draw()
 							}
-							const solidBrush = new Konva.Circle({
-								x: pointerPos.x / scale,
-								y: pointerPos.y / scale,
-								radius: plugin.brushSize,
-								fill: col
-							});
-							plugin.maskLayer.add(solidBrush)
-							plugin.tempUndo.push(solidBrush)
-						} else {
-							let col = 'rgba(0,0,0,0)'
-							if (plugin.brushColor == 'white') {
-								col = 'rgba(255, 255, 255, 0)'
-							}
-							const featheredBrush = new Konva.Circle({
-								x: pointerPos.x / scale,
-								y: pointerPos.y / scale,
-								radius: plugin.brushSize,
-								fillRadialGradientStartPoint: { x: 0, y: 0 },
-								fillRadialGradientStartRadius: 0,
-								fillRadialGradientEndPoint: { x: 0, y: 0 },
-								fillRadialGradientEndRadius: plugin.brushSize,
-								fillRadialGradientColorStops: [0, plugin.brushColor, 1, col], // Gradient fade
-							});
-							plugin.tempUndo.push(featheredBrush)
-							plugin.maskLayer.add(featheredBrush)
+						}
+						return
+					}
+
+					if (plugin.mode === "expert") {
+						plugin.isDrawing = true;
+						plugin.startPos = getTransformedPointerPosition();
+						switch (plugin.currentTool) {
+							case "freehand":
+							case "feather":
+								plugin.currentLine = new Konva.Line({
+									stroke: "white",
+									strokeWidth: plugin.currentTool === "feather" ? brushSize * 2 : brushSize,
+									lineCap: "round",
+									lineJoin: "round",
+									points: [plugin.startPos.x, plugin.startPos.y]
+								});
+								plugin.currentLine.setAttr("brushType", plugin.currentTool);
+								plugin.drawnGroup.add(plugin.currentLine);
+								break
+							case "square":
+								plugin.currentShape = new Konva.Rect({
+									x: plugin.startPos.x,
+									y: plugin.startPos.y,
+									width: 0,
+									height: 0,
+									stroke: "white",
+									strokeWidth: 2
+								})
+								plugin.drawnGroup.add(plugin.currentShape)
+								break
+							case "filledPath":
+								plugin.currentLine = new Konva.Line({
+									stroke: "white",
+									strokeWidth: 2,
+									closed: false,
+									points: [plugin.startPos.x, plugin.startPos.y]
+								})
+								plugin.drawnGroup.add(plugin.currentLine)
+								break
+							case "circle":
+								plugin.currentShape = new Konva.Circle({
+									x: plugin.startPos.x,
+									y: plugin.startPos.y,
+									radius: 0,
+									stroke: "white",
+									strokeWidth: 2,
+									fill: "white"
+								})
+								plugin.drawnGroup.add(plugin.currentShape)
+								break
 						}
 					}
-				}
+				})
 
-				if (plugin.drawMode == 'erase') {
-					var circle = new Konva.Circle({
-						x: pointerPos.x / scale,
-						y: pointerPos.y / scale,
-						radius: plugin.brushSize,
-						fill: 'white',
-						globalCompositeOperation: 'destination-out',
-						listening: false
-					  })
-				
-					  plugin.maskLayer.add(circle)
-
-				}
-
-				plugin.maskLayer.draw();
-			});	
-			
-			
-			plugin.brushCircle = new Konva.Circle({
-				x: 0,
-				y: 0,
-				radius: plugin.brushSize,
-				stroke: 'white',
-				strokeWidth: 2
-			  })
-			  
-
-			  plugin.mouseLayer.add(plugin.brushCircle);
-			  plugin.mouseLayer.draw();
-
-		}
-
-		var createToolbarEvents = function() {
-
-			$(document).on('click', '.allsky-mask-tool-shape', (e) => {
-				plugin.shape = $(e.currentTarget).data('shape') 
-				updateToolbar()
-			})
-
-			
-			$(document).on('click', '.allsky-mask-tool-colour', (e) => {
-				plugin.brushColor = $(e.target).data('colour') 
-				updateToolbar()
-			})
-
-			$(document).on('click', '#allsky-mask-tool-paint', () => {
-				plugin.brushColor = 'white'
-				plugin.drawMode = 'paint'
-				updateToolbar()
-			})
-
-			$(document).on('click', '#allsky-mask-tool-erase', () => {
-				plugin.brushColor = 'white'
-				plugin.drawMode = 'erase'
-				updateToolbar()
-			})
-
-			$(document).keydown(function (event) {
-				if (event.key === ']') {
-					plugin.brushSize += 20
-					$('#brushsize').slider('setValue', plugin.brushSize)
-					plugin.stage.fire('mousemove', { evt: { } })
-				}
-
-				if (event.key === '[') {
-					plugin.brushSize -= 20
-					$('#brushsize').slider('setValue', plugin.brushSize)
-					plugin.stage.fire('mousemove', { evt: { } })
-				}
-
-			})
-
-			$('#maskopacity').slider({
-				value: 100
-			}).on('slide', (e) => {
-				let opacity = e.value / 100
-				plugin.maskLayer.opacity(opacity)
-			})		
-
-			$('#brushsize').slider({
-				value: 80
-			}).on('slide', (e) => {
-				plugin.brushSize = e.value
-				plugin.stage.fire('mousemove', { evt: { } })
-			})	
-			
-			$('#allsky-mask-tool-zoom').slider({
-				value: 80
-			}).on('slide', (e) => {
-				let scale = e.value / 100
-				plugin.stage.scale({x: scale, y: scale})
-				plugin.stage.fire('mousemove', { evt: { } })
-			})	
-
-			
-
-
-			$('body').on('click', '.allsky-mask-brush', (e) => {
-				plugin.brushStyle = $(e.target).data('brush')
-			})
-
-			$('body').on('click', '#allsky-mask-new', (e) => {
-				plugin.maskLayer.destroyChildren()
-				plugin.maskLayer.draw()
-				plugin.redo = []
-				plugin.undo = []
-			})
-
-			$('body').on('click', '#allsky-mask-undo', (e) => {
-				let lastShapeList = plugin.undo.pop()
-				if (lastShapeList) {
-					for (let shapeEntry of lastShapeList) {
-						shapeEntry.remove()
+				plugin.stage.on("mousemove touchmove", function (e) {
+					if (!plugin.isDrawing) return
+					var pos = getTransformedPointerPosition()
+					if (plugin.mode === "expert") {
+						if (plugin.currentTool === "freehand" || plugin.currentTool === "feather") {
+							var newPoints = plugin.currentLine.points().concat([pos.x, pos.y])
+							plugin.currentLine.points(newPoints)
+							plugin.drawingLayer.batchDraw();
+						} else if (plugin.currentTool === "square") {
+							plugin.currentShape.width(pos.x - plugin.startPos.x)
+							plugin.currentShape.height(pos.y - plugin.startPos.y)
+							plugin.drawingLayer.batchDraw()
+						} else if (plugin.currentTool === "filledPath") {
+							var newPoints = plugin.currentLine.points().concat([pos.x, pos.y])
+							plugin.currentLine.points(newPoints)
+							plugin.drawingLayer.batchDraw()
+						} else if (plugin.currentTool === "circle") {
+							var dx = pos.x - plugin.startPos.x
+							var dy = pos.y - plugin.startPos.y
+							var newRadius = Math.sqrt(dx * dx + dy * dy)
+							plugin.currentShape.radius(newRadius)
+							plugin.drawingLayer.batchDraw()
+						}
 					}
-				  	plugin.maskLayer.draw()
-//TODO: Need to clone
-					plugin.redo.push(lastShapeList)
-					updateToolbar()
-				}
-			})
-			
-			$('body').on('click', '#allsky-mask-redo', (e) => {
-				let lastShapeList = plugin.redo.pop()
-				if (lastShapeList) {
-					for (let shapeEntry of lastShapeList) {
-						plugin.maskLayer.add(shapeEntry)
+				})
+
+				plugin.stage.on("mouseup touchend", function () {
+					if (plugin.isDrawing && plugin.mode === "expert") {
+						if (plugin.currentTool === "filledPath" && plugin.currentLine) {
+							plugin.currentLine.closed(true)
+							plugin.currentLine.fill("white")
+							plugin.drawingLayer.draw()
+							plugin.drawnObjects.push(plugin.currentLine)
+						}
+						if (plugin.currentTool === "square" && plugin.currentShape) {
+							plugin.currentShape.fill("white")
+							plugin.drawingLayer.draw()
+							plugin.drawnObjects.push(plugin.currentShape)
+						}
+						if (plugin.currentTool === "circle" && plugin.currentShape) {
+							plugin.drawingLayer.draw()
+							plugin.drawnObjects.push(plugin.currentShape)
+						}
+						if ((plugin.currentTool === "freehand" || plugin.currentTool === "feather") && plugin.currentLine) {
+							if (plugin.currentTool === "feather") {
+								plugin.currentLine.filters([Konva.Filters.Blur])
+								plugin.currentLine.blurRadius(3)
+								plugin.currentLine.cache()
+							}
+							plugin.drawingLayer.draw()
+							plugin.drawnObjects.push(plugin.currentLine)
+						}
 					}
-				  	plugin.maskLayer.draw()
-					updateToolbar()
-				}
+					plugin.isDrawing = false
+					plugin.currentLine = null
+					plugin.currentShape = null
+				})
+
+				plugin.drawingLayer.draw()
 			})
-		
 		}
 
-		var updateToolbar = function() {
-			$('.allsky-mask-tool-drawing').removeClass('active')
-			if (plugin.drawMode == 'paint') {
-				$('#allsky-mask-tool-paint').addClass('active')
-			}		
-	
-			if (plugin.drawMode == 'erase') {
-				$('#allsky-mask-tool-erase').addClass('active')
-			}
-			
-			if (plugin.undo.length > 0) {
-				$('#allsky-mask-undo').removeClass('disabled')
-			} else {
-				$('#allsky-mask-undo').addClass('disabled')
-			}
-
-			if (plugin.redo.length > 0) {
-				$('#allsky-mask-redo').removeClass('disabled')
-			} else {
-				$('#allsky-mask-redo').addClass('disabled')
-			}
-
-			if (plugin.shape == 'circle') {
-				$('#allsky-mask-toolbar-shape').empty()
-				$('#allsky-mask-toolbar-shape').html('<i class="fa-solid fa-circle"></i>')
-			}
-
-			if (plugin.shape == 'rectangle') {
-				$('#allsky-mask-toolbar-shape').empty()
-				$('#allsky-mask-toolbar-shape').html('<i class="fa-solid fa-square"></i>')
-			}
-
-			if (plugin.shape == 'path') {
-				$('#allsky-mask-toolbar-shape').empty()
-				$('#allsky-mask-toolbar-shape').html('<i class="fa-solid fa-draw-polygon"></i>')
-			}
-
+		var getTransformedPointerPosition = function () {
+			var pos = plugin.stage.getPointerPosition()
+			var scale = plugin.stage.scaleX()
+			return { x: pos.x / scale, y: pos.y / scale }
 		}
 
-        plugin.destroy = function () {
+		var saveImage = function() {
+			bootbox.prompt({
+			  title: "Enter a valid filename:",
+			  callback: (result) => {
+				// If user cancels the prompt, you may choose to handle it differently.
+				if (result === null) {
+				  console.log("User cancelled the prompt.");
+				  return;
+				}
+		  
+				// Example validation: filename must not be empty and can only contain
+				// letters, numbers, underscores, hyphens, and periods.
+				var validPattern = /^[a-zA-Z0-9_.-]+$/;
+				if (!result || !validPattern.test(result)) {
+				  // Notify the user of the invalid entry and re-display the prompt.
+				  bootbox.alert("Invalid filename. Please try again.", function() {
+					promptForFilename(); // Recursively call the function.
+				  });
+				} else {
+
+
+
+
+					$.ajax({
+						type: 'POST', // Specifies the request type as POST
+						url: plugin.settings.saveURL, // Replace with your server endpoint
+						data: {
+							filename: result,
+							image: plugin.finalDataURL
+						},
+						success: function(response) {
+							// This function is called if the request succeeds.
+							console.log('Success:', response);
+						},
+						error: function(xhr, status, error) {
+							// This function is called if the request fails.
+							console.error('Error:', error);
+						}
+					});
+
+
+
+				}
+			  }
+			});
+		  }
+
+		plugin.destroy = function () {
 			plugin.stage.destroy()
-			$(plugin.modalidel).remove()
-            $(document).removeData('allskyMASK');
-        }
+			$(`#${plugin.settings.modalId}`).remove()
+			$(document).removeData('allskyMASK');
+		}
 
-        plugin.init();
+		plugin.init();
 
-    }
+	}
 
-    $.fn.allskyMASK = function (options) {
-        return this.each(function () {
-            if (undefined == $(this).data('allskyMASK')) {
-                var plugin = new $.allskyMASK(this, options);
-                $(this).data('allskyMASK', plugin);
-            }
-        });
-    }
+	$.fn.allskyMASK = function (options) {
+		return this.each(function () {
+			if (undefined == $(this).data('allskyMASK')) {
+				var plugin = new $.allskyMASK(this, options)
+				$(this).data('allskyMASK', plugin)
+			}
+		})
+	}
 
 })(jQuery);

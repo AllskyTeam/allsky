@@ -65,7 +65,7 @@ if [[ -n ${POSSIBLE} ]]; then
 	echo -n "Your storage device is likely"
 	if [[ ${NUM} -eq 1 ]]; then
 		echo " the entry below whose 'PATH' column is '${POSSIBLE}',"
-		echo "if the 'Size' roughly matches your device."
+		echo "as long as the 'Size' roughly matches your device."
 	else
 		echo " one of the entries below whose 'TYPE' column is 'part'."
 		echo "Pick the entry whose 'SIZE' most closely matches your device."

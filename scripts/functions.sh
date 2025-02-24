@@ -1164,7 +1164,8 @@ function one_instance()
 				MSG+="\nOnce you have resolved the cause,"
 				"${ALLSKY_SCRIPTS}/addMessage.sh" \
 					--type ${SEVERITY} \
-					--id "${ID}" --cmd "Click here to reset counter" \
+					--no-date \
+					--id "${ID}" --cmd "click here to reset the counter" \
 					--msg "${MSG}"
 			fi
 

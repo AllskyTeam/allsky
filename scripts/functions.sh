@@ -1154,15 +1154,19 @@ function one_instance()
 			# If it's happening often let the user know.
 			[[ ! -d ${ALLSKY_ABORTS_DIR} ]] && mkdir "${ALLSKY_ABORTS_DIR}"
 			local AF="${ALLSKY_ABORTS_DIR}/${ABORTED_FILE}"
+			local ID="AM_RM_ABORTS_${ABORTED_FILE}"
 			echo -e "$( date )\t${ABORTED_FIELDS}" >> "${AF}"
 			NUM=$( wc -l < "${AF}" )
 			if [[ ${NUM} -eq 10 ]]; then
 				MSG="${NUM} ${ABORTED_MSG2} have been aborted waiting for others to finish."
 				[[ -n ${CAUSED_BY} ]] && MSG+="\n${CAUSED_BY}"
 				SEVERITY="warning"
-				MSG+="\nOnce you have resolved the cause, reset the aborted counter:"
-				MSG+="\n&nbsp; &nbsp; <code>rm -f '${AF}'</code>"
-				"${ALLSKY_SCRIPTS}/addMessage.sh" --type ${SEVERITY} --msg "${MSG}"
+				MSG+="\nOnce you have resolved the cause,"
+				"${ALLSKY_SCRIPTS}/addMessage.sh" \
+					--type ${SEVERITY} \
+					--no-date \
+					--id "${ID}" --cmd "click here to reset the counter" \
+					--msg "${MSG}"
 			fi
 
 			return 2

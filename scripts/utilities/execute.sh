@@ -60,12 +60,13 @@ function rm_msg()
 function rm_object()
 {
 	local ITEM="$1"
+	local SILENT="$2"
 
 	local R="$( rm -r "${ITEM}" 2>&1 )"	# -r in case it's a directory
 	local RET_CODE=$?
 
 	if [[ ${RET_CODE} -eq 0 ]]; then
-		echo "Removed '${ITEM}'"
+		[[ ${SILENT} != "silent" ]] && echo "Removed '${ITEM}'"
 	else
 		echo "Unable to remove '${ITEM}': ${R}" >&2
 	fi
@@ -97,10 +98,10 @@ case "${CMD}" in
 		rm_msg "${CMD}"
 		;;
 
-	AM_RM_ABORTS_*)		# Remove "have been aborted" file
+	AM_RM_ABORTS_*)		# Remove the specified "have been aborted" file
 		# The "*" is the file name.
 		FILE="${CMD/AM_RM_ABORTS_/}"
-		rm_object "${ALLSKY_ABORTS_DIR}/${FILE}"
+		rm_object "${ALLSKY_ABORTS_DIR}/${FILE}" "silent"
 		RET=$?
 
 		rm_msg "${CMD}"

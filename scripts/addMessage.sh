@@ -46,16 +46,19 @@ usage_and_exit()
 	local MSG
 	exec >&2
 	echo
-	MSG="Usage: ${ME} [--id ID [--cmd TEXT]] [--delete] [--no-date] [--url url]  --type message_type  --msg message"
+	MSG="Usage: ${ME} [--id ID [--cmd c]] [--delete] [--no-date] [--url u] --type t --msg m"
 	if [[ ${RET} -eq 0 ]]; then
 		echo -e "${MSG}"
 	else
 		wE_ "${MSG}"
 	fi
 	echo
-	echo "    '--no-date' does not add the current date to the message."
-	echo "    'message_type' is 'success', 'warning', 'error', 'info', or 'debug'."
-	echo "    'url' is a URL to (normally) a documentation page."
+	echo "where:"
+	echo "  --cmd c      displays 'c' as a link in the WebUI."
+	echo "  --delete     if specified, only '--id ID' is required."
+	echo "  --no-date    does not add the current date to the message."
+	echo "  --url u      'u' is a URL to (normally) a documentation page."
+	echo "  --type t     't' is 'success', 'warning', 'error', 'info', or 'debug'."
 	echo
 	exit "${RET}"
 }
@@ -118,7 +121,7 @@ done
 
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
-if [[ -z ${TYPE} || -z ${MESSAGE} ]]; then
+if [[ ${DELETE} == "false" && (-z ${TYPE} || -z ${MESSAGE}) ]]; then
 	[[ -z ${TYPE} ]] && wE_ "--type not specified" >&2
 	[[ -z ${MESSAGE} ]] && wE_ "--msg not specified" >&2
 	usage_and_exit 1

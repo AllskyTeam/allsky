@@ -97,6 +97,15 @@ case "${CMD}" in
 		rm_msg "${CMD}"
 		;;
 
+	AM_RM_ABORTS_*)		# Remove "have been aborted" file
+		# The "*" is the file name.
+		FILE="${CMD/AM_RM_ABORTS_/}"
+		rm_object "${ALLSKY_ABORTS_DIR}/${FILE}"
+		RET=$?
+
+		rm_msg "${CMD}"
+		;;
+
 	"AM_NOT_SUPPORTED")		# Not supported camera
 		CT="$2"
 		shift

@@ -16,14 +16,6 @@ source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
-if [[ ${ON_TTY} == "false" ]]; then
-	echo "<!DOCTYPE html><html lang='en'>"
-	echo "<head>"
-	echo "<style>"
-		echo "body {font-size: 150%;}"
-	echo "</style>"
-	echo "</head>"
-fi
 OK="true"
 DO_HELP="false"
 while [[ $# -gt 0 ]]; do
@@ -76,6 +68,7 @@ function rm_object()
 	local R="$( rm -r "${ITEM}" 2>&1 )"	# -r in case it's a directory
 	local RET_CODE=$?
 
+	echo "<span style='font-size: 200%'>"
 	if [[ ${RET_CODE} -eq 0 ]]; then
 		if [[ -n ${MSG} ]]; then
 			echo -e "${MSG}"
@@ -83,8 +76,9 @@ function rm_object()
 			echo "Removed '${ITEM}'"
 		fi
 	else
-		echo "Unable to remove '${ITEM}': ${R}" >&2
+		wE_ "Unable to remove '${ITEM}': ${R}" >&2
 	fi
+	echo "</span>"
 	return "${RET_CODE}"
 }
 
@@ -131,7 +125,7 @@ case "${CMD}" in
 		;;
 
 	AM_*)
-		echo "${ME}: ERROR: Unknown error ID: '${CMD}'." >&2
+		wE_ "${ME}: ERROR: Unknown error ID: '${CMD}'." >&2
 		exit 1
 		;;
 
@@ -141,13 +135,9 @@ case "${CMD}" in
 		if [[ ${RET} -eq 0 ]]; then
 			echo "Executed ${*}"
 		else
-			echo "Unable to execute ${*}" >&2
+			wE_ "Unable to execute ${*}" >&2
 		fi
 		;;
 esac
-
-if [[ ${ON_TTY} == "false" ]]; then
-	echo "</body></html>"
-fi
 
 exit "${RET}"

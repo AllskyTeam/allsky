@@ -16,6 +16,14 @@ source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
+if [[ ${ON_TTY} == "false" ]]; then
+	echo "<!DOCTYPE html><html lang='en'>"
+	echo "<head>"
+	echo "<style>"
+		echo "body {font-size: 150%;}"
+	echo "</style>"
+	echo "</head>"
+fi
 OK="true"
 DO_HELP="false"
 while [[ $# -gt 0 ]]; do
@@ -25,7 +33,7 @@ while [[ $# -gt 0 ]]; do
 			DO_HELP="true"
 			;;
 		-*)
-			echo -e "${RED}Unknown argument '${ARG}' ignoring.${NC}" >&2
+			wE_ "Unknown argument '${ARG}'." >&2
 			OK="false"
 			;;
 		*)
@@ -40,9 +48,12 @@ usage_and_exit()
 	local RET=${1}
 	exec 2>&1
 	echo
-	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-	echo "Usage: ${ME} [--help] command [arguments...]"
-	[[ ${RET} -ne 0 ]] && echo -en "${NC}"
+	local USAGE="Usage: ${ME} [--help] command [arguments...]"
+	if [[ ${RET} -ne 0 ]]; then
+		wE_ "${USAGE}"
+	else
+		echo "${USAGE}"
+	fi
 	exit "${RET}"
 }
 
@@ -53,20 +64,24 @@ usage_and_exit()
 # Remove a message from the messages DB.
 function rm_msg()
 {
-	local ID="$1"
+	local ID="${1}"
 	"${ALLSKY_SCRIPTS}/addMessage.sh" --id "${ID}" --delete
 }
 
 function rm_object()
 {
-	local ITEM="$1"
-	local SILENT="$2"
+	local ITEM="${1}"
+	local MSG="${2}"
 
 	local R="$( rm -r "${ITEM}" 2>&1 )"	# -r in case it's a directory
 	local RET_CODE=$?
 
 	if [[ ${RET_CODE} -eq 0 ]]; then
-		[[ ${SILENT} != "silent" ]] && echo "Removed '${ITEM}'"
+		if [[ -n ${MSG} ]]; then
+			echo -e "${MSG}"
+		else
+			echo "Removed '${ITEM}'"
+		fi
 	else
 		echo "Unable to remove '${ITEM}': ${R}" >&2
 	fi
@@ -101,7 +116,7 @@ case "${CMD}" in
 	AM_RM_ABORTS_*)		# Remove the specified "have been aborted" file
 		# The "*" is the file name.
 		FILE="${CMD/AM_RM_ABORTS_/}"
-		rm_object "${ALLSKY_ABORTS_DIR}/${FILE}" "silent"
+		rm_object "${ALLSKY_ABORTS_DIR}/${FILE}" "File removed."
 		RET=$?
 
 		rm_msg "${CMD}"
@@ -130,5 +145,9 @@ case "${CMD}" in
 		fi
 		;;
 esac
+
+if [[ ${ON_TTY} == "false" ]]; then
+	echo "</body></html>"
+fi
 
 exit "${RET}"

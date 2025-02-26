@@ -73,7 +73,7 @@ while [[ $# -gt 0 ]]; do
 				;;
 
 			-*)
-				echo -e "${RED}${ME}: Unknown argument '${ARG}' ignoring.${NC}" >&2
+				E_ "${ME}: Unknown argument '${ARG}' ignoring." >&2
 				DO_HELP="true"
 				;;
 			*)
@@ -87,23 +87,27 @@ usage_and_exit()
 {
 	local RET=${1}
 	exec >&2
+	local USAGE="Usage: ${ME} [--help] [--silent] [--debug] [--nice n] [--upload] \\"
+	USAGE+="    [--thumbnail-only] [--keogram] [--startrails] [--timelapse] \\"
+	USAGE+="    {--images file | <INPUT_DIR>}"
 	echo
-	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-	echo "Usage: ${ME} [--help] [--silent] [--debug] [--nice n] [--upload] \\"
-	echo "    [--thumbnail-only] [--keogram] [--startrails] [--timelapse] \\"
-	echo "    {--images file | <INPUT_DIR>}"
-	[[ ${RET} -ne 0 ]] && echo -en "${NC}"
-	echo "    where:"
-	echo "      '--help' displays this message and exits."
-	echo "      '--debug' runs upload.sh in debug mode."
-	echo "      '--nice' runs with nice level n."
-	echo "      '--upload' uploads previously-created files instead of creating them."
-	echo "      '--thumbnail-only' creates or uploads video thumbnails only."
-	echo "      'INPUT_DIR' is the day in '${ALLSKY_IMAGES}' to process."
-	echo "      '--keogram' will ${MSG1} a keogram."
-	echo "      '--startrails' will ${MSG1} a startrail."
-	echo "      '--timelapse' will ${MSG1} a timelapse."
-	echo "    If you don't specify --keogram, --startrails, or --timelapse, all three will be ${MSG2}."
+	if [[ ${RET} -ne 0 ]]; then
+		E_ "${USAGE}"
+	else
+		echo "${USAGE}"
+	fi
+	echo "where:"
+	echo "  --help           displays this message and exits."
+	echo "  --debug          runs upload.sh in debug mode."
+	echo "  --nice           runs with nice level n."
+	echo "  --upload         uploads previously-created files instead of creating them."
+	echo "  --thumbnail-only creates or uploads video thumbnails only."
+	echo "  INPUT_DIR        is the day in '${ALLSKY_IMAGES}' to process."
+	echo "  --keogram        will ${MSG1} a keogram."
+	echo "  --startrails     will ${MSG1} a startrail."
+	echo "  --timelapse      will ${MSG1} a timelapse."
+	echo
+	echo "If you don't specify --keogram, --startrails, or --timelapse, all three will be ${MSG2}."
 	echo
 	echo "The list of images is determined in one of two ways:"
 	echo "1. Looking in '<INPUT_DIR>' for files with an extension of '${EXTENSION}'."
@@ -127,7 +131,7 @@ fi
 
 if [[ -n ${IMAGES_FILE} ]]; then
 	if [[ ! -s ${IMAGES_FILE} ]]; then
-		echo -e "${RED}*** ${ME} ERROR: '${IMAGES_FILE}' does not exist or is empty!${NC}" >&2
+		E_ "*** ${ME} ERROR: '${IMAGES_FILE}' does not exist or is empty!" >&2
 		exit 3
 	fi
 	INPUT_DIR=""		# Not used
@@ -139,9 +143,7 @@ if [[ -n ${IMAGES_FILE} ]]; then
 	# In case the filename doesn't include a path, put in a default location.
 	if [[ ${OUTPUT_DIR} == "." ]]; then
 		OUTPUT_DIR="${ALLSKY_TMP}"
-		echo -en "${ME}: ${YELLOW}" >&2
-		echo "Can't determine where to put files so putting in '${OUTPUT_DIR}'." >&2
-		echo -e "${NC}" >&2
+		W_ "${ME}: Can't determine where to put files so putting in '${OUTPUT_DIR}'." >&2
 	fi
 
 	# Use the basename of the directory.
@@ -159,7 +161,7 @@ else
 		DATE="$( basename "${INPUT_DIR}" )"
 	fi
 	if [[ ! -d ${INPUT_DIR} ]]; then
-		echo -e "${RED}*** ${ME} ERROR: '${INPUT_DIR}' does not exist!${NC}" >&2
+		E_ "*** ${ME} ERROR: '${INPUT_DIR}' does not exist!" >&2
 		exit 4
 	fi
 
@@ -186,7 +188,7 @@ if [[ ${TYPE} == "GENERATE" ]]; then
 		eval ${CMD}
 		local RET=$?
 		if [[ ${RET} -ne 0 ]]; then
-			echo -e "${RED}${ME}: Command Failed: ${CMD}${NC}" >&2
+			E_ "${ME}: Command Failed: ${CMD}" >&2
 		elif [[ ${SILENT} == "false" ]]; then
 			echo -e "\tDone"
 		fi
@@ -201,7 +203,7 @@ else
 	if [[ ${L_WEB_USE} == "false" &&
 		  ${R_WEB_USE} == "false" &&
 		  ${R_SERVER_USE} == "false" ]]; then
-		echo -e "${RED}*** ${ME} ERROR: '--upload' specified but nowhere to upload!${NC}" >&2
+		E_ "*** ${ME} ERROR: '--upload' specified but nowhere to upload!" >&2
 		exit 5
 	fi
 
@@ -286,9 +288,7 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 
 	else
 		if [[ ! -f ${UPLOAD_FILE} ]]; then
-			echo -en "${YELLOW}" >&2
-			echo -n "WARNING: '${UPLOAD_FILE}' not found; skipping." >&2
-			echo -e "${NC}" >&2
+			W_ "WARNING: '${UPLOAD_FILE}' not found; skipping." >&2
 			((EXIT_CODE++))
 		else
 			DEST_DIR="keograms"
@@ -347,9 +347,7 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 
 	else
 		if [[ ! -f ${UPLOAD_FILE} ]]; then
-			echo -en "${YELLOW}" >&2
-			echo -n "WARNING: '${UPLOAD_FILE}' not found; skipping." >&2
-			echo -e "${NC}" >&2
+			W_ "WARNING: '${UPLOAD_FILE}' not found; skipping." >&2
 			((EXIT_CODE++))
 		else
 			DEST_DIR="startrails"
@@ -401,8 +399,9 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 			if [[ -f ${UPLOAD_FILE} ]]; then
 				RET=0
 			else
-				echo -e "${RED}${ME}: ERROR: video file '${UPLOAD_FILE}' not found!" >&2
-				echo -e "Cannot create thumbnail.${NC}" >&2
+				ERR="${ME}: ERROR: video file '${UPLOAD_FILE}' not found!"
+				ERR+="\nCannot create thumbnail."
+				E_ "${ERR}" >&2
 				RET=1
 			fi
 		else
@@ -429,14 +428,12 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 				make_thumbnail "00" "${UPLOAD_FILE}" "${UPLOAD_THUMBNAIL}"
 			fi
 			if [[ ! -f ${UPLOAD_THUMBNAIL} ]]; then
-				echo -e "${RED}${ME}: ERROR: video thumbnail not created!${NC}" >&2
+				E_ "${ME}: ERROR: video thumbnail not created!" >&2
 			fi
 		fi
 
 	elif [[ ! -f ${UPLOAD_FILE} ]]; then
-		echo -en "${YELLOW}" >&2
-		echo -n "WARNING: '${UPLOAD_FILE}' not found; skipping." >&2
-		echo -e "${NC}" >&2
+		W_ "WARNING: '${UPLOAD_FILE}' not found; skipping." >&2
 		((EXIT_CODE++))
 	else
 		DEST_DIR="videos"

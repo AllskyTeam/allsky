@@ -585,13 +585,16 @@ A typical page is below.
 </tr>
 <tr><td id="debuglevel"><span class="WebUISetting">Debug Level</span></td>
 	<td>1</td>
-	<td>Determines the amount of output in the log file.
-<!--
-	Log entries can also be viewed with <code>journalctl -u allsky</code>.
--->
-	<br><span class="WebUIValue">0</span> outputs error messages only.
-	<span class="WebUIValue">4</span> outputs a LOT of messages and generally should
-	only be used if an Allsky developers directs you to.
+	<td>Determines the amount of output in the Allsky log file:
+	<ul class="minimalPadding">
+		<li><span class="WebUIValue">0</span> outputs error messages only.
+		<li><span class="WebUIValue">1</span> outputs "what's happening" type messages.
+		<li><span class="WebUIValue">2</span> outputs more "what's happening" messages.
+		<li><span class="WebUIValue">3</span> outputs debugging information.
+			<strong>Use this level when debugging problems.</strong>
+		<li><span class="WebUIValue">4</span> outputs a LOT of INFO messages.
+			Use only if directed to by an Allsky developer.
+	</ul>
 	</td>
 </tr>
 

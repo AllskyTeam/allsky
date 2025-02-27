@@ -873,7 +873,7 @@
 {
 "name" : "debuglevel",
 "default" : 1,
-"description" : "Debug level. <span class='WebUIValue'>0</span> is errors only.  <span class='WebUIValue'>4</span> is for Allsky developers use.",
+"description" : "Debug level. Use <span class='WebUIValue'>3</span> while debugging.  See the <a external='true' allsky='true' href='/documentation/settings/allsky.html#debuglevel'>documentation</a> for meaning of the levels.",
 "label" : "Debug Level",
 "type" : "select_integer",
 "usage" : "capture",

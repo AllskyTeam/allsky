@@ -1423,8 +1423,8 @@ function get_lat_long()
 # Return the amount of RAM in GB.
 function get_RAM()
 {
-	# vcgencmd doesn't exist on many non-Pi computers, so return 0 on them.
-	type vcgencmd >/dev/null 2>&1 || { echo 0; return; }
+	# vcgencmd doesn't exist on many non-Pi computers, so return "unknown" on them.
+	type vcgencmd >/dev/null 2>&1 || { echo "unknown"; return; }
 
 	local UNITS="${1:-GB}"
 

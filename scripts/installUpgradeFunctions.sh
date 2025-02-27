@@ -785,12 +785,7 @@ function get_ram_tmp_swap()
 {
 	[[ -n ${RAM_SIZE} ]] && return	# already determined numbers
 
-	# This can return "total_mem is unknown" if the OS is REALLY old.
 	RAM_SIZE="$( get_RAM "MB" )"
-	if [[ ${RAM_SIZE} == "unknown" ]]; then
-		# Note: This doesn't produce exact results.  On a 4 GB Pi, it returns 3.74805.
-		RAM_SIZE=$( free --mebi | gawk '{if ($1 == "Mem:") {print $2; exit 0} }' )		# in MB
-	fi
 
 	declare -A TMP_SIZES=()
 	TMP_SIZES["512"]=75
@@ -1420,33 +1415,50 @@ function get_lat_long()
 
 
 ####
-# Return the amount of RAM in GB.
+# Return the amount of RAM in the units specified (either MB or GB).
 function get_RAM()
 {
-	# vcgencmd doesn't exist on many non-Pi computers, so return "unknown" on them.
-	type vcgencmd >/dev/null 2>&1 || { echo "unknown"; return; }
-
 	local UNITS="${1:-GB}"
+	local RAM
 
-	# Input example: total_mem=4096
-	# Pi's have either 0.5 GB or an integer number of GB.
-	sudo vcgencmd get_config total_mem | gawk --field-separator "=" -v UNITS="${UNITS}" '
-		{
-			if ($0 ~ /unknown/) {
-				printf("unknown");
+	function parse_RAM()
+	{
+		local UNITS="${1}"
+		
+		gawk -v UNITS="${UNITS}" '
+			{
+				if ($0 ~ /unknown/) {
+					printf("unknown");
+					exit 0;
+				}
+
+				amt = $2;		# in MB
+				if (UNITS == "MB") {
+					printf("%d", amt);
+				} else if (amt < 1024) {
+					printf("%.1f", amt / 1024);
+				} else {
+					printf("%d", amt / 1024);
+				}
 				exit 0;
-			}
+			}'
+	}
 
-			amt = $2;		# in MB
-			if (UNITS == "MB") {
-				printf("%d", amt);
-			} else if (amt < 1024) {
-				printf("%.1f", amt / 1024);
-			} else {
-				printf("%d", amt / 1024);
-			}
-			exit 0;
-		}'
+	# vcgencmd doesn't exist on many non-Pi computers;
+	if type vcgencmd >/dev/null 2>&1 ; then
+		# vcgencmd can return "total_mem is unknown" if the OS is REALLY old.
+		# Input example: total_mem=4096
+		# Pi's have either 0.5 GB or an integer number of GB.
+		RAM="$( sudo vcgencmd get_config total_mem | sed 's/=/ /' | parse_RAM "${UNITS}" )"
+		if [[ ${RAM} != "unknown" ]]; then
+			echo "${RAM}"
+			return
+		fi
+	fi
+
+	# Try a different way.
+	# Note: This doesn't produce exact results.  On a 4 GB Pi, it returns 3.74805.
+	free --mebi | parse_RAM "${UNITS}"
 }
 
 
@@ -1457,7 +1469,7 @@ function get_computer()
 	# The file has a NULL at the end so to avoid a bash warning, ignore it.
 	local MODEL="$( tr --delete '\0' < /sys/firmware/devicetree/base/model |
 			sed 's/Raspberry Pi/RPi/')"
-	local GB="$( get_RAM )"
+	local GB="$( get_RAM "GB" )"
 	echo "${MODEL}, ${GB} GB"
 }
 

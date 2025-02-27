@@ -292,9 +292,9 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 			((EXIT_CODE++))
 		else
 			DEST_DIR="keograms"
+			DEST_NAME="${KEOGRAM_FILE}"
 
 			if [[ ${L_WEB_USE} == "true" ]]; then
-				DEST_NAME="${KEOGRAM_FILE}"
 				#shellcheck disable=SC2086
 				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--local-web" \
 					"${UPLOAD_FILE}" "${DEST_DIR}" "${DEST_NAME}"
@@ -309,8 +309,6 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 			if [[ ${R_SERVER_USE} == "true" ]]; then
 				if [[ -n ${R_SERVER_KEOGRAM_NAME} ]]; then
 					DEST_NAME="${R_SERVER_KEOGRAM_NAME}"
-				else
-					DEST_NAME="${KEOGRAM_FILE}"
 				fi
 
 				#shellcheck disable=SC2086
@@ -351,9 +349,9 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 			((EXIT_CODE++))
 		else
 			DEST_DIR="startrails"
+			DEST_NAME="${STARTRAILS_FILE}"
 
 			if [[ ${L_WEB_USE} == "true" ]]; then
-				DEST_NAME="${STARTRAILS_FILE}"
 				#shellcheck disable=SC2086
 				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--local-web" \
 					"${UPLOAD_FILE}" "${DEST_DIR}" "${DEST_NAME}"
@@ -368,8 +366,6 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 			if [[ ${R_SERVER_USE} == "true" ]]; then
 				if [[ -n ${R_SERVER_STARTRAILS_NAME} ]]; then
 					DEST_NAME="${R_SERVER_STARTRAILS_NAME}"
-				else
-					DEST_NAME="${STARTRAILS_FILE}"
 				fi
 
 				#shellcheck disable=SC2086
@@ -437,9 +433,9 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 		((EXIT_CODE++))
 	else
 		DEST_DIR="videos"
+		DEST_NAME="${VIDEO_FILE}"
 
 		if [[ ${L_WEB_USE} == "true" ]]; then
-			DEST_NAME="${VIDEO_FILE}"		# no name choice for local Website
 			D="${DEST_DIR}"
 			if [[ ${THUMBNAIL_ONLY} != "true" ]]; then
 				#shellcheck disable=SC2086
@@ -476,8 +472,6 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 		if [[ ${R_SERVER_USE} == "true" ]]; then
 			if [[ -n ${R_SERVER_VIDEO_NAME} ]]; then
 				DEST_NAME="${R_SERVER_VIDEO_NAME}"
-			else
-				DEST_NAME="${VIDEO_FILE}"
 			fi
 
 			D="${R_SERVER_DEST_DIR}${DEST_DIR}"

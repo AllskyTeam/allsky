@@ -122,7 +122,6 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	# Areas for users' Allsky-related files that get propogated to new releases.
 	ALLSKY_MYFILES_NAME="myFiles"
 	ALLSKY_MYFILES_DIR="${ALLSKY_CONFIG}/${ALLSKY_MYFILES_NAME}"
-	ALLSKY_WEBSITE_MYFILES_DIR="${ALLSKY_WEBSITE}/${ALLSKY_MYFILES_NAME}"
 
 	# Holds all the notification images.
 	ALLSKY_NOTIFICATION_IMAGES="${ALLSKY_HOME}/notificationImages"
@@ -182,8 +181,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_VERSION_FILE="${ALLSKY_HOME}/version"
 	ALLSKY_VERSION="$( < "${ALLSKY_VERSION_FILE}" )"
 
-	# Location of optional allsky-website package.
+	# Location of Allsky Website files.
 	ALLSKY_WEBSITE="${ALLSKY_WEBUI}/allsky"
+	ALLSKY_WEBSITE_MYFILES_DIR="${ALLSKY_WEBSITE}/${ALLSKY_MYFILES_NAME}"
 	ALLSKY_WEBSITE_CHECKSUM_FILE="${ALLSKY_WEBSITE}/checksums.txt"
 	ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME="viewSettings"
 	ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY="${ALLSKY_WEBSITE}/${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"

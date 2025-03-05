@@ -18,19 +18,22 @@ function usage_and_exit()
 {
 	local RET=${1}
 	exec >&2
-	[[ ${RET} -ne 0 ]] && echo -en "${wERROR}"
+	local MSG="Usage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug] [--machineid id] [--endofnight] [--fromWebUI]"
 	echo
-	echo -e "Usage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug] [--machineid id] [--endofnight] [--fromWebUI]"
+	if [[ ${RET} -eq 0 ]]; then
+		echo -e "${MSG}"
+	else
+		E_ "${MSG}"
+	fi
+	echo "where:"
+	echo "    --help:       Print this usage message and exit immediately."
+	echo "    --whisper:    Be quiet with non-error related output - only display results."
+	echo "    --delete:     Delete map data; all fields except machine_id are ignored."
+	echo "    --force:      Force updates, even if not scheduled automatically for today."
+	echo "    --debug:      Output debugging statements."
+	echo "    --endofnight: ${ME} was called from endOfNight.sh."
+	echo "    --fromWebUI:  ${ME} was called from the WebUI (use html)."
 	echo
-	echo "--help:       Print this usage message and exit immediately."
-	echo "--whisper:    Be quiet with non-error related output - only display results."
-	echo "--delete:     Delete map data; all fields except machine_id are ignored."
-	echo "--force:      Force updates, even if not scheduled automatically for today."
-	echo "--debug:      Output debugging statements."
-	echo "--endofnight: ${ME} was called from endOfNight.sh."
-	echo "--fromWebUI:  ${ME} was called from the WebUI (use html)."
-	echo
-	[[ ${RET} -ne 0 ]] && echo -e "${wNC}"
 	exit "${RET}"
 }
 
@@ -81,9 +84,7 @@ function check_URL()
 		local CONTENT="$( curl --user-agent Allsky --location --head --silent --show-error --connect-timeout "${TIMEOUT}" "${URL}" 2>&1 )"
 		local RET=$?
 		if [[ ${DEBUG} == "true" ]]; then
-			echo -e "\n${wDEBUG}"
-			echo -e "check_URL(${URL}, ${URL_TYPE}, ${FIELD_NAME}) RET=${RET}:\n${CONTENT}"
-			echo -e "${wNC}.\n"
+			D_ "\ncheck_URL(${URL}, ${URL_TYPE}, ${FIELD_NAME}) RET=${RET}:\n${CONTENT}\n"
 		fi
 		if [[ ${RET} -eq 6 ]]; then
 			E+="ERROR: ${FIELD_NAME} '${URL}' not found - check spelling and network connectivity.${BR}"
@@ -119,6 +120,7 @@ WHISPER="false"
 ENDOFNIGHT="false"
 MACHINE_ID=""
 FROM_WEBUI="false"
+FORCE="false"
 while [[ $# -ne 0 ]]; do
 	case "${1,,}" in
 		--help)
@@ -132,6 +134,7 @@ while [[ $# -ne 0 ]]; do
 			DEBUG="true"
 			;;
 		--force)
+			FORCE="true"
 			UPLOAD="true"
 			;;
 		--whisper)
@@ -170,12 +173,12 @@ fi
 
 if [[ ${WHISPER} == "true" ]]; then
 	MSG_START=""
-	ERROR_MSG_START="${wERROR}"
-	WARNING_MSG_START="${wWARNING}"
+	ERROR_MSG_START=""
+	WARNING_MSG_START=""
 else
 	MSG_START="${ME}: "
-	ERROR_MSG_START="${wERROR}*** ${ME}: "
-	WARNING_MSG_START="${wWARNING}*** ${ME}: "
+	ERROR_MSG_START="*** ${ME}: "
+	WARNING_MSG_START="*** ${ME}: "
 	if [[ ${FROM_WEBUI} == "true" ]]; then
 		ERROR_MSG_START+="${BR}"
 		WARNING_MSG_START+="${BR}"
@@ -187,7 +190,7 @@ if [[ -z ${MACHINE_ID} ]]; then
 	MACHINE_ID="$( < /etc/machine-id )"
 	if [[ -z ${MACHINE_ID} ]]; then
 		ERR="ERROR: Unable to get 'machine_id': check /etc/machine-id."
-		echo -e "${ERROR_MSG_START}${ERR}${wNC}" >&2
+		wE_ "${ERROR_MSG_START}${ERR}" >&2
 		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${ERR}"
 		exit 3
 	fi
@@ -203,7 +206,7 @@ if [[ -z ${LONGITUDE} ]]; then
 	E+="ERROR: 'Longitude' is required.${BR}"
 fi
 if [[ -n ${E} ]]; then
-	echo -e "${ERROR_MSG_START}${E}${wNC}"
+	wE_ "${ERROR_MSG_START}${E}"
 	exit 1
 fi
 
@@ -226,8 +229,8 @@ if [[ ${DELETE} == "true" ]]; then
 	{
 		cat <<-EOF
 		{
-		"website_url": "DELETE",
-		"machine_id": "${MACHINE_ID}"
+		"machine_id": "${MACHINE_ID}",
+		"website_url": "DELETE"
 		}
 		EOF
 	}
@@ -283,7 +286,7 @@ else
 	fi
 
 	if [[ -n ${W} ]]; then
-		echo -e "${WARNING_MSG_START}${W%%"${BR}"}${NC}" >&2
+		wW_ "${WARNING_MSG_START}${W%%"${BR}"}" >&2
 		# Want each message to have its own addMessage.sh entry.
 		if [[ ${ENDOFNIGHT} == "true" ]]; then
 			echo "${W}" | while read -r MSG
@@ -293,7 +296,7 @@ else
 		fi
 	fi
 	if [[ -n ${E} ]]; then
-		echo -e "${ERROR_MSG_START}${E%%"${BR}"}${NC}" >&2
+		wE_ "${ERROR_MSG_START}${E%%"${BR}"}" >&2
 		if [[ ${ENDOFNIGHT} == "true" ]]; then
 			echo "${E}" | while read -r MSG
 			do
@@ -305,9 +308,23 @@ else
 
 	generate_post_data()
 	{
+		# Need to escape single quotes.
+		local ALLSKY_SETTINGS="$( sed -e "s/'/'\"'\"'/g" "${SETTINGS_FILE}" )"
+
+		local WEBSITE_SETTINGS
+		if [[ $( settings ".uselocalwebsite" ) == "true" ]]; then
+			WEBSITE_SETTINGS="$( sed -e "s/'/'\"'\"'/g" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" )"
+		elif [[ $( settings ".useremotewebsite" ) == "true" ]]; then
+			WEBSITE_SETTINGS="$( sed -e "s/'/'\"'\"'/g" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
+		else
+			WEBSITE_SETTINGS="{ }"
+		fi
+
 		# Handle double quotes in fields that may have them.
 		cat <<-EOF
 		{
+		"force": ${FORCE},
+		"machine_id": "${MACHINE_ID}",
 		"location": "${LOCATION/\"/\\\"}",
 		"owner": "${OWNER/\"/\\\"}",
 		"latitude": "${LATITUDE}",
@@ -318,7 +335,8 @@ else
 		"lens": "${LENS/\"/\\\"}",
 		"computer": "${COMPUTER/\"/\\\"}",
 		"allsky_version": "${ALLSKY_VERSION}",
-		"machine_id": "${MACHINE_ID}"
+		"website_settings" : ${WEBSITE_SETTINGS},
+		"allsky_settings" : ${ALLSKY_SETTINGS}
 		}
 		EOF
 	}
@@ -345,65 +363,71 @@ if [[ ${UPLOAD} == "true" ]]; then
 	# shellcheck disable=SC2089
 	CMD+=" --data '$( generate_post_data )'"
 	CMD+=" https://www.thomasjacquin.com/allsky-map/postToMap.php"
-	[[ ${DEBUG} == "true" ]] && echo -e "\n${wDEBUG}Executing:\n${CMD}${wNC}\n"
+	[[ ${DEBUG} == "true" ]] && wD_ "Executing:\n${CMD}\n"
 
 	# shellcheck disable=SC2090,SC2086
 	RETURN="$( eval ${CMD} 2>&1 )"
 	RETURN_CODE=$?
-	[[ ${DEBUG} == "true" ]] && echo -e "\n${wDEBUG}Returned:\n${RETURN}${wNC}.\n"
+	[[ ${DEBUG} == "true" ]] && wD_ "Returned:\n${RETURN:-Nothing returned}"
 	if [[ ${RETURN_CODE} -ne 0 ]]; then
 		ERR="ERROR while uploading map data with curl: ${RETURN}, CMD=${CMD}."
 		if [[ ${ENDOFNIGHT} == "true" ]]; then
 			echo -e "${ME}: ${ERR}"		# goes in log file
 			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${ERR}"
 		else
-			echo -e "${ERROR_MSG_START}${ERR}${wNC}" >&2
+			wE_ "${ERROR_MSG_START}${ERR}" >&2
 		fi
 		exit "${RETURN_CODE}"
 	fi
 
+	# Check for server error.
+	if HTTP="$( echo "${RETURN}" | grep HTTP )" ; then
+		if [[ ! ${HTTP} =~ 200 ]]; then
+			wW_ "Got server error ${HTTP}"
+		fi
+		exit 1
+	fi
 	# Get the return string from the server.  It's the last line of output.
 	RET="$( echo "${RETURN}" | tail -1 )"
 	if [[ ${RET} == "INSERTED" || ${RET} == "DELETED" ]]; then
-		echo -e "${wOK}${MSG_START}Map data ${RET}.${wNC}"
+		wO_ "${MSG_START}Map data ${RET}."
 
 	elif [[ ${RET:0:7} == "UPDATED" ]]; then
-		[[ ${ENDOFNIGHT} == "false" ]] && echo -en "${wOK}${MSG_START}Map data UPDATED.${wNC}"
 		NUMBERS=${RET:8}	# num_updates max
+		MSG=""
 		if [[ -n ${NUMBERS} ]]; then
 			NUM_UPDATES=${NUMBERS% *}
 			MAX_UPDATES=${NUMBERS##* }
 			NUM_LEFT=$((MAX_UPDATES - NUM_UPDATES))
 			if [[ ${NUM_LEFT} -eq 0 ]]; then
-				echo "  This is your last update allowed today.  You made ${MAX_UPDATES}."
+				MSG="  This is your last update allowed today.  You made ${MAX_UPDATES}."
 			else
-				echo "  You can make ${NUM_LEFT} more updates today."
+				MSG="  You can make ${NUM_LEFT} more updates today."
 			fi
-		else
-			echo	# terminating newline
 		fi
+		[[ ${ENDOFNIGHT} == "false" ]] && wO_ "${MSG_START}Map data UPDATED.${MSG}"
 
 	elif [[ -z ${RET} ]]; then
 		MSG="ERROR: Unknown reply from server: ${RETURN}."
-		echo -e "${ERROR_MSG_START}${MSG}${wNC}"
+		wE_ "${ERROR_MSG_START}${MSG}"
 		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${MSG}"
 		RETURN_CODE=2
 
 	elif [[ ${RET:0:6} == "ERROR " ]]; then
 		MSG="ERROR returned while uploading map data: ${RET:6}."
-		echo -e "${ERROR_MSG_START}${MSG}${wNC}"
+		wE_ "${ERROR_MSG_START}${MSG}"
 		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${MSG}"
 		RETURN_CODE=2
 
 	elif [[ ${RET:0:15} == "ALREADY UPDATED" ]]; then
 		MAX_UPDATES=${RET:16}
 		MSG="NOTICE: You have already updated your map data the maximum of ${MAX_UPDATES} times per day.  Try again tomorrow."
-		echo -e "${WARNING_MSG_START}${MSG}${wNC}"
+		wW_ "${WARNING_MSG_START}${MSG}"
 		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${ME}: ${MSG}"
 
 	else
-		MSG="ERROR returned while uploading map data: ${RET}."
-		echo -e "${ERROR_MSG_START}${MSG}${wNC}"
+		MSG="ERROR Got unknown error while uploading map data: ${RET:-No output}."
+		wE_ "${ERROR_MSG_START}${MSG}"
 		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${MSG}"
 		RETURN_CODE=2
 	fi

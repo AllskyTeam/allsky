@@ -124,6 +124,11 @@ case "${CMD}" in
 		rm_msg "${CMD}"
 		;;
 
+	"allsky-config")
+		shift
+		"${ALLSKY_SCRIPTS}/${CMD}" "${@}"
+		;;
+
 	AM_*)
 		wE_ "${ME}: ERROR: Unknown error ID: '${CMD}'." >&2
 		exit 1

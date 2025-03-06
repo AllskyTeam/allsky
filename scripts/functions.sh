@@ -656,6 +656,9 @@ function get_sunrise_sunset()
 			--no-header)
 				DO_HEADER="false"
 				;;
+			*)
+				break;
+				;;
 		esac
 		shift
 	done
@@ -663,6 +666,7 @@ function get_sunrise_sunset()
 	local ANGLE="${1}"
 	local LATITUDE="${2}"
 	local LONGITUDE="${3}"
+
 	#shellcheck source-path=.
 	source "${ALLSKY_HOME}/variables.sh"	|| return 1
 

@@ -645,10 +645,20 @@ function convertLatLong()
 function get_sunrise_sunset()
 {
 	local DO_ZERO="false"
-	if [[ ${1} == "--zero" ]]; then
-		DO_ZERO="true"
+	local DO_HEADER="true"
+
+	while [[ $# -gt 0 ]]; do
+		ARG="${1}"
+		case "${ARG,,}" in
+			--zero)
+				DO_ZERO="true"
+				;;
+			--no-header)
+				DO_HEADER="false"
+				;;
+		esac
 		shift
-	fi
+	done
 
 	local ANGLE="${1}"
 	local LATITUDE="${2}"
@@ -664,7 +674,9 @@ function get_sunrise_sunset()
 	LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )"	|| return 2
 
 	local FORMAT="%-15s  %-17s  %6s   %-10s  %-10s\n"
-	echo "Daytime start    Nighttime start     Angle   Latitude    Longitude"
+	if [[ ${DO_HEADER} == "true" ]]; then
+		echo "Daytime start    Nighttime start     Angle   Latitude    Longitude"
+	fi
 	local STARTS=()
 	# sunwait output:  day_start, night_start
 	# Need to get rid of the comma.

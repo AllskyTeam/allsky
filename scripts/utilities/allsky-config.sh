@@ -386,14 +386,15 @@ function show_start_times()
 	if [[ ${1} == "--help" ]]; then
 		echo
 		W_ "Usage:"
-		W_ "    ${ME}  ${ME_F} [--zero] [angle [latitude [longitude]]]"
+		W_ "    ${ME}  ${ME_F} [--zero] [--no-header] [angle [latitude [longitude]]]"
 		echo "OR"
-		W_ "    ${ME}  ${ME_F} [--zero] [--angle A] [--latitude LAT] [--longitude LONG]"
+		W_ "    ${ME}  ${ME_F} [--zero] [--no-header] [--angle A] [--latitude LAT] [--longitude LONG]"
 		echo
 		echo "Show the daytime and nighttime start times for the specified"
 		echo "angle, latitude, and longitude."
 		echo "If you don't specify those values, your current values are used."
 		echo "'--zero' also displays information for an angle of 0."
+		echo "'--no-header' only displays the data, no header."
 		echo
 		echo "This information is useful to determine what to put in the 'Angle' setting in the WebUI."
 		echo "Typically you would adjust the angle until you got the start time you wanted."

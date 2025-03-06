@@ -9,6 +9,7 @@ source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 
 OK="true"
+HEADER=""
 ZERO=""
 ANGLE=""
 LATITUDE=""
@@ -19,6 +20,10 @@ while [[ $# -gt 0 ]]; do
 	case "${ARG,,}" in
 		--zero)
 			ZERO="${ARG}"
+			;;
+
+		--no-header)
+			HEADER="${ARG}"
 			;;
 
 		--angle)
@@ -67,4 +72,4 @@ if [[ $# -gt 0 ]]; then
 fi
 
 #shellcheck disable=SC2086
-get_sunrise_sunset ${ZERO} "${ANGLE}" "${LATITUDE}" "${LONGITUDE}"
+get_sunrise_sunset ${HEADER} ${ZERO} "${ANGLE}" "${LATITUDE}" "${LONGITUDE}"

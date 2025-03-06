@@ -1,3 +1,22 @@
+<?php
+	include_once('includes/functions.php');
+
+	// Execute a command specified in "cmd" (with html output) or "CMD" (with just text).
+	$use_TEXT = false;
+	$cmd = getVariableOrDefault($_POST, 'cmd', getVariableOrDefault($_GET, 'cmd', null));
+	if ($cmd === null) {
+		$cmd = getVariableOrDefault($_POST, 'CMD', getVariableOrDefault($_GET, 'CMD', null));
+		if ($cmd !== null) {
+			$use_TEXT = true;
+		}
+	}
+	if ($use_TEXT) {
+		$eS = "";
+		$eE = "";
+	} else {
+		$eS = "<p class='errorMsgBig'>";
+		$eE = "</p>";
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,28 +30,35 @@
 </head>
 <body>
 <?php
-	include_once('includes/functions.php');
-
-	$cmd = getVariableOrDefault($_POST, 'cmd', getVariableOrDefault($_GET, 'cmd', null));
+}
 	if ($cmd === null) {
-		echo "<p class='errorMsgBig>No 'cmd' specified!</p>";
+		echo "${eS}No 'cmd' specified!${eE}";
 		exit(1);
 	}
 
 	$CMD = "sudo --user=" . ALLSKY_OWNER . " " . ALLSKY_UTILITIES . "/execute.sh $cmd";
 	exec("$CMD 2>&1", $result, $return_val);
-	$dq = '"';
-	echo "<script>console.log(${dq}[$CMD] returned $return_val, result=" . implode(" ", $result) . "${dq});</script>";
+	if (! $use_TEXT) {
+		$dq = '"';
+		echo "<script>console.log(";
+		echo "${dq}[$CMD] returned $return_val, result=" . implode(" ", $result) . "${dq}";
+		echo ");</script>\n";
+	}
 
 	if ($return_val > 0) {
-		echo "<p class='errorMsgBig>Unable to execute '$CMD'</p>";
+		echo "${eS}Unable to execute '$CMD'${eE}";
 	}
 	if ($result != null) {
-		echo "<pre>";
-		echo implode("<br>", $result);
-		echo "</pre>";
+		if ($use_TEXT) {
+			echo implode("\n", $result);
+		} else {
+			echo "<pre>";
+			echo implode("<br>", $result);
+			echo "</pre>";
+		}
 	}
 
+	if (! $use_TEXT) {
+		echo "\n</body>\n</html>\n";
+	}
 ?>
-</body>
-</html>

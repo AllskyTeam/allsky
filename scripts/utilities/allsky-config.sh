@@ -41,6 +41,10 @@ function show_supported_cameras()
 
 	#shellcheck disable=SC2086
 	if needs_arguments ${ARGS} ; then
+		if [[ ${ON_TTY} == "false" ]]; then
+			E_ "${ME} ${ME_F}: Need to specify all aruments on command line." >&2
+			return
+		fi
 		PROMPT="\nSelect the camera(s) to show:"
 		OPTS=()
 		OPTS+=("--RPi"			"RPi and compatible")
@@ -154,6 +158,11 @@ function samba()
 		return
 	fi
 
+	if [[ ${ON_TTY} == "false" ]]; then
+		W_ "${ME} ${ME_F} must run from a terminal." >&2
+		return
+	fi
+
 	installSamba.sh
 }
 
@@ -173,6 +182,11 @@ function move_images()
 		echo
 		echo "The new location is typically an SSD or other higher-capacity,"
 		echo "more reliable media than an SD card."
+		return
+	fi
+
+	if [[ ${ON_TTY} == "false" ]]; then
+		W_ "${ME} ${ME_F} must run from a terminal." >&2
 		return
 	fi
 
@@ -224,6 +238,11 @@ function compare_paths()
 
 	#shellcheck disable=SC2086
 	if needs_arguments ${ARGS} ; then
+		if [[ ${ON_TTY} == "false" ]]; then
+			E_ "${ME} ${ME_F}: Need to specify all aruments on command line." >&2
+			return
+		fi
+
 		PROMPT="\nSelect the machine you want to check:"
 		OPTS=()
 		OPTS+=("--website"	\
@@ -286,6 +305,11 @@ config_timelapse()
 		return
 	fi
 
+	if [[ ${ON_TTY} == "false" ]]; then
+		W_ "${ME} ${ME_F} must run from a terminal." >&2
+		return
+	fi
+
 	configTimelapse.sh
 }
 
@@ -305,6 +329,11 @@ function change_tmp()
 		echo
 		echo "If 'allsky/tmp' is is already in memory, you can change its size."
 		echo "If it's NOT in memory, you can move it to memory."
+		return
+	fi
+
+	if [[ ${ON_TTY} == "false" ]]; then
+		W_ "${ME} ${ME_F} must run from a terminal." >&2
 		return
 	fi
 
@@ -336,6 +365,11 @@ function change_swap()
 		echo "This script lets you change the amount of swap space."
 		echo "A suggested amount is displayed for your Pi and is usually enough,"
 		echo "but if you use your Pi for a lot of things, you may want to increase swap space."
+		return
+	fi
+
+	if [[ ${ON_TTY} == "false" ]]; then
+		W_ "${ME} ${ME_F} must run from a terminal." >&2
 		return
 	fi
 
@@ -386,14 +420,15 @@ function show_start_times()
 	if [[ ${1} == "--help" ]]; then
 		echo
 		W_ "Usage:"
-		W_ "    ${ME}  ${ME_F} [--zero] [angle [latitude [longitude]]]"
+		W_ "    ${ME}  ${ME_F} [--zero] [--no-header] [angle [latitude [longitude]]]"
 		echo "OR"
-		W_ "    ${ME}  ${ME_F} [--zero] [--angle A] [--latitude LAT] [--longitude LONG]"
+		W_ "    ${ME}  ${ME_F} [--zero] [--no-header] [--angle A] [--latitude LAT] [--longitude LONG]"
 		echo
 		echo "Show the daytime and nighttime start times for the specified"
 		echo "angle, latitude, and longitude."
 		echo "If you don't specify those values, your current values are used."
 		echo "'--zero' also displays information for an angle of 0."
+		echo "'--no-header' only displays the data, no header."
 		echo
 		echo "This information is useful to determine what to put in the 'Angle' setting in the WebUI."
 		echo "Typically you would adjust the angle until you got the start time you wanted."
@@ -422,7 +457,7 @@ function check_post_data()
 		echo
 		echo "This command helps determine why you get the"
 		echo "    data.json is X days old"
-		echo "message.  If possible, a solution is proposed"
+		echo "message.  If possible, a solution is proposed."
 		return
 	fi
 
@@ -444,8 +479,6 @@ function get_filesystems()
 	getFilesystems.sh
 }
 
-
-####################################### Helper functions
 
 ####################################### Helper functions
 
@@ -539,7 +572,11 @@ function run_command()
 
 #####
 # Prompt for a command or argument from a list.
-WT_LINES=$( tput lines )
+if [[ ${ON_TTY} == "true" ]]; then
+	WT_LINES=$( tput lines 2>/dev/null )
+fi
+WT_LINES="${WT_LINES:-24}"
+
 function prompt()
 {
 	PROMPT="${1}"
@@ -649,8 +686,12 @@ if [[ ${DO_HELP} == "true" ]]; then
 fi
 [[ ${OK} == "false" ]] && usage_and_exit 1
 PATH="${PATH}:${ALLSKY_UTILITIES}"
-
 if [[ -z ${CMD} ]]; then
+	if [[ ${ON_TTY} == "false" ]]; then
+		W_ "${ME} must run from a terminal or have all arguments included on the command line." >&2
+		exit
+	fi
+
 	# No command given on command line so prompt for one.
 
 	PROMPT="\nSelect a command to run:"

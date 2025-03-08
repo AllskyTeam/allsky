@@ -83,37 +83,37 @@ function rm_object()
 }
 
 RET=0
-CMD="${1}"
-case "${CMD}" in
+ID="${1}"
+case "${ID}" in
 	"AM_RM_PRIOR")		# Remove prior version of Allsky
 		rm_object "${PRIOR_ALLSKY_DIR}" 
 		RET=$?
 		rm -f "${OLD_ALLSKY_REMINDER}"
 
-		rm_msg "${CMD}"
+		rm_msg "${ID}"
 		;;
 
 	"AM_RM_CHECK")		# Remove log from checkAllsky.sh
 		rm_object "${CHECK_ALLSKY_LOG}"
 		RET=$?
 
-		rm_msg "${CMD}"
+		rm_msg "${ID}"
 		;;
 
 	"AM_RM_POST")		# Remove log from checkAllsky.sh
 		rm_object "${POST_INSTALLATION_ACTIONS}"
 		RET=$?
 
-		rm_msg "${CMD}"
+		rm_msg "${ID}"
 		;;
 
 	AM_RM_ABORTS_*)		# Remove the specified "have been aborted" file
 		# The "*" is the file name.
-		FILE="${CMD/AM_RM_ABORTS_/}"
+		FILE="${ID/AM_RM_ABORTS_/}"
 		rm_object "${ALLSKY_ABORTS_DIR}/${FILE}" "File removed."
 		RET=$?
 
-		rm_msg "${CMD}"
+		rm_msg "${ID}"
 		;;
 
 	"AM_NOT_SUPPORTED")		# Not supported camera
@@ -121,27 +121,17 @@ case "${CMD}" in
 		shift
 		"${ALLSKY_UTILITIES}/showSupportedCameras.sh" "--${CT}"
 
-		rm_msg "${CMD}"
+		rm_msg "${ID}"
 		;;
 
 	"allsky-config")
 		shift
-		"${ALLSKY_SCRIPTS}/${CMD}" "${@}"
+		"${ALLSKY_SCRIPTS}/${ID}" "${@}"
 		;;
 
-	AM_*)
-		wE_ "${ME}: ERROR: Unknown error ID: '${CMD}'." >&2
+	*)
+		wE_ "${ME}: ERROR: Unknown command ID: '${ID}'." >&2
 		exit 1
-		;;
-
-	*)		# Arbitrary command
-		eval "${*}"
-		RET=$?
-		if [[ ${RET} -eq 0 ]]; then
-			echo "Executed ${*}"
-		else
-			wE_ "Unable to execute ${*}" >&2
-		fi
 		;;
 esac
 

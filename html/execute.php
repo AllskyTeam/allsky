@@ -1,24 +1,25 @@
 <?php
-	include_once('includes/functions.php');
-	initialize_variables();
-	include_once('includes/authenticate.php');
+include_once('includes/functions.php');
+initialize_variables();
+include_once('includes/authenticate.php');
 
-	// Cause a command specified by "ID" (with html output) or "ID" (with just text)
-	// to be executed.
-	$use_TEXT = false;
+// Cause a command specified by "ID" (with html output) or "ID" (with just text)
+// to be executed.
+$use_TEXT = false;
+$ID = getVariableOrDefault($_POST, 'ID', getVariableOrDefault($_GET, 'ID', null));
+if ($ID === null) {
 	$ID = getVariableOrDefault($_POST, 'ID', getVariableOrDefault($_GET, 'ID', null));
-	if ($ID === null) {
-		$ID = getVariableOrDefault($_POST, 'ID', getVariableOrDefault($_GET, 'ID', null));
-		if ($ID !== null) {
-			$use_TEXT = true;
-		}
+	if ($ID !== null) {
+		$use_TEXT = true;
 	}
-	if ($use_TEXT) {
-		$eS = "";
-		$eE = "";
-	} else {
-		$eS = "<p class='errorMsgBig'>";
-		$eE = "</p>";
+}
+if ($use_TEXT) {
+	$eS = "";
+	$eE = "";
+} else {
+	$eS = "<p class='errorMsgBig'>";
+	$eE = "</p>";
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -34,36 +35,38 @@
 <body>
 <?php
 }
-	if ($id === null) {
-		echo "${eS}No 'id' specified!${eE}";
-		exit(1);
-	}
 
-	$CMD = "sudo --user=" . ALLSKY_OWNER . " " . ALLSKY_UTILITIES . "/execute.sh $id";
-	$CMD = escapeshellcmd($CMD);
-	exec("$CMD 2>&1", $result, $return_val);
-	if (! $use_TEXT) {
-		// Writing to the console aids in debugging.
-		$dq = '"';
-		echo "<script>console.log(";
-		echo "${dq}[$CMD] returned $return_val, result=" . implode(" ", $result) . "${dq}";
-		echo ");</script>\n";
-	}
+if ($id === null) {
+	echo "${eS}No 'id' specified!${eE}";
+	exit(1);
+}
 
-	if ($return_val !== 0) {
-		error_log("ERROR: Unable to execute '$CMD'");
-	}
-	if ($result != null) {
-		if ($use_TEXT) {
-			echo implode("\n", $result);
-		} else {
-			echo "<pre>";
-			echo implode("<br>", $result);
-			echo "</pre>";
-		}
-	}
+$CMD = "sudo --user=" . ALLSKY_OWNER . " " . ALLSKY_UTILITIES . "/execute.sh $id";
+$CMD = escapeshellcmd($CMD);
+exec("$CMD 2>&1", $result, $return_val);
+if (! $use_TEXT) {
+	// Writing to the console aids in debugging.
+	$dq = '"';
+	echo "<script>console.log(";
+	echo "${dq}[$CMD] returned $return_val, result=" . implode(" ", $result) . "${dq}";
+	echo ");</script>\n";
+}
 
-	if (! $use_TEXT) {
-		echo "\n</body>\n</html>\n";
+if ($return_val !== 0) {
+	error_log("ERROR: Unable to execute '$CMD'");
+}
+if ($result != null) {
+	if ($use_TEXT) {
+		echo implode("\n", $result);
+	} else {
+		echo "<pre>";
+		echo implode("<br>", $result);
+		echo "</pre>";
 	}
+}
+
+if (! $use_TEXT) {
+	echo "\n</body>\n</html>\n";
+}
+
 ?>

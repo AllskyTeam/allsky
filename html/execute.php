@@ -29,9 +29,11 @@ if ($space === false) {
 if ($use_TEXT) {
 	$eS = "";
 	$eE = "\n";
+	$sep = "\n";
 } else {
 	$eS = "<p class='errorMsgBig'>";
 	$eE = "</p>";
+	$sep = "<br>";
 
 ?>
 <!DOCTYPE html>
@@ -56,7 +58,7 @@ if ($ID === null) {
 
 switch ($ID) {
 	case "AM_RM_PRIOR":		// Remove prior version of Allsky.
-		rm_object(ALLSKY_PRIOR_DIR, "Prior Allsky removed.");
+		rm_object(ALLSKY_PRIOR_DIR, "Prior Allsky directory '" .ALLSKY_PRIOR_DIR. "' removed.");
 		rm_object(ALLSKY_OLD_REMINDER);
 
 		rm_msg($ID);
@@ -69,13 +71,14 @@ switch ($ID) {
 		break;
 
 	case "AM_RM_POST":		// Remove log of post-installation actions.
-		rm_object(ALLSKY_POST_INSTALL_ACTIONS, "Action recorded.");
+		rm_object(ALLSKY_POST_INSTALL_ACTIONS, "Deleted list of actions to perform.");
 
 		rm_msg($ID);
 		break;
 
 	case "AM_RM_ABORTS":	// Remove the specified "have been aborted" file
-		rm_object(ALLSKY_ABORTS_DIR . "/$ARGS", "File removed.");
+		$file = ALLSKY_ABORTS_DIR . "/$ARGS";
+		rm_object($file, "File removed.");
 
 		rm_msg($ID);
 		break;
@@ -112,19 +115,20 @@ exit;
 
 // =============================== functions
 
+// Check the return code from the last exec() and display any output.
 function checkRet($cmd, $return_code, $return_string)
 {
-	global $use_TEXT, $eS, $eE;
+	global $use_TEXT, $eS, $eE, $sep;
 
 	if ($return_code !== 0) {
-		echo "${eS}ERROR: Unable to execute '$cmd'.${eE}";
+		echo "${eS}ERROR while executing:${sep}${cmd}${eE}";
 	}
 	if ($return_string != null) {
 		if ($use_TEXT) {
-			echo implode("\n", $return_string);
+			echo $return_string;
 		} else {
-			echo "<pre>";
-			echo implode("<br>", $return_string);
+			echo "<pre style='font-size: 150%'>";
+			echo $return_string;
 			echo "</pre>";
 		}
 	}
@@ -132,19 +136,24 @@ function checkRet($cmd, $return_code, $return_string)
 	return($return_code);
 }
 
-// Execute a command.
-function execute($cmd, $args="")
+// Execute a command.  On error, return the error message.
+function execute($cmd, $args="", $outputToConsole=false)
 {
-	global $use_TEXT;
+	global $use_TEXT, $sep;
 
-	$cmd = escapeshellcmd("sudo --user=" . ALLSKY_OWNER . " $cmd ${$args}");
+	// Do NOT quote $args since there may be multiple arguments.
+	$cmd = escapeshellcmd("sudo --user=" . ALLSKY_OWNER . " $cmd $args");
+	$result = null;
 	exec("$cmd 2>&1", $result, $return_val);
 
-	if (! $use_TEXT) {
+	if ($result !== null) {
+		$result = implode($sep, $result);
+	}
+	if (! $use_TEXT && $outputToConsole) {
 		// Writing to the console aids in debugging.
-		$dq = "'";
+		$cmd = str_replace("'", "$apos;", $cmd);
 		echo "<script>console.log(";
-		echo "${dq}[$cmd] returned $return_val, result=" . implode(" ", $result) . "${dq}";
+		echo "'[$cmd] returned $return_val, result=$result'";
 		echo ");</script>\n";
 	}
 
@@ -161,26 +170,25 @@ function rm_msg($ID)
 {
 	$cmd = ALLSKY_SCRIPTS .  "/addMessage.sh";
 	$args = "--id '${ID}' --delete";
-	execute($cmd, $args);
+	execute($cmd, $args, false);
 }
 
 // Remove a file or directory.
-function rm_object($item, $msg=null)
+function rm_object($item, $successMsg=null)
 {
 	global $use_TEXT, $eS, $eE;
 
 	$cmd = "rm";
 	$args = "-fr '$item'";		// -r in case it's a directory
-	$ret = execute($cmd, $args);
-	if ($msg === null) {
-		return;
-	}
-
-	$msg = "";
+	$ret = execute($cmd, $args, true);
 	if ($ret === "") {
-		$msg .= "Removed '${item}'";
+		if ($successMsg === null) {
+			$msg = "Removed '${item}'";
+		} else {
+			$msg = $successMsg;
+		}
 	} else {
-		$msg .= "${eS}Unable to remove '${item}': ${ret}${eE}";
+		$msg = "${eS}Unable to remove '${item}': ${ret}${eE}";
 	}
 
 	if ($use_TEXT) {
@@ -189,4 +197,5 @@ function rm_object($item, $msg=null)
 		echo "<span style='font-size: 200%'>$msg</span>";
 	}
 }
+
 ?>

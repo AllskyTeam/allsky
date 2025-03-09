@@ -612,7 +612,14 @@ class MODULESEDITOR {
 						if (this.#convertBool(fieldValue) == true) {
 							checked = 'checked="checked"';
 						}
-						inputHTML = '<input type="checkbox" id="' + key + '" name="' + key + '" ' + checked + ' value="checked"' + required + fieldDescription + '>';
+						//inputHTML = '<input type="checkbox" id="' + key + '" name="' + key + '" ' + checked + ' value="checked"' + required + fieldDescription + '>'
+
+						inputHTML = '<label class="el-switch el-switch-sm el-switch-green">\
+  							<input type="checkbox" id="' + key + '" name="' + key + '" ' + checked + ' value="checked"' + required + fieldDescription + '>\
+  							<span class="el-switch-style"></span>\
+						</label>'
+
+
 						extraClass = 'input-group';
 					}
 
@@ -737,10 +744,10 @@ class MODULESEDITOR {
 						extraClass = 'input-group';
 						inputHTML = '\
 							<div class="row">\
-								<div class="col-xs-8">\
+								<div class="col-xs-7">\
 								' + inputHTML + '\
 								</div>\
-								<div class="col-xs-4">\
+								<div class="col-xs-5">\
 									<button type="button" class="btn btn-default" id="open-gpio-' + key + '" data-source="' + key + '">...</button>\
 									<button type="button" class="btn btn-default" id="reset-gpio-' + key + '" data-source="' + key + '"><i class="fa-solid fa-rotate-right"></i></button>\
 								</div>\
@@ -811,10 +818,10 @@ class MODULESEDITOR {
 						extraClass = 'input-group';
 						inputHTML = '\
 							<div class="row">\
-								<div class="col-xs-8">\
+								<div class="col-xs-7">\
 								' + inputHTML + '\
 								</div>\
-								<div class="col-xs-4">\
+								<div class="col-xs-5">\
 									<button type="button" class="btn btn-default" id="open-i2c-' + key + '" data-source="' + key + '">...</button>\
 									<button type="button" class="btn btn-default" id="reset-i2c-' + key + '" data-source="' + key + '"><i class="fa-solid fa-rotate-right"></i></button>\
 								</div>\

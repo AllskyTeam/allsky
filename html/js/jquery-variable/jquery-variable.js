@@ -52,7 +52,7 @@
                 if (rowData !== undefined) {
 				    let selectedVariable = rowData.variable
 					plugin.settings.variable = selectedVariable
-					updateSample(selectedVariable)
+					//updateSample(selectedVariable)
                     plugin.settings.variableSelected.call(this, selectedVariable);
                 }
                 plugin.destroy()

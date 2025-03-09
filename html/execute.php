@@ -112,12 +112,12 @@ exit;
 
 // =============================== functions
 
-function checkRet($CMD, $return_code, $return_string)
+function checkRet($cmd, $return_code, $return_string)
 {
 	global $use_TEXT, $eS, $eE;
 
 	if ($return_code !== 0) {
-		echo "${eS}ERROR: Unable to execute '$CMD'.${eE}";
+		echo "${eS}ERROR: Unable to execute '$cmd'.${eE}";
 	}
 	if ($return_string != null) {
 		if ($use_TEXT) {
@@ -133,22 +133,22 @@ function checkRet($CMD, $return_code, $return_string)
 }
 
 // Execute a command.
-function execute($CMD, $ARGS="")
+function execute($cmd, $args="")
 {
 	global $use_TEXT;
 
-	$CMD = escapeshellcmd("sudo --user=" . ALLSKY_OWNER . " $CMD ${ARGS}");
-	exec("$CMD 2>&1", $result, $return_val);
+	$cmd = escapeshellcmd("sudo --user=" . ALLSKY_OWNER . " $cmd ${$args}");
+	exec("$cmd 2>&1", $result, $return_val);
 
 	if (! $use_TEXT) {
 		// Writing to the console aids in debugging.
 		$dq = "'";
 		echo "<script>console.log(";
-		echo "${dq}[$CMD] returned $return_val, result=" . implode(" ", $result) . "${dq}";
+		echo "${dq}[$cmd] returned $return_val, result=" . implode(" ", $result) . "${dq}";
 		echo ");</script>\n";
 	}
 
-	if (checkRet($CMD, $return_val, $result)) {
+	if (checkRet($cmd, $return_val, $result)) {
 		return "";
 	} else {
 		return($result);
@@ -159,9 +159,9 @@ function execute($CMD, $ARGS="")
 // Don't display any output.
 function rm_msg($ID)
 {
-	$CMD = ALLSKY_SCRIPTS .  "/addMessage.sh";
-	$ARGS = "--id '${ID}' --delete";
-	execute($CMD, $ARGS);
+	$cmd = ALLSKY_SCRIPTS .  "/addMessage.sh";
+	$args = "--id '${ID}' --delete";
+	execute($cmd, $args);
 }
 
 // Remove a file or directory.
@@ -169,9 +169,9 @@ function rm_object($item, $msg=null)
 {
 	global $use_TEXT, $eS, $eE;
 
-	$CMD = "rm";
-	$ARGS = "-fr '$item'";		// -r in case it's a directory
-	$ret = execute($CMD, $ARGS);
+	$cmd = "rm";
+	$args = "-fr '$item'";		// -r in case it's a directory
+	$ret = execute($cmd, $args);
 	if ($msg === null) {
 		return;
 	}

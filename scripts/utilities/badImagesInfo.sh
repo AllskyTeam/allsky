@@ -1,6 +1,5 @@
 #!/bin/bash
-
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$(dirname "${BASH_ARGV0}")/../.." )"
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
@@ -61,7 +60,7 @@ echo "$INFO" | gawk '
 		}
 	}
 	END {
-		name = "Remove Bad Images Threshold"
+		name = "\"Remove Bad Images Threshold\""
 		if (low_count > 0) {
 			printf("%d image", low_count);
 			if (low_count > 1) printf("s");

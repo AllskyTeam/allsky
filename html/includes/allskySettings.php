@@ -602,7 +602,7 @@ if ($debug) {
 							if ($result != null) {
 								$result = implode("<br>", $result);
 								// Not worth checking if the update worked.
-								updateFile(ALLSKY_CHECK_ALLSKY_LOG, $result, "checkAllsky", true);
+								updateFile(ALLSKY_CHECK_LOG, $result, "checkAllsky", true);
 	
 								$msg = "<div class='errorMsgBig errorMsgBox center-div center-text'>";
 								$msg .= "Suggested changes to your settings<br>";

@@ -517,7 +517,7 @@ function validate_camera()
 			local CMD_MSG="Click here to see the supported ${CT} cameras."
 			[[ ${CT} == "ZWO" ]] && CMD_MSG+=" WARNING: the list is long!"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" \
-				--id "AM_NOT_SUPPORTED ${CT}" \
+				--id "AM_NOT_SUPPORTED --${CT}" \
 				--type warning \
 				--msg "${MSG}" \
 				--url "${URL}" \

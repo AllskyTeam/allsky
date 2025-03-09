@@ -3,7 +3,7 @@
 # This scripts outputs the list of cameras Allsky supports.
 
 # Allow this script to be executed manually, which requires several variables to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/../.." )"
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
@@ -71,7 +71,8 @@ fi
 
 
 if [[ ${DO_RPI} == "true" ]]; then
-	[[ ${DO_ZWO} == "true" ]] && echo -e "===== Supported RPi cameras:"
+	echo -e "===== Supported RPi cameras:\n"
+
 	# Format of input file:
 	#	camera  sensor  compare_length  model  other_info_for_camera_1
 	#	libcamera libcamera_camera_capability_line_1
@@ -102,7 +103,7 @@ if [[ ${DO_RPI} == "true" ]]; then
 fi
 
 if [[ ${DO_ZWO} == "true" ]]; then
-	[[ ${DO_RPI} == "true" ]] && echo -e "\n===== Supported ZWO cameras:"
+	echo -e "\n===== Supported ZWO cameras:\n"
 
 	# Any of the libraries should work.
 	strings "${ZWO_FILE}" |

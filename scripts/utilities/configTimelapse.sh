@@ -4,7 +4,7 @@
 # Prompt for one or more values of different settings,
 # then create a timelapse for each combination of values.
 
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$(dirname "${BASH_ARGV0}")/../.." )"
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.

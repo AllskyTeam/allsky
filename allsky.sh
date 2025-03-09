@@ -116,11 +116,11 @@ ARGS_FILE="${ALLSKY_TMP}/capture_args.txt"
 # or it's been at least a week since the last reminder.
 if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
 	DO_MSG="true"
-	if [[ -f ${OLD_ALLSKY_REMINDER} ]]; then
+	if [[ -f ${ALLSKY_OLD_REMINDER} ]]; then
 		CHECK_DATE="$( date -d '1 week ago' +'%Y%m%d%H%M.%S' )"
 		CHECK_TMP_FILE="${ALLSKY_TMP}/check_date"
 		touch -t "${CHECK_DATE}" "${CHECK_TMP_FILE}"
-		[[ ${OLD_ALLSKY_REMINDER} -nt "${CHECK_TMP_FILE}" ]] && DO_MSG="false"
+		[[ ${ALLSKY_OLD_REMINDER} -nt "${CHECK_TMP_FILE}" ]] && DO_MSG="false"
 		rm -f "${CHECK_TMP_FILE}"
 	fi
 	if [[ ${DO_MSG} == "true" ]]; then
@@ -128,12 +128,12 @@ if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
 		MSG+="\nIf you are no longer using it, it can be removed to save disk space."
 		"${ALLSKY_SCRIPTS}/addMessage.sh" --id AM_RM_PRIOR --type info --msg "${MSG}" \
 			--cmd "Click here to remove."
-		touch "${OLD_ALLSKY_REMINDER}"		# Sets the last time we displayed the message.
+		touch "${ALLSKY_OLD_REMINDER}"		# Sets the last time we displayed the message.
 	fi
 fi
 
 # If there's some checkAllsky.sh output, remind the user.
-if [[ -f ${CHECK_ALLSKY_LOG} ]]; then
+if [[ -f ${ALLSKY_CHECK_LOG} ]]; then
 	DO_MSG="true"
 	REMINDER="${ALLSKY_LOGS}/checkAllsky_reminder.txt"
 	if [[ -f ${REMINDER} ]]; then
@@ -147,7 +147,7 @@ if [[ -f ${CHECK_ALLSKY_LOG} ]]; then
 		MSG="<div class='errorMsgBig errorMsgBox center-div center-text'>"
 		MSG+="Reminder to make these changes to your settings"
 		MSG+="</div>"
-		MSG+="$( < "${CHECK_ALLSKY_LOG}" )"
+		MSG+="$( < "${ALLSKY_CHECK_LOG}" )"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" --id AM_RM_CHECK --type warning --msg "${MSG}" \
 			--cmd "<hr><span class='errorMsgBig'>If you made the changes click here.</span>"
 		touch "${REMINDER}"		# last time we displayed the message
@@ -155,9 +155,9 @@ if [[ -f ${CHECK_ALLSKY_LOG} ]]; then
 fi
 
 # This file contains information the user needs to act upon after an installation.
-if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
+if [[ -f ${ALLSKY_POST_INSTALL_ACTIONS} ]]; then
 	# If there's an initial message created during installation, display an image and stop.
-	F="${POST_INSTALLATION_ACTIONS}_initial_message"
+	F="${ALLSKY_POST_INSTALL_ACTIONS}_initial_message"
 	if [[ -f ${F} ]]; then
 		# There is already a message so don't add another,
 		# and there's already an image, so don't overwrite it.
@@ -167,7 +167,7 @@ if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 		doExit "${EXIT_ERROR_STOP}" "no-image" "" ""
 	else
 		MSG="Reminder: Click here to see the action(s) that need to be performed."
-		PIA="${POST_INSTALLATION_ACTIONS/${ALLSKY_HOME}/}"
+		PIA="${ALLSKY_POST_INSTALL_ACTIONS/${ALLSKY_HOME}/}"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" --id AM_RM_POST --type warning --msg "${MSG}" --url "${PIA}" \
 			--cmd "\nOnce you perform them, click here to remove this message."
 	fi

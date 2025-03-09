@@ -19,8 +19,8 @@ cd "${ALLSKY_HOME}"  									|| exit "${EXIT_ERROR_STOP}"
 
 [[ ! -d ${ALLSKY_TMP} ]] && mkdir -p "${ALLSKY_TMP}"
 
-# The POST_INSTALLATION_ACTIONS contains information the user needs to act upon after installation.
-rm -f "${POST_INSTALLATION_ACTIONS}"		# Shouldn't be there, but just in case.
+# The ALLSKY_POST_INSTALL_ACTIONS contains information the user needs to act upon after installation.
+rm -f "${ALLSKY_POST_INSTALL_ACTIONS}"		# Shouldn't be there, but just in case.
 rm -f "${ALLSKY_MESSAGES}"					# Start out with no messages.
 
 # In case it's left over from a prior install.
@@ -791,7 +791,11 @@ update_php_defines()
 			-e "s;XX_ALLSKY_TMP_XX;${ALLSKY_TMP};g" \
 			-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};g" \
 			-e "s;XX_ALLSKY_MESSAGES_XX;${ALLSKY_MESSAGES};g" \
-			-e "s;XX_ALLSKY_CHECK_ALLSKY_LOG_XX;${CHECK_ALLSKY_LOG};g" \
+			-e "s;XX_ALLSKY_CHECK_LOG_XX;${ALLSKY_CHECK_LOG};g" \
+			-e "s;XX_ALLSKY_PRIOR_DIR_XX;${PRIOR_ALLSKY_DIR};g" \
+			-e "s;XX_ALLSKY_OLD_REMINDER_XX;${ALLSKY_OLD_REMINDER};g" \
+			-e "s;XX_ALLSKY_POST_INSTALL_ACTIONS_XX;${ALLSKY_POST_INSTALL_ACTIONS};g" \
+			-e "s;XX_ALLSKY_ABORTS_DIR_XX;${ALLSKY_ABORTS_DIR};g" \
 			-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};g" \
 			-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};g" \
 			-e "s;XX_ALLSKY_WEBSITE_LOCAL_CONFIG_NAME_XX;${ALLSKY_WEBSITE_CONFIGURATION_NAME};g" \
@@ -3128,7 +3132,7 @@ do_restore()
 		mount_tmp "${ALLSKY_TMP}"
 	fi
 
-	mkdir -p "$( dirname "${POST_INSTALLATION_ACTIONS}" )"
+	mkdir -p "$( dirname "${ALLSKY_POST_INSTALL_ACTIONS}" )"
 
 	MSG="\nRestoration is done and"
 	MSG2=" Allsky needs its settings checked."
@@ -3515,14 +3519,14 @@ display_image()
 	else
 		IMAGE_NAME="${IMAGE_OR_CUSTOM}"
 
-		if [[ ${IMAGE_NAME} == "ConfigurationNeeded" && -f ${POST_INSTALLATION_ACTIONS} ]]; then
+		if [[ ${IMAGE_NAME} == "ConfigurationNeeded" && -f ${ALLSKY_POST_INSTALL_ACTIONS} ]]; then
 			# Add a message the user will see in the WebUI.
-			MSG="Actions needed.  See ${POST_INSTALLATION_ACTIONS}."
-			X="${POST_INSTALLATION_ACTIONS/${ALLSKY_HOME}/}"
+			MSG="Actions needed.  See ${ALLSKY_POST_INSTALL_ACTIONS}."
+			X="${ALLSKY_POST_INSTALL_ACTIONS/${ALLSKY_HOME}/}"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${MSG}" --url "${X}"
 
 			# This tells allsky.sh not to display a message about actions since we just did.
-			touch "${POST_INSTALLATION_ACTIONS}_initial_message"
+			touch "${ALLSKY_POST_INSTALL_ACTIONS}_initial_message"
 		fi
 
 		X="${IMAGE_NAME}.${EXTENSION}"
@@ -3767,7 +3771,7 @@ do_allsky_status()
 add_to_post_actions()
 {
 	local MSG="${1}"
-	echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+	echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${ALLSKY_POST_INSTALL_ACTIONS}"
 }
 
 

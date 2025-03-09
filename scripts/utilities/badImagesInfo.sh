@@ -1,6 +1,5 @@
 #!/bin/bash
-
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
+[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$(dirname "${BASH_ARGV0}")/../.." )"
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
@@ -61,7 +60,7 @@ echo "$INFO" | gawk '
 		}
 	}
 	END {
-		name = "Remove Bad Images Threshold"
+		name = "\"Remove Bad Images Threshold\""
 		if (low_count > 0) {
 			printf("%d image", low_count);
 			if (low_count > 1) printf("s");
@@ -72,9 +71,9 @@ echo "$INFO" | gawk '
 				printf("or increasing your exposure and/or gain.\n");
 			} else {
 				ave = low_mean_total / low_count;
-				printf("The lowest mean was %f and the highest %f with and average of %f\n",
+				printf("The lowest mean was %f and the highest %f with an average of %f.\n",
 					low_min, low_max, ave);
-				printf("\nConsider lowering your Low %s to around %f\n", name, ave);
+				printf("\nConsider lowering your Low %s to around %f.\n", name, ave);
 			}
 		}
 		if (high_count > 0) {

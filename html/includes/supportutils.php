@@ -149,6 +149,9 @@ class SUPPORTUTIL
             if (strpos($file, '.') !== 0) {
 
                 $fileBits = explode("-", $file);
+                $type = $fileBits[0];		// e.g., "support"
+// TODO: support repository and Issue/Discussion in file name
+// If needed for compatibility, possibly use a different $type for the new format.
                 $issue = $fileBits[1];
                 $date = explode(".", $fileBits[2])[0];
                 $year = substr($date, 0, 4);

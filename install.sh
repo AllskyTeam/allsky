@@ -3338,7 +3338,7 @@ install_Python()
 
 		L="${TMP}.${COUNT}.log"
 		M="${NAME} [${package}] failed"
-		pip3 install --no-warn-script-location -r /tmp/package > "${L}" 2>&1
+		pip3 install --upgrade --no-warn-script-location -r /tmp/package > "${L}" 2>&1
 		# These files are too big to display so pass in "0" instead of ${DEBUG}.
 		if ! check_success $? "${M}" "${L}" 0 ; then
 			rm -fr "${PIP3_BUILD}"

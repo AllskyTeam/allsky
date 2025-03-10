@@ -11,4 +11,5 @@ astropy
 suncalc
 Adafruit-Blinka
 vcgencmd
+certifi
 requests

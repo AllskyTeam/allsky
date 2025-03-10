@@ -27,9 +27,11 @@ class ALLSKYSUPPORT {
                             cache: false
                         }).done(() => {
                             logTable.ajax.reload()
+// TODO: the reload removes any "external" icons
                         }).always(() => {
                             $('.as-support-loading').LoadingOverlay('hide')
                         })
+// TODO: check for error
                     }
                 }
             })
@@ -39,7 +41,9 @@ class ALLSKYSUPPORT {
             var logId = $(event.currentTarget).data('logid')
             var logTable = this.#supportFilesTable            
             bootbox.prompt({
-                title: 'Enter the id of the Github discussion', 
+// TODO: If the filename (logID) includes the repository and category (Issue or Discussion),
+// the 'title' should state the repository and category.
+                title: 'Enter the id of the Github Discussion', 
                 centerVertical: true,
                 inputType: 'number',
                 callback: function(githubid){ 
@@ -59,9 +63,11 @@ class ALLSKYSUPPORT {
                             cache: false
                         }).done(() => {
                             logTable.ajax.reload();
+// TODO: the reload removes any "external" icons
                         }).always(() => {
                             $('.as-support-loading').LoadingOverlay('hide')
                         })
+// TODO: check for error
                     }
                 }
             });                      
@@ -95,6 +101,7 @@ class ALLSKYSUPPORT {
             }).always(() => {
                 $('.as-support-loading').LoadingOverlay('hide')
             })          
+// TODO: check for error
         })
 
         $(document).on('click', '#as-support-generate', (event) => {
@@ -131,9 +138,11 @@ Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
                         cache: false                
                     }).done(() => {
                         logTable.ajax.reload()
+// TODO: the reload removes any "external" icons
                     }).always(() => {
                         $('body').LoadingOverlay('hide')
                     }) 
+// TODO: check for error
                 }
             });
 
@@ -165,12 +174,15 @@ Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
                 },{ 
                     data: 'issue',
                     render: function (item, type, row, meta) {
-                        let result = 'No LInked Issue'
+                        let result = 'No Linked Issue'
                         if (item !== 'none') {
-                            let issue = 'https://github.com/AllskyTeam/allsky/discussions/' + item
-                            result = '<a external="true" href="' + issue + '" target="_blank">Issue ' + item + '</a>'
+// TODO: this assumes the item is a Discussion versus and Issue,
+// and it assumes it's in the "allsky" repository.
+                            let discussion = 'https://github.com/AllskyTeam/allsky/discussions/' + item
+                            result = '<a external="true" href="' + discussion + '" target="_blank">Discussion ' + item + '</a>'
                         }
 
+						convertURL();	// processes "external=true"
                         return result
                     }                 
                 },{
@@ -179,9 +191,14 @@ Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
                     data: null,
                     width: '120px',
                     render: function (item, type, row, meta) {
-                        let buttonGithub = '<button type="button" title="Edit Guthib Discussion Number" class="btn btn-primary as-support-log-github mr-10" data-logid="' + item.filename + '"><i class="fa-brands fa-github"></i></button>'
-                        let buttonDownload = '<button type="button" title="Download log" class="btn btn-primary as-support-log-download mr-10" data-logid="' + item.filename + '"><i class="fa-solid fa-download"></i></button>'
-                        let buttonDelete = '<button type="button" title="Delete Log" class="btn btn-danger as-support-log-delete" data-logid="' + item.filename + '"><i class="fa-solid fa-trash"></i></button>'
+                        let icon = '<i class="fa-solid fa-download"></i>'
+                        let buttonDownload = '<button type="button" title="Download log" class="btn btn-primary as-support-log-download mr-10" data-logid="' + item.filename + '">' + icon + '</button>'
+
+                        icon = '<i class="fa-brands fa-github"></i>'
+                        let buttonGithub = '<button type="button" title="Edit Guthib Discussion Number" class="btn btn-primary as-support-log-github mr-10" data-logid="' + item.filename + '">' + icon + '</button>'
+
+                        icon = '<i class="fa-solid fa-trash"></i>'
+                        let buttonDelete = '<button type="button" title="Delete Log" class="btn btn-danger as-support-log-delete" data-logid="' + item.filename + '">' + icon + '</button>'
                         
                         let buttons = '<div>' + buttonDownload + buttonGithub + buttonDelete + '</div>'
                         return buttons

@@ -8,8 +8,10 @@ function DisplayEditor()
 
     $fullN = null;			// this is the file that's displayed by default
     $localN = basename(getLocalWebsiteConfigFile());
+    $localN_withComment = "$localN (local Allsky Website)";
     $fullLocalN = "website/$localN";
     $remoteN = basename(getRemoteWebsiteConfigFile());
+    $remoteN_withComment = "$remoteN (remote Allsky Website)";
     $fullRemoteN = "config/$remoteN";
 
     // See what files there are to edit.
@@ -24,6 +26,10 @@ function DisplayEditor()
             $myStatus->addMessage($msg, 'danger');
         }
     } else {
+        $msg =  "<div class='dropdown'><code>$localN_withComment</code>";
+		$msg .= " will appear in the list below if you enable";
+		$msg .= " <span class='WebUISetting'>Use Local Website</span>.</div>";
+        $myStatus->addMessage($msg, 'info');
         $localN = null;
     }
 
@@ -293,14 +299,14 @@ function DisplayEditor()
                                     // The website is installed on this Pi.
                                     // The physical path is ALLSKY_WEBSITE; virtual path is "website".
                                     echo "<option value='$fullLocalN'>";
-                                    echo "$localN (local Allsky Website)";
+                                    echo $localN_withComment;
                                     echo "</option>";
                                 }
 
                                 if ($remoteN !== null) {
                                     // A copy of the remote website's config file is on the Pi.
                                     echo "<option value='{REMOTE}$fullRemoteN'>";
-                                    echo "$remoteN (remote Allsky Website)";
+                                    echo $remoteN_withComment;
                                     echo "</option>";
                                 }
 

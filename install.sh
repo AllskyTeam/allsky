@@ -1507,14 +1507,21 @@ does_prior_Allsky_Website_exist()
 		if [[ -d ${PRIOR_WEBSITE_DIR} ]]; then
 			PRIOR_WEBSITE_STYLE="${NEW_STYLE_ALLSKY}"
 			PRIOR_WEBSITE_CONFIG_FILE="${PRIOR_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
-			PRIOR_WEB_CONFIG_VERSION="$( settings ".${WEBSITE_CONFIG_VERSION}" "${PRIOR_WEBSITE_CONFIG_FILE}" )"
-			if [[ -z ${PRIOR_WEB_CONFIG_VERSION} ]]; then
-				# This shouldn't happen ...
-				MSG="Missing ${WEBSITE_CONFIG_VERSION} in ${PRIOR_WEBSITE_CONFIG_FILE}."
-				MSG+="\nYou need to manually copy your prior local Allsky Website settings to"
-				MSG+="\n${ALLSKY_WEBSITE_CONFIGURATION_FILE}."
-				display_msg --log error "${MSG}"
+			if [[ -s ${PRIOR_WEBSITE_CONFIG_FILE} ]]; then
+				PRIOR_WEB_CONFIG_VERSION="$( settings ".${WEBSITE_CONFIG_VERSION}" "${PRIOR_WEBSITE_CONFIG_FILE}" )"
+				if [[ -z ${PRIOR_WEB_CONFIG_VERSION} ]]; then
+					# This shouldn't happen ...
+					MSG="Missing ${WEBSITE_CONFIG_VERSION} in ${PRIOR_WEBSITE_CONFIG_FILE}."
+					MSG+="\nYou need to manually copy your prior local Allsky Website settings to"
+					MSG+="\n${ALLSKY_WEBSITE_CONFIGURATION_FILE}."
+					display_msg --log error "${MSG}"
+					PRIOR_WEB_CONFIG_VERSION="1"		# Assume the oldest version
+				fi
+			else
+				# No config file - they user probably never used the local Website
 				PRIOR_WEB_CONFIG_VERSION="1"		# Assume the oldest version
+				MSG="Prior Website config file '${PRIOR_WEBSITE_CONFIG_FILE}' not found."
+				display_msg --logonly info "${MSG}"
 			fi
 		else
 			PRIOR_WEBSITE_DIR=""
@@ -1532,7 +1539,7 @@ does_prior_Allsky_Website_exist()
 	fi
 
 	if [[ -z ${PRIOR_WEBSITE_DIR} ]]; then
-		display_msg --logonly info "No prior Allsky Website found."
+		display_msg --logonly info "No prior local Allsky Website found."
 	else
 		display_msg --logonly info "PRIOR_WEBSITE_STYLE=${PRIOR_WEBSITE_STYLE}"
 		display_msg --logonly info "PRIOR_WEBSITE_DIR=${PRIOR_WEBSITE_DIR}"
@@ -2927,30 +2934,38 @@ restore_prior_website_files()
 		prepare_local_website "" "postData"
 
 	else		# NEW_STYLE_WEBSITE
+		PRIOR_WEBSITE_CONFIG_FILE="${PRIOR_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 		ITEM="${SPACE}${SPACE}${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
-		if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
-			MSG="${ITEM} (copying and updating for version ${NEW_WEB_CONFIG_VERSION})"
-			display_msg --log progress "${MSG}"
-		fi
 
-		# Copy the old file to the current location.
-		display_msg --log progress "${ITEM} (copying)"
-		cp "${PRIOR_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}" \
-			"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+		if [[ -f ${PRIOR_WEBSITE_CONFIG_FILE} ]]; then
+			if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
+				MSG="${ITEM} (copying and updating for version ${NEW_WEB_CONFIG_VERSION})"
+				display_msg --log progress "${MSG}"
+			fi
 
-		MSG="${SPACE}${SPACE}${SPACE}"
-		if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
-			# If different versions, then update the current one.
-			MSG+="Updating version from ${PRIOR_WEB_CONFIG_VERSION} to ${NEW_WEB_CONFIG_VERSION}."
-			update_old_website_config_file "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" \
-				"${PRIOR_WEB_CONFIG_VERSION}" "${NEW_WEB_CONFIG_VERSION}"
+			# Copy the old file to the current location.
+			display_msg --log progress "${ITEM} (copying)"
+			cp "${PRIOR_WEBSITE_CONFIG_FILE}" \
+				"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+
+			MSG="${SPACE}${SPACE}${SPACE}"
+			if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
+				# If different versions, then update the current one.
+				MSG+="Updating version from ${PRIOR_WEB_CONFIG_VERSION} to ${NEW_WEB_CONFIG_VERSION}."
+				update_old_website_config_file "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" \
+					"${PRIOR_WEB_CONFIG_VERSION}" "${NEW_WEB_CONFIG_VERSION}"
+			else
+				MSG+="Already current @ version ${NEW_WEB_CONFIG_VERSION}"
+			fi
+			display_msg --logonly info "${MSG}"
+
+			# Since the config file already exists, this will just run postData.sh:
+			prepare_local_website "" "postData"
+
 		else
-			MSG+="Already current @ version ${NEW_WEB_CONFIG_VERSION}"
+			# Prior Website config file doesn't exist.
+			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		fi
-		display_msg --logonly info "${MSG}"
-
-		# Since the config file already exists, this will just run postData.sh:
-		prepare_local_website "" "postData"
 	fi
 
 	# data.json was updated above so don't copy it.

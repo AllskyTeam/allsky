@@ -24,6 +24,9 @@
 	--btn-hover-color: black;
 	--btn-dark-color: #bfbfbf;
 	--panel-heading-color: #6b6b6b;
+	--select-background-color: #e4e4e4;
+	--select-color: #555555;
+    --color-border-muted: hsla(210,18%,87%,1);
 }
 
 .page-header {
@@ -553,6 +556,17 @@ input[type="text"].has-error {
 		display: none;
 	}
 }
+.dropdown code {
+	line-height: 3;
+	padding: .4em .8em;
+	margin: 0 .5em;
+	font-size: inherit;
+	color: var(--select-color);
+	background-color: var(--select-background-color);
+	border: 1px solid var(--color-border-muted);
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	border-radius: 3px;
+}
 
 /* Headers in Allsky settings */
 .settingsHeader {
@@ -658,8 +672,8 @@ input[type="text"],
 input[type="number"],
 input[type="select"],
 select {
-	background-color: #e4e4e4;
-	color: #555555;
+	background-color: var(--select-background-color);
+	color: var(--select-color);
 }
 
 /* Colors for user-supplied buttons.

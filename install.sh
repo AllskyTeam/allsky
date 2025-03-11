@@ -2965,6 +2965,7 @@ restore_prior_website_files()
 		else
 			# Prior Website config file doesn't exist.
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+			doV "uselocalwebsite" "false" "uselocalwebsite" "boolean" "${SETTINGS_FILE}"
 		fi
 	fi
 

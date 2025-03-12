@@ -1384,11 +1384,16 @@ set_locale()
 
 	if [[ ${CURRENT_LOCALE} == "${DESIRED_LOCALE}" ]]; then
 		display_msg --logonly info "Keeping '${DESIRED_LOCALE}' locale."
-		L="$( settings ".locale" )"
+		L="$( settings --null ".locale" )"
 		MSG="Settings file '${SETTINGS_FILE}'"
-		if [[ -z ${L} ]]; then
+		if [[ -z ${L} || ${L} == "null" ]]; then
 			# Either a new install or an upgrade from an older Allsky.
-			MSG+=" did NOT contain .locale so adding it."
+			if [[ -z ${L} ]]; then
+				MSG+=" did NOT contain .locale"
+			else
+				MSG+=" had null .locale"
+			fi
+			MSG+=" so adding it."
 			display_msg --logonly info "${MSG}"
 			doV "" "DESIRED_LOCALE" "locale" "text" "${SETTINGS_FILE}"
 

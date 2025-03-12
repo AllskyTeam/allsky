@@ -234,9 +234,16 @@ function determineCommandToUse()
 		CMD_FOUND="true"	# one of the commands were found.
 
 		# Found a command - see if it works.
-		"${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1
+		# If the cable is bad the camera might be found but not work,
+		# and the command can hang.
+		timeout 10 "${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1
 		RET=$?
-		if [[ ${RET} -eq 137 ]]; then
+		if [[ ${RET} -eq 124 ]]; then
+			# Time out.  Let invoker know
+			echo "'${CMD_TO_USE_} timed out." >&2
+			return "${EXIT_ERROR_STOP}"
+
+		elif [[ ${RET} -eq 137 ]]; then
 			# If another of these commands is running ours will hang for
 			# about a minute then be killed with RET=137.
 			# If that happens, assume this is the command to use.

@@ -477,6 +477,8 @@ get_connected_cameras()
 	# true == ignore errors.  ${CMD} will be "" if no command found.
 	CMD="$( determineCommandToUse "false" "" "true" 2> /dev/null )"
 	CMD_RET=$?		# return of 2 means no command was found
+	[[ ${CMD_RET} -ne 0 ]] && CMD=""
+
 	setup_rpi_supported_cameras "${CMD}"		# Will create full file is CMD == ""
 
 	# RPi format:	RPi \t camera_number \t camera_sensor [\t optional_other_stuff]
@@ -525,6 +527,11 @@ get_connected_cameras()
 		MSG="No connected cameras were detected.  The installation will exit."
 		MSG+="\nMake sure a camera is plugged in and working prior to restarting"
 		MSG+=" the installation."
+		if [[ ${CMD_RET} -eq "${EXIT_ERROR_STOP}" ]]; then
+			# RPi command timed out.
+			MSG+="\n\nIf you have an RPi camera attached, double check the cable -"
+			MSG+=" it may be bad or not seated properly."
+		fi
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 
 		MSG="No connected cameras were detected."

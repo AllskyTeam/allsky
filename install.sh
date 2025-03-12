@@ -1396,14 +1396,6 @@ set_locale()
 			MSG+=" so adding it."
 			display_msg --logonly info "${MSG}"
 			doV "" "DESIRED_LOCALE" "locale" "text" "${SETTINGS_FILE}"
-
-# TODO: Something was unlinking the settings file from its camera-specific file,
-# so do "ls" of the settings files to try and pinpoint the problem.
-# I think this was fixed in v2023.05.01_03...
-#shellcheck disable=SC2012
-MSG="$( /bin/ls -l "${ALLSKY_CONFIG}/settings"*.json 2>/dev/null | sed 's/^/    /' )"
-display_msg --logonly info "Settings files now:\n${MSG}"
-
 		else
 			MSG+=" CONTAINED .locale:  ${L}"
 			display_msg --logonly info "${MSG}"

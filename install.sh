@@ -1407,11 +1407,6 @@ set_locale()
 	display_msg --log progress "Setting locale to '${DESIRED_LOCALE}'."
 	doV "" "DESIRED_LOCALE" "locale" "text" "${SETTINGS_FILE}"
 
-# TODO: same as above...
-#shellcheck disable=SC2012
-MSG="$( /bin/ls -l "${ALLSKY_CONFIG}/settings"*.json 2>/dev/null | sed 's/^/    /' )"
-display_msg --logonly info "Settings files now:\n${MSG}"
-
 	# This updates /etc/default/locale
 	sudo update-locale LC_ALL="${DESIRED_LOCALE}" LANGUAGE="${DESIRED_LOCALE}" LANG="${DESIRED_LOCALE}"
 

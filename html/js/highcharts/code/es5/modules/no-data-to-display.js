@@ -1,0 +1,12 @@
+!/**
+ * Highcharts JS v12.1.2 (2025-01-09)
+ * @module highcharts/modules/no-data-to-display
+ * @requires highcharts
+ *
+ * Plugin for displaying a message when there is no data visible in chart.
+ *
+ * (c) 2010-2024 Highsoft AS
+ * Author: Oystein Moseng
+ *
+ * License: www.highcharts.com/license
+ */function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e(require("highcharts"),require("highcharts").AST):"function"==typeof define&&define.amd?define("highcharts/modules/no-data-to-display",[["highcharts/highcharts"],["highcharts/highcharts","AST"]],e):"object"==typeof exports?exports["highcharts/modules/no-data-to-display"]=e(require("highcharts"),require("highcharts").AST):t.Highcharts=e(t.Highcharts,t.Highcharts.AST)}(this,function(t,e){return function(){"use strict";var a={660:function(t){t.exports=e},944:function(e){e.exports=t}},o={};function r(t){var e=o[t];if(void 0!==e)return e.exports;var n=o[t]={exports:{}};return a[t](n,n.exports,r),n.exports}r.n=function(t){var e=t&&t.__esModule?function(){return t.default}:function(){return t};return r.d(e,{a:e}),e},r.d=function(t,e){for(var a in e)r.o(e,a)&&!r.o(t,a)&&Object.defineProperty(t,a,{enumerable:!0,get:e[a]})},r.o=function(t,e){return Object.prototype.hasOwnProperty.call(t,e)};var n={};r.d(n,{default:function(){return y}});var i=r(944),s=r.n(i),h=r(660),d=r.n(h),u={lang:{noData:"No data to display"},noData:{attr:{zIndex:1},position:{x:0,y:0,align:"center",verticalAlign:"middle"},style:{fontWeight:"bold",fontSize:"0.8em",color:"#666666"}}},c=s().addEvent,l=s().extend,f=s().merge;function p(){for(var t=this.series||[],e=t.length;e--;)if(t[e].hasData()&&!t[e].options.isInternal)return!0;return this.loadingShown}function g(){this.noDataLabel&&(this.noDataLabel=this.noDataLabel.destroy())}function D(t){var e=this.options,a=t||e&&e.lang.noData||"",o=e&&(e.noData||{});this.renderer&&(this.noDataLabel||(this.noDataLabel=this.renderer.label(a,0,0,void 0,void 0,void 0,o.useHTML,void 0,"no-data").add()),this.styledMode||this.noDataLabel.attr(d().filterUserAttributes(o.attr||{})).css(o.style||{}),this.noDataLabel.align(l(this.noDataLabel.getBBox(),o.position||{}),!1,"plotBox"))}function v(){this.hasData()?this.hideNoData():this.showNoData()}var b=s();({compose:function(t,e){var a=t.prototype;a.showNoData||(a.hasData=p,a.hideNoData=g,a.showNoData=D,c(t,"render",v),f(!0,e,u))}}).compose(b.Chart,b.defaultOptions);var y=s();return n.default}()});

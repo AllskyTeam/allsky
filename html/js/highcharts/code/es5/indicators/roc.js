@@ -1,0 +1,12 @@
+!/**
+ * Highstock JS v12.1.2 (2025-01-09)
+ * @module highcharts/indicators/roc
+ * @requires highcharts
+ * @requires highcharts/modules/stock
+ *
+ * Indicator series type for Highcharts Stock
+ *
+ * (c) 2010-2024 Kacper Madej
+ *
+ * License: www.highcharts.com/license
+ */function(t,r){"object"==typeof exports&&"object"==typeof module?module.exports=r(require("highcharts"),require("highcharts").SeriesRegistry):"function"==typeof define&&define.amd?define("highcharts/indicators/roc",[["highcharts/highcharts"],["highcharts/highcharts","SeriesRegistry"]],r):"object"==typeof exports?exports["highcharts/indicators/roc"]=r(require("highcharts"),require("highcharts").SeriesRegistry):t.Highcharts=r(t.Highcharts,t.Highcharts.SeriesRegistry)}(this,function(t,r){return function(){"use strict";var e,n={512:function(t){t.exports=r},944:function(r){r.exports=t}},o={};function i(t){var r=o[t];if(void 0!==r)return r.exports;var e=o[t]={exports:{}};return n[t](e,e.exports,i),e.exports}i.n=function(t){var r=t&&t.__esModule?function(){return t.default}:function(){return t};return i.d(r,{a:r}),r},i.d=function(t,r){for(var e in r)i.o(r,e)&&!i.o(t,e)&&Object.defineProperty(t,e,{enumerable:!0,get:r[e]})},i.o=function(t,r){return Object.prototype.hasOwnProperty.call(t,r)};var s={};i.d(s,{default:function(){return x}});var u=i(944),a=i.n(u),c=i(512),h=i.n(c),p=(e=function(t,r){return(e=Object.setPrototypeOf||({__proto__:[]})instanceof Array&&function(t,r){t.__proto__=r}||function(t,r){for(var e in r)r.hasOwnProperty(e)&&(t[e]=r[e])})(t,r)},function(t,r){function n(){this.constructor=t}e(t,r),t.prototype=null===r?Object.create(r):(n.prototype=r.prototype,new n)}),f=h().seriesTypes.sma,y=a().isArray,d=a().merge,g=a().extend,l=function(t){function r(){return null!==t&&t.apply(this,arguments)||this}return p(r,t),r.prototype.getValues=function(t,r){var e,n,o=r.period,i=t.xData,s=t.yData,u=s?s.length:0,a=[],c=[],h=[],p=-1;if(!(i.length<=o)){for(y(s[0])&&(p=r.index),e=o;e<u;e++)n=function(t,r,e,n,o){var i,s;return s=o<0?(i=r[e-n])?(r[e]-i)/i*100:null:(i=r[e-n][o])?(r[e][o]-i)/i*100:null,[t[e],s]}(i,s,e,o,p),a.push(n),c.push(n[0]),h.push(n[1]);return{values:a,xData:c,yData:h}}},r.defaultOptions=d(f.defaultOptions,{params:{index:3,period:9}}),r}(f);g(l.prototype,{nameBase:"Rate of Change"}),h().registerSeriesType("roc",l);var x=a();return s.default}()});

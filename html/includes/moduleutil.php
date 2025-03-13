@@ -1074,6 +1074,75 @@ class MODULEUTIL
 		}
 		$this->sendResponse(json_encode($result));
 	}
+
+    public function getDewHeaterData() {
+        $result = array();
+        $file_name = $this->extraDataFolder . '/' . 'dewheaterhistory';
+        $jsonData = file_get_contents($file_name);
+        $array = json_decode($jsonData, true);
+        $categories = array();
+        $temp = array(
+            "name" =>"Temperature",
+            "yAxis" => 0,
+            "data" => array()
+        );
+        $dewPoint = array(
+            "name" =>"Dew Point",
+            "yAxis" => 0,
+            "data" => array()
+        );
+        $humidity = array(
+            "name" =>"Humidity",
+            "yAxis" => 1,
+            "data" => array()
+        );
+        $heater = array(
+            "name" =>"Heater",
+            "yAxis" => 1,
+            "data" => array()
+        );
+        foreach($array as $date=>$data) {
+            $temp["data"][] = array($date, $data["temperature"]);
+            $dewPoint["data"][] = array($date, $data["dew_point"]);
+            $humidity["data"][] = array($date, $data["humidity"]);
+            $heater["data"][] = array($date, $data["heater"]);
+        }
+        $result = array(
+            "series" => array(
+                $temp,
+                $dewPoint,
+                $humidity,
+                $heater
+            )
+        );
+        $this->sendResponse(json_encode($result));
+    }
+
+ /*   {
+        "series": [
+            {
+                "name": "Temperature",
+                "yAxis": 0,
+                "data": [[1710367200000, 22.5], [1710368100000, 23.1], [1710369000000, 24.0]]
+            },
+            {
+                "name": "Dew Point",
+                "yAxis": 0,
+                "data": [[1710367200000, 18.2], [1710368100000, 18.5], [1710369000000, 18.9]]
+            },
+            {
+                "name": "Humidity",
+                "yAxis": 1,
+                "data": [[1710367200000, 60], [1710368100000, 58], [1710369000000, 55]]
+            },
+            {
+                "name": "Duty Cycle",
+                "yAxis": 1,
+                "data": [[1710367200000, 40], [1710368100000, 42], [1710369000000, 39]]
+            }
+        ]
+    }*/
+
 }
 
 $moduleUtil = new MODULEUTIL();

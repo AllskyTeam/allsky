@@ -1,0 +1,208 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Highcharts Example</title>
+
+		<style type="text/css">
+.highcharts-figure,
+.highcharts-data-table table {
+    min-width: 320px;
+    max-width: 800px;
+    margin: 1em auto;
+}
+
+#container {
+    height: 400px;
+}
+
+.highcharts-data-table table {
+    font-family: Verdana, sans-serif;
+    border-collapse: collapse;
+    border: 1px solid #ebebeb;
+    margin: 10px auto;
+    text-align: center;
+    width: 100%;
+    max-width: 500px;
+}
+
+.highcharts-data-table caption {
+    padding: 1em 0;
+    font-size: 1.2em;
+    color: #555;
+}
+
+.highcharts-data-table th {
+    font-weight: 600;
+    padding: 0.5em;
+}
+
+.highcharts-data-table td,
+.highcharts-data-table th,
+.highcharts-data-table caption {
+    padding: 0.5em;
+}
+
+.highcharts-data-table thead tr,
+.highcharts-data-table tr:nth-child(even) {
+    background: #f8f8f8;
+}
+
+.highcharts-data-table tr:hover {
+    background: #f1f7ff;
+}
+
+.highcharts-description {
+    margin: 0.3rem 10px;
+}
+
+		</style>
+	</head>
+	<body>
+<script src="../../code/highcharts.js"></script>
+<script src="../../code/modules/exporting.js"></script>
+<script src="../../code/modules/export-data.js"></script>
+<script src="../../code/modules/accessibility.js"></script>
+
+<figure class="highcharts-figure">
+    <div id="container"></div>
+    <p class="highcharts-description">
+        Chart showing data updating every second, with old data being removed.
+    </p>
+</figure>
+
+
+
+		<script type="text/javascript">
+// On chart load, start an interval that adds points to the chart and animate
+// the pulsating marker.
+const onChartLoad = function () {
+    const chart = this,
+        series = chart.series[0];
+
+    setInterval(function () {
+        const x = (new Date()).getTime(), // current time
+            y = Math.random();
+
+        series.addPoint([x, y], true, true);
+    }, 1000);
+};
+
+// Create the initial data
+const data = (function () {
+    const data = [];
+    const time = new Date().getTime();
+
+    for (let i = -19; i <= 0; i += 1) {
+        data.push({
+            x: time + i * 1000,
+            y: Math.random()
+        });
+    }
+    return data;
+}());
+
+// Plugin to add a pulsating marker on add point
+Highcharts.addEvent(Highcharts.Series, 'addPoint', e => {
+    const point = e.point,
+        series = e.target;
+
+    if (!series.pulse) {
+        series.pulse = series.chart.renderer.circle()
+            .add(series.markerGroup);
+    }
+
+    setTimeout(() => {
+        series.pulse
+            .attr({
+                x: series.xAxis.toPixels(point.x, true),
+                y: series.yAxis.toPixels(point.y, true),
+                r: series.options.marker.radius,
+                opacity: 1,
+                fill: series.color
+            })
+            .animate({
+                r: 20,
+                opacity: 0
+            }, {
+                duration: 1000
+            });
+    }, 1);
+});
+
+
+Highcharts.chart('container', {
+    chart: {
+        type: 'spline',
+        events: {
+            load: onChartLoad
+        }
+    },
+
+    time: {
+        useUTC: false
+    },
+
+    title: {
+        text: 'Live random data'
+    },
+
+    accessibility: {
+        announceNewData: {
+            enabled: true,
+            minAnnounceInterval: 15000,
+            announcementFormatter: function (allSeries, newSeries, newPoint) {
+                if (newPoint) {
+                    return 'New point added. Value: ' + newPoint.y;
+                }
+                return false;
+            }
+        }
+    },
+
+    xAxis: {
+        type: 'datetime',
+        tickPixelInterval: 150,
+        maxPadding: 0.1
+    },
+
+    yAxis: {
+        title: {
+            text: 'Value'
+        },
+        plotLines: [
+            {
+                value: 0,
+                width: 1,
+                color: '#808080'
+            }
+        ]
+    },
+
+    tooltip: {
+        headerFormat: '<b>{series.name}</b><br/>',
+        pointFormat: '{point.x:%Y-%m-%d %H:%M:%S}<br/>{point.y:.2f}'
+    },
+
+    legend: {
+        enabled: false
+    },
+
+    exporting: {
+        enabled: false
+    },
+
+    series: [
+        {
+            name: 'Random data',
+            lineWidth: 2,
+            color: Highcharts.getOptions().colors[2],
+            data
+        }
+    ]
+});
+
+		</script>
+	</body>
+</html>

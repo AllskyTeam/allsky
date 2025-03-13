@@ -1,0 +1,161 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Highcharts Example</title>
+
+		<style type="text/css">
+#container {
+    height: 400px;
+}
+
+.highcharts-figure,
+.highcharts-data-table table {
+    min-width: 310px;
+    max-width: 800px;
+    margin: 1em auto;
+}
+
+.highcharts-data-table table {
+    font-family: Verdana, sans-serif;
+    border-collapse: collapse;
+    border: 1px solid #ebebeb;
+    margin: 10px auto;
+    text-align: center;
+    width: 100%;
+    max-width: 500px;
+}
+
+.highcharts-data-table caption {
+    padding: 1em 0;
+    font-size: 1.2em;
+    color: #555;
+}
+
+.highcharts-data-table th {
+    font-weight: 600;
+    padding: 0.5em;
+}
+
+.highcharts-data-table td,
+.highcharts-data-table th,
+.highcharts-data-table caption {
+    padding: 0.5em;
+}
+
+.highcharts-data-table thead tr,
+.highcharts-data-table tr:nth-child(even) {
+    background: #f8f8f8;
+}
+
+.highcharts-data-table tr:hover {
+    background: #f1f7ff;
+}
+
+.highcharts-description {
+    margin: 0.3rem 10px;
+}
+
+		</style>
+	</head>
+	<body>
+<script src="../../code/highcharts.js"></script>
+<script src="../../code/modules/exporting.js"></script>
+<script src="../../code/modules/export-data.js"></script>
+<script src="../../code/modules/accessibility.js"></script>
+
+<figure class="highcharts-figure">
+    <div id="container"></div>
+    <p class="highcharts-description">
+        Chart showing use of rotated axis labels and data labels. This can be a
+        way to include more labels in the chart, but note that more labels can
+        sometimes make charts harder to read.
+    </p>
+</figure>
+
+
+		<script type="text/javascript">
+Highcharts.chart('container', {
+    chart: {
+        type: 'column'
+    },
+    title: {
+        text: 'World\'s largest cities per 2021'
+    },
+    subtitle: {
+        text: 'Source: <a href="https://worldpopulationreview.com/world-cities" target="_blank">World Population Review</a>'
+    },
+    xAxis: {
+        type: 'category',
+        labels: {
+            autoRotation: [-45, -90],
+            style: {
+                fontSize: '13px',
+                fontFamily: 'Verdana, sans-serif'
+            }
+        }
+    },
+    yAxis: {
+        min: 0,
+        title: {
+            text: 'Population (millions)'
+        }
+    },
+    legend: {
+        enabled: false
+    },
+    tooltip: {
+        pointFormat: 'Population in 2021: <b>{point.y:.1f} millions</b>'
+    },
+    series: [{
+        name: 'Population',
+        colors: [
+            '#9b20d9', '#9215ac', '#861ec9', '#7a17e6', '#7010f9', '#691af3',
+            '#6225ed', '#5b30e7', '#533be1', '#4c46db', '#4551d5', '#3e5ccf',
+            '#3667c9', '#2f72c3', '#277dbd', '#1f88b7', '#1693b1', '#0a9eaa',
+            '#03c69b',  '#00f194'
+        ],
+        colorByPoint: true,
+        groupPadding: 0,
+        data: [
+            ['Tokyo', 37.33],
+            ['Delhi', 31.18],
+            ['Shanghai', 27.79],
+            ['Sao Paulo', 22.23],
+            ['Mexico City', 21.91],
+            ['Dhaka', 21.74],
+            ['Cairo', 21.32],
+            ['Beijing', 20.89],
+            ['Mumbai', 20.67],
+            ['Osaka', 19.11],
+            ['Karachi', 16.45],
+            ['Chongqing', 16.38],
+            ['Istanbul', 15.41],
+            ['Buenos Aires', 15.25],
+            ['Kolkata', 14.974],
+            ['Kinshasa', 14.970],
+            ['Lagos', 14.86],
+            ['Manila', 14.16],
+            ['Tianjin', 13.79],
+            ['Guangzhou', 13.64]
+        ],
+        dataLabels: {
+            enabled: true,
+            rotation: -90,
+            color: '#FFFFFF',
+            inside: true,
+            verticalAlign: 'top',
+            format: '{point.y:.1f}', // one decimal
+            y: 10, // 10 pixels down from the top
+            style: {
+                fontSize: '13px',
+                fontFamily: 'Verdana, sans-serif'
+            }
+        }
+    }]
+});
+
+		</script>
+	</body>
+</html>

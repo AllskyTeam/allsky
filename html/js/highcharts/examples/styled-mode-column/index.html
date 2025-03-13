@@ -1,0 +1,166 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Highcharts Example</title>
+
+		<style type="text/css">
+@import url("https://code.highcharts.com/css/highcharts.css");
+
+.highcharts-figure,
+.highcharts-data-table table {
+    min-width: 310px;
+    max-width: 800px;
+    margin: 1em auto;
+}
+
+.highcharts-data-table table {
+    font-family: Verdana, sans-serif;
+    border-collapse: collapse;
+    border: 1px solid #ebebeb;
+    margin: 10px auto;
+    text-align: center;
+    width: 100%;
+    max-width: 500px;
+}
+
+.highcharts-data-table caption {
+    padding: 1em 0;
+    font-size: 1.2em;
+    color: #555;
+}
+
+.highcharts-data-table th {
+    font-weight: 600;
+    padding: 0.5em;
+}
+
+.highcharts-data-table td,
+.highcharts-data-table th,
+.highcharts-data-table caption {
+    padding: 0.5em;
+}
+
+.highcharts-data-table thead tr,
+.highcharts-data-table tr:nth-child(even) {
+    background: #f8f8f8;
+}
+
+.highcharts-data-table tr:hover {
+    background: #f1f7ff;
+}
+
+.highcharts-yaxis .highcharts-axis-line {
+    stroke-width: 2px;
+}
+
+/* Link the series colors to axis colors */
+.highcharts-color-0 {
+    fill: #7cb5ec;
+    stroke: #7cb5ec;
+}
+
+.highcharts-axis.highcharts-color-0 .highcharts-axis-line {
+    stroke: #7cb5ec;
+}
+
+.highcharts-axis.highcharts-color-0 text {
+    fill: #7cb5ec;
+}
+
+.highcharts-color-1 {
+    fill: #90ed7d;
+    stroke: #90ed7d;
+}
+
+.highcharts-axis.highcharts-color-1 .highcharts-axis-line {
+    stroke: #90ed7d;
+}
+
+.highcharts-axis.highcharts-color-1 text {
+    fill: #90ed7d;
+}
+
+.highcharts-description {
+    margin: 0.3rem 10px;
+}
+
+		</style>
+	</head>
+	<body>
+<script src="../../code/highcharts.js"></script>
+<script src="../../code/modules/exporting.js"></script>
+<script src="../../code/modules/export-data.js"></script>
+<script src="../../code/modules/accessibility.js"></script>
+
+<figure class="highcharts-figure">
+    <div id="container"></div>
+    <p class="highcharts-description">
+        Charts can be styled using CSS, allowing designers and
+        developers to more easily collaborate on chart configuration.
+        This example shows how the base Highcharts styling is imported
+        using CSS, and modified without the need for Javascript.
+    </p>
+</figure>
+
+
+
+		<script type="text/javascript">
+Highcharts.chart('container', {
+
+    chart: {
+        type: 'column',
+        styledMode: true
+    },
+
+    title: {
+        text: 'Average weight and BMI in some countries, women'
+    },
+
+    subtitle: {
+        text: 'Source: ' +
+            '<a href="https://www.worlddata.info/average-bodyheight.php"' +
+            'target="_blank">WorldData</a>'
+    },
+
+    xAxis: {
+        categories: ['Tokelau', 'Ireland', 'Italy', 'Timor-Leste']
+    },
+
+    yAxis: [{ // Primary axis
+        className: 'highcharts-color-0',
+        title: {
+            text: 'Weight'
+        }
+    }, { // Secondary axis
+        className: 'highcharts-color-1',
+        opposite: true,
+        title: {
+            text: 'BMI'
+        }
+    }],
+
+    plotOptions: {
+        column: {
+            borderRadius: 5
+        }
+    },
+
+    series: [{
+        name: 'Weight',
+        data: [92.5, 73.1, 64.8, 49.0],
+        tooltip: {
+            valueSuffix: ' kg'
+        }
+    }, {
+        name: 'BMI',
+        data: [33.7, 27.1, 24.9, 21.2],
+        yAxis: 1
+    }]
+
+});
+
+		</script>
+	</body>
+</html>

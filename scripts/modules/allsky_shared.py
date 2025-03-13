@@ -27,6 +27,8 @@ from pathlib import Path
 
 from allskyvariables import allskyvariables
 
+from gpiozero import Device, CPUTemperature
+
 try:
     locale.setlocale(locale.LC_ALL, '')
 except:
@@ -80,6 +82,9 @@ SETTINGS = {}
 TOD = ''
 DBDATA = {}
 
+PI_INFO_MODEL = 1
+Pi_INFO_CPU_TEMPERATURE = 2
+
 def get_lat_lon():
 	lat = None
 	lon = None
@@ -93,6 +98,19 @@ def get_lat_lon():
 
 	return lat, lon
 
+def get_pi_info(info):
+    resukt = None
+    
+    if info == PI_INFO_MODEL:
+        Device.ensure_pin_factory()
+        pi_info = Device.pin_factory.board_info
+        result = pi_info.model
+
+    if info == Pi_INFO_CPU_TEMPERATURE:
+        result = CPUTemperature().temperature
+                            
+    return result
+        
 def obfuscate_secret(secret, visible_chars=3):
     return secret[:visible_chars] + '*' * (len(secret) - visible_chars)
 
@@ -141,6 +159,7 @@ def convert_lat_lon(input):
 def convertLatLon(input):
     """ lat and lon can either be a positive or negative float, or end with N, S, E,or W. """
     """ If in  N, S, E, W format, 0.2E becomes -0.2 """
+    input = str(input)
     input = input.upper()
     nsew = 1 if input[-1] in ['N', 'S', 'E', 'W'] else 0
     if nsew:
@@ -483,38 +502,38 @@ def validateExtraFileName(params, module, fileKey):
 def save_extra_data(file_name, extra_data, source='', structure={}, custom_fields={}):
     saveExtraData(file_name, extra_data, source, structure, custom_fields)
 def saveExtraData(file_name, extra_data, source='', structure={}, custom_fields={}):
-	"""
-	Save extra data to allows the overlay module to disdplay it.
+    """
+    Save extra data to allows the overlay module to disdplay it.
 
-	Args:
-		file_name (string): The name of the file to save.
-		extra_data (object): The data to save.
+    Args:
+        file_name (string): The name of the file to save.
+        extra_data (object): The data to save.
 
-	Returns:
-		Nothing
-	"""
-	try:
-		extra_data_path = getExtraDir()
-		if extra_data_path is not None:        
-			checkAndCreateDirectory(extra_data_path)
+    Returns:
+        Nothing
+    """
+    try:
+        extra_data_path = getExtraDir()
+        if extra_data_path is not None:        
+            checkAndCreateDirectory(extra_data_path)
 
-			file_extension = Path(file_name).suffix
-			extra_data_filename = os.path.join(extra_data_path, file_name)
-			with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
-				if file_extension == '.json':
-					extra_data = format_extra_data(extra_data, structure, source)
-					if len(custom_fields) > 0:
-						for key, value in custom_fields.items():
-							extra_data[key] = value
-					extra_data = json.dumps(extra_data, indent=4)
-					temp_file.write(extra_data)
-				temp_file_name = temp_file.name
-				os.chmod(temp_file_name, 0o644)
+            file_extension = Path(file_name).suffix
+            extra_data_filename = os.path.join(extra_data_path, file_name)
+            with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
+                if file_extension == '.json':
+                    extra_data = format_extra_data(extra_data, structure, source)
+                if len(custom_fields) > 0:
+                    for key, value in custom_fields.items():
+                        extra_data[key] = value
+                extra_data = json.dumps(extra_data, indent=4)
+                temp_file.write(extra_data)
+                temp_file_name = temp_file.name
+                os.chmod(temp_file_name, 0o644)
 
-			shutil.move(temp_file_name, extra_data_filename)
-	except Exception as e:
-		eType, eObject, eTraceback = sys.exc_info()            
-		log(0, f'ERROR: Module saveExtraData failed on line {eTraceback.tb_lineno} - {e}')
+            shutil.move(temp_file_name, extra_data_filename)
+    except Exception as e:
+        eType, eObject, eTraceback = sys.exc_info()            
+        log(0, f'ERROR: Module saveExtraData failed on line {eTraceback.tb_lineno} - {e}')
 
 def format_extra_data(extra_data, structure, source):
     result = extra_data
@@ -569,7 +588,7 @@ def format_extra_data(extra_data, structure, source):
                     
     return result
 
-def load_extra_data_file(file_name):
+def load_extra_data_file(file_name, type=''):
     result = {}
     extra_data_path = getExtraDir()
     if extra_data_path is not None:               # it should never be None
@@ -578,7 +597,7 @@ def load_extra_data_file(file_name):
         if file_path.is_file() and isFileReadable(file_path):
             file_extension = Path(file_path).suffix
 
-            if file_extension == '.json':
+            if file_extension == '.json' or type == 'json':
                 try:
                     with open(extra_data_filename, 'r') as file:
                         result = json.load(file)

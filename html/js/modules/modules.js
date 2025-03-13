@@ -524,7 +524,8 @@ class MODULESEDITOR {
 			'spectrum': [],
 			'select2': [],
 			'position': [],
-			'urlcheck': []
+			'urlcheck': [],
+			'chart': []
 		}
 
         target = $(target)
@@ -542,7 +543,7 @@ class MODULESEDITOR {
 			let fieldType = null
             if (fieldData.type !== undefined) {
 				if (fieldData.type.fieldtype !== undefined) {				
-                	fieldType = fieldData.type.fieldtype
+					fieldType = fieldData.type.fieldtype
 				}
 			}
 
@@ -983,23 +984,50 @@ class MODULESEDITOR {
 							inputHTML += `	<div class="col-md-3"><input class="form-control" type="number" min="1" max="65535" id="${portId}" name="${portId}" value="${fieldValue}"></div>`
 						}
 						inputHTML += '</div>'						
-					}					
+					}
+					
+					if (fieldType == 'dewheatergraph') {
+						controls['chart'].push({
+							'id': key,
+							'data_url': 'includes/moduleutil.php?request=DewHeaterData'
+						})						
+						inputHTML = `
+							<div id="${key}"></div>
+						`
+					}
+
 				}
 
-				fieldHTML = '\
-					<div class="form-group" id="' + key + '-wrapper">\
-						<label for="' + key + '" class="control-label col-xs-4">' + fieldData.description + '</label>\
-						<div class="col-xs-7">\
-							<div class="'+ extraClass + '">\
-								' + inputHTML + '\
+				if (fieldType == 'dewheatergraph') {
+					fieldHTML = `
+						<div class="form-group" id="${key}-wrapper">
+							<div class="col-xs-11">
+								<div class="${extraClass}">
+									${inputHTML}
+								</div>
+								${helpText}
+							</div>
+							<div class="col-xs-1">
+								${fieldPostHTML}
+							</div>
+						</div>
+					`
+				} else {
+					fieldHTML = '\
+						<div class="form-group" id="' + key + '-wrapper">\
+							<label for="' + key + '" class="control-label col-xs-4">' + fieldData.description + '</label>\
+							<div class="col-xs-7">\
+								<div class="'+ extraClass + '">\
+									' + inputHTML + '\
+								</div>\
+								' + helpText + '\
 							</div>\
-							' + helpText + '\
+							<div class="col-xs-1">\
+							' + fieldPostHTML + '\
+							</div>\
 						</div>\
-						<div class="col-xs-1">\
-						' + fieldPostHTML + '\
-						</div>\
-					</div>\
-				';
+					'
+				}
 
 			} else {
 				let fieldError = true
@@ -1054,8 +1082,7 @@ class MODULESEDITOR {
 				if (this.#dialogFilters[filters.filter] === undefined) {
 					this.#dialogFilters[filters.filter] = {}
 				}
-				let sourceField = moduleData.metadata
-.				argumentdetails[filters.filter]
+				let sourceField = moduleData.metadata.argumentdetails[filters.filter]
 				let sourceFieldType = 'text'
 				if (sourceField.type !== undefined) {
 					if (sourceField.type.fieldtype !== undefined) {
@@ -1338,6 +1365,27 @@ class MODULESEDITOR {
 			$(value['id']).allskyURLCHECK({});
 		})
 
+		Object.entries(controls['chart']).forEach(([key, value]) => {
+            fetch(value['data_url'])
+                .then(response => response.json())
+                .then(data => {
+                    Highcharts.chart(value['id'], {
+                        chart: { type: 'line' },
+						title: { text: 'Temperature, Dew Point, Humidity, Duty Cycle' },
+						xAxis: { type: 'datetime' },
+						yAxis: [
+							{ title: { text: 'Temperature & Dew Point (°C)' } },
+							{ title: { text: 'Humidity (%) & Duty Cycle (%)' }, opposite: true }
+						],
+						series: data.series
+                    });
+                })
+                .catch(error => console.error('Error loading data:', error));
+
+		})
+
+
+
 
 		let centerModal = true
 		if ('centersettings' in moduleData.metadata) {
@@ -1346,7 +1394,7 @@ class MODULESEDITOR {
 			}
 		}
 		if (centerModal) {
-        	$('.modal').on('shown.bs.modal', this.alignModal);
+			$('.modal').on('shown.bs.modal', this.alignModal);
 		}
 
         if ('extradata' in moduleData.metadata) {

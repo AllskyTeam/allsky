@@ -1,0 +1,12 @@
+!/**
+ * Highstock JS v12.1.2 (2025-01-09)
+ * @module highcharts/indicators/apo
+ * @requires highcharts
+ * @requires highcharts/modules/stock
+ *
+ * Indicator series type for Highcharts Stock
+ *
+ * (c) 2010-2024 Wojciech Chmiel
+ *
+ * License: www.highcharts.com/license
+ */function(e,t){"object"==typeof exports&&"object"==typeof module?module.exports=t(require("highcharts"),require("highcharts").SeriesRegistry):"function"==typeof define&&define.amd?define("highcharts/indicators/apo",[["highcharts/highcharts"],["highcharts/highcharts","SeriesRegistry"]],t):"object"==typeof exports?exports["highcharts/indicators/apo"]=t(require("highcharts"),require("highcharts").SeriesRegistry):e.Highcharts=t(e.Highcharts,e.Highcharts.SeriesRegistry)}(this,function(e,t){return function(){"use strict";var r,o={512:function(e){e.exports=t},944:function(t){t.exports=e}},n={};function i(e){var t=n[e];if(void 0!==t)return t.exports;var r=n[e]={exports:{}};return o[e](r,r.exports,i),r.exports}i.n=function(e){var t=e&&e.__esModule?function(){return e.default}:function(){return e};return i.d(t,{a:t}),t},i.d=function(e,t){for(var r in t)i.o(t,r)&&!i.o(e,r)&&Object.defineProperty(e,r,{enumerable:!0,get:t[r]})},i.o=function(e,t){return Object.prototype.hasOwnProperty.call(e,t)};var a={};i.d(a,{default:function(){return x}});var s=i(944),u=i.n(s),p=i(512),c=i.n(p),h=(r=function(e,t){return(r=Object.setPrototypeOf||({__proto__:[]})instanceof Array&&function(e,t){e.__proto__=t}||function(e,t){for(var r in t)t.hasOwnProperty(r)&&(e[r]=t[r])})(e,t)},function(e,t){function o(){this.constructor=e}r(e,t),e.prototype=null===t?Object.create(t):(o.prototype=t.prototype,new o)}),f=c().seriesTypes.ema,d=u().extend,l=u().merge,y=u().error,g=function(e){function t(){return null!==e&&e.apply(this,arguments)||this}return h(t,e),t.prototype.getValues=function(t,r){var o,n,i=r.periods,a=r.index,s=[],u=[],p=[];if(2!==i.length||i[1]<=i[0]){y('Error: "APO requires two periods. Notice, first period should be lower than the second one."');return}var c=e.prototype.getValues.call(this,t,{index:a,period:i[0]}),h=e.prototype.getValues.call(this,t,{index:a,period:i[1]});if(c&&h){var f=i[1]-i[0];for(n=0;n<h.yData.length;n++)o=c.yData[n+f]-h.yData[n],s.push([h.xData[n],o]),u.push(h.xData[n]),p.push(o);return{values:s,xData:u,yData:p}}},t.defaultOptions=l(f.defaultOptions,{params:{period:void 0,periods:[10,20]}}),t}(f);d(g.prototype,{nameBase:"APO",nameComponents:["periods"]}),c().registerSeriesType("apo",g);var x=u();return a.default}()});

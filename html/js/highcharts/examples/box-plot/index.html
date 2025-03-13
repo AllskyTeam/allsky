@@ -1,0 +1,153 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Highcharts Example</title>
+
+		<style type="text/css">
+#container {
+    height: 400px;
+}
+
+.highcharts-figure,
+.highcharts-data-table table {
+    min-width: 310px;
+    max-width: 700px;
+    margin: 1em auto;
+}
+
+.highcharts-data-table table {
+    font-family: Verdana, sans-serif;
+    border-collapse: collapse;
+    border: 1px solid #ebebeb;
+    margin: 10px auto;
+    text-align: center;
+    width: 100%;
+    max-width: 500px;
+}
+
+.highcharts-data-table caption {
+    padding: 1em 0;
+    font-size: 1.2em;
+    color: #555;
+}
+
+.highcharts-data-table th {
+    font-weight: 600;
+    padding: 0.5em;
+}
+
+.highcharts-data-table td,
+.highcharts-data-table th,
+.highcharts-data-table caption {
+    padding: 0.5em;
+}
+
+.highcharts-data-table thead tr,
+.highcharts-data-table tr:nth-child(even) {
+    background: #f8f8f8;
+}
+
+.highcharts-data-table tr:hover {
+    background: #f1f7ff;
+}
+
+.highcharts-description {
+    margin: 0.3rem 10px;
+}
+
+		</style>
+	</head>
+	<body>
+<script src="../../code/highcharts.js"></script>
+<script src="../../code/highcharts-more.js"></script>
+<script src="../../code/modules/exporting.js"></script>
+<script src="../../code/modules/export-data.js"></script>
+<script src="../../code/modules/accessibility.js"></script>
+
+<figure class="highcharts-figure">
+    <div id="container"></div>
+    <p class="highcharts-description">
+        Chart showing the use of box plots with outliers. The chart makes use
+        of a plot line to show the theoretical mean value across the y-axis.
+    </p>
+</figure>
+
+
+		<script type="text/javascript">
+Highcharts.chart('container', {
+
+    chart: {
+        type: 'boxplot'
+    },
+
+    title: {
+        text: 'Highcharts Box Plot Example'
+    },
+
+    legend: {
+        enabled: false
+    },
+
+    xAxis: {
+        categories: ['1', '2', '3', '4', '5'],
+        title: {
+            text: 'Experiment No.'
+        }
+    },
+
+    yAxis: {
+        title: {
+            text: 'Observations'
+        },
+        plotLines: [{
+            value: 932,
+            color: 'red',
+            width: 1,
+            label: {
+                text: 'Theoretical mean: 932',
+                align: 'center',
+                style: {
+                    color: 'gray'
+                }
+            }
+        }]
+    },
+
+    series: [{
+        name: 'Observations',
+        data: [
+            [760, 801, 848, 895, 965],
+            [733, 853, 939, 980, 1080],
+            [714, 762, 817, 870, 918],
+            [724, 802, 806, 871, 950],
+            [834, 836, 864, 882, 910]
+        ],
+        tooltip: {
+            headerFormat: '<em>Experiment No {point.key}</em><br/>'
+        }
+    }, {
+        name: 'Outliers',
+        color: Highcharts.getOptions().colors[0],
+        type: 'scatter',
+        data: [ // x, y positions where 0 is the first category
+            [0, 644],
+            [4, 718],
+            [4, 951],
+            [4, 969]
+        ],
+        marker: {
+            fillColor: 'white',
+            lineWidth: 1,
+            lineColor: Highcharts.getOptions().colors[0]
+        },
+        tooltip: {
+            pointFormat: 'Observation: {point.y}'
+        }
+    }]
+
+});
+		</script>
+	</body>
+</html>

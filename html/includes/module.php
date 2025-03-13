@@ -58,6 +58,8 @@ function DisplayModule() {
 
 <link rel='stylesheet' href='/css/checkbox.css?c=<?php echo ALLSKY_VERSION; ?>' />
 
+<script src="/js/highcharts/code/highcharts.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+<script src="/js/highcharts/code//modules/series-label.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
 <div class="row">
     <div class="col-lg-12">

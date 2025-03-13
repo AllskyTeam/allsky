@@ -1,0 +1,12 @@
+!/**
+ * Highstock JS v12.1.2 (2025-01-09)
+ * @module highcharts/indicators/wma
+ * @requires highcharts
+ * @requires highcharts/modules/stock
+ *
+ * Indicator series type for Highcharts Stock
+ *
+ * (c) 2010-2024 Kacper Madej
+ *
+ * License: www.highcharts.com/license
+ */function(t,r){"object"==typeof exports&&"object"==typeof module?module.exports=r(require("highcharts"),require("highcharts").SeriesRegistry):"function"==typeof define&&define.amd?define("highcharts/indicators/wma",[["highcharts/highcharts"],["highcharts/highcharts","SeriesRegistry"]],r):"object"==typeof exports?exports["highcharts/indicators/wma"]=r(require("highcharts"),require("highcharts").SeriesRegistry):t.Highcharts=r(t.Highcharts,t.Highcharts.SeriesRegistry)}(this,function(t,r){return function(){"use strict";var e,n={512:function(t){t.exports=r},944:function(r){r.exports=t}},o={};function i(t){var r=o[t];if(void 0!==r)return r.exports;var e=o[t]={exports:{}};return n[t](e,e.exports,i),e.exports}i.n=function(t){var r=t&&t.__esModule?function(){return t.default}:function(){return t};return i.d(r,{a:r}),r},i.d=function(t,r){for(var e in r)i.o(r,e)&&!i.o(t,e)&&Object.defineProperty(t,e,{enumerable:!0,get:r[e]})},i.o=function(t,r){return Object.prototype.hasOwnProperty.call(t,r)};var u={};i.d(u,{default:function(){return x}});var s=i(944),a=i.n(s),c=i(512),h=i.n(c),f=(e=function(t,r){return(e=Object.setPrototypeOf||({__proto__:[]})instanceof Array&&function(t,r){t.__proto__=r}||function(t,r){for(var e in r)r.hasOwnProperty(e)&&(t[e]=r[e])})(t,r)},function(t,r){function n(){this.constructor=t}e(t,r),t.prototype=null===r?Object.create(r):(n.prototype=r.prototype,new n)}),p=h().seriesTypes.sma,d=a().isArray,g=a().merge;function y(t,r,e,n,o){var i=r[n],u=o<0?e[n]:e[n][o];t.push([i,u])}function l(t,r,e,n){var o=t.length,i=t.reduce(function(t,r,e){return[null,t[1]+r[1]*(e+1)]})[1]/((o+1)/2*o),u=r[n-1];return t.shift(),[u,i]}var v=function(t){function r(){return null!==t&&t.apply(this,arguments)||this}return f(r,t),r.prototype.getValues=function(t,r){var e,n,o=r.period,i=t.xData,u=t.yData,s=u?u.length:0,a=i[0],c=[],h=[],f=[],p=1,g=-1,v=u[0];if(!(i.length<o)){d(u[0])&&(g=r.index,v=u[0][g]);for(var x=[[a,v]];p!==o;)y(x,i,u,p,g),p++;for(e=p;e<s;e++)n=l(x,i,u,e),c.push(n),h.push(n[0]),f.push(n[1]),y(x,i,u,e,g);return n=l(x,i,u,e),c.push(n),h.push(n[0]),f.push(n[1]),{values:c,xData:h,yData:f}}},r.defaultOptions=g(p.defaultOptions,{params:{index:3,period:9}}),r}(p);h().registerSeriesType("wma",v);var x=a();return u.default}()});

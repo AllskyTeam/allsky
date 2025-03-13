@@ -1,0 +1,121 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Highcharts Example</title>
+
+		<style type="text/css">
+.highcharts-figure,
+.highcharts-data-table table {
+    min-width: 310px;
+    max-width: 800px;
+    margin: 1em auto;
+}
+
+.highcharts-data-table table {
+    font-family: Verdana, sans-serif;
+    border-collapse: collapse;
+    border: 1px solid #ebebeb;
+    margin: 10px auto;
+    text-align: center;
+    width: 100%;
+    max-width: 500px;
+}
+
+.highcharts-data-table caption {
+    padding: 1em 0;
+    font-size: 1.2em;
+    color: #555;
+}
+
+.highcharts-data-table th {
+    font-weight: 600;
+    padding: 0.5em;
+}
+
+.highcharts-data-table td,
+.highcharts-data-table th,
+.highcharts-data-table caption {
+    padding: 0.5em;
+}
+
+.highcharts-data-table thead tr,
+.highcharts-data-table tr:nth-child(even) {
+    background: #f8f8f8;
+}
+
+.highcharts-data-table tr:hover {
+    background: #f1f7ff;
+}
+
+.highcharts-description {
+    margin: 0.3rem 10px;
+}
+
+		</style>
+	</head>
+	<body>
+<script src="../../code/highcharts.js"></script>
+<script src="../../code/highcharts-3d.js"></script>
+<script src="../../code/modules/cylinder.js"></script>
+<script src="../../code/modules/funnel3d.js"></script>
+<script src="../../code/modules/pyramid3d.js"></script>
+<script src="../../code/modules/exporting.js"></script>
+<script src="../../code/modules/export-data.js"></script>
+<script src="../../code/modules/accessibility.js"></script>
+
+<figure class="highcharts-figure">
+    <div id="container"></div>
+    <p class="highcharts-description">
+        Highcharts supports drawing pyramid charts in 3D as well as 2D. While
+        the 2D version is typically easier to read, the 3D version is sometimes
+        used for decorative effect.
+    </p>
+</figure>
+
+
+
+		<script type="text/javascript">
+// Set up the chart
+Highcharts.chart('container', {
+    chart: {
+        type: 'pyramid3d',
+        options3d: {
+            enabled: true,
+            alpha: 10,
+            depth: 50,
+            viewDistance: 50
+        }
+    },
+    title: {
+        text: 'Highcharts Pyramid3D Chart'
+    },
+    plotOptions: {
+        series: {
+            dataLabels: {
+                enabled: true,
+                format: '<b>{point.name}</b> ({point.y:,.0f})',
+                allowOverlap: true,
+                x: 10,
+                y: -5
+            },
+            width: '60%',
+            height: '80%',
+            center: ['50%', '45%']
+        }
+    },
+    series: [{
+        name: 'Unique users',
+        data: [
+            ['Website visits', 15654],
+            ['Downloads', 4064],
+            ['Requested price list', 1987],
+            ['Invoice sent', 976],
+            ['Finalized', 846]
+        ]
+    }]
+});
+		</script>
+	</body>
+</html>

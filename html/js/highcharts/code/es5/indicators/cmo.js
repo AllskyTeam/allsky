@@ -1,0 +1,12 @@
+!/**
+ * Highstock JS v12.1.2 (2025-01-09)
+ * @module highcharts/indicators/cmo
+ * @requires highcharts
+ * @requires highcharts/modules/stock
+ *
+ * Indicator series type for Highcharts Stock
+ *
+ * (c) 2010-2024 Pawel Lysy
+ *
+ * License: www.highcharts.com/license
+ */function(t,r){"object"==typeof exports&&"object"==typeof module?module.exports=r(require("highcharts"),require("highcharts").SeriesRegistry):"function"==typeof define&&define.amd?define("highcharts/indicators/cmo",[["highcharts/highcharts"],["highcharts/highcharts","SeriesRegistry"]],r):"object"==typeof exports?exports["highcharts/indicators/cmo"]=r(require("highcharts"),require("highcharts").SeriesRegistry):t.Highcharts=r(t.Highcharts,t.Highcharts.SeriesRegistry)}(this,function(t,r){return function(){"use strict";var e,n={512:function(t){t.exports=r},944:function(r){r.exports=t}},o={};function i(t){var r=o[t];if(void 0!==r)return r.exports;var e=o[t]={exports:{}};return n[t](e,e.exports,i),e.exports}i.n=function(t){var r=t&&t.__esModule?function(){return t.default}:function(){return t};return i.d(r,{a:r}),r},i.d=function(t,r){for(var e in r)i.o(r,e)&&!i.o(t,e)&&Object.defineProperty(t,e,{enumerable:!0,get:r[e]})},i.o=function(t,r){return Object.prototype.hasOwnProperty.call(t,r)};var s={};i.d(s,{default:function(){return l}});var u=i(944),a=i.n(u),c=i(512),h=i.n(c),p=(e=function(t,r){return(e=Object.setPrototypeOf||({__proto__:[]})instanceof Array&&function(t,r){t.__proto__=r}||function(t,r){for(var e in r)r.hasOwnProperty(e)&&(t[e]=r[e])})(t,r)},function(t,r){function n(){this.constructor=t}e(t,r),t.prototype=null===r?Object.create(r):(n.prototype=r.prototype,new n)}),f=h().seriesTypes.sma,g=a().isNumber,d=a().merge,y=function(t){function r(){return null!==t&&t.apply(this,arguments)||this}return p(r,t),r.prototype.getValues=function(t,r){var e,n,o=r.period,i=t.xData,s=t.yData,u=s?s.length:0,a=[],c=[],h=[],p=r.index;if(!(i.length<o)){g(s[0])?n=s:(p=Math.min(p,s[0].length-1),n=s.map(function(t){return t[p]}));for(var f,d=0,y=0,l=0,x=o;x>0;x--)n[x]>n[x-1]?y+=n[x]-n[x-1]:n[x]<n[x-1]&&(l+=n[x-1]-n[x]);for(f=y+l>0?100*(y-l)/(y+l):0,c.push(i[o]),h.push(f),a.push([i[o],f]),e=o+1;e<u;e++)d=Math.abs(n[e-o-1]-n[e-o]),n[e]>n[e-1]?y+=n[e]-n[e-1]:n[e]<n[e-1]&&(l+=n[e-1]-n[e]),n[e-o]>n[e-o-1]?y-=d:l-=d,f=y+l>0?100*(y-l)/(y+l):0,c.push(i[e]),h.push(f),a.push([i[e],f]);return{values:a,xData:c,yData:h}}},r.defaultOptions=d(f.defaultOptions,{params:{period:20,index:3}}),r}(f);h().registerSeriesType("cmo",y);var l=a();return s.default}()});

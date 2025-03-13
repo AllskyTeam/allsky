@@ -1,0 +1,12 @@
+!/**
+ * Highstock JS v12.1.2 (2025-01-09)
+ * @module highcharts/indicators/momentum
+ * @requires highcharts
+ * @requires highcharts/modules/stock
+ *
+ * Indicator series type for Highcharts Stock
+ *
+ * (c) 2010-2024 Sebastian Bochan
+ *
+ * License: www.highcharts.com/license
+ */function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e(require("highcharts"),require("highcharts").SeriesRegistry):"function"==typeof define&&define.amd?define("highcharts/indicators/momentum",[["highcharts/highcharts"],["highcharts/highcharts","SeriesRegistry"]],e):"object"==typeof exports?exports["highcharts/indicators/momentum"]=e(require("highcharts"),require("highcharts").SeriesRegistry):t.Highcharts=e(t.Highcharts,t.Highcharts.SeriesRegistry)}(this,function(t,e){return function(){"use strict";var r,n={512:function(t){t.exports=e},944:function(e){e.exports=t}},o={};function i(t){var e=o[t];if(void 0!==e)return e.exports;var r=o[t]={exports:{}};return n[t](r,r.exports,i),r.exports}i.n=function(t){var e=t&&t.__esModule?function(){return t.default}:function(){return t};return i.d(e,{a:e}),e},i.d=function(t,e){for(var r in e)i.o(e,r)&&!i.o(t,r)&&Object.defineProperty(t,r,{enumerable:!0,get:e[r]})},i.o=function(t,e){return Object.prototype.hasOwnProperty.call(t,e)};var u={};i.d(u,{default:function(){return x}});var s=i(944),a=i.n(s),c=i(512),h=i.n(c),p=(r=function(t,e){return(r=Object.setPrototypeOf||({__proto__:[]})instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var r in e)e.hasOwnProperty(r)&&(t[r]=e[r])})(t,e)},function(t,e){function n(){this.constructor=t}r(t,e),t.prototype=null===e?Object.create(e):(n.prototype=e.prototype,new n)}),f=h().seriesTypes.sma,y=a().extend,d=a().isArray,g=a().merge;function l(t,e,r,n,o){var i=e[r-1][o]-e[r-n-1][o];return[t[r-1],i]}var m=function(t){function e(){return null!==t&&t.apply(this,arguments)||this}return p(e,t),e.prototype.getValues=function(t,e){var r,n,o=e.period,i=e.index,u=t.xData,s=t.yData,a=s?s.length:0,c=[],h=[],p=[];if(!(u.length<=o)&&d(s[0])){for(r=o+1;r<a;r++)n=l(u,s,r,o,i),c.push(n),h.push(n[0]),p.push(n[1]);return n=l(u,s,r,o,i),c.push(n),h.push(n[0]),p.push(n[1]),{values:c,xData:h,yData:p}}},e.defaultOptions=g(f.defaultOptions,{params:{index:3}}),e}(f);y(m.prototype,{nameBase:"Momentum"}),h().registerSeriesType("momentum",m);var x=a();return u.default}()});

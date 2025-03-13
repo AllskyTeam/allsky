@@ -1,0 +1,167 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Highcharts Example</title>
+
+		<style type="text/css">
+.highcharts-figure,
+.highcharts-data-table table {
+    min-width: 320px;
+    max-width: 800px;
+    margin: 1em auto;
+}
+
+.highcharts-data-table table {
+    font-family: Verdana, sans-serif;
+    border-collapse: collapse;
+    border: 1px solid #ebebeb;
+    margin: 10px auto;
+    text-align: center;
+    width: 100%;
+    max-width: 500px;
+}
+
+.highcharts-data-table caption {
+    padding: 1em 0;
+    font-size: 1.2em;
+    color: #555;
+}
+
+.highcharts-data-table th {
+    font-weight: 600;
+    padding: 0.5em;
+}
+
+.highcharts-data-table td,
+.highcharts-data-table th,
+.highcharts-data-table caption {
+    padding: 0.5em;
+}
+
+.highcharts-data-table thead tr,
+.highcharts-data-table tr:nth-child(even) {
+    background: #f8f8f8;
+}
+
+.highcharts-data-table tr:hover {
+    background: #f1f7ff;
+}
+
+.ld-label {
+    width: 200px;
+    display: inline-block;
+}
+
+.ld-url-input {
+    width: 500px;
+}
+
+.ld-time-input {
+    width: 40px;
+}
+
+.highcharts-description {
+    margin: 0.3rem 10px;
+}
+
+		</style>
+	</head>
+	<body>
+<script src="../../code/highcharts.js"></script>
+<script src="../../code/highcharts-more.js"></script>
+<script src="../../code/modules/dumbbell.js"></script>
+<script src="../../code/modules/lollipop.js"></script>
+<script src="../../code/modules/exporting.js"></script>
+<script src="../../code/modules/accessibility.js"></script>
+
+<figure class="highcharts-figure">
+    <div id="container"></div>
+    <p class="highcharts-description">
+        Lollipop charts are variants of column charts, with a circle
+        marker for the data value and a line extending to the axis.
+    </p>
+</figure>
+
+
+		<script type="text/javascript">
+// Data retrieved from https://worldpopulationreview.com/countries
+Highcharts.chart('container', {
+
+    chart: {
+        type: 'lollipop'
+    },
+
+    accessibility: {
+        point: {
+            valueDescriptionFormat: '{index}. {xDescription}, {point.y}.'
+        }
+    },
+
+    legend: {
+        enabled: false
+    },
+
+    subtitle: {
+        text: '2024'
+    },
+
+    title: {
+        text: 'Top 10 Countries by Population'
+    },
+
+    tooltip: {
+        shared: true
+    },
+
+    xAxis: {
+        type: 'category'
+    },
+
+    yAxis: {
+        title: {
+            text: 'Population'
+        }
+    },
+
+    series: [{
+        name: 'Population',
+        data: [{
+            name: 'India',
+            y: 1441719852
+        }, {
+            name: 'China',
+            y: 1425178782
+        }, {
+            name: 'United States',
+            y: 341814420
+        }, {
+            name: 'Indonesia',
+            y: 279798049
+        }, {
+            name: 'Pakistan',
+            y: 245209815
+        }, {
+            name: 'Nigeria',
+            y: 229152217
+        }, {
+            name: 'Brazil',
+            y: 217637297
+        }, {
+            name: 'Bangladesh',
+            y: 174701211
+        }, {
+            name: 'Russia',
+            y: 143957079
+        }, {
+            name: 'Ethiopia',
+            y: 129719719
+        }]
+    }]
+
+});
+
+		</script>
+	</body>
+</html>

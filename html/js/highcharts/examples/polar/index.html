@@ -1,0 +1,140 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Highcharts Example</title>
+
+		<style type="text/css">
+.highcharts-figure,
+.highcharts-data-table table {
+    min-width: 320px;
+    max-width: 660px;
+    margin: 1em auto;
+}
+
+.highcharts-data-table table {
+    font-family: Verdana, sans-serif;
+    border-collapse: collapse;
+    border: 1px solid #ebebeb;
+    margin: 10px auto;
+    text-align: center;
+    width: 100%;
+    max-width: 500px;
+}
+
+.highcharts-data-table caption {
+    padding: 1em 0;
+    font-size: 1.2em;
+    color: #555;
+}
+
+.highcharts-data-table th {
+    font-weight: 600;
+    padding: 0.5em;
+}
+
+.highcharts-data-table td,
+.highcharts-data-table th,
+.highcharts-data-table caption {
+    padding: 0.5em;
+}
+
+.highcharts-data-table thead tr,
+.highcharts-data-table tr:nth-child(even) {
+    background: #f8f8f8;
+}
+
+.highcharts-data-table tr:hover {
+    background: #f1f7ff;
+}
+
+.highcharts-description {
+    margin: 0.3rem 10px;
+}
+
+		</style>
+	</head>
+	<body>
+<script src="../../code/highcharts.js"></script>
+<script src="../../code/highcharts-more.js"></script>
+<script src="../../code/modules/exporting.js"></script>
+<script src="../../code/modules/export-data.js"></script>
+<script src="../../code/modules/accessibility.js"></script>
+
+<figure class="highcharts-figure">
+    <div id="container"></div>
+    <p class="highcharts-description">
+        A polar chart showing different series types on a radial axis. Polar
+        charts, also known as a radar charts, are often used to compare
+        multivariate data sets. A polar chart in Highcharts is simply a
+        cartesian chart where the X axis is wrapped around the perimeter. It
+        can render common cartesian series types like line, column, area or
+        arearange.
+    </p>
+</figure>
+
+
+
+		<script type="text/javascript">
+Highcharts.chart('container', {
+
+    chart: {
+        polar: true
+    },
+
+    title: {
+        text: 'Highcharts Polar Chart'
+    },
+
+    subtitle: {
+        text: 'Also known as Radar Chart'
+    },
+
+    pane: {
+        startAngle: 0,
+        endAngle: 360
+    },
+
+    xAxis: {
+        tickInterval: 45,
+        min: 0,
+        max: 360,
+        labels: {
+            format: '{value}°'
+        }
+    },
+
+    yAxis: {
+        min: 0
+    },
+
+    plotOptions: {
+        series: {
+            pointStart: 0,
+            pointInterval: 45
+        },
+        column: {
+            pointPadding: 0,
+            groupPadding: 0
+        }
+    },
+
+    series: [{
+        type: 'column',
+        name: 'Column',
+        data: [8, 7, 6, 5, 4, 3, 2, 1],
+        pointPlacement: 'between'
+    }, {
+        type: 'line',
+        name: 'Line',
+        data: [1, 2, 3, 4, 5, 6, 7, 8]
+    }, {
+        type: 'area',
+        name: 'Area',
+        data: [1, 8, 2, 7, 3, 6, 4, 5]
+    }]
+});
+		</script>
+	</body>
+</html>

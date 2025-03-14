@@ -3,12 +3,6 @@
 # Shell functions used by multiple scripts.
 # This file is "source"d into others, and must be done AFTER source'ing variables.sh.
 
-SUDO_OK="${SUDO_OK:-false}"
-if [[ ${SUDO_OK} == "false" && ${EUID} -eq 0 ]]; then
-	echo -e "\n${RED}${ME}: This script must NOT be run as root, do NOT use 'sudo'.${NC}\n" >&2
-	exit 1
-fi
-
 # Globals
 ZWO_VENDOR="03c3"
 # shellcheck disable=SC2034
@@ -16,6 +10,7 @@ NOT_STARTED_MSG="Can't start Allsky!"
 STOPPED_MSG="Allsky Stopped!"
 ERROR_MSG_PREFIX="*** ERROR ***\n${STOPPED_MSG}\n"
 FATAL_MSG="FATAL ERROR:"
+
 if [[ ${ON_TTY} == "true" ]]; then
 	export NL="\n"
 	export SPACES="    "
@@ -23,8 +18,8 @@ if [[ ${ON_TTY} == "true" ]]; then
 	export STRONGe=""
 	export WSNs="'"
 	export WSNe="'"
-	export WSVs=""
-	export WSVe=""
+	export WSVs="'"
+	export WSVe="'"
 else
 	export NL="<br>"
 	export SPACES="&nbsp; &nbsp; &nbsp;"
@@ -35,6 +30,38 @@ else
 	export WSVs="<span class='WebUIValue'>"		# Web Setting Value start
 	export WSVe="</span>"
 fi
+
+##### output messages with appropriate color strings
+function O_() { echo -e "${cOK}${1}${cNC}" ; }
+function I_() { echo -e "${cINFO}${1}${cNC}" ; }
+function W_() { echo -e "${cWARNING}${1}${cNC}" ; }
+function E_() { echo -e "${cERROR}${1}${cNC}" ; }
+function D_() { echo -e "${cDEBUG}DEBUG: ${1}${cNC}" ; }
+function U_() { echo -e "${cUNDERLINE}${1}${cNC}" ; }
+function B_() { echo -e "${cBOLD}${1}${cNC}" ; }
+# If the output may go to the WebUI:
+function wO_() { echo -e "${wOK}${1}${wNC}" ; }
+function wI_() { echo -e "${wINFO}${1}${wNC}" ; }
+function wW_() { echo -e "${wWARNING}${1}${wNC}" ; }
+function wE_() { echo -e "${wERROR}${1}${wNC}" ; }
+function wD_() { echo -e "${wDEBUG}DEBUG: ${1}${wNC}" ; }
+function wU_() { echo -e "${wUNDERLINE}${1}${wNC}" ; }
+function wB_() { echo -e "${wBOLD}${1}${wNBOLD}" ; }
+# If the output may go to the "dialog" command (no "-e"):
+function dO_() { echo "${DIALOG_OK}${1}${DIALOG_NC}" ; }
+function dI_() { echo "${DIALOG_INFO}${1}${DIALOG_NC}" ; }
+function dW_() { echo "${DIALOG_WARNING}${1}${DIALOG_NC}" ; }
+function dE_() { echo "${DIALOG_ERROR}${1}${DIALOG_NC}" ; }
+function dD_() { echo "${DIALOG_DEBUG}DEBUG: ${1}${DIALOG_NC}" ; }
+function dU_() { echo "${DIALOG_UNDERLINE}${1}${DIALOG_NC}" ; }
+function dB_() { echo "${DIALOG_BOLD}${1}${DIALOG_NC}" ; }
+
+SUDO_OK="${SUDO_OK:-false}"
+if [[ ${SUDO_OK} == "false" && ${EUID} -eq 0 ]]; then
+	E_ "\n${ME}: This script must NOT be run as root, do NOT use 'sudo'.\n" >&2
+	exit 1
+fi
+
 
 ##### Start and Stop Allsky
 function start_Allsky()
@@ -84,7 +111,7 @@ function doExit()
 
 	OUTPUT_A_MSG="false"
 	if [[ -n ${WEBUI_MESSAGE} ]]; then
-		"${ALLSKY_SCRIPTS}/addMessage.sh" "${MSG_TYPE}" "${WEBUI_MESSAGE}"
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --type "${MSG_TYPE}" --msg "${WEBUI_MESSAGE}"
 		echo -e "Stopping Allsky: ${WEBUI_MESSAGE}" >&2
 		OUTPUT_A_MSG="true"
 	fi
@@ -96,18 +123,19 @@ function doExit()
 			# Create a custom error message.
 			# If we error out before variables.sh is sourced in,
 			# ${FILENAME} and ${EXTENSION} won't be set so guess at what they are.
-			"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" \
+			"${ALLSKY_SCRIPTS}/generateNotificationImages.sh" --directory "${ALLSKY_TMP}" \
 				"${FILENAME:-"image"}" \
 				"${COLOR}" "" "85" "" "" \
 				"" "10" "${COLOR}" "${EXTENSION:-"jpg"}" "" "${CUSTOM_MESSAGE}"
 			echo "Stopping Allsky: ${CUSTOM_MESSAGE}"
+
 		elif [[ ${TYPE} != "no-image" ]]; then
 			[[ ${OUTPUT_A_MSG} == "false" && ${TYPE} == "RebootNeeded" ]] && echo "Reboot needed"
-			"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 0 "${TYPE}" 2>&1
+			"${ALLSKY_SCRIPTS}/copyNotificationImage.sh" --expires 0 "${TYPE}" 2>&1
 		fi
 	fi
 
-	echo "     ***** AllSky Stopped *****" >&2
+	echo "     ***** Allsky Stopped *****" >&2
 
 	# Don't let the service restart us because we'll likely get the same error again.
 	# Stop here so the message above is output first.
@@ -148,7 +176,7 @@ function verify_CAMERA_TYPE()
 	fi
 
 	if [[ ${OK} == "false" ]]; then
-		echo -e "${RED}${FATAL_MSG} ${MSG}${NC}" >&2
+		E_ "${FATAL_MSG} ${MSG}" >&2
 
 		if [[ ${IGNORE_ERRORS} != "true" ]]; then
 			doExit "${EXIT_NO_CAMERA}" "Error" "${IMAGE_MSG}" "${MSG}"
@@ -206,9 +234,16 @@ function determineCommandToUse()
 		CMD_FOUND="true"	# one of the commands were found.
 
 		# Found a command - see if it works.
-		"${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1
+		# If the cable is bad the camera might be found but not work,
+		# and the command can hang.
+		timeout 10 "${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1
 		RET=$?
-		if [[ ${RET} -eq 137 ]]; then
+		if [[ ${RET} -eq 124 ]]; then
+			# Time out.  Let invoker know
+			echo "'${CMD_TO_USE_} timed out." >&2
+			return "${EXIT_ERROR_STOP}"
+
+		elif [[ ${RET} -eq 137 ]]; then
 			# If another of these commands is running ours will hang for
 			# about a minute then be killed with RET=137.
 			# If that happens, assume this is the command to use.
@@ -289,7 +324,7 @@ function get_connected_cameras_info()
 	if [[ -n ${CMD_TO_USE_} ]]; then
 		if [[ ${CMD_TO_USE_} == "raspistill" ]]; then
 			# Only supported camera with raspistill
-			echo -e "RPi\t0\timx477"
+			echo -e "RPi\t0\timx477\t[4056x3040]"
 
 		else
 			# Input:
@@ -391,7 +426,7 @@ function get_connected_camera_models()
 				}
 			} else {
 				sensor = $3;
-				"get_model_from_sensor.sh " sensor | getline model;
+				"getModelFromSensor.sh " sensor | getline model;
 				if (FULL == "true") {
 					printf("%s\t%d\t%s\t%s\n", $1, $2, model, sensor);
 				} else {
@@ -419,7 +454,7 @@ function validate_camera()
 	local CM="${2}"		# Camera model
 	local CN="${3}"		# Camera number
 	if [[ $# -lt 3 ]]; then
-		echo -e "\n${RED}Usage: ${FUNCNAME[0]} camera_type camera_model camera_number${NC}\n" >&2
+		E_ "\nUsage: ${FUNCNAME[0]} camera_type camera_model camera_number\n" >&2
 		return 2
 	fi
 	local IGNORE_ERRORS="${4:-false}"	# True if just checking
@@ -437,34 +472,34 @@ function validate_camera()
 	if [[ ${SETTINGS_CT} != "${CT}" ]]; then
 		MSG="The Camera Type unexpectedly changed from '${SETTINGS_CT}' to '${CT}'."
 		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
-		MSG+="\nchange the 'Camera Type' to 'Refresh' then save the settings."
+		MSG+=" change the 'Camera Type' to 'Refresh' then save the settings."
 		if [[ ${ON_TTY} == "true" ]]; then
-			echo -e "\n${RED}${MSG}${NC}\n"
+			E_ "\n${MSG}\n"
 		else
 			URL="/index.php?page=configuration"
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${MSG}" "${URL}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${MSG}" --url "${URL}"
 		fi
 		RET=1
 	elif [[ ${SETTINGS_CM} != "${CM}" ]]; then
 		MSG="The Camera Model unexpectedly changed from '${SETTINGS_CM}' to '${CM}'."
 		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
-		MSG+="\nchange the 'Camera Model' to '${CM}' then save the settings."
+		MSG+=" change the 'Camera Model' to '${CM}' then save the settings."
 		if [[ ${ON_TTY} == "true" ]]; then
-			echo -e "\n${RED}${MSG}${NC}\n"
+			E_ "\n${MSG}\n"
 		else
 			URL="/index.php?page=configuration"
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${MSG}" "${URL}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${MSG}" --url "${URL}"
 		fi
 		RET=1
 	elif [[ ${SETTINGS_CN} != "${CN}" ]]; then
 		MSG="The camera's number unexpectedly changed from '${SETTINGS_CN}' to '${CN}'."
 		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
-		MSG+="\nchange the 'Camera Type' to 'Refresh' then save the settings."
+		MSG+=" change the 'Camera Type' to 'Refresh' then save the settings."
 		if [[ ${ON_TTY} == "true" ]]; then
-			echo -e "\n${RED}${MSG}${NC}\n"
+			E_ "\n${MSG}\n"
 		else
 			URL="/index.php?page=configuration"
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "error" "${MSG}" "${URL}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${MSG}" --url "${URL}"
 		fi
 		RET=1
 	fi
@@ -477,19 +512,23 @@ function validate_camera()
 	fi
 
 	# Now make sure the camera is supported.
-	if ! "${ALLSKY_UTILITIES}/show_supported_cameras.sh" "--${CT}" |
+	if ! "${ALLSKY_UTILITIES}/showSupportedCameras.sh" "--${CT}" |
 		grep --silent "${CM}" ; then
 
-		MSG="${CT} camera model '${CM}' is not supported by Allsky."
-		MSG+="\nTo see the list of supported ${CT} cameras, run"
-		MSG+="\n    show_supported_cameras.sh --${CT}"
-		[[ ${CT} == "ZWO" ]] && MSG+="\nWARNING: the list is long!"
+		MSG="${CT} camera '${CM}' is not supported by Allsky."
 		if [[ ${ON_TTY} == "true" ]]; then
-			echo -e "\n${RED}${MSG}${NC}\n"
+			E_ "\n${MSG}\n"
 		else
 			MSG+="\n\nClick this message to ask that Allsky support this camera."
 			URL="/documentation/explanations/requestCameraSupport.html";
-			"${ALLSKY_SCRIPTS}/addMessage.sh" "warning" "${MSG}" "${URL}"
+			local CMD_MSG="Click here to see the supported ${CT} cameras."
+			[[ ${CT} == "ZWO" ]] && CMD_MSG+=" WARNING: the list is long!"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" \
+				--id "AM_NOT_SUPPORTED --${CT}" \
+				--type warning \
+				--msg "${MSG}" \
+				--url "${URL}" \
+				--cmd "${CMD_MSG}"
 		fi
 
 		return 2
@@ -613,14 +652,28 @@ function convertLatLong()
 function get_sunrise_sunset()
 {
 	local DO_ZERO="false"
-	if [[ ${1} == "--zero" ]]; then
-		DO_ZERO="true"
+	local DO_HEADER="true"
+
+	while [[ $# -gt 0 ]]; do
+		ARG="${1}"
+		case "${ARG,,}" in
+			--zero)
+				DO_ZERO="true"
+				;;
+			--no-header)
+				DO_HEADER="false"
+				;;
+			*)
+				break;
+				;;
+		esac
 		shift
-	fi
+	done
 
 	local ANGLE="${1}"
 	local LATITUDE="${2}"
 	local LONGITUDE="${3}"
+
 	#shellcheck source-path=.
 	source "${ALLSKY_HOME}/variables.sh"	|| return 1
 
@@ -631,18 +684,20 @@ function get_sunrise_sunset()
 	LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" )"		|| return 2
 	LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )"	|| return 2
 
-	local FORMAT="%-15s  %-17s  %-7s  %-10s  %-10s\n"
-	# shellcheck disable=SC2059
-	printf "${FORMAT}" "Daytime start" "Nighttime start" "Angle" "Latitude" "Longitude"
+	local FORMAT="%-15s  %-17s  %6s   %-10s  %-10s\n"
+	if [[ ${DO_HEADER} == "true" ]]; then
+		echo "Daytime start    Nighttime start     Angle   Latitude    Longitude"
+	fi
 	local STARTS=()
 	# sunwait output:  day_start, night_start
 	# Need to get rid of the comma.
 	if [[ ${DO_ZERO} == "true" ]]; then
 		read -r -a STARTS <<< "$( sunwait list angle "0" "${LATITUDE}" "${LONGITUDE}" )"
 		# shellcheck disable=SC2059
-		printf "${FORMAT}" "${STARTS[0]/,/}" "${STARTS[1]}" "0" "${LATITUDE}" "${LONGITUDE}"
+		printf "${FORMAT}" "${STARTS[0]/,/}" "${STARTS[1]}" " 0.00" "${LATITUDE}" "${LONGITUDE}"
 	fi
 	read -r -a STARTS <<< "$( sunwait list angle "${ANGLE}" "${LATITUDE}" "${LONGITUDE}" )"
+	ANGLE="$( printf "% 2.2f" "${ANGLE}" )"
 	# shellcheck disable=SC2059
 	printf "${FORMAT}" "${STARTS[0]/,/}" "${STARTS[1]}" "${ANGLE}" "${LATITUDE}" "${LONGITUDE}"
 }
@@ -688,13 +743,19 @@ function checkAndGetNewerFile()
 	else
 		local BRANCH="${GITHUB_MAIN_BRANCH}"
 	fi
+
+	if [[ $# -ne 3 ]]; then
+		echo "Usage: ${FUNCNAME[0]} [--branch b] current_file git_file downloaded_file" >&2
+		return 1
+	fi
+
 	local CURRENT_FILE="${1}"
-	local GIT_FILE="${GITHUB_RAW_ROOT}/allsky/${BRANCH}/${2}"
+	local GIT_FILE="${GITHUB_RAW_ROOT}/${GITHUB_ALLSKY_PACKAGE}/${BRANCH}/${2}"
 	local DOWNLOADED_FILE="${3}"
 	# Download the file and put in DOWNLOADED_FILE
 	X="$( curl --show-error --silent "${GIT_FILE}" )"
 	RET=$?
-	if [[ ${RET} -eq 0 && ${X} != "404: Not Found" ]]; then
+	if [[ ${RET} -eq 0 && ${X} != "400: Invalid request" && ${X} != "404: Not Found" ]]; then
 		# We really just check if the files are different.
 		echo "${X}" > "${DOWNLOADED_FILE}"
 		DOWNLOADED_CHECKSUM="$( sum "${DOWNLOADED_FILE}" )"
@@ -708,7 +769,7 @@ function checkAndGetNewerFile()
 			return 1
 		fi
 	else
-		echo "ERROR: '${GIT_FILE} not found!"
+		echo "ERROR: '${GIT_FILE}' not found!"
 		return 2
 	fi
 }
@@ -724,6 +785,8 @@ function checkPixelValue()
 	local VALUE="${3}"
 	local MIN=${4}
 	local MAX="${5}"
+
+	[[ ${VALUE} -eq 0 ]] && return 0
 
 	local MIN_MSG   MAX_MSG
 	if [[ ${MIN} == "any" ]]; then
@@ -755,30 +818,24 @@ function checkPixelValue()
 # Assume each number has already been checked, e.g., it's not a string.
 function checkWidthHeight()
 {
-	local NAME="${1}"
+	local NAME_PREFIX="${1}"
 	local ITEM="${2}"
 	local WIDTH="${3}"
 	local HEIGHT="${4}"
 	local SENSOR_WIDTH="${5}"
 	local SENSOR_HEIGHT="${6}"
-	local ERR=""
+	local ERR
 
 	# Width and height must both be 0 or non-zero.
 	if [[ (${WIDTH} -gt 0 && ${HEIGHT} -eq 0) || (${WIDTH} -eq 0 && ${HEIGHT} -gt 0) ]]; then
-		ERR+="${WSNs}${NAME} Width${WSNe} (${WSVs}${WIDTH}${WSVe})"
-		ERR+=" and ${WSNs}${NAME} Height${WSNe} (${WSVs}${HEIGHT}${WSVe})"
-		ERR+=" must both be either 0 or non-zero.\n"
-		ERR+="The ${ITEM} will NOT be resized since it would look unnatural.\n"
-		ERR+="FIX: Either set both numbers to 0 to not resize,"
-		ERR+=" or set both numbers to something greater than 0."
+		ERR="${WSNs}${NAME_PREFIX} Width${WSNe} (${WSVs}${WIDTH}${WSVe})"
+		ERR+=" and ${WSNs}Height${WSNe} (${WSVs}${HEIGHT}${WSVe})"
+		ERR+=" must both be either 0 or non-zero.${wBR}"
+		ERR+="The ${ITEM} will NOT be resized since it would look unnatural."
 
 	elif [[ ${WIDTH} -gt 0 && ${HEIGHT} -gt 0 &&
 			${SENSOR_WIDTH} -eq ${WIDTH} && ${SENSOR_HEIGHT} -eq ${HEIGHT} ]]; then
-		ERR+="Resizing a ${ITEM} to the same size as the sensor does nothing useful.\n"
-		ERR+="FIX: Check ${WSNs}${NAME} Width${WSNe} (${WIDTH}) and"
-		ERR+=" ${WSNs}${NAME} Height${WSNe} (${HEIGHT})"
-		ERR+=" and set them to something other than the sensor size"
-		ERR+=" (${WSVs}${SENSOR_WIDTH} x ${SENSOR_HEIGHT}${WSVe})."
+		ERR="Resizing a ${ITEM} to the same size as the sensor does nothing useful."
 	fi
 
 	[[ -z ${ERR} ]] && return 0
@@ -804,23 +861,23 @@ function checkCropValues()
 	local ERR=""
 	if [[ ${CROP_TOP} -lt 0 || ${CROP_RIGHT} -lt 0 ||
 			${CROP_BOTTOM} -lt 0 || ${CROP_LEFT} -lt 0 ]]; then
-		ERR+="\nCrop numbers must all be positive."
+		ERR+="${wBR}Crop numbers must all be positive."
 	fi
 	if [[ $((CROP_TOP % 2)) -eq 1 || $((CROP_RIGHT % 2)) -eq 1 ||
 			$((CROP_BOTTOM % 2)) -eq 1 || $((CROP_LEFT % 2)) -eq 1 ]]; then
-		ERR+="\nCrop numbers must all be even."
+		ERR+="${wBR}Crop numbers must all be even."
 	fi
 	if [[ ${CROP_TOP} -gt $((MAX_RESOLUTION_Y -2)) ]]; then
-		ERR+="\nCropping on top (${CROP_TOP}) is larger than the image height (${MAX_RESOLUTION_Y})."
+		ERR+="${wBR}Cropping on top (${CROP_TOP}) is larger than the image height (${MAX_RESOLUTION_Y})."
 	fi
 	if [[ ${CROP_RIGHT} -gt $((MAX_RESOLUTION_X - 2)) ]]; then
-		ERR+="\nCropping on right (${CROP_RIGHT}) is larger than the image width (${MAX_RESOLUTION_X})."
+		ERR+="${wBR}Cropping on right (${CROP_RIGHT}) is larger than the image width (${MAX_RESOLUTION_X})."
 	fi
 	if [[ ${CROP_BOTTOM} -gt $((MAX_RESOLUTION_Y - 2)) ]]; then
-		ERR+="\nCropping on bottom (${CROP_BOTTOM}) is larger than the image height (${MAX_RESOLUTION_Y})."
+		ERR+="${wBR}Cropping on bottom (${CROP_BOTTOM}) is larger than the image height (${MAX_RESOLUTION_Y})."
 	fi
 	if [[ ${CROP_LEFT} -gt $((MAX_RESOLUTION_X - 2)) ]]; then
-		ERR+="\nCropping on left (${CROP_LEFT}) is larger than the image width (${MAX_RESOLUTION_X})."
+		ERR+="${wBR}Cropping on left (${CROP_LEFT}) is larger than the image width (${MAX_RESOLUTION_X})."
 	fi
 
 	if [[ -z ${ERR} ]]; then
@@ -1081,7 +1138,7 @@ function one_instance()
 	# CAUSED_BY and PID aren't required
 
 	if [[ ${OK} == "false" ]]; then
-		echo -e "${RED}${ME}: ERROR: ${ERRORS}.${NC}" >&2
+		E_ "${ME}: ERROR: ${ERRORS}." >&2
 		return 1
 	fi
 
@@ -1105,31 +1162,34 @@ function one_instance()
 		# that means another process grabbed the lock.
 		# Since there may be several processes waiting, exit.
 		if [[ ${NUM_CHECKS} -eq ${MAX_CHECKS} || ${CURRENT_PID} -ne ${INITIAL_PID} ]]; then
-			echo -en "${YELLOW}" >&2
-			echo -e  "${ABORTED_MSG1}" >&2
+			local MSG="${ABORTED_MSG1}"
 			if [[ ${CURRENT_PID} -ne ${INITIAL_PID} ]]; then
-				echo -n  "Another process (PID=${CURRENT_PID}) got the lock." >&2
+				MSG+="Another process (PID=${CURRENT_PID}) got the lock."
 			else
-				echo -n  "Made ${NUM_CHECKS} attempts at waiting." >&2
-				echo -n  " Process ${CURRENT_PID} still has lock." >&2
+				MSG+="Made ${NUM_CHECKS} attempts at waiting."
+				MSG+=" Process ${CURRENT_PID} still has lock."
 			fi
-			echo -n  " If this happens often, check your settings. PID=${PID}" >&2
-			echo -e  "${NC}" >&2
+			MSG+=" If this happens often, check your settings. PID=${PID}"
+			E_ "${MSG}"
 			ps -fp "${CURRENT_PID}" >&2
 
 			# Keep track of aborts so user can be notified.
 			# If it's happening often let the user know.
 			[[ ! -d ${ALLSKY_ABORTS_DIR} ]] && mkdir "${ALLSKY_ABORTS_DIR}"
 			local AF="${ALLSKY_ABORTS_DIR}/${ABORTED_FILE}"
+			local ID="AM_RM_ABORTS_${ABORTED_FILE}"
 			echo -e "$( date )\t${ABORTED_FIELDS}" >> "${AF}"
 			NUM=$( wc -l < "${AF}" )
 			if [[ ${NUM} -eq 10 ]]; then
 				MSG="${NUM} ${ABORTED_MSG2} have been aborted waiting for others to finish."
 				[[ -n ${CAUSED_BY} ]] && MSG+="\n${CAUSED_BY}"
 				SEVERITY="warning"
-				MSG+="\nOnce you have resolved the cause, reset the aborted counter:"
-				MSG+="\n&nbsp; &nbsp; <code>rm -f '${AF}'</code>"
-				"${ALLSKY_SCRIPTS}/addMessage.sh" "${SEVERITY}" "${MSG}"
+				MSG+="\nOnce you have resolved the cause,"
+				"${ALLSKY_SCRIPTS}/addMessage.sh" \
+					--type ${SEVERITY} \
+					--no-date \
+					--id "${ID}" --cmd "click here to reset the counter" \
+					--msg "${MSG}"
 			fi
 
 			return 2
@@ -1158,19 +1218,32 @@ function make_thumbnail()
 
 
 #####
+# Create the reboot-is-needed file.
+function set_reboot_needed()
+{
+	uptime --since > "${ALLSKY_REBOOT_NEEDED}"
+}
+
+#####
 # Check if the user was supposed to reboot, and if so, if they did.
 # Return 0 if a reboot is needed.
 function reboot_needed()
 {
 	[[ ! -f ${ALLSKY_REBOOT_NEEDED} ]] && return 1
 
-	# The file exists so they were supposed to reboot.
-	BEFORE="$( < "${ALLSKY_REBOOT_NEEDED}" )"
-	NOW="$( uptime --since )"
-	if [[ ${BEFORE} == "${NOW}" ]]; then
+	# The file exists and has the uptime as of when the file was created.
+	# If the Pi has rebooted since the file was created,
+	# the current uptime and saved uptime will be different,
+	# so the file is outdated so delete it.
+
+	local PRIOR_UPTIME="$( < "${ALLSKY_REBOOT_NEEDED}" )"
+	local CURRENT_UPTIME="$( uptime --since )"
+	if [[ ${PRIOR_UPTIME} == "${CURRENT_UPTIME}" ]]; then
+		# No reboot; still need to reboot.
 		return 0
 	else
-		rm -f "${ALLSKY_REBOOT_NEEDED}"		# different times so they rebooted
+		# Different uptimes so they rebooted.
+		rm -f "${ALLSKY_REBOOT_NEEDED}"
 		return 1
 	fi
 }
@@ -1385,4 +1458,41 @@ function get_model_from_sensor()
 				exit(1);
 			}
 		} ' "${RPi_SUPPORTED_CAMERAS}"
+}
+
+
+####
+# Get the RPi camera model given its sensor name.
+function execute_web_commands()
+{
+	local URL="${1}"
+
+	curl --silent --location "${URL}/runCommands.php"
+}
+
+####
+# Get everthing in between "START info" and "END info".
+# Ignore any WARNING messages (we'll often have a certificate warning).
+# Return 0 if we found the start, even if nothing's there.
+function get_ls_contents()
+{
+	local FILE="${1}"
+
+	nawk 'BEGIN { in_info = 0; dir = ""; }
+		{
+			if ($0 == "START info") {
+				in_info = 1;
+			} else if ($0 == "END info") {
+				exit(0);
+			} else if (in_info >= 1) {
+				if (in_info++ == 1) {
+					printf("Contents:\n");
+				}
+				if ($1 != "WARNING:")
+					print $0;
+			}
+		}
+		END {
+			exit(! in_info);
+		}' "${FILE}"
 }

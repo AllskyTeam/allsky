@@ -14,14 +14,12 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP
 
 function usage_and_exit()
 {
-	{
-		echo -en "${wERROR}"
-		echo     "Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly] [--fromInstall] [--addNewSettings]"
-		echo -en "\tkey label old_value new_value [...]"
-		echo -e  "${wNC}"
-		echo "There must be a multiple of 4 key/label/old_value/new_value arguments"
-		echo "unless the --optionsOnly argument is given."
-	} >&2
+	exec >&2
+	local E="\n"
+	E+="Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly] [--fromInstall] [--addNewSettings]"
+	E+="\n\tkey  label  old_value  new_value  [...]"
+	wE_ "${E}"
+	echo "There must be a multiple of 4 key/label/old_value/new_value arguments."
 	exit "${1}"
 }
 
@@ -32,7 +30,7 @@ DEBUG_ARG=""
 HELP="false"
 OPTIONS_FILE_ONLY="false"
 CAMERA_TYPE_ONLY="false"	# Only update the cameratype?
-FROM_INSTALL="false"		# Called from install.sh ?
+FROM=""						# Where are we called from?
 ADD_NEW_SETTINGS="false"
 FORCE=""					# Passed to createAllskyOptions.php
 
@@ -54,7 +52,7 @@ while [[ $# -gt 0 ]]; do
 			CAMERA_TYPE_ONLY="true"
 			;;
 		--frominstall)
-			FROM_INSTALL="true"
+			FROM="install"
 			;;
 		--addnewsettings)
 			ADD_NEW_SETTINGS="true"
@@ -63,7 +61,7 @@ while [[ $# -gt 0 ]]; do
 			FORCE="${ARG}"
 			;;
 		-*)
-			echo -e "${wERROR}ERROR: Unknown argument: '${ARG}'${wNC}"
+			wE_ "ERROR: Unknown argument: '${ARG}'"
 			OK="false"
 			;;
 		*)
@@ -73,19 +71,18 @@ while [[ $# -gt 0 ]]; do
 	shift
 done
 
-if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
+if [[ ${ON_TTY} == "false" ]]; then
+	FROM_WEBUI="--fromWebUI"
 	# The WebUI will display our output in an
 	# appropriate style if ERROR: or WARNING: is in the message, so
 	# don't provide our own format.
 	ERROR_PREFIX=""
 	wERROR=""
-	wDEBUG="DEBUG: "
 	wWARNING=""
 	wNC=""
-	BR="<br>"
 else
+	FROM_WEBUI=""
 	ERROR_PREFIX="${ME}: "
-	BR="\n"
 fi
 
 [[ ${HELP} == "true" ]] && usage_and_exit 0
@@ -94,13 +91,16 @@ if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
 	[[ $# -eq 0 ]] && usage_and_exit 1
 	[[ $(($# % 4)) -ne 0 ]] && usage_and_exit 2
 fi
+if [[ ${DEBUG} == "true" ]]; then
+	debug() { return 0 ; }
+else
+	debug() { return 1 ; }
+fi
 
 RUN_POSTTOMAP="false"
 POSTTOMAP_ACTION=""
 WEBSITE_CONFIG=()
-WEB_CONFIG_FILE=""
-HAS_WEBSITE_RET=""
-WEBSITES=""		# local, remote, both, none
+WEBSITE_VALUE_CHANGED="false"
 GOT_WARNING="false"
 SHOW_ON_MAP=""
 CHECK_REMOTE_WEBSITE_ACCESS="false"
@@ -108,10 +108,11 @@ CHECK_REMOTE_SERVER_ACCESS="false"
 USE_REMOTE_WEBSITE=""
 USE_REMOTE_SERVER=""
 
-# Several of the fields are in the Allsky Website configuration file,
-# so check if the IS a file before trying to update it.
-# Return 0 on found and 1 on not found.
-# The first time we're called, set ${WEBSITES}
+# Return 0 if at least one Website is found, otherwise 1.
+# The first time we're called, set some global variables.
+WEB_CONFIG_FILE=""
+HAS_WEBSITE_RET=""
+WEBSITES=""				# local, remote, both, none
 function check_website()
 {
 	[[ -n ${HAS_WEBSITE_RET} ]] && return "${HAS_WEBSITE_RET}"		# already checked
@@ -131,18 +132,28 @@ function check_website()
 }
 
 # Get all settings at once rather than individually via settings().
+function getAllSettings()
+{
+	local X
+
+	if ! X="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix S_ --shell 2>&1 )" ; then
+		echo "${X}"
+		return 1
+	fi
+
+	eval "${X}"
+	return 0
+}
+
 if [[ -f ${SETTINGS_FILE} ]]; then
-	# check_website requires the settings file to exist.
-	# If it doesn't we are likely called from the install script before the file is created.
+	# If the settings file doesn't exist, check_website() won't find a website and
+	# we are likely called from the install script before the file is created.
+
 	check_website		# invoke to set variables
 
-	X="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix S_ --shell )"
-	if [[ $? -ne 0 ]]; then
-		echo "${X}"
-		exit 1
-	fi
-	eval "${X}"
+	getAllSettings || exit 1
 fi
+
 if [[ -f ${CC_FILE} ]]; then
 	# "convertJSON.php" won't work with the CC_FILE since it has arrays.
 	C_sensorWidth="$( settings ".sensorWidth" "${CC_FILE}" )"
@@ -158,14 +169,98 @@ function check_filename_type()
 	
 	if [[ ${TYPE} -eq 2 ]]; then		# 2 is RAW16 in allsky_common.h - it must match
 		if [[ ${EXTENSION,,} != "png" ]]; then
-			echo -en "${wERROR}${ERROR_PREFIX}"
-			echo -n "ERROR: RAW16 images only work with .png files"
-			echo -n "; either change the Image Type or the Filename."
-			echo -e "${wNC}"
+			E="${ERROR_PREFIX}ERROR: RAW16 images only work with .png files"
+			E+="; either change the Image Type or the Filename."
+			wE_ "${E}"
 			return 1
 		fi
 	fi
 	return 0
+}
+
+# Check width and height for daily or mini timelapse
+function checkTimelapse()
+{
+	local KEY="${1}"
+	local TYPE="${2}";		local type="${TYPE,,}"; type="${type/-/}"
+	local WIDTH="${3}"
+	local HEIGHT="${4}"
+
+	local MAX  O  MIN  THIS_OK  W  H
+
+	if [[ ${KEY} == "${type}timelapsewidth" ]]; then
+		MAX="${C_sensorWidth}"
+		O="${type}timelapseheight"
+	else
+		MAX="${C_sensorHeight}"
+		O="${type}timelapsewidth"
+	fi
+	MIN=2
+
+	THIS_OK="true"
+
+	if [[ -z ${TYPE} ]]; then
+		W="${S_timelapsewidth}"
+		H="${S_timelapseheight}"
+	else
+		W="${S_minitimelapsewidth}"
+		H="${S_minitimelapseheight}"
+	fi
+
+	# Check for only 1 value of 0.
+	if ! checkWidthHeight "${TYPE}Timelapse" "${TYPE}timelapse" \
+			"${W}" "${H}" "${C_sensorWidth}" "${C_sensorHeight}" 2>&1 ; then
+		THIS_OK="false"
+	fi
+	if ! checkPixelValue "${TYPE}Timelapse ${LABELS["${KEY}"]}" "sensor size" \
+			"${NEW_VALUES["${KEY}"]}" "${MIN}" "${MAX}" ; then
+		THIS_OK="false"
+	fi
+	if [[ -n ${KEYS["${O}"]} ]]; then
+		if ! checkPixelValue "${TYPE}Timelapse ${LABELS["${O}"]}" "sensor size" \
+				"${NEW_VALUES["${O}"]}" "${MIN}" "${MAX}" ; then
+			THIS_OK="false"
+		fi
+	fi
+
+	unset 'KEYS["${KEY}"]';  unset 'KEYS["${O}"]'
+
+	if [[ ${THIS_OK} == "false" ]]; then
+		# Restore the old values
+		restoreSettings "${KEY}" "${LABELS["${KEY}"]}" \
+			"${OLD_VALUES["${KEY}"]}" "${O}" "${TYPE}Timelapse "
+		return 1
+	fi
+
+	return 0
+}
+
+# Restore a pair of settings.
+function restoreSettings()
+{
+	local KEY="${1}"
+	local LABEL="${2}"
+	local VALUE="${3}"
+	local OTHER_KEY="${4}"
+	local PREFIX="${5}"
+
+	local MSG
+	MSG="Not changing ${PREFIX}${LABEL}"
+	local RESTORES=( "${KEY}" "${LABEL}" "${VALUE}" )
+	(( NUM_CHANGED-- ))
+
+	if [[ -n ${KEYS["${OTHER_KEY}"]} ]]; then
+		MSG+=" or ${PREFIX}${LABELS["${OTHER_KEY}"]}"
+		RESTORES+=( "${OTHER_KEY}" "${LABELS["${OTHER_KEY}"]}" "${OLD_VALUES["${OTHER_KEY}"]}" )
+		(( NUM_CHANGED-- ))
+	fi
+
+	echo "${MSG}."
+
+	# shellcheck disable=SC2086
+	"${ALLSKY_SCRIPTS}/updateJsonFile.sh" \
+		--verbosity silent --file "${SETTINGS_FILE}" "${RESTORES[@]}" ||
+		echo "Failed with KEYs '${KEY}' and '${OTHER_KEY}'."
 }
 
 CAMERA_NUMBER=""
@@ -173,39 +268,68 @@ CAMERA_NUMBER_ARG=""
 CAMERA_MODEL=""
 CAMERA_MODEL_ARG=""
 
-NUM_CHANGED=0
+# Read all the arguments into array.
+# Several settings like image size related ones are usually updated at the same time.
+# Having an array of all changes allows us to check both values at once,
+# and if either is invalid, restore both values.
 
+declare -A KEYS=()
+declare -a KEY_NUMS=()
+declare -A LABELS=()
+declare -A OLD_VALUES=()
+declare -A NEW_VALUES=()
+
+NUM_CHANGED=0
 while [[ $# -gt 0 ]]
 do
-	KEY="${1}"
+	KEY="${1,,}" ;	 KEY="${KEY/#_/}"	# convert to lowercase and remove any leading "_"
 	LABEL="${2}"
 	OLD_VALUE="${3}"
 	NEW_VALUE="${4}"
 
-	if [[ ${DEBUG} == "true" ]]; then
+	shift 4
+
+	# Don't skip if it's a camera* settings since that means we need to refresh the camera info.
+	if [[ ${KEY} != "cameratype" && ${KEY} != "cameranumber" && ${KEY} != "cameramodel" &&
+			${OLD_VALUE} == "${NEW_VALUE}" ]]; then
+		if debug ; then
+			wD_ "Skipping ${LABEL} - old and new are equal."
+		fi
+		continue
+	fi
+
+	(( NUM_CHANGED++ ))
+	N="$( printf "%03d" "${NUM_CHANGED}" )"
+	KEY_NUMS[${N}]="${KEY}"		# new ones added to the end
+	KEYS[${KEY}]="${KEY}"		# new ones appear to be added in random order
+	LABELS[${KEY}]="${LABEL}"
+	OLD_VALUES[${KEY}]="${OLD_VALUE}"
+	NEW_VALUES[${KEY}]="${NEW_VALUE}"
+done
+
+# shellcheck disable=SC2302
+for KEY in "${KEY_NUMS[@]}"
+do
+	# See if the setting was already processed and hence removed from the array.
+	# Can't check for empty ${KEY} since the items in the "for" line were set once.
+	# shellcheck disable=SC2303
+	[[ -z ${KEYS[${KEY}]} ]] && continue
+
+	LABEL="${LABELS[${KEY}]}"
+	OLD_VALUE="${OLD_VALUES[${KEY}]}"
+	NEW_VALUE="${NEW_VALUES[${KEY}]}"
+
+	if debug ; then
 		MSG="${KEY}: Old=[${OLD_VALUE}], New=[${NEW_VALUE}]"
-		echo -e "${wDEBUG}${ME}: ${MSG}${wNC}"
+		wD_ "${ME}: ${MSG}"
 		if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
 			echo -e "<script>console.log('${MSG}');</script>"
 		fi
 	fi
 
-	KEY="${KEY,,}"		# convert to lowercase
-	KEY="${KEY/#_/}"	# Remove any leading "_"
-
-	# Don't skip if it's cameratype since that indicates we need to refresh.
-	if [[ ${KEY} != "cameratype" && ${OLD_VALUE} == "${NEW_VALUE}" ]]; then
-		if [[ ${DEBUG} == "true" ]]; then
-			echo -e "    ${wDEBUG}Skipping - old and new are equal${wNC}"
-		fi
-		shift 4
-		continue
-	fi
-
 	# The Allsky configuration file was already updated.
-	# If we find a bad entry, e.g., a file doesn't exist, all we can do is warn the user.
+	# If we find a bad entry, e.g., a file doesn't exist, warn the user and reset the value.
 
-	((NUM_CHANGED++))
 	case "${KEY}" in
 
 		# When called from the installer we get cameranumber, cameramodel, and cameratype.
@@ -214,7 +338,7 @@ do
 		# When called from the WebUI we only get what the user changed which is
 		# either cameramodel OR cameratype.
 		"cameranumber")
-			CAMERA_NUMBER="${NEW_VALUE}"
+			CAMERA_NUMBER="${NEW_VALUE:-0}"
 			CAMERA_NUMBER_ARG=" -cameranumber ${CAMERA_NUMBER}"
 			;;
 
@@ -222,28 +346,29 @@ do
 			if [[ ${KEY} == "cameramodel" ]]; then
 				CAMERA_MODEL="${NEW_VALUE}"
 
-				if [[ ${FROM_INSTALL} == "true" ]]; then
+				if [[ ${FROM} == "install" ]]; then
+# TODO: Use the KEYS[] array so the settings can be passed in either order.
 					# When called during installation the camera model is
 					# passed in, then the camera type.
-					shift 4
 					continue
 				fi
 
 				# If only the CAMERA_MODEL changed, it's the same CAMERA_TYPE.
+# TODO: use   CAMERA_TYPE="${S_cameratype}"
 				CAMERA_TYPE="$( settings ".cameratype" )"
 
 			else
 				CAMERA_TYPE="${NEW_VALUE}"
 				if [[ ! -e "${ALLSKY_BIN}/capture_${CAMERA_TYPE}" ]]; then
-					MSG="Unknown Camera Type: '${CAMERA_TYPE}'."
-					echo -e "${wERROR}${ERROR_PREFIX}ERROR: ${MSG}${wNC}"
+					MSG="Unknown ${WSNs}${LABEL}${WSNe}: '${CAMERA_TYPE}'."
+					wE_ "${ERROR_PREFIX}ERROR: ${MSG}"
 					exit "${EXIT_NO_CAMERA}"
 				fi
 			fi
 
 			# This requires Allsky to be stopped so we don't
 			# try to call the capture program while it's already running.
-			stop_Allsky
+			[[ ${FROM} == "install" ]] && stop_Allsky
 
 			if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
 
@@ -258,11 +383,11 @@ do
 					RPi_COMMAND_TO_USE="$( determineCommandToUse "false" "" "false" 2>&1 )"
 					RET=$?
 					if [[ ${RET} -ne 0 ]] ; then
-						echo -e "${wERROR}${ERROR_PREFIX}ERROR: ${RPi_COMMAND_TO_USE}.${wNC}"
+						wE_ "${ERROR_PREFIX}ERROR: ${RPi_COMMAND_TO_USE}."
 						exit "${RET}"
 					fi
 
-					if [[ ${FROM_INSTALL} == "false" ]]; then
+					if [[ ${FROM} != "install" ]]; then
 						# Installation routine already did this,
 						# otherwise do it again in case the list of cameras changed.
 
@@ -291,8 +416,8 @@ do
 					MSG+=" cameranumber ${CAMERA_NUMBER}"
 					if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
 						echo -e "<script>console.log('${MSG}');</script>"
-					elif [[ ${DEBUG} == "true" ]]; then
-						echo -e "${wDEBUG}${MSG}${wNC}"
+					elif debug ; then
+						wD_ "${MSG}"
 					fi
 				fi
 
@@ -304,10 +429,8 @@ do
 				else
 					CAMERA_MODEL_ARG=""
 				fi
-				if [[ ${DEBUG} == "true" ]]; then
-					echo -en "${wDEBUG}"
-					echo "Calling: ${CMD} ${OTHER_ARGS} ${CAMERA_MODEL_ARG} -cc_file '${CC_FILE}'"
-					echo -e "${wNC}"
+				if debug ; then
+					wD_ "Calling: ${CMD} ${OTHER_ARGS} ${CAMERA_MODEL_ARG} -cc_file '${CC_FILE}'"
 				fi
 
 				# CAMERA_MODEL may have spaces in it so can't put in quotes in
@@ -327,14 +450,15 @@ do
 
 					# Invoker displays error message on EXIT_NO_CAMERA.
 					if [[ ${RET} -ne "${EXIT_NO_CAMERA}" ]]; then
-						echo -en "${BR}${wERROR}ERROR: "
+						E="${wBR}ERROR: "
 						if [[ ${RET} -eq 139 ]]; then
-							echo -en "Segmentation fault in ${CMD}"
+							E+="Segmentation fault in ${CMD}"
 						else
-							echo -en "${R}${BR}Unable to create cc file '${CC_FILE}'."
+							E+="${R}${wBR}Unable to create cc file '${CC_FILE}'."
 						fi
-						echo -e "${wNC}"
+						wE_ "${E}"
 					fi
+# TODO: re-set settings to prior values?
 					exit "${RET}"		# the actual exit code is important
 				fi
 				[[ -n ${R} ]] && echo -e "${R}"
@@ -345,8 +469,9 @@ do
 					SETTING_NAME="cameraModel"		# Name is Upper case in CC file
 					CAMERA_MODEL="$( settings ".${SETTING_NAME}" "${CC_FILE}" )"
 					if [[ -z ${CAMERA_MODEL} ]]; then
-						echo -e "${wERROR}ERROR: '${SETTING_NAME}' not found in ${CC_FILE}.${wNC}"
+						wE_ "ERROR: '${SETTING_NAME}' not found in ${CC_FILE}."
 						[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${CC_FILE}"
+# TODO: re-set settings to prior values?
 						exit 1
 					fi
 				fi
@@ -385,15 +510,12 @@ do
 				OLD_MODEL=""
 			fi
 
-			if [[ ${DEBUG} == "true" ]]; then
-				# shellcheck disable=SC2086
-				echo -e "${wDEBUG}Calling:" \
-					"${ALLSKY_SCRIPTS}/createAllskyOptions.php" \
-					${FORCE} ${DEBUG_ARG} \
-					"\n\t--cc-file ${CC_FILE}" \
-					"\n\t--options-file ${OPTIONS_FILE}" \
-					"\n\t--settings-file ${SETTINGS_FILE}" \
-					"${wNC}"
+			if debug ; then
+				MSG="Calling: ${ALLSKY_SCRIPTS}/createAllskyOptions.php ${FORCE} ${DEBUG_ARG}"
+				MSG+="\n\t--cc-file ${CC_FILE}"
+				MSG+="\n\t--options-file ${OPTIONS_FILE}"
+				MSG+="\n\t--settings-file ${SETTINGS_FILE}"
+				wD_ "${MSG}"
 			fi
 			# shellcheck disable=SC2086
 			R="$( "${ALLSKY_SCRIPTS}/createAllskyOptions.php" \
@@ -410,26 +532,28 @@ do
 			fi
 
 			if [[ ${RET} -ne 0 ]]; then
-				echo -en "${wERROR}ERROR: Unable to create '${OPTIONS_FILE}'"
+				E="ERROR: Unable to create '${OPTIONS_FILE}'"
 				if [[ ${OPTIONS_FILE_ONLY} == "true" ]]; then
-					echo -n " file"
+					E+=" file"
 				else
-					echo -n " and '${SETTINGS_FILE}' files"
+					E+=" and '${SETTINGS_FILE}' files"
 				fi
-				echo -e "${wNC}, RET=${RET}: ${R}"
+				wE_ "${E}, RET=${RET}: ${R}"
+# TODO: re-set settings to prior values?
 				exit 1
 			fi
-			[[ ${DEBUG} == "true" && -n ${R} ]] && echo -e "${wDEBUG}${R}${wNC}"
+			debug && [[ -n ${R} ]] && wD_ "${R}"
 
 			ERR=""
 			if [[ ! -f ${OPTIONS_FILE} ]]; then
-				ERR+="${BR}ERROR Options file ${OPTIONS_FILE} not created."
+				ERR+="${wBR}ERROR Options file ${OPTIONS_FILE} not created."
 			fi
 			if [[ ! -f ${SETTINGS_FILE} && ${OPTIONS_FILE_ONLY} == "false" ]]; then
-				ERR+="${BR}ERROR Settings file ${SETTINGS_FILE} not created."
+				ERR+="${wBR}ERROR Settings file ${SETTINGS_FILE} not created."
 			fi
 			if [[ -n ${ERR} ]]; then
-				echo -e "${wERROR}${ERROR_PREFIX}${ERR}${wNC}"
+				wE_ "${ERROR_PREFIX}${ERR}"
+# TODO: re-set settings to prior values?
 				exit 2
 			fi
 
@@ -441,9 +565,9 @@ do
 				# We assume the user wants the non-camera specific settings below
 				# for this camera to be the same as the prior camera.
 
-				if [[ ${DEBUG} == "true" ]]; then
+				if debug ; then
 					MSG="Updating user-defined settings in new settings file."
-					echo -e "${wDEBUG}${MSG}${wNC}"
+					wD_ "${MSG}"
 				fi
 
 				# First determine the name of the prior camera-specific settings file.
@@ -451,16 +575,31 @@ do
 				S_NAME="${NAME%.*}"
 				S_EXT="${NAME##*.}"
 				OLD_SETTINGS_FILE="${ALLSKY_CONFIG}/${S_NAME}_${OLD_TYPE}_${OLD_MODEL// /_}.${S_EXT}"
-				"${ALLSKY_SCRIPTS}/convertJSON.php" --carryforward |
-				while read -r SETTING TYPE
+				{
+					echo "_START_"
+					"${ALLSKY_SCRIPTS}/convertJSON.php" \
+						--carryforward \
+						--null \
+						--settings-file "${OLD_SETTINGS_FILE}"
+					echo "_END_"
+				} |
+				while read -r SETTING TYPE VALUE
 				do
-					# Some carried-forward settings may not be in the old settings file,
-					# so check for "null".
-					X="$( settings --null ".${SETTING}" "${OLD_SETTINGS_FILE}" )"
-					[[ ${X} == "null" ]] && continue
+					if [[ ${SETTINGS} == "_START_" ]]; then
+						CHANGES=()
+					elif [[ ${SETTINGS} == "_END_" ]]; then
+						if [[ ${#CHANGES[@]} -gt 0 ]]; then
+							# shellcheck disable=SC2086
+							"${ALLSKY_SCRIPTS}/updateJsonFile.sh" \
+								--verbosity silent --file "${SETTINGS_FILE}" "${CHANGES[@]}"
+						fi
+					else
+						# Some carried-forward settings may not be in the old settings file,
+						# so check for "null".
+						[[ ${VALUE} == "null" ]] && continue
 
-					update_json_file ".${SETTING}" "${X}" "${SETTINGS_FILE}" "${TYPE}" ||
-						echo "WARNING: Unable to update ${SETTING} of type ${TYPE}" >&2
+						CHANGES+=( "${SETTING}" "${SETTING,,}" "${VALUE}" )
+					fi
 				done
 			fi
 
@@ -472,14 +611,16 @@ do
 			else
 				OVERLAY_NAME="overlay-${CAMERA_TYPE}.json"
 			fi
+
+			CHANGES=()
 			# Set to defaults since there are no prior files.
 			for s in daytimeoverlay nighttimeoverlay
 			do
-				update_json_file ".${s}" "${OVERLAY_NAME}" "${SETTINGS_FILE}" "text"
+				CHANGES+=( "${s}" "${s}" "${OVERLAY_NAME}" )
 			done
 			COMPUTER="$( get_computer )"
-			update_json_file ".computer" "${COMPUTER}" "${SETTINGS_FILE}" "text"
-			update_json_file ".camera" "${CAMERA_TYPE} ${CAMERA_MODEL}" "${SETTINGS_FILE}" "text"
+			CHANGES+=( "computer" "Computer" "${COMPUTER}" )
+			CHANGES+=( "camera" "Camera Type" "${CAMERA_TYPE} ${CAMERA_MODEL}" )
 
 			# Because the user doesn't change the camera number directly it's
 			# not updated in the settings file, so we have to do it.
@@ -488,10 +629,14 @@ do
 				CAMERA_NUMBER="$( settings ".cameraNumber" "${CC_FILE}" )"
 				CAMERA_NUMBER=${CAMERA_NUMBER:-0}
 			fi
-			update_json_file ".cameranumber" "${CAMERA_NUMBER}" "${SETTINGS_FILE}" "integer"
+			CHANGES+=( "cameranumber" "Camera Number" "${CAMERA_NUMBER}" )
+
+			# shellcheck disable=SC2086
+			"${ALLSKY_SCRIPTS}/updateJsonFile.sh" \
+				--verbosity silent --file "${SETTINGS_FILE}" "${CHANGES[@]}"
 
 			if [[ ${ADD_NEW_SETTINGS} == "true" ]]; then
-				add_new_settings "${SETTINGS_FILE}" "${OPTIONS_FILE}" "${FROM_INSTALL}"
+				add_new_settings "${SETTINGS_FILE}" "${OPTIONS_FILE}" "${FROM}"
 			fi
 
 			# Don't do anything else if ${CAMERA_TYPE_ONLY} is set.
@@ -505,12 +650,15 @@ do
 			;;
 
 		"type")
+# TODO: Use  ${S_filename}  ??
 			check_filename_type "$( settings '.filename' )" "${NEW_VALUE}" || OK="false"
 			;;
 
 		"filename")
+# TODO: Use  ${S_type}  ??
 			if check_filename_type "${NEW_VALUE}" "$( settings '.type' )" ; then
 				check_website && WEBSITE_CONFIG+=("config.imageName" "${LABEL}" "${NEW_VALUE}")
+				WEBSITE_VALUE_CHANGED="true"
 			else
 				OK="false"
 			fi
@@ -519,17 +667,18 @@ do
 		"usedarkframes")
 			if [[ ${NEW_VALUE} == "true" ]]; then
 				if [[ ! -d ${ALLSKY_DARKS} ]]; then
-					echo -en "${wWARNING}"
-					echo -n "WARNING: No darks to subtract.  No '${ALLSKY_DARKS}' directory.${NC}"
+					wW_ "WARNING: No darks to subtract.  No '${ALLSKY_DARKS}' directory."
 					# Restore to old value
-					echo "${BR}Disabling ${WSNs}${LABEL}${WSNe}."
+					echo "${wBR}Disabling ${WSNs}${LABEL}${WSNe}."
 					update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "boolean"
+					(( NUM_CHANGED-- ))
 				else
 					NUM_DARKS=$( find "${ALLSKY_DARKS}" -name "*.${EXTENSION}" 2>/dev/null | wc -l)
 					if [[ ${NUM_DARKS} -eq 0 ]]; then
-						echo -n "WARNING: ${WSNs}${LABEL}${WSNe} is set but there are no darks"
-						echo -n " in '${ALLSKY_DARKS}' with extension of '${EXTENSION}'."
-						echo    "${BR}FIX: Either disable the setting or take dark frames."
+						W="WARNING: ${WSNs}${LABEL}${WSNe} is set but there are no darks"
+						W+=" in '${ALLSKY_DARKS}' with extension of '${EXTENSION}'."
+						wW_ "${W}"
+						echo    "${wBR}FIX: Either disable the setting or take dark frames."
 					fi
 				fi
 			fi
@@ -544,7 +693,7 @@ do
 				elif [[ ! -s ${NEW_VALUE} ]]; then
 					X=" is empty"
 				fi
-				echo -e "${wWARNING}WARNING: '${NEW_VALUE}' ${X}; please change it.${wNC}"
+				wW_ "WARNING: '${NEW_VALUE}' ${X}; please change it."
 			fi
 			;;
 
@@ -557,38 +706,34 @@ do
 				elif [[ ! -s ${NEW_VALUE} ]]; then
 					X=" is empty"
 				fi
-				echo -e "${wWARNING}WARNING: Configuration file '${NEW_VALUE}' ${X}; please change it.${wNC}"
+				wW_ "WARNING: Configuration file '${NEW_VALUE}' ${X}; please change it."
 			fi
 			;;
 
 		"daytuningfile" | "nighttuningfile")
 			if [[ -n ${NEW_VALUE} && ! -f ${NEW_VALUE} ]]; then
-				echo -ne "${wWARNING}"
-				echo -n "WARNING: Tuning File '${NEW_VALUE}' does not exist; please change it."
-				echo -e "${wNC}"
+				wW_ "WARNING: Tuning File '${NEW_VALUE}' does not exist; please change it."
 			fi
 			;;
 
 		"displaysettings")
 			[[ ${NEW_VALUE} != "false" ]] && NEW_VALUE="true"
 			if check_website; then
-				# If there are two Websites, this gets the index in the first one.
+				# If there are TWO Websites, this gets the index in the first one.
 				# Let's hope it's the same index in the second one...
 				PARENT="homePage.popoutIcons"
 				INDEX=$( getJSONarrayIndex "${WEB_CONFIG_FILE}" "${PARENT}" "Allsky Settings" )
 				if [[ ${INDEX} -ge 0 ]]; then
 					WEBSITE_CONFIG+=("${PARENT}[${INDEX}].display" "${LABEL}" "${NEW_VALUE}")
 				else
-					echo -en "${wWARNING}"
-					echo -en "WARNING: Unable to update ${wBOLD}${LABEL}${wNBOLD}"
-					echo -en " in ${WEB_CONFIG_FILE}; ignoring."
-					echo -e "${wNC}"
+					W="WARNING: Unable to update ${WSNs}${LABEL}${WSNe}"
+					W+=" in ${WEB_CONFIG_FILE}; ignoring."
+					wW_ "${W}"
 				fi
 			else
-				echo -en "${wWARNING}"
-				echo -en "Change to ${wBOLD}${LABEL}${wNBOLD} not relevant - "
-				echo -en "No local or remote Allsky Website found."
-				echo -e "${wNC}"
+				W="Change to ${WSNs}${LABEL}${WSNe} not relevant - "
+				W+="\nNo local or remote Allsky Website enabled."
+				wW_ "${W}"
 				GOT_WARNING="true"
 			fi
 			;;
@@ -603,12 +748,15 @@ do
 			# Allow either +/- decimal numbers, OR numbers with N, S, E, W, but not both.
 			if LAT_LON="$( convertLatLong "${NEW_VALUE}" "${KEY}" 2>&1 )" ; then
 				check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${LAT_LON}")
+				WEBSITE_VALUE_CHANGED="true"
 				RUN_POSTTOMAP="true"
 			else
 				# Restore to old value
-				echo -en "${wERROR}${LAT_LON}${wNC}"
-				echo "${BR}Setting ${WSNs}${LABEL}${WSNe} back to ${WSVs}${OLD_VALUE}${WSVe}."
+				# Don't restore the "other" KEY since the two keys don't depend on each other.
+				wE_ "${LAT_LON}"
+				echo "${wBR}Setting ${WSNs}${LABEL}${WSNe} back to ${WSVs}${OLD_VALUE}${WSVe}."
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "string"
+				(( NUM_CHANGED-- ))
 				OK="false"
 			fi
 			;;
@@ -616,13 +764,12 @@ do
 		"location" | "owner" | "camera" | "lens" | "computer")
 			RUN_POSTTOMAP="true"
 			check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
+			WEBSITE_VALUE_CHANGED="true"
 			;;
 
 
 		"uselocalwebsite")
-			if [[ ${NEW_VALUE} == "true" ]]; then
-				prepare_local_website "" "postData"
-			fi
+			[[ ${NEW_VALUE} == "true" ]] && prepare_local_website "" "postData"
 			;;
 
 		"remotewebsiteurl" | "remotewebsiteimageurl")
@@ -656,93 +803,89 @@ do
 
 		"overlaymethod")
 			if [[ ${NEW_VALUE} -eq 1 ]]; then		# 1 == "overlay" method
-				echo -en "${wWARNING}WARNING: "
-				echo -en "NOTE: You must enable the ${wBOLD}Overlay Module${wNBOLD} in the"
-				echo -en " ${wBOLD}Daytime Capture${wNBOLD} and/or"
-				echo -en " ${wBOLD}Nighttime Capture${wNBOLD} flows of the"
-				echo -en " ${wBOLD}Module Manager${wNBOLD}"
-				echo -en " for the '${LABEL}' to take effect."
-				echo -e "${wNC}"
+				W="NOTE: You must enable the ${WSNs}Overlay Module${WSNe} in the"
+				W+="\n ${WSNs}Daytime Capture${WSNe} and/or"
+				W+="\n ${WSNs}Nighttime Capture${WSNe} flows of the"
+				W+="\n ${WSNs}Module Manager${WSNe}"
+				W+="\n for the ${WSNs}${LABEL}${WSNe} to take effect."
+				w "${W}"
 			else
 				rm -f "${ALLSKY_TMP}/overlaydebug.txt"
 			fi
 			;;
 
 		"takedaytimeimages" | "takenighttimeimages")
-:
-###### TODO anything to do for these?
+:	###### TODO anything to do for these?
 			;;
 
 		"timelapsewidth" | "timelapseheight")
-			DID_TIMELAPSE="${DID_TIMELAPSE:-false}"
-			if [[ ${NEW_VALUE} != "0" ]]; then
-				# Check the KEY by itself then both numbers together.
-				if [[ ${KEY} == "timelapsewidth" ]]; then
-					MAX="${C_sensorWidth}"
-				else
-					MAX="${C_sensorHeight}"
-				fi
-				MIN=2
-
-				THIS_OK="true"
-#XX echo "CALLING: checkPixelValue 'Timelapse ${LABEL}' '${NEW_VALUE}' '${MIN}' '${MAX}'"
-				if ! checkPixelValue "Timelapse ${LABEL}" "sensor size" "${NEW_VALUE}" "${MIN}" "${MAX}" ; then
-#XX echo "    FALSE"
-					THIS_OK="false"
-				else
-					if [[ ${DID_TIMELAPSE} == "false" ]]; then
-#XX echo "CALLING: checkWidthHeight 'Timelapse' 'timelapse' '${S_timelapsewidth}' '${S_timelapseheight}' '${C_sensorWidth}' '${C_sensorHeight}'"
-						if ! checkWidthHeight "Timelapse" "timelapse" \
-						"${S_timelapsewidth}" "${S_timelapseheight}" \
-	 					"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 ; then
-#XX echo "false"
-							THIS_OK="false"
-						fi
-						DID_TIMELAPSE="true"
-					fi
-				fi
-
-				if [[ ${THIS_OK} == "false" ]]; then
-					# Restore to old value
-					echo "Setting ${WSNs}Timelapse ${LABEL}${WSNe} back to ${WSVs}${OLD_VALUE}${WSVe}."
-					update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "number"
+			if [[ $((S_timelapsewidth + S_timelapseheight)) -gt 0 ]]; then
+				if ! checkTimelapse "${KEY}" "" \
+						"${S_timelapsewidth}" "${S_timelapseheight}" ; then
 					OK="false"
 				fi
 			fi
 			;;
 
 		"minitimelapsewidth" | "minitimelapseheight")
-			if ! ERR="$( checkWidthHeight "Mini-Timelapse" "mini-timelapse" \
-				"${S_minitimelapsewidth}" "${S_minitimelapseheight}" \
-				"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )" ; then
-
-				# Restore to old value
-				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "number"
+			if [[ $((S_minitimelapsewidth + S_minitimelapseheight)) -gt 0 ]]; then
+				if ! checkTimelapse "${KEY}" "Mini-" \
+						"${S_minitimelapsewidth}" "${S_minitimelapseheight}" ; then
+					OK="false"
+				fi
 			fi
+			;;
+
+		"imageresizeuploadwidth" | "imageresizeuploadheight")
+			if [[ ${KEY} == "imageresizeupladwidth" ]]; then
+				O="imageresizeuploadheight"
+			else
+				O="imageresizeuploadwidth"
+			fi
+			if ! ERR="$( checkWidthHeight "Resize Uploaded Images" "uploaded image" \
+				"${S_imageresizeuploadwidth}" "${S_imageresizeuploadheight}" \
+	 			"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )" ; then
+
+				echo -e "ERROR: ${ERR}"
+				# Restore the old values
+				restoreSettings "${KEY}" "${LABEL}" "${OLD_VALUE}" "${O}" ""
+			fi
+
+			unset 'KEYS["${KEY}"]';  unset 'KEYS["${O}"]'
 			;;
 
 		"imageresizewidth" | "imageresizeheight")
-			if ! ERR="$( checkWidthHeight "Image RESIZE" \
-				"${S_imageresizeWidth}" "${S_imageresizeHeight}" \
+			if [[ ${KEY} == "imageresizewidth" ]]; then
+				O="imageresizeheight"
+			else
+				O="imageresizewidth"
+			fi
+			if ! ERR="$( checkWidthHeight "Image Resize" "image" \
+				"${S_imageresizewidth}" "${S_imageresizeheight}" \
 	 			"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )" ; then
 
-				# Restore to old value
-				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "number"
+				echo -e "ERROR: ${ERR}"
+				# Restore to old values
+				restoreSettings "${KEY}" "${LABEL}" "${OLD_VALUE}" "${O}" ""
 			fi
+
+			unset 'KEYS["${KEY}"]';  unset 'KEYS["${O}"]'
 			;;
 
 		"imagecroptop" | "imagecropright" | "imagecropbottom" | "imagecropleft")
-
-			if [[ $((S_imagecroptop + S_imagecropright + BOTTOM + LEFT)) -gt 0 ]]; then
+			# Only check if at least one value isn't 0.
+			if [[ $((S_imagecroptop + S_imagecropright + S_imagecropbottom + S_imagecropleft)) -gt 0 ]]; then
 				ERR="$( checkCropValues "${S_imagecroptop}" "${S_imagecropright}" \
 					"${S_imagecropbottom}" "${S_imagecropleft}" \
-					"${C_sensorWidth}" "${C_sensorHeight}" )"
+					"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )"
 				if [[ $? -ne 0 ]]; then
-					MSG="ERROR: ${ERR}${BR}"
-					MSG+="FIX: Check the ${WSNs}Image Crop Top/Right/Bottom/Left${WSNe} settings."
-					echo -e "${MSG}"
+					echo -e "ERROR: ${ERR}"
+# TODO: restore them?  Why is this different than other image sizes?
 				fi
 			fi
+
+			unset 'KEYS["imagecroptop"]';  unset 'KEYS["imagecropright"]'
+			unset 'KEYS["imagecropbottom"]';  unset 'KEYS["imagecropleft"]'
 			;;
 
 		"timelapsevcodec")
@@ -751,15 +894,15 @@ do
 				{ if ($2 == codec) { exit_code = 0; exit 0; } }
 				END { exit exit_code; }' ; then
 
-				MSG="${wWARNING}WARNING: "
+				MSG="WARNING: "
 				MSG+="Unknown VCODEC: '${NEW_VALUE}'; resetting to '${OLD_VALUE}'."
-				MSG+="${BR}Execute: ffmpeg -encoders"
-				MSG+="${BR}for a list of VCODECs."
-				MSG+="${wNC}"
-				echo -e "${MSG}"
+				MSG+="${wBR}Execute: ffmpeg -encoders"
+				MSG+="${wBR}for a list of VCODECs."
+				wW_ "${MSG}"
 
 				# Restore to old value
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "text"
+				(( NUM_CHANGED-- ))
 			fi
 			;;
 
@@ -769,22 +912,23 @@ do
 				{ if ($2 == fmt) { exit_code = 0; exit 0; } }
 				END { exit exit_code; }' ; then
 
-				MSG="${wWARNING}WARNING: "
+				MSG="WARNING: "
 				MSG+="Unknown Pixel Format: '${NEW_VALUE}'; resetting to '${OLD_VALUE}'."
 				MSG+="Execute: ffmpeg -pix_fmts"
 				MSG+="for a list of formats."
-				MSG+="${wNC}"
-				echo -e "${MSG}"
+				wW_ "${MSG}"
 
 				# Restore to old value
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "text"
+				(( NUM_CHANGED-- ))
 			fi
 			;;
 
 		"daystokeep" | "daystokeeplocalwebsite" | "daystokeepremotewebsite")
 			if [[ ${NEW_VALUE} -gt 0 ]]; then
 :	# TODO: Check how many days images there are of the specified type.
-	# For remote website, query the website for the number (to be implemented).
+	# Create a "getNumImages() ${KEY}" function to return the number.
+	#	(For remote Website, query the Website for the number.)
 	# If MORE than NEW_VALUE, warn the user since those images will be deleted
 	# at the next endOfNight.sh run.
 			fi
@@ -792,30 +936,28 @@ do
 
 		"uselogin")
 			if [[ ${NEW_VALUE} == "false" ]]; then
-				MSG="${wWARNING}WARNING: "
-				MSG+="Disabling '${LABEL}' should NOT be done if your Pi is"
-				MSG+=" accessible on the Internet.  It's a HUGE security risk!"
-				MSG+="${wNC}"
-				echo -e "${MSG}"
+				W="WARNING: "
+				W+="Disabling ${WSNs}${LABEL}${WSNe} should NOT be done if your Pi is"
+				W+=" accessible on the Internet.  It's a HUGE security risk!"
+				wW_ "${W}"
 			fi
 			;;
 
 		*)
-			MSG="${wWARNING}WARNING: "
-			MSG+="Unknown key '${KEY}'; ignoring.  Old=${OLD_VALUE}, New=${NEW_VALUE}"
-			MSG+="${wNC}"
-			echo -e "${MSG}"
-			((NUM_CHANGED--))
+			W="WARNING: "
+			W+="Unknown key '${KEY}'; ignoring.  Old=${OLD_VALUE}, New=${NEW_VALUE}"
+			wW_ "${W}"
+			(( NUM_CHANGED-- ))
 			;;
 
 		esac
-		shift 4
 done
 
 [[ ${OK} == "false" ]] && exit 1
 
 [[ ${NUM_CHANGED} -le 0 ]] && exit 0		# Nothing changed
 
+# TODO: Use  ${S_useremotewebsite} and ${S_useremoteserver}  ??
 USE_REMOTE_WEBSITE="$( settings ".useremotewebsite" )"
 USE_REMOTE_SERVER="$( settings ".useremoteserver" )"
 if [[ ${USE_REMOTE_WEBSITE} == "true" || ${USE_REMOTE_SERVER} == "true" ]]; then
@@ -824,71 +966,92 @@ if [[ ${USE_REMOTE_WEBSITE} == "true" || ${USE_REMOTE_SERVER} == "true" ]]; then
 	fi
 
 	if [[ ${USE_REMOTE_WEBSITE} == "true" && ${CHECK_REMOTE_WEBSITE_ACCESS} == "true" ]]; then
+# TODO:   ERR="$( _check_web_connectivity --website --from "${FROM}" 2>&1 )"
+
 		# testUpload.sh displays error messages
+# TODO: check return code.
 		"${ALLSKY_SCRIPTS}/testUpload.sh" --website
 
 		# If the remote configuration file doesn't exist assume it's because
 		# the user enabled it but hasn't yet "installed" it (which creates the file).
 		if [[ ! -s ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
-			MSG="${wWARNING}WARNING: "
-			MSG+="The Remote Website is now enabled but hasn't been installed yet."
-			MSG+="${BR}Please do so now."
+			W="WARNING: "
+			W+="The Remote Website is now enabled but hasn't been installed yet."
+			W+="${wBR}Please do so now."
 			if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
-				MSG+="${BR}See <a allsky='true' external='true'"
-				MSG+=" href='/documentation/installations/AllskyWebsite.html'>the documentation</a>"
+				W+="${wBR}See <a allsky='true' external='true'"
+				W+=" href='/documentation/installations/AllskyWebsite.html'>the documentation</a>"
 			fi
-			MSG+="${wNC}"
-			echo -e "${MSG}"
+			wW_ "${W}"
 			[[ ${WEBSITES} != "local" ]] && WEBSITES=""
 		fi
 	fi
 
 	if [[ ${USE_REMOTE_SERVER} == "true" && ${CHECK_REMOTE_SERVER_ACCESS} == "true" ]]; then
+# TODO:   ERR="$( _check_web_connectivity --server --from "${FROM}" 2>&1 )"
+# TODO: check return code.
 		"${ALLSKY_SCRIPTS}/testUpload.sh" --server
 	fi
 fi
 
+CHANGED_LOCAL_WEBSITE="false"
+CHANGED_REMOTE_WEBSITE="false"
 # shellcheck disable=SC2128
 if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 	# Update the local and/or Website remote config file
 	if [[ ${WEBSITES} == "local" || ${WEBSITES} == "both" ]]; then
-		if [[ ${DEBUG} == "true" ]]; then
-			echo -e "${wDEBUG}Executing updateWebsiteConfig.sh local${wNC}"
-		fi
+		debug && wD_ "Executing updateJsonFile.sh --local"
 		# shellcheck disable=SC2086
-		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${DEBUG_ARG} --local "${WEBSITE_CONFIG[@]}"
+		"${ALLSKY_SCRIPTS}/updateJsonFile.sh" ${DEBUG_ARG} --local "${WEBSITE_CONFIG[@]}"
+		CHANGED_LOCAL_WEBSITE="true"
 	fi
+
 	if [[ ${WEBSITES} == "remote" || ${WEBSITES} == "both" ]]; then
-		if [[ ${DEBUG} == "true" ]]; then
-			echo -e "${wDEBUG}Executing updateWebsiteConfig.sh remote${wNC}"
-		fi
+		debug && wD_ "Executing updateJsonFile.sh --remote"
 		# shellcheck disable=SC2086
-		"${ALLSKY_SCRIPTS}/updateWebsiteConfig.sh" ${DEBUG_ARG} --remote "${WEBSITE_CONFIG[@]}"
+		"${ALLSKY_SCRIPTS}/updateJsonFile.sh" ${DEBUG_ARG} --remote "${WEBSITE_CONFIG[@]}"
+		CHANGED_REMOTE_WEBSITE="true"
 
 		FILE_TO_UPLOAD="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
+# TODO: Use  ${S_remotewebsiteimagedir}  ??
 		IMAGE_DIR="$( settings ".remotewebsiteimagedir" )"
-		if [[ ${DEBUG} == "true" ]]; then
-			echo -e "${wDEBUG}Uploading '${FILE_TO_UPLOAD}' to remote Website.${wNC}"
-		fi
+		debug && wD_ "Uploading '${FILE_TO_UPLOAD}' to remote Website."
 
 		if ! "${ALLSKY_SCRIPTS}/upload.sh" --silent --remote-web \
 				"${FILE_TO_UPLOAD}" \
 				"${IMAGE_DIR}" \
 				"${ALLSKY_WEBSITE_CONFIGURATION_NAME}" \
 				"RemoteWebsite" ; then
-			echo -e "${wERROR}${ERROR_PREFIX}Unable to upload '${FILE_TO_UPLOAD}' to Website ${NUM}.${wNC}"
+			wE_ "${ERROR_PREFIX}Unable to upload '${FILE_TO_UPLOAD}' to Website ${NUM}."
 		fi
 	fi
 fi
 
+if [[ ${WEBSITE_VALUE_CHANGED} == "true" ]]; then
+	# TODO: A default local configuration.json file is created during installation
+	# if one didn't already exist.
+	# We have no way of knowing if what's there is the default file or was modified or
+	# was copied from the prior Allsky.
+	# Until we do, no't display this message:
+	if [[ ${CHANGED_LOCAL_WEBSITE} == "false" && -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
+:
+#		echo -n "WARNING: ${ALLSKY_WEBSITE_CONFIGURATION_NAME} not updated"
+#		echo    " because the local Website is not enabled."
+	fi
+	if [[ ${CHANGED_REMOTE_WEBSITE} == "false" && -f ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE} ]]; then
+		echo -n "WARNING: ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} not updated"
+		echo    " because the remote Website is not enabled."
+	fi
+fi
+
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
-	[[ -z ${SHOW_ON_MAP} ]] && SHOW_ON_MAP="$( settings ".showonmap" )"
+	# Only run postToMap.sh if: 1) we turned off showonmap,  2) showonmap is on
+	[[ -z ${SHOW_ON_MAP} ]] && SHOW_ON_MAP="${S_showonmap}"
 	if [[ ${SHOW_ON_MAP} == "true" ]]; then
-		[[ ${DEBUG} == "true" ]] && echo -e "${wDEBUG}Executing postToMap.sh${wNC}"
-# TODO: put in background to return to user faster?
+		debug && wD_ "Executing postToMap.sh"
 		# shellcheck disable=SC2086
-		"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${POSTTOMAP_ACTION}
+		"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${FROM_WEBUI} ${POSTTOMAP_ACTION}
 	fi
 fi
 

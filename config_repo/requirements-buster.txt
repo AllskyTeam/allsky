@@ -10,4 +10,5 @@ paho-mqtt
 suncalc
 Adafruit-Blinka
 vcgencmd
+certifi
 requests

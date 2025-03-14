@@ -141,6 +141,40 @@ function readOptionsFile() {
 	return($contents);
 }
 
+$allsky_status = null;
+$allsky_status_timestamp = null;
+function output_allsky_status() {
+	global $allsky_status, $allsky_status_timestamp;
+
+	$retMsg = "";
+	$s = get_decoded_json_file(ALLSKY_STATUS, true, "", $retMsg);
+	if ($s === null) {
+		$allsky_status = "Unknown";
+		$allsky_status_timestamp = $retMsg;
+	} else {
+		$allsky_status = getVariableOrDefault($s, 'status', "Unknown");
+		$allsky_status_timestamp = getVariableOrDefault($s, 'timestamp', null);
+	}
+
+	if ($allsky_status_timestamp === null) {
+		$title = "";
+		$class = "";
+	} else if ($allsky_status == "Unknown") {
+		$allsky_status_timestamp = str_replace("<b>", "", $allsky_status_timestamp);
+		$allsky_status_timestamp = str_replace("</b>","", $allsky_status_timestamp);
+		$title = " title='$allsky_status_timestamp'";
+		$class = "alert-danger";
+	} else {
+		$title = "title='Since $allsky_status_timestamp'";
+		if ($allsky_status == "Running") {
+			$class = "alert-success";
+		} else {
+			$class = "alert-warning";
+		}
+	}
+	return("<span class='nowrap $class' $title>Status: $allsky_status</span><br>");
+}
+
 function initialize_variables($website_only=false) {
 	global $status;
 	global $image_name;
@@ -274,9 +308,9 @@ function check_if_configured($page, $calledFrom) {
 
 	if ($lastChanged === "") {
 		// The settings aren't configured - probably right after an installation.
-		$msg = "Allsky must be configured before using it.<br>";
+		$msg = "Please verify the Allsky settings and update where needed.<br>";
 		if ($page === "configuration")
-			$msg .= "If it's already configured, just click on the 'Save changes' button.";
+			$msg .= "When done, click on the 'Save changes' button.";
 		else
 			$msg .= "Go to the 'Allsky Settings' page to do so.";
 		$status->addMessage("<div id='mustConfigure' class='important'>$msg</div>", 'danger');
@@ -602,7 +636,13 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
 	$num = 0;	// Let the user know when there are no images for the specified day
 	// "/images" is an alias in the web server for ALLSKY_IMAGES
 	$images_dir = "/images";
-	$chosen_day = $_GET['day'];
+	$chosen_day = getVariableOrDefault($_GET, 'day', null);
+	if ($chosen_day === null) {
+		echo "<br><br><br>";
+		echo "<h2 class='alert-danger'>ERROR: No 'day' specified in URL.</h2>";
+		return;
+	}
+
 	echo "<h2>$formalImageTypeName - $chosen_day</h2>\n";
 	echo "<div class='row'>\n";
 	if ($chosen_day === 'All'){
@@ -683,7 +723,7 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
 			}
 		}
 	}
-        echo "</div>";
+	echo "</div>";
 }
 
 // Run a command and display the appropriate status message.
@@ -725,12 +765,28 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 	// If there are any lines that begin with:  ERROR  or  WARNING
 	// then display them in the appropriate format.
 	if ($result != null) {
-		//x $status->addMessage(implode("<br>", $result), "message", false);
   		foreach ( $result as $line) {
 			if (strpos($line, "ERROR:") !== false) {
+				$line = str_replace("ERROR", "<strong>ERROR</strong>", $line);
+				$sev = "danger";
+			} else if (strpos($line, "ERROR::") !== false) {
+				$line = str_replace("ERROR:", "<strong>ERROR</strong>", $line);
 				$sev = "danger";
 			} else if (strpos($line, "WARNING:") !== false) {
+				$line = str_replace("WARNING", "<strong>WARNING</strong>", $line);
 				$sev = "warning";
+			} else if (strpos($line, "WARNING::") !== false) {
+				$line = str_replace("WARNING:", "<strong>WARNING</strong>", $line);
+				$sev = "warning";
+			} else if (strpos($line, "SUCCESS::") !== false) {
+				$line = str_replace("SUCCESS::", "", $line);
+				$sev = "success";
+			} else if (strpos($line, "INFO::") !== false) {
+				$line = str_replace("INFO::", "", $line);
+				$sev = "info";
+			} else if (strpos($line, "DEBUG:") !== false) {
+				$line = str_replace("DEBUG", "", $line);
+				$sev = "debug";
 			} else {
 				$sev = "message";
 			}
@@ -867,8 +923,6 @@ function getVariableOrDefault($a, $v, $d) {
 function getTOD() {
 	global $settings_array;
 
-	//$settings_array = readSettingsFile();
-
 	$angle = getVariableOrDefault($settings_array, 'angle', -6);
 	$lat = getVariableOrDefault($settings_array, 'latitude', "");
 	$lon = getVariableOrDefault($settings_array, 'longitude', "");
@@ -884,5 +938,72 @@ function getTOD() {
 	}
 	
 	return $tod;
+}
+
+// Get the newest Allsky version string.
+// For efficiency, only check every other day.
+function getNewestAllskyVersion(&$changed=null)
+{
+	$versionFile = ALLSKY_CONFIG . "/newestversion.json";
+	$version_array = null;
+	$priorVersion = null;
+	$changed = false;
+	$date = date_create("now");
+	$compareDate = date_timestamp_get($date) - (24 * 60 * 60 * 2);		// 2 days
+	$exists = file_exists($versionFile);
+
+	if ($exists) {
+		$str = file_get_contents($versionFile, true);
+		$err = "";
+		if ($str === false) {
+			// TODO: should these errors set addMessage() ?
+			$err = "Error reading of $versionFile.";
+		} else if ($str === "") {
+			$err = "$versionFile is empty!";
+		} else {
+			$version_array = json_decode($str, true);
+			if ($version_array === null) {
+				$err = "$versionFile has no json!";
+			} else {
+				$priorVersion = $version_array['version'];
+			}
+		}
+		if ($err !== "") {
+			unlink($versionFile);
+			$exists = false;
+		}
+	}
+
+	if ($version_array === null || ($exists && filemtime($versionFile) < $compareDate)) {
+		// Need to (re)get the data.
+
+		$cmd = ALLSKY_UTILITIES . "/getNewestAllskyVersion.sh";
+		exec("$cmd 2>&1", $newest, $return_val);
+
+		// 90 == newest is newer than current.
+		if (($return_val !== 0 && $return_val !== 90) || $newest === null) {
+			// some error
+			if ($exists) unlink($versionFile);
+			return($version_array);		// may be null...
+		}
+
+		$version_array = array();
+		$version_array['version'] = implode(" ", $newest);
+		$version_array['timestamp'] = date_format($date, "c");	// NOTE: Does not use timezone
+
+		// Has the version changed?
+		if ($priorVersion === null || $priorVersion !== $version_array['version']) {
+			$changed = true;
+		}
+
+		$msg = "[$cmd] returned $return_val, version=${version_array['version']}, changed=$changed";
+		echo "<script>console.log('$msg');</script>";
+
+		// Save new info.
+		@file_put_contents($versionFile, json_encode($version_array, JSON_PRETTY_PRINT));
+		@chmod($versionFile, 0664);		// so the user can remove it if desired
+	}
+
+	return($version_array);
 }
 ?>

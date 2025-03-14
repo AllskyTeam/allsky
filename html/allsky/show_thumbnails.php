@@ -10,6 +10,7 @@
 	}
 	$homePage = v("homePage", null, $webSettings_array);
 	$includeGoogleAnalytics = v("includeGoogleAnalytics", false, $homePage);
+	$thumbnailsortorder = v("thumbnailsortorder", "ascending", $homePage);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -19,13 +20,13 @@
 		<link rel="shortcut icon" type="image/png" href="../allsky-favicon.png">
 		<title><?php echo $title; ?></title>
 
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<?php	if ($includeGoogleAnalytics && file_exists("../analyticsTracking.js")) {
-			echo "<script src='../analyticsTracking.js'></script>";
+<?php	if ($includeGoogleAnalytics && file_exists("../js/analyticsTracking.js")) {
+			echo "<script src='../js/analyticsTracking.js'></script>";
 		}
+		// TODO: Don't think Jquery is needed:  <script src="../js/jquery.min.js"></script>
 ?>
-		<script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
-		<link href="../allsky.css" rel="stylesheet">
+		<link href="../font-awesome/css/all.min.css" rel="stylesheet">
+		<link href="../css/allsky.css" rel="stylesheet">
 	</head>
 	<body>
 		<?php display_thumbnails($dir, $prefix, $title); ?>

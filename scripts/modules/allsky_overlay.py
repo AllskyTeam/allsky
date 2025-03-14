@@ -442,8 +442,8 @@ class ALLSKYOVERLAY:
                 s.log(4, f"INFO: {text} Elapsed time {elapsedTime.total_seconds():.6f} seconds")
 
     def _getFont(self, font, fontSize):
-
-        tt = '/usr/share/fonts/truetype/msttcorefonts'
+        
+        tt = os.path.join(s.ALLSKY_OVERLAY, 'system_fonts')
         systemFontMapCased = {
             'Arial':           {'fontpath': f'{tt}/Arial.ttf'},
             'Arial Black':     {'fontpath': f'{tt}/Arial_Black.ttf'},

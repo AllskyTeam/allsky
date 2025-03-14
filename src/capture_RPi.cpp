@@ -231,7 +231,7 @@ int RPicapture(config cg, cv::Mat *image)
 			command += " --analoggain 1";	// 1 makes it autogain
 		}
 	}
-	else if (cg.currentGain != cg.defaultGain)	// Is manual gain
+	else 	// Is manual gain
 	{
 		ss.str("");
 		ss << cg.currentGain;
@@ -347,7 +347,7 @@ int RPicapture(config cg, cv::Mat *image)
 	{
 		*image = cv::imread(cg.fullFilename, cv::IMREAD_UNCHANGED);
 		if (! image->data) {
-			Log(1, "*** %s: WARNING: Error re-reading file '%s'; skipping further processing.\n",
+			Log(-1, "*** %s: WARNING: Error re-reading file '%s'; skipping further processing.\n",
 				cg.ME, basename(cg.fullFilename));
 		}
 		ret = 0;	// Makes it easier for caller to determine if there was an error.

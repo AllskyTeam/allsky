@@ -162,7 +162,7 @@ float aegCalcMean(cv::Mat image, bool useMask)
 
 		char const *maskName = "tmp/mask.png";
 		if (! cv::imwrite(maskName, mask, compressionParameters))
-			Log(1, "*** ERROR: Unable to write to '%s'\n", maskName);
+			Log(-1, "*** ERROR: Unable to write to '%s'\n", maskName);
 
 		if (0) {		// Not sure what good this image does.
 			// Copy the source image to destination image with masking.
@@ -171,7 +171,7 @@ float aegCalcMean(cv::Mat image, bool useMask)
 
 			char const *dstImageName = "tmp/dstImage.jpg";
 			if (! cv::imwrite(dstImageName, dstImage, compressionParameters))
-				Log(1, "*** ERROR: Unable to write to '%s'\n", dstImageName);
+				Log(-1, "*** ERROR: Unable to write to '%s'\n", dstImageName);
 		}
 #endif
 	}

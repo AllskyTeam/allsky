@@ -2014,13 +2014,13 @@ bool checkExposureValues(config *cg)
 	}
 	else if (cg->dayExposure_us > cg->cameraMaxExposure_us)
 	{
-	 	Log(1, "*** %s: WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
+	 	Log(-1, "*** %s: WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
 			cg->ME, cg->dayExposure_us, cg->cameraMaxExposure_us);
 	 	cg->dayExposure_us = cg->cameraMaxExposure_us;
 	}
 	else if (cg->dayAutoExposure && cg->dayExposure_us > cg->cameraMaxAutoExposure_us)
 	{
-	 	Log(1, "*** %s: WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
+	 	Log(-1, "*** %s: WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
 			cg->ME, cg->dayExposure_us, cg->cameraMaxAutoExposure_us);
 	 	cg->dayExposure_us = cg->cameraMaxAutoExposure_us;
 	}
@@ -2033,13 +2033,13 @@ bool checkExposureValues(config *cg)
 	}
 	else if (cg->nightExposure_us > cg->cameraMaxExposure_us)
 	{
-	 	Log(1, "*** %s: WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
+	 	Log(-1, "*** %s: WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
 			cg->ME, cg->nightExposure_us, cg->cameraMaxExposure_us);
 	 	cg->nightExposure_us = cg->cameraMaxExposure_us;
 	}
 	else if (cg->nightAutoExposure && cg->nightExposure_us > cg->cameraMaxAutoExposure_us)
 	{
-	 	Log(1, "*** %s: WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
+	 	Log(-1, "*** %s: WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
 			cg->ME, cg->nightExposure_us, cg->cameraMaxAutoExposure_us);
 	 	cg->nightExposure_us = cg->cameraMaxAutoExposure_us;
 	}
@@ -2450,18 +2450,6 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 		}
 	}
 	else if (cg->ct == ctZWO) {
-		ret = getControlCapForControlType(cg->cameraNumber, ASI_GAMMA, &cc);
-		if (ret == ASI_SUCCESS)
-		{
-			if (cg->gamma == NOT_CHANGED)
-				cg->gamma = cc.DefaultValue;
-			else
-				validateLong(&cg->gamma, cc.MinValue, cc.MaxValue, "gamma", true);
-		} else if (ret != ASI_ERROR_INVALID_CONTROL_TYPE) {
-			Log(0, "*** %s ERROR: ASI_GAMMA failed with %s\n", cg->ME, getRetCode(ret));
-			ok = false;
-		}
-
 		if (cg->isCooledCamera && (cg->dayEnableCooler || cg->nightEnableCooler)) {
 			ret = getControlCapForControlType(cg->cameraNumber, ASI_TARGET_TEMP, &cc);
 			if (ret == ASI_SUCCESS)

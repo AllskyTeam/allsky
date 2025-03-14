@@ -34,8 +34,7 @@ This pages lists how to troubleshoot other problems that don't deserve their own
 <p>
 You can ignore entries similar to the following in the system logs:  
 <pre>
-Sep 15 17:44:28 Pi-Allsky kernel: [108641.695297] usb 1-1.5: reset
-	high-speed USB device number 4 using dwc_otg
+Sep 15 17:44:28 Pi-Allsky kernel: [108641.695297] usb 1-1.5: reset high-speed USB device number 4 using dwc_otg
 </pre>
 </p>
 <p>
@@ -145,6 +144,29 @@ image contains parts of two or more frames, offset lines, etc.
 		cut -d / -f 6 | sed -Ee 's/(.*)[.]([0-9]+)$/-l \1 -p \2/')</pre>
 </ul>
 </p>
+</details>
+
+
+<h2>Errors when running <code>git clone...</code></h2>
+<details><summary></summary>
+<p>
+The <code>git</code> command is used to download Allsky releases from the
+<a href="https://github.com/AllskyTeam/allsky">git server</a>.
+The command rarely fails,
+but it can if there are networking problems or the git server is down.
+</p>
+<p>
+The first thing to check is your networking - can you get to a site on the Internet?
+If you can and you see unusual messages like below,
+the git server is probably having problems so try again a few hours later.
+</p>
+<pre>
+error: RPC failed; curl 92 HTTP/2 stream 0 was not closed cleanly
+error: 1234 bytes of body are still expected
+fetch-pack: unexpcted disconnect while reading sideband packet
+fatal: early EOF
+fatal: index-pack failed
+</pre>
 </details>
 
 

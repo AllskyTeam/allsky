@@ -12,31 +12,32 @@ $initializeErrorMessage = null;				// Invoker can check this.
 $webSettings_array = null;
 if (! isset($configFilePrefix)) $configFilePrefix = "";
 
+define('CONFIG_UPDATE_STRING', 'XX_NEED_TO_UPDATE_XX');
+
 function initialize() {
 	global $webSettings_array;
 	global $configFilePrefix;
 
-	$needToUpdateString = "XX_NEED_TO_UPDATE_XX";
 	$configurationFileName = "configuration.json";
 	$retMsg = "";
 
-	// Read the website configuration file.
+	// Read the Website configuration file.
 	// Some settings impact this page, some impact the constellation overlay.
 	$configuration_file = "$configFilePrefix$configurationFileName";
 	if (! file_exists($configuration_file)) {
 		$retMsg .= "<p class='error-msg'>";
-			$retMsg .= "ERROR: This remote Website does not appear to be fully installed.";
+			$retMsg .= "ERROR: This Website does not appear to be fully installed.";
 			$retMsg .= "<br>The configuration file '$configuration_file' is missing.";
-			$retMsg .= "<br><br>Make sure this remote Website is installed enabled in the WebUI.";
+			$retMsg .= "<br><br>Make sure this Website is enabled in the WebUI.";
 		$retMsg .= "</p>";
 		return($retMsg);
 	}
 	$webSettings_str = file_get_contents($configuration_file, true);
-	if (strpos($webSettings_str, $needToUpdateString) !== false) {
+	if (strpos($webSettings_str, CONFIG_UPDATE_STRING) !== false) {
 		$retMsg .= "<p class='warning-msg'>";
 			$retMsg .= "The '$configurationFileName' file needs to be updated via";
 			$retMsg .= " the 'Editor' page in the WebUI.";
-			$retMsg .= "<br><br>Update fields with '$needToUpdateString'";
+			$retMsg .= "<br><br>Update fields with '".CONFIG_UPDATE_STRING."'";
 			$retMsg .= " and check all other entries.";
 			$retMsg .= "<br><br>This Allsky Website will not work until updated.";
 		$retMsg .= "</p>";
@@ -343,7 +344,6 @@ function display_thumbnails($dir, $file_prefix, $title)
 		asort($files);
 		$sortOrder = "Sorted oldest to newest (ascending)";
 	}
-	$sortOrder = "<span class='imagesSortOrder'>$sortOrder</span>";
 	
 	$thumb_dir = "$dir/thumbnails";
 	if (! is_dir($thumb_dir)) {
@@ -352,10 +352,15 @@ function display_thumbnails($dir, $file_prefix, $title)
 			print_r(error_get_last());
 	}
 
-	echo "<table class='imagesHeader'><tr>";
-		echo "<td class='headerButton'>$back_button</td>";
-		echo "<td class='headerTitle'>$title</td>";
-	echo "</tr></table>";
+	echo "<table class='imagesHeader'>";
+		echo "<tr>";
+			echo "<td class='headerButton'>$back_button</td>";
+			echo "<td class='headerTitle'>$title</td>";
+		echo "</tr>";
+		echo "<tr>";
+			echo "<td colspan='2'><div class='imagesSortOrder'>$sortOrder</div></td>";
+		echo "</tr>";
+	echo "</table>";
 	echo "<div class='archived-files'>\n";
 
 	$thumbnailSizeX = v("thumbnailsizex", 100, $webSettings_array['homePage']);

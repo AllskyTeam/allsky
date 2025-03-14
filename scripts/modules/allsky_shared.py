@@ -21,6 +21,9 @@ import locale
 import board
 import argparse
 import locale
+import tempfile
+import pathlib
+from pathlib import Path
 
 try:
     locale.setlocale(locale.LC_ALL, '')
@@ -47,7 +50,6 @@ ALLSKY_TMP = getEnvironmentVariable("ALLSKY_TMP", fatal=True)
 ALLSKY_SCRIPTS = getEnvironmentVariable("ALLSKY_SCRIPTS", fatal=True)
 SETTINGS_FILE = getEnvironmentVariable("SETTINGS_FILE", fatal=True)
 ALLSKY_OVERLAY = getEnvironmentVariable("ALLSKY_OVERLAY", fatal=True)
-
 
 LOGLEVEL = 0
 SETTINGS = {}
@@ -84,7 +86,9 @@ def convertLatLonOld(input):
 def convertLatLon(input):
     """ lat and lon can either be a positive or negative float, or end with N, S, E,or W. """
     """ If in  N, S, E, W format, 0.2E becomes -0.2 """
-    input = input.upper()
+
+    """ #4220 Ensure that the passed in value is always a string"""
+    input = str(input).upper()
     nsew = 1 if input[-1] in ['N', 'S', 'E', 'W'] else 0
     if nsew:
         multiplier = 1 if input[-1] in ['N', 'E'] else -1
@@ -158,7 +162,6 @@ def convertPath(path):
 
     return path
 
-
 def startModuleDebug(module):
     global ALLSKY_TMP
 
@@ -171,7 +174,6 @@ def startModuleDebug(module):
     except:
         log(0, f"ERROR: Unable to create {moduleTmpDir}")
 
-
 def writeDebugImage(module, fileName, image):
     global ALLSKY_TMP
 
@@ -180,7 +182,6 @@ def writeDebugImage(module, fileName, image):
     moduleTmpFile = os.path.join(debugDir, fileName)
     cv2.imwrite(moduleTmpFile, image, params=None)
     log(4,"INFO: Wrote debug file {0}".format(moduleTmpFile))
-
 
 def setEnvironmentVariable(name, value, logMessage='', logLevel=4):
     result = True
@@ -194,7 +195,6 @@ def setEnvironmentVariable(name, value, logMessage='', logLevel=4):
         log(2, f'ERROR: Failed to set environment variable {name} to value {value}')
 
     return result
-
 
 def setupForCommandLine():
     global ALLSKYPATH
@@ -252,10 +252,8 @@ def updateSetting(values):
 
     writeSettings()
 
-
 def var_dump(variable):
     pprint.PrettyPrinter(indent=2, width=128).pprint(variable)
-
 
 def log(level, text, preventNewline = False, exitCode=None, sendToAllsky=False):
     """ Very simple method to log data if in verbose mode """
@@ -271,7 +269,7 @@ def log(level, text, preventNewline = False, exitCode=None, sendToAllsky=False):
         # Need to escape single quotes in {text}.
         doubleQuote = '"'
         text = text.replace("'", f"'{doubleQuote}'{doubleQuote}'")
-        command = os.path.join(ALLSKY_SCRIPTS, f"addMessage.sh error '{text}'")
+        command = os.path.join(ALLSKY_SCRIPTS, f"addMessage.sh --type error --msg '{text}'")
         os.system(command)
     
     if exitCode is not None:
@@ -369,7 +367,6 @@ def asfloat(val):
 
     return val
 
-
 def getExtraDir():
     return getEnvironmentVariable("ALLSKY_EXTRA", fatal=True)
 
@@ -389,15 +386,31 @@ def validateExtraFileName(params, module, fileKey):
                     
     params[fileKey] = extraDataFilename
             
+def save_extra_data(file_name, extra_data):
+    saveExtraData(file_name, extra_data)
 
-def saveExtraData(fileName, extraData):
-    extraDataPath = getExtraDir()
-    if extraDataPath is not None:               # it should never be None
-        checkAndCreateDirectory(extraDataPath)
-        extraDataFilename = os.path.join(extraDataPath, fileName)
-        with open(extraDataFilename, "w") as file:
-            formattedJSON = json.dumps(extraData, indent=4)
-            file.write(formattedJSON)
+def saveExtraData(file_name, extra_data):
+    """
+    Save extra data to allows the overlay module to disdplay it.
+
+    Args:
+        file_name (string): The name of the file to save.
+        extra_data (object): The data to save.
+
+    Returns:
+        Nothing
+    """
+    extra_data_path = getExtraDir()
+    if extra_data_path is not None:               # it should never be None
+        checkAndCreateDirectory(extra_data_path)
+        extra_data_filename = os.path.join(extra_data_path, file_name)
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
+            formatted_json = json.dumps(extra_data, indent=4)
+            temp_file.write(formatted_json)
+            temp_file_name = temp_file.name
+            os.chmod(temp_file_name, 0o644)
+            
+        shutil.move(temp_file_name, extra_data_filename)
 
 def deleteExtraData(fileName):
     extraDataPath = getExtraDir()
@@ -534,5 +547,88 @@ def getGPIOPin(pin):
 
     if pin == 27:
         result = board.D27
+
+    return result
+
+
+def _get_value_from_json_file(file_path, variable):
+    """
+    Loads a json based extra data file and returns the value of a variable if found
+
+    Args:
+        variable (string): The varible to get
+
+    Returns:
+        result (various) The result or None if the variable could not be found
+    """
+    result = None
+    try:
+        with open(file_path, encoding='utf-8') as file:
+            json_data = json.load(file)
+            for (name, value_data) in json_data.items():
+                if name == variable:
+                    if isinstance(value_data, dict):
+                        if 'value' in value_data:
+                            result = value_data['value']
+                    else:
+                        result = value_data
+    except: # pylint: disable=W0702
+        pass
+
+    return result
+
+def _get_value_from_text_file(file_path, variable):
+    """
+    Loads a text based extra data file and returns the value of a variable if found
+
+    Args:
+        variable (string): The varible to get
+
+    Returns:
+        result (various) The result or None if the variable could not be found
+    """
+    result = None
+
+    with open(file_path, encoding='utf-8') as file:
+        for line in file:
+            name, value = line.partition("=")[::2]
+            name = name.rstrip()
+            value = value.lstrip()
+            value = value.strip()
+            if name == variable:
+                result = value
+                break
+
+    return result   
+
+def get_allsky_variable(variable):
+    """
+    Gets an Allsky variable either from the environment or extra data files
+
+    Args:
+        variable (string): The varible to get
+
+    Returns:
+        result (various) The result or None if the variable could not be found
+    """
+    result = getEnvironmentVariable(variable)
+
+    if result is None:
+        extra_data_path = getExtraDir()
+        directory = Path(extra_data_path)
+
+        for file_path in directory.iterdir():
+            if file_path.is_file() and isFileReadable(file_path):
+
+                file_extension = Path(file_path).suffix
+
+                if file_extension == '.json':
+                    result = _get_value_from_json_file(file_path, variable)
+
+                if file_extension == '.txt':
+                    result = _get_value_from_text_file(file_path, variable)
+
+            if result is not None:
+                break
 
     return result

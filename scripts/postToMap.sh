@@ -65,6 +65,7 @@ function check_URL()
 	local D="$( get_domain "${URL}" )"
 	if [[ "${D:0:7}"  == "192.168"		||
 		  "${D:0:4}"  == "10.0"			||
+		  "${D:0:9}"  == "127.0.0.1"	||
 		  "${D:0:6}"  == "172.16"		||
 		  "${D:0:9}"  == "169.254.0"	||
 		  "${D:0:6}"  == "198.18"		||
@@ -73,19 +74,20 @@ function check_URL()
 		  "${D:0:3}"  == "240" ]]; then
 		E+="ERROR: ${FIELD_NAME} '${URL}' is not reachable from the Internet.${BR}"
 
-	elif [[ ${URL:0:5} != "http:" && ${URL:0:6} != "https:" ]]; then
-		E+="ERROR: ${FIELD_NAME} '${URL}' must begin with 'http:' or 'https:'.${BR}"
+	elif [[ ${URL:0:7} != "http://" && ${URL:0:8} != "https://" ]]; then
+		E+="ERROR: ${FIELD_NAME} '${URL}' must begin with 'http://' or 'https://'.${BR}"
 
 	elif [[ ${URL_TYPE} == "remotewebsiteurl" && "$( basename "${URL}" )" == "index.php" ]]; then
 		E+="ERROR: ${FIELD_NAME} '${URL}' should not end with '/index.php'.${BR}"
 
 	else
 		# Make sure it's a valid URL.  Some servers don't return anything if the user agent is "curl".
-		local CONTENT="$( curl --user-agent Allsky --location --head --silent --show-error --connect-timeout "${TIMEOUT}" "${URL}" 2>&1 )"
+		local CONTENT="$( curl --user-agent Allsky --location --head --no-progress-meter --show-error --connect-timeout "${TIMEOUT}" "${URL}" 2>&1 )"
 		local RET=$?
 		if [[ ${DEBUG} == "true" ]]; then
 			D_ "\ncheck_URL(${URL}, ${URL_TYPE}, ${FIELD_NAME}) RET=${RET}:\n${CONTENT}\n"
 		fi
+
 		if [[ ${RET} -eq 6 ]]; then
 			E+="ERROR: ${FIELD_NAME} '${URL}' not found - check spelling and network connectivity.${BR}"
 		elif [[ ${RET} -eq 28 ]]; then

@@ -18,7 +18,7 @@ function usage_and_exit()
 {
 	local RET=${1}
 	exec >&2
-	local MSG="Usage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug] [--machineid id] [--endofnight] [--fromWebUI]"
+	local MSG="Usage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug] [--machineid id] [--endofnight] [--from f]"
 	echo
 	if [[ ${RET} -eq 0 ]]; then
 		echo -e "${MSG}"
@@ -32,7 +32,7 @@ function usage_and_exit()
 	echo "    --force:      Force updates, even if not scheduled automatically for today."
 	echo "    --debug:      Output debugging statements."
 	echo "    --endofnight: ${ME} was called from endOfNight.sh."
-	echo "    --fromWebUI:  ${ME} was called from the WebUI (use html)."
+	echo "    --from f:     Who called ${ME}, e.g., 'WebUI' (use html)."
 	echo
 	exit "${RET}"
 }
@@ -121,7 +121,7 @@ UPLOAD="false"
 WHISPER="false"
 ENDOFNIGHT="false"
 MACHINE_ID=""
-FROM_WEBUI="false"
+FROM=""
 FORCE="false"
 while [[ $# -ne 0 ]]; do
 	case "${1,,}" in
@@ -149,8 +149,9 @@ while [[ $# -ne 0 ]]; do
 			MACHINE_ID="${2}"
 			shift
 			;;
-		--fromwebui)
-			FROM_WEBUI="true"
+		--from)
+			FROM="${2,,}"
+			shift
 			;;
 		*)
 			usage_and_exit 1;
@@ -160,7 +161,7 @@ while [[ $# -ne 0 ]]; do
 done
 
 
-if [[ ${FROM_WEBUI} == "true" ]]; then
+if [[ ${FROM} == "webui" ]]; then
 	BR="<br>"		# Line break
 else
 	BR="\n"
@@ -181,7 +182,7 @@ else
 	MSG_START="${ME}: "
 	ERROR_MSG_START="*** ${ME}: "
 	WARNING_MSG_START="*** ${ME}: "
-	if [[ ${FROM_WEBUI} == "true" ]]; then
+	if [[ ${FROM} == "webui" ]]; then
 		ERROR_MSG_START+="${BR}"
 		WARNING_MSG_START+="${BR}"
 	fi

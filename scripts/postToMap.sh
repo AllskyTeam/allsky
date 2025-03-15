@@ -191,9 +191,9 @@ fi
 if [[ -z ${MACHINE_ID} ]]; then
 	MACHINE_ID="$( < /etc/machine-id )"
 	if [[ -z ${MACHINE_ID} ]]; then
-		ERR="ERROR: Unable to get 'machine_id': check /etc/machine-id."
-		wE_ "${ERROR_MSG_START}${ERR}" >&2
-		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${ERR}"
+		E="ERROR: Unable to get 'machine_id': check /etc/machine-id."
+		wE_ "${ERROR_MSG_START}${E}" >&2
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
 		exit 3
 	fi
 fi
@@ -209,6 +209,7 @@ if [[ -z ${LONGITUDE} ]]; then
 fi
 if [[ -n ${E} ]]; then
 	wE_ "${ERROR_MSG_START}${E}"
+	[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
 	exit 1
 fi
 
@@ -361,7 +362,7 @@ if [[ ${UPLOAD} == "true" ]]; then
 		[[ ${WHISPER} == "false" ]] && echo "${ME}: Uploading map data."
 	fi
 	# shellcheck disable=SC2089
-	CMD="curl --silent --show-error -i -H 'Accept: application/json' -H 'Content-Type:application/json'"
+	CMD="curl --no-progress-meter --show-error -i -H 'Accept: application/json' -H 'Content-Type:application/json'"
 	# shellcheck disable=SC2089
 	CMD+=" --data '$( generate_post_data )'"
 	CMD+=" https://www.thomasjacquin.com/allsky-map/postToMap.php"
@@ -372,12 +373,12 @@ if [[ ${UPLOAD} == "true" ]]; then
 	RETURN_CODE=$?
 	[[ ${DEBUG} == "true" ]] && wD_ "Returned:\n${RETURN:-Nothing returned}"
 	if [[ ${RETURN_CODE} -ne 0 ]]; then
-		ERR="ERROR while uploading map data with curl: ${RETURN}, CMD=${CMD}."
+		E="ERROR while uploading map data with curl: ${RETURN}, CMD=${CMD}."
 		if [[ ${ENDOFNIGHT} == "true" ]]; then
-			echo -e "${ME}: ${ERR}"		# goes in log file
-			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${ERR}"
+			echo -e "${ME}: ${E}"		# goes in log file
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
 		else
-			wE_ "${ERROR_MSG_START}${ERR}" >&2
+			wE_ "${ERROR_MSG_START}${E}" >&2
 		fi
 		exit "${RETURN_CODE}"
 	fi
@@ -410,15 +411,15 @@ if [[ ${UPLOAD} == "true" ]]; then
 		[[ ${ENDOFNIGHT} == "false" ]] && wO_ "${MSG_START}Map data UPDATED.${MSG}"
 
 	elif [[ -z ${RET} ]]; then
-		MSG="ERROR: Unknown reply from server: ${RETURN}."
-		wE_ "${ERROR_MSG_START}${MSG}"
-		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${MSG}"
+		E="ERROR: Unknown reply from server: ${RETURN}."
+		wE_ "${ERROR_MSG_START}${E}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
 		RETURN_CODE=2
 
 	elif [[ ${RET:0:6} == "ERROR " ]]; then
-		MSG="ERROR returned while uploading map data: ${RET:6}."
-		wE_ "${ERROR_MSG_START}${MSG}"
-		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${MSG}"
+		E="ERROR returned while uploading map data: ${RET:6}."
+		wE_ "${ERROR_MSG_START}${E}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
 		RETURN_CODE=2
 
 	elif [[ ${RET:0:15} == "ALREADY UPDATED" ]]; then
@@ -428,9 +429,9 @@ if [[ ${UPLOAD} == "true" ]]; then
 		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${ME}: ${MSG}"
 
 	else
-		MSG="ERROR Got unknown error while uploading map data: ${RET:-No output}."
-		wE_ "${ERROR_MSG_START}${MSG}"
-		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${MSG}"
+		E="ERROR Got unknown error while uploading map data: ${RET:-No output}."
+		wE_ "${ERROR_MSG_START}${E}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
 		RETURN_CODE=2
 	fi
 

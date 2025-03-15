@@ -20,7 +20,7 @@ function _check_web_connectivity()
 				URL="$( settings ".remote${ARG/--/}url" )"
 				;;
 			"--from")
-				FROM="${2}"
+				FROM="${2,,}"
 				shift
 				;;
 			"--url")
@@ -42,7 +42,7 @@ function _check_web_connectivity()
 
 	local HTTP_STATUS  RET  MSG  WHY
 
-	HTTP_STATUS="$( curl -o /dev/null --head --silent --location \
+	HTTP_STATUS="$( curl -o /dev/null --head --no-progress-meter --location \
 		--write-out "%{http_code}" "${URL}" )"
 	RET=$?
 	if [[ ${RET} -ne 0 ]] ; then

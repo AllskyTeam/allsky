@@ -516,7 +516,7 @@ if ($debug) {
 					// This must run with different permissions so makeChanges.sh can
 					// write to the allsky directory.
 					$CMD = "sudo --user=" . ALLSKY_OWNER . " ";
-					$CMD .= ALLSKY_SCRIPTS . "/makeChanges.sh $cmdDebugArg $moreArgs $changes";
+					$CMD .= ALLSKY_SCRIPTS . "/makeChanges.sh --from WebUI $cmdDebugArg $moreArgs $changes";
 
 					# Let makeChanges.sh display any output.
 					// false = don't add anything to the message.

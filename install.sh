@@ -701,7 +701,7 @@ do_save_camera_capabilities()
 	display_msg --log progress "Making new settings file '${SETTINGS_FILE}'."
 
 	CMD="makeChanges.sh${FORCE}${OPTIONSONLY}"
-	CMD+=" --cameraTypeOnly --fromInstall --addNewSettings ${DEBUG_ARG}"
+	CMD+=" --cameraTypeOnly --from install --addNewSettings ${DEBUG_ARG}"
 	#shellcheck disable=SC2089
 	CMD+=" cameranumber 'Camera Number' '${PRIOR_CAMERA_NUMBER}' '${CAMERA_NUMBER}'"
 	#shellcheck disable=SC2089

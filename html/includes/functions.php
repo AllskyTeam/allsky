@@ -765,33 +765,42 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 	// If there are any lines that begin with:  ERROR  or  WARNING
 	// then display them in the appropriate format.
 	if ($result != null) {
+		$msg = "";
+		$sev = "";
   		foreach ( $result as $line) {
-			if (strpos($line, "ERROR:") !== false) {
-				$line = str_replace("ERROR", "<strong>ERROR</strong>", $line);
-				$sev = "danger";
-			} else if (strpos($line, "ERROR::") !== false) {
-				$line = str_replace("ERROR:", "<strong>ERROR</strong>", $line);
-				$sev = "danger";
-			} else if (strpos($line, "WARNING:") !== false) {
-				$line = str_replace("WARNING", "<strong>WARNING</strong>", $line);
-				$sev = "warning";
+			if ($msg !== "") $msg .= "<br>";
+
+			if (strpos($line, "ERROR::") !== false) {
+				$msg .= str_replace("ERROR:", "<strong>ERROR</strong>", $line);
+				if ($sev === "") $sev = "danger";
+			} else if (strpos($line, "ERROR:") !== false) {
+				$msg .= str_replace("ERROR", "<strong>ERROR</strong>", $line);
+				if ($sev === "") $sev = "danger";
+
 			} else if (strpos($line, "WARNING::") !== false) {
-				$line = str_replace("WARNING:", "<strong>WARNING</strong>", $line);
-				$sev = "warning";
+				$msg .= str_replace("WARNING:", "<strong>WARNING</strong>", $line);
+				if ($sev === "") $sev = "warning";
+			} else if (strpos($line, "WARNING:") !== false) {
+				$msg .= str_replace("WARNING", "<strong>WARNING</strong>", $line);
+				if ($sev === "") $sev = "warning";
+
 			} else if (strpos($line, "SUCCESS::") !== false) {
-				$line = str_replace("SUCCESS::", "", $line);
-				$sev = "success";
+				$msg .= str_replace("SUCCESS::", "", $line);
+				if ($sev === "") $sev = "success";
+
 			} else if (strpos($line, "INFO::") !== false) {
-				$line = str_replace("INFO::", "", $line);
-				$sev = "info";
+				$msg .= str_replace("INFO::", "", $line);
+				if ($sev === "") $sev = "info";
+
 			} else if (strpos($line, "DEBUG:") !== false) {
-				$line = str_replace("DEBUG", "", $line);
-				$sev = "debug";
+				$msg .= str_replace("DEBUG:", "", $line);
+				if ($sev === "") $sev = "debug";
+
 			} else {
-				$sev = "message";
+				if ($sev === "") $sev = "message";
 			}
-			$status->addMessage("$line<br>", $sev, false);
 		}
+		$status->addMessage("$msg<br>", $sev, false);
 	}
 
 	return true;

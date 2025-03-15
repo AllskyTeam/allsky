@@ -18,7 +18,7 @@ function usage_and_exit()
 {
 	local RET=${1}
 	exec >&2
-	local MSG="Usage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug] [--machineid id] [--endofnight] [--fromWebUI]"
+	local MSG="Usage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug] [--machineid id] [--endofnight] [--from f]"
 	echo
 	if [[ ${RET} -eq 0 ]]; then
 		echo -e "${MSG}"
@@ -32,7 +32,7 @@ function usage_and_exit()
 	echo "    --force:      Force updates, even if not scheduled automatically for today."
 	echo "    --debug:      Output debugging statements."
 	echo "    --endofnight: ${ME} was called from endOfNight.sh."
-	echo "    --fromWebUI:  ${ME} was called from the WebUI (use html)."
+	echo "    --from f:     Who called ${ME}, e.g., 'WebUI' (use html)."
 	echo
 	exit "${RET}"
 }
@@ -65,6 +65,7 @@ function check_URL()
 	local D="$( get_domain "${URL}" )"
 	if [[ "${D:0:7}"  == "192.168"		||
 		  "${D:0:4}"  == "10.0"			||
+		  "${D:0:9}"  == "127.0.0.1"	||
 		  "${D:0:6}"  == "172.16"		||
 		  "${D:0:9}"  == "169.254.0"	||
 		  "${D:0:6}"  == "198.18"		||
@@ -73,19 +74,20 @@ function check_URL()
 		  "${D:0:3}"  == "240" ]]; then
 		E+="ERROR: ${FIELD_NAME} '${URL}' is not reachable from the Internet.${BR}"
 
-	elif [[ ${URL:0:5} != "http:" && ${URL:0:6} != "https:" ]]; then
-		E+="ERROR: ${FIELD_NAME} '${URL}' must begin with 'http:' or 'https:'.${BR}"
+	elif [[ ${URL:0:7} != "http://" && ${URL:0:8} != "https://" ]]; then
+		E+="ERROR: ${FIELD_NAME} '${URL}' must begin with 'http://' or 'https://'.${BR}"
 
 	elif [[ ${URL_TYPE} == "remotewebsiteurl" && "$( basename "${URL}" )" == "index.php" ]]; then
 		E+="ERROR: ${FIELD_NAME} '${URL}' should not end with '/index.php'.${BR}"
 
 	else
 		# Make sure it's a valid URL.  Some servers don't return anything if the user agent is "curl".
-		local CONTENT="$( curl --user-agent Allsky --location --head --silent --show-error --connect-timeout "${TIMEOUT}" "${URL}" 2>&1 )"
+		local CONTENT="$( curl --user-agent Allsky --location --head --no-progress-meter --show-error --connect-timeout "${TIMEOUT}" "${URL}" 2>&1 )"
 		local RET=$?
 		if [[ ${DEBUG} == "true" ]]; then
 			D_ "\ncheck_URL(${URL}, ${URL_TYPE}, ${FIELD_NAME}) RET=${RET}:\n${CONTENT}\n"
 		fi
+
 		if [[ ${RET} -eq 6 ]]; then
 			E+="ERROR: ${FIELD_NAME} '${URL}' not found - check spelling and network connectivity.${BR}"
 		elif [[ ${RET} -eq 28 ]]; then
@@ -119,7 +121,7 @@ UPLOAD="false"
 WHISPER="false"
 ENDOFNIGHT="false"
 MACHINE_ID=""
-FROM_WEBUI="false"
+FROM=""
 FORCE="false"
 while [[ $# -ne 0 ]]; do
 	case "${1,,}" in
@@ -147,8 +149,9 @@ while [[ $# -ne 0 ]]; do
 			MACHINE_ID="${2}"
 			shift
 			;;
-		--fromwebui)
-			FROM_WEBUI="true"
+		--from)
+			FROM="${2,,}"
+			shift
 			;;
 		*)
 			usage_and_exit 1;
@@ -158,7 +161,7 @@ while [[ $# -ne 0 ]]; do
 done
 
 
-if [[ ${FROM_WEBUI} == "true" ]]; then
+if [[ ${FROM} == "webui" ]]; then
 	BR="<br>"		# Line break
 else
 	BR="\n"
@@ -179,7 +182,7 @@ else
 	MSG_START="${ME}: "
 	ERROR_MSG_START="*** ${ME}: "
 	WARNING_MSG_START="*** ${ME}: "
-	if [[ ${FROM_WEBUI} == "true" ]]; then
+	if [[ ${FROM} == "webui" ]]; then
 		ERROR_MSG_START+="${BR}"
 		WARNING_MSG_START+="${BR}"
 	fi
@@ -189,9 +192,9 @@ fi
 if [[ -z ${MACHINE_ID} ]]; then
 	MACHINE_ID="$( < /etc/machine-id )"
 	if [[ -z ${MACHINE_ID} ]]; then
-		ERR="ERROR: Unable to get 'machine_id': check /etc/machine-id."
-		wE_ "${ERROR_MSG_START}${ERR}" >&2
-		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${ERR}"
+		E="ERROR: Unable to get 'machine_id': check /etc/machine-id."
+		wE_ "${ERROR_MSG_START}${E}" >&2
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
 		exit 3
 	fi
 fi
@@ -207,6 +210,7 @@ if [[ -z ${LONGITUDE} ]]; then
 fi
 if [[ -n ${E} ]]; then
 	wE_ "${ERROR_MSG_START}${E}"
+	[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
 	exit 1
 fi
 
@@ -359,7 +363,7 @@ if [[ ${UPLOAD} == "true" ]]; then
 		[[ ${WHISPER} == "false" ]] && echo "${ME}: Uploading map data."
 	fi
 	# shellcheck disable=SC2089
-	CMD="curl --silent --show-error -i -H 'Accept: application/json' -H 'Content-Type:application/json'"
+	CMD="curl --no-progress-meter --show-error -i -H 'Accept: application/json' -H 'Content-Type:application/json'"
 	# shellcheck disable=SC2089
 	CMD+=" --data '$( generate_post_data )'"
 	CMD+=" https://www.thomasjacquin.com/allsky-map/postToMap.php"
@@ -370,12 +374,12 @@ if [[ ${UPLOAD} == "true" ]]; then
 	RETURN_CODE=$?
 	[[ ${DEBUG} == "true" ]] && wD_ "Returned:\n${RETURN:-Nothing returned}"
 	if [[ ${RETURN_CODE} -ne 0 ]]; then
-		ERR="ERROR while uploading map data with curl: ${RETURN}, CMD=${CMD}."
+		E="ERROR while uploading map data with curl: ${RETURN}, CMD=${CMD}."
 		if [[ ${ENDOFNIGHT} == "true" ]]; then
-			echo -e "${ME}: ${ERR}"		# goes in log file
-			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${ERR}"
+			echo -e "${ME}: ${E}"		# goes in log file
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
 		else
-			wE_ "${ERROR_MSG_START}${ERR}" >&2
+			wE_ "${ERROR_MSG_START}${E}" >&2
 		fi
 		exit "${RETURN_CODE}"
 	fi
@@ -408,15 +412,15 @@ if [[ ${UPLOAD} == "true" ]]; then
 		[[ ${ENDOFNIGHT} == "false" ]] && wO_ "${MSG_START}Map data UPDATED.${MSG}"
 
 	elif [[ -z ${RET} ]]; then
-		MSG="ERROR: Unknown reply from server: ${RETURN}."
-		wE_ "${ERROR_MSG_START}${MSG}"
-		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${MSG}"
+		E="ERROR: Unknown reply from server: ${RETURN}."
+		wE_ "${ERROR_MSG_START}${E}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
 		RETURN_CODE=2
 
 	elif [[ ${RET:0:6} == "ERROR " ]]; then
-		MSG="ERROR returned while uploading map data: ${RET:6}."
-		wE_ "${ERROR_MSG_START}${MSG}"
-		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${MSG}"
+		E="ERROR returned while uploading map data: ${RET:6}."
+		wE_ "${ERROR_MSG_START}${E}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
 		RETURN_CODE=2
 
 	elif [[ ${RET:0:15} == "ALREADY UPDATED" ]]; then
@@ -426,9 +430,9 @@ if [[ ${UPLOAD} == "true" ]]; then
 		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${ME}: ${MSG}"
 
 	else
-		MSG="ERROR Got unknown error while uploading map data: ${RET:-No output}."
-		wE_ "${ERROR_MSG_START}${MSG}"
-		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${MSG}"
+		E="ERROR Got unknown error while uploading map data: ${RET:-No output}."
+		wE_ "${ERROR_MSG_START}${E}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
 		RETURN_CODE=2
 	fi
 

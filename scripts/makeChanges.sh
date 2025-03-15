@@ -83,7 +83,6 @@ if [[ ${FROM} == "webui" ]]; then
 	wWARNING=""
 	wNC=""
 else
-	FROM_WEBUI=""
 	ERROR_PREFIX="${ME}: "
 fi
 

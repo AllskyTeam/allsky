@@ -43,21 +43,40 @@
 
 			<h3>v2024.12.06_02  - Point Release # 2</h3>
 			<details sub open> <summary></summary>
+				<h4 style="color: red">IMPORTANT NOTES:</h4>
+				<ul>
+					<li>This is the LAST release that supports Buster.
+					<li>This is the LAST release that contains the "legacy"
+						overlay method.
+				</ul>
+
 				<h4>Enhancements / Changes</h4>
 				<ul>
-					<li>The WebUI will now notify you when a new Allsky versions is available.
-					<li>If you are seeing a "Multiple consecutive bad images"
-						message in the WebUI, run
-						the new <code>allsky-config &nbsp;bad_image_info</code> command.
-						It will suggest how to fix the problem.
-					<li>If a local or remote Allsky Website has a problem reading
-						the <span class="fileName">data.json</span> file,
-						you are now directed to run the new
-						<code>allsky-config &nbsp;check_post_data</code> command.
-						It tries to determine why the message occurred.
-					<li>The <code>allsky-config &nbsp;move_images</code> command
-						is more robust and allows you to move the images back to
-						the <span class="fileName">~/allsky/images</span> folder if desired.
+					<li>The WebUI will now notify you when a new Allsky version is available.
+					<li>The <code>remoteWebsiteInstall.sh</code> command does a better
+						job telling you why problems occur and how to fix them.
+					<li>Additions to the <code>allsky-config</code> command:
+						<ul>
+							<li>If you are seeing a <b>Multiple consecutive bad images</b>
+								message in the WebUI, run
+								<code>allsky-config &nbsp;bad_image_info</code>.
+								It will suggest how to fix the problem.
+							<li>If a local or remote Allsky Website has a problem reading
+								the <span class="fileName">data.json</span> file,
+								you are now directed to run the new
+								<code>allsky-config &nbsp;check_post_data</code> command.
+								It tries to determine why the message occurred.
+							<li>The <code>allsky-config &nbsp;move_images</code> command
+								is more robust and allows you to move the images back to the
+								<span class="fileName">~/allsky/images</span>
+								folder if desired.
+						</ul>
+					<li>When an Allsky Website is stuck on the "Loading ..." message
+						because it can't find the current image,
+						you'll get a message telling you how to fix it.
+					<li>Several Allsky Website files are now in subdirectories, e.g.,
+						all the "css" files are in a <span class="fileName">css</span> directory.
+						No user action is needed.
 					<li>You can now have custom "notification images" like
 						"Allsky is starting up".
 						To do so, create a
@@ -69,7 +88,13 @@
 
 				<h4>Bug Fixes</h4>
 				<ul>
+					<li>The problem with <span class="fileName">de421.bsp</span> is fixed.
+					<li>Timelapse thumbnails now have the correct name.
 					<li>A security issue was fixed.
+					<li>Installing or upgrading Allsky is less likely to hang when there's
+						a problem with an RPi camera.
+					<li>Fixed a typo in the <strong>ssl:check-hostname</strong> command in
+						<code>testUpload.sh</code>.
 					<li><code>removeBadImages.sh</code> now works with mean values
 						that have a comma in them.
 				</ul>

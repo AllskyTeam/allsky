@@ -55,7 +55,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
-"description" : "Maximum daytime <span class='WebUISetting'>Auto-Exposure<span> time in milliseconds (1000ms = 1 sec).<br>Click <a allsky='true' external='true' href='/documentation/settings/allsky.html#daymaxautoexposure'>here</a> to see how this setting impacts the time between exposures.",
+"description" : "Maximum daytime <span class='WebUISetting'>Auto-Exposure</span> time in milliseconds (1000ms = 1 sec).<br>Click <a allsky='true' external='true' href='/documentation/settings/allsky.html#daymaxautoexposure'>here</a> to see how this setting impacts the time between exposures.",
 "label" : "Max Auto-Exposure",
 "label_prefix" : "Daytime",
 "type" : "float",
@@ -873,7 +873,7 @@
 {
 "name" : "debuglevel",
 "default" : 1,
-"description" : "Debug level. <span class='WebUIValue'>0</span> is errors only.  <span class='WebUIValue'>4</span> is for Allsky developers use.",
+"description" : "Debug level. Use <span class='WebUIValue'>3</span> while debugging.  See the <a external='true' allsky='true' href='/documentation/settings/allsky.html#debuglevel'>documentation</a> for meaning of the levels.",
 "label" : "Debug Level",
 "type" : "select_integer",
 "usage" : "capture",
@@ -1195,7 +1195,7 @@
 {
 "name" : "imageremovebadhigh",
 "minimum" : 0,
-"maximum" : 0.5,
+"maximum" : 0.999,
 "default" : 0.9,
 "description" : "Delete images whose mean is above this value.<br><span class='WebUIValue'>0</span> disables this check.",
 "label" : "Remove Bad Images Threshold High",
@@ -1405,7 +1405,7 @@
 {
 "name" : "timelapseextraparameters",
 "default" : "",
-"description" : "Optional additional timelapse creation parameters.  Run <code>ffmpeg -?</code> to see the options.<br>If quality is poor or the video does not plan on Apple devices, try adding <code>-level 3.1</code>.",
+"description" : "Optional additional timelapse creation parameters.  Run <code>ffmpeg -?</code> to see the options.<br>If quality is poor or the video does not play on Apple devices, try adding <code>-level 3.1</code>.",
 "label" : "Extra Parameters",
 "label_prefix" : "Daily Timelapse",
 "type" : "widetext",

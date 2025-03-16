@@ -210,12 +210,15 @@ foreach ($lines AS $line) {
 			break;
 
 
-		case "delete_prior_files":
-			// Delete files left over from prior Allsky releases.
-			$items = array("getTime.php", "virtualsky.json", "README.md", "version", "allsky-font.css",
-						"config.js", ".git");
-			foreach ($items AS $item) {
-					if (is_dir($item)) {
+		case "delete_files":
+			// Delete the specified files and/or directories.
+			if ($numArgs === 0) {
+				do_error($command, "No files to delete given; expected at least one.");
+				break;
+			}
+
+			foreach ($args as $item) {
+				if (is_dir($item)) {
 						if (deleteDirectory($item)) {	// recursively deletes
 							do_return($command, "", "Deleted: $dir/");
 						}
@@ -229,6 +232,34 @@ foreach ($lines AS $line) {
 					}
 				}
 			}
+			break;
+
+		case "move_files":
+			// Move the specified files and/or directories.
+			if ($numArgs !== 2) {
+				do_error($command, "Expected 2 arguments.");
+				break;
+			}
+
+			$from = $args[0];
+			$to = $args[1];
+
+			if (file_exists($from)) {
+				if (is_dir($to)) {
+					$b = basename($from);
+					$to = "${to}/${b}";
+				}
+				if (rename($from, $to)) {
+					do_return($command, "", "Moved '$from' to '$to'.");
+				} else {
+					$last_error = error_get_last();
+					$err = $last_error['message'];
+					do_error($command, "Unable to move '$from' to '$to': $err");
+				}
+			}
+			// ignore items not found
+
+
 			break;
 
 

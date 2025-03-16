@@ -223,18 +223,6 @@ body {
 	padding: 0;
 	list-style-type: none;
 }
-.markdown-body ol[type="1"] {
-	list-style-type: decimal;
-}
-.markdown-body ol[type=a] {
-	list-style-type: lower-alpha;
-}
-.markdown-body ol[type=i] {
-	list-style-type: lower-roman;
-}
-.markdown-body div>ol:not([type]) {
-	list-style-type: decimal;
-}
 .markdown-body ul ul,
 .markdown-body ul ol,
 .markdown-body ol ol,

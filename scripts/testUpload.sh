@@ -16,27 +16,30 @@ usage_and_exit()
 {
 	exec >&2
 	local RET=${1}
-	local MSG="Usage: ${ME} [--help] [--debug] [--silent] [--file f] [--fromInstall]] \\"
+	local MSG="Usage: ${ME} [--help] [--debug] [--silent] [--file f] [--fromInstall]] \\\\"
 	MSG+="\n\t[[--output o]] --website  and/or  --server"
 	[[ ${RET} -eq 2 ]] && echo -e "\nERROR: You must specify --website and/or --server\n"
 
 	if [[ ${RET} -ne 0 ]]; then
 		wE_ "${MSG}"
 	else
-		echo "${MSG}"
+		echo -e "${MSG}"
 	fi
-	echo -e "\nWhere:"
-	echo -e "\t'--silent' only outputs errors."
-	echo -e "\t'--file f' optionally specifies the test file to upload."
-	echo -e "\t'--fromInstall' outputs text without colors or other escape sequences."
-	echo -e "\t'--output o' puts detailed output in the specified file."
+	echo
+	echo "Where:"
+	echo "    '--silent' only outputs errors."
+	echo "    '--file f' optionally specifies the test file to upload."
+	echo "    '--fromInstall' outputs text without colors or other escape sequences."
+	echo "    '--output o' puts detailed output in the specified file."
+
 	exit "${RET}"
 }
 
 OK="true"
 DEBUG="false"
 SILENT="false"
-TEST_FILE="/tmp/${ME}.txt"
+DEFAULT_TEST_FILE="/tmp/${ME}.txt"
+TEST_FILE="${DEFAULT_TEST_FILE}"
 OUT_FILE=""
 DO_WEBSITE="false"
 DO_SERVER="false"
@@ -112,24 +115,17 @@ parse_output()
 
 	[[ ! -s ${FILE} ]] && return	# empty file - shouldn't happen...
 
-	local PROTOCOL  DIR  HOST  USER  STRING  S  CMD  FIX
+	local STRING  S  CMD  FIX
 
 	if [[ ${TYPE} == "REMOTEWEBSITE" ]]; then
-		PROTOCOL="remotewebsiteprotocol"
-		DIR="remotewebsiteimagedir"
 		S="Remote Website Settings"
 	else
-		PROTOCOL="remoteserverprotocol"
-		DIR="remoteserverimagedir"
 		S="Remote Server Settings"
 	fi
-	HOST="${TYPE}_HOST"
-	USER="${TYPE}_USER"
 
 	# Parse output.
 	STRING="host name resolve timeout"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
-		HOST="$( settings ".${HOST}" "${ENV_FILE}" )"
 		error_type "* ${WSNs}Server Name${WSNe} ${WSVs}${HOST}${WSVe} not found."
 		echo "  FIX: Check the spelling of the server."
 	   	echo "       Make sure your network is up."
@@ -144,12 +140,9 @@ parse_output()
 
 	STRING="max-retries exceeded"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
-		error_type "* Unable to log in for unknown reason."
+		error_type "* Unable to log: max-retries exceeded."
 		echo "  FIX: Make sure the ${WSNs}Port${WSNe} is correct and your network is working."
-		PROTOCOL="$( settings ".${PROTOCOL}" )"
 		if [[ ${PROTOCOL} == "sftp" ]]; then
-			HOST="$( settings ".${HOST}" "${ENV_FILE}" )"
-			USER="$( settings ".${USER}" "${ENV_FILE}" )"
 			echo "       On your Pi, run:  ssh ${USER}@${HOST}"
 			echo "       When prompted to enter 'yes' or 'no', enter 'yes'."
 			echo "       You may need to do this if the IP address of your Pi changed."
@@ -166,8 +159,7 @@ parse_output()
 			# If we can't login we wouldn't know if the location was there.
 			error_type "* Login failed and unknown location found."
 		fi
-		DIR="$( settings ".${DIR}" )"
-		if [[ -n ${DIR} ]]; then
+		if [[ -n ${DIR} && ${DIR} != "null" ]]; then
 			echo "  The ${WSNs}Image Directory${WSNe} in the WebUI's '${S}' section is ${WSVs}${DIR}${WSVe}."
 			FIX="  FIX: Make sure the ${WSVs}${DIR}${WSVe} directory exists on the server."
 		else
@@ -197,9 +189,6 @@ parse_output()
 	# Certificate-related issues
 	STRING="The authenticity of host"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
-		HOST="$( settings ".${HOST}" "${ENV_FILE}" )"
-		USER="$( settings ".${USER}" "${ENV_FILE}" )"
-		PROTOCOL="$( settings ".${PROTOCOL}" )"
 		error_type "* The remote machine doesn't know about your Pi."
 		if [[ ${PROTOCOL} == "sftp" ]]; then
 			echo "  This happens the first time you use ${WSNs}Protocol${WSNe} 'sftp' on a new Pi."
@@ -214,7 +203,7 @@ parse_output()
 
 	STRING="certificate common name doesn't match requested host name"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
-		CMD="set ssl:check-hostname"
+		CMD="set ssl:check-hostname false"
 		error_type "* Certificate host verification issue."
 		fix "${CMD}" "${S}" "FIX: "
 	fi >&2
@@ -244,7 +233,7 @@ parse_output()
 do_test()
 {
 	local TYPE="${1}"
-	local bTEST_FILE  HUMAN_TYPE  PROTOCOL  DIR  REMOTE  CMD  D
+	local bTEST_FILE  HUMAN_TYPE  REMOTE  CMD  D
 
 	bTEST_FILE="$( basename "${TEST_FILE}" )"
 	if [[ ! -f ${TEST_FILE} ]]; then
@@ -256,26 +245,26 @@ do_test()
 		OUTPUT_FILE="${ALLSKY_TMP}/${ME}-${TYPE}.txt"
 	fi
 
+	# Set global variables used by us and parse_output().
+	HOST="$( settings ".${TYPE}_HOST" "${ENV_FILE}" )"
 	if [[ ${TYPE} == "REMOTEWEBSITE" ]]; then
-		HUMAN_TYPE="Remote Website"
+		HUMAN_TYPE="Remote Website ${HOST}"
 		PROTOCOL="remotewebsiteprotocol"
 		DIR="remotewebsiteimagedir"
 		REMOTE="web"
 	else
-		HUMAN_TYPE="Remote Server"
+		HUMAN_TYPE="Remote Server ${HOST}"
 		PROTOCOL="remoteserverprotocol"
 		DIR="remoteserverimagedir"
 		REMOTE="server"
 	fi
-
 	PROTOCOL="$( settings ".${PROTOCOL}" )"
 	if [[ $? -ne 0 || -z ${PROTOCOL} ]]; then
 		wE_ "${ME}: could not find ${WSNs}Protocol${WSNe} for ${HUMAN_TYPE}; unable to test." >&2
 		return 1
 	fi
-
-	DIR="$( settings ".${DIR}" )"
-	DIR="${DIR:=null}"
+	USER="$( settings ".${TYPE}_USER" "${ENV_FILE}" )"
+	DIR="$( settings --null ".${DIR}" )"
 
 	CMD="${ALLSKY_SCRIPTS}/upload.sh --debug --remote-${REMOTE}"
 	if [[ ${DEBUG} == "true" ]]; then
@@ -327,7 +316,9 @@ do_test()
 		fi
 	fi
 
-	rm -f "${TEST_FILE}"
+	if [[ ${TEST_FILE} == "${DEFAULT_TEST_FILE}" ]]; then
+		rm -f "${TEST_FILE}"
+	fi
 	[[ ! -s ${OUTPUT_FILE} ]] && rm -f "${OUTPUT_FILE}"
 	[[ ${DEBUG} == "true" && ! -s ${OUT} ]] && rm -f "${OUT}"
 
@@ -341,6 +332,12 @@ do_test()
 # it has to write to file descriptor 3 for the user to see the output
 # in real time.
 [[ ${DEBUG} == "true" ]] && exec 3>&2
+
+# Globals
+HOST=""
+USER=""
+PROTOCOL=""
+DIR=""
 
 MSG_FILE="/tmp/$$"
 ERR_MSG=""

@@ -19,9 +19,9 @@ if [[ ! -d ${ALLSKY_CONFIG} ]]; then
 	MSG="*** ====="
 	MSG+="\nAllsky needs to be installed.  Run:  cd ~/allsky; ./install.sh"
 	MSG+="\n*** ====="
-	echo -e "${RED}${MSG}${NC}" >&2
+	E_ "${MSG}" >&2
 
-	# Can't call addMessage.sh or copy_notification_image.sh or almost anything
+	# Can't call addMessage.sh or copyNotificationImage.sh or almost anything
 	# since they use ${ALLSKY_CONIG} and/or ${ALLSKY_TMP} which don't exist yet.
 	set_allsky_status "${ALLSKY_STATUS_NEVER_RUN}"
 	doExit "${EXIT_ERROR_STOP}" "no-image" "" ""
@@ -36,9 +36,9 @@ usage_and_exit()
 	MSG+="\n    '--help' displays this message and the help message from the capture program, then exits."
 	MSG+="\n    '--preview' displays images on your screen as they are taken."
 	if [[ ${RET} -eq 0 ]]; then
-		echo -e "${YELLOW}${MSG}${NC}"
+		W_ "${MSG}" >&2
 	else
-		echo -e "${RED}${MSG}${NC}"
+		E_ "${MSG}" >&2
 		exit "${RET}"
 	fi
 }
@@ -59,7 +59,7 @@ while [[ $# -gt 0 ]]; do
 			PREVIEW="true"
 			;;
 		-*)
-			echo -e "${RED}ERROR: Unknown argument: '${ARG}'${NC}." >&2
+			E_ "ERROR: Unknown argument: '${ARG}'." >&2
 			OK="false"
 			;;
 		*)
@@ -76,7 +76,7 @@ if [[ ${HELP} == "true" ]]; then
 fi
 
 # Make it easy to find the beginning of this run in the log file.
-echo "     ***** Starting AllSky *****"
+echo "     ***** Starting Allsky *****"
 
 # Make sure ${CAMERA_TYPE} is valid; if not, exit with a message.
 verify_CAMERA_TYPE "${CAMERA_TYPE}"
@@ -116,11 +116,11 @@ ARGS_FILE="${ALLSKY_TMP}/capture_args.txt"
 # or it's been at least a week since the last reminder.
 if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
 	DO_MSG="true"
-	if [[ -f ${OLD_ALLSKY_REMINDER} ]]; then
+	if [[ -f ${ALLSKY_OLD_REMINDER} ]]; then
 		CHECK_DATE="$( date -d '1 week ago' +'%Y%m%d%H%M.%S' )"
 		CHECK_TMP_FILE="${ALLSKY_TMP}/check_date"
 		touch -t "${CHECK_DATE}" "${CHECK_TMP_FILE}"
-		[[ ${OLD_ALLSKY_REMINDER} -nt "${CHECK_TMP_FILE}" ]] && DO_MSG="false"
+		[[ ${ALLSKY_OLD_REMINDER} -nt "${CHECK_TMP_FILE}" ]] && DO_MSG="false"
 		rm -f "${CHECK_TMP_FILE}"
 	fi
 	if [[ ${DO_MSG} == "true" ]]; then
@@ -128,12 +128,12 @@ if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
 		MSG+="\nIf you are no longer using it, it can be removed to save disk space."
 		"${ALLSKY_SCRIPTS}/addMessage.sh" --id AM_RM_PRIOR --type info --msg "${MSG}" \
 			--cmd "Click here to remove."
-		touch "${OLD_ALLSKY_REMINDER}"		# Sets the last time we displayed the message.
+		touch "${ALLSKY_OLD_REMINDER}"		# Sets the last time we displayed the message.
 	fi
 fi
 
 # If there's some checkAllsky.sh output, remind the user.
-if [[ -f ${CHECK_ALLSKY_LOG} ]]; then
+if [[ -f ${ALLSKY_CHECK_LOG} ]]; then
 	DO_MSG="true"
 	REMINDER="${ALLSKY_LOGS}/checkAllsky_reminder.txt"
 	if [[ -f ${REMINDER} ]]; then
@@ -147,7 +147,7 @@ if [[ -f ${CHECK_ALLSKY_LOG} ]]; then
 		MSG="<div class='errorMsgBig errorMsgBox center-div center-text'>"
 		MSG+="Reminder to make these changes to your settings"
 		MSG+="</div>"
-		MSG+="$( < "${CHECK_ALLSKY_LOG}" )"
+		MSG+="$( < "${ALLSKY_CHECK_LOG}" )"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" --id AM_RM_CHECK --type warning --msg "${MSG}" \
 			--cmd "<hr><span class='errorMsgBig'>If you made the changes click here.</span>"
 		touch "${REMINDER}"		# last time we displayed the message
@@ -155,9 +155,9 @@ if [[ -f ${CHECK_ALLSKY_LOG} ]]; then
 fi
 
 # This file contains information the user needs to act upon after an installation.
-if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
+if [[ -f ${ALLSKY_POST_INSTALL_ACTIONS} ]]; then
 	# If there's an initial message created during installation, display an image and stop.
-	F="${POST_INSTALLATION_ACTIONS}_initial_message"
+	F="${ALLSKY_POST_INSTALL_ACTIONS}_initial_message"
 	if [[ -f ${F} ]]; then
 		# There is already a message so don't add another,
 		# and there's already an image, so don't overwrite it.
@@ -167,7 +167,7 @@ if [[ -f ${POST_INSTALLATION_ACTIONS} ]]; then
 		doExit "${EXIT_ERROR_STOP}" "no-image" "" ""
 	else
 		MSG="Reminder: Click here to see the action(s) that need to be performed."
-		PIA="${POST_INSTALLATION_ACTIONS/${ALLSKY_HOME}/}"
+		PIA="${ALLSKY_POST_INSTALL_ACTIONS/${ALLSKY_HOME}/}"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" --id AM_RM_POST --type warning --msg "${MSG}" --url "${PIA}" \
 			--cmd "\nOnce you perform them, click here to remove this message."
 	fi
@@ -194,7 +194,7 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 				rm -f "${RESETTING_USB_LOG}"
 
 				MSG="Too many consecutive USB bus resets done (${NUM_USB_RESETS})."
-				echo -e "${RED}*** ${FATAL_MSG} ${MSG} Stopping Allsky.${NC}" >&2
+				E_ "*** ${FATAL_MSG} ${MSG} Stopping Allsky." >&2
 				IMAGE_MSG="${ERROR_MSG_PREFIX}"
 				IMAGE_MSG+="\nToo many consecutive\nUSB bus resets done!\n${SEE_LOG_MSG}"
 				doExit "${EXIT_ERROR_STOP}" "Error" 
@@ -206,7 +206,7 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 
 		MSG="WARNING: Resetting USB ports ${REASON/\\n/ }"
 		if [[ ${ON_TTY} == "true" ]]; then
-			echo "${YELLOW}${MSG}; restart ${ME} when done.${NC}" >&2
+			W_ "${MSG}; restart ${ME} when done." >&2
 		else
 			echo "${MSG}, then restarting." >&2
 			# The service will automatically restart this script.
@@ -216,7 +216,7 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 		echo "${NUM_USB_RESETS}" > "${RESETTING_USB_LOG}"
 
 		# Display a warning message
-		"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" \
+		"${ALLSKY_SCRIPTS}/generateNotificationImages.sh" --directory "${ALLSKY_TMP}" \
 			"${FILENAME}" "yellow" "" "85" "" "" \
 			"" "5" "yellow" "${EXTENSION}" "" \
 			"WARNING:\n\nResetting USB bus\n${REASON}.\nAttempt ${NUM_USB_RESETS}."
@@ -274,7 +274,7 @@ fi
 # Make sure the settings file is linked to the camera-specific file.
 if ! MSG="$( check_settings_link "${SETTINGS_FILE}" )" ; then
 	"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --cmd "${MSG}"
-	echo "ERROR: ${MSG}" >&2
+	E_ "ERROR: ${MSG}" >&2
 fi
 
 # Make directories that need to exist.
@@ -305,12 +305,12 @@ rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 # Optionally display a notification image.
 if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
 	# Can do this in the background to speed up startup.
-	"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 0 "StartingUp" 2>&1 &
+	"${ALLSKY_SCRIPTS}/copyNotificationImage.sh" --expires 0 "StartingUp" 2>&1 &
 fi
 
 # Only pass settings that are used by the capture program.
 if ! ARGS="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --capture-only )" ; then
-	echo "${ME}: ERROR: convertJSON.php returned: ${ARGS}"
+	E_ "${ME}: ERROR: convertJSON.php returned: ${ARGS}"
 	set_allsky_status "${ALLSKY_STATUS_ERROR}"
 	exit "${EXIT_ERROR_STOP}"
 fi
@@ -360,6 +360,8 @@ RETCODE=$?
 if [[ ${RETCODE} -eq ${EXIT_OK} ]]; then
 	[[ ${CAMERA_TYPE} == "ZWO" ]] && rm -f "${RESETTING_USB_LOG}"
 	set_allsky_status "${ALLSKY_STATUS_STOPPED}"
+	# The user probably stopped Allsky, and the WebUI's status will show "Stopped".
+	# In case the user wants to see the last image, do NOT call copyNotificationImage.sh.
 	doExit "${EXIT_OK}" ""
 fi
 
@@ -369,6 +371,9 @@ if [[ ${RETCODE} -eq ${EXIT_RESTARTING} ]]; then
 		NOTIFICATION_TYPE="NotRunning"
 	else
 		NOTIFICATION_TYPE="Restarting"
+	fi
+	if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
+		"${ALLSKY_SCRIPTS}/copyNotificationImage.sh" "${NOTIFICATION_TYPE}"
 	fi
 	set_allsky_status "${ALLSKY_STATUS_RESTARTING}"
 	doExit 0 "${NOTIFICATION_TYPE}"		# use 0 so the service is restarted
@@ -384,7 +389,7 @@ if [[ ${RETCODE} -eq ${EXIT_RESET_USB} ]]; then
 		NOTIFICATION_TYPE="Restarting"
 	fi
 	if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
-		"${ALLSKY_SCRIPTS}/copy_notification_image.sh" "${NOTIFICATION_TYPE}"
+		"${ALLSKY_SCRIPTS}/copyNotificationImage.sh" "${NOTIFICATION_TYPE}"
 	fi
 	set_allsky_status "${ALLSKY_STATUS_ERROR}"
 	doExit 0 ""		# use 0 so the service is restarted

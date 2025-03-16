@@ -3,12 +3,6 @@
 # Shell functions used by multiple scripts.
 # This file is "source"d into others, and must be done AFTER source'ing variables.sh.
 
-SUDO_OK="${SUDO_OK:-false}"
-if [[ ${SUDO_OK} == "false" && ${EUID} -eq 0 ]]; then
-	echo -e "\n${RED}${ME}: This script must NOT be run as root, do NOT use 'sudo'.${NC}\n" >&2
-	exit 1
-fi
-
 # Globals
 ZWO_VENDOR="03c3"
 # shellcheck disable=SC2034
@@ -38,21 +32,35 @@ else
 fi
 
 ##### output messages with appropriate color strings
-function O_() { echo -e "${GREEN}${1}${NC}" ; }
-function W_() { echo -e "${YELLOW}${1}${NC}" ; }
-function E_() { echo -e "${RED}${1}${NC}" ; }
-function D_() { echo -e "${cDEBUG}DEBUG: ${1}${NC}" ; }
+function O_() { echo -e "${cOK}${1}${cNC}" ; }
+function I_() { echo -e "${cINFO}${1}${cNC}" ; }
+function W_() { echo -e "${cWARNING}${1}${cNC}" ; }
+function E_() { echo -e "${cERROR}${1}${cNC}" ; }
+function D_() { echo -e "${cDEBUG}DEBUG: ${1}${cNC}" ; }
+function U_() { echo -e "${cUNDERLINE}${1}${cNC}" ; }
+function B_() { echo -e "${cBOLD}${1}${cNC}" ; }
 # If the output may go to the WebUI:
 function wO_() { echo -e "${wOK}${1}${wNC}" ; }
+function wI_() { echo -e "${wINFO}${1}${wNC}" ; }
 function wW_() { echo -e "${wWARNING}${1}${wNC}" ; }
 function wE_() { echo -e "${wERROR}${1}${wNC}" ; }
 function wD_() { echo -e "${wDEBUG}DEBUG: ${1}${wNC}" ; }
+function wU_() { echo -e "${wUNDERLINE}${1}${wNC}" ; }
+function wB_() { echo -e "${wBOLD}${1}${wNBOLD}" ; }
 # If the output may go to the "dialog" command (no "-e"):
-function dO_() { echo "${DIALOG_GREEN}${1}${DIALOG_NC}" ; }
-function dW_() { echo "${DIALOG_YELLOW}${1}${DIALOG_NC}" ; }
-function dE_() { echo "${DIALOG_RED}${1}${DIALOG_NC}" ; }
+function dO_() { echo "${DIALOG_OK}${1}${DIALOG_NC}" ; }
+function dI_() { echo "${DIALOG_INFO}${1}${DIALOG_NC}" ; }
+function dW_() { echo "${DIALOG_WARNING}${1}${DIALOG_NC}" ; }
+function dE_() { echo "${DIALOG_ERROR}${1}${DIALOG_NC}" ; }
 function dD_() { echo "${DIALOG_DEBUG}DEBUG: ${1}${DIALOG_NC}" ; }
 function dU_() { echo "${DIALOG_UNDERLINE}${1}${DIALOG_NC}" ; }
+function dB_() { echo "${DIALOG_BOLD}${1}${DIALOG_NC}" ; }
+
+SUDO_OK="${SUDO_OK:-false}"
+if [[ ${SUDO_OK} == "false" && ${EUID} -eq 0 ]]; then
+	E_ "\n${ME}: This script must NOT be run as root, do NOT use 'sudo'.\n" >&2
+	exit 1
+fi
 
 
 ##### Start and Stop Allsky
@@ -115,18 +123,19 @@ function doExit()
 			# Create a custom error message.
 			# If we error out before variables.sh is sourced in,
 			# ${FILENAME} and ${EXTENSION} won't be set so guess at what they are.
-			"${ALLSKY_SCRIPTS}/generate_notification_images.sh" --directory "${ALLSKY_TMP}" \
+			"${ALLSKY_SCRIPTS}/generateNotificationImages.sh" --directory "${ALLSKY_TMP}" \
 				"${FILENAME:-"image"}" \
 				"${COLOR}" "" "85" "" "" \
 				"" "10" "${COLOR}" "${EXTENSION:-"jpg"}" "" "${CUSTOM_MESSAGE}"
 			echo "Stopping Allsky: ${CUSTOM_MESSAGE}"
+
 		elif [[ ${TYPE} != "no-image" ]]; then
 			[[ ${OUTPUT_A_MSG} == "false" && ${TYPE} == "RebootNeeded" ]] && echo "Reboot needed"
-			"${ALLSKY_SCRIPTS}/copy_notification_image.sh" --expires 0 "${TYPE}" 2>&1
+			"${ALLSKY_SCRIPTS}/copyNotificationImage.sh" --expires 0 "${TYPE}" 2>&1
 		fi
 	fi
 
-	echo "     ***** AllSky Stopped *****" >&2
+	echo "     ***** Allsky Stopped *****" >&2
 
 	# Don't let the service restart us because we'll likely get the same error again.
 	# Stop here so the message above is output first.
@@ -167,7 +176,7 @@ function verify_CAMERA_TYPE()
 	fi
 
 	if [[ ${OK} == "false" ]]; then
-		echo -e "${RED}${FATAL_MSG} ${MSG}${NC}" >&2
+		E_ "${FATAL_MSG} ${MSG}" >&2
 
 		if [[ ${IGNORE_ERRORS} != "true" ]]; then
 			doExit "${EXIT_NO_CAMERA}" "Error" "${IMAGE_MSG}" "${MSG}"
@@ -225,9 +234,16 @@ function determineCommandToUse()
 		CMD_FOUND="true"	# one of the commands were found.
 
 		# Found a command - see if it works.
-		"${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1
+		# If the cable is bad the camera might be found but not work,
+		# and the command can hang.
+		timeout 10 "${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1
 		RET=$?
-		if [[ ${RET} -eq 137 ]]; then
+		if [[ ${RET} -eq 124 ]]; then
+			# Time out.  Let invoker know
+			echo "'${CMD_TO_USE_} timed out." >&2
+			return "${EXIT_ERROR_STOP}"
+
+		elif [[ ${RET} -eq 137 ]]; then
 			# If another of these commands is running ours will hang for
 			# about a minute then be killed with RET=137.
 			# If that happens, assume this is the command to use.
@@ -438,7 +454,7 @@ function validate_camera()
 	local CM="${2}"		# Camera model
 	local CN="${3}"		# Camera number
 	if [[ $# -lt 3 ]]; then
-		echo -e "\n${RED}Usage: ${FUNCNAME[0]} camera_type camera_model camera_number${NC}\n" >&2
+		E_ "\nUsage: ${FUNCNAME[0]} camera_type camera_model camera_number\n" >&2
 		return 2
 	fi
 	local IGNORE_ERRORS="${4:-false}"	# True if just checking
@@ -458,7 +474,7 @@ function validate_camera()
 		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
 		MSG+=" change the 'Camera Type' to 'Refresh' then save the settings."
 		if [[ ${ON_TTY} == "true" ]]; then
-			echo -e "\n${RED}${MSG}${NC}\n"
+			E_ "\n${MSG}\n"
 		else
 			URL="/index.php?page=configuration"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${MSG}" --url "${URL}"
@@ -469,7 +485,7 @@ function validate_camera()
 		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
 		MSG+=" change the 'Camera Model' to '${CM}' then save the settings."
 		if [[ ${ON_TTY} == "true" ]]; then
-			echo -e "\n${RED}${MSG}${NC}\n"
+			E_ "\n${MSG}\n"
 		else
 			URL="/index.php?page=configuration"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${MSG}" --url "${URL}"
@@ -480,7 +496,7 @@ function validate_camera()
 		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
 		MSG+=" change the 'Camera Type' to 'Refresh' then save the settings."
 		if [[ ${ON_TTY} == "true" ]]; then
-			echo -e "\n${RED}${MSG}${NC}\n"
+			E_ "\n${MSG}\n"
 		else
 			URL="/index.php?page=configuration"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${MSG}" --url "${URL}"
@@ -501,14 +517,14 @@ function validate_camera()
 
 		MSG="${CT} camera '${CM}' is not supported by Allsky."
 		if [[ ${ON_TTY} == "true" ]]; then
-			echo -e "\n${RED}${MSG}${NC}\n"
+			E_ "\n${MSG}\n"
 		else
 			MSG+="\n\nClick this message to ask that Allsky support this camera."
 			URL="/documentation/explanations/requestCameraSupport.html";
 			local CMD_MSG="Click here to see the supported ${CT} cameras."
 			[[ ${CT} == "ZWO" ]] && CMD_MSG+=" WARNING: the list is long!"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" \
-				--id "AM_NOT_SUPPORTED ${CT}" \
+				--id "AM_NOT_SUPPORTED --${CT}" \
 				--type warning \
 				--msg "${MSG}" \
 				--url "${URL}" \
@@ -636,14 +652,28 @@ function convertLatLong()
 function get_sunrise_sunset()
 {
 	local DO_ZERO="false"
-	if [[ ${1} == "--zero" ]]; then
-		DO_ZERO="true"
+	local DO_HEADER="true"
+
+	while [[ $# -gt 0 ]]; do
+		ARG="${1}"
+		case "${ARG,,}" in
+			--zero)
+				DO_ZERO="true"
+				;;
+			--no-header)
+				DO_HEADER="false"
+				;;
+			*)
+				break;
+				;;
+		esac
 		shift
-	fi
+	done
 
 	local ANGLE="${1}"
 	local LATITUDE="${2}"
 	local LONGITUDE="${3}"
+
 	#shellcheck source-path=.
 	source "${ALLSKY_HOME}/variables.sh"	|| return 1
 
@@ -655,7 +685,9 @@ function get_sunrise_sunset()
 	LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )"	|| return 2
 
 	local FORMAT="%-15s  %-17s  %6s   %-10s  %-10s\n"
-	echo "Daytime start    Nighttime start     Angle   Latitude    Longitude"
+	if [[ ${DO_HEADER} == "true" ]]; then
+		echo "Daytime start    Nighttime start     Angle   Latitude    Longitude"
+	fi
 	local STARTS=()
 	# sunwait output:  day_start, night_start
 	# Need to get rid of the comma.
@@ -711,13 +743,19 @@ function checkAndGetNewerFile()
 	else
 		local BRANCH="${GITHUB_MAIN_BRANCH}"
 	fi
+
+	if [[ $# -ne 3 ]]; then
+		echo "Usage: ${FUNCNAME[0]} [--branch b] current_file git_file downloaded_file" >&2
+		return 1
+	fi
+
 	local CURRENT_FILE="${1}"
-	local GIT_FILE="${GITHUB_RAW_ROOT}/allsky/${BRANCH}/${2}"
+	local GIT_FILE="${GITHUB_RAW_ROOT}/${GITHUB_ALLSKY_PACKAGE}/${BRANCH}/${2}"
 	local DOWNLOADED_FILE="${3}"
 	# Download the file and put in DOWNLOADED_FILE
 	X="$( curl --show-error --silent "${GIT_FILE}" )"
 	RET=$?
-	if [[ ${RET} -eq 0 && ${X} != "404: Not Found" ]]; then
+	if [[ ${RET} -eq 0 && ${X} != "400: Invalid request" && ${X} != "404: Not Found" ]]; then
 		# We really just check if the files are different.
 		echo "${X}" > "${DOWNLOADED_FILE}"
 		DOWNLOADED_CHECKSUM="$( sum "${DOWNLOADED_FILE}" )"
@@ -731,7 +769,7 @@ function checkAndGetNewerFile()
 			return 1
 		fi
 	else
-		echo "ERROR: '${GIT_FILE} not found!"
+		echo "ERROR: '${GIT_FILE}' not found!"
 		return 2
 	fi
 }
@@ -1100,7 +1138,7 @@ function one_instance()
 	# CAUSED_BY and PID aren't required
 
 	if [[ ${OK} == "false" ]]; then
-		echo -e "${RED}${ME}: ERROR: ${ERRORS}.${NC}" >&2
+		E_ "${ME}: ERROR: ${ERRORS}." >&2
 		return 1
 	fi
 
@@ -1124,31 +1162,34 @@ function one_instance()
 		# that means another process grabbed the lock.
 		# Since there may be several processes waiting, exit.
 		if [[ ${NUM_CHECKS} -eq ${MAX_CHECKS} || ${CURRENT_PID} -ne ${INITIAL_PID} ]]; then
-			echo -en "${YELLOW}" >&2
-			echo -e  "${ABORTED_MSG1}" >&2
+			local MSG="${ABORTED_MSG1}"
 			if [[ ${CURRENT_PID} -ne ${INITIAL_PID} ]]; then
-				echo -n  "Another process (PID=${CURRENT_PID}) got the lock." >&2
+				MSG+="Another process (PID=${CURRENT_PID}) got the lock."
 			else
-				echo -n  "Made ${NUM_CHECKS} attempts at waiting." >&2
-				echo -n  " Process ${CURRENT_PID} still has lock." >&2
+				MSG+="Made ${NUM_CHECKS} attempts at waiting."
+				MSG+=" Process ${CURRENT_PID} still has lock."
 			fi
-			echo -n  " If this happens often, check your settings. PID=${PID}" >&2
-			echo -e  "${NC}" >&2
+			MSG+=" If this happens often, check your settings. PID=${PID}"
+			E_ "${MSG}"
 			ps -fp "${CURRENT_PID}" >&2
 
 			# Keep track of aborts so user can be notified.
 			# If it's happening often let the user know.
 			[[ ! -d ${ALLSKY_ABORTS_DIR} ]] && mkdir "${ALLSKY_ABORTS_DIR}"
 			local AF="${ALLSKY_ABORTS_DIR}/${ABORTED_FILE}"
+			local ID="AM_RM_ABORTS_${ABORTED_FILE}"
 			echo -e "$( date )\t${ABORTED_FIELDS}" >> "${AF}"
 			NUM=$( wc -l < "${AF}" )
 			if [[ ${NUM} -eq 10 ]]; then
 				MSG="${NUM} ${ABORTED_MSG2} have been aborted waiting for others to finish."
 				[[ -n ${CAUSED_BY} ]] && MSG+="\n${CAUSED_BY}"
 				SEVERITY="warning"
-				MSG+="\nOnce you have resolved the cause, reset the aborted counter:"
-				MSG+="\n&nbsp; &nbsp; <code>rm -f '${AF}'</code>"
-				"${ALLSKY_SCRIPTS}/addMessage.sh" --type ${SEVERITY} --msg "${MSG}"
+				MSG+="\nOnce you have resolved the cause,"
+				"${ALLSKY_SCRIPTS}/addMessage.sh" \
+					--type ${SEVERITY} \
+					--no-date \
+					--id "${ID}" --cmd "click here to reset the counter" \
+					--msg "${MSG}"
 			fi
 
 			return 2

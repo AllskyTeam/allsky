@@ -229,15 +229,33 @@ if ($useRemoteWebsite) {
 				</a>
 				<div class="version-title version-title-color">
 					<span id="allskyStatus"><?php echo output_allsky_status(); ?></span>
-					<span class="nowrap">Version: <?php echo ALLSKY_VERSION; ?></span>
-<?php if ($useLocalWebsite) {
+<?php
+					$newest = getNewestAllskyVersion($changed);
+					if ($newest !== null) $newest = $newest['version'];
+					if ($newest !== null && $newest > ALLSKY_VERSION) {
+						$more = "title='New Version $newest Available'";
+						$more .= " style='background-color: red; color: white;'";
+
+						if ($changed) {
+							$msg = "<br>&nbsp; &nbsp; <strong>";
+							$msg .= "A new release of Allsky is available: $newest";
+							$msg .= "</strong><br><br>";
+							$cmd = ALLSKY_SCRIPTS . "/addMessage.sh";
+							$cmd .= " --no-date --type success --msg '${msg}'";
+							runCommand($cmd, "", "");
+						}
+					} else {
+						$more = "";
+					}
+					echo "<span $more class='nowrap'>Version: " . ALLSKY_VERSION . "</span>";
+if ($useLocalWebsite) {
 					echo "<br>";
 					echo "<span class='nowrap'>";
 					echo "<a external='true' class='version-title-color' href='allsky/index.php'>";
 					echo "Local Website</a>";
 					echo "</span>";
-} ?>
-<?php if ($useRemoteWebsite) {
+}
+if ($useRemoteWebsite) {
 					echo "&nbsp;&nbsp;&nbsp;&nbsp; ";
 					echo "<span class='nowrap'>";
 					echo "<a external='true' class='version-title-color' href='$remoteWebsiteURL'>";
@@ -373,15 +391,17 @@ if ($useRemoteWebsite) {
 								}
 
 								if ($id !== "") {
-									$m1 = "<br><a href='/execute.php?cmd=" . urlencode($id) . "'";
+									$m1 = "<br><a href='/execute.php?id=" . urlencode($id) . "'";
 									$m1 .= " class='executeAction' title='Click to perform action' target='_actions'>";
 									$message .= "${m1}${cmd_txt}</a>";
 								}
 
-								if ($count == 1)
-									$message .= " &nbsp; ($date)";
-								else
+								if ($count == 1) {
+									if ($date !== "")
+										$message .= " &nbsp; ($date)";
+								} else {
 									$message .= " &nbsp; ($count occurrences, last on $date)";
+								}
 							} else {
 								$level = "error";	// badly formed message
 								$message = "INTERNAL ERROR: Poorly formatted message: $line";

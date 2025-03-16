@@ -350,7 +350,7 @@ else # sftp/ftp/ftps
 		if [[ -n ${LFTP_COMMANDS} ]]; then
 			echo "${LFTP_COMMANDS}"
 			if [[ ${DEBUG} == "true" ]]; then
-				echo "echo '${LFTP_COMMANDS}'	# From FTP Commands"
+				echo "echo '${LFTP_COMMANDS}    # From FTP Commands'"
 			fi
 		fi
 
@@ -423,7 +423,7 @@ else # sftp/ftp/ftps
 		RET=$?
 	fi
 	if [[ ${RET} -ne 0 ]]; then
-		HEADER="${RED}*** ${ME}: ERROR,"
+		HEADER="*** ${ME}: ERROR,"
 		if [[ ${RET} -eq ${EXIT_ERROR_STOP} ]]; then
 			# shellcheck disable=SC2153
 			OUTPUT="$(
@@ -439,7 +439,6 @@ else # sftp/ftp/ftps
 				echo "DIRECTORY='${DIRECTORY}'"
 				echo "TEMP_NAME='${TEMP_NAME}'"
 				echo "DESTINATION_NAME='${DESTINATION_NAME}'"
-				echo -en "${NC}"
 				[[ -n ${OUTPUT} ]] && echo -e "\n${OUTPUT}"
 			)"
 		fi

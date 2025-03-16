@@ -45,7 +45,7 @@ WEBSITES="$( whatWebsites )"
 
 if [[ ${WEBSITES} != "none" ]]; then
 	echo -e "${ME}: ===== Posting twilight data"
-	"${ALLSKY_SCRIPTS}/postData.sh"
+	"${ALLSKY_SCRIPTS}/postData.sh" --from endOfNight
 fi
 
 # Generate keogram from collected images

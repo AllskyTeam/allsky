@@ -17,7 +17,7 @@ usage_and_exit()
 	exec >&2
 	local MSG="Usage: ${ME} DAY|NIGHT  full_path_to_image  [variable=value [...]]"
 	if [[ ${RET} -ne 0 ]]; then
-		echo -e "${RED}${MSG}${NC}"
+		E_ "${MSG}"
 	else
 		echo -e "${MSG}"
 	fi
@@ -40,11 +40,11 @@ export DAY_OR_NIGHT="${1}"
 export CURRENT_IMAGE="${2}"
 shift 2
 if [[ ! -f ${CURRENT_IMAGE} ]] ; then
-	echo -e "${RED}*** ${ME}: ERROR: File '${CURRENT_IMAGE}' not found; ignoring${NC}"
+	E_ "*** ${ME}: ERROR: File '${CURRENT_IMAGE}' not found; ignoring."
 	exit 2
 fi
 if [[ ! -s ${CURRENT_IMAGE} ]] ; then
-	echo -e "${RED}*** ${ME}: ERROR: File '${CURRENT_IMAGE}' is empty; ignoring${NC}"
+	E_ "*** ${ME}: ERROR: File '${CURRENT_IMAGE}' is empty; ignoring."
 	exit 2
 fi
 
@@ -88,10 +88,10 @@ IMAGE_NAME=$( basename "${CURRENT_IMAGE}" )		# just the file name
 WORKING_DIR=$( dirname "${CURRENT_IMAGE}" )		# the directory the image is currently in
 
 # Check for bad images.
-# Return code 99 means the image was bad and deleted and an error message
+# Return code ${EXIT_PARTIAL_OK} means the image was bad and deleted and an error message
 # displayed so don't continue.
 "${ALLSKY_SCRIPTS}/removeBadImages.sh" "${WORKING_DIR}" "${IMAGE_NAME}"
-[[ $? -eq 99 ]] && exit 99
+[[ $? -eq ${EXIT_PARTIAL_OK} ]] && exit 1
 
 CROP_TOP="$( settings ".imagecroptop" )"
 CROP_RIGHT="$( settings ".imagecropright" )"
@@ -104,7 +104,7 @@ if [[ ${CROP_IMAGE} -gt 0 ]]; then
 	# Typical "identify" output:
 	#	image.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.19257MiB 0.000u 0:00.000
 	if ! x=$( identify "${CURRENT_IMAGE}" 2>/dev/null ) ; then
-		echo -e "${RED}*** ${ME}: ERROR: '${CURRENT_IMAGE}' is corrupt; not saving.${NC}"
+		E_ "*** ${ME}: ERROR: '${CURRENT_IMAGE}' is corrupt; not saving."
 		exit 3
 	fi
 
@@ -176,7 +176,7 @@ if [[ ${AS_RESIZE_WIDTH} -gt 0 && ${AS_RESIZE_HEIGHT} -gt 0 ]]; then
 		ERROR_MSG+="\n'Image Resize Width' (${AS_RESIZE_HEIGHT}) must be a number."
 	fi
 	if [[ -n ${ERROR_MSG} ]]; then
-		echo -e "${RED}*** ${ME}: ERROR: Image resize number(s) invalid.${NC}"
+		E_ "*** ${ME}: ERROR: Image resize number(s) invalid."
 		display_error_and_exit "${ERROR_MSG}" "Image Resize"
 	fi
 
@@ -184,7 +184,7 @@ if [[ ${AS_RESIZE_WIDTH} -gt 0 && ${AS_RESIZE_HEIGHT} -gt 0 ]]; then
 		echo "${ME}: Resizing '${CURRENT_IMAGE}' to ${AS_RESIZE_WIDTH}x${AS_RESIZE_HEIGHT}"
 	fi
 	if ! convert "${CURRENT_IMAGE}" -resize "${AS_RESIZE_WIDTH}x${AS_RESIZE_HEIGHT}" "${CURRENT_IMAGE}" ; then
-		echo -e "${RED}*** ${ME}: ERROR: image resize failed; not saving${NC}"
+		E_ "*** ${ME}: ERROR: image resize failed; not saving."
 		exit 4
 	fi
 
@@ -215,11 +215,11 @@ if [[ ${CROP_IMAGE} -gt 0 ]]; then
 		# shellcheck disable=SC2086
 		convert "${CURRENT_IMAGE}" ${C} "${CURRENT_IMAGE}"
 		if [[ $? -ne 0 ]] ; then
-			echo -e "${RED}*** ${ME}: ERROR: CROP_IMAGE failed; not saving${NC}"
+			E_ "*** ${ME}: ERROR: CROP_IMAGE failed; not saving."
 			exit 4
 		fi
 	else
-		echo -e "${RED}*** ${ME}: ERROR: Crop number(s) invalid; not cropping image.${NC}"
+		E_ "*** ${ME}: ERROR: Crop number(s) invalid; not cropping image."
 		display_error_and_exit "${ERROR_MSG}" "CROP"
 	fi
 fi
@@ -234,7 +234,7 @@ if [[ ${AS_STRETCH_AMOUNT} -gt 0 ]]; then
  	convert "${CURRENT_IMAGE}" -sigmoidal-contrast \
 		"${AS_STRETCH_AMOUNT}x${AS_STRETCH_MIDPOINT}%" "${CURRENT_IMAGE}"
 	if [[ $? -ne 0 ]]; then
-		echo -e "${RED}*** ${ME}: ERROR: AUTO_STRETCH failed; not saving${NC}"
+		E_ "*** ${ME}: ERROR: AUTO_STRETCH failed; not saving."
 		exit 4
 	fi
 fi
@@ -290,7 +290,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 		X="$( settings ".thumbnailsizex" )"
 		Y="$( settings ".thumbnailsizey" )"
 		if ! convert "${CURRENT_IMAGE}" -resize "${X}x${Y}" "${THUMBNAILS_DIR}/${IMAGE_NAME}" ; then
-			echo -e "${YELLOW}*** ${ME}: WARNING: THUMBNAIL resize failed; continuing.${NC}"
+			W_ "*** ${ME}: WARNING: THUMBNAIL resize failed; continuing."
 		fi
 	fi
 
@@ -323,7 +323,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 					echo "${FINAL_FILE}" >> "${MINI_TIMELAPSE_FILES}"
 				elif [[ ${ALLSKY_DEBUG_LEVEL} -ge 1 ]]; then
 					# This shouldn't happen...
-					echo -e "${YELLOW}${ME} WARNING: '${FINAL_FILE}' already in set.${NC}" >&2
+					W_ "${ME} WARNING: '${FINAL_FILE}' already in set." >&2
 				fi
 				NUM_IMAGES=$( wc -l < "${MINI_TIMELAPSE_FILES}" )
 				LEFT=$((TIMELAPSE_MINI_IMAGES - NUM_IMAGES))
@@ -365,8 +365,9 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 					x="$( tail "-${KEEP}" "${MINI_TIMELAPSE_FILES}" )"
 					echo -e "${x}" > "${MINI_TIMELAPSE_FILES}"
 					if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-						echo -en "${YELLOW}${ME}: Replaced ${TIMELAPSE_MINI_FREQUENCY} oldest, LEFT=$LEFT, KEEP=$KEEP"
-						echo -e " timelapse file(s).${NC}" >&2
+						MSG="${ME}: Replaced ${TIMELAPSE_MINI_FREQUENCY} oldest, LEFT=$LEFT, KEEP=$KEEP"
+						MSG+=" timelapse file(s)."
+						W_ "${MSG}" >&2
 					fi
 				fi
 
@@ -385,7 +386,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 		fi
 
 	else
-		echo "*** ERROR: ${ME}: unable to copy ${CURRENT_IMAGE} ***"
+		E_ "*** ERROR: ${ME}: unable to copy ${CURRENT_IMAGE} ***"
 		SAVE_IMAGE="false"
 		TIMELAPSE_MINI_UPLOAD_VIDEO="false"			# so we can easily compare below
 	fi
@@ -446,7 +447,7 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 			S="${W}x${H}"
 			[[ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]] && echo "${ME}: Resizing upload file '${FILE_TO_UPLOAD}' to ${S}"
 			if ! convert "${CURRENT_IMAGE}" -resize "${S}" -gravity East -chop 2x0 "${FILE_TO_UPLOAD}" ; then
-				echo -e "${YELLOW}*** ${ME}: WARNING: Resize Uploads failed; continuing with larger image.${NC}"
+				W_ "*** ${ME}: WARNING: Resize Uploads failed; continuing with larger image."
 				# We don't know the state of $FILE_TO_UPLOAD so use the larger file.
 				FILE_TO_UPLOAD="${CURRENT_IMAGE}"
 			fi

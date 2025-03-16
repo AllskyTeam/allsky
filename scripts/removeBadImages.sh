@@ -25,7 +25,7 @@ usage_and_exit()
 	echo
 	local MSG="Usage: ${ME} [--help] [--debug]  directory  [file]"
 	if [[ "${RET}" -ne 0 ]]; then
-		echo -e "${RED}${MSG}${NC}"
+		E_ "${MSG}"
 	else
 		echo -e "${MSG}"
 	fi
@@ -53,7 +53,7 @@ while [[ $# -gt 0 ]]; do
 				r="would be removed"
 				;;
 			-*)
-				echo -e "${RED}${ME}: Unknown argument '${ARG}'.${NC}" >&2
+				E_ "${ME}: Unknown argument '${ARG}'." >&2
 				OK="false"
 				;;
 			*)
@@ -79,12 +79,12 @@ fi
 # If it's not a full pathname, assume it's in ${ALLSKY_IMAGES}.
 [[ ${DIRECTORY:0:1} != "/" ]] && DIRECTORY="${ALLSKY_IMAGES}/${DIRECTORY}"
 if [[ ! -d ${DIRECTORY} ]]; then
-	echo -e "${RED}${ME} '${DIRECTORY}' is not a directory${NC}" >&2
+	E_ "${ME} '${DIRECTORY}' is not a directory." >&2
 	exit 2
 fi
 
 if [[ ${FILE} != "" && ! -f ${DIRECTORY}/${FILE} ]]; then
-	echo -e "${RED}${ME} '${FILE}' not found in '${DIRECTORY}'${NC}" >&2
+	E_ "${ME} '${FILE}' not found in '${DIRECTORY}'." >&2
 	exit 2
 fi
 
@@ -112,7 +112,7 @@ BAD_LIMIT=5
 
 set +a		# turn off auto-export since ${IMAGE_FILES} might be huge and produce errors
 
-cd "${DIRECTORY}" || exit 99
+cd "${DIRECTORY}" || exit "${EXIT_ERROR_STOP}"
 
 # If the LOW threshold is 0 or < 0 it's disabled.
 # If the HIGH threshold is 0 or 1.0 (nothing can be brighter than 1.0) it's disabled.
@@ -166,16 +166,16 @@ for f in ${IMAGE_FILES} ; do
 		BAD="'${f}' (zero length)"
 	else
 		if [[ -n ${AS_MEAN} ]]; then
-			MEAN="${AS_MEAN}"		# single image: mean passed to us
+			MEAN="${AS_MEAN/,/.}"		# single image: mean passed to us.  Allow commas
 		elif ! MEAN=$( ${NICE} convert "${f}" -colorspace Gray -format "%[fx:image.mean]" info: 2>&1 ) ; then
 			# Do NOT set BAD since this isn't necessarily a problem with the file.
-			echo -e "${RED}***${ME} ERROR: 'convert ${f}' failed; leaving file.${NC}" >&2
+			E_ "***${ME} ERROR: 'convert ${f}' failed; leaving file." >&2
 			echo -e "Message=${MEAN}" >&2
 			continue
 		fi
 		if [[ -z ${MEAN} ]]; then
 			# Do NOT set BAD since this isn't necessarily a problem with the file.
-			echo -e "${RED}***${ME} ERROR: 'convert ${f}' returned nothing; leaving file.${NC}" >&2
+			E_ "***${ME} ERROR: 'convert ${f}' returned nothing; leaving file." >&2
 			continue
 		fi
 
@@ -201,8 +201,9 @@ for f in ${IMAGE_FILES} ; do
 			LOW_CHECK=$(  gawk -v x="${LOW}"  'BEGIN { printf("%d", x * 100000); }' )
 
 			if [[ ${DEBUG} == "true" ]]; then
-				echo -n "${ME} ${FILE}: MEAN=${MEAN}, MEAN_CHECK=${MEAN_CHECK},"
-				echo " LOW_CHECK=${LOW_CHECK}, HIGH_CHECK=${HIGH_CHECK}"
+				MSG="${ME} ${FILE}: MEAN=${MEAN}, MEAN_CHECK=${MEAN_CHECK},"
+				MSG+=" LOW_CHECK=${LOW_CHECK}, HIGH_CHECK=${HIGH_CHECK}"
+				D_ "${MSG}"
 			fi
 			MSG=""
 			if [[ ${HIGH_CHECK} -ne 0 ]]; then
@@ -242,7 +243,7 @@ done
 if [[ ${num_bad} -eq 0 ]]; then
 	# If only one file, "no news is good news".
 	if [[ -z ${FILE} ]]; then
-		echo -e "\n${ME} ${GREEN}No bad files found.${NC}" >&2
+		O_ "\n${ME} N}No bad files found." >&2
 		rm -f "${OUTPUT}"
 	else
 		rm -f "${ALLSKY_BAD_IMAGE_COUNT}"
@@ -257,9 +258,9 @@ else
 		BAD_COUNT="$( wc -l < "${ALLSKY_BAD_IMAGE_COUNT}" )"
 		if [[ $((BAD_COUNT % BAD_LIMIT)) -eq 0 ]]; then
 			MSG="Multiple consecutive bad images."
-			MSG+="\nCheck the values of 'Remove Bad Images Threshold Low',"
-			MSG+=" 'Remove Bad Images Threshold High',"
-			MSG+=" and 'Max Auto-Exposure' in the WebUI."
+			MSG+="\nCheck the values of ${WSNs}Remove Bad Images Threshold Low${WSNe},"
+			MSG+=" ${WSNs}Remove Bad Images Threshold High${WSNe},"
+			MSG+=" and ${WSNs}Max Auto-Exposure${WSNe} in the WebUI."
 			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${MSG}" >&2
 		fi
 		if [[ ${BAD_COUNT} -ge "${BAD_LIMIT}" ]]; then
@@ -267,20 +268,18 @@ else
 			DIR="$( dirname "${ALLSKY_BAD_IMAGE_COUNT}" )"
 			FILE="$( basename "${ALLSKY_BAD_IMAGE_COUNT}" )"
 
-			"${ALLSKY_SCRIPTS}/generate_notification_images.sh" \
+			"${ALLSKY_SCRIPTS}/generateNotificationImages.sh" \
 				--directory "${ALLSKY_TMP}" \
 				"${FILENAME}" "yellow" "" "85" "" "" \
 	 			"" "5" "yellow" "${EXTENSION}" "" \
 				"WARNING:\n${BAD_COUNT} consecutive\nbad images. See:\n${DIR}/\n  ${FILE}" >&2
-
 		fi
-
 	fi
 fi
 
 if [[ ${num_bad} -eq 0 ]]; then
 	exit 0
 else
-	exit 99		# "99" means we deleted at least one file.
+	exit "${EXIT_PARTIAL_OK}"		# partially ok because we deleted at least one file.
 fi
 

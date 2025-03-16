@@ -9,6 +9,9 @@ ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck disable=SC1091 source=variables.sh
 source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+
 
 # The file is tab-separated:    type  date  count  message  url
 TAB="$( echo -e "\t" )"
@@ -39,18 +42,28 @@ function convert_string()
 usage_and_exit()
 {
 	local RET=${1}
+
+	local MSG
 	exec >&2
 	echo
-	[[ ${RET} -ne 0 ]] && echo -en "${wERROR}"
-	echo "Usage: ${ME} [--id ID [--cmd TEXT]] [--delete] [--url url]  --type message_type  --msg message"
-	[[ ${RET} -ne 0 ]] && echo -en "${wNC}"
+	MSG="Usage: ${ME} [--id ID [--cmd c]] [--delete] [--no-date] [--url u] --type t --msg m"
+	if [[ ${RET} -eq 0 ]]; then
+		echo -e "${MSG}"
+	else
+		wE_ "${MSG}"
+	fi
 	echo
-	echo "'message_type' is 'success', 'warning', 'error', 'info', or 'debug'."
-	echo "'url' is a URL to (normally) a documentation page."
+	echo "where:"
+	echo "  --cmd c      displays 'c' as a link in the WebUI."
+	echo "  --delete     if specified, only '--id ID' is required."
+	echo "  --no-date    does not add the current date to the message."
+	echo "  --url u      'u' is a URL to (normally) a documentation page."
+	echo "  --type t     't' is 'success', 'warning', 'error', 'info', or 'debug'."
 	echo
 	exit "${RET}"
 }
 
+ADD_DATE="true"
 OK="true"
 DO_HELP="false"
 ID=""
@@ -73,6 +86,9 @@ while [[ $# -gt 0 ]]; do
 			DELETE="true"
 			shift
 			;;
+		"--no-date")
+			ADD_DATE="false"
+			;;
 		"--cmd")
 			CMD_TEXT="$( convert_string "${2}" )"
 			shift
@@ -93,7 +109,7 @@ while [[ $# -gt 0 ]]; do
 			shift
 			;;
 		-*)
-			echo -e "${wERROR}Unknown argument '${ARG}' ignoring.${wNC}" >&2
+			wE_ "Unknown argument '${ARG}' ignoring." >&2
 			OK="false"
 			;;
 		*)
@@ -105,12 +121,16 @@ done
 
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
-[[ -z ${TYPE} || -z ${MESSAGE} ]] && usage_and_exit 1
+if [[ ${DELETE} == "false" && (-z ${TYPE} || -z ${MESSAGE}) ]]; then
+	[[ -z ${TYPE} ]] && wE_ "--type not specified" >&2
+	[[ -z ${MESSAGE} ]] && wE_ "--msg not specified" >&2
+	usage_and_exit 1
+fi
 
 if [[ ${DELETE} == "true" ]]; then
 	[[ ! -f ${ALLSKY_MESSAGES} ]] && exit 0
 	if [[ -z ${ID} ]]; then
-		echo "${ME}: ERROR: delete specified but no message id given." >&2
+		wE_ "${ME}: ERROR: delete specified but no message id given." >&2
 		exit 1
 	fi
 
@@ -132,10 +152,15 @@ elif [[ ${TYPE} == "debug" ]]; then
 elif [[ ${TYPE} == "no-image" ]]; then
 	TYPE="success"
 elif [[ ${TYPE} != "warning" && ${TYPE} != "info" && ${TYPE} != "success" ]]; then
-	echo -e "${wERROR}ERROR: unknown message type: '${TYPE}'.${wNC}" >&2
-	echo 2
+	wE_ "ERROR: unknown message type: '${TYPE}'." >&2
+	exit 2
 fi
-DATE="$( date '+%B %d, %r' )"
+
+if [[ ${ADD_DATE} == "true" ]]; then
+	DATE="$( date '+%B %d, %r' )"
+else
+	DATE=""
+fi
 
 if [[ -f ${ALLSKY_MESSAGES} ]] &&  M="$( grep "${TAB}${ESCAPED_MESSAGE}${TAB}" "${ALLSKY_MESSAGES}" )" ; then
 	COUNT=0
@@ -149,7 +174,7 @@ if [[ -f ${ALLSKY_MESSAGES} ]] &&  M="$( grep "${TAB}${ESCAPED_MESSAGE}${TAB}" "
 	# use to separate the sed components?
 	EXPRESSION="\%${TAB}${ESCAPED_MESSAGE}${TAB}$%d"
 	if ! sed -i -e "${EXPRESSION}"  "${ALLSKY_MESSAGES}" ; then
-		echo "${ME}: Warning, sed -e '${EXPRESSION}' failed." >&2
+		wW_ "${ME}: Warning, sed -e '${EXPRESSION}' failed." >&2
 	fi
 else
 	COUNT=1

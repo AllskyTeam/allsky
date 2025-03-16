@@ -1,4 +1,4 @@
-# Allsky Camera ![Release](https://img.shields.io/badge/Version-v2024.12.06_01-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
+# Allsky Camera ![Release](https://img.shields.io/badge/Version-v2024.12.06_02-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
 
 This is the source code for the Allsky Camera project described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/).
 &nbsp;  
@@ -13,6 +13,7 @@ This is the source code for the Allsky Camera project described [on Instructable
 In order to run the Allsky software you need:
 
  * A Raspberry Pi Zero 2, Pi 2, Pi 3, Pi 4, Pi 5, or Le Potato.
+ * A version of the Raspberry Pi OS.  Other operating systems like Ubuntu are NOT supported.  If possible use the newest Bookworm 64-bit release of Pi OS with the "Desktop" version. Bullseye will also work. __Buster support will be dropped in the next major release__.
  * A camera:
     * Any ZWO camera sold before February 1, 2025,
     * or one of the following cameras:
@@ -33,7 +34,6 @@ In order to run the Allsky software you need:
 
 &nbsp;  
 > __NOTES:__
->	- Only the Raspberry Pi OS is supported.  Other operating systems like Ubuntu are NOT supported.  If possible use the newest Bookworm 64-bit release. Bullseye will also work. __Buster support will be dropped in the next major release__.
 >	- The ZWO ASI120-series cameras are __not__ recommended due to their tendency to produce poor-quality images.
 >	- The Pi Zero with its limited memory and _very_ limited CPU power is not recommended.  You probably won't be able to create keograms, startrails, or timelapse videos.
 >	- The Pi Zero 2 with its limited memory and somewhat limited CPU power is not recommended unless cost is the only concern.  Creating keograms, startrails, and timelapse videos may or may not be possible.

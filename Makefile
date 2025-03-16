@@ -23,7 +23,7 @@ endif
 %:
 	@make -C src $@
 	@make -C config_repo $@
-	@make -C notification_images $@
+	@make -C notificationImages $@
 	@make -C scripts $@
 
 deps:
@@ -39,7 +39,7 @@ else
 	@echo `date +%F\ %R:%S` Starting install...
 	@make -C src $@
 	@make -C config_repo $@
-	@make -C notification_images $@
+	@make -C notificationImages $@
 	@make -C scripts $@
 	@if [ $(PKGBUILD) -eq 1 ]; then \
 	  [ ! -e $(DESTDIR)$(libexecdir) ] && mkdir -p $(DESTDIR)$(libexecdir) \

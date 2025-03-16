@@ -516,7 +516,7 @@ if ($debug) {
 					// This must run with different permissions so makeChanges.sh can
 					// write to the allsky directory.
 					$CMD = "sudo --user=" . ALLSKY_OWNER . " ";
-					$CMD .= ALLSKY_SCRIPTS . "/makeChanges.sh $cmdDebugArg $moreArgs $changes";
+					$CMD .= ALLSKY_SCRIPTS . "/makeChanges.sh --from WebUI $cmdDebugArg $moreArgs $changes";
 
 					# Let makeChanges.sh display any output.
 					// false = don't add anything to the message.
@@ -592,7 +592,7 @@ if ($debug) {
 							$moreArgs .= " --allFiles";
 
 						// postData.sh will output necessary messages.
-						$cmd = "${CMD}/postData.sh --fromWebUI $cmdDebugArg $moreArgs";
+						$cmd = "${CMD}/postData.sh --from WebUI $cmdDebugArg $moreArgs";
 						$worked = runCommand($cmd, "", "success", false);
 
 						if ($fromConfiguration) {
@@ -602,7 +602,7 @@ if ($debug) {
 							if ($result != null) {
 								$result = implode("<br>", $result);
 								// Not worth checking if the update worked.
-								updateFile(ALLSKY_CHECK_ALLSKY_LOG, $result, "checkAllsky", true);
+								updateFile(ALLSKY_CHECK_LOG, $result, "checkAllsky", true);
 	
 								$msg = "<div class='errorMsgBig errorMsgBox center-div center-text'>";
 								$msg .= "Suggested changes to your settings<br>";

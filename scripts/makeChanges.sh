@@ -11,12 +11,14 @@ source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/checkFunctions.sh"			|| exit "${EXIT_ERROR_STOP}"
 
 function usage_and_exit()
 {
 	exec >&2
 	local E="\n"
-	E+="Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly] [--fromInstall] [--addNewSettings]"
+	E+="Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly] [--from f] [--addNewSettings]"
 	E+="\n\tkey  label  old_value  new_value  [...]"
 	wE_ "${E}"
 	echo "There must be a multiple of 4 key/label/old_value/new_value arguments."
@@ -51,8 +53,9 @@ while [[ $# -gt 0 ]]; do
 		--cameratypeonly)
 			CAMERA_TYPE_ONLY="true"
 			;;
-		--frominstall)
-			FROM="install"
+		--from)
+			FROM="${2,,}"
+			shift
 			;;
 		--addnewsettings)
 			ADD_NEW_SETTINGS="true"
@@ -71,8 +74,7 @@ while [[ $# -gt 0 ]]; do
 	shift
 done
 
-if [[ ${ON_TTY} == "false" ]]; then
-	FROM_WEBUI="--fromWebUI"
+if [[ ${FROM} == "webui" ]]; then
 	# The WebUI will display our output in an
 	# appropriate style if ERROR: or WARNING: is in the message, so
 	# don't provide our own format.
@@ -81,7 +83,6 @@ if [[ ${ON_TTY} == "false" ]]; then
 	wWARNING=""
 	wNC=""
 else
-	FROM_WEBUI=""
 	ERROR_PREFIX="${ME}: "
 fi
 
@@ -103,8 +104,9 @@ WEBSITE_CONFIG=()
 WEBSITE_VALUE_CHANGED="false"
 GOT_WARNING="false"
 SHOW_ON_MAP=""
-CHECK_REMOTE_WEBSITE_ACCESS="false"
-CHECK_REMOTE_SERVER_ACCESS="false"
+CHECK_REMOTE_WEBSITE_ACCESS="false"		# check URL
+CHECK_REMOTE_WEBSITE_UPLOAD="false"		# check upload to host name
+CHECK_REMOTE_SERVER_UPLOAD="false"		# check upload to host name
 USE_REMOTE_WEBSITE=""
 USE_REMOTE_SERVER=""
 
@@ -322,7 +324,7 @@ do
 	if debug ; then
 		MSG="${KEY}: Old=[${OLD_VALUE}], New=[${NEW_VALUE}]"
 		wD_ "${ME}: ${MSG}"
-		if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
+		if [[ ${FROM} == "webui" ]]; then
 			echo -e "<script>console.log('${MSG}');</script>"
 		fi
 	fi
@@ -414,7 +416,7 @@ do
 				if [[ -n ${CAMERA_NUMBER} ]]; then
 					MSG="Re-creating files for cameratype ${CAMERA_TYPE},"
 					MSG+=" cameranumber ${CAMERA_NUMBER}"
-					if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
+					if [[ ${FROM} == "webui" ]]; then
 						echo -e "<script>console.log('${MSG}');</script>"
 					elif debug ; then
 						wD_ "${MSG}"
@@ -778,28 +780,36 @@ do
 			;;
 
 		"useremotewebsite")
-			[[ ${NEW_VALUE} == "true" ]] && CHECK_REMOTE_WEBSITE_ACCESS="true"
+			if [[ ${NEW_VALUE} == "true" ]]; then
+				CHECK_REMOTE_WEBSITE_ACCESS="true"
+				CHECK_REMOTE_WEBSITE_UPLOAD="true"
+			fi
 			;;
 
 		"remotewebsiteprotocol" | "remotewebsiteimagedir")
-			CHECK_REMOTE_WEBSITE_ACCESS="true"
+			CHECK_REMOTE_WEBSITE_UPLOAD="true"
 			;;
 
 		remotewebsite_*)		# from REMOTE_WEBSITE_* settings in env file
 			CHECK_REMOTE_WEBSITE_ACCESS="true"
+			CHECK_REMOTE_WEBSITE_UPLOAD="true"
 			;;
 
+
 		"useremoteserver")
-			[[ ${NEW_VALUE} == "true" ]] && CHECK_REMOTE_SERVER_ACCESS="true"
+			if [[ ${NEW_VALUE} == "true" ]]; then
+				CHECK_REMOTE_SERVER_UPLOAD="true"
+			fi
 			;;
 
 		"remoteserverprotocol" | "remoteserverimagedir")
-			CHECK_REMOTE_SERVER_ACCESS="true"
+			CHECK_REMOTE_SERVER_UPLOAD="true"
 			;;
 
 		remoteserver_*)			# from env file
-			CHECK_REMOTE_SERVER_ACCESS="true"
+			CHECK_REMOTE_SERVER_UPLOAD="true"
 			;;
+
 
 		"overlaymethod")
 			if [[ ${NEW_VALUE} -eq 1 ]]; then		# 1 == "overlay" method
@@ -898,7 +908,7 @@ do
 				MSG+="Unknown VCODEC: '${NEW_VALUE}'; resetting to '${OLD_VALUE}'."
 				MSG+="${wBR}Execute: ffmpeg -encoders"
 				MSG+="${wBR}for a list of VCODECs."
-				sW_ "${MSG}"
+				wW_ "${MSG}"
 
 				# Restore to old value
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "text"
@@ -916,7 +926,7 @@ do
 				MSG+="Unknown Pixel Format: '${NEW_VALUE}'; resetting to '${OLD_VALUE}'."
 				MSG+="Execute: ffmpeg -pix_fmts"
 				MSG+="for a list of formats."
-				sW_ "${MSG}"
+				wW_ "${MSG}"
 
 				# Restore to old value
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "text"
@@ -939,14 +949,14 @@ do
 				W="WARNING: "
 				W+="Disabling ${WSNs}${LABEL}${WSNe} should NOT be done if your Pi is"
 				W+=" accessible on the Internet.  It's a HUGE security risk!"
-				sW_ "${W}"
+				wW_ "${W}"
 			fi
 			;;
 
 		*)
 			W="WARNING: "
 			W+="Unknown key '${KEY}'; ignoring.  Old=${OLD_VALUE}, New=${NEW_VALUE}"
-			sW_ "${W}"
+			wW_ "${W}"
 			(( NUM_CHANGED-- ))
 			;;
 
@@ -957,20 +967,35 @@ done
 
 [[ ${NUM_CHANGED} -le 0 ]] && exit 0		# Nothing changed
 
-# TODO: Use  ${S_useremotewebsite} and ${S_useremoteserver}  ??
-USE_REMOTE_WEBSITE="$( settings ".useremotewebsite" )"
-USE_REMOTE_SERVER="$( settings ".useremoteserver" )"
+USE_REMOTE_WEBSITE="${S_useremotewebsite}"
+USE_REMOTE_SERVER="${S_useremoteserver}"
 if [[ ${USE_REMOTE_WEBSITE} == "true" || ${USE_REMOTE_SERVER} == "true" ]]; then
 	if [[ ! -f ${ALLSKY_ENV} ]]; then
 		cp "${REPO_ENV_FILE}" "${ALLSKY_ENV}"
 	fi
 
-	if [[ ${USE_REMOTE_WEBSITE} == "true" && ${CHECK_REMOTE_WEBSITE_ACCESS} == "true" ]]; then
-# TODO:   ERR="$( _check_web_connectivity --website --from "${FROM}" 2>&1 )"
+	if [[ ${USE_REMOTE_WEBSITE} == "true" ]]; then
+		if [[ ${CHECK_REMOTE_WEBSITE_ACCESS} == "true" ]]; then
+			# Check URL(s).  They are optional.
+			if [[ ${S_remotewebsiteurl} ]]; then
+				# Don't check image URL in case they Website isn't complete yet.
+				if ! ERR="$( _check_web_connectivity --website --from "${FROM}" 2>&1 )" ; then
+					if [[ ${FROM} == "webui" ]]; then
+						wE_ "Unable to access remote Website '${S_remotewebsiteurl}': ${E}"
+					fi
+				fi
+			fi
+		fi
 
-		# testUpload.sh displays error messages
-# TODO: check return code.
-		"${ALLSKY_SCRIPTS}/testUpload.sh" --website
+		if [[ ${CHECK_REMOTE_WEBSITE_UPLOAD} == "true" ]]; then
+			# Check Server Name by trying to upload to it.
+			# testUpload.sh displays error messages
+			if ! E="$( "${ALLSKY_SCRIPTS}/testUpload.sh" --website 2>&1 )" ; then
+				if [[ ${FROM} == "webui" ]]; then
+					wE_ "${E}"
+				fi
+			fi
+		fi
 
 		# If the remote configuration file doesn't exist assume it's because
 		# the user enabled it but hasn't yet "installed" it (which creates the file).
@@ -978,19 +1003,23 @@ if [[ ${USE_REMOTE_WEBSITE} == "true" || ${USE_REMOTE_SERVER} == "true" ]]; then
 			W="WARNING: "
 			W+="The Remote Website is now enabled but hasn't been installed yet."
 			W+="${wBR}Please do so now."
-			if [[ ${ON_TTY} == "false" ]]; then		# called from WebUI.
+			if [[ ${FROM} == "webui" ]]; then
 				W+="${wBR}See <a allsky='true' external='true'"
 				W+=" href='/documentation/installations/AllskyWebsite.html'>the documentation</a>"
 			fi
-			sW_ "${W}"
+			wW_ "${W}"
 			[[ ${WEBSITES} != "local" ]] && WEBSITES=""
 		fi
 	fi
 
-	if [[ ${USE_REMOTE_SERVER} == "true" && ${CHECK_REMOTE_SERVER_ACCESS} == "true" ]]; then
-# TODO:   ERR="$( _check_web_connectivity --server --from "${FROM}" 2>&1 )"
-# TODO: check return code.
-		"${ALLSKY_SCRIPTS}/testUpload.sh" --server
+	if [[ ${USE_REMOTE_SERVER} == "true" ]]; then
+		if [[ ${CHECK_REMOTE_SERVER_UPLOAD} == "true" ]]; then
+			if ! E="$( "${ALLSKY_SCRIPTS}/testUpload.sh" --server 2>&1 )" ; then
+				if [[ ${FROM} == "webui" ]]; then
+					wE_ "${E}"
+				fi
+			fi
+		fi
 	fi
 fi
 
@@ -1014,8 +1043,7 @@ if [[ ${#WEBSITE_CONFIG[@]} -gt 0 ]]; then
 
 		FILE_TO_UPLOAD="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 
-# TODO: Use  ${S_remotewebsiteimagedir}  ??
-		IMAGE_DIR="$( settings ".remotewebsiteimagedir" )"
+		IMAGE_DIR="${S_remotewebsiteimagedir}"
 		debug && wD_ "Uploading '${FILE_TO_UPLOAD}' to remote Website."
 
 		if ! "${ALLSKY_SCRIPTS}/upload.sh" --silent --remote-web \
@@ -1051,7 +1079,7 @@ if [[ ${RUN_POSTTOMAP} == "true" ]]; then
 	if [[ ${SHOW_ON_MAP} == "true" ]]; then
 		debug && wD_ "Executing postToMap.sh"
 		# shellcheck disable=SC2086
-		"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} ${FROM_WEBUI} ${POSTTOMAP_ACTION}
+		"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} --from "${FROM}" ${POSTTOMAP_ACTION}
 	fi
 fi
 

@@ -17,14 +17,22 @@ source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 function usage_and_exit()
 {
 	local RET=${1}
-	{
-		echo
-		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-		echo "Usage: ${ME} [--help] [--debug] [--settingsOnly] [--fromWebUI] [--allfiles]"
-		[[ ${RET} -ne 0 ]] && echo -en "${NC}"
-		echo "    where:"
-		echo "      '--allfiles' causes all 'view settings' files to be uploaded"
-	} >&2
+	
+	exec >&2
+	local USAGE="Usage: ${ME} [--help] [--debug] [--settingsOnly] [--from f] [--allfiles]"
+	echo
+	if [[ ${RET} -eq 0 ]]; then
+		echo -e "${USAGE}"
+	else
+		E_ "${USAGE}"
+	fi
+	echo "where:"
+	echo "  --help          displays this message and exits"
+	echo "  --settingsOnly  only uploads the settings.json file"
+	echo "  --from f        specifies who called ${ME}:"
+	echo "      WebUI | install | endOfNight"
+	echo "  --allfiles      causes all 'view settings' files to be uploaded"
+
 	exit "${RET}"
 }
 
@@ -35,8 +43,8 @@ function upload_file()
 	local DIRECTORY="${3}"		# Directory to put file in
 	if [[ ! -f ${FILE_TO_UPLOAD} ]]; then
 		local MSG="File to upload '${FILE_TO_UPLOAD}' - file not found."
-		echo -e "${RED}${ME}: ERROR: ${MSG}.${NC}" >&2
-		if [[ ${FROM_WEBUI} == "false" ]]; then
+		E_ "${ME}: ERROR: ${MSG}." >&2
+		if [[ ${FROM} == "endofnight" ]]; then
 			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${MSG}"
 		fi
 		return 1
@@ -49,7 +57,7 @@ function upload_file()
 }
 
 # If called from the WebUI, it displays our output so don't call addMessage.sh.
-FROM_WEBUI="false"
+FROM=""
 HELP="false"
 DEBUG="false"
 SETTINGS_ONLY="false"
@@ -70,11 +78,12 @@ while [[ $# -gt 0 ]]; do
 		--settingsonly)
 			SETTINGS_ONLY="true"
 			;;
-		--fromwebui)
-			FROM_WEBUI="true"
+		--from)
+			FROM="${2,,}"
+			shift
 			;;
 		-*)
-			echo -e "${RED}Unknown argument '${ARG}'.${NC}" >&2
+			E_ "${ME}: Unknown argument '${ARG}'." >&2
 			RET=1
 			;;
 		*)
@@ -107,7 +116,7 @@ fi
 
 if [[ -z ${WHERE_TO} ]]; then
 	if [[ ${ON_TTY} == "true" ]]; then
-		echo -e "\nWARNING: No action taken because no Websites are enabled.\n" >&2
+		W_ "${ME}: WARNING: No action taken because no Websites are enabled.\n" >&2
 		exit 1
 	else
 		# Not on a tty so probably called via end-of-night or WebUI so silently exit.
@@ -115,8 +124,8 @@ if [[ -z ${WHERE_TO} ]]; then
 	fi
 fi
 
-if [[ ${FROM_WEBUI} == "true" ]]; then
-	# Don't want potentially lots of "uploading xxx" messages.
+if [[ ${FROM} == "webui" || ${FROM} == "install" ]]; then
+	# Don't want any "uploading xxx" messages.
 	SILENT="--silent"
 else
 	SILENT=""
@@ -126,15 +135,15 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	OK="true"
 	if ! latitude="$( convertLatLong "$( settings ".latitude" )" "latitude" 2>&1 )" ; then
 		OK="false"
-		echo -e "${RED}${ME}: ERROR: ${latitude}" >&2
-		if [[ ${FROM_WEBUI} == "false" ]]; then
+		E_ "${ME}: ERROR: ${latitude}" >&2
+		if [[ ${FROM} == "endofnight" ]]; then
 			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${latitude}"
 		fi
 	fi
 	if ! longitude="$( convertLatLong "$( settings ".longitude" )" "longitude" 2>&1 )" ; then
 		OK="false"
-		echo -e "${RED}${ME}: ERROR: ${longitude}" >&2
-		if [[ ${FROM_WEBUI} == "false" ]]; then
+		E_ "${ME}: ERROR: ${longitude}" >&2
+		if [[ ${FROM} != "endofnight" ]]; then
 			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${longitude}"
 		fi
 	fi
@@ -156,11 +165,11 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 		# TODO What SHOULD *_hhmm be?
 		sunrise_hhmm="00:00"
 		sunset_hhmm="00:00"
-
 		{
 			echo "***"
-			echo -e "${RED}${ME}: WARNING: angle ${angle} caused sunwait to return"
-			echo -e "sunrise='${sunrise}' and sunset='${sunset}'.${NC}"
+			MSG="${ME}: WARNING: angle ${angle} caused sunwait to return"
+			MSG+=" sunrise='${sunrise}' and sunset='${sunset}'."
+			W_ "${MSG}"
 			echo "Using tomorrow at '${sunrise_hhmm}' instead."
 			echo "***"
 		} >&2
@@ -208,7 +217,9 @@ if [[ -n ${WEBS} ]]; then
 		done
 	fi
 
-	[[ ${FROM_WEBUI} == "true" ]] && echo "Uploaded configuration files to: ${WHERE_TO}."
+	if [[ ${FROM} == "webui" || ${FROM} == "install" ]]; then
+		echo "Uploaded configuration files to: ${WHERE_TO}."
+	fi
 fi
 
 exit 0

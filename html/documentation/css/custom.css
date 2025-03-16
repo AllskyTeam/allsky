@@ -24,6 +24,9 @@
 	--btn-hover-color: black;
 	--btn-dark-color: #bfbfbf;
 	--panel-heading-color: #6b6b6b;
+	--select-background-color: #e4e4e4;
+	--select-color: #555555;
+    --color-border-muted: hsla(210,18%,87%,1);
 }
 
 .page-header {
@@ -280,6 +283,7 @@ body.dark {
 .alert {
 	padding: 5px;
 	margin-bottom: 3px;
+	border-width: 3px;
 }
 button.close {
 	opacity: 0.8;
@@ -287,7 +291,7 @@ button.close {
 	margin-top: -2px;
 }
 .alert td {
-	padding: 0 10px 0 3px;
+	padding: 0 5px 0 5px;
 }
 .alert td .important {
 	font-weight: bold;
@@ -341,6 +345,7 @@ table .alert-dismissable {
 .dark .alert-success {
 	color: #95bb85;
 	border-color: #8f9d84;
+	border-color: #d2e2c4;
 	background-color: #044a05;
 }
 .dark .alert-warning, .dark .alert-warning a {
@@ -352,10 +357,6 @@ table .alert-dismissable {
 	color: #f1b1b1;
 	border-color: #f1b1b1;
 	background-color: #a94442;
-}
-.alert-danger, .alert-warning {
-	border-top-width: 3px;
-	border-bottom-width: 3px;
 }
 
 .dark .form-control,
@@ -555,6 +556,17 @@ input[type="text"].has-error {
 		display: none;
 	}
 }
+.dropdown code {
+	line-height: 3;
+	padding: .4em .8em;
+	margin: 0 .5em;
+	font-size: inherit;
+	color: var(--select-color);
+	background-color: var(--select-background-color);
+	border: 1px solid var(--color-border-muted);
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	border-radius: 3px;
+}
 
 /* Headers in Allsky settings */
 .settingsHeader {
@@ -660,8 +672,8 @@ input[type="text"],
 input[type="number"],
 input[type="select"],
 select {
-	background-color: #e4e4e4;
-	color: #555555;
+	background-color: var(--select-background-color);
+	color: var(--select-color);
 }
 
 /* Colors for user-supplied buttons.

@@ -21,14 +21,14 @@ function initialize() {
 	$configurationFileName = "configuration.json";
 	$retMsg = "";
 
-	// Read the website configuration file.
+	// Read the Website configuration file.
 	// Some settings impact this page, some impact the constellation overlay.
 	$configuration_file = "$configFilePrefix$configurationFileName";
 	if (! file_exists($configuration_file)) {
 		$retMsg .= "<p class='error-msg'>";
-			$retMsg .= "ERROR: This remote Website does not appear to be fully installed.";
+			$retMsg .= "ERROR: This Website does not appear to be fully installed.";
 			$retMsg .= "<br>The configuration file '$configuration_file' is missing.";
-			$retMsg .= "<br><br>Make sure this remote Website is installed enabled in the WebUI.";
+			$retMsg .= "<br><br>Make sure this Website is enabled in the WebUI.";
 		$retMsg .= "</p>";
 		return($retMsg);
 	}

@@ -19,8 +19,8 @@ cd "${ALLSKY_HOME}"  									|| exit "${EXIT_ERROR_STOP}"
 
 [[ ! -d ${ALLSKY_TMP} ]] && mkdir -p "${ALLSKY_TMP}"
 
-# The POST_INSTALLATION_ACTIONS contains information the user needs to act upon after installation.
-rm -f "${POST_INSTALLATION_ACTIONS}"		# Shouldn't be there, but just in case.
+# The ALLSKY_POST_INSTALL_ACTIONS contains information the user needs to act upon after installation.
+rm -f "${ALLSKY_POST_INSTALL_ACTIONS}"		# Shouldn't be there, but just in case.
 rm -f "${ALLSKY_MESSAGES}"					# Start out with no messages.
 
 # In case it's left over from a prior install.
@@ -39,8 +39,11 @@ COPIED_PRIOR_FTP_SH="false"				# prior ftp-settings.sh's settings copied to sett
 SUGGESTED_NEW_HOST_NAME="allsky"		# Suggested new host name
 NEW_HOST_NAME=""						# User-specified host name
 BRANCH="${GITHUB_MAIN_BRANCH}"			# default branch
+
+PASSED_DISPLAY_MSG_LOG="${DISPLAY_MSG_LOG}"		# if set, we were given the log file name
 # shellcheck disable=SC2034
 DISPLAY_MSG_LOG="${DISPLAY_MSG_LOG:-${ALLSKY_LOGS}/install.log}"	# send log entries here
+
 LONG_BITS=$( getconf LONG_BIT ) # Size of a long, 32 or 64
 REBOOT_NEEDED="true"					# Is a reboot needed at end of installation?
 CONFIGURATION_NEEDED="true"				# Does Allsky need to be configured at end of installation?
@@ -381,6 +384,9 @@ do_function()
 	local FUNCTION="${1}"
 	shift
 
+	# If we were passed a log file location, use it.
+	[[ -n ${PASSED_DISPLAY_MSG_LOG} ]] && DISPLAY_MSG_LOG="${PASSED_DISPLAY_MSG_LOG}"
+
 	if ! type "${FUNCTION}" > /dev/null; then
 		display_msg error "Unknown function: '${FUNCTION}'."
 		exit 1
@@ -471,6 +477,8 @@ get_connected_cameras()
 	# true == ignore errors.  ${CMD} will be "" if no command found.
 	CMD="$( determineCommandToUse "false" "" "true" 2> /dev/null )"
 	CMD_RET=$?		# return of 2 means no command was found
+	[[ ${CMD_RET} -ne 0 ]] && CMD=""
+
 	setup_rpi_supported_cameras "${CMD}"		# Will create full file is CMD == ""
 
 	# RPi format:	RPi \t camera_number \t camera_sensor [\t optional_other_stuff]
@@ -519,6 +527,11 @@ get_connected_cameras()
 		MSG="No connected cameras were detected.  The installation will exit."
 		MSG+="\nMake sure a camera is plugged in and working prior to restarting"
 		MSG+=" the installation."
+		if [[ ${CMD_RET} -eq "${EXIT_ERROR_STOP}" ]]; then
+			# RPi command timed out.
+			MSG+="\n\nIf you have an RPi camera attached, double check the cable -"
+			MSG+=" it may be bad or not seated properly."
+		fi
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 
 		MSG="No connected cameras were detected."
@@ -688,7 +701,7 @@ do_save_camera_capabilities()
 	display_msg --log progress "Making new settings file '${SETTINGS_FILE}'."
 
 	CMD="makeChanges.sh${FORCE}${OPTIONSONLY}"
-	CMD+=" --cameraTypeOnly --fromInstall --addNewSettings ${DEBUG_ARG}"
+	CMD+=" --cameraTypeOnly --from install --addNewSettings ${DEBUG_ARG}"
 	#shellcheck disable=SC2089
 	CMD+=" cameranumber 'Camera Number' '${PRIOR_CAMERA_NUMBER}' '${CAMERA_NUMBER}'"
 	#shellcheck disable=SC2089
@@ -717,8 +730,8 @@ do_save_camera_capabilities()
 			exit_with_image 1 "${STATUS_ERROR}" "No camera detected"
 		elif [[ ${OPTIONSFILEONLY} == "false" ]]; then
 			display_msg --log error "Unable to save camera capabilities."
-			[[ -s ${TMP} ]] && display_msg --log info "$( < "${TMP}" )"
-			[[ -n ${M} ]] && display_msg --log info "${M}"
+			[[ -s ${TMP} ]] && display_msg --log info "TMP=$( < "${TMP}" )"
+			[[ -n ${M} ]] && display_msg --log info "M=${M}"
 		fi
 		return 1
 	else
@@ -785,7 +798,11 @@ update_php_defines()
 			-e "s;XX_ALLSKY_TMP_XX;${ALLSKY_TMP};g" \
 			-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};g" \
 			-e "s;XX_ALLSKY_MESSAGES_XX;${ALLSKY_MESSAGES};g" \
-			-e "s;XX_ALLSKY_CHECK_ALLSKY_LOG_XX;${CHECK_ALLSKY_LOG};g" \
+			-e "s;XX_ALLSKY_CHECK_LOG_XX;${ALLSKY_CHECK_LOG};g" \
+			-e "s;XX_ALLSKY_PRIOR_DIR_XX;${PRIOR_ALLSKY_DIR};g" \
+			-e "s;XX_ALLSKY_OLD_REMINDER_XX;${ALLSKY_OLD_REMINDER};g" \
+			-e "s;XX_ALLSKY_POST_INSTALL_ACTIONS_XX;${ALLSKY_POST_INSTALL_ACTIONS};g" \
+			-e "s;XX_ALLSKY_ABORTS_DIR_XX;${ALLSKY_ABORTS_DIR};g" \
 			-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};g" \
 			-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};g" \
 			-e "s;XX_ALLSKY_WEBSITE_LOCAL_CONFIG_NAME_XX;${ALLSKY_WEBSITE_CONFIGURATION_NAME};g" \
@@ -1135,7 +1152,6 @@ set_permissions()
 
 	# These directories aren't in GitHub so need to be manually created.
 	mkdir -p \
-		"${ALLSKY_WEBSITE_MYFILES_DIR}" \
 		"${ALLSKY_WEBSITE}/videos/thumbnails" \
 		"${ALLSKY_WEBSITE}/keograms/thumbnails" \
 		"${ALLSKY_WEBSITE}/startrails/thumbnails" \
@@ -1375,21 +1391,18 @@ set_locale()
 
 	if [[ ${CURRENT_LOCALE} == "${DESIRED_LOCALE}" ]]; then
 		display_msg --logonly info "Keeping '${DESIRED_LOCALE}' locale."
-		L="$( settings ".locale" )"
+		L="$( settings --null ".locale" )"
 		MSG="Settings file '${SETTINGS_FILE}'"
-		if [[ -z ${L} ]]; then
+		if [[ -z ${L} || ${L} == "null" ]]; then
 			# Either a new install or an upgrade from an older Allsky.
-			MSG+=" did NOT contain .locale so adding it."
+			if [[ -z ${L} ]]; then
+				MSG+=" did NOT contain .locale"
+			else
+				MSG+=" had null .locale"
+			fi
+			MSG+=" so adding it."
 			display_msg --logonly info "${MSG}"
 			doV "" "DESIRED_LOCALE" "locale" "text" "${SETTINGS_FILE}"
-
-# TODO: Something was unlinking the settings file from its camera-specific file,
-# so do "ls" of the settings files to try and pinpoint the problem.
-# I think this was fixed in v2023.05.01_03...
-#shellcheck disable=SC2012
-MSG="$( /bin/ls -l "${ALLSKY_CONFIG}/settings"*.json 2>/dev/null | sed 's/^/    /' )"
-display_msg --logonly info "Settings files now:\n${MSG}"
-
 		else
 			MSG+=" CONTAINED .locale:  ${L}"
 			display_msg --logonly info "${MSG}"
@@ -1400,11 +1413,6 @@ display_msg --logonly info "Settings files now:\n${MSG}"
 
 	display_msg --log progress "Setting locale to '${DESIRED_LOCALE}'."
 	doV "" "DESIRED_LOCALE" "locale" "text" "${SETTINGS_FILE}"
-
-# TODO: same as above...
-#shellcheck disable=SC2012
-MSG="$( /bin/ls -l "${ALLSKY_CONFIG}/settings"*.json 2>/dev/null | sed 's/^/    /' )"
-display_msg --logonly info "Settings files now:\n${MSG}"
 
 	# This updates /etc/default/locale
 	sudo update-locale LC_ALL="${DESIRED_LOCALE}" LANGUAGE="${DESIRED_LOCALE}" LANG="${DESIRED_LOCALE}"
@@ -1498,14 +1506,21 @@ does_prior_Allsky_Website_exist()
 		if [[ -d ${PRIOR_WEBSITE_DIR} ]]; then
 			PRIOR_WEBSITE_STYLE="${NEW_STYLE_ALLSKY}"
 			PRIOR_WEBSITE_CONFIG_FILE="${PRIOR_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
-			PRIOR_WEB_CONFIG_VERSION="$( settings ".${WEBSITE_CONFIG_VERSION}" "${PRIOR_WEBSITE_CONFIG_FILE}" )"
-			if [[ -z ${PRIOR_WEB_CONFIG_VERSION} ]]; then
-				# This shouldn't happen ...
-				MSG="Missing ${WEBSITE_CONFIG_VERSION} in ${PRIOR_WEBSITE_CONFIG_FILE}."
-				MSG+="\nYou need to manually copy your prior local Allsky Website settings to"
-				MSG+="\n${ALLSKY_WEBSITE_CONFIGURATION_FILE}."
-				display_msg --log error "${MSG}"
+			if [[ -s ${PRIOR_WEBSITE_CONFIG_FILE} ]]; then
+				PRIOR_WEB_CONFIG_VERSION="$( settings ".${WEBSITE_CONFIG_VERSION}" "${PRIOR_WEBSITE_CONFIG_FILE}" )"
+				if [[ -z ${PRIOR_WEB_CONFIG_VERSION} ]]; then
+					# This shouldn't happen ...
+					MSG="Missing ${WEBSITE_CONFIG_VERSION} in ${PRIOR_WEBSITE_CONFIG_FILE}."
+					MSG+="\nYou need to manually copy your prior local Allsky Website settings to"
+					MSG+="\n${ALLSKY_WEBSITE_CONFIGURATION_FILE}."
+					display_msg --log error "${MSG}"
+					PRIOR_WEB_CONFIG_VERSION="1"		# Assume the oldest version
+				fi
+			else
+				# No config file - they user probably never used the local Website
 				PRIOR_WEB_CONFIG_VERSION="1"		# Assume the oldest version
+				MSG="Prior Website config file '${PRIOR_WEBSITE_CONFIG_FILE}' not found."
+				display_msg --logonly info "${MSG}"
 			fi
 		else
 			PRIOR_WEBSITE_DIR=""
@@ -1523,7 +1538,7 @@ does_prior_Allsky_Website_exist()
 	fi
 
 	if [[ -z ${PRIOR_WEBSITE_DIR} ]]; then
-		display_msg --logonly info "No prior Allsky Website found."
+		display_msg --logonly info "No prior local Allsky Website found."
 	else
 		display_msg --logonly info "PRIOR_WEBSITE_STYLE=${PRIOR_WEBSITE_STYLE}"
 		display_msg --logonly info "PRIOR_WEBSITE_DIR=${PRIOR_WEBSITE_DIR}"
@@ -2603,7 +2618,9 @@ restore_prior_files()
 	ITEM="${SPACE}'config/overlay' directory"
 	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
 		display_msg --log progress "${ITEM} (copying)"
-# TODO: ALEX: FIX: Copying everying in these 3 directories means we can never release new versions.
+# TODO: ALEX: FIX:
+# Copying everying in these 3 directories means we can never release new versions, correct?
+
 		cp -a -r "${PRIOR_CONFIG_DIR}/overlay/fonts" "${ALLSKY_OVERLAY}"
 		cp -a -r "${PRIOR_CONFIG_DIR}/overlay/images" "${ALLSKY_OVERLAY}"
 		cp -a -r "${PRIOR_CONFIG_DIR}/overlay/imagethumbnails" "${ALLSKY_OVERLAY}"
@@ -2896,20 +2913,6 @@ restore_prior_website_files()
 		display_msg --logonly progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-	A="analyticsTracking.js"
-	ITEM="${SPACE}${SPACE}${A}"
-	D="${PRIOR_WEBSITE_DIR}/${A}"
-	if [[ -f ${D} ]]; then
-		# Few people use this file, so only copy prior version if it's
-		# different than the current one.
-		if ! cmp --silent "${D}" "${ALLSKY_WEBSITE}/${A}" ; then
-			display_msg --log progress "${ITEM} (copying)"
-			cp "${D}" "${ALLSKY_WEBSITE}"
-		fi
-	else
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-	fi
-
 	# Now deal with the local Website configuration file.
 	if [[ ${PRIOR_WEBSITE_STYLE} == "${OLD_STYLE_ALLSKY}" ]]; then
 		# The format of the old files is too different from the new file,
@@ -2930,30 +2933,39 @@ restore_prior_website_files()
 		prepare_local_website "" "postData"
 
 	else		# NEW_STYLE_WEBSITE
+		PRIOR_WEBSITE_CONFIG_FILE="${PRIOR_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 		ITEM="${SPACE}${SPACE}${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
-		if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
-			MSG="${ITEM} (copying and updating for version ${NEW_WEB_CONFIG_VERSION})"
-			display_msg --log progress "${MSG}"
-		fi
 
-		# Copy the old file to the current location.
-		display_msg --log progress "${ITEM} (copying)"
-		cp "${PRIOR_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}" \
-			"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+		if [[ -f ${PRIOR_WEBSITE_CONFIG_FILE} ]]; then
+			if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
+				MSG="${ITEM} (copying and updating for version ${NEW_WEB_CONFIG_VERSION})"
+				display_msg --log progress "${MSG}"
+			fi
 
-		MSG="${SPACE}${SPACE}${SPACE}"
-		if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
-			# If different versions, then update the current one.
-			MSG+="Updating version from ${PRIOR_WEB_CONFIG_VERSION} to ${NEW_WEB_CONFIG_VERSION}."
-			update_old_website_config_file "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" \
-				"${PRIOR_WEB_CONFIG_VERSION}" "${NEW_WEB_CONFIG_VERSION}"
+			# Copy the old file to the current location.
+			display_msg --log progress "${ITEM} (copying)"
+			cp "${PRIOR_WEBSITE_CONFIG_FILE}" \
+				"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+
+			MSG="${SPACE}${SPACE}${SPACE}"
+			if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
+				# If different versions, then update the current one.
+				MSG+="Updating version from ${PRIOR_WEB_CONFIG_VERSION} to ${NEW_WEB_CONFIG_VERSION}."
+				update_old_website_config_file "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" \
+					"${PRIOR_WEB_CONFIG_VERSION}" "${NEW_WEB_CONFIG_VERSION}"
+			else
+				MSG+="Already current @ version ${NEW_WEB_CONFIG_VERSION}"
+			fi
+			display_msg --logonly info "${MSG}"
+
+			# Since the config file already exists, this will just run postData.sh:
+			prepare_local_website "" "postData"
+
 		else
-			MSG+="Already current @ version ${NEW_WEB_CONFIG_VERSION}"
+			# Prior Website config file doesn't exist.
+			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+			doV "uselocalwebsite" "false" "uselocalwebsite" "boolean" "${SETTINGS_FILE}"
 		fi
-		display_msg --logonly info "${MSG}"
-
-		# Since the config file already exists, this will just run postData.sh:
-		prepare_local_website "" "postData"
 	fi
 
 	# data.json was updated above so don't copy it.
@@ -3135,7 +3147,7 @@ do_restore()
 		mount_tmp "${ALLSKY_TMP}"
 	fi
 
-	mkdir -p "$( dirname "${POST_INSTALLATION_ACTIONS}" )"
+	mkdir -p "$( dirname "${ALLSKY_POST_INSTALL_ACTIONS}" )"
 
 	MSG="\nRestoration is done and"
 	MSG2=" Allsky needs its settings checked."
@@ -3341,7 +3353,7 @@ install_Python()
 
 		L="${TMP}.${COUNT}.log"
 		M="${NAME} [${package}] failed"
-		pip3 install --no-warn-script-location -r /tmp/package > "${L}" 2>&1
+		pip3 install --upgrade --no-warn-script-location -r /tmp/package > "${L}" 2>&1
 		# These files are too big to display so pass in "0" instead of ${DEBUG}.
 		if ! check_success $? "${M}" "${L}" 0 ; then
 			rm -fr "${PIP3_BUILD}"
@@ -3512,7 +3524,7 @@ display_image()
 
 		MSG="Displaying custom notification image: $( echo -e "${CUSTOM_MESSAGE}" | tr '\n' ' ' )"
 		display_msg --logonly info "${MSG}"
-		MSG="$( "${ALLSKY_SCRIPTS}/generate_notification_images.sh" \
+		MSG="$( "${ALLSKY_SCRIPTS}/generateNotificationImages.sh" \
 			--directory "${ALLSKY_TMP}" \
 			"${FILENAME}" "${COLOR}" "" "" "" "" \
 			"" "10" "${COLOR}" "${EXTENSION}" "" "${CUSTOM_MESSAGE}"  2>&1 >/dev/null )"
@@ -3522,14 +3534,14 @@ display_image()
 	else
 		IMAGE_NAME="${IMAGE_OR_CUSTOM}"
 
-		if [[ ${IMAGE_NAME} == "ConfigurationNeeded" && -f ${POST_INSTALLATION_ACTIONS} ]]; then
+		if [[ ${IMAGE_NAME} == "ConfigurationNeeded" && -f ${ALLSKY_POST_INSTALL_ACTIONS} ]]; then
 			# Add a message the user will see in the WebUI.
-			MSG="Actions needed.  See ${POST_INSTALLATION_ACTIONS}."
-			X="${POST_INSTALLATION_ACTIONS/${ALLSKY_HOME}/}"
+			MSG="Actions needed.  See ${ALLSKY_POST_INSTALL_ACTIONS}."
+			X="${ALLSKY_POST_INSTALL_ACTIONS/${ALLSKY_HOME}/}"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${MSG}" --url "${X}"
 
 			# This tells allsky.sh not to display a message about actions since we just did.
-			touch "${POST_INSTALLATION_ACTIONS}_initial_message"
+			touch "${ALLSKY_POST_INSTALL_ACTIONS}_initial_message"
 		fi
 
 		X="${IMAGE_NAME}.${EXTENSION}"
@@ -3774,7 +3786,7 @@ do_allsky_status()
 add_to_post_actions()
 {
 	local MSG="${1}"
-	echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${POST_INSTALLATION_ACTIONS}"
+	echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${ALLSKY_POST_INSTALL_ACTIONS}"
 }
 
 
@@ -3954,7 +3966,8 @@ done
 IorR="INSTALLATION"		# Installation (default) or Restoration
 
 if [[ -n ${FUNCTION} || ${FIX} == "true" ]]; then
-	# Don't log when a single function is executed or we're fixing things.
+	# If we were passed a log file name, use it, otherwise
+	# don't log when a single function is executed or we're fixing things.
 	DISPLAY_MSG_LOG=""
 else
 	if [[ ${RESTORE} == "true" ]]; then

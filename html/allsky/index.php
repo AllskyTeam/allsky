@@ -8,12 +8,18 @@
 	<!-- From: https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css -->
 	<link rel="stylesheet" href="font-awesome/css/all.min.css" type="text/css">
 	<!-- https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css -->
-	<link rel="stylesheet" type="text/css" href="bootstrap.min.css">
-<!--
-	<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Ubuntu:400,300">
--->
-	<link rel="stylesheet" type="text/css" href="animate.min.css">
-	<link rel="stylesheet" type="text/css" href="allsky.css">
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="css/animate.min.css">
+	<link rel="stylesheet" type="text/css" href="css/allsky.css">
+	<!-- From: https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js -->
+	<script src="js/jquery.min.js"></script>
+	<!-- From: https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js -->
+	<script src="js/angular.min.js"></script>
+	<script src="js/moment.js"></script>
+	<script src="virtualsky/stuquery.js"></script>
+	<script src="virtualsky/virtualsky.js"></script>
+	<script src="js/ng-lodash.min.js"></script>
+	<script src="js/controller.js"></script>
 
 	<?php
 		// This gets the settings.
@@ -111,16 +117,6 @@
 	<meta property="og:image" content="<?php echo $og_image ?>" />
 	<meta property="og:image:type" content="<?php echo $og_image_type ?>" />
 	<link rel="shortcut icon" type="<?php echo $faviconType ?>" href="<?php echo $favicon ?>">
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"
-		integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa"
-		crossorigin="anonymous"></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
-	<script src="moment.js"></script>
-	<script src="virtualsky/stuquery.js"></script>
-	<script src="virtualsky/virtualsky.js"></script>
-	<script src="ng-lodash.min.js"></script>
-	<script src="controller.js"></script>
 
 	<style>
 		.clear { clear: both; }
@@ -233,8 +229,8 @@
 		echo "</div>";
 	}
 
-	if ($includeGoogleAnalytics && file_exists("analyticsTracking.js")) {
-		echo "<script src='analyticsTracking.js'></script>";
+	if ($includeGoogleAnalytics && file_exists("myFiles/analyticsTracking.js")) {
+		echo "<script src='myFiles/analyticsTracking.js'></script>";
 	}
 ?>
 </body>

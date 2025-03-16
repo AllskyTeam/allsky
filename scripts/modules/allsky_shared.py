@@ -28,6 +28,7 @@ from pathlib import Path
 from allskyvariables import allskyvariables
 
 from gpiozero import Device, CPUTemperature
+import pigpio
 
 try:
     locale.setlocale(locale.LC_ALL, '')
@@ -248,7 +249,7 @@ def startModuleDebug(module):
 
 def write_debug_image(module, fileName, image):
 	writeDebugImage(module, fileName, image)
- 
+
 def writeDebugImage(module, fileName, image):
     global ALLSKY_WEBUI
 
@@ -756,6 +757,56 @@ def getGPIOPin(pin):
 
     return result
 
+def connect_pigpio(show_errors=False):
+    pi = pigpio.pi(show_errors)
+    
+    return pi
+
+def read_gpio_pin(gpio_pin, pi=None, show_errors=False):
+    pin_state = None
+    try:
+        if pi is None:
+            pi = pigpio.pi(show_errors=show_errors)
+            
+        if pi.connected:        
+            pi.set_mode(gpio_pin, pigpio.INPUT)
+            pin_state = pi.read(gpio_pin)
+    except:
+        pass
+    
+    return pin_state
+
+def set_gpio_pin(gpio_pin, state, pi=None, show_errors=False):
+    result = False
+    try:
+        if pi is None:
+            pi = pigpio.pi(show_errors=show_errors)
+            
+        if pi.connected:        
+            pi.set_mode(gpio_pin, pigpio.OUTPUT)
+            pi.write(gpio_pin, state)
+            result = True
+    except:
+        pass
+    
+    return result
+
+def set_pwm(gpio_pin, duty_cycle, pi=None, show_errors=False):
+    result = False
+    try:
+        if pi is None:
+            pi = pigpio.pi(show_errors=False)
+            
+        if pi.connected:
+            pi.set_PWM_range(gpio_pin, 100)
+            pi.set_PWM_frequency(gpio_pin, 1_000)
+            pi.set_PWM_dutycycle(gpio_pin, duty_cycle)
+            result = True
+    except:
+        pass
+    
+    return result
+    
 def _get_value_from_json_file(file_path, variable):
     """
     Loads a json based extra data file and returns the value of a variable if found

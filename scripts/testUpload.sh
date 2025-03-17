@@ -264,7 +264,8 @@ do_test()
 		return 1
 	fi
 	USER="$( settings ".${TYPE}_USER" "${ENV_FILE}" )"
-	DIR="$( settings --null ".${DIR}" )"
+	DIR="$( settings ".${DIR}" )"
+	DIR="${DIR:=null}"
 
 	CMD="${ALLSKY_SCRIPTS}/upload.sh --debug --remote-${REMOTE}"
 	if [[ ${DEBUG} == "true" ]]; then

@@ -419,7 +419,7 @@ function update_json_file()		# [-d] field, new value, file, [type]
 		NEW_VALUE="(delete)"	# only used in error message below.
 		ACTION="del(${FIELD})"
 	else
-		NEW_VALUE="${2/\"/\\\"}"
+		NEW_VALUE="${2//\"/\\\"}"
 		TYPE="${4}"
 
 		DOUBLE_QUOTE='"'

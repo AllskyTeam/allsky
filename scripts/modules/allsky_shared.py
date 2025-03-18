@@ -12,6 +12,8 @@ import shlex
 import subprocess
 import string
 import json
+import sqlite3
+import math
 import cv2
 import shutil
 import re
@@ -499,42 +501,73 @@ def validateExtraFileName(params, module, fileKey):
     extraDataFilename = fileName + fileExtension
                     
     params[fileKey] = extraDataFilename
-            
+
+
+
+def update_database(structure, extra_data):
+    try:
+        if 'enabled' in structure['database']:
+            if structure['database']['enabled']:
+                if 'table' in structure['database']:
+                    database_table = structure['database']['table']
+                    base_path = get_environment_variable('ALLSKY_MYFILES_DIR')
+                    database_path = os.path.join(base_path, 'allsky.db')
+                    conn = sqlite3.connect(database_path, 5)
+                    cursor = conn.cursor()
+                    cursor.execute('PRAGMA journal_mode=WAL;')
+                    cursor.execute('PRAGMA synchronous=NORMAL;')
+
+                    cursor.execute(f'CREATE TABLE IF NOT EXISTS {database_table} (id INTEGER PRIMARY KEY AUTOINCREMENT,timestamp REAL NOT NULL,json_data TEXT NOT NULL)')
+
+                    json_string = json.dumps(extra_data)
+                    timestamp = math.floor(time.time()) 
+                    cursor.execute(f'INSERT INTO {database_table} (timestamp, json_data) VALUES (?, ?)', (timestamp, json_string))
+
+                    conn.commit()
+                    conn.close()
+    except Exception as e:
+        eType, eObject, eTraceback = sys.exc_info()            
+        log(0, f'ERROR: Module update_database failed on line {eTraceback.tb_lineno} - {e}')
+
+
 def save_extra_data(file_name, extra_data, source='', structure={}, custom_fields={}):
     saveExtraData(file_name, extra_data, source, structure, custom_fields)
 def saveExtraData(file_name, extra_data, source='', structure={}, custom_fields={}):
-    """
-    Save extra data to allows the overlay module to disdplay it.
+	"""
+	Save extra data to allows the overlay module to display it.
 
-    Args:
-        file_name (string): The name of the file to save.
-        extra_data (object): The data to save.
+	Args:
+		file_name (string): The name of the file to save.
+		extra_data (object): The data to save.
 
-    Returns:
-        Nothing
-    """
-    try:
-        extra_data_path = getExtraDir()
-        if extra_data_path is not None:        
-            checkAndCreateDirectory(extra_data_path)
+	Returns:
+		Nothing
+	"""
+	try:
+		extra_data_path = getExtraDir()
+		if extra_data_path is not None:        
+			checkAndCreateDirectory(extra_data_path)
 
-            file_extension = Path(file_name).suffix
-            extra_data_filename = os.path.join(extra_data_path, file_name)
-            with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
-                if file_extension == '.json':
-                    extra_data = format_extra_data(extra_data, structure, source)
-                if len(custom_fields) > 0:
-                    for key, value in custom_fields.items():
-                        extra_data[key] = value
-                extra_data = json.dumps(extra_data, indent=4)
-                temp_file.write(extra_data)
-                temp_file_name = temp_file.name
-                os.chmod(temp_file_name, 0o644)
+			file_extension = Path(file_name).suffix
+			extra_data_filename = os.path.join(extra_data_path, file_name)
+			with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
+				if file_extension == '.json':
+					extra_data = format_extra_data(extra_data, structure, source)
+				if len(custom_fields) > 0:
+					for key, value in custom_fields.items():
+						extra_data[key] = value
+				extra_data = json.dumps(extra_data, indent=4)
+				temp_file.write(extra_data)
+				temp_file_name = temp_file.name
+				os.chmod(temp_file_name, 0o644)
 
-            shutil.move(temp_file_name, extra_data_filename)
-    except Exception as e:
-        eType, eObject, eTraceback = sys.exc_info()            
-        log(0, f'ERROR: Module saveExtraData failed on line {eTraceback.tb_lineno} - {e}')
+				shutil.move(temp_file_name, extra_data_filename)
+
+				if 'database' in structure:
+					update_database(structure, extra_data)
+	except Exception as e:
+		eType, eObject, eTraceback = sys.exc_info()            
+		log(0, f'ERROR: Module saveExtraData failed on line {eTraceback.tb_lineno} - {e}')
 
 def format_extra_data(extra_data, structure, source):
     result = extra_data

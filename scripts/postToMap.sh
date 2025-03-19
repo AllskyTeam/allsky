@@ -82,7 +82,7 @@ function check_URL()
 
 	else
 		# Make sure it's a valid URL.  Some servers don't return anything if the user agent is "curl".
-		local CONTENT="$( curl --user-agent Allsky --location --head --no-progress-meter --show-error --connect-timeout "${TIMEOUT}" "${URL}" 2>&1 )"
+		local CONTENT="$( curl --user-agent Allsky --location --head --silent --show-error --connect-timeout "${TIMEOUT}" "${URL}" 2>&1 )"
 		local RET=$?
 		if [[ ${DEBUG} == "true" ]]; then
 			D_ "\ncheck_URL(${URL}, ${URL_TYPE}, ${FIELD_NAME}) RET=${RET}:\n${CONTENT}\n"
@@ -372,7 +372,7 @@ if [[ ${UPLOAD} == "true" ]]; then
 	# shellcheck disable=SC2090,SC2086
 	RETURN="$( eval ${CMD} 2>&1 )"
 	RETURN_CODE=$?
-	[[ ${DEBUG} == "true" ]] && wD_ "Returned:\n${RETURN:-Nothing returned}"
+	[[ ${DEBUG} == "true" ]] && wD_ "Returned code ${RETURN_CODE}:\n${RETURN:-Nothing returned}"
 	if [[ ${RETURN_CODE} -ne 0 ]]; then
 		E="ERROR while uploading map data with curl: ${RETURN}, CMD=${CMD}."
 		if [[ ${ENDOFNIGHT} == "true" ]]; then
@@ -388,9 +388,10 @@ if [[ ${UPLOAD} == "true" ]]; then
 	if HTTP="$( echo "${RETURN}" | grep HTTP )" ; then
 		if [[ ! ${HTTP} =~ 200 ]]; then
 			wW_ "Got server error ${HTTP}"
+			exit 1
 		fi
-		exit 1
 	fi
+
 	# Get the return string from the server.  It's the last line of output.
 	RET="$( echo "${RETURN}" | tail -1 )"
 	if [[ ${RET} == "INSERTED" || ${RET} == "DELETED" ]]; then

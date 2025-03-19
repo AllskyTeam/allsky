@@ -685,9 +685,7 @@ function check_if_web_files_exist()
 	for FILE in "$@"; do
 		url="${URL}/${FILE}"
 
-# MSG="curl -o /dev/null --head --silent --location --write-out %{http_code} ${url}"
-# show_debug_message "Executing: ${MSG}"
-		HTTP_STATUS="$( curl -o /dev/null --head --silent --location --write-out "%{http_code}" "${url}" )"
+		HTTP_STATUS="$( curl -o /dev/null --head --silent --show-error --location --write-out "%{http_code}" "${url}" 2>&1 )"
 		RET=$?
 
 		if [[ ${RET} -ne 0 || ${HTTP_STATUS} != "200" ]] ; then

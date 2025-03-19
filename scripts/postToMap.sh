@@ -82,7 +82,7 @@ function check_URL()
 
 	else
 		# Make sure it's a valid URL.  Some servers don't return anything if the user agent is "curl".
-		local CONTENT="$( curl --user-agent Allsky --location --head --no-progress-meter --show-error --connect-timeout "${TIMEOUT}" "${URL}" 2>&1 )"
+		local CONTENT="$( curl --user-agent Allsky --location --head --silent --show-error --connect-timeout "${TIMEOUT}" "${URL}" 2>&1 )"
 		local RET=$?
 		if [[ ${DEBUG} == "true" ]]; then
 			D_ "\ncheck_URL(${URL}, ${URL_TYPE}, ${FIELD_NAME}) RET=${RET}:\n${CONTENT}\n"

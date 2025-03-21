@@ -280,7 +280,7 @@ function generate_support_info()
         cp "${LIGHTTPD_ERROR_LOG}" "${LIGHTTPD_ERROR_LOG_FILE}"
     fi
 
-    CAMERA_INFO_FILE="${TEMP_DIR}/camera_info.txt"
+    SUPPORTED_CAMERAS_FILE="${TEMP_DIR}/supported_cameras.txt"
     {
         print_heading "Allsky - Supported Cameras"
 
@@ -314,7 +314,7 @@ function generate_support_info()
 		    sed -e 's/^.*CameraS//' -e 's/17Cam//' -e 's/_SetResolutionEv//' | \
 		    sort -u
 
-    } >> "${CAMERA_INFO_FILE}"
+    } >> "${SUPPORTED_CAMERAS_FILE}"
 
     ALLSKY_LOG_FILE="${TEMP_DIR}/allsky_log.txt"
     if [[ "${LOG_LINES}" == "all" ]]; then

@@ -27,6 +27,7 @@ fi
 
 echo -e "\n*** Testing ${CMD}..."
 
+export ALLSKY_DEBUG_LEVEL=3     # so we get a list of what was uploaded
 if ! OUTPUT="$( postData.sh 2>&1 )" ; then
 	MSG="${CMD} failed:"
 	MSG+="\n$( indent "${OUTPUT}" )"

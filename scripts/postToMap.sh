@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2154		# referenced but not assigned - from convertJSON.php#
 
 # Allow this script to be executed manually, which requires several variables to be set.
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"

@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2154		# referenced but not assigned - from convertJSON.php#
 
 # Allow this script to be executed manually, which requires several variables to be set.
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
@@ -30,7 +31,7 @@ function usage_and_exit()
 	echo "    --whisper:    Be quiet with non-error related output - only display results."
 	echo "    --delete:     Delete map data; all fields except machine_id are ignored."
 	echo "    --force:      Force updates, even if not scheduled automatically for today."
-	echo "    --debug:      Output debugging statements."
+	echo "    --debug:      Output debugging statements.  Can specify more than once for additional info."
 	echo "    --endofnight: ${ME} was called from endOfNight.sh."
 	echo "    --from f:     Who called ${ME}, e.g., 'WebUI' (use html)."
 	echo
@@ -72,7 +73,7 @@ function check_URL()
 		  "${D:0:10}" == "198.51.100"	||
 		  "${D:0:9}"  == "203.0.113"	||
 		  "${D:0:3}"  == "240" ]]; then
-		E+="ERROR: ${FIELD_NAME} '${URL}' is not reachable from the Internet.${BR}"
+		E+="ERROR: ${FIELD_NAME} '${URL}' is not reachable from the Internet. Please unset the 'Website URL' and 'Image URL' settings.${BR}"
 
 	elif [[ ${URL:0:7} != "http://" && ${URL:0:8} != "https://" ]]; then
 		E+="ERROR: ${FIELD_NAME} '${URL}' must begin with 'http://' or 'https://'.${BR}"
@@ -84,8 +85,12 @@ function check_URL()
 		# Make sure it's a valid URL.  Some servers don't return anything if the user agent is "curl".
 		local CONTENT="$( curl --user-agent Allsky --location --head --silent --show-error --connect-timeout "${TIMEOUT}" "${URL}" 2>&1 )"
 		local RET=$?
-		if [[ ${DEBUG} == "true" ]]; then
-			D_ "\ncheck_URL(${URL}, ${URL_TYPE}, ${FIELD_NAME}) RET=${RET}:\n${CONTENT}\n"
+		if [[ ${DEBUG} -gt 0 ]]; then
+			local MSG="check_URL(${URL}, ${URL_TYPE}), RET=${RET}"
+			if [[ ${DEBUG} -gt 1 ]]; then
+				MSG+=":\n$( indent --spaces "${CONTENT}" )\n"
+			fi
+			wD_ "${MSG}" >&2
 		fi
 
 		if [[ ${RET} -eq 6 ]]; then
@@ -104,7 +109,8 @@ function check_URL()
 				T="image"
 			fi
 			if [[ -z ${TYPE} ]]; then
-				E+="ERROR: ${FIELD_NAME} '${URL}' does not appear to be a valid ${T}.${BR}"
+				E+="ERROR: ${FIELD_NAME} '${URL}' does not appear to be a valid ${T}:"
+				E+="\n$( indent --spaces "${CONTENT}" ).${BR}"
 			else
 				return 0
 			fi
@@ -115,7 +121,7 @@ function check_URL()
 	return 1
 }
 
-DEBUG="false"
+DEBUG="0"
 DELETE="false"
 UPLOAD="false"
 WHISPER="false"
@@ -133,7 +139,7 @@ while [[ $# -ne 0 ]]; do
 			UPLOAD="true"		# always upload DELETEs
 			;;
 		--debug)
-			DEBUG="true"
+			(( DEBUG++ ))
 			;;
 		--force)
 			FORCE="true"
@@ -199,12 +205,16 @@ if [[ -z ${MACHINE_ID} ]]; then
 	fi
 fi
 
+# This gets all settings and prefixes their names with "S_".
+# It's faster than calling "settings(" a bunch of times.
+getAllSettings || exit 1
+
 E=""
-LATITUDE="$( settings ".latitude" )"
+LATITUDE="${S_latitude}"
 if [[ -z ${LATITUDE} ]]; then
 	E+="ERROR: 'Latitude' is required.${BR}"
 fi
-LONGITUDE="$( settings ".longitude" )"
+LONGITUDE="${S_longitude}"
 if [[ -z ${LONGITUDE} ]]; then
 	E+="ERROR: 'Longitude' is required.${BR}"
 fi
@@ -240,13 +250,13 @@ if [[ ${DELETE} == "true" ]]; then
 	}
 
 else
-	LOCATION="$( settings ".location" )"
-	OWNER="$( settings ".owner" )"
-	WEBSITE_URL="$( settings ".remotewebsiteurl" )"
-	IMAGE_URL="$( settings ".remotewebsiteimageurl" )"
-	CAMERA="$( settings ".camera" )"
-	LENS="$( settings ".lens" )"
-	COMPUTER="$( settings ".computer" )"
+	LOCATION="${S_location}"
+	OWNER="${S_owner}"
+	WEBSITE_URL="${S_remotewebsiteurl}"
+	IMAGE_URL="${S_remotewebsiteimageurl}"
+	CAMERA="${S_camera}"
+	LENS="${S_lens}"
+	COMPUTER="${S_computer}"
 
 	E=""
 	W=""
@@ -273,6 +283,7 @@ else
 
 	if [[ (-n ${WEBSITE_URL} && -z ${IMAGE_URL}) || (-z ${WEBSITE_URL} && -n ${IMAGE_URL}) ]]; then
 		E+="ERROR: If you specify the Website URL or Image URL, you must specify both URLs.${BR}"
+
 	elif [[ -n ${WEBSITE_URL} ]]; then		# they specified both
 		# The domain names (or IP addresses) must be the same.
 		Wurl="$( get_domain "${WEBSITE_URL}" )"
@@ -316,9 +327,9 @@ else
 		local ALLSKY_SETTINGS="$( sed -e "s/'/'\"'\"'/g" "${SETTINGS_FILE}" )"
 
 		local WEBSITE_SETTINGS
-		if [[ $( settings ".uselocalwebsite" ) == "true" ]]; then
+		if [[ ${S_uselocalwebsite} == "true" ]]; then
 			WEBSITE_SETTINGS="$( sed -e "s/'/'\"'\"'/g" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" )"
-		elif [[ $( settings ".useremotewebsite" ) == "true" ]]; then
+		elif [[ ${S_useremotewebsite} == "true" ]]; then
 			WEBSITE_SETTINGS="$( sed -e "s/'/'\"'\"'/g" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
 		else
 			WEBSITE_SETTINGS="{ }"
@@ -363,16 +374,32 @@ if [[ ${UPLOAD} == "true" ]]; then
 		[[ ${WHISPER} == "false" ]] && echo "${ME}: Uploading map data."
 	fi
 	# shellcheck disable=SC2089
-	CMD="curl --no-progress-meter --show-error -i -H 'Accept: application/json' -H 'Content-Type:application/json'"
+	CMD="curl --silent --show-error -i -H 'Accept: application/json' -H 'Content-Type:application/json'"
 	# shellcheck disable=SC2089
-	CMD+=" --data '$( generate_post_data )'"
-	CMD+=" https://www.thomasjacquin.com/allsky-map/postToMap.php"
-	[[ ${DEBUG} == "true" ]] && wD_ "Executing:\n${CMD}\n"
+	CMD2=" --data '$( generate_post_data )'"
+	CMD3=" https://www.thomasjacquin.com/allsky-map/postToMap.php"
+	if [[ ${DEBUG} -gt 0 ]]; then
+		MSG="${CMD}"
+		if [[ ${DEBUG} -eq 1 ]]; then
+			MSG+=" --data '..DATA..'"
+		else
+			MSG+=" ${CMD2}"
+		fi
+		wD_ "Executing:\n$( indent --spaces "${MSG} ${CMD3}" )\n"
+	fi
+	CMD+=" ${CMD2} ${CMD3}"
 
 	# shellcheck disable=SC2090,SC2086
 	RETURN="$( eval ${CMD} 2>&1 )"
 	RETURN_CODE=$?
-	[[ ${DEBUG} == "true" ]] && wD_ "Returned code ${RETURN_CODE}:\n${RETURN:-Nothing returned}"
+	if [[ ${DEBUG} -gt 0 ]]; then
+		MSG="Returned code ${RETURN_CODE}"
+		if [[ ${DEBUG} -gt 1 ]]; then
+			MSG+=":\n$( indent --spaces "${RETURN:-Nothing returned}" )"
+		fi
+		wD_ "${MSG}" >&2
+	fi
+
 	if [[ ${RETURN_CODE} -ne 0 ]]; then
 		E="ERROR while uploading map data with curl: ${RETURN}, CMD=${CMD}."
 		if [[ ${ENDOFNIGHT} == "true" ]]; then

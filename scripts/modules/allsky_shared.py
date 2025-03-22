@@ -519,8 +519,9 @@ def update_database(structure, extra_data):
 
                     cursor.execute(f'CREATE TABLE IF NOT EXISTS {database_table} (id INTEGER PRIMARY KEY AUTOINCREMENT,timestamp REAL NOT NULL,json_data TEXT NOT NULL)')
 
-                    json_string = json.dumps(extra_data)
-                    timestamp = math.floor(time.time()) 
+                    timestamp = math.floor(time.time())
+                    json_string = json.dumps(extra_data, separators=(",", ":"), ensure_ascii=True).replace("\n", "").replace("\r", "")
+                    json_string = json_string.replace("\\n","").replace("\\r","").replace("\\","")
                     cursor.execute(f'INSERT INTO {database_table} (timestamp, json_data) VALUES (?, ?)', (timestamp, json_string))
 
                     conn.commit()
@@ -904,7 +905,6 @@ def get_allsky_variable(variable):
         result (various) The result or None if the variable could not be found
     """
     result = getEnvironmentVariable(variable)
-
     if result is None:
         extra_data_path = getExtraDir()
         directory = Path(extra_data_path)

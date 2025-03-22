@@ -158,9 +158,9 @@ class MODULEUTIL
                     if ($entry !== 'allsky_shared.py' && $entry !== 'allsky_base.py') {
                         $fileName = $moduleDirectory . '/' . $entry;
                         $metaData = $this->getMetaDataFromFile($fileName);
-                        $decoded = json_decode($metaData);		
+                        $decoded = json_decode($metaData, false);		
 						if ($decoded !== Null) {
-							if (in_array($event, $decoded->events)) {
+							if (in_array($event, $decoded->events) || $event == null) {
 								if (isset($decoded->experimental)) {
 									$experimental = strtolower($decoded->experimental) == "true"? true: false;
 								} else {
@@ -272,7 +272,7 @@ class MODULEUTIL
 
     public function getModules() {
         $result = $this->readModules();
-        $result = json_encode($result, JSON_FORCE_OBJECT);
+        $result = json_encode($result, false);
         $this->sendResponse($result);
     }
 
@@ -387,7 +387,7 @@ class MODULEUTIL
 			}
 
 			$selectedResult[$selectedName] = $moduleData;
-	};
+        };
 
         $restore = false;
         if (file_exists($configFileName . '-last')) {
@@ -452,7 +452,7 @@ class MODULEUTIL
         $extraHelp = $this->getModuleHelpFromFolder($extraHelpFolder);
 
         $help = array_merge($help, $extraHelp);
-
+        return '';
         return $help;
     }
 
@@ -483,7 +483,7 @@ class MODULEUTIL
 		if ($envData !== null) {
 			file_put_contents(ALLSKY_ENV, json_encode($envData, JSON_PRETTY_PRINT));
 		}
-		 
+		
         $result = file_put_contents($configFileName, $configData);
         $this->changeOwner($configFileName);
         $backupFilename = $configFileName . '-last';
@@ -643,7 +643,7 @@ class MODULEUTIL
 				'message' => $result['message'],
 				'extradata' => json_decode($extraData)
 			];
-		    $this->sendResponse(json_encode($result));
+            $this->sendResponse(json_encode($result));
         }
 	}
 
@@ -950,7 +950,7 @@ class MODULEUTIL
 
 		if ($found) {
 			$metaData = $this->getMetaDataFromFile($checkPath);
-			$metaData = json_decode($metaData);
+			$metaData = json_decode($metaData, false);
 		}
 
 		return $metaData;
@@ -1025,7 +1025,7 @@ class MODULEUTIL
 	public function getOnewire() {
 		$folderPath = '/sys/bus/w1/devices/';
 		$files = glob($folderPath . '[0-9a-fA-F]*-*');
-				  
+
 		$results = array();
 		$results['results'] = array();
 		foreach ($files as $file) {
@@ -1040,7 +1040,7 @@ class MODULEUTIL
 
 	public function getSerialPorts() {
 		$files = glob('/dev/serial*');
-				  
+
 		$results = array();
 		$results['results'] = array();
 		foreach ($files as $file) {
@@ -1075,74 +1075,90 @@ class MODULEUTIL
 		$this->sendResponse(json_encode($result));
 	}
 
-    public function getDewHeaterData() {
-        $result = array();
-        $file_name = $this->extraDataFolder . '/' . 'dewheaterhistory';
-        $jsonData = file_get_contents($file_name);
-        $array = json_decode($jsonData, true);
-        $categories = array();
-        $temp = array(
-            "name" =>"Temperature",
-            "yAxis" => 0,
-            "data" => array()
-        );
-        $dewPoint = array(
-            "name" =>"Dew Point",
-            "yAxis" => 0,
-            "data" => array()
-        );
-        $humidity = array(
-            "name" =>"Humidity",
-            "yAxis" => 1,
-            "data" => array()
-        );
-        $heater = array(
-            "name" =>"Heater",
-            "yAxis" => 1,
-            "data" => array()
-        );
-        foreach($array as $date=>$data) {
-            $temp["data"][] = array($date, $data["temperature"]);
-            $dewPoint["data"][] = array($date, $data["dew_point"]);
-            $humidity["data"][] = array($date, $data["humidity"]);
-            $heater["data"][] = array($date, $data["heater"]);
+    public function postGraphData() {
+        $db = new SQLite3('/home/pi/allsky/config/myFiles/allsky.db');
+
+        $config = $_POST["series"];
+        $table = $_POST["table"];
+
+        if (!$config) {
+            echo json_encode(["error" => "Invalid configuration"]);
+            exit;
         }
+        
+        $highchartsSeries = [];
+        
+        $query = "SELECT json_data, timestamp FROM " . $table . " ORDER BY timestamp ASC";
+        $results = $db->query($query);
+        
+        while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
+            $jsonString = stripslashes($row['json_data']);
+            $jsonString = trim($jsonString, '"'); 
+
+            $timestamp = intval($row['timestamp'])*1000;
+        
+            $dataArray = json_decode($jsonString, true);   
+            if ($dataArray) {
+                foreach ($config as $key => $seriesConfig) {
+                    $variable = $seriesConfig['variable'];
+        
+                    if (isset($dataArray[$variable])) {
+                        if (!isset($highchartsSeries[$key])) {
+                            $highchartsSeries[$key] = [
+                                "name" => $seriesConfig['name'],
+                                "yAxis" => intval($seriesConfig['yAxis']),
+                                "data" => []
+                            ];
+                        }        
+                        $highchartsSeries[$key]['data'][] = [$timestamp, $dataArray[$variable]['value']];
+                    }
+                }
+            }
+        }
+        
+        $highchartsSeries = array_values($highchartsSeries);
+        
         $result = array(
-            "series" => array(
-                $temp,
-                $dewPoint,
-                $humidity,
-                $heater
-            )
-        );
+            "series" => $highchartsSeries
+        );        
+
         $this->sendResponse(json_encode($result));
     }
 
- /*   {
-        "series": [
-            {
-                "name": "Temperature",
-                "yAxis": 0,
-                "data": [[1710367200000, 22.5], [1710368100000, 23.1], [1710369000000, 24.0]]
-            },
-            {
-                "name": "Dew Point",
-                "yAxis": 0,
-                "data": [[1710367200000, 18.2], [1710368100000, 18.5], [1710369000000, 18.9]]
-            },
-            {
-                "name": "Humidity",
-                "yAxis": 1,
-                "data": [[1710367200000, 60], [1710368100000, 58], [1710369000000, 55]]
-            },
-            {
-                "name": "Duty Cycle",
-                "yAxis": 1,
-                "data": [[1710367200000, 40], [1710368100000, 42], [1710369000000, 39]]
-            }
-        ]
-    }*/
+    public function getAvailableGraphs() {
+        $graphList = [];
+        $coreModules = $this->readModuleData($this->allskyModules, "system", null);
+        $userModules = $this->readModuleData($this->userModules, "user", null);
+        $myModules = $this->readModuleData($this->myFiles, "user", null);        
 
+        $allModules = array_merge($coreModules, $userModules, $myModules);
+        foreach ($allModules as $key=>$moduleData) {
+            if (isset($moduleData['metadata'])) {
+                if (isset($moduleData['metadata']->graph)) {
+                    $icon = 'fa-chart-line';
+                    if (isset($moduleData['metadata']->graph->icon)) {
+                        $icon = $moduleData['metadata']->graph->icon;
+                    }
+                    $title = ucfirst(str_replace('allsky_', '', $moduleData['metadata']->module));
+                    if (isset($moduleData['metadata']->graph->title)) {
+                        $title = $moduleData['metadata']->graph->title;
+                    }
+                    
+                    $module = $moduleData['metadata']->module;
+
+                    $graphList[$module] = [
+                        'module'=>$module,
+                        'icon'=>$icon,
+                        'title'=>$title,
+                        'table'=>$moduleData['metadata']->extradata->database->table,
+                        'series'=>$moduleData['metadata']->graph->series,
+                        'config'=>$moduleData['metadata']->graph->config
+                    ];
+                }
+            }
+        }
+        $this->sendResponse(json_encode($graphList));
+    }
 }
 
 $moduleUtil = new MODULEUTIL();

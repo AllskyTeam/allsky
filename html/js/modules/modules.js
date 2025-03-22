@@ -986,19 +986,21 @@ class MODULESEDITOR {
 						inputHTML += '</div>'						
 					}
 					
-					if (fieldType == 'dewheatergraph') {
-						controls['chart'].push({
-							'id': key,
-							'data_url': 'includes/moduleutil.php?request=DewHeaterData'
-						})						
-						inputHTML = `
-							<div id="${key}"></div>
-						`
+					if (fieldType == 'graph') {
+						if ('graph' in moduleData.metadata) {
+							controls['chart'].push({
+								'id': key,
+								'module': moduleData,
+								'data_url': 'includes/moduleutil.php?request=GraphData',
+								'chartconfig': moduleData.metadata.graph
+							})						
+							inputHTML = `<div id="${key}"></div>`
+						}
 					}
 
 				}
 
-				if (fieldType == 'dewheatergraph') {
+				if (fieldType == 'graph') {
 					fieldHTML = `
 						<div class="form-group" id="${key}-wrapper">
 							<div class="col-xs-11">
@@ -1015,8 +1017,8 @@ class MODULESEDITOR {
 				} else {
 					fieldHTML = '\
 						<div class="form-group" id="' + key + '-wrapper">\
-							<label for="' + key + '" class="control-label col-xs-4">' + fieldData.description + '</label>\
-							<div class="col-xs-7">\
+							<label for="' + key + '" class="control-label col-xs-3">' + fieldData.description + '</label>\
+							<div class="col-xs-8">\
 								<div class="'+ extraClass + '">\
 									' + inputHTML + '\
 								</div>\
@@ -1051,14 +1053,14 @@ class MODULESEDITOR {
 					switch (width) {
 						case 'full':
 							fieldHTML = '<div class="row" id="' + key + '-wrapper"><div class="col-xs-12">' + fieldHTML + '</div></div>'
-						  break;
+							break;
 						case 'left':
 							fieldHTML = '<div class="row" id="' + key + '-wrapper"><div class="col-xs-4">' + fieldHTML + '</div></div>'
-						  break;
+							break;
 						case 'right':
 							fieldHTML = '<div class="row" id="' + key + '-wrapper"><div class="col-xs-offset-4"><div class="col-xs-8">' + fieldHTML + '</div></div></div>'
-						  break;
-					  }
+							break;
+						}
 
 				}
 				if (fieldError) {
@@ -1321,11 +1323,11 @@ class MODULESEDITOR {
                         <div class="modal-footer">\
                             ' + testButton + '\
 							<div class="pull-right">\
-                            	<button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>\
-                            	<button type="button" class="btn btn-primary" id="module-settings-dialog-save">Save</button>\
-                        	</div>\
-                        </div>\
-                    </div>\
+								<button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>\
+								<button type="button" class="btn btn-primary" id="module-settings-dialog-save">Save</button>\
+							</div>\
+						</div>\
+					</div>\
                 </div>\
             </div>\
         ';
@@ -1366,22 +1368,60 @@ class MODULESEDITOR {
 		})
 
 		Object.entries(controls['chart']).forEach(([key, value]) => {
-            fetch(value['data_url'])
-                .then(response => response.json())
-                .then(data => {
-                    Highcharts.chart(value['id'], {
-                        chart: { type: 'line' },
-						title: { text: 'Temperature, Dew Point, Humidity, Duty Cycle' },
-						xAxis: { type: 'datetime' },
-						yAxis: [
-							{ title: { text: 'Temperature & Dew Point (°C)' } },
-							{ title: { text: 'Humidity (%) & Duty Cycle (%)' }, opposite: true }
-						],
-						series: data.series
-                    });
-                })
-                .catch(error => console.error('Error loading data:', error));
 
+
+
+			$.ajax({
+				url: value['data_url'],
+				type: 'POST',
+				data: {
+					'table': value.module.metadata.extradata.database.table,
+					'series': value.chartconfig.series
+				},
+				dataType: 'json',
+				success: function (data) {
+
+					if ($('body').hasClass('dark')) {
+						Highcharts.theme = {
+							chart: {
+								backgroundColor: '#1e1e1e', 
+								style: { color: '#ffffff' }
+							},
+							title: { style: { color: '#ffffff' } },
+							xAxis: {
+								labels: { style: { color: '#ffffff' } },
+								lineColor: '#ffffff',
+								tickColor: '#ffffff'
+							},
+							yAxis: {
+								labels: { style: { color: '#ffffff' } },
+								gridLineColor: '#444444',
+								title: { style: { color: '#ffffff' } }
+							},
+							legend: {
+								itemStyle: { color: '#ffffff' },
+								itemHoverStyle: { color: '#cccccc' }
+							},
+							tooltip: {
+								backgroundColor: 'rgba(0, 0, 0, 0.7)',
+								style: { color: '#ffffff' }
+							},
+							plotOptions: {
+								series: { dataLabels: { color: '#ffffff' } }
+							}
+						};
+						
+						Highcharts.setOptions(Highcharts.theme);
+					}
+					let chartConfig = value.chartconfig.config
+					chartConfig.series = data.series
+
+					Highcharts.chart(value['id'], chartConfig);
+				},
+				error: function (xhr, status, error) {
+					console.error('AJAX error:', status, error);
+				}
+				});
 		})
 
 

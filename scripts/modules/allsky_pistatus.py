@@ -31,8 +31,59 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 		"experimental": "false",
 		"testable": "true",  
 		"centersettings": "false",
+        "graph": {
+            "icon": "fa-brands fa-raspberry-pi",
+            "title": "Hardware",
+            "config": {
+                "chart": {
+                    "type": "spline",
+                    "zooming": {
+                        "type": "x"
+                    }
+                },
+                "title": {
+                    "text": "Hardware"
+                },
+                "xAxis": {
+                    "type": "datetime",
+                    "dateTimeLabelFormats": {
+                        "day": "%Y-%m-%d",
+                        "hour": "%H:%M"
+                    }
+                },
+                "yAxis": [
+                    { 
+                        "title": {
+                            "text": "CPU Temp"
+                        } 
+                    },
+                    {
+                        "title": { 
+                            "text": "Free Disk"
+                        }, 
+                        "opposite": "true"
+                    }
+                ]
+            },
+            "series": {
+                "exposure": {
+					"name": "CPU Temp",
+                    "yAxis": "0",
+                    "variable": "AS_CPUTEMP"                 
+                },
+                "gain": {
+					"name": "Free Disk",
+                    "yAxis": "1",
+                    "variable": "AS_DISKFREE"
+                }               
+            }
+		},            
 		"extradatafilename": "allsky_pistatus.json", 
 		"extradata": {
+			"database": {
+				"enabled": "True",
+				"table": "allsky_hardware"
+			},      
 			"values": {
 				"AS_CPUTEMP": {
 					"name": "${CPUTEMP}",
@@ -114,7 +165,14 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 					"max": 1440,
 					"step": 1
 				}          
-			}                                 
+			},
+			"graph": {
+				"required": "false",
+				"tab": "History",
+				"type": {
+					"fieldtype": "graph"
+				}
+			}                                   
 		},
 		"enabled": "false"
 	}
@@ -194,7 +252,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 			result = 'Will run in ' + str(period - diff) + ' seconds'
 			
 		if extra_data:
-			allsky_shared.saveExtraData(metaData["extradatafilename"], extra_data, metaData['module'], metaData['extradata'])
+			allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'])
 		
 		allsky_shared.log(4, f'INFO: {result}')
 		return result

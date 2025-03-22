@@ -176,7 +176,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 				star_template_1_size = self.get_param('template1', 0, int)
 				debug = self.get_param('debug', 0, bool)
 				debug_image = self.get_param('debugimage', '', str)
-                      
+
 				using_debug_image = False
 				if debug_image != "":
 					image = cv2.imread(debug_image)
@@ -268,7 +268,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 
 		extra_data = {}
 		extra_data['AS_STARCOUNT'] = star_count
-		allsky_shared.saveExtraData(metaData["extradatafilename"], extra_data, metaData['module'], metaData['extradata'])
+		allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'])
        
 		return result
 

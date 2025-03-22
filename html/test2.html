@@ -1,69 +1,250 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Bootstrap 3 Toolbar Example</title>
-  <!-- Bootstrap 3 CSS -->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>jQuery Drag & Drop Highcharts</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+
   <style>
-    .toolbar {
-      margin: 20px;
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #as-charts-sidebar {
+      background: #f3f3f3;
+      width: 250px;
+      padding: 10px;
+      transition: width 0.3s;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      overflow: hidden;
+    }
+
+    #as-charts-sidebar.as-charts-collapsed {
+      width: 50px;
+      align-items: center;
+    }
+
+    #as-charts-toggleSidebar {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      margin-bottom: 10px;
+      align-self: flex-start;
+    }
+
+    #as-charts-sidebar.as-charts-collapsed #as-charts-toggleSidebar {
+      align-self: center;
+    }
+
+    .as-charts-chart-type {
+      margin: 10px 0;
+      padding: 10px;
+      background: #ddd;
+      cursor: grab;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      border-radius: 5px;
+    }
+
+    .as-charts-chart-type i {
+      width: 20px;
+      text-align: center;
+      font-size: 18px;
+    }
+
+    #as-charts-sidebar.as-charts-collapsed .as-charts-label {
+      display: none;
+    }
+
+    #as-charts-sidebar.as-charts-collapsed .as-charts-chart-type {
+      justify-content: center;
+      padding: 10px 0;
+      width: 100%;
+    }
+
+    #as-charts-main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 10px;
+      padding: 10px;
+      overflow-y: auto;
+      height: 100vh;
+    }
+
+    .as-charts-grid-cell {
+      background: #f9f9f9;
+      border: 2px dashed #ccc;
+      display: flex;
+      align-items: stretch;
+      justify-content: stretch;
+    }
+
+    .as-charts-chart-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .as-charts-chart-remove {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: red;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 25px;
+      height: 25px;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    .as-charts-chart-container {
+      flex: 1;
+      width: 100%;
+      height: 100%;
     }
   </style>
 </head>
-<body>
+<body style="display: flex">
+  <div id="as-charts-sidebar">
+    <button id="as-charts-toggleSidebar" title="Toggle Sidebar">
+      <i class="fas fa-bars"></i>
+    </button>
 
-<div class="container">
-  <h1>Toolbar Example</h1>
-  
-  <div class="toolbar">
-    <div class="btn-toolbar" role="toolbar">
-      
-      <!-- Dropdown Button Group for Drawing Tools -->
-      <div class="btn-group">
-        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-          Select Tool <span class="caret"></span>
-        </button>
-        <ul class="dropdown-menu" role="menu">
-          <li><a href="#" data-tool="Pencil">Pencil</a></li>
-          <li><a href="#" data-tool="Eraser">Eraser</a></li>
-          <li><a href="#" data-tool="Rectangle">Rectangle</a></li>
-          <li><a href="#" data-tool="Circle">Circle</a></li>
-        </ul>
-      </div>
-      
-      <!-- Toggle Button Group: only one button active at any time -->
-      <div class="btn-group" role="group">
-        <button type="button" class="btn btn-default">Button 1</button>
-        <button type="button" class="btn btn-default">Button 2</button>
-        <button type="button" class="btn btn-default">Button 3</button>
-      </div>
-      
+    <div class="as-charts-chart-type as-charts-draggable" draggable="true" data-type="line">
+      <i class="fas fa-chart-line"></i><span class="as-charts-label"> Line Chart</span>
+    </div>
+    <div class="as-charts-chart-type as-charts-draggable" draggable="true" data-type="bar">
+      <i class="fas fa-chart-bar"></i><span class="as-charts-label"> Bar Chart</span>
+    </div>
+    <div class="as-charts-chart-type as-charts-draggable" draggable="true" data-type="pie">
+      <i class="fas fa-chart-pie"></i><span class="as-charts-label"> Pie Chart</span>
     </div>
   </div>
-  
-</div>
 
-<!-- jQuery -->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-<!-- Bootstrap 3 JS -->
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-<script>
-$(document).ready(function(){
-  // Update the dropdown button label when a tool is selected.
-  $('.dropdown-menu a').click(function(e) {
-    e.preventDefault();
-    var tool = $(this).data('tool');
-    $(this).closest('.btn-group').find('.dropdown-toggle').html(tool + ' <span class="caret"></span>');
-  });
-  
-  // Ensure only one button is active at a time in the button group.
-  $('.btn-group[role="group"] button').click(function(){
-    $(this).addClass('active').siblings().removeClass('active');
-  });
-});
-</script>
+  <div id="as-charts-main">
+    <div class="as-charts-grid-cell"></div>
+    <div class="as-charts-grid-cell"></div>
+    <div class="as-charts-grid-cell"></div>
+    <div class="as-charts-grid-cell"></div>
+    <div class="as-charts-grid-cell"></div>
+    <div class="as-charts-grid-cell"></div>
+  </div>
 
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+
+  <script>
+    $(document).ready(function () {
+      $('#as-charts-toggleSidebar').on('click', function () {
+        $('#as-charts-sidebar').toggleClass('as-charts-collapsed');
+      });
+
+      $('.as-charts-draggable').on('dragstart', function (e) {
+        e.originalEvent.dataTransfer.setData("chart-type", $(this).data("type"));
+      });
+
+      $('.as-charts-grid-cell').on('dragover', function (e) {
+        e.preventDefault();
+      });
+
+      $('.as-charts-grid-cell').on('drop', function (e) {
+        e.preventDefault();
+        const type = e.originalEvent.dataTransfer.getData("chart-type");
+        if (!type) return;
+
+        $(this).empty();
+
+        const chartId = 'as-charts-chart-' + Date.now();
+        const $wrapper = $('<div class="as-charts-chart-wrapper" draggable="true"></div>');
+        const $removeBtn = $('<button class="as-charts-chart-remove">✖</button>');
+        const $container = $('<div class="as-charts-chart-container">').attr('id', chartId);
+
+        $wrapper.append($removeBtn, $container);
+        $(this).append($wrapper);
+
+        renderHighchart(chartId, type);
+      });
+
+      $(document).on('dragstart', '.as-charts-chart-wrapper', function (e) {
+        e.originalEvent.dataTransfer.setData("chart-html", $(this).parent().html());
+        $(this).addClass('as-charts-dragging');
+      });
+
+      $(document).on('drop', '.as-charts-grid-cell', function (e) {
+        e.preventDefault();
+        const chartHTML = e.originalEvent.dataTransfer.getData("chart-html");
+        if (chartHTML) {
+          $(this).empty().html(chartHTML);
+          reRenderChartsInCell($(this));
+        }
+      });
+
+      $(document).on('click', '.as-charts-chart-remove', function () {
+        $(this).closest('.as-charts-grid-cell').empty();
+      });
+
+      function reRenderChartsInCell($cell) {
+        $cell.find('.as-charts-chart-wrapper').each(function () {
+          const $container = $(this).find('.as-charts-chart-container');
+          const type = detectChartTypeFromHTML($container);
+          renderHighchart($container.attr('id'), type);
+        });
+      }
+
+      function detectChartTypeFromHTML($el) {
+        return 'bar'; // Fallback: real detection would depend on metadata
+      }
+
+      function renderHighchart(containerId, type) {
+        let options = {
+          chart: { type: type === 'bar' ? 'column' : type },
+          title: { text: type.charAt(0).toUpperCase() + type.slice(1) + ' Chart' },
+          xAxis: { categories: ['A', 'B', 'C', 'D'] },
+          series: [{
+            name: 'Example',
+            data: [29, 71, 106, 129],
+            colorByPoint: true
+          }],
+          credits: { enabled: false }
+        };
+
+        if (type === 'pie') {
+          options = {
+            chart: { type: 'pie' },
+            title: { text: 'Pie Chart' },
+            series: [{
+              name: 'Values',
+              data: [
+                { name: 'A', y: 29 },
+                { name: 'B', y: 71 },
+                { name: 'C', y: 106 },
+                { name: 'D', y: 129 }
+              ]
+            }],
+            credits: { enabled: false }
+          };
+        }
+
+        Highcharts.chart(containerId, options);
+      }
+    });
+  </script>
 </body>
 </html>

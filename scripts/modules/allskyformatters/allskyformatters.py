@@ -1,10 +1,9 @@
 import time
 import locale
 import allsky_shared as allsky_shared
-
 from datetime import date, datetime
-
 from allskyexceptions import AllskyFormatError
+
 
 class AllskyFormatters:
 	def __init__(self):
@@ -99,9 +98,6 @@ class AllskyFormatters:
           
 		return value
 
-	def as_string(self, value, variable_name, format, variable_type):
-		return value
-
 	def as_timestamp(self, value, variable_name, format, variable_type):
 		try:
 			internalFormat = allsky_shared.getSetting('timeformat')
@@ -167,10 +163,16 @@ class AllskyFormatters:
 				format = "{" + format + "}"
 			convertValue = value
 			try:
+				if '.' in str(value):
+					convertValue = float(value)
+				else:
+					convertValue = int(value)
+
 				#try:
 				#	convertValue = int(value)
 				#except ValueError:
 				#	convertValue = float(value)
+				
 				try:
 					if format.startswith('{'):
 						value = format.format(convertValue)
@@ -180,11 +182,11 @@ class AllskyFormatters:
 						else:
 							value = convertValue
 				except Exception as err:
-					error =  f"ERROR: Cannot use format '{original_format}' on Number variable (value={value})."
-					raise AllskyFormatError(error, 0, True)        
+					error =  f"ERROR: Cannot use format '{original_format}' on Number variable (value={value}). Error is {err}"
+					raise AllskyFormatError(error, 0, False)        
 			except ValueError as err:
-					error =  f"ERROR: Cannot use format '{original_format}' on Number variable (value={value})."
-					raise AllskyFormatError(error, 0, True)          
+					error =  f"ERROR: Cannot use format '{original_format}' on Number variable (value={value}). Error is {err}"
+					raise AllskyFormatError(error, 0, False)          
 
 		return value
 
@@ -435,5 +437,6 @@ class AllskyFormatters:
 				value = f'FL{int(value / 100):03}'
 			
 		return value
-     
+
 allsky_formatters = AllskyFormatters()
+

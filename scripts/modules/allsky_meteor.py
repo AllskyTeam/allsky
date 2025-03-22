@@ -247,13 +247,13 @@ def meteor1(params, event):
 
 def meteor_cleanup():
 	moduleData = {
-	    "metaData": metaData,
-	    "cleanup": {
-	        "files": {},
-	        "env": {
-	            "AS_METEORLINECOUNT",
-	            "AS_METEORCOUNT"
-	        }
-	    }
+		"metaData": metaData,
+		"cleanup": {
+			"files": {},
+			"env": {
+				"AS_METEORLINECOUNT",
+				"AS_METEORCOUNT"
+			}
+		}
 	}
 	allsky_shared.cleanupModule(moduleData)

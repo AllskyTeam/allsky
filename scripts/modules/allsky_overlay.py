@@ -21,7 +21,7 @@ from pytz import timezone
 
 
 from allskyformatters import allskyformatters
-from allskyvariables import allskyvariables
+from allskyvariables.allskyvariables import ALLSKYVARIABLES
 from allskyexceptions import AllskyFormatError
 from allskyoverlay.overlaydata import ALLSKYOVERLAYDATA
 
@@ -68,7 +68,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 	_image_date = None
 	_debug = False
 	_not_enabled = ""
-
+	_variables = None
 	_errors = ''
 	_overlay_editor_config = None
 	
@@ -85,7 +85,8 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		self._OVERLAYTLEFOLDER = os.path.join(self._OVERLAYTMP , 'tle')
 		self._createTempDir(self._OVERLAYTLEFOLDER)
 
-		self._fields = allskyvariables.get_variables()
+		self._variables = ALLSKYVARIABLES()
+		self._fields = self._variables.get_variables()
  
 		shared.log(4, f"INFO: Config file set to '{self._overlay_config_file}'.")
 
@@ -479,7 +480,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 			imageY = int(imageData["y"])
 			image = None
 
-			imagePath = os.path.join(s.ALLSKY_OVERLAY, "images", imageName)
+			imagePath = os.path.join(shared.ALLSKY_OVERLAY, "images", imageName)
 
 			if shared.isFileReadable(imagePath):
 				image = cv2.imread(imagePath, cv2.IMREAD_UNCHANGED)
@@ -589,7 +590,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 				self._timer("Saving Final Image")
 				if self._debug:
 					self._timer("Writing debug data")
-					self._dump_debug_data()
+				self._dump_debug_data()
 
 		self._timer("Annotation Complete", showIntermediate=False)
 

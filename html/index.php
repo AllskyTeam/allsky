@@ -264,6 +264,9 @@ if ($useRemoteWebsite) {
 						<a id="overlay" href="index.php?page=overlay"><i class="fa fa-edit fa-fw"></i> Overlay Editor</a>
 					</li>
 					<li>
+						<a id="charts" href="index.php?page=charts"><i class="fa-solid fa-chart-line"></i> Charts</a>
+					</li>					
+					<li>
 						<a id="module" href="index.php?page=module"><i class="fa fa-bars fa-fw"></i> Module Manager</a>
 					</li>
 					<li>
@@ -469,7 +472,11 @@ if ($useRemoteWebsite) {
                     case "support":
 						include_once('includes/support.php');
 						break;
-
+					case "charts":
+						include_once('includes/charts.php');
+						DisplayCharts();
+						break;
+	
 					case "live_view":
 					default:
 						include_once('includes/liveview.php');

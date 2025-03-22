@@ -14,7 +14,7 @@ import time
 try:
 	import allsky_shared as shared
 	from allskyformatters import allskyformatters
-	from allskyvariables import allskyvariables
+	from allskyvariables.allskyvariables import ALLSKYVARIABLES
 	from allskyexceptions import AllskyFormatError 
 except:
 	pass
@@ -48,18 +48,22 @@ class ALLSKYOVERLAYDATA:
 		'stroke': None,
 		'strokewidth': None,
 	}
+	variable_class = None
+ 
  
 	def __init__(self, from_command_line, values_only, debug_mode, overlay_file):
 		self.from_command_line = from_command_line
 		self.values_only = values_only
 		self.debug_mode = debug_mode
 		self.overlay_file = overlay_file
+  
+		self.variable_class = ALLSKYVARIABLES()
 
-	def __debug(self, message):
+	def _debug(self, message):
 		if self.debug_mode:
 			print(message)
    
-	def __log(self, level, text, prevent_newline = False, exit_code=None, send_to_allsky=False):
+	def _log(self, level, text, prevent_newline = False, exit_code=None, send_to_allsky=False):
 		if self.from_command_line:
 			if self.debug_mode:
 				shared.log(level, text, prevent_newline, exit_code, sendToAllsky=send_to_allsky)
@@ -126,7 +130,7 @@ class ALLSKYOVERLAYDATA:
 					field_data['value'] = field_data['value']['value']
 		except Exception as e:
 			eType, eObject, eTraceback = sys.exc_info()
-			self.__log(0, f'ERROR: __parse_extra_data_field failed on line {eTraceback.tb_lineno} - {e}')
+			self._log(0, f'ERROR: __parse_extra_data_field failed on line {eTraceback.tb_lineno} - {e}')
 
 		return field_data
 
@@ -139,9 +143,9 @@ class ALLSKYOVERLAYDATA:
 					for (field_name, field_data) in json_data.items():
 						self.extra_fields[field_name] = self.__parse_extra_data_field(field_data)
 			except:
-				self.__log(0, f'WARNING: Data File {os.path.basename(file_name)} is invalid - IGNORING.')
+				self._log(0, f'WARNING: Data File {os.path.basename(file_name)} is invalid - IGNORING.')
 		else:
-			self.__log(0, f'ERROR: Data File {os.path.basename(file_name)} is not accessible - IGNORING.')
+			self._log(0, f'ERROR: Data File {os.path.basename(file_name)} is not accessible - IGNORING.')
  
 	def __read_text_file(self, file_name):
 		pass
@@ -154,12 +158,12 @@ class ALLSKYOVERLAYDATA:
 			if file_extension == '.txt':
 				self.__read_text_file(file_name)
 			else:
-				self.__log(4, f'INFO: Unknown file {os.path.basename(file_name)}')
+				self._log(4, f'INFO: Unknown file {os.path.basename(file_name)}')
 
 		self.__remove_expired_fields()
     
 	def __add_core_allsky_variables(self):
-		debug_variables = allskyvariables.get_debug_variables()
+		debug_variables = self.variable_class.get_debug_variables()
    
 		for debug_variable in debug_variables:
 			if not debug_variable in self.extra_fields:
@@ -179,7 +183,7 @@ class ALLSKYOVERLAYDATA:
 		for (dirPath, dirNames, file_names) in os.walk(self.extra_folder):
 			for file_name in file_names:
 				extra_data_file_name = os.path.join(self.extra_folder, file_name)
-				self.__debug(f'INFO: Loading Data File {extra_data_file_name}')
+				self._debug(f'INFO: Loading Data File {extra_data_file_name}')
 				self.__read_data(extra_data_file_name)
 
 		self.__add_core_allsky_variables()
@@ -191,15 +195,15 @@ class ALLSKYOVERLAYDATA:
 		field_label = field_data['label']
 		variable_matches = re.findall(variable_regex, field_label)   
 		
-		self.__debug(f'INFO: Found the following variables {variable_matches}')
+		self._debug(f'INFO: Found the following variables {variable_matches}')
 		format_matches = None
 		if 'format' in field_data:
 			format_regex = r"\{(.*?)\}"
 			formats = field_data['format']    
 			format_matches = re.findall(format_regex, formats)
-			self.__debug(f'INFO: Found the following formats {format_matches}')
+			self._debug(f'INFO: Found the following formats {format_matches}')
 		else:
-			self.__debug(f'INFO: No formats found')
+			self._debug(f'INFO: No formats found')
 
 		for variable_pos, raw_variable in enumerate(variable_matches):
 			variable = 'AS_' + raw_variable.replace('${','').replace('}', '')
@@ -208,7 +212,7 @@ class ALLSKYOVERLAYDATA:
 				value = self.extra_fields[variable]['value']
 			pre_formatted_value = value
 		
-			variable_definition = allskyvariables.get_variable(self.variables, variable)
+			variable_definition = self.variable_class.get_variable(self.variables, variable)
 			if variable_definition is not None:
 				if isinstance(variable_definition['value'] , dict):
 					for (def_key, def_value) in variable_definition['value'].items():
@@ -227,42 +231,39 @@ class ALLSKYOVERLAYDATA:
 					if 'type' in field_data:
 						variable_group = field_data['type']
           
-					self.__debug(f'INFO: Formatting variable {variable}, value {self.extra_fields[variable]["value"]}, using format "{formats}"')
+					self._debug(f'INFO: Formatting variable {variable}, value {self.extra_fields[variable]["value"]}, using format "{formats}"')
 					format_list = formats.split('|')
 					for index, format in enumerate(format_list):
 						if index > 0:
 							variable_group = 'number'
 						format_function = 'as_' + variable_group.lower()
 						if hasattr(allskyformatters.allsky_formatters, format_function):
-							self.__debug(f'INFO: Formatter "{format_function}" found for variable "{variable}". Value = "{value}", format = "{format}"')        
+							self._debug(f'INFO: Formatter "{format_function}" found for variable "{variable}". Value = "{value}", format = "{format}"')        
 							try:
 								if variable == 'DATE' or variable == 'AS_DATE' or variable == 'AS_TIME' or variable == 'TIME':
 									value = time.time()
 					
 								value = getattr(allskyformatters.allsky_formatters, format_function)(value, variable, format, '')
 							except AllskyFormatError as e:
-								self.__log(e.log_level, e.message, e.send_to_allsky)
-							#except Exception as e:
-							#	print(e)
-							#	pass
+								self._log(e.log_level, e.message, send_to_allsky=e.send_to_allsky)
 						else:
-							self.__log(4, f'Formatter {format_function} NOT found')	
-					else:
-						self.__debug(f'ERROR: No variable defintion found for {variable}')
+							self._log(4, f'Formatter {format_function} NOT found')	
+					#else:
+					#	self._debug(f'ERROR: No variable defintion found for {variable}')
 				else:
-					self.__debug(f'ERROR: Variable {variable} not found in extra fields')
+					self._debug(f'ERROR: Variable {variable} not found in extra fields')
         
-			self.__debug(f'INFO: pre formatted value = "{pre_formatted_value}", value after formatting = "{value}"')
+			self._debug(f'INFO: pre formatted value = "{pre_formatted_value}", value after formatting = "{value}"')
 
 			if not value:
 				if 'empty' in field_data:
 					if field_data['empty']:
 						value = field_data['empty']
-						self.__debug(f'INFO: Field value is empty and default value "{field_data["empty"]}" provided')
+						self._debug(f'INFO: Field value is empty and default value "{field_data["empty"]}" provided')
 					else:
-						self.__debug('INFO: Field value is empty but no empty value provided')
+						self._debug('INFO: Field value is empty but no empty value provided')
 				else:
-					self.__debug('INFO: Field value is empty but no empty value provided')
+					self._debug('INFO: Field value is empty but no empty value provided')
 
 			if value:
 				field_label = field_label.replace('&deg;', '\u00B0')
@@ -273,28 +274,28 @@ class ALLSKYOVERLAYDATA:
 
 		field_data['label'] = field_label
 
-		self.__debug(f'INFO: Final formatted label "{field_label}"')
-		self.__debug('')
+		self._debug(f'INFO: Final formatted label "{field_label}"')
+		self._debug('')
 
 		return field_label
 
 	def format(self):
 		if self.overlay_file != '':     
-			self.__debug(f'INFO: Using overlay "{self.overlay_file}"')
+			self._debug(f'INFO: Using overlay "{self.overlay_file}"')
 			if shared.isFileReadable(self.overlay_file):
 				#try:
 				with open(self.overlay_file) as file:
 					json_overlay = json.load(file)
-					self.variables = allskyvariables.get_variables()
+					self.variables = self.variable_class.get_variables()
 					for index,field_data in enumerate(json_overlay['fields']):
-						self.__debug(f"INFO: Formatting field {field_data['label']}")
+						self._debug(f"INFO: Formatting field {field_data['label']}")
 						field_data['label'] = self.__format_field(field_data)
 
 				#except:
 				#	self._log(0, f'WARNING: Data File {overlay_file} is invalid - IGNORING.', sendToAllsky=True)
 				result = json_overlay['fields']
 			else:
-				self.__log(0, f'ERROR: Data File {self.overlay_file} is not accessible - IGNORING.', send_to_allsky=False)
+				self._log(0, f'ERROR: Data File {self.overlay_file} is not accessible - IGNORING.', send_to_allsky=False)
 		else:
 			result = self.extra_fields
    
@@ -316,9 +317,6 @@ if __name__ == '__main__':
 	if args.overlay == '':
 		args.valuesonly = True
 		
-	allsky_data = ALLSKYOVERLAYDATA(True, args.valuesonly, args.debug, args.overlay)
-	allsky_data.setup_for_command_line(args.allskyhome)
-
 	try:
 		allsky_my_files_folder = os.environ["ALLSKY_MYFILES_DIR"]
 	except KeyError:
@@ -346,9 +344,12 @@ if __name__ == '__main__':
 
 	import allsky_shared as shared
 	from allskyformatters import allskyformatters
-	from allskyvariables import allskyvariables
+	from allskyvariables.allskyvariables import ALLSKYVARIABLES
 	from allskyexceptions import AllskyFormatError
 
+	allsky_data = ALLSKYOVERLAYDATA(True, args.valuesonly, args.debug, args.overlay)
+	allsky_data.setup_for_command_line(args.allskyhome)
+ 
 	try:
 		shared.LOGLEVEL = int(os.environ['ALLSKY_DEBUG_LEVEL'])
 	except KeyError:

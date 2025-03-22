@@ -1496,3 +1496,19 @@ function get_ls_contents()
 			exit(! in_info);
 		}' "${FILE}"
 }
+
+####
+# Get all settings at once rather than individually via settings().
+function getAllSettings()
+{
+	local X
+
+	if ! X="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix S_ --shell 2>&1 )" ; then
+		echo "${X}"
+		return 1
+	fi
+
+	eval "${X}"
+	return 0
+}
+

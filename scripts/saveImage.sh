@@ -183,7 +183,7 @@ if [[ ${AS_RESIZE_WIDTH} -gt 0 && ${AS_RESIZE_HEIGHT} -gt 0 ]]; then
 	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "${ME}: Resizing '${CURRENT_IMAGE}' to ${AS_RESIZE_WIDTH}x${AS_RESIZE_HEIGHT}"
 	fi
-	if ! convert "${CURRENT_IMAGE}" -resize "${AS_RESIZE_WIDTH}x${AS_RESIZE_HEIGHT}" "${CURRENT_IMAGE}" ; then
+	if ! convert "${CURRENT_IMAGE}" -resize "${AS_RESIZE_WIDTH}x${AS_RESIZE_HEIGHT}!" "${CURRENT_IMAGE}" ; then
 		E_ "*** ${ME}: ERROR: image resize failed; not saving."
 		exit 4
 	fi

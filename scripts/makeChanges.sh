@@ -133,20 +133,6 @@ function check_website()
 	return "${HAS_WEBSITE_RET}"
 }
 
-# Get all settings at once rather than individually via settings().
-function getAllSettings()
-{
-	local X
-
-	if ! X="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix S_ --shell 2>&1 )" ; then
-		echo "${X}"
-		return 1
-	fi
-
-	eval "${X}"
-	return 0
-}
-
 if [[ -f ${SETTINGS_FILE} ]]; then
 	# If the settings file doesn't exist, check_website() won't find a website and
 	# we are likely called from the install script before the file is created.

@@ -1310,7 +1310,9 @@ function upload_all()
 		if [[ -z ${ROOT} ]]; then
 			REMOTE_DIR="${SUBDIR}"
 		else
-			REMOTE_DIR="${ROOT}/${SUBDIR}"
+			REMOTE_DIR="${ROOT}"
+			[[ ${ROOT: -1:1} != "/" ]] && REMOTE_DIR+="/"
+			REMOTE_DIR+="${SUBDIR}"
 		fi
 		#shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/upload.sh" ${SILENT} ${ARGS} "${REMOTE_WEB}" \

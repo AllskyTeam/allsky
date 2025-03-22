@@ -784,7 +784,7 @@ int displayNotificationImage(char const *arg)
 {
 	char cmd[1024];
 
-	snprintf(cmd, sizeof(cmd)-1, "%s/scripts/copy_notification_image.sh %s", CG.allskyHome, arg);
+	snprintf(cmd, sizeof(cmd)-1, "%s/scripts/copyNotificationImage.sh %s", CG.allskyHome, arg);
 	Log(4, "Calling system(%s)\n", cmd);
 	return(system(cmd));
 }

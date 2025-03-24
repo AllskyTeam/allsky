@@ -8,7 +8,8 @@ function DisplayCharts() {
 
   <link rel="stylesheet" href="https://unpkg.com/gridstack/dist/gridstack.min.css" />
   <script src="https://unpkg.com/gridstack/dist/gridstack-all.js"></script>
-  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="/js/highcharts/code/highcharts.js"></script>
+  <script src="/js/highcharts/code/highcharts-more.js"></script>
 
   <script src="/js/charts.js"></script>
 

@@ -1076,8 +1076,6 @@ class MODULEUTIL
 	}
 
     public function postGraphData() {
-        $db = new SQLite3('/home/pi/allsky/config/myFiles/allsky.db');
-
         $config = $_POST["series"];
         $table = $_POST["table"];
 
@@ -1087,13 +1085,28 @@ class MODULEUTIL
         }
         
         $highchartsSeries = [];
+
+        $host = 'localhost';
+        $db   = 'allsky';
+        $user = 'allsky';
+        $pass = 'allsky';
+        $charset = 'utf8mb4';
         
+        $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+        
+        $options = [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        ];
+        $pdo = new PDO($dsn, $user, $pass, $options);
+
         $query = "SELECT json_data, timestamp FROM " . $table . " ORDER BY timestamp ASC";
-        $results = $db->query($query);
+        $stmt = $pdo->query($query);        
         
-        while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
-            $jsonString = stripslashes($row['json_data']);
-            $jsonString = trim($jsonString, '"'); 
+        while ($row = $stmt->fetch()) {
+            $jsonString = json_decode($row['json_data']);
+            //$jsonString = stripslashes($jsonString);
+            //$jsonString = trim($jsonString, '"'); 
 
             $timestamp = intval($row['timestamp'])*1000;
         
@@ -1134,26 +1147,32 @@ class MODULEUTIL
         $allModules = array_merge($coreModules, $userModules, $myModules);
         foreach ($allModules as $key=>$moduleData) {
             if (isset($moduleData['metadata'])) {
-                if (isset($moduleData['metadata']->graph)) {
-                    $icon = 'fa-chart-line';
-                    if (isset($moduleData['metadata']->graph->icon)) {
-                        $icon = $moduleData['metadata']->graph->icon;
-                    }
-                    $title = ucfirst(str_replace('allsky_', '', $moduleData['metadata']->module));
-                    if (isset($moduleData['metadata']->graph->title)) {
-                        $title = $moduleData['metadata']->graph->title;
-                    }
-                    
-                    $module = $moduleData['metadata']->module;
+                if (isset($moduleData['metadata']->graphs)) {
 
-                    $graphList[$module] = [
-                        'module'=>$module,
-                        'icon'=>$icon,
-                        'title'=>$title,
-                        'table'=>$moduleData['metadata']->extradata->database->table,
-                        'series'=>$moduleData['metadata']->graph->series,
-                        'config'=>$moduleData['metadata']->graph->config
-                    ];
+
+                    foreach ($moduleData['metadata']->graphs as $graphKey=>$graphData) {
+
+                        $icon = 'fa-chart-line';
+                        if (isset($graphData->icon)) {
+                            $icon = $graphData->icon;
+                        }
+                        $title = ucfirst(str_replace('allsky_', '', $moduleData['metadata']->module));
+                        if (isset($graphData->title)) {
+                            $title = $graphData->title;
+                        }
+                        
+                        $module = $moduleData['metadata']->module;
+
+                        $graphList[$module . '-' . $graphKey] = [
+                            'module'=>$module,
+                            'key'=>$graphKey,
+                            'icon'=>$icon,
+                            'title'=>$title,
+                            'table'=>$moduleData['metadata']->extradata->database->table,
+                            'series'=>$graphData->series,
+                            'config'=>$graphData->config
+                        ];
+                    }
                 }
             }
         }

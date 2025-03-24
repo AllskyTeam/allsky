@@ -13,6 +13,7 @@ import subprocess
 import string
 import json
 import sqlite3
+import mysql.connector
 import math
 import cv2
 import shutil
@@ -503,33 +504,35 @@ def validateExtraFileName(params, module, fileKey):
     params[fileKey] = extraDataFilename
 
 
-
 def update_database(structure, extra_data):
     try:
         if 'enabled' in structure['database']:
             if structure['database']['enabled']:
                 if 'table' in structure['database']:
                     database_table = structure['database']['table']
-                    base_path = get_environment_variable('ALLSKY_MYFILES_DIR')
-                    database_path = os.path.join(base_path, 'allsky.db')
-                    conn = sqlite3.connect(database_path, 5)
+                    conn = mysql.connector.connect(
+                        host="localhost",
+                        user="allsky",
+                        password="allsky",
+                        database="allsky"
+                    )
+
                     cursor = conn.cursor()
-                    cursor.execute('PRAGMA journal_mode=WAL;')
-                    cursor.execute('PRAGMA synchronous=NORMAL;')
-
-                    cursor.execute(f'CREATE TABLE IF NOT EXISTS {database_table} (id INTEGER PRIMARY KEY AUTOINCREMENT,timestamp REAL NOT NULL,json_data TEXT NOT NULL)')
-
-                    timestamp = math.floor(time.time())
+                    cursor.execute(f'CREATE TABLE IF NOT EXISTS {database_table} (id INT AUTO_INCREMENT PRIMARY KEY, timestamp BIGINT, json_data JSON)')
+                    unix_timestamp = math.floor(time.time())
                     json_string = json.dumps(extra_data, separators=(",", ":"), ensure_ascii=True).replace("\n", "").replace("\r", "")
                     json_string = json_string.replace("\\n","").replace("\\r","").replace("\\","")
-                    cursor.execute(f'INSERT INTO {database_table} (timestamp, json_data) VALUES (?, ?)', (timestamp, json_string))
+                    json_string = json.dumps(extra_data)
+                    insert_query = f"INSERT INTO {database_table} (timestamp, json_data) VALUES (%s, %s)"
+                    cursor.execute(insert_query, (unix_timestamp, json_string))
 
                     conn.commit()
+                    cursor.close()
                     conn.close()
+
     except Exception as e:
         eType, eObject, eTraceback = sys.exc_info()            
         log(0, f'ERROR: Module update_database failed on line {eTraceback.tb_lineno} - {e}')
-
 
 def save_extra_data(file_name, extra_data, source='', structure={}, custom_fields={}):
     saveExtraData(file_name, extra_data, source, structure, custom_fields)

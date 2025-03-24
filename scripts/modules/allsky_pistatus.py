@@ -31,52 +31,55 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 		"experimental": "false",
 		"testable": "true",  
 		"centersettings": "false",
-        "graph": {
-            "icon": "fa-brands fa-raspberry-pi",
-            "title": "Hardware",
-            "config": {
-                "chart": {
-                    "type": "spline",
-                    "zooming": {
-                        "type": "x"
-                    }
-                },
-                "title": {
-                    "text": "Hardware"
-                },
-                "xAxis": {
-                    "type": "datetime",
-                    "dateTimeLabelFormats": {
-                        "day": "%Y-%m-%d",
-                        "hour": "%H:%M"
-                    }
-                },
-                "yAxis": [
-                    { 
-                        "title": {
-                            "text": "CPU Temp"
-                        } 
-                    },
-                    {
-                        "title": { 
-                            "text": "Free Disk"
-                        }, 
-                        "opposite": "true"
-                    }
-                ]
-            },
-            "series": {
-                "exposure": {
-					"name": "CPU Temp",
-                    "yAxis": "0",
-                    "variable": "AS_CPUTEMP"                 
-                },
-                "gain": {
-					"name": "Free Disk",
-                    "yAxis": "1",
-                    "variable": "AS_DISKFREE"
-                }               
-            }
+        "graphs": {
+            "chart1": {
+				"icon": "fa-brands fa-raspberry-pi",
+				"title": "Hardware",
+				"main": "true",
+				"config": {
+					"chart": {
+						"type": "spline",
+						"zooming": {
+							"type": "x"
+						}
+					},
+					"title": {
+						"text": "Hardware"
+					},
+					"xAxis": {
+						"type": "datetime",
+						"dateTimeLabelFormats": {
+							"day": "%Y-%m-%d",
+							"hour": "%H:%M"
+						}
+					},
+					"yAxis": [
+						{ 
+							"title": {
+								"text": "CPU Temp"
+							} 
+						},
+						{
+							"title": { 
+								"text": "Free Disk"
+							}, 
+							"opposite": "true"
+						}
+					]
+				},
+				"series": {
+					"exposure": {
+						"name": "CPU Temp",
+						"yAxis": "0",
+						"variable": "AS_CPUTEMP"                 
+					},
+					"gain": {
+						"name": "Free Disk",
+						"yAxis": "1",
+						"variable": "AS_DISKFREE"
+					}               
+				}
+			}
 		},            
 		"extradatafilename": "allsky_pistatus.json", 
 		"extradata": {

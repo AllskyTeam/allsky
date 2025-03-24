@@ -24,52 +24,54 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 			"day",
 			"night"
 		],
-        "graph": {
-            "icon": "fas fa-camera",
-            "title": "Camera",
-            "config": {
-                "chart": {
-                    "type": "spline",
-                    "zooming": {
-                        "type": "x"
-                    }
-                },
-                "title": {
-                    "text": "Exposures"
-                },
-                "xAxis": {
-                    "type": "datetime",
-                    "dateTimeLabelFormats": {
-                        "day": "%Y-%m-%d",
-                        "hour": "%H:%M"
-                    }
-                },
-                "yAxis": [
-                    { 
-                        "title": {
-                            "text": "Exposure"
-                        } 
-                    },
-                    {
-                        "title": { 
-                            "text": "Gain"
-                        }, 
-                        "opposite": "true"
-                    }
-                ]
-            },
-            "series": {
-                "exposure": {
-					"name": "Exposure",
-                    "yAxis": "0",
-                    "variable": "AS_CAMERAEXPOSURE"                 
-                },
-                "gain": {
-					"name": "Gain",
-                    "yAxis": "1",
-                    "variable": "AS_CAMERAGAIN"
-                }               
-            }
+        "graphs": {
+            "chart1": {
+				"icon": "fas fa-camera",
+				"title": "Camera",
+				"config": {
+					"chart": {
+						"type": "spline",
+						"zooming": {
+							"type": "x"
+						}
+					},
+					"title": {
+						"text": "Exposures"
+					},
+					"xAxis": {
+						"type": "datetime",
+						"dateTimeLabelFormats": {
+							"day": "%Y-%m-%d",
+							"hour": "%H:%M"
+						}
+					},
+					"yAxis": [
+						{ 
+							"title": {
+								"text": "Exposure"
+							} 
+						},
+						{
+							"title": { 
+								"text": "Gain"
+							}, 
+							"opposite": "true"
+						}
+					]
+				},
+				"series": {
+					"exposure": {
+						"name": "Exposure",
+						"yAxis": "0",
+						"variable": "AS_CAMERAEXPOSURE"                 
+					},
+					"gain": {
+						"name": "Gain",
+						"yAxis": "1",
+						"variable": "AS_CAMERAGAIN"
+					}               
+				}
+			}
         },
 		"extradata": {
 			"database": {

@@ -966,7 +966,7 @@ function usage_and_exit()
 	fi
 
 	MSG="Usage: ${ME} [--help] [--debug] [--skipupload] [-auto] [--text]"
-	echo -e "\n${C}${MSG}${NC}"
+	echo -e "\n${C}${MSG}${cNC}"
 	echo "where:"
 	echo "    '--help' displays this message and exits."
 	echo "    '--debug' adds addtional debugging information to the installation log."
@@ -1007,7 +1007,7 @@ function set_colors()
 {
 	if [[ ${TEXT_ONLY} == "true" ]]; then
 		DIALOG_RED="${cRED}"
-		DIALOG_NC="${NC}"
+		DIALOG_NC="${cNC}"
 	fi
 }
 

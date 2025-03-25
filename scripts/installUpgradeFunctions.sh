@@ -1636,23 +1636,23 @@ function enter_yes_no()
 	local RET=1
 	local ANSWER
 
-	if [[ ${AUTO_CONFIRM} == "false" ]]; then
-		while true; do
-			echo -e "${TEXT}"
-			read -r -p "Do you want to continue? (y/n): " ANSWER
-			ANSWER="${ANSWER,,}"	# convert to lowercase
-
-			if [[ ${ANSWER} == "y" || ${ANSWER} == "yes" ]]; then
-				return 0
-			elif [[ ${ANSWER} == "n" || ${ANSWER} == "no" ]]; then
-				return 1
-			else
-				E_ "\nInvalid response. Please enter y/yes or n/no."
-			fi
-		done
-	else
+	if [[ ${AUTO_CONFIRM} == "true" ]]; then
 		return 0
 	fi
+
+	while true; do
+		echo -e "${TEXT}"
+		read -r -p "Do you want to continue? (y/n): " ANSWER
+		ANSWER="${ANSWER,,}"	# convert to lowercase
+
+		if [[ ${ANSWER} == "y" || ${ANSWER} == "yes" ]]; then
+			return 0
+		elif [[ ${ANSWER} == "n" || ${ANSWER} == "no" ]]; then
+			return 1
+		else
+			E_ "\nInvalid response. Please enter y/yes or n/no."
+		fi
+	done
 
 	return "${RET}"
 }
@@ -1662,7 +1662,7 @@ function enter_yes_no()
 function press_any_key()
 {
 	if [[ ${AUTO_CONFIRM} == "false" ]]; then
-		echo -e "${1}\nPress any key to continue..."
+		echo -e "${1}\n\nPress any key to continue..."
 		read -r -n1 -s
 	fi
 }
@@ -1689,6 +1689,17 @@ function display_box()
 		elif [[ ${DIALOG_TYPE} == "--yesno" ]]; then
 			enter_yes_no "${DIALOG_TEXT}"
 			RET=$?
+		elif [[ ${DIALOG_TYPE} == "--inputbox" ]]; then
+			# Need prompts to go to stderr since stdout is likely
+			# being stored in a variable so the user won't see it.
+			echo -en "${DIALOG_TEXT} "
+			read -r x
+			if [[ -z ${x} ]]; then
+				return 1
+			else
+				echo -e "${x}" >&2
+				return 0
+			fi
 		else
 			echo -e "${DIALOG_TEXT}"
 		fi

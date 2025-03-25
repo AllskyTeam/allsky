@@ -960,9 +960,9 @@ function usage_and_exit()
 
 	exec >&2
 	if [[ ${RET} -eq 0 ]]; then
-		C="${YELLOW}"
+		C="${cYELLOW}"
 	else
-		C="${RED}"
+		C="${cRED}"
 	fi
 
 	MSG="Usage: ${ME} [--help] [--debug] [--skipupload] [-auto] [--text]"
@@ -1006,7 +1006,7 @@ function post_data()
 function set_colors()
 {
 	if [[ ${TEXT_ONLY} == "true" ]]; then
-		DIALOG_RED="${RED}"
+		DIALOG_RED="${cRED}"
 		DIALOG_NC="${NC}"
 	fi
 }

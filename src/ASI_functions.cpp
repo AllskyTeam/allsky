@@ -1245,7 +1245,7 @@ void processConnectedCameras()
 		if (ASIGetCameraProperty(&info, numThisType) != ASI_SUCCESS)
 		{
 #ifdef IS_ZWO	// RPi version already displayed message.
-			Log(0, "ERROR: can't get information for camera number %d.\n", numThisType);
+			Log(0, "ERROR: cannot get information for camera number %d.\n", numThisType);
 #endif
 			numThisType++;
 			continue;

@@ -1245,7 +1245,7 @@ void processConnectedCameras()
 		if (ASIGetCameraProperty(&info, numThisType) != ASI_SUCCESS)
 		{
 #ifdef IS_ZWO	// RPi version already displayed message.
-			Log(0, "ERROR: can't get information for camera number %d.\n", numThisType);
+			Log(0, "ERROR: cannot get information for camera number %d.\n", numThisType);
 #endif
 			numThisType++;
 			continue;
@@ -2313,7 +2313,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 			ok = false;
 	}
 
-	validateLong(&cg->debugLevel, 0, 4, "Debug Level", true);
+	validateLong(&cg->debugLevel, 0, 5, "Debug Level", true);
 
 	// Overlay-related arguments
 	validateLong(&cg->overlay.extraFileAge, 0, NO_MAX_VALUE, "Max Age Of Extra", true);

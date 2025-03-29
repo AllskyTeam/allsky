@@ -821,6 +821,8 @@ update_php_defines()
 			-e "s;XX_ALLSKY_REPO_XX;${ALLSKY_REPO};g" \
 			-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};g" \
 			-e "s;XX_ALLSKY_STATUS_XX;${ALLSKY_STATUS};g" \
+			-e "s;XX_ALLSKY_STATUS_NEEDS_CONFIGURATION_XX;${ALLSKY_STATUS_NEEDS_CONFIGURATION};g" \
+			-e "s;XX_ALLSKY_STATUS_NEEDS_REVIEW_XX;${ALLSKY_STATUS_NEEDS_REVIEW};g" \
 			-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};g" \
 		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
 		chmod 644 "${FILE}"
@@ -3499,7 +3501,7 @@ check_if_buster()
 display_image()
 {
 	local IMAGE_OR_CUSTOM="${1}"
-	local FULL_FILENAME  FILENAME  EXTENSION  IMAGE_NAME  COLOR  CUSTOM_MESSAGE  MSG  X  I
+	local FULL_FILENAME  FILENAME  EXTENSION  COLOR  CUSTOM_MESSAGE  MSG  X  I
 
 	if [[ -s ${SETTINGS_FILE} ]]; then		# The file may not exist yet.
 		FULL_FILENAME="$( settings ".filename" )"
@@ -3532,9 +3534,7 @@ display_image()
 			display_msg --logonly info "${MSG}"
 		fi
 	else
-		IMAGE_NAME="${IMAGE_OR_CUSTOM}"
-
-		if [[ ${IMAGE_NAME} == "ConfigurationNeeded" && -f ${ALLSKY_POST_INSTALL_ACTIONS} ]]; then
+		if [[ -f ${ALLSKY_POST_INSTALL_ACTIONS} ]]; then
 			# Add a message the user will see in the WebUI.
 			MSG="Actions needed.  See ${ALLSKY_POST_INSTALL_ACTIONS}."
 			X="${ALLSKY_POST_INSTALL_ACTIONS/${ALLSKY_HOME}/}"
@@ -3544,7 +3544,7 @@ display_image()
 			touch "${ALLSKY_POST_INSTALL_ACTIONS}_initial_message"
 		fi
 
-		X="${IMAGE_NAME}.${EXTENSION}"
+		X="${IMAGE_OR_CUSTOM}.${EXTENSION}"
 		display_msg --logonly info "Displaying notification image '${X}'"
 		cp "${ALLSKY_NOTIFICATION_IMAGES}/${X}" "${I}" ||
 			display_msg --log info "WARNING: unable to copy '${X}' to '${I}'"
@@ -3608,12 +3608,12 @@ check_restored_settings()
 		[[ -f ${s} ]] && sort_settings_file "${s}"
 	done
 
-	if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" && \
-	  	  ${COPIED_PRIOR_CONFIG_SH} == "true" && \
+	if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" &&
+	  	  ${COPIED_PRIOR_CONFIG_SH} == "true" &&
 	  	  ${COPIED_PRIOR_FTP_SH} == "true" ]]; then
 		# We restored all the prior settings so no configuration is needed.
 		# However, check if a reboot is needed.
-		CONFIGURATION_NEEDED="false"
+		CONFIGURATION_NEEDED="review"
 		if [[ ${REBOOT_NEEDED} == "true" ]]; then
 			IMG="RebootNeeded"
 		else
@@ -3890,16 +3890,22 @@ do_done()
 		do_allsky_status "${ALLSKY_STATUS_NOT_RUNNING}"
 		display_image --custom "lime" "Allsky is\nready to start"
 		display_msg --log progress "\nInstallation is done."  "You must manually restart Allsky."
-	elif [[ ${CONFIGURATION_NEEDED} != "true" ]]; then
-		# A status string.
-		exit_installation 0 "${CONFIGURATION_NEEDED}" ""
-	else
-		# "true"
+	elif [[ ${CONFIGURATION_NEEDED} == "true" ]]; then
 		display_image "ConfigurationNeeded"
 		do_allsky_status "${ALLSKY_STATUS_NEEDS_CONFIGURATION}"
 		MSG=" but Allsky needs to be configured before it will start."
 		display_msg --log progress "\nInstallation is done" "${MSG}"
 		display_msg progress "" "Go to the 'Allsky Settings' page of the WebUI to configure Allsky."
+	elif [[ ${CONFIGURATION_NEEDED} == "review" ]]; then
+		display_image "ReviewNeeded"
+		do_allsky_status "${ALLSKY_STATUS_NEEDS_REVIEW}"
+		MSG=" Please review the settings on the WebUI's 'Allsky Settings' page and make any necessary changes."
+		display_msg --log progress "\nInstallation is done." "${MSG}"
+		display_msg progress "" "Go to the 'Allsky Settings' page of the WebUI to configure Allsky."
+
+	else
+		# A different status string.
+		exit_installation 0 "${CONFIGURATION_NEEDED}" ""
 	fi
 
 	display_msg progress "\nEnjoy Allsky!\n"

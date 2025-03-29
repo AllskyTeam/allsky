@@ -120,6 +120,8 @@ $useRemoteWebsite = false;
 $hasLocalWebsite = false;
 $hasRemoteWebsite = false;
 $endSetting = "XX_END_XX";
+$saveChangesLabel = "Save changes";
+$forceRestart = false;					// Restart even if no changes?
 
 function readSettingsFile() {
 	$settings_file = getSettingsFile();
@@ -300,17 +302,33 @@ function initialize_variables($website_only=false) {
 
 // Check if the settings have been configured.
 function check_if_configured($page, $calledFrom) {
-	global $lastChanged, $status;
+	global $lastChanged, $status, $allsky_status, $saveChangesLabel;
+
 	static $will_display_configured_message = false;
 
-	if ($will_display_configured_message)
+	if ($will_display_configured_message) {
 		return(true);
+	}
 
 	if ($lastChanged === "") {
-		// The settings aren't configured - probably right after an installation.
-		$msg = "Please verify the Allsky settings and update where needed.<br>";
+		// The settings either need reviewing or aren't fully configured which
+		// usually happens right after an installation or upgrade.
+		if ($allsky_status == ALLSKY_STATUS_NEEDS_REVIEW) {
+			$msg = "Please review the Allsky settings to make sure they look correct.<br>";
+			$saveChangesLabel = "Review done; restart Allsky";
+			$forceRestart = true;
+		} else {
+			// Should be ALLSKY_STATUS_NEEDS_CONFIGURATION, but if something else,
+			// do the same the same thing.
+			$msg = "Please configure the Allsky settings.<br>";
+			$forceRestart = true;
+		}
+
+		$msg2 = "When done, click on the";
+		$msg2 .= " <span class='btn-primary btn-fake'>${saveChangesLabel}</span> button.";
+
 		if ($page === "configuration")
-			$msg .= "When done, click on the 'Save changes' button.";
+			$msg .= $msg2;
 		else
 			$msg .= "Go to the 'Allsky Settings' page to do so.";
 		$status->addMessage("<div id='mustConfigure' class='important'>$msg</div>", 'danger');
@@ -767,7 +785,7 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 	if ($result != null) {
 		$msg = "";
 		$sev = "";
-  		foreach ( $result as $line) {
+  		foreach ($result as $line) {
 			if ($msg !== "") $msg .= "<br>";
 
 			if (strpos($line, "ERROR::") !== false) {
@@ -797,6 +815,7 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 				if ($sev === "") $sev = "debug";
 
 			} else {
+				$msg .= $line;
 				if ($sev === "") $sev = "message";
 			}
 		}

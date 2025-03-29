@@ -222,9 +222,24 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 			"WARNING:\n\nResetting USB bus\n${REASON}.\nAttempt ${NUM_USB_RESETS}."
 
 		SEARCH="${ZWO_VENDOR}:${ZWO_CAMERA_ID}"
-		sudo "${ALLSKY_BIN}/uhubctl" --action off --exact --search "${SEARCH}"
+		# Get the hub number the camera is on.
+		local HUB="$( sudo "${ALLSKY_BIN}/uhubctl" --exact --search "${SEARCH}" |
+			gawk -v Z="${SEARCH}" '
+				BEGIN {hub = ""; }
+   				{
+					if ($4 == "hub") {
+						hub = $5;
+						next;
+					}
+					if (index($0, Z) > 0) {
+						print hub;
+						exit(0);
+					}
+				}'
+		)"
+		sudo "${ALLSKY_BIN}/uhubctl" --action off --exact --search "${SEARCH}" --location "${HUB}"
 		sleep 3		# give it a few seconds, plus, allow the notification images to be seen
-		sudo "${ALLSKY_BIN}/uhubctl" --action on --exact --search "${SEARCH}"
+		sudo "${ALLSKY_BIN}/uhubctl" --action on --exact --search "${SEARCH}" --location "${HUB}"
 	}
 
 else	# RPi

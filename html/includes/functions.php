@@ -302,7 +302,7 @@ function initialize_variables($website_only=false) {
 
 // Check if the settings have been configured.
 function check_if_configured($page, $calledFrom) {
-	global $lastChanged, $status, $allsky_status;
+	global $lastChanged, $status, $allsky_status, $saveChangesLabel;
 
 	static $will_display_configured_message = false;
 
@@ -311,17 +311,19 @@ function check_if_configured($page, $calledFrom) {
 	}
 
 	if ($lastChanged === "") {
-		$msg = "";
-		$msg2 = "";
-		// The settings either need reviewing or aren't fully configured - probably right after an installation.
-		if ($allsky_status == ALLSKY_STATUS_NEEDS_CONFIGURATION) {
-			$msg = "Please configure the Allsky settings.<br>";
-			$forceRestart = true;
-		} else if ($allsky_status == ALLSKY_STATUS_NEEDS_REVIEW) {
+		// The settings either need reviewing or aren't fully configured which
+		// usually happens right after an installation or upgrade.
+		if ($allsky_status == ALLSKY_STATUS_NEEDS_REVIEW) {
 			$msg = "Please verify the Allsky settings and update where needed.<br>";
 			$saveChangesLabel = "Review done; restart Allsky";
 			$forceRestart = true;
+		} else {
+			// Should be ALLSKY_STATUS_NEEDS_CONFIGURATION, but if something else,
+			// do the same the same thing.
+			$msg = "Please configure the Allsky settings.<br>";
+			$forceRestart = true;
 		}
+
 		$msg2 = "When done, click on the '${saveChangesLabel}' button.";
 
 		if ($page === "configuration")

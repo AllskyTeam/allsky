@@ -547,10 +547,15 @@ if ($debug) {
 						if (! runCommand($CMD, $msg, "success")) {	// displays $msg on success.
 							$status->addMessage("Unable to restart Allsky.", 'warning');
 						} else {
-							$msg = "<span style='font-size: 150%'>";
-							$msg .= "Refresh this window to update messages.";
-							$msg .= "</span>";
+/* TODO: We get here because a form was submitted which caused Allsky to restart.
+	We don't want the user to refresh the page because that might cause Allsky to
+	restart again.  We really want them to click on the link that takes them to this page.
+
+							$msg = "<div class='center-text' style='font-size: 150%'>";
+							$msg .= "*** Refresh this window to update messages. ***";
+							$msg .= "</div>";
 							$status->addMessage($msg, 'info');
+*/
 						}
 
 					} else if ($stopRequired) {

@@ -95,7 +95,7 @@ fi
 LAST_CHANGED="$( settings ".lastchanged" )"
 if [[ -z ${LAST_CHANGED} ]]; then
 	STATUS="$( get_allsky_status )"
-	if [[ ${STATUS} == "${ALLSKY_STATUS_NEEDS_REVIEW}" ]] then
+	if [[ ${STATUS} == "${ALLSKY_STATUS_NEEDS_REVIEW}" ]]; then
 		IMAGE_NAME="ReviewNeeded"
 		MSG="Please review the settings on the WebUI's 'Allsky Settings' page"
 		MSG+=" and make any necessary changes."

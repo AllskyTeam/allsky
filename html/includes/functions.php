@@ -661,6 +661,13 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
 		return;
 	}
 
+	if (! is_dir(ALLSKY_IMAGES)) {
+		echo "<br><div class='errorMsgBig'>";
+		echo "ERROR: '" . ALLSKY_IMAGES . "' directory is missing!";
+		echo "</div>";
+		return;
+	}
+
 	echo "<h2>$formalImageTypeName - $chosen_day</h2>\n";
 	echo "<div class='row'>\n";
 	if ($chosen_day === 'All'){

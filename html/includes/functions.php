@@ -314,7 +314,7 @@ function check_if_configured($page, $calledFrom) {
 		// The settings either need reviewing or aren't fully configured which
 		// usually happens right after an installation or upgrade.
 		if ($allsky_status == ALLSKY_STATUS_NEEDS_REVIEW) {
-			$msg = "Please verify the Allsky settings and update where needed.<br>";
+			$msg = "Please review the Allsky settings to make sure they look correct.<br>";
 			$saveChangesLabel = "Review done; restart Allsky";
 			$forceRestart = true;
 		} else {

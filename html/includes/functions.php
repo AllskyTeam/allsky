@@ -317,7 +317,7 @@ function check_if_configured($page, $calledFrom) {
 		if ($allsky_status == ALLSKY_STATUS_NEEDS_CONFIGURATION) {
 			$msg = "Please configure the Allsky settings.<br>";
 			$forceRestart = true;
-		else if ($allsky_status == ALLSKY_STATUS_NEEDS_REVIEW) {
+		} else if ($allsky_status == ALLSKY_STATUS_NEEDS_REVIEW) {
 			$msg = "Please verify the Allsky settings and update where needed.<br>";
 			$saveChangesLabel = "Review done; restart Allsky";
 			$forceRestart = true;

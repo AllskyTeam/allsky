@@ -107,6 +107,9 @@ if [[ -z ${LAST_CHANGED} ]]; then
 		WEBUI_MSG="Allsky needs to be configured"
 
 	else
+		# I don't think we'll ever get here.
+		MSG="ERROR: Unknown reason 'lastchanged' did not exist."
+		WEBUI_MSG="${MSG}"
 		IMAGE_NAME=""
 	fi
 	if [[ ${NEEDS_REBOOT} == "true" ]]; then
@@ -114,7 +117,7 @@ if [[ -z ${LAST_CHANGED} ]]; then
 		doExit "${EXIT_ERROR_STOP}" "${IMAGE_NAME}" \
 			"" "${WEBUI_MSG} and then the Pi rebooted."
 	else
-		doExit "${EXIT_ERROR_STOP}" "${IMAGE}" "" "${WEBUI_MSG}."
+		doExit "${EXIT_ERROR_STOP}" "${IMAGE_NAME}" "" "${WEBUI_MSG}."
 	fi
 	echo "*** ===== ${MSG}" >&2		# to the log
 

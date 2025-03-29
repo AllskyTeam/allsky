@@ -120,6 +120,7 @@ $useRemoteWebsite = false;
 $hasLocalWebsite = false;
 $hasRemoteWebsite = false;
 $endSetting = "XX_END_XX";
+$saveChangesLabel = "Save changes";
 
 function readSettingsFile() {
 	$settings_file = getSettingsFile();
@@ -300,17 +301,28 @@ function initialize_variables($website_only=false) {
 
 // Check if the settings have been configured.
 function check_if_configured($page, $calledFrom) {
-	global $lastChanged, $status;
+	global $lastChanged, $status, $allsky_status;
+
 	static $will_display_configured_message = false;
 
-	if ($will_display_configured_message)
+	if ($will_display_configured_message) {
 		return(true);
+	}
 
 	if ($lastChanged === "") {
-		// The settings aren't configured - probably right after an installation.
-		$msg = "Please verify the Allsky settings and update where needed.<br>";
+		$msg = "";
+		$msg2 = "";
+		// The settings either need reviewing or aren't fully configured - probably right after an installation.
+		if ($allsky_status == ALLSKY_STATUS_NEEDS_CONFIGURATION) {
+			$msg = "Please configure the Allsky settings.<br>";
+		else if ($allsky_status == ALLSKY_STATUS_NEEDS_REVIEW) {
+			$msg = "Please verify the Allsky settings and update where needed.<br>";
+			$saveChangesLabel = "Review done; restart Allsky";
+		}
+		$msg2 = "When done, click on the '${saveChangesLabel}' button.";
+
 		if ($page === "configuration")
-			$msg .= "When done, click on the 'Save changes' button.";
+			$msg .= $msg2;
 		else
 			$msg .= "Go to the 'Allsky Settings' page to do so.";
 		$status->addMessage("<div id='mustConfigure' class='important'>$msg</div>", 'danger');

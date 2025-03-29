@@ -785,7 +785,7 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 	if ($result != null) {
 		$msg = "";
 		$sev = "";
-  		foreach ( $result as $line) {
+  		foreach ($result as $line) {
 			if ($msg !== "") $msg .= "<br>";
 
 			if (strpos($line, "ERROR::") !== false) {
@@ -815,6 +815,7 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 				if ($sev === "") $sev = "debug";
 
 			} else {
+				$msg .= $line;
 				if ($sev === "") $sev = "message";
 			}
 		}

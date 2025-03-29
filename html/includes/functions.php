@@ -324,7 +324,8 @@ function check_if_configured($page, $calledFrom) {
 			$forceRestart = true;
 		}
 
-		$msg2 = "When done, click on the '${saveChangesLabel}' button.";
+		$msg2 = "When done, click on the";
+		$msg2 .= " <span class='btn-primary btn-fake'>${saveChangesLabel}</span> button.";
 
 		if ($page === "configuration")
 			$msg .= $msg2;

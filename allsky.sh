@@ -90,20 +90,34 @@ else
 	NEEDS_REBOOT="false"
 fi
 
-# Make sure the settings have been configured after an installation or upgrade.
 # If the "lastchanged" setting is missing, the user needs to review/change the settings.
+# This will happen after an installation or upgrade, which also sets the Allsky status.
 LAST_CHANGED="$( settings ".lastchanged" )"
 if [[ -z ${LAST_CHANGED} ]]; then
-	set_allsky_status "${ALLSKY_STATUS_NEEDS_CONFIGURATION}"
-	echo "*** ===== Allsky needs to be configured before it can be used.  See the WebUI." >&2
-	if [[ ${NEEDS_REBOOT} == "true" ]]; then
-		echo "*** ===== The Pi also needs to be rebooted." >&2
-		doExit "${EXIT_ERROR_STOP}" "ConfigurationNeeded" \
-			"Allsky needs\nconfiguration\nand the Pi needs\na reboot" \
-			"Allsky needs to be configured and then the Pi rebooted."
+	STATUS="$( get_allsky_status )"
+	if [[ ${STATUS} == "${ALLSKY_STATUS_NEEDS_REVIEW}" ]] then
+		IMAGE_NAME="ReviewNeeded"
+		MSG="Please review the settings on the WebUI's 'Allsky Settings' page"
+		MSG+=" and make any necessary changes."
+		WEBUI_MSG="Allsky settings need review"
+
+	elif [[ ${STATUS} == "${ALLSKY_STATUS_NEEDS_CONFIGURATION}" ]]; then
+		IMAGE_NAME="ConfigurationNeeded"
+		MSG="Allsky needs to be configured before it can be used.  See the WebUI."
+		WEBUI_MSG="Allsky needs to be configured"
+
 	else
-		doExit "${EXIT_ERROR_STOP}" "ConfigurationNeeded" "" "Allsky needs to be configured."
+		IMAGE_NAME=""
 	fi
+	if [[ ${NEEDS_REBOOT} == "true" ]]; then
+		MSG+=" The Pi also needs to be rebooted." >&2
+		doExit "${EXIT_ERROR_STOP}" "${IMAGE_NAME}" \
+			"" "${WEBUI_MSG} and then the Pi rebooted."
+	else
+		doExit "${EXIT_ERROR_STOP}" "${IMAGE}" "" "${WEBUI_MSG}."
+	fi
+	echo "*** ===== ${MSG}" >&2		# to the log
+
 elif [[ ${NEEDS_REBOOT} == "true" ]]; then
 	set_allsky_status "${ALLSKY_STATUS_REBOOT_NEEDED}"
 	doExit "${EXIT_ERROR_STOP}" "RebootNeeded" "" "The Pi needs to be rebooted."
@@ -222,9 +236,24 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 			"WARNING:\n\nResetting USB bus\n${REASON}.\nAttempt ${NUM_USB_RESETS}."
 
 		SEARCH="${ZWO_VENDOR}:${ZWO_CAMERA_ID}"
-		sudo "${ALLSKY_BIN}/uhubctl" --action off --exact --search "${SEARCH}"
+		# Get the hub number the camera is on.
+		local HUB="$( sudo "${ALLSKY_BIN}/uhubctl" --exact --search "${SEARCH}" |
+			gawk -v Z="${SEARCH}" '
+				BEGIN {hub = ""; }
+   				{
+					if ($4 == "hub") {
+						hub = $5;
+						next;
+					}
+					if (index($0, Z) > 0) {
+						print hub;
+						exit(0);
+					}
+				}'
+		)"
+		sudo "${ALLSKY_BIN}/uhubctl" --action off --exact --search "${SEARCH}" --location "${HUB}"
 		sleep 3		# give it a few seconds, plus, allow the notification images to be seen
-		sudo "${ALLSKY_BIN}/uhubctl" --action on --exact --search "${SEARCH}"
+		sudo "${ALLSKY_BIN}/uhubctl" --action on --exact --search "${SEARCH}" --location "${HUB}"
 	}
 
 else	# RPi

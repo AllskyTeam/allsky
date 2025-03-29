@@ -821,6 +821,8 @@ update_php_defines()
 			-e "s;XX_ALLSKY_REPO_XX;${ALLSKY_REPO};g" \
 			-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};g" \
 			-e "s;XX_ALLSKY_STATUS_XX;${ALLSKY_STATUS};g" \
+			-e "s;XX_ALLSKY_STATUS_NEEDS_CONFIGURATION_XX;${ALLSKY_STATUS_NEEDS_CONFIGURATION};g" \
+			-e "s;XX_ALLSKY_STATUS_NEEDS_REVIEW_XX;${ALLSKY_STATUS_NEEDS_REVIEW};g" \
 			-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};g" \
 		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
 		chmod 644 "${FILE}"
@@ -3889,7 +3891,6 @@ do_done()
 		display_image --custom "lime" "Allsky is\nready to start"
 		display_msg --log progress "\nInstallation is done."  "You must manually restart Allsky."
 	elif [[ ${CONFIGURATION_NEEDED} == "true" ]]; then
-		# "true"
 		display_image "ConfigurationNeeded"
 		do_allsky_status "${ALLSKY_STATUS_NEEDS_CONFIGURATION}"
 		MSG=" but Allsky needs to be configured before it will start."

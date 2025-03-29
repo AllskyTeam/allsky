@@ -132,6 +132,8 @@ function DisplayAllskyConfig() {
 	global $ME;
 	global $status;
 	global $endSetting;
+	global $saveChangesLabel;
+	global $forceRestart;
 
 	$cameraTypeName = "cameratype";			// json setting name
 	$cameraModelName = "cameramodel";		// json setting name
@@ -146,7 +148,6 @@ function DisplayAllskyConfig() {
 	$showIcon = "<i class='fa fa-chevron-down fa-fw'></i>";
 	$hideIcon = "<i class='fa fa-chevron-up fa-fw'></i>";
 
-//x	$mode = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK | JSON_PRESERVE_ZERO_FRACTION;
 	$mode = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION;
 	$settings_file = getSettingsFile();
 	$options_file = getOptionsFile();
@@ -221,8 +222,8 @@ function DisplayAllskyConfig() {
 				if (in_array($name, ["csrf_token", "save_settings", "reset_settings",
 						"restart", "page", "_ts", $endSetting, "fromConfiguration"])) {
 					if ($name === "fromConfiguration") {
-						// If set, the prior screen said "you must configure Allsky ..." so it's
-						// ok if nothing changed, but we need to update $lastChanged.
+						// If set, the prior screen said "you must configure Allsky ..." so
+						// it's ok if nothing changed, but we need to update $lastChanged.
 						$fromConfiguration = $newValue;
 					}
 					continue;
@@ -545,6 +546,11 @@ if ($debug) {
 						$CMD = "sudo /bin/systemctl reload-or-restart allsky.service";
 						if (! runCommand($CMD, $msg, "success")) {	// displays $msg on success.
 							$status->addMessage("Unable to restart Allsky.", 'warning');
+						} else {
+							$msg = "<span style='font-size: 150%'>";
+							$msg .= "Refresh this window to update messages.";
+							$msg .= "</span>";
+							$status->addMessage($msg, 'info');
 						}
 
 					} else if ($stopRequired) {
@@ -711,7 +717,7 @@ if ($debug) {
 					<div class="col-md-11 col-sm-11 col-xs-11 nowrap">
 						<button type="submit" class="btn btn-primary"
 								name="save_settings" title="Save changes">
-							<i class="fa-solid fa-floppy-disk"></i> Save changes
+							<i class="fa-solid fa-floppy-disk"></i> <?php echo $saveChangesLabel; ?>
 						</button>
 						<button type="submit" class="btn ml-3 btn-warning"
 								name="reset_settings" title="Reset to default values"

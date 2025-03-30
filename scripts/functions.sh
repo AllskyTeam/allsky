@@ -240,7 +240,7 @@ function determineCommandToUse()
 		RET=$?
 		if [[ ${RET} -eq 124 ]]; then
 			# Time out.  Let invoker know
-			echo "'${CMD_TO_USE_} timed out." >&2
+			echo "'${CMD_TO_USE_}' timed out." >&2
 			return "${EXIT_ERROR_STOP}"
 
 		elif [[ ${RET} -eq 137 ]]; then

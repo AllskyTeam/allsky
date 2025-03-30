@@ -498,6 +498,8 @@ if ($useRemoteWebsite) {
 			localStorage.setItem("theme", "light");
 		}
 		$("body").attr("class", localStorage.getItem("theme"));
+		$(document).trigger("allsky-theme-change")
+
 	}
 
 	$("#live_container").click(function () {

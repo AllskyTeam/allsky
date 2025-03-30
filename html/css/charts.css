@@ -1,0 +1,155 @@
+body {
+    margin: 0;
+    font-family: sans-serif;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#allsky-charts-sidebar {
+    width: 250px;
+    background: #f3f3f3;
+    padding: 40px 10px 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    border: 1px solid #444;
+    overflow-y: auto;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 10000;
+    border-radius: 8px;
+    cursor: move;
+}
+.dark #allsky-charts-sidebar {
+    background: #222222;
+}
+
+#allsky-charts-sidebar-title {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    font-weight: bold;
+    font-size: 16px;
+    z-index: 1001;
+    width: 100%;
+    background-color: #bbb;
+    padding: 10px 0px 10px 10px;
+}
+.dark #allsky-charts-sidebar-title {
+    background: #171717 !important;
+}
+
+#allsky-charts-main {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    padding: 20px;
+    overflow: auto;
+    /*background-image:
+        linear-gradient(to right, #eee 1px, transparent 1px),
+        linear-gradient(to bottom, #eee 1px, transparent 1px);*/
+    background-size: 20px 20px;
+}
+
+.allsky-charts-chart-menu-item {
+    padding: 5px;
+    margin-bottom: 5px;
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.allsky-charts-dashboard-chart {
+    position: absolute;
+    background: white;
+    border: 1px solid #aaa;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.allsky-charts-chart-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.allsky-charts-chart-toolbar {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 4px 6px;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    display: none;
+    z-index: 1001;
+}
+.dark .allsky-charts-chart-toolbar {
+    background: #171717;
+}
+
+.allsky-charts-chart-toolbar select,
+.allsky-charts-chart-toolbar button {
+    margin-left: 5px;
+    font-size: 14px;
+    padding: 3px 6px;
+}
+
+.allsky-charts-resizer {
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    cursor: se-resize;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.allsky-charts-dashboard-chart .allsk-charts-resizer,
+.allsky-charts-dashboard-chart .allsk-charts-delete-chart,
+.allsky-charts-dashboard-chart select {
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.3s;
+}
+
+.allsky-charts-dashboard-chart:hover .allsk-charts-resizer,
+.allsky-charts-dashboard-chart:hover .allsk-charts-delete-chart,
+.allsky-charts-dashboard-chart:hover select {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.allsky-charts-refresh-indicator {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    z-index: 1001;
+    font-size: 12px;
+    padding: 2px 6px;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    border-radius: 4px;
+}
+
+.allsky-charts-navbar {
+    height: 60px !important;
+    margin-bottom: 0px !important;
+}
+
+
+
+.allsky-charts-chart-menu-item {
+    cursor: grab;
+    margin-bottom: 8px;
+    padding: 6px 10px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.allsky-charts-chart-menu-item:hover {
+    background: #f0f0f0;
+}

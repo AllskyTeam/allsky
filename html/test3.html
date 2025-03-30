@@ -1,509 +1,143 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Responsive Konva Drawing Tool with Dark Area Brightness</title>
-    <!-- Bootstrap 3 CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" />
-    <!-- Font Awesome Free -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" />
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Bootstrap 3 JS -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-    <!-- KonvaJS -->
-    <script src="https://cdn.jsdelivr.net/npm/konva@8.3.5/konva.min.js"></script>
-    <style>
-      /* All CSS scoped within #allsky-mask */
-      #allsky-mask .modal-dialog {
-        width: 90%;
-      }
-      #allsky-mask .modal-content {
-        display: flex;
-        flex-direction: column;
-        height: 75vh;
-      }
-      #allsky-mask .modal-body {
-        flex: 1 1 auto;
-        display: flex;
-        flex-direction: column;
-        padding: 0;
-      }
-      /* Toolbar styling */
-      #allsky-mask #allsky-mask-toolbar {
-        flex: 0 0 auto;
-        padding: 10px;
-        background: #eee;
-        border-bottom: 1px solid #ccc;
-      }
-      #allsky-mask #allsky-mask-container {
-        flex: 1 1 auto;
-        border: 1px solid #ccc;
-        width: 100%;
-      }
-      /* Spacing for dropdown and buttons */
-      #allsky-mask .dropdown,
-      #allsky-mask .allsky-mask-tool-button {
-        margin-right: 5px;
-      }
-      #allsky-mask label {
-        margin-right: 10px;
-      }
-    </style>
-    <script>
-      // Custom filter: Only brighten dark areas.
-      Konva.Filters.DarkAreaBrighten = function(imageData) {
-        var brightness = this.brightness(); // expected value in 0..1
-        var data = imageData.data;
-        var threshold = 128;
-        var addValue = brightness > 0 ? brightness * 100 : 0;
-        for (var i = 0; i < data.length; i += 4) {
-          var avg = (data[i] + data[i+1] + data[i+2]) / 3;
-          if (avg < threshold) {
-            data[i] = Math.min(255, data[i] + addValue);
-            data[i+1] = Math.min(255, data[i+1] + addValue);
-            data[i+2] = Math.min(255, data[i+2] + addValue);
-          }
-        }
-      };
-    </script>
-  </head>
-  <body>
-    <div id="allsky-mask">
-      <!-- Button to open modal -->
-      <div class="container">
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#allsky-mask-drawingModal">
-          Open Drawing Tool
-        </button>
-      </div>
-  
-      <!-- Modal -->
-      <div class="modal fade" id="allsky-mask-drawingModal" tabindex="-1" role="dialog" aria-labelledby="allsky-mask-drawingModalLabel">
-        <div class="modal-dialog" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span>&times;</span>
-              </button>
-              <h4 class="modal-title" id="allsky-mask-drawingModalLabel">Konva Drawing Tool</h4>
-            </div>
-            <div class="modal-body">
-              <!-- Toolbar: Dropdown for expert tool selection plus button group for mode and action buttons, and sliders -->
-              <div id="allsky-mask-toolbar">
-                <!-- Dropdown for expert mode drawing tool selection -->
-                <div class="dropdown" style="display:inline-block;">
-                  <button id="drawingToolDropdown" class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
-                    <i class="fas fa-brush"></i> <span class="caret"></span>
-                  </button>
-                  <ul class="dropdown-menu">
-                    <li><a href="#" data-tool="freehand"><i class="fas fa-brush"></i> Freehand Brush</a></li>
-                    <li><a href="#" data-tool="feather"><i class="fas fa-brush"></i> Feather Brush</a></li>
-                    <li><a href="#" data-tool="square">Square</a></li>
-                    <li><a href="#" data-tool="filledPath">Filled Path</a></li>
-                    <li><a href="#" data-tool="circle">Circle</a></li>
-                  </ul>
-                </div>
-                <!-- Button group for mode selection -->
-                <div class="btn-group" role="group">
-                  <button type="button" class="btn btn-default active" id="allsky-mask-easyModeBtn">Easy Mode</button>
-                  <button type="button" class="btn btn-default" id="allsky-mask-expertModeBtn">Expert Mode</button>
-                </div>
-                <!-- Other action buttons -->
-                <button class="allsky-mask-tool-button btn btn-default" id="allsky-mask-newBtn">New</button>
-                <button class="allsky-mask-tool-button btn btn-default" id="allsky-mask-undoBtn">Undo</button>
-                <button class="allsky-mask-tool-button btn btn-default" id="allsky-mask-redoBtn">Redo</button>
-                <button class="allsky-mask-tool-button btn btn-default" id="allsky-mask-saveBtn">Save</button>
-                <!-- Sliders -->
-                <label>Drawing Opacity:
-                  <input type="range" id="allsky-mask-opacitySlider" min="0" max="1" step="0.1" value="1" />
-                </label>
-                <label>Image Brightness:
-                  <input type="range" id="allsky-mask-brightnessSlider" min="-1" max="1" step="0.1" value="0" />
-                </label>
-                <label>Brush Size:
-                  <input type="range" id="allsky-mask-brushSizeSlider" min="1" max="50" step="1" value="2" />
-                </label>
-                <label>Zoom:
-                  <input type="range" id="allsky-mask-zoomSlider" min="0.5" max="3" step="0.05" value="1" />
-                </label>
-              </div>
-              <!-- Drawing container -->
-              <div id="allsky-mask-container"></div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-          </div>
-        </div>
-      </div>
-  
-      <script>
-        $(document).ready(function(){
-          // Global Konva variables.
-          var stage, drawingLayer, drawnGroup, transformer;
-          var imageScaleFactor = 1, displayedImageWidth = 0, originalImageWidth = 0, originalImageHeight = 0;
-  
-          // Global drawing variables.
-          // currentTool: "freehand", "feather", "square", "filledPath", "circle"
-          var currentTool = null;
-          // mode is either "easy" or "expert" - default is easy mode.
-          var mode = "easy";
-          var isDrawing = false;
-          var currentLine, currentShape, startPos;
-          var easyCircle = null;
-          var brushSize = parseInt($("#allsky-mask-brushSizeSlider").val(), 10);
-  
-          $("#allsky-mask-brushSizeSlider").on("input", function(){
-            brushSize = parseInt($(this).val(), 10);
-          });
-  
-          // Dropdown event for selecting drawing tool (only used in expert mode).
-          $("#drawingToolDropdown").next(".dropdown-menu").on("click", "a", function(e){
-            e.preventDefault();
-            var tool = $(this).data("tool");
-            currentTool = tool;
-            if(tool === "freehand" || tool === "feather"){
-              $("#drawingToolDropdown").html('<i class="fas fa-brush"></i> <span class="caret"></span>');
-            } else {
-              $("#drawingToolDropdown").html($(this).text() + ' <span class="caret"></span>');
-            }
-          });
-  
-          // Mode button group handling.
-          $("#allsky-mask-easyModeBtn").click(function(){
-            mode = "easy";
-            currentTool = "circle"; // Easy mode forces a circle.
-            $(this).addClass("active");
-            $("#allsky-mask-expertModeBtn").removeClass("active");
-          });
-          $("#allsky-mask-expertModeBtn").click(function(){
-            mode = "expert";
-            $(this).addClass("active");
-            $("#allsky-mask-easyModeBtn").removeClass("active");
-          });
-  
-          // New button: reset drawings.
-          $("#allsky-mask-newBtn").click(function(){
-            drawnGroup.destroyChildren();
-            drawnObjects = [];
-            undoneObjects = [];
-            drawingLayer.draw();
-            // In easy mode, reset the single circle.
-            easyCircle = null;
-          });
-  
-          // Undo/Redo arrays.
-          var drawnObjects = [];
-          var undoneObjects = [];
-  
-          $("#allsky-mask-undoBtn").click(function(){
-            if(mode === "easy") return; // Undo disabled in easy mode.
-            if(drawnObjects.length > 0){
-              var node = drawnObjects.pop();
-              node.remove();
-              undoneObjects.push(node);
-              drawingLayer.draw();
-            }
-          });
-  
-          $("#allsky-mask-redoBtn").click(function(){
-            if(mode === "easy") return; // Redo disabled in easy mode.
-            if(undoneObjects.length > 0){
-              var node = undoneObjects.pop();
-              drawnGroup.add(node);
-              drawnObjects.push(node);
-              drawingLayer.draw();
-            }
-          });
-  
-          $("#allsky-mask-saveBtn").click(function(){
-            transformer.hide();
-            drawingLayer.opacity(1);
-            drawingLayer.draw();
-            var pixelRatio = 1 / imageScaleFactor;
-            var dataURL = drawingLayer.toDataURL({
-              pixelRatio: pixelRatio,
-              x: 0,
-              y: 0,
-              width: stage.width(),
-              height: stage.height(),
-              backgroundColor: "transparent"
-            });
-            transformer.show();
-            drawingLayer.draw();
-            var tempCanvas = document.createElement("canvas");
-            tempCanvas.width = originalImageWidth;
-            tempCanvas.height = originalImageHeight;
-            var ctx = tempCanvas.getContext("2d");
-            ctx.fillStyle = "black";
-            ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-            var drawingImg = new Image();
-            drawingImg.onload = function(){
-              ctx.drawImage(drawingImg, 0, 0, originalImageWidth, originalImageHeight);
-              var finalDataURL = tempCanvas.toDataURL();
-              $("<img>").attr("src", finalDataURL).css({
-                "max-width": "100%",
-                "display": "block",
-                "margin": "10px auto"
-              }).appendTo("body");
-            };
-            drawingImg.src = dataURL;
-          });
-  
-          function getTransformedPointerPosition(){
-            var pos = stage.getPointerPosition();
-            var scale = stage.scaleX(); // uniform scaling
-            return { x: pos.x/scale, y: pos.y/scale };
-          }
-  
-          $("#allsky-mask-drawingModal").on("shown.bs.modal", function(){
-            var container = document.getElementById("allsky-mask-container");
-            var rect = container.getBoundingClientRect();
-            var containerWidth = rect.width;
-            var containerHeight = rect.height;
-  
-            stage = new Konva.Stage({
-              container: "allsky-mask-container",
-              width: containerWidth,
-              height: containerHeight
-            });
-  
-            var imageLayer = new Konva.Layer();
-            drawingLayer = new Konva.Layer();
-            stage.add(imageLayer);
-            stage.add(drawingLayer);
-  
-            drawnGroup = new Konva.Group({ id: "allsky-mask-drawnGroup" });
-            drawingLayer.add(drawnGroup);
-  
-            transformer = new Konva.Transformer();
-            drawingLayer.add(transformer);
-  
-            var imageObj = new Image();
-            imageObj.onload = function(){
-              originalImageWidth = imageObj.naturalWidth;
-              originalImageHeight = imageObj.naturalHeight;
-              imageScaleFactor = Math.min(containerWidth/originalImageWidth, containerHeight/originalImageHeight);
-              displayedImageWidth = originalImageWidth * imageScaleFactor;
-              var displayedImageHeight = originalImageHeight * imageScaleFactor;
-  
-              stage.width(displayedImageWidth);
-              stage.height(displayedImageHeight);
-  
-              var konvaImage = new Konva.Image({
-                image: imageObj,
-                x: 0,
-                y: 0,
-                width: displayedImageWidth,
-                height: displayedImageHeight,
-                draggable: false
-              });
-              konvaImage.filters([Konva.Filters.DarkAreaBrighten]);
-              konvaImage.brightness(0);
-              konvaImage.cache({ x: 0, y: 0, width: displayedImageWidth, height: displayedImageHeight });
-              konvaImage.listening(false);
-              imageLayer.add(konvaImage);
-              imageLayer.draw();
-  
-              $("#allsky-mask .modal-dialog").css("width", displayedImageWidth + "px");
-  
-              setTimeout(function(){
-                var newRect = container.getBoundingClientRect();
-                var newWidth = newRect.width;
-                var newHeight = newRect.height;
-                imageScaleFactor = Math.min(newWidth/originalImageWidth, newHeight/originalImageHeight);
-                displayedImageWidth = originalImageWidth * imageScaleFactor;
-                var newDisplayedHeight = originalImageHeight * imageScaleFactor;
-                stage.width(displayedImageWidth);
-                stage.height(newDisplayedHeight);
-                konvaImage.width(displayedImageWidth);
-                konvaImage.height(newDisplayedHeight);
-                konvaImage.cache({ x: 0, y: 0, width: displayedImageWidth, height: newDisplayedHeight });
-                imageLayer.batchDraw();
-              }, 100);
-            };
-            imageObj.onerror = function(){
-              console.error("Error loading image at /current/tmp/i.jpg");
-            };
-            imageObj.src = "/current/tmp/i.jpg?noCache=" + new Date().getTime();
-  
-            $("#allsky-mask-zoomSlider").on("input", function(){
-              var newScale = parseFloat($(this).val());
-              stage.scale({ x: newScale, y: newScale });
-              stage.batchDraw();
-            });
-  
-            stage.on("wheel", function(e){
-              e.evt.preventDefault();
-              var oldScale = stage.scaleX();
-              var scaleBy = 1.05;
-              var newScale = e.evt.deltaY > 0 ? oldScale/scaleBy : oldScale*scaleBy;
-              stage.scale({ x: newScale, y: newScale });
-              $("#allsky-mask-zoomSlider").val(newScale);
-              stage.batchDraw();
-            });
-  
-            $("#allsky-mask-brightnessSlider").on("input", function(){
-              var value = parseFloat($(this).val());
-              var bgImage = imageLayer.findOne("Image");
-              if(bgImage){
-                bgImage.brightness(value);
-                bgImage.cache({ x: 0, y: 0, width: displayedImageWidth, height: stage.height() });
-                imageLayer.batchDraw();
-              }
-            });
-  
-            $("#allsky-mask-opacitySlider").on("input", function(){
-              var opac = parseFloat($(this).val());
-              drawingLayer.opacity(opac);
-              drawingLayer.draw();
-            });
-  
-            // Separate event handling for easy and expert modes.
-            stage.on("mousedown touchstart", function(e){
-              if(mode === "easy"){
-                // In easy mode, only allow a single circle.
-                if(e.target === stage){
-                  if(!easyCircle){
-                    var circle = new Konva.Circle({
-                      x: stage.width()/2,
-                      y: stage.height()/2,
-                      radius: 50,
-                      fill: "white",
-                      draggable: true
-                    });
-                    drawnGroup.add(circle);
-                    transformer.nodes([circle]);
-                    drawingLayer.draw();
-                    drawnObjects.push(circle);
-                    easyCircle = circle;
-                  } else {
-                    transformer.nodes([easyCircle]);
-                    drawingLayer.draw();
-                  }
-                }
-                return;
-              }
-  
-              if(mode === "expert"){
-                isDrawing = true;
-                startPos = getTransformedPointerPosition();
-                switch(currentTool){
-                  case "freehand":
-                  case "feather":
-                    currentLine = new Konva.Line({
-                      stroke: "white",
-                      strokeWidth: currentTool === "feather" ? brushSize * 2 : brushSize,
-                      lineCap: "round",
-                      lineJoin: "round",
-                      points: [startPos.x, startPos.y]
-                    });
-                    currentLine.setAttr("brushType", currentTool);
-                    drawnGroup.add(currentLine);
-                    break;
-                  case "square":
-                    currentShape = new Konva.Rect({
-                      x: startPos.x,
-                      y: startPos.y,
-                      width: 0,
-                      height: 0,
-                      stroke: "white",
-                      strokeWidth: 2
-                    });
-                    drawnGroup.add(currentShape);
-                    break;
-                  case "filledPath":
-                    currentLine = new Konva.Line({
-                      stroke: "white",
-                      strokeWidth: 2,
-                      closed: false,
-                      points: [startPos.x, startPos.y]
-                    });
-                    drawnGroup.add(currentLine);
-                    break;
-                  case "circle":
-                    currentShape = new Konva.Circle({
-                      x: startPos.x,
-                      y: startPos.y,
-                      radius: 0,
-                      stroke: "white",
-                      strokeWidth: 2,
-                      fill: "white"
-                    });
-                    drawnGroup.add(currentShape);
-                    break;
-                }
-              }
-            });
-  
-            stage.on("mousemove touchmove", function(e){
-              if(!isDrawing) return;
-              var pos = getTransformedPointerPosition();
-              if(mode === "expert"){
-                if(currentTool === "freehand" || currentTool === "feather"){
-                  var newPoints = currentLine.points().concat([pos.x, pos.y]);
-                  currentLine.points(newPoints);
-                  drawingLayer.batchDraw();
-                } else if(currentTool === "square"){
-                  currentShape.width(pos.x - startPos.x);
-                  currentShape.height(pos.y - startPos.y);
-                  drawingLayer.batchDraw();
-                } else if(currentTool === "filledPath"){
-                  var newPoints = currentLine.points().concat([pos.x, pos.y]);
-                  currentLine.points(newPoints);
-                  drawingLayer.batchDraw();
-                } else if(currentTool === "circle"){
-                  var dx = pos.x - startPos.x;
-                  var dy = pos.y - startPos.y;
-                  var newRadius = Math.sqrt(dx*dx+dy*dy);
-                  currentShape.radius(newRadius);
-                  drawingLayer.batchDraw();
-                }
-              }
-            });
-  
-            stage.on("mouseup touchend", function(){
-              if(isDrawing && mode === "expert"){
-                if(currentTool === "filledPath" && currentLine){
-                  currentLine.closed(true);
-                  currentLine.fill("white");
-                  drawingLayer.draw();
-                  drawnObjects.push(currentLine);
-                }
-                if(currentTool === "square" && currentShape){
-                  currentShape.fill("white");
-                  drawingLayer.draw();
-                  drawnObjects.push(currentShape);
-                }
-                if(currentTool === "circle" && currentShape){
-                  drawingLayer.draw();
-                  drawnObjects.push(currentShape);
-                }
-                if((currentTool === "freehand" || currentTool === "feather") && currentLine){
-                  if(currentTool === "feather"){
-                    currentLine.filters([Konva.Filters.Blur]);
-                    currentLine.blurRadius(3);
-                    currentLine.cache();
-                  }
-                  drawingLayer.draw();
-                  drawnObjects.push(currentLine);
-                }
-              }
-              isDrawing = false;
-              currentLine = null;
-              currentShape = null;
-            });
-  
-            drawingLayer.draw();
-          });
-        });
-  
-        function getTransformedPointerPosition(){
-          var pos = stage.getPointerPosition();
-          var scale = stage.scaleX();
-          return { x: pos.x/scale, y: pos.y/scale };
-        }
-      </script>
-    </div>
-  </body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ECharts with Toolbar</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <style>
+    #chart-container {
+      position: relative;
+      width: 800px;
+      height: 400px;
+      border: 1px solid #ccc;
+      margin: 20px auto;
+    }
+
+    #chart-toolbar {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: none;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 6px;
+      padding: 6px 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      z-index: 10;
+      font-family: sans-serif;
+    }
+
+    #chart-toolbar select,
+    #chart-toolbar button {
+      margin-left: 5px;
+      font-size: 14px;
+      padding: 3px 6px;
+    }
+
+    .toolbar-btn {
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div id="chart-container">
+  <div id="chart-toolbar">
+    <select id="refresh-interval">
+      <option value="5000">5s</option>
+      <option value="10000">10s</option>
+      <option value="30000">30s</option>
+    </select>
+    <button id="refresh-now" class="toolbar-btn">⟳ Refresh</button>
+    <button id="toggle-zoom" class="toolbar-btn">Disable Zoom</button>
+    <button id="close-chart" class="toolbar-btn">✕</button>
+  </div>
+  <div id="main-chart" style="width: 100%; height: 100%;"></div>
+</div>
+
+<script>
+  let chart = echarts.init(document.getElementById('main-chart'));
+  let zoomEnabled = true;
+  let refreshInterval = 5000;
+  let intervalId;
+
+  function generateData() {
+    return Array.from({ length: 20 }, () => Math.floor(Math.random() * 100));
+  }
+
+  function updateChart() {
+    const data = generateData();
+
+    const option = {
+      tooltip: { trigger: 'axis' },
+      xAxis: {
+        type: 'category',
+        data: data.map((_, i) => `Point ${i + 1}`)
+      },
+      yAxis: { type: 'value' },
+      dataZoom: zoomEnabled
+        ? [
+            { id: 'insideZoom', type: 'inside', xAxisIndex: 0 },
+            { id: 'sliderZoom', type: 'slider', xAxisIndex: 0 }
+          ]
+        : [],
+      series: [{
+        data: data,
+        type: 'line',
+        smooth: true
+      }]
+    };
+
+    // true forces full re-render (needed to remove zoom properly)
+    chart.setOption(option, true);
+  }
+
+  function startAutoRefresh() {
+    clearInterval(intervalId);
+    intervalId = setInterval(updateChart, refreshInterval);
+  }
+
+  function updateZoomButtonLabel() {
+    $('#toggle-zoom').text(zoomEnabled ? 'Disable Zoom' : 'Enable Zoom');
+  }
+
+  $(document).ready(function() {
+    updateChart();
+    startAutoRefresh();
+    updateZoomButtonLabel();
+
+    // Show/hide toolbar on hover
+    $('#chart-container').hover(
+      () => $('#chart-toolbar').fadeIn(200),
+      () => $('#chart-toolbar').fadeOut(200)
+    );
+
+    // Refresh interval change
+    $('#refresh-interval').on('change', function() {
+      refreshInterval = parseInt($(this).val());
+      startAutoRefresh();
+    });
+
+    // Manual refresh
+    $('#refresh-now').on('click', function() {
+      updateChart();
+    });
+
+    // Toggle zoom
+    $('#toggle-zoom').on('click', function() {
+      zoomEnabled = !zoomEnabled;
+      updateZoomButtonLabel();
+      updateChart();
+    });
+
+    // Close chart
+    $('#close-chart').on('click', function() {
+      $('#chart-container').fadeOut(300);
+      clearInterval(intervalId);
+    });
+  });
+</script>
+
+</body>
 </html>

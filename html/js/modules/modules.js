@@ -987,14 +987,20 @@ class MODULESEDITOR {
 					}
 					
 					if (fieldType == 'graph') {
-						if ('graph' in moduleData.metadata) {
-							controls['chart'].push({
-								'id': key,
-								'module': moduleData,
-								'data_url': 'includes/moduleutil.php?request=GraphData',
-								'chartconfig': moduleData.metadata.graph
-							})						
-							inputHTML = `<div id="${key}"></div>`
+						if ('graphs' in moduleData.metadata) {
+							Object.entries(moduleData.metadata.graphs).forEach(([graphName, graphData]) => {
+								if ('main' in graphData) {
+									if (graphData.main == 'true') {
+										controls['chart'].push({
+											'id': key,
+											'module': moduleData,
+											'data_url': 'includes/moduleutil.php?request=GraphData',
+											'chartconfig': graphData
+										})						
+										inputHTML = `<div id="${key}"></div>`
+									}
+								}
+							});
 						}
 					}
 

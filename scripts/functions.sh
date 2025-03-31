@@ -1177,7 +1177,7 @@ function one_instance()
 			# If it's happening often let the user know.
 			[[ ! -d ${ALLSKY_ABORTS_DIR} ]] && mkdir "${ALLSKY_ABORTS_DIR}"
 			local AF="${ALLSKY_ABORTS_DIR}/${ABORTED_FILE}"
-			local ID="AM_RM_ABORTS_${ABORTED_FILE}"
+			local ID="AM_RM_ABORTS ${ABORTED_FILE}"
 			echo -e "$( date )\t${ABORTED_FIELDS}" >> "${AF}"
 			NUM=$( wc -l < "${AF}" )
 			if [[ ${NUM} -eq 10 ]]; then

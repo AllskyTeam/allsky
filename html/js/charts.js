@@ -3,17 +3,20 @@
 class CHARTMANAGER {
 
     chartStorageKey = 'allsky-charts'
+    chartLockedKey = 'allsky-charts-locked'
     refreshIntervals = {}
     countdownTimers = {}
     chartCount = 0
     charts = []
+    chartListVisible = false
+    chartsLocked = false
 
-    createChartBox(id, type, left, top, width, height) {
+    createChartBox(id, moduleName, chartKey, left, top, width, height) {
         const box = $('<div class="allsky-charts-dashboard-chart"></div>').attr({
             'data-left': left, 'data-top': top, 'data-width': width, 'data-height': height
         });
 
-        const container = $(`<div class="allsky-charts-chart-container" id="${id}" data-type="${type}"></div>`);
+        const container = $(`<div class="allsky-charts-chart-container" id="${id}" data-module="${moduleName}" data-chartkey="${chartKey}"></div>`);
         const resizer = $('<div class="allsky-charts-resizer"></div>');
         const toolbar = $(`<div class="allsky-charts-chart-toolbar"></div>`);
         const select = $('<select></select>').css({ fontSize: '12px', marginRight: '5px' }).append(`
@@ -24,9 +27,9 @@ class CHARTMANAGER {
             <option value="60000">1m</option>
         `);
 
-        const refreshBtn = $('<button title="Refresh" class="btn btn-primary"><i class="fa-solid fa-arrows-rotate"></i></button>')
-        const toggleZoomBtn = $('<button title="Toggle Zoom" class="btn btn-primary">Disable Zoom</button>')
-        const closeBtn = $('<button title="Close" class="btn btn-danger">×</button>')
+        const refreshBtn = $('<button title="Refresh" class="btn btn-primary btn-xs ml-1"><i class="fa-solid fa-arrows-rotate"></i></button>')
+        const toggleZoomBtn = $('<button title="Toggle Zoom" class="btn btn-primary btn-xs ml-1">Disable Zoom</button>')
+        const closeBtn = $('<button title="Close" class="btn btn-danger btn-xs ml-1">×</button>')
 
         toolbar.append(select, refreshBtn, toggleZoomBtn, closeBtn);
 
@@ -47,7 +50,7 @@ class CHARTMANAGER {
                 indicator.text(countdown + 's').show();
 
                 this.refreshIntervals[id] = setInterval(() => {
-                    this.renderChart(id, type, { zoomEnabled });
+                    this.renderChart(id, moduleName, chartKey, { zoomEnabled });
                     countdown = interval / 1000;
                 }, interval);
 
@@ -65,13 +68,13 @@ class CHARTMANAGER {
         });
 
         refreshBtn.on('click', () => {
-            this.renderChart(id, type, { zoomEnabled });
+            this.renderChart(id, moduleName, chartKey, { zoomEnabled });
         });
 
         toggleZoomBtn.on('click', () => {
             zoomEnabled = !zoomEnabled;
             updateZoomBtnText();
-            this.renderChart(id, type, { zoomEnabled });
+            this.renderChart(id, moduleName, chartKey, { zoomEnabled });
         });
 
         closeBtn.on('click', () => {
@@ -81,13 +84,11 @@ class CHARTMANAGER {
             this.saveCharts();
         });
 
-        // === Hover Toolbar Toggle ===
         box.hover(
             () => toolbar.fadeIn(150),
             () => toolbar.fadeOut(150)
-        );
+        )
 
-        // === Initial setup ===
         updateZoomBtnText();
         box.append(container, resizer, toolbar, indicator);
         this.makeDraggable(box);
@@ -96,7 +97,7 @@ class CHARTMANAGER {
         return box[0];
     }
 
-    renderChart(id, type, options = {}) {
+    renderChart(id, moduleName, chartKey, options = {}) {
         const zoomKey = `chartZoomEnabled_${id}`;
 
         let zoomEnabled;
@@ -122,59 +123,66 @@ class CHARTMANAGER {
             value: values[i]
         }));
 
-        let option;
 
-        if (type === 'line' || type === 'bar') {
-            option = {
-                title: 'TEST',
-                tooltip: { trigger: 'axis' },
-                xAxis: { type: 'category', data: categories },
-                yAxis: { type: 'value' },
-                series: [{
-                    data: values,
-                    type: type,
-                    smooth: type === 'line'
-                }],
-                dataZoom: zoomEnabled
-                    ? [
-                        { id: 'insideZoom', type: 'inside', xAxisIndex: 0 },
-                        { id: 'sliderZoom', type: 'slider', xAxisIndex: 0 }
-                    ]
-                    : []
-            };
-        } else if (type === 'pie') {
-            option = {
-                tooltip: { trigger: 'item' },
-                legend: {
-                    orient: 'vertical',
-                    left: 'left'
-                },
-                series: [{
-                    type: 'pie',
-                    radius: '60%',
-                    data: pieData,
-                    emphasis: {
-                        itemStyle: {
-                            shadowBlur: 10,
-                            shadowOffsetX: 0,
-                            shadowColor: 'rgba(0, 0, 0, 0.5)'
-                        }
-                    }
-                }]
-            };
-        } else {
-            console.warn(`Unsupported chart type: ${type}`);
-            return;
-        }
 
-        option.title =  {
+
+        $.ajax({
+            url: 'includes/moduleutil.php?request=GraphData',
+            type: 'POST',
+            data: {
+                module: moduleName,
+                chartkey: chartKey
+            },
+            async: false,
+            dataType: 'json',
+            success: function (allskyChartData) {
+                let chartOptions = allskyChartData.config
+                let series = allskyChartData.series
+
+                chartOptions.series = series
+                chart.setOption(chartOptions, true)
+                this.charts.push(chart)
+                this.setTheme()
+            },
+            error: function (xhr, status, error) {
+                console.error('Error:', error)
+            }
+        })
+
+
+
+
+
+
+
+  /*      let option;
+
+        option = {
+            title: moduleName,
+            tooltip: { trigger: 'axis' },
+            xAxis: { type: 'category', data: categories },
+            yAxis: { type: 'value' },
+            series: [{
+                data: values,
+                type: 'line',
+                smooth: true
+            }],
+            dataZoom: zoomEnabled
+                ? [
+                    { id: 'insideZoom', type: 'inside', xAxisIndex: 0 },
+                    { id: 'sliderZoom', type: 'slider', xAxisIndex: 0 }
+                ]
+                : []
+        };
+
+        option.title = {
             left: 'center',
-            text: `Chart ${type}`
+            text: `Chart ${moduleName}`
         }
 
         chart.setOption(option, true)
         this.charts.push(chart)
-        this.setTheme()
+        this.setTheme()*/
     }
 
     positionChartBox(box) {
@@ -198,11 +206,15 @@ class CHARTMANAGER {
         let offsetX = 0
         let offsetY = 0
 
-        el.on('mousedown', function (e) {
-            if ($(e.target).is('select, button') || $(e.target).hasClass('allsky-charts-resizer')) return;
-            isDragging = true;
-            offsetX = e.offsetX;
-            offsetY = e.offsetY;
+        el.on('mousedown', (e) => {
+            if (!this.chartsLocked) {
+                if ($(e.target).is('select, button') || $(e.target).hasClass('allsky-charts-resizer')) {
+                    return
+                }
+                isDragging = true
+                offsetX = e.offsetX
+                offsetY = e.offsetY
+            }
         })
         $(document).on('mousemove', (e) => {
             if (!isDragging) return;
@@ -221,14 +233,16 @@ class CHARTMANAGER {
 
     makeResizable(box, handle) {
         let isResizing = false, startX, startY, startW, startH;
-        handle.on('mousedown', function (e) {
-            e.preventDefault();
-            isResizing = true;
-            startX = e.clientX;
-            startY = e.clientY;
-            startW = box.width();
-            startH = box.height();
-        });
+        handle.on('mousedown', (e) => {
+            if (!this.chartsLocked) {
+                e.preventDefault()
+                isResizing = true
+                startX = e.clientX
+                startY = e.clientY
+                startW = box.width()
+                startH = box.height()
+            }
+        })
         $(document).on('mousemove', (e) => {
             if (!isResizing) {
                 return
@@ -248,10 +262,10 @@ class CHARTMANAGER {
 
     loadCharts() {
         const data = JSON.parse(localStorage.getItem(this.chartStorageKey) || '[]');
-        data.forEach(({ chartId, type, position, interval }) => {
-            const box = $(this.createChartBox(chartId, type, position.left, position.top, position.width, position.height))
+        data.forEach(({ chartId, moduleName, chartKey, position, interval }) => {
+            const box = $(this.createChartBox(chartId, moduleName, chartKey, position.left, position.top, position.width, position.height))
             $('#allsky-charts-main').append(box)
-            this.renderChart(chartId, type)
+            this.renderChart(chartId, moduleName, chartKey)
             box.find('select').val(interval).trigger('change')
         })
         this.chartCount = data.reduce((max, c) => Math.max(max, parseInt(c.chartId.split('-')[1])), 0)
@@ -266,7 +280,8 @@ class CHARTMANAGER {
 
             return {
                 chartId: container.attr('id'),
-                type: container.data('type'),
+                moduleName: container.data('module'),
+                chartKey: container.data('chartkey'),
                 position: {
                     left: box.attr('data-left'),
                     top: box.attr('data-top'),
@@ -292,54 +307,152 @@ class CHARTMANAGER {
             const oldOption = chart.getOption();
 
             // Modify specific theme-dependent styles
-            const updatedOption = {
-                ...oldOption,
-                backgroundColor: isDark ? '#1f1f1f' : '#fff',
-                title: {
-                    ...oldOption.title?.[0],
-                    textStyle: {
-                        ...oldOption.title?.[0]?.textStyle,
-                        color: isDark ? '#fff' : '#000'
-                    }
-                },
-                xAxis: (oldOption.xAxis || []).map(axis => ({
-                    ...axis,
-                    axisLine: {
-                        ...axis.axisLine,
-                        lineStyle: {
-                            ...axis.axisLine?.lineStyle,
-                            color: isDark ? '#ccc' : '#000'
+            if (oldOption !== null) {
+                const updatedOption = {
+                    ...oldOption,
+                    backgroundColor: isDark ? '#1f1f1f' : '#fff',
+                    title: {
+                        ...oldOption.title?.[0],
+                        textStyle: {
+                            ...oldOption.title?.[0]?.textStyle,
+                            color: isDark ? '#fff' : '#000'
                         }
                     },
-                    axisLabel: {
-                        ...axis.axisLabel,
-                        color: isDark ? '#ddd' : '#000'
-                    }
-                })),
-                yAxis: (oldOption.yAxis || []).map(axis => ({
-                    ...axis,
-                    axisLine: {
-                        ...axis.axisLine,
-                        lineStyle: {
-                            ...axis.axisLine?.lineStyle,
+                    xAxis: (oldOption.xAxis || []).map(axis => ({
+                        ...axis,
+                        axisLine: {
+                            ...axis.axisLine,
+                            lineStyle: {
+                                ...axis.axisLine?.lineStyle,
+                                color: isDark ? '#ccc' : '#000'
+                            }
+                        },
+                        axisLabel: {
+                            ...axis.axisLabel,
                             color: isDark ? '#ddd' : '#000'
                         }
-                    },
-                    axisLabel: {
-                        ...axis.axisLabel,
-                        color: isDark ? '#ddd' : '#000'
-                    }
-                }))
-            }
+                    })),
+                    yAxis: (oldOption.yAxis || []).map(axis => ({
+                        ...axis,
+                        axisLine: {
+                            ...axis.axisLine,
+                            lineStyle: {
+                                ...axis.axisLine?.lineStyle,
+                                color: isDark ? '#ddd' : '#000'
+                            }
+                        },
+                        axisLabel: {
+                            ...axis.axisLabel,
+                            color: isDark ? '#ddd' : '#000'
+                        }
+                    }))
+                }
 
-            chart.setOption(updatedOption, true)
+                chart.setOption(updatedOption, true)
+            }
         })
+    }
+
+    #setLockedState() {
+        $('#allsky-charts-chart-toggle-lock').removeClass('fa-lock')
+        $('#allsky-charts-chart-toggle-lock').removeClass('fa-lock-open')
+        if (this.chartsLocked) {
+            $('#allsky-charts-chart-toggle-lock').addClass('fa-lock')
+        } else {
+            $('#allsky-charts-chart-toggle-lock').addClass('fa-lock-open')
+        }
+        localStorage.setItem(this.chartLockedKey, this.chartsLocked ? 'true' : 'false')
+    }
+
+    buildUI() {
+        $.ajax({
+            url: 'includes/moduleutil.php?request=AvailableGraphs',
+            type: 'GET',
+            async: false,
+            dataType: 'json',
+            success: function (allskyChartData) {
+                var sidebar = $('#allsky-charts-sidebar')
+                $.each(allskyChartData, function (categoryName, chartsArray) {
+                    var collapseId = 'category-' + categoryName.toLowerCase()
+
+                    var panel = $('<div>', { class: 'panel panel-default chart-category' })
+
+                    var heading = $('<div>', { class: 'panel-heading' }).append(
+                        $('<h4>', { class: 'panel-title' }).append(
+                            $('<a>', {
+                                class: 'collapsed',
+                                'data-toggle': 'collapse',
+                                href: '#' + collapseId,
+                                text: categoryName
+                            })
+                        )
+                    )
+
+                    var body = $('<div>', {
+                        id: collapseId,
+                        class: 'panel-collapse collapse'
+                    }).append(
+                        $('<div>', { class: 'panel-body' })
+                    )
+
+                    chartsArray.forEach(function (chart) {
+                        var item = $('<div>', {
+                            class: 'allsky-charts-chart-menu-item',
+                            'data-module': chart.module,
+                            'data-chartkey': chart.key,
+                            draggable: true
+                        }).append(
+                            $('<i>', { class: chart.icon }).css({ marginRight: '5px' }),
+                            chart.title
+                        )
+
+                        body.find('.panel-body').append(item)
+                    })
+
+                    panel.append(heading).append(body)
+                    sidebar.append(panel)
+                })
+            },
+            error: function (xhr, status, error) {
+                console.error('Error:', error)
+            }
+        })
+
+        this.chartsLocked = localStorage.getItem(this.chartLockedKey) === 'true'
+        this.#setLockedState()
+
+        //$('#allsky-charts-sidebar').hide()
     }
 
     addEvents() {
         let draggingSidebar = false
         let offsetX = 0
         let offsetY = 0
+
+        var isToggled = false;
+
+        $('#allsky-charts-lock').click((e) => {
+            this.chartsLocked = !this.chartsLocked
+            this.#setLockedState()
+        })
+
+        $('#allsky-charts-chart-list-toggle').click(function () {
+            this.chartListVisible = !this.chartListVisible
+
+            if (this.chartListVisible) {
+                $('#allsky-charts-sidebar').show()
+                $('#allsky-charts-chart-list-toggle-label')
+                    .removeClass('label-default')
+                    .addClass('label-success')
+                    .text('ON');
+            } else {
+                $('#allsky-charts-sidebar').hide()
+                $('#allsky-charts-chart-list-toggle-label')
+                    .removeClass('label-success')
+                    .addClass('label-default')
+                    .text('OFF');
+            }
+        });
 
         $('#allsky-charts-sidebar').on('mousedown', function (e) {
             if ($(e.target).closest('.allsky-charts-chart-menu-item').length) {
@@ -360,7 +473,8 @@ class CHARTMANAGER {
             .on('mouseup', () => draggingSidebar = false)
 
         $('.allsky-charts-chart-menu-item').attr('draggable', true).on('dragstart', function (e) {
-            e.originalEvent.dataTransfer.setData('type', $(this).data('type'))
+            e.originalEvent.dataTransfer.setData('module', $(this).data('module'))
+            e.originalEvent.dataTransfer.setData('chartkey', $(this).data('chartkey'))
         })
 
         $('#allsky-charts-main').on('dragover', (e) => {
@@ -369,18 +483,17 @@ class CHARTMANAGER {
         $('#allsky-charts-main').on('drop', (e) => {
             e.preventDefault()
             let el = e.currentTarget
-            const type = e.originalEvent.dataTransfer.getData('type')
-            if (!type) {
-                return
-            }
+            const moduleName = e.originalEvent.dataTransfer.getData('module')
+            const chartKey = e.originalEvent.dataTransfer.getData('chartkey')
+
             const rect = el.getBoundingClientRect()
             const left = ((e.originalEvent.clientX - rect.left) / rect.width) * 100
             const top = ((e.originalEvent.clientY - rect.top) / rect.height) * 100
             const id = 'chart-' + (++this.chartCount)
-            const box = this.createChartBox(id, type, left, top, 30, 20)
+            const box = this.createChartBox(id, moduleName, chartKey, left, top, 30, 20)
             if (box) {
                 el.appendChild(box)
-                this.renderChart(id, type)
+                this.renderChart(id, moduleName, chartKey)
                 this.setTheme()
                 this.saveCharts()
             }
@@ -411,11 +524,12 @@ class CHARTMANAGER {
     }
 
     run() {
+        this.buildUI()        
         this.addEvents()
     }
 }
 
 $(function () {
     let chartManager = new CHARTMANAGER()
-    chartManager.run();
+    chartManager.run()
 })

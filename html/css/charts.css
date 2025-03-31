@@ -5,6 +5,21 @@ body {
     overflow: hidden;
 }
 
+.navbar-btn.fix-toggle-btn {
+    border: 1px solid #ccc; /* match default border */
+    padding: 6px 12px; /* match Bootstrap default padding */
+}
+
+.navbar-btn.fix-toggle-btn:hover {
+    border: 1px solid #ccc;
+}
+
+.navbar-btn.fix-toggle-btn i {
+    width: 16px;
+    text-align: center;
+    display: inline-block;
+}
+
 #allsky-charts-sidebar {
     width: 250px;
     background: #f3f3f3;
@@ -18,6 +33,7 @@ body {
     z-index: 10000;
     border-radius: 8px;
     cursor: move;
+    font-size: 12px;
 }
 .dark #allsky-charts-sidebar {
     background: #222222;
@@ -28,7 +44,6 @@ body {
     top: 0px;
     left: 0px;
     font-weight: bold;
-    font-size: 16px;
     z-index: 1001;
     width: 100%;
     background-color: #bbb;
@@ -38,17 +53,43 @@ body {
     background: #171717 !important;
 }
 
+#allsky-charts-sidebar .panel {
+    margin-top: 10px;
+}
+
+#allsky-charts-sidebar .panel-title {
+    font-size: 12px;
+}
+
+#allsky-charts-sidebar .panel-heading {
+    padding: 5px;
+}
+
+#allsky-charts-sidebar .panel-group .panel-heading+.panel-collapse>.list-group, .panel-group .panel-heading+.panel-collapse>.panel-body {
+    border: none;
+}
+
+#allsky-charts-sidebar .panel-body {
+    padding: 5px;
+}
+
 #allsky-charts-main {
     width: 100vw;
     height: 100vh;
     position: relative;
     padding: 20px;
     overflow: auto;
-    /*background-image:
+    background-image:
         linear-gradient(to right, #eee 1px, transparent 1px),
-        linear-gradient(to bottom, #eee 1px, transparent 1px);*/
+        linear-gradient(to bottom, #eee 1px, transparent 1px);
     background-size: 20px 20px;
 }
+.dark #allsky-charts-main  {
+    background-image:
+        linear-gradient(to right, #202020 1px, transparent 1px),
+        linear-gradient(to bottom, #202020 1px, transparent 1px);
+}
+
 
 .allsky-charts-chart-menu-item {
     padding: 5px;
@@ -65,6 +106,10 @@ body {
     border: 1px solid #aaa;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     overflow: hidden;
+}
+.dark .allsky-charts-dashboard-chart{
+    border: 1px solid #555;
+    box-shadow: 0 2px 6px rgba(127, 127, 127, 0.5);    
 }
 
 .allsky-charts-chart-container {
@@ -90,13 +135,6 @@ body {
     background: #171717;
 }
 
-.allsky-charts-chart-toolbar select,
-.allsky-charts-chart-toolbar button {
-    margin-left: 5px;
-    font-size: 14px;
-    padding: 3px 6px;
-}
-
 .allsky-charts-resizer {
     width: 10px;
     height: 10px;
@@ -106,17 +144,20 @@ body {
     cursor: se-resize;
     background: rgba(0, 0, 0, 0.2);
 }
+.dark .allsky-charts-resizer {
+    background: rgba(127, 127, 127, 0.5); 
+}
 
-.allsky-charts-dashboard-chart .allsk-charts-resizer,
-.allsky-charts-dashboard-chart .allsk-charts-delete-chart,
+.allsky-charts-dashboard-chart .allsky-charts-resizer,
+.allsky-charts-dashboard-chart .allsky-charts-delete-chart,
 .allsky-charts-dashboard-chart select {
     opacity: 0;
     pointer-events: none;
     transition: 0.3s;
 }
 
-.allsky-charts-dashboard-chart:hover .allsk-charts-resizer,
-.allsky-charts-dashboard-chart:hover .allsk-charts-delete-chart,
+.allsky-charts-dashboard-chart:hover .allsky-charts-resizer,
+.allsky-charts-dashboard-chart:hover .allsky-charts-delete-chart,
 .allsky-charts-dashboard-chart:hover select {
     opacity: 1;
     pointer-events: auto;
@@ -139,8 +180,6 @@ body {
     margin-bottom: 0px !important;
 }
 
-
-
 .allsky-charts-chart-menu-item {
     cursor: grab;
     margin-bottom: 8px;
@@ -149,7 +188,14 @@ body {
     border: 1px solid #ddd;
     border-radius: 4px;
 }
+.dark .allsky-charts-chart-menu-item  {
+    background: #222222;
+    border: 1px solid #333333;    
+}
 
 .allsky-charts-chart-menu-item:hover {
     background: #f0f0f0;
+}
+.dark .allsky-charts-chart-menu-item:hover {
+    background: #444444;
 }

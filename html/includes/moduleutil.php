@@ -148,6 +148,21 @@ class MODULEUTIL
         return $metaData;
     }
 
+    private function getModuleMetaData($modulelName) {
+        $fileName = $this->myFiles . '/' . $modulelName;
+        $metaData = $this->getMetaDataFromFile($fileName);
+        if ($metaData == "") {
+            $fileName = $this->userModules . '/' . $modulelName;
+            $metaData = $this->getMetaDataFromFile($fileName);
+            if ($metaData == "") {
+                $fileName = $this->allskyModules . '/' . $modulelName;
+                $metaData = $this->getMetaDataFromFile($fileName);
+                
+            }                
+        }
+        return $metaData;
+    }
+
     private function readModuleData($moduleDirectory, $type, $event) {
         $arrFiles = array();
         $handle = opendir($moduleDirectory);
@@ -1075,17 +1090,8 @@ class MODULEUTIL
 		$this->sendResponse(json_encode($result));
 	}
 
-    public function postGraphData() {
-        $config = $_POST["series"];
-        $table = $_POST["table"];
-
-        if (!$config) {
-            echo json_encode(["error" => "Invalid configuration"]);
-            exit;
-        }
-        
-        $highchartsSeries = [];
-
+    private function getChartDataForChart($chart, $table) {
+        $seriesData = [];
         $host = 'localhost';
         $db   = 'allsky';
         $user = 'allsky';
@@ -1101,41 +1107,76 @@ class MODULEUTIL
         $pdo = new PDO($dsn, $user, $pass, $options);
 
         $query = "SELECT json_data, timestamp FROM " . $table . " ORDER BY timestamp ASC";
-        $stmt = $pdo->query($query);        
-        
+        $stmt = $pdo->query($query);
+
         while ($row = $stmt->fetch()) {
             $jsonString = json_decode($row['json_data']);
-            //$jsonString = stripslashes($jsonString);
-            //$jsonString = trim($jsonString, '"'); 
 
             $timestamp = intval($row['timestamp'])*1000;
         
             $dataArray = json_decode($jsonString, true);   
             if ($dataArray) {
-                foreach ($config as $key => $seriesConfig) {
-                    $variable = $seriesConfig['variable'];
+                foreach ($chart->series as $key => $seriesConfig) {
+                    $variable = $seriesConfig->variable;
         
                     if (isset($dataArray[$variable])) {
-                        if (!isset($highchartsSeries[$key])) {
-                            $highchartsSeries[$key] = [
-                                "name" => $seriesConfig['name'],
-                                "yAxis" => intval($seriesConfig['yAxis']),
+                        if (!isset($seriesData[$key])) {
+                            $seriesData[$key] = [
+                                "name" => $seriesConfig->name,
+                                "type" => $seriesConfig->type,
+                                "yAxis" => intval($seriesConfig->yAxis),
                                 "data" => []
                             ];
                         }        
-                        $highchartsSeries[$key]['data'][] = [$timestamp, $dataArray[$variable]['value']];
+                        $seriesData[$key]['data'][] = [$timestamp, $dataArray[$variable]['value']];
                     }
                 }
             }
         }
         
-        $highchartsSeries = array_values($highchartsSeries);
+        $seriesData = array_values($seriesData);
         
-        $result = array(
-            "series" => $highchartsSeries
-        );        
+        $seriesData = array(
+            "series" => $seriesData
+        );   
 
-        $this->sendResponse(json_encode($result));
+        return $seriesData;
+    }
+
+    public function postGraphData() {
+        $chartData = null;
+        $module = $_POST["module"];
+        $chartKey = $_POST["chartkey"];
+        if (substr($module, -3) !== '.py') {
+            $module .= '.py';
+        }
+
+        $metaData = $this->getModuleMetaData($module);
+        if ($metaData !== "") {
+            $metaData = json_decode($metaData);
+
+            if (isset($metaData->graphs)) {
+                if (isset($metaData->extradata)) {
+                    if (isset($metaData->extradata->database)) {
+                        if (isset($metaData->extradata->database->table)) {
+                            $table = $metaData->extradata->database->table;
+                            $graphs = $metaData->graphs;
+                            foreach($graphs as $key=>$graph) {
+                                if ($key === $chartKey) {
+                                    $seriesData = $this->getChartDataForChart($graph, $table);
+                                    $chartData = array(
+                                        "config" => $graph,
+                                        "series" => $seriesData
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        $this->sendResponse(json_encode($chartData));
     }
 
     public function getAvailableGraphs() {
@@ -1148,10 +1189,7 @@ class MODULEUTIL
         foreach ($allModules as $key=>$moduleData) {
             if (isset($moduleData['metadata'])) {
                 if (isset($moduleData['metadata']->graphs)) {
-
-
                     foreach ($moduleData['metadata']->graphs as $graphKey=>$graphData) {
-
                         $icon = 'fa-chart-line';
                         if (isset($graphData->icon)) {
                             $icon = $graphData->icon;
@@ -1162,20 +1200,27 @@ class MODULEUTIL
                         }
                         
                         $module = $moduleData['metadata']->module;
-
-                        $graphList[$module . '-' . $graphKey] = [
+                        if (isset($graphData->group)) {
+                            $key = $graphData->group;
+                        } else {
+                            $key = 'Unknown';
+                        }
+                        if (!isset($graphList[$key])) {
+                            $graphList[$key] = [];
+                        }
+                        $graphList[$key][] = [
                             'module'=>$module,
                             'key'=>$graphKey,
                             'icon'=>$icon,
                             'title'=>$title,
                             'table'=>$moduleData['metadata']->extradata->database->table,
-                            'series'=>$graphData->series,
                             'config'=>$graphData->config
                         ];
                     }
                 }
             }
         }
+        asort($graphList);
         $this->sendResponse(json_encode($graphList));
     }
 }

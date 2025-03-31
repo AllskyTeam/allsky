@@ -1,141 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ECharts with Toolbar</title>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-  <style>
-    #chart-container {
-      position: relative;
-      width: 800px;
-      height: 400px;
-      border: 1px solid #ccc;
-      margin: 20px auto;
-    }
-
-    #chart-toolbar {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      display: none;
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 6px;
-      padding: 6px 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-      z-index: 10;
-      font-family: sans-serif;
-    }
-
-    #chart-toolbar select,
-    #chart-toolbar button {
-      margin-left: 5px;
-      font-size: 14px;
-      padding: 3px 6px;
-    }
-
-    .toolbar-btn {
-      cursor: pointer;
-    }
-  </style>
+  <title>FontAwesome Toggle</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 </head>
 <body>
 
-<div id="chart-container">
-  <div id="chart-toolbar">
-    <select id="refresh-interval">
-      <option value="5000">5s</option>
-      <option value="10000">10s</option>
-      <option value="30000">30s</option>
-    </select>
-    <button id="refresh-now" class="toolbar-btn">⟳ Refresh</button>
-    <button id="toggle-zoom" class="toolbar-btn">Disable Zoom</button>
-    <button id="close-chart" class="toolbar-btn">✕</button>
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">MyApp</a>
+    </div>
+
+    <ul class="nav navbar-nav navbar-right">
+      <li>
+        <button id="iconToggle" type="button" class="btn btn-default navbar-btn">
+          <i class="fa fa-eye" id="toggleIcon"></i> Toggle View
+        </button>
+      </li>
+    </ul>
   </div>
-  <div id="main-chart" style="width: 100%; height: 100%;"></div>
+</nav>
+
+<!-- Example toggled element -->
+<div id="toggleTarget" class="container" style="display: none;">
+  <h3>Hidden Content</h3>
+  <p>This is toggled by the icon button.</p>
 </div>
 
 <script>
-  let chart = echarts.init(document.getElementById('main-chart'));
-  let zoomEnabled = true;
-  let refreshInterval = 5000;
-  let intervalId;
+  var isVisible = false;
 
-  function generateData() {
-    return Array.from({ length: 20 }, () => Math.floor(Math.random() * 100));
-  }
+  $('#iconToggle').click(function() {
+    isVisible = !isVisible;
 
-  function updateChart() {
-    const data = generateData();
+    // Toggle the element
+    $('#toggleTarget').toggle();
 
-    const option = {
-      tooltip: { trigger: 'axis' },
-      xAxis: {
-        type: 'category',
-        data: data.map((_, i) => `Point ${i + 1}`)
-      },
-      yAxis: { type: 'value' },
-      dataZoom: zoomEnabled
-        ? [
-            { id: 'insideZoom', type: 'inside', xAxisIndex: 0 },
-            { id: 'sliderZoom', type: 'slider', xAxisIndex: 0 }
-          ]
-        : [],
-      series: [{
-        data: data,
-        type: 'line',
-        smooth: true
-      }]
-    };
-
-    // true forces full re-render (needed to remove zoom properly)
-    chart.setOption(option, true);
-  }
-
-  function startAutoRefresh() {
-    clearInterval(intervalId);
-    intervalId = setInterval(updateChart, refreshInterval);
-  }
-
-  function updateZoomButtonLabel() {
-    $('#toggle-zoom').text(zoomEnabled ? 'Disable Zoom' : 'Enable Zoom');
-  }
-
-  $(document).ready(function() {
-    updateChart();
-    startAutoRefresh();
-    updateZoomButtonLabel();
-
-    // Show/hide toolbar on hover
-    $('#chart-container').hover(
-      () => $('#chart-toolbar').fadeIn(200),
-      () => $('#chart-toolbar').fadeOut(200)
-    );
-
-    // Refresh interval change
-    $('#refresh-interval').on('change', function() {
-      refreshInterval = parseInt($(this).val());
-      startAutoRefresh();
-    });
-
-    // Manual refresh
-    $('#refresh-now').on('click', function() {
-      updateChart();
-    });
-
-    // Toggle zoom
-    $('#toggle-zoom').on('click', function() {
-      zoomEnabled = !zoomEnabled;
-      updateZoomButtonLabel();
-      updateChart();
-    });
-
-    // Close chart
-    $('#close-chart').on('click', function() {
-      $('#chart-container').fadeOut(300);
-      clearInterval(intervalId);
-    });
+    // Swap the icon class
+    $('#toggleIcon')
+      .toggleClass('fa-eye')
+      .toggleClass('fa-eye-slash');
   });
 </script>
 

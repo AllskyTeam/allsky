@@ -1,50 +1,57 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>FontAwesome Toggle</title>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-</head>
-<body>
+<div id="chart" style="width: 600px; height: 400px;"></div>
 
-<nav class="navbar navbar-default">
-  <div class="container-fluid">
-    <div class="navbar-header">
-      <a class="navbar-brand" href="#">MyApp</a>
-    </div>
-
-    <ul class="nav navbar-nav navbar-right">
-      <li>
-        <button id="iconToggle" type="button" class="btn btn-default navbar-btn">
-          <i class="fa fa-eye" id="toggleIcon"></i> Toggle View
-        </button>
-      </li>
-    </ul>
-  </div>
-</nav>
-
-<!-- Example toggled element -->
-<div id="toggleTarget" class="container" style="display: none;">
-  <h3>Hidden Content</h3>
-  <p>This is toggled by the icon button.</p>
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
 <script>
-  var isVisible = false;
+  var chart = echarts.init(document.getElementById('chart'));
 
-  $('#iconToggle').click(function() {
-    isVisible = !isVisible;
+  var option = {
+    title: {
+      text: 'Multiple Y-Axes Example'
+    },
+    tooltip: {
+      trigger: 'axis'
+    },
+    legend: {
+      data: ['Temperature', 'Humidity']
+    },
+    xAxis: {
+      type: 'time'
+    },
+    yAxis: [
+      {
+        type: 'value',
+        name: 'Temperature (°C)'
+      },
+      {
+        type: 'value',
+        name: 'Humidity (%)',
+        position: 'right',
+        offset: 0
+      }
+    ],
+    series: [
+      {
+        name: 'Temperature',
+        type: 'line',
+        yAxisIndex: 0, // left
+        data: [
+          [1711800000000, 22],
+          [1711803600000, 24],
+          [1711807200000, 23]
+        ]
+      },
+      {
+        name: 'Humidity',
+        type: 'line',
+        yAxisIndex: 1, // right
+        data: [
+          [1711800000000, 45],
+          [1711803600000, 55],
+          [1711807200000, 50]
+        ]
+      }
+    ]
+  };
 
-    // Toggle the element
-    $('#toggleTarget').toggle();
-
-    // Swap the icon class
-    $('#toggleIcon')
-      .toggleClass('fa-eye')
-      .toggleClass('fa-eye-slash');
-  });
+  chart.setOption(option);
 </script>
-
-</body>
-</html>

@@ -135,12 +135,17 @@ class CHARTMANAGER {
             },
             async: false,
             dataType: 'json',
-            success: function (allskyChartData) {
-                let chartOptions = allskyChartData.config
-                let series = allskyChartData.series
+            success: (allskyChartData) => {
 
-                chartOptions.series = series
-                chart.setOption(chartOptions, true)
+             //   if (zoomEnabled) {
+                allskyChartData.dataZoom = 
+                    [
+                        { id: 'insideZoom', type: 'inside', xAxisIndex: 0 },
+                        { id: 'sliderZoom', type: 'slider', xAxisIndex: 0 }
+                    ]
+              //  }
+
+                chart.setOption(allskyChartData, true)              
                 this.charts.push(chart)
                 this.setTheme()
             },

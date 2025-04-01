@@ -1090,6 +1090,49 @@ class MODULEUTIL
 		$this->sendResponse(json_encode($result));
 	}
 
+    private function insertNullsOnGap(array $data, int $thresholdSeconds = 7200): array {
+        $result = [];
+
+        $thresholdSeconds = $thresholdSeconds * 1000;
+
+        for ($i = 0; $i < count($data) - 1; $i++) {
+            $current = $data[$i];
+            $next = $data[$i + 1];
+    
+            $result[] = $current;
+    
+            $gap = $next[0] - $current[0];
+            if ($gap > $thresholdSeconds) {
+                $result[] = [null, null]; // this breaks the line in ECharts
+            }
+        }
+    
+        // Add the final data point
+        $result[] = end($data);
+    
+        return $result;
+    }
+
+    private function convertChartObject($data) {
+        if (is_array($data)) {
+            foreach ($data as $key => $value) {
+                $data[$key] = $this->convertChartObject($value);
+            }
+        } elseif (is_object($data)) {
+            foreach ($data as $key => $value) {
+                $data->$key = $this->convertChartObject($value);
+            }
+        } elseif (is_string($data)) {
+            if (strtolower($data) === 'true') {
+                return true;
+            } elseif (strtolower($data) === 'false') {
+                return false;
+            }
+        }
+    
+        return $data;
+    }
+
     private function getChartDataForChart($chart, $table) {
         $seriesData = [];
         $host = 'localhost';
@@ -1122,23 +1165,26 @@ class MODULEUTIL
                     if (isset($dataArray[$variable])) {
                         if (!isset($seriesData[$key])) {
                             $seriesData[$key] = [
-                                "name" => $seriesConfig->name,
-                                "type" => $seriesConfig->type,
-                                "yAxis" => intval($seriesConfig->yAxis),
                                 "data" => []
                             ];
+
+                            foreach ($seriesConfig as $seriesKey=>$seriesValue) {
+                                if ($seriesKey !== 'variable') {
+                                    $seriesData[$key][$seriesKey] = $seriesValue;
+                                }
+                            }
                         }        
                         $seriesData[$key]['data'][] = [$timestamp, $dataArray[$variable]['value']];
                     }
                 }
             }
         }
+
+        foreach ($seriesData as $key=>$series) {
+            $seriesData[$key]["data"] = $this->insertNullsOnGap($series["data"]);
+        }
         
         $seriesData = array_values($seriesData);
-        
-        $seriesData = array(
-            "series" => $seriesData
-        );   
 
         return $seriesData;
     }
@@ -1164,10 +1210,8 @@ class MODULEUTIL
                             foreach($graphs as $key=>$graph) {
                                 if ($key === $chartKey) {
                                     $seriesData = $this->getChartDataForChart($graph, $table);
-                                    $chartData = array(
-                                        "config" => $graph,
-                                        "series" => $seriesData
-                                    );
+                                    $chartData = $graph->config;
+                                    $chartData->series = $seriesData;
                                 }
                             }
                         }
@@ -1175,6 +1219,7 @@ class MODULEUTIL
                 }
             }
         }
+        $chartData = $this->convertChartObject($chartData);
 
         $this->sendResponse(json_encode($chartData));
     }

@@ -35,49 +35,132 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
             "chart1": {
 				"icon": "fa-brands fa-raspberry-pi",
 				"title": "Hardware",
+				"group": "Hardware",    
 				"main": "true",
 				"config": {
-					"chart": {
-						"type": "spline",
-						"zooming": {
-							"type": "x"
-						}
-					},
 					"title": {
 						"text": "Hardware"
 					},
-					"xAxis": {
-						"type": "datetime",
-						"dateTimeLabelFormats": {
-							"day": "%Y-%m-%d",
-							"hour": "%H:%M"
+					"tooltip": {
+						"trigger": "axis",
+						"axisPointer": {
+							"type": "cross"
 						}
 					},
+					"legend": {
+						"show": "true"
+					},
+					"xAxis": {
+						"type": "time"
+					},
 					"yAxis": [
-						{ 
-							"title": {
-								"text": "CPU Temp"
-							} 
+						{
+							"name": "CPU Temp",
+							"type": "value",
+							"splitLine": {
+								"show": "true",
+								"lineStyle": {
+									"width": 1,
+									"color": "#444",
+									"type": "dashed"
+								}
+							}
 						},
 						{
-							"title": { 
-								"text": "Free Disk"
-							}, 
-							"opposite": "true"
+							"name": "Free Disk",
+							"type": "value",
+							"position": "right",
+							"splitLine": {
+								"show": "true",
+								"lineStyle": {
+									"width": 1,
+									"color": "#444",
+									"type": "dashed"
+								}
+							}
 						}
-					]
+					],
+					"animation": "false"
 				},
 				"series": {
 					"exposure": {
 						"name": "CPU Temp",
-						"yAxis": "0",
+						"yAxisIndex": 0,
+						"type": "line",
+                        "smooth": "true",
+                        "connectNulls": "false",
 						"variable": "AS_CPUTEMP"                 
 					},
 					"gain": {
 						"name": "Free Disk",
-						"yAxis": "1",
+						"yAxisIndex": 1,
+						"type": "line",
+                        "smooth": "true",
+                        "connectNulls": "false",
 						"variable": "AS_DISKFREE"
 					}               
+				}
+			},
+            "guage1": {
+				"icon": "fa-brands fa-raspberry-pi",
+				"title": "CPU Temp",
+				"group": "Hardware",    
+				"main": "true",                
+				"config": {
+					"series": [
+					{
+						"type": "gauge",
+						"startAngle": 180,
+						"endAngle": 0,
+						"radius": "95%",
+						"axisLine": {
+							"lineStyle": {
+								"width": 30,
+								"color": [
+									[0.3, "#22ff22"],
+									[0.7, "#ffbb00"],
+									[1, "#fd666d"]
+								]
+							}
+						},
+						"pointer": {
+							"itemStyle": {
+								"color": "auto"
+							}
+						},
+						"axisTick": {
+							"distance": -30,
+							"length": 8,
+							"lineStyle": {
+								"color": "#fff",
+								"width": 2
+							}
+						},
+						"splitLine": {
+							"distance": -30,
+							"length": 30,
+							"lineStyle": {
+								"color": "#fff",
+								"width": 4
+							}
+						},
+						"axisLabel": {
+							"color": "inherit",
+							"distance": 40,
+							"fontSize": 20
+						},
+						"detail": {
+							"valueAnimation": "true",
+							"formatter": "{value} km/h",
+							"color": "inherit"
+						},
+						"data": [
+							{
+								"value": 70
+							}
+						]
+					}
+					]				
 				}
 			}
 		},            

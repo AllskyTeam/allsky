@@ -28,48 +28,71 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
             "chart1": {
 				"icon": "fas fa-camera",
 				"title": "Camera",
+				"group": "Camera",
+				"main": "true",
 				"config": {
-					"chart": {
-						"type": "spline",
-						"zooming": {
-							"type": "x"
+					"title": {
+						"text": "Camera"
+					},
+					"tooltip": {
+						"trigger": "axis",
+						"axisPointer": {
+							"type": "cross"
 						}
 					},
-					"title": {
-						"text": "Exposures"
+					"legend": {
+						"show": "true"
 					},
 					"xAxis": {
-						"type": "datetime",
-						"dateTimeLabelFormats": {
-							"day": "%Y-%m-%d",
-							"hour": "%H:%M"
-						}
+						"type": "time"
 					},
 					"yAxis": [
-						{ 
-							"title": {
-								"text": "Exposure"
-							} 
+						{
+							"name": "Exposure",
+							"type": "value",
+							"alignTicks": "true",
+							"splitLine": {
+								"show": "true",
+								"lineStyle": {
+									"width": 1,
+									"color": "#444",
+									"type": "dashed"
+								}
+							}
 						},
 						{
-							"title": { 
-								"text": "Gain"
-							}, 
-							"opposite": "true"
+							"name": "Gain",
+							"type": "value",
+							"alignTicks": "true",
+							"splitLine": {
+								"show": "true",
+								"lineStyle": {
+									"width": 1,
+									"color": "#444",
+									"type": "dashed"
+								}
+							}
 						}
-					]
+					],
+					"animation": "false"
 				},
 				"series": {
 					"exposure": {
 						"name": "Exposure",
-						"yAxis": "0",
+						"yAxisIndex": 0,
+						"type": "line",
+                        "smooth": "true",
+                        "connectNulls": "false",
 						"variable": "AS_CAMERAEXPOSURE"                 
 					},
 					"gain": {
 						"name": "Gain",
-						"yAxis": "1",
-						"variable": "AS_CAMERAGAIN"
-					}               
+						"yAxisIndex": 1,
+						"type": "line",
+                        "smooth": "true",
+                        "connectNulls": "false",                     
+						"variable": "AS_CAMERAGAIN"                 
+					} 
 				}
 			}
         },
@@ -94,7 +117,15 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"group": "Camera",
 					"description": "Exposure",
 					"type": "number"
-				}    
+				},
+				"AS_CAMERAGAIN": {
+					"name": "${CAMERAGAIN}",
+					"format": "",
+					"sample": "",                
+					"group": "Camera",
+					"description": "Exposure",
+					"type": "number"
+				}  
 			}                         
 		}          
 	}    
@@ -114,6 +145,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 		extra_data = {}
 		extra_data['AS_CAMERAIMAGE'] = filename
 		extra_data['AS_CAMERAEXPOSURE'] = int(allsky_shared.get_environment_variable('AS_EXPOSURE_US'))
+		extra_data['AS_CAMERAGAIN'] = 0
 
 		allsky_shared.save_extra_data(self.meta_data['extradatafilename'], extra_data, self.meta_data['module'], self.meta_data['extradata'])
 

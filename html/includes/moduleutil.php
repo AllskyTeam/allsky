@@ -1103,11 +1103,10 @@ class MODULEUTIL
     
             $gap = $next[0] - $current[0];
             if ($gap > $thresholdSeconds) {
-                $result[] = [null, null]; // this breaks the line in ECharts
+                $result[] = [null, null];
             }
         }
     
-        // Add the final data point
         $result[] = end($data);
     
         return $result;
@@ -1209,9 +1208,11 @@ class MODULEUTIL
                             $graphs = $metaData->graphs;
                             foreach($graphs as $key=>$graph) {
                                 if ($key === $chartKey) {
-                                    $seriesData = $this->getChartDataForChart($graph, $table);
                                     $chartData = $graph->config;
-                                    $chartData->series = $seriesData;
+                                    if (isset($graph->series)) {
+                                        $seriesData = $this->getChartDataForChart($graph, $table);
+                                        $chartData->series = $seriesData;
+                                    }
                                 }
                             }
                         }

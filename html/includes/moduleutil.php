@@ -780,6 +780,32 @@ class MODULEUTIL
         return $variables;
     }
 */
+    private function getAllskyVariable($variable="AS_CPUTEMP") {
+        $variables = $this->getAllVariables();
+
+        $value = null;
+        foreach ($variables as $variableData) {
+            if ($variableData->variable == $variable) {
+                $value = $variableData->value;
+                break;
+            }
+        }
+
+        return $value;
+    }
+
+    private function getAllVariables() {
+		$pythonScript = '/home/pi/allsky/scripts/modules/allskyvariables/allskyvariables.py --print --empty --allskyhome ' . ALLSKY_HOME;
+
+		$output = [];
+		$returnValue = 0;
+		exec("python3 $pythonScript 2>&1", $output, $returnValue);
+
+		$data = json_decode($output[0]);
+
+        return $data;
+    }
+
     public function getVariableList() {
         $showEmpty=trim(filter_input(INPUT_GET, 'showempty', FILTER_SANITIZE_STRING));
         if (empty($showEmpty)) {
@@ -807,8 +833,8 @@ class MODULEUTIL
 		$jsonString = json_encode($output[0], JSON_UNESCAPED_SLASHES);
 		$data = json_encode($jsonString);
 
-		$this->sendResponse($output[0]);
-        //return $this->getVariableListInternal($showEmpty, $module);
+        $this->sendResponse($output[0]);
+
     }
 /*
     public function getVariableListInternal($showEmpty='yes', $module='') {
@@ -1148,7 +1174,7 @@ class MODULEUTIL
         ];
         $pdo = new PDO($dsn, $user, $pass, $options);
 
-        $query = "SELECT json_data, timestamp FROM " . $table . " ORDER BY timestamp ASC";
+        $query = "SELECT json_data, timestamp FROM " . $table . " WHERE timestamp >= UNIX_TIMESTAMP() - 3600 ORDER BY timestamp ASC";
         $stmt = $pdo->query($query);
 
         while ($row = $stmt->fetch()) {
@@ -1209,9 +1235,21 @@ class MODULEUTIL
                             foreach($graphs as $key=>$graph) {
                                 if ($key === $chartKey) {
                                     $chartData = $graph->config;
-                                    if (isset($graph->series)) {
+
+                                    $chartType = "line";
+                                    if (isset($graph->type)) {
+                                        $chartType = $graph->type;
+                                    }
+
+                                    if ($chartType == "line") {
                                         $seriesData = $this->getChartDataForChart($graph, $table);
                                         $chartData->series = $seriesData;
+                                    }
+
+                                    if ($chartType == "gauge") {                                    
+                                        $variable = $chartData->series[0]->data[0]->value;  
+                                        $value = $this->getAllskyVariable($variable);
+                                        $chartData->series[0]->data[0]->value = $value;
                                     }
                                 }
                             }

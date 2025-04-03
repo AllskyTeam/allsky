@@ -133,7 +133,6 @@ class CHARTMANAGER {
                 module: moduleName,
                 chartkey: chartKey
             },
-            async: false,
             dataType: 'json',
             success: (allskyChartData) => {
 
@@ -154,40 +153,6 @@ class CHARTMANAGER {
             }
         })
 
-
-
-
-
-
-
-  /*      let option;
-
-        option = {
-            title: moduleName,
-            tooltip: { trigger: 'axis' },
-            xAxis: { type: 'category', data: categories },
-            yAxis: { type: 'value' },
-            series: [{
-                data: values,
-                type: 'line',
-                smooth: true
-            }],
-            dataZoom: zoomEnabled
-                ? [
-                    { id: 'insideZoom', type: 'inside', xAxisIndex: 0 },
-                    { id: 'sliderZoom', type: 'slider', xAxisIndex: 0 }
-                ]
-                : []
-        };
-
-        option.title = {
-            left: 'center',
-            text: `Chart ${moduleName}`
-        }
-
-        chart.setOption(option, true)
-        this.charts.push(chart)
-        this.setTheme()*/
     }
 
     positionChartBox(box) {

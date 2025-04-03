@@ -33,7 +33,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 		"centersettings": "false",
         "graphs": {
             "chart1": {
-				"icon": "fa-brands fa-raspberry-pi",
+				"icon": "fa-solid fa-chart-line",
 				"title": "Hardware",
 				"group": "Hardware",    
 				"main": "true",
@@ -102,10 +102,11 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 				}
 			},
             "guage1": {
-				"icon": "fa-brands fa-raspberry-pi",
+				"icon": "fa-solid fa-gauge",
 				"title": "CPU Temp",
 				"group": "Hardware",    
-				"main": "true",                
+				"main": "true",
+				"type": "gauge",
 				"config": {
 					"series": [
 					{
@@ -113,6 +114,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 						"startAngle": 180,
 						"endAngle": 0,
 						"radius": "95%",
+						"animation": "false",
 						"axisLine": {
 							"lineStyle": {
 								"width": 30,
@@ -151,12 +153,12 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 						},
 						"detail": {
 							"valueAnimation": "true",
-							"formatter": "{value} km/h",
+							"formatter": "{value}",
 							"color": "inherit"
 						},
 						"data": [
 							{
-								"value": 70
+								"value": "AS_CPUTEMP"
 							}
 						]
 					}

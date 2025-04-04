@@ -230,7 +230,7 @@
 	}
 
 	if ($includeGoogleAnalytics && file_exists("myFiles/analyticsTracking.js")) {
-		echo "<script src='myFiles/analyticsTracking.js'></script>";
+		include_once("myFiles/analyticsTracking.js");
 	}
 ?>
 </body>

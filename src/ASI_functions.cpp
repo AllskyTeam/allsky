@@ -119,7 +119,7 @@ int getNumOfConnectedCameras()
 	{
 		on_line++;
 		Log(5, "Line %d: [%s]\n", on_line, line);
-		(void) getToken(NULL, '\t');		// tell getToken() we have a new line.
+		(void) getToken(NULL, '\t');		// tells getToken() we have a new line.
 
 		char *cameraType = getToken(line, '\t');
 		char *numStr = getToken(line, '\t');
@@ -694,7 +694,7 @@ if (0) {
 		on_line++;
 		Log(5, "Line %3d: %s\n", on_line, full_line);
 
-		(void) getToken(NULL, '\t');		// tell getToken() we have a new line.
+		(void) getToken(NULL, '\t');		// tells getToken() we have a new line.
 
 		char *cameraLength = NULL;
 		char *lt = getToken(line, '\t');	// line type

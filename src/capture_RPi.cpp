@@ -388,7 +388,7 @@ bool readMetadataFile(string file)
 		{
 			continue;		// blank line
 		}
-		(void) getToken(NULL, '=');		// tell getToken() we have a new line.
+		(void) getToken(NULL, '=');		// tells getToken() we have a new line.
 
 		// Input lines are:  name=value
 		char *name = getToken(line, '=');
@@ -407,10 +407,10 @@ bool readMetadataFile(string file)
 			int x = atoi(value);
 			if (x != myRaspistillSetting.shutter_us)
 			{
-Log(5, "  ExposureTime %d (%s) !=  myRaspistillSetting.shutter_us (%d)\n", x, value,  myRaspistillSetting.shutter_us);
+Log(5, "  ExposureTime %d !=  myRaspistillSetting.shutter_us (%d)\n", x, myRaspistillSetting.shutter_us);
 // CG.lastExposure_us = myRaspistillSetting.shutter_us;		SHOULD be == auto/manual exposure algormithm value
 			}
-else Log(5, "  ExposureTime = %d (%s)\n", x, value);
+else Log(5, "  ExposureTime = %f ('%s')\n", x, value);
 		}
 		else if (strcmp(name, "ColourGains") == 0)
 		{
@@ -421,12 +421,12 @@ else Log(5, "  ExposureTime = %d (%s)\n", x, value);
 				Log(1, "*** %s: WARNING, WBR and WBB not on line: '%s'\n", CG.ME, line);
 			}
 else
-Log(5, "  ColourGains: Red: %lf, Blue: %lf (%s)\n", CG.lastWBR, CG.lastWBB, value);
+Log(5, "  ColourGains: Red: %lf, Blue: %lf\n", CG.lastWBR, CG.lastWBB);
 		}
 		else if (strcmp(name, "SensorTemperature") == 0)
 		{
 			CG.lastSensorTemp = atof(value);
-Log(5, "  SensorTemperature = %f (%s)\n", CG.lastSensorTemp, value);
+Log(5, "  SensorTemperature = %f ('%s')\n", CG.lastSensorTemp, value);
 
 		}
 		else if (strcmp(name, "AnalogueGain") == 0)
@@ -435,10 +435,10 @@ Log(5, "  SensorTemperature = %f (%s)\n", CG.lastSensorTemp, value);
 			float x = atof(value);
 			if (x != myRaspistillSetting.analoggain)
 			{
-Log(5, "  AnalogueGain %f (%s) !=  myRaspistillSetting.analoggain (%f)\n", x, value,  myRaspistillSetting.analoggain);
+Log(5, "  AnalogueGain %f !=  myRaspistillSetting.analoggain (%f)\n", x, myRaspistillSetting.analoggain);
 // CG.lastGain =  myRaspistillSetting.analoggain; 		SHOULD be == auto/manual exposure algormithm value
 			}
-else Log(5, "  AnalogueGain = %f (%s)\n", x, value);
+else Log(5, "  AnalogueGain = %f ('%s')\n", x, value);
 		}
 	}
 	return(true);

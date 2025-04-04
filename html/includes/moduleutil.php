@@ -86,34 +86,37 @@ class MODULEUTIL
 	}
 
     private function getMetaDataFromFileByName($fileName, $metaName) {
-        $fileContents = file($fileName);
-        $found = False;
-
-		$level = 0;
 		$metaData = "";
-		foreach ($fileContents as $source_line) {
-    
-			if (rtrim($source_line) !== '' && str_ends_with(rtrim($source_line), '{')) {
-				$level++;
-			}
-		
-			if (ltrim($source_line) !== '' && str_starts_with(ltrim($source_line), '}')) {
-				$level--;
-			}
-		
-			if (ltrim($source_line) !== '' && str_starts_with(ltrim($source_line), $metaName)) {
-				$found = true;
-				$source_line = str_replace([$metaName, "=", " "], "", $source_line);
-			}
-		
-			if ($found) {
-				$metaData .= $source_line;
-			}
-		
-			if (trim($source_line) === '}' && $found && $level === 0) {
-				break;
-			}
-		}
+
+        if (file_exists($fileName)) {
+            $fileContents = file($fileName);
+            $found = False;
+
+            $level = 0;
+            foreach ($fileContents as $source_line) {
+        
+                if (rtrim($source_line) !== '' && str_ends_with(rtrim($source_line), '{')) {
+                    $level++;
+                }
+            
+                if (ltrim($source_line) !== '' && str_starts_with(ltrim($source_line), '}')) {
+                    $level--;
+                }
+            
+                if (ltrim($source_line) !== '' && str_starts_with(ltrim($source_line), $metaName)) {
+                    $found = true;
+                    $source_line = str_replace([$metaName, "=", " "], "", $source_line);
+                }
+            
+                if ($found) {
+                    $metaData .= $source_line;
+                }
+            
+                if (trim($source_line) === '}' && $found && $level === 0) {
+                    break;
+                }
+            }
+        }
 		
 
         return $metaData;
@@ -662,7 +665,7 @@ class MODULEUTIL
         }
 	}
 
-    public function getAllskyVariables() {
+    public function getAllskyVariables($return=false) {
         $sourceDir = ALLSKY_OVERLAY . '/extra';
         $variables = [];
 
@@ -692,7 +695,11 @@ class MODULEUTIL
             }
         }
 
-        $this->sendResponse(json_encode($variables));
+        if ($return) {
+            return $variables;
+        } else {
+            $this->sendResponse(json_encode($variables));
+        }
     }
 	
 	/*
@@ -781,29 +788,18 @@ class MODULEUTIL
     }
 */
     private function getAllskyVariable($variable="AS_CPUTEMP") {
-        $variables = $this->getAllVariables();
+
+        $variables = $this->getAllskyVariables(true);
 
         $value = null;
         foreach ($variables as $variableData) {
-            if ($variableData->variable == $variable) {
-                $value = $variableData->value;
+            if ($variableData["variable"] == $variable) {
+                $value = $variableData["lastvalue"]->value;
                 break;
             }
         }
 
         return $value;
-    }
-
-    private function getAllVariables() {
-		$pythonScript = '/home/pi/allsky/scripts/modules/allskyvariables/allskyvariables.py --print --empty --allskyhome ' . ALLSKY_HOME;
-
-		$output = [];
-		$returnValue = 0;
-		exec("python3 $pythonScript 2>&1", $output, $returnValue);
-
-		$data = json_decode($output[0]);
-
-        return $data;
     }
 
     public function getVariableList() {
@@ -1174,7 +1170,8 @@ class MODULEUTIL
         ];
         $pdo = new PDO($dsn, $user, $pass, $options);
 
-        $query = "SELECT json_data, timestamp FROM " . $table . " WHERE timestamp >= UNIX_TIMESTAMP() - 3600 ORDER BY timestamp ASC";
+        $query = "SELECT json_data, timestamp FROM " . $table . " WHERE timestamp >= UNIX_TIMESTAMP() - 86400 ORDER BY timestamp ASC";
+        #$query = "SELECT json_data, timestamp FROM " . $table . " ORDER BY timestamp ASC";
         $stmt = $pdo->query($query);
 
         while ($row = $stmt->fetch()) {
@@ -1223,6 +1220,7 @@ class MODULEUTIL
         }
 
         $metaData = $this->getModuleMetaData($module);
+
         if ($metaData !== "") {
             $metaData = json_decode($metaData);
 
@@ -1247,9 +1245,9 @@ class MODULEUTIL
                                     }
 
                                     if ($chartType == "gauge") {                                    
-                                        $variable = $chartData->series[0]->data[0]->value;  
+                                        $variable = $chartData->series[0]->data;  
                                         $value = $this->getAllskyVariable($variable);
-                                        $chartData->series[0]->data[0]->value = $value;
+                                        $chartData->series[0]->data = array($value);
                                     }
                                 }
                             }

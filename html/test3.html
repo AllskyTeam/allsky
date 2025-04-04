@@ -1,57 +1,47 @@
-<div id="chart" style="width: 600px; height: 400px;"></div>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Highcharts Test</title>
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+</head>
+<body>
+  <div id="myLineChart" style="width: 800px; height: 400px;"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
-<script>
-  var chart = echarts.init(document.getElementById('chart'));
-
-  var option = {
-    title: {
-      text: 'Multiple Y-Axes Example'
-    },
-    tooltip: {
-      trigger: 'axis'
-    },
-    legend: {
-      data: ['Temperature', 'Humidity']
-    },
-    xAxis: {
-      type: 'time'
-    },
-    yAxis: [
-      {
-        type: 'value',
-        name: 'Temperature (°C)'
+  <script>
+    Highcharts.chart('myLineChart', {
+      chart: { type: 'line' },
+      title: { text: 'Total Aircraft' },
+      subtitle: { text: 'Source: adsb module' },
+      xAxis: {
+        type: 'datetime',
+        dateTimeLabelFormats: {
+          day: '%Y-%m-%d',
+          hour: '%H:%M'
+        }
       },
-      {
-        type: 'value',
-        name: 'Humidity (%)',
-        position: 'right',
-        offset: 0
-      }
-    ],
-    series: [
-      {
-        name: 'Temperature',
-        type: 'line',
-        yAxisIndex: 0, // left
+      yAxis: [{
+        title: { text: 'Total' }
+      }],
+      series: [{
+        name: 'Total',
+        yAxis: 0,
         data: [
-          [1711800000000, 22],
-          [1711803600000, 24],
-          [1711807200000, 23]
+          [1743796290000, 21],
+          [1743796402000, 19],
+          [1743796469000, 19],
+          [1743796537000, 20],
+          [1743796604000, 19],
+          [1743796672000, 21],
+          [1743796738000, 18],
+          [1743796807000, 21],
+          [1743796873000, 20],
+          [1743796940000, 19],
+          [1743797008000, 19],
+          [1743797074000, 19],
+          [1743797142000, 19]
         ]
-      },
-      {
-        name: 'Humidity',
-        type: 'line',
-        yAxisIndex: 1, // right
-        data: [
-          [1711800000000, 45],
-          [1711803600000, 55],
-          [1711807200000, 50]
-        ]
-      }
-    ]
-  };
-
-  chart.setOption(option);
-</script>
+      }]
+    });
+  </script>
+</body>
+</html>

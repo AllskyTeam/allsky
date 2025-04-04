@@ -7,9 +7,295 @@ class CHARTMANAGER {
     refreshIntervals = {}
     countdownTimers = {}
     chartCount = 0
-    charts = []
+    charts = new Map()
     chartListVisible = false
     chartsLocked = false
+    darkTheme = {
+        colors: [
+            '#8087E8', '#A3EDBA', '#F19E53', '#6699A1',
+            '#E1D369', '#87B4E7', '#DA6D85', '#BBBAC5'
+        ],
+        chart: {
+            backgroundColor: '#272727',
+            style: {
+                fontFamily: 'IBM Plex Sans, sans-serif'
+            }
+        },
+        title: {
+            style: {
+                fontSize: '22px',
+                fontWeight: '500',
+                color: '#fff'
+            }
+        },
+        subtitle: {
+            style: {
+                fontSize: '16px',
+                fontWeight: '400',
+                color: '#fff'
+            }
+        },
+        credits: {
+            style: {
+                color: '#f0f0f0'
+            }
+        },
+        caption: {
+            style: {
+                color: '#f0f0f0'
+            }
+        },
+        tooltip: {
+            borderWidth: 0,
+            backgroundColor: '#f0f0f0',
+            shadow: true
+        },
+        legend: {
+            backgroundColor: 'transparent',
+            itemStyle: {
+                fontWeight: '400',
+                fontSize: '12px',
+                color: '#fff'
+            },
+            itemHoverStyle: {
+                fontWeight: '700',
+                color: '#fff'
+            }
+        },
+        plotOptions: {
+            series: {
+                dataLabels: {
+                    color: '#46465C',
+                    style: {
+                        fontSize: '13px'
+                    }
+                },
+                marker: {
+                    lineColor: '#333'
+                }
+            },
+            boxplot: {
+                fillColor: '#505053'
+            },
+            candlestick: {
+                lineColor: null,
+                upColor: '#DA6D85',
+                upLineColor: '#DA6D85'
+            },
+            errorbar: {
+                color: 'white'
+            },
+            dumbbell: {
+                lowColor: '#f0f0f0'
+            },
+            map: {
+                borderColor: '#909090',
+                nullColor: '#78758C'
+            }
+        },
+        drilldown: {
+            activeAxisLabelStyle: {
+                color: '#F0F0F3'
+            },
+            activeDataLabelStyle: {
+                color: '#F0F0F3'
+            },
+            drillUpButton: {
+                theme: {
+                    fill: '#fff'
+                }
+            }
+        },
+        xAxis: {
+            gridLineColor: '#707073',
+            labels: {
+                style: {
+                    color: '#fff',
+                    fontSize: '12px'
+                }
+            },
+            lineColor: '#707073',
+            minorGridLineColor: '#505053',
+            tickColor: '#707073',
+            title: {
+                style: {
+                    color: '#fff'
+                }
+            }
+        },
+        yAxis: {
+            gridLineColor: '#707073',
+            labels: {
+                style: {
+                    color: '#fff',
+                    fontSize: '12px'
+                }
+            },
+            lineColor: '#707073',
+            minorGridLineColor: '#505053',
+            tickColor: '#707073',
+            tickWidth: 1,
+            title: {
+                style: {
+                    color: '#fff',
+                    fontWeight: '300'
+                }
+            }
+        },
+        colorAxis: {
+            gridLineColor: '#45445d',
+            labels: {
+                style: {
+                    color: '#fff',
+                    fontSize: '12px'
+                }
+            },
+            minColor: '#342f95',
+            maxColor: '#2caffe',
+            tickColor: '#45445d'
+        },
+        mapNavigation: {
+            enabled: true,
+            buttonOptions: {
+                theme: {
+                    fill: '#46465C',
+                    'stroke-width': 1,
+                    stroke: '#BBBAC5',
+                    r: 2,
+                    style: {
+                        color: '#fff'
+                    },
+                    states: {
+                        hover: {
+                            fill: '#000',
+                            'stroke-width': 1,
+                            stroke: '#f0f0f0',
+                            style: {
+                                color: '#fff'
+                            }
+                        },
+                        select: {
+                            fill: '#000',
+                            'stroke-width': 1,
+                            stroke: '#f0f0f0',
+                            style: {
+                                color: '#fff'
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        // Scroll charts
+        rangeSelector: {
+            buttonTheme: {
+                fill: '#46465C',
+                stroke: '#BBBAC5',
+                'stroke-width': 1,
+                style: {
+                    color: '#fff'
+                },
+                states: {
+                    hover: {
+                        fill: '#1f1836',
+                        style: {
+                            color: '#fff'
+                        },
+                        'stroke-width': 1,
+                        stroke: 'white'
+                    },
+                    select: {
+                        fill: '#1f1836',
+                        style: {
+                            color: '#fff'
+                        },
+                        'stroke-width': 1,
+                        stroke: 'white'
+                    }
+                }
+            },
+            inputBoxBorderColor: '#BBBAC5',
+            inputStyle: {
+                backgroundColor: '#2F2B38',
+                color: '#fff'
+            },
+            labelStyle: {
+                color: '#fff'
+            }
+        },
+        navigator: {
+            handles: {
+                backgroundColor: '#BBBAC5',
+                borderColor: '#2F2B38'
+            },
+            outlineColor: '#CCC',
+            maskFill: 'rgba(255,255,255,0.1)',
+            series: {
+                color: '#A3EDBA',
+                lineColor: '#A3EDBA'
+            },
+            xAxis: {
+                gridLineColor: '#505053'
+            }
+        },
+        scrollbar: {
+            barBackgroundColor: '#BBBAC5',
+            barBorderColor: '#808083',
+            buttonArrowColor: '#2F2B38',
+            buttonBackgroundColor: '#BBBAC5',
+            buttonBorderColor: '#2F2B38',
+            rifleColor: '#2F2B38',
+            trackBackgroundColor: '#78758C',
+            trackBorderColor: '#2F2B38'
+        }
+    }
+    lightTheme = {
+        chart: {
+            backgroundColor: '#FFFFFF',
+            style: {
+                fontFamily: 'Lucida Grande, Lucida Sans Unicode, Verdana, Arial, Helvetica, sans-serif'
+            }
+        },
+        title: {
+            style: {
+                color: '#333333',
+                fontSize: '18px'
+            }
+        },
+        xAxis: {
+            labels: {
+                style: {
+                    color: '#666666'
+                }
+            }
+        },
+        yAxis: {
+            labels: {
+                style: {
+                    color: '#666666'
+                }
+            }
+        },
+        legend: {
+            itemStyle: {
+                color: '#333333'
+            },
+            itemHoverStyle: {
+                color: '#000000'
+            }
+        },
+        tooltip: {
+            backgroundColor: 'rgba(255, 255, 255, 0.85)',
+            style: {
+                color: '#333333'
+            }
+        },
+        colors: [
+            '#7cb5ec', '#434348', '#90ed7d', '#f7a35c',
+            '#8085e9', '#f15c80', '#e4d354', '#2b908f',
+            '#f45b5b', '#91e8e1'
+        ]
+    }
 
     createChartBox(id, moduleName, chartKey, left, top, width, height) {
         const box = $('<div class="allsky-charts-dashboard-chart"></div>').attr({
@@ -28,17 +314,11 @@ class CHARTMANAGER {
         `);
 
         const refreshBtn = $('<button title="Refresh" class="btn btn-primary btn-xs ml-1"><i class="fa-solid fa-arrows-rotate"></i></button>')
-        const toggleZoomBtn = $('<button title="Toggle Zoom" class="btn btn-primary btn-xs ml-1">Disable Zoom</button>')
         const closeBtn = $('<button title="Close" class="btn btn-danger btn-xs ml-1">×</button>')
 
-        toolbar.append(select, refreshBtn, toggleZoomBtn, closeBtn);
+        toolbar.append(select, refreshBtn, closeBtn);
 
         const indicator = $('<div class="allsky-charts-refresh-indicator">⏳</div>').hide()
-        let zoomEnabled = true
-
-        const updateZoomBtnText = () => {
-            toggleZoomBtn.text(zoomEnabled ? 'Disable Zoom' : 'Enable Zoom');
-        };
 
         select.on('change', () => {
             clearInterval(this.refreshIntervals[id]);
@@ -50,7 +330,7 @@ class CHARTMANAGER {
                 indicator.text(countdown + 's').show();
 
                 this.refreshIntervals[id] = setInterval(() => {
-                    this.renderChart(id, moduleName, chartKey, { zoomEnabled });
+                    this.renderChart(id, moduleName, chartKey);
                     countdown = interval / 1000;
                 }, interval);
 
@@ -68,28 +348,22 @@ class CHARTMANAGER {
         });
 
         refreshBtn.on('click', () => {
-            this.renderChart(id, moduleName, chartKey, { zoomEnabled });
-        });
-
-        toggleZoomBtn.on('click', () => {
-            zoomEnabled = !zoomEnabled;
-            updateZoomBtnText();
-            this.renderChart(id, moduleName, chartKey, { zoomEnabled });
+            this.renderChart(id, moduleName, chartKey);
         });
 
         closeBtn.on('click', () => {
-            clearInterval(this.refreshIntervals[id]);
-            clearInterval(this.countdownTimers[id]);
-            box.remove();
-            this.saveCharts();
-        });
+            clearInterval(this.refreshIntervals[id])
+            clearInterval(this.countdownTimers[id])
+            this.charts.delete(chartKey)
+            box.remove()
+            this.saveCharts()
+        })
 
         box.hover(
             () => toolbar.fadeIn(150),
             () => toolbar.fadeOut(150)
         )
 
-        updateZoomBtnText();
         box.append(container, resizer, toolbar, indicator);
         this.makeDraggable(box);
         this.makeResizable(box, resizer);
@@ -98,33 +372,13 @@ class CHARTMANAGER {
     }
 
     renderChart(id, moduleName, chartKey, options = {}) {
-        const zoomKey = `chartZoomEnabled_${id}`;
-
-        let zoomEnabled;
-        if (options.hasOwnProperty('zoomEnabled')) {
-            zoomEnabled = options.zoomEnabled;
-            localStorage.setItem(zoomKey, JSON.stringify(zoomEnabled));
-        } else {
-            const stored = localStorage.getItem(zoomKey);
-            zoomEnabled = stored === null ? true : JSON.parse(stored);
-        }
 
         const dom = document.getElementById(id);
         if (!dom) {
             return
         }
-        echarts.dispose(dom);
-        const chart = echarts.init(dom);
 
-        const categories = Array.from({ length: 10 }, (_, i) => `Label ${i + 1}`);
-        const values = Array.from({ length: 100 }, () => Math.floor(Math.random() * 100));
-        const pieData = categories.map((label, i) => ({
-            name: label,
-            value: values[i]
-        }));
-
-
-
+        this.positionChartBox(dom.closest('.allsky-charts-dashboard-chart'));
 
         $.ajax({
             url: 'includes/moduleutil.php?request=GraphData',
@@ -135,17 +389,14 @@ class CHARTMANAGER {
             },
             dataType: 'json',
             success: (allskyChartData) => {
-
-             //   if (zoomEnabled) {
-                allskyChartData.dataZoom = 
-                    [
-                        { id: 'insideZoom', type: 'inside', xAxisIndex: 0 },
-                        { id: 'sliderZoom', type: 'slider', xAxisIndex: 0 }
-                    ]
-              //  }
-
-                chart.setOption(allskyChartData, true)              
-                this.charts.push(chart)
+                if (this.charts.has(chartKey)) {
+                    const chart = this.charts.get(chartKey);
+                    chart.update(allskyChartData);
+                } else {
+                    const chart = Highcharts.chart(dom, allskyChartData)
+                    //this.charts.set(chartKey, chart)
+                }
+                
                 this.setTheme()
             },
             error: function (xhr, status, error) {
@@ -167,7 +418,7 @@ class CHARTMANAGER {
         $(box).css({ left, top, width, height })
         const container = $(box).find('.allsky-charts-chart-container')[0]
         if (container) {
-            echarts.getInstanceByDom(container)?.resize()
+            //echarts.getInstanceByDom(container)?.resize()
         }
     }
 
@@ -181,6 +432,7 @@ class CHARTMANAGER {
                 if ($(e.target).is('select, button') || $(e.target).hasClass('allsky-charts-resizer')) {
                     return
                 }
+
                 isDragging = true
                 offsetX = e.offsetX
                 offsetY = e.offsetY
@@ -266,61 +518,11 @@ class CHARTMANAGER {
     }
 
     setTheme() {
-        let theme = 'light'
         if ($('body').hasClass('dark')) {
-            theme = 'dark'
+            Highcharts.setOptions(this.darkTheme)
+        } else {
+            Highcharts.setOptions(this.lightTheme)
         }
-
-        const isDark = theme === 'dark'
-
-        this.charts.forEach(chart => {
-            const oldOption = chart.getOption();
-
-            // Modify specific theme-dependent styles
-            if (oldOption !== null) {
-                const updatedOption = {
-                    ...oldOption,
-                    backgroundColor: isDark ? '#1f1f1f' : '#fff',
-                    title: {
-                        ...oldOption.title?.[0],
-                        textStyle: {
-                            ...oldOption.title?.[0]?.textStyle,
-                            color: isDark ? '#fff' : '#000'
-                        }
-                    },
-                    xAxis: (oldOption.xAxis || []).map(axis => ({
-                        ...axis,
-                        axisLine: {
-                            ...axis.axisLine,
-                            lineStyle: {
-                                ...axis.axisLine?.lineStyle,
-                                color: isDark ? '#ccc' : '#000'
-                            }
-                        },
-                        axisLabel: {
-                            ...axis.axisLabel,
-                            color: isDark ? '#ddd' : '#000'
-                        }
-                    })),
-                    yAxis: (oldOption.yAxis || []).map(axis => ({
-                        ...axis,
-                        axisLine: {
-                            ...axis.axisLine,
-                            lineStyle: {
-                                ...axis.axisLine?.lineStyle,
-                                color: isDark ? '#ddd' : '#000'
-                            }
-                        },
-                        axisLabel: {
-                            ...axis.axisLabel,
-                            color: isDark ? '#ddd' : '#000'
-                        }
-                    }))
-                }
-
-                chart.setOption(updatedOption, true)
-            }
-        })
     }
 
     #setLockedState() {
@@ -475,6 +677,11 @@ class CHARTMANAGER {
 
         $(document).on('allsky-theme-change', (e) => {
             this.setTheme()
+            for (const [id, chart] of this.charts.entries()) {
+                if (chart && chart.redraw) {
+                    chart.redraw();
+                }
+            }            
         })
 
         $('.chart-category').each(function () {
@@ -494,7 +701,7 @@ class CHARTMANAGER {
     }
 
     run() {
-        this.buildUI()        
+        this.buildUI()
         this.addEvents()
     }
 }

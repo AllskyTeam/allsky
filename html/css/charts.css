@@ -120,6 +120,10 @@ body {
     bottom: 0;
 }
 
+.dark .allsky-charts-chart-container {
+    background: #272727;
+}
+
 .allsky-charts-chart-toolbar {
     position: absolute;
     top: 4px;

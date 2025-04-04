@@ -5,8 +5,11 @@ function DisplayCharts() {
 }
 
 ?>
+<script src="/js/highcharts/code/highcharts.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+<script src="/js/highcharts/code/highcharts-more.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+<script src="/js/highcharts/code/modules/series-label.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+<script src="/js/highcharts/code/modules/no-data-to-display.js"></script> 
 <script src="js/charts.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-<script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
 <link rel="stylesheet" href="/css/charts.css?c=<?php echo ALLSKY_VERSION; ?>" />
 
 <div id="allsky-charts-sidebar" class="panel-group">

@@ -35,137 +35,53 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
             "chart1": {
 				"icon": "fa-solid fa-chart-line",
 				"title": "Hardware",
-				"group": "Hardware",    
+				"group": "Hardware",
 				"main": "true",
 				"config": {
+					"chart": {
+						"type": "spline",
+						"zooming": {
+							"type": "x"
+						}
+					},
 					"title": {
 						"text": "Hardware"
 					},
-					"tooltip": {
-						"trigger": "axis",
-						"axisPointer": {
-							"type": "cross"
-						}
-					},
-					"legend": {
-						"show": "true"
-					},
 					"xAxis": {
-						"type": "time"
+						"type": "datetime",
+						"dateTimeLabelFormats": {
+							"day": "%Y-%m-%d",
+							"hour": "%H:%M"
+						}
 					},
 					"yAxis": [
-						{
-							"name": "CPU Temp",
-							"type": "value",
-							"splitLine": {
-								"show": "true",
-								"lineStyle": {
-									"width": 1,
-									"color": "#444",
-									"type": "dashed"
-								}
-							}
+						{ 
+							"title": {
+								"text": "CPU Temp"
+							} 
 						},
 						{
-							"name": "Free Disk",
-							"type": "value",
-							"position": "right",
-							"splitLine": {
-								"show": "true",
-								"lineStyle": {
-									"width": 1,
-									"color": "#444",
-									"type": "dashed"
-								}
-							}
+							"title": { 
+								"text": "Free Disk"
+							}, 
+							"opposite": "true"
 						}
-					],
-					"animation": "false"
+					]
 				},
 				"series": {
 					"exposure": {
 						"name": "CPU Temp",
-						"yAxisIndex": 0,
-						"type": "line",
-                        "smooth": "true",
-                        "connectNulls": "false",
+						"yAxis": 0,
 						"variable": "AS_CPUTEMP"                 
 					},
 					"gain": {
 						"name": "Free Disk",
-						"yAxisIndex": 1,
-						"type": "line",
-                        "smooth": "true",
-                        "connectNulls": "false",
+						"yAxis": 1,
 						"variable": "AS_DISKFREE"
 					}               
 				}
-			},
-            "guage1": {
-				"icon": "fa-solid fa-gauge",
-				"title": "CPU Temp",
-				"group": "Hardware",    
-				"main": "true",
-				"type": "gauge",
-				"config": {
-					"series": [
-					{
-						"type": "gauge",
-						"startAngle": 180,
-						"endAngle": 0,
-						"radius": "95%",
-						"animation": "false",
-						"axisLine": {
-							"lineStyle": {
-								"width": 30,
-								"color": [
-									[0.3, "#22ff22"],
-									[0.7, "#ffbb00"],
-									[1, "#fd666d"]
-								]
-							}
-						},
-						"pointer": {
-							"itemStyle": {
-								"color": "auto"
-							}
-						},
-						"axisTick": {
-							"distance": -30,
-							"length": 8,
-							"lineStyle": {
-								"color": "#fff",
-								"width": 2
-							}
-						},
-						"splitLine": {
-							"distance": -30,
-							"length": 30,
-							"lineStyle": {
-								"color": "#fff",
-								"width": 4
-							}
-						},
-						"axisLabel": {
-							"color": "inherit",
-							"distance": 40,
-							"fontSize": 20
-						},
-						"detail": {
-							"valueAnimation": "true",
-							"formatter": "{value}",
-							"color": "inherit"
-						},
-						"data": [
-							{
-								"value": "AS_CPUTEMP"
-							}
-						]
-					}
-					]				
-				}
 			}
-		},            
+		}, 
 		"extradatafilename": "allsky_pistatus.json", 
 		"extradata": {
 			"database": {

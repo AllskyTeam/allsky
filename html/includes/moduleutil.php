@@ -1170,7 +1170,7 @@ class MODULEUTIL
         ];
         $pdo = new PDO($dsn, $user, $pass, $options);
 
-        $query = "SELECT json_data, timestamp FROM " . $table . " WHERE timestamp >= UNIX_TIMESTAMP() - 86400 ORDER BY timestamp ASC";
+        $query = "SELECT json_data, timestamp FROM " . $table . " WHERE timestamp >= UNIX_TIMESTAMP() - 3600 ORDER BY timestamp ASC";
         #$query = "SELECT json_data, timestamp FROM " . $table . " ORDER BY timestamp ASC";
         $stmt = $pdo->query($query);
 

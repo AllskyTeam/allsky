@@ -203,3 +203,48 @@ body {
 .dark .allsky-charts-chart-menu-item:hover {
     background: #444444;
 }
+
+#allsky-charts-tabbar .custom-tab {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    padding-right: 10px; /* spacing for the close button */
+}
+
+#allsky-charts-tabbar .custom-tab a {
+    display: inline-block;
+    padding-right: 15px; /* ensure the close icon doesn’t overlap */
+    }
+
+#allsky-charts-tabbar .custom-tab a .tab-title {
+    padding-right: 10px;
+}
+
+#allsky-charts-tabbar #add-tab-btn a {
+    color: green;
+}
+
+#allsky-charts-tabbar .custom-tab .close-tab {
+    position: absolute;
+    right: 3px;
+    top: 0px;
+    color: red;
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 10;
+}
+
+#allsky-charts-tabbar .custom-tab .close-tab {
+    opacity: 0;
+    transform: scale(0.9);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    transition-delay: 0s;
+}
+
+#allsky-charts-tabbar .custom-tab:hover .close-tab {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+    transition-delay: 0.6s;
+}

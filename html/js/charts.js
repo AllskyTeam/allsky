@@ -10,6 +10,7 @@ class CHARTMANAGER {
     charts = new Map()
     chartListVisible = false
     chartsLocked = false
+    tabCount = 1
     darkTheme = {
         colors: [
             '#8087E8', '#A3EDBA', '#F19E53', '#6699A1',
@@ -316,7 +317,21 @@ class CHARTMANAGER {
         const refreshBtn = $('<button title="Refresh" class="btn btn-primary btn-xs ml-1"><i class="fa-solid fa-arrows-rotate"></i></button>')
         const closeBtn = $('<button title="Close" class="btn btn-danger btn-xs ml-1">×</button>')
 
-        toolbar.append(select, refreshBtn, closeBtn);
+        const tabSelect = $('<select class="tab-selector ml-1" title="Move chart to another tab"></select>')
+        .css({ fontSize: '12px', marginRight: '5px' })
+    
+        const tabList = this.getTabList();
+        tabList.forEach(tab => {
+            tabSelect.append(`<option value="${tab.id}">${tab.name}</option>`)
+        })
+            
+        tabSelect.on('change', () => {
+            const newTabId = tabSelect.val()
+            $(`#${newTabId}`).append(box)
+            this.saveCharts()
+        })
+    
+        toolbar.append(select, refreshBtn, tabSelect, closeBtn);
 
         const indicator = $('<div class="allsky-charts-refresh-indicator">⏳</div>').hide()
 
@@ -483,15 +498,29 @@ class CHARTMANAGER {
     }
 
     loadCharts() {
+        this.loadTabNamesAndBuildTabs()
         const data = JSON.parse(localStorage.getItem(this.chartStorageKey) || '[]');
-        data.forEach(({ chartId, moduleName, chartKey, position, interval }) => {
+        data.forEach(({ chartId, moduleName, chartKey, position, interval, tabId }) => {
             const box = $(this.createChartBox(chartId, moduleName, chartKey, position.left, position.top, position.width, position.height))
-            $('#allsky-charts-main').append(box)
+            tabId = tabId || 'tab1';            
+            $('#' + tabId).append(box);         
             this.renderChart(chartId, moduleName, chartKey)
             box.find('select').val(interval).trigger('change')
         })
         this.chartCount = data.reduce((max, c) => Math.max(max, parseInt(c.chartId.split('-')[1])), 0)
         this.setTheme()
+    }
+
+    reloadAllCharts() {
+        $('.allsky-charts-dashboard-chart').each((_, el) => {
+            const $box = $(el);
+            const container = $box.find('.allsky-charts-chart-container');
+            const id = container.attr('id');
+            const moduleName = container.data('module');
+            const chartKey = container.data('chartkey');
+    
+            this.renderChart(id, moduleName, chartKey);
+        });
     }
 
     saveCharts() {
@@ -504,6 +533,7 @@ class CHARTMANAGER {
                 chartId: container.attr('id'),
                 moduleName: container.data('module'),
                 chartKey: container.data('chartkey'),
+                tabId: container.closest('.tab-pane').attr('id'),              
                 position: {
                     left: box.attr('data-left'),
                     top: box.attr('data-top'),
@@ -515,6 +545,52 @@ class CHARTMANAGER {
         }).get()
 
         localStorage.setItem(this.chartStorageKey, JSON.stringify(data));
+    }
+
+    saveTabNames() {
+        const tabNames = {};
+        $('#allsky-charts-tabbar li.custom-tab').each(function () {
+            const href = $(this).find('a').attr('href'); // e.g., #tab2
+            const name = $(this).find('.tab-title').text().trim();
+            if (href) {
+                tabNames[href.replace('#', '')] = name;
+            }
+        });
+        localStorage.setItem('allsky-tab-names', JSON.stringify(tabNames));
+    }
+    
+    loadTabNamesAndBuildTabs() {
+        const tabNames = JSON.parse(localStorage.getItem('allsky-tab-names') || '{}');
+    
+        for (const [tabId, title] of Object.entries(tabNames)) {
+            if ($(`#${tabId}`).length === 0) {
+                this.tabCount++
+                // Tab content
+                $('#allsky-charts-main').append(`<div id="${tabId}" class="tab-pane fade"></div>`);
+    
+                // Tab header
+                $(`
+                    <li class="custom-tab">
+                        <a href="#${tabId}" data-toggle="tab">
+                            <span class="tab-title" contenteditable="false">${title}</span>
+                        </a>
+                        <span class="close-tab"><i class="fa-solid fa-trash-can"></i></span>
+                    </li>
+                `).insertBefore('#add-tab-btn');
+            } else {
+                // Update the name in case it was renamed
+                $(`#allsky-charts-tabbar a[href="#${tabId}"] .tab-title`).text(title);
+            }
+        }
+    
+        $('#allsky-charts-tabbar li:not(#add-tab-btn)').first().find('a').tab('show');
+    }
+
+    deleteTabName(tabId) {
+        tabId = tabId.replace('#', '');
+        const tabNames = JSON.parse(localStorage.getItem('allsky-tab-names') || '{}');
+        delete tabNames[tabId];
+        localStorage.setItem('allsky-tab-names', JSON.stringify(tabNames));
     }
 
     setTheme() {
@@ -593,7 +669,32 @@ class CHARTMANAGER {
         this.chartsLocked = localStorage.getItem(this.chartLockedKey) === 'true'
         this.#setLockedState()
 
-        //$('#allsky-charts-sidebar').hide()
+        $('#allsky-charts-sidebar').hide()
+    }
+
+    getTabList() {
+        const tabs = [];
+        $('#allsky-charts-tabbar li.custom-tab').each(function () {
+            const href = $(this).find('a').attr('href')
+            const name = $(this).find('.tab-title').text().trim()
+            if (href) {
+                tabs.push({ id: href.replace('#', ''), name })
+            }
+        })
+
+        return tabs
+    }
+
+    updateAllTabSelectors() {
+        const tabList = this.getTabList();
+        $('.tab-selector').each(function () {
+            const current = $(this).val()
+            $(this).empty()
+            tabList.forEach(tab => {
+                $(this).append(`<option value="${tab.id}">${tab.name}</option>`);
+            })
+            $(this).val(current)
+        })
     }
 
     addEvents() {
@@ -601,7 +702,73 @@ class CHARTMANAGER {
         let offsetX = 0
         let offsetY = 0
 
-        var isToggled = false;
+        $('#add-tab-btn').on('click', (e) => {
+            this.tabCount++
+        
+            const newTabId = `tab${this.tabCount}`
+            const newTabTitle = `Tab ${this.tabCount}`
+        
+            const $newTab = $(`
+                <li class="custom-tab">
+                    <a href="#${newTabId}" data-toggle="tab">
+                        <span class="tab-title" contenteditable="false">${newTabTitle}</span>
+                    </a>
+                    <span class="close-tab"><i class="fa-solid fa-trash-can"></i></span>
+                </li>
+            `).insertBefore('#add-tab-btn');
+        
+            $('#allsky-charts-main').append(`<div id="${newTabId}" class="tab-pane fade"></div>`);
+        
+            $newTab.find('a').tab('show')
+            this.saveTabNames()
+            this.updateAllTabSelectors()
+        });
+
+        $('#allsky-charts-tabbar').on('click', '.close-tab', (e) => {
+            e.stopPropagation(); // Prevent the tab from switching
+        
+            const $li = $(e.currentTarget).closest('li');
+            const href = $li.find('a').attr('href'); // e.g., "#tab2"
+            const $tabPane = $(href);            
+            const tabId = href.replace('#', '');
+            const tabName = $li.find('.tab-title').text().trim();
+        
+            // Optional: Protect tab1
+            if (tabId === 'tab1') {
+                alert('Tab 1 cannot be deleted.');
+                return;
+            }
+
+            const hasCharts = $tabPane.find('.allsky-charts-dashboard-chart').length > 0;
+            if (hasCharts) {
+                alert(`You can't delete "${tabName}" — it still contains charts.`);
+                return;
+            }
+
+            // Confirm deletion
+            const confirmed = confirm(`Are you sure you want to delete "${tabName}" and all its charts?`);
+            if (!confirmed) return;
+        
+            // Remove charts in the tab
+            $(href).find('.allsky-charts-dashboard-chart').each(function () {
+                $(this).remove(); // You might also want to clear refresh timers here
+            });
+        
+            // Remove tab content + header
+            $(href).remove();
+            $li.remove();
+        
+            // Switch to the first available tab
+            $('#allsky-charts-tabbar li.custom-tab:not(#add-tab-btn)').first().find('a').tab('show');
+        
+            // Remove tab name from storage
+            this.deleteTabName(tabId);
+        
+            // Save updated chart layout
+            this.saveCharts()
+            this.updateAllTabSelectors()
+        });
+
 
         $('#allsky-charts-lock').click((e) => {
             this.chartsLocked = !this.chartsLocked
@@ -651,9 +818,11 @@ class CHARTMANAGER {
 
         $('#allsky-charts-main').on('dragover', (e) => {
             e.preventDefault()
-        });
+        })
+
         $('#allsky-charts-main').on('drop', (e) => {
             e.preventDefault()
+            let activeTab = $('#allsky-charts-main .tab-pane.active')[0]
             let el = e.currentTarget
             const moduleName = e.originalEvent.dataTransfer.getData('module')
             const chartKey = e.originalEvent.dataTransfer.getData('chartkey')
@@ -664,7 +833,8 @@ class CHARTMANAGER {
             const id = 'chart-' + (++this.chartCount)
             const box = this.createChartBox(id, moduleName, chartKey, left, top, 30, 20)
             if (box) {
-                el.appendChild(box)
+                //el.appendChild(box)
+                activeTab.appendChild(box);
                 this.renderChart(id, moduleName, chartKey)
                 this.setTheme()
                 this.saveCharts()
@@ -677,11 +847,7 @@ class CHARTMANAGER {
 
         $(document).on('allsky-theme-change', (e) => {
             this.setTheme()
-            for (const [id, chart] of this.charts.entries()) {
-                if (chart && chart.redraw) {
-                    chart.redraw();
-                }
-            }            
+            this.reloadAllCharts()          
         })
 
         $('.chart-category').each(function () {
@@ -698,6 +864,26 @@ class CHARTMANAGER {
         $('[data-toggle="tooltip"]').tooltip();
 
         this.loadCharts()
+
+        // Double-click to enable editing
+        $('#allsky-charts-tabbar').on('dblclick', '.tab-title', function (e) {
+            e.stopPropagation();
+            const $title = $(this);
+            $title.attr('contenteditable', 'true').focus();
+        });
+
+        // Blur or Enter key to finish editing
+        $('#allsky-charts-tabbar').on('blur', '.tab-title', (e) => {
+            $(e.currentTarget).attr('contenteditable', 'false');
+            this.saveTabNames(); // persist if you want
+        });
+
+        $('#allsky-charts-tabbar').on('keydown', '.tab-title', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                $(this).blur();
+            }
+        });        
     }
 
     run() {

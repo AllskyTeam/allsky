@@ -33,14 +33,20 @@ function DisplayCharts() {
           </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        <li>
-          <div class="btn navbar-btn ml-2" id="allsky-charts-clear" data-toggle="tooltip" data-placement="top" data-container="body" title="Delete all charts">
-            <i class="fa-solid fa-trash-can"></i>
-          </div>
-        </li>
       </ul> 
   </div>
 </nav>
 
+<ul class="nav nav-tabs mt-3" id="allsky-charts-tabbar">
+  <li class="custom-tab active">
+    <a href="#tab1" data-toggle="tab">
+      <span class="tab-title" contenteditable="false">Tab 1</span>
+    </a>
+  </li>
+  <li id="add-tab-btn"><a href="#"><i class="fa-solid fa-square-plus"></i></a></li>
+</ul>
 
-  <div id="allsky-charts-main"></div>
+<div class="tab-content" id="allsky-charts-main">
+  <div id="tab1" class="tab-pane fade in active"></div>
+</div>
+<div id="allsky-charts-main"></div>

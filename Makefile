@@ -20,8 +20,6 @@ install:
 	@echo ""
 	@make -C config_repo $@
 	@echo ""
-	@make -C scripts $@
-	@echo ""
 	@echo "`date +%F\ %R:%S` Setting directory permissions..."
 	@[ ! -e tmp ] && mkdir tmp
 	@chown -R $(SUDO_USER):$(SUDO_USER) ./

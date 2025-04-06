@@ -2,6 +2,7 @@ arch = $(shell dpkg --print-architecture)
 platform = $(shell uname -m)
 prefix =
 
+
 sysconfdir = ${prefix}/etc
 exec_prefix = /usr
 bindir = ${exec_prefix}/bin

@@ -9,6 +9,9 @@ sharedir = ${exec_prefix}/share/allsky
 
 HOMEDIR = $(shell dirname "$$PWD")
 SCRIPTSDIR = ${HOMEDIR}/scripts
+UTILITIESDIR = ${SCRIPTSDIR}/utilities
+# TODO: get from variables.sh
+NORESTARTCODES = 100 101
 
 .DEFAULT_GOAL := all
 
@@ -32,8 +35,8 @@ UNINSTALLFILES := $(DESTDIR)$(sysconfdir)/logrotate.d/allsky $(DESTDIR)$(sysconf
 
 ifneq ($(ROOTCHECK), 0)
 install uninstall:
-	@echo This must be run with root permissions.
-	@echo Please run \'sudo make $@\'
+	@echo "This must be run with root permissions."
+	@echo "Please run 'sudo make $@'"
 else # Root check passed
 
 uninstall:
@@ -44,7 +47,7 @@ uninstall:
 	@echo `date +%F\ %R:%S` To remove config files, please run \'sudo make remove_configs\'
 .PHONY : uninstall
 
-ifeq ($(PKGBUILD),1)
+ifeq ($(PKGBUILD),1)	# In package build mode ###################################### Needs testing
 
 remove_configs:
 	@echo `date +%F\ %R:%S` Removing config path and files $(DESTDIR)$(sysconfigdir)/allsky
@@ -83,7 +86,7 @@ install: createDirs $(ENVFILE)
 	@echo "export ALLSKY_TMP=/tmp\nexport ALLSKY_CONFIG=$(DESTDIR)$(sysconfdir)/allsky\nexport ALLSKY_SCRIPTS=$(DESTDIR)$(libexecdir)\nexport ALLSKY_NOTIFICATION_IMAGES=$(DESTDIR)$(sharedir)\nexport ALLSKY_IMAGES=/home/allsky/images/\nPATH=${PATH}:${DESTDIR}$(libexedir)" > $(DESTDIR)$(sysconfdir)/profile.d/allsy.sh
 
 
-else # Not in package build mode ######################################
+else					# Not in package build mode ######################################
 
 remove_configs:
 	@echo `date +%F\ %R:%S` Removing config path and files ../config
@@ -107,11 +110,18 @@ install: createDirs
 	@if [ -e /etc/xdg/lxsession/LXDE-pi/autostart ]; then \
 	  sed -i '/allsky.sh/d' /etc/xdg/lxsession/LXDE-pi/autostart; fi
 	@# Don't use the /lib/systemd/system directory
-	@sed -e "s|XX_ALLSKY_OWNER_XX|$(SUDO_USER)|" -e "s|XX_ALLSKY_HOME_XX|$(HOMEDIR)|" -e "s|XX_ALLSKY_SCRIPTS_XX|$(SCRIPTSDIR)|" allsky.service.repo > allsky.service
+	sed -e "s|XX_ALLSKY_OWNER_XX|$(SUDO_USER)|" \
+	     -e "s|XX_ALLSKY_HOME_XX|$(HOMEDIR)|" \
+	     -e "s|XX_NO_RESTART_CODES_XX|$(NORESTARTCODES)|" \
+	     -e "s|XX_ALLSKY_UTILITIES_XX|$(UTILITIESDIR)|" \
+	  allsky.service.repo > allsky.service
 	@install -m 0644 allsky.service $(DESTDIR)$(sysconfdir)/systemd/system/
 	@rm -f allsky.service
 	@if [ -e /lib/systemd/system/allsky.service ]; then rm -f /lib/systemd/system/allsky.service; fi
-	@sed -e "s|XX_ALLSKY_OWNER_XX|$(SUDO_USER)|" -e "s|XX_ALLSKY_SCRIPTS_XX|$(SCRIPTSDIR)|" allskyperiodic.service.repo > allskyperiodic.service
+	sed -e "s|XX_ALLSKY_OWNER_XX|$(SUDO_USER)|" \
+	     -e "s|XX_NO_RESTART_CODES_XX|$(NORESTARTCODES)|" \
+	     -e "s|XX_ALLSKY_SCRIPTS_XX|$(SCRIPTSDIR)|" \
+	  allskyperiodic.service.repo > allskyperiodic.service
 	@install -m 0644 allskyperiodic.service $(DESTDIR)$(sysconfdir)/systemd/system/
 	@rm -f allskyperiodic.service
 	@if [ -e /lib/systemd/system/allskyperiodic.service ]; then rm -f /lib/systemd/system/allskyperiodic.service; fi

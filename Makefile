@@ -18,17 +18,8 @@ ifeq ($(PKGBUILD),)
   PKGBUILD=0
 endif
 
-# .github/workflows/ci_compile.yml calls
-#		sudo make deps
-#		sudo make all
-# Which means until ci_compile.yml is changed, we need "deps" and "all".
-# Once ci_compile.yml uses "make -C src all" then remove these.
 %:
-	@make -C src $@
-#	@echo "Nothing to do for 'all'.  Run 'sudo make install' instead."
-deps:
-	@sudo make -C src $@
-.PHONY : deps
+	@echo "Nothing to do for 'all'.  Run 'sudo make install' instead."
 
 
 ifneq ($(ROOTCHECK), 0)

@@ -49,4 +49,5 @@ function DisplayCharts() {
 <div class="tab-content" id="allsky-charts-main">
   <div id="tab1" class="tab-pane fade in active"></div>
 </div>
+<div id="container"></div>
 <div id="allsky-charts-main"></div>

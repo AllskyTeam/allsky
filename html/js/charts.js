@@ -404,12 +404,38 @@ class CHARTMANAGER {
             },
             dataType: 'json',
             success: (allskyChartData) => {
+
+                const hasTooltip = allskyChartData.tooltip
+                if (hasTooltip !== undefined) {
+                    allskyChartData.tooltip =  {
+                        useHTML: true,
+                        formatter: function () {
+                            return `
+                                <b>${Highcharts.dateFormat('%A, %b %e, %Y %H:%M', this.x)}</b><br>
+                                Value: ${this.y}<br>
+                                <img src="${this.point.data}" style="width:100px;height:auto;border:1px solid #ccc;" />
+                                `;
+                        }
+                    }
+                    const chartType = allskyChartData.chart?.type;
+                    if (chartType === 'line' || chartType === 'spline') {
+                        allskyChartData.chart = allskyChartData.chart || {};
+                        allskyChartData.chart.events = allskyChartData.chart.events || {};
+
+                        allskyChartData.series[0].data.forEach(point => {
+                            Highcharts.addEvent(point, 'click', function () {
+                                console.log('Point clicked:', this);
+                                window.open(this.data, '_blank');
+                            });
+                        });                    
+                    }
+                }
+
                 if (this.charts.has(chartKey)) {
                     const chart = this.charts.get(chartKey);
                     chart.update(allskyChartData);
                 } else {
                     const chart = Highcharts.chart(dom, allskyChartData)
-                    //this.charts.set(chartKey, chart)
                 }
                 
                 this.setTheme()

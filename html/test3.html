@@ -20,7 +20,7 @@
   <script type="text/javascript" src="/js/datatables/datatables.js"></script>
 
   <link rel="stylesheet" href="/js/jquery-variable/jquery-variable.css">
-  <script src="/js/jquery-variable/jquery-variable.js"></script>  
+  <script src="/js/jquery-variable/jquery-variable.js"></script>
 </head>
 
 <body>
@@ -230,18 +230,18 @@
 
           $(document).off('click', '.as-charts-add-var')
           $(document).on('click', '.as-charts-add-var', (e) => {
-            const input = $(e.currentTarget).closest('.series-row').find('input.series-var')        
-						$.allskyVariable({
+            const input = $(e.currentTarget).closest('.series-row').find('input.series-var')
+            $.allskyVariable({
               variable: '',
-							valueDiv: '',
-							variableSelected: function(variable) {
+              valueDiv: '',
+              variableSelected: function (variable) {
                 $(input).val(variable)
-							}
-						});
-					});   
+              }
+            });
+          });
 
         }
-        
+
         $(document)
           .on('click', '.chart-type-option', function () {
             $('.chart-type-option').removeClass('active');
@@ -262,113 +262,109 @@
         $('.wizard-back').click(() => showStep(step - 1));
 
 
-
-
-
-
         $('.wizard-finish').click(() => {
-  const chartType = $('input[name="chartType"]').val();
-  const now = Date.now();
-  const stepMs = 60000;
-  let config;
+          const chartType = $('input[name="chartType"]').val();
+          const now = Date.now();
+          const stepMs = 60000;
+          let config;
 
-  if (chartType === 'gauge') {
-    const greenMax = parseFloat($('#gaugeGreen').val()) || 33;
-    const yellowMax = parseFloat($('#gaugeYellow').val()) || 66;
-    const yellowMin = greenMax;
-    const redMin = yellowMax;
+          if (chartType === 'gauge') {
+            const greenMax = parseFloat($('#gaugeGreen').val()) || 33;
+            const yellowMax = parseFloat($('#gaugeYellow').val()) || 66;
+            const yellowMin = greenMax;
+            const redMin = yellowMax;
 
-    config = {
-      chart: { type: 'gauge', height: '50%' },
-      title: { text: 'Speedometer' },
-      pane: {
-        startAngle: -90,
-        endAngle: 89.9,
-        background: null,
-        center: ['50%', '55%'],
-        size: '100%'
-      },
-      yAxis: {
-        min: 0,
-        max: 100,
-        tickPosition: 'inside',
-        labels: { distance: 20, style: { fontSize: '14px' } },
-        lineWidth: 0,
-        plotBands: [
-          { from: 0, to: greenMax, color: '#55BF3B', thickness: 20 },
-          { from: yellowMin, to: yellowMax, color: '#DDDF0D', thickness: 20 },
-          { from: redMin, to: 200, color: '#DF5353', thickness: 20 }
-        ]
-      },
-      legend: { enabled: $('#show-legend').is(':checked') },
-      series: [{
-        name: 'Speed',
-        data: [Math.floor(Math.random() * 100)],
-        tooltip: { valueSuffix: ' km/h' },
-        dataLabels: {
-          format: '{y} km/h',
-          style: { fontSize: '16px' }
-        },
-        dial: {
-          radius: '80%',
-          backgroundColor: 'gray',
-          baseWidth: 12,
-          baseLength: '0%',
-          rearLength: '0%'
-        },
-        pivot: {
-          backgroundColor: 'gray',
-          radius: 6
-        }
-      }],
-      plotOptions: {
-        gauge: {
-          animation: $('#animated-gauge').is(':checked')
-        }
-      }
-    };
-  } else {
-    const smooth = $('#smooth-line').is(':checked');
-    const type = chartType === 'bar' ? 'column' : (smooth ? 'spline' : 'line');
-    const series = [];
+            config = {
+              chart: { type: 'gauge', height: '50%' },
+              title: { text: 'Speedometer' },
+              pane: {
+                startAngle: -90,
+                endAngle: 89.9,
+                background: null,
+                center: ['50%', '55%'],
+                size: '100%'
+              },
+              yAxis: {
+                min: 0,
+                max: 100,
+                tickPosition: 'inside',
+                labels: { distance: 20, style: { fontSize: '14px' } },
+                lineWidth: 0,
+                plotBands: [
+                  { from: 0, to: greenMax, color: '#55BF3B', thickness: 20 },
+                  { from: yellowMin, to: yellowMax, color: '#DDDF0D', thickness: 20 },
+                  { from: redMin, to: 200, color: '#DF5353', thickness: 20 }
+                ]
+              },
+              legend: { enabled: $('#show-legend').is(':checked') },
+              series: [{
+                name: 'Speed',
+                data: [Math.floor(Math.random() * 100)],
+                tooltip: { valueSuffix: ' km/h' },
+                dataLabels: {
+                  format: '{y} km/h',
+                  style: { fontSize: '16px' }
+                },
+                dial: {
+                  radius: '80%',
+                  backgroundColor: 'gray',
+                  baseWidth: 12,
+                  baseLength: '0%',
+                  rearLength: '0%'
+                },
+                pivot: {
+                  backgroundColor: 'gray',
+                  radius: 6
+                }
+              }],
+              plotOptions: {
+                gauge: {
+                  animation: $('#animated-gauge').is(':checked')
+                }
+              }
+            };
+          } else {
+            const smooth = $('#smooth-line').is(':checked');
+            const type = chartType === 'bar' ? 'column' : (smooth ? 'spline' : 'line');
+            const series = [];
 
-    $('.series-row').each(function () {
-      const name = $(this).find('.series-var').val() || 'Series';
-      const color = $(this).find('.series-color').val();
-      const style = $(this).find('.series-style').val();
-      const axis = parseInt($(this).find('.series-axis').val(), 10);
-      const data = Array.from({ length: 10 }, (_, i) => [now + i * stepMs, Math.floor(Math.random() * 100)]);
-      series.push({ name, yAxis: axis, color, dashStyle: style, data });
-    });
+            $('.series-row').each(function () {
+              const name = $(this).find('.series-var').val() || 'Series';
+              const color = $(this).find('.series-color').val();
+              const style = $(this).find('.series-style').val();
+              const axis = parseInt($(this).find('.series-axis').val(), 10);
+              const data = Array.from({ length: 10 }, (_, i) => [now + i * stepMs, Math.floor(Math.random() * 100)]);
+              series.push({ name, yAxis: axis, color, dashStyle: style, data });
+            });
 
-    config = {
-      chart: {
-        type,
-        zoomType: $('#zoomable').is(':checked') ? 'x' : null
-      },
-      title: null,
-      xAxis: {
-        type: 'datetime',
-        title: { text: $('#xAxisTitle').val() }
-      },
-      yAxis: [
-        { title: { text: $('#yAxisTitle').val() || 'Left' } },
-        { title: { text: 'Right' }, opposite: true }
-      ],
-      legend: { enabled: $('#show-legend').is(':checked') },
-      plotOptions: {
-        series: {
-          animation: $('#animated-linebar').is(':checked')
-        }
-      },
-      series
-    };
-  }
+            config = {
+              chart: {
+                type,
+                zoomType: $('#zoomable').is(':checked') ? 'x' : null
+              },
+              title: null,
+              xAxis: {
+                type: 'datetime',
+                title: { text: $('#xAxisTitle').val() }
+              },
+              yAxis: [
+                { title: { text: $('#yAxisTitle').val() || 'Left' } },
+                { title: { text: 'Right' }, opposite: true }
+              ],
+              legend: { enabled: $('#show-legend').is(':checked') },
+              plotOptions: {
+                series: {
+                  animation: $('#animated-linebar').is(':checked')
+                }
+              },
+              series
+            };
+          }
 
-  const configJson = JSON.stringify(config, null, 2);
-  settings.onFinish(configJson);
-  $('#customChartModal').modal('hide');
-});
+          const configJson = JSON.stringify(config, null, 2);
+          settings.onFinish(configJson);
+          $('#customChartModal').modal('hide');
+        });
 
 
 
@@ -401,14 +397,14 @@
     })(jQuery);
   </script>
 
-<div id="wizard"></div>
-<script>
-  $('#wizard').chartWizard({
-    onFinish: function (configJson) {
-      console.log("User's final chart config:", configJson);
-    }
-  });
-</script>
+  <div id="wizard"></div>
+  <script>
+    $('#wizard').chartWizard({
+      onFinish: function (configJson) {
+        console.log("User's final chart config:", configJson);
+      }
+    });
+  </script>
 </body>
 
 </html>

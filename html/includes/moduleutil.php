@@ -1182,8 +1182,9 @@ class MODULEUTIL
             $dataArray = json_decode($jsonString, true);   
             if ($dataArray) {
                 foreach ($chart->series as $key => $seriesConfig) {
-                    $variable = $seriesConfig->variable;
-        
+                    $variableData = explode("|", $seriesConfig->variable);
+                    $variable = $variableData[0];
+                    
                     if (isset($dataArray[$variable])) {
                         if (!isset($seriesData[$key])) {
                             $seriesData[$key] = [
@@ -1195,8 +1196,17 @@ class MODULEUTIL
                                     $seriesData[$key][$seriesKey] = $seriesValue;
                                 }
                             }
-                        }        
-                        $seriesData[$key]['data'][] = [$timestamp, $dataArray[$variable]['value']];
+                        }
+                        $dataPoint = [
+                            "x" => $timestamp,
+                            "y" => $dataArray[$variable]['value']
+                        ]; 
+
+                        if (count($variableData) > 1) {
+                            $dataPoint["data"] = $dataArray[$variableData[1]]['value'];
+                        }
+
+                        $seriesData[$key]['data'][] = $dataPoint;
                     }
                 }
             }

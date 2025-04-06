@@ -66,7 +66,17 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 							}, 
 							"opposite": "true"
 						}
-					]
+					],
+					"lang": {
+						"noData": "No data available"
+					},
+					"noData": {
+						"style": {
+							"fontWeight": "bold",
+							"fontSize": "16px",
+							"color": "#666"
+						}
+					}
 				},
 				"series": {
 					"exposure": {

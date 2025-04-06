@@ -25,74 +25,69 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 			"night"
 		],
         "graphs": {
-            "chart1": {
-				"icon": "fas fa-camera",
+			"chart1": {
+				"icon": "fas fa-chart-line",
 				"title": "Camera",
-				"group": "Camera",
-				"main": "true",
+				"group": "Camera",    
+				"main": "true",    
 				"config": {
+					"tooltip": "true",
+					"chart": {
+						"type": "spline",
+						"zooming": {
+							"type": "x"
+						}
+					},
 					"title": {
 						"text": "Camera"
 					},
-					"tooltip": {
-						"trigger": "axis",
-						"axisPointer": {
-							"type": "cross"
+					"plotOptions": {
+						"series": {
+							"animation": "false"
 						}
-					},
-					"legend": {
-						"show": "true"
 					},
 					"xAxis": {
-						"type": "time"
+						"type": "datetime",
+						"dateTimeLabelFormats": {
+							"day": "%Y-%m-%d",
+							"hour": "%H:%M"
+						}
 					},
 					"yAxis": [
-						{
-							"name": "Exposure",
-							"type": "value",
-							"alignTicks": "true",
-							"splitLine": {
-								"show": "true",
-								"lineStyle": {
-									"width": 1,
-									"color": "#444",
-									"type": "dashed"
-								}
-							}
+						{ 
+							"title": {
+								"text": "Exposure"
+							} 
 						},
-						{
-							"name": "Gain",
-							"type": "value",
-							"alignTicks": "true",
-							"splitLine": {
-								"show": "true",
-								"lineStyle": {
-									"width": 1,
-									"color": "#444",
-									"type": "dashed"
-								}
-							}
+						{ 
+							"title": {
+								"text": "Gain"
+							},
+							"opposite": "true" 
 						}
 					],
-					"animation": "false"
+					"lang": {
+						"noData": "No data available"
+					},
+					"noData": {
+						"style": {
+							"fontWeight": "bold",
+							"fontSize": "16px",
+							"color": "#666"
+						}
+					}
 				},
 				"series": {
 					"exposure": {
 						"name": "Exposure",
-						"yAxisIndex": 0,
-						"type": "line",
-                        "smooth": "true",
-                        "connectNulls": "false",
-						"variable": "AS_CAMERAEXPOSURE"                 
+						"yAxis": 0,
+						"variable": "AS_CAMERAEXPOSURE|AS_CAMERAIMAGEURL"                  
 					},
 					"gain": {
 						"name": "Gain",
-						"yAxisIndex": 1,
-						"type": "line",
-                        "smooth": "true",
-                        "connectNulls": "false",                     
-						"variable": "AS_CAMERAGAIN"                 
-					} 
+						"yAxis": 0,
+						"variable": "AS_CAMERAGAIN"
+					}               
 				}
 			}
         },
@@ -108,6 +103,22 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"sample": "",                
 					"group": "Camera",
 					"description": "Current Image",
+					"type": "string"
+				},
+				"AS_CAMERAIMAGEPATH": {
+					"name": "${CAMERAIMAGEPATH}",
+					"format": "",
+					"sample": "",                
+					"group": "Camera",
+					"description": "Current Image Path",
+					"type": "string"
+				},
+				"AS_CAMERAIMAGEURL": {
+					"name": "${CAMERAIMAGEURL}",
+					"format": "",
+					"sample": "",                
+					"group": "Camera",
+					"description": "Current Image URL",
 					"type": "string"
 				},
 				"AS_CAMERAEXPOSURE": {
@@ -141,9 +152,15 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 			allsky_shared.log(0, f'ERROR: Cannot load {allsky_shared.CURRENTIMAGEPATH}: {e}', exitCode=1)
 
 
+		#http://allsky.local/images/20250405/thumbnails/image-20250405211205.jpg
 		filename = os.path.basename(allsky_shared.CURRENTIMAGEPATH)
+		date = filename[6:14]
+		url = f'/images/{date}/thumbnails/{filename}'
+    
 		extra_data = {}
 		extra_data['AS_CAMERAIMAGE'] = filename
+		extra_data['AS_CAMERAIMAGEPATH'] = allsky_shared.CURRENTIMAGEPATH
+		extra_data['AS_CAMERAIMAGEURL'] = url
 		extra_data['AS_CAMERAEXPOSURE'] = int(allsky_shared.get_environment_variable('AS_EXPOSURE_US'))
 		extra_data['AS_CAMERAGAIN'] = 0
 

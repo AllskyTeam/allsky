@@ -5,6 +5,8 @@ sysconfdir = ${prefix}/etc
 exec_prefix = /usr
 libexecdir = ${exec_prefix}/libexec/allsky
 
+.DEFAULT_GOAL := all
+
 ROOTCHECK=$(shell id -u)
 ifneq ($(ROOTCHECK),0)
   ifeq ($(PKGBUILD),1)
@@ -16,11 +18,18 @@ ifeq ($(PKGBUILD),)
   PKGBUILD=0
 endif
 
-all:
-	@echo "Nothing to do for 'all'.  Run 'sudo make install' instead."
+# .github/workflows/ci_compile.yml calls
+#		sudo make deps
+#		sudo make all
+# Which means until ci_compile.yml is changed, we need "deps" and "all".
+# Once ci_compile.yml uses "make -C src all" then remove these.
+%:
+	@make -C src $@
+#	@echo "Nothing to do for 'all'.  Run 'sudo make install' instead."
+deps:
+	@sudo make -C src $@
+.PHONY : deps
 
-deps:			# Needed for .github/workflows/ci_compile.yml
-	@echo ""
 
 ifneq ($(ROOTCHECK), 0)
 install:

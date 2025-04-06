@@ -1,22 +1,8 @@
 platform = $(shell uname -m)
-prefix =
-
-sysconfdir = ${prefix}/etc
-exec_prefix = /usr
-libexecdir = ${exec_prefix}/libexec/allsky
 
 .DEFAULT_GOAL := all
 
 ROOTCHECK=$(shell id -u)
-ifneq ($(ROOTCHECK),0)
-  ifeq ($(PKGBUILD),1)
-    ROOTCHECK=0
-  endif
-endif
-
-ifeq ($(PKGBUILD),)
-  PKGBUILD=0
-endif
 
 %:
 	@echo "Nothing to do for 'all'.  Run 'sudo make install' instead."
@@ -25,7 +11,7 @@ endif
 ifneq ($(ROOTCHECK), 0)
 install:
 	@echo "This must be run with root permissions."
-	@echo "Please run 'sudo make install'"
+	@echo "Please run 'sudo make install'."
 else
 install:
 	@echo `date +%F\ %R:%S` Starting install...
@@ -38,19 +24,9 @@ install:
 	@echo ""
 	@make -C scripts $@
 	@echo ""
-	@if [ $(PKGBUILD) -eq 1 ]; then \
-	  [ ! -e $(DESTDIR)$(libexecdir) ] && mkdir -p $(DESTDIR)$(libexecdir) \
-	  install allsky.sh $(DESTDIR)$(libexecdir)/allsky.sh; \
-        fi
-	@if [ $(PKGBUILD) -ne 1 ]; then \
-	  echo `date +%F\ %R:%S` Setting directory permissions...; \
-	  [ ! -e tmp ] && mkdir tmp; \
-	  chown -R $(SUDO_USER):$(SUDO_USER) ./ ; \
-	  echo ""; \
-	  echo ""; \
-	  echo `date +%F\ %R:%S` Install complete; \
-	  echo ""; \
-	  echo ""; \
-	fi
+	@echo "`date +%F\ %R:%S` Setting directory permissions..."
+	@[ ! -e tmp ] && mkdir tmp
+	@chown -R $(SUDO_USER):$(SUDO_USER) ./
+	@echo "\n\n`date +%F\ %R:%S` Install complete\n\n"
 endif
 .PHONY : install

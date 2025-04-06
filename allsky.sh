@@ -3,14 +3,23 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
 ME="$( basename "${BASH_ARGV0}" )"
 
-# NOT_STARTED_MSG, STOPPED_MSG, ERROR_MSG_PREFIX, and ZWO_VENDOR are globals
-
 #shellcheck source-path=.
 source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+
+# If Allsky is already running, exit.  Let prior copy continue runnning.
+if [[ $( pgrep --count "${ME}" ) -gt 1 ]]; then
+	echo "     ***** Allsky already running; see below. Exiting new copy. *****" >&2
+	# Show other processes.  Don't show any newer than 5 seconds so we don't show ourself.
+	echo "$( ps -f -p "$( pgrep --older 5 "${ME}" )" )"
+	exit "${EXIT_ERROR_STOP}"
+fi
+
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+
+# NOT_STARTED_MSG, STOPPED_MSG, ERROR_MSG_PREFIX, and ZWO_VENDOR are globals
 
 # Output from this script goes either to the log file or a tty,
 # so can't use "w*" colors.
@@ -191,9 +200,6 @@ if [[ -f ${ALLSKY_POST_INSTALL_ACTIONS} ]]; then
 fi
 
 USE_NOTIFICATION_IMAGES="$( settings ".notificationimages" )"		|| exit "${EXIT_ERROR_STOP}"
-
-# Make sure we are not already running.
-pgrep "${ME}" | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
 
 # Get the list of connected cameras and make sure the one we want is connected.
 if [[ ${CAMERA_TYPE} == "ZWO" ]]; then

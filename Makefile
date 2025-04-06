@@ -3,11 +3,7 @@ prefix =
 
 sysconfdir = ${prefix}/etc
 exec_prefix = /usr
-bindir = ${exec_prefix}/bin
 libexecdir = ${exec_prefix}/libexec/allsky
-sharedir = ${exec_prefix}/share/allsky
-
-.DEFAULT_GOAL := all
 
 ROOTCHECK=$(shell id -u)
 ifneq ($(ROOTCHECK),0)
@@ -20,24 +16,25 @@ ifeq ($(PKGBUILD),)
   PKGBUILD=0
 endif
 
-%:
-	@make -C src $@
+all:
+	@echo "Nothing to do for 'all'.  Run 'sudo make install' instead."
 
-deps:
-	@make -C src $@
-
-.PHONY : deps
-
-install:
 ifneq ($(ROOTCHECK), 0)
-	@echo This must be run with root permissions.
-	@echo Please run \'sudo make install\'
+install:
+	@echo "This must be run with root permissions."
+	@echo "Please run 'sudo make install'"
 else
+install:
 	@echo `date +%F\ %R:%S` Starting install...
+	@echo ""
 	@make -C src $@
+	@echo ""
 	@make -C config_repo $@
+	@echo ""
 	@make -C notificationImages $@
+	@echo ""
 	@make -C scripts $@
+	@echo ""
 	@if [ $(PKGBUILD) -eq 1 ]; then \
 	  [ ! -e $(DESTDIR)$(libexecdir) ] && mkdir -p $(DESTDIR)$(libexecdir) \
 	  install allsky.sh $(DESTDIR)$(libexecdir)/allsky.sh; \

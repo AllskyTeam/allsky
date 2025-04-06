@@ -34,7 +34,6 @@ ifeq ($(PKGBUILD),)
 endif
 
 PKGPATH=$(shell which pkg-config)
-
 ifneq ($(PKGPATH),)
   USB=$(shell pkg-config --exists libusb-1.0 && pkg-config --cflags --libs libusb-1.0)
   OPENCV = $(shell pkg-config --exists opencv && pkg-config --cflags --libs opencv || (pkg-config --exists opencv4 && pkg-config --cflags --libs opencv4))
@@ -177,8 +176,8 @@ symlink: all
 
 ifneq ($(ROOTCHECK), 0)
 install uninstall:
-	@echo This must be run with root permissions.
-	@echo Please run 'sudo make $@'
+	@echo "This must be run with root permissions."
+	@echo "Please run 'sudo make $@'"
 else
 install:
 	@echo `date +%F\ %R:%S` Copying binaries...

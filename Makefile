@@ -22,9 +22,6 @@ endif
 
 %:
 	@make -C src $@
-	@make -C config_repo $@
-	@make -C notificationImages $@
-	@make -C scripts $@
 
 deps:
 	@make -C src $@

@@ -10,7 +10,7 @@ source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 if [[ $( pgrep --count "${ME}" ) -gt 1 ]]; then
 	echo "     ***** Allsky already running; see below. Exiting new copy. *****" >&2
 	# Show other processes.  Don't show any newer than 5 seconds so we don't show ourself.
-	echo "$( ps -f -p "$( pgrep --older 5 "${ME}" )" )"
+	ps -f -p "$( pgrep --older 5 "${ME}" )"
 	exit "${EXIT_ERROR_STOP}"
 fi
 

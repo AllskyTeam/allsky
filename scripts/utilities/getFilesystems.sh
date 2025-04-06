@@ -49,7 +49,7 @@ FS="$( lsblk --output "NAME,SIZE,TYPE,HOTPLUG,MOUNTPOINTS" )"
 
 HEADER="$( echo "${FS}" | head -1 )"
 ENTRIES="$( echo "${FS}" | grep -v "${HEADER}" )"
-NUM_DISKS="$( echo "${FS}" | grep -E " disk| disk $" | wc -l )"
+NUM_DISKS="$( echo "${FS}" | grep --count -E " disk| disk $" )"
 
 # Ignore the boot drive and entries we know aren't the user's extra storage device.
 POSSIBLE="$( echo "${ENTRIES}" | nawk 'BEGIN { num = 0; }
@@ -89,7 +89,7 @@ if [[ -n ${POSSIBLE} ]]; then
 	if [[ ${NUM} -eq 1 ]]; then
 		echo " the one above whose 'PATH' column is '${POSSIBLE}',"
 		echo "as long as the 'SIZE' roughly matches your device."
-		if [[ ${POSSIBLE} =~ " " ]] then
+		if [[ ${POSSIBLE} =~ " " ]]; then
 			echo
 			echo "If this is your device we suggest removing the space from the PATH name,"
 			echo "which may require changing the disk's label."

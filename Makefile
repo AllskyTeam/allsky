@@ -19,6 +19,9 @@ endif
 all:
 	@echo "Nothing to do for 'all'.  Run 'sudo make install' instead."
 
+deps:			# Needed for .github/workflows/ci_compile.yml
+	@echo ""
+
 ifneq ($(ROOTCHECK), 0)
 install:
 	@echo "This must be run with root permissions."

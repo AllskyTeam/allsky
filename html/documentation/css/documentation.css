@@ -822,13 +822,16 @@ b, strong {
 	padding: 5px 0px 5px 0px;
 }
 .fileName {
-	padding: 0 .2em;
+	padding: 0 .2em .1em .2em;
 	margin: 0;
 	font-size: 90%;
-	color: inherit;
 	border-radius: 6px;
 	background-color: var(--color-attention-verysubtle);
 	border: 1px solid var(--color-attention-muted);
+}
+blockquote .fileName {	/* Make class stand out from blockquote. */
+	color: var(--color-fg-default);
+	border-width: 2px;
 }
 
 /* "ls" colors in a terminal window */

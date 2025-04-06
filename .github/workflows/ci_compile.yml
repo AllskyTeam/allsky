@@ -23,5 +23,6 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: make deps all
         run: |
+          sudo apt update
           sudo make -C src deps
           make -C src all

@@ -1818,6 +1818,11 @@ install_dependencies_etc()
 		ln -s "${F}" "${T}"		|| echo "Unable to ln -s '${F}' '${T}'" >&2
 	fi
 
+	TMP="${ALLSKY_LOGS}/allsky_dependencies.log"
+	run_aptGet ffmpeg lftp imagemagick bc > "${TMP}" 2>&1
+	check_success $? "Allsky dependency installation failed" "${TMP}" "${DEBUG}" ||
+		exit_with_image 1 "${STATUS_ERROR}" "dependency installation failed"
+
 	TMP="${ALLSKY_LOGS}/make_deps.log"
 	sudo make deps > "${TMP}" 2>&1
 	check_success $? "Dependency installation failed" "${TMP}" "${DEBUG}" ||

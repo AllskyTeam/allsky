@@ -23,9 +23,10 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: make deps
         run: |
-          sudo make deps
+          sudo make -C src deps
+          echo "hi there"
 
-      # Info: depends an step "make deps"
+      # Info: depends on step "make deps"
       - name: make all
         run: |
-          sudo make all
+          make -C src all

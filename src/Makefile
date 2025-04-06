@@ -85,7 +85,7 @@ endif
 
 CFLAGS += $(DEFS) $(ZWOSDK)
 
-all:check_deps capture_ZWO capture_RPi startrails keogram sunwait uhubctl
+all: check_deps capture_ZWO capture_RPi startrails keogram sunwait uhubctl
 .PHONY : all
 
 ifneq ($(shell id -u), 0)
@@ -95,7 +95,7 @@ deps:
 else
 deps:
 	@echo `date +%F\ %R:%S` Installing build dependencies...
-	@apt update && apt -y install libopencv-dev libusb-dev libusb-1.0-0-dev ffmpeg lftp imagemagick bc
+	@apt update && apt -y install libopencv-dev libusb-dev libusb-1.0-0-dev
 endif
 
 .PHONY : deps

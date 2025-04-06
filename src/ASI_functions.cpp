@@ -1941,7 +1941,7 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, config cg,
 		double temp = 0.0;
 #endif
 		ASIGetControlValue(cameraInfo.CameraID, ASI_TEMPERATURE, &temp, &a);
-		if (cg.supportTemperature) {
+		if (cg.supportsTemperature) {
 			printf("  - Sensor temperature: ");
 #ifdef IS_ZWO
 			printf("%0.1f C\n", (float)temp / cg.divideTemperatureBy);

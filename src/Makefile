@@ -7,7 +7,7 @@ PDIR = $(shell dirname "$$PWD")
 MYDIR = $(shell basename "$$PWD")
 
 .DEFAULT_GOAL := all
- 
+
 ROOTCHECK=$(shell id -u)
 
 PKGPATH=$(shell which pkg-config)

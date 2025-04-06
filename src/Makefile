@@ -5,6 +5,7 @@ bindir = /usr/bin
 
 PDIR = $(shell dirname "$$PWD")
 MYDIR = $(shell basename "$$PWD")
+ALLSKYBIN = ../bin
 
 .DEFAULT_GOAL := all
 
@@ -140,21 +141,21 @@ deps:
 
 install:
 	@echo "`date +%F\ %R:%S` Copying binaries..."
-	@[ ! -e ../bin ] && mkdir -p ../bin
-	@install -o $(SUDO_USER) -g $(SUDO_USER) capture_ZWO ../bin/
-	@install -o $(SUDO_USER) -g $(SUDO_USER) capture_RPi ../bin/
-	@install -o $(SUDO_USER) -g $(SUDO_USER) keogram ../bin/
-	@install -o $(SUDO_USER) -g $(SUDO_USER) startrails ../bin/
-	@install -o $(SUDO_USER) -g $(SUDO_USER) uhubctl ../bin/
-	@install sunwait $(DESTDIR)$(bindir)
+	@if [ ! -e $(ALLSKYBIN) ]; then mkdir -p $(ALLSKYBIN); fi
+	@install -o $(SUDO_USER) -g $(SUDO_USER) capture_ZWO $(ALLSKYBIN)/
+	@install -o $(SUDO_USER) -g $(SUDO_USER) capture_RPi $(ALLSKYBIN)/
+	@install -o $(SUDO_USER) -g $(SUDO_USER) keogram $(ALLSKYBIN)/
+	@install -o $(SUDO_USER) -g $(SUDO_USER) startrails $(ALLSKYBIN)/
+	@install -o $(SUDO_USER) -g $(SUDO_USER) uhubctl $(ALLSKYBIN)/
+	@install sunwait $(bindir)
 
 uninstall:
 	@echo "`date +%F\ %R:%S` Removing binaries..."
-	@rm -f ../bin/capture_ZWO
-	@rm -f ../bin/capture_RPi
-	@rm -f ../bin/keogram
-	@rm -f ../bin/startrails
-	@rm -f ../bin/uhubctl
+	@rm -f $(ALLSKYBIN)/capture_ZWO
+	@rm -f $(ALLSKYBIN)/capture_RPi
+	@rm -f $(ALLSKYBIN)/keogram
+	@rm -f $(ALLSKYBIN)/startrails
+	@rm -f $(ALLSKYBIN)/uhubctl
 
 endif # sudo / root check
 .PHONY : deps install uninstall

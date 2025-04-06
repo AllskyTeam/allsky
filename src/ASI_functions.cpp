@@ -1941,7 +1941,14 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, config cg,
 		double temp = 0.0;
 #endif
 		ASIGetControlValue(cameraInfo.CameraID, ASI_TEMPERATURE, &temp, &a);
-		printf("  - Sensor temperature: %0.1f C\n", (float)temp / cg.divideTemperatureBy);
+		if (cg.supportTemperature) {
+			printf("  - Sensor temperature: ");
+#ifdef IS_ZWO
+			printf("%0.1f C\n", (float)temp / cg.divideTemperatureBy);
+#else
+			printf("not available until an image is taken.\n");
+#endif
+		}
 	}
 	printf("  - Bit depth: %d\n", cameraInfo.BitDepth);
 #ifdef IS_RPi

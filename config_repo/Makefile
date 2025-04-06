@@ -57,7 +57,7 @@ install: createDirs
 	@if [ -e /etc/xdg/lxsession/LXDE-pi/autostart ]; then \
 	  sed -i '/allsky.sh/d' /etc/xdg/lxsession/LXDE-pi/autostart; fi
 	@# Don't use the $(LIBSYSTEMDIR) directory
-	sed -e "s|XX_ALLSKY_OWNER_XX|$(SUDO_USER)|" \
+	@sed -e "s|XX_ALLSKY_OWNER_XX|$(SUDO_USER)|" \
 	     -e "s|XX_ALLSKY_HOME_XX|$(HOMEDIR)|" \
 	     -e "s|XX_NO_RESTART_CODES_XX|$(NORESTARTCODES)|" \
 	     -e "s|XX_ALLSKY_UTILITIES_XX|$(UTILITIESDIR)|" \
@@ -65,7 +65,7 @@ install: createDirs
 	@install -m 0644 allsky.service /etc/systemd/system/
 	@rm -f allsky.service
 	@if [ -e $(LIBSYSTEMDIR)/allsky.service ]; then rm -f $(LIBSYSTEMDIR)/allsky.service; fi
-	sed -e "s|XX_ALLSKY_OWNER_XX|$(SUDO_USER)|" \
+	@sed -e "s|XX_ALLSKY_OWNER_XX|$(SUDO_USER)|" \
 	     -e "s|XX_NO_RESTART_CODES_XX|$(NORESTARTCODES)|" \
 	     -e "s|XX_ALLSKY_SCRIPTS_XX|$(SCRIPTSDIR)|" \
 	  allskyperiodic.service.repo > allskyperiodic.service
@@ -75,7 +75,7 @@ install: createDirs
 	@systemctl daemon-reload
 	@systemctl enable allsky
 	@systemctl enable allskyperiodic
-	@echo `date +%F\ %R:%S` Setting up ALLSKY_HOME environment variable...
+	@echo "`date +%F\ %R:%S` Setting up ALLSKY_HOME environment variable..."
 	@echo "export ALLSKY_HOME=$(HOMEDIR)\nPATH=${PATH}:$(SCRIPTSDIR)" > /etc/profile.d/allsky.sh
 
 .PHONY : install

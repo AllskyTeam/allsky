@@ -1836,7 +1836,7 @@ install_dependencies_etc()
 	# "make -C src deps" may need to install some packages, so needs "sudo".
 	display_msg --log progress "Creating Allsky commands."
 	TMP="${ALLSKY_LOGS}/make_all.log"
-	{ sudo make -C src deps; make -C src all } > "${TMP}" 2>&1
+	{ sudo make -C src deps && make -C src all ; } > "${TMP}" 2>&1
 	check_success $? "Compile failed" "${TMP}" "${DEBUG}" ||
 		exit_with_image 1 "${STATUS_ERROR}" "compile failed"
 

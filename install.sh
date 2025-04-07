@@ -1818,9 +1818,9 @@ install_dependencies_etc()
 		ln -s "${F}" "${T}"		|| echo "Unable to ln -s '${F}' '${T}'" >&2
 	fi
 
-	TMP="${ALLSKY_LOGS}/make_deps.log"
-	sudo make deps > "${TMP}" 2>&1
-	check_success $? "Dependency installation failed" "${TMP}" "${DEBUG}" ||
+	TMP="${ALLSKY_LOGS}/allsky_dependencies.log"
+	run_aptGet ffmpeg lftp imagemagick bc > "${TMP}" 2>&1
+	check_success $? "Allsky dependency installation failed" "${TMP}" "${DEBUG}" ||
 		exit_with_image 1 "${STATUS_ERROR}" "dependency installation failed"
 
 	# Set some default locations needed by the capture programs so we
@@ -1830,18 +1830,23 @@ install_dependencies_etc()
 		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
 		-e "s;XX_CONNECTED_CAMERAS_FILE_XX;${CONNECTED_CAMERAS_INFO};" \
 		-e "s;XX_RPI_CAMERA_INFO_FILE_XX;${RPi_SUPPORTED_CAMERAS};" \
-		"${ALLSKY_HOME}/src/include/allsky_common.h.repo" > "${ALLSKY_HOME}/src/include/allsky_common.h"
+		"${ALLSKY_HOME}/src/include/allsky_common.h.repo" \
+	> "${ALLSKY_HOME}/src/include/allsky_common.h"
 
-	display_msg --log progress "Preparing Allsky commands."
+	# "make -C src deps" may need to install some packages, so needs "sudo".
+	display_msg --log progress "Creating Allsky commands."
 	TMP="${ALLSKY_LOGS}/make_all.log"
-	make all > "${TMP}" 2>&1
+	{
+		echo "===== make deps"
+		sudo make -C src deps && echo -e "\n\n===== make all" && make -C src all
+	} > "${TMP}" 2>&1
 	check_success $? "Compile failed" "${TMP}" "${DEBUG}" ||
 		exit_with_image 1 "${STATUS_ERROR}" "compile failed"
 
 	TMP="${ALLSKY_LOGS}/make_install.log"
 	sudo make install > "${TMP}" 2>&1
 	check_success $? "make install failed" "${TMP}" "${DEBUG}" ||
-		exit_with_image 1 "${STATUS_ERROR}" "make insall_failed"
+		exit_with_image 1 "${STATUS_ERROR}" "make install failed"
 
 	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }

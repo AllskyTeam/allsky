@@ -20,9 +20,7 @@ install:
 	@echo ""
 	@make -C config_repo $@
 	@echo ""
-	@echo "`date +%F\ %R:%S` Setting directory permissions..."
-	@[ ! -e tmp ] && mkdir tmp
-	@chown -R $(SUDO_USER):$(SUDO_USER) ./
 	@echo "\n\n`date +%F\ %R:%S` Install complete\n\n"
 endif
+
 .PHONY : install

@@ -56,11 +56,14 @@ int currentBitDepth				= NOT_SET;			// 8 or 16
 raspistillSetting myRaspistillSetting;
 modeMeanSetting myModeMeanSetting;
 std::string errorOutput;
+std::string metadataFile = "";
 
 
 //---------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------
 
+
+bool readMetadataFile(string file);
 
 // Build capture command to capture the image from the camera.
 // If an argument is IS_DEFAULT, the user didn't set it so don't pass to the program and
@@ -320,6 +323,8 @@ int RPicapture(config cg, cv::Mat *image)
 	string s2 = "";
 	if (cg.isLibcamera)
 	{
+		command += " --metadata '" + metadataFile + "' --metadata-format txt";
+
 		// If there have been 2 consecutive errors, chances are this one will fail too,
 		// so capture the error message.
 		if (cg.debugLevel >= 3 || numConsecutiveErrors >= 2)
@@ -351,12 +356,93 @@ int RPicapture(config cg, cv::Mat *image)
 				cg.ME, basename(cg.fullFilename));
 		}
 		ret = 0;	// Makes it easier for caller to determine if there was an error.
+
+		if (cg.isLibcamera)
+		{
+			readMetadataFile(metadataFile);
+		}
 	}
 	// else, error message is printed by caller.
 
 	return(ret);
 }
 
+bool readMetadataFile(string file)
+{
+	char *buf = readFileIntoBuffer(&CG, file.c_str());
+	if (buf == NULL)
+	{
+		CG.lastSensorTemp = NOT_SET;
+		// The other "last" values will use the requested values.
+		return(false);
+	}
+
+	char *line;
+	int on_line = 0;			// number of lines found
+	(void) getLine(NULL);		// resets the buffer pointer
+	while ((line = getLine(buf)) != NULL)
+	{
+		on_line++;
+		Log(5, "Line %d: [%s]\n", on_line, line);
+		if (*line == '\0')
+		{
+			continue;		// blank line
+		}
+		(void) getToken(NULL, '=');		// tells getToken() we have a new line.
+
+		// Input lines are:  name=value
+		char *name = getToken(line, '=');
+		char *value = getToken(line, '=');
+		if (value == NULL)
+		{
+			// "line" ends with newline
+			Log(1, "%s: WARNING: skipping invalid line %d in '%s': [%s]",
+				CG.ME, on_line, file.c_str(), line);
+			continue;
+		}
+
+		if (strcmp(name, "ExposureTime") == 0)
+		{
+			// integer
+			int x = atoi(value);
+			if (x != myRaspistillSetting.shutter_us)
+			{
+Log(5, "  ExposureTime %d !=  myRaspistillSetting.shutter_us (%d)\n", x, myRaspistillSetting.shutter_us);
+// CG.lastExposure_us = myRaspistillSetting.shutter_us;		SHOULD be == auto/manual exposure algormithm value
+			}
+else Log(5, "  ExposureTime = %f ('%s')\n", x, value);
+		}
+		else if (strcmp(name, "ColourGains") == 0)
+		{
+
+			// [ float, float ]		red, blue
+			if (sscanf(value, "[ %lf, %lf ]", &CG.lastWBR, &CG.lastWBB) != 2)
+			{
+				Log(1, "*** %s: WARNING, WBR and WBB not on line: '%s'\n", CG.ME, line);
+			}
+else
+Log(5, "  ColourGains: Red: %lf, Blue: %lf\n", CG.lastWBR, CG.lastWBB);
+		}
+		else if (strcmp(name, "SensorTemperature") == 0)
+		{
+			CG.lastSensorTemp = atof(value);
+Log(5, "  SensorTemperature = %f ('%s')\n", CG.lastSensorTemp, value);
+
+		}
+		else if (strcmp(name, "AnalogueGain") == 0)
+		{
+			// float
+			float x = atof(value);
+			if (x != myRaspistillSetting.analoggain)
+			{
+Log(5, "  AnalogueGain %f !=  myRaspistillSetting.analoggain (%f)\n", x, myRaspistillSetting.analoggain);
+// CG.lastGain =  myRaspistillSetting.analoggain; 		SHOULD be == auto/manual exposure algormithm value
+			}
+else Log(5, "  AnalogueGain = %f ('%s')\n", x, value);
+		}
+	}
+	return(true);
+}
 
 //---------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------
@@ -441,8 +527,10 @@ int main(int argc, char *argv[])
 		closeUp(EXIT_ERROR_STOP);
 	}
 
-	errorOutput = CG.saveDir;
+	errorOutput  = CG.saveDir;
 	errorOutput += "/capture_RPi_debug.txt";
+	metadataFile = CG.saveDir;
+	metadataFile += "/metadata.txt";
 
 	int iMaxWidth, iMaxHeight;
 	double pixelSize;
@@ -764,10 +852,13 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				numExposures++;
 				numConsecutiveErrors = 0;
 
-				// We currently have no way to get the actual white balance values,
-				// so use what the user requested.
-				CG.lastWBR = CG.currentWBR;
-				CG.lastWBB = CG.currentWBB;
+// TODO: NEW: use current values if manual mode or using raspistill
+// Otherwise use the value from metadata.
+				if (CG.currentAutoAWB || ! CG.isLibcamera)
+				{
+					CG.lastWBR = CG.currentWBR;
+					CG.lastWBB = CG.currentWBB;
+				}
 
 				CG.lastFocusMetric = CG.determineFocus ? (int)round(get_focus_metric(pRgb)) : -1;
 

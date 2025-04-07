@@ -94,7 +94,7 @@ if [[ $( settings ".takedarkframes" ) == "true" ]]; then
 	# Disable low brightness check since darks will have extremely low brightness.
 	# Set the high value to something a dark frame should never get to.
 	LOW=0.00000
-	HIGH=0.01000	# 1%
+	HIGH=0.10000	# 10%
 fi
 # TODO: make BAD_LIMIT a WebUI setting.
 BAD_LIMIT=5

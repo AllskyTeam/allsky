@@ -655,18 +655,18 @@ do
 		"usedarkframes")
 			if [[ ${NEW_VALUE} == "true" ]]; then
 				if [[ ! -d ${ALLSKY_DARKS} ]]; then
-					wW_ "WARNING: No darks to subtract.  No '${ALLSKY_DARKS}' directory."
+					wE_ "ERROR: The '${ALLSKY_DARKS}' directory does not exist so there are no darks to subtract."
 					# Restore to old value
 					echo "${wBR}Disabling ${WSNs}${LABEL}${WSNe}."
 					update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "boolean"
 					(( NUM_CHANGED-- ))
 				else
-					NUM_DARKS=$( find "${ALLSKY_DARKS}" -name "*.${EXTENSION}" 2>/dev/null | wc -l)
+					NUM_DARKS=$( find "${ALLSKY_DARKS}" \( -name "*.png" -o -name "*.jpg" \) 2>/dev/null | wc -l)
 					if [[ ${NUM_DARKS} -eq 0 ]]; then
 						W="WARNING: ${WSNs}${LABEL}${WSNe} is set but there are no darks"
-						W+=" in '${ALLSKY_DARKS}' with extension of '${EXTENSION}'."
+						W+=" frames in '${ALLSKY_DARKS}'."
 						wW_ "${W}"
-						echo    "${wBR}FIX: Either disable the setting or take dark frames."
+						echo "${wBR}FIX: Either disable the setting or take dark frames."
 					fi
 				fi
 			fi

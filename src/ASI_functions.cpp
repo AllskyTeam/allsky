@@ -118,8 +118,8 @@ int getNumOfConnectedCameras()
 	while ((line = getLine(buf)) != NULL)
 	{
 		on_line++;
-		Log(5, "Line %d: [%s]: ", on_line, line);
-		(void) getToken(NULL, '\t');		// tell getToken() we have a new line.
+		Log(5, "Line %d: [%s]\n", on_line, line);
+		(void) getToken(NULL, '\t');		// tells getToken() we have a new line.
 
 		char *cameraType = getToken(line, '\t');
 		char *numStr = getToken(line, '\t');
@@ -713,7 +713,7 @@ if (0) {
 		on_line++;
 		Log(5, "Line %3d: %s\n", on_line, full_line);
 
-		(void) getToken(NULL, '\t');		// tell getToken() we have a new line.
+		(void) getToken(NULL, '\t');		// tells getToken() we have a new line.
 
 		char *cameraLength = NULL;
 		char *lt = getToken(line, '\t');	// line type
@@ -1960,7 +1960,12 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, config cg,
 		double temp = 0.0;
 #endif
 		ASIGetControlValue(cameraInfo.CameraID, ASI_TEMPERATURE, &temp, &a);
-		printf("  - Sensor temperature: %0.1f C\n", (float)temp / cg.divideTemperatureBy);
+		printf("  - Sensor temperature: ");
+#ifdef IS_ZWO
+		printf("%0.1f C\n", (float)temp / cg.divideTemperatureBy);
+#else
+		printf("not available until an image is taken.\n");
+#endif
 	}
 	printf("  - Bit depth: %d\n", cameraInfo.BitDepth);
 #ifdef IS_RPi
@@ -2332,7 +2337,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 			ok = false;
 	}
 
-	validateLong(&cg->debugLevel, 0, 4, "Debug Level", true);
+	validateLong(&cg->debugLevel, 0, 5, "Debug Level", true);
 
 	// Overlay-related arguments
 	validateLong(&cg->overlay.extraFileAge, 0, NO_MAX_VALUE, "Max Age Of Extra", true);

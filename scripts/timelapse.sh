@@ -173,7 +173,9 @@ if [[ ${LOCK} == "true" ]]; then
 	ABORTED_FIELDS="$( basename "${OUTPUT_FILE}" )\tMY_PID=${MY_PID}\tPPID=${PPID}"
 	ABORTED_MSG2="timelapse creations"
 	if [[ ${IS_MINI} == "true" ]]; then
-		CAUSED_BY="This could be caused by unreasonable TIMELAPSE_MINI_IMAGES and TIMELAPSE_MINI_FREQUENCY settings."
+		CAUSED_BY="This could be caused by the  Mini-Timelapse"
+		CAUSED_BY+=" 'Number Of Images' setting being to high"
+		CAUSED_BY+=" and/or 'Frequency' settings being too low."
 	else
 		CAUSED_BY="Unknown cause - see ${ALLSKY_LOG}."
 	fi

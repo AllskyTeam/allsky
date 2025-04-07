@@ -1,44 +1,22 @@
 arch = $(shell dpkg --print-architecture)
 platform = $(shell uname -m)
-prefix =
 
-sysconfdir = ${prefix}/etc
-exec_prefix = /usr
-bindir = ${exec_prefix}/bin
-libexecdir = ${exec_prefix}/libexec/allsky
-sharedir = ${exec_prefix}/share/allsky
+bindir = /usr/bin
 
 PDIR = $(shell dirname "$$PWD")
 MYDIR = $(shell basename "$$PWD")
-RIGHTPATH = 1
-
-ifneq (src,$(MYDIR))
-  RIGHTPATH = 0
-endif
-
-ifneq (1,$(RIGHTPATH))
-  $(error Unexpected directory structure. This should be in allsky/src directory.)
-else
+ALLSKYBIN = ../bin
 
 .DEFAULT_GOAL := all
 
 ROOTCHECK=$(shell id -u)
-ifneq ($(ROOTCHECK),0)
-  ifeq ($(PKGBUILD),1)
-    ROOTCHECK=0
-  endif
-endif
-
-ifeq ($(PKGBUILD),)
-  PKGBUILD=0
-endif
 
 PKGPATH=$(shell which pkg-config)
-
 ifneq ($(PKGPATH),)
-  USB=$(shell pkg-config --exists libusb-1.0 && pkg-config --cflags --libs libusb-1.0)
+  USB = $(shell pkg-config --exists libusb-1.0 && pkg-config --cflags --libs libusb-1.0)
   OPENCV = $(shell pkg-config --exists opencv && pkg-config --cflags --libs opencv || (pkg-config --exists opencv4 && pkg-config --cflags --libs opencv4))
 endif
+
 DEFS = -D_LIN -D_DEBUG -DGLIBC_20
 CFLAGS = -Werror -Wall -Wno-psabi -Wno-unused-result -g -O2 -lpthread -pthread
 
@@ -85,21 +63,8 @@ endif
 
 CFLAGS += $(DEFS) $(ZWOSDK)
 
-all:check_deps capture_ZWO capture_RPi startrails keogram sunwait uhubctl
+all: check_deps capture_ZWO capture_RPi startrails keogram sunwait uhubctl
 .PHONY : all
-
-ifneq ($(shell id -u), 0)
-deps:
-	echo This must be run with root permissions.
-	echo Please run 'sudo make deps'
-else
-deps:
-	@echo `date +%F\ %R:%S` Installing build dependencies...
-	@apt update && apt -y install libopencv-dev libusb-dev libusb-1.0-0-dev ffmpeg lftp imagemagick bc
-endif
-
-.PHONY : deps
-
 
 check_deps:
 ifeq (,$(USB))
@@ -144,86 +109,60 @@ capture_ZWO: capture_ZWO.o allsky_common.o
 	@$(CC) -o $@ $(CFLAGS)  capture_ZWO.o allsky_common.o $(OPENCV) -lASICamera2 $(USB)
 	@echo `date +%F\ %R:%S` Done.
 
-capture_RPi:capture_RPi.o allsky_common.o mode_mean.o
+capture_RPi: capture_RPi.o allsky_common.o mode_mean.o
 	@echo `date +%F\ %R:%S` Building $@ program...
 	@$(CC) -o $@ $(CFLAGS) capture_RPi.o allsky_common.o $(OPENCV) mode_mean.o
 	@echo `date +%F\ %R:%S` Done.
 
-keogram:keogram.cpp
+keogram: keogram.cpp
 	@echo `date +%F\ %R:%S` Building $@ program...
 	@$(CC) $@.cpp -o $@ $(CFLAGS) $(OPENCV)
 	@echo `date +%F\ %R:%S` Done.
 
-startrails:startrails.cpp
+startrails: startrails.cpp
 	@echo `date +%F\ %R:%S` Building $@ program...
 	@$(CC) $@.cpp -o $@ $(CFLAGS) $(OPENCV)
 	@echo `date +%F\ %R:%S` Done.
 
-uhubctl:uhubctl.c
+uhubctl: uhubctl.c
 	@echo `date +%F\ %R:%S` Building $@ program...
 # This comes from the uhubctl Makefile:
 	@cc -g -O0 -Wall -Wextra -std=c99 -pedantic -DPROGRAM_VERSION=\"2.5.0\" -I/usr/include/libusb-1.0 $@.c -o $@ -Wl,-zrelro,-znow -lusb-1.0
 	@echo `date +%F\ %R:%S` Done.
 
-symlink: all
-	@echo `date +%F\ %R:%S` Symlinking binaries...
-	@ln -s $$PWD/capture_ZWO ../bin/
-	@ln -s $$PWD/capture_RPi ../bin/
-	@ln -s $$PWD/keogram ../bin/
-	@ln -s $$PWD/startrails ../bin/
-	@ln -s $$PWD/uhubctl ../bin/
-
-.PHONY: symlink
-
 ifneq ($(ROOTCHECK), 0)
-install uninstall:
-	@echo This must be run with root permissions.
-	@echo Please run 'sudo make $@'
+deps install uninstall:
+	@echo "This must be run with root permissions."
+	@echo "Please run 'sudo make $@'."
 else
+deps:
+	@echo "`date +%F\ %R:%S` Installing build dependencies..."
+	@apt -y install libopencv-dev libusb-dev libusb-1.0-0-dev
+
 install:
-	@echo `date +%F\ %R:%S` Copying binaries...
-	@if [ $(PKGBUILD) -eq 1 ]; then \
-	  [ ! -e $(DESTDIR)$(bindir) ] && mkdir -p $(DESTDIR)$(bindir); \
-	  install capture_ZWO $(DESTDIR)$(bindir); \
-	  install capture_RPi $(DESTDIR)$(bindir); \
-	  install keogram $(DESTDIR)$(bindir); \
-	  install startrails $(DESTDIR)$(bindir); \
-	  install uhubctl $(DESTDIR)$(bindir); \
-	else \
-	  [ ! -e ../bin ] && mkdir -p ../bin; \
-	  install -o $(SUDO_USER) -g $(SUDO_USER) capture_ZWO ../bin/; \
-	  install -o $(SUDO_USER) -g $(SUDO_USER) capture_RPi ../bin/; \
-	  install -o $(SUDO_USER) -g $(SUDO_USER) keogram ../bin/; \
-	  install -o $(SUDO_USER) -g $(SUDO_USER) startrails ../bin/; \
-	  install -o $(SUDO_USER) -g $(SUDO_USER) uhubctl ../bin/; \
-	fi
-	@install sunwait $(DESTDIR)$(bindir)
+	@echo "`date +%F\ %R:%S` Copying binaries..."
+	@if [ ! -e $(ALLSKYBIN) ]; then mkdir -p $(ALLSKYBIN); fi
+	@install -o $(SUDO_USER) -g $(SUDO_USER) capture_ZWO $(ALLSKYBIN)/
+	@install -o $(SUDO_USER) -g $(SUDO_USER) capture_RPi $(ALLSKYBIN)/
+	@install -o $(SUDO_USER) -g $(SUDO_USER) keogram $(ALLSKYBIN)/
+	@install -o $(SUDO_USER) -g $(SUDO_USER) startrails $(ALLSKYBIN)/
+	@install -o $(SUDO_USER) -g $(SUDO_USER) uhubctl $(ALLSKYBIN)/
+	@install sunwait $(bindir)
 
 uninstall:
-	@echo `date +%F\ %R:%S` Removing binaries...
-	@if [ $(PKGBUILD) -eq 1 ]; then \
-	  rm -f $(DESTDIR)$(bindir)/capture_ZWO; \
-	  rm -f $(DESTDIR)$(bindir)/capture_RPi; \
-	  rm -f $(DESTDIR)$(bindir)/keogram; \
-	  rm -f $(DESTDIR)$(bindir)/startrails; \
-	  rm -f $(DESTDIR)$(bindir)/sunwait; \
-	  rm -f $(DESTDIR)$(bindir)/uhubctl; \
-	else \
-	  rm -f ../bin/capture_ZWO; \
-	  rm -f ../bin/capture_RPi; \
-	  rm -f ../bin/keogram; \
-	  rm -f ../bin/startrails; \
-	  rm -f ../bin/uhubctl; \
-	fi
+	@echo "`date +%F\ %R:%S` Removing binaries..."
+	@rm -f $(ALLSKYBIN)/capture_ZWO
+	@rm -f $(ALLSKYBIN)/capture_RPi
+	@rm -f $(ALLSKYBIN)/keogram
+	@rm -f $(ALLSKYBIN)/startrails
+	@rm -f $(ALLSKYBIN)/uhubctl
 
 endif # sudo / root check
-.PHONY : install uninstall
+.PHONY : deps install uninstall
 
 clean:
 	rm -f capture_ZWO capture_RPi startrails keogram sunwait uhubctl *.o *.a
 .PHONY : clean
 
-endif # Correct directory structure check
-
 %:
-	@echo `date +%F\ %R:%S` nothing to do for $@
+	@echo "`date +%F\ %R:%S` nothing to do for $@"

@@ -250,6 +250,7 @@ class MODULEUTIL
         $selectedResult = [];
         foreach($configData as $selectedName=>$data) {
             $moduleName = "allsky_" . $selectedName . ".py";
+            // TODO: check if  $allModules[$moduleName]  exists.
             $moduleData = $allModules[$moduleName];
 
             if (isset($data->metadata->arguments)) {

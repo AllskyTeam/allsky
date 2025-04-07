@@ -126,10 +126,10 @@ int getNumOfConnectedCameras()
 		char *cameraModel = getToken(line, '\t');
 		if (cameraModel != NULL)
 		{
-			int num = atoi(numStr);
-			Log(5, "  cameraType=[%s], num=%d, cameraModel=[%s]\n", cameraType, num, cameraModel);
+			int cameraNum = atoi(numStr);
+			Log(5, "  cameraType=[%s], cameraNum=[%d], cameraModel=[%s]\n", cameraType, cameraNum, cameraModel);
 			CONNECTED_CAMERAS *cC = &connectedCameras[totalNum_connectedCameras++];
-			cC->cameraID = num;
+			cC->cameraID = cameraNum;
 			strncpy(cC->Type, cameraType, CC_TYPE_SIZE);
 #ifdef IS_ZWO
 			strncpy(cC->Name, cameraModel, CAMERA_NAME_SIZE);
@@ -147,7 +147,7 @@ int getNumOfConnectedCameras()
 			int n = num_connectedCameraTypes;
 			for (int i=0; i <= n; i++)
 			{
-Log(5, "checking connectedCameraTypes[%d], num_connectedCameraTypes=%d\n", i, n);
+Log(5, "Checking connectedCameraTypes[%d] of %d\n", i, n);
 				if (i == num_connectedCameraTypes)
 				{
 					p = "";
@@ -165,7 +165,7 @@ Log(5, "  >> %s already in list; skipping\n", p);
 				{
 					connectedCameraTypes[num_connectedCameraTypes] = cC->Type;
 					num_connectedCameraTypes++;
-Log(5, "  NEW TYPE [%s], num_connectedCameraTypes=%d\n", cC->Type, num_connectedCameraTypes);
+Log(5, "  NEW TYPE FOUND [%s], num_connectedCameraTypes now = %d\n", cC->Type, num_connectedCameraTypes);
 					break;
 				}
 			}
@@ -178,15 +178,34 @@ Log(5, "  NEW TYPE [%s], num_connectedCameraTypes=%d\n", cC->Type, num_connected
 		}
 	}
 
-	Log(4, "Connected camera types: %d, connected %s cameras: %d\n",
-		num_connectedCameraTypes, CAMERA_TYPE, numThisType);
+	Log(4, "%s connected cameras: %d of %d total types connected\n",
+		CAMERA_TYPE, numThisType, num_connectedCameraTypes);
 
 #ifdef IS_ZWO
 	int  ZWOnum = ASIGetNumOfConnectedCameras();
 	if (ZWOnum != numThisType)
 	{
-		Log(0, "%s: ERROR: mismatch with number of ZWO cameras connected: ZWO=%d, other=%d\n",
-			CG.ME, ZWOnum, numThisType);
+		Log(0, "%s: ERROR: mismatch with number of ZWO cameras connected: per ZWO SDK: %d, per %s: %d\n",
+			CG.ME, ZWOnum, CG.connectedCamerasFile, numThisType);
+
+		Log(1, "Attached Cameras:\n");
+		ASI_CAMERA_INFO info;
+		for (int i=0; i < ZWOnum; i++)
+		{
+			Log(1, "    Camera # %d: ", i);
+			ASI_ERROR_CODE ret = ASIGetCameraProperty(&info, i);
+			if (ret != ASI_SUCCESS)
+			{
+				char *getRetCode(ASI_ERROR_CODE code);
+				Log(1, "ERROR: cannot get information: %s.\n", getRetCode(ret));
+			}
+			else
+			{
+				Log(1, "Name: %s, CameraID: %d, MaxHeight: %ld, MaxWidth: %ld\n",
+					info.Name, info.CameraID, info.MaxHeight, info.MaxWidth);
+			}
+		}
+
 		closeUp(EXIT_ERROR_STOP);
 	}
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2023 Vadim Mikhailov
+ * Copyright (c) 2009-2025 Vadim Mikhailov
  *
  * Utility to turn USB port power on/off
  * for USB hubs that support per-port power switching.
@@ -9,7 +9,7 @@
  *
  */
 
-#define _XOPEN_SOURCE 500
+#define _XOPEN_SOURCE 600
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,6 +18,7 @@
 #include <getopt.h>
 #include <errno.h>
 #include <ctype.h>
+#include <fcntl.h>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -29,27 +30,27 @@
 #include <unistd.h>
 #endif
 
-#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(_WIN32)
 #include <libusb.h>
-#else
-#include <libusb-1.0/libusb.h>
+
+/* LIBUSBX_API_VERSION was first defined in libusb 1.0.13
+  and renamed to LIBUSB_API_VERSION since libusb 1.0.16 */
+#if defined(LIBUSBX_API_VERSION) && !defined(LIBUSB_API_VERSION)
+#define LIBUSB_API_VERSION LIBUSBX_API_VERSION
 #endif
 
-#if defined(__APPLE__) || defined(__FreeBSD__) /* snprintf is not available in pure C mode */
-int snprintf(char * __restrict __str, size_t __size, const char * __restrict __format, ...) __printflike(3, 4);
-#endif
-
-#if !defined(LIBUSB_API_VERSION) || (LIBUSB_API_VERSION <= 0x01000103)
+/* FreeBSD's libusb does not define LIBUSB_DT_SUPERSPEED_HUB */
+#if !defined(LIBUSB_DT_SUPERSPEED_HUB)
 #define LIBUSB_DT_SUPERSPEED_HUB 0x2a
+#endif
+
+#if !defined(LIBUSB_API_VERSION)
+#error "libusb-1.0 is required!"
 #endif
 
 #if _POSIX_C_SOURCE >= 199309L
 #include <time.h>   /* for nanosleep */
 #endif
 
-#ifdef __gnu_linux__
-#include <fcntl.h> /* for open() / O_WRONLY */
-#endif
 
 /* cross-platform sleep function */
 
@@ -80,6 +81,7 @@ void sleep_ms(int milliseconds)
 #define POWER_ON                 1
 #define POWER_CYCLE              2
 #define POWER_TOGGLE             3
+#define POWER_FLASH              4
 
 #define MAX_HUB_CHAIN            8  /* Per USB 3.0 spec max hub chain is 7 */
 
@@ -226,15 +228,24 @@ static int opt_exact  = 0;  /* exact location match - disable USB3 duality handl
 static int opt_reset  = 0;  /* reset hub after operation(s) */
 static int opt_force  = 0;  /* force operation even on unsupported hubs */
 static int opt_nodesc = 0;  /* skip querying device description */
-#ifdef __gnu_linux__
+#if defined(__linux__)
 static int opt_nosysfs = 0; /* don't use the Linux sysfs port disable interface, even if available */
+#if (LIBUSB_API_VERSION >= 0x01000107) /* 1.0.23 */
+static const char *opt_sysdev;
+#endif
 #endif
 
+/* For Raspberry Pi detection and workarounds: */
+static int is_rpi_4b = 0;
+static int is_rpi_5  = 0;
 
 static const char short_options[] =
     "l:L:n:a:p:d:r:w:s:hvefRN"
-#ifdef __gnu_linux__
+#if defined(__linux__)
     "S"
+#if (LIBUSB_API_VERSION >= 0x01000107) /* 1.0.23 */
+    "y:"
+#endif
 #endif
 ;
 
@@ -251,8 +262,11 @@ static const struct option long_options[] = {
     { "exact",    no_argument,       NULL, 'e' },
     { "force",    no_argument,       NULL, 'f' },
     { "nodesc",   no_argument,       NULL, 'N' },
-#ifdef __gnu_linux__
+#if defined(__linux__)
     { "nosysfs",  no_argument,       NULL, 'S' },
+#if (LIBUSB_API_VERSION >= 0x01000107)
+    { "sysdev",   required_argument, NULL, 'y' },
+#endif
 #endif
     { "reset",    no_argument,       NULL, 'R' },
     { "version",  no_argument,       NULL, 'v' },
@@ -269,19 +283,22 @@ static int print_usage(void)
         "Without options, show status for all smart hubs.\n"
         "\n"
         "Options [defaults in brackets]:\n"
-        "--action,   -a - action to off/on/cycle/toggle (0/1/2/3) for affected ports.\n"
+        "--action,   -a - action to off/on/cycle/toggle/flash (0/1/2/3/4) for affected ports.\n"
         "--ports,    -p - ports to operate on    [all hub ports].\n"
         "--location, -l - limit hub by location  [all smart hubs].\n"
         "--level     -L - limit hub by location level (e.g. a-b.c is level 3).\n"
         "--vendor,   -n - limit hub by vendor id [%s] (partial ok).\n"
         "--search,   -s - limit hub by attached device description.\n"
-        "--delay,    -d - delay for cycle action [%g sec].\n"
+        "--delay,    -d - delay for cycle/flash action [%g sec].\n"
         "--repeat,   -r - repeat power off count [%d] (some devices need it to turn off).\n"
         "--exact,    -e - exact location (no USB3 duality handling).\n"
         "--force,    -f - force operation even on unsupported hubs.\n"
         "--nodesc,   -N - do not query device description (helpful for unresponsive devices).\n"
-#ifdef __gnu_linux__
+#if defined(__linux__)
         "--nosysfs,  -S - do not use the Linux sysfs port disable interface.\n"
+#if (LIBUSB_API_VERSION >= 0x01000107)
+        "--sysdev,   -y - open system device node instead of scanning.\n"
+#endif
 #endif
         "--reset,    -R - reset hub after each power-on action, causing all devices to reassociate.\n"
         "--wait,     -w - wait before repeat power off [%d ms].\n"
@@ -364,6 +381,46 @@ static int ports2bitmap(char* const portlist)
     return ports;
 }
 
+/*
+ * Get model of the computer we are currently running on.
+ * On success return 0 and fill model string (null terminated).
+ * If model is not known or error occurred returns -1.
+ *
+ * Currently this can only return successfully on Linux,
+ * but in the future we may need it on other operating systems too.
+ */
+
+static int get_computer_model(char *model, int len)
+{
+    int fd = open("/sys/firmware/devicetree/base/model", O_RDONLY);
+    if (fd < 0) {
+        return fd;
+    }
+    int bytes_read = read(fd, model, len-1);
+    close(fd);
+    if (bytes_read < 0) {
+        return -1;
+    }
+    model[bytes_read] = 0;
+    return 0;
+}
+
+/*
+ * Check if we are running on given computer model using substring match.
+ * Returns 1 if yes and 0 otherwise.
+ */
+
+static int check_computer_model(const char *target)
+{
+    char model[256] = "";
+    if (get_computer_model(model, sizeof(model)) == 0) {
+        if (strstr(model, target) != NULL) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 
 /*
  * Compatibility wrapper around libusb_get_port_numbers()
@@ -372,7 +429,7 @@ static int ports2bitmap(char* const portlist)
 static int get_port_numbers(libusb_device *dev, uint8_t *buf, uint8_t bufsize)
 {
     int pcount;
-#if defined(LIBUSB_API_VERSION) && (LIBUSB_API_VERSION >= 0x01000102)
+#if (LIBUSB_API_VERSION >= 0x01000102)
     /*
      * libusb_get_port_path is deprecated since libusb v1.0.16,
      * therefore use libusb_get_port_numbers when supported
@@ -404,7 +461,7 @@ static int get_hub_info(struct libusb_device *dev, struct hub_info *info)
         return rc;
     if (desc.bDeviceClass != LIBUSB_CLASS_HUB)
         return LIBUSB_ERROR_INVALID_PARAM;
-    int bcd_usb = libusb_le16_to_cpu(desc.bcdUSB);
+    int bcd_usb = desc.bcdUSB;
     int desc_type = bcd_usb >= USB_SS_BCD ? LIBUSB_DT_SUPERSPEED_HUB
                                           : LIBUSB_DT_HUB;
     rc = libusb_open(dev, &devh);
@@ -427,8 +484,8 @@ static int get_hub_info(struct libusb_device *dev, struct hub_info *info)
             snprintf(
                 info->vendor, sizeof(info->vendor),
                 "%04x:%04x",
-                libusb_le16_to_cpu(desc.idVendor),
-                libusb_le16_to_cpu(desc.idProduct)
+                desc.idVendor,
+                desc.idProduct
             );
 
             /* Convert bus and ports array into USB location string */
@@ -443,7 +500,7 @@ static int get_hub_info(struct libusb_device *dev, struct hub_info *info)
             }
 
             /* Get container_id: */
-            bzero(info->container_id, sizeof(info->container_id));
+            memset(info->container_id, 0, sizeof(info->container_id));
             struct libusb_bos_descriptor *bos;
             rc = libusb_get_bos_descriptor(devh, &bos);
             if (rc == 0) {
@@ -469,7 +526,8 @@ static int get_hub_info(struct libusb_device *dev, struct hub_info *info)
                 libusb_free_bos_descriptor(bos);
 
                 /* Raspberry Pi 4B hack for USB3 root hub: */
-                if (strlen(info->container_id)==0 &&
+                if (is_rpi_4b &&
+                    strlen(info->container_id)==0 &&
                     strcasecmp(info->vendor, "1d6b:0003")==0 &&
                     info->pn_len==0 &&
                     info->nports==4 &&
@@ -486,10 +544,32 @@ static int get_hub_info(struct libusb_device *dev, struct hub_info *info)
                 lpsm = HUB_CHAR_INDV_PORT_LPSM;
             }
             /* Raspberry Pi 4B reports inconsistent descriptors, override: */
-            if (lpsm == HUB_CHAR_COMMON_LPSM && strcasecmp(info->vendor, "2109:3431")==0) {
+            if (is_rpi_4b && lpsm == HUB_CHAR_COMMON_LPSM && strcasecmp(info->vendor, "2109:3431")==0) {
                 lpsm = HUB_CHAR_INDV_PORT_LPSM;
             }
             info->lpsm = lpsm;
+
+            /* Raspberry Pi 5 hack */
+            if (is_rpi_5 &&
+                strlen(info->container_id)==0 &&
+                info->lpsm==HUB_CHAR_INDV_PORT_LPSM &&
+                info->pn_len==0)
+            {
+                /* USB2 */
+                if (strcasecmp(info->vendor, "1d6b:0002")==0 &&
+                    info->nports==2 &&
+                    !info->super_speed)
+                {
+                    strcpy(info->container_id, "Raspberry Pi 5 Fake Container Id");
+                }
+                /* USB3 */
+                if (strcasecmp(info->vendor, "1d6b:0003")==0 &&
+                    info->nports==1 &&
+                    info->super_speed)
+                {
+                    strcpy(info->container_id, "Raspberry Pi 5 Fake Container Id");
+                }
+            }
             rc = 0;
         } else {
             rc = len;
@@ -524,11 +604,11 @@ static int get_port_status(struct libusb_device_handle *devh, int port)
     if (rc < 0) {
         return rc;
     }
-    return ust.wPortStatus;
+    return libusb_le16_to_cpu(ust.wPortStatus);
 }
 
 
-#ifdef __gnu_linux__
+#if defined(__linux__)
 /*
  * Try to use the Linux sysfs interface to power a port off/on.
  * Returns 0 on success.
@@ -548,10 +628,17 @@ static int set_port_status_linux(struct libusb_device_handle *devh, struct hub_i
      * The "disable" sysfs interface is available only starting with kernel version 6.0.
      * For earlier kernel versions the open() call will fail and we fall back to using libusb.
      */
-    snprintf(disable_path, PATH_MAX,
-        "/sys/bus/usb/devices/%s:%d.0/%s-port%i/disable",
-        hub->location, configuration, hub->location, port
-    );
+    if (hub->pn_len == 0) {
+      snprintf(disable_path, PATH_MAX,
+          "/sys/bus/usb/devices/%s-0:%d.0/usb%s-port%i/disable",
+          hub->location, configuration, hub->location, port
+      );
+    } else {
+      snprintf(disable_path, PATH_MAX,
+          "/sys/bus/usb/devices/%s:%d.0/%s-port%i/disable",
+          hub->location, configuration, hub->location, port
+      );
+    }
 
     int disable_fd = open(disable_path, O_WRONLY);
     if (disable_fd >= 0) {
@@ -621,7 +708,7 @@ static int set_port_status_libusb(struct libusb_device_handle *devh, int port, i
 
 static int set_port_status(struct libusb_device_handle *devh, struct hub_info *hub, int port, int on)
 {
-#ifdef __gnu_linux__
+#if defined(__linux__)
     if (!opt_nosysfs) {
         if (set_port_status_linux(devh, hub, port, on) == 0) {
             return 0;
@@ -661,9 +748,9 @@ static int get_device_description(struct libusb_device * dev, struct descriptor_
     rc = libusb_get_device_descriptor(dev, &desc);
     if (rc)
         return rc;
-    bzero(ds, sizeof(*ds));
-    id_vendor  = libusb_le16_to_cpu(desc.idVendor);
-    id_product = libusb_le16_to_cpu(desc.idProduct);
+    memset(ds, 0, sizeof(*ds));
+    id_vendor  = desc.idVendor;
+    id_product = desc.idProduct;
     rc = libusb_open(dev, &devh);
     if (rc == 0) {
         if (!opt_nodesc) {
@@ -685,6 +772,7 @@ static int get_device_description(struct libusb_device * dev, struct descriptor_
         }
         if (desc.bDeviceClass == LIBUSB_CLASS_HUB) {
             struct hub_info info;
+            memset(&info, 0, sizeof(info));
             rc = get_hub_info(dev, &info);
             if (rc == 0) {
                 const char * lpsm_type;
@@ -742,7 +830,7 @@ static int print_port_status(struct hub_info * hub, int portmask)
             printf("  Port %d: %04x", port, port_status);
 
             struct descriptor_strings ds;
-            bzero(&ds, sizeof(ds));
+            memset(&ds, 0, sizeof(ds));
             struct libusb_device * udev;
             int i = 0;
             while ((udev = usb_devs[i++]) != NULL) {
@@ -837,7 +925,7 @@ static int usb_find_hubs(void)
         if (rc == 0 && desc.bDeviceClass != LIBUSB_CLASS_HUB)
             continue;
         struct hub_info info;
-        bzero(&info, sizeof(info));
+        memset(&info, 0, sizeof(info));
         rc = get_hub_info(dev, &info);
         if (rc) {
             perm_ok = 0; /* USB permission issue? */
@@ -863,7 +951,7 @@ static int usb_find_hubs(void)
                     (memcmp(info.port_numbers, dev_pn, info.pn_len) == 0))
                 {
                     struct descriptor_strings ds;
-                    bzero(&ds, sizeof(ds));
+                    memset(&ds, 0, sizeof(ds));
                     rc = get_device_description(udev, &ds);
                     if (rc != 0)
                         break;
@@ -973,7 +1061,7 @@ static int usb_find_hubs(void)
                 }
 
                 /* Raspberry Pi 4B hack (USB2 hub is one level deeper than USB3): */
-                if (l1 + s1 == l2 + s2 && l1 >= s2 && memcmp(p1 + s2, p2 + s1, l1 - s2)==0) {
+                if (is_rpi_4b && l1 + s1 == l2 + s2 && l1 >= s2 && memcmp(p1 + s2, p2 + s1, l1 - s2)==0) {
                     if (best_score < 3) {
                         best_score = 3;
                         best_match = j;
@@ -1011,7 +1099,7 @@ static int usb_find_hubs(void)
         }
     }
     if (perm_ok == 0 && hub_phys_count == 0) {
-#ifdef __gnu_linux__
+#if defined(__linux__)
         if (geteuid() != 0) {
             fprintf(stderr,
                 "There were permission problems while accessing USB.\n"
@@ -1030,6 +1118,10 @@ int main(int argc, char *argv[])
     int rc;
     int c = 0;
     int option_index = 0;
+#if defined(__linux__) && (LIBUSB_API_VERSION >= 0x01000107)
+    int sys_fd;
+    libusb_device_handle *sys_devh = NULL;
+#endif
 
     for (;;) {
         c = getopt_long(argc, argv, short_options, long_options, &option_index);
@@ -1078,6 +1170,9 @@ int main(int argc, char *argv[])
             if (!strcasecmp(optarg, "toggle") || !strcasecmp(optarg, "3")) {
                 opt_action = POWER_TOGGLE;
             }
+            if (!strcasecmp(optarg, "flash") || !strcasecmp(optarg, "4")) {
+                opt_action = POWER_FLASH;
+            }
             break;
         case 'd':
             opt_delay = atof(optarg);
@@ -1091,10 +1186,15 @@ int main(int argc, char *argv[])
         case 'N':
             opt_nodesc = 1;
             break;
-#ifdef __gnu_linux__
+#if defined(__linux__)
         case 'S':
             opt_nosysfs = 1;
             break;
+#if (LIBUSB_API_VERSION >= 0x01000107)
+        case 'y':
+            opt_sysdev = optarg;
+            break;
+#endif
 #endif
         case 'e':
             opt_exact = 1;
@@ -1137,7 +1237,35 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+#if defined(__linux__) && (LIBUSB_API_VERSION >= 0x01000107)
+    if (opt_sysdev) {
+        sys_fd = open(opt_sysdev, O_RDWR);
+        if (sys_fd < 0) {
+            fprintf(stderr, "Cannot open system node!\n");
+            rc = 1;
+            goto cleanup;
+        }
+        rc = libusb_wrap_sys_device(NULL, sys_fd, &sys_devh);
+        if (rc != 0) {
+            fprintf(stderr,
+                    "Cannot use %s as USB hub device, failed to wrap system node!\n",
+                    opt_sysdev);
+            rc = 1;
+            goto cleanup;
+        }
+        usb_devs = calloc(2, sizeof *usb_devs);
+        if (!usb_devs) {
+            fprintf(stderr, "Out of memory\n");
+            rc = 1;
+            goto cleanup;
+        }
+        usb_devs[0] = libusb_get_device(sys_devh);
+    } else {
+        rc = libusb_get_device_list(NULL, &usb_devs);
+    }
+#else
     rc = libusb_get_device_list(NULL, &usb_devs);
+#endif
     if (rc < 0) {
         fprintf(stderr,
             "Cannot enumerate USB devices!\n"
@@ -1145,6 +1273,9 @@ int main(int argc, char *argv[])
         rc = 1;
         goto cleanup;
     }
+
+    is_rpi_4b = check_computer_model("Raspberry Pi 4 Model B");
+    is_rpi_5  = check_computer_model("Raspberry Pi 5");
 
     rc = usb_find_hubs();
     if (rc <= 0) {
@@ -1193,6 +1324,9 @@ int main(int argc, char *argv[])
                 /* will operate on these ports */
                 int ports = ((1 << hubs[i].nports) - 1) & opt_ports;
                 int should_be_on = k;
+                if (opt_action == POWER_FLASH) {
+                    should_be_on = !should_be_on;
+                }
 
                 int port;
                 for (port=1; port <= hubs[i].nports; port++) {
@@ -1232,13 +1366,23 @@ int main(int argc, char *argv[])
             }
             libusb_close(devh);
         }
-        if (k == 0 && opt_action == POWER_CYCLE)
+        if (k == 0 && (opt_action == POWER_CYCLE || opt_action == POWER_FLASH))
             sleep_ms((int)(opt_delay * 1000));
     }
     rc = 0;
 cleanup:
+#if defined(__linux__) && (LIBUSB_API_VERSION >= 0x01000107)
+    if (opt_sysdev && sys_fd >= 0) {
+        if (sys_devh)
+            libusb_close(sys_devh);
+        close(sys_fd);
+        free(usb_devs);
+    } else if (usb_devs)
+        libusb_free_device_list(usb_devs, 1);
+#else
     if (usb_devs)
         libusb_free_device_list(usb_devs, 1);
+#endif
     usb_devs = NULL;
     libusb_exit(NULL);
     return rc;

@@ -25,6 +25,14 @@ function delete_directory($directory_name) {
 
 function ListDays(){
 	global $page;
+
+	if (! is_dir(ALLSKY_IMAGES)) {
+		echo "<br><div class='errorMsgBig'>";
+		echo "ERROR: '" . ALLSKY_IMAGES . "' directory is missing!";
+		echo "</div>";
+		return;
+	}
+
 	$days = array();
 
 	$date = getVariableOrDefault($_POST, 'delete_directory', null);

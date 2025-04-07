@@ -187,6 +187,12 @@ function rm_object($item, $successMsg=null)
 		} else {
 			$msg = $successMsg;
 		}
+		if ($use_TEXT) {
+			$msg .= "\n\n";
+		} else {
+			$msg .= "<br><br>";
+		}
+		$msg .= "Return to the WebUI and refresh the window.";
 	} else {
 		$msg = "${eS}Unable to remove '${item}': ${ret}${eE}";
 	}

@@ -14,24 +14,26 @@ function DisplayWPAConfig(){
 
 	$thisNetwork = null;
 	$ssid = null;
+	$networks = Array();
 
 	// Process the already-configured networks.
 	$onLine = 0;
 	$inNetwork = false;
 	$numNetworks = 0;
+
 	foreach($known_out as $line) {
 		$onLine++;
 		if ($line === "") continue;
 
 		if ($debug) echo "<br>Line $onLine: $line";
 		if (preg_match('/network\s*=/', $line)) {
-		if ($debug) echo "<br>&nbsp; &nbsp; new network";
+			if ($debug) echo "<br>&nbsp; &nbsp; new network";
 			$inNetwork = true;
 			$numNetworks++;
 			$thisNetwork = array('visible' => false, 'configured' => true, 'connected' => false);
 		} elseif ($thisNetwork !== null) {
-			if (preg_match('/^\s*}\s*$/', $line)) {		// end of info for this Network
-			if ($debug) echo "<br>&nbsp; &nbsp; end of network $ssid";
+			if (preg_match("/^\s*}\s*$/", $line)) {		// end of info for this Network
+				if ($debug) echo "<br>&nbsp; &nbsp; end of network $ssid";
 				$networks[$ssid] = $thisNetwork;
 				$thisNetwork = null;
 				$ssid = null;

@@ -709,10 +709,10 @@ if [[ -z ${CMD} ]]; then
 	CMDS+=("show_start_times"			"$( L "Show daytime and nighttime start times" )"); ((N++))
 	CMDS+=("compare_paths"				"$( L "Compare upload and Website paths" )"); ((N++))
 	CMDS+=("get_brightness_info"		"$( L "Get information on image brightness" )"); ((N++))
+	CMDS+=("check_post_data"			"$( L "Troubleshoot the 'data.json is X days old' message" )"); ((N++))
+	CMDS+=("get_filesystems"			"$( L "Determine where a secodary storage device is" )"); ((N++))
 	CMDS+=("encoders"					"$( L "Show list of timelapse encoders available" )"); ((N++))
 	CMDS+=("pix_fmts"					"$( L "Show list of timelapse pixel formats available" )"); ((N++))
-	CMDS+=("check_post_data"			"$( L "Helps resolve the 'data.json is X days old' message" )"); ((N++))
-	CMDS+=("get_filesystems"			"$( L "Helps determine where a storage device is" )"); ((N++))
 
 	# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 	while COMMAND="$( prompt "${PROMPT}" "${CMDS[@]}" )"

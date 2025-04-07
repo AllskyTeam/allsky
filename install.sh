@@ -1846,7 +1846,7 @@ install_dependencies_etc()
 	TMP="${ALLSKY_LOGS}/make_install.log"
 	sudo make install > "${TMP}" 2>&1
 	check_success $? "make install failed" "${TMP}" "${DEBUG}" ||
-		exit_with_image 1 "${STATUS_ERROR}" "make insall_failed"
+		exit_with_image 1 "${STATUS_ERROR}" "make install failed"
 
 	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }

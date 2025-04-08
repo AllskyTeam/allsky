@@ -279,10 +279,10 @@ def pistatus(params, event):
 
 def pistatus_cleanup():
 	moduleData = {
-		"metaData": metaData,
+		"metaData": ALLSKYPISTATUS.meta_data,
 		"cleanup": {
 			"files": {
-				metaData["extradatafilename"]
+				ALLSKYPISTATUS.meta_data["extradatafilename"]
 			},
 		"env": {}
 		}

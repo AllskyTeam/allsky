@@ -1212,9 +1212,9 @@ class MODULEUTIL
             }
         }
 
-        foreach ($seriesData as $key=>$series) {
-            $seriesData[$key]["data"] = $this->insertNullsOnGap($series["data"]);
-        }
+        //foreach ($seriesData as $key=>$series) {
+        //    $seriesData[$key]["data"] = $this->insertNullsOnGap($series["data"]);
+        //}
         
         $seriesData = array_values($seriesData);
 

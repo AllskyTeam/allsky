@@ -1,7 +1,8 @@
 import allsky_shared as allsky_shared
 import os
 import json
-
+import time
+from functools import wraps
 
 class ALLSKYMODULEBASE:
 
@@ -62,3 +63,4 @@ class ALLSKYMODULEBASE:
 	def debug_log(self, message):
 		if self._debugmode:
 			print(message)
+   

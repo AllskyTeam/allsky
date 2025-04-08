@@ -11,13 +11,11 @@ None
 '''
 import allsky_shared as allsky_shared
 from allsky_base import ALLSKYMODULEBASE
-import os
-import math
-import cv2
-import json
-import numpy as np
-from math import sqrt
 
+import cv2
+import os
+from astropy.stats import sigma_clipped_stats
+from photutils.detection import DAOStarFinder
 
 class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 
@@ -32,16 +30,100 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 		"testable": "true",
 		"testableresult": "images",
 		"centersettings": "false",
-		"extradatafilename": "allsky_starcount.json",  
+		"extradatafilename": "allsky_starcount.json",
+        "graphs": {
+            "chart1": {
+				"icon": "fa-solid fa-chart-line",
+				"title": "Stars",
+				"group": "Analysis",
+				"main": "true",
+				"config": {
+					"tooltip": "true",
+					"chart": {
+						"type": "spline",
+						"zooming": {
+							"type": "x"
+						}
+					},
+					"title": {
+						"text": "Stars"
+					},
+					"plotOptions": {
+						"series": {
+							"animation": "false"
+						}
+					},
+					"xAxis": {
+						"type": "datetime",
+						"dateTimeLabelFormats": {
+							"day": "%Y-%m-%d",
+							"hour": "%H:%M"
+						}
+					},
+					"yAxis": [
+						{ 
+							"title": {
+								"text": "Count"
+							} 
+						}
+					],
+					"lang": {
+						"noData": "No data available"
+					},
+					"noData": {
+						"style": {
+							"fontWeight": "bold",
+							"fontSize": "16px",
+							"color": "#666"
+						}
+					}
+				},
+				"series": {
+					"count": {
+						"name": "Star Count",
+						"yAxis": 0,
+						"variable": "AS_STARCOUNT|AS_STARIMAGEURL"                 
+					}            
+				}
+			}
+		}, 
 		"extradata": {
+			"database": {
+				"enabled": "True",
+				"table": "allsky_stars"
+			}, 
 			"values": {
+				"AS_STARIMAGE": {
+					"name": "${STARIMAGE}",
+					"format": "",
+					"sample": "",
+					"group": "Image Data",
+					"description": "Image with stars",
+					"type": "string"
+				},
+				"AS_STARIMAGEPATH": {
+					"name": "${STARIMAGEPATH}",
+					"format": "",
+					"sample": "",                
+					"group": "Image Data",
+					"description": "Image with stars Path",
+					"type": "string"
+				},
+				"AS_STARIMAGEURL": {
+					"name": "${STARIMAGEURL}",
+					"format": "",
+					"sample": "",                
+					"group": "Image Data",
+					"description": "Image with stars URL",
+					"type": "string"
+				},
 				"AS_STARCOUNT": {
 					"name": "${STARCOUNT}",
 					"format": "",
 					"sample": "",                
-					"group": "Stars",
-					"description": "Number of stars",
-					"type": "Number"
+					"group": "Image Data",
+					"description": "STAR COUNT",
+					"type": "number"
 				}
 			}
 		},     
@@ -132,144 +214,59 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 		}          
 	}
 
- 
-	def __create_star_template(self, star_size, debug):
-		star_template_size = star_size * 4
-		if (star_template_size % 2) != 0:
-			star_template_size += 1
-
-		starTemplate = np.zeros([star_template_size, star_template_size], dtype=np.uint8)
-		cv2.circle(
-			img=starTemplate,
-			center=(allsky_shared.int(star_template_size/2), allsky_shared.int(star_template_size/2)),
-			radius=allsky_shared.int(star_size/2),
-			color=(255, 255, 255),
-			thickness=cv2.FILLED,
-		)
-
-		starTemplate = cv2.blur(
-			src=starTemplate,
-			ksize=(3, 3)
-		)
-
-		if debug:
-			allsky_shared.writeDebugImage(metaData['module'], f'star-template-{star_size}.png', starTemplate)
-
-		return starTemplate
-
 	def run(self):
-		star_count = 0
-       
-		raining, rain_flag = allsky_shared.raining()
-		sky_state, sky_clear = allsky_shared.skyClear()
+		result = ''
+  
+		image = allsky_shared.image
 
-		use_clear_sky = self.get_param('useclearsky', False, bool)
-		if not use_clear_sky:
-			sky_clear = True
-
-		if not rain_flag:
-			if sky_clear:        
-				detection_threshold = self.get_param('detectionThreshold', 0, float)
-				distance_threshold = self.get_param('distanceThreshold', 0, float)
-				mask = self.get_param('mask', '', str)
-				annotate = self.get_param('annotate', 0, bool)
-				star_template_1_size = self.get_param('template1', 0, int)
-				debug = self.get_param('debug', 0, bool)
-				debug_image = self.get_param('debugimage', '', str)
-
-				using_debug_image = False
-				if debug_image != "":
-					image = cv2.imread(debug_image)
-					if image is None:
-						image = allsky_shared.image
-						allsky_shared.log(4, f'WARNING: Debug image set to {debug_image} but cannot be found, using latest allsky image')
-					else:
-						using_debug_image = True
-						allsky_shared.log(4, f'WARNING: Using debug image {debug_image}')
-				else:
-					image = allsky_shared.image
-
-				if debug:
-					allsky_shared.startModuleDebug(metaData['module'])
-
-				if len(image) == 2:
-					gray_image = image
-				else:
-					gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-				
-				if debug:
-					allsky_shared.writeDebugImage(metaData['module'], 'a-greyscale-image.png', gray_image)
-
-				image_mask = None
-				if mask != "":
-					mask_path = os.path.join(allsky_shared.ALLSKY_OVERLAY, 'images', mask)
-					image_mask = cv2.imread(mask_path,cv2.IMREAD_GRAYSCALE)
-					if debug:
-						allsky_shared.writeDebugImage(metaData['module'], 'b-image-mask.png', image_mask) 
-
-
-				star_template = self.__create_star_template(star_template_1_size, debug)
-
-				if image_mask is not None:
-					if gray_image.shape == image_mask.shape:
-						gray_image = cv2.bitwise_and(src1=gray_image, src2=image_mask)
-						if debug:
-							allsky_shared.writeDebugImage(metaData['module'], 'h-masked-image.png', gray_image)                   
-					else:
-						allsky_shared.log(0, 'ERROR: Source image and mask dimensions do not match.')
-						imageLoaded = False
-
-				detected_image_clean = gray_image.copy()
-				source_image_copy = gray_image.copy()
-				
-				star_list = list()
-
-				template_width, template_height = star_template.shape[::-1]
-
-				try:
-					result = cv2.matchTemplate(source_image_copy, star_template, cv2.TM_CCOEFF_NORMED)
-				except:
-					allsky_shared.log(0, 'ERROR: Star template match failed')
-				else:
-					loc = np.where(result >= detection_threshold)
-
-					for pt in zip(*loc[::-1]):
-						for star in star_list:
-							distance = sqrt(((pt[0] - star[0]) ** 2) + ((pt[1] - star[1]) ** 2))
-							if (distance < distance_threshold):
-								break
-						else:
-							star_list.append(pt)
-
-					wOffset = allsky_shared.int(template_width/2)
-					hOffset = allsky_shared.int(template_height/2)
-
-					if annotate:
-						for star in star_list:
-							if using_debug_image:
-								allsky_shared.log(4, f'{star[0] + wOffset}, {star[1] + hOffset}')
-								cv2.circle(image, (star[0] + wOffset, star[1] + hOffset), 10, (0, 0, 255), 5)
-							else:
-								cv2.circle(allsky_shared.image, (star[0] + wOffset, star[1] + hOffset), 10, (0, 0, 255), 5)
-
-				if debug:
-					allsky_shared.writeDebugImage(metaData['module'], 'final.png', image)
-
-				star_count = len(star_list)
-
-				result = f'Total stars found {star_count}'
-				allsky_shared.log(4, f'INFO: {result}')
-			else:
-				result = 'Sky is not clear so ignoring starcount.'
-				allsky_shared.log(4, f'INFO: {result}')
+		# Convert to grayscale if it's RGB
+		if image.ndim == 3:
+			gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 		else:
-			result = 'Its raining so ignorning starcount.'
-			allsky_shared.log(4, f'INFO: {result}')
+			gray = image
 
-		extra_data = {}
-		extra_data['AS_STARCOUNT'] = star_count
-		allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'])
-       
+		# Convert to float for processing
+		image_data = gray.astype(float)
+
+		# Estimate background stats
+		mean, median, std = sigma_clipped_stats(image_data, sigma=3.0)
+
+		# Detect stars
+		daofind = DAOStarFinder(fwhm=3.0, threshold=5.0*std)
+		sources = daofind(image_data - median)
+
+		# Show results
+		if sources is not None:
+			print(f"Number of stars detected: {len(sources)}")
+
+			for i, row in enumerate(sources):
+				x = int(row['xcentroid'])
+				y = int(row['ycentroid'])
+
+				print(f'x={x}, y={y}')
+				# Draw red circle (radius = 6)
+				cv2.circle(allsky_shared.image, (x, y), 20, (0, 0, 255), 2)
+
+				# Draw yellow label
+				cv2.putText(allsky_shared.image, str(i+1), (x+7, y-7), cv2.FONT_HERSHEY_SIMPLEX, 
+							0.4, (0, 255, 255), 1, cv2.LINE_AA)
+
+			extra_data = {}
+			filename = os.path.basename(allsky_shared.CURRENTIMAGEPATH)
+			date = filename[6:14]
+			url = f'/images/{date}/thumbnails/{filename}'
+		
+			extra_data = {}
+			extra_data['AS_STARIMAGE'] = filename
+			extra_data['AS_STARIMAGEPATH'] = allsky_shared.CURRENTIMAGEPATH
+			extra_data['AS_STARIMAGEURL'] = url
+			extra_data['AS_STARCOUNT'] = len(sources)
+			allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'])
+   
+		else:
+			allsky_shared.delete_extra_data(self.meta_data['extradatafilename'])
+			print("No stars detected.")
+   
 		return result
 
 def starcount(params, event):

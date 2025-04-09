@@ -60,6 +60,12 @@ class ALLSKYMODULEBASE:
 
 		return result
 
+	def log(self, message, debug=False):
+		if debug:
+			allsky_shared.log(0, f'{message}')
+		else:
+			allsky_shared.log(4, f'{message}')
+  
 	def debug_log(self, message):
 		if self._debugmode:
 			print(message)

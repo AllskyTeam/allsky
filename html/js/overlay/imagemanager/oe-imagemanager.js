@@ -34,32 +34,35 @@
             // user-provided options (if any)
             plugin.settings = $.extend({}, defaults, options);
 
-            let nav = '<div id="' + plugin.imageManagerId + '">\
-                    <nav class="navbar navbar-default">\
-                    <div class="container-fluid">\
-                        <div class="collapse navbar-collapse" id="oe-main-navbar">\
-                            <ul class="nav navbar-nav">\
-                                <li>\
-                                    <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Add Selected Image">\
-                                        <div class="btn btn-lg navbar-btn disabled" id="' + plugin.addId + '"><i class="fa-solid fa-image"></i></div>\
-                                    </div>\
-                                </li>\
-                                <li> \
-                                    <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Delete The Selected Image">\
-                                        <div class="btn btn-lg navbar-btn disabled" id="' + plugin.deleteId + '"><i class="fa-solid fa-trash"></i></div>\
-                                    </div>\
-                                </li>\
-                            </ul>\
-                            <ul class="nav navbar-nav navbar-right">\
-                            </ul>\
-                        </div>\
-                    </div>\
-                </nav>\
-                <div class="oe-image-manager-images" id="' + plugin.imagesId + '">\
-                </div>\
-                </div>\
-                <div class="dropzone" id="' + plugin.ddId + '">\
-                </div>';
+            let nav = `<div id="${plugin.imageManagerId}">
+                    <nav class="navbar navbar-default">
+                    <div class="container-fluid">
+                        <div class="collapse navbar-collapse" id="oe-main-navbar">
+                            <ul class="nav navbar-nav">
+                                <li>
+                                    <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Add Selected Image">
+                                        <div class="btn btn-lg navbar-btn disabled" id="${plugin.addId}"><i class="fa-solid fa-image"></i></div>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Delete The Selected Image">
+                                        <div class="btn btn-lg navbar-btn disabled" id="${plugin.deleteId}"><i class="fa-solid fa-trash"></i></div>
+                                    </div>
+                                </li>
+                            </ul>
+                            <ul class="nav navbar-nav navbar-right">
+                            </ul>
+                        </div>
+                    </div>
+                </nav>
+                <div class="oe-image-manager-images" id="${plugin.imagesId }">
+                </div>
+                </div>
+                <div class="dropzone" id="${plugin.ddId}">
+                </div>
+                <div id="dz-error-message">
+                </div>`
+
             $(plugin.element).html(nav);
 
             let myDropzone = new Dropzone('div#' + plugin.ddId, {
@@ -68,8 +71,19 @@
                 acceptedFiles: 'image/png, image/jpeg',
                 init: function() {
                     this.on('queuecomplete', () => {
-                        loadThumbnails();
-                    });
+                        loadThumbnails()
+                    })
+
+                    this.on('processing', function(file) {
+                        $("#dz-error-message").text('')
+                    })
+                      
+                    this.on("error", function (file, message, xhr) {
+                        if (xhr && xhr.responseText) {
+                          message = xhr.responseText
+                        }
+                        $("#dz-error-message").text(message)                
+                      })
                 }                
             });
 

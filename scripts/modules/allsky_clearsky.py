@@ -5,410 +5,207 @@ Part of allsky postprocess.py modules.
 https://github.com/AllskyTeam/allsky
 
 '''
-import allsky_shared as s
+import allsky_shared as allsky_shared
+from allsky_base import ALLSKYMODULEBASE
 import cv2
 import os
-import numpy as np
-from math import sqrt
-import paho.mqtt.client as paho
-from paho import mqtt
+from astropy.stats import sigma_clipped_stats
+from photutils.detection import DAOStarFinder
 
-import locale
+class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
+	_module_debug = False
 
-try:
-	locale.setlocale(locale.LC_ALL, '')
-except:
-	pass
+	meta_data = {
+		"name": "Clear Sky Alarm",
+		"description": "Clear Sky Alarm",
+		"module": "allsky_clearsky",
+		"version": "v1.0.1",
+		"extradatafilename": "allsky_clearsky.json",
+		"events": [
+			"day",
+			"night"
+		],
+		"experimental": "true",
+		"extradata": {
+			"database": {
+				"enabled": "True",
+				"table": "allsky_clearsky"
+			}, 
+			"values": {
+				"AS_CLEARSKYSTATE": {
+					"name": "${CLEARSKYSTATE}",
+					"format": "",
+					"sample": "",
+					"group": "Environment",
+					"description": "Sky State",
+					"type": "string"
+				},
+				"AS_CLEARSKYSTATEFLAG": {
+					"name": "${CLEARSKYSTATEFLAG}",
+					"format": "",
+					"sample": "",
+					"group": "Environment",
+					"description": "Sky State Boolean",
+					"type": "bool"
+				},
+				"AS_CLEARSKYSTATESTARS": {
+					"name": "${CLEARSKYSTATESTARS}",
+					"format": "",
+					"sample": "",                
+					"group": "Environment",
+					"description": "Sky State Star Count",
+					"type": "number"
+				}
+			}
+		}, 
+		"arguments":{
+			"annotate": "false",
+			"debug": "false",
+			"clearvalue": 10,
+			"roi": "",
+			"roifallback": 5,
+			"debugimage": ""
+		},
+		"argumentdetails": {
+			"roi": {
+				"required": "false",
+				"description": "Region of Interest",
+				"help": "The area of the image to check for clear skies. Format is x1,y1,x2,y2",
+				"type": {
+					"fieldtype": "roi"
+				}
+			},
+			"roifallback" : {
+				"required": "true",
+				"description": "Fallback %",
+				"help": "If no ROI is set then this % of the image, from the center will be used",
+				"type": {
+					"fieldtype": "spinner",
+					"min": 1,
+					"max": 100,
+					"step": 1
+				}
+			},
+			"clearvalue" : {
+				"required": "true",
+				"description": "Clear Sky",
+				"help": "If more than this number of stars are found the sky will be considered clear",
+				"type": {
+					"fieldtype": "spinner",
+					"min": 1,
+					"max": 1000,
+					"step": 1
+				}
+			},
+			"annotate" : {
+				"required": "false",
+				"description": "Annotate Stars",
+				"help": "If selected the identified stars in the image will be highlighted",
+				"tab": "Debug",
+				"type": {
+					"fieldtype": "checkbox"
+				}
+			},
+			"debug" : {
+				"required": "false",
+				"description": "Enable debug mode",
+				"help": "If selected each stage of the detection will generate images in the allsky tmp debug folder",
+				"tab": "Debug",
+				"type": {
+					"fieldtype": "checkbox"
+				}
+			},
+			"debugimage" : {
+				"required": "false",
+				"description": "Debug Image",
+				"help": "Image to use for debugging. DO NOT set this unless you know what you are doing",
+				"tab": "Debug"
+			}
+		},
+		"enabled": "false"
+	}
+    
+	def run(self):
+     
+		roi_str = self.get_param('roi', '', str, True)
+		roi_percent = self.get_param('roifallback', 10, int) / 100
+		self._module_debug = self.get_param('debug', False, bool)
+		annotate_image = self.get_param('annotate', False, bool)
+		clear_value = self.get_param('clearvalue', 10, int)
 
-metaData = {
-	"name": "Clear Sky Alarm",
-	"description": "Clear Sky Alarm",
-	"module": "allsky_clearsky",
-	"version": "v1.0.1",
-	"events": [
-	    "day",
-	    "night"
-	],
-	"experimental": "true",
-	"arguments":{
-	    "detectionThreshold": 0.55,
-	    "distanceThreshold": 20,
-	    "annotate": "false",
-	    "template1": 6,
-	    "mask": "",
-	    "debug": "false",
-	    "clearvalue": 10,
-	    "roi": "",
-	    "roifallback": 5,
-	    "mqttenable": "False",
-	    "mqttusesecure": "true",        
-	    "mqttbroker": "",
-	    "mqttport": 1883,
-	    "mqttloopdelay": "5",        
-	    "mqttusername": "",
-	    "mqttpassword": "",
-	    "mqtttopic": "SKYSTATE",
-	    "debugimage": ""
-	},
-	"argumentdetails": {
-	    "roi": {
-	        "required": "true",
-	        "description": "Region of Interest",
-	        "help": "The area of the image to check for clear skies. Format is x1,y1,x2,y2",
-	        "type": {
-	            "fieldtype": "roi"
-	        }
-	    },
-	    "roifallback" : {
-	        "required": "true",
-	        "description": "Fallback %",
-	        "help": "If no ROI is set then this % of the image, from the center will be used",
-	        "type": {
-	            "fieldtype": "spinner",
-	            "min": 1,
-	            "max": 100,
-	            "step": 1
-	        }
-	    },
-	    "clearvalue" : {
-	        "required": "true",
-	        "description": "Clear Sky",
-	        "help": "If more than this number of stars are found the sky will be considered clear",
-	        "type": {
-	            "fieldtype": "spinner",
-	            "min": 1,
-	            "max": 1000,
-	            "step": 1
-	        }
-	    },
-	    "detectionThreshold" : {
-	        "required": "true",
-	        "description": "Detection Threshold",
-	        "help": "The limit at which stars will be detected",
-	        "type": {
-	            "fieldtype": "spinner",
-	            "min": 0.05,
-	            "max": 1,
-	            "step": 0.01
-	        }
-	    },
-	    "distanceThreshold" : {
-	        "required": "true",
-	        "description": "Distance Threshold",
-	        "help": "Stars within this number of pixels of another star will not be counted. Helps to reduce errors in the count",
-	        "type": {
-	            "fieldtype": "spinner",
-	            "min": 0,
-	            "max": 100,
-	            "step": 1
-	        }
-	    },
-	    "template1" : {
-	        "required": "true",
-	        "description": "Star Template size",
-	        "help": "Size in pixels of the star template.",
-	        "type": {
-	            "fieldtype": "spinner",
-	            "min": 0,
-	            "max": 100,
-	            "step": 1
-	        }
-	    },
-	    "mask" : {
-	        "required": "false",
-	        "description": "Mask Path",
-	        "help": "The name of the image mask. THis mask is applied when counting stars bit not visible in the final image",
-	        "type": {
-	            "fieldtype": "image"
-	        }
-	    },
-	    "annotate" : {
-	        "required": "false",
-	        "description": "Annotate Stars",
-	        "help": "If selected the identified stars in the image will be highlighted",
-	        "tab": "Debug",
-	        "type": {
-	            "fieldtype": "checkbox"
-	        }
-	    },
-	    "debug" : {
-	        "required": "false",
-	        "description": "Enable debug mode",
-	        "help": "If selected each stage of the detection will generate images in the allsky tmp debug folder",
-	        "tab": "Debug",
-	        "type": {
-	            "fieldtype": "checkbox"
-	        }
-	    },
-	    "debugimage" : {
-	        "required": "false",
-	        "description": "Debug Image",
-	        "help": "Image to use for debugging. DO NOT set this unless you know what you are doing",
-	        "tab": "Debug"
-	    },
-	    "mqttenable" : {
-	        "required": "false",
-	        "description": "Enable MQTT",
-	        "help": "Enable updates to a MQTT Broker",
-	        "tab": "MQTT",
-	        "type": {
-	            "fieldtype": "checkbox"
-	        }
-	    },
-	    "mqttusesecure": {
-	        "required": "false",
-	        "description": "Use Secure Connection",
-	        "tab": "MQTT",
-	        "type": {
-	            "fieldtype": "checkbox"
-	        }
-	    },         
-	    "mqttbroker" : {
-	        "required": "false",
-	        "description": "MQTT Broker address",
-	        "help": "MQTT Broker address",
-	        "tab": "MQTT"
-	    },
-	    "mqttport" : {
-	        "required": "false",
-	        "description": "MQTT Broker port",
-	        "help": "MQTT Broker port",
-	        "tab": "MQTT",
-	        "type": {
-	            "fieldtype": "spinner",
-	            "min": 1,
-	            "max": 65536,
-	            "step": 1
-	        }
-	    },
-	    "mqttloopdelay": {
-	        "required": "false",
-	        "description": "Loop Delay(s)",
-	        "help": "The loop delay, only increase this if you experience issues with messages missing in the broker",
-	        "tab": "MQTT",
-	        "type": {
-	            "fieldtype": "spinner",
-	            "min": 0.5,
-	            "max": 10,
-	            "step": 0.5
-	        }              
-	    },        
-	    "mqttusername" : {
-	        "required": "false",
-	        "description": "MQTT Username",
-	        "help": "MQTT Username",
-	        "tab": "MQTT"
-	    },
-	    "mqttpassword" : {
-	        "required": "false",
-	        "description": "MQTT Pasword",
-	        "help": "MQTT Password",
-	        "tab": "MQTT"
-	    },
-	    "mqtttopic" : {
-	        "required": "false",
-	        "description": "MQTT Topic",
-	        "help": "MQTT Topic the sky state is published to",
-	        "tab": "MQTT"
-	    }
-	},
-	"enabled": "false"
-}
+		found_stars = 0
+		sky_state = 'Not Clear'
+  
+		image = allsky_shared.image
+		height, width = image.shape[:2]
 
-def MQTTonConnect(client, userdata, flags, rc, properties=None): 
-	s.log(4, f"INFO: MQTT - CONNACK received with code {rc}.")
+		if roi_str.strip():
+			roi_x, roi_y, roi_w, roi_h = map(int, roi_str.split(','))
+			self.log(f'INFO: Using roi of {roi_x},{roi_y},{roi_w},{roi_h}', self._module_debug)
+		else:
+			roi_w = int(width * roi_percent)
+			roi_h = int(height * roi_percent)
+			roi_x = (width - roi_w) // 2
+			roi_y = (height - roi_h) // 2
+			self.log(f'INFO: Using roi % of {roi_percent} and roi of {roi_x},{roi_y},{roi_w},{roi_h}', self._module_debug)
 
-def MQTTonPublish(client, userdata, mid, properties=None):
-	s.log(4, f"INFO: MQTT - Message published {mid}.")
-	
-def onPublish(client, userdata, mid, properties=None):
-	s.log(4,"INFO: Sky state published to MQTT Broker mid {0}".format(mid))
+		if image.ndim == 3:
+			gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+			self.log('INFO: Converted image to grayscale', self._module_debug)
+		else:
+			gray = image
+
+		roi_image = gray[roi_y:roi_y + roi_h, roi_x:roi_x + roi_w]
+
+		image_data = roi_image.astype(float)
+
+		mean, median, std = sigma_clipped_stats(image_data, sigma=3.0)
+
+		self.log(f'INFO: Background info mean={mean}, median={median}, std={std}', self._module_debug)
+
+		daofind = DAOStarFinder(fwhm=3.0, threshold=5.0 * std)
+		sources = daofind(image_data - median)
+
+		if sources is not None:
+			found_stars = len(sources)
+			self.log(f'INFO: Number of stars detected in ROI: {len(sources)}', self._module_debug)
+
+			if annotate_image:
+				for i, row in enumerate(sources):
+					# Convert ROI-local coordinates to full image coordinates
+					x = int(row['xcentroid'] + roi_x)
+					y = int(row['ycentroid'] + roi_y)
+
+					self.log(f'INFO: star {i}, x={x}, y={y}', self._module_debug)
+
+					cv2.circle(allsky_shared.image, (x, y), 20, (0, 0, 255), 2)
+					cv2.putText(allsky_shared.image, str(i + 1), (x + 7, y - 7), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 255), 1, cv2.LINE_AA)
+					cv2.rectangle(allsky_shared.image, (roi_x, roi_y), (roi_x + roi_w, roi_y + roi_h), (255, 255, 0), 2)
+		else:
+			self.log(f'INFO: No stars detected in ROI', self._module_debug)
+
+		if found_stars > clear_value:
+			sky_state = 'Clear'
+
+		extra_data = {}
+		extra_data['AS_CLEARSKYSTATE'] = sky_state
+		extra_data['AS_CLEARSKYSTATESTARS'] = found_stars
+		extra_data['AS_CLEARSKYSTATEFLAG'] = 1 if sky_state.strip().lower() == "clear" else 0
+		allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'])
 
 def clearsky(params, event):
-	#ONLY AT NIGHT !
+	allsky_clear_sky = ALLSKYCLEARSKY(params, event)
+	result = allsky_clear_sky.run()
 
-	detectionThreshold = s.asfloat(params["detectionThreshold"])
-	distanceThreshold = int(params["distanceThreshold"])
-	mask = params["mask"]
-	annotate = params["annotate"]
-	starTemplate1Size = s.int(params["template1"])
-	debug = params["debug"]
-	debugimage = params["debugimage"]
-	clearvalue = s.int(params["clearvalue"])
-	roi = params["roi"].replace(" ", "")
-	fallback = s.int(params["roifallback"])
-
-	mqttenable = params["mqttenable"]
-	mqttusesecure = params["mqttusesecure"]
-	mqttbroker = params["mqttbroker"]
-	mqttport = s.int(params["mqttport"])
-	mqttusername = params["mqttusername"]
-	mqttpassword = params["mqttpassword"]
-	mqtttopic = params["mqtttopic"]
-	mqttloopdelay = params["mqttloopdelay"]
-
-	starCount = ""
-
-	binning = s.getEnvironmentVariable("AS_BIN")
-	if binning is None:
-	    binning = 1
-	binning = s.int(binning)
-
-	if debugimage != "":
-	    image = cv2.imread(debugimage)
-	    if image is None:
-	        image = s.image
-	        s.log(0, "WARNING: Debug image set to {0} but cannot be found, using latest allsky image".format(debugimage))
-	    else:
-	        s.log(0, "WARNING: Using debug image {0}".format(debugimage))
-	else:
-	    image = s.image
-
-	if mask != "":
-	    maskPath = os.path.join(s.getEnvironmentVariable("ALLSKY_OVERLAY", fatal=True),"images",mask)
-	    imageMask = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
-	    if debug:
-	        s.writeDebugImage(metaData["module"], "image-mask.png", imageMask)
-
-	if len(image.shape) == 2:
-	    grayImage = image
-	else:
-	    grayImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-	if debug:
-	    s.writeDebugImage(metaData["module"], "gray.png", grayImage)
-
-	imageHeight, imageWidth = grayImage.shape[:2]
-	try:
-	    roiList = roi.split(",")
-	    x1 = s.int(s.int(roiList[0]) / binning)
-	    y1 = s.int(s.int(roiList[1]) / binning)
-	    x2 = s.int(s.int(roiList[2]) / binning)
-	    y2 = s.int(s.int(roiList[3]) / binning)
-	except:
-	    if len(roi) > 0:
-	        s.log(0, "ERROR: ROI is invalid, falling back to {0}% of image".format(fallback))
-	    else:
-	        s.log(4, "INFO: ROI not set, falling back to {0}% of image".format(fallback))
-	    fallbackAdj = (100 / fallback)
-	    x1 = s.int((imageWidth / 2) - (imageWidth / fallbackAdj))
-	    y1 = s.int((imageHeight / 2) - (imageHeight / fallbackAdj))
-	    x2 = s.int((imageWidth / 2) + (imageWidth / fallbackAdj))
-	    y2 = s.int((imageHeight / 2) + (imageHeight / fallbackAdj))
-
-	croppedImage = grayImage[y1:y2, x1:x2]
-
-	if debug:
-	    s.writeDebugImage(metaData["module"], "cropped.png", croppedImage)
-
-	starTemplateSize = starTemplate1Size * 4
-	if (starTemplateSize % 2) != 0:
-	    starTemplateSize += 1
-
-	startTemplateAdj = 8
-	starTemplate = np.zeros([starTemplateSize+startTemplateAdj, starTemplateSize+startTemplateAdj], dtype=np.uint8)
-	cv2.circle(
-	    img=starTemplate,
-	    center=(int((starTemplateSize + startTemplateAdj)/2), int((starTemplateSize + startTemplateAdj)/2)),
-	    radius=int(starTemplateSize/2),
-	    color=(255, 255, 255),
-	    thickness=cv2.FILLED,
-	)
-
-	starTemplate = cv2.blur(
-	    src=starTemplate,
-	    ksize=(3, 3)
-	)
-
-	if debug:
-	    templateFileName = "startemplate-{0}.png".format(starTemplate1Size)
-	    s.writeDebugImage(metaData["module"], templateFileName, starTemplate)
-
-	s.log(4,"INFO: Created star template. Radius - {0}".format(starTemplate1Size))
-
-	starList = list()
-	templateWidth, templateHeight = starTemplate.shape[::-1]
-
-	try:
-	    result = cv2.matchTemplate(croppedImage, starTemplate, cv2.TM_CCOEFF_NORMED)
-	except:
-	    s.log(0,"ERROR: Star template match failed")
-	else:
-	    loc = np.where(result >= detectionThreshold)
-
-	    for pt in zip(*loc[::-1]):
-	        for star in starList:
-	            distance = sqrt(((pt[0] - star[0]) ** 2) + ((pt[1] - star[1]) ** 2))
-	            if (distance < distanceThreshold):
-	                break
-	        else:
-	            starList.append(pt)
-
-	    wOffset = s.int(templateWidth/2)
-	    hOffset = s.int(templateHeight/2)
-
-	    if annotate:
-	        for star in starList:
-	            cv2.circle(croppedImage, (star[0] + wOffset, star[1] + hOffset), 10, (255, 255, 255), 1)
-
-	if debug:
-	    s.writeDebugImage(metaData["module"], "result.png", croppedImage)
-
-	starCount = len(starList)
-
-	if starCount >= clearvalue:
-	    s.log(4,"INFO: Sky is clear. {0} stars found, clear limit is {1}".format(starCount, clearvalue))
-	    skyState = "Clear"
-	else:
-	    s.log(4,"INFO: Sky is NOT clear. {0} stars found, clear limit is {1}".format(starCount, clearvalue))
-	    skyState = "NOT Clear"
-
-	if mqttenable:
-	    s.log(4,"INFO: Sending sky state {0} to MQTT Broker {1} using topic {2}".format(skyState, mqttbroker, mqtttopic))
-
-	    channel_topic = mqtttopic
-	    if channel_topic == "":
-	        s.log(0, "ERROR:MQTT - Please specify a topic to publish")
-	        return
-
-	    client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
-	    client.on_connect = MQTTonConnect
-	    client.on_publish = MQTTonPublish        
-	    if mqttusername != "" and mqttpassword!= "":
-	        client.username_pw_set(mqttusername, mqttpassword)
-
-	    if mqttbroker== "":
-	        s.log(0, "ERROR: MQTT - Please specify a MQTT host to publish to")
-	        return
-
-	    if mqttusesecure:
-	        client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
-
-	    client.connect(mqttbroker, mqttport)
-
-	    client.publish(mqtttopic, skyState ,qos=1)
-	    s.log(1, f"INFO: MQTT - Published to MQTT on channel: {channel_topic}")
-	    delay = int(mqttloopdelay)
-	    client.loop(delay)
-	    client.disconnect()        
-	    
-	else:
-	    s.log(4,"INFO: MQTT disabled")
-
-	s.setEnvironmentVariable("AS_SKYSTATE", skyState)
-	os.environ["AS_SKYSTATE"] = skyState
-	s.setEnvironmentVariable("AS_SKYSTATESTARS", str(starCount))
-	return "Sky is {0}".format(skyState)
+	return result
 
 def clearsky_cleanup():
 	moduleData = {
-	    "metaData": metaData,
+	    "metaData": ALLSKYCLEARSKY.meta_data,
 	    "cleanup": {
-	        "files": {},
-	        "env": {
-	            "AS_SKYSTATE",
-	            "AS_SKYSTATESTARS"
-	        }
+			"files": {
+				ALLSKYCLEARSKY.meta_data["extradatafilename"]
+			}
 	    }
 	}
-	s.cleanupModule(moduleData)
+	allsky_shared.cleanupModule(moduleData)

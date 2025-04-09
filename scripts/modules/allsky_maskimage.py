@@ -5,65 +5,84 @@ https://github.com/AllskyTeam/allsky
 
 This module will apply a permenant mask to the captured image
 """
-import allsky_shared as s
-import os
+import allsky_shared as allsky_shared
+from allsky_base import ALLSKYMODULEBASE
+import numpy as np
 import cv2
+import os
 
-metaData = {
-	"name": "Mask Image",
-	"description": "Masks an Image",
-	"events": [
-	    "day",
-	    "night"
-	],
-	"arguments":{
-	    "mask": ""
-	},    
-	"argumentdetails": {
-	    "mask" : {
-	        "required": "true",
-	        "description": "Mask Path",
-	        "help": "The name of the image mask",
-	        "type": {
-	            "fieldtype": "image"
-	        }                
-	    } 
-	}         
-}
+class ALLSKYMASKIMAGE(ALLSKYMODULEBASE):
 
+	meta_data = {
+		"name": "Mask Image",
+		"description": "Masks an Image",
+		"events": [
+			"day",
+			"night"
+		],
+		"arguments":{
+			"mask": ""
+		},    
+		"argumentdetails": {
+			"mask" : {
+				"required": "true",
+				"description": "Mask Path",
+				"help": "The name of the image mask",
+				"type": {
+					"fieldtype": "image"
+				}                
+			} 
+		}         
+	}
+
+
+	def load_mask(self, mask_path, target_shape):
+		mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+		if mask is not None:
+			if (mask.shape[0] != target_shape[0]) or (mask.shape[1] != target_shape[1]):
+				mask = cv2.resize(mask, (target_shape[1], target_shape[0]))
+			mask = mask.astype(np.float32) / 255.0
+  
+		return mask
+
+
+	def run(self):
+		try:
+			mask_file_name = self.get_param('mask', '', str, True)
+			if (mask_file_name is not None) and (mask_file_name != ""):
+				mask_path = os.path.join(allsky_shared.ALLSKY_OVERLAY, 'images', mask_file_name)
+				image = allsky_shared.image
+
+				mask = self.load_mask(mask_path, image.shape[:2])
+				if mask is not None:
+					if len(image.shape) == 2:
+						image = image.astype(np.float32)
+						output = image * mask
+					else:
+						image = image.astype(np.float32)
+						if mask.ndim == 2:
+							mask = mask[..., np.newaxis]
+						output = image * mask
+
+					allsky_shared.image =  np.clip(output, 0, 255).astype(np.uint8)
+					result = f'Mask {mask_path} applied to image'
+					allsky_shared.log(4, f'INFO: {result}')
+				else:
+					result = f'Mask {mask_path} not found'
+					allsky_shared.log(0, f'ERROR: {result}')
+			else:
+				result = 'No mask defined'
+				allsky_shared.log(0, f'ERROR: {result}')
+
+		except Exception as e:
+			eType, eObject, eTraceback = sys.exc_info()
+			result = f'Module mask image failed on line {eTraceback.tb_lineno} - {e}'
+			allsky_shared.log(0, f'ERROR: {result}')
+           
+		return result
 
 def maskimage(params, event):
-	""" Applies th emask to the captured image
-
-	Args:
-	    params (array): Array of parameters, see abovge
-	"""
-	result = ""
-	mask = params['mask']
-	if (mask is not None) and (mask != ""):
-	    maskPath = os.path.join(s.ALLSKY_OVERLAY, "images", mask)
-	    maskImage = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
-	    if maskImage is not None:
-	        maskChannels = maskImage.shape[-1] if maskImage.ndim == 3 else 1
-	        imageChannels = s.image.shape[-1] if s.image.ndim == 3 else 1
-	        
-	        maskHeight = maskImage.shape[0]
-	        maskWidth = maskImage.shape[1]
-	        imageHeight = s.image.shape[0]
-	        imageWidth = s.image.shape[1]
-	        
-	        if (maskWidth == imageWidth) and (maskHeight == imageHeight):            
-	            s.image = cv2.bitwise_and(s.image,s.image,mask = maskImage)
-	            result = "Mask {0} applied".format(maskPath)
-	            s.log(4, f"INFO: {result}")
-	        else:
-	            result = f"Mask {mask} is incorrect size: {maskWidth}x{maskHeight}. Main image is {imageWidth}x{imageHeight}."
-	            s.log(0, f"ERROR: {result}")
-	    else:
-	        result = "Mask {0} not found".format(maskPath)
-	        s.log(0, f"ERROR: {result}")
-	else:
-	    result = "No mask defined"
-	    s.log(0, f"ERROR: {result}")
+	allsky_mask_image = ALLSKYMASKIMAGE(params, event)
+	result = allsky_mask_image.run()
 
 	return result

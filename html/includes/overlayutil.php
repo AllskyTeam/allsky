@@ -59,6 +59,12 @@ class OVERLAYUTIL
         }
     }
 
+    private function send400($message) {
+        http_response_code(400);
+        echo $message;        
+        die();
+    }
+
     private function send404() {
         header('HTTP/1.0 404 Not Found');
         die();
@@ -622,7 +628,15 @@ class OVERLAYUTIL
         if ($result) {
             $this->sendResponse();
         } else {
-            $this->send500();
+            if (isset($_FILES['file']['error'])) {
+                if ($_FILES['file']['error'] == 1) {
+                    $this->send400('File is too large. Either reduce its size or adjust the php settings to allow larger files to be uploaded');
+                } else {
+                    $this->send500();
+                }
+            } else {
+                $this->send500();
+            }
         }
     }
 

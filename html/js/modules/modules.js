@@ -674,10 +674,10 @@ class MODULESEDITOR {
 						extraClass = 'input-group';
 						inputHTML = '\
 							<div class="row">\
-								<div class="col-xs-8">\
+								<div class="col-xs-7">\
 								' + inputHTML + '\
 								</div>\
-								<div class="col-xs-4">\
+								<div class="col-xs-5">\
 									<button type="button" class="btn btn-default" id="open-roi-' + key + '" data-source="' + key + '">...</button>\
 									<button type="button" class="btn btn-default" id="reset-roi-' + key + '" data-source="' + key + '"><i class="fa-solid fa-rotate-right"></i></button>\
 								</div>\

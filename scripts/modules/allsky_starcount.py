@@ -277,10 +277,10 @@ def starcount(params, event):
          
 def starcount_cleanup():
 	moduleData = {
-	    "metaData": metaData,
+	    "metaData": ALLSKYSTARCOUNT.meta_data,
 	    "cleanup": {
 			"files": {
-				metaData["extradatafilename"]
+				ALLSKYSTARCOUNT.meta_data["extradatafilename"]
 			}
 	    }
 	}

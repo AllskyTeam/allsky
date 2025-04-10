@@ -8,24 +8,90 @@ https://github.com/AllskyTeam/allsky
 import allsky_shared as allsky_shared
 from allsky_base import ALLSKYMODULEBASE
 import cv2
-import os
+import sys
 from astropy.stats import sigma_clipped_stats
 from photutils.detection import DAOStarFinder
 
 class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
-	_module_debug = False
 
 	meta_data = {
 		"name": "Clear Sky Alarm",
 		"description": "Clear Sky Alarm",
 		"module": "allsky_clearsky",
-		"version": "v1.0.1",
+		"version": "v1.0.2",
 		"extradatafilename": "allsky_clearsky.json",
 		"events": [
 			"day",
 			"night"
 		],
 		"experimental": "true",
+        "graphs": {
+            "chart1": {
+				"icon": "fa-solid fa-chart-line",
+				"title": "Sky State",
+				"group": "Analysis",
+				"main": "true",
+				"config": {
+					"tooltip": "true",
+					"chart": {
+						"type": "spline",
+						"zooming": {
+							"type": "x"
+						}
+					},
+					"title": {
+						"text": "Sky State"
+					},
+					"plotOptions": {
+						"series": {
+							"animation": "false"
+						}
+					},
+					"xAxis": {
+						"type": "datetime",
+						"dateTimeLabelFormats": {
+							"day": "%Y-%m-%d",
+							"hour": "%H:%M"
+						}
+					},
+					"yAxis": [
+						{ 
+							"title": {
+								"text": "Sky State"
+							} 
+						},
+						{ 
+							"title": {
+								"text": "Star Count"
+							},
+       						"opposite": "true" 
+						}
+					],
+					"lang": {
+						"noData": "No data available"
+					},
+					"noData": {
+						"style": {
+							"fontWeight": "bold",
+							"fontSize": "16px",
+							"color": "#666"
+						}
+					}
+				},
+				"series": {
+					"state": {
+						"name": "Sky State",
+						"yAxis": 0,
+						"variable": "AS_CLEARSKYSTATEFLAG"                 
+					},
+					"state": {
+						"name": "Star Count",
+						"yAxis": 1,
+						"variable": "AS_CLEARSKYSTATESTARS"                 
+					}          
+				}
+			}
+		}, 
 		"extradata": {
 			"database": {
 				"enabled": "True",
@@ -45,7 +111,7 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 					"format": "",
 					"sample": "",
 					"group": "Environment",
-					"description": "Sky State Boolean",
+					"description": "Sky State Boolean, 0=Cloudy, 1=Clear",
 					"type": "bool"
 				},
 				"AS_CLEARSKYSTATESTARS": {
@@ -60,7 +126,6 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 		}, 
 		"arguments":{
 			"annotate": "false",
-			"debug": "false",
 			"clearvalue": 10,
 			"roi": "",
 			"roifallback": 5,
@@ -106,15 +171,6 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 					"fieldtype": "checkbox"
 				}
 			},
-			"debug" : {
-				"required": "false",
-				"description": "Enable debug mode",
-				"help": "If selected each stage of the detection will generate images in the allsky tmp debug folder",
-				"tab": "Debug",
-				"type": {
-					"fieldtype": "checkbox"
-				}
-			},
 			"debugimage" : {
 				"required": "false",
 				"description": "Debug Image",
@@ -122,76 +178,96 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 				"tab": "Debug"
 			}
 		},
-		"enabled": "false"
+		"enabled": "false",
+		"changelog": {
+			"v1.0.0" : [
+				{
+					"author": "Alex Greenland",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": "Initial Release"
+				}
+			],
+			"v1.0.2" : [
+				{
+					"author": "Alex Greenland",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": [
+						"Updates for the new module manager structure"
+					]
+				}
+			]                                                          
+		}
 	}
     
 	def run(self):
-     
-		roi_str = self.get_param('roi', '', str, True)
-		roi_percent = self.get_param('roifallback', 10, int) / 100
-		self._module_debug = self.get_param('debug', False, bool)
-		annotate_image = self.get_param('annotate', False, bool)
-		clear_value = self.get_param('clearvalue', 10, int)
+		try:
+			roi_str = self.get_param('roi', '', str, True)
+			roi_percent = self.get_param('roifallback', 10, int) / 100
+			annotate_image = self.get_param('annotate', False, bool)
+			clear_value = self.get_param('clearvalue', 10, int)
 
-		found_stars = 0
-		sky_state = 'Not Clear'
-  
-		image = allsky_shared.image
-		height, width = image.shape[:2]
+			found_stars = 0
+			sky_state = 'Not Clear'
+	
+			image = allsky_shared.image
+			height, width = image.shape[:2]
 
-		if roi_str.strip():
-			roi_x, roi_y, roi_w, roi_h = map(int, roi_str.split(','))
-			self.log(f'INFO: Using roi of {roi_x},{roi_y},{roi_w},{roi_h}', self._module_debug)
-		else:
-			roi_w = int(width * roi_percent)
-			roi_h = int(height * roi_percent)
-			roi_x = (width - roi_w) // 2
-			roi_y = (height - roi_h) // 2
-			self.log(f'INFO: Using roi % of {roi_percent} and roi of {roi_x},{roi_y},{roi_w},{roi_h}', self._module_debug)
+			if roi_str.strip():
+				roi_x, roi_y, roi_w, roi_h = map(int, roi_str.split(','))
+				self.log(f'INFO: Using roi of {roi_x},{roi_y},{roi_w},{roi_h}')
+			else:
+				roi_w = int(width * roi_percent)
+				roi_h = int(height * roi_percent)
+				roi_x = (width - roi_w) // 2
+				roi_y = (height - roi_h) // 2
+				self.log(f'INFO: Using roi % of {roi_percent} and roi of {roi_x},{roi_y},{roi_w},{roi_h}')
 
-		if image.ndim == 3:
-			gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-			self.log('INFO: Converted image to grayscale', self._module_debug)
-		else:
-			gray = image
+			if image.ndim == 3:
+				gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+				self.log('INFO: Converted image to grayscale')
+			else:
+				gray = image
 
-		roi_image = gray[roi_y:roi_y + roi_h, roi_x:roi_x + roi_w]
+			roi_image = gray[roi_y:roi_y + roi_h, roi_x:roi_x + roi_w]
+			image_data = roi_image.astype(float)
 
-		image_data = roi_image.astype(float)
+			sources, image = allsky_shared.count_starts_in_image(image_data, annotate_image)
 
-		mean, median, std = sigma_clipped_stats(image_data, sigma=3.0)
+			if sources is not None:
+				found_stars = len(sources)
+				self.log(f'INFO: Number of stars detected in ROI: {len(sources)}')
 
-		self.log(f'INFO: Background info mean={mean}, median={median}, std={std}', self._module_debug)
+				if annotate_image:
+					for i, row in enumerate(sources):
+						x = int(row['xcentroid'] + roi_x)
+						y = int(row['ycentroid'] + roi_y)
 
-		daofind = DAOStarFinder(fwhm=3.0, threshold=5.0 * std)
-		sources = daofind(image_data - median)
+						self.log(f'INFO: star {i}, x={x}, y={y}')
 
-		if sources is not None:
-			found_stars = len(sources)
-			self.log(f'INFO: Number of stars detected in ROI: {len(sources)}', self._module_debug)
+						cv2.circle(allsky_shared.image, (x, y), 20, (0, 0, 255), 2)
+			else:
+				self.log(f'INFO: No stars detected in ROI')
 
 			if annotate_image:
-				for i, row in enumerate(sources):
-					# Convert ROI-local coordinates to full image coordinates
-					x = int(row['xcentroid'] + roi_x)
-					y = int(row['ycentroid'] + roi_y)
+				cv2.rectangle(allsky_shared.image, (roi_x, roi_y), (roi_x + roi_w, roi_y + roi_h), (255, 255, 0), 2)
 
-					self.log(f'INFO: star {i}, x={x}, y={y}', self._module_debug)
+			if found_stars > clear_value:
+				sky_state = 'Clear'
 
-					cv2.circle(allsky_shared.image, (x, y), 20, (0, 0, 255), 2)
-					cv2.putText(allsky_shared.image, str(i + 1), (x + 7, y - 7), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 255), 1, cv2.LINE_AA)
-					cv2.rectangle(allsky_shared.image, (roi_x, roi_y), (roi_x + roi_w, roi_y + roi_h), (255, 255, 0), 2)
-		else:
-			self.log(f'INFO: No stars detected in ROI', self._module_debug)
+			extra_data = {}
+			extra_data['AS_CLEARSKYSTATE'] = sky_state
+			extra_data['AS_CLEARSKYSTATESTARS'] = found_stars
+			extra_data['AS_CLEARSKYSTATEFLAG'] = 1 if sky_state.strip().lower() == "clear" else 0
+			allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'])
 
-		if found_stars > clear_value:
-			sky_state = 'Clear'
-
-		extra_data = {}
-		extra_data['AS_CLEARSKYSTATE'] = sky_state
-		extra_data['AS_CLEARSKYSTATESTARS'] = found_stars
-		extra_data['AS_CLEARSKYSTATEFLAG'] = 1 if sky_state.strip().lower() == "clear" else 0
-		allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'])
+			result = f'Sky is {sky_state} with {found_stars} stars detected in the ROI'
+			self.log(f'INFO: {result}')
+		except Exception as e:
+			eType, eObject, eTraceback = sys.exc_info()
+			result = f'Module allsky_clearsky failed on line {eTraceback.tb_lineno} - {e}'
+			allsky_shared.log(0,f'ERROR: {result}')
+   
+		return result
 
 def clearsky(params, event):
 	allsky_clear_sky = ALLSKYCLEARSKY(params, event)
@@ -200,7 +276,7 @@ def clearsky(params, event):
 	return result
 
 def clearsky_cleanup():
-	moduleData = {
+	module_data = {
 	    "metaData": ALLSKYCLEARSKY.meta_data,
 	    "cleanup": {
 			"files": {
@@ -208,4 +284,4 @@ def clearsky_cleanup():
 			}
 	    }
 	}
-	allsky_shared.cleanupModule(moduleData)
+	allsky_shared.cleanupModule(module_data)

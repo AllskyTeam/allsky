@@ -30,8 +30,13 @@ from pathlib import Path
 
 from allskyvariables import allskyvariables
 
+from astropy.stats import sigma_clipped_stats
+from photutils.detection import DAOStarFinder
+
 from gpiozero import Device, CPUTemperature
 import pigpio
+
+import numpy as np
 
 try:
     locale.setlocale(locale.LC_ALL, '')
@@ -927,3 +932,72 @@ def get_allsky_variable(variable):
                 break
 
     return result
+
+def load_mask(mask_file_name, target_image):
+    mask = None
+    
+    mask_path = os.path.join(ALLSKY_OVERLAY, 'images', mask_file_name)
+    target_shape = target_image.shape[:2]
+    
+    mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+    if mask is not None:
+        if (mask.shape[0] != target_shape[0]) or (mask.shape[1] != target_shape[1]):
+            mask = cv2.resize(mask, (target_shape[1], target_shape[0]))
+        mask = mask.astype(np.float32) / 255.0
+
+    return mask
+
+def mask_image(image, mask_file_name=''):
+    output = None
+    try:
+        if mask_file_name != '':
+            mask = load_mask(mask_file_name, image)
+            if len(image.shape) == 2:
+                image = image.astype(np.float32)
+                output = image * mask
+            else:
+                image = image.astype(np.float32)
+                if mask.ndim == 2:
+                    mask = mask[..., np.newaxis]
+                output = image * mask
+
+            output =  np.clip(output, 0, 255).astype(np.uint8)
+            
+            log(4, f'INFO: Mask {mask_file_name} applied')
+                
+    except Exception as e:
+        eType, eObject, eTraceback = sys.exc_info()
+        result = f'mask_image failed on line {eTraceback.tb_lineno} - {e}'
+        log(0,f'ERROR: {result}')
+
+       
+    return output
+     
+def count_starts_in_image(image, annotate=False, mask_file_name=None):
+    # Convert to grayscale if it's RGB
+    if image.ndim == 3:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = image
+
+    if mask_file_name is not None and mask_file_name != '':
+        gray = mask_image(gray, mask_file_name)
+
+    # Convert to float for processing
+    image_data = gray.astype(float)
+
+    # Estimate background stats
+    mean, median, std = sigma_clipped_stats(image_data, sigma=3.0)
+
+    # Detect stars
+    daofind = DAOStarFinder(fwhm=3.0, threshold=5.0*std)
+    sources = daofind(image_data - median)
+
+    if sources is not None and annotate:
+        for i, row in enumerate(sources):
+            x = round(float(row['xcentroid']))
+            y = round(float(row['ycentroid']))
+
+            cv2.circle(image, (x, y), 20, (0, 0, 255), 2)
+    
+    return sources, image

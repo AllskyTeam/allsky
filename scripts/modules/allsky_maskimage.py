@@ -7,15 +7,16 @@ This module will apply a permenant mask to the captured image
 """
 import allsky_shared as allsky_shared
 from allsky_base import ALLSKYMODULEBASE
-import numpy as np
-import cv2
-import os
+import sys
 
 class ALLSKYMASKIMAGE(ALLSKYMODULEBASE):
 
 	meta_data = {
 		"name": "Mask Image",
 		"description": "Masks an Image",
+		"version": "v1.0.2",
+		"centersettings": "false",
+		"testable": "false",
 		"events": [
 			"day",
 			"night"
@@ -31,45 +32,39 @@ class ALLSKYMASKIMAGE(ALLSKYMODULEBASE):
 				"type": {
 					"fieldtype": "image"
 				}                
-			} 
-		}         
+			}
+		},
+		"changelog": {
+			"v1.0.0" : [
+				{
+					"author": "Alex Greenland",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": "Initial Release"
+				}
+			],
+			"v1.0.2" : [
+				{
+					"author": "Alex Greenland",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": [
+						"Updates for the new module manager structure"
+					]
+				}
+			]                                                          
+		}        
 	}
-
-
-	def load_mask(self, mask_path, target_shape):
-		mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
-		if mask is not None:
-			if (mask.shape[0] != target_shape[0]) or (mask.shape[1] != target_shape[1]):
-				mask = cv2.resize(mask, (target_shape[1], target_shape[0]))
-			mask = mask.astype(np.float32) / 255.0
-  
-		return mask
-
 
 	def run(self):
 		try:
 			mask_file_name = self.get_param('mask', '', str, True)
-			if (mask_file_name is not None) and (mask_file_name != ""):
-				mask_path = os.path.join(allsky_shared.ALLSKY_OVERLAY, 'images', mask_file_name)
+   
+			if (mask_file_name is not None) and (mask_file_name != ""):    
 				image = allsky_shared.image
-
-				mask = self.load_mask(mask_path, image.shape[:2])
-				if mask is not None:
-					if len(image.shape) == 2:
-						image = image.astype(np.float32)
-						output = image * mask
-					else:
-						image = image.astype(np.float32)
-						if mask.ndim == 2:
-							mask = mask[..., np.newaxis]
-						output = image * mask
-
-					allsky_shared.image =  np.clip(output, 0, 255).astype(np.uint8)
-					result = f'Mask {mask_path} applied to image'
-					allsky_shared.log(4, f'INFO: {result}')
-				else:
-					result = f'Mask {mask_path} not found'
-					allsky_shared.log(0, f'ERROR: {result}')
+				masked_image = allsky_shared.mask_image(image, mask_file_name)
+				if masked_image is not None:
+					allsky_shared.image = masked_image
+     
+				result = 'Mask applied'
 			else:
 				result = 'No mask defined'
 				allsky_shared.log(0, f'ERROR: {result}')

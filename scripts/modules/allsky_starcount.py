@@ -12,10 +12,7 @@ None
 import allsky_shared as allsky_shared
 from allsky_base import ALLSKYMODULEBASE
 
-import cv2
 import os
-from astropy.stats import sigma_clipped_stats
-from photutils.detection import DAOStarFinder
 
 class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 
@@ -27,7 +24,8 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 		],
 		"experimental": "true",
 		"module": "allsky_starcount",
-		"testable": "true",
+		"version": "v1.0.2",
+		"testable": "false",
 		"testableresult": "images",
 		"centersettings": "false",
 		"extradatafilename": "allsky_starcount.json",
@@ -128,49 +126,12 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 			}
 		},     
 		"arguments":{
-			"detectionThreshold": 0.55,
-			"distanceThreshold": 20,
 			"annotate": "false",
-			"template1": 6,
 			"mask": "",
-			"debug": "false",
 			"debugimage": "",
 			"useclearsky": "False"
 		},
-		"argumentdetails": {
-			"detectionThreshold" : {
-				"required": "true",
-				"description": "Detection Threshold",
-				"help": "The limit at which stars will be detected",
-				"type": {
-					"fieldtype": "spinner",
-					"min": 0.05,
-					"max": 1,
-					"step": 0.01
-				}
-			},
-			"distanceThreshold" : {
-				"required": "true",
-				"description": "Distance Threshold",
-				"help": "Stars within this number of pixels of another star will not be counted. Helps to reduce errors in the count",
-				"type": {
-					"fieldtype": "spinner",
-					"min": 0,
-					"max": 100,
-					"step": 1
-				}          
-			},
-			"template1" : {
-				"required": "true",
-				"description": "Star Template size",
-				"help": "Size in pixels of the first star template",
-				"type": {
-					"fieldtype": "spinner",
-					"min": 0,
-					"max": 100,
-					"step": 1
-				}          
-			},          
+		"argumentdetails": {    
 			"mask" : {
 				"required": "false",
 				"description": "Mask Path",
@@ -196,76 +157,72 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 					"fieldtype": "checkbox"
 				}          
 			},
-			"debug" : {
-				"required": "false",
-				"description": "Enable debug mode",
-				"help": "If selected each stage of the detection will generate images in the allsky tmp debug folder",
-				"tab": "Debug",
-				"type": {
-					"fieldtype": "checkbox"
-				}          
-			},
 			"debugimage" : {
 				"required": "false",
 				"description": "Debug Image",
 				"help": "Image to use for debugging. DO NOT set this unless you know what you are doing",
 				"tab": "Debug"        
 			}                  
-		}          
+		},
+		"changelog": {
+			"v1.0.0" : [
+				{
+					"author": "Alex Greenland",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": "Initial Release"
+				}
+			],
+			"v1.0.2" : [
+				{
+					"author": "Alex Greenland",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": [
+						"Updates for the new module manager structure"
+					]
+				}
+			]                                                          
+		}         
 	}
 
 	def run(self):
-		result = ''
-  
-		image = allsky_shared.image
-
-		# Convert to grayscale if it's RGB
-		if image.ndim == 3:
-			gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-		else:
-			gray = image
-
-		# Convert to float for processing
-		image_data = gray.astype(float)
-
-		# Estimate background stats
-		mean, median, std = sigma_clipped_stats(image_data, sigma=3.0)
-
-		# Detect stars
-		daofind = DAOStarFinder(fwhm=3.0, threshold=5.0*std)
-		sources = daofind(image_data - median)
-
-		# Show results
-		if sources is not None:
-			print(f"Number of stars detected: {len(sources)}")
-
-			for i, row in enumerate(sources):
-				x = int(row['xcentroid'])
-				y = int(row['ycentroid'])
-
-				print(f'x={x}, y={y}')
-				# Draw red circle (radius = 6)
-				cv2.circle(allsky_shared.image, (x, y), 20, (0, 0, 255), 2)
-
-				# Draw yellow label
-				cv2.putText(allsky_shared.image, str(i+1), (x+7, y-7), cv2.FONT_HERSHEY_SIMPLEX, 
-							0.4, (0, 255, 255), 1, cv2.LINE_AA)
-
-			extra_data = {}
-			filename = os.path.basename(allsky_shared.CURRENTIMAGEPATH)
-			date = filename[6:14]
-			url = f'/images/{date}/thumbnails/{filename}'
+     
+		try:
+			result = ''
+	
+			annotate_image = self.get_param('annotate', False, bool)
+			mask_file_name = self.get_param('mask', '', str)
+	
+			image = allsky_shared.image
 		
-			extra_data = {}
-			extra_data['AS_STARIMAGE'] = filename
-			extra_data['AS_STARIMAGEPATH'] = allsky_shared.CURRENTIMAGEPATH
-			extra_data['AS_STARIMAGEURL'] = url
-			extra_data['AS_STARCOUNT'] = len(sources)
-			allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'])
-   
-		else:
-			allsky_shared.delete_extra_data(self.meta_data['extradatafilename'])
-			print("No stars detected.")
+			sources, image = allsky_shared.count_starts_in_image(image, annotate_image, mask_file_name)
+	
+			if sources is not None:
+				result = f"Number of stars detected: {len(sources)}"
+				self.log(f'INFO: {result}')
+
+				if annotate_image:
+					allsky_shared.image = image
+			
+				extra_data = {}
+				filename = os.path.basename(allsky_shared.CURRENTIMAGEPATH)
+				date = filename[6:14]
+				url = f'/images/{date}/thumbnails/{filename}'
+			
+				extra_data = {}
+				extra_data['AS_STARIMAGE'] = filename
+				extra_data['AS_STARIMAGEPATH'] = allsky_shared.CURRENTIMAGEPATH
+				extra_data['AS_STARIMAGEURL'] = url
+				extra_data['AS_STARCOUNT'] = len(sources)
+				allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'])
+			else:
+				allsky_shared.delete_extra_data(self.meta_data['extradatafilename'])
+				result = 'No stars detected.'
+				self.log(f'INFO: {result}')
+
+		except Exception as e:
+			eType, eObject, eTraceback = sys.exc_info()
+			result = f'Module allsky_starcount failed on line {eTraceback.tb_lineno} - {e}'
+			allsky_shared.log(0,f'ERROR: {result}')
    
 		return result
 
@@ -276,7 +233,7 @@ def starcount(params, event):
 	return result     
          
 def starcount_cleanup():
-	moduleData = {
+	module_data = {
 	    "metaData": ALLSKYSTARCOUNT.meta_data,
 	    "cleanup": {
 			"files": {
@@ -284,4 +241,4 @@ def starcount_cleanup():
 			}
 	    }
 	}
-	allsky_shared.cleanupModule(moduleData)
+	allsky_shared.cleanupModule(module_data)

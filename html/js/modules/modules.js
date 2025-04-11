@@ -369,6 +369,12 @@ class MODULESEDITOR {
         }
     }
 
+	#getNested(obj, path, defaultValue = undefined) {
+		return path
+		  .split('.')
+		  .reduce((acc, part) => acc?.[part], obj) ?? defaultValue;
+	  }
+
     #createModuleHTML(data, element, moduleKey) {
         let settingsHtml = '';
         if (data.metadata.arguments !== undefined) {
@@ -413,8 +419,19 @@ class MODULESEDITOR {
 		if (element != '#modules-available') {
 			hidden = 'hidden';
 		}
-		let popover = 'data-toggle="popover" data-delay=\'{"show": 1000, "hide": 200}\' data-placement="top" data-trigger="hover" title="Add Module" data-content="Adds the ' + data.metadata.name + ' to the selected modules"'
-		let addHTML = '<button type="button" class="btn btn-sm btn-success module-add-button ml-2 ' + hidden + '" id="' + moduleKey + 'add" data-module="' + moduleKey + '" ' + popover + '>>></button>';
+		
+		
+		let deprecated = this.#getNested(data.metadata, 'deprecation.deprecated', 'false')
+
+		let addHTML = ''
+		if (deprecated == 'true') {
+			let deprecatedText = this.#getNested(data.metadata, 'deprecation.notes', 'This module has been deprecated')
+			let popover = 'data-toggle="popover" data-delay=\'{"show": 100, "hide": 200}\' data-placement="top" data-trigger="hover" title="' + deprecatedText + '"'
+			addHTML = '<button type="button" class="btn btn-sm btn-danger  ml-2"' + popover + '><i class="fa-solid fa-circle-info fa-lg"></i></button>';
+		} else {	
+			let popover = 'data-toggle="popover" data-delay=\'{"show": 1000, "hide": 200}\' data-placement="top" data-trigger="hover" title="Add Module" data-content="Adds the ' + data.metadata.name + ' to the selected modules"'
+			addHTML = '<button type="button" class="btn btn-sm btn-success module-add-button ml-2 ' + hidden + '" id="' + moduleKey + 'add" data-module="' + moduleKey + '" ' + popover + '>>></button>';
+		}
 		
         let disabled = '';
         if (element == '#modules-available') {
@@ -993,9 +1010,8 @@ class MODULESEDITOR {
 									if (graphData.main == 'true') {
 										controls['chart'].push({
 											'id': key,
-											'module': moduleData,
-											'data_url': 'includes/moduleutil.php?request=GraphData',
-											'chartconfig': graphData
+											'chartkey': graphName,
+											'module': module.replace('.py', '')
 										})						
 										inputHTML = `<div id="${key}"></div>`
 									}
@@ -1375,17 +1391,15 @@ class MODULESEDITOR {
 
 		Object.entries(controls['chart']).forEach(([key, value]) => {
 
-
-
 			$.ajax({
-				url: value['data_url'],
+				url: 'includes/moduleutil.php?request=GraphData',
 				type: 'POST',
 				data: {
-					'table': value.module.metadata.extradata.database.table,
-					'series': value.chartconfig.series
+					'module': value.module,
+					'chartkey': value.chartkey
 				},
 				dataType: 'json',
-				success: function (data) {
+				success: function (allskyChartData) {
 
 					if ($('body').hasClass('dark')) {
 						Highcharts.theme = {
@@ -1419,15 +1433,39 @@ class MODULESEDITOR {
 						
 						Highcharts.setOptions(Highcharts.theme);
 					}
-					let chartConfig = value.chartconfig.config
-					chartConfig.series = data.series
 
-					Highcharts.chart(value['id'], chartConfig);
+
+					const hasTooltip = allskyChartData.tooltip
+					if (hasTooltip !== undefined) {
+						allskyChartData.tooltip =  {
+							useHTML: true,
+							formatter: function () {
+								return `
+									<b>${Highcharts.dateFormat('%A, %b %e, %Y %H:%M', this.x)}</b><br>
+									Value: ${this.y}<br>
+									<img src="${this.point.data}" style="width:100px;height:auto;border:1px solid #ccc;" />
+									`;
+							}
+						}
+						const chartType = allskyChartData.chart?.type;
+						if (chartType === 'line' || chartType === 'spline') {
+							allskyChartData.chart = allskyChartData.chart || {};
+							allskyChartData.chart.events = allskyChartData.chart.events || {};
+	
+							allskyChartData.series[0].data.forEach(point => {
+								Highcharts.addEvent(point, 'click', function () {
+									console.log('Point clicked:', this);
+									window.open(this.data.replace('thumbnails/',''), '_blank');
+								});
+							});                    
+						}
+					}
+					Highcharts.chart(value['id'], allskyChartData);
 				},
 				error: function (xhr, status, error) {
 					console.error('AJAX error:', status, error);
 				}
-				});
+			});
 		})
 
 

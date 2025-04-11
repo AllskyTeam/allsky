@@ -155,7 +155,7 @@ class ALLSKYVARIABLES:
 
         return variable
 
-    def get_variables(self, show_empty=True, module='', indexed=False, raw_index=False):
+    def get_variables(self, show_empty=True, module='', indexed=False, raw_index=False, debug=False):
         ALLSKY_CONFIG = self._get_environment_variable('ALLSKY_CONFIG')
         ALLSKY_SCRIPTS = self._get_environment_variable('ALLSKY_SCRIPTS')
         ALLSKY_OVERLAY = self._get_environment_variable('ALLSKY_OVERLAY')
@@ -214,9 +214,10 @@ class ALLSKYVARIABLES:
 
                 add = True
                 if show_empty is False and module == '':
-                    if not value:
-                        if not isinstance(value, bool):
-                            add = False
+                    if value != 0:
+                        if not value:
+                            if not isinstance(value, bool):
+                                add = False
 
                 if add:
                     result.append({
@@ -271,12 +272,13 @@ if __name__ == "__main__":
     parser.add_argument("--prettyprint", action="store_true", help="Pretty Print the results to stdout")
     parser.add_argument("--indexed", action="store_true", help="Return data indexed by variable name")
     parser.add_argument("--raw", action="store_true", help="Do not strip AS_ from indexed data")
+    parser.add_argument("--debug", action="store_true", help="Display debug info")
 
     args = parser.parse_args()
 
     variable_engine = ALLSKYVARIABLES()
     variable_engine.setup_for_command_line(args.allskyhome)
-    variables = variable_engine.get_variables(args.empty, args.module, args.indexed, args.raw)
+    variables = variable_engine.get_variables(args.empty, args.module, args.indexed, args.raw, args.debug)
 
     if args.print:
         print(json.dumps(variables))

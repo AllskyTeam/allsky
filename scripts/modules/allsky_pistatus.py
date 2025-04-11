@@ -8,13 +8,10 @@ https://github.com/AllskyTeam/allsky
 '''
 import allsky_shared as allsky_shared
 from allsky_base import ALLSKYMODULEBASE
-import os
 import shutil
+import psutil
 from vcgencmd import Vcgencmd
 from gpiozero import CPUTemperature, Device
-
-
-
 
 class ALLSKYPISTATUS(ALLSKYMODULEBASE):
  
@@ -90,6 +87,64 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 						"variable": "AS_DISKFREE"
 					}               
 				}
+			},
+            "memory": {
+				"icon": "fa-solid fa-chart-line",
+				"title": "Memory",
+				"group": "Hardware",
+				"main": "true",
+				"config": {
+					"chart": {
+						"type": "spline",
+						"zooming": {
+							"type": "x"
+						}
+					},
+					"title": {
+						"text": "Memory"
+					},
+					"xAxis": {
+						"type": "datetime",
+						"dateTimeLabelFormats": {
+							"day": "%Y-%m-%d",
+							"hour": "%H:%M"
+						}
+					},
+					"yAxis": [
+						{ 
+							"title": {
+								"text": "Memory"
+							} 
+						}
+					],
+					"lang": {
+						"noData": "No data available"
+					},
+					"noData": {
+						"style": {
+							"fontWeight": "bold",
+							"fontSize": "16px",
+							"color": "#666"
+						}
+					}
+				},
+				"series": {
+					"totalmemory": {
+						"name": "Total Memory",
+						"yAxis": 0,
+						"variable": "AS_MEMORYTOTAL"                 
+					},
+					"usedmemory": {
+						"name": "Used Memory",
+						"yAxis": 0,
+						"variable": "AS_MEMORYUSED"
+					},
+					"freememory": {
+						"name": "Free Memory",
+						"yAxis": 0,
+						"variable": "AS_MEMORYAVAILABLE"
+					}                
+				}
 			}
 		}, 
 		"extradatafilename": "allsky_pistatus.json", 
@@ -161,6 +216,30 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 					"sample": "100000",              
 					"group": "Pi",
 					"description": "Storage free size",
+					"type": "filesize"
+				},
+				"AS_MEMORYTOTAL": {
+					"name": "${MEMORYTOTAL}",
+					"format": "filesize",
+					"sample": "100000",              
+					"group": "Pi",
+					"description": "Total Memory",
+					"type": "filesize"
+				},
+				"AS_MEMORYUSED": {
+					"name": "${MEMORYUSED}",
+					"format": "filesize",
+					"sample": "100000",              
+					"group": "Pi",
+					"description": "Memory used",
+					"type": "filesize"
+				},
+				"AS_MEMORYAVAILABLE": {
+					"name": "${MEMORYAVAILABLE}",
+					"format": "filesize",
+					"sample": "100000",              
+					"group": "Pi",
+					"description": "Memory available",
 					"type": "filesize"
 				}
 			}
@@ -257,6 +336,15 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 				tstatText = ', '.join(text)
 			extra_data['AS_TSTATSUMARYTEXT'] = tstatText
 
+			mem = psutil.virtual_memory()
+			total_memory = mem.total
+			used_memory = mem.used
+			available_memory = mem.available	
+			extra_data['AS_MEMORYTOTAL'] = total_memory
+			extra_data['AS_MEMORYUSED'] = used_memory
+			extra_data['AS_MEMORYAVAILABLE'] = available_memory
+   
+    
 				
 			allsky_shared.setLastRun('pistatus')
 			allsky_shared.dbUpdate('pistatus', extra_data)

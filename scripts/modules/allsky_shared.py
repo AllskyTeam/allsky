@@ -848,6 +848,21 @@ def set_pwm(gpio_pin, duty_cycle, pi=None, show_errors=False):
         pass
     
     return result
+
+def stop_pwm(gpio_pin):
+    result = False
+    try:
+        if pi is None:
+            pi = pigpio.pi(show_errors=False)
+            
+        if pi.connected:
+            pi.set_PWM_dutycycle(self._fan_pin, 0)
+            pi.stop()
+            result = True
+    except:
+        pass
+
+    return result
     
 def _get_value_from_json_file(file_path, variable):
     """
@@ -973,7 +988,7 @@ def mask_image(image, mask_file_name=''):
        
     return output
      
-def count_starts_in_image(image, annotate=False, mask_file_name=None):
+def count_starts_in_image(image, mask_file_name=None):
     # Convert to grayscale if it's RGB
     if image.ndim == 3:
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -992,12 +1007,5 @@ def count_starts_in_image(image, annotate=False, mask_file_name=None):
     # Detect stars
     daofind = DAOStarFinder(fwhm=3.0, threshold=5.0*std)
     sources = daofind(image_data - median)
-
-    if sources is not None and annotate:
-        for i, row in enumerate(sources):
-            x = round(float(row['xcentroid']))
-            y = round(float(row['ycentroid']))
-
-            cv2.circle(image, (x, y), 20, (0, 0, 255), 2)
     
     return sources, image

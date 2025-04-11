@@ -11,8 +11,9 @@ None
 '''
 import allsky_shared as allsky_shared
 from allsky_base import ALLSKYMODULEBASE
-
+import cv2
 import os
+import sys
 
 class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 
@@ -62,7 +63,8 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 						{ 
 							"title": {
 								"text": "Count"
-							} 
+							},
+							"min": 0
 						}
 					],
 					"lang": {
@@ -127,6 +129,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 		},     
 		"arguments":{
 			"annotate": "false",
+			"scalefactor": "0.5",
 			"mask": "",
 			"debugimage": "",
 			"useclearsky": "False"
@@ -140,6 +143,17 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 					"fieldtype": "image"
 				}                
 			},
+			"scalefactor" : {
+				"required": "false",
+				"description": "Scale Factor",
+				"help": "Amount to scale the captured image by before attempting meteor detection",
+				"type": {
+					"fieldtype": "spinner",
+					"min": ".25",
+					"max": "1",
+					"step": "0.05"
+				}     
+			}, 
 			"useclearsky" : {
 				"required": "false",
 				"description": "Use Clear Sky",
@@ -162,7 +176,14 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 				"description": "Debug Image",
 				"help": "Image to use for debugging. DO NOT set this unless you know what you are doing",
 				"tab": "Debug"        
-			}                  
+			},
+			"graph": {
+				"required": "false",
+				"tab": "History",
+				"type": {
+					"fieldtype": "graph"
+				}
+			}                 
 		},
 		"changelog": {
 			"v1.0.0" : [
@@ -184,24 +205,38 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 		}         
 	}
 
+	def _resize_image(self, image, scale=0.5):
+		height, width = image.shape[:2]
+		new_size = (int(width * scale), int(height * scale))
+		resized = cv2.resize(image, new_size, interpolation=cv2.INTER_AREA)
+
+		return resized
+
 	def run(self):
-     
+		
 		try:
 			result = ''
-	
+
 			annotate_image = self.get_param('annotate', False, bool)
 			mask_file_name = self.get_param('mask', '', str)
-	
-			image = allsky_shared.image
-		
-			sources, image = allsky_shared.count_starts_in_image(image, annotate_image, mask_file_name)
-	
+			scale = self.get_param('scalefactor', 0.5, float)
+
+			source_image = allsky_shared.image
+			image = self._resize_image(source_image, scale)
+
+			sources, image = allsky_shared.count_starts_in_image(image, mask_file_name)
+
 			if sources is not None:
 				result = f"Number of stars detected: {len(sources)}"
 				self.log(f'INFO: {result}')
 
-				if annotate_image:
-					allsky_shared.image = image
+				if sources is not None and annotate_image:
+					for i, row in enumerate(sources):
+						x = round(float(row['xcentroid']))
+						y = round(float(row['ycentroid']))
+
+						cv2.circle(source_image, (x, y), 20, (0, 0, 255), 2)
+					allsky_shared.image = source_image
 			
 				extra_data = {}
 				filename = os.path.basename(allsky_shared.CURRENTIMAGEPATH)
@@ -223,7 +258,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 			eType, eObject, eTraceback = sys.exc_info()
 			result = f'Module allsky_starcount failed on line {eTraceback.tb_lineno} - {e}'
 			allsky_shared.log(0,f'ERROR: {result}')
-   
+
 		return result
 
 def starcount(params, event):

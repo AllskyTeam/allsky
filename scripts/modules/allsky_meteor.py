@@ -306,6 +306,13 @@ class ALLSKYMETEOR(ALLSKYMODULEBASE):
 				"type": {
 					"fieldtype": "checkbox"
 				}
+			},
+			"graph": {
+				"required": "false",
+				"tab": "History",
+				"type": {
+					"fieldtype": "graph"
+				}
 			}
 		}
 	}

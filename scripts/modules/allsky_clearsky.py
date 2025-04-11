@@ -176,7 +176,14 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 				"description": "Debug Image",
 				"help": "Image to use for debugging. DO NOT set this unless you know what you are doing",
 				"tab": "Debug"
-			}
+			},
+			"graph": {
+				"required": "false",
+				"tab": "History",
+				"type": {
+					"fieldtype": "graph"
+				}
+			}	
 		},
 		"enabled": "false",
 		"changelog": {
@@ -231,7 +238,7 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 			roi_image = gray[roi_y:roi_y + roi_h, roi_x:roi_x + roi_w]
 			image_data = roi_image.astype(float)
 
-			sources, image = allsky_shared.count_starts_in_image(image_data, annotate_image)
+			sources, image = allsky_shared.count_starts_in_image(image_data)
 
 			if sources is not None:
 				found_stars = len(sources)

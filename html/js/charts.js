@@ -425,7 +425,7 @@ class CHARTMANAGER {
                         allskyChartData.series[0].data.forEach(point => {
                             Highcharts.addEvent(point, 'click', function () {
                                 console.log('Point clicked:', this);
-                                window.open(this.data, '_blank');
+                                window.open(this.data.replace('thumbnails/',''), '_blank');
                             });
                         });                    
                     }

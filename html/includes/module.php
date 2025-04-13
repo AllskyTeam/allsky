@@ -199,25 +199,6 @@ function DisplayModule() {
             </div>
             <div class="modal-body">
                 <form id="oe-debug-dialog-form" class="form-horizontal">
-                    <!-- <div class="form-group">
-                        <label for="checkbox" class="control-label col-xs-4"></label> 
-                        <div class="col-xs-8">
-                            <label class="checkbox-inline">
-                            <input type="checkbox" name="enablewatchdog" id="enablewatchdog" checked="checked">
-                                Enable Watchdog
-                            </label>
-                            <p class="help-block">Enable the module watchdog. This will automatically disable slow running modules</p>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="watchdog-timeout" class="col-sm-4 control-label">Module Max Time</label>
-                        <div class="col-sm-8">
-                            <div class="input-group">
-                                <input id="watchdog-timeout" name="watchdog-timeout" type="number" min="0" max="100" step="1" class="form-control">
-                            </div>
-                            <p class="help-block">The maximum time a module can run for, in seconds. After this amount of time it will be disabled</p>
-                        </div>
-                    </div> -->
                     <div class="form-group">
                         <label for="checkbox" class="control-label col-xs-4"></label> 
                         <div class="col-xs-8">
@@ -246,7 +227,16 @@ function DisplayModule() {
                             </div>
                             <p class="help-block">The delay between running periodic modules in seconds</p>
                         </div>
-                    </div>                     
+                    </div>
+                    <div class="form-group">
+                        <label for="watchdog-timeout" class="col-sm-4 control-label">Data Expiry</label>
+                        <div class="col-sm-8">
+                            <div class="input-group">
+                                <input id="expiry-age" name="expiry-age" type="number" min="0" max="600000" step="1" class="form-control">
+                            </div>
+                            <p class="help-block">Max age extra data will be kept before being deleted</p>
+                        </div>
+                    </div>               
                 </form>                          
             </div>
             <div class="modal-footer">

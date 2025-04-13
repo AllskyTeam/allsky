@@ -44,6 +44,11 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 					"title": {
 						"text": "Hardware"
 					},
+					"plotOptions": {
+						"series": {
+							"animation": "false"
+						}
+					},
 					"xAxis": {
 						"type": "datetime",
 						"dateTimeLabelFormats": {
@@ -102,6 +107,11 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 					},
 					"title": {
 						"text": "Memory"
+					},
+					"plotOptions": {
+						"series": {
+							"animation": "false"
+						}
 					},
 					"xAxis": {
 						"type": "datetime",
@@ -196,7 +206,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 				},
 				"AS_DISKSIZE": {
 					"name": "${DISKSIZE}",
-					"format": "filesize",
+					"format": "{GB}",
 					"sample": "100000",
 					"group": "Pi",
 					"description": "Storage size",
@@ -204,7 +214,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 				},
 				"AS_DISKUSAGE": {
 					"name": "${DISKUSAGE}",
-					"format": "filesize",
+					"format": "{GB}",
 					"sample": "100000",              
 					"group": "Pi",
 					"description": "Storage used size",
@@ -212,7 +222,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 				},
 				"AS_DISKFREE": {
 					"name": "${DISKFREE}",
-					"format": "filesize",
+					"format": "{GB}",
 					"sample": "100000",              
 					"group": "Pi",
 					"description": "Storage free size",
@@ -220,7 +230,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 				},
 				"AS_MEMORYTOTAL": {
 					"name": "${MEMORYTOTAL}",
-					"format": "filesize",
+					"format": "{GB}",
 					"sample": "100000",              
 					"group": "Pi",
 					"description": "Total Memory",
@@ -228,7 +238,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 				},
 				"AS_MEMORYUSED": {
 					"name": "${MEMORYUSED}",
-					"format": "filesize",
+					"format": "{GB}",
 					"sample": "100000",              
 					"group": "Pi",
 					"description": "Memory used",
@@ -245,7 +255,9 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 			}
 		},
 		"arguments":{
-			"period": 60
+			"period": 60,
+			"enabledataage": "false",
+			"dataage": "0"
 		},
 		"argumentdetails": {
 			"period" : {
@@ -258,6 +270,34 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 					"max": 1440,
 					"step": 1
 				}          
+			},
+			"enabledataage" : {
+				"required": "false",
+				"description": "Custom Data Expiry",
+				"help": "Enable custom data expiry. This will overrides the default in the module manager",
+				"tab": "Data Control",
+    			"type": {
+					"fieldtype": "checkbox"
+				}
+			},  
+			"dataage" : {
+				"required": "false",
+				"description": "Data Age",
+				"help": "After this number of seconds if the module data is not updated it will be removed.",
+				"tab": "Data Control",
+				"type": {
+					"fieldtype": "spinner",
+					"min": 0,
+					"max": 60000,
+					"step": 1
+				},
+				"filters": {
+					"filter": "enabledataage",
+					"filtertype": "show",
+					"values": [
+						"enabledataage"
+					]
+				}         
 			},
 			"graph": {
 				"required": "false",

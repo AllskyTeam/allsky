@@ -26,7 +26,9 @@ import argparse
 import locale
 import tempfile
 import pathlib
+import shlex
 from pathlib import Path
+from functools import reduce
 
 from allskyvariables import allskyvariables
 
@@ -85,6 +87,8 @@ ALLSKY_SCRIPTS = getEnvironmentVariable("ALLSKY_SCRIPTS", fatal=True)
 SETTINGS_FILE = getEnvironmentVariable("SETTINGS_FILE", fatal=True)
 ALLSKY_OVERLAY = getEnvironmentVariable("ALLSKY_OVERLAY", fatal=True)
 ALLSKY_WEBUI = getEnvironmentVariable("ALLSKY_WEBUI", fatal=True)
+ALLSKY_MODULES = getEnvironmentVariable("ALLSKY_MODULES", fatal=True)
+SETTINGS_FILE = getEnvironmentVariable("SETTINGS_FILE", fatal=True)
 
 LOGLEVEL = 0
 SETTINGS = {}
@@ -460,6 +464,8 @@ def isFileWriteable(fileName):
     else:
         return False
 
+def is_file_readable(file_name):
+    return isFileReadable(file_name)
 def isFileReadable(fileName):
 
     """ Check if a file is readable """
@@ -507,7 +513,6 @@ def validateExtraFileName(params, module, fileKey):
     extraDataFilename = fileName + fileExtension
                     
     params[fileKey] = extraDataFilename
-
 
 def update_database(structure, extra_data):
     try:
@@ -662,6 +667,89 @@ def deleteExtraData(fileName):
             if isFileWriteable(extraDataFilename):
                 os.remove(extraDataFilename)
 
+def is_just_filename(path):
+    return os.path.basename(path) == path
+
+def _load_flows_for_cleanup():
+    flows = {}
+    flow_names = ['day', 'night', 'periodic', 'nightday', 'daynight']
+    for flow_name in flow_names:
+        flow_file_name = os.path.join(ALLSKY_MODULES, f'postprocessing_{flow_name}.json')
+        if is_file_readable(flow_file_name):
+            with open(flow_file_name, 'r') as file:
+                flows[flow_name] = json.load(file)
+    return flows
+
+def _load_module_settings():
+    module_settings = {}
+    module_settings_filename = os.path.join(ALLSKY_MODULES, f'module-settings.json')
+    if is_file_readable(module_settings_filename):
+        with open(module_settings_filename, 'r') as file:
+            module_settings= json.load(file)
+    return module_settings
+
+def _get_dict_path(data, keys):
+    try:
+        return reduce(lambda d, k: d[k], keys, data)
+    except (KeyError, TypeError):
+        return None
+    
+def _get_expiry_time_for_module(flows, module_name, module_settings, tod):
+    delete_age = 0
+    
+    module_name = module_name.replace('.json', '').replace('allsky_', '')
+    
+    delete_age = _get_dict_path(flows, [tod, module_name, 'metadata', 'arguments', 'dataage'])
+
+    if delete_age is None:
+        for flow in flows:
+            if flow != tod:
+                delete_age_tmp = _get_dict_path(flows, [flow, module_name, 'metadata', 'argumants', 'dataage'])
+                if delete_age_tmp is not None:
+                    delete_age_tmp = round(float(delete_age_tmp))
+                    if delete_age_tmp > delete_age:
+                        delete_age = delete_age_tmp                        
+    else:
+        delete_age = round(float(delete_age))
+    
+    if delete_age is None:
+        delete_age = 600
+        if 'expiryage' in module_settings:
+            delete_age = round(module_settings['expiryage'])    
+    
+    return delete_age
+
+def cleanup_extra_data():
+    flows = _load_flows_for_cleanup()
+    module_settings = _load_module_settings()
+    tod = getEnvironmentVariable('DAY_OR_NIGHT', fatal=True).lower()
+
+    extra_data_path = getExtraDir()
+    with os.scandir(extra_data_path) as entries:
+        for entry in entries: 
+            if entry.is_file():
+                delete_age = _get_expiry_time_for_module(flows, entry.name, module_settings, tod)
+                cleanup_extra_data_file(entry.path, delete_age)
+            
+def cleanup_extra_data_file(file_name, delete_age=600):
+    
+    if (is_just_filename(file_name)):    
+        extra_data_path = getExtraDir()
+        if extra_data_path is not None:
+            file_name = os.path.join(extra_data_path, file_name)
+
+    if (isFileWriteable(file_name)):
+        file_modified_time = round(os.path.getmtime(file_name))
+        file_age = round(time.time() - file_modified_time)
+        if (file_age > delete_age):
+            log(4, f'INFO: Deleting extra data file {file_name} as its older than {delete_age} seconds')
+            delete_extra_data(file_name)
+        else:
+            log(4, f'INFO: Not deleteing {file_name} as its {file_age} seconds old, threshhold is {delete_age}')
+    else:
+        log(4, f'ERROR: Cannot check extra data file {file_name} as it is not writeable')
+            
+    
 def cleanup_module(moduleData):
     cleanupModule(moduleData)
 def cleanupModule(moduleData):
@@ -1009,3 +1097,57 @@ def count_starts_in_image(image, mask_file_name=None):
     sources = daofind(image_data - median)
     
     return sources, image
+
+def get_sensor_temperature():
+    temperature = 0
+    camera_type = get_camera_type()
+
+    if camera_type == 'rpi':
+        temperature = get_rpi_meta_value('SensorTemperature')
+    else:
+        temperature = get_environment_variable('AS_TEMPERATURE_C')
+    
+    return float(temperature)
+
+def get_camera_gain():
+    gain = 0
+    camera_type = get_camera_type()
+
+    if camera_type == 'rpi':
+        gain = get_rpi_meta_value('AnalogueGain')
+    else:
+        gain = get_environment_variable('AS_GAIN')
+    
+    return float(gain)
+   
+   
+def get_camera_type():
+    camera_type = get_environment_variable('CAMERA_TYPE')
+    return camera_type.lower()
+
+def get_rpi_meta_value(value):
+    result = None
+    metadata_path = get_rpi_metadata()
+    
+    if metadata_path is not None:
+        with open(metadata_path, 'r') as file:
+            metadata = json.load(file)
+            if value in metadata:
+                result = metadata[value]
+                
+    return result
+
+def get_rpi_metadata():
+    with open(SETTINGS_FILE) as file:
+        config = json.load(file)
+
+    extraargs = config.get('extraargs', '')
+    args = shlex.split(extraargs)
+
+    metadata_path = None
+    for i, arg in enumerate(args):
+        if arg == '--metadata' and i + 1 < len(args):
+            metadata_path = args[i + 1]
+            break
+
+    return metadata_path

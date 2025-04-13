@@ -774,7 +774,6 @@ class OEUIMANAGER {
             $('#defaultfontsize').val(this.#configManager.getValue('settings.defaultfontsize'));
             $('#defaultfontopacity').val(this.#configManager.getValue('settings.defaultfontopacity') * 100);
             $('#defaulttextrotation').val(this.#configManager.getValue('settings.defaulttextrotation'));
-            $('#defaultdatafileexpiry').val(this.#configManager.getValue('settings.defaultdatafileexpiry'));
             $('#defaultexpirytext').val(this.#configManager.getValue('settings.defaultexpirytext'));
             $('#oe-default-font-colour').val(this.#configManager.getValue('settings.defaultfontcolour'));
             $('#oe-default-stroke-colour').val(this.#configManager.getValue('settings.defaultstrokecolour'));
@@ -915,7 +914,6 @@ class OEUIMANAGER {
             let defaultFont = $("#defaultfont option").filter(":selected").val();
             let defaultFontOpacity = $('#defaultfontopacity').val() / 100;
             let defaultFontColour = $('#oe-default-font-colour').val();
-            let defaultdatafileexpiry = $('#defaultdatafileexpiry').val();
             let defaultexpirytext = $('#defaultexpirytext').val();            
             let defaultStrokeColour = $('#oe-default-stroke-colour').val();
             let defaultStrokeSize = $('#oe-default-stroke-size').val();
@@ -927,7 +925,6 @@ class OEUIMANAGER {
             this.#configManager.setValue('settings.defaulttextrotation', defaultTextRotation);
             this.#configManager.setValue('settings.defaultfont', defaultFont);
             this.#configManager.setValue('settings.defaultfontcolour', defaultFontColour);
-            this.#configManager.setValue('settings.defaultdatafileexpiry', defaultdatafileexpiry);
             this.#configManager.setValue('settings.defaultexpirytext', defaultexpirytext);
             this.#configManager.setValue('settings.defaultstrokecolour', defaultStrokeColour);
 

@@ -1139,7 +1139,8 @@ class MODULESEDITOR {
 		}
 		if ('deprecation' in moduleData.metadata) {
 			numberOfTabs += 1
-		}				
+		}
+			
         if (numberOfTabs === 1 && moduleData.metadata.extradata === undefined) {
             for (let tabName in tabs) {
                 for (let field in tabs[tabName]) {
@@ -2034,15 +2035,18 @@ class MODULESEDITOR {
                 cache: false,
                 context: this
             }).done((result) => {
-                this.#moduleSettings = result;
                 if (result.periodictimer == undefined) {
                     result.periodictimer = 5;
                 }
-                //$('#enablewatchdog').prop('checked', result.watchdog);
-                //$('#watchdog-timeout').val(result.timeout);                
+                if (result.expiryage == undefined) {
+                    result.expiryage = 600;
+                }
+                this.#moduleSettings = result
                 $('#autoenable').prop('checked', result.autoenable);
                 $('#debugmode').prop('checked', result.debugmode);
-                $('#periodic-timer').val(result.periodictimer);                  
+                $('#periodic-timer').val(result.periodictimer);    
+                $('#expiry-age').val(result.expiryage);    
+
                 $('#module-editor-settings-dialog').modal('show');
             }).always(() => {
                 clearTimeout(loadingTimer);
@@ -2056,12 +2060,12 @@ class MODULESEDITOR {
                 $.LoadingOverlay('show', {text : 'Sorry this is taking longer than expected ...'});
             }, 500)
 
-            //this.#moduleSettings.watchdog = $('#enablewatchdog').prop('checked');
-            //this.#moduleSettings.timeout = $('#watchdog-timeout').val() | 0;
+
             this.#moduleSettings.autoenable = $('#autoenable').prop('checked');
             this.#moduleSettings.debugmode = $('#debugmode').prop('checked');
 
             this.#moduleSettings.periodictimer = $('#periodic-timer').val() | 0;
+            this.#moduleSettings.expiryage = $('#expiry-age').val() | 0;
 
             this.#settings.settings = this.#moduleSettings;
             $.moduleeditor.settings = this.#settings.settings;

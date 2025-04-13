@@ -274,13 +274,13 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 				# Only display this message once per font/size
 				if fontKey not in self._font_msgs:
 					self._font_msgs[fontKey] = True
-					shared.log(4, F'{preMsg} from cache.')
+					shared.log(4, f'INFO: {preMsg} from cache.')
 			else:
 				try:
 					fontSize = shared.int(fontSize)
 					self._fonts[fontKey] = ImageFont.truetype(fontPath, fontSize)
 					font = self._fonts[fontKey]
-					shared.log(4, F'{preMsg} from disk.')
+					shared.log(4, f'INFO: {preMsg} from disk.')
 				except OSError as err:
 					self._log(0, f"ERROR: Could not load font '{fontPath}' from disk.", sendToAllsky=True)
 					font = None

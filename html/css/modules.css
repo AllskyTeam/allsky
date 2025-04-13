@@ -246,3 +246,8 @@
 	background-color: #444 !important;
 	border: 1px solid #777 !important;
 }
+
+.modal-footer.flex-footer {
+  display: flex;
+  align-items: center;
+}

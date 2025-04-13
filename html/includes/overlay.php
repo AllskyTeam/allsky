@@ -39,6 +39,8 @@ function DisplayOverlay($image_name)
     <script src="/js/bootbox/bootbox.all.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
     <script src="/js/bootbox/bootbox.locales.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
+    <link rel='stylesheet' href='/css/checkbox.css?c=<?php echo ALLSKY_VERSION; ?>' />
+
     <link rel='stylesheet' href='/js/jquery-ui-1.13.1.custom/jquery-ui.min.css?c=<?php echo ALLSKY_VERSION; ?>' />
     <script src="/js/jquery-ui-1.13.1.custom/jquery-ui.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
@@ -65,7 +67,8 @@ function DisplayOverlay($image_name)
 
     <link rel="stylesheet" href="/js/jquery-variable/jquery-variable.css">
     <script src="/js/jquery-variable/jquery-variable.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-        
+
+    
     <div id="oeeditor">
         <div id="oe-overlay-manager"></div>     
         <div class="row">
@@ -623,15 +626,6 @@ function DisplayOverlay($image_name)
                                                 <div class="input-group">
                                                     <input id="oe-default-stroke-colour" name="oe-default-stroke-colour" type="input" class="form-control layoutfield">
                                                 </div>
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="defaultdatafileexpiry" class="control-label col-xs-4">Default Extra Data Expiry</label>
-                                            <div class="col-xs-8">
-                                                <div class="input-group">
-                                                    <input id="defaultdatafileexpiry" name="defaultdatafileexpiry" type="number" min="0" max="60000" step="10" class="form-control layoutfield">
-                                                </div>
-                                                <p class="help-block">This is the default expiry time in seconds for the extra data files. This can be overriden for each variable in the data files, see the documentation for more details</p>
                                             </div>
                                         </div>
 

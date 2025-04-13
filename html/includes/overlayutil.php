@@ -1102,6 +1102,7 @@ class OVERLAYUTIL
         file_put_contents($fileName,  $overlay);
 
         $command = 'sudo bash -c "source /home/pi/allsky/venv/bin/activate; export ALLSKY_HOME=/home/pi/allsky; source /home/pi/allsky/variables.sh; python3 ' . ALLSKY_SCRIPTS . '/modules/allskyoverlay/overlaydata.py --overlay=' . ALLSKY_TMP . '/test_overlay.json --print"';
+
         $result = $this->runShellCommand($command);
         if ($result['error']) {
             die($result['message']);

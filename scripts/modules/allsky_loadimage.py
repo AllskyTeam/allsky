@@ -12,6 +12,8 @@ import allsky_shared as allsky_shared
 from allsky_base import ALLSKYMODULEBASE
 import cv2
 import os
+import sys
+
 class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 
 	meta_data = {
@@ -85,9 +87,63 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					},
 					"gain": {
 						"name": "Gain",
-						"yAxis": 0,
+						"yAxis": 1,
 						"variable": "AS_CAMERAGAIN"
 					}               
+				}
+			},
+			"temp": {
+				"icon": "fas fa-chart-line",
+				"title": "Camera Temperature",
+				"group": "Camera",    
+				"main": "true",    
+				"config": {
+					"tooltip": "true",
+					"chart": {
+						"type": "spline",
+						"zooming": {
+							"type": "x"
+						}
+					},
+					"title": {
+						"text": "Camera Temperature"
+					},
+					"plotOptions": {
+						"series": {
+							"animation": "false"
+						}
+					},
+					"xAxis": {
+						"type": "datetime",
+						"dateTimeLabelFormats": {
+							"day": "%Y-%m-%d",
+							"hour": "%H:%M"
+						}
+					},
+					"yAxis": [
+						{ 
+							"title": {
+								"text": "Temperature"
+							} 
+						}
+					],
+					"lang": {
+						"noData": "No data available"
+					},
+					"noData": {
+						"style": {
+							"fontWeight": "bold",
+							"fontSize": "16px",
+							"color": "#666"
+						}
+					}
+				},
+				"series": {
+					"exposure": {
+						"name": "Temperature",
+						"yAxis": 0,
+						"variable": "AS_CAMERATEMPERATURE|AS_CAMERAIMAGEURL"                  
+					}              
 				}
 			}
         },
@@ -136,10 +192,22 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"group": "Camera",
 					"description": "Exposure",
 					"type": "number"
-				}  
+				},
+				"AS_CAMERATEMPERATURE": {
+					"name": "${CAMERATEMPERATURE}",
+					"format": "",
+					"sample": "",                
+					"group": "Camera",
+					"description": "Exposure",
+					"type": "temperature"
+				} 
 			}                         
 		}          
 	}    
+
+	def _cleanup_module_data(arg):
+		allsky_shared.log(4,'INFO: Cleanup module data')
+		allsky_shared.cleanup_extra_data()
 
 	def run(self):
 		result = f'Image {allsky_shared.CURRENTIMAGEPATH} Loaded'
@@ -151,8 +219,6 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 		except Exception as e:
 			allsky_shared.log(0, f'ERROR: Cannot load {allsky_shared.CURRENTIMAGEPATH}: {e}', exitCode=1)
 
-
-		#http://allsky.local/images/20250405/thumbnails/image-20250405211205.jpg
 		filename = os.path.basename(allsky_shared.CURRENTIMAGEPATH)
 		date = filename[6:14]
 		url = f'/images/{date}/thumbnails/{filename}'
@@ -162,10 +228,17 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 		extra_data['AS_CAMERAIMAGEPATH'] = allsky_shared.CURRENTIMAGEPATH
 		extra_data['AS_CAMERAIMAGEURL'] = url
 		extra_data['AS_CAMERAEXPOSURE'] = int(allsky_shared.get_environment_variable('AS_EXPOSURE_US'))
-		extra_data['AS_CAMERAGAIN'] = 0
+		extra_data['AS_CAMERAGAIN'] = allsky_shared.get_camera_gain()
+		extra_data['AS_CAMERATEMPERATURE'] = allsky_shared.get_sensor_temperature()
 
 		allsky_shared.save_extra_data(self.meta_data['extradatafilename'], extra_data, self.meta_data['module'], self.meta_data['extradata'])
 
+		try:
+			self._cleanup_module_data()
+		except Exception as e:
+			eType, eObject, eTraceback = sys.exc_info()
+			result = f'Cannot cleanup extra module data {eTraceback.tb_lineno} - {e}'
+			allsky_shared.log(0,f'ERROR: {result}')  
 
 		allsky_shared.log(4, f'INFO: {result}')
 		return result        

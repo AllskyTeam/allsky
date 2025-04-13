@@ -648,7 +648,6 @@ class CHARTMANAGER {
                 var sidebar = $('#allsky-charts-sidebar')
                 $.each(allskyChartData, function (categoryName, chartsArray) {
                     var collapseId = 'category-' + categoryName.toLowerCase()
-
                     var panel = $('<div>', { class: 'panel panel-default chart-category' })
 
                     var heading = $('<div>', { class: 'panel-heading' }).append(
@@ -881,10 +880,10 @@ class CHARTMANAGER {
             const $items = $panel.find('.allsky-charts-chart-menu-item');
             const $collapse = $panel.find('.panel-collapse');
 
-            if ($items.length === 1) {
-                $collapse.addClass('in'); // Bootstrap 3 collapse "open" class
-                $panel.find('.panel-title a').removeClass('collapsed');
-            }
+           // if ($items.length === 1) {
+           //     $collapse.addClass('in'); // Bootstrap 3 collapse "open" class
+           //     $panel.find('.panel-title a').removeClass('collapsed');
+           // }
         });
 
         $('[data-toggle="tooltip"]').tooltip();

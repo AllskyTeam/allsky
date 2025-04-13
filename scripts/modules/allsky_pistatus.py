@@ -166,7 +166,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 			"values": {
 				"AS_CPUTEMP": {
 					"name": "${CPUTEMP}",
-					"format": "float",
+					"format": "number",
 					"sample": "43.2",
 					"group": "Pi",
 					"description": "CPU Temperature (In C or F)",
@@ -174,7 +174,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 				},              
 				"AS_CPUTEMP_C": {
 					"name": "${CPUTEMP_C}",
-					"format": "float",
+					"format": "number",
 					"sample": "43.2",              
 					"group": "Pi",
 					"description": "CPU Temperature (In Centigrade)",
@@ -182,7 +182,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 				},
 				"AS_CPUTEMP_F": {
 					"name": "${CPUTEMP_F}",
-					"format": "float",
+					"format": "number",
 					"sample": "76.2",              
 					"group": "Pi",
 					"description": "CPU Temperature (In Farenheight)",

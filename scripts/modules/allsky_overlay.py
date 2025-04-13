@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import time
 
-import allsky_shared as shared
+import allsky_shared as allsky_shared
 from allsky_base import ALLSKYMODULEBASE
 
 from datetime import datetime, timedelta, date
@@ -74,7 +74,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 	
 	def __init__(self, params, event, formaterrortext):
 		super().__init__(params, event)
-		config_folder = os.path.join(shared.ALLSKY_OVERLAY, 'config')
+		config_folder = os.path.join(allsky_shared.ALLSKY_OVERLAY, 'config')
 		self._overlay_config_file = os.path.join(config_folder, self._OVERLAYCONFIGFILE)
 		self._load_overlay()
 
@@ -88,7 +88,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		self._variables = ALLSKYVARIABLES()
 		self._fields = self._variables.get_variables()
  
-		shared.log(4, f"INFO: Config file set to '{self._overlay_config_file}'.")
+		allsky_shared.log(4, f"INFO: Config file set to '{self._overlay_config_file}'.")
 
 		self._set_date_and_time()
 		self._debug = True
@@ -104,10 +104,10 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 					self._overlay_editor_config['overlayErrorsText'] = 'Error found; see the WebU'
 					
 		except Exception as e:
-			shared.log(0,f'ERROR: Unable to read the overlay config file {oeConfigFile}')
+			allsky_shared.log(0,f'ERROR: Unable to read the overlay config file {oeConfigFile}')
 	        
 	def _log(self, level, text, preventNewline = False, exitCode=None, sendToAllsky=False, addErrorToOverlay=False):
-		shared.log(level=level, text=text, preventNewline=preventNewline,exitCode=exitCode, sendToAllsky=sendToAllsky)
+		allsky_shared.log(level=level, text=text, preventNewline=preventNewline,exitCode=exitCode, sendToAllsky=sendToAllsky)
 		if sendToAllsky:
 			if self._overlay_editor_config is not None:
 				if self._overlay_editor_config['overlayErrors']:
@@ -116,9 +116,9 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 	def _load_overlay(self):
 		dayORNight = os.environ['DAY_OR_NIGHT']
 		if dayORNight == 'DAY':
-			overlayName = shared.getSetting('daytimeoverlay')
+			overlayName = allsky_shared.getSetting('daytimeoverlay')
 		else:
-			overlayName = shared.getSetting('nighttimeoverlay')
+			overlayName = allsky_shared.getSetting('nighttimeoverlay')
 
 		userPath = os.path.join(os.environ['ALLSKY_OVERLAY'], 'myTemplates', overlayName)
 		if os.path.isfile(userPath):
@@ -133,10 +133,10 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 				self._log(0, f'ERROR: Unable to locate an overlay file: TOD {dayORNight}, overlay "{overlayName}"', sendToAllsky=True)
 				
 	def _dump_debug_data(self):
-		debugFilePath = os.path.join(shared.ALLSKY_TMP, 'overlaydebug.txt')
+		debugFilePath = os.path.join(allsky_shared.ALLSKY_TMP, 'overlaydebug.txt')
 		env = {}
 		for var in os.environ:
-			varValue = shared.getEnvironmentVariable(var, fatal=True)
+			varValue = allsky_shared.getEnvironmentVariable(var, fatal=True)
 			varValue = varValue.replace('\n', '')
 			varValue = varValue.replace('\r', '')
 			var = var.ljust(50, ' ')
@@ -147,7 +147,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 				varValue = env[var]
 				debugFile.write(var + varValue + os.linesep)
 
-		shared.log(4, f"INFO: Debug information written to {debugFilePath}")
+		allsky_shared.log(4, f"INFO: Debug information written to {debugFilePath}")
 
 	def _createTempDir(self, path):
 		if not os.path.isdir(path):
@@ -156,8 +156,8 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 			os.umask(umask)
 
 	def _set_date_and_time(self):
-		osDate = shared.getEnvironmentVariable('AS_DATE', fatal=True)
-		osTime = shared.getEnvironmentVariable('AS_TIME', fatal=True)
+		osDate = allsky_shared.getEnvironmentVariable('AS_DATE', fatal=True)
+		osTime = allsky_shared.getEnvironmentVariable('AS_TIME', fatal=True)
 		if osDate.startswith('20'):
 			self._image_date = time.mktime(datetime.strptime(osDate + ' ' + osTime,"%Y%m%d %H%M%S").timetuple())
 		else:
@@ -165,16 +165,16 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 
 	def _load_config_file(self):
 		result = True
-		if shared.isFileReadable(self._overlay_config_file):
+		if allsky_shared.isFileReadable(self._overlay_config_file):
 			with open(self._overlay_config_file) as file:
 				self._overlay_config = json.load(file)
 
 			allsky_data_class = ALLSKYOVERLAYDATA(True, False, False, self._overlay_config_file)
-			extra_folder = os.path.join(shared.ALLSKY_OVERLAY, 'extra')
+			extra_folder = os.path.join(allsky_shared.ALLSKY_OVERLAY, 'extra')
 			self._overlay_fields = allsky_data_class.load(10000, extra_folder)
 
 			#if len(self._overlay_config["fields"]) == 0 and len(self._overlay_config["images"]) == 0:
-			#	shared.log(1, f"WARNING: Config file '{self._overlay_config_file}' is empty.")
+			#	allsky_shared.log(1, f"WARNING: Config file '{self._overlay_config_file}' is empty.")
 			#	result = True
 		else:
 			self._log(0, f"ERROR: Config File '{self._overlay_config_file}' not accessible.", sendToAllsky=True)
@@ -189,18 +189,18 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		"""
 		result = True
 
-		self._image = shared.image
+		self._image = allsky_shared.image
 		if self._not_enabled != "":
-			shared.log(4, f'INFO: Not enabled: {self._not_enabled}')
+			allsky_shared.log(4, f'INFO: Not enabled: {self._not_enabled}')
 		return result
 
 	def _save_image_file(self):
 		""" Saves the final image """
-		shared.image = self._image
+		allsky_shared.image = self._image
 
 	def _timer(self, text, showIntermediate=True, showMessage=True):
 		""" Method to display the elapsed time between function calls and the total script execution time """
-		if shared.LOGLEVEL and showMessage:
+		if allsky_shared.LOGLEVEL and showMessage:
 			now = datetime.now()
 			if self._last_timer is None:
 				elapsedSinceLastTime = now - self._start_time
@@ -213,13 +213,13 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 			# Need .6f  or else really small numbers have scientific notation
 			if showIntermediate:
 				lastText = elapsedSinceLastTime.total_seconds()
-				shared.log(4, f"INFO: {text} took {lastText:.6f} seconds. Elapsed time {elapsedTime.total_seconds():.6f} seconds")
+				allsky_shared.log(4, f"INFO: {text} took {lastText:.6f} seconds. Elapsed time {elapsedTime.total_seconds():.6f} seconds")
 			else:
-				shared.log(4, f"INFO: {text} Elapsed time {elapsedTime.total_seconds():.6f} seconds")
+				allsky_shared.log(4, f"INFO: {text} Elapsed time {elapsedTime.total_seconds():.6f} seconds")
 
 	def _get_font(self, font, fontSize):
 		
-		tt = os.path.join(shared.ALLSKY_OVERLAY, 'system_fonts')
+		tt = os.path.join(allsky_shared.ALLSKY_OVERLAY, 'system_fonts')
 		systemFontMapCased = {
 			'Arial':           {'fontpath': f'{tt}/Arial.ttf'},
 			'Arial Black':     {'fontpath': f'{tt}/Arial_Black.ttf'},
@@ -253,7 +253,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 			fontConfigPath = fontData['fontPath']
 			if fontConfigPath.startswith('/'):
 				fontConfigPath = fontConfigPath[1:]
-			C = shared.getEnvironmentVariable('ALLSKY_CONFIG', fatal=True)
+			C = allsky_shared.getEnvironmentVariable('ALLSKY_CONFIG', fatal=True)
 			fontPath = os.path.join(C, 'overlay', fontConfigPath)
 		else:
 			if font in systemFontMap:
@@ -274,13 +274,13 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 				# Only display this message once per font/size
 				if fontKey not in self._font_msgs:
 					self._font_msgs[fontKey] = True
-					shared.log(4, f'INFO: {preMsg} from cache.')
+					allsky_shared.log(4, f'INFO: {preMsg} from cache.')
 			else:
 				try:
-					fontSize = shared.int(fontSize)
+					fontSize = allsky_shared.int(fontSize)
 					self._fonts[fontKey] = ImageFont.truetype(fontPath, fontSize)
 					font = self._fonts[fontKey]
-					shared.log(4, f'INFO: {preMsg} from disk.')
+					allsky_shared.log(4, f'INFO: {preMsg} from disk.')
 				except OSError as err:
 					self._log(0, f"ERROR: Could not load font '{fontPath}' from disk.", sendToAllsky=True)
 					font = None
@@ -356,14 +356,14 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 				stroke_b = None
 
 			if 'tlx' in field_data:
-				field_x = shared.int(field_data['tlx'])
+				field_x = allsky_shared.int(field_data['tlx'])
 			else:
-				field_x = shared.int(field_data['x'])
+				field_x = allsky_shared.int(field_data['x'])
 
 			if 'tly' in field_data:
-				field_y = shared.int(field_data['tly'])
+				field_y = allsky_shared.int(field_data['tly'])
 			else:
-				field_y = shared.int(field_data['y'])
+				field_y = allsky_shared.int(field_data['y'])
 				
 			r, g, b = self._convert_colour(field_colour)
 								
@@ -380,7 +380,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 					else:
 						strokeFill = (stroke_b, stroke_g, stroke_r, 0)
 
-					if len(shared.image.shape) == 2:
+					if len(allsky_shared.image.shape) == 2:
 						fill = 255
 
 					self._check_text_bounds(field_label, field_x, field_y)
@@ -397,7 +397,26 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 
 		self._image = np.array(pil_image)
 
-	def _convert_colour(self, value):
+	def _convert_colour(self, color_str):
+		try:
+			color_str = color_str.strip()
+
+			# Handle "R,G,B" format
+			if "," in color_str and all(part.strip().isdigit() for part in color_str.split(",")):
+				parts = list(map(int, color_str.split(",")))
+				if len(parts) == 3 and all(0 <= val <= 255 for val in parts):
+					return parts[0], parts[1], parts[2]
+				else:
+					return 255, 255, 255
+
+			# Fallback to ImageColor for named colors and hex codes
+			r, g, b = ImageColor.getcolor(color_str, "RGB")
+			return r, g, b
+
+		except Exception:
+			return 255, 255, 255
+    
+	def _convert_colour_old(self, value):
 		try:
 			r,g,b = ImageColor.getcolor(value, "RGB")
 		except:
@@ -480,14 +499,14 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 			imageY = int(imageData["y"])
 			image = None
 
-			imagePath = os.path.join(shared.ALLSKY_OVERLAY, "images", imageName)
+			imagePath = os.path.join(allsky_shared.ALLSKY_OVERLAY, "images", imageName)
 
-			if shared.isFileReadable(imagePath):
+			if allsky_shared.isFileReadable(imagePath):
 				image = cv2.imread(imagePath, cv2.IMREAD_UNCHANGED)
 			if image is not None:
 				if "scale" in imageData:
 					if imageData["scale"] is not None:
-						scale = shared.asfloat(imageData["scale"])
+						scale = allsky_shared.asfloat(imageData["scale"])
 						image = cv2.resize(image, (0, 0), fx=scale, fy=scale)
 
 				if "rotate" in imageData:
@@ -501,11 +520,11 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 				imageY = imageY - int(height / 2)
 
 				self._image = self._overlay_transparent(imageName, self._image, image, imageX, imageY, imageData)
-				shared.log(4, f"INFO: Adding image field {imageName}")
+				allsky_shared.log(4, f"INFO: Adding image field {imageName}")
 			else:
 				self._log(1, f"WARNING: image '{imageName}' missing; ignoring.", sendToAllsky=True)
 		else:
-			shared.log(1, "WARNING: Image not set so ignoring.")
+			allsky_shared.log(1, "WARNING: Image not set so ignoring.")
 
 	def _overlay_transparent(self, imageName, background, overlay, x, y, imageData):
 		background_height, background_width = background.shape[0], background.shape[1]
@@ -597,7 +616,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 def overlay(params, event):
 	global formatErrorPlaceholder
 
-	enabled = shared.int(shared.getEnvironmentVariable("AS_eOVERLAY"))
+	enabled = allsky_shared.int(allsky_shared.getEnvironmentVariable("AS_eOVERLAY"))
 	if enabled == 1:
 		if "formaterrortext" in params:
 			formaterrortext = params["formaterrortext"]
@@ -608,6 +627,6 @@ def overlay(params, event):
 		result = ""
 	else:
 		result = "Module Overlay Method Disabled"
-		shared.log(4, f"INFO: {result}.")
+		allsky_shared.log(4, f"INFO: {result}.")
 
 	return result

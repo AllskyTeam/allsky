@@ -1197,9 +1197,14 @@ class MODULEUTIL
                                 }
                             }
                         }
+
+                        $value = $dataArray[$variable]['value'];
+                        if (is_array($value)) {
+                            $value = $dataArray[$variable]['value']['value'];
+                        }
                         $dataPoint = [
                             "x" => $timestamp,
-                            "y" => $dataArray[$variable]['value']
+                            "y" => $value
                         ]; 
 
                         if (count($variableData) > 1) {
@@ -1257,6 +1262,9 @@ class MODULEUTIL
                                     if ($chartType == "gauge") {                                    
                                         $variable = $chartData->series[0]->data;  
                                         $value = $this->getAllskyVariable($variable);
+                                        if (is_object($value)) {
+                                            $value = $value->value;
+                                        }
                                         $chartData->series[0]->data = array($value);
                                     }
                                 }

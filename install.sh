@@ -22,9 +22,7 @@ cd "${ALLSKY_HOME}"  									|| exit "${EXIT_ERROR_STOP}"
 # The ALLSKY_POST_INSTALL_ACTIONS contains information the user needs to act upon after installation.
 rm -f "${ALLSKY_POST_INSTALL_ACTIONS}"		# Shouldn't be there, but just in case.
 rm -f "${ALLSKY_MESSAGES}"					# Start out with no messages.
-
-# In case it's left over from a prior install.
-rm -f "${ALLSKY_REBOOT_NEEDED}"
+rm -f "${ALLSKY_REBOOT_NEEDED}"				# In case it's left over from a prior install.
 
 SHORT_TITLE="Allsky Installer"
 TITLE="${SHORT_TITLE} - ${ALLSKY_VERSION}"
@@ -76,6 +74,8 @@ declare -r FIRST_CAMERA_TYPE_BASE_VERSION="v2023.05.01"
 declare -r FIRST_VERSION_VERSION="v2022.03.01"
 	# Versions before ${FIRST_VERSION_VERSION} didn't have version numbers.
 declare -r PRE_FIRST_VERSION_VERSION="old"
+	# A reboot isn't needed if upgrading from this base release.  This changes every release.
+declare -r NO_REBOOT_BASE_VERSION="v2024.12.06"
 
 ##### Information on the prior Allsky version, if used
 USE_PRIOR_ALLSKY="false"
@@ -1314,6 +1314,14 @@ get_desired_locale()
 	# Get current locale to use as the default.
 	# Ignore any line that doesn't have a value, and get rid of double quotes.
 	TEMP_LOCALE="$( locale | grep -E "^LANG=|^LANGUAGE=|^LC_ALL=" | sed -e '/=$/d' -e 's/"//g' )"
+
+	CURRENT_LOCALE="$( 
+		eval "$( locale | grep -E "^LANG=|^LANGUAGE=|^LC_ALL=" | sed -e '/=$/d' -e 's/"//g' )"
+		[[ -n ${LANG} ]] && echo "${LANG}" && return
+		[[ -n ${LANGUAGE} ]] && echo "${LANGUAGE}" && return
+		echo "${LC_ALL}"
+	)"
+if false; then	# XXXXXXXXXXXXX
 	CURRENT_LOCALE="$( echo "${TEMP_LOCALE}" | sed --silent -e '/LANG=/ s/LANG=//p' )"
 	if [[ -z ${CURRENT_LOCALE} ]];  then
 		CURRENT_LOCALE="$( echo "${TEMP_LOCALE}" | sed --silent -e '/LANGUAGE=/ s/LANGUAGE=//p' )"
@@ -1470,7 +1478,8 @@ is_reboot_needed()
 	local NEW_VERSION="${2}"
 	local NEW_BASE_VERSION="$( remove_point_release "${NEW_VERSION}" )"
 
-	if [[ ${NEW_BASE_VERSION} == "${OLD_BASE_VERSION}" ]]; then
+	if [[ ${NEW_BASE_VERSION} == "${OLD_BASE_VERSION}" ||
+		  ${OLD_BASE_VERSION} == "${NO_REBOOT_BASE_VERSION}" ]]; then
 		# Assume just bug fixes between point releases.
 # TODO: this may not always be true.
 		REBOOT_NEEDED="false"

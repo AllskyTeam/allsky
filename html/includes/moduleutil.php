@@ -317,14 +317,16 @@ class MODULEUTIL
         $config = $_POST['config'];
         $configData = $_POST['configData'];
         $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($config) . '.json';
-
-        $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($config) . '.json';
         $rawConfigData = file_get_contents($configFileName);
         $oldModules = json_decode($rawConfigData);
 
         $result = file_put_contents($configFileName, $configData);
         $this->changeOwner($configFileName);
         $backupFilename = $configFileName . '-last';
+# TODO: fix these errors:
+#	copy(/home/pi/allsky/config/modules/postprocessing_day.json-last) Failed to open stream: Permission denied
+#	copy(/home/pi/allsky/config/modules/postprocessing_periodic.json-last) Failed to open stream: Permission denied
+# Not sure if the error is with the FILE (it would have to be unreadable) or with config/modules/ directory not being writable by lighttpd.
         copy($configFileName, $backupFilename);
         $this->changeOwner($backupFilename);
         if ($result !== false) {

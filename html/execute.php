@@ -58,7 +58,7 @@ if ($ID === null) {
 
 switch ($ID) {
 	case "AM_RM_PRIOR":		// Remove prior version of Allsky.
-		rm_object(ALLSKY_PRIOR_DIR, "Prior Allsky directory '" .ALLSKY_PRIOR_DIR. "' removed.");
+		rm_object(PRIOR_ALLSKY_DIR, "Prior Allsky directory '" .PRIOR_ALLSKY_DIR. "' removed.");
 		rm_object(ALLSKY_OLD_REMINDER);
 
 		rm_msg($ID);

@@ -1321,6 +1321,7 @@ get_desired_locale()
 		[[ -n ${LANGUAGE} ]] && echo "${LANGUAGE}" && return
 		echo "${LC_ALL}"
 	)"
+
 if false; then	# XXXXXXXXXXXXX
 	CURRENT_LOCALE="$( echo "${TEMP_LOCALE}" | sed --silent -e '/LANG=/ s/LANG=//p' )"
 	if [[ -z ${CURRENT_LOCALE} ]];  then
@@ -1329,6 +1330,7 @@ if false; then	# XXXXXXXXXXXXX
 			CURRENT_LOCALE="$( echo "${TEMP_LOCALE}" | sed --silent -e '/LC_ALL=/ s/LC_ALL=//p' )"
 		fi
 	fi
+fi
 	MSG="CURRENT_LOCALE=${CURRENT_LOCALE}, TEMP_LOCALE=[[$( echo "${TEMP_LOCALE}" | tr '\n' ' ' )]]"
 	display_msg --logonly info "${MSG}"
 

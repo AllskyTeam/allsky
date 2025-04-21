@@ -99,11 +99,21 @@ else
 	NEEDS_REBOOT="false"
 fi
 
+if [[ ${NEEDS_REBOOT} == "true" ]]; then
+	set_allsky_status "${ALLSKY_STATUS_REBOOT_NEEDED}"
+	doExit "${EXIT_ERROR_STOP}" "RebootNeeded" "" "The Pi needs to be rebooted."
+fi
+
 # If the "lastchanged" setting is missing, the user needs to review/change the settings.
 # This will happen after an installation or upgrade, which also sets the Allsky status.
 LAST_CHANGED="$( settings ".lastchanged" )"
 if [[ -z ${LAST_CHANGED} ]]; then
 	STATUS="$( get_allsky_status )"
+	if [[ ${STATUS} == "${ALLSKY_STATUS_REBOOT_NEEDED}" ]]; then
+		# It's been rebooted and now we need to force "lastchanged" to be set.
+		STATUS="${ALLSKY_STATUS_NEEDS_REVIEW}"
+	fi
+
 	if [[ ${STATUS} == "${ALLSKY_STATUS_NEEDS_REVIEW}" ]]; then
 		IMAGE_NAME="ReviewNeeded"
 		MSG="Please review the settings on the WebUI's 'Allsky Settings' page"
@@ -128,11 +138,7 @@ if [[ -z ${LAST_CHANGED} ]]; then
 	else
 		doExit "${EXIT_ERROR_STOP}" "${IMAGE_NAME}" "" "${WEBUI_MSG}."
 	fi
-	echo "*** ===== ${MSG}" >&2		# to the log
-
-elif [[ ${NEEDS_REBOOT} == "true" ]]; then
-	set_allsky_status "${ALLSKY_STATUS_REBOOT_NEEDED}"
-	doExit "${EXIT_ERROR_STOP}" "RebootNeeded" "" "The Pi needs to be rebooted."
+	[[ -n ${MSG} ]] && echo "*** ===== ${MSG}" >&2		# to the log
 fi
 
 SEE_LOG_MSG="See ${ALLSKY_LOG}"

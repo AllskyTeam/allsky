@@ -315,7 +315,7 @@ function check_if_configured($page, $calledFrom) {
 		// usually happens right after an installation or upgrade.
 		if ($allsky_status == ALLSKY_STATUS_NEEDS_REVIEW) {
 			$msg = "Please review the Allsky settings to make sure they look correct.<br>";
-			$saveChangesLabel = "Review done; restart Allsky";
+			$saveChangesLabel = "Review done; start Allsky";
 			$forceRestart = true;
 		} else {
 			// Should be ALLSKY_STATUS_NEEDS_CONFIGURATION, but if something else,

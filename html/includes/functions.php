@@ -758,28 +758,65 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 {
 	global $status;
 
+	$result = null;
 	exec("$cmd 2>&1", $result, $return_val);
 	$dq = '"';
-	echo "<script>console.log(${dq}[$cmd] returned $return_val, result=" . implode(" ", $result) . "${dq});</script>";
-	if ($return_val === 255) {
-		// This is only a warning so only display the caller's message, if any.
-		if ($result != null) $msg = implode("<br>", $result);
-		else $msg = "";
-		$status->addMessage($msg, "warning", false);
-		return false;
-	} elseif ($return_val > 0) {
+	$script = "";
+	echo "<script>";
+		echo "console.log(${dq}[$cmd] returned $return_val";
+		if ($result === null) {
+			$modifiedResult = $result;
+		} else {
+			$modifiedResult = array();
+			$on_line = 0;
+			foreach ($result as $res) {
+				$on_line++;
+
+				if (substr($res, 0, 8) == "<script>") {
+					$script .= $res;
+				} else {
+					if ($on_line === 1) {
+						echo ", result=";
+					}
+					echo "$res   ";
+					$modifiedResult[] = $res;
+				}
+			}
+		}
+		echo "${dq});";
+	echo "</script>\n";
+	if ($script !== "") {
+		echo "\n<!-- from $cmd -->$script\n";
+	}
+	if ($return_val > 0) {
+		$r = "";
+		if ($modifiedResult !== null) {
+			$r = implode("<br>", $modifiedResult);
+		}
+
+		if ($return_val === 255) {
+			// This is only a warning so only display the caller's message, if any.
+			$msg = $r;
+			if ($msg !== "") {
+				$status->addMessage($msg, "warning", false);
+			}
+			return false;
+		}
+
 		// Display a failure message, plus the caller's message, if any.
 		if ($addMsg) {
 			$msg = "'$cmd' failed";
-			if ($result != null) $msg .= ":<br>" . implode("<br>", $result);
+			if ($r != null) $msg .= ":<br>$r";
 		} else {
-			if ($result != null) $msg = implode("<br>", $result);
-			else $msg = "";
+			$msg = $r;
 		}
 		// Display the caller's "on success" onSuccessMessage, if any.
-		if ($onFailureMessage !== "")
+		if ($onFailureMessage !== "") {
 			$status->addMessage($onFailureMessage, "danger", false);
-		$status->addMessage($msg, "danger", false);
+		}
+		if ($msg !== "") {
+			$status->addMessage($msg, "danger", false);
+		}
 		return false;
 	}
 
@@ -790,10 +827,10 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 	// Display any output from the command.
 	// If there are any lines that begin with:  ERROR  or  WARNING
 	// then display them in the appropriate format.
-	if ($result != null) {
+	if ($modifiedResult != null) {
 		$msg = "";
 		$sev = "";
-  		foreach ($result as $line) {
+  		foreach ($modifiedResult as $line) {
 			if ($msg !== "") $msg .= "<br>";
 
 			if (strpos($line, "ERROR::") !== false) {

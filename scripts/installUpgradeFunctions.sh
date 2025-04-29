@@ -180,6 +180,7 @@ function remove_colors()
 			-e "s/${R}//g" \
 			-e "s/${D}//g" \
 			-e "s/${N}//g" \
+			-e "s/\\\Z.//g" \
 	)"
 }
 

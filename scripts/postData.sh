@@ -218,7 +218,12 @@ if [[ -n ${WEBS} ]]; then
 	fi
 
 	if [[ ${FROM} == "webui" || ${FROM} == "install" ]]; then
-		echo "Uploaded configuration files to: ${WHERE_TO}."
+		MSG="Uploaded configuration files to: ${WHERE_TO}."
+		if [[ ${FROM} == "webui" ]]; then
+			echo "<script>console.log('${MSG}');</script>"
+		else
+			echo "${MSG}"
+		fi
 	fi
 fi
 

@@ -321,6 +321,7 @@ function check_if_configured($page, $calledFrom) {
 			// Should be ALLSKY_STATUS_NEEDS_CONFIGURATION, but if something else,
 			// do the same the same thing.
 			$msg = "Please configure the Allsky settings.<br>";
+			$saveChangesLabel = "Configuration done; start Allsky";
 			$forceRestart = true;
 		}
 

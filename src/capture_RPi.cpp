@@ -57,6 +57,7 @@ raspistillSetting myRaspistillSetting;
 modeMeanSetting myModeMeanSetting;
 std::string errorOutput;
 std::string metadataFile = "";
+std::string metadataArgs = "";
 
 
 //---------------------------------------------------------------------------------------------
@@ -323,14 +324,9 @@ int RPicapture(config cg, cv::Mat *image)
 	string s2 = "";
 	if (cg.isLibcamera)
 	{
-		command += " --metadata '" + metadataFile + "' --metadata-format txt";
+		command += metadataArgs;
 
-		// If there have been 2 consecutive errors, chances are this one will fail too,
-		// so capture the error message.
-		if (cg.debugLevel >= 3 || numConsecutiveErrors >= 2)
-			s2 = " > " + errorOutput + " 2>&1";
-		else
-			s2 = " 2> /dev/null";	// gets rid of a bunch of libcamera verbose messages
+		s2 = " > " + errorOutput + " 2>&1";
 	}
 
 	// Create the command we'll actually run.
@@ -531,6 +527,7 @@ int main(int argc, char *argv[])
 	errorOutput += "/capture_RPi_debug.txt";
 	metadataFile = CG.saveDir;
 	metadataFile += "/metadata.txt";
+	metadataArgs = " --metadata '" + metadataFile + "' --metadata-format txt";
 
 	int iMaxWidth, iMaxHeight;
 	double pixelSize;

@@ -480,7 +480,7 @@ function display_aborted()
 function display_complete()
 {
 	local EXTRA_TEXT  E  DIALOG_TEXT
-	E="Go to the WebUI's 'Editor' page to confirm the settings in this file are correct,"
+	E="Go to the WebUI's 'Editor' page to confirm the settings are correct,"
 	E+="\n${INDENT}and update as needed:"
 	E+="\n\n${INDENT}    ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)"
 

@@ -303,8 +303,10 @@ fi
 # Make sure the current camera is supported and hasn't changed unexpectedly.
 CAM="${CAMERA_TYPE}	${CAMERA_NUMBER}	${CAMERA_MODEL}"	# has TABS
 CCM="$( get_connected_camera_models --full "${CAMERA_TYPE}" )"
-read -r CC_TYPE CC_NUMBER CC_MODEL <<<"${CCM}"
-if ! echo -e "${CCM}" | grep --silent "${CAM}" ; then
+if [[ ! ${CCM} =~ "${CAM}" ]]; then
+	IFS="	" read -r CC_TYPE CC_NUMBER CC_MODEL CC_OTHER <<<"${CCM}"
+	echo -e "Was: ${CAMERA_TYPE} ${CAMERA_NUMBER} ${CAMERA_MODEL}"
+	echo -e "Now: ${CC_TYPE} ${CC_NUMBER} ${CC_MODEL} ${CC_OTHER}"
 	# Something changed.  validate_camera() displays the error message.
 	if ! validate_camera "${CC_TYPE}" "${CC_MODEL}" "${CC_NUMBER}" ; then
 		set_allsky_status "${ALLSKY_STATUS_CAMERA_CHANGED}"

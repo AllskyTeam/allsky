@@ -26,7 +26,7 @@ while [[ $# -gt 0 ]]; do
 			shift
 			;;
 		-*)
-			echo -e "${RED}Unknown argument '${ARG}'.${NC}" >&2
+			E_ "Unknown argument '${ARG}'." >&2
 			OK="false"
 			;;
 	esac
@@ -36,26 +36,24 @@ done
 usage_and_exit()
 {
 	local RET=${1}
-	{
-		echo
-		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-		echo "Usage: ${ME} [--help] [--camera NUM]"
-		[[ ${RET} -ne 0 ]] && echo -en "${NC}"
-		echo "    where:"
-		echo "      '--help' displays this message and exits."
-		echo "      '--camera NUM' use camera number NUM."
-		exit "${RET}"
-	} >&2
+	exec >&2
+	echo
+	local USAGE="Usage: ${ME} [--help] [--camera NUM]"
+	if [[ ${RET} -ne 0 ]]; then
+		E_ "${USAGE}"
+	else
+		echo -e "${USAGE}"
+	fi
+	echo "where:"
+	echo "    --help         displays this message and exits."
+	echo "    --camera NUM   use camera number NUM."
+	exit "${RET}"
 }
 
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
 CMD="$( determineCommandToUse "false" "" "false" )"		|| exit 1
-if [[ ${CMD} == "raspistill" ]]; then
-	echo "${ME} does not work with raspistill." >&2
-	exit 1
-fi
 
 export LIBCAMERA_LOG_LEVELS="ERROR,FATAL"
 CAMERA_DATA="${ALLSKY_TMP}/camera_data.txt"

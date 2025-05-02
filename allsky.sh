@@ -303,6 +303,7 @@ fi
 # Make sure the current camera is supported and hasn't changed unexpectedly.
 CAM="${CAMERA_TYPE}	${CAMERA_NUMBER}	${CAMERA_MODEL}"	# has TABS
 CCM="$( get_connected_camera_models --full "${CAMERA_TYPE}" )"
+#shellcheck disable=SC2076
 if [[ ! ${CCM} =~ "${CAM}" ]]; then
 	IFS="	" read -r CC_TYPE CC_NUMBER CC_MODEL CC_OTHER <<<"${CCM}"
 	echo -e "Was: ${CAMERA_TYPE} ${CAMERA_NUMBER} ${CAMERA_MODEL}"

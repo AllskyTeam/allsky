@@ -130,7 +130,7 @@ function get_branch()
 		# runs "git clone --branch v2024.12.06_02 ...".
 		local FILE="${H}/.git/packed-refs"
 		if [[ -s ${FILE} ]]; then
-			local B="$( tail -1 "${H}" | sed -e 's;.*/;;' )"
+			local B="$( tail -1 "${FILE}" | sed -e 's;.*/;;' )"
 			[[ -n ${B} ]] && BRANCH="${B}"
 		fi
 	fi

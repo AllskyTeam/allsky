@@ -123,7 +123,18 @@ function get_version()
 function get_branch()
 {
 	local H="${1:-${ALLSKY_HOME}}"
-	echo "$( cd "${H}" || exit; git rev-parse --abbrev-ref HEAD )"
+	local BRANCH="$( cd "${H}" || exit; git rev-parse --abbrev-ref HEAD )"
+	if [[ ${BRANCH} == "HEAD" ]]; then
+		# If the user is getting the master branch but uses the "--branch master_branch_name",
+		# BRANCH will be "HEAD".  For example if the master branch is v2024.12.06_02 and the user
+		# runs "git clone --branch v2024.12.06_02 ...".
+		local FILE="${H}/.git/packed-refs"
+		if [[ -s ${FILE} ]]; then
+			local B="$( tail -1 "${FILE}" | sed -e 's;.*/;;' )"
+			[[ -n ${B} ]] && BRANCH="${B}"
+		fi
+	fi
+	echo "${BRANCH}"
 }
 
 

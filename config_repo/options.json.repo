@@ -458,7 +458,7 @@
 "name" : "nightawb",
 "display" : "_display",
 "default" : false,
-"description" : "Enable to use auto white balance so the camera adjusts the color.<br>NOTE: enabling this can significantly increase the time needed to capture a nighttime image.",
+"description" : "Enable to use auto white balance so the camera adjusts the color.<br>NOTE: enabling this can <strong>significantly</strong> increase the time needed to capture a nighttime image, so it's usually best to disable this at night.",
 "label" : "Auto White Balance",
 "label_prefix" : "Nighttime",
 "type" : "boolean",

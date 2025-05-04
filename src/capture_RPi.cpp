@@ -525,9 +525,11 @@ int main(int argc, char *argv[])
 
 	errorOutput  = CG.saveDir;
 	errorOutput += "/capture_RPi_debug.txt";
-	metadataFile = CG.saveDir;
-	metadataFile += "/metadata.txt";
-	metadataArgs = " --metadata '" + metadataFile + "' --metadata-format txt";
+	if (CG.isLibcamera) {
+		metadataFile = CG.saveDir;
+		metadataFile += "/metadata.txt";
+		metadataArgs = " --metadata '" + metadataFile + "' --metadata-format txt";
+	}
 
 	int iMaxWidth, iMaxHeight;
 	double pixelSize;

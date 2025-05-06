@@ -401,6 +401,7 @@ display_start_dialog()
 			SUPPORT_TCS+="Do you want to continue?\n"
 		fi
 		if ! display_box "--yesno" "Generate Support Information" "${SUPPORT_TCS}" ; then
+			dialog --clear
 			exit 1
 		fi
 	fi

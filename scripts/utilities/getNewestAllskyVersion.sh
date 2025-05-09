@@ -37,7 +37,8 @@ if [[ ${CURRENT_VERSION} == "${NEWEST_VERSION}" ]]; then
 elif [[ ${CURRENT_VERSION} < "${NEWEST_VERSION}" ]]; then
 	RET="${EXIT_PARTIAL_OK}"
 else
-	RET=0		# Current newer than newest - this should not happen in normal use
+	# Current newer than newest - this can happen if testing a newer release.
+	RET=0
 fi
 
 echo "${NEWEST_VERSION}"

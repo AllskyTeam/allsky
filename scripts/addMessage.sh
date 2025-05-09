@@ -165,7 +165,7 @@ fi
 if [[ -f ${ALLSKY_MESSAGES} ]] &&  M="$( grep "${TAB}${ESCAPED_MESSAGE}${TAB}" "${ALLSKY_MESSAGES}" )" ; then
 	COUNT=0
 	# tail -1  in case file is corrupt and has more than one line we want.
-	PRIOR_COUNT=$( echo -e "${M}" | cut -f3 -d"${TAB}" | tail -1 )
+	PRIOR_COUNT=$( echo -e "${M}" | cut -f5 -d"${TAB}" | tail -1 )
 
 	# If this entry is corrupted don't try to update the counter.
 	[[ ${PRIOR_COUNT} != "" ]] && ((COUNT = PRIOR_COUNT + 1))

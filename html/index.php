@@ -400,7 +400,10 @@ if ($useRemoteWebsite) {
 									if ($date !== "")
 										$message .= " &nbsp; ($date)";
 								} else {
-									$message .= " &nbsp; ($count occurrences, last on $date)";
+									$message .= " &nbsp; ($count occurrences";
+									if ($date !== "")
+										$message .= ", last on $date";
+									$message .= ")";
 								}
 							} else {
 								$level = "error";	// badly formed message

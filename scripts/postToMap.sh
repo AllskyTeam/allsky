@@ -257,6 +257,7 @@ else
 	CAMERA="${S_camera}"
 	LENS="${S_lens}"
 	COMPUTER="${S_computer}"
+	EQUIPMENT="${S_equipmentinfo}"
 
 	E=""
 	W=""
@@ -349,6 +350,7 @@ else
 		"camera": "${CAMERA/\"/\\\"}",
 		"lens": "${LENS/\"/\\\"}",
 		"computer": "${COMPUTER/\"/\\\"}",
+		"equipmentinfo": "${EQUIPMENT/\"/\\\"}",
 		"allsky_version": "${ALLSKY_VERSION}",
 		"website_settings" : ${WEBSITE_SETTINGS},
 		"allsky_settings" : ${ALLSKY_SETTINGS}

@@ -127,17 +127,14 @@ function collect_support_info()
 	CPU_ARCH="$( uname -m )"
 	CPU_BITS="$( getconf LONG_BIT )"
 	CPU_TOTAL="$( nproc )"
-	MEM_TOTAL="$( free -h | grep Mem | gawk '{print $2}' )"
+	MEMORY_INFO="$( free -h )"
+	MEM_TOTAL="$( echo "${MEMORY_INFO}" | grep Mem | gawk '{print $2}' )"
 	VERSION_FILE="${ALLSKY_CONFIG}/piversion"
 	if [[ -s ${VERSION_FILE} ]]; then
 		PI_MODEL="$( < "${VERSION_FILE}" )"
 	else
 		PI_MODEL="unknown"
 	fi
-	###
-
-	### Memry Info
-	MEMORY_INFO="$( free )"
 	###
 
 	### Network Info
@@ -182,7 +179,7 @@ function collect_support_info()
 	###
 
 	### pi Camera stuff
-	PI_CAMERAS="$( libcamera-still --list-cameras 2> /dev/null )"
+	RPI_CAMERAS="$( libcamera-still --list-cameras 2> /dev/null )"
 	###
 
 	### get installed package information
@@ -259,8 +256,8 @@ function generate_support_info()
 
 	local LIBCAMERA_FILE="${TEMP_DIR}/libcamera.txt"
 	{
-		print_heading "Libcamera Devices"
-		print "${PI_CAMERAS}"
+		print_heading "Libcamera Cameras"
+		print "${RPI_CAMERAS}"
 	} > "${LIBCAMERA_FILE}"
 
 	local i2C_FILE="${TEMP_DIR}/i2c.txt"

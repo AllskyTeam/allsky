@@ -782,7 +782,7 @@ function update_old_website_config_file()
 						printf("%s{\n", spaces6);
 						printf("%s\"display\": true,\n", spaces8)
 						printf("%s\"label\": \"Equipment info\",\n", spaces8)
-						printf("%s\"icon\": \"fa fa-2x fa-fw fa-keyboard\",\n", spaces8)
+						printf("%s\"icon\": \"fa fa-fw fa-keyboard\",\n", spaces8)
 						printf("%s\"variable\": \"equipmentinfo\",\n", spaces8)
 						printf("%s\"value\": \"\",\n", spaces8)
 						printf("%s\"style\": \"\"\n", spaces8)

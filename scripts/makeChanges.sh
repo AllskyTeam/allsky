@@ -608,7 +608,7 @@ do
 			done
 			COMPUTER="$( get_computer )"
 			CHANGES+=( "computer" "Computer" "${COMPUTER}" )
-			CHANGES+=( "camera" "Camera Type" "${CAMERA_TYPE} ${CAMERA_MODEL}" )
+			CHANGES+=( "camera" "Camera" "${CAMERA_TYPE} ${CAMERA_MODEL}" )
 
 			# Because the user doesn't change the camera number directly it's
 			# not updated in the settings file, so we have to do it.
@@ -749,7 +749,7 @@ do
 			fi
 			;;
 
-		"location" | "owner" | "camera" | "lens" | "computer")
+		"location" | "owner" | "lens" | "equipmentinfo")
 			RUN_POSTTOMAP="true"
 			check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
 			WEBSITE_VALUE_CHANGED="true"

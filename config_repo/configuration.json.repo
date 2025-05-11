@@ -202,6 +202,14 @@
             },
             {
                 "display": true,
+                "label": "Equipment info",
+                "icon": "fa fa-fw fa-keyboard",
+                "variable": "equipmentinfo",
+                "value": "",
+                "style": ""
+            },
+            {
+                "display": true,
                 "label": "Owner",
                 "icon": "fa fa-fw fa-user",
                 "variable": "owner",

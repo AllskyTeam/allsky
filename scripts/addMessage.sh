@@ -174,12 +174,15 @@ if [[ -f ${ALLSKY_MESSAGES} ]] &&  M="$( grep "${TAB}${ESCAPED_MESSAGE}${TAB}" "
 
 	# TODO: prior messages can have any character in them so what do we
 	# use to separate the sed components?
-	EXPRESSION="\%${TAB}${ESCAPED_MESSAGE}${TAB}$%d"
+	# Delete the existing entry.  A new one with a higher COUNT will be added below.
+	EXPRESSION="\%${TAB}${ESCAPED_MESSAGE}${TAB}%d"
 	if ! sed -i -e "${EXPRESSION}"  "${ALLSKY_MESSAGES}" ; then
 		wW_ "${ME}: Warning, sed -e '${EXPRESSION}' failed." >&2
+		exit 1
 	fi
 else
 	COUNT=1
 fi
 
+#          1          2                3            4            5             6               7
 echo -e "${ID}${TAB}${CMD_TEXT}${TAB}${TYPE}${TAB}${DATE}${TAB}${COUNT}${TAB}${MESSAGE}${TAB}${URL}"  >>  "${ALLSKY_MESSAGES}"

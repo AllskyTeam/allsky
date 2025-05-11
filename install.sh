@@ -1513,7 +1513,7 @@ does_prior_Allsky_Website_exist()
 	local MSG
 
 # TODO: The Website moved to ~/allsky/html/allsky in v2023.05.01
-# In next major release if that directory doesn't exist, no prior Website exists.
+# In v2025.xx.xx if that directory doesn't exist, no prior Website exists.
 	if [[ ${PRIOR_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
 		PRIOR_WEBSITE_DIR="${PRIOR_ALLSKY_DIR}${ALLSKY_WEBSITE/${ALLSKY_HOME}/}"
 		if [[ -d ${PRIOR_WEBSITE_DIR} ]]; then

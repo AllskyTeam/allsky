@@ -607,6 +607,14 @@ function replace_website_placeholders()
 		fi
 	fi
 
+	EQUIPMENT="$( settings ".config.equipmentinfo" "${FILE}" )"
+	if [[ ${EQUIPMENT} == "${NEED_TO_UPDATE}" ]]; then
+		TEMP="$( settings ".equipmentinfo" )"
+		if [[ -n ${TEMP} ]]; then
+			EQUIPMENT="${TEMP}"
+		fi
+	fi
+
 	if [[ ${TYPE} == "local" ]]; then
 		#shellcheck disable=SC2153
 		IMAGE_NAME="/${IMG_DIR}/${FULL_FILENAME}"
@@ -624,6 +632,7 @@ function replace_website_placeholders()
 		config.camera				"camera"			"${CAMERA}" \
 		config.lens					"lens"				"${LENS}" \
 		config.computer				"computer"			"${COMPUTER}" \
+		config.equipmentinfo		"equipmentinfo"		"${EQUIPMENT}" \
 		"${WEBSITE_ALLSKY_VERSION}"	"AllskyVersion"		"${ALLSKY_VERSION}" \
 		"${MINI_TLAPSE_DISPLAY}"	"mini_display"		"${MINI_TLAPSE_DISPLAY_VALUE}" \
 		"${MINI_TLAPSE_URL}"		"mini_url"			"${MINI_TLAPSE_URL_VALUE}"
@@ -687,7 +696,11 @@ function update_old_website_config_file()
 
 	# Version: 1 from v2023.05.01*
 	# Version: 2 from v2024.12.06
-	# Current version: 3 from v2024.12.06_01
+	# Version: 3 from v2024.12.06_01
+	#	Added "meteors/"
+	# Current version: 4 from v2024.12.06_03
+	#	Added "equipmentinfo" setting
+
 	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
 		# These steps bring version 1 up to 2.
 		# Deletions:
@@ -710,8 +723,7 @@ function update_old_website_config_file()
 
 	# Try to determine what future changes are needed,
 	# rather than compare version numbers as above.
-	if ! grep --silent "meteors/" "${FILE}" ; then
-		# Added in version 3.
+	if [[ ${PRIOR_VERSION} -lt 3 ]] && ! grep --silent "meteors/" "${FILE}" ; then
 		# Add after "startrails/" entry.
 		TEMP="/tmp/$$"
 		gawk 'BEGIN { found_startrails = 0; }
@@ -721,7 +733,7 @@ function update_old_website_config_file()
 				if (found_startrails == 1) {
 					if ($1 == "},") {
 						spaces6 = "      ";
-						spaces8 = "        ";
+						spaces8 = spaces6 + "  ";
 						printf("%s{\n", spaces6);
 						printf("%s\"display\": false,\n", spaces8)
 						printf("%s\"url\": \"meteors/\",\n", spaces8)
@@ -737,6 +749,54 @@ function update_old_website_config_file()
 					}
 				} else if ($0 ~ /"startrails\/"/) {
 					found_startrails = 1;
+				}
+			}' "${FILE}" > "${TEMP}"
+		if [[ $? -eq 0 ]]; then
+			# cp so it keeps ${FILE}'s attributes
+			cp "${TEMP}" "${FILE}" && rm -f "${TEMP}"
+		fi
+	fi
+
+	if [[ ${PRIOR_VERSION} -lt 4 ]] && ! grep --silent '"equipmentinfo"' "${FILE}" ; then
+		# Add setting after "computer" entry.
+		# Add popoutIcons entry after "Computer" entry (with "fa-microchip").
+		TEMP="/tmp/$$"
+		local E="$( settings ".equipmentinfo" )"
+		gawk -v E="${E}" 'BEGIN {
+				found_computer = 0;
+				found_microchip = 0;
+				spaces6 = "      ";
+				spaces8 = "        ";
+			}
+			{
+				print $0;
+
+				if (found_computer == 1) {
+					printf("%s\"equipmentinfo\": \"%s\",\n", spaces8, E)
+					found_computer = 0;
+					next;
+				}
+
+				if (found_microchip == 1) {
+					if ($1 == "},") {
+						printf("%s{\n", spaces6);
+						printf("%s\"display\": true,\n", spaces8)
+						printf("%s\"label\": \"Equipment info\",\n", spaces8)
+						printf("%s\"icon\": \"fa fa-2x fa-fw fa-keyboard\",\n", spaces8)
+						printf("%s\"variable\": \"equipmentinfo\",\n", spaces8)
+						printf("%s\"value\": \"\",\n", spaces8)
+						printf("%s\"style\": \"\"\n", spaces8)
+						printf("%s},\n", spaces6);
+	
+						while (getline) {
+							print $0;
+						}
+						exit(0);
+					}
+				} else if ($0 ~ /"computer"/) {
+					found_computer = 1;
+				} else if ($0 ~ / fa-microchip"/) {
+					found_microchip = 1;
 				}
 			}' "${FILE}" > "${TEMP}"
 		if [[ $? -eq 0 ]]; then
@@ -1145,6 +1205,7 @@ function check_tmp()
 		if [[ ${CALLED_FROM} == "install" ]]; then
 			# During installation, don't give the user the option of changing.
 			# They can do it afterwards via "allsky-config".
+# TODO: set to new, larger size if not already there.
 			MSG="${ALLSKY_TMP} is currently a memory filesystem; no change needed."
 			display_msg --logonly info "${MSG}"
 

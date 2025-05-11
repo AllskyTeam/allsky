@@ -141,7 +141,7 @@ deps:
 
 install:
 	@echo "`date +%F\ %R:%S` Copying binaries..."
-	@if [ ! -e $(ALLSKYBIN) ]; then mkdir -p $(ALLSKYBIN); fi
+	@if [ ! -e $(ALLSKYBIN) ]; then mkdir -p $(ALLSKYBIN); chown ${SUDO_USER}:${SUDO_USER} ${ALLSKYBIN}; fi
 	@install -o $(SUDO_USER) -g $(SUDO_USER) capture_ZWO $(ALLSKYBIN)/
 	@install -o $(SUDO_USER) -g $(SUDO_USER) capture_RPi $(ALLSKYBIN)/
 	@install -o $(SUDO_USER) -g $(SUDO_USER) keogram $(ALLSKYBIN)/

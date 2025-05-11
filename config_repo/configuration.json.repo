@@ -9,6 +9,7 @@
         "camera": "XX_NEED_TO_UPDATE_XX",
         "lens": "XX_NEED_TO_UPDATE_XX",
         "computer": "XX_NEED_TO_UPDATE_XX",
+        "equipmentinfo": "XX_NEED_TO_UPDATE_XX",
         "owner": "XX_NEED_TO_UPDATE_XX",
         "auroraForecast": false,
         "auroraMap": "XX_NEED_TO_UPDATE_XX",
@@ -228,5 +229,5 @@
             }
         ]
     },
-    "ConfigVersion": "3"
+    "ConfigVersion": "4"
 }

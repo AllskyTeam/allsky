@@ -2333,7 +2333,7 @@
 {
 "name" : "lens",
 "default" : "",
-"description" : "The lens you're using on your camera, for example: <span class='WebUIValue'>Arecont 1.55</span>.",
+"description" : "The lens you're using on your camera, for example: <span class='WebUIValue'>Arecont 1.55 mm</span>.",
 "label" : "Lens",
 "type" : "text",
 "checkchanges" : true,

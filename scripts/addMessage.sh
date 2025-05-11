@@ -154,6 +154,7 @@ elif [[ ${TYPE} == "no-image" ]]; then
 	TYPE="success"
 elif [[ ${TYPE} != "warning" && ${TYPE} != "info" && ${TYPE} != "success" ]]; then
 	wE_ "ERROR: unknown message type: '${TYPE}'." >&2
+	echo "Valid message types are:  error, debug, warning, info, success, no-image." >&2
 	exit 2
 fi
 

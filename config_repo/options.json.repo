@@ -1378,7 +1378,6 @@
 "label" : "Bitrate",
 "label_prefix" : "Daily Timelapse",
 "type" : "integer",
-"checkchanges" : true,
 "booldependson" : "timelapsegenerate"
 },
 {

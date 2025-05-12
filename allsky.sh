@@ -314,6 +314,7 @@ if [[ ! ${CCM} =~ "${CAM}" ]]; then
 		IMAGE_MSG="${ERROR_MSG_PREFIX}"
 		IMAGE_MSG+="The camera changed."
 		IMAGE_MSG+="\nCheck Camera Type\n& Model in the WebUI."
+		reset_usb "Camera changed"
 		doExit "${EXIT_ERROR_STOP}" "Error" "${IMAGE_MSG}"
 	fi
 fi

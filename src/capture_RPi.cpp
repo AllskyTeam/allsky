@@ -358,7 +358,37 @@ int RPicapture(config cg, cv::Mat *image)
 			readMetadataFile(metadataFile);
 		}
 	}
-	// else, error message is printed by caller.
+	else
+	{
+		// Unable to take picture.
+		// The child command is "/bin/sh" will will basically never get a signal
+		// even if the camera program does, so check for a signal in WEXITSTATUS() not ret.
+		if (WIFSIGNALED(WEXITSTATUS(ret)))
+		{
+			Log(1, " >>> %s: WARNING: %s received signal %d, ret=0x%x\n",
+				cg.ME, cg.cmdToUse, WTERMSIG(WEXITSTATUS(ret)), ret);
+		}
+		else if (WIFEXITED(ret))
+		{
+			// "Normal" return but command failed.
+			Log(1, " >>> %s: WARNING: Unable to take picture, return code=0x%0x, WEXITSTATUS=0x%0x\n",
+				cg.ME, ret, WEXITSTATUS(ret));
+		}
+		else
+		{
+			// Not sure what this would be...
+			Log(1, " >>> %s: WARNING: Unable to take picture, command did not return normally, return code=0x%0x WEXITSTATUS=0x%0x\n",
+				cg.ME, ret, WEXITSTATUS(ret));
+		}
+
+		// Add errorOutput to the log file.
+		std::string errMsg;
+		command = "cat " + errorOutput;
+		errMsg = exec(command.c_str());
+		Log(0, "********************");
+		Log(0, "%s", errMsg.c_str());
+		Log(0, "********************");
+	}
 
 	return(ret);
 }
@@ -944,26 +974,6 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 			else
 			{
 				// Unable to take picture.
-				// The child command is "/bin/sh" will will basically never get a signal
-				// even if the camera program does, so check for a signal in WEXITSTATUS() not retCode.
-				if (WIFSIGNALED(WEXITSTATUS(retCode)))
-				{
-					Log(1, " >>> %s: WARNING: %s received signal %d, retCode=0x%x\n",
-						CG.ME, CG.cmdToUse, WTERMSIG(WEXITSTATUS(retCode)), retCode);
-				}
-				else if (WIFEXITED(retCode))
-				{
-					// "Normal" return but command failed.
-					Log(1, " >>> %s: WARNING: Unable to take picture, return code=0x%0x, WEXITSTATUS=0x%0x\n",
-						CG.ME, retCode, WEXITSTATUS(retCode));
-				}
-				else
-				{
-					// Not sure what this would be...
-					Log(1, " >>> %s: WARNING: Unable to take picture, command did not return normally, return code=0x%0x WEXITSTATUS=0x%0x\n",
-						CG.ME, retCode, WEXITSTATUS(retCode));
-				}
-
 				numTotalErrors++;
 				numConsecutiveErrors++;
 				if (numConsecutiveErrors >= maxErrors)

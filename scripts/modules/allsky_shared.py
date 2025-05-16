@@ -40,6 +40,8 @@ import pigpio
 
 import numpy as np
 
+from typing import Union, List, Dict
+
 try:
     locale.setlocale(locale.LC_ALL, '')
 except:
@@ -98,6 +100,34 @@ DBDATA = {}
 PI_INFO_MODEL = 1
 Pi_INFO_CPU_TEMPERATURE = 2
 
+def get_secrets(keys: Union[str, List[str]]) -> Union[str, Dict[str, str], None]:
+    """
+    Retrieve secret(s) from the given JSON file.
+
+    :param keys: A single key (str) or a list of keys to retrieve.
+    :param file_path: Path to the secrets JSON file.
+    :return: Value (str) if one key, or dict of key-value pairs if multiple keys.
+                Returns None or empty dict if keys not found.
+    """
+    single = isinstance(keys, str)
+    if single:
+        keys = [keys]
+
+    try:
+        file_path = os.path.join(ALLSKYPATH, 'env.json')
+        with open(file_path, 'r') as f:
+            secrets = json.load(f)
+
+        results = {k: secrets[k] for k in keys if k in secrets}
+
+        if single:
+            return results.get(keys[0])
+        return results
+
+    except (IOError, json.JSONDecodeError) as e:
+        print(f"Error reading secrets file: {e}")
+        return None if single else {}
+    
 def get_lat_lon():
 	lat = None
 	lon = None
@@ -514,19 +544,89 @@ def validateExtraFileName(params, module, fileKey):
                     
     params[fileKey] = extraDataFilename
 
+def check_mysql_connection(host, user, password, database=None, port=3306):
+    try:
+        conn = mysql.connector.connect(
+            host=host,
+            user=user,
+            password=password,
+            database=database,
+            port=port
+        )
+        if conn.is_connected():
+            conn.close()
+            return True
+    except Exception as e:
+        log(0, f'ERROR: Database is configured as mysql but cannot connect')
+        pass
+    return False
+
+def get_database_config():
+    secret_data = get_secrets(['databasehost', 'databaseuser', 'databasepassword', 'databasedatabase'])
+    secret_data['databasetype'] = get_setting('databasetype')
+    
+    return secret_data
+
+    
 def update_database(structure, extra_data):
+    secret_data = get_database_config()
+
+    if not re.fullmatch(r'[a-zA-Z_][a-zA-Z0-9_]*', secret_data['databasedatabase']):
+        log(0, f"ERROR: Database table name {secret_data['databasedatabase']} is invalid")
+        return
+
+    if secret_data['databasetype'] == 'mysql':
+        if check_mysql_connection(secret_data['databasehost'],secret_data['databaseuser'],secret_data['databasepassword']):
+            update_mysql_database(structure, extra_data, secret_data)
+    
+    if secret_data['databasetype'] == 'sqlite':
+        update_sqlite_database(structure, extra_data, secret_data)
+
+def update_sqlite_database(structure, extra_data, secret_data):
+    db_path = os.path.join(ALLSKYPATH, 'config', 'myFiles', 'allsky.db')
+    try:
+        if 'enabled' in structure['database']:
+            if structure['database']['enabled']:
+                if 'table' in structure['database']:
+                    database_table = structure['database']['table']
+                    
+                    json_str = json.dumps(extra_data)
+                    timestamp = math.floor(time.time())
+
+                    # Use a context manager to ensure safe connection handling
+                    with sqlite3.connect(db_path, timeout=10) as conn:
+                        #conn.execute('PRAGMA journal_mode = WAL')  # Enables safe concurrent access
+                        #conn.execute('PRAGMA synchronous = NORMAL')  # Balance between speed and safety
+                        conn.execute(f'''
+                            CREATE TABLE IF NOT EXISTS {database_table} (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                timestamp INTEGER NOT NULL,
+                                json_data TEXT NOT NULL
+                            )
+                        ''')
+                        conn.execute(f'''
+                            INSERT INTO {database_table} (timestamp, json_data)
+                            VALUES (?, ?)
+                        ''', (timestamp, json_str))
+                        conn.commit()
+
+    except Exception as e:
+        eType, eObject, eTraceback = sys.exc_info()            
+        log(0, f'ERROR: Module update_database failed on line {eTraceback.tb_lineno} - {e}')
+        
+def update_mysql_database(structure, extra_data, secret_data):
     try:
         if 'enabled' in structure['database']:
             if structure['database']['enabled']:
                 if 'table' in structure['database']:
                     database_table = structure['database']['table']
                     conn = mysql.connector.connect(
-                        host="localhost",
-                        user="allsky",
-                        password="allsky",
-                        database="allsky"
+                        host=secret_data['databasehost'],
+                        user=secret_data['databaseuser'],
+                        password=secret_data['databasepassword'],
+                        database=secret_data['databasedatabase']
                     )
-
+                    
                     cursor = conn.cursor()
                     cursor.execute(f'CREATE TABLE IF NOT EXISTS {database_table} (id INT AUTO_INCREMENT PRIMARY KEY, timestamp BIGINT, json_data JSON)')
                     unix_timestamp = math.floor(time.time())
@@ -1119,8 +1219,7 @@ def get_camera_gain():
         gain = get_environment_variable('AS_GAIN')
     
     return float(gain)
-   
-   
+    
 def get_camera_type():
     camera_type = get_environment_variable('CAMERA_TYPE')
     return camera_type.lower()

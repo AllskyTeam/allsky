@@ -22,12 +22,17 @@ class OEUIMANAGER {
     #imageCache = null;
     #errorFields = [];
     #errorsTable = null;
+    #selectionLayer = null;
+    #selectionRect = null;
+    #selectionActive = false;
 
     #fieldTable = null;
     #allFieldTable = null;
 
     #debugMode = false;
     #debugPosMode = false;
+
+    #selectionStart = null;
 
     constructor(imageObj) {
 
@@ -53,6 +58,14 @@ class OEUIMANAGER {
             draggable: true
         });
                 
+        this.#selectionLayer = new Konva.Layer();
+        this.#selectionRect = new Konva.Rect({
+            fill: 'rgba(0, 161, 255, 0.3)',
+            visible: false,
+        });
+        this.#selectionLayer.add(this.#selectionRect);
+        this.#oeEditorStage.add(this.#selectionLayer);
+
         this.#backgroundLayer = new Konva.Layer();
         this.#backgroundLayer.add(this.#backgroundImage);
         this.#oeEditorStage.add(this.#backgroundLayer);
@@ -249,6 +262,92 @@ class OEUIMANAGER {
                 return undefined;
             }
         });
+
+
+
+
+
+
+
+        $(this.#oeEditorStage.container()).on('mousedown', (e) => {
+            if (e.button !== 0) return; // only left mouse
+ 
+            const pointer = this.#oeEditorStage.getPointerPosition();
+            const transform = this.#oeEditorStage.getAbsoluteTransform().copy().invert();
+            const pos = transform.point(pointer);
+            this.#selectionStart = pos;
+            this.#selectionActive = false; 
+          });
+      
+          $(this.#oeEditorStage.container()).on('mousemove', (e) => {
+            if (!this.#selectionStart) return;
+
+            if (this.#selected  !== null) return
+
+            const transform = this.#oeEditorStage.getAbsoluteTransform().copy().invert();
+            const pos = transform.point(this.#oeEditorStage.getPointerPosition());
+          
+            const dx = pos.x - this.#selectionStart .x;
+            const dy = pos.y - this.#selectionStart .y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+          
+            if (!this.#selectionActive && dist > 10) {
+                this.#selectionActive = true;
+                this.#selectionRect.visible(true);
+            }
+          
+            if (this.#selectionActive) {
+                const x = Math.min(this.#selectionStart.x, pos.x);
+                const y = Math.min(this.#selectionStart.y, pos.y);
+                const width = Math.abs(pos.x - this.#selectionStart.x);
+                const height = Math.abs(pos.y - this.#selectionStart.y);
+                this.#selectionRect.setAttrs({ x, y, width, height });
+
+                const box = this.#selectionRect.getClientRect()
+                this.#fieldManager.setupSelection(box, this.#transformer)
+                this.updateToolbar()
+            }
+          });
+      
+        $(this.#oeEditorStage.container()).on('mouseup', (e) => {
+            if (!this.#selectionStart) return;
+            
+            if (this.#selected  !== null) return
+
+            if (this.#selectionActive) {
+                const box = this.#selectionRect.getClientRect()
+                this.#fieldManager.setupSelection(box, this.#transformer)
+                this.updateToolbar();
+                this.#selectionRect.visible(false)
+                this.#selectionStart = null
+            } else {
+                this.#fieldManager.clearSelection(this.#transformer)
+                this.#selectionStart = null
+            }
+          });
+
+
+        $(document).on('click', '#oe-left-align', (event) => {
+            this.#fieldManager.leftAlignFields(this.#transformer)
+            this.#configManager.dirty = true;
+            this.updateToolbar();
+        })
+
+        $(document).on('click', '#oe-vertical-equal', (event) => {
+            this.#fieldManager.equalSpaceFields(this.#transformer)
+            this.#configManager.dirty = true;
+            this.updateToolbar();
+        })
+
+        
+
+
+
+
+
+
+
+
 
         this.#oeEditorStage.on('dragmove', (event) => {
 
@@ -1593,6 +1692,18 @@ class OEUIMANAGER {
                 $('#oe-toolbar-debug').removeClass('hidden')
             } else {
                 $('#oe-toolbar-debug').addClass('hidden')
+            }
+
+            if (this.#transformer.nodes().length > 1) {
+                $('#oe-group').removeClass('disabled');                
+                $('#oe-ungroup').removeClass('disabled');
+                $('#oe-left-align').removeClass('disabled');
+                $('#oe-vertical-equal').removeClass('disabled');
+            } else {
+                $('#oe-group').addClass('disabled');
+                $('#oe-ungroup').addClass('disabled');
+                $('#oe-left-align').addClass('disabled');
+                $('#oe-vertical-equal').addClass('disabled');
             }
         }
     }

@@ -28,6 +28,66 @@ class OEFIELDMANAGER {
         return this.#fields;
     }
 
+    setupSelection(selectionRect, transformer) {
+        transformer.nodes([]);
+        for (let [fieldName, field] of this.#fields.entries()) {
+            if (field.type == 'fields') {
+                const isIntersecting = Konva.Util.haveIntersection(selectionRect, field.shape.getClientRect());
+
+                if (isIntersecting) {
+                    const oldNodes = transformer.nodes();
+                    const newNodes = oldNodes.concat([field.shape]);
+                    transformer.nodes(newNodes);
+                }
+            }
+        }
+    }
+
+    clearSelection(transformer) {
+        transformer.nodes([]);
+    }
+
+    leftAlignFields(transformer) {
+        let leftMost = 9999999999
+        let leftMostId = ''
+
+        transformer.nodes().forEach((node) => {
+            const x = node.x()
+            if (x < leftMost) {
+                leftMost = x - node.offsetX()
+                leftMostId = node.id()
+            }
+        })
+
+        transformer.nodes().forEach((node) => {
+            if (node.id() !== leftMostId) {
+                const field = this.findField(node.id())
+                field.x = leftMost + node.offsetX()
+            }
+        })
+    }
+
+    equalSpaceFields(transformer) {
+
+        const count = textNodes.length;
+        if (count === 0) return;
+    
+        const totalHeight = textNodes.reduce((sum, node) => sum + node.height(), 0);
+        const availableSpace = bottomY - topY;
+        const spacing = (availableSpace - totalHeight) / (count - 1);
+    
+        let currentY = topY;
+    
+        textNodes.forEach(node => {
+            // Account for offsetY
+            node.y(currentY + node.offsetY());
+            currentY += node.height() + spacing;
+        });
+        
+
+    }
+
+
     clearDirty() {
         for (let [fieldName, field] of this.#fields.entries()) {
             field.dirty = false;

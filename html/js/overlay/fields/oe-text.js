@@ -84,6 +84,10 @@ class OETEXTFIELD extends OEFIELD {
     this.shape.offset({x: size.width/2, y: size.height/2});    
   }
 
+  get colour() {
+    return this.fieldData.fill;
+  }
+
   get empty() {
     return this.fieldData.empty;
   }

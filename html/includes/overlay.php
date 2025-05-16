@@ -133,6 +133,24 @@ function DisplayOverlay($image_name)
                                             <div class="btn btn-lg navbar-btn oe-button" id="oe-test-mode" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Sample Data"><i class="fa-regular fa-square-check"></i></div>
                                         </li>
 
+
+
+                                        <li>
+                                            <div class="btn btn-lg navbar-btn oe-zoom oe-button border-left" id="oe-group" data-toggle="tooltip" data-container="body" data-placement="top" title="Group Fields"><i class="fa-solid fa-object-group"></i></div>
+                                        </li>
+                                        <li>
+                                            <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-ungroup" data-toggle="tooltip" data-container="body" data-placement="top" title="Un Group Fields"><i class="fa-solid fa-object-ungroup"></i></div>
+                                        </li>
+
+                                        
+                                        <li>
+                                            <div class="btn btn-lg navbar-btn oe-zoom oe-button border-left" id="oe-left-align" data-toggle="tooltip" data-container="body" data-placement="top" title="Left Align"><i class="fa-solid fa-align-left"></i></div>
+                                        </li>
+                                        <li>
+                                            <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-vertical-equal" data-toggle="tooltip" data-container="body" data-placement="top" title="Equal Spacing"><i class="fa-solid fa-arrows-up-down"></i></div>
+                                        </li>
+                                        
+
                                         <li>
                                             <div class="btn btn-lg navbar-btn oe-zoom oe-button border-left" id="oe-zoom-in" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
                                         </li>

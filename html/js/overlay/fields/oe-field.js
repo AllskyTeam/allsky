@@ -7,11 +7,12 @@ class OEFIELD {
 	shape = null;
 	id = null;
 	loaded = true;
+	type = null;
 
 	OVERLAYFIELDSELECTOR = ".overlayfield";
 
 	constructor(type, id) {
-		//this.type = type;
+		this.type = type;
 		this.id = 'oe-field-' + id;
 	}
 
@@ -45,6 +46,10 @@ class OEFIELD {
 				}
 			}
 		}
+	}
+
+	get type() {
+		return this.type
 	}
 
 	get loaded() {

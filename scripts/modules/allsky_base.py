@@ -32,7 +32,6 @@ class ALLSKYMODULEBASE:
 		except (ValueError, KeyError):
 			pass
 
-#		if self.meta_data is not None:
 		if hasattr(self, 'meta_data'):
 			if 'argumentdetails' in self.meta_data:
 				if param in self.meta_data['argumentdetails']:
@@ -69,4 +68,8 @@ class ALLSKYMODULEBASE:
 	def debug_log(self, message):
 		if self._debugmode:
 			print(message)
-   
+
+	def get_database_config(self):
+		database_config = allsky_shared.get_database_config()
+  
+		return database_config

@@ -284,6 +284,9 @@ class MODULEUTIL
         $configData = json_decode($rawConfigData);
 
         $result['settings'] = $configData;
+
+        $result['haveDatabase'] = haveDatabase();
+                
         $formattedJSON = json_encode($result, JSON_PRETTY_PRINT);
         $this->sendResponse($formattedJSON);
     }
@@ -1154,14 +1157,26 @@ class MODULEUTIL
         return $data;
     }
 
-    private function getChartDataForChart($chart, $table) {
-        $seriesData = [];
-        $host = 'localhost';
-        $db   = 'allsky';
-        $user = 'allsky';
-        $pass = 'allsky';
+    private function getDatabaseConfig() {
+        $secretData = getDatabaseConfig();
+
+        return $secretData;
+    }
+
+    private function getChartDataFromMySQL($databaseConfig, $table) {
+        $chartData = [];
+
+        $host = $databaseConfig['databasehost'];
+        $db   = $databaseConfig['databasedatabase'];
+        $user = $databaseConfig['databaseuser'];
+        $pass = $databaseConfig['databasepassword'];
         $charset = 'utf8mb4';
         
+        // IMPORTANT: validate $table to prevent SQL injection
+        if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $table)) {
+            die("Invalid table name.");
+        }
+
         $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
         
         $options = [
@@ -1171,14 +1186,109 @@ class MODULEUTIL
         $pdo = new PDO($dsn, $user, $pass, $options);
 
         $query = "SELECT json_data, timestamp FROM " . $table . " WHERE timestamp >= UNIX_TIMESTAMP() - 3600 ORDER BY timestamp ASC";
-        #$query = "SELECT json_data, timestamp FROM " . $table . " ORDER BY timestamp ASC";
         $stmt = $pdo->query($query);
 
         while ($row = $stmt->fetch()) {
             $jsonString = json_decode($row['json_data']);
-
             $timestamp = intval($row['timestamp'])*1000;
+            $chartData[$timestamp] = $jsonString;
+        }
+
+        return $chartData;
+    }
+
+    private function getChartDataFromPostgreSQL($databaseConfig, $table) {
+        $chartData = [];
+
+        $host = $databaseConfig['databasehost'];
+        $db   = $databaseConfig['databasedatabase'];
+        $user = $databaseConfig['databaseuser'];
+        $pass = $databaseConfig['databasepassword'];
+
+        $dbconn = pg_connect("host=$host dbname=$db user=$user password=$pass");
         
+        if ($dbconn) {
+            $now = time();
+            $since = $now - 3600;
+            
+            // IMPORTANT: validate $table to prevent SQL injection
+            if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $table)) {
+                die("Invalid table name.");
+            }
+            
+            $query = "SELECT json_data, timestamp FROM $table WHERE timestamp >= $1 ORDER BY timestamp ASC";
+            $result = pg_query_params($dbconn, $query, [$since]);
+            
+            if ($result) {
+                while ($row = pg_fetch_assoc($result)) {
+                    $jsonString = json_decode($row['json_data']);
+                    $timestamp = intval($row['timestamp'])*1000;
+                    $chartData[$timestamp] = $jsonString;
+                }
+            }
+            
+            pg_free_result($result);
+            pg_close($dbconn);
+        }
+
+        return $chartData;  
+    }
+
+    private function getChartDataFromSQLite($databaseConfig, $table) {
+        $chartData = [];
+
+        // IMPORTANT: validate $table to prevent SQL injection
+        if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $table)) {
+            die("Invalid table name.");
+        }
+
+        $db = new SQLite3(ALLSKY_MYFILES_DIR . '/allsky.db', SQLITE3_OPEN_READONLY);
+        $db->busyTimeout(5000);
+
+        $now = time();
+        $since = $now - 3600;
+        
+        $stmt = $db->prepare('SELECT json_data, timestamp FROM ' . $table . ' WHERE timestamp >= :since');
+        $stmt->bindValue(':since', $since, SQLITE3_INTEGER);
+        
+        $result = $stmt->execute();
+        
+        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+            $jsonString = json_decode($row['json_data']);
+            $timestamp = intval($row['timestamp'])*1000;
+            $chartData[$timestamp] = $jsonString;
+        }
+        
+        $db->close();
+
+
+        return $chartData;
+    }
+
+    private function getChartDataForChart($chart, $table) {
+        $seriesData = [];
+        $chartData = [];
+
+        if (haveDatabase()) {
+            $databaseConfig = $this->getDatabaseConfig();
+            $databaseType = $databaseConfig['databasetype'];
+
+            switch($databaseType) {
+                case 'mysql':
+                    $chartData = $this->getChartDataFromMySQL($databaseConfig, $table);
+                    break;
+                
+                case 'postgresql':
+                    $chartData = $this->getChartDataFromPostgreSQL($databaseConfig, $table);
+                    break;
+
+                case 'sqlite':
+                    $chartData = $this->getChartDataFromSQLite($databaseConfig, $table);
+                    break;
+            }
+        }
+
+        foreach ($chartData as $timestamp=>$jsonString) {
             $dataArray = json_decode($jsonString, true);   
             if ($dataArray) {
                 foreach ($chart->series as $key => $seriesConfig) {
@@ -1216,10 +1326,6 @@ class MODULEUTIL
                 }
             }
         }
-
-        //foreach ($seriesData as $key=>$series) {
-        //    $seriesData[$key]["data"] = $this->insertNullsOnGap($series["data"]);
-        //}
         
         $seriesData = array_values($seriesData);
 

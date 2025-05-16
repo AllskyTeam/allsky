@@ -207,6 +207,17 @@ function show_start_times()
 }
 
 #####
+# Show all the currently connected cameras.
+function setup_database()
+{
+	# shellcheck disable=SC2124
+	local ARGS="${@}"		# optional
+
+	# shellcheck disable=SC2086
+	setup_database.sh ${ARGS}
+}
+
+#####
 # recheck_tmp and recheck_swap are functions defined elsewhere.
 
 ####################################### Helper functions
@@ -294,6 +305,7 @@ if [[ -z ${CMD} ]]; then
 	CMDS+=("samba"						"5. Simplify copying files to/from the Pi")
 	CMDS+=("new_rpi_camera_info"		"6. Collect information for new RPi camera")
 	CMDS+=("show_start_times"	 		"7. Show daytime and nighttime start times")
+	CMDS+=("setup_database"		 		"8. Setup the Allsky database server")
 
 	# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 	while COMMAND="$( prompt "${PROMPT}" "${CMDS[@]}" )"

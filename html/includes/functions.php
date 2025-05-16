@@ -885,4 +885,87 @@ function getTOD() {
 	
 	return $tod;
 }
+
+function getSecret($secret=false) {
+
+	$rawData = file_get_contents(ALLSKY_ENV, true);
+	$secretData = json_decode($rawData, true);
+
+	if ($secret !== false) {
+		$result = null;
+
+		if (isset($secretData[$secret])) {
+			$result = $secretData[$secret];
+		}
+	} else {
+		$result = $secretData;
+	}
+
+	return $result;
+}
+
+#
+## Create a single array with database settings
+#
+function getDatabaseConfig() {
+	$secretData = getSecret();
+	$settings = readSettingsFile();
+	$secretData['databasetype'] = $settings['databasetype'];
+
+	return $secretData;
+}
+
+function haveDatabase() {
+
+	$secretData = getDatabaseConfig();
+	$databaseType = 'none';
+	if (isset($secretData['databasetype'])) {
+		$databaseType = $secretData['databasetype'];
+	}
+	switch ($databaseType) {
+		case 'sqlite':
+			return haveSQLite($secretData);
+		case 'mysql':
+			return haveMySQL($secretData);
+		default:
+			return false;
+	}
+}
+
+function haveSQLite($secretData) {
+	$result = true;
+	$db = new SQLite3(ALLSKY_MYFILES_DIR . '/allsky.db');
+
+	if (!$db) {
+		$result = false;
+	}
+	return $result;
+}
+
+function haveMySQL($secretData) {
+	$result = false;
+	try {
+		if (in_array('mysql', PDO::getAvailableDrivers())) {
+
+			$host = $secretData['databasehost'];
+			$db   = $secretData['databasedatabase'];
+			$user = $secretData['databaseuser'];
+			$pass = $secretData['databasepassword'];
+			$charset = 'utf8mb4';
+			
+			$dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+			
+			$options = [
+				PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+				PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+			];		
+			$pdo = new PDO($dsn, $user, $pass, $options);
+			$result = true;
+		}	
+	} catch (PDOException $e) {
+	} catch (Exception $e) {
+	}
+	
+	return $result;
+}
 ?>

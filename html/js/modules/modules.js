@@ -1005,37 +1005,41 @@ class MODULESEDITOR {
 					
 					if (fieldType == 'graph') {
 						if ('graphs' in moduleData.metadata) {
-							Object.entries(moduleData.metadata.graphs).forEach(([graphName, graphData]) => {
-								if ('main' in graphData) {
-									if (graphData.main == 'true') {
-										controls['chart'].push({
-											'id': key,
-											'chartkey': graphName,
-											'module': module.replace('.py', '')
-										})						
-										inputHTML = `<div id="${key}"></div>`
+							if (this.#settings.haveDatabase) {
+								Object.entries(moduleData.metadata.graphs).forEach(([graphName, graphData]) => {
+									if ('main' in graphData) {
+										if (graphData.main == 'true') {
+											controls['chart'].push({
+												'id': key,
+												'chartkey': graphName,
+												'module': module.replace('.py', '')
+											})						
+											inputHTML = `<div id="${key}"></div>`
+										}
 									}
-								}
-							});
+								});
+							}
 						}
 					}
 
 				}
 
 				if (fieldType == 'graph') {
-					fieldHTML = `
-						<div class="form-group" id="${key}-wrapper">
-							<div class="col-xs-11">
-								<div class="${extraClass}">
-									${inputHTML}
+					if (this.#settings.haveDatabase) {					
+						fieldHTML = `
+							<div class="form-group" id="${key}-wrapper">
+								<div class="col-xs-11">
+									<div class="${extraClass}">
+										${inputHTML}
+									</div>
+									${helpText}
 								</div>
-								${helpText}
+								<div class="col-xs-1">
+									${fieldPostHTML}
+								</div>
 							</div>
-							<div class="col-xs-1">
-								${fieldPostHTML}
-							</div>
-						</div>
-					`
+						`
+					}
 				} else {
 					fieldHTML = '\
 						<div class="form-group" id="' + key + '-wrapper">\
@@ -1090,16 +1094,25 @@ class MODULESEDITOR {
 				}
 			}
 
-            let tab = 'Settings';
-            if (fieldData.tab !== undefined) {
-                tab = fieldData.tab
-                tab = tab.replace(/\s+/g,'_');
-            }
-            if (tabs[tab] === undefined) {
-                tabs[tab] = [];
-            }
-            tabs[tab].push(fieldHTML);
-            fieldsHTML += fieldHTML;
+			let include = true;
+			if (fieldType == 'graph') {
+				if (!this.#settings.haveDatabase) {
+					include = false;
+				}
+			}
+
+			if (include) {
+				let tab = 'Settings';
+				if (fieldData.tab !== undefined) {
+					tab = fieldData.tab
+					tab = tab.replace(/\s+/g,'_');
+				}
+				if (tabs[tab] === undefined) {
+					tabs[tab] = [];
+				}
+				tabs[tab].push(fieldHTML);
+				fieldsHTML += fieldHTML;
+			}
 
 			if (fieldData.filters !== undefined) {
 				let filters = fieldData.filters

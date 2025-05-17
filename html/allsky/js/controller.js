@@ -341,6 +341,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 	$scope.camera = config.camera;
 	$scope.lens = config.lens;
 	$scope.computer = config.computer;
+	$scope.equipmentinfo = config.equipmentinfo;
 	$scope.owner = config.owner;
 	$scope.auroraForecast = config.auroraForecast;
 	$scope.imageName = config.imageName;

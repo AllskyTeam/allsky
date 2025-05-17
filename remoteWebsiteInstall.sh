@@ -480,7 +480,7 @@ function display_aborted()
 function display_complete()
 {
 	local EXTRA_TEXT  E  DIALOG_TEXT
-	E="Go to the WebUI's 'Editor' page to confirm the settings in this file are correct,"
+	E="Go to the WebUI's 'Editor' page to confirm the settings are correct,"
 	E+="\n${INDENT}and update as needed:"
 	E+="\n\n${INDENT}    ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)"
 
@@ -960,13 +960,13 @@ function usage_and_exit()
 
 	exec >&2
 	if [[ ${RET} -eq 0 ]]; then
-		C="${YELLOW}"
+		C="${cYELLOW}"
 	else
-		C="${RED}"
+		C="${cRED}"
 	fi
 
 	MSG="Usage: ${ME} [--help] [--debug] [--skipupload] [-auto] [--text]"
-	echo -e "\n${C}${MSG}${NC}"
+	echo -e "\n${C}${MSG}${cNC}"
 	echo "where:"
 	echo "    '--help' displays this message and exits."
 	echo "    '--debug' adds addtional debugging information to the installation log."
@@ -1006,8 +1006,8 @@ function post_data()
 function set_colors()
 {
 	if [[ ${TEXT_ONLY} == "true" ]]; then
-		DIALOG_RED="${RED}"
-		DIALOG_NC="${NC}"
+		DIALOG_RED="${cRED}"
+		DIALOG_NC="${cNC}"
 	fi
 }
 

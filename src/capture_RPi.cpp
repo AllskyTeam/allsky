@@ -56,11 +56,15 @@ int currentBitDepth				= NOT_SET;			// 8 or 16
 raspistillSetting myRaspistillSetting;
 modeMeanSetting myModeMeanSetting;
 std::string errorOutput;
+std::string metadataFile = "";
+std::string metadataArgs = "";
 
 
 //---------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------
 
+
+bool readMetadataFile(string file);
 
 // Build capture command to capture the image from the camera.
 // If an argument is IS_DEFAULT, the user didn't set it so don't pass to the program and
@@ -320,12 +324,9 @@ int RPicapture(config cg, cv::Mat *image)
 	string s2 = "";
 	if (cg.isLibcamera)
 	{
-		// If there have been 2 consecutive errors, chances are this one will fail too,
-		// so capture the error message.
-		if (cg.debugLevel >= 3 || numConsecutiveErrors >= 2)
-			s2 = " > " + errorOutput + " 2>&1";
-		else
-			s2 = " 2> /dev/null";	// gets rid of a bunch of libcamera verbose messages
+		command += metadataArgs;
+
+		s2 = " > " + errorOutput + " 2>&1";
 	}
 
 	// Create the command we'll actually run.
@@ -351,12 +352,123 @@ int RPicapture(config cg, cv::Mat *image)
 				cg.ME, basename(cg.fullFilename));
 		}
 		ret = 0;	// Makes it easier for caller to determine if there was an error.
+
+		if (cg.isLibcamera)
+		{
+			readMetadataFile(metadataFile);
+		}
 	}
-	// else, error message is printed by caller.
+	else
+	{
+		// Unable to take picture.
+		// The child command is "/bin/sh" will will basically never get a signal
+		// even if the camera program does, so check for a signal in WEXITSTATUS() not ret.
+		if (WIFSIGNALED(WEXITSTATUS(ret)))
+		{
+			Log(1, " >>> %s: WARNING: %s received signal %d, ret=0x%x\n",
+				cg.ME, cg.cmdToUse, WTERMSIG(WEXITSTATUS(ret)), ret);
+		}
+		else if (WIFEXITED(ret))
+		{
+			// "Normal" return but command failed.
+			Log(1, " >>> %s: WARNING: Unable to take picture, return code=0x%0x, WEXITSTATUS=0x%0x\n",
+				cg.ME, ret, WEXITSTATUS(ret));
+		}
+		else
+		{
+			// Not sure what this would be...
+			Log(1, " >>> %s: WARNING: Unable to take picture, command did not return normally, return code=0x%0x WEXITSTATUS=0x%0x\n",
+				cg.ME, ret, WEXITSTATUS(ret));
+		}
+
+		// Add errorOutput to the log file.
+		std::string errMsg;
+		command = "cat " + errorOutput;
+		errMsg = exec(command.c_str());
+		Log(0, "********************");
+		Log(0, "%s", errMsg.c_str());
+		Log(0, "********************");
+	}
 
 	return(ret);
 }
 
+bool readMetadataFile(string file)
+{
+	char *buf = readFileIntoBuffer(&CG, file.c_str());
+	if (buf == NULL)
+	{
+		CG.lastSensorTemp = NOT_SET;
+		// The other "last" values will use the requested values.
+		return(false);
+	}
+
+	char *line;
+	int on_line = 0;			// number of lines found
+	(void) getLine(NULL);		// resets the buffer pointer
+	while ((line = getLine(buf)) != NULL)
+	{
+		on_line++;
+		Log(5, "Line %d: [%s]\n", on_line, line);
+		if (*line == '\0')
+		{
+			continue;		// blank line
+		}
+		(void) getToken(NULL, '=');		// tells getToken() we have a new line.
+
+		// Input lines are:  name=value
+		char *name = getToken(line, '=');
+		char *value = getToken(line, '=');
+		if (value == NULL)
+		{
+			// "line" ends with newline
+			Log(1, "%s: WARNING: skipping invalid line %d in '%s': [%s]",
+				CG.ME, on_line, file.c_str(), line);
+			continue;
+		}
+
+		if (strcmp(name, "ExposureTime") == 0)
+		{
+			// integer
+			int x = atoi(value);
+			if (x != myRaspistillSetting.shutter_us)
+			{
+Log(5, "  ExposureTime %d !=  myRaspistillSetting.shutter_us (%d)\n", x, myRaspistillSetting.shutter_us);
+// CG.lastExposure_us = myRaspistillSetting.shutter_us;		SHOULD be == auto/manual exposure algormithm value
+			}
+else Log(5, "  ExposureTime = %f ('%s')\n", x, value);
+		}
+		else if (strcmp(name, "ColourGains") == 0)
+		{
+
+			// [ float, float ]		red, blue
+			if (sscanf(value, "[ %lf, %lf ]", &CG.lastWBR, &CG.lastWBB) != 2)
+			{
+				Log(1, "*** %s: WARNING, WBR and WBB not on line: '%s'\n", CG.ME, line);
+			}
+else
+Log(5, "  ColourGains: Red: %lf, Blue: %lf\n", CG.lastWBR, CG.lastWBB);
+		}
+		else if (strcmp(name, "SensorTemperature") == 0)
+		{
+			CG.lastSensorTemp = atof(value);
+Log(5, "  SensorTemperature = %f ('%s')\n", CG.lastSensorTemp, value);
+
+		}
+		else if (strcmp(name, "AnalogueGain") == 0)
+		{
+			// float
+			float x = atof(value);
+			if (x != myRaspistillSetting.analoggain)
+			{
+Log(5, "  AnalogueGain %f !=  myRaspistillSetting.analoggain (%f)\n", x, myRaspistillSetting.analoggain);
+// CG.lastGain =  myRaspistillSetting.analoggain; 		SHOULD be == auto/manual exposure algormithm value
+			}
+else Log(5, "  AnalogueGain = %f ('%s')\n", x, value);
+		}
+	}
+	return(true);
+}
 
 //---------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------
@@ -441,8 +553,13 @@ int main(int argc, char *argv[])
 		closeUp(EXIT_ERROR_STOP);
 	}
 
-	errorOutput = CG.saveDir;
+	errorOutput  = CG.saveDir;
 	errorOutput += "/capture_RPi_debug.txt";
+	if (CG.isLibcamera) {
+		metadataFile = CG.saveDir;
+		metadataFile += "/metadata.txt";
+		metadataArgs = " --metadata '" + metadataFile + "' --metadata-format txt";
+	}
 
 	int iMaxWidth, iMaxHeight;
 	double pixelSize;
@@ -764,10 +881,13 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				numExposures++;
 				numConsecutiveErrors = 0;
 
-				// We currently have no way to get the actual white balance values,
-				// so use what the user requested.
-				CG.lastWBR = CG.currentWBR;
-				CG.lastWBB = CG.currentWBB;
+// TODO: NEW: use current values if manual mode or using raspistill
+// Otherwise use the value from metadata.
+				if (CG.currentAutoAWB || ! CG.isLibcamera)
+				{
+					CG.lastWBR = CG.currentWBR;
+					CG.lastWBB = CG.currentWBB;
+				}
 
 				CG.lastFocusMetric = CG.determineFocus ? (int)round(get_focus_metric(pRgb)) : -1;
 
@@ -854,26 +974,6 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 			else
 			{
 				// Unable to take picture.
-				// The child command is "/bin/sh" will will basically never get a signal
-				// even if the camera program does, so check for a signal in WEXITSTATUS() not retCode.
-				if (WIFSIGNALED(WEXITSTATUS(retCode)))
-				{
-					Log(1, " >>> %s: WARNING: %s received signal %d, retCode=0x%x\n",
-						CG.ME, CG.cmdToUse, WTERMSIG(WEXITSTATUS(retCode)), retCode);
-				}
-				else if (WIFEXITED(retCode))
-				{
-					// "Normal" return but command failed.
-					Log(1, " >>> %s: WARNING: Unable to take picture, return code=0x%0x, WEXITSTATUS=0x%0x\n",
-						CG.ME, retCode, WEXITSTATUS(retCode));
-				}
-				else
-				{
-					// Not sure what this would be...
-					Log(1, " >>> %s: WARNING: Unable to take picture, command did not return normally, return code=0x%0x WEXITSTATUS=0x%0x\n",
-						CG.ME, retCode, WEXITSTATUS(retCode));
-				}
-
 				numTotalErrors++;
 				numConsecutiveErrors++;
 				if (numConsecutiveErrors >= maxErrors)

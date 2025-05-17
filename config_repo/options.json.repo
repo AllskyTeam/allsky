@@ -458,7 +458,7 @@
 "name" : "nightawb",
 "display" : "_display",
 "default" : false,
-"description" : "Enable to use auto white balance so the camera adjusts the color.<br>NOTE: enabling this can significantly increase the time needed to capture a nighttime image.",
+"description" : "Enable to use auto white balance so the camera adjusts the color.<br>NOTE: enabling this can <strong>significantly</strong> increase the time needed to capture a nighttime image, so it's usually best to disable this at night.",
 "label" : "Auto White Balance",
 "label_prefix" : "Nighttime",
 "type" : "boolean",
@@ -1378,7 +1378,6 @@
 "label" : "Bitrate",
 "label_prefix" : "Daily Timelapse",
 "type" : "integer",
-"checkchanges" : true,
 "booldependson" : "timelapsegenerate"
 },
 {
@@ -2324,18 +2323,16 @@
 },
 {
 "name" : "camera",
+"settingsonly" : true,
 "default" : "",
-"description" : "The type and model of your camera, for example: <span class='WebUIValue'>ZWO 224MC</span> or <span class='WebUIValue'>RPi HQ</span>.  Set automatically.",
-"label" : "Camera",
-"type" : "widetext",
-"checkchanges" : true,
-"optional" : true,
-"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
+"description" : "The type and model of your camera. Set automatically.",
+"label" : "NOT DISPLAYED IN WebUI",
+"type" : "text"
 },
 {
 "name" : "lens",
 "default" : "",
-"description" : "The lens you're using on your camera, for example: <span class='WebUIValue'>Arecont 1.55</span>.",
+"description" : "The lens you're using on your camera, for example: <span class='WebUIValue'>Arecont 1.55 mm</span>.",
 "label" : "Lens",
 "type" : "text",
 "checkchanges" : true,
@@ -2344,14 +2341,21 @@
 },
 {
 "name" : "computer",
+"settingsonly" : true,
 "default" : "",
-"description" : "The computer running your allsky camera, for example: <span class='WebUIValue'>Raspberry Pi 3, 4 GB</span>.  Set automatically.",
-"label" : "Computer",
+"description" : "The computer running your allsky camera. Set automatically.",
+"label" : "NOT DISPLAYED IN WebUI",
+"type" : "text",
+"carryforward" : true
+},
+{
+"name" : "equipmentinfo",
+"default" : "",
+"description" : "Optional information on your equipment.",
+"label" : "Equipment Info",
 "type" : "widetext",
-"carryforward" : true,
 "checkchanges" : true,
-"optional" : true,
-"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
+"optional" : true
 },
 
 {

@@ -133,20 +133,6 @@ function check_website()
 	return "${HAS_WEBSITE_RET}"
 }
 
-# Get all settings at once rather than individually via settings().
-function getAllSettings()
-{
-	local X
-
-	if ! X="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix S_ --shell 2>&1 )" ; then
-		echo "${X}"
-		return 1
-	fi
-
-	eval "${X}"
-	return 0
-}
-
 if [[ -f ${SETTINGS_FILE} ]]; then
 	# If the settings file doesn't exist, check_website() won't find a website and
 	# we are likely called from the install script before the file is created.
@@ -622,7 +608,7 @@ do
 			done
 			COMPUTER="$( get_computer )"
 			CHANGES+=( "computer" "Computer" "${COMPUTER}" )
-			CHANGES+=( "camera" "Camera Type" "${CAMERA_TYPE} ${CAMERA_MODEL}" )
+			CHANGES+=( "camera" "Camera" "${CAMERA_TYPE} ${CAMERA_MODEL}" )
 
 			# Because the user doesn't change the camera number directly it's
 			# not updated in the settings file, so we have to do it.
@@ -669,18 +655,18 @@ do
 		"usedarkframes")
 			if [[ ${NEW_VALUE} == "true" ]]; then
 				if [[ ! -d ${ALLSKY_DARKS} ]]; then
-					wW_ "WARNING: No darks to subtract.  No '${ALLSKY_DARKS}' directory."
+					wE_ "ERROR: The '${ALLSKY_DARKS}' directory does not exist so there are no darks to subtract."
 					# Restore to old value
 					echo "${wBR}Disabling ${WSNs}${LABEL}${WSNe}."
 					update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "boolean"
 					(( NUM_CHANGED-- ))
 				else
-					NUM_DARKS=$( find "${ALLSKY_DARKS}" -name "*.${EXTENSION}" 2>/dev/null | wc -l)
+					NUM_DARKS=$( find "${ALLSKY_DARKS}" \( -name "*.png" -o -name "*.jpg" \) 2>/dev/null | wc -l)
 					if [[ ${NUM_DARKS} -eq 0 ]]; then
 						W="WARNING: ${WSNs}${LABEL}${WSNe} is set but there are no darks"
-						W+=" in '${ALLSKY_DARKS}' with extension of '${EXTENSION}'."
+						W+=" frames in '${ALLSKY_DARKS}'."
 						wW_ "${W}"
-						echo    "${wBR}FIX: Either disable the setting or take dark frames."
+						echo "${wBR}FIX: Either disable the setting or take dark frames."
 					fi
 				fi
 			fi
@@ -763,7 +749,7 @@ do
 			fi
 			;;
 
-		"location" | "owner" | "camera" | "lens" | "computer")
+		"location" | "owner" | "lens" | "equipmentinfo")
 			RUN_POSTTOMAP="true"
 			check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${NEW_VALUE}")
 			WEBSITE_VALUE_CHANGED="true"

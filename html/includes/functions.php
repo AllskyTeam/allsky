@@ -120,6 +120,8 @@ $useRemoteWebsite = false;
 $hasLocalWebsite = false;
 $hasRemoteWebsite = false;
 $endSetting = "XX_END_XX";
+$saveChangesLabel = "Save changes";
+$forceRestart = false;					// Restart even if no changes?
 
 function readSettingsFile() {
 	$settings_file = getSettingsFile();
@@ -300,17 +302,34 @@ function initialize_variables($website_only=false) {
 
 // Check if the settings have been configured.
 function check_if_configured($page, $calledFrom) {
-	global $lastChanged, $status;
+	global $lastChanged, $status, $allsky_status, $saveChangesLabel;
+
 	static $will_display_configured_message = false;
 
-	if ($will_display_configured_message)
+	if ($will_display_configured_message) {
 		return(true);
+	}
 
 	if ($lastChanged === "") {
-		// The settings aren't configured - probably right after an installation.
-		$msg = "Please verify the Allsky settings and update where needed.<br>";
+		// The settings either need reviewing or aren't fully configured which
+		// usually happens right after an installation or upgrade.
+		if ($allsky_status == ALLSKY_STATUS_NEEDS_REVIEW) {
+			$msg = "Please review the Allsky settings to make sure they look correct.<br>";
+			$saveChangesLabel = "Review done; start Allsky";
+			$forceRestart = true;
+		} else {
+			// Should be ALLSKY_STATUS_NEEDS_CONFIGURATION, but if something else,
+			// do the same the same thing.
+			$msg = "Please configure the Allsky settings.<br>";
+			$saveChangesLabel = "Configuration done; start Allsky";
+			$forceRestart = true;
+		}
+
+		$msg2 = "When done, click on the";
+		$msg2 .= " <span class='btn-primary btn-fake'>${saveChangesLabel}</span> button.";
+
 		if ($page === "configuration")
-			$msg .= "When done, click on the 'Save changes' button.";
+			$msg .= $msg2;
 		else
 			$msg .= "Go to the 'Allsky Settings' page to do so.";
 		$status->addMessage("<div id='mustConfigure' class='important'>$msg</div>", 'danger');
@@ -643,6 +662,13 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
 		return;
 	}
 
+	if (! is_dir(ALLSKY_IMAGES)) {
+		echo "<br><div class='errorMsgBig'>";
+		echo "ERROR: '" . ALLSKY_IMAGES . "' directory is missing!";
+		echo "</div>";
+		return;
+	}
+
 	echo "<h2>$formalImageTypeName - $chosen_day</h2>\n";
 	echo "<div class='row'>\n";
 	if ($chosen_day === 'All'){
@@ -732,28 +758,65 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 {
 	global $status;
 
+	$result = null;
 	exec("$cmd 2>&1", $result, $return_val);
 	$dq = '"';
-	echo "<script>console.log(${dq}[$cmd] returned $return_val, result=" . implode(" ", $result) . "${dq});</script>";
-	if ($return_val === 255) {
-		// This is only a warning so only display the caller's message, if any.
-		if ($result != null) $msg = implode("<br>", $result);
-		else $msg = "";
-		$status->addMessage($msg, "warning", false);
-		return false;
-	} elseif ($return_val > 0) {
+	$script = "";
+	echo "<script>";
+		echo "console.log(${dq}[$cmd] returned $return_val";
+		if ($result === null) {
+			$modifiedResult = $result;
+		} else {
+			$modifiedResult = array();
+			$on_line = 0;
+			foreach ($result as $res) {
+				$on_line++;
+
+				if (substr($res, 0, 8) == "<script>") {
+					$script .= $res;
+				} else {
+					if ($on_line === 1) {
+						echo ", result=";
+					}
+					echo "$res   ";
+					$modifiedResult[] = $res;
+				}
+			}
+		}
+		echo "${dq});";
+	echo "</script>\n";
+	if ($script !== "") {
+		echo "\n<!-- from $cmd -->$script\n";
+	}
+	if ($return_val > 0) {
+		$r = "";
+		if ($modifiedResult !== null) {
+			$r = implode("<br>", $modifiedResult);
+		}
+
+		if ($return_val === 255) {
+			// This is only a warning so only display the caller's message, if any.
+			$msg = $r;
+			if ($msg !== "") {
+				$status->addMessage($msg, "warning", false);
+			}
+			return false;
+		}
+
 		// Display a failure message, plus the caller's message, if any.
 		if ($addMsg) {
 			$msg = "'$cmd' failed";
-			if ($result != null) $msg .= ":<br>" . implode("<br>", $result);
+			if ($r != null) $msg .= ":<br>$r";
 		} else {
-			if ($result != null) $msg = implode("<br>", $result);
-			else $msg = "";
+			$msg = $r;
 		}
 		// Display the caller's "on success" onSuccessMessage, if any.
-		if ($onFailureMessage !== "")
+		if ($onFailureMessage !== "") {
 			$status->addMessage($onFailureMessage, "danger", false);
-		$status->addMessage($msg, "danger", false);
+		}
+		if ($msg !== "") {
+			$status->addMessage($msg, "danger", false);
+		}
 		return false;
 	}
 
@@ -764,10 +827,10 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 	// Display any output from the command.
 	// If there are any lines that begin with:  ERROR  or  WARNING
 	// then display them in the appropriate format.
-	if ($result != null) {
+	if ($modifiedResult != null) {
 		$msg = "";
 		$sev = "";
-  		foreach ( $result as $line) {
+  		foreach ($modifiedResult as $line) {
 			if ($msg !== "") $msg .= "<br>";
 
 			if (strpos($line, "ERROR::") !== false) {
@@ -797,6 +860,7 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 				if ($sev === "") $sev = "debug";
 
 			} else {
+				$msg .= $line;
 				if ($sev === "") $sev = "message";
 			}
 		}

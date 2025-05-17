@@ -503,6 +503,8 @@ bool checkForValidExtension(config *cg)
 	}
 
 	ext++;
+	if (cg->takeDarkFrames) ext = "png";	// Dark frames should be png.
+
 	if (strcasecmp(ext, "jpg") == 0 || strcasecmp(ext, "jpeg") == 0) {
 		if (cg->imageType == IMG_RAW16) {
 			Log(0, "*** %s: ERROR: RAW16 images only work with .png files; either change the Image Type or the Filename.\n", cg->ME);
@@ -510,31 +512,18 @@ bool checkForValidExtension(config *cg)
 		}
 		cg->imageExt = "jpg";
 		cg->extensionType = isJPG;
+		cg->quality = 100;
 
 		compressionParameters.push_back(cv::IMWRITE_JPEG_QUALITY);
-		// Want dark frames to be at highest quality as well as images that will be passed
-		// to a module to be post-processed.
-		if (cg->takeDarkFrames || cg->overlay.overlayMethod == OVERLAY_METHOD_MODULE) {
-			cg->quality = 100;
-		} else if (cg->quality == NOT_SET) {
-			cg->quality = cg->qualityJPG;
-		} else {
-			validateLong(&cg->quality, 0, 100, "JPG Quality", true);
-		}
 
 	} else if (strcasecmp(ext, "png") == 0) {
 		cg->imageExt = "png";
 		cg->extensionType = isPNG;
+		// png is lossless so "quality" is really just the amount of compression.
+		// It takes a LONG time to save at compression 9, so set it lower.
+		cg->quality = 4;
 
 		compressionParameters.push_back(cv::IMWRITE_PNG_COMPRESSION);
-		// png is lossless so "quality" is really just the amount of compression.
-		if (cg->takeDarkFrames || cg->overlay.overlayMethod == OVERLAY_METHOD_MODULE) {
-			cg->quality = 9;
-		} else if (cg->quality == NOT_SET) {
-			cg->quality = cg->qualityPNG;
-		} else {
-			validateLong(&cg->quality, 0, 9, "PNG Quality/Compression", true);
-		}
 
 	} else {
 		Log(0, "*** %s: ERROR: Unsupported image extension (%s); only .jpg and .png are supported.\n", cg->ME, ext);
@@ -1370,7 +1359,8 @@ bool day_night_timeSleep(bool displayedMsg, config cg, bool isDaytime)
 void delayBetweenImages(config cg, long lastExposure_us, std::string sleepType)
 {
 	if (cg.takeDarkFrames) {
-		Log(2, "  > Not sleeping between dark frames\n");
+		// Need to sleep a little since saving .png files takes a while.
+		usleep(5 * US_IN_SEC);
 		return;
 	}
 

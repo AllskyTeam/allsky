@@ -67,6 +67,7 @@ ADD_DATE="true"
 OK="true"
 DO_HELP="false"
 ID=""
+DELETE="false"
 CMD_TEXT=""
 TYPE=""
 MESSAGE=""
@@ -153,6 +154,7 @@ elif [[ ${TYPE} == "no-image" ]]; then
 	TYPE="success"
 elif [[ ${TYPE} != "warning" && ${TYPE} != "info" && ${TYPE} != "success" ]]; then
 	wE_ "ERROR: unknown message type: '${TYPE}'." >&2
+	echo "Valid message types are:  error, debug, warning, info, success, no-image." >&2
 	exit 2
 fi
 
@@ -165,19 +167,22 @@ fi
 if [[ -f ${ALLSKY_MESSAGES} ]] &&  M="$( grep "${TAB}${ESCAPED_MESSAGE}${TAB}" "${ALLSKY_MESSAGES}" )" ; then
 	COUNT=0
 	# tail -1  in case file is corrupt and has more than one line we want.
-	PRIOR_COUNT=$( echo -e "${M}" | cut -f3 -d"${TAB}" | tail -1 )
+	PRIOR_COUNT=$( echo -e "${M}" | cut -f5 -d"${TAB}" | tail -1 )
 
 	# If this entry is corrupted don't try to update the counter.
 	[[ ${PRIOR_COUNT} != "" ]] && ((COUNT = PRIOR_COUNT + 1))
 
 	# TODO: prior messages can have any character in them so what do we
 	# use to separate the sed components?
-	EXPRESSION="\%${TAB}${ESCAPED_MESSAGE}${TAB}$%d"
+	# Delete the existing entry.  A new one with a higher COUNT will be added below.
+	EXPRESSION="\%${TAB}${ESCAPED_MESSAGE}${TAB}%d"
 	if ! sed -i -e "${EXPRESSION}"  "${ALLSKY_MESSAGES}" ; then
 		wW_ "${ME}: Warning, sed -e '${EXPRESSION}' failed." >&2
+		exit 1
 	fi
 else
 	COUNT=1
 fi
 
+#          1          2                3            4            5             6               7
 echo -e "${ID}${TAB}${CMD_TEXT}${TAB}${TYPE}${TAB}${DATE}${TAB}${COUNT}${TAB}${MESSAGE}${TAB}${URL}"  >>  "${ALLSKY_MESSAGES}"

@@ -10,7 +10,7 @@ source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 # Log entry format:
 #	2025-02-09T10:44:17.594698-07:00 new-allsky allsky[905780]: removeBadImages.sh: File is bad: \
 #		removed 'image-20250209104345.jpg' (MEAN of 0.167969 is below low threshold of 0.5)
-INFO="$( grep "File is bad:.*MEAN of" "${ALLSKY_LOG}"* | sed -e 's/.*(MEAN/MEAN/' -e 's/)//' )"
+INFO="$( grep "File is bad:.*MEAN of" "${ALLSKY_LOG}"* 2>/dev/null | sed -e 's/.*(MEAN/MEAN/' -e 's/)//' )"
 if [[ -z ${INFO} ]]; then
 	W_ "\nNo bad file information found in the Allsky log (${ALLSKY_LOG}).  Cannot continue.\n"
 	exit 1
@@ -79,7 +79,7 @@ echo "$INFO" | gawk '
 		if (high_count > 0) {
 			printf("%d image", high_count);
 			if (high_count > 1) printf("s");
-			printf(" had a mean above the High %s of %f.\n", name high_threshold);
+			printf(" had a mean above the High %s of %f.\n", name, high_threshold);
 			if (high_min == high_max) {
 				printf("The highest mean was %f.\n", high_min);
 				printf("\nConsider raising your High %s to more than %f\n", name, high_min);

@@ -240,7 +240,7 @@ function determineCommandToUse()
 		RET=$?
 		if [[ ${RET} -eq 124 ]]; then
 			# Time out.  Let invoker know
-			echo "'${CMD_TO_USE_} timed out." >&2
+			echo "'${CMD_TO_USE_}' timed out." >&2
 			return "${EXIT_ERROR_STOP}"
 
 		elif [[ ${RET} -eq 137 ]]; then
@@ -1177,7 +1177,7 @@ function one_instance()
 			# If it's happening often let the user know.
 			[[ ! -d ${ALLSKY_ABORTS_DIR} ]] && mkdir "${ALLSKY_ABORTS_DIR}"
 			local AF="${ALLSKY_ABORTS_DIR}/${ABORTED_FILE}"
-			local ID="AM_RM_ABORTS_${ABORTED_FILE}"
+			local ID="AM_RM_ABORTS ${ABORTED_FILE}"
 			echo -e "$( date )\t${ABORTED_FIELDS}" >> "${AF}"
 			NUM=$( wc -l < "${AF}" )
 			if [[ ${NUM} -eq 10 ]]; then
@@ -1310,7 +1310,9 @@ function upload_all()
 		if [[ -z ${ROOT} ]]; then
 			REMOTE_DIR="${SUBDIR}"
 		else
-			REMOTE_DIR="${ROOT}/${SUBDIR}"
+			REMOTE_DIR="${ROOT}"
+			[[ ${ROOT: -1:1} != "/" ]] && REMOTE_DIR+="/"
+			REMOTE_DIR+="${SUBDIR}"
 		fi
 		#shellcheck disable=SC2086
 		"${ALLSKY_SCRIPTS}/upload.sh" ${SILENT} ${ARGS} "${REMOTE_WEB}" \
@@ -1496,3 +1498,19 @@ function get_ls_contents()
 			exit(! in_info);
 		}' "${FILE}"
 }
+
+####
+# Get all settings at once rather than individually via settings().
+function getAllSettings()
+{
+	local X
+
+	if ! X="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix S_ --shell 2>&1 )" ; then
+		echo "${X}"
+		return 1
+	fi
+
+	eval "${X}"
+	return 0
+}
+

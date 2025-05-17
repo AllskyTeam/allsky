@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2154		# referenced but not assigned - from convertJSON.php
 
 # Script to save a DAY or NIGHT image.
 # It goes in ${ALLSKY_TMP} where the WebUI and local Allsky Website can find it.
@@ -68,6 +69,10 @@ if ! one_instance --pid-file "${PID_FILE}" --sleep "3s" --max-checks 3 \
 	exit 1
 fi
 
+# This gets all settings and prefixes their names with "S_".
+# It's faster than calling "settings(" a bunch of times.
+getAllSettings || exit 1
+
 # Get passed-in variables and export as AS_* so overlays can use them.
 while [[ $# -gt 0 ]]; do
 	VARIABLE="AS_${1%=*}"		# everything before the "="
@@ -93,10 +98,10 @@ WORKING_DIR=$( dirname "${CURRENT_IMAGE}" )		# the directory the image is curren
 "${ALLSKY_SCRIPTS}/removeBadImages.sh" "${WORKING_DIR}" "${IMAGE_NAME}"
 [[ $? -eq ${EXIT_PARTIAL_OK} ]] && exit 1
 
-CROP_TOP="$( settings ".imagecroptop" )"
-CROP_RIGHT="$( settings ".imagecropright" )"
-CROP_BOTTOM="$( settings ".imagecropbottom" )"
-CROP_LEFT="$( settings ".imagecropleft" )"
+CROP_TOP="${S_imagecroptop}"
+CROP_RIGHT="${S_imagecropright}"
+CROP_BOTTOM="${S_imagecropbottom}"
+CROP_LEFT="${S_imagecropleft}"
 CROP_IMAGE=$(( CROP_TOP + CROP_RIGHT + CROP_BOTTOM + CROP_LEFT ))		# > 0 if cropping
 
 # If we're cropping the image, get the image resolution.
@@ -125,7 +130,7 @@ if [[ -z ${AS_TEMPERATURE_C} ]]; then
 fi
 
 # If taking dark frames, save the dark frame then exit.
-if [[ $( settings ".takedarkframes" ) == "true" ]]; then
+if [[ ${S_takedarkframes} == "true" ]]; then
 	#shellcheck source-path=scripts
 	source "${ALLSKY_SCRIPTS}/darkCapture.sh"
 	exit 0
@@ -133,7 +138,7 @@ fi
 
 # TODO: Dark subtract long-exposure images, even if during daytime.
 # TODO: Need a config variable to specify the threshold to dark subtract.
-if [[ $( settings ".usedarkframes" ) == "true" ]]; then
+if [[ ${S_usedarkframes} == "true" ]]; then
 	if [[ ${DAY_OR_NIGHT} == "NIGHT" ]]; then
 		#shellcheck source-path=scripts
 		source "${ALLSKY_SCRIPTS}/darkSubtract.sh"	# It will modify the image but not its name.
@@ -164,8 +169,8 @@ function display_error_and_exit()	# error message, notification string
 }
 
 # Resize the image if required
-export AS_RESIZE_WIDTH="$( settings ".imageresizewidth" )"
-export AS_RESIZE_HEIGHT="$( settings ".imageresizeheight" )"
+export AS_RESIZE_WIDTH="${S_imageresizewidth}"
+export AS_RESIZE_HEIGHT="${S_imageresizeheight}"
 if [[ ${AS_RESIZE_WIDTH} -gt 0 && ${AS_RESIZE_HEIGHT} -gt 0 ]]; then
 	# Make sure we were given numbers.
 	ERROR_MSG=""
@@ -180,10 +185,11 @@ if [[ ${AS_RESIZE_WIDTH} -gt 0 && ${AS_RESIZE_HEIGHT} -gt 0 ]]; then
 		display_error_and_exit "${ERROR_MSG}" "Image Resize"
 	fi
 
+	S="${AS_RESIZE_WIDTH}x${AS_RESIZE_HEIGHT}!"
 	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		echo "${ME}: Resizing '${CURRENT_IMAGE}' to ${AS_RESIZE_WIDTH}x${AS_RESIZE_HEIGHT}"
+		echo "${ME}: Resizing '${CURRENT_IMAGE}' to ${S/!/}"
 	fi
-	if ! convert "${CURRENT_IMAGE}" -resize "${AS_RESIZE_WIDTH}x${AS_RESIZE_HEIGHT}" "${CURRENT_IMAGE}" ; then
+	if ! convert "${CURRENT_IMAGE}" -resize "${S}" "${CURRENT_IMAGE}" ; then
 		E_ "*** ${ME}: ERROR: image resize failed; not saving."
 		exit 4
 	fi
@@ -225,8 +231,13 @@ if [[ ${CROP_IMAGE} -gt 0 ]]; then
 fi
 
 # Stretch the image if required.
-export AS_STRETCH_AMOUNT="$( settings ".imagestretchamount${DAY_OR_NIGHT,,}time" )"
-export AS_STRETCH_MIDPOINT="$( settings ".imagestretchmidpoint${DAY_OR_NIGHT,,}time" )"
+if [[ ${DAY_OR_NIGHT} == "DAY" ]]; then
+	export AS_STRETCH_AMOUNT="${S_imagestretchamountdaytime}"
+	export AS_STRETCH_MIDPOINT="${S_imagestretchmidpointdaytime}"
+else
+	export AS_STRETCH_AMOUNT="${S_imagestretchamountnighttime}"
+	export AS_STRETCH_MIDPOINT="${S_imagestretchmidpointnighttime}"
+fi
 if [[ ${AS_STRETCH_AMOUNT} -gt 0 ]]; then
 	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 		echo "${ME}: Stretching '${CURRENT_IMAGE}' by ${AS_STRETCH_AMOUNT} @ ${AS_STRETCH_MIDPOINT}%"
@@ -260,10 +271,10 @@ rm -f "${PID_FILE}"
 SAVED_FILE="${CURRENT_IMAGE}"						# The name of the file saved from the camera.
 WEBSITE_FILE="${WORKING_DIR}/${FULL_FILENAME}"		# The name of the file the websites look for
 
-TIMELAPSE_MINI_UPLOAD_VIDEO="$( settings ".minitimelapseupload" )"
+TIMELAPSE_MINI_UPLOAD_VIDEO="${S_minitimelapseupload}"
 # If needed, save the current image in today's directory.
-if [[ ( $( settings ".savedaytimeimages" ) == "true" && ${DAY_OR_NIGHT} == "DAY" ) || 
-	  ( $( settings ".savenighttimeimages" ) == "true" && ${DAY_OR_NIGHT} == "NIGHT" ) ]]; then
+if [[ ( ${S_savedaytimeimages} == "true" && ${DAY_OR_NIGHT} == "DAY" ) || 
+	  ( ${S_savenighttimeimages} == "true" && ${DAY_OR_NIGHT} == "NIGHT" ) ]]; then
 	SAVE_IMAGE="true"
 else
 	SAVE_IMAGE="false"
@@ -281,15 +292,16 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 	DATE_DIR="${ALLSKY_IMAGES}/${DATE_NAME}"
 	[[ ! -d ${DATE_DIR} ]] && mkdir -p "${DATE_DIR}"
 
-	if [[ $( settings ".imagecreatethumbnails" ) == "true" ]]; then
+	if [[ ${S_imagecreatethumbnails} == "true" ]]; then
 		THUMBNAILS_DIR="${DATE_DIR}/thumbnails"
 		mkdir -p "${THUMBNAILS_DIR}"
 		# Create a thumbnail of the image for faster load in the WebUI.
 		# If we resized above, this will be a resize of a resize,
 		# but for thumbnails that should be ok.
-		X="$( settings ".thumbnailsizex" )"
-		Y="$( settings ".thumbnailsizey" )"
-		if ! convert "${CURRENT_IMAGE}" -resize "${X}x${Y}" "${THUMBNAILS_DIR}/${IMAGE_NAME}" ; then
+		X="${S_thumbnailsizex}"
+		Y="${S_thumbnailsizey}"
+		S="${X}x${Y}!"
+		if ! convert "${CURRENT_IMAGE}" -resize "${S}" "${THUMBNAILS_DIR}/${IMAGE_NAME}" ; then
 			W_ "*** ${ME}: WARNING: THUMBNAIL resize failed; continuing."
 		fi
 	fi
@@ -299,13 +311,13 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 	FINAL_FILE="${DATE_DIR}/${IMAGE_NAME}"
 	if cp "${CURRENT_IMAGE}" "${FINAL_FILE}" ; then
 
-		TIMELAPSE_MINI_IMAGES="$( settings ".minitimelapsenumimages" )"
-		TIMELAPSE_MINI_FREQUENCY="$( settings ".minitimelapsefrequency" )"
+		TIMELAPSE_MINI_IMAGES="${S_minitimelapsenumimages}"
+		TIMELAPSE_MINI_FREQUENCY="${S_minitimelapsefrequency}"
 		if [[ ${TIMELAPSE_MINI_IMAGES} -eq 0 ]]; then
 			TIMELAPSE_MINI_UPLOAD_VIDEO="false"
 
 		elif [[ ${TIMELAPSE_MINI_FREQUENCY} -ne 1 ]]; then
-			TIMELAPSE_MINI_FORCE_CREATION="$( settings ".minitimelapseforcecreation" )"
+			TIMELAPSE_MINI_FORCE_CREATION="${S_minitimelapseforcecreation}"
 			# We are creating mini-timelapses; see if we should create one now.
 
 			CREATE="false"
@@ -398,7 +410,7 @@ if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "false" ]]; then
 fi
 
 # If upload is true, optionally create a smaller version of the image; either way, upload it
-IMG_UPLOAD_FREQUENCY="$( settings ".imageuploadfrequency" )"
+IMG_UPLOAD_FREQUENCY="${S_imageuploadfrequency}"
 if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 	# First check if we should upload this image
 	if [[ ${IMG_UPLOAD_FREQUENCY} -ne 1 ]]; then
@@ -433,19 +445,21 @@ fi
 
 RET=0
 if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
-	R_WEB="$( settings ".useremotewebsite" )"
-	R_SERVER="$( settings ".useremoteserver" )"
+	R_WEB="${S_useremotewebsite}"
+	R_SERVER="${S_useremoteserver}"
 
 	if [[ ${R_WEB} == "true" || ${R_SERVER} == "true" ]]; then
-		W="$( settings ".imageresizeuploadswidth" )"
-		H="$( settings ".imageresizeuploadsheight" )"
+		W="${S_imageresizeuploadswidth}"
+		H="${S_imageresizeuploadsheight}"
 		if [[ ${W} -gt 0 && ${H} -gt 0 ]]; then
 			RESIZE_UPLOADS="true"
 			# Need a copy of the image since we are going to resize it.
 			# Put the copy in ${WORKING_DIR}.
 			FILE_TO_UPLOAD="${WORKING_DIR}/resize-${IMAGE_NAME}"
-			S="${W}x${H}"
-			[[ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]] && echo "${ME}: Resizing upload file '${FILE_TO_UPLOAD}' to ${S}"
+			S="${W}x${H}!"
+			if [[ "${ALLSKY_DEBUG_LEVEL}" -ge 3 ]]; then
+				echo "${ME}: Resizing upload file '${FILE_TO_UPLOAD}' to ${S/!/}"
+			fi
 			if ! convert "${CURRENT_IMAGE}" -resize "${S}" -gravity East -chop 2x0 "${FILE_TO_UPLOAD}" ; then
 				W_ "*** ${ME}: WARNING: Resize Uploads failed; continuing with larger image."
 				# We don't know the state of $FILE_TO_UPLOAD so use the larger file.
@@ -457,7 +471,7 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 		fi
 
 		if [[ ${R_WEB} == "true" ]]; then
-			if [[ $( settings ".remotewebsiteimageuploadoriginalname" ) == "true" ]]; then
+			if [[ ${S_remotewebsiteimageuploadoriginalname} == "true" ]]; then
 				DESTINATION_NAME=""
 			else
 				DESTINATION_NAME="${FULL_FILENAME}"
@@ -468,7 +482,7 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 		fi
 
 		if [[ ${R_SERVER} == "true" ]]; then
-			if [[ $( settings ".remoteserverimageuploadoriginalname" ) == "true" ]]; then
+			if [[ ${S_remoteserverimageuploadoriginalname} == "true" ]]; then
 				DESTINATION_NAME=""
 			else
 				DESTINATION_NAME="${FULL_FILENAME}"
@@ -489,7 +503,7 @@ if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${SAVE_IMAGE} == "true" && ${R
 
 	upload_all --remote-web --remote-server "${FILE_TO_UPLOAD}" "" "${MINI}" "MiniTimelapse"
 	RET=$?
-	if [[ ${RET} -eq 0 && $( settings ".minitimelapseuploadthumbnail" ) == "true" ]]; then
+	if [[ ${RET} -eq 0 && ${S_minitimelapseuploadthumbnail} == "true" ]]; then
 		UPLOAD_THUMBNAIL_NAME="mini-timelapse.jpg"
 		UPLOAD_THUMBNAIL="${ALLSKY_TMP}/${UPLOAD_THUMBNAIL_NAME}"
 		# Create the thumbnail for the mini timelapse, then upload it.

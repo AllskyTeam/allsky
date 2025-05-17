@@ -123,7 +123,18 @@ function get_version()
 function get_branch()
 {
 	local H="${1:-${ALLSKY_HOME}}"
-	echo "$( cd "${H}" || exit; git rev-parse --abbrev-ref HEAD )"
+	local BRANCH="$( cd "${H}" || exit; git rev-parse --abbrev-ref HEAD )"
+	if [[ ${BRANCH} == "HEAD" ]]; then
+		# If the user is getting the master branch but uses the "--branch master_branch_name",
+		# BRANCH will be "HEAD".  For example if the master branch is v2024.12.06_02 and the user
+		# runs "git clone --branch v2024.12.06_02 ...".
+		local FILE="${H}/.git/packed-refs"
+		if [[ -s ${FILE} ]]; then
+			local B="$( tail -1 "${FILE}" | sed -e 's;.*/;;' )"
+			[[ -n ${B} ]] && BRANCH="${B}"
+		fi
+	fi
+	echo "${BRANCH}"
 }
 
 
@@ -180,6 +191,7 @@ function remove_colors()
 			-e "s/${R}//g" \
 			-e "s/${D}//g" \
 			-e "s/${N}//g" \
+			-e "s/\\\Z.//g" \
 	)"
 }
 
@@ -595,6 +607,14 @@ function replace_website_placeholders()
 		fi
 	fi
 
+	EQUIPMENT="$( settings ".config.equipmentinfo" "${FILE}" )"
+	if [[ ${EQUIPMENT} == "${NEED_TO_UPDATE}" ]]; then
+		TEMP="$( settings ".equipmentinfo" )"
+		if [[ -n ${TEMP} ]]; then
+			EQUIPMENT="${TEMP}"
+		fi
+	fi
+
 	if [[ ${TYPE} == "local" ]]; then
 		#shellcheck disable=SC2153
 		IMAGE_NAME="/${IMG_DIR}/${FULL_FILENAME}"
@@ -612,6 +632,7 @@ function replace_website_placeholders()
 		config.camera				"camera"			"${CAMERA}" \
 		config.lens					"lens"				"${LENS}" \
 		config.computer				"computer"			"${COMPUTER}" \
+		config.equipmentinfo		"equipmentinfo"		"${EQUIPMENT}" \
 		"${WEBSITE_ALLSKY_VERSION}"	"AllskyVersion"		"${ALLSKY_VERSION}" \
 		"${MINI_TLAPSE_DISPLAY}"	"mini_display"		"${MINI_TLAPSE_DISPLAY_VALUE}" \
 		"${MINI_TLAPSE_URL}"		"mini_url"			"${MINI_TLAPSE_URL_VALUE}"
@@ -675,7 +696,11 @@ function update_old_website_config_file()
 
 	# Version: 1 from v2023.05.01*
 	# Version: 2 from v2024.12.06
-	# Current version: 3 from v2024.12.06_01
+	# Version: 3 from v2024.12.06_01
+	#	Added "meteors/"
+	# Current version: 4 from v2024.12.06_03
+	#	Added "equipmentinfo" setting
+
 	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
 		# These steps bring version 1 up to 2.
 		# Deletions:
@@ -698,8 +723,7 @@ function update_old_website_config_file()
 
 	# Try to determine what future changes are needed,
 	# rather than compare version numbers as above.
-	if ! grep --silent "meteors/" "${FILE}" ; then
-		# Added in version 3.
+	if [[ ${PRIOR_VERSION} -lt 3 ]] && ! grep --silent "meteors/" "${FILE}" ; then
 		# Add after "startrails/" entry.
 		TEMP="/tmp/$$"
 		gawk 'BEGIN { found_startrails = 0; }
@@ -709,7 +733,7 @@ function update_old_website_config_file()
 				if (found_startrails == 1) {
 					if ($1 == "},") {
 						spaces6 = "      ";
-						spaces8 = "        ";
+						spaces8 = spaces6 + "  ";
 						printf("%s{\n", spaces6);
 						printf("%s\"display\": false,\n", spaces8)
 						printf("%s\"url\": \"meteors/\",\n", spaces8)
@@ -725,6 +749,54 @@ function update_old_website_config_file()
 					}
 				} else if ($0 ~ /"startrails\/"/) {
 					found_startrails = 1;
+				}
+			}' "${FILE}" > "${TEMP}"
+		if [[ $? -eq 0 ]]; then
+			# cp so it keeps ${FILE}'s attributes
+			cp "${TEMP}" "${FILE}" && rm -f "${TEMP}"
+		fi
+	fi
+
+	if [[ ${PRIOR_VERSION} -lt 4 ]] && ! grep --silent '"equipmentinfo"' "${FILE}" ; then
+		# Add setting after "computer" entry.
+		# Add popoutIcons entry after "Computer" entry (with "fa-microchip").
+		TEMP="/tmp/$$"
+		local E="$( settings ".equipmentinfo" )"
+		gawk -v E="${E}" 'BEGIN {
+				found_computer = 0;
+				found_microchip = 0;
+				spaces6 = "      ";
+				spaces8 = "        ";
+			}
+			{
+				print $0;
+
+				if (found_computer == 1) {
+					printf("%s\"equipmentinfo\": \"%s\",\n", spaces8, E)
+					found_computer = 0;
+					next;
+				}
+
+				if (found_microchip == 1) {
+					if ($1 == "},") {
+						printf("%s{\n", spaces6);
+						printf("%s\"display\": true,\n", spaces8)
+						printf("%s\"label\": \"Equipment info\",\n", spaces8)
+						printf("%s\"icon\": \"fa fa-fw fa-keyboard\",\n", spaces8)
+						printf("%s\"variable\": \"equipmentinfo\",\n", spaces8)
+						printf("%s\"value\": \"\",\n", spaces8)
+						printf("%s\"style\": \"\"\n", spaces8)
+						printf("%s},\n", spaces6);
+	
+						while (getline) {
+							print $0;
+						}
+						exit(0);
+					}
+				} else if ($0 ~ /"computer"/) {
+					found_computer = 1;
+				} else if ($0 ~ / fa-microchip"/) {
+					found_microchip = 1;
 				}
 			}' "${FILE}" > "${TEMP}"
 		if [[ $? -eq 0 ]]; then
@@ -1133,6 +1205,7 @@ function check_tmp()
 		if [[ ${CALLED_FROM} == "install" ]]; then
 			# During installation, don't give the user the option of changing.
 			# They can do it afterwards via "allsky-config".
+# TODO: set to new, larger size if not already there.
 			MSG="${ALLSKY_TMP} is currently a memory filesystem; no change needed."
 			display_msg --logonly info "${MSG}"
 
@@ -1636,23 +1709,23 @@ function enter_yes_no()
 	local RET=1
 	local ANSWER
 
-	if [[ ${AUTO_CONFIRM} == "false" ]]; then
-		while true; do
-			echo -e "${TEXT}"
-			read -r -p "Do you want to continue? (y/n): " ANSWER
-			ANSWER="${ANSWER,,}"	# convert to lowercase
-
-			if [[ ${ANSWER} == "y" || ${ANSWER} == "yes" ]]; then
-				return 0
-			elif [[ ${ANSWER} == "n" || ${ANSWER} == "no" ]]; then
-				return 1
-			else
-				E_ "\nInvalid response. Please enter y/yes or n/no."
-			fi
-		done
-	else
+	if [[ ${AUTO_CONFIRM} == "true" ]]; then
 		return 0
 	fi
+
+	while true; do
+		echo -e "${TEXT}"
+		read -r -p "Do you want to continue? (y/n): " ANSWER
+		ANSWER="${ANSWER,,}"	# convert to lowercase
+
+		if [[ ${ANSWER} == "y" || ${ANSWER} == "yes" ]]; then
+			return 0
+		elif [[ ${ANSWER} == "n" || ${ANSWER} == "no" ]]; then
+			return 1
+		else
+			E_ "\nInvalid response. Please enter y/yes or n/no."
+		fi
+	done
 
 	return "${RET}"
 }
@@ -1662,7 +1735,7 @@ function enter_yes_no()
 function press_any_key()
 {
 	if [[ ${AUTO_CONFIRM} == "false" ]]; then
-		echo -e "${1}\nPress any key to continue..."
+		echo -e "${1}\n\nPress any key to continue..."
 		read -r -n1 -s
 	fi
 }
@@ -1689,6 +1762,17 @@ function display_box()
 		elif [[ ${DIALOG_TYPE} == "--yesno" ]]; then
 			enter_yes_no "${DIALOG_TEXT}"
 			RET=$?
+		elif [[ ${DIALOG_TYPE} == "--inputbox" ]]; then
+			# Need prompts to go to stderr since stdout is likely
+			# being stored in a variable so the user won't see it.
+			echo -en "${DIALOG_TEXT} "
+			read -r x
+			if [[ -z ${x} ]]; then
+				return 1
+			else
+				echo -e "${x}" >&2
+				return 0
+			fi
 		else
 			echo -e "${DIALOG_TEXT}"
 		fi

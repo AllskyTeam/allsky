@@ -218,7 +218,8 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_STATUS_CAMERA_CHANGED="Stopped - camera changed"
 	ALLSKY_STATUS_REBOOT_NEEDED="Stopped - reboot needed"
 	ALLSKY_STATUS_ACTIONS_NEEDED="Stopped - actions needed"
-	ALLSKY_STATUS_NEEDS_CONFIGURATION="Allsky needs configuring"
+	ALLSKY_STATUS_NEEDS_CONFIGURATION="Allsky settings need configuring"
+	ALLSKY_STATUS_NEEDS_REVIEW="Allsky settings need to be reviewed"
 
 	# GitHub information - package names, repository, and contents of a file.
 	GITHUB_ROOT="https://github.com/AllskyTeam"

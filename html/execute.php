@@ -58,7 +58,7 @@ if ($ID === null) {
 
 switch ($ID) {
 	case "AM_RM_PRIOR":		// Remove prior version of Allsky.
-		rm_object(ALLSKY_PRIOR_DIR, "Prior Allsky directory '" .ALLSKY_PRIOR_DIR. "' removed.");
+		rm_object(PRIOR_ALLSKY_DIR, "Prior Allsky directory '" .PRIOR_ALLSKY_DIR. "' removed.");
 		rm_object(ALLSKY_OLD_REMINDER);
 
 		rm_msg($ID);
@@ -151,7 +151,7 @@ function execute($cmd, $args="", $outputToConsole=false)
 	}
 	if (! $use_TEXT && $outputToConsole) {
 		// Writing to the console aids in debugging.
-		$cmd = str_replace("'", "$apos;", $cmd);
+		$cmd = str_replace("'", "&apos;", $cmd);
 		echo "<script>console.log(";
 		echo "'[$cmd] returned $return_val, result=$result'";
 		echo ");</script>\n";
@@ -187,6 +187,12 @@ function rm_object($item, $successMsg=null)
 		} else {
 			$msg = $successMsg;
 		}
+		if ($use_TEXT) {
+			$msg .= "\n\n";
+		} else {
+			$msg .= "<br><br>";
+		}
+		$msg .= "Return to the WebUI and refresh the window.";
 	} else {
 		$msg = "${eS}Unable to remove '${item}': ${ret}${eE}";
 	}

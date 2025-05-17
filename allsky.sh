@@ -3,14 +3,23 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
 ME="$( basename "${BASH_ARGV0}" )"
 
-# NOT_STARTED_MSG, STOPPED_MSG, ERROR_MSG_PREFIX, and ZWO_VENDOR are globals
-
 #shellcheck source-path=.
 source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+
+# If Allsky is already running, exit.  Let prior copy continue runnning.
+if [[ $( pgrep --count "${ME}" ) -gt 1 ]]; then
+	echo "     ***** Allsky already running; see below. Exiting new copy. *****" >&2
+	# Show other processes.  Don't show any newer than 5 seconds so we don't show ourself.
+	ps -f -p "$( pgrep --older 5 "${ME}" )"
+	exit "${EXIT_ERROR_STOP}"
+fi
+
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+
+# NOT_STARTED_MSG, STOPPED_MSG, ERROR_MSG_PREFIX, and ZWO_VENDOR are globals
 
 # Output from this script goes either to the log file or a tty,
 # so can't use "w*" colors.
@@ -90,23 +99,46 @@ else
 	NEEDS_REBOOT="false"
 fi
 
-# Make sure the settings have been configured after an installation or upgrade.
-# If the "lastchanged" setting is missing, the user needs to review/change the settings.
-LAST_CHANGED="$( settings ".lastchanged" )"
-if [[ -z ${LAST_CHANGED} ]]; then
-	set_allsky_status "${ALLSKY_STATUS_NEEDS_CONFIGURATION}"
-	echo "*** ===== Allsky needs to be configured before it can be used.  See the WebUI." >&2
-	if [[ ${NEEDS_REBOOT} == "true" ]]; then
-		echo "*** ===== The Pi also needs to be rebooted." >&2
-		doExit "${EXIT_ERROR_STOP}" "ConfigurationNeeded" \
-			"Allsky needs\nconfiguration\nand the Pi needs\na reboot" \
-			"Allsky needs to be configured and then the Pi rebooted."
-	else
-		doExit "${EXIT_ERROR_STOP}" "ConfigurationNeeded" "" "Allsky needs to be configured."
-	fi
-elif [[ ${NEEDS_REBOOT} == "true" ]]; then
+if [[ ${NEEDS_REBOOT} == "true" ]]; then
 	set_allsky_status "${ALLSKY_STATUS_REBOOT_NEEDED}"
 	doExit "${EXIT_ERROR_STOP}" "RebootNeeded" "" "The Pi needs to be rebooted."
+fi
+
+# If the "lastchanged" setting is missing, the user needs to review/change the settings.
+# This will happen after an installation or upgrade, which also sets the Allsky status.
+LAST_CHANGED="$( settings ".lastchanged" )"
+if [[ -z ${LAST_CHANGED} ]]; then
+	STATUS="$( get_allsky_status )"
+	if [[ ${STATUS} == "${ALLSKY_STATUS_REBOOT_NEEDED}" ]]; then
+		# It's been rebooted and now we need to force "lastchanged" to be set.
+		STATUS="${ALLSKY_STATUS_NEEDS_REVIEW}"
+	fi
+
+	if [[ ${STATUS} == "${ALLSKY_STATUS_NEEDS_REVIEW}" ]]; then
+		IMAGE_NAME="ReviewNeeded"
+		MSG="Please review the settings on the WebUI's 'Allsky Settings' page"
+		MSG+=" and make any necessary changes."
+		WEBUI_MSG="Allsky settings need review"
+
+	elif [[ ${STATUS} == "${ALLSKY_STATUS_NEEDS_CONFIGURATION}" ]]; then
+		IMAGE_NAME="ConfigurationNeeded"
+		MSG="Allsky needs to be configured before it can be used.  See the WebUI."
+		WEBUI_MSG="Allsky needs to be configured"
+
+	else
+		# I don't think we'll ever get here.
+		MSG="ERROR: Unknown reason 'lastchanged' did not exist."
+		WEBUI_MSG="${MSG}"
+		IMAGE_NAME=""
+	fi
+	if [[ ${NEEDS_REBOOT} == "true" ]]; then
+		MSG+=" The Pi also needs to be rebooted." >&2
+		doExit "${EXIT_ERROR_STOP}" "${IMAGE_NAME}" \
+			"" "${WEBUI_MSG} and then the Pi rebooted."
+	else
+		doExit "${EXIT_ERROR_STOP}" "${IMAGE_NAME}" "" "${WEBUI_MSG}."
+	fi
+	[[ -n ${MSG} ]] && echo "*** ===== ${MSG}" >&2		# to the log
 fi
 
 SEE_LOG_MSG="See ${ALLSKY_LOG}"
@@ -175,9 +207,6 @@ fi
 
 USE_NOTIFICATION_IMAGES="$( settings ".notificationimages" )"		|| exit "${EXIT_ERROR_STOP}"
 
-# Make sure we are not already running.
-pgrep "${ME}" | grep -v $$ | xargs "sudo kill -9" 2>/dev/null
-
 # Get the list of connected cameras and make sure the one we want is connected.
 if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 	RPi_COMMAND_TO_USE=""
@@ -222,9 +251,24 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 			"WARNING:\n\nResetting USB bus\n${REASON}.\nAttempt ${NUM_USB_RESETS}."
 
 		SEARCH="${ZWO_VENDOR}:${ZWO_CAMERA_ID}"
-		sudo "${ALLSKY_BIN}/uhubctl" --action off --exact --search "${SEARCH}"
+		# Get the hub number the camera is on.
+		local HUB="$( sudo "${ALLSKY_BIN}/uhubctl" --exact --search "${SEARCH}" |
+			gawk -v Z="${SEARCH}" '
+				BEGIN {hub = ""; }
+   				{
+					if ($4 == "hub") {
+						hub = $5;
+						next;
+					}
+					if (index($0, Z) > 0) {
+						print hub;
+						exit(0);
+					}
+				}'
+		)"
+		sudo "${ALLSKY_BIN}/uhubctl" --action off --exact --search "${SEARCH}" --location "${HUB}"
 		sleep 3		# give it a few seconds, plus, allow the notification images to be seen
-		sudo "${ALLSKY_BIN}/uhubctl" --action on --exact --search "${SEARCH}"
+		sudo "${ALLSKY_BIN}/uhubctl" --action on --exact --search "${SEARCH}" --location "${HUB}"
 	}
 
 else	# RPi
@@ -259,14 +303,18 @@ fi
 # Make sure the current camera is supported and hasn't changed unexpectedly.
 CAM="${CAMERA_TYPE}	${CAMERA_NUMBER}	${CAMERA_MODEL}"	# has TABS
 CCM="$( get_connected_camera_models --full "${CAMERA_TYPE}" )"
-read -r CC_TYPE CC_NUMBER CC_MODEL <<<"${CCM}"
-if ! echo -e "${CCM}" | grep --silent "${CAM}" ; then
+#shellcheck disable=SC2076
+if [[ ! ${CCM} =~ "${CAM}" ]]; then
+	IFS="	" read -r CC_TYPE CC_NUMBER CC_MODEL CC_OTHER <<<"${CCM}"
+	echo -e "Was: ${CAMERA_TYPE} ${CAMERA_NUMBER} ${CAMERA_MODEL}"
+	echo -e "Now: ${CC_TYPE} ${CC_NUMBER} ${CC_MODEL} ${CC_OTHER}"
 	# Something changed.  validate_camera() displays the error message.
 	if ! validate_camera "${CC_TYPE}" "${CC_MODEL}" "${CC_NUMBER}" ; then
 		set_allsky_status "${ALLSKY_STATUS_CAMERA_CHANGED}"
 		IMAGE_MSG="${ERROR_MSG_PREFIX}"
 		IMAGE_MSG+="The camera changed."
 		IMAGE_MSG+="\nCheck Camera Type\n& Model in the WebUI."
+		reset_usb "Camera changed"
 		doExit "${EXIT_ERROR_STOP}" "Error" "${IMAGE_MSG}"
 	fi
 fi

@@ -1881,7 +1881,7 @@ long saved_newExposure_us = newExposure_us;
 					// Hopefully the user can use the time it took to save a file to disk
 					// to help determine why they are getting this warning.
 					// Perhaps their disk is very slow or their delay is too short.
-					Log(-1, "  > WARNING: currently saving an image; can't save new one at %s.\n", exposureStart);
+					Log(-1, "  > WARNING: currently saving an image; cannot save new one at %s.\n", exposureStart);
 
 					// TODO: wait for the prior image to finish saving.
 				}

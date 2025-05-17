@@ -500,13 +500,14 @@ if ($settings_file !== "") {
 	}
 	$FileName = $pieces[0];		// e.g., "settings"
 	$FileExt = $pieces[1];		// e.g., "json"
-	// e.g., "settings_ZWO_ASI123.json"
 
 	// The camera model may have spaces which is a hassle in file names,
 	// so convert to underscores.
 	$cameraModel = str_replace(" ", "_", $cameraModel);
 
-	$cameraSpecificSettingsName = $FileName . "_$cameraType" . "_$cameraModel.$FileExt";
+	// e.g., "settings_ZWO_ASI123.json"
+	$cameraSpecificSettingsName = "${FileName}_${cameraType}_${cameraModel}.${FileExt}";
+
 	$fullSpecificFileName = dirname($settings_file) . "/$cameraSpecificSettingsName";
 	$specificFileExists =  file_exists($fullSpecificFileName);
 	if ($debug > 0) {
@@ -519,10 +520,10 @@ if ($settings_file !== "") {
 	// Remove the link because it points to a prior camera.
 	$settings_array = null;
 	if (file_exists($settings_file)) {
-		$errorMsg = "ERROR: Unable to process prior settings file '$settings_file'.";
-
-		if ($specificFileExists)
+		if ($specificFileExists) {
+			$errorMsg = "ERROR: Unable to process prior settings file '$settings_file'.";
 			$settings_array = get_decoded_json_file($settings_file, true, $errorMsg);
+		}
 
 		if ($debug > 0) echo "Removing $settings_file.\n";
 		if (! unlink($settings_file)) {

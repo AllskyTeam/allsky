@@ -73,7 +73,7 @@ class OETEXTFIELD extends OEFIELD {
       fill: this.fieldData.fontcolour,
       rotation:  this.fieldData.rotate,
       opacity: this.fieldData.opacity,
-      draggable: true,
+      draggable: false,
       fill: this.fieldData.fill,
       name: 'field',
       strokeWidth: this.fieldData.strokewidth,

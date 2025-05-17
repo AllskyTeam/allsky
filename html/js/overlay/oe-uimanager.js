@@ -34,6 +34,12 @@ class OEUIMANAGER {
 
     #selectionStart = null;
 
+    #drawLayer = null
+    #drawStart = null
+    #drawRect = null
+    #drawRectStartX = 0
+    #drawRectStartY = 0
+
     constructor(imageObj) {
 
         this.#configManager = window.oedi.get('config');
@@ -72,8 +78,18 @@ class OEUIMANAGER {
 
         this.#gridLayer = new Konva.Layer();
         this.#overlayLayer = new Konva.Layer();
+        this.#drawLayer = new Konva.Layer();
+        this.#oeEditorStage.add(this.#drawLayer);
         this.#oeEditorStage.add(this.#overlayLayer);
         this.#oeEditorStage.add(this.#gridLayer);
+
+        this.#drawRect = new Konva.Rect({
+            fill: 'rgba(0, 0, 0, 0.5)',
+            stroke: 'red',
+            strokeWidth: 10,
+            visible: false
+        })
+        this.#drawLayer.add(this.#drawRect)
 
         this.#oeEditorStage.on('mousemove', (e) => {
             let mousePos = this.#oeEditorStage.getPointerPosition();
@@ -231,13 +247,17 @@ class OEUIMANAGER {
         this.resetUI();
         this.setupFonts();
 
-        window.oedi.get('fieldmanager').parseConfig();
+        this.#fieldManager.parseConfig();
 
         let fields = this.#fieldManager.fields;
         for (let [fieldName, field] of fields.entries()) {
             let object = field.shape;
 
-            this.#overlayLayer.add(object);
+            if (field.type === 'rect') {
+                this.#drawLayer.add(object)
+            } else {
+                this.#overlayLayer.add(object)
+            }
         }
 
         $(window).on('resize', (event) => {
@@ -270,79 +290,131 @@ class OEUIMANAGER {
 
 
         $(this.#oeEditorStage.container()).on('mousedown', (e) => {
-            if (e.button !== 0) return; // only left mouse
- 
-            const pointer = this.#oeEditorStage.getPointerPosition();
-            const transform = this.#oeEditorStage.getAbsoluteTransform().copy().invert();
-            const pos = transform.point(pointer);
-            this.#selectionStart = pos;
-            this.#selectionActive = false; 
-          });
+            if (e.shiftKey) {                
+                const pointer = this.#oeEditorStage.getPointerPosition()
+                const transform = this.#oeEditorStage.getAbsoluteTransform().copy().invert()
+                const pos = transform.point(pointer)
+                this.#selectionStart = pos
+                this.#selectionActive = false
+            }
+
+            if (e.altKey) {
+                const pointer = this.#oeEditorStage.getPointerPosition()
+                const transform = this.#oeEditorStage.getAbsoluteTransform().copy().invert()
+                const pos = transform.point(pointer)
+                
+                this.#drawStart = pos
+                this.#drawRect.position(pos)
+                this.#drawRect.visible(true)
+                this.#drawRectStartX = pos.x
+                this.#drawRectStartY = pos.y
+            }
+        })
       
           $(this.#oeEditorStage.container()).on('mousemove', (e) => {
-            if (!this.#selectionStart) return;
+            if (this.#selectionStart) {
+                if (this.#selected  !== null) return
 
-            if (this.#selected  !== null) return
+                const transform = this.#oeEditorStage.getAbsoluteTransform().copy().invert();
+                const pos = transform.point(this.#oeEditorStage.getPointerPosition());
+            
+                const dx = pos.x - this.#selectionStart .x;
+                const dy = pos.y - this.#selectionStart .y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+            
+                if (!this.#selectionActive && dist > 10) {
+                    this.#selectionActive = true;
+                    this.#selectionRect.visible(true);
+                }
+            
+                if (this.#selectionActive) {
+                    const x = Math.min(this.#selectionStart.x, pos.x);
+                    const y = Math.min(this.#selectionStart.y, pos.y);
+                    const width = Math.abs(pos.x - this.#selectionStart.x);
+                    const height = Math.abs(pos.y - this.#selectionStart.y);
+                    this.#selectionRect.setAttrs({ x, y, width, height });
 
-            const transform = this.#oeEditorStage.getAbsoluteTransform().copy().invert();
-            const pos = transform.point(this.#oeEditorStage.getPointerPosition());
-          
-            const dx = pos.x - this.#selectionStart .x;
-            const dy = pos.y - this.#selectionStart .y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-          
-            if (!this.#selectionActive && dist > 10) {
-                this.#selectionActive = true;
-                this.#selectionRect.visible(true);
+                    const box = this.#selectionRect.getClientRect()
+                    this.#fieldManager.setupSelection(box, this.#transformer)
+                    this.updateToolbar()
+                }
             }
-          
-            if (this.#selectionActive) {
-                const x = Math.min(this.#selectionStart.x, pos.x);
-                const y = Math.min(this.#selectionStart.y, pos.y);
-                const width = Math.abs(pos.x - this.#selectionStart.x);
-                const height = Math.abs(pos.y - this.#selectionStart.y);
-                this.#selectionRect.setAttrs({ x, y, width, height });
 
-                const box = this.#selectionRect.getClientRect()
-                this.#fieldManager.setupSelection(box, this.#transformer)
-                this.updateToolbar()
+            if (this.#drawStart) {
+                const transform = this.#oeEditorStage.getAbsoluteTransform().copy().invert()
+                const pos = transform.point(this.#oeEditorStage.getPointerPosition())
+                const newX = Math.min(pos.x, this.#drawRectStartX)
+                const newY = Math.min(pos.y, this.#drawRectStartY)
+                const newW = Math.abs(pos.x - this.#drawRectStartX)
+                const newH = Math.abs(pos.y - this.#drawRectStartY)
+              
+                this.#drawRect.setAttrs({
+                    x: newX,
+                    y: newY,
+                    width: newW,
+                    height: newH,
+                })
             }
-          });
+        })
       
         $(this.#oeEditorStage.container()).on('mouseup', (e) => {
-            if (!this.#selectionStart) return;
-            
-            if (this.#selected  !== null) return
-
-            if (this.#selectionActive) {
-                const box = this.#selectionRect.getClientRect()
-                this.#fieldManager.setupSelection(box, this.#transformer)
-                this.updateToolbar();
-                this.#selectionRect.visible(false)
-                this.#selectionStart = null
-            } else {
-                this.#fieldManager.clearSelection(this.#transformer)
-                this.#selectionStart = null
+            if (this.#selectionStart) {
+                if (this.#selected !== null) return
+                if (this.#selectionActive) {
+                    const box = this.#selectionRect.getClientRect()
+                    this.#fieldManager.setupSelection(box, this.#transformer)
+                    this.updateToolbar();
+                    this.#selectionRect.visible(false)
+                    this.#selectionStart = null
+                } else {
+                    this.#fieldManager.clearSelection(this.#transformer)
+                    this.#selectionStart = null
+                }
             }
-          });
+
+            if (this.#drawStart) {
+                this.#drawRect.visible(false)
+
+                const transform = this.#oeEditorStage.getAbsoluteTransform().copy().invert()
+                const pos = transform.point(this.#oeEditorStage.getPointerPosition())
+                const newX = Math.min(pos.x, this.#drawRectStartX)
+                const newY = Math.min(pos.y, this.#drawRectStartY)
+                const newW = Math.abs(pos.x - this.#drawRectStartX)
+                const newH = Math.abs(pos.y - this.#drawRectStartY)
+              
+                const field = this.#fieldManager.addField('rect', '', null, null, null, null , newX, newY, newW, newH)
+                this.#drawLayer.add(field);
+
+                this.#drawStart = false
+            }
+        })
 
 
         $(document).on('click', '#oe-left-align', (event) => {
             this.#fieldManager.leftAlignFields(this.#transformer)
-            this.#configManager.dirty = true;
-            this.updateToolbar();
+            this.#configManager.dirty = true
+            this.updateToolbar()
         })
 
         $(document).on('click', '#oe-vertical-equal', (event) => {
             this.#fieldManager.equalSpaceFields(this.#transformer)
-            this.#configManager.dirty = true;
-            this.updateToolbar();
+            this.#configManager.dirty = true
+            this.updateToolbar()
         })
 
         
+        $(document).on('click', '#oe-group', (event) => {
+            this.#fieldManager.groupFields(this.#transformer)
+            this.#configManager.dirty = true
+            this.updateToolbar()
+        })
 
-
-
+        $(document).on('click', '#oe-ungroup', (event) => {
+            this.#fieldManager.unGroupFields(this.#transformer)
+            this.#transformer.nodes([])
+            this.#configManager.dirty = true
+            this.updateToolbar()
+        })
 
 
 
@@ -414,6 +486,8 @@ class OEUIMANAGER {
                 return;
             }
 
+            let shapes = this.#fieldManager.getGroupedFields(shape)
+
             this.#transformer.resizeEnabled(false);
             this.setTransformerState(shape);
 
@@ -422,7 +496,30 @@ class OEUIMANAGER {
                 this.#transformer.keepRatio(true);
                 this.#transformer.enabledAnchors(['top-left', 'top-right', 'bottom-left', 'bottom-right']);
             }
-            this.#transformer.nodes([event.target]);
+
+            if (event.evt.shiftKey) {                
+                const transformerNodes = this.#transformer.nodes();
+                const index = transformerNodes.indexOf(shape);
+                
+                if (index !== -1) {
+                    transformerNodes.splice(index, 1);
+                } else {
+                    transformerNodes.push(shape);
+                }
+                this.#transformer.nodes(transformerNodes);
+            } else {
+                if (this.#transformer.nodes().length > 1) {
+                    this.#transformer.nodes([event.target]);
+                } else {
+                    this.#transformer.nodes(shapes);
+                }
+            }
+
+            this.#transformer.nodes().forEach((node) => {
+                const field = this.#fieldManager.findField(node.id())
+                field.shape.draggable(true)
+            })
+
             this.#selected = this.#fieldManager.findField(shape);
             this.setFieldOpacity(false);
             this.setFieldOpacity(true, shape.id());
@@ -439,14 +536,16 @@ class OEUIMANAGER {
         this.#overlayLayer.on('dblclick dbltap', (event) => {
             let shape = event.target;
 
-            if (this.#transformer.nodes().length == 1) {
+
+           // if (this.#transformer.nodes().length == 1) {
+            this.#transformer.nodes([event.target]);
                 this.setFieldOpacity(true, shape.id());
                 this.#selected = this.#fieldManager.findField(shape);
                 $('#oe-delete').removeClass('disabled');
 
                 this.showPropertyEditor();
                 
-            }
+          //  }
         });
 
         this.#overlayLayer.on('dragstart', (event) => {
@@ -479,41 +578,52 @@ class OEUIMANAGER {
             
         });
 
-        this.#overlayLayer.on('dragmove ', (event) => {
+        this.#overlayLayer.on('dragmove', (event) => {
             this.moveField(event);
         });
 
         this.#overlayLayer.on('dragend', (event) => {
             let shape = event.target;
 
-            let gridSizeX = this.#configManager.gridSize;
-            let gridSizeY = this.#configManager.gridSize;
+            event.cancelBubble = true;
 
-            if (gridSizeX != 0 && gridSizeY != 0) {
-                let adjustedX = shape.x() - shape.offsetX();
-                let adjustedY = shape.y() - shape.offsetY();
+            if (event.target.hasName('field')) {                
 
-                shape.position({
-                    x: (Math.round(adjustedX / gridSizeX) * gridSizeX) + shape.offsetX() | 0,
-                    y: (Math.round(adjustedY / gridSizeY) * gridSizeY) + shape.offsetY() | 0
-                });
-            }
+                let field = this.#fieldManager.findField(shape.id())
+                field.shape.draggable(false)
 
-            if (this.#movingField !== null) {
-                this.#movingField.x = shape.x() | 0;
-                this.#movingField.y = shape.y() | 0;
-            }
+                let gridSizeX = this.#configManager.gridSize;
+                let gridSizeY = this.#configManager.gridSize;
 
-            if (this.#selected !== null) {
-                if (this.#selected.id === shape.id()) {
-                    this.updatePropertyEditor();
+                if (gridSizeX != 0 && gridSizeY != 0) {
+                    let adjustedX = shape.x() - shape.offsetX();
+                    let adjustedY = shape.y() - shape.offsetY();
+
+                    shape.position({
+                        x: (Math.round(adjustedX / gridSizeX) * gridSizeX) + shape.offsetX() | 0,
+                        y: (Math.round(adjustedY / gridSizeY) * gridSizeY) + shape.offsetY() | 0
+                    });
                 }
+
+                //let field = this.#fieldManager.findField(shape.id())
+
+                if (field !== null) {
+                    field.x = shape.x() | 0
+                    field.y = shape.y() | 0
+
+                    if (this.#selected !== null) {
+                        if (this.#selected.id === shape.id()) {
+                            this.updatePropertyEditor();
+                        }
+                    }
+
+                    if (this.#configManager.snapBackground) {
+                        this.#snapRectangle.visible(false);
+                    }
+                }
+
             }
 
-            if (this.#configManager.snapBackground) {
-                this.#snapRectangle.visible(false);
-            }
-            this.#movingField = null;
             this.checkFields();
             this.updateToolbar();
         });
@@ -1480,8 +1590,8 @@ class OEUIMANAGER {
 
         /** Nasty hack to fix tlx and tly being wrong on scaled images */
         if (field instanceof OEIMAGEFIELD) {
-            let tx = field.shape.getWidth()* field.scale/2;
-            let ty = field.shape.getHeight()* field.scale/2;
+            let tx = field.shape.getWidth() * field.scale/2;
+            let ty = field.shape.getHeight() * field.scale/2;
             x = field.x - tx;
             y = field.y - ty;
         }
@@ -1971,7 +2081,7 @@ class OEUIMANAGER {
     updatePropertyEditor() {
         if (this.#selected !== null) {
 
-			let label  = this.#selected.fieldData.label
+		/*	let label  = this.#selected.fieldData.label
 			const regex = /\${([^}]+)}/;
 			const match = label.match(regex);
 			let source = ''
@@ -1991,7 +2101,7 @@ class OEUIMANAGER {
 				tableRow.css('display', 'table-row')
 			} else {
 		//		tableRow.css('display', 'none')
-			}
+			}*/
 
             let textVisible = false;
             if ($('#textdialog').closest('.ui-dialog').is(':visible')) {

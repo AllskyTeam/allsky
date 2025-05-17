@@ -8,44 +8,13 @@ class OEFIELD {
 	id = null;
 	loaded = true;
 	type = null;
+	groupId = null
 
 	OVERLAYFIELDSELECTOR = ".overlayfield";
 
 	constructor(type, id) {
 		this.type = type;
 		this.id = 'oe-field-' + id;
-	}
-
-	setDefaults() {
-		for (let defaultName in this.DEFAULTS) {
-			let path = this.DEFAULTS[defaultName].path;
-			let defaultPath = this.DEFAULTS[defaultName].defaultpath;
-			let defaultValue = this.DEFAULTS[defaultName].default;
-
-			if (!(path in this.fieldData)) {
-				if (defaultPath !== '') {
-					this.fieldData[path] = this.config.getValue(defaultPath, defaultValue);
-				} else {
-					this.fieldData[path] = defaultValue;
-				}
-			}
-		}
-	}
-
-	updateDefaults() {
-		for (let defaultName in this.DEFAULTS) {
-			let path = this.DEFAULTS[defaultName].path;
-			let defaultPath = this.DEFAULTS[defaultName].defaultpath;
-			let defaultValue = this.DEFAULTS[defaultName].default;
-
-			if (path in this.fieldData) {
-				let oldDefault = this.config.getBackupValue(defaultPath, defaultValue);
-				if (this.fieldData[path] == oldDefault) {
-					this.fieldData[path] = this.config.getValue(defaultPath, defaultValue);
-					this[path] = this.fieldData[path];
-				}
-			}
-		}
 	}
 
 	get type() {
@@ -64,71 +33,16 @@ class OEFIELD {
 		return this.shape;
 	}
 
-	getValue(path, defaultValue = null) {
-		return path.split('.').reduce((o, p) => o ? o[p] : defaultValue, this.fieldData);
-	}
+	get group() {
+		let result = null
 
-	setValue(path, value) {
-		return path.split('.').reduce((o, p, i) => o[p] = path.split('.').length === ++i ? value : o[p] || {}, this.fieldData);
-	}
-
-	deleteValue(path) {
-		let currentObject = this.fieldData
-		const parts = path.split(".")
-		const last = parts.pop()
-		for (const part of parts) {
-			currentObject = currentObject[part]
-			if (!currentObject) {
-				return
-			}
+		if (this.fieldData.groupId !== undefined) {
+			result = this.fieldData.groupId
 		}
-		delete currentObject[last]
+		return result
 	}
-
-	getJSON() {
-		this.saveFieldData = JSON.parse(JSON.stringify(this.fieldData));
-		for (let defaultName in this.DEFAULTS) {
-			let path = this.DEFAULTS[defaultName].path;
-			let defaultPath = this.DEFAULTS[defaultName].defaultpath;
-			let defaultClassValue = this.DEFAULTS[defaultName].default;
-
-			let defaultValue = '';
-			if (defaultPath !== '') {
-				defaultValue = this.config.getValue(defaultPath, defaultClassValue);
-			}
-
-			if (path in this.saveFieldData) {
-				if (this.saveFieldData[path] === defaultValue) {
-					delete this.saveFieldData[path];
-				}
-			}
-		}
-
-		return this.saveFieldData;
-	}
-
-	rotatePoint() {
-
-		let tlx = this.shape.x() - this.shape.offsetX();
-		let tly = this.shape.y() - this.shape.offsetY();
-		let pt = {
-			x: tlx,
-			y: tly
-		};
-
-		let o = {
-			x: this.shape.x(),
-			y: this.shape.y()
-		};
-
-		let a = this.shape.rotation();
-
-		var angle = a * (Math.PI / 180);
-		var rotatedX = Math.cos(angle) * (pt.x - o.x) - Math.sin(angle) * (pt.y - o.y) + o.x;
-		var rotatedY = Math.sin(angle) * (pt.x - o.x) + Math.cos(angle) * (pt.y - o.y) + o.y;
-
-		this.fieldData.tlx = rotatedX | 0;
-		this.fieldData.tly = rotatedY | 0;
+	set group(group) {
+		this.fieldData.groupId = group
 	}
 
 	get sample() {
@@ -215,6 +129,105 @@ class OEFIELD {
 		this.fieldData.fill = fill;
 		this.shape.fill(fill);
 		this.dirty = true;
+	}
+
+	setDefaults() {
+		for (let defaultName in this.DEFAULTS) {
+			let path = this.DEFAULTS[defaultName].path;
+			let defaultPath = this.DEFAULTS[defaultName].defaultpath;
+			let defaultValue = this.DEFAULTS[defaultName].default;
+
+			if (!(path in this.fieldData)) {
+				if (defaultPath !== '') {
+					this.fieldData[path] = this.config.getValue(defaultPath, defaultValue);
+				} else {
+					this.fieldData[path] = defaultValue;
+				}
+			}
+		}
+	}
+
+	updateDefaults() {
+		for (let defaultName in this.DEFAULTS) {
+			let path = this.DEFAULTS[defaultName].path;
+			let defaultPath = this.DEFAULTS[defaultName].defaultpath;
+			let defaultValue = this.DEFAULTS[defaultName].default;
+
+			if (path in this.fieldData) {
+				let oldDefault = this.config.getBackupValue(defaultPath, defaultValue);
+				if (this.fieldData[path] == oldDefault) {
+					this.fieldData[path] = this.config.getValue(defaultPath, defaultValue);
+					this[path] = this.fieldData[path];
+				}
+			}
+		}
+	}
+
+	getValue(path, defaultValue = null) {
+		return path.split('.').reduce((o, p) => o ? o[p] : defaultValue, this.fieldData);
+	}
+
+	setValue(path, value) {
+		return path.split('.').reduce((o, p, i) => o[p] = path.split('.').length === ++i ? value : o[p] || {}, this.fieldData);
+	}
+
+	deleteValue(path) {
+		let currentObject = this.fieldData
+		const parts = path.split(".")
+		const last = parts.pop()
+		for (const part of parts) {
+			currentObject = currentObject[part]
+			if (!currentObject) {
+				return
+			}
+		}
+		delete currentObject[last]
+	}
+
+	getJSON() {
+		this.saveFieldData = JSON.parse(JSON.stringify(this.fieldData));
+		for (let defaultName in this.DEFAULTS) {
+			let path = this.DEFAULTS[defaultName].path;
+			let defaultPath = this.DEFAULTS[defaultName].defaultpath;
+			let defaultClassValue = this.DEFAULTS[defaultName].default;
+
+			let defaultValue = '';
+			if (defaultPath !== '') {
+				defaultValue = this.config.getValue(defaultPath, defaultClassValue);
+			}
+
+			if (path in this.saveFieldData) {
+				if (this.saveFieldData[path] === defaultValue) {
+					delete this.saveFieldData[path];
+				}
+			}
+		}
+
+		return this.saveFieldData;
+	}
+
+	rotatePoint() {
+
+		let tlx = this.shape.x() - this.shape.offsetX();
+		let tly = this.shape.y() - this.shape.offsetY();
+		let pt = {
+			x: tlx,
+			y: tly
+		};
+
+		let o = {
+			x: this.shape.x(),
+			y: this.shape.y()
+		};
+
+		let a = this.shape.rotation();
+
+		var angle = a * (Math.PI / 180);
+		var rotatedX = Math.cos(angle) * (pt.x - o.x) - Math.sin(angle) * (pt.y - o.y) + o.x;
+		var rotatedY = Math.sin(angle) * (pt.x - o.x) + Math.cos(angle) * (pt.y - o.y) + o.y;
+
+		this.fieldData.tlx = rotatedX | 0;
+		this.fieldData.tly = rotatedY | 0;
 	}
 
 	enableTestMode(value) {

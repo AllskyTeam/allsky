@@ -289,22 +289,87 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 
 		return font
 
+	def _rgba_to_bgr_alpha(self, rgba_str):
+		rgba_str = rgba_str.strip().lower().replace("rgba(", "").replace(")", "")
+		r, g, b, a = map(float, rgba_str.split(','))
+		bgr = (int(b), int(g), int(r))
+		alpha = int(round(a * 255))
+		return bgr, alpha
+
 	def _add_rect(self):
 		for index, rectData in enumerate(self._overlay_config['rects']):
 			top_left = (int(rectData['x']), int(rectData['y']))
 			bottom_right = (int(rectData['x'] + rectData['width']), int(rectData['y'] + rectData['height']))
-   
-			print(top_left, bottom_right)
-   
-			fill_color = (0, 0, 0)
+			fill_colour, fill_opacity = self._rgba_to_bgr_alpha(rectData['fill'])
+			print(fill_colour)
+			print(fill_opacity)
+			#fill_color = (128, 0, 0)
 			fill_opacity = 0.5
-			stroke_color = (0, 0, 255)
+			border_color = (0, 0, 255)
+			radius = 100
+   
+			self.draw_rounded_rect_fill_overlay(top_left, bottom_right, fill_colour, fill_opacity, radius)
+			self.draw_rounded_rect_border(top_left, bottom_right, border_color, thickness=3, radius=radius)   
+			#overlay = self._image.copy()
 
-			overlay = self._image.copy()
+			#cv2.rectangle(overlay, top_left, bottom_right, fill_color, thickness=cv2.FILLED)
+			#cv2.addWeighted(overlay, fill_opacity, self._image, 1 - fill_opacity, 0, self._image)
+			#cv2.rectangle(self._image, top_left, bottom_right, stroke_color, thickness=10)
 
-			cv2.rectangle(overlay, top_left, bottom_right, fill_color, thickness=cv2.FILLED)
-			cv2.addWeighted(overlay, fill_opacity, self._image, 1 - fill_opacity, 0, self._image)
-			cv2.rectangle(self._image, top_left, bottom_right, stroke_color, thickness=10)
+	def draw_rounded_rect_fill_overlay(self, top_left, bottom_right, fill_color, fill_opacity, radius=20):
+		x1, y1 = top_left
+		x2, y2 = bottom_right
+
+		overlay = np.zeros_like(self._image)
+		alpha_mask = np.zeros((self._image.shape[0], self._image.shape[1]), dtype=np.uint8)
+
+		# Draw center rectangles
+		cv2.rectangle(overlay, (x1 + radius, y1), (x2 - radius, y2), fill_color, -1)
+		cv2.rectangle(overlay, (x1, y1 + radius), (x2, y2 - radius), fill_color, -1)
+		cv2.rectangle(alpha_mask, (x1 + radius, y1), (x2 - radius, y2), 255, -1)
+		cv2.rectangle(alpha_mask, (x1, y1 + radius), (x2, y2 - radius), 255, -1)
+
+		# Draw the rounded corners on both overlay and mask
+		corners = [
+			((x1 + radius, y1 + radius), 180),
+			((x2 - radius, y1 + radius), 270),
+			((x1 + radius, y2 - radius), 90),
+			((x2 - radius, y2 - radius), 0)
+		]
+		for center, angle in corners:
+			cv2.ellipse(overlay, center, (radius, radius), angle, 0, 90, fill_color, -1)
+			cv2.ellipse(alpha_mask, center, (radius, radius), angle, 0, 90, 255, -1)
+
+		# Apply blended fill only where alpha mask is non-zero
+		mask = alpha_mask.astype(bool)
+
+		blended = (
+			self._image[mask].astype(np.float32) * (1 - fill_opacity) +
+			overlay[mask].astype(np.float32) * fill_opacity
+		)
+		self._image[mask] = blended.clip(0, 255).astype(np.uint8)
+
+
+	def draw_rounded_rect_border(self, top_left, bottom_right, border_color, thickness=2, radius=20):
+		x1, y1 = top_left
+		x2, y2 = bottom_right
+
+		# Straight edges
+		cv2.line(self._image, (x1 + radius, y1), (x2 - radius, y1), border_color, thickness)
+		cv2.line(self._image, (x1 + radius, y2), (x2 - radius, y2), border_color, thickness)
+		cv2.line(self._image, (x1, y1 + radius), (x1, y2 - radius), border_color, thickness)
+		cv2.line(self._image, (x2, y1 + radius), (x2, y2 - radius), border_color, thickness)
+
+		# Corners
+		corners = [
+			((x1 + radius, y1 + radius), 180),
+			((x2 - radius, y1 + radius), 270),
+			((x1 + radius, y2 - radius), 90),
+			((x2 - radius, y2 - radius), 0)
+		]
+		for center, angle in corners:
+			cv2.ellipse(self._image, center, (radius, radius), angle, 0, 90, border_color, thickness)
+
 
 	def _add_text(self):
 		pil_image = Image.fromarray(self._image)

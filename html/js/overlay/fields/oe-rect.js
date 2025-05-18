@@ -15,12 +15,17 @@ class OERECTFIELD extends OEFIELD {
         'opacity': {
             'path': 'opacity',
             'defaultpath': '',
-            'default': '100'
+            'default': 100
+        },
+        'cornerradius': {
+            'path': 'cornerradius',
+            'defaultpath': '',
+            'default': 10
         },
         'strokewidth': {
             'path': 'strokewidth',
             'defaultpath': '',
-            'default': '10'
+            'default': 10
         },
         'stroke': {
             'path': 'stroke',
@@ -58,8 +63,41 @@ class OERECTFIELD extends OEFIELD {
             fill: this.fieldData.fill,
             name: 'field',
             perfectDrawEnabled: false,
-            fillEnabled: fillEnabled
+            fillEnabled: fillEnabled,
+            cornerRadius: this.fieldData.cornerradius
         })
+    }
+
+    get cornerRadius() {
+        return this.fieldData.cornerradius
+    }
+    set cornerRadius(cornerRadius) {
+        this.fieldData.cornerradius = cornerRadius
+        this.shape.cornerRadius(cornerRadius)
+    }
+
+    get strokeWidth() {
+        return this.fieldData.strokewidth
+    }
+    set strokeWidth(strokeWidth) {
+        this.fieldData.strokewidth = strokeWidth
+        this.shape.strokeWidth(strokeWidth)
+    }
+
+    get width() {
+        return this.fieldData.width
+    }
+    set width(width) {
+        this.fieldData.width = width
+        this.shape.width(width)
+    }
+
+    get height() {
+        return this.fieldData.height
+    }
+    set height(height) {
+        this.fieldData.height = height
+        this.shape.height(height)
     }
 
     get colour() {

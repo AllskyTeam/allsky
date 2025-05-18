@@ -89,7 +89,7 @@ class OEFIELD {
 	}
 	set y(y) {
 		this.fieldData.y = y;
-		this.shape.y(y);;
+		this.shape.y(y);
 		this.rotatePoint()
 		this.dirty = true;
 	}

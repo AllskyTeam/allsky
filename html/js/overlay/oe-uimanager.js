@@ -243,10 +243,7 @@ class OEUIMANAGER {
 
     }
 
-    buildUI() {
-        this.resetUI();
-        this.setupFonts();
-
+    addFields() {
         this.#fieldManager.parseConfig();
 
         let fields = this.#fieldManager.fields;
@@ -259,36 +256,261 @@ class OEUIMANAGER {
                 this.#overlayLayer.add(object)
             }
         }
+    }
 
-        $(window).on('resize', (event) => {
-            this.#resizeWindow();
+    buildUI() {
+        this.resetUI()
+        this.setupFonts()
+
+        this.addFields()
+
+        this.setupToolbarEvents()
+        this.setupDragAndDrop()
+        this.setupErrorsEvents()
+        this.setupFontEvents()
+        this.setupGenericEvents()
+        this.setupVariableManagerEvents()
+        this.setupOptionsDialogEvents()
+        this.setupOverlayManagerEvents()
+        this.setupImageManagerEvents()
+
+        this.updateDebugWindow()
+        this.drawGrid()
+        this.updateBackgroundImage()
+        this.setupDebug()
+        this.updateToolbar()
+        this.checkFieldstimer()
+
+        $('[data-toggle="tooltip"]').tooltip()
+        $('.modal').on('shown.bs.modal', this.alignModal)
+    }
+
+    setupImageManagerEvents() {
+        $(document).on('click', '#oe-show-image-manager', (event) => {
+
+            let usedImages = [];
+            fields = this.#configManager.getValue('images', {});
+            for (let index in fields) {
+                let field = fields[index];
+                let fileName = field.image;
+                if (!usedImages.includes(fileName)) {
+                    usedImages.push(fileName);
+                }
+            }
+
+            $('#oe-image-manager').oeImageManager({
+                thumbnailURL: 'includes/overlayutil.php?request=Images',
+                usedImages: usedImages
+            });
+            $('#oe-file-manager-dialog').modal({
+                keyboard: false
+            });
+
+            $('#oe-file-manager-dialog').on('hidden.bs.modal', () => {
+                $('#oe-image-manager').data('oeImageManager').destroy();
+            });
+
         });
 
+        $(document).on('oe-imagemanager-add', (event, image) => {
+            let shape = this.#fieldManager.addField('image', '', null, null, null, image);
+            this.#overlayLayer.add(shape);
+            this.#selected = this.#fieldManager.findField(shape);
+            this.showPropertyEditor();
+            this.updatePropertyEditor();
+            this.updateToolbar();
+        });
+    }
+
+    setupOverlayManagerEvents() {
+        $(document).on('click', '#optionsdialognewoverlay', (event) => {
+            $('#oe-overlay-manager').data('allskyMM').show();
+            $('#oe-overlay-manager').data('allskyMM').showNew();            
+            $('#optionsdialog').modal('hide');
+        });
+
+        $(document).on('click', '.oe-options-overlay-edit', (event) => {
+            let fileName = $(event.currentTarget).data('filename');
+            $('#oe-overlay-manager').data('allskyMM').show();
+            $('#oe-overlay-manager').data('allskyMM').setSelected(fileName);
+            $('#optionsdialog').modal('hide');
+        });
+    }
+
+    setupGenericEvents() {
+
         if (!this.#debugMode) {
-            let selectedOverlay = this.#configManager.selectedOverlay;
+            let selectedOverlay = this.#configManager.selectedOverlay
             if (selectedOverlay.type === 'allsky') {
-                $('#oe-overlay-disable').removeClass('hidden');
+                $('#oe-overlay-disable').removeClass('hidden')
             } else {
-                $('#oe-overlay-disable').addClass('hidden');
+                $('#oe-overlay-disable').addClass('hidden')
             }
         } else {
-            $('#oe-overlay-disable').addClass('hidden');
+            $('#oe-overlay-disable').addClass('hidden')
         }
+
+        $(window).on('resize', (event) => {
+            this.#resizeWindow()
+        })
+
 
         jQuery(window).bind('beforeunload', ()=> {
             if (this.#fieldManager.dirty || this.#configManager.dirty) {
-                return ' ';
+                return ' '
             } else {
-                return undefined;
+                return undefined
             }
+        })
+
+        $(window).on('resize', (event) => {
+            $('.modal:visible').each(this.alignModal)
+        })
+
+        $(document).on('oe-config-updated', (e) => {
+            this.updateToolbar();
         });
+    }
+
+    setupVariableManagerEvents() {
+        $(document).on('click', '#oe-item-list', (event) => {
+            let el = $(event.target).data('source');
+            let data = $('#' + el).val();
+
+            $.allskyVariable({
+                id: 'var',
+                variable: '',
+				stateKey: 'as-oe',
+                variableSelected: (variable) => {
+                    let name = '${' + variable.replace('AS_', '') + '}'
+                    let field = this.#configManager.findFieldByName(name)
+                    let shape = this.#fieldManager.addField('text', field.name, null, field.format, field.sample)
+                    this.setFieldOpacity(true)
+                    this.#overlayLayer.add(shape)
+                    this.#selected = this.#fieldManager.findField(shape)
+                    this.#transformer.nodes([shape])
+                    this.showPropertyEditor()
+                    this.updatePropertyEditor()
+                    this.updateToolbar()
+                    if (this.testMode) {
+                        this.enableTestMode()
+                    }
+                }
+            })
+        })
+
+        $(document).on('click', '#oe-add-text', (event) => {
+            event.stopPropagation()
+            event.preventDefault()
+            let shape = this.#fieldManager.addField('text')
+            this.#overlayLayer.add(shape)
+
+            this.setFieldOpacity(true, shape.id())
+
+            this.#selected = this.#fieldManager.findField(shape)
+            this.showPropertyEditor()
+            this.updatePropertyEditor()
+            this.updateToolbar()
+            if (this.testMode) {
+                this.enableTestMode()
+            }
+        })
+
+        $(document).on('click', '#oe-add-image', (event) => {
+            let shape = this.#fieldManager.addField('image')
+            this.#overlayLayer.add(shape)
+            this.#selected = this.#fieldManager.findField(shape)
+            this.showPropertyEditor()
+            this.updatePropertyEditor()
+            this.updateToolbar()
+        })
 
 
+    }
 
+    setupToolbarEvents() {
+        $(document).on('click', '#oe-left-align', (event) => {
+            this.#fieldManager.leftAlignFields(this.#transformer)
+            this.#configManager.dirty = true
+            this.updateToolbar()
+        })
 
+        $(document).on('click', '#oe-vertical-equal', (event) => {
+            this.#fieldManager.equalSpaceFields(this.#transformer)
+            this.#configManager.dirty = true
+            this.updateToolbar()
+        })
 
+        
+        $(document).on('click', '#oe-group', (event) => {
+            this.#fieldManager.groupFields(this.#transformer)
+            this.#configManager.dirty = true
+            this.updateToolbar()
+        })
 
+        $(document).on('click', '#oe-ungroup', (event) => {
+            this.#fieldManager.unGroupFields(this.#transformer)
+            this.#transformer.nodes([])
+            this.#configManager.dirty = true
+            this.updateToolbar()
+        })
 
+        $(document).keyup((event) => {
+            if ($(event.target)[0].nodeName == 'BODY') {
+                if (event.key === 'Backspace' || event.key === 'Delete') {
+                    if (this.#selected !== null) {
+                        event.stopPropagation()
+                        event.preventDefault()
+                        this.#deleteField(event)
+                        return false
+                    }
+                }
+            }
+        })
+
+        $(document).on('click', '.oe-zoom', (event) => {
+            this.setZoom(event.currentTarget.id)
+        })
+
+        $(document).on('click','#oe-show-overlay-manager', (e) => {
+            $(document).trigger('oe-show-overlay-manager')
+        })
+
+        $(document).on('click', '#oe-save', (event) => {
+            if (this.#fieldManager.dirty || this.#configManager.dirty) {
+                this.#saveConfig()
+                $(document).trigger('oe-overlay-saved');
+            }
+        })
+
+        $(document).on('click', '#oe-test-mode', (event) => {
+            if (this.testMode) {
+                this.disableTestMode()
+            } else {
+                this.enableTestMode()
+            }
+        })
+
+        $(document).on('click', '#oe-delete', (event) => {
+            this.#deleteField(event)
+        })
+
+        $(document).on('click', '#oe-toobar-debug-button', (event) => {
+
+            let data = JSON.stringify(this.#configManager.config);
+            $('#oe-debug-dialog-overlay').val(data);
+            data = JSON.stringify(this.#configManager.dataFields);
+            $('#oe-debug-dialog-fields').val(data);
+            data = JSON.stringify(this.#configManager.appConfig);
+            $('#oe-debug-dialog-config').val(data);
+
+            $('#oe-debug-dialog').modal({
+                keyboard: false
+            });
+        })
+    }
+
+    setupDragAndDrop() {
         $(this.#oeEditorStage.container()).on('mousedown', (e) => {
             if (e.shiftKey) {                
                 const pointer = this.#oeEditorStage.getPointerPosition()
@@ -390,37 +612,6 @@ class OEUIMANAGER {
         })
 
 
-        $(document).on('click', '#oe-left-align', (event) => {
-            this.#fieldManager.leftAlignFields(this.#transformer)
-            this.#configManager.dirty = true
-            this.updateToolbar()
-        })
-
-        $(document).on('click', '#oe-vertical-equal', (event) => {
-            this.#fieldManager.equalSpaceFields(this.#transformer)
-            this.#configManager.dirty = true
-            this.updateToolbar()
-        })
-
-        
-        $(document).on('click', '#oe-group', (event) => {
-            this.#fieldManager.groupFields(this.#transformer)
-            this.#configManager.dirty = true
-            this.updateToolbar()
-        })
-
-        $(document).on('click', '#oe-ungroup', (event) => {
-            this.#fieldManager.unGroupFields(this.#transformer)
-            this.#transformer.nodes([])
-            this.#configManager.dirty = true
-            this.updateToolbar()
-        })
-
-
-
-
-
-
         this.#oeEditorStage.on('dragmove', (event) => {
 
             let stage = event.target;
@@ -491,9 +682,15 @@ class OEUIMANAGER {
             this.#transformer.resizeEnabled(false);
             this.setTransformerState(shape);
 
-            if (event.target.getClassName() === 'Image' || event.target.getClassName() === 'Rect') {
+            if (event.target.getClassName() === 'Image') {
                 this.#transformer.resizeEnabled(true);
                 this.#transformer.keepRatio(true);
+                this.#transformer.enabledAnchors(['top-left', 'top-right', 'bottom-left', 'bottom-right']);
+            }
+
+            if (event.target.getClassName() === 'Rect') {
+                this.#transformer.resizeEnabled(true);
+                this.#transformer.keepRatio(false );
                 this.#transformer.enabledAnchors(['top-left', 'top-right', 'bottom-left', 'bottom-right']);
             }
 
@@ -532,6 +729,16 @@ class OEUIMANAGER {
             this.updateDebugWindow();
             this.updateToolbar();
         });
+
+        this.#drawLayer.on('dblclick dbltap', (event) => {
+            let shape = event.target;
+
+            this.#transformer.nodes([event.target]);
+                this.setFieldOpacity(true, shape.id());
+                this.#selected = this.#fieldManager.findField(shape);
+                $('#oe-delete').removeClass('disabled');
+                this.showPropertyEditor();
+        })
 
         this.#overlayLayer.on('dblclick dbltap', (event) => {
             let shape = event.target;
@@ -585,7 +792,7 @@ class OEUIMANAGER {
         this.#overlayLayer.on('dragend', (event) => {
             let shape = event.target;
 
-            event.cancelBubble = true;
+            //event.cancelBubble = true;
 
             if (event.target.hasName('field')) {                
 
@@ -659,510 +866,122 @@ class OEUIMANAGER {
             }
         });
 
-        $(document).on('click', '#oe-item-list', (event) => {
-            let el = $(event.target).data('source');
-            let data = $('#' + el).val();
 
-            $.allskyVariable({
-                id: 'var',
-                variable: '',
-				stateKey: 'as-oe',
-                variableSelected: (variable) => {
-                    let name = '${' + variable.replace('AS_', '') + '}'
-                    let field = this.#configManager.findFieldByName(name);
-                    let shape = this.#fieldManager.addField('text', field.name, null, field.format, field.sample);
-                    this.setFieldOpacity(true);
-                    this.#overlayLayer.add(shape);
-                    $('#itemlisttable').DataTable().destroy();
-                    $('#oe-item-list-dialog').modal('hide');
-                    this.#selected = this.#fieldManager.findField(shape);
-                    this.#transformer.nodes([shape]);
-                    this.showPropertyEditor();
-                    this.updatePropertyEditor();
-                    this.updateToolbar();
-                    //this.#fieldManager.buildJSON();
-                    if (this.testMode) {
-                        this.enableTestMode();
-                    }
-                }
-            });
 
-        });
+    }
 
-        $(document).on('click', '.oe-list-delete', (event) => {
+    setupErrorsEvents() {
+        $(document).on('click', '#oe-field-errors', (event) => {
 
-            event.preventDefault();
-            event.stopPropagation();
-            let fieldId = $(event.currentTarget).data('id');
-
-            let field = this.#configManager.findFieldById(fieldId);
-
-            if (field.source !== 'System') {
-                if (window.confirm('Are you sure you wish to delete this item?')) {
-                    this.#configManager.deletefieldById(field.id);
-                    $('#itemlisttable').DataTable().clear();
-                    $('#itemlisttable').DataTable().rows.add(this.#configManager.dataFields);
-                    $('#itemlisttable').DataTable().draw();
-                    if (this.#configManager.allDataFields != undefined) {
-                        $('#allitemlisttable').DataTable().rows().invalidate().draw('page');
-                    }
-
-                    $('#oe-item-list-edit-dialog').modal('hide');
-                    $('#oe-item-list-dialog-close').html('Cancel');
-                    $('#oe-item-list-dialog-save').removeClass('hidden');
-                }
-            }
-        });
-
-        $(document).on('click', '.oe-all-list-add', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            let fieldId = $(event.currentTarget).data('id');
-            let field = this.#configManager.findAllFieldsById(fieldId);
-            let fieldName = '${' + field.name + '}';
-            $('#oe-item-list-edit-dialog-id').val('');
-            $('#oe-item-list-edit-dialog-name').val(fieldName.replace('AS_', ''));
-            $('#oe-item-list-edit-dialog-description').val('');
-            $('#oe-item-list-edit-dialog-format').val('');
-            $('#oe-item-list-edit-dialog-sample').val('');
-            $('#oe-item-list-edit-dialog-type option[value=Text]').attr('selected', 'selected');
-            $('#oe-item-list-edit-dialog-source option[value=User').attr('selected', 'selected');
-
-            $('#oe-item-list-edit-dialog-name').closest('.form-group').removeClass('has-error');
-            $('#oe-item-list-edit-dialog-description').closest('.form-group').removeClass('has-error');
-
-            $('#oe-item-list-edit-dialog-name').prop('disabled', false);
-            $('#oe-item-list-edit-dialog-type').prop('disabled', false);
-
-            $('#oe-variable-edit-fash').hide();
-
-            $('#oe-variable-edit-title').html('Add Variable');
-            $('#oe-item-list-edit-dialog').modal({
-                keyboard: false
-            });
-
-        });
-
-        $(document).on('click', '.oe-list-add', (event) => {
-
-            event.preventDefault();
-            event.stopPropagation();
-            let fieldId = $(event.currentTarget).data('id');
-
-            let field = this.#configManager.findFieldById(fieldId);
-
-            let shape = this.#fieldManager.addField('text', field.name, null, field.format, field.sample);
-
-            this.setFieldOpacity(true);
-
-            this.#overlayLayer.add(shape);
-
-            $('#itemlisttable').DataTable().destroy();
-            $('#oe-item-list-dialog').modal('hide');
-
-            this.#selected = this.#fieldManager.findField(shape);
-            this.#transformer.nodes([shape]);
-            this.showPropertyEditor();
-            this.updatePropertyEditor();
-            this.updateToolbar();
-            //this.#fieldManager.buildJSON();
-            if (this.testMode) {
-                this.enableTestMode();
-            }
-        });
-
-        $(document).on('click', '#oe-field-dialog-add-field', (event) => {
-
-            event.preventDefault();
-            event.stopPropagation();
-
-            $('#oe-item-list-edit-dialog-id').val('');
-            $('#oe-item-list-edit-dialog-name').val('');
-            $('#oe-item-list-edit-dialog-description').val('');
-            $('#oe-item-list-edit-dialog-format').val('');
-            $('#oe-item-list-edit-dialog-sample').val('');
-            $('#oe-item-list-edit-dialog-type option[value=Text]').attr('selected', 'selected');
-            $('#oe-item-list-edit-dialog-source option[value=User').attr('selected', 'selected');
-
-            $('#oe-item-list-edit-dialog-name').closest('.form-group').removeClass('has-error');
-            $('#oe-item-list-edit-dialog-description').closest('.form-group').removeClass('has-error');
-
-            $('#oe-item-list-edit-dialog-name').prop('disabled', false);
-            $('#oe-item-list-edit-dialog-type').prop('disabled', false);
-
-            $('#oe-variable-edit-fash').hide();
-
-            $('#oe-variable-edit-title').html('Add Variable');
-            $('#oe-item-list-edit-dialog').modal({
-                keyboard: false
-            });
-
-        });
-
-        $(document).on('click', '.oe-list-edit', (event) => {
-
-            event.preventDefault();
-            event.stopPropagation();
-
-            let fieldId = $(event.currentTarget).data('id');
-            let field = this.#configManager.findFieldById(fieldId);
-
-            if (field !== 'undefined') {
-
-                if (field.source === 'System') {
-                    $('#oe-item-list-edit-dialog-name').prop('disabled', true);
-                    $('#oe-item-list-edit-dialog-type').prop('disabled', true);
-                } else {
-                    $('#oe-item-list-edit-dialog-name').prop('disabled', false);
-                    $('#oe-item-list-edit-dialog-type').prop('disabled', false);
-                }
-
-                $('#oe-item-list-edit-dialog-name').closest('.form-group').removeClass('has-error');
-                $('#oe-item-list-edit-dialog-description').closest('.form-group').removeClass('has-error');
-
-                $('#oe-item-list-edit-dialog-id').val(field.id);
-                $('#oe-item-list-edit-dialog-name').val(field.name);
-                $('#oe-item-list-edit-dialog-description').val(field.description);
-                $('#oe-item-list-edit-dialog-format').val(field.format);
-                $('#oe-item-list-edit-dialog-sample').val(field.sample);
-                $('#oe-item-list-edit-dialog-type option[value=' + field.type + ']').attr('selected', 'selected');
-                $('#oe-item-list-edit-dialog-source option[value=' + field.source + ']').attr('selected', 'selected');
-
-                if (field.source == 'System') {
-                    $('#oe-variable-edit-fash').show();
-                } else {
-                    $('#oe-variable-edit-fash').hide();
-                }
-
-                $('#oe-variable-edit-title').html('Edit Variable');
-                $('#oe-item-list-edit-dialog').modal({
-                    keyboard: false
-                });
-            }
-
-        });
-
-        $(document).on('click', '#oe-field-save', (event) => {
-            let fieldId = $('#oe-item-list-edit-dialog-id').val();
-            let fieldName = $('#oe-item-list-edit-dialog-name').val();
-            let fieldDescription = $('#oe-item-list-edit-dialog-description').val();
-            let fieldFormat = $('#oe-item-list-edit-dialog-format').val();
-            let fieldSample = $('#oe-item-list-edit-dialog-sample').val();
-
-            let fieldType = $("#oe-item-list-edit-dialog-type option").filter(":selected").val();
-            let fieldSource = $("#oe-item-list-edit-dialog-source option").filter(":selected").val();
-
-            let formValid = true;
-            if (!fieldName.startsWith('${')) {
-                $('#oe-item-list-edit-dialog-name').closest('.form-group').addClass('has-error');
-                formValid = false;
-            }
-            if (fieldDescription == '') {
-                $('#oe-item-list-edit-dialog-description').closest('.form-group').addClass('has-error');
-                formValid = false;
-            }
-
-            if (formValid) {
-                if (fieldId !== '') {
-                    let field = this.#configManager.findFieldById(fieldId);
-                    if (field !== null) {
-                        field.name = fieldName;
-                        field.description = fieldDescription;
-                        field.format = fieldFormat;
-                        field.sample = fieldSample;
-                        field.type = fieldType;
-                        field.source = fieldSource;
-                    }
-                } else {
-                    let fieldId = this.#configManager.dataFields.length + 1;
-                    let newField = {
-                        id: fieldId,
-                        name: fieldName,
-                        description: fieldDescription,
-                        format: fieldFormat,
-                        sample: fieldSample,
-                        type: fieldType,
-                        source: fieldSource
-                    };
-                    this.#configManager.addField(newField);
-                }
-
-                $('#itemlisttable').DataTable().clear();
-                $('#itemlisttable').DataTable().rows.add(this.#configManager.dataFields);
-                $('#itemlisttable').DataTable().draw();
-                if (this.#configManager.allDataFields != undefined) {
-                    $('#allitemlisttable').DataTable().rows().invalidate().draw('page');
-                }
-                $('#oe-item-list-edit-dialog').modal('hide');
-                $('#oe-item-list-dialog-close').html('Cancel');
-                $('#oe-item-list-dialog-save').removeClass('hidden');
-            }
-        });
-
-        $(document).on('click', '#oe-item-list-dialog-save', (event) => {
-            this.#configManager.saveFields();
-            $('#oe-item-list-dialog').modal('hide');
-        });
-
-        $(document).on('click', '#oe-item-list-dialog-close', (event) => {
-            if (!$('#oe-item-list-dialog-save').hasClass('hidden')) {
-                $.ajax({
-                    type: "GET",
-                    url: "includes/overlayutil.php?request=Data",
-                    data: "",
-                    dataType: 'json',
-                    cache: false
-                }).done((data) => {
-                    this.#configManager.dataFields = data;
-                });
-            }
-            $('#oe-item-list-dialog').modal('hide');
-        });
-
-        $(document).on('click', '#oe-save', (event) => {
-            if (this.#fieldManager.dirty || this.#configManager.dirty) {
-                this.#saveConfig();
-                $(document).trigger('oe-overlay-saved');
-            }
-        });
-
-        $(document).on('click', '#oe-test-mode', (event) => {
-            if (this.testMode) {
-                this.disableTestMode();
-            } else {
-                this.enableTestMode();
-            }
-        });
-
-        $(document).keyup((event) => {
-            if ($(event.target)[0].nodeName == 'BODY') {
-                if (event.key === 'Backspace' || event.key === 'Delete') {
-                    if (this.#selected !== null) {
-                        event.stopPropagation();
-                        event.preventDefault();
-                        this.#deleteField(event);
-                        return false;
-                    }
-                }
-            }
-        });
-
-        $(document).on('click', '#oe-delete', (event) => {
-            this.#deleteField(event);
-        });
-
-        $(document).on('click', '#oe-add-text', (event) => {
-            event.stopPropagation();
-            event.preventDefault();
-            let shape = this.#fieldManager.addField('text');
-            this.#overlayLayer.add(shape);
-
-            this.setFieldOpacity(true, shape.id());
-
-            this.#selected = this.#fieldManager.findField(shape);
-            this.showPropertyEditor();
-            this.updatePropertyEditor();
-            this.updateToolbar();
-            if (this.testMode) {
-                this.enableTestMode();
-            }
-        });
-
-        $(document).on('click', '#oe-add-image', (event) => {
-            let shape = this.#fieldManager.addField('image');
-            this.#overlayLayer.add(shape);
-            this.#selected = this.#fieldManager.findField(shape);
-            this.showPropertyEditor();
-            this.updatePropertyEditor();
-            this.updateToolbar();
-        });
-
-        $(document).on('click', '#oe-options', (event) => {
-            $('#defaultimagetopacity').val(this.#configManager.getValue('settings.defaultimagetopacity') * 100);
-            $('#defaultimagerotation').val(this.#configManager.getValue('settings.defaultimagerotation'));
-            $('#defaultfontsize').val(this.#configManager.getValue('settings.defaultfontsize'));
-            $('#defaultfontopacity').val(this.#configManager.getValue('settings.defaultfontopacity') * 100);
-            $('#defaulttextrotation').val(this.#configManager.getValue('settings.defaulttextrotation'));
-            $('#defaultexpirytext').val(this.#configManager.getValue('settings.defaultexpirytext'));
-            $('#oe-default-font-colour').val(this.#configManager.getValue('settings.defaultfontcolour'));
-            $('#oe-default-stroke-colour').val(this.#configManager.getValue('settings.defaultstrokecolour'));
-
-
-            $('#oe-default-font-colour').spectrum({
-                type: 'color',
-                showInput: true,
-                showInitial: true,
-                showAlpha: false
-            });
-
-            $('#oe-default-stroke-colour').spectrum({
-                type: 'color',
-                showInput: true,
-                showInitial: true,
-                showAlpha: false
-            });
-
-            var defaultfont = this.#configManager.getValue('settings.defaultfont');
-
-            $('#defaultfont').empty();
-            this.#fonts.forEach(function (value, index, array) {
-                var optionValue = value.value;
-                var optionText = value.text;
-                var selected = "";
-                if (optionValue == defaultfont) {
-                    selected = 'selected="selected"';
-                }
-                $('#defaultfont').append(`<option value="${optionValue}" ${selected}>${optionText}</option>`);
-            });
-
-            $('#oe-app-options-show-grid').prop('checked', this.#configManager.gridVisible);
-            $('#oe-app-options-grid-size option[value=' + this.#configManager.gridSize + ']').attr('selected', 'selected');
-            $('#oe-app-options-grid-opacity').val(this.#configManager.gridOpacity);
-            $('#oe-app-options-snap-background').prop('checked', this.#configManager.snapBackground);
-            $('#oe-app-options-add-list-size option[value=' + this.#configManager.addListPageSize + ']').attr('selected', 'selected');
-            $('#oe-app-options-add-field-opacity').val(this.#configManager.addFieldOpacity);
-            $('#oe-app-options-select-field-opacity').val(this.#configManager.selectFieldOpacity);
-            $('#oe-app-options-mousewheel-zoom').prop('checked', this.#configManager.mouseWheelZoom);
-            $('#oe-app-options-background-opacity').val(this.#configManager.backgroundImageOpacity);
-            $('#oe-app-options-grid-colour').val(this.#configManager.gridColour);
-
-            $('#oe-app-options-show-errors').prop('checked', this.#configManager.overlayErrors);
-            $('#oe-app-options-show-errors-text').val(this.#configManager.overlayErrorsText);
-
-            $('#oe-app-options-grid-colour').spectrum({
-                type: 'color',
-                showInput: true,
-                showInitial: true,
-                showAlpha: false,
-                preferredFormat: 'hex'
-            });            
-            
-
-            $('#overlaytablelist').DataTable().destroy();
-            $('#overlaytablelist').DataTable({
-                ajax: 'includes/overlayutil.php?request=OverlayList',
-                dom: '<"toolbar">frtip',
+            this.#errorsTable = $('#fielderrorstable').DataTable({
+                data: this.#errorFields,
+                retrieve: true,
                 autoWidth: false,
                 pagingType: 'simple_numbers',
                 paging: true,
-                pageLength: 20,
-                info: false,
-                searching: false,
-                order: [[0, 'asc']],
+                info: true,
                 ordering: false,
+                searching: true,
+                rowId: 'id',
+                pageLength: parseInt(this.#configManager.addListPageSize),
+                lengthMenu: [ [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, -1], [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 'All']],
+                order: [[0, 'asc']],
                 columns: [
                     {
-                        data: 'type',
-                        width: '80px'
-                    }, {
                         data: 'name',
-                        width: '300px'
+                        width: '600px'
                     }, {
-                        data: 'brand',
-                        width: '80px'
-                    }, {
-                        data: 'model',
-                        width: '80px'
-                    }, {
-                        data: 'tod',
-                        width: '80px',
-                        render: function (item, type, row, meta) {
-                            return item.charAt(0).toUpperCase() + item.slice(1);
-                        }                        
+                        data: 'type',
+                        width: '100px'
                     }, {
                         data: null,
-                        width: '50px',
+                        width: '100px',
                         render: function (item, type, row, meta) {
-                            let icon = 'fa-pen-to-square'
-                            if (item.type === 'Allsky') {
-                                icon = 'fa-file-circle-plus';
-                            }
-
-                            let buttons = '<button type="button" class="btn btn-primary btn-sms oe-options-overlay-edit" data-filename="' + item.filename + '"><i class="fa-solid ' + icon + '"></i></button>';
+                            let buttons = '';
+                            buttons += '<button type="button" class="btn btn-primary btn-xs oe-field-errors-dialog-fix" data-id="' + item.id + '" data-type="' + item.type + '">Fix</button>';
+                            buttons += '<button style="margin-left:10px;" type="button" class="btn btn-danger btn-xs oe-field-errors-dialog-delete" data-id="' + item.id + '"><i class="fa-solid fa-trash oe-field-errors-dialog-delete" data-id="' + item.id + '"></i></button>';
+                            buttons += '</div>';
                             return buttons;
                         }
                     }
-                ]
+
+                ],
+                fnDrawCallback: function (oSettings) {
+                    if (oSettings._iDisplayLength >= oSettings.aoData.length) {
+                        $(oSettings.nTableWrapper).find('.dataTables_paginate').hide();
+                        $(oSettings.nTableWrapper).children('div').first().hide();
+                        $(oSettings.nTableWrapper).children('div').last().hide();
+                    } else {
+                        $(oSettings.nTableWrapper).find('.dataTables_paginate').show();
+                        $(oSettings.nTableWrapper).children('div').first().show();
+                        $(oSettings.nTableWrapper).children('div').last().show();
+                    }
+                }
             });
 
-            $('#optionsdialog').modal({
-                keyboard: false
-            });
-
-            $('a[href="#configoptions"]').tab('show');
-
-        });
-
-        $('#optionsdialog a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-            var target = $(e.target).attr('href')
-            if (target === '#oeeditoroverlays') {
-                $('#optionsdialognewoverlay').removeClass('hidden');
+            if ($('#oe-field-errors-dialog').data('bs.modal') === undefined) {
+                $('#oe-field-errors-dialog').modal({
+                    keyboard: false,
+                    width: 800
+                })
             } else {
-                $('#optionsdialognewoverlay').addClass('hidden');
+                $('#oe-field-errors-dialog').modal('show');
             }
+
+            $('#oe-field-errors-dialog').on('hidden.bs.modal', (event) => {
+                this.checkFields();
+                $('#fielderrorstable').DataTable().destroy();
+            });            
         });
 
-        $(document).on('click', '#optionsdialognewoverlay', (event) => {
-            $('#oe-overlay-manager').data('allskyMM').show();
-            $('#oe-overlay-manager').data('allskyMM').showNew();            
-            $('#optionsdialog').modal('hide');
+        $(document).on('click', '#oe-field-errors-dialog-close', (event) => {
+            $('#oe-field-errors-dialog').modal('hide');            
         });
 
-        $(document).on('click', '.oe-options-overlay-edit', (event) => {
-            let fileName = $(event.currentTarget).data('filename');
-            $('#oe-overlay-manager').data('allskyMM').show();
-            $('#oe-overlay-manager').data('allskyMM').setSelected(fileName);
-            $('#optionsdialog').modal('hide');
+        $(document).on('click', '.oe-field-errors-dialog-delete', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            let fieldId = $(event.currentTarget).data('id');
+            let field = this.#fieldManager.findField(fieldId);
+
+            let shape = field.shape;
+            this.#fieldManager.deleteField(shape.id());
+            shape.destroy();
+            this.#errorsTable.rows('#' + fieldId).remove().draw();
+
+            if (this.#errorsTable .rows().count() == 0) {
+                $('#oe-field-errors-dialog').modal('hide');
+            }    
+
+            this.#configManager.dirty = true;
+            this.updateToolbar();            
         });
 
-        $(document).on('click', '#oe-defaults-save', (event) => {
-            let defaultImagOpacity = $('#defaultimagetopacity').val() / 100;
-            let defaultImagRotation = $('#defaultimagerotation').val() | 0;
-            let defaultFontSize = $('#defaultfontsize').val() | 0;
-            let defaultTextRotation = $('#defaulttextrotation').val() | 0;
-            let defaultFont = $("#defaultfont option").filter(":selected").val();
-            let defaultFontOpacity = $('#defaultfontopacity').val() / 100;
-            let defaultFontColour = $('#oe-default-font-colour').val();
-            let defaultexpirytext = $('#defaultexpirytext').val();            
-            let defaultStrokeColour = $('#oe-default-stroke-colour').val();
-            let defaultStrokeSize = $('#oe-default-stroke-size').val();
+        $(document).on('click', '.oe-field-errors-dialog-fix', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            let fieldId = $(event.currentTarget).data('id');
+            let field = this.#fieldManager.findField(fieldId);
 
-            this.#configManager.setValue('settings.defaultimagetopacity', defaultImagOpacity);
-            this.#configManager.setValue('settings.defaultimagerotation', defaultImagRotation);
-            this.#configManager.setValue('settings.defaultfontsize', defaultFontSize);
-            this.#configManager.setValue('settings.defaultfontopacity', defaultFontOpacity);
-            this.#configManager.setValue('settings.defaulttextrotation', defaultTextRotation);
-            this.#configManager.setValue('settings.defaultfont', defaultFont);
-            this.#configManager.setValue('settings.defaultfontcolour', defaultFontColour);
-            this.#configManager.setValue('settings.defaultexpirytext', defaultexpirytext);
-            this.#configManager.setValue('settings.defaultstrokecolour', defaultStrokeColour);
+            let stageWidth = this.#oeEditorStage.width();
+            let stageHeight = this.#oeEditorStage.height();
+            
+            field.x = (stageWidth / 2)|0;
+            field.y = (stageHeight / 3)|0;
 
-            this.#configManager.gridVisible = $('#oe-app-options-show-grid').prop('checked');
-            this.#configManager.gridSize = $("#oe-app-options-grid-size option").filter(":selected").val();
-            this.#configManager.gridOpacity = $('#oe-app-options-grid-opacity').val() | 0;
-            this.#configManager.gridColour = $('#oe-app-options-grid-colour').val();
-            this.#configManager.snapBackground = $('#oe-app-options-snap-background').prop('checked');
-            this.#configManager.addListPageSize = $("#oe-app-options-add-list-size option").filter(":selected").val();
-            this.#configManager.addFieldOpacity = $('#oe-app-options-add-field-opacity').val() | 0;
-            this.#configManager.selectFieldOpacity = $('#oe-app-options-select-field-opacity').val() | 0;
-            this.#configManager.mouseWheelZoom = $('#oe-app-options-mousewheel-zoom').prop('checked');
-            this.#configManager.backgroundImageOpacity = $('#oe-app-options-background-opacity').val() | 0;
+            this.#errorsTable.rows('#' + fieldId).remove().draw();
 
-            this.#configManager.overlayErrors = $('#oe-app-options-show-error').prop('checked');
-            this.#configManager.overlayErrorsText = $('#oe-app-options-show-error').val();
+            if (this.#errorsTable .rows().count() == 0) {
+                $('#oe-field-errors-dialog').modal('hide');
+            }
 
-            this.#fieldManager.updateFieldDefaults();
-            this.drawGrid();
-            this.updateBackgroundImage();
-
-            this.#configManager.saveSettings();
-            this.#fieldManager.defaultsModified();
-
-            $('#optionsdialog').modal('hide');
-            this.updateToolbar();
-            this.setupDebug();
+            this.#configManager.dirty = true;
+            this.updateToolbar();            
         });
+          
+    }
 
+    setupFontEvents() {
         $(document).on('click', '#oe-font-dialog-add-font', (event) => {
             if (this.#fieldManager.dirty) {
                 if (window.confirm('This current configuration has been modified. If you continue any chnages will be lost. Would you like to continue?')) {
@@ -1309,193 +1128,181 @@ class OEUIMANAGER {
             }
         });
 
-        $(document).on('click', '.oe-zoom', (event) => {
-            this.setZoom(event.currentTarget.id);
-        });
-
-        $(document).on('click', '#oe-show-image-manager', (event) => {
-
-            let usedImages = [];
-            fields = this.#configManager.getValue('images', {});
-            for (let index in fields) {
-                let field = fields[index];
-                let fileName = field.image;
-                if (!usedImages.includes(fileName)) {
-                    usedImages.push(fileName);
-                }
-            }
-
-            $('#oe-image-manager').oeImageManager({
-                thumbnailURL: 'includes/overlayutil.php?request=Images',
-                usedImages: usedImages
-            });
-            $('#oe-file-manager-dialog').modal({
-                keyboard: false
-            });
-
-            $('#oe-file-manager-dialog').on('hidden.bs.modal', () => {
-                $('#oe-image-manager').data('oeImageManager').destroy();
-            });
-
-        });
-
-        $(document).on('oe-imagemanager-add', (event, image) => {
-            let shape = this.#fieldManager.addField('image', '', null, null, null, image);
-            this.#overlayLayer.add(shape);
-            this.#selected = this.#fieldManager.findField(shape);
-            this.showPropertyEditor();
-            this.updatePropertyEditor();
-            this.updateToolbar();
-        });
-
-        $(document).on('click', '#oe-toobar-debug-button', (event) => {
-
-            let data = JSON.stringify(this.#configManager.config);
-            $('#oe-debug-dialog-overlay').val(data);
-            data = JSON.stringify(this.#configManager.dataFields);
-            $('#oe-debug-dialog-fields').val(data);
-            data = JSON.stringify(this.#configManager.appConfig);
-            $('#oe-debug-dialog-config').val(data);
-
-            $('#oe-debug-dialog').modal({
-                keyboard: false
-            });
-        });
-
-        $(window).on('resize', (event) => {
-            $('.modal:visible').each(this.alignModal);
-        });
-   
-        $(document).on('oe-config-updated', (e) => {
-            this.updateToolbar();
-        });
-
-        $(document).on('click','#oe-show-overlay-manager', (e) => {
-            $(document).trigger('oe-show-overlay-manager');
-        });
-
-        this.setupErrorsEvents()
-
-        this.updateDebugWindow()
-        this.drawGrid()
-        this.updateBackgroundImage()
-        this.setupDebug()
-        this.updateToolbar()
-        this.checkFieldstimer()
-
-        $('[data-toggle="tooltip"]').tooltip()
-        $('.modal').on('shown.bs.modal', this.alignModal)
     }
 
-    setupErrorsEvents() {
-        $(document).on('click', '#oe-field-errors', (event) => {
+    setupOptionsDialogEvents() {
+        $(document).on('click', '#oe-options', (event) => {
+            $('#defaultimagetopacity').val(this.#configManager.getValue('settings.defaultimagetopacity') * 100);
+            $('#defaultimagerotation').val(this.#configManager.getValue('settings.defaultimagerotation'));
+            $('#defaultfontsize').val(this.#configManager.getValue('settings.defaultfontsize'));
+            $('#defaultfontopacity').val(this.#configManager.getValue('settings.defaultfontopacity') * 100);
+            $('#defaulttextrotation').val(this.#configManager.getValue('settings.defaulttextrotation'));
+            $('#defaultexpirytext').val(this.#configManager.getValue('settings.defaultexpirytext'));
+            $('#oe-default-font-colour').val(this.#configManager.getValue('settings.defaultfontcolour'));
+            $('#oe-default-stroke-colour').val(this.#configManager.getValue('settings.defaultstrokecolour'));
 
-            this.#errorsTable = $('#fielderrorstable').DataTable({
-                data: this.#errorFields,
-                retrieve: true,
+
+            $('#oe-default-font-colour').spectrum({
+                type: 'color',
+                showInput: true,
+                showInitial: true,
+                showAlpha: false
+            });
+
+            $('#oe-default-stroke-colour').spectrum({
+                type: 'color',
+                showInput: true,
+                showInitial: true,
+                showAlpha: false
+            });
+
+            var defaultfont = this.#configManager.getValue('settings.defaultfont');
+
+            $('#defaultfont').empty();
+            this.#fonts.forEach(function (value, index, array) {
+                var optionValue = value.value;
+                var optionText = value.text;
+                var selected = "";
+                if (optionValue == defaultfont) {
+                    selected = 'selected="selected"';
+                }
+                $('#defaultfont').append(`<option value="${optionValue}" ${selected}>${optionText}</option>`);
+            });
+
+            $('#oe-app-options-show-grid').prop('checked', this.#configManager.gridVisible);
+            $('#oe-app-options-grid-size option[value=' + this.#configManager.gridSize + ']').attr('selected', 'selected');
+            $('#oe-app-options-grid-opacity').val(this.#configManager.gridOpacity);
+            $('#oe-app-options-snap-background').prop('checked', this.#configManager.snapBackground);
+            $('#oe-app-options-add-list-size option[value=' + this.#configManager.addListPageSize + ']').attr('selected', 'selected');
+            $('#oe-app-options-add-field-opacity').val(this.#configManager.addFieldOpacity);
+            $('#oe-app-options-select-field-opacity').val(this.#configManager.selectFieldOpacity);
+            $('#oe-app-options-mousewheel-zoom').prop('checked', this.#configManager.mouseWheelZoom);
+            $('#oe-app-options-background-opacity').val(this.#configManager.backgroundImageOpacity);
+            $('#oe-app-options-grid-colour').val(this.#configManager.gridColour);
+
+            $('#oe-app-options-show-errors').prop('checked', this.#configManager.overlayErrors);
+            $('#oe-app-options-show-errors-text').val(this.#configManager.overlayErrorsText);
+
+            $('#oe-app-options-grid-colour').spectrum({
+                type: 'color',
+                showInput: true,
+                showInitial: true,
+                showAlpha: false,
+                preferredFormat: 'hex'
+            });            
+            
+
+            $('#overlaytablelist').DataTable().destroy();
+            $('#overlaytablelist').DataTable({
+                ajax: 'includes/overlayutil.php?request=OverlayList',
+                dom: '<"toolbar">frtip',
                 autoWidth: false,
                 pagingType: 'simple_numbers',
                 paging: true,
-                info: true,
-                ordering: false,
-                searching: true,
-                rowId: 'id',
-                pageLength: parseInt(this.#configManager.addListPageSize),
-                lengthMenu: [ [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, -1], [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 'All']],
+                pageLength: 20,
+                info: false,
+                searching: false,
                 order: [[0, 'asc']],
+                ordering: false,
                 columns: [
                     {
-                        data: 'name',
-                        width: '600px'
-                    }, {
                         data: 'type',
-                        width: '100px'
+                        width: '80px'
+                    }, {
+                        data: 'name',
+                        width: '300px'
+                    }, {
+                        data: 'brand',
+                        width: '80px'
+                    }, {
+                        data: 'model',
+                        width: '80px'
+                    }, {
+                        data: 'tod',
+                        width: '80px',
+                        render: function (item, type, row, meta) {
+                            return item.charAt(0).toUpperCase() + item.slice(1);
+                        }                        
                     }, {
                         data: null,
-                        width: '100px',
+                        width: '50px',
                         render: function (item, type, row, meta) {
-                            let buttons = '';
-                            buttons += '<button type="button" class="btn btn-primary btn-xs oe-field-errors-dialog-fix" data-id="' + item.id + '" data-type="' + item.type + '">Fix</button>';
-                            buttons += '<button style="margin-left:10px;" type="button" class="btn btn-danger btn-xs oe-field-errors-dialog-delete" data-id="' + item.id + '"><i class="fa-solid fa-trash oe-field-errors-dialog-delete" data-id="' + item.id + '"></i></button>';
-                            buttons += '</div>';
+                            let icon = 'fa-pen-to-square'
+                            if (item.type === 'Allsky') {
+                                icon = 'fa-file-circle-plus';
+                            }
+
+                            let buttons = '<button type="button" class="btn btn-primary btn-sms oe-options-overlay-edit" data-filename="' + item.filename + '"><i class="fa-solid ' + icon + '"></i></button>';
                             return buttons;
                         }
                     }
-
-                ],
-                fnDrawCallback: function (oSettings) {
-                    if (oSettings._iDisplayLength >= oSettings.aoData.length) {
-                        $(oSettings.nTableWrapper).find('.dataTables_paginate').hide();
-                        $(oSettings.nTableWrapper).children('div').first().hide();
-                        $(oSettings.nTableWrapper).children('div').last().hide();
-                    } else {
-                        $(oSettings.nTableWrapper).find('.dataTables_paginate').show();
-                        $(oSettings.nTableWrapper).children('div').first().show();
-                        $(oSettings.nTableWrapper).children('div').last().show();
-                    }
-                }
+                ]
             });
 
-            if ($('#oe-field-errors-dialog').data('bs.modal') === undefined) {
-                $('#oe-field-errors-dialog').modal({
-                    keyboard: false,
-                    width: 800
-                })
+            $('#optionsdialog').modal({
+                keyboard: false
+            });
+
+            $('a[href="#configoptions"]').tab('show');
+
+        });
+
+        $('#optionsdialog a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            var target = $(e.target).attr('href')
+            if (target === '#oeeditoroverlays') {
+                $('#optionsdialognewoverlay').removeClass('hidden');
             } else {
-                $('#oe-field-errors-dialog').modal('show');
+                $('#optionsdialognewoverlay').addClass('hidden');
             }
-
-            $('#oe-field-errors-dialog').on('hidden.bs.modal', (event) => {
-                this.checkFields();
-                $('#fielderrorstable').DataTable().destroy();
-            });            
         });
 
-        $(document).on('click', '#oe-field-errors-dialog-close', (event) => {
-            $('#oe-field-errors-dialog').modal('hide');            
+        $(document).on('click', '#oe-defaults-save', (event) => {
+            let defaultImagOpacity = $('#defaultimagetopacity').val() / 100;
+            let defaultImagRotation = $('#defaultimagerotation').val() | 0;
+            let defaultFontSize = $('#defaultfontsize').val() | 0;
+            let defaultTextRotation = $('#defaulttextrotation').val() | 0;
+            let defaultFont = $("#defaultfont option").filter(":selected").val();
+            let defaultFontOpacity = $('#defaultfontopacity').val() / 100;
+            let defaultFontColour = $('#oe-default-font-colour').val();
+            let defaultexpirytext = $('#defaultexpirytext').val();            
+            let defaultStrokeColour = $('#oe-default-stroke-colour').val();
+            let defaultStrokeSize = $('#oe-default-stroke-size').val();
+
+            this.#configManager.setValue('settings.defaultimagetopacity', defaultImagOpacity);
+            this.#configManager.setValue('settings.defaultimagerotation', defaultImagRotation);
+            this.#configManager.setValue('settings.defaultfontsize', defaultFontSize);
+            this.#configManager.setValue('settings.defaultfontopacity', defaultFontOpacity);
+            this.#configManager.setValue('settings.defaulttextrotation', defaultTextRotation);
+            this.#configManager.setValue('settings.defaultfont', defaultFont);
+            this.#configManager.setValue('settings.defaultfontcolour', defaultFontColour);
+            this.#configManager.setValue('settings.defaultexpirytext', defaultexpirytext);
+            this.#configManager.setValue('settings.defaultstrokecolour', defaultStrokeColour);
+
+            this.#configManager.gridVisible = $('#oe-app-options-show-grid').prop('checked');
+            this.#configManager.gridSize = $("#oe-app-options-grid-size option").filter(":selected").val();
+            this.#configManager.gridOpacity = $('#oe-app-options-grid-opacity').val() | 0;
+            this.#configManager.gridColour = $('#oe-app-options-grid-colour').val();
+            this.#configManager.snapBackground = $('#oe-app-options-snap-background').prop('checked');
+            this.#configManager.addListPageSize = $("#oe-app-options-add-list-size option").filter(":selected").val();
+            this.#configManager.addFieldOpacity = $('#oe-app-options-add-field-opacity').val() | 0;
+            this.#configManager.selectFieldOpacity = $('#oe-app-options-select-field-opacity').val() | 0;
+            this.#configManager.mouseWheelZoom = $('#oe-app-options-mousewheel-zoom').prop('checked');
+            this.#configManager.backgroundImageOpacity = $('#oe-app-options-background-opacity').val() | 0;
+
+            this.#configManager.overlayErrors = $('#oe-app-options-show-error').prop('checked');
+            this.#configManager.overlayErrorsText = $('#oe-app-options-show-error').val();
+
+            this.#fieldManager.updateFieldDefaults();
+            this.drawGrid();
+            this.updateBackgroundImage();
+
+            this.#configManager.saveSettings();
+            this.#fieldManager.defaultsModified();
+
+            $('#optionsdialog').modal('hide');
+            this.updateToolbar();
+            this.setupDebug();
         });
-
-        $(document).on('click', '.oe-field-errors-dialog-delete', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            let fieldId = $(event.currentTarget).data('id');
-            let field = this.#fieldManager.findField(fieldId);
-
-            let shape = field.shape;
-            this.#fieldManager.deleteField(shape.id());
-            shape.destroy();
-            this.#errorsTable.rows('#' + fieldId).remove().draw();
-
-            if (this.#errorsTable .rows().count() == 0) {
-                $('#oe-field-errors-dialog').modal('hide');
-            }    
-
-            this.#configManager.dirty = true;
-            this.updateToolbar();            
-        });
-
-        $(document).on('click', '.oe-field-errors-dialog-fix', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            let fieldId = $(event.currentTarget).data('id');
-            let field = this.#fieldManager.findField(fieldId);
-
-            let stageWidth = this.#oeEditorStage.width();
-            let stageHeight = this.#oeEditorStage.height();
-            
-            field.x = (stageWidth / 2)|0;
-            field.y = (stageHeight / 3)|0;
-
-            this.#errorsTable.rows('#' + fieldId).remove().draw();
-
-            if (this.#errorsTable .rows().count() == 0) {
-                $('#oe-field-errors-dialog').modal('hide');
-            }
-
-            this.#configManager.dirty = true;
-            this.updateToolbar();            
-        });
-          
     }
 
     checkFieldstimer() {
@@ -2046,7 +1853,8 @@ class OEUIMANAGER {
         if (this.#selected instanceof OETEXTFIELD) {
             this.#createTextPropertyEditor();
             this.updatePropertyEditor();
-        } else {
+        }
+        if (this.#selected instanceof OEIMAGEFIELD)  {
             $.ajax({
                 url: 'includes/overlayutil.php?request=Images',
                 type: 'GET',
@@ -2059,6 +1867,11 @@ class OEUIMANAGER {
                 this.updatePropertyEditor();
             });
         }
+        if (this.#selected instanceof OERECTFIELD) {
+            this.#createRectPropertyEditor();
+            this.updatePropertyEditor();
+        }
+
     }
 
     hidePropertyEditor() {
@@ -2115,11 +1928,20 @@ class OEUIMANAGER {
             if ($('#imagedialog').closest('.ui-dialog').is(':visible')) {
                 imageVisible = true;
             }
+            let rectVisible = false;
+            if ($('#rectdialog').closest('.ui-dialog').is(':visible')) {
+                rectVisible = true;
+            }
 
             if (this.#selected instanceof OETEXTFIELD) {
                 if (imageVisible) {
                     $('#imagepropgrid').jqPropertyGrid('Destroy');
                     $('#imagedialog').dialog('close');
+                    this.#createTextPropertyEditor();
+                }
+                if (rectVisible) {
+                    $('#rectpropgrid').jqPropertyGrid('Destroy');
+                    $('#rectdialog').dialog('close');
                     this.#createTextPropertyEditor();
                 }
                 let strokeColour = this.#selected.stroke;
@@ -2142,11 +1964,17 @@ class OEUIMANAGER {
                     'strokewidth': this.#selected.strokewidth,
                     'stroke': strokeColour
                 });
-            } else {
+            }
+            if (this.#selected instanceof OEIMAGEFIELD) {
                 if (textVisible) {
                     $('#textdialog').dialog('close');
                     $('#textpropgrid').jqPropertyGrid('Destroy');
                     this.#createImagePropertyEditor();                    
+                }
+                if (rectVisible) {
+                    $('#rectpropgrid').jqPropertyGrid('Destroy');
+                    $('#rectdialog').dialog('close');
+                    this.#createImagePropertyEditor();
                 }
                 $('#imagepropgrid').jqPropertyGrid('set', {
                     'x': this.#selected.x,
@@ -2155,6 +1983,29 @@ class OEUIMANAGER {
                     'opacity': this.#selected.opacity,
                     'rotation': this.#selected.rotation,
                     'scale': this.#selected.scale
+                });
+            }
+
+            if (this.#selected instanceof OERECTFIELD) {
+                if (textVisible) {
+                    $('#textdialog').dialog('close');
+                    $('#textpropgrid').jqPropertyGrid('Destroy');
+                    this.#createRectPropertyEditor();                    
+                }
+                if (imageVisible) {
+                    $('#imagepropgrid').jqPropertyGrid('Destroy');
+                    $('#imagedialog').dialog('close');
+                    this.#createRectPropertyEditor();
+                }
+                $('#rectpropgrid').jqPropertyGrid('set', {
+                    'x': this.#selected.x,
+                    'y': this.#selected.y,
+                    'width': this.#selected.width,
+                    'height': this.#selected.height,
+                    'fill': this.#selected.fill,
+                    'opacity': this.#selected.opacity,
+                    'strokewidth': this.#selected.strokeWidth,
+                    'cornerradius':this.#selected.cornerRadius
                 });
             }
         }
@@ -2232,6 +2083,174 @@ class OEUIMANAGER {
                 $.LoadingOverlay('hide');
             }
         }
+    }
+
+    #createRectPropertyEditor() {
+
+
+
+        var rectData = {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+            opacity: 1,
+            cornerradius: 0,
+            fill: '#ffffff',
+            strokewidth: 0,
+            stroke: ''
+        };
+
+        let gridSizeX = this.#configManager.gridSize;
+        let gridSizeY = this.#configManager.gridSize;
+
+        if (gridSizeX == 0) {
+            gridSizeX = 1;
+        }
+        if (gridSizeY == 0) {
+            gridSizeY = 1;
+        }
+
+
+		const rectConfig = {
+            x: { 
+                group: 'Position', 
+                name: 'X', 
+                type: 'number', 
+                options: { 
+                    min: 0, 
+                    max: this.#backgroundImage.width(), 
+                    step: gridSizeX
+                }
+            },
+            y: {
+                group: 'Position',
+                name: 'Y',
+                type: 'number',
+                options: {
+                    min: 0,
+                    max: this.#backgroundImage.height(),
+                    step: gridSizeY
+                }
+            },
+            width: {
+                group: 'Position',
+                name: 'Width',
+                type: 'number',
+                options: {
+                    min: 0,
+                    max: this.#backgroundImage.width(),
+                    step: gridSizeX
+                }
+            },
+            height: {
+                group: 'Position',
+                name: 'Height',
+                type: 'number',
+                options: {
+                    min: 0,
+                    max: this.#backgroundImage.height(),
+                    step: gridSizeY
+                }
+            },
+            opacity: { 
+                group: 'Background', 
+                name: 'Opacity', 
+                type: 'number', 
+                options: {
+                    min: 0,
+                    max: 1,
+                    step: 0.1
+                }
+            },
+            fill: {
+                group: 'Background', 
+                name: 'Colour', 
+                type: 'color', 
+                options: {
+                    preferredFormat: 'hex',
+                    type: "color",
+                    showInput: true,
+                    showInitial: true,
+                    showAlpha: true
+                }
+            },
+            cornerradius: { 
+                group: 'Border', 
+                name: 'Corner Radius', 
+                type: 'number', 
+                options: {
+                    min: 0,
+                    max: 1000,
+                    step: 1
+                }
+            },
+            strokewidth: {
+                group: 'Border',
+                name: 'Stroke Size',
+                type: 'number',
+                options: {
+                    min: 0,
+                    max: 200,
+                    step: 1
+                }
+            },
+            stroke: {
+                group: 'Border', 
+                name: 'Stroke Colour', 
+                type: 'color', 
+                options: {
+                    preferredFormat: 'hex',
+                    type: "color",
+                    showInput: true,
+                    showInitial: true,
+                    showAlpha: false
+                }
+            }
+        };
+
+        function propertyChangedCallback(grid, name, value) {
+            let uiManager = window.oedi.get('uimanager')
+            let field = uiManager.selected
+
+            if (name == 'x') {
+                field.x = value                
+            }
+            if (name == 'y') {
+                field.y = value                
+            }
+            if (name == 'width') {
+                field.width = value                
+            }
+            if (name == 'height') {
+                field.height = value                
+            }
+            if (name == 'cornerradius') {
+                field.cornerRadius = value
+            }
+            if (name == 'strokewidth') {
+                field.strokeWidth = value
+            }
+        }
+
+        var options = {
+            meta: rectConfig,
+            prefix: 'rect',
+            callback: propertyChangedCallback,
+        };
+
+        $('#rectpropgrid').jqPropertyGrid(rectData, options);
+        $('#rectdialog').dialog({
+            resizable: false,
+            closeOnEscape: false,
+            width: 350,
+            beforeClose: function (event, ui) {
+                let uiManager = window.oedi.get('uimanager');
+                uiManager.setFieldOpacity(false);
+            }
+        });
+
+
     }
 
     #createTextPropertyEditor() {

@@ -242,7 +242,8 @@ class OEFIELDMANAGER {
                     'x': x,
                     'y': y,
                     'width': width,
-                    'height': height
+                    'height': height,
+                    'strokewidth': 10
                 };
                 newField = new OERECTFIELD(field, id);
                 this.#fields.set(newField.id, newField);

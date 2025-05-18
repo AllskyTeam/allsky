@@ -491,7 +491,7 @@ class OEUIMANAGER {
             this.#transformer.resizeEnabled(false);
             this.setTransformerState(shape);
 
-            if (event.target.getClassName() === 'Image') {
+            if (event.target.getClassName() === 'Image' || event.target.getClassName() === 'Rect') {
                 this.#transformer.resizeEnabled(true);
                 this.#transformer.keepRatio(true);
                 this.#transformer.enabledAnchors(['top-left', 'top-right', 'bottom-left', 'bottom-right']);
@@ -1362,14 +1362,32 @@ class OEUIMANAGER {
             });
         });
 
-        $('.modal').on('shown.bs.modal', this.alignModal);
-
         $(window).on('resize', (event) => {
             $('.modal:visible').each(this.alignModal);
         });
+   
+        $(document).on('oe-config-updated', (e) => {
+            this.updateToolbar();
+        });
 
-        $('[data-toggle="tooltip"]').tooltip();
+        $(document).on('click','#oe-show-overlay-manager', (e) => {
+            $(document).trigger('oe-show-overlay-manager');
+        });
 
+        this.setupErrorsEvents()
+
+        this.updateDebugWindow()
+        this.drawGrid()
+        this.updateBackgroundImage()
+        this.setupDebug()
+        this.updateToolbar()
+        this.checkFieldstimer()
+
+        $('[data-toggle="tooltip"]').tooltip()
+        $('.modal').on('shown.bs.modal', this.alignModal)
+    }
+
+    setupErrorsEvents() {
         $(document).on('click', '#oe-field-errors', (event) => {
 
             this.#errorsTable = $('#fielderrorstable').DataTable({
@@ -1477,21 +1495,7 @@ class OEUIMANAGER {
             this.#configManager.dirty = true;
             this.updateToolbar();            
         });
-             
-        $(document).on('oe-config-updated', (e) => {
-            this.updateToolbar();
-        });
-
-        $(document).on('click','#oe-show-overlay-manager', (e) => {
-            $(document).trigger('oe-show-overlay-manager');
-        });
-
-        this.updateDebugWindow();
-        this.drawGrid();
-        this.updateBackgroundImage();
-        this.setupDebug();
-        this.updateToolbar();
-        this.checkFieldstimer();
+          
     }
 
     checkFieldstimer() {

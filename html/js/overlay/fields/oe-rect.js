@@ -15,7 +15,7 @@ class OERECTFIELD extends OEFIELD {
         'opacity': {
             'path': 'opacity',
             'defaultpath': '',
-            'default': '50'
+            'default': '100'
         },
         'strokewidth': {
             'path': 'strokewidth',

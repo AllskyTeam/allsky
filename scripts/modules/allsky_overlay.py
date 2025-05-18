@@ -289,6 +289,23 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 
 		return font
 
+	def _add_rect(self):
+		for index, rectData in enumerate(self._overlay_config['rects']):
+			top_left = (int(rectData['x']), int(rectData['y']))
+			bottom_right = (int(rectData['x'] + rectData['width']), int(rectData['y'] + rectData['height']))
+   
+			print(top_left, bottom_right)
+   
+			fill_color = (0, 0, 0)
+			fill_opacity = 0.5
+			stroke_color = (0, 0, 255)
+
+			overlay = self._image.copy()
+
+			cv2.rectangle(overlay, top_left, bottom_right, fill_color, thickness=cv2.FILLED)
+			cv2.addWeighted(overlay, fill_opacity, self._image, 1 - fill_opacity, 0, self._image)
+			cv2.rectangle(self._image, top_left, bottom_right, stroke_color, thickness=10)
+
 	def _add_text(self):
 		pil_image = Image.fromarray(self._image)
 		for field_data in self._overlay_fields:
@@ -601,6 +618,8 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 			self._timer("Loading Image")
 			if self._load_image_file():
 				self._timer("Loading Extra Data")
+				self._add_rect()
+				self._timer("Adding All Rectangles")
 				self._add_text()
 				self._timer("Adding All Text Fields")
 				self._add_images()

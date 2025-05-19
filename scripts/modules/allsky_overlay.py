@@ -370,7 +370,6 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		for center, angle in corners:
 			cv2.ellipse(self._image, center, (radius, radius), angle, 0, 90, border_color, thickness)
 
-
 	def _add_text(self):
 		pil_image = Image.fromarray(self._image)
 		for field_data in self._overlay_fields:

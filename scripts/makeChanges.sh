@@ -804,7 +804,7 @@ do
 				W+="\n ${WSNs}Nighttime Capture${WSNe} flows of the"
 				W+="\n ${WSNs}Module Manager${WSNe}"
 				W+="\n for the ${WSNs}${LABEL}${WSNe} to take effect."
-				w "${W}"
+				W_ "${W}"
 			else
 				rm -f "${ALLSKY_TMP}/overlaydebug.txt"
 			fi

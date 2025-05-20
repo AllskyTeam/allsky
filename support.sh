@@ -35,7 +35,6 @@ function set_dialog_info()
 	if [[ ${TEXT_ONLY} == "true" ]]; then
 		DIALOG_ERROR="${cERROR}"
 		DIALOG_BLUE="${cBLUE}"
-		DIALOG_BOLD="${cBOLD}"
 		DIALOG_NC="${cNC}"
 	fi
 }
@@ -46,20 +45,20 @@ function set_messages()
 	DIALOG_COMPLETE_MESSAGE+="\n"
 	DIALOG_COMPLETE_MESSAGE+="    ${DIALOG_BLUE}${ALLSKY_SUPPORT_DIR}/XX_ZIPNAME_XX${DIALOG_NC}\n"
 	DIALOG_COMPLETE_MESSAGE+="\n"
-	DIALOG_COMPLETE_MESSAGE+="This file should be attached to the relevant Discussion in Github.\n"
+	DIALOG_COMPLETE_MESSAGE+="This file should be attached to the relevant Issue or Discussion in Github.\n"
 	DIALOG_COMPLETE_MESSAGE+="\n"
 	DIALOG_COMPLETE_MESSAGE+="If your WebUI is functioning, the file can be downloaded using the"
-	DIALOG_COMPLETE_MESSAGE+=" ${DIALOG_BOLD}Getting Support${DIALOG_NC} page."
+	DIALOG_COMPLETE_MESSAGE+=" '${DIALOG_BLUE}Getting Support${DIALOG_NC}' page."
 
-	GITHUB_ERROR="${DIALOG_ERROR}\nERROR: The Discussion number must be numeric.${DIALOG_NC}\n"
+	GITHUB_ERROR="${DIALOG_ERROR}\nERROR: The Issue / Discussion number must be numeric.${DIALOG_NC}\n"
 	GITHUB_ERROR+="\n"
 	GITHUB_ERROR+="It can be found in the URL of the Github post, for example if the URL is:\n"
 	GITHUB_ERROR+="\n"
 	GITHUB_ERROR+="    ${DIALOG_BLUE}${GITHUB_ROOT}/${GITHUB_ALLSKY_PACKAGE}/discussions/4119${DIALOG_NC}\n"
 	GITHUB_ERROR+="\n"
-	GITHUB_ERROR+="the Discussion number is ${DIALOG_BOLD}4119${DIALOG_NC}."
+	GITHUB_ERROR+="the post is a Discussion whose number is ${DIALOG_BLUE}4119${DIALOG_NC}."
 
-	SUPPORT_TCS="\n${DIALOG_BOLD}This script collects the following data from your Raspberry Pi to"
+	SUPPORT_TCS="\n${DIALOG_BLUE}This script collects the following data from your Raspberry Pi to"
 	SUPPORT_TCS+=" assist in supporting problems (all private data is hidden):${DIALOG_NC}\n"
 	SUPPORT_TCS+="\n"
 	SUPPORT_TCS+="- Basic system information\n"
@@ -150,23 +149,17 @@ function collect_support_info()
 	# TODO: GET AS image dir sizes
 	###
 
-	X="${ALLSKY_PYTHON_VENV}/bin/activate"
-	if [[ -s ${X} ]]; then
-		# shellcheck source=/dev/null
-		source "${X}"
-		PYTHON_VERSION="$( python3 -V )"
-		PYTHON_MODULES="$( pip list )"
-	else
-		PYTHON_VERSION="unknown"
-		PYTHON_MODULES="unknown"
-	fi
+	activate_python_venv
+	PYTHON_VERSION="$( python3 -V )"
+#x	PYTHON_MODULES="$( pip list )"
+	PYTHON_VERSION="${PYTHON_VERSION:-unknown}"
+#x	PYTHON_MODULES="${PYTHON_MODULES:-unknown}"
 	###
 
 	### Devices
 	DEV="$( sudo ls -alh  /dev )"
 	USB="$( sudo lsusb -v )"
 	I2C_ENABLED="$( sudo raspi-config nonint get_i2c )"
-	I2C_DEVICES=""
 	if [[ ${I2C_ENABLED} == "0" ]]; then
 		I2C_DEVICES="$( sudo i2cdetect -y -a 1 )"
 	else
@@ -183,15 +176,43 @@ function collect_support_info()
 	###
 
 	### get installed package information
-	PYTHON_PACKAGES="$( dpkg -l | grep python )"
+#x	PYTHON_PACKAGES="$( dpkg -l | grep python )"
 	# REPOS="$( grep -r '^deb' /etc/apt/sources.list /etc/apt/sources.list.d/ )"
-	APT_INSTALLED="$( sudo dpkg-query -l )"
+#x	APT_INSTALLED="$( sudo dpkg-query -l )"
 	###
 }
 
 function generate_support_info()
 {
-	local TEMP_DIR="$( mktemp -d "${TMPDIR:-/tmp}/allsky_XXX" )"
+	# Create a temporary directory to hold all our files,
+	# and make sure we can create a file in it.
+	local TEMP_DIR="$( mktemp --directory "${TMPDIR:-/tmp}/allsky_XXX" 2>&1 )"
+	local RET=$?
+	if [[ $RET -ne 0 ]]; then
+		echo "ERROR: mktemp returned code ${RET}: ${TEMP_DIR}" >&2
+		return 1
+	elif [[ -z ${TEMP_DIR} ]]; then
+		echo "ERROR: mktemp returned nothing." >&2
+		return 1
+	elif [[ ! -d ${TEMP_DIR} ]]; then
+		local A="Argument list too long"
+		#shellcheck disable=SC2076
+		if [[ ${TEMP_DIR} =~ "${A}" ]]; then
+			echo "INTERNAL ERROR: '${A}'." >&2
+			echo "Report to Allsky Team on GitHub." >&2
+		else
+			echo "ERROR: TEMP_DIR (${TEMP_DIR}) does not exist." >&2
+		fi
+		return 1
+	else
+		local TEST_FILE="${TEMP_DIR}/test.txt"
+		local TEST
+		if ! TEST="$( touch "${TEST_FILE}" 2>&1 )" ; then
+			echo "ERROR: Unable to create '${TEST_FILE}': ${TEST}" >&2
+			return 1
+		fi
+		rm -f "${TEST_FILE}"
+	fi
 
 	local BASIC_FILE="${TEMP_DIR}/system.txt"
 	{
@@ -276,15 +297,21 @@ function generate_support_info()
 	{
 		print_heading "Allsky Venv information"
 		print_info "Python Version:" "${PYTHON_VERSION}"
-		print "${PYTHON_MODULES}"
+		# This produces too much output to hold in a variable.
+		pip list
+#x		print "${PYTHON_MODULES}"
 		print_heading "Package Information"
-		print "${PYTHON_PACKAGES}"
+		# This produces too much output to hold in a variable.
+		dpkg -l | grep python
+#x		print "${PYTHON_PACKAGES}"
 	}  > "${ALLSKYVENV_FILE}"
 
 	local APT_FILE="${TEMP_DIR}/apt.txt"
 	{
 		print_heading "APT installed packages"
-		print "${APT_INSTALLED}"
+		# This produces too much output to hold in a variable.
+		sudo dpkg-query -l
+#x		print "${APT_INSTALLED}"
 	} > "${APT_FILE}"
 
 	local LIGHTTPD_ERROR_LOG_FILE="${TEMP_DIR}/lighttpd_error.txt"
@@ -296,11 +323,6 @@ function generate_support_info()
 	local SUPPORTED_CAMERAS_FILE="${TEMP_DIR}/supported_cameras.txt"
 	{
 		print_heading "Allsky - Supported Cameras"
-
-		# print_sub_heading "Raspberry Pi Cameras Attached"
-		# sudo "${ALLSKY_UTILITIES}/getRPiCameraInfo.sh"
-		# sudo cat ./tmp/camera_data.txt
-
 		"${ALLSKY_UTILITIES}/showSupportedCameras.sh" --rpi --zwo
 	} > "${SUPPORTED_CAMERAS_FILE}"
 
@@ -313,12 +335,12 @@ function generate_support_info()
 		fi
 	fi
 
-	ALLSKY_PERIODIC_LOG_FILE="${TEMP_DIR}/allskyperiodic_log.txt"
+	local PERIODIC_LOG_FILE="${TEMP_DIR}/allskyperiodic_log.txt"
 	if [[ -f ${ALLSKY_PERIODIC_LOG} ]]; then
 		if [[ ${LOG_LINES} == "all" ]]; then
-			cp "${ALLSKY_PERIODIC_LOG}" "${ALLSKY_PERIODIC_LOG_FILE}"
+			cp "${ALLSKY_PERIODIC_LOG}" "${PERIODIC_LOG_FILE}"
 		else
-			tail -n "${LOG_LINES}" /var/log/allskyperiodic.log > "${ALLSKY_PERIODIC_LOG_FILE}"
+			tail -n "${LOG_LINES}" "${ALLSKY_PERIODIC_LOG}" > "${PERIODIC_LOG_FILE}"
 		fi
 	fi
 
@@ -334,16 +356,20 @@ function generate_support_info()
 	X="${TEMP_DIR}/config/modules"
 	[[ -d ${X} ]] && find "${TEMP_DIR}/config/modules" -type f -exec truncate -s 0 {} +
 
-	SUPPORT_ZIP_NAME="${SUPPORT_ZIP_NAME//XX_ISSUE_XX/${ISSUE_NUMBER}}"
-	DIALOG_COMPLETE_MESSAGE="${DIALOG_COMPLETE_MESSAGE//XX_ZIPNAME_XX/${SUPPORT_ZIP_NAME}}"
+	local ZIP_NAME="${SUPPORT_ZIP_NAME//XX_ISSUE_XX/${ISSUE_NUMBER}}"
+	# We're in a subshell so we need to "echo" this to pass it back to our invoker.
+	echo "${DIALOG_COMPLETE_MESSAGE//XX_ZIPNAME_XX/${ZIP_NAME}}"
 
-	SUPPORT_ZIP_NAME="${TEMP_DIR}/${SUPPORT_ZIP_NAME}"
-	zip -r "${SUPPORT_ZIP_NAME}" "${TEMP_DIR}/"* > /dev/null 2>&1
-	sudo chown "${USER_NAME}:${WEBSERVER_OWNER}" "${SUPPORT_ZIP_NAME}"
-	sudo chmod g+wx "${SUPPORT_ZIP_NAME}"
-	sudo chmod u+wx "${SUPPORT_ZIP_NAME}"
-	sudo mv "${SUPPORT_ZIP_NAME}" "${ALLSKY_SUPPORT_DIR}"
-	trap 'rm -rf "${TEMP_DIR}"' EXIT
+	ZIP_NAME="${TEMP_DIR}/${ZIP_NAME}"
+	zip -r "${ZIP_NAME}" "${TEMP_DIR}/"* > /dev/null 2>&1
+	sudo chown "${USER_NAME}:${WEBSERVER_OWNER}" "${ZIP_NAME}"
+	sudo chmod g+wx "${ZIP_NAME}"
+	sudo chmod u+wx "${ZIP_NAME}"
+	sudo mv "${ZIP_NAME}" "${ALLSKY_SUPPORT_DIR}"
+
+	rm -rf "${TEMP_DIR}"
+
+	return 0
 }
 
 ####
@@ -353,8 +379,9 @@ function get_github_discussion_id()
 	local ISSUE_NUMBER_TEMP
 
 	if [[ ${AUTO_CONFIRM} == "false"  && ${ISSUE_NUMBER} == "none" ]]; then
-		local MSG="${DIALOG_BOLD}Enter the Github Discussion Number.${DIALOG_NC}\nPress 'Enter' if you don't know it: "
-		local DIALOG_TITLE="Github Discussion Number"
+		local MSG="${DIALOG_BLUE}Enter the Github Issue or Discussion number.${DIALOG_NC}"
+		MSG+="\nPress 'Enter' if you don't know it: "
+		local DIALOG_TITLE="Github Issue / Discussion Number"
 		while true; do
 			# The prompt is written to stdout and the answer to stderr, so switch them.
 			ISSUE_NUMBER_TEMP="$( display_box "--inputbox" "${DIALOG_TITLE}" "\n${MSG}" --no-cancel 3>&1 1>&2 2>&3 )"
@@ -378,15 +405,20 @@ display_running_dialog()
 {
 	if [[ "${AUTO_CONFIRM}" == "false" ]]; then
 		DIALOG_TITLE="Processing"
-		DIALOG_TEXT="${DIALOG_BOLD}Please wait while the support info is collected...${DIALOG_NC}"
+		DIALOG_TEXT="${DIALOG_BLUE}Please wait while the support information is collected...${DIALOG_NC}"
 		display_box "--infobox" "${TITLE}" "\n\n${DIALOG_TEXT}\n"
 	fi
 }
 
 display_complete_dialog()
 {
+	local STATUS="${1:-Complete}"
 	if [[ ${AUTO_CONFIRM} == "false" ]]; then
-		display_box "--msgbox" "Complete" "${DIALOG_COMPLETE_MESSAGE}"
+		if ! display_box "--msgbox" " ${STATUS} " "${DIALOG_COMPLETE_MESSAGE}" 2>/dev/null ; then
+			# In case of major failure with display_box(), echo the output.
+			clear
+			echo -e "\n\n${DIALOG_COMPLETE_MESSAGE}\n" >&2
+		fi
 	fi
 }
 
@@ -426,7 +458,7 @@ function usage_and_exit()
 	echo "	--help        Displays this message and exits."
 	echo "	--text        Use text mode. Options must be specified on the command line."
 	echo "	--auto        Auto accept any prompts and no output."
-	echo "	--issue i     Include the Github issue number."
+	echo "	--issue i     Include the Github Issue or Discussion number."
 	echo "	--loglines n  Number of lines to include from log files, defaults to 'all' for entire file."
 
 	exit "${RET}"
@@ -436,7 +468,7 @@ function usage_and_exit()
 ############################################## main body
 
 OK="true"
-TEXT_ONLY="false"
+TEXT_ONLY="false"		# Also used by display_box()
 ISSUE_NUMBER="none"
 AUTO_CONFIRM="false"
 LOG_LINES="all"
@@ -487,6 +519,12 @@ display_start_dialog
 get_github_discussion_id
 display_running_dialog
 collect_support_info
-generate_support_info
+DIALOG_COMPLETE_MESSAGE="$( generate_support_info 2>&1 )"
+RET=$?
 kill_running_dialog
-display_complete_dialog
+if [[ ${RET} -eq 0 ]]; then
+	display_complete_dialog
+else
+	display_complete_dialog "Failure"
+fi
+exit "${RET}"

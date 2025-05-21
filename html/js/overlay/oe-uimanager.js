@@ -533,7 +533,7 @@ class OEUIMANAGER {
             }
         })
       
-          $(this.#oeEditorStage.container()).on('mousemove', (e) => {
+        $(this.#oeEditorStage.container()).on('mousemove', (e) => {
             if (this.#selectionStart) {
                 if (this.#selected  !== null) return
 
@@ -611,9 +611,7 @@ class OEUIMANAGER {
             }
         })
 
-
         this.#oeEditorStage.on('dragmove', (event) => {
-
             let stage = event.target;
             if (stage.getClassName() === 'Stage') {
                 let x = stage.x();
@@ -636,8 +634,6 @@ class OEUIMANAGER {
                 event.evt.preventDefault();
                 event.evt.stopPropagation();
             }
-
-
         });
 
         this.#oeEditorStage.on('wheel', (event) => {
@@ -672,7 +668,6 @@ class OEUIMANAGER {
                 return;
             }
 
-            // do nothing if clicked NOT on our rectangles
             if (!event.target.hasName('field')) {
                 return;
             }
@@ -756,84 +751,25 @@ class OEUIMANAGER {
         });
 
         this.#overlayLayer.on('dragstart', (event) => {
-            let shape = event.target;
-
-            this.#movingField = this.#fieldManager.findField(shape);
-            if (this.#configManager.snapBackground) {
-                let gridSizeX = this.#configManager.gridSize * this.#oeEditorStage.scaleX();
-                let gridSizeY = this.#configManager.gridSize * this.#oeEditorStage.scaleY();
-                
-                if (gridSizeX != 0 && gridSizeY != 0) {
-                    this.#snapRectangle.size({
-                        width: shape.width(),
-                        height: shape.height()
-                    });
-                    this.#snapRectangle.position({
-                        x: (Math.round(shape.x() / gridSizeX) * gridSizeX) | 0,
-                        y: (Math.round(shape.y() / gridSizeY) * gridSizeY) | 0
-                    });
-    //                this.#snapRectangle.offset({x: shape.width()/2, y: shape.height()/2});                
-                    this.#snapRectangle.offsetX(shape.offsetX());
-                    this.#snapRectangle.offsetY(shape.offsetY());
-                    this.#snapRectangle.scale({
-                        x: this.#movingField.scale,
-                        y: this.#movingField.scale
-                    });
-                    this.#snapRectangle.visible(true);
-                }
-            }
-            
+            this.#dragStart(event)
+        });
+        this.#drawLayer.on('dragstart', (event) => {
+            this.#dragStart(event)
         });
 
         this.#overlayLayer.on('dragmove', (event) => {
             this.moveField(event);
         });
+        this.#drawLayer.on('dragmove', (event) => {
+            this.moveField(event);
+        });
 
         this.#overlayLayer.on('dragend', (event) => {
-            let shape = event.target;
-
-            //event.cancelBubble = true;
-
-            if (event.target.hasName('field')) {                
-
-                let field = this.#fieldManager.findField(shape.id())
-                field.shape.draggable(false)
-
-                let gridSizeX = this.#configManager.gridSize;
-                let gridSizeY = this.#configManager.gridSize;
-
-                if (gridSizeX != 0 && gridSizeY != 0) {
-                    let adjustedX = shape.x() - shape.offsetX();
-                    let adjustedY = shape.y() - shape.offsetY();
-
-                    shape.position({
-                        x: (Math.round(adjustedX / gridSizeX) * gridSizeX) + shape.offsetX() | 0,
-                        y: (Math.round(adjustedY / gridSizeY) * gridSizeY) + shape.offsetY() | 0
-                    });
-                }
-
-                //let field = this.#fieldManager.findField(shape.id())
-
-                if (field !== null) {
-                    field.x = shape.x() | 0
-                    field.y = shape.y() | 0
-
-                    if (this.#selected !== null) {
-                        if (this.#selected.id === shape.id()) {
-                            this.updatePropertyEditor();
-                        }
-                    }
-
-                    if (this.#configManager.snapBackground) {
-                        this.#snapRectangle.visible(false);
-                    }
-                }
-
-            }
-
-            this.checkFields();
-            this.updateToolbar();
+            this.#dragEnd(event)
         });
+        this.#drawLayer.on('dragend', (event) => {
+            this.#dragEnd(event)       
+        })
 
         this.#transformer.on('transform ', (event) => {
             this.moveField(event);
@@ -865,9 +801,6 @@ class OEUIMANAGER {
                 this.updateSelected(event.target);
             }
         });
-
-
-
     }
 
     setupErrorsEvents() {
@@ -1305,6 +1238,84 @@ class OEUIMANAGER {
         });
     }
 
+    #dragStart(event) {
+        let shape = event.target;
+
+        this.#movingField = this.#fieldManager.findField(shape);
+        if (this.#configManager.snapBackground) {
+            let gridSizeX = this.#configManager.gridSize * this.#oeEditorStage.scaleX();
+            let gridSizeY = this.#configManager.gridSize * this.#oeEditorStage.scaleY();
+            
+            if (gridSizeX != 0 && gridSizeY != 0) {
+                this.#snapRectangle.size({
+                    width: shape.width(),
+                    height: shape.height()
+                });
+                this.#snapRectangle.position({
+                    x: (Math.round(shape.x() / gridSizeX) * gridSizeX) | 0,
+                    y: (Math.round(shape.y() / gridSizeY) * gridSizeY) | 0
+                });
+//                this.#snapRectangle.offset({x: shape.width()/2, y: shape.height()/2});                
+                this.#snapRectangle.offsetX(shape.offsetX());
+                this.#snapRectangle.offsetY(shape.offsetY());
+                this.#snapRectangle.scale({
+                    x: this.#movingField.scale,
+                    y: this.#movingField.scale
+                });
+                this.#snapRectangle.visible(true);
+            }
+        }
+    }
+
+    #dragEnd(event) {
+        let shape = event.target;
+
+        //event.cancelBubble = true;
+
+        if (event.target.hasName('field')) {                
+
+            let field = this.#fieldManager.findField(shape.id())
+            field.shape.draggable(false)
+
+            let gridSizeX = this.#configManager.gridSize;
+            let gridSizeY = this.#configManager.gridSize;
+
+            if (gridSizeX != 0 && gridSizeY != 0) {
+                let adjustedX = shape.x() - shape.offsetX();
+                let adjustedY = shape.y() - shape.offsetY();
+
+                shape.position({
+                    x: (Math.round(adjustedX / gridSizeX) * gridSizeX) + shape.offsetX() | 0,
+                    y: (Math.round(adjustedY / gridSizeY) * gridSizeY) + shape.offsetY() | 0
+                });
+            }
+
+            if (field !== null) {
+                field.x = shape.x() | 0
+                field.y = shape.y() | 0
+
+                if (field.type === 'rect') {
+                    field.width = shape.width() | 0
+                    field.height = shape.height() | 0
+                }
+
+                if (this.#selected !== null) {
+                    if (this.#selected.id === shape.id()) {
+                        this.updatePropertyEditor();
+                    }
+                }
+
+                if (this.#configManager.snapBackground) {
+                    this.#snapRectangle.visible(false);
+                }
+            }
+
+        }
+
+        this.checkFields();
+        this.updateToolbar();
+    }
+
     checkFieldstimer() {
         let checkFunction = function() {
             let allLoaded = true;
@@ -1327,7 +1338,6 @@ class OEUIMANAGER {
 
     moveField(event) {
         let shape = event.target;
-
         if (shape.getClassName() !== 'Transformer') {
             if (this.#configManager.snapBackground) {
                 let gridSizeX = this.#configManager.gridSize;
@@ -1489,16 +1499,20 @@ class OEUIMANAGER {
     }
 
     #deleteField(event) {
-        let shape = this.#selected.shape;
-        this.hidePropertyEditor();
-        this.#fieldManager.deleteField(shape.id());
-        this.#transformer.nodes([]);
-        shape.destroy();
-        this.setFieldOpacity(false);
-        this.#selected = null;
-        this.setFieldOpacity(false);
-
-        this.updateToolbar();
+        bootbox.confirm({
+            message: 'Are you sure you wish to delete this field(s)?',
+            callback: (result) => {
+                if (result) {
+                    this.hidePropertyEditor()
+                    this.#fieldManager.deleteFields(this.#transformer)
+                    this.#transformer.nodes([])
+                    this.setFieldOpacity(false)
+                    this.#selected = null
+                    this.setFieldOpacity(false)
+                    this.updateToolbar()
+                }
+            }
+        })
     }
 
     setZoom(type) {
@@ -1883,12 +1897,22 @@ class OEUIMANAGER {
                     $('#oe-default-font-colour').spectrum('Destroy');
                 } catch (error) { }
             }
-        } else {
+        }
+
+        if (this.#selected instanceof OEIMAGEFIELD) {
             if ($("#imagedialog").hasClass('ui-dialog-content')) {
                 $('#imagepropgrid').jqPropertyGrid('Destroy');
                 $('#imagedialog').dialog('close');
             }
         }
+
+        if (this.#selected instanceof OERECTFIELD) {
+            if ($("#rectdialog").hasClass('ui-dialog-content')) {
+                $('#rectpropgrid').jqPropertyGrid('Destroy');
+                $('#rectdialog').dialog('close');
+            }
+        }
+
         if ($("#formatdialog").hasClass('ui-dialog-content')) {
             $('#formatdialog').dialog('close');
         }
@@ -2003,8 +2027,8 @@ class OEUIMANAGER {
                     'width': this.#selected.width,
                     'height': this.#selected.height,
                     'fill': this.#selected.fill,
-                    'opacity': this.#selected.opacity,
                     'strokewidth': this.#selected.strokeWidth,
+                    'stroke': this.#selected.stroke,
                     'cornerradius':this.#selected.cornerRadius
                 });
             }
@@ -2085,16 +2109,29 @@ class OEUIMANAGER {
         }
     }
 
+    #hexToRgb(hex, opacity) {
+        hex = hex.replace(/^#/, '')
+
+        if (hex.length === 3) {
+            hex = hex.split('').map(c => c + c).join('')
+        }
+
+        var bigint = parseInt(hex, 16)
+        var r = (bigint >> 16) & 255
+        var g = (bigint >> 8) & 255
+        var b = bigint & 255
+
+        var rgbaString = `rgba(${r}, ${g}, ${b}, ${opacity})`
+
+        return rgbaString
+    }
+
     #createRectPropertyEditor() {
-
-
-
         var rectData = {
             x: 0,
             y: 0,
             width: 0,
             height: 0,
-            opacity: 1,
             cornerradius: 0,
             fill: '#ffffff',
             strokewidth: 0,
@@ -2153,22 +2190,12 @@ class OEUIMANAGER {
                     step: gridSizeY
                 }
             },
-            opacity: { 
-                group: 'Background', 
-                name: 'Opacity', 
-                type: 'number', 
-                options: {
-                    min: 0,
-                    max: 1,
-                    step: 0.1
-                }
-            },
             fill: {
                 group: 'Background', 
                 name: 'Colour', 
                 type: 'color', 
                 options: {
-                    preferredFormat: 'hex',
+                    preferredFormat: 'rgb',
                     type: "color",
                     showInput: true,
                     showInitial: true,
@@ -2231,6 +2258,14 @@ class OEUIMANAGER {
             if (name == 'strokewidth') {
                 field.strokeWidth = value
             }
+            if (name == 'stroke') {
+                field.stroke = value
+            }
+            if (name == 'fill') {
+                field.fill = value
+            }
+
+            field.dirty = true
         }
 
         var options = {

@@ -83,29 +83,37 @@ class OEFIELDMANAGER {
         })
     }
 
-    equalSpaceFields(transformer) {
-
-        let textNodes = transformer.nodes()
-        const count = textNodes.length;
-        if (count === 0) return;
-
-        let topY = textNodes[0].y() - textNodes[0].offsetY()
-        let bottomY = textNodes[textNodes.length - 1].y() - textNodes[textNodes.length - 1].offsetY()
-
-
-        const totalHeight = textNodes.reduce((sum, node) => sum + node.height(), 0);
-        const availableSpace = bottomY - topY;
-        const spacing = (availableSpace - totalHeight) / (count - 1);
-    
-        let currentY = topY;
-    
-        textNodes.forEach(node => {
+    deleteFields(transformer) {
+        transformer.nodes().forEach((node) => {
             const field = this.findField(node.id())
-            field.y= currentY + node.offsetY()
-            currentY += node.height() + spacing;
-        });
-        
+            if (field) {
+                field.shape.destroy()
+                this.#fields.delete(field.id)
+            }
+        })
+    }
 
+    equalSpaceFields(transformer) {
+        const nodes = Object.values(transformer.nodes())
+            if (nodes.length > 1) {
+
+            nodes.sort((a, b) => a.y() - b.y());
+
+            const topNode = nodes[0];
+            const bottomNode = nodes[nodes.length - 1];
+
+            const yStart = topNode.y();
+            const yEnd = bottomNode.y();
+            const middleCount = nodes.length - 2;
+
+            if (middleCount !== 0) {
+                const spacing = (yEnd - yStart) / (nodes.length - 1);
+
+                for (let i = 1; i < nodes.length - 1; i++) {
+                    nodes[i].y(yStart + i * spacing);
+                }
+            }
+        }
     }
 
     groupFields(transformer) {

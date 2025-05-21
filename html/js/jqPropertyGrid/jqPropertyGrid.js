@@ -307,7 +307,13 @@
 			}
 
 			if (getValueFuncs) {
-			    getValueFuncs[name] = function () { return $('#' + elemId).spectrum('get').toHexString(); };
+				if (meta.options.preferredFormat === 'rgb') {
+			    	getValueFuncs[name] = function () { 
+						return $('#' + elemId).spectrum('get').toRgbString();
+					};
+				} else {
+			    	getValueFuncs[name] = function () { return $('#' + elemId).spectrum('get').toHexString(); };
+				}
 			}
 			if (setValueFuncs) {
 			    setValueFuncs[name] = function (value) { $('#' + elemId).spectrum('set', value); };
@@ -454,7 +460,28 @@
 				$elem.on('change', function changed(e, color) {
 					let colourHex = null;
 					if (color !== null) {
-						colourHex = color.toHexString();
+						if (color.getFormat() == 'rgb') {
+							colourHex = color.toRgbString();
+
+							// Handle hex format: #rrggbb
+							if (/^#([0-9a-f]{6})$/i.test(colourHex)) {
+								const hex = colourHex.slice(1);
+								const r = parseInt(hex.slice(0, 2), 16);
+								const g = parseInt(hex.slice(2, 4), 16);
+								const b = parseInt(hex.slice(4, 6), 16);
+								colourHex = `rgba(${r}, ${g}, ${b}, 1)`;
+							}
+
+							// Handle rgb() format
+							const rgbMatch = colourHex.match(/^rgb\(\s*(\d+),\s*(\d+),\s*(\d+)\s*\)$/);
+							if (rgbMatch) {
+								const [_, r, g, b] = rgbMatch;
+								colourHex = `rgba(${r}, ${g}, ${b}, 1)`;
+							}
+
+						} else {
+							colourHex = color.toHexString();
+						}
 					}
 					changedCallback(el, name, colourHex);
 				});

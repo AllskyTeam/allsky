@@ -294,6 +294,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		r, g, b, a = map(float, rgba_str.split(','))
 		bgr = (int(b), int(g), int(r))
 		alpha = int(round(a * 255))
+		alpha = a
 		return bgr, alpha
 
 	def _add_rect(self):
@@ -301,20 +302,14 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 			top_left = (int(rectData['x']), int(rectData['y']))
 			bottom_right = (int(rectData['x'] + rectData['width']), int(rectData['y'] + rectData['height']))
 			fill_colour, fill_opacity = self._rgba_to_bgr_alpha(rectData['fill'])
-			print(fill_colour)
-			print(fill_opacity)
-			#fill_color = (128, 0, 0)
-			fill_opacity = 0.5
-			border_color = (0, 0, 255)
-			radius = 100
+
+			border_color = self._convert_RGB_to_BGR(rectData['stroke'], 1)
+			radius = int(rectData['cornerradius'])
+			thickness = int(rectData['strokewidth'])
    
 			self.draw_rounded_rect_fill_overlay(top_left, bottom_right, fill_colour, fill_opacity, radius)
-			self.draw_rounded_rect_border(top_left, bottom_right, border_color, thickness=3, radius=radius)   
-			#overlay = self._image.copy()
-
-			#cv2.rectangle(overlay, top_left, bottom_right, fill_color, thickness=cv2.FILLED)
-			#cv2.addWeighted(overlay, fill_opacity, self._image, 1 - fill_opacity, 0, self._image)
-			#cv2.rectangle(self._image, top_left, bottom_right, stroke_color, thickness=10)
+			if thickness > 0:
+				self.draw_rounded_rect_border(top_left, bottom_right, border_color, thickness, radius=radius)   
 
 	def draw_rounded_rect_fill_overlay(self, top_left, bottom_right, fill_color, fill_opacity, radius=20):
 		x1, y1 = top_left
@@ -348,7 +343,6 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 			overlay[mask].astype(np.float32) * fill_opacity
 		)
 		self._image[mask] = blended.clip(0, 255).astype(np.uint8)
-
 
 	def draw_rounded_rect_border(self, top_left, bottom_right, border_color, thickness=2, radius=20):
 		x1, y1 = top_left

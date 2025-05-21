@@ -174,6 +174,10 @@ function DisplayOverlay($image_name)
                                         <div class="btn btn-lg navbar-btn oe-button" id="oe-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Layout and App Options"><i class="fa-solid fa-gear"></i>
                                         </div>
                                     </li>
+                                    <li>
+                                        <div class="btn btn-lg navbar-btn oe-button" id="oe-help" data-toggle="tooltip" data-container="body" data-placement="top" title="Help"><i class="fa-solid fa-question"></i>
+                                        </div>
+                                    </li>
                                 </ul>
                             </div>
                         </div>

@@ -385,9 +385,9 @@ int RPicapture(config cg, cv::Mat *image)
 		std::string errMsg;
 		command = "cat " + errorOutput;
 		errMsg = exec(command.c_str());
-		Log(0, "********************");
-		Log(0, "%s", errMsg.c_str());
-		Log(0, "********************");
+		Log(0, "********************\n");
+		Log(0, "%s\n", errMsg.c_str());
+		Log(0, "********************\n");
 	}
 
 	return(ret);

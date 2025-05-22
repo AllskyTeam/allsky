@@ -50,17 +50,26 @@ void Log(int required_level, const char *fmt, ...)
 		if (required_level <= 0)
 		{
 			char const *severity;
-			if (strcasestr(msg, "warning") != NULL)
-				severity = "warning";
-			else if (strcasestr(msg, "error") != NULL)
-				severity = "error";
-			else
-				severity = "info";
 
-			char *p = &msg[strlen(msg) - 1];
-			if (*p == '\n')
+			if (*msg == '\0')
 			{
-				*p = '\0';
+				snprintf(msg, sizeof(msg), "ERROR: %s: UNKNOWN MESSAGE for debug level %d", CG.ME, required_level);
+				severity = "error";
+			}
+			else
+			{
+				if (strcasestr(msg, "warning") != NULL)
+					severity = "warning";
+				else if (strcasestr(msg, "error") != NULL)
+					severity = "error";
+				else
+					severity = "info";
+
+				char *p = &msg[strlen(msg) - 1];
+				if (*p == '\n')
+				{
+					*p = '\0';
+				}
 			}
 
 			char command[sizeof(msg) + 100];

@@ -385,9 +385,9 @@ int RPicapture(config cg, cv::Mat *image)
 		std::string errMsg;
 		command = "cat " + errorOutput;
 		errMsg = exec(command.c_str());
-		Log(0, "********************");
-		Log(0, "%s", errMsg.c_str());
-		Log(0, "********************");
+		Log(0, "********************\n");
+		Log(0, "%s\n", errMsg.c_str());
+		Log(0, "********************\n");
 	}
 
 	return(ret);
@@ -976,7 +976,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				// Unable to take picture.
 				numTotalErrors++;
 				numConsecutiveErrors++;
-				if (numConsecutiveErrors >= maxErrors)
+				if ((numConsecutiveErrors % maxErrors) == 0)
 				{
 					Log(0, "*** %s: ERROR: maximum number of consecutive errors of %d reached; capture program stopped. Total errors=%'d.\n", CG.ME, maxErrors, numTotalErrors);
 					Log(0, "Make sure cable between camera and Pi is all the way in.\n");
@@ -984,7 +984,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					closeUp(EXIT_ERROR_STOP);
 				}
 	
-				// Don't wait the full amount of time on error in case the error was a one off.
+				// Don't wait the full amount of time on error in case the error was a one-off.
 				long timeToSleep = (float)CG.currentDelay_ms * .25;
 				Log(2, "  > Sleeping from failed exposure: %.1f seconds\n", (float)timeToSleep / MS_IN_SEC);
 				usleep(timeToSleep * US_IN_MS);

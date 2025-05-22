@@ -455,6 +455,12 @@ class OEUIMANAGER {
             this.updateToolbar()
         })
 
+        $(document).on('click', '#oe-equal-width', (event) => {
+            this.#fieldManager.equalWidth(this.#transformer)
+            this.#configManager.dirty = true
+            this.updateToolbar()
+        })
+
         $(document).keyup((event) => {
             if ($(event.target)[0].nodeName == 'BODY') {
                 if (event.key === 'Backspace' || event.key === 'Delete') {
@@ -782,6 +788,18 @@ class OEUIMANAGER {
 
                 if (this.#selected instanceof OEIMAGEFIELD) {
                     this.#selected.scale = shape.scaleX();
+                }
+
+                if (this.#selected instanceof OERECTFIELD) {
+                    let field = this.#fieldManager.findField(shape.id())
+                    field.shape.draggable(false)
+                    field.x = shape.x() | 0
+                    field.y = shape.y() | 0
+
+                    field.width = (shape.width() * shape.scaleX())| 0
+                    field.height = (shape.height() * shape.scaleY()) | 0
+                    shape.scaleX(1)
+                    shape.scaleY(1)
                 }
 
                 if (this.#selected.id === shape.id()) {
@@ -1639,6 +1657,12 @@ class OEUIMANAGER {
                 $('#oe-ungroup').addClass('disabled');
                 $('#oe-left-align').addClass('disabled');
                 $('#oe-vertical-equal').addClass('disabled');
+            }
+
+            if (this.#fieldManager.allRects(this.#transformer)) {
+                $('#oe-equal-width').removeClass('disabled');    
+            } else {
+                $('#oe-equal-width').addClass('disabled');
             }
         }
     }

@@ -137,7 +137,9 @@ function DisplayOverlay($image_name)
                                     <li>
                                         <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-vertical-equal" data-toggle="tooltip" data-container="body" data-placement="top" title="Equal Spacing"><i class="fa-solid fa-arrows-up-down"></i></div>
                                     </li>
-                                    
+                                    <li>
+                                        <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-equal-width" data-toggle="tooltip" data-container="body" data-placement="top" title="Equal Width"><i class="fa-solid fa-rotate-90 fa-arrows-up-down"></i></div>
+                                    </li>                                    
 
                                     <li>
                                         <div class="btn btn-lg navbar-btn oe-zoom oe-button border-left" id="oe-zoom-in" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></div>

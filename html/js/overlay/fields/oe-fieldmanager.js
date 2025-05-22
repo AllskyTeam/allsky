@@ -28,6 +28,22 @@ class OEFIELDMANAGER {
         return this.#fields;
     }
 
+    allRects(transformer) {
+        let result = true
+        if (transformer.nodes().length > 1) {
+            transformer.nodes().forEach((node) => {
+                const field = this.findField(node.id())
+                if (field.type !== 'rect') {
+                    result = false
+                }
+            })
+        } else {
+            result = false
+        }
+
+        return result
+    }
+
     setupSelection(selectionRect, transformer) {
         transformer.nodes([])
         for (let [fieldName, field] of this.#fields.entries()) {
@@ -110,7 +126,24 @@ class OEFIELDMANAGER {
                 const spacing = (yEnd - yStart) / (nodes.length - 1);
 
                 for (let i = 1; i < nodes.length - 1; i++) {
-                    nodes[i].y(yStart + i * spacing);
+                    let field = this.findField(nodes[i].id())
+                    field.y = yStart + i * spacing
+                }
+            }
+        }
+    }
+
+    equalWidth(transformer) {
+        const nodes = transformer.nodes();
+        const firstRect = nodes[0]
+        let field = this.findField(firstRect.id())
+        if (field !== null) {
+            const setWidth = field.width
+            for (let i = 1; i < nodes.length; i++) {
+                const node = nodes[i];
+                field = this.findField(node.id())
+                if (field !== null) {
+                    field.width = setWidth
                 }
             }
         }

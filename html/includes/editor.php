@@ -8,8 +8,10 @@ function DisplayEditor()
 
     $fullN = null;			// this is the file that's displayed by default
     $localN = basename(getLocalWebsiteConfigFile());
+    $localN_withComment = "$localN (local Allsky Website)";
     $fullLocalN = "website/$localN";
     $remoteN = basename(getRemoteWebsiteConfigFile());
+    $remoteN_withComment = "$remoteN (remote Allsky Website)";
     $fullRemoteN = "config/$remoteN";
 
     // See what files there are to edit.
@@ -19,10 +21,15 @@ function DisplayEditor()
         $fullN = $fullLocalN;
         $numFiles++;
         if (!$useLocalWebsite) {
-            $msg = "<span class='WebUISetting'>Use Local Website</span> is not enabled. Your changes won't take effect until you enable that setting.</span>";
+            $msg =  "<span class='WebUISetting'>Use Local Website</span> is not enabled.";
+            $msg .= "<br>Your changes won't take effect until you enable that setting.</span>";
             $myStatus->addMessage($msg, 'danger');
         }
     } else {
+        $msg =  "<div class='dropdown'><code>$localN_withComment</code>";
+		$msg .= " will appear in the list below if you enable";
+		$msg .= " <span class='WebUISetting'>Use Local Website</span>.</div>";
+        $myStatus->addMessage($msg, 'info');
         $localN = null;
     }
 
@@ -31,7 +38,8 @@ function DisplayEditor()
             $fullN = $fullRemoteN;
         $numFiles++;
         if (!$useRemoteWebsite) {
-            $msg = "<span class='WebUISetting'>Use Remote Website</span> is not enabled. Your changes won't take effect until you enable that setting.</span>";
+            $msg = "<span class='WebUISetting'>Use Remote Website</span> is not enabled.";
+            $msg .= "<br>Your changes won't take effect until you enable that setting.</span>";
             $myStatus->addMessage($msg, 'danger');
         }
     } else {
@@ -73,12 +81,22 @@ function DisplayEditor()
 
                     if (!searchTerm) return;
 
+                    let num = 0;
                     const cursor = editor.getSearchCursor(searchTerm, null, { caseFold: true });
                     while (cursor.findNext()) {
                         const mark = editor.markText(cursor.from(), cursor.to(), {
                             className: "highlight",
                         });
+                        num++;
                         currentMarks.push(mark);
+                    }
+                    if (num == 0) {
+                        document.getElementById("need-to-update").innerHTML = '';
+                    } else {
+                        let m = "NOTE: You must update all <span class='cm-string highlight'>" + CONFIG_UPDATE_STRING + "</span>";
+                        m += " values before the Website will work.";
+                        let msg = '<div class="alert alert-danger" style="font-size: 150%">' + m + '</div>';
+                        document.getElementById("need-to-update").innerHTML = msg;
                     }
                 }
 
@@ -204,7 +222,9 @@ function DisplayEditor()
                             }
                         });
                     } else {
-                        let message = "<h2>Error</h2><br><h3>Unable to save as the configuration file is invalid.</h3><br><h4>" + jsonStatus.error + "</h4>";
+                        let message = "<span class='errorMsgBig'>Error:</span>";
+                        message += "<br><h3>Unable to save as the configuration file is invalid.</h3>";
+                        message += "<br><h4>" + jsonStatus.error + "</h4>";
                         bootbox.alert({
                             message: message,
                             buttons: {
@@ -235,7 +255,7 @@ function DisplayEditor()
                     $.get(fileName + "?_ts=" + new Date().getTime(), function (data) {
                         data = JSON.stringify(data, null, "\t");
                         editor.getDoc().setValue(data);
-                        highlightText(CONFIG_UPDATE_STRING)
+                        highlightText(CONFIG_UPDATE_STRING);
                     }).fail(function (x) {
                         if (x.status == 200) {	// json files can fail but actually work
                             editor.getDoc().setValue(x.responseText);
@@ -254,6 +274,7 @@ function DisplayEditor()
             <div class="panel panel-primary">
                 <div class="panel-heading"><i class="fa fa-code fa-fw"></i> Editor</div>
                 <div class="panel-body">
+                    <p id="need-to-update"></p>
                     <p id="editor-messages"><?php $myStatus->showMessages(); ?></p>
                     <div id="editorContainer"></div>
                     <div class="editorBottomSection">
@@ -278,14 +299,14 @@ function DisplayEditor()
                                     // The website is installed on this Pi.
                                     // The physical path is ALLSKY_WEBSITE; virtual path is "website".
                                     echo "<option value='$fullLocalN'>";
-                                    echo "$localN (local Allsky Website)";
+                                    echo $localN_withComment;
                                     echo "</option>";
                                 }
 
                                 if ($remoteN !== null) {
                                     // A copy of the remote website's config file is on the Pi.
                                     echo "<option value='{REMOTE}$fullRemoteN'>";
-                                    echo "$remoteN (remote Allsky Website)";
+                                    echo $remoteN_withComment;
                                     echo "</option>";
                                 }
 

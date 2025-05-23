@@ -1096,6 +1096,7 @@ function haveMySQL($secretData) {
     return $result;
 }
 
+
 // Get the newest Allsky version string.
 // For efficiency, only check every other day.
 function getNewestAllskyVersion(&$changed=null)

@@ -386,7 +386,7 @@ class OVERLAYUTIL
 
     private function processDebugData()  
     {
-        $file = ALLSKY_HOME . "/tmp/overlaydebug.txt";
+        $file = $this->allskyTmp . "/overlaydebug.txt";
 
         $exampleData = array();
         if (is_readable($file)) {

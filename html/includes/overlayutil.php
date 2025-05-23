@@ -384,8 +384,7 @@ class OVERLAYUTIL
         }
     }
 
-    private function processDebugData()  
-    {
+    private function processDebugData() {
         $file = $this->allskyTmp . "/overlaydebug.txt";
 
         $exampleData = array();

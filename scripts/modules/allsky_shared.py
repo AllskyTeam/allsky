@@ -202,6 +202,8 @@ def convert_lat_lon(input):
 def convertLatLon(input):
     """ lat and lon can either be a positive or negative float, or end with N, S, E,or W. """
     """ If in  N, S, E, W format, 0.2E becomes -0.2 """
+    
+    """ #4220 Ensure that the passed in value is always a string"""    
     input = str(input).upper()
     nsew = 1 if input[-1] in ['N', 'S', 'E', 'W'] else 0
     if nsew:

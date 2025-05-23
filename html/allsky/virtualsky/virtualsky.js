@@ -297,6 +297,7 @@ function VirtualSky(input){
 	this.transparent = false;			// Show the sky background or not
 	this.fps = 10;						// Number of frames per second when animating
 	this.credit = (location.host == "lco.global" && location.href.indexOf("/embed") < 0) ? false : true;
+this.credit = false;	// ALLSKY set to false
 	this.callback = { geo:'', mouseenter:'', mouseout:'', contextmenu: '', cursor: '', click:'', draw: '' };
 	this.lookup = {};
 	this.keys = [];
@@ -859,6 +860,7 @@ function VirtualSky(input){
 	// Define the colours that we will use
 	this.colours = {
 		'normal' : {
+			'polaroutline' : "rgb(0,0,0)",	// ALLSKY ADDED
 			'txt' : "rgb(255,255,255)",
 			'black':"rgb(0,0,0)",
 			'white':"rgb(255,255,255)",
@@ -879,6 +881,7 @@ function VirtualSky(input){
 			'pointers':'rgb(200,200,200)'
 		},
 		'negative':{
+			'polaroutline' : "rgb(255,255,255)",	// ALLSKY ADDED
 			'txt' : "rgb(0,0,0)",
 			'black':"rgb(0,0,0)",
 			'white':"rgb(255,255,255)",
@@ -1378,24 +1381,17 @@ VirtualSky.prototype.createSky = function(){
 
 	// Add named objects to the display
 	if(this.objects){
-		// To stop lookUp being hammered, we'll only lookup a maximum of 5 objects
-		// If you need more objects (e.g. for the Messier catalogue) build a JSON
-		// file containing all the results one time only.
 		var ob = this.objects.split(';');
 
 		// Build the array of JSON requests
-		// ALLSKY CHANGE: Stuart's lookup no longer works.
+		// ALLSKY CHANGE: Stuart's lookup no longer works so remove all the "lookup" code.
 		// ALLSKY CHANGE: for(o = 0; o < ob.length ; o++) ob[o] = ((ob[o].search(/\.json$/) >= 0) ? {'url':ob[o], 'src':'file', 'type':'json' } : {'url': 'https://www.strudel.org.uk/lookUP/json/?name='+ob[o],'src':'lookup','type':'jsonp'});
 		for(o = 0; o < ob.length ; o++) ob[o] = ((ob[o].search(/\.json$/) >= 0) ? {'url':ob[o], 'src':'file', 'type':'json' } : {'src':''});
 
 		// Loop over the requests
-		var lookups = 0;
-		var ok = true;
 		for(o = 0; o < ob.length ; o++){
-			if(ob[o].src == "") continue;	// ALLSKY CHANGE: was a lookup
-			if(ob[o].src == "lookup") lookups++;
-			if(lookups > 5) ok = false;
-			if(ok || ob[o].src != "lookup"){
+			if(ob[o].src == "") continue;			// ALLSKY CHANGE: was a lookup
+			{  // ALLSKY CHANGE: was a lookup "if"
 				S(document).ajax(ob[o].url, { dataType: ob[o].type, "this": this, success: function(data){
 					// If we don't have a length property, we only have one result so make it an array
 					if(typeof data.length === "undefined") data = [data];
@@ -1435,7 +1431,6 @@ VirtualSky.prototype.createSky = function(){
 	// For excanvas we need to initialise the newly created <canvas>
 	if(this.excanvas)
 		this.c = G_vmlCanvasManager.initElement(this.c);
-
 	if(this.c && this.c.getContext){
 		this.setWH(this.wide,this.tall);
 		var ctx = this.ctx = this.c.getContext('2d');
@@ -1446,7 +1441,7 @@ VirtualSky.prototype.createSky = function(){
 		ctx.fillStyle = 'rgb(0,0,0)';
 		ctx.lineWidth = 1.5;
 		var loading = 'Loading sky...';
-		ctx.fillText(loading,(ctx.wide-ctx.measureText(loading).width)/2,(this.tall-fs)/2);
+		ctx.fillText(loading,(this.wide-ctx.measureText(loading).width)/2,(this.tall-fs)/2);
 		ctx.fill();
 
 		// ALLSKY 0.7.3 PR added touchClickHandler and deleted contextManuHandler
@@ -2418,13 +2413,19 @@ VirtualSky.prototype.drawImmediate = function(proj, whofrom){
 		c.closePath();
 		c.beginPath();
 		c.arc(this.wide/2,this.tall/2,-0.5+this.tall/2,0,Math.PI*2,true);
+if (false) {		// ALLSKY ADDED this block to add a dot at the overlay center
+  var dot_size = 5;
+  c.moveTo(this.wide/2 +dot_size,this.tall/2);
+  c.arc(this.wide/2,this.tall/2,-0.5+dot_size,0,Math.PI*2,true);
+  c.strokeStyle = this.col.polaroutline;
+}
 		c.closePath();
 		if(!this.transparent){
 			c.fillStyle = (this.hasGradient()) ? "rgba(0,15,30, 1)" : ((this.negative) ? white : black);
 			c.fill();
 		}
 		c.lineWidth = 0.5;
-		c.strokeStyle = black;
+		c.strokeStyle = this.col.polaroutline;		// ALLSKY: this is circle outline color
 		c.stroke();
 	}else if(typeof this.projection.draw==="function") this.projection.draw.call(this);
 

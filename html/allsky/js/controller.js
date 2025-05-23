@@ -8,7 +8,9 @@ var configData = "configuration.json";	// contains web configuration data
 var dateTimeF = "YYYY-MM-DD HH:mm:ss";
 var dateF = "YYYY-MM-DD";
 var timeF = "HH:mm";
-var timeAmPmF = "h:mm a";
+var userTimeF = "h:mm a";				// Time the user sees.
+var spanOn  = "<span style='color: white'>";
+var spanOff = "</span>";
 
 // This returns the height INCLUDING the border:      $("#imageContainer").css('height')
 // This returns the height NOT including the border:  $("#imageContainer").height()
@@ -25,6 +27,7 @@ var icHeight = 0;
 var icImageAspectRatio = 0;
 var overlayAspectRatio = 0;
 var myLatitude = 0, myLongitude = 0;
+var imageBorder = 0;
 
 $(window).resize(function () {
 	if (overlayBuilt) {					// only rebuild if already built once
@@ -47,7 +50,10 @@ $(window).resize(function () {
 
 		wasDiff = true;
 
-		// Refresh the page if there was a difference
+		// Refresh the page if there was a difference.
+		// TODO: reloading the page causes it to flash,
+		// and if the overlay is showing, it becomes hidden,
+		// so don't reload it.
 		if (0 && wasDiff) {
 			location.reload();
 		}
@@ -104,10 +110,6 @@ function buildOverlay(){
 				S.virtualsky(virtualSkyData);		// Creates overlay
 				overlayBuilt = true;
 
-				// Save overlay offset values
-				overlayOffsetTop = c.overlayOffsetTop;
-				overlayOffsetLeft = c.overlayOffsetLeft;
-
 				// max-width of #imageContainer is set in index.php based on
 				// width user specified (imageWidth)
 				icWidth = $("#imageContainer").width();
@@ -129,15 +131,19 @@ function buildOverlay(){
 				starmapWidth = $("#starmap").width();
 				starmapHeight = $("#starmap").height();
 
+				var percentSmallerHeight = 1;
+				var percentSmallerWidth = 1;
 				var imageWidth = c.imageWidth
-				if (icWidth < imageWidth) {
+				var checkWidth = icWidth + (imageBorder ? 2 : 0);	// border is 1px
+				if (checkWidth < imageWidth) {
 					// The actual image on the screen is smaller than the
 					// imageWidth requested by the user.
 					// Determine the percent smaller, then shrink the overlay that amount.
-					var percentSmaller = icWidth / c.imageWidth;
+					percentSmallerWidth = icWidth / c.imageWidth;
+					percentSmallerHeight = percentSmallerWidth;
 
 					// #starmap holds the starmap button, so needs to resize it as well.
-					var w = starmapWidth * percentSmaller;
+					w = starmapWidth * percentSmallerWidth;
 					var h = Math.round(w / overlayAspectRatio, 0);
 					w = Math.round(w, 0);
 					$("#starmap")
@@ -152,28 +158,66 @@ function buildOverlay(){
 						.css("margin-top", c.overlayOffsetTop * scalemargins + "px")
 						.css("margin-left", c.overlayOffsetLeft * scalemargins + "px");
 
-					overlayWidth = Math.round(overlayWidth * percentSmaller, 0);
+					overlayWidth = Math.round(overlayWidth * percentSmallerWidth, 0);
 					overlayHeight = Math.round(overlayWidth / overlayAspectRatio, 0);
 					$("#starmap_inner")
 						.css("width", overlayWidth + "px")
 						.css("height", overlayHeight + "px");
 				} else {
 					$("#starmap")
-					.css("margin-top", c.overlayOffsetTop + "px")
-					.css("margin-left", Math.round(c.overlayOffsetLeft, 0) + "px");
-
+						.css("margin-top", c.overlayOffsetTop + "px")
+						.css("margin-left", Math.round(c.overlayOffsetLeft, 0) + "px");
 				}
 
 				// id="live_container" is where the image goes.
 				var image_w = c.imageWidth;
 				var image_h = Math.round((image_w / icImageAspectRatio), 0);
 
-				// Put "?" icon on upper right of image. +2 moves off border.
-				var x = w
-						- document.getElementById("imageContainer").offsetWidth
-						- document.getElementById("imageContainer").offsetLeft
-						+ 2;  // 2 to move off border
+				// The "?" icon is in the "starmap" container,
+				// which is part of the (usually larger) "starmap_container".
+				// Since the optional border goes around the "starmap_container",
+				// put "?" icon on upper right of that container, 3 pixels inside the border.
+
+				// Determine how far apart the right sides of the
+				// "starmap" and "starmap_container" are.
+
+				var i = "starmap_container";
+				var starmap_containerWidth = $("#"+i).width();
+				var diffWidth = Math.round((starmap_containerWidth - starmapWidth) * percentSmallerWidth, 0) - c.overlayOffsetLeft;
+				let x = -diffWidth + 3;
+				var y = -c.overlayOffsetTop + 3;
+
+				if (checkWidth < imageWidth) {
+// This doesn't work very well - when the browser window is larger than the image,
+// the "?" icon is in the correct place, but when the browser window is smaller than the image,
+// which it is when (checkWidth < imageWidth), the icon is slightly too far to the right
+// when checkWidth is slightly < imageWidth, then as checkWidth decreases, the icon
+// move farther and farther left.
+// The "percentSmallerWidth" tries unsuccessfully to take that movement into account.
+					if (c.overlayOffsetLeft != 0) {
+						// TODO: I have no idea why this is needed.
+						// I got the number by trial and error but
+						// they aren't great.
+						var change =  ((percentSmallerWidth * 0.95 * x) - x) / 2;
+						x += change + 20;
+						x = Math.round(x, 0);
+					}
+
+					if (c.overlayOffsetTop > 0) {
+						y *= percentSmallerHeight * 1.3;
+						y = Math.round(y, 0);
+					} else if (c.overlayOffsetTop < 0) {
+						y *= percentSmallerHeight * 1.5;
+						y = Math.round(y, 0);
+					}
+				}
 				$(".starmap_btn_help").css("right", Math.round(x, 0) + "px");
+				$(".starmap_btn_help").css("top", Math.round(y, 0) + "px");
+//console.log("percentSmallerWidth="+percentSmallerWidth +", adjusted="+(percentSmallerWidth * 1.001));
+//console.log("===========");
+//console.log("putting at x="+x +", y="+y, $("#"+i));
+//console.log("starmapWidth="+starmapWidth +", starmap_containerWidth="+starmap_containerWidth +", diff width="+diffWidth);
+//console.log("oL="+c.overlayOffsetLeft +", oT="+c.overlayOffsetTop);
 
 				// Keep track of the sizes.  virtualsky.js seems to change them,
 				// so we need to change them based on our last known sizes.
@@ -285,6 +329,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 	myLongitude = $scope.longitude;
 
 	$scope.imageURL = config.loadingImage;
+	imageBorder = config.imageBorder;
 	$scope.showInfo = false;
 	$scope.showOverlay = config.showOverlayAtStartup;
 	if ($scope.showOverlay) {
@@ -296,10 +341,13 @@ function AppCtrl($scope, $timeout, $http, _) {
 	$scope.camera = config.camera;
 	$scope.lens = config.lens;
 	$scope.computer = config.computer;
+	$scope.equipmentinfo = config.equipmentinfo;
 	$scope.owner = config.owner;
 	$scope.auroraForecast = config.auroraForecast;
 	$scope.imageName = config.imageName;
 	$scope.AllskyVersion = config.AllskyVersion;
+	$scope.messages = document.getElementById("messages");
+	$scope.messages.innerHTML = "";
 
 	function getHiddenProp() {
 		var prefixes = ['webkit', 'moz', 'ms', 'o'];
@@ -338,16 +386,22 @@ function AppCtrl($scope, $timeout, $http, _) {
 	// it'll be a day old so use a value at least greater than 1.
 	const oldDataLimit = 2;
 
-	// The defaultInterval should ideally be based on the time between day and night images - why
-	// check every 5 seconds if new images only appear once a minute?
-	var defaultInterval = (config.intervalSeconds * 1000);		// Time to wait between normal images.
-	var intervalTimer = defaultInterval;		// Amount of time we're currently waiting
+	// The defaultInterval should ideally be based on the time between day and
+	// night images - why check every 5 seconds if new images only appear once a minute?
 
-	// If we're not taking pictures during the day, we don't need to check for updated images as often.
+	// Time to wait between normal images.
+	var defaultInterval = (config.intervalSeconds * 1000);
+	// Amount of time we're currently waiting
+	var intervalTimer = defaultInterval;
+
+	// If we're not taking pictures during the day,
+	// we don't need to check for updated images as often.
 	// If we're displaying an aurora picture, it's only updated every 5 mintutes.
 	// If we're not displaying an aurora picture the picture we ARE displaying doesn't change so
 	// there's no need to check until nightfall.
-	// However, in case the image DOES change, check every minute.  Seems like a good compromise.
+	// However, in case the image DOES change, check every minute.
+	// Seems like a good compromise.
+
 	// Also, in both cases, if we wait too long, when the user returns to the web page after
 	// it's been hidden, they'll have to wait a long time for the page to update.
 	var auroraIntervalTimer = (60 * 1000);			// seconds
@@ -417,7 +471,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 			if (is_nighttime) {
 				// Only add to the console log once per message type
 				if (lastType !== "nighttime") {
-					console.log("=== Night Time imaging starts at " + m_now.format(timeAmPmF));
+					console.log("=== Night Time imaging starts at " + m_now.format(userTimeF));
 					lastType = "nighttime";
 					loggedTimes = false;
 					rereadSunriseSunset = true;
@@ -428,7 +482,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 
 			} else if ($scope.takedaytimeimages) {
 				if (lastType !== "daytime") {
-					console.log("=== Day Time imaging starts at " + m_now.format(timeAmPmF));
+					console.log("=== Day Time imaging starts at " + m_now.format(userTimeF));
 					lastType = "daytime";
 					loggedTimes = false;
 					rereadSunriseSunset = true;
@@ -439,7 +493,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 
 			} else {	// daytime but we're not taking pictures
 				if (lastType !== "daytimeoff") {
-					console.log("=== Camera turned off during Day Time at " + m_now.format(timeAmPmF));
+					console.log("=== Camera turned off during Day Time at " + m_now.format(userTimeF));
 					lastType = "daytimeoff";
 					loggedTimes = false;
 					rereadSunriseSunset = true;
@@ -459,7 +513,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 				// long nighttime exposures, so add 2.5 minutes.
 				const add = 2.5 * 60 * 1000;
 				ms += add;
-				const time_to_come_back = moment($scope.sunset + add).format(timeAmPmF);
+				const time_to_come_back = moment($scope.sunset + add).format(userTimeF);
 
 				var d = moment.duration(ms);
 				var hours = Math.floor(d.asHours());
@@ -506,20 +560,39 @@ function AppCtrl($scope, $timeout, $http, _) {
 				console.log("  afterSunsetTime = " + afterSunsetTime);
 			}
 
-// TODO: Is there a way to specify not to cache this without using "?_ts" ?
 			var img = $("<img title='allsky image' />")
-				.attr('src', url + '?_ts=' + new Date().getTime())
 				.addClass(imageClass)
 				.on('load', function() {
-					if (!this.complete || typeof this.naturalWidth === "undefined" || this.naturalWidth === 0) {
-						alert('broken image!');
-						$timeout(function(){
-							$scope.getImage();
-						}, 500);
-					} else {
-						$("#live_container").empty().append(img);
+					$("#live_container").empty().append(img);
+					$scope.messages.innerHTML = "";
+				}).on('error', function(e) {
+					if ($scope.messages.innerHTML == "") {
+						console.log("GOT ERROR reading image");
+
+						let message = "The image at <span style='color: white;'>";
+						message += $scope.imageName;
+// TODO: is there a way to determine "not found" from "corrupted" ?
+						message += "</span> is not found or is corrupted.";
+						message += "<br><br>";
+						message += "Check the <span style='color: #a6e22e;'>imageName</span>";
+						message += " setting in the WebUI's 'Editor' page.";
+						message += "<br>";
+						message += "<br>For local Websites, edit ";
+						message += "<code>configuration.json</code>.";
+						message += "<br>For remote Websites, edit ";
+						message += "<code>remote_configuration.json</code>.";
+						// If it contains "current" say that's only for remote Websites
+						if ($scope.imageName.search("/current") >= 0) {
+							message += "<br><br>";
+							message += "If this is a <u>remote</u> Allsky Website,<br>";
+							message += " the setting should normally be ";
+							message += " <span style='color: white;'>image.jpg</span>.";
+						}
+						$scope.messages.innerHTML = formatMessage(message, "warning");
 					}
-				});
+				})
+// TODO: Is there a way to specify not to cache this without using "?_ts" ?
+				.attr('src', url + '?_ts=' + new Date().getTime());
 
 			// Don't re-read after the 1st image of this period since we read it right before the image.
 			if (rereadSunriseSunset && numImagesRead > 1) {
@@ -598,10 +671,10 @@ function AppCtrl($scope, $timeout, $http, _) {
 					dataMissingMsg = "ERROR: Data missing from '" + sunData + "':";
 					dataMissingMsg += "<div><ul style='text-align: left; display: inline-block; '>";
 					if (usingDefaultSunrise) {
-						dataMissingMsg += "<li>'sunrise' (using " + $scope.sunrise.format(timeAmPmF) + ")";
+						dataMissingMsg += "<li>'sunrise' (using " + $scope.sunrise.format(userTimeF) + ")";
 					}
 					if (usingDefaultSunset) {
-						dataMissingMsg += "<li>'sunset' (using " + $scope.sunset.format(timeAmPmF) + ")";
+						dataMissingMsg += "<li>'sunset' (using " + $scope.sunset.format(userTimeF) + ")";
 					}
 					if (usingDefaultTakingDaytime) {
 						dataMissingMsg += "<li>'takedaytimeimages' (using " + $scope.takedaytimeimages + ")";
@@ -610,10 +683,11 @@ function AppCtrl($scope, $timeout, $http, _) {
 						dataMissingMsg += "<li>'takenighttimeimages' (using " + $scope.takenighttimeimages + ")";
 					}
 					dataMissingMsg += "</ul></div>";
-					dataMissingMsg += "Run 'postData.sh' to determine why data is missing.";
+					dataMissingMsg += "Run 'allsky-config check_post_data'";
+					dataMissingMsg += " on the Pi to determine why data is missing.";
 				}
 
-				// Get when the file was last modified so we can warn if it's old
+				// Get when the file was last modified so we can warn if it's old.
 				function fetchHeader(url, wch) {
 					try {
 						var req=new XMLHttpRequest();
@@ -633,10 +707,13 @@ function AppCtrl($scope, $timeout, $http, _) {
 					lastModifiedSunriseSunsetFile = moment(x);
 					var duration = moment.duration(moment(now).diff(lastModifiedSunriseSunsetFile));
 					if (duration.days() > oldDataLimit) {
-						dataOldMsg = "WARNING: '" + sunData + "' is " + duration.days() + " days old.";
+						var file = spanOn + sunData + spanOff;
+						dataOldMsg = "WARNING: '" + file + "'";
+						dataOldMsg += " is " + duration.days() + " days old.";
 						if (dataMissingMsg == "") {
-							dataOldMsg += "<br>Check Allsky log file if 'postData.sh' has";
-							dataOldMsg += " been running successfully at the end of nighttime.";
+							var cmd = spanOn + "allsky-config check_post_data" + spanOff;
+							dataOldMsg += "<br>Run '" + cmd + "'";
+							dataOldMsg += " on the Pi to troubleshoot.";
 						}
 					}
 
@@ -655,10 +732,13 @@ function AppCtrl($scope, $timeout, $http, _) {
 				$scope.takedaytimeimages = true;; usingDefaultTakingDaytime = true;
 				$scope.takenighttimeimages = true;; usingDefaultTakingDaytime = true;
 
-				dataMissingMsg = "ERROR: '" + sunData + " file not found.";
-				dataMissingMsg += "<br>Using " + $scope.sunrise.format("h:mm a") + " for sunrise";
-				dataMissingMsg += " and " + $scope.sunset.format("h:mm a") + " for sunset.";
-				dataMissingMsg += "<br>Run 'postData.sh' to create the file,";
+				var file = spanOn + sunData + spanOff;
+				dataMissingMsg = "ERROR: '" + file + "' file not found.";
+				dataMissingMsg += "<br>Using " + $scope.sunrise.format(userTimeF) + " for sunrise";
+				dataMissingMsg += " and " + $scope.sunset.format(userTimeF) + " for sunset.";
+				var cmd = spanOn + "allsky-config check_post_data" + spanOff;
+				dataMissingMsg += "<br>Run '" + cmd + "'";
+				dataMissingMsg += " on the Pi to troubleshoot,";
 				dataMissingMsg += " then refresh this browser window.";
 				console.log("  *** Unable to read '" + sunData + "' file");
 				writeSunriseSunsetToConsole();
@@ -686,7 +766,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 
 		if (! overlayBuilt && $scope.showOverlay) {
 			console.log("@@@@ Building overlay from toggle...");
-			// Version 0.7.7 of VirtualSky doesn't show the overlay unless buildOverlay() is called.
+			// Version 0.7.7 of VirtualSky only shows the overlay if buildOverlay() is called.
 			buildOverlay();
 		}
 

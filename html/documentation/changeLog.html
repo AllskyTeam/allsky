@@ -12,7 +12,7 @@
 	<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 	<style>
 		#pageTitle::before {
-			content: "Version Change Log";
+			content: "Allsky Version Change Log";
 		}
 	</style>
 	<link href="css/documentation.css" rel="stylesheet">
@@ -28,31 +28,266 @@
 	<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
 	<div class="Layout-main markdown-body" id="mainContents">
 		<p>
-			This page lists the changes to all Allsky releases.
+			This page lists the major changes to all Allsky releases.
 			You can also see the
 			<a allsky="true" external="true"
 				href="knownIssues.html">Known Issues and Limitations</a>
 			of the current release.
 		</p>
 
-		<blockquote>
-			Wonder what all the colors below mean?
-			Check out
-			<a allsky="true" external="true" href="settings/EditorColors.html">this page</a>.
-		</blockquote>
+		<!-- =========================================== -->
+<!-- TODO: uncomment for v2025.xx.xx
+		<h2>v2025.xx.xx</h2>
+		<details open> <summary></summary>
+-->
 
+			<!--
+			<h3>v2025.xx.xx_01  - Point Release # 1</h3>
+			<details sub open> <summary></summary>
+			xxx
+			</details>
+
+			<h3>v2025.xx.xx - Base Release</h3>
+			-->
+
+<!-- TODO: uncomment for v2025.xx.xx
+				<h4>Deleted capabilities</h4>
+				<ul>
+					<li>The Buster operating system is no longer supported.
+					<li>The "legacy" overlay method and the
+						<span class="settingsHeader">Image Overlay Settings</span>
+						section of the WebUI no longer exist.
+						All overlays are now done via the
+						<span class="WebUILink">Overlay Editor</span> in the WebUI.
+				</ul>
+
+				<h4>Enhancements / Changes</h4>
+				<ul>
+					<li>RPi cameras that report sensor temperature now support
+						<strong>dark frames</strong>.
+						<br>The TEMPERATURE_C and TEMPERATURE_F variables can
+						be displayed in overlays for these cameras.
+
+						<details sub><summary></summary>
+						<ul>
+							<li>RPi cameras that report sensor temperature
+								and support dark frames:
+								<ul>
+									<li>HQ
+									<li>Module 3
+									<li>Arducam 16 MP
+								</ul>
+							<li>These cameras do not support darks:
+								<ul>
+									<li>Version 1
+									<li>imx290 60.00 fps
+									<li>Arducam 64 MP
+									<li>Arducam 462
+									<li>Waveshare imx219-d160
+									<li>Arducam 64 MB Owlsight
+									<li>OneInchEye IMX283
+								</ul>
+						</ul>
+						</details>
+
+					<li>Dark frames are now saved as <span class="fileName">.png</span>
+						files for better quality.
+						<blockquote>
+						If you have any <span class="fileName">.jpg</span> darks
+						in <span class="fileName">~/allsky/darks</span>
+						we suggest re-doing your darks then removing the old
+						<span class="fileName">.jpg</span> darks.
+						</blockquote>
+				</ul>
+
+				<h4>Bug Fixes</h4>
+				<ul>
+					<li>MOON variables work in the
+						<span class="WebUILink">Overlay Editor</span>
+						(the <span class="fileName">de421.bsp</span> file downloads correctly).
+					<li>All the "Click here to ..." messages in the WebUI now work.
+					<li>Using the <span class="fileName">analyticsTracking.js</span>
+						in an Allsky Website now works.
+				</ul>
+
+				<h4>Deleted Settings</h4>
+				<ul>
+					<li><span class="WebUISetting">None</span>
+				</ul>
+				<h4>New Settings</h4>
+				<ul>
+					<li><span class="WebUISetting">None</span>
+				</ul>
+
+			<hr class="separator">
+		</details>
+-->
 
 		<!-- =========================================== -->
 
 		<h2>v2024.12.06</h2>
-			<details open> <summary></summary>
+		<details open> <summary></summary>
 
-			<h3>v2024.12.06_01  - Point Release # 1</h3>
-			<details sub open> <summary></summary>
+			<h3>v2024.12.06_03  - Point Release # 3</h3>
+			<details open sub> <summary></summary>
+				<h4 style="color: red">IMPORTANT NOTES:</h4>
+				<ul>
+					<li>This is the LAST major release that supports Buster.
+					<li>This is the LAST major release that contains the "legacy"
+						overlay method.
+				</ul>
+
 				<h4>Enhancements / Changes</h4>
 				<ul>
-					<li>The WebUI's <span class="WebUILink">Editor</span> page now:
+					<li>RPi cameras that report sensor temperature now support
+						<strong>dark frames</strong>.
+						<br>The TEMPERATURE_C and TEMPERATURE_F variables can
+						be displayed in overlays for these cameras.
+
+						<details sub><summary></summary>
 						<ul>
+							<li>RPi cameras that report sensor temperature
+								and support dark frames:
+								<ul>
+									<li>HQ
+									<li>Module 3
+									<li>Arducam 16 MP
+								</ul>
+							<li>These cameras do not support darks:
+								<ul>
+									<li>Version 1
+									<li>imx290 60.00 fps
+									<li>Arducam 64 MP
+									<li>Arducam 462
+									<li>Waveshare imx219-d160
+									<li>Arducam 64 MB Owlsight
+									<li>OneInchEye IMX283
+								</ul>
+						</ul>
+						</details>
+					<li>Dark frames are now saved as <span class="fileName">.png</span>
+						files for better quality.
+						<blockquote>
+						If you have any <span class="fileName">.jpg</span> darks
+						in <span class="fileName">~/allsky/darks</span>
+						we suggest re-doing your darks then removing the old
+						<span class="fileName">.jpg</span> darks.
+						</blockquote>
+					<li>Error messages that occur while taking images with an
+						RPi camera are added to the log file.
+				</ul>
+
+				<h4>Bug Fixes</h4>
+				<ul>
+					<li>MOON variables work in the
+						<span class="WebUILink">Overlay Editor</span>
+						(the <span class="fileName">de421.bsp</span> file downloads correctly).
+					<li>All the "Click here to ..." messages in the WebUI now work.
+					<li>Using the <span class="fileName">analyticsTracking.js</span>
+						in an Allsky Website now works.
+					<li>An issue with adding images in overlays was fixed.
+					<li>The `remoteWebsiteInstall.sh` command now works if the
+						<span class="WebUISetting">Image Directory</span> setting is empty.
+					<li>Duplicate System Messages now have the correct count of the number
+						of times the problem occurred.
+				</ul>
+
+				<h4>Deleted Settings</h4>
+				<ul>
+					<li><span class="WebUISetting">Camera</span>
+						and <span class="WebUISetting">Computer</span>.
+						<br>These values are automatically set during installation so
+						no longer need to be prompted for.
+				</ul>
+				<h4>New Settings</h4>
+				<ul>
+					<li><span class="WebUISetting">Equipment Info</span>
+					<br>This optional setting is used to add any additional information
+					about the equipment you are using,
+					for example, if you are using a NoIR (no infra-red filter)
+					version of a camera.
+					<br>This information will appear on any Allsky Website you have.
+				</ul>
+			</details>
+
+
+			<h3>v2024.12.06_02  - Point Release # 2</h3>
+			<details sub> <summary></summary>
+				<h4>Enhancements / Changes</h4>
+				<ul>
+					<li>The WebUI will now notify you when a new Allsky version is available.
+					<li>The <code>remoteWebsiteInstall.sh</code> command does a better
+						job telling you why problems occur and how to fix them.
+					<li>Additions to the <code>allsky-config</code> command:
+						<ul>
+							<li>If you are seeing a <b>Multiple consecutive bad images</b>
+								message in the WebUI, run
+								<code>allsky-config &nbsp;bad_image_info</code>.
+								It will suggest how to fix the problem.
+							<li>If a local or remote Allsky Website has a problem reading
+								the <span class="fileName">data.json</span> file,
+								you are now directed to run the new
+								<code>allsky-config &nbsp;check_post_data</code> command.
+								It tries to determine why the message occurred.
+							<li>The <code>allsky-config &nbsp;move_images</code> command
+								is more robust and allows you to move the images back to the
+								<span class="fileName">~/allsky/images</span>
+								folder if desired.
+						</ul>
+					<li>When an Allsky Website is stuck on the "Loading ..." message
+						because it can't find the current image,
+						you'll get a message telling you how to fix it.
+					<li>Several Allsky Website files are now in subdirectories, e.g.,
+						all the "css" files are in a <span class="fileName">css</span> directory.
+						No user action is needed.
+					<li>You can now have custom "notification images" like
+						"Allsky is starting up".
+						To do so, create a
+						<span class="fileName">~/allsky/config/myFiles/notificationImages</span>
+						directory, then put your custom images there using the exact same names
+						as the Allsky files in 
+						<span class="fileName">~/allsky/notificationImages</span>.
+				</ul>
+
+				<h4>Bug Fixes</h4>
+				<ul>
+					<li>The problem with <span class="fileName">de421.bsp</span> is fixed.
+					<li>Timelapse thumbnails now have the correct name.
+					<li>A security issue was fixed.
+					<li>Installing or upgrading Allsky is less likely to hang when there's
+						a problem with an RPi camera.
+					<li>Fixed a typo in the <strong>ssl:check-hostname</strong> command in
+						<code>testUpload.sh</code>.
+					<li><code>removeBadImages.sh</code> now works with mean values
+						that have a comma in them.
+				</ul>
+
+				<h4>New Settings</h4>
+				<ul>
+					<li><span class="WebUISetting">None</span>
+				</ul>
+				<h4>Deleted Settings</h4>
+				<ul>
+					<li><span class="WebUISetting">None</span>
+				</ul>
+			</details>
+
+
+			<h3>v2024.12.06_01  - Point Release # 1</h3>
+			<details sub> <summary></summary>
+				<h4>Enhancements / Changes</h4>
+				<ul>
+					<li>You can no longer enter <strong>Issues</strong> in GitHub
+						(you can still enter <strong>Discussions</strong>).
+						Instead, use the new <span class="WebUILink">Getting Support</span>
+						page in the WebUI to automatically collect the information
+						needed to troubleshoot your problem.
+						Simply following the instructions on that page.
+						<br>NO private information is sent; that information is kept in
+						the <span class="fileName">~/allsky/env.json</span> file which
+						should never be uploaded.
+					<li>The WebUI's <span class="WebUILink">Editor</span> page now:
+						<ul class="minimalPadding">
 							<li>Tells you if there is a formatting error on the page,
 								for example, if you are missing a comma.
 								You will not be able to save the file until the error(s) are fixed.
@@ -60,18 +295,60 @@
 								will work are highlighted like
 								<span class="cm-string highlight">XX_NEED_TO_UPDATE_XX</span>.
 						</ul>
-					<li>Displaying image previews is now done via <code>allsky.sh --preview</code>.
-						It was previously <code>allsky.sh preview</code>.
+					<li>The WebUI now displays the status of Allsky (Running, Stopped, etc.).
+						The status is determined every time a WebUI page is displayed,
+						so if the status changes while you are on a page it won't be
+						updated until the page is refreshed.
+					<li>You can now easily specify a location to store Allsky's image
+						other than in <span class="fileName">~/allsky/images</span>.
+						This is typically done to store images on an SSD or a
+						similar larger, faster, and more reliable media than an SD card.
+						See the <code>allsky-config &nbsp;move_images</code> command.
+					<li>If you are having problems getting startrails to show the trails,
+						the new <code>allsky-config &nbsp;get_brightness_info</code> command
+						helps by displaying information on image brightness determined during
+						startrails generation.
+						That information helps determine what to put in the
+						<span class="WebUISetting">Brightness Threshold</span> setting.
+						See <a allsky="true" external="true"
+							href="/documentation/explanations/startrails.html#brightnessthreshold">
+							Startrails settings</a>
+						for details.
+					<li>The new <code>allsky-config &nbsp;compare_paths</code> command helps
+						determine where to upload your remote Website files and what URL to use.
+						See the <a allsky="true" external="true"
+							href="/documentation/explanations/serverLocationToURL.html">
+							Mapping Server Locations to URLs</a>
+						page for details.
+					<li>The <code>allsky-config</code> command can do more,
+						including lettings you change the size of the
+						<span class="fileName">~/allsky/tmp</span> directory
+						and the amount of swap space.
+						Run <code>allsky-config</code> for a full list of what it can do.
+					<li>The new <span class="fileName">meteors</span> directory in
+						Allsky Websites is to upload images with meteors.
+						A meteor icon can be displayed to the list of icons
+						on the left side of a Website page by
+						setting the "display" line to "true" in the "Archived Meteors" section
+						of the associated <span class="fileName">configuration.json</span> file.
+						<br><strong>NOTE: Support for saving and uploading images with
+						meteors will be added in a future Allsky release.</strong>
+					<li>The <code>remoteWebsiteInstall.sh</code> command now prompts
+						to upload any local startrails, keograms, and timelapse files.
+						It's also more "polished", doesn't fail as often,
+						and provides better messages.
+					<li>Allsky Websites now give a detailed message when they can't
+						find the image, instead of just the "Loading..." picture forever.
 				</ul>
 				<h4>New Settings</h4>
 				<ul>
-					<li><span class="WebUISetting">xxx</span>
+					<li><span class="WebUISetting">None</span>
 				</ul>
 				<h4>Deleted Settings</h4>
 				<ul>
 					<li>To further simplify configuring a remote Website and
 						remove a source of user error,
-						changing the name of the timelapse, keogram, and startrails files
+						changing the names of the timelapse, keogram, and startrails files
 						uploaded to a remote Website is no longer allowed
 						(these already couldn't be changed for local Websites).
 						Hence, the
@@ -84,8 +361,13 @@
 				</ul>
 				<h4>Bug Fixes</h4>
 				<ul>
+					<li>Allsky Website icon sorting by date now works.
+					<li><code>remoteWebsiteInstall.sh</code> no longer fails if you have
+						commands in the <span class="WebUISetting">FTP Commands</span> setting.
+					<li>Changes to the image resize settings in the WebUI are now saved.
 					<li><code>allsky.sh --help</code> now works and displays all the
 						options to the capture programs.
+					<li>Many others including with modules and overlays.
 				</ul>
 				<hr class="separator"><!-- =========================================== -->
 			</details>
@@ -287,9 +569,9 @@
 							See <a href="https://github.com/AllskyTeam/allsky/issues/3317"
 								allsky="true" external="true">[BUG] If a field is outside the image ...</a></li>
 						<li>If images are not being captured the
-					    	<span class="editorName">Overlay Editor</span> will not start and
-		    				will display a message and wait until images are being captured.
-		    				This prevents a (usually much smaller) notification image
+							<span class="editorName">Overlay Editor</span> will not start and
+							will display a message and wait until images are being captured.
+							This prevents a (usually much smaller) notification image
 							from being used as the <span class="editorName">Overlay Editor</span>
 							background.</li>
 					</ul>
@@ -389,6 +671,7 @@
 					These changes should have no impact on users.
 				</li>
 			</ul>
+			</details>
 
 			<hr class="separator"><!-- =========================================== -->
 		</details>

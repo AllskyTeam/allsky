@@ -14,3 +14,4 @@ vcgencmd
 certifi
 requests
 mysql-connector-python
+photutils

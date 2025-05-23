@@ -993,26 +993,6 @@ function getVariableOrDefault($a, $v, $d) {
 	return($d);
 }
 
-function getTOD() {
-	global $settings_array;
-
-	$angle = getVariableOrDefault($settings_array, 'angle', -6);
-	$lat = getVariableOrDefault($settings_array, 'latitude', "");
-	$lon = getVariableOrDefault($settings_array, 'longitude', "");
-	$tod = 'Unknown';
-
-	if ($lat != "" && $lon != "") {
-		exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
-		if ($retval == 2) {
-			$tod = 'day';
-		} else if ($retval == 3) {
-			$tod = 'night';
-		}
-	}
-	
-	return $tod;
-}
-
 function getSecret($secret=false) {
 
     $rawData = file_get_contents(ALLSKY_ENV, true);
@@ -1094,6 +1074,26 @@ function haveMySQL($secretData) {
     }
     
     return $result;
+}
+
+function getTOD() {
+	global $settings_array;
+
+	$angle = getVariableOrDefault($settings_array, 'angle', -6);
+	$lat = getVariableOrDefault($settings_array, 'latitude', "");
+	$lon = getVariableOrDefault($settings_array, 'longitude', "");
+	$tod = 'Unknown';
+
+	if ($lat != "" && $lon != "") {
+		exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
+		if ($retval == 2) {
+			$tod = 'day';
+		} else if ($retval == 3) {
+			$tod = 'night';
+		}
+	}
+	
+	return $tod;
 }
 
 // Get the newest Allsky version string.

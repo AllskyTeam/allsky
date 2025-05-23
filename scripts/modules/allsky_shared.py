@@ -199,7 +199,7 @@ def convertLatLonOld(input):
 
 def convert_lat_lon(input):
 	return convertLatLon(input)
-ef convertLatLon(input):
+def convertLatLon(input):
     """ lat and lon can either be a positive or negative float, or end with N, S, E,or W. """
     """ If in  N, S, E, W format, 0.2E becomes -0.2 """
 

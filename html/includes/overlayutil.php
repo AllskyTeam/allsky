@@ -136,7 +136,8 @@ class OVERLAYUTIL
         return file_exists($destImagePath);
     }
 
-    public function getConfig() {
+    public function getConfig() 
+    {
         $fileName = $this->overlayPath . '/config/overlay.json';
         $config = file_get_contents($fileName);
         $this->sendResponse($config);
@@ -161,7 +162,8 @@ class OVERLAYUTIL
         }
     }
 
-    public function getAppConfig($returnResult=false) {
+    public function getAppConfig($returnResult=false) 
+    {
         $fileName = $this->overlayPath . '/config/oe-config.json';
         $config = file_get_contents($fileName);
         if ($config === false) {
@@ -195,7 +197,8 @@ class OVERLAYUTIL
         }
     }
 
-    public function postAppConfig() {
+    public function postAppConfig() 
+    {
         $fileName = $this->overlayPath . '/config/oe-config.json';
         $settings = $_POST["settings"];
         $formattedJSON = json_encode(json_decode($settings), JSON_PRETTY_PRINT);

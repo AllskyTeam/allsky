@@ -1,0 +1,19 @@
+@mixin slider-background-image($colorstart: #F5F5F5, $colorend: #F9F9F9, $backcolor: #F7F7F7) {
+  background-color: $backcolor;
+  background-image: linear-gradient(to bottom, $colorstart, $colorend);
+  background-repeat: repeat-x;
+  // Fallback for IE9 and below
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#{$colorstart}', endColorstr='#{$colorend}', GradientType=0);
+}
+
+@mixin slider-box-sizing($value) {
+  box-sizing: $value;
+}
+
+@mixin slider-box-shadow($value...) {
+  box-shadow: $value;
+}
+
+@mixin slider-border-radius($value) {
+  border-radius: $value;
+}

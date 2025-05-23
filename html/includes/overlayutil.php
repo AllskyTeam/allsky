@@ -220,7 +220,8 @@ class OVERLAYUTIL
         return $result;
     }
 
-    public function getData($returnResult=false) {
+    public function getData($returnResult=false) 
+    {
         $fileName = $this->overlayPath . '/config/fields.json';
         $fields = file_get_contents($fileName);
         $systemData = json_decode($fields);
@@ -278,7 +279,8 @@ class OVERLAYUTIL
         }
     }
 
-    public function postData() {
+    public function postData() 
+    {
         $fileName = $this->overlayPath . '/config/userfields.json';
         $fields = $_POST["data"];
         $fields = json_decode($fields);
@@ -354,7 +356,8 @@ class OVERLAYUTIL
         }        
     }
 
-    public function getAutoExposure() {
+    public function getAutoExposure() 
+    {
         $data = file_get_contents($this->overlayPath . "/config/autoexposure.json");
         $this->sendResponse($data);
     }
@@ -381,7 +384,8 @@ class OVERLAYUTIL
         }
     }
 
-    private function processDebugData()  {
+    private function processDebugData()  
+    {
         $file = ALLSKY_HOME . "/tmp/overlaydebug.txt";
 
         $exampleData = array();
@@ -688,7 +692,8 @@ class OVERLAYUTIL
 
     }
 
-    public function getFormats() {
+    public function getFormats() 
+    {
         $data = file_get_contents($this->overlayPath . "/config/formats.json");
         $this->sendResponse($data);
     }

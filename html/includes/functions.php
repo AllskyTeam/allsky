@@ -120,6 +120,8 @@ $useRemoteWebsite = false;
 $hasLocalWebsite = false;
 $hasRemoteWebsite = false;
 $endSetting = "XX_END_XX";
+$saveChangesLabel = "Save changes";
+$forceRestart = false;					// Restart even if no changes?
 
 function readSettingsFile() {
 	$settings_file = getSettingsFile();
@@ -139,6 +141,40 @@ function readOptionsFile() {
 		exit(1);
 	}
 	return($contents);
+}
+
+$allsky_status = null;
+$allsky_status_timestamp = null;
+function output_allsky_status() {
+	global $allsky_status, $allsky_status_timestamp;
+
+	$retMsg = "";
+	$s = get_decoded_json_file(ALLSKY_STATUS, true, "", $retMsg);
+	if ($s === null) {
+		$allsky_status = "Unknown";
+		$allsky_status_timestamp = $retMsg;
+	} else {
+		$allsky_status = getVariableOrDefault($s, 'status', "Unknown");
+		$allsky_status_timestamp = getVariableOrDefault($s, 'timestamp', null);
+	}
+
+	if ($allsky_status_timestamp === null) {
+		$title = "";
+		$class = "";
+	} else if ($allsky_status == "Unknown") {
+		$allsky_status_timestamp = str_replace("<b>", "", $allsky_status_timestamp);
+		$allsky_status_timestamp = str_replace("</b>","", $allsky_status_timestamp);
+		$title = " title='$allsky_status_timestamp'";
+		$class = "alert-danger";
+	} else {
+		$title = "title='Since $allsky_status_timestamp'";
+		if ($allsky_status == "Running") {
+			$class = "alert-success";
+		} else {
+			$class = "alert-warning";
+		}
+	}
+	return("<span class='nowrap $class' $title>Status: $allsky_status</span><br>");
 }
 
 function initialize_variables($website_only=false) {
@@ -266,17 +302,34 @@ function initialize_variables($website_only=false) {
 
 // Check if the settings have been configured.
 function check_if_configured($page, $calledFrom) {
-	global $lastChanged, $status;
+	global $lastChanged, $status, $allsky_status, $saveChangesLabel;
+
 	static $will_display_configured_message = false;
 
-	if ($will_display_configured_message)
+	if ($will_display_configured_message) {
 		return(true);
+	}
 
 	if ($lastChanged === "") {
-		// The settings aren't configured - probably right after an installation.
-		$msg = "Allsky must be configured before using it.<br>";
+		// The settings either need reviewing or aren't fully configured which
+		// usually happens right after an installation or upgrade.
+		if ($allsky_status == ALLSKY_STATUS_NEEDS_REVIEW) {
+			$msg = "Please review the Allsky settings to make sure they look correct.<br>";
+			$saveChangesLabel = "Review done; start Allsky";
+			$forceRestart = true;
+		} else {
+			// Should be ALLSKY_STATUS_NEEDS_CONFIGURATION, but if something else,
+			// do the same the same thing.
+			$msg = "Please configure the Allsky settings.<br>";
+			$saveChangesLabel = "Configuration done; start Allsky";
+			$forceRestart = true;
+		}
+
+		$msg2 = "When done, click on the";
+		$msg2 .= " <span class='btn-primary btn-fake'>${saveChangesLabel}</span> button.";
+
 		if ($page === "configuration")
-			$msg .= "If it's already configured, just click on the 'Save changes' button.";
+			$msg .= $msg2;
 		else
 			$msg .= "Go to the 'Allsky Settings' page to do so.";
 		$status->addMessage("<div id='mustConfigure' class='important'>$msg</div>", 'danger');
@@ -602,7 +655,20 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
 	$num = 0;	// Let the user know when there are no images for the specified day
 	// "/images" is an alias in the web server for ALLSKY_IMAGES
 	$images_dir = "/images";
-	$chosen_day = $_GET['day'];
+	$chosen_day = getVariableOrDefault($_GET, 'day', null);
+	if ($chosen_day === null) {
+		echo "<br><br><br>";
+		echo "<h2 class='alert-danger'>ERROR: No 'day' specified in URL.</h2>";
+		return;
+	}
+
+	if (! is_dir(ALLSKY_IMAGES)) {
+		echo "<br><div class='errorMsgBig'>";
+		echo "ERROR: '" . ALLSKY_IMAGES . "' directory is missing!";
+		echo "</div>";
+		return;
+	}
+
 	echo "<h2>$formalImageTypeName - $chosen_day</h2>\n";
 	echo "<div class='row'>\n";
 	if ($chosen_day === 'All'){
@@ -683,7 +749,7 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
 			}
 		}
 	}
-        echo "</div>";
+	echo "</div>";
 }
 
 // Run a command and display the appropriate status message.
@@ -692,28 +758,65 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 {
 	global $status;
 
+	$result = null;
 	exec("$cmd 2>&1", $result, $return_val);
 	$dq = '"';
-	echo "<script>console.log(${dq}[$cmd] returned $return_val, result=" . implode(" ", $result) . "${dq});</script>";
-	if ($return_val === 255) {
-		// This is only a warning so only display the caller's message, if any.
-		if ($result != null) $msg = implode("<br>", $result);
-		else $msg = "";
-		$status->addMessage($msg, "warning", false);
-		return false;
-	} elseif ($return_val > 0) {
+	$script = "";
+	echo "<script>";
+		echo "console.log(${dq}[$cmd] returned $return_val";
+		if ($result === null) {
+			$modifiedResult = $result;
+		} else {
+			$modifiedResult = array();
+			$on_line = 0;
+			foreach ($result as $res) {
+				$on_line++;
+
+				if (substr($res, 0, 8) == "<script>") {
+					$script .= $res;
+				} else {
+					if ($on_line === 1) {
+						echo ", result=";
+					}
+					echo "$res   ";
+					$modifiedResult[] = $res;
+				}
+			}
+		}
+		echo "${dq});";
+	echo "</script>\n";
+	if ($script !== "") {
+		echo "\n<!-- from $cmd -->$script\n";
+	}
+	if ($return_val > 0) {
+		$r = "";
+		if ($modifiedResult !== null) {
+			$r = implode("<br>", $modifiedResult);
+		}
+
+		if ($return_val === 255) {
+			// This is only a warning so only display the caller's message, if any.
+			$msg = $r;
+			if ($msg !== "") {
+				$status->addMessage($msg, "warning", false);
+			}
+			return false;
+		}
+
 		// Display a failure message, plus the caller's message, if any.
 		if ($addMsg) {
 			$msg = "'$cmd' failed";
-			if ($result != null) $msg .= ":<br>" . implode("<br>", $result);
+			if ($r != null) $msg .= ":<br>$r";
 		} else {
-			if ($result != null) $msg = implode("<br>", $result);
-			else $msg = "";
+			$msg = $r;
 		}
 		// Display the caller's "on success" onSuccessMessage, if any.
-		if ($onFailureMessage !== "")
+		if ($onFailureMessage !== "") {
 			$status->addMessage($onFailureMessage, "danger", false);
-		$status->addMessage($msg, "danger", false);
+		}
+		if ($msg !== "") {
+			$status->addMessage($msg, "danger", false);
+		}
 		return false;
 	}
 
@@ -724,18 +827,44 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 	// Display any output from the command.
 	// If there are any lines that begin with:  ERROR  or  WARNING
 	// then display them in the appropriate format.
-	if ($result != null) {
-		//x $status->addMessage(implode("<br>", $result), "message", false);
-  		foreach ( $result as $line) {
-			if (strpos($line, "ERROR:") !== false) {
-				$sev = "danger";
+	if ($modifiedResult != null) {
+		$msg = "";
+		$sev = "";
+  		foreach ($modifiedResult as $line) {
+			if ($msg !== "") $msg .= "<br>";
+
+			if (strpos($line, "ERROR::") !== false) {
+				$msg .= str_replace("ERROR:", "<strong>ERROR</strong>", $line);
+				if ($sev === "") $sev = "danger";
+			} else if (strpos($line, "ERROR:") !== false) {
+				$msg .= str_replace("ERROR", "<strong>ERROR</strong>", $line);
+				if ($sev === "") $sev = "danger";
+
+			} else if (strpos($line, "WARNING::") !== false) {
+				$msg .= str_replace("WARNING:", "<strong>WARNING</strong>", $line);
+				if ($sev === "") $sev = "warning";
 			} else if (strpos($line, "WARNING:") !== false) {
-				$sev = "warning";
+				$msg .= str_replace("WARNING", "<strong>WARNING</strong>", $line);
+				if ($sev === "") $sev = "warning";
+
+			} else if (strpos($line, "SUCCESS::") !== false) {
+				$msg .= str_replace("SUCCESS::", "", $line);
+				if ($sev === "") $sev = "success";
+
+			} else if (strpos($line, "INFO::") !== false) {
+				$msg .= str_replace("INFO::", "", $line);
+				if ($sev === "") $sev = "info";
+
+			} else if (strpos($line, "DEBUG:") !== false) {
+				$msg .= str_replace("DEBUG:", "", $line);
+				if ($sev === "") $sev = "debug";
+
 			} else {
-				$sev = "message";
+				$msg .= $line;
+				if ($sev === "") $sev = "message";
 			}
-			$status->addMessage("$line<br>", $sev, false);
 		}
+		$status->addMessage("$msg<br>", $sev, false);
 	}
 
 	return true;
@@ -867,8 +996,6 @@ function getVariableOrDefault($a, $v, $d) {
 function getTOD() {
 	global $settings_array;
 
-	//$settings_array = readSettingsFile();
-
 	$angle = getVariableOrDefault($settings_array, 'angle', -6);
 	$lat = getVariableOrDefault($settings_array, 'latitude', "");
 	$lon = getVariableOrDefault($settings_array, 'longitude', "");
@@ -886,86 +1013,153 @@ function getTOD() {
 	return $tod;
 }
 
-function getSecret($secret=false) {
+// Get the newest Allsky version string.
+// For efficiency, only check every other day.
+function getNewestAllskyVersion(&$changed=null)
+{
+	$versionFile = ALLSKY_CONFIG . "/newestversion.json";
+	$version_array = null;
+	$priorVersion = null;
+	$changed = false;
+	$date = date_create("now");
+	$compareDate = date_timestamp_get($date) - (24 * 60 * 60 * 2);		// 2 days
+	$exists = file_exists($versionFile);
 
-	$rawData = file_get_contents(ALLSKY_ENV, true);
-	$secretData = json_decode($rawData, true);
-
-	if ($secret !== false) {
-		$result = null;
-
-		if (isset($secretData[$secret])) {
-			$result = $secretData[$secret];
+	if ($exists) {
+		$str = file_get_contents($versionFile, true);
+		$err = "";
+		if ($str === false) {
+			// TODO: should these errors set addMessage() ?
+			$err = "Error reading of $versionFile.";
+		} else if ($str === "") {
+			$err = "$versionFile is empty!";
+		} else {
+			$version_array = json_decode($str, true);
+			if ($version_array === null) {
+				$err = "$versionFile has no json!";
+			} else {
+				$priorVersion = $version_array['version'];
+			}
 		}
-	} else {
-		$result = $secretData;
+		if ($err !== "") {
+			unlink($versionFile);
+			$exists = false;
+		}
 	}
 
-	return $result;
+	if ($version_array === null || ($exists && filemtime($versionFile) < $compareDate)) {
+		// Need to (re)get the data.
+
+		$cmd = ALLSKY_UTILITIES . "/getNewestAllskyVersion.sh";
+		exec("$cmd 2>&1", $newest, $return_val);
+
+		// 90 == newest is newer than current.
+		if (($return_val !== 0 && $return_val !== 90) || $newest === null) {
+			// some error
+			if ($exists) unlink($versionFile);
+			return($version_array);		// may be null...
+		}
+
+		$version_array = array();
+		$version_array['version'] = implode(" ", $newest);
+		$version_array['timestamp'] = date_format($date, "c");	// NOTE: Does not use timezone
+
+		// Has the version changed?
+		if ($priorVersion === null || $priorVersion !== $version_array['version']) {
+			$changed = true;
+		}
+
+		$msg = "[$cmd] returned $return_val, version=${version_array['version']}, changed=$changed";
+		echo "<script>console.log('$msg');</script>";
+
+		// Save new info.
+		@file_put_contents($versionFile, json_encode($version_array, JSON_PRETTY_PRINT));
+		@chmod($versionFile, 0664);		// so the user can remove it if desired
+	}
+
+	return($version_array);
+}
+
+function getSecret($secret=false) {
+
+    $rawData = file_get_contents(ALLSKY_ENV, true);
+    $secretData = json_decode($rawData, true);
+
+    if ($secret !== false) {
+        $result = null;
+
+        if (isset($secretData[$secret])) {
+            $result = $secretData[$secret];
+        }
+    } else {
+        $result = $secretData;
+    }
+
+    return $result;
 }
 
 #
 ## Create a single array with database settings
 #
 function getDatabaseConfig() {
-	$secretData = getSecret();
-	$settings = readSettingsFile();
-	$secretData['databasetype'] = $settings['databasetype'];
+    $secretData = getSecret();
+    $settings = readSettingsFile();
+    $secretData['databasetype'] = $settings['databasetype'];
 
-	return $secretData;
+    return $secretData;
 }
 
 function haveDatabase() {
 
-	$secretData = getDatabaseConfig();
-	$databaseType = 'none';
-	if (isset($secretData['databasetype'])) {
-		$databaseType = $secretData['databasetype'];
-	}
-	switch ($databaseType) {
-		case 'sqlite':
-			return haveSQLite($secretData);
-		case 'mysql':
-			return haveMySQL($secretData);
-		default:
-			return false;
-	}
+    $secretData = getDatabaseConfig();
+    $databaseType = 'none';
+    if (isset($secretData['databasetype'])) {
+        $databaseType = $secretData['databasetype'];
+    }
+    switch ($databaseType) {
+        case 'sqlite':
+            return haveSQLite($secretData);
+        case 'mysql':
+            return haveMySQL($secretData);
+        default:
+            return false;
+    }
 }
 
 function haveSQLite($secretData) {
-	$result = true;
-	$db = new SQLite3(ALLSKY_MYFILES_DIR . '/allsky.db');
+    $result = true;
+    $db = new SQLite3(ALLSKY_MYFILES_DIR . '/allsky.db');
 
-	if (!$db) {
-		$result = false;
-	}
-	return $result;
+    if (!$db) {
+        $result = false;
+    }
+    return $result;
 }
 
 function haveMySQL($secretData) {
-	$result = false;
-	try {
-		if (in_array('mysql', PDO::getAvailableDrivers())) {
+    $result = false;
+    try {
+        if (in_array('mysql', PDO::getAvailableDrivers())) {
 
-			$host = $secretData['databasehost'];
-			$db   = $secretData['databasedatabase'];
-			$user = $secretData['databaseuser'];
-			$pass = $secretData['databasepassword'];
-			$charset = 'utf8mb4';
-			
-			$dsn = "mysql:host=$host;dbname=$db;charset=$charset";
-			
-			$options = [
-				PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-				PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-			];		
-			$pdo = new PDO($dsn, $user, $pass, $options);
-			$result = true;
-		}	
-	} catch (PDOException $e) {
-	} catch (Exception $e) {
-	}
-	
-	return $result;
+            $host = $secretData['databasehost'];
+            $db   = $secretData['databasedatabase'];
+            $user = $secretData['databaseuser'];
+            $pass = $secretData['databasepassword'];
+            $charset = 'utf8mb4';
+            
+            $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+            
+            $options = [
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            ];      
+            $pdo = new PDO($dsn, $user, $pass, $options);
+            $result = true;
+        }   
+    } catch (PDOException $e) {
+    } catch (Exception $e) {
+    }
+    
+    return $result;
 }
 ?>

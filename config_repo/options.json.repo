@@ -1,4 +1,55 @@
 [
+	{
+		"name" : "databasesettingsheader",
+		"label" : "Database Settings",
+		"type" : "header"
+	},
+	{
+		"name" : "databasetype",
+		"default" : "none",
+		"description" : "The database to use to store data.",
+		"label" : "Database Tyoe",
+		"type" : "select_text",
+		"carryforward" : true,
+		"options" : [
+			{"value" : "none", "label" : "None"},
+			{"value" : "mysql", "label" : "MariaDB"},
+			{"value" : "postgresql", "label" : "PostgreSQL"},
+			{"value" : "sqlite", "label" : "SQLite"}
+		]
+		},
+		{
+			"name" : "databasehost",
+			"default" : "",
+			"description" : "The ip / hostname of the server running the database.",
+			"label" : "Database Host",
+			"type" : "text",
+			"source" : "${ALLSKY_ENV}"
+		},
+		{
+			"name" : "databaseuser",
+			"default" : "",
+			"description" : "The username used to connect to the database.",
+			"label" : "Database User",
+			"type" : "text",
+			"source" : "${ALLSKY_ENV}"
+		},
+		{
+			"name" : "databasepassword",
+			"default" : "",
+			"description" : "The password used to connect to the database.",
+			"label" : "User Password",
+			"type" : "text",
+			"source" : "${ALLSKY_ENV}"
+		},
+		{
+			"name" : "databasedatabase",
+			"default" : "",
+			"description" : "The database to use.",
+			"label" : "Database",
+			"type" : "text",
+			"source" : "${ALLSKY_ENV}"
+		},
 {
 "name" : "daynighttab========================================",
 "display" : false,
@@ -55,7 +106,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
-"description" : "Maximum daytime Auto-Exposure time in milliseconds (1000ms = 1 sec).",
+"description" : "Maximum daytime <span class='WebUISetting'>Auto-Exposure</span> time in milliseconds (1000ms = 1 sec).<br>Click <a allsky='true' external='true' href='/documentation/settings/allsky.html#daymaxautoexposure'>here</a> to see how this setting impacts the time between exposures.",
 "label" : "Max Auto-Exposure",
 "label_prefix" : "Daytime",
 "type" : "float",
@@ -68,7 +119,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "day_default",
-"description" : "Manual exposure time in milliseconds (1000ms = 1 sec). Can be a fraction.<br>If using daytime <span class='WebUISetting'>Auto-Exposure</span>, this number is used as a starting point.",
+"description" : "Manual exposure time in milliseconds (1000ms = 1 sec). Can be a fraction.<br>If daytime <span class='WebUISetting'>Auto-Exposure</span> is enabled, this number is used as a starting point.<br>Click <a allsky='true' external='true' href='/documentation/settings/allsky.html#dayexposure'>here</a> to see how this setting impacts the time between exposures.",
 "label" : "Manual Exposure",
 "label_prefix" : "Daytime",
 "type" : "float",
@@ -119,7 +170,7 @@
 {
 "name" : "dayautogain",
 "default" : "_default",
-"description" : "Enable to use dayime Auto-Gain.",
+"description" : "Enable to use dayime auto-gain.",
 "label" : "Auto-Gain",
 "label_prefix" : "Daytime",
 "type" : "boolean",
@@ -132,7 +183,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
-"description" : "Maximum gain when using <span class='WebUISetting'>Auto-Gain</span>.",
+"description" : "Maximum gain when <span class='WebUISetting'>Auto-Gain</span> is enabled.",
 "label" : "Max Auto-Gain",
 "label_prefix" : "Daytime",
 "type" : "float",
@@ -193,7 +244,7 @@
 "name" : "dayawb",
 "display" : "_display",
 "default" : false,
-"description" : "Sets Auto White Balance (camera adjusts color).",
+"description" : "Sets auto white balance so the camera adjusts the color.",
 "label" : "Auto White Balance",
 "label_prefix" : "Daytime",
 "type" : "boolean",
@@ -207,7 +258,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
-"description" : "Red component for the white balance.<br>When using <span class='WebUISetting'>Auto White Balance</span>, this number is a starting point.",
+"description" : "Red component for the white balance.<br>When <span class='WebUISetting'>Auto White Balance</span> is enabled, this number is a starting point.",
 "label" : "Red Balance",
 "label_prefix" : "Daytime",
 "type" : "float",
@@ -221,7 +272,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
-"description" : "Blue component for the white balance.<br>When using <span class='WebUISetting'>Auto White Balance</span>, this number is a starting point.",
+"description" : "Blue component for the white balance.<br>When <span class='WebUISetting'>Auto White Balance</span> is enabled, this number is a starting point.",
 "label" : "Blue Balance",
 "label_prefix" : "Daytime",
 "type" : "float",
@@ -326,7 +377,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
-"description" : "Maximum nighttime Auto-Exposure time in milliseconds (1000ms = 1 sec).",
+"description" : "Maximum nighttime <span class='WebUISetting'>Auto-Exposure</span> time in milliseconds (1000ms = 1 sec).",
 "label" : "Max Auto-Exposure",
 "label_prefix" : "Nighttime",
 "type" : "float",
@@ -339,7 +390,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "night_default",
-"description" : "Manual exposure time in milliseconds (1000ms = 1 sec). Can be a fraction.<br>If using nighttime <span class='WebUISetting'>Auto-Exposure</span>, this number is used as a starting point.",
+"description" : "Manual exposure time in milliseconds (1000ms = 1 sec). Can be a fraction.<br>If nighttime <span class='WebUISetting'>Auto-Exposure</span> is enabled, this number is used as a starting point.",
 "label" : "Manual Exposure",
 "label_prefix" : "Nighttime",
 "type" : "float",
@@ -387,7 +438,7 @@
 {
 "name" : "nightautogain",
 "default" : "_default",
-"description" : "Enable to use nighttime Auto-Gain.",
+"description" : "Enable to use nighttime auto-gain.",
 "label" : "Auto-Gain",
 "label_prefix" : "Nighttime",
 "type" : "boolean",
@@ -399,7 +450,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
-"description" : "Maximum gain when using <span class='WebUISetting'>Auto-Gain</span>.",
+"description" : "Maximum gain when <span class='WebUISetting'>Auto-Gain</span> is enabled.",
 "label" : "Max Auto-Gain",
 "label_prefix" : "Nighttime",
 "type" : "float",
@@ -458,7 +509,7 @@
 "name" : "nightawb",
 "display" : "_display",
 "default" : false,
-"description" : "Enable to use Auto White Balance (camera adjusts color).<br>NOTE: enabling this can significantly increase the time needed to capture a nighttime image.",
+"description" : "Enable to use auto white balance so the camera adjusts the color.<br>NOTE: enabling this can <strong>significantly</strong> increase the time needed to capture a nighttime image, so it's usually best to disable this at night.",
 "label" : "Auto White Balance",
 "label_prefix" : "Nighttime",
 "type" : "boolean",
@@ -471,7 +522,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
-"description" : "Red component for the white balance.<br>When using <span class='WebUISetting'>Auto White Balance</span>, this number is a starting point.",
+"description" : "Red component for the white balance.<br>When <span class='WebUISetting'>Auto White Balance</span> is enabled, this number is a starting point.",
 "label" : "Red Balance",
 "label_prefix" : "Nighttime",
 "type" : "float",
@@ -485,7 +536,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
-"description" : "Blue component for the white balance.<br>When using <span class='WebUISetting'>Auto White Balance</span>, this number is a starting point.",
+"description" : "Blue component for the white balance.<br>When <span class='WebUISetting'>Auto White Balance</span> is enabled, this number is a starting point.",
 "label" : "Blue Balance",
 "label_prefix" : "Nighttime",
 "type" : "float",
@@ -628,24 +679,12 @@
 "action" : "reload"
 },
 {
-"name" : "gamma",
-"display" : "_display",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "_default",
-"description" : "Changes the difference between light and dark areas.<br>Higher numbers increase contrast.",
-"label" : "Gamma",
-"type" : "integer",
-"usage" : "capture",
-"action" : "reload"
-},
-{
 "name" : "aggression",
 "display" : "_display",
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
-"description" : "How much of a calculated exposure change should be made during Auto-Exposure?<br>Lower numbers smooth out changes but take longer to react to brightness changes.",
+"description" : "How much of a calculated exposure change should be made during auto-exposure?<br>Lower numbers smooth out changes but take longer to react to brightness changes.",
 "label" : "Aggression",
 "type" : "percent",
 "usage" : "capture",
@@ -706,7 +745,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
-"description" : "USB bandwidth.<br>If you get ASI_ERROR_TIMEOUT errors in the log file, try changing this number.",
+"description" : "USB bandwidth.<br>If you get ASI_ERROR_TIMEOUT errors in the log file, try changing this number up and/or down.",
 "label" : "USB Bandwidth",
 "type" : "integer",
 "usage" : "capture",
@@ -764,7 +803,7 @@
 {
 "name" : "consistentdelays",
 "default" : true,
-"description" : "Enable to have the delays between images be a consistent length.<br>The time between the start of exposures will always be (max exposure + delay).",
+"description" : "Enable to have the delays between images be a consistent length.<br>The time between the start of exposures will always be <span class='WebUISetting'>Max Auto-Exposure + Delay</span>.",
 "label" : "Consistent Delays Between Images",
 "type" : "boolean",
 "usage" : "capture",
@@ -774,7 +813,7 @@
 {
 "name" : "timeformat",
 "default" : "%Y%m%d %H:%M:%S",
-"description" : "Determines the format of the displayed time. Run 'man 3 strftime' to see the options.",
+"description" : "Determines the format of the displayed date and time. Run <code>man 3 strftime</code> to see the options.",
 "label" : "Time Format",
 "type" : "text",
 "usage" : "capture",
@@ -885,7 +924,7 @@
 {
 "name" : "debuglevel",
 "default" : 1,
-"description" : "Debug level. <span class='WebUIValue'>0</span> is errors only.  <span class='WebUIValue'>4</span> is for Allsky developers use.",
+"description" : "Debug level. Use <span class='WebUIValue'>3</span> while debugging.  See the <a external='true' allsky='true' href='/documentation/settings/allsky.html#debuglevel'>documentation</a> for meaning of the levels.",
 "label" : "Debug Level",
 "type" : "select_integer",
 "usage" : "capture",
@@ -998,7 +1037,7 @@
 "name" : "showhistogrambox",
 "display" : "_display",
 "default" : false,
-"description" : "Enable to show an outline of the histogram box, useful for determining what the 'Histogram Box' numbers should be.",
+"description" : "Enable to show an outline of the histogram box, useful for determining what the <span class='WebUISetting'>Histogram Box</span> numbers should be.",
 "label" : "Show Histogram Box",
 "type" : "boolean",
 "usage" : "capture",
@@ -1207,7 +1246,7 @@
 {
 "name" : "imageremovebadhigh",
 "minimum" : 0,
-"maximum" : 0.5,
+"maximum" : 0.999,
 "default" : 0.9,
 "description" : "Delete images whose mean is above this value.<br><span class='WebUIValue'>0</span> disables this check.",
 "label" : "Remove Bad Images Threshold High",
@@ -1250,7 +1289,7 @@
 "minimum" : 2,
 "maximum" : "none",
 "default" : 0,
-"description" : "Width of resized image before cropping.  <span class='WebUIValue'>0</span> means don't resize.",
+"description" : "Width of resized image before cropping.  <span class='WebUIValue'>0</span> means don't resize.  Must be an even number.",
 "label" : "Image Resize Width",
 "type" : "integer",
 "checkchanges" : true,
@@ -1261,7 +1300,7 @@
 "minimum" : 2,
 "maximum" : "none",
 "default" : 0,
-"description" : "Height of resized image before cropping.  <span class='WebUIValue'>0</span> means don't resize.",
+"description" : "Height of resized image before cropping.  <span class='WebUIValue'>0</span> means don't resize.  Must be an even number.",
 "label" : "Image Resize Height",
 "type" : "integer",
 "checkchanges" : true,
@@ -1362,10 +1401,11 @@
 "minimum" : 0,
 "maximum" : "_max",
 "default" : 0,
-"description" : "Width of resized timelapse video. <span class='WebUIValue'>0</span> disables resize.",
+"description" : "Width of resized timelapse video. <span class='WebUIValue'>0</span> disables resize.  Must be an even number.",
 "label" : "Width",
 "label_prefix" : "Daily Timelapse",
 "type" : "integer",
+"checkchanges" : true,
 "booldependson" : "timelapsegenerate"
 },
 {
@@ -1373,10 +1413,11 @@
 "minimum" : 0,
 "maximum" : "_max",
 "default" : 0,
-"description" : "Height of resized timelapse video. <span class='WebUIValue'>0</span> disables resize.",
+"description" : "Height of resized timelapse video. <span class='WebUIValue'>0</span> disables resize.  Must be an even number.",
 "label" : "Height",
 "label_prefix" : "Daily Timelapse",
 "type" : "integer",
+"checkchanges" : true,
 "booldependson" : "timelapsegenerate"
 },
 {
@@ -1414,7 +1455,7 @@
 {
 "name" : "timelapseextraparameters",
 "default" : "",
-"description" : "Optional additional timelapse creation parameters.  Run <code>ffmpeg -?</code> to see the options.<br>If quality is poor or the video does not plan on Apple devices, try adding <code>-level 3.1</code>.",
+"description" : "Optional additional timelapse creation parameters.  Run <code>ffmpeg -?</code> to see the options.<br>If quality is poor or the video does not play on Apple devices, try adding <code>-level 3.1</code>.",
 "label" : "Extra Parameters",
 "label_prefix" : "Daily Timelapse",
 "type" : "widetext",
@@ -1488,10 +1529,11 @@
 "minimum" : 0,
 "maximum" : "_max",
 "default" : 0,
-"description" : "Width of resized mini-timelapse video. <span class='WebUIValue'>0</span> disables resize.",
+"description" : "Width of resized mini-timelapse video. <span class='WebUIValue'>0</span> disables resize.  Must be an even number.",
 "label" : "Width",
 "label_prefix" : "Mini-Timelapse",
 "type" : "integer",
+"checkchanges" : true,
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 {
@@ -1499,10 +1541,11 @@
 "minimum" : 0,
 "maximum" : "_max",
 "default" : 0,
-"description" : "Height of resized mini-timelapse video. <span class='WebUIValue'>0</span> disables resize.",
+"description" : "Height of resized mini-timelapse video. <span class='WebUIValue'>0</span> disables resize.  Must be an even number.",
 "label" : "Height",
 "label_prefix" : "Mini-Timelapse",
 "type" : "integer",
+"checkchanges" : true,
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 {
@@ -1542,7 +1585,6 @@
 "label_prefix" : "Timelapse",
 "type" : "text",
 "carryforward" : true,
-"comment" : "check using ffmpeg -encoder looking at argument 2 for ' libxs264  '",
 "booldependson" : "timelapsegenerate",
 "checkchanges" : true
 },
@@ -1555,7 +1597,6 @@
 "type" : "text",
 "carryforward" : true,
 "booldependson" : "timelapsegenerate",
-"comment" : "check using ffmpeg -pix_fmts looking at argument 2 for ' yuv420p  '",
 "checkchanges" : true
 },
 {
@@ -1746,9 +1787,10 @@
 "minimum" : 0,
 "maximum" : "_max",
 "default" : 0,
-"description" : "Resized width of uploaded images. <span class='WebUIValue'>0</span> means don't resize.",
+"description" : "Resized width of uploaded images. <span class='WebUIValue'>0</span> means don't resize.  Must be an even number.",
 "label" : "Resize Uploaded Images Width",
 "type" : "integer",
+"checkchanges" : true,
 "booldependson" : "imageupload"
 },
 {
@@ -1756,9 +1798,10 @@
 "minimum" : 0,
 "maximum" : "_max",
 "default" : 0,
-"description" : "Resized height of uploaded images. <span class='WebUIValue'>0</span> means don't resize.",
+"description" : "Resized height of uploaded images. <span class='WebUIValue'>0</span> means don't resize.  Must be an even number.",
 "label" : "Resize Uploaded Images Height",
 "type" : "integer",
+"checkchanges" : true,
 "booldependson" : "imageupload"
 },
 {
@@ -1838,6 +1881,42 @@
 "display" : false
 },
 {
+"name" : "REMOTEWEBSITE_HOST",
+"default" : "",
+"description" : "Name of server hosting the remote Allsky Website.  NOT a URL.",
+"label" : "Server Name",
+"label_prefix" : "Remote Website",
+"type" : "widetext",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremotewebsite",
+"optional" : true
+},
+{
+"name" : "remotewebsiteurl",
+"default" : "",
+"description" : "The URL of your Allsky Website, for example: <span class='WebUIValue'>https://mywebsite.com/allsky/</span>.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
+"label" : "Website URL",
+"label_prefix" : "Remote Website",
+"type" : "widetext",
+"carryforward" : true,
+"checkchanges" : true,
+"booldependson" : "showonmap OR useremotewebsite OR remotewebsiteimageurl",
+"optional" : true
+},
+{
+"name" : "remotewebsiteimageurl",
+"default" : "",
+"description" : "The URL of the image on your Allsky Website, for example: <span class='WebUIValue'>https://mywebsite.com/allsky/image.jpg</span>.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
+"label" : "Image URL",
+"label_prefix" : "Remote Website",
+"type" : "widetext",
+"carryforward" : true,
+"checkchanges" : true,
+"booldependson" : "showonmap OR useremotewebsite OR remotewebsiteurl",
+"optional" : true
+},
+{
 "name" : "remotewebsiteimagedir",
 "default" : "allsky",
 "description" : "Name of the top-level remote Website directory where images go.",
@@ -1869,18 +1948,6 @@
 "carryforward" : true,
 "checkchanges" : true,
 "booldependson" : "useremotewebsite"
-},
-{
-"name" : "REMOTEWEBSITE_HOST",
-"default" : "",
-"description" : "Name of server hosting the remote Allsky Website.",
-"label" : "Server Name",
-"label_prefix" : "Remote Website",
-"type" : "widetext",
-"checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremotewebsite",
-"optional" : true
 },
 {
 "name" : "REMOTEWEBSITE_PORT",
@@ -1924,7 +1991,7 @@
 "description" : "Special commands needed when connecting to an FTP server.",
 "label" : "FTP Commands",
 "label_prefix" : "Remote Website",
-"type" : "text",
+"type" : "widetext",
 "checkchanges" : true,
 "source" : "${ALLSKY_ENV}",
 "booldependson" : "useremotewebsite",
@@ -1934,8 +2001,8 @@
 {
 "name" : "REMOTEWEBSITE_SSH_KEY_FILE",
 "default" : "",
-"description" : "Path on the Pi to the SSH key file.",
-"label" : "SSH Key File",
+"description" : "Path on the Pi to the SSH public key file.",
+"label" : "SSH Public Key File",
 "label_prefix" : "Remote Website",
 "type" : "widetext",
 "checkchanges" : true,
@@ -2019,30 +2086,6 @@
 "carryforward" : true,
 "valuedependson" : "imageuploadfrequency=[1-9]*"
 },
-{
-"name" : "remotewebsiteurl",
-"default" : "",
-"description" : "The URL of your Allsky Website, for example: <span class='WebUIValue'>https://mywebsite.com/allsky/</span>.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
-"label" : "Website URL",
-"label_prefix" : "Remote Website",
-"type" : "widetext",
-"carryforward" : true,
-"checkchanges" : true,
-"booldependson" : "showonmap OR useremotewebsite OR remotewebsiteimageurl",
-"optional" : true
-},
-{
-"name" : "remotewebsiteimageurl",
-"default" : "",
-"description" : "The URL of the image on your Allsky Website, for example: <span class='WebUIValue'>https://mywebsite.com/allsky/image.jpg</span>.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
-"label" : "Image URL",
-"label_prefix" : "Remote Website",
-"type" : "widetext",
-"carryforward" : true,
-"checkchanges" : true,
-"booldependson" : "showonmap OR useremotewebsite OR remotewebsiteurl",
-"optional" : true
-},
 
 
 {
@@ -2058,6 +2101,31 @@
 "type" : "boolean",
 "carryforward" : true,
 "checkchanges" : true
+},
+{
+"name" : "REMOTESERVER_HOST",
+"default" : "",
+"description" : "Name of remote server NOT hosting an Allsky Website.  NOT a URL.",
+"label" : "Server Name",
+"label_prefix" : "Remote Server",
+"type" : "widetext",
+"checkchanges" : true,
+"source" : "${ALLSKY_ENV}",
+"booldependson" : "useremoteserver",
+"optional" : true
+},
+{
+"name" : "remoteserverurl",
+"default" : "",
+"description" : "Optional URL of remote server, for example: <span class='WebUIValue'>https://myserver.com/</span>.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
+"label" : "Server URL",
+"label_prefix" : "Remote Server",
+"type" : "widetext",
+"carryforward" : true,
+"checkchanges" : true,
+"booldependson" : "useremoteserver",
+"optional" : true,
+"display" : false
 },
 {
 "name" : "remoteserverimagedir",
@@ -2090,18 +2158,6 @@
 "carryforward" : true,
 "checkchanges" : true,
 "booldependson" : "useremoteserver"
-},
-{
-"name" : "REMOTESERVER_HOST",
-"default" : "",
-"description" : "Name of remote server NOT hosting an Allsky Website.",
-"label" : "Server Name",
-"label_prefix" : "Remote Server",
-"type" : "widetext",
-"checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremoteserver",
-"optional" : true
 },
 {
 "name" : "REMOTESERVER_PORT",
@@ -2145,7 +2201,7 @@
 "description" : "Special commands needed when connecting to an FTP server.",
 "label" : "FTP Commands",
 "label_prefix" : "Remote Server",
-"type" : "text",
+"type" : "widetext",
 "checkchanges" : true,
 "source" : "${ALLSKY_ENV}",
 "booldependson" : "useremoteserver",
@@ -2155,8 +2211,8 @@
 {
 "name" : "REMOTESERVER_SSH_KEY_FILE",
 "default" : "",
-"description" : "Path on the Pi to the SSH key file.",
-"label" : "SSH Key File",
+"description" : "Path on the Pi to the SSH public key file.",
+"label" : "SSH Public Key File",
 "label_prefix" : "Remote Server",
 "type" : "widetext",
 "checkchanges" : true,
@@ -2318,18 +2374,16 @@
 },
 {
 "name" : "camera",
+"settingsonly" : true,
 "default" : "",
-"description" : "The type and model of your camera, for example: <span class='WebUIValue'>ZWO 224MC</span> or <span class='WebUIValue'>RPi HQ</span>.  Set automatically.",
-"label" : "Camera",
-"type" : "widetext",
-"checkchanges" : true,
-"optional" : true,
-"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
+"description" : "The type and model of your camera. Set automatically.",
+"label" : "NOT DISPLAYED IN WebUI",
+"type" : "text"
 },
 {
 "name" : "lens",
 "default" : "",
-"description" : "The lens you're using on your camera, for example: <span class='WebUIValue'>Arecont 1.55</span>.",
+"description" : "The lens you're using on your camera, for example: <span class='WebUIValue'>Arecont 1.55 mm</span>.",
 "label" : "Lens",
 "type" : "text",
 "checkchanges" : true,
@@ -2338,14 +2392,21 @@
 },
 {
 "name" : "computer",
+"settingsonly" : true,
 "default" : "",
-"description" : "The computer running your allsky camera, for example: <span class='WebUIValue'>Raspberry Pi 3, 4 GB</span>.  Set automatically.",
-"label" : "Computer",
+"description" : "The computer running your allsky camera. Set automatically.",
+"label" : "NOT DISPLAYED IN WebUI",
+"type" : "text",
+"carryforward" : true
+},
+{
+"name" : "equipmentinfo",
+"default" : "",
+"description" : "Optional information on your equipment.",
+"label" : "Equipment Info",
 "type" : "widetext",
-"carryforward" : true,
 "checkchanges" : true,
-"optional" : true,
-"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
+"optional" : true
 },
 
 {
@@ -2361,7 +2422,7 @@
 {
 "name" : "imagessortorder",
 "default" : "ascending",
-"description" : "The order the images on the 'Images' page are sorted in.<br>'Ascending' is oldest to newest. 'Descending' is newest to oldest.",
+"description" : "The order the images on the <span class='WebUIWebPage'>Images</span> page are sorted in.<br><strong>Ascending</strong> is oldest to newest. <strong>Descending</strong> is newest to oldest.",
 "label" : "Images Sort Order",
 "type" : "select_text",
 "carryforward" : true,

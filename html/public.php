@@ -5,6 +5,7 @@
 // It needs to be at the top of this file since code below uses the items it sets.
 include_once('includes/functions.php');
 initialize_variables();		// sets some variables
+$resizeImage = true;		// allow for this to be a setting in the future.
 ?>
 
 <!DOCTYPE html>
@@ -16,8 +17,23 @@ initialize_variables();		// sets some variables
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="description" content="">
 	<meta name="author" content="Thomas Jacquin">
+	<script src="documentation/bower_components/jquery/dist/jquery.min.js"></script>
 	<link href="documentation/css/custom.css" rel="stylesheet">
-	<title>AllSky Public Page</title>
+<?php if ($resizeImage) { ?>
+	<style>
+		.live_container {
+			width: 99vw;
+			height: 99vh;
+			margin: auto;
+			text-align: center;
+		}
+		.current {
+			height: auto;
+			max-height: 100%;
+		}
+	</style>
+<?php } ?>
+	<title>Allsky Public Page</title>
 </head>
 <body>
 
@@ -26,8 +42,6 @@ initialize_variables();		// sets some variables
 		<img id="current" class="current" src="<?php echo $image_name ?>">
 	</div>
 </div>
-
-<script src="documentation/bower_components/jquery/dist/jquery.min.js"></script>
 
 <script type="text/javascript">
 	function getImage() {

@@ -132,6 +132,8 @@ function DisplayAllskyConfig() {
 	global $ME;
 	global $status;
 	global $endSetting;
+	global $saveChangesLabel;
+	global $forceRestart;
 
 	$cameraTypeName = "cameratype";			// json setting name
 	$cameraModelName = "cameramodel";		// json setting name
@@ -146,7 +148,6 @@ function DisplayAllskyConfig() {
 	$showIcon = "<i class='fa fa-chevron-down fa-fw'></i>";
 	$hideIcon = "<i class='fa fa-chevron-up fa-fw'></i>";
 
-//x	$mode = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK | JSON_PRESERVE_ZERO_FRACTION;
 	$mode = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION;
 	$settings_file = getSettingsFile();
 	$options_file = getOptionsFile();
@@ -221,8 +222,8 @@ function DisplayAllskyConfig() {
 				if (in_array($name, ["csrf_token", "save_settings", "reset_settings",
 						"restart", "page", "_ts", $endSetting, "fromConfiguration"])) {
 					if ($name === "fromConfiguration") {
-						// If set, the prior screen said "you must configure Allsky ..." so it's
-						// ok if nothing changed, but we need to update $lastChanged.
+						// If set, the prior screen said "you must configure Allsky ..." so
+						// it's ok if nothing changed, but we need to update $lastChanged.
 						$fromConfiguration = $newValue;
 					}
 					continue;
@@ -516,7 +517,7 @@ if ($debug) {
 					// This must run with different permissions so makeChanges.sh can
 					// write to the allsky directory.
 					$CMD = "sudo --user=" . ALLSKY_OWNER . " ";
-					$CMD .= ALLSKY_SCRIPTS . "/makeChanges.sh $cmdDebugArg $moreArgs $changes";
+					$CMD .= ALLSKY_SCRIPTS . "/makeChanges.sh --from WebUI $cmdDebugArg $moreArgs $changes";
 
 					# Let makeChanges.sh display any output.
 					// false = don't add anything to the message.
@@ -545,6 +546,16 @@ if ($debug) {
 						$CMD = "sudo /bin/systemctl reload-or-restart allsky.service";
 						if (! runCommand($CMD, $msg, "success")) {	// displays $msg on success.
 							$status->addMessage("Unable to restart Allsky.", 'warning');
+						} else {
+/* TODO: We get here because a form was submitted which caused Allsky to restart.
+	We don't want the user to refresh the page because that might cause Allsky to
+	restart again.  We really want them to click on the link that takes them to this page.
+
+							$msg = "<div class='center-text' style='font-size: 150%'>";
+							$msg .= "*** Refresh this window to update messages. ***";
+							$msg .= "</div>";
+							$status->addMessage($msg, 'info');
+*/
 						}
 
 					} else if ($stopRequired) {
@@ -592,7 +603,7 @@ if ($debug) {
 							$moreArgs .= " --allFiles";
 
 						// postData.sh will output necessary messages.
-						$cmd = "${CMD}/postData.sh --fromWebUI $cmdDebugArg $moreArgs";
+						$cmd = "${CMD}/postData.sh --from WebUI $cmdDebugArg $moreArgs";
 						$worked = runCommand($cmd, "", "success", false);
 
 						if ($fromConfiguration) {
@@ -602,7 +613,7 @@ if ($debug) {
 							if ($result != null) {
 								$result = implode("<br>", $result);
 								// Not worth checking if the update worked.
-								updateFile(ALLSKY_CHECK_ALLSKY_LOG, $result, "checkAllsky", true);
+								updateFile(ALLSKY_CHECK_LOG, $result, "checkAllsky", true);
 	
 								$msg = "<div class='errorMsgBig errorMsgBox center-div center-text'>";
 								$msg .= "Suggested changes to your settings<br>";
@@ -702,22 +713,27 @@ if ($debug) {
 		echo "<p id='messages'>";
 			if ($status->isMessage()) echo $status->showMessages();
 		echo "</p>";
-		echo "<form method='POST' action='$ME?_ts=" . time() . " name='conf_form'>";
+		$t = time();
+		echo "<form method='POST' action='${ME}?_ts=${t}' name='conf_form'>";
 ?>
 		<div class="sticky settings-nav">
-			<div class="container-fluid">
+			<div class="settings-buttons container-fluid">
 				<div class="row">
-					<div class="col-md-11 col-sm-11 col-xs-11">
-						<button type="submit" class="btn btn-primary" name="save_settings" title="Save changes">
-							<i class="fa-solid fa-floppy-disk"></i> Save changes
+					<div class="col-md-11 col-sm-11 col-xs-11 nowrap">
+						<button type="submit" class="btn btn-primary"
+								name="save_settings" title="Save changes">
+							<i class="fa-solid fa-floppy-disk"></i> <?php echo $saveChangesLabel; ?>
 						</button>
-						<button type="submit" class="btn ml-3 btn-warning" name="reset_settings" title="Reset to default values" id="settings-reset">
+						<button type="submit" class="btn ml-3 btn-warning"
+								name="reset_settings" title="Reset to default values"
+								id="settings-reset">
 							<i class="fa-solid fa-rotate-left"></i> Reset to default values
 						</button>
 					</div>
 					
 					<div class="col-md-1 col-sm-1 col-xs-1">
-						<button type="button" class="<?php if (!$hideHeaderBodies) { echo("hidden ") ;}?>btn btn-primary ml-5 settings-expand pull-right" id="settings-all-control" title="Expand/Collapse all settings">
+						<button type="button" class="<?php if (!$hideHeaderBodies) { echo("hidden ") ;}?>btn btn-primary ml-5 settings-expand pull-right"
+								id="settings-all-control" title="Expand/Collapse all settings">
 							<?php echo $showIcon ?>
 						</button>
 					</div>

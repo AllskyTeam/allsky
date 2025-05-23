@@ -42,17 +42,20 @@ preURL_include = preURL_src;
 
 // Convert URL for all tags with an "allsky=true" attribute.
 // The specified URL will never be a full URL, i.e., it'll start with "/" or a dir/file.
+// Allow this to be called multiple times, e.g., after dynamic HTML is added,
+// so remove tags so we don't process them twice.
 function convertURL() {
 	allTags = document.getElementsByTagName("*");
 	for (var i = 0; i < allTags.length; i++) {
 		var elmnt = allTags[i];
 
 		if (elmnt.getAttribute("external")) {
-			elmnt.innerHTML += " <i class='fa fa-external-link-alt fa_external'></i>";
+			elmnt.innerHTML += " <i class='fa fa-external-link-alt fa_external'></i>&nbsp;";
 			if (debug) console.log("elmnt=", elmnt);
 
 			elmnt["target"] = "_blank";
 			elmnt["title"] = "Opens in new tab/window";
+			elmnt.removeAttribute("external");
 		}
 
 		/*
@@ -60,6 +63,7 @@ function convertURL() {
 			we need to update the URL.
 		*/
 		if (! elmnt.getAttribute("allsky")) continue;	// "allsky" not defined - ignore tag
+		elmnt.removeAttribute("allsky");
 
 		var url = null;
 		var preURL;

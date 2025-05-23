@@ -1,4 +1,4 @@
-# Allsky Camera ![Release](https://img.shields.io/badge/Version-v2024.12.06_01-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
+# Allsky Camera ![Release](https://img.shields.io/badge/Version-v2024.12.06_03-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
 
 This is the source code for the Allsky Camera project described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/).
 &nbsp;  
@@ -13,25 +13,28 @@ This is the source code for the Allsky Camera project described [on Instructable
 In order to run the Allsky software you need:
 
  * A Raspberry Pi Zero 2, Pi 2, Pi 3, Pi 4, Pi 5, or Le Potato.
+ * A version of the Raspberry Pi OS.  Other operating systems like Ubuntu are NOT supported.  If possible use the newest Bookworm 64-bit release of Pi OS with the "Desktop" version. Bullseye will also work. __Buster support will be dropped in the next major release__.
  * A camera:
-    * Any ZWO camera sold before October 2024.
-    * One of the following Raspberry Pi cameras:
-       * RPi HQ (IMX477 sensor)
-       * RPi Module 3 (IMX708 sensor)
-       * RPi Version 1 (OV5647 sensor; NOT RECOMMENDED: 0.9 second maximum exposure)
-       * IMX290 60.00 fps
-       * ArduCam 16 MP (IMX519 sensor)
-       * ArduCam 64 MP (arducam_64mp sensor)
-       * ArduCam 462 (arducam-pivariety sensor)
-       * Waveshare imx219-d160 (IMX290 sensor)
-       * ArduCam 64 MP Owlsight (OV64a40 sensor)
-       * OneInchEye IMX283 (IMX283 sensor)
+    * Any ZWO camera sold before February 1, 2025,
+    * or one of the following cameras:
+       * Raspberry Pi:
+          * HQ (IMX477 sensor)
+          * Module 3 (IMX708 sensor)
+          * Version 1 (OV5647 sensor; NOT RECOMMENDED: 0.9 second maximum exposure)
+       * Arducam:
+          * 16 MP (IMX519 sensor)
+          * 64 MP (arducam_64mp sensor)
+          * 462 (arducam-pivariety sensor)
+          * 64 MP Owlsight (OV64a40 sensor)
+       * Other:
+          * Waveshare imx219-d160 (IMX290 sensor)
+          * OneInchEye IMX283 (IMX283 sensor)
+          * IMX290 60.00 fps
 
 
 &nbsp;  
 > __NOTES:__
->	- Only the Raspberry Pi OS is supported.  Other operating systems like Ubuntu are NOT supported.  If possible use the newest Bookworm 64-bit release. Bullseye will also work. __Buster support will be dropped in the next major release__.
->	- The ZWO ASI120-series cameras are __not__ recommended due to their tendency to produce errors and poor-quality images.
+>	- The ZWO ASI120-series cameras are __not__ recommended due to their tendency to produce poor-quality images.
 >	- The Pi Zero with its limited memory and _very_ limited CPU power is not recommended.  You probably won't be able to create keograms, startrails, or timelapse videos.
 >	- The Pi Zero 2 with its limited memory and somewhat limited CPU power is not recommended unless cost is the only concern.  Creating keograms, startrails, and timelapse videos may or may not be possible.
 >	- The Le Potato is the only "Pi-compatible" board that we've found to actually be compatible, so buyer beware.
@@ -77,14 +80,19 @@ It should be used before requesting support on GitHub.
 
 &nbsp;
 <!-- =============================================================================== --> 
-## Allsky Website and remote server
+## Allsky Website
 
 The local Allsky Website (i.e., on the Pi) is installed with Allsky but must be enabled in the WebUI in order to use it.
 You can also install the Allsky Website on a remote server so it can be viewable via the Internet.
 
 See [Installation / Upgrading --> Website](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/installations/AllskyWebsite.html) for information on how to install and configure an Allsky Website.
 
+&nbsp;
+<!-- =============================================================================== --> 
+## Remote server
 Allsky images, keograms, startrails, and timelapse videos can optionally be uploaded to a remote server __not__ running an Allsky Website.  This is useful if you have a personal website and want to include the most recent Allsky images.
+
+See [Installation / Upgrading --> Remote server](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/installations/RemoteServer.html) for information on how to configure a remote server.
 
 ---
 
@@ -122,6 +130,10 @@ See [Explanations / How To -> Dark frames](https://htmlpreview.github.io/?https:
 By default, a timelapse video is generated at the end of nighttime from all of the images captured in the last 24 hours.
 
 "Mini" timelapse videos can also be created every few images, and contain the last several images.  They are useful to see what the sky was recently like.
+
+
+See [Explanations / How To --> Timelapses](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/explanations/timelapses.html).
+
 
 ---
 

@@ -162,7 +162,7 @@ float aegCalcMean(cv::Mat image, bool useMask)
 
 		char const *maskName = "tmp/mask.png";
 		if (! cv::imwrite(maskName, mask, compressionParameters))
-			Log(1, "*** ERROR: Unable to write to '%s'\n", maskName);
+			Log(-1, "*** ERROR: Unable to write to '%s'\n", maskName);
 
 		if (0) {		// Not sure what good this image does.
 			// Copy the source image to destination image with masking.
@@ -171,7 +171,7 @@ float aegCalcMean(cv::Mat image, bool useMask)
 
 			char const *dstImageName = "tmp/dstImage.jpg";
 			if (! cv::imwrite(dstImageName, dstImage, compressionParameters))
-				Log(1, "*** ERROR: Unable to write to '%s'\n", dstImageName);
+				Log(-1, "*** ERROR: Unable to write to '%s'\n", dstImageName);
 		}
 #endif
 	}
@@ -319,7 +319,7 @@ void aegGetNextExposureSettings(config * cg,
 			Log(4, "  >> exposureLevel increased by %d to %d\n", ExposureChange, currentModeMeanSetting.exposureLevel);
 		}
 		else {
-			Log(3, "    >>> Already at max gain (%1.3f) and max exposure (%s) - can't go any higher!\n",
+			Log(3, "    >>> Already at max gain (%1.3f) and max exposure (%s) - cannot go any higher!\n",
 				currentModeMeanSetting.maxGain, length_in_units(currentModeMeanSetting.maxExposure_us, true));
 		}
 	}
@@ -333,7 +333,7 @@ void aegGetNextExposureSettings(config * cg,
 			Log(4, "  > exposureLevel decreased by %d to %d\n", ExposureChange, currentModeMeanSetting.exposureLevel);
 		}
 		else {
-			Log(3, "    >>> Already at min gain (%1.3f) and min exposure (%s) - can't go any lower!\n",
+			Log(3, "    >>> Already at min gain (%1.3f) and min exposure (%s) - cannot go any lower!\n",
 				currentModeMeanSetting.minGain, length_in_units(currentModeMeanSetting.minExposure_us, true));
 		}
 	}

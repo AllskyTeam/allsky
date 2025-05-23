@@ -9,6 +9,7 @@
         "camera": "XX_NEED_TO_UPDATE_XX",
         "lens": "XX_NEED_TO_UPDATE_XX",
         "computer": "XX_NEED_TO_UPDATE_XX",
+        "equipmentinfo": "XX_NEED_TO_UPDATE_XX",
         "owner": "XX_NEED_TO_UPDATE_XX",
         "auroraForecast": false,
         "auroraMap": "XX_NEED_TO_UPDATE_XX",
@@ -124,6 +125,13 @@
                 "style": ""
             },
             {
+                "display": false,
+                "url": "meteors/",
+                "title": "Archived Meteors",
+                "icon": "fa fa-2x fa-fw fa-meteor",
+                "style": ""
+            },
+            {
                 "display": true,
                 "variable": "imageName",
                 "title": "Full-sized image",
@@ -194,6 +202,14 @@
             },
             {
                 "display": true,
+                "label": "Equipment info",
+                "icon": "fa fa-fw fa-keyboard",
+                "variable": "equipmentinfo",
+                "value": "",
+                "style": ""
+            },
+            {
+                "display": true,
                 "label": "Owner",
                 "icon": "fa fa-fw fa-user",
                 "variable": "owner",
@@ -221,5 +237,5 @@
             }
         ]
     },
-    "ConfigVersion": "2"
+    "ConfigVersion": "4"
 }

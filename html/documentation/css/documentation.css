@@ -7,6 +7,7 @@
 	--WebUI-value-background-color: #e4e4e4;
 	--WebUI-link-color: #4b4a4b;
 	--WebUI-link-background-color: #f8f8f8;
+	--navbar-border-color: #e7e7e7;
 }
 
 body {
@@ -222,18 +223,6 @@ body {
 .markdown-body ol.no-list {
 	padding: 0;
 	list-style-type: none;
-}
-.markdown-body ol[type="1"] {
-	list-style-type: decimal;
-}
-.markdown-body ol[type=a] {
-	list-style-type: lower-alpha;
-}
-.markdown-body ol[type=i] {
-	list-style-type: lower-roman;
-}
-.markdown-body div>ol:not([type]) {
-	list-style-type: decimal;
 }
 .markdown-body ul ul,
 .markdown-body ul ol,
@@ -690,7 +679,8 @@ b, strong {
 	padding: 0 .2em;
 	color: var(--WebUI-link-color);
 	background-color: var(--WebUI-link-background-color);
-	border-bottom: 1px solid #e7e7e7;
+	border-top: 2px solid var(--navbar-border-color);
+	border-bottom: 2px solid var(--navbar-border-color);
 }
 .WebUISetting {	/* Matches what's in the WebUI */
 	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
@@ -832,13 +822,16 @@ b, strong {
 	padding: 5px 0px 5px 0px;
 }
 .fileName {
-	padding: 0 .2em;
+	padding: 0 .2em .1em .2em;
 	margin: 0;
 	font-size: 90%;
-	color: inherit;
 	border-radius: 6px;
 	background-color: var(--color-attention-verysubtle);
 	border: 1px solid var(--color-attention-muted);
+}
+blockquote .fileName {	/* Make class stand out from blockquote. */
+	color: var(--color-fg-default);
+	border-width: 2px;
 }
 
 /* "ls" colors in a terminal window */

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Imaging a storage device";
+		} 
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<script src="../js/all.min.js" type="application/javascript"></script>
+	<title>Imaging an SD card, SSD, or NVMe disk</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<p>
+This page describes how to image an SD card, an SSD, or an NVMe disk for use by Allsky.
+</p>
+
+<blockquote>
+In the instructions below, a <strong>storage device</strong> refers to
+either an SD card, an SSD, or a NVMe disk
+because the instructions for all of them are almost identical.
+</blockquote>
+
+<p class="morePadding">
+The two main scenarios when imaging a storage device are described below.
+</p>
+
+<h2>Hardware required</h2>
+<p>
+Before you begin make sure you have the necessary
+adapter to plug your storage device into a PC, Mac, and/or Pi.
+</p>
+<details><summary></summary>
+
+<blockquote class="warning">
+If you plan to use an SSD or an NVMe disk,
+make sure they fit in your allsky camera case.
+</blockquote>
+
+<h3>SD card</h3>
+You'll need an adapter that allows the SD card
+(technically a "micro SD card") to plug into a USB port on your Pi, PC, and/or Mac.
+<br>
+The easiest way is with an inexpensive device like this:
+<p><img src="microSDcardUSBadapter.png" title="micro SD Card USB Adapter"
+	loading="lazy" width="25%" class="imgBorder"></p>
+You simply plug the card into the back of the adapter
+and plug the adapter into a USB-B port.
+
+<p>
+If you have a computer with an SD card reader, a device like this works well:
+<p><img src="microSDcardAndAdapter.png" title="micro SD Card and Adapter"
+	loading="lazy" width="25%" class="imgBorder"></p>
+You plug the micro SD card on the left into the adapter on the right,
+then plug the larger adapter into your computer.
+</p>
+
+<h3>SSD</h3>
+You need an adapter cable that connects the SSD to your PC, Mac, or Pi's USB port.
+<ul>
+	<li>If the SSD is an "external" unit with a case around it,
+		it likely came with the cable.
+	<li>If the SSD is an "internal" unit with no case,
+		like in the picture below, you'll need a SATA-to-USB-B adapter
+		like the one in the picture.
+		The SSD plugs into the SATA end of the adapter and you plug the USB
+		end into your PC, Mac, or Pi.
+		<p><img src="internalSSDandConnector.png" title="Internal SSD and Adapter"
+			loading="lazy" width="40%" class="imgBorder"></p>
+</ul>
+
+<h3>NVMe drive</h3>
+If you have a Pi 5 or above the ultimate storage device is an NVMe disk.
+These disks are <b>significantly</b> faster and more reliable than an SD card,
+and can hold more data.
+<br>
+In order to use one you'll need a "HAT" which is a "Hardware On Top" board
+that is attached to a Pi, as shown below:
+<p><img src="NVMeHat.png" title="NVMe HAT"
+	width="40%" loading="lazy" class="imgBorder"></p>
+This is the official Raspberry Pi M.2 HAT which sits on top of the Pi
+and accepts 30mm and 42mm NVMe disks (the white rectangle in the picture).
+<br>
+Other brands have boards that go underneeath the Pi and accept up to 80mm
+boards, which hold more data and tend to be faster.
+<p>
+In order to connect the disk to your PC or Mac you'll need an adapter like below.
+The disk plugs into the unit on the right.
+<p><img src="NVMeUSBadapter.png" title="NVMe USB adapter"
+	width="40%" loading="lazy" class="imgBorder"></p>
+</p>
+
+<hr class="separator">
+</details>
+
+
+<h2>Scenario 1: New Pi or "starting over"</h2>
+<p>
+This scenario is used when:
+<ul class="minimalPadding">
+	<li>you have a new Pi
+	<li>you want to use a new storage device
+	<li>you want to "start over" and re-image your existing storage device
+</ul>
+</p>
+<details><summary></summary>
+
+<p id="install">
+Do the following:
+<ol>
+	<li>Connect your storage device to your PC or Mac using the appropriate adapter.
+	<li>Download the 
+		<a href="https://www.raspberrypi.com/software/" external="true">Raspberry Pi Imager></a>
+		to a PC or Mac.
+	<li>Start the Pi Imager and choose your "Raspberry Pi Device".
+	<li>Choose your "Storage" (where to write the operating system to - your storage device).
+		If nothing appears in the list then the Imager can't find your device;
+		make sure it's plugged in and your computer can see it.
+	<li>Choose the Pi "Operating System".
+		<br>
+		Select the <strong>(Recommended)</strong> entry which is usually the first one.
+		For Pi 4 and newer models, that will be <strong>Raspberry Pi OS (64-bit)</strong>.
+		For older models it will be <strong>Raspberry Pi OS (Legacy, 32-bit)</strong>.
+		<br>Allsky installs many of the packages used by the "Desktop" version
+		so we suggest installing it.
+		<p><img src="PiImager.png" title="Chosing Pi OS" width="50%"></p>
+	<li>Press "NEXT".
+	<li>When asked to <strong>apply OS Customisation settings</strong> press
+		<strong>EDIT SETTINGS</strong> and make these changes:
+		<blockquote class="warning">
+		<p><strong>Do not skip this step unless you enjoy pain!</strong></p>
+		Skipping it means you'll need to make those changes after
+		turning your Pi on the first time.
+		Wi-Fi won't work so you'll need to use a wired connection to the Pi,
+		or connect a monitor, keyboard, and mouse to it.
+		</blockquote>
+	<ul>
+		<li>GENERAL tab:
+		<ul>
+			<li><u>Set hostname</u>: <code>allsky</code>
+				<br>unless you have multiple Pi's on your network in which case
+				they must all have unique names.
+			<li><u>Set username and password</u>: <code>pi</code> and whatever you want
+				for the password.
+			<li><u>Configure wireless LAN</u>:
+				<br>it's MUCH easier to do this now rather than after your Pi is running.
+			<li><u>Set local settings</u>:
+				<br>This doesn't actually change the "Locale"; it just changes
+				the time zone and keyboard layout.
+				Allsky will prompt for the <span class="WebUISetting">Locale</span>
+				during installation.
+		</ul>
+		<li>SERVICES tab:
+			<ul>
+				<li>Enable SSH - Use password authentication
+			</ul>
+	</ul>
+</ol>
+</p>
+<p>
+Make sure your Pi is turned off,
+then disconnect the storage device from your computer and plug it into the Pi.
+Power up the Pi; after it boots, install Allsky and your favorite programs.
+</p>
+
+<hr class="separator">
+</details>
+
+
+<h2>Scenario 2: Use a new storage device but keep some files from the old device</h2>
+<p>
+In this scenario, you have a working Pi and want to use a <em>new</em>
+storage device AND keep some files from the existing storage device.
+Files like your Allsky images, darks, and configuration files are usually kept.
+</p>
+
+<p>
+This is typically done because:
+<ul class="minimalPadding">
+	<li>you want a device with more disk space
+	<li>you want a device with better performance
+	<li>your current device is physically going bad
+	<li>your are seeing lots of strange behavior and suspect Linux files are corrupted
+	<li>your current device is getting "cluttered" and you want to start over
+		with a clean install
+</ul>
+</p>
+<details><summary></summary>
+
+<p>
+The instructions differ depending on if you have one, or two, storage devices.
+</p>
+
+<h3>You have <u>one</u> storage device</h3>
+<p>
+If you don't have a second storage device,
+consider getting one and use the instructions below - it's much easier.
+<br>
+Otherwise, do the following:
+<ol class="minimalPadding">
+	<li>Stop Allsky: <code>sudo systemctl stop allsky</code>.
+	<li>Copy <span class="fileName">~/allsky</span> plus any other
+		files, images, etc. you want to keep from your SD card to a
+		USB drive, PC, Mac, or another device.
+		<br>If you have modules in <span class="fileName">/opt/allsky</span>,
+		copy that directory as well.
+		Suggestion: name its backup directory
+		<span class="fileName">opt-allsky</span>
+		<blockquote>
+		You can easily copy files between a Pi and a PC/Mac if you run
+		<code class="nowrap">allsky-config samba</code> on your Pi
+		and follow the instructions.
+		</blockquote>
+	<li>Shutdown the Pi and remove power.
+	<li>Remove the storage device from the Pi.
+	<li>Image the storage device using the
+		<a href="#install">instructions above.</a>
+	<li>Plug the newly-imaged device back into your Pi and turn the Pi on.
+	<li>Copy your saved files back to the storage device:
+		<ul class="minimalPadding">
+			<li>Copy the saved <span class="fileName">~/allsky</span> directory to
+				<span class="fileName">~/allsky-OLD</span> on the newly-imaged device.
+			<li>If you saved <span class="fileName">/opt/allsky</span>,
+				copy that directory to the newly-imaged storage device using <code>sudo</code>.
+		</ul>
+	<li><a allsky="true" external="true" href="../installations/Allsky.html">Install Allsky</a>
+		and tell the installation you want to use the prior version of Allsky;
+		it will then restore your saved images, darks, and configuration files.
+</ol>
+</p>
+
+<h3>You have <u>two</u> storage devices</h3>
+<p>
+In the instructions below,
+your current storage device is called the <strong>old device</strong>
+and the second device is called the <strong>new device</strong>.
+<br>
+<ol>
+	<li>Image the new device using the <a href="#install">instructions above.</a>
+	<li>If the new device is:
+		<ul class="minimalPadding">
+			<li>an <strong>SD card</strong> or <strong>SSD</strong>,
+				use the appropriate adapter to plug the device
+				into a USB 3 port on the Pi
+				(or USB 2 port if your Pi doesn't have USB 3).
+			<li>an <strong>NVMe disk</strong>,
+				turn the Pi off and connect the NVMe HAT and the NVMe disk
+				per the manufacture's instructions.
+				Turn the Pi back on.
+				<br>
+				The Pi should boot off the <em>old</em> device with
+				the new device connected.
+				To verify, run <code>cd; ls allsky</code>.
+				It should list the contents of the
+				<span class="fileName">allsky</span> directory.
+				If instead, you get an error, the Pi booted off the <em>new</em> device.
+				<br>
+				Do NOT continue; instead, search on the Internet for how
+				to boot off an SD card when an NVMe disk is also installed.
+		</ul>
+	<li>Determine the path name to the new device by running
+		<code class="nowrap">allsky-config get_filesystems</code>
+		and following any instructions it provides.
+	<li>Copy the <span class="fileName">~/allsky</span> directory on the <em>old</em>
+		device to the <em>new</em> device.
+		If your new device is in <span class="fileName">/media/SSD</span>, run:
+		<pre>sudo cp -Ra ~/allsky /media/SSD
+cd /media/SSD
+mv allsky allsky-OLD</pre>
+	<li>If <span class="fileName">/opt/allsky</span> exists, copy it to the new device:
+		<pre>sudo cp -Ra /opt/allsky /media/SSD/opt</pre>
+	<li>Copy whatever other files you want from the old device to the new one.
+		This normally includes files in your login's home directory.
+		Don't forget hidden files that begin with
+		<span class="fileName">.</span>.
+	<li>Run <code>cd; touch OLD_DEVICE</code>
+		to create a file called <span class="fileName">OLD_DEVICE</span>
+		on the old storage device.
+		This will allow you to easily determine which device is the old one
+		in subsequent steps.
+	<li>Shutdown the Pi and remove power.
+	<li>Switch the old and new devices on the Pi.
+		<br>
+		For example, if your old and new storage devices are SD cards,
+		remove both cards, then put the old card in the USB adapter and the
+		new card in the SD slot on the Pi.
+	<li>Turn the Pi back on.
+		It should boot from the <em>new</em> device with the old device connected.
+	<li>Run <code>cd; ls OLD_DEVICE</code>.
+		You should get an error that "OLD_DEVICE does not exist".
+		That's because it's only on the <em>old</em> device and you are now on the
+		<em>new</em> device.
+		<br>
+		If you do NOT get an error that means the Pi booted off the old device.
+		Check your work.
+	<li><a allsky="true" external="true" href="../installations/Allsky.html">Install Allsky</a>
+		and tell the installation you want to use the prior version of Allsky;
+		it will then restore your saved images, darks, and configuration files.
+	<li>When you are sure you've copied everything you want,
+		unplug the <em>old</em> device from the Pi.
+		It's suggested to leave the old device as is,
+		in case you later need to copy additional files on it to the new device.
+</ol>
+
+
+</details>
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>
+

@@ -84,7 +84,7 @@ ASI_ERROR_CODE setControl(int camNum, ASI_CONTROL_TYPE control, long value, ASI_
 			{
 				if (value > ControlCaps.MaxValue)
 				{
-					Log(1, "*** %s: WARNING: Value of %ld greater than max value allowed (%ld) for control '%s' (#%d).\n",
+					Log(-1, "*** %s: WARNING: Value of %ld greater than max value allowed (%ld) for control '%s' (#%d).\n",
 						CG.ME, value, ControlCaps.MaxValue, ControlCaps.Name, ControlCaps.ControlType);
 					value = ControlCaps.MaxValue;
 				} else if (value < ControlCaps.MinValue)
@@ -95,7 +95,7 @@ ASI_ERROR_CODE setControl(int camNum, ASI_CONTROL_TYPE control, long value, ASI_
 				}
 			 	if (makeAuto == ASI_TRUE && ControlCaps.IsAutoSupported == ASI_FALSE)
 				{
-					Log(1, "*** %s: WARNING: control '%s' (#%d) doesn't support auto mode.\n",
+					Log(-1, "*** %s: WARNING: control '%s' (#%d) doesn't support auto mode.\n",
 						CG.ME, ControlCaps.Name, ControlCaps.ControlType);
 					makeAuto = ASI_FALSE;
 				}
@@ -114,7 +114,7 @@ ASI_ERROR_CODE setControl(int camNum, ASI_CONTROL_TYPE control, long value, ASI_
 			return ret;
 		}
 	}
-	Log(2, "NOTICE: Camera does not support ControlCap # %d; not setting to %ld.\n", control, value);
+	Log(-2, "NOTICE: Camera does not support ControlCap # %d; not setting to %ld.\n", control, value);
 	return ASI_ERROR_INVALID_CONTROL_TYPE;
 }
 
@@ -1881,7 +1881,7 @@ long saved_newExposure_us = newExposure_us;
 					// Hopefully the user can use the time it took to save a file to disk
 					// to help determine why they are getting this warning.
 					// Perhaps their disk is very slow or their delay is too short.
-					Log(1, "  > WARNING: currently saving an image; can't save new one at %s.\n", exposureStart);
+					Log(-1, "  > WARNING: currently saving an image; cannot save new one at %s.\n", exposureStart);
 
 					// TODO: wait for the prior image to finish saving.
 				}

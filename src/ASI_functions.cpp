@@ -119,17 +119,17 @@ int getNumOfConnectedCameras()
 	{
 		on_line++;
 		Log(5, "Line %d: [%s]\n", on_line, line);
-		(void) getToken(NULL, '\t');		// tell getToken() we have a new line.
+		(void) getToken(NULL, '\t');		// tells getToken() we have a new line.
 
 		char *cameraType = getToken(line, '\t');
 		char *numStr = getToken(line, '\t');
 		char *cameraModel = getToken(line, '\t');
 		if (cameraModel != NULL)
 		{
-			int num = atoi(numStr);
-			Log(5, "  cameraType=[%s], num=%d, cameraModel=[%s]\n", cameraType, num, cameraModel);
+			int cameraNum = atoi(numStr);
+			Log(5, "  cameraType=[%s], cameraNum=[%d], cameraModel=[%s]\n", cameraType, cameraNum, cameraModel);
 			CONNECTED_CAMERAS *cC = &connectedCameras[totalNum_connectedCameras++];
-			cC->cameraID = num;
+			cC->cameraID = cameraNum;
 			strncpy(cC->Type, cameraType, CC_TYPE_SIZE);
 #ifdef IS_ZWO
 			strncpy(cC->Name, cameraModel, CAMERA_NAME_SIZE);
@@ -147,7 +147,7 @@ int getNumOfConnectedCameras()
 			int n = num_connectedCameraTypes;
 			for (int i=0; i <= n; i++)
 			{
-Log(5, "checking connectedCameraTypes[%d], num_connectedCameraTypes=%d\n", i, n);
+Log(5, "Checking connectedCameraTypes[%d] of %d\n", i, n);
 				if (i == num_connectedCameraTypes)
 				{
 					p = "";
@@ -165,7 +165,7 @@ Log(5, "  >> %s already in list; skipping\n", p);
 				{
 					connectedCameraTypes[num_connectedCameraTypes] = cC->Type;
 					num_connectedCameraTypes++;
-Log(5, "  NEW TYPE [%s], num_connectedCameraTypes=%d\n", cC->Type, num_connectedCameraTypes);
+Log(5, "  NEW TYPE FOUND [%s], num_connectedCameraTypes now = %d\n", cC->Type, num_connectedCameraTypes);
 					break;
 				}
 			}
@@ -178,15 +178,34 @@ Log(5, "  NEW TYPE [%s], num_connectedCameraTypes=%d\n", cC->Type, num_connected
 		}
 	}
 
-	Log(4, "Connected camera types: %d, connected %s cameras: %d\n",
-		num_connectedCameraTypes, CAMERA_TYPE, numThisType);
+	Log(4, "%s connected cameras: %d of %d total types connected\n",
+		CAMERA_TYPE, numThisType, num_connectedCameraTypes);
 
 #ifdef IS_ZWO
 	int  ZWOnum = ASIGetNumOfConnectedCameras();
 	if (ZWOnum != numThisType)
 	{
-		Log(0, "%s: ERROR: mismatch with number of ZWO cameras connected: ZWO=%d, other=%d\n",
-			CG.ME, ZWOnum, numThisType);
+		Log(0, "%s: ERROR: mismatch with number of ZWO cameras connected: per ZWO SDK: %d, per %s: %d\n",
+			CG.ME, ZWOnum, CG.connectedCamerasFile, numThisType);
+
+		Log(1, "Attached Cameras:\n");
+		ASI_CAMERA_INFO info;
+		for (int i=0; i < ZWOnum; i++)
+		{
+			Log(1, "    Camera # %d: ", i);
+			ASI_ERROR_CODE ret = ASIGetCameraProperty(&info, i);
+			if (ret != ASI_SUCCESS)
+			{
+				char *getRetCode(ASI_ERROR_CODE code);
+				Log(1, "ERROR: cannot get information: %s.\n", getRetCode(ret));
+			}
+			else
+			{
+				Log(1, "Name: %s, CameraID: %d, MaxHeight: %ld, MaxWidth: %ld\n",
+					info.Name, info.CameraID, info.MaxHeight, info.MaxWidth);
+			}
+		}
+
 		closeUp(EXIT_ERROR_STOP);
 	}
 #endif
@@ -694,7 +713,7 @@ if (0) {
 		on_line++;
 		Log(5, "Line %3d: %s\n", on_line, full_line);
 
-		(void) getToken(NULL, '\t');		// tell getToken() we have a new line.
+		(void) getToken(NULL, '\t');		// tells getToken() we have a new line.
 
 		char *cameraLength = NULL;
 		char *lt = getToken(line, '\t');	// line type
@@ -1245,7 +1264,7 @@ void processConnectedCameras()
 		if (ASIGetCameraProperty(&info, numThisType) != ASI_SUCCESS)
 		{
 #ifdef IS_ZWO	// RPi version already displayed message.
-			Log(0, "ERROR: can't get information for camera number %d.\n", numThisType);
+			Log(0, "ERROR: cannot get information for camera number %d.\n", numThisType);
 #endif
 			numThisType++;
 			continue;
@@ -1941,7 +1960,12 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, config cg,
 		double temp = 0.0;
 #endif
 		ASIGetControlValue(cameraInfo.CameraID, ASI_TEMPERATURE, &temp, &a);
-		printf("  - Sensor temperature: %0.1f C\n", (float)temp / cg.divideTemperatureBy);
+		printf("  - Sensor temperature: ");
+#ifdef IS_ZWO
+		printf("%0.1f C\n", (float)temp / cg.divideTemperatureBy);
+#else
+		printf("not available until an image is taken.\n");
+#endif
 	}
 	printf("  - Bit depth: %d\n", cameraInfo.BitDepth);
 #ifdef IS_RPi
@@ -2014,13 +2038,13 @@ bool checkExposureValues(config *cg)
 	}
 	else if (cg->dayExposure_us > cg->cameraMaxExposure_us)
 	{
-	 	Log(1, "*** %s: WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
+	 	Log(-1, "*** %s: WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
 			cg->ME, cg->dayExposure_us, cg->cameraMaxExposure_us);
 	 	cg->dayExposure_us = cg->cameraMaxExposure_us;
 	}
 	else if (cg->dayAutoExposure && cg->dayExposure_us > cg->cameraMaxAutoExposure_us)
 	{
-	 	Log(1, "*** %s: WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
+	 	Log(-1, "*** %s: WARNING: daytime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
 			cg->ME, cg->dayExposure_us, cg->cameraMaxAutoExposure_us);
 	 	cg->dayExposure_us = cg->cameraMaxAutoExposure_us;
 	}
@@ -2033,13 +2057,13 @@ bool checkExposureValues(config *cg)
 	}
 	else if (cg->nightExposure_us > cg->cameraMaxExposure_us)
 	{
-	 	Log(1, "*** %s: WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
+	 	Log(-1, "*** %s: WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
 			cg->ME, cg->nightExposure_us, cg->cameraMaxExposure_us);
 	 	cg->nightExposure_us = cg->cameraMaxExposure_us;
 	}
 	else if (cg->nightAutoExposure && cg->nightExposure_us > cg->cameraMaxAutoExposure_us)
 	{
-	 	Log(1, "*** %s: WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
+	 	Log(-1, "*** %s: WARNING: nighttime exposure %'ld us greater than camera maximum of %'ld us; setting to maximum\n",
 			cg->ME, cg->nightExposure_us, cg->cameraMaxAutoExposure_us);
 	 	cg->nightExposure_us = cg->cameraMaxAutoExposure_us;
 	}
@@ -2313,7 +2337,7 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 			ok = false;
 	}
 
-	validateLong(&cg->debugLevel, 0, 4, "Debug Level", true);
+	validateLong(&cg->debugLevel, 0, 5, "Debug Level", true);
 
 	// Overlay-related arguments
 	validateLong(&cg->overlay.extraFileAge, 0, NO_MAX_VALUE, "Max Age Of Extra", true);

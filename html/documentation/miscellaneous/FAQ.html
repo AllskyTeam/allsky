@@ -53,6 +53,67 @@ might give you an idea of the problem.
 </details>
 
 
+<h2>My SD card is getting full, or
+<br>
+How do I move my images somewhere else, like to a bigger SSD?</h2>
+<details><summary></summary>
+<p>
+If you would like to store more images or other files than will fit on your SD card, you can:
+<ol type="A">
+	<li><strong>Buy a bigger SD card.</strong>
+		<br>
+		This is fairly easy to do and is relatively inexpensive.
+		The disadvantage is that you would still using an SD card,
+		which is not a fast or reliable as other media.
+		<br>
+		If you go with this option, follow the steps on the
+		<a allsky="true" external="true" href="/documentation/explanations/imageStorageDevice.html">
+			Imaging a storage device</a> page.
+
+	<li><strong>Replace the SD card with a bigger, more reliable drive like an SSD.</strong>
+		<br>
+		This option is similar to buying a bigger SD card,
+		but you will be using a faster, more reliable media, potentially with much more disk space.
+		On the other hand, an SSD may not fit in your allsky camera enclosure.
+		<br>
+		If you go with this option, follow the same instructions as above.
+
+	<li><strong>Add a second disk, such as a USB thumb drive or SSD.</strong>
+		<br>
+		This option is probably the easiest one to implement - you won't need to reinstall
+		Linux or any programs.  Just follow a couple easy steps:
+		<ol xclass="minimalPadding">
+			<li>Make sure your SSD or other media is attached to the Pi and you know how write files there.
+				<ul class="minimalPadding">
+					<li>How you do that is outside the scope of this Allsky documentation.
+					<li>If you don't know, try searching the Internet for instructions.
+				</ul>
+			<li>Run: <code>allsky-config &nbsp;move_images</code>
+				<ul class="minimalPadding">
+					<li>It will prompt you for the full pathname of where the images should be moved to,
+						for example, <span class="fileName">/media/SSD/images</span>.
+					<li>We recommend having <span class="fileName">images</span> as the last part
+						of the location since you may want to store other files on the SSD and don't
+						want them in the same directory as the images.
+					<li>You will also be asked if you want your <strong>current</strong> images:
+						<ol type="A" class="minimalPadding">
+							<li><strong>Moved</strong> to the new location.
+							<li><strong>Copied</strong> to the new location.
+							<li><strong>Left</strong> in the old location.
+						</ol>
+						In most cases you'll want to <strong>move</strong> the images.
+				</ul>
+		</ol>
+		<p>
+		The new location will be maintained during future Allsky upgrades,
+		as long as you tell the installation script you want to use the prior
+		<span class="fileName">allsky-OLD</span> directory.
+		</p>
+</ol>
+</p>
+</details>
+
+
 <h2>Why is there is a long delay between pictures?</h2>
 <details><summary></summary>
 <p>

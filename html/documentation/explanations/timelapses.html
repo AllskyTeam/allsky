@@ -46,6 +46,11 @@ and there is a sub-section that applies to both timelapse types.
 
 <h2>Daily Timelapse</h2>
 <p>
+The "Daily" timelapse is the one that's created once a day, at the end of nighttime.
+It includes all the images saved in the last 24 hours.
+</p>
+<details><summary></summary>
+<p id="dailytimelapse">
 You specify whether or not you want a daily timelapse automatically created via the
 <a allsky="true" external="true" href="/documentation/settings/allsky.html#dailytimelapse">
 	<span class="WebUISetting">Generate</span></a>
@@ -56,10 +61,10 @@ When enabled, a daily timelapse will be created (and optionally uploaded) at the
 The easiest way to <strong>manually</strong> create and optionally upload a
 daily timelapse is via the <code>generateForDay.sh</code> command.
 For example, to create and then upload a daily timelapse to any Allsky Website and/or remote server 
-you have for July 10, 2024:
+you have for July 10, 2025:
 <pre>
-generateForDay.sh --timelapse 20240710
-generateForDay.sh --upload --timelapse 20240710
+generateForDay.sh --timelapse 20250710
+generateForDay.sh --upload --timelapse 20250710
 </pre>
 This will use the settings specified in the
 <span class="subSettingsHeader">Daily Timelapse</span> sub-section of the WebUI.
@@ -78,6 +83,9 @@ settings.
 Cutting each size in half is a good starting point.
 </p>
 
+<hr class="separator">
+</details>
+
 
 <h2>Mini Timelapse</h2>
 <p>
@@ -88,7 +96,8 @@ and is recreated every 5 images.
 Note that every new mini timelapse <strong>replaces</strong> the prior one,
 so there is ever only one mini timelapse.
 </p>
-<p>
+<details><summary></summary>
+<p id="minitimelapse">
 You specify whether or not you want a mini timelapse created via the
 <a allsky="true" external="true" href="/documentation/settings/allsky.html#minitimelapse">
 	<span class="WebUISetting">Number Of Images</span></a>
@@ -120,6 +129,155 @@ Try starting off at <span class="WebUIValue">5</span> and adjust as needed.
 Mini timelapses are not designed to be created manually
 because some configuration files need to be updated after creation.
 </p>
+
+<hr class="separator">
+</details>
+
+
+<h2>How to change the length of a timelapse</h2>
+<p>
+Two things determine how long a timelapse video is:
+<ol class="minimalPadding">
+	<li>The number of images (called "frames") in a video.
+	<li>How many frames are displayed per second
+		(called "Frames Per Second" or "FPS").
+</ol>
+These are described in more details below.
+</p>
+
+<details open><summary></summary>
+
+<h3 id="changelength">1. &nbsp; Number of frames in a video</h3>
+Everything else being equal, the more frames in a video, the longer it plays.
+Doubling the number of frames will double the video's length.
+<p>
+To <strong>increase</strong> a video's length, do options A and/or B below.
+<br>
+To <strong>decrease</strong> a video's length, do the opposite of the options below.
+
+<ol type="A">
+	<li><strong>Decrease the interval between images.</strong>
+		<br>
+		Depending on the speed of your Pi, the size of each image,
+		and how much image processing you do
+		(e.g., how complex your overlay is, if you crop or stretch the image, etc.),
+		you may be able to get by with a delay of a second or two (1000 - 2000 ms).
+		Make sure you DISABLE the
+		<span class="WebUISetting">Consistent Delays Between Images</span> setting.
+
+		<p>
+		Try a <span class="WebUISetting">Delay</span> of
+		<span class="WebUIValue">2000</span> ms and let it run for a day.
+		If Allsky can't keep up you'll get messages in the WebUI.
+		You may be able to live with an occassional error,
+		although you may get tired seeing the error messages.
+		</p>
+
+		<u>Advantages</u>:
+		<ul class="minimalPadding">
+			<li>Easy to do.
+			<li>Videos will look smoother; stars and clouds won't "jump" as
+				much from one image to the next.
+			<li>If you like capturing meteors and other items that appear for
+				only a few seconds,
+				a smaller delay means more time is spent capturing images versus
+				waiting, so it can significantly increase your chances of
+				catching items.
+				<br>
+		</ul>
+
+		<u>Disadvantages</u>:
+		<ul class="minimalPadding">
+			<li>More images take up more disk space.
+		</ul>
+
+		<blockquote>
+		Most people start off adjusting the delay between images to change
+		the length of a video.
+		</blockquote>
+
+	<li class="morePadding"><strong>Take shorter exposures.</strong>
+		<br>
+		In order to keep the image brightness the same, you must also increase the gain.
+		<br>
+		<u>Advantages</u>:
+		<ul class="minimalPadding">
+			<li>Easy to do.
+			<li>Moving objects will have less blur.
+			<li>Stars will have shorter trails,
+				although you may not notice unless you zoom into the video.
+		</ul>
+
+		<u>Disadvantages</u>:
+		<ul class="minimalPadding">
+			<li>More images take up more disk space.
+			<li>It takes longer to create a timelapse with more images.
+				For daily timelapses this may not be an issues since they
+				are created while Allsky continues taking pictures.
+			<li>Image quality decreases as gain increases.
+				There's probably a gain level where you'll say "this is too grainy".
+			<li>If you like capturing meteors,
+				shorter exposures increase the time when no image is being taken,
+				which increases the chance of missing a meteor.
+				<br>
+				For example, assume your exposure length is 60 seconds and
+				you have a 2 second delay between images.
+				In an hour about 58 images will be taken and
+				will be spent <em>processing</em> images and not <em>taking</em> them.
+				<br>Decreasing the exposure to 30 seconds produces 112 images
+				but increases the total delay to about 3 minutes 45 seconds.
+			<li>Taking shorter exposures only helps at night -
+				typical daytime exposures are less than a second.
+		</ul>
+</ol>
+</p>
+
+<h3>2. &nbsp; Frames Per Second (FPS)</h3>
+<p>
+A video with 2000 frames displayed at the default FPS of 25
+will run for 80 seconds (2000 / 25).
+The same video displayed at 10 FPS will run for 200 seconds, or 3 minutes, 20 seconds.
+<p>
+
+<u>Advantages</u>:
+<ul class="minimalPadding">
+	<li>Easy to do.
+</ul>
+
+<u>Disadvantages</u>:
+<ul class="minimalPadding">
+	<li>The lower the FPS is, the "jerkier" the video is.
+	<li>Who wants to watch a 3 minute, 20 second video of the sky moving?
+		A minute or two is the limit for many people.
+</ul>
+</p>
+
+<p>
+Do the following to see how low the FPS can go before you think
+the video is too jerky or too long:
+<pre>
+cd ~/allsky/images
+mkdir test
+# Copy about 100 images from another directory to the "test" directory.
+
+# Do the following 3 steps a few times, changing your 'Delay' each time.
+# Change the "20" in the steps to whatever you set the delay to.
+
+# Set your 'Delay' in the WebUI to something like 20.
+generateForDay.sh --timelapse test
+mv test/allsky-test.mp4  test/allsky-test-20.mp4
+
+# After you've created some test videos, watch them and pick whichever one
+you think is best.
+
+# When done delete the test images:
+rm -fr test
+</pre>
+</p>
+
+<hr class="separator">
+</details>
+
 
 
 <h2>Troubleshooting</h2>

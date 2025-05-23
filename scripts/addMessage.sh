@@ -9,27 +9,69 @@ ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck disable=SC1091 source=variables.sh
 source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+
+
+# The file is tab-separated:    type  date  count  message  url
+TAB="$( echo -e "\t" )"
+
+function convert_string()
+{
+	local STRING="${1}"
+
+	# Convert newlines to HTML breaks.
+	STRING="$( echo -en "${STRING}" |
+		gawk 'BEGIN { l=0; } { if (++l > 1) printf("<br>"); printf("%s", $0); }' )"
+
+	# Make 2 spaces in a row viewable in HTML.
+	STRING="${STRING//  /\&nbsp;\&nbsp;}"
+
+	# Convert tabs to spaces because we use tabs as field separators.
+	# Tabs in the input can either be an actual tab or \t
+	STRING="${STRING//${TAB}/\&nbsp;\&nbsp;\&nbsp;\&nbsp;}"
+	STRING="${STRING//\\t/\&nbsp;\&nbsp;\&nbsp;\&nbsp;}"
+
+	# Messages may have "/" in them so we can't use that to search in sed,
+	# so use "%" instead, but because it could be in a message (although unlikely),
+	# convert all "%" to the ASCII code.
+	# The pound sign in escaped only to make gvim look nicer.
+	echo "${STRING//%/\&\#37;}"
+}
 
 usage_and_exit()
 {
 	local RET=${1}
-	{
-		echo
-		[[ ${RET} -ne 0 ]] && echo -en "${wERROR}"
-		echo "Usage: ${ME} [--id ID [--cmd TEXT]] [--delete] --type message_type  --msg message  [--url url]"
-		[[ ${RET} -ne 0 ]] && echo -en "${wNC}"
-		echo -e "\n'message_type' is 'success', 'warning', 'error', 'info', or 'debug'."
-		echo -e "\n'url' is a URL to (normally) a documentation page."
-	} >&2
+
+	local MSG
+	exec >&2
+	echo
+	MSG="Usage: ${ME} [--id ID [--cmd c]] [--delete] [--no-date] [--url u] --type t --msg m"
+	if [[ ${RET} -eq 0 ]]; then
+		echo -e "${MSG}"
+	else
+		wE_ "${MSG}"
+	fi
+	echo
+	echo "where:"
+	echo "  --cmd c      displays 'c' as a link in the WebUI."
+	echo "  --delete     if specified, only '--id ID' is required."
+	echo "  --no-date    does not add the current date to the message."
+	echo "  --url u      'u' is a URL to (normally) a documentation page."
+	echo "  --type t     't' is 'success', 'warning', 'error', 'info', or 'debug'."
+	echo
 	exit "${RET}"
 }
 
+ADD_DATE="true"
 OK="true"
 DO_HELP="false"
 ID=""
+DELETE="false"
 CMD_TEXT=""
 TYPE=""
 MESSAGE=""
+ESCAPED_MESSAGE=""
 URL=""
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
@@ -45,8 +87,11 @@ while [[ $# -gt 0 ]]; do
 			DELETE="true"
 			shift
 			;;
+		"--no-date")
+			ADD_DATE="false"
+			;;
 		"--cmd")
-			CMD_TEXT="${2}"
+			CMD_TEXT="$( convert_string "${2}" )"
 			shift
 			;;
 		"--type")
@@ -54,7 +99,10 @@ while [[ $# -gt 0 ]]; do
 			shift
 			;;
 		"--msg")
-			MESSAGE="${2}"
+			MESSAGE="$( convert_string "${2}" )"
+			# If ${MESSAGE} contains "*" it hoses up the grep and sed regular expression,
+			# so escape it.
+			ESCAPED_MESSAGE="${MESSAGE//\*/\\*}"
 			shift
 			;;
 		"--url")
@@ -62,7 +110,7 @@ while [[ $# -gt 0 ]]; do
 			shift
 			;;
 		-*)
-			echo -e "${wERROR}Unknown argument '${ARG}' ignoring.${wNC}" >&2
+			wE_ "Unknown argument '${ARG}' ignoring." >&2
 			OK="false"
 			;;
 		*)
@@ -74,11 +122,16 @@ done
 
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
+if [[ ${DELETE} == "false" && (-z ${TYPE} || -z ${MESSAGE}) ]]; then
+	[[ -z ${TYPE} ]] && wE_ "--type not specified" >&2
+	[[ -z ${MESSAGE} ]] && wE_ "--msg not specified" >&2
+	usage_and_exit 1
+fi
 
 if [[ ${DELETE} == "true" ]]; then
 	[[ ! -f ${ALLSKY_MESSAGES} ]] && exit 0
 	if [[ -z ${ID} ]]; then
-		echo "${ME}: ERROR: delete specified but no message id given." >&2
+		wE_ "${ME}: ERROR: delete specified but no message id given." >&2
 		exit 1
 	fi
 
@@ -100,53 +153,36 @@ elif [[ ${TYPE} == "debug" ]]; then
 elif [[ ${TYPE} == "no-image" ]]; then
 	TYPE="success"
 elif [[ ${TYPE} != "warning" && ${TYPE} != "info" && ${TYPE} != "success" ]]; then
-	echo -e "${wWARNING}Warning: unknown message type: '${TYPE}'. Using 'info'.${wNC}" >&2
-	TYPE="info"
+	wE_ "ERROR: unknown message type: '${TYPE}'." >&2
+	echo "Valid message types are:  error, debug, warning, info, success, no-image." >&2
+	exit 2
 fi
-DATE="$( date '+%B %d, %r' )"
 
-# The file is tab-separated:    type  date  count  message  url
-TAB="$( echo -e "\t" )"
-
-if [[ -n ${MESSAGE} ]]; then
-	# Convert newlines to HTML breaks.
-	MESSAGE="$( echo -en "${MESSAGE}" |
-		awk 'BEGIN { l=0; } { if (++l > 1) printf("<br>"); printf("%s", $0); }' )"
-
-	# Make 2 spaces in a row viewable in HTML.
-	MESSAGE="${MESSAGE//  /\&nbsp;\&nbsp;}"
-
-	# Convert tabs to spaces because we use tabs as field separators.
-	# Tabs in the input can either be an actual tab or \t
-	MESSAGE="${MESSAGE//${TAB}/\&nbsp;\&nbsp;\&nbsp;\&nbsp;}"
-	MESSAGE="${MESSAGE//\\t/\&nbsp;\&nbsp;\&nbsp;\&nbsp;}"
-
-	# Messages may have "/" in them so we can't use that to search in sed,
-	# so use "%" instead, but because it could be in a message (although unlikely),
-	# convert all "%" to the ASCII code.
-	# The pound sign in escaped only to make gvim look nicer.
-	MESSAGE="${MESSAGE//%/\&\#37;}"
-
-	# If ${MESSAGE} contains "*" it hoses up the grep and sed regular expression, so escape it.
-	ESCAPED_MESSAGE="${MESSAGE//\*/\\*}"
+if [[ ${ADD_DATE} == "true" ]]; then
+	DATE="$( date '+%B %d, %r' )"
+else
+	DATE=""
 fi
 
 if [[ -f ${ALLSKY_MESSAGES} ]] &&  M="$( grep "${TAB}${ESCAPED_MESSAGE}${TAB}" "${ALLSKY_MESSAGES}" )" ; then
 	COUNT=0
 	# tail -1  in case file is corrupt and has more than one line we want.
-	PRIOR_COUNT=$( echo -e "${M}" | cut -f3 -d"${TAB}" | tail -1 )
+	PRIOR_COUNT=$( echo -e "${M}" | cut -f5 -d"${TAB}" | tail -1 )
 
 	# If this entry is corrupted don't try to update the counter.
 	[[ ${PRIOR_COUNT} != "" ]] && ((COUNT = PRIOR_COUNT + 1))
 
 	# TODO: prior messages can have any character in them so what do we
 	# use to separate the sed components?
-	EXPRESSION="\%${TAB}${ESCAPED_MESSAGE}${TAB}$%d"
+	# Delete the existing entry.  A new one with a higher COUNT will be added below.
+	EXPRESSION="\%${TAB}${ESCAPED_MESSAGE}${TAB}%d"
 	if ! sed -i -e "${EXPRESSION}"  "${ALLSKY_MESSAGES}" ; then
-		echo "${ME}: Warning, sed -e '${EXPRESSION}' failed." >&2
+		wW_ "${ME}: Warning, sed -e '${EXPRESSION}' failed." >&2
+		exit 1
 	fi
 else
 	COUNT=1
 fi
 
+#          1          2                3            4            5             6               7
 echo -e "${ID}${TAB}${CMD_TEXT}${TAB}${TYPE}${TAB}${DATE}${TAB}${COUNT}${TAB}${MESSAGE}${TAB}${URL}"  >>  "${ALLSKY_MESSAGES}"

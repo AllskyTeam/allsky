@@ -557,13 +557,16 @@ A (partial) typical page is below.
 </tr>
 <tr><td id="debuglevel"><span class="WebUISetting">Debug Level</span></td>
 	<td>1</td>
-	<td>Determines the amount of output in the log file.
-<!--
-	Log entries can also be viewed with <code>journalctl -u allsky</code>.
--->
-	<br><span class="WebUIValue">0</span> outputs error messages only.
-	<span class="WebUIValue">4</span> outputs a LOT of messages and generally should
-	only be used if an Allsky developers directs you to.
+	<td>Determines the amount of output in the Allsky log file:
+	<ul class="minimalPadding">
+		<li><span class="WebUIValue">0</span> outputs error messages only.
+		<li><span class="WebUIValue">1</span> outputs "what's happening" type messages.
+		<li><span class="WebUIValue">2</span> outputs more "what's happening" messages.
+		<li><span class="WebUIValue">3</span> outputs debugging information.
+			<strong>Use this level when debugging problems.</strong>
+		<li><span class="WebUIValue">4</span> outputs a LOT of INFO messages.
+			Use only if directed to by an Allsky developer.
+	</ul>
 	</td>
 </tr>
 
@@ -924,12 +927,16 @@ A (partial) typical page is below.
 	<td>libx264</td>
 	<td>Encoder used to create the timelapse video.
 	Rarely changed.
+	<br>
+	Run <code>allsky-config encoders</code> for a (long) list.
 	</td>
 </tr>
 <tr><td id="timelapsevpixfmt"><span class="WebUISetting">Pixel format</span></td>
 	<td>yuv420p</td>
 	<td>Pixel format.
-	<br>If you don't know what this is, don't change it.
+	Rarely changed.
+	<br>
+	Run <code>allsky-config pix_fmts</code> for a (long) list.
 	</td>
 </tr>
 <tr><td id="timelapsefflog"><span class="WebUISetting">Log Level</span></td>
@@ -1138,19 +1145,20 @@ A (partial) typical page is below.
 	</td></tr>
 <tr><td id="REMOTEWEBSITE_LFTP_COMMANDS"><span class="WebUISetting">FTP Commands</span></td>
 	<td></td>
-	<td>(ftp protocols only) Optional colon-separated list of commands to send to the ftp server
-		prior to transfering files.
+	<td>(ftp protocols only) Optional command(s) to send to the ftp server prior to transfering files.
 		If you have problems uploading to an ftp server you'll often need to add
 		something to this field - see the
 		<a allsky="true" external="true" href="/documentation/troubleshooting/uploads.html">Troubleshooting -> Uploads</a>
 		page for more information.
+		<br>
+		If you need to add multiple commands, separate them with a semi-colon.
 	</td></tr>
-<tr><td id="REMOTEWEBSITE_SSH_KEY_FILE"><span class="WebUISetting">SSH Key File</span></td>
+<tr><td id="REMOTEWEBSITE_SSH_KEY_FILE"><span class="WebUISetting">SSH Public Key File</span></td>
 	<td></td>
-	<td>(scp and rsync protocols only) Path to the SSH key.
+	<td>(scp and rsync protocols only) Path to the SSH public key file.
 	<p>
 	You need to set up SSH key authentication on your server.
-	First, generate an SSH key on your Pi:
+	First, generate a public SSH key on your Pi:
 <pre>ssh-keygen -t rsa</pre>
 	When prompted, leave the default filename, and use an empty passphrase.
 	</p>
@@ -1161,7 +1169,7 @@ A (partial) typical page is below.
 	If you are prompted to <code>...continue connecting...</code>, enter <code>yes</code>.
 	<p>
 	The private SSH key will be stored in
-	<span class="fileName">~/.ssh</span> (default filename is <span class="fileName">id_rsa</span>).
+	<span class="fileName">~/.ssh/id_rsa</span>).
 	</p>
 	<p>
 	If you are using SSH Key with Amazon's Lightsail,
@@ -1295,7 +1303,7 @@ aws configure
 <tr><td id="REMOTESERVER_LFTP_COMMANDS"><span class="WebUISetting">FTP Commands</span></td>
 	<td></td>
 	<td></td></tr>
-<tr><td id="REMOTESERVER_SSH_KEY_FILE"><span class="WebUISetting">SSH Key File</span></td>
+<tr><td id="REMOTESERVER_SSH_KEY_FILE"><span class="WebUISetting">SSH Public Key File</span></td>
 	<td></td>
 	<td></td></tr>
 <tr><td id="REMOTESERVER_ASW_CLI_DIR"><span class="WebUISetting">AWS CLI Directory</span></td>
@@ -1363,17 +1371,14 @@ aws configure
 <tr><td id="owner"><span class="WebUISetting">Owner</span> <span class="AW">AW</span></td>
 	<td></td>
 	<td>The owner of the camera - your name, an association name, an observatory, etc.</td></tr>
-<tr><td id="camera"><span class="WebUISetting">Camera</span> <span class="AW">AW</span></td>
-	<td></td>
-	<td>The type and model of your camera, for example: <b>ZWO ASI224MC</b> or <b>RPi HQ</b>.
-	This field is required and a default value is set during Allsky installation.</td></tr>
 <tr><td id="lens"><span class="WebUISetting">Lens</span> <span class="AW">AW</span></td>
 	<td></td>
 	<td>The lens you're using on your camera, for example: <b>Arecont 1.55</b>.</td></tr>
-<tr><td id="computer"><span class="WebUISetting">Computer</span> <span class="AW">AW</span></td>
+<tr><td id="equipmentinfo"><span class="WebUISetting">Equipment Info</span> <span class="AW">AW</span></td>
 	<td></td>
-	<td>The computer running your allsky camera, for example: <b>Raspberry Pi 3</b>.
-	This field is required and a default value is set during Allsky installation.</td></tr>
+	<td>Any optional information you want to add about the equipment you are using.
+	For example, if you are using a camera with no infrared filter (a "NoIR" camera).
+	</td></tr>
 
 <tr><td id=webusconfiguration" class="settingsHeader" colspan="3">WebUI Configuration</td></tr>
 <tr><td id="imagessortorder"><span class="WebUISetting">Images Sort Order</span></td>

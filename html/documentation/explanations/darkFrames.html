@@ -25,14 +25,32 @@
 <div class="Layout-main markdown-body" id="mainContents">
 
 <p>
-All cameras produce noise which can be one or more of the following:
+All cameras produce noise, which is shown in the picture below
+(click on it to show a larger version where the noise is more apparent).
+A theoretical "perfect" camera would produce a pure black image.
+<br>
+Noise can be one or more of the following:
 </p>
-<ul class="minimalPadding">
-	<li>A salt and pepper-like pattern.
-	<li>Pixels that are always on and appear white on a mono camera,
+<ol class="minimalPadding">
+	<li>Pixels that are stuck on and appear white on a mono camera,
 		or red, green, or blue on a color camera.
-	<li>Pixels that are always off and appear black.
-</ul>
+		These are called "hot pixels".
+		<br>
+		White hot pixels are visible in the unaltered left side of the image.
+		Blue hot pixels are visible in the artifically-brightened
+		right side of the image.
+	<li>A salt and pepper-like pattern, visible in the right side of the image,
+		especially when zoomed in.
+	<li>Pixels that are always off and appear black (called "cold pixels").
+		This noise is very difficult to see unless zoomed in several hundred percent.
+		You might see cold pixels if they are in a bright area of the picture
+		(more likely during the day).
+</ol>
+<p>
+<a allsky="true" external="true" href="cameraNoise.png">
+	<img src="cameraNoise-sm.png" title="Camera noise - click to enlarge" class="imgCenter">
+</a>
+</p>
 <p>
 Noise increases with temperature and exposure length.
 You won't notice noise in a daylight image
@@ -49,14 +67,12 @@ but typically only 10 - 30 degrees C below ambient temperature.
 <p>
 Many people find noise distracting, and a good way to decrease it is to subtract
 it from a captured image.
-A picture that contains your desired object, e.g., night sky, and noise is called a "light frame".
-A picture with just the noise is called a "dark frame" because it's mostly dark.
+A picture that contains your desired object, e.g., night sky, and noise is called a
+<strong>light frame</strong>.
+A picture with just the noise (like the picture above) is called a
+<strong>dark frame</strong> because it's mostly dark.
 Subtracting a dark frame from a light frame leaves just your desired object.
 </p>
-<blockquote>
-Dark frames don't currently work with RPi HQ cameras,
-but they will in a future release of Allsky when running on the Bullseye or newer operating system.
-</blockquote>
 
 
 <h2>When should I take dark frames?</h2>
@@ -100,31 +116,37 @@ Execute these steps to take and then use dark frames.
 </p>
 <h4>Capture dark frames</h4>
 <ol>
-	<li>In the WebUI open the <span class="WebUILink">Allsky Settings</span> page and set
-		<span class="WebUISetting">Take Dark Frames</span> to <b>Yes</b>.
+	<li>In the WebUI's <span class="WebUILink">Allsky Settings</span> page,
+		set <span class="WebUISetting">Take Dark Frames</span> to <b>Yes</b>.
 	<li>Click on the
 		<span class="btn btn-primary btn-not-real btn-small">Save changes</span> button.
-		This will stop Allsky and wait until you manually start it below.
+		<br>
+		<strong>Allsky will stop and wait until you manually start it below.</strong>
+		This gives you time for the next step...
 	<li>Cover your camera lens and/or dome.
-		Make sure NO light can get in.
-	<li>Start Allsky: <code>systemctl start allsky</code>.
+		Make sure NO light gets in.
+	<li>Start Allsky: <code>sudo systemctl start allsky</code>.
 		Dark frames will be saved in the <span class="fileName">~/allsky/darks</span> directory.
 		A new dark is created every time the sensor temperature changes by 1 degree C.
+<!--
 		<br>
 		If there are no dark frames in the <span class="fileName">~/allsky/darks</span>
 		folder something went wrong so check the
 		<span class="fileName">/var/log/allsky.log</span> file.
+-->
 	<li>After you are done taking darks,
 		set <span class="WebUISetting">Take Dark Frames</span> in the WebUI to <b>No</b>.
-		Allsky will stop and wait for you to manually start it.
+		<br>
+		<strong>Allsky will stop and wait for you to manually start it.</strong>
+		This gives you time for the next step...
 	<li>Remove the cover from the lens/dome.
-	<li>Restart Allsky: <code>systemctl start allsky</code>.
+	<li>Restart Allsky: <code>sudo systemctl start allsky</code>.
 </ol>
 
 <h4>Subtract dark frames</h4>
 <ol>
-	<li>On the <span class="WebUILink">Allsky Settings</span> page in the WebUI set
-		<span class="WebUISetting">Use Dark Frames</span> to <b>Yes</b>.
+	<li>On the WebUI's <span class="WebUILink">Allsky Settings</span> page
+		set <span class="WebUISetting">Use Dark Frames</span> to <b>Yes</b>.
 	<li>Click on the
 		<span class="btn btn-primary btn-not-real btn-small">Save changes</span> button.
 		This will restart Allsky taking light frames, and subtract dark frames at night.
@@ -145,24 +167,28 @@ and
 </p>
 <p>
 <blockquote>
-If you later change any of those settings you should discard the old darks and take new ones.
+If you later change the
+<span class="WebUISetting">Gain</span>
+or
+<span class="WebUISetting">Binning</span>,
+you must discard the old darks and take new ones
+(noise, and hence dark frames, is impacted by these settings).
 If you think you'll go back to the original settings,
-save the old darks instead of discarding them.
+save the old darks somewhere else instead of discarding them.
 </blockquote>
 
-When a dark image is taken a file called <span class="fileName">dark.jpg</span>
-(or <span class="fileName">dark.png</span>)
+When a dark image is taken a file called <span class="fileName">dark.png</span>
 is saved in <span class="fileName">~/allsky/tmp</span>,
 then moved to <span class="fileName">~/allsky/darks</span>
-with a name like "XX.jpg", where "XX" is the temperature, for example,
-<span class="fileName">21.jpg</span>.
+with a name like "XX.png", where "XX" is the temperature, for example,
+<span class="fileName">21.png</span>.
 </p>
 <p>
 When darks are being <b>subtracted</b>, the software looks in
 <span class="fileName">~/allsky/darks</span>
 for the dark frame that is closest to the current sensor temperature.
 For example, if the current temperature is 21 and you have 3 darks,
-17.jpg, 20.jpg, and 23.jpg, the software will pick 20.jpg because it's only
+17.png, 20.png, and 23.png, the software will pick 20.png because it's only
 1 degree off from the current sensor temperature.
 </p>
 <p>

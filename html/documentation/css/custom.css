@@ -24,6 +24,9 @@
 	--btn-hover-color: black;
 	--btn-dark-color: #bfbfbf;
 	--panel-heading-color: #6b6b6b;
+	--select-background-color: #e4e4e4;
+	--select-color: #555555;
+    --color-border-muted: hsla(210,18%,87%,1);
 }
 
 .page-header {
@@ -69,9 +72,7 @@
 }
 
 .navbar-toggle { float: left; margin-left: 10px; }
-@media (max-width: 450px) {.version-title { font-size: 75%; }}
-@media (max-width: 400px) {.version-title { font-size: 65%; }}
-@media (min-width: 796px) {	/* was 768px */
+@media (min-width: 796px) {
 	.sidebar { width: 210px; }
 	.navbar-title { display: inline-block; }
 	#page-wrapper { margin-left: 210px; }
@@ -84,8 +85,12 @@
 	.navbar-toggle { display: block; }
 	#page-wrapper { margin: 0; }
 	.navbar-collapse { display: none; }
-	.navbar-brand { float: none; }
+	.navbar-brand { float: none; line-height: 18px; }
 	.version-title { margin-left: 0; }
+}
+@media (max-width: 465px) {
+	.version-title { font-size: 65%; }
+	.navbar-brand { line-height: 15px; }
 }
 
 .right-panel .panel:first-of-type {
@@ -278,6 +283,7 @@ body.dark {
 .alert {
 	padding: 5px;
 	margin-bottom: 3px;
+	border-width: 3px;
 }
 button.close {
 	opacity: 0.8;
@@ -285,7 +291,7 @@ button.close {
 	margin-top: -2px;
 }
 .alert td {
-	padding: 0 10px 0 3px;
+	padding: 0 5px 0 5px;
 }
 .alert td .important {
 	font-weight: bold;
@@ -311,14 +317,35 @@ table .alert-dismissable {
 	background-color: #d9edf7;
 	border-color: #92b5bd;
 }
-.dark .alert-message, .dark .alert-info {
+.dark .alert-message {
 	color: #23485a;
 	border-color: #99ccdd;
 	background-color: #8b989f;
 }
+.alert-info {
+	color: #31708f;
+	background-color: #effaff;
+	border-color: #92b5bd;
+}
+.dark .alert-info {	/* TODO: change from .alert-info */
+	color: #23485a;
+	border-color: #99ccdd;
+	background-color: #8b989f;
+}
+.alert-debug {
+	color: #db8300;
+	background-color: white;
+	border-color: #db8300;
+}
+.dark .alert-debug {
+	color: #e9a846;
+	background-color: black;
+	border-color: #e9a846#db8300;
+}
 .dark .alert-success {
 	color: #95bb85;
 	border-color: #8f9d84;
+	border-color: #d2e2c4;
 	background-color: #044a05;
 }
 .dark .alert-warning, .dark .alert-warning a {
@@ -330,10 +357,6 @@ table .alert-dismissable {
 	color: #f1b1b1;
 	border-color: #f1b1b1;
 	background-color: #a94442;
-}
-.alert-danger, .alert-warning {
-	border-top-width: 3px;
-	border-bottom-width: 3px;
 }
 
 .dark .form-control,
@@ -397,6 +420,11 @@ input[type="text"].has-error {
 }
 
 /* Buttons */
+@media (max-width: 465px) {
+	.settings-buttons .btn { padding: 1px 5px; }
+	.settings-buttons.container-fluid { padding: 0; }
+}
+
 .btn-primary {
 	border: 2px solid #00527c;
 }
@@ -501,13 +529,13 @@ input[type="text"].has-error {
 }
 
 
-@media screen and (max-width: 795px) {	/* was 767 */
+@media screen and (max-width: 795px) {
 	.dark .table-responsive {
 		border-color: transparent;
 	}
 
 	.navbar {
-		height: 52px;
+		height: 60px;
 	}
 
 	.navbar-brand img {
@@ -516,12 +544,22 @@ input[type="text"].has-error {
 
 	.switch-field {
 		display: block;
-		/* height: 40px; /* was 50 */
 	}
 	
 	form thead {
 		display: none;
 	}
+}
+.dropdown code {
+	line-height: 3;
+	padding: .4em .8em;
+	margin: 0 .5em;
+	font-size: inherit;
+	color: var(--select-color);
+	background-color: var(--select-background-color);
+	border: 1px solid var(--color-border-muted);
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	border-radius: 3px;
 }
 
 /* Headers in Allsky settings */
@@ -530,6 +568,10 @@ input[type="text"].has-error {
 	text-align: center;
 	font-weight: bold;
 	padding: 1px 3px 1px 3px;
+}
+.markdown-body .settingsHeader {
+	font-size: 1em;
+	border-radius: 4px;
 }
 .dark .settingsHeader {
 	background-color: #333;
@@ -627,8 +669,8 @@ input[type="text"],
 input[type="number"],
 input[type="select"],
 select {
-	background-color: #e4e4e4;
-	color: #555555;
+	background-color: var(--select-background-color);
+	color: var(--select-color);
 }
 
 /* Colors for user-supplied buttons.
@@ -718,7 +760,8 @@ select {
 	padding: 0 .2em;
 	color: var(--WebUI-link-color);
 	background-color: var(--WebUI-link-background-color);
-	border-bottom: 1px solid #e7e7e7;
+	border-top: 2px solid var(--navbar-border-color);
+	border-bottom: 2px solid var(--navbar-border-color);
 }
 .WebUISetting {	/* Matches what's in the WebUI */
 	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;

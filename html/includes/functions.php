@@ -1041,7 +1041,12 @@ function haveDatabase() {
 
 function haveSQLite($secretData) {
     $result = true;
-    $db = new SQLite3(ALLSKY_MYFILES_DIR . '/allsky.db');
+
+	try {
+    	$db = new SQLite3(ALLSKY_MYFILES_DIR . '/allsky.db');
+	} catch (Exception $e) {
+		$db = false;
+	}
 
     if (!$db) {
         $result = false;

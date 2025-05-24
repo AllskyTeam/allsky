@@ -14,15 +14,20 @@ data = {
     }
 }
 
-i2c_bus = smbus2.SMBus(1)
+try:
+    i2c_bus = smbus2.SMBus(1)
 
-for address in range(0x00, 0x80):
-    try:
-        i2c_bus.write_quick(address)
-        data['1']['devices'].append(hex(address))
-    except OSError:
-        # Ignore errors; they indicate no device at this address
-        pass
+    for address in range(0x00, 0x80):
+        try:
+            i2c_bus.write_quick(address)
+            data['1']['devices'].append(hex(address))
+        except OSError:
+            # Ignore errors; they indicate no device at this address
+            pass
+    i2c_bus.close()
+except Exception:
+    # Ignore errors; this will probably be i2c disabled on the pi
+    pass
+    
 
-i2c_bus.close()
 print(json.dumps(data))

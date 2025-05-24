@@ -11,6 +11,7 @@
 		"label" : "Database Tyoe",
 		"type" : "select_text",
 		"carryforward" : true,
+		"optional" : true,
 		"options" : [
 			{"value" : "none", "label" : "None"},
 			{"value" : "mysql", "label" : "MariaDB"},
@@ -24,6 +25,8 @@
 			"description" : "The ip / hostname of the server running the database.",
 			"label" : "Database Host",
 			"type" : "text",
+			"carryforward" : true,
+			"optional" : true,
 			"source" : "${ALLSKY_ENV}"
 		},
 		{
@@ -32,6 +35,8 @@
 			"description" : "The username used to connect to the database.",
 			"label" : "Database User",
 			"type" : "text",
+			"carryforward" : true,
+			"optional" : true,
 			"source" : "${ALLSKY_ENV}"
 		},
 		{
@@ -40,6 +45,8 @@
 			"description" : "The password used to connect to the database.",
 			"label" : "User Password",
 			"type" : "text",
+			"carryforward" : true,
+			"optional" : true,
 			"source" : "${ALLSKY_ENV}"
 		},
 		{
@@ -48,6 +55,8 @@
 			"description" : "The database to use.",
 			"label" : "Database",
 			"type" : "text",
+			"carryforward" : true,
+			"optional" : true,
 			"source" : "${ALLSKY_ENV}"
 		},
 {

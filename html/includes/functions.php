@@ -778,8 +778,9 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 					if ($on_line === 1) {
 						echo ", result=";
 					}
-					echo "$res   ";
 					$modifiedResult[] = $res;
+					echo str_replace('"', "'", $res);
+					echo "   ";
 				}
 			}
 		}

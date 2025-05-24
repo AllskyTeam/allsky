@@ -298,18 +298,19 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		return bgr, alpha
 
 	def _add_rect(self):
-		for index, rectData in enumerate(self._overlay_config['rects']):
-			top_left = (int(rectData['x']), int(rectData['y']))
-			bottom_right = (int(rectData['x'] + rectData['width']), int(rectData['y'] + rectData['height']))
-			fill_colour, fill_opacity = self._rgba_to_bgr_alpha(rectData['fill'])
+		if 'rects' in self._overlay_config:
+			for index, rectData in enumerate(self._overlay_config['rects']):
+				top_left = (int(rectData['x']), int(rectData['y']))
+				bottom_right = (int(rectData['x'] + rectData['width']), int(rectData['y'] + rectData['height']))
+				fill_colour, fill_opacity = self._rgba_to_bgr_alpha(rectData['fill'])
 
-			border_color = self._convert_RGB_to_BGR(rectData['stroke'], 1)
-			radius = int(rectData['cornerradius'])
-			thickness = int(rectData['strokewidth'])
-   
-			self.draw_rounded_rect_fill_overlay(top_left, bottom_right, fill_colour, fill_opacity, radius)
-			if thickness > 0:
-				self.draw_rounded_rect_border(top_left, bottom_right, border_color, thickness, radius=radius)   
+				border_color = self._convert_RGB_to_BGR(rectData['stroke'], 1)
+				radius = int(rectData['cornerradius'])
+				thickness = int(rectData['strokewidth'])
+	
+				self.draw_rounded_rect_fill_overlay(top_left, bottom_right, fill_colour, fill_opacity, radius)
+				if thickness > 0:
+					self.draw_rounded_rect_border(top_left, bottom_right, border_color, thickness, radius=radius)   
 
 	def draw_rounded_rect_fill_overlay(self, top_left, bottom_right, fill_color, fill_opacity, radius=20):
 		x1, y1 = top_left

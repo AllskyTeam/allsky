@@ -255,6 +255,33 @@
                 plugin.settings.i2cSelected.call(this, plugin.settings.address);
 				$('#mm-i2c-dialog').modal('hide');
             })
+
+            $('.mm-i2c-create-library').on('click', (e) => {
+                $('body').LoadingOverlay('show', {
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    imageColor: '#a94442',
+                    textColor: '#a94442',
+                    text: 'Building i2c Database'
+                });  
+
+                $.ajax({
+                    url: 'includes/i2cutil.php?request=Build',
+                    type: 'GET',
+                    dataType: 'json',
+                    cache: false
+                })
+                .always(() => {
+                    $('#mm-i2c-dialog-tab-detected-devices').DataTable().destroy()
+                    $('#mm-i2c-dialog-tab-library-library').DataTable().destroy()
+
+                    getData();
+                    createHtml();
+                    buildUI();
+                    updateUI();
+                    $('body').LoadingOverlay('hide')
+                });
+
+            });
         }
 
         var updateUI = function() {
@@ -262,6 +289,26 @@
                 $('#mm-i2c-dialog-select').hide();
             } else {
                 $('#mm-i2c-dialog-select').show();
+            }
+
+            if (plugin.settings.installedDevices[1].devices == 0) {
+                $('#mm-i2c-dialog-tab-detected-devices_wrapper').hide();
+                $('#mm-i2c-dialog-tab-library-library_wrapper').hide();
+                $('#mm-i2c-error').show();
+            } else {
+                $('#mm-i2c-dialog-tab-detected-devices_wrapper').show();
+                $('#mm-i2c-dialog-tab-library-library_wrapper').show();
+                $('#mm-i2c-error').hide();
+
+                if (plugin.settings.deviceListData.length == 0) {
+                    $('#mm-i2c-dialog-tab-detected-devices_wrapper').hide();
+                    $('#mm-i2c-dialog-tab-library-library_wrapper').hide();
+                    $('#mm-i2c-data-missing').show();
+                } else {
+                    $('#mm-i2c-dialog-tab-detected-devices_wrapper').show();
+                    $('#mm-i2c-dialog-tab-library-library_wrapper').show();
+                    $('#mm-i2c-data-missing').hide();
+                }
             }
         }
 

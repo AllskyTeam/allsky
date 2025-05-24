@@ -1,9 +1,12 @@
+#!/home/pi/allsky/venv/bin/python3
+
 import sys
 import os
 import json
 import pprint
 import re
 import urllib.request
+import argparse
 
 class ALLSKYI2CPROCESSOR:
     _URLS = [
@@ -18,9 +21,10 @@ class ALLSKYI2CPROCESSOR:
     ]
     
     _IC2 = {}
+    _home = '/tmp'
     
-    def __init__(self):
-        pass
+    def __init__(self, home):        
+        self._home = home
 
     def var_dump(self, variable):
         pprint.PrettyPrinter(indent=2, width=128).pprint(variable)
@@ -80,10 +84,21 @@ class ALLSKYI2CPROCESSOR:
                         self._IC2[currentAddress].append(deviceData)
 
         jsonData = json.dumps(self._IC2, indent=4)
-        destFile = os.path.join(os.environ['ALLSKY_HOME'], 'config', 'i2c.json')
+        destFile = os.path.join(self._home, 'config', 'i2c.json')
+        print(destFile)
         with open(destFile, mode='wt') as file:
             file.write(jsonData)
+            print(f'INFO: I2C data written to {destFile}')
         
 if __name__ == '__main__':
-    processor = ALLSKYI2CPROCESSOR()
+    
+    if 'ALLSKY_HOME' in os.environ:
+        home = os.environ['ALLSKY_HOME']
+    else:
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--allskyhome", type=str, default="/home/pi/allsky", help="Allsky home directory")
+        args = parser.parse_args()
+        home = args.allskyhome
+    
+    processor = ALLSKYI2CPROCESSOR(home)
     processor.run()

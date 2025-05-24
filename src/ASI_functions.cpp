@@ -1921,7 +1921,12 @@ void outputCameraInfo(ASI_CAMERA_INFO cameraInfo, config cg,
 {
 	printf(" Camera Information:\n");
 	printf("  - Type: %s\n", CAMERA_TYPE);
-	printf("  - Model: %s (%s)\n", getCameraModel(cameraInfo.Name), cg.cm);
+	printf("  - Model: %s", getCameraModel(cameraInfo.Name));
+	if (strcmp(getCameraModel(cameraInfo.Name), cg.cm) != 0)
+	{
+		printf(" (%s)", cg.cm);
+	}
+	printf("\n");
 #ifdef IS_ZWO
 	printf("  - ID: %s\n", cID);
 #endif

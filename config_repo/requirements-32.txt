@@ -15,3 +15,4 @@ certifi
 requests
 mysql-connector-python
 photutils
+psutil

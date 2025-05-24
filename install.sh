@@ -824,6 +824,7 @@ update_php_defines()
 			-e "s;XX_ALLSKY_STATUS_NEEDS_CONFIGURATION_XX;${ALLSKY_STATUS_NEEDS_CONFIGURATION};g" \
 			-e "s;XX_ALLSKY_STATUS_NEEDS_REVIEW_XX;${ALLSKY_STATUS_NEEDS_REVIEW};g" \
 			-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};g" \
+			-e "s;XX_ALLSKY_MYFILES_DIR_XX;${ALLSKY_MYFILES_DIR};g" \
 		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
 		chmod 644 "${FILE}"
 
@@ -3423,6 +3424,8 @@ install_overlay()
 	display_msg --log progress "Setting up default modules and overlays."
 	# Some of these will get overwritten later if the user has prior versions.
 	cp -ar "${ALLSKY_REPO}/overlay" "${ALLSKY_REPO}/modules" "${ALLSKY_CONFIG}"
+	
+	cp  "${ALLSKY_REPO}/variables.json.repo" "${ALLSKY_CONFIG}/variables.json"
 
 	# MY_OVERLAY_TEMPLATES is not in ALLSKY_REPI and we haven't restored
 	# anything yet, so create the directory.

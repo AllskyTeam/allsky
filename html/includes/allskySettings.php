@@ -45,7 +45,8 @@ function toString($b) {
 }
 
 // Error checking functions.
-function formatSettingName($name) {
+function formatSettingName($name, $prefix="") {
+	if ($prefix !== "") $name = "$prefix $name";
 	return("<span class='WebUISetting'>$name</span>");
 }
 function formatSettingValue($value) {
@@ -68,7 +69,7 @@ function getLogicalType($type) {
 
 // Check the value for the correct type.
 // Return "" on success and some string on error.
-function checkType($fieldName, $value, $old, $label, $type, &$shortened=null) {
+function checkType($fieldName, $value, $old, $label, $label_prefix, $type, &$shortened=null) {
 	if ($type === null || $type === "text" || $value === "") {
 		return("");
 	}
@@ -105,7 +106,7 @@ function checkType($fieldName, $value, $old, $label, $type, &$shortened=null) {
 	if (substr($fieldName, 0, 3) === "day") $label = "Daytime $label";
 	else if (substr($fieldName, 0, 5) == "night") $label = "Nighttime $label";
 
-	return(formatSettingName($label) . " $msg");
+	return(formatSettingName($label, $label_prefix) . " $msg");
 }
 
 // Return $value as type $type.
@@ -255,6 +256,7 @@ function DisplayAllskyConfig() {
 					if ($option['name'] !== $name) continue;
 
 					$label = getVariableOrDefault($option, 'label', "");
+					$label_prefix = getVariableOrDefault($option, 'label_prefix', "");
 					$found = true;
 					$shortMsg = "";
 					$type = $type_array[$name];
@@ -264,7 +266,7 @@ function DisplayAllskyConfig() {
 					$e = checkType($name,
 							$newValue,
 							$oldValue,
-							$label,
+							$label, $label_prefix,
 							$logicalType,
 							$shortMsg);
 					if ($e != "") {
@@ -876,6 +878,8 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 					// Do error checking of values in settings file
 					// except for any settings already checked.
 
+					$label = getVariableOrDefault($option, 'label', "");
+					$label_prefix = getVariableOrDefault($option, 'label_prefix', "");
 					$optional = toBool(getVariableOrDefault($option, 'optional', "false"));
 					$minimum = getVariableOrDefault($option, 'minimum', "");
 					$maximum = getVariableOrDefault($option, 'maximum', "");
@@ -886,7 +890,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 						$e = checkType($name,
 								$value,
 								$value,
-								$option['label'],
+								$label, $label_prefix,
 								$type,
 								$shortMsg);
 						if ($e != "") {
@@ -918,7 +922,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 							} else {
 								$missingSettings .= "<br>&nbsp; &nbsp; $bullet ";
 							}
-							$missingSettings .= formatSettingName($label);
+							$missingSettings .= formatSettingName($label, $label_prefix);
 							$warning_class = "alert-danger";
 							$warning_msg = "<span class='errorMsg'>This field cannot be empty.</span><br>";
 
@@ -931,7 +935,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 							} else {
 								$missingSettingsHasDefault .= "<br>&nbsp; &nbsp; $bullet ";
 							}
-							$missingSettingsHasDefault .= formatSettingName($label);
+							$missingSettingsHasDefault .= formatSettingName($label, $label_prefix);
 							$warning_class = "alert-warning";
 							$warning_msg = "<span class='errorMsg'>This field was empty but set to the default.</span><br>";
 						}

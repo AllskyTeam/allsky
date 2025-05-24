@@ -51,7 +51,7 @@
 		},
 		{
 			"name" : "databasedatabase",
-			"default" : "",
+			"default" : "allsky",
 			"description" : "The database to use.",
 			"label" : "Database",
 			"type" : "text",

@@ -3459,7 +3459,7 @@ install_overlay()
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 
 	display_msg --log progress "Enabling and starting the pigpiod service."
-	sudo systemct enable pigpiod
+	sudo systemctl enable pigpiod
 	sudo systemctl start pigpiod
 
 }

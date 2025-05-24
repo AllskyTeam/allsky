@@ -552,16 +552,17 @@ do
 				# We assume the user wants the non-camera specific settings below
 				# for this camera to be the same as the prior camera.
 
-				if debug ; then
-					MSG="Updating user-defined settings in new settings file."
-					wD_ "${MSG}"
-				fi
-
 				# First determine the name of the prior camera-specific settings file.
 				NAME="$( basename "${SETTINGS_FILE}" )"
 				S_NAME="${NAME%.*}"
 				S_EXT="${NAME##*.}"
-				OLD_SETTINGS_FILE="${ALLSKY_CONFIG}/${S_NAME}_${OLD_TYPE}_${OLD_MODEL// /_}.${S_EXT}"
+				O="${S_NAME}_${OLD_TYPE}_${OLD_MODEL// /_}.${S_EXT}"
+				OLD_SETTINGS_FILE="${ALLSKY_CONFIG}/${O}"
+				if debug ; then
+					MSG="Updating user-defined settings in new settings file from '${O}'."
+					wD_ "${MSG}"
+				fi
+
 				{
 					echo "_START_"
 					"${ALLSKY_SCRIPTS}/convertJSON.php" \
@@ -572,9 +573,9 @@ do
 				} |
 				while read -r SETTING TYPE VALUE
 				do
-					if [[ ${SETTINGS} == "_START_" ]]; then
+					if [[ ${SETTING} == "_START_" ]]; then
 						CHANGES=()
-					elif [[ ${SETTINGS} == "_END_" ]]; then
+					elif [[ ${SETTING} == "_END_" ]]; then
 						if [[ ${#CHANGES[@]} -gt 0 ]]; then
 							# shellcheck disable=SC2086
 							"${ALLSKY_SCRIPTS}/updateJsonFile.sh" \

@@ -568,7 +568,6 @@ def get_database_config():
     
     return secret_data
 
-    
 def update_database(structure, extra_data):
     secret_data = get_database_config()
 
@@ -1208,6 +1207,9 @@ def get_sensor_temperature():
     else:
         temperature = get_environment_variable('AS_TEMPERATURE_C')
     
+    if temperature == None:
+        temperature = 0
+    
     return float(temperature)
 
 def get_camera_gain():
@@ -1219,6 +1221,9 @@ def get_camera_gain():
     else:
         gain = get_environment_variable('AS_GAIN')
     
+    if gain == None:
+        gain = 0
+        
     return float(gain)
     
 def get_camera_type():

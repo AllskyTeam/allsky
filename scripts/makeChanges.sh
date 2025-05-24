@@ -287,9 +287,8 @@ do
 	fi
 
 	(( NUM_CHANGED++ ))
-	N="$( printf "%03d" "${NUM_CHANGED}" )"
-	KEY_NUMS[${N}]="${KEY}"		# new ones added to the end
-	KEYS[${KEY}]="${KEY}"		# new ones appear to be added in random order
+	KEY_NUMS[${NUM_CHANGED}]="${KEY}"		# new ones added to the end
+	KEYS[${KEY}]="${KEY}"					# new ones appear to be added in random order
 	LABELS[${KEY}]="${LABEL}"
 	OLD_VALUES[${KEY}]="${OLD_VALUE}"
 	NEW_VALUES[${KEY}]="${NEW_VALUE}"

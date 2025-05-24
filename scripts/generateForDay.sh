@@ -27,6 +27,7 @@ THUMBNAIL_ONLY="false"
 THUMBNAIL_ONLY_ARG=""
 IMAGES_FILE=""
 OUTPUT_DIR=""
+OUTPUT_DIR_ENTERED=""
 
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
@@ -62,6 +63,7 @@ while [[ $# -gt 0 ]]; do
 				;;
 			--output-dir)
 				OUTPUT_DIR="${2}"
+				OUTPUT_DIR_ENTERED="${OUTPUT_DIR}"
 				shift
 				;;
 			-k | --keogram)
@@ -92,15 +94,15 @@ usage_and_exit()
 {
 	local RET=${1}
 	exec >&2
-	local USAGE="Usage: ${ME} [--help] [--silent] [--debug] [--nice n] [--upload] \\"
-	USAGE+="    [--thumbnail-only] [--keogram] [--startrails] [--timelapse] \\"
-	USAGE+="    [--output-dir <OUTPUT_DIR>] \\"
+	local USAGE="Usage: ${ME} [--help] [--silent] [--debug] [--nice n] [--upload] \\ \n"
+	USAGE+="    [--thumbnail-only] [--keogram] [--startrails] [--timelapse] \\ \n"
+	USAGE+="    [--output-dir <OUTPUT_DIR>] \\ \n"
 	USAGE+="    {--images file | <INPUT_DIR>}"
 	echo
 	if [[ ${RET} -ne 0 ]]; then
 		E_ "${USAGE}"
 	else
-		echo "${USAGE}"
+		echo -e "${USAGE}"
 	fi
 	echo "where:"
 	echo "  --help             Displays this message and exits."
@@ -138,6 +140,12 @@ fi
 if [[ -n ${IMAGES_FILE} ]]; then
 	# If IMAGES_FILE is specified there should be no other arguments.
 	[[ $# -ne 0 ]] && usage_and_exit 1
+
+	if [[ ${DO_KEOGRAM} == "true" || ${DO_STARTRAILS} == "true" ]]; then
+		E_ "${ME}: The '--images' argument does not (yet) work with keograms or startrails." >&2
+		exit 1
+	fi
+
 elif [[ $# -eq 0 || $# -gt 1 ]]; then
 	usage_and_exit 2
 fi
@@ -281,7 +289,7 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 			[[ ${SIZE} != "" ]] && MORE+=" --font-size ${SIZE}"
 		THICKNESS="$( settings ".keogramlinethickness" )"
 			[[ ${THICKNESS} != "" ]] && MORE+=" --font-type ${THICKNESS}"
-		CMD="'${ALLSKY_BIN}/keogram' ${NICE} ${SIZE_FILTER} -d '${OUTPUT_DIR}' \
+		CMD="'${ALLSKY_BIN}/keogram' ${NICE} ${SIZE_FILTER} -d '${INPUT_DIR}' \
 			-e ${EXTENSION} -o '${UPLOAD_FILE}' ${MORE} ${KEOGRAM_EXTRA_PARAMETERS}"
 		generate "Keogram" "keogram" "${CMD}"
 
@@ -333,7 +341,7 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 	if [[ ${TYPE} == "GENERATE" ]]; then
 		BRIGHTNESS_THRESHOLD="$( settings ".startrailsbrightnessthreshold" )"
 		STARTRAILS_EXTRA_PARAMETERS="$( settings ".startrailsextraparameters" )"
-		CMD="'${ALLSKY_BIN}/startrails' ${NICE} ${SIZE_FILTER} -d '${OUTPUT_DIR}' \
+		CMD="'${ALLSKY_BIN}/startrails' ${NICE} ${SIZE_FILTER} -d '${INPUT_DIR}' \
 			-e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o '${UPLOAD_FILE}' \
 			${STARTRAILS_EXTRA_PARAMETERS}"
 		generate "Startrails, threshold=${BRIGHTNESS_THRESHOLD}" "startrails" "${CMD}"
@@ -498,7 +506,11 @@ if [[ ${TYPE} == "GENERATE" && ${SILENT} == "false" && ${EXIT_CODE} -eq 0 ]]; th
 	[[ ${DO_TIMELAPSE} == "true" ]] && ARGS="${ARGS} --timelapse"
 	echo -e "\n================"
 	echo "If you want to upload the file(s) you just created,"
-	echo -e "\texecute '${ME} --upload ${ARGS} ${DATE}'"
+	echo -en "\texecute '${ME} --upload"
+	if [[ -n ${OUTPUT_DIR_ENTERED} ]]; then
+		echo -n " --output-dir '${OUTPUT_DIR_ENTERED}'"
+	fi
+	echo -e " ${ARGS} ${DATE}'"
 	echo "================"
 fi
 

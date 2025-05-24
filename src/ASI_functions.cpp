@@ -1111,8 +1111,8 @@ char const *argumentNames[][2] = {
 	{ "HardwareBin", "" },
 	{ "HighSpeedMode", "" },
 	{ "CoolerPowerPerc", "" },						// read-only so no argument
-	{ "TargetTemp", "TargetTemp" },
-	{ "CoolerOn", "EnableCooler" },					// day/night
+	{ "TargetTemp", "targettemp" },
+	{ "CoolerOn", "enablecooler" },					// day/night
 	{ "MonoBin", "" },
 	{ "FanOn", "??" },				// correct Control name?
 	{ "PatternAdjust", "" },		// correct Control name?

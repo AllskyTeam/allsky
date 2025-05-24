@@ -36,10 +36,8 @@
 		</p>
 
 		<!-- =========================================== -->
-<!-- TODO: uncomment for v2025.xx.xx
 		<h2>v2025.xx.xx</h2>
 		<details open> <summary></summary>
--->
 
 			<!--
 			<h3>v2025.xx.xx_01  - Point Release # 1</h3>
@@ -50,7 +48,6 @@
 			<h3>v2025.xx.xx - Base Release</h3>
 			-->
 
-<!-- TODO: uncomment for v2025.xx.xx
 				<h4>Deleted capabilities</h4>
 				<ul>
 					<li>The Buster operating system is no longer supported.
@@ -63,55 +60,23 @@
 
 				<h4>Enhancements / Changes</h4>
 				<ul>
-					<li>RPi cameras that report sensor temperature now support
-						<strong>dark frames</strong>.
-						<br>The TEMPERATURE_C and TEMPERATURE_F variables can
-						be displayed in overlays for these cameras.
-
-						<details sub><summary></summary>
-						<ul>
-							<li>RPi cameras that report sensor temperature
-								and support dark frames:
-								<ul>
-									<li>HQ
-									<li>Module 3
-									<li>Arducam 16 MP
-								</ul>
-							<li>These cameras do not support darks:
-								<ul>
-									<li>Version 1
-									<li>imx290 60.00 fps
-									<li>Arducam 64 MP
-									<li>Arducam 462
-									<li>Waveshare imx219-d160
-									<li>Arducam 64 MB Owlsight
-									<li>OneInchEye IMX283
-								</ul>
-						</ul>
-						</details>
-
-					<li>Dark frames are now saved as <span class="fileName">.png</span>
-						files for better quality.
-						<blockquote>
-						If you have any <span class="fileName">.jpg</span> darks
-						in <span class="fileName">~/allsky/darks</span>
-						we suggest re-doing your darks then removing the old
-						<span class="fileName">.jpg</span> darks.
-						</blockquote>
+					<li>When RPi cameras are unable to take an image,
+						an error message is added to the log file.
+						Previously the error message was written to a temporary
+						file that was overwritten every exposure, thereby
+						losing prior messages.
 				</ul>
 
 				<h4>Bug Fixes</h4>
 				<ul>
-					<li>MOON variables work in the
-						<span class="WebUILink">Overlay Editor</span>
-						(the <span class="fileName">de421.bsp</span> file downloads correctly).
-					<li>All the "Click here to ..." messages in the WebUI now work.
-					<li>Using the <span class="fileName">analyticsTracking.js</span>
-						in an Allsky Website now works.
+					<li>The <span class="WebUILink">Getting Support</span> WebUI page
+						(and the related <code>support.sh</code> command) no longer
+						fail with a "Argument list too long" message.
 				</ul>
 
 				<h4>Deleted Settings</h4>
 				<ul>
+<!-- Notification Images -->
 					<li><span class="WebUISetting">None</span>
 				</ul>
 				<h4>New Settings</h4>
@@ -121,15 +86,14 @@
 
 			<hr class="separator">
 		</details>
--->
 
 		<!-- =========================================== -->
 
 		<h2>v2024.12.06</h2>
-		<details open> <summary></summary>
+		<details> <summary></summary>
 
 			<h3>v2024.12.06_03  - Point Release # 3</h3>
-			<details open sub> <summary></summary>
+			<details sub> <summary></summary>
 				<h4 style="color: red">IMPORTANT NOTES:</h4>
 				<ul>
 					<li>This is the LAST major release that supports Buster.
@@ -165,6 +129,7 @@
 								</ul>
 						</ul>
 						</details>
+
 					<li>Dark frames are now saved as <span class="fileName">.png</span>
 						files for better quality.
 						<blockquote>
@@ -173,8 +138,6 @@
 						we suggest re-doing your darks then removing the old
 						<span class="fileName">.jpg</span> darks.
 						</blockquote>
-					<li>Error messages that occur while taking images with an
-						RPi camera are added to the log file.
 				</ul>
 
 				<h4>Bug Fixes</h4>

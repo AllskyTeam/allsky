@@ -42,7 +42,7 @@ function _check_web_connectivity()
 
 	local HTTP_STATUS  RET  MSG  WHY
 
-	HTTP_STATUS="$( curl -o /dev/null --head --silent --show-error --location \
+	HTTP_STATUS="$( curl --user-agent Allsky -o /dev/null --head --silent --show-error --location \
 		--write-out "%{http_code}" "${URL}" )"
 	RET=$?
 	if [[ ${RET} -ne 0 ]] ; then

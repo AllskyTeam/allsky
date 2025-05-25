@@ -113,6 +113,9 @@ function checkType($fieldName, $value, $old, $label, $label_prefix, $type, &$sho
 // This eliminates the need for JSON_NUMERIC_CHECK, which converts some
 // strings we want as strings to numbers, e.g., "longitude = +105.0" should stay as a string.
 function setValue($name, $value, $type) {
+# TODO: May 2025:  Is it ok to return "" for empty numbers?
+	if ($value === "") return "";
+
 	if ($type === "integer") {
 		return (int) $value;
 	} else if ($type === "float") {
@@ -132,6 +135,7 @@ function DisplayAllskyConfig() {
 	global $page;
 	global $ME;
 	global $status;
+	global $allsky_status;
 	global $endSetting;
 	global $saveChangesLabel;
 	global $forceRestart;
@@ -148,6 +152,7 @@ function DisplayAllskyConfig() {
 	$bullet = "<div class='bullet'>*</div>";
 	$showIcon = "<i class='fa fa-chevron-down fa-fw'></i>";
 	$hideIcon = "<i class='fa fa-chevron-up fa-fw'></i>";
+	$saveChangesIcon = "<i class='fa-solid fa-floppy-disk'></i>";
 
 	$mode = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION;
 	$settings_file = getSettingsFile();
@@ -723,12 +728,13 @@ if ($debug) {
 				<div class="row">
 					<div class="col-md-11 col-sm-11 col-xs-11 nowrap">
 						<button type="submit" class="btn btn-primary"
-								name="save_settings" title="Save changes">
-							<i class="fa-solid fa-floppy-disk"></i> <?php echo $saveChangesLabel; ?>
+								id="save_settings" name="save_settings"
+								title="Save changes">
+							<?php echo "$saveChangesIcon $saveChangesLabel"; ?>
 						</button>
 						<button type="submit" class="btn ml-3 btn-warning"
-								name="reset_settings" title="Reset to default values"
-								id="settings-reset">
+								id="settings-reset" name="reset_settings"
+								title="Reset to default values">
 							<i class="fa-solid fa-rotate-left"></i> Reset to default values
 						</button>
 					</div>
@@ -756,8 +762,6 @@ if ($debug) {
 
 CSRFToken();
 		echo "<input type='hidden' name='page' value='$page'>\n";
-		if ($needsConfiguration)
-			echo "<input type='hidden' name='fromConfiguration' value='true'>\n";
 
 		if ($formReadonly == "readonly") {
 			$readonlyForm = "readonly disabled";	// covers both bases
@@ -1156,14 +1160,36 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 			if ($inHeader) echo "</tbody>";
 		echo "</table>";
 
+		if ($numMissingHasDefault > 0) {
+			$needsConfiguration = true;
+			if ($lastChanged !== "") {
+				$lastChanged = "";
+				$allsky_status = ALLSKY_STATUS_NEEDS_REVIEW;
+				check_if_configured($page, "settings");
+?>
+				<script>
+					var s = document.getElementById('save_settings');
+					s.innerHTML = "<?php echo "$saveChangesIcon $saveChangesLabel" ?>";
+				</script>
+<?php
+			}
+		}
+
+		if ($needsConfiguration) {
+			echo "<input type='hidden' name='fromConfiguration' value='true'>\n";
+		}
+
 		if ($fromConfiguration) {
 			// Hide the message about "Allsky must be configured..."
 ?>
 			<script>
-			var p = document.getElementById('mustConfigure').parentElement;
-			var gp = p.parentElement;
-			if (gp != null) p = gp;
-			p.style.display = 'none';
+			var m = document.getElementById('mustConfigure');
+			if (m != null) {
+				var p = m.parentElement;
+				var gp = p.parentElement;
+				if (gp != null) p = gp;
+				p.style.display = 'none';
+			}
 			</script>
 <?php
 		}

@@ -205,7 +205,7 @@ if [[ -f ${ALLSKY_POST_INSTALL_ACTIONS} ]]; then
 	fi
 fi
 
-USE_NOTIFICATION_IMAGES="$( settings ".notificationimages" )"		|| exit "${EXIT_ERROR_STOP}"
+USE_NOTIFICATION_IMAGES="true"
 
 # Get the list of connected cameras and make sure the one we want is connected.
 if [[ ${CAMERA_TYPE} == "ZWO" ]]; then

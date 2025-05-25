@@ -531,12 +531,12 @@ function check_upload()
 		for FILE_TO_MOVE in "${FILES_TO_MOVE[@]}"; do
 			echo -e "move_files\t${FILE_TO_MOVE}"
 		done
-	} > "${TEST_FILE}"
+	} > "${ALLSKY_TMP}/${TEST_FILE}"
 
 	# Some user reported this hanging, so add a timeout.
 	ERR="$( timeout --signal=KILL "${SECS}" \
 		"${ALLSKY_SCRIPTS}/testUpload.sh" --frominstall --website --silent \
-		--output "${TESTUPLOAD_OUTPUT_FILE}" --file "${TEST_FILE}" 2>&1 )"
+		--output "${TESTUPLOAD_OUTPUT_FILE}" --file "${ALLSKY_TMP}/${TEST_FILE}" 2>&1 )"
 	RET=$?
 	if [[ ${RET} -eq 0 ]]; then
 		echo "PASSED"

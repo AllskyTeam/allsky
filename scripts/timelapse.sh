@@ -17,7 +17,9 @@ LOCK="false"
 IMAGES_FILE=""
 INPUT_DIR=""
 IMAGE_NAME="${FILENAME}"
-OUTPUT_FILE=""
+OUTPUT=""			# shorthand for ${OUTPUT_DIR}/${OUTPUT_FILE}
+OUTPUT_DIR=""		# Used when more granularity is needed
+OUTPUT_FILE=""		# Used when more granularity is needed
 FPS=""
 TIMELAPSE_BITRATE=""
 while [[ $# -gt 0 ]]; do
@@ -39,8 +41,16 @@ while [[ $# -gt 0 ]]; do
 				IMAGE_NAME="${2}"
 				shift
 				;;
-			-o | --output)
+			--output-dir)
+				OUTPUT_DIR="${2}"
+				shift
+				;;
+			--output-file)
 				OUTPUT_FILE="${2}"
+				shift
+				;;
+			-o | --output)
+				OUTPUT="${2}"
 				shift
 				;;
 			-i | --images)
@@ -62,7 +72,7 @@ while [[ $# -gt 0 ]]; do
 				shift
 				;;
 			-*)
-				E_ "${ME}: Unknown argument '${ARG}' ignoring." >&2
+				E_ "${ME}: Unknown argument '${ARG}'." >&2
 				DO_HELP="true"
 				;;
 			*)
@@ -79,7 +89,7 @@ usage_and_exit()
 	RET=$1
 	exec >&2
 
-	local MSG="\nUsage: ${ME} [--help] [--debug] [--lock] [--output file]"
+	local MSG="\nUsage: ${ME} [--help] [--debug] [--lock] [--output-dir dir] [--output file]"
 	MSG+="\n    [--mini] [--filename file]"
 	MSG+="\n    [--fps s] [--bitrate b]"
 	MSG+="\n    --images file | <INPUT_DIR>"
@@ -91,25 +101,29 @@ usage_and_exit()
 
 	echo
 	echo "where:"
-	echo "    '--help' prints this message and exists."
-	echo "    '--debug' outputs debugging information."
-	echo "    '--lock' ensures only one instance of ${ME} runs at a time."
-	echo "    '--output file' overrides the default storage location and file name."
-	echo "    '--mini' uses the Mini-Timelapse settings and the timelapse file is"
-	echo "       called 'mini-timelapse.mp4' (unless '--output' is used)."
-	echo "    '--filename file' uses 'file' as the beginning of the file names." 
-	echo "       This is useful if creating a timelapse of non-Allsky files."
+	echo "  --help             prints this message and exists."
+	echo "  --debug            outputs debugging information."
+	echo "  --lock             ensures only one instance of ${ME} runs at a time."
+	echo "  --output-dir dir   puts the output file in 'dir'."
+	echo "  --output file      overrides the default storage location and file name."
+	echo "                     Should not be used if --output-dir is also used."
+	echo "  --mini             uses the Mini-Timelapse settings and the timelapse file is"
+	echo "                     called 'mini-timelapse.mp4' (unless '--output' is used)."
+	echo "  --filename file    uses 'file' as the beginning of the file names." 
+	echo "                     This is useful if creating a timelapse of non-Allsky files."
 	echo
-	echo "The list of images to use is determined in one of two ways:"
+	echo "The list of images to process is determined in one of two ways:"
 	echo "1. Looking in '<INPUT_DIR>' for files with an extension of '${EXTENSION}'."
 	echo "   If <INPUT_DIR> is a full path name all files ending in '${EXTENSION}' are used,"
 	echo "   otherwise <INPUT_DIR> is assumed to be in '${ALLSKY_IMAGES}' and"
 	echo "   only files begining with '${IMAGE_NAME}' are use."
-	echo "   The timelapse is stored in <INPUT_DIR> and is called 'allsky-<BASENAME_DIR>.mp4',"
-	echo "   where <BASENAME_DIR> is the basename of <INPUT_DIR>."
+	echo "   The timelapse is called 'allsky-<BASENAME_DIR>.mp4' where"
+	echo "   <BASENAME_DIR> is the basename of <INPUT_DIR> and"
+	echo "   is stored in <INPUT_DIR> unless '-output-dir' is specified."
 	echo
 	echo "2. Specifying '--images file' uses the images listed in 'file'; <INPUT_DIR> is not used."
-	echo "   The timelapse video is stored in the same directory as the first image."
+	echo "   timelapse videos are stored in the same directory as the first image unless"
+	echo "   '--output-dir' is specified."
 
 	exit "${RET}"
 }
@@ -118,8 +132,11 @@ usage_and_exit()
 [[ -z ${IMAGES_FILE} && -z ${INPUT_DIR} ]] && usage_and_exit 1
 [[ -n ${IMAGES_FILE} && -n ${INPUT_DIR} ]] && usage_and_exit 1
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
+if [[ -n ${OUTPUT_DIR} && ! -d ${OUTPUT_DIR} ]]; then
+	E_ "${ME}: Output directory '${OUTPUT_DIR}' does not exist." >&2
+	exit 2
+fi
 
-OUTPUT_DIR=""
 LAST_IMAGE=""
 
 if [[ -n ${IMAGES_FILE} ]]; then
@@ -170,7 +187,7 @@ if [[ ${LOCK} == "true" ]]; then
 		fi
 	fi
 	ABORTED_MSG1="Another timelapse creation is in progress so this one (${PPID}) was aborted."
-	ABORTED_FIELDS="$( basename "${OUTPUT_FILE}" )\tMY_PID=${MY_PID}\tPPID=${PPID}"
+	ABORTED_FIELDS="$( basename "${OUTPUT}" )\tMY_PID=${MY_PID}\tPPID=${PPID}"
 	ABORTED_MSG2="timelapse creations"
 	if [[ ${IS_MINI} == "true" ]]; then
 		CAUSED_BY="This could be caused by the  Mini-Timelapse"
@@ -201,12 +218,14 @@ else
 	ALLSKY_TIMELAPSE_PID_FILE=""
 fi
 
-if [[ -z ${OUTPUT_FILE} ]]; then
+if [[ -n ${OUTPUT_DIR} && -n ${OUTPUT_FILE} ]]; then
+	OUTPUT="${OUTPUT_DIR}/${OUTPUT_FILE}"
+elif [[ -z ${OUTPUT} ]]; then
 	if [[ ${IS_MINI} == "true" ]]; then
-		OUTPUT_DIR="${ALLSKY_TMP}"
-		OUTPUT_FILE="${OUTPUT_DIR}/mini-timelapse.mp4"
+		[[ -z ${OUTPUT_DIR} ]] && OUTPUT_DIR="${ALLSKY_TMP}"
+		OUTPUT="${OUTPUT_DIR}/${OUTPUT_FILE:-mini-timelapse.mp4}"
 	else
-		if [[ -n ${IMAGES_FILE} ]]; then
+		if [[ -z ${OUTPUT_DIR} && -n ${IMAGES_FILE} ]]; then
 			# Use the directory the images are in.  Only look at the first one.
 			I="$( head -1 "${IMAGES_FILE}" )"
 			OUTPUT_DIR="$( dirname "${I}" )"
@@ -219,8 +238,7 @@ if [[ -z ${OUTPUT_FILE} ]]; then
 		fi
 
 		# Use the basename of the directory.
-		B="$( basename "${OUTPUT_DIR}" )"
-		OUTPUT_FILE="${OUTPUT_DIR}/allsky-${B}.mp4"
+		OUTPUT="${OUTPUT_DIR}/${OUTPUT_FILE:-allsky-$( basename "${OUTPUT_DIR}" ).mp4}"
 	fi
 fi
 
@@ -317,7 +335,7 @@ X="$( ffmpeg -y -f image2 \
 	-movflags +faststart \
 	${SCALE} \
 	${EXTRA} \
-	"${OUTPUT_FILE}" 2>&1 )"
+	"${OUTPUT}" 2>&1 )"
 RET=$?
 # The "deprecated..." message is useless and only confuses users, so hide it.
 X="$( echo "${X}" | grep -E -v "deprecated pixel format used|Processed " )"
@@ -340,7 +358,7 @@ if [[ ${RET} -ne -0 ]]; then
 	echo
 	echo "Links in '${SEQUENCE_DIR}' left for debugging."
 	echo -e "Remove them when the problem is fixed.${NC}\n"
-	rm -f "${OUTPUT_FILE}"	# don't leave around to confuse user
+	rm -f "${OUTPUT}"	# don't leave around to confuse user
 	[[ -n ${ALLSKY_TIMELAPSE_PID_FILE} ]] && rm -f "${ALLSKY_TIMELAPSE_PID_FILE}"
 	exit 1
 fi

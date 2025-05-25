@@ -11,6 +11,7 @@ source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 
+OK="true"
 DO_HELP="false"
 DEBUG_ARG=""
 TYPE="GENERATE"
@@ -81,7 +82,7 @@ while [[ $# -gt 0 ]]; do
 
 			-*)
 				E_ "${ME}: Unknown argument '${ARG}'." >&2
-				DO_HELP="true"
+				OK="false"
 				;;
 			*)
 				break
@@ -131,6 +132,7 @@ usage_and_exit()
 }
 
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
+[[ ${OK} == "false" ]] && usage_and_exit 1
 
 if [[ -n ${OUTPUT_DIR} && ! -d ${OUTPUT_DIR} ]]; then
 	E_ "${ME}: Output directory '${OUTPUT_DIR}' does not exist." >&2

@@ -2398,16 +2398,6 @@
 "carryforward" : true
 },
 {
-"name" : "notificationimages",
-"default" : true,
-"description" : "Enable to display notification images, e.g., 'Camera is off during the day'.<br>While these messages appear in the WebUI and Allsky Website, they are not saved so don't appear in timelapse, startrails, or keograms.",
-"label" : "Notification Images",
-"type" : "boolean",
-"usage" : "capture",
-"carryforward" : true,
-"action" : "reload"
-},
-{
 "name" : "webuidatafiles",
 "default" : "",
 "description" : "See the documentation for a <a allsky='true' external='true' href='/documentation/settings/allsky.html'>description of this setting</a>.",

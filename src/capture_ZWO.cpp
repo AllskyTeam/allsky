@@ -1163,9 +1163,7 @@ int main(int argc, char *argv[])
 
 			Log(1, "Taking dark frames...\n");
 
-			if (CG.notificationImages) {
-				(void) displayNotificationImage("--expires 0 DarkFrames &");
-			}
+			(void) displayNotificationImage("--expires 0 DarkFrames &");
 		}
 
 		else if (dayOrNight == "DAY")

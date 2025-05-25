@@ -65,7 +65,7 @@ OVERLAY_NAME=""
 #xxx currently not used:    ALLSKY_BASE_VERSION="$( remove_point_release "${ALLSKY_VERSION}" )"
 
 	# Base of first version without Buster support or "legacy" overlay method.
-declare -r NO_BUSTER_BASE_VERSION="v2025.xx.xx"		# TODO: Change xxxxxxxxxxxxxxxx
+#declare -r NO_BUSTER_BASE_VERSION="v2025.xx.xx"		# TODO: Change xxxxxx not used yet
 	# Base of first version with combined configuration files and all lowercase setting names.
 declare -r COMBINED_BASE_VERSION="v2024.12.06"
 	# Base of first version with CAMERA_TYPE instead of CAMERA in config.sh and

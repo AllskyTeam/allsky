@@ -247,7 +247,11 @@ if ($useRemoteWebsite) {
 					} else {
 						$more = "";
 					}
-					echo "<span $more class='nowrap'>Version: " . ALLSKY_VERSION . "</span>";
+					echo "<span class='nowrap'>";
+						echo "<span $more>Version: " . ALLSKY_VERSION . "</span>";
+						echo "&nbsp; on &nbsp;";
+						echo "<span style='font-weight: bold'>$hostname</span>";
+					echo "</span>";
 if ($useLocalWebsite) {
 					echo "<br>";
 					echo "<span class='nowrap'>";

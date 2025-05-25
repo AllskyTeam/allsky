@@ -207,13 +207,9 @@ function displayUserData($file, $displayType)
  */
 function DisplaySystem()
 {
-	global $temptype, $page, $settings_array, $status;
+	global $temptype, $page, $settings_array, $status, $hostname;
 
 	$top_dir = dirname(ALLSKY_WEBSITE, 1);
-
-	// hostname
-	exec("hostname -f", $hostarray);
-	$hostname = $hostarray[0];
 
 	// uptime
 	$uparray = explode(" ", exec("cat /proc/uptime"));

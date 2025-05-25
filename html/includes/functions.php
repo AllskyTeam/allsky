@@ -122,6 +122,7 @@ $hasRemoteWebsite = false;
 $endSetting = "XX_END_XX";
 $saveChangesLabel = "Save changes";
 $forceRestart = false;					// Restart even if no changes?
+$hostname = null;
 
 function readSettingsFile() {
 	$settings_file = getSettingsFile();
@@ -187,6 +188,7 @@ function initialize_variables($website_only=false) {
 	global $settings_array;
 	global $useLocalWebsite, $useRemoteWebsite;
 	global $hasLocalWebsite, $hasRemoteWebsite;
+	global $hostname;
 
 	$settings_array = readSettingsFile();
 
@@ -298,6 +300,9 @@ function initialize_variables($website_only=false) {
 	// Lessen the delay between a new picture and when we check.
 	$delay /= 5;
 	$delay = max($delay, 2 * $ms_per_sec);
+
+	exec("hostname -f", $hostarray);
+	$hostname = $hostarray[0];
 }
 
 // Check if the settings have been configured.

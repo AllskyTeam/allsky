@@ -1471,7 +1471,7 @@ function execute_web_commands()
 {
 	local URL="${1}"
 
-	curl --silent --location "${URL}/runCommands.php"
+	curl --user-agent Allsky --silent --location "${URL}/runCommands.php"
 }
 
 ####

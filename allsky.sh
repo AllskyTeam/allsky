@@ -205,8 +205,6 @@ if [[ -f ${ALLSKY_POST_INSTALL_ACTIONS} ]]; then
 	fi
 fi
 
-USE_NOTIFICATION_IMAGES="true"
-
 # Get the list of connected cameras and make sure the one we want is connected.
 if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 	RPi_COMMAND_TO_USE=""
@@ -350,11 +348,8 @@ sudo chmod 775 "${ALLSKY_ABORTS_DIR}"
 
 rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 
-# Optionally display a notification image.
-if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
-	# Can do this in the background to speed up startup.
-	"${ALLSKY_SCRIPTS}/copyNotificationImage.sh" --expires 0 "StartingUp" 2>&1 &
-fi
+# Can do this in the background to speed up startup.
+"${ALLSKY_SCRIPTS}/copyNotificationImage.sh" --expires 0 "StartingUp" 2>&1 &
 
 # Only pass settings that are used by the capture program.
 if ! ARGS="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --capture-only )" ; then
@@ -420,9 +415,7 @@ if [[ ${RETCODE} -eq ${EXIT_RESTARTING} ]]; then
 	else
 		NOTIFICATION_TYPE="Restarting"
 	fi
-	if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
-		"${ALLSKY_SCRIPTS}/copyNotificationImage.sh" "${NOTIFICATION_TYPE}"
-	fi
+	"${ALLSKY_SCRIPTS}/copyNotificationImage.sh" "${NOTIFICATION_TYPE}"
 	set_allsky_status "${ALLSKY_STATUS_RESTARTING}"
 	doExit 0 "${NOTIFICATION_TYPE}"		# use 0 so the service is restarted
 fi
@@ -436,9 +429,7 @@ if [[ ${RETCODE} -eq ${EXIT_RESET_USB} ]]; then
 	else
 		NOTIFICATION_TYPE="Restarting"
 	fi
-	if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
-		"${ALLSKY_SCRIPTS}/copyNotificationImage.sh" "${NOTIFICATION_TYPE}"
-	fi
+	"${ALLSKY_SCRIPTS}/copyNotificationImage.sh" "${NOTIFICATION_TYPE}"
 	set_allsky_status "${ALLSKY_STATUS_ERROR}"
 	doExit 0 ""		# use 0 so the service is restarted
 fi
@@ -457,11 +448,6 @@ if [[ ${RETCODE} -ge ${EXIT_ERROR_STOP} ]]; then
 fi
 
 # Some other error
-if [[ ${USE_NOTIFICATION_IMAGES} == "true" ]]; then
-	# If started by the service, it will restart us once we exit.
-	set_allsky_status "${ALLSKY_STATUS_NOT_RUNNING}"
-	doExit "${RETCODE}" "NotRunning"
-else
-	set_allsky_status "${ALLSKY_STATUS_SEE_WEBUI}"
-	doExit "${RETCODE}" ""
-fi
+# If started by the service, it will restart us once we exit.
+set_allsky_status "${ALLSKY_STATUS_NOT_RUNNING}"
+doExit "${RETCODE}" "NotRunning"

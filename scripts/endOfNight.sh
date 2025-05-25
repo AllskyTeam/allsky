@@ -52,16 +52,19 @@ fi
 if [[ $( settings ".keogramgenerate" ) == "true" ]]; then
 	echo -e "${ME}: ===== Generating Keogram for ${DATE}"
 	#shellcheck disable=SC2086
-	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent --keogram "${DATE}"
+	X="$( "${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent --keogram "${DATE}" 2>&1 )"
 	RET=$?
 	MSG="${ME}: ===== Keogram completed"
 	if [[ ${RET} -eq 0 ]]; then
 		echo -e "${MSG} successfully"
+		[[ -n ${X} ]] && echo "${X}"
 		if [[ $( settings ".keogramupload" ) == "true" ]] ; then
 			"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload --keogram "${DATE}"
 		fi
 	else
-		echo -e "${MSG} with error"
+		echo -e "${MSG} with error:" >&2
+		echo -e "${X}" >&2
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${X}"
 	fi
 fi
 
@@ -70,16 +73,19 @@ fi
 if [[ $( settings ".startrailsgenerate" ) == "true" ]]; then
 	echo -e "${ME}: ===== Generating Startrails for ${DATE}"
 	#shellcheck disable=SC2086
-	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent --startrails "${DATE}"
+	X="$( "${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent --startrails "${DATE}" 2>&1 )"
 	RET=$?
 	MSG="${ME}: ===== Startrails completed"
 	if [[ ${RET} -eq 0 ]]; then
 		echo -e "${MSG} successfully"
+		[[ -n ${X} ]] && echo "${X}"
 		if [[ $( settings ".startrailsupload" ) == "true" ]] ; then
 			"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload --startrails "${DATE}"
 		fi
 	else
-		echo -e "${MSG} with error"
+		echo -e "${MSG} with error:" >&2
+		echo -e "${X}" >&2
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${X}"
 	fi
 fi
 
@@ -89,16 +95,19 @@ fi
 if [[ $( settings ".timelapsegenerate" ) == "true" ]]; then
 	echo -e "${ME}: ===== Generating Timelapse for ${DATE}"
 	#shellcheck disable=SC2086
-	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent --timelapse "${DATE}"
+	X="$( "${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent --timelapse "${DATE}" 2>&1 )"
 	RET=$?
 	MSG="${ME}: ===== Timelapse completed"
 	if [[ ${RET} -eq 0 ]]; then
 		echo -e "${MSG} successfully"
+		[[ -n ${X} ]] && echo "${X}"
 		if [[ $( settings ".timelapseupload" ) == "true" ]] ; then
 			"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload --timelapse "${DATE}"
 		fi
 	else
-		echo -e "${MSG} with error"
+		echo -e "${MSG} with error:" >&2
+		echo -e "${X}" >&2
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${X}"
 	fi
 fi
 
@@ -108,15 +117,14 @@ if [[ ${DAYS_TO_KEEP} -gt 0 ]]; then
 	del=$( date --date="${DAYS_TO_KEEP} days ago" +%Y%m%d )
 	# "20" for years >= 2000.   Format:  YYYYMMDD
 	#                                                   YY  Y    Y   M    M   D      D
-	find "${ALLSKY_IMAGES}/" -maxdepth 1 -type d -name "20[2-9][0-9][01][0-9][0123][0-9]" | \
+	find "${ALLSKY_IMAGES}/" -maxdepth 1 -type d -name "20[2-9][0-9][01][0-9][0123][0-9]" |
 		while read -r i
-
-	do
-		if (( del > $( basename "${i}" ) )); then
-			echo "${ME}: Deleting old directory ${i}"
-			rm -rf "${i}"
-		fi
-	done
+		do
+			if (( del > $( basename "${i}" ) )); then
+				echo "${ME}: Deleting old directory ${i}"
+				rm -rf "${i}"
+			fi
+		done
 fi
 
 # Automatically delete old Website images and videos.

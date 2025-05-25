@@ -296,6 +296,21 @@ function DisplayModule() {
 					<li role="presentation"><a href="#mm-i2c-dialog-tab-help" aria-controls="profile" role="tab" data-toggle="tab">Help</a></li>
 				</ul>
 
+
+                <div class="alert alert-danger mt-5" id="mm-i2c-error" style="display: none" role="alert">No i2c devices found. Please check that i2c is enabled using the raspi-config tool</div>
+
+                <div class="panel panel-default mt-5" id="mm-i2c-data-missing" style="display: none">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">i2c Library missing</h3>
+                    </div>
+                    <div class="panel-body">
+                        <p>The i2c library is not installed. To create the library please click the button below. The update can take several minutes.</p>
+                        <div class="text-center">
+                            <button class="btn btn-primary mm-i2c-create-library" >Create Library</button>
+                        </div>
+                    </div>
+                </div>
+
 				<div class="tab-content">
 					<div role="tabpanel" class="tab-pane active" id="mm-i2c-dialog-tab-detected">
 						<table id="mm-i2c-dialog-tab-detected-devices" class="display i2ctable" style="width:98%">
@@ -337,6 +352,8 @@ function DisplayModule() {
 				</div>
 			</div>
 			<div class="modal-footer">
+                <button type="button" class="btn btn-primary pull-left mm-i2c-create-library" >Update Database</button>
+
 				<button type="button" class="btn btn-danger" data-dismiss="modal" id="mm-i2c-dialog-cancel">Close</button>
 				<button type="submit" class="btn btn-primary" id="mm-i2c-dialog-select">Select</button>
 			</div>

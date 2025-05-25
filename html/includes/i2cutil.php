@@ -10,10 +10,9 @@ class I2CUTIL
     private $request;
     private $method;
     private $jsonResponse = false;
-    private $issueDir;
 
     function __construct() {
-        $this->issueDir = ALLSKY_WEBUI . "/support";
+        $this->allskyHome = ALLSKY_HOME;
     }
 
     public function run()
@@ -98,6 +97,12 @@ class I2CUTIL
 
 		return $result;
 	}
+
+    public function getBuild() {
+		$command = ALLSKY_SCRIPTS . "/i2cdatabase.py --allskyhome " . ALLSKY_HOME;
+		$result = $this->runShellCommand($command);
+        $this->sendResponse($result['message']);
+    }
 
     public function getDevices() {
 		$command = 'sudo ' . ALLSKY_SCRIPTS . "/i2cbus.py";

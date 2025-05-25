@@ -65,6 +65,8 @@
 						Previously the error message was written to a temporary
 						file that was overwritten every exposure, thereby
 						losing prior messages.
+					<li>A message is added to the WebUI if creation of a timelapse,
+						startrails, or keogram fails during end-of-night processing.
 				</ul>
 
 				<h4>Bug Fixes</h4>
@@ -72,12 +74,16 @@
 					<li>The <span class="WebUILink">Getting Support</span> WebUI page
 						(and the related <code>support.sh</code> command) no longer
 						fail with a "Argument list too long" message.
+					<li><code>upload.sh</code> no longer finds files that don't exist.
 				</ul>
 
 				<h4>Deleted Settings</h4>
 				<ul>
-<!-- Notification Images -->
-					<li><span class="WebUISetting">None</span>
+					<li><span class="WebUISetting">Notification Images</span>
+						<br>
+						Notification images, e.g., "Allsky is starting up" now provide
+						valuable status and troubshooting information so can no longer
+						be disabled.
 				</ul>
 				<h4>New Settings</h4>
 				<ul>

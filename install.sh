@@ -2430,7 +2430,7 @@ restore_prior_settings_file()
 		# Copy all the camera-specific settings files; don't copy the generic-named
 		# file since it will be recreated.
 		# There will be more than one camera-specific file if the user has multiple cameras.
-		local PRIOR_SPECIFIC_FILES="$( find "${PRIOR_CONFIG_DIR}" -name "${NAME}_"'*'".${EXT}" )"
+		local PRIOR_SPECIFIC_FILES="$( find "${PRIOR_CONFIG_DIR}" -maxdepth 1 -name "${NAME}_"'*'".${EXT}" )"
 		if [[ -n ${PRIOR_SPECIFIC_FILES} ]]; then
 			FIRST_ONE="true"
 			echo "${PRIOR_SPECIFIC_FILES}" | while read -r FILE

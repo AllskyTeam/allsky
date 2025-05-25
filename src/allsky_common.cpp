@@ -544,7 +544,7 @@ bool checkForValidExtension(config *cg)
 	// Get just the name of the file, without any directories or the extension.
 	if (cg->takeDarkFrames)
 	{
-		// To avoid overwriting the optional notification image with the dark image,
+		// To avoid overwriting the notification image with the dark image,
 		// during dark frames we use a different file name.
 		static char darkFilename[20];
 		snprintf(darkFilename, sizeof(darkFilename), "dark.%s", cg->imageExt);

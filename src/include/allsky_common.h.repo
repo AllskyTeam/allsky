@@ -296,7 +296,6 @@ struct config {			// for configuration variables
 		char fullFilename[1000]			= { 0 };
 	long rotation						= 0;
 	long flip							= 0;
-	bool notificationImages				= true;
 	char const *tempType				= "C";
 	char const *latitude				= NULL;
 	char const *longitude				= NULL;

@@ -1362,9 +1362,11 @@ function activate_python_venv()
 # TODO: will need to change when the OS after bookworm is released
 # If our next release is out, it won't support buster so may be check  != bullseye  ?
 
-	if [[ ${PI_OS} == "bookworm" ]]; then
+	local ACTIVATE="${ALLSKY_PYTHON_VENV}/bin/activate"
+
+	if [[ ${PI_OS} == "bookworm" && -s ${ACTIVATE} ]]; then
 		#shellcheck disable=SC1090,SC1091
-		source "${ALLSKY_PYTHON_VENV}/bin/activate" || exit 1
+		source "${ACTIVATE}" || exit 1
 		PYTHON_VENV_ACTIVATED="true"
 		return 0	# Successfully activated
 	fi
@@ -1469,7 +1471,7 @@ function execute_web_commands()
 {
 	local URL="${1}"
 
-	curl --silent --location "${URL}/runCommands.php"
+	curl --user-agent Allsky --silent --location "${URL}/runCommands.php"
 }
 
 ####

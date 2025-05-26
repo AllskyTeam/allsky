@@ -28,15 +28,3 @@ else
 	MOVE_TO_FILE="${DARKS_DIR}/${AS_TEMPERATURE_C}.${DARK_EXTENSION}"
 fi
 mv "${CURRENT_IMAGE}" "${MOVE_TO_FILE}" || exit 3
-
-# If the user has notification images on, the current image says "Taking dark frames",
-# so don't overwrite it.
-# If notification images are off, let the user see the dark from to know it's working.
-# Some people may want to see the dark frame even if notification images
-# are being used, but no one's askef for that feature so don't worry about it.
-
-if [[ $( settings ".notificationimages" ) == "false" ]]; then
-	# We're copying back the file we just moved, but the assumption is few people
-	# will want to see the dark frames so the performance hit is 
-	cp "${MOVE_TO_FILE}" "${ALLSKY_TMP}/${FILENAME}.${EXTENSION}" || exit 4
-fi

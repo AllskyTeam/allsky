@@ -17,7 +17,9 @@ fi
 #	Minimum: 0.0840083   maximum: 0.145526   mean: 0.103463   median: 0.104839
 #	$2       $3          $4       $5         $6    $7         $8      $9
 
-grep --no-filename "startrails: Minimum" "${ALLSKY_LOG}"* 2> /dev/null |
+LOGS="$( ls -tr "${ALLSKY_LOG}"* )"
+#shellcheck disable=SC2086
+grep --no-filename "startrails: Minimum" ${LOGS} 2> /dev/null |
 	sed "s/$(uname -n).*startrails: //" |
 	nawk 'BEGIN {
 			print; t_min=0; t_max=0; t_mean=0; t_median=0; t_num=0

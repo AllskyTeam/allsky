@@ -78,7 +78,7 @@ DIALOG_PRE_CHECK="${DIALOG_WELCOME_TITLE} - Pre Installation Checks"
 DIALOG_INSTALL="Installing Remote Website"
 DIALOG_DONE="Remote Website Installation Completed"
 DIALOG_ABORT="${DIALOG_WELCOME_TITLE} - Aborting"
-DIALOG_TITLE_LOG="Allsky Remote Website Installation Log"
+DIALOG_TITLE_ERROR_MSG="Allsky Remote Website Detailed Error Message"
 
 # Old Allksy Website files that should be removed if they exist.
 # These were removed in v2024.12.06:
@@ -460,7 +460,7 @@ function display_aborted()
 		DIALOG_PROMPT+="$( dU_ "Would you like to view the detailed error message?" )"
 		if display_box "--yesno" "${DIALOG_ABORT}" "${DIALOG_PROMPT}" ; then
 			ERROR_MSG="$( remove_colors "\n\n${ERROR_MSG}" )"
-			display_box "--msgbox" "${DIALOG_TITLE_LOG}" "${ERROR_MSG}" "--scrollbar"
+			display_box "--msgbox" "${DIALOG_TITLE_ERROR_MSG}" "${ERROR_MSG}" "--scrollbar"
 		fi
 	fi
 
@@ -531,12 +531,12 @@ function check_upload()
 		for FILE_TO_MOVE in "${FILES_TO_MOVE[@]}"; do
 			echo -e "move_files\t${FILE_TO_MOVE}"
 		done
-	} > "${TEST_FILE}"
+	} > "${ALLSKY_TMP}/${TEST_FILE}"
 
 	# Some user reported this hanging, so add a timeout.
 	ERR="$( timeout --signal=KILL "${SECS}" \
 		"${ALLSKY_SCRIPTS}/testUpload.sh" --frominstall --website --silent \
-		--output "${TESTUPLOAD_OUTPUT_FILE}" --file "${TEST_FILE}" 2>&1 )"
+		--output "${TESTUPLOAD_OUTPUT_FILE}" --file "${ALLSKY_TMP}/${TEST_FILE}" 2>&1 )"
 	RET=$?
 	if [[ ${RET} -eq 0 ]]; then
 		echo "PASSED"
@@ -685,7 +685,7 @@ function check_if_web_files_exist()
 	for FILE in "$@"; do
 		url="${URL}/${FILE}"
 
-		HTTP_STATUS="$( curl -o /dev/null --head --silent --show-error --location --write-out "%{http_code}" "${url}" 2>&1 )"
+		HTTP_STATUS="$( curl --user-agent Allsky -o /dev/null --head --silent --show-error --location --write-out "%{http_code}" "${url}" 2>&1 )"
 		RET=$?
 
 		if [[ ${RET} -ne 0 || ${HTTP_STATUS} != "200" ]] ; then

@@ -64,6 +64,8 @@ OVERLAY_NAME=""
 ##### Allsky versions.   ${ALLSKY_VERSION} is set in variables.sh
 #xxx currently not used:    ALLSKY_BASE_VERSION="$( remove_point_release "${ALLSKY_VERSION}" )"
 
+	# Base of first version without Buster support or "legacy" overlay method.
+#declare -r NO_BUSTER_BASE_VERSION="v2025.xx.xx"		# TODO: Change xxxxxx not used yet
 	# Base of first version with combined configuration files and all lowercase setting names.
 declare -r COMBINED_BASE_VERSION="v2024.12.06"
 	# Base of first version with CAMERA_TYPE instead of CAMERA in config.sh and
@@ -1972,6 +1974,10 @@ convert_settings_file()			# prior_file, new_file
 				"XX_END_XX")
 					;;
 
+				# ===== Deleted in ${NO_BUSTER_BASE_VERSION}
+				"notificationimages")
+					;;
+
 				# ===== Deleted in ${COMBINED_BASE_VERSION}.
 				"autofocus" | "background" | "alwaysshowadvanced" | \
 				"newexposure" | "experimentalexposure" | "showbrightness")
@@ -2425,7 +2431,7 @@ restore_prior_settings_file()
 		# Copy all the camera-specific settings files; don't copy the generic-named
 		# file since it will be recreated.
 		# There will be more than one camera-specific file if the user has multiple cameras.
-		local PRIOR_SPECIFIC_FILES="$( find "${PRIOR_CONFIG_DIR}" -name "${NAME}_"'*'".${EXT}" )"
+		local PRIOR_SPECIFIC_FILES="$( find "${PRIOR_CONFIG_DIR}" -maxdepth 1 -name "${NAME}_"'*'".${EXT}" )"
 		if [[ -n ${PRIOR_SPECIFIC_FILES} ]]; then
 			FIRST_ONE="true"
 			echo "${PRIOR_SPECIFIC_FILES}" | while read -r FILE

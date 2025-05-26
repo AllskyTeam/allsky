@@ -386,12 +386,12 @@ else # sftp/ftp/ftps
 			fi
 		fi
 
-		# Unlikely, but just in case it's already there.
-		# Need the "*" after the file name otherwise glob always succeeds.
-		echo "glob --exist '${TEMP_NAME}*' && echo '${TEMP_NAME} exists; removing...' && rm '${TEMP_NAME}'"
+		# Unlikely, but just in case it's already there, remove it and log the action.
+		# Glob requires a regular expression, otherwise it always finds the file even if it's not there.
+		echo "glob --exist '[${TEMP_NAME:0:1}]${TEMP_NAME:1}' && echo '${TEMP_NAME} exists; removing...' && rm '${TEMP_NAME}'"
 
 		echo "put '${FILE_TO_UPLOAD}' -o '${TEMP_NAME}'
-			|| (echo 'put of ${FILE_TO_UPLOAD} to ${TEMP_NAME} failed!  Trying again...'; (!sleep 3);  put '${FILE_TO_UPLOAD}' -o '${TEMP_NAME}' && echo 'WORKED' && exit 0)
+			|| (echo 'put of ${FILE_TO_UPLOAD} to ${TEMP_NAME} failed!  Trying again...'; sleep 3;  put '${FILE_TO_UPLOAD}' -o '${TEMP_NAME}' && echo 'WORKED' && exit 0)
 			|| (echo '2nd put failed again, quitting'; exit 1)
 			|| exit 2"
 
@@ -399,15 +399,15 @@ else # sftp/ftp/ftps
 		# If the "rm" fails, the file may be in use by the web server or another lftp,
 		# so wait a few seconds and try again, but without the "-f" option so we see any error msg.
 		echo "rm  -f '${DESTINATION_NAME}'"
-		echo "glob --exist '${DESTINATION_NAME}*'
-			&& (echo 'rm of ${DESTINATION_NAME} failed!  Trying again...';  (!sleep 3);  rm '${DESTINATION_NAME}' && echo 'WORKED' && exit 1)
+		echo "glob --exist '[${DESTINATION_NAME:0:1}]${DESTINATION_NAME:1}'
+			&& (echo 'rm of ${DESTINATION_NAME} failed!  Trying again...';  sleep 3;  rm '${DESTINATION_NAME}' && echo 'WORKED' && exit 1)
 			&& (echo '2nd rm failed, quiting.'; rm -f '${TEMP_NAME}'; exit 1)
 			&& exit 3"
 
 		# If the first "mv" fails, wait, then try again.  If that works, exit 0.
 		# If the 2nd "mv" also fails exit 4.  Either way, display a 2nd message.
 		echo "mv '${TEMP_NAME}' '${DESTINATION_NAME}'
-			|| (echo 'mv of ${TEMP_NAME} to ${DESTINATION_NAME} failed!  Trying again...'; (!sleep 3); mv '${TEMP_NAME}' '${DESTINATION_NAME}' && echo 'WORKED' && exit 0)
+			|| (echo 'mv of ${TEMP_NAME} to ${DESTINATION_NAME} failed!  Trying again...'; sleep 3; mv '${TEMP_NAME}' '${DESTINATION_NAME}' && echo 'WORKED' && exit 0)
 			|| (echo '2nd mv failed, quitting.'; rm -f '${TEMP_NAME}'; exit 1)
 			|| exit 4"
 

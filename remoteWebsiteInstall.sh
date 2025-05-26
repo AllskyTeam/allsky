@@ -38,6 +38,8 @@ TEST_FILE_UPLOADED="false"
 UPLOAD_IMAGE_FILES="false"
 GLOBAL_ERROR_MSG=""			# a global error message
 INDENT="  "		# indent each line so it's easier to read
+	# USER_AGENT is for servers that don't return anything to curl or wget.
+USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36 Edg/136.0.0.0"
 
 # Get DIALOG_WIDTH and DIALOG_HEIGHT
 calc_d_sizes
@@ -606,7 +608,7 @@ function update_old()
 # See 'pre_install_checks' for details on which configuration file is used.
 function create_website_config()
 {
-	local MSG  ERR  DEST_FILE  FILE  VER
+	local MSG  ERR  DEST_FILE  FILE  VER  COOKIE
 
 	if [[ ${CONFIG_TO_USE} == "new" || ${CONFIG_TO_USE} == "remoteReallyOld" ]]; then
 		# Need a new config file so copy it from the repo and replace as many
@@ -641,7 +643,10 @@ function create_website_config()
 		FILE="${REMOTE_WEBSITE_URL}"
 		[[ ${FILE: -1:1} != "/" ]] && FILE+="/"
 		FILE+="${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
-		if ERR="$( wget -O "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" "${FILE}" 2>&1)"; then
+		# COOKIE needed by "openresty" server.
+		COOKIE="Cookie: __test=fe0d3f38baa58bc2c6c8219346065dac"
+		if ERR="$( wget --tries=1 --user-agent="${USER_AGENT}" --header="${COOKIE}" --no-verbose \
+				-O "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" "${FILE}" 2>&1)"; then
 			MSG="Downloaded remote '${ALLSKY_WEBSITE_CONFIGURATION_NAME}'"
 			MSG+=" to '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}'."
 			display_msg --logonly info "${MSG}"
@@ -685,7 +690,7 @@ function check_if_web_files_exist()
 	for FILE in "$@"; do
 		url="${URL}/${FILE}"
 
-		HTTP_STATUS="$( curl --user-agent Allsky -o /dev/null --head --silent --show-error --location --write-out "%{http_code}" "${url}" 2>&1 )"
+		HTTP_STATUS="$( curl --user-agent "${USER_AGENT}" -o /dev/null --head --silent --show-error --location --write-out "%{http_code}" "${url}" 2>&1 )"
 		RET=$?
 
 		if [[ ${RET} -ne 0 || ${HTTP_STATUS} != "200" ]] ; then

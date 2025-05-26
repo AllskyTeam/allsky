@@ -179,13 +179,7 @@ if ($useRemoteWebsite) {
 
 	<script src="js/bigscreen.min.js"></script>
 
-	<script type="text/javascript">
-		// Inititalize theme to light
-		if (!localStorage.getItem("theme")) {
-			localStorage.setItem("theme", "light")
-		}
-
-	</script>
+    <script src="js/allsky.js"></script>
 
 	<!-- Custom Theme JavaScript -->
 	<script src="documentation/js/sb-admin-2.js"></script>
@@ -524,44 +518,7 @@ if ($useRemoteWebsite) {
 	</div><!-- /#page-wrapper -->
 </div><!-- /#wrapper -->
 
-<script type="text/javascript">
-	$("body").attr("class", localStorage.getItem("theme"));
+<script> var allskyPage='<?php echo $page ?>';  </script>
 
-	function switchTheme() {
-		if (localStorage.getItem("theme") === "light") {
-			localStorage.setItem("theme", "dark");
-		} else {
-			localStorage.setItem("theme", "light");
-		}
-		$("body").attr("class", localStorage.getItem("theme"));
-	}
-
-	$("#live_container").click(function () {
-			if (BigScreen.enabled) {
-				BigScreen.toggle(this, null, null, null);
-			} else {
-				console.log("Not Supported");
-			}
-		});
-
-	// Add timestamps to href's that need it.
-	function addTimestamp(id) {
-		var x = document.getElementById(id);
-		if (! x) console.log("No id for " + id);
-		else x.href += "&_ts=" + new Date().getTime();
-	}
-	addTimestamp("live_view");
-	addTimestamp("list_days");
-	addTimestamp("configuration");
-	addTimestamp("editor");
-	addTimestamp("overlay");
-	addTimestamp("module");
-	addTimestamp("LAN");
-	addTimestamp("WLAN");
-	addTimestamp("wifi");
-	addTimestamp("auth_conf");
-	addTimestamp("system");
-</script>
 </body>
 </html>
-<script> includeHTML(); </script>

@@ -1085,4 +1085,114 @@ function getNewestAllskyVersion(&$changed=null)
 
 	return($version_array);
 }
+
+function getCPULoad() 
+{
+	$secs = 2; $q = '"';
+	$cmd = "(grep -m 1 'cpu ' /proc/stat; sleep $secs; grep -m 1 'cpu ' /proc/stat)";
+	$cmd .= " | gawk '{u=$2+$4; t=$2+$4+$5; if (NR==1){u1=u; t1=t;} else printf($q%.0f$q, (($2+$4-u1) * 100 / (t-t1))); }'";
+	$cpuload = exec($cmd);
+	if ($cpuload < 0 || $cpuload > 100) echo "<p class='errorMsgBig'>Invalid cpuload value: $cpuload</p>";
+
+	return $cpuload;
+}
+
+function getCPUTemp()
+{
+	global $temptype;
+	
+	$temperature = file_get_contents("/sys/class/thermal/thermal_zone0/temp");
+	$temperature = round($temperature / 1000, 2);
+	if ($temperature < 0) {
+		$temperature_status = "danger";
+	} elseif ($temperature < 10) {
+		$temperature_status = "warning";
+	} else {
+		$temperature_status = "";
+	}
+	$display_temperature = "";
+	if ($temptype == "C" || $temptype == "B") {
+		$display_temperature = number_format($temperature, 1, '.', '') . "&deg;C";
+	}
+	if ($temptype == "F" || $temptype == "B") {
+		$t = (($temperature * 1.8) + 32);
+		$t = number_format($t, 1, '.', '');
+		$display_temperature .= "&nbsp; &nbsp; $t &deg;F";
+	}
+
+	return array(
+		'temperature' => $temperature,
+		'display_temperature' => $display_temperature,
+		'temperature_status' => $temperature_status
+	);
+
+}
+
+function getMemoryUsed() 
+{
+	exec("free -m | gawk '/Mem:/ { total=$2 } /buffers\/cache/ { used=$3 } END { print used/total*100}'", $memarray);
+	$memused = floor($memarray[0]);
+	// check if memused is unreasonably low, if so repeat
+	if ($memused < 0.1) {
+		unset($memarray);
+		exec("free -m | gawk '/Mem:/ { total=$2 } /Mem:/ { used=$3 } END { print used/total*100}'", $memarray);
+		$memused = floor($memarray[0]);
+	}
+	
+	return $memused;
+}
+
+function getThrottleStatus() 
+{
+	$x = exec("sudo vcgencmd get_throttled 2>&1");	// Output: throttled=0x12345...
+	if (preg_match("/^throttled=/", $x) == false) {
+			$throttle_status = "danger";
+			$throttle = "Not able to get throttle status:<br>$x";
+			$throttle .= "<br><span class='errorMsgBig'>";
+			$throttle .= "Run '~/allsky/install.sh --update' to try and resolve.</span>";
+	} else {
+		$x = explode("x", $x);	// Output: throttled=0x12345...
+		if ($x[1] == "0") {
+				$throttle_status = "success";
+				$throttle = "No throttling";
+		} else {
+			$bits = base_convert($x[1], 16, 2);	// convert hex to bits
+			// See https://www.raspberrypi.com/documentation/computers/os.html#vcgencmd
+			$messages = array(
+				0 => 'Currently under-voltage',
+				1 => 'ARM frequency currently capped',
+				2 => 'Currently throttled',
+				3 => 'Soft temperature limit currently active',
+
+				16 => 'Under-voltage has occurred since last reboot.',
+				17 => 'Throttling has occurred since last reboot.',
+				18 => 'ARM frequency capped has occurred since last reboot.',
+				19 => 'Soft temperature limit has occurred'
+			);
+			$l = strlen($bits);
+			$throttle_status = "warning";
+			$throttle = "";
+			// bit 0 is the rightmost bit
+			for ($pos=0; $pos<$l; $pos++) {
+				$i = $l - $pos - 1;
+				$bit = $bits[$i];
+				if ($bit == 0) continue;
+				if (array_key_exists($pos, $messages)) {
+					if ($throttle == "") {
+						$throttle = $messages[$pos];
+					} else {
+						$throttle .= "<br>" . $messages[$pos];
+					}
+					// current issues are a danger; prior issues are a warning
+					if ($pos <= 3) $throttle_status = "danger";
+				}
+			}
+		}
+	}
+
+	return array(
+		'throttle_status' => $throttle_status,
+		'throttle' => $throttle
+	);
+}
 ?>

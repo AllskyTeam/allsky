@@ -659,8 +659,8 @@ div.subSettingsHeader {
 	border-bottom-color: var(--rowSeparator-dark);
 }
 /* used in system.php */
-.progress-bar {
-	color: black;
+.progress-bar-animated {
+	color: white;
 	animation-name: progress_bar;
 	animation-duration: 0.6s;
 	animation-timing-function: ease;

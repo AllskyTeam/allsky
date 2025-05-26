@@ -78,7 +78,7 @@ DIALOG_PRE_CHECK="${DIALOG_WELCOME_TITLE} - Pre Installation Checks"
 DIALOG_INSTALL="Installing Remote Website"
 DIALOG_DONE="Remote Website Installation Completed"
 DIALOG_ABORT="${DIALOG_WELCOME_TITLE} - Aborting"
-DIALOG_TITLE_LOG="Allsky Remote Website Installation Log"
+DIALOG_TITLE_ERROR_MSG="Allsky Remote Website Detailed Error Message"
 
 # Old Allksy Website files that should be removed if they exist.
 # These were removed in v2024.12.06:
@@ -460,7 +460,7 @@ function display_aborted()
 		DIALOG_PROMPT+="$( dU_ "Would you like to view the detailed error message?" )"
 		if display_box "--yesno" "${DIALOG_ABORT}" "${DIALOG_PROMPT}" ; then
 			ERROR_MSG="$( remove_colors "\n\n${ERROR_MSG}" )"
-			display_box "--msgbox" "${DIALOG_TITLE_LOG}" "${ERROR_MSG}" "--scrollbar"
+			display_box "--msgbox" "${DIALOG_TITLE_ERROR_MSG}" "${ERROR_MSG}" "--scrollbar"
 		fi
 	fi
 

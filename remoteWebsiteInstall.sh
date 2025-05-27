@@ -26,18 +26,15 @@ DISPLAY_MSG_LOG="${ALLSKY_LOGS}/${ME/.sh/}.log"
 # Config variables
 TESTUPLOAD_OUTPUT_FILE="${ALLSKY_TMP}/${ME}.txt"
 BASIC_CONNECTIVITY_ONLY="false"
-HAVE_LOCAL_REMOTE_CONFIG="false"
-HAVE_NEW_STYLE_REMOTE_CONFIG="false"
-HAVE_REALLY_OLD_REMOTE_CONFIG="false"
-CONFIG_TO_USE=""		# which Website configuration file to use?
-LFTP_CMDS="set dns:fatal-timeout 10; set net:max-retries 2; set net:timeout 10"
-X="$( settings ".REMOTEWEBSITE_LFTP_COMMANDS" "${ALLSKY_ENV}" )"
-[[ -n ${X} ]] && LFTP_CMDS+="; ${X}"
-TEST_FILE="commands.txt"
-TEST_FILE_UPLOADED="false"
+HAVE_LOCAL_REMOTE_CONFIG="false"			# Is there a remote Website config file on the Pi?
+HAVE_NEW_STYLE_REMOTE_CONFIG="false"		# Is there a new-style remote Website config file on the server?
+HAVE_REALLY_OLD_REMOTE_CONFIG="false"		# Is there a old-style remote Website config file on the server?
+CONFIG_TO_USE=""							# Which Website configuration file to use?
+TEST_FILE="commands.txt"					# Name of file we try to upload
+TEST_FILE_UPLOADED="false"					# Was the test upload successful?
 UPLOAD_IMAGE_FILES="false"
-GLOBAL_ERROR_MSG=""			# a global error message
-INDENT="  "		# indent each line so it's easier to read
+GLOBAL_ERROR_MSG=""							# A global error message
+INDENT="  "									# indent each line so it's easier to read
 	# USER_AGENT is for servers that don't return anything to curl or wget.
 USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36 Edg/136.0.0.0"
 
@@ -56,9 +53,13 @@ REMOTE_DIR="$( settings ".remotewebsiteimagedir" "${SETTINGS_FILE}" )"
 REMOTE_PROTOCOL="$( settings ".remotewebsiteprotocol" "${SETTINGS_FILE}" )"
 REMOTE_PROTOCOL="${REMOTE_PROTOCOL,,}"		# convert to lowercase
 
-#### TODO: this script needs to support ALL protocols, not just *ftp*.
-# When it does, remove this check.
-if [[ ${REMOTE_PROTOCOL} != "sftp" && ${REMOTE_PROTOCOL} != "ftp" && ${REMOTE_PROTOCOL} != "ftps" ]]; then
+if [[ ${REMOTE_PROTOCOL} == "sftp" || ${REMOTE_PROTOCOL} == "ftp" || ${REMOTE_PROTOCOL} == "ftps" ]]; then
+	LFTP_CMDS="set dns:fatal-timeout 10; set net:max-retries 2; set net:timeout 10"
+	X="$( settings ".REMOTEWEBSITE_LFTP_COMMANDS" "${ALLSKY_ENV}" )"
+	[[ -n ${X} ]] && LFTP_CMDS+="; ${X}"
+else
+	#### TODO: this script needs to support ALL protocols, not just *ftp*.
+	# When it does, remove this code.
 	exec >&2
 	echo -e "\n\n"
 	echo    "************* NOTICE *************"
@@ -98,8 +99,7 @@ OLD_FILES_TO_REMOVE=( \
 OLD_FILES_TO_REMOVE+=( \
 	"allsky.css" "animate.min.css" "bootstrap.min.css" \
 	"controller.js" "moment.js" "ng-lodash.min.js")
-# Tab separated the "to" and "from"
-FILES_TO_MOVE=( "analyticsTracking.js	myFiles" )
+FILES_TO_MOVE=( "analyticsTracking.js	myFiles" )	# A tab separates the names
 
 ############################################## functions
 
@@ -277,11 +277,9 @@ function pre_install_checks()
 		else
 			DIALOG_TEXT+="$( dE_ "\n${SPACES}WARNING: No configuration file found so a new one will be created." )"
 		fi
-
 	fi
 
-
-	if [[ ${HAVE_LOCAL_CONFIG} == "true" ]]; then
+	if [[ ${HAVE_LOCAL_REMOTE_CONFIG} == "true" ]]; then
 		if [[ ${HAVE_NEW_STYLE_REMOTE_CONFIG} == "true" ]]; then
 			MSG="A remote configuration file was found but using the local file instead."
 		else
@@ -610,7 +608,43 @@ function create_website_config()
 {
 	local MSG  ERR  DEST_FILE  FILE  VER  COOKIE
 
-	if [[ ${CONFIG_TO_USE} == "new" || ${CONFIG_TO_USE} == "remoteReallyOld" ]]; then
+	if [[ ${CONFIG_TO_USE} == "remote" ]]; then
+		# Use the remote config file since none were found locally.
+		# Convert it to the newest format.
+		# Remember that the remote file name is different than what we store on the Pi.
+		FILE="${REMOTE_WEBSITE_URL}"
+		[[ ${FILE: -1:1} != "/" ]] && FILE+="/"
+		FILE+="${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
+		if ERR="$( wget --tries=1 --user-agent="${USER_AGENT}" \ --no-verbose \
+				-O "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" "${FILE}" 2>&1)"; then
+
+			# Some servers return javascript code to make sure a browser requested
+			# the page.  If that's the case, ignore the remote file and use
+			# the local one if present.
+			MSG="Downloaded remote '${ALLSKY_WEBSITE_CONFIGURATION_NAME}'"
+			MSG+=" to '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}'."
+			display_msg --logonly info "${MSG}"
+
+			update_old "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
+
+		else
+			# This "shouldn't" happen since we either already checked that the file exists,
+			# or we uploaded it.
+			MSG="Failed to download '${FILE}'. Where did it go?"
+			display_aborted "${MSG}" "${ERR}"
+		fi
+	fi
+
+	# Don't use "elif" since CONFIG_TO_USE may have been modified above.
+	if [[ ${CONFIG_TO_USE} == "local" ]]; then
+		# Using the remote config file on the Pi which may be new or old format.
+		MSG="Using existing ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
+		if update_old "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" ; then
+			MSG+=" and converting to newest format."
+		fi
+		display_msg --logonly info "${MSG}"
+
+	elif [[ ${CONFIG_TO_USE} == "new" || ${CONFIG_TO_USE} == "remoteReallyOld" ]]; then
 		# Need a new config file so copy it from the repo and replace as many
 		# placeholders as we can.
 		DEST_FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
@@ -628,38 +662,6 @@ function create_website_config()
 		return
 	fi
 
-	if [[ ${CONFIG_TO_USE} == "local" ]]; then
-		# Using the remote config file on the Pi which may be new or old format.
-		MSG="Using existing ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
-		if update_old "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" ; then
-			MSG+=" and converting to newest format."
-		fi
-		display_msg --logonly info "${MSG}"
-
-	elif [[ ${CONFIG_TO_USE} == "remote" ]]; then
-		# Use the remote config file since none were found locally.
-		# Convert it to the newest format.
-		# Remember that the remote file name is different than what we store on the Pi.
-		FILE="${REMOTE_WEBSITE_URL}"
-		[[ ${FILE: -1:1} != "/" ]] && FILE+="/"
-		FILE+="${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
-		# COOKIE needed by "openresty" server.
-		COOKIE="Cookie: __test=fe0d3f38baa58bc2c6c8219346065dac"
-		if ERR="$( wget --tries=1 --user-agent="${USER_AGENT}" --header="${COOKIE}" --no-verbose \
-				-O "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" "${FILE}" 2>&1)"; then
-			MSG="Downloaded remote '${ALLSKY_WEBSITE_CONFIGURATION_NAME}'"
-			MSG+=" to '${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}'."
-			display_msg --logonly info "${MSG}"
-
-			update_old "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
-
-		else
-			# This "shouldn't" happen since we either already checked that the file exists,
-			# or we uploaded it.
-			MSG="Failed to download '${FILE}'. Where did it go?"
-			display_aborted "${MSG}" "${ERR}"
-		fi
-	fi
 
 	VER="$( settings ".${WEBSITE_ALLSKY_VERSION}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
 	if [[ ${VER} == "${ALLSKY_VERSION}" ]]; then

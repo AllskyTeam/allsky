@@ -25,7 +25,6 @@ DISPLAY_MSG_LOG="${ALLSKY_LOGS}/${ME/.sh/}.log"
 
 # Config variables
 TESTUPLOAD_OUTPUT_FILE="${ALLSKY_TMP}/${ME}.txt"
-BASIC_CONNECTIVITY_ONLY="false"
 HAVE_LOCAL_REMOTE_CONFIG="false"			# Is there a remote Website config file on the Pi?
 HAVE_NEW_STYLE_REMOTE_CONFIG="false"		# Is there a new-style remote Website config file on the server?
 HAVE_REALLY_OLD_REMOTE_CONFIG="false"		# Is there a old-style remote Website config file on the server?
@@ -785,7 +784,6 @@ function remove_remote_file()
 # all of the ${WEBSITE_FILES} exist then assume the remote Website is valid.
 # Set global variables:
 #	GLOBAL_ERROR_MSG
-#	BASIC_CONNECTIVITY_ONLY
 #	HAVE_REALLY_OLD_REMOTE_CONFIG
 #	HAVE_NEW_STYLE_REMOTE_CONFIG
 
@@ -799,7 +797,6 @@ function check_if_website_is_valid()
 	RET=$?
 	if [[ ${RET} -ne 0 ]]; then
 		if [[ ${RET} -eq "${EXIT_PARTIAL_OK}" ]]; then
-			BASIC_CONNECTIVITY_ONLY="true"
 			# We only have basic connectivity so the site is probably empty
 			# so the checks for files below will fail.  Return now.
 			MSG="Skipping remaining validity checks due to Basic Connectivity."

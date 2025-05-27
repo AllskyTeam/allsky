@@ -938,7 +938,7 @@ function m()
 	local FROM="${5}"
 
 	if [[ ${FROM} == "install" ]]; then
-		display_msg "${LOG}" log "${LEVEL}" "${MSG}" "${MSG2}"
+		display_msg "${LOG}" "${LEVEL}" "${MSG}" "${MSG2}"
 	else
 		if [[ ${LEVEL} == "error" ]]; then
 			wE_ "\nERROR: ${MSG}${MSG2}\n"
@@ -1500,6 +1500,10 @@ function get_RAM()
 		
 		gawk -v UNITS="${UNITS}" '
 			{
+				if (NR == 1) {
+					next;		# skip header line
+				}
+
 				if ($0 ~ /unknown/) {
 					printf("unknown");
 					exit 0;

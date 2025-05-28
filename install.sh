@@ -298,9 +298,9 @@ do_initial_heading()
 			H="$( basename "${ALLSKY_HOME}" )"
 			X="$( basename "${RENAMED_DIR}" )"
 			MSG+="\nYour current '${H}' directory will be renamed to"
-			MSG+="\n    ${X}"
+			MSG+="\n\n    ${X}"
 			X="$( basename "${PRIOR_ALLSKY_DIR}" )"
-			MSG+="\nand the prior Allsky in '${X}' will be"
+			MSG+="\n\nand the prior Allsky in '${X}' will be"
 			MSG+=" renamed to back to '${H}'."
 			MSG+="\n\nFiles that were moved from the old release to the current one"
 			MSG+=" will be moved back."
@@ -3176,11 +3176,11 @@ do_restore()
 	MSG2=" Allsky needs its settings reviewed to make sure they still apply."
 	display_msg --log progress "${MSG}" "${MSG2}"
 
-	MSG2+="Go to the 'Allsky Settings' page of the WebUI and"
-	MSG2+="\nmake any necessary changes."
+	MSG2+="\nGo to the 'Allsky Settings' page of the WebUI and"
+	MSG2+=" make any necessary changes."
 	add_to_post_actions "${MSG}${MSG2}"
 
-	whiptail --title "${TITLE}" --msgbox "${MSG} ${MSG2}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+	whiptail --title "${TITLE}" --msgbox "${MSG}${MSG2}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 	display_image "ReviewNeeded"
 
 	# Force the user to look at the settings before Allsky will run.
@@ -4010,7 +4010,7 @@ else
 		V="$( get_version "${PRIOR_ALLSKY_DIR}/" )"		# Returns "" if no version file.
 		V="${V:-prior version}"
 		SHORT_TITLE="Allsky Restorer"
-		TITLE="${SHORT_TITLE} - from ${ALLSKY_VERSION} to ${V}"
+		TITLE="${SHORT_TITLE} - from ${ALLSKY_VERSION} back to ${V}"
 		NOT_RESTORED="NO CURRENT VERSION"
 	else
 		V="${ALLSKY_VERSION}"

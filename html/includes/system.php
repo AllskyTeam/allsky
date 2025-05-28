@@ -70,50 +70,35 @@ function checkNumFields($num_required, $num_have, $type, $line_num, $line, $file
 }
 
 /* Display a "progress" bar. */
-function displayProgress($x, $label, $data, $min, $current, $max, $danger, $warning, $status_override, $elId="", $tempText="")
+function displayProgress($x, $label, $data, $min, $current, $max, $danger, $warning, $status_override)
 {
-        if ($status_override !== "") {
-                $myStatus = $status_override;
-        } else if ($current >= $danger) {
-                $myStatus = "danger";
-        } elseif ($current >= $warning) {
-                $myStatus = "warning";
-        } else {
-                $myStatus = "success";
-        }
+	if ($status_override !== "") {
+		$myStatus = $status_override;
+	} else if ($current >= $danger) {
+		$myStatus = "danger";
+	} elseif ($current >= $warning) {
+		$myStatus = "warning";
+	} else {
+		$myStatus = "success";
+	}
+	echo "<tr><td colspan='2' style='height: 5px'></td></tr>\n";
+	echo "<tr><td $x>$label</td>\n";
+	echo "    <td style='width: 100%' class='progress'><div class='progress-bar progress-bar-$myStatus'\n";
+	echo "    role='progressbar'\n";
 
-        if ($elId !== "") {
-                $id = " id='$elId'";
-        } else {
-                $id = "";
-        }
+	echo "    title='current: $current, min: $min, max: $max'";
+	if ($current < $min) $current = $min;
+	else if ($current > $max) $current = $max;
+   	echo "    aria-valuenow='$current' aria-valuemin='$min' aria-valuemax='$max'\n";
 
-        if ($tempText !== "") {
-                echo "<tr><td colspan='2' style='height: 5px'></td></tr>\n";
-                echo "<tr><td $x>$label</td>\n";
-                echo "    <td style='width: 100%' class='progress' $id><div class='text-center'>$tempText</div>";
-                echo "    </td></tr>\n";
-        } else {
-                echo "<tr><td colspan='2' style='height: 5px'></td></tr>\n";
-                echo "<tr><td $x>$label</td>\n";
-                echo "    <td style='width: 100%' class='progress' $id>";
-                echo "          <div class='progress-bar progress-bar-animated progress-bar-$myStatus'\n";
-                echo "    role='progressbar'\n";
-
-                echo "    title='current: $current, min: $min, max: $max'";
-                if ($current < $min) $current = $min;
-                else if ($current > $max) $current = $max;
-                echo "    aria-valuenow='$current' aria-valuemin='$min' aria-valuemax='$max'\n";
-
-                // The width of the bar should be the percent that $current is in the
-                // range of ($max-$min).
-                // In the typical case where $max=100 and $min=0, if $current is 21,
-                // then width=(21/(100-0)*100) = 21.
-                // If $max=50, $min=0, and $current=21, then width=(21/(50-0))*100 = 42.
-                $width = (($current - $min) / ($max - $min)) * 100;
-                echo "    style='width: $width%;'>$data\n";
-                echo "    </div></td></tr>\n";
-        }
+	// The width of the bar should be the percent that $current is in the
+	// range of ($max-$min).
+	// In the typical case where $max=100 and $min=0, if $current is 21,
+	// then width=(21/(100-0)*100) = 21.
+	// If $max=50, $min=0, and $current=21, then width=(21/(50-0))*100 = 42.
+	$width = (($current - $min) / ($max - $min)) * 100;
+	echo "    style='width: $width%;'>$data\n";
+	echo "    </div></td></tr>\n";
 }
 
 /* Display user data in "file". */
@@ -222,9 +207,13 @@ function displayUserData($file, $displayType)
  */
 function DisplaySystem()
 {
-	global $temptype, $page, $settings_array, $status, $hostname;
+	global $temptype, $page, $settings_array, $status;
 
 	$top_dir = dirname(ALLSKY_WEBSITE, 1);
+
+	// hostname
+	exec("hostname -f", $hostarray);
+	$hostname = $hostarray[0];
 
 	// uptime
 	$uparray = explode(" ", exec("cat /proc/uptime"));
@@ -246,7 +235,15 @@ function DisplaySystem()
 	}
 
 	// mem used
-	$memused = getMemoryUsed();
+	exec("free -m | gawk '/Mem:/ { total=$2 } /buffers\/cache/ { used=$3 } END { print used/total*100}'", $memarray);
+	$memused = floor($memarray[0]);
+	// check if memused is unreasonably low, if so repeat
+	if ($memused < 0.1) {
+		unset($memarray);
+		exec("free -m | gawk '/Mem:/ { total=$2 } /Mem:/ { used=$3 } END { print used/total*100}'", $memarray);
+		$memused = floor($memarray[0]);
+	}
+
 
 	// Disk and File usage
 	$df = @disk_free_space($top_dir);		// returns bytes
@@ -267,21 +264,78 @@ function DisplaySystem()
 	}
 
 	// Throttle / undervoltage status
-	$throttle_data = getThrottleStatus();
+	$x = exec("sudo vcgencmd get_throttled 2>&1");	// Output: throttled=0x12345...
+	if (preg_match("/^throttled=/", $x) == false) {
+			$throttle_status = "danger";
+			$throttle = "Not able to get throttle status:<br>$x";
+			$throttle .= "<br><span class='errorMsgBig'>";
+			$throttle .= "Run '~/allsky/install.sh --update' to try and resolve.</span>";
+	} else {
+		$x = explode("x", $x);	// Output: throttled=0x12345...
+		if ($x[1] == "0") {
+				$throttle_status = "success";
+				$throttle = "No throttling";
+		} else {
+			$bits = base_convert($x[1], 16, 2);	// convert hex to bits
+			// See https://www.raspberrypi.com/documentation/computers/os.html#vcgencmd
+			$messages = array(
+				0 => 'Currently under-voltage',
+				1 => 'ARM frequency currently capped',
+				2 => 'Currently throttled',
+				3 => 'Soft temperature limit currently active',
 
-	$throttle_status = $throttle_data['throttle_status'];
-	$throttle = $throttle_data['throttle']; 
-
+				16 => 'Under-voltage has occurred since last reboot.',
+				17 => 'Throttling has occurred since last reboot.',
+				18 => 'ARM frequency capped has occurred since last reboot.',
+				19 => 'Soft temperature limit has occurred'
+			);
+			$l = strlen($bits);
+			$throttle_status = "warning";
+			$throttle = "";
+			// bit 0 is the rightmost bit
+			for ($pos=0; $pos<$l; $pos++) {
+				$i = $l - $pos - 1;
+				$bit = $bits[$i];
+				if ($bit == 0) continue;
+				if (array_key_exists($pos, $messages)) {
+					if ($throttle == "") {
+						$throttle = $messages[$pos];
+					} else {
+						$throttle .= "<br>" . $messages[$pos];
+					}
+					// current issues are a danger; prior issues are a warning
+					if ($pos <= 3) $throttle_status = "danger";
+				}
+			}
+		}
+	}
 
 	// cpu load
-	$cpuLoad = 0;
+	$secs = 2; $q = '"';
+	$cmd = "(grep -m 1 'cpu ' /proc/stat; sleep $secs; grep -m 1 'cpu ' /proc/stat)";
+	$cmd .= " | gawk '{u=$2+$4; t=$2+$4+$5; if (NR==1){u1=u; t1=t;} else printf($q%.0f$q, (($2+$4-u1) * 100 / (t-t1))); }'";
+	$cpuload = exec($cmd);
+	if ($cpuload < 0 || $cpuload > 100) echo "<p class='errorMsgBig'>Invalid cpuload value: $cpuload</p>";
 
 	// temperature
-	$cpuTempData = getCPUTemp();
-
-	$temperature = $cpuTempData['temperature'];
-	$display_temperature = $cpuTempData['display_temperature'];
-	$temperature_status = $cpuTempData['temperature_status'];
+	$temperature = file_get_contents("/sys/class/thermal/thermal_zone0/temp");
+	$temperature = round($temperature / 1000, 2);
+	if ($temperature < 0) {
+		$temperature_status = "danger";
+	} elseif ($temperature < 10) {
+		$temperature_status = "warning";
+	} else {
+		$temperature_status = "";
+	}
+	$display_temperature = "";
+	if ($temptype == "C" || $temptype == "B") {
+		$display_temperature = number_format($temperature, 1, '.', '') . "&deg;C";
+	}
+	if ($temptype == "F" || $temptype == "B") {
+		$t = (($temperature * 1.8) + 32);
+		$t = number_format($t, 1, '.', '');
+		$display_temperature .= "&nbsp; &nbsp; $t &deg;F";
+	}
 
 	// Optional user-specified data.
 	// TODO: read each file once and populate arrays for "data", "progress", and "button".
@@ -364,13 +418,13 @@ function DisplaySystem()
 
 								<tr><td colspan="2" style="height: 5px"></td></tr>
 								<!-- Treat Throttle Status like a full-width progress bar -->
-								<?php displayProgress("", "Throttle Status", $throttle, 0, 100, 100, -1, -1, $throttle_status, "as-throttle"); ?>
+								<?php displayProgress("", "Throttle Status", $throttle, 0, 100, 100, -1, -1, $throttle_status); ?>
 								<tr><td colspan="2" style="height: 5px"></td></tr>
-								<?php displayProgress("", "Memory Used", "$memused%", 0, $memused, 100, 90, 75, "", "as-memory"); ?>
+								<?php displayProgress("", "Memory Used", "$memused%", 0, $memused, 100, 90, 75, ""); ?>
 								<tr><td colspan="2" style="height: 5px"></td></tr>
-								<?php displayProgress("", "CPU Load", "$cpuLoad%", 0, $cpuLoad, 100, 90, 75, "", "as-cpuload", "Calculating"); ?>
+								<?php displayProgress("", "CPU Load", "$cpuload%", 0, $cpuload, 100, 90, 75, ""); ?>
 								<tr><td colspan="2" style="height: 5px"></td></tr>
-								<?php displayProgress("", "CPU Temperature", $display_temperature, 0, $temperature, 100, 70, 60, $temperature_status, "as-cputemp"); ?>
+								<?php displayProgress("", "CPU Temperature", $display_temperature, 0, $temperature, 100, 70, 60, $temperature_status); ?>
 								<tr><td colspan="2" style="height: 5px"></td></tr>
 								<?php 
 									if ($dp === -1) {
@@ -396,6 +450,10 @@ function DisplaySystem()
 
 					<div class="row">
 					<form action="?page=<?php echo $page ?>" method="POST">
+					<div style="margin-bottom: 15px">
+						<button type="button" class="btn btn-primary" onclick="document.location.reload(true)">
+							<i class="fa fa-sync-alt"></i> Refresh</button>
+					</div>
 					<div style="margin-bottom: 15px">
 						<button type="submit" class="btn btn-success" name="service_start"/>
 							<i class="fa fa-play"></i> Start Allsky</button>

@@ -89,7 +89,7 @@ PRIOR_CAMERA_MODEL=""
 PRIOR_CAMERA_NUMBER=""
 
 # Holds status of installation if we need to exit and get back in.
-declare -r STATUS_FILE="${ALLSKY_LOGS}/install_status.txt"
+STATUS_FILE="${ALLSKY_LOGS}/install_status.txt"
 declare -r STATUS_FILE_TEMP="${ALLSKY_TMP}/temp_status.txt"	# holds intermediate status
 # status of rebooting due to locale change
 declare -r STATUS_LOCALE_REBOOT="Rebooting to change locale"
@@ -328,7 +328,6 @@ do_initial_heading()
 
 		display_header "Welcome to the ${SHORT_TITLE}"
 	fi
-
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} != "true" ]] && STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
 
@@ -2565,7 +2564,7 @@ restore_prior_files()
 	D="${PRIOR_ALLSKY_DIR}/tmp"
 	if is_mounted "${D}" ; then
 		display_msg --logonly info "Unmounting '${D}'."
-		umount_tmp "${D}"
+		umount_dir "${D}" "install"
 	fi
 
 	[[ ${USE_PRIOR_ALLSKY} == "false" ]] && return
@@ -3142,7 +3141,7 @@ do_restore()
 	# If ${ALLSKY_TMP} is a memory filesystem, unmount it.
 	if is_mounted "${ALLSKY_TMP}" ; then
 		display_msg --logonly progress "Unmounting '${ALLSKY_TMP}'."
-		umount_tmp "${ALLSKY_TMP}"
+		umount_dir "${ALLSKY_TMP}" "install"
 		WAS_MOUNTED="true"
 	else
 		WAS_MOUNTED="false"
@@ -3168,24 +3167,25 @@ do_restore()
 	if [[ ${WAS_MOUNTED} == "true" ]]; then
 		# Remounts ${ALLSKY_TMP}
 		display_msg --logonly progress "Re-mounting '${ALLSKY_TMP}'."
-		mount_tmp "${ALLSKY_TMP}"
+		mount_dir "${ALLSKY_TMP}" "install"
 	fi
 
 	mkdir -p "$( dirname "${ALLSKY_POST_INSTALL_ACTIONS}" )"
 
 	MSG="\nRestoration is done and"
-	MSG2=" Allsky needs its settings checked."
+	MSG2=" Allsky needs its settings reviewed to make sure they still apply."
 	display_msg --log progress "${MSG}" "${MSG2}"
 
 	MSG2+="Go to the 'Allsky Settings' page of the WebUI and"
-	MSG2+="\nmake any necessary changes, then press the 'Save changes' button."
+	MSG2+="\nmake any necessary changes."
 	add_to_post_actions "${MSG}${MSG2}"
 
-	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
-	display_image "ConfigurationNeeded"
+	whiptail --title "${TITLE}" --msgbox "${MSG} ${MSG2}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+	display_image "ReviewNeeded"
 
 	# Force the user to look at the settings before Allsky will run.
 	update_json_file -d ".lastchanged" "" "${SETTINGS_FILE}"
+	set_allsky_status "${ALLSKY_STATUS_NEEDS_REVIEW}"
 
 	exit_installation 0 "${STATUS_OK}" ""
 }
@@ -4000,7 +4000,7 @@ if [[ -n ${FUNCTION} || ${FIX} == "true" ]]; then
 else
 	if [[ ${RESTORE} == "true" ]]; then
 		if [[ ! -d ${PRIOR_ALLSKY_DIR} ]]; then
-			echo -en "\nERROR: You requested a restore,"
+			echo -en "\nERROR: You requested a restore," >&2
 			echo -e " but no prior Allsky found at '${PRIOR_ALLSKY_DIR}'.\n" >&2
 			exit 1
 		fi

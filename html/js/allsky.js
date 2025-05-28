@@ -124,6 +124,7 @@ class ALLSKY {
         $.ajax({
             url: url,
             type: 'GET',
+            cache: false, 
             success: (data) => {
                 $(elementSelector).html(data);
             },

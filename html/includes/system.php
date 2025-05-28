@@ -397,10 +397,6 @@ function DisplaySystem()
 					<div class="row">
 					<form action="?page=<?php echo $page ?>" method="POST">
 					<div style="margin-bottom: 15px">
-						<button type="button" class="btn btn-primary" onclick="document.location.reload(true)">
-							<i class="fa fa-sync-alt"></i> Refresh</button>
-					</div>
-					<div style="margin-bottom: 15px">
 						<button type="submit" class="btn btn-success" name="service_start"/>
 							<i class="fa fa-play"></i> Start Allsky</button>
 						&nbsp;

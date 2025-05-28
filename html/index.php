@@ -327,7 +327,7 @@ if ($useRemoteWebsite) {
 						<a href="index.php?page=support"><i class="fa fa-question fa-fw"></i> Getting Support</a>
 					</li>
 					<li>
-						<span onclick="switchTheme()"><i class="fa fa-moon fa-fw"></i> Light/Dark mode</span>
+						<span id="as-switch-theme"><i class="fa fa-moon fa-fw"></i> Light/Dark mode</span>
 					</li>
 
 				</ul>

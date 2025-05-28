@@ -44,7 +44,7 @@ DISPLAY_MSG_LOG="${DISPLAY_MSG_LOG:-${ALLSKY_LOGS}/install.log}"	# send log entr
 
 LONG_BITS=$( getconf LONG_BIT ) # Size of a long, 32 or 64
 REBOOT_NEEDED="true"					# Is a reboot needed at end of installation?
-CONFIGURATION_NEEDED="true"				# Does Allsky need to be configured at end of installation?
+CONFIGURATION_NEEDED="true"				# Does Allsky need configuring at end of installation?
 ALLSKY_IMAGES_MOVED="false"				# Did the user move ALLSKY_IMAGES, e.g., to an SSD?
 SPACE="    "
 NOT_RESTORED="NO PRIOR VERSION"
@@ -3911,19 +3911,23 @@ do_done()
 	if [[ ${CONFIGURATION_NEEDED} == "false" ]]; then
 		do_allsky_status "${ALLSKY_STATUS_NOT_RUNNING}"
 		display_image --custom "lime" "Allsky is\nready to start"
-		display_msg --log progress "\nInstallation is done."  "You must manually restart Allsky."
+		MSG="\nInstallation is done."
+		display_msg --log progress "${MSG}"  "You must manually restart Allsky."
+
 	elif [[ ${CONFIGURATION_NEEDED} == "true" ]]; then
 		display_image "ConfigurationNeeded"
 		do_allsky_status "${ALLSKY_STATUS_NEEDS_CONFIGURATION}"
-		MSG=" but Allsky needs to be configured before it will start."
+		MSG="; Allsky needs to be configured before it will start."
 		display_msg --log progress "\nInstallation is done" "${MSG}"
-		display_msg progress "" "Go to the 'Allsky Settings' page of the WebUI to configure Allsky."
+		MSG="Go to the 'Allsky Settings' page of the WebUI to configure Allsky."
+		display_msg progress "" "${MSG}"
+
 	elif [[ ${CONFIGURATION_NEEDED} == "review" ]]; then
 		display_image "ReviewNeeded"
 		do_allsky_status "${ALLSKY_STATUS_NEEDS_REVIEW}"
-		MSG=" Please review the settings on the WebUI's 'Allsky Settings' page and make any necessary changes."
+		MSG=" Please review the settings on the WebUI's 'Allsky Settings' page"
+		MSG+="\nto make sure they still look ok."
 		display_msg --log progress "\nInstallation is done." "${MSG}"
-		display_msg progress "" "Go to the 'Allsky Settings' page of the WebUI to configure Allsky."
 
 	else
 		# A different status string.

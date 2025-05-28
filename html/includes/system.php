@@ -368,7 +368,7 @@ function DisplaySystem()
 								<tr><td colspan="2" style="height: 5px"></td></tr>
 								<?php displayProgress("", "Memory Used", "$memused%", 0, $memused, 100, 90, 75, "", "as-memory"); ?>
 								<tr><td colspan="2" style="height: 5px"></td></tr>
-								<?php displayProgress("", "CPU Load", "$cpuload%", 0, $cpuload, 100, 90, 75, "", "as-cpuload", "Calculating"); ?>
+								<?php displayProgress("", "CPU Load", "$cpuLoad%", 0, $cpuLoad, 100, 90, 75, "", "as-cpuload", "Calculating"); ?>
 								<tr><td colspan="2" style="height: 5px"></td></tr>
 								<?php displayProgress("", "CPU Temperature", $display_temperature, 0, $temperature, 100, 70, 60, $temperature_status, "as-cputemp"); ?>
 								<tr><td colspan="2" style="height: 5px"></td></tr>

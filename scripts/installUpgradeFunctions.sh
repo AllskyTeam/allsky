@@ -1496,11 +1496,18 @@ function get_RAM()
 
 	function parse_RAM()
 	{
+		local SKIP_HEADER
+		if [[ ${1} == "--skip-header" ]]; then
+			SKIP_HEADER="true"
+			shift
+		else
+			SKIP_HEADER="false"
+		fi
 		local UNITS="${1}"
 		
-		gawk -v UNITS="${UNITS}" '
+		gawk -v UNITS="${UNITS}" -v SKIP_HEADER="${SKIP_HEADER}" '
 			{
-				if (NR == 1) {
+				if (NR == 1 && SKIP_HEADER == "true") {
 					next;		# skip header line
 				}
 
@@ -1535,7 +1542,7 @@ function get_RAM()
 
 	# Try a different way.
 	# Note: This doesn't produce exact results.  On a 4 GB Pi, it returns 3.74805.
-	free --mebi | parse_RAM "${UNITS}"
+	free --mebi | parse_RAM --skip-header "${UNITS}"
 }
 
 

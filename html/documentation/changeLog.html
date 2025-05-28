@@ -36,8 +36,10 @@
 		</p>
 
 		<!-- =========================================== -->
+<!-- uncomment for v2025.xx.xx
 		<h2>v2025.xx.xx</h2>
 		<details open> <summary></summary>
+-->
 
 			<!--
 			<h3>v2025.xx.xx_01  - Point Release # 1</h3>
@@ -48,6 +50,7 @@
 			<h3>v2025.xx.xx - Base Release</h3>
 			-->
 
+<!-- uncomment for v2025.xx.xx
 				<h4>Deleted capabilities</h4>
 				<ul>
 					<li>The Buster operating system is no longer supported.
@@ -56,6 +59,44 @@
 						section of the WebUI no longer exist.
 						All overlays are now done via the
 						<span class="WebUILink">Overlay Editor</span> in the WebUI.
+				</ul>
+
+				<h4>Enhancements / Changes</h4>
+				<ul>
+					<li>
+				</ul>
+
+				<h4>Bug Fixes</h4>
+				<ul>
+					<li>
+				</ul>
+
+				<h4>Deleted Settings</h4>
+				<ul>
+					<li><span class="WebUISetting">xxx</span>
+						<br>
+				</ul>
+				<h4>New Settings</h4>
+				<ul>
+					<li><span class="WebUISetting">None</span>
+				</ul>
+
+			<hr class="separator">
+		</details>
+-->
+
+		<!-- =========================================== -->
+
+		<h2>v2024.12.06</h2>
+		<details open> <summary></summary>
+
+			<h3>v2024.12.06_04  - Point Release # 4</h3>
+			<details open sub> <summary></summary>
+				<h4 style="color: red">IMPORTANT NOTES:</h4>
+				<ul>
+					<li>This is the LAST major release that supports Buster.
+					<li>This is the LAST major release that contains the "legacy"
+						overlay method.
 				</ul>
 
 				<h4>Enhancements / Changes</h4>
@@ -73,20 +114,26 @@
 				<ul>
 					<li>The <span class="WebUILink">Getting Support</span> WebUI page
 						(and the related <code>support.sh</code> command) no longer
-						fail with a "Argument list too long" message.
-					<li><code>upload.sh</code> no longer finds files that don't exist.
+						fail with an "Argument list too long" message.
 					<li>Setting a target temperature for cooled ZWO cameras now works.
 					<li><code>remoteWebsiteInstall.sh</code> now handles servers that
-						don't return anything when the <code>curl</code> command requests
-						a page.  This is uncommon.
+						don't return anything under certain circumstances.
+						This is uncommon but when it happened it kept the
+						remote Website from being installed.
 					<li>The Allsky Website now correctly colors aurora forecasts.
+					<li><code>upload.sh</code> no longer finds files that don't exist.
+					<li>During installation, the amount of RAM for non-Raspberry Pi
+						boards is now determined correctly.
+						This number is used to properly size the swap space.
+						It's also used to populate the
+						<span class="WebUISetting">Computer</span> setting.
 				</ul>
 
 				<h4>Deleted Settings</h4>
 				<ul>
 					<li><span class="WebUISetting">Notification Images</span>
 						<br>
-						Notification images, e.g., "Allsky is starting up" now provide
+						Notification images, e.g., "Allsky is starting up" provide
 						valuable status and troubshooting information so can no longer
 						be disabled.
 				</ul>
@@ -94,23 +141,10 @@
 				<ul>
 					<li><span class="WebUISetting">None</span>
 				</ul>
-
-			<hr class="separator">
-		</details>
-
-		<!-- =========================================== -->
-
-		<h2>v2024.12.06</h2>
-		<details> <summary></summary>
+			</details>
 
 			<h3>v2024.12.06_03  - Point Release # 3</h3>
-			<details sub> <summary></summary>
-				<h4 style="color: red">IMPORTANT NOTES:</h4>
-				<ul>
-					<li>This is the LAST major release that supports Buster.
-					<li>This is the LAST major release that contains the "legacy"
-						overlay method.
-				</ul>
+			<details open sub> <summary></summary>
 
 				<h4>Enhancements / Changes</h4>
 				<ul>

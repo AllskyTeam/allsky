@@ -159,7 +159,7 @@ if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
 		MSG="Reminder: your prior Allsky is still in '${PRIOR_ALLSKY_DIR}'."
 		MSG+="\nIf you are no longer using it, it can be removed to save disk space."
 		"${ALLSKY_SCRIPTS}/addMessage.sh" --id AM_RM_PRIOR --type info --msg "${MSG}" \
-			--cmd "Click here to remove."
+			--cmd "Click here to remove the directory and all its contents."
 		touch "${ALLSKY_OLD_REMINDER}"		# Sets the last time we displayed the message.
 	fi
 fi

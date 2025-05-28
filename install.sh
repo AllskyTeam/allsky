@@ -2766,7 +2766,11 @@ restore_prior_files()
 			MSG+="\n\n  cd ~/allsky;  ./remoteWebsiteInstall.sh"
 			MSG+="\n\nNote that you do NOT need to manually copy files to the Website;"
 			MSG+="\nthe installation does that for you."
-			display_msg --log notice "${MSG}"
+			display_msg notice "${MSG}"
+
+			MSG="Displayed messaged that remote Website @ ${PRIOR_V} needs updating."
+			display_msg --logonly info "${MSG}"
+
 			add_to_post_actions "${MSG}"
 		fi
 	else
@@ -3558,7 +3562,7 @@ display_image()
 	else
 		if [[ -f ${ALLSKY_POST_INSTALL_ACTIONS} ]]; then
 			# Add a message the user will see in the WebUI.
-			MSG="Actions needed.  See ${ALLSKY_POST_INSTALL_ACTIONS}."
+			MSG="Actions needed.  Click for more information."
 			X="${ALLSKY_POST_INSTALL_ACTIONS/${ALLSKY_HOME}/}"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${MSG}" --url "${X}"
 
@@ -3635,7 +3639,13 @@ check_restored_settings()
 	  	  ${COPIED_PRIOR_FTP_SH} == "true" ]]; then
 		# We restored all the prior settings so no configuration is needed.
 		# However, check if a reboot is needed.
-		CONFIGURATION_NEEDED="review"
+
+		if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
+			CONFIGURATION_NEEDED="false"
+		else
+			CONFIGURATION_NEEDED="review"
+		fi
+
 		if [[ ${REBOOT_NEEDED} == "true" ]]; then
 			IMG="RebootNeeded"
 		else

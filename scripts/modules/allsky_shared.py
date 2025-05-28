@@ -1230,19 +1230,26 @@ def get_camera_type():
     camera_type = get_environment_variable('CAMERA_TYPE')
     return camera_type.lower()
 
-def get_rpi_meta_value(value):
+def get_rpi_meta_value(key):
     result = None
     metadata_path = get_rpi_metadata()
     
     if metadata_path is not None:
-        with open(metadata_path, 'r') as file:
-            metadata = json.load(file)
-            if value in metadata:
-                result = metadata[value]
-                
+        try:
+            with open(metadata_path, 'r') as file:
+                metadata = json.load(file)
+                if key in metadata:
+                    result = metadata[key]
+        except json.JSONDecodeError as e:
+            with open(metadata_path, 'r') as f:
+                for line in f:
+                    if line.startswith(key + "="):
+                        result = line.split("=", 1)[1].strip()
+            
     return result
 
 def get_rpi_metadata():
+
     with open(SETTINGS_FILE) as file:
         config = json.load(file)
 
@@ -1254,5 +1261,7 @@ def get_rpi_metadata():
         if arg == '--metadata' and i + 1 < len(args):
             metadata_path = args[i + 1]
             break
+    if metadata_path is None:
+        metadata_path = os.path.join(ALLSKY_TMP,'metadata.txt')
 
     return metadata_path

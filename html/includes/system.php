@@ -301,7 +301,7 @@ function DisplaySystem()
 				<div class="panel-body">
 
 					<?php
-					$s = false;		// Update Allsky Status ?
+					$s = false;		// Update interval for Allsky Status ?
 
 					if (isset($_POST['system_reboot'])) {
 						$status->addMessage("System Rebooting Now!", "warning", true);
@@ -319,12 +319,8 @@ function DisplaySystem()
 						$s = true;
 					}
 					if ($s) {
-// TODO: Make output_allsky_status() a javascript function that updates the status every x seconds
-// and if it hasn't change in y checks, increase the delay.
-						$new_status = output_allsky_status();
-						echo "<script>";
-						echo 'document.getElementById("allskyStatus").innerHTML = "' . $new_status . '";';
-						echo "</script>";
+						# Allsky status will change so check often.
+						echo "<script>allskystatus_interval = 2 * 1000;</script>";
 					}
 
 					$e = "";

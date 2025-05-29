@@ -186,8 +186,7 @@ class MODULEUTIL
 
         $result['lat'] = $lat;
         $result['lon'] = $lon;
-        $imageDir = get_variable(ALLSKY_HOME . '/variables.sh', "IMG_DIR=", 'current/tmp');
-        $result['filename'] = $imageDir . '/' . $settings_array['filename'];
+        $result['filename'] = IMG_DIR . '/' . $settings_array['filename'];
 
         exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
         if ($retval == 2) {

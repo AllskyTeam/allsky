@@ -180,6 +180,7 @@ if ($useRemoteWebsite) {
 	<script src="js/bigscreen.min.js"></script>
 
     <script src="js/allsky.js"></script>
+	<script> var allskyPage='<?php echo $page ?>';  </script>
 
 	<!-- Custom Theme JavaScript -->
 	<script src="documentation/js/sb-admin-2.js"></script>
@@ -517,8 +518,6 @@ if ($useRemoteWebsite) {
 		</div>
 	</div><!-- /#page-wrapper -->
 </div><!-- /#wrapper -->
-
-<script> var allskyPage='<?php echo $page ?>';  </script>
 
 </body>
 </html>

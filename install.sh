@@ -812,6 +812,7 @@ update_php_defines()
 			-e "s;XX_ALLSKY_WEBSITE_REMOTE_CONFIG_XX;${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE};g" \
 			-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};g" \
 			-e "s;XX_ALLSKY_ENV_XX;${ALLSKY_ENV};g" \
+			-e "s;XX_IMG_DIR_XX;${IMG_DIR};g" \
 			-e "s;XX_MY_OVERLAY_TEMPLATES_XX;${MY_OVERLAY_TEMPLATES};g" \
 			-e "s;XX_ALLSKY_MODULES_XX;${ALLSKY_MODULES};g" \
 			-e "s;XX_ALLSKY_MODULE_LOCATION_XX;${ALLSKY_MODULE_LOCATION};g" \
@@ -822,6 +823,8 @@ update_php_defines()
 			-e "s;XX_ALLSKY_REPO_XX;${ALLSKY_REPO};g" \
 			-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};g" \
 			-e "s;XX_ALLSKY_STATUS_XX;${ALLSKY_STATUS};g" \
+			-e "s;XX_ALLSKY_STATUS_NOT_RUNNING_XX;${ALLSKY_STATUS_NOT_RUNNING};g" \
+			-e "s;XX_ALLSKY_STATUS_RUNNING_XX;${ALLSKY_STATUS_RUNNING};g" \
 			-e "s;XX_ALLSKY_STATUS_NEEDS_CONFIGURATION_XX;${ALLSKY_STATUS_NEEDS_CONFIGURATION};g" \
 			-e "s;XX_ALLSKY_STATUS_NEEDS_REVIEW_XX;${ALLSKY_STATUS_NEEDS_REVIEW};g" \
 			-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};g" \
@@ -3564,7 +3567,7 @@ display_image()
 			# Add a message the user will see in the WebUI.
 			MSG="Actions needed.  Click for more information."
 			X="${ALLSKY_POST_INSTALL_ACTIONS/${ALLSKY_HOME}/}"
-			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${MSG}" --url "${X}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --ID AM_POST --msg "${MSG}" --url "${X}"
 
 			# This tells allsky.sh not to display a message about actions since we just did.
 			touch "${ALLSKY_POST_INSTALL_ACTIONS}_initial_message"

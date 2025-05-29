@@ -3567,7 +3567,7 @@ display_image()
 			# Add a message the user will see in the WebUI.
 			MSG="Actions needed.  Click for more information."
 			X="${ALLSKY_POST_INSTALL_ACTIONS/${ALLSKY_HOME}/}"
-			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${MSG}" --url "${X}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --ID AM_POST --msg "${MSG}" --url "${X}"
 
 			# This tells allsky.sh not to display a message about actions since we just did.
 			touch "${ALLSKY_POST_INSTALL_ACTIONS}_initial_message"

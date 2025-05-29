@@ -106,6 +106,7 @@ function verifyNumber($num) {
 }
 
 // Globals
+define('DATE_TIME_FORMAT', 'Y-m-d H:i:s');
 $image_name = null;
 $showUpdatedMessage = true; $delay=null; $daydelay=null; $daydelay_postMsg=""; $nightdelay=null; $nightdelay_postMsg="";
 $imagesSortOrder = null;
@@ -120,7 +121,7 @@ $useRemoteWebsite = false;
 $hasLocalWebsite = false;
 $hasRemoteWebsite = false;
 $endSetting = "XX_END_XX";
-$saveChangesLabel = "Save changes";
+$saveChangesLabel = "Save changes";		// May be overwritten
 $forceRestart = false;					// Restart even if no changes?
 $hostname = null;
 
@@ -146,6 +147,22 @@ function readOptionsFile() {
 
 $allsky_status = null;
 $allsky_status_timestamp = null;
+
+function update_allsky_status($newStatus) {
+	global $status, $allsky_status;
+
+	$s = array();
+	$s["status"] = $newStatus;
+	$s['timestamp'] = date(DATE_TIME_FORMAT);
+
+	$msg = updateFile(ALLSKY_STATUS, json_encode($s, JSON_PRETTY_PRINT), "Allsky status", true);
+	if ($msg !== "") {
+		$status->addMessage("Failed to update Allsky status: $msg", 'danger');
+	} else {
+		$allsky_status = $newStatus;
+	}
+}
+
 function output_allsky_status() {
 	global $allsky_status, $allsky_status_timestamp;
 
@@ -207,11 +224,10 @@ function initialize_variables($website_only=false) {
 
 	if ($website_only) return;
 
-	// $img_dir is an alias in the web server's config that points to where the current image is.
+	// IMG_DIR is an alias in the web server's config that points to where the current image is.
 	// It's the same as ${ALLSKY_TMP} which is the physical path name on the server.
-	$img_dir = get_variable(ALLSKY_HOME . '/variables.sh', 'IMG_DIR=', 'current/tmp');
 	$f = getVariableOrDefault($settings_array, 'filename', "image.jpg");
-	$image_name = "$img_dir/$f";
+	$image_name = IMG_DIR . "/$f";
 	$darkframe = toBool(getVariableOrDefault($settings_array, 'takedarkframes', "false"));
 	$imagesSortOrder = getVariableOrDefault($settings_array, 'imagessortorder', "ascending");
 	$useLogin = toBool(getVariableOrDefault($settings_array, 'uselogin', "true"));
@@ -607,6 +623,9 @@ function handle_interface_POST_and_status($interface, $input, &$myStatus) {
 * however, there can be optional spaces or tabs before the string.
 *
 */
+
+# TODO: As of v2024.12.06_04 this is no longer needed.  Remove it in the next release.
+
 function get_variable($file, $searchfor, $default)
 {
 	// get the file contents
@@ -1068,7 +1087,7 @@ function getNewestAllskyVersion(&$changed=null)
 
 		$version_array = array();
 		$version_array['version'] = implode(" ", $newest);
-		$version_array['timestamp'] = date_format($date, "c");	// NOTE: Does not use timezone
+		$version_array['timestamp'] = date(DATE_TIME_FORMAT);
 
 		// Has the version changed?
 		if ($priorVersion === null || $priorVersion !== $version_array['version']) {

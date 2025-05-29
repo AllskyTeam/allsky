@@ -699,7 +699,7 @@ do_save_camera_capabilities()
 	# the appropriate one can be used by makeChanges.sh.
 	[[ -n ${PRIOR_SETTINGS_FILE} ]] && restore_prior_settings_file
 
-	display_msg --log progress "Making new settings file '${SETTINGS_FILE}'."
+	display_msg --logonly info "Making new settings file '${SETTINGS_FILE}'."
 
 	CMD="makeChanges.sh${FORCE}${OPTIONSONLY}"
 	CMD+=" --cameraTypeOnly --from install --addNewSettings ${DEBUG_ARG}"
@@ -1961,8 +1961,7 @@ convert_settings_file()			# prior_file, new_file
 			case "${FIELD}" in
 				"lastchanged")
 					# Update the value.
-					VALUE="$( date +'%Y-%m-%d %H:%M:%S' )"
-					doV "${FIELD}" "VALUE" "${FIELD}" "text" "${NEW_FILE}"
+					set_now "${FIELD}" "${NEW_FILE}"
 					;;
 
 				"computer")
@@ -3628,7 +3627,9 @@ check_restored_settings()
 
 	if [[ ${ALLSKY_VERSION} == "${PRIOR_ALLSKY_VERSION}" ]]; then
 		CONFIGURATION_NEEDED="false"
-		display_msg --logonly info "Re-installed same version; no configuration or reboot needed."
+		MSG="Re-installed same version; no configuration or reboot needed."
+		display_msg --logonly info "${MSG}"
+		STATUS_VARIABLES+=("CONFIGURATION_NEEDED='${CONFIGURATION_NEEDED}'\n")
 		return
 	fi
 
@@ -3645,8 +3646,12 @@ check_restored_settings()
 
 		if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
 			CONFIGURATION_NEEDED="false"
+			MSG="Upgrading a new-style version; no configuration needed."
+			display_msg --logonly info "${MSG}"
 		else
+			MSG="Upgrading a old-style version; review needed."
 			CONFIGURATION_NEEDED="review"
+			display_msg --logonly info "${MSG}"
 		fi
 
 		if [[ ${REBOOT_NEEDED} == "true" ]]; then
@@ -3655,6 +3660,7 @@ check_restored_settings()
 			IMG=""					# Blank name removes existing image
 		fi
 		display_image "${IMG}"
+		STATUS_VARIABLES+=("CONFIGURATION_NEEDED='${CONFIGURATION_NEEDED}'\n")
 		return
 	fi
 
@@ -3671,6 +3677,7 @@ check_restored_settings()
 	fi
 
 	CONFIGURATION_NEEDED="true"
+	STATUS_VARIABLES+=("CONFIGURATION_NEEDED='${CONFIGURATION_NEEDED}'\n")
 }
 
 
@@ -3824,6 +3831,16 @@ add_to_post_actions()
 	echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${ALLSKY_POST_INSTALL_ACTIONS}"
 }
 
+####
+# Set the specified json field in the specified file to now.
+set_now()
+{
+	local FIELD="${1}"
+	local FILE="${2}"
+
+	local NOW="$( date +'%Y-%m-%d %H:%M:%S' )"
+	doV "${FIELD}" "NOW" "${FIELD}" "text" "${FILE}"
+}
 
 ####
 # Install packages needed by this script.
@@ -3880,7 +3897,6 @@ display_wait_message()
 # TODO: adjust time based on Pi model
 	MSG="The following steps can take up to an hour depending on the speed of"
 	MSG+="\nyour Pi and how many of the necessary dependencies are already installed."
-	MSG+="\nYou will see progress messages throughout the process."
 	display_msg notice "${MSG}"
 }
 
@@ -3927,6 +3943,9 @@ do_done()
 		MSG="\nInstallation is done."
 		display_msg --log progress "${MSG}"  "You must manually restart Allsky."
 
+		# Set it so the user isn't asked to review the Allsky settings.
+		set_now "lastchanged" "${SETTINGS_FILE}"
+
 	elif [[ ${CONFIGURATION_NEEDED} == "true" ]]; then
 		display_image "ConfigurationNeeded"
 		do_allsky_status "${ALLSKY_STATUS_NEEDS_CONFIGURATION}"
@@ -3959,6 +3978,7 @@ WT_WIDTH="$( calc_wt_size )"
 
 ##### Check arguments
 OK="true"
+SKIP="false"			# mostly for testing same install multiple times
 DEBUG=0
 DEBUG_ARG=""
 LOG_TYPE="--logonly"	# by default we only log some messages but don't display

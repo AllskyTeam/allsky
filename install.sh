@@ -3838,6 +3838,7 @@ set_now()
 	local FIELD="${1}"
 	local FILE="${2}"
 
+	#shellcheck disable=SC2034
 	local NOW="$( date +'%Y-%m-%d %H:%M:%S' )"
 	doV "${FIELD}" "NOW" "${FIELD}" "text" "${FILE}"
 }

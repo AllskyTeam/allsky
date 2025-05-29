@@ -1,5 +1,12 @@
 "use strict";
 
+// Timer intervals.  Make global to allow changing.
+let allskystatus_interval = 10 * 1000;		// it's decreased when starting / stopping Allsky
+let cpuload_interval = 10 * 1000;
+let cputemp_interval = 10 * 1000;
+let memory_interval = 10 * 1000;
+let throttle_interval = 30 * 1000;
+
 class ALLSKY {
     #timers  = {};
     #allskyPage = '';
@@ -8,8 +15,9 @@ class ALLSKY {
             timers: {
                 allskystatus: {
                     url: 'includes/uiutil.php?request=AllskyStatus',
-                    interval: 4000,
+                    interval: allskystatus_interval,
                     element: '#allskyStatus',
+                    name: 'Allsky status',
                     wait: false
 
                 }
@@ -19,26 +27,30 @@ class ALLSKY {
             timers: {
                 cpuload: {
                     url: 'includes/uiutil.php?request=CPULoad',
-                    interval: 5000,
+                    interval: cpuload_interval,
                     element: '#as-cpuload',
+                    name: 'CPU load',
                     wait: false
                 },
                 cputemp: {
                     url: 'includes/uiutil.php?request=CPUTemp',
-                    interval: 10000,
+                    interval: cputemp_interval,
                     element: '#as-cputemp',
+                    name: 'CPU temperature',
                     wait: true
                 },
                 memory: {
                     url: 'includes/uiutil.php?request=MemoryUsed',
-                    interval: 10000,
+                    interval: memory_interval,
                     element: '#as-memory',
+                    name: 'memory usage',
                     wait: true
                 },
                 throttle: {
                     url: 'includes/uiutil.php?request=ThrottleStatus',
-                    interval: 15000,
+                    interval: throttle_interval,
                     element: '#as-throttley',
+                    name: 'Pi throttle',
                     wait: true
                 }
             }
@@ -46,7 +58,7 @@ class ALLSKY {
     };
     constructor(page) {
         this.#allskyPage = page;
-        console.log(page);
+        console.log("On " + page + " page");
     }
 
     #setupTheme() {
@@ -54,7 +66,7 @@ class ALLSKY {
                 localStorage.setItem("theme", "light")
         }
 
-            $('body').attr('class', localStorage.getItem('theme'));
+        $('body').attr('class', localStorage.getItem('theme'));
 
         $('#as-switch-theme').on('click', (e) => {
             if (localStorage.getItem('theme') === 'light') {
@@ -78,11 +90,11 @@ class ALLSKY {
     }
 
     #addTimestamp(id) {
-                const x = document.getElementById(id);
-                if (! x) {
+        const x = document.getElementById(id);
+        if (! x) {
             console.log('No id for ' + id);
         } else {
-                    x.href += '&_ts=' + new Date().getTime();
+            x.href += '&_ts=' + new Date().getTime();
         }
     }
 
@@ -101,7 +113,6 @@ class ALLSKY {
     }
 
     #initTimers(page) {
-
         if (page in this.#pageTimers) {
             const timers = this.#pageTimers[page].timers;
 
@@ -110,17 +121,17 @@ class ALLSKY {
 
                 if (timer.url && timer.element && timer.interval) {
                     if (timer.wait !== undefined && !timer.wait) {
-                        this.fetchAndUpdate(timer.url, timer.element);
+                        this.fetchAndUpdate(timer.url, timer.element, timer.name);
                     }
                     this.#timers[name] = setInterval(() => {
-                        this.fetchAndUpdate(timer.url, timer.element);
+                        this.fetchAndUpdate(timer.url, timer.element, timer.name);
                     }, timer.interval);
                 }
             }
         }
     }
 
-    fetchAndUpdate(url, elementSelector) {
+    fetchAndUpdate(url, elementSelector, name) {
         $.ajax({
             url: url,
             type: 'GET',
@@ -129,7 +140,7 @@ class ALLSKY {
                 $(elementSelector).html(data);
             },
             error: () => {
-                $(elementSelector).text('Error loading data');
+                $(elementSelector).text('Error loading ' + name + ' data');
             }
         });
     }
@@ -144,7 +155,10 @@ class ALLSKY {
         this.#setupTheme();
         this.#setupBigScreen();
         this.#setupTimestamps();
+
+        // initialize timers that apply to all pages
         this.#initTimers('all');
+        // initialize timers that apply to this page only
         this.#initTimers(this.#allskyPage);
 
         includeHTML();

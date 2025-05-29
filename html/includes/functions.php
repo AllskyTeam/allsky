@@ -169,7 +169,7 @@ function output_allsky_status() {
 		$class = "alert-danger";
 	} else {
 		$title = "title='Since $allsky_status_timestamp'";
-		if ($allsky_status == "Running") {
+		if ($allsky_status == ALLSKY_STATUS_RUNNING) {
 			$class = "alert-success";
 		} else {
 			$class = "alert-warning";

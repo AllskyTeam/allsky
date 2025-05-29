@@ -433,22 +433,32 @@ if ($debug) {
 						if ($numSettingsChanges > 0 || $fromConfiguration) {
 							// Keep track of the last time the file changed.
 							// If we end up not updating the file this will be ignored.
-							$lastChanged = date('Y-m-d H:i:s');
+							$lastChanged = date(DATE_TIME_FORMAT);
 							$settings_array[$lastChangedName] = $lastChanged;
 							if ($fromConfiguration) {
 								$restartRequired = true;
 								unset($settings_array[$endSetting]);
 							}
+$remove0 = false;
+if ($remove0) {
+	# TODO: Unfortunately this remove .0 from Computer, e.g., "Rev 1.0,"
+	# I think it's ok to not do this.
 							$content = str_replace(".0,", ",", json_encode($settings_array, $mode));
+} else {
+							$content = json_encode($settings_array, $mode);
+}
 if ($debug) {
 	echo "<br><br>Updating $settings_file, numSettingsChanges = $numSettingsChanges";
-//	echo "<br>settings_array['longitude']=${settings_array['longitude']}";
-	echo "<pre>"; var_dump($settings_array); echo "</pre>";
-	echo "<pre>"; var_dump($content); echo "</pre>";
+	echo "<pre>settings_array: "; var_dump($settings_array); echo "</pre>";
+if ($remove0) {
+	echo "<pre>content: "; var_dump($content); echo "</pre>";
+}
 }
 							// updateFile() only returns error messages.
 							$msg = updateFile($settings_file, $content, "settings", true);
-							echo '<script>console.log("Updated ' . "$settings_file, msg=$msg" . '");</script>';
+							echo '<script>console.log("Updated ' . "$settings_file";
+							if ($msg !== "") echo " msg=$msg";
+							echo '");</script>';
 							if ($msg === "") {
 								if ($numSettingsChanges > 0) {
 									$msg = "$numSettingsChanges setting";
@@ -456,7 +466,7 @@ if ($debug) {
 										$msg .= "s";
 									$msg .= " changed.";
 								} else {	# configuration needed and no changes made.
-									$msg = "Configuration saved and timestamp updated.";
+									$msg = "Settings saved and timestamp updated.";
 								}
 								$needsConfiguration = false;
 								$reReadSettings = true;
@@ -511,6 +521,11 @@ if ($debug) {
 			}
 
 			if ($ok) {
+				if ($fromConfiguration) {
+					// If we restart Allsky this tells it it's ok to start.
+					update_allsky_status(ALLSKY_STATUS_NOT_RUNNING);
+				}
+
 				if (! $changesMade && ! $fromConfiguration) {
 					$msg = "<div class='noChanges'>No settings changed.  Nothing updated.</div>";
 					$status->addMessage($msg, 'message');
@@ -546,6 +561,9 @@ if ($debug) {
 				if ($ok) {
 					// The "restart" field is a checkbox.  If not checked it returns nothing.
 					if ($restartRequired && getVariableOrDefault($_POST, 'restart', "") != "") {
+						# Allsky status will change so check often.
+						echo "<script>allskystatus_interval = 2 * 1000;</script>";
+
 						if ($msg !== "")
 							$msg .= " &nbsp;";
 						$msg .= "Allsky restarted.";
@@ -553,19 +571,12 @@ if ($debug) {
 						$CMD = "sudo /bin/systemctl reload-or-restart allsky.service";
 						if (! runCommand($CMD, $msg, "success")) {	// displays $msg on success.
 							$status->addMessage("Unable to restart Allsky.", 'warning');
-						} else {
-/* TODO: We get here because a form was submitted which caused Allsky to restart.
-	We don't want the user to refresh the page because that might cause Allsky to
-	restart again.  We really want them to click on the link that takes them to this page.
-
-							$msg = "<div class='center-text' style='font-size: 150%'>";
-							$msg .= "*** Refresh this window to update messages. ***";
-							$msg .= "</div>";
-							$status->addMessage($msg, 'info');
-*/
 						}
 
 					} else if ($stopRequired) {
+						# Allsky status will change so check often.
+						echo "<script>allskystatus_interval = 2 * 1000;</script>";
+
 						if ($msg !== "")
 							$msg .= " &nbsp;";
 
@@ -642,9 +653,8 @@ if ($debug) {
 		} else {
 			$status->addMessage('Unable to save settings - session timeout.', 'danger');
 		}
-	}
 
-	if (isset($_POST['reset_settings'])) {
+	} else if (isset($_POST['reset_settings'])) {
 		if (CSRFValidate()) {
 			$settings_array = array();
 			$sourceFilesChanged = array();
@@ -691,6 +701,9 @@ if ($debug) {
 		} else {
 			$status->addMessage('Unable to reset settings - session timeout', 'danger');
 		}
+	} else {
+		# The Allsky status isn't likely to change so increase the interval.
+		echo "<script>allskystatus_interval = 20 * 1000;</script>";
 	}
 
 	// If $settings_array is null it means we're being called from the Allsky Website,

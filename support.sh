@@ -234,11 +234,13 @@ function generate_support_info()
 		print_info "User ID:" "${USER_ID}"
 	} > "${BASIC_FILE}"
 
-	local ISSUE_FILE="${TEMP_DIR}/issue.txt"
-	{
-		print_heading "Github Issue"
-		print "${ISSUE_NUMBER}"
-	} > "${ISSUE_FILE}"
+	if [[ ${ISSUE_NUMBER} != "none" ]]; then
+		local ISSUE_FILE="${TEMP_DIR}/issue.txt"
+		{
+			print_heading "Github Issue"
+			print "${ISSUE_NUMBER}"
+		} > "${ISSUE_FILE}"
+	fi
 
 	local OS_FILE="${TEMP_DIR}/ps.txt"
 	{
@@ -316,10 +318,16 @@ function generate_support_info()
 		sudo dpkg-query -l
 	} > "${APT_FILE}"
 
-	local LIGHTTPD_ERROR_LOG_FILE="${TEMP_DIR}/lighttpd_error.txt"
 	local LIGHTTPD_ERROR_LOG="/var/log/lighttpd/error.log"
+	local LIGHTTPD_ERROR_LOG_FILE="${TEMP_DIR}/lighttpd_error.txt"
 	if [[ -f ${LIGHTTPD_ERROR_LOG} ]]; then
-		cp "${LIGHTTPD_ERROR_LOG}" "${LIGHTTPD_ERROR_LOG_FILE}"
+		# Don't include these - they aren't errors.
+		grep -E -v " server started | server stopped | logfiles cycled " \
+			"${LIGHTTPD_ERROR_LOG}" > "${LIGHTTPD_ERROR_LOG_FILE}"
+	fi
+
+	if [[ -s ${ALLSKY_MESSAGES} ]]; then
+		cp "${ALLSKY_MESSAGES}" "${TEMP_DIR}"
 	fi
 
 	local SUPPORTED_CAMERAS_FILE="${TEMP_DIR}/supported_cameras.txt"
@@ -347,6 +355,12 @@ function generate_support_info()
 	fi
 
 	[[ -d ${ALLSKY_CONFIG} ]] && cp -ar "${ALLSKY_CONFIG}" "${TEMP_DIR}"
+
+	if [[ -d ${ALLSKY_TMP} ]]; then
+		cp -ar "${ALLSKY_CONFIG}" "${TEMP_DIR}"
+		# The cache files aren't needed
+		rm -fr "${TEMP_DIR}/$( basename "${ALLSKY_CONFIG}" )/__pycache__"
+	fi
 
 	# Truncate large files not needed for support.
 	local X="${TEMP_DIR}/config/overlay/config/tmp/overlay/de421.bsp"

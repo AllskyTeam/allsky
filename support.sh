@@ -291,7 +291,11 @@ function generate_support_info()
 	local ALLSKYFILES_FILE="${TEMP_DIR}/allsky_files.txt"
 	{
 		print_heading "Files in ${ALLSKY_HOME}"
-		tree -ugp --gitignore -I '.git|__pycache__' "${ALLSKY_HOME}"
+		local IGNORE
+		IGNORE='.git|__pycache__'
+		IGNORE+='|system_fonts|python3*'		# python3 in venv has LOTs of files
+		IGNORE+='|image-2*|startrails-*|keogram-*|allsky-2*|thumbnail-*'
+		tree --du -h -ugp -I "${IGNORE}" "${ALLSKY_HOME}"
 	} > "${ALLSKYFILES_FILE}"
 
 	local ALLSKYVENV_FILE="${TEMP_DIR}/allsky_venv.txt"

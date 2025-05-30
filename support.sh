@@ -23,6 +23,11 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP
 SUPPORT_DATETIME_SHORT="$( date +"%Y%m%d%H%M%S" )"
 SUPPORT_ZIP_NAME="support-XX_ISSUE_XX-${SUPPORT_DATETIME_SHORT}.zip"
 ALLSKY_SUPPORT_DIR="${ALLSKY_WEBUI}/support"
+if [[ ! -d ${ALLSKY_SUPPORT_DIR} ]]; then
+	mkdir -p "${ALLSKY_SUPPORT_DIR}" || exit 2
+	sudo chown "${USER_NAME}:${WEBSERVER_OWNER}" "${ALLSKY_SUPPORT_DIR}"
+	sudo chmod 775 "${ALLSKY_SUPPORT_DIR}"
+fi
 
 
 ############################################## functions
@@ -361,7 +366,8 @@ function generate_support_info()
 	echo "${DIALOG_COMPLETE_MESSAGE//XX_ZIPNAME_XX/${ZIP_NAME}}"
 
 	ZIP_NAME="${TEMP_DIR}/${ZIP_NAME}"
-	zip -r "${ZIP_NAME}" "${TEMP_DIR}/"* > /dev/null 2>&1
+	cd "${TEMP_DIR}" || exit 1
+	zip -r "${ZIP_NAME}" ./* > /dev/null 2>&1
 	sudo chown "${USER_NAME}:${WEBSERVER_OWNER}" "${ZIP_NAME}"
 	sudo chmod g+wx "${ZIP_NAME}"
 	sudo chmod u+wx "${ZIP_NAME}"

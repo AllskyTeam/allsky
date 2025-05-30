@@ -1015,9 +1015,13 @@ class ALLSKYOVERLAY:
                 self._image = self._overlay_transparent(imageName, self._image, image, imageX, imageY, imageData)
                 s.log(4, f"INFO: Adding image field {imageName}")
             else:
-                self._log(1, f"WARNING: image '{imageName}' missing; ignoring.", sendToAllsky=True)
+                if os.path.exists(imagePath):
+                    self._log(1, f"WARNING: image '{imageName}' not found; ignoring.", sendToAllsky=True)
+                else:
+                    self._log(1, f"WARNING: image '{imageName}' not readable or is not a file; ignoring.", sendToAllsky=True)
         else:
-            s.log(1, "WARNING: Image not set so ignoring.")
+            """ TODO: Make the message more meaningful to a user, e.g., what should they look for or do? """
+            s.log(1, "WARNING: Overlay: 'image' not set so ignoring.", sendToAllsky=True)
 
     def _overlay_transparent(self, imageName, background, overlay, x, y, imageData):
         background_height, background_width = background.shape[0], background.shape[1]

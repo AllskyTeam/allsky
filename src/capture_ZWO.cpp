@@ -374,10 +374,10 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 
 	ASI_ERROR_CODE status, ret;
 
-	// ZWO recommends timeout = (exposure*2) + 500 ms
+	// ZWO recommends timeout_ms = (exposure*2) + 500 ms
 	// After some discussion, we're doing +5000ms to account for delays induced by
 	// USB contention, such as that caused by heavy USB disk IO
-	long timeout = ((cg->currentExposure_us * 2) / US_IN_MS) + 5000;	// timeout is in ms
+	long timeout_ms = ((cg->currentExposure_us * 2) / US_IN_MS) + 5000;
 
 	// Sanity check.
 	if (cg->HB.useHistogram && cg->currentAutoExposure)
@@ -472,7 +472,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 		}
 
 	} else {	// some video mode
-		status = ASIGetVideoData(cg->cameraNumber, imageBuffer, bufferSize, timeout);
+		status = ASIGetVideoData(cg->cameraNumber, imageBuffer, bufferSize, timeout_ms);
 		if (status != ASI_SUCCESS)
 		{
 			Log(0, "  > %s: ERROR: Failed getting image: %s.\n",

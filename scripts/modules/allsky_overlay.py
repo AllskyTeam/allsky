@@ -1015,9 +1015,12 @@ class ALLSKYOVERLAY:
                 self._image = self._overlay_transparent(imageName, self._image, image, imageX, imageY, imageData)
                 s.log(4, f"INFO: Adding image field {imageName}")
             else:
-                self._log(1, f"WARNING: image '{imageName}' missing; ignoring.", sendToAllsky=True)
+                if os.path.exists(imagePath):
+                    self._log(1, f"WARNING: image '{imageName}' not found; ignoring.", sendToAllsky=True)
+                else:
+                    self._log(1, f"WARNING: image '{imageName}' not readable or is not a file; ignoring.", sendToAllsky=True)
         else:
-            s.log(1, "WARNING: Image not set so ignoring.")
+            s.log(1, "WARNING: Overlay: 'image' not set. Please check the overlay manager for any image fields that have the image set to 'Select Image'", sendToAllsky=True)
 
     def _overlay_transparent(self, imageName, background, overlay, x, y, imageData):
         background_height, background_width = background.shape[0], background.shape[1]

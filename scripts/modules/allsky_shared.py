@@ -141,7 +141,7 @@ def get_lat_lon():
 	return lat, lon
 
 def get_pi_info(info):
-    resukt = None
+    result = None
     
     if info == PI_INFO_MODEL:
         Device.ensure_pin_factory()
@@ -486,6 +486,8 @@ def writeDB():
 
 def isFileWriteable(fileName):
     """ Check if a file exists and can be written to """
+    """ TODO: Don't need path.exists() - isfile() will fail if the file doesn't exist.
+    """ TODO: It's possible only os.access() is needed.
     if os.path.exists(fileName):
         if os.path.isfile(fileName):
             return os.access(fileName, os.W_OK)
@@ -499,6 +501,8 @@ def is_file_readable(file_name):
 def isFileReadable(fileName):
 
     """ Check if a file is readable """
+    """ TODO: Don't need path.exists() - isfile() will fail if the file doesn't exist.
+    """ TODO: It's possible only os.access() is needed.
     if os.path.exists(fileName):
         if os.path.isfile(fileName):
             return os.access(fileName, os.R_OK)

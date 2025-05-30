@@ -1020,8 +1020,7 @@ class ALLSKYOVERLAY:
                 else:
                     self._log(1, f"WARNING: image '{imageName}' not readable or is not a file; ignoring.", sendToAllsky=True)
         else:
-            """ TODO: Make the message more meaningful to a user, e.g., what should they look for or do? """
-            s.log(1, "WARNING: Overlay: 'image' not set so ignoring.", sendToAllsky=True)
+            s.log(1, "WARNING: Overlay: 'image' not set. Please check the overlay manager for any image fields that have the image set to 'Select Image'", sendToAllsky=True)
 
     def _overlay_transparent(self, imageName, background, overlay, x, y, imageData):
         background_height, background_width = background.shape[0], background.shape[1]

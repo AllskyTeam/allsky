@@ -90,7 +90,6 @@ SETTINGS_FILE = getEnvironmentVariable("SETTINGS_FILE", fatal=True)
 ALLSKY_OVERLAY = getEnvironmentVariable("ALLSKY_OVERLAY", fatal=True)
 ALLSKY_WEBUI = getEnvironmentVariable("ALLSKY_WEBUI", fatal=True)
 ALLSKY_MODULES = getEnvironmentVariable("ALLSKY_MODULES", fatal=True)
-SETTINGS_FILE = getEnvironmentVariable("SETTINGS_FILE", fatal=True)
 
 LOGLEVEL = 0
 SETTINGS = {}

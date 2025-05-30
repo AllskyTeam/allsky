@@ -1105,9 +1105,9 @@ function getNewestAllskyVersion(&$changed=null)
 	return($version_array);
 }
 
-function getCPULoad() 
+function getCPULoad($secs=2) 
 {
-	$secs = 2; $q = '"';
+	$q = '"';
 	$cmd = "(grep -m 1 'cpu ' /proc/stat; sleep $secs; grep -m 1 'cpu ' /proc/stat)";
 	$cmd .= " | gawk '{u=$2+$4; t=$2+$4+$5; if (NR==1){u1=u; t1=t;} else printf($q%.0f$q, (($2+$4-u1) * 100 / (t-t1))); }'";
 	$cpuload = exec($cmd);
@@ -1213,5 +1213,27 @@ function getThrottleStatus()
 		'throttle_status' => $throttle_status,
 		'throttle' => $throttle
 	);
+}
+
+function getUptime() {
+	$uparray = explode(" ", exec("cat /proc/uptime"));
+	$seconds = round($uparray[0], 0);
+	$minutes = $seconds / 60;
+	$hours = $minutes / 60;
+	$days = floor($hours / 24);
+	$hours = floor($hours - ($days * 24));
+	$minutes = floor($minutes - ($days * 24 * 60) - ($hours * 60));
+	$uptime = '';
+	if ($days != 0) {
+		$uptime .= $days . ' day' . (($days > 1) ? 's ' : ' ');
+	}
+	if ($hours != 0) {
+		$uptime .= $hours . ' hour' . (($hours > 1) ? 's ' : ' ');
+	}
+	if ($minutes != 0) {
+		$uptime .= $minutes . ' minute' . (($minutes > 1) ? 's ' : ' ');
+	}
+
+	return $uptime;
 }
 ?>

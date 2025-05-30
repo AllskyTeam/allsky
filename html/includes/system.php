@@ -227,23 +227,7 @@ function DisplaySystem()
 	$top_dir = dirname(ALLSKY_WEBSITE, 1);
 
 	// uptime
-	$uparray = explode(" ", exec("cat /proc/uptime"));
-	$seconds = round($uparray[0], 0);
-	$minutes = $seconds / 60;
-	$hours = $minutes / 60;
-	$days = floor($hours / 24);
-	$hours = floor($hours - ($days * 24));
-	$minutes = floor($minutes - ($days * 24 * 60) - ($hours * 60));
-	$uptime = '';
-	if ($days != 0) {
-		$uptime .= $days . ' day' . (($days > 1) ? 's ' : ' ');
-	}
-	if ($hours != 0) {
-		$uptime .= $hours . ' hour' . (($hours > 1) ? 's ' : ' ');
-	}
-	if ($minutes != 0) {
-		$uptime .= $minutes . ' minute' . (($minutes > 1) ? 's ' : ' ');
-	}
+	$uptime = getUptime();
 
 	// mem used
 	$memused = getMemoryUsed();
@@ -344,7 +328,7 @@ function DisplaySystem()
 								<!-- <colgroup> doesn't seem to support "width", so set on 1st line -->
 								<tr><td style="padding-right: 90px;">Hostname</td><td><?php echo $hostname ?></td></tr>
 								<tr><td>Pi Model</td><td><?php echo RPiModel() ?></td></tr>
-								<tr><td>Uptime</td><td><?php echo $uptime ?></td></tr>
+								<tr><td>Uptime</td><td id="as-uptime"><?php echo $uptime ?></td></tr>
 								<?php if ($dp === -1) $x = "<span class='errorMsg'>ERROR: unable to read '$top_dir' to get data.</span>";
 									  else $x = "$dt ($df free)";
 								?>

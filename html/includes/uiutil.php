@@ -10,6 +10,7 @@ class UIUTIL
     private $request;
     private $method;
     private $jsonResponse = false;
+    private $returnValues = False;
 
     function __construct() {
         $this->allskyHome = ALLSKY_HOME;
@@ -52,9 +53,17 @@ class UIUTIL
         die();
     }
 
-    private function sendResponse($response = 'ok')
-    {
-        echo ($response);
+
+    private function sendResponse($response = 'ok', $isJson = false) {
+
+        if ($isJson) {
+            header('Content-Type: application/json');
+            echo json_encode($response, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        } else {
+            header('Content-Type: text/html; charset=UTF-8');
+            echo $response;
+        }
+
         die();
     }
 
@@ -79,19 +88,20 @@ class UIUTIL
         } else {
             $myStatus = "success";
         }
-        $result = "<div class='progress-bar progress-bar-$myStatus'\n";
-        $result .= "    role='progressbar'\n";
-        $result .= "    title='current: $current, min: $min, max: $max'";
+
         if ($current < $min) {
             $current = $min;
         } else if ($current > $max) {
             $current = $max;
         }
-        $result .= "    aria-valuenow='$current' aria-valuemin='$min' aria-valuemax='$max'\n";
-
         $width = (($current - $min) / ($max - $min)) * 100;
-        $result .= "    style='width: $width%;'>$data\n";
-        $result .= "    </div>\n";
+
+        $result =  "<div class='progress-bar progress-bar-$myStatus'";
+        $result .= "    role='progressbar'";
+        $result .= "    title='current: $current, min: $min, max: $max'";
+        $result .= "    aria-valuenow='$current' aria-valuemin='$min' aria-valuemax='$max'";
+        $result .= "    style='width: $width%;'>$data";
+        $result .= "</div>";
 
         return $result;
     }
@@ -104,10 +114,13 @@ class UIUTIL
 
     public function getCPULoad() 
     {
-        $cpuLoad = getCPULoad();
+        $cpuLoad = getCPULoad(1);
 
-        $cpuBar = $this->displayProgress("", "$cpuLoad%", 0, $cpuLoad, 100, 90, 75, ""); 
+        $cpuBar = $this->displayProgress("", $cpuLoad . "%", 0, $cpuLoad, 100, 90, 75, ""); 
 
+        if ($this->returnValues) {
+            return $cpuBar;
+        }
         $this->sendResponse($cpuBar);
     }
 
@@ -121,6 +134,9 @@ class UIUTIL
 
         $cpuTemp =$this->displayProgress("", $display_temperature, 0, $temperature, 100, 70, 60, $temperature_status);
 
+        if ($this->returnValues) {
+            return $cpuTemp;
+        }
         $this->sendResponse($cpuTemp);   
     }
 
@@ -128,8 +144,11 @@ class UIUTIL
     {
         $memoryUsed = getMemoryUsed();
 
-        $memoryBar = $this->displayProgress("", "$memoryUsed%", 0, $memoryUsed, 100, 90, 75, "");
+        $memoryBar = $this->displayProgress("", $memoryUsed . "%", 0, $memoryUsed, 100, 90, 75, "");
 
+        if ($this->returnValues) {
+            return $memoryBar;
+        }
         $this->sendResponse($memoryBar);
     }
 
@@ -144,6 +163,33 @@ class UIUTIL
 
         $this->sendResponse($throttleBar);
 
+    }
+
+    public function getUptime()
+    {
+        $uptime = getUptime();
+
+        if ($this->returnValues) {
+            return $uptime;
+        }
+        $this->sendResponse($uptime);
+    }
+
+    public function postMultiple() {
+        $input = file_get_contents('php://input');
+        $data = json_decode($input, true);
+        $this->returnValues = true;
+        $result = [];
+
+        foreach ($data as $key => $value) {
+            $method = "get" . $value["data"];
+            if (method_exists($this, $method)) {
+                $result[$value["data"]] = call_user_func(array($this, $method));
+            } else {
+                $result[$value["data"]] = "Method $value does not exist.";
+            }
+        }
+        $this->sendResponse($result, true);
     }
 }   
 

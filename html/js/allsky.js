@@ -2,8 +2,7 @@
 
 // Timer intervals.  Make global to allow changing.
 let allskystatus_interval = 10 * 1000;		// it's decreased when starting / stopping Allsky
-let cpuload_interval = 10 * 1000;
-let cputemp_interval = 10 * 1000;
+let cpuloadtemp_interval = 20 * 1000;
 let memory_interval = 10 * 1000;
 let throttle_interval = 30 * 1000;
 
@@ -16,8 +15,7 @@ class ALLSKY {
                 allskystatus: {
                     url: 'includes/uiutil.php?request=AllskyStatus',
                     interval: allskystatus_interval,
-                    element: '#allskyStatus',
-                    name: 'Allsky status',
+                    updateelement: '#allskyStatus',
                     wait: false
 
                 }
@@ -25,40 +23,43 @@ class ALLSKY {
         },
         system : {
             timers: {
-                cpuload: {
-                    url: 'includes/uiutil.php?request=CPULoad',
-                    interval: cpuload_interval,
-                    element: '#as-cpuload',
-                    name: 'CPU load',
+                cpuandtemp: {
+                    url: 'includes/uiutil.php?request=Multiple',
+                    interval: cpuloadtemp_interval,
+                    updateelement: [
+                        {
+                            data: 'CPULoad',
+                            element: '#as-cpuload',
+                        },
+                        {
+                            data: 'CPUTemp',
+                            element: '#as-cputemp',
+                        },
+                        {
+                            data: 'Uptime',
+                            element: '#as-uptime',
+                        }
+                    ],
                     wait: false
-                },
-                cputemp: {
-                    url: 'includes/uiutil.php?request=CPUTemp',
-                    interval: cputemp_interval,
-                    element: '#as-cputemp',
-                    name: 'CPU temperature',
-                    wait: true
                 },
                 memory: {
                     url: 'includes/uiutil.php?request=MemoryUsed',
                     interval: memory_interval,
-                    element: '#as-memory',
-                    name: 'memory usage',
+                    updateelement: '#as-memory',
                     wait: true
                 },
                 throttle: {
                     url: 'includes/uiutil.php?request=ThrottleStatus',
                     interval: throttle_interval,
-                    element: '#as-throttley',
-                    name: 'Pi throttle',
+                    updateelement: '#as-throttley',
                     wait: true
                 }
             }
         }
     };
+
     constructor(page) {
         this.#allskyPage = page;
-        console.log("On " + page + " page");
     }
 
     #setupTheme() {
@@ -116,31 +117,55 @@ class ALLSKY {
         if (page in this.#pageTimers) {
             const timers = this.#pageTimers[page].timers;
 
-            for (const name in timers) {
-                const timer = timers[name];
+            for (const timerId in timers) {
+                const timer = timers[timerId];
 
-                if (timer.url && timer.element && timer.interval) {
+                if (timer.url && timer.updateelement && timer.interval) {
                     if (timer.wait !== undefined && !timer.wait) {
-                        this.fetchAndUpdate(timer.url, timer.element, timer.name);
+                        this.fetchAndUpdate(timerId, timer);
                     }
-                    this.#timers[name] = setInterval(() => {
-                        this.fetchAndUpdate(timer.url, timer.element, timer.name);
+                    this.#timers[timerId] = setInterval(() => {
+                        this.fetchAndUpdate(timerId, timer);
                     }, timer.interval);
                 }
             }
         }
     }
 
-    fetchAndUpdate(url, elementSelector, name) {
+    fetchAndUpdate(timerId, timer) {
+        const url = timer.url
+        let updateElement = timer.updateelement || null;
+        let type = 'GET';
+        let dataType = 'html';
+        let postData = [];
+
+        if (Array.isArray(updateElement)) {
+            postData = updateElement;
+            type = 'POST'
+            dataType = 'json';
+        }
+
         $.ajax({
             url: url,
-            type: 'GET',
+            type: type,
+            data: JSON.stringify(postData),
+            dataType: dataType,
             cache: false, 
-            success: (data) => {
-                $(elementSelector).html(data);
+            success: (response) => {
+                if (Array.isArray(updateElement)) {
+                    timer.updateelement.forEach(updateData => {
+                        if (updateData && updateData.element) {
+                            $(updateData.element).html(response[updateData.data]);
+                        } else {
+                            console.error('Invalid element configuration for', timerId);
+                        }
+                    });
+                } else {
+                    $(updateElement).html(response);
+                }
             },
-            error: () => {
-                $(elementSelector).text('Error loading ' + name + ' data');
+            error: (a, b) => {
+                $(elementSelector).html('Error loading ' + timerId + ' data');
             }
         });
     }
@@ -155,7 +180,6 @@ class ALLSKY {
         this.#setupTheme();
         this.#setupBigScreen();
         this.#setupTimestamps();
-
         // initialize timers that apply to all pages
         this.#initTimers('all');
         // initialize timers that apply to this page only

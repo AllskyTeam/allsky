@@ -156,9 +156,7 @@ function collect_support_info()
 
 	activate_python_venv
 	PYTHON_VERSION="$( python3 -V )"
-#x	PYTHON_MODULES="$( pip list )"
 	PYTHON_VERSION="${PYTHON_VERSION:-unknown}"
-#x	PYTHON_MODULES="${PYTHON_MODULES:-unknown}"
 	###
 
 	### Devices
@@ -181,9 +179,7 @@ function collect_support_info()
 	###
 
 	### get installed package information
-#x	PYTHON_PACKAGES="$( dpkg -l | grep python )"
 	# REPOS="$( grep -r '^deb' /etc/apt/sources.list /etc/apt/sources.list.d/ )"
-#x	APT_INSTALLED="$( sudo dpkg-query -l )"
 	###
 }
 
@@ -295,7 +291,7 @@ function generate_support_info()
 	local ALLSKYFILES_FILE="${TEMP_DIR}/allsky_files.txt"
 	{
 		print_heading "Files in ${ALLSKY_HOME}"
-		tree -ugp --gitignore --prune -I '.git|__pycache__' "${ALLSKY_HOME}"
+		tree -ugp --gitignore -I '.git|__pycache__' "${ALLSKY_HOME}"
 	} > "${ALLSKYFILES_FILE}"
 
 	local ALLSKYVENV_FILE="${TEMP_DIR}/allsky_venv.txt"
@@ -304,11 +300,9 @@ function generate_support_info()
 		print_info "Python Version:" "${PYTHON_VERSION}"
 		# This produces too much output to hold in a variable.
 		pip list
-#x		print "${PYTHON_MODULES}"
 		print_heading "Package Information"
 		# This produces too much output to hold in a variable.
 		dpkg -l | grep python
-#x		print "${PYTHON_PACKAGES}"
 	}  > "${ALLSKYVENV_FILE}"
 
 	local APT_FILE="${TEMP_DIR}/apt.txt"
@@ -316,7 +310,6 @@ function generate_support_info()
 		print_heading "APT installed packages"
 		# This produces too much output to hold in a variable.
 		sudo dpkg-query -l
-#x		print "${APT_INSTALLED}"
 	} > "${APT_FILE}"
 
 	local LIGHTTPD_ERROR_LOG_FILE="${TEMP_DIR}/lighttpd_error.txt"

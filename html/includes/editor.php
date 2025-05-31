@@ -5,6 +5,7 @@ function DisplayEditor()
 	global $useLocalWebsite, $useRemoteWebsite;
 	global $hasLocalWebsite, $hasRemoteWebsite;
 	$myStatus = new StatusMessages();
+	$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
 
 	$content = "";			// content of the default file to display on error
 	$onFile = null;			// the is the file that's displayed by default
@@ -48,7 +49,7 @@ function DisplayEditor()
 			$localContent = file_get_contents(getLocalWebsiteConfigFile());
 			$localOK = "false";
 		} else {
-			$localContent = json_encode($localContent, JSON_PRETTY_PRINT);
+			$localContent = json_encode($localContent, $mode);
 		}
 		$content = $localContent;
 		$onFile = "local";
@@ -75,7 +76,7 @@ function DisplayEditor()
 			$remoteOK = "false";
 			$remoteContent = file_get_contents(getRemoteWebsiteConfigFile());
 		} else {
-			$remoteContent = json_encode($remoteContent, JSON_PRETTY_PRINT);
+			$remoteContent = json_encode($remoteContent, $mode);
 		}
 
 		if ($onFile === null) {
@@ -102,7 +103,7 @@ function DisplayEditor()
 				$envOK = "false";
 				$envContent = file_get_contents(ALLSKY_ENV);
 			} else {
-				$envContent = json_encode($envContent, JSON_PRETTY_PRINT);
+				$envContent = json_encode($envContent, $mode);
 			}
 
 			if ($onFile === null) {

@@ -111,6 +111,8 @@ STATUS_VARIABLES=()								# Holds the variables and values to save
 ##### Set in installUpgradeFunctions.sh
 # PRIOR_ALLSKY_DIR
 # PRIOR_CONFIG_DIR
+# PRIOR_WEBSITE_DIR
+# PRIOR_WEBSITE_CONFIG_FILE
 # PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE
 # PRIOR_CONFIG_FILE, PRIOR_FTP_FILE
 # PRIOR_PYTHON_VENV
@@ -1502,8 +1504,6 @@ is_reboot_needed()
 # First look in the prior Allsky directory, if it exists.
 # If not, look in the old Website location.
 PRIOR_WEBSITE_STYLE=""
-PRIOR_WEBSITE_DIR=""
-PRIOR_WEBSITE_CONFIG_FILE=""
 
 # Versions of the Website configuration files: 1, 2, etc.
 NEW_WEB_CONFIG_VERSION=""
@@ -1519,10 +1519,8 @@ does_prior_Allsky_Website_exist()
 # TODO: The Website moved to ~/allsky/html/allsky in v2023.05.01
 # In v2025.xx.xx if that directory doesn't exist, no prior Website exists.
 	if [[ ${PRIOR_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
-		PRIOR_WEBSITE_DIR="${PRIOR_ALLSKY_DIR}${ALLSKY_WEBSITE/${ALLSKY_HOME}/}"
 		if [[ -d ${PRIOR_WEBSITE_DIR} ]]; then
 			PRIOR_WEBSITE_STYLE="${NEW_STYLE_ALLSKY}"
-			PRIOR_WEBSITE_CONFIG_FILE="${PRIOR_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 			if [[ -s ${PRIOR_WEBSITE_CONFIG_FILE} ]]; then
 				PRIOR_WEB_CONFIG_VERSION="$( settings ".${WEBSITE_CONFIG_VERSION}" "${PRIOR_WEBSITE_CONFIG_FILE}" )"
 				if [[ -z ${PRIOR_WEB_CONFIG_VERSION} ]]; then
@@ -1562,6 +1560,7 @@ does_prior_Allsky_Website_exist()
 		# New Website configuration file may not exist yet so use repo version.
 		NEW_WEB_CONFIG_VERSION="$( settings ".${WEBSITE_CONFIG_VERSION}" "${REPO_WEBCONFIG_FILE}" )"
 		display_msg --logonly info "NEW_WEB_CONFIG_VERSION=${NEW_WEB_CONFIG_VERSION}"
+		display_msg --logonly info "PRIOR_WEB_CONFIG_VERSION=${PRIOR_WEB_CONFIG_VERSION}"
 	fi
 }
 
@@ -2966,15 +2965,16 @@ restore_prior_website_files()
 		ITEM="${SPACE}${SPACE}${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 
 		if [[ -f ${PRIOR_WEBSITE_CONFIG_FILE} ]]; then
+			# Copy the old file to the current location.
+
 			if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
 				MSG="${ITEM} (copying and updating for version ${NEW_WEB_CONFIG_VERSION})"
-				display_msg --log progress "${MSG}"
+			else
+				MSG="${ITEM} (copying)"
 			fi
+			display_msg --log progress "${MSG}"
 
-			# Copy the old file to the current location.
-			display_msg --log progress "${ITEM} (copying)"
-			cp "${PRIOR_WEBSITE_CONFIG_FILE}" \
-				"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+			cp "${PRIOR_WEBSITE_CONFIG_FILE}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 
 			MSG="${SPACE}${SPACE}${SPACE}"
 			if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then

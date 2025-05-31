@@ -330,6 +330,15 @@ function generate_support_info()
 		cp "${ALLSKY_MESSAGES}" "${TEMP_DIR}"
 	fi
 
+	PRIOR_WEBSITE_DIR="${PRIOR_ALLSKY_DIR}${ALLSKY_WEBSITE/${ALLSKY_HOME}/}"
+	if [[ -d ${PRIOR_WEBSITE_DIR} ]]; then
+		PRIOR_WEBSITE_CONFIG_FILE="${PRIOR_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
+		if [[ -s ${PRIOR_WEBSITE_CONFIG_FILE} ]]; then
+			cp "${PRIOR_WEBSITE_CONFIG_FILE}" "${TEMP_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}-OLD.json"
+		fi
+	fi
+
+
 	local SUPPORTED_CAMERAS_FILE="${TEMP_DIR}/supported_cameras.txt"
 	{
 		print_heading "Allsky - Supported Cameras"

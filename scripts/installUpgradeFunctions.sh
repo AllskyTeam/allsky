@@ -27,12 +27,16 @@ export REPO_WEBSITE_CONFIGURATION_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGUR
 
 ##### Information on prior Allsky versions and files.
 	# Location of old-style WebUI and Website.
+# TODO: delete these two in v2025.xx.xx
 export OLD_WEBUI_LOCATION="/var/www/html"
 export OLD_WEBSITE_LOCATION="${OLD_WEBUI_LOCATION}/allsky"
+
 	# Directory of prior version of Allsky, if it exists.
 export PRIOR_ALLSKY_DIR="$( dirname "${ALLSKY_HOME}" )/${ALLSKY_INSTALL_DIR}-OLD"
 	# Prior "config" directory, if it exists.
 export PRIOR_CONFIG_DIR="${PRIOR_ALLSKY_DIR}/$( basename "${ALLSKY_CONFIG}" )"
+export PRIOR_WEBSITE_DIR="${PRIOR_ALLSKY_DIR}${ALLSKY_WEBSITE/${ALLSKY_HOME}/}"
+export PRIOR_WEBSITE_CONFIG_FILE="${PRIOR_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 export PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE="${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
 export PRIOR_PYTHON_VENV="${PRIOR_ALLSKY_DIR}/venv/lib"
 export PRIOR_MYFILES_DIR="${ALLSKY_MYFILES_DIR/${ALLSKY_HOME}/${PRIOR_ALLSKY_DIR}}"
@@ -43,6 +47,7 @@ export WEBSITE_CONFIG_VERSION="ConfigVersion"
 export WEBSITE_ALLSKY_VERSION="config.AllskyVersion"
 
 	# Location of prior files varies by release; this is most recent location.
+# TODO: delete these two in v2025.xx.xx
 export PRIOR_CONFIG_FILE="${PRIOR_CONFIG_DIR}/config.sh"
 export PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"
 

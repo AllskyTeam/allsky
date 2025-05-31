@@ -6,25 +6,52 @@ function DisplayEditor()
     global $hasLocalWebsite, $hasRemoteWebsite;
     $myStatus = new StatusMessages();
 
-    $fullN = null;			// this is the file that's displayed by default
+	$content = "";			// content of the default file to display on error
+	$onFile = null;			// the is the file that's displayed by default
+
+	// Don't allow users to edit - they should use the Allsky Settings page.
+	$useEnv = false;			// Allow editing of the ALLSKY_ENV file?
+
     $localN = basename(getLocalWebsiteConfigFile());
     $localN_withComment = "$localN (local Allsky Website)";
     $fullLocalN = "website/$localN";
+	$localOK = "true";
+
     $remoteN = basename(getRemoteWebsiteConfigFile());
     $remoteN_withComment = "$remoteN (remote Allsky Website)";
     $fullRemoteN = "config/$remoteN";
+	$remoteOK = "true";
+
+    if ($useEnv) {
+        $envN = basename(ALLSKY_ENV);
+		$envN_withComment = $envN;		// not needed, but use for consistency with other files.
+        $fullEnvN = "current/$envN";
+	}
+	$envOK = "true";
 
     // See what files there are to edit.
     $numFiles = 0;
 
     if ($hasLocalWebsite) {
-        $fullN = $fullLocalN;
-        $numFiles++;
-        if (!$useLocalWebsite) {
-            $msg =  "<span class='WebUISetting'>Use Local Website</span> is not enabled.";
-            $msg .= "<br>Your changes won't take effect until you enable that setting.</span>";
-            $myStatus->addMessage($msg, 'danger');
-        }
+       	$numFiles++;
+
+       	if (! $useLocalWebsite) {
+           	$msg =  "<span class='WebUISetting'>Use Local Website</span> is not enabled.";
+           	$msg .= "<br>Your changes won't take effect until you enable that setting.</span>";
+           	$myStatus->addMessage($msg, 'info');
+       	}
+
+		# Check for corruption in the file.
+		$returnedMsg = "";
+		$localContent = get_decoded_json_file(getLocalWebsiteConfigFile(), true, "", $returnedMsg);
+		if ($localContent === null) {
+			$localContent = file_get_contents(getLocalWebsiteConfigFile());
+			$localOK = "false";
+		} else {
+			$localContent = json_encode($localContent, JSON_PRETTY_PRINT);
+		}
+		$content = $localContent;
+		$onFile = "local";
     } else {
         $msg =  "<div class='dropdown'><code>$localN_withComment</code>";
 		$msg .= " will appear in the list below if you enable";
@@ -34,46 +61,121 @@ function DisplayEditor()
     }
 
     if ($hasRemoteWebsite) {
-        if ($fullN === null)
-            $fullN = $fullRemoteN;
         $numFiles++;
-        if (!$useRemoteWebsite) {
-            $msg = "<span class='WebUISetting'>Use Remote Website</span> is not enabled.";
-            $msg .= "<br>Your changes won't take effect until you enable that setting.</span>";
-            $myStatus->addMessage($msg, 'danger');
-        }
+
+       	if (! $useRemoteWebsite) {
+           	$msg = "<span class='WebUISetting'>Use Remote Website</span> is not enabled.";
+           	$msg .= "<br>Your changes won't take effect until you enable that setting.</span>";
+           	$myStatus->addMessage($msg, 'danger');
+       	}
+
+		$returnedMsg = "";
+		$remoteContent = get_decoded_json_file(getRemoteWebsiteConfigFile(), true, "", $returnedMsg);
+		if ($remoteContent === null) {
+			$remoteOK = "false";
+			$remoteContent = file_get_contents(getRemoteWebsiteConfigFile());
+		} else {
+			$remoteContent = json_encode($remoteContent, JSON_PRETTY_PRINT);
+		}
+
+        if ($onFile === null) {
+			$onFile = "remote";
+			$content = $remoteContent;
+		}
     } else {
         $remoteN = null;
     }
 
-    if (true) {
-        $envN = null;	// Don't allow users to edit - they should use the Allsky Settings page.
-    } else {
-        $envN = basename(ALLSKY_ENV);
-        $fullenvN = "current/$envN";
-        if (file_exists(ALLSKY_ENV)) {
-            if ($fullN === null)
-                $fullN = $fullenvN;
-            $numFiles++;
-        } else {
-            $envN = null;
-        }
-    }
+	if ($useEnv) {
+		if (! file_exists(ALLSKY_ENV)) {
+        	$msg =  "<div class='dropdown'><code>$envN_withComment</code>";
+			$msg .= " will appear in the list below when you save";
+			$msg .= " any private data in the WebUI.";
+        	$myStatus->addMessage($msg, 'info');
+			$envN = null;
+
+		} else {
+			$numFiles++;
+			$returnedMsg = "";
+			$envContent = get_decoded_json_file(ALLSKY_ENV, true, "", $returnedMsg);
+			if ($envContent === null) {
+				$envOK = "false";
+				$envContent = file_get_contents(ALLSKY_ENV);
+			} else {
+				$envContent = json_encode($envContent, JSON_PRETTY_PRINT);
+			}
+
+			if ($onFile === null) {
+				$onFile = "env";
+				$content = $envContent;
+			}
+		}
+	} else {
+		$envN = null;
+	}
 
     if ($numFiles > 0) {
-        if ($fullN === null) {
-            if ($hasLocalWebsite)
-                $fullN = $fullLocalN;
-            else
-                $fullN = $fullRemoteN;
+        if ($onFile === null) {
+            if ($hasLocalWebsite) {
+                $onFile = "local";
+                $content = $localContent;
+            } else if ($hasLocalWebsite) {
+                $onFile = "remote";
+                $content = $remoteContent;
+            } else if ($useEnv) {
+                $onFile = "env";
+                $content = $envContent;
+			}
         }
         ?>
         <script type="text/javascript">
+			<?php
+				echo "let localOK = $localOK;";
+				echo "let remoteOK = $remoteOK;";
+    			echo "let envOK = $envOK;";
+			?>
             let CONFIG_UPDATE_STRING = "<?php echo CONFIG_UPDATE_STRING ?>"
             $(document).ready(function () {
                 let clearTimer = null;
                 let currentMarks = [];
                 var editor = null;
+
+				function getFileType() {
+// TODO: There's a probably a better way to determine which file this is.
+					var path = $("#script_path").val();
+					if (path.substr(0, 8) === "{REMOTE}")
+						return("remote");
+					if (path == "<?php echo $fullEnvN ?>")
+						return("env");
+					return("local");
+				}
+
+				let corruptionMsg = "";
+				corruptionMsg += "Scroll down in the window below until you see a";
+				corruptionMsg += " <div class='CodeMirror-lint-marker CodeMirror-lint-marker-error'></div>";
+				corruptionMsg += " on the left side of the window.";
+                function checkCorruption() {
+					var ok = true;
+					var fileType = getFileType();
+					if (fileType == "remote") {
+						ok = remoteOK;
+					} else if (fileType == "local") {
+						ok = localOK;
+					} else if (fileType == "env") {
+						ok = envOK;
+					} else {
+						ok = false;
+					}
+
+					if (ok) {
+                        document.getElementById("file-corruption").innerHTML = '';
+                    } else {
+						let m = "This file appears corrupted.<br>";
+						m += corruptionMsg;
+                        let msg = '<div class="alert alert-danger" style="font-size: 125%">' + m + '</div>';
+                        document.getElementById("file-corruption").innerHTML = msg;
+                    }
+				}
 
                 function highlightText(searchTerm) {
                     currentMarks.forEach(mark => mark.clear());
@@ -94,8 +196,8 @@ function DisplayEditor()
                         document.getElementById("need-to-update").innerHTML = '';
                     } else {
                         let m = "NOTE: You must update all <span class='cm-string highlight'>" + CONFIG_UPDATE_STRING + "</span>";
-                        m += " values before the Website will work.";
-                        let msg = '<div class="alert alert-danger" style="font-size: 150%">' + m + '</div>';
+                        m += " values below before the Website will work.";
+                        let msg = '<div class="alert alert-warning" style="font-size: 125%">' + m + '</div>';
                         document.getElementById("need-to-update").innerHTML = msg;
                     }
                 }
@@ -111,22 +213,15 @@ function DisplayEditor()
                     }
                 }
 
-                function startTimer() {
+                function startTimer(secs) {
                     clearTimer = setInterval(() => {
                         clearInterval(clearTimer);
                         clearTimer = null;
                         document.getElementById("editor-messages").innerHTML = '';
-                    }, 5000);
+                    }, secs);
                 }
 
-                $.get("<?php echo $fullN; ?>", function (data) {
-
-                    // .json files return "data" as json array, and we need a regular string.
-                    // Get around this by stringify'ing "data".
-                    if (typeof data != 'string') {
-                        data = JSON.stringify(data, null, "\t");
-                    }
-
+				function doEditor(data) {
                     editor = CodeMirror(document.querySelector("#editorContainer"), {
                         value: data,
                         theme: "monokai",
@@ -135,13 +230,24 @@ function DisplayEditor()
                         gutters: ["CodeMirror-lint-markers"],
                         lint: true
                     });
+				}
 
-                    editor.on("change", (instance, changeObj) => {
-                        highlightText(CONFIG_UPDATE_STRING);
-                    });
-
-                    highlightText(CONFIG_UPDATE_STRING);
-                });
+				// Display the initial window.
+				let c = '<?php echo urlencode($content); ?>';
+				// .json files return "data" as json array, and we need a regular string.
+				// Get around this by stringify'ing "data".
+				if (typeof c != 'string') {
+					c = JSON.stringify(c, null, "\t");
+				}
+				c = decodeURIComponent(c.replaceAll("+", " "));
+				doEditor(c);
+				editor.on("change", (instance, changeObj) => {
+// TODO: This is called TWICE each time the file changes.  Why?
+					highlightText(CONFIG_UPDATE_STRING);
+					checkCorruption();
+				});
+				highlightText(CONFIG_UPDATE_STRING);
+				checkCorruption();
 
                 $("#save_file").click(function () {
                     if (clearTimer !== null) {
@@ -151,12 +257,20 @@ function DisplayEditor()
                     var content = editor.doc.getValue(); //textarea text
                     let jsonStatus = validateJSON(content);
                     if (jsonStatus.valid) {
-                        var path = $("#script_path").val(); //path of the file to save
-                        var isRemote = path.substr(0, 8) === "{REMOTE}";
-                        if (isRemote)
-                            fileName = path.substr(8);
-                        else
+						var isRemote = false;
+						var path = $("#script_path").val();
+						var fileType = getFileType();
+                        if (fileType == "remote") {
+                            fileName = path.substr(8);	// Skip "{REMOTE}"
+							remoteOK = true;
+							isRemote = true;
+						} else if (fileType == "local") {
+							localOK = true;
                             fileName = path;
+						} else if (fileType == "env") {
+							envOK = true;
+                            fileName = path;
+						}
 
                         $(".panel-body").LoadingOverlay('show', {
                             background: "rgba(0, 0, 0, 0.5)"
@@ -186,7 +300,7 @@ function DisplayEditor()
                                     for (var i = 0; i < returnArray.length; i++) {
                                         var line = returnArray[i];
                                         returnStatus = line.substr(0, 2);
-                                        if (returnStatus === "S\t") {
+                                        if (returnStatus === "S\t") {		// Success
                                             returnMsg += line.substr(2);
                                         } else if (returnStatus === "W\t") {
                                             c = "warning";
@@ -202,6 +316,10 @@ function DisplayEditor()
                                         }
                                     }
                                 }
+								if (ok) {
+									checkCorruption();
+								}
+
                                 var messages = document.getElementById("editor-messages");
                                 if (messages === null) {
                                     ok = false;
@@ -212,13 +330,13 @@ function DisplayEditor()
                                 messages.innerHTML = m;
                                 $(".panel-body").LoadingOverlay('hide');
                                 if (c !== "danger") {
-                                    startTimer();
+                                    startTimer(10000);
                                 }
                             },
                             error: function (XMLHttpRequest, textStatus, errorThrown) {
                                 $(".panel-body").LoadingOverlay('hide');
                                 alert("Unable to save '" + fileName + ": " + errorThrown);
-                                startTimer();
+                                startTimer(15000);
                             }
                         });
                     } else {
@@ -238,10 +356,17 @@ function DisplayEditor()
                 });
 
                 $("#script_path").change(function (e) {
-                    editor.getDoc().setValue("");	// Keeps new file from reading old one first.
                     var fileName = e.currentTarget.value;
                     if (fileName.substr(0, 8) === "{REMOTE}")
                         fileName = fileName.substr(8);
+
+					try {
+                    	editor.getDoc().setValue("");	// Keeps new file from reading old one first.
+					} catch (ee) {
+						console.log("Got error reading " + fileName);
+						return;
+					}
+
                     var ext = fileName.substring(fileName.lastIndexOf(".") + 1);
                     if (ext == "js") {
                         editor.setOption("mode", "javascript");
@@ -274,8 +399,8 @@ function DisplayEditor()
             <div class="panel panel-primary">
                 <div class="panel-heading"><i class="fa fa-code fa-fw"></i> Editor</div>
                 <div class="panel-body">
-                    <p id="need-to-update"></p>
                     <p id="editor-messages"><?php $myStatus->showMessages(); ?></p>
+                    <p id="need-to-update"></p> <p id="file-corruption"></p>
                     <div id="editorContainer"></div>
                     <div class="editorBottomSection">
                         <?php
@@ -300,20 +425,20 @@ function DisplayEditor()
                                     // The physical path is ALLSKY_WEBSITE; virtual path is "website".
                                     echo "<option value='$fullLocalN'>";
                                     echo $localN_withComment;
-                                    echo "</option>";
+                                    echo "</option>\n";
                                 }
 
                                 if ($remoteN !== null) {
                                     // A copy of the remote website's config file is on the Pi.
                                     echo "<option value='{REMOTE}$fullRemoteN'>";
                                     echo $remoteN_withComment;
-                                    echo "</option>";
+                                    echo "</option>\n";
                                 }
 
                                 if ($envN !== null) {
-                                    echo "<option value='$fullenvN'>";
-                                    echo "$envN";
-                                    echo "</option>";
+                                    echo "<option value='$fullEnvN'>";
+                                    echo "$envN_withComment";
+                                    echo "</option>\n";
                                 }
                                 ?>
                             </select>

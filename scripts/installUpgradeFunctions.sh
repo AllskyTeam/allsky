@@ -709,7 +709,7 @@ function update_old_website_config_file()
 	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
 		# These steps bring version 1 up to 2.
 		# Deletions:
-		update_json_file -d ".AllskyWebsiteVersion" "" "${FILE}"
+		update_json_file -d ".config.AllskyWebsiteVersion" "" "${FILE}"
 		update_json_file -d ".homePage.onPi" "" "${FILE}"
 		update_array_field "${FILE}" "homePage.popoutIcons" "variable" "AllskyWebsiteVersion" "--delete"
 
@@ -737,15 +737,13 @@ function update_old_website_config_file()
 
 				if (found_startrails == 1) {
 					if ($1 == "},") {
-						spaces6 = "      ";
-						spaces8 = spaces6 + "  ";
-						printf("%s{\n", spaces6);
-						printf("%s\"display\": false,\n", spaces8)
-						printf("%s\"url\": \"meteors/\",\n", spaces8)
-						printf("%s\"title\": \"Archived Meteors/\",\n", spaces8)
-						printf("%s\"icon\": \"fa fa-2x fa-fw fa-meteor\",\n", spaces8)
-						printf("%s\"style\": \"\"\n", spaces8)
-						printf("%s},\n", spaces6);
+						printf("%12s{\n", " ");
+						printf("%16s\"display\": false,\n", " ")
+						printf("%16s\"url\": \"meteors/\",\n", " ")
+						printf("%16s\"title\": \"Archived Meteors\",\n", " ")
+						printf("%16s\"icon\": \"fa fa-2x fa-fw fa-meteor\",\n", " ")
+						printf("%16s\"style\": \"\"\n", " ")
+						printf("%12s},\n", " ");
 	
 						while (getline) {
 							print $0;
@@ -770,28 +768,26 @@ function update_old_website_config_file()
 		gawk -v E="${E}" 'BEGIN {
 				found_computer = 0;
 				found_microchip = 0;
-				spaces6 = "      ";
-				spaces8 = "        ";
 			}
 			{
 				print $0;
 
 				if (found_computer == 1) {
-					printf("%s\"equipmentinfo\": \"%s\",\n", spaces8, E)
+					printf("%16s\"equipmentinfo\": \"%s\",\n", " ", E)
 					found_computer = 0;
 					next;
 				}
 
 				if (found_microchip == 1) {
 					if ($1 == "},") {
-						printf("%s{\n", spaces6);
-						printf("%s\"display\": true,\n", spaces8)
-						printf("%s\"label\": \"Equipment info\",\n", spaces8)
-						printf("%s\"icon\": \"fa fa-fw fa-keyboard\",\n", spaces8)
-						printf("%s\"variable\": \"equipmentinfo\",\n", spaces8)
-						printf("%s\"value\": \"\",\n", spaces8)
-						printf("%s\"style\": \"\"\n", spaces8)
-						printf("%s},\n", spaces6);
+						printf("%12s{\n", " ");
+						printf("%16s\"display\": true,\n", " ")
+						printf("%16s\"label\": \"Equipment info\",\n", " ")
+						printf("%16s\"icon\": \"fa fa-fw fa-keyboard\",\n", " ")
+						printf("%16s\"variable\": \"equipmentinfo\",\n", " ")
+						printf("%16s\"value\": \"\",\n", " ")
+						printf("%16s\"style\": \"\"\n", " ")
+						printf("%12s},\n", " ");
 	
 						while (getline) {
 							print $0;

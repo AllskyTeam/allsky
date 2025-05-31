@@ -107,6 +107,9 @@
 						The installation script will tell you what to do.
 					<li>The Allsky "Status:" on the top of the WebUI
 						now updates automatically every few seconds.
+					<li>The <span class="WebUILink">Editor</span> WebUI page
+						will display a message in the unlikely event that the
+						file is corrupted.
 					<li>The <span class="WebUILink">System</span> WebUI page
 						now appears very quickly and the data is automatically
 						updated every few seconds.
@@ -129,7 +132,11 @@
 					<li>The <span class="WebUILink">Getting Support</span> WebUI page
 						(and the related <code>support.sh</code> command) no longer
 						fail with an "Argument list too long" message.
+						<br>
+						They also provide more information to aid in troubleshooting.
 					<li>Setting a target temperature for cooled ZWO cameras now works.
+					<li><code>install.sh</code> no longer corrupts the Website
+						configuration file when adding meteor fields.
 					<li><code>remoteWebsiteInstall.sh</code> now handles servers that
 						don't return anything under certain circumstances.
 						This is uncommon but when it happened it kept the

@@ -79,6 +79,7 @@ function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=nul
 		$retMsg .= $div;
 		$retMsg .= "$errorMsg ";
 		$retMsg .= json_last_error_msg();
+# TODO: json_pp gives a generic "on line 59" message.
 		$cmd = "json_pp < $file 2>&1";
 		exec($cmd, $output);
 		$retMsg .= $br;

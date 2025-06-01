@@ -379,6 +379,9 @@ input[type="text"].has-error {
 .dark .progress {
 	background-color: #171717;
 }
+.progress-bar {
+	color: black;
+}
 .dark .progress-bar {
 	color: #ccc;
 }
@@ -391,6 +394,14 @@ input[type="text"].has-error {
 .dark .progress-bar-warning {
 	background-color: #a7742d;
 }
+
+/* used in system.php */
+.progress-bar-animated {
+	animation-name: progress_bar;
+	animation-duration: 0.6s;
+	animation-timing-function: ease;
+}
+@keyframes progress_bar { from { width: 0px } }
 
 .dark .table-striped>tbody>tr:nth-of-type(odd) {
 	background-color: #171717;
@@ -658,14 +669,6 @@ div.subSettingsHeader {
 .dark .rowSeparator {
 	border-bottom-color: var(--rowSeparator-dark);
 }
-/* used in system.php */
-.progress-bar-animated {
-	color: white;
-	animation-name: progress_bar;
-	animation-duration: 0.6s;
-	animation-timing-function: ease;
-}
-@keyframes progress_bar { from { width: 0px } }
 
 .form-control,
 input[type="text"],

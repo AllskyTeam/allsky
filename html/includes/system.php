@@ -88,16 +88,14 @@ function displayProgress($x, $label, $data, $min, $current, $max, $danger, $warn
                 $id = "";
         }
 
+        echo "<tr><td colspan='2' style='height: 5px'></td></tr>\n";
+        echo "<tr><td $x>$label</td>\n";
+        echo "    <td style='width: 100%' class='progress' $id>";
         if ($tempText !== "") {
-                echo "<tr><td colspan='2' style='height: 5px'></td></tr>\n";
-                echo "<tr><td $x>$label</td>\n";
-                echo "    <td style='width: 100%' class='progress' $id><div class='text-center'>$tempText</div>";
+                echo "    <div class='text-center'>$tempText</div>";
                 echo "    </td></tr>\n";
         } else {
-                echo "<tr><td colspan='2' style='height: 5px'></td></tr>\n";
-                echo "<tr><td $x>$label</td>\n";
-                echo "    <td style='width: 100%' class='progress' $id>";
-                echo "          <div class='progress-bar progress-bar-animated progress-bar-$myStatus'\n";
+                echo "    <div class='progress-bar progress-bar-animated progress-bar-$myStatus'\n";
                 echo "    role='progressbar'\n";
 
                 echo "    title='current: $current, min: $min, max: $max'";

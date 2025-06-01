@@ -2764,11 +2764,10 @@ restore_prior_files()
 			MSG+="\n\nNote that you do NOT need to manually copy files to the Website;"
 			MSG+="\nthe installation does that for you."
 			display_msg notice "${MSG}"
-
-			MSG="Displayed messaged that remote Website @ ${PRIOR_V} needs updating."
-			display_msg --logonly info "${MSG}"
-
 			add_to_post_actions "${MSG}"
+
+			MSG="Displayed message that remote Website @ ${PRIOR_V} needs updating."
+			display_msg --logonly info "${MSG}"
 		fi
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"

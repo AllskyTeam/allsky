@@ -3921,6 +3921,8 @@ request_map()
 # Perform actions after the installation completes.
 do_done()
 {
+	local MSG  MSG2
+
 	request_map
 
 	if [[ ${WILL_REBOOT} == "true" ]]; then
@@ -3938,7 +3940,10 @@ do_done()
 		do_allsky_status "${ALLSKY_STATUS_NOT_RUNNING}"
 		display_image --custom "lime" "Allsky is\nready to start"
 		MSG="\nInstallation is done."
-		display_msg --log progress "${MSG}"  "You must manually restart Allsky."
+		MSG2="To start Allsky, go to the WebUI's 'System' page."
+		display_msg --log progress "${MSG}"  "${MSG2}"
+		MSG2+="  You can then clear this message."
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --type info --msg "${MSG2}"
 
 		# Set it so the user isn't asked to review the Allsky settings.
 		set_now "lastchanged" "${SETTINGS_FILE}"
@@ -3948,7 +3953,7 @@ do_done()
 		do_allsky_status "${ALLSKY_STATUS_NEEDS_CONFIGURATION}"
 		MSG="; Allsky needs to be configured before it will start."
 		display_msg --log progress "\nInstallation is done" "${MSG}"
-		MSG="Go to the 'Allsky Settings' page of the WebUI to configure Allsky."
+		MSG="Go to the WebUI's 'Allsky Settings' page to configure Allsky."
 		display_msg progress "" "${MSG}"
 
 	elif [[ ${CONFIGURATION_NEEDED} == "review" ]]; then

@@ -12,7 +12,7 @@ class ALLSKYVARIABLES:
 
     def _get_json_file(self, file_path):
         data = {}
-        with open(file_path, 'r', encoding='utf-8') as file:	
+        with open(file_path, 'r', encoding='utf-8') as file:
             data = json.load(file)
 
         return data
@@ -166,8 +166,9 @@ class ALLSKYVARIABLES:
         core_module_directory = os.path.join(ALLSKY_SCRIPTS, 'modules')
         extra_module_directory = os.path.join(ALLSKY_MODULE_LOCATION, 'modules')
         extra_files = os.path.join(ALLSKY_OVERLAY, 'extra')
+        my_files_path = os.path.join(ALLSKY_MY_FILES_FOLDER, 'modules')
 
-        valid_module_paths = [ALLSKY_MY_FILES_FOLDER, extra_module_directory, core_module_directory]
+        valid_module_paths = [my_files_path, extra_module_directory, core_module_directory]
 
         for valid_module_path in valid_module_paths:
             sys.path.append(os.path.abspath(valid_module_path))
@@ -178,6 +179,9 @@ class ALLSKYVARIABLES:
 
         debug_variables = self.get_debug_variables()
 
+        variables = self._get_module_variable_list(my_files_path, module)
+        temp_variable_list = temp_variable_list | variables
+        
         variables = self._get_module_variable_list(core_module_directory, module)
         temp_variable_list = temp_variable_list | variables
 

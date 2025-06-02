@@ -19,7 +19,7 @@ class MODULEUTIL
         $this->allskyModules = ALLSKY_SCRIPTS . '/modules';
         $this->userModules = ALLSKY_MODULE_LOCATION . '/modules';
 		$this->extraDataFolder = ALLSKY_OVERLAY . '/extra';
-		$this->myFiles = ALLSKY_MYFILES_DIR;
+		$this->myFiles = ALLSKY_MYFILES_DIR . '/modules';
 
     }
 
@@ -825,7 +825,6 @@ class MODULEUTIL
 			$params .= ' --module ' . $module;
 		}
 		$pythonScript = '/home/pi/allsky/scripts/modules/allskyvariables/allskyvariables.py --print ' . $params . ' --allskyhome ' . ALLSKY_HOME;
-
 		$output = [];
 		$returnValue = 0;
 		exec("python3 $pythonScript 2>&1", $output, $returnValue);
@@ -1431,6 +1430,53 @@ class MODULEUTIL
         }
         asort($graphList);
         $this->sendResponse(json_encode($graphList));
+    }
+
+    public function postHassSensors() {
+        $hassUrl = $_POST['hassurl'];
+        $token = $_POST['hassltt'];
+        $result = [[
+            'id'=> '',
+            'name' => "Error retreiving sensors"
+        ]];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, "$hassUrl/api/states");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Authorization: Bearer $token",
+            "Content-Type: application/json"
+        ]);
+
+        $response = curl_exec($ch);
+
+        if (!curl_errno($ch)) {
+            curl_close($ch);
+
+            $data = json_decode($response, true);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+            if ($httpCode == 200) {
+                $sensors = array_values(array_filter($data, function ($entity) {
+                    return strpos($entity['entity_id'], 'sensor.') === 0;
+                }));
+
+                $result = array_map(function ($sensor) {
+                    return [
+                        'id' => $sensor['entity_id'],
+                        'state' => $sensor['state'],
+                        'unit' => $sensor['attributes']['unit_of_measurement'] ?? null,
+                        'name' => $sensor['attributes']['friendly_name'] ?? $sensor['entity_id']
+                    ];
+                }, $sensors);
+            } else {
+                if ($httpCode == 401) {
+                    $result[0]['name'] = 'Unauthorised. Please check the HA token';
+                }
+            }
+        }
+
+        $this->sendResponse(json_encode($result));
     }
 }
 

@@ -74,6 +74,41 @@ class MODULESEDITOR {
                 this.#addModules(this.#configData.available, '#modules-available')
                 this.#addModules(this.#configData.selected, '#modules-selected')
 
+
+				let groups = ['All Modules'];
+
+				const availableModules = this.#configData.available || {};
+				for (const key in availableModules) {
+					const module = availableModules[key];
+					const group = module?.metadata?.group;
+					if (group && !groups.includes(group)) {
+						groups.push(group);
+					}
+				}
+
+				groups.sort();
+
+				const filterSelect = $('#module-filters');
+				filterSelect.empty();
+
+				groups.forEach(function(group) {
+					filterSelect.append($('<option>', {
+						value: group,
+						text: group
+					}));
+				});
+
+				$('#module-filters').off('change');
+				$('#module-filters').on('change', function () {
+					const selectedValue = $(this).val();
+					if (selectedValue === 'All Modules') {
+						$('#modules-available .allskymodule').show();
+					} else {
+						$('#modules-available .allskymodule').hide();
+						$(`#modules-available .allskymodule[data-group="${selectedValue}"]`).show();
+					}
+				});
+
 				$('[data-toggle="popover"]').popover('destroy')				
 				$('[data-toggle="popover"]').popover()
 
@@ -460,13 +495,13 @@ class MODULESEDITOR {
 		if (data.corrupt !== undefined) {
 			nameData = 'WARNING: This modules metaData is corrupt. Please contact Allsky support'
 		}
-		let template = '\
-            <div id="' + moduleKey + '" data-id="' + data.module + '" class="list-group-item allskymodule ' + locked + '" data-search="' + data.metadata.description + ' ' + data.metadata.name + '"> \
-                <div class="panel panel-default"> \
-                    <div class="panel-heading"><span class="warning" data-toggle="popover" data-delay=\'{"show": 1000, "hide": 200}\' data-placement="top" data-trigger="hover" data-placement="top" title="" data-content=""><i class="fa-solid fa-2x fa-triangle-exclamation"></i></span> ' + lockedHTML + data.metadata.name + ' ' + version + ' ' + enabledHTML + '</div> \
-                    <div class="panel-body">' + nameData + ' <div class="pull-right">' + settingsHtml + addHTML + '</div></div> \
-                </div> \
-            </div>';
+		let template = `
+            <div id="${moduleKey}" data-id="${data.module}" class="list-group-item allskymodule ${locked}" data-search="${data.metadata.description} ${data.metadata.name}" data-group="${data.metadata.group}">
+                <div class="panel panel-default">
+                    <div class="panel-heading"><span class="warning" data-toggle="popover" data-delay=\'{"show": 1000, "hide": 200}\' data-placement="top" data-trigger="hover" data-placement="top" title="" data-content=""><i class="fa-solid fa-2x fa-triangle-exclamation"></i></span> ${lockedHTML}${data.metadata.name} ${version} ${enabledHTML}</div> 
+                    <div class="panel-body">${nameData} <div class="pull-right">${settingsHtml} ${addHTML}</div></div> 
+                </div> 
+            </div>`;
 
         return template;
     }
@@ -551,6 +586,7 @@ class MODULESEDITOR {
         moduleShortName = moduleShortName.replace('allsky_', '')
         let moduleData = this.#findModuleData(module)
         moduleData = moduleData.data
+		let dependenciesset = {};
 
         let fieldsHTML = ''
         let args = moduleData.metadata.argumentdetails
@@ -884,6 +920,22 @@ class MODULESEDITOR {
 							inputHTML += '<option value="' + optionValue + '"' + selected + '>' + optiontext + '</option>';
 						}
 						inputHTML += '</select>';
+					}
+
+					if (fieldType == 'dependentselect') {
+						let dataAttributes = ""
+						const action = fieldData?.type?.action
+
+						if (fieldData.type.dependenciesset !== undefined) {
+							Object.values(fieldData.type.dependenciesset).forEach((value, index) => {
+								dataAttributes += ` data-dependency${index}="${value}"`
+								if (dependenciesset[value] === undefined) {
+									dependenciesset[value] = []
+								}
+								dependenciesset[value].push(key)
+							})
+						}
+						inputHTML = `<select name="${key}" id="${key}" ${required} ${fieldDescription} class="as-module-dependency-select" data-action="${action}" data-value="${fieldValue}" ${dataAttributes}></select>`
 					}
 
 					if (fieldType == 'ajaxselect') {
@@ -1483,6 +1535,29 @@ class MODULESEDITOR {
 		})
 
 
+		Object.entries(dependenciesset).forEach(([key, dependentFields]) => {
+			$(`#${key}`).off('change');
+			$(`#${key}`).on('change', (e) => {
+				$('.as-module-dependency-select').trigger('as-dependent');
+			});
+		})
+
+		$(document).off('change', '.as-module-dependency-select');
+		$(document).on('change', '.as-module-dependency-select', (e) => {
+			const el = $(e.currentTarget);
+			const currentValue = el.val();
+
+			el.data('value', currentValue);
+		});
+
+		$(document).off('focus', '.as-module-dependency-select');
+		$(document).on('focus', '.as-module-dependency-select', (e) => {
+			this.handleDependentSelect(e);
+		});
+		$(document).on('as-dependent', '.as-module-dependency-select', (e) => {
+			this.handleDependentSelect(e);
+		});
+		$('.as-module-dependency-select').trigger('as-dependent');
 
 
 		let centerModal = true
@@ -1615,6 +1690,50 @@ class MODULESEDITOR {
 
 		this.#setFormState()
     }
+
+	handleDependentSelect(e) {
+		const el = $(e.currentTarget);
+		const currentValue = el.data('value');
+		let ok = true;
+
+		$.each(el[0].attributes, function(_, attr) {
+			if (attr.name.startsWith('data-dependency')) {
+
+				let val = $(`#${attr.value}`).val()
+				if (val.trim() === '') {
+					ok = false
+				}
+			}
+		});
+
+		if (ok) {
+			let url = el.data('dependency0');
+			let ltt = el.data('dependency1');
+			$.ajax({
+				url: 'includes/moduleutil.php?request=HassSensors',
+				type: 'POST',
+				data: {
+					'hassurl': $(`#${url}`).val(),
+					'hassltt': $(`#${ltt}`).val()
+				},
+				dataType: 'json',
+				success: function (sensorData) {
+					
+					el.empty();
+					$.each(sensorData, function(index, sensor) {
+						el.append(
+							$('<option>', {
+								value: sensor.id,
+								text: sensor.name + ` (${sensor.id})`,
+								selected: sensor.id === currentValue
+							})
+						);
+					});
+
+				}
+			});
+		}
+	}
 
 	#getFormValues() {
 		let formValues = {};

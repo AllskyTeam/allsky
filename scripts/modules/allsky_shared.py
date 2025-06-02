@@ -11,6 +11,7 @@ import pprint
 import shlex
 import subprocess
 import string
+import requests
 import json
 import sqlite3
 import mysql.connector
@@ -90,6 +91,7 @@ SETTINGS_FILE = getEnvironmentVariable("SETTINGS_FILE", fatal=True)
 ALLSKY_OVERLAY = getEnvironmentVariable("ALLSKY_OVERLAY", fatal=True)
 ALLSKY_WEBUI = getEnvironmentVariable("ALLSKY_WEBUI", fatal=True)
 ALLSKY_MODULES = getEnvironmentVariable("ALLSKY_MODULES", fatal=True)
+SETTINGS_FILE = getEnvironmentVariable("SETTINGS_FILE", fatal=True)
 
 LOGLEVEL = 0
 SETTINGS = {}
@@ -141,7 +143,7 @@ def get_lat_lon():
 	return lat, lon
 
 def get_pi_info(info):
-    result = None
+    resukt = None
     
     if info == PI_INFO_MODEL:
         Device.ensure_pin_factory()
@@ -486,8 +488,6 @@ def writeDB():
 
 def isFileWriteable(fileName):
     """ Check if a file exists and can be written to """
-    """ TODO: Don't need path.exists() - isfile() will fail if the file doesn't exist.
-    """ TODO: It's possible only os.access() is needed.
     if os.path.exists(fileName):
         if os.path.isfile(fileName):
             return os.access(fileName, os.W_OK)
@@ -501,8 +501,6 @@ def is_file_readable(file_name):
 def isFileReadable(fileName):
 
     """ Check if a file is readable """
-    """ TODO: Don't need path.exists() - isfile() will fail if the file doesn't exist.
-    """ TODO: It's possible only os.access() is needed.
     if os.path.exists(fileName):
         if os.path.isfile(fileName):
             return os.access(fileName, os.R_OK)
@@ -1252,7 +1250,6 @@ def get_rpi_meta_value(key):
     return result
 
 def get_rpi_metadata():
-
     with open(SETTINGS_FILE) as file:
         config = json.load(file)
 
@@ -1268,3 +1265,282 @@ def get_rpi_metadata():
         metadata_path = os.path.join(ALLSKY_TMP,'metadata.txt')
 
     return metadata_path
+
+def _get_nested_value(data, path, value_type=str, separator="."):
+    keys = path.split(separator)
+    try:
+        for key in keys:
+            if isinstance(data, dict):
+                data = data[key]
+            elif isinstance(data, list):
+                data = data[int(key)]
+            else:
+                return None
+        return value_type(data)
+    except (KeyError, IndexError, ValueError, TypeError):
+        return None
+
+def get_ecowitt_data(api_key, app_key, mac_address, temp_unitid=1, pressure_unitid=3):
+    result = {
+        'outdoor': {
+            'temperature': None,
+            'feels_like': None,
+            'humidity': None,
+            'app_temp': None,
+            'dew_point': None
+        },
+        'indoor': {
+            'temperature': None,
+            'humidity': None
+        },
+        'solar_and_uvi': {
+            'solar': None,
+            'uvi': None
+        }, 
+        'rainfall': {
+            'rain_rate': None,
+            'daily': None,
+            'event': None,
+            'hourly': None,
+            'weekly': None,
+            'monthly': None,
+            'yearly': None
+        },        
+        'wind': {
+            'wind_speed': None,
+            'wind_gust': None,
+            'wind_direction': None
+        },
+        'pressure': {
+            'relative': None,
+            'absolute': None
+        },
+        'lightning': {
+            'distance': None,
+            'count': None
+        }
+    }  
+    if all(var.strip() for var in (app_key, api_key, mac_address)):
+        ECOWITT_API_URL = f'https://api.ecowitt.net/api/v3/device/real_time?application_key={app_key}&api_key={api_key}&mac={mac_address}&call_back=all&temp_unitid={temp_unitid}&pressure_unitid={pressure_unitid}'
+        
+        log(4,f"INFO: Reading Ecowitt API from - {ECOWITT_API_URL}")
+        try:
+            response = requests.get(ECOWITT_API_URL)
+            if response.status_code == 200:
+                raw_data = response.json()
+
+                result['outdoor']['temperature'] = _get_nested_value(raw_data, 'data.outdoor.temperature.value', float)
+                result['outdoor']['feels_like'] = _get_nested_value(raw_data, 'data.outdoor.feels_like.value', float)
+                result['outdoor']['humidity']  = _get_nested_value(raw_data, 'data.outdoor.humidity.value', float)
+                result['outdoor']['app_temp']  = _get_nested_value(raw_data, 'data.outdoor.app_temp.value', float)
+                result['outdoor']['dew_point']  = _get_nested_value(raw_data, 'data.outdoor.dew_point.value', float)
+
+                result['indoor']['temperature']  = _get_nested_value(raw_data, 'data.indoor.temperature.value', float)
+                result['indoor']['humidity']  = _get_nested_value(raw_data, 'data.indoor.humidity.value', float)
+
+                result['solar_and_uvi']['solar']  = _get_nested_value(raw_data, 'data.solar_and_uvi.solar.value', float)
+                result['solar_and_uvi']['uvi']  = _get_nested_value(raw_data, 'data.solar_and_uvi.uvi.value', float)
+
+                result['rainfall']['rain_rate']  = _get_nested_value(raw_data, 'data.rainfall.rain_rate.value', float)
+                result['rainfall']['daily']  = _get_nested_value(raw_data, 'data.rainfall.daily.value', float)
+                result['rainfall']['event']  = _get_nested_value(raw_data, 'data.rainfall.event.value', float)
+                result['rainfall']['hourly']  = _get_nested_value(raw_data, 'data.rainfall.hourly.value', float)
+                result['rainfall']['weekly']  = _get_nested_value(raw_data, 'data.rainfall.weekly.value', float)
+                result['rainfall']['monthly']  = _get_nested_value(raw_data, 'data.rainfall.monthly.value', float)
+                result['rainfall']['yearly']  = _get_nested_value(raw_data, 'data.rainfall.yearly.value', float)
+
+                result['wind']['wind_speed']  = _get_nested_value(raw_data, 'data.wind.wind_speed.value', float)
+                result['wind']['wind_gust']  = _get_nested_value(raw_data, 'data.wind.wind_gust.value', float)
+                result['wind']['wind_direction']  = _get_nested_value(raw_data, 'data.wind.wind_direction.value', int)
+
+                result['pressure']['relative']  = _get_nested_value(raw_data, 'data.pressure.relative.value', float)
+                result['pressure']['absolute']  = _get_nested_value(raw_data, 'data.pressure.absolute.value', float)
+
+                result['lightning']['distance']  = _get_nested_value(raw_data, 'data.lightning.distance.value', float)
+                result['lightning']['count']  = _get_nested_value(raw_data, 'data.lightning.count.value', int)                
+
+                log(1, f'INFO: Data read from Ecowitt API')
+            else:
+                result = f'Got error from the Ecowitt API. Response code {response.status_code}'
+                log(0,f'ERROR: {result}')
+        except Exception as e:
+            eType, eObject, eTraceback = sys.exc_info()
+            result = f'ERROR: Failed to read data from Ecowitt {eTraceback.tb_lineno} - {e}'
+            log(0, result)
+    else:
+        result = 'Missing Ecowitt Application Key, API Key or MAC Address'
+        log(0, f'ERROR: {result}')    
+    
+    return result
+
+def get_ecowitt_local_data(address, password=None):
+    '''
+    Temp 0 - C, 1 - F
+    Pressure 0 - hPA, 1 - inHg, 2 - mmHg
+    Wind 0 - m/s, 1 - km/h, 2 - mph, 3 - knots, 5 - Beaufort
+    Rain 0 - mm, 1 - in
+    Irradiance 0 - Klux, 1 - W/m2, 2 - Kfc
+    Capacity 0 - L, 1 - m3, 2 - Gal
+    '''    
+
+    result = {
+        'outdoor': {
+            'temperature': None,
+            'feels_like': None,
+            'humidity': None,
+            'app_temp': None,
+            'dew_point': None
+        },
+        'indoor': {
+            'temperature': None,
+            'humidity': None
+        },
+        'solar_and_uvi': {
+            'solar': None,
+            'uvi': None
+        }, 
+        'rainfall': {
+            'rain_rate': None,
+            'daily': None,
+            'event': None,
+            'hourly': None,
+            'weekly': None,
+            'monthly': None,
+            'yearly': None
+        },        
+        'wind': {
+            'wind_speed': None,
+            'wind_gust': None,
+            'wind_direction': None
+        },
+        'pressure': {
+            'relative': None,
+            'absolute': None
+        },
+        'lightning': {
+            'distance': None,
+            'count': None
+        }
+    } 
+    
+    def parse_val(val, as_type=float, unit=None):
+        """
+        Extract numeric part from a value string and optionally convert °F to °C.
+        """
+        if val is None:
+            return None
+        try:
+            num_str = str(val).strip().split()[0].strip('%')
+            value = as_type(num_str)
+            if unit:
+                unit = unit.lower()
+                if unit in ['f', '°f']:
+                    value = round((value - 32) * 5 / 9, 2)
+            return value
+        except (ValueError, TypeError):
+            return None
+
+    def get_val_and_unit(data_list, target_id):
+        for item in data_list:
+            if item.get("id") == target_id:
+                return item.get("val"), item.get("unit", None)
+        return None, None
+        
+    LIVE_URL = f'{address}/get_livedata_info?'
+
+    try:
+        response = requests.get(LIVE_URL)
+        if response.status_code == 200:
+            live_data = response.json()
+            
+            common = live_data.get("common_list", [])
+            val, unit = get_val_and_unit(common, "0x02")
+            result['outdoor']['temperature'] = parse_val(val, float, unit)
+
+            val, unit = get_val_and_unit(common, "0x07")
+            result['outdoor']['humidity'] = parse_val(val, int, unit)
+
+            val, unit = get_val_and_unit(common, "3")
+            result['outdoor']['feels_like'] = parse_val(val, float, unit)
+
+            val, unit = get_val_and_unit(common, "0x03")
+            result['outdoor']['dew_point'] = parse_val(val, float, unit)
+
+
+            val, unit = get_val_and_unit(common, "0x0B")
+            result['wind']['wind_speed'] = parse_val(val, float, unit)
+
+            val, unit = get_val_and_unit(common, "0x0C")
+            result['wind']['wind_gust'] = parse_val(val, float, unit)
+
+            val, unit = get_val_and_unit(common, "0x0A")
+            result['wind']['wind_direction'] = parse_val(val, int, unit)
+            
+            val, unit = get_val_and_unit(common, "0x15")
+            result['solar_and_uvi']['solar'] = parse_val(val, float, unit)
+
+            val, unit = get_val_and_unit(common, "0x17")
+            result['solar_and_uvi']['uvi'] = parse_val(val, int, unit)
+
+            # --- Rain ---
+            rain = live_data.get("rain", [])
+            for rid, key in {
+                "0x0D": "event",
+                "0x0E": "rain_rate",
+                "0x10": "hourly",
+                "0x11": "daily",
+                "0x12": "weekly",
+                "0x13": "yearly"
+            }.items():
+                val, unit = get_val_and_unit(rain, rid)
+                result['rainfall'][key] = parse_val(val, float, unit)
+
+            # --- WH25 Indoor Sensor ---
+            wh25 = live_data.get("wh25", [{}])[0]
+            result['indoor']['temperature'] = parse_val(wh25.get("intemp"), float, wh25.get("unit"))
+            result['indoor']['humidity'] = parse_val(wh25.get("inhumi"), int)
+
+            result['pressure']['absolute'] = parse_val(wh25.get("abs"), float)
+            result['pressure']['relative'] = parse_val(wh25.get("rel"), float)
+
+            # --- Lightning ---
+            lightning = live_data.get("lightning", [{}])[0]
+            result['lightning']['distance'] = parse_val(lightning.get("distance"), float)
+            result['lightning']['count'] = parse_val(lightning.get("count"), int)
+
+    except Exception as e:
+        eType, eObject, eTraceback = sys.exc_info()
+        result = f'ERROR: Failed to read live data from the local Ecowitt gateway {eTraceback.tb_lineno} - {e}'
+        log(0, result)
+
+    return result
+
+def get_hass_sensor_value(ha_url, ha_ltt, ha_sensor):
+    result = None
+    
+    headers = {
+        'Authorization': f'Bearer {ha_ltt}',
+        'Content-Type': 'application/json',
+    }
+
+    try:
+        response = requests.get(f'{ha_url}/api/states/{ha_sensor}', headers=headers)
+
+        if response.status_code == 200:
+            result = float(response.json().get('state'))
+        else:
+            if response.status_code == 404:
+                log(0, f'ERROR: Unable to read {ha_sensor} from {ha_url}. homeassistant reports the sensor does not exist')
+            else:
+                if response.status_code == 401:
+                    log(0, f'ERROR: Unable to read {ha_sensor} from {ha_url}. homeassistant reports the token is unauthorised')
+                else:            
+                    log(0, f'ERROR: Unable to read {ha_sensor} from {ha_url}. Error code {response.status_code}')
+                
+    except Exception as e:
+        eType, eObject, eTraceback = sys.exc_info()
+        error = f'ERROR: Failed to read data from Homeassistant {eTraceback.tb_lineno} - {e}'
+        log(0, error)
+        result = None
+
+    return result

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+    <meta charset="UTF-8">
+    <title>AI Classifier</title>
+
+        <script src="//code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    </head>
+
+    <body>
+
+
+
+<!-- Allsky Classifier Modal & Script (Fixed) -->
+<div id="allskyModal" class="modal fade" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" style="width: 95%;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Allsky Image Classifier</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="allsky-classifier"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary save-btn">Save</button>
+        <button class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="imageModal" class="modal fade" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-body text-center">
+        <img id="modalImage" src="" style="max-width:100%;">
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.category-bin.highlight {
+  border: 2px dashed #007bff;
+  background-color: #eaf4ff;
+}
+.unclassified-grid {
+  max-height: 500px;
+  overflow-y: auto;
+  padding: 5px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.unclassified-grid .col-xs-4,
+.unclassified-grid .col-sm-2 {
+  padding: 2px;
+  margin: 0;
+  width: auto;
+}
+</style>
+
+<script>
+function openAllskyModal() {
+  $.getJSON("/tests/ai/list-folders.php", function(folders) {
+    $('#allsky-classifier').empty().allskyClassifier({
+      folders: folders,
+      getImagesUrl: folder => `/images/${folder}/`,
+      formatLabel: folder => folder.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'),
+      onClassify: function(classifications) {
+        $('#allsky-classifier').data('classifications', classifications);
+      }
+    });
+    $('#allskyModal').modal('show');
+  });
+}
+
+$('.save-btn').on('click', function () {
+  const classifications = $('#allsky-classifier').data('classifications') || {};
+  $.ajax({
+    url: '/tests/ai/save-classifications.php',
+    method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify(classifications),
+    success: function () {
+      alert("Saved!");
+      $('#allskyModal').modal('hide');
+    },
+    error: function () {
+      alert("Failed to save");
+    }
+  });
+});
+
+(function($) {
+  $.fn.allskyClassifier = function(options) {
+    const settings = $.extend({
+      folders: [],
+      getImagesUrl: folder => `/images/${folder}/`,
+      categories: ["Clear", "Partially Cloudy", "Cloudy", "Raining"],
+      formatLabel: null,
+      onClassify: function() {}
+    }, options);
+
+    const $container = $(this).empty().addClass("row");
+    const classifications = {};
+    $(this).data('classifications', classifications);
+
+    const $left = $('<div class="col-sm-3"><h4>Categories</h4></div>');
+    settings.categories.forEach(cat => {
+      const $panel = $(`
+        <div class="panel panel-default category-dropzone" data-category="${cat}" style="min-height:150px;">
+          <div class="panel-heading">${cat} (<span class="count">0</span>)</div>
+          <div class="panel-body category-bin" data-category="${cat}"></div>
+        </div>`);
+      $left.append($panel);
+    });
+
+    const $right = $('<div class="col-sm-9"></div>');
+    const $select = $('<select class="form-control folder-select" style="margin-bottom:10px;"></select>');
+    settings.folders.forEach(f => {
+      const label = settings.formatLabel ? settings.formatLabel(f) : f;
+      $select.append(`<option value="${f}">${label}</option>`);
+    });
+    const $grid = $('<div class="image-grid row unclassified-grid"></div>');
+    $right.append($select).append($('<h4>Unclassified</h4>')).append($grid);
+
+    $container.append($left).append($right);
+
+    $select.on("change", function() {
+      const folder = $(this).val();
+      const baseUrl = settings.getImagesUrl(folder);
+      loadImages(folder, baseUrl, $grid);
+    }).trigger("change");
+
+    function makeDraggable($img, fullSrc) {
+      $img.attr("draggable", "true")
+        .attr("data-fullsrc", fullSrc)
+        .on("dragstart", function(e) {
+          e.originalEvent.dataTransfer.setData("text/plain", fullSrc);
+        })
+        .on("click", function() {
+          $('#modalImage').attr("src", fullSrc);
+          $('#imageModal').modal('show');
+        });
+    }
+
+    function loadImages(folder, baseUrl, $grid) {
+      $grid.empty();
+      $.ajax({
+        url: "/tests/ai/list-images.php",
+        method: "GET",
+        data: { folder: folder },
+        dataType: "json",
+        success: function(list) {
+          list.forEach(file => {
+            const thumbSrc = baseUrl + "thumbnails/" + file;
+            const fullSrc = baseUrl + file;
+            const $img = $('<img>').attr("src", thumbSrc);
+            makeDraggable($img, fullSrc);
+            $grid.append($('<div class="col-xs-4 col-sm-2"></div>').append($img));
+            classifications[fullSrc] = null;
+          });
+          updateCounts();
+          enableDrops();
+        },
+        error: function() {
+          alert("Failed to load images for folder " + folder);
+        }
+      });
+    }
+
+    function enableDrops() {
+      $container.find(".category-bin, .unclassified-grid").each(function() {
+        this.addEventListener("dragover", function(e) {
+          e.preventDefault();
+          this.classList.add("highlight");
+        });
+        this.addEventListener("dragleave", function() {
+          this.classList.remove("highlight");
+        });
+        this.addEventListener("drop", function(e) {
+          e.preventDefault();
+          this.classList.remove("highlight");
+
+          const src = e.dataTransfer.getData("text/plain");
+          const thumbSrc = src.replace('/images/', '/images/').replace(/\/([^\/]+)$/, '/thumbnails/$1');
+          const $img = $('<img>').attr("src", thumbSrc);
+          makeDraggable($img, src);
+
+          // Remove only one instance
+          $(`[data-fullsrc='${src}']`).each(function() {
+            const container = $(this).closest('.category-bin, .unclassified-grid');
+            if (container.length) $(this).parent().remove();
+          });
+
+          const $slot = $('<div class="col-xs-4 col-sm-2"></div>').append($img);
+          $(this).append($slot);
+
+          classifications[src] = this.classList.contains('unclassified-grid') ? null : this.dataset.category;
+          updateCounts();
+          settings.onClassify(classifications);
+        });
+      });
+    }
+
+    function updateCounts() {
+      settings.categories.forEach(cat => {
+        const count = Object.values(classifications).filter(v => v === cat).length;
+        $container.find(`.category-dropzone[data-category='${cat}'] .count`).text(count);
+      });
+    }
+
+    return this;
+  };
+})(jQuery);
+</script>
+
+
+
+
+
+
+<script>
+openAllskyModal();
+</script>
+
+    </body>
+</html>

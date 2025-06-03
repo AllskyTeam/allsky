@@ -10,6 +10,7 @@ import shlex
 import sys
 import re
 import time
+from pathlib import Path
 
 try:
 	import allsky_shared as shared
@@ -70,7 +71,7 @@ class ALLSKYOVERLAYDATA:
 		else:
 			shared.log(level, text, prevent_newline, exit_code, sendToAllsky=send_to_allsky)
 
-	def __set_environment_variable(self, name, value):
+	def _set_environment_variable(self, name, value):
 		result = True
 
 		try:
@@ -99,15 +100,15 @@ class ALLSKYOVERLAYDATA:
 			line = line.strip("\r")
 			try:
 				(key, _, value) = line.partition("=")
-				self.__set_environment_variable(key, value)
+				self._set_environment_variable(key, value)
 			except Exception:
 				pass
 		proc.communicate()
- 
-	def __remove_expired_fields(self):
+   
+	def _remove_expired_fields(self):
 		pass
 	
-	def __parse_extra_data_field(self, raw_field_data):
+	def _parse_extra_data_field(self, raw_field_data):
 		if self.values_only:
 			field_data = {
 				'value': ''
@@ -130,39 +131,73 @@ class ALLSKYOVERLAYDATA:
 					field_data['value'] = field_data['value']['value']
 		except Exception as e:
 			eType, eObject, eTraceback = sys.exc_info()
-			self._log(0, f'ERROR: __parse_extra_data_field failed on line {eTraceback.tb_lineno} - {e}')
+			self._log(0, f'ERROR: _parse_extra_data_field failed on line {eTraceback.tb_lineno} - {e}')
 
 		return field_data
 
-	def __read_json_file(self, file_name):
+	def _read_json_file(self, file_name):
 		if shared.isFileReadable(file_name):
 			file_modified_time = int(os.path.getmtime(file_name))
 			try:
 				with open(file_name) as file:
 					json_data = json.load(file)
 					for (field_name, field_data) in json_data.items():
-						self.extra_fields[field_name] = self.__parse_extra_data_field(field_data)
+						self.extra_fields[field_name] = self._parse_extra_data_field(field_data)
 			except:
 				self._log(0, f'WARNING: Data File {os.path.basename(file_name)} is invalid - IGNORING.')
 		else:
 			self._log(0, f'ERROR: Data File {os.path.basename(file_name)} is not accessible - IGNORING.')
  
-	def __read_text_file(self, file_name):
-		pass
+	def _read_text_file(self, file_name):
+		entry = Path(file_name).name     
+		stem = Path(entry).stem
+		with open(file_name, 'r') as f:
+			data = {}
+			for line in f:
+				line = line.strip()
+				if not line or '=' not in line:
+					continue
+				key, value = line.split('=', 1)
+				key = key.strip()
+				value = value.strip()
+				out_key = key.upper()
+				type = 'string'
+				try:
+					value = int(value)
+					type = 'number'
+				except ValueError:
+					try:
+						value = float(value)
+						type = 'number'
+					except ValueError:
+						value = value
+						type = 'string'
 
-	def __read_data(self, file_name):
-		file_extension = pathlib.Path(file_name).suffix
+				data = {
+					"name": "${" + key + "}",
+					"format": "",
+					"sample": "",
+					"group": "User",
+					"description": "Allsky variable " + key,
+					"type": type,
+					"source": stem,
+					"value": value
+				}
+				self.extra_fields[out_key] = data
+
+	def _read_data(self, file_name):
+		file_extension = Path(file_name).suffix
 		if file_extension == '.json':
-			self.__read_json_file(file_name)
+			self._read_json_file(file_name)
 		else:
 			if file_extension == '.txt':
-				self.__read_text_file(file_name)
+				self._read_text_file(file_name)
 			else:
 				self._log(4, f'INFO: Unknown file {os.path.basename(file_name)}')
 
-		self.__remove_expired_fields()
+		self._remove_expired_fields()
     
-	def __add_core_allsky_variables(self):
+	def _add_core_allsky_variables(self):
 		debug_variables = self.variable_class.get_debug_variables()
    
 		for debug_variable in debug_variables:
@@ -184,13 +219,13 @@ class ALLSKYOVERLAYDATA:
 			for file_name in file_names:
 				extra_data_file_name = os.path.join(self.extra_folder, file_name)
 				self._debug(f'INFO: Loading Data File {extra_data_file_name}')
-				self.__read_data(extra_data_file_name)
+				self._read_data(extra_data_file_name)
 
-		self.__add_core_allsky_variables()
+		self._add_core_allsky_variables()
 
 		return self.format()
 
-	def __format_field(self, field_data):
+	def _format_field(self, field_data):
 		variable_regex =  r"\$\{.*?\}"
 		field_label = field_data['label']
 		variable_matches = re.findall(variable_regex, field_label)   
@@ -210,8 +245,13 @@ class ALLSKYOVERLAYDATA:
 			value = ''
 			if variable in self.extra_fields:
 				value = self.extra_fields[variable]['value']
+			else:
+				variable = raw_variable.replace('${','').replace('}', '')
+				if variable in self.extra_fields:
+					value = self.extra_fields[variable]['value']
+       
 			pre_formatted_value = value
-		
+
 			variable_definition = self.variable_class.get_variable(self.variables, variable)
 			if variable_definition is not None:
 				if isinstance(variable_definition['value'] , dict):
@@ -289,13 +329,13 @@ class ALLSKYOVERLAYDATA:
 					self.variables = self.variable_class.get_variables()
 					for index,field_data in enumerate(json_overlay['fields']):
 						self._debug(f"INFO: Formatting field {field_data['label']}")
-						field_data['label'] = self.__format_field(field_data)
+						field_data['label'] = self._format_field(field_data)
 
 				#except:
-				#	self._log(0, f'WARNING: Data File {overlay_file} is invalid - IGNORING.', sendToAllsky=True)
+				#	self._log(0, f'WARNING: Data File {self.overlay_file} is invalid - IGNORING.')
 				result = json_overlay['fields']
 			else:
-				self._log(0, f'ERROR: Data File {self.overlay_file} is not accessible - IGNORING.', send_to_allsky=False)
+				self._log(0, f'ERROR: Data File {self.overlay_file} is not accessible - IGNORING.')
 		else:
 			result = self.extra_fields
    
@@ -311,7 +351,6 @@ if __name__ == '__main__':
 	parser.add_argument("--print", action="store_true", help="Print the results to stdout")
 	parser.add_argument("--prettyprint", action="store_true", help="Pretty Print the results to stdout")
 	parser.add_argument("--debug", action="store_true", help="Display debug info")
-
 	args = parser.parse_args()
     
 	if args.overlay == '':
@@ -358,7 +397,7 @@ if __name__ == '__main__':
 	extra_folder = allsky_data.get_environment_variable('ALLSKY_EXTRA')
  
 	result = allsky_data.load(10000, extra_folder)
-	
+
 	if args.print:
 		print(json.dumps(result))
   

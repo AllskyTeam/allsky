@@ -19,6 +19,7 @@ class ALLSKYHISTOGRAM(ALLSKYMODULEBASE):
         "name": "Histogram",
         "description": "Displays a histogram of the image",
         "module": "allsky_histogram",
+        "group": "Image Adjustments",
         "events": [
             "day",
             "night"

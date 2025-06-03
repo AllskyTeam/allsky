@@ -33,6 +33,7 @@ class ALLSKYMETEOR(ALLSKYMODULEBASE):
 		"module": "allsky_meteor",
 		"centersettings": "false",
 		"extradatafilename": "allsky_meteor.json",
+		"group": "Image Analysis",
         "graphs": {
             "chart1": {
 				"icon": "fa-solid fa-chart-line",

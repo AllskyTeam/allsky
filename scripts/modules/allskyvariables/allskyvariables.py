@@ -6,7 +6,7 @@ import os
 import json
 import sys
 import argparse
-
+from pathlib import Path
 
 class ALLSKYVARIABLES:
 
@@ -112,9 +112,47 @@ class ALLSKYVARIABLES:
             if isExtra:
                 if entry not in ['.', '..']:
                     file_name = os.path.join(folder, entry)
-                    with open(file_name, 'r') as f:
-                        data = json.load(f)
-                    variables.update(data)
+                    ext = Path(entry).suffix.lower()
+                    if ext == '.json':
+                        with open(file_name, 'r') as f:
+                            data = json.load(f)
+                        variables.update(data)
+                    if ext == '.txt':
+                        stem = Path(entry).stem
+                        with open(file_name, 'r') as f:
+                            data = {}
+                            for line in f:
+                                line = line.strip()
+                                if not line or '=' not in line:
+                                    continue
+                                key, value = line.split('=', 1)
+                                key = key.strip()
+                                value = value.strip()
+                                out_key = "AS_" + key.upper()
+                                type = 'string'
+                                try:
+                                    value = int(value)
+                                    type = 'number'
+                                except ValueError:
+                                    try:
+                                        value = float(value)
+                                        type = 'number'
+                                    except ValueError:
+                                        value = value
+                                        type = 'string'
+
+                                data[out_key] = {
+                                    "name": "${" + key + "}",
+                                    "format": "",
+                                    "sample": "",
+                                    "group": "User",
+                                    "description": "Allsky variable " + key,
+                                    "type": type,
+                                    "source": stem,
+                                    "value": value
+                                }
+                        variables.update(data)                        
+            
             else:
                 if entry.startswith('allsky_') and entry != 'allsky_shared.py' and entry != 'allsky_base.py':
                     include = True
@@ -263,7 +301,6 @@ class ALLSKYVARIABLES:
             result = new_result
 
         return result
-
 
 if __name__ == "__main__":
 

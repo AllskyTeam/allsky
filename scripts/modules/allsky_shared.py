@@ -6,43 +6,31 @@ https://github.com/AllskyTeam/allsky
 
 This module is a common dumping ground for shared variables and functions.
 '''
+import time
 import os
 import pprint
 import shlex
 import subprocess
-import string
 import requests
 import json
 import sqlite3
 import mysql.connector
 import math
-import cv2
 import shutil
 import re
 import sys
 import time
 import locale
-import board
-import argparse
 import locale
 import tempfile
-import pathlib
 import shlex
 from pathlib import Path
 from functools import reduce
-
 from allskyvariables import allskyvariables
-
-from astropy.stats import sigma_clipped_stats
-from photutils.detection import DAOStarFinder
-
-from gpiozero import Device, CPUTemperature
 import pigpio
-
 import numpy as np
-
 from typing import Union, List, Dict
-
+ 
 try:
     locale.setlocale(locale.LC_ALL, '')
 except:
@@ -143,6 +131,7 @@ def get_lat_lon():
 	return lat, lon
 
 def get_pi_info(info):
+    from gpiozero import Device, CPUTemperature
     resukt = None
     
     if info == PI_INFO_MODEL:
@@ -295,6 +284,7 @@ def write_debug_image(module, fileName, image):
 	writeDebugImage(module, fileName, image)
 
 def writeDebugImage(module, fileName, image):
+    import cv2
     global ALLSKY_WEBUI
 
     debugDir = os.path.join(ALLSKY_WEBUI, "debug", module)
@@ -667,7 +657,7 @@ def saveExtraData(file_name, extra_data, source='', structure={}, custom_fields=
 			extra_data_filename = os.path.join(extra_data_path, file_name)
 			with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
 				if file_extension == '.json':
-					extra_data = format_extra_data(extra_data, structure, source)
+					extra_data = format_extra_data_json(extra_data, structure, source)
 				if len(custom_fields) > 0:
 					for key, value in custom_fields.items():
 						extra_data[key] = value
@@ -684,7 +674,7 @@ def saveExtraData(file_name, extra_data, source='', structure={}, custom_fields=
 		eType, eObject, eTraceback = sys.exc_info()            
 		log(0, f'ERROR: Module saveExtraData failed on line {eTraceback.tb_lineno} - {e}')
 
-def format_extra_data(extra_data, structure, source):
+def format_extra_data_json(extra_data, structure, source):
     result = extra_data
 
     if structure:
@@ -875,6 +865,7 @@ def get_gpio_pin_details(pin):
 def get_gpio_pin(pin):
 	return getGPIOPin(pin)
 def getGPIOPin(pin):
+    import board
     result = None
     if pin == 0:
         result = board.D0
@@ -1138,6 +1129,7 @@ def get_allsky_variable(variable):
     return result
 
 def load_mask(mask_file_name, target_image):
+    import cv2
     mask = None
     
     mask_path = os.path.join(ALLSKY_OVERLAY, 'images', mask_file_name)
@@ -1178,6 +1170,10 @@ def mask_image(image, mask_file_name=''):
     return output
      
 def count_starts_in_image(image, mask_file_name=None):
+    from photutils.detection import DAOStarFinder
+    from astropy.stats import sigma_clipped_stats
+    import cv2
+    
     # Convert to grayscale if it's RGB
     if image.ndim == 3:
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)

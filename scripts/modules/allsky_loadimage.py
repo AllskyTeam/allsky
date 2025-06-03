@@ -21,7 +21,8 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 		"description": "Loads the last captured image",
 		"module": "allsky_loadimage",
 		"ignorewatchdog": "True",
-		"extradatafilename": "allsky_camera.json",  
+		"extradatafilename": "allsky_camera.json",
+		"group": "Allsky Core",
 		"events": [
 			"day",
 			"night"

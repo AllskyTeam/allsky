@@ -25,6 +25,7 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 			"night"
 		],
 		"experimental": "true",
+  		"group": "Image Analysis",
         "graphs": {
             "chart1": {
 				"icon": "fa-solid fa-chart-line",

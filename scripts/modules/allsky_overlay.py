@@ -34,6 +34,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		"name": "Overlays data on the image",
 		"description": "Overlays data fields on the image",
 		"module": "allsky_overlay",
+		"group": "Image Analysis",
 		"events": [
 			"day",
 			"night"

@@ -28,6 +28,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 		"experimental": "false",
 		"testable": "true",  
 		"centersettings": "false",
+		"group": "Hardware",
         "graphs": {
             "chart1": {
 				"icon": "fa-solid fa-chart-line",

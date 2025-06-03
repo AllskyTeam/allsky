@@ -21,7 +21,8 @@ class ALLSKYSAVEINTERMMEDIATEIMAGE(ALLSKYMODULEBASE):
 	meta_data = {
 		"name": "Saves an intermediate image",
 		"description": "Saves an intermediate image",
-		"module": "allsky_saveintermediateimage",      
+		"module": "allsky_saveintermediateimage",
+		"group": "Allsky Core",      
 		"events": [
 			"day",
 			"night"

@@ -18,7 +18,8 @@ class ALLSKYSAVEIMAGE(ALLSKYMODULEBASE):
 		"name": "Saves the image",
 		"description": "Saves the image",
 		"module": "allsky_saveimage",
-		"ignorewatchdog": "True",     
+		"ignorewatchdog": "True",
+		"group": "Allsky Core",       
 		"events": [
 			"day",
 			"night"

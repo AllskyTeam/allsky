@@ -20,7 +20,8 @@ class ALLSKYEXPORT(ALLSKYMODULEBASE):
 		"description": "Exports AllSKY data to json",
 		"module": "allsky_export",
 		"testable": "true",
-		"centersettings": "false",        
+		"centersettings": "false",
+    	"group": "Data Export",
 		"events": [
 			"day",
 			"night"

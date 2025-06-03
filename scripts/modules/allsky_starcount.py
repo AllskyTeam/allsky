@@ -30,6 +30,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 		"testableresult": "images",
 		"centersettings": "false",
 		"extradatafilename": "allsky_starcount.json",
+		"group": "Image Analysis",  
         "graphs": {
             "chart1": {
 				"icon": "fa-solid fa-chart-line",

@@ -17,6 +17,7 @@ class ALLSKYMASKIMAGE(ALLSKYMODULEBASE):
 		"version": "v1.0.2",
 		"centersettings": "false",
 		"testable": "false",
+		"group": "Image Adjustments",
 		"events": [
 			"day",
 			"night"

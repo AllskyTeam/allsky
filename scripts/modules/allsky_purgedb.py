@@ -19,7 +19,8 @@ class ALLSKYPURGEDB(ALLSKYMODULEBASE):
         "module": "allsky_purgedb",
         "testable": "true",
         "centersettings": "false",
-		"version": "v1.0.0",        
+		"version": "v1.0.0",
+		"group": "Allsky Core",    
         "events": [
             "day",
             "night",

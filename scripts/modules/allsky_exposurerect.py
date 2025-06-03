@@ -18,6 +18,7 @@ class ALLSKYEXPOSURERECT(ALLSKYMODULEBASE):
         "name": "Exposure Rect",
         "description": "Displays the ZWO Exposure calculation area",
         "module": "allsky_exposurerect",
+        "group": "Image Adjustments",
         "events": [
             "day",
             "night"

@@ -225,16 +225,29 @@ if ($useRemoteWebsite) {
 				<div class="version-title version-title-color">
 					<span id="allskyStatus"><?php echo output_allsky_status(); ?></span>
 <?php
-					$newest = getNewestAllskyVersion($changed);
-					if ($newest !== null) $newest = $newest['version'];
-					if ($newest !== null && $newest > ALLSKY_VERSION) {
-						$more = "title='New Version $newest Available'";
-						$more .= " style='background-color: red; color: white;'";
+					$versionInfo = getNewestAllskyVersion($changed);
+					if ($versionInfo !== null) {
+						$newestVersion = $versionInfo['version'];
+					} else {
+						$newestVersion = null;
+					}
+					if ($newestVersion !== null && $newestVersion > ALLSKY_VERSION) {
+						$note = getVariableOrDefault($versionInfo, "versionNote", "");
+						$more = "title='New Version $newestVersion Available";
+						if ($note !== "") {
+							$more .= ", $note";
+						}
+						$more .= "' style='background-color: red; color: white;'";
 
 						if ($changed) {
-							$msg = "<br>&nbsp; &nbsp; <strong>";
-							$msg .= "A new release of Allsky is available: $newest";
-							$msg .= "</strong><br><br>";
+							$x = "<br>&nbsp; &nbsp;";
+							$msg .= "$x<strong>";
+							$msg .= "A new release of Allsky is available: $newestVersion";
+							$msg .= "</strong>";
+							if ($note !== "") {
+								$msg .= "$x$note";
+							}
+							$msg .= "<br><br>";
 							$cmd = ALLSKY_SCRIPTS . "/addMessage.sh";
 							$cmd .= " --no-date --type success --msg '${msg}'";
 							runCommand($cmd, "", "");

@@ -241,7 +241,7 @@ if ($useRemoteWebsite) {
 
 						if ($changed) {
 							$x = "<br>&nbsp; &nbsp;";
-							$msg .= "$x<strong>";
+							$msg = "$x<strong>";
 							$msg .= "A new release of Allsky is available: $newestVersion";
 							$msg .= "</strong>";
 							if ($note !== "") {

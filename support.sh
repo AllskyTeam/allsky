@@ -294,7 +294,7 @@ function generate_support_info()
 	{
 		print_heading "Files in ${ALLSKY_HOME}"
 		local IGNORE
-		IGNORE='.git|__pycache__'
+		IGNORE='__pycache__'
 		IGNORE+='|system_fonts|python3*'		# python3 in venv has LOTs of files
 		IGNORE+='|image-2*|startrails-*|keogram-*|allsky-2*|thumbnail-*'
 		tree --du -h -ugp -I "${IGNORE}" "${ALLSKY_HOME}"

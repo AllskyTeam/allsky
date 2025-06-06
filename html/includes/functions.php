@@ -1055,19 +1055,19 @@ function getNewestAllskyVersion(&$changed=null)
 		$str = file_get_contents($versionFile, true);
 		$err = "";
 		if ($str === false) {
-			// TODO: should these errors set addMessage() ?
-			$err = "Error reading of $versionFile.";
+			$err = "Error reading $versionFile.";
 		} else if ($str === "") {
-			$err = "$versionFile is empty!";
+			$err = "$versionFile is empty.";
 		} else {
 			$version_array = json_decode($str, true);
 			if ($version_array === null) {
-				$err = "$versionFile has no json!";
+				$err = "$versionFile has no json.";
 			} else {
-				$priorVersion = $version_array['version'];
+				$priorVersion = getVariableOrDefault($version_array, 'version', null);
 			}
 		}
 		if ($err !== "") {
+			// TODO: should these errors set addMessage() ?
 			unlink($versionFile);
 			$exists = false;
 		}
@@ -1077,18 +1077,18 @@ function getNewestAllskyVersion(&$changed=null)
 		// Need to (re)get the data.
 
 		$cmd = ALLSKY_UTILITIES . "/getNewestAllskyVersion.sh";
-		exec("$cmd 2>&1", $newest, $return_val);
+		exec("$cmd 2>&1", $newestVersion, $return_val);
 
-		// 90 == newest is newer than current.
-		if (($return_val !== 0 && $return_val !== 90) || $newest === null) {
+		// 90 == newestVersion is newer than current.
+		if (($return_val !== 0 && $return_val !== 90) || $newestVersion === null) {
 			// some error
 			if ($exists) unlink($versionFile);
 			return($version_array);		// may be null...
 		}
 
 		$version_array = array();
-		$version_array['version'] = $newest[0];
-		$version_array['versionNote'] = $newest[1];
+		$version_array['version'] = getVariableOrDefault($newestVersion, 0, "");
+		$version_array['versionNote'] = getVariableOrDefault($newestVersion, 1, "");
 		$version_array['timestamp'] = date(DATE_TIME_FORMAT);
 
 		// Has the version changed?
@@ -1096,7 +1096,7 @@ function getNewestAllskyVersion(&$changed=null)
 			$changed = true;
 		}
 
-		$msg = "[$cmd] returned $return_val, version=${version_array['version']}, changed=$changed";
+		$msg = "[$cmd] returned $return_val, version_array=" . json_encode($newestVersion) . ", changed=$changed";
 		echo "<script>console.log('$msg');</script>";
 
 		// Save new info.

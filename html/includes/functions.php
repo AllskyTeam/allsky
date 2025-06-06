@@ -1087,7 +1087,8 @@ function getNewestAllskyVersion(&$changed=null)
 		}
 
 		$version_array = array();
-		$version_array['version'] = implode(" ", $newest);
+		$version_array['version'] = $newest[0];
+		$version_array['versionNote'] = $newest[1];
 		$version_array['timestamp'] = date(DATE_TIME_FORMAT);
 
 		// Has the version changed?

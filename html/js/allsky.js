@@ -1,8 +1,8 @@
 "use strict";
 
 // Timer intervals.  Make global to allow changing.
-let allskystatus_interval = 10 * 1000;		// it's decreased when starting / stopping Allsky
-let cpuloadtemp_interval = 20 * 1000;
+let allskystatus_interval = 20 * 1000;		// it's decreased when starting / stopping Allsky
+let cpuloadtemp_interval = 5 * 1000;		// also for cpu temp and uptime
 let memory_interval = 10 * 1000;
 let throttle_interval = 30 * 1000;
 

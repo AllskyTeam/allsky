@@ -179,7 +179,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 
 	# Allsky version.
 	ALLSKY_VERSION_FILE="${ALLSKY_HOME}/version"
-	ALLSKY_VERSION="$( < "${ALLSKY_VERSION_FILE}" )"
+	ALLSKY_VERSION="$( head -1 "${ALLSKY_VERSION_FILE}" )"
 
 	# Location of Allsky Website files.
 	ALLSKY_WEBSITE="${ALLSKY_WEBUI}/allsky"

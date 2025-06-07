@@ -109,6 +109,12 @@ function get_Git_version()
 # Get the version from a local file, if it exists.  If not, get from default file.
 function get_version()
 {
+	if [[ ${1} == "--note" ]]; then
+		GET_NOTE="true"
+		shift
+	else
+		GET_NOTE="false"
+	fi
 	local F="${1}"
 	if [[ -z ${F} ]]; then
 		F="${ALLSKY_VERSION_FILE}"		# default
@@ -117,8 +123,13 @@ function get_version()
 	fi
 	if [[ -f ${F} ]]; then
 		# Sometimes the branch file will have both "master" and "dev" on two lines.
-		local VALUE="$( head -1 "${F}" )"
-		echo -n "${VALUE}" | tr -d '\n\r'
+		local RETURN="$( head -1 "${F}" )"
+		if [[ ${GET_NOTE} == "true" ]]; then
+			local NOTE="$( tail -1 "${F}" )"
+			# Check if there's a note; if not, there will be only a version.
+			[[ ${NOTE} != "${RETURN}" ]] && RETURN="${NOTE}"
+		fi
+		echo -n "${RETURN}" | tr -d '\n\r'
 	fi
 }
 

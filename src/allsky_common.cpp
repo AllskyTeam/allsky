@@ -1200,11 +1200,11 @@ void displaySettings(config cg)
 	printf("   Nighttime capture: %s\n", yesNo(cg.nighttimeCapture));
 	printf("   Nighttime save: %s\n", yesNo(cg.nighttimeSave));
 
-	printf("   Exposure (day):   %15s, Auto: %3s", length_in_units(cg.dayExposure_us, true), yesNo(cg.dayAutoExposure));
+	printf("   Exposure (day):   %25s, Auto: %3s", length_in_units(cg.dayExposure_us, true), yesNo(cg.dayAutoExposure));
 		if (cg.dayAutoExposure)
 			printf(", Max Auto-Exposure: %s", length_in_units(cg.dayMaxAutoExposure_us, true));
 		printf("\n");
-	printf("   Exposure (night): %15s, Auto: %3s", length_in_units(cg.nightExposure_us, true), yesNo(cg.nightAutoExposure));
+	printf("   Exposure (night): %25s, Auto: %3s", length_in_units(cg.nightExposure_us, true), yesNo(cg.nightAutoExposure));
 		if (cg.nightAutoExposure)
 			printf(", Max Auto-Exposure: %s", length_in_units(cg.nightMaxAutoExposure_us, true));
 		printf("\n");

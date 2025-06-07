@@ -3,15 +3,16 @@
 // Timer intervals.  Make global to allow changing.
 let allskystatus_interval = 20 * 1000;		// it's decreased when starting / stopping Allsky
 let uptime_interval = 60 * 1000;			// Display only goes to minutes.
-let cpuloadtemp_interval = 5 * 1000;
-let memory_interval = 10 * 1000;
 let throttle_interval = 30 * 1000;
+let memory_interval = 10 * 1000;
+let cpuloadtemp_interval = 5 * 1000;
+let diskusage_interval = 30 * 1000;
 
 class ALLSKY {
 	#timers  = {};
 	#allskyPage = '';
 	#pageTimers = {
-		all: {
+		all: {			// Timers that apply to ALL pages
 			timers: {
 				allskystatus: {
 					url: 'includes/uiutil.php?request=AllskyStatus',
@@ -21,10 +22,26 @@ class ALLSKY {
 				}
 			}
 		},
-		system : {
+		system : {			// Timers for the WebUI "System" page
 			timers: {
-/* #as-diskUsage,  #as-tmpUsage
-*/
+				uptime: {
+					url: 'includes/uiutil.php?request=Uptime',
+					interval: uptime_interval,
+					updateelement: '#as-uptime',
+					wait: true
+				},
+				throttle: {
+					url: 'includes/uiutil.php?request=ThrottleStatus',
+					interval: throttle_interval,
+					updateelement: '#as-throttley',
+					wait: true
+				},
+				memory: {
+					url: 'includes/uiutil.php?request=MemoryUsed',
+					interval: memory_interval,
+					updateelement: '#as-memory',
+					wait: true
+				},
 				cpuandtemp: {
 					url: 'includes/uiutil.php?request=Multiple',
 					interval: cpuloadtemp_interval,
@@ -39,25 +56,23 @@ class ALLSKY {
 						}
 					],
 					wait: false
-				},
-				uptime: {
-					url: 'includes/uiutil.php?request=Uptime',
-					interval: uptime_interval,
-					updateelement: '#as-uptime',
-					wait: true
-				},
-				memory: {
-					url: 'includes/uiutil.php?request=MemoryUsed',
-					interval: memory_interval,
-					updateelement: '#as-memory',
-					wait: true
-				},
-				throttle: {
-					url: 'includes/uiutil.php?request=ThrottleStatus',
-					interval: throttle_interval,
-					updateelement: '#as-throttley',
-					wait: true
 				}
+/*
+				diskUsage: {
+					url: 'includes/uiutil.php?request=Multiple',
+					interval: diskusage_interval,
+					updateelement: [
+						{
+							data: 'diskUsage',
+							element: '#as-diskUsage',
+						},
+						{
+							data: 'tmpUsage',
+							element: '#as-tmpUsage',
+						}
+					],
+					wait: true
+*/
 			}
 		}
 	};

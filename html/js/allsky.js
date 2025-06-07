@@ -2,7 +2,8 @@
 
 // Timer intervals.  Make global to allow changing.
 let allskystatus_interval = 20 * 1000;		// it's decreased when starting / stopping Allsky
-let cpuloadtemp_interval = 5 * 1000;		// also for cpu temp and uptime
+let uptime_interval = 60 * 1000;			// Display only goes to minutes.
+let cpuloadtemp_interval = 5 * 1000;
 let memory_interval = 10 * 1000;
 let throttle_interval = 30 * 1000;
 
@@ -23,6 +24,8 @@ class ALLSKY {
         },
         system : {
             timers: {
+/* #as-diskUsage,  #as-tmpUsage
+*/
                 cpuandtemp: {
                     url: 'includes/uiutil.php?request=Multiple',
                     interval: cpuloadtemp_interval,
@@ -34,13 +37,15 @@ class ALLSKY {
                         {
                             data: 'CPUTemp',
                             element: '#as-cputemp',
-                        },
-                        {
-                            data: 'Uptime',
-                            element: '#as-uptime',
                         }
                     ],
                     wait: false
+                },
+                uptime: {
+                    url: 'includes/uiutil.php?request=Uptime',
+                    interval: uptime_interval,
+                    updateelement: '#as-uptime',
+                    wait: true
                 },
                 memory: {
                     url: 'includes/uiutil.php?request=MemoryUsed',

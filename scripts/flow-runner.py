@@ -57,6 +57,7 @@ except KeyError:
     print("ERROR: $ALLSKY_SCRIPTS not found - Aborting")
     sys.exit(1)
 allsky_modules_path = os.path.join(allsky_scripts, "modules")
+allsky_my_files_folder = os.path.join(allsky_my_files_folder, "modules")
 
 valid_module_paths = [allsky_my_files_folder, allsky_modules_location, allsky_modules_path]
 

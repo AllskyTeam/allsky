@@ -365,20 +365,22 @@ int RPicapture(config cg, cv::Mat *image)
 	else
 	{
 		// Unable to take picture.
-		// The child command is "/bin/sh" will will basically never get a signal
-		// even if the camera program does, so check for a signal in WEXITSTATUS() not ret.
+		// The child command is "/bin/sh" and will basically never get a signal even
+		// if the camera program does, so check for a signal in WEXITSTATUS() not ret.
+
+		int l = 0;		// log level
 		if (WIFSIGNALED(WEXITSTATUS(ret)))
 		{
+			l = 1;		// Don't send camera's message to WebUI.
+
 			int sig_num = WTERMSIG(WEXITSTATUS(ret));
 			if (sig_num == 124)		// The "timeout" command exits with this if a timeout occurred.
 			{
-				Log(1, " >>> %s: WARNING: %s timed out after %d seconds.\n",
-					cg.ME, cg.cmdToUse, timeout_s);
+				Log(-1, "WARNING: %s timed out taking image after %d seconds.\n", cg.cmdToUse, timeout_s);
 			}
 			else
 			{
-				Log(1, " >>> %s: WARNING: %s received signal %d, ret=0x%x\n",
-					cg.ME, cg.cmdToUse, sig_num, ret);
+				Log(1, "WARNING: %s received signal %d, ret=0x%x\n", cg.cmdToUse, sig_num, ret);
 			}
 		}
 		else if (WIFEXITED(ret))
@@ -399,8 +401,8 @@ int RPicapture(config cg, cv::Mat *image)
 		std::string errMsg;
 		command = "grep -E -v 'Mode selection|Score|configuration adjusted' " + errorOutput;
 		errMsg = exec(command.c_str());
-		Log(1, "********************\n");		// 1 so it doesn't go to addMessage.sh
-		Log(0, "%s\n", errMsg.c_str());
+		Log(1, "********************\n");		// 1 so it doesn't go to WebUI.
+		Log(l, "%s\n", errMsg.c_str());
 		Log(1, "********************\n");
 	}
 

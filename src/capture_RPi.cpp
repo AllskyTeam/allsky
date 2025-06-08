@@ -191,9 +191,6 @@ int RPicapture(config cg, cv::Mat *image)
 		else if (cg.currentBin == 2)
 		{
 			command += " --mode 2";
-//x			ss << cg.width / 2;
-//x			ss2 << cg.height / 2;
-//x			command += " --mode 2 --width " + ss.str() + " --height " + ss2.str();
 		}
 	}
 
@@ -400,11 +397,11 @@ int RPicapture(config cg, cv::Mat *image)
 		// Add errorOutput to the log file.
 		// Ignore info lines - we only care about errors.
 		std::string errMsg;
-		command = "grep -E -v 'Score|configuration adjusted' " + errorOutput;
+		command = "grep -E -v 'Mode selection|Score|configuration adjusted' " + errorOutput;
 		errMsg = exec(command.c_str());
-		Log(0, "********************\n");
+		Log(1, "********************\n");		// 1 so it doesn't go to addMessage.sh
 		Log(0, "%s\n", errMsg.c_str());
-		Log(0, "********************\n");
+		Log(1, "********************\n");
 	}
 
 	return(ret);

@@ -1572,7 +1572,7 @@
 "type" : "header-tab"
 },
 {
-"name" : "timelapseheader",
+"name" : "keogramheader",
 "label" : "Keogram and Startrails Settings",
 "type" : "header"
 },

@@ -90,7 +90,7 @@ int RPicapture(config cg, cv::Mat *image)
 	}
 
 	// The command sometimes hangs so put a timeout on it that's longer than the exposure time.
-	long timeout_s = (cg.currentExposure_us / US_IN_SEC) + 15;		// guess on how much longer
+	long timeout_s = (cg.currentExposure_us / US_IN_SEC) + 30;		// guess on how much longer
 	ss << timeout_s;
 
 	// Define command line.

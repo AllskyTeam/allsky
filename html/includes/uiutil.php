@@ -96,11 +96,11 @@ class UIUTIL
         }
         $width = (($current - $min) / ($max - $min)) * 100;
 
-        $result =  "<div class='progress-bar progress-bar-$myStatus'";
+        $result =  "<div class='progress-bar progress-bar-not-animated progress-bar-$myStatus'";
         $result .= "    role='progressbar'";
         $result .= "    title='current: $current, min: $min, max: $max'";
         $result .= "    aria-valuenow='$current' aria-valuemin='$min' aria-valuemax='$max'";
-        $result .= "    style='width: $width%;'>$data";
+        $result .= "    style='width: $width%;'><span class='nowrap'>$data</span>";
         $result .= "</div>";
 
         return $result;
@@ -127,12 +127,11 @@ class UIUTIL
     public function getCPUTemp() 
     {
         $cpuTempData = getCPUTemp();
-
         $temperature = $cpuTempData['temperature'];
 		$display_temperature = $cpuTempData['display_temperature'];
 		$temperature_status = $cpuTempData['temperature_status'];
 
-        $cpuTemp =$this->displayProgress("", $display_temperature, 0, $temperature, 100, 70, 60, $temperature_status);
+        $cpuTemp = $this->displayProgress("", $display_temperature, 0, $temperature, 100, 70, 60, $temperature_status);
 
         if ($this->returnValues) {
             return $cpuTemp;

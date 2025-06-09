@@ -188,17 +188,34 @@ class ALLSKYPURGEDB(ALLSKYMODULEBASE):
     
     def run(self):
         result =''
+
+        frequency = self.get_param('runevery', 1, int)
+        frequency = frequency * 60 *60
+
+        should_run, diff = allsky_shared.should_run('allskypurgedb', frequency)    
+        if should_run or self.debug_mode:
+               
+            age_hours = self.get_param('hourstokeep', 24, int)
+            age_seconds = 60 * 60 * age_hours
+            
+            database_config = self.get_database_config()
+            
+            if database_config['databasetype'] == 'mysql':
+                result = self._purge_mysql(database_config, age_seconds, age_hours)
+            
+            if database_config['databasetype'] == 'sqlite':
+                result = self._purge_sqlite(age_seconds, age_hours)
         
-        age_hours = self.get_param('hourstokeep', 24, int)
-        age_seconds = 60 * 60 * age_hours
-        
-        database_config = self.get_database_config()
-        
-        if database_config['databasetype'] == 'mysql':
-            result = self._purge_mysql(database_config, age_seconds, age_hours)
-        
-        if database_config['databasetype'] == 'sqlite':
-            result = self._purge_sqlite(age_seconds, age_hours)
+            allsky_shared.set_last_run('allskypurgedb')
+        else:
+            seconds = frequency - diff
+            hours = seconds // 3600
+            minutes = (seconds % 3600) // 60
+            secs = int(seconds % 60)
+
+            result = f'Will run in {hours}h {minutes}m {secs}s'
+
+            allsky_shared.log(1, f'INFO: {result}')
         
         return result
 

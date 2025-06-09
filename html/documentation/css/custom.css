@@ -402,6 +402,9 @@ input[type="text"].has-error {
 	animation-timing-function: ease;
 }
 @keyframes progress_bar { from { width: 0px } }
+.progress-bar-not-animated {
+	animation: none !important;
+}
 
 .dark .table-striped>tbody>tr:nth-of-type(odd) {
 	background-color: #171717;

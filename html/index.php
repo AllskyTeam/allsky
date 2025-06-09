@@ -154,7 +154,6 @@ if ($useRemoteWebsite) {
 	<!-- MetisMenu CSS -->
 	<link href="documentation/bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
 
-	<!-- Custom CSS -->
 	<link href="documentation/css/sb-admin-2.css" rel="stylesheet">
 
 	<!-- Font Awesome -->
@@ -179,7 +178,7 @@ if ($useRemoteWebsite) {
 
 	<script src="js/bigscreen.min.js"></script>
 
-    <script src="js/allsky.js"></script>
+	<script src="js/allsky.js"></script>
 	<script> var allskyPage='<?php echo $page ?>';  </script>
 
 	<!-- Custom Theme JavaScript -->

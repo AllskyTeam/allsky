@@ -129,14 +129,18 @@ class MODULESEDITOR {
                 }
                 this.#updateToolbar();
 
-                $(document).on('click', '.module-add-button', (event) => {
-
+                $(document).off('click', '.module-add-button')
+				$(document).on('click', '.module-add-button', (event) => {
 					let id = $(event.target).data('module')
-					$('#allskyloadimage').after($('#'+id));
+					if ($('#allskyloadimage').length) {
+						$('#allskyloadimage').after($('#'+id));
+					} else {
+						$('#modules-selected').prepend($('#'+id));
+					}
 					this.#moduleAdded($('#'+id))
-
                 });
 
+                $(document).off('click', '.module-delete-button')				
                 $(document).on('click', '.module-delete-button', (event) => {
                     if (this.#dirty) {
                         bootbox.alert('Please save the current configuration before deleting the module');

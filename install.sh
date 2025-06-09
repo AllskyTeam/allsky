@@ -1191,6 +1191,12 @@ set_permissions()
 			fi
 		done
 	fi
+
+	# Ensure the support folder has the correct owner and group
+	local SUPPORT="${ALLSKY_WEBUI}/support"
+	[[ ! -d ${SUPPORT} ]] && mkdir -p "${SUPPORT}"
+	sudo chown "${ALLSKY_OWNER}":"${WEBSERVER_GROUP}" "${SUPPORT}"
+	sudo chgrp 775 "${SUPPORT}"
 }
 
 

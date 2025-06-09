@@ -58,7 +58,7 @@ class ALLSKYOVERLAYDATA:
 		self.debug_mode = debug_mode
 		self.overlay_file = overlay_file
   
-		self.variable_class = ALLSKYVARIABLES()
+		self.variable_class = ALLSKYVARIABLES(debug_mode)
 
 	def _debug(self, message):
 		if self.debug_mode:

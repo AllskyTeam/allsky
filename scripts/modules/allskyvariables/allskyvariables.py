@@ -6,10 +6,19 @@ import os
 import json
 import sys
 import argparse
+import re
 from pathlib import Path
 
 class ALLSKYVARIABLES:
+    _debug_mode = False
+    
+    def __init__(self, debug_mode=False):
+        self._debug_mode = debug_mode
 
+    def _debug(self, message):
+        if self._debug_mode:
+            print(message)
+        
     def _get_json_file(self, file_path):
         data = {}
         with open(file_path, 'r', encoding='utf-8') as file:
@@ -66,8 +75,8 @@ class ALLSKYVARIABLES:
                 if len(field_split) > 1:
                     value = field_split[1].strip()
                     #value = value.encode('ISO-8859-1', 'ignore').decode('UTF-8')
-                    if field_split[0].startswith("AS_"):
-                        result[field_split[0]] = value
+                    #if field_split[0].startswith("AS_"):
+                    result[field_split[0]] = value
 
         return result
 
@@ -193,7 +202,7 @@ class ALLSKYVARIABLES:
 
         return variable
 
-    def get_variables(self, show_empty=True, module='', indexed=False, raw_index=False, debug=False):
+    def get_variables(self, show_empty=True, module='', indexed=False, raw_index=False):
         ALLSKY_CONFIG = self._get_environment_variable('ALLSKY_CONFIG')
         ALLSKY_SCRIPTS = self._get_environment_variable('ALLSKY_SCRIPTS')
         ALLSKY_OVERLAY = self._get_environment_variable('ALLSKY_OVERLAY')
@@ -247,12 +256,20 @@ class ALLSKYVARIABLES:
                 variableList[variable] = config
 
         result = []
+
         for variable, config in variableList.items():
             if isinstance(config, dict):
                 value = config.get('value', '')
 
-                if config.get('group') == 'Allsky' and variable in debug_variables:
-                    value = debug_variables[variable]
+                if config.get('group') == 'Allsky':
+                    if variable in debug_variables:
+                        value = debug_variables[variable]
+                    else:
+                        variable_tmp = re.sub(r'^AS_', '', variable)
+                        if variable_tmp in debug_variables:
+                            value = debug_variables[variable_tmp]
+                        else:
+                            self._debug(f'WARNING: {variable} not found, looked for {variable_tmp} as well.')
 
                 add = True
                 if show_empty is False and module == '':
@@ -317,9 +334,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    variable_engine = ALLSKYVARIABLES()
+    variable_engine = ALLSKYVARIABLES(args.debug)
     variable_engine.setup_for_command_line(args.allskyhome)
-    variables = variable_engine.get_variables(args.empty, args.module, args.indexed, args.raw, args.debug)
+    variables = variable_engine.get_variables(args.empty, args.module, args.indexed, args.raw)
 
     if args.print:
         print(json.dumps(variables))

@@ -131,8 +131,7 @@ $V = ALLSKY_VERSION;
 
 					<div class="alert alert-danger" role="alert">
 						<strong>NOTE:</strong> The Allsky developers do not actively monitor
-						other social media channels such as Facebook,
-						so please use GitHub for support.
+						Facebook, so please use GitHub for support.
 					</div> 
 				</div>
 			</div>

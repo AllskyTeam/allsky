@@ -18,7 +18,7 @@ function formatSize($bytes)
 {
 	$types = array('B', 'KB', 'MB', 'GB', 'TB');
 	for ($i = 0; $bytes >= 1024 && $i < (count($types) - 1); $bytes /= 1024, $i++) ;
-	return (round($bytes, 2) . " " . $types[$i]);
+	return (round($bytes, 1) . " " . $types[$i]);
 }
 
 /* Check if the data in $file has expired, using the last modified time of the file.
@@ -109,7 +109,7 @@ function displayProgress($x, $label, $data, $min, $current, $max, $danger, $warn
                 // then width=(21/(100-0)*100) = 21.
                 // If $max=50, $min=0, and $current=21, then width=(21/(50-0))*100 = 42.
                 $width = (($current - $min) / ($max - $min)) * 100;
-                echo "    style='width: $width%;'>$data\n";
+                echo "    style='width: $width%;'><span class='nowrap'>$data</span>\n";
                 echo "    </div></td></tr>\n";
         }
 }
@@ -222,18 +222,20 @@ function DisplaySystem()
 {
 	global $temptype, $page, $settings_array, $status, $hostname;
 
-	$top_dir = dirname(ALLSKY_WEBSITE, 1);
-
 	// uptime
 	$uptime = getUptime();
 
 	// mem used
 	$memused = getMemoryUsed();
 
-	// Disk and File usage
+	// Disk and File usage.
+
+	// Filesystem Allsky is on.
+	$top_dir = ALLSKY_WEBUI;
 	$df = @disk_free_space($top_dir);		// returns bytes
 	if ($df === false) {
 		$dp = -1;	// signals an error
+		$dp_msg = "<span class='errorMsg'>Unable to read '$top_dir'.</span>";
 	} else {
 		// and get disk space total (in bytes)
 		$dt = disk_total_space($top_dir);
@@ -246,19 +248,34 @@ function DisplaySystem()
 		$df = formatSize($df);
 		$du = formatSize($du);
 		$dt = formatSize($dt);
+		$dp_msg = "$dp% &nbsp; &nbsp; - &nbsp; &nbsp; $dt ($df free)";
+	}
+	// Allsky tmp filesystem
+	$tmp_dir = ALLSKY_TMP;
+	$tdf = @disk_free_space($tmp_dir);
+	if ($tdf === false) {
+		$tdp = -1;
+		$tdp_msg = "<span class='errorMsg'>Unable to read '$tmp_dir'.</span>";
+	} else {
+		$tdt = disk_total_space($tmp_dir);
+		$tdu = $tdt - $tdf;
+		$tdp = sprintf('%d', ($tdu / $tdt) * 100);
+		$tdf = formatSize($tdf);
+		$tdu = formatSize($tdu);
+		$tdt = formatSize($tdt);
+		$tdp_msg = "$tdp% &nbsp; &nbsp; - &nbsp; &nbsp; $tdt ($tdf free)";
 	}
 
 	// Throttle / undervoltage status
 	$throttle_data = getThrottleStatus();
-
 	$throttle_status = $throttle_data['throttle_status'];
 	$throttle = $throttle_data['throttle']; 
 
 
-	// cpu load
+	// cpu load - calculated over several seconds
 	$cpuLoad = 0;
 
-	// temperature
+	// cpu temperature
 	$cpuTempData = getCPUTemp();
 
 	$temperature = $cpuTempData['temperature'];
@@ -327,10 +344,6 @@ function DisplaySystem()
 								<tr><td style="padding-right: 90px;">Hostname</td><td><?php echo $hostname ?></td></tr>
 								<tr><td>Pi Model</td><td><?php echo RPiModel() ?></td></tr>
 								<tr><td>Uptime</td><td id="as-uptime"><?php echo $uptime ?></td></tr>
-								<?php if ($dp === -1) $x = "<span class='errorMsg'>ERROR: unable to read '$top_dir' to get data.</span>";
-									  else $x = "$dt ($df free)";
-								?>
-								<tr ><td>SD Card</td><td><?php echo "$x" ?></td></tr>
 								<?php
 									// Optional user-specified progress bars.
 									$e = "";
@@ -351,13 +364,26 @@ function DisplaySystem()
 								<?php displayProgress("", "CPU Temperature", $display_temperature, 0, $temperature, 100, 70, 60, $temperature_status, "as-cputemp"); ?>
 								<tr><td colspan="2" style="height: 5px"></td></tr>
 								<?php 
+									$label = "Disk Usage";
 									if ($dp === -1) {
 										echo "<tr>";
-										echo "<td>Disk Usage</td>";
-										echo "<td><span class='errorMsg'>ERROR: unable to read '<strong>$top_dir</strong>' to get disk usage.</span></td>";
+										echo "<td>$label</td>";
+										echo "<td>$dp_msg</td>";
 										echo "</tr>";
 									} else {
-										displayProgress("", "Disk Usage", "$dp%", 0, $dp, 100, 90, 70, "");
+										displayProgress("", $label, $dp_msg, 0, $dp, 100, 90, 70, "");
+									}
+								?>
+								<tr><td colspan="2" style="height: 5px"></td></tr>
+								<?php 
+									$label = str_replace(ALLSKY_HOME, "~/allsky", $tmp_dir) . " Usage";
+									if ($tdp === -1) {
+										echo "<tr>";
+										echo "<td>$label</td>";
+										echo "<td>$tdp_msg</td>";
+										echo "</tr>";
+									} else {
+										displayProgress("", $label, $tdp_msg, 0, $tdp, 100, 90, 70, "");
 									}
 
 									// Optional user-specified progress bars.

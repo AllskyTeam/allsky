@@ -13,9 +13,10 @@ class SUPPORTUTIL
     private $issueDir;
 
     function __construct() {
-        $this->issueDir = ALLSKY_WEBUI . "/support";
+        $this->issueDir = ALLSKY_SUPPORT_DIR;
 		if (! is_dir($this->issueDir)) {
-			$this->send500("Directory '" . $this->issueDir . "' not found!\n");
+			$msg = "ERROR - Directory '" . $this->issueDir . "' not found!\n";
+			$this->send500($msg);
 		}
     }
 
@@ -56,8 +57,7 @@ class SUPPORTUTIL
     {
         header('HTTP/1.0 404 Not Found');
 		if ($msg !== null) {
-// TODO: Is this the correct way to pass it back?
-			echo $msg;
+        	header("Content-Description: $msg");
 		}
         die();
     }
@@ -66,8 +66,8 @@ class SUPPORTUTIL
     {
         header('HTTP/1.0 500 Internal Server Error');
 		if ($msg !== null) {
-// TODO: Is this the correct way to pass it back?
-			echo $msg;
+        	header("Content-Description: $msg");
+        	// TODO $this->sendResponse(json_encode(array("status"=>"ERROR", "message"=>"$msg")));
 		}
         die();
     }
@@ -84,7 +84,7 @@ class SUPPORTUTIL
         if (is_callable(array('SUPPORTUTIL', $action))) {
             call_user_func(array($this, $action));
         } else {
-            $this->send404("SUPPORTUTIL is not callable.");
+            $this->send404($this->request . " is not callable.");
         }
     }
 
@@ -98,7 +98,7 @@ class SUPPORTUTIL
         $logId = $_POST['logId'];
         $logId = basename($logId);
         $fromFile = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
-
+// TODO: check if $fromFile exists
         header('Content-Description: File Transfer');
         header('Content-Type: application/octet-stream');
         header('Content-Disposition: attachment; filename="' . basename($fromFile) . '"');
@@ -107,8 +107,9 @@ class SUPPORTUTIL
         header('Cache-Control: must-revalidate');
         header('Pragma: public');
         header('Content-Length: ' . filesize($fromFile));
-        readfile($fromFile);
-// TODO: handle error in readfile()
+		if ( ! readfile($fromFile)) {
+			echo "ERROR: Unable to read '$fromFile'";
+		}
         exit;
     }
 
@@ -124,9 +125,15 @@ class SUPPORTUTIL
         $fromFile = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
         $newFile = $this->issueDir . DIRECTORY_SEPARATOR . $newLogId;
 
-        rename($fromFile, $newFile);
-// TODO: handle failure
-        $this->sendResponse(json_encode("ok"));
+		if ( ! file_exists($fromFile)) {
+        	$msg = "'$fromFile' does not exist.";
+        	$this->sendResponse(json_encode(array("status"=>"ERROR", "message"=>"$msg")));
+		} else if (rename($fromFile, $newFile)) {
+        	$this->sendResponse(json_encode(array("status"=>"ok")));
+		} else {
+        	$msg = "Could not rename($fromFile, $newFile)";
+        	$this->sendResponse(json_encode(array("status"=>"ERROR", "message"=>"$msg")));
+		}
     }
 
     public function postDeleteLog() {
@@ -134,17 +141,30 @@ class SUPPORTUTIL
         $logId = basename($logId);
         
         $fileToDelete = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
-        unlink($fileToDelete);
-// TODO: handle failure in unlink()
-        $this->sendResponse(json_encode("ok"));
+        if (@unlink($fileToDelete)) {
+        	$this->sendResponse(json_encode(array("status"=>"ok")));
+		} else {
+        	$msg = "Could not unlink($fileToDelete)";
+        	$this->sendResponse(json_encode(array("status"=>"ERROR", "message"=>"$msg")));
+		}
     }
 
     public function getSupportFilesList() {
 
-        $data=array();
+        $data = array();
         
+		if ( ! is_dir($this->issueDir)) {
+        	$sg = "Directory '" . $this->issueDir . "' does not exist.";
+        	$this->sendResponse(json_encode(array("status"=>"ERROR", "message"=>"$msg")));
+			return;
+		}
         $files = scandir($this->issueDir);
-// TODO: handle error in scandir()
+		if ($files === false) {
+        	$msg = "Could not scandir({$this->issueDir})";
+        	$this->sendResponse(json_encode(array("status"=>"ERROR", "message"=>"$msg")));
+			return;
+		}
+
         foreach ($files as $file) {
             if (strpos($file, '.') !== 0) {
 
@@ -179,11 +199,14 @@ class SUPPORTUTIL
 
     public function getGenerateLog() {
         $command = 'export ALLSKY_HOME=' . ALLSKY_HOME . '; export SUDO_OK="true"; ';
-		$command .= ALLSKY_HOME . '/support.sh --auto';
-        $output = shell_exec($command);
-// TODO: handle errors from shell_exec
-
-        $this->sendResponse(json_encode("ok"));        
+		$command .= ALLSKY_HOME . '/support.sh --auto 2>&1';
+		exec($command, $result, $ret_code);
+        if ($ret_code === 0) {
+        	$this->sendResponse(json_encode(array("status"=>"ok")));
+		} else {
+			$msg = "[$cmd] failed: " . implode(" ", $result);
+        	$this->sendResponse(json_encode(array("status"=>"ERROR", "message"=>"$msg")));
+		}
     }
 
 }

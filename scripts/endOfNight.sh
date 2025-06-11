@@ -69,7 +69,6 @@ if [[ $( settings ".keogramgenerate" ) == "true" ]]; then
 fi
 
 # Generate startrails from collected images.
-# Threshold set to 0.1 by default to avoid stacking over-exposed images.
 if [[ $( settings ".startrailsgenerate" ) == "true" ]]; then
 	echo -e "${ME}: ===== Generating Startrails for ${DATE}"
 	#shellcheck disable=SC2086

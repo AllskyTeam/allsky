@@ -22,6 +22,7 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP
 
 SUPPORT_DATETIME_SHORT="$( date +"%Y%m%d%H%M%S" )"
 SUPPORT_ZIP_NAME="support-XX_ISSUE_XX-${SUPPORT_DATETIME_SHORT}.zip"
+SUPPORT_ZIP_NAME_WITH_REPO="support-XX_REPO_XX-XX_ISSUE_XX-${SUPPORT_DATETIME_SHORT}.zip"
 ALLSKY_SUPPORT_DIR="${ALLSKY_WEBUI}/support"
 if [[ ! -d ${ALLSKY_SUPPORT_DIR} ]]; then
 	mkdir -p "${ALLSKY_SUPPORT_DIR}" || exit 2
@@ -100,7 +101,8 @@ function print_heading()
 	printf "%-20s\n" "============================"
 }
 
-function print_sub_heading(){
+function print_sub_heading()
+{
 	local LABEL="${1}"
 
 	printf "\n%-20s\n" "${LABEL}"
@@ -294,7 +296,7 @@ function generate_support_info()
 	{
 		print_heading "Files in ${ALLSKY_HOME}"
 		local IGNORE
-		IGNORE='__pycache__'
+		IGNORE='.git|__pycache__'
 		IGNORE+='|system_fonts|python3*'		# python3 in venv has LOTs of files
 		IGNORE+='|image-2*|startrails-*|keogram-*|allsky-2*|thumbnail-*'
 		tree --du -h -ugp -I "${IGNORE}" "${ALLSKY_HOME}"
@@ -381,7 +383,13 @@ function generate_support_info()
 	X="${TEMP_DIR}/config/modules"
 	[[ -d ${X} ]] && find "${TEMP_DIR}/config/modules" -type f -exec truncate -s 0 {} +
 
-	local ZIP_NAME="${SUPPORT_ZIP_NAME//XX_ISSUE_XX/${ISSUE_NUMBER}}"
+	if [[ ${ISSUE_NUMBER} != "none" && ${DISCUSSION_REPO} != ""  ]]; then
+		local ZIP_NAME="${SUPPORT_ZIP_NAME_WITH_REPO//XX_ISSUE_XX/${ISSUE_NUMBER}}"
+		ZIP_NAME="${ZIP_NAME//XX_REPO_XX/${DISCUSSION_REPO}}"
+	else
+		local ZIP_NAME="${SUPPORT_ZIP_NAME//XX_ISSUE_XX/${ISSUE_NUMBER}}"
+	fi
+
 	# We're in a subshell so we need to "echo" this to pass it back to our invoker.
 	echo "${DIALOG_COMPLETE_MESSAGE//XX_ZIPNAME_XX/${ZIP_NAME}}"
 
@@ -423,6 +431,28 @@ function get_github_discussion_id()
 				break
 			fi
 		done
+	fi
+}
+
+function get_discusion_repo()
+{
+	if [[ ${AUTO_CONFIRM} == "false"  && ${SOURCE} == "" && ${ISSUE_NUMBER} != "none" ]]; then
+
+
+		RESPONSE=$(dialog --clear \
+		--colors \
+		--title "Select Discussion Repository" \
+		--menu "Choose a Respository:" 10 40 2 \
+		1 "Allsky" \
+		2 "Allsky modules" \
+		3>&1 1>&2 2>&3)
+
+
+		if [[ ${RESPONSE} == "1" ]]; then
+			DISCUSSION_REPO="AS"
+		else
+			DISCUSSION_REPO="ASM"
+		fi
 	fi
 }
 
@@ -496,6 +526,7 @@ function usage_and_exit()
 OK="true"
 TEXT_ONLY="false"		# Also used by display_box()
 ISSUE_NUMBER="none"
+DISCUSSION_REPO=""
 AUTO_CONFIRM="false"
 LOG_LINES="all"
 
@@ -543,6 +574,7 @@ set_dialog_info
 set_messages
 display_start_dialog
 get_github_discussion_id
+get_discusion_repo
 display_running_dialog
 collect_support_info
 DIALOG_COMPLETE_MESSAGE="$( generate_support_info 2>&1 )"

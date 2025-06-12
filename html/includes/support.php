@@ -80,6 +80,10 @@ if (! is_dir(ALLSKY_SUPPORT_DIR)) {
 					<h3>Getting Support <small>&nbsp; &nbsp; how to ask for help</small></h3>
 				</div>
 				<div class="panel-body markdown-body">
+					<div class="alert alert-danger" role="alert">
+						<strong>NOTE:</strong> The Allsky Team does not actively monitor
+						Facebook, so please use GitHub for support.
+					</div> 
 					<div class="alert alert-success" role="alert">
 						<p>
 						<blockquote>
@@ -139,11 +143,6 @@ if (! is_dir(ALLSKY_SUPPORT_DIR)) {
 						</a>.
 						</p>
 					</div>
-
-					<div class="alert alert-danger" role="alert">
-						<strong>NOTE:</strong> The Allsky developers do not actively monitor
-						Facebook, so please use GitHub for support.
-					</div> 
 				</div>
 			</div>
 

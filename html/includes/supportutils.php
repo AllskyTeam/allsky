@@ -161,7 +161,7 @@ class SUPPORTUTIL
 			$this->sendResponse(json_encode(array("status"=>"ERROR", "message"=>"$msg")));
 			return;
 		}
-		$files = scandir($this->issueDir . "x");
+		$files = scandir($this->issueDir);
 		if ($files === false) {
 			$msg = "scandir({$this->issueDir}) failed.";
 			// TODO  $data = array("status"=>"ERROR", "message"=>"$msg");

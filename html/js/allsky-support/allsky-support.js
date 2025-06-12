@@ -1,5 +1,7 @@
 "use strict";
 
+let ALLSKY_URL = 'https://github.com/AllskyTeam/allsky/';
+
 class ALLSKYSUPPORT {
     #supportFilesTable = null
 
@@ -11,11 +13,11 @@ class ALLSKYSUPPORT {
             bootbox.confirm({
                 message: 'Are you sure you wish to delete this log entry?',
                 centerVertical: true,
-                callback: function(result) { 
+                callback: function(result) {
                     if (result) {
                         $('.as-support-loading').LoadingOverlay('show', {
                             background: 'rgba(0, 0, 0, 0.5)',
-                            imageColor: '#a94442'                            
+                            imageColor: '#a94442'
                         });
                         $.ajax({
                             type: 'POST',
@@ -37,13 +39,13 @@ class ALLSKYSUPPORT {
 
         $(document).on('click', '.as-support-log-github', (event) => {
             var logId = $(event.currentTarget).data('logid')
-            var logTable = this.#supportFilesTable            
+            var logTable = this.#supportFilesTable
             bootbox.prompt({
-                title: 'Enter the id of the Github discussion', 
+                title: 'Enter the new Github Discussion or Issue number',
                 centerVertical: true,
                 inputType: 'number',
-                callback: function(githubid){ 
-                    if (githubid !== null && githubid !== '') {                    
+                callback: function(newId){
+                    if (newId !== null && newId !== '') {
                         $('.as-support-loading').LoadingOverlay('show', {
                             background: 'rgba(0, 0, 0, 0.5)',
                             imageColor: '#a94442'
@@ -53,7 +55,7 @@ class ALLSKYSUPPORT {
                             url: 'includes/supportutils.php?request=ChangeGithubId',
                             data: {
                                 logId: logId,
-                                githubid: githubid
+                                newId: newId
                             },
                             dataType: 'json',
                             cache: false
@@ -64,22 +66,22 @@ class ALLSKYSUPPORT {
                         })
                     }
                 }
-            });                      
+            });
         })
-        
+
         $(document).on('click', '.as-support-log-download', (event) => {
             var logId = $(event.currentTarget).data('logid')
             $('.as-support-loading').LoadingOverlay('show', {
                 background: 'rgba(0, 0, 0, 0.5)',
                 imageColor: '#a94442'
-            });  
-            
+            });
+
             $.ajax({
                 url: 'includes/supportutils.php?request=DownloadLog',
                 type: 'POST',
                 data: {
                     logId: logId
-                },                
+                },
                 xhrFields: {
                   responseType: 'blob'
                 }
@@ -94,7 +96,7 @@ class ALLSKYSUPPORT {
                 window.URL.revokeObjectURL(url)
             }).always(() => {
                 $('.as-support-loading').LoadingOverlay('hide')
-            })          
+            })
         })
 
         $(document).on('click', '#as-support-generate', (event) => {
@@ -115,35 +117,32 @@ The following data is collected:<br><br>\
 </ul><br>\
 Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
 
-            bootbox.confirm(message, function(result){              
+            bootbox.confirm(message, function(result){
                 if (result) {
                     $('body').LoadingOverlay('show', {
                         background: 'rgba(0, 0, 0, 0.5)',
                         imageColor: '#a94442',
                         textColor: '#a94442',
                         text: 'Generating Support Information'
-                    });  
-                    
+                    });
+
                     $.ajax({
                         url: 'includes/supportutils.php?request=GenerateLog',
                         type: 'GET',
                         dataType: 'json',
-                        cache: false                
+                        cache: false
                     }).done(() => {
                         logTable.ajax.reload()
                     }).always(() => {
                         $('body').LoadingOverlay('hide')
-                    }) 
+                    })
                 }
             });
-
-         
-        })        
-        
+        })
 
         this.#supportFilesTable = $('#as-support-files').DataTable({
             ajax: {
-                url: 'includes/supportutils.php?request=SupportFilesList', 
+                url: 'includes/supportutils.php?request=SupportFilesList',
                 type: 'GET',
                 dataSrc: ''
             },
@@ -156,33 +155,47 @@ Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
                 }
             ],
             columns: [
-                { 
+                {
                     data: 'filename'
-                },{ 
-                    data: 'sortfield'                    
-                },{ 
+                },{
+                    data: 'sortfield'
+                },{
                     data: 'date'
-                },{ 
-                    data: 'issue',
-                    render: function (item, type, row, meta) {
-                        let result = 'No LInked Issue'
-                        if (item !== 'none') {
-                            let issue = 'https://github.com/AllskyTeam/allsky/discussions/' + item
-                            result = '<a external="true" href="' + issue + '" target="_blank">Issue ' + item + '</a>'
+                },{
+                    data: 'ID',
+                    render: function (ID, type, row, meta) {
+                        if (ID == '') {
+							return('');
+						}
+                        let result = 'No Linked GitHub Item'
+                        if (ID !== 'none') {
+							let fileName = row.filename;
+							let a = fileName.split("-")[0];
+							let type = "#";
+							let DIR = "discussions";
+							if (a != "support") {
+								type = a;
+								DIR = a.toLowerCase() + 's'
+							}
+                            let URL = ALLSKY_URL + DIR + '/' + ID
+                            result = '<a external="true" href="' + URL + '" target="_blank">' + type + ' ' + ID + '</a>'
                         }
 
                         return result
-                    }                 
+                    }
                 },{
-                    data: 'size'                  
+                    data: 'size'
                 },{
                     data: null,
                     width: '120px',
                     render: function (item, type, row, meta) {
-                        let buttonGithub = '<button type="button" title="Edit Guthib Discussion Number" class="btn btn-primary as-support-log-github mr-10" data-logid="' + item.filename + '"><i class="fa-brands fa-github"></i></button>'
-                        let buttonDownload = '<button type="button" title="Download log" class="btn btn-primary as-support-log-download mr-10" data-logid="' + item.filename + '"><i class="fa-solid fa-download"></i></button>'
-                        let buttonDelete = '<button type="button" title="Delete Log" class="btn btn-danger as-support-log-delete" data-logid="' + item.filename + '"><i class="fa-solid fa-trash"></i></button>'
-                        
+                        if (item.filename == '') {
+							return('');
+						}
+                        let buttonGithub = '<button type="button" title="Edit Guthib Discussion/Issue Number" class="btn btn-primary as-support-log-github mr-10" data-logid="' + item.filename + '"><i class="fa-brands fa-github"></i></button>'
+                        let buttonDownload = '<button type="button" title="Download Support Log" class="btn btn-primary as-support-log-download mr-10" data-logid="' + item.filename + '"><i class="fa-solid fa-download"></i></button>'
+                        let buttonDelete = '<button type="button" title="Delete Support Log" class="btn btn-danger as-support-log-delete" data-logid="' + item.filename + '"><i class="fa-solid fa-trash"></i></button>'
+
                         let buttons = '<div>' + buttonDownload + buttonGithub + buttonDelete + '</div>'
                         return buttons
                     }
@@ -190,5 +203,4 @@ Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
             ]
         });
     }
-
 }

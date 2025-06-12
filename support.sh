@@ -5,9 +5,9 @@
 
 # IMPORTANT:
 #	This script only assumes that "git clone" was successful.
-#	It does NOT assume Allsky has been installed so only uses scripts and function
+#	It does NOT assume Allsky has been installed so only uses scripts and functions
 #	that do not require Allsky to be installed.  This is to prevent any issues
-#	with the Allsky installation from interfering with the data collection
+#	with the Allsky installation from interfering with the data collection.
 
 
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
@@ -20,15 +20,14 @@ source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
-SUPPORT_DATETIME_SHORT="$( date +"%Y%m%d%H%M%S" )"
-SUPPORT_ZIP_NAME="support-XX_ISSUE_XX-${SUPPORT_DATETIME_SHORT}.zip"
-ALLSKY_SUPPORT_DIR="${ALLSKY_WEBUI}/support"
 if [[ ! -d ${ALLSKY_SUPPORT_DIR} ]]; then
 	mkdir -p "${ALLSKY_SUPPORT_DIR}" || exit 2
 	sudo chown "${USER_NAME}:${WEBSERVER_OWNER}" "${ALLSKY_SUPPORT_DIR}"
 	sudo chmod 775 "${ALLSKY_SUPPORT_DIR}"
 fi
 
+SUPPORT_DATETIME_SHORT="$( date +"%Y%m%d%H%M%S" )"
+SUPPORT_ZIP_NAME="XX_TYPE_XX-XX_ISSUE_XX-${SUPPORT_DATETIME_SHORT}.zip"
 
 ############################################## functions
 
@@ -382,6 +381,8 @@ function generate_support_info()
 	[[ -d ${X} ]] && find "${TEMP_DIR}/config/modules" -type f -exec truncate -s 0 {} +
 
 	local ZIP_NAME="${SUPPORT_ZIP_NAME//XX_ISSUE_XX/${ISSUE_NUMBER}}"
+# TODO: for now, assume it's a Discussion and not an Issue.
+	ZIP_NAME="${ZIP_NAME//XX_TYPE_XX/Discussion}"
 	# We're in a subshell so we need to "echo" this to pass it back to our invoker.
 	echo "${DIALOG_COMPLETE_MESSAGE//XX_ZIPNAME_XX/${ZIP_NAME}}"
 

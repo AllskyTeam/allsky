@@ -807,6 +807,7 @@ update_php_defines()
 			-e "s;XX_ALLSKY_POST_INSTALL_ACTIONS_XX;${ALLSKY_POST_INSTALL_ACTIONS};g" \
 			-e "s;XX_ALLSKY_ABORTS_DIR_XX;${ALLSKY_ABORTS_DIR};g" \
 			-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};g" \
+			-e "s;XX_ALLSKY_SUPPORT_DIR_XX;${ALLSKY_SUPPORT_DIR};g" \
 			-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};g" \
 			-e "s;XX_ALLSKY_WEBSITE_LOCAL_CONFIG_NAME_XX;${ALLSKY_WEBSITE_CONFIGURATION_NAME};g" \
 			-e "s;XX_ALLSKY_WEBSITE_REMOTE_CONFIG_NAME_XX;${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME};g" \
@@ -1193,10 +1194,9 @@ set_permissions()
 	fi
 
 	# Ensure the support folder has the correct owner and group
-	local SUPPORT="${ALLSKY_WEBUI}/support"
-	[[ ! -d ${SUPPORT} ]] && mkdir -p "${SUPPORT}"
-	sudo chown "${ALLSKY_OWNER}":"${WEBSERVER_GROUP}" "${SUPPORT}"
-	sudo chgrp 775 "${SUPPORT}"
+	[[ ! -d ${ALLSKY_SUPPORT_DIR} ]] && mkdir -p "${ALLSKY_SUPPORT_DIR}"
+	sudo chown "${ALLSKY_OWNER}":"${WEBSERVER_GROUP}" "${ALLSKY_SUPPORT_DIR}"
+	sudo chgrp 775 "${ALLSKY_SUPPORT_DIR}"
 }
 
 

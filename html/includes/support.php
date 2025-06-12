@@ -1,6 +1,17 @@
 <?php
 $DiscussionURL = "https://github.com/AllskyTeam/allsky/discussions";
 $V = ALLSKY_VERSION;
+if (! is_dir(ALLSKY_SUPPORT_DIR)) {
+	$cmd = "{ sudo mkdir " .  ALLSKY_SUPPORT_DIR . " &&";
+	$cmd .= " sudo chown " . ALLSKY_OWNER . ":" . WEBSERVER_GROUP . " " . ALLSKY_SUPPORT_DIR . " &&";
+	$cmd .= " sudo chmod 775 " . ALLSKY_SUPPORT_DIR . "; } 2>&1";
+	echo "<script>console.log('Excuting: $cmd');</script>";
+	$x = exec($cmd, $result, $ret_value);
+	if ($x === false || $ret_value !== 0) {
+		echo "<p class='errorMsg'>Failed running $cmd: " . implode("<br>", $result) . ".</p>";
+	}
+}
+
 ?>
 
 <style>
@@ -69,6 +80,10 @@ $V = ALLSKY_VERSION;
 					<h3>Getting Support <small>&nbsp; &nbsp; how to ask for help</small></h3>
 				</div>
 				<div class="panel-body markdown-body">
+					<div class="alert alert-danger" role="alert">
+						<strong>NOTE:</strong> The Allsky Team does not actively monitor
+						Facebook, so please use GitHub for support.
+					</div> 
 					<div class="alert alert-success" role="alert">
 						<p>
 						<blockquote>
@@ -128,11 +143,6 @@ $V = ALLSKY_VERSION;
 						</a>.
 						</p>
 					</div>
-
-					<div class="alert alert-danger" role="alert">
-						<strong>NOTE:</strong> The Allsky developers do not actively monitor
-						Facebook, so please use GitHub for support.
-					</div> 
 				</div>
 			</div>
 

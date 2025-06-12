@@ -164,6 +164,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 
 	# Location of WebUI.
 	ALLSKY_WEBUI="${ALLSKY_HOME}/html"
+	ALLSKY_SUPPORT_DIR="${ALLSKY_WEBUI}/support"
 
 	# Base location of the overlay and module configuration and data files.
 	ALLSKY_OVERLAY="${ALLSKY_CONFIG}/overlay"

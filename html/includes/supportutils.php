@@ -14,9 +14,6 @@ class SUPPORTUTIL
 
     function __construct() {
         $this->issueDir = ALLSKY_WEBUI . "/support";
-		if (! is_dir($this->issueDir)) {
-			$this->send500("Directory '" . $this->issueDir . "' not found!\n");
-		}
     }
 
     public function run()
@@ -54,26 +51,27 @@ class SUPPORTUTIL
 
     private function send404($msg = null)
     {
-        header('HTTP/1.0 404 Not Found');
-		if ($msg !== null) {
-// TODO: Is this the correct way to pass it back?
-			echo $msg;
-		}
+        header('HTTP/1.0 404 ');
+        if ($msg !== null) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'error' => $msg,
+                'code' => 404
+            ]);
+        }
         die();
     }
 
-    private function send500($msg = null)
+    private function send500()
     {
         header('HTTP/1.0 500 Internal Server Error');
-		if ($msg !== null) {
-// TODO: Is this the correct way to pass it back?
-			echo $msg;
-		}
         die();
     }
 
     private function sendResponse($response = 'ok')
     {
+        http_response_code(200);
+        header('Content-Type: application/json');
         echo ($response);
         die();
     }
@@ -88,102 +86,149 @@ class SUPPORTUTIL
         }
     }
 
-    private function humanReadableFileSize($bytes, $decimals = 2) {
+    private function humanReadableFileSize($bytes, $decimals = 2) 
+    {
         $sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
         $factor = floor((strlen($bytes) - 1) / 3);
         return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . ' ' . $sizes[$factor];
     }
 
-    public function postDownloadLog() {
+    public function postDownloadLog() 
+    {
         $logId = $_POST['logId'];
         $logId = basename($logId);
         $fromFile = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
 
-        header('Content-Description: File Transfer');
-        header('Content-Type: application/octet-stream');
-        header('Content-Disposition: attachment; filename="' . basename($fromFile) . '"');
-        header('Content-Transfer-Encoding: binary');
-        header('Expires: 0');
-        header('Cache-Control: must-revalidate');
-        header('Pragma: public');
-        header('Content-Length: ' . filesize($fromFile));
-        readfile($fromFile);
-// TODO: handle error in readfile()
+        if (!file_exists($fromFile) || !is_readable($fromFile)) {
+            $this->send500();
+        } else {
+            header('Content-Description: File Transfer');
+            header('Content-Type: application/octet-stream');
+            header('Content-Disposition: attachment; filename="' . basename($fromFile) . '"');
+            header('Content-Transfer-Encoding: binary');
+            header('Expires: 0');
+            header('Cache-Control: must-revalidate');
+            header('Pragma: public');
+            header('Content-Length: ' . filesize($fromFile));
+            readfile($fromFile);
+        }
         exit;
     }
 
-    public function postChangeGithubId() {
-        $logId = $_POST['logId'];
-        $logId = basename($logId);
+    private function parseFilename($filename) {
+        $pattern = '/^support(?:-([a-zA-Z0-9]+))?(?:-(\d+))?-(\d{14})\.zip$/';
 
-        $githubId = $_POST['githubid'];
-
-        $nameParts = explode('-', $logId);
-        $newLogId = $nameParts[0] . '-' . $githubId . '-' . $nameParts[2];
-
-        $fromFile = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
-        $newFile = $this->issueDir . DIRECTORY_SEPARATOR . $newLogId;
-
-        rename($fromFile, $newFile);
-// TODO: handle failure
-        $this->sendResponse(json_encode("ok"));
+        if (preg_match($pattern, $filename, $matches)) {
+            return [
+                'source'    => isset($matches[1]) ? $matches[1] : 'AS',
+                'id'        => isset($matches[2]) ? $matches[2] : null,
+                'timestamp' => $matches[3],
+                'ext'       => 'zip'
+            ];
+        } else {
+            return null;
+        }
     }
 
-    public function postDeleteLog() {
+    public function postChangeGithubId() 
+    {
+        $logId = $_POST['logId'];
+        $source = $_POST['source'];
+        $logId = basename($logId);
+        $githubId = $_POST['githubid'];
+
+        $fromFile = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
+
+        if (file_exists($fromFile) && is_readable($fromFile)) {
+            $fileParts = $this->parseFilename($logId);
+            if ($fileParts !== null) {
+            
+                $newFile = $this->issueDir . DIRECTORY_SEPARATOR . 'support-' . $source . '-' . $githubId . '-' . $fileParts['timestamp'] . '.' . $fileParts['ext'];
+                $result = rename($fromFile, $newFile);
+
+                if ($result) {
+                    $this->sendResponse(json_encode("ok"));
+                } else {
+                    $this->send500();
+                }
+            } else {
+                $this->send500();
+            }
+        } else {
+            $this->send500();
+
+        }
+    }
+
+    public function postDeleteLog() 
+    {
         $logId = $_POST['logId'];
         $logId = basename($logId);
         
         $fileToDelete = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
-        unlink($fileToDelete);
-// TODO: handle failure in unlink()
-        $this->sendResponse(json_encode("ok"));
+        $result = unlink($fileToDelete);
+
+        if ($result) {
+            $this->sendResponse(json_encode("ok"));
+        } else {
+            $this->send500();
+        }        
     }
 
-    public function getSupportFilesList() {
+    public function getSupportFilesList() 
+    {
 
         $data=array();
         
-        $files = scandir($this->issueDir);
-// TODO: handle error in scandir()
-        foreach ($files as $file) {
-            if (strpos($file, '.') !== 0) {
+        if (is_dir($this->issueDir)) {
+            $files = scandir($this->issueDir);
+            foreach ($files as $file) {
+                if (strpos($file, '.') !== 0) {
+                    
+                    $fileParts = $this->parseFilename(($file));
+                    $issue = $fileParts['id'];
+                    $source = $fileParts['source'];
+                    $date = $fileParts['timestamp'];
 
-                $fileBits = explode("-", $file);
-                $issue = $fileBits[1];
-                $date = explode(".", $fileBits[2])[0];
-                $year = substr($date, 0, 4);
-                $month = substr($date, 4, 2);
-                $day = substr($date, 6, 2);
-                $hour = substr($date, 8, 2);
-                $minute = substr($date, 10, 2);
-                $second = substr($date, 12, 2);
+                    $year = (int)substr($date, 0, 4);
+                    $month = (int)substr($date, 4, 2);
+                    $day = (int)substr($date, 6, 2);
+                    $hour = (int)substr($date, 8, 2);
+                    $minute = (int)substr($date, 10, 2);
+                    $second = (int)substr($date, 12, 2);
 
-                $timestamp = mktime($hour, $minute, $second, $month, $day, $year);
-                $formattedDate = strftime("%A %d %B %Y, %H:%M", $timestamp);
+                    $timestamp = mktime($hour, $minute, $second, $month, $day, $year);
+                    $formattedDate = strftime("%A %d %B %Y, %H:%M", $timestamp);
 
-                $size = filesize($this->issueDir . DIRECTORY_SEPARATOR . $file);
-                $hrSize = $this->humanReadableFileSize($size);
+                    $size = filesize($this->issueDir . DIRECTORY_SEPARATOR . $file);
+                    $hrSize = $this->humanReadableFileSize($size);
 
-                $data[] = [
-                    "filename" => $file,
-                    "sortfield" => $year.$month.$day.$hour.$minute.$second,
-                    "date" => $formattedDate,
-                    "issue" => $issue,
-                    "size" => $hrSize,
-                    "actions" => ""                    
-                ];
+                    $data[] = [
+                        "filename" => $file,
+                        "sortfield" => $year.$month.$day.$hour.$minute.$second,
+                        "date" => $formattedDate,
+                        "issue" => $issue,
+                        "source" => $source,
+                        "size" => $hrSize,
+                        "actions" => ""                    
+                    ];
+                }
             }
         }
         $this->sendResponse(json_encode($data));
     }
 
-    public function getGenerateLog() {
+    public function getGenerateLog() 
+    {
         $command = 'export ALLSKY_HOME=' . ALLSKY_HOME . '; export SUDO_OK="true"; ';
 		$command .= ALLSKY_HOME . '/support.sh --auto';
-        $output = shell_exec($command);
-// TODO: handle errors from shell_exec
+        exec($command, $output, $exitCode);
 
-        $this->sendResponse(json_encode("ok"));        
+        if ($exitCode == 2) {
+            $this->send500();
+        } else {
+            $this->sendResponse(json_encode("ok"));
+        }
     }
 
 }

@@ -98,7 +98,7 @@ class SUPPORTUTIL
 	}
 
 	public function postDownloadLog() {
-		$logId = $_POST['logId'];
+		$logId = $_POST['logId'];		// filename
 		$logId = basename($logId);
 		$fromFile = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
 // TODO: check if $fromFile exists
@@ -117,21 +117,26 @@ class SUPPORTUTIL
 	}
 
 	public function postChangeGithubId() {
-		$logId = $_POST['logId'];
+		$logId = $_POST['logId'];		// filename
 		$logId = basename($logId);
 
-		$githubId = $_POST['githubid'];
-
 		$nameParts = explode('-', $logId);
-		$newLogId = $nameParts[0] . '-' . $githubId . '-' . $nameParts[2];
+		$newId = $_POST['newId'];
+		$currentType = $nameParts[0];
+// TODO: See if the newId is an Allsky or Allsky-modules Discussion or Issue.  Error if not found.
+$newType = $currentType;
+		$newLogId = $newType . '-' . $newId . '-' . $nameParts[2];
 
 		$fromFile = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
-		$newFile = $this->issueDir . DIRECTORY_SEPARATOR . $newLogId;
-
 		if ( ! file_exists($fromFile)) {
 			$msg = "'$fromFile' does not exist.";
 			$this->sendResponse(json_encode(array("status"=>"ERROR", "message"=>"$msg")));
-		} else if (rename($fromFile, $newFile)) {
+			return;
+		}
+
+		$newFile = $this->issueDir . DIRECTORY_SEPARATOR . $newLogId;
+		
+		if (rename($fromFile, $newFile)) {
 			$this->sendResponse(json_encode(array("status"=>"ok")));
 		} else {
 			$msg = "Could not rename($fromFile, $newFile)";
@@ -140,7 +145,7 @@ class SUPPORTUTIL
 	}
 
 	public function postDeleteLog() {
-		$logId = $_POST['logId'];
+		$logId = $_POST['logId'];		// filename
 		$logId = basename($logId);
 
 		$fileToDelete = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
@@ -153,7 +158,6 @@ class SUPPORTUTIL
 	}
 
 	public function getSupportFilesList() {
-
 		$data = array();
 
 		if ( ! is_dir($this->issueDir)) {
@@ -161,7 +165,7 @@ class SUPPORTUTIL
 			$this->sendResponse(json_encode(array("status"=>"ERROR", "message"=>"$msg")));
 			return;
 		}
-		$files = scandir($this->issueDir);
+		$files = @scandir($this->issueDir);
 		if ($files === false) {
 			$msg = "scandir({$this->issueDir}) failed.";
 			// TODO  $data = array("status"=>"ERROR", "message"=>"$msg");

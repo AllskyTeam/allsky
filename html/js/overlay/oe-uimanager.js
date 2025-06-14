@@ -542,12 +542,11 @@ class OEUIMANAGER {
         $(this.#oeEditorStage.container()).on('mousemove', (e) => {
             if (this.#selectionStart) {
                 if (this.#selected  !== null) return
-
                 const transform = this.#oeEditorStage.getAbsoluteTransform().copy().invert();
                 const pos = transform.point(this.#oeEditorStage.getPointerPosition());
             
-                const dx = pos.x - this.#selectionStart .x;
-                const dy = pos.y - this.#selectionStart .y;
+                const dx = pos.x - this.#selectionStart.x;
+                const dy = pos.y - this.#selectionStart.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
             
                 if (!this.#selectionActive && dist > 10) {

@@ -33,7 +33,7 @@ class OEFIELDMANAGER {
         if (transformer.nodes().length > 1) {
             transformer.nodes().forEach((node) => {
                 const field = this.findField(node.id())
-                if (field.type !== 'rect') {
+                if (field.fieldType !== 'rect') {
                     result = false
                 }
             })
@@ -47,7 +47,7 @@ class OEFIELDMANAGER {
     setupSelection(selectionRect, transformer) {
         transformer.nodes([])
         for (let [fieldName, field] of this.#fields.entries()) {
-            if (field.type == 'fields') {
+            if (field.fieldType == 'fields') {
                 field.shape.draggable(false)
                 const isIntersecting = Konva.Util.haveIntersection(selectionRect, field.shape.getClientRect());
 
@@ -194,7 +194,7 @@ class OEFIELDMANAGER {
 
         if (group !== null) {
             for (let [fieldName, field] of this.#fields.entries()) {
-                if (field.type == 'fields') {
+                if (field.fieldType == 'fields') {
                     if (field.id !== id) {
                         if (field.group === group) {
                             result.push(field.shape)

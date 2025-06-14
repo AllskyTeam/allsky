@@ -1,5 +1,7 @@
 "use strict";
 
+let ALLSKY_URL = 'https://github.com/AllskyTeam/allsky/';
+
 class ALLSKYSUPPORT {
     #supportFilesTable = null
 
@@ -11,11 +13,11 @@ class ALLSKYSUPPORT {
             bootbox.confirm({
                 message: 'Are you sure you wish to delete this log entry?',
                 centerVertical: true,
-                callback: function(result) { 
+                callback: function(result) {
                     if (result) {
                         $('.as-support-loading').LoadingOverlay('show', {
                             background: 'rgba(0, 0, 0, 0.5)',
-                            imageColor: '#a94442'                            
+                            imageColor: '#a94442'
                         });
                         $.ajax({
                             type: 'POST',
@@ -42,7 +44,7 @@ class ALLSKYSUPPORT {
 
         $(document).on('click', '.as-support-log-github', (event) => {
             var logId = $(event.currentTarget).data('logid')
-            var logTable = this.#supportFilesTable            
+            var logTable = this.#supportFilesTable
 
 
             const regex = /^support(?:-([A-Za-z0-9]+))?(?:-(\d+))?-(\d{14})\.zip$/;
@@ -92,23 +94,23 @@ class ALLSKYSUPPORT {
                 }).always(() => {
                     $('.as-support-loading').LoadingOverlay('hide')
                 })
-            });        
+            });
         })
-        
+
         $(document).on('click', '.as-support-log-download', (event) => {
             var logId = $(event.currentTarget).data('logid')
             $('.as-support-loading').LoadingOverlay('show', {
                 background: 'rgba(0, 0, 0, 0.5)',
                 imageColor: '#a94442'
-            });  
-            
+            });
+
             $.ajax({
                 url: 'includes/supportutils.php?request=DownloadLog',
                 type: 'POST',
                 cache: false,
                 data: {
                     logId: logId
-                },     
+                },
                 xhrFields: {
                   responseType: 'blob'
                 }
@@ -128,7 +130,7 @@ class ALLSKYSUPPORT {
                 });
             }).always(() => {
                 $('.as-support-loading').LoadingOverlay('hide')
-            })          
+            })
         })
 
         $(document).on('click', '#as-support-generate', (event) => {
@@ -149,20 +151,20 @@ The following data is collected:<br><br>\
 </ul><br>\
 Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
 
-            bootbox.confirm(message, function(result){              
+            bootbox.confirm(message, function(result){
                 if (result) {
                     $('body').LoadingOverlay('show', {
                         background: 'rgba(0, 0, 0, 0.5)',
                         imageColor: '#a94442',
                         textColor: '#a94442',
                         text: 'Generating Support Information'
-                    });  
-                    
+                    });
+
                     $.ajax({
                         url: 'includes/supportutils.php?request=GenerateLog',
                         type: 'GET',
                         dataType: 'json',
-                        cache: false                
+                        cache: false
                     }).done(() => {
                         logTable.ajax.reload()
                     }).fail((a,b,c) => {
@@ -172,16 +174,14 @@ Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
                         });
                     }).always(() => {
                         $('body').LoadingOverlay('hide')
-                    }) 
+                    })
                 }
             });
+        })
 
-         
-        })        
-        
         this.#supportFilesTable = $('#as-support-files').DataTable({
             ajax: {
-                url: 'includes/supportutils.php?request=SupportFilesList', 
+                url: 'includes/supportutils.php?request=SupportFilesList',
                 type: 'GET',
                 dataSrc: ''
             },
@@ -194,13 +194,13 @@ Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
                 }
             ],
             columns: [
-                { 
+                {
                     data: 'filename'
-                },{ 
-                    data: 'sortfield'                    
-                },{ 
+                },{
+                    data: 'sortfield'
+                },{
                     data: 'date'
-                },{ 
+                },{
                     data: 'issue',
                     render: function (item, type, row, meta) {
                         let result = 'No LInked Issue'
@@ -218,9 +218,9 @@ Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
                         }
 
                         return result
-                    }                 
+                    }
                 },{
-                    data: 'size'                  
+                    data: 'size'
                 },{
                     data: null,
                     width: '150px',
@@ -236,5 +236,4 @@ Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
             ]
         });
     }
-
 }

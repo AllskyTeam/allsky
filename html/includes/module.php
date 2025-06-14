@@ -121,12 +121,16 @@ function DisplayModule() {
 							<form class="form-horizontal mt-3">
 								<div class="form-group">
 									<label for="module-module-filter" class="col-sm-2 control-label">Search</label>
-									<div class="col-sm-6">
+									<div class="col-sm-4">
 										<input type="text" class="form-control" id="module-available-filter">
 									</div>
-									<div class="col-sm-4">
+									<div class="col-sm-2">
 										<button type="button" class="btn btn-primary btn-sm pull-left" id="module-available-filter-clear"><i class="fa-solid fa-xmark"></i></button>
 									</div>
+									<div class="col-sm-2">
+                                        <select name="cars" id="module-filters">
+                                        </select>
+									</div>                                    
 								</div>
 							</form>
 						</h4>

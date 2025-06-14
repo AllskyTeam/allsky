@@ -114,7 +114,20 @@ class OETEXTFIELD extends OEFIELD {
   }
 
   get type() {
-    return this.fieldData.type;
+    let type = '';
+    if (this.fieldData.type !== undefined) {
+      type = this.fieldData.type
+    } else {
+      const fields = this.extractPlaceholders(this.getLabel())
+      const configManager = window.oedi.get('config');
+      if (fields.length == 1) {
+        let variableDefinition = configManager.findFieldByName('${' + fields[0] + '}')
+        if (variableDefinition !== null) {
+          type = variableDefinition.type;
+        }
+      }
+    }
+    return type;
   }
   set type(type) {
     this.fieldData.type = type;  

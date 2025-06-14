@@ -25,6 +25,11 @@ class ALLSKYSUPPORT {
                             },
                             dataType: 'json',
                             cache: false
+                        }).fail(() => {
+                            bootbox.alert({
+                                title: 'Error',
+                                message: 'Error deleting the support log. Please refer to the <a external="true" target="_blank" href="/documentation/troubleshooting/reportingProblems.html#supportErrors">Getting Support</a>'
+                            });
                         }).done(() => {
                             logTable.ajax.reload()
                         }).always(() => {
@@ -38,33 +43,56 @@ class ALLSKYSUPPORT {
         $(document).on('click', '.as-support-log-github', (event) => {
             var logId = $(event.currentTarget).data('logid')
             var logTable = this.#supportFilesTable            
-            bootbox.prompt({
-                title: 'Enter the id of the Github discussion', 
-                centerVertical: true,
-                inputType: 'number',
-                callback: function(githubid){ 
-                    if (githubid !== null && githubid !== '') {                    
-                        $('.as-support-loading').LoadingOverlay('show', {
-                            background: 'rgba(0, 0, 0, 0.5)',
-                            imageColor: '#a94442'
-                        });
-                        $.ajax({
-                            type: 'POST',
-                            url: 'includes/supportutils.php?request=ChangeGithubId',
-                            data: {
-                                logId: logId,
-                                githubid: githubid
-                            },
-                            dataType: 'json',
-                            cache: false
-                        }).done(() => {
-                            logTable.ajax.reload();
-                        }).always(() => {
-                            $('.as-support-loading').LoadingOverlay('hide')
-                        })
-                    }
-                }
-            });                      
+
+
+            const regex = /^support(?:-([A-Za-z0-9]+))?(?:-(\d+))?-(\d{14})\.zip$/;
+            const match = logId.match(regex);
+
+            if (match) {
+                var source = match[1] || 'AS';
+                var id = match[2];
+            } else {
+                bootbox.alert({
+                    title: 'Error',
+                    message: 'Error updating determining the support log. Please refer to the <a external="true" target="_blank" href="/documentation/troubleshooting/reportingProblems.html#supportErrors">Getting Support</a>'
+                });
+                return
+            }
+
+            $('input[name="choice"][value="' + source + '"]').prop('checked', true);
+            $('#githubIdModalId').val(id);
+            $('#githubIdModal').modal('show');
+
+            $('#githubIdModalOK').off('click');
+            $('#githubIdModalOK').on('click', () => {
+                var source = $('input[name="choice"]:checked').val();
+                var githubid = $('#githubIdModalId').val();
+                $('#githubIdModal').modal('hide');
+                $('.as-support-loading').LoadingOverlay('show', {
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    imageColor: '#a94442'
+                });
+                $.ajax({
+                    type: 'POST',
+                    url: 'includes/supportutils.php?request=ChangeGithubId',
+                    data: {
+                        logId: logId,
+                        source: source,
+                        githubid: githubid
+                    },
+                    dataType: 'json',
+                    cache: false
+                }).fail(() => {
+                    bootbox.alert({
+                        title: 'Error',
+                        message: 'Error updating the GitHub issue file. Please refer to the <a external="true" target="_blank" href="/documentation/troubleshooting/reportingProblems.html#supportErrors">Getting Support</a>'
+                    });
+                }).done(() => {
+                    logTable.ajax.reload();
+                }).always(() => {
+                    $('.as-support-loading').LoadingOverlay('hide')
+                })
+            });        
         })
         
         $(document).on('click', '.as-support-log-download', (event) => {
@@ -77,9 +105,10 @@ class ALLSKYSUPPORT {
             $.ajax({
                 url: 'includes/supportutils.php?request=DownloadLog',
                 type: 'POST',
+                cache: false,
                 data: {
                     logId: logId
-                },                
+                },     
                 xhrFields: {
                   responseType: 'blob'
                 }
@@ -92,6 +121,11 @@ class ALLSKYSUPPORT {
                 a.click()
                 a.remove()
                 window.URL.revokeObjectURL(url)
+            }).fail((a,b,c) => {
+                bootbox.alert({
+                    title: 'Error',
+                    message: 'Error downloading file. Please refer to the <a external="true" target="_blank" href="/documentation/troubleshooting/reportingProblems.html#supportErrors">Getting Support</a>'
+                });
             }).always(() => {
                 $('.as-support-loading').LoadingOverlay('hide')
             })          
@@ -100,17 +134,20 @@ class ALLSKYSUPPORT {
         $(document).on('click', '#as-support-generate', (event) => {
             var logTable = this.#supportFilesTable
 
-let message="This script will collect data from your Raspberry Pi to assist in supporting any issues.<br>\
-No personal information is collected by this script. The following data is collected<br><br>\
-- Basic system information\<br>\
-- Filesystem/Memory/Network Information (IPV4/6/MAC details are obfuscated)<br>\
-- Installed system and python packages<br>\
-- Allsky/lighttpd logs and error logs<br>\
-- Connected camera details<br>\
-- i2c bus details<br>\
-- Running processes<br>\
-- Allsky config files (obfuscated where required to hide any credentials)<br><br>\
-Select 'Ok' to agree or 'Cancel' to cncel"
+let message="This script will collect data from your Raspberry Pi to assist in reporting a problem.<br>\
+<strong>No personal information is collected</strong>.\
+The following data is collected:<br><br>\
+<ul>\
+<li>Basic system information</li>\
+<li>Filesystem / Memory / Network Information (IPV4/6/MAC details are obfuscated)</li>\
+<li>Installed system and python packages</li>\
+<li>Allsky and web server logs and error logs</li>\
+<li>Connected camera details</li>\
+<li>i2c bus details</li>\
+<li>Running processes</li>\
+<li>Allsky config files (obfuscated where required to hide any credentials)</li>\
+</ul><br>\
+Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
 
             bootbox.confirm(message, function(result){              
                 if (result) {
@@ -128,6 +165,11 @@ Select 'Ok' to agree or 'Cancel' to cncel"
                         cache: false                
                     }).done(() => {
                         logTable.ajax.reload()
+                    }).fail((a,b,c) => {
+                        bootbox.alert({
+                            title: 'Error',
+                            message: 'Error unable to create the support directory. Please refer to the <a external="true" target="_blank" href="/documentation/troubleshooting/reportingProblems.html#supportErrors">Getting Support</a>'
+                        });
                     }).always(() => {
                         $('body').LoadingOverlay('hide')
                     }) 
@@ -137,7 +179,6 @@ Select 'Ok' to agree or 'Cancel' to cncel"
          
         })        
         
-
         this.#supportFilesTable = $('#as-support-files').DataTable({
             ajax: {
                 url: 'includes/supportutils.php?request=SupportFilesList', 
@@ -163,9 +204,17 @@ Select 'Ok' to agree or 'Cancel' to cncel"
                     data: 'issue',
                     render: function (item, type, row, meta) {
                         let result = 'No LInked Issue'
-                        if (item !== 'none') {
-                            let issue = 'https://github.com/AllskyTeam/allsky/discussions/' + item
-                            result = '<a external="true" href="' + issue + '" target="_blank">Issue ' + item + '</a>'
+                        if (item !== '') {
+                            let issue = '';
+                            let text = '';
+                            if (row.source == 'AS') {
+                                issue = 'https://github.com/AllskyTeam/allsky/discussions/' + item
+                                text = 'Allsky';
+                            } else {
+                                issue = 'https://github.com/AllskyTeam/allsky-modules/discussions/' + item
+                                text = 'Allsky Modules';
+                            }
+                            result = '<a external="true" href="' + issue + '" target="_blank">' + text + ' ' + item + ' <i class="fa-solid fa-arrow-up-right-from-square"></i></a>'
                         }
 
                         return result
@@ -174,7 +223,7 @@ Select 'Ok' to agree or 'Cancel' to cncel"
                     data: 'size'                  
                 },{
                     data: null,
-                    width: '120px',
+                    width: '150px',
                     render: function (item, type, row, meta) {
                         let buttonGithub = '<button type="button" title="Edit Guthib Discussion Number" class="btn btn-primary as-support-log-github mr-10" data-logid="' + item.filename + '"><i class="fa-brands fa-github"></i></button>'
                         let buttonDownload = '<button type="button" title="Download log" class="btn btn-primary as-support-log-download mr-10" data-logid="' + item.filename + '"><i class="fa-solid fa-download"></i></button>'

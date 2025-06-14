@@ -36,8 +36,10 @@
 		</p>
 
 		<!-- =========================================== -->
+<!-- uncomment for v2025.xx.xx
 		<h2>v2025.xx.xx</h2>
 		<details open> <summary></summary>
+-->
 
 			<!--
 			<h3>v2025.xx.xx_01  - Point Release # 1</h3>
@@ -48,6 +50,7 @@
 			<h3>v2025.xx.xx - Base Release</h3>
 			-->
 
+<!-- uncomment for v2025.xx.xx
 				<h4>Deleted capabilities</h4>
 				<ul>
 					<li>The Buster operating system is no longer supported.
@@ -60,34 +63,18 @@
 
 				<h4>Enhancements / Changes</h4>
 				<ul>
-					<li>When RPi cameras are unable to take an image,
-						an error message is added to the log file.
-						Previously the error message was written to a temporary
-						file that was overwritten every exposure, thereby
-						losing prior messages.
-					<li>A message is added to the WebUI if creation of a timelapse,
-						startrails, or keogram fails during end-of-night processing.
+					<li>
 				</ul>
 
 				<h4>Bug Fixes</h4>
 				<ul>
-					<li>The <span class="WebUILink">Getting Support</span> WebUI page
-						(and the related <code>support.sh</code> command) no longer
-						fail with a "Argument list too long" message.
-					<li><code>upload.sh</code> no longer finds files that don't exist.
-					<li>Setting a target temperature for cooled ZWO cameras now works.
-					<li><code>remoteWebsiteInstall.sh</code> now handles servers that
-						don't return anything when the <code>curl</code> command requests
-						a page.  This is uncommon.
+					<li>
 				</ul>
 
 				<h4>Deleted Settings</h4>
 				<ul>
-					<li><span class="WebUISetting">Notification Images</span>
+					<li><span class="WebUISetting">xxx</span>
 						<br>
-						Notification images, e.g., "Allsky is starting up" now provide
-						valuable status and troubshooting information so can no longer
-						be disabled.
 				</ul>
 				<h4>New Settings</h4>
 				<ul>
@@ -96,20 +83,92 @@
 
 			<hr class="separator">
 		</details>
+-->
 
 		<!-- =========================================== -->
 
 		<h2>v2024.12.06</h2>
-		<details> <summary></summary>
+		<details open> <summary></summary>
 
-			<h3>v2024.12.06_03  - Point Release # 3</h3>
-			<details sub> <summary></summary>
+			<h3>v2024.12.06_04  - Point Release # 4</h3>
+			<details open sub> <summary></summary>
 				<h4 style="color: red">IMPORTANT NOTES:</h4>
 				<ul>
 					<li>This is the LAST major release that supports Buster.
 					<li>This is the LAST major release that contains the "legacy"
 						overlay method.
 				</ul>
+
+				<h4>Enhancements / Changes</h4>
+				<ul>
+					<li>When upgrading from a recent version from Allsky
+						you'll likely just need to restart Allsky
+						without having to review the settings.
+						The installation script will tell you what to do.
+					<li>The Allsky "Status:" on the top of the WebUI
+						now updates automatically every few seconds.
+					<li>The <span class="WebUILink">Editor</span> WebUI page
+						will display a message in the unlikely event that the
+						file is corrupted.
+					<li>The <span class="WebUILink">System</span> WebUI page
+						now appears very quickly and the data is automatically
+						updated every few seconds.
+						The "Refresh" button is no longer needed so was removed.
+					<li>RPi cameras sometimes hang while taking pictures.
+						This used to hang Allsky, but it now times out instead.
+					<li>When RPi cameras are unable to take an image,
+						an error message from the camera is added to the log file.
+						Previously the error message was written to a temporary
+						file that was overwritten every exposure, thereby
+						losing prior messages.
+					<li>A message is added to the WebUI if creation of a timelapse,
+						startrails, or keogram fails during end-of-night processing.
+					<li>The name of the Pi is shown at the top of the WebUI.
+						This is useful for people with multiple Pi's.
+				</ul>
+
+				<h4>Bug Fixes</h4>
+				<ul>
+					<li>The <span class="WebUILink">Getting Support</span> WebUI page
+						(and the related <code>support.sh</code> command) no longer
+						fail with an "Argument list too long" message.
+						<br>
+						They also provide more information to aid in troubleshooting.
+					<li>Setting a target temperature for cooled ZWO cameras now works.
+					<li><code>install.sh</code> no longer corrupts the Website
+						configuration file when adding meteor fields.
+					<li><code>remoteWebsiteInstall.sh</code> now handles servers that
+						don't return anything under certain circumstances.
+						This is uncommon but when it happened it kept the
+						remote Website from being installed.
+					<li>Permission denied errors from <code>moduleutil.php</code>
+						when it tried to overwrite files ending in
+						<span class="fileName">-last</span> has been fixed.
+					<li>The Allsky Website now correctly colors aurora forecasts.
+					<li><code>upload.sh</code> no longer finds files that don't exist.
+					<li>During installation, the amount of RAM for non-Raspberry Pi
+						boards is now determined correctly.
+						This number is used to properly size the swap space.
+						It's also used to populate the
+						<span class="WebUISetting">Computer</span> setting.
+				</ul>
+
+				<h4>Deleted Settings</h4>
+				<ul>
+					<li><span class="WebUISetting">Notification Images</span>
+						<br>
+						Notification images, e.g., "Allsky is starting up" provide
+						valuable status and troubshooting information so can no longer
+						be disabled.
+				</ul>
+				<h4>New Settings</h4>
+				<ul>
+					<li><span class="WebUISetting">None</span>
+				</ul>
+			</details>
+
+			<h3>v2024.12.06_03  - Point Release # 3</h3>
+			<details open sub> <summary></summary>
 
 				<h4>Enhancements / Changes</h4>
 				<ul>

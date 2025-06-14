@@ -1236,6 +1236,23 @@ class MODULEUTIL
         return $chartData;  
     }
 
+    private function doesSqliteTableExist($table) {
+        $db = new SQLite3(ALLSKY_MYFILES_DIR . '/allsky.db', SQLITE3_OPEN_READONLY);
+        $db->busyTimeout(5000);
+
+        $stmt = $db->prepare("SELECT name FROM sqlite_master WHERE type='table' AND name = :name");
+        $stmt->bindValue(':name', $table, SQLITE3_TEXT);
+        $result = $stmt->execute();
+
+        if ($result->fetchArray(SQLITE3_ASSOC)) {
+            $result = true;
+        } else {
+            $result = false;
+        }
+
+        return $result;
+    }
+
     private function getChartDataFromSQLite($databaseConfig, $table) {
         $chartData = [];
 
@@ -1244,25 +1261,26 @@ class MODULEUTIL
             die("Invalid table name.");
         }
 
-        $db = new SQLite3(ALLSKY_MYFILES_DIR . '/allsky.db', SQLITE3_OPEN_READONLY);
-        $db->busyTimeout(5000);
+        if ($this->doesSqliteTableExist($table)) {
+            $db = new SQLite3(ALLSKY_MYFILES_DIR . '/allsky.db', SQLITE3_OPEN_READONLY);
+            $db->busyTimeout(5000);
 
-        $now = time();
-        $since = $now - 3600;
-        
-        $stmt = $db->prepare('SELECT json_data, timestamp FROM ' . $table . ' WHERE timestamp >= :since');
-        $stmt->bindValue(':since', $since, SQLITE3_INTEGER);
-        
-        $result = $stmt->execute();
-        
-        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-            $jsonString = json_decode($row['json_data']);
-            $timestamp = intval($row['timestamp'])*1000;
-            $chartData[$timestamp] = $jsonString;
+            $now = time();
+            $since = $now - 86400;
+            
+            $stmt = $db->prepare('SELECT json_data, timestamp FROM ' . $table . ' WHERE timestamp >= :since');
+            $stmt->bindValue(':since', $since, SQLITE3_INTEGER);
+            
+            $result = $stmt->execute();
+            
+            while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+                $jsonString = json_decode($row['json_data']);
+                $timestamp = intval($row['timestamp'])*1000;
+                $chartData[$timestamp] = $jsonString;
+            }
+            
+            $db->close();
         }
-        
-        $db->close();
-
 
         return $chartData;
     }

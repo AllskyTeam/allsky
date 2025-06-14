@@ -688,7 +688,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 				self._timer("Saving Final Image")
 				if self._debug:
 					self._timer("Writing debug data")
-				self._dump_debug_data()
+				#self._dump_debug_data()
 
 		self._timer("Annotation Complete", showIntermediate=False)
 

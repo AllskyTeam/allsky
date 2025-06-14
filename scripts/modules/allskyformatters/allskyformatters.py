@@ -438,5 +438,14 @@ class AllskyFormatters:
 			
 		return value
 
+	def as_flip(self, value, variable_name, format, variable_type):
+		''' Converts an altitude in meters to a flight level
+		'''
+		
+		if format == 'flip':
+			value = value.capitalize()
+			
+		return value
+
 allsky_formatters = AllskyFormatters()
 

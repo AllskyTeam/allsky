@@ -121,7 +121,7 @@
 		"format": "",
 		"sample": "",
 		"source": "Allsky",			
-		"type": "float",
+		"type": "number",
 		"group": "Allsky",
 		"description": "Mean value"
 	},
@@ -146,7 +146,7 @@
 		"format": "",
 		"sample": "",
 		"source": "Allsky",			
-		"type": "float",
+		"type": "number",
 		"group": "Allsky"
 	},
 	"AS_STRETCH_MIDPOINT": {
@@ -154,7 +154,7 @@
 		"format": "",
 		"sample": "",
 		"source": "Allsky",			
-		"type": "float",
+		"type": "number",
 		"group": "Allsky"
 	},
 	"AS_TIME": {
@@ -228,5 +228,14 @@
 		"type": "string",
 		"group": "Allsky",
 		"description": "Auto exposure info"
+	},
+	"AS_DAY_OR_NIGHT": {
+		"name": "${DAY_OR_NIGHT}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",			
+		"type": "string",
+		"group": "Allsky",
+		"description": "Time of Day"
 	}
 }

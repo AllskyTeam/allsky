@@ -250,7 +250,7 @@ class OEUIMANAGER {
         for (let [fieldName, field] of fields.entries()) {
             let object = field.shape;
 
-            if (field.type === 'rect') {
+            if (field.fieldType === 'rect') {
                 this.#drawLayer.add(object)
             } else {
                 this.#overlayLayer.add(object)
@@ -1312,7 +1312,7 @@ class OEUIMANAGER {
                 field.x = shape.x() | 0
                 field.y = shape.y() | 0
 
-                if (field.type === 'rect') {
+                if (field.fieldType === 'rect') {
                     field.width = shape.width() | 0
                     field.height = shape.height() | 0
                 }
@@ -1404,7 +1404,7 @@ class OEUIMANAGER {
                     'id': fieldName,
                     'name': name,
                     'field': field,
-                    'type': result.type
+                    'type': result.fieldType
                 });
             }
         }
@@ -2349,7 +2349,8 @@ class OEUIMANAGER {
             format: { group: 'Label', name: 'Format', type: 'text', helpcallback: function (name) {
                 let uiManager = window.oedi.get('uimanager')
 				let selected = uiManager.#selected
-				let type = ''				
+                let type = selected.type;
+				/*let type = ''				
 				if (selected.fieldData.type === '' || selected.fieldData.type === undefined) {
 					let label  = selected.fieldData.label
 					const regex = /\${([^}]+)}/;
@@ -2364,7 +2365,7 @@ class OEUIMANAGER {
 					}
 				} else {
 					type = selected.fieldData.type
-				}
+				}*/
                 uiManager.#createFormatHelpWindow(type);
             }},
             sample: { group: 'Label', name: 'Sample', type: 'text' },
@@ -2695,7 +2696,8 @@ class OEUIMANAGER {
 				$('#oe-format-filters').html('<option value="all">Show All</option>');
 				Object.entries(filters).forEach(([filter, total]) => {
 					let opt = filter.charAt(0).toUpperCase() + filter.slice(1)
-					$('#oe-format-filters').append('<option value="' + filter + '">' + opt + '</option>')
+                    let selectedAttr = (filter === filterType) ? ' selected' : '';
+					$('#oe-format-filters').append('<option value="' + filter + '"' + selectedAttr + '>' + opt + '</option>');
 				});
 
 				$('#oe-format-filters').off('change')			
@@ -2706,13 +2708,7 @@ class OEUIMANAGER {
 						formatTable.column(3).search(this.value).draw()
 					}
 				});
-
-				if (filterType !== '') {
-					formatTable.column(3).search(filterType).draw()
-					$('#oe-format-filters').val(filterType)
-					filterType = ''
-				}
-				let t = 56				
+                $('#oe-format-filters').trigger('change');		
 			})
 			.DataTable({
 				ajax: {

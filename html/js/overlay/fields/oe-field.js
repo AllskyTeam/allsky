@@ -7,17 +7,17 @@ class OEFIELD {
 	shape = null;
 	id = null;
 	loaded = true;
-	type = null;
+	fieldType = null;
 	groupId = null
 
 	OVERLAYFIELDSELECTOR = ".overlayfield";
 
-	constructor(type, id) {
-		this.type = type;
+	constructor(fieldType, id) {
+		this.fieldType = fieldType;
 		this.id = 'oe-field-' + id;
 	}
 
-	get type() {
+	get fieldType() {
 		return this.type
 	}
 
@@ -129,6 +129,18 @@ class OEFIELD {
 		this.fieldData.fill = fill;
 		this.shape.fill(fill);
 		this.dirty = true;
+	}
+
+	extractPlaceholders(str) {
+		const regex = /\$\{([^}]+)\}/g;
+		const matches = [];
+		let match;
+
+		while ((match = regex.exec(str)) !== null) {
+			matches.push(match[1]);
+		}
+
+		return matches;
 	}
 
 	setDefaults() {

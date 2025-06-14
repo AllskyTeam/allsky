@@ -454,7 +454,13 @@
             "example": "",           
             "stackable": false,
             "type": "altitude"
+        },
+        {
+            "format": "flip",
+            "description": "Image flip",
+            "example": "",           
+            "stackable": false,
+            "type": "flip"
         }
-
     ]
 }

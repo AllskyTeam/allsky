@@ -13,7 +13,10 @@ class SUPPORTUTIL
 	private $issueDir;
 
 	function __construct() {
-		$this->issueDir = ALLSKY_WEBUI . "/support";
+		$this->issueDir = ALLSKY_SUPPORT_DIR;
+		if (! is_dir($this->issueDir)) {
+			$this->send404("Directory '" . $this->issueDir . "' not found!");
+		}
 	}
 
 	public function run()
@@ -51,7 +54,7 @@ class SUPPORTUTIL
 
 	private function send404($msg = null)
 	{
-		header('HTTP/1.0 404 ');
+		header('HTTP/1.0 404');
 		if ($msg !== null) {
 			header('Content-Type: application/json');
 			echo json_encode([
@@ -62,9 +65,16 @@ class SUPPORTUTIL
 		die();
 	}
 
-	private function send500()
+	private function send500($msg = null)
 	{
 		header('HTTP/1.0 500 Internal Server Error');
+		if ($msg !== null) {
+			header('Content-Type: application/json');
+			echo json_encode([
+				'error' => $msg,
+				'code' => 500
+			]);
+		}
 		die();
 	}
 
@@ -82,25 +92,25 @@ class SUPPORTUTIL
 		if (is_callable(array('SUPPORTUTIL', $action))) {
 			call_user_func(array($this, $action));
 		} else {
-			$this->send404("SUPPORTUTIL is not callable.");
+			$this->send404($this->request . " is not callable.");
 		}
 	}
 
-	private function humanReadableFileSize($bytes, $decimals = 2) 
+	private function humanReadableFileSize($bytes, $decimals = 2)
 	{
 		$sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
 		$factor = floor((strlen($bytes) - 1) / 3);
 		return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . ' ' . $sizes[$factor];
 	}
 
-	public function postDownloadLog() 
+	public function postDownloadLog()
 	{
-		$logId = $_POST['logId'];
+		$logId = $_POST['logId'];		// filename
 		$logId = basename($logId);
 		$fromFile = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
 
-		if (!file_exists($fromFile) || !is_readable($fromFile)) {
-			$this->send500();
+		if ( ! is_readable($fromFile)) {
+			$this->send500("'$fromFle' does not exist or is not readable.");
 		} else {
 			header('Content-Description: File Transfer');
 			header('Content-Type: application/octet-stream');
@@ -110,18 +120,37 @@ class SUPPORTUTIL
 			header('Cache-Control: must-revalidate');
 			header('Pragma: public');
 			header('Content-Length: ' . filesize($fromFile));
-			readfile($fromFile);
+			if ( ! readfile($fromFile)) {
+				$this->send500("Unable to read from '$fromFle'.");
+			}
 		}
 		exit;
 	}
 
 	private function parseFilename($filename) {
+		// File name format:  support-SOURCE-PROBLEM_ID-YYYYMMDDHHMMSS.zip
+		//                    0       1      2          3
+		// Where SOURCE is "AS" or "ASM" and PROBLEM_ID is "none" or [DI]ID
+		// "D" is for Discussion and "I" is for Issue and is needed to
+		// create the GitHub URL.
 		$pattern = '/^support(?:-([a-zA-Z0-9]+))?(?:-(\d+))?-(\d{14})\.zip$/';
-
 		if (preg_match($pattern, $filename, $matches)) {
+			$source = isset($matches[1]) ? $matches[1] : 'AS';
+			$id = isset($matches[2]) ? $matches[2] : "none";
+			if ($id === "none") {
+				$type = "";
+			} else {
+				$type = substr($id, 0, 1);
+				if ($type === "D" || $type === "I") {
+					$id = substr($id, 1);
+				} else {
+					$type = "D";		// old-format filename or an error, so use default
+				}
+			}
 			return [
-				'source'	=> isset($matches[1]) ? $matches[1] : 'AS',
-				'id'		=> isset($matches[2]) ? $matches[2] : null,
+				'source'	=> isset($matches[1]) ? $matches[1] : 'AS';
+				'type'		=> $type;
+				'id'		=> $id,
 				'timestamp' => $matches[3],
 				'ext'	   => 'zip'
 			];
@@ -130,104 +159,122 @@ class SUPPORTUTIL
 		}
 	}
 
-	public function postChangeGithubId() 
+	public function postChangeGithubId()
 	{
-		$logId = $_POST['logId'];
-		$source = $_POST['source'];
+		$logId = $_POST['logId'];		// filename
 		$logId = basename($logId);
-		$githubId = $_POST['githubid'];
 
 		$fromFile = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
+		if ( ! is_readable($fromFile)) {
+			$this->send500("'$fromFile' does not exist or is not readable.");
+		}
 
-		if (file_exists($fromFile) && is_readable($fromFile)) {
-			$fileParts = $this->parseFilename($logId);
-			if ($fileParts !== null) {
-			
-				$newFile = $this->issueDir . DIRECTORY_SEPARATOR . 'support-' . $source . '-' . $githubId . '-' . $fileParts['timestamp'] . '.' . $fileParts['ext'];
-				$result = rename($fromFile, $newFile);
+		$source = $_POST['source'];		// user-entered repository name
+		$newId = $_POST['newId'];		// user-entered number
+		$fileParts = $this->parseFilename($logId);
+		if ($fileParts === null) {
+			$this->send500("Bad file name: $logId");
+		}
 
-				if ($result) {
-					$this->sendResponse(json_encode("ok"));
-				} else {
-					$this->send500();
-				}
-			} else {
-				$this->send500();
-			}
+// TODO: Look in GitHub to see if the newId is an existing Discussion or Issue.
+// Tell the user to re-enter the number if not in GitHub.
+$newType = "D"; // For now assume Discussion.
+
+		$timestamp = $fileParts['timestamp'];		// reuse existing value
+		$ext = $fileParts['ext'];
+		$newFile = $this->issueDir . DIRECTORY_SEPARATOR;
+		$newFile .= "support-$source-$newType$newId-$timestamp.$ext";
+		if (rename($fromFile, $newFile)) {
+			$this->sendResponse(json_encode("ok"));
 		} else {
-			$this->send500();
-
+			$this->send500("Could not rename($fromFile, $newFile)");
 		}
 	}
 
-	public function postDeleteLog() 
+	public function postDeleteLog()
 	{
-		$logId = $_POST['logId'];
+		$logId = $_POST['logId'];		// filename
 		$logId = basename($logId);
-		
-		$fileToDelete = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
-		$result = unlink($fileToDelete);
 
-		if ($result) {
+		$fileToDelete = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
+		if (@unlink($fileToDelete)) {
 			$this->sendResponse(json_encode("ok"));
 		} else {
-			$this->send500();
-		}		
+			$this->send500("Could not unlink($fileToDelete)");
+		}
 	}
 
-	public function getSupportFilesList() 
+	public function getSupportFilesList()
 	{
+		$data = array();
 
-		$data=array();
-		
-		if (is_dir($this->issueDir)) {
-			$files = scandir($this->issueDir);
+		if ( ! is_dir($this->issueDir)) {
+			$sg = "Directory '" . $this->issueDir . "' does not exist.";
+			$this->send500($msg);
+			return;
+		}
+
+		$files = @scandir($this->issueDir);
+		if ($files === false) {
+			$msg = "scandir({$this->issueDir}) failed.";
+			$data[] = [
+				"filename" => "",
+				"source" => "",
+				"type" => "",
+				"ID" => "",
+				"sortfield" => "",
+				"date" => "<br><p class='errorMsgBox errorMsg'>$msg</p>",
+				"size" => "",
+				"actions" => ""
+			];
+		} else {
 			foreach ($files as $file) {
-				if (strpos($file, '.') !== 0) {
-					
-					$fileParts = $this->parseFilename(($file));
-					$issue = $fileParts['id'];
-					$source = $fileParts['source'];
-					$date = $fileParts['timestamp'];
-
-					$year = (int)substr($date, 0, 4);
-					$month = (int)substr($date, 4, 2);
-					$day = (int)substr($date, 6, 2);
-					$hour = (int)substr($date, 8, 2);
-					$minute = (int)substr($date, 10, 2);
-					$second = (int)substr($date, 12, 2);
-
-					$timestamp = mktime($hour, $minute, $second, $month, $day, $year);
-					$formattedDate = strftime("%A %d %B %Y, %H:%M", $timestamp);
-
-					$size = filesize($this->issueDir . DIRECTORY_SEPARATOR . $file);
-					$hrSize = $this->humanReadableFileSize($size);
-
-					$data[] = [
-						"filename" => $file,
-						"sortfield" => $year.$month.$day.$hour.$minute.$second,
-						"date" => $formattedDate,
-						"issue" => $issue,
-						"source" => $source,
-						"size" => $hrSize,
-						"actions" => ""					
-					];
+				if (strpos($file, '.') === 0) {
+					continue;
 				}
+				$fileParts = $this->parseFilename(($file));
+				if ($fileParts === null) {
+					continue;
+				}
+				$source = $fileParts['source'];
+				$problemType = $filearts['type'];
+				$GitHubID = $fileParts['id'];
+				$date = $fileParts['timestamp'];
+				$year = (int)substr($date, 0, 4);
+				$month = (int)substr($date, 4, 2);
+				$day = (int)substr($date, 6, 2);
+				$hour = (int)substr($date, 8, 2);
+				$minute = (int)substr($date, 10, 2);
+				$second = (int)substr($date, 12, 2);
+				$timestamp = mktime($hour, $minute, $second, $month, $day, $year);
+				$formattedDate = strftime("%A %d %B %Y, %H:%M", $timestamp);
+				$size = filesize($this->issueDir . DIRECTORY_SEPARATOR . $file);
+				$hrSize = $this->humanReadableFileSize($size);
+
+				$data[] = [
+					"filename" => $file,
+					"source" => $source,
+				   	"type" => $problemType,
+				   	"ID" => $GitHubID,
+					"sortfield" => $year.$month.$day.$hour.$minute.$second,
+					"date" => $formattedDate,
+				   	"size" => $hrSize,
+				   	"actions" => ""
+				];
 			}
 		}
 		$this->sendResponse(json_encode($data));
 	}
 
-	public function getGenerateLog() 
+	public function getGenerateLog()
 	{
 		$command = 'export ALLSKY_HOME=' . ALLSKY_HOME . '; export SUDO_OK="true"; ';
-		$command .= ALLSKY_HOME . '/support.sh --auto';
+		$command .= ALLSKY_HOME . '/support.sh --auto 2>&1';
 		exec($command, $output, $exitCode);
-
-		if ($exitCode == 2) {
-			$this->send500();
-		} else {
+		if ($exitCode === 0) {
 			$this->sendResponse(json_encode("ok"));
+		} else {
+			$this->send500("[$cmd] failed: " . implode(" ", $output));
 		}
 	}
 

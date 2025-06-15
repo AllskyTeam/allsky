@@ -241,6 +241,7 @@ $newType = "D"; // For now assume Discussion.
 				if ($fileParts === null) {
 					continue;
 				}
+
 				$source = $fileParts['source'];
 				$problemType = $fileParts['type'];
 				$GitHubID = $fileParts['id'];
@@ -259,12 +260,12 @@ $newType = "D"; // For now assume Discussion.
 				$data[] = [
 					"filename" => $file,
 					"source" => $source,
-				   	"type" => $problemType,
-				   	"ID" => $GitHubID,
+				  "type" => $problemType,
+				  "ID" => $GitHubID,
 					"sortfield" => $year.$month.$day.$hour.$minute.$second,
 					"date" => $formattedDate,
-				   	"size" => $hrSize,
-				   	"actions" => ""
+				  "size" => $hrSize,
+				  "actions" => ""
 				];
 			}
 		}

@@ -146,7 +146,6 @@ class ALLSKYSUPPORT {
 
 		$(document).on('click', '#as-support-generate', (event) => {
 			var logTable = this.#supportFilesTable
-
 let message="This script will collect data from your Raspberry Pi to assist in reporting a problem.<br>\
 <strong>No personal information is collected</strong>.\
 The following data is collected:<br><br>\

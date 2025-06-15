@@ -1,5 +1,6 @@
 <?php
-$DiscussionURL = "https://github.com/AllskyTeam/allsky/discussions";
+$Github_root = "https://github.com/AllskyTeam";
+$DiscussionURL = "$Github_root/allsky/discussions";
 $V = ALLSKY_VERSION;
 
 if (! is_dir(ALLSKY_SUPPORT_DIR)) {
@@ -77,14 +78,14 @@ if (! is_dir(ALLSKY_SUPPORT_DIR)) {
     <div class="modal-content">
       
       <div class="modal-header">
-        <h4 class="modal-title">Link Github discussion</h4>
+        <h4 class="modal-title">Link Github Discussion or Issue</h4>
         <button type="button" class="close" data-dismiss="modal">&times;</button>
       </div>
 
       <div class="modal-body">
         <form id="githubIdModalForm">
           <div class="form-group">
-            <label>Select the repository your discussion is looged in:</label><br>
+            <label>Select the repository your Discussion or Issue is in:</label><br>
             <label class="radio-inline">
               <input type="radio" name="choice" value="AS" checked> Allsky
             </label>
@@ -94,10 +95,12 @@ if (! is_dir(ALLSKY_SUPPORT_DIR)) {
           </div>
           
           <div class="form-group">
-            <label for="numberInput">Discussion id:</label>
+            <label for="numberInput">Github ID:</label>
             <input type="number" class="form-control" id="githubIdModalId" name="githubIdModalId" required>
           </div>
-		  <div class="alert alert-info" role="alert">This can be found in the url of the Github discussion. If the url is 'https://github.com/AllskyTeam/allsky/discussions/123' then then id is 123</div>
+		  <div class="alert alert-info" role="alert">This can be found at the end of the GitHub url.
+		  	If the url is '<?php echo $DiscussionURL ?>/123' then the ID is 123.
+		  </div>
         </form>
       </div>
 

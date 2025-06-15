@@ -230,7 +230,6 @@ Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
 									problemType = "Issue";
 								}
 								DIR = problemType.toLowerCase() + 's';
-								ID = ID.substring(1);
 							} else {
 								DIR = "discussions";
 								problemType = "#";
@@ -246,7 +245,7 @@ Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
 							}
 							URL += '/' + DIR + '/' + ID;
 							let label = text + ' ' + problemType + ' ' + ID + ' <i class="fa-solid fa-arrow-up-right-from-square"></i>';
-							result = '<a external="true" href="' + URL + '>' + label + '</a>';
+							result = '<a external="true" href="' + URL + '">' + label + '</a>';
 						} else {
 							result = 'No Linked GitHub Item';
 						}

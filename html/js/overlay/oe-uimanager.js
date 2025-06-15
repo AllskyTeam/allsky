@@ -932,6 +932,7 @@ class OEUIMANAGER {
     }
 
     setupFontEvents() {
+        $(document).off('click', '#oe-font-dialog-add-font');
         $(document).on('click', '#oe-font-dialog-add-font', (event) => {
             if (this.#fieldManager.dirty) {
                 if (window.confirm('This current configuration has been modified. If you continue any chnages will be lost. Would you like to continue?')) {
@@ -940,9 +941,9 @@ class OEUIMANAGER {
             } else {
                 this.installFont();
             }
-
         });
 
+        $(document).off('click', '#oe-font-dialog-upload-font');
         $(document).on('click', '#oe-font-dialog-upload-font', (event) => {
             if (this.#fieldManager.dirty) {
                 if (window.confirm('This current configuration has been modified. If you continue any chnages will be lost. Would you like to continue?')) {
@@ -951,11 +952,11 @@ class OEUIMANAGER {
             } else {
                 this.uploadFont();
             }
-
         });
 
+
+        $(document).off('click', '#oe-upload-font');
         $(document).on('click', '#oe-upload-font', (event) => {
-          
             $('#fontlisttable').DataTable().destroy();
             $('#fontlisttable').DataTable({
                 ajax: function(data, callback, settings) {
@@ -1041,6 +1042,7 @@ class OEUIMANAGER {
             })
         });
 
+        $('#fontlisttable').off('click', '.oe-list-font-use');
         $('#fontlisttable').on('click', '.oe-list-font-use', function(e) {
             let fontName = $(e.currentTarget).data('fontname');
             let fontPath = $(e.currentTarget).data('path');
@@ -1056,6 +1058,7 @@ class OEUIMANAGER {
             }.bind(this));
         }.bind(this));
 
+        $('#fontlisttable').off('click', '.oe-list-font-remove');
         $('#fontlisttable').on('click', '.oe-list-font-remove', function(e) {
             let fontName = $(e.currentTarget).data('fontname');
             let fontToDelete = null;
@@ -1078,6 +1081,7 @@ class OEUIMANAGER {
             this.updateToolbar();            
         }.bind(this));
 
+        $(document).off('click', '.oe-list-font-delete');
         $(document).on('click', '.oe-list-font-delete', (event) => {
             event.stopPropagation();
             if (window.confirm('Are you sure you wish to delete this font? If the font is in use then all fields will be set to the default font.')) {
@@ -2156,8 +2160,9 @@ class OEUIMANAGER {
 
     deleteFont(fontName) {
         let fontToDelete = null;
+        const fontBaseName = fontName.split('/').pop().replace(/\.[^/.]+$/, '');
         for (let fontFace of document.fonts.values()) {
-            if (fontFace.family == fontName) {
+            if (fontFace.family == fontBaseName) {
                 fontToDelete = fontFace;
                 break;
             }
@@ -2168,32 +2173,14 @@ class OEUIMANAGER {
             let result = document.fonts.delete(fontToDelete);
             if (result) {
                 $.ajax({
-                    type: 'POST',
-                    url: 'includes/overlayutil.php?request=Config',
-                    data: { config: JSON.stringify(this.#configManager.config) },
-                    cache: false
+                    url: 'includes/overlayutil.php?request=font&fontName=' + fontName,
+                    type: 'DELETE',
+                    context: this
                 }).done((result) => {
-                    $.ajax({
-                        url: 'includes/overlayutil.php?request=font&fontName=' + fontName,
-                        type: 'DELETE',
-                        context: this
-                    }).done((result) => {
-                        this.#fieldManager.switchFontUsed(fontName);
-                        //this.#fieldManager.buildJSON();
-                        this.#configManager.deleteValue('fonts.' + fontName);
-                        $.ajax({
-                            type: 'POST',
-                            url: 'includes/overlayutil.php?request=Config',
-                            data: { config: JSON.stringify(this.#configManager.config) },
-                            cache: false
-                        }).done((result) => {
-                            $('#fontlisttable').DataTable().ajax.reload();
-                            $.LoadingOverlay('hide');
-                        });
-                    }).fail((jqXHR, textStatus, errorThrown) => {
-                        $.LoadingOverlay('hide');
-                    });
+                    this.#fieldManager.switchFontUsed(fontName);
+                     $('#fontlisttable').DataTable().ajax.reload();
                 }).fail((jqXHR, textStatus, errorThrown) => {
+                }).always(() => {
                     $.LoadingOverlay('hide');
                 });
             } else {

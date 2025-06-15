@@ -104,6 +104,45 @@ class OECONFIG {
 
     }
 
+    loadFonts() {
+        try {
+            let result = $.ajax({
+                type: "GET",
+                url: "includes/overlayutil.php?request=FontNames",
+                data: "",
+                dataType: 'json',
+                cache: false,
+                async: false,
+                context: this,
+                success: function (fontData) {
+                    let fontList = Array.from(document.fonts);
+                    for (let i in fontList) {
+                        document.fonts.delete(fontList[i]);
+                    }
+
+                    const promises = [];
+                    fontData.data.forEach(font => {
+                        let fontFace = new FontFace(font.name, 'url(' + window.oedi.get('BASEDIR') + font.path + ')');
+                        promises.push(
+                            fontFace.load()
+                        );
+                    });
+
+                    Promise.all(promises).then(function(loadedFonts) {
+                        for (let font in loadedFonts) {
+                            document.fonts.add(loadedFonts[font]);
+                        }
+                        window.oedi.get('uimanager').buildUI();
+                    });
+
+                }                
+            });
+        } catch (error) {
+            confirm('A fatal error has occureed loading the fonts.')
+            return false;
+        }
+    }
+
     loadOverlay(overlay, type) {
         this.#selectedOverlay.type = type;
         this.#selectedOverlay.name = overlay;
@@ -118,32 +157,10 @@ class OECONFIG {
                 context: this,
                 success: function (result) {    
                     this.#config = result;
-  
-                    let fontList = Array.from(document.fonts);
-                    for (let i in fontList) {
-                        document.fonts.delete(fontList[i]);
-                    }
-
-                    const promises = [];
-                    let fonts = this.getValue('fonts', {});
-                    for (let font in fonts) {
-                        let fontData = this.getValue('fonts.' + font, {});
-                        let fontFace = new FontFace(font, 'url(' + window.oedi.get('BASEDIR') + fontData.fontPath + ')');
-                        promises.push(
-                            fontFace.load()
-                        );
-                    }
-
-                    Promise.all(promises).then(function(loadedFonts) {
-                        for (let font in loadedFonts) {
-                            document.fonts.add(loadedFonts[font]);
-                        }
-                        window.oedi.get('uimanager').buildUI();
-                    });
-
                     $(document).trigger('oe-overlay-loaded', {
                         overlay: this.#selectedOverlay
                     });
+                    window.oedi.get('uimanager').buildUI();
                     this.dirty = false;                
                 },
                 error: function(xHR, Status, error) {

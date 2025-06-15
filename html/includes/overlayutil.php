@@ -445,9 +445,56 @@ class OVERLAYUTIL
         return $parsed;      
     }
 
+    public function getFontNames() 
+    {
+        $count = 1;
+        $systemFontBase = '/system_fonts/';
+        $usableFonts = array(
+            'Arial' => array('fontpath' => $systemFontBase . 'Arial.ttf'),
+            'Arial Black' => array('fontpath' => $systemFontBase . 'Arial_Black.ttf'),
+            'Times New Roman' => array('fontpath' => $systemFontBase . 'Times_New_Roman.ttf'),
+            'Courier New' => array('fontpath' => $systemFontBase . 'cour.ttf'),
+            'Verdana' => array('fontpath' => $systemFontBase . 'Verdana.ttf'),
+            'Trebuchet MS' => array('fontpath' => $systemFontBase . 'trebuc.ttf'),
+            'Impact' => array('fontpath' => $systemFontBase . 'Impact.ttf'),
+            'Georgia' => array('fontpath' => $systemFontBase . 'Georgia.ttf'),
+            'Comic Sans MS' => array('fontpath' => $systemFontBase . 'comic.ttf'),
+        );
+
+        foreach ($usableFonts as $fontName => $fontData) {
+            $obj = (object) [
+                'id' => $count,
+                'name' => $fontName,
+                'path' => $fontData['fontpath']
+            ];
+            $fields[] = $obj;
+            $count++;
+        }
+
+        $fontDir = $this->overlayPath . '/fonts/';
+        $fontList = scandir($fontDir);
+        foreach ($fontList as $font) {
+            if ($font !== '.' && $font !== '..') {
+                $obj = (object) [
+                    'id' => $count,
+                    'name' => pathinfo($font, PATHINFO_FILENAME),
+                    'path' => '/fonts/' . $font
+                ];
+            }
+            $fields[] = $obj;
+            $count++;
+        }
+
+        $data = array(
+            'data' => $fields,
+        );
+
+        $data = json_encode($data, JSON_PRETTY_PRINT);
+        $this->sendResponse($data);  
+    }
+
     public function getFonts()  
     {
-
         $count = 1;
         $systemFontBase = $this->overlayPath . '/system_fonts/';
         $usableFonts = array(
@@ -594,20 +641,15 @@ class OVERLAYUTIL
 
     public function deleteFont() 
     {
-        $fontName = strtolower($_GET['fontName']);
-        $fileName = $this->overlayPath . '/overlay.json';
-        $config = json_decode(file_get_contents($fileName));
+        $fontName = $_GET['fontName'];
+        $fontName = basename($fontName);
 
-        $fontPath = $this->overlayPath . "/" . $config->fonts->{$fontName}->fontPath;
-        unlink($fontPath);
-        unset($config->fonts->{$fontName});
-
-        $formattedJSON = json_encode($config, JSON_PRETTY_PRINT);
-
-        if (file_put_contents($fileName, $formattedJSON) !== false) {
+        $fontPath = $this->overlayPath . '/fonts/' . $fontName;
+        if (file_exists($fontPath) && is_readable($fontPath)) {        
+            unlink($fontPath);
             $this->sendResponse();
         } else {
-            $this->sendHTTPResponse(500);
+            $this->sendResponse('', 500);
         }
     }
 

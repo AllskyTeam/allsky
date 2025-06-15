@@ -100,7 +100,12 @@ class SUPPORTUTIL
 	{
 		$sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
 		$factor = floor((strlen($bytes) - 1) / 3);
-		return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . ' ' . $sizes[$factor];
+		if ($factor == 0) {
+			$s = "%d";		// Bytes need no decimal
+		} else {
+			$s = "%.{$decimals}f";
+		}
+		return sprintf($s, $bytes / pow(1024, $factor)) . ' ' . $sizes[$factor];
 	}
 
 	public function postDownloadLog()
@@ -133,7 +138,7 @@ class SUPPORTUTIL
 		// Where SOURCE is "AS" or "ASM" and PROBLEM_ID is "none" or [DI]ID
 		// "D" is for Discussion and "I" is for Issue and is needed to
 		// create the GitHub URL.
-		$pattern = '/^support(?:-([a-zA-Z0-9]+))?(?:-(\d+))?-(\d{14})\.zip$/';
+		$pattern = '/^support(?:-([a-zA-Z0-9]+))?(?:-([DI]?\d+))?-(\d{14})\.zip$/';
 		if (preg_match($pattern, $filename, $matches)) {
 			$source = isset($matches[1]) ? $matches[1] : 'AS';
 			$id = isset($matches[2]) ? $matches[2] : "none";
@@ -148,8 +153,8 @@ class SUPPORTUTIL
 				}
 			}
 			return [
-				'source'	=> isset($matches[1]) ? $matches[1] : 'AS';
-				'type'		=> $type;
+				'source'	=> isset($matches[1]) ? $matches[1] : 'AS',
+				'type'		=> $type,
 				'id'		=> $id,
 				'timestamp' => $matches[3],
 				'ext'	   => 'zip'
@@ -237,15 +242,15 @@ $newType = "D"; // For now assume Discussion.
 					continue;
 				}
 				$source = $fileParts['source'];
-				$problemType = $filearts['type'];
+				$problemType = $fileParts['type'];
 				$GitHubID = $fileParts['id'];
 				$date = $fileParts['timestamp'];
-				$year = (int)substr($date, 0, 4);
-				$month = (int)substr($date, 4, 2);
-				$day = (int)substr($date, 6, 2);
-				$hour = (int)substr($date, 8, 2);
-				$minute = (int)substr($date, 10, 2);
-				$second = (int)substr($date, 12, 2);
+				$year = substr($date, 0, 4);
+				$month = substr($date, 4, 2);
+				$day = substr($date, 6, 2);
+				$hour = substr($date, 8, 2);
+				$minute = substr($date, 10, 2);
+				$second = substr($date, 12, 2);
 				$timestamp = mktime($hour, $minute, $second, $month, $day, $year);
 				$formattedDate = strftime("%A %d %B %Y, %H:%M", $timestamp);
 				$size = filesize($this->issueDir . DIRECTORY_SEPARATOR . $file);

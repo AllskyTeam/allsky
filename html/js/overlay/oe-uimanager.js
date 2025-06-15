@@ -289,7 +289,7 @@ class OEUIMANAGER {
         $(document).on('click', '#oe-show-image-manager', (event) => {
 
             let usedImages = [];
-            fields = this.#configManager.getValue('images', {});
+            let fields = this.#configManager.getValue('images', {});
             for (let index in fields) {
                 let field = fields[index];
                 let fileName = field.image;
@@ -955,9 +955,26 @@ class OEUIMANAGER {
         });
 
         $(document).on('click', '#oe-upload-font', (event) => {
+          
             $('#fontlisttable').DataTable().destroy();
             $('#fontlisttable').DataTable({
-                ajax: 'includes/overlayutil.php?request=Fonts',
+                ajax: function(data, callback, settings) {
+                    $.ajax({
+                        url: 'includes/overlayutil.php?request=Fonts',
+                        type: 'GET',
+                        dataType: 'json',
+                        beforeSend: function(xhr) {
+                            $.LoadingOverlay('show', {
+                                text : 'Loading fonts'
+                            });  
+                        },
+                        success: function(response) {
+                            $.LoadingOverlay('hide');
+                            callback(response);
+                        }
+                    });
+                },
+
                 dom: '<"toolbar">frtip',
                 autoWidth: false,
                 pagingType: 'simple_numbers',
@@ -971,16 +988,12 @@ class OEUIMANAGER {
                         data: 'name',
                         width: '250px'
                     }, {
-                        data: 'path',
-                        width: '250px',
-                        render: function (item, type, row, meta) {
-                            if (item.includes('msttcorefonts')) {
-                                return 'System Font';
-                            } else {
-                                return item;
-                            }
-                        }
+                        data: 'family',
+                        width: '150px',
                     }, {
+                        data: 'style',
+                        width: '150px',
+                    },{
                         data: null,
                         width: '100px',
                         render: function (item, type, row, meta) {
@@ -989,7 +1002,7 @@ class OEUIMANAGER {
                             let defaultFont = config.getValue('settings.defaultfont');
 
                             let buttons = '';
-                            if (item.name !== 'moon_phases' && item.name !== defaultFont && !item.path.includes('msttcorefonts')) {
+                            if (item.type == 'user' && item.name !== defaultFont) {
 
 
                                 let fonts = config.getValue('fonts');
@@ -1688,32 +1701,44 @@ class OEUIMANAGER {
     }
 
     uploadFont() {
-        $('#fontuploadfile').val('');
-        $('#fontuploadsubmit').addClass('disabled');
-        $('#fontuploadalert').addClass('hidden');
 
-        $('#fontuploaddialog').modal({
+
+        $('#fontuploadfile').val('');
+        $('#oe-fontupload-submit').addClass('disabled');
+        $('.oe-fontuploaddialog-error').addClass('hidden');
+        $('#oe-fontuploaddialog-info').removeClass('hidden');
+
+        $('#oe-fontuploaddialog').modal({
             keyboard: false,
             width: 600
         });
 
-        $('#fontuploadfile').change(function() {
-            $('#fontuploadalert').addClass('hidden');
+        $('#oe-fontupload-file').off('change');
+        $('#oe-fontupload-file').on('change',function() {
+            $('.oe-fontuploaddialog-error').addClass('hidden');
+            $('#oe-fontuploaddialog-info').removeClass('hidden');
 
             var file = this.files[0];
             var fileType = file.type;
             var match = ['application/zip', 'application/zip-compressed', 'application/x-zip-compressed', 'application/x-zip'];
             if(!((fileType == match[0]) || (fileType == match[1]) || (fileType == match[2]) || (fileType == match[3]) )){
-                alert('Sorry, only zip files are allowed.');
-                $('#fontuploadfile').val('');
-                $('#fontuploadsubmit').addClass('disabled');
+                $('#oe-fontupload-file').val('');
+                $('#oe-fontupload-submit').addClass('disabled');
+                $('#oe-fontuploaddialog-info').addClass('hidden');
+                $('#oe-fontuploaddialog-zip-only').removeClass('hidden');
+
                 return false;
             }
-            $('#fontuploadsubmit').removeClass('disabled');
+            $('#oe-fontupload-submit').removeClass('disabled');
         });
-        
-        $('#fontuploadsubmit').off('click');
-        $('#fontuploadsubmit').on('click', (e) => {
+
+        $('#oe-fontupload-submit').off('click');
+        $('#oe-fontupload-submit').on('click', (e) => {
+
+            $.LoadingOverlay('show', {
+                text : 'Installing font'
+            });
+
             e.preventDefault();
             $.ajax({
                 type: 'POST',
@@ -1725,12 +1750,10 @@ class OEUIMANAGER {
                 processData:false,
                 context: this,
                 beforeSend: function( xhr ) {
-                    $('.fontuploadsubmit').attr('disabled','disabled');
-                    $('#fontuploadform').css('opacity','.5');
+                    $('#oe-fontupload-submit').addClass('disabled');
                 }                
             }).done( (fontData) => {
-                $('#fontuploadform').css('opacity','');
-                $('.fontuploadsubmit').removeAttr('disabled');
+                $('#oe-fontupload-submit').removeClass('disabled');
                 for (let i = 0; i < fontData.length; i++) {
                     let fontFace = new FontFace(fontData[i].key, 'url(' + window.oedi.get('BASEDIR') + fontData[i].path + ')');
                     fontFace.load();
@@ -1752,19 +1775,55 @@ class OEUIMANAGER {
                     });
                 });                
 
-                $('#fontuploaddialog').modal('hide');                
+                $('#oe-fontuploaddialog').modal('hide');                
             }).fail( (jqXHR, error, errorThrown) => {
-                $('#fontuploadform').css('opacity','');
-                $('#fontuploadalert').removeClass('hidden');
-                $('#fontuploadsubmit').addClass('disabled');                
+                if (jqXHR.status === 413) {
+                    $('#oe-fontuploaddialog-info').addClass('hidden');
+                    $('#oe-fontuploaddialog-size').removeClass('hidden');
+                } else if (jqXHR.status === 415) {
+                    $('#oe-fontuploaddialog-info').addClass('hidden');
+                    $('#oe-fontuploaddialog-header').removeClass('hidden');
+                } else if (jqXHR.status === 507) {
+                    $('#oe-fontuploaddialog-info').addClass('hidden');
+                    $('#oe-fontuploaddialog-file-failed').removeClass('hidden');
+                } else if (jqXHR.status === 417) {
+                    $('#oe-fontuploaddialog-info').addClass('hidden');
+                    $('#oe-fontuploaddialog-no-fonts').removeClass('hidden');
+                }
+            }).always(() => {
+                $.LoadingOverlay('hide');
             });
         });
 
     }
 
     installFont() {
-        bootbox.prompt('Enter the URL of the font from daFont.com', (fontURL) => {
-            if (fontURL !== '') {
+
+        $('#fontinstalldialog').modal({
+            keyboard: false,
+            width: 600
+        });
+
+        $('#oe-fontinstalldialog-url').off('input');
+        $('#oe-fontinstalldialog-url').on('input', (e) => {
+            const fontURL = $.trim($('#oe-fontinstalldialog-url').val());
+            if (fontURL.startsWith("https://www.dafont.com/")) {
+                $('#oe-fontinstalldialog-install').prop('disabled', false);
+            } else {
+                $('#oe-fontinstalldialog-install').prop('disabled', true);
+            }
+            $('#oe-fontinstalldialog-info').removeClass('hidden');
+            $('#oe-fontinstalldialog-dl-error').addClass('hidden');
+            $('#oe-fontinstalldialog-missing').addClass('hidden');
+        });
+
+        $('#oe-fontinstalldialog-install').off('click');
+        $('#oe-fontinstalldialog-install').on('click', (e) => {
+            const fontURL = $.trim($('#oe-fontinstalldialog-url').val());
+            if (fontURL.startsWith("https://www.dafont.com/")) {
+                $.LoadingOverlay('show', {
+                    text : 'Installing font'
+                });
                 $.ajax({
                     url: 'includes/overlayutil.php?request=fonts',
                     type: 'POST',
@@ -1792,10 +1851,21 @@ class OEUIMANAGER {
                         }).done((data) => {
                             this.#configManager.config = data;
                         });
+
+                        $('#fontinstalldialog').modal('hide');
                     });
                 }).fail(function (jqXHR, textStatus, errorThrown) {
-                    bootbox.alert('Please enter a valid url from daFont.com ' + errorThrown);
-                }).fail((jqXHR, textStatus, errorThrown) => {
+                    if (jqXHR.status === 404) {
+                        $('#oe-fontinstalldialog-info').addClass('hidden');
+                        $('#oe-fontinstalldialog-dl-error').addClass('hidden');
+                        $('#oe-fontinstalldialog-missing').removeClass('hidden');
+                    } else if (jqXHR.status === 422) {
+                        $('#oe-fontinstalldialog-info').addClass('hidden');
+                        $('#oe-fontinstalldialog-dl-error').removeClass('hidden');
+                        $('#oe-fontinstalldialog-missing').addClass('hidden');
+                    }
+                }).always(() => {
+                    $.LoadingOverlay('hide');
                 });
             }
         });

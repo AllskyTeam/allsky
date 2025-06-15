@@ -397,3 +397,7 @@ div.dtsp-searchPane div.dtsp-topRow {
     border: dotted 1px #444;
     padding: 5px;
 }
+
+.dt-paging {
+    margin-top: 5px !important;
+}

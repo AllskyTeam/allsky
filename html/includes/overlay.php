@@ -166,7 +166,7 @@ function DisplayOverlay($image_name)
                                     </li>
                                     <li>
                                         <div id="oe-upload-font" class="btn btn-lg navbar-btn oe-button" data-toggle="tooltip" data-container="body" data-placement="top" title="Font Manager">
-                                            <i class="fa-solid fa-download"></i>
+                                            <i class="fa-solid fa-font"></i>
                                         </div>
                                     </li>
                                     <li>
@@ -282,18 +282,22 @@ function DisplayOverlay($image_name)
                     <h4 class="modal-title">Font Manager</h4>
                 </div>
                 <div class="modal-body">
-                    <table id="fontlisttable" class="display compact" style="width:98%">
+                    <div class="alert alert-success mt-3" role="alert" id="oe-fontinstalldialog-info">
+                        <strong>Note:</strong> After installing a font please add the fonts to the overlay using the 'use' button. Please refer to the overlay documentation for more information
+                    </div>                    
+                    <table id="fontlisttable" class="display compact mt-5" style="width:98%">
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Path</th>
+                                <th>Family</th>
+                                <th>Style</th>
                                 <th>&nbsp;</th>
                             </tr>
                         </thead>
                     </table>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary pull-left" id="oe-font-dialog-add-font">Add Font</button>
+                    <button type="button" class="btn btn-primary pull-left" id="oe-font-dialog-add-font">Install font from dafont.com</button>
                     <button type="button" class="btn btn-primary pull-left" id="oe-font-dialog-upload-font">Upload Font</button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 </div>
@@ -623,7 +627,7 @@ function DisplayOverlay($image_name)
         </div><!-- /.modal-dialog -->
     </div>
 
-    <div class="modal" role="dialog" id="fontuploaddialog">
+    <div class="modal" role="dialog" id="oe-fontuploaddialog">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -632,24 +636,79 @@ function DisplayOverlay($image_name)
                 </div>
                 <div class="modal-body">
                     <div>
-                        <div style="margin: 10px;">
-                            <h4>Please refer to the <a href="/documentation/overlays/overlays.html" target="_blank">documentation</a> before uploading zip files. Please ensure the zip file only contains fonts</h4>
+
+                        <div class="alert alert-success mt-3" role="alert" id="oe-fontuploaddialog-info">
+                            Please refer to the <a href="/documentation/overlays/overlays.html" target="_blank">documentation</a> before uploading zip files. Please ensure the zip file only contains fonts
                         </div>
-                        <div class="alert alert-danger hidden" id="fontuploadalert">
+
+                        <div class="alert alert-danger hidden oe-fontuploaddialog-error" id="oe-fontuploaddialog-invalid">
                             <strong>Error!</strong> Unable to upload the zip file. Invalid Signature for font file
                         </div>
+
+                        <div class="alert alert-danger hidden oe-fontuploaddialog-error" id="oe-fontuploaddialog-zip-only">
+                            <strong>Error!</strong> You can only upload zip files, please refer to the Overlay documentation for more information
+                        </div>
+
+                        <div class="alert alert-danger hidden oe-fontuploaddialog-error" id="oe-fontuploaddialog-size">
+                            <strong>Error!</strong> The file you are attempting to upload is to large for the current php configuration. Please refer to the Overlay documentation for help on fixing this error
+                        </div>
+
+                        <div class="alert alert-danger hidden oe-fontuploaddialog-error" id="oe-fontuploaddialog-header">
+                            <strong>Error!</strong> The file you are attempting to upload contains invalid ttf or otf files. Please refer to the Overlay documentation for help on fixing this error
+                        </div>
+
+                        <div class="alert alert-danger hidden oe-fontuploaddialog-error" id="oe-fontuploaddialog-file-failed">
+                            <strong>Error!</strong> Unable to save the font on the pi. Please refer to the Overlay documentation for help on fixing this error
+                        </div>
+
+                        <div class="alert alert-danger hidden oe-fontuploaddialog-error" id="oe-fontuploaddialog-no-fonts">
+                            <strong>Error!</strong> The zip file did not contain any valid fonts. Please refer to the Overlay documentation for help on fixing this error
+                        </div>
+
                         <form enctype="multipart/form-data" id="fontuploadform" >
-                            <div class="form-group">
-                                <label for="fontuploadfile" class="control-label col-xs-2">File</label>
+                            <div class="form-group mt-5">
                                 <div class="input-group">
-                                    <input type="file" class="form-control" id="fontuploadfile" name="fontuploadfile" required />
+                                    <input type="file" class="form-control" id="oe-fontupload-file" name="oe-fontupload-file" required />
                                 </div>
                             </div>
                         </form>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary disabled" name="fontuploadsubmit" id="fontuploadsubmit">Upload</button>
+                    <button type="button" class="btn btn-primary disabled" name="oe-fontupload-submit" id="oe-fontupload-submit">Upload</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal" role="dialog" id="fontinstalldialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Install Font from dafont.com</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-success mt-1" role="alert" id="oe-fontinstalldialog-info">
+                        <strong>Note:</strong> Browse to the font page on dafont.com then copy and paste the url into the input field below.
+                    </div>
+                    <div class="alert alert-danger hidden mt-1" role="alert" id="oe-fontinstalldialog-missing">
+                        <strong>ERROR:</strong> Unable to install the requested font. Please check the URL.
+                    </div>
+                    <div class="alert alert-danger hidden mt-1" role="alert" id="oe-fontinstalldialog-dl-error">
+                        <strong>ERROR:</strong> The URL is valid but unable to download the font. Please refer to the Allsky documentation.
+                    </div>                       
+                    <form role="form">
+                        <div class="form-group">
+                            <input type="url" class="form-control mt-3" id="oe-fontinstalldialog-url" placeholder="https://www.dafont.com/led-sled.font">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <a class="btn btn-primary pull-left" href="https://dafont.com" target="_blank">dafont.com <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                    <button type="button" class="btn btn-success" name="oe-fontinstalldialog-install" id="oe-fontinstalldialog-install" disabled>Install</button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 </div>
             </div>

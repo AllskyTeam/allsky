@@ -508,7 +508,7 @@ function usage_and_exit()
 {
 	local RET=${1}
 	exec 2>&1
-	local USAGE="\nUsage: ${ME} [--help] [--tree] [--number n] [--repo r] [--fullusb] "
+	local USAGE="\nUsage: ${ME} [--help] [--tree] [--type t] [--repo r] [--number n] [--fullusb] "
 	if [[ ${RET} -ne 0 ]]; then
 		E_ "${USAGE}"
 	else
@@ -518,8 +518,8 @@ function usage_and_exit()
 	echo "Where:"
 	echo "	--help        Displays this message and exits."
 	echo "	--text        Use text mode. Options must be specified on the command line."
-	echo "	--auto        Auto accept any prompts and no output."
-	echo "	--type  t     'D' for Github Discussion, 'I' for Issue."
+	echo "	--auto        Auto accept any prompts and produce no output except for errors."
+	echo "	--type t      'D' for Github Discussion, 'I' for Issue."
 	echo "	--repo r      Use the specified Github repository, either 'AS' for Allsky or 'ASM' for Allsky Modules."
 	echo "	--number n    The Github Issue or Discussion number."
 	echo "	--loglines n  Number of lines to include from log files, defaults to 'all' for entire file."

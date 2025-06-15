@@ -1,6 +1,8 @@
 <?php
-$DiscussionURL = "https://github.com/AllskyTeam/allsky/discussions";
+$Github_root = "https://github.com/AllskyTeam";
+$DiscussionURL = "$Github_root/allsky/discussions";
 $V = ALLSKY_VERSION;
+
 if (! is_dir(ALLSKY_SUPPORT_DIR)) {
 	$cmd = "{ sudo mkdir " .  ALLSKY_SUPPORT_DIR . " &&";
 	$cmd .= " sudo chown " . ALLSKY_OWNER . ":" . WEBSERVER_GROUP . " " . ALLSKY_SUPPORT_DIR . " &&";
@@ -70,6 +72,47 @@ if (! is_dir(ALLSKY_SUPPORT_DIR)) {
 		border: 1px solid rgba(187,128,9,0.4) !important;
 	}	
 </style>
+
+<div id="githubIdModal" class="modal fade" tabindex="-1" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      
+      <div class="modal-header">
+        <h4 class="modal-title">Link Github Discussion or Issue</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <form id="githubIdModalForm">
+          <div class="form-group">
+            <label>Select the repository your Discussion or Issue is in:</label><br>
+            <label class="radio-inline">
+              <input type="radio" name="choice" value="AS" checked> Allsky
+            </label>
+            <label class="radio-inline">
+              <input type="radio" name="choice" value="ASM"> Allsky Modules
+            </label>
+          </div>
+          
+          <div class="form-group">
+            <label for="numberInput">Github ID:</label>
+            <input type="number" class="form-control" id="githubIdModalId" name="githubIdModalId" required>
+          </div>
+		  <div class="alert alert-info" role="alert">This can be found at the end of the GitHub url.
+		  	If the url is '<?php echo $DiscussionURL ?>/123' then the ID is 123.
+		  </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button id="githubIdModalOK" class="btn btn-primary">OK</button>
+        <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 
 <div class="row">
 	<div class="panel panel-primary">
@@ -161,7 +204,7 @@ if (! is_dir(ALLSKY_SUPPORT_DIR)) {
 							<tr>
 								<th>Filename</th>
 								<th>Sort</th>
-								<th>Date/Time Create</th>
+								<th>Date/Time Created</th>
 								<th>Problem</th>
 								<th>Size</th>
 								<th>Actions</th>

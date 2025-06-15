@@ -15,8 +15,7 @@ class SUPPORTUTIL
 	function __construct() {
 		$this->issueDir = ALLSKY_SUPPORT_DIR;
 		if (! is_dir($this->issueDir)) {
-			$msg = "Directory '" . $this->issueDir . "' not found!";
-			$this->send404($msg);
+			$this->send404("Directory '" . $this->issueDir . "' not found!");
 		}
 	}
 
@@ -55,13 +54,13 @@ class SUPPORTUTIL
 
 	private function send404($msg = null)
 	{
+		header('HTTP/1.0 404');
 		if ($msg !== null) {
-			$this->sendResponse(json_encode(array("status"=>"ERROR", "message"=>"$msg")));
-			die();
-		}
-		header('HTTP/1.0 404 Not Found');
-		if ($msg !== null) {
-			header("Content-Description: $msg");
+			header('Content-Type: application/json');
+			echo json_encode([
+				'error' => $msg,
+				'code' => 404
+			]);
 		}
 		die();
 	}
@@ -70,13 +69,19 @@ class SUPPORTUTIL
 	{
 		header('HTTP/1.0 500 Internal Server Error');
 		if ($msg !== null) {
-			header("Content-Description: $msg");
+			header('Content-Type: application/json');
+			echo json_encode([
+				'error' => $msg,
+				'code' => 500
+			]);
 		}
 		die();
 	}
 
 	private function sendResponse($response = 'ok')
 	{
+		http_response_code(200);
+		header('Content-Type: application/json');
 		echo ($response);
 		die();
 	}
@@ -91,140 +96,191 @@ class SUPPORTUTIL
 		}
 	}
 
-	private function humanReadableFileSize($bytes, $decimals = 2) {
+	private function humanReadableFileSize($bytes, $decimals = 2)
+	{
 		$sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
 		$factor = floor((strlen($bytes) - 1) / 3);
-		return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . ' ' . $sizes[$factor];
+		if ($factor == 0) {
+			$s = "%d";		// Bytes need no decimal
+		} else {
+			$s = "%.{$decimals}f";
+		}
+		return sprintf($s, $bytes / pow(1024, $factor)) . ' ' . $sizes[$factor];
 	}
 
-	public function postDownloadLog() {
+	public function postDownloadLog()
+	{
 		$logId = $_POST['logId'];		// filename
 		$logId = basename($logId);
 		$fromFile = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
-// TODO: check if $fromFile exists
-		header('Content-Description: File Transfer');
-		header('Content-Type: application/octet-stream');
-		header('Content-Disposition: attachment; filename="' . basename($fromFile) . '"');
-		header('Content-Transfer-Encoding: binary');
-		header('Expires: 0');
-		header('Cache-Control: must-revalidate');
-		header('Pragma: public');
-		header('Content-Length: ' . filesize($fromFile));
-		if ( ! readfile($fromFile)) {
-			echo "ERROR: Unable to read '$fromFile'";
+
+		if ( ! is_readable($fromFile)) {
+			$this->send500("'$fromFle' does not exist or is not readable.");
+		} else {
+			header('Content-Description: File Transfer');
+			header('Content-Type: application/octet-stream');
+			header('Content-Disposition: attachment; filename="' . basename($fromFile) . '"');
+			header('Content-Transfer-Encoding: binary');
+			header('Expires: 0');
+			header('Cache-Control: must-revalidate');
+			header('Pragma: public');
+			header('Content-Length: ' . filesize($fromFile));
+			if ( ! readfile($fromFile)) {
+				$this->send500("Unable to read from '$fromFle'.");
+			}
 		}
 		exit;
 	}
 
-	public function postChangeGithubId() {
-		$logId = $_POST['logId'];		// filename
-		$logId = basename($logId);
-
-		$nameParts = explode('-', $logId);
-		$newId = $_POST['newId'];
-		$currentType = $nameParts[0];
-// TODO: See if the newId is an Allsky or Allsky-modules Discussion or Issue.  Error if not found.
-$newType = $currentType;
-		$newLogId = $newType . '-' . $newId . '-' . $nameParts[2];
-
-		$fromFile = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
-		if ( ! file_exists($fromFile)) {
-			$msg = "'$fromFile' does not exist.";
-			$this->sendResponse(json_encode(array("status"=>"ERROR", "message"=>"$msg")));
-			return;
-		}
-
-		$newFile = $this->issueDir . DIRECTORY_SEPARATOR . $newLogId;
-		
-		if (rename($fromFile, $newFile)) {
-			$this->sendResponse(json_encode(array("status"=>"ok")));
+	private function parseFilename($filename) {
+		// File name format:  support-SOURCE-PROBLEM_ID-YYYYMMDDHHMMSS.zip
+		//                    0       1      2          3
+		// Where SOURCE is "AS" or "ASM" and PROBLEM_ID is "none" or [DI]ID
+		// "D" is for Discussion and "I" is for Issue and is needed to
+		// create the GitHub URL.
+		$pattern = '/^support(?:-([a-zA-Z0-9]+))?(?:-([DI]?\d+))?-(\d{14})\.zip$/';
+		if (preg_match($pattern, $filename, $matches)) {
+			$source = isset($matches[1]) ? $matches[1] : 'AS';
+			$id = isset($matches[2]) ? $matches[2] : "none";
+			if ($id === "none") {
+				$type = "";
+			} else {
+				$type = substr($id, 0, 1);
+				if ($type === "D" || $type === "I") {
+					$id = substr($id, 1);
+				} else {
+					$type = "D";		// old-format filename or an error, so use default
+				}
+			}
+			return [
+				'source'	=> isset($matches[1]) ? $matches[1] : 'AS',
+				'type'		=> $type,
+				'id'		=> $id,
+				'timestamp' => $matches[3],
+				'ext'	   => 'zip'
+			];
 		} else {
-			$msg = "Could not rename($fromFile, $newFile)";
-			$this->sendResponse(json_encode(array("status"=>"ERROR", "message"=>"$msg")));
+			return null;
 		}
 	}
 
-	public function postDeleteLog() {
+	public function postChangeGithubId()
+	{
+		$logId = $_POST['logId'];		// filename
+		$logId = basename($logId);
+
+		$fromFile = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
+		if ( ! is_readable($fromFile)) {
+			$this->send500("'$fromFile' does not exist or is not readable.");
+		}
+
+		$source = $_POST['source'];		// user-entered repository name
+		$newId = $_POST['newId'];		// user-entered number
+		$fileParts = $this->parseFilename($logId);
+		if ($fileParts === null) {
+			$this->send500("Bad file name: $logId");
+		}
+
+// TODO: Look in GitHub to see if the newId is an existing Discussion or Issue.
+// Tell the user to re-enter the number if not in GitHub.
+$newType = "D"; // For now assume Discussion.
+
+		$timestamp = $fileParts['timestamp'];		// reuse existing value
+		$ext = $fileParts['ext'];
+		$newFile = $this->issueDir . DIRECTORY_SEPARATOR;
+		$newFile .= "support-$source-$newType$newId-$timestamp.$ext";
+		if (rename($fromFile, $newFile)) {
+			$this->sendResponse(json_encode("ok"));
+		} else {
+			$this->send500("Could not rename($fromFile, $newFile)");
+		}
+	}
+
+	public function postDeleteLog()
+	{
 		$logId = $_POST['logId'];		// filename
 		$logId = basename($logId);
 
 		$fileToDelete = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
 		if (@unlink($fileToDelete)) {
-			$this->sendResponse(json_encode(array("status"=>"ok")));
+			$this->sendResponse(json_encode("ok"));
 		} else {
-			$msg = "Could not unlink($fileToDelete)";
-			$this->sendResponse(json_encode(array("status"=>"ERROR", "message"=>"$msg")));
+			$this->send500("Could not unlink($fileToDelete)");
 		}
 	}
 
-	public function getSupportFilesList() {
+	public function getSupportFilesList()
+	{
 		$data = array();
 
 		if ( ! is_dir($this->issueDir)) {
 			$sg = "Directory '" . $this->issueDir . "' does not exist.";
-			$this->sendResponse(json_encode(array("status"=>"ERROR", "message"=>"$msg")));
+			$this->send500($msg);
 			return;
 		}
+
 		$files = @scandir($this->issueDir);
 		if ($files === false) {
 			$msg = "scandir({$this->issueDir}) failed.";
-			// TODO  $data = array("status"=>"ERROR", "message"=>"$msg");
 			$data[] = [
 				"filename" => "",
+				"source" => "",
+				"type" => "",
+				"ID" => "",
 				"sortfield" => "",
 				"date" => "<br><p class='errorMsgBox errorMsg'>$msg</p>",
-				"ID" => "",
 				"size" => "",
 				"actions" => ""
 			];
 		} else {
-			// file format:  support-none-20250612160748.zip
 			foreach ($files as $file) {
 				if (strpos($file, '.') === 0) {
 					continue;
 				}
-				$fileBits = explode("-", $file);
-				$problemType = $fileBits[0];
-				if ($problemType !== "support" && $problemType !== "Discussion" && $problemType !== "Issue") {
+				$fileParts = $this->parseFilename(($file));
+				if ($fileParts === null) {
 					continue;
 				}
 
-				$GitHubID = $fileBits[1];					// GitHub ID
-				$date = explode(".", $fileBits[2])[0];	// date
+				$source = $fileParts['source'];
+				$problemType = $fileParts['type'];
+				$GitHubID = $fileParts['id'];
+				$date = $fileParts['timestamp'];
 				$year = substr($date, 0, 4);
 				$month = substr($date, 4, 2);
 				$day = substr($date, 6, 2);
 				$hour = substr($date, 8, 2);
 				$minute = substr($date, 10, 2);
 				$second = substr($date, 12, 2);
-			   	$timestamp = mktime($hour, $minute, $second, $month, $day, $year);
-			   	$formattedDate = strftime("%A %d %B %Y, %H:%M", $timestamp);
+				$timestamp = mktime($hour, $minute, $second, $month, $day, $year);
+				$formattedDate = strftime("%A %d %B %Y, %H:%M", $timestamp);
+				$size = filesize($this->issueDir . DIRECTORY_SEPARATOR . $file);
+				$hrSize = $this->humanReadableFileSize($size);
 
-			   	$size = filesize($this->issueDir . DIRECTORY_SEPARATOR . $file);
-			   	$hrSize = $this->humanReadableFileSize($size);
-
-			   	$data[] = [
-				   	"filename" => $file,
-				   	"sortfield" => $year.$month.$day.$hour.$minute.$second,
-				   	"date" => $formattedDate,
-				   	"ID" => $GitHubID,
-				   	"size" => $hrSize,
-				   	"actions" => ""
-			   	];
+				$data[] = [
+					"filename" => $file,
+					"source" => $source,
+				  "type" => $problemType,
+				  "ID" => $GitHubID,
+					"sortfield" => $year.$month.$day.$hour.$minute.$second,
+					"date" => $formattedDate,
+				  "size" => $hrSize,
+				  "actions" => ""
+				];
 			}
 		}
 		$this->sendResponse(json_encode($data));
 	}
 
-	public function getGenerateLog() {
+	public function getGenerateLog()
+	{
 		$command = 'export ALLSKY_HOME=' . ALLSKY_HOME . '; export SUDO_OK="true"; ';
 		$command .= ALLSKY_HOME . '/support.sh --auto 2>&1';
-		exec($command, $result, $ret_code);
-		if ($ret_code === 0) {
-			$this->sendResponse(json_encode(array("status"=>"ok")));
+		exec($command, $output, $exitCode);
+		if ($exitCode === 0) {
+			$this->sendResponse(json_encode("ok"));
 		} else {
-			$msg = "[$cmd] failed: " . implode(" ", $result);
-			$this->sendResponse(json_encode(array("status"=>"ERROR", "message"=>"$msg")));
+			$this->send500("[$cmd] failed: " . implode(" ", $output));
 		}
 	}
 

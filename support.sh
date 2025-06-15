@@ -27,7 +27,8 @@ if [[ ! -d ${ALLSKY_SUPPORT_DIR} ]]; then
 fi
 
 SUPPORT_DATETIME_SHORT="$( date +"%Y%m%d%H%M%S" )"
-SUPPORT_ZIP_NAME="XX_TYPE_XX-XX_ISSUE_XX-${SUPPORT_DATETIME_SHORT}.zip"
+SUPPORT_ZIP_NAME="support-XX_GITHUB_NUMBER_XX-${SUPPORT_DATETIME_SHORT}.zip"
+SUPPORT_ZIP_NAME_WITH_REPO="support-XX_REPO_XX-XX_GITHUB_NUMBER_XX-${SUPPORT_DATETIME_SHORT}.zip"
 
 ############################################## functions
 
@@ -49,14 +50,14 @@ function set_messages()
 	DIALOG_COMPLETE_MESSAGE+="\n"
 	DIALOG_COMPLETE_MESSAGE+="    ${DIALOG_BLUE}${ALLSKY_SUPPORT_DIR}/XX_ZIPNAME_XX${DIALOG_NC}\n"
 	DIALOG_COMPLETE_MESSAGE+="\n"
-	DIALOG_COMPLETE_MESSAGE+="This file should be attached to the relevant Issue or Discussion in Github.\n"
+	DIALOG_COMPLETE_MESSAGE+="This file should be attached to the relevant Discussion or Issue in Github.\n"
 	DIALOG_COMPLETE_MESSAGE+="\n"
 	DIALOG_COMPLETE_MESSAGE+="If your WebUI is functioning, the file can be downloaded using the"
 	DIALOG_COMPLETE_MESSAGE+=" '${DIALOG_BLUE}Getting Support${DIALOG_NC}' page."
 
-	GITHUB_ERROR="${DIALOG_ERROR}\nERROR: The Issue / Discussion number must be numeric.${DIALOG_NC}\n"
+	GITHUB_ERROR="${DIALOG_ERROR}\nERROR: The Discussion / Issue number must be numeric.${DIALOG_NC}\n"
 	GITHUB_ERROR+="\n"
-	GITHUB_ERROR+="It can be found in the URL of the Github post, for example if the URL is:\n"
+	GITHUB_ERROR+="It can be found at the end of the Github URL, for example if the URL is:\n"
 	GITHUB_ERROR+="\n"
 	GITHUB_ERROR+="    ${DIALOG_BLUE}${GITHUB_ROOT}/${GITHUB_ALLSKY_PACKAGE}/discussions/4119${DIALOG_NC}\n"
 	GITHUB_ERROR+="\n"
@@ -99,7 +100,8 @@ function print_heading()
 	printf "%-20s\n" "============================"
 }
 
-function print_sub_heading(){
+function print_sub_heading()
+{
 	local LABEL="${1}"
 
 	printf "\n%-20s\n" "${LABEL}"
@@ -233,12 +235,12 @@ function generate_support_info()
 		print_info "User ID:" "${USER_ID}"
 	} > "${BASIC_FILE}"
 
-	if [[ ${ISSUE_NUMBER} != "none" ]]; then
-		local ISSUE_FILE="${TEMP_DIR}/issue.txt"
+	if [[ ${GITHUB_NUMBER} != "none" ]]; then
+		local GITHUB_FILE="${TEMP_DIR}/Github_ID.txt"
 		{
-			print_heading "Github Issue"
-			print "${ISSUE_NUMBER}"
-		} > "${ISSUE_FILE}"
+			print_heading "Github ID"
+			print "${GITHUB_NUMBER}"
+		} > "${GITHUB_FILE}"
 	fi
 
 	local OS_FILE="${TEMP_DIR}/ps.txt"
@@ -380,9 +382,16 @@ function generate_support_info()
 	X="${TEMP_DIR}/config/modules"
 	[[ -d ${X} ]] && find "${TEMP_DIR}/config/modules" -type f -exec truncate -s 0 {} +
 
-	local ZIP_NAME="${SUPPORT_ZIP_NAME//XX_ISSUE_XX/${ISSUE_NUMBER}}"
-# TODO: for now, assume it's a Discussion and not an Issue.
-	ZIP_NAME="${ZIP_NAME//XX_TYPE_XX/Discussion}"
+	[[ ${GITHUB_NUMBER} != "none" ]] && GITHUB_NUMBER="${GITHUB_TYPE}${GITHUB_NUMBER}"
+
+	local ZIP_NAME
+	if [[ ${GITHUB_NUMBER} != "none" && -n ${GITHUB_REPO} ]]; then
+		ZIP_NAME="${SUPPORT_ZIP_NAME_WITH_REPO//XX_GITHUB_NUMBER_XX/${GITHUB_NUMBER}}"
+		ZIP_NAME="${ZIP_NAME//XX_REPO_XX/${GITHUB_REPO}}"
+	else
+		ZIP_NAME="${SUPPORT_ZIP_NAME//XX_GITHUB_NUMBER_XX/${GITHUB_NUMBER}}"
+	fi
+
 	# We're in a subshell so we need to "echo" this to pass it back to our invoker.
 	echo "${DIALOG_COMPLETE_MESSAGE//XX_ZIPNAME_XX/${ZIP_NAME}}"
 
@@ -400,30 +409,55 @@ function generate_support_info()
 }
 
 ####
-# Allows the user to enter the Github discussion id
-function get_github_discussion_id()
+# Allows the user to enter the Github id
+function get_github_number()
 {
-	local ISSUE_NUMBER_TEMP
+	if [[ ${AUTO_CONFIRM} == "true" || ${GITHUB_NUMBER} != "none" ]]; then
+		return
+	fi
 
-	if [[ ${AUTO_CONFIRM} == "false"  && ${ISSUE_NUMBER} == "none" ]]; then
-		local MSG="${DIALOG_BLUE}Enter the Github Issue or Discussion number.${DIALOG_NC}"
-		MSG+="\nPress 'Enter' if you don't know it: "
-		local DIALOG_TITLE="Github Issue / Discussion Number"
-		while true; do
-			# The prompt is written to stdout and the answer to stderr, so switch them.
-			ISSUE_NUMBER_TEMP="$( display_box "--inputbox" "${DIALOG_TITLE}" "\n${MSG}" --no-cancel 3>&1 1>&2 2>&3 )"
+	local GITHUB_NUMBER_TEMP
+	local MSG="${DIALOG_BLUE}Enter the Github Issue or Discussion number.${DIALOG_NC}"
+	MSG+="\n\nPress 'Enter' if you don't know it: "
+	local DIALOG_TITLE="Github Issue / Discussion Number"
 
-			if [[ -n ${ISSUE_NUMBER_TEMP} ]]; then
-				if [[ ${ISSUE_NUMBER_TEMP} =~ ^[+-]?[0-9]+$ ]]; then
-					ISSUE_NUMBER="${ISSUE_NUMBER_TEMP}"
-					break
-				else
-					display_box "--msgbox" "${DIALOG_TITLE}" "${GITHUB_ERROR}"
-				fi
-			else
+	while true; do
+		# The prompt is written to stdout and the answer to stderr, so switch them.
+		GITHUB_NUMBER_TEMP="$( display_box "--inputbox" "${DIALOG_TITLE}" "\n${MSG}" --no-cancel 3>&1 1>&2 2>&3 )"
+
+		if [[ -n ${GITHUB_NUMBER_TEMP} ]]; then
+			if [[ ${GITHUB_NUMBER_TEMP} =~ ^[+-]?[0-9]+$ ]]; then
+				GITHUB_NUMBER="${GITHUB_NUMBER_TEMP}"
+# TODO: look in GitHub's GITHUB_REPO for a Discussion or Issue with this number
+# If found, set GITHUB_TYPE to "D" or "I".
+# Output error message and try again if not found.
+GITHUB_TYPE="D"		# Assume this for now.
 				break
+			else
+				display_box "--msgbox" "${DIALOG_TITLE}" "${GITHUB_ERROR}"
 			fi
-		done
+		else
+			break
+		fi
+	done
+}
+
+function get_github_repo()
+{
+	if [[ ${AUTO_CONFIRM} == "false"  && ${SOURCE} == "" && -z ${GITHUB_REPO} ]]; then
+		RESPONSE="$( dialog --clear \
+		--colors \
+		--title "Select Discussion/Issue Repository" \
+		--menu "Choose a Respository:" 10 40 2 \
+			1 "Allsky" \
+			2 "Allsky modules" \
+		3>&1 1>&2 2>&3)"
+
+		if [[ ${RESPONSE} == "2" ]]; then
+			GITHUB_REPO="ASM"
+		else
+			GITHUB_REPO="AS"
+		fi
 	fi
 }
 
@@ -474,7 +508,7 @@ function usage_and_exit()
 {
 	local RET=${1}
 	exec 2>&1
-	local USAGE="\nUsage: ${ME} [--help] [--tree] [--issue i] [--fullusb] "
+	local USAGE="\nUsage: ${ME} [--help] [--tree] [--type t] [--repo r] [--number n] [--fullusb] "
 	if [[ ${RET} -ne 0 ]]; then
 		E_ "${USAGE}"
 	else
@@ -484,8 +518,10 @@ function usage_and_exit()
 	echo "Where:"
 	echo "	--help        Displays this message and exits."
 	echo "	--text        Use text mode. Options must be specified on the command line."
-	echo "	--auto        Auto accept any prompts and no output."
-	echo "	--issue i     Include the Github Issue or Discussion number."
+	echo "	--auto        Auto accept any prompts and produce no output except for errors."
+	echo "	--type t      'D' for Github Discussion, 'I' for Issue."
+	echo "	--repo r      Use the specified Github repository, either 'AS' for Allsky or 'ASM' for Allsky Modules."
+	echo "	--number n    The Github Issue or Discussion number."
 	echo "	--loglines n  Number of lines to include from log files, defaults to 'all' for entire file."
 
 	exit "${RET}"
@@ -496,7 +532,9 @@ function usage_and_exit()
 
 OK="true"
 TEXT_ONLY="false"		# Also used by display_box()
-ISSUE_NUMBER="none"
+GITHUB_NUMBER="none"
+GITHUB_REPO=""
+GITHUB_TYPE=""
 AUTO_CONFIRM="false"
 LOG_LINES="all"
 
@@ -515,8 +553,18 @@ while [[ $# -gt 0 ]]; do
 			AUTO_CONFIRM="true"
 			;;
 
-		--issue)
-			ISSUE_NUMBER="${2}"
+		--type)
+			GITHUB_TYPE="${2}"
+			shift
+			;;
+
+		--repo)
+			GITHUB_REPO="${2}"
+			shift
+			;;
+
+		--number)
+			GITHUB_NUMBER="${2}"
 			shift
 			;;
 
@@ -543,7 +591,8 @@ done
 set_dialog_info
 set_messages
 display_start_dialog
-get_github_discussion_id
+get_github_repo
+get_github_number
 display_running_dialog
 collect_support_info
 DIALOG_COMPLETE_MESSAGE="$( generate_support_info 2>&1 )"

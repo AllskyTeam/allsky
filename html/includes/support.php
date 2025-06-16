@@ -1,6 +1,5 @@
 <?php
-$Github_root = "https://github.com/AllskyTeam";
-$DiscussionURL = "$Github_root/allsky/discussions";
+$DiscussionURL = GITHUB_ROOT . "/" . GITHUB_ALLSKY_REPO . "/discussions";
 $V = ALLSKY_VERSION;
 
 if (! is_dir(ALLSKY_SUPPORT_DIR)) {
@@ -222,6 +221,10 @@ if (! is_dir(ALLSKY_SUPPORT_DIR)) {
 	$(document).ready(function() {
 		let supportManager = new ALLSKYSUPPORT()
 	});
+
+	let GITHUB_ROOT = '<?php echo GITHUB_ROOT; ?>';
+	let ALLSKY_REPO_URL = '<?php echo GITHUB_ROOT . "/" . GITHUB_ALLSKY_REPO; ?>';
+	let ALLSKY_MODULES_REPO_URL = '<?php echo GITHUB_ROOT . "/" . GITHUB_ALLSKY_MODULES_REPO; ?>';
 </script>
 
 <script src="/js/allsky-support/allsky-support.js?c=<?php echo $V; ?>"></script>

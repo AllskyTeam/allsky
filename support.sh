@@ -59,7 +59,7 @@ function set_messages()
 	GITHUB_ERROR+="\n"
 	GITHUB_ERROR+="It can be found at the end of the Github URL, for example if the URL is:\n"
 	GITHUB_ERROR+="\n"
-	GITHUB_ERROR+="    ${DIALOG_BLUE}${GITHUB_ROOT}/${GITHUB_ALLSKY_PACKAGE}/discussions/4119${DIALOG_NC}\n"
+	GITHUB_ERROR+="    ${DIALOG_BLUE}${GITHUB_ROOT}/${GITHUB_ALLSKY_REPO}/discussions/4119${DIALOG_NC}\n"
 	GITHUB_ERROR+="\n"
 	GITHUB_ERROR+="the post is a Discussion whose number is ${DIALOG_BLUE}4119${DIALOG_NC}."
 

@@ -133,18 +133,27 @@ class SUPPORTUTIL
 	}
 
 	private function parseFilename($filename) {
-		// File name format:  support-SOURCE-PROBLEM_ID-YYYYMMDDHHMMSS.zip
-		//                    0       1      2          3
+		// File name format:
+		//		support-SOURCE-PROBLEM_ID-YYYYMMDDHHMMSS.zip
+		//      0       1      2          3
+		// or
+		//		support-PROBLEM_ID-YYYYMMDDHHMMSS.zip
+		//      0       1          3    (2 is "")
 		// Where SOURCE is "AS" or "ASM" and PROBLEM_ID is "none" or [DI]ID
 		// "D" is for Discussion and "I" is for Issue and is needed to
 		// create the GitHub URL.
 		$pattern = '/^support(?:-([a-zA-Z0-9]+))?(?:-([DI]?\d+))?-(\d{14})\.zip$/';
 		if (preg_match($pattern, $filename, $matches)) {
-			$source = isset($matches[1]) ? $matches[1] : 'AS';
-			$id = isset($matches[2]) ? $matches[2] : "none";
+			$source = $matches[1];
+			$id = $matches[2];
 			if ($id === "none") {
 				$type = "";
 			} else {
+				if ($id === "") {
+					// Assume format # 2 above.
+					$id = $source;		// Probably "none, but don't assume that.
+					$source = "AS";
+				}
 				$type = substr($id, 0, 1);
 				if ($type === "D" || $type === "I") {
 					$id = substr($id, 1);
@@ -153,7 +162,7 @@ class SUPPORTUTIL
 				}
 			}
 			return [
-				'source'	=> isset($matches[1]) ? $matches[1] : 'AS',
+				'source'	=> $source,
 				'type'		=> $type,
 				'id'		=> $id,
 				'timestamp' => $matches[3],
@@ -183,6 +192,9 @@ class SUPPORTUTIL
 
 // TODO: Look in GitHub to see if the newId is an existing Discussion or Issue.
 // Tell the user to re-enter the number if not in GitHub.
+// BE CAREFUL: if you look in {[issues|discussions} for an item and it's in the other one,
+// GitHub returns HTM code 302 and then returns the page in the other location assuming it exists.
+// Need to treat HTML 404 and 302 as both "not found".
 $newType = "D"; // For now assume Discussion.
 
 		$timestamp = $fileParts['timestamp'];		// reuse existing value
@@ -260,12 +272,12 @@ $newType = "D"; // For now assume Discussion.
 				$data[] = [
 					"filename" => $file,
 					"source" => $source,
-				  "type" => $problemType,
-				  "ID" => $GitHubID,
+					"type" => $problemType,
+					"ID" => $GitHubID,
 					"sortfield" => $year.$month.$day.$hour.$minute.$second,
 					"date" => $formattedDate,
-				  "size" => $hrSize,
-				  "actions" => ""
+					"size" => $hrSize,
+					"actions" => ""
 				];
 			}
 		}

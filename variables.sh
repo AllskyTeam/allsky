@@ -226,7 +226,8 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	GITHUB_ROOT="https://github.com/AllskyTeam"
 	GITHUB_RAW_ROOT="https://raw.githubusercontent.com/AllskyTeam"
 	GITHUB_MAIN_BRANCH="master"
-	GITHUB_ALLSKY_PACKAGE="allsky"
+	GITHUB_ALLSKY_REPO="allsky"
+	GITHUB_ALLSKY_MODULES_REPO="allsky-modules"
 
 	# NAMEs of some configuration files:
 	#	Camera Capabilities - specific to a camera type and model (cc.json)

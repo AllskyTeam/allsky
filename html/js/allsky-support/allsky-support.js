@@ -49,17 +49,21 @@ class ALLSKYSUPPORT {
 			const regex = /^support(?:-([a-zA-Z0-9]+))?(?:-([DI]?\d+))?-(\d{14})\.zip$/;
 			const match = logId.match(regex);
 			if (match) {
-				var source = match[1] || 'AS';
-				var id = match[2];
+				var source = match[1];
+				var id = match[2] || "";
 				var type = '';
-				if (id != "" && id != "none") {
+				if (id != "none") {
+					if (id == "") {		// no source given
+						id = source;
+						source = "AS";
+					}
 					type = id.substring(0,1);
 					if (type == "D" || type == "I") {
 						id = id.substring(1);
 						if (type == "D") type = "Discussion";
 						else type = "Issue";
 					} else {
-						type = '';
+						type = 'D';		// old-format filename or an error, so use default
 					}
 				}
 			} else {
@@ -244,7 +248,7 @@ Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
 							let label = text + ' ' + problemType + ' ' + ID + ' <i class="fa-solid fa-arrow-up-right-from-square"></i>';
 							result = '<a external="true" href="' + URL + '">' + label + '</a>';
 						} else {
-							result = 'No Linked GitHub Item';
+							result = 'No GitHub Number';
 						}
 
 						return result

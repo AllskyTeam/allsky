@@ -12,8 +12,8 @@ class OECONFIG {
     #BASEDIR = 'annotater/';
     #dirty = false;
     #overlays = {};
-
     #lastConfig = [];
+    #fonts = [];
 
     constructor() {
     }
@@ -115,6 +115,8 @@ class OECONFIG {
                 async: false,
                 context: this,
                 success: function (fontData) {
+
+                    this.#fonts = fontData['data'];
                     let fontList = Array.from(document.fonts);
                     for (let i in fontList) {
                         document.fonts.delete(fontList[i]);
@@ -122,17 +124,24 @@ class OECONFIG {
 
                     const promises = [];
                     fontData.data.forEach(font => {
+                        //console.log('url(' + window.oedi.get('BASEDIR') + font.path + ')');
                         let fontFace = new FontFace(font.name, 'url(' + window.oedi.get('BASEDIR') + font.path + ')');
                         promises.push(
                             fontFace.load()
                         );
                     });
 
-                    Promise.all(promises).then(function(loadedFonts) {
+                    Promise.all(promises)
+                    .then(loadedFonts => {
                         for (let font in loadedFonts) {
                             document.fonts.add(loadedFonts[font]);
                         }
-                        window.oedi.get('uimanager').buildUI();
+                        
+                        $(document).trigger('oe-uimanager-fonts-loaded');
+                        //window.oedi.get('uimanager').buildUI();
+                    })
+                    .catch(err => {
+                        console.log(`Font failed to load ${err}`);
                     });
 
                 }                
@@ -445,6 +454,7 @@ class OECONFIG {
 
     saveConfig1() {
         let fileName = this.#selectedOverlay.name;
+        this.rebuildOverlayFonts();
         $.ajax({
             type: 'POST',
             url: 'includes/overlayutil.php?request=Config',
@@ -532,4 +542,18 @@ class OECONFIG {
         delete currentObject[last]
     }
 
+    rebuildOverlayFonts() {
+        this.setValue('fonts', {});
+        for (const field of this.#config.fields) {
+            if ('font' in field) {
+                const fontName = field['font'];
+                const fontDetails = this.#fonts.find(font => font.name === fontName);
+                if (fontDetails !== undefined) {
+                    const fontPath = fontDetails['path'];
+                    this.setValue(`fonts.${fontName.toLowerCase()}`, {'fontPath' : fontPath});
+                }
+            }
+        }
+        let tt = 56;
+    }
 }

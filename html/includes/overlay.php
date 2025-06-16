@@ -297,12 +297,54 @@ function DisplayOverlay($image_name)
                     </table>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary pull-left" id="oe-font-dialog-add-font">Install font from dafont.com</button>
+                    <button type="button" class="btn btn-primary pull-left" id="oe-font-dialog-add-font">Install from dafont</button>
                     <button type="button" class="btn btn-primary pull-left" id="oe-font-dialog-upload-font">Upload Font</button>
+                    <button type="button" class="btn btn-primary pull-left" id="oe-font-dialog-preview">Preview</button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
+    </div>
+
+    <div id="oe-font-preview-modal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+        <div class="modal-header">
+            <h4 class="modal-title">Font Preview</h4>
+        </div>
+
+        <div class="modal-body">
+            <form>
+            <div class="form-group">
+                <label for="oe-font-preview-modal-font-select">Choose a font:</label>
+                <select id="oe-font-preview-modal-font-select" class="form-control"></select>
+            </div>
+
+            <div class="form-group form-inline">
+                <label for="oe-font-preview-modal-preview-text">Enter text:</label>
+                <input type="text" id="oe-font-preview-modal-preview-text" class="form-control" placeholder="Type something..." style="width: 60%;" />
+
+                <label for="oe-font-preview-modal-font-size" style="margin-left: 10px;">Size:</label>
+                <input type="number" id="oe-font-preview-modal-font-size" class="form-control" value="16" min="8" max="100" step="1" style="width: 80px;" />
+                <span>px</span>
+            </div>
+
+            <div class="form-group">
+                <label>Preview:</label>
+                <div id="oe-font-preview-modal-preview-box">
+                The quick brown fox jumps over the lazy dog.
+                </div>
+            </div>
+            </form>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+
+        </div>
+    </div>
     </div>
 
     <div class="modal" role="dialog" id="oe-file-manager-dialog">

@@ -200,8 +200,6 @@ class OEUIMANAGER {
         $(document).off('click', '#oe-font-dialog-add-font');
         $(document).off('click', '#oe-font-dialog-upload-font');
         $(document).off('click', '#oe-upload-font');
-        $('#fontlisttable').off('click', '.oe-list-font-use');
-        $('#fontlisttable').off('click', '.oe-list-font-remove');
         $(document).off('click', '.oe-list-font-delete');
         $(document).off('click', '.oe-zoom');
         $(document).off('click', '#oe-show-image-manager');
@@ -240,6 +238,11 @@ class OEUIMANAGER {
 
         this.#transformer.off('transformend');
 
+        $(document).on('oe-uimanager-fonts-loaded', (e, data) => {
+            this.setupFonts()
+            this.#drawLayer.draw();
+            this.#overlayLayer.draw();
+        });
 
     }
 
@@ -954,7 +957,42 @@ class OEUIMANAGER {
             }
         });
 
+        $(document).off('click', '#oe-font-dialog-preview');
+        $(document).on('click', '#oe-font-dialog-preview', (event) => {
+            $('#oe-font-preview-modal').modal({
+                keyboard: false,
+                width: 600
+            });
 
+            $('#oe-font-preview-modal-font-select, #oe-font-preview-modal-preview-text').on('input change', () => {
+                const font = $('#oe-font-preview-modal-font-select').val();
+                const text = $('#oe-font-preview-modal-preview-text').val().trim();
+                const size = $('#oe-font-preview-modal-font-size').val() + 'px';
+
+                $('#oe-font-preview-modal-preview-box')
+                    .css({
+                        'font-family': font,
+                        'font-size': size
+                    })
+                        .text(text || 'The quick brown fox jumps over the lazy dog.');                
+                    });
+
+            const fontSelect = $('#oe-font-preview-modal-font-select');
+            fontSelect.empty();
+
+            const addedFonts = new Set();
+
+            document.fonts.forEach(fontFace => {
+            const font = fontFace.family.replace(/["']/g, '');
+            if (!addedFonts.has(font)) {
+                addedFonts.add(font);
+                fontSelect.append($('<option></option>').val(font).text(font));
+            }
+            });
+
+        });
+
+        
         $(document).off('click', '#oe-upload-font');
         $(document).on('click', '#oe-upload-font', (event) => {
             $('#fontlisttable').DataTable().destroy();
@@ -1004,30 +1042,7 @@ class OEUIMANAGER {
 
                             let buttons = '';
                             if (item.type == 'user' && item.name !== defaultFont) {
-
-
-                                let fonts = config.getValue('fonts');
-                                let extPos = item.name.indexOf('.');
-    
-                                let fontName = item.name;
-                                if (extPos > -1) {
-                                    let parts = item.name.split('.');
-                                    fontName = parts[0];
-                                }
-                                let fontLCName = fontName.toLowerCase();
-
-                                let enabled = false;
-                                if (fonts[fontLCName] !== undefined) {
-                                    enabled = true;
-                                }
-
-
                                 buttons += '<button type="button" class="btn btn-danger btn-xs oe-list-font-delete" data-fontname="' + item.name + '"><i class="fa-solid fa-trash"></i></button>';
-                                if (!enabled) {
-                                    buttons += '&nbsp; <button type="button" class="btn btn-primary btn-xs oe-list-font-use" data-fontname="' + fontName + '" data-path="' + item.path + '">Use</button>';
-                                } else {
-                                    buttons += '&nbsp; <button type="button" class="btn btn-danger btn-xs oe-list-font-remove" data-fontname="' + fontName + '" data-path="' + item.path + '">Remove</button>';
-                                }
                             }
                             return buttons;
                         }
@@ -1041,45 +1056,6 @@ class OEUIMANAGER {
                 width: 600
             })
         });
-
-        $('#fontlisttable').off('click', '.oe-list-font-use');
-        $('#fontlisttable').on('click', '.oe-list-font-use', function(e) {
-            let fontName = $(e.currentTarget).data('fontname');
-            let fontPath = $(e.currentTarget).data('path');
-
-            let fontFace = new FontFace(fontName, 'url(' + window.oedi.get('BASEDIR') + fontPath + ')');
-            fontFace.load().then(function(font) {
-                document.fonts.add(fontFace);
-                this.setupFonts();
-                this.#configManager.setValue('fonts.' + fontName.toLowerCase() + '.fontPath', fontPath);
-                $('#fontlisttable').DataTable().ajax.reload( null, false ); 
-                this.#configManager.dirty = true;
-                this.updateToolbar();
-            }.bind(this));
-        }.bind(this));
-
-        $('#fontlisttable').off('click', '.oe-list-font-remove');
-        $('#fontlisttable').on('click', '.oe-list-font-remove', function(e) {
-            let fontName = $(e.currentTarget).data('fontname');
-            let fontToDelete = null;
-            for (let fontFace of document.fonts.values()) {
-                if (fontFace.family == fontName) {
-                    fontToDelete = fontFace;
-                    break;
-                }
-            }
-    
-            if (fontToDelete !== null) {
-                document.fonts.delete(fontToDelete);
-            }
-            
-            this.#configManager.deleteValue('fonts.' + fontName.toLowerCase());
-            this.#fieldManager.switchFontUsed(fontName);
-            this.setupFonts();
-            $('#fontlisttable').DataTable().ajax.reload( null, false );
-            this.#configManager.dirty = true;
-            this.updateToolbar();            
-        }.bind(this));
 
         $(document).off('click', '.oe-list-font-delete');
         $(document).on('click', '.oe-list-font-delete', (event) => {
@@ -1835,29 +1811,9 @@ class OEUIMANAGER {
                     dataType: 'json',
                     context: this
                 }).done((fontData) => {
-
-                    for (let i = 0; i < fontData.length; i++) {
-                        let fontFace = new FontFace(fontData[i].key, 'url(' + window.oedi.get('BASEDIR') + fontData[i].path + ')');
-                        fontFace.load();
-                        document.fonts.add(fontFace);
-                    }
-
-                    document.fonts.ready.then((font_face_set) => {
-                        this.setupFonts();
-                        $('#fontlisttable').DataTable().ajax.reload();
-                        let result = $.ajax({
-                            type: "GET",
-                            url: "includes/overlayutil.php?request=Config",
-                            data: "",
-                            dataType: 'json',
-                            cache: false,
-                            context: this
-                        }).done((data) => {
-                            this.#configManager.config = data;
-                        });
-
-                        $('#fontinstalldialog').modal('hide');
-                    });
+                    $('#fontlisttable').DataTable().ajax.reload();
+                    this.#configManager.loadFonts();
+                    $('#fontinstalldialog').modal('hide');
                 }).fail(function (jqXHR, textStatus, errorThrown) {
                     if (jqXHR.status === 404) {
                         $('#oe-fontinstalldialog-info').addClass('hidden');

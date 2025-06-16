@@ -210,6 +210,23 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 		allsky_shared.log(4,'INFO: Cleanup module data')
 		allsky_shared.cleanup_extra_data()
 
+	def _dump_debug_data(self):
+		debugFilePath = os.path.join(allsky_shared.ALLSKY_TMP, 'overlaydebug.txt')
+		env = {}
+		for var in os.environ:
+			varValue = allsky_shared.getEnvironmentVariable(var, fatal=True)
+			varValue = varValue.replace('\n', '')
+			varValue = varValue.replace('\r', '')
+			var = var.ljust(50, ' ')
+			env[var] = varValue
+
+		with open(debugFilePath, 'w') as debugFile:
+			for var in sorted(env):
+				varValue = env[var]
+				debugFile.write(var + varValue + os.linesep)
+
+		allsky_shared.log(4, f"INFO: Debug information written to {debugFilePath}")
+  
 	def run(self):
 		result = f'Image {allsky_shared.CURRENTIMAGEPATH} Loaded'
 			
@@ -241,6 +258,8 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 			result = f'Cannot cleanup extra module data {eTraceback.tb_lineno} - {e}'
 			allsky_shared.log(0,f'ERROR: {result}')  
 
+		self._dump_debug_data()
+  
 		allsky_shared.log(4, f'INFO: {result}')
 		return result        
 

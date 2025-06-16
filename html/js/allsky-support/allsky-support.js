@@ -1,7 +1,5 @@
 "use strict";
 
-let ALLSKY_URL = 'https://github.com/AllskyTeam/allsky';
-let ALLSKY_MODULES_URL = 'https://github.com/AllskyTeam/allsky-modules';
 let troubleshootingMsg = 'Please refer to the WebUI <a external="true" href="/documentation/troubleshooting/reportingProblems.html#supportErrors">Getting Support</a> page';
 
 class ALLSKYSUPPORT {
@@ -236,10 +234,10 @@ Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
 							let URL = "";
 							let text = '';
 							if (row.source == 'AS') {
-								URL = ALLSKY_URL;
+								URL = ALLSKY_REPO_URL;
 								text = 'Allsky';
 							} else {
-								URL = ALLSKY_MODULES_URL;
+								URL = ALLSKY_MODULES_REPO_URL;
 								text = 'Allsky Modules';
 							}
 							URL += '/' + DIR + '/' + ID;

@@ -143,7 +143,7 @@ if ($useRemoteWebsite) {
 		default:					$Title = "Allsky WebUI";		break;
 	}
 ?>
-	</script>	<!-- allows <a external="true" ...> -->
+	<!-- allows <a external="true" ...> -->
 	<script src="documentation/js/documentation.js" type="application/javascript"></script>
 
 	<title><?php echo "$Title - WebUI"; ?></title>

@@ -44,7 +44,7 @@ while [[ $# -gt 0 ]]; do
 				UPLOAD_SILENT=""	# since WE aren't outputing a message, upload.sh should.
 				;;
 			--nice)
-				NICE="nice -n ${2}"
+				NICE="${2}"
 				shift
 				;;
 			--thumbnail-only)
@@ -151,6 +151,14 @@ if [[ -n ${IMAGES_FILE} ]]; then
 elif [[ $# -eq 0 || $# -gt 1 ]]; then
 	usage_and_exit 2
 fi
+
+# TODO: Get these settings once:
+# eval "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix S_ --shell --variables "var1 var2 ..."
+#uselocalwebsite
+#useremotewebsite remotewebsiteimagedir
+#useremoteserver remoteserverimagedir remoteserverkeogramdestinationname remoteserverstartrailsdestinationname remoteservervideodestinationname
+#keogramextraparameters keogramexpand keogramfontname keogramfontcolor keogramfontsize keogramlinethickness
+#startrailsbrightnessthreshold startrailsextraparameters timelapseuploadthumbnail
 
 if [[ -n ${IMAGES_FILE} ]]; then
 	if [[ ! -s ${IMAGES_FILE} ]]; then
@@ -279,6 +287,11 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 	UPLOAD_FILE="${OUTPUT_DIR}/keogram/${KEOGRAM_FILE}"
 
 	if [[ ${TYPE} == "GENERATE" ]]; then
+		if [[ -z ${NICE} ]]; then
+			N=""
+		else
+			N="--nice ${NICE}"
+		fi
 		KEOGRAM_EXTRA_PARAMETERS="$( settings ".keogramextraparameters" )"
 		MORE=""
 		EXPAND="$( settings ".keogramexpand" )"
@@ -291,7 +304,7 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 			[[ ${SIZE} != "" ]] && MORE+=" --font-size ${SIZE}"
 		THICKNESS="$( settings ".keogramlinethickness" )"
 			[[ ${THICKNESS} != "" ]] && MORE+=" --font-type ${THICKNESS}"
-		CMD="'${ALLSKY_BIN}/keogram' ${NICE} ${SIZE_FILTER} -d '${INPUT_DIR}' \
+		CMD="'${ALLSKY_BIN}/keogram' ${N} ${SIZE_FILTER} -d '${INPUT_DIR}' \
 			-e ${EXTENSION} -o '${UPLOAD_FILE}' ${MORE} ${KEOGRAM_EXTRA_PARAMETERS}"
 		generate "Keogram" "keogram" "${CMD}"
 
@@ -341,9 +354,14 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 	STARTRAILS_FILE="startrails-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${OUTPUT_DIR}/startrails/${STARTRAILS_FILE}"
 	if [[ ${TYPE} == "GENERATE" ]]; then
+		if [[ -z ${NICE} ]]; then
+			N=""
+		else
+			N="--nice ${NICE}"
+		fi
 		BRIGHTNESS_THRESHOLD="$( settings ".startrailsbrightnessthreshold" )"
 		STARTRAILS_EXTRA_PARAMETERS="$( settings ".startrailsextraparameters" )"
-		CMD="'${ALLSKY_BIN}/startrails' ${NICE} ${SIZE_FILTER} -d '${INPUT_DIR}' \
+		CMD="'${ALLSKY_BIN}/startrails' ${N} ${SIZE_FILTER} -d '${INPUT_DIR}' \
 			-e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o '${UPLOAD_FILE}' \
 			${STARTRAILS_EXTRA_PARAMETERS}"
 		generate "Startrails, threshold=${BRIGHTNESS_THRESHOLD}" "startrails" "${CMD}"

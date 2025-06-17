@@ -1,6 +1,7 @@
 "use strict";
 
-let troubleshootingMsg = 'Please refer to the WebUI <a external="true" href="/documentation/troubleshooting/reportingProblems.html#supportErrors">Getting Support</a> page';
+let troubleshootingMsg = 'Please refer to the WebUI <a external="true" target="_blank" href="/documentation/troubleshooting/reportingProblems.html#supportErrors">Getting Support';
+troubleshootingMsg += ' <i class="fa-solid fa-arrow-up-right-from-square"></i></a> page';
 
 class ALLSKYSUPPORT {
 	#supportFilesTable = null
@@ -245,12 +246,12 @@ Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
 								text = 'Allsky Modules';
 							}
 							URL += '/' + DIR + '/' + ID;
-							let label = text + ' ' + problemType + ' ' + ID + ' <i class="fa-solid fa-arrow-up-right-from-square"></i>';
+							let label = text + ' ' + problemType + ' ' + ID;
 							result = '<a external="true" href="' + URL + '">' + label + '</a>';
 						} else {
 							result = 'No GitHub Number';
 						}
-
+						convertURL();		// handles <a external="true" ...>
 						return result
 					}
 				},{

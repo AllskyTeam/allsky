@@ -1503,11 +1503,30 @@ function get_ls_contents()
 
 ####
 # Get all settings at once rather than individually via settings().
+# --var "variable1 ..." gets only the specified variables.
 function getAllSettings()
 {
+	local M="${ME:-${FUNCNAME[0]}}"
+	local VAR=""
+	local PREFIX="S_"
+	while [[ ${1:0:1} == "-" ]]
+	do
+		if [[ ${1} == "--var" ]]; then
+			VAR="${2}"
+			shift
+		elif [[ ${1} == "--prefix" ]]; then
+			PREFIX="${2}"
+			shift
+		else
+			echo "${M}: ERROR: Unknown argument: ${1}." >&2
+			return 2
+		fi
+		shift
+	done
 	local X
 
-	if ! X="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix S_ --shell 2>&1 )" ; then
+	#shellcheck disable=SC2086
+	if ! X="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix "${PREFIX}" --shell --variables "${VAR}" 2>&1 )" ; then
 		echo "${X}"
 		return 1
 	fi

@@ -56,6 +56,9 @@ $default_delimiter = "=";
 //			- Quote values as needed, e.g., strings.
 //			- Create variable with name of setting.
 
+// --variables "v1 v2..."
+//		Used with --shell to only output the specified variables.
+
 include_once("functions.php");
 
 function quoteIt($string, $type)
@@ -83,6 +86,7 @@ $convert = false;
 $order = false;
 $prefix = "";
 $shell = false;
+$variables = null;
 $type_to_output = "";
 $options_file = null;
 $include_not_in_options = false;
@@ -98,6 +102,7 @@ $longopts = array(
 	"delimiter:",
 	"prefix:",
 	"type:",
+	"variables:",
 
 	// no arguments:
 	"settings-only",
@@ -165,6 +170,11 @@ foreach ($options as $opt => $val) {
 
 	} else if ($opt === "shell") {
 		$shell = true;
+
+	} else if ($opt === "variables") {
+		if ($val !== "") {
+			$variables = explode(" ", $val);
+		}
 
 	} else if ($opt === "prefix") {
 		$prefix = $val;
@@ -383,6 +393,9 @@ if ($convert || $order) {
 
 	// Booleans are either 1 for true, or "" for false, so convert to "true" and "false".
 	foreach ($settings_array as $name => $val) {
+		if ($variables !== null && ! in_array($name, $variables)) {
+			continue;
+		}
 		$type = getVariableOrDefault($type_array, $name, "text");
 		if ($type == "boolean") {
 			// use "==" to catch numbers and booleans

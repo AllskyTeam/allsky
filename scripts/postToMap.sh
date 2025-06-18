@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2154		# referenced but not assigned - from convertJSON.php#
+# shellcheck disable=SC2154		# referenced but not assigned - from convertJSON.php
 
 # Allow this script to be executed manually, which requires several variables to be set.
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
@@ -206,7 +206,8 @@ if [[ -z ${MACHINE_ID} ]]; then
 fi
 
 # This gets all settings and prefixes their names with "S_".
-# It's faster than calling "settings(" a bunch of times.
+# It's faster than calling "settings()" a bunch of times.
+#shellcheck disable=SC2119
 getAllSettings || exit 1
 
 E=""

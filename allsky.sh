@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2154		# referenced but not assigned - from convertJSON.php
 
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
 ME="$( basename "${BASH_ARGV0}" )"
@@ -106,7 +107,7 @@ fi
 
 # Get all settings we're going to use.
 #shellcheck disable=SC2119
-getAllSettings --var "lastchanged cameranumber local" || exit 1
+getAllSettings --var "lastchanged cameranumber locale" || exit 1
 
 # If the "lastchanged" setting is missing, the user needs to review/change the settings.
 # This will happen after an installation or upgrade, which also sets the Allsky status.

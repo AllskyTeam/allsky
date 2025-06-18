@@ -139,6 +139,7 @@ if [[ -f ${SETTINGS_FILE} ]]; then
 
 	check_website		# invoke to set variables
 
+	#shellcheck disable=SC2119
 	getAllSettings || exit 1
 fi
 

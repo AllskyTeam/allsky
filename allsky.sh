@@ -105,7 +105,8 @@ if [[ ${NEEDS_REBOOT} == "true" ]]; then
 fi
 
 # Get all settings we're going to use.
-getAllSettings --var "lastchanged cameranumber local"
+#shellcheck disable=SC2119
+getAllSettings --var "lastchanged cameranumber local" || exit 1
 
 # If the "lastchanged" setting is missing, the user needs to review/change the settings.
 # This will happen after an installation or upgrade, which also sets the Allsky status.

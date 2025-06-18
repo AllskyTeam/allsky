@@ -138,9 +138,6 @@ if [[ ${S_daystokeep} -gt 0 ]]; then
 fi
 
 # Automatically delete old Website images and videos.
-
-
-LOCAL_WEB_DAYS_TO_KEEP="${S_daystokeeplocalwebsite}"
 if [[ ${S_daystokeeplocalwebsite} -gt 0 && ${S_uselocalwebsite} == "true" ]]; then
 	if [[ ! -d ${ALLSKY_WEBSITE} ]]; then
 		echo -e "${ME}: ${YELLOW}WARNING: 'Days to Keep on Pi Website' set but no Local Website found in '${ALLSKY_WEBSITE}!${NC}"

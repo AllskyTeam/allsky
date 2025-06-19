@@ -290,7 +290,7 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 		if [[ -z ${NICE} ]]; then
 			N=""
 		else
-			N="--nice ${NICE}"
+			N="--nice-level ${NICE}"
 		fi
 		KEOGRAM_EXTRA_PARAMETERS="$( settings ".keogramextraparameters" )"
 		MORE=""
@@ -431,12 +431,17 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 				RET=1
 			fi
 		else
+			if [[ -z ${NICE} ]]; then
+				N=""
+			else
+				N="nice -n ${NICE}"
+			fi
 			if [[ -n ${IMAGES_FILE} ]]; then
 				X="--images '${IMAGES_FILE}'"
 			else
 				X="--output '${UPLOAD_FILE}' '${INPUT_DIR}'"
 			fi
-			CMD="${NICE} '${ALLSKY_SCRIPTS}/timelapse.sh' ${DEBUG_ARG} ${X}"
+			CMD="${N} '${ALLSKY_SCRIPTS}/timelapse.sh' ${DEBUG_ARG} ${X}"
 			generate "Timelapse" "" "${CMD}"	# it creates the necessary directory
 			RET=$?
 		fi

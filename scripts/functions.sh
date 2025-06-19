@@ -1512,7 +1512,7 @@ function getAllSettings()
 	while [[ ${1:0:1} == "-" ]]
 	do
 		if [[ ${1} == "--var" ]]; then
-			VAR="${2}"
+			VAR="${2//	/ }"	# Convert tabs to spaces for convertJSON.php
 			shift
 		elif [[ ${1} == "--prefix" ]]; then
 			PREFIX="${2}"
@@ -1530,7 +1530,6 @@ function getAllSettings()
 		echo "${X}"
 		return 1
 	fi
-
 	eval "${X}"
 	return 0
 }

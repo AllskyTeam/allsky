@@ -81,7 +81,7 @@ if [[ ${S_keogramgenerate} == "true" ]]; then
 fi
 
 # Generate startrails from collected images.
-if [[ ${startrailsgenerate} == "true" ]]; then
+if [[ ${S_startrailsgenerate} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Startrails for ${DATE}"
 	#shellcheck disable=SC2086
 	X="$( "${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent --startrails "${DATE}" 2>&1 )"

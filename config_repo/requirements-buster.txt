@@ -8,6 +8,7 @@ pytz
 scipy<=1.8.1
 paho-mqtt
 suncalc
+swig
 Adafruit-Blinka
 vcgencmd
 certifi

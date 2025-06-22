@@ -440,19 +440,6 @@ class OECONFIG {
     }
 
     saveConfig() {
-        debugger;
-        /*
-        result =  $.ajax({
-            type: 'POST',
-            url: 'includes/overlayutil.php?request=Config',
-            data: { config: JSON.stringify(this.#config) },
-            async: false,
-            dataType: 'json',
-            cache: false
-        });*/
-    }
-
-    saveConfig1() {
         let fileName = this.#selectedOverlay.name;
         this.rebuildOverlayFonts();
         $.ajax({
@@ -464,7 +451,7 @@ class OECONFIG {
             },
             cache: false
         }).done(function() {
-        }).fail(function() {
+        }).fail(function(e) {
 			let msg = "Failed to save the overlay config.";
             msg += " Please check the permissions on the '~/allsky/config/overlay/config/" + fileName + "' file.";
             bootbox.alert(msg);
@@ -542,6 +529,20 @@ class OECONFIG {
         delete currentObject[last]
     }
 
+    getUsedFonts() {
+        let result = [];
+        for (const field of this.#config.fields) {
+            if ('font' in field) {
+                const fontName = field['font'];
+
+                if (!result.includes(fontName)) {
+                    result.push(fontName);
+                }
+            }
+        }
+        return result;
+    }
+
     rebuildOverlayFonts() {
         this.setValue('fonts', {});
         for (const field of this.#config.fields) {
@@ -554,6 +555,5 @@ class OECONFIG {
                 }
             }
         }
-        let tt = 56;
     }
 }

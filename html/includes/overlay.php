@@ -282,19 +282,18 @@ function DisplayOverlay($image_name)
                     <h4 class="modal-title">Font Manager</h4>
                 </div>
                 <div class="modal-body">
-                    <div class="alert alert-success mt-3" role="alert" id="oe-fontinstalldialog-info">
-                        <strong>Note:</strong> After installing a font please add the fonts to the overlay using the 'use' button. Please refer to the overlay documentation for more information
-                    </div>                    
-                    <table id="fontlisttable" class="display compact mt-5" style="width:98%">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Family</th>
-                                <th>Style</th>
-                                <th>&nbsp;</th>
-                            </tr>
-                        </thead>
-                    </table>
+                    <div class="mt-3">            
+                        <table id="fontlisttable" class="display compact" style="width:98%">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Family</th>
+                                    <th>Style</th>
+                                    <th>&nbsp;</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary pull-left" id="oe-font-dialog-add-font">Install from dafont</button>
@@ -724,6 +723,22 @@ function DisplayOverlay($image_name)
         </div>
     </div>
 
+    <div class="modal" role="dialog" id="oe-font-delete-dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Delete Font</h4>
+                </div>
+                <div class="modal-body">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" id="oe-font-delete-dialog-do-delete" disabled>Delete</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="modal" role="dialog" id="fontinstalldialog">
         <div class="modal-dialog modal-lg" role="document">

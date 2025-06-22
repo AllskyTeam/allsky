@@ -180,7 +180,18 @@ class MODULESEDITOR {
                 });
 
                 $(document).on('click', '.module-settings-button', (event) => {
+
+					//var loadingTimer = setTimeout(() => {
+					//	$.LoadingOverlay('show', {text : 'Sorry this is taking longer than expected ...'});
+        			//}, 10);
+
                     this.#createSettingsDialog(event.target);
+			
+					//$('#module-settings-dialog').off('shown.bs.modal').on('shown.bs.modal', () => {
+					//	clearTimeout(loadingTimer);
+					//	$.LoadingOverlay('hide');
+					//});
+
                     $('#module-settings-dialog').modal({
                         keyboard: false
                     });
@@ -308,7 +319,11 @@ class MODULESEDITOR {
 		$(document).off('click', '#module-settings-dialog-test')
         $(document).on('click', '#module-settings-dialog-test', () => {
 			this.#testModule()
-		})       
+		})
+		
+		$('#device-manager').off('click').on('click', () => {
+			$.devicemanager();			
+		});
     }
 
 	#moduleAdded(item) {
@@ -627,6 +642,17 @@ class MODULESEDITOR {
 					fieldValue = moduleData.metadata.arguments[key];
 				}
 
+				let extraFieldValue = 1;
+				if (fieldType == 'i2c') {
+					const extraKey = key + '-bus';
+					if (moduleData.metadata.arguments[extraKey] !== undefined) {
+						extraFieldValue = moduleData.metadata.arguments[extraKey];
+						if (extraFieldValue == "") {
+							extraFieldValue = 1;
+						}
+					}
+				}
+
                 let disabled = ''
                 if (fieldData.disabled !== undefined) {
                     if (fieldData.disabled) {
@@ -873,6 +899,9 @@ class MODULESEDITOR {
 
 					if (fieldType == 'i2c') {
 						inputHTML = '<input id="' + key + '" name="' + key + '" class="form-control" value="' + fieldValue + '"' + required + fieldDescription + '>';
+						let extraKey = key + '-bus';
+						inputHTML += '<input id="' + extraKey + '" name="' + extraKey + '" class="form-control hidden" value="' + extraFieldValue + '">';
+
 						extraClass = 'input-group';
 						inputHTML = '\
 							<div class="row">\
@@ -894,13 +923,18 @@ class MODULESEDITOR {
 
 						$(document).off('click', '#open-i2c-' + key)
                         $(document).on('click', '#open-i2c-' + key, (event) => {
-							var el = $(event.target).data('source');
-							let data = $('#' + el).val();
+							let el = $(event.target).data('source');
+							const address = $('#' + el).val();
+							el = $(event.target).data('source') + '-bus';
+							const bus = parseInt($('#' + el).val());
+
 
 							$.allskyI2C({
-								address: data,
-								i2cSelected: (address) => {
-									$('#' + key).val(address)                                 
+								address: address,
+								bus: extraFieldValue,
+								i2cSelected: (address, bus) => {
+									$(`#${key}`).val(address)                                 
+									$(`#${key}-bus`).val(bus)                                 
 								}
 							});
 						});						
@@ -1258,19 +1292,19 @@ class MODULESEDITOR {
             }
 
             if ('extradata' in moduleData.metadata) {
-                moduleSettingsHtml += '\
-                    <div role="tabpanel" style="margin-top:10px" class="tab-pane" id="as-module-var-list">\
-                        <div class="alert alert-success" role="alert">The table shows all variables that this module can generate. Where ${COUNT} appears it means that the module can generate multiple variables with ${COUNT} replaced by a number.<br>Any other ${} variables will be replaced with the relevant content - See the module documentation for more details</div>\
-                        <table id="as-module-var-list-table" class="display compact as-variable-list" style="width:98%;">\
-                            <thead>\
-                                <tr>\
-                                    <th>Variable</th>\
-                                    <th>Type</th>\
-                                    <th>Description</th>\
-                                </tr>\
-                            </thead>\
-                        </table>\
-                    </div>'
+                moduleSettingsHtml += `
+                    <div role="tabpanel" style="margin-top:10px" class="tab-pane" id="as-module-var-list">
+                        <div class="alert alert-success hidden as-module-var-count" role="alert">The table shows all variables that this module can generate. Where \${COUNT} appears it means that the module can generate multiple variables with \${COUNT} replaced by a number.<br>Any other \${} variables will be replaced with the relevant content - See the module documentation for more details</div>
+                        <table id="as-module-var-list-table" class="display compact as-variable-list" style="width:98%;">
+                            <thead>
+                                <tr>
+                                    <th>Variable</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>`
             }
 
             if ('changelog' in moduleData.metadata) {
@@ -1576,7 +1610,7 @@ class MODULESEDITOR {
 
         if ('extradata' in moduleData.metadata) {
             $('#as-module-var-list-table').DataTable().destroy()
-            $('#as-module-var-list-table').DataTable({
+            let variableTable = $('#as-module-var-list-table').DataTable({
                 ajax: {
                     url: 'includes/moduleutil.php?request=VariableList&module=' + module,
                     type: 'GET',
@@ -1611,6 +1645,22 @@ class MODULESEDITOR {
                     }
                 ]                
             })
+
+			variableTable.off('draw').on('draw', function () {
+				let found = false;
+
+				variableTable.column(0).data().each(function (value) {
+					if (value.toString().toUpperCase().includes("COUNT")) {
+						found = true;
+					}
+				});
+
+				if (found) {
+					$('.as-module-var-count').removeClass('hidden');
+				}
+			});
+
+
         }
 
         $('#module-settings-dialog').off('hidden.bs.modal')
@@ -1740,6 +1790,11 @@ class MODULESEDITOR {
 	}
 
 	#getFormValues() {
+
+		$('#module-editor-settings-form').find('input').each(function () {
+  			console.log(this.name, $(this).val());
+		});
+
 		let formValues = {};
 		$('#module-editor-settings-form :input:not([type=button])').each((index, element) => {
 			let el = $(element)

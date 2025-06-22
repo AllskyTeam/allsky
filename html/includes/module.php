@@ -61,6 +61,9 @@ function DisplayModule() {
 <script src="/js/highcharts/code/highcharts.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 <script src="/js/highcharts/code//modules/series-label.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
+<script src="/js/jquery-devicemanager/jquery-devicemanager.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+<link rel="stylesheet" href="/js/jquery-devicemanager/jquery-devicemanager.css?c=<?php echo ALLSKY_VERSION; ?>">
+
 <div class="row">
     <div class="col-lg-12">
 		<div class="panel panel-primary">
@@ -99,8 +102,10 @@ function DisplayModule() {
                             </ul>
                             <ul class="nav navbar-nav navbar-right">
                                 <li>
-                                    <div class="btn btn-lg navbar-btn" id="module-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Module Options"><i class="fa-solid fa-gear"></i>
-                                    </div>
+                                    <div class="btn btn-lg navbar-btn" id="device-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Device Manager"><i class="fa-solid fa-wrench"></i></div>
+                                </li>
+                                <li>
+                                    <div class="btn btn-lg navbar-btn" id="module-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Module Options"><i class="fa-solid fa-gear"></i></div>
                                 </li>
                                 <li id="oe-toolbar-debug" class="hidden">
                                     <div id="module-toobar-debug-button" class="btn btn-lg navbar-btn" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"><i class="fa-solid fa-bug"></i></div>
@@ -284,85 +289,6 @@ function DisplayModule() {
             </div>
         </div>
     </div>
-</div>
-
-<div class="modal" role="dialog" id="mm-i2c-dialog">
-	<div class="modal-dialog modal-lg" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<h4 class="modal-title">i2c Selector</h4>
-			</div>
-			<div class="modal-body">
-				<ul class="nav nav-tabs" role="tablist">
-					<li role="presentation" class="active"><a href="#mm-i2c-dialog-tab-detected" role="tab" data-toggle="tab">Detected Devices</a></li>
-					<li role="presentation"><a href="#mm-i2c-dialog-tab-library" aria-controls="profile" role="tab" data-toggle="tab">i2c Library</a></li>
-					<li role="presentation"><a href="#mm-i2c-dialog-tab-help" aria-controls="profile" role="tab" data-toggle="tab">Help</a></li>
-				</ul>
-
-
-                <div class="alert alert-danger mt-5" id="mm-i2c-error" style="display: none" role="alert">No i2c devices found. Please check that i2c is enabled using the raspi-config tool</div>
-
-                <div class="panel panel-default mt-5" id="mm-i2c-data-missing" style="display: none">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">i2c Library missing</h3>
-                    </div>
-                    <div class="panel-body">
-                        <p>The i2c library is not installed. To create the library please click the button below. The update can take several minutes.</p>
-                        <div class="text-center">
-                            <button class="btn btn-primary mm-i2c-create-library" >Create Library</button>
-                        </div>
-                    </div>
-                </div>
-
-				<div class="tab-content">
-					<div role="tabpanel" class="tab-pane active" id="mm-i2c-dialog-tab-detected">
-						<table id="mm-i2c-dialog-tab-detected-devices" class="display i2ctable" style="width:98%">
-							<thead>
-								<tr>
-									<th>Address</th>
-									<th>Possible Devices</th>
-									<th></th>                                        
-								</tr>
-							</thead>
-						</table>
-					</div>
-					<div role="tabpanel" class="tab-pane" id="mm-i2c-dialog-tab-library">
-						<div id="oe-item-list-dialog-all-table">
-							<table id="mm-i2c-dialog-tab-library-library" class="display compact i2ctable" style="width:98%">
-								<thead>
-									<tr>
-										<th>Address</th>
-										<th>Devices</th>
-										<th>Address Range</th>
-										<th>Link</th>
-									</tr>
-								</thead>
-							</table>
-						</div>
-					</div>
-					<div role="tabpanel" class="tab-pane" id="mm-i2c-dialog-tab-help">
-						<h3>Information</h3>
-						<p>This dialog allows you to select the required i2c address by providing a list of devices addresses detected on your Pi and a list of possible devices.</p>
-						<p><strong>NOTE:</strong> The devices listed are only possible devices. If you are sure you know the address you require but your device is not listed please select the address anyway.</p>
-						<p>The hardware and address data used in this dialog has been provided by Adafruit, see <a href="https://github.com/adafruit/I2C_Addresses" target="_blank">Adafruit i2c list</a></p>
-						<br>
-						<h4>Detected Devices</h4>
-						<p>Since multiple hardware devices can share the same i2c address This tab displays the devices that have been detected on the FIRST i2c bus and a list of possible devices</p>
-						<p>Select the relevant address by clicking on the row.</p>
-						<h4>i2c Library</h4>
-						<p>This tab shows a list of knows i2c hardware devices and the addresses they occupy. Given that new devices are released frequntly this list may not be uptodate</p>
-					</div>                        
-				</div>
-			</div>
-			<div class="modal-footer">
-                <button type="button" class="btn btn-primary pull-left mm-i2c-create-library" >Update Database</button>
-
-				<button type="button" class="btn btn-danger" data-dismiss="modal" id="mm-i2c-dialog-cancel">Close</button>
-				<button type="submit" class="btn btn-primary" id="mm-i2c-dialog-select">Select</button>
-			</div>
-		</div>
-	</div>
 </div>
 
 <script type="module">

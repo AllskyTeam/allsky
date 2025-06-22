@@ -7,8 +7,10 @@
             data: {},
             active: true,
             id: 'oe-i2c',
+            modalid: 'oe-i2c-modal',
             dirty: false,
             address: '',
+            bus: 1,
             i2cSelected: function (address) { }
         }
 
@@ -29,8 +31,9 @@
 
 
         plugin.init = function () {
+            addDialogHTML();
             getData();
-            createHtml();
+            createTables();
             buildUI();
             updateUI();
             setupEvents();
@@ -72,25 +75,6 @@
             }
             plugin.settings.deviceListData = data;
 
-            data = [];
-            for (let deviceNumber in plugin.settings.installedDevices[1].devices) {
-                let deviceAddress = plugin.settings.installedDevices[1].devices[deviceNumber];
-                let intAddress = addressToDecinal(deviceAddress)
-                if (intAddress !== 0) {
-                    for (let libDeviceAddress in plugin.settings.deviceList) {
-                        let intLibDeviceAddress = addressToDecinal(libDeviceAddress);
-                        if (intAddress == intLibDeviceAddress) {
-                            data.push({
-                                'address': deviceAddress,
-                                'devices': plugin.settings.deviceList[libDeviceAddress]
-                            });
-                            break;
-                        }
-                    }
-                }
-            }
-            plugin.settings.detected = data;
-
             $('body').LoadingOverlay('hide')
         }
 
@@ -102,13 +86,20 @@
             return intAddress
         }
 
-        var createHtml = function() {
+        var boldFirstWord = function (text) {
+            return text.replace(/^(\S+)/, '<strong>$1</strong>');
+        }
+
+        var createTables = function() {
 
             plugin.settings.deviceTable = $('#mm-i2c-dialog-tab-detected-devices').DataTable({
                 data: plugin.settings.detected,
                 retrieve: true,
                 autoWidth: false,
                 pagingType: 'simple_numbers',
+                select: {
+                    style: 'single'
+                },
                 paging: true,
                 info: true,
                 ordering: false,
@@ -120,7 +111,9 @@
                 columns: [
                     {
                         data: 'address',
-                        width: '100px'
+                        width: '100px',
+                        type: 'string',
+                        className: 'v-align-top'
                     }, {
                         data: null,
                         width: '400px',
@@ -129,7 +122,7 @@
                             let len = Math.ceil((item.devices.length / 2));
                             for (let entry in item.devices) {
                                 if (entry < len) {
-                                    devicesList += '&#x2022; ' + item.devices[entry].device + '<br/>';
+                                    devicesList += '&#x2022; ' + boldFirstWord(item.devices[entry].device) + '<br/>';
                                 }
                             }
                             devicesList += '<br/>';
@@ -144,7 +137,7 @@
                             let len = item.devices.length - Math.ceil((item.devices.length / 2));
                             for (let entry in item.devices) {
                                 if (entry >= len) {
-                                    devicesList += '&#x2022; ' + item.devices[entry].device + '<br/>';
+                                    devicesList += '&#x2022; ' + boldFirstWord(item.devices[entry].device) + '<br/>';
                                 }
                             }
                             devicesList += '<br/>';
@@ -156,7 +149,7 @@
                 ]
             });
             
-            let selectedRow = -1;
+          /*  let selectedRow = -1;
             plugin.settings.deviceTable.rows().every (function (rowIdx, tableLoop, rowLoop) {
                 if (this.data().address === plugin.settings.address) {
                   this.select();
@@ -170,7 +163,7 @@
                 let pageNumber = Math.floor(selectedRow / rowsPerPage);
                 plugin.settings.deviceTable.page(pageNumber).draw(false);
             }
-
+*/
             plugin.settings.deviceTable.on('click', 'tbody tr', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -205,14 +198,16 @@
                 columns: [
                     {
                         data: 'address',
-                        width: '100px'
+                        width: '100px',
+                        type: 'string',
+                        className: 'v-align-top'
                     }, {
                         data: null,
                         width: '400px',
                         render: function (item, type, row, meta) {
                             let devicesList = '';
                             for (let entry in item.devices) {
-                                devicesList += '&#x2022; ' + item.devices[entry].device + '<br/>';
+                                devicesList += '&#x2022; ' + boldFirstWord(item.devices[entry].device) + '<br/>';
                             }
                             devicesList += '<br/>';
 
@@ -250,10 +245,103 @@
 
         }
 
+        var addDialogHTML = function() {
+            $(`#${plugin.settings.modalid}`).remove();
+            $('body').append(`
+                <div class="modal" role="dialog" id="${plugin.settings.modalid}">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title">i2c Selector</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="panel panel-default panel-shadow">
+                                    <div class="panel-body">
+                                        <form id="as-i2c-bus-select-form" class="form-horizontal hidden">
+                                            <label for="bus-select" class="col-sm-2 control-label">Select Bus</label>
+                                            <div class="col-sm-4">
+                                                <select id="as-i2c-bus-select" class="form-control">
+                                                </select>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div class="panel panel-default panel-shadow">                                
+                                    <ul class="nav nav-tabs" role="tablist">
+                                        <li role="presentation" class="active"><a href="#mm-i2c-dialog-tab-detected" role="tab" data-toggle="tab">Detected Devices</a></li>
+                                        <li role="presentation"><a href="#mm-i2c-dialog-tab-library" aria-controls="profile" role="tab" data-toggle="tab">i2c Library</a></li>
+                                        <li role="presentation"><a href="#mm-i2c-dialog-tab-help" aria-controls="profile" role="tab" data-toggle="tab">Help</a></li>
+                                    </ul>
+                                    <div class="alert alert-danger mt-5" id="mm-i2c-error" style="display: none" role="alert">No i2c devices found. Please check that i2c is enabled using the raspi-config tool</div>
+                                    <div class="panel panel-default mt-5" id="mm-i2c-data-missing" style="display: none">
+                                        <div class="panel-heading">
+                                            <h3 class="panel-title">i2c Library missing</h3>
+                                        </div>
+                                        <div class="panel-body">
+                                            <p>The i2c library is not installed. To create the library please click the button below. The update can take several minutes.</p>
+                                            <div class="text-center">
+                                                <button class="btn btn-primary mm-i2c-create-library" >Create Library</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="tab-content">
+                                        <div role="tabpanel" class="tab-pane active" id="mm-i2c-dialog-tab-detected">
+                                            <table id="mm-i2c-dialog-tab-detected-devices" class="display i2ctable" style="width:98%">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Address</th>
+                                                        <th>Possible Devices</th>
+                                                        <th></th>                                        
+                                                    </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                        <div role="tabpanel" class="tab-pane" id="mm-i2c-dialog-tab-library">
+                                            <div id="oe-item-list-dialog-all-table">
+                                                <table id="mm-i2c-dialog-tab-library-library" class="display compact i2ctable" style="width:98%">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Address</th>
+                                                            <th>Devices</th>
+                                                            <th>Address Range</th>
+                                                            <th>Link</th>
+                                                        </tr>
+                                                    </thead>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div role="tabpanel" class="tab-pane" id="mm-i2c-dialog-tab-help">
+                                            <h3>Information</h3>
+                                            <p>This dialog allows you to select the required i2c address by providing a list of devices addresses detected on your Pi and a list of possible devices.</p>
+                                            <p><strong>NOTE:</strong> The devices listed are only possible devices. If you are sure you know the address you require but your device is not listed please select the address anyway.</p>
+                                            <p>The hardware and address data used in this dialog has been provided by Adafruit, see <a href="https://github.com/adafruit/I2C_Addresses" target="_blank">Adafruit i2c list</a></p>
+                                            <br>
+                                            <h4>Detected Devices</h4>
+                                            <p>Since multiple hardware devices can share the same i2c address This tab displays the devices that have been detected and a list of possible devices</p>
+                                            <p>Select the relevant address by clicking on the row.</p>
+                                            <h4>i2c Library</h4>
+                                            <p>This tab shows a list of knows i2c hardware devices and the addresses they occupy. Given that new devices are released frequntly this list may not be uptodate</p>
+                                        </div>                        
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary pull-left mm-i2c-create-library" >Update Database</button>
+                                    <button type="button" class="btn btn-danger" data-dismiss="modal" id="mm-i2c-dialog-cancel">Close</button>
+                                    <button type="submit" class="btn btn-primary" id="mm-i2c-dialog-select">Select</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `);
+        }
+
         var setupEvents = function() {
-            $('#mm-i2c-dialog').on('click', '#mm-i2c-dialog-select', (e) => {
-                plugin.settings.i2cSelected.call(this, plugin.settings.address);
-				$('#mm-i2c-dialog').modal('hide');
+            $('#mm-i2c-dialog-select').off('click').on('click', (e) => {
+                plugin.settings.i2cSelected.call(this, plugin.settings.address, plugin.settings.bus);
+				$(`#${plugin.settings.modalid}`).modal('hide');
             })
 
             $('.mm-i2c-create-library').on('click', (e) => {
@@ -280,8 +368,41 @@
                     updateUI();
                     $('body').LoadingOverlay('hide')
                 });
-
             });
+
+            $('#as-i2c-bus-select').off('change').on('change', function() {
+                const bus = $(this).val();
+                setI2CBus(bus);
+            });
+        }
+
+        var setI2CBus = function(bus) {
+            let data = [];
+            if (plugin.settings.installedDevices[bus] === undefined) {
+                bus = 1
+            }
+            for (let deviceNumber in plugin.settings.installedDevices[bus].devices) {
+                let deviceAddress = plugin.settings.installedDevices[bus].devices[deviceNumber];
+                let intAddress = addressToDecinal(deviceAddress)
+                if (intAddress !== 0) {
+                    for (let libDeviceAddress in plugin.settings.deviceList) {
+                        let intLibDeviceAddress = addressToDecinal(libDeviceAddress);
+                        if (intAddress == intLibDeviceAddress) {
+                            data.push({
+                                'address': deviceAddress,
+                                'devices': plugin.settings.deviceList[libDeviceAddress]
+                            });
+                            break;
+                        }
+                    }
+                }
+            }
+            plugin.settings.detected = data;
+            plugin.settings.bus = parseInt(bus);
+
+            plugin.settings.deviceTable.clear();
+            plugin.settings.deviceTable.rows.add(data);
+            plugin.settings.deviceTable.draw();
         }
 
         var updateUI = function() {
@@ -313,18 +434,43 @@
         }
 
         var buildUI = function() {
-            $('#mm-i2c-dialog').modal({
-                keyboard: false,
-                width: 800
+            const count = Object.keys(plugin.settings.installedDevices).length;
+            if (count > 1) {
+                $('#as-i2c-bus-select-form').removeClass('hidden');
+            }
+            var select = $('#as-i2c-bus-select');
+            Object.keys(plugin.settings.installedDevices).forEach((bus) =>{
+                select.append('<option value="' + bus + '">Bus ' + bus + '</option>');
             });
 
-            $('#mm-i2c-dialog').on('hidden.bs.modal', function () {
+            $(`#${plugin.settings.modalid}`).modal({
+                keyboard: false,
+                width: 900
+            });
+
+            $(`#${plugin.settings.modalid}`).on('hidden.bs.modal', function () {
                 plugin.settings.deviceTable.off('click', 'tbody tr');
 
                 $('#mm-i2c-dialog-tab-detected-devices').DataTable().destroy()
                 $('#mm-i2c-dialog-tab-library-library').DataTable().destroy()
             });
 
+            setI2CBus(plugin.settings.bus);
+            $('#as-i2c-bus-select').val(plugin.settings.bus);
+
+
+
+plugin.settings.deviceTable .rows().deselect(); // optional: clear existing selection
+
+plugin.settings.deviceTable .rows().every(function () {
+  var data = this.data();
+  if (data.address === plugin.settings.address) {  // first column match
+    this.select();
+  }
+});
+
+
+            
         }
 
         plugin.destroy = function () {

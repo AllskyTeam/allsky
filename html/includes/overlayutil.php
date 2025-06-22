@@ -531,7 +531,7 @@ class OVERLAYUTIL
                 $fontInfo = $this->scanFont($fontPath);
                 $obj = (object) [
                     'id' => $count,
-                    'name' => basename($font),
+                    'name' => pathinfo($font, PATHINFO_FILENAME),
                     'family' => $fontInfo['family'],
                     'style' => $fontInfo['style'],
                     'type' => 'user',

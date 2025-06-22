@@ -961,10 +961,11 @@ class OEUIMANAGER {
         $(document).on('click', '#oe-font-dialog-preview', (event) => {
             $('#oe-font-preview-modal').modal({
                 keyboard: false,
-                width: 600
+                width: 700
             });
 
-            $('#oe-font-preview-modal-font-select, #oe-font-preview-modal-preview-text').on('input change', () => {
+            $('#oe-font-preview-modal-font-select, #oe-font-preview-modal-preview-text, #oe-font-preview-modal-font-size').off('input change')
+            $('#oe-font-preview-modal-font-select, #oe-font-preview-modal-preview-text, #oe-font-preview-modal-font-size').on('input change', () => {
                 const font = $('#oe-font-preview-modal-font-select').val();
                 const text = $('#oe-font-preview-modal-preview-text').val().trim();
                 const size = $('#oe-font-preview-modal-font-size').val() + 'px';
@@ -995,8 +996,9 @@ class OEUIMANAGER {
         
         $(document).off('click', '#oe-upload-font');
         $(document).on('click', '#oe-upload-font', (event) => {
+            var usedFonts = this.#configManager.getUsedFonts();
             $('#fontlisttable').DataTable().destroy();
-            $('#fontlisttable').DataTable({
+            let fontTable = $('#fontlisttable').DataTable({
                 ajax: function(data, callback, settings) {
                     $.ajax({
                         url: 'includes/overlayutil.php?request=Fonts',
@@ -1014,13 +1016,15 @@ class OEUIMANAGER {
                     });
                 },
 
-                dom: '<"toolbar">frtip',
+                dom1: '<"toolbar">lfrtip',
+                dom: '<"row oe-table-header"<"col-sm-6"l><"col-sm-6"f>>rt<"row"<"col-sm-6"p>>',
                 autoWidth: false,
                 pagingType: 'simple_numbers',
                 paging: true,
                 pageLength: 20,
                 info: false,
-                searching: false,
+                searching: true,
+                lengthMenu: [10, 20, 30, { label: 'All', value: -1 }],
                 order: [[0, 'asc']],
                 columns: [
                     {
@@ -1040,15 +1044,28 @@ class OEUIMANAGER {
                             let config = window.oedi.get('config');
                             let defaultFont = config.getValue('settings.defaultfont');
 
+                            let disabled = '';
+                            let tooltip = 'Delete font';
+                            if (usedFonts.includes(row.name)) {
+                                disabled = 'disabled';
+                            }
+
                             let buttons = '';
                             if (item.type == 'user' && item.name !== defaultFont) {
-                                buttons += '<button type="button" class="btn btn-danger btn-xs oe-list-font-delete" data-fontname="' + item.name + '"><i class="fa-solid fa-trash"></i></button>';
+                                buttons += `
+                                    <span data-toggle="tooltip" title="${tooltip}">
+                                        <button type="button" class="btn btn-danger btn-xs oe-list-font-delete" data-fontname="${item.name}"><i class="fa-solid fa-trash"></i></button>
+                                    </span>`;
                             }
                             return buttons;
                         }
                     }
 
                 ]
+            });
+
+            fontTable.on('draw', function () {
+                $('[data-toggle="tooltip"]').tooltip();
             });
 
             $('#fontlistdialog').modal({
@@ -1060,15 +1077,25 @@ class OEUIMANAGER {
         $(document).off('click', '.oe-list-font-delete');
         $(document).on('click', '.oe-list-font-delete', (event) => {
             event.stopPropagation();
-            if (window.confirm('Are you sure you wish to delete this font? If the font is in use then all fields will be set to the default font.')) {
-                let fontName = $(event.currentTarget).data('fontname');
-                if (fontName !== 'undefined') {
-                    let uiManager = window.oedi.get('uimanager');
-                    uiManager.deleteFont(fontName);
-                    this.#configManager.dirty = true;
-                    this.updateToolbar();
+            
+            $('#oe-font-delete-dialog').modal({
+                keyboard: false,
+                width: 500
+            });
+            
+            /*var fontName = $(event.currentTarget).data('fontname');
+            if (fontName !== 'undefined') {
+
+                if (this.#fieldManager.isFontUsed(fontName)) {
+                    debugger;
                 }
-            }
+                if (window.confirm('Are you sure you wish to delete this font? If the font is in use then all fields will be set to the default font.')) {
+                        let uiManager = window.oedi.get('uimanager');
+                        uiManager.deleteFont(fontName);
+                        this.#configManager.dirty = true;
+                        this.updateToolbar();
+                }
+            }*/
         });
 
     }
@@ -1502,7 +1529,7 @@ class OEUIMANAGER {
 
     #saveConfig() {
         this.#fieldManager.buildJSON();
-        this.#configManager.saveConfig1();
+        this.#configManager.saveConfig();
         this.#fieldManager.clearDirty();
         this.#configManager.dirty = false;
         this.updateToolbar();
@@ -1831,6 +1858,64 @@ class OEUIMANAGER {
         });
     }
 
+
+    setupFonts() {
+        this.#fonts = [];
+
+        this.#fonts.push({ 'value': 'Arial', 'text': 'Arial (sans-serif)' });
+        this.#fonts.push({ 'value': 'Arial Black', 'text': 'Arial Black (sans-serif)' });
+        this.#fonts.push({ 'value': 'Times New Roman', 'text': 'Times New Roman (serif)' });
+        this.#fonts.push({ 'value': 'Courier New', 'text': 'Courier (monospace)' });
+        this.#fonts.push({ 'value': 'Verdana', 'text': 'Verdana (sans-serif)' });
+        this.#fonts.push({ 'value': 'Trebuchet MS', 'text': 'Trebuchet MS (sans-serif)' });
+        this.#fonts.push({ 'value': 'Impact', 'text': 'Impact (sans-serif)' });
+        this.#fonts.push({ 'value': 'Georgia', 'text': 'Georgia (serif)' });
+        this.#fonts.push({ 'value': 'Comic Sans MS', 'text': 'Comic Sans MS (cursive)' });
+
+        /** Add our fonts */
+        let fontList = Array.from(document.fonts);
+        for (let i = 0; i < fontList.length; i++) {
+            let fontFace = fontList[i];
+            let fontName = fontFace.family.replace(/["']/g, '');
+
+            let alreadyExists = this.#fonts.some(f => f.value === fontName);
+            if (!alreadyExists) {
+                this.#fonts.push({ 'value': fontName, 'text': fontName });
+            }
+        }
+    }
+
+    deleteFont(fontName) {
+        let fontToDelete = null;
+        const fontBaseName = fontName.split('/').pop().replace(/\.[^/.]+$/, '');
+        for (let fontFace of document.fonts.values()) {
+            if (fontFace.family == fontBaseName) {
+                fontToDelete = fontFace;
+                break;
+            }
+        }
+
+        if (fontToDelete !== null) {
+            $.LoadingOverlay('show');
+            let result = document.fonts.delete(fontToDelete);
+            if (result) {
+                $.ajax({
+                    url: 'includes/overlayutil.php?request=font&fontName=' + fontName,
+                    type: 'DELETE',
+                    context: this
+                }).done((result) => {
+                    this.#fieldManager.switchFontUsed(fontName);
+                     $('#fontlisttable').DataTable().ajax.reload();
+                }).fail((jqXHR, textStatus, errorThrown) => {
+                }).always(() => {
+                    $.LoadingOverlay('hide');
+                });
+            } else {
+                $.LoadingOverlay('hide');
+            }
+        }
+    }
+
     setFieldOpacity(state, ignoreId) {
         let opacity = this.#configManager.addFieldOpacity / 100;
         if (typeof ignoreId !== 'undefined') {
@@ -2088,63 +2173,6 @@ class OEUIMANAGER {
         }
     }
 
-    /**
-     * Build an internal list of all available fonts. This is used for the drop downs on the 
-     * text field property editor.
-     */
-    setupFonts() {
-        this.#fonts = [];
-
-        /** Add our fonts */
-        let fontList = Array.from(document.fonts);
-        for (let i=0; i<fontList.length; i++) {
-            let fontFace = fontList[i];
-            this.#fonts.push({ 'value': fontFace.family, 'text': fontFace.family });
-        };
-
-        /** Add Web safe fonts */
-        this.#fonts.push({ 'value': 'Arial', 'text': 'Arial (sans-serif)' });
-        this.#fonts.push({ 'value': 'Arial Black', 'text': 'Arial Black (sans-serif)' });
-        this.#fonts.push({ 'value': 'Times New Roman', 'text': 'Times New Roman (serif)' });
-        this.#fonts.push({ 'value': 'Courier New', 'text': 'Courier (monospace)' });
-        this.#fonts.push({ 'value': 'Verdana', 'text': 'Verdana (sans-serif)' });
-        this.#fonts.push({ 'value': 'Trebuchet MS', 'text': 'Trebuchet MS (sans-serif)' });
-        this.#fonts.push({ 'value': 'Impact', 'text': 'Impact (sans-serif)' });
-        this.#fonts.push({ 'value': 'Georgia', 'text': 'Georgia (serif)' });
-        this.#fonts.push({ 'value': 'Comic Sans MS', 'text': 'Comic Sans MS (cursive)' });
-    }
-
-    deleteFont(fontName) {
-        let fontToDelete = null;
-        const fontBaseName = fontName.split('/').pop().replace(/\.[^/.]+$/, '');
-        for (let fontFace of document.fonts.values()) {
-            if (fontFace.family == fontBaseName) {
-                fontToDelete = fontFace;
-                break;
-            }
-        }
-
-        if (fontToDelete !== null) {
-            $.LoadingOverlay('show');
-            let result = document.fonts.delete(fontToDelete);
-            if (result) {
-                $.ajax({
-                    url: 'includes/overlayutil.php?request=font&fontName=' + fontName,
-                    type: 'DELETE',
-                    context: this
-                }).done((result) => {
-                    this.#fieldManager.switchFontUsed(fontName);
-                     $('#fontlisttable').DataTable().ajax.reload();
-                }).fail((jqXHR, textStatus, errorThrown) => {
-                }).always(() => {
-                    $.LoadingOverlay('hide');
-                });
-            } else {
-                $.LoadingOverlay('hide');
-            }
-        }
-    }
-
     #hexToRgb(hex, opacity) {
         hex = hex.replace(/^#/, '')
 
@@ -2362,22 +2390,6 @@ class OEUIMANAGER {
                 let uiManager = window.oedi.get('uimanager')
 				let selected = uiManager.#selected
                 let type = selected.type;
-				/*let type = ''				
-				if (selected.fieldData.type === '' || selected.fieldData.type === undefined) {
-					let label  = selected.fieldData.label
-					const regex = /\${([^}]+)}/;
-					const match = label.match(regex);
-					if (match !== null) {
-						let configManager = window.oedi.get('config');
-						let name = match[0]
-						let field = configManager.findFieldByName(name)
-						if (field !== null) {
-							type = field.type
-						}
-					}
-				} else {
-					type = selected.fieldData.type
-				}*/
                 uiManager.#createFormatHelpWindow(type);
             }},
             sample: { group: 'Label', name: 'Sample', type: 'text' },

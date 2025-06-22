@@ -1,0 +1,74 @@
+#deviceManagerModal .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+#dm-tab-i2c .i2c-entry {
+    margin: 0px 5px 10px 5px;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #f9f9f9;
+}
+
+#dm-tab-i2c .i2c-header {
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+#dm-tab-i2c .i2c-device-col {
+    display: inline-block;
+    vertical-align: top;
+    width: 49%;
+    font-size: 90%;
+    padding-left: 5px;
+}
+
+#dm-tab-i2c .i2c-device-col small {
+    color: #888;
+}
+
+#dm-tab-serial pre {
+    white-space: pre-wrap;
+    margin-top: 5px;
+    background: #f7f7f7;
+    padding: 6px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+
+
+
+    .dm-ow-wrapper {
+      height: 100%;
+      display: table;
+      width: 100%;
+    }
+
+    .dm-ow-row {
+      display: table-row;
+      height: 100%;
+    }
+
+    .dm-ow-left {
+      display: table-cell;
+      width: 25%;
+      vertical-align: middle;
+      text-align: center;
+    }
+
+    .dm-ow-right {
+      display: table-cell;
+      width: 75%;
+      vertical-align: top;
+    }
+
+    .dm-ow-top-bar {
+      height: 40px;
+
+    }
+
+    .dm-ow-main-content {
+      height: calc(100% - 70px); /* account for top bar + spacing */
+    }

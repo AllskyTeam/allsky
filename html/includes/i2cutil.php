@@ -17,7 +17,7 @@ class I2CUTIL
 
     public function run()
     {
-        //$this->checkXHRRequest();
+        $this->checkXHRRequest();
         $this->sanitizeRequest();
         $this->runRequest();
     }
@@ -116,6 +116,11 @@ class I2CUTIL
         $this->sendResponse($data);		
 	}
 
+    public function getDeviceManager() {
+		$command = 'sudo ' . ALLSKY_SCRIPTS . "/devicemanager.py";
+		$result = $this->runShellCommand($command);
+        $this->sendResponse($result['message']);	
+	}
 }
 
 

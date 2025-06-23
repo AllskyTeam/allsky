@@ -1199,7 +1199,7 @@ set_permissions()
 	# Ensure the support folder has the correct owner and group
 	[[ ! -d ${ALLSKY_SUPPORT_DIR} ]] && mkdir -p "${ALLSKY_SUPPORT_DIR}"
 	sudo chown "${ALLSKY_OWNER}":"${WEBSERVER_GROUP}" "${ALLSKY_SUPPORT_DIR}"
-	sudo chgrp 775 "${ALLSKY_SUPPORT_DIR}"
+	sudo chmod 775 "${ALLSKY_SUPPORT_DIR}"
 }
 
 

@@ -169,6 +169,7 @@ class SUPPORTUTIL
 				'ext'	   => 'zip'
 			];
 		} else {
+			error_log("Support log file '$filename' is not a valid file name - ignoring.");
 			return null;
 		}
 	}
@@ -187,7 +188,7 @@ class SUPPORTUTIL
 		$newId = $_POST['newId'];		// user-entered number
 		$fileParts = $this->parseFilename($logId);
 		if ($fileParts === null) {
-			$this->send500("Bad file name: $logId");
+			$this->send500("Bad file name: '$logId'");
 		}
 
 // TODO: Look in GitHub to see if the newId is an existing Discussion or Issue.
@@ -201,11 +202,37 @@ $newType = "D"; // For now assume Discussion.
 		$ext = $fileParts['ext'];
 		$newFile = $this->issueDir . DIRECTORY_SEPARATOR;
 		$newFile .= "support-$source-$newType$newId-$timestamp.$ext";
-		if (rename($fromFile, $newFile)) {
-			$this->sendResponse(json_encode("ok"));
-		} else {
-			$this->send500("Could not rename($fromFile, $newFile)");
+		$ret = @rename($fromFile, $newFile);
+		if ($ret === false) {
+			// Assume if failed due to permissions.
+			$cmd = "sudo chgrp " . WEBSERVER_GROUP . " '$fromFile' " . ALLSKY_SUPPORT_DIR;
+			$cmd .= " && sudo chmod g+w '$fromFile' " . ALLSKY_SUPPORT_DIR;
+			$return = null;
+			$ret = exec("( $cmd ) 2>&1", $return, $retval);
+			if (gettype($return) === "array")
+				$c = count($return);
+			else
+				$c = 0;
+			if ($ret === false || $c > 0 || $retval !== 0) {
+				$msg = "ERROR: '$cmd' returned code $retval: ";
+				if ($c > 0) {
+					$msg .= implode("\n", $return);
+				} else {
+					$msg .= error_get_last()['message'];
+				}
+				error_log($msg);
+				$this->send500("cmd '$cmd' failed");
+			}
+			$ret = @rename($fromFile, $newFile);
+			if ($ret === false) {
+				$msg = "ERROR: '$cmd' failed: ";
+				$msg .= error_get_last()['message'];
+				error_log($msg);
+				$this->send500("Could not rename($fromFile, $newFile)");
+			}
 		}
+
+		$this->sendResponse(json_encode("ok"));
 	}
 
 	public function postDeleteLog()

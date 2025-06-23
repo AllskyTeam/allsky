@@ -395,13 +395,11 @@ function generate_support_info()
 	# We're in a subshell so we need to "echo" this to pass it back to our invoker.
 	echo "${DIALOG_COMPLETE_MESSAGE//XX_ZIPNAME_XX/${ZIP_NAME}}"
 
-	ZIP_NAME="${TEMP_DIR}/${ZIP_NAME}"
 	cd "${TEMP_DIR}" || exit 1
-	zip -r "${ZIP_NAME}" ./* > /dev/null 2>&1
-	sudo chown "${USER_NAME}:${WEBSERVER_OWNER}" "${ZIP_NAME}"
-	sudo chmod g+wx "${ZIP_NAME}"
-	sudo chmod u+wx "${ZIP_NAME}"
+	zip -r "${TEMP_DIR}/${ZIP_NAME}" ./* > /dev/null 2>&1
 	sudo mv "${ZIP_NAME}" "${ALLSKY_SUPPORT_DIR}"
+	sudo chown "${USER_NAME}:${WEBSERVER_OWNER}" "${ALLSKY_SUPPORT_DIR}/${ZIP_NAME}"
+	sudo chmod 664 "${ALLSKY_SUPPORT_DIR}/${ZIP_NAME}"
 
 	rm -rf "${TEMP_DIR}"
 

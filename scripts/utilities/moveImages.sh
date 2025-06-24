@@ -123,7 +123,7 @@ fi
 # Reset everything that points to old location.
 if [[ ${ALLSKY_IMAGES_ALREADY_MOVED} == "true" ]]; then
 	ALLSKY_IMAGES_ORIGINAL="$( eval "$( grep "^ALLSKY_IMAGES=" "${ALLSKY_HOME}/variables.sh" )"; echo "${ALLSKY_IMAGES}" )"
-	if [[ ${NEW_ALLSKY_IMAGES} == ${ALLSKY_IMAGES_ORIGINAL} ]]; then
+	if [[ ${NEW_ALLSKY_IMAGES} == "${ALLSKY_IMAGES_ORIGINAL}" ]]; then
 		# Restore to standard location.
 		sed -i -e '/^ALLSKY_IMAGES=/d' "${ALLSKY_USER_VARIABLES}"
 		RET=$?

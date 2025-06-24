@@ -27,6 +27,8 @@ function DisplayEditor()
 		$envN = basename(ALLSKY_ENV);
 		$envN_withComment = $envN;		// not needed, but use for consistency with other files.
 		$fullEnvN = "current/$envN";
+	} else {
+		$fullEnvN = "";
 	}
 	$envOK = "true";
 

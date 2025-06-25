@@ -364,6 +364,16 @@ function generate_support_info()
 		fi
 	fi
 
+	local CONF_FILE="/etc/lighttpd/lighttpd.conf"
+	if [[ -f ${CONF_FILE} ]]; then
+		cp "${CONF_FILE}" "${TEMP_DIR}/etc-$( basename "${CONF_FILE}" )"
+	fi
+
+	local INC_FILE="${ALLSKY_WEBUI}/includes/${ALLSKY_DEFINES_INC}"
+	if [[ -f ${INC_FILE} ]]; then
+		cp "${INC_FILE}" "${TEMP_DIR}"
+	fi
+	
 	[[ -d ${ALLSKY_CONFIG} ]] && cp -ar "${ALLSKY_CONFIG}" "${TEMP_DIR}"
 
 	if [[ -d ${ALLSKY_TMP} ]]; then

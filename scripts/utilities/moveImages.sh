@@ -102,6 +102,16 @@ fi
 sudo chown "${ALLSKY_OWNER}":"${ALLSKY_OWNER}" "${NEW_ALLSKY_IMAGES}"
 chmod 775 "${NEW_ALLSKY_IMAGES}"
 
+# Make sure the web server can view the directory.
+DIR="${NEW_ALLSKY_IMAGES}"
+while ! sudo --user "${WEBSERVER_OWNER}" ls "${DIR}" > /dev/null 2>&1
+do
+	display_msg --logonly info "  > Changing permissions of '${DIR}' so web server can view images."
+	sudo chmod o+rx "${DIR}"
+	[[ ${DIR} == "/" ]] && break
+	DIR="$( dirname "${DIR}" )"
+done
+
 # Get current status of Allsky to determine if we have to stop and restart it.
 STATUS="$( get_allsky_status )"
 if [[ ${STATUS} == "${ALLSKY_STATUS_STARTING}" ||

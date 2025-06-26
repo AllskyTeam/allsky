@@ -117,7 +117,8 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_BIN="${ALLSKY_HOME}/bin"
 
 	# Holds all the images on a per-day basis.
-	ALLSKY_IMAGES="${ALLSKY_HOME}/images"
+	ALLSKY_IMAGES_ORIGINAL="${ALLSKY_HOME}/images"
+	ALLSKY_IMAGES="${ALLSKY_IMAGES_ORIGINAL}"		# User can override
 
 	# Areas for users' Allsky-related files that get propogated to new releases.
 	ALLSKY_MYFILES_NAME="myFiles"

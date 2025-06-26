@@ -3069,12 +3069,12 @@ do_restore()
 	display_msg --log progress "Restoring files:"
 
 	ITEM="${SPACE}'images' directory"
-	if [[ ${ALLSKY_IMAGES_MOVED} == "true" ]]; then
+	if [[ ${ALLSKY_IMAGES} != "${ALLSKY_IMAGES_ORIGINAL}" ]]; then
 		display_msg --log progress "${ITEM} (leaving '${ALLSKY_IMAGES}' as is)"
 	else
-		if [[ -d ${ALLSKY_HOME}/images ]]; then
+		if [[ -d ${ALLSKY_IMAGES} ]]; then
 			display_msg --log progress "${ITEM} (moving back)"
-			mv "${ALLSKY_HOME}/images" "${PRIOR_ALLSKY_DIR}"
+			mv "${ALLSKY_IMAGES}" "${PRIOR_ALLSKY_DIR}"
 		else
 			# This is probably very rare so let the user know
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}." " This is unusual."

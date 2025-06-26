@@ -2613,7 +2613,13 @@ restore_prior_files()
 	ITEM="${SPACE}'$( basename "$( dirname "${ALLSKY_MYFILES_DIR}" )" )/${ALLSKY_MYFILES_NAME}' directory"
 	if [[ -d ${PRIOR_MYFILES_DIR} ]]; then
 		display_msg --log progress "${ITEM} (moving)"
-		mv "${PRIOR_MYFILES_DIR}" "${ALLSKY_MYFILES_DIR}"
+		if [[ -d ${ALLSKY_MYFILES_DIR} ]]; then
+			(shopt -s dotglob
+			 mv "${PRIOR_MYFILES_DIR}"/* "${ALLSKY_MYFILES_DIR}" 2>/dev/null
+	 		)
+		else
+			mv "${PRIOR_MYFILES_DIR}" "${ALLSKY_MYFILES_DIR}"
+		fi
 	else
 		# Almost no one has this directory, so don't show to user.
 		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
@@ -2922,7 +2928,13 @@ restore_prior_website_files()
 	D="${PRIOR_WEBSITE_DIR}/${ALLSKY_MYFILES_NAME}"
 	if [[ -d ${D} ]]; then
 		display_msg --log progress "${ITEM} (moving)"
-		mv "${D}"   "${ALLSKY_WEBSITE_MYFILES_DIR}"
+		if [[ -d ${ALLSKY_WEBSITE_MYFILES_DIR} ]]; then
+			(shopt -s dotglob
+			 mv "${D}"/*   "${ALLSKY_WEBSITE_MYFILES_DIR}" 2>/dev/null
+	 		)
+		else
+			mv "${D}"   "${ALLSKY_WEBSITE_MYFILES_DIR}"
+		fi
 	else
 		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
 	fi
@@ -2936,8 +2948,9 @@ restore_prior_website_files()
 		if [[ ${count} -gt 1 ]]; then
 			local MSG2="  Please use '${ALLSKY_WEBSITE_MYFILES_DIR}' going forward."
 			display_msg --log progress "${ITEM} (copying to '${ALLSKY_WEBSITE_MYFILES_DIR}')" "${MSG2}"
-			# TODO: This won't copy dot files.
-			cp "${D}"/*   "${ALLSKY_WEBSITE_MYFILES_DIR}"
+			(shopt -s dotglob
+			 cp "${D}"/*   "${ALLSKY_WEBSITE_MYFILES_DIR}" 2>/dev/null
+	 		)
 		fi
 	else
 		# Since this is obsolete only add to log file.
@@ -3079,7 +3092,7 @@ do_restore()
 	ITEM="${SPACE}'$( basename "$( dirname "${ALLSKY_MYFILES_DIR}" )" )/${ALLSKY_MYFILES_NAME}' directory"
 	if [[ -d ${ALLSKY_MYFILES_DIR} ]]; then
 		display_msg --log progress "${ITEM} (moving back)"
-		mv "${ALLSKY_MYFILES_DIR}" "${PRIOR_MYFILES_DIR}"
+		mv "${ALLSKY_MYFILES_DIR}" "$( dirname "${PRIOR_MYFILES_DIR}" )"
 	else
 		# Few people have this directory, so don't show to user.
 		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
@@ -3136,7 +3149,7 @@ do_restore()
 
 		ITEM="${SPACE}${SPACE}${ALLSKY_MYFILES_NAME}"
 		if [[ -d ${ALLSKY_WEBSITE_MYFILES_DIR} ]]; then
-			display_msg --log progress "${ITEM} (moving)"
+			display_msg --log progress "${ITEM} (moving back)"
 			mv "${ALLSKY_WEBSITE_MYFILES_DIR}"   "${PRIOR_WEBSITE_DIR}"
 		else
 			display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"

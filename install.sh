@@ -1640,11 +1640,10 @@ does_prior_Allsky_exist()
 		if [[ -s ${PRIOR_ALLSKY_USER_VARIABLES} ]]; then
 			display_msg --logonly info "User has ${PRIOR_ALLSKY_USER_VARIABLES}"
 			# Check if ALLSKY_IMAGES was changed.
-			local SAVED_ALLSKY_IMAGES="${ALLSKY_IMAGES}"
 			local X="$(
 				# shellcheck disable=SC1090,SC1091
 				source "${PRIOR_ALLSKY_USER_VARIABLES}"
-				[[ ${ALLSKY_IMAGES} != "${SAVED_ALLSKY_IMAGES}" ]] && echo "${ALLSKY_IMAGES}"
+				[[ ${ALLSKY_IMAGES} != "${ALLSKY_IMAGES_ORIGINAL}" ]] && echo "${ALLSKY_IMAGES}"
 			)"
 			if [[ -n ${X} ]]; then
 				ALLSKY_IMAGES="${X}"
@@ -2738,7 +2737,7 @@ restore_prior_files()
 
 	ITEM="${SPACE}uservariables.sh"
 	if [[ -f ${PRIOR_CONFIG_DIR}/uservariables.sh ]]; then
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED} (copying)"
+		display_msg --log progress "${ITEM}: (copying)"
 		cp -a "${PRIOR_CONFIG_DIR}/uservariables.sh" "${ALLSKY_CONFIG}"
 	# Don't bother with the "else" part since this file is very rarely used.
 	fi

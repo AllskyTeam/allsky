@@ -2590,7 +2590,7 @@ restore_prior_files()
 	fi
 
 	ITEM="${SPACE}'images' directory"
-	if [[ ${ALLSKY_IMAGES_MOVED} == "true" ]]; then
+	if [[ ${ALLSKY_IMAGES} != "${ALLSKY_IMAGES_ORIGINAL}" ]]; then
 		display_msg --log progress "${ITEM} (leaving '${ALLSKY_IMAGES}' as is)"
 	else
 		if [[ -d ${PRIOR_ALLSKY_DIR}/images ]]; then

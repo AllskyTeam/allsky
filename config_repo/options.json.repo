@@ -1634,7 +1634,7 @@
 },
 {
 "name" : "keogramfontcolor",
-"default" : "#fff",
+"default" : "#ffffff",
 "description" : "Font color.",
 "label" : "Font Color",
 "label_prefix" : "Keograms",

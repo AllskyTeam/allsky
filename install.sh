@@ -120,6 +120,7 @@ STATUS_VARIABLES=()								# Holds the variables and values to save
 # ALLSKY_DEFINES_INC, REPO_WEBUI_DEFINES_FILE
 # REPO_SUDOERS_FILE, REPO_LIGHTTPD_FILE, REPO_AVI_FILE, REPO_OPTIONS_FILE
 # LIGHTTPD_LOG_DIR, LIGHTTPD_LOG_FILE
+# INSTALLED_LOCALES
 # Plus others I probably forgot about...
 
 
@@ -1283,10 +1284,10 @@ get_desired_locale()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 
-	local INSTALLED_LOCALES  MSG  MSG2  X  TEMP_LOCALE  D
+	local MSG  MSG2  X  TEMP_LOCALE  D
 
 	# Get the list of all installed locales.
-	INSTALLED_LOCALES="$( get_installed_locales )"
+	get_installed_locales		# Sets global ${INSTALLED_LOCALES}
 	if [[ -z ${INSTALLED_LOCALES} ]]; then
 		MSG="There are no locales on your system ('locale -a' didn't return valid locales)."
 		MSG+="\nYou need to install and set one before Allsky installation can run."
@@ -1313,7 +1314,7 @@ get_desired_locale()
 		# People rarely change locale once set, so assume they still want the prior one.
 		DESIRED_LOCALE="$( settings ".locale" "${PRIOR_SETTINGS_FILE}" )"
 		if [[ -n ${DESIRED_LOCALE} ]]; then
-			if ! echo "${INSTALLED_LOCALES}" | grep --silent -i "^${DESIRED_LOCALE}$"; then
+			if ! is_installed_locale "${DESIRED_LOCALE}"; then
 				# This is probably EXTREMELY rare.
 				MSG2="NOTE: Your prior locale (${DESIRED_LOCALE}) is no longer installed on this Pi."
 			fi
@@ -1331,15 +1332,6 @@ get_desired_locale()
 		echo "${LC_ALL}"
 	)"
 
-if false; then	# XXXXXXXXXXXXX
-	CURRENT_LOCALE="$( echo "${TEMP_LOCALE}" | sed --silent -e '/LANG=/ s/LANG=//p' )"
-	if [[ -z ${CURRENT_LOCALE} ]];  then
-		CURRENT_LOCALE="$( echo "${TEMP_LOCALE}" | sed --silent -e '/LANGUAGE=/ s/LANGUAGE=//p' )"
-		if [[ -z ${CURRENT_LOCALE} ]];  then
-			CURRENT_LOCALE="$( echo "${TEMP_LOCALE}" | sed --silent -e '/LC_ALL=/ s/LC_ALL=//p' )"
-		fi
-	fi
-fi
 	MSG="CURRENT_LOCALE=${CURRENT_LOCALE}, TEMP_LOCALE=[[$( echo "${TEMP_LOCALE}" | tr '\n' ' ' )]]"
 	display_msg --logonly info "${MSG}"
 

@@ -842,6 +842,7 @@
 "type" : "text",
 "usage" : "capture",
 "carryforward" : true,
+"checkchanges" : true,
 "action" : "reload"
 },
 {

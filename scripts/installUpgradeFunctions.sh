@@ -1707,6 +1707,7 @@ function add_new_settings()
 }
 
 # Return the locales installed on the computer.
+# Ignore any lines with ":" which are usually error messages.
 function get_installed_locales()
 {
 	locale -a 2>/dev/null | grep -E -v "^C$|:" | sed 's/utf8/UTF-8/' 

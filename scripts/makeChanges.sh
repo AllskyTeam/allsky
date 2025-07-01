@@ -640,9 +640,9 @@ do
 
 		"locale")
 			if ! is_installed_locale "${NEW_VALUE}"; then
-				E="ERROR: ${LABEL} '${NEW_VALUE}' is not installed on this computer."
+				E="ERROR: ${WSNs}${LABEL}${WSNe} ${WSVs}${NEW_VALUE}${WSVe} is not installed on this computer."
 				wE_ "${E}"
-				echo -e "${wBR}Installed Locale are:${wBR}${INSTALLED_LOCALES}${wBR}"
+				echo -e "${wBR}Installed locales are:${wBR}${INSTALLED_LOCALES}${wBR}"
 
 				echo "${wBR}Setting ${WSNs}${LABEL}${WSNe} back to ${WSVs}${OLD_VALUE}${WSVe}."
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "string"

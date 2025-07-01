@@ -1706,6 +1706,12 @@ function add_new_settings()
 	return 0
 }
 
+# Return the locales installed on the computer.
+function get_installed_locales()
+{
+	locale -a 2>/dev/null | grep -E -v "^C$|:" | sed 's/utf8/UTF-8/' 
+}
+
 
 #########
 # Functions for interacting with a dialog box.

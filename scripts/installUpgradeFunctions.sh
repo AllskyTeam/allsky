@@ -1708,9 +1708,21 @@ function add_new_settings()
 
 # Return the locales installed on the computer.
 # Ignore any lines with ":" which are usually error messages.
+INSTALLED_LOCALES=""
 function get_installed_locales()
 {
-	locale -a 2>/dev/null | grep -E -v "^C$|:" | sed 's/utf8/UTF-8/' 
+	[[ -n ${INSTALLED_LOCALES} ]] && return
+
+	INSTALLED_LOCALES="$( locale -a 2>/dev/null | grep -E -v "^C$|:" | sed 's/utf8/UTF-8/' )"
+}
+function is_installed_locale()
+{
+	local CHECK_LOCALE="${1}"
+
+	[[ -z ${INSTALLED_LOCALES} ]] && get_installed_locales
+
+	# Return exit code of "grep"
+	echo "${INSTALLED_LOCALES}" | grep --silent -i "^${CHECK_LOCALE}$";
 }
 
 

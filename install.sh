@@ -1285,9 +1285,8 @@ get_desired_locale()
 
 	local INSTALLED_LOCALES  MSG  MSG2  X  TEMP_LOCALE  D
 
-	# List of all installed locales, ignoring any lines with ":" which
-	# are usually error messages.
-	INSTALLED_LOCALES="$( locale -a 2>/dev/null | grep -E -v "^C$|:" | sed 's/utf8/UTF-8/' )"
+	# Get the list of all installed locales.
+	INSTALLED_LOCALES="$( get_installed_locales )"
 	if [[ -z ${INSTALLED_LOCALES} ]]; then
 		MSG="There are no locales on your system ('locale -a' didn't return valid locales)."
 		MSG+="\nYou need to install and set one before Allsky installation can run."
@@ -1314,8 +1313,7 @@ get_desired_locale()
 		# People rarely change locale once set, so assume they still want the prior one.
 		DESIRED_LOCALE="$( settings ".locale" "${PRIOR_SETTINGS_FILE}" )"
 		if [[ -n ${DESIRED_LOCALE} ]]; then
-			X="$( echo "${INSTALLED_LOCALES}" | grep "${DESIRED_LOCALE}" )"
-			if [[ -z ${X} ]]; then
+			if ! echo "${INSTALLED_LOCALES}" | grep --silent -i "^${DESIRED_LOCALE}$"; then
 				# This is probably EXTREMELY rare.
 				MSG2="NOTE: Your prior locale (${DESIRED_LOCALE}) is no longer installed on this Pi."
 			fi

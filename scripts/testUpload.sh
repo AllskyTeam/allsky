@@ -16,7 +16,7 @@ usage_and_exit()
 {
 	exec >&2
 	local RET=${1}
-	local MSG="Usage: ${ME} [--help] [--debug] [--silent] [--file f] [--fromInstall]] \\\\"
+	local MSG="Usage: ${ME} [--help] [--debug] [--silent] [--file f] [--fromInstall] \\\\"
 	MSG+="\n\t[[--output o]] --website  and/or  --server"
 	[[ ${RET} -eq 2 ]] && echo -e "\nERROR: You must specify --website and/or --server\n"
 

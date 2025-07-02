@@ -94,11 +94,13 @@ switch ($ID) {
 		rm_msg($ID);
 		break;
 
-	case "AM_INSTALLED_LOCALES":
-		$CMD = ALLSKY_SCRIPTS . "/allsky-config show_installed_locales";
-		echo "<pre>";
+	case "AM_ALLSKY_CONFIG":
+		if ($ARGS === "") {
+			echo "${eS}ERROR: Argument not given to command ID: '${ID}'.${eE}";
+			exit(1);
+		}
+		$CMD = ALLSKY_SCRIPTS . "/allsky-config";
 		execute($CMD, $ARGS);
-		echo "</pre>";
 
 		break;
 

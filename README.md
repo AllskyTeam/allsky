@@ -70,7 +70,7 @@ A public page is also available in order to view the current image without havin
 http://your_raspberry_IP/public.php
 ```
 
-Make sure this page is publically viewable.
+Make sure this page is publicly viewable.
 If it is behind a firewall consult the documentation for your network equipment for information on allowing inbound connections.
 
 The WebUI has a link to the Allsky Documentation which describes all the settings Allsky uses as well as troubleshooting information.

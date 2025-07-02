@@ -16,8 +16,8 @@ usage_and_exit()
 {
 	exec >&2
 	local RET=${1}
-	local MSG="Usage: ${ME} [--help] [--debug] [--silent] [--file f] [--fromInstall]] \\\\"
-	MSG+="\n\t[[--output o]] --website  and/or  --server"
+	local MSG="Usage: ${ME} [--help] [--debug] [--silent] [--file f] [--fromInstall] \\\\"
+	MSG+="\n\t[--output o] --website  and/or  --server"
 	[[ ${RET} -eq 2 ]] && echo -e "\nERROR: You must specify --website and/or --server\n"
 
 	if [[ ${RET} -ne 0 ]]; then
@@ -27,15 +27,16 @@ usage_and_exit()
 	fi
 	echo
 	echo "Where:"
-	echo "    '--silent' only outputs errors."
-	echo "    '--file f' optionally specifies the test file to upload."
-	echo "    '--fromInstall' outputs text without colors or other escape sequences."
-	echo "    '--output o' puts detailed output in the specified file."
+	echo "   --silent        Only outputs errors."
+	echo "   --file f        Optionally specifies the test file to upload."
+	echo "   --fromInstall   Outputs text without colors or other escape sequences."
+	echo "   --output o      Puts detailed output in the specified file."
 
 	exit "${RET}"
 }
 
 OK="true"
+HELP="false"
 DEBUG="false"
 SILENT="false"
 DEFAULT_TEST_FILE="/tmp/${ME}.txt"
@@ -246,7 +247,7 @@ do_test()
 	fi
 
 	# Set global variables used by us and parse_output().
-	HOST="$( settings ".${TYPE}_HOST" "${ENV_FILE}" )"
+	HOST="$( settings ".${TYPE}_HOST" "${ALLSKY_ENV}" )"
 	if [[ ${TYPE} == "REMOTEWEBSITE" ]]; then
 		HUMAN_TYPE="Remote Website ${HOST}"
 		PROTOCOL="remotewebsiteprotocol"
@@ -263,7 +264,7 @@ do_test()
 		wE_ "${ME}: could not find ${WSNs}Protocol${WSNe} for ${HUMAN_TYPE}; unable to test." >&2
 		return 1
 	fi
-	USER="$( settings ".${TYPE}_USER" "${ENV_FILE}" )"
+	USER="$( settings ".${TYPE}_USER" "${ALLSKY_ENV}" )"
 	DIR="$( settings ".${DIR}" )"
 	DIR="${DIR:=null}"
 

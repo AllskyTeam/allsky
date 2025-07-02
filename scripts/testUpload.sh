@@ -1,10 +1,12 @@
 #!/bin/bash
+set -euo pipefail
+ALLSKY_VARIABLE_SET="${ALLSKY_VARIABLE_SET-}"
 
 # Run upload.sh using a test file and if it doesn't work, parse the output
 # looking for errors that are easy for users to miss.
 
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
-[[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
+[[ -z "${ALLSKY_HOME:-}" ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
@@ -36,6 +38,7 @@ usage_and_exit()
 }
 
 OK="true"
+HELP="false"
 DEBUG="false"
 SILENT="false"
 DEFAULT_TEST_FILE="/tmp/${ME}.txt"
@@ -44,6 +47,7 @@ OUT_FILE=""
 DO_WEBSITE="false"
 DO_SERVER="false"
 FROM_INSTALL="false"
+ENV_FILE=""
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in

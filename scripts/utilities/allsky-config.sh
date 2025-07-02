@@ -157,27 +157,30 @@ function show_connected_cameras()
 # Show all the supported cameras.
 function show_installed_locales()
 {
+	local HTML=""
+
 	if [[ ${1} == "--help" ]]; then
 		echo
 		W_ "Usage: ${ME}  ${ME_F}"
 		echo
-		echo "Display all list of the locales installed on this computer."
+		echo "Display a list of the locales installed on this computer."
 		return
 	fi
 
 	echo
 	echo "The following locales are installed on this computer."
-	echo -n "If the locale you want to use is NOT in the list,"
+	echo -n "If the one you want to use is NOT in the list,"
 	if [[ ${ON_TTY} == "true" ]]; then
 		echo " see the 'Locale' setting on the WebUI's"
 		echo "'Settings -> Allsky' Documentation page for instructions on how to install it."
 	else
 		echo " <a href='/documentation/settings/allsky.html#locale'>click here</a>"
 		echo "for instructions on how to install it."
+		HTML="--html"
 	fi
 
-	echo -e "${HOW}"
-	indent "$( list_installed_locales )"
+	# shellcheck disable=SC2086
+	indent ${HTML} "$( list_installed_locales )"
 }
 
 #####

@@ -837,7 +837,7 @@
 {
 "name" : "locale",
 "default" : "",
-"description" : "Your locale, used to determine what the thousands and decimal separators are.<br>Type <code>locale --all-locales</code> at a command prompt to see which locales are configured on your Pi.",
+"description" : "Your locale, used to determine what the thousands and decimal separators are.<br>Click <a external='true' href='/execute.php?ID=AM_ALLSKY_CONFIG show_installed_locales'>here</a> to see which locales are configured on your Pi.",
 "label" : "Locale",
 "type" : "text",
 "usage" : "capture",

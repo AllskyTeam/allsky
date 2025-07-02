@@ -1345,7 +1345,7 @@ function indent()
 		INDENT="    "
 		shift
 	elif [[ ${1} == "--html" ]]; then
-		INDENT="&nbsp;&nbsp;&nbsp;&nbsp;"
+		INDENT="\&nbsp;\&nbsp;\&nbsp;\&nbsp;"
 		shift
 	else
 		INDENT="	"	# tab

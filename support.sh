@@ -4,8 +4,8 @@
 # Generate Allsky support info.
 
 # IMPORTANT:
-#	This script only assues that "git clone" was successful.
-#	It does NOT assume Allsky has been installed so only uses scripts and function
+#	This script only assumes that "git clone" was successful.
+#	It does NOT assume Allsky has been installed so only uses scripts and functions
 #	that do not require Allsky to be installed.  This is to prevent any issues
 #	with the Allsky installation from interfering with the data collection
 

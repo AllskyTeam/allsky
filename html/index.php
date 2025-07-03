@@ -305,7 +305,7 @@ if ($useRemoteWebsite) {
 						<a id="WLAN" href="index.php?page=WLAN_info"><i class="fa fa-tachometer-alt fa-fw"></i> <b>WLAN</b> Dashboard</a>
 					</li>
 					<li>
-						<a id="wifi" href="index.php?page=wifi"><i class="fa fa-wifi fa-fw"></i> Configure Wifi</a>
+						<a id="wifi" href="index.php?page=wifi"><i class="fa fa-wifi fa-fw"></i> Configure Wi-Fi</a>
 					</li>
 					<?php if (DHCP_ENABLED) : ?>
 						<li>

@@ -128,7 +128,7 @@ if ($useRemoteWebsite) {
 		case "hostapd_conf":		$Title = "Configure Hotspot";	break;
 		case "openvpn_conf":		$Title = "Configure OpenVPN";	break;
 		case "torproxy_conf":		$Title = "Configure TOR proxy";	break;
-		case "auth_conf":			$Title = "Change password";		break;
+		case "auth_conf":			$Title = "Change Password";		break;
 		case "system":				$Title = "System";				break;
 		case "list_days":			$Title = "Images";				break;
 		case "list_images":			$Title = "Images$day";			break;
@@ -138,7 +138,7 @@ if ($useRemoteWebsite) {
 		case "editor":				$Title = "Editor";				break;
 		case "overlay":				$Title = "Overlay Editor";		break;
 		case "module":				$Title = "Module Manager";		break;
-		case "live_view":			$Title = "Liveview";			break;
+		case "live_view":			$Title = "Live View";			break;
 		case "support": 			$Title = "Getting Support";		break;
 		default:					$Title = "Allsky WebUI";		break;
 	}

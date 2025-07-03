@@ -102,3 +102,32 @@ function _check_web_connectivity()
 	echo "Unable to connect to ${URL}\n   ${WHY}"		# NO "-e"; let caller do it
 	return 1
 }
+
+
+####
+# Check if the specified locale is valid and installed.
+# Return a message on error.
+function _check_locale()
+{
+	local LOCALE="${1}"
+	local LABEL="${2}"
+	is_installed_locale "${LOCALE}" && return 0
+
+	local _LOCALE="${WSVs}${LOCALE}${WSVe}"
+	local _LABEL="${WSNs}${LABEL}${WSNe}"
+	local ERR="${_LABEL} ${_LOCALE} "
+	local FIX="FIX: Either change ${_LABEL} to an installed locale "
+	if is_valid_locale "${LOCALE}" ; then
+		# Valid locale, just not installed.
+		ERR+="is not installed on this computer."
+		FIX+="or install '${_LOCALE}'."
+	else
+		ERR+="is not a valid locale."
+		FIX+="or install a different one."
+	fi
+	echo "${ERR}"
+	echo "Installed locales are:\n$( indent "$( list_installed_locales )" )"
+	echo "${FIX}"
+	echo "See the 'Settings -> Allsky' Documentation page for how to install locales."
+	return 1
+}

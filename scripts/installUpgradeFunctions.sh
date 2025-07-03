@@ -1730,6 +1730,15 @@ function is_installed_locale()
 	# Return exit code of "grep"
 	echo "${INSTALLED_LOCALES}" | grep --silent -i "^${CHECK_LOCALE}$";
 }
+function is_valid_locale()
+{
+	local CHECK_LOCALE="${1}"
+
+	[[ -z ${INSTALLED_LOCALES} ]] && get_installed_locales
+
+	# Only look for base of locale - anything before the ".".
+	[[ -f "/usr/share/i18n/locales/${CHECK_LOCALE/.*}" ]]		# Returns $?
+}
 
 
 #########

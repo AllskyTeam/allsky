@@ -347,6 +347,13 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 			echo "FIX: These are now separate settings so move them to their own settings."
 		fi
 	fi
+	if [[ -n ${S_keogramfontcolor} && ${S_keogramfontcolor:0:1} == "#" && ${#S_keogramfontcolor} -ne 7 ]]; then
+		heading "Information"
+		echo -n "${WSNs}${S_keogramfontcolor_label}${WSNe} should have a '#' followed by 6 hex digits; "
+		echo "yours has $(( ${#S_keogramfontcolor} - 1)): ${WSVs}${S_keogramfontcolor}${WSVe}."
+		echo "FIX: Make sure there are 6 digits after the '#', for example: '#ffffff' for white."
+	fi
+
 fi		# end of checking for informational items
 
 

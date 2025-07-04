@@ -9,7 +9,7 @@
 
 // This file sets all the define() variables.
 $defs = 'allskyDefines.inc';
-if ((include $defs) == false) {
+if ((@include $defs) == false) {
 	echo "<br><div style='font-size: 200%; color: red;'>";
 	echo "The installation of Allsky is incomplete.<br>";
 	echo "File '$defs' not found.<br>";

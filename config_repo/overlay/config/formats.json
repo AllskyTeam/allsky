@@ -449,6 +449,13 @@
             "type": "string"
         },
         {
+            "format": "capitalize",
+            "description": "Capitalize the string",
+            "example": "",           
+            "stackable": false,
+            "type": "string"
+        },
+        {
             "format": "flightlevel",
             "description": "Convert altitude in metres to flight level",
             "example": "",           

@@ -399,7 +399,8 @@ class AllskyFormatters:
 			upper		- Uppercase the string
 			camel		- Camelcase the string
 			sentence	- Camelcase the string
-   
+			capitalize	- Capitalize the string
+      
 		Args:
 			value (any): The input value 
 			variable_name 	(string):	The name of the variable
@@ -410,6 +411,9 @@ class AllskyFormatters:
 			(string): The formatted value
 		"""     
 
+		if format == 'capitalize':
+			value = value.capitalize()
+      
 		if format == 'lower':
 			value = value.lower()
    

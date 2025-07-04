@@ -2221,7 +2221,7 @@ convert_config_sh()
 		doV "" "UPLOAD_KEOGRAM" "keogramupload" "boolean" "${NEW_FILE}"
 		X="true"; doV "NEW" "X" "keogramexpand" "boolean" "${NEW_FILE}"
 		X="simplex"; doV "NEW" "X" "keogramfontname" "text" "${NEW_FILE}"
-		X="#ffff"; doV "NEW" "X" "keogramfontcolor" "text" "${NEW_FILE}"
+		X="#ffffff"; doV "NEW" "X" "keogramfontcolor" "text" "${NEW_FILE}"
 		X=1; doV "NEW" "X" "keogramfontsize" "text" "${NEW_FILE}"
 		X=3; doV "NEW" "X" "keogramlinethickness" "text" "${NEW_FILE}"
 

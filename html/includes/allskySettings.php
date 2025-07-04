@@ -55,7 +55,7 @@ function formatSettingValue($value) {
 
 // Determine the logical type based on the actual type.
 function getLogicalType($type) {
-	if (strpos($type, "text") !== false || $type == "password" || $type === "color") {
+	if (strpos($type, "text") !== false || $type == "password") {
 		return("text");
 	} else if (strpos($type, "integer") !== false) {
 		return("integer");
@@ -70,6 +70,7 @@ function getLogicalType($type) {
 // Check the value for the correct type.
 // Return "" on success and some string on error.
 function checkType($fieldName, $value, $old, $label, $label_prefix, $type, &$shortened=null) {
+
 	if ($type === null || $type === "text" || $value === "") {
 		return("");
 	}
@@ -80,20 +81,21 @@ function checkType($fieldName, $value, $old, $label, $label_prefix, $type, &$sho
 	// or a boolean, and only is_numeric() accounts for types of string.
 	if ($type === "integer") {
 		if (! is_numeric($value) || ! is_int($value + 0))
-			$msg = "without a fraction";
+			$msg = "must be a number without a fraction";
 		else
 			$value += 0;
 	} else if ($type === "float") {
 		if (! is_numeric($value) || ! is_float($value + 0.0))
-			$msg = "with, or without, a fraction";
+			$msg = "must be a number with, or without, a fraction";
 		else
 			$value += 0.0;
+	} else if ($type === "color" && substr($value, 0, 1) === "#" && strlen($value) !== 7) {
+		$msg = "must contain 6 characters after the '#'";
 	}
 	if ($msg === "") {
 		return("");
 	}
 
-	$msg = "must be a number $msg.";
 	$shortened .= "It $msg";
 	if ($value === $old) {
 		$msg .= " The saved value is: ";
@@ -821,7 +823,6 @@ if (false && $debug) { echo "<br>Option $name"; }
 					continue;
 				}
 
-				$logicalType = getLogicalType($type);
 				if (substr($type, 0, 7) === "select_") {
 					$type = "select";
 				}
@@ -831,6 +832,7 @@ if (false && $debug) { echo "<br>Option $name"; }
 				if (toBool(getVariableOrDefault($option, 'settingsonly', "false"))) {
 					$display = false;
 				}
+				$logicalType = getLogicalType($type);
 				$isHeader = substr($logicalType, 0, 6) === "header";
 				if (! $display && ! $isHeader) {
 					if ($formReadonly != "readonly") {
@@ -1120,8 +1122,8 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 						// numbers to the left, and they don't line up with text.
 						// Plus, they don't accept decimal points in "float".
 						// So, display numbers as text.
-						if ($type == "integer" || $type == "float" ||
-							$type == "color" || $type == "percent") {
+						if ($type == "color" || $type == "integer" ||
+							$type == "float" || $type == "percent") {
 								$type = "text";
 						}
 						echo "\n\t\t<input class='form-control boxShadow settingInput settingInputTextNumber'" .

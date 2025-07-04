@@ -35,22 +35,41 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		"description": "Overlays data fields on the image",
 		"module": "allsky_overlay",
 		"group": "Image Analysis",
+		"version": "v1.0.1",
+		"centersettings": "false",
 		"events": [
 			"day",
 			"night"
 		],
+		"help": "/documentation/overlays/overlays.html",
 		"arguments":{
 			"formaterrortext": "??",
 			"suntimeformat": "",
 			"nonighttext": ""
 		},
 		"argumentdetails": {
-				"formaterrortext" : {
+			"formaterrortext" : {
 				"required": "false",
 				"tab": "Overlays",
 				"description": "Format Error Text",
 				"help": "Value to place in a variable when the provided format is invalid. defaults to ??"
 			}
+		},
+		"changelog": {
+			"v1.0.0" : [
+				{
+					"author": "Alex Greenland",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": "Initial Release"
+				}
+			],
+			"v1.0.1" : [
+				{
+					"author": "Alex Greenland",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": "Updated for new module system"
+				}
+			]
 		}
 	}
     

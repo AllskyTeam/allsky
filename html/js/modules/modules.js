@@ -1432,31 +1432,38 @@ class MODULESEDITOR {
 				errorHTML = '<div class="alert alert-warning mt-4 mb-4" role="alert">WARNING: ' + text + '</div>'
 			}
 		}
-        let dialogTemplate = '\
-            <div class="modal" role="dialog" id="module-settings-dialog" data-module="' + module + '">\
-                <div class="modal-dialog modal-lg" role="document">\
-                    <div class="modal-content">\
-                        <div class="modal-header">\
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>\
-                            <h4 class="modal-title"><strong>' + moduleData.metadata.name + ' Settings</strong> ' + experimental + '</h4>\
-                        </div>\
-                        <div class="modal-body">\
-							' + errorHTML + '\
-                            <form id="module-editor-settings-form" class="form-horizontal">\
-                            ' + moduleSettingsHtml + '\
-                            </form>\
-                        </div>\
-                        <div class="modal-footer">\
-                            ' + testButton + '\
-							<div class="pull-right">\
-								<button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>\
-								<button type="button" class="btn btn-primary" id="module-settings-dialog-save">Save</button>\
-							</div>\
-						</div>\
-					</div>\
-                </div>\
-            </div>\
-        ';
+
+		let helpLink = '';
+		if (moduleData.metadata.help !== undefined) {
+			helpLink = `<a type="button" class="btn btn-danger mr-4" target="_blank" href="${moduleData.metadata.help}"><i class="fa-solid fa-question"></i></a>`;
+		}
+
+        let dialogTemplate = `
+            <div class="modal" role="dialog" id="module-settings-dialog" data-module="${module}">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title"><strong>${moduleData.metadata.name} Settings</strong> ${experimental }</h4>
+                        </div>
+                        <div class="modal-body">
+							${errorHTML}
+                            <form id="module-editor-settings-form" class="form-horizontal">
+                            ${moduleSettingsHtml}
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            ${testButton}
+							<div class="pull-right">
+								${helpLink}
+								<button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+								<button type="button" class="btn btn-primary" id="module-settings-dialog-save">Save</button>
+							</div>
+						</div>
+					</div>
+                </div>
+            </div>
+        `;
 
         $('#module-settings-dialog').remove();
         $(document.body).append(dialogTemplate);

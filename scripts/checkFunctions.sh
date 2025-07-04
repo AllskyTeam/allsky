@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2154		# referenced but not assigned - for ${WSNs}, et. al.
 
 # Functions that check various things and are used in multiple other scripts.
 
@@ -126,7 +127,7 @@ function _check_locale()
 		FIX+="or install a different one."
 	fi
 	echo "${ERR}"
-	echo "Installed locales are:\n$( indent "$( list_installed_locales )" )"
+	echo -e "Installed locales are:\n$( indent "$( list_installed_locales )" )"
 	echo "${FIX}"
 	echo "See the 'Settings -> Allsky' Documentation page for how to install locales."
 	return 1

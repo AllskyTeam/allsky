@@ -68,6 +68,9 @@
 
 				<h4>Bug Fixes</h4>
 				<ul>
+					<li>Entering a <span class="WebUISetting">Locale</span> in the WebUI
+						that is not installed on the Pi displays an error message and lists
+						the locales that ARE installed and tells the user how to install other locales.
 					<li>
 				</ul>
 
@@ -128,6 +131,12 @@
 						losing prior messages.
 					<li>A message is added to the WebUI if creation of a timelapse,
 						startrails, or keogram fails during end-of-night processing.
+					<li>If the <span class="WebUISetting">Keograms Font Color</span> begins with a
+						<span class="WebUIValue">0</span> and does not have 6 characters after it,
+						e.g., <span class="WebUIValue">#fff</span>,
+						an error message is displayed in the WebUI.
+						Those values didn't produce the color expected, for example,
+						<span class="WebUIValue">#fff</span> produced blue labels, not white.
 					<li>The name of the Pi is shown at the top of the WebUI.
 						This is useful for people with multiple Pi's.
 				</ul>

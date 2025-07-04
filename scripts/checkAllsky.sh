@@ -24,6 +24,7 @@ source "${ALLSKY_SCRIPTS}/checkFunctions.sh"			|| exit "${EXIT_ERROR_STOP}"
 usage_and_exit()
 {
 	local RET=${1}
+
 	exec >&2
 	local MSG="Usage: ${ME} [--help] [--fromWebUI] [--no-info] [--no-warn] [--no-error]"
 	echo
@@ -68,7 +69,7 @@ while [[ $# -gt 0 ]]; do
 			CHECK_ERRORS="false"
 			;;
 		*)
-			echo -e "${RED}Unknown argument: '${ARG}'${NC}" >&2
+			E_ "Unknown argument: '${ARG}'." >&2
 			OK="false"
 			;;
 	esac

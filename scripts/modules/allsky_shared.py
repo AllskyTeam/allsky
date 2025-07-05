@@ -24,6 +24,10 @@ import locale
 import locale
 import tempfile
 import shlex
+import board
+import busio
+import importlib
+
 from pathlib import Path
 from functools import reduce
 from allskyvariables import allskyvariables
@@ -381,7 +385,7 @@ def log(level, text, preventNewline = False, exitCode=None, sendToAllsky=False):
         # Need to escape single quotes in {text}.
         doubleQuote = '"'
         text = text.replace("'", f"'{doubleQuote}'{doubleQuote}'")
-        command = os.path.join(ALLSKY_SCRIPTS, f"addMessage.sh error '{text}'")
+        command = os.path.join(ALLSKY_SCRIPTS, f"addMessage.sh --type {type} --msg '{text}'")
         os.system(command)
     
     if exitCode is not None:
@@ -1540,3 +1544,35 @@ def get_hass_sensor_value(ha_url, ha_ltt, ha_sensor):
         result = None
 
     return result
+
+def create_device(import_name: str, class_name: str, bus_number: int, i2c_address: str = ""):
+    bus_number = int(bus_number) 
+        
+    # Define SCL/SDA pins for each bus
+    I2C_BUS_PINS = {
+        1: (board.SCL, board.SDA),
+        3: (board.D5, board.D4),
+        4: (board.D9, board.D8),
+        5: (board.D13, board.D12),
+        6: (board.D23, board.D22)
+    }
+
+    # Dynamically import the module and get the class
+    try:
+        module = importlib.import_module(import_name)
+        cls = getattr(module, class_name)
+    except (ImportError, AttributeError) as e:
+        raise ImportError(f"Could not import '{class_name}' from '{import_name}': {e}")
+
+    try:
+        scl, sda = I2C_BUS_PINS[bus_number]
+    except KeyError:
+        raise ValueError(f"No pin mapping defined for I2C bus {bus_number}")
+
+    i2c = busio.I2C(scl, sda)
+
+    # Instantiate device
+    if i2c_address:
+        return cls(i2c, int(i2c_address, 0))
+    else:
+        return cls(i2c)

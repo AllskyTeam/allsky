@@ -50,7 +50,7 @@ if [[ ${VERSION_ONLY} == "true" ]]; then
 	exit 0
 fi
 
-
+#shellcheck disable=SC2119
 CURRENT_VERSION="$( get_version )"
 RET=0
 if [[ ${CURRENT_VERSION} == "${NEWEST_VERSION}" ]]; then

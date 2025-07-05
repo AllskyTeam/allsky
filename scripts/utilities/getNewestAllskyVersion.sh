@@ -13,23 +13,40 @@ source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
-if [[ ${1} == "--branch" ]]; then
-	BRANCH="${2}"
-	shift 2
-else
-	BRANCH="${GITHUB_MAIN_BRANCH}"
-fi
+BRANCH=""
+VERSION_ONLY="false"
+while [[ $# -gt 0 ]]; do
+	ARG="${1}"
+	case "${ARG,,}" in
+		--branch)
+			BRANCH="${2}"
+			shift
+			;;
+		--version-only)
+			VERSION_ONLY="true"
+			;;
+	esac
+	shift
+done
+
+[[ -z ${BRANCH} ]] && BRANCH="${GITHUB_MAIN_BRANCH}"
 
 GIT_FILE="${GITHUB_RAW_ROOT}/${GITHUB_ALLSKY_REPO}/${BRANCH}/version"
 if ! NEWEST_VERSION="$( curl --show-error --silent "${GIT_FILE}" 2>&1 )" ; then
-	echo "${ME}: ERROR: Unable to get newest Allsky version: ${NEWEST_VERSION}."
+	echo "${ME}: ERROR: Unable to get newest Allsky version: ${NEWEST_VERSION}." >&2
 	exit 1
 fi
 if [[ ${NEWEST_VERSION:0:1} != "v" ||
 		${NEWEST_VERSION} == "400: Invalid request" ||
 		${NEWEST_VERSION} == "404: Not Found" ]]; then
-	echo "${ME}: ERROR: Got unknown newest Allsky version: ${NEWEST_VERSION}."
+	echo "${ME}: ERROR: Got unknown newest Allsky version: ${NEWEST_VERSION}." >&2
 	exit 1
+fi
+
+if [[ ${VERSION_ONLY} == "true" ]]; then
+	# Just output the newest version and quit.
+	echo "${NEWEST_VERSION}" | head -1
+	exit 0
 fi
 
 CURRENT_VERSION="$( get_version )"

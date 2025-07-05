@@ -34,6 +34,8 @@ class OVERLAYUTIL
         $this->allskyOverlays = MY_OVERLAY_TEMPLATES . '/';
         $this->allskyTmp = ALLSKY_TMP;
         $this->allskyStatus = ALLSKY_STATUS;
+        $this->allsky_scripts = ALLSKY_SCRIPTS;
+        $this->allsky_home = ALLSKY_HOME;
 
         $ccFile = ALLSKY_CONFIG . "/cc.json";
         $ccJson = file_get_contents($ccFile, true);
@@ -1201,8 +1203,10 @@ class OVERLAYUTIL
         $fileName = ALLSKY_TMP . '/test_overlay.json';
         file_put_contents($fileName,  $overlay);
 
-        $command = 'sudo bash -c "source /home/pi/allsky/venv/bin/activate; export ALLSKY_HOME=/home/pi/allsky; source /home/pi/allsky/variables.sh; python3 ' . ALLSKY_SCRIPTS . '/modules/allskyoverlay/overlaydata.py --overlay=' . ALLSKY_TMP . '/test_overlay.json --print"';
+        $command = 'sudo ' . $this->allsky_scripts  . '/test_overlay.sh --allsky_home ' . $this->allsky_home  . ' --allsky_scripts ' . $this->allsky_scripts  . ' --allsky_tmp ' . $this->allskyTmp . ' --overlay ' . $this->allskyTmp . '/test_overlay.json';
+
         $result = $this->runShellCommand($command);
+
         if ($result['error']) {
             die($result['message']);
             $this->sendHTTPResponse(500);

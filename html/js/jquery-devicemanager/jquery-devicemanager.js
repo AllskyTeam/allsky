@@ -6,32 +6,32 @@
 
         if (!$('#deviceManagerModal').length) {
             $('body').append(`
-        <div id="deviceManagerModal" class="modal fade" tabindex="-1" role="dialog">
-          <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-              <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title">Connected Devices</h4>
-              </div>
-              <div class="modal-body">
-                <ul class="nav nav-tabs" role="tablist">
-                  <li class="active"><a href="#dm-tab-i2c" role="tab" data-toggle="tab">I2C Devices</a></li>
-                  <li><a href="#dm-tab-1wire" role="tab" data-toggle="tab">1-Wire Devices</a></li>
-                  <li><a href="#dm-tab-serial" role="tab" data-toggle="tab">Serial Devices</a></li>
-                </ul>
-                <div class="tab-content" style="margin-top:15px;">
-                  <div class="tab-pane active" id="dm-tab-i2c">Loading I2C devices...</div>
-                  <div class="tab-pane" id="dm-tab-1wire">Loading 1-Wire devices...</div>
-                  <div class="tab-pane" id="dm-tab-serial">Loading Serial devices...</div>
+                <div id="deviceManagerModal" class="modal fade" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Connected Devices</h4>
+                    </div>
+                    <div class="modal-body">
+                        <ul class="nav nav-tabs" role="tablist">
+                        <li class="active"><a href="#dm-tab-i2c" role="tab" data-toggle="tab">I2C Devices</a></li>
+                        <li><a href="#dm-tab-1wire" role="tab" data-toggle="tab">1-Wire Devices</a></li>
+                        <li><a href="#dm-tab-serial" role="tab" data-toggle="tab">Serial Devices</a></li>
+                        </ul>
+                        <div class="tab-content" style="margin-top:15px;">
+                        <div class="tab-pane active" id="dm-tab-i2c">Loading I2C devices...</div>
+                        <div class="tab-pane" id="dm-tab-1wire">Loading 1-Wire devices...</div>
+                        <div class="tab-pane" id="dm-tab-serial">Loading Serial devices...</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                    </div>
                 </div>
-              </div>
-              <div class="modal-footer">
-                <button class="btn btn-default" data-dismiss="modal">Close</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      `);
+                </div>
+            `);
         }
 
         $('#deviceManagerModal')
@@ -48,7 +48,11 @@
                     $.LoadingOverlay('hide');
 
                     updateTabFormatted('#dm-tab-i2c', data.i2c || [], function (item) {
-                        let html = `<div class="panel panel-default panel-shadow"><div class="panel-body"><div class="i2c-header">${item.bus} ${item.address}</div>`;
+                        let html = `<div class="panel panel-default panel-shadow">
+                                <div class="panel-heading">
+                                    <h4>${item.bus} ${item.address}</h4>
+                                </div>
+                                <div class="panel-body">`;
 
                         if (Array.isArray(item.devices) && item.devices.length > 0) {
                             const mid = Math.ceil(item.devices.length / 2);
@@ -62,7 +66,7 @@
                                     let devName = dev.device || "Unnamed device";
                                     let url = dev.url ? `<a href="${dev.url}" target="_blank">${devName}</a>` : devName;
                                     let range = dev.addresses ? ` <small>(${dev.addresses})</small>` : "";
-                                    html += `• ${url}${range}<br>`;
+                                    html += `• ${url}<br>`;
                                 });
                                 html += '</div>';
                             });
@@ -74,21 +78,6 @@
                         html += `</div>`;
                         return html;
                     });
-
-/*
-<div class="panel panel-default panel-shadow">
-    <div class="panel-body">
-        <form id="as-i2c-bus-select-form" class="form-horizontal">
-            <label for="bus-select" class="col-sm-2 control-label">Select Bus</label>
-            <div class="col-sm-4">
-                <select id="as-i2c-bus-select" class="form-control">
-                <option value="1">Bus 1</option><option value="5">Bus 5</option></select>
-            </div>
-        </form>
-    </div>
-</div>
-*/
-
 
                     updateTabFormatted('#dm-tab-1wire', data.onewire || [], function (item) {
 
@@ -109,45 +98,40 @@
                                     <h4>${id}</h4>
                                 </div>
                                 <div class="panel-body">
-
-
-
-
-
-<div class="dm-ow-wrapper">
-  <div class="dm-ow-row">
-    <!-- Left Column -->
-    <div class="dm-ow-left">
-      ${icon}
-    </div>
-
-    <!-- Right Column -->
-    <div class="dm-ow-right">
-      <div class="dm-ow-top-bar">
-        <h2><strong>${type}</strong></h2>
-      </div>
-      <div class="dm-ow-main-content">
-        <h3><small>${devs}</small></h3>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
+                                    <div class="dm-ow-wrapper">
+                                        <div class="dm-ow-row">
+                                            <div class="dm-ow-left">
+                                                ${icon}
+                                            </div>
+                                            <div class="dm-ow-right">
+                                                <div class="dm-ow-top-bar">
+                                                    <h2><strong>${type}</strong></h2>
+                                                </div>
+                                                <div class="dm-ow-main-content">
+                                                    <h3><small>${devs}</small></h3>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>`;
+
                         return html;
-                        //return `[${type}] ${id}${devs}`;
                     });
 
                     updateTabFormatted('#dm-tab-serial', data.serial || [], function (item) {
-                        let html = `<strong>${item.device} @ ${item.baud || "unknown"}</strong>`;
-                        if (item.data) {
-                            html += `<pre>${item.data.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`;
-                        } else {
-                            html += `<div class="text-muted">No data</div>`;
-                        }
+                        let html = `
+                            <div class="panel panel-default panel-shadow">
+                                <div class="panel-heading">
+                                    <h4>${item.device} @ ${item.baud || "unknown"}</h4>
+                                </div>
+                                <div class="panel-body">
+                                    <pre>${item.data.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
+                                </div>
+                            </div>`;
+
+
+
                         return html;
                     });
                 }).fail(function (xhr, status, error) {

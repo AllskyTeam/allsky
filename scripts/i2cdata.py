@@ -1,6 +1,4 @@
-#!/home/pi/allsky/venv//bin/python3
-
-# REPLACE WITH CORRECT PATH AT INSTALL TIME
+#!/usr/bin/python3
 
 import os
 

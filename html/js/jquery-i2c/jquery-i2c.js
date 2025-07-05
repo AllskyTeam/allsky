@@ -39,19 +39,19 @@
             setupEvents();
         }
 
-        var getData = function() {
+        var getData = function () {
             $('body').LoadingOverlay('show', {
                 background: 'rgba(0, 0, 0, 0.5)',
                 imageColor: '#a94442',
                 textColor: '#a94442',
                 text: 'Loading i2c Data'
-            });            
+            });
             let result = $.ajax({
                 url: '/includes/i2cutil.php?request=Devices',
                 type: 'GET',
                 dataType: 'json',
                 cache: false,
-                async: false,                
+                async: false,
                 context: this
             });
             plugin.settings.installedDevices = result.responseJSON
@@ -61,13 +61,13 @@
                 type: 'GET',
                 dataType: 'json',
                 cache: false,
-                async: false,                
+                async: false,
                 context: this
-            }); 
+            });
             plugin.settings.deviceList = result.responseJSON;
-            
+
             let data = []
-            for ( let address in plugin.settings.deviceList) {
+            for (let address in plugin.settings.deviceList) {
                 data.push({
                     'address': address,
                     'devices': plugin.settings.deviceList[address]
@@ -78,8 +78,8 @@
             $('body').LoadingOverlay('hide')
         }
 
-        var addressToDecinal = function(address) {
-            address = address.replace('0x','');
+        var addressToDecinal = function (address) {
+            address = address.replace('0x', '');
 
             let intAddress = parseInt(address, 16);
 
@@ -90,7 +90,10 @@
             return text.replace(/^(\S+)/, '<strong>$1</strong>');
         }
 
-        var createTables = function() {
+        var createTables = function () {
+
+            $('#mm-i2c-dialog-tab-detected-devices').DataTable().destroy()
+            $('#mm-i2c-dialog-tab-library-library').DataTable().destroy()
 
             plugin.settings.deviceTable = $('#mm-i2c-dialog-tab-detected-devices').DataTable({
                 data: plugin.settings.detected,
@@ -105,7 +108,7 @@
                 ordering: false,
                 searching: true,
                 pageLength: 5,
-                lengthMenu: [ [5, 10, -1], [5, 10, 'All']],
+                lengthMenu: [[5, 10, -1], [5, 10, 'All']],
                 rowId: 'id',
                 order: [[0, 'asc']],
                 columns: [
@@ -128,7 +131,7 @@
                             devicesList += '<br/>';
 
                             return devicesList;
-                        }                        
+                        }
                     }, {
                         data: null,
                         width: '400px',
@@ -143,32 +146,32 @@
                             devicesList += '<br/>';
 
                             return devicesList;
-                        }                        
+                        }
                     }
 
                 ]
             });
-            
-          /*  let selectedRow = -1;
-            plugin.settings.deviceTable.rows().every (function (rowIdx, tableLoop, rowLoop) {
-                if (this.data().address === plugin.settings.address) {
-                  this.select();
-                  selectedRow = rowIdx;
-                }
-            });
-            updateUI();
 
-            if (selectedRow != -1) {
-                let rowsPerPage = plugin.settings.deviceTable.page.len();
-                let pageNumber = Math.floor(selectedRow / rowsPerPage);
-                plugin.settings.deviceTable.page(pageNumber).draw(false);
-            }
-*/
+            /*  let selectedRow = -1;
+              plugin.settings.deviceTable.rows().every (function (rowIdx, tableLoop, rowLoop) {
+                  if (this.data().address === plugin.settings.address) {
+                    this.select();
+                    selectedRow = rowIdx;
+                  }
+              });
+              updateUI();
+  
+              if (selectedRow != -1) {
+                  let rowsPerPage = plugin.settings.deviceTable.page.len();
+                  let pageNumber = Math.floor(selectedRow / rowsPerPage);
+                  plugin.settings.deviceTable.page(pageNumber).draw(false);
+              }
+  */
             plugin.settings.deviceTable.on('click', 'tbody tr', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 let classList = e.currentTarget.classList;
-             
+
                 if (classList.contains('selected')) {
                     classList.remove('selected');
                     plugin.settings.address = '';
@@ -192,7 +195,7 @@
                 ordering: false,
                 searching: true,
                 pageLength: 5,
-                lengthMenu: [ [5, 10, -1], [5, 10, 'All']],
+                lengthMenu: [[5, 10, -1], [5, 10, 'All']],
                 rowId: 'id',
                 order: [[0, 'asc']],
                 columns: [
@@ -212,7 +215,7 @@
                             devicesList += '<br/>';
 
                             return devicesList;
-                        }                                               
+                        }
                     }, {
                         data: null,
                         width: '400px',
@@ -224,7 +227,7 @@
                             addressList += '<br/>';
 
                             return addressList;
-                        }                                               
+                        }
                     }, {
                         data: null,
                         width: '400px',
@@ -238,14 +241,14 @@
                             urlList += '<br/>';
 
                             return urlList;
-                        }                                               
+                        }
                     }
                 ]
-            }); 
+            });
 
         }
 
-        var addDialogHTML = function() {
+        var addDialogHTML = function () {
             $(`#${plugin.settings.modalid}`).remove();
             $('body').append(`
                 <div class="modal" role="dialog" id="${plugin.settings.modalid}">
@@ -338,10 +341,10 @@
             `);
         }
 
-        var setupEvents = function() {
+        var setupEvents = function () {
             $('#mm-i2c-dialog-select').off('click').on('click', (e) => {
                 plugin.settings.i2cSelected.call(this, plugin.settings.address, plugin.settings.bus);
-				$(`#${plugin.settings.modalid}`).modal('hide');
+                $(`#${plugin.settings.modalid}`).modal('hide');
             })
 
             $('.mm-i2c-create-library').on('click', (e) => {
@@ -350,7 +353,7 @@
                     imageColor: '#a94442',
                     textColor: '#a94442',
                     text: 'Building i2c Database'
-                });  
+                });
 
                 $.ajax({
                     url: 'includes/i2cutil.php?request=Build',
@@ -358,25 +361,22 @@
                     dataType: 'json',
                     cache: false
                 })
-                .always(() => {
-                    $('#mm-i2c-dialog-tab-detected-devices').DataTable().destroy()
-                    $('#mm-i2c-dialog-tab-library-library').DataTable().destroy()
-
-                    getData();
-                    createHtml();
-                    buildUI();
-                    updateUI();
-                    $('body').LoadingOverlay('hide')
-                });
+                    .always(() => {
+                        getData();
+                        setI2CBus(1);
+                        createTables();
+                        updateUI();
+                        $('body').LoadingOverlay('hide')
+                    });
             });
 
-            $('#as-i2c-bus-select').off('change').on('change', function() {
+            $('#as-i2c-bus-select').off('change').on('change', function () {
                 const bus = $(this).val();
                 setI2CBus(bus);
             });
         }
 
-        var setI2CBus = function(bus) {
+        var setI2CBus = function (bus) {
             let data = [];
             if (plugin.settings.installedDevices[bus] === undefined) {
                 bus = 1
@@ -405,7 +405,12 @@
             plugin.settings.deviceTable.draw();
         }
 
-        var updateUI = function() {
+        var updateUI = function () {
+            const count = Object.keys(plugin.settings.installedDevices).length;
+            if (count > 1) {
+                $('#as-i2c-bus-select-form').removeClass('hidden');
+            }
+
             if (plugin.settings.address == '') {
                 $('#mm-i2c-dialog-select').hide();
             } else {
@@ -433,13 +438,14 @@
             }
         }
 
-        var buildUI = function() {
+        var buildUI = function () {
             const count = Object.keys(plugin.settings.installedDevices).length;
             if (count > 1) {
                 $('#as-i2c-bus-select-form').removeClass('hidden');
             }
             var select = $('#as-i2c-bus-select');
-            Object.keys(plugin.settings.installedDevices).forEach((bus) =>{
+            select.empty();
+            Object.keys(plugin.settings.installedDevices).forEach((bus) => {
                 select.append('<option value="' + bus + '">Bus ' + bus + '</option>');
             });
 
@@ -448,7 +454,7 @@
                 width: 900
             });
 
-            $(`#${plugin.settings.modalid}`).on('hidden.bs.modal', function () {
+            $(`#${plugin.settings.modalid}`).off('hidden.bs.modal').on('hidden.bs.modal', function () {
                 plugin.settings.deviceTable.off('click', 'tbody tr');
 
                 $('#mm-i2c-dialog-tab-detected-devices').DataTable().destroy()
@@ -457,29 +463,22 @@
 
             setI2CBus(plugin.settings.bus);
             $('#as-i2c-bus-select').val(plugin.settings.bus);
-
-
-
-plugin.settings.deviceTable .rows().deselect(); // optional: clear existing selection
-
-plugin.settings.deviceTable .rows().every(function () {
-  var data = this.data();
-  if (data.address === plugin.settings.address) {  // first column match
-    this.select();
-  }
-});
-
-
-            
+            plugin.settings.deviceTable.rows().deselect(); 
+            plugin.settings.deviceTable.rows().every(function () {
+                var data = this.data();
+                if (data.address === plugin.settings.address) {
+                    this.select();
+                }
+            });
         }
 
         plugin.destroy = function () {
-			$('#mm-i2c-dialog-tab-library-library').DataTable().destroy()
-			$('#mm-i2c-dialog-tab-detected-devices').DataTable().destroy()
+            $('#mm-i2c-dialog-tab-library-library').DataTable().destroy()
+            $('#mm-i2c-dialog-tab-detected-devices').DataTable().destroy()
             $(document).removeData('allskyI2C')
         }
 
-        plugin.init();       
+        plugin.init();
     }
 
     $.fn.allskyI2C = function (options) {

@@ -1,13 +1,22 @@
-#!/home/pi/allsky/venv/bin/python
+#!/usr/bin/python3
 
 import os
-import pathlib
+import sys
+import subprocess
+
+# Ensure the script is running in the correct Python environment
+allsky_home = os.environ['ALLSKY_HOME']
+here = os.path.dirname(os.path.abspath(__file__))
+venv_dir = os.path.join(allsky_home, 'venv')
+venv_python = os.path.join(venv_dir, 'bin', 'python3')
+if sys.executable != venv_python:
+    os.execv(venv_python, [venv_python] + sys.argv)
+
 import json
 import copy
 import argparse
 import subprocess
 import shlex
-import sys
 import re
 import time
 from pathlib import Path
@@ -352,7 +361,7 @@ if __name__ == '__main__':
 	parser.add_argument("--prettyprint", action="store_true", help="Pretty Print the results to stdout")
 	parser.add_argument("--debug", action="store_true", help="Display debug info")
 	args = parser.parse_args()
-    
+
 	if args.overlay == '':
 		args.valuesonly = True
 		

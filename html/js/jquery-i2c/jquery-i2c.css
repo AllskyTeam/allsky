@@ -44,3 +44,7 @@ table.dataTable th,
 table.dataTable td {
     padding: 2px !important;
 }
+
+#mm-i2c-dialog-tab-help {
+    padding: 10px;
+}

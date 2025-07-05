@@ -1,7 +1,6 @@
-#!/home/pi/allsky/venv/bin/python3
+#!/usr/bin/python3
 
-import sys
-import os
+import os 
 import json
 import pprint
 import re
@@ -23,7 +22,7 @@ class ALLSKYI2CPROCESSOR:
     _IC2 = {}
     _home = '/tmp'
     
-    def __init__(self, home):        
+    def __init__(self, home): 
         self._home = home
 
     def var_dump(self, variable):
@@ -85,7 +84,7 @@ class ALLSKYI2CPROCESSOR:
 
         jsonData = json.dumps(self._IC2, indent=4)
         destFile = os.path.join(self._home, 'config', 'i2c.json')
-        print(destFile)
+
         with open(destFile, mode='wt') as file:
             file.write(jsonData)
             print(f'INFO: I2C data written to {destFile}')

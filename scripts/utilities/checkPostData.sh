@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2154		# referenced but not assigned - from convertJSON.php
 
 # Help determine why postData.sh failed.
 # Failure will often result in an Allsky Website displaying the message:
@@ -13,11 +14,11 @@ source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 
 CMD="postData.sh"
-LOCAL="$( settings ".uselocalwebsite" )"
-REMOTE_W="$( settings ".useremotewebsite" )"
-REMOTE_S="$( settings ".useremoteserver" )"
+# Get all settings we're going to use.
+#shellcheck disable=SC2119
+getAllSettings --var "uselocalwebsite useremotewebsite useremoteserver"
 
-if [[ ${LOCAL} == "false" && ${REMOTE_W} == "false" && ${REMOTE_S} == "false" ]]; then
+if [[ ${S_uselocalwebsite} == "false" && ${S_useremotewebsite} == "false" && ${S_useremoteserver} == "false" ]]; then
 	MSG="${CMD} does not run because there is no where to upload data."
 	MSG+="\nThe local Website, remote Website, and remote Server are all disabled"
 	MSG+=" in the WebUI."

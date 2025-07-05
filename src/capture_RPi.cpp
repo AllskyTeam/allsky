@@ -71,11 +71,11 @@ bool readMetadataFile(string file);
 // the default will be used.
 int RPicapture(config cg, cv::Mat *image)
 {
-	// Define command line.
-	string command = cg.cmdToUse;
+	stringstream ss, ss2, ss_cmd;		// temporary variables
 
 	// Ensure no prior process is still running.
-	string kill = "pkill --signal SIGKILL '" + command + "' 2> /dev/null";
+	ss_cmd << cg.cmdToUse;
+	string kill = "pkill --signal SIGKILL '" + ss_cmd.str() + "' 2> /dev/null";
 	static bool showed_kill_command = false;
 	if (! showed_kill_command) {
 		// only show once - it never changes
@@ -84,9 +84,21 @@ int RPicapture(config cg, cv::Mat *image)
 	}
 	system(kill.c_str());
 
-	stringstream ss, ss2;
+	if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
+	{
+		cg.currentExposure_us = myRaspistillSetting.shutter_us;
+	}
 
+	// The command sometimes hangs so put a timeout on it that's longer than the exposure time.
+	long timeout_s = (cg.currentExposure_us / US_IN_SEC) + 30;		// guess on how much longer
+	ss << timeout_s;
+
+	// Define command line.
+	string command = "timeout " + ss.str() + " " + ss_cmd.str();
+
+	ss.str("");
 	ss << cg.fullFilename;
+
 	command += " --thumb none --output '" + ss.str() + "'";		// don't include a thumbnail in the file
 
 	if (cg.isLibcamera)
@@ -179,15 +191,7 @@ int RPicapture(config cg, cv::Mat *image)
 		else if (cg.currentBin == 2)
 		{
 			command += " --mode 2";
-//x			ss << cg.width / 2;
-//x			ss2 << cg.height / 2;
-//x			command += " --mode 2 --width " + ss.str() + " --height " + ss2.str();
 		}
-	}
-
-	if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
-	{
-		cg.currentExposure_us = myRaspistillSetting.shutter_us;
 	}
 
 	// Check if automatic determined exposure time is selected
@@ -361,12 +365,23 @@ int RPicapture(config cg, cv::Mat *image)
 	else
 	{
 		// Unable to take picture.
-		// The child command is "/bin/sh" will will basically never get a signal
-		// even if the camera program does, so check for a signal in WEXITSTATUS() not ret.
+		// The child command is "/bin/sh" and will basically never get a signal even
+		// if the camera program does, so check for a signal in WEXITSTATUS() not ret.
+
+		int l = 0;		// log level
 		if (WIFSIGNALED(WEXITSTATUS(ret)))
 		{
-			Log(1, " >>> %s: WARNING: %s received signal %d, ret=0x%x\n",
-				cg.ME, cg.cmdToUse, WTERMSIG(WEXITSTATUS(ret)), ret);
+			l = 1;		// Don't send camera's message to WebUI.
+
+			int sig_num = WTERMSIG(WEXITSTATUS(ret));
+			if (sig_num == 124)		// The "timeout" command exits with this if a timeout occurred.
+			{
+				Log(-1, "WARNING: %s timed out taking image after %d seconds.\n", cg.cmdToUse, timeout_s);
+			}
+			else
+			{
+				Log(1, "WARNING: %s received signal %d, ret=0x%x\n", cg.cmdToUse, sig_num, ret);
+			}
 		}
 		else if (WIFEXITED(ret))
 		{
@@ -382,12 +397,13 @@ int RPicapture(config cg, cv::Mat *image)
 		}
 
 		// Add errorOutput to the log file.
+		// Ignore info lines - we only care about errors.
 		std::string errMsg;
-		command = "cat " + errorOutput;
+		command = "grep -E -v 'Mode selection|Score|configuration adjusted' " + errorOutput;
 		errMsg = exec(command.c_str());
-		Log(0, "********************\n");
-		Log(0, "%s\n", errMsg.c_str());
-		Log(0, "********************\n");
+		Log(1, "********************\n");		// 1 so it doesn't go to WebUI.
+		Log(l, "%s\n", errMsg.c_str());
+		Log(1, "********************\n");
 	}
 
 	return(ret);

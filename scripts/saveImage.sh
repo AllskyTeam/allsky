@@ -70,7 +70,8 @@ if ! one_instance --pid-file "${PID_FILE}" --sleep "3s" --max-checks 3 \
 fi
 
 # This gets all settings and prefixes their names with "S_".
-# It's faster than calling "settings(" a bunch of times.
+# It's faster than calling "settings()" a bunch of times.
+#shellcheck disable=SC2119
 getAllSettings || exit 1
 
 # Get passed-in variables and export as AS_* so overlays can use them.

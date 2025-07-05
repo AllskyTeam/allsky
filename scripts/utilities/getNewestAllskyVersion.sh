@@ -10,6 +10,8 @@ ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
 source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 if [[ ${1} == "--branch" ]]; then
 	BRANCH="${2}"
@@ -18,7 +20,7 @@ else
 	BRANCH="${GITHUB_MAIN_BRANCH}"
 fi
 
-GIT_FILE="${GITHUB_RAW_ROOT}/${GITHUB_ALLSKY_PACKAGE}/${BRANCH}/version"
+GIT_FILE="${GITHUB_RAW_ROOT}/${GITHUB_ALLSKY_REPO}/${BRANCH}/version"
 if ! NEWEST_VERSION="$( curl --show-error --silent "${GIT_FILE}" 2>&1 )" ; then
 	echo "${ME}: ERROR: Unable to get newest Allsky version: ${NEWEST_VERSION}."
 	exit 1
@@ -30,11 +32,13 @@ if [[ ${NEWEST_VERSION:0:1} != "v" ||
 	exit 1
 fi
 
-CURRENT_VERSION="$( < "${ALLSKY_VERSION_FILE}" )"
+CURRENT_VERSION="$( get_version )"
+NOTE=""
 RET=0
 if [[ ${CURRENT_VERSION} == "${NEWEST_VERSION}" ]]; then
 	RET=0
 elif [[ ${CURRENT_VERSION} < "${NEWEST_VERSION}" ]]; then
+	NOTE="$( get_version --note )"
 	RET="${EXIT_PARTIAL_OK}"
 else
 	# Current newer than newest - this can happen if testing a newer release.
@@ -42,4 +46,6 @@ else
 fi
 
 echo "${NEWEST_VERSION}"
+[[ -n ${NOTE} ]] && echo "${NOTE}"
+
 exit "${RET}"

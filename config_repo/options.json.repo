@@ -1632,7 +1632,7 @@
 "type" : "header-tab"
 },
 {
-"name" : "timelapseheader",
+"name" : "keogramheader",
 "label" : "Keogram and Startrails Settings",
 "type" : "header"
 },
@@ -1694,7 +1694,7 @@
 },
 {
 "name" : "keogramfontcolor",
-"default" : "#fff",
+"default" : "#ffffff",
 "description" : "Font color.",
 "label" : "Font Color",
 "label_prefix" : "Keograms",

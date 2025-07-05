@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2154		# referenced but not assigned - from convertJSON.php
 
 # This script allows users to manually generate or upload keograms, startrails, and timelapses.
 
@@ -44,7 +45,7 @@ while [[ $# -gt 0 ]]; do
 				UPLOAD_SILENT=""	# since WE aren't outputing a message, upload.sh should.
 				;;
 			--nice)
-				NICE="nice -n ${2}"
+				NICE="${2}"
 				shift
 				;;
 			--thumbnail-only)
@@ -152,6 +153,16 @@ elif [[ $# -eq 0 || $# -gt 1 ]]; then
 	usage_and_exit 2
 fi
 
+# Get all settings we're going to use.
+#shellcheck disable=SC2119
+getAllSettings --var "uselocalwebsite \
+	useremotewebsite remotewebsiteimagedir \
+	useremoteserver remoteserverimagedir \
+	remoteserverkeogramdestinationname remoteserverstartrailsdestinationname remoteservervideodestinationname \
+	keogramextraparameters keogramexpand keogramfontname keogramfontcolor keogramfontsize keogramlinethickness \
+	startrailsbrightnessthreshold startrailsextraparameters \
+	timelapseuploadthumbnail" || exit 1
+
 if [[ -n ${IMAGES_FILE} ]]; then
 	if [[ ! -s ${IMAGES_FILE} ]]; then
 		E_ "*** ${ME} ERROR: '${IMAGES_FILE}' does not exist or is empty!" >&2
@@ -219,9 +230,9 @@ if [[ ${TYPE} == "GENERATE" ]]; then
 	}
 
 else
-	L_WEB_USE="$( settings ".uselocalwebsite" )"
-	R_WEB_USE="$( settings ".useremotewebsite" )"
-	R_SERVER_USE="$( settings ".useremoteserver" )"
+	L_WEB_USE="${S_uselocalwebsite}"
+	R_WEB_USE="${S_useremotewebsite}"
+	R_SERVER_USE="${S_useremoteserver}"
 	if [[ ${L_WEB_USE} == "false" &&
 		  ${R_WEB_USE} == "false" &&
 		  ${R_SERVER_USE} == "false" ]]; then
@@ -232,26 +243,26 @@ else
 	# Local Websites don't have directory or file name choices.
 
 	if [[ ${R_WEB_USE} == "true" ]]; then
-		R_WEB_DEST_DIR="$( settings ".remotewebsiteimagedir" )"
+		R_WEB_DEST_DIR="${S_remotewebsiteimagedir}"
 		if [[ -n ${R_WEB_DEST_DIR} && ${R_WEB_DEST_DIR: -1:1} != "/" ]]; then
 			R_WEB_DEST_DIR+="/"
 		fi
 	fi
 
 	if [[ ${R_SERVER_USE} == "true" ]]; then
-		R_SERVER_DEST_DIR="$( settings ".remoteserverimagedir" )"
+		R_SERVER_DEST_DIR="${S_remoteserverimagedir}"
 		if [[ -n ${R_SERVER_DEST_DIR} && ${R_SERVER_DEST_DIR: -1:1} != "/" ]]; then
 			R_SERVER_DEST_DIR+="/"
 		fi
 
 		if [[ ${DO_KEOGRAM} == "true" ]]; then
-			R_SERVER_KEOGRAM_NAME="$( settings ".remoteserverkeogramdestinationname" )"
+			R_SERVER_KEOGRAM_NAME="${S_remoteserverkeogramdestinationname}"
 		fi
 		if [[ ${DO_STARTRAILS} == "true" ]]; then
-			R_SERVER_STARTRAILS_NAME="$( settings ".remoteserverstartrailsdestinationname" )"
+			R_SERVER_STARTRAILS_NAME="${S_remoteserverstartrailsdestinationname}"
 		fi
 		if [[ ${DO_TIMELAPSE} == "true" ]]; then
-			R_SERVER_VIDEO_NAME="$( settings ".remoteservervideodestinationname" )"
+			R_SERVER_VIDEO_NAME="${S_remoteservervideodestinationname}"
 		fi
 	fi
 fi
@@ -279,19 +290,24 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 	UPLOAD_FILE="${OUTPUT_DIR}/keogram/${KEOGRAM_FILE}"
 
 	if [[ ${TYPE} == "GENERATE" ]]; then
-		KEOGRAM_EXTRA_PARAMETERS="$( settings ".keogramextraparameters" )"
+		if [[ -z ${NICE} ]]; then
+			N=""
+		else
+			N="--nice-level ${NICE}"
+		fi
+		KEOGRAM_EXTRA_PARAMETERS="${S_keogramextraparameters}"
 		MORE=""
-		EXPAND="$( settings ".keogramexpand" )"
+		EXPAND="${S_keogramexpand}"
 			[[ ${EXPAND} == "true" ]] && MORE+=" --image-expand"
-		NAME="$( settings ".keogramfontname" )"
+		NAME="${S_keogramfontname}"
 			[[ ${NAME} != "" ]] && MORE+=" --font-name ${NAME}"
-		COLOR="$( settings ".keogramfontcolor" )"
+		COLOR="${S_keogramfontcolor}"
 			[[ ${COLOR} != "" ]] && MORE+=" --font-color '${COLOR}'"
-		SIZE="$( settings ".keogramfontsize" )"
+		SIZE="${S_keogramfontsize}"
 			[[ ${SIZE} != "" ]] && MORE+=" --font-size ${SIZE}"
-		THICKNESS="$( settings ".keogramlinethickness" )"
+		THICKNESS="${S_keogramlinethickness}"
 			[[ ${THICKNESS} != "" ]] && MORE+=" --font-type ${THICKNESS}"
-		CMD="'${ALLSKY_BIN}/keogram' ${NICE} ${SIZE_FILTER} -d '${INPUT_DIR}' \
+		CMD="'${ALLSKY_BIN}/keogram' ${N} ${SIZE_FILTER} -d '${INPUT_DIR}' \
 			-e ${EXTENSION} -o '${UPLOAD_FILE}' ${MORE} ${KEOGRAM_EXTRA_PARAMETERS}"
 		generate "Keogram" "keogram" "${CMD}"
 
@@ -341,9 +357,14 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 	STARTRAILS_FILE="startrails-${DATE}.${EXTENSION}"
 	UPLOAD_FILE="${OUTPUT_DIR}/startrails/${STARTRAILS_FILE}"
 	if [[ ${TYPE} == "GENERATE" ]]; then
-		BRIGHTNESS_THRESHOLD="$( settings ".startrailsbrightnessthreshold" )"
-		STARTRAILS_EXTRA_PARAMETERS="$( settings ".startrailsextraparameters" )"
-		CMD="'${ALLSKY_BIN}/startrails' ${NICE} ${SIZE_FILTER} -d '${INPUT_DIR}' \
+		if [[ -z ${NICE} ]]; then
+			N=""
+		else
+			N="--nice ${NICE}"
+		fi
+		BRIGHTNESS_THRESHOLD="${S_startrailsbrightnessthreshold}"
+		STARTRAILS_EXTRA_PARAMETERS="${S_startrailsextraparameters}"
+		CMD="'${ALLSKY_BIN}/startrails' ${N} ${SIZE_FILTER} -d '${INPUT_DIR}' \
 			-e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o '${UPLOAD_FILE}' \
 			${STARTRAILS_EXTRA_PARAMETERS}"
 		generate "Startrails, threshold=${BRIGHTNESS_THRESHOLD}" "startrails" "${CMD}"
@@ -398,7 +419,7 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 	UPLOAD_THUMBNAIL="${OUTPUT_DIR}/${THUMBNAIL_FILE}"
 	UPLOAD_FILE="${OUTPUT_DIR}/${VIDEO_FILE}"
 
-	TIMELAPSE_UPLOAD_THUMBNAIL="$( settings ".timelapseuploadthumbnail" )"
+	TIMELAPSE_UPLOAD_THUMBNAIL="${S_timelapseuploadthumbnail}"
 	if [[ ${TYPE} == "GENERATE" ]]; then
 		# If the thumbnail file exists it will used and produce errors, so delete it.
 		rm -f "${UPLOAD_THUMBNAIL}"
@@ -413,12 +434,17 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 				RET=1
 			fi
 		else
+			if [[ -z ${NICE} ]]; then
+				N=""
+			else
+				N="nice -n ${NICE}"
+			fi
 			if [[ -n ${IMAGES_FILE} ]]; then
 				X="--images '${IMAGES_FILE}'"
 			else
 				X="--output '${UPLOAD_FILE}' '${INPUT_DIR}'"
 			fi
-			CMD="${NICE} '${ALLSKY_SCRIPTS}/timelapse.sh' ${DEBUG_ARG} ${X}"
+			CMD="${N} '${ALLSKY_SCRIPTS}/timelapse.sh' ${DEBUG_ARG} ${X}"
 			generate "Timelapse" "" "${CMD}"	# it creates the necessary directory
 			RET=$?
 		fi

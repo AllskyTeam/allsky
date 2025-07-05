@@ -117,7 +117,8 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_BIN="${ALLSKY_HOME}/bin"
 
 	# Holds all the images on a per-day basis.
-	ALLSKY_IMAGES="${ALLSKY_HOME}/images"
+	ALLSKY_IMAGES_ORIGINAL="${ALLSKY_HOME}/images"
+	ALLSKY_IMAGES="${ALLSKY_IMAGES_ORIGINAL}"		# User can override
 
 	# Areas for users' Allsky-related files that get propogated to new releases.
 	ALLSKY_MYFILES_NAME="myFiles"
@@ -164,6 +165,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 
 	# Location of WebUI.
 	ALLSKY_WEBUI="${ALLSKY_HOME}/html"
+	ALLSKY_SUPPORT_DIR="${ALLSKY_WEBUI}/support"
 
 	# Base location of the overlay and module configuration and data files.
 	ALLSKY_OVERLAY="${ALLSKY_CONFIG}/overlay"
@@ -179,7 +181,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 
 	# Allsky version.
 	ALLSKY_VERSION_FILE="${ALLSKY_HOME}/version"
-	ALLSKY_VERSION="$( < "${ALLSKY_VERSION_FILE}" )"
+	ALLSKY_VERSION="$( head -1 "${ALLSKY_VERSION_FILE}" )"
 
 	# Location of Allsky Website files.
 	ALLSKY_WEBSITE="${ALLSKY_WEBUI}/allsky"
@@ -225,7 +227,8 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	GITHUB_ROOT="https://github.com/AllskyTeam"
 	GITHUB_RAW_ROOT="https://raw.githubusercontent.com/AllskyTeam"
 	GITHUB_MAIN_BRANCH="master"
-	GITHUB_ALLSKY_PACKAGE="allsky"
+	GITHUB_ALLSKY_REPO="allsky"
+	GITHUB_ALLSKY_MODULES_REPO="allsky-modules"
 
 	# NAMEs of some configuration files:
 	#	Camera Capabilities - specific to a camera type and model (cc.json)

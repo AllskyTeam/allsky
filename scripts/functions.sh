@@ -750,7 +750,7 @@ function checkAndGetNewerFile()
 	fi
 
 	local CURRENT_FILE="${1}"
-	local GIT_FILE="${GITHUB_RAW_ROOT}/${GITHUB_ALLSKY_PACKAGE}/${BRANCH}/${2}"
+	local GIT_FILE="${GITHUB_RAW_ROOT}/${GITHUB_ALLSKY_REPO}/${BRANCH}/${2}"
 	local DOWNLOADED_FILE="${3}"
 	# Download the file and put in DOWNLOADED_FILE
 	X="$( curl --show-error --silent "${GIT_FILE}" )"
@@ -1345,7 +1345,7 @@ function indent()
 		INDENT="    "
 		shift
 	elif [[ ${1} == "--html" ]]; then
-		INDENT="&nbsp;&nbsp;&nbsp;&nbsp;"
+		INDENT="\&nbsp;\&nbsp;\&nbsp;\&nbsp;"
 		shift
 	else
 		INDENT="	"	# tab
@@ -1503,15 +1503,33 @@ function get_ls_contents()
 
 ####
 # Get all settings at once rather than individually via settings().
+# --var "variable1 ..." gets only the specified variables.
 function getAllSettings()
 {
+	local M="${ME:-${FUNCNAME[0]}}"
+	local VAR=""
+	local PREFIX="S_"
+	while [[ ${1:0:1} == "-" ]]
+	do
+		if [[ ${1} == "--var" ]]; then
+			VAR="${2//	/ }"	# Convert tabs to spaces for convertJSON.php
+			shift
+		elif [[ ${1} == "--prefix" ]]; then
+			PREFIX="${2}"
+			shift
+		else
+			echo "${M}: ERROR: Unknown argument: ${1}." >&2
+			return 2
+		fi
+		shift
+	done
 	local X
 
-	if ! X="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix S_ --shell 2>&1 )" ; then
+	#shellcheck disable=SC2086
+	if ! X="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix "${PREFIX}" --shell --variables "${VAR}" 2>&1 )" ; then
 		echo "${X}"
 		return 1
 	fi
-
 	eval "${X}"
 	return 0
 }

@@ -102,6 +102,16 @@ fi
 sudo chown "${ALLSKY_OWNER}":"${ALLSKY_OWNER}" "${NEW_ALLSKY_IMAGES}"
 chmod 775 "${NEW_ALLSKY_IMAGES}"
 
+# Make sure the web server can view the directory.
+DIR="${NEW_ALLSKY_IMAGES}"
+while ! sudo --user "${WEBSERVER_OWNER}" ls "${DIR}" > /dev/null 2>&1
+do
+	display_msg --logonly info "  > Changing permissions of '${DIR}' so web server can view images."
+	sudo chmod o+rx "${DIR}"
+	[[ ${DIR} == "/" ]] && break
+	DIR="$( dirname "${DIR}" )"
+done
+
 # Get current status of Allsky to determine if we have to stop and restart it.
 STATUS="$( get_allsky_status )"
 if [[ ${STATUS} == "${ALLSKY_STATUS_STARTING}" ||
@@ -114,18 +124,21 @@ fi
 
 if [[ ${ALLSKY_RUNNING} == "true" ]]; then
 	stop_Allsky
-	display_msg --log progress "Allsky stopped."
+	display_msg progress "Allsky stopped."
+	display_msg --logonly info "Allsky stopped; was '${STATUS}'."
+else
+	display_msg --logonly info "Not stopping Allsky - is currently '${STATUS}'."
 fi
 
 # Reset everything that points to old location.
 if [[ ${ALLSKY_IMAGES_ALREADY_MOVED} == "true" ]]; then
-	if [[ ${NEW_ALLSKY_IMAGES} =~ ${ALLSKY_HOME} ]]; then
-		# Restoring to standard location.
+	if [[ ${NEW_ALLSKY_IMAGES} == "${ALLSKY_IMAGES_ORIGINAL}" ]]; then
+		# Restore to standard location.
 		sed -i -e '/^ALLSKY_IMAGES=/d' "${ALLSKY_USER_VARIABLES}"
 		RET=$?
 		if [[ ! -s ${ALLSKY_USER_VARIABLES} ]]; then
 			display_msg --logonly info "'${ALLSKY_USER_VARIABLES}' is now empty so removing"
-			rm "${ALLSKY_USER_VARIABLES}"
+			rm -f "${ALLSKY_USER_VARIABLES}"
 		fi
 	else
 		sed -i \
@@ -134,7 +147,7 @@ if [[ ${ALLSKY_IMAGES_ALREADY_MOVED} == "true" ]]; then
 		RET=$?
 	fi
 	if [[ ${RET} -ne 0 ]]; then
-		display_msg --log error "Unable to update '${ALLSKY_USER_VARIABLES}; exiting."
+		display_msg --log error "Unable to update '${ALLSKY_USER_VARIABLES}'; exiting."
 		do_exit 1
 	fi
 else

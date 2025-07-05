@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2154		# referenced but not assigned - from convertJSON.php
 
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
 ME="$( basename "${BASH_ARGV0}" )"
@@ -104,10 +105,13 @@ if [[ ${NEEDS_REBOOT} == "true" ]]; then
 	doExit "${EXIT_ERROR_STOP}" "RebootNeeded" "" "The Pi needs to be rebooted."
 fi
 
+# Get all settings we're going to use.
+#shellcheck disable=SC2119
+getAllSettings --var "lastchanged cameranumber locale" || exit 1
+
 # If the "lastchanged" setting is missing, the user needs to review/change the settings.
 # This will happen after an installation or upgrade, which also sets the Allsky status.
-LAST_CHANGED="$( settings ".lastchanged" )"
-if [[ -z ${LAST_CHANGED} ]]; then
+if [[ -z ${S_lastchanged} ]]; then
 	STATUS="$( get_allsky_status )"
 	if [[ ${STATUS} == "${ALLSKY_STATUS_REBOOT_NEEDED}" ]]; then
 		# It's been rebooted and now we need to force "lastchanged" to be set.
@@ -159,7 +163,7 @@ if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
 		MSG="Reminder: your prior Allsky is still in '${PRIOR_ALLSKY_DIR}'."
 		MSG+="\nIf you are no longer using it, it can be removed to save disk space."
 		"${ALLSKY_SCRIPTS}/addMessage.sh" --id AM_RM_PRIOR --type info --msg "${MSG}" \
-			--cmd "Click here to remove."
+			--cmd "Click here to remove the directory and all its contents."
 		touch "${ALLSKY_OLD_REMINDER}"		# Sets the last time we displayed the message.
 	fi
 fi
@@ -198,9 +202,13 @@ if [[ -f ${ALLSKY_POST_INSTALL_ACTIONS} ]]; then
 		set_allsky_status "${ALLSKY_STATUS_ACTIONS_NEEDED}"
 		doExit "${EXIT_ERROR_STOP}" "no-image" "" ""
 	else
+		# First delete the initial message if there since we're posting a reminder.
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --id AM_POST --delete
+
 		MSG="Reminder: Click here to see the action(s) that need to be performed."
 		PIA="${ALLSKY_POST_INSTALL_ACTIONS/${ALLSKY_HOME}/}"
-		"${ALLSKY_SCRIPTS}/addMessage.sh" --id AM_RM_POST --type warning --msg "${MSG}" --url "${PIA}" \
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --id AM_RM_POST --type warning \
+			--msg "${MSG}" --url "${PIA}" \
 			--cmd "\nOnce you perform them, click here to remove this message."
 	fi
 fi
@@ -389,14 +397,13 @@ trap "catch_signal" SIGTERM SIGINT SIGHUP
 set_allsky_status "${ALLSKY_STATUS_STARTING}"
 
 # Run the camera-specific capture program - this is the main attraction...
-CAMERA_NUMBER="$( settings ".cameranumber" )"
-CAMERA_NUMBER="${CAMERA_NUMBER:-0}"		# default
+CAMERA_NUMBER="${S_cameranumber:-0}"		# default
 "${ALLSKY_BIN}/${CAPTURE}" \
 	-debuglevel "${ALLSKY_DEBUG_LEVEL}" \
 	-cmd "${RPi_COMMAND_TO_USE}" \
 	-cameramodel "${CAMERA_MODEL}" \
 	-cameranumber "${CAMERA_NUMBER}" \
-	-locale "$( settings ".locale" )" \
+	-locale "${S_locale}" \
 	-config "${ARGS_FILE}"
 RETCODE=$?
 

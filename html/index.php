@@ -128,7 +128,7 @@ if ($useRemoteWebsite) {
 		case "hostapd_conf":		$Title = "Configure Hotspot";	break;
 		case "openvpn_conf":		$Title = "Configure OpenVPN";	break;
 		case "torproxy_conf":		$Title = "Configure TOR proxy";	break;
-		case "auth_conf":			$Title = "Change password";		break;
+		case "auth_conf":			$Title = "Change Password";		break;
 		case "system":				$Title = "System";				break;
 		case "list_days":			$Title = "Images";				break;
 		case "list_images":			$Title = "Images$day";			break;
@@ -138,12 +138,12 @@ if ($useRemoteWebsite) {
 		case "editor":				$Title = "Editor";				break;
 		case "overlay":				$Title = "Overlay Editor";		break;
 		case "module":				$Title = "Module Manager";		break;
-		case "live_view":			$Title = "Liveview";			break;
+		case "live_view":			$Title = "Live View";			break;
 		case "support": 			$Title = "Getting Support";		break;
 		default:					$Title = "Allsky WebUI";		break;
 	}
 ?>
-	</script>	<!-- allows <a external="true" ...> -->
+	<!-- allows <a external="true" ...> -->
 	<script src="documentation/js/documentation.js" type="application/javascript"></script>
 
 	<title><?php echo "$Title - WebUI"; ?></title>
@@ -154,7 +154,6 @@ if ($useRemoteWebsite) {
 	<!-- MetisMenu CSS -->
 	<link href="documentation/bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
 
-	<!-- Custom CSS -->
 	<link href="documentation/css/sb-admin-2.css" rel="stylesheet">
 
 	<!-- Font Awesome -->
@@ -179,7 +178,8 @@ if ($useRemoteWebsite) {
 
 	<script src="js/bigscreen.min.js"></script>
 
-    <script src="js/allsky.js"></script>
+	<script src="js/allsky.js"></script>
+	<script> var allskyPage='<?php echo $page ?>';  </script>
 
 	<!-- Custom Theme JavaScript -->
 	<script src="documentation/js/sb-admin-2.js"></script>
@@ -224,16 +224,29 @@ if ($useRemoteWebsite) {
 				<div class="version-title version-title-color">
 					<span id="allskyStatus"><?php echo output_allsky_status(); ?></span>
 <?php
-					$newest = getNewestAllskyVersion($changed);
-					if ($newest !== null) $newest = $newest['version'];
-					if ($newest !== null && $newest > ALLSKY_VERSION) {
-						$more = "title='New Version $newest Available'";
-						$more .= " style='background-color: red; color: white;'";
+					$versionInfo = getNewestAllskyVersion($changed);
+					if ($versionInfo !== null) {
+						$newestVersion = $versionInfo['version'];
+					} else {
+						$newestVersion = null;
+					}
+					if ($newestVersion !== null && $newestVersion > ALLSKY_VERSION) {
+						$note = getVariableOrDefault($versionInfo, "versionNote", "");
+						$more = "title='New Version $newestVersion Available";
+						if ($note !== "") {
+							$more .= ", $note";
+						}
+						$more .= "' style='background-color: red; color: white;'";
 
 						if ($changed) {
-							$msg = "<br>&nbsp; &nbsp; <strong>";
-							$msg .= "A new release of Allsky is available: $newest";
-							$msg .= "</strong><br><br>";
+							$x = "<br>&nbsp; &nbsp;";
+							$msg = "$x<strong>";
+							$msg .= "A new release of Allsky is available: $newestVersion";
+							$msg .= "</strong>";
+							if ($note !== "") {
+								$msg .= "$x$note";
+							}
+							$msg .= "<br><br>";
 							$cmd = ALLSKY_SCRIPTS . "/addMessage.sh";
 							$cmd .= " --no-date --type success --msg '${msg}'";
 							runCommand($cmd, "", "");
@@ -297,7 +310,7 @@ if ($useRemoteWebsite) {
 						<a id="WLAN" href="index.php?page=WLAN_info"><i class="fa fa-tachometer-alt fa-fw"></i> <b>WLAN</b> Dashboard</a>
 					</li>
 					<li>
-						<a id="wifi" href="index.php?page=wifi"><i class="fa fa-wifi fa-fw"></i> Configure Wifi</a>
+						<a id="wifi" href="index.php?page=wifi"><i class="fa fa-wifi fa-fw"></i> Configure Wi-Fi</a>
 					</li>
 					<?php if (DHCP_ENABLED) : ?>
 						<li>
@@ -526,8 +539,6 @@ if ($useRemoteWebsite) {
 		</div>
 	</div><!-- /#page-wrapper -->
 </div><!-- /#wrapper -->
-
-<script> var allskyPage='<?php echo $page ?>';  </script>
 
 </body>
 </html>

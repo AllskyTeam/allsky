@@ -20,7 +20,8 @@ class MODULEUTIL
         $this->userModules = ALLSKY_MODULE_LOCATION . '/modules';
 		$this->extraDataFolder = ALLSKY_OVERLAY . '/extra';
 		$this->myFiles = ALLSKY_MYFILES_DIR . '/modules';
-
+        $this->allsky_home = ALLSKY_HOME;
+        $this->allsky_scripts = ALLSKY_SCRIPTS;
     }
 
     public function run()
@@ -644,8 +645,7 @@ class MODULEUTIL
         $fileName = ALLSKY_MODULES . '/test_flow.json';
         file_put_contents($fileName,  $flow);
 
-        #TODO add bash to sudoers
-        $command = 'sudo bash -c "source /home/pi/allsky/venv/bin/activate; export ALLSKY_HOME=/home/pi/allsky; source /home/pi/allsky/variables.sh; export CURRENT_IMAGE=""; export DAY_OR_NIGHT="' . $dayNight . '"; source /home/pi/allsky/variables.sh; python3 ' . ALLSKY_SCRIPTS . '/flow-runner.py --test"';
+        $command = 'sudo ' . $this->allsky_scripts  . '/test_flow.sh --allsky_home ' . $this->allsky_home  . ' --allsky_scripts ' . $this->allsky_scripts  . ' --day_night ' . $dayNight;
         $result = $this->runShellCommand($command);
 
 		$jsonFlow = json_decode($flow, true);
@@ -708,91 +708,6 @@ class MODULEUTIL
         }
     }
 	
-	/*
-    private function getdebugVariables() {
-        $result = [];
-        $fileName = ALLSKY_TMP . '/overlaydebug.txt';
-
-        if (file_exists($fileName)) {
-            $fields = file($fileName);
-
-            if ($fields !== false) {
-                $fieldData = [];
-                $count = 0;
-                foreach ($fields as $field) {
-                    $fieldSplit = explode(" ", $field, 2);
-                    // Fields that have \n in them will be split and
-                    // the line after \n may not have any spaces.
-                    // Silently ignore these lines since they aren't errors.
-
-                    // TODO: Whatever creates this file should handle fields with \n.
-                    // If the line(s) after the \n have spaces in them,
-                    // they will be treated as fields, which they aren't.
-                    if (count($fieldSplit) > 1) {
-                        $value = trim($fieldSplit[1]);
-                        $value = iconv("UTF-8","ISO-8859-1//IGNORE",$value);
-                        $value = iconv("ISO-8859-1","UTF-8",$value);
-                        if (substr($fieldSplit[0],0,3) == "AS_") {
-                            $result[$fieldSplit[0]] = $value;
-                            $count++;
-                        }
-                    }
-                }
-            }
-        }
-
-        return $result;
-     
-    }
-
-    private function getModulevariableList($folder, $module='', $isExtra=false) {
-        $variables = new stdClass();
-
-        $handle = opendir($folder);
-        if ($handle) {
-            while (($entry = readdir($handle)) !== FALSE) {
-                if ($isExtra) {
-                    if ($entry !== '.' && $entry !== '..') {
-                        $fileName = $folder . '/' . $entry;
-                        $data = file_get_contents($fileName);
-                        $decoded = json_decode($data);
-                        $variables = (object)array_merge((array)$variables, (array)$decoded);
-                    }
-                } else {
-                    if (preg_match('/^allsky_/', $entry)) {
-                        if ($entry !== 'allsky_shared.py') {
-
-                            $include = true;
-                            if ($module !== '') {
-                                $include=false;
-                                if ($module === $entry) {
-                                    $include = true;
-                                }
-                            }
-                            if ($include) {
-                                $fileName = $folder . '/' . $entry;
-                                $metaData = $this->getMetaDataFromFile($fileName);
-                                $decoded = json_decode($metaData);
-
-                                $extraVars = $decoded->extradata->values;
-
-                                foreach ($extraVars as &$extraVar) {
-                                    $extraVar->source = $decoded->module;
-                                }
-
-                                if (isset($decoded->extradata)) {
-                                    $variables = (object)array_merge((array)$variables, (array)$extraVars);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return $variables;
-    }
-*/
     private function getAllskyVariable($variable="AS_CPUTEMP") {
 
         $variables = $this->getAllskyVariables(true);
@@ -837,89 +752,7 @@ class MODULEUTIL
         $this->sendResponse($output[0]);
 
     }
-/*
-    public function getVariableListInternal($showEmpty='yes', $module='') {
 
-        $baseVariableListFile = ALLSKY_CONFIG . '/variables.json';
-        $coreModuleDir = ALLSKY_SCRIPTS . '/modules';
-        $extraModulesDir = '/opt/allsky/modules';
-        $extraFiles = ALLSKY_OVERLAY . '/extra';
-
-        $tempVariableList = [];
-        if ($module === '') {
-            $tempVariableList = json_decode(file_get_contents($baseVariableListFile));
-        }
-
-        $debugVariables = $this->getdebugVariables();
-
-        $variables = $this->getModulevariableList($coreModuleDir, $module);
-        $tempVariableList = (object)array_merge((array)$tempVariableList, (array)$variables);
-
-        $variables = $this->getModulevariableList($extraModulesDir, $module);
-        $tempVariableList = (object)array_merge((array)$tempVariableList, (array)$variables);
-
-        if ($module === '') {        
-            $variables = $this->getModulevariableList($extraFiles, null, true);
-            $tempVariableList = (object)array_merge((array)$tempVariableList, (array)$variables);
-        }
-
-        $tempVariableList = (array)$tempVariableList;
-        $variableList = array();
-
-        foreach ($tempVariableList as $variable=>$config) {
-            if ($module === '') {           
-                $add = true;
-                if (str_contains($variable, '${COUNT}')) {
-                    $matchString = str_replace('${COUNT}', '', $variable);
-
-                    foreach ($tempVariableList as $tempVariable=>$tempConfig) {
-                        $tempVariable = preg_replace('/\d+$/', '', $tempVariable);
-                        if ($tempVariable === $matchString) {
-                            $add = false;
-                        }
-                    }
-                }
-                if ($add) {
-                    $variableList[$variable] = $config;
-                }
-            } else {
-                $variableList[$variable] = $config;
-            }
-        }
-
-        $result = array();
-        foreach ($variableList as $variable=>$config) {
-            $value = (isset($config->value)) && $config->value ? $config->value : '';
-
-            if ($config->group == 'Allsky' && isset($debugVariables[$variable])) {
-                $value = $debugVariables[$variable];
-            }
-
-            $add = true;
-            if ($showEmpty == 'no' && $module === '') {
-                if (empty($value)) {
-                    $add = false;
-                }
-            }
-
-            if ($add) {
-                $result[] = [
-                    'name' => (isset($config->name)) && $config->name ? $config->name : '${' . str_replace('AS_', '', $variable) . '}',
-                    'format' => (isset($config->format)) && $config->format ? $config->format : '',
-                    'sample' => (isset($config->sample)) && $config->sample ? $config->sample : '',
-                    'variable' => $variable,
-                    'group' => (isset($config->group)) && $config->group ? $config->group : 'Unknown',
-                    'description' => (isset($config->description)) && $config->description ? $config->description : '',
-                    'value' => $value,
-                    'type' => (isset($config->type)) && $config->type ? $config->type : 'Unknown',
-                    'source' => (isset($config->source)) && $config->source ? $config->source : 'Unknown'
-                ];
-            }
-        }
-
-        $this->sendResponse(json_encode($result));
-    }
-*/
     public function postValidateMask() {
         $error = false;
         $message='';

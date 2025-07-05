@@ -79,7 +79,6 @@ function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=nul
 		$retMsg .= $div;
 		$retMsg .= "$errorMsg ";
 		$retMsg .= json_last_error_msg();
-# TODO: json_pp gives a generic "on line 59" message.
 		$cmd = "json_pp < $file 2>&1";
 		exec($cmd, $output);
 		$retMsg .= $br;
@@ -107,7 +106,6 @@ function verifyNumber($num) {
 }
 
 // Globals
-define('DATE_TIME_FORMAT', 'Y-m-d H:i:s');
 $image_name = null;
 $showUpdatedMessage = true; $delay=null; $daydelay=null; $daydelay_postMsg=""; $nightdelay=null; $nightdelay_postMsg="";
 $imagesSortOrder = null;
@@ -122,7 +120,7 @@ $useRemoteWebsite = false;
 $hasLocalWebsite = false;
 $hasRemoteWebsite = false;
 $endSetting = "XX_END_XX";
-$saveChangesLabel = "Save changes";		// May be overwritten
+$saveChangesLabel = "Save changes";
 $forceRestart = false;					// Restart even if no changes?
 $hostname = null;
 
@@ -148,22 +146,6 @@ function readOptionsFile() {
 
 $allsky_status = null;
 $allsky_status_timestamp = null;
-
-function update_allsky_status($newStatus) {
-	global $status, $allsky_status;
-
-	$s = array();
-	$s["status"] = $newStatus;
-	$s['timestamp'] = date(DATE_TIME_FORMAT);
-
-	$msg = updateFile(ALLSKY_STATUS, json_encode($s, JSON_PRETTY_PRINT), "Allsky status", true);
-	if ($msg !== "") {
-		$status->addMessage("Failed to update Allsky status: $msg", 'danger');
-	} else {
-		$allsky_status = $newStatus;
-	}
-}
-
 function output_allsky_status() {
 	global $allsky_status, $allsky_status_timestamp;
 
@@ -187,7 +169,7 @@ function output_allsky_status() {
 		$class = "alert-danger";
 	} else {
 		$title = "title='Since $allsky_status_timestamp'";
-		if ($allsky_status == ALLSKY_STATUS_RUNNING) {
+		if ($allsky_status == "Running") {
 			$class = "alert-success";
 		} else {
 			$class = "alert-warning";
@@ -225,10 +207,11 @@ function initialize_variables($website_only=false) {
 
 	if ($website_only) return;
 
-	// IMG_DIR is an alias in the web server's config that points to where the current image is.
+	// $img_dir is an alias in the web server's config that points to where the current image is.
 	// It's the same as ${ALLSKY_TMP} which is the physical path name on the server.
+	$img_dir = get_variable(ALLSKY_HOME . '/variables.sh', 'IMG_DIR=', 'current/tmp');
 	$f = getVariableOrDefault($settings_array, 'filename', "image.jpg");
-	$image_name = IMG_DIR . "/$f";
+	$image_name = "$img_dir/$f";
 	$darkframe = toBool(getVariableOrDefault($settings_array, 'takedarkframes', "false"));
 	$imagesSortOrder = getVariableOrDefault($settings_array, 'imagessortorder', "ascending");
 	$useLogin = toBool(getVariableOrDefault($settings_array, 'uselogin', "true"));
@@ -624,9 +607,6 @@ function handle_interface_POST_and_status($interface, $input, &$myStatus) {
 * however, there can be optional spaces or tabs before the string.
 *
 */
-
-# TODO: As of v2024.12.06_04 this is no longer needed.  Remove it in the next release.
-
 function get_variable($file, $searchfor, $default)
 {
 	// get the file contents
@@ -1019,6 +999,94 @@ function getVariableOrDefault($a, $v, $d) {
 	return($d);
 }
 
+function getSecret($secret=false) {
+
+    $rawData = file_get_contents(ALLSKY_ENV, true);
+    $secretData = json_decode($rawData, true);
+
+    if ($secret !== false) {
+        $result = null;
+
+        if (isset($secretData[$secret])) {
+            $result = $secretData[$secret];
+        }
+    } else {
+        $result = $secretData;
+    }
+
+    return $result;
+}
+
+#
+## Create a single array with database settings
+#
+function getDatabaseConfig() {
+    $secretData = getSecret();
+    $settings = readSettingsFile();
+    $secretData['databasetype'] = $settings['databasetype'];
+
+    return $secretData;
+}
+
+function haveDatabase() {
+
+    $secretData = getDatabaseConfig();
+    $databaseType = 'none';
+    if (isset($secretData['databasetype'])) {
+        $databaseType = $secretData['databasetype'];
+    }
+    switch ($databaseType) {
+        case 'sqlite':
+            return haveSQLite($secretData);
+        case 'mysql':
+            return haveMySQL($secretData);
+        default:
+            return false;
+    }
+}
+
+function haveSQLite($secretData) {
+    $result = true;
+
+	try {
+    	$db = new SQLite3(ALLSKY_MYFILES_DIR . '/allsky.db');
+	} catch (Exception $e) {
+		$db = false;
+	}
+
+    if (!$db) {
+        $result = false;
+    }
+    return $result;
+}
+
+function haveMySQL($secretData) {
+    $result = false;
+    try {
+        if (in_array('mysql', PDO::getAvailableDrivers())) {
+
+            $host = $secretData['databasehost'];
+            $db   = $secretData['databasedatabase'];
+            $user = $secretData['databaseuser'];
+            $pass = $secretData['databasepassword'];
+            $charset = 'utf8mb4';
+            
+            $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+            
+            $options = [
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            ];      
+            $pdo = new PDO($dsn, $user, $pass, $options);
+            $result = true;
+        }   
+    } catch (PDOException $e) {
+    } catch (Exception $e) {
+    }
+    
+    return $result;
+}
+
 function getTOD() {
 	global $settings_array;
 
@@ -1055,19 +1123,19 @@ function getNewestAllskyVersion(&$changed=null)
 		$str = file_get_contents($versionFile, true);
 		$err = "";
 		if ($str === false) {
-			$err = "Error reading $versionFile.";
+			// TODO: should these errors set addMessage() ?
+			$err = "Error reading of $versionFile.";
 		} else if ($str === "") {
-			$err = "$versionFile is empty.";
+			$err = "$versionFile is empty!";
 		} else {
 			$version_array = json_decode($str, true);
 			if ($version_array === null) {
-				$err = "$versionFile has no json.";
+				$err = "$versionFile has no json!";
 			} else {
-				$priorVersion = getVariableOrDefault($version_array, 'version', null);
+				$priorVersion = $version_array['version'];
 			}
 		}
 		if ($err !== "") {
-			// TODO: should these errors set addMessage() ?
 			unlink($versionFile);
 			$exists = false;
 		}
@@ -1077,26 +1145,25 @@ function getNewestAllskyVersion(&$changed=null)
 		// Need to (re)get the data.
 
 		$cmd = ALLSKY_UTILITIES . "/getNewestAllskyVersion.sh";
-		exec("$cmd 2>&1", $newestVersion, $return_val);
+		exec("$cmd 2>&1", $newest, $return_val);
 
-		// 90 == newestVersion is newer than current.
-		if (($return_val !== 0 && $return_val !== 90) || $newestVersion === null) {
+		// 90 == newest is newer than current.
+		if (($return_val !== 0 && $return_val !== 90) || $newest === null) {
 			// some error
 			if ($exists) unlink($versionFile);
 			return($version_array);		// may be null...
 		}
 
 		$version_array = array();
-		$version_array['version'] = getVariableOrDefault($newestVersion, 0, "");
-		$version_array['versionNote'] = getVariableOrDefault($newestVersion, 1, "");
-		$version_array['timestamp'] = date(DATE_TIME_FORMAT);
+		$version_array['version'] = implode(" ", $newest);
+		$version_array['timestamp'] = date_format($date, "c");	// NOTE: Does not use timezone
 
 		// Has the version changed?
 		if ($priorVersion === null || $priorVersion !== $version_array['version']) {
 			$changed = true;
 		}
 
-		$msg = "[$cmd] returned $return_val, version_array=" . json_encode($newestVersion) . ", changed=$changed";
+		$msg = "[$cmd] returned $return_val, version=${version_array['version']}, changed=$changed";
 		echo "<script>console.log('$msg');</script>";
 
 		// Save new info.
@@ -1107,9 +1174,9 @@ function getNewestAllskyVersion(&$changed=null)
 	return($version_array);
 }
 
-function getCPULoad($secs=2) 
+function getCPULoad() 
 {
-	$q = '"';
+	$secs = 2; $q = '"';
 	$cmd = "(grep -m 1 'cpu ' /proc/stat; sleep $secs; grep -m 1 'cpu ' /proc/stat)";
 	$cmd .= " | gawk '{u=$2+$4; t=$2+$4+$5; if (NR==1){u1=u; t1=t;} else printf($q%.0f$q, (($2+$4-u1) * 100 / (t-t1))); }'";
 	$cpuload = exec($cmd);
@@ -1217,25 +1284,87 @@ function getThrottleStatus()
 	);
 }
 
-function getUptime() {
-	$uparray = explode(" ", exec("cat /proc/uptime"));
-	$seconds = round($uparray[0], 0);
-	$minutes = $seconds / 60;
-	$hours = $minutes / 60;
-	$days = floor($hours / 24);
-	$hours = floor($hours - ($days * 24));
-	$minutes = floor($minutes - ($days * 24 * 60) - ($hours * 60));
-	$uptime = '';
-	if ($days != 0) {
-		$uptime .= $days . ' day' . (($days > 1) ? 's ' : ' ');
-	}
-	if ($hours != 0) {
-		$uptime .= $hours . ' hour' . (($hours > 1) ? 's ' : ' ');
-	}
-	if ($minutes != 0) {
-		$uptime .= $minutes . ' minute' . (($minutes > 1) ? 's ' : ' ');
-	}
+function getHTTPResponseCodeString($responseCode)
+{
+	$httpStatusCodes = [
+		// 1xx Informational
+		100 => 'Continue',
+		101 => 'Switching Protocols',
+		102 => 'Processing',
+		103 => 'Early Hints',
 
-	return $uptime;
+		// 2xx Success
+		200 => 'OK',
+		201 => 'Created',
+		202 => 'Accepted',
+		203 => 'Non-Authoritative Information',
+		204 => 'No Content',
+		205 => 'Reset Content',
+		206 => 'Partial Content',
+		207 => 'Multi-Status',
+		208 => 'Already Reported',
+		226 => 'IM Used',
+
+		// 3xx Redirection
+		300 => 'Multiple Choices',
+		301 => 'Moved Permanently',
+		302 => 'Found',
+		303 => 'See Other',
+		304 => 'Not Modified',
+		305 => 'Use Proxy',
+		307 => 'Temporary Redirect',
+		308 => 'Permanent Redirect',
+
+		// 4xx Client Errors
+		400 => 'Bad Request',
+		401 => 'Unauthorized',
+		402 => 'Payment Required',
+		403 => 'Forbidden',
+		404 => 'Not Found',
+		405 => 'Method Not Allowed',
+		406 => 'Not Acceptable',
+		407 => 'Proxy Authentication Required',
+		408 => 'Request Timeout',
+		409 => 'Conflict',
+		410 => 'Gone',
+		411 => 'Length Required',
+		412 => 'Precondition Failed',
+		413 => 'Payload Too Large',
+		414 => 'URI Too Long',
+		415 => 'Unsupported Media Type',
+		416 => 'Range Not Satisfiable',
+		417 => 'Expectation Failed',
+		418 => 'I\'m a teapot',
+		421 => 'Misdirected Request',
+		422 => 'Unprocessable Entity',
+		423 => 'Locked',
+		424 => 'Failed Dependency',
+		425 => 'Too Early',
+		426 => 'Upgrade Required',
+		428 => 'Precondition Required',
+		429 => 'Too Many Requests',
+		431 => 'Request Header Fields Too Large',
+		451 => 'Unavailable For Legal Reasons',
+
+		// 5xx Server Errors
+		500 => 'Internal Server Error',
+		501 => 'Not Implemented',
+		502 => 'Bad Gateway',
+		503 => 'Service Unavailable',
+		504 => 'Gateway Timeout',
+		505 => 'HTTP Version Not Supported',
+		506 => 'Variant Also Negotiates',
+		507 => 'Insufficient Storage',
+		508 => 'Loop Detected',
+		510 => 'Not Extended',
+		511 => 'Network Authentication Required',
+	];
+
+    if (array_key_exists($responseCode, $httpStatusCodes)) {
+        $result = "HTTP/1.1 $responseCode {$httpStatusCodes[$responseCode]}";
+    } else {
+        $result = "HTTP/1.1 500 Internal Server Error";
+    }
+	return $result;
 }
 ?>

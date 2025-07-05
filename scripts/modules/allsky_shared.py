@@ -381,11 +381,7 @@ def log(level, text, preventNewline = False, exitCode=None, sendToAllsky=False):
         else:
             print(text)
 
-    if sendToAllsky or level == 0:
-        if level == 0:
-            type = "error"
-        else:
-            type = "warning"
+    if sendToAllsky and level == 0:
         # Need to escape single quotes in {text}.
         doubleQuote = '"'
         text = text.replace("'", f"'{doubleQuote}'{doubleQuote}'")

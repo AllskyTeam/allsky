@@ -57,6 +57,12 @@ function DisplayOverlay($image_name)
     <link rel="stylesheet" type="text/css" href="/js/overlay/imagemanager/oe-imagemanager.css?c=<?php echo ALLSKY_VERSION; ?>" />
     <script type="text/javascript" src="/js/overlay/imagemanager/oe-imagemanager.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
+    <link rel="stylesheet" href="/js/jquery-mask/jquery-mask.css?c=<?php echo ALLSKY_VERSION; ?>">
+    <script src="/js/jquery-mask/jquery-mask.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+
+    <link rel="stylesheet" href="/js/bootstrap-slider/dist/css/bootstrap-slider.css?c=<?php echo ALLSKY_VERSION; ?>">
+    <script src="/js/bootstrap-slider/dist/bootstrap-slider.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+
     <script type="text/javascript" src="/js/jquery-overlaymanager/jquery-overlaymanager.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
     <link href="/js/dropzone/dropzone.css?c=<?php echo ALLSKY_VERSION; ?>" type="text/css" rel="stylesheet" />
@@ -344,23 +350,6 @@ function DisplayOverlay($image_name)
 
         </div>
     </div>
-    </div>
-
-    <div class="modal" role="dialog" id="oe-file-manager-dialog">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title">Image Manager</h4>
-                </div>
-                <div class="modal-body">
-                    <div id="oe-image-manager"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" id="oe-file-manager-dialog-close" data-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
     </div>
 
     <div class="modal" role="dialog" id="oe-debug-dialog">

@@ -728,28 +728,15 @@ class MODULESEDITOR {
 
 						$(document).off('click', '#open-image-manager-' + key)                
                         $(document).on('click', '#open-image-manager-' + key, (event) => {                
-							$('#module-image-manager').oeImageManager({
+							$(document).oeImageManager({
 								thumbnailURL: 'includes/overlayutil.php?request=Images',
 								usedImages: [],
 								bind: '#' + key,
                                 validate: validate,
+								showMaskCreation: true,
 								allowDoubleClick: true
 							});
-							$('#module-file-manager-dialog').modal({
-								keyboard: false
-							});
-						});
-
-						$('#module-file-manager-dialog').off('hidden.bs.modal')
-                        $('#module-file-manager-dialog').on('hidden.bs.modal', () => {
-							$('#module-image-manager').data('oeImageManager').destroy();
-						});                    
-
-						$(document).off('oe-imagemanager-add')
-                        $(document).on('oe-imagemanager-add', (event, image) => {
-							$('#module-file-manager-dialog').modal('hide')
-						});
-						
+						});						
 					}
 
 					if (fieldType == 'roi') {

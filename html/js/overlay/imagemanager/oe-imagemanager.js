@@ -10,6 +10,7 @@
             allowDoubleClick: false,
             validate: null,
             msgInUse: 'This image is in use and cannot be deleted',
+            showMaskCreation: false,
             onFoo: function () { }
 
         }
@@ -17,21 +18,23 @@
         var plugin = this;
         plugin.settings = {}
 
-        var $element = $(element); // reference to the jQuery version of DOM element
+        var $element = $(element);
 
-        plugin.ddId = element.id + "-oe-image-manager-dd";
-        plugin.addId = element.id + "-oe-image-manager-add";
-        plugin.deleteId = element.id + "-oe-image-manager-delete";
-        plugin.imagesId = element.id + "-oe-image-manager-images";
-        plugin.imageManagerId = element.id + "-oe-image-manager";
+        plugin.prefix = 'id-' + Math.random().toString(36).substr(2, 6);
 
-        plugin.element = element;    // reference to the actual DOM element
+        plugin.dialogId = plugin.prefix+ "-oe-image-manager-dialog";
+        plugin.ddId = plugin.prefix+ "-oe-image-manager-dd";
+        plugin.addId = plugin.prefix + "-oe-image-manager-add";
+        plugin.deleteId = plugin.prefix+ "-oe-image-manager-delete";
+        plugin.imagesId = plugin.prefix + "-oe-image-manager-images";
+        plugin.imageManagerId = plugin.prefix+ "-oe-image-manager";
+        plugin.maskCreateId = plugin.prefix+ "-oe-image-manager-mask-create";
 
-        // the "constructor" method that gets called when the object is created
+        plugin.element = element; 
+
+
         plugin.init = function () {
 
-            // the plugin's final properties are the merged default and 
-            // user-provided options (if any)
             plugin.settings = $.extend({}, defaults, options);
 
             let nav = `<div id="${plugin.imageManagerId}">
@@ -41,12 +44,12 @@
                             <ul class="nav navbar-nav">
                                 <li>
                                     <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Add Selected Image">
-                                        <div class="btn btn-lg navbar-btn disabled" id="${plugin.addId}"><i class="fa-solid fa-image"></i></div>
+                                        <div class="btn btn-lg navbar-btn disabled" id="${plugin.addId}"><i class="fa-solid fa-image text-success fa-xl"></i></div>
                                     </div>
                                 </li>
                                 <li>
                                     <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Delete The Selected Image">
-                                        <div class="btn btn-lg navbar-btn disabled" id="${plugin.deleteId}"><i class="fa-solid fa-trash"></i></div>
+                                        <div class="btn btn-lg navbar-btn disabled" id="${plugin.deleteId}"><i class="fa-solid fa-trash text-danger fa-xl"></i></div>
                                     </div>
                                 </li>
                             </ul>
@@ -63,28 +66,81 @@
                 <div id="dz-error-message">
                 </div>`
 
-            $(plugin.element).html(nav);
+            let maskHTML = '';
+            if (plugin.settings.showMaskCreation) {
+                maskHTML = `<button type="button" class="btn btn-primary" id="${plugin.maskCreateId}">Create Mask</button>`;
+            }
 
-            let myDropzone = new Dropzone('div#' + plugin.ddId, {
-                url: plugin.settings.thumbnailURL,
-                maxFilesize: 100,
-                acceptedFiles: 'image/png, image/jpeg',
-                init: function() {
-                    this.on('queuecomplete', () => {
-                        loadThumbnails()
-                    })
+            let imageManagerDialog = `
+                <div class="modal oe-image-manager-dialog" role="dialog" id="${plugin.dialogId}">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title">Image Manager</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div id="module-image-manager">${nav}</div>
+                            </div>
+                            <div class="modal-footer">
+                                ${maskHTML}
+                                <button type="button" class="btn btn-success" id="module-file-manager-dialog-close" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            $('.oe-image-manager-dialog').remove();
+            $(document.body).append(imageManagerDialog);
 
-                    this.on('processing', function(file) {
-                        $("#dz-error-message").text('')
-                    })
-                      
-                    this.on("error", function (file, message, xhr) {
-                        if (xhr && xhr.responseText) {
-                          message = xhr.responseText
+            $(`#${plugin.dialogId}`).on('shown.bs.modal', () => {
+                $(`#${plugin.maskCreateId}`).off('click').on('click', (event) => {
+                    $(document).allskyMASK({
+                        onComplete: () => {
+                            loadThumbnails();
                         }
-                        $("#dz-error-message").text(message)                
-                      })
-                }                
+                    });
+                });
+
+                let dropzoneObj = new Dropzone(`#${plugin.ddId}`, {
+                    url: plugin.settings.thumbnailURL,
+                    maxFilesize: 100,
+                    acceptedFiles: 'image/png, image/jpeg',
+                    init: function() {
+                        this.on('queuecomplete', () => {
+                            loadThumbnails()
+                        })
+
+                        this.on('processing', function(file) {
+                            $("#dz-error-message").text('')
+                        })
+                        
+                        this.on("error", function (file, message, xhr) {
+                            if (xhr && xhr.responseText) {
+                            message = xhr.responseText
+                            }
+                            $("#dz-error-message").text(message)                
+                        })
+                    }                
+                });
+            });
+
+            $(`#${plugin.dialogId}`).off('hidden.bs.modal')
+            $(`#${plugin.dialogId}`).on('hidden.bs.modal', function() {
+                $(this).remove();
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open');                      
+                $(document).data('oeImageManager').destroy();
+            });                    
+
+            $(`#${plugin.dialogId}`).modal({
+                keyboard: false
+            }); 
+
+            $(document).off('oe-imagemanager-add')
+            $(document).on('oe-imagemanager-add', (event, image) => {
+                $(`#${plugin.dialogId}`).modal('hide')
             });
 
             loadThumbnails();
@@ -116,34 +172,14 @@
                     $(document).trigger('oe-imagemanager-add', [fileName]);
                 }
             });
-            
-
-            // code goes here
-            // Build UI - Elements
-            // Fire ajax request to load thumbnails
-            // Display Thumbnails
-            //
-
         }
 
-        // public methods
-        // these methods can be called like:
-        // plugin.methodName(arg1, arg2, ... argn) from inside the plugin or
-        // element.data('pluginName').publicMethod(arg1, arg2, ... argn) from outside 
-        // the plugin, where "element" is the element the plugin is attached to;
-
-        // a public method. for demonstration purposes only - remove it!
         plugin.destroy = function () {
             $('#' + plugin.imagesId).off('click');
             $('#' + plugin.imageManagerId).remove();
             $(plugin.element).removeData('oeImageManager');
         }
 
-        // private methods
-        // these methods can be called only from inside the plugin like:
-        // methodName(arg1, arg2, ... argn)
-
-        // a private method. for demonstration purposes only - remove it!
         var updateToolbar = function () {
 
             let selected = $('.oe-image-manager-image').hasClass('oe-image-manager-image-selected');
@@ -259,30 +295,13 @@
 
     }
 
-    // add the plugin to the jQuery.fn object
     $.fn.oeImageManager = function (options) {
-
-        // iterate through the DOM elements we are attaching the plugin to
         return this.each(function () {
-
-            // if plugin has not already been attached to the element
             if (undefined == $(this).data('oeImageManager')) {
-
-                // create a new instance of the plugin
-                // pass the DOM element and the user-provided options as arguments
                 var plugin = new $.oeImageManager(this, options);
-
-                // in the jQuery version of the element
-                // store a reference to the plugin object
-                // you can later access the plugin and its methods and properties like
-                // element.data('pluginName').publicMethod(arg1, arg2, ... argn) or
-                // element.data('pluginName').settings.propertyName
                 $(this).data('oeImageManager', plugin);
-
             }
-
         });
-
     }
 
 })(jQuery);

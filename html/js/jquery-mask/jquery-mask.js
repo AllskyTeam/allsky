@@ -8,7 +8,7 @@
 			modalId: 'allsky-mask-drawingModal',
 			image: '/current/tmp/image.jpg',
 			saveURL: 'includes/overlayutil.php?request=Base64Image',
-			onClick: function (latlon) { }
+			onComplete: function (latlon) { }
 		}
 
 		var plugin = this;
@@ -23,7 +23,7 @@
 			plugin.stage = null
 			plugin.drawingLayer = null
 			plugin.drawnGroup = null
-			plugin.transformer = null			
+			plugin.transformer = null
 			plugin.originalImageWidth = 0
 			plugin.originalImageHeight = 0
 			plugin.imageScaleFactor = 1
@@ -156,6 +156,14 @@
 		}
 
 		var showMaskEditor = function () {
+
+			$(`#${plugin.settings.modalId}`).on('hidden.bs.modal', () => {
+				$(`#${plugin.settings.modalId}`).remove();
+				$('.modal-backdrop').remove();
+				$('body').removeClass('modal-open');
+				plugin.destroy();
+			});
+
 			$(`#${plugin.settings.modalId}`).modal({
 				keyboard: false
 			});
@@ -233,7 +241,7 @@
 				}
 			})
 
-			$("#allsky-mask-saveBtn").click(function () {
+			$("#allsky-mask-saveBtn").click(() => {
 				plugin.transformer.hide()
 				plugin.drawingLayer.opacity(1)
 				plugin.drawingLayer.draw()
@@ -264,10 +272,10 @@
 						"margin": "10px auto"
 					}).appendTo("body")
 					plugin.finalDataURL = finalDataURL
-					saveImage()
+					saveImage();
 				}
 
-				
+
 				drawingImg.src = dataURL;
 			})
 
@@ -534,52 +542,43 @@
 			return { x: pos.x / scale, y: pos.y / scale }
 		}
 
-		var saveImage = function() {
+		var saveImage = function () {
 			bootbox.prompt({
-			  title: "Enter a valid filename:",
-			  callback: (result) => {
-				// If user cancels the prompt, you may choose to handle it differently.
-				if (result === null) {
-				  console.log("User cancelled the prompt.");
-				  return;
+				title: "Enter a valid filename:",
+				callback: (result) => {
+					if (result === null) {
+						console.log("User cancelled the prompt.");
+						return;
+					}
+
+					// Example validation: filename must not be empty and can only contain
+					// letters, numbers, underscores, hyphens, and periods.
+					var validPattern = /^[a-zA-Z0-9_.-]+$/;
+					if (!result || !validPattern.test(result)) {
+						// Notify the user of the invalid entry and re-display the prompt.
+						bootbox.alert("Invalid filename. Please try again.", function () {
+							promptForFilename(); // Recursively call the function.
+						});
+					} else {
+						$.ajax({
+							type: 'POST',
+							url: plugin.settings.saveURL,
+							data: {
+								filename: result,
+								image: plugin.finalDataURL
+							},
+							success: (response) => {
+								$(`#${plugin.settings.modalId}`).modal('hide');
+								plugin.settings.onComplete.call(this, {});								
+							},
+							error: function (xhr, status, error) {
+								console.error('Error:', error);
+							}
+						});
+					}
 				}
-		  
-				// Example validation: filename must not be empty and can only contain
-				// letters, numbers, underscores, hyphens, and periods.
-				var validPattern = /^[a-zA-Z0-9_.-]+$/;
-				if (!result || !validPattern.test(result)) {
-				  // Notify the user of the invalid entry and re-display the prompt.
-				  bootbox.alert("Invalid filename. Please try again.", function() {
-					promptForFilename(); // Recursively call the function.
-				  });
-				} else {
-
-
-
-
-					$.ajax({
-						type: 'POST', // Specifies the request type as POST
-						url: plugin.settings.saveURL, // Replace with your server endpoint
-						data: {
-							filename: result,
-							image: plugin.finalDataURL
-						},
-						success: function(response) {
-							// This function is called if the request succeeds.
-							console.log('Success:', response);
-						},
-						error: function(xhr, status, error) {
-							// This function is called if the request fails.
-							console.error('Error:', error);
-						}
-					});
-
-
-
-				}
-			  }
 			});
-		  }
+		}
 
 		plugin.destroy = function () {
 			plugin.stage.destroy()

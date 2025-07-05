@@ -301,17 +301,18 @@ class OEUIMANAGER {
                 }
             }
 
-            $('#oe-image-manager').oeImageManager({
+            $(document).oeImageManager({
                 thumbnailURL: 'includes/overlayutil.php?request=Images',
-                usedImages: usedImages
+                usedImages: usedImages,
+                showMaskCreation: true
             });
-            $('#oe-file-manager-dialog').modal({
-                keyboard: false
-            });
+            //$('#oe-file-manager-dialog').modal({
+            //    keyboard: false
+            //});
 
-            $('#oe-file-manager-dialog').on('hidden.bs.modal', () => {
-                $('#oe-image-manager').data('oeImageManager').destroy();
-            });
+            //$('#oe-file-manager-dialog').on('hidden.bs.modal', () => {
+            //    $('#oe-image-manager').data('oeImageManager').destroy();
+            //});
 
         });
 

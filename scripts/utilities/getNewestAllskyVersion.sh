@@ -32,10 +32,11 @@ done
 [[ -z ${BRANCH} ]] && BRANCH="${GITHUB_MAIN_BRANCH}"
 
 GIT_FILE="${GITHUB_RAW_ROOT}/${GITHUB_ALLSKY_REPO}/${BRANCH}/version"
-if ! NEWEST_VERSION="$( curl --show-error --silent "${GIT_FILE}" 2>&1 )" ; then
+if ! NEWEST_INFO="$( curl --show-error --silent "${GIT_FILE}" 2>&1 )" ; then
 	echo "${ME}: ERROR: Unable to get newest Allsky version: ${NEWEST_VERSION}." >&2
 	exit 1
 fi
+NEWEST_VERSION="$( echo "${NEWEST_INFO}" | head -1 )"
 if [[ ${NEWEST_VERSION:0:1} != "v" ||
 		${NEWEST_VERSION} == "400: Invalid request" ||
 		${NEWEST_VERSION} == "404: Not Found" ]]; then
@@ -45,17 +46,16 @@ fi
 
 if [[ ${VERSION_ONLY} == "true" ]]; then
 	# Just output the newest version and quit.
-	echo "${NEWEST_VERSION}" | head -1
+	echo "${NEWEST_VERSION}"
 	exit 0
 fi
 
+
 CURRENT_VERSION="$( get_version )"
-NOTE=""
 RET=0
 if [[ ${CURRENT_VERSION} == "${NEWEST_VERSION}" ]]; then
 	RET=0
 elif [[ ${CURRENT_VERSION} < "${NEWEST_VERSION}" ]]; then
-	NOTE="$( get_version --note )"
 	RET="${EXIT_PARTIAL_OK}"
 else
 	# Current newer than newest - this can happen if testing a newer release.
@@ -63,6 +63,7 @@ else
 fi
 
 echo "${NEWEST_VERSION}"
-[[ -n ${NOTE} ]] && echo "${NOTE}"
+NEWEST_NOTE="$( echo "${NEWEST_INFO}" | tail -1 )"
+[[ -n ${NEWEST_NOTE} ]] && echo "${NEWEST_NOTE}"
 
 exit "${RET}"

@@ -68,6 +68,9 @@
 
 				<h4>Bug Fixes</h4>
 				<ul>
+					<li>Entering a <span class="WebUISetting">Locale</span> in the WebUI
+						that is not installed on the Pi displays an error message and lists
+						the locales that ARE installed and tells the user how to install other locales.
 					<li>
 				</ul>
 
@@ -105,15 +108,20 @@
 						you'll likely just need to restart Allsky
 						without having to review the settings.
 						The installation script will tell you what to do.
+					<li>In addition to the WebUI telling you when a new Allsky
+						version is available, an optional note about the new version
+						will be displayed, such as
+						"Contains an important security update; please install".
 					<li>The Allsky "Status:" on the top of the WebUI
 						now updates automatically every few seconds.
+					<li>The <span class="WebUILink">System</span> WebUI page
+						now appears very quickly and some of the data is automatically
+						updated every few seconds.
+						<br>Usage of <span class="fileName">~/allsky/tmp</span> is now displayed.
+						<br>The "Refresh" button is no longer needed so was removed.
 					<li>The <span class="WebUILink">Editor</span> WebUI page
 						will display a message in the unlikely event that the
 						file is corrupted.
-					<li>The <span class="WebUILink">System</span> WebUI page
-						now appears very quickly and the data is automatically
-						updated every few seconds.
-						The "Refresh" button is no longer needed so was removed.
 					<li>RPi cameras sometimes hang while taking pictures.
 						This used to hang Allsky, but it now times out instead.
 					<li>When RPi cameras are unable to take an image,
@@ -123,6 +131,12 @@
 						losing prior messages.
 					<li>A message is added to the WebUI if creation of a timelapse,
 						startrails, or keogram fails during end-of-night processing.
+					<li>If the <span class="WebUISetting">Keograms Font Color</span> begins with a
+						<span class="WebUIValue">0</span> and does not have 6 characters after it,
+						e.g., <span class="WebUIValue">#fff</span>,
+						an error message is displayed in the WebUI.
+						Those values didn't produce the color expected, for example,
+						<span class="WebUIValue">#fff</span> produced blue labels, not white.
 					<li>The name of the Pi is shown at the top of the WebUI.
 						This is useful for people with multiple Pi's.
 				</ul>

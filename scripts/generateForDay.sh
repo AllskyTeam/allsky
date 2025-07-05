@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2154		# referenced but not assigned - from convertJSON.php
 
 # This script allows users to manually generate or upload keograms, startrails, and timelapses.
 
@@ -11,6 +12,7 @@ source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 
+OK="true"
 DO_HELP="false"
 DEBUG_ARG=""
 TYPE="GENERATE"
@@ -26,6 +28,8 @@ DO_TIMELAPSE="false"
 THUMBNAIL_ONLY="false"
 THUMBNAIL_ONLY_ARG=""
 IMAGES_FILE=""
+OUTPUT_DIR=""
+OUTPUT_DIR_ENTERED=""
 
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
@@ -52,11 +56,16 @@ while [[ $# -gt 0 ]]; do
 				TYPE="UPLOAD"
 				MSG1="upload"
 				MSG2="uploaded"
-				# On uploads, we should let upload.sh output messages since it has more details.
+				# On uploads, let upload.sh output messages since it has more details.
 				UPLOAD_SILENT=""
 				;;
 			--images)
 				IMAGES_FILE="${2}"
+				shift
+				;;
+			--output-dir)
+				OUTPUT_DIR="${2}"
+				OUTPUT_DIR_ENTERED="${OUTPUT_DIR}"
 				shift
 				;;
 			-k | --keogram)
@@ -73,8 +82,8 @@ while [[ $# -gt 0 ]]; do
 				;;
 
 			-*)
-				E_ "${ME}: Unknown argument '${ARG}' ignoring." >&2
-				DO_HELP="true"
+				E_ "${ME}: Unknown argument '${ARG}'." >&2
+				OK="false"
 				;;
 			*)
 				break
@@ -87,47 +96,72 @@ usage_and_exit()
 {
 	local RET=${1}
 	exec >&2
-	local USAGE="Usage: ${ME} [--help] [--silent] [--debug] [--nice n] [--upload] \\"
-	USAGE+="    [--thumbnail-only] [--keogram] [--startrails] [--timelapse] \\"
+	local USAGE="Usage: ${ME} [--help] [--silent] [--debug] [--nice n] [--upload] \\ \n"
+	USAGE+="    [--thumbnail-only] [--keogram] [--startrails] [--timelapse] \\ \n"
+	USAGE+="    [--output-dir <OUTPUT_DIR>] \\ \n"
 	USAGE+="    {--images file | <INPUT_DIR>}"
 	echo
 	if [[ ${RET} -ne 0 ]]; then
 		E_ "${USAGE}"
 	else
-		echo "${USAGE}"
+		echo -e "${USAGE}"
 	fi
 	echo "where:"
-	echo "  --help           displays this message and exits."
-	echo "  --debug          runs upload.sh in debug mode."
-	echo "  --nice           runs with nice level n."
-	echo "  --upload         uploads previously-created files instead of creating them."
-	echo "  --thumbnail-only creates or uploads video thumbnails only."
-	echo "  INPUT_DIR        is the day in '${ALLSKY_IMAGES}' to process."
-	echo "  --keogram        will ${MSG1} a keogram."
-	echo "  --startrails     will ${MSG1} a startrail."
-	echo "  --timelapse      will ${MSG1} a timelapse."
+	echo "  --help             Displays this message and exits."
+	echo "  --debug            Runs upload.sh in debug mode."
+	echo "  --nice             Runs with nice level n."
+	echo "  --upload           Uploads previously-created files instead of creating them."
+	echo "  --thumbnail-only   Creates or uploads video thumbnails only."
+	echo "  --keogram          Will ${MSG1} a keogram."
+	echo "  --startrails       Will ${MSG1} a startrail."
+	echo "  --timelapse        Will ${MSG1} a timelapse."
+	echo "  --output-dir dir   Put the output file in 'dir'."
+	echo "  INPUT_DIR          Is the day in '${ALLSKY_IMAGES}' to process."
 	echo
 	echo "If you don't specify --keogram, --startrails, or --timelapse, all three will be ${MSG2}."
 	echo
-	echo "The list of images is determined in one of two ways:"
+	echo "The list of images to process is determined in one of two ways:"
 	echo "1. Looking in '<INPUT_DIR>' for files with an extension of '${EXTENSION}'."
-	echo "   If <INPUT_DIR> is NOT a full path name it is assumed to be in '${ALLSKY_IMAGES}',"
+	echo "   If <INPUT_DIR> does NOT begin with a '/' it is assumed to be in '${ALLSKY_IMAGES}',"
 	echo "   which allows using images on a USB stick, for example."
-	echo "   The output file(s) are stored in <INPUT_DIR>."
+	echo "   The output file(s) are stored in <INPUT_DIR> unless '--output-dir' is specified."
 	echo
 	echo "2. Specifying '--images file' uses the images listed in 'file'; <INPUT_DIR> is not used."
-	echo "   The output file is stored in the same directory as the first image."
+	echo "   The output file is stored in the same directory as the first image unless"
+	echo "   '--output-dir' is specified."
 	exit "${RET}"
 }
 
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
+[[ ${OK} == "false" ]] && usage_and_exit 1
+
+if [[ -n ${OUTPUT_DIR} && ! -d ${OUTPUT_DIR} ]]; then
+	E_ "${ME}: Output directory '${OUTPUT_DIR}' does not exist." >&2
+	exit 2
+fi
 
 if [[ -n ${IMAGES_FILE} ]]; then
 	# If IMAGES_FILE is specified there should be no other arguments.
 	[[ $# -ne 0 ]] && usage_and_exit 1
+
+	if [[ ${DO_KEOGRAM} == "true" || ${DO_STARTRAILS} == "true" ]]; then
+		E_ "${ME}: The '--images' argument does not (yet) work with keograms or startrails." >&2
+		exit 1
+	fi
+
 elif [[ $# -eq 0 || $# -gt 1 ]]; then
 	usage_and_exit 2
 fi
+
+# Get all settings we're going to use.
+#shellcheck disable=SC2119
+getAllSettings --var "uselocalwebsite \
+	useremotewebsite remotewebsiteimagedir \
+	useremoteserver remoteserverimagedir \
+	remoteserverkeogramdestinationname remoteserverstartrailsdestinationname remoteservervideodestinationname \
+	keogramextraparameters keogramexpand keogramfontname keogramfontcolor keogramfontsize keogramlinethickness \
+	startrailsbrightnessthreshold startrailsextraparameters \
+	timelapseuploadthumbnail" || exit 1
 
 if [[ -n ${IMAGES_FILE} ]]; then
 	if [[ ! -s ${IMAGES_FILE} ]]; then
@@ -136,14 +170,16 @@ if [[ -n ${IMAGES_FILE} ]]; then
 	fi
 	INPUT_DIR=""		# Not used
 
-	# Use the directory the images are in.  Only look at the first one.
-	I="$( head -1 "${IMAGES_FILE}" )"
-	OUTPUT_DIR="$( dirname "${I}" )"
+	if [[ -z ${OUTPUT_DIR} ]]; then
+		# Use the directory the images are in.  Only look at the first one.
+		I="$( head -1 "${IMAGES_FILE}" )"
+		OUTPUT_DIR="$( dirname "${I}" )"
 
-	# In case the filename doesn't include a path, put in a default location.
-	if [[ ${OUTPUT_DIR} == "." ]]; then
-		OUTPUT_DIR="${ALLSKY_TMP}"
-		W_ "${ME}: Can't determine where to put files so putting in '${OUTPUT_DIR}'." >&2
+		# In case the filename doesn't include a path, put in a default location.
+		if [[ ${OUTPUT_DIR} == "." ]]; then
+			OUTPUT_DIR="${ALLSKY_TMP}"
+			W_ "${ME}: Can't determine where to put files so putting in '${OUTPUT_DIR}'." >&2
+		fi
 	fi
 
 	# Use the basename of the directory.
@@ -152,20 +188,17 @@ if [[ -n ${IMAGES_FILE} ]]; then
 else
 	INPUT_DIR="${1}"
 
-	# If not a full pathname, ${DIRNAME} will be "." so look in ${ALLSKY_IMAGES}.
-	DIRNAME="$( dirname "${INPUT_DIR}" )"
-	if [[ ${DIRNAME} == "." ]]; then
-		DATE="${INPUT_DIR}"
+	# If not a full pathname look in ${ALLSKY_IMAGES}.
+	DATE="$( basename "${INPUT_DIR}" )"
+	if [[ ${INPUT_DIR:0:1} != "/" && ${INPUT_DIR:0:2} != ".." ]]; then
 		INPUT_DIR="${ALLSKY_IMAGES}/${INPUT_DIR}"	# Need full pathname for links.
-	else
-		DATE="$( basename "${INPUT_DIR}" )"
 	fi
 	if [[ ! -d ${INPUT_DIR} ]]; then
 		E_ "*** ${ME} ERROR: '${INPUT_DIR}' does not exist!" >&2
 		exit 4
 	fi
 
-	OUTPUT_DIR="${INPUT_DIR}"	# Put output file(s) in same location as input files.
+	[[ -z ${OUTPUT_DIR} ]] && OUTPUT_DIR="${INPUT_DIR}"	# Put output file(s) in same location as input files.
 fi
 
 if [[ ${GOT} -eq 0 ]]; then
@@ -197,9 +230,9 @@ if [[ ${TYPE} == "GENERATE" ]]; then
 	}
 
 else
-	L_WEB_USE="$( settings ".uselocalwebsite" )"
-	R_WEB_USE="$( settings ".useremotewebsite" )"
-	R_SERVER_USE="$( settings ".useremoteserver" )"
+	L_WEB_USE="${S_uselocalwebsite}"
+	R_WEB_USE="${S_useremotewebsite}"
+	R_SERVER_USE="${S_useremoteserver}"
 	if [[ ${L_WEB_USE} == "false" &&
 		  ${R_WEB_USE} == "false" &&
 		  ${R_SERVER_USE} == "false" ]]; then
@@ -210,26 +243,26 @@ else
 	# Local Websites don't have directory or file name choices.
 
 	if [[ ${R_WEB_USE} == "true" ]]; then
-		R_WEB_DEST_DIR="$( settings ".remotewebsiteimagedir" )"
+		R_WEB_DEST_DIR="${S_remotewebsiteimagedir}"
 		if [[ -n ${R_WEB_DEST_DIR} && ${R_WEB_DEST_DIR: -1:1} != "/" ]]; then
 			R_WEB_DEST_DIR+="/"
 		fi
 	fi
 
 	if [[ ${R_SERVER_USE} == "true" ]]; then
-		R_SERVER_DEST_DIR="$( settings ".remoteserverimagedir" )"
+		R_SERVER_DEST_DIR="${S_remoteserverimagedir}"
 		if [[ -n ${R_SERVER_DEST_DIR} && ${R_SERVER_DEST_DIR: -1:1} != "/" ]]; then
 			R_SERVER_DEST_DIR+="/"
 		fi
 
 		if [[ ${DO_KEOGRAM} == "true" ]]; then
-			R_SERVER_KEOGRAM_NAME="$( settings ".remoteserverkeogramdestinationname" )"
+			R_SERVER_KEOGRAM_NAME="${S_remoteserverkeogramdestinationname}"
 		fi
 		if [[ ${DO_STARTRAILS} == "true" ]]; then
-			R_SERVER_STARTRAILS_NAME="$( settings ".remoteserverstartrailsdestinationname" )"
+			R_SERVER_STARTRAILS_NAME="${S_remoteserverstartrailsdestinationname}"
 		fi
 		if [[ ${DO_TIMELAPSE} == "true" ]]; then
-			R_SERVER_VIDEO_NAME="$( settings ".remoteservervideodestinationname" )"
+			R_SERVER_VIDEO_NAME="${S_remoteservervideodestinationname}"
 		fi
 	fi
 fi
@@ -262,19 +295,19 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 		else
 			N="--nice-level ${NICE}"
 		fi
-		KEOGRAM_EXTRA_PARAMETERS="$( settings ".keogramextraparameters" )"
+		KEOGRAM_EXTRA_PARAMETERS="${S_keogramextraparameters}"
 		MORE=""
-		EXPAND="$( settings ".keogramexpand" )"
-			[[ ${EXPAND} == "true" ]] && MORE="${MORE} --image-expand"
-		NAME="$( settings ".keogramfontname" )"
-			[[ ${NAME} != "" ]] && MORE="${MORE} --font-name ${NAME}"
-		COLOR="$( settings ".keogramfontcolor" )"
-			[[ ${COLOR} != "" ]] && MORE="${MORE} --font-color '${COLOR}'"
-		SIZE="$( settings ".keogramfontsize" )"
-			[[ ${SIZE} != "" ]] && MORE="${MORE} --font-size ${SIZE}"
-		THICKNESS="$( settings ".keogramlinethickness" )"
-			[[ ${THICKNESS} != "" ]] && MORE="${MORE} --font-type ${THICKNESS}"
-		CMD="'${ALLSKY_BIN}/keogram' ${N} ${SIZE_FILTER} -d '${OUTPUT_DIR}' \
+		EXPAND="${S_keogramexpand}"
+			[[ ${EXPAND} == "true" ]] && MORE+=" --image-expand"
+		NAME="${S_keogramfontname}"
+			[[ ${NAME} != "" ]] && MORE+=" --font-name ${NAME}"
+		COLOR="${S_keogramfontcolor}"
+			[[ ${COLOR} != "" ]] && MORE+=" --font-color '${COLOR}'"
+		SIZE="${S_keogramfontsize}"
+			[[ ${SIZE} != "" ]] && MORE+=" --font-size ${SIZE}"
+		THICKNESS="${S_keogramlinethickness}"
+			[[ ${THICKNESS} != "" ]] && MORE+=" --font-type ${THICKNESS}"
+		CMD="'${ALLSKY_BIN}/keogram' ${N} ${SIZE_FILTER} -d '${INPUT_DIR}' \
 			-e ${EXTENSION} -o '${UPLOAD_FILE}' ${MORE} ${KEOGRAM_EXTRA_PARAMETERS}"
 		generate "Keogram" "keogram" "${CMD}"
 
@@ -329,9 +362,9 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 		else
 			N="--nice ${NICE}"
 		fi
-		BRIGHTNESS_THRESHOLD="$( settings ".startrailsbrightnessthreshold" )"
-		STARTRAILS_EXTRA_PARAMETERS="$( settings ".startrailsextraparameters" )"
-		CMD="'${ALLSKY_BIN}/startrails' ${N} ${SIZE_FILTER} -d '${OUTPUT_DIR}' \
+		BRIGHTNESS_THRESHOLD="${S_startrailsbrightnessthreshold}"
+		STARTRAILS_EXTRA_PARAMETERS="${S_startrailsextraparameters}"
+		CMD="'${ALLSKY_BIN}/startrails' ${N} ${SIZE_FILTER} -d '${INPUT_DIR}' \
 			-e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o '${UPLOAD_FILE}' \
 			${STARTRAILS_EXTRA_PARAMETERS}"
 		generate "Startrails, threshold=${BRIGHTNESS_THRESHOLD}" "startrails" "${CMD}"
@@ -386,7 +419,7 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 	UPLOAD_THUMBNAIL="${OUTPUT_DIR}/${THUMBNAIL_FILE}"
 	UPLOAD_FILE="${OUTPUT_DIR}/${VIDEO_FILE}"
 
-	TIMELAPSE_UPLOAD_THUMBNAIL="$( settings ".timelapseuploadthumbnail" )"
+	TIMELAPSE_UPLOAD_THUMBNAIL="${S_timelapseuploadthumbnail}"
 	if [[ ${TYPE} == "GENERATE" ]]; then
 		# If the thumbnail file exists it will used and produce errors, so delete it.
 		rm -f "${UPLOAD_THUMBNAIL}"
@@ -501,7 +534,11 @@ if [[ ${TYPE} == "GENERATE" && ${SILENT} == "false" && ${EXIT_CODE} -eq 0 ]]; th
 	[[ ${DO_TIMELAPSE} == "true" ]] && ARGS="${ARGS} --timelapse"
 	echo -e "\n================"
 	echo "If you want to upload the file(s) you just created,"
-	echo -e "\texecute '${ME} --upload ${ARGS} ${DATE}'"
+	echo -en "\texecute '${ME} --upload"
+	if [[ -n ${OUTPUT_DIR_ENTERED} ]]; then
+		echo -n " --output-dir '${OUTPUT_DIR_ENTERED}'"
+	fi
+	echo -e " ${ARGS} ${DATE}'"
 	echo "================"
 fi
 

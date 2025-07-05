@@ -36,7 +36,7 @@
 		</p>
 
 		<!-- =========================================== -->
-<!-- TODO: uncomment for v2025.xx.xx
+<!-- uncomment for v2025.xx.xx
 		<h2>v2025.xx.xx</h2>
 		<details open> <summary></summary>
 -->
@@ -50,7 +50,7 @@
 			<h3>v2025.xx.xx - Base Release</h3>
 			-->
 
-<!-- TODO: uncomment for v2025.xx.xx
+<!-- uncomment for v2025.xx.xx
 				<h4>Deleted capabilities</h4>
 				<ul>
 					<li>The Buster operating system is no longer supported.
@@ -63,56 +63,21 @@
 
 				<h4>Enhancements / Changes</h4>
 				<ul>
-					<li>RPi cameras that report sensor temperature now support
-						<strong>dark frames</strong>.
-						<br>The TEMPERATURE_C and TEMPERATURE_F variables can
-						be displayed in overlays for these cameras.
-
-						<details sub><summary></summary>
-						<ul>
-							<li>RPi cameras that report sensor temperature
-								and support dark frames:
-								<ul>
-									<li>HQ
-									<li>Module 3
-									<li>Arducam 16 MP
-								</ul>
-							<li>These cameras do not support darks:
-								<ul>
-									<li>Version 1
-									<li>imx290 60.00 fps
-									<li>Arducam 64 MP
-									<li>Arducam 462
-									<li>Waveshare imx219-d160
-									<li>Arducam 64 MB Owlsight
-									<li>OneInchEye IMX283
-								</ul>
-						</ul>
-						</details>
-
-					<li>Dark frames are now saved as <span class="fileName">.png</span>
-						files for better quality.
-						<blockquote>
-						If you have any <span class="fileName">.jpg</span> darks
-						in <span class="fileName">~/allsky/darks</span>
-						we suggest re-doing your darks then removing the old
-						<span class="fileName">.jpg</span> darks.
-						</blockquote>
+					<li>
 				</ul>
 
 				<h4>Bug Fixes</h4>
 				<ul>
-					<li>MOON variables work in the
-						<span class="WebUILink">Overlay Editor</span>
-						(the <span class="fileName">de421.bsp</span> file downloads correctly).
-					<li>All the "Click here to ..." messages in the WebUI now work.
-					<li>Using the <span class="fileName">analyticsTracking.js</span>
-						in an Allsky Website now works.
+					<li>Entering a <span class="WebUISetting">Locale</span> in the WebUI
+						that is not installed on the Pi displays an error message and lists
+						the locales that ARE installed and tells the user how to install other locales.
+					<li>
 				</ul>
 
 				<h4>Deleted Settings</h4>
 				<ul>
-					<li><span class="WebUISetting">None</span>
+					<li><span class="WebUISetting">xxx</span>
+						<br>
 				</ul>
 				<h4>New Settings</h4>
 				<ul>
@@ -128,7 +93,7 @@
 		<h2>v2024.12.06</h2>
 		<details open> <summary></summary>
 
-			<h3>v2024.12.06_03  - Point Release # 3</h3>
+			<h3>v2024.12.06_04  - Point Release # 4</h3>
 			<details open sub> <summary></summary>
 				<h4 style="color: red">IMPORTANT NOTES:</h4>
 				<ul>
@@ -136,6 +101,88 @@
 					<li>This is the LAST major release that contains the "legacy"
 						overlay method.
 				</ul>
+
+				<h4>Enhancements / Changes</h4>
+				<ul>
+					<li>When upgrading from a recent version from Allsky
+						you'll likely just need to restart Allsky
+						without having to review the settings.
+						The installation script will tell you what to do.
+					<li>In addition to the WebUI telling you when a new Allsky
+						version is available, an optional note about the new version
+						will be displayed, such as
+						"Contains an important security update; please install".
+					<li>The Allsky "Status:" on the top of the WebUI
+						now updates automatically every few seconds.
+					<li>The <span class="WebUILink">System</span> WebUI page
+						now appears very quickly and some of the data is automatically
+						updated every few seconds.
+						<br>Usage of <span class="fileName">~/allsky/tmp</span> is now displayed.
+						<br>The "Refresh" button is no longer needed so was removed.
+					<li>The <span class="WebUILink">Editor</span> WebUI page
+						will display a message in the unlikely event that the
+						file is corrupted.
+					<li>RPi cameras sometimes hang while taking pictures.
+						This used to hang Allsky, but it now times out instead.
+					<li>When RPi cameras are unable to take an image,
+						an error message from the camera is added to the log file.
+						Previously the error message was written to a temporary
+						file that was overwritten every exposure, thereby
+						losing prior messages.
+					<li>A message is added to the WebUI if creation of a timelapse,
+						startrails, or keogram fails during end-of-night processing.
+					<li>If the <span class="WebUISetting">Keograms Font Color</span> begins with a
+						<span class="WebUIValue">0</span> and does not have 6 characters after it,
+						e.g., <span class="WebUIValue">#fff</span>,
+						an error message is displayed in the WebUI.
+						Those values didn't produce the color expected, for example,
+						<span class="WebUIValue">#fff</span> produced blue labels, not white.
+					<li>The name of the Pi is shown at the top of the WebUI.
+						This is useful for people with multiple Pi's.
+				</ul>
+
+				<h4>Bug Fixes</h4>
+				<ul>
+					<li>The <span class="WebUILink">Getting Support</span> WebUI page
+						(and the related <code>support.sh</code> command) no longer
+						fail with an "Argument list too long" message.
+						<br>
+						They also provide more information to aid in troubleshooting.
+					<li>Setting a target temperature for cooled ZWO cameras now works.
+					<li><code>install.sh</code> no longer corrupts the Website
+						configuration file when adding meteor fields.
+					<li><code>remoteWebsiteInstall.sh</code> now handles servers that
+						don't return anything under certain circumstances.
+						This is uncommon but when it happened it kept the
+						remote Website from being installed.
+					<li>Permission denied errors from <code>moduleutil.php</code>
+						when it tried to overwrite files ending in
+						<span class="fileName">-last</span> has been fixed.
+					<li>The Allsky Website now correctly colors aurora forecasts.
+					<li><code>upload.sh</code> no longer finds files that don't exist.
+					<li>During installation, the amount of RAM for non-Raspberry Pi
+						boards is now determined correctly.
+						This number is used to properly size the swap space.
+						It's also used to populate the
+						<span class="WebUISetting">Computer</span> setting.
+				</ul>
+
+				<h4>Deleted Settings</h4>
+				<ul>
+					<li><span class="WebUISetting">Notification Images</span>
+						<br>
+						Notification images, e.g., "Allsky is starting up" provide
+						valuable status and troubshooting information so can no longer
+						be disabled.
+				</ul>
+				<h4>New Settings</h4>
+				<ul>
+					<li><span class="WebUISetting">None</span>
+				</ul>
+			</details>
+
+			<h3>v2024.12.06_03  - Point Release # 3</h3>
+			<details open sub> <summary></summary>
 
 				<h4>Enhancements / Changes</h4>
 				<ul>
@@ -165,6 +212,7 @@
 								</ul>
 						</ul>
 						</details>
+
 					<li>Dark frames are now saved as <span class="fileName">.png</span>
 						files for better quality.
 						<blockquote>
@@ -173,8 +221,6 @@
 						we suggest re-doing your darks then removing the old
 						<span class="fileName">.jpg</span> darks.
 						</blockquote>
-					<li>Error messages that occur while taking images with an
-						RPi camera are added to the log file.
 				</ul>
 
 				<h4>Bug Fixes</h4>

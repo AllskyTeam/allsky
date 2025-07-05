@@ -1,6 +1,6 @@
-# Allsky Camera ![Release](https://img.shields.io/badge/Version-v2024.12.06_03-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
+# Allsky Camera ![Release](https://img.shields.io/badge/Version-v2024.12.06_04-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
 
-This is the source code for the Allsky Camera project described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/).
+This is the source code for the Allsky Camera project.  <!-- described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/). -->
 &nbsp;  
 <p align="center">
 <img src="https://github.com/AllskyTeam/allsky/blob/master/assets/allsky_camera.png" width="50%" title="Example of an allsky camera">
@@ -70,7 +70,7 @@ A public page is also available in order to view the current image without havin
 http://your_raspberry_IP/public.php
 ```
 
-Make sure this page is publically viewable.
+Make sure this page is publicly viewable.
 If it is behind a firewall consult the documentation for your network equipment for information on allowing inbound connections.
 
 The WebUI has a link to the Allsky Documentation which describes all the settings Allsky uses as well as troubleshooting information.

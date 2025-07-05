@@ -1,6 +1,18 @@
 <?php
-$DiscussionURL = "https://github.com/AllskyTeam/allsky/discussions";
+$DiscussionURL = GITHUB_ROOT . "/" . GITHUB_ALLSKY_REPO . "/discussions";
 $V = ALLSKY_VERSION;
+
+if (! is_dir(ALLSKY_SUPPORT_DIR)) {
+	$cmd = "{ sudo mkdir " .  ALLSKY_SUPPORT_DIR . " &&";
+	$cmd .= " sudo chown " . ALLSKY_OWNER . ":" . WEBSERVER_GROUP . " " . ALLSKY_SUPPORT_DIR . " &&";
+	$cmd .= " sudo chmod 775 " . ALLSKY_SUPPORT_DIR . "; } 2>&1";
+	echo "<script>console.log('Excuting: $cmd');</script>";
+	$x = exec($cmd, $result, $ret_value);
+	if ($x === false || $ret_value !== 0) {
+		echo "<p class='errorMsg'>Failed running $cmd: " . implode("<br>", $result) . ".</p>";
+	}
+}
+
 ?>
 
 <style>
@@ -60,6 +72,47 @@ $V = ALLSKY_VERSION;
 	}	
 </style>
 
+<div id="githubIdModal" class="modal fade" tabindex="-1" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      
+      <div class="modal-header">
+        <h4 class="modal-title">Link Github Discussion or Issue</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <form id="githubIdModalForm">
+          <div class="form-group">
+            <label>Select the repository your Discussion or Issue is in:</label><br>
+            <label class="radio-inline">
+              <input type="radio" name="choice" value="AS" checked> Allsky
+            </label>
+            <label class="radio-inline">
+              <input type="radio" name="choice" value="ASM"> Allsky Modules
+            </label>
+          </div>
+          
+          <div class="form-group">
+            <label for="numberInput">Github ID:</label>
+            <input type="number" class="form-control" id="githubIdModalId" name="githubIdModalId" required>
+          </div>
+		  <div class="alert alert-info" role="alert">This can be found at the end of the GitHub url.
+		  	If the url is '<?php echo $DiscussionURL ?>/123' then the ID is 123.
+		  </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button id="githubIdModalOK" class="btn btn-primary">OK</button>
+        <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
 <div class="row">
 	<div class="panel panel-primary">
 		<div class="panel-heading"><i class="fa fa-code fa-question"></i> Getting Support</div>
@@ -69,6 +122,10 @@ $V = ALLSKY_VERSION;
 					<h3>Getting Support <small>&nbsp; &nbsp; how to ask for help</small></h3>
 				</div>
 				<div class="panel-body markdown-body">
+					<div class="alert alert-danger" role="alert">
+						<strong>NOTE:</strong> The Allsky Team does not actively monitor
+						Facebook, so please use GitHub for support.
+					</div> 
 					<div class="alert alert-success" role="alert">
 						<p>
 						<blockquote>
@@ -128,12 +185,6 @@ $V = ALLSKY_VERSION;
 						</a>.
 						</p>
 					</div>
-
-					<div class="alert alert-danger" role="alert">
-						<strong>NOTE:</strong> The Allsky developers do not actively monitor
-						other social media channels such as Facebook,
-						so please use GitHub for support.
-					</div> 
 				</div>
 			</div>
 
@@ -152,7 +203,7 @@ $V = ALLSKY_VERSION;
 							<tr>
 								<th>Filename</th>
 								<th>Sort</th>
-								<th>Date/Time Create</th>
+								<th>Date/Time Created</th>
 								<th>Problem</th>
 								<th>Size</th>
 								<th>Actions</th>
@@ -170,6 +221,10 @@ $V = ALLSKY_VERSION;
 	$(document).ready(function() {
 		let supportManager = new ALLSKYSUPPORT()
 	});
+
+	let GITHUB_ROOT = '<?php echo GITHUB_ROOT; ?>';
+	let ALLSKY_REPO_URL = '<?php echo GITHUB_ROOT . "/" . GITHUB_ALLSKY_REPO; ?>';
+	let ALLSKY_MODULES_REPO_URL = '<?php echo GITHUB_ROOT . "/" . GITHUB_ALLSKY_MODULES_REPO; ?>';
 </script>
 
 <script src="/js/allsky-support/allsky-support.js?c=<?php echo $V; ?>"></script>

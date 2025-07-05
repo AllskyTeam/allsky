@@ -27,12 +27,16 @@ export REPO_WEBSITE_CONFIGURATION_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGUR
 
 ##### Information on prior Allsky versions and files.
 	# Location of old-style WebUI and Website.
+# TODO: delete these two in v2025.xx.xx
 export OLD_WEBUI_LOCATION="/var/www/html"
 export OLD_WEBSITE_LOCATION="${OLD_WEBUI_LOCATION}/allsky"
+
 	# Directory of prior version of Allsky, if it exists.
 export PRIOR_ALLSKY_DIR="$( dirname "${ALLSKY_HOME}" )/${ALLSKY_INSTALL_DIR}-OLD"
 	# Prior "config" directory, if it exists.
 export PRIOR_CONFIG_DIR="${PRIOR_ALLSKY_DIR}/$( basename "${ALLSKY_CONFIG}" )"
+export PRIOR_WEBSITE_DIR="${PRIOR_ALLSKY_DIR}${ALLSKY_WEBSITE/${ALLSKY_HOME}/}"
+export PRIOR_WEBSITE_CONFIG_FILE="${PRIOR_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 export PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE="${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
 export PRIOR_PYTHON_VENV="${PRIOR_ALLSKY_DIR}/venv/lib"
 export PRIOR_MYFILES_DIR="${ALLSKY_MYFILES_DIR/${ALLSKY_HOME}/${PRIOR_ALLSKY_DIR}}"
@@ -43,6 +47,7 @@ export WEBSITE_CONFIG_VERSION="ConfigVersion"
 export WEBSITE_ALLSKY_VERSION="config.AllskyVersion"
 
 	# Location of prior files varies by release; this is most recent location.
+# TODO: delete these two in v2025.xx.xx
 export PRIOR_CONFIG_FILE="${PRIOR_CONFIG_DIR}/config.sh"
 export PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"
 
@@ -104,6 +109,12 @@ function get_Git_version()
 # Get the version from a local file, if it exists.  If not, get from default file.
 function get_version()
 {
+	if [[ ${1} == "--note" ]]; then
+		GET_NOTE="true"
+		shift
+	else
+		GET_NOTE="false"
+	fi
 	local F="${1}"
 	if [[ -z ${F} ]]; then
 		F="${ALLSKY_VERSION_FILE}"		# default
@@ -112,8 +123,13 @@ function get_version()
 	fi
 	if [[ -f ${F} ]]; then
 		# Sometimes the branch file will have both "master" and "dev" on two lines.
-		local VALUE="$( head -1 "${F}" )"
-		echo -n "${VALUE}" | tr -d '\n\r'
+		local RETURN="$( head -1 "${F}" )"
+		if [[ ${GET_NOTE} == "true" ]]; then
+			local NOTE="$( tail -1 "${F}" )"
+			# Check if there's a note; if not, there will be only a version.
+			[[ ${NOTE} != "${RETURN}" ]] && RETURN="${NOTE}"
+		fi
+		echo -n "${RETURN}" | tr -d '\n\r'
 	fi
 }
 
@@ -704,7 +720,7 @@ function update_old_website_config_file()
 	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
 		# These steps bring version 1 up to 2.
 		# Deletions:
-		update_json_file -d ".AllskyWebsiteVersion" "" "${FILE}"
+		update_json_file -d ".config.AllskyWebsiteVersion" "" "${FILE}"
 		update_json_file -d ".homePage.onPi" "" "${FILE}"
 		update_array_field "${FILE}" "homePage.popoutIcons" "variable" "AllskyWebsiteVersion" "--delete"
 
@@ -732,15 +748,13 @@ function update_old_website_config_file()
 
 				if (found_startrails == 1) {
 					if ($1 == "},") {
-						spaces6 = "      ";
-						spaces8 = spaces6 + "  ";
-						printf("%s{\n", spaces6);
-						printf("%s\"display\": false,\n", spaces8)
-						printf("%s\"url\": \"meteors/\",\n", spaces8)
-						printf("%s\"title\": \"Archived Meteors/\",\n", spaces8)
-						printf("%s\"icon\": \"fa fa-2x fa-fw fa-meteor\",\n", spaces8)
-						printf("%s\"style\": \"\"\n", spaces8)
-						printf("%s},\n", spaces6);
+						printf("%12s{\n", " ");
+						printf("%16s\"display\": false,\n", " ")
+						printf("%16s\"url\": \"meteors/\",\n", " ")
+						printf("%16s\"title\": \"Archived Meteors\",\n", " ")
+						printf("%16s\"icon\": \"fa fa-2x fa-fw fa-meteor\",\n", " ")
+						printf("%16s\"style\": \"\"\n", " ")
+						printf("%12s},\n", " ");
 	
 						while (getline) {
 							print $0;
@@ -765,28 +779,26 @@ function update_old_website_config_file()
 		gawk -v E="${E}" 'BEGIN {
 				found_computer = 0;
 				found_microchip = 0;
-				spaces6 = "      ";
-				spaces8 = "        ";
 			}
 			{
 				print $0;
 
 				if (found_computer == 1) {
-					printf("%s\"equipmentinfo\": \"%s\",\n", spaces8, E)
+					printf("%16s\"equipmentinfo\": \"%s\",\n", " ", E)
 					found_computer = 0;
 					next;
 				}
 
 				if (found_microchip == 1) {
 					if ($1 == "},") {
-						printf("%s{\n", spaces6);
-						printf("%s\"display\": true,\n", spaces8)
-						printf("%s\"label\": \"Equipment info\",\n", spaces8)
-						printf("%s\"icon\": \"fa fa-fw fa-keyboard\",\n", spaces8)
-						printf("%s\"variable\": \"equipmentinfo\",\n", spaces8)
-						printf("%s\"value\": \"\",\n", spaces8)
-						printf("%s\"style\": \"\"\n", spaces8)
-						printf("%s},\n", spaces6);
+						printf("%12s{\n", " ");
+						printf("%16s\"display\": true,\n", " ")
+						printf("%16s\"label\": \"Equipment info\",\n", " ")
+						printf("%16s\"icon\": \"fa fa-fw fa-keyboard\",\n", " ")
+						printf("%16s\"variable\": \"equipmentinfo\",\n", " ")
+						printf("%16s\"value\": \"\",\n", " ")
+						printf("%16s\"style\": \"\"\n", " ")
+						printf("%12s},\n", " ");
 	
 						while (getline) {
 							print $0;
@@ -938,7 +950,7 @@ function m()
 	local FROM="${5}"
 
 	if [[ ${FROM} == "install" ]]; then
-		display_msg "${LOG}" log "${LEVEL}" "${MSG}" "${MSG2}"
+		display_msg "${LOG}" "${LEVEL}" "${MSG}" "${MSG2}"
 	else
 		if [[ ${LEVEL} == "error" ]]; then
 			wE_ "\nERROR: ${MSG}${MSG2}\n"
@@ -1496,10 +1508,21 @@ function get_RAM()
 
 	function parse_RAM()
 	{
+		local SKIP_HEADER
+		if [[ ${1} == "--skip-header" ]]; then
+			SKIP_HEADER="true"
+			shift
+		else
+			SKIP_HEADER="false"
+		fi
 		local UNITS="${1}"
 		
-		gawk -v UNITS="${UNITS}" '
+		gawk -v UNITS="${UNITS}" -v SKIP_HEADER="${SKIP_HEADER}" '
 			{
+				if (NR == 1 && SKIP_HEADER == "true") {
+					next;		# skip header line
+				}
+
 				if ($0 ~ /unknown/) {
 					printf("unknown");
 					exit 0;
@@ -1531,7 +1554,7 @@ function get_RAM()
 
 	# Try a different way.
 	# Note: This doesn't produce exact results.  On a 4 GB Pi, it returns 3.74805.
-	free --mebi | parse_RAM "${UNITS}"
+	free --mebi | parse_RAM --skip-header "${UNITS}"
 }
 
 
@@ -1681,6 +1704,25 @@ function add_new_settings()
 		done
 
 	return 0
+}
+
+# Return the locales installed on the computer.
+# Ignore any lines with ":" which are usually error messages.
+INSTALLED_LOCALES=""
+function get_installed_locales()
+{
+	[[ -n ${INSTALLED_LOCALES} ]] && return
+
+	INSTALLED_LOCALES="$( locale -a 2>/dev/null | grep -E -v "^C$|:" | sed 's/utf8/UTF-8/' )"
+}
+function is_installed_locale()
+{
+	local CHECK_LOCALE="${1}"
+
+	[[ -z ${INSTALLED_LOCALES} ]] && get_installed_locales
+
+	# Return exit code of "grep"
+	echo "${INSTALLED_LOCALES}" | grep --silent -i "^${CHECK_LOCALE}$";
 }
 
 

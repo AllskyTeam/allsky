@@ -79,6 +79,7 @@ function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=nul
 		$retMsg .= $div;
 		$retMsg .= "$errorMsg ";
 		$retMsg .= json_last_error_msg();
+# TODO: json_pp gives a generic "on line 59" message.
 		$cmd = "json_pp < $file 2>&1";
 		exec($cmd, $output);
 		$retMsg .= $br;
@@ -106,6 +107,7 @@ function verifyNumber($num) {
 }
 
 // Globals
+define('DATE_TIME_FORMAT', 'Y-m-d H:i:s');
 $image_name = null;
 $showUpdatedMessage = true; $delay=null; $daydelay=null; $daydelay_postMsg=""; $nightdelay=null; $nightdelay_postMsg="";
 $imagesSortOrder = null;
@@ -120,8 +122,9 @@ $useRemoteWebsite = false;
 $hasLocalWebsite = false;
 $hasRemoteWebsite = false;
 $endSetting = "XX_END_XX";
-$saveChangesLabel = "Save changes";
+$saveChangesLabel = "Save changes";		// May be overwritten
 $forceRestart = false;					// Restart even if no changes?
+$hostname = null;
 
 function readSettingsFile() {
 	$settings_file = getSettingsFile();
@@ -145,6 +148,22 @@ function readOptionsFile() {
 
 $allsky_status = null;
 $allsky_status_timestamp = null;
+
+function update_allsky_status($newStatus) {
+	global $status, $allsky_status;
+
+	$s = array();
+	$s["status"] = $newStatus;
+	$s['timestamp'] = date(DATE_TIME_FORMAT);
+
+	$msg = updateFile(ALLSKY_STATUS, json_encode($s, JSON_PRETTY_PRINT), "Allsky status", true);
+	if ($msg !== "") {
+		$status->addMessage("Failed to update Allsky status: $msg", 'danger');
+	} else {
+		$allsky_status = $newStatus;
+	}
+}
+
 function output_allsky_status() {
 	global $allsky_status, $allsky_status_timestamp;
 
@@ -168,7 +187,7 @@ function output_allsky_status() {
 		$class = "alert-danger";
 	} else {
 		$title = "title='Since $allsky_status_timestamp'";
-		if ($allsky_status == "Running") {
+		if ($allsky_status == ALLSKY_STATUS_RUNNING) {
 			$class = "alert-success";
 		} else {
 			$class = "alert-warning";
@@ -187,6 +206,7 @@ function initialize_variables($website_only=false) {
 	global $settings_array;
 	global $useLocalWebsite, $useRemoteWebsite;
 	global $hasLocalWebsite, $hasRemoteWebsite;
+	global $hostname;
 
 	$settings_array = readSettingsFile();
 
@@ -205,11 +225,10 @@ function initialize_variables($website_only=false) {
 
 	if ($website_only) return;
 
-	// $img_dir is an alias in the web server's config that points to where the current image is.
+	// IMG_DIR is an alias in the web server's config that points to where the current image is.
 	// It's the same as ${ALLSKY_TMP} which is the physical path name on the server.
-	$img_dir = get_variable(ALLSKY_HOME . '/variables.sh', 'IMG_DIR=', 'current/tmp');
 	$f = getVariableOrDefault($settings_array, 'filename', "image.jpg");
-	$image_name = "$img_dir/$f";
+	$image_name = IMG_DIR . "/$f";
 	$darkframe = toBool(getVariableOrDefault($settings_array, 'takedarkframes', "false"));
 	$imagesSortOrder = getVariableOrDefault($settings_array, 'imagessortorder', "ascending");
 	$useLogin = toBool(getVariableOrDefault($settings_array, 'uselogin', "true"));
@@ -298,6 +317,9 @@ function initialize_variables($website_only=false) {
 	// Lessen the delay between a new picture and when we check.
 	$delay /= 5;
 	$delay = max($delay, 2 * $ms_per_sec);
+
+	exec("hostname -f", $hostarray);
+	$hostname = $hostarray[0];
 }
 
 // Check if the settings have been configured.
@@ -602,6 +624,9 @@ function handle_interface_POST_and_status($interface, $input, &$myStatus) {
 * however, there can be optional spaces or tabs before the string.
 *
 */
+
+# TODO: As of v2024.12.06_04 this is no longer needed.  Remove it in the next release.
+
 function get_variable($file, $searchfor, $default)
 {
 	// get the file contents
@@ -778,8 +803,9 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 					if ($on_line === 1) {
 						echo ", result=";
 					}
-					echo "$res   ";
 					$modifiedResult[] = $res;
+					echo str_replace('"', "'", $res);
+					echo "   ";
 				}
 			}
 		}
@@ -1029,19 +1055,19 @@ function getNewestAllskyVersion(&$changed=null)
 		$str = file_get_contents($versionFile, true);
 		$err = "";
 		if ($str === false) {
-			// TODO: should these errors set addMessage() ?
-			$err = "Error reading of $versionFile.";
+			$err = "Error reading $versionFile.";
 		} else if ($str === "") {
-			$err = "$versionFile is empty!";
+			$err = "$versionFile is empty.";
 		} else {
 			$version_array = json_decode($str, true);
 			if ($version_array === null) {
-				$err = "$versionFile has no json!";
+				$err = "$versionFile has no json.";
 			} else {
-				$priorVersion = $version_array['version'];
+				$priorVersion = getVariableOrDefault($version_array, 'version', null);
 			}
 		}
 		if ($err !== "") {
+			// TODO: should these errors set addMessage() ?
 			unlink($versionFile);
 			$exists = false;
 		}
@@ -1051,25 +1077,26 @@ function getNewestAllskyVersion(&$changed=null)
 		// Need to (re)get the data.
 
 		$cmd = ALLSKY_UTILITIES . "/getNewestAllskyVersion.sh";
-		exec("$cmd 2>&1", $newest, $return_val);
+		exec("$cmd 2>&1", $newestVersion, $return_val);
 
-		// 90 == newest is newer than current.
-		if (($return_val !== 0 && $return_val !== 90) || $newest === null) {
+		// 90 == newestVersion is newer than current.
+		if (($return_val !== 0 && $return_val !== 90) || $newestVersion === null) {
 			// some error
 			if ($exists) unlink($versionFile);
 			return($version_array);		// may be null...
 		}
 
 		$version_array = array();
-		$version_array['version'] = implode(" ", $newest);
-		$version_array['timestamp'] = date_format($date, "c");	// NOTE: Does not use timezone
+		$version_array['version'] = getVariableOrDefault($newestVersion, 0, "");
+		$version_array['versionNote'] = getVariableOrDefault($newestVersion, 1, "");
+		$version_array['timestamp'] = date(DATE_TIME_FORMAT);
 
 		// Has the version changed?
 		if ($priorVersion === null || $priorVersion !== $version_array['version']) {
 			$changed = true;
 		}
 
-		$msg = "[$cmd] returned $return_val, version=${version_array['version']}, changed=$changed";
+		$msg = "[$cmd] returned $return_val, version_array=" . json_encode($newestVersion) . ", changed=$changed";
 		echo "<script>console.log('$msg');</script>";
 
 		// Save new info.
@@ -1078,5 +1105,137 @@ function getNewestAllskyVersion(&$changed=null)
 	}
 
 	return($version_array);
+}
+
+function getCPULoad($secs=2) 
+{
+	$q = '"';
+	$cmd = "(grep -m 1 'cpu ' /proc/stat; sleep $secs; grep -m 1 'cpu ' /proc/stat)";
+	$cmd .= " | gawk '{u=$2+$4; t=$2+$4+$5; if (NR==1){u1=u; t1=t;} else printf($q%.0f$q, (($2+$4-u1) * 100 / (t-t1))); }'";
+	$cpuload = exec($cmd);
+	if ($cpuload < 0 || $cpuload > 100) echo "<p class='errorMsgBig'>Invalid cpuload value: $cpuload</p>";
+
+	return $cpuload;
+}
+
+function getCPUTemp()
+{
+	global $temptype;
+	
+	$temperature = file_get_contents("/sys/class/thermal/thermal_zone0/temp");
+	$temperature = round($temperature / 1000, 2);
+	if ($temperature < 0) {
+		$temperature_status = "danger";
+	} elseif ($temperature < 10) {
+		$temperature_status = "warning";
+	} else {
+		$temperature_status = "";
+	}
+	$display_temperature = "";
+	if ($temptype == "C" || $temptype == "B") {
+		$display_temperature = number_format($temperature, 1, '.', '') . "&deg;C";
+	}
+	if ($temptype == "F" || $temptype == "B") {
+		$t = (($temperature * 1.8) + 32);
+		$t = number_format($t, 1, '.', '');
+		$display_temperature .= "&nbsp; &nbsp; $t &deg;F";
+	}
+
+	return array(
+		'temperature' => $temperature,
+		'display_temperature' => $display_temperature,
+		'temperature_status' => $temperature_status
+	);
+
+}
+
+function getMemoryUsed() 
+{
+	exec("free -m | gawk '/Mem:/ { total=$2 } /buffers\/cache/ { used=$3 } END { print used/total*100}'", $memarray);
+	$memused = floor($memarray[0]);
+	// check if memused is unreasonably low, if so repeat
+	if ($memused < 0.1) {
+		unset($memarray);
+		exec("free -m | gawk '/Mem:/ { total=$2 } /Mem:/ { used=$3 } END { print used/total*100}'", $memarray);
+		$memused = floor($memarray[0]);
+	}
+	
+	return $memused;
+}
+
+function getThrottleStatus() 
+{
+	$x = exec("sudo vcgencmd get_throttled 2>&1");	// Output: throttled=0x12345...
+	if (preg_match("/^throttled=/", $x) == false) {
+			$throttle_status = "danger";
+			$throttle = "Not able to get throttle status:<br>$x";
+			$throttle .= "<br><span class='errorMsgBig'>";
+			$throttle .= "Run '~/allsky/install.sh --update' to try and resolve.</span>";
+	} else {
+		$x = explode("x", $x);	// Output: throttled=0x12345...
+		if ($x[1] == "0") {
+				$throttle_status = "success";
+				$throttle = "No throttling";
+		} else {
+			$bits = base_convert($x[1], 16, 2);	// convert hex to bits
+			// See https://www.raspberrypi.com/documentation/computers/os.html#vcgencmd
+			$messages = array(
+				0 => 'Currently under-voltage',
+				1 => 'ARM frequency currently capped',
+				2 => 'Currently throttled',
+				3 => 'Soft temperature limit currently active',
+
+				16 => 'Under-voltage has occurred since last reboot.',
+				17 => 'Throttling has occurred since last reboot.',
+				18 => 'ARM frequency capped has occurred since last reboot.',
+				19 => 'Soft temperature limit has occurred'
+			);
+			$l = strlen($bits);
+			$throttle_status = "warning";
+			$throttle = "";
+			// bit 0 is the rightmost bit
+			for ($pos=0; $pos<$l; $pos++) {
+				$i = $l - $pos - 1;
+				$bit = $bits[$i];
+				if ($bit == 0) continue;
+				if (array_key_exists($pos, $messages)) {
+					if ($throttle == "") {
+						$throttle = $messages[$pos];
+					} else {
+						$throttle .= "<br>" . $messages[$pos];
+					}
+					// current issues are a danger; prior issues are a warning
+					if ($pos <= 3) $throttle_status = "danger";
+				}
+			}
+		}
+	}
+
+	return array(
+		'throttle_status' => $throttle_status,
+		'throttle' => $throttle
+	);
+}
+
+function getUptime() {
+	$uparray = explode(" ", exec("cat /proc/uptime"));
+	$seconds = round($uparray[0], 0);
+	$minutes = $seconds / 60;
+	$hours = $minutes / 60;
+	$days = floor($hours / 24);
+	$hours = floor($hours - ($days * 24));
+	$minutes = floor($minutes - ($days * 24 * 60) - ($hours * 60));
+	$uptime = '';
+	if ($days != 0) {
+		$uptime .= $days . ' day' . (($days > 1) ? 's ' : ' ');
+	}
+	if ($hours != 0) {
+		$uptime .= $hours . ' hour' . (($hours > 1) ? 's ' : ' ');
+	}
+	if ($minutes != 0) {
+		$uptime .= $minutes . ' minute' . (($minutes > 1) ? 's ' : ' ');
+	}
+
+	return $uptime;
 }
 ?>

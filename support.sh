@@ -4,10 +4,10 @@
 # Generate Allsky support info.
 
 # IMPORTANT:
-#	This script only assues that "git clone" was successful.
-#	It does NOT assume Allsky has been installed so only uses scripts and function
+#	This script only assumes that "git clone" was successful.
+#	It does NOT assume Allsky has been installed so only uses scripts and functions
 #	that do not require Allsky to be installed.  This is to prevent any issues
-#	with the Allsky installation from interfering with the data collection
+#	with the Allsky installation from interfering with the data collection.
 
 
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
@@ -20,10 +20,15 @@ source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
-SUPPORT_DATETIME_SHORT="$( date +"%Y%m%d%H%M%S" )"
-SUPPORT_ZIP_NAME="support-XX_ISSUE_XX-${SUPPORT_DATETIME_SHORT}.zip"
-ALLSKY_SUPPORT_DIR="${ALLSKY_WEBUI}/support"
+if [[ ! -d ${ALLSKY_SUPPORT_DIR} ]]; then
+	mkdir -p "${ALLSKY_SUPPORT_DIR}" || exit 2
+	sudo chown "${USER_NAME}:${WEBSERVER_OWNER}" "${ALLSKY_SUPPORT_DIR}"
+	sudo chmod 775 "${ALLSKY_SUPPORT_DIR}"
+fi
 
+SUPPORT_DATETIME_SHORT="$( date +"%Y%m%d%H%M%S" )"
+SUPPORT_ZIP_NAME="support-XX_GITHUB_NUMBER_XX-${SUPPORT_DATETIME_SHORT}.zip"
+SUPPORT_ZIP_NAME_WITH_REPO="support-XX_REPO_XX-XX_GITHUB_NUMBER_XX-${SUPPORT_DATETIME_SHORT}.zip"
 
 ############################################## functions
 
@@ -35,7 +40,6 @@ function set_dialog_info()
 	if [[ ${TEXT_ONLY} == "true" ]]; then
 		DIALOG_ERROR="${cERROR}"
 		DIALOG_BLUE="${cBLUE}"
-		DIALOG_BOLD="${cBOLD}"
 		DIALOG_NC="${cNC}"
 	fi
 }
@@ -46,20 +50,20 @@ function set_messages()
 	DIALOG_COMPLETE_MESSAGE+="\n"
 	DIALOG_COMPLETE_MESSAGE+="    ${DIALOG_BLUE}${ALLSKY_SUPPORT_DIR}/XX_ZIPNAME_XX${DIALOG_NC}\n"
 	DIALOG_COMPLETE_MESSAGE+="\n"
-	DIALOG_COMPLETE_MESSAGE+="This file should be attached to the relevant Discussion in Github.\n"
+	DIALOG_COMPLETE_MESSAGE+="This file should be attached to the relevant Discussion or Issue in Github.\n"
 	DIALOG_COMPLETE_MESSAGE+="\n"
 	DIALOG_COMPLETE_MESSAGE+="If your WebUI is functioning, the file can be downloaded using the"
-	DIALOG_COMPLETE_MESSAGE+=" ${DIALOG_BOLD}Getting Support${DIALOG_NC} page."
+	DIALOG_COMPLETE_MESSAGE+=" '${DIALOG_BLUE}Getting Support${DIALOG_NC}' page."
 
-	GITHUB_ERROR="${DIALOG_ERROR}\nERROR: The Discussion number must be numeric.${DIALOG_NC}\n"
+	GITHUB_ERROR="${DIALOG_ERROR}\nERROR: The Discussion / Issue number must be numeric.${DIALOG_NC}\n"
 	GITHUB_ERROR+="\n"
-	GITHUB_ERROR+="It can be found in the URL of the Github post, for example if the URL is:\n"
+	GITHUB_ERROR+="It can be found at the end of the Github URL, for example if the URL is:\n"
 	GITHUB_ERROR+="\n"
-	GITHUB_ERROR+="    ${DIALOG_BLUE}${GITHUB_ROOT}/${GITHUB_ALLSKY_PACKAGE}/discussions/4119${DIALOG_NC}\n"
+	GITHUB_ERROR+="    ${DIALOG_BLUE}${GITHUB_ROOT}/${GITHUB_ALLSKY_REPO}/discussions/4119${DIALOG_NC}\n"
 	GITHUB_ERROR+="\n"
-	GITHUB_ERROR+="the Discussion number is ${DIALOG_BOLD}4119${DIALOG_NC}."
+	GITHUB_ERROR+="the post is a Discussion whose number is ${DIALOG_BLUE}4119${DIALOG_NC}."
 
-	SUPPORT_TCS="\n${DIALOG_BOLD}This script collects the following data from your Raspberry Pi to"
+	SUPPORT_TCS="\n${DIALOG_BLUE}This script collects the following data from your Raspberry Pi to"
 	SUPPORT_TCS+=" assist in supporting problems (all private data is hidden):${DIALOG_NC}\n"
 	SUPPORT_TCS+="\n"
 	SUPPORT_TCS+="- Basic system information\n"
@@ -96,7 +100,8 @@ function print_heading()
 	printf "%-20s\n" "============================"
 }
 
-function print_sub_heading(){
+function print_sub_heading()
+{
 	local LABEL="${1}"
 
 	printf "\n%-20s\n" "${LABEL}"
@@ -150,23 +155,15 @@ function collect_support_info()
 	# TODO: GET AS image dir sizes
 	###
 
-	X="${ALLSKY_PYTHON_VENV}/bin/activate"
-	if [[ -s ${X} ]]; then
-		# shellcheck source=/dev/null
-		source "${X}"
-		PYTHON_VERSION="$( python3 -V )"
-		PYTHON_MODULES="$( pip list )"
-	else
-		PYTHON_VERSION="unknown"
-		PYTHON_MODULES="unknown"
-	fi
+	activate_python_venv
+	PYTHON_VERSION="$( python3 -V )"
+	PYTHON_VERSION="${PYTHON_VERSION:-unknown}"
 	###
 
 	### Devices
 	DEV="$( sudo ls -alh  /dev )"
 	USB="$( sudo lsusb -v )"
 	I2C_ENABLED="$( sudo raspi-config nonint get_i2c )"
-	I2C_DEVICES=""
 	if [[ ${I2C_ENABLED} == "0" ]]; then
 		I2C_DEVICES="$( sudo i2cdetect -y -a 1 )"
 	else
@@ -183,15 +180,41 @@ function collect_support_info()
 	###
 
 	### get installed package information
-	PYTHON_PACKAGES="$( dpkg -l | grep python )"
 	# REPOS="$( grep -r '^deb' /etc/apt/sources.list /etc/apt/sources.list.d/ )"
-	APT_INSTALLED="$( sudo dpkg-query -l )"
 	###
 }
 
 function generate_support_info()
 {
-	local TEMP_DIR="$( mktemp -d "${TMPDIR:-/tmp}/allsky_XXX" )"
+	# Create a temporary directory to hold all our files,
+	# and make sure we can create a file in it.
+	local TEMP_DIR="$( mktemp --directory "${TMPDIR:-/tmp}/allsky_XXX" 2>&1 )"
+	local RET=$?
+	if [[ $RET -ne 0 ]]; then
+		echo "ERROR: mktemp returned code ${RET}: ${TEMP_DIR}" >&2
+		return 1
+	elif [[ -z ${TEMP_DIR} ]]; then
+		echo "ERROR: mktemp returned nothing." >&2
+		return 1
+	elif [[ ! -d ${TEMP_DIR} ]]; then
+		local A="Argument list too long"
+		#shellcheck disable=SC2076
+		if [[ ${TEMP_DIR} =~ "${A}" ]]; then
+			echo "INTERNAL ERROR: '${A}'." >&2
+			echo "Report to Allsky Team on GitHub." >&2
+		else
+			echo "ERROR: TEMP_DIR (${TEMP_DIR}) does not exist." >&2
+		fi
+		return 1
+	else
+		local TEST_FILE="${TEMP_DIR}/test.txt"
+		local TEST
+		if ! TEST="$( touch "${TEST_FILE}" 2>&1 )" ; then
+			echo "ERROR: Unable to create '${TEST_FILE}': ${TEST}" >&2
+			return 1
+		fi
+		rm -f "${TEST_FILE}"
+	fi
 
 	local BASIC_FILE="${TEMP_DIR}/system.txt"
 	{
@@ -212,11 +235,13 @@ function generate_support_info()
 		print_info "User ID:" "${USER_ID}"
 	} > "${BASIC_FILE}"
 
-	local ISSUE_FILE="${TEMP_DIR}/issue.txt"
-	{
-		print_heading "Github Issue"
-		print "${ISSUE_NUMBER}"
-	} > "${ISSUE_FILE}"
+	if [[ ${GITHUB_NUMBER} != "none" ]]; then
+		local GITHUB_FILE="${TEMP_DIR}/Github_ID.txt"
+		{
+			print_heading "Github ID"
+			print "${GITHUB_NUMBER}"
+		} > "${GITHUB_FILE}"
+	fi
 
 	local OS_FILE="${TEMP_DIR}/ps.txt"
 	{
@@ -269,38 +294,55 @@ function generate_support_info()
 	local ALLSKYFILES_FILE="${TEMP_DIR}/allsky_files.txt"
 	{
 		print_heading "Files in ${ALLSKY_HOME}"
-		tree -ugp --gitignore --prune -I '.git|__pycache__' "${ALLSKY_HOME}"
+		local IGNORE
+		IGNORE='__pycache__'
+		IGNORE+='|system_fonts|python3*'		# python3 in venv has LOTs of files
+		IGNORE+='|image-2*|startrails-*|keogram-*|allsky-2*|thumbnail-*'
+		tree --du -h -ugp -I "${IGNORE}" "${ALLSKY_HOME}"
 	} > "${ALLSKYFILES_FILE}"
 
 	local ALLSKYVENV_FILE="${TEMP_DIR}/allsky_venv.txt"
 	{
 		print_heading "Allsky Venv information"
 		print_info "Python Version:" "${PYTHON_VERSION}"
-		print "${PYTHON_MODULES}"
+		# This produces too much output to hold in a variable.
+		pip list
 		print_heading "Package Information"
-		print "${PYTHON_PACKAGES}"
+		# This produces too much output to hold in a variable.
+		dpkg -l | grep python
 	}  > "${ALLSKYVENV_FILE}"
 
 	local APT_FILE="${TEMP_DIR}/apt.txt"
 	{
 		print_heading "APT installed packages"
-		print "${APT_INSTALLED}"
+		# This produces too much output to hold in a variable.
+		sudo dpkg-query -l
 	} > "${APT_FILE}"
 
-	local LIGHTTPD_ERROR_LOG_FILE="${TEMP_DIR}/lighttpd_error.txt"
 	local LIGHTTPD_ERROR_LOG="/var/log/lighttpd/error.log"
+	local LIGHTTPD_ERROR_LOG_FILE="${TEMP_DIR}/lighttpd_error.txt"
 	if [[ -f ${LIGHTTPD_ERROR_LOG} ]]; then
-		cp "${LIGHTTPD_ERROR_LOG}" "${LIGHTTPD_ERROR_LOG_FILE}"
+		# Don't include these - they aren't errors.
+		grep -E -v " server started | server stopped | logfiles cycled " \
+			"${LIGHTTPD_ERROR_LOG}" > "${LIGHTTPD_ERROR_LOG_FILE}"
 	fi
+
+	if [[ -s ${ALLSKY_MESSAGES} ]]; then
+		cp "${ALLSKY_MESSAGES}" "${TEMP_DIR}"
+	fi
+
+	PRIOR_WEBSITE_DIR="${PRIOR_ALLSKY_DIR}${ALLSKY_WEBSITE/${ALLSKY_HOME}/}"
+	if [[ -d ${PRIOR_WEBSITE_DIR} ]]; then
+		PRIOR_WEBSITE_CONFIG_FILE="${PRIOR_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
+		if [[ -s ${PRIOR_WEBSITE_CONFIG_FILE} ]]; then
+			cp "${PRIOR_WEBSITE_CONFIG_FILE}" "${TEMP_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}-OLD.json"
+		fi
+	fi
+
 
 	local SUPPORTED_CAMERAS_FILE="${TEMP_DIR}/supported_cameras.txt"
 	{
 		print_heading "Allsky - Supported Cameras"
-
-		# print_sub_heading "Raspberry Pi Cameras Attached"
-		# sudo "${ALLSKY_UTILITIES}/getRPiCameraInfo.sh"
-		# sudo cat ./tmp/camera_data.txt
-
 		"${ALLSKY_UTILITIES}/showSupportedCameras.sh" --rpi --zwo
 	} > "${SUPPORTED_CAMERAS_FILE}"
 
@@ -313,16 +355,32 @@ function generate_support_info()
 		fi
 	fi
 
-	ALLSKY_PERIODIC_LOG_FILE="${TEMP_DIR}/allskyperiodic_log.txt"
+	local PERIODIC_LOG_FILE="${TEMP_DIR}/allskyperiodic_log.txt"
 	if [[ -f ${ALLSKY_PERIODIC_LOG} ]]; then
 		if [[ ${LOG_LINES} == "all" ]]; then
-			cp "${ALLSKY_PERIODIC_LOG}" "${ALLSKY_PERIODIC_LOG_FILE}"
+			cp "${ALLSKY_PERIODIC_LOG}" "${PERIODIC_LOG_FILE}"
 		else
-			tail -n "${LOG_LINES}" /var/log/allskyperiodic.log > "${ALLSKY_PERIODIC_LOG_FILE}"
+			tail -n "${LOG_LINES}" "${ALLSKY_PERIODIC_LOG}" > "${PERIODIC_LOG_FILE}"
 		fi
 	fi
 
+	local CONF_FILE="/etc/lighttpd/lighttpd.conf"
+	if [[ -f ${CONF_FILE} ]]; then
+		cp "${CONF_FILE}" "${TEMP_DIR}/etc-$( basename "${CONF_FILE}" )"
+	fi
+
+	local INC_FILE="${ALLSKY_WEBUI}/includes/${ALLSKY_DEFINES_INC}"
+	if [[ -f ${INC_FILE} ]]; then
+		cp "${INC_FILE}" "${TEMP_DIR}"
+	fi
+	
 	[[ -d ${ALLSKY_CONFIG} ]] && cp -ar "${ALLSKY_CONFIG}" "${TEMP_DIR}"
+
+	if [[ -d ${ALLSKY_TMP} ]]; then
+		cp -ar "${ALLSKY_CONFIG}" "${TEMP_DIR}"
+		# The cache files aren't needed
+		rm -fr "${TEMP_DIR}/$( basename "${ALLSKY_CONFIG}" )/__pycache__"
+	fi
 
 	# Truncate large files not needed for support.
 	local X="${TEMP_DIR}/config/overlay/config/tmp/overlay/de421.bsp"
@@ -334,42 +392,80 @@ function generate_support_info()
 	X="${TEMP_DIR}/config/modules"
 	[[ -d ${X} ]] && find "${TEMP_DIR}/config/modules" -type f -exec truncate -s 0 {} +
 
-	SUPPORT_ZIP_NAME="${SUPPORT_ZIP_NAME//XX_ISSUE_XX/${ISSUE_NUMBER}}"
-	DIALOG_COMPLETE_MESSAGE="${DIALOG_COMPLETE_MESSAGE//XX_ZIPNAME_XX/${SUPPORT_ZIP_NAME}}"
+	[[ ${GITHUB_NUMBER} != "none" ]] && GITHUB_NUMBER="${GITHUB_TYPE}${GITHUB_NUMBER}"
 
-	SUPPORT_ZIP_NAME="${TEMP_DIR}/${SUPPORT_ZIP_NAME}"
-	zip -r "${SUPPORT_ZIP_NAME}" "${TEMP_DIR}/"* > /dev/null 2>&1
-	sudo chown "${USER_NAME}:${WEBSERVER_OWNER}" "${SUPPORT_ZIP_NAME}"
-	sudo chmod g+wx "${SUPPORT_ZIP_NAME}"
-	sudo chmod u+wx "${SUPPORT_ZIP_NAME}"
-	sudo mv "${SUPPORT_ZIP_NAME}" "${ALLSKY_SUPPORT_DIR}"
-	trap 'rm -rf "${TEMP_DIR}"' EXIT
+	local ZIP_NAME
+	if [[ ${GITHUB_NUMBER} != "none" && -n ${GITHUB_REPO} ]]; then
+		ZIP_NAME="${SUPPORT_ZIP_NAME_WITH_REPO//XX_GITHUB_NUMBER_XX/${GITHUB_NUMBER}}"
+		ZIP_NAME="${ZIP_NAME//XX_REPO_XX/${GITHUB_REPO}}"
+	else
+		ZIP_NAME="${SUPPORT_ZIP_NAME//XX_GITHUB_NUMBER_XX/${GITHUB_NUMBER}}"
+	fi
+
+	# We're in a subshell so we need to "echo" this to pass it back to our invoker.
+	echo "${DIALOG_COMPLETE_MESSAGE//XX_ZIPNAME_XX/${ZIP_NAME}}"
+
+	cd "${TEMP_DIR}" || exit 1
+	zip -r "${TEMP_DIR}/${ZIP_NAME}" ./* > /dev/null 2>&1
+	sudo mv "${ZIP_NAME}" "${ALLSKY_SUPPORT_DIR}"
+	sudo chown "${USER_NAME}:${WEBSERVER_OWNER}" "${ALLSKY_SUPPORT_DIR}/${ZIP_NAME}"
+	sudo chmod 664 "${ALLSKY_SUPPORT_DIR}/${ZIP_NAME}"
+
+	rm -rf "${TEMP_DIR}"
+
+	return 0
 }
 
 ####
-# Allows the user to enter the Github discussion id
-function get_github_discussion_id()
+# Allows the user to enter the Github id
+function get_github_number()
 {
-	local ISSUE_NUMBER_TEMP
+	if [[ ${AUTO_CONFIRM} == "true" || ${GITHUB_NUMBER} != "none" ]]; then
+		return
+	fi
 
-	if [[ ${AUTO_CONFIRM} == "false"  && ${ISSUE_NUMBER} == "none" ]]; then
-		local MSG="${DIALOG_BOLD}Enter the Github Discussion Number.${DIALOG_NC}\nPress 'Enter' if you don't know it: "
-		local DIALOG_TITLE="Github Discussion Number"
-		while true; do
-			# The prompt is written to stdout and the answer to stderr, so switch them.
-			ISSUE_NUMBER_TEMP="$( display_box "--inputbox" "${DIALOG_TITLE}" "\n${MSG}" --no-cancel 3>&1 1>&2 2>&3 )"
+	local GITHUB_NUMBER_TEMP
+	local MSG="${DIALOG_BLUE}Enter the Github Issue or Discussion number.${DIALOG_NC}"
+	MSG+="\n\nPress 'Enter' if you don't know it: "
+	local DIALOG_TITLE="Github Issue / Discussion Number"
 
-			if [[ -n ${ISSUE_NUMBER_TEMP} ]]; then
-				if [[ ${ISSUE_NUMBER_TEMP} =~ ^[+-]?[0-9]+$ ]]; then
-					ISSUE_NUMBER="${ISSUE_NUMBER_TEMP}"
-					break
-				else
-					display_box "--msgbox" "${DIALOG_TITLE}" "${GITHUB_ERROR}"
-				fi
-			else
+	while true; do
+		# The prompt is written to stdout and the answer to stderr, so switch them.
+		GITHUB_NUMBER_TEMP="$( display_box "--inputbox" "${DIALOG_TITLE}" "\n${MSG}" --no-cancel 3>&1 1>&2 2>&3 )"
+
+		if [[ -n ${GITHUB_NUMBER_TEMP} ]]; then
+			if [[ ${GITHUB_NUMBER_TEMP} =~ ^[+-]?[0-9]+$ ]]; then
+				GITHUB_NUMBER="${GITHUB_NUMBER_TEMP}"
+# TODO: look in GitHub's GITHUB_REPO for a Discussion or Issue with this number
+# If found, set GITHUB_TYPE to "D" or "I".
+# Output error message and try again if not found.
+GITHUB_TYPE="D"		# Assume this for now.
 				break
+			else
+				display_box "--msgbox" "${DIALOG_TITLE}" "${GITHUB_ERROR}"
 			fi
-		done
+		else
+			break
+		fi
+	done
+}
+
+function get_github_repo()
+{
+	if [[ ${AUTO_CONFIRM} == "false"  && ${SOURCE} == "" && -z ${GITHUB_REPO} ]]; then
+		RESPONSE="$( dialog --clear \
+		--colors \
+		--title "Select Discussion/Issue Repository" \
+		--menu "Choose a Respository:" 10 40 2 \
+			1 "Allsky" \
+			2 "Allsky modules" \
+		3>&1 1>&2 2>&3)"
+
+		if [[ ${RESPONSE} == "2" ]]; then
+			GITHUB_REPO="ASM"
+		else
+			GITHUB_REPO="AS"
+		fi
 	fi
 }
 
@@ -378,15 +474,20 @@ display_running_dialog()
 {
 	if [[ "${AUTO_CONFIRM}" == "false" ]]; then
 		DIALOG_TITLE="Processing"
-		DIALOG_TEXT="${DIALOG_BOLD}Please wait while the support info is collected...${DIALOG_NC}"
+		DIALOG_TEXT="${DIALOG_BLUE}Please wait while the support information is collected...${DIALOG_NC}"
 		display_box "--infobox" "${TITLE}" "\n\n${DIALOG_TEXT}\n"
 	fi
 }
 
 display_complete_dialog()
 {
+	local STATUS="${1:-Complete}"
 	if [[ ${AUTO_CONFIRM} == "false" ]]; then
-		display_box "--msgbox" "Complete" "${DIALOG_COMPLETE_MESSAGE}"
+		if ! display_box "--msgbox" " ${STATUS} " "${DIALOG_COMPLETE_MESSAGE}" 2>/dev/null ; then
+			# In case of major failure with display_box(), echo the output.
+			clear
+			echo -e "\n\n${DIALOG_COMPLETE_MESSAGE}\n" >&2
+		fi
 	fi
 }
 
@@ -415,7 +516,7 @@ function usage_and_exit()
 {
 	local RET=${1}
 	exec 2>&1
-	local USAGE="\nUsage: ${ME} [--help] [--tree] [--issue i] [--fullusb] "
+	local USAGE="\nUsage: ${ME} [--help] [--tree] [--type t] [--repo r] [--number n] [--fullusb] "
 	if [[ ${RET} -ne 0 ]]; then
 		E_ "${USAGE}"
 	else
@@ -425,8 +526,10 @@ function usage_and_exit()
 	echo "Where:"
 	echo "	--help        Displays this message and exits."
 	echo "	--text        Use text mode. Options must be specified on the command line."
-	echo "	--auto        Auto accept any prompts and no output."
-	echo "	--issue i     Include the Github issue number."
+	echo "	--auto        Auto accept any prompts and produce no output except for errors."
+	echo "	--type t      'D' for Github Discussion, 'I' for Issue."
+	echo "	--repo r      Use the specified Github repository, either 'AS' for Allsky or 'ASM' for Allsky Modules."
+	echo "	--number n    The Github Issue or Discussion number."
 	echo "	--loglines n  Number of lines to include from log files, defaults to 'all' for entire file."
 
 	exit "${RET}"
@@ -436,8 +539,10 @@ function usage_and_exit()
 ############################################## main body
 
 OK="true"
-TEXT_ONLY="false"
-ISSUE_NUMBER="none"
+TEXT_ONLY="false"		# Also used by display_box()
+GITHUB_NUMBER="none"
+GITHUB_REPO=""
+GITHUB_TYPE=""
 AUTO_CONFIRM="false"
 LOG_LINES="all"
 
@@ -456,8 +561,18 @@ while [[ $# -gt 0 ]]; do
 			AUTO_CONFIRM="true"
 			;;
 
-		--issue)
-			ISSUE_NUMBER="${2}"
+		--type)
+			GITHUB_TYPE="${2}"
+			shift
+			;;
+
+		--repo)
+			GITHUB_REPO="${2}"
+			shift
+			;;
+
+		--number)
+			GITHUB_NUMBER="${2}"
 			shift
 			;;
 
@@ -484,9 +599,16 @@ done
 set_dialog_info
 set_messages
 display_start_dialog
-get_github_discussion_id
+get_github_repo
+get_github_number
 display_running_dialog
 collect_support_info
-generate_support_info
+DIALOG_COMPLETE_MESSAGE="$( generate_support_info 2>&1 )"
+RET=$?
 kill_running_dialog
-display_complete_dialog
+if [[ ${RET} -eq 0 ]]; then
+	display_complete_dialog
+else
+	display_complete_dialog "Failure"
+fi
+exit "${RET}"

@@ -265,11 +265,15 @@ def log(level, text, preventNewline = False, exitCode=None, sendToAllsky=False):
         else:
             print(text)
 
-    if sendToAllsky and level == 0:
+    if sendToAllsky or level == 0:
+        if level == 0:
+            type = "error"
+        else:
+            type = "warning"
         # Need to escape single quotes in {text}.
         doubleQuote = '"'
         text = text.replace("'", f"'{doubleQuote}'{doubleQuote}'")
-        command = os.path.join(ALLSKY_SCRIPTS, f"addMessage.sh --type error --msg '{text}'")
+        command = os.path.join(ALLSKY_SCRIPTS, f"addMessage.sh --type {type} --msg '{text}'")
         os.system(command)
     
     if exitCode is not None:

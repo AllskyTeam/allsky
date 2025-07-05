@@ -50,17 +50,26 @@ void Log(int required_level, const char *fmt, ...)
 		if (required_level <= 0)
 		{
 			char const *severity;
-			if (strcasestr(msg, "warning") != NULL)
-				severity = "warning";
-			else if (strcasestr(msg, "error") != NULL)
-				severity = "error";
-			else
-				severity = "info";
 
-			char *p = &msg[strlen(msg) - 1];
-			if (*p == '\n')
+			if (*msg == '\0')
 			{
-				*p = '\0';
+				snprintf(msg, sizeof(msg), "ERROR: %s: UNKNOWN MESSAGE for debug level %d", CG.ME, required_level);
+				severity = "error";
+			}
+			else
+			{
+				if (strcasestr(msg, "warning") != NULL)
+					severity = "warning";
+				else if (strcasestr(msg, "error") != NULL)
+					severity = "error";
+				else
+					severity = "info";
+
+				char *p = &msg[strlen(msg) - 1];
+				if (*p == '\n')
+				{
+					*p = '\0';
+				}
 			}
 
 			char command[sizeof(msg) + 100];
@@ -535,7 +544,7 @@ bool checkForValidExtension(config *cg)
 	// Get just the name of the file, without any directories or the extension.
 	if (cg->takeDarkFrames)
 	{
-		// To avoid overwriting the optional notification image with the dark image,
+		// To avoid overwriting the notification image with the dark image,
 		// during dark frames we use a different file name.
 		static char darkFilename[20];
 		snprintf(darkFilename, sizeof(darkFilename), "dark.%s", cg->imageExt);
@@ -808,18 +817,16 @@ void closeUp(int e)
 
 	char const *a = e == EXIT_RESTARTING ? "Restarting" : "Stopping";
 
-	if (CG.notificationImages) {
-		if (e == EXIT_RESTARTING)
-			(void) displayNotificationImage("--expires 15 Restarting &");
-		else if (e == EXIT_OK)
-			(void) displayNotificationImage("--expires 2 NotRunning &");
-		else
-			(void) displayNotificationImage("--expires 0 Error &");
+	if (e == EXIT_RESTARTING)
+		(void) displayNotificationImage("--expires 15 Restarting &");
+	else if (e == EXIT_OK)
+		(void) displayNotificationImage("--expires 2 NotRunning &");
+	else
+		(void) displayNotificationImage("--expires 0 Error &");
 
-		// Sleep to give it a chance to print any messages so they (hopefully) get printed
-		// before the one below. This is only so it looks nicer in the log file.
-		sleep(3);
-	}
+	// Sleep to give it a chance to print any messages so they (hopefully) get printed
+	// before the one below. This is only so it looks nicer in the log file.
+	sleep(3);
 
 	printf("     ***** %s Allsky *****\n", a);
 
@@ -1081,8 +1088,6 @@ void displayHelp(config cg)
 	printf(" -%-*s - 'true' enables focus mode [%s].\n", n, "determinefocus b", yesNo(cg.determineFocus));
 	printf(" -%-*s - 'true' enables consistent delays between images [%s].\n", n, "consistentdelays b", yesNo(cg.consistentDelays));
 	printf(" -%-*s - Format the time is displayed in [%s].\n", n, "timeformat s", cg.timeFormat);
-	printf(" -%-*s - 'true' enables notification images like 'Camera is off during day' [%s].\n",
-		n, "notificationimages b", yesNo(cg.notificationImages));
 	printf(" -%-*s - Latitude of the camera [no default - you must set it].\n", n, "latitude s");
 	printf(" -%-*s - Longitude of the camera [no default - you must set it].\n", n, "longitude s");
 	printf(" -%-*s - Angle of the sun below the horizon [%.2f]:\n", n, "angle n", cg.angle);
@@ -1195,11 +1200,11 @@ void displaySettings(config cg)
 	printf("   Nighttime capture: %s\n", yesNo(cg.nighttimeCapture));
 	printf("   Nighttime save: %s\n", yesNo(cg.nighttimeSave));
 
-	printf("   Exposure (day):   %15s, Auto: %3s", length_in_units(cg.dayExposure_us, true), yesNo(cg.dayAutoExposure));
+	printf("   Exposure (day):   %25s, Auto: %3s", length_in_units(cg.dayExposure_us, true), yesNo(cg.dayAutoExposure));
 		if (cg.dayAutoExposure)
 			printf(", Max Auto-Exposure: %s", length_in_units(cg.dayMaxAutoExposure_us, true));
 		printf("\n");
-	printf("   Exposure (night): %15s, Auto: %3s", length_in_units(cg.nightExposure_us, true), yesNo(cg.nightAutoExposure));
+	printf("   Exposure (night): %25s, Auto: %3s", length_in_units(cg.nightExposure_us, true), yesNo(cg.nightAutoExposure));
 		if (cg.nightAutoExposure)
 			printf(", Max Auto-Exposure: %s", length_in_units(cg.nightMaxAutoExposure_us, true));
 		printf("\n");
@@ -1263,7 +1268,6 @@ void displaySettings(config cg)
 		printf("   Extra arguments: %s\n", stringORnone(cg.extraArgs));
 	}
 	printf("   Locale: %s\n", cg.locale);
-	printf("   Notification Images: %s\n", yesNo(cg.notificationImages));
 	if (cg.ct == ctZWO) {
 		printf("   Histogram Box: %d %d %0.0f %0.0f, center: %dx%d, upper left: %dx%d, lower right: %dx%d\n",
 			cg.HB.histogramBoxSizeX, cg.HB.histogramBoxSizeY,
@@ -1325,14 +1329,13 @@ bool day_night_timeSleep(bool displayedMsg, config cg, bool isDaytime)
 	// Only display messages once a day.
 	if (! displayedMsg)
 	{
-		if (cg.notificationImages) {
-			// In case another notification image is being upload, give it time to finish.
-			sleep(5);
-			if (isDaytime)
-				(void) displayNotificationImage("--expires 0 CameraOffDuringDay &");
-			else
-				(void) displayNotificationImage("--expires 0 CameraOffDuringNight &");
-		}
+		// In case another notification image is being upload, give it time to finish.
+		sleep(5);
+		if (isDaytime)
+			(void) displayNotificationImage("--expires 0 CameraOffDuringDay &");
+		else
+			(void) displayNotificationImage("--expires 0 CameraOffDuringNight &");
+
 		Log(1, "It's %stime... we're not saving images.\n", isDaytime ? "day" : "night");
 		displayedMsg = true;
 
@@ -1864,10 +1867,6 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 		else if (strcmp(a, "determinefocus") == 0)
 		{
 			cg->determineFocus = getBoolean(argv[++i]);
-		}
-		else if (strcmp(a, "notificationimages") == 0)
-		{
-			cg->notificationImages = getBoolean(argv[++i]);
 		}
 		else if (strcmp(a, "consistentdelays") == 0)
 		{

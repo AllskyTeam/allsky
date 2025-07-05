@@ -2,331 +2,460 @@
 
 function DisplayEditor()
 {
-    global $useLocalWebsite, $useRemoteWebsite;
-    global $hasLocalWebsite, $hasRemoteWebsite;
-    $myStatus = new StatusMessages();
+	global $useLocalWebsite, $useRemoteWebsite;
+	global $hasLocalWebsite, $hasRemoteWebsite;
+	$myStatus = new StatusMessages();
+	$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
 
-    $fullN = null;			// this is the file that's displayed by default
-    $localN = basename(getLocalWebsiteConfigFile());
-    $localN_withComment = "$localN (local Allsky Website)";
-    $fullLocalN = "website/$localN";
-    $remoteN = basename(getRemoteWebsiteConfigFile());
-    $remoteN_withComment = "$remoteN (remote Allsky Website)";
-    $fullRemoteN = "config/$remoteN";
+	$content = "";			// content of the default file to display on error
+	$onFile = null;			// the is the file that's displayed by default
 
-    // See what files there are to edit.
-    $numFiles = 0;
+	// Don't allow users to edit - they should use the Allsky Settings page.
+	$useEnv = false;			// Allow editing of the ALLSKY_ENV file?
 
-    if ($hasLocalWebsite) {
-        $fullN = $fullLocalN;
-        $numFiles++;
-        if (!$useLocalWebsite) {
-            $msg =  "<span class='WebUISetting'>Use Local Website</span> is not enabled.";
-            $msg .= "<br>Your changes won't take effect until you enable that setting.</span>";
-            $myStatus->addMessage($msg, 'danger');
-        }
-    } else {
-        $msg =  "<div class='dropdown'><code>$localN_withComment</code>";
+	$localN = basename(getLocalWebsiteConfigFile());
+	$localN_withComment = "$localN (local Allsky Website)";
+	$fullLocalN = "website/$localN";
+	$localOK = "true";
+
+	$remoteN = basename(getRemoteWebsiteConfigFile());
+	$remoteN_withComment = "$remoteN (remote Allsky Website)";
+	$fullRemoteN = "config/$remoteN";
+	$remoteOK = "true";
+
+	if ($useEnv) {
+		$envN = basename(ALLSKY_ENV);
+		$envN_withComment = $envN;		// not needed, but use for consistency with other files.
+		$fullEnvN = "current/$envN";
+	} else {
+		$fullEnvN = "";
+	}
+	$envOK = "true";
+
+	// See what files there are to edit.
+	$numFiles = 0;
+
+	if ($hasLocalWebsite) {
+	   	$numFiles++;
+
+	   	if (! $useLocalWebsite) {
+		   	$msg =  "<span class='WebUISetting'>Use Local Website</span> is not enabled.";
+		   	$msg .= "<br>Your changes won't take effect until you enable that setting.</span>";
+		   	$myStatus->addMessage($msg, 'info');
+	   	}
+
+		# Check for corruption in the file.
+		$returnedMsg = "";
+		$localContent = get_decoded_json_file(getLocalWebsiteConfigFile(), true, "", $returnedMsg);
+		if ($localContent === null) {
+			$localContent = file_get_contents(getLocalWebsiteConfigFile());
+			$localOK = "false";
+		} else {
+			$localContent = json_encode($localContent, $mode);
+		}
+		$content = $localContent;
+		$onFile = "local";
+	} else {
+		$msg =  "<div class='dropdown'><code>$localN_withComment</code>";
 		$msg .= " will appear in the list below if you enable";
 		$msg .= " <span class='WebUISetting'>Use Local Website</span>.</div>";
-        $myStatus->addMessage($msg, 'info');
-        $localN = null;
-    }
+		$myStatus->addMessage($msg, 'info');
+		$localN = null;
+	}
 
-    if ($hasRemoteWebsite) {
-        if ($fullN === null)
-            $fullN = $fullRemoteN;
-        $numFiles++;
-        if (!$useRemoteWebsite) {
-            $msg = "<span class='WebUISetting'>Use Remote Website</span> is not enabled.";
-            $msg .= "<br>Your changes won't take effect until you enable that setting.</span>";
-            $myStatus->addMessage($msg, 'danger');
-        }
-    } else {
-        $remoteN = null;
-    }
+	if ($hasRemoteWebsite) {
+		$numFiles++;
 
-    if (true) {
-        $envN = null;	// Don't allow users to edit - they should use the Allsky Settings page.
-    } else {
-        $envN = basename(ALLSKY_ENV);
-        $fullenvN = "current/$envN";
-        if (file_exists(ALLSKY_ENV)) {
-            if ($fullN === null)
-                $fullN = $fullenvN;
-            $numFiles++;
-        } else {
-            $envN = null;
-        }
-    }
+	   	if (! $useRemoteWebsite) {
+		   	$msg = "<span class='WebUISetting'>Use Remote Website</span> is not enabled.";
+		   	$msg .= "<br>Your changes won't take effect until you enable that setting.</span>";
+		   	$myStatus->addMessage($msg, 'danger');
+	   	}
 
-    if ($numFiles > 0) {
-        if ($fullN === null) {
-            if ($hasLocalWebsite)
-                $fullN = $fullLocalN;
-            else
-                $fullN = $fullRemoteN;
-        }
-        ?>
-        <script type="text/javascript">
-            let CONFIG_UPDATE_STRING = "<?php echo CONFIG_UPDATE_STRING ?>"
-            $(document).ready(function () {
-                let clearTimer = null;
-                let currentMarks = [];
-                var editor = null;
+		$returnedMsg = "";
+		$remoteContent = get_decoded_json_file(getRemoteWebsiteConfigFile(), true, "", $returnedMsg);
+		if ($remoteContent === null) {
+			$remoteOK = "false";
+			$remoteContent = file_get_contents(getRemoteWebsiteConfigFile());
+		} else {
+			$remoteContent = json_encode($remoteContent, $mode);
+		}
 
-                function highlightText(searchTerm) {
-                    currentMarks.forEach(mark => mark.clear());
-                    currentMarks = [];
+		if ($onFile === null) {
+			$onFile = "remote";
+			$content = $remoteContent;
+		}
+	} else {
+		$remoteN = null;
+	}
 
-                    if (!searchTerm) return;
+	if ($useEnv) {
+		if (! file_exists(ALLSKY_ENV)) {
+			$msg =  "<div class='dropdown'><code>$envN_withComment</code>";
+			$msg .= " will appear in the list below when you save";
+			$msg .= " any private data in the WebUI.";
+			$myStatus->addMessage($msg, 'info');
+			$envN = null;
 
-                    let num = 0;
-                    const cursor = editor.getSearchCursor(searchTerm, null, { caseFold: true });
-                    while (cursor.findNext()) {
-                        const mark = editor.markText(cursor.from(), cursor.to(), {
-                            className: "highlight",
-                        });
-                        num++;
-                        currentMarks.push(mark);
-                    }
-                    if (num == 0) {
-                        document.getElementById("need-to-update").innerHTML = '';
-                    } else {
-                        let m = "NOTE: You must update all <span class='cm-string highlight'>" + CONFIG_UPDATE_STRING + "</span>";
-                        m += " values before the Website will work.";
-                        let msg = '<div class="alert alert-danger" style="font-size: 150%">' + m + '</div>';
-                        document.getElementById("need-to-update").innerHTML = msg;
-                    }
-                }
+		} else {
+			$numFiles++;
+			$returnedMsg = "";
+			$envContent = get_decoded_json_file(ALLSKY_ENV, true, "", $returnedMsg);
+			if ($envContent === null) {
+				$envOK = "false";
+				$envContent = file_get_contents(ALLSKY_ENV);
+			} else {
+				$envContent = json_encode($envContent, $mode);
+			}
 
-                function validateJSON(jsonString) {
-                    try {
-                        JSON.parse(jsonString);
-                        return { valid: true, error: null };
-                    } catch (e) {
-                        const match = e.message.match(/at position (\d+)/);
-                        const position = match ? parseInt(match[1], 10) : null;
-                        return { valid: false, error: e.message, position: position };
-                    }
-                }
+			if ($onFile === null) {
+				$onFile = "env";
+				$content = $envContent;
+			}
+		}
+	} else {
+		$envN = null;
+	}
 
-                function startTimer() {
-                    clearTimer = setInterval(() => {
-                        clearInterval(clearTimer);
-                        clearTimer = null;
-                        document.getElementById("editor-messages").innerHTML = '';
-                    }, 5000);
-                }
+	if ($numFiles > 0) {
+		if ($onFile === null) {
+			if ($hasLocalWebsite) {
+				$onFile = "local";
+				$content = $localContent;
+			} else if ($hasLocalWebsite) {
+				$onFile = "remote";
+				$content = $remoteContent;
+			} else if ($useEnv) {
+				$onFile = "env";
+				$content = $envContent;
+			}
+		}
+		?>
+		<script type="text/javascript">
+			<?php
+				echo "let localOK = $localOK;";
+				echo "let remoteOK = $remoteOK;";
+				echo "let envOK = $envOK;";
+			?>
+			let CONFIG_UPDATE_STRING = "<?php echo CONFIG_UPDATE_STRING ?>"
+			$(document).ready(function () {
+				let clearTimer = null;
+				let currentMarks = [];
+				var editor = null;
 
-                $.get("<?php echo $fullN; ?>", function (data) {
+				function getFileType() {
+// TODO: There's a probably a better way to determine which file this is.
+					var path = $("#script_path").val();
+					if (path.substr(0, 8) === "{REMOTE}")
+						return("remote");
+					if (path == "<?php echo $fullEnvN ?>")
+						return("env");
+					return("local");
+				}
 
-                    // .json files return "data" as json array, and we need a regular string.
-                    // Get around this by stringify'ing "data".
-                    if (typeof data != 'string') {
-                        data = JSON.stringify(data, null, "\t");
-                    }
+				let corruptionMsg = "";
+				corruptionMsg += "Scroll down in the window below until you see a";
+				corruptionMsg += " <div class='CodeMirror-lint-marker CodeMirror-lint-marker-error'></div>";
+				corruptionMsg += " on the left side of the window.";
+				function checkCorruption() {
+					var ok = true;
+					var fileType = getFileType();
+					if (fileType == "remote") {
+						ok = remoteOK;
+					} else if (fileType == "local") {
+						ok = localOK;
+					} else if (fileType == "env") {
+						ok = envOK;
+					} else {
+						ok = false;
+					}
 
-                    editor = CodeMirror(document.querySelector("#editorContainer"), {
-                        value: data,
-                        theme: "monokai",
-                        lineNumbers: true,
-                        mode: "application/json",
-                        gutters: ["CodeMirror-lint-markers"],
-                        lint: true
-                    });
+					if (ok) {
+						document.getElementById("file-corruption").innerHTML = '';
+					} else {
+						let m = "This file appears corrupted.<br>";
+						m += corruptionMsg;
+						let msg = '<div class="alert alert-danger" style="font-size: 125%">' + m + '</div>';
+						document.getElementById("file-corruption").innerHTML = msg;
+					}
+				}
 
-                    editor.on("change", (instance, changeObj) => {
-                        highlightText(CONFIG_UPDATE_STRING);
-                    });
+				function highlightText(searchTerm) {
+					currentMarks.forEach(mark => mark.clear());
+					currentMarks = [];
 
-                    highlightText(CONFIG_UPDATE_STRING);
-                });
+					if (!searchTerm) return;
 
-                $("#save_file").click(function () {
-                    if (clearTimer !== null) {
-                        clearInterval(clearTimer);
-                        clearTimer = null;
-                    }
-                    var content = editor.doc.getValue(); //textarea text
-                    let jsonStatus = validateJSON(content);
-                    if (jsonStatus.valid) {
-                        var path = $("#script_path").val(); //path of the file to save
-                        var isRemote = path.substr(0, 8) === "{REMOTE}";
-                        if (isRemote)
-                            fileName = path.substr(8);
-                        else
-                            fileName = path;
+					let num = 0;
+					const cursor = editor.getSearchCursor(searchTerm, null, { caseFold: true });
+					while (cursor.findNext()) {
+						const mark = editor.markText(cursor.from(), cursor.to(), {
+							className: "highlight",
+						});
+						num++;
+						currentMarks.push(mark);
+					}
+					if (num == 0) {
+						document.getElementById("need-to-update").innerHTML = '';
+					} else {
+						let m = "NOTE: You must update all <span class='cm-string highlight'>" + CONFIG_UPDATE_STRING + "</span>";
+						m += " values below before the Website will work.";
+						let msg = '<div class="alert alert-warning" style="font-size: 125%">' + m + '</div>';
+						document.getElementById("need-to-update").innerHTML = msg;
+					}
+				}
 
-                        $(".panel-body").LoadingOverlay('show', {
-                            background: "rgba(0, 0, 0, 0.5)"
-                        });
-                        $.ajax({
-                            type: "POST",
-                            url: "includes/save_file.php",
-                            data: { content: content, path: fileName, isRemote: isRemote },
-                            dataType: 'text',
-                            cache: false,
-                            success: function (data) {
-                                // "data" is a string with a return code (ERROR or SUCCESS),
-                                // then a tab, then a message.
-                                var returnMsg = "";
-                                var ok = true;
-                                var c = "success";		// CSS class
-                                if (data == "") {
-                                    returnMsg = "No response from save_file.php";
-                                    c = "danger";
-                                    ok = false;
-                                } else {
-                                    returnArray = data.split("\n");
+				function validateJSON(jsonString) {
+					try {
+						JSON.parse(jsonString);
+						return { valid: true, error: null };
+					} catch (e) {
+						const match = e.message.match(/at position (\d+)/);
+						const position = match ? parseInt(match[1], 10) : null;
+						return { valid: false, error: e.message, position: position };
+					}
+				}
 
-                                    // Check every line in the output.
-                                    // output any lines not beginnning with "S " or "E ",
-                                    // they are probably debug lines.
-                                    for (var i = 0; i < returnArray.length; i++) {
-                                        var line = returnArray[i];
-                                        returnStatus = line.substr(0, 2);
-                                        if (returnStatus === "S\t") {
-                                            returnMsg += line.substr(2);
-                                        } else if (returnStatus === "W\t") {
-                                            c = "warning";
-                                            returnMsg += line.substr(2);
-                                        } else if (returnStatus === "E\t") {
-                                            ok = false;
-                                            c = "danger";
-                                            returnMsg += line.substr(2);
-                                        } else {
-                                            // Assume it's a debug statement.  Display whole line.
-                                            c = "info";
-                                            console.log(line);
-                                        }
-                                    }
-                                }
-                                var messages = document.getElementById("editor-messages");
-                                if (messages === null) {
-                                    ok = false;
-                                    c = "danger";
-                                    returnMsg = "No response from save_file.php";
-                                }
-                                var m = '<div class="alert alert-' + c + '">' + returnMsg + '</div>';
-                                messages.innerHTML = m;
-                                $(".panel-body").LoadingOverlay('hide');
-                                if (c !== "danger") {
-                                    startTimer();
-                                }
-                            },
-                            error: function (XMLHttpRequest, textStatus, errorThrown) {
-                                $(".panel-body").LoadingOverlay('hide');
-                                alert("Unable to save '" + fileName + ": " + errorThrown);
-                                startTimer();
-                            }
-                        });
-                    } else {
-                        let message = "<span class='errorMsgBig'>Error:</span>";
-                        message += "<br><h3>Unable to save as the configuration file is invalid.</h3>";
-                        message += "<br><h4>" + jsonStatus.error + "</h4>";
-                        bootbox.alert({
-                            message: message,
-                            buttons: {
-                                ok: {
-                                    label: 'OK',
-                                    className: 'btn-danger'
-                                }
-                            }
-                        });
-                    }
-                });
+				function startTimer(secs) {
+					clearTimer = setInterval(() => {
+						clearInterval(clearTimer);
+						clearTimer = null;
+						document.getElementById("editor-messages").innerHTML = '';
+					}, secs);
+				}
 
-                $("#script_path").change(function (e) {
-                    editor.getDoc().setValue("");	// Keeps new file from reading old one first.
-                    var fileName = e.currentTarget.value;
-                    if (fileName.substr(0, 8) === "{REMOTE}")
-                        fileName = fileName.substr(8);
-                    var ext = fileName.substring(fileName.lastIndexOf(".") + 1);
-                    if (ext == "js") {
-                        editor.setOption("mode", "javascript");
-                    } else if (ext == "json") {
-                        editor.setOption("mode", "json");
-                    } else {
-                        editor.setOption("mode", "shell");
-                    }
-                    // It would be easy to support other files types.
-                    // Would need "type.js" file to do the formatting.
-                    $.get(fileName + "?_ts=" + new Date().getTime(), function (data) {
-                        data = JSON.stringify(data, null, "\t");
-                        editor.getDoc().setValue(data);
-                        highlightText(CONFIG_UPDATE_STRING);
-                    }).fail(function (x) {
-                        if (x.status == 200) {	// json files can fail but actually work
-                            editor.getDoc().setValue(x.responseText);
-                        } else {
-                            alert('Requested file [' + fileName + '] not found or an unsupported language.');
-                        }
-                    })
-                });
-            });
+				function doEditor(data) {
+					editor = CodeMirror(document.querySelector("#editorContainer"), {
+						value: data,
+						theme: "monokai",
+						lineNumbers: true,
+						mode: "application/json",
+						gutters: ["CodeMirror-lint-markers"],
+						lint: true
+					});
+				}
 
-        </script>
-    <?php } ?>
+				// Display the initial window.
+				let c = '<?php echo urlencode($content); ?>';
+				// .json files return "data" as json array, and we need a regular string.
+				// Get around this by stringify'ing "data".
+				if (typeof c != 'string') {
+					c = JSON.stringify(c, null, "\t");
+				}
+				c = decodeURIComponent(c.replaceAll("+", " "));
+				doEditor(c);
+				editor.on("change", (instance, changeObj) => {
+// TODO: This is executed TWICE each time a file changes.  Why?
+					highlightText(CONFIG_UPDATE_STRING);
+					checkCorruption();
+				});
+				highlightText(CONFIG_UPDATE_STRING);
+				checkCorruption();
 
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="panel panel-primary">
-                <div class="panel-heading"><i class="fa fa-code fa-fw"></i> Editor</div>
-                <div class="panel-body">
-                    <p id="need-to-update"></p>
-                    <p id="editor-messages"><?php $myStatus->showMessages(); ?></p>
-                    <div id="editorContainer"></div>
-                    <div class="editorBottomSection">
-                        <?php
-                        if ($numFiles === 0) {
-                            ?>
-                                <div id="as-editor-overlay" class="as-overlay big">
-                                    <div class="center-full">
-                                        <div class="center-paragraph">
-                                            <h1>There are no files to edit</h1>
-                                            <p>No configuration files could be found to edit.</p>
-                                        </div>
-                                    </div>
-                                </div> 
-                            <?php
+				$("#save_file").click(function () {
+					if (clearTimer !== null) {
+						clearInterval(clearTimer);
+						clearTimer = null;
+					}
+					var content = editor.doc.getValue(); //textarea text
+					let jsonStatus = validateJSON(content);
+					if (jsonStatus.valid) {
+						var isRemote = false;
+						var path = $("#script_path").val();
+						var fileType = getFileType();
+						if (fileType == "remote") {
+							fileName = path.substr(8);	// Skip "{REMOTE}"
+							remoteOK = true;
+							isRemote = true;
+						} else if (fileType == "local") {
+							localOK = true;
+							fileName = path;
+						} else if (fileType == "env") {
+							envOK = true;
+							fileName = path;
+						}
 
-                        } else {
-                            ?>
-                            <select class="form-control editorForm" id="script_path" title="Pick a file">
-                                <?php
-                                if ($localN !== null) {
-                                    // The website is installed on this Pi.
-                                    // The physical path is ALLSKY_WEBSITE; virtual path is "website".
-                                    echo "<option value='$fullLocalN'>";
-                                    echo $localN_withComment;
-                                    echo "</option>";
-                                }
+						$(".panel-body").LoadingOverlay('show', {
+							background: "rgba(0, 0, 0, 0.5)"
+						});
+						$.ajax({
+							type: "POST",
+							url: "includes/save_file.php",
+							data: { content: content, path: fileName, isRemote: isRemote },
+							dataType: 'text',
+							cache: false,
+							success: function (data) {
+								// "data" is a string with a return code (ERROR or SUCCESS),
+								// then a tab, then a message.
+								var returnMsg = "";
+								var ok = true;
+								var c = "success";		// CSS class
+								if (data == "") {
+									returnMsg = "No response from save_file.php";
+									c = "danger";
+									ok = false;
+								} else {
+									returnArray = data.split("\n");
 
-                                if ($remoteN !== null) {
-                                    // A copy of the remote website's config file is on the Pi.
-                                    echo "<option value='{REMOTE}$fullRemoteN'>";
-                                    echo $remoteN_withComment;
-                                    echo "</option>";
-                                }
+									// Check every line in the output.
+									// output any lines not beginnning with "S " or "E ",
+									// they are probably debug lines.
+									for (var i = 0; i < returnArray.length; i++) {
+										var line = returnArray[i];
+										returnStatus = line.substr(0, 2);
+										if (returnStatus === "S\t") {		// Success
+											returnMsg += line.substr(2);
+										} else if (returnStatus === "W\t") {
+											c = "warning";
+											returnMsg += line.substr(2);
+										} else if (returnStatus === "E\t") {
+											ok = false;
+											c = "danger";
+											returnMsg += line.substr(2);
+										} else {
+											// Assume it's a debug statement.  Display whole line.
+											c = "info";
+											console.log(line);
+										}
+									}
+								}
+								if (ok) {
+									checkCorruption();
+								}
 
-                                if ($envN !== null) {
-                                    echo "<option value='$fullenvN'>";
-                                    echo "$envN";
-                                    echo "</option>";
-                                }
-                                ?>
-                            </select>
-                            <button type="submit" class="btn btn-primary editorSaveChanges" id="save_file">
-                                <i class="fa fa-save"></i> Save Changes</button>
-                            <?php
-                        }
-                        ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <?php
+								var messages = document.getElementById("editor-messages");
+								if (messages === null) {
+									ok = false;
+									c = "danger";
+									returnMsg = "No response from save_file.php";
+								}
+								var m = '<div class="alert alert-' + c + '">' + returnMsg + '</div>';
+								messages.innerHTML = m;
+								$(".panel-body").LoadingOverlay('hide');
+								if (c !== "danger") {
+									startTimer(10000);
+								}
+							},
+							error: function (XMLHttpRequest, textStatus, errorThrown) {
+								$(".panel-body").LoadingOverlay('hide');
+								alert("Unable to save '" + fileName + ": " + errorThrown);
+								startTimer(15000);
+							}
+						});
+					} else {
+						let message = "<span class='errorMsgBig'>Error:</span>";
+						message += "<br><h3>Unable to save as the file is invalid.</h3>";
+						message += "<br><h4>" + jsonStatus.error + "</h4>";
+						bootbox.alert({
+							message: message,
+							buttons: {
+								ok: {
+									label: 'OK',
+									className: 'btn-danger'
+								}
+							}
+						});
+					}
+				});
+
+				$("#script_path").change(function (e) {
+					var fileName = e.currentTarget.value;
+					if (fileName.substr(0, 8) === "{REMOTE}")
+						fileName = fileName.substr(8);
+
+					try {
+						// Keeps new file from reading old one first.
+						editor.getDoc().setValue("");
+					} catch (ee) {
+						console.log("Got error reading " + fileName);
+						return;
+					}
+
+					var ext = fileName.substring(fileName.lastIndexOf(".") + 1);
+					if (ext == "js") {
+						editor.setOption("mode", "javascript");
+					} else if (ext == "json") {
+						editor.setOption("mode", "json");
+					} else {
+						editor.setOption("mode", "shell");
+					}
+					// It would be easy to support other files types.
+					// Would need "type.js" file to do the formatting.
+					$.get(fileName + "?_ts=" + new Date().getTime(), function (data) {
+						data = JSON.stringify(data, null, "\t");
+						editor.getDoc().setValue(data);
+						highlightText(CONFIG_UPDATE_STRING);
+					}).fail(function (x) {
+						if (x.status == 200) {	// json files can fail but actually work
+							editor.getDoc().setValue(x.responseText);
+						} else {
+							alert('Requested file [' + fileName + '] not found or an unsupported language.');
+						}
+					})
+				});
+			});
+
+		</script>
+	<?php } ?>
+
+	<div class="row">
+		<div class="col-lg-12">
+			<div class="panel panel-primary">
+				<div class="panel-heading"><i class="fa fa-code fa-fw"></i> Editor</div>
+				<div class="panel-body">
+					<p id="editor-messages"><?php $myStatus->showMessages(); ?></p>
+					<p id="need-to-update"></p> <p id="file-corruption"></p>
+					<div id="editorContainer"></div>
+					<div class="editorBottomSection">
+						<?php
+						if ($numFiles === 0) {
+							?>
+								<div id="as-editor-overlay" class="as-overlay big">
+									<div class="center-full">
+										<div class="center-paragraph">
+											<h1>There are no files to edit</h1>
+											<p>No configuration files could be found to edit.</p>
+										</div>
+									</div>
+								</div> 
+							<?php
+
+						} else {
+							?>
+							<select class="form-control editorForm" id="script_path" title="Pick a file">
+								<?php
+								if ($localN !== null) {
+									// The website is installed on this Pi.
+									// The physical path is ALLSKY_WEBSITE; virtual path is "website".
+									echo "<option value='$fullLocalN'>";
+									echo $localN_withComment;
+									echo "</option>\n";
+								}
+
+								if ($remoteN !== null) {
+									// A copy of the remote website's config file is on the Pi.
+									echo "<option value='{REMOTE}$fullRemoteN'>";
+									echo $remoteN_withComment;
+									echo "</option>\n";
+								}
+
+								if ($envN !== null) {
+									echo "<option value='$fullEnvN'>";
+									echo "$envN_withComment";
+									echo "</option>\n";
+								}
+								?>
+							</select>
+							<button type="submit" class="btn btn-primary editorSaveChanges" id="save_file">
+								<i class="fa fa-save"></i> Save Changes</button>
+							<?php
+						}
+						?>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<?php
 }
 ?>

@@ -44,7 +44,7 @@ function DisplayAuthConfig($username, $password) {
 <div class="row">
 	<div class="col-lg-12">
 		<div class="panel panel-primary">
-			<div class="panel-heading"><i class="fa fa-lock fa-fw"></i> Change Admin Username and/or Password</div>
+			<div class="panel-heading"><i class="fa fa-lock fa-fw"></i> Change WebUI Username and/or Password</div>
 			<div class="panel-body">
 				<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
 

@@ -139,6 +139,7 @@ if [[ -f ${SETTINGS_FILE} ]]; then
 
 	check_website		# invoke to set variables
 
+	#shellcheck disable=SC2119
 	getAllSettings || exit 1
 fi
 
@@ -287,9 +288,8 @@ do
 	fi
 
 	(( NUM_CHANGED++ ))
-	N="$( printf "%03d" "${NUM_CHANGED}" )"
-	KEY_NUMS[${N}]="${KEY}"		# new ones added to the end
-	KEYS[${KEY}]="${KEY}"		# new ones appear to be added in random order
+	KEY_NUMS[${NUM_CHANGED}]="${KEY}"		# new ones added to the end
+	KEYS[${KEY}]="${KEY}"					# new ones appear to be added in random order
 	LABELS[${KEY}]="${LABEL}"
 	OLD_VALUES[${KEY}]="${OLD_VALUE}"
 	NEW_VALUES[${KEY}]="${NEW_VALUE}"
@@ -553,16 +553,17 @@ do
 				# We assume the user wants the non-camera specific settings below
 				# for this camera to be the same as the prior camera.
 
-				if debug ; then
-					MSG="Updating user-defined settings in new settings file."
-					wD_ "${MSG}"
-				fi
-
 				# First determine the name of the prior camera-specific settings file.
 				NAME="$( basename "${SETTINGS_FILE}" )"
 				S_NAME="${NAME%.*}"
 				S_EXT="${NAME##*.}"
-				OLD_SETTINGS_FILE="${ALLSKY_CONFIG}/${S_NAME}_${OLD_TYPE}_${OLD_MODEL// /_}.${S_EXT}"
+				O="${S_NAME}_${OLD_TYPE}_${OLD_MODEL// /_}.${S_EXT}"
+				OLD_SETTINGS_FILE="${ALLSKY_CONFIG}/${O}"
+				if debug ; then
+					MSG="Updating user-defined settings in new settings file from '${O}'."
+					wD_ "${MSG}"
+				fi
+
 				{
 					echo "_START_"
 					"${ALLSKY_SCRIPTS}/convertJSON.php" \
@@ -573,9 +574,9 @@ do
 				} |
 				while read -r SETTING TYPE VALUE
 				do
-					if [[ ${SETTINGS} == "_START_" ]]; then
+					if [[ ${SETTING} == "_START_" ]]; then
 						CHANGES=()
-					elif [[ ${SETTINGS} == "_END_" ]]; then
+					elif [[ ${SETTING} == "_END_" ]]; then
 						if [[ ${#CHANGES[@]} -gt 0 ]]; then
 							# shellcheck disable=SC2086
 							"${ALLSKY_SCRIPTS}/updateJsonFile.sh" \
@@ -804,7 +805,7 @@ do
 				W+="\n ${WSNs}Nighttime Capture${WSNe} flows of the"
 				W+="\n ${WSNs}Module Manager${WSNe}"
 				W+="\n for the ${WSNs}${LABEL}${WSNe} to take effect."
-				w "${W}"
+				W_ "${W}"
 			else
 				rm -f "${ALLSKY_TMP}/overlaydebug.txt"
 			fi

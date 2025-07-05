@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2154		# referenced but not assigned - from convertJSON.php#
+# shellcheck disable=SC2154		# referenced but not assigned - from convertJSON.php
 
 # Allow this script to be executed manually, which requires several variables to be set.
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
@@ -27,13 +27,13 @@ function usage_and_exit()
 		E_ "${MSG}"
 	fi
 	echo "where:"
-	echo "    --help:       Print this usage message and exit immediately."
-	echo "    --whisper:    Be quiet with non-error related output - only display results."
-	echo "    --delete:     Delete map data; all fields except machine_id are ignored."
-	echo "    --force:      Force updates, even if not scheduled automatically for today."
-	echo "    --debug:      Output debugging statements.  Can specify more than once for additional info."
-	echo "    --endofnight: ${ME} was called from endOfNight.sh."
-	echo "    --from f:     Who called ${ME}, e.g., 'WebUI' (use html)."
+	echo "   --help        Print this usage message and exit immediately."
+	echo "   --whisper     Be quiet with non-error related output - only display results."
+	echo "   --delete      Delete map data; all fields except machine_id are ignored."
+	echo "   --force       Force updates, even if not scheduled automatically for today."
+	echo "   --debug       Output debugging statements.  Can specify more than once for additional info."
+	echo "   --endofnight  ${ME} was called from endOfNight.sh."
+	echo "   --from f      Who called ${ME}, e.g., 'WebUI' (use html)."
 	echo
 	exit "${RET}"
 }
@@ -206,7 +206,8 @@ if [[ -z ${MACHINE_ID} ]]; then
 fi
 
 # This gets all settings and prefixes their names with "S_".
-# It's faster than calling "settings(" a bunch of times.
+# It's faster than calling "settings()" a bunch of times.
+#shellcheck disable=SC2119
 getAllSettings || exit 1
 
 E=""
@@ -382,7 +383,8 @@ if [[ ${UPLOAD} == "true" ]]; then
 	CMD3=" https://www.thomasjacquin.com/allsky-map/postToMap.php"
 	if [[ ${DEBUG} -gt 0 ]]; then
 		MSG="${CMD}"
-		if [[ ${DEBUG} -eq 1 ]]; then
+		# Not much data is returned by DELETE, so output it all.
+		if [[ ${DEBUG} -eq 1 && ${DELETE} == "false" ]]; then
 			MSG+=" --data '..DATA..'"
 		else
 			MSG+=" ${CMD2}"

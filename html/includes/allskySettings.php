@@ -45,7 +45,8 @@ function toString($b) {
 }
 
 // Error checking functions.
-function formatSettingName($name) {
+function formatSettingName($name, $prefix="") {
+	if ($prefix !== "") $name = "$prefix $name";
 	return("<span class='WebUISetting'>$name</span>");
 }
 function formatSettingValue($value) {
@@ -54,7 +55,7 @@ function formatSettingValue($value) {
 
 // Determine the logical type based on the actual type.
 function getLogicalType($type) {
-	if (strpos($type, "text") !== false || $type == "password" || $type === "color") {
+	if (strpos($type, "text") !== false || $type == "password") {
 		return("text");
 	} else if (strpos($type, "integer") !== false) {
 		return("integer");
@@ -68,7 +69,8 @@ function getLogicalType($type) {
 
 // Check the value for the correct type.
 // Return "" on success and some string on error.
-function checkType($fieldName, $value, $old, $label, $type, &$shortened=null) {
+function checkType($fieldName, $value, $old, $label, $label_prefix, $type, &$shortened=null) {
+
 	if ($type === null || $type === "text" || $value === "") {
 		return("");
 	}
@@ -79,20 +81,21 @@ function checkType($fieldName, $value, $old, $label, $type, &$shortened=null) {
 	// or a boolean, and only is_numeric() accounts for types of string.
 	if ($type === "integer") {
 		if (! is_numeric($value) || ! is_int($value + 0))
-			$msg = "without a fraction";
+			$msg = "must be a number without a fraction";
 		else
 			$value += 0;
 	} else if ($type === "float") {
 		if (! is_numeric($value) || ! is_float($value + 0.0))
-			$msg = "with, or without, a fraction";
+			$msg = "must be a number with, or without, a fraction";
 		else
 			$value += 0.0;
+	} else if ($type === "color" && substr($value, 0, 1) === "#" && strlen($value) !== 7) {
+		$msg = "must contain 6 characters after the '#'";
 	}
 	if ($msg === "") {
 		return("");
 	}
 
-	$msg = "must be a number $msg.";
 	$shortened .= "It $msg";
 	if ($value === $old) {
 		$msg .= " The saved value is: ";
@@ -105,13 +108,16 @@ function checkType($fieldName, $value, $old, $label, $type, &$shortened=null) {
 	if (substr($fieldName, 0, 3) === "day") $label = "Daytime $label";
 	else if (substr($fieldName, 0, 5) == "night") $label = "Nighttime $label";
 
-	return(formatSettingName($label) . " $msg");
+	return(formatSettingName($label, $label_prefix) . " $msg");
 }
 
 // Return $value as type $type.
 // This eliminates the need for JSON_NUMERIC_CHECK, which converts some
 // strings we want as strings to numbers, e.g., "longitude = +105.0" should stay as a string.
 function setValue($name, $value, $type) {
+# TODO: May 2025:  Is it ok to return "" for empty numbers?
+	if ($value === "") return "";
+
 	if ($type === "integer") {
 		return (int) $value;
 	} else if ($type === "float") {
@@ -131,6 +137,7 @@ function DisplayAllskyConfig() {
 	global $page;
 	global $ME;
 	global $status;
+	global $allsky_status;
 	global $endSetting;
 	global $saveChangesLabel;
 	global $forceRestart;
@@ -147,6 +154,7 @@ function DisplayAllskyConfig() {
 	$bullet = "<div class='bullet'>*</div>";
 	$showIcon = "<i class='fa fa-chevron-down fa-fw'></i>";
 	$hideIcon = "<i class='fa fa-chevron-up fa-fw'></i>";
+	$saveChangesIcon = "<i class='fa-solid fa-floppy-disk'></i>";
 
 	$mode = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION;
 	$settings_file = getSettingsFile();
@@ -255,6 +263,7 @@ function DisplayAllskyConfig() {
 					if ($option['name'] !== $name) continue;
 
 					$label = getVariableOrDefault($option, 'label', "");
+					$label_prefix = getVariableOrDefault($option, 'label_prefix', "");
 					$found = true;
 					$shortMsg = "";
 					$type = $type_array[$name];
@@ -264,7 +273,7 @@ function DisplayAllskyConfig() {
 					$e = checkType($name,
 							$newValue,
 							$oldValue,
-							$label,
+							$label, $label_prefix,
 							$logicalType,
 							$shortMsg);
 					if ($e != "") {
@@ -426,22 +435,32 @@ if ($debug) {
 						if ($numSettingsChanges > 0 || $fromConfiguration) {
 							// Keep track of the last time the file changed.
 							// If we end up not updating the file this will be ignored.
-							$lastChanged = date('Y-m-d H:i:s');
+							$lastChanged = date(DATE_TIME_FORMAT);
 							$settings_array[$lastChangedName] = $lastChanged;
 							if ($fromConfiguration) {
 								$restartRequired = true;
 								unset($settings_array[$endSetting]);
 							}
+$remove0 = false;
+if ($remove0) {
+	# TODO: Unfortunately this remove .0 from Computer, e.g., "Rev 1.0,"
+	# I think it's ok to not do this.
 							$content = str_replace(".0,", ",", json_encode($settings_array, $mode));
+} else {
+							$content = json_encode($settings_array, $mode);
+}
 if ($debug) {
 	echo "<br><br>Updating $settings_file, numSettingsChanges = $numSettingsChanges";
-//	echo "<br>settings_array['longitude']=${settings_array['longitude']}";
-	echo "<pre>"; var_dump($settings_array); echo "</pre>";
-	echo "<pre>"; var_dump($content); echo "</pre>";
+	echo "<pre>settings_array: "; var_dump($settings_array); echo "</pre>";
+if ($remove0) {
+	echo "<pre>content: "; var_dump($content); echo "</pre>";
+}
 }
 							// updateFile() only returns error messages.
 							$msg = updateFile($settings_file, $content, "settings", true);
-							echo '<script>console.log("Updated ' . "$settings_file, msg=$msg" . '");</script>';
+							echo '<script>console.log("Updated ' . "$settings_file";
+							if ($msg !== "") echo " msg=$msg";
+							echo '");</script>';
 							if ($msg === "") {
 								if ($numSettingsChanges > 0) {
 									$msg = "$numSettingsChanges setting";
@@ -449,7 +468,7 @@ if ($debug) {
 										$msg .= "s";
 									$msg .= " changed.";
 								} else {	# configuration needed and no changes made.
-									$msg = "Configuration saved and timestamp updated.";
+									$msg = "Settings saved and timestamp updated.";
 								}
 								$needsConfiguration = false;
 								$reReadSettings = true;
@@ -504,6 +523,11 @@ if ($debug) {
 			}
 
 			if ($ok) {
+				if ($fromConfiguration) {
+					// If we restart Allsky this tells it it's ok to start.
+					update_allsky_status(ALLSKY_STATUS_NOT_RUNNING);
+				}
+
 				if (! $changesMade && ! $fromConfiguration) {
 					$msg = "<div class='noChanges'>No settings changed.  Nothing updated.</div>";
 					$status->addMessage($msg, 'message');
@@ -539,6 +563,9 @@ if ($debug) {
 				if ($ok) {
 					// The "restart" field is a checkbox.  If not checked it returns nothing.
 					if ($restartRequired && getVariableOrDefault($_POST, 'restart', "") != "") {
+						# Allsky status will change so check often.
+						echo "<script>allskystatus_interval = 2 * 1000;</script>";
+
 						if ($msg !== "")
 							$msg .= " &nbsp;";
 						$msg .= "Allsky restarted.";
@@ -546,19 +573,12 @@ if ($debug) {
 						$CMD = "sudo /bin/systemctl reload-or-restart allsky.service";
 						if (! runCommand($CMD, $msg, "success")) {	// displays $msg on success.
 							$status->addMessage("Unable to restart Allsky.", 'warning');
-						} else {
-/* TODO: We get here because a form was submitted which caused Allsky to restart.
-	We don't want the user to refresh the page because that might cause Allsky to
-	restart again.  We really want them to click on the link that takes them to this page.
-
-							$msg = "<div class='center-text' style='font-size: 150%'>";
-							$msg .= "*** Refresh this window to update messages. ***";
-							$msg .= "</div>";
-							$status->addMessage($msg, 'info');
-*/
 						}
 
 					} else if ($stopRequired) {
+						# Allsky status will change so check often.
+						echo "<script>allskystatus_interval = 2 * 1000;</script>";
+
 						if ($msg !== "")
 							$msg .= " &nbsp;";
 
@@ -635,9 +655,8 @@ if ($debug) {
 		} else {
 			$status->addMessage('Unable to save settings - session timeout.', 'danger');
 		}
-	}
 
-	if (isset($_POST['reset_settings'])) {
+	} else if (isset($_POST['reset_settings'])) {
 		if (CSRFValidate()) {
 			$settings_array = array();
 			$sourceFilesChanged = array();
@@ -684,6 +703,9 @@ if ($debug) {
 		} else {
 			$status->addMessage('Unable to reset settings - session timeout', 'danger');
 		}
+	} else {
+		# The Allsky status isn't likely to change so increase the interval.
+		echo "<script>allskystatus_interval = 20 * 1000;</script>";
 	}
 
 	// If $settings_array is null it means we're being called from the Allsky Website,
@@ -721,12 +743,13 @@ if ($debug) {
 				<div class="row">
 					<div class="col-md-11 col-sm-11 col-xs-11 nowrap">
 						<button type="submit" class="btn btn-primary"
-								name="save_settings" title="Save changes">
-							<i class="fa-solid fa-floppy-disk"></i> <?php echo $saveChangesLabel; ?>
+								id="save_settings" name="save_settings"
+								title="Save changes">
+							<?php echo "$saveChangesIcon $saveChangesLabel"; ?>
 						</button>
 						<button type="submit" class="btn ml-3 btn-warning"
-								name="reset_settings" title="Reset to default values"
-								id="settings-reset">
+								id="settings-reset" name="reset_settings"
+								title="Reset to default values">
 							<i class="fa-solid fa-rotate-left"></i> Reset to default values
 						</button>
 					</div>
@@ -754,8 +777,6 @@ if ($debug) {
 
 CSRFToken();
 		echo "<input type='hidden' name='page' value='$page'>\n";
-		if ($needsConfiguration)
-			echo "<input type='hidden' name='fromConfiguration' value='true'>\n";
 
 		if ($formReadonly == "readonly") {
 			$readonlyForm = "readonly disabled";	// covers both bases
@@ -802,7 +823,6 @@ if (false && $debug) { echo "<br>Option $name"; }
 					continue;
 				}
 
-				$logicalType = getLogicalType($type);
 				if (substr($type, 0, 7) === "select_") {
 					$type = "select";
 				}
@@ -812,6 +832,7 @@ if (false && $debug) { echo "<br>Option $name"; }
 				if (toBool(getVariableOrDefault($option, 'settingsonly', "false"))) {
 					$display = false;
 				}
+				$logicalType = getLogicalType($type);
 				$isHeader = substr($logicalType, 0, 6) === "header";
 				if (! $display && ! $isHeader) {
 					if ($formReadonly != "readonly") {
@@ -876,6 +897,8 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 					// Do error checking of values in settings file
 					// except for any settings already checked.
 
+					$label = getVariableOrDefault($option, 'label', "");
+					$label_prefix = getVariableOrDefault($option, 'label_prefix', "");
 					$optional = toBool(getVariableOrDefault($option, 'optional', "false"));
 					$minimum = getVariableOrDefault($option, 'minimum', "");
 					$maximum = getVariableOrDefault($option, 'maximum', "");
@@ -886,7 +909,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 						$e = checkType($name,
 								$value,
 								$value,
-								$option['label'],
+								$label, $label_prefix,
 								$type,
 								$shortMsg);
 						if ($e != "") {
@@ -918,7 +941,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 							} else {
 								$missingSettings .= "<br>&nbsp; &nbsp; $bullet ";
 							}
-							$missingSettings .= formatSettingName($label);
+							$missingSettings .= formatSettingName($label, $label_prefix);
 							$warning_class = "alert-danger";
 							$warning_msg = "<span class='errorMsg'>This field cannot be empty.</span><br>";
 
@@ -931,7 +954,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 							} else {
 								$missingSettingsHasDefault .= "<br>&nbsp; &nbsp; $bullet ";
 							}
-							$missingSettingsHasDefault .= formatSettingName($label);
+							$missingSettingsHasDefault .= formatSettingName($label, $label_prefix);
 							$warning_class = "alert-warning";
 							$warning_msg = "<span class='errorMsg'>This field was empty but set to the default.</span><br>";
 						}
@@ -1099,8 +1122,8 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 						// numbers to the left, and they don't line up with text.
 						// Plus, they don't accept decimal points in "float".
 						// So, display numbers as text.
-						if ($type == "integer" || $type == "float" ||
-							$type == "color" || $type == "percent") {
+						if ($type == "color" || $type == "integer" ||
+							$type == "float" || $type == "percent") {
 								$type = "text";
 						}
 						echo "\n\t\t<input class='form-control boxShadow settingInput settingInputTextNumber'" .
@@ -1152,14 +1175,36 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 			if ($inHeader) echo "</tbody>";
 		echo "</table>";
 
+		if ($numMissingHasDefault > 0) {
+			$needsConfiguration = true;
+			if ($lastChanged !== "") {
+				$lastChanged = "";
+				$allsky_status = ALLSKY_STATUS_NEEDS_REVIEW;
+				check_if_configured($page, "settings");
+?>
+				<script>
+					var s = document.getElementById('save_settings');
+					s.innerHTML = "<?php echo "$saveChangesIcon $saveChangesLabel" ?>";
+				</script>
+<?php
+			}
+		}
+
+		if ($needsConfiguration) {
+			echo "<input type='hidden' name='fromConfiguration' value='true'>\n";
+		}
+
 		if ($fromConfiguration) {
 			// Hide the message about "Allsky must be configured..."
 ?>
 			<script>
-			var p = document.getElementById('mustConfigure').parentElement;
-			var gp = p.parentElement;
-			if (gp != null) p = gp;
-			p.style.display = 'none';
+			var m = document.getElementById('mustConfigure');
+			if (m != null) {
+				var p = m.parentElement;
+				var gp = p.parentElement;
+				if (gp != null) p = gp;
+				p.style.display = 'none';
+			}
 			</script>
 <?php
 		}

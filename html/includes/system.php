@@ -18,7 +18,7 @@ function formatSize($bytes)
 {
 	$types = array('B', 'KB', 'MB', 'GB', 'TB');
 	for ($i = 0; $bytes >= 1024 && $i < (count($types) - 1); $bytes /= 1024, $i++) ;
-	return (round($bytes, 2) . " " . $types[$i]);
+	return (round($bytes, 1) . " " . $types[$i]);
 }
 
 /* Check if the data in $file has expired, using the last modified time of the file.
@@ -70,35 +70,48 @@ function checkNumFields($num_required, $num_have, $type, $line_num, $line, $file
 }
 
 /* Display a "progress" bar. */
-function displayProgress($x, $label, $data, $min, $current, $max, $danger, $warning, $status_override)
+function displayProgress($x, $label, $data, $min, $current, $max, $danger, $warning, $status_override, $elId="", $tempText="")
 {
-	if ($status_override !== "") {
-		$myStatus = $status_override;
-	} else if ($current >= $danger) {
-		$myStatus = "danger";
-	} elseif ($current >= $warning) {
-		$myStatus = "warning";
-	} else {
-		$myStatus = "success";
-	}
-	echo "<tr><td colspan='2' style='height: 5px'></td></tr>\n";
-	echo "<tr><td $x>$label</td>\n";
-	echo "    <td style='width: 100%' class='progress'><div class='progress-bar progress-bar-$myStatus'\n";
-	echo "    role='progressbar'\n";
+        if ($status_override !== "") {
+                $myStatus = $status_override;
+        } else if ($current >= $danger) {
+                $myStatus = "danger";
+        } elseif ($current >= $warning) {
+                $myStatus = "warning";
+        } else {
+                $myStatus = "success";
+        }
 
-	echo "    title='current: $current, min: $min, max: $max'";
-	if ($current < $min) $current = $min;
-	else if ($current > $max) $current = $max;
-   	echo "    aria-valuenow='$current' aria-valuemin='$min' aria-valuemax='$max'\n";
+        if ($elId !== "") {
+                $id = " id='$elId'";
+        } else {
+                $id = "";
+        }
 
-	// The width of the bar should be the percent that $current is in the
-	// range of ($max-$min).
-	// In the typical case where $max=100 and $min=0, if $current is 21,
-	// then width=(21/(100-0)*100) = 21.
-	// If $max=50, $min=0, and $current=21, then width=(21/(50-0))*100 = 42.
-	$width = (($current - $min) / ($max - $min)) * 100;
-	echo "    style='width: $width%;'>$data\n";
-	echo "    </div></td></tr>\n";
+        echo "<tr><td colspan='2' style='height: 5px'></td></tr>\n";
+        echo "<tr><td $x>$label</td>\n";
+        echo "    <td style='width: 100%' class='progress' $id>";
+        if ($tempText !== "") {
+                echo "    <div class='text-center'>$tempText</div>";
+                echo "    </td></tr>\n";
+        } else {
+                echo "    <div class='progress-bar progress-bar-animated progress-bar-$myStatus'\n";
+                echo "    role='progressbar'\n";
+
+                echo "    title='current: $current, min: $min, max: $max'";
+                if ($current < $min) $current = $min;
+                else if ($current > $max) $current = $max;
+                echo "    aria-valuenow='$current' aria-valuemin='$min' aria-valuemax='$max'\n";
+
+                // The width of the bar should be the percent that $current is in the
+                // range of ($max-$min).
+                // In the typical case where $max=100 and $min=0, if $current is 21,
+                // then width=(21/(100-0)*100) = 21.
+                // If $max=50, $min=0, and $current=21, then width=(21/(50-0))*100 = 42.
+                $width = (($current - $min) / ($max - $min)) * 100;
+                echo "    style='width: $width%;'><span class='nowrap'>$data</span>\n";
+                echo "    </div></td></tr>\n";
+        }
 }
 
 /* Display user data in "file". */
@@ -207,48 +220,22 @@ function displayUserData($file, $displayType)
  */
 function DisplaySystem()
 {
-	global $temptype, $page, $settings_array, $status;
-
-	$top_dir = dirname(ALLSKY_WEBSITE, 1);
-
-	// hostname
-	exec("hostname -f", $hostarray);
-	$hostname = $hostarray[0];
+	global $temptype, $page, $settings_array, $status, $hostname;
 
 	// uptime
-	$uparray = explode(" ", exec("cat /proc/uptime"));
-	$seconds = round($uparray[0], 0);
-	$minutes = $seconds / 60;
-	$hours = $minutes / 60;
-	$days = floor($hours / 24);
-	$hours = floor($hours - ($days * 24));
-	$minutes = floor($minutes - ($days * 24 * 60) - ($hours * 60));
-	$uptime = '';
-	if ($days != 0) {
-		$uptime .= $days . ' day' . (($days > 1) ? 's ' : ' ');
-	}
-	if ($hours != 0) {
-		$uptime .= $hours . ' hour' . (($hours > 1) ? 's ' : ' ');
-	}
-	if ($minutes != 0) {
-		$uptime .= $minutes . ' minute' . (($minutes > 1) ? 's ' : ' ');
-	}
+	$uptime = getUptime();
 
 	// mem used
-	exec("free -m | gawk '/Mem:/ { total=$2 } /buffers\/cache/ { used=$3 } END { print used/total*100}'", $memarray);
-	$memused = floor($memarray[0]);
-	// check if memused is unreasonably low, if so repeat
-	if ($memused < 0.1) {
-		unset($memarray);
-		exec("free -m | gawk '/Mem:/ { total=$2 } /Mem:/ { used=$3 } END { print used/total*100}'", $memarray);
-		$memused = floor($memarray[0]);
-	}
+	$memused = getMemoryUsed();
 
+	// Disk and File usage.
 
-	// Disk and File usage
+	// Filesystem Allsky is on.
+	$top_dir = ALLSKY_WEBUI;
 	$df = @disk_free_space($top_dir);		// returns bytes
 	if ($df === false) {
 		$dp = -1;	// signals an error
+		$dp_msg = "<span class='errorMsg'>Unable to read '$top_dir'.</span>";
 	} else {
 		// and get disk space total (in bytes)
 		$dt = disk_total_space($top_dir);
@@ -261,81 +248,39 @@ function DisplaySystem()
 		$df = formatSize($df);
 		$du = formatSize($du);
 		$dt = formatSize($dt);
+		$dp_msg = "$dp% &nbsp; &nbsp; - &nbsp; &nbsp; $dt ($df free)";
+	}
+	// Allsky tmp filesystem
+	$tmp_dir = ALLSKY_TMP;
+	$tdf = @disk_free_space($tmp_dir);
+	if ($tdf === false) {
+		$tdp = -1;
+		$tdp_msg = "<span class='errorMsg'>Unable to read '$tmp_dir'.</span>";
+	} else {
+		$tdt = disk_total_space($tmp_dir);
+		$tdu = $tdt - $tdf;
+		$tdp = sprintf('%d', ($tdu / $tdt) * 100);
+		$tdf = formatSize($tdf);
+		$tdu = formatSize($tdu);
+		$tdt = formatSize($tdt);
+		$tdp_msg = "$tdp% &nbsp; &nbsp; - &nbsp; &nbsp; $tdt ($tdf free)";
 	}
 
 	// Throttle / undervoltage status
-	$x = exec("sudo vcgencmd get_throttled 2>&1");	// Output: throttled=0x12345...
-	if (preg_match("/^throttled=/", $x) == false) {
-			$throttle_status = "danger";
-			$throttle = "Not able to get throttle status:<br>$x";
-			$throttle .= "<br><span class='errorMsgBig'>";
-			$throttle .= "Run '~/allsky/install.sh --update' to try and resolve.</span>";
-	} else {
-		$x = explode("x", $x);	// Output: throttled=0x12345...
-		if ($x[1] == "0") {
-				$throttle_status = "success";
-				$throttle = "No throttling";
-		} else {
-			$bits = base_convert($x[1], 16, 2);	// convert hex to bits
-			// See https://www.raspberrypi.com/documentation/computers/os.html#vcgencmd
-			$messages = array(
-				0 => 'Currently under-voltage',
-				1 => 'ARM frequency currently capped',
-				2 => 'Currently throttled',
-				3 => 'Soft temperature limit currently active',
+	$throttle_data = getThrottleStatus();
+	$throttle_status = $throttle_data['throttle_status'];
+	$throttle = $throttle_data['throttle']; 
 
-				16 => 'Under-voltage has occurred since last reboot.',
-				17 => 'Throttling has occurred since last reboot.',
-				18 => 'ARM frequency capped has occurred since last reboot.',
-				19 => 'Soft temperature limit has occurred'
-			);
-			$l = strlen($bits);
-			$throttle_status = "warning";
-			$throttle = "";
-			// bit 0 is the rightmost bit
-			for ($pos=0; $pos<$l; $pos++) {
-				$i = $l - $pos - 1;
-				$bit = $bits[$i];
-				if ($bit == 0) continue;
-				if (array_key_exists($pos, $messages)) {
-					if ($throttle == "") {
-						$throttle = $messages[$pos];
-					} else {
-						$throttle .= "<br>" . $messages[$pos];
-					}
-					// current issues are a danger; prior issues are a warning
-					if ($pos <= 3) $throttle_status = "danger";
-				}
-			}
-		}
-	}
 
-	// cpu load
-	$secs = 2; $q = '"';
-	$cmd = "(grep -m 1 'cpu ' /proc/stat; sleep $secs; grep -m 1 'cpu ' /proc/stat)";
-	$cmd .= " | gawk '{u=$2+$4; t=$2+$4+$5; if (NR==1){u1=u; t1=t;} else printf($q%.0f$q, (($2+$4-u1) * 100 / (t-t1))); }'";
-	$cpuload = exec($cmd);
-	if ($cpuload < 0 || $cpuload > 100) echo "<p class='errorMsgBig'>Invalid cpuload value: $cpuload</p>";
+	// cpu load - calculated over several seconds
+	$cpuLoad = 0;
 
-	// temperature
-	$temperature = file_get_contents("/sys/class/thermal/thermal_zone0/temp");
-	$temperature = round($temperature / 1000, 2);
-	if ($temperature < 0) {
-		$temperature_status = "danger";
-	} elseif ($temperature < 10) {
-		$temperature_status = "warning";
-	} else {
-		$temperature_status = "";
-	}
-	$display_temperature = "";
-	if ($temptype == "C" || $temptype == "B") {
-		$display_temperature = number_format($temperature, 1, '.', '') . "&deg;C";
-	}
-	if ($temptype == "F" || $temptype == "B") {
-		$t = (($temperature * 1.8) + 32);
-		$t = number_format($t, 1, '.', '');
-		$display_temperature .= "&nbsp; &nbsp; $t &deg;F";
-	}
+	// cpu temperature
+	$cpuTempData = getCPUTemp();
+
+	$temperature = $cpuTempData['temperature'];
+	$display_temperature = $cpuTempData['display_temperature'];
+	$temperature_status = $cpuTempData['temperature_status'];
 
 	// Optional user-specified data.
 	// TODO: read each file once and populate arrays for "data", "progress", and "button".
@@ -355,7 +300,7 @@ function DisplaySystem()
 				<div class="panel-body">
 
 					<?php
-					$s = false;		// Update Allsky Status ?
+					$s = false;		// Update interval for Allsky Status ?
 
 					if (isset($_POST['system_reboot'])) {
 						$status->addMessage("System Rebooting Now!", "warning", true);
@@ -373,12 +318,8 @@ function DisplaySystem()
 						$s = true;
 					}
 					if ($s) {
-// TODO: Make output_allsky_status() a javascript function that updates the status every x seconds
-// and if it hasn't change in y checks, increase the delay.
-						$new_status = output_allsky_status();
-						echo "<script>";
-						echo 'document.getElementById("allskyStatus").innerHTML = "' . $new_status . '";';
-						echo "</script>";
+						# Allsky status will change so check often.
+						echo "<script>allskystatus_interval = 2 * 1000;</script>";
 					}
 
 					$e = "";
@@ -402,11 +343,7 @@ function DisplaySystem()
 								<!-- <colgroup> doesn't seem to support "width", so set on 1st line -->
 								<tr><td style="padding-right: 90px;">Hostname</td><td><?php echo $hostname ?></td></tr>
 								<tr><td>Pi Model</td><td><?php echo RPiModel() ?></td></tr>
-								<tr><td>Uptime</td><td><?php echo $uptime ?></td></tr>
-								<?php if ($dp === -1) $x = "<span class='errorMsg'>ERROR: unable to read '$top_dir' to get data.</span>";
-									  else $x = "$dt ($df free)";
-								?>
-								<tr ><td>SD Card</td><td><?php echo "$x" ?></td></tr>
+								<tr><td>Uptime</td><td id="as-uptime"><?php echo $uptime ?></td></tr>
 								<?php
 									// Optional user-specified progress bars.
 									$e = "";
@@ -418,22 +355,35 @@ function DisplaySystem()
 
 								<tr><td colspan="2" style="height: 5px"></td></tr>
 								<!-- Treat Throttle Status like a full-width progress bar -->
-								<?php displayProgress("", "Throttle Status", $throttle, 0, 100, 100, -1, -1, $throttle_status); ?>
+								<?php displayProgress("", "Throttle Status", $throttle, 0, 100, 100, -1, -1, $throttle_status, "as-throttle"); ?>
 								<tr><td colspan="2" style="height: 5px"></td></tr>
-								<?php displayProgress("", "Memory Used", "$memused%", 0, $memused, 100, 90, 75, ""); ?>
+								<?php displayProgress("", "Memory Used", "$memused%", 0, $memused, 100, 90, 75, "", "as-memory"); ?>
 								<tr><td colspan="2" style="height: 5px"></td></tr>
-								<?php displayProgress("", "CPU Load", "$cpuload%", 0, $cpuload, 100, 90, 75, ""); ?>
+								<?php displayProgress("", "CPU Load", "$cpuLoad%", 0, $cpuLoad, 100, 90, 75, "", "as-cpuload", "Calculating"); ?>
 								<tr><td colspan="2" style="height: 5px"></td></tr>
-								<?php displayProgress("", "CPU Temperature", $display_temperature, 0, $temperature, 100, 70, 60, $temperature_status); ?>
+								<?php displayProgress("", "CPU Temperature", $display_temperature, 0, $temperature, 100, 70, 60, $temperature_status, "as-cputemp"); ?>
 								<tr><td colspan="2" style="height: 5px"></td></tr>
 								<?php 
+									$label = "Disk Usage";
 									if ($dp === -1) {
 										echo "<tr>";
-										echo "<td>Disk Usage</td>";
-										echo "<td><span class='errorMsg'>ERROR: unable to read '<strong>$top_dir</strong>' to get disk usage.</span></td>";
+										echo "<td>$label</td>";
+										echo "<td>$dp_msg</td>";
 										echo "</tr>";
 									} else {
-										displayProgress("", "Disk Usage", "$dp%", 0, $dp, 100, 90, 70, "");
+										displayProgress("", $label, $dp_msg, 0, $dp, 100, 90, 70, "");
+									}
+								?>
+								<tr><td colspan="2" style="height: 5px"></td></tr>
+								<?php 
+									$label = str_replace(ALLSKY_HOME, "~/allsky", $tmp_dir) . " Usage";
+									if ($tdp === -1) {
+										echo "<tr>";
+										echo "<td>$label</td>";
+										echo "<td>$tdp_msg</td>";
+										echo "</tr>";
+									} else {
+										displayProgress("", $label, $tdp_msg, 0, $tdp, 100, 90, 70, "");
 									}
 
 									// Optional user-specified progress bars.
@@ -450,10 +400,6 @@ function DisplaySystem()
 
 					<div class="row">
 					<form action="?page=<?php echo $page ?>" method="POST">
-					<div style="margin-bottom: 15px">
-						<button type="button" class="btn btn-primary" onclick="document.location.reload(true)">
-							<i class="fa fa-sync-alt"></i> Refresh</button>
-					</div>
 					<div style="margin-bottom: 15px">
 						<button type="submit" class="btn btn-success" name="service_start"/>
 							<i class="fa fa-play"></i> Start Allsky</button>

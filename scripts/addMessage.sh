@@ -12,6 +12,7 @@ source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 
+ARGS=$*
 
 # The file is tab-separated:    type  date  count  message  url
 TAB="$( echo -e "\t" )"
@@ -110,7 +111,7 @@ while [[ $# -gt 0 ]]; do
 			shift
 			;;
 		-*)
-			wE_ "Unknown argument '${ARG}' ignoring." >&2
+			wE_ "Unknown argument '${ARG}'." >&2
 			OK="false"
 			;;
 		*)
@@ -125,6 +126,7 @@ done
 if [[ ${DELETE} == "false" && (-z ${TYPE} || -z ${MESSAGE}) ]]; then
 	[[ -z ${TYPE} ]] && wE_ "--type not specified" >&2
 	[[ -z ${MESSAGE} ]] && wE_ "--msg not specified" >&2
+	echo "Command line: ${ARGS}" >&2
 	usage_and_exit 1
 fi
 

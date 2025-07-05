@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2154		# referenced but not assigned - from convertJSON.php
 
 # This script has two main purposes:
 #	1. Optionally create a keogram, startrails, and timelapse video for the specified day.
@@ -48,87 +49,101 @@ if [[ ${WEBSITES} != "none" ]]; then
 	"${ALLSKY_SCRIPTS}/postData.sh" --from endOfNight
 fi
 
+# Get all settings we're going to use.
+#shellcheck disable=SC2119
+getAllSettings --var "keogramgenerate keogramupload \
+	startrailsgenerate startrailsupload \
+	timelapsegenerate timelapseupload \
+	daystokeep \
+	daystokeeplocalwebsite uselocalwebsite \
+	daystokeepremotewebsite useremotewebsite \
+	showonmap" || exit 1
+
+
 # Generate keogram from collected images
-if [[ $( settings ".keogramgenerate" ) == "true" ]]; then
+if [[ ${S_keogramgenerate} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Keogram for ${DATE}"
 	#shellcheck disable=SC2086
-	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent --keogram "${DATE}"
+	X="$( "${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent --keogram "${DATE}" 2>&1 )"
 	RET=$?
 	MSG="${ME}: ===== Keogram completed"
 	if [[ ${RET} -eq 0 ]]; then
 		echo -e "${MSG} successfully"
-		if [[ $( settings ".keogramupload" ) == "true" ]] ; then
+		[[ -n ${X} ]] && echo "${X}"
+		if [[ ${S_keogramupload} == "true" ]] ; then
 			"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload --keogram "${DATE}"
 		fi
 	else
-		echo -e "${MSG} with error"
+		echo -e "${MSG} with error:" >&2
+		echo -e "${X}" >&2
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${X}"
 	fi
 fi
 
 # Generate startrails from collected images.
-# Threshold set to 0.1 by default to avoid stacking over-exposed images.
-if [[ $( settings ".startrailsgenerate" ) == "true" ]]; then
+if [[ ${S_startrailsgenerate} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Startrails for ${DATE}"
 	#shellcheck disable=SC2086
-	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent --startrails "${DATE}"
+	X="$( "${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent --startrails "${DATE}" 2>&1 )"
 	RET=$?
 	MSG="${ME}: ===== Startrails completed"
 	if [[ ${RET} -eq 0 ]]; then
 		echo -e "${MSG} successfully"
-		if [[ $( settings ".startrailsupload" ) == "true" ]] ; then
+		[[ -n ${X} ]] && echo "${X}"
+		if [[ ${S_startrailsupload} == "true" ]] ; then
 			"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload --startrails "${DATE}"
 		fi
 	else
-		echo -e "${MSG} with error"
+		echo -e "${MSG} with error:" >&2
+		echo -e "${X}" >&2
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${X}"
 	fi
 fi
 
 # Generate timelapse from collected images.
 # Use generateForDay.sh instead of putting all the commands here so users can easily
 # test the timelapse creation, which sometimes has issues.
-if [[ $( settings ".timelapsegenerate" ) == "true" ]]; then
+if [[ ${S_timelapsegenerate} == "true" ]]; then
 	echo -e "${ME}: ===== Generating Timelapse for ${DATE}"
 	#shellcheck disable=SC2086
-	"${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent --timelapse "${DATE}"
+	X="$( "${ALLSKY_SCRIPTS}/generateForDay.sh" ${NICE_ARG} --silent --timelapse "${DATE}" 2>&1 )"
 	RET=$?
 	MSG="${ME}: ===== Timelapse completed"
 	if [[ ${RET} -eq 0 ]]; then
 		echo -e "${MSG} successfully"
-		if [[ $( settings ".timelapseupload" ) == "true" ]] ; then
+		[[ -n ${X} ]] && echo "${X}"
+		if [[ ${S_timelapseupload} == "true" ]] ; then
 			"${ALLSKY_SCRIPTS}/generateForDay.sh" --upload --timelapse "${DATE}"
 		fi
 	else
-		echo -e "${MSG} with error"
+		echo -e "${MSG} with error:" >&2
+		echo -e "${X}" >&2
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${X}"
 	fi
 fi
 
-DAYS_TO_KEEP="$( settings ".daystokeep" )"
 # Automatically delete old images and videos.
-if [[ ${DAYS_TO_KEEP} -gt 0 ]]; then
-	del=$( date --date="${DAYS_TO_KEEP} days ago" +%Y%m%d )
+if [[ ${S_daystokeep} -gt 0 ]]; then
+	del=$( date --date="${S_daystokeep} days ago" +%Y%m%d )
 	# "20" for years >= 2000.   Format:  YYYYMMDD
 	#                                                   YY  Y    Y   M    M   D      D
-	find "${ALLSKY_IMAGES}/" -maxdepth 1 -type d -name "20[2-9][0-9][01][0-9][0123][0-9]" | \
+	find "${ALLSKY_IMAGES}/" -maxdepth 1 -type d -name "20[2-9][0-9][01][0-9][0123][0-9]" |
 		while read -r i
-
-	do
-		if (( del > $( basename "${i}" ) )); then
-			echo "${ME}: Deleting old directory ${i}"
-			rm -rf "${i}"
-		fi
-	done
+		do
+			if (( del > $( basename "${i}" ) )); then
+				echo "${ME}: Deleting old directory ${i}"
+				rm -rf "${i}"
+			fi
+		done
 fi
 
 # Automatically delete old Website images and videos.
-
-
-LOCAL_WEB_DAYS_TO_KEEP="$( settings ".daystokeeplocalwebsite" )"
-if [[ ${LOCAL_WEB_DAYS_TO_KEEP} -gt 0 && $( settings ".uselocalwebsite" ) == "true" ]]; then
+if [[ ${S_daystokeeplocalwebsite} -gt 0 && ${S_uselocalwebsite} == "true" ]]; then
 	if [[ ! -d ${ALLSKY_WEBSITE} ]]; then
 		echo -e "${ME}: ${YELLOW}WARNING: 'Days to Keep on Pi Website' set but no Local Website found in '${ALLSKY_WEBSITE}!${NC}"
 		echo -e 'Set "Days to Keep on Pi Website" to ""'
 	else
-		del=$( date --date="${LOCAL_WEB_DAYS_TO_KEEP} days ago" +%Y%m%d )
+		del=$( date --date="${S_daystokeeplocalwebsite} days ago" +%Y%m%d )
 		(
 			cd "${ALLSKY_WEBSITE}" || exit 1
 			NUM_DELETED=0
@@ -158,16 +173,14 @@ if [[ ${LOCAL_WEB_DAYS_TO_KEEP} -gt 0 && $( settings ".uselocalwebsite" ) == "tr
 	fi
 fi
 
-REMOTE_WEB_DAYS_TO_KEEP="$( settings ".daystokeepremotewebsite" )"
-if [[ ${REMOTE_WEB_DAYS_TO_KEEP} -gt 0 && $( settings ".useremotewebsite" ) == "true" ]]; then
+if [[ ${S_daystokeepremotewebsite} -gt 0 && ${S_useremotewebsite} == "true" ]]; then
 	# TODO: work on remote Websites.
-	# Possibly do a curl xxxx?keep=${REMOTE_WEB_DAYS_TO_KEEP}
+	# Possibly do a curl xxxx?keep=${S_daystokeepremotewebsite}
 	# and pass something so it knows this is a valid request.
 	:
 fi
 
-SHOW_ON_MAP=$( settings ".showonmap" )
-if [[ ${SHOW_ON_MAP} == "true" ]]; then
+if [[ ${S_showonmap} == "true" ]]; then
 	echo -e "${ME}: ===== Posting camera details to Allsky map."
 	"${ALLSKY_SCRIPTS}/postToMap.sh" --endofnight
 fi

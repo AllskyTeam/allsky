@@ -22,6 +22,63 @@ TITLE="*** Allsky Configuration ***"
 
 ####################################### Functions - one per command
 
+####
+# Display the usage message.
+function usage_and_exit()
+{
+	local COMMANDS_ONLY="false"
+	[[ ${1} == "--commands-only" ]] && COMMANDS_ONLY="true" && shift
+
+	local RET=${1}
+	
+	exec 2>&1
+	echo
+
+	if [[ ${COMMANDS_ONLY} == "false" ]]; then
+		local MSG="Usage: ${ME} [--debug] [--help] [command [arguments ...]]"
+		if [[ ${RET} -ne 0 ]]; then
+			E_ "${MSG}"
+		else
+			W_ "${MSG}"
+		fi
+		echo
+		echo "where:"
+		echo "   --help           Displays this message and exits."
+		echo "   --help command   Displays a help message for the specified command, then exits."
+		echo "   --debug          Displays debugging information."
+		echo "   command          Is a command to execute with optional arguments.  Choices are:"
+	else
+		echo "Valid commands are:"
+	fi
+
+	echo "      show_supported_cameras  --RPi | --ZWO"
+	echo "      show_connected_cameras"
+	echo "      prepare_logs"
+	echo "      config_timelapse"
+	echo "      change_swap"
+	echo "      change_tmp"
+	echo "      samba"
+	echo "      move_images"
+	echo "      bad_images_info"
+	echo "      new_rpi_camera_info [--camera NUM]"
+	echo "      show_start_times [--zero] [angle [latitude [longitude]]]"
+	echo "      compare_paths --website | --server"
+	echo "      get_brightness_info"
+	echo "      check_post_data"
+	echo "      get_filesystems"
+	echo "      encoders"
+	echo "      pix_fmts"
+
+	if [[ ${COMMANDS_ONLY} == "false" ]]; then
+		echo "  If no 'command' is specified you are prompted for one."
+	fi
+	echo
+	echo "Enter:"
+	 W_ "   ${ME}  command  --help"
+	echo "for information on the specified command."
+
+	exit "${RET}"
+}
 
 #####
 # Show all the supported cameras.
@@ -482,48 +539,6 @@ function get_filesystems()
 
 ####################################### Helper functions
 
-####
-# Display the usage message.
-function usage_and_exit()
-{
-	local RET=${1}
-	
-	exec 2>&1
-	echo
-	local MSG="Usage: ${ME} [--debug] [--help] [command [arguments ...]]"
-	if [[ ${RET} -ne 0 ]]; then
-		E_ "${MSG}"
-	else
-		W_ "${MSG}"
-	fi
-	echo -e "\nwhere:"
-	echo -e "  '--help' displays this message and exits."
-	echo -e "  '--help command' displays a help message for the specified command, then exits."
-	echo -e "  '--debug' displays debugging information."
-	echo -e "  'command' is a command to execute with optional arguments.  Choices are:"
-	echo -e "      show_supported_cameras  --RPi | --ZWO"
-	echo -e "      show_connected_cameras"
-	echo -e "      prepare_logs"
-	echo -e "      config_timelapse"
-	echo -e "      change_swap"
-	echo -e "      change_tmp"
-	echo -e "      samba"
-	echo -e "      move_images"
-	echo -e "      bad_images_info"
-	echo -e "      new_rpi_camera_info [--camera NUM]"
-	echo -e "      show_start_times [--zero] [angle [latitude [longitude]]]"
-	echo -e "      compare_paths --website | --server"
-	echo -e "      get_brightness_info"
-	echo -e "      check_post_data"
-	echo -e "      get_filesystems"
-	echo -e "      encoders"
-	echo -e "      pix_fmts"
-	echo -e "  If no 'command' is specified you are prompted for one."
-	echo
-
-	exit "${RET}"
-}
-
 # Check if the required argument(s) were given to this command.
 # If called via the command line it's an error if no arguments
 # were given, so exit since we can't prompt (we may be called by another program).
@@ -557,7 +572,7 @@ function run_command()
 	ARGUMENTS="${@}"
 	if ! type "${COMMAND}" > /dev/null 2>&1 ; then
 		E_ "\n${ME}: Unknown command '${COMMAND}'." >&2
-		return 1
+		usage_and_exit --commands-only 2
 	fi
 
 	if [[ ${DEBUG} == "true" ]]; then
@@ -685,14 +700,16 @@ if [[ ${DO_HELP} == "true" ]]; then
 	fi
 fi
 [[ ${OK} == "false" ]] && usage_and_exit 1
+
 PATH="${PATH}:${ALLSKY_UTILITIES}"
+
 if [[ -z ${CMD} ]]; then
+	# No command given on command line so prompt for one.
+
 	if [[ ${ON_TTY} == "false" ]]; then
 		W_ "${ME} must run from a terminal or have all arguments included on the command line." >&2
-		exit
+		exit 2
 	fi
-
-	# No command given on command line so prompt for one.
 
 	PROMPT="\nSelect a command to run:"
 	CMDS=(); N=1

@@ -782,11 +782,11 @@ function AppCtrl($scope, $timeout, $http, _) {
 			2: "Quiet",
 			3: "Unsettled",
 			4: "Active",
-			5: "Minor_storm",
-			6: "Moderate_storm",
-			7: "Strong_storm",
-			8: "Severe_storm",
-			9: "Extreme_storm",
+			5: "Minor_Storm",
+			6: "Moderate_Storm",
+			7: "Strong_Storm",
+			8: "Severe_Storm",
+			9: "Extreme_Storm",
 			100: "WARNING"
 		};
 		return scale[index];

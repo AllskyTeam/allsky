@@ -117,68 +117,69 @@ class ALLSKYVARIABLES:
     def _get_module_variable_list(self, folder, module='', isExtra=False):
         variables = {}
 
-        for entry in os.listdir(folder):
-            if isExtra:
-                if entry not in ['.', '..']:
-                    file_name = os.path.join(folder, entry)
-                    ext = Path(entry).suffix.lower()
-                    if ext == '.json':
-                        with open(file_name, 'r') as f:
-                            data = json.load(f)
-                        variables.update(data)
-                    if ext == '.txt':
-                        stem = Path(entry).stem
-                        with open(file_name, 'r') as f:
-                            data = {}
-                            for line in f:
-                                line = line.strip()
-                                if not line or '=' not in line:
-                                    continue
-                                key, value = line.split('=', 1)
-                                key = key.strip()
-                                value = value.strip()
-                                out_key = "AS_" + key.upper()
-                                type = 'string'
-                                try:
-                                    value = int(value)
-                                    type = 'number'
-                                except ValueError:
+        if os.path.isdir(folder):
+            for entry in os.listdir(folder):
+                if isExtra:
+                    if entry not in ['.', '..']:
+                        file_name = os.path.join(folder, entry)
+                        ext = Path(entry).suffix.lower()
+                        if ext == '.json':
+                            with open(file_name, 'r') as f:
+                                data = json.load(f)
+                            variables.update(data)
+                        if ext == '.txt':
+                            stem = Path(entry).stem
+                            with open(file_name, 'r') as f:
+                                data = {}
+                                for line in f:
+                                    line = line.strip()
+                                    if not line or '=' not in line:
+                                        continue
+                                    key, value = line.split('=', 1)
+                                    key = key.strip()
+                                    value = value.strip()
+                                    out_key = "AS_" + key.upper()
+                                    type = 'string'
                                     try:
-                                        value = float(value)
+                                        value = int(value)
                                         type = 'number'
                                     except ValueError:
-                                        value = value
-                                        type = 'string'
+                                        try:
+                                            value = float(value)
+                                            type = 'number'
+                                        except ValueError:
+                                            value = value
+                                            type = 'string'
 
-                                data[out_key] = {
-                                    "name": "${" + key + "}",
-                                    "format": "",
-                                    "sample": "",
-                                    "group": "User",
-                                    "description": "Allsky variable " + key,
-                                    "type": type,
-                                    "source": stem,
-                                    "value": value
-                                }
-                        variables.update(data)                        
-            
-            else:
-                if entry.startswith('allsky_') and entry != 'allsky_shared.py' and entry != 'allsky_base.py':
-                    include = True
-                    if module:
-                        include = False
-                        if module == entry:
-                            include = True
-                    if include:
-                        file_name = os.path.join(folder, entry)
-                        meta_data = self._get_meta_data_from_file(file_name)
-                        decoded = json.loads(meta_data)
+                                    data[out_key] = {
+                                        "name": "${" + key + "}",
+                                        "format": "",
+                                        "sample": "",
+                                        "group": "User",
+                                        "description": "Allsky variable " + key,
+                                        "type": type,
+                                        "source": stem,
+                                        "value": value
+                                    }
+                            variables.update(data)                        
+                
+                else:
+                    if entry.startswith('allsky_') and entry != 'allsky_shared.py' and entry != 'allsky_base.py':
+                        include = True
+                        if module:
+                            include = False
+                            if module == entry:
+                                include = True
+                        if include:
+                            file_name = os.path.join(folder, entry)
+                            meta_data = self._get_meta_data_from_file(file_name)
+                            decoded = json.loads(meta_data)
 
-                        if 'extradata' in decoded:
-                            extra_vars = decoded['extradata']['values']
-                            for key, value in extra_vars.items():
-                                extra_vars[key]['source'] = decoded['module']
-                            variables.update(extra_vars)
+                            if 'extradata' in decoded:
+                                extra_vars = decoded['extradata']['values']
+                                for key, value in extra_vars.items():
+                                    extra_vars[key]['source'] = decoded['module']
+                                variables.update(extra_vars)
 
         return variables
 

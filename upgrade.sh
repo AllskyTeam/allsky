@@ -12,25 +12,6 @@ source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
-# High-level steps to upgrade:
-#	Get version of new release (checking if --branch was specified).
-#
-#	If new release == current release, prompt to: continue OR exit
-#
-#	If ${PRIOR_ALLSKY_DIR} exists:
-#		If $(PRIOR_ALLSKY_DIR}-OLDEST exists:
-#			Exit - can't rename "allsky-OLD" and can't rename "allsky"
-#
-#		Rename ${PRIOR_ALLSKY_DIR} to $(PRIOR_ALLSKY_DIR}-OLDEST
-#
-#	Rename ${ALLSKY_HOME} to ${PRIOR_ALLSKY_DIR}
-#		Reset DISPLAY_MSG_LOG="${DISPLAY_MSG_LOG/${ALLSKY_HOME}/${PRIOR_ALLSKY_DIR}}
-#		Reset anything else?
-#
-#	Download new release (with optional branch) from GitHub.
-#
-#	Execute new release's installation script telling it it's an upgrade.
-
 #############  TODO: Changes to install.sh needed:
 #	* Accept "--upgrade" argument which means we're doing an upgrade.
 #		- Don't display "**** Welcome to the installer ****"
@@ -198,7 +179,7 @@ if [[ $? -ne 0 || -z ${NEWEST_VERSION} ]]; then
 	MSG="Unable to determine newest version; cannot continue."
 	if [[ ${BRANCH} != "${GITHUB_MAIN_BRANCH}" ]];
 	then
-		MSG2="Make sure branch '${BRANCH}' is a valid branch."
+		MSG2="Make sure '${BRANCH}' is a valid branch in GitHub."
 	else
 		MSG2=""
 	fi
@@ -235,25 +216,25 @@ display_msg --log progress "Stopping Allsky"
 stop_allsky
 
 display_msg --log progress "Renaming '${ALLSKY_HOME}' to '${PRIOR_ALLSKY_DIR}'."
-echo xxx mv "${ALLSKY_HOME}" "${PRIOR_ALLSKY_DIR}"
+mv "${ALLSKY_HOME}" "${PRIOR_ALLSKY_DIR}"
 
-# Keep using same log file
+# Keep using same log file which is now in the "prior" directory.
 DISPLAY_MSG_LOG="${DISPLAY_MSG_LOG/${ALLSKY_HOME}/${PRIOR_ALLSKY_DIR}}"
 
 cd || exit "${EXIT_ERROR_STOP}"
  
 
-display_msg --logonly info "Running: git clone --depth=1 --recursive --branch '${BRANCH}' '${GITHUB_ROOT}/${GITHUB_ALLSKY_REPO}.git'"
-git clone --depth=1 --recursive --branch "${BRANCH}" "${GITHUB_ROOT}/${GITHUB_ALLSKY_REPO}.git"
-if [[ $? -ne 0 ]]; then
-	display_msg --log error "'git clone' failed."
+R="${GITHUB_ROOT}/${GITHUB_ALLSKY_REPO}.git"
+display_msg --logonly info "Running: git clone --depth=1 --recursive --branch '${BRANCH}' '${R}'"
+if ! ERR="$( git clone --depth=1 --recursive --branch "${BRANCH}" "${R}" 2>&1 )" ; then
+	display_msg --log error "'git clone' failed." " ${ERR}"
 	restore_directories
 	exit 3
 fi
 
-cd ${ALLSKY_HOME} || exit "${EXIT_ERROR_STOP}"
+cd "${ALLSKY_HOME}" || exit "${EXIT_ERROR_STOP}"
 #
-#	--doUpgrade tells it to use prior version without asking and to
-#	not display header, change messages to say "upgrade", not "install", etc.
-
-echo xxx	"./install.sh" ${DEBUG_ARG} --branch "${BRANCH}" --doUpgrade
+# --doUpgrade tells it to use prior version without asking and to not display header,
+# change messages to say "upgrade", not "install", etc.
+# shellcheck disable=SC2086
+echo xxx	./install.sh ${DEBUG_ARG} --branch "${BRANCH}" --doUpgrade

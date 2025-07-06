@@ -106,6 +106,7 @@ function verifyNumber($num) {
 }
 
 // Globals
+define('DATE_TIME_FORMAT', 'Y-m-d H:i:s');
 $image_name = null;
 $showUpdatedMessage = true; $delay=null; $daydelay=null; $daydelay_postMsg=""; $nightdelay=null; $nightdelay_postMsg="";
 $imagesSortOrder = null;
@@ -120,7 +121,7 @@ $useRemoteWebsite = false;
 $hasLocalWebsite = false;
 $hasRemoteWebsite = false;
 $endSetting = "XX_END_XX";
-$saveChangesLabel = "Save changes";
+$saveChangesLabel = "Save changes";		// May be overwritten
 $forceRestart = false;					// Restart even if no changes?
 $hostname = null;
 
@@ -142,6 +143,21 @@ function readOptionsFile() {
 		exit(1);
 	}
 	return($contents);
+}
+
+function update_allsky_status($newStatus) {
+	global $status, $allsky_status;
+
+	$s = array();
+	$s["status"] = $newStatus;
+	$s['timestamp'] = date(DATE_TIME_FORMAT);
+
+	$msg = updateFile(ALLSKY_STATUS, json_encode($s, JSON_PRETTY_PRINT), "Allsky status", true);
+	if ($msg !== "") {
+		$status->addMessage("Failed to update Allsky status: $msg", 'danger');
+	} else {
+		$allsky_status = $newStatus;
+	}
 }
 
 $allsky_status = null;

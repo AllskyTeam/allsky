@@ -251,3 +251,29 @@
   display: flex;
   align-items: center;
 }
+
+.dt-paging {
+    margin-top: 5px !important;
+}
+
+.oe-table-header {
+    margin-bottom: 1em !important;
+}
+
+.dt-column-title {
+    font-size: 1.3em !important;
+}
+
+blockquote {
+  border-left: 4px solid #007BFF;
+  padding-left: 15px;
+  margin: 20px 0;
+  background: none;
+  font-style: italic;
+}
+
+blockquote footer {
+  font-size: 90%;
+  color: #777;
+  margin-top: 10px;
+}

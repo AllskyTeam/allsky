@@ -240,9 +240,6 @@ class MODULEUTIL
 
         $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($flow) . '.json';
         $backupConfigFileName = $configFileName . '-last';
-        # File are created 644 which means the web server can't change them after
-        # they are created.  To get around this, remove backupFileName before copy over it.
-        @unlink($configFileName);
         copy($backupConfigFileName, $configFileName);
         $this->changeOwner($configFileName);
         $this->sendResponse();
@@ -269,7 +266,8 @@ class MODULEUTIL
 
         $result['lat'] = $lat;
         $result['lon'] = $lon;
-        $result['filename'] = IMG_DIR . '/' . $settings_array['filename'];
+        $imageDir = get_variable(ALLSKY_HOME . '/variables.sh', "IMG_DIR=", 'current/tmp');
+        $result['filename'] = $imageDir . '/' . $settings_array['filename'];
 
         exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
         if ($retval == 2) {
@@ -468,6 +466,24 @@ class MODULEUTIL
         return $result;
     }
 
+    private function getModuleFile() {
+        $rawFilename = $_GET['file'] ?? '';
+        $filename = basename($rawFilename);
+
+        $rawModuleame = $_GET['module'] ?? '';
+        $modulename = basename($rawModuleame);
+
+        $filePath = $this->myFiles . '/moduledata/data/' . $modulename . '/' . $filename;
+
+        if (file_exists($filePath)) {
+            $fileContents = file_get_contents($filePath);
+        } else {
+            $fileContents = 'File ' . $filename . ' Not found';
+        }
+
+        $this->sendResponse($fileContents);
+    }
+
     private function getModuleHelp() {
         //TODO: Not sure about this location
         $coreHelpFolder = ALLSKY_SCRIPTS . '/modules/info';
@@ -509,10 +525,13 @@ class MODULEUTIL
 		
         $result = file_put_contents($configFileName, $configData);
         $this->changeOwner($configFileName);
-        $backupFileName = $configFileName . '-last';
-        @unlink($backupFileName);
-        copy($configFileName, $backupFileName);
-        $this->changeOwner($backupFileName);
+        $backupFilename = $configFileName . '-last';
+# TODO: fix these errors:
+#	copy(/home/pi/allsky/config/modules/postprocessing_day.json-last) Failed to open stream: Permission denied
+#	copy(/home/pi/allsky/config/modules/postprocessing_periodic.json-last) Failed to open stream: Permission denied
+# Not sure if the error is with the FILE (it would have to be unreadable) or with config/modules/ directory not being writable by lighttpd.
+        copy($configFileName, $backupFilename);
+        $this->changeOwner($backupFilename);
         if ($result !== false) {
             $newModules = json_decode($configData);
             $this->CheckForDisabledModules($newModules, $oldModules);

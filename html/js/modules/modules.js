@@ -602,6 +602,7 @@ class MODULESEDITOR {
         target = $(target)
         let module = target.data('module')
         let moduleShortName = module.replace('.py', '')
+		let allskyModuleShortName = moduleShortName;
         moduleShortName = moduleShortName.replace('allsky_', '')
         let moduleData = this.#findModuleData(module)
         moduleData = moduleData.data
@@ -1099,23 +1100,58 @@ class MODULESEDITOR {
 						}
 					}
 
+					if (fieldType == 'html') {
+					}
 				}
 
-				if (fieldType == 'graph') {
-					if (this.#settings.haveDatabase) {					
-						fieldHTML = `
-							<div class="form-group" id="${key}-wrapper">
-								<div class="col-xs-11">
-									<div class="${extraClass}">
-										${inputHTML}
+				if (fieldType == 'graph' || fieldType == 'html') {
+					if (fieldType == 'html') {
+						let source = '';
+						let html = '';
+						if (fieldData.source !== undefined) {
+							source = fieldData.source.toLowerCase();
+
+							if (source == 'local') {
+								if (fieldData.html !== undefined) {
+									html = fieldData.html;
+								}
+							}
+							if (source == 'file') {
+								if (fieldData.file !== undefined) {
+									let result = $.ajax({
+										url: 'includes/moduleutil.php?request=ModuleFile',
+										type: 'GET',
+										async: false,
+										data: {
+											file: fieldData.file,
+											module: allskyModuleShortName
+										}
+									});
+									html = result.responseText;
+								} else {
+									html = '<p class="text-danger">Error: No source defined for HTML field</p>';
+								}
+							}							
+						}
+						fieldHTML = html;
+					}
+
+					if (fieldType == 'graph') {
+						if (this.#settings.haveDatabase) {					
+							fieldHTML = `
+								<div class="form-group" id="${key}-wrapper">
+									<div class="col-xs-11">
+										<div class="${extraClass}">
+											${inputHTML}
+										</div>
+										${helpText}
 									</div>
-									${helpText}
+									<div class="col-xs-1">
+										${fieldPostHTML}
+									</div>
 								</div>
-								<div class="col-xs-1">
-									${fieldPostHTML}
-								</div>
-							</div>
-						`
+							`
+						}
 					}
 				} else {
 					fieldHTML = '\

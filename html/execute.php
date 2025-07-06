@@ -94,6 +94,16 @@ switch ($ID) {
 		rm_msg($ID);
 		break;
 
+	case "AM_ALLSKY_CONFIG":
+		if ($ARGS === "") {
+			echo "${eS}ERROR: Argument not given to command ID: '${ID}'.${eE}";
+			exit(1);
+		}
+		$CMD = ALLSKY_SCRIPTS . "/allsky-config";
+		execute($CMD, $ARGS);
+
+		break;
+
 	case "allsky-config":
 		if ($ARGS === "") {
 			echo "${eS}ERROR: Argument not given to command ID: '${ID}'.${eE}";

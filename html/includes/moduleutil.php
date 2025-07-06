@@ -169,44 +169,44 @@ class MODULEUTIL
 
     private function readModuleData($moduleDirectory, $type, $event) {
         $arrFiles = array();
-        $handle = opendir($moduleDirectory);
 
-        if ($handle) {
-            while (($entry = readdir($handle)) !== FALSE) {
-                if (preg_match('/^allsky_/', $entry)) {
-                    if ($entry !== 'allsky_shared.py' && $entry !== 'allsky_base.py') {
-                        $fileName = $moduleDirectory . '/' . $entry;
-                        $metaData = $this->getMetaDataFromFile($fileName);
-                        $decoded = json_decode($metaData, false);		
-						if ($decoded !== Null) {
-							if (in_array($event, $decoded->events) || $event == null) {
-								if (isset($decoded->experimental)) {
-									$experimental = strtolower($decoded->experimental) == "true"? true: false;
-								} else {
-									$experimental = false;
-								}
-								$arrFiles[$entry] = [
-									'module' => $entry,
-									'metadata' => $decoded,
-									'type' => $type
-								];
-								$arrFiles[$entry]['metadata']->experimental = $experimental;
-							}
-						} else {
-							$arrFiles[$entry] = [
-								'module' => $entry,
-								'metadata' => (object)[],
-								'type' => $type
-							];
-							$arrFiles[$entry] = null;
-						}
+        if (is_dir($moduleDirectory)) {
+            $handle = opendir($moduleDirectory);
+            if ($handle) {
+                while (($entry = readdir($handle)) !== FALSE) {
+                    if (preg_match('/^allsky_/', $entry)) {
+                        if ($entry !== 'allsky_shared.py' && $entry !== 'allsky_base.py') {
+                            $fileName = $moduleDirectory . '/' . $entry;
+                            $metaData = $this->getMetaDataFromFile($fileName);
+                            $decoded = json_decode($metaData, false);		
+                            if ($decoded !== Null) {
+                                if (in_array($event, $decoded->events) || $event == null) {
+                                    if (isset($decoded->experimental)) {
+                                        $experimental = strtolower($decoded->experimental) == "true"? true: false;
+                                    } else {
+                                        $experimental = false;
+                                    }
+                                    $arrFiles[$entry] = [
+                                        'module' => $entry,
+                                        'metadata' => $decoded,
+                                        'type' => $type
+                                    ];
+                                    $arrFiles[$entry]['metadata']->experimental = $experimental;
+                                }
+                            } else {
+                                $arrFiles[$entry] = [
+                                    'module' => $entry,
+                                    'metadata' => (object)[],
+                                    'type' => $type
+                                ];
+                                $arrFiles[$entry] = null;
+                            }
+                        }
                     }
                 }
             }
+            closedir($handle);
         }
-
-        closedir($handle);
-
         return $arrFiles;
     }
 

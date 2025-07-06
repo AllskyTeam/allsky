@@ -117,7 +117,7 @@ class I2CUTIL
 	}
 
     public function getDeviceManager() {
-		$command = 'sudo ' . ALLSKY_SCRIPTS . "/devicemanager.py";
+		$command = 'sudo ' . ALLSKY_SCRIPTS . "/run_devicemanager.sh --allsky_home " . ALLSKY_HOME;
 		$result = $this->runShellCommand($command);
         $this->sendResponse($result['message']);	
 	}

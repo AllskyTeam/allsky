@@ -1,16 +1,6 @@
 #!/usr/bin/python3
 
-import os
-import sys
-
-# Ensure the script is running in the correct Python environment
-allsky_home = os.environ['ALLSKY_HOME']
-here = os.path.dirname(os.path.abspath(__file__))
-venv_dir = os.path.join(allsky_home, 'venv')
-venv_python = os.path.join(venv_dir, 'bin', 'python3')
-if sys.executable != venv_python:
-    os.execv(venv_python, [venv_python] + sys.argv)
-    
+import os 
 import json
 import serial
 import serial.tools.list_ports

@@ -86,9 +86,9 @@ check_for_oldest()
 
 	if [[ -d ${OLDEST_DIR} ]]; then
 		local MSG="Directory '${OLDEST_DIR}' already exist."
-		MSG+="\n\nIf you want to upgrade to the newest release, either remove '${OLDEST_DIR}'"
-		MSG+=" or rename it to something else, then re-run this upgrade."
-		whiptail --title "${TITLE}" --msgbox "${MSG}" 25 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+		local MSG2="\n\nIf you want to upgrade to the newest release, either remove '${OLDEST_DIR}'"
+		MSG2+=" or rename it to something else, then re-run this upgrade."
+		whiptail --title "${TITLE}" --msgbox "${MSG}${MSG2}" 25 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 		display_msg --log info "${MSG}"
 		exit 2
 	fi
@@ -224,7 +224,7 @@ cd || exit "${EXIT_ERROR_STOP}"
  
 
 R="${GITHUB_ROOT}/${GITHUB_ALLSKY_REPO}.git"
-display_msg --log info "Running: git clone --depth=1 --recursive --branch '${BRANCH}' '${R}'"
+display_msg --log progress "Running: git clone --depth=1 --recursive --branch '${BRANCH}' '${R}'"
 if ! ERR="$( git clone --depth=1 --recursive --branch "${BRANCH}" "${R}" 2>&1 )" ; then
 	display_msg --log error "'git clone' failed." " ${ERR}"
 	restore_directories

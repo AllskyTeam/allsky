@@ -37,16 +37,15 @@ do_initial_heading()
 	else
 		MSG+=" upgraded to ${NEWEST_VERSION}"
 	fi
-	MSG+="\nand all settings and images maintained."
+	MSG+=" and all settings and images maintained."
 
-	MSG+="\n\n"
 	if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
-		MSG+="'${PRIOR_ALLSKY_DIR}' will be renamed to '${OLDEST_DIR}'.\n"
+		MSG+="\n\n'${PRIOR_ALLSKY_DIR}' will be renamed to '${OLDEST_DIR}'."
 	fi
-	MSG+="'${ALLSKY_HOME}' will be renamed to '${PRIOR_ALLSKY_DIR}'."
-	MSG+="\nThe new release will go in '${ALLSKY_HOME}'."
+	MSG+="\n\n'${ALLSKY_HOME}' will be renamed to '${PRIOR_ALLSKY_DIR}'."
+	MSG+="\n\nThe new release will go in '${ALLSKY_HOME}'."
 
-	MSG+="\n\nContinue?"
+	MSG+="\n\n\nContinue?"
 	if ! whiptail --title "${TITLE}" --yesno "${MSG}" 25 "${WT_WIDTH}" \
 			3>&1 1>&2 2>&3; then
 		display_msg --logonly info "User not ready to continue."
@@ -213,7 +212,7 @@ check_for_current
 check_for_oldest
 
 display_msg --log progress "Stopping Allsky"
-stop_allsky
+stop_Allsky
 
 display_msg --log progress "Renaming '${ALLSKY_HOME}' to '${PRIOR_ALLSKY_DIR}'."
 mv "${ALLSKY_HOME}" "${PRIOR_ALLSKY_DIR}"
@@ -225,7 +224,7 @@ cd || exit "${EXIT_ERROR_STOP}"
  
 
 R="${GITHUB_ROOT}/${GITHUB_ALLSKY_REPO}.git"
-display_msg --logonly info "Running: git clone --depth=1 --recursive --branch '${BRANCH}' '${R}'"
+display_msg --log info "Running: git clone --depth=1 --recursive --branch '${BRANCH}' '${R}'"
 if ! ERR="$( git clone --depth=1 --recursive --branch "${BRANCH}" "${R}" 2>&1 )" ; then
 	display_msg --log error "'git clone' failed." " ${ERR}"
 	restore_directories

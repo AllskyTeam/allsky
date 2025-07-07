@@ -33,7 +33,11 @@ done
 
 GIT_FILE="${GITHUB_RAW_ROOT}/${GITHUB_ALLSKY_REPO}/${BRANCH}/version"
 if ! NEWEST_INFO="$( curl --show-error --silent "${GIT_FILE}" 2>&1 )" ; then
-	echo "${ME}: ERROR: Unable to get newest Allsky version: ${NEWEST_VERSION}." >&2
+	echo "${ME}: ERROR: Unable to get newest Allsky version: ${NEWEST_INFO}." >&2
+	exit 1
+fi
+if [[ -z ${NEWEST_INFO} ]]; then
+	echo "${ME}: ERROR: Empty newest Allsky version for branch '${BRANCH}'." >&2
 	exit 1
 fi
 NEWEST_VERSION="$( echo "${NEWEST_INFO}" | head -1 )"

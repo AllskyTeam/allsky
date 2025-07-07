@@ -33,10 +33,21 @@
         plugin.init = function () {
             addDialogHTML();
             getData();
-            createTables();
-            buildUI();
-            updateUI();
-            setupEvents();
+            if (Object.keys(plugin.settings.installedDevices).length === 0) {
+
+                $(`#${plugin.settings.modalid}`).modal({
+                    keyboard: false,
+                    width: 900
+                });
+
+                $('.have-i2c').addClass('hidden');
+                $('#dont-have-i2c').removeClass('hidden');
+            } else {
+                createTables();
+                buildUI();
+                updateUI();
+                setupEvents();
+            }
         }
 
         var getData = function () {
@@ -259,7 +270,16 @@
                                 <h4 class="modal-title">i2c Selector</h4>
                             </div>
                             <div class="modal-body">
-                                <div class="panel panel-default panel-shadow">
+                                <div class="panel panel-default panel-shadow hidden" id="dont-have-i2c">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title text-danger">i2c Error</h3>
+                                    </div>
+                                    <div class="panel-body">
+                                        <blockquote>i2c is not enabled on your Pi. Please use the raspi-config utility to enable the i2c interface. Please refer to the troubleshooting section of the Allsky documentation for more information.</blockquote>
+                                        <h4>Once i2c is enabled please close and reopen this dialog.</h4>
+                                    </div>
+                                </div>
+                                <div class="panel panel-default panel-shadow have-i2c">
                                     <div class="panel-body">
                                         <form id="as-i2c-bus-select-form" class="form-horizontal hidden">
                                             <label for="bus-select" class="col-sm-2 control-label">Select Bus</label>
@@ -270,7 +290,7 @@
                                         </form>
                                     </div>
                                 </div>
-                                <div class="panel panel-default panel-shadow">                                
+                                <div class="panel panel-default panel-shadow have-i2c">                                
                                     <ul class="nav nav-tabs" role="tablist">
                                         <li role="presentation" class="active"><a href="#mm-i2c-dialog-tab-detected" role="tab" data-toggle="tab">Detected Devices</a></li>
                                         <li role="presentation"><a href="#mm-i2c-dialog-tab-library" aria-controls="profile" role="tab" data-toggle="tab">i2c Library</a></li>
@@ -332,7 +352,7 @@
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-primary pull-left mm-i2c-create-library" >Update Database</button>
                                     <button type="button" class="btn btn-danger" data-dismiss="modal" id="mm-i2c-dialog-cancel">Close</button>
-                                    <button type="submit" class="btn btn-primary" id="mm-i2c-dialog-select">Select</button>
+                                    <button type="submit" class="btn btn-primary have-i2c" id="mm-i2c-dialog-select">Select</button>
                                 </div>
                             </div>
                         </div>

@@ -173,8 +173,7 @@ done
 [[ ${DEBUG} == "true" ]] && echo "Running: ${ME} ${ALL_ARGS}"
 
 
-NEWEST_VERSION="$( "${ALLSKY_UTILITIES}/getNewestAllskyVersion.sh" --branch "${BRANCH}" --version-only 2>&1 )"
-if [[ $? -ne 0 || -z ${NEWEST_VERSION} ]]; then
+if ! NEWEST_VERSION="$( "${ALLSKY_UTILITIES}/getNewestAllskyVersion.sh" --branch "${BRANCH}" --version-only 2>&1 )" ; then
 	MSG="Unable to determine newest version; cannot continue."
 	if [[ ${BRANCH} != "${GITHUB_MAIN_BRANCH}" ]];
 	then
@@ -183,6 +182,7 @@ if [[ $? -ne 0 || -z ${NEWEST_VERSION} ]]; then
 		MSG2=""
 	fi
 	display_msg --log error "${MSG}" "${MSG2}"
+	display_msg --logonly info "${NEWEST_VERSION}"		# is the error message.
 	echo
 	exit 2
 fi
@@ -235,5 +235,5 @@ cd "${ALLSKY_HOME}" || exit "${EXIT_ERROR_STOP}"
 #
 # --doUpgrade tells it to use prior version without asking and to not display header,
 # change messages to say "upgrade", not "install", etc.
-# shellcheck disable=SC2086
+# shellcheck disable=SC2086,SC2291
 echo xxx	./install.sh ${DEBUG_ARG} --branch "${BRANCH}" --doUpgrade

@@ -26,10 +26,6 @@ if [[ ! -d ${ALLSKY_SUPPORT_DIR} ]]; then
 	sudo chmod 775 "${ALLSKY_SUPPORT_DIR}"
 fi
 
-SUPPORT_DATETIME_SHORT="$( date +"%Y%m%d%H%M%S" )"
-SUPPORT_ZIP_NAME="support-XX_GITHUB_NUMBER_XX-${SUPPORT_DATETIME_SHORT}.zip"
-SUPPORT_ZIP_NAME_WITH_REPO="support-XX_REPO_XX-XX_GITHUB_NUMBER_XX-${SUPPORT_DATETIME_SHORT}.zip"
-
 ############################################## functions
 
 function set_dialog_info()
@@ -392,15 +388,11 @@ function generate_support_info()
 	X="${TEMP_DIR}/config/modules"
 	[[ -d ${X} ]] && find "${TEMP_DIR}/config/modules" -type f -exec truncate -s 0 {} +
 
-	[[ ${GITHUB_NUMBER} != "none" ]] && GITHUB_NUMBER="${GITHUB_TYPE}${GITHUB_NUMBER}"
-
-	local ZIP_NAME
-	if [[ ${GITHUB_NUMBER} != "none" && -n ${GITHUB_REPO} ]]; then
-		ZIP_NAME="${SUPPORT_ZIP_NAME_WITH_REPO//XX_GITHUB_NUMBER_XX/${GITHUB_NUMBER}}"
-		ZIP_NAME="${ZIP_NAME//XX_REPO_XX/${GITHUB_REPO}}"
-	else
-		ZIP_NAME="${SUPPORT_ZIP_NAME//XX_GITHUB_NUMBER_XX/${GITHUB_NUMBER}}"
-	fi
+	local ZIP_NAME="support"
+	ZIP_NAME+="-${GITHUB_REPO:-repo}"
+	ZIP_NAME+="-${GITHUB_TYPE:-type}"
+	ZIP_NAME+="-${GITHUB_NUMBER:-none}"
+	ZIP_NAME+="-$( date +"%Y%m%d%H%M%S" ).zip"
 
 	# We're in a subshell so we need to "echo" this to pass it back to our invoker.
 	echo "${DIALOG_COMPLETE_MESSAGE//XX_ZIPNAME_XX/${ZIP_NAME}}"
@@ -456,7 +448,7 @@ function get_github_repo()
 		RESPONSE="$( dialog --clear \
 		--colors \
 		--title "Select Discussion/Issue Repository" \
-		--menu "Choose a Respository:" 10 40 2 \
+		--menu "\nChoose a Respository:" 15 40 2 \
 			1 "Allsky" \
 			2 "Allsky modules" \
 		3>&1 1>&2 2>&3)"
@@ -483,11 +475,9 @@ display_complete_dialog()
 {
 	local STATUS="${1:-Complete}"
 	if [[ ${AUTO_CONFIRM} == "false" ]]; then
-		if ! display_box "--msgbox" " ${STATUS} " "${DIALOG_COMPLETE_MESSAGE}" 2>/dev/null ; then
-			# In case of major failure with display_box(), echo the output.
-			clear
-			echo -e "\n\n${DIALOG_COMPLETE_MESSAGE}\n" >&2
-		fi
+		display_box "--msgbox" " ${STATUS} " "${DIALOG_COMPLETE_MESSAGE}" 2>/dev/null
+		clear
+		echo -e "$( remove_colors "\n${DIALOG_COMPLETE_MESSAGE}\n" )"
 	fi
 }
 

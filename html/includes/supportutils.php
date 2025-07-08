@@ -134,41 +134,40 @@ class SUPPORTUTIL
 
 	private function parseFilename($filename) {
 		// File name format:
-		//		support-SOURCE-PROBLEM_ID-YYYYMMDDHHMMSS.zip
-		//      0       1      2          3
-		// or
-		//		support-PROBLEM_ID-YYYYMMDDHHMMSS.zip
-		//      0       1          3    (2 is "")
-		// Where SOURCE is "AS" or "ASM" and PROBLEM_ID is "none" or [DI]ID
-		// "D" is for Discussion and "I" is for Issue and is needed to
-		// create the GitHub URL.
-		$pattern = '/^support(?:-([a-zA-Z0-9]+))?(?:-([DI]?\d+))?-(\d{14})\.zip$/';
-		if (preg_match($pattern, $filename, $matches)) {
-			$source = $matches[1];
-			$id = $matches[2];
-			if ($id === "none") {
-				$type = "";
-			} else {
-				if ($id === "") {
-					// Assume format # 2 above.
-					$id = $source;		// Probably "none, but don't assume that.
-					$source = "AS";
-				}
-				$type = substr($id, 0, 1);
-				if ($type === "D" || $type === "I") {
-					$id = substr($id, 1);
-				} else {
-					$type = "D";		// old-format filename or an error, so use default
-				}
-			}
-			return [
-				'source'	=> $source,
-				'type'		=> $type,
-				'id'		=> $id,
-				'timestamp' => $matches[3],
-				'ext'	   => 'zip'
-			];
+		//		support-REPO-PROBLEM_TYPE-PROBLEM_ID-YYYYMMDDHHMMSS.zip
+		//      0       1      2            3          4
+		// Where:
+		//	REPO is "repo", "AS", or "ASM".
+		//	PROBLEM_TYPE is "type", "discussion", or "issue"
+		//	PROBLEM_ID is "none" or a numeric GitHub ID.
+		$ok = true;
+		$name = explode("-", $filename);
+		$num = count($name);
+		if ($num !== 5) {
+			$ok = false;
 		} else {
+			$support = $name[0];
+			$repo = $name[1];
+			$type = $name[2];
+			$id = $name[3];
+			$timestamp = $name[4];
+			if ($support !== "support") {
+				$ok = false;
+			} else {
+				$t = explode(".", $timestamp);
+				$timestamp = $t[0];
+				$ext = $t[1];
+// error_log("support=$support, repo=$repo, id=$id, timestamp=$timestamp, ext=$ext");
+				return [
+					'repo'		=> $repo,
+					'type'		=> $type,
+					'id'		=> $id,
+					'timestamp' => $timestamp,
+					'ext'	   => $ext
+				];
+			}
+		}
+		if (! $ok) {
 			error_log("Support log file '$filename' is not a valid file name - ignoring.");
 			return null;
 		}
@@ -184,8 +183,8 @@ class SUPPORTUTIL
 			$this->send500("'$fromFile' does not exist or is not readable.");
 		}
 
-		$source = $_POST['source'];		// user-entered repository name
-		$newId = $_POST['newId'];		// user-entered number
+		$newRepo = $_POST['repo'];			// user-entered repository name
+		$newId  = $_POST['newId'];		// user-entered number
 		$fileParts = $this->parseFilename($logId);
 		if ($fileParts === null) {
 			$this->send500("Bad file name: '$logId'");
@@ -196,12 +195,12 @@ class SUPPORTUTIL
 // BE CAREFUL: if you look in {[issues|discussions} for an item and it's in the other one,
 // GitHub returns HTM code 302 and then returns the page in the other location assuming it exists.
 // Need to treat HTML 404 and 302 as both "not found".
-$newType = "D"; // For now assume Discussion.
+$newType = "discussion"; // For now assume Discussion.
 
 		$timestamp = $fileParts['timestamp'];		// reuse existing value
 		$ext = $fileParts['ext'];
 		$newFile = $this->issueDir . DIRECTORY_SEPARATOR;
-		$newFile .= "support-$source-$newType$newId-$timestamp.$ext";
+		$newFile .= "support-$newRepo-$newType-$newId-$timestamp.$ext";
 		$ret = @rename($fromFile, $newFile);
 		if ($ret === false) {
 			// Assume if failed due to permissions.
@@ -263,7 +262,7 @@ $newType = "D"; // For now assume Discussion.
 			$msg = "scandir({$this->issueDir}) failed.";
 			$data[] = [
 				"filename" => "",
-				"source" => "",
+				"repo" => "",
 				"type" => "",
 				"ID" => "",
 				"sortfield" => "",
@@ -273,7 +272,7 @@ $newType = "D"; // For now assume Discussion.
 			];
 		} else {
 			foreach ($files as $file) {
-				if (strpos($file, '.') === 0) {
+				if (strpos($file, '.') === 0) {		// ignore "." and ".."
 					continue;
 				}
 				$fileParts = $this->parseFilename(($file));
@@ -281,7 +280,7 @@ $newType = "D"; // For now assume Discussion.
 					continue;
 				}
 
-				$source = $fileParts['source'];
+				$repo = $fileParts['repo'];
 				$problemType = $fileParts['type'];
 				$GitHubID = $fileParts['id'];
 				$date = $fileParts['timestamp'];
@@ -298,7 +297,7 @@ $newType = "D"; // For now assume Discussion.
 
 				$data[] = [
 					"filename" => $file,
-					"source" => $source,
+					"repo" => $repo,
 					"type" => $problemType,
 					"ID" => $GitHubID,
 					"sortfield" => $year.$month.$day.$hour.$minute.$second,

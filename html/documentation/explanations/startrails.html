@@ -169,17 +169,24 @@ then create another startrails, change the setting, etc.
 		replacing <code>DATE</code> with the date of a non-working startrails.
 	<li>Using the timestamp of each image,
 		move a few hours of <b>nighttime</b> images to the
-		<span class="fileName">~/allsky/images/test</span> directory.
-		This is easiest if you first open a "File Manager" window on the Pi -
-		you can then select the files with the mouse and
-		drag to the <span class="fileName">test</span> directory.
-		<br>If you aren't logged into the Pi desktop you'll need to use
-		the <code>mv</code> command to move the files.
-		Using the <code>*</code> wildcard in the file names will allow you to move
-		multiple files at a time.
+		<span class="fileName">~/allsky/images/test</span> directory:
+		<ul>
+			<li>If you are running SAMBA (<code>allsky-config  samba</code>) you can view
+				the files from your PC or Mac and then select some files with the mouse and
+				drag to the <span class="fileName">test</span> directory.
+			<li>If you are not running SAMBA and you are logged into the Pi desktop,
+				open a "File Manager" window on the Pi and drag/drop the files.
+			<li>If neither of the above work for you,
+				you'll need to use the <code>mv</code> command to move the files.
+				Using the <code>*</code> wildcard in the file names will allow you to move
+				multiple files at a time.
+				<br>For example: <code>mv 2025071001* ../test</code> to move all the images taken
+				from 1:00 AM to 1:59 AM.
+		</ul>
 	<li>Run <code>generateForDay.sh --startrails  test</code>
 		to create a startrails file in the <span class="fileName">test</span> directory.
 		Look at the image using the <span class="WebUILink">Images</span> page in the WebUI.
+		Also look at the <code>Images used</code> and <code>Not used</code> columns of the output.
 	<li>As needed, adjust <span class="WebUISetting">Brightness Threshold</span>
 		and re-run <code>generateForDay.sh</code>.
 	<li>When done, move all the images from the

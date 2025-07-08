@@ -322,10 +322,6 @@ function generate_support_info()
 			"${LIGHTTPD_ERROR_LOG}" > "${LIGHTTPD_ERROR_LOG_FILE}"
 	fi
 
-	if [[ -s ${ALLSKY_MESSAGES} ]]; then
-		cp "${ALLSKY_MESSAGES}" "${TEMP_DIR}"
-	fi
-
 	PRIOR_WEBSITE_DIR="${PRIOR_ALLSKY_DIR}${ALLSKY_WEBSITE/${ALLSKY_HOME}/}"
 	if [[ -d ${PRIOR_WEBSITE_DIR} ]]; then
 		PRIOR_WEBSITE_CONFIG_FILE="${PRIOR_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
@@ -361,18 +357,18 @@ function generate_support_info()
 
 	local CONF_FILE="/etc/lighttpd/lighttpd.conf"
 	if [[ -f ${CONF_FILE} ]]; then
-		cp "${CONF_FILE}" "${TEMP_DIR}/etc-$( basename "${CONF_FILE}" )"
+		cp "${CONF_FILE}" "${TEMP_DIR}/etc-$( basename "${CONF_FILE}" ).txt"
 	fi
 
 	local INC_FILE="${ALLSKY_WEBUI}/includes/${ALLSKY_DEFINES_INC}"
 	if [[ -f ${INC_FILE} ]]; then
-		cp "${INC_FILE}" "${TEMP_DIR}"
+		cp "${INC_FILE}" "${TEMP_DIR}.txt"
 	fi
 	
 	[[ -d ${ALLSKY_CONFIG} ]] && cp -ar "${ALLSKY_CONFIG}" "${TEMP_DIR}"
 
 	if [[ -d ${ALLSKY_TMP} ]]; then
-		cp -ar "${ALLSKY_CONFIG}" "${TEMP_DIR}"
+		cp -ar "${ALLSKY_TMP}" "${TEMP_DIR}"
 		# The cache files aren't needed
 		rm -fr "${TEMP_DIR}/$( basename "${ALLSKY_CONFIG}" )/__pycache__"
 	fi

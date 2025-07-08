@@ -58,7 +58,7 @@ This will use the settings specified in the
 <span class="subSettingsHeader">Startrails</span> sub-section of the WebUI.
 </p>
 
-<h4>Advanced users: running the <code>startrails</code> program</h4>
+<h4>Advanced users: running the <code>startrails</code> program manually</h4>
 <details><summary></summary>
 <p>
 <code>generateForDay.sh</code> calls the <code>startrails</code> program
@@ -79,11 +79,11 @@ Arguments:
 -h : display this help, then exit
 -v : increase log verbosity
 -S : print image directory statistics without producing image.
-<u>-d &lt;str&gt; : directory from which to read images (required)</u>
-<u>-e &lt;str&gt; : filter images to just this extension (required)</u>
-<u>-o &lt;str&gt; : output image filename</u>
 -s &lt;int&gt;x&lt;int&gt; : restrict processed images to this size
-<u>-b &lt;float&gt; : ranges from 0 (black) to 1 (white).</u>
+<u>-d &lt;str&gt;</u> : directory from which to read images (required)
+<u>-e &lt;str&gt;</u> : filter images to just this extension (required)
+<u>-o &lt;str&gt;</u> : output image filename
+<u>-b &lt;float&gt;</u> : ranges from 0.0 (black) to 1.0 (white).
         A moonless sky may be as low as 0.05 while full moon can be as high as 0.4.
 </pre>
 
@@ -112,15 +112,15 @@ which is a fairly dark image, typical of a moon-less night.
 Any image with an average brightness <strong>greater than</strong>
 the <span class="WebUISetting">Brightness Threshold</span>
 is skipped during startrails generation,
-so <b>daytime images should be skipped</b>.
-You need to experiment with this setting to get the best results,
+so daytime images should be skipped.
+<strong>You need to experiment with this setting to get the best results</strong>,
 as allsky cameras, lenses, and sky conditions impact an image's average brightness,
 and hence what you use for this setting.
 Every time a startrails image is created a summary of brightness values is saved to the
 Allsky log file.
 </p>
 <p>
-If you aren't seeing trailed star in your images and you get a message like
+If you aren't seeing trailed stars in your images and you get a message like
 "<b>No images below threshold 0.100, writing the minimum image only</b>",
 your images are too bright and
 <span class="WebUISetting">Brightness Threshold</span> needs to be reduced.
@@ -133,12 +133,12 @@ Do the following:
 	<li>If there is no data yet a message will appear with a possible reason,
 		otherwise the output will look like:
 <pre>
-Date                   Minimum    Maximum    Mean       Median
---------------------------------------------------------------
-2025-01-17  06:20:45   0.084      0.146      0.103      0.105
-2025-01-18  06:16:18   0.045      0.135      0.102      0.106
---------------------------------------------------------------
-Total average          0.065      0.140      0.103      0.106
+Date                   Minimum   Maximum   Mean      Median    Images used   Not used
+-------------------------------------------------------------------------------------
+2025-01-17  06:20:45   0.084     0.146     0.103     0.105     250           3
+2025-01-18  06:16:18   0.045     0.135     0.102     0.106     247           6
+-------------------------------------------------------------------------------------
+Total average          0.065     0.140     0.103     0.106     497           9
 </pre>
 		<blockquote>
 		Note that the Mean brightness is determined by looking at the <em>whole</em> image,
@@ -169,17 +169,24 @@ then create another startrails, change the setting, etc.
 		replacing <code>DATE</code> with the date of a non-working startrails.
 	<li>Using the timestamp of each image,
 		move a few hours of <b>nighttime</b> images to the
-		<span class="fileName">~/allsky/images/test</span> directory.
-		This is easiest if you first open a "File Manager" window on the Pi -
-		you can then select the files with the mouse and
-		drag to the <span class="fileName">test</span> directory.
-		<br>If you aren't logged into the Pi desktop you'll need to use
-		the <code>mv</code> command to move the files.
-		Using the <code>*</code> wildcard in the file names will allow you to move
-		multiple files at a time.
+		<span class="fileName">~/allsky/images/test</span> directory:
+		<ul>
+			<li>If you are running SAMBA (<code>allsky-config  samba</code>) you can view
+				the files from your PC or Mac and then select some files with the mouse and
+				drag to the <span class="fileName">test</span> directory.
+			<li>If you are not running SAMBA and you are logged into the Pi desktop,
+				open a "File Manager" window on the Pi and drag/drop the files.
+			<li>If neither of the above work for you,
+				you'll need to use the <code>mv</code> command to move the files.
+				Using the <code>*</code> wildcard in the file names will allow you to move
+				multiple files at a time.
+				<br>For example: <code>mv 2025071001* ../test</code> to move all the images taken
+				from 1:00 AM to 1:59 AM.
+		</ul>
 	<li>Run <code>generateForDay.sh --startrails  test</code>
 		to create a startrails file in the <span class="fileName">test</span> directory.
 		Look at the image using the <span class="WebUILink">Images</span> page in the WebUI.
+		Also look at the <code>Images used</code> and <code>Not used</code> columns of the output.
 	<li>As needed, adjust <span class="WebUISetting">Brightness Threshold</span>
 		and re-run <code>generateForDay.sh</code>.
 	<li>When done, move all the images from the
@@ -200,28 +207,35 @@ then create another startrails, change the setting, etc.
 <details><summary></summary>
 <p id="troubleshooting">
 <blockquote>
-It's extremely rare that a startrails image isn't created at all when it's supposed to be.
-It's much more common that an image is created but it has no startrails.
-When that happens,
+It's extremely rare that a startrails image isn't created at all.
+It's much more common that an image <strong>is</strong> created but none of the stars have trails.
+If none of the stars have trails,
 see the <a href="#brightnessthreshold">Startrails settings</a> section above.
 </blockquote>
-
-If a startrails image isn't being created, first make sure the Startrails
-<span class="WebUISetting">Generate</span> setting is enabled.
+<blockquote class="warning">
+The resolution of all images must be identical;
+if not, only images with the same resolution as the FIRST image are used.
 <br>
-If it IS enabled, run:
-<pre>generateForDay.sh  --startrails  DATE</pre>
-and check for errors.
+This can happen if the daytime and nighttime
+<span class="WebUISetting">Binning</span> settings are not the same,
+or any day you change the <span class="WebUISetting">Image Resize</span> and/or
+<span class="WebUISetting">Image Crop</span> settings.
+</blockquote>
 </p>
 <p>
-If a startrails image isn't being <em>uploaded</em>, make sure the
-Startrails <span class="WebUISetting">Upload</span> setting is enabled.
-<br>
-If that IS enabled, run:
-<pre>generateForDay.sh  --upload  --debug  --startrails  DATE</pre>
-and check for errors.
-If needed, run <code>testUpload.sh</code> to see why the upload fails.
-</p>
+<ul>
+	<li>If a startrails image isn't being created, make sure the Startrails
+		<span class="WebUISetting">Generate</span> setting is enabled.
+		If it IS enabled, run:
+		<pre>generateForDay.sh  --startrails  DATE</pre>
+		replacing <code>DATE</code> with a valid date like <code>20250710</code> and check for errors.
+	<li>If a startrails image is created but not <em>uploaded</em>, make sure the
+		Startrails <span class="WebUISetting">Upload</span> setting is enabled.
+		If that IS enabled, run:
+		<pre>generateForDay.sh  --upload  --debug  --startrails  DATE</pre>
+		and check for errors.
+		If needed, run <code>testUpload.sh</code> to see why the upload fails.
+</ul>
 </details>
 
 

@@ -54,6 +54,7 @@ int nchan = 0;
 unsigned long nfiles = 0;
 int s_len = 0;	// length in characters of nfiles, e.g. if nfiles == "1000", s_len = 4.
 const char *ME = "";
+int numImagesUsed = 0;
 
 // Read a single file and return true on success and false on error.
 // On success, set "mat".
@@ -199,6 +200,7 @@ void startrail_worker(
 		stats_ptr->col(f) = image_mean;
 
 		if (cf->startrails_enabled && image_mean <= cf->brightness_limit) {
+			numImagesUsed++;		// Keep track of the number of images used
 			if (thread_accumulator.empty()) {
 				imagesrc.copyTo(thread_accumulator);
 			} else {
@@ -478,7 +480,9 @@ int main(int argc, char* argv[]) {
 	ds_median = vec[vec.size() / 2];
 
 	std::cout << ME << ": Minimum: " << ds_min << "   maximum: " << ds_max
-			<< "   mean: " << ds_mean << "   median: " << ds_median << std::endl;
+			<< "   mean: " << ds_mean << "   median: " << ds_median
+			<< "   numImagesUsed: " << numImagesUsed << "   numImagesNotUsed: " << (vec.size() - numImagesUsed)
+			<< std::endl;
 
 	// If we still don't have an image (no images below threshold), copy the
 	// minimum mean image so we see why

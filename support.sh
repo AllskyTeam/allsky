@@ -429,9 +429,9 @@ function get_github_number()
 			if [[ ${GITHUB_NUMBER_TEMP} =~ ^[+-]?[0-9]+$ ]]; then
 				GITHUB_NUMBER="${GITHUB_NUMBER_TEMP}"
 # TODO: look in GitHub's GITHUB_REPO for a Discussion or Issue with this number
-# If found, set GITHUB_TYPE to "D" or "I".
+# If found, set GITHUB_TYPE to "discussion" or "issue".
 # Output error message and try again if not found.
-GITHUB_TYPE="D"		# Assume this for now.
+GITHUB_TYPE="discussion"		# Assume this for now.
 				break
 			else
 				display_box "--msgbox" "${DIALOG_TITLE}" "${GITHUB_ERROR}"

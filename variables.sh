@@ -197,6 +197,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	# Holds all the Allsky documentation.
 	ALLSKY_DOCUMENTATION="${ALLSKY_WEBUI}/documentation"
 
+	# Holds the version of the Pi.
+	PI_VERSION_FILE="${ALLSKY_CONFIG}/piversion.txt"
+
 	# When the Pi was last rebooted.  If the file exists a reboot is needed.
 	# Put in ALLSKY_TMP so it'll be removed upon reboot.
 	ALLSKY_REBOOT_NEEDED="${ALLSKY_TMP}/reboot_needed.txt"

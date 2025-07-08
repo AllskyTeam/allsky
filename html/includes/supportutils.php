@@ -135,7 +135,7 @@ class SUPPORTUTIL
 	private function parseFilename($filename) {
 		// File name format:
 		//		support-REPO-PROBLEM_TYPE-PROBLEM_ID-YYYYMMDDHHMMSS.zip
-		//      0       1      2            3          4
+		//      0       1    2            3          4
 		// Where:
 		//	REPO is "repo", "AS", or "ASM".
 		//	PROBLEM_TYPE is "type", "discussion", or "issue"

@@ -83,18 +83,23 @@ class ALLSKY {
 
 	#setupTheme() {
 		if (!localStorage.getItem("theme")) {
-				localStorage.setItem("theme", "light")
+			localStorage.setItem("theme", "light")
 		}
 
-		$('body').attr('class', localStorage.getItem('theme'));
+		let theme = localStorage.getItem('theme');
+		if (theme == "dark") {
+			$('#theme-toggle').prop('checked', true);
+		}
 
-		$('#as-switch-theme').on('click', (e) => {
+		$('body').attr('data-bs-theme', theme);
+
+		$('#theme-toggle').on('change', (e) => {
 			if (localStorage.getItem('theme') === 'light') {
 				localStorage.setItem('theme', 'dark');
 			} else {
 				localStorage.setItem('theme', 'light');
 			}
-			$('body').attr('class', localStorage.getItem('theme'));
+			$('body').attr('data-bs-theme', localStorage.getItem('theme'));
 		});
 
 	};
@@ -203,8 +208,6 @@ class ALLSKY {
 		this.#initTimers('all');
 		// initialize timers that apply to this page only
 		this.#initTimers(this.#allskyPage);
-
-		includeHTML();
 	}
 
 }

@@ -182,16 +182,16 @@ function output_allsky_status() {
 		$allsky_status_timestamp = str_replace("<b>", "", $allsky_status_timestamp);
 		$allsky_status_timestamp = str_replace("</b>","", $allsky_status_timestamp);
 		$title = " title='$allsky_status_timestamp'";
-		$class = "alert-danger";
+		$class = "text-danger";
 	} else {
 		$title = "title='Since $allsky_status_timestamp'";
 		if ($allsky_status == "Running") {
-			$class = "alert-success";
+			$class = "text-success";
 		} else {
-			$class = "alert-warning";
+			$class = "text-warning";
 		}
 	}
-	return("<span class='nowrap $class' $title>Status: $allsky_status</span><br>");
+	return("<span class='nowrap $class' $title>Status: $allsky_status</span>");
 }
 
 function initialize_variables($website_only=false) {
@@ -555,7 +555,13 @@ function parse_ifconfig($input, &$strHWAddress, &$strIPAddress, &$strNetMask, &$
 
 function handle_interface_POST_and_status($interface, $input, &$myStatus) {
 	$interface_up = false;
-	if( isset($_POST['turn_down']) ) {
+	
+	$interfaceToModify = "";
+	if( isset($_POST['interface']) ) {
+		$interfaceToModify = $_POST['interface'];
+	}
+
+	if( isset($_POST['turn_down']) && ($interface == $interfaceToModify)) {
 		// We should only get here if the interface is up,
 		// but just in case, check if it's already down.
 		// If the interface is down it's also not running.
@@ -578,7 +584,7 @@ function handle_interface_POST_and_status($interface, $input, &$myStatus) {
 			}
 		}
 
-	} elseif( isset($_POST['turn_up']) ) {
+	} elseif( isset($_POST['turn_up']) && ($interface == $interfaceToModify) ) {
 		// We should only get here if the interface is down,
 		// but just in case, check if it's already up.
 		if (is_interface_up(get_interface_status("ifconfig $interface"))) {
@@ -1234,7 +1240,7 @@ function getCPUTemp()
 	} elseif ($temperature < 10) {
 		$temperature_status = "warning";
 	} else {
-		$temperature_status = "";
+		$temperature_status = "success";
 	}
 	$display_temperature = "";
 	if ($temptype == "C" || $temptype == "B") {
@@ -1404,5 +1410,310 @@ function getHTTPResponseCodeString($responseCode)
         $result = "HTTP/1.1 500 Internal Server Error";
     }
 	return $result;
+}
+
+function getPageTitleHtml($page) {
+
+	$pageInfo = getPageInfo($page);
+	if (is_array($pageInfo)) {
+		return '<i class="' . $pageInfo["icon"] . ' me-2"></i> ' . $pageInfo["title"];
+	} else {
+		return $page;
+	}
+};
+
+function getRoutes($page=null) {
+
+	#define('DHCP_ENABLED', false);
+	#define('APD_ENABLED', false);
+	#define('RASPI_OPENVPN_ENABLED', false);
+	#define('RASPI_TORPROXY_ENABLED', false);
+
+	$routes = array(
+		"live_view" => array(
+			"title" => "Live View",
+			"title_color" => "text-primary-emphasis",
+			"icon" => "fa fa-code fa-eye",
+			"include" => "liveview.php",
+			"inmenu" => true
+		),
+		"list_days" => array(
+			"title" => "Images",
+			"title_color" => "text-success",
+			"icon" => "fa fa-image fa-fw",
+			"include" => "days.php",
+			"inmenu" => true
+		),
+		"list_images" => array(
+			"title" => "View Images",
+			"icon" => "fa fa-image fa-fw",			
+			"include" => "days.php",
+			"inmenu" => false
+		),
+		"list_timelapse" => array(
+			"title" => "View Timelapse",
+			"icon" => "fa fa-film fa-lg fa-fw",			
+			"include" => "days.php",
+			"inmenu" => false
+		),
+		"list_keogram" => array(
+			"title" => "View Keograms",
+			"icon" => "fa fa-barcode fa-lg fa-fw",			
+			"include" => "days.php",
+			"inmenu" => false
+		),
+		"list_startrail" => array(
+			"title" => "View Startrails",
+			"icon" => "fa fa-star fa-lg fa-fw",			
+			"include" => "days.php",
+			"inmenu" => false
+		),
+		"configuration" => array(
+			"title" => "Settings",
+			"title_color" => "text-success",
+			"icon" => "fa fa-camera fa-fw",
+			"include" => "allskySettings.php",			
+			"inmenu" => true
+		),
+		"editor" => array(
+			"title" => "Editor",
+			"title_color" => "text-success",
+			"icon" => "fa fa-code fa-fw",
+			"inmenu" => true
+		),
+		"overlay" => array(
+			"title" => "Overlay Editor",
+			"title_color" => "text-success",
+			"icon" => "fa fa-edit fa-fw",
+			"inmenu" => true
+		),
+		"module" => array(
+			"title" => "Module Manager",
+			"title_color" => "text-success",
+			"icon" => "fa fa-bars fa-fw",
+			"inmenu" => true
+		),
+		"charts"=> array(
+			"title" => "Charts",
+			"title_color" => "text-success",
+			"icon" => "fa-solid fa-chart-line",
+			"inmenu" => true
+		),
+		"LAN_info" => array(
+			"title" => "LAN Information",
+			"title_color" => "text-primary",
+			"icon" => "fa fa-network-wired fa-fw",
+			"include" => "dashboard_LAN.php",
+			"inmenu" => true
+		),		
+		"WLAN_info" => array(
+			"title" => 	"WLAN Information",
+			"title_color" => "text-success",
+			"icon" => "fa fa-tachometer-alt fa-fw",
+			"include" => "dashboard_WLAN.php",
+			"inmenu" => true
+		),
+		"wifi" => array(
+			"title" => "WiFi Configuration",
+			"title_color" => "text-success",
+			"icon" => "fa fa-wifi fa-fw",
+			"inmenu" => true			
+		),
+		"dhcp_conf" => array(
+			"title" => "DHCP Configuration",
+			"title_color" => "text-success",
+			"icon" => "fa fa-exchange fa-fw",
+			"inmenu" => true
+		),
+		"hostapd_conf" => array(
+			"title" => "HostAPD Configuration",
+			"title_color" => "text-success",
+			"icon" => "fa fa-dot-circle fa-fw",
+			"inmenu" => true
+		),
+		"openvpn_conf" => array(
+			"title" => "OpenVPN Configuration",
+			"title_color" => "text-success",
+			"icon" => "fa fa-lock fa-fw",
+			"inmenu" => true			
+		),
+		"torproxy_conf" => array(
+			"title" => "Tor Proxy Configuration",
+			"title_color" => "text-success",
+			"icon" => "fa fa-eye-slash fa-fw",
+			"inmenu" => true
+		),
+		"auth_conf" => array(
+			"title" => "Change Password",
+			"title_color" => "text-success",
+			"icon" => "fa fa-lock fa-fw",
+			"inmenu" => true			
+		),
+		"system" => array(
+			"title" => "System",
+			"title_color" => "text-success",
+			"icon" => "fa fa-cube fa-fw",
+			"include" => "system.php",			
+			"inmenu" => true
+		),
+		"documentation" => array(
+			"title" => "Documentation",
+			"title_color" => "text-success",
+			"icon" => "fa fa-book fa-fw",
+			"inmenu" => true
+		),
+		"support" => array(
+			"title" => "Support Information",
+			"title_color" => "text-success",
+			"icon" => "fa fa-question fa-fw",
+			"include" => "support.php",			
+			"inmenu" => true
+		)
+	);
+
+	if (!DHCP_ENABLED) {
+		unset($routes["dhcp_conf"]);
+	}
+	if (!APD_ENABLED) {
+		unset($routes["hostapd_conf"]);
+	}
+	if (!RASPI_OPENVPN_ENABLED) {
+		unset($routes["openvpn_conf"]);
+	}
+	if (!RASPI_TORPROXY_ENABLED) {
+		unset($routes["torproxy_conf"]);
+	}
+
+	if ($page == null) {
+		return $routes;
+	}
+	return isset($routes[$page]) ? $routes[$page] : $page;}
+
+function includePage($page) {
+	switch ($page) {
+		case "WLAN_info":
+			include_once('includes/dashboard_WLAN.php');
+			DisplayDashboard_WLAN();
+			break;
+		case "LAN_info":
+			include_once('includes/dashboard_LAN.php');
+			DisplayDashboard_LAN();
+			break;
+		case "configuration":
+			include_once('includes/allskySettings.php');
+			DisplayAllskyConfig();
+			break;
+		case "wifi":
+			include_once('includes/configureWiFi.php');
+			DisplayWPAConfig();
+			break;
+		case "dhcp_conf":
+			include_once('includes/dhcp.php');
+			DisplayDHCPConfig();
+			break;
+		case "hostapd_conf":
+			include_once('includes/hostapd.php');
+			DisplayHostAPDConfig();
+			break;
+		case "openvpn_conf":
+			include_once('includes/torAndVPN.php');
+			DisplayTorProxyConfig();
+			DisplayOpenVPNConfig();
+			break;
+		case "torproxy_conf":
+			include_once('includes/torAndVPN.php');
+			DisplayTorProxyConfig();
+			break;
+		case "save_hostapd_conf":
+			SaveTORAndVPNConfig();
+			break;
+		case "auth_conf":
+			include_once('includes/admin.php');
+			DisplayAuthConfig($config['admin_user'], $config['admin_pass']);
+			break;
+		case "system":
+			include_once('includes/system.php');
+			DisplaySystem();
+			break;
+		case "list_days":
+			include_once('includes/days.php');
+			ListDays();
+			break;
+		case "list_images":
+			include_once('includes/images.php');
+			ListImages();
+			break;
+		case "list_videos":
+			// directory, file name prefix, formal name, type of file
+			ListFileType("", "allsky", "Timelapse", "video");
+			break;
+		case "list_keograms":
+			// directory, file name prefix, formal name, type of file
+			ListFileType("keogram/", "keogram", "Keogram", "picture");
+			break;
+		case "list_startrails":
+			// directory, file name prefix, formal name, type of file
+			ListFileType("startrails/", "startrails", "Startrails", "picture");
+			break;
+		case "editor":
+			include_once('includes/editor.php');
+			DisplayEditor();
+			break;
+		case "overlay":
+			include_once('includes/overlay.php');
+			DisplayOverlay($image_name);
+			break;
+		case "module":
+			include_once('includes/module.php');
+			DisplayModule();
+			break;
+		case "support":
+			include_once('includes/support.php');
+			break;
+		case "charts":
+			include_once('includes/charts.php');
+			DisplayCharts();
+			break;
+			
+		case "live_view":
+		default:
+			include_once('includes/liveview.php');
+			DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg, $darkframe);
+	}	
+}
+
+function delete_directory($directory_name) {
+	global $page;
+
+	// First make sure this is a valid directory.
+	if (! is_valid_directory($directory_name)) {
+		return "Invalid directory name.";
+	}
+
+	// If there is any output it's from an error message.
+	$output = null;
+	$retval = null;
+	exec("sudo rm -r '$directory_name' 2>&1", $output, $retval);
+	if ($output == null) {
+		if ($retval != 0)
+			$output = "Unknown error, retval=$retval.";
+		else
+			$output = "";
+	} else {
+		$output = $output[0];	// exec() return output as an array
+	}
+	return $output;
+}
+
+function vdd($data) {
+	echo "<pre>";
+	var_dump($data);
+	echo "</pre>";
+	die();
+}
+
+function redirect($url) {
+	header("Location: $url");
+	exit;
 }
 ?>

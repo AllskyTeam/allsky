@@ -1,0 +1,81 @@
+{{ messages|raw }}
+<form action="?page=list_days" method="POST" onsubmit="return confirm('Are you sure you want to delete ALL images for that day?');">
+	<div class="card shadow">
+		<div class="card-header">
+			<div class="row">
+				<div class="col-2 border-bottom">Day</div>
+				<div class="col-2 border-bottom">Images</div>
+				<div class="col-2 border-bottom">Timelapse</div>
+				<div class="col-2 border-bottom">Keogram</div>
+				<div class="col-2 border-bottom">Startrails</div>
+				<div class="col-2 border-bottom"></div>
+			</div>
+			<div class="row mt-1">
+				<div class="col-2">All</div>
+				<div class="col-2">-</div>
+				<div class="col-2">
+					<a href="{{ nocache_url('index.php?page=list_timelapse&all=true&day=' ~ day) }}" title="All Timelapses">				
+						<i class="fa fa-film fa-lg fa-fw"></i>
+					</a>
+				</div>
+				<div class="col-2">
+					<a href="{{ nocache_url('index.php?page=list_keogram&all=true&day=' ~ day) }}" title="All Keograms">
+						<i class="fa fa-barcode fa-lg fa-fw"></i>
+					</a>
+				</div>
+				<div class="col-2">
+					<a href="{{ nocache_url('index.php?page=list_startrail&all=true&day=' ~ day) }}" title="All Startrails">
+						<i class="fa fa-star fa-lg fa-fw"></i>
+					</a>
+				</div>
+				<div class="col-2"></div>
+			</div>
+		</div>
+		<div class="card-body">
+			{% for day, info in days %}
+
+				<div class="row mb-2">
+					<div class="col-2">{{ day | format_date }}</div>
+					<div class="col-2">
+						<a href="{{ nocache_url('index.php?page=list_images&day=' ~ day) }}" title="Images">
+							<i class="fa fa-image fa-lg fa-fw"></i>
+						</a>
+					</div>
+					<div class="col-2">
+							{% if info.haveTimelapse %}
+								<a href="{{ nocache_url('index.php?page=list_timelapse&day=' ~ day) }}" title="Images">
+									<i class="fa fa-film fa-lg fa-fw"></i>
+								</a>
+							{% else %}
+								<span class="text-secondary">None</span>
+							{% endif %}
+					</div>
+					<div class="col-2">
+						{% if info.haveKeogram %}
+							<a href="{{ nocache_url('index.php?page=list_keogram&day=' ~ day) }}" title="Images">
+								<i class="fa fa-barcode fa-lg fa-fw"></i>
+							</a>
+						{% else %}
+							<span class="text-secondary">None</span>
+						{% endif %}
+					</div>
+					<div class="col-2">
+						{% if info.haveStarTrails %}
+							<a href="{{ nocache_url('index.php?page=list_startrail&day=' ~ day) }}" title="Images">
+								<i class="fa fa-star fa-lg fa-fw"></i>
+							</a>
+						{% else %}
+							<span class="text-secondary">None</span>
+						{% endif %}
+					</div>
+					<div class="col-2">
+						<button type="submit" name="delete_directory" class="btn btn-sm btn-danger" value="{{ day }}">
+							<i class='fa fa-trash'></i>
+							Delete
+						</button>
+					</div>
+				</div>
+			{% endfor %}
+		</div>
+	</div>
+</form>

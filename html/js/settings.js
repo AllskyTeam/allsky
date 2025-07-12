@@ -8,6 +8,27 @@ class ALLSKYSETTINGSCONTROLLER {
 	#hideIcon = '<i class="fa fa-chevron-up fa-fw"></i>';
 
     constructor() {
+
+    const $btn = $('#toggleAllBtn');
+    $btn.on('click', function () {
+      const $all = $('.collapse');
+      const anyClosed = $all.filter(':not(.show)').length > 0;
+
+      $all.collapse(anyClosed ? 'show' : 'hide');     // open if any closed, else close
+      $(this).html(anyClosed
+          ? '<i class="fas fa-compress-alt me-1"></i> Close&nbsp;All'
+          : '<i class="fas fa-expand-arrows-alt me-1"></i> Open&nbsp;All');
+    });
+
+  $('[data-bs-toggle="collapse"]').each(function () {
+    const $header = $(this),
+          $icon   = $header.find('.rotate'),
+          target  = $header.data('bsTarget');
+    $(target)
+      .on('show.bs.collapse', () => $icon.addClass('open'))
+      .on('hide.bs.collapse', () => $icon.removeClass('open'));
+  });
+
         this.#readState();
     }
     

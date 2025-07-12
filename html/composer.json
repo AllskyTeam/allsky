@@ -1,0 +1,19 @@
+{
+    "name": "pi/allsky",
+    "description": "Allsky Camera",
+    "type": "project",
+    "require": {
+        "twig/twig": "^3.21"
+    },
+    "autoload": {
+        "psr-4": {
+            "Pi\\Allsky\\": "/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Alex",
+            "email": "alex.greenland@gmail.com"
+        }
+    ]
+}

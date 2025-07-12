@@ -1,0 +1,57 @@
+
+{% if videos|length == 1 %}
+    {% for video in videos %}
+        <div class="row g-2">
+            <div class="card shadow mb-3">
+                <div class="card-header"><i class="fa-solid fa-circle-info me-2"></i> {{ video.name }} {{ video.width }}x{{ video.height }} ({{ video.duration|number_format(0) }} seconds)</div>
+                <div class="card-body">
+                    <video controls width="100%" preload="metadata">
+                        <source src="{{ video.full }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video> 
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+
+    <div id="gallery-videojs" class="row g-2">
+        {% for video in videos %}
+            <div class="col-6 col-sm-4 col-lg-3">
+                <div class="card shadow mb-3">
+                    <div class="card-header bg-primary"><i class="fa-solid fa-circle-info me-2"></i> {{ video.day|format_date }}</div>
+                    <div class="card-body bg-secondary-subtle text-center">
+    
+                        <a
+                            data-lg-size="{{ video.width }}-{{ video.height }}"
+                            data-video='{"source": [{"src":"{{ video.full }}", "type":"video/mp4"}], "tracks": [{"src": "{/videos/title.txt", "kind":"captions", "srclang": "en", "label": "English", "default": "true"}], "attributes": {"preload": false, "playsinline": true, "controls": true, "autoplay": true}}'
+                            data-poster=""
+                            data-sub-html="<h4></h4>"
+                        >
+                            <i class="fa-solid fa-circle-play fa-5x"></i>
+                        </a>
+                    </div>
+                    <div class="card-footer text-muted">{{ video.duration|number_format(0) }} secs</div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+        <link href="https://cdn.jsdelivr.net/npm/lightgallery/css/lightgallery-bundle.min.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/lightgallery/lightgallery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/lightgallery/plugins/zoom/lg-zoom.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/lightgallery/plugins/thumbnail/lg-thumbnail.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/lightgallery/plugins/video/lg-video.min.js"></script>
+
+        <script>
+            lightGallery(document.getElementById('gallery-videojs'), {
+                selector: 'a',
+                plugins: [lgZoom, lgThumbnail, lgVideo],
+                videojs: true,
+                videojsOptions: {
+                    muted: true,
+                }
+            });
+        </script>
+
+
+{% endif %}

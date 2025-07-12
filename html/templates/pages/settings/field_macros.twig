@@ -1,0 +1,104 @@
+{# ==================================================================
+   Twig macros for rendering settings fields
+   - Supports various field types (text, integer, float, percent, select,
+     boolean switch, color, widetext, fallback)
+   - Numeric float: step is based on decimal precision of default value
+   - Layout helper macro `input` renders a label, control, and description
+     using Bootstrap 5 grid (col-2 | col-3 | col-7).
+================================================================== #}
+
+{% macro render_control(field, id, value, readonly) %}
+
+	{% set readonlyStr = "" %}
+  {% if readonly %}
+	  {% set readonlyStr = "readonly disabled" %}  
+  {% endif %}
+
+	{# 1. SELECT (text/integer) ------------------------------------- #}
+	{% if field.type in ['select_text','select_integer'] %}
+		<select class="form-select w-auto" style="max-width: 120px;" id="{{ id }}" name="{{ id }}">
+			{% for opt in field.options %}
+				<option value="{{ opt.value }}" {{ opt.value == value ? 'selected' }} {{ readonlyStr }}>{{ opt.label is defined ? opt.label : opt.value }}</option>
+			{% endfor %}
+		</select>
+
+		{# 2. BOOLEAN (switch) ----------------------------------------- #}
+	{% elseif field.type == 'boolean' %}
+		<div class="form-check form-switch mb-0">
+			<input class="form-check-input" type="checkbox" role="switch" {{ readonlyStr }} style="transform: scale(1.3); cursor: pointer;" id="{{ id }}" name="{{ id }}" {{ value in ['1',1,true] ? 'checked' }}>
+		</div>
+
+		{# 3. NUMERIC (integer / float / percent) ---------------------- #}
+	{% elseif field.type in ['integer','float','percent'] %}
+		{# --- derive step value --- #}
+		{% if field.type == 'float' %}
+			{% set defaultStr = value is not empty ? value ~ '' : '0' %}
+			{% if '.' in defaultStr %}
+				{% set fracPart = (defaultStr|split('.',2))[1]
+                           |replace({'000':'','00':'','0':''}) %}
+				{% set decimals = fracPart|length %}
+			{% else %}
+				{% set decimals = 0 %}
+			{% endif %}
+			{% set stepVal = decimals > 0 ? '0.' ~ ('0' * (decimals-1)) ~ '1' : '1' %}
+		{% elseif field.type == 'percent' %}
+			{% set stepVal = 'any' %}
+		{% else %}
+			{% set stepVal = '1' %}
+		{% endif %}
+
+		<input
+		type="text" id="{{ id }}" name="{{ id }}" class="form-control w-auto" {{ readonlyStr }} style="max-width: 120px;" step="{{ stepVal }}" {% if field.minimum is defined %} min="{{ field.minimum }}" {% endif %} {% if field.maximum is defined and field.maximum != 'none' %} max="{{ field.maximum }}" {% endif %} value="{{ value }}">
+
+		{# 4. COLOR ----------------------------------------------------- #}
+	{% elseif field.type == 'color' %}
+		<input
+		type="color" id="{{ id }}" name="{{ id }}" class="form-control-color" {{ readonlyStr }} style="height:2.4rem;width:3rem;padding:0;border:1px solid #ccc;border-radius:0.25rem;" value="{{ value }}">
+
+		{# 5. WIDETEXT (single-line full width) ------------------------ #}
+	{% elseif field.type == 'widetext' %}
+		<input
+		type="text" id="{{ id }}" {{ readonlyStr }} name="{{ id }}" class="form-control" value="{{ value }}">
+
+		{# 6. DEFAULT TEXT --------------------------------------------- #}
+	{% else %}
+		<input type="text" id="{{ id }}" {{ readonlyStr }} name="{{ id }}" class="form-control w-auto" style="max-width: 200px;" value="{{ value }}">
+	{% endif %}
+{% endmacro %}
+
+
+{# ----------------------------------------------------------------
+   input macro: renders a full field row with label, control, desc
+----------------------------------------------------------------- #}
+{% macro input(field, readonly) %}
+	{% set id        = field.name %}
+	{% set value     = field.value ?? '' %}
+	{% set labelText = field.label ?? id %}
+	{% set desc      = field.description ?? '' %}
+	{% set hasDesc   = desc|length > 0 %}
+	{% set isWide    = field.type == 'widetext' %}
+
+	<div class="row g-2 align-items-start">
+		<div class="col-12 col-md-2 fw-bold">
+			<label for="{{ id }}" class="mb-0">{{ labelText }}</label>
+		</div>
+
+		{% if isWide %}
+			<div class="col-12 col-md-10">
+				{{ _self.render_control(field,id,value, readonly) }}
+				{% if hasDesc %}
+					<div class="mt-1 text-muted">{{ desc|raw }}</div>
+				{% endif %}
+			</div>
+		{% else %}
+			<div class="col-12 col-md-3">
+				{{ _self.render_control(field,id,value, readonly) }}
+			</div>
+			<div class="col-12 col-md-7">
+				{% if hasDesc %}
+					<span class="text-muted">{{ desc|raw }}</span>
+				{% endif %}
+			</div>
+		{% endif %}
+	</div>
+{% endmacro %}

@@ -1,0 +1,105 @@
+{% import 'pages/settings/field_macros.twig' as ui %}
+
+<style>
+	.rotate {
+		transition: transform 0.2s
+	}
+	.rotate.open {
+		transform: rotate(90deg)
+	}
+</style>
+
+
+<form method="post" id="settingsForm" class="container my-4">
+
+    <nav class="navbar navbar-light bg-body shadow-sm sticky-top mb-3 py-2">
+        <div class="container-fluid">
+
+            <span class="navbar-brand fw-semibold">Settings</span>
+
+            <div
+                class="ms-auto d-flex gap-2">
+
+                {# Save — standard POST submit #}
+                <button type="submit" id="save_settings" name="save_settings" class="btn btn-success">
+                    <i class="fas fa-save me-1"></i>
+                    Save
+                </button>
+
+                {# Reset — native form reset #}
+                <button type="submit" id="reset_settings" name="reset_settings" class="btn btn-secondary">
+                    <i class="fas fa-undo me-1"></i>
+                    Reset
+                </button>
+
+                {# Toggle all — JS handles open / close #}
+                <button type="button" id="toggleAllBtn" class="btn btn-outline-primary">
+                    <i class="fas fa-expand-arrows-alt me-1"></i>
+                    Open&nbsp;All
+                </button>
+
+            </div>
+        </div>
+    </nav>
+
+    {% if csrftoken != '' %}
+        <input type="hidden" name="csrf_token" value="{{ csrftoken }}" />    
+    {% endif %}
+	{% for section in grouped %}
+		{% set cid = 'collapse_' ~ loop.index %}
+		<div class="card mb-3 shadow-sm">
+
+			<div class="card-header bg-primary text-white fw-bold d-flex align-items-center" role="button" data-bs-toggle="collapse" data-bs-target="#{{ cid }}" aria-expanded="true" aria-controls="{{ cid }}">
+				<i class="fas fa-chevron-right rotate me-2"></i>
+				{{ section.header.label ?? section.header.name }}
+			</div>
+
+			<div id="{{ cid }}" class="collapse">
+				<div class="card-body">
+
+					{% for sg in section.subgroups %}
+
+						{% if sg.subheader %}
+							{# ── Wrapper holds blue left bar for whole subgroup ── #}
+							<div class="border-start border-4 border-primary bg-body-secondary ps-2">
+
+								<div class="fw-semibold fs-5 mt-3 mb-0">
+									{{ sg.subheader.label ?? sg.subheader.name }}
+								</div>
+
+								{% for field in sg.fields %}
+									{% if field.settingsonly is defined and field.settingsonly %}
+										<input type="hidden" name="{{ field.name }}" value="{{ field.default ?? '' }}">
+									{% else %}
+										{% if field.show %}
+											<div class="p-2 {% if not loop.last %}border-bottom pb-2{% endif %}">
+												{{ ui.input(field) }}
+											</div>
+										{% endif %}
+									{% endif %}
+								{% endfor %}
+
+							</div>
+							{# /wrapper #}
+
+						{% else %}
+							{# ── Groups without sub-header (original layout) ── #}
+							{% for field in sg.fields %}
+								{% if field.show %}
+									{% if field.settingsonly is defined and field.settingsonly %}
+										<input type="hidden" name="{{ field.name }}" value="{{ field.default ?? '' }}">
+									{% else %}
+										<div class="p-2 {% if not loop.last %}border-bottom pb-2 mb-2{% endif %}">
+											{{ ui.input(field, readonly) }}
+										</div>
+									{% endif %}
+								{% endif %}
+							{% endfor %}
+						{% endif %}
+
+					{% endfor %}
+				</div>
+			</div>
+		</div>
+	{% endfor %}
+</form>

@@ -1,5 +1,90 @@
 <?php
 
+function renderWLAN_info($twig) {
+
+	$statusMessages = new StatusMessages();
+
+	$dq = '"';		// double quote
+	$cmd = "hwinfo --network --short | gawk '{ if ($2 == ${dq}WLAN${dq}) print $1; }' ";
+	if (exec($cmd, $output, $retval) === false || $retval !== 0) {
+		return $twig->render('errors/generic.twig', [
+			"message" => 'Unable to get list of network devices'
+		]);		
+	}
+
+	$interfaceData = array();
+	foreach($output as $interface) {
+		if ($interface === "") continue;
+
+		$notSetMsg = "[not set]";
+		$interface_output = get_interface_status("ifconfig $interface; iwconfig $interface");
+		parse_ifconfig($interface_output, $strHWAddress, $strIPAddress, $strNetMask, $strRxPackets, $strTxPackets, $strRxBytes, $strTxBytes);
+
+		// parse the iwconfig data:
+		preg_match( '/ESSID:\"([-a-zA-Z0-9\s]+)\"/i', $interface_output, $result );
+		$strSSID = getVariableOrDefault($result, 1, $notSetMsg);
+		$strSSID = str_replace('"','', $strSSID);
+
+		preg_match( '/Access Point: ([0-9a-f:]+)/i', $interface_output, $result );
+		$strBSSID = getVariableOrDefault($result, 1, $notSetMsg);
+
+		preg_match( '/Bit Rate=([0-9\.]+ Mb\/s)/i', $interface_output, $result );
+		$strBitrate = getVariableOrDefault($result, 1, $notSetMsg);
+
+		preg_match( '/Tx-Power=([0-9]+ dBm)/i', $interface_output, $result );
+		$strTxPower = getVariableOrDefault($result, 1, $notSetMsg);
+
+		// for example:   Link Quality=63/70.  Show absolute number (63) and percent (90%)
+		preg_match( '/Link Quality=([0-9]+)\/([0-9]+)/i', $interface_output, $result );
+		$strLinkQualityAbsolute = getVariableOrDefault($result, 1, 0);
+		$strLinkQualityMax = getVariableOrDefault($result, 2, 100);
+		$strLinkQualityPercent = number_format(($strLinkQualityAbsolute / $strLinkQualityMax) * 100, 0);
+		if ($strLinkQualityPercent >= 75)
+			$strLinkQuality_status = "success";
+		else if ($strLinkQualityPercent >= 50)
+			$strLinkQuality_status = "warning";
+		else
+			$strLinkQuality_status = "danger";
+
+		preg_match( '/Signal level=(-?[0-9]+ dBm)/i', $interface_output, $result );
+		$strSignalLevel = getVariableOrDefault($result, 1, $notSetMsg);
+
+		preg_match('/Frequency:(\d+.\d+ GHz)/i', $interface_output, $result);
+		$strFrequency = getVariableOrDefault($result, 1, $notSetMsg);
+
+		// $interface and $interface_output are sent, $myStatus is returned.
+		$interface_up = handle_interface_POST_and_status($interface, $interface_output, $statusMessages);
+
+		$interfaceData[$interface] = array(
+			"interface" => $interface,
+			"ip" => $strIPAddress,
+			"mac" => $strHWAddress,
+			"netmask" => $strNetMask,
+			"rxpackets" => $strRxPackets,
+			"rxbytes" => $strRxBytes,
+			"txpackets" => $strTxPackets,
+			"txbytes" => $strTxBytes,	
+			"ssid" => $strSSID,
+			"apmac" => $strBSSID,
+			"bitrate" => $strBitrate,
+			"signallevel" => $strSignalLevel,
+			"transmitpower" => $strTxPower,
+			"frequency" => $strFrequency,
+			"linkqualityabsolute" => $strLinkQualityAbsolute,
+			"linkqualitypercent" => $strLinkQualityPercent,
+			"linkqualitystatus" => $strLinkQuality_status,
+			"messages" => $statusMessages->getMessages()	
+		);
+
+		$statusMessages->reset();
+	}
+
+	return $twig->render('pages/wlan/page.twig', [
+		"interfaces" => $interfaceData	
+	]);
+
+}
+
 function DisplayDashboard_WLAN()
 {
 

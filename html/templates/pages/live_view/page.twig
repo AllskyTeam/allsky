@@ -1,0 +1,25 @@
+{{ messages|raw }}
+<div id="live_container" class="cursorPointer live_container" title="Click to make full-screen">
+	<img id="current" class="current" src="">
+</div>
+
+<script>
+	function getImage() {
+		var newImg = new Image();
+		newImg.src = '{{ image_name }}?_ts=' + new Date().getTime();
+		newImg.id = "current";
+		newImg.className = "current";
+		newImg.decode().then(() => {
+			$("#live_container").empty().append(newImg);
+		}).catch((err) => {
+			if (!this.complete || typeof this.naturalWidth == "undefined" || this.naturalWidth == 0) {
+				console.log('broken image: ', err);
+			}
+		}).finally(() => {
+			// Use tail recursion to trigger the next invocation after `$delay` milliseconds
+			setTimeout(function () { getImage(); }, {{ delay }});
+		});
+	};
+
+	getImage();
+</script>

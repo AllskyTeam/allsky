@@ -112,7 +112,10 @@ class I2CUTIL
 
 	public function getData() {
 		$filename = ALLSKY_CONFIG . '/i2c.json';
-		$data = file_get_contents($filename);
+        $data = "{}";
+        if (file_exists($filename)) {
+		    $data = file_get_contents($filename);
+        }
         $this->sendResponse($data);		
 	}
 

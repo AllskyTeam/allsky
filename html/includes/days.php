@@ -1,150 +1,259 @@
 <?php
+function renderlist_days($twig) {
 
-function delete_directory($directory_name) {
-	global $page;
-
-	// First make sure this is a valid directory.
-	if (! is_valid_directory($directory_name)) {
-		return "Invalid directory name.";
-	}
-
-	// If there is any output it's from an error message.
-	$output = null;
-	$retval = null;
-	exec("sudo rm -r '$directory_name' 2>&1", $output, $retval);
-	if ($output == null) {
-		if ($retval != 0)
-			$output = "Unknown error, retval=$retval.";
-		else
-			$output = "";
-	} else {
-		$output = $output[0];	// exec() return output as an array
-	}
-	return $output;
-}
-
-function ListDays(){
-	global $page;
+	$statusMessages = new StatusMessages();
 
 	if (! is_dir(ALLSKY_IMAGES)) {
-		echo "<br><div class='errorMsgBig'>";
-		echo "ERROR: '" . ALLSKY_IMAGES . "' directory is missing!";
-		echo "</div>";
-		return;
-	}
+		return $twig->render('errors/images_missing.twig');
+	} else {
 
-	$days = array();
-
-	$date = getVariableOrDefault($_POST, 'delete_directory', null);
-	if ($date !== null) {
-		$msg = delete_directory(ALLSKY_IMAGES . "/$date");
-		if ($msg == "") {
-			echo "<div class='alert alert-success'>Deleted directory $date</div>";
-		} else {
-			echo "<div class='alert alert-danger'><b>Unable to delete directory for $date</b>: $msg</div>";
+		$date = getVariableOrDefault($_POST, 'delete_directory', null);
+		if ($date !== null) {
+			$msg = delete_directory(ALLSKY_IMAGES . "/$date");
+			if ($msg == "") {
+				$statusMessages->addMessage("Deleted directory $date", "success", true, "fa-solid fa-circle-info");
+			} else {
+				$statusMessages->addMessage("Unable to delete directory for $date: $msg", "danger", true, "fa-solid fa-circle-info");
+			}
 		}
-	}
 
-	if ($handle = opendir(ALLSKY_IMAGES)) {
-		while (false !== ($day = readdir($handle))) {
-			if (is_valid_directory($day)) {
-				$days[] = $day;
+		if ($handle = opendir(ALLSKY_IMAGES)) {
+			while (false !== ($day = readdir($handle))) {
+				if (is_valid_directory($day)) {
+					$haveTimelapse = false;
+					if (glob(ALLSKY_IMAGES . "/$day/*.mp4") != false) {
+						$haveTimelapse = true;
+					}
+
+					$haveKeogram = false;
+					if (is_dir(ALLSKY_IMAGES . "/$day/keogram")) {
+						$haveKeogram = true;
+					}
+					
+					$haveStarTrails = false;
+					if (is_dir(ALLSKY_IMAGES . "/$day/startrails")) {
+						$haveStarTrails = true;		
+					}
+
+					$days[$day] = array(
+						"day" => $day,
+						"haveTimelapse" => $haveTimelapse,
+						"haveKeogram" => $haveKeogram,
+						"haveStarTrails" => $haveStarTrails
+					);
+				}
+			}
+			closedir($handle);
+		}
+		arsort($days);
+
+		$messages = "";
+		if ($statusMessages->isMessage()) {
+			$messages = $statusMessages->getMessages();
+		}
+
+		return $twig->render('pages/images/days.twig', [
+			"days" => $days,
+			"messages" => $messages
+		]);
+	}
+}
+
+function renderlist_images($twig) {
+	$chosen_day = getVariableOrDefault($_GET, 'day', null);
+	if ($chosen_day === null) {
+		return $twig->render('errors/generic.twig', [
+			"message" => 'No day specified. Please click <a href="index.php?page=list_days">here</a> to return to the image overview page'
+		]);
+	} else {
+
+		$images = array();
+		$dir = ALLSKY_IMAGES . "/$chosen_day";
+		if ($handle = opendir($dir)) {
+			while (false !== ($image = readdir($handle))) {
+				// Name format: "image-YYYYMMDDHHMMSS.jpg" or .jpe or .png
+				if (preg_match('/^\w+-.*\d{14}[.](jpe?g|png)$/i', $image)){
+					$images[] = array(
+						"thumbnail" => "/images/$chosen_day/thumbnails/$image",
+						"full" => "/images/$chosen_day/$image"
+					);
+				}
+			}
+			closedir($handle);
+		}
+
+		return $twig->render('pages/images/images.twig', [
+			"images" => $images
+		]);
+
+	}	
+}
+
+function getVideos($day, &$videos) {
+	$videoExtensions = ['mp4', 'webm', 'ogg', 'avi', 'mov', 'mkv'];
+
+	$dir = ALLSKY_IMAGES . "/$day";
+	if ($handle = opendir($dir)) {
+		while (false !== ($file = readdir($handle))) {
+			$ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+
+			if (in_array($ext, $videoExtensions)) {
+
+
+				$command = "ffprobe -v quiet -print_format json -show_format -show_streams " . escapeshellarg(ALLSKY_HOME . "/images/$day/$file");
+				$output = shell_exec($command);
+				$info = json_decode($output, true);
+
+				if ($info) {
+					$duration = $info['format']['duration'];
+					$width = $info['streams'][0]['width'] ?? null;
+					$height = $info['streams'][0]['height'] ?? null;
+					$codec = $info['streams'][0]['codec_name'] ?? null;
+				} else {
+					$duration = 0;
+					$width = 0;
+					$height = 0;
+					$codec = '';
+				}
+
+
+				$videos[] = array(
+					"full" => "/images/$day/$file",
+					"name" => $file,
+					"duration" => $duration,
+					"width" => $width,
+					"height" => $height,
+					"codec" => $codec,
+					"day" => $day
+				);
 			}
 		}
 		closedir($handle);
 	}
-
-	arsort($days);
-
-?>
-<style>
-	table th {
-		text-align:center;
-		padding: 0 10px;
-	}
-	table tr td {
-		padding: 0 10px;
-	}
-</style>
-<div class="row">
-	<div class="col-lg-12">
-	<div class="panel panel-primary">
-	<div class="panel-heading"><i class="fa fa-image fa-fw" style="margin-right: 10px"></i>Images</div>
-	<div class="panel-body">
-	<div class="row">
-	<form action="?page=<?php echo $page ?>" method="POST" onsubmit="return confirm('Are you sure you want to delete ALL images for that day?');">
-	<table style='margin-top: 15px; text-align:center'>
-	  <thead>
-			<tr style="border-bottom: 1px solid #888">
-				<th style="text-align:center">Day</th>
-				<th style="text-align:center">Images</th>
-				<th style="text-align:center">Timelapse</th>
-				<th style="text-align:center">Keogram</th>
-				<th style="text-align:center">Startrails</th>
-			</tr>
-	  </thead>
-	  <tbody>
-		<tr>
-			<td style='font-weight:bold'>All</td>
-			<td>-</td>
-			<td><a href='index.php?page=list_videos&day=All' title='All Timelapse (CAN BE SLOW TO LOAD)'><i class='fa fa-film fa-lg fa-fw'></i></a></td>
-			<td><a href='index.php?page=list_keograms&day=All' title='All Keograms'><i class='fa fa-barcode fa-lg fa-fw'></i></a></td>
-			<td><a href='index.php?page=list_startrails&day=All' title='All Startrails'><i class='fa fa-star fa-lg fa-fw'></i></a></td>
-			<td style='padding: 22px 0'></td>
-		</tr>
-<?php
-foreach ($days as $day) {
-	echo "\t\t<tr>\n";
-	echo "\t\t\t<td style='font-weight:bold'>$day</td>\n";
-
-	echo "\t\t\t<td>";
-	echo "<a href='index.php?page=list_images&day=$day' title='Images'><i class='fa fa-image fa-lg fa-fw'></i></a>";
-	echo "</td>\n";
-
-	echo "\t\t\t<td>";
-	if (glob(ALLSKY_IMAGES . "/$day/*.mp4") != false) {
-		echo "<a href='index.php?page=list_videos&day=$day' title='Timelapse'><i class='fa fa-film fa-lg fa-fw'></i></a>";
-	} else {
-		echo "none";
-	}
-	echo "</td>\n";
-
-	// For keograms and startrails assume if the directory exists a file does too.
-	echo "\t\t\t<td>";
-	$d = ALLSKY_IMAGES . "/$day/keogram";
-	if (is_dir($d)) {
-		echo "<a href='index.php?page=list_keograms&day=$day' title='Keogram'><i class='fa fa-barcode fa-lg fa-fw'></i></a>";
-	} else {
-		echo "none";
-	}
-	echo "</td>\n";
-
-	echo "\t\t\t<td>";
-	$d = ALLSKY_IMAGES . "/$day/startrails";
-	if (is_dir($d)) {
-		echo "<a href='index.php?page=list_startrails&day=$day' title='Startrails'><i class='fa fa-star fa-lg fa-fw'></i></a>";
-	} else {
-		echo "none";
-	}
-	echo "</td>\n";
-
-	echo "\t\t\t<td style='padding: 5px'>
-				<button type='submit' data-toggle='confirmation'
-					class='btn btn-delete' name='delete_directory' value='$day'>
-					<i class='fa fa-trash'></i> <span class='hidden-xs'>Delete</span>
-				</button>
-			</td>
-		</tr>";
 }
-?>
-	  </tbody>
-	</table>
-	</form>
-	</div><!-- /.row -->
-	</div><!-- /.panel-body -->
-	</div><!-- /.panel-primary -->
-	</div><!-- /.col-lg-12 -->
-</div><!-- /.row -->
-<?php
+function renderlist_timelapse($twig) {
+
+	$showAll = getVariableOrDefault($_GET, 'all', false);
+	$chosen_day = getVariableOrDefault($_GET, 'day', null);
+	if ($chosen_day === null) {
+		return $twig->render('errors/generic.twig', [
+			"message" => 'No day specified. Please clike <a href="index.php?page=list_days">here</a> to return to the image overview page'
+		]);
+	} else {
+		$videos = array();
+
+		if ($showAll === "false") {	
+			getVideos($chosen_day, $videos);
+		} else {
+			if ($handle = opendir(ALLSKY_IMAGES)) {
+				while (false !== ($day = readdir($handle))) {
+					if (is_valid_directory($day)) {
+						getVideos($day, $videos);
+					}
+				}
+				closedir($handle);
+			}
+		}
+		return $twig->render('pages/images/videos.twig', [
+			"videos" => $videos
+		]);
+	}	
 }
-?>
+
+function getKeograms($day, &$keograms) {
+	$keogramExtensions = ['jpg', 'png'];
+
+	$dir = ALLSKY_IMAGES . "/$day/keogram";
+	if ($handle = opendir($dir)) {
+		while (false !== ($file = readdir($handle))) {
+			$ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+
+			if (in_array($ext, $keogramExtensions)) {
+				$keograms[] = array(
+					"full" => "/images/$day/keogram/$file",
+					"name" => $file,
+					"day" => $day
+				);
+			}
+		}
+		closedir($handle);
+	}
+}
+
+function renderlist_keogram($twig) {
+	$showAll = getVariableOrDefault($_GET, 'all', false);
+	$chosen_day = getVariableOrDefault($_GET, 'day', null);
+	if ($chosen_day === null) {
+		return $twig->render('errors/generic.twig', [
+			"message" => 'No day specified. Please clike <a href="index.php?page=list_days">here</a> to return to the image overview page'
+		]);
+	} else {
+		$keograms = array();
+
+		if ($showAll === "false") {
+			getKeograms($chosen_day, $keograms);
+		} else {
+			if ($handle = opendir(ALLSKY_IMAGES)) {
+				while (false !== ($day = readdir($handle))) {
+					if (is_dir(ALLSKY_IMAGES . '/' . $day . '/keogram')) {
+						getKeograms($day, $keograms);
+					}
+				}
+				closedir($handle);
+			}
+		}	
+
+		return $twig->render('pages/images/keograms.twig', [
+			"keograms" => $keograms
+		]);
+	}	
+}
+
+function getStartrails($day, &$startrails) {
+	$startrailsExtensions = ['jpg', 'png'];
+
+	$dir = ALLSKY_IMAGES . "/$day/startrails";
+	if ($handle = opendir($dir)) {
+		while (false !== ($file = readdir($handle))) {
+			$ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+			if (in_array($ext, $startrailsExtensions)) {
+				$startrails[] = array(
+					"full" => "/images/$day/startrails/$file",
+					"name" => $file,
+					"day" => $day
+
+				);
+			}
+		}
+		closedir($handle);
+	}
+}
+
+function renderlist_startrail($twig) {
+	$showAll = getVariableOrDefault($_GET, 'all', false);
+	$chosen_day = getVariableOrDefault($_GET, 'day', null);
+	if ($chosen_day === null) {
+		return $twig->render('errors/generic.twig', [
+			"message" => 'No day specified. Please clike <a href="index.php?page=list_days">here</a> to return to the image overview page'
+		]);
+	} else {
+		$startrails = array();
+
+		if ($showAll === "false") {
+			getStartrails($chosen_day, $startrails);
+		} else {
+			if ($handle = opendir(ALLSKY_IMAGES)) {
+				while (false !== ($day = readdir($handle))) {
+					if (is_dir(ALLSKY_IMAGES . '/' . $day . '/startrails')) {
+						getStartrails($day, $startrails);
+					}
+				}
+				closedir($handle);
+			}
+		}	
+
+		return $twig->render('pages/images/startrails.twig', [
+			"startrails" => $startrails
+		]);
+	}	
+}

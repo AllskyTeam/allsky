@@ -22,6 +22,22 @@ $ME = htmlspecialchars($_SERVER["PHP_SELF"]);
 // It needs to be at the top of this file since code below uses the items it sets.
 include_once('includes/functions.php');
 include_once('includes/status_messages.php');
+
+
+require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/Twig/MenuExtension.php';
+require_once __DIR__ . '/Twig/DateFormatterExtension.php';
+require_once __DIR__ . '/Twig/NoCacheUrlExtension.php';
+
+$loader = new \Twig\Loader\FilesystemLoader(__DIR__ . '/templates');
+$twig = new \Twig\Environment($loader, [
+	"cache" => false
+]);
+
+$twig->addExtension(new \MenuExtension());
+$twig->addExtension(new \DateFormatterExtension());
+$twig->addExtension(new \NoCacheUrlExtension());
+
 $status = new StatusMessages();
 initialize_variables();		// sets some variables
 
@@ -32,7 +48,8 @@ define('RASPI_WPA_SUPPLICANT_CONFIG', '/etc/wpa_supplicant/wpa_supplicant.conf')
 define('RASPI_WPA_CTRL_INTERFACE', '/var/run/wpa_supplicant');
 
 // Optional services, set to true to enable.
-define('DHCP_ENABLED', true);
+define('', true);
+define('DHCP_ENABLED', false);
 define('APD_ENABLED', false);
 define('RASPI_OPENVPN_ENABLED', false);
 define('RASPI_TORPROXY_ENABLED', false);
@@ -60,6 +77,18 @@ if (RASPI_OPENVPN_ENABLED || RASPI_TORPROXY_ENABLED) {
 	function DisplayTorProxyConfig() {}
 }
 
+session_start();
+if ($useLogin) {
+	if (empty($_SESSION['csrf_token'])) {
+		if (function_exists('mcrypt_create_iv')) {
+			$_SESSION['csrf_token'] = bin2hex(mcrypt_create_iv(32, MCRYPT_DEV_URANDOM));
+		} else {
+			$_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(32));
+		}
+	}
+	$csrf_token = $_SESSION['csrf_token'];
+}
+
 $output = $return = 0;
 if (isset($_POST['page']))
 	$page = $_POST['page'];
@@ -71,6 +100,53 @@ if (isset($_GET['day']))
 	$day = " - " . $_GET['day'];
 else
 	$day = "";
+
+$routes = getRoutes($page);
+
+$includeCode = $routes["include"];
+
+include_once("includes/$includeCode");
+$renderCode = "render$page";
+$pageHTML = $renderCode($twig);
+
+$html = $pageHTML;
+$extaCSS = array();
+$extraJS = array();
+$messages = "";
+if (is_array($pageHTML)) {
+	if (isset($pageHTML["template"])) {
+		$html = $pageHTML["template"];
+	}
+	if (isset($pageHTML["extracss"])) {
+		$extaCSS = $pageHTML["extracss"];
+	}
+	if (isset($pageHTML["extrajs"])) {
+		$extraJS = $pageHTML["extrajs"];
+	}
+	if (isset($pageHTML["messages"])) {
+		$messages = $pageHTML["messages"];
+	}		
+}
+
+if (isset($_SESSION['flash'])) {
+	$messages .= $_SESSION['flash'];
+	unset($_SESSION['flash']);
+}
+echo $twig->render('layout.twig', [
+	"nocache" => ALLSKY_VERSION,
+    'menuData' => getRoutes(),
+	"pageInfo" => getRoutes($page),
+	'allskyPage' => $page,
+	"allskyStatus" => output_allsky_status(),
+	"pageHTML" => $html,
+	"extracss" => $extaCSS,
+	"extrajs" => $extraJS,
+	"messages" => $messages
+]);
+
+
+
+die();
 
 if ($useLogin) {
 	session_start();
@@ -119,49 +195,25 @@ if ($useRemoteWebsite) {
 	<meta name="author" content="Thomas Jacquin">
 
 <?php	// Give each page its own <title> so they are easy to distinguish in the browser.
-	switch ($page) {
-		case "WLAN_info":			$Title = "WLAN Dashboard";		break;
-		case "LAN_info":			$Title = "LAN Dashboard";		break;
-		case "configuration":		$Title = "Allsky Settings";		break;
-		case "wifi":				$Title = "Configure Wi-Fi";		break;
-		case "dhcp_conf":			$Title = "Configure DHCP";		break;
-		case "hostapd_conf":		$Title = "Configure Hotspot";	break;
-		case "openvpn_conf":		$Title = "Configure OpenVPN";	break;
-		case "torproxy_conf":		$Title = "Configure TOR proxy";	break;
-		case "auth_conf":			$Title = "Change Password";		break;
-		case "system":				$Title = "System";				break;
-		case "list_days":			$Title = "Images";				break;
-		case "list_images":			$Title = "Images$day";			break;
-		case "list_videos":			$Title = "Timelapse$day";		break;
-		case "list_keograms":		$Title = "Keogram$day";			break;
-		case "list_startrails":		$Title = "Startrails$day";		break;
-		case "editor":				$Title = "Editor";				break;
-		case "overlay":				$Title = "Overlay Editor";		break;
-		case "module":				$Title = "Module Manager";		break;
-		case "live_view":			$Title = "Live View";			break;
-		case "support": 			$Title = "Getting Support";		break;
-		default:					$Title = "Allsky WebUI";		break;
+	$pageInfo = getPageInfo($page);
+	if (is_array($pageInfo)) {
+		$Title = $pageInfo["title"];
+	} else {
+		$Title = $pageInfo;
 	}
+
 ?>
 	<!-- allows <a external="true" ...> -->
 	<script src="documentation/js/documentation.js" type="application/javascript"></script>
 
 	<title><?php echo "$Title - WebUI"; ?></title>
-
-	<!-- Bootstrap Core CSS -->
+<!--
 	<link href="documentation/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-
-	<!-- MetisMenu CSS -->
 	<link href="documentation/bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
-
 	<link href="documentation/css/sb-admin-2.css" rel="stylesheet">
-
-	<!-- Font Awesome -->
 	<script defer src="documentation/js/all.min.js"></script>
-
-	<!-- Custom CSS -->
 	<link href="documentation/css/custom.css" rel="stylesheet">
-
+-->
 	<link rel="shortcut icon" type="image/png" href="documentation/img/allsky-favicon.png">
 
 	<!-- RaspAP JavaScript -->
@@ -171,18 +223,22 @@ if ($useRemoteWebsite) {
 	<script src="documentation/bower_components/jquery/dist/jquery.min.js"></script>
 
 	<!-- Bootstrap Core JavaScript -->
+<!--	
 	<script src="documentation/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-
+-->
 	<!-- Metis Menu Plugin JavaScript -->
+<!--
 	<script src="documentation/bower_components/metisMenu/dist/metisMenu.min.js"></script>
-
 	<script src="js/bigscreen.min.js"></script>
+-->
 
 	<script src="js/allsky.js"></script>
 	<script> var allskyPage='<?php echo $page ?>';  </script>
 
 	<!-- Custom Theme JavaScript -->
+<!--
 	<script src="documentation/js/sb-admin-2.js"></script>
+-->
 
 	<!-- Code Mirror editor -->
 <?php if ($page === "editor") { ?>
@@ -206,9 +262,197 @@ if ($useRemoteWebsite) {
 <?php } ?>
 </head>
 <body>
+
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+    .header {
+      height: 60px;
+      background-color: #343a40;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 15px;
+    }
+
+    .content-wrapper {
+      display: flex;
+      height: calc(100% - 60px);
+    }
+
+    .sidebar {
+      width: 250px;
+	  min-width: 250px;
+      transition: width 0.3s;
+      overflow-x: hidden;
+    }
+
+    .sidebar.collapsed {
+      width: 60px;
+    }
+
+    .sidebar .nav-link {
+      display: flex;
+      align-items: center;
+      padding: 7px 12px;
+      white-space: nowrap;
+    }
+
+    .sidebar .nav-link i {
+      font-size: 18px;
+      width: 1.5em;
+      text-align: center;
+      margin-right: 10px;
+    }
+
+    .sidebar.collapsed .nav-link {
+      justify-content: center;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .sidebar.collapsed .nav-link i {
+      margin-right: 0;
+    }
+
+    .sidebar.collapsed .nav-link span {
+      display: none;
+    }
+
+    .main {
+      flex-grow: 1;
+      padding: 15px;
+      overflow: auto;
+    }
+
+    #toggleSidebar {
+      margin-bottom: 1rem;
+      width: 100%;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 60px;
+      }
+
+      .sidebar .nav-link {
+        justify-content: center;
+        padding-left: 0;
+        padding-right: 0;
+      }
+
+      .sidebar .nav-link span {
+        display: none;
+      }
+
+      .sidebar .nav-link i {
+        margin-right: 0;
+      }
+    }
+	.logo {
+	max-height: 40px;  /* Fit within header */
+	height: auto;
+	width: auto;
+	}	
+
+
+	.current {
+		width: 100%;
+	}
+	</style>
+
+  <!-- Header -->
+  	<div class="header">
+    	<div class="d-flex align-items-center">
+      		<img src="documentation/img/allsky-logo.png" class="me-2 logo" alt="Allsky Logo">
+      		<span class="fw-semibold">Allsky Web UI</span>
+    	</div>
+    	<div>
+			<?php echo output_allsky_status(); ?>
+    	</div>
+  	</div>
+
+	<!-- Sidebar + Main -->
+	<div class="content-wrapper">
+    	<div id="sidebar" class="sidebar border-end p-2">
+      		<button id="toggleSidebar" class="btn btn-sm btn-outline-secondary">☰</button>
+
+			<div id="as-switch-theme" class="form-check form-switch mt-1">
+				<input class="form-check-input" type="checkbox" id="theme-toggle">
+				<label class="form-check-label" for="theme-toggle">Dark Mode</label>
+			</div>
+
+      		<nav class="nav flex-column mt-2">
+				<a id="live_view" class="nav-link" href="index.php?page=live_view"><i class="fa fa-eye fa-fw"></i> <span>Live View</span></a>
+				<a id="list_days" class="nav-link" href="index.php?page=list_days"><i class="fa fa-image fa-fw"></i> <span>Images</span></a>
+				<a id="configuration" class="nav-link" href="index.php?page=configuration"><i class="fa fa-camera fa-fw"></i> <span>Settings</span></a>
+				<a id="editor" class="nav-link" href="index.php?page=editor"><i class="fa fa-code fa-fw"></i> <span>Editor</span></a>
+				<a id="overlay" class="nav-link" href="index.php?page=overlay"><i class="fa fa-edit fa-fw"></i> <span>Overlay Editor</span></a>
+				<?php if (haveDatabase()) { ?>
+					<a id="charts" class="nav-link" href="index.php?page=charts"><i class="fa-solid fa-chart-line"></i> <span>Charts</span></a>
+				<?php } ?>
+				<a id="module" class="nav-link" href="index.php?page=module"><i class="fa fa-bars fa-fw"></i> <span>Module Manager</span></a>
+				<a id="LAN" class="nav-link" href="index.php?page=LAN_info"><i class="fa fa-network-wired fa-fw"></i> <span><b>LAN</b> Dashboard</span></a>
+				<a id="WLAN" class="nav-link" href="index.php?page=WLAN_info"><i class="fa fa-tachometer-alt fa-fw"></i> <span><b>WLAN</b> Dashboard</span></a>
+				<a id="wifi" class="nav-link" href="index.php?page=wifi"><i class="fa fa-wifi fa-fw"></i> <span>Configure Wi-Fi</span></a>
+				<?php if (DHCP_ENABLED) : ?>
+					<a id="dhcp" class="nav-link" href="index.php?page=dhcp_conf"><i class="fa fa-exchange fa-fw"></i> <span>Configure DHCP</span></a>
+				<?php endif; ?>
+				<?php if (APD_ENABLED) : ?>
+					<a id="adp" class="nav-link" href="index.php?page=hostapd_conf"><i class="fa fa-dot-circle fa-fw"></i> <span>Configure Hotspot</span></a>
+				<?php endif; ?>
+				<?php if (RASPI_OPENVPN_ENABLED) : ?>
+					<a id="vpn" class="nav-link" href="index.php?page=openvpn_conf"><i class="fa fa-lock fa-fw"></i> <span>Configure OpenVPN</span></a>
+				<?php endif; ?>
+				<?php if (RASPI_TORPROXY_ENABLED) : ?>
+					<a id="tor" class="nav-link" href="index.php?page=torproxy_conf"><i class="fa fa-eye-slash fa-fw"></i> <span>Configure TOR proxy</span></a>
+				<?php endif; ?>
+				<a id="auth_conf" class="nav-link" href="index.php?page=auth_conf"><i class="fa fa-lock fa-fw"></i> <span>Change Password</span></a>
+				<a id="system" class="nav-link" href="index.php?page=system"><i class="fa fa-cube fa-fw"></i> <span>System</span></a>
+				<a id="documendocumentationtatio" class="nav-link" href="/documentation"><i class="fa fa-book fa-fw"></i> <span>Allsky Documentation</span></a>
+				<a id="support" class="nav-link" href="index.php?page=support"><i class="a fa-question fa-fw"></i> <span>Getting Support</span></a>
+				<a id="theme-toggle" class="nav-link" href="#"><i class="fa fa-moon fa-fw"></i> <span>Light/Dark mode</span></a>			
+			</nav>
+    	</div>
+    	<div class="main">
+			<div class="card mb-3">
+  				<div class="card-header"><?php echo getPageTitleHtml($page); ?></div>
+  				<div class="card-body">
+					<?php
+						includePage($page);
+					?>
+  				</div>
+			</div>
+		</div>
+	</div>
+
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Collapse toggle -->
+  <script>
+    const toggleBtn = document.getElementById('toggleSidebar');
+    const sidebar = document.getElementById('sidebar');
+
+    toggleBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+    });
+  </script>
+
+
+
+
 <div id="wrapper">
 	<!-- Navigation -->
-	<nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+	<nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0" id="main-header">
 		<div class="navbar-header">
 			<button type="button" class="navbar-toggle as-nav-toggle" data-toggle="collapse" data-target=".navbar-collapse">
 				<span class="sr-only">Toggle navigation</span>
@@ -223,7 +467,7 @@ if ($useRemoteWebsite) {
 				</a>
 				<div class="version-title version-title-color">
 					<span id="allskyStatus"><?php echo output_allsky_status(); ?></span>
-<?php
+					<?php
 					$versionInfo = getNewestAllskyVersion($changed);
 					if ($versionInfo !== null) {
 						$newestVersion = $versionInfo['version'];
@@ -259,20 +503,20 @@ if ($useRemoteWebsite) {
 						echo "&nbsp; on &nbsp;";
 						echo "<span style='font-weight: bold'>$hostname</span>";
 					echo "</span>";
-if ($useLocalWebsite) {
-					echo "<br>";
-					echo "<span class='nowrap'>";
-					echo "<a external='true' class='version-title-color' href='allsky/index.php'>";
-					echo "Local Website</a>";
-					echo "</span>";
-}
-if ($useRemoteWebsite) {
-					echo "&nbsp;&nbsp;&nbsp;&nbsp; ";
-					echo "<span class='nowrap'>";
-					echo "<a external='true' class='version-title-color' href='$remoteWebsiteURL'>";
-					echo "Remote Website $remoteWebsiteVersion</a>";
-					echo "</span>";
-} ?>
+					if ($useLocalWebsite) {
+						echo "<br>";
+						echo "<span class='nowrap'>";
+						echo "<a external='true' class='version-title-color' href='allsky/index.php'>";
+						echo "Local Website</a>";
+						echo "</span>";
+					}
+					if ($useRemoteWebsite) {
+						echo "&nbsp;&nbsp;&nbsp;&nbsp; ";
+						echo "<span class='nowrap'>";
+						echo "<a external='true' class='version-title-color' href='$remoteWebsiteURL'>";
+						echo "Remote Website $remoteWebsiteVersion</a>";
+						echo "</span>";
+					} ?>
 				</div>
 		</div> <!-- /.navbar-header -->
 

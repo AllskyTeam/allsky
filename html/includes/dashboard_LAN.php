@@ -1,5 +1,46 @@
 <?php
 
+function renderLAN_info($twig) {
+
+	$statusMessages = new StatusMessages();
+
+	$dq = '"';
+	$cmd = "hwinfo --network --short | gawk '{ if ($2 == ${dq}Ethernet${dq}) print $1; }' ";
+	if (exec($cmd, $output, $retval) === false || $retval !== 0) {
+		return $twig->render('errors/generic.twig', [
+			"message" => 'Unable to get list of network devices'
+		]);
+	}
+
+	asort($output);
+	$interfaceData = array();
+	foreach($output as $interface) {
+		if ($interface === "") continue;
+
+		$interface_output = get_interface_status("ifconfig $interface");
+		parse_ifconfig($interface_output, $strHWAddress, $strIPAddress, $strNetMask, $strRxPackets, $strTxPackets, $strRxBytes, $strTxBytes);
+		$interface_up = handle_interface_POST_and_status($interface, $interface_output,$statusMessages);
+		$interfaceData[$interface] = array(
+			"interface" => $interface,
+			"up" => $interface_up,
+			"ip" => $strIPAddress,
+			"mac" => $strHWAddress,
+			"netmask" => $strNetMask,
+			"rxpackets" => $strRxPackets,
+			"rxbytes" => $strRxBytes,
+			"txpackets" => $strTxPackets,
+			"txbytes" => $strTxBytes,
+			"messages" => $statusMessages->getMessages()
+		);
+		$statusMessages->reset();
+	}
+
+	return $twig->render('pages/lan/page.twig', [
+		"interfaces" => $interfaceData	
+	]);
+
+}
+
 function DisplayDashboard_LAN()
 {
 

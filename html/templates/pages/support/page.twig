@@ -1,0 +1,158 @@
+<div class="alert alert-success" role="alert">
+  Before using this page please ensure that you read the information in the 'Help' tab
+</div>
+
+<ul class="nav nav-tabs" id="myTabs" role="tablist">
+	<li class="nav-item" role="presentation">
+		<button class="nav-link active" id="supporttable-tab" data-bs-toggle="tab" data-bs-target="#supporttable" type="button" role="tab" aria-controls="supporttable" aria-selected="true">
+			Support Logs
+		</button>
+	</li>
+	<li class="nav-item" role="presentation">
+		<button class="nav-link" id="supporthelp-tab" data-bs-toggle="tab" data-bs-target="#supporthelp" type="button" role="tab" aria-controls="supporthelp" aria-selected="false">
+			Help
+		</button>
+	</li>
+</ul>
+
+<div class="tab-content mt-3" id="myTabContent">
+	<div class="tab-pane fade show active" id="supporttable" role="tabpanel" aria-labelledby="supporttable-tab">
+		<div class="card shadow">
+			<div class="card-header d-flex justify-content-between align-items-center">
+				<span>
+					<i class="fa-solid fa-question me-2"></i>Available Logs</span>
+				<button type="button" class="btn btn-sm btn-danger" id="as-support-generate">Generate</button>
+			</div>
+			<div class="card-body">
+				<table id="as-support-files" class="table">
+					<thead>
+						<tr>
+							<th>Filename</th>
+							<th>Sort</th>
+							<th>Date/Time Created</th>
+							<th>Problem</th>
+							<th>Size</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+		</div>
+	</div>
+	<div class="tab-pane fade" id="supporthelp" role="tabpanel" aria-labelledby="supporthelp-tab">
+		<div class="alert alert-danger" role="alert">
+			<strong>NOTE:</strong>
+			The Allsky Team does not actively monitor
+																		Facebook, so please use GitHub for support.
+		</div>
+		<blockquote class="bg-success-subtle">
+			<ul>
+				<li>If you have a
+					<strong>QUESTION</strong>
+					<a external="true" href="<?php echo $DiscussionURL ?>/new?category=q-a">
+						create a new GitHub Q&amp;A Discussion</a>.</li>
+				<li>If you want to request a
+					<strong>NEW FEATURE</strong>
+					<a external="true" href="<?php echo $DiscussionURL ?>/new?category=new-feature-requests">
+						create a new GitHub feature request</a>.</li>
+				<li>If you have
+					<strong>anything else that's not a problem</strong>,
+					<a external="true" href="<?php echo $DiscussionURL ?>/new">
+						create some other GitHub Discussion</a>.</li>
+			</ul>
+			<p>
+				Only use the steps below if there is an Allsky problem,
+																																i.e., something doesn't work.
+			</p>
+		</blockquote>
+		<div class="card">
+			<div class="card-header">
+				Follow these steps to report a problem with the Allsky software
+			</div>
+			<div class="card-body">
+				<ol>
+					<li>Click the
+						<span class="btn btn-sm btn-danger me-1">Generate</span>button below to collect information needed by the Allsky Team to help troubleshoot your problem.
+					</li>
+					<li>A message will appear that lists the data being collected.
+						<br>
+						Click its
+						<span class="btn btn-sm btn-primary me-1">OK</span>
+						button to generate a "support log file" and add an entry for it to the list below.
+						<br>You can generate multiple logs; if so, the latest one is displayed in green.
+					</li>
+					<li>If you don't already have a GitHub Discussion for this problem,
+						<a external="true" href="<?php echo $DiscussionURL ?>/new/choose">
+							click here to start one</a>, but do
+						<strong>NOT</strong>submit it yet.
+					</li>
+					<li>Attach the support log file to the GitHub Discussion.</li>
+					<li>Click the
+						<span class="btn btn-sm btn-primary me-1">Start discussion</span>button in GitHub.
+					</li>
+					<li>Come back to this page.</li>
+					<li>Add the GitHub discussion number by clicking on the
+						<span class="btn btn-sm btn-primary me-1">
+							<i class="fa-brands fa-github"></i>
+						</span>icon associated with the new support log below.
+					</li>
+				</ol>
+			</div>
+			<div class="card-footer text-end">
+				<strong>If the above steps didn't work</strong>,
+				<a allsky="true" external="true" href="/documentation/troubleshooting/reportingProblems.html#manualMethod">
+					manually run them
+				</a>.
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="githubIdModal" tabindex="-1">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h4 class="modal-title">Link Github Discussion or Issue</h4>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<form id="githubIdModalForm">
+					<div class="mb-3">
+						<label class="form-label">Select the repository your Discussion or Issue is in:</label><br>
+						<div class="form-check form-check-inline">
+							<input class="form-check-input" type="radio" name="choice" id="repoAS" value="AS" checked>
+							<label class="form-check-label" for="repoAS">Allsky</label>
+						</div>
+						<div class="form-check form-check-inline">
+							<input class="form-check-input" type="radio" name="choice" id="repoASM" value="ASM">
+							<label class="form-check-label" for="repoASM">Allsky Modules</label>
+						</div>
+					</div>
+
+					<div class="mb-3">
+						<label for="githubIdModalId" class="form-label">Github ID:</label>
+						<input type="number" class="form-control" id="githubIdModalId" name="githubIdModalId" required>
+					</div>
+
+					<div class="alert alert-info" role="alert">
+						This can be found at the end of the GitHub URL.<br>
+						If the URL is '{{ discussionurl }}/123' then the ID is
+						<strong>123</strong>.
+					</div>
+				</form>
+
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+				<button type="button" id="githubIdModalOK" class="btn btn-primary">Ok</button>
+			</div>
+
+		</div>
+	</div>
+</div>
+
+<script>
+	let GITHUB_ROOT = "{{ GITHUB_ROOT }}"
+	let ALLSKY_REPO_URL = "{{ ALLSKY_REPO_URL }}";
+	let ALLSKY_MODULES_REPO_URL = "{{ ALLSKY_MODULES_REPO_URL }}";
+</script>

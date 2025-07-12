@@ -2,7 +2,11 @@
 class StatusMessages {
 	public $messages = array();
 
-	public function addMessage($message, $level='success', $dismissable=false) {
+	public function reset() {
+		$this->messages = array();
+	}
+
+	public function addMessage($message, $level='success', $dismissable=false, $icon="") {
 		$status = "<tr class='alert alert-$level'><td>$message</td>";
 		if ($dismissable) {
 			$status .= "<td class='alert-dismissable'>";
@@ -13,14 +17,43 @@ class StatusMessages {
 		}
 		$status .= "</tr>";
 
+if ($icon !== "") {
+	$icon = '<i class="' . $icon . ' me-2"></i>';
+}
+$status = '
+	<div class="alert alert-' . $level . ' alert-dismissible fade show" role="alert">
+  		' . $icon . $message . '
+  		<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+	</div>';
+
 		array_push($this->messages, $status);
 	}
 
+	public function flash() {
+		$_SESSION['flash'] = $this->getMessages();
+	}
+
+	public function getMessages() {
+		$result = "";
+
+		foreach($this->messages as $message) {
+			$result .= $message;
+		}
+
+		return $result;
+	}
 
 	// If $escape is true, escape single quotes.
 	// If $highlight is true, hightlight the groups of messages (often only error message(s)).
 
 	public function showMessages($clear=true, $escape=false, $highlight=false) {
+
+		foreach($this->messages as $message) {
+			echo($message);
+		}
+
+		return ;
+
 		if ($escape === true) {
 			// We can't have any single quotes in the output.
 			$apos = "&apos;";

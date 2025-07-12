@@ -1,0 +1,61 @@
+{{ messages|raw }}
+
+<div class="row">
+{% for interface, info in interfaces %}
+    <div class="col-6">
+        <div class="card shadow">
+            <div class="card-header">
+                <i class="fa fa-network-wired fa-fw me-2"></i> {{ interface }} Details
+            </div>
+            <div class="card-body">
+                {{ info.messages|raw }}
+                <h5>Interface Information</h5>
+                <div class="row">
+                    <div class="col-4">Interface Name</div>
+                    <div class="col-6">{{ interface }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-4">IP Address</div>
+                    <div class="col-6">{{ info.ip }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-4">Subnet Mask</div>
+                    <div class="col-6">{{ info.netmask }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-4">Mac Address</div>
+                    <div class="col-6">{{ info.mac }}</div>
+                </div>
+
+                <h5 class="mt-3">Interface Statistics</h5>
+                <div class="row">
+                    <div class="col-4">Received Packets</div>
+                    <div class="col-6">{{ info.rxpackets }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-4">Received bytes</div>
+                    <div class="col-6">{{ info.rxbytes }}</div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-4">Transferred Packets</div>
+                    <div class="col-6">{{ info.txpackets }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-4">Transferred bytes</div>
+                    <div class="col-6">{{ info.txbytes }}</div>
+                </div>                              
+            </div>
+            <div class="card-footer text-end">
+                <form action="?page=LAN_info" method="POST">
+                    <input type="hidden" name="interface" value="{{ interface }}">
+                    {% if info.up %}
+                        <input type="submit" class="btn btn-danger" value="Stop {{ interface }}" name="turn_down" />
+                    {% else %}
+                        <input type="submit" class="btn btn-success" value="Start {{ interface }}" name="turn_up" />
+                    {% endif %}
+                </form>
+            </div>            
+        </div>
+	</div>
+{% endfor %}
+</div>

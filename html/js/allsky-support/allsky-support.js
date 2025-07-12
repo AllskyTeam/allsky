@@ -198,7 +198,7 @@ Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
 				type: 'GET',
 				dataSrc: ''
 			},
-			dom: 'rtip',
+			dom: 'rt',
 			order: [[1, 'desc']],
 			columnDefs: [
 				{
@@ -251,7 +251,7 @@ Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
 						} else {
 							result = 'No GitHub Number';
 						}
-						convertURL();		// handles <a external="true" ...>
+						//convertURL();		// handles <a external="true" ...>
 						return result
 					}
 				},{
@@ -263,9 +263,9 @@ Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
 						if (item.filename == '') {
 							return('');
 						}
-						let buttonGithub = '<button type="button" title="Edit Guthib Discussion/Issue Number" class="btn btn-primary as-support-log-github mr-10" data-logid="' + item.filename + '"><i class="fa-brands fa-github"></i></button>'
-						let buttonDownload = '<button type="button" title="Download Support Log" class="btn btn-primary as-support-log-download mr-10" data-logid="' + item.filename + '"><i class="fa-solid fa-download"></i></button>'
-						let buttonDelete = '<button type="button" title="Delete Support Log" class="btn btn-danger as-support-log-delete" data-logid="' + item.filename + '"><i class="fa-solid fa-trash"></i></button>'
+						let buttonGithub = '<button type="button" title="Edit Guthib Discussion/Issue Number" class="btn btn-sm btn-primary as-support-log-github me-2" data-logid="' + item.filename + '"><i class="fa-brands fa-github"></i></button>'
+						let buttonDownload = '<button type="button" title="Download Support Log" class="btn btn-sm btn-primary as-support-log-download me-2" data-logid="' + item.filename + '"><i class="fa-solid fa-download"></i></button>'
+						let buttonDelete = '<button type="button" title="Delete Support Log" class="btn btn-sm btn-danger as-support-log-delete" data-logid="' + item.filename + '"><i class="fa-solid fa-trash"></i></button>'
 
 						let buttons = '<div>' + buttonDownload + buttonGithub + buttonDelete + '</div>'
 						return buttons
@@ -275,3 +275,7 @@ Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
 		});
 	}
 }
+
+$(document).ready(function() {
+	let supportManager = new ALLSKYSUPPORT()
+});

@@ -1,0 +1,133 @@
+{{ messages|raw }}
+<div class="card shadow">
+    <div class="card-header">
+        <i class="fa-solid fa-circle-info fa-lg me-2"></i>System Information
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-5 col-sm-5 col-lg-3">Hostname</div>
+            <div class="col">{{ hostname }}</div>
+        </div>
+        <div class="row">
+            <div class="col-5 col-sm-5 col-lg-3">Pi Version</div>
+            <div class="col">{{ hardware }}</div>
+        </div>
+        <div class="row">
+            <div class="col-5 col-sm-5 col-lg-3">Uptime</div>
+            <div class="col">{{ uptime }}</div>
+        </div>
+        <div class="row mb-3 mt-3">
+            <div class="col-6 mb-3">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa-solid fa-microchip fa-lg me-2"></i>CPU
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-4 col-sm-3 col-lg-2">Load</div>
+                            <div class="col">
+                                <div id="as-cpuload">
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" style="width: {{ cpuload }}%;" aria-valuenow="{{ cpuload }}" aria-valuemin="0" aria-valuemax="100">
+                                            {{ cpuload }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-4 col-sm-3 col-lg-2">Temp</div>
+                            <div class="col">
+                                <div id="as-cputemp">
+                                    <div class="progress">
+                                        <div class="progress-bar bg-{{ cputemp.temperatureStatus }}" role="progressbar" style="width: {{ cputemp.cputemp }}%;" aria-valuenow="{{ cputemp.cputemp }}" aria-valuemin="0" aria-valuemax="100">
+                                            {{ cputemp.displayTemperature|raw }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 mb-3">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa-solid fa-memory fa-lg me-2"></i>Memory
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-4 col-sm-3 col-lg-2">Used</div>
+                            <div class="col">
+                                <div id="as-memory">
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" style="width: {{ memused }}%;" aria-valuenow="{{ memused }}" aria-valuemin="0" aria-valuemax="100">
+                                            {{ memused }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 mb-3">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa-solid fa-hard-drive fa-lg me-2"></i>Disk
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-4 col-sm-3 col-lg-2">Used</div>
+                            <div class="col">
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" style="width: {{ disk.diskpercentage }}%;" aria-valuenow="{{ disk.diskpercentage }}" aria-valuemin="0" aria-valuemax="100">
+                                        {{ disk.diskmsg|raw }}%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-4 col-sm-3 col-lg-2">/tmp</div>
+                            <div class="col">
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" style="width: {{ allskytmp.diskpercentage }}%;" aria-valuenow="{{ allskytmp.diskpercentage }}" aria-valuemin="0" aria-valuemax="100">
+                                        {{ allskytmp.diskmsg|raw }}%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 mb-3">
+                <div class="card">
+                    <div class="card-header bg-{{ throttle.throttleStatus }} text-white">
+                        <i class="fa-solid fa-gauge fa-lg me-2"></i>Throttle Status
+                    </div>
+                    <div class="card-body">
+                        {{ throttle.throttle }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer text-end">
+        <form action="?page=system" method="POST">
+            <button type="submit" class="btn btn-success" name="service_start"><i class="fa fa-play"></i> Start Allsky</button>
+            <button type="submit" class="btn btn-danger" name="service_stop"><i class="fa fa-stop"></i> Stop Allsky</button>
+            <button type="submit" class="btn btn-warning" name="system_reboot"><i class="fa fa-power-off"></i> Reboot Pi</button>
+            <button type="submit" class="btn btn-warning" name="system_shutdown"><i class="fa fa-plug"></i> Shutdown Pi</button>
+        </form>
+    </div>             
+</div>
+
+<div class="card shadow mt-4">
+    <div class="card-header">
+        <i class="fa-solid fa-users-gear fa-lg me-2"></i>User Functions
+    </div>
+    <div class="card-body text-center">
+        <h1>DONT FORGET THIS</h1>
+    </div>
+</div>

@@ -1,0 +1,61 @@
+{% if keograms is empty %}
+	{% include 'errors/generic.twig' with { message: 'There are no keograms available. Please click <a href="index.php?page=list_days">here</a> to return to the image overview page' } %}
+{% else %}
+
+	{% if keograms|length == 1 %}
+		<div id="gallery" class="row g-2">
+			{% for keogram in keograms %}
+				<div class="card shadow mb-3">
+					<div class="card-header">
+						<i class="fa-solid fa-circle-info me-2"></i>
+						{{ keogram.name }}</div>
+					<div class="card-body">
+						<img src="{{ keogram.full }}" style="width: 100%;">
+					</div>
+				</div>
+			{% endfor %}
+		</div>
+	{% else %}
+		<div id="gallery" class="row g-2">
+			{% for keogram in keograms %}
+				<div class="col-6 col-sm-4 col-lg-3">
+					<div class="card shadow mb-3">
+						<div class="card-header bg-primary">
+							<i class="fa-solid fa-circle-info me-2"></i>
+							{{ keogram.day|format_date }}
+						</div>
+						<div class="card-body bg-secondary-subtle text-center p-2">
+                            <div style="min-height: 150px;">
+                                <div class="lg-keogram" data-src="{{ keogram.full }}">
+                                    <a href="#">
+                                        <img src="{{ keogram.full }}" class="img-fluid rounded w-100 h-auto" />
+                                    </a>
+                                </div>
+							</div>
+						</div>
+					</div>
+				</div>
+			{% endfor %}
+		</div>
+
+		<link href="https://cdn.jsdelivr.net/npm/lightgallery/css/lightgallery-bundle.min.css" rel="stylesheet">
+		<script src="https://cdn.jsdelivr.net/npm/lightgallery/lightgallery.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/lightgallery/plugins/zoom/lg-zoom.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/lightgallery/plugins/thumbnail/lg-thumbnail.min.js"></script>
+
+		<script>
+			lightGallery(document.getElementById('gallery'), {
+                selector: '.lg-keogram',
+                plugins: [
+                    lgZoom, lgThumbnail
+                ],
+                thumbWidth: 200,
+                thumbHeight: '80px',
+                speed: 300,
+                download: false,
+                thumbnail: true,
+                zoom: true
+            });
+		</script>
+	{% endif %}
+{% endif %}

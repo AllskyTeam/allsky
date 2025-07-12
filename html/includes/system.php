@@ -6,6 +6,108 @@
  *
  */
 
+function rendersystem($twig) {
+	global $temptype, $page, $settings_array, $status, $hostname;
+
+	$status = new StatusMessages();	
+
+
+	if (isset($_POST['system_reboot'])) {
+		$status->addMessage("System Rebooting Now!", "warning", true);
+		$result = shell_exec("sudo /sbin/reboot");
+	} else if (isset($_POST['system_shutdown'])) {
+		$status->addMessage("System Shutting Down Now!", "warning", true);
+		$result = shell_exec("sudo /sbin/shutdown -h now");
+	} else if (isset($_POST['service_start'])) {
+		// Sleep to let Allsky status get updated.
+		// Starting Allsky takes longer to update status.
+		runCommand("sudo /bin/systemctl start allsky && sleep 4", "Allsky started", "success");
+		$s = true;
+	} else if (isset($_POST['service_stop'])) {
+		runCommand("sudo /bin/systemctl stop allsky && sleep 3", "Allsky stopped", "success");
+		$s = true;
+	}
+
+	$uptime = getUptime();
+	$memused = getMemoryUsed();
+	$cpuTempData = getCPUTemp();
+	$temperature = $cpuTempData['temperature'];
+	$display_temperature = $cpuTempData['display_temperature'];
+	$temperature_status = $cpuTempData['temperature_status'];
+	$throttle_data = getThrottleStatus();
+	$throttle_status = $throttle_data['throttle_status'];
+	$throttle = $throttle_data['throttle']; 
+
+
+
+	$top_dir = ALLSKY_WEBUI;
+	$df = @disk_free_space($top_dir);		// returns bytes
+	if ($df === false) {
+		$dp = -1;	// signals an error
+		$dp_msg = "<span class='errorMsg'>Unable to read '$top_dir'.</span>";
+	} else {
+		// and get disk space total (in bytes)
+		$dt = disk_total_space($top_dir);
+		// now we calculate the disk space used (in bytes)
+		$du = $dt - $df;
+		// percentage of disk used - this will be used to also set the width % of the progress bar
+		$dp = sprintf('%d', ($du / $dt) * 100);
+
+		/* and we format the size from bytes to MB, GB, etc. */
+		$df = formatSize($df);
+		$du = formatSize($du);
+		$dt = formatSize($dt);
+		$dp_msg = "$dp% - $dt ($df free)";
+	}
+	// Allsky tmp filesystem
+	$tmp_dir = ALLSKY_TMP;
+	$tdf = @disk_free_space($tmp_dir);
+	if ($tdf === false) {
+		$tdp = -1;
+		$tdp_msg = "<span class='errorMsg'>Unable to read '$tmp_dir'.</span>";
+	} else {
+		$tdt = disk_total_space($tmp_dir);
+		$tdu = $tdt - $tdf;
+		$tdp = sprintf('%d', ($tdu / $tdt) * 100);
+		$tdf = formatSize($tdf);
+		$tdu = formatSize($tdu);
+		$tdt = formatSize($tdt);
+		$tdp_msg = "$tdp% - $tdt ($tdf free)";
+	}
+
+	$messages = "";
+	if ($status->isMessage()) {
+		$messages = $status->getMessages();
+	}
+
+	return $twig->render('pages/system/page.twig', [
+		"messages" => $messages,
+		"hostname" => $hostname,
+		"hardware" => RPiModel(),
+		"uptime" => $uptime,
+		"memused" => $memused,
+		"messages" => $messages,
+		"cputemp" => array(
+			"cputemp" => $temperature,
+			"displayTemperature" => $display_temperature,
+			"temperatureStatus" => $temperature_status
+		),
+		"throttle" => array(
+			"throttle" => $throttle,
+			"throttleStatus" => $throttle_status
+		),
+		"disk" => array(
+			"diskmsg" => $dp_msg,
+			"diskpercentage" => $dp
+		),
+		"allskytmp" => array(
+			"diskmsg" => $tdp_msg,
+			"diskpercentage" => $tdp
+		)		
+	]);
+
+}
+
 function RPiModel()
 {
 	global $settings_array;

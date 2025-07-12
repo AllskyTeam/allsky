@@ -96,11 +96,13 @@ class UIUTIL
         }
         $width = (($current - $min) / ($max - $min)) * 100;
 
-        $result =  "<div class='progress-bar progress-bar-not-animated progress-bar-$myStatus'";
+        $result = '<div class="progress">';
+        $result .=  "<div class='progress-bar progress-bar-not-animated bg-$myStatus'";
         $result .= "    role='progressbar'";
         $result .= "    title='current: $current, min: $min, max: $max'";
         $result .= "    aria-valuenow='$current' aria-valuemin='$min' aria-valuemax='$max'";
         $result .= "    style='width: $width%;'><span class='nowrap'>$data</span>";
+        $result .= "</div>";
         $result .= "</div>";
 
         return $result;

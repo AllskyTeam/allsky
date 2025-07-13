@@ -149,8 +149,7 @@ gawk 'BEGIN {
 		totalCount = min(numStarts, numGots);
 		if (totalCount > 0) {
 #			printf("num_STARTING: %d, num_Got: %d, ", numStarts, numGots);
-			printf("average_time: %2.1f seconds, average_overhead: %2.1f seconds\n",
-				totalSeconds / totalCount, totalOverhead / totalCount);
+			printf("average_overhead: %2.1f seconds\n", totalOverhead / totalCount);
 		}
 	} ' "${TMP}"
 

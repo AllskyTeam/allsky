@@ -582,7 +582,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 	// When in auto-exposure mode the returned exposure length is what the driver thinks the
 	// next exposure should be, and will eventually converge on the correct exposure.
 
-	Log(2, "  > GOT IMAGE%s.", tb);
+	Log(1, "  > GOT IMAGE%s.", tb);
 	ret = ASIGetControlValue(cg->cameraNumber, ASI_EXPOSURE, &suggestedNextExposure_us, &wasAutoExposure);
 	if (ret != ASI_SUCCESS)
 	{

@@ -603,9 +603,8 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 						ok = false;
 						break;
 					}
-				} else {
-					if (optarg[0] == '#')	// '#' is optional
-						optarg++;
+				} else if (optarg[0] == '#') {
+					optarg++;
 					if (strlen(optarg) == 3) {
 						sscanf(optarg, "%1x%1x%1x", &r, &g, &b);
 						r = (r << 4) + r;
@@ -619,6 +618,11 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 						ok = false;
 						break;
 					}
+				} else {
+					std::cerr << KRED << ME <<  ": font-color must have 3 number or start with a '#'."
+						<< "  You had '" << optarg << ".'" << KNRM << std::endl << std::endl;
+					ok = false;
+					break;
 				}
 
 				cf->r = r & 0xff;

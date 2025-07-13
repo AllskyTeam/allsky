@@ -68,9 +68,6 @@
 
 				<h4>Bug Fixes</h4>
 				<ul>
-					<li>Entering a <span class="WebUISetting">Locale</span> in the WebUI
-						that is not installed on the Pi displays an error message and lists
-						the locales that ARE installed and tells the user how to install other locales.
 					<li>
 				</ul>
 
@@ -108,6 +105,20 @@
 
 				<h4>Bug Fixes</h4>
 				<ul>
+					<li>For RPi cameras, the length of time Allsky waits before
+						timing out an image was increased.
+						For some Pi's, the prior 30-second timeout was too short
+						when the Pi was extremely busy such as during
+						timelapse creation.
+					<li>Entering a <span class="WebUISetting">Locale</span> in the WebUI
+						that is not installed on the Pi displays an error message and lists
+						the locales that ARE installed and tells the user how
+						to install other locales.
+					<li>Mono cameras were calculating the mean image brightness
+						twice: once prior to the initial save of the image
+						and a second time when determining if the image was too
+						dark or too bright.
+						The second time used a different formula than the first time.
 				</ul>
 
 				<h4>New Settings</h4>

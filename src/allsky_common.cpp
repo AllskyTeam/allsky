@@ -259,10 +259,10 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 			snprintf(tmp, s, " WBB=%s", LorF(cg.lastWBB, "%d", "%f"));
 			strcat(cmd, tmp);
 		}
-		if (cg.lastMean >= 0.0) {
-			snprintf(tmp, s, " MEAN=%f", cg.lastMean);
-			strcat(cmd, tmp);
-		}
+	}
+	if (cg.lastMean >= 0.0) {
+		snprintf(tmp, s, " MEAN=%f", cg.lastMean);
+		strcat(cmd, tmp);
 	}
 
 	// Since negative temperatures are valid, check against an impossible temperature.

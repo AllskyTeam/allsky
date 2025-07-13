@@ -817,6 +817,7 @@ update_php_defines()
 			-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};g" \
 			-e "s;XX_ALLSKY_ENV_XX;${ALLSKY_ENV};g" \
 			-e "s;XX_IMG_DIR_XX;${IMG_DIR};g" \
+			-e "s;XX_ALLSKY_MYFILES_DIR_XX;${ALLSKY_MYFILES_DIR};g" \
 			-e "s;XX_MY_OVERLAY_TEMPLATES_XX;${MY_OVERLAY_TEMPLATES};g" \
 			-e "s;XX_ALLSKY_MODULES_XX;${ALLSKY_MODULES};g" \
 			-e "s;XX_ALLSKY_MODULE_LOCATION_XX;${ALLSKY_MODULE_LOCATION};g" \
@@ -3418,8 +3419,7 @@ install_Python()
 	CMD+="\nDevice.ensure_pin_factory()"
 	CMD+="\nprint(Device.pin_factory.board_info.model)"
 	pimodel="$( echo -e "${CMD}" | python3 2>/dev/null )"	# hide error since it only applies to Pi 5.
-
-	echo "${pimodel}" > "${ALLSKY_CONFIG}/piversion"
+	echo "${pimodel}" > "${PI_VERSION_FILE}"
 
 	# if we are on the pi 5 then uninstall rpi.gpio, using the virtual environment which will always
 	# exist on the pi 5. lgpio is installed globally so will be used after rpi.gpio is removed

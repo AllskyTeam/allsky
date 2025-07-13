@@ -53,6 +53,7 @@ function usage_and_exit()
 
 	echo "      show_supported_cameras  --RPi | --ZWO"
 	echo "      show_connected_cameras"
+	echo "      show_installed_locales"
 	echo "      prepare_logs"
 	echo "      config_timelapse"
 	echo "      change_swap"
@@ -151,6 +152,36 @@ function show_connected_cameras()
 	fi
 }
 
+
+#####
+# Show all the supported cameras.
+function show_installed_locales()
+{
+	local HTML=""
+
+	if [[ ${1} == "--help" ]]; then
+		echo
+		W_ "Usage: ${ME}  ${ME_F}"
+		echo
+		echo "Display a list of the locales installed on this computer."
+		return
+	fi
+
+	echo
+	echo "The following locales are installed on this computer."
+	echo -n "If the one you want to use is NOT in the list,"
+	if [[ ${ON_TTY} == "true" ]]; then
+		echo " see the 'Locale' setting on the WebUI's"
+		echo "'Settings -> Allsky' Documentation page for instructions on how to install it."
+	else
+		echo " <a href='/documentation/settings/allsky.html#locale'>click here</a>"
+		echo "for instructions on how to install it."
+		HTML="--html"
+	fi
+
+	# shellcheck disable=SC2086
+	indent ${HTML} "$( list_installed_locales )"
+}
 
 #####
 # Prepare Allsky for troubleshooting.
@@ -715,6 +746,7 @@ if [[ -z ${CMD} ]]; then
 	CMDS=(); N=1
 	CMDS+=("show_supported_cameras"		"$( L "Show supported cameras" )"); ((N++))
 	CMDS+=("show_connected_cameras"		"$( L "Show connected cameras" )"); ((N++))
+	CMDS+=("show_installed_locales"		"$( L "Show locales installed on this computer" )"); ((N++))
 	CMDS+=("prepare_logs"				"$( L "Prepare log files for troubleshooting" )"); ((N++))
 	CMDS+=("config_timelapse"			"$( L "Create timelapse videos with different settings" )"); ((N++))
 	CMDS+=("change_swap"				"$( L "Add swap space or change size" )"); ((N++))

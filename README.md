@@ -44,11 +44,6 @@ In order to run the Allsky software you need:
 <!-- =============================================================================== --> 
 ## Software Installation
 
-<!-- HIDE FOR NOW - THE VIDEO IS A COUPLE RELEASES OLD
-PatriotAstro created a great [video](https://www.youtube.com/watch?v=7TGpGz5SeVI) describing the installation steps below.
-__We recommend viewing it before installing the software__.
--->
-
 See the [detailed installation instructions](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/installations/Allsky.html).
 
 ---

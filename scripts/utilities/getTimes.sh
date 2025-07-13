@@ -65,6 +65,7 @@ gawk 'BEGIN {
 		t = (hours * (60 * 60)) + (minutes * 60) + seconds;
 		return t;
 	}
+
 	{
 		if ($4 == "STARTING" && $5 == "EXPOSURE") {
 			numStarts++;
@@ -83,7 +84,6 @@ gawk 'BEGIN {
 				printf("UNKNOWN exposure units: %s\n", $0);
 				exposureSeconds = 0
 			}
-# printf("exposureSeconds = %2.6f, (%s %s)\n", exposureSeconds, $10, exposureUnits);
 		} else if ($5 == "Running:") {
 			# This always comes after STARTING EXPOSURE and is when libcamera-still actually starts.
 			# Use it if it exists since it is a more accurate start time.
@@ -124,7 +124,9 @@ gawk 'BEGIN {
 	END {
 		totalCount = min(numStarts, numGots);
 		if (totalCount > 0) {
-			printf("num_STARTING: %d, num_Got: %d, average_time: %2.1f seconds, average_overhead: %2.1f seconds\n",
-				numStarts, numGots, totalSeconds / totalCount, totalOverhead / totalCount);
+#			printf("num_STARTING: %d, num_Got: %d, ", numStarts, numGots);
+			printf("average_time: %2.1f seconds, average_overhead: %2.1f seconds\n",
+				totalSeconds / totalCount, totalOverhead / totalCount);
 		}
 	} ' "${TMP}"
+

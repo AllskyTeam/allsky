@@ -4,12 +4,17 @@ ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck disable=SC1091 source=variables.sh
 source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+
 
 TMP="${ALLSKY_TMP}/${ME}.txt"
 
 # 2025-07-06T04:47:43.690741-05:00 Pi_name allsky[pid]: STARTING EXPOSURE at: 2025-07-06 04:47:43   @ 28.0 sec
 # 1                                2       3              4        5        6   7          8          9 10   11
 # 2025-07-06T04:47:43.690741-05:00 Pi_name allsky[pid]: STARTING EXPOSURE at: 2025-07-06 04:47:43   @ 123 us
+# OR:
+# Jul 12 23:59:41 Pi_name allsky[pid]: ...
 
 # 2025-07-13T00:01:18.865853-05:00 Pi_name allsky[pid]:  > Running: timeout 63  ...
 # 1                                2       3               4 5
@@ -48,13 +53,23 @@ gawk 'BEGIN {
 	}
 	function getTime(dateTime) {
 		# 2025-07-13T02:33:31.569085-05:00
+		# 2025-07-13T02:33:31.569085+05:00
+		sub(".*T", "", dateTime);
+		sub("[+-].*", "", dateTime);
+		return dateTime;
+# TODO: not needed
 		T = index(dateTime, "T") + 1;
 		if (T == 1) return "";
 		time = substr(dateTime, T);
 
-		minus = index(time, "-");
-		if (minus > 0) {
-			time = substr(time, 1, minus-1)
+		sign = index(time, "-");
+		if (sign > 0) {
+			time = substr(time, 1, sign-1)
+		} else {
+			sign = index(time, "+");
+			if (sign > 0) {
+				time = substr(time, 1, sign-1)
+			}
 		}
 		return time;
 	}
@@ -67,10 +82,21 @@ gawk 'BEGIN {
 	}
 
 	{
+		# Get the time.
+		if (substr($1, 1, 2) == "20") {		# 2025, etc.
+			thisTime = getTime($1);
+			thisSeconds = getSeconds(thisTime);
+		} else {
+			# Assume "Jul 12 01:02:03" so drop the "Jul" and "12".
+			thisTime = $3;
+			thisSeconds = getSeconds(thisTime);
+			sub($2 " ", "", $0);	# Month: needs to come before $1
+			sub($1 " ", "", $0);	# Day
+		}
+
 		if ($4 == "STARTING" && $5 == "EXPOSURE") {
 			numStarts++;
-			startTime = getTime($1);
-			startSeconds = getSeconds(startTime);
+			startSeconds = thisSeconds;
 			exposure = $10;
 			sub(",", "", exposure);		# remove commas from number  TODO: "." for thousands separator??
 			exposureUnits = $11
@@ -87,19 +113,17 @@ gawk 'BEGIN {
 		} else if ($5 == "Running:") {
 			# This always comes after STARTING EXPOSURE and is when libcamera-still actually starts.
 			# Use it if it exists since it is a more accurate start time.
-			startTime = getTime($1);
-			startSeconds = getSeconds(startTime);
+			startSeconds = thisSeconds;
 
 		} else if ($5 == "Got:" || $5 == "GOT") {
 			if (startSeconds != "") {
 				numGots++;
-				endTime = getTime($1);
-				endSeconds = getSeconds(endTime);
+				endSeconds = thisSeconds;
 				# endSeconds will be less than startSeconds if they are in different days.
 				if (endSeconds != "" && endSeconds > startSeconds) {
 					seconds = endSeconds - startSeconds;
 					totalSeconds += seconds;
-					printf("%2.1f seconds @ %s", seconds, endTime);
+					printf("%2.1f seconds @ %s", seconds, thisTime);
 					if (exposureSeconds != 0.0) {
 						overhead = seconds - exposureSeconds;
 						printf(", overhead %2.1f seconds", overhead);
@@ -111,13 +135,13 @@ gawk 'BEGIN {
 			}
 		} else if ($4 == "endOfNight.sh:") {
 			# Output just the time and "endOfNight.sh" and everything after it.
-			sub("^....-..-..T", "", $0);
+			sub("^....-..[+-]..T", "", $0);
 			sub("-..:.. ", " ", $0);
 			sub("\\[", "", $0);
-			sub($3, "", $0);	# needs to come before $2
-			sub($2, "", $0);
+			sub($3 " ", "", $0);	# needs to come before $2
+			sub($2 " ", "", $0);
 			printf("    %s\n", $0);
-		} else {
+		} else if ($0 != "") {
 			printf("UNKNOWN LINE %6d: \"%s\"\n", FNR, $0);
 		}
 	}
@@ -129,3 +153,8 @@ gawk 'BEGIN {
 				totalSeconds / totalCount, totalOverhead / totalCount);
 		}
 	} ' "${TMP}"
+
+	echo
+	echo "Computer = $( settings ".computer" )"
+	echo "PI_OS = ${PI_OS}"
+	echo "Day AWB = $( settings ".dayawb" ), Night AWB = $( settings ".nightawb" )"

@@ -120,7 +120,7 @@ bool read_file(
 }
 
 void parse_args(int, char**, struct config_t*);
-void usage_and_exit(int);
+void usage_and_exit(int, bool);
 int get_font_by_name(char*);
 
 // Keep track of number of digits in nfiles so file numbers will be consistent width.
@@ -490,7 +490,7 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 	cf->fontScale = 2;
 	cf->fontType = cv::LINE_8;
 	cf->lineWidth = 3;
-	cf->a = cf->r = cf->g = 0;
+	cf->a = cf->r = cf->g = 0;		// cf->a (transparency) not currently used.
 	cf->b = 0xff;
 	cf->rotation_angle = 0;
 	cf->verbose = cf->img_width = cf->img_height = 0;
@@ -500,6 +500,7 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 	cf->num_img_expand = 1;
 	cf->channel_info = false;
 
+	bool ok = true;
 	while (1) {		// getopt loop
 	int option_index = 0;
 	static struct option long_options[] = {
@@ -534,7 +535,7 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 		switch (c)
 		{
 			case 'h':
-				usage_and_exit(0);
+				usage_and_exit(0, true);
 				// NOTREACHED
 			case 'd':
 				cf->img_src_dir = optarg;
@@ -573,14 +574,13 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 				// 122.8Mpx should be enough for anybody.
 				if (height < 0 || width < 0) {
 					height = width = 0;
-					fprintf(stderr, "%s: WARNING: height (%d) and width (%d) must be >= 0.",
+					fprintf(stderr, "%s: ERROR: height (%d) and width (%d) must be >= 0.",
 						ME, height, width);
-					fprintf(stderr, "  Setting to 0.\n");
+					ok = false;
 				} else if (height > 9600 || width > 12800) {
-					fprintf(stderr, "%s: WARNING: maximum height (%d) is 9600 and maximum width (%d) is 12800.",
+					fprintf(stderr, "%s: ERROR: maximum height (%d) is 9600 and maximum width (%d) is 12800.",
 						ME, height, width);
-					fprintf(stderr, "  Setting to 0.\n");
-					height = width = 0;
+					ok = false;
 				}
 				cf->img_height = height;
 				cf->img_width = width;
@@ -589,24 +589,44 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 				cf->verbose++;
 				break;
 			case 'C':
+				int r, g, b;
+
 				// Allow space- or comma-separated numbers, or hex numbers
 				if (strchr(optarg, ' ') || strchr(optarg, ',')) {
-					int r, g, b;
 					if (strchr(optarg, ' '))
-						sscanf(optarg, "%d %d %d", &b, &g, &r);
+						sscanf(optarg, "%d %d %d", &r, &g, &b);
 					else
-						sscanf(optarg, "%d,%d,%d", &b, &g, &r);
-					cf->b = b & 0xff;
-					cf->g = g & 0xff;
-					cf->r = r & 0xff;
-					break;
+						sscanf(optarg, "%d,%d,%d", &r, &g, &b);
+					if (r > 255 || g > 255 || b > 255) {
+						std::cerr << KRED << ME <<  ": font-color must have 3 numbers between 0 and 255."
+							<< "  You had '" << optarg << ".'" << KNRM << std::endl << std::endl;
+						ok = false;
+						break;
+					}
+				} else {
+					if (optarg[0] == '#')	// '#' is optional
+						optarg++;
+					if (strlen(optarg) == 3) {
+						sscanf(optarg, "%1x%1x%1x", &r, &g, &b);
+						r = (r << 4) + r;
+						g = (g << 4) + g;
+						b = (b << 4) + b;
+					} else if (strlen(optarg) == 6) {
+						sscanf(optarg, "%2x%2x%2x", &r, &g, &b);
+					} else {
+						std::cerr << KRED << ME <<  ": font-color must have either 3 or 6 hex digits."
+							<< "  You had '" << optarg << ".'" << KNRM << std::endl << std::endl;
+						ok = false;
+						break;
+					}
 				}
-				if (optarg[0] == '#')	// skip '#' if input is like '#coffee'
-					optarg++;
-				sscanf(optarg, "%06x", &tmp);
-				cf->b = tmp & 0xff;
-				cf->g = (tmp >> 8) & 0xff;
-				cf->r = (tmp >> 16) & 0xff;
+
+				cf->r = r & 0xff;
+				cf->g = g & 0xff;
+				cf->b = b & 0xff;
+				if (cf->verbose) {
+					printf("r=%x, g=%x, B=%x\n", (int)cf->r, (int)cf->g, (int)cf->b);
+				}
 				break;
 			case 'L':
 				cf->lineWidth = atoi(optarg);
@@ -655,13 +675,16 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 				break;
 		}	// option switch
 	}		// getopt loop
+
+	if (! ok) usage_and_exit(1, false);
 }
 
-void usage_and_exit(int x) {
+void usage_and_exit(int x, bool showAll) {
 	std::cerr << "Usage: " << ME << " -d <imagedir> -e <ext>"
 		<< " -o <outputfile> [<other_args>]" << std::endl;
-	if (x)
-		std::cerr << KRED << "Source directory, image extension, and output file are required" << std::endl;
+	if (x != 0) {
+		std::cerr << KRED << "    Source directory, image extension, and output file are required." << std::endl;
+	}
 
 	std::cerr << KNRM << std::endl;
 	std::cerr << "Arguments:" << std::endl;
@@ -674,7 +697,7 @@ void usage_and_exit(int x) {
 	std::cerr << "-v | --verbose : Increase logging verbosity" << std::endl;
 	std::cerr << "-n | --no-label : Disable hour and date labels" << std::endl;
 	std::cerr << "-D | --no-date : Disable date label" << std::endl;
-	std::cerr << "-C | --font-color <str> : label font color, in HTML format (0000ff)" << std::endl;
+	std::cerr << "-C | --font-color <str> : label font color, in HTML format (#0000ff)" << std::endl;
 	std::cerr << "-L | --font-line <int> : font line thickness (3), (min=1)" << std::endl;
 	std::cerr << "-N | --font-name <str> : font name (simplex)" << std::endl;
 	std::cerr << "-S | --font-size <float> : font size (2.0)" << std::endl;
@@ -687,16 +710,17 @@ void usage_and_exit(int x) {
 	std::cerr << "-p | --parse-filename : parse time using filename instead of stat(filename)" << std::endl;
 
 	std::cerr << KNRM << std::endl;
-	std::cerr << "Font name is one of these OpenCV font names:\n\tSimplex, Plain, "
-	"Duplex, Complex, Triplex, ComplexSmall, ScriptSimplex, ScriptComplex" << std::endl;
-	std::cerr << "Font Type is an OpenCV line type: 0=antialias, 1=8-connected, 2=4-connected" << std::endl;
-//x	std::cerr << KNRM << std::endl;
-	std::cerr << "In some cases --font-line and --font-size can lead to annoying horizontal lines.:"
-		<< std::endl
-		<< "Solution: try other values" << std::endl;
-//x	std::cerr << KNRM << std::endl;
-	std::cerr << "   ex: keogram --directory ../images/current/ --extension jpg --output-file keogram.jpg --font-size 2" << std::endl;
-	std::cerr << "   ex: keogram -d . -e png -o /home/pi/allsky/keogram.jpg -n" << KNRM << std::endl;
+	if (showAll) {
+		std::cerr << "Font name is one of these OpenCV font names:\n\tSimplex, Plain, "
+			"Duplex, Complex, Triplex, ComplexSmall, ScriptSimplex, ScriptComplex" << std::endl;
+		std::cerr << "Font Type is an OpenCV line type: 0=antialias, 1=8-connected, 2=4-connected" << std::endl;
+		std::cerr << "In some cases --font-line and --font-size can lead to annoying horizontal lines.:"
+			<< std::endl << "Solution: try other values, for example:" << std::endl;
+		std::cerr << "   " << ME
+			<< " --directory ../images/current/ --extension jpg --output-file keogram.jpg --font-size 2" << std::endl;
+		std::cerr << "   " << ME
+			<< " -d . -e png -o /home/pi/allsky/keogram.jpg -n" << KNRM << std::endl;
+	}
 	exit(x);
 }
 
@@ -733,7 +757,7 @@ int main(int argc, char* argv[])
 	parse_args(argc, argv, &config);
 
 	if (config.img_src_dir.empty() || config.img_src_ext.empty() || config.dst_keogram.empty())
-		usage_and_exit(3);
+		usage_and_exit(3, true);
 
 	r = setpriority(PRIO_PROCESS, 0, config.nice_level);
 	if (r) {

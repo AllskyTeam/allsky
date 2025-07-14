@@ -30,8 +30,9 @@ TMP="${ALLSKY_TMP}/${ME}.txt"
 # 2025-07-13T04:52:49.038624-05:00 Pi_name allsky[pid]: endOfNight.sh: ===== Generating Keogram for 20250712
 # 1                                2       3            4
 
+# Use sed to remove text that's not needed to minimize the size of the file.
 SEARCH_STRING="STARTING EXPOSURE |> Running: |> GOT IMAGE |> Got: |endOfNight.sh:"
-[[ ! -s ${TMP} ]] && grep --no-filename -E "${SEARCH_STRING}" "${ALLSKY_LOG}"* 2>/dev/null |
+grep --no-filename -E "${SEARCH_STRING}" "${ALLSKY_LOG}"* 2>/dev/null |
 	sed -e 's/, gain.*//' -e 's/ --thumb.*//' > "${TMP}"
 if [[ ! -s ${TMP} ]]; then
 	echo "ERROR: No lines in log file(s) with '${SEARCH_STRING}'" >&2

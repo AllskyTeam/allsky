@@ -89,8 +89,11 @@ function checkType($fieldName, $value, $old, $label, $label_prefix, $type, &$sho
 			$msg = "must be a number with, or without, a fraction";
 		else
 			$value += 0.0;
-	} else if ($type === "color" && substr($value, 0, 1) === "#" && strlen($value) !== 7) {
-		$msg = "must contain 6 characters after the '#'";
+	} else if ($type === "color" && substr($value, 0, 1) === "#") {
+		$l = strlen($value);
+		if ($l != 4 && $l !== 7) {
+			$msg = "must contain either 3 or 6 characters after the '#'";
+		}
 	}
 	if ($msg === "") {
 		return("");

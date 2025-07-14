@@ -31,7 +31,7 @@ TMP="${ALLSKY_TMP}/${ME}.txt"
 # 1                                2       3            4
 
 # Use sed to remove text that's not needed to minimize the size of the file.
-SEARCH_STRING="STARTING EXPOSURE |> Running: |> GOT IMAGE |> Got: |endOfNight.sh:"
+SEARCH_STRING="STARTING EXPOSURE |> Running: |> GOT IMAGE|> Got: |endOfNight.sh:"
 grep --no-filename -E "${SEARCH_STRING}" "${ALLSKY_LOG}"* 2>/dev/null |
 	sed -e 's/, gain.*//' -e 's/ --thumb.*//' > "${TMP}"
 if [[ ! -s ${TMP} ]]; then

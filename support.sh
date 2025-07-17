@@ -337,14 +337,17 @@ function generate_support_info()
 		"${ALLSKY_UTILITIES}/showSupportedCameras.sh" --rpi --zwo
 	} > "${SUPPORTED_CAMERAS_FILE}"
 
-	local ALLSKY_LOG_FILE="${TEMP_DIR}/allsky_log.txt"
-	if [[ -f ${ALLSKY_LOG} ]]; then
-		if [[ ${LOG_LINES} == "all" ]]; then
-			cp "${ALLSKY_LOG}" "${ALLSKY_LOG_FILE}"
-		else
-			tail -n "${LOG_LINES}" "${ALLSKY_LOG}" > "${ALLSKY_LOG_FILE}"
+	local ALLSKY_LOG_FILE
+ 	for L in "${ALLSKY_LOG}" "${ALLSKY_LOG}.1"; do
+		if [[ -f ${L} ]]; then
+  			ALLSKY_LOG_FILE="${TEMP_DIR}/$( basename "${L}" ).txt"
+			if [[ ${LOG_LINES} == "all" ]]; then
+				cp "${L}" "${ALLSKY_LOG_FILE}"
+			else
+				tail -n "${LOG_LINES}" "${L}" > "${ALLSKY_LOG_FILE}"
+			fi
 		fi
-	fi
+  	done
 
 	local PERIODIC_LOG_FILE="${TEMP_DIR}/allskyperiodic_log.txt"
 	if [[ -f ${ALLSKY_PERIODIC_LOG} ]]; then

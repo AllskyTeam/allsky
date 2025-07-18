@@ -213,6 +213,7 @@ class OEUIMANAGER {
         $(document).off('click', '.oe-field-errors-dialog-fix');
         $(document).off('oe-config-updated');
         $(document).off('click','#oe-show-overlay-manager');
+        $(document).off('addFields');
 
         this.#overlayLayer.destroyChildren();
         this.#transformer = new Konva.Transformer({
@@ -374,6 +375,83 @@ class OEUIMANAGER {
         $(document).on('oe-config-updated', (e) => {
             this.updateToolbar();
         });
+
+        $(document).on('addFields', (e, templateInfo) => {
+            this.#transformer.nodes([]); 
+            if ('fields' in templateInfo.template) {
+                let fields = templateInfo.template.fields;
+
+
+                let yAdd = this.#configManager.getValue('settings.defaultfontsize');
+                let gridSize =this.#configManager.gridSize;
+
+                function snapToGrid(value) {
+                    return Math.round(value / gridSize) * gridSize;
+                }
+
+                let y = 10;
+                y = snapToGrid(y)
+                let largestCol1 = 0;
+                let col2 = [];       
+                Object.entries(fields).forEach(([key, value]) => {
+                    let x = 500;
+                    x = snapToGrid(x)
+                    if ('text' in value) {
+                        let shape = this.#fieldManager.addField('text', value.text)
+                        this.#overlayLayer.add(shape)
+                        let id = shape.id();
+                        let field = this.#fieldManager.findField(id);
+                        field.tlx = x;
+                        field.tly = y;
+                        field.format = value.format;
+                        if (value.font !== "") {
+                            field.font = value.font;
+                        }
+                        let current = this.#transformer.nodes();
+                        this.#transformer.nodes([...current, shape]); 
+                    } else {
+                        let col1 = true;
+                        Object.entries(value).forEach(([fieldkey, fieldvalue]) => {
+                            if ('text' in fieldvalue) {
+                                let shape = this.#fieldManager.addField('text', fieldvalue.text)
+                                this.#overlayLayer.add(shape)
+                                let id = shape.id();
+                                let field = this.#fieldManager.findField(id);
+                                field.tlx = x;
+                                field.tly = y;
+                                field.format = fieldvalue.format;
+                                if (fieldvalue.font !== "") {
+                                    field.font = fieldvalue.font;
+                                }
+                                x += shape.width() / this.#oeEditorStage.scaleX();
+                                x = snapToGrid(x)
+                                let current = this.#transformer.nodes();
+                                this.#transformer.nodes([...current, shape]);
+                                if (col1) {
+                                    if (shape.width() > largestCol1) {
+                                        largestCol1 = shape.width();
+                                    }
+                                } else {
+                                    col2.push(field);
+                                }
+                                col1 = false;
+                            }        
+                        });
+                    } 
+                    y += yAdd;
+                    y = snapToGrid(y);
+                });
+
+                Object.entries(col2).forEach(([key, field]) => {
+                    let tlx = largestCol1 + (largestCol1 * 0.3) + 500;
+                    field.tlx = snapToGrid(tlx)
+                });
+            }
+            this.#fieldManager.groupFields(this.#transformer)
+            this.#configManager.dirty = true
+            this.updateToolbar();
+        });        
+        
     }
 
     setupVariableManagerEvents() {

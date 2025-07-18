@@ -35,6 +35,9 @@
         plugin.refreshButton = pluginPrefix + 'as-variable-refresh'
         plugin.resetButton = pluginPrefix + 'as-variable-reset'		
 		
+        plugin.templatecontainer = pluginPrefix + '-allskyTemplatesContainer';
+        plugin.mmtemplateId = pluginPrefix + '-allskyTemplates';
+
         plugin.init = function () {
             buildUI()
             updateUI()
@@ -98,22 +101,46 @@
                                 <h4 class="modal-title">Select Allsky Variable</h4>
                             </div>
                             <div class="modal-body">
-                                <div class="as-var" id="${plugin.container}">
-                                    <div>
-                                        <table id="${plugin.mmId}-table" class="display compact as-variable-list" style="width:98%;">
-                                            <thead>
-                                                <tr>
-                                                    <th>Variable</th>
-                                                    <th>Group</th>
-                                                    <th>Source</th>
-                                                    <th>Value</th>
-                                                    <th>Format</th>
-                                                    <th>Sample</th>
-                                                    <th>Type</th>
-                                                    <th>Description</th>
-                                                </tr>
-                                            </thead>
-                                        </table>
+                                <ul class="nav nav-tabs" role="tablist">
+                                    <li class="active"><a href="#variables" role="tab" data-toggle="tab">Variables</a></li>
+                                    <li><a href="#templates" role="tab" data-toggle="tab">Templates</a></li>
+                                </ul>
+                                <div class="tab-content" style="margin-top:15px;">
+                                    <div class="tab-pane active" id="variables">
+                                        <div class="as-var" id="${plugin.container}">
+                                            <div>
+                                                <table id="${plugin.mmId}-table" class="display compact as-variable-list" style="width:98%;">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Variable</th>
+                                                            <th>Group</th>
+                                                            <th>Source</th>
+                                                            <th>Value</th>
+                                                            <th>Format</th>
+                                                            <th>Sample</th>
+                                                            <th>Type</th>
+                                                            <th>Description</th>
+                                                        </tr>
+                                                    </thead>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane" id="templates">
+                                        <div class="as-var" id="${plugin.templatecontainer}">
+                                            <div>
+                                                <table id="${plugin.mmtemplateId}-table" class="display compact as-variable-list" style="width:98%;">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Group</th>
+                                                            <th>Description</th>
+                                                            <th></th>
+                                                        </tr>
+                                                    </thead>
+                                                </table>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -160,6 +187,86 @@
 			$('#' + plugin.mmId + '-table').off('preXhr.dt')
 			$('#' + plugin.mmId + '-table').off('xhr.dt')
 			$('#' + plugin.mmId + '-table').DataTable().destroy()
+			$('#' + plugin.mmtemplateId + '-table').DataTable().destroy()
+
+            plugin.templateTable = $('#' + plugin.mmtemplateId + '-table')
+                .DataTable({
+                    ajax: {
+                        url: 'includes/moduleutil.php?request=TemplateList',
+                        dataSrc : '',
+                        type: 'GET',
+                        dataType: 'json',
+                        cache: false				
+                    },
+                    order: [[1, 'asc']],
+                    paging: false,
+                    scrollY: '50vh',
+                    scrollCollapse: true,
+                    autoWidth: true,       
+                    columns: [
+                        { 
+                            data: 'name'                     
+                        },{
+                            data: 'group',
+                            visible: true
+                        },{
+                            data: 'description'
+                        },{
+                            data: null,
+                            width: '100px',
+                            render: function (item, type, row, meta) {
+                                let buttons = `
+                                    <button type="button" class="btn btn-success btn-sm oe-add-field-template" data-tod="${row.tod}" data-template="${row.template}" data-group="${row.group}">Add</button>
+                                `;
+
+                                return buttons;
+                            }
+                        }
+                    ],
+                    rowGroup: {
+                        dataSrc: 'group',
+                        startRender: function (rows, group) {
+                            var collapsed = !!templateCollapsedGroups[group];
+                            
+                            let icon = collapsed ? '<i class="fa-solid fa-angles-right"></i>' : '<i class="fa-solid fa-angles-down"></i>';
+                            rows.nodes().each(function (r) {
+                                r.style.display = collapsed ? 'none' : '';
+                            });    
+
+                            return $('<tr/>')
+                                .append('<td colspan="9">' + icon + ' ' + group + ' (' + rows.count() + ' Variables)</td>')
+                                .attr('data-name', group)
+                                .toggleClass('collapsed', collapsed);
+                        }
+                    }                             
+                })            
+
+            var templateCollapsedGroups = {};                
+            $('#' + plugin.mmtemplateId + '-table tbody').on('click', 'tr.dtrg-start', function () {
+                var name = $(this).data('name');
+                templateCollapsedGroups[name] = !templateCollapsedGroups[name];
+                plugin.templateTable.draw(false);
+            });                
+
+
+            $(document).off('click', '.oe-add-field-template');
+            $(document).on('click', '.oe-add-field-template', (e) =>{
+                let template = $(e.currentTarget).data('template');
+                let group = $(e.currentTarget).data('group');
+                let tod = $(e.currentTarget).data('tod');
+                $.ajax({
+                    url: 'includes/moduleutil.php?request=Template&template=' + template + '&group=' + group + '&tod=' + tod,
+                    type: 'GET',
+                    dataType: 'json',
+                    cache: false,             
+                    context: this
+                }).done((result) => {
+                    $(document).trigger('addFields', {
+                        template: result
+                    });
+                });                 
+            });
+
 
             var collapsedGroups = {};
             plugin.variableTable = $('#' + plugin.mmId + '-table')

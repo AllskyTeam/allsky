@@ -15,6 +15,8 @@ class MODULEUTIL
 	private $extraDataFolder;
 	private $myFiles;
 
+    private $allskySettings = null;
+
     function __construct() {
         $this->allskyModules = ALLSKY_SCRIPTS . '/modules';
         $this->userModules = ALLSKY_MODULE_LOCATION . '/modules';
@@ -22,6 +24,7 @@ class MODULEUTIL
 		$this->myFiles = ALLSKY_MYFILES_DIR . '/modules';
         $this->allsky_home = ALLSKY_HOME;
         $this->allsky_scripts = ALLSKY_SCRIPTS;
+        $this->allsky_config = ALLSKY_CONFIG;
     }
 
     public function run()
@@ -1347,6 +1350,148 @@ class MODULEUTIL
 
         $this->sendResponse(json_encode($result));
     }
+
+    public function getTemplateList() {
+
+        global $settings_array;		// defined in initialize_variables()
+        $angle = $settings_array['angle'];
+        $lat = $settings_array['latitude'];
+        $lon = $settings_array['longitude'];
+
+        $imageDir = get_variable(ALLSKY_HOME . '/variables.sh', "IMG_DIR=", 'current/tmp');
+        $result['filename'] = $imageDir . '/' . $settings_array['filename'];
+
+        exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
+        if ($retval == 2) {
+            $daynight = 'day';
+        } else if ($retval == 3) {
+            $daynight = 'night';
+        } else {
+            $daynight = '';
+        }
+
+        $result = array();
+
+
+        $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($daynight) . '.json';
+        $rawConfigData = file_get_contents($configFileName);
+        $modules = json_decode($rawConfigData, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            die('Invalid JSON: ' . json_last_error_msg());
+        }
+
+        $result = [];
+
+        foreach ($modules as $moduleName => $moduleData) {
+            if (!empty($moduleData['metadata']['templates'])) {
+                foreach ($moduleData['metadata']['templates'] as $templateName => $templateData) {
+                    $result[] = array(
+                        "name" => $templateData["name"],
+                        "group" => $moduleName,
+                        "template" => $templateName,
+                        "tod" => $daynight,
+                        "description" => $templateData["description"]
+                    );
+                }
+            }
+        }
+
+        $this->sendResponse(json_encode($result));        
+    }
+    
+    private function getAllskySetting($setting) {
+        if ($this->allskySettings == null) {
+            $file = $this->allsky_config . '/settings.json';
+            $rawConfigData = file_get_contents($file);
+            $this->allskySettings = json_decode($rawConfigData, true);
+        }
+        $result = $setting;
+        if (isset($this->allskySettings[$setting])) {
+            $result = $this->allskySettings[$setting];
+        }
+
+        return $result;
+    }
+
+    public function getTemplate() {
+        $moduleName = $_GET['group'];
+        $template = $_GET['template'];        
+        $tod = $_GET['tod'];   
+        
+        $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($tod) . '.json';
+        $rawConfigData = file_get_contents($configFileName);
+        $modules = json_decode($rawConfigData, true);
+
+        $result = array();
+        if (isset($modules[$moduleName])) {
+            if (isset($modules[$moduleName]['metadata']['templates'][$template])) {
+                $result = $modules[$moduleName]['metadata']['templates'][$template];
+            }
+        }
+
+        foreach ($result as &$row) {
+            foreach ($row as &$rowData) {
+                if (isset($rowData["text"])) {
+                    if (preg_match('/\$\{([^}]+)\}/', $rowData["text"], $matches)) {
+                        $variable = $matches[1];
+                        if (isset($modules[$moduleName]['metadata']['extradata'])) {
+                            if (isset($modules[$moduleName]['metadata']['extradata']['values'])) {
+                                foreach ($modules[$moduleName]['metadata']['extradata']['values'] as $key=>$value) {
+                                    if ($key == $variable) {
+                                        if (isset($value['format'])) {
+                                            $format = $value['format'];
+                                        }
+                                        if (isset($value['font'])) {
+                                            $font = $value['font'];
+                                        }                                        
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        $format = "";
+                        $font = "";
+                    }
+                    //$format = $this->getAllskySetting($format);
+                    $rowData['format'] = $format;
+                    $rowData['font'] = $font;                    
+                } else {
+                    foreach ($rowData as &$colData) {
+                        if (isset($colData["text"])) {
+                            if (preg_match('/\$\{([^}]+)\}/', $colData["text"], $matches)) {
+                                $variable = $matches[1];
+                                if (isset($modules[$moduleName]['metadata']['extradata'])) {
+                                    if (isset($modules[$moduleName]['metadata']['extradata']['values'])) {
+                                        foreach ($modules[$moduleName]['metadata']['extradata']['values'] as $key=>$value) {
+                                            if ($key == $variable) {
+                                                if (isset($value['format'])) {
+                                                    $format = $value['format'];
+                                                }
+                                                if (isset($value['font'])) {
+                                                    $font = $value['font'];
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                $format = "";
+                                $font = "";
+                            }
+                            //$format = $this->getAllskySetting($format);                            
+                            $colData['format'] = $format;
+                            $colData['font'] = $font;
+                        }                        
+                    }
+                }
+            }
+        }
+
+        //var_dump($result["fields"]); die();
+        $this->sendResponse(json_encode($result));          
+
+    }    
 }
 
 $moduleUtil = new MODULEUTIL();

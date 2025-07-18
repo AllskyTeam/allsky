@@ -102,6 +102,18 @@ class OEFIELD {
 		return this.fieldData.tly;
 	}
 
+	set tlx(x) {
+		this.fieldData.tlx = x;
+		this.shape.x(x + this.shape.width()/2);
+		this.rotatePoint();
+	}
+
+	set tly(y) {
+		this.fieldData.tly = y;
+		this.shape.y(y + this.shape.height()/2);
+		this.rotatePoint();
+	}
+
 
 	get rotation() {
 		return this.fieldData.rotate;

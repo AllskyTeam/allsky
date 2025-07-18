@@ -44,7 +44,7 @@ DISPLAY_MSG_LOG="${DISPLAY_MSG_LOG:-${ALLSKY_LOGS}/install.log}"	# send log entr
 
 LONG_BITS=$( getconf LONG_BIT ) # Size of a long, 32 or 64
 REBOOT_NEEDED="true"					# Is a reboot needed at end of installation?
-CONFIGURATION_NEEDED="true"				# Does Allsky need to be configured at end of installation?
+CONFIGURATION_NEEDED="true"				# Does Allsky need configuring at end of installation?
 ALLSKY_IMAGES_MOVED="false"				# Did the user move ALLSKY_IMAGES, e.g., to an SSD?
 SPACE="    "
 NOT_RESTORED="NO PRIOR VERSION"
@@ -89,7 +89,7 @@ PRIOR_CAMERA_MODEL=""
 PRIOR_CAMERA_NUMBER=""
 
 # Holds status of installation if we need to exit and get back in.
-declare -r STATUS_FILE="${ALLSKY_LOGS}/install_status.txt"
+STATUS_FILE="${ALLSKY_LOGS}/install_status.txt"
 declare -r STATUS_FILE_TEMP="${ALLSKY_TMP}/temp_status.txt"	# holds intermediate status
 # status of rebooting due to locale change
 declare -r STATUS_LOCALE_REBOOT="Rebooting to change locale"
@@ -111,6 +111,8 @@ STATUS_VARIABLES=()								# Holds the variables and values to save
 ##### Set in installUpgradeFunctions.sh
 # PRIOR_ALLSKY_DIR
 # PRIOR_CONFIG_DIR
+# PRIOR_WEBSITE_DIR
+# PRIOR_WEBSITE_CONFIG_FILE
 # PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE
 # PRIOR_CONFIG_FILE, PRIOR_FTP_FILE
 # PRIOR_PYTHON_VENV
@@ -118,6 +120,7 @@ STATUS_VARIABLES=()								# Holds the variables and values to save
 # ALLSKY_DEFINES_INC, REPO_WEBUI_DEFINES_FILE
 # REPO_SUDOERS_FILE, REPO_LIGHTTPD_FILE, REPO_AVI_FILE, REPO_OPTIONS_FILE
 # LIGHTTPD_LOG_DIR, LIGHTTPD_LOG_FILE
+# INSTALLED_LOCALES
 # Plus others I probably forgot about...
 
 
@@ -298,9 +301,9 @@ do_initial_heading()
 			H="$( basename "${ALLSKY_HOME}" )"
 			X="$( basename "${RENAMED_DIR}" )"
 			MSG+="\nYour current '${H}' directory will be renamed to"
-			MSG+="\n    ${X}"
+			MSG+="\n\n    ${X}"
 			X="$( basename "${PRIOR_ALLSKY_DIR}" )"
-			MSG+="\nand the prior Allsky in '${X}' will be"
+			MSG+="\n\nand the prior Allsky in '${X}' will be"
 			MSG+=" renamed to back to '${H}'."
 			MSG+="\n\nFiles that were moved from the old release to the current one"
 			MSG+=" will be moved back."
@@ -328,7 +331,6 @@ do_initial_heading()
 
 		display_header "Welcome to the ${SHORT_TITLE}"
 	fi
-
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} != "true" ]] && STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
 
@@ -700,7 +702,7 @@ do_save_camera_capabilities()
 	# the appropriate one can be used by makeChanges.sh.
 	[[ -n ${PRIOR_SETTINGS_FILE} ]] && restore_prior_settings_file
 
-	display_msg --log progress "Making new settings file '${SETTINGS_FILE}'."
+	display_msg --logonly info "Making new settings file '${SETTINGS_FILE}'."
 
 	CMD="makeChanges.sh${FORCE}${OPTIONSONLY}"
 	CMD+=" --cameraTypeOnly --from install --addNewSettings ${DEBUG_ARG}"
@@ -806,6 +808,7 @@ update_php_defines()
 			-e "s;XX_ALLSKY_POST_INSTALL_ACTIONS_XX;${ALLSKY_POST_INSTALL_ACTIONS};g" \
 			-e "s;XX_ALLSKY_ABORTS_DIR_XX;${ALLSKY_ABORTS_DIR};g" \
 			-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};g" \
+			-e "s;XX_ALLSKY_SUPPORT_DIR_XX;${ALLSKY_SUPPORT_DIR};g" \
 			-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};g" \
 			-e "s;XX_ALLSKY_WEBSITE_LOCAL_CONFIG_NAME_XX;${ALLSKY_WEBSITE_CONFIGURATION_NAME};g" \
 			-e "s;XX_ALLSKY_WEBSITE_REMOTE_CONFIG_NAME_XX;${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME};g" \
@@ -813,6 +816,7 @@ update_php_defines()
 			-e "s;XX_ALLSKY_WEBSITE_REMOTE_CONFIG_XX;${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE};g" \
 			-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};g" \
 			-e "s;XX_ALLSKY_ENV_XX;${ALLSKY_ENV};g" \
+			-e "s;XX_IMG_DIR_XX;${IMG_DIR};g" \
 			-e "s;XX_MY_OVERLAY_TEMPLATES_XX;${MY_OVERLAY_TEMPLATES};g" \
 			-e "s;XX_ALLSKY_MODULES_XX;${ALLSKY_MODULES};g" \
 			-e "s;XX_ALLSKY_MODULE_LOCATION_XX;${ALLSKY_MODULE_LOCATION};g" \
@@ -821,12 +825,18 @@ update_php_defines()
 			-e "s;XX_WEBSERVER_OWNER_XX;${WEBSERVER_OWNER};g" \
 			-e "s;XX_WEBSERVER_GROUP_XX;${WEBSERVER_GROUP};g" \
 			-e "s;XX_ALLSKY_REPO_XX;${ALLSKY_REPO};g" \
+			-e "s;XX_GITHUB_ROOT_XX;${GITHUB_ROOT};g" \
+			-e "s;XX_GITHUB_ALLSKY_REPO_XX;${GITHUB_ALLSKY_REPO};g" \
+			-e "s;XX_GITHUB_ALLSKY_MODULES_REPO_XX;${GITHUB_ALLSKY_MODULES_REPO};g" \
 			-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};g" \
 			-e "s;XX_ALLSKY_STATUS_XX;${ALLSKY_STATUS};g" \
+			-e "s;XX_ALLSKY_STATUS_INSTALLING_XX;${ALLSKY_STATUS_INSTALLING};g" \
+			-e "s;XX_ALLSKY_STATUS_NOT_RUNNING_XX;${ALLSKY_STATUS_NOT_RUNNING};g" \
+			-e "s;XX_ALLSKY_STATUS_RUNNING_XX;${ALLSKY_STATUS_RUNNING};g" \
 			-e "s;XX_ALLSKY_STATUS_NEEDS_CONFIGURATION_XX;${ALLSKY_STATUS_NEEDS_CONFIGURATION};g" \
 			-e "s;XX_ALLSKY_STATUS_NEEDS_REVIEW_XX;${ALLSKY_STATUS_NEEDS_REVIEW};g" \
 			-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};g" \
-			-e "s;XX_ALLSKY_MYFILES_DIR_XX;${ALLSKY_MYFILES_DIR};g" \
+			-e "s;XX_EXIT_PARTIAL_OK_XX;${EXIT_PARTIAL_OK};g" \
 		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
 		chmod 644 "${FILE}"
 
@@ -1189,9 +1199,10 @@ set_permissions()
 		done
 	fi
 
-    # Ensure the support folder has the correct owner and group
-    sudo chown "${ALLSKY_OWNER}":"${WEBSERVER_GROUP}" "${ALLSKY_WEBUI}/support"
-    sudo chmod 774 "${ALLSKY_WEBUI}/support"
+	# Ensure the support folder has the correct owner and group
+	[[ ! -d ${ALLSKY_SUPPORT_DIR} ]] && mkdir -p "${ALLSKY_SUPPORT_DIR}"
+	sudo chown "${ALLSKY_OWNER}":"${WEBSERVER_GROUP}" "${ALLSKY_SUPPORT_DIR}"
+	sudo chmod 775 "${ALLSKY_SUPPORT_DIR}"
 }
 
 
@@ -1275,11 +1286,10 @@ get_desired_locale()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 
-	local INSTALLED_LOCALES  MSG  MSG2  X  TEMP_LOCALE  D
+	local MSG  MSG2  X  TEMP_LOCALE  D
 
-	# List of all installed locales, ignoring any lines with ":" which
-	# are usually error messages.
-	INSTALLED_LOCALES="$( locale -a 2>/dev/null | grep -E -v "^C$|:" | sed 's/utf8/UTF-8/' )"
+	# Get the list of all installed locales.
+	get_installed_locales		# Sets global ${INSTALLED_LOCALES}
 	if [[ -z ${INSTALLED_LOCALES} ]]; then
 		MSG="There are no locales on your system ('locale -a' didn't return valid locales)."
 		MSG+="\nYou need to install and set one before Allsky installation can run."
@@ -1306,8 +1316,7 @@ get_desired_locale()
 		# People rarely change locale once set, so assume they still want the prior one.
 		DESIRED_LOCALE="$( settings ".locale" "${PRIOR_SETTINGS_FILE}" )"
 		if [[ -n ${DESIRED_LOCALE} ]]; then
-			X="$( echo "${INSTALLED_LOCALES}" | grep "${DESIRED_LOCALE}" )"
-			if [[ -z ${X} ]]; then
+			if ! is_installed_locale "${DESIRED_LOCALE}"; then
 				# This is probably EXTREMELY rare.
 				MSG2="NOTE: Your prior locale (${DESIRED_LOCALE}) is no longer installed on this Pi."
 			fi
@@ -1325,15 +1334,6 @@ get_desired_locale()
 		echo "${LC_ALL}"
 	)"
 
-if false; then	# XXXXXXXXXXXXX
-	CURRENT_LOCALE="$( echo "${TEMP_LOCALE}" | sed --silent -e '/LANG=/ s/LANG=//p' )"
-	if [[ -z ${CURRENT_LOCALE} ]];  then
-		CURRENT_LOCALE="$( echo "${TEMP_LOCALE}" | sed --silent -e '/LANGUAGE=/ s/LANGUAGE=//p' )"
-		if [[ -z ${CURRENT_LOCALE} ]];  then
-			CURRENT_LOCALE="$( echo "${TEMP_LOCALE}" | sed --silent -e '/LC_ALL=/ s/LC_ALL=//p' )"
-		fi
-	fi
-fi
 	MSG="CURRENT_LOCALE=${CURRENT_LOCALE}, TEMP_LOCALE=[[$( echo "${TEMP_LOCALE}" | tr '\n' ' ' )]]"
 	display_msg --logonly info "${MSG}"
 
@@ -1501,8 +1501,6 @@ is_reboot_needed()
 # First look in the prior Allsky directory, if it exists.
 # If not, look in the old Website location.
 PRIOR_WEBSITE_STYLE=""
-PRIOR_WEBSITE_DIR=""
-PRIOR_WEBSITE_CONFIG_FILE=""
 
 # Versions of the Website configuration files: 1, 2, etc.
 NEW_WEB_CONFIG_VERSION=""
@@ -1518,10 +1516,8 @@ does_prior_Allsky_Website_exist()
 # TODO: The Website moved to ~/allsky/html/allsky in v2023.05.01
 # In v2025.xx.xx if that directory doesn't exist, no prior Website exists.
 	if [[ ${PRIOR_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
-		PRIOR_WEBSITE_DIR="${PRIOR_ALLSKY_DIR}${ALLSKY_WEBSITE/${ALLSKY_HOME}/}"
 		if [[ -d ${PRIOR_WEBSITE_DIR} ]]; then
 			PRIOR_WEBSITE_STYLE="${NEW_STYLE_ALLSKY}"
-			PRIOR_WEBSITE_CONFIG_FILE="${PRIOR_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 			if [[ -s ${PRIOR_WEBSITE_CONFIG_FILE} ]]; then
 				PRIOR_WEB_CONFIG_VERSION="$( settings ".${WEBSITE_CONFIG_VERSION}" "${PRIOR_WEBSITE_CONFIG_FILE}" )"
 				if [[ -z ${PRIOR_WEB_CONFIG_VERSION} ]]; then
@@ -1561,6 +1557,7 @@ does_prior_Allsky_Website_exist()
 		# New Website configuration file may not exist yet so use repo version.
 		NEW_WEB_CONFIG_VERSION="$( settings ".${WEBSITE_CONFIG_VERSION}" "${REPO_WEBCONFIG_FILE}" )"
 		display_msg --logonly info "NEW_WEB_CONFIG_VERSION=${NEW_WEB_CONFIG_VERSION}"
+		display_msg --logonly info "PRIOR_WEB_CONFIG_VERSION=${PRIOR_WEB_CONFIG_VERSION}"
 	fi
 }
 
@@ -1635,11 +1632,10 @@ does_prior_Allsky_exist()
 		if [[ -s ${PRIOR_ALLSKY_USER_VARIABLES} ]]; then
 			display_msg --logonly info "User has ${PRIOR_ALLSKY_USER_VARIABLES}"
 			# Check if ALLSKY_IMAGES was changed.
-			local SAVED_ALLSKY_IMAGES="${ALLSKY_IMAGES}"
 			local X="$(
 				# shellcheck disable=SC1090,SC1091
 				source "${PRIOR_ALLSKY_USER_VARIABLES}"
-				[[ ${ALLSKY_IMAGES} != "${SAVED_ALLSKY_IMAGES}" ]] && echo "${ALLSKY_IMAGES}"
+				[[ ${ALLSKY_IMAGES} != "${ALLSKY_IMAGES_ORIGINAL}" ]] && echo "${ALLSKY_IMAGES}"
 			)"
 			if [[ -n ${X} ]]; then
 				ALLSKY_IMAGES="${X}"
@@ -1960,8 +1956,7 @@ convert_settings_file()			# prior_file, new_file
 			case "${FIELD}" in
 				"lastchanged")
 					# Update the value.
-					VALUE="$( date +'%Y-%m-%d %H:%M:%S' )"
-					doV "${FIELD}" "VALUE" "${FIELD}" "text" "${NEW_FILE}"
+					set_now "${FIELD}" "${NEW_FILE}"
 					;;
 
 				"computer")
@@ -2226,7 +2221,7 @@ convert_config_sh()
 		doV "" "UPLOAD_KEOGRAM" "keogramupload" "boolean" "${NEW_FILE}"
 		X="true"; doV "NEW" "X" "keogramexpand" "boolean" "${NEW_FILE}"
 		X="simplex"; doV "NEW" "X" "keogramfontname" "text" "${NEW_FILE}"
-		X="#ffff"; doV "NEW" "X" "keogramfontcolor" "text" "${NEW_FILE}"
+		X="#ffffff"; doV "NEW" "X" "keogramfontcolor" "text" "${NEW_FILE}"
 		X=1; doV "NEW" "X" "keogramfontsize" "text" "${NEW_FILE}"
 		X=3; doV "NEW" "X" "keogramlinethickness" "text" "${NEW_FILE}"
 
@@ -2566,7 +2561,7 @@ restore_prior_files()
 	D="${PRIOR_ALLSKY_DIR}/tmp"
 	if is_mounted "${D}" ; then
 		display_msg --logonly info "Unmounting '${D}'."
-		umount_tmp "${D}"
+		umount_dir "${D}" "install"
 	fi
 
 	[[ ${USE_PRIOR_ALLSKY} == "false" ]] && return
@@ -2587,7 +2582,7 @@ restore_prior_files()
 	fi
 
 	ITEM="${SPACE}'images' directory"
-	if [[ ${ALLSKY_IMAGES_MOVED} == "true" ]]; then
+	if [[ ${ALLSKY_IMAGES} != "${ALLSKY_IMAGES_ORIGINAL}" ]]; then
 		display_msg --log progress "${ITEM} (leaving '${ALLSKY_IMAGES}' as is)"
 	else
 		if [[ -d ${PRIOR_ALLSKY_DIR}/images ]]; then
@@ -2610,7 +2605,13 @@ restore_prior_files()
 	ITEM="${SPACE}'$( basename "$( dirname "${ALLSKY_MYFILES_DIR}" )" )/${ALLSKY_MYFILES_NAME}' directory"
 	if [[ -d ${PRIOR_MYFILES_DIR} ]]; then
 		display_msg --log progress "${ITEM} (moving)"
-		mv "${PRIOR_MYFILES_DIR}" "${ALLSKY_MYFILES_DIR}"
+		if [[ -d ${ALLSKY_MYFILES_DIR} ]]; then
+			(shopt -s dotglob
+			 mv "${PRIOR_MYFILES_DIR}"/* "${ALLSKY_MYFILES_DIR}" 2>/dev/null
+	 		)
+		else
+			mv "${PRIOR_MYFILES_DIR}" "${ALLSKY_MYFILES_DIR}"
+		fi
 	else
 		# Almost no one has this directory, so don't show to user.
 		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
@@ -2734,7 +2735,7 @@ restore_prior_files()
 
 	ITEM="${SPACE}uservariables.sh"
 	if [[ -f ${PRIOR_CONFIG_DIR}/uservariables.sh ]]; then
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED} (copying)"
+		display_msg --log progress "${ITEM}: (copying)"
 		cp -a "${PRIOR_CONFIG_DIR}/uservariables.sh" "${ALLSKY_CONFIG}"
 	# Don't bother with the "else" part since this file is very rarely used.
 	fi
@@ -2768,8 +2769,11 @@ restore_prior_files()
 			MSG+="\n\n  cd ~/allsky;  ./remoteWebsiteInstall.sh"
 			MSG+="\n\nNote that you do NOT need to manually copy files to the Website;"
 			MSG+="\nthe installation does that for you."
-			display_msg --log notice "${MSG}"
+			display_msg notice "${MSG}"
 			add_to_post_actions "${MSG}"
+
+			MSG="Displayed message that remote Website @ ${PRIOR_V} needs updating."
+			display_msg --logonly info "${MSG}"
 		fi
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
@@ -2916,7 +2920,13 @@ restore_prior_website_files()
 	D="${PRIOR_WEBSITE_DIR}/${ALLSKY_MYFILES_NAME}"
 	if [[ -d ${D} ]]; then
 		display_msg --log progress "${ITEM} (moving)"
-		mv "${D}"   "${ALLSKY_WEBSITE_MYFILES_DIR}"
+		if [[ -d ${ALLSKY_WEBSITE_MYFILES_DIR} ]]; then
+			(shopt -s dotglob
+			 mv "${D}"/*   "${ALLSKY_WEBSITE_MYFILES_DIR}" 2>/dev/null
+	 		)
+		else
+			mv "${D}"   "${ALLSKY_WEBSITE_MYFILES_DIR}"
+		fi
 	else
 		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
 	fi
@@ -2930,8 +2940,9 @@ restore_prior_website_files()
 		if [[ ${count} -gt 1 ]]; then
 			local MSG2="  Please use '${ALLSKY_WEBSITE_MYFILES_DIR}' going forward."
 			display_msg --log progress "${ITEM} (copying to '${ALLSKY_WEBSITE_MYFILES_DIR}')" "${MSG2}"
-			# TODO: This won't copy dot files.
-			cp "${D}"/*   "${ALLSKY_WEBSITE_MYFILES_DIR}"
+			(shopt -s dotglob
+			 cp "${D}"/*   "${ALLSKY_WEBSITE_MYFILES_DIR}" 2>/dev/null
+	 		)
 		fi
 	else
 		# Since this is obsolete only add to log file.
@@ -2962,15 +2973,16 @@ restore_prior_website_files()
 		ITEM="${SPACE}${SPACE}${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 
 		if [[ -f ${PRIOR_WEBSITE_CONFIG_FILE} ]]; then
+			# Copy the old file to the current location.
+
 			if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
 				MSG="${ITEM} (copying and updating for version ${NEW_WEB_CONFIG_VERSION})"
-				display_msg --log progress "${MSG}"
+			else
+				MSG="${ITEM} (copying)"
 			fi
+			display_msg --log progress "${MSG}"
 
-			# Copy the old file to the current location.
-			display_msg --log progress "${ITEM} (copying)"
-			cp "${PRIOR_WEBSITE_CONFIG_FILE}" \
-				"${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+			cp "${PRIOR_WEBSITE_CONFIG_FILE}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 
 			MSG="${SPACE}${SPACE}${SPACE}"
 			if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
@@ -3049,12 +3061,12 @@ do_restore()
 	display_msg --log progress "Restoring files:"
 
 	ITEM="${SPACE}'images' directory"
-	if [[ ${ALLSKY_IMAGES_MOVED} == "true" ]]; then
+	if [[ ${ALLSKY_IMAGES} != "${ALLSKY_IMAGES_ORIGINAL}" ]]; then
 		display_msg --log progress "${ITEM} (leaving '${ALLSKY_IMAGES}' as is)"
 	else
-		if [[ -d ${ALLSKY_HOME}/images ]]; then
+		if [[ -d ${ALLSKY_IMAGES} ]]; then
 			display_msg --log progress "${ITEM} (moving back)"
-			mv "${ALLSKY_HOME}/images" "${PRIOR_ALLSKY_DIR}"
+			mv "${ALLSKY_IMAGES}" "${PRIOR_ALLSKY_DIR}"
 		else
 			# This is probably very rare so let the user know
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}." " This is unusual."
@@ -3072,7 +3084,7 @@ do_restore()
 	ITEM="${SPACE}'$( basename "$( dirname "${ALLSKY_MYFILES_DIR}" )" )/${ALLSKY_MYFILES_NAME}' directory"
 	if [[ -d ${ALLSKY_MYFILES_DIR} ]]; then
 		display_msg --log progress "${ITEM} (moving back)"
-		mv "${ALLSKY_MYFILES_DIR}" "${PRIOR_MYFILES_DIR}"
+		mv "${ALLSKY_MYFILES_DIR}" "$( dirname "${PRIOR_MYFILES_DIR}" )"
 	else
 		# Few people have this directory, so don't show to user.
 		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
@@ -3129,7 +3141,7 @@ do_restore()
 
 		ITEM="${SPACE}${SPACE}${ALLSKY_MYFILES_NAME}"
 		if [[ -d ${ALLSKY_WEBSITE_MYFILES_DIR} ]]; then
-			display_msg --log progress "${ITEM} (moving)"
+			display_msg --log progress "${ITEM} (moving back)"
 			mv "${ALLSKY_WEBSITE_MYFILES_DIR}"   "${PRIOR_WEBSITE_DIR}"
 		else
 			display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
@@ -3143,7 +3155,7 @@ do_restore()
 	# If ${ALLSKY_TMP} is a memory filesystem, unmount it.
 	if is_mounted "${ALLSKY_TMP}" ; then
 		display_msg --logonly progress "Unmounting '${ALLSKY_TMP}'."
-		umount_tmp "${ALLSKY_TMP}"
+		umount_dir "${ALLSKY_TMP}" "install"
 		WAS_MOUNTED="true"
 	else
 		WAS_MOUNTED="false"
@@ -3169,24 +3181,25 @@ do_restore()
 	if [[ ${WAS_MOUNTED} == "true" ]]; then
 		# Remounts ${ALLSKY_TMP}
 		display_msg --logonly progress "Re-mounting '${ALLSKY_TMP}'."
-		mount_tmp "${ALLSKY_TMP}"
+		mount_dir "${ALLSKY_TMP}" "install"
 	fi
 
 	mkdir -p "$( dirname "${ALLSKY_POST_INSTALL_ACTIONS}" )"
 
 	MSG="\nRestoration is done and"
-	MSG2=" Allsky needs its settings checked."
+	MSG2=" Allsky needs its settings reviewed to make sure they still apply."
 	display_msg --log progress "${MSG}" "${MSG2}"
 
-	MSG2+="Go to the 'Allsky Settings' page of the WebUI and"
-	MSG2+="\nmake any necessary changes, then press the 'Save changes' button."
+	MSG2+="\nGo to the 'Allsky Settings' page of the WebUI and"
+	MSG2+=" make any necessary changes."
 	add_to_post_actions "${MSG}${MSG2}"
 
-	whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
-	display_image "ConfigurationNeeded"
+	whiptail --title "${TITLE}" --msgbox "${MSG}${MSG2}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+	display_image "ReviewNeeded"
 
 	# Force the user to look at the settings before Allsky will run.
 	update_json_file -d ".lastchanged" "" "${SETTINGS_FILE}"
+	set_allsky_status "${ALLSKY_STATUS_NEEDS_REVIEW}"
 
 	exit_installation 0 "${STATUS_OK}" ""
 }
@@ -3252,7 +3265,7 @@ install_PHP_modules()
 
 	display_msg --log progress "Installing PHP modules and dependencies."
 	TMP="${ALLSKY_LOGS}/PHP_modules.log"
-	run_aptGet php-zip php-sqlite3 php-curl python3-pip > "${TMP}" 2>&1
+	run_aptGet php-zip php-sqlite3 python3-pip > "${TMP}" 2>&1
 	check_success $? "PHP module installation failed" "${TMP}" "${DEBUG}" ||
 		exit_with_image 1 "${STATUS_ERROR}" "PHP module install failed."
 
@@ -3430,8 +3443,6 @@ install_overlay()
 	display_msg --log progress "Setting up default modules and overlays."
 	# Some of these will get overwritten later if the user has prior versions.
 	cp -ar "${ALLSKY_REPO}/overlay" "${ALLSKY_REPO}/modules" "${ALLSKY_CONFIG}"
-	
-	cp  "${ALLSKY_REPO}/variables.json.repo" "${ALLSKY_CONFIG}/variables.json"
 
 	# MY_OVERLAY_TEMPLATES is not in ALLSKY_REPI and we haven't restored
 	# anything yet, so create the directory.
@@ -3463,11 +3474,6 @@ install_overlay()
 	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
-
-	display_msg --log progress "Enabling and starting the pigpiod service."
-	sudo systemctl enable pigpiod
-	sudo systemctl start pigpiod
-
 }
 
 
@@ -3566,9 +3572,9 @@ display_image()
 	else
 		if [[ -f ${ALLSKY_POST_INSTALL_ACTIONS} ]]; then
 			# Add a message the user will see in the WebUI.
-			MSG="Actions needed.  See ${ALLSKY_POST_INSTALL_ACTIONS}."
+			MSG="Actions needed.  Click for more information."
 			X="${ALLSKY_POST_INSTALL_ACTIONS/${ALLSKY_HOME}/}"
-			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${MSG}" --url "${X}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --ID AM_POST --msg "${MSG}" --url "${X}"
 
 			# This tells allsky.sh not to display a message about actions since we just did.
 			touch "${ALLSKY_POST_INSTALL_ACTIONS}_initial_message"
@@ -3629,7 +3635,9 @@ check_restored_settings()
 
 	if [[ ${ALLSKY_VERSION} == "${PRIOR_ALLSKY_VERSION}" ]]; then
 		CONFIGURATION_NEEDED="false"
-		display_msg --logonly info "Re-installed same version; no configuration or reboot needed."
+		MSG="Re-installed same version; no configuration or reboot needed."
+		display_msg --logonly info "${MSG}"
+		STATUS_VARIABLES+=("CONFIGURATION_NEEDED='${CONFIGURATION_NEEDED}'\n")
 		return
 	fi
 
@@ -3643,13 +3651,24 @@ check_restored_settings()
 	  	  ${COPIED_PRIOR_FTP_SH} == "true" ]]; then
 		# We restored all the prior settings so no configuration is needed.
 		# However, check if a reboot is needed.
-		CONFIGURATION_NEEDED="review"
+
+		if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
+			CONFIGURATION_NEEDED="false"
+			MSG="Upgrading a new-style version; no configuration needed."
+			display_msg --logonly info "${MSG}"
+		else
+			MSG="Upgrading a old-style version; review needed."
+			CONFIGURATION_NEEDED="review"
+			display_msg --logonly info "${MSG}"
+		fi
+
 		if [[ ${REBOOT_NEEDED} == "true" ]]; then
 			IMG="RebootNeeded"
 		else
 			IMG=""					# Blank name removes existing image
 		fi
 		display_image "${IMG}"
+		STATUS_VARIABLES+=("CONFIGURATION_NEEDED='${CONFIGURATION_NEEDED}'\n")
 		return
 	fi
 
@@ -3666,6 +3685,7 @@ check_restored_settings()
 	fi
 
 	CONFIGURATION_NEEDED="true"
+	STATUS_VARIABLES+=("CONFIGURATION_NEEDED='${CONFIGURATION_NEEDED}'\n")
 }
 
 
@@ -3819,6 +3839,17 @@ add_to_post_actions()
 	echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${ALLSKY_POST_INSTALL_ACTIONS}"
 }
 
+####
+# Set the specified json field in the specified file to now.
+set_now()
+{
+	local FIELD="${1}"
+	local FILE="${2}"
+
+	#shellcheck disable=SC2034
+	local NOW="$( date +'%Y-%m-%d %H:%M:%S' )"
+	doV "${FIELD}" "NOW" "${FIELD}" "text" "${FILE}"
+}
 
 ####
 # Install packages needed by this script.
@@ -3875,7 +3906,6 @@ display_wait_message()
 # TODO: adjust time based on Pi model
 	MSG="The following steps can take up to an hour depending on the speed of"
 	MSG+="\nyour Pi and how many of the necessary dependencies are already installed."
-	MSG+="\nYou will see progress messages throughout the process."
 	display_msg notice "${MSG}"
 }
 
@@ -3903,6 +3933,8 @@ request_map()
 # Perform actions after the installation completes.
 do_done()
 {
+	local MSG  MSG2
+
 	request_map
 
 	if [[ ${WILL_REBOOT} == "true" ]]; then
@@ -3919,19 +3951,29 @@ do_done()
 	if [[ ${CONFIGURATION_NEEDED} == "false" ]]; then
 		do_allsky_status "${ALLSKY_STATUS_NOT_RUNNING}"
 		display_image --custom "lime" "Allsky is\nready to start"
-		display_msg --log progress "\nInstallation is done."  "You must manually restart Allsky."
+		MSG="\nInstallation is done."
+		MSG2="To start Allsky, go to the WebUI's 'System' page."
+		display_msg --log progress "${MSG}"  "${MSG2}"
+		MSG2+="  You can then clear this message."
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --type info --msg "${MSG2}"
+
+		# Set it so the user isn't asked to review the Allsky settings.
+		set_now "lastchanged" "${SETTINGS_FILE}"
+
 	elif [[ ${CONFIGURATION_NEEDED} == "true" ]]; then
 		display_image "ConfigurationNeeded"
 		do_allsky_status "${ALLSKY_STATUS_NEEDS_CONFIGURATION}"
-		MSG=" but Allsky needs to be configured before it will start."
+		MSG="; Allsky needs to be configured before it will start."
 		display_msg --log progress "\nInstallation is done" "${MSG}"
-		display_msg progress "" "Go to the 'Allsky Settings' page of the WebUI to configure Allsky."
+		MSG="Go to the WebUI's 'Allsky Settings' page to configure Allsky."
+		display_msg progress "" "${MSG}"
+
 	elif [[ ${CONFIGURATION_NEEDED} == "review" ]]; then
 		display_image "ReviewNeeded"
 		do_allsky_status "${ALLSKY_STATUS_NEEDS_REVIEW}"
-		MSG=" Please review the settings on the WebUI's 'Allsky Settings' page and make any necessary changes."
+		MSG=" Please review the settings on the WebUI's 'Allsky Settings' page"
+		MSG+="\nto make sure they still look ok."
 		display_msg --log progress "\nInstallation is done." "${MSG}"
-		display_msg progress "" "Go to the 'Allsky Settings' page of the WebUI to configure Allsky."
 
 	else
 		# A different status string.
@@ -3950,6 +3992,7 @@ WT_WIDTH="$( calc_wt_size )"
 
 ##### Check arguments
 OK="true"
+SKIP="false"			# mostly for testing same install multiple times
 DEBUG=0
 DEBUG_ARG=""
 LOG_TYPE="--logonly"	# by default we only log some messages but don't display
@@ -4008,7 +4051,7 @@ if [[ -n ${FUNCTION} || ${FIX} == "true" ]]; then
 else
 	if [[ ${RESTORE} == "true" ]]; then
 		if [[ ! -d ${PRIOR_ALLSKY_DIR} ]]; then
-			echo -en "\nERROR: You requested a restore,"
+			echo -en "\nERROR: You requested a restore," >&2
 			echo -e " but no prior Allsky found at '${PRIOR_ALLSKY_DIR}'.\n" >&2
 			exit 1
 		fi
@@ -4018,7 +4061,7 @@ else
 		V="$( get_version "${PRIOR_ALLSKY_DIR}/" )"		# Returns "" if no version file.
 		V="${V:-prior version}"
 		SHORT_TITLE="Allsky Restorer"
-		TITLE="${SHORT_TITLE} - from ${ALLSKY_VERSION} to ${V}"
+		TITLE="${SHORT_TITLE} - from ${ALLSKY_VERSION} back to ${V}"
 		NOT_RESTORED="NO CURRENT VERSION"
 	else
 		V="${ALLSKY_VERSION}"

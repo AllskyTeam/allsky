@@ -306,6 +306,14 @@
             "type": "azimuth"
         },
         {
+            "format": "intd",
+            "description": "Azimuth integered with Deg symbol",
+            "example": "123°",
+            "function": "intd",
+            "stackable": false,
+            "type": "azimuth"
+        },        
+        {
             "format": "1dp",
             "description": "Azimuth to 1 decimal place",
             "example": "123.1",

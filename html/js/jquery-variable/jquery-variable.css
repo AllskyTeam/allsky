@@ -38,3 +38,7 @@ table.dataTable .selected {
 table.dataTable .selected .as-variable-has-value {
 	color: white !important;
 }
+
+.dt-scroll-body {
+	overflow-x: hidden !important;
+}

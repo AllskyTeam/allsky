@@ -106,6 +106,7 @@ class OEFIELDMANAGER {
                 field.shape.destroy()
                 this.#fields.delete(field.id)
             }
+            this.#fieldDeletedAddedDefaultsChanged = true;
         })
     }
 

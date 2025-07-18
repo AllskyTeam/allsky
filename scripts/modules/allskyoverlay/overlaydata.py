@@ -40,6 +40,7 @@ class ALLSKYOVERLAYDATA:
 	overlay_file = ''
 	variables = {}
 	extra_fields = {}
+	settings_file = {}
 	extra_field_definition = {
 		'value': None,
 		'x': None,
@@ -68,6 +69,9 @@ class ALLSKYOVERLAYDATA:
 		self.overlay_file = overlay_file
   
 		self.variable_class = ALLSKYVARIABLES(debug_mode)
+  
+		with open(os.environ['SETTINGS_FILE'], 'r') as f:
+			self.settings_file = json.load(f)
 
 	def _debug(self, message):
 		if self.debug_mode:
@@ -243,7 +247,7 @@ class ALLSKYOVERLAYDATA:
 		format_matches = None
 		if 'format' in field_data:
 			format_regex = r"\{(.*?)\}"
-			formats = field_data['format']    
+			formats = field_data['format']
 			format_matches = re.findall(format_regex, formats)
 			self._debug(f'INFO: Found the following formats {format_matches}')
 		else:
@@ -268,7 +272,7 @@ class ALLSKYOVERLAYDATA:
 						if def_key != 'value':
 							field_data[def_key] = def_value
 
-			if format_matches is not None:
+			if format_matches:
 				formats = format_matches[variable_pos]
     
 				if variable in self.extra_fields:
@@ -284,7 +288,14 @@ class ALLSKYOVERLAYDATA:
 					format_list = formats.split('|')
 					for index, format in enumerate(format_list):
 						if index > 0:
-							variable_group = 'number'
+							#variable_group = 'number'
+							variable_group = format
+       
+						if format in self.settings_file:
+							old_format = format
+							format = self.settings_file[format]
+							self._debug(f'INFO: swapped format {old_format} for {format}')
+
 						format_function = 'as_' + variable_group.lower()
 						if hasattr(allskyformatters.allsky_formatters, format_function):
 							self._debug(f'INFO: Formatter "{format_function}" found for variable "{variable}". Value = "{value}", format = "{format}"')        

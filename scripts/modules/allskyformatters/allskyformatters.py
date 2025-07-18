@@ -287,6 +287,7 @@ class AllskyFormatters:
 			Formatters
    
 			int			- Formats the passed value to an integer
+			intd		- Formats the passed value to an integer with a deegrees symbol  
 			1dp			- Formats the passed value to 1 decimal places
 			2dp			- Formats the passed value to 2 decimal places
 			dms			- Formats the value to Degrees, Minutes and Seconds
@@ -305,6 +306,9 @@ class AllskyFormatters:
 		if format == 'int':
 			value = int(float_value)
 
+		if format == 'intd':
+			value = f'{int(float_value)}°'
+   
 		if format == '1dp':
 			value = f'{float_value:.1f}'
 
@@ -328,6 +332,7 @@ class AllskyFormatters:
 			Formatters
    
 			int			- Formats the passed value to an integer
+			intd		- Formats the passed value to an integer with a deegrees symbol     
 			1dp			- Formats the passed value to 1 decimal places
 			2dp			- Formats the passed value to 2 decimal places
    
@@ -345,6 +350,9 @@ class AllskyFormatters:
 		if format == 'int':
 			value = int(float_value)
 
+		if format == 'intd':
+			value = f'{int(float_value)}°'
+   
 		if format == '1dp':
 			value = f'{float_value:.1f}'
 
@@ -449,6 +457,38 @@ class AllskyFormatters:
 		if format == 'flip':
 			value = value.capitalize()
 			
+		return value
+
+	def as_deg(self, value, variable_name, format, variable_type):
+		""" Adds a degrees symbol
+		Args:
+			value (any): The input value 
+			variable_name 	(string):	The name of the variable
+			format 			(string):	The format to be applied
+			variable_type 	(object):	The variable type object
+
+		Returns:
+			(string): The formatted value
+		"""
+		value = f'{str(value)}°'
+
+
+		return value
+
+	def as_per(self, value, variable_name, format, variable_type):
+		""" Adda a percent symbol
+		Args:
+			value (any): The input value 
+			variable_name 	(string):	The name of the variable
+			format 			(string):	The format to be applied
+			variable_type 	(object):	The variable type object
+
+		Returns:
+			(string): The formatted value
+		"""
+		value = f'{str(value)}%'
+
+
 		return value
 
 allsky_formatters = AllskyFormatters()

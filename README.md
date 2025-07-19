@@ -16,7 +16,7 @@ In order to run the Allsky software you need:
  * A Raspberry Pi Zero 2, Pi 2, Pi 3, Pi 4, Pi 5, or Le Potato.
  * A version of the Raspberry Pi OS.  Other operating systems like Ubuntu are NOT supported.  If possible use the newest Bookworm 64-bit release of Pi OS with the "Desktop" version. Bullseye will also work. __Buster support will be dropped in the next major release__.
  * A camera:
-    * Any ZWO camera sold before February 1, 2025,
+    * Any ZWO camera sold before July 1, 2025,
     * or one of the following cameras:
        * Raspberry Pi:
           * HQ (IMX477 sensor)

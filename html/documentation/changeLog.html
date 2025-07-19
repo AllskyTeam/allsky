@@ -168,6 +168,81 @@
 			</details>
 
 
+
+			<h3>v2024.12.06_04  - Point Release # 4</h3>
+			<details sub> <summary></summary>
+
+				<h4 style="color: red">IMPORTANT NOTES:</h4>
+				<ul>
+					<li>This is the LAST major release that supports Buster.
+					<li>This is the LAST major release that contains the "legacy"
+						overlay method.
+				</ul>
+
+				<h4>Changes that may require action (upgrades only)</h4>
+				<ul>
+					<li><blockquote class="warning">
+						The changes in this section may require settings changes;
+						after upgrading, check that your settings and images look right.
+						</blockquote>
+					</li>
+					<li>If your Keogram <span class="WebUISetting">Font Color</span>
+						contained three numbers you'll need to reverse the order
+						of the numbers.
+						<br>This setting previously accepted two formats:
+						<ol>
+							<li><code>blue_number green_number red_number</code>
+								(with spaces or commas separating the numbers)
+								where each number is from <code>0</code> to <code>255</code>.
+							<li><code>#RRGGBB</code> where each two-digit pair
+								goes from hex <code>00</code> to <code>ff</code>.
+						</ol>
+						<p>
+						To be consistent with the hex order and with web pages,
+						the order of the first format is now:
+						<code>red_number green_number blue_number</code>
+						(red and blue switched places).
+						<br>The order of the second format did not change but
+						it now accepts either 3 or 6 hex digits.
+						<br>See <a external="true" allsky="true"
+							href="/documentation/settings/allsky.html#keogramfontcolor">
+							the documentation</a> for more details on this setting.
+						</p>
+				</ul>
+
+				<h4>Enhancements / Changes</h4>
+				<ul>
+					<li>The <code>allsky-config &nbsp; get_brightness_info</code>
+						command now displays how many images were used, and not used,
+						in each startrails image.
+						This is useful when setting the 
+						<span class="WebUISetting">Brightness Threshold</span>.
+				</ul>
+
+				<h4>Bug Fixes</h4>
+				<ul>
+					<li>For RPi cameras, the length of time Allsky waits before
+						timing out an image was increased.
+						For some Pi's, the prior 30-second timeout was too short
+						when the Pi was extremely busy such as during
+						timelapse creation.
+					<li>Entering a <span class="WebUISetting">Locale</span> in the WebUI
+						that is not installed on the Pi displays an error message and lists
+						the locales that ARE installed and tells the user how
+						to install other locales.
+					<li>Mono cameras were calculating the mean image brightness
+						twice: once prior to the initial save of the image
+						and a second time when determining if the image was too
+						dark or too bright.
+						The second time used a different formula than the first time.
+				</ul>
+
+				<h4>New Settings</h4>
+				<ul>
+					<li><span class="WebUISetting">None</span>
+				</ul>
+			</details>
+
 			<h3>v2024.12.06_04  - Point Release # 4</h3>
 			<details sub> <summary></summary>
 				<h4 style="color: red">IMPORTANT NOTES:</h4>

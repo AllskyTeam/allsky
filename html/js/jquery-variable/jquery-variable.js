@@ -103,7 +103,7 @@
                             <div class="modal-body">
                                 <ul class="nav nav-tabs" role="tablist">
                                     <li class="active"><a href="#variables" role="tab" data-toggle="tab">Variables</a></li>
-                                    <li><a href="#templates" role="tab" data-toggle="tab">Templates</a></li>
+                                    <li><a href="#templates" role="tab" data-toggle="tab">Blocks</a></li>
                                 </ul>
                                 <div class="tab-content" style="margin-top:15px;">
                                     <div class="tab-pane active" id="variables">
@@ -205,10 +205,17 @@
                     autoWidth: true,       
                     columns: [
                         { 
-                            data: 'name'                     
+                            data: 'name',
+                            render: function(data, type, row, meta) {
+                                let result = data
+                                if (row.value !== '') {
+                                    result = '<b class="as-variable-has-value">' + data + '</b>'
+                                }
+                                return result
+                            }                                              
                         },{
                             data: 'group',
-                            visible: true
+                            visible: false
                         },{
                             data: 'description'
                         },{
@@ -216,7 +223,7 @@
                             width: '100px',
                             render: function (item, type, row, meta) {
                                 let buttons = `
-                                    <button type="button" class="btn btn-success btn-sm oe-add-field-template" data-tod="${row.tod}" data-template="${row.template}" data-group="${row.group}">Add</button>
+                                    <button type="button" class="btn btn-success btn-sm oe-add-field-template" data-group="${row.group}" data-block="${row.blockname}" data-filename="${row.filename}">Add</button>
                                 `;
 
                                 return buttons;
@@ -233,8 +240,9 @@
                                 r.style.display = collapsed ? 'none' : '';
                             });    
 
+                            group = group.replace(/^allsky_/, '').toUpperCase();
                             return $('<tr/>')
-                                .append('<td colspan="9">' + icon + ' ' + group + ' (' + rows.count() + ' Variables)</td>')
+                                .append('<td colspan="9">' + icon + ' ' + group + ' (' + rows.count() + ' Blocks)</td>')
                                 .attr('data-name', group)
                                 .toggleClass('collapsed', collapsed);
                         }
@@ -251,19 +259,17 @@
 
             $(document).off('click', '.oe-add-field-template');
             $(document).on('click', '.oe-add-field-template', (e) =>{
-                let template = $(e.currentTarget).data('template');
+                let block = $(e.currentTarget).data('block');
+                let filename = $(e.currentTarget).data('filename');
                 let group = $(e.currentTarget).data('group');
-                let tod = $(e.currentTarget).data('tod');
                 $.ajax({
-                    url: 'includes/moduleutil.php?request=Template&template=' + template + '&group=' + group + '&tod=' + tod,
+                    url: 'includes/moduleutil.php?request=Template&block=' + block + '&filename=' + filename + "&group=" + group,
                     type: 'GET',
                     dataType: 'json',
                     cache: false,             
                     context: this
                 }).done((result) => {
-                    $(document).trigger('addFields', {
-                        template: result
-                    });
+                    $(document).trigger('addFields', result);
                 });                 
             });
 

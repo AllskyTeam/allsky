@@ -14,6 +14,8 @@ class MODULEUTIL
     private $userModules;
 	private $extraDataFolder;
 	private $myFiles;
+    private $myFilesData;
+    private $allsky_config = null;
 
     private $allskySettings = null;
 
@@ -22,6 +24,7 @@ class MODULEUTIL
         $this->userModules = ALLSKY_MODULE_LOCATION . '/modules';
 		$this->extraDataFolder = ALLSKY_OVERLAY . '/extra';
 		$this->myFiles = ALLSKY_MYFILES_DIR . '/modules';
+		$this->myFilesData = ALLSKY_MYFILES_DIR . '/modules/moduledata';        
         $this->allsky_home = ALLSKY_HOME;
         $this->allsky_scripts = ALLSKY_SCRIPTS;
         $this->allsky_config = ALLSKY_CONFIG;
@@ -838,10 +841,15 @@ class MODULEUTIL
 		if (file_exists($checkPath)) {
 			$found = true;
 		} else {
-			$checkPath = $extraModulesDir . '/' . $module;
+			$checkPath = $this->myFiles . '/' . $module;
 			if (file_exists($checkPath)) {
 				$found = true;
-			}
+			} else {
+                $checkPath = $extraModulesDir . '/' . $module;
+                if (file_exists($checkPath)) {
+                    $found = true;
+                }
+            }
 		}
 
 		if ($found) {
@@ -1352,53 +1360,53 @@ class MODULEUTIL
     }
 
     public function getTemplateList() {
+        $result = array();        
+        $basePath = $this->myFilesData . DIRECTORY_SEPARATOR . 'blocks';
+        $corePath = $this->allsky_config . '/overlay/config/blocks';
 
-        global $settings_array;		// defined in initialize_variables()
-        $angle = $settings_array['angle'];
-        $lat = $settings_array['latitude'];
-        $lon = $settings_array['longitude'];
+        $paths = [$corePath, $basePath];
 
-        $imageDir = get_variable(ALLSKY_HOME . '/variables.sh', "IMG_DIR=", 'current/tmp');
-        $result['filename'] = $imageDir . '/' . $settings_array['filename'];
+        foreach($paths as $path) {
+            $outer = new DirectoryIterator($path);
 
-        exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
-        if ($retval == 2) {
-            $daynight = 'day';
-        } else if ($retval == 3) {
-            $daynight = 'night';
-        } else {
-            $daynight = '';
-        }
+            foreach ($outer as $folder) {
+                if ($folder->isDot() || !$folder->isDir()) {
+                    continue;
+                }
 
-        $result = array();
+                $innerPath = $folder->getPathname();
+                $inner = new DirectoryIterator($innerPath);
 
+                foreach ($inner as $file) {
+                    if ($file->isDot() || !$file->isFile()) {
+                        continue;
+                    }
 
-        $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($daynight) . '.json';
-        $rawConfigData = file_get_contents($configFileName);
-        $modules = json_decode($rawConfigData, true);
+                    if ($file->getExtension() === 'json') {
+                        $json = file_get_contents($file->getPathname());
+                        $parsed = json_decode($json, true);
 
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            die('Invalid JSON: ' . json_last_error_msg());
-        }
-
-        $result = [];
-
-        foreach ($modules as $moduleName => $moduleData) {
-            if (!empty($moduleData['metadata']['templates'])) {
-                foreach ($moduleData['metadata']['templates'] as $templateName => $templateData) {
-                    $result[] = array(
-                        "name" => $templateData["name"],
-                        "group" => $moduleName,
-                        "template" => $templateName,
-                        "tod" => $daynight,
-                        "description" => $templateData["description"]
-                    );
+                        if (json_last_error() === JSON_ERROR_NONE) {
+                            foreach ($parsed as $blockKey => $data) {
+                                $result[] = [
+                                    'name'        => $data['name'] ?? 'Unknown',
+                                    'group'       => $folder->getFilename(),
+                                    'blockname'    => $blockKey,
+                                    'filename'    => $file->getFilename(),
+                                    'description' => $data['description'] ?? '',
+                                ];
+                            }
+                        } else {
+                            // TODO: Log error
+                        }
+                    }
                 }
             }
         }
-
+        
         $this->sendResponse(json_encode($result));        
     }
+
     
     private function getAllskySetting($setting) {
         if ($this->allskySettings == null) {
@@ -1415,43 +1423,42 @@ class MODULEUTIL
     }
 
     public function getTemplate() {
-        $moduleName = $_GET['group'];
-        $template = $_GET['template'];        
-        $tod = $_GET['tod'];   
-        
-        $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($tod) . '.json';
-        $rawConfigData = file_get_contents($configFileName);
-        $modules = json_decode($rawConfigData, true);
+        $fileName = $_GET['filename'];
+        $block = $_GET['block'];
+        $group = $_GET['group'];
 
-        $result = array();
-        if (isset($modules[$moduleName])) {
-            if (isset($modules[$moduleName]['metadata']['templates'][$template])) {
-                $result = $modules[$moduleName]['metadata']['templates'][$template];
-            }
+        if ($group === 'allsky_allsky') {
+            $blockFilename = $this->allsky_config . '/overlay/config/blocks/allsky_allsky/' . $fileName;
+        } else {
+            $blockFilename = $this->myFilesData . DIRECTORY_SEPARATOR . 'blocks' . DIRECTORY_SEPARATOR . $group . DIRECTORY_SEPARATOR . $fileName;
         }
+        $rawBlockData = file_get_contents($blockFilename);
+        $result = json_decode($rawBlockData, true);
+        $result = $result[$block];
 
-        foreach ($result as &$row) {
+        $moduleData = $this->findModule($group . '.py');
+
+        foreach ($result['fields'] as &$row) {
             foreach ($row as &$rowData) {
                 if (isset($rowData["text"])) {
+                    $format = "";
+                    $font = "";                    
                     if (preg_match('/\$\{([^}]+)\}/', $rowData["text"], $matches)) {
                         $variable = $matches[1];
-                        if (isset($modules[$moduleName]['metadata']['extradata'])) {
-                            if (isset($modules[$moduleName]['metadata']['extradata']['values'])) {
-                                foreach ($modules[$moduleName]['metadata']['extradata']['values'] as $key=>$value) {
+                        if (isset($moduleData->extradata)) {
+                            if (isset($moduleData->extradata->values)) {
+                                foreach ($moduleData->extradata->values as $key=>$value) {
                                     if ($key == $variable) {
-                                        if (isset($value['format'])) {
-                                            $format = $value['format'];
+                                        if (isset($value->format)) {
+                                            $format = $value->format;
                                         }
-                                        if (isset($value['font'])) {
-                                            $font = $value['font'];
+                                        if (isset($value->font)) {
+                                            $font = $value->font;
                                         }                                        
                                     }
                                 }
                             }
                         }
-                    } else {
-                        $format = "";
-                        $font = "";
                     }
                     //$format = $this->getAllskySetting($format);
                     $rowData['format'] = $format;
@@ -1459,25 +1466,24 @@ class MODULEUTIL
                 } else {
                     foreach ($rowData as &$colData) {
                         if (isset($colData["text"])) {
+                            $format = "";
+                            $font = "";                            
                             if (preg_match('/\$\{([^}]+)\}/', $colData["text"], $matches)) {
                                 $variable = $matches[1];
-                                if (isset($modules[$moduleName]['metadata']['extradata'])) {
-                                    if (isset($modules[$moduleName]['metadata']['extradata']['values'])) {
-                                        foreach ($modules[$moduleName]['metadata']['extradata']['values'] as $key=>$value) {
+                                if (isset($moduleData->extradata)) {
+                                    if (isset($moduleData->extradata->values)) {
+                                        foreach ($moduleData->extradata->values as $key=>$value) {
                                             if ($key == $variable) {
-                                                if (isset($value['format'])) {
-                                                    $format = $value['format'];
+                                                if (isset($value->format)) {
+                                                    $format = $value->format;
                                                 }
-                                                if (isset($value['font'])) {
-                                                    $font = $value['font'];
+                                                if (isset($value->font)) {
+                                                    $font = $value->font;
                                                 }
                                             }
                                         }
                                     }
                                 }
-                            } else {
-                                $format = "";
-                                $font = "";
                             }
                             //$format = $this->getAllskySetting($format);                            
                             $colData['format'] = $format;

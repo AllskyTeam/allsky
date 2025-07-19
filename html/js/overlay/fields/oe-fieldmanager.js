@@ -417,7 +417,7 @@ class OEFIELDMANAGER {
         return fields
     }
 
-    enableTestMode() {
+    enableTestMode(async=true) {
         let config ={
             fields: this.buildTestJSON()
         };
@@ -436,6 +436,7 @@ class OEFIELDMANAGER {
 			},
             dataType: 'json',
             cache: false,
+            async: async,
             context: this
         }).done((data) => {
             $.LoadingOverlay('hide');

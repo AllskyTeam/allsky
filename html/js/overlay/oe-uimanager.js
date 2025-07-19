@@ -378,11 +378,12 @@ class OEUIMANAGER {
 
         $(document).on('addFields', (e, templateInfo) => {
             this.#transformer.nodes([]); 
-            if ('fields' in templateInfo.template) {
-                let fields = templateInfo.template.fields;
+            if ('fields' in templateInfo) {
 
+                let fields = templateInfo.fields;
 
-                let yAdd = this.#configManager.getValue('settings.defaultfontsize');
+                let fontSize = this.#configManager.getValue('settings.defaultfontsize');
+                let defaultFontName = this.#configManager.getValue('settings.defaultfont');
                 let gridSize =this.#configManager.gridSize;
 
                 function snapToGrid(value) {
@@ -391,9 +392,11 @@ class OEUIMANAGER {
 
                 let y = 10;
                 y = snapToGrid(y)
-                let largestCol1 = 0;
-                let col2 = [];       
+                let cols = [];
+                let rows = [];
+                let row = 0;
                 Object.entries(fields).forEach(([key, value]) => {
+                    rows[row] = [];
                     let x = 500;
                     x = snapToGrid(x)
                     if ('text' in value) {
@@ -406,11 +409,13 @@ class OEUIMANAGER {
                         field.format = value.format;
                         if (value.font !== "") {
                             field.font = value.font;
+                        } else {
+                            field.font = defaultFontName;
                         }
                         let current = this.#transformer.nodes();
                         this.#transformer.nodes([...current, shape]); 
                     } else {
-                        let col1 = true;
+                        let col = 0;
                         Object.entries(value).forEach(([fieldkey, fieldvalue]) => {
                             if ('text' in fieldvalue) {
                                 let shape = this.#fieldManager.addField('text', fieldvalue.text)
@@ -422,32 +427,68 @@ class OEUIMANAGER {
                                 field.format = fieldvalue.format;
                                 if (fieldvalue.font !== "") {
                                     field.font = fieldvalue.font;
+                                } else {
+                                    field.font = defaultFontName;
                                 }
                                 x += shape.width() / this.#oeEditorStage.scaleX();
                                 x = snapToGrid(x)
                                 let current = this.#transformer.nodes();
                                 this.#transformer.nodes([...current, shape]);
-                                if (col1) {
-                                    if (shape.width() > largestCol1) {
-                                        largestCol1 = shape.width();
-                                    }
-                                } else {
-                                    col2.push(field);
+                                if (shape.width() > cols[col] || cols[col] === undefined) {
+                                    cols[col] = Math.ceil(shape.width());
                                 }
-                                col1 = false;
+                                rows[row].push(field);
+                                col++;
                             }        
                         });
-                    } 
-                    y += yAdd;
+                    }
+                    row++;
+                    y += fontSize;
                     y = snapToGrid(y);
                 });
+                           
+                //this.enableTestMode(false);
+//console.log(cols);
+                let col = 0;
+                Object.entries(cols).forEach(([col, colWidth]) => {
+                    colWidth = 0;
+                    Object.entries(rows).forEach(([row, fields]) => {
+                        let field = fields[col];
+                        if (field !== undefined) {
+                            let width = Math.ceil(field.shape.width());
+                            if (width > cols[col]  || cols[col]  === 0) {
+                                cols[col] = width;
+                            }
+                        }
+                    });
+                    col++;
+                });
+//console.log(cols);
 
-                Object.entries(col2).forEach(([key, field]) => {
-                    let tlx = largestCol1 + (largestCol1 * 0.3) + 500;
-                    field.tlx = snapToGrid(tlx)
+
+
+                Object.entries(rows).forEach(([row, fields]) => {
+                    let x = 500;
+                    Object.entries(cols).forEach(([col, colWidth]) => {
+                        if (col > 0) {
+                            colWidth = cols[col-1];                            
+                            x += colWidth + (colWidth * 0.1);
+                            let field = fields[col];
+                            if (field !== undefined) {
+                                field.tlx = snapToGrid(x);
+                                let posx = snapToGrid(x); 
+                                //console.log(`Setting row${row} col${col} to ${x} (snapped to ${posx})colwidth ${colWidth}`)
+                            }
+                        }
+                    });
                 });
             }
+            //this.disableTestMode();
             this.#fieldManager.groupFields(this.#transformer)
+            this.#transformer.nodes().forEach((node) => {
+                const field = this.#fieldManager.findField(node.id())
+                field.shape.draggable(true)
+            })            
             this.#configManager.dirty = true
             this.updateToolbar();
         });        
@@ -471,6 +512,10 @@ class OEUIMANAGER {
                     this.#overlayLayer.add(shape)
                     this.#selected = this.#fieldManager.findField(shape)
                     this.#transformer.nodes([shape])
+                    this.#transformer.nodes().forEach((node) => {
+                        const field = this.#fieldManager.findField(node.id())
+                        field.shape.draggable(true)
+                    })
                     this.showPropertyEditor()
                     this.updatePropertyEditor()
                     this.updateToolbar()
@@ -2634,14 +2679,17 @@ class OEUIMANAGER {
         });
     }
 
-    enableTestMode() {
+    enableTestMode(async=true) {
         this.testMode = true;
-        this.#fieldManager.enableTestMode();
+        async = true;
+        this.#fieldManager.enableTestMode(async);
+        this.updateDebugWindow();
     }
 
     disableTestMode() {
         this.testMode = false;
         this.#fieldManager.disableTestMode();
+        this.updateDebugWindow();
     }
 
     rotatePoint(pt, o, a){

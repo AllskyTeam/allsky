@@ -1,5 +1,6 @@
 # Allsky Camera ![Release](https://img.shields.io/badge/Version-v2024.12.06_05-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
 
+
 This is the source code for the Allsky Camera project.  <!-- described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/). -->
 &nbsp;  
 <p align="center">
@@ -126,9 +127,7 @@ By default, a timelapse video is generated at the end of nighttime from all of t
 
 "Mini" timelapse videos can also be created every few images, and contain the last several images.  They are useful to see what the sky was recently like.
 
-
 See [Explanations / How To --> Timelapses](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/explanations/timelapses.html).
-
 
 ---
 
@@ -146,7 +145,6 @@ For each image a central vertical column 1 pixel wide is extracted. All these co
 
 See [Explanations / How To --> Keograms](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/explanations/keograms.html).
 
-
 ---
 
 
@@ -163,7 +161,6 @@ In the image above, Polaris is centered about one-fourth the way from the top.
 
 See [Explanations / How To --> Startrails](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/explanations/startrails.html).
 	
-
 ---
 
 

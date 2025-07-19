@@ -18,25 +18,28 @@ source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 source "${ALLSKY_SCRIPTS}/functions.sh" 				|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/checkFunctions.sh"			|| exit "${EXIT_ERROR_STOP}"
 
 usage_and_exit()
 {
 	local RET=${1}
-	local C=""
-	[[ ${RET} -ne 0 ]] && C="${RED}"
-	{
-		echo
-		echo -en "${C}"
-		echo -n  "Usage: ${ME} [--help] [--fromWebUI] [--no-info] [--no-warn] [--no-error]"
-		echo -e  "${NC}"
-		echo
-		echo "'--help' displays this message and exits."
-		echo "'--fromWebUI' displays output to be displayed in the WebUI."
-		echo "'--no-info' skips checking for Informational items."
-		echo "'--no-warn' skips checking for Warning items."
-		echo "'--no-error' skips checking for Error items."
-		echo
-	} >&2
+
+	exec >&2
+	local MSG="Usage: ${ME} [--help] [--fromWebUI] [--no-info] [--no-warn] [--no-error]"
+	echo
+	if [[ ${RET} -eq 0 ]]; then
+		echo -e "${MSG}"
+	else
+		E_ "${MSG}"
+	fi
+	echo "Where:"
+	echo "   --help        Displays this message and exits."
+	echo "   --fromWebUI   Displays output to be displayed in the WebUI."
+	echo "   --no-info     Skips checking for Informational items."
+	echo "   --no-warn     Skips checking for Warning items."
+	echo "   --no-error    Skips checking for Error items."
+	echo
 	exit "${RET}"
 }
 
@@ -66,7 +69,7 @@ while [[ $# -gt 0 ]]; do
 			CHECK_ERRORS="false"
 			;;
 		*)
-			echo -e "${RED}Unknown argument: '${ARG}'${NC}" >&2
+			E_ "Unknown argument: '${ARG}'." >&2
 			OK="false"
 			;;
 	esac
@@ -344,6 +347,13 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 			echo "FIX: These are now separate settings so move them to their own settings."
 		fi
 	fi
+	if [[ -n ${S_keogramfontcolor} && ${S_keogramfontcolor:0:1} == "#" && ${#S_keogramfontcolor} -ne 7 ]]; then
+		heading "Information"
+		echo -n "${WSNs}${S_keogramfontcolor_label}${WSNe} should have a '#' followed by 6 hex digits; "
+		echo "yours has $(( ${#S_keogramfontcolor} - 1)): ${WSVs}${S_keogramfontcolor}${WSVe}."
+		echo "FIX: Make sure there are 6 digits after the '#', for example: '#ffffff' for white."
+	fi
+
 fi		# end of checking for informational items
 
 
@@ -769,15 +779,22 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 		echo "${WSNs}${S_angle_label}${WSNe} (${S_angle}) must be a number."
 		echo "FIX: Set to a number in the WebUI then rerun ${ME}."
 	fi
-	if [[ -n ${S_latitude} ]] && ! LAT="$( convertLatLong "${S_latitude}" "latitude" 2>&1 )" ; then
+	if [[ -n ${S_latitude} ]] && 
+			! LAT="$( convertLatLong "${S_latitude}" "latitude" 2>&1 )" ; then
 		heading "Error"
 		echo -e "${LAT}"		# ${LAT} contains the error message
 		echo    "FIX: Correct the ${S_latitude_label} then rerun ${ME}."
 	fi
-	if [[ -n ${S_longitude} ]] && ! LONG="$( convertLatLong "${S_longitude}" "longitude" 2>&1 )" ; then
+	if [[ -n ${S_longitude} ]] &&
+			! LONG="$( convertLatLong "${S_longitude}" "longitude" 2>&1 )" ; then
 		heading "Error"
 		echo -e "${LONG}"
 		echo    "FIX: Correct the ${S_longitude_label} then rerun ${ME}."
+	fi
+	if [[ -n ${S_locale} ]] &&
+			! MSG="$( _check_locale "${S_locale}" "${S_locale_label}" )" ; then
+		heading "Error"
+		echo -e "${MSG}"
 	fi
 
 	##### Make sure required files exist
@@ -791,7 +808,8 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 	if [[ ${S_useremotewebsite} == "true" && ! -f ${f} ]]; then
 		heading "Error"
 		echo "${WSNs}${S_useremotewebsite_label}${WSNe} is enabled but '${f}' does not exist."
-		echo "FIX: Either disable ${WSNs}${S_useremotewebsite_label}${WSNe} or run 'cd ~/allsky; ./remoteWebsiteInstall.sh'."
+		echo -n "FIX: Either disable ${WSNs}${S_useremotewebsite_label}${WSNe}"
+		echo " or run 'cd ~/allsky; ./remoteWebsiteInstall.sh'."
 	fi
 
 	##### Check dark frames

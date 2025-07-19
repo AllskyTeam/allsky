@@ -53,6 +53,7 @@ function usage_and_exit()
 
 	echo "      show_supported_cameras  --RPi | --ZWO"
 	echo "      show_connected_cameras"
+	echo "      show_installed_locales"
 	echo "      prepare_logs"
 	echo "      config_timelapse"
 	echo "      change_swap"
@@ -151,6 +152,36 @@ function show_connected_cameras()
 	fi
 }
 
+
+#####
+# Show all the supported cameras.
+function show_installed_locales()
+{
+	local HTML=""
+
+	if [[ ${1} == "--help" ]]; then
+		echo
+		W_ "Usage: ${ME}  ${ME_F}"
+		echo
+		echo "Display a list of the locales installed on this computer."
+		return
+	fi
+
+	echo
+	echo "The following locales are installed on this computer."
+	echo -n "If the one you want to use is NOT in the list,"
+	if [[ ${ON_TTY} == "true" ]]; then
+		echo " see the 'Locale' setting on the WebUI's"
+		echo "'Settings -> Allsky' Documentation page for instructions on how to install it."
+	else
+		echo " <a href='/documentation/settings/allsky.html#locale'>click here</a>"
+		echo "for instructions on how to install it."
+		HTML="--html"
+	fi
+
+	# shellcheck disable=SC2086
+	indent ${HTML} "$( list_installed_locales )"
+}
 
 #####
 # Prepare Allsky for troubleshooting.
@@ -613,7 +644,7 @@ function prompt()
 	fi >&2
 
 	local OPT="$( whiptail --title "${TITLE}" --notags --menu "${PROMPT}" \
-		"${LINES}" "${WT_WIDTH:-80}" "${NUM_OPTIONS}" -- "${OPTIONS[@]}" 3>&1 1>&2 2>&3 )"
+		"${LINES}" "${WT_WIDTH:-100}" "${NUM_OPTIONS}" -- "${OPTIONS[@]}" 3>&1 1>&2 2>&3 )"
 	local RET=$?
 	if [[ ${RET} -eq 255 ]]; then
 		E_ "\n${ME}: whiptail failed." >&2
@@ -713,23 +744,41 @@ if [[ -z ${CMD} ]]; then
 
 	PROMPT="\nSelect a command to run:"
 	CMDS=(); N=1
-	CMDS+=("show_supported_cameras"		"$( L "Show supported cameras" )"); ((N++))
-	CMDS+=("show_connected_cameras"		"$( L "Show connected cameras" )"); ((N++))
-	CMDS+=("prepare_logs"				"$( L "Prepare log files for troubleshooting" )"); ((N++))
-	CMDS+=("config_timelapse"			"$( L "Create timelapse videos with different settings" )"); ((N++))
-	CMDS+=("change_swap"				"$( L "Add swap space or change size" )"); ((N++))
-	CMDS+=("change_tmp" 				"$( L "Move ~/allsky/tmp to memory or change size") "); ((N++))
-	CMDS+=("samba" 						"$( L "Simplify copying files to/from the Pi" )"); ((N++))
-	CMDS+=("move_images"				"$( L "Move ~/allsky/images to a different location" )"); ((N++))
-	CMDS+=("bad_images_info"			"$( L "Display information on 'bad' images." )"); ((N++))
-	CMDS+=("new_rpi_camera_info"		"$( L "Collect information for new RPi camera" )"); ((N++))
-	CMDS+=("show_start_times"			"$( L "Show daytime and nighttime start times" )"); ((N++))
-	CMDS+=("compare_paths"				"$( L "Compare upload and Website paths" )"); ((N++))
-	CMDS+=("get_brightness_info"		"$( L "Get information on image brightness" )"); ((N++))
-	CMDS+=("check_post_data"			"$( L "Troubleshoot the 'data.json is X days old' message" )"); ((N++))
-	CMDS+=("get_filesystems"			"$( L "Determine where a secodary storage device is" )"); ((N++))
-	CMDS+=("encoders"					"$( L "Show list of timelapse encoders available" )"); ((N++))
-	CMDS+=("pix_fmts"					"$( L "Show list of timelapse pixel formats available" )"); ((N++))
+
+	C="show_supported_cameras"
+	CMDS+=("${C}"			"$( L "Show supported cameras                              (${C})" )"); ((N++))
+	C="show_connected_cameras"
+	CMDS+=("${C}"			"$( L "Show connected cameras                              (${C})" )"); ((N++))
+	C="prepare_logs"
+	CMDS+=("${C}"			"$( L "Prepare log files for troubleshooting               (${C})" )"); ((N++))
+	C="config_timelapse"
+	CMDS+=("${C}"			"$( L "Create timelapse videos with different settings     (${C})" )"); ((N++))
+	C="change_swap"
+	CMDS+=("${C}"			"$( L "Add swap space or change size                       (${C})" )"); ((N++))
+	C="change_tmp"
+	CMDS+=("${C}" 			"$( L "Move ~/allsky/tmp to memory or change size          (${C})") "); ((N++))
+	C="samba"
+	CMDS+=("${C}" 			"$( L "Simplify copying files to/from the Pi               (${C})" )"); ((N++))
+	C="move_images"
+	CMDS+=("${C}"			"$( L "Move ~/allsky/images to a different location        (${C})" )"); ((N++))
+	C="bad_images_info"
+	CMDS+=("${C}"			"$( L "Display information on 'bad' images                 (${C})" )"); ((N++))
+	C="new_rpi_camera_info"
+	CMDS+=("${C}"			"$( L "Collect information for new RPi camera              (${C})" )"); ((N++))
+	C="show_start_times"
+	CMDS+=("${C}"			"$( L "Show daytime and nighttime start times              (${C})" )"); ((N++))
+	C="compare_paths"
+	CMDS+=("${C}"			"$( L "Compare upload and Website paths                    (${C})" )"); ((N++))
+	C="get_brightness_info"
+	CMDS+=("${C}"			"$( L "Get information on image brightness                 (${C})" )"); ((N++))
+	C="check_post_data"
+	CMDS+=("${C}"			"$( L "Troubleshoot the 'data.json is X days old' message  (${C})" )"); ((N++))
+	C="get_filesystems"
+	CMDS+=("${C}"			"$( L "Determine where a secodary storage device is        (${C})" )"); ((N++))
+	C="encoders"
+	CMDS+=("${C}"			"$( L "Show list of timelapse encoders available           (${C})" )"); ((N++))
+	C="pix_fmts"
+	CMDS+=("${C}"			"$( L "Show list of timelapse pixel formats available      (${C})" )"); ((N++))
 
 	# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 	while COMMAND="$( prompt "${PROMPT}" "${CMDS[@]}" )"

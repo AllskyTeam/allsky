@@ -1715,6 +1715,12 @@ function get_installed_locales()
 
 	INSTALLED_LOCALES="$( locale -a 2>/dev/null | grep -E -v "^C$|:" | sed 's/utf8/UTF-8/' )"
 }
+function list_installed_locales()
+{
+	[[ -z ${INSTALLED_LOCALES} ]] && get_installed_locales
+
+	echo "${INSTALLED_LOCALES}"
+}
 function is_installed_locale()
 {
 	local CHECK_LOCALE="${1}"
@@ -1723,6 +1729,15 @@ function is_installed_locale()
 
 	# Return exit code of "grep"
 	echo "${INSTALLED_LOCALES}" | grep --silent -i "^${CHECK_LOCALE}$";
+}
+function is_valid_locale()
+{
+	local CHECK_LOCALE="${1}"
+
+	[[ -z ${INSTALLED_LOCALES} ]] && get_installed_locales
+
+	# Only look for base of locale - anything before the ".".
+	[[ -f "/usr/share/i18n/locales/${CHECK_LOCALE/.*}" ]]		# Returns $?
 }
 
 

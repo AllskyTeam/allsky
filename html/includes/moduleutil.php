@@ -1448,7 +1448,7 @@ class MODULEUTIL
                         if (isset($moduleData->extradata)) {
                             if (isset($moduleData->extradata->values)) {
                                 foreach ($moduleData->extradata->values as $key=>$value) {
-                                    if ($key == $variable) {
+                                    if ($key == $variable || $key == $variable . "\${COUNT}" ) {
                                         if (isset($value->format)) {
                                             $format = $value->format;
                                         }
@@ -1473,7 +1473,7 @@ class MODULEUTIL
                                 if (isset($moduleData->extradata)) {
                                     if (isset($moduleData->extradata->values)) {
                                         foreach ($moduleData->extradata->values as $key=>$value) {
-                                            if ($key == $variable) {
+                                            if ($key == $variable || $key == $variable . "\${COUNT}") {
                                                 if (isset($value->format)) {
                                                     $format = $value->format;
                                                 }

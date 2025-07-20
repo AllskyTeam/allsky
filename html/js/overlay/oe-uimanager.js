@@ -1982,7 +1982,6 @@ class OEUIMANAGER {
         });
     }
 
-
     setupFonts() {
         this.#fonts = [];
 
@@ -2831,6 +2830,7 @@ class OEUIMANAGER {
         $('#formatlisttable').removeClass('hidden')
         $(document).off('click', '.oe-format-replace')
         $(document).off('click', '.oe-format-add')
+
         var formatTable = $('#formatlisttable')
 			.on('preXhr.dt', function (e, settings, data) {	
 			})			
@@ -2866,7 +2866,7 @@ class OEUIMANAGER {
 					url: 'includes/overlayutil.php?request=Formats',
 					dataType: 'json'
 				},
-                ordering: false,
+                order: [[3, 'asc']],
                 paging: false,
 				scrollY: '25vh',
 				scrollCollapse: true,
@@ -2874,7 +2874,14 @@ class OEUIMANAGER {
 				columns: [
 					{ 
 						data: 'format',
-						width: '20%'
+						width: '15%',
+                        render: function(data, type, row, meta) {
+                            let result = data
+                            if (row.value !== '') {
+                                result = '<b class="as-variable-has-value">' + data + '</b>'
+                            }
+                            return result
+                        }                          
 					},
 					{ 
 						data: 'description',
@@ -2883,29 +2890,67 @@ class OEUIMANAGER {
 					{ 
 						data: 'example',
 						width: '20%'					
-					},
+					},                  
 					{ 
 						data: 'type',
 						visible: false
 					},
+					{ 
+						data: 'legacy',
+                        defaultContent: 'Current',
+                        visible: false,
+						width: '5%'					
+					},                     
 					{
 						data: null,
 						width: '10%',
 						render: function (item, type, row, meta) {
-							let buttonReplace = '<button type="button" title="Replace Format" class="btn btn-primary btn-xs oe-format-replace" data-format="' + item.format + '"><i class="fa-solid fa-right-to-bracket"></i></button>';
-							let buttonAdd = ''
+                            let buttons = '';
+                            if (item.legacy !== 'Legacy') {
+                                let buttonReplace = '<button type="button" title="Replace Format" class="btn btn-success btn-xs oe-format-replace" data-format="' + item.format + '"><i class="fa-solid fa-right-to-bracket"></i></button>';
+                                let buttonAdd = ''
 
-							if (row.stackable) {
-								buttonAdd = '<button type="button" title="Add to format" class="btn btn-primary btn-xs oe-format-add" data-format="' + item.format + '"><i class="fa-solid fa-plus"></i></button>';
-							}
-							
-							let buttons = '<div class="btn-group">' + buttonReplace + buttonAdd + '</div>';                        
+                                if (row.stackable) {
+                                    buttonAdd = '<button type="button" title="Add to format" class="btn btn-primary btn-xs oe-format-add" data-format="' + item.format + '"><i class="fa-solid fa-plus"></i></button>';
+                                }
+                                
+                                buttons = '<div class="btn-group">' + buttonReplace + buttonAdd + '</div>';
+                            }
 							return buttons;
 						}
 					}                
-				]
+				],
+                    rowGroup: {
+                        dataSrc: 'legacy',
+                        startRender: function (rows, group) {
+                            if (group == 'No group') {
+                                group = 'Available Formats';
+                            }                            
+                            var collapsed = !!legacyCollapsedGroups[group];
+                            
+                            let icon = collapsed ? '<i class="fa-solid fa-angles-right"></i>' : '<i class="fa-solid fa-angles-down"></i>';
+                            rows.nodes().each(function (r) {
+                                r.style.display = collapsed ? 'none' : '';
+                            });    
+
+                            if (group === 'Legacy') {
+                                group = 'Legacy Formats - NO NOT USE';
+                            }
+                            return $('<tr/>')
+                                .append('<td colspan="9">' + icon + ' ' + group + '</td>')
+                                .attr('data-name', group)
+                                .toggleClass('collapsed', collapsed);
+                        }
+                    }                 
 			})
-      
+
+            var legacyCollapsedGroups = {};                
+            $('#formatlisttable').on('click', 'tr.dtrg-start', function () {
+                var name = $(this).data('name');
+                legacyCollapsedGroups[name] = !legacyCollapsedGroups[name];
+                formatTable.draw(false);
+            });  
+
         $('#formatdialog').dialog({
             resizable: false,
             closeOnEscape: false,

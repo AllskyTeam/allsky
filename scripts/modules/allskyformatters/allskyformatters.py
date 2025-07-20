@@ -82,20 +82,34 @@ class AllskyFormatters:
 
 	def as_bool(self, value, variable_name, format, variable_type):
 		
-		if format == '%yes':
+		if format == '%yes' or format == 'yesno':
 			if type(value) is bool:
 				if value:
 					value = 'Yes'
 				else:
 					value = 'No'        
 		
-		if format == '%on':
+		if format == '%on' or format == 'onoff':
 			if type(value) is bool:
 				if value:
 					value = 'On'
 				else:
 					value = 'Off'        
-          
+
+		if format == '%true' or format == 'truefalse':
+			if type(value) is bool:
+				if value:
+					value = 'True'
+				else:
+					value = 'False'
+
+		if format == '%1' or format == 'num':
+			if type(value) is bool:
+				if value:
+					value = '1'
+				else:
+					value = '0'
+                
 		return value
 
 	def as_timestamp(self, value, variable_name, format, variable_type):
@@ -157,37 +171,86 @@ class AllskyFormatters:
 		return value
 
 	def as_number(self, value, variable_name, format, variable_type):
-		if format is not None and format != "":
-			original_format = format
-			if format.startswith(':'):
-				format = "{" + format + "}"
-			convertValue = value
-			try:
-				if '.' in str(value):
-					convertValue = float(value)
-				else:
-					convertValue = int(value)
 
-				#try:
-				#	convertValue = int(value)
-				#except ValueError:
-				#	convertValue = float(value)
-				
+		processed = False
+		if format == 'int':
+			value = int(value)
+			processed = True
+
+		if format == 'intlocale':
+			value = locale.format_string('%d', value, grouping=True)
+			processed = True 
+   
+		if format == '1dp':
+			value = float(value)
+			value = round(value,1)
+			processed = True
+   
+		if format == '1dplocale':
+			value = locale.format_string('%.1f', value, grouping=True)
+			processed = True   
+
+		if format == '2dp':
+			value = float(value)
+			value = round(value,2)
+			processed = True
+   
+		if format == '2dplocale':
+			value = locale.format_string('%.2f', value, grouping=True)
+			processed = True  
+      
+		if format == '3dp':
+			value = float(value)
+			value = round(value,3)
+			processed = True
+
+		if format == '3dplocale':
+			value = locale.format_string('%.3f', value, grouping=True)
+			processed = True  
+   
+		if format == '4dp':
+			value = float(value)
+			value = round(value,4)
+			processed = True
+
+		if format == '4dplocale':
+			value = locale.format_string('%.4f', value, grouping=True)
+			processed = True  
+      
+		if not processed:
+			if format is not None and format != "":
+				original_format = format
+				if format.startswith(':'):
+					format = "{" + format + "}"
+				convertValue = value
 				try:
-					if format.startswith('{'):
-						value = format.format(convertValue)
+					if '.' in str(value):
+						convertValue = float(value)
 					else:
-						if format.startswith('%'):
-							value = locale.format_string(format, convertValue, grouping=True)
-						else:
-							value = convertValue
-				except Exception as err:
-					error =  f"ERROR: Cannot use format '{original_format}' on Number variable (value={value}). Error is {err}"
-					raise AllskyFormatError(error, 0, False)        
-			except ValueError as err:
-					error =  f"ERROR: Cannot use format '{original_format}' on Number variable (value={value}). Error is {err}"
-					raise AllskyFormatError(error, 0, False)          
+						convertValue = int(value)
 
+					#try:
+					#	convertValue = int(value)
+					#except ValueError:
+					#	convertValue = float(value)
+					
+					try:
+						if format.startswith('{'):
+							value = format.format(convertValue)
+						else:
+							if format.startswith('%'):
+								value = locale.format_string(format, convertValue, grouping=True)
+							else:
+								value = convertValue
+					except Exception as err:
+						error =  f"ERROR: Cannot use format '{original_format}' on Number variable (value={value}). Error is {err}"
+						raise AllskyFormatError(error, 0, False)        
+				except ValueError as err:
+						error =  f"ERROR: Cannot use format '{original_format}' on Number variable (value={value}). Error is {err}"
+						raise AllskyFormatError(error, 0, False)          
+
+		value = str(value)
+  
 		return value
 
 	def as_int(self, value, variable_name, format, variable_type):
@@ -229,6 +292,12 @@ class AllskyFormatters:
 		try:
 			float_value = float(value)
 
+			temp_units = allsky_shared.getSetting('temptype')
+			old_format = format
+			if format == 'allsky' or format == 'allskyfull':
+				if temp_units == 'F':
+					format = 'degctof'
+
 			if format == 'deg':
 				value = f'{float_value:.2f}'
 
@@ -237,7 +306,7 @@ class AllskyFormatters:
     
 			if format == 'degctof':
 				value = value * 9 / 5 + 32
-				value = f'{float_value:.2f}'
+				value = f'{value:.2f}'
 
 			if format == 'degctofint':
 				value = value * 9 / 5 + 32
@@ -245,10 +314,16 @@ class AllskyFormatters:
     
 			if format == 'degftoc':
 				value = (value - 32) * 5 / 9
-				value = f'{float_value:.2f}'
+				value = f'{value:.2f}'
     
 			if format == 'degftocint':
 				value = int(value)
+
+			if old_format == 'allskyfull':
+				if temp_units == 'C':
+					value = f'{value}°C'
+				else:
+					value = f'{value}°F'
 
 			value = str(value)
 		except ValueError:
@@ -476,7 +551,7 @@ class AllskyFormatters:
 		return value
 
 	def as_per(self, value, variable_name, format, variable_type):
-		""" Adda a percent symbol
+		""" Adds a percent symbol
 		Args:
 			value (any): The input value 
 			variable_name 	(string):	The name of the variable
@@ -489,6 +564,31 @@ class AllskyFormatters:
 		value = f'{str(value)}%'
 
 
+		return value
+
+	def as_distance(self, value, variable_name, format, variable_type):
+		""" Converts a distance to various units
+		Args:
+			value (any): The input value 
+			variable_name 	(string):	The name of the variable
+			format 			(string):	The format to be applied
+			variable_type 	(object):	The variable type object
+
+		Returns:
+			(string): The formatted value
+		"""
+
+		value = int(value)
+  
+		if format == 'allsky':
+			pass
+
+		if format == 'mtok':
+			value = int(value * 1.60934)
+
+		if format == 'ktom':
+			value = int(value * 0.621371)
+           
 		return value
 
 allsky_formatters = AllskyFormatters()

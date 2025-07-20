@@ -162,7 +162,7 @@
 		"format": "",
 		"sample": "",
 		"source": "Allsky",			
-		"type": "time",
+		"type": "date",
 		"group": "Allsky",
 		"description": "Time of last image"
 	},

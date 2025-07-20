@@ -241,6 +241,7 @@ function DisplayOverlay($image_name)
                     <th>Description</th>
                     <th>Sample</th>
                     <th>Type</th>
+                    <th>Legacy</th>
                     <th></th>
                 </tr>
             </thead>

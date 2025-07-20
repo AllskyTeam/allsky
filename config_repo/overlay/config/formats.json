@@ -218,59 +218,164 @@
             "type": "date"
         },
         {
-            "format": "{:.0f}",            
-            "description": "Number to zero decimal places",
+            "format": "int",            
+            "description": "Number integer",
             "example": "52",
             "stackable": true,
             "type": "number"
         },
         {
-            "format": "{:.2f}",            
+            "format": "intlocale",            
+            "description": "Number integer, formatted using locale",
+            "example": "52,000",
+            "stackable": true,
+            "type": "number"
+        },        
+        {
+            "format": "1dp",            
+            "description": "Number to 1 decimal place",
+            "example": "52.1",
+            "stackable": true,
+            "type": "number"
+        },
+        {
+            "format": "1dplocale",            
+            "description": "Number to 1 decimal place, formatted using locale",
+            "example": "52,000.0",
+            "stackable": true,
+            "type": "number"
+        },         
+        {
+            "format": "2dp",            
             "description": "Number to 2 decimal places",
+            "example": "52.12",
+            "stackable": true,
+            "type": "number"
+        },
+        {
+            "format": "2dplocale",            
+            "description": "Number to 2 decimal places, formatted using locale",
+            "example": "52,000.00",
+            "stackable": true,
+            "type": "number"
+        },         
+        {
+            "format": "3dp",            
+            "description": "Number to 3 decimal places",
+            "example": "52.121",
+            "stackable": true,
+            "type": "number"
+        },
+        {
+            "format": "3dplocale",            
+            "description": "Number to 3 decimal places, formatted using locale",
+            "example": "52,000.000",
+            "stackable": true,
+            "type": "number"
+        },           
+        {
+            "format": "4dp",            
+            "description": "Number to 4 decimal places",
+            "example": "52.1211",
+            "stackable": true,
+            "type": "number"
+        },
+        {
+            "format": "4dplocale",            
+            "description": "Number to 4 decimal places, formatted using locale",
+            "example": "52,000.0000",
+            "stackable": true,
+            "type": "number"
+        },                     
+        {
+            "format": "{:.0f}",            
+            "description": "Number to zero DP. (LEGACY DO NOT USE)",
+            "example": "52",
+            "stackable": true,
+            "legacy": "Legacy",
+            "type": "number"
+        },
+        {
+            "format": "{:.2f}",            
+            "description": "Number to 2 DP. (LEGACY DO NOT USE)",
             "example": "52.00",
             "stackable": false,
+            "legacy": "Legacy",            
             "type": "number"
         },        
         {
             "format": "{:,}",
-            "description": "Comma for thousands separator",
+            "description": "Comma for thousands. (LEGACY DO NOT USE)",
             "example": "800,000",
             "stackable": false,
+            "legacy": "Legacy",            
             "type": "number"
         },
         {
             "format": "{:n}",
-            "description": "Use locale thousands separator",
+            "description": "Use locale thousands. (LEGACY DO NOT USE)",
             "example": "800.000",
             "stackable": false,
+            "legacy": "Legacy",            
             "type": "number"
         },
         {
-            "format": "%yes",
+            "format": "yesno",
             "description": "Output Yes (if input is 1) or No",
             "example": "Yes, No",
             "stackable": false,
             "type": "bool"
-        },
+        },        
         {
-            "format": "%on",
+            "format": "onoff",
             "description": "Output On (if input is 1) or Off",
             "example": "On, Off",
             "stackable": false,
             "type": "bool"
         },
         {
-            "format": "%true",
+            "format": "truefalse",
             "description": "Output True (if input is 1) of False",
             "example": "True, False",
             "stackable": false,
             "type": "bool"
         },
         {
-            "format": "%1",
+            "format": "num",
             "description": "Output 1 (if input is 1) or 0",
             "example": "1, 0",
             "stackable": false,
+            "type": "bool"
+        },                 
+        {
+            "format": "%yes",
+            "description": "Output Yes or No. (LEGACY DO NOT USE)",
+            "example": "Yes, No",
+            "stackable": false,
+            "type": "bool"
+        },
+        {
+            "format": "%on",
+            "description": "Output On or Off. (LEGACY DO NOT USE)",
+            "example": "On, Off",
+            "stackable": false,
+            "legacy": "Legacy",            
+            "type": "bool"
+        },
+        {
+            "format": "%true",
+            "description": "Output True of False. (LEGACY DO NOT USE)",
+            "example": "True, False",
+            "stackable": false,
+            "legacy": "Legacy",            
+            "type": "bool"
+        },
+        {
+            "format": "%1",
+            "description": "Output 1 or 0. (LEGACY DO NOT USE)",
+            "example": "1, 0",
+            "stackable": false,
+            "legacy": "Legacy",            
             "type": "bool"
         },
         {
@@ -371,7 +476,21 @@
             "example": "102400",            
             "stackable": false,
             "type": "filesize"
-        },		
+        },
+        {
+            "format": "allsky",
+            "description": "Use Allsky setting",
+            "example": "23.50",          
+            "stackable": false,
+            "type": "temperature"
+        },
+        {
+            "format": "allskyfull",
+            "description": "Use Allsky setting with Deg unit",
+            "example": "23.50",          
+            "stackable": false,
+            "type": "temperature"
+        },        
         {
             "format": "deg",
             "description": "Degrees 2DP",
@@ -476,6 +595,27 @@
             "example": "",           
             "stackable": false,
             "type": "flip"
-        }
+        },
+        {
+            "format": "allsky",
+            "description": "Allsky internal distance (miles)",
+            "example": "",           
+            "stackable": false,
+            "type": "distance"
+        },
+        {
+            "format": "mtok",
+            "description": "Miles to Kilometres",
+            "example": "",           
+            "stackable": false,
+            "type": "distance"
+        },
+        {
+            "format": "ktom",
+            "description": "Kilometres to Miles",
+            "example": "",           
+            "stackable": false,
+            "type": "distance"
+        }  
     ]
 }

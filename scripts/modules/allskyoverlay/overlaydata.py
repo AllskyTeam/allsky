@@ -248,7 +248,8 @@ class ALLSKYOVERLAYDATA:
 		if 'format' in field_data:
 			format_regex = r"\{(.*?)\}"
 			formats = field_data['format']
-			format_matches = re.findall(format_regex, formats)
+			if formats is not None:
+				format_matches = re.findall(format_regex, formats)
 			self._debug(f'INFO: Found the following formats {format_matches}')
 		else:
 			self._debug(f'INFO: No formats found')

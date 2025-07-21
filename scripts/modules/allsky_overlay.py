@@ -141,11 +141,14 @@ class ALLSKYOVERLAY:
 
         s.log(4, f"INFO: Config file set to '{self._overlayConfigFile}'.")
         self._enableSkyfield = True
+        de = "de421.bsp"
         try:
             load = Loader(self._OVERLAYTMP, verbose=False)
-            self._eph = load('de421.bsp')
+            self._eph = load(de)
         except Exception as err:
-            s.log(0, f"ERROR: Unable to download de421.bsp: {err}")
+            # The error message may contain "<" so convert to code to not hose up system messages.
+            e = str(err).replace("<", "&lt;");
+            s.log(0, f"ERROR: Unable to download {de}: {e}")
             self._enableSkyfield = False
         self._setDateandTime()
         self._observerLat = s.getSetting('latitude')

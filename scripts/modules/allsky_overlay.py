@@ -141,10 +141,9 @@ class ALLSKYOVERLAY:
 
         s.log(4, f"INFO: Config file set to '{self._overlayConfigFile}'.")
         self._enableSkyfield = True
-        de = "de421.bsp"
         try:
             load = Loader(self._OVERLAYTMP, verbose=False)
-            self._eph = load(de)
+            self._eph = load('de421.bsp')
         except Exception as err:
             # The error message may contain "<", so convert to code to not hose up system messages.
             e = str(err).replace("<", "&lt;");

@@ -146,7 +146,7 @@ class ALLSKYOVERLAY:
             load = Loader(self._OVERLAYTMP, verbose=False)
             self._eph = load(de)
         except Exception as err:
-            # The error message may contain "<" so convert to code to not hose up system messages.
+            # The error message may contain "<", so convert to code to not hose up system messages.
             e = str(err).replace("<", "&lt;");
             s.log(0, f"ERROR: Unable to download {de}: {e}")
             self._enableSkyfield = False

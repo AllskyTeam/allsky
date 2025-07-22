@@ -3266,14 +3266,9 @@ install_PHP_modules()
 
 	display_msg --log progress "Installing PHP modules and dependencies."
 	TMP="${ALLSKY_LOGS}/PHP_modules.log"
-	run_aptGet php-zip php-sqlite3 python3-pip > "${TMP}" 2>&1
+	run_aptGet php-zip php-sqlite3 python3-pip libatlas-base-dev > "${TMP}" 2>&1
 	check_success $? "PHP module installation failed" "${TMP}" "${DEBUG}" ||
 		exit_with_image 1 "${STATUS_ERROR}" "PHP module install failed."
-
-	TMP="${ALLSKY_LOGS}/libatlas.log"
-	run_aptGet libatlas-base-dev > "${TMP}" 2>&1
-	check_success $? "PHP dependencies failed" "${TMP}" "${DEBUG}" ||
-		exit_with_image 1 "${STATUS_ERROR}" "PHP dependencies failed."
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }

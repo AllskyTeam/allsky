@@ -594,7 +594,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 		Log(3, cg->HB.useHistogram ? " Ignoring suggested next exposure of %s." : "  Suggested next exposure: %s.",
 			length_in_units(suggestedNextExposure_us, true));
 	}
-	Log(2, "\n");
+	Log(1, "\n");
 
 	long temp;
 	ret = ASIGetControlValue(cg->cameraNumber, ASI_TEMPERATURE, &temp, &bAuto);

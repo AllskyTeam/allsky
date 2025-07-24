@@ -54,7 +54,7 @@ function usage_and_exit()
 	echo "      show_supported_cameras  --RPi | --ZWO"
 	echo "      show_connected_cameras"
 	echo "      show_installed_locales"
-	echo "      prepare_logs"
+	echo "      prepare_logs [debug_level]"
 	echo "      config_timelapse"
 	echo "      change_swap"
 	echo "      change_tmp"
@@ -188,19 +188,8 @@ function show_installed_locales()
 # Stop it, then truncate the log files and restart Allsky.
 function prepare_logs()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "Configure Allsky to collect the proper information for troubleshooting problems."
-		echo "Allsky is stopped, the Debug Level set to the appropriate value if needed,"
-		echo "the log files are truncated, and Allsky is restarted."
-		echo "After the problem appears, see the 'Getting Help' page in the WebUI for details"
-		echo "on how to report the problem."
-		return
-	fi
-
-	prepareLogs.sh
+	# shellcheck disable=SC2086,SC2124
+	prepareLogs.sh ${@}
 }
 
 
@@ -720,6 +709,8 @@ while [[ $# -gt 0 ]]; do
 	shift
 done
 
+PATH="${PATH}:${ALLSKY_UTILITIES}"
+
 if [[ ${DO_HELP} == "true" ]]; then
 	if [[ -n ${CMD} ]]; then
 		echo
@@ -731,8 +722,6 @@ if [[ ${DO_HELP} == "true" ]]; then
 	fi
 fi
 [[ ${OK} == "false" ]] && usage_and_exit 1
-
-PATH="${PATH}:${ALLSKY_UTILITIES}"
 
 if [[ -z ${CMD} ]]; then
 	# No command given on command line so prompt for one.

@@ -35,7 +35,7 @@ usage_and_exit()
 function debug_()
 {
 	[[ ${DEBUG} != "true" ]] && return
-	# shellcheck disable=SC2086
+	# shellcheck disable=SC2068
 	echo -e ${@}
 }
 

@@ -106,19 +106,31 @@ class MODULEUTIL
                         }
 
                         $decoded = json_decode($metaData);
-                        if (in_array($event, $decoded->events)) {
-                            if (isset($decoded->experimental)) {
-                                $experimental = strtolower($decoded->experimental) == "true"? true: false;
-                            } else {
-                                $experimental = false;
-                            }
+                        if ($decoded !== null) {
+                            if (in_array($event, $decoded->events)) {
+                                if (isset($decoded->experimental)) {
+                                    $experimental = strtolower($decoded->experimental) == "true"? true: false;
+                                } else {
+                                    $experimental = false;
+                                }
 
+                                $arrFiles[$entry] = [
+                                    'module' => $entry,
+                                    'metadata' => $decoded,
+                                    'type' => $type
+                                ];
+                                $arrFiles[$entry]['metadata']->experimental = $experimental;
+                            }
+                        } else {
+                            $decoded = new stdClass();
+                            $decoded->name = "Module " . $entry . " is currupted";
+                            $decoded->description = "The metadata in the module file is invalid. Please contact Allsky support.";
+                            $decoded->events = ["day", "night", "periodic", "daynight", "nightday"];
                             $arrFiles[$entry] = [
                                 'module' => $entry,
                                 'metadata' => $decoded,
                                 'type' => $type
-                            ];
-                            $arrFiles[$entry]['metadata']->experimental = $experimental;
+                            ];                         
                         }
                     }
                 }
@@ -252,7 +264,9 @@ class MODULEUTIL
         $selectedResult = [];
         foreach($configData as $selectedName=>$data) {
             $moduleName = "allsky_" . $selectedName . ".py";
-            // TODO: check if  $allModules[$moduleName]  exists.
+            if (!isset($allModules[$moduleName])) {
+                continue;
+            }
             $moduleData = $allModules[$moduleName];
 
             if (isset($data->metadata->arguments)) {
@@ -402,3 +416,4 @@ class MODULEUTIL
 
 $overlayUtil = new MODULEUTIL();
 $overlayUtil->run();
+

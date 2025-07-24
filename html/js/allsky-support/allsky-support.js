@@ -122,6 +122,7 @@ class ALLSKYSUPPORT {
 		})
 
 		$(document).on('click', '.as-support-log-download', (event) => {
+			var logId = $(event.currentTarget).data('logid')
 			$('.as-support-loading').LoadingOverlay('show', {
 				background: 'rgba(0, 0, 0, 0.5)',
 				imageColor: '#a94442'

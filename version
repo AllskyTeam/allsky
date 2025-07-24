@@ -1,2 +1,2 @@
-v2024.12.06_05
-Highly recommended for RPi camera users - fixes a possible timeout problem. Optional for ZWO camera users.
+v2024.12.06_06
+Fixes a few bugs.  Recommended to upgrade if you encounter those bugs (see the Documentation -> Version Change Log); optional otherwise.

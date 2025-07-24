@@ -188,7 +188,7 @@ function show_installed_locales()
 # Stop it, then truncate the log files and restart Allsky.
 function prepare_logs()
 {
-	# shellcheck disable=SC2086,SC2124
+	# shellcheck disable=SC2068
 	prepareLogs.sh ${@}
 }
 

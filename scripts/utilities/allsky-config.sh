@@ -407,32 +407,8 @@ function pix_fmts()
 # Show the daytime and nighttime start times
 function show_start_times()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage:"
-		W_ "    ${ME}  ${ME_F} [--zero] [--no-header] [angle [latitude [longitude]]]"
-		echo "OR"
-		W_ "    ${ME}  ${ME_F} [--zero] [--no-header] [--angle A] [--latitude LAT] [--longitude LONG]"
-		echo
-		echo "Show the daytime and nighttime start times for the specified"
-		echo "angle, latitude, and longitude."
-		echo "If you don't specify those values, your current values are used."
-		echo "'--zero' also displays information for an angle of 0."
-		echo "'--no-header' only displays the data, no header."
-		echo
-		echo "This information is useful to determine what to put in the 'Angle' setting in the WebUI."
-		echo "Typically you would adjust the angle until you got the start time you wanted."
-		echo
-		echo "This is also useful to troubleshoot why the daytime and nighttime start times"
-		echo "aren't what you expected."
-		return
-	fi
-
-	# shellcheck disable=SC2124
-	local ARGS="${@}"		# optional
-
 	# shellcheck disable=SC2086
-	showStartTimes.sh ${ARGS}
+	showStartTimes.sh ${@}
 }
 
 
@@ -441,17 +417,8 @@ function show_start_times()
 #	data.json is X days old. Check ... postData.sh
 function check_post_data()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "This command helps determine why you get the"
-		echo "    data.json is X days old"
-		echo "message.  If possible, a solution is proposed."
-		return
-	fi
-
-	checkPostData.sh
+	# shellcheck disable=SC2086
+	checkPostData.sh ${@}
 }
 
 #####

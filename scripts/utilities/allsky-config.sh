@@ -231,18 +231,8 @@ function move_images()
 # Move ALLSKY_IMAGES to a new location.
 function bad_images_info()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "Display information on 'bad' images, which are ones that are too dark or too light,"
-		echo "and hence have been deleted."
-		echo "This information can be used to determine what the low and high 'Remove Bad Images Threshold'"
-		echo "settings should be."
-		return
-	fi
-
-	badImagesInfo.sh
+	# shellcheck disable=SC2086
+	badImagesInfo.sh ${@}
 }
 
 

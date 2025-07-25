@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Troubleshooting Tools";
+		} 
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<title>Troubleshooting Tools</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<p>
+This pages lists some tools and techniques to aid in troubleshooting Allsky.
+If you have any other tools, please submit a GitHub Discussion and let the
+Allsky developers know.
+</p>
+
+
+<h2><code>allsky-config</code> command</h2>
+<p>
+The <code>allsky-config</code> command performs various actions.
+Some let you easily configure a feature
+(like the ability to share files between your Pi and a PC or Mac),
+while other actions let you view various types of information
+which is often used to troubleshoot.
+<br>
+The list of actions grows often so is not shown here but you can
+enter <code>allsky-config --help</code> to see the list.
+
+<blockquote>
+The Allsky developers may ask you to run <code>allsky-config</code>
+to provide additional information.
+In most cases you can simply copy and paste the command you are asked to run into
+a terminal window on the Pi.
+</blockquote>
+</p>
+<p>
+<code>allsky-config</code> can be used two different ways:
+<ol>
+	<li><strong>Menu-driven</strong>
+		<br>
+		In this mode you simply type <code>allsky-config</code> and
+		are presented with a menu of actions you can perform.
+		Use the up and down arrow keys to navigate the list
+		and the left right arrow keys to go to the choices at the end of the list.
+		After selecting an action,
+		if additional information is needed you are prompted for it.
+		The action you selected is then executed and its output displayed.
+		<br>
+		You can then enter <code>q</code> to quit <code>allsky-config</code> or
+		press return to be shown the menu of actions again.
+
+		<p>
+		When viewing the menu, the name of the action that will be taken
+		is listed at the end of every entry.
+		That action name is used in the next mode of <code>allsky-config</code>
+		- see below.
+		</p>
+	<li><strong>Action-specific</strong>
+		<br>
+		In this mode, you type <code>allsky-config  ACTION</code>
+		where "ACTION" is the name of an actions to execute, optionally followed by arguments.
+		<br>
+		For example: <code>allsky-config show_supported_cameras --zwo</code>.
+		<p>
+		Most actions only output information but a few first prompt for something
+		then perform the action.
+		</p>
+</ol>
+</p>
+<p>
+To see what an action does and what, if any arguments it takes,
+enter <code>allsky-config ACTION --help</code>,
+replacing "ACTION" with an action name shown in the command above.
+</p>
+
+
+<h2><code>htop</code></h2>
+<p>
+If your Pi seems very slow you can run the Linux <code>htop</code> command which
+displays the usage of all the CPUs and the amount of memory and swap in use,
+as well as the processes using the most CPU.
+The display is updated roughly every second.
+</p>
+<p>
+You will probably first need to install <code>htop</code> by executing
+<code>sudo apt install htop</code>.
+</p>
+
+<h2>Other troubleshooting tools</h2>
+<p>
+More to come...
+</p>
+
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>

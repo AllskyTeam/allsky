@@ -59,6 +59,10 @@ usage_and_exit()
 	echo "    '--zwo-file f' looks in this file for list of supported ZWO cameras."
 	echo "    '--rpi' displays a list of supported Raspberry Pi and compatible cameras."
 	echo "    '--zwo' displays a list of supported ZWO cameras."
+	echo
+	echo "Display all the cameras of the specified type that Allsky supports."
+	echo "Note that the ZWO list is very long."
+
 	exit "${RET}"
 }
 

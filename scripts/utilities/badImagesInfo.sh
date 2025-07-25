@@ -7,6 +7,45 @@ source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 
+usage_and_exit()
+{
+	local RET=${1}
+	exec >&2
+	echo
+	local USAGE="Usage: ${ME} [--help]"
+	if [[ ${RET} -ne 0 ]]; then
+		E_ "${USAGE}"
+	else
+		echo -e "${USAGE}"
+	fi
+
+	echo
+	echo "Display information on 'bad' images, which are ones that are too dark or too light,"
+	echo "and hence have been deleted."
+	echo "This information can be used to determine what the low and high 'Remove Bad Images Threshold'"
+	echo "settings should be."
+	echo
+
+	exit "${RET}"
+}
+OK="true"
+DO_HELP="false"
+while [[ $# -gt 0 ]]; do
+	ARG="${1}"
+	case "${ARG,,}" in
+		--help)
+			DO_HELP="true"
+			;;
+		-*)
+			E_ "Unknown argument '${ARG}'." >&2
+			OK="false"
+			;;
+	esac
+	shift
+done
+[[ ${DO_HELP} == "true" ]] && usage_and_exit 0
+[[ ${OK} == "false" ]] && usage_and_exit 1
+
 # Log entry format:
 #	2025-02-09T10:44:17.594698-07:00 new-allsky allsky[905780]: removeBadImages.sh: File is bad: \
 #		removed 'image-20250209104345.jpg' (MEAN of 0.167969 is below low threshold of 0.5)

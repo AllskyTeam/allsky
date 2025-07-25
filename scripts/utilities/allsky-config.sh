@@ -54,7 +54,7 @@ function usage_and_exit()
 	echo "      show_supported_cameras  --RPi | --ZWO"
 	echo "      show_connected_cameras"
 	echo "      show_installed_locales"
-	echo "      prepare_logs"
+	echo "      prepare_logs [debug_level]"
 	echo "      config_timelapse"
 	echo "      change_swap"
 	echo "      change_tmp"
@@ -85,24 +85,18 @@ function usage_and_exit()
 # Show all the supported cameras.
 function show_supported_cameras()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F} --RPi | --ZWO"
-		echo
-		echo "Display all the cameras of the specified type that Allsky supports."
-		echo "Note that the ZWO list is very long."
-		return
+	local COMMAND_TO_EXECUTE="showSupportedCameras.sh"
+
+	if [[ $# -eq 0 && -n ${FUNTION_TO_EXECUTE} ]]; then
+		# Command to run specified on command line but required options not given.
+		E_ "${ME} ${ME_F}: Need to specify all arguments on command line." >&2
+		"${COMMAND_TO_EXECUTE}" --help
+		exit 2
 	fi
 
-	# shellcheck disable=SC2124
-	local ARGS="${@}"
+	local ARGS
 
-	#shellcheck disable=SC2086
-	if needs_arguments ${ARGS} ; then
-		if [[ ${ON_TTY} == "false" ]]; then
-			E_ "${ME} ${ME_F}: Need to specify all aruments on command line." >&2
-			return
-		fi
+	if [[ $# -eq 0 && -z ${FUNTION_TO_EXECUTE} ]]; then
 		PROMPT="\nSelect the camera(s) to show:"
 		OPTS=()
 		OPTS+=("--RPi"			"RPi and compatible")
@@ -111,10 +105,13 @@ function show_supported_cameras()
 
 		# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 		ARGS="$( prompt "${PROMPT}" "${OPTS[@]}" )"
+	else
+		# shellcheck disable=SC2124
+		ARGS="${@}"
 	fi
 
 	# shellcheck disable=SC2086
-	showSupportedCameras.sh ${ARGS}
+	"${COMMAND_TO_EXECUTE}" ${ARGS}
 }
 
 
@@ -188,19 +185,8 @@ function show_installed_locales()
 # Stop it, then truncate the log files and restart Allsky.
 function prepare_logs()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "Configure Allsky to collect the proper information for troubleshooting problems."
-		echo "Allsky is stopped, the Debug Level set to the appropriate value if needed,"
-		echo "the log files are truncated, and Allsky is restarted."
-		echo "After the problem appears, see the 'Getting Help' page in the WebUI for details"
-		echo "on how to report the problem."
-		return
-	fi
-
-	prepareLogs.sh
+	# shellcheck disable=SC2068
+	prepareLogs.sh ${@}
 }
 
 
@@ -208,26 +194,8 @@ function prepare_logs()
 # Request support for an RPi camera.
 function new_rpi_camera_info()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}  [--camera NUM]"
-		echo
-		W_ "NOTE: This command only works if you have an RPi camera connected to the Pi."
-		echo
-		echo "Saves detailed information on the attached RPi camera to a file."
-		echo "This file MUST be attached to your GitHub Discussion requesting support for the camera."
-		echo
-		echo "If there is more than one RPi camera connected to the Pi,"
-		echo "by default, information on the first camera (number 0) is displayed."
-		echo "Use the '--camera NUM' argument to specify a different camera."
-		return
-	fi
-
-	# shellcheck disable=SC2124
-	local ARGS="${@}"		# optional
-
-	# shellcheck disable=SC2086
-	getRPiCameraInfo.sh ${ARGS}
+	# shellcheck disable=SC2068
+	getRPiCameraInfo.sh ${@}
 }
 
 
@@ -235,23 +203,13 @@ function new_rpi_camera_info()
 # Install SAMBA.
 function samba()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "Configure your Pi using the Samba protocol to allow easy file transfers to"
-		echo "and from PCs and MACs.  The HOME directory of the login you use on the Pi"
-		echo "will be available to connect to a PC or MAC,"
-		echo "where it will be treated like any other disk.  You can then drag and drop files."
-		return
-	fi
-
 	if [[ ${ON_TTY} == "false" ]]; then
 		W_ "${ME} ${ME_F} must run from a terminal." >&2
 		return
 	fi
 
-	installSamba.sh
+	# shellcheck disable=SC2068
+	installSamba.sh ${@}
 }
 
 
@@ -259,26 +217,13 @@ function samba()
 # Move ALLSKY_IMAGES to a new location.
 function move_images()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "Configure Allsky to save images in the location you specify,"
-		echo "rather than in ~/allsky/images.  You are prompted for the new location,"
-		echo "and if there are images in the current location, you'll be prompted for"
-		echo "what you want to do with them (typically move them to the new location)."
-		echo
-		echo "The new location is typically an SSD or other higher-capacity,"
-		echo "more reliable media than an SD card."
-		return
-	fi
-
 	if [[ ${ON_TTY} == "false" ]]; then
 		W_ "${ME} ${ME_F} must run from a terminal." >&2
 		return
 	fi
 
-	moveImages.sh
+	# shellcheck disable=SC2068
+	moveImages.sh ${@}
 }
 
 
@@ -286,18 +231,8 @@ function move_images()
 # Move ALLSKY_IMAGES to a new location.
 function bad_images_info()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "Display information on 'bad' images, which are ones that are too dark or too light,"
-		echo "and hence have been deleted."
-		echo "This information can be used to determine what the low and high 'Remove Bad Images Threshold'"
-		echo "settings should be."
-		return
-	fi
-
-	badImagesInfo.sh
+	# shellcheck disable=SC2068
+	badImagesInfo.sh ${@}
 }
 
 
@@ -306,31 +241,18 @@ function bad_images_info()
 # display the path on the server give a URL.
 function compare_paths()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}  --website | --server"
-		echo
-		echo "Helps determine what to put in the 'Image Directory' and 'Website URL' settings"
-		echo "in the 'Remote Server' section of the WebUI."
-		echo "It does this by displaying information from a remote Website's server via FTP"
-		echo "and via a URL, such as the directory name (they should match) and"
-		echo "a list of files in those directories."
-		echo
-		echo "If you did not specify either '--website' or '--server',"
-		echo "you will be prompted for which to use."
-		return
+	local COMMAND_TO_EXECUTE="comparePaths.sh"
+
+	if [[ $# -eq 0 && -n ${FUNTION_TO_EXECUTE} ]]; then
+		# Command to run specified on command line but required options not given.
+		E_ "${ME} ${ME_F}: Need to specify all arguments on command line." >&2
+		"${COMMAND_TO_EXECUTE}" --help
+		exit 2
 	fi
 
-	# shellcheck disable=SC2124
-	local ARGS="${@}"
+	local ARGS
 
-	#shellcheck disable=SC2086
-	if needs_arguments ${ARGS} ; then
-		if [[ ${ON_TTY} == "false" ]]; then
-			E_ "${ME} ${ME_F}: Need to specify all aruments on command line." >&2
-			return
-		fi
-
+	if [[ $# -eq 0 && -z ${FUNTION_TO_EXECUTE} ]]; then
 		PROMPT="\nSelect the machine you want to check:"
 		OPTS=()
 		OPTS+=("--website"	\
@@ -349,10 +271,13 @@ function compare_paths()
 			done
 			ARGS+=" ${A}"
 		fi
+	else
+		# shellcheck disable=SC2124
+		local ARGS="${@}"
 	fi
 
 	# shellcheck disable=SC2086
-	comparePaths.sh ${ARGS}
+	"${COMMAND_TO_EXECUTE}" ${ARGS}
 }
 
 
@@ -360,16 +285,8 @@ function compare_paths()
 # Display brightness information from the startrails command.
 get_brightness_info()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "Displays brightness information used when updating the 'Threshold' startrails setting."
-		echo "Typically this is needed when startrails images don't show any trails."
-		return
-	fi
-
-	getBrightnessInfo.sh
+	# shellcheck disable=SC2068
+	getBrightnessInfo.sh ${@}
 }
 
 
@@ -377,28 +294,13 @@ get_brightness_info()
 # Help determine some timelapse settings.
 config_timelapse()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "Create multiple timelapse videos with different settings to help determine"
-		echo "what settings to ultimately use.  You are prompted for:"
-		echo "    - which day's images to use (default is yesterday's images)"
-		echo "    - how many images to include (default is 200 to minimize the processing time)"
-		echo "    - one or more 'Bitrate' values"
-		echo "    - one or more 'FPS' values"
-		echo
-		echo "A timelapse video is created for each combination of values you specified."
-		echo "The list of videos created is displayed for you to compare."
-		return
-	fi
-
 	if [[ ${ON_TTY} == "false" ]]; then
 		W_ "${ME} ${ME_F} must run from a terminal." >&2
 		return
 	fi
 
-	configTimelapse.sh
+	# shellcheck disable=SC2068
+	configTimelapse.sh ${@}
 }
 
 
@@ -505,32 +407,8 @@ function pix_fmts()
 # Show the daytime and nighttime start times
 function show_start_times()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage:"
-		W_ "    ${ME}  ${ME_F} [--zero] [--no-header] [angle [latitude [longitude]]]"
-		echo "OR"
-		W_ "    ${ME}  ${ME_F} [--zero] [--no-header] [--angle A] [--latitude LAT] [--longitude LONG]"
-		echo
-		echo "Show the daytime and nighttime start times for the specified"
-		echo "angle, latitude, and longitude."
-		echo "If you don't specify those values, your current values are used."
-		echo "'--zero' also displays information for an angle of 0."
-		echo "'--no-header' only displays the data, no header."
-		echo
-		echo "This information is useful to determine what to put in the 'Angle' setting in the WebUI."
-		echo "Typically you would adjust the angle until you got the start time you wanted."
-		echo
-		echo "This is also useful to troubleshoot why the daytime and nighttime start times"
-		echo "aren't what you expected."
-		return
-	fi
-
-	# shellcheck disable=SC2124
-	local ARGS="${@}"		# optional
-
-	# shellcheck disable=SC2086
-	showStartTimes.sh ${ARGS}
+	# shellcheck disable=SC2068
+	showStartTimes.sh ${@}
 }
 
 
@@ -539,68 +417,30 @@ function show_start_times()
 #	data.json is X days old. Check ... postData.sh
 function check_post_data()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "This command helps determine why you get the"
-		echo "    data.json is X days old"
-		echo "message.  If possible, a solution is proposed."
-		return
-	fi
-
-	checkPostData.sh
+	# shellcheck disable=SC2068
+	checkPostData.sh ${@}
 }
 
 #####
 # Get a list of filesystems to help the user determine where a devices is mounted.
 function get_filesystems()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "This command helps determine the path to a storage device like an SSD."
-		return
-	fi
-
-	getFilesystems.sh
+	# shellcheck disable=SC2068
+	getFilesystems.sh ${@}
 }
 
 
 ####################################### Helper functions
 
-# Check if the required argument(s) were given to this command.
-# If called via the command line it's an error if no arguments
-# were given, so exit since we can't prompt (we may be called by another program).
-# If called via a menu item there normally WON'T be an argument so
-# return 0 which tells the caller it needs to prompt for the arguments.
-function needs_arguments()
-{
-	if [[ $# -eq 0 ]]; then
-		if [[ -n ${CMD} ]]; then		# CMD is global
-			E_ "\n'${FUNCNAME[1]}' requires an argument." >&2
-			usage_and_exit 1
-		else
-			echo "${@}"
-		fi
-
-		return 0
-	else
-		return 1
-	fi
-}
-
-
 #####
 # Run a command / function, passing any arguments.
 function run_command()
 {
-	COMMAND="${1}"
+	local COMMAND="${1}"
 	shift
 
 	# shellcheck disable=SC2124
-	ARGUMENTS="${@}"
+	local ARGUMENTS="${@}"
 	if ! type "${COMMAND}" > /dev/null 2>&1 ; then
 		E_ "\n${ME}: Unknown command '${COMMAND}'." >&2
 		usage_and_exit --commands-only 2
@@ -690,8 +530,8 @@ function L()
 
 OK="true"
 DO_HELP="false"
-CMD=""
-CMD_ARGS=""
+FUNTION_TO_EXECUTE=""
+FUNTION_TO_EXECUTE_ARGS=""
 DEBUG="false"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
@@ -710,20 +550,22 @@ while [[ $# -gt 0 ]]; do
 			;;
 
 		*)
-			CMD="${ARG}"
+			FUNTION_TO_EXECUTE="${ARG}"
 			shift
 			# shellcheck disable=SC2124
-			CMD_ARGS="${@}"
+			FUNTION_TO_EXECUTE_ARGS="${@}"
 			break;
 			;;
 	esac
 	shift
 done
 
+PATH="${PATH}:${ALLSKY_UTILITIES}"
+
 if [[ ${DO_HELP} == "true" ]]; then
-	if [[ -n ${CMD} ]]; then
+	if [[ -n ${FUNTION_TO_EXECUTE} ]]; then
 		echo
-		run_command "${CMD}" "--help"
+		run_command "${FUNTION_TO_EXECUTE}" "--help"
 		echo
 		exit 0
 	else
@@ -732,9 +574,7 @@ if [[ ${DO_HELP} == "true" ]]; then
 fi
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
-PATH="${PATH}:${ALLSKY_UTILITIES}"
-
-if [[ -z ${CMD} ]]; then
+if [[ -z ${FUNTION_TO_EXECUTE} ]]; then
 	# No command given on command line so prompt for one.
 
 	if [[ ${ON_TTY} == "false" ]]; then
@@ -808,7 +648,7 @@ if [[ -z ${CMD} ]]; then
 
 else
 	#shellcheck disable=SC2086
-	run_command "${CMD}" ${CMD_ARGS}
+	run_command "${FUNTION_TO_EXECUTE}" ${FUNTION_TO_EXECUTE_ARGS}
 	exit $?
 fi
 

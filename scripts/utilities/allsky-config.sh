@@ -85,7 +85,7 @@ function usage_and_exit()
 # Show all the supported cameras.
 function show_supported_cameras()
 {
-	if [[ $# -eq 0 && -n ${COMMAND_TO_EXECUTE} ]]; then
+	if [[ $# -eq 0 && -n ${FUNTION_TO_EXECUTE} ]]; then
 		# Command to run specified on command line but required options not given.
 		E_ "${ME} ${ME_F}: Need to specify all arguments on command line." >&2
 		showSupportedCameras.sh --help
@@ -94,7 +94,7 @@ function show_supported_cameras()
 
 	local ARGS
 
-	if [[ $# -eq 0 && -z ${COMMAND_TO_EXECUTE} ]]; then
+	if [[ $# -eq 0 && -z ${FUNTION_TO_EXECUTE} ]]; then
 		PROMPT="\nSelect the camera(s) to show:"
 		OPTS=()
 		OPTS+=("--RPi"			"RPi and compatible")
@@ -290,7 +290,7 @@ function bad_images_info()
 # display the path on the server give a URL.
 function compare_paths()
 {
-	if [[ $# -eq 0 && -n ${COMMAND_TO_EXECUTE} ]]; then
+	if [[ $# -eq 0 && -n ${FUNTION_TO_EXECUTE} ]]; then
 		# Command to run specified on command line but required options not given.
 		E_ "${ME} ${ME_F}: Need to specify all arguments on command line." >&2
 		comparePaths.sh --help
@@ -314,7 +314,7 @@ function compare_paths()
 
 	local ARGS
 
-	if [[ $# -eq 0 && -z ${COMMAND_TO_EXECUTE} ]]; then
+	if [[ $# -eq 0 && -z ${FUNTION_TO_EXECUTE} ]]; then
 		PROMPT="\nSelect the machine you want to check:"
 		OPTS=()
 		OPTS+=("--website"	\
@@ -655,8 +655,8 @@ function L()
 
 OK="true"
 DO_HELP="false"
-COMMAND_TO_EXECUTE=""
-COMMAND_TO_EXECUTE_ARGS=""
+FUNTION_TO_EXECUTE=""
+FUNTION_TO_EXECUTE_ARGS=""
 DEBUG="false"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
@@ -675,10 +675,10 @@ while [[ $# -gt 0 ]]; do
 			;;
 
 		*)
-			COMMAND_TO_EXECUTE="${ARG}"
+			FUNTION_TO_EXECUTE="${ARG}"
 			shift
 			# shellcheck disable=SC2124
-			COMMAND_TO_EXECUTE_ARGS="${@}"
+			FUNTION_TO_EXECUTE_ARGS="${@}"
 			break;
 			;;
 	esac
@@ -688,9 +688,9 @@ done
 PATH="${PATH}:${ALLSKY_UTILITIES}"
 
 if [[ ${DO_HELP} == "true" ]]; then
-	if [[ -n ${COMMAND_TO_EXECUTE} ]]; then
+	if [[ -n ${FUNTION_TO_EXECUTE} ]]; then
 		echo
-		run_command "${COMMAND_TO_EXECUTE}" "--help"
+		run_command "${FUNTION_TO_EXECUTE}" "--help"
 		echo
 		exit 0
 	else
@@ -699,7 +699,7 @@ if [[ ${DO_HELP} == "true" ]]; then
 fi
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
-if [[ -z ${COMMAND_TO_EXECUTE} ]]; then
+if [[ -z ${FUNTION_TO_EXECUTE} ]]; then
 	# No command given on command line so prompt for one.
 
 	if [[ ${ON_TTY} == "false" ]]; then
@@ -773,7 +773,7 @@ if [[ -z ${COMMAND_TO_EXECUTE} ]]; then
 
 else
 	#shellcheck disable=SC2086
-	run_command "${COMMAND_TO_EXECUTE}" ${COMMAND_TO_EXECUTE_ARGS}
+	run_command "${FUNTION_TO_EXECUTE}" ${FUNTION_TO_EXECUTE_ARGS}
 	exit $?
 fi
 

@@ -110,7 +110,7 @@ function show_supported_cameras()
 		ARGS="${@}"
 	fi
 
-	# shellcheck disable=SC2086
+	# shellcheck disable=SC2068
 	"${COMMAND_TO_EXECUTE}" ${ARGS}
 }
 
@@ -176,7 +176,7 @@ function show_installed_locales()
 		HTML="--html"
 	fi
 
-	# shellcheck disable=SC2086
+	# shellcheck disable=SC2068
 	indent ${HTML} "$( list_installed_locales )"
 }
 
@@ -194,7 +194,7 @@ function prepare_logs()
 # Request support for an RPi camera.
 function new_rpi_camera_info()
 {
-	# shellcheck disable=SC2086
+	# shellcheck disable=SC2068
 	getRPiCameraInfo.sh ${@}
 }
 
@@ -208,7 +208,7 @@ function samba()
 		return
 	fi
 
-	# shellcheck disable=SC2086
+	# shellcheck disable=SC2068
 	installSamba.sh ${@}
 }
 
@@ -222,7 +222,7 @@ function move_images()
 		return
 	fi
 
-	# shellcheck disable=SC2086
+	# shellcheck disable=SC2068
 	moveImages.sh ${@}
 }
 
@@ -231,7 +231,7 @@ function move_images()
 # Move ALLSKY_IMAGES to a new location.
 function bad_images_info()
 {
-	# shellcheck disable=SC2086
+	# shellcheck disable=SC2068
 	badImagesInfo.sh ${@}
 }
 
@@ -276,7 +276,7 @@ function compare_paths()
 		local ARGS="${@}"
 	fi
 
-	# shellcheck disable=SC2086
+	# shellcheck disable=SC2068
 	"${COMMAND_TO_EXECUTE}" ${ARGS}
 }
 
@@ -285,7 +285,7 @@ function compare_paths()
 # Display brightness information from the startrails command.
 get_brightness_info()
 {
-	# shellcheck disable=SC2086
+	# shellcheck disable=SC2068
 	getBrightnessInfo.sh ${@}
 }
 
@@ -299,7 +299,7 @@ config_timelapse()
 		return
 	fi
 
-	# shellcheck disable=SC2086
+	# shellcheck disable=SC2068
 	configTimelapse.sh ${@}
 }
 
@@ -407,7 +407,7 @@ function pix_fmts()
 # Show the daytime and nighttime start times
 function show_start_times()
 {
-	# shellcheck disable=SC2086
+	# shellcheck disable=SC2068
 	showStartTimes.sh ${@}
 }
 
@@ -417,7 +417,7 @@ function show_start_times()
 #	data.json is X days old. Check ... postData.sh
 function check_post_data()
 {
-	# shellcheck disable=SC2086
+	# shellcheck disable=SC2068
 	checkPostData.sh ${@}
 }
 
@@ -425,7 +425,7 @@ function check_post_data()
 # Get a list of filesystems to help the user determine where a devices is mounted.
 function get_filesystems()
 {
-	# shellcheck disable=SC2086
+	# shellcheck disable=SC2068
 	getFilesystems.sh ${@}
 }
 
@@ -451,7 +451,7 @@ function run_command()
 	fi
 
 	ME_F="${COMMAND}"		# global
-	#shellcheck disable=SC2086
+	#shellcheck disable=SC2068
 	"${COMMAND}" ${ARGUMENTS}
 }
 
@@ -647,7 +647,7 @@ if [[ -z ${FUNTION_TO_EXECUTE} ]]; then
 	exit 0
 
 else
-	#shellcheck disable=SC2086
+	#shellcheck disable=SC2068
 	run_command "${FUNTION_TO_EXECUTE}" ${FUNTION_TO_EXECUTE_ARGS}
 	exit $?
 fi

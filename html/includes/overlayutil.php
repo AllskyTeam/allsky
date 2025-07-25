@@ -160,11 +160,12 @@ class OVERLAYUTIL
         }
         $config = $_POST['config'];
         $formattedJSON = json_encode(json_decode($config), JSON_PRETTY_PRINT);
-        $bytesWritten = file_put_contents($fileName, $formattedJSON);
-        if ($bytesWritten === false) {
-            $this->send500();
-        } else {
+		// updateFile() only returns error messages.
+        $msg = updateFile($fileName, $formattedJSON, $fileName, false, true);
+		if ($msg === "") {
             $this->sendResponse();
+        } else {
+            $this->sendResponse($msg);
         }
     }
 
@@ -209,8 +210,12 @@ class OVERLAYUTIL
         $settings = $_POST["settings"];
         $formattedJSON = json_encode(json_decode($settings), JSON_PRETTY_PRINT);
 
-        file_put_contents($fileName, $formattedJSON);
-        $this->sendResponse();
+        $msg = updateFile($fileName, $formattedJSON, $fileName, false, true);
+		if ($msg === "") {
+            $this->sendResponse();
+        } else {
+            $this->sendResponse($msg);
+        }
     }
 
     private function includeField($field) {
@@ -311,8 +316,12 @@ class OVERLAYUTIL
         );
         $formattedJSON = json_encode($fields, JSON_PRETTY_PRINT);
 
-        file_put_contents($fileName, $formattedJSON);
-        $this->sendResponse();
+        $msg = updateFile($fileName, $formattedJSON, $fileName, false, true);
+		if ($msg === "") {
+            $this->sendResponse();
+        } else {
+            $this->sendResponse($msg);
+        }
     }
 
     public function getOverlayData($returnResult=false) {
@@ -374,7 +383,11 @@ class OVERLAYUTIL
         $data = json_decode($data);
         if ($data !== null) {
             $data = json_encode($data, JSON_PRETTY_PRINT);
-            file_put_contents($this->overlayConfigPath . "/autoexposure.json", $data);
+            $fileName = $this->overlayConfigPath . "/autoexposure.json";
+        	$msg = updateFile($fileName, $data, $fileName, false, true);
+			if ($msg !== "") {
+            	$this->sendResponse($msg);
+        	}
             $data = json_decode($data);
 
             $image = imagecreate($data->stagewidth, $data->stageheight);
@@ -387,7 +400,7 @@ class OVERLAYUTIL
             imagepng($image, "../autoexposure.png");
             $this->sendResponse();
         } else {
-            $this->send500();
+            $this->sendResponse("'data' is null in postAutoExposure");
         }
     }
 
@@ -461,17 +474,23 @@ class OVERLAYUTIL
 
         if (isset($_POST['fontURL'])) {
             $fontURL = strtolower($_POST['fontURL']);
-            if (substr($fontURL, 0, 23) === "https://www.dafont.com/") {
-                $fontName = str_replace("https://www.dafont.com/", "", $fontURL);
+			$URL = "https://www.dafont.com/";
+            if (substr($fontURL, 0, 23) === $URL) {
+                $fontName = str_replace($URL, "", $fontURL);
                 $fontName = str_replace(".font", "", $fontName);
                 $fileName = str_replace("-", "_", $fontName);
 
                 $downloadURL = "https://dl.dafont.com/dl/?f=" . $fileName;
-                $downloadPath = sys_get_temp_dir() . '/' . $fileName . '.zip';
+                $fileName = sys_get_temp_dir() . '/' . $fileName . '.zip';
 
-                if (!file_put_contents($downloadPath, file_get_contents($downloadURL))) {
-                    $proceed = false;
-                }
+				# TODO: Check for error in file_get_contents()
+        		$contents = file_get_contents($downloadURL);
+
+        		$msg = updateFile($fileName, $contents, $fileName, false, true);
+				if ($msg !== "") {
+					# TODO: Is there a way to notify the user of the failure?
+                	$proceed = false;
+        		}
             } else {
                 $proceed = false;
             }
@@ -543,7 +562,7 @@ class OVERLAYUTIL
                                 $config->fonts->$key = $obj;
                                 $formattedJSON = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
-                                file_put_contents($configFileName, $formattedJSON);
+        						updateFile($configFileName, $formattedJSON, $configFileName, false, true);
                                 */
 
                                 $result[] = array(
@@ -579,10 +598,11 @@ class OVERLAYUTIL
 
         $formattedJSON = json_encode($config, JSON_PRETTY_PRINT);
 
-        if (file_put_contents($fileName, $formattedJSON) !== false) {
+        $msg = updateFile($fileName, $formattedJSON, $fileName, false, true);
+		if ($msg === "") {
             $this->sendResponse();
         } else {
-            $this->send500();
+            $this->sendResponse($msg);
         }
     }
 
@@ -592,19 +612,23 @@ class OVERLAYUTIL
         $imageFolder = $this->overlayPath . '/images/';
         $thumbnailFolder = $this->overlayPath . '/imagethumbnails/';
 
-        if (!empty($_FILES)) {
+        if (empty($_FILES)) {
+			# TODO: Call this instead:    $this->sendResponse('$_FILES is empty.');
+			# This requires the invoker to look at the return string.
+            $this->send500();
+		} else {
             $tempFile = $_FILES['file']['tmp_name'];
             $targetFile = $imageFolder . $_FILES['file']['name'];
             $result = move_uploaded_file($tempFile, $targetFile);
             if ($result) {
                 $thumbnailPath = $thumbnailFolder . $_FILES['file']['name'];
                 $this->createThumbnail($targetFile, $thumbnailPath, 90);
-            }
-        }
-        if ($result) {
-            $this->sendResponse();
-        } else {
-            $this->send500();
+            	$this->sendResponse();
+            } else {
+				# TODO: Call $this->sendResponse("move_uploaded_file($tempFile, $targetFile) failed.");
+				# This requires the invoker to look at the return string.
+            	$this->send500();
+			}
         }
     }
 
@@ -650,6 +674,8 @@ class OVERLAYUTIL
             unlink($thumbnailPath);
             $this->sendResponse();
         } else {
+			# TODO: Call $this->sendResponse("$imagePath and/or $thumbnailPath is not a file.");
+			# This requires the invoker to look at the return string.
             $this->send500();
         }
 
@@ -903,11 +929,14 @@ class OVERLAYUTIL
         }            
                 
         $newOverlay = json_encode($newOverlay, JSON_PRETTY_PRINT);
-
         $overlayFile = $this->allskyOverlays . $_POST['data']['filename'] . '.json';
-        file_put_contents($overlayFile, $newOverlay);
-        chmod($overlayFile, 0775);
-        $this->sendResponse();
+        $msg = updateFile($overlayFile, $newOverlay, $overlayFile, false, true);
+		if ($msg === "") {
+			chmod($overlayFile, 0775);
+			$this->sendResponse();
+		} else {
+			$this->sendResponse($msg);
+		}
     }
 
     public function getDeleteOverlay() {
@@ -932,10 +961,12 @@ class OVERLAYUTIL
         $mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
         $data = json_encode($settingsData, $mode);
 
-        $result = file_put_contents($settingsFile, $data);
-                
-        $this->sendResponse($result);
-
+        $msg = updateFile($settingsFile, $data, $settingsFile, false, true);
+		if ($msg === "") {
+            $this->sendResponse();
+        } else {
+            $this->sendResponse($msg);
+        }
     }
 
     private function fixMetaData(&$overlay) {

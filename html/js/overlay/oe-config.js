@@ -152,13 +152,17 @@ class OECONFIG {
                             dataType: 'json',
                             cache: false,
                             async: false
+        				}).done(function(ret) {
+							if (ret != "ok") {
+            					alert(ret);
+							}
                         });
                         location.reload();
                     }
                 }                
             });
         } catch (error) {
-            confirm('A fatal error has occureed loading the application configuration.')
+            confirm('A fatal error has occured loading the application configuration.')
             return false;
         }         
     }
@@ -293,9 +297,15 @@ class OECONFIG {
                 data: { data: JSON.stringify(this.#dataFields) },
                 dataType: 'json',
                 cache: false
+        	}).done(function(ret) {
+				if (ret != "ok") {
+            		alert(ret);
+					console.log("?request=Data returned ", ret);
+            		return false;
+				}
             });
         } catch (error) {
-            console.log(error); // TODO: Daal with corrupt config
+            console.log(error); // TODO: Deal with corrupt config
             return false;
         }
     }
@@ -366,9 +376,15 @@ class OECONFIG {
                 data: { settings: JSON.stringify(this.#appConfig) },
                 dataType: 'json',
                 cache: false
+        	}).done(function(ret) {
+				if (ret != "ok") {
+            		alert(ret);
+					console.log("?request=AppConfig returned ", ret);
+            		return false;
+				}
             });
         } catch (error) {
-            console.log(error); // TODO: Daal with corrupt config
+            console.log(error); // TODO: Deal with corrupt config
             return false;
         }
     }
@@ -383,6 +399,12 @@ class OECONFIG {
             async: false,
             dataType: 'json',
             cache: false
+        }).done(function(ret) {
+			if (ret != "ok") {
+           		alert(ret);
+				console.log("?request=Config returned ", ret);
+           		return false;
+			}
         });*/
     }
 
@@ -396,7 +418,10 @@ class OECONFIG {
                 config: JSON.stringify(this.#config)
             },
             cache: false
-        }).done(function() {
+        }).done(function(ret) {
+			if (ret != "ok") {
+            	bootbox.alert(ret);
+			}
         }).fail(function() {
 			let msg = "Failed to save the overlay config.";
             msg += " Please check the permissions on the '~/allsky/config/overlay/config/" + fileName + "' file.";

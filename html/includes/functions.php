@@ -899,19 +899,21 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 // Update a file.
 // Files should be writable by the web server, but if they aren't, use a temporary file.
 // Return any error message.
-function updateFile($file, $contents, $fileName, $toConsole) {
+function updateFile($file, $contents, $fileName, $toConsole, $silent=false) {
 	if (@file_put_contents($file, $contents) == false) {
 		$e = error_get_last()['message'];
 
-		// $toConsole tells us whether or not to use console.log() or just echo.
-		if ($toConsole) {
-			$cl1 = '<script>console.log("';
-			$cl2 = '");</script>';
-		} else {
-			$cl1 = "<br>";
-			$cl2 = "";
+		if (! $silent) {
+			// $toConsole tells us whether or not to use console.log() or just echo.
+			if ($toConsole) {
+				$cl1 = '<script>console.log("';
+				$cl2 = '");</script>';
+			} else {
+				$cl1 = "<br>";
+				$cl2 = "";
+			}
+			echo "${cl1}Note: Unable to update $file 1st time: ${e}${cl2}\n";
 		}
-		echo "${cl1}Note: Unable to update $file 1st time: ${e}${cl2}\n";
 
 		// Assumed it failed due to lack of permissions,
 		// usually because the file isn't grouped to the web server group.
@@ -927,15 +929,17 @@ function updateFile($file, $contents, $fileName, $toConsole) {
 			$c = 0;
 		if ($ret === false || $c > 0 || $retval !== 0) {
 			$err = implode("\n", $return);
-			return "Unable to update settings: $err";
+			return "Unable to update '$file': $err";
 		}
 
 		if (@file_put_contents($file, $contents) == false) {
-			$e = error_get_last()['message'];
-			$err = "Failed to save settings: $e";
-			echo "${cl1}Unable to update file for 2nd time: ${e}${cl2}";
-			$x = str_replace("\n", "", shell_exec("ls -l '$file'"));
-			echo "${cl1}ls -l returned: ${x}${cl2}";
+			if (! $silent) {
+				$e = error_get_last()['message'];
+				$err = "Failed to save '$file': $e";
+				echo "${cl1}Unable to update file for 2nd time: ${e}${cl2}";
+				$x = str_replace("\n", "", shell_exec("ls -l '$file'"));
+				echo "${cl1}ls -l returned: ${x}${cl2}";
+			}
 
 			// Save a temporary copy of the file in a place the webserver can write to,
 			// then use sudo to "cp" the file to the final place.

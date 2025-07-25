@@ -101,9 +101,10 @@ while [[ $# -gt 0 ]]; do
 			;;
 		"--msg")
 			MESSAGE="$( convert_string "${2}" )"
-			# If ${MESSAGE} contains "*" it hoses up the grep and sed regular expression,
-			# so escape it.
+			# If ${MESSAGE} contains "*" or "[" it hoses up the grep and sed regular expression,
+			# so escape them.
 			ESCAPED_MESSAGE="${MESSAGE//\*/\\*}"
+			ESCAPED_MESSAGE="${ESCAPED_MESSAGE//\[/\\[}"
 			shift
 			;;
 		"--url")

@@ -54,7 +54,7 @@ function usage_and_exit()
 	echo "      show_supported_cameras  --RPi | --ZWO"
 	echo "      show_connected_cameras"
 	echo "      show_installed_locales"
-	echo "      prepare_logs"
+	echo "      prepare_logs [debug_level]"
 	echo "      config_timelapse"
 	echo "      change_swap"
 	echo "      change_tmp"
@@ -200,7 +200,8 @@ function prepare_logs()
 		return
 	fi
 
-	prepareLogs.sh
+	# shellcheck disable=SC2068
+	prepareLogs.sh ${@}
 }
 
 

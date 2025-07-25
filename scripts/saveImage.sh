@@ -49,6 +49,11 @@ if [[ ! -s ${CURRENT_IMAGE} ]] ; then
 	exit 2
 fi
 
+# This gets all settings and prefixes their names with "S_".
+# It's faster than calling "settings()" a bunch of times.
+#shellcheck disable=SC2119
+getAllSettings || exit 1
+
 # Make sure only one save happens at once.
 # Multiple concurrent saves (which can happen if the delay is short or post-processing
 # is long) causes read and write errors.
@@ -68,11 +73,6 @@ if ! one_instance --pid-file "${PID_FILE}" --sleep "3s" --max-checks 3 \
 	rm -f "${CURRENT_IMAGE}"
 	exit 1
 fi
-
-# This gets all settings and prefixes their names with "S_".
-# It's faster than calling "settings()" a bunch of times.
-#shellcheck disable=SC2119
-getAllSettings || exit 1
 
 # Get passed-in variables and export as AS_* so overlays can use them.
 while [[ $# -gt 0 ]]; do

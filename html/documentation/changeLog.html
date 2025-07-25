@@ -36,8 +36,10 @@
 		</p>
 
 		<!-- =========================================== -->
+<!--
 		<h2>v2025.xx.xx</h2>
 		<details open> <summary></summary>
+-->
 
 			<!--
 			<h3>v2025.xx.xx_01  - Point Release # 1</h3>
@@ -48,7 +50,7 @@
 			<h3>v2025.xx.xx - Base Release</h3>
 			-->
 
-
+<!--
 				<h4>Deleted capabilities</h4>
 				<ul>
 					<li>The Buster operating system is no longer supported.
@@ -63,6 +65,10 @@
 				<ul>
 					<li>Updated to ZWO SDK v1.38 which supports the
 						ASI582MC and Seestar 585MC cameras.
+					<li>Added a
+						<a external="true" allsky="true"
+							href="/documentation/troubleshooting/troubleshootingTools.html">Troubleshooting Tools</a>
+						Documentation page to list tools to aid in troubleshooting.
 				</ul>
 
 				<h4>Bug Fixes</h4>
@@ -88,11 +94,53 @@
 
 			<hr class="separator">
 		</details>
+-->
 
 		<!-- =========================================== -->
 
 		<h2>v2024.12.06</h2>
-		<details> <summary></summary>
+		<details open> <summary></summary>
+
+			<h3>v2024.12.06_06  - Point Release # 6</h3>
+			<details open sub> <summary></summary>
+				<h4 style="color: red">IMPORTANT NOTES:</h4>
+				<ul>
+					<li>This is the LAST major release that supports Buster.
+					<li>This is the LAST major release that contains the "legacy"
+						overlay method.
+				</ul>
+
+				<h4>Enhancements / Changes</h4>
+				<ul>
+					<li>When 4 consecutive errors occur while capturing images
+						with an RPi camera, the last error is now shown
+						in the WebUI's "System Messages" section.
+				</ul>
+
+				<h4>Bug Fixes</h4>
+				<ul>
+					<li>Fixed an issue where downloading the support log from the
+						<span class="WebUILink">Getting Support</span>
+						page would hang the page.
+					<li>Fixed an issue with WebUI "System Messages":
+						<ol>
+							<li>Some messages were displayed hundreds or thousands
+								of times rather than being displayed once with a
+								number of occurrences greater than 1.
+							<li>A message was truncated when unable to download the
+								<span class="fileName">de421.bsp</span> file.
+						</ol>
+					<li>Fixed a rare situation where the
+						<span class="managerName">Module Manager</span>
+						will fail to display any modules due to corruption in
+						a module's metaData.
+				</ul>
+
+				<h4>New Settings</h4>
+				<ul>
+					<li>None
+				</ul>
+			</details>
 
 			<h3>v2024.12.06_05  - Point Release # 5</h3>
 			<details sub> <summary></summary>

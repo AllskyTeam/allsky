@@ -110,7 +110,7 @@ function show_supported_cameras()
 		ARGS="${@}"
 	fi
 
-	# shellcheck disable=SC2068
+	# shellcheck disable=SC2086
 	"${COMMAND_TO_EXECUTE}" ${ARGS}
 }
 
@@ -176,7 +176,7 @@ function show_installed_locales()
 		HTML="--html"
 	fi
 
-	# shellcheck disable=SC2068
+	# shellcheck disable=SC2086
 	indent ${HTML} "$( list_installed_locales )"
 }
 

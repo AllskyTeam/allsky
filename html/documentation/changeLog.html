@@ -65,6 +65,10 @@
 				<ul>
 					<li>Updated to ZWO SDK v1.38 which supports the
 						ASI582MC and Seestar 585MC cameras.
+					<li>Added a
+						<a external="true" allsky="true"
+							href="/documentation/troubleshooting/troubleshootingTools.html">Troubleshooting Tools</a>
+						Documentation page to list tools to aid in troubleshooting.
 				</ul>
 
 				<h4>Bug Fixes</h4>
@@ -115,20 +119,21 @@
 
 				<h4>Bug Fixes</h4>
 				<ul>
-					<li>Fixed a couple issues with WebUI "System Messages":
+					<li>Fixed an issue where downloading the support log from the
+						<span class="WebUILink">Getting Support</span>
+						page would hang the page.
+					<li>Fixed an issue with WebUI "System Messages":
 						<ol>
 							<li>Some messages were displayed hundreds or thousands
 								of times rather than being displayed once with a
-								number of occurrences greather than 1.
-							<li>Some messages were truncated.
+								number of occurrences greater than 1.
+							<li>A message was truncated when unable to download the
+								<span class="fileName">de421.bsp</span> file.
 						</ol>
 					<li>Fixed a rare situation where the
 						<span class="managerName">Module Manager</span>
 						will fail to display any modules due to corruption in
 						a module's metaData.
-					<li>Fixed a minor issue where a System Message was truncated
-						when unable to download the
-						<span class="fileName">de421.bsp</span> file.
 				</ul>
 
 				<h4>New Settings</h4>

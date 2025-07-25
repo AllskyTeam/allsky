@@ -85,24 +85,16 @@ function usage_and_exit()
 # Show all the supported cameras.
 function show_supported_cameras()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F} --RPi | --ZWO"
-		echo
-		echo "Display all the cameras of the specified type that Allsky supports."
-		echo "Note that the ZWO list is very long."
-		return
+	if [[ $# -eq 0 && -n ${COMMAND_TO_EXECUTE} ]]; then
+		# Command to run specified on command line but required options not given.
+		E_ "${ME} ${ME_F}: Need to specify all arguments on command line." >&2
+		showSupportedCameras.sh --help
+		exit 2
 	fi
 
-	# shellcheck disable=SC2124
-	local ARGS="${@}"
+	local ARGS
 
-	#shellcheck disable=SC2086
-	if needs_arguments ${ARGS} ; then
-		if [[ ${ON_TTY} == "false" ]]; then
-			E_ "${ME} ${ME_F}: Need to specify all aruments on command line." >&2
-			return
-		fi
+	if [[ $# -eq 0 && -z ${COMMAND_TO_EXECUTE} ]]; then
 		PROMPT="\nSelect the camera(s) to show:"
 		OPTS=()
 		OPTS+=("--RPi"			"RPi and compatible")
@@ -111,6 +103,9 @@ function show_supported_cameras()
 
 		# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 		ARGS="$( prompt "${PROMPT}" "${OPTS[@]}" )"
+	else
+		# shellcheck disable=SC2124
+		ARGS="${@}"
 	fi
 
 	# shellcheck disable=SC2086
@@ -295,6 +290,13 @@ function bad_images_info()
 # display the path on the server give a URL.
 function compare_paths()
 {
+	if [[ $# -eq 0 && -n ${COMMAND_TO_EXECUTE} ]]; then
+		# Command to run specified on command line but required options not given.
+		E_ "${ME} ${ME_F}: Need to specify all arguments on command line." >&2
+		comparePaths.sh --help
+		exit 2
+	fi
+
 	if [[ ${1} == "--help" ]]; then
 		echo
 		W_ "Usage: ${ME}  ${ME_F}  --website | --server"
@@ -310,16 +312,9 @@ function compare_paths()
 		return
 	fi
 
-	# shellcheck disable=SC2124
-	local ARGS="${@}"
+	local ARGS
 
-	#shellcheck disable=SC2086
-	if needs_arguments ${ARGS} ; then
-		if [[ ${ON_TTY} == "false" ]]; then
-			E_ "${ME} ${ME_F}: Need to specify all aruments on command line." >&2
-			return
-		fi
-
+	if [[ $# -eq 0 && -z ${COMMAND_TO_EXECUTE} ]]; then
 		PROMPT="\nSelect the machine you want to check:"
 		OPTS=()
 		OPTS+=("--website"	\
@@ -338,6 +333,9 @@ function compare_paths()
 			done
 			ARGS+=" ${A}"
 		fi
+	else
+		# shellcheck disable=SC2124
+		local ARGS="${@}"
 	fi
 
 	# shellcheck disable=SC2086
@@ -559,28 +557,6 @@ function get_filesystems()
 
 ####################################### Helper functions
 
-# Check if the required argument(s) were given to this command.
-# If called via the command line it's an error if no arguments
-# were given, so exit since we can't prompt (we may be called by another program).
-# If called via a menu item there normally WON'T be an argument so
-# return 0 which tells the caller it needs to prompt for the arguments.
-function needs_arguments()
-{
-	if [[ $# -eq 0 ]]; then
-		if [[ -n ${CMD} ]]; then		# CMD is global
-			E_ "\n'${FUNCNAME[1]}' requires an argument." >&2
-			usage_and_exit 1
-		else
-			echo "${@}"
-		fi
-
-		return 0
-	else
-		return 1
-	fi
-}
-
-
 #####
 # Run a command / function, passing any arguments.
 function run_command()
@@ -679,8 +655,8 @@ function L()
 
 OK="true"
 DO_HELP="false"
-CMD=""
-CMD_ARGS=""
+COMMAND_TO_EXECUTE=""
+COMMAND_TO_EXECUTE_ARGS=""
 DEBUG="false"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
@@ -699,10 +675,10 @@ while [[ $# -gt 0 ]]; do
 			;;
 
 		*)
-			CMD="${ARG}"
+			COMMAND_TO_EXECUTE="${ARG}"
 			shift
 			# shellcheck disable=SC2124
-			CMD_ARGS="${@}"
+			COMMAND_TO_EXECUTE_ARGS="${@}"
 			break;
 			;;
 	esac
@@ -712,9 +688,9 @@ done
 PATH="${PATH}:${ALLSKY_UTILITIES}"
 
 if [[ ${DO_HELP} == "true" ]]; then
-	if [[ -n ${CMD} ]]; then
+	if [[ -n ${COMMAND_TO_EXECUTE} ]]; then
 		echo
-		run_command "${CMD}" "--help"
+		run_command "${COMMAND_TO_EXECUTE}" "--help"
 		echo
 		exit 0
 	else
@@ -723,7 +699,7 @@ if [[ ${DO_HELP} == "true" ]]; then
 fi
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
-if [[ -z ${CMD} ]]; then
+if [[ -z ${COMMAND_TO_EXECUTE} ]]; then
 	# No command given on command line so prompt for one.
 
 	if [[ ${ON_TTY} == "false" ]]; then
@@ -797,7 +773,7 @@ if [[ -z ${CMD} ]]; then
 
 else
 	#shellcheck disable=SC2086
-	run_command "${CMD}" ${CMD_ARGS}
+	run_command "${COMMAND_TO_EXECUTE}" ${COMMAND_TO_EXECUTE_ARGS}
 	exit $?
 fi
 

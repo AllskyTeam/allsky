@@ -85,7 +85,7 @@ function usage_and_exit()
 # Show all the supported cameras.
 function show_supported_cameras()
 {
-	local COMMAND_TO_EXECUTE="comparePaths.sh"
+	local COMMAND_TO_EXECUTE="showSupportedCameras.sh"
 
 	if [[ $# -eq 0 && -n ${FUNTION_TO_EXECUTE} ]]; then
 		# Command to run specified on command line but required options not given.

@@ -425,15 +425,8 @@ function check_post_data()
 # Get a list of filesystems to help the user determine where a devices is mounted.
 function get_filesystems()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "This command helps determine the path to a storage device like an SSD."
-		return
-	fi
-
-	getFilesystems.sh
+	# shellcheck disable=SC2086
+	getFilesystems.sh ${@}
 }
 
 

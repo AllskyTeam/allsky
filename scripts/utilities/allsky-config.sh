@@ -285,16 +285,8 @@ function compare_paths()
 # Display brightness information from the startrails command.
 get_brightness_info()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "Displays brightness information used when updating the 'Threshold' startrails setting."
-		echo "Typically this is needed when startrails images don't show any trails."
-		return
-	fi
-
-	getBrightnessInfo.sh
+	# shellcheck disable=SC2086
+	getBrightnessInfo.sh ${@}
 }
 
 
@@ -302,28 +294,13 @@ get_brightness_info()
 # Help determine some timelapse settings.
 config_timelapse()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "Create multiple timelapse videos with different settings to help determine"
-		echo "what settings to ultimately use.  You are prompted for:"
-		echo "    - which day's images to use (default is yesterday's images)"
-		echo "    - how many images to include (default is 200 to minimize the processing time)"
-		echo "    - one or more 'Bitrate' values"
-		echo "    - one or more 'FPS' values"
-		echo
-		echo "A timelapse video is created for each combination of values you specified."
-		echo "The list of videos created is displayed for you to compare."
-		return
-	fi
-
 	if [[ ${ON_TTY} == "false" ]]; then
 		W_ "${ME} ${ME_F} must run from a terminal." >&2
 		return
 	fi
 
-	configTimelapse.sh
+	# shellcheck disable=SC2086
+	configTimelapse.sh ${@}
 }
 
 

@@ -194,11 +194,8 @@ function prepare_logs()
 # Request support for an RPi camera.
 function new_rpi_camera_info()
 {
-	# shellcheck disable=SC2124
-	local ARGS="${@}"		# optional
-
 	# shellcheck disable=SC2086
-	getRPiCameraInfo.sh ${ARGS}
+	getRPiCameraInfo.sh ${@}
 }
 
 
@@ -211,7 +208,8 @@ function samba()
 		return
 	fi
 
-	installSamba.sh
+	# shellcheck disable=SC2086
+	installSamba.sh ${@}
 }
 
 
@@ -219,26 +217,13 @@ function samba()
 # Move ALLSKY_IMAGES to a new location.
 function move_images()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "Configure Allsky to save images in the location you specify,"
-		echo "rather than in ~/allsky/images.  You are prompted for the new location,"
-		echo "and if there are images in the current location, you'll be prompted for"
-		echo "what you want to do with them (typically move them to the new location)."
-		echo
-		echo "The new location is typically an SSD or other higher-capacity,"
-		echo "more reliable media than an SD card."
-		return
-	fi
-
 	if [[ ${ON_TTY} == "false" ]]; then
 		W_ "${ME} ${ME_F} must run from a terminal." >&2
 		return
 	fi
 
-	moveImages.sh
+	# shellcheck disable=SC2086
+	moveImages.sh ${@}
 }
 
 

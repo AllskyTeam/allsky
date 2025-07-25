@@ -85,10 +85,12 @@ function usage_and_exit()
 # Show all the supported cameras.
 function show_supported_cameras()
 {
+	local COMMAND_TO_EXECUTE="comparePaths.sh"
+
 	if [[ $# -eq 0 && -n ${FUNTION_TO_EXECUTE} ]]; then
 		# Command to run specified on command line but required options not given.
 		E_ "${ME} ${ME_F}: Need to specify all arguments on command line." >&2
-		showSupportedCameras.sh --help
+		"${COMMAND_TO_EXECUTE}" --help
 		exit 2
 	fi
 
@@ -109,7 +111,7 @@ function show_supported_cameras()
 	fi
 
 	# shellcheck disable=SC2086
-	showSupportedCameras.sh ${ARGS}
+	"${COMMAND_TO_EXECUTE}" ${ARGS}
 }
 
 
@@ -192,21 +194,6 @@ function prepare_logs()
 # Request support for an RPi camera.
 function new_rpi_camera_info()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}  [--camera NUM]"
-		echo
-		W_ "NOTE: This command only works if you have an RPi camera connected to the Pi."
-		echo
-		echo "Saves detailed information on the attached RPi camera to a file."
-		echo "This file MUST be attached to your GitHub Discussion requesting support for the camera."
-		echo
-		echo "If there is more than one RPi camera connected to the Pi,"
-		echo "by default, information on the first camera (number 0) is displayed."
-		echo "Use the '--camera NUM' argument to specify a different camera."
-		return
-	fi
-
 	# shellcheck disable=SC2124
 	local ARGS="${@}"		# optional
 
@@ -290,10 +277,12 @@ function bad_images_info()
 # display the path on the server give a URL.
 function compare_paths()
 {
+	local COMMAND_TO_EXECUTE="comparePaths.sh"
+
 	if [[ $# -eq 0 && -n ${FUNTION_TO_EXECUTE} ]]; then
 		# Command to run specified on command line but required options not given.
 		E_ "${ME} ${ME_F}: Need to specify all arguments on command line." >&2
-		comparePaths.sh --help
+		"${COMMAND_TO_EXECUTE}" --help
 		exit 2
 	fi
 
@@ -339,7 +328,7 @@ function compare_paths()
 	fi
 
 	# shellcheck disable=SC2086
-	comparePaths.sh ${ARGS}
+	"${COMMAND_TO_EXECUTE}" ${ARGS}
 }
 
 
@@ -561,11 +550,11 @@ function get_filesystems()
 # Run a command / function, passing any arguments.
 function run_command()
 {
-	COMMAND="${1}"
+	local COMMAND="${1}"
 	shift
 
 	# shellcheck disable=SC2124
-	ARGUMENTS="${@}"
+	local ARGUMENTS="${@}"
 	if ! type "${COMMAND}" > /dev/null 2>&1 ; then
 		E_ "\n${ME}: Unknown command '${COMMAND}'." >&2
 		usage_and_exit --commands-only 2

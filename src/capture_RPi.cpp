@@ -64,7 +64,17 @@ std::string metadataArgs = "";
 //---------------------------------------------------------------------------------------------
 
 
-bool readMetadataFile(string file);
+bool readMetadataFile(string file);		// forward definition
+
+// Display what's in the libcamera output debug file.
+std::string showDebugFile(string debugFile)
+{
+		// Ignore info lines - we only care about errors.
+		std::string command, errMsg;
+		command = "grep -E -v 'Mode selection|Score|configuration adjusted' " + debugFile;
+		errMsg = exec(command.c_str());
+		return(errMsg);
+}
 
 // Build capture command to capture the image from the camera.
 // If an argument is IS_DEFAULT, the user didn't set it so don't pass to the program and
@@ -400,12 +410,8 @@ int RPicapture(config cg, cv::Mat *image)
 		}
 
 		// Add errorOutput to the log file.
-		// Ignore info lines - we only care about errors.
-		std::string errMsg;
-		command = "grep -E -v 'Mode selection|Score|configuration adjusted' " + errorOutput;
-		errMsg = exec(command.c_str());
 		Log(1, "********************\n");		// 1 so it doesn't go to WebUI.
-		Log(l, "%s\n", errMsg.c_str());
+		Log(l, "%s\n", showDebugFile(errorOutput).c_str());
 		Log(1, "********************\n");
 	}
 
@@ -997,7 +1003,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				{
 					Log(0, "*** %s: ERROR: maximum number of consecutive errors of %d reached; capture program stopped. Total errors=%'d.\n", CG.ME, maxErrors, numTotalErrors);
 					Log(0, "Make sure cable between camera and Pi is all the way in.\n");
-					Log(0, "Look in '%s' for details.\n", errorOutput.c_str());
+					Log(0, "The last error was: %s", showDebugFile(errorOutput).c_str());
 					closeUp(EXIT_ERROR_STOP);
 				}
 	
@@ -1017,3 +1023,4 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 
 	closeUp(EXIT_OK);
 }
+

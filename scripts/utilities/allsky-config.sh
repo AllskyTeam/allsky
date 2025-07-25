@@ -276,7 +276,7 @@ function compare_paths()
 		local ARGS="${@}"
 	fi
 
-	# shellcheck disable=SC2068
+	# shellcheck disable=SC2086
 	"${COMMAND_TO_EXECUTE}" ${ARGS}
 }
 
@@ -451,7 +451,7 @@ function run_command()
 	fi
 
 	ME_F="${COMMAND}"		# global
-	#shellcheck disable=SC2068
+	#shellcheck disable=SC2086
 	"${COMMAND}" ${ARGUMENTS}
 }
 
@@ -647,7 +647,7 @@ if [[ -z ${FUNTION_TO_EXECUTE} ]]; then
 	exit 0
 
 else
-	#shellcheck disable=SC2068
+	#shellcheck disable=SC2086
 	run_command "${FUNTION_TO_EXECUTE}" ${FUNTION_TO_EXECUTE_ARGS}
 	exit $?
 fi

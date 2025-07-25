@@ -848,7 +848,7 @@ function create_lighttpd_config_file()
 # Create the lighttpd log file with permissions so user can update it.
 function create_lighttpd_log_file()
 {
-	display_msg --log progress "Creating new ${LIGHTTPD_LOG_FILE}."
+	display_msg --logonly progress "Creating new ${LIGHTTPD_LOG_FILE}."
 
 	# Remove any old log files.
 	# Start off with a 0-length log file the user can write to.

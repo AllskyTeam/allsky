@@ -250,21 +250,6 @@ function compare_paths()
 		exit 2
 	fi
 
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}  --website | --server"
-		echo
-		echo "Helps determine what to put in the 'Image Directory' and 'Website URL' settings"
-		echo "in the 'Remote Server' section of the WebUI."
-		echo "It does this by displaying information from a remote Website's server via FTP"
-		echo "and via a URL, such as the directory name (they should match) and"
-		echo "a list of files in those directories."
-		echo
-		echo "If you did not specify either '--website' or '--server',"
-		echo "you will be prompted for which to use."
-		return
-	fi
-
 	local ARGS
 
 	if [[ $# -eq 0 && -z ${FUNTION_TO_EXECUTE} ]]; then

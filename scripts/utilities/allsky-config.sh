@@ -206,17 +206,6 @@ function new_rpi_camera_info()
 # Install SAMBA.
 function samba()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "Configure your Pi using the Samba protocol to allow easy file transfers to"
-		echo "and from PCs and MACs.  The HOME directory of the login you use on the Pi"
-		echo "will be available to connect to a PC or MAC,"
-		echo "where it will be treated like any other disk.  You can then drag and drop files."
-		return
-	fi
-
 	if [[ ${ON_TTY} == "false" ]]; then
 		W_ "${ME} ${ME_F} must run from a terminal." >&2
 		return

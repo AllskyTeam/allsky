@@ -47,6 +47,17 @@ usage_and_exit()
 	echo "where:"
 	echo "    --help         displays this message and exits."
 	echo "    --camera NUM   use camera number NUM."
+	echo
+
+	W_ "NOTE: This command only works if you have an RPi camera connected to the Pi."
+	echo
+	echo "Saves detailed information on the attached RPi camera to a file."
+	echo "This file MUST be attached to your GitHub Discussion requesting support for the camera."
+	echo
+	echo "If there is more than one RPi camera connected to the Pi,"
+	echo "by default, information on the first camera (number 0) is displayed."
+	echo "Use the '--camera NUM' argument to specify a different camera."
+
 	exit "${RET}"
 }
 

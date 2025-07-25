@@ -8,7 +8,11 @@ source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 
-NEW_DEBUG=3
+if [[ ${1} != "" ]]; then
+	NEW_DEBUG="${1}"
+else
+	NEW_DEBUG=3
+fi
 OLD_DEBUG=$( settings ".debuglevel" )
 
 stop_Allsky

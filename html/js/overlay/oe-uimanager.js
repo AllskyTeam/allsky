@@ -376,15 +376,23 @@ class OEUIMANAGER {
             this.updateToolbar();
         });
 
-        $(document).on('addFields', (e, templateInfo) => {
-            this.#transformer.nodes([]); 
+        $(document).on('addFields', (e, result) => {
+            this.#transformer.nodes([]);
+            let templateInfo = result.fields
             if ('fields' in templateInfo) {
 
                 let fields = templateInfo.fields;
 
-                let fontSize = this.#configManager.getValue('settings.defaultfontsize');
+                let fontSize = parseInt(this.#configManager.getValue('settings.defaultfontsize'), 10);
                 let defaultFontName = this.#configManager.getValue('settings.defaultfont');
                 let gridSize =this.#configManager.gridSize;
+
+                if ('font' in result) {
+                    defaultFontName = result.font;
+                }
+                if ('fontSize' in result) {
+                    fontSize = parseInt(result.fontSize, 10);
+                }
 
                 function snapToGrid(value) {
                     return Math.round(value / gridSize) * gridSize;
@@ -412,6 +420,7 @@ class OEUIMANAGER {
                         } else {
                             field.font = defaultFontName;
                         }
+                        field.fontsize = fontSize;
                         let current = this.#transformer.nodes();
                         this.#transformer.nodes([...current, shape]); 
                     } else {
@@ -430,6 +439,7 @@ class OEUIMANAGER {
                                 } else {
                                     field.font = defaultFontName;
                                 }
+                                field.fontsize = fontSize;
                                 x += shape.width() / this.#oeEditorStage.scaleX();
                                 x = snapToGrid(x)
                                 let current = this.#transformer.nodes();
@@ -504,6 +514,10 @@ class OEUIMANAGER {
                 id: 'var',
                 variable: '',
 				stateKey: 'as-oe',
+                fonts: this.#fonts,
+                defaultFont: this.#configManager.getValue('settings.defaultfont'),
+                defaultFontSize: this.#configManager.getValue('settings.defaultfontsize'),
+                showBlocks: true,
                 variableSelected: (variable) => {
                     let name = '${' + variable.replace('AS_', '') + '}'
                     let field = this.#configManager.findFieldByName(name)
@@ -2978,24 +2992,34 @@ class OEUIMANAGER {
             const table = $('#formatlisttable').DataTable();
             const rowData = table.row(index).data();
 
-            if ('attribute' in rowData) {
-                const jsonData = rowData.attribute
-                const keys = Object.keys(jsonData);
-
-                $('body').formModalFromJson({
-                    data: jsonData,
-                    keys: keys,
-                    initialValues: format,
-                    title: 'Configure Format Options',
-                    onSubmit: function (resultString) {
+            if (rowData.format === 'customdate') {
+                $.fn.dateFormatBuilder({
+                    onSave: function (format) {
                         let uiManager = window.oedi.get('uimanager')
-                        //let format = '{' + $(event.currentTarget).data('format') + '}'
-                        uiManager.updateFormat('{' + resultString + '}', 'replace')
+                        uiManager.updateFormat('{' + format + '}', 'replace')
                     }
                 });
+
             } else {
-                let uiManager = window.oedi.get('uimanager')
-                uiManager.updateFormat('{' + rowData.format + '}', 'replace')
+                if ('attribute' in rowData) {
+                    const jsonData = rowData.attribute
+                    const keys = Object.keys(jsonData);
+
+                    $('body').formModalFromJson({
+                        data: jsonData,
+                        keys: keys,
+                        initialValues: format,
+                        title: 'Configure Format Options',
+                        onSubmit: function (resultString) {
+                            let uiManager = window.oedi.get('uimanager')
+                            //let format = '{' + $(event.currentTarget).data('format') + '}'
+                            uiManager.updateFormat('{' + resultString + '}', 'replace')
+                        }
+                    });
+                } else {
+                    let uiManager = window.oedi.get('uimanager')
+                    uiManager.updateFormat('{' + rowData.format + '}', 'replace')
+                }
             }
         })
 

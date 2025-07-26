@@ -17,8 +17,8 @@ function DisplayModule() {
 <script src="/js/bootbox/bootbox.all.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 <script src="/js/bootbox/bootbox.locales.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-<link rel='stylesheet' href='/js/jquery-ui-1.13.1.custom/jquery-ui.min.css?c=<?php echo ALLSKY_VERSION; ?>' />
-<script src="/js/jquery-ui-1.13.1.custom/jquery-ui.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+<link rel='stylesheet' href='/js/jquery-ui-1.14.1.custom/jquery-ui.min.css?c=<?php echo ALLSKY_VERSION; ?>' />
+<script src="/js/jquery-ui-1.14.1.custom/jquery-ui.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
 <link rel="stylesheet" type="text/css" href="/js/overlay/imagemanager/oe-imagemanager.css?c=<?php echo ALLSKY_VERSION; ?>" />
 <script type="text/javascript" src="/js/overlay/imagemanager/oe-imagemanager.js?c=<?php echo ALLSKY_VERSION; ?>"></script>

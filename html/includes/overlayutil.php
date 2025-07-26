@@ -839,7 +839,6 @@ class OVERLAYUTIL
         $result = json_encode($result);
         $this->sendResponse($result);
     }
-
     public function getLoadOverlay($overlayName=null, $return=false) 
     {
         if ($overlayName === null) {
@@ -954,7 +953,6 @@ class OVERLAYUTIL
         $overlayData = json_encode($overlayData);
         $this->sendResponse($overlayData);
     }
-
     public function getValidateFilename() 
     {
         $fileName = $_GET['filename'];
@@ -997,7 +995,6 @@ class OVERLAYUTIL
 
         $this->sendResponse($maxFound);        
     }
-
     public function postNewOverlay() 
     {
 
@@ -1216,6 +1213,21 @@ class OVERLAYUTIL
 
 		return $result;
 	}
+
+    public function postPythonDate() {
+        $formatString = $_POST['format'];
+        $escapedFormat = escapeshellarg($formatString);
+
+        $cmd = "python3 -c \"from datetime import datetime; print(datetime.now().strftime({$escapedFormat}))\"";
+
+        $result = $this->runShellCommand($cmd);
+
+        if ($result['error']) {
+            $this->sendHTTPResponse(500);
+        } else {
+		    $this->sendResponse($result['message']);
+        }
+    }
 
 	public function postSample() 
     {

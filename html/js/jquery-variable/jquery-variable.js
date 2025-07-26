@@ -12,6 +12,8 @@
 			stateKey: 'as-variables',
 			valueDiv: null,
 			selectStyle: 'single',
+            showBlocks: false,
+            fonts: [],
             variableSelected: function (variable) { }
         }
 
@@ -191,6 +193,46 @@
 
             plugin.templateTable = $('#' + plugin.mmtemplateId + '-table')
                 .DataTable({
+
+                    initComplete: function () {
+                        const searchDiv = $('#' + plugin.mmtemplateId + '-table_wrapper').find('.dt-search');
+
+                        if (searchDiv.length) {
+                            searchDiv.css({
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                flexWrap: 'nowrap'
+                            });
+
+                            const spinnerGroup = $(`
+                                <div style="display: flex; align-items: center;">
+                                    <label for="dt-font-size" style="margin-right: 5px;">Font Size</label>
+                                    <input type="number" id="block-font-size" class="form-control input-sm" value="10" min="1" style="width: 80px;">
+                                </div>
+                            `);
+
+                            spinnerGroup.find('input').val(plugin.settings.defaultFontSize);
+
+                            const fontDropdown = $(`
+                                <div style="display: flex; align-items: center; margin-right: 10px;">
+                                    <label for="dt-font-family" style="margin-right: 5px;">Font</label>
+                                    <select id="block-font" class="form-control input-sm">
+                                    </select>
+                                </div>
+                            `);
+
+                            plugin.settings.fonts.forEach(f => {
+                            const $option = $('<option>').val(f.value).text(f.text);
+                            if (f.value === plugin.settings.defaultFont) {
+                                $option.prop('selected', true);
+                            }
+                            fontDropdown.find('select').append($option);
+                            });
+
+                            searchDiv.prepend(fontDropdown).prepend(spinnerGroup);
+                        }
+                    },                    
                     ajax: {
                         url: 'includes/moduleutil.php?request=TemplateList',
                         dataSrc : '',
@@ -223,7 +265,7 @@
                             width: '100px',
                             render: function (item, type, row, meta) {
                                 let buttons = `
-                                    <button type="button" class="btn btn-success btn-sm oe-add-field-template" data-group="${row.group}" data-block="${row.blockname}" data-filename="${row.filename}">Add</button>
+                                    <button type="button" class="btn btn-success btn-xs oe-add-field-template" data-group="${row.group}" data-block="${row.blockname}" data-filename="${row.filename}">Add</button>
                                 `;
 
                                 return buttons;
@@ -268,7 +310,12 @@
                     dataType: 'json',
                     cache: false,             
                     context: this
-                }).done((result) => {
+                }).done((fields) => {
+                    let result = {
+                        fields: fields,
+                        font: $('#block-font').val(),
+                        fontSize: $('#block-font-size').val()
+                    }
                     $(document).trigger('addFields', result);
                 });                 
             });

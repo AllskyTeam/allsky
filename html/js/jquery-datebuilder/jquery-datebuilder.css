@@ -1,0 +1,40 @@
+    .token {
+        cursor: move;
+        display: inline-block;
+        margin: 3px 0;
+        padding: 6px 10px;
+        background: #1d5a79;
+        color: white;
+        border-radius: 5px;
+        font-family: monospace;
+        user-select: none;
+        font-size: 1.3rem;
+    }
+
+    .drop-zone {
+        border: 2px dashed #ccc;
+        padding: 10px;
+        min-height: 60px;
+        background: #f8f9fa;
+    }
+
+    .dark .drop-zone {
+        border-color: #6c757d;
+        background: #343a40;
+    }
+
+    .token-clone {
+        margin-right: 5px;
+        background: #198754;
+    }
+
+    .token-list,
+    .token-list *,
+    .panel-body ul,
+    .panel-body li small,
+    .panel-group {
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+    }

@@ -37,6 +37,8 @@ function DisplayOverlay($image_name)
     <script src="/js/overlay/fields/oe-rect.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
     <script src="/js/overlay/oe-exposure.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
+    <script src="/js/jquery-attributes/jquery-attributes.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+
     <script src="/js/bootbox/bootbox.all.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
     <script src="/js/bootbox/bootbox.locales.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 

@@ -774,8 +774,29 @@ class OVERLAYUTIL
 
     public function getFormats() 
     {
-        $data = file_get_contents($this->overlayConfigPath . "/formats.json");
-        $this->sendResponse($data);
+        $formats = json_decode(file_get_contents($this->overlayConfigPath . "/formats.json"), true);
+        $attributes = json_decode(file_get_contents($this->overlayConfigPath . "/format_attributes.json"), true);
+
+        foreach ($formats["data"] as &$format) {
+            if (isset($format['attribute']) && is_array($format['attribute'])) {
+                $expanded = [];
+                foreach ($format['attribute'] as $attrKey) {
+                    if (isset($attributes[$attrKey])) {
+                        $expanded[$attrKey] = $attributes[$attrKey];
+                    } else {
+                        if (substr($attrKey, 0, 2) === 'dp') {
+                            $number = (int)substr($attrKey, 2);
+                            $expanded['dp'] = $attributes['dp'];
+                            $expanded['dp']['value']= $number;
+                        }
+                    }
+                }
+                $format['attribute'] = $expanded;
+            }
+        }
+        unset($format);
+
+        $this->sendResponse(json_encode($formats));
     }
 
     public function getConfigs() 

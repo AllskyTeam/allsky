@@ -5,14 +5,14 @@
             "description": "Short date/time UK format",
             "example": "25-12-23 23:20",
             "stackable": false,
-            "type": "timestamp"
+            "type": "date"
         },
         {
             "format": "%m-%d-%y %H:%M",
             "description": "Short date/time US format",
             "example": "25-12-23 23:20",
             "stackable": false,
-            "type": "timestamp"
+            "type": "date"
         },
 		{
             "format": "%d-%m-%y",
@@ -219,74 +219,31 @@
         },
         {
             "format": "int",            
-            "description": "Number integer",
+            "description": "Integered Number",
             "example": "52",
-            "stackable": true,
+            "attribute": [
+                "dp0",
+                "per",
+                "deg",
+                "locale"
+            ],
             "type": "number"
         },
         {
-            "format": "intlocale",            
-            "description": "Number integer, formatted using locale",
-            "example": "52,000",
-            "stackable": true,
-            "type": "number"
-        },        
-        {
-            "format": "1dp",            
-            "description": "Number to 1 decimal place",
-            "example": "52.1",
-            "stackable": true,
-            "type": "number"
-        },
-        {
-            "format": "1dplocale",            
-            "description": "Number to 1 decimal place, formatted using locale",
-            "example": "52,000.0",
-            "stackable": true,
-            "type": "number"
-        },         
-        {
-            "format": "2dp",            
-            "description": "Number to 2 decimal places",
+            "format": "float",            
+            "description": "Floating Point Number",
             "example": "52.12",
-            "stackable": true,
+            "attribute": [
+                "dp",
+                "per",
+                "deg",
+                "locale"
+            ],
             "type": "number"
         },
-        {
-            "format": "2dplocale",            
-            "description": "Number to 2 decimal places, formatted using locale",
-            "example": "52,000.00",
-            "stackable": true,
-            "type": "number"
-        },         
-        {
-            "format": "3dp",            
-            "description": "Number to 3 decimal places",
-            "example": "52.121",
-            "stackable": true,
-            "type": "number"
-        },
-        {
-            "format": "3dplocale",            
-            "description": "Number to 3 decimal places, formatted using locale",
-            "example": "52,000.000",
-            "stackable": true,
-            "type": "number"
-        },           
-        {
-            "format": "4dp",            
-            "description": "Number to 4 decimal places",
-            "example": "52.1211",
-            "stackable": true,
-            "type": "number"
-        },
-        {
-            "format": "4dplocale",            
-            "description": "Number to 4 decimal places, formatted using locale",
-            "example": "52,000.0000",
-            "stackable": true,
-            "type": "number"
-        },                     
+
+
+                    
         {
             "format": "{:.0f}",            
             "description": "Number to zero DP. (LEGACY DO NOT USE)",
@@ -352,6 +309,7 @@
             "description": "Output Yes or No. (LEGACY DO NOT USE)",
             "example": "Yes, No",
             "stackable": false,
+            "legacy": "Legacy",            
             "type": "bool"
         },
         {
@@ -480,7 +438,13 @@
         {
             "format": "allsky",
             "description": "Use Allsky setting",
-            "example": "23.50",          
+            "example": "23.50",
+            "attribute": [
+                "dp2",
+                "allsky",
+                "deg",
+                "unit"
+            ],                      
             "stackable": false,
             "type": "temperature"
         },
@@ -541,12 +505,26 @@
             "type": "gpio"
         },
         {
-            "format": "bool",
+            "format": "yesno",
+            "description": "Show as Yes or No",
+            "example": "Yes",           
+            "stackable": false,
+            "type": "gpio"
+        },        
+        {
+            "format": "truefalse",
             "description": "Show as True or False",
             "example": "False",           
             "stackable": false,
             "type": "gpio"
         },
+        {
+            "format": "num",
+            "description": "Show as 1 or 0",
+            "example": "False",           
+            "stackable": false,
+            "type": "gpio"
+        },        
         {
             "format": "none",
             "description": "No chnage to the string",

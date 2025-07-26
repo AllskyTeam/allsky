@@ -2907,7 +2907,7 @@ class OEUIMANAGER {
 						render: function (item, type, row, meta) {
                             let buttons = '';
                             if (item.legacy !== 'Legacy') {
-                                let buttonReplace = '<button type="button" title="Replace Format" class="btn btn-success btn-xs oe-format-replace" data-format="' + item.format + '"><i class="fa-solid fa-right-to-bracket"></i></button>';
+                                let buttonReplace = '<button type="button" title="Replace Format" class="btn btn-success btn-xs oe-format-replace" data-index="' + meta.row + '" data-format="' + item.format + '"><i class="fa-solid fa-right-to-bracket"></i></button>';
                                 let buttonAdd = ''
 
                                 if (row.stackable) {
@@ -2968,9 +2968,35 @@ class OEUIMANAGER {
         
 		$(document).off('click', '.oe-format-replace')
         $(document).on('click', '.oe-format-replace', (event) => {
-            let uiManager = window.oedi.get('uimanager')
-            let format = '{' + $(event.currentTarget).data('format') + '}'
-            uiManager.updateFormat(format, 'replace')
+            let format = '';
+            if (this.#selected !== null) {
+                format = this.#selected.format
+                format = format.slice(1, -1);
+            }
+
+            const index = $(event.currentTarget).data('index');
+            const table = $('#formatlisttable').DataTable();
+            const rowData = table.row(index).data();
+
+            if ('attribute' in rowData) {
+                const jsonData = rowData.attribute
+                const keys = Object.keys(jsonData);
+
+                $('body').formModalFromJson({
+                    data: jsonData,
+                    keys: keys,
+                    initialValues: format,
+                    title: 'Configure Format Options',
+                    onSubmit: function (resultString) {
+                        let uiManager = window.oedi.get('uimanager')
+                        //let format = '{' + $(event.currentTarget).data('format') + '}'
+                        uiManager.updateFormat('{' + resultString + '}', 'replace')
+                    }
+                });
+            } else {
+                let uiManager = window.oedi.get('uimanager')
+                uiManager.updateFormat('{' + rowData.format + '}', 'replace')
+            }
         })
 
         $(document).off('click', '.oe-format-add')		

@@ -1,4 +1,5 @@
-# Allsky Camera ![Release](https://img.shields.io/badge/Version-v2024.12.06_04-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
+# Allsky Camera ![Release](https://img.shields.io/badge/Version-v2025.xx.xx-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
+
 
 This is the source code for the Allsky Camera project.  <!-- described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/). -->
 &nbsp;  
@@ -15,7 +16,7 @@ In order to run the Allsky software you need:
  * A Raspberry Pi Zero 2, Pi 2, Pi 3, Pi 4, Pi 5, or Le Potato.
  * A version of the Raspberry Pi OS.  Other operating systems like Ubuntu are NOT supported.  If possible use the newest Bookworm 64-bit release of Pi OS with the "Desktop" version. Bullseye will also work. __Buster support will be dropped in the next major release__.
  * A camera:
-    * Any ZWO camera sold before February 1, 2025,
+    * Any ZWO camera sold before July 1, 2025,
     * or one of the following cameras:
        * Raspberry Pi:
           * HQ (IMX477 sensor)
@@ -43,11 +44,6 @@ In order to run the Allsky software you need:
 &nbsp;
 <!-- =============================================================================== --> 
 ## Software Installation
-
-<!-- HIDE FOR NOW - THE VIDEO IS A COUPLE RELEASES OLD
-PatriotAstro created a great [video](https://www.youtube.com/watch?v=7TGpGz5SeVI) describing the installation steps below.
-__We recommend viewing it before installing the software__.
--->
 
 See the [detailed installation instructions](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/installations/Allsky.html).
 
@@ -131,9 +127,7 @@ By default, a timelapse video is generated at the end of nighttime from all of t
 
 "Mini" timelapse videos can also be created every few images, and contain the last several images.  They are useful to see what the sky was recently like.
 
-
 See [Explanations / How To --> Timelapses](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/explanations/timelapses.html).
-
 
 ---
 
@@ -151,7 +145,6 @@ For each image a central vertical column 1 pixel wide is extracted. All these co
 
 See [Explanations / How To --> Keograms](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/explanations/keograms.html).
 
-
 ---
 
 
@@ -168,7 +161,6 @@ In the image above, Polaris is centered about one-fourth the way from the top.
 
 See [Explanations / How To --> Startrails](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/explanations/startrails.html).
 	
-
 ---
 
 

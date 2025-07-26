@@ -9,7 +9,7 @@
 
 // This file sets all the define() variables.
 $defs = 'allskyDefines.inc';
-if ((include $defs) == false) {
+if ((@include $defs) == false) {
 	echo "<br><div style='font-size: 200%; color: red;'>";
 	echo "The installation of Allsky is incomplete.<br>";
 	echo "File '$defs' not found.<br>";
@@ -775,7 +775,7 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
 
 // Run a command and display the appropriate status message.
 // If $addMsg is false, then don't add our own message.
-function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFailureMessage="")
+function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFailureMessage="", &$return_val=null)
 {
 	global $status;
 
@@ -810,7 +810,7 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 	if ($script !== "") {
 		echo "\n<!-- from $cmd -->$script\n";
 	}
-	if ($return_val > 0) {
+	if ($return_val > 0 && $return_val !== EXIT_PARTIAL_OK) {
 		$r = "";
 		if ($modifiedResult !== null) {
 			$r = implode("<br>", $modifiedResult);

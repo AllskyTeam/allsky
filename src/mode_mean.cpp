@@ -230,7 +230,7 @@ void aegGetNextExposureSettings(config * cg,
 		values += currentModeMeanSetting.historySize;
 	}
 
-	Log(3, "  > Got:    shutter_us: %s, gain: %1.3f, mean: %1.3f, target mean: %1.3f, diff (target - mean): %'1.3f\n",
+	Log(1, "  > GOT IMAGE:    shutter_us: %s, gain: %1.3f, mean: %1.3f, target mean: %1.3f, diff (target - mean): %'1.3f\n",
 		length_in_units(currentRaspistillSetting.shutter_us, true), cg->lastGain, cg->lastMean,
 		cg->myModeMeanSetting.currentMean, (cg->myModeMeanSetting.currentMean - cg->lastMean));
 

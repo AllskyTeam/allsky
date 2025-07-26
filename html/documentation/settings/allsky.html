@@ -996,9 +996,39 @@ A typical page is below.
 	<td>Font name.</td>
 </tr>
 <tr><td id="keogramfontcolor"><span class="WebUISetting">Font Color</span></td>
-	<td>#fff (white)</td>
-	<td>Font color.
+	<td>#ffffff (white)</td>
+	<td>Color of the date/time label on the keogram.
 	Same as the "--font-color" and "-C" options.
+	<br>The color can be specified using one of the following:
+		<ol>
+			<li>Three comma- or space-separated numbers between
+				<code>0</code> and <code>255</code>.
+				where the numbers are in Red, Green, Blue order:
+				<code>0,255,0</code> would be green and
+				<code>255 0 1</code> would be red with a tiny bit of blue.
+			<li>A <code>#</code> followed by <strong>six</strong> hex digits between
+				<code>00</code> and <code>ff</code>
+				where the digits are in Red, Green, Blue order:
+				<code>#00ff00</code> would be green and
+				<code>#ff0001</code> would be red with a tiny bit of blue.
+			<li>A <code>#</code> followed by <strong>three</strong> hex digits between
+				<code>0</code> and <code>f</code>
+				where the digits are in Red, Green, Blue order:
+				<code>#0f0</code> is equal to <code>#00ff00</code>
+				and would be green and
+				<code>#f00</code> is equal to <code>#ff0011</code>
+				and would be red with a little bit of blue.
+		</ol>
+		Hex digits include: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, a, b, c, d, e, and f,
+		where hex <code>a</code> == decimal <code>10</code>,
+		b == 11, c == 12, d == 13, e == 14, and f == 15.
+		Hex <code>10</code> == decimal <code>16</code> and
+		hex <code>ff</code> == decimal <code>255</code>.
+		<br>
+		The larger each number or hex digit, the more of that color is present, hence
+		<code>#000000</code> is pure black,
+		<code>255 255 255</code> is pure white,
+		and <code>128,128,128</code> is middle gray.
 	</td>
 </tr>
 <tr><td id="keogramfontsize"><span class="WebUISetting">Font Size</span></td>

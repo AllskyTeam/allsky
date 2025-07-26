@@ -74,6 +74,9 @@ generateForDay.sh --upload --keogram 20240710
 This will use the settings specified in the
 <span class="subSettingsHeader">Keograms</span> sub-section of the WebUI.
 </p>
+
+<h4>Advanced users: running the <code>keogram</code> program manually</h4>
+<details><summary></summary>
 <p>
 <code>generateForDay.sh</code> calls the <code>keogram</code> program
 to actually create the keogram, passing it several arguments
@@ -82,29 +85,30 @@ plus any others you add to the
 <span class="WebUISetting">Keogram Extra Parameters</span> setting.
 </p>
 <p>
-You can execute the <code>keogram</code> program manually,
-but will need to specify at least all the required arguments.
+Executing the <code>keogram</code> program manually is possible,
+but not very useful.
+If run manually you need to specify at least the three required arguments.
 </p>
 <pre>
 Usage:  keogram -d &lt;imagedir&gt; -e &lt;ext&gt; -o &lt;outputfile&gt; [optional arguments]
 
 Arguments:
-<u>-d | --directory &lt;str&gt; : directory from which to load images (required)</u>
-<u>-e | --extension &lt;str&gt; : image extension to process (required)</u>
-<u>-o | --output-file &lt;str&gt; : name of output file (required)</u>
+<u>-d | --directory &lt;str&gt;</u> : directory from which to load images (required)
+<u>-e | --extension &lt;str&gt;</u> : image extension to process (required)
+<u>-o | --output-file &lt;str&gt;</u> : name of output file (required)
 -r | --rotate &lt;float&gt; : number of degrees to rotate image, counterclockwise (0)
 -s | --image-size &lt;int&gt;x&lt;int&gt; : only process images of a given size, eg. 1280x960
 -h | --help : display this help message
 -v | --verbose : Increase logging verbosity
 -n | --no-label : Disable hour labels
-<u>-C | --font-color &lt;str&gt; : label font color, in HTML format (0000ff)</u>
-<u>-L | --font-line &lt;int&gt; : font line thickness (3)</u>
-<u>-N | --font-name &lt;str&gt; : font name (simplex)</u>
-<u>-S | --font-size &lt;float&gt; : font size (2.0)</u>
+<u>-C | --font-color</u> &lt;str&gt; : label font color, in HTML format (#0000ff)
+<u>-L | --font-line</u> &lt;int&gt; : font line thickness (3)
+<u>-N | --font-name</u> &lt;str&gt; : font name (simplex)
+<u>-S | --font-size</u> &lt;float&gt; : font size (2.0)
 -T | --font-type &lt;int&gt; : font line type (1)
 -Q | --max-threads &lt;int&gt; : limit maximum number of processing threads. (use all cpus)
 -q | --nice-level &lt;int&gt; : nice(2) level of processing threads (10)
-<u>-x | --image-expand : expand image to get the proportions of source - avoids tall and narrow images</u>
+<u>-x | --image-expand</u> : expand image to get the proportions of source - avoids tall and narrow images
 -c | --channel-info : show channel infos - mean value of R/G/B
 -f | --fixed-channel-number &lt;int&gt; : define number of channels 0=auto, 1=mono, 3=rgb (0=auto)
 
@@ -120,42 +124,44 @@ Example of running the <code>keogram</code> program manually:
 cd ~/allsky/bin
 ./keogram -d images/20240710 -e jpg -o images/20240710/keogram/keogram.jpg --rotate 42 --font-size 2
 </pre>
-
-<!-- THESE SETTINGS NO LONGER EXIST
-<blockquote>
-If you set the
-<span class="WebUISetting">Image Width</span> and
-<span class="WebUISetting">Image Height</span>
-of your camera in the WebUI to the actual values of your camera,
-keogram generation will skip any file that's not that size.
-This eliminates any garbage images that happen to be generated.
-</blockquote>
--->
+</details>
 
 <h2>Troubleshooting</h2>
-<p>
-If a keogram isn't being created, make sure the
-<span class="WebUISetting">Generate</span> setting is enabled.
-If that IS enabled, run:
-<pre>generateForDay.sh --keogram DATE</pre>
-and check for errors.
+<details><summary></summary>
+<p id="troubleshooting">
 <blockquote>
 It is extremely rare that a keogram isn't created.
 </blockquote>
+<blockquote class="warning">
+The resolution of all images must be identical;
+if not, only images with the same resolution as the FIRST image are used.
+<br>
+This can happen if the daytime and nighttime
+<span class="WebUISetting">Binning</span> settings are not the same,
+or any day you change the <span class="WebUISetting">Image Resize</span> and/or
+<span class="WebUISetting">Image Crop</span> settings.
+</blockquote>
 </p>
 <p>
-If a keogram isn't being uploaded, make sure the
-<span class="WebUISetting">Upload</span> setting is enabled.
-If that IS enabled, run:
-<pre>generateForDay.sh --upload --debug --keogram DATE</pre>
-and check for errors.
-If needed, run <code>testUpload.sh</code> to see why the upload fails.
+<ul>
+	<li>If a keogram isn't being created, make sure the Keogram
+		<span class="WebUISetting">Generate</span> setting is enabled.
+		If that IS enabled, run:
+		<pre>generateForDay.sh  --keogram  DATE</pre>
+		replacing <code>DATE</code> with a valid date like <code>20250710</code>
+		and check for errors.
+	<li>If a keogram is created but not <em>uploaded</em>, make sure the
+		Keogram <span class="WebUISetting">Upload</span> setting is enabled.
+		If that IS enabled, run:
+		<pre>generateForDay.sh  --upload  --debug  --keogram  DATE</pre>
+		and check for errors.
+		If needed, run <code>testUpload.sh</code> to see why the upload fails.
+	<li>If your keograms are tall and skinny you can have them created so they
+		look like regular images by enabling the
+		<span class="WebUISetting">Expand</span> setting.
+</ul>
 </p>
-<p>
-If your keograms are tall and skinny you can have them created so they
-look like regular images by enabling the
-<span class="WebUISetting">Expand</span> setting.
-</p>
+</details>
 
 </div><!-- Layout-main -->
 </div><!-- Layout -->

@@ -26,10 +26,6 @@ if [[ ! -d ${ALLSKY_SUPPORT_DIR} ]]; then
 	sudo chmod 775 "${ALLSKY_SUPPORT_DIR}"
 fi
 
-SUPPORT_DATETIME_SHORT="$( date +"%Y%m%d%H%M%S" )"
-SUPPORT_ZIP_NAME="support-XX_GITHUB_NUMBER_XX-${SUPPORT_DATETIME_SHORT}.zip"
-SUPPORT_ZIP_NAME_WITH_REPO="support-XX_REPO_XX-XX_GITHUB_NUMBER_XX-${SUPPORT_DATETIME_SHORT}.zip"
-
 ############################################## functions
 
 function set_dialog_info()
@@ -134,9 +130,8 @@ function collect_support_info()
 	CPU_TOTAL="$( nproc )"
 	MEMORY_INFO="$( free -h )"
 	MEM_TOTAL="$( echo "${MEMORY_INFO}" | grep Mem | gawk '{print $2}' )"
-	VERSION_FILE="${ALLSKY_CONFIG}/piversion"
-	if [[ -s ${VERSION_FILE} ]]; then
-		PI_MODEL="$( < "${VERSION_FILE}" )"
+	if [[ -s ${PI_VERSION_FILE} ]]; then
+		PI_MODEL="$( < "${PI_VERSION_FILE}" )"
 	else
 		PI_MODEL="unknown"
 	fi
@@ -327,10 +322,6 @@ function generate_support_info()
 			"${LIGHTTPD_ERROR_LOG}" > "${LIGHTTPD_ERROR_LOG_FILE}"
 	fi
 
-	if [[ -s ${ALLSKY_MESSAGES} ]]; then
-		cp "${ALLSKY_MESSAGES}" "${TEMP_DIR}"
-	fi
-
 	PRIOR_WEBSITE_DIR="${PRIOR_ALLSKY_DIR}${ALLSKY_WEBSITE/${ALLSKY_HOME}/}"
 	if [[ -d ${PRIOR_WEBSITE_DIR} ]]; then
 		PRIOR_WEBSITE_CONFIG_FILE="${PRIOR_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
@@ -346,14 +337,17 @@ function generate_support_info()
 		"${ALLSKY_UTILITIES}/showSupportedCameras.sh" --rpi --zwo
 	} > "${SUPPORTED_CAMERAS_FILE}"
 
-	local ALLSKY_LOG_FILE="${TEMP_DIR}/allsky_log.txt"
-	if [[ -f ${ALLSKY_LOG} ]]; then
-		if [[ ${LOG_LINES} == "all" ]]; then
-			cp "${ALLSKY_LOG}" "${ALLSKY_LOG_FILE}"
-		else
-			tail -n "${LOG_LINES}" "${ALLSKY_LOG}" > "${ALLSKY_LOG_FILE}"
+	local ALLSKY_LOG_FILE
+ 	for L in "${ALLSKY_LOG}" "${ALLSKY_LOG}.1"; do
+		if [[ -f ${L} ]]; then
+  			ALLSKY_LOG_FILE="${TEMP_DIR}/$( basename "${L}" ).txt"
+			if [[ ${LOG_LINES} == "all" ]]; then
+				cp "${L}" "${ALLSKY_LOG_FILE}"
+			else
+				tail -n "${LOG_LINES}" "${L}" > "${ALLSKY_LOG_FILE}"
+			fi
 		fi
-	fi
+  	done
 
 	local PERIODIC_LOG_FILE="${TEMP_DIR}/allskyperiodic_log.txt"
 	if [[ -f ${ALLSKY_PERIODIC_LOG} ]]; then
@@ -366,18 +360,18 @@ function generate_support_info()
 
 	local CONF_FILE="/etc/lighttpd/lighttpd.conf"
 	if [[ -f ${CONF_FILE} ]]; then
-		cp "${CONF_FILE}" "${TEMP_DIR}/etc-$( basename "${CONF_FILE}" )"
+		cp "${CONF_FILE}" "${TEMP_DIR}/etc-$( basename "${CONF_FILE}" ).txt"
 	fi
 
 	local INC_FILE="${ALLSKY_WEBUI}/includes/${ALLSKY_DEFINES_INC}"
 	if [[ -f ${INC_FILE} ]]; then
-		cp "${INC_FILE}" "${TEMP_DIR}"
+		cp "${INC_FILE}" "${TEMP_DIR}.txt"
 	fi
 	
 	[[ -d ${ALLSKY_CONFIG} ]] && cp -ar "${ALLSKY_CONFIG}" "${TEMP_DIR}"
 
 	if [[ -d ${ALLSKY_TMP} ]]; then
-		cp -ar "${ALLSKY_CONFIG}" "${TEMP_DIR}"
+		cp -ar "${ALLSKY_TMP}" "${TEMP_DIR}"
 		# The cache files aren't needed
 		rm -fr "${TEMP_DIR}/$( basename "${ALLSKY_CONFIG}" )/__pycache__"
 	fi
@@ -392,15 +386,11 @@ function generate_support_info()
 	X="${TEMP_DIR}/config/modules"
 	[[ -d ${X} ]] && find "${TEMP_DIR}/config/modules" -type f -exec truncate -s 0 {} +
 
-	[[ ${GITHUB_NUMBER} != "none" ]] && GITHUB_NUMBER="${GITHUB_TYPE}${GITHUB_NUMBER}"
-
-	local ZIP_NAME
-	if [[ ${GITHUB_NUMBER} != "none" && -n ${GITHUB_REPO} ]]; then
-		ZIP_NAME="${SUPPORT_ZIP_NAME_WITH_REPO//XX_GITHUB_NUMBER_XX/${GITHUB_NUMBER}}"
-		ZIP_NAME="${ZIP_NAME//XX_REPO_XX/${GITHUB_REPO}}"
-	else
-		ZIP_NAME="${SUPPORT_ZIP_NAME//XX_GITHUB_NUMBER_XX/${GITHUB_NUMBER}}"
-	fi
+	local ZIP_NAME="support"
+	ZIP_NAME+="-${GITHUB_REPO:-repo}"
+	ZIP_NAME+="-${GITHUB_TYPE:-type}"
+	ZIP_NAME+="-${GITHUB_NUMBER:-none}"
+	ZIP_NAME+="-$( date +"%Y%m%d%H%M%S" ).zip"
 
 	# We're in a subshell so we need to "echo" this to pass it back to our invoker.
 	echo "${DIALOG_COMPLETE_MESSAGE//XX_ZIPNAME_XX/${ZIP_NAME}}"
@@ -437,9 +427,9 @@ function get_github_number()
 			if [[ ${GITHUB_NUMBER_TEMP} =~ ^[+-]?[0-9]+$ ]]; then
 				GITHUB_NUMBER="${GITHUB_NUMBER_TEMP}"
 # TODO: look in GitHub's GITHUB_REPO for a Discussion or Issue with this number
-# If found, set GITHUB_TYPE to "D" or "I".
+# If found, set GITHUB_TYPE to "discussion" or "issue".
 # Output error message and try again if not found.
-GITHUB_TYPE="D"		# Assume this for now.
+GITHUB_TYPE="discussion"		# Assume this for now.
 				break
 			else
 				display_box "--msgbox" "${DIALOG_TITLE}" "${GITHUB_ERROR}"
@@ -456,7 +446,7 @@ function get_github_repo()
 		RESPONSE="$( dialog --clear \
 		--colors \
 		--title "Select Discussion/Issue Repository" \
-		--menu "Choose a Respository:" 10 40 2 \
+		--menu "\nChoose a Respository:" 15 40 2 \
 			1 "Allsky" \
 			2 "Allsky modules" \
 		3>&1 1>&2 2>&3)"
@@ -483,11 +473,9 @@ display_complete_dialog()
 {
 	local STATUS="${1:-Complete}"
 	if [[ ${AUTO_CONFIRM} == "false" ]]; then
-		if ! display_box "--msgbox" " ${STATUS} " "${DIALOG_COMPLETE_MESSAGE}" 2>/dev/null ; then
-			# In case of major failure with display_box(), echo the output.
-			clear
-			echo -e "\n\n${DIALOG_COMPLETE_MESSAGE}\n" >&2
-		fi
+		display_box "--msgbox" " ${STATUS} " "${DIALOG_COMPLETE_MESSAGE}" 2>/dev/null
+		clear
+		echo -e "$( remove_colors "\n${DIALOG_COMPLETE_MESSAGE}\n" )"
 	fi
 }
 

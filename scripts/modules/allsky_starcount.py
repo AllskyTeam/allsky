@@ -262,6 +262,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 
 		return result
 
+
 def starcount(params, event):
 	allsky_starcount = ALLSKYSTARCOUNT(params, event)
 	result = allsky_starcount.run()

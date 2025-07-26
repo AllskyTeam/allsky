@@ -17,6 +17,48 @@ display_msg --logonly info "\nSTARTING moveImages"
 ALLSKY_IMAGES_ALREADY_MOVED="false"					# Did the user already move the images?
 OLD_ALLSKY_IMAGES="${ALLSKY_IMAGES}"				# Where images are currently kept.
 
+usage_and_exit()
+{
+	local RET=${1}
+	exec >&2
+	echo
+	local USAGE="Usage: ${ME} [--help]"
+	if [[ ${RET} -ne 0 ]]; then
+		E_ "${USAGE}"
+	else
+		echo -e "${USAGE}"
+	fi
+
+	echo
+	echo "Configure Allsky to save images in the location you specify,"
+	echo "rather than in ~/allsky/images.  You are prompted for the new location,"
+	echo "and if there are images in the current location, you'll be prompted for"
+	echo "what you want to do with them (typically move them to the new location)."
+	echo
+	echo "The new location is typically an SSD or other higher-capacity,"
+	echo "more reliable media than an SD card."
+	echo
+
+	exit "${RET}"
+}
+OK="true"
+DO_HELP="false"
+while [[ $# -gt 0 ]]; do
+	ARG="${1}"
+	case "${ARG,,}" in
+		--help)
+			DO_HELP="true"
+			;;
+		-*)
+			E_ "Unknown argument '${ARG}'." >&2
+			OK="false"
+			;;
+	esac
+	shift
+done
+[[ ${DO_HELP} == "true" ]] && usage_and_exit 0
+[[ ${OK} == "false" ]] && usage_and_exit 1
+
 function do_exit()
 {
 	local RET="${1}"

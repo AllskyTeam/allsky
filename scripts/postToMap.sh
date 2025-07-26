@@ -110,6 +110,8 @@ function check_URL()
 			fi
 			if [[ -z ${TYPE} ]]; then
 				E+="ERROR: ${FIELD_NAME} '${URL}' does not appear to be a valid ${T}:"
+				# Hide header entries that aren't needed for troubleshooting.
+				CONTENT="$( echo "${CONTENT}" | grep -v -E "^x-ws-|^server:|^strict-transport|^x-powered-by" )"
 				E+="\n$( indent --spaces "${CONTENT}" ).${BR}"
 			else
 				return 0
@@ -295,7 +297,19 @@ else
 		fi
 
 		ERR="$( check_URL "${WEBSITE_URL}" remotewebsiteurl "Website URL" )"  || E+="${ERR}"
-		ERR="$( check_URL "${IMAGE_URL}" remotewebsiteimageurl "Image URL" )" || E+="${ERR}"
+		function C()
+		{
+			check_URL "${IMAGE_URL}" remotewebsiteimageurl "Image URL"
+		}
+		if ! ERR="$( C )" ; then
+			# If the web server is updating the image when we check, it may not be there so wait
+			# a little and try again.
+			if [[ ${DEBUG} -gt 0 ]]; then
+				wD_ "First check of valid image failed; trying again." >&2
+			fi
+			sleep 10
+			ERR="$( C )" || E+="${ERR}"
+		fi
 
 		# Without a trailing "/" we may get a "Moved permanently" message.
 		# This check needs to come after check_URL() above.
@@ -304,21 +318,14 @@ else
 
 	if [[ -n ${W} ]]; then
 		wW_ "${WARNING_MSG_START}${W%%"${BR}"}" >&2
-		# Want each message to have its own addMessage.sh entry.
 		if [[ ${ENDOFNIGHT} == "true" ]]; then
-			echo "${W}" | while read -r MSG
-			do
-				"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${ME}: ${MSG}"
-			done
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${ME}: ${W}"
 		fi
 	fi
 	if [[ -n ${E} ]]; then
 		wE_ "${ERROR_MSG_START}${E%%"${BR}"}" >&2
 		if [[ ${ENDOFNIGHT} == "true" ]]; then
-			echo "${E}" | while read -r MSG
-			do
-				"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${MSG}"
-			done
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
 		fi
 		exit 2
 	fi

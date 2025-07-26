@@ -548,6 +548,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		text_height = font.getmask(text_string).getbbox()[3] + descent
 
 		return (text_width, text_height)
+
     
 	def _convert_RGB_to_BGR(self, colour, opacity):
 		r,g,b = ImageColor.getrgb(colour)

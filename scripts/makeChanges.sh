@@ -638,6 +638,18 @@ do
 			fi
 			;;
 
+		"locale")
+			if ! is_installed_locale "${NEW_VALUE}"; then
+				E="ERROR: ${WSNs}${LABEL}${WSNe} ${WSVs}${NEW_VALUE}${WSVe} is not installed on this computer."
+				wE_ "${E}"
+				echo -e "${wBR}Installed locales are:${wBR}${INSTALLED_LOCALES}${wBR}"
+
+				echo "${wBR}Setting ${WSNs}${LABEL}${WSNe} back to ${WSVs}${OLD_VALUE}${WSVe}."
+				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "string"
+				(( NUM_CHANGED-- ))
+			fi
+			;;
+
 		"type")
 # TODO: Use  ${S_filename}  ??
 			check_filename_type "$( settings '.filename' )" "${NEW_VALUE}" || OK="false"
@@ -746,7 +758,6 @@ do
 				echo "${wBR}Setting ${WSNs}${LABEL}${WSNe} back to ${WSVs}${OLD_VALUE}${WSVe}."
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${SETTINGS_FILE}" "string"
 				(( NUM_CHANGED-- ))
-				OK="false"
 			fi
 			;;
 
@@ -952,7 +963,7 @@ done
 
 [[ ${OK} == "false" ]] && exit 1
 
-[[ ${NUM_CHANGED} -le 0 ]] && exit 0		# Nothing changed
+[[ ${NUM_CHANGED} -le 0 ]] && exit "${EXIT_PARTIAL_OK}" 		# Nothing changed
 
 USE_REMOTE_WEBSITE="${S_useremotewebsite}"
 USE_REMOTE_SERVER="${S_useremoteserver}"

@@ -1,7 +1,10 @@
 "use strict";
 
-let troubleshootingMsg = 'Please refer to the WebUI <a external="true" target="_blank" href="/documentation/troubleshooting/reportingProblems.html#supportErrors">Getting Support';
-troubleshootingMsg += ' <i class="fa-solid fa-arrow-up-right-from-square"></i></a> page';
+let externalIcon = '&nbsp;<i class="fa fa-external-link-alt fa_external"></i>';
+let troubleshootingMsg = ' Please refer to the WebUI <a target="_blank" href="/documentation/troubleshooting/reportingProblems.html#supportErrors">Getting&nbsp;Support';
+troubleshootingMsg += externalIcon;
+troubleshootingMsg += '</a> page';
+
 
 class ALLSKYSUPPORT {
 	#supportFilesTable = null
@@ -47,27 +50,27 @@ class ALLSKYSUPPORT {
 			var logId = $(event.currentTarget).data('logid')
 			var logTable = this.#supportFilesTable
 
-			const regex = /^support(?:-([a-zA-Z0-9]+))?(?:-([DI]?\d+))?-(\d{14})\.zip$/;
-			const match = logId.match(regex);
-			if (match) {
-				var source = match[1];
-				var id = match[2] || "";
-				var type = '';
-				if (id != "none") {
-					if (id == "") {		// no source given
-						id = source;
-						source = "AS";
-					}
-					type = id.substring(0,1);
-					if (type == "D" || type == "I") {
-						id = id.substring(1);
-						if (type == "D") type = "Discussion";
-						else type = "Issue";
-					} else {
-						type = 'D';		// old-format filename or an error, so use default
-					}
-				}
+			// File name format:
+			//		support-REPO-PROBLEM_TYPE-PROBLEM_ID-YYYYMMDDHHMMSS.zip
+			//      0       1    2            3          4
+
+			var ok = true;
+			const match = logId.split("-");
+			var num = match.length;
+			if (num != 5) {
+				ok = false;
 			} else {
+				var support = match[0];
+				if (support != "support") {
+					ok = false;
+				} else {
+					var repo = match[1];
+//x					var type = match[2];
+					var id = match[3];
+					if (id == "none") id = "";
+				}
+			}
+			if (! ok) {
 				bootbox.alert({
 					title: 'Error',
 					message: 'Error finding support log "' + logId + '".' + troubleshootingMsg
@@ -75,14 +78,21 @@ class ALLSKYSUPPORT {
 				return
 			}
 
-			$('input[name="choice"][value="' + source + '"]').prop('checked', true);
+			$('input[name="choice"][value="' + repo + '"]').prop('checked', true);
 			$('#githubIdModalId').val(id);
 			$('#githubIdModal').modal('show');
 
 			$('#githubIdModalOK').off('click');
 			$('#githubIdModalOK').on('click', () => {
-				var source = $('input[name="choice"]:checked').val();
+				var repo = $('input[name="choice"]:checked').val();
 				var newId = $('#githubIdModalId').val();
+				if (newId == "") {
+					bootbox.alert({
+						title: 'Error',
+						message: 'The GitHub ID is required.'
+					});
+					return;		// This leaves the dialog box up so the user can enter the ID.
+				}
 				$('#githubIdModal').modal('hide');
 				$('.as-support-loading').LoadingOverlay('show', {
 					background: 'rgba(0, 0, 0, 0.5)',
@@ -93,7 +103,7 @@ class ALLSKYSUPPORT {
 						url: 'includes/supportutils.php?request=ChangeGithubId',
 						data: {
 							logId: logId,
-							source: source,
+							repo: repo,
 							newId: newId
 					},
 					dataType: 'json',
@@ -173,8 +183,9 @@ Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
 						text: 'Generating Support Information'
 					});
 
-					$.ajax({
-						url: 'includes/supportutils.php?request=GenerateLog',
+// TODO: prompt for repo and optionally the id
+
+					$.ajax({ url: 'includes/supportutils.php?request=GenerateLog',
 						type: 'GET',
 						dataType: 'json',
 						cache: false
@@ -220,25 +231,18 @@ Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
 							return('');
 						}
 
+						let DIR = "";
+						let problemType = row.type;
+						if (problemType == "discussion" || problemType == "issue") {
+							DIR = problemType.toLowerCase() + 's';
+						}
+
 						let result = "";
-						if (ID != 'none') {
+						if (ID != 'none' && DIR != "") {
 							let fileName = row.filename;
-							let DIR = "";
-							let problemType = row.type;
-							if (problemType == "D" || problemType == "I") {
-								if (problemType == "D") {
-									problemType = "Discussion";
-								} else {
-									problemType = "Issue";
-								}
-								DIR = problemType.toLowerCase() + 's';
-							} else {
-								DIR = "discussions";
-								problemType = "#";
-							}
 							let URL = "";
 							let text = '';
-							if (row.source == 'AS') {
+							if (row.repo == 'AS') {
 								URL = ALLSKY_REPO_URL;
 								text = 'Allsky';
 							} else {
@@ -247,11 +251,11 @@ Select '<strong>OK</strong>' to agree or '<strong>Cancel</strong>' to cancel."
 							}
 							URL += '/' + DIR + '/' + ID;
 							let label = text + ' ' + problemType + ' ' + ID;
-							result = '<a external="true" href="' + URL + '">' + label + '</a>';
+							result = '<a href="' + URL + '">' + label + '</a>' + externalIcon;
 						} else {
-							result = 'No GitHub Number';
+							if (problemType == "type") problemType = "";
+							result = 'No GitHub ' + problemType + '  Number';
 						}
-						convertURL();		// handles <a external="true" ...>
 						return result
 					}
 				},{

@@ -366,9 +366,13 @@ if ($useRemoteWebsite) {
 					if ($t != false) {
 						$newT = getVariableOrDefault($_POST, "filetime", 0);
 						if ($t == $newT) {
-							exec("sudo rm -f " . ALLSKY_MESSAGES, $result, $retcode);
+							$cmd = "sudo rm -f " . ALLSKY_MESSAGES . " 2>/dev/null";
+							echo "<script>console.log('Executing [$cmd]');</script>";
+							exec($cmd, $result, $retcode);
 							if ($retcode !== 0) {
-								$status->addMessage("Unable to clear messages: " . $result[0], 'danger');
+								$result = $result[0];
+								echo "<script>console.log('[$cmd] failed: $result');</script>";
+								$status->addMessage("Unable to clear messages: $result", 'danger');
 								$status->showMessages();
 							}
 						} else {

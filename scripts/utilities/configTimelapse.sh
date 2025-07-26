@@ -12,6 +12,51 @@ source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 
+usage_and_exit()
+{
+	local RET=${1}
+	exec >&2
+	echo
+	local USAGE="Usage: ${ME} [--help] [--camera NUM]"
+	if [[ ${RET} -ne 0 ]]; then
+		E_ "${USAGE}"
+	else
+		echo -e "${USAGE}"
+	fi
+
+	echo
+	echo "Create multiple timelapse videos with different settings to help determine"
+	echo "what settings to ultimately use.  You are prompted for:"
+	echo "    - which day's images to use (default is yesterday's images)"
+	echo "    - how many images to include (default is 200 to minimize the processing time)"
+	echo "    - one or more 'Bitrate' values"
+	echo "    - one or more 'FPS' values"
+	echo
+	echo "A timelapse video is created for each combination of values you specified."
+	echo "The list of videos created is displayed for you to compare."
+	echo
+
+	exit "${RET}"
+}
+
+OK="true"
+DO_HELP="false"
+while [[ $# -gt 0 ]]; do
+	ARG="${1}"
+	case "${ARG,,}" in
+		--help)
+			DO_HELP="true"
+			;;
+		-*)
+			E_ "Unknown argument '${ARG}'." >&2
+			OK="false"
+			;;
+	esac
+	shift
+done
+[[ ${DO_HELP} == "true" ]] && usage_and_exit 0
+[[ ${OK} == "false" ]] && usage_and_exit 1
+
 TODAY="$( date '+%Y%m%d' )"
 # Get the last directory other than today.
 DIR="$( find "${ALLSKY_IMAGES}" -type d -name '20*' \! -name "${TODAY}" | sort | tail -1 )"

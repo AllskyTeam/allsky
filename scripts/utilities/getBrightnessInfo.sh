@@ -8,6 +8,44 @@ source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 
+usage_and_exit()
+{
+	local RET=${1}
+	exec >&2
+	echo
+	local USAGE="Usage: ${ME} [--help]"
+	if [[ ${RET} -ne 0 ]]; then
+		E_ "${USAGE}"
+	else
+		echo -e "${USAGE}"
+	fi
+
+	echo
+	echo "Displays brightness information used when updating the startrails 'Threshold' setting."
+	echo "Typically this is needed when startrails images don't show any trails."
+	echo
+
+	exit "${RET}"
+}
+
+OK="true"
+DO_HELP="false"
+while [[ $# -gt 0 ]]; do
+	ARG="${1}"
+	case "${ARG,,}" in
+		--help)
+			DO_HELP="true"
+			;;
+		-*)
+			E_ "Unknown argument '${ARG}'." >&2
+			OK="false"
+			;;
+	esac
+	shift
+done
+[[ ${DO_HELP} == "true" ]] && usage_and_exit 0
+[[ ${OK} == "false" ]] && usage_and_exit 1
+
 if [[ "$( settings ".startrailsgenerate" )" != "true" ]]; then
 	w_ "\nWARNING: The startrails 'Generate' setting is not enabled."
 fi
@@ -22,13 +60,14 @@ LOGS="$( ls -tr "${ALLSKY_LOG}"* )"
 grep --no-filename "startrails: Minimum" ${LOGS} 2> /dev/null |
 	sed "s/$(uname -n).*startrails: //" |
 	nawk 'BEGIN {
-			print; t_min=0; t_max=0; t_mean=0; t_median=0; t_num=0
-			numFmt = "%-20s   %.3f      %.3f      %.3f      %.3f\n";
+			print;
+			t_min=0; t_max=0; t_mean=0; t_median=0; t_num=0; t_used=0; t_notUsed=0;
+			numFmt = "%-20s   %.3f     %.3f     %.3f     %.3f     %-9d     %-d\n";
 		}
 		{
 			if (++num == 1) {
-				header = sprintf("%-20s  %8s   %8s   %5s       %-s\n",
-					"Date", "Minimum", "Maximum", "Mean", "Median");
+				header = sprintf("%-20s   %-8s  %-8s  %-8s  %-8s  %-12s  %-s\n",
+					"Date", "Minimum", "Maximum", "Mean", "Median", "Images used", "Not used");
 				printf(header);
 				dashes = "-";
 				l = length(header) - 2;
@@ -40,11 +79,13 @@ grep --no-filename "startrails: Minimum" ${LOGS} 2> /dev/null |
 
 
 			date = substr($1, 0, 10) "  "  substr($1, 12, 8);
-			min = $3;		t_min+= min;
-			max = $5;		t_max+= max;
-			mean = $7;		t_mean+= mean;
-			median = $9;	t_median+= median;
-			printf(numFmt, date, min, max, mean, median);
+			min = $3;		t_min += min;
+			max = $5;		t_max += max;
+			mean = $7;		t_mean += mean;
+			median = $9;	t_median += median;
+			used = $11;		t_used += used;
+			notUsed = $11;		t_notUsed += notUsed;
+			printf(numFmt, date, min, max, mean, median, used, notUsed);
 		}
 		END {
 			if (num == 0) {
@@ -55,7 +96,7 @@ grep --no-filename "startrails: Minimum" ${LOGS} 2> /dev/null |
 				printf("Consider running this command in a few days to get more information.\n");
 			} else {
 				printf("%s\n", dashes);
-				printf(numFmt, "Total average", t_min/num, t_max/num, t_mean/num, t_median/num);
+				printf(numFmt, "Total average", t_min/num, t_max/num, t_mean/num, t_median/num, t_used/num, t_notUsed/num);
 			}
 			exit 0;
 		}'

@@ -20,6 +20,46 @@ if [[ -z ${LOGNAME} ]]; then
 	exit 1
 fi
 
+usage_and_exit()
+{
+	local RET=${1}
+	exec >&2
+	echo
+	local USAGE="Usage: ${ME} [--help]"
+	if [[ ${RET} -ne 0 ]]; then
+		E_ "${USAGE}"
+	else
+		echo -e "${USAGE}"
+	fi
+
+	echo
+	echo "Configure your Pi using the Samba protocol to allow easy file transfers to"
+	echo "and from PCs and MACs.  The HOME directory of the login you use on the Pi"
+	echo "will be available to connect to a PC or MAC,"
+	echo "where it will be treated like any other disk.  You can then drag and drop files."
+	echo
+
+	exit "${RET}"
+}
+
+OK="true"
+DO_HELP="false"
+while [[ $# -gt 0 ]]; do
+	ARG="${1}"
+	case "${ARG,,}" in
+		--help)
+			DO_HELP="true"
+			;;
+		-*)
+			E_ "Unknown argument '${ARG}'." >&2
+			OK="false"
+			;;
+	esac
+	shift
+done
+[[ ${DO_HELP} == "true" ]] && usage_and_exit 0
+[[ ${OK} == "false" ]] && usage_and_exit 1
+
 mkdir -p "${ALLSKY_LOGS}"
 DISPLAY_MSG_LOG="${ALLSKY_LOGS}/SAMBA.log"
 

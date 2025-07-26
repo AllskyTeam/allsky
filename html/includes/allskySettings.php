@@ -89,8 +89,11 @@ function checkType($fieldName, $value, $old, $label, $label_prefix, $type, &$sho
 			$msg = "must be a number with, or without, a fraction";
 		else
 			$value += 0.0;
-	} else if ($type === "color" && substr($value, 0, 1) === "#" && strlen($value) !== 7) {
-		$msg = "must contain 6 characters after the '#'";
+	} else if ($type === "color" && substr($value, 0, 1) === "#") {
+		$l = strlen($value);
+		if ($l != 4 && $l !== 7) {
+			$msg = "must contain either 3 or 6 characters after the '#'";
+		}
 	}
 	if ($msg === "") {
 		return("");
@@ -545,18 +548,22 @@ if ($debug) {
 
 					# Let makeChanges.sh display any output.
 					// false = don't add anything to the message.
-					$ok = runCommand($CMD, "", "success", false);
+					$ok = runCommand($CMD, "", "success", false, "", $return_val);
 
-					// If Allsky needs to be configured again, e.g., a new camera type/model,
-					// stop Allsky, don't restart it.
-					$settings_array = readSettingsFile();
-					$reReadSettings = false;	// just re-read it, so don't need to read again
-					if (getVariableOrDefault($settings_array, $lastChangedName, null) === null) {
-						$msg .= "Allsky needs to be re-configured.<br>";
-						$restartRequired = false;
-						$stopRequired = true;
+					$msg = "";
+					// EXIT_PARTIAL_OK means there were problem(s) and nothing changed.
+					if ($return_val === EXIT_PARTIAL_OK) {
+						$ok = false;
 					} else {
-						$msg = "";
+						// If Allsky needs to be configured again, e.g., a new camera type/model,
+						// stop Allsky, don't restart it.
+						$settings_array = readSettingsFile();
+						$reReadSettings = false;	// just re-read it, so don't need to read again
+						if (getVariableOrDefault($settings_array, $lastChangedName, null) === null) {
+							$msg .= "Allsky needs to be re-configured.<br>";
+							$restartRequired = false;
+							$stopRequired = true;
+						}
 					}
 				}
 
@@ -644,8 +651,8 @@ if ($debug) {
 						}
 					}
 				}
-
-			} else {	// not $ok
+			}
+			if (! $ok) {
 				$status->addMessage("Settings NOT saved due to errors above.", 'info');
 			}
 

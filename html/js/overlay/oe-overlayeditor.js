@@ -35,6 +35,7 @@ class OVERLAYEDITOR {
             $('#oe-overlay-manager').allskyMM();
 
             configManager.loadConfig();
+            configManager.loadFonts();
             $(document).trigger('oe-startup');
             $.LoadingOverlay('hide');            
         }); 

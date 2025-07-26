@@ -6,25 +6,35 @@ https://github.com/AllskyTeam/allsky
 
 This module is a common dumping ground for shared variables and functions.
 '''
+import time
 import os
 import pprint
 import shlex
 import subprocess
-import string
+import requests
 import json
-import cv2
+import sqlite3
+import mysql.connector
+import math
 import shutil
 import re
 import sys
 import time
 import locale
-import board
-import argparse
 import locale
 import tempfile
-import pathlib
-from pathlib import Path
+import shlex
+import board
+import busio
+import importlib
 
+from pathlib import Path
+from functools import reduce
+from allskyvariables import allskyvariables
+import pigpio
+import numpy as np
+from typing import Union, List, Dict
+ 
 try:
     locale.setlocale(locale.LC_ALL, '')
 except:
@@ -32,17 +42,38 @@ except:
 
 ABORT = True
 
-def getEnvironmentVariable(name, fatal=False):
-    result = None
+def get_environment_variable(name, fatal=False, debug=False):
+    return getEnvironmentVariable(name, fatal, debug)
+def getEnvironmentVariable(name, fatal=False, debug=False):
+	global ALLSKY_TMP
 
-    try:
-        result = os.environ[name]
-    except KeyError:
-        if fatal:
-            log(0, f"ERROR: Environment variable '{name}' not found.", exitCode=98)
+	result = None
 
-    return result
+	if not debug:
+		try:
+			result = os.environ[name]
+		except KeyError:
+			if fatal:
+				log(0, f"ERROR: Environment variable '{name}' not found.", exitCode=98)
+	else:
+		db_file = os.path.join(ALLSKY_TMP, 'allskydebugdb.py')
+		if not os.path.isfile(db_file):
+			file = open(db_file, 'w+')
+			file.write('DataBase = {}')
+			file.close()
 
+		try:
+			sys.path.insert(1, ALLSKY_TMP)
+			database = __import__('allskydebugdb')
+			DBDEBUGDATA = database.DataBase
+		except:
+			DBDEBUGDATA = {}
+			log(0, f"ERROR: Resetting corrupted Allsky database '{db_file}'")
+
+		if name in DBDEBUGDATA['os']:
+			result = DBDEBUGDATA['os'][name]
+
+	return result
 
 # These must exist and are used in several places.
 ALLSKYPATH = getEnvironmentVariable("ALLSKY_HOME", fatal=True)
@@ -50,12 +81,87 @@ ALLSKY_TMP = getEnvironmentVariable("ALLSKY_TMP", fatal=True)
 ALLSKY_SCRIPTS = getEnvironmentVariable("ALLSKY_SCRIPTS", fatal=True)
 SETTINGS_FILE = getEnvironmentVariable("SETTINGS_FILE", fatal=True)
 ALLSKY_OVERLAY = getEnvironmentVariable("ALLSKY_OVERLAY", fatal=True)
+ALLSKY_WEBUI = getEnvironmentVariable("ALLSKY_WEBUI", fatal=True)
+ALLSKY_MODULES = getEnvironmentVariable("ALLSKY_MODULES", fatal=True)
+SETTINGS_FILE = getEnvironmentVariable("SETTINGS_FILE", fatal=True)
 
 LOGLEVEL = 0
 SETTINGS = {}
 TOD = ''
 DBDATA = {}
 
+PI_INFO_MODEL = 1
+Pi_INFO_CPU_TEMPERATURE = 2
+
+def get_secrets(keys: Union[str, List[str]]) -> Union[str, Dict[str, str], None]:
+    """
+    Retrieve secret(s) from the given JSON file.
+
+    :param keys: A single key (str) or a list of keys to retrieve.
+    :param file_path: Path to the secrets JSON file.
+    :return: Value (str) if one key, or dict of key-value pairs if multiple keys.
+                Returns None or empty dict if keys not found.
+    """
+    single = isinstance(keys, str)
+    if single:
+        keys = [keys]
+
+    try:
+        file_path = os.path.join(ALLSKYPATH, 'env.json')
+        with open(file_path, 'r') as f:
+            secrets = json.load(f)
+
+        results = {k: secrets[k] for k in keys if k in secrets}
+
+        if single:
+            return results.get(keys[0])
+        return results
+
+    except (IOError, json.JSONDecodeError) as e:
+        print(f"Error reading secrets file: {e}")
+        return None if single else {}
+    
+def get_lat_lon():
+	lat = None
+	lon = None
+
+	temp_lat = get_setting('latitude')
+	if temp_lat != '':
+		lat = convert_lat_lon(temp_lat)
+	temp_lon = get_setting('longitude')
+	if temp_lon != '':
+		lon = convert_lat_lon(temp_lon)
+
+	return lat, lon
+
+def get_pi_info(info):
+    from gpiozero import Device, CPUTemperature
+    resukt = None
+    
+    if info == PI_INFO_MODEL:
+        Device.ensure_pin_factory()
+        pi_info = Device.pin_factory.board_info
+        result = pi_info.model
+
+    if info == Pi_INFO_CPU_TEMPERATURE:
+        result = CPUTemperature().temperature
+                            
+    return result
+        
+def obfuscate_secret(secret, visible_chars=3):
+    return secret[:visible_chars] + '*' * (len(secret) - visible_chars)
+
+def create_cardinal(degrees):
+	try:
+		cardinals = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW','W', 'WNW', 'NW', 'NNW', 'N']
+		cardinal = cardinals[round(degrees / 22.5)]
+	except Exception:
+		cardinal = 'N/A'
+
+	return cardinal
+
+def should_run(module, period):
+    return shouldRun(module, period)
 def shouldRun(module, period):
     result = False
     diff = 0
@@ -72,6 +178,8 @@ def shouldRun(module, period):
 
     return result, diff
 
+def set_last_run(module):
+	setLastRun(module)
 def setLastRun(module):
     dbKey = module + "_lastrun"
     now = time.time()
@@ -83,6 +191,8 @@ def convertLatLonOld(input):
     multiplier = 1 if input[-1] in ['N', 'E'] else -1
     return multiplier * sum(float(x) / 60 ** n for n, x in enumerate(input[:-1].split('-')))
 
+def convert_lat_lon(input):
+	return convertLatLon(input)
 def convertLatLon(input):
     """ lat and lon can either be a positive or negative float, or end with N, S, E,or W. """
     """ If in  N, S, E, W format, 0.2E becomes -0.2 """
@@ -174,10 +284,14 @@ def startModuleDebug(module):
     except:
         log(0, f"ERROR: Unable to create {moduleTmpDir}")
 
-def writeDebugImage(module, fileName, image):
-    global ALLSKY_TMP
+def write_debug_image(module, fileName, image):
+	writeDebugImage(module, fileName, image)
 
-    debugDir = os.path.join(ALLSKY_TMP, "debug", module)
+def writeDebugImage(module, fileName, image):
+    import cv2
+    global ALLSKY_WEBUI
+
+    debugDir = os.path.join(ALLSKY_WEBUI, "debug", module)
     os.makedirs(debugDir, mode = 0o777, exist_ok = True)
     moduleTmpFile = os.path.join(debugDir, fileName)
     cv2.imwrite(moduleTmpFile, image, params=None)
@@ -223,6 +337,8 @@ def readSettings():
 
     LOGLEVEL = int(getSetting("debuglevel"))
 
+def get_setting(settingName):
+    return getSetting(settingName)
 def getSetting(settingName):
     global SETTINGS
 
@@ -265,11 +381,7 @@ def log(level, text, preventNewline = False, exitCode=None, sendToAllsky=False):
         else:
             print(text)
 
-    if sendToAllsky or level == 0:
-        if level == 0:
-            type = "error"
-        else:
-            type = "warning"
+    if sendToAllsky and level == 0:
         # Need to escape single quotes in {text}.
         doubleQuote = '"'
         text = text.replace("'", f"'{doubleQuote}'{doubleQuote}'")
@@ -296,26 +408,36 @@ def initDB():
         DBDATA = {}
         log(0, f"ERROR: Resetting corrupted Allsky database '{dbFile}'")
 
+def db_add(key, value):
+    dbAdd(key, value) 
 def dbAdd(key, value):
     global DBDATA
     DBDATA[key] = value
     writeDB()
 
+def db_update(key, value):
+    return dbUpdate(key, value)
 def dbUpdate(key, value):
     global DBDATA
     DBDATA[key] = value
     writeDB()
 
+def db_delete_key(key):
+    dbDeleteKey(key)
 def dbDeleteKey(key):
     global DBDATA
     if dbHasKey(key):
         del DBDATA[key]
         writeDB()
 
+def db_has_key(key):
+	return dbHasKey(key)
 def dbHasKey(key):
     global DBDATA
     return (key in DBDATA)
 
+def db_get(key):
+    return dbGet(key)
 def dbGet(key):
     global DBDATA
     if dbHasKey(key):
@@ -323,6 +445,32 @@ def dbGet(key):
     else:
         return None
 
+def write_env_to_db():
+	global ALLSKY_TMP
+
+	dbFile = os.path.join(ALLSKY_TMP, 'allskydebugdb.py')
+	if not os.path.isfile(dbFile):
+		file = open(dbFile, 'w+')
+		file.write('DataBase = {}')
+		file.close()
+
+	try:
+		sys.path.insert(1, ALLSKY_TMP)
+		database = __import__('allskydebugdb')
+		DBDEBUGDATA = database.DataBase
+	except:
+		DBDEBUGDATA = {}
+		log(0, f"ERROR: Resetting corrupted Allsky database '{dbFile}'")
+
+	DBDEBUGDATA['os'] = {}	
+	for key, value in os.environ.items():            
+		DBDEBUGDATA['os'][key] = value
+
+	file = open(dbFile, 'w+')
+	file.write('DataBase = ')
+	file.write(str(DBDEBUGDATA))
+	file.close()
+    
 def writeDB():
     global DBDATA, ALLSKY_TMP
 
@@ -342,6 +490,8 @@ def isFileWriteable(fileName):
     else:
         return False
 
+def is_file_readable(file_name):
+    return isFileReadable(file_name)
 def isFileReadable(fileName):
 
     """ Check if a file is readable """
@@ -389,33 +539,221 @@ def validateExtraFileName(params, module, fileKey):
     extraDataFilename = fileName + fileExtension
                     
     params[fileKey] = extraDataFilename
-            
-def save_extra_data(file_name, extra_data):
-    saveExtraData(file_name, extra_data)
 
-def saveExtraData(file_name, extra_data):
-    """
-    Save extra data to allows the overlay module to disdplay it.
+def check_mysql_connection(host, user, password, database=None, port=3306):
+    try:
+        conn = mysql.connector.connect(
+            host=host,
+            user=user,
+            password=password,
+            database=database,
+            port=port
+        )
+        if conn.is_connected():
+            conn.close()
+            return True
+    except Exception as e:
+        log(0, f'ERROR: Database is configured as mysql but cannot connect')
+        pass
+    return False
 
-    Args:
-        file_name (string): The name of the file to save.
-        extra_data (object): The data to save.
+def get_database_config():
+    secret_data = get_secrets(['databasehost', 'databaseuser', 'databasepassword', 'databasedatabase'])
+    secret_data['databasetype'] = get_setting('databasetype')
+    
+    return secret_data
 
-    Returns:
-        Nothing
-    """
+def update_database(structure, extra_data):
+    secret_data = get_database_config()
+
+    if not re.fullmatch(r'[a-zA-Z_][a-zA-Z0-9_]*', secret_data['databasedatabase']):
+        log(0, f"ERROR: Database table name {secret_data['databasedatabase']} is invalid")
+        return
+
+    if secret_data['databasetype'] == 'mysql':
+        if check_mysql_connection(secret_data['databasehost'],secret_data['databaseuser'],secret_data['databasepassword']):
+            update_mysql_database(structure, extra_data, secret_data)
+    
+    if secret_data['databasetype'] == 'sqlite':
+        update_sqlite_database(structure, extra_data, secret_data)
+
+def update_sqlite_database(structure, extra_data, secret_data):
+    db_path = os.path.join(ALLSKYPATH, 'config', 'myFiles', 'allsky.db')
+    try:
+        if 'enabled' in structure['database']:
+            if structure['database']['enabled']:
+                if 'table' in structure['database']:
+                    database_table = structure['database']['table']
+                    
+                    json_str = json.dumps(extra_data)
+                    timestamp = math.floor(time.time())
+
+                    # Use a context manager to ensure safe connection handling
+                    with sqlite3.connect(db_path, timeout=10) as conn:
+                        #conn.execute('PRAGMA journal_mode = WAL')  # Enables safe concurrent access
+                        #conn.execute('PRAGMA synchronous = NORMAL')  # Balance between speed and safety
+                        conn.execute(f'''
+                            CREATE TABLE IF NOT EXISTS {database_table} (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                timestamp INTEGER NOT NULL,
+                                json_data TEXT NOT NULL
+                            )
+                        ''')
+                        conn.execute(f'''
+                            INSERT INTO {database_table} (timestamp, json_data)
+                            VALUES (?, ?)
+                        ''', (timestamp, json_str))
+                        conn.commit()
+
+    except Exception as e:
+        eType, eObject, eTraceback = sys.exc_info()            
+        log(0, f'ERROR: Module update_database failed on line {eTraceback.tb_lineno} - {e}')
+        
+def update_mysql_database(structure, extra_data, secret_data):
+    try:
+        if 'enabled' in structure['database']:
+            if structure['database']['enabled']:
+                if 'table' in structure['database']:
+                    database_table = structure['database']['table']
+                    conn = mysql.connector.connect(
+                        host=secret_data['databasehost'],
+                        user=secret_data['databaseuser'],
+                        password=secret_data['databasepassword'],
+                        database=secret_data['databasedatabase']
+                    )
+                    
+                    cursor = conn.cursor()
+                    cursor.execute(f'CREATE TABLE IF NOT EXISTS {database_table} (id INT AUTO_INCREMENT PRIMARY KEY, timestamp BIGINT, json_data JSON)')
+                    unix_timestamp = math.floor(time.time())
+                    json_string = json.dumps(extra_data, separators=(",", ":"), ensure_ascii=True).replace("\n", "").replace("\r", "")
+                    json_string = json_string.replace("\\n","").replace("\\r","").replace("\\","")
+                    json_string = json.dumps(extra_data)
+                    insert_query = f"INSERT INTO {database_table} (timestamp, json_data) VALUES (%s, %s)"
+                    cursor.execute(insert_query, (unix_timestamp, json_string))
+
+                    conn.commit()
+                    cursor.close()
+                    conn.close()
+
+    except Exception as e:
+        eType, eObject, eTraceback = sys.exc_info()            
+        log(0, f'ERROR: Module update_database failed on line {eTraceback.tb_lineno} - {e}')
+
+def save_extra_data(file_name, extra_data, source='', structure={}, custom_fields={}):
+    saveExtraData(file_name, extra_data, source, structure, custom_fields)
+def saveExtraData(file_name, extra_data, source='', structure={}, custom_fields={}):
+	"""
+	Save extra data to allows the overlay module to display it.
+
+	Args:
+		file_name (string): The name of the file to save.
+		extra_data (object): The data to save.
+
+	Returns:
+		Nothing
+	"""
+	try:
+		extra_data_path = getExtraDir()
+		if extra_data_path is not None:        
+			checkAndCreateDirectory(extra_data_path)
+
+			file_extension = Path(file_name).suffix
+			extra_data_filename = os.path.join(extra_data_path, file_name)
+			with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
+				if file_extension == '.json':
+					extra_data = format_extra_data_json(extra_data, structure, source)
+				if len(custom_fields) > 0:
+					for key, value in custom_fields.items():
+						extra_data[key] = value
+				extra_data = json.dumps(extra_data, indent=4)
+				temp_file.write(extra_data)
+				temp_file_name = temp_file.name
+				os.chmod(temp_file_name, 0o644)
+
+				shutil.move(temp_file_name, extra_data_filename)
+
+				if 'database' in structure:
+					update_database(structure, extra_data)
+	except Exception as e:
+		eType, eObject, eTraceback = sys.exc_info()            
+		log(0, f'ERROR: Module saveExtraData failed on line {eTraceback.tb_lineno} - {e}')
+
+def format_extra_data_json(extra_data, structure, source):
+    result = extra_data
+
+    if structure:
+        result = {}
+        counter = 2
+        blank_first_entry = False
+        if 'info' in structure:
+            if 'count' in structure['info']:
+                counter = structure['info']['count']
+            if 'firstblank' in structure['info']:
+                blank_first_entry = structure['info']['firstblank']
+
+        for valueItr in range(1, counter):
+            index = valueItr
+            if blank_first_entry and valueItr == 1:
+                index = ''
+            else:
+                index = index - 1
+
+            for raw_key, value in structure['values'].items():
+                key = raw_key.replace('${COUNT}', str(index))
+                if key in extra_data:
+                    result[key] = dict(structure['values'][raw_key])
+                    result[key]['source'] = source
+                    result[key]["value"] = extra_data[key]
+
+                    description = structure['values'][raw_key]['description']
+                    description = description.replace('${COUNT}', str(index))
+                    result[key]["description"] = description
+
+                    if 'name' in result[key]:
+                        result[key]['name'] = result[key]['name'].replace('${COUNT}', str(index))
+
+                    regex = r"\$\{.*?\}"
+                    matches = re.finditer(regex, description, re.MULTILINE | re.IGNORECASE)
+                    placeHolder = ''
+                    for matchNum, match in enumerate(matches, start=1):
+                        replacement = ""
+                        raw_matched = match.group()
+
+                        placeHolder = raw_matched.replace("${", "")
+                        placeHolder = placeHolder.replace("}", "")
+
+                    if placeHolder in extra_data:
+                        replacement = extra_data[placeHolder]
+                        result[key]["description"] = description.replace(raw_matched, replacement)
+                else:
+                    pass
+                    #log(0, f"ERROR: {key} not found in module config")
+                    
+    return result
+
+def load_extra_data_file(file_name, type=''):
+    result = {}
     extra_data_path = getExtraDir()
     if extra_data_path is not None:               # it should never be None
-        checkAndCreateDirectory(extra_data_path)
         extra_data_filename = os.path.join(extra_data_path, file_name)
-        with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
-            formatted_json = json.dumps(extra_data, indent=4)
-            temp_file.write(formatted_json)
-            temp_file_name = temp_file.name
-            os.chmod(temp_file_name, 0o644)
-            
-        shutil.move(temp_file_name, extra_data_filename)
+        file_path = Path(extra_data_filename)
+        if file_path.is_file() and isFileReadable(file_path):
+            file_extension = Path(file_path).suffix
 
+            if file_extension == '.json' or type == 'json':
+                try:
+                    with open(extra_data_filename, 'r') as file:
+                        result = json.load(file)
+                except json.JSONDecodeError:
+                    log(0, f'Error reading extra_data_filename')
+            
+            if file_extension == '.txt':
+                pass
+            
+    return result
+
+def delete_extra_data(fileName):
+	deleteExtraData(fileName)
 def deleteExtraData(fileName):
     extraDataPath = getExtraDir()
     if extraDataPath is not None:               # it should never be None
@@ -424,6 +762,91 @@ def deleteExtraData(fileName):
             if isFileWriteable(extraDataFilename):
                 os.remove(extraDataFilename)
 
+def is_just_filename(path):
+    return os.path.basename(path) == path
+
+def _load_flows_for_cleanup():
+    flows = {}
+    flow_names = ['day', 'night', 'periodic', 'nightday', 'daynight']
+    for flow_name in flow_names:
+        flow_file_name = os.path.join(ALLSKY_MODULES, f'postprocessing_{flow_name}.json')
+        if is_file_readable(flow_file_name):
+            with open(flow_file_name, 'r') as file:
+                flows[flow_name] = json.load(file)
+    return flows
+
+def _load_module_settings():
+    module_settings = {}
+    module_settings_filename = os.path.join(ALLSKY_MODULES, f'module-settings.json')
+    if is_file_readable(module_settings_filename):
+        with open(module_settings_filename, 'r') as file:
+            module_settings= json.load(file)
+    return module_settings
+
+def _get_dict_path(data, keys):
+    try:
+        return reduce(lambda d, k: d[k], keys, data)
+    except (KeyError, TypeError):
+        return None
+    
+def _get_expiry_time_for_module(flows, module_name, module_settings, tod):
+    delete_age = 0
+    
+    module_name = module_name.replace('.json', '').replace('allsky_', '')
+    
+    delete_age = _get_dict_path(flows, [tod, module_name, 'metadata', 'arguments', 'dataage'])
+
+    if delete_age is None:
+        for flow in flows:
+            if flow != tod:
+                delete_age_tmp = _get_dict_path(flows, [flow, module_name, 'metadata', 'argumants', 'dataage'])
+                if delete_age_tmp is not None:
+                    delete_age_tmp = round(float(delete_age_tmp))
+                    if delete_age_tmp > delete_age:
+                        delete_age = delete_age_tmp                        
+    else:
+        delete_age = round(float(delete_age))
+    
+    if delete_age is None:
+        delete_age = 600
+        if 'expiryage' in module_settings:
+            delete_age = round(module_settings['expiryage'])    
+    
+    return delete_age
+
+def cleanup_extra_data():
+    flows = _load_flows_for_cleanup()
+    module_settings = _load_module_settings()
+    tod = getEnvironmentVariable('DAY_OR_NIGHT', fatal=True).lower()
+
+    extra_data_path = getExtraDir()
+    with os.scandir(extra_data_path) as entries:
+        for entry in entries: 
+            if entry.is_file():
+                delete_age = _get_expiry_time_for_module(flows, entry.name, module_settings, tod)
+                cleanup_extra_data_file(entry.path, delete_age)
+            
+def cleanup_extra_data_file(file_name, delete_age=600):
+    
+    if (is_just_filename(file_name)):    
+        extra_data_path = getExtraDir()
+        if extra_data_path is not None:
+            file_name = os.path.join(extra_data_path, file_name)
+
+    if (isFileWriteable(file_name)):
+        file_modified_time = round(os.path.getmtime(file_name))
+        file_age = round(time.time() - file_modified_time)
+        if (file_age > delete_age):
+            log(4, f'INFO: Deleting extra data file {file_name} as its older than {delete_age} seconds')
+            delete_extra_data(file_name)
+        else:
+            log(4, f'INFO: Not deleteing {file_name} as its {file_age} seconds old, threshhold is {delete_age}')
+    else:
+        log(4, f'ERROR: Cannot check extra data file {file_name} as it is not writeable')
+            
+    
+def cleanup_module(moduleData):
+    cleanupModule(moduleData)
 def cleanupModule(moduleData):
     if "cleanup" in moduleData:
         if "files" in moduleData["cleanup"]:
@@ -439,8 +862,14 @@ def createTempDir(path):
         umask = os.umask(0o000)
         os.makedirs(path, mode=0o777)
         os.umask(umask)
-            
+
+def get_gpio_pin_details(pin):
+    return getGPIOPin(pin)
+
+def get_gpio_pin(pin):
+	return getGPIOPin(pin)
 def getGPIOPin(pin):
+    import board
     result = None
     if pin == 0:
         result = board.D0
@@ -554,7 +983,71 @@ def getGPIOPin(pin):
 
     return result
 
+def connect_pigpio(show_errors=False):
+    pi = pigpio.pi(show_errors)
+    
+    return pi
 
+def read_gpio_pin(gpio_pin, pi=None, show_errors=False):
+    pin_state = None
+    try:
+        if pi is None:
+            pi = pigpio.pi(show_errors=show_errors)
+            
+        if pi.connected:        
+            pi.set_mode(gpio_pin, pigpio.INPUT)
+            pin_state = pi.read(gpio_pin)
+    except:
+        pass
+    
+    return pin_state
+
+def set_gpio_pin(gpio_pin, state, pi=None, show_errors=False):
+    result = False
+    try:
+        if pi is None:
+            pi = pigpio.pi(show_errors=show_errors)
+            
+        if pi.connected:        
+            pi.set_mode(gpio_pin, pigpio.OUTPUT)
+            pi.write(gpio_pin, state)
+            result = True
+    except:
+        pass
+    
+    return result
+
+def set_pwm(gpio_pin, duty_cycle, pi=None, show_errors=False):
+    result = False
+    try:
+        if pi is None:
+            pi = pigpio.pi(show_errors=False)
+            
+        if pi.connected:
+            pi.set_PWM_range(gpio_pin, 100)
+            pi.set_PWM_frequency(gpio_pin, 1_000)
+            pi.set_PWM_dutycycle(gpio_pin, duty_cycle)
+            result = True
+    except:
+        pass
+    
+    return result
+
+def stop_pwm(gpio_pin):
+    result = False
+    try:
+        if pi is None:
+            pi = pigpio.pi(show_errors=False)
+            
+        if pi.connected:
+            pi.set_PWM_dutycycle(self._fan_pin, 0)
+            pi.stop()
+            result = True
+    except:
+        pass
+
+    return result
+    
 def _get_value_from_json_file(file_path, variable):
     """
     Loads a json based extra data file and returns the value of a variable if found
@@ -605,6 +1098,9 @@ def _get_value_from_text_file(file_path, variable):
 
     return result   
 
+def get_all_allsky_variables(show_empty=True, module='', indexed=False, raw=False):
+    return allskyvariables.get_variables(show_empty, module, indexed, raw)
+    
 def get_allsky_variable(variable):
     """
     Gets an Allsky variable either from the environment or extra data files
@@ -616,7 +1112,6 @@ def get_allsky_variable(variable):
         result (various) The result or None if the variable could not be found
     """
     result = getEnvironmentVariable(variable)
-
     if result is None:
         extra_data_path = getExtraDir()
         directory = Path(extra_data_path)
@@ -636,3 +1131,448 @@ def get_allsky_variable(variable):
                 break
 
     return result
+
+def load_mask(mask_file_name, target_image):
+    import cv2
+    mask = None
+    
+    mask_path = os.path.join(ALLSKY_OVERLAY, 'images', mask_file_name)
+    target_shape = target_image.shape[:2]
+    
+    mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+    if mask is not None:
+        if (mask.shape[0] != target_shape[0]) or (mask.shape[1] != target_shape[1]):
+            mask = cv2.resize(mask, (target_shape[1], target_shape[0]))
+        mask = mask.astype(np.float32) / 255.0
+
+    return mask
+
+def mask_image(image, mask_file_name=''):
+    output = None
+    try:
+        if mask_file_name != '':
+            mask = load_mask(mask_file_name, image)
+            if len(image.shape) == 2:
+                image = image.astype(np.float32)
+                output = image * mask
+            else:
+                image = image.astype(np.float32)
+                if mask.ndim == 2:
+                    mask = mask[..., np.newaxis]
+                output = image * mask
+
+            output =  np.clip(output, 0, 255).astype(np.uint8)
+            
+            log(4, f'INFO: Mask {mask_file_name} applied')
+                
+    except Exception as e:
+        eType, eObject, eTraceback = sys.exc_info()
+        result = f'mask_image failed on line {eTraceback.tb_lineno} - {e}'
+        log(0,f'ERROR: {result}')
+
+       
+    return output
+     
+def count_starts_in_image(image, mask_file_name=None):
+    from photutils.detection import DAOStarFinder
+    from astropy.stats import sigma_clipped_stats
+    import cv2
+    
+    # Convert to grayscale if it's RGB
+    if image.ndim == 3:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = image
+
+    if mask_file_name is not None and mask_file_name != '':
+        gray = mask_image(gray, mask_file_name)
+
+    # Convert to float for processing
+    image_data = gray.astype(float)
+
+    # Estimate background stats
+    mean, median, std = sigma_clipped_stats(image_data, sigma=3.0)
+
+    # Detect stars
+    daofind = DAOStarFinder(fwhm=3.0, threshold=5.0*std)
+    sources = daofind(image_data - median)
+    
+    return sources, image
+
+def get_sensor_temperature():
+    temperature = 0
+    camera_type = get_camera_type()
+
+    if camera_type == 'rpi':
+        temperature = get_rpi_meta_value('SensorTemperature')
+    else:
+        temperature = get_environment_variable('AS_TEMPERATURE_C')
+    
+    if temperature == None:
+        temperature = 0
+    
+    return float(temperature)
+
+def get_camera_gain():
+    gain = 0
+    camera_type = get_camera_type()
+
+    if camera_type == 'rpi':
+        gain = get_rpi_meta_value('AnalogueGain')
+    else:
+        gain = get_environment_variable('AS_GAIN')
+    
+    if gain == None:
+        gain = 0
+        
+    return float(gain)
+    
+def get_camera_type():
+    camera_type = get_environment_variable('CAMERA_TYPE')
+    return camera_type.lower()
+
+def get_rpi_meta_value(key):
+    result = None
+    metadata_path = get_rpi_metadata()
+    
+    if metadata_path is not None:
+        try:
+            with open(metadata_path, 'r') as file:
+                metadata = json.load(file)
+                if key in metadata:
+                    result = metadata[key]
+        except json.JSONDecodeError as e:
+            with open(metadata_path, 'r') as f:
+                for line in f:
+                    if line.startswith(key + "="):
+                        result = line.split("=", 1)[1].strip()
+            
+    return result
+
+def get_rpi_metadata():
+    with open(SETTINGS_FILE) as file:
+        config = json.load(file)
+
+    extraargs = config.get('extraargs', '')
+    args = shlex.split(extraargs)
+
+    metadata_path = None
+    for i, arg in enumerate(args):
+        if arg == '--metadata' and i + 1 < len(args):
+            metadata_path = args[i + 1]
+            break
+    if metadata_path is None:
+        metadata_path = os.path.join(ALLSKY_TMP,'metadata.txt')
+
+    return metadata_path
+
+def _get_nested_value(data, path, value_type=str, separator="."):
+    keys = path.split(separator)
+    try:
+        for key in keys:
+            if isinstance(data, dict):
+                data = data[key]
+            elif isinstance(data, list):
+                data = data[int(key)]
+            else:
+                return None
+        return value_type(data)
+    except (KeyError, IndexError, ValueError, TypeError):
+        return None
+
+def get_ecowitt_data(api_key, app_key, mac_address, temp_unitid=1, pressure_unitid=3):
+    result = {
+        'outdoor': {
+            'temperature': None,
+            'feels_like': None,
+            'humidity': None,
+            'app_temp': None,
+            'dew_point': None
+        },
+        'indoor': {
+            'temperature': None,
+            'humidity': None
+        },
+        'solar_and_uvi': {
+            'solar': None,
+            'uvi': None
+        }, 
+        'rainfall': {
+            'rain_rate': None,
+            'daily': None,
+            'event': None,
+            'hourly': None,
+            'weekly': None,
+            'monthly': None,
+            'yearly': None
+        },        
+        'wind': {
+            'wind_speed': None,
+            'wind_gust': None,
+            'wind_direction': None
+        },
+        'pressure': {
+            'relative': None,
+            'absolute': None
+        },
+        'lightning': {
+            'distance': None,
+            'count': None
+        }
+    }  
+    if all(var.strip() for var in (app_key, api_key, mac_address)):
+        ECOWITT_API_URL = f'https://api.ecowitt.net/api/v3/device/real_time?application_key={app_key}&api_key={api_key}&mac={mac_address}&call_back=all&temp_unitid={temp_unitid}&pressure_unitid={pressure_unitid}'
+        
+        log(4,f"INFO: Reading Ecowitt API from - {ECOWITT_API_URL}")
+        try:
+            response = requests.get(ECOWITT_API_URL)
+            if response.status_code == 200:
+                raw_data = response.json()
+
+                result['outdoor']['temperature'] = _get_nested_value(raw_data, 'data.outdoor.temperature.value', float)
+                result['outdoor']['feels_like'] = _get_nested_value(raw_data, 'data.outdoor.feels_like.value', float)
+                result['outdoor']['humidity']  = _get_nested_value(raw_data, 'data.outdoor.humidity.value', float)
+                result['outdoor']['app_temp']  = _get_nested_value(raw_data, 'data.outdoor.app_temp.value', float)
+                result['outdoor']['dew_point']  = _get_nested_value(raw_data, 'data.outdoor.dew_point.value', float)
+
+                result['indoor']['temperature']  = _get_nested_value(raw_data, 'data.indoor.temperature.value', float)
+                result['indoor']['humidity']  = _get_nested_value(raw_data, 'data.indoor.humidity.value', float)
+
+                result['solar_and_uvi']['solar']  = _get_nested_value(raw_data, 'data.solar_and_uvi.solar.value', float)
+                result['solar_and_uvi']['uvi']  = _get_nested_value(raw_data, 'data.solar_and_uvi.uvi.value', float)
+
+                result['rainfall']['rain_rate']  = _get_nested_value(raw_data, 'data.rainfall.rain_rate.value', float)
+                result['rainfall']['daily']  = _get_nested_value(raw_data, 'data.rainfall.daily.value', float)
+                result['rainfall']['event']  = _get_nested_value(raw_data, 'data.rainfall.event.value', float)
+                result['rainfall']['hourly']  = _get_nested_value(raw_data, 'data.rainfall.hourly.value', float)
+                result['rainfall']['weekly']  = _get_nested_value(raw_data, 'data.rainfall.weekly.value', float)
+                result['rainfall']['monthly']  = _get_nested_value(raw_data, 'data.rainfall.monthly.value', float)
+                result['rainfall']['yearly']  = _get_nested_value(raw_data, 'data.rainfall.yearly.value', float)
+
+                result['wind']['wind_speed']  = _get_nested_value(raw_data, 'data.wind.wind_speed.value', float)
+                result['wind']['wind_gust']  = _get_nested_value(raw_data, 'data.wind.wind_gust.value', float)
+                result['wind']['wind_direction']  = _get_nested_value(raw_data, 'data.wind.wind_direction.value', int)
+
+                result['pressure']['relative']  = _get_nested_value(raw_data, 'data.pressure.relative.value', float)
+                result['pressure']['absolute']  = _get_nested_value(raw_data, 'data.pressure.absolute.value', float)
+
+                result['lightning']['distance']  = _get_nested_value(raw_data, 'data.lightning.distance.value', float)
+                result['lightning']['count']  = _get_nested_value(raw_data, 'data.lightning.count.value', int)                
+
+                log(1, f'INFO: Data read from Ecowitt API')
+            else:
+                result = f'Got error from the Ecowitt API. Response code {response.status_code}'
+                log(0,f'ERROR: {result}')
+        except Exception as e:
+            eType, eObject, eTraceback = sys.exc_info()
+            result = f'ERROR: Failed to read data from Ecowitt {eTraceback.tb_lineno} - {e}'
+            log(0, result)
+    else:
+        result = 'Missing Ecowitt Application Key, API Key or MAC Address'
+        log(0, f'ERROR: {result}')    
+    
+    return result
+
+def get_ecowitt_local_data(address, password=None):
+    '''
+    Temp 0 - C, 1 - F
+    Pressure 0 - hPA, 1 - inHg, 2 - mmHg
+    Wind 0 - m/s, 1 - km/h, 2 - mph, 3 - knots, 5 - Beaufort
+    Rain 0 - mm, 1 - in
+    Irradiance 0 - Klux, 1 - W/m2, 2 - Kfc
+    Capacity 0 - L, 1 - m3, 2 - Gal
+    '''    
+
+    result = {
+        'outdoor': {
+            'temperature': None,
+            'feels_like': None,
+            'humidity': None,
+            'app_temp': None,
+            'dew_point': None
+        },
+        'indoor': {
+            'temperature': None,
+            'humidity': None
+        },
+        'solar_and_uvi': {
+            'solar': None,
+            'uvi': None
+        }, 
+        'rainfall': {
+            'rain_rate': None,
+            'daily': None,
+            'event': None,
+            'hourly': None,
+            'weekly': None,
+            'monthly': None,
+            'yearly': None
+        },        
+        'wind': {
+            'wind_speed': None,
+            'wind_gust': None,
+            'wind_direction': None
+        },
+        'pressure': {
+            'relative': None,
+            'absolute': None
+        },
+        'lightning': {
+            'distance': None,
+            'count': None
+        }
+    } 
+    
+    def parse_val(val, as_type=float, unit=None):
+        """
+        Extract numeric part from a value string and optionally convert °F to °C.
+        """
+        if val is None:
+            return None
+        try:
+            num_str = str(val).strip().split()[0].strip('%')
+            value = as_type(num_str)
+            if unit:
+                unit = unit.lower()
+                if unit in ['f', '°f']:
+                    value = round((value - 32) * 5 / 9, 2)
+            return value
+        except (ValueError, TypeError):
+            return None
+
+    def get_val_and_unit(data_list, target_id):
+        for item in data_list:
+            if item.get("id") == target_id:
+                return item.get("val"), item.get("unit", None)
+        return None, None
+        
+    LIVE_URL = f'{address}/get_livedata_info?'
+
+    try:
+        response = requests.get(LIVE_URL)
+        if response.status_code == 200:
+            live_data = response.json()
+            
+            common = live_data.get("common_list", [])
+            val, unit = get_val_and_unit(common, "0x02")
+            result['outdoor']['temperature'] = parse_val(val, float, unit)
+
+            val, unit = get_val_and_unit(common, "0x07")
+            result['outdoor']['humidity'] = parse_val(val, int, unit)
+
+            val, unit = get_val_and_unit(common, "3")
+            result['outdoor']['feels_like'] = parse_val(val, float, unit)
+
+            val, unit = get_val_and_unit(common, "0x03")
+            result['outdoor']['dew_point'] = parse_val(val, float, unit)
+
+
+            val, unit = get_val_and_unit(common, "0x0B")
+            result['wind']['wind_speed'] = parse_val(val, float, unit)
+
+            val, unit = get_val_and_unit(common, "0x0C")
+            result['wind']['wind_gust'] = parse_val(val, float, unit)
+
+            val, unit = get_val_and_unit(common, "0x0A")
+            result['wind']['wind_direction'] = parse_val(val, int, unit)
+            
+            val, unit = get_val_and_unit(common, "0x15")
+            result['solar_and_uvi']['solar'] = parse_val(val, float, unit)
+
+            val, unit = get_val_and_unit(common, "0x17")
+            result['solar_and_uvi']['uvi'] = parse_val(val, int, unit)
+
+            # --- Rain ---
+            rain = live_data.get("rain", [])
+            for rid, key in {
+                "0x0D": "event",
+                "0x0E": "rain_rate",
+                "0x10": "hourly",
+                "0x11": "daily",
+                "0x12": "weekly",
+                "0x13": "yearly"
+            }.items():
+                val, unit = get_val_and_unit(rain, rid)
+                result['rainfall'][key] = parse_val(val, float, unit)
+
+            # --- WH25 Indoor Sensor ---
+            wh25 = live_data.get("wh25", [{}])[0]
+            result['indoor']['temperature'] = parse_val(wh25.get("intemp"), float, wh25.get("unit"))
+            result['indoor']['humidity'] = parse_val(wh25.get("inhumi"), int)
+
+            result['pressure']['absolute'] = parse_val(wh25.get("abs"), float)
+            result['pressure']['relative'] = parse_val(wh25.get("rel"), float)
+
+            # --- Lightning ---
+            lightning = live_data.get("lightning", [{}])[0]
+            result['lightning']['distance'] = parse_val(lightning.get("distance"), float)
+            result['lightning']['count'] = parse_val(lightning.get("count"), int)
+
+    except Exception as e:
+        eType, eObject, eTraceback = sys.exc_info()
+        result = f'ERROR: Failed to read live data from the local Ecowitt gateway {eTraceback.tb_lineno} - {e}'
+        log(0, result)
+
+    return result
+
+def get_hass_sensor_value(ha_url, ha_ltt, ha_sensor):
+    result = None
+    
+    headers = {
+        'Authorization': f'Bearer {ha_ltt}',
+        'Content-Type': 'application/json',
+    }
+
+    try:
+        response = requests.get(f'{ha_url}/api/states/{ha_sensor}', headers=headers)
+
+        if response.status_code == 200:
+            result = float(response.json().get('state'))
+        else:
+            if response.status_code == 404:
+                log(0, f'ERROR: Unable to read {ha_sensor} from {ha_url}. homeassistant reports the sensor does not exist')
+            else:
+                if response.status_code == 401:
+                    log(0, f'ERROR: Unable to read {ha_sensor} from {ha_url}. homeassistant reports the token is unauthorised')
+                else:            
+                    log(0, f'ERROR: Unable to read {ha_sensor} from {ha_url}. Error code {response.status_code}')
+                
+    except Exception as e:
+        eType, eObject, eTraceback = sys.exc_info()
+        error = f'ERROR: Failed to read data from Homeassistant {eTraceback.tb_lineno} - {e}'
+        log(0, error)
+        result = None
+
+    return result
+
+def create_device(import_name: str, class_name: str, bus_number: int, i2c_address: str = ""):
+    bus_number = int(bus_number) 
+        
+    # Define SCL/SDA pins for each bus
+    I2C_BUS_PINS = {
+        1: (board.SCL, board.SDA),
+        3: (board.D5, board.D4),
+        4: (board.D9, board.D8),
+        5: (board.D13, board.D12),
+        6: (board.D23, board.D22)
+    }
+
+    # Dynamically import the module and get the class
+    try:
+        module = importlib.import_module(import_name)
+        cls = getattr(module, class_name)
+    except (ImportError, AttributeError) as e:
+        raise ImportError(f"Could not import '{class_name}' from '{import_name}': {e}")
+
+    try:
+        scl, sda = I2C_BUS_PINS[bus_number]
+    except KeyError:
+        raise ValueError(f"No pin mapping defined for I2C bus {bus_number}")
+
+    i2c = busio.I2C(scl, sda)
+
+    # Instantiate device
+    if i2c_address:
+        return cls(i2c, int(i2c_address, 0))
+    else:
+        return cls(i2c)

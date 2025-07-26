@@ -1,5 +1,18 @@
-import sys
+#!/usr/bin/python3
+
 import os
+import sys
+import subprocess
+
+# Ensure the script is running in the correct Python environment
+allsky_home = os.environ['ALLSKY_HOME']
+here = os.path.dirname(os.path.abspath(__file__))
+venv_dir = os.path.join(allsky_home, 'venv')
+venv_python = os.path.join(venv_dir, 'bin', 'python3')
+if sys.executable != venv_python:
+    os.execv(venv_python, [venv_python] + sys.argv)
+
+
 import json
 import argparse
 import importlib
@@ -39,20 +52,27 @@ Get the locations of the modules and scripts and add them to the path.
 '''
 # Can't use log() or getEnvironmentVariable() yet.
 try:
-    allSkyModules = os.environ["ALLSKY_MODULE_LOCATION"]
+    allsky_my_files_folder = os.environ["ALLSKY_MYFILES_DIR"]
+except KeyError:
+    print("ERROR: $ALLSKY_MYFILES_DIR not found - Aborting.")
+    sys.exit(1)
+
+try:
+    all_sky_modules = os.environ["ALLSKY_MODULE_LOCATION"]
 except KeyError:
     print("ERROR: $ALLSKY_MODULE_LOCATION not found - Aborting.")
     sys.exit(1)
-allSkyModulesLocation = os.path.join(allSkyModules, "modules")
+allsky_modules_location = os.path.join(all_sky_modules, "modules")
 
 try:
-    allSkyScripts = os.environ["ALLSKY_SCRIPTS"]
+    allsky_scripts = os.environ["ALLSKY_SCRIPTS"]
 except KeyError:
     print("ERROR: $ALLSKY_SCRIPTS not found - Aborting")
     sys.exit(1)
-allSkyModulesPath = os.path.join(allSkyScripts, "modules")
+allsky_modules_path = os.path.join(allsky_scripts, "modules")
+allsky_my_files_folder = os.path.join(allsky_my_files_folder, "modules")
 
-valid_module_paths = [allSkyModulesLocation, allSkyModulesPath]
+valid_module_paths = [allsky_my_files_folder, allsky_modules_location, allsky_modules_path]
 
 for vmp in valid_module_paths:
     sys.path.append(os.path.abspath(vmp))
@@ -64,6 +84,7 @@ if __name__ == "__main__":
     parser.add_argument("-e", "--event",  type=str, help="The event we are running modules for (defaults to postcapture).", default="postcapture", choices=["postcapture","daynight", "nightday", "periodic"])
     parser.add_argument("-f", "--flowtimerframes",  type=int, help="Number of frames to capture for the flow timing averages.", default=10)
     parser.add_argument("-c", "--cleartimings", action="store_true", help="Clear any flow average timing data.")
+    parser.add_argument("-t", "--test", action="store_true", help="Run the test module flow")
     shared.args = parser.parse_args()
     #ignoreWatchdogMsg = ""
 
@@ -78,16 +99,22 @@ if __name__ == "__main__":
             shutil.rmtree(flowTimingsFolder)
         sys.exit(0)
 
-    imagesRoot = shared.getEnvironmentVariable("ALLSKY_IMAGES", fatal=True);
-
+    imagesRoot = shared.getEnvironmentVariable("ALLSKY_IMAGES", fatal=True)
+ 
+    testMode = False
+    if shared.args.test:
+        testMode = True
+    else:
+        shared.write_env_to_db()
+  
     if (shared.args.event == "postcapture"):
         try:
             shared.LOGLEVEL = int(os.environ["ALLSKY_DEBUG_LEVEL"])
         except KeyError:
             shared.LOGLEVEL = 0
 
-        shared.CURRENTIMAGEPATH = shared.getEnvironmentVariable("CURRENT_IMAGE", fatal=True);
-        shared.args.tod = shared.getEnvironmentVariable("DAY_OR_NIGHT", fatal=True).lower();
+        shared.CURRENTIMAGEPATH = shared.getEnvironmentVariable("CURRENT_IMAGE", fatal=True)
+        shared.args.tod = shared.getEnvironmentVariable("DAY_OR_NIGHT", fatal=True).lower()
 
         try:
             with open(shared.SETTINGS_FILE, 'r') as settingsFile:
@@ -95,7 +122,7 @@ if __name__ == "__main__":
         except (FileNotFoundError, KeyError):
             shared.log(0, f"ERROR: Unable to read {shared.SETTINGS_FILE} - Aborting", exitCode=1)
 
-        shared.fullFilename = shared.getEnvironmentVariable("FULL_FILENAME", fatal=True);
+        shared.fullFilename = shared.getEnvironmentVariable("FULL_FILENAME", fatal=True)
         shared.createThumbnails = bool(shared.getSetting("imagecreatethumbnails"))
         shared.thumbnailWidth = int(shared.getSetting("thumbnailsizex"))
         shared.thumbnailHeight = int(shared.getSetting("thumbnailsizey"))
@@ -136,7 +163,8 @@ if __name__ == "__main__":
         pass
         #watchdog = False
 
-    shared.log(4, f"INFO: Loading {shared.SETTINGS_FILE}")
+    if not testMode:
+        shared.log(4, f"INFO: Loading {shared.SETTINGS_FILE}")
     try:
         with open(shared.SETTINGS_FILE,'r') as config:
             try:
@@ -147,9 +175,14 @@ if __name__ == "__main__":
         shared.log(0, f"ERROR: Failed to open {shared.SETTINGS_FILE}", exitCode=1)
 
     flowName = shared.args.tod if shared.args.event == "postcapture" else shared.args.event
-    shared.log(4, f"INFO: ===== Running {flowName} flow...")
-    moduleConfig = f"{shared.args.ALLSKY_MODULES}/postprocessing_{flowName}.json"
-    moduleDebugFile = f"{shared.args.ALLSKY_MODULES}/postprocessing_{flowName}-debug.json"
+    if not testMode:
+        shared.log(4, f"INFO: ===== Running {flowName} flow...")
+    if testMode:
+        moduleConfig = f"{shared.args.ALLSKY_MODULES}/test_flow.json"
+        moduleDebugFile = f"{shared.args.ALLSKY_MODULES}/test_flow-debug.json"
+    else:
+        moduleConfig = f"{shared.args.ALLSKY_MODULES}/postprocessing_{flowName}.json"
+        moduleDebugFile = f"{shared.args.ALLSKY_MODULES}/postprocessing_{flowName}-debug.json"
     try:
         with open(moduleConfig) as flow_file:
             if (os.stat(moduleConfig).st_size == 0):
@@ -189,7 +222,8 @@ if __name__ == "__main__":
             try:
                 moduleName = fileName.replace('.py','')
                 method = moduleName.replace('allsky_','')
-                shared.log(4, f"INFO: --------------- Running Module {moduleName} ---------------")
+                if not testMode:
+                    shared.log(4, f"INFO: --------------- Running Module {moduleName} ---------------")
                 _temp = importlib.import_module(moduleName)
                 globals()[method] = getattr(_temp, method)
             except Exception as e:
@@ -205,6 +239,7 @@ if __name__ == "__main__":
             if 'arguments' in shared.flow[shared.step]['metadata']:
                 arguments = shared.flow[shared.step]['metadata']['arguments']
 
+            arguments['ALLSKYTESTMODE'] = testMode                
             if shared.LOGLEVEL == 4:
                 result = globals()[method](arguments, shared.args.event)
             else:
@@ -217,37 +252,14 @@ if __name__ == "__main__":
             endTime = datetime.now()
             elapsedTime = (((endTime - startTime).total_seconds()) * 1000) / 1000
 
-            #ignoreWatchdog = False
-            #if shared.step in ['loadimage','saveimage']:
-            #     ignoreWatchdog = True
-            #else:
-            #    if 'ignorewatchdog' in shared.flow[shared.step]['metadata']:
-            #        if shared.flow[shared.step]['metadata']['ignorewatchdog']:
-            #            ignoreWatchdog = True
-
             results[shared.step] = {}
-            #if not ignoreWatchdog:
-            #    if watchdog:
-            #        if elapsedTime > timeout:
-            #            shared.log(0, f'ERROR: Module {fileName} will be disabled, it took {elapsedTime:.2f} seconds; max allowed is {timeout} seconds')
-            #            results[shared.step]["disable"] = True
-            #        else:
-            #            shared.log(4, f'INFO: Module {fileName} ran ok in {elapsedTime:.2f} seconds')
-            #    else:
-            #        shared.log(4, f'INFO: Module {fileName} ran ok in {elapsedTime:.2f} seconds')
-            #else:
-            #    ignoreWatchdogMsg = ignoreWatchdogMsg + f"  {shared.step}"
-
             results[shared.step]["lastexecutiontime"] = str(elapsedTime)
-
             if result == shared.ABORT:
                 break
 
             results[shared.step]["lastexecutionresult"] = result
-
-    #if ignoreWatchdogMsg != "":
-    #    shared.log(4, f'INFO: Ignored watchdog for: {ignoreWatchdogMsg}')
-    shared.log(4, f"INFO: ===== {flowName} flow complete.")
+    if not testMode:
+        shared.log(4, f"INFO: ===== {flowName} flow complete.")
 
     try:
         debugData = {}

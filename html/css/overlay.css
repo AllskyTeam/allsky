@@ -376,3 +376,28 @@ div.dtsp-searchPane div.dtsp-topRow {
     font-size: 1.5vw;
     margin-top: 10px;
 }
+
+/* Jquery UI overrides */
+.ui-widget-header {
+    border: none;
+    background: none;
+    color: #fff;
+    font-weight: bold;
+}
+
+.ui-dialog {
+    border-radius: 10px !important;
+}
+
+.ui-widget.ui-widget-content {
+    border: none;
+}
+
+.pgCell {
+    border: dotted 1px #444;
+    padding: 5px;
+}
+
+.dt-paging {
+    margin-top: 5px !important;
+}

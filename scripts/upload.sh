@@ -367,7 +367,7 @@ else # sftp/ftp/ftps
 		# lftp doesn't open the connection until the first command is executed,
 		# and if it fails the error message isn't always clear.
 		# So, do a simple command first so we get a better error message.
-		echo "cd . || exit ${EXIT_ERROR_STOP}"
+		echo "cd . || exit 99"
 
 		if [[ ${DEBUG} == "true" ]]; then
 			echo "debug 0"

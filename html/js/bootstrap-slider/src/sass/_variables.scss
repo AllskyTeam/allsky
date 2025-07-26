@@ -1,0 +1,38 @@
+$slider-line-height: 20px !default;
+$slider-border-radius: 4px !default;
+$slider-horizontal-width: 210px !default;
+$slider-vertical-height: 210px !default;
+
+// Primary colors
+$slider-primary: null !default;
+@if variable-exists(brand-primary) {
+  $slider-primary: $brand-primary !default;
+} @else {
+  $slider-primary: #0480BE !default;
+}
+
+$slider-primary-top: $slider-primary !default;
+$slider-primary-bottom: darken($slider-primary, 5%) !default;
+$slider-secondary-top: saturate(lighten($slider-primary, 28%), 20%) !default;
+$slider-secondary-bottom: saturate(lighten($slider-primary, 23%), 2%) !default;
+
+// grays for slider channel and disabled states
+$slider-gray-1: #BEBEBE !default;
+$slider-gray-2: #DFDFDF !default;
+$slider-gray-3: #E5E5E5 !default;
+$slider-gray-4: #E9E9E9 !default;
+$slider-gray-5: #F5F5F5 !default;
+$slider-gray-6: #F9F9F9 !default;
+
+// unicode color for demo page
+$slider-unicode-color: #726204 !default;
+
+// components
+$slider-selection-background-color: mix($slider-gray-6, $slider-gray-5) !default;
+$slider-selection-tick-background-color: mix($slider-secondary-top, $slider-secondary-bottom) !default;
+$slider-tick-background-color: mix($slider-gray-5, $slider-gray-6) !default;
+$slider-tick-in-selection-background-color: mix($slider-secondary-top, $slider-secondary-bottom) !default;
+$slider-handle-background-color: mix($slider-primary-top, $slider-primary-bottom) !default;
+$slider-handle-background-color-disabled: mix($slider-gray-2, $slider-gray-1) !default;
+$slider-track-background-color: mix($slider-gray-5, $slider-gray-6) !default;
+$slider-track-background-color-disabled: mix($slider-gray-3, $slider-gray-4) !default;

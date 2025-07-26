@@ -73,7 +73,7 @@ class OETEXTFIELD extends OEFIELD {
       fill: this.fieldData.fontcolour,
       rotation:  this.fieldData.rotate,
       opacity: this.fieldData.opacity,
-      draggable: true,
+      draggable: false,
       fill: this.fieldData.fill,
       name: 'field',
       strokeWidth: this.fieldData.strokewidth,
@@ -82,6 +82,10 @@ class OETEXTFIELD extends OEFIELD {
     });    
     let size = this.shape.measureSize(this.fieldData.label);  
     this.shape.offset({x: size.width/2, y: size.height/2});    
+  }
+
+  get colour() {
+    return this.fieldData.fill;
   }
 
   get empty() {
@@ -109,17 +113,32 @@ class OETEXTFIELD extends OEFIELD {
     this.dirty = true;
   }
 
+  get type() {
+    let type = '';
+    if (this.fieldData.type !== undefined) {
+      type = this.fieldData.type
+    } else {
+      const fields = this.extractPlaceholders(this.getLabel())
+      const configManager = window.oedi.get('config');
+      if (fields.length == 1) {
+        let variableDefinition = configManager.findFieldByName('${' + fields[0] + '}')
+        if (variableDefinition !== null) {
+          type = variableDefinition.type;
+        }
+      }
+    }
+    return type;
+  }
+  set type(type) {
+    this.fieldData.type = type;  
+    this.dirty = true;
+  }
+
   getLabel() {
     return this.shape.text();
   }
   setLabel(label) {
-
-    let currentXoffset = this.shape.offsetX();
-    let currentX = this.shape.x();
-    let currentY = this.shape.y();
     this.shape.text(label);
-    let size = this.shape.measureSize(label);  
-    //this.shape.offset({x: size.width/2, y: size.height/2});
     this.dirty = true;
   }
 

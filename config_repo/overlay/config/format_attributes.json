@@ -1,0 +1,53 @@
+{
+    "dp0": {
+        "description": "Set number an integer",
+        "example": "52",
+        "type": {
+            "field": "boolean"
+        }        
+    },    
+    "dp": {
+        "description": "Set number of decimal places",
+        "example": "52.3",
+        "input": {
+            "field": "spinner",
+            "min": 0,
+            "max": 10
+        }
+    },
+    "deg": {
+        "description": "Add degrees symbol",
+        "example": "52°",
+        "type": {
+            "field": "boolean"
+        }        
+    },
+    "per": {
+        "description": "Add percentage symbol",
+        "example": "52%",
+        "type": {
+            "field": "boolean"
+        }      
+    },    
+    "locale": {
+        "description": "Use locale formatting",
+        "example": "1,234.56",
+        "type": {
+            "field": "boolean"
+        }  
+    },
+    "allsky": {
+        "description": "Use Allsky settings units",
+        "example": "",
+        "type": {
+            "field": "boolean"
+        }  
+    },
+    "unit": {
+        "description": "Add Allsky settings units symbol",
+        "example": "",
+        "type": {
+            "field": "boolean"
+        }  
+    }      
+}

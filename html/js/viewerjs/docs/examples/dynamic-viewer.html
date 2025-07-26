@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Viewer.js</title>
+  <link rel="stylesheet" href="https://unpkg.com/bootstrap@4/dist/css/bootstrap.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="../css/viewer.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Show a viewer dynamically on click a button</h1>
+    <button type="button" class="btn btn-primary" id="button">
+      Launch the demo
+    </button>
+  </div>
+
+  <script src="https://unpkg.com/jquery@3/dist/jquery.slim.min.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/bootstrap@4/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+  <script src="../js/viewer.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      document.getElementById('button').addEventListener('click', function () {
+        var image = new Image();
+
+        image.src = '../images/tibet-1.jpg';
+
+        var viewer = new Viewer(image, {
+          hidden: function () {
+            viewer.destroy();
+          },
+        });
+
+        // image.click();
+        viewer.show();
+      });
+    });
+  </script>
+</body>
+</html>

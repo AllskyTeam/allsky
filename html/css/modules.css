@@ -12,6 +12,14 @@
     padding: 6px !important;
 }
 
+.module-enable {
+	display: flex;
+}
+
+.module-enable-text {
+	margin-right: 10px;
+}
+
 @media (min-width: 1280px) {
   .list-group-item {
     padding: 10px !important;
@@ -55,18 +63,18 @@
 }
 .dark .list-group-item {
     background: #444 !important;
-    border: 1px solid #666 !important;
+    border: None !important;
     margin-bottom: 10px !important;
 }
 .list-group .panel {
     margin: 0px 0px !important;
 }
 .list-group .locked .panel-heading {
-    background-color: #df0000 !important;
+    background-color: #777 !important;
     color: white !important;
 }
 .list-group .locked .panel-body {
-    background-color: #bb0000 !important;
+    background-color: #aaa !important;
     color: white !important;
 }
 .dark .list-group .locked .panel-heading {
@@ -185,4 +193,87 @@
 
 .module-error-dialog > .modal-dialog {
   width:50% !important;
+}
+
+.module-test-results {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+#module-editor-settings-form .alert {
+  margin-bottom: 10px;
+}
+
+.warning {
+	color: yellow;
+	margin-right: 1em;
+	display: none;
+}
+
+.noborder {
+	border: none !important;
+	background: transparent !important;
+}
+
+#module-editor-settings-form {
+	user-select: none;
+}
+
+.sp-replacer {
+	height: 2.5rem !important;
+    width: 4rem !important;
+}
+
+.dark .select2-container--default .select2-selection--single {
+	background: #171717 !important;
+}
+
+.dark .select2-container--default .select2-selection--single .select2-selection__rendered {
+	color: #aaaaaa !important;	
+}
+
+.dark .select2-container--default .select2-selection--single {
+	border-color: #555555 !important;
+	border-radius: 0px !important;
+}
+
+.dark .select2-dropdown {
+	background: #171717 !important;
+	color: #aaaaaa !important;
+}
+
+.dark .well {
+	background-color: #444 !important;
+	border: 1px solid #777 !important;
+}
+
+.modal-footer.flex-footer {
+  display: flex;
+  align-items: center;
+}
+
+.dt-paging {
+    margin-top: 5px !important;
+}
+
+.oe-table-header {
+    margin-bottom: 1em !important;
+}
+
+.dt-column-title {
+    font-size: 1.3em !important;
+}
+
+blockquote {
+  border-left: 4px solid #007BFF;
+  padding-left: 15px;
+  margin: 20px 0;
+  background: none;
+  font-style: italic;
+}
+
+blockquote footer {
+  font-size: 90%;
+  color: #777;
+  margin-top: 10px;
 }

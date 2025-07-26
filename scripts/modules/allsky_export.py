@@ -6,115 +6,83 @@ https://github.com/AllskyTeam/allsky
 This module will export all of the AllSky variables to a json file. 
 The default json path is ${ALLSKY_TMP}/allskydata.json but this can be changed in the module settings
 """
-import allsky_shared as s
+import allsky_shared as allsky_shared
+from allsky_base import ALLSKYMODULEBASE
+from allskyvariables import allskyvariables
 import os 
 import json
 import re
 
-metaData = {
-    "name": "AllSKY Export",
-    "description": "Exports AllSKY data to json",
-    "module": "allsky_export",       
-    "events": [
-        "day",
-        "night"
-    ],
-    "arguments":{
-        "filelocation": "${ALLSKY_TMP}/allskydata.json",
-        "extradata": "CAMERA_TYPE,DAY_OR_NIGHT,CURRENT_IMAGE,FULL_FILENAME,ALLSKY_VERSION"
-    },
-    "argumentdetails": {
-        "filelocation" : {
-            "required": "true",
-            "description": "File Location",
-            "help": "The location to save the json date"
-        },
-        "extradata" : {
-            "required": "false",
-            "description": "Extra data to export",
-            "help": "Comma seperated list of additional variables to export to json"
-        }        
-    }          
-}
+class ALLSKYEXPORT(ALLSKYMODULEBASE):
 
-def getSavePath(savePath):
-    """ Returns path to save the generated json file
-    This function will replace any placeholder sin the filepath and then
-    check that the file is writeable. If the file is not writeable then
-    Non will be returned
+	meta_data = {
+		"name": "AllSKY Export",
+		"description": "Exports AllSKY data to json",
+		"module": "allsky_export",
+		"testable": "true",
+		"centersettings": "false",
+    	"group": "Data Export",
+		"events": [
+			"day",
+			"night"
+		],
+		"arguments":{
+			"filelocation": "${ALLSKY_TMP}/allskydata.json",
+			"extradata": "CAMERA_TYPE,DAY_OR_NIGHT,CURRENT_IMAGE,FULL_FILENAME,ALLSKY_VERSION"
+		},
+		"argumentdetails": {
+			"filelocation" : {
+				"required": "true",
+				"description": "File Location",
+				"help": "The location to save the json date"
+			},
+			"extradata" : {
+				"required": "false",
+				"description": "Extra data to export",
+				"help": "Comma seperated list of additional variables to export to json"
+			}        
+		}          
+	}
 
-    Args:
-        savePath (string): The file path, may contain ${} placeholders
+	def run(self):
+		""" Generates the json file and saves it 
+		"""    
+		export_data = {}
 
-    Returns:
-        String/None: The file path to save or None 
-    """
-    regex =  r"\$\{.*?\}"
-    matches = re.finditer(regex, savePath, re.MULTILINE | re.IGNORECASE)
+		save_path_raw = self.get_param('filelocation', '', str)
+		extra_vars = self.get_param('extradata', '', str)
+		save_path = allsky_shared.convertPath(save_path_raw)
 
-    for matchNum, match in enumerate(matches, start=1):
-        variable = match.group()
-        envVar = variable.replace("${", "")
-        envVar = envVar.replace("}", "")
+		if save_path is not None:
+			variables = allskyvariables.get_variables(True, '', True)
+			if len(extra_vars) > 0 :
+				extra_entries = extra_vars.split(',')
+				for variable_name in extra_entries:
+					if variable_name.startswith('AS_'):
+						variable_name = variable_name[3:]
 
-        envVarValue = s.getEnvironmentVariable(envVar)
-        if envVarValue is not None:
-            savePath = savePath.replace(variable, envVarValue)
-        else:
-            s.log(0, "ERROR: Cannot locate environment variable {0} Allsky data will NOT be exported".format(envVar))
-            savePath = None
-            break
+					if variable_name in variables:
+						export_data[variable_name] = variables[variable_name]['value']
+					else:
+						export_data[variable_name] = allsky_shared.getEnvironmentVariable(variable_name)
+      			
+				with open(save_path, 'w', encoding='utf-8') as out_file:
+					json.dump(export_data, out_file, indent=4)
+     
+				result = f'Data exported to {save_path}'
+				allsky_shared.log(4, f'INFO: {result}')
+			else:
+				result = f'No extra variables defined for export'
+				allsky_shared.log(0, f'ERROR: {result}')
+		else:
+			result = f'Invalid save path {save_path_raw}'
+			allsky_shared.log(0, f'ERROR: {result}')
+          
+		return result
 
-    try:
-        with open(savePath, "w") as outfile:
-            pass
-    except Exception:
-        okToSave = False
-        s.log(0, "ERROR: path is not writeable {0} so Allsky data will NOT be exported".format(savePath))
-        savePath = None
-
-    return savePath 
 
 def export(params, event):
-    """ Generates the json file and saves it 
+	allsky_export = ALLSKYEXPORT(params, event)
+	result = allsky_export.run()
 
-    Args:
-        params (array): Array of params, see meta data for details
-    """    
-    jsonData = {}
-    s.env = {}
-
-    savePath = params["filelocation"]
-    savePath = getSavePath(savePath)
-
-    if savePath is not None:
-        for var in os.environ:
-            if var.startswith("AS_") or var.startswith("ALLSKY_"):
-                jsonData[var] = s.getEnvironmentVariable(var)
-                s.env[var] = jsonData[var]
-
-        onVar = 0
-        if len(params['extradata']) > 0 :
-            extraEntries = params["extradata"].split(",")
-            for envVar in extraEntries:
-                onVar = onVar + 1
-                envVar = envVar.lstrip()
-                envVar = envVar.rstrip()
-                if envVar:
-                    envVarValue = s.getEnvironmentVariable(envVar)
-                    if envVarValue is not None:
-                        jsonData[envVar] = envVarValue
-                        s.env[envVar] = envVarValue
-                    else:
-                        s.log(0, "ERROR: Cannot locate environment variable {0} specified in the extradata".format(envVar))
-                else:
-                    s.log(0, "ERROR: Extra variable {0} is empty! Check commas!".format(onVar))
-        else:
-            s.log(4, "DEBUG: No extra data found")
-
-        with open(savePath, "w") as outfile:
-            json.dump(jsonData, outfile, indent=4)
-
-        s.log(4, "INFO: Allsky data exported to {0}".format(savePath))
-
-        return "Allsky data exported to {0}".format(savePath)
+	return result 

@@ -1,0 +1,44 @@
+.as-variable-list .dtrg-group td{
+	padding: 5px;
+	background: #e0e0e0
+}
+
+.dark .as-variable-list .dtrg-group td{
+	background: #222
+}
+
+.dark .as-variable-has-value {
+	color: green;
+}
+
+.as-variables .toolbar {
+	padding: 5px 0px 5px 0px;
+	background: #e0e0e0;
+}
+
+.dark .as-variables .toolbar {
+	background: #222;
+}
+
+.as-variable-list td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+div.dt-container div.dt-scroll-body {
+	border-bottom: none !important;
+}
+
+table.dataTable .selected {
+	background-color: rgb(0, 136, 204);
+	color: white !important;
+}
+
+table.dataTable .selected .as-variable-has-value {
+	color: white !important;
+}
+
+.dt-scroll-body {
+	overflow-x: hidden !important;
+}

@@ -5,65 +5,80 @@ https://github.com/AllskyTeam/allsky
 
 This module will apply a permenant mask to the captured image
 """
-import allsky_shared as s
-import os
-import cv2
+import allsky_shared as allsky_shared
+from allsky_base import ALLSKYMODULEBASE
+import sys
 
-metaData = {
-    "name": "Mask Image",
-    "description": "Masks an Image",
-    "events": [
-        "day",
-        "night"
-    ],
-    "arguments":{
-        "mask": ""
-    },    
-    "argumentdetails": {
-        "mask" : {
-            "required": "true",
-            "description": "Mask Path",
-            "help": "The name of the image mask",
-            "type": {
-                "fieldtype": "image"
-            }                
-        } 
-    }         
-}
+class ALLSKYMASKIMAGE(ALLSKYMODULEBASE):
 
+	meta_data = {
+		"name": "Mask Image",
+		"description": "Masks an Image",
+		"version": "v1.0.2",
+		"centersettings": "false",
+		"testable": "false",
+		"group": "Image Adjustments",
+		"events": [
+			"day",
+			"night"
+		],
+		"arguments":{
+			"mask": ""
+		},    
+		"argumentdetails": {
+			"mask" : {
+				"required": "true",
+				"description": "Mask Path",
+				"help": "The name of the image mask",
+				"type": {
+					"fieldtype": "image"
+				}                
+			}
+		},
+		"changelog": {
+			"v1.0.0" : [
+				{
+					"author": "Alex Greenland",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": "Initial Release"
+				}
+			],
+			"v1.0.2" : [
+				{
+					"author": "Alex Greenland",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": [
+						"Updates for the new module manager structure"
+					]
+				}
+			]                                                          
+		}        
+	}
+
+	def run(self):
+		try:
+			mask_file_name = self.get_param('mask', '', str, True)
+   
+			if (mask_file_name is not None) and (mask_file_name != ""):    
+				image = allsky_shared.image
+				masked_image = allsky_shared.mask_image(image, mask_file_name)
+				if masked_image is not None:
+					allsky_shared.image = masked_image
+     
+				result = 'Mask applied'
+			else:
+				result = 'No mask defined'
+				allsky_shared.log(0, f'ERROR: {result}')
+
+		except Exception as e:
+			eType, eObject, eTraceback = sys.exc_info()
+			result = f'Module mask image failed on line {eTraceback.tb_lineno} - {e}'
+			allsky_shared.log(0, f'ERROR: {result}')
+           
+		return result
 
 def maskimage(params, event):
-    """ Applies th emask to the captured image
+	allsky_mask_image = ALLSKYMASKIMAGE(params, event)
+	result = allsky_mask_image.run()
 
-    Args:
-        params (array): Array of parameters, see abovge
-    """
-    result = ""
-    mask = params['mask']
-    if (mask is not None) and (mask != ""):
-        maskPath = os.path.join(s.ALLSKY_OVERLAY, "images", mask)
-        maskImage = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
-        if maskImage is not None:
-            maskChannels = maskImage.shape[-1] if maskImage.ndim == 3 else 1
-            imageChannels = s.image.shape[-1] if s.image.ndim == 3 else 1
-            
-            maskHeight = maskImage.shape[0]
-            maskWidth = maskImage.shape[1]
-            imageHeight = s.image.shape[0]
-            imageWidth = s.image.shape[1]
-            
-            if (maskWidth == imageWidth) and (maskHeight == imageHeight):            
-                s.image = cv2.bitwise_and(s.image,s.image,mask = maskImage)
-                result = "Mask {0} applied".format(maskPath)
-                s.log(4, f"INFO: {result}")
-            else:
-                result = f"Mask {mask} is incorrect size: {maskWidth}x{maskHeight}. Main image is {imageWidth}x{imageHeight}."
-                s.log(0, f"ERROR: {result}")
-        else:
-            result = "Mask {0} not found".format(maskPath)
-            s.log(0, f"ERROR: {result}")
-    else:
-        result = "No mask defined"
-        s.log(0, f"ERROR: {result}")
-
-    return result
+	return result

@@ -12,8 +12,8 @@ class OECONFIG {
     #BASEDIR = 'annotater/';
     #dirty = false;
     #overlays = {};
-
     #lastConfig = [];
+    #fonts = [];
 
     constructor() {
     }
@@ -81,7 +81,75 @@ class OECONFIG {
         } catch (error) {
             confirm('A fatal error has occureed loading the application configuration.')
             return false;
-        }            
+        }
+        
+		//TODO: Should this be async?
+        try {
+            let result = $.ajax({
+                type: "GET",
+                url: "includes/moduleutil.php?request=VariableList&showempty=yes",
+                data: "",
+                dataType: 'json',
+                cache: false,
+                //async: false,
+                context: this,
+                success: function (result) {
+                    this.#dataFields = result;
+                }                
+            });
+        } catch (error) {
+            confirm('A fatal error has occureed loading the application configuration.')
+            return false;
+        }
+
+    }
+
+    loadFonts() {
+        try {
+            let result = $.ajax({
+                type: "GET",
+                url: "includes/overlayutil.php?request=FontNames",
+                data: "",
+                dataType: 'json',
+                cache: false,
+                async: false,
+                context: this,
+                success: function (fontData) {
+
+                    this.#fonts = fontData['data'];
+                    let fontList = Array.from(document.fonts);
+                    for (let i in fontList) {
+                        document.fonts.delete(fontList[i]);
+                    }
+
+                    const promises = [];
+                    fontData.data.forEach(font => {
+                        //console.log('url(' + window.oedi.get('BASEDIR') + font.path + ')');
+                        let fontFace = new FontFace(font.name, 'url(' + window.oedi.get('BASEDIR') + font.path + ')');
+                        promises.push(
+                            fontFace.load()
+                        );
+                    });
+
+                    Promise.all(promises)
+                    .then(loadedFonts => {
+                        for (let font in loadedFonts) {
+                            document.fonts.add(loadedFonts[font]);
+                        }
+                        
+                        $(document).trigger('oe-uimanager-fonts-loaded');
+                        //window.oedi.get('uimanager').buildUI();
+                    })
+                    .catch(err => {
+                        console.log(`Font failed to load ${err}`);
+                    });
+
+                }                
+            });
+        } catch (error) {
+            confirm('A fatal error has occureed loading the fonts.')
+            return false;
+        }
     }
 
     loadOverlay(overlay, type) {
@@ -98,32 +166,10 @@ class OECONFIG {
                 context: this,
                 success: function (result) {    
                     this.#config = result;
-  
-                    let fontList = Array.from(document.fonts);
-                    for (let i in fontList) {
-                        document.fonts.delete(fontList[i]);
-                    }
-
-                    const promises = [];
-                    let fonts = this.getValue('fonts', {});
-                    for (let font in fonts) {
-                        let fontData = this.getValue('fonts.' + font, {});
-                        let fontFace = new FontFace(font, 'url(' + window.oedi.get('BASEDIR') + fontData.fontPath + ')');
-                        promises.push(
-                            fontFace.load()
-                        );
-                    }
-
-                    Promise.all(promises).then(function(loadedFonts) {
-                        for (let font in loadedFonts) {
-                            document.fonts.add(loadedFonts[font]);
-                        }
-                        window.oedi.get('uimanager').buildUI();
-                    });
-
                     $(document).trigger('oe-overlay-loaded', {
                         overlay: this.#selectedOverlay
                     });
+                    window.oedi.get('uimanager').buildUI();
                     this.dirty = false;                
                 },
                 error: function(xHR, Status, error) {
@@ -300,12 +346,32 @@ class OECONFIG {
         }
     }
 
+	getTypes(forSelect=false) {
+		let types = [...new Set(Object.values(this.#dataFields).map(item => item.type))];
+
+		if (forSelect) {
+			let result = []
+			result.push({
+				value: '',
+				text: 'None'
+			})
+			for (let type of types) {
+				result.push({
+					value: type,
+					text: type.charAt(0).toUpperCase() + type.slice(1)
+				})
+			}
+			types = result
+		}
+		return types
+	}
+
     findFieldByName(name) {
         let result = null;
 
-        for (let key in this.#dataFields.data) {
-            if (this.#dataFields.data[key].name === name) {
-                result = this.#dataFields.data[key];
+        for (let key in this.#dataFields) {
+            if (this.#dataFields[key].name === name) {
+                result = this.#dataFields[key];
                 break;
             }
         }
@@ -374,20 +440,8 @@ class OECONFIG {
     }
 
     saveConfig() {
-        debugger;
-        /*
-        result =  $.ajax({
-            type: 'POST',
-            url: 'includes/overlayutil.php?request=Config',
-            data: { config: JSON.stringify(this.#config) },
-            async: false,
-            dataType: 'json',
-            cache: false
-        });*/
-    }
-
-    saveConfig1() {
         let fileName = this.#selectedOverlay.name;
+        this.rebuildOverlayFonts();
         $.ajax({
             type: 'POST',
             url: 'includes/overlayutil.php?request=Config',
@@ -397,7 +451,7 @@ class OECONFIG {
             },
             cache: false
         }).done(function() {
-        }).fail(function() {
+        }).fail(function(e) {
 			let msg = "Failed to save the overlay config.";
             msg += " Please check the permissions on the '~/allsky/config/overlay/config/" + fileName + "' file.";
             bootbox.alert(msg);
@@ -475,4 +529,31 @@ class OECONFIG {
         delete currentObject[last]
     }
 
+    getUsedFonts() {
+        let result = [];
+        for (const field of this.#config.fields) {
+            if ('font' in field) {
+                const fontName = field['font'];
+
+                if (!result.includes(fontName)) {
+                    result.push(fontName);
+                }
+            }
+        }
+        return result;
+    }
+
+    rebuildOverlayFonts() {
+        this.setValue('fonts', {});
+        for (const field of this.#config.fields) {
+            if ('font' in field) {
+                const fontName = field['font'];
+                const fontDetails = this.#fonts.find(font => font.name === fontName);
+                if (fontDetails !== undefined) {
+                    const fontPath = fontDetails['path'];
+                    this.setValue(`fonts.${fontName.toLowerCase()}`, {'fontPath' : fontPath});
+                }
+            }
+        }
+    }
 }

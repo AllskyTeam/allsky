@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Floating Dashboard with Countdown</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #allsk-charts-sidebar {
+      width: 250px;
+      background: #f3f3f3;
+      padding: 40px 10px 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      overflow-y: auto;
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 10000;
+      border-radius: 8px;
+      cursor: move;
+    }
+
+    #allsk-charts-sidebar-title {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-weight: bold;
+      font-size: 16px;
+      z-index: 1001;
+    }
+
+    #allsk-charts-main {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      padding: 20px;
+      overflow: auto;
+      background-image:
+        linear-gradient(to right, #eee 1px, transparent 1px),
+        linear-gradient(to bottom, #eee 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    .allsk-charts-chart-menu-item {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+      cursor: grab;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .allsk-charts-dashboard-chart {
+      position: absolute;
+      background: white;
+      border: 1px solid #aaa;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
+
+    .allsk-charts-chart-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+
+    .allsk-charts-resizer {
+      width: 10px;
+      height: 10px;
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      cursor: se-resize;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .allsk-charts-dashboard-chart .allsk-charts-resizer,
+    .allsk-charts-dashboard-chart .allsk-charts-delete-chart,
+    .allsk-charts-dashboard-chart select {
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.3s;
+    }
+
+    .allsk-charts-dashboard-chart:hover .allsk-charts-resizer,
+    .allsk-charts-dashboard-chart:hover .allsk-charts-delete-chart,
+    .allsk-charts-dashboard-chart:hover select {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .allsk-charts-refresh-indicator {
+      pointer-events: none;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div id="allsk-charts-sidebar">
+    <div id="allsk-charts-sidebar-title">📊 Chart Toolbox</div>
+    <div class="allsk-charts-chart-menu-item" data-type="line" draggable="true">
+      <i class="fa-solid fa-chart-line"></i><span class="allsk-charts-chart-label">Line Chart</span>
+    </div>
+    <div class="allsk-charts-chart-menu-item" data-type="bar" draggable="true">
+      <i class="fa-solid fa-chart-bar"></i><span class="allsk-charts-chart-label">Bar Chart</span>
+    </div>
+    <div class="allsk-charts-chart-menu-item" data-type="pie" draggable="true">
+      <i class="fa-solid fa-chart-pie"></i><span class="allsk-charts-chart-label">Pie Chart</span>
+    </div>
+  </div>
+  <div id="allsk-charts-main"></div>
+
+  <script>
+    const chartStorageKey = 'savedCharts';
+    const refreshIntervals = {};
+    const countdownTimers = {};
+    let chartCount = 0;
+
+    function createChartBox(id, type, left, top, width, height) {
+      const $box = $('<div class="allsk-charts-dashboard-chart"></div>').attr({
+        'data-left': left, 'data-top': top, 'data-width': width, 'data-height': height
+      });
+
+      const $container = $(`<div class="allsk-charts-chart-container" id="${id}" data-type="${type}"></div>`);
+      const $resizer = $('<div class="allsk-charts-resizer"></div>');
+      const $deleteBtn = $('<button class="allsk-charts-delete-chart">×</button>').css({
+        position: 'absolute', top: '4px', right: '4px', zIndex: 1001,
+        background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%',
+        cursor: 'pointer', width: '20px', height: '20px', display: 'flex',
+        alignItems: 'center', justifyContent: 'center', fontSize: '14px'
+      }).on('click', () => {
+        clearInterval(refreshIntervals[id]);
+        clearInterval(countdownTimers[id]);
+        $box.remove();
+        saveCharts();
+      });
+
+      const $select = $('<select></select>').css({ position: 'absolute', left: '4px', bottom: '4px', zIndex: 1001 });
+      $select.append('<option value="0">No Refresh</option>');
+      $select.append('<option value="5000">5 sec</option>');
+      $select.append('<option value="10000">10 sec</option>');
+      $select.append('<option value="30000">30 sec</option>');
+      $select.append('<option value="60000">1 min</option>');
+
+      const $indicator = $('<div class="allsk-charts-refresh-indicator">⏳</div>').css({
+        position: 'absolute',
+        bottom: '4px',
+        right: '4px',
+        zIndex: 1001,
+        fontSize: '12px', padding: '2px 6px', background: 'rgba(0,0,0,0.5)', color: '#fff', borderRadius: '4px'
+      });
+
+      $select.on('change', () => {
+        clearInterval(refreshIntervals[id]);
+        clearInterval(countdownTimers[id]);
+        const interval = parseInt($select.val());
+        if (interval > 0) {
+          let countdown = interval / 1000;
+          $indicator.text(countdown + 's').show();
+          refreshIntervals[id] = setInterval(() => {
+            renderChart(id, type);
+            countdown = interval / 1000;
+          }, interval);
+          countdownTimers[id] = setInterval(() => {
+            if (countdown > 0) {
+              countdown--;
+              $indicator.text(countdown + 's');
+            }
+          }, 1000);
+        } else {
+          $indicator.hide();
+        }
+        saveCharts();
+      });
+
+      $box.append($container, $resizer, $deleteBtn, $select, $indicator);
+      makeDraggable($box);
+      makeResizable($box, $resizer);
+      positionChartBox($box[0]);
+      return $box[0];
+    }
+
+    function renderChart(id, type) {
+      const $el = $('#' + id);
+      const box = $el.length ? $el.parent()[0] : null;
+      if (box) positionChartBox(box);
+
+      let chart = echarts.getInstanceByDom($el[0]);
+      if (!chart) chart = echarts.init($el[0]);
+
+      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+      const random = () => Math.round(Math.random() * 200);
+      const option = type === 'line' ? {
+        title: { text: 'Line Chart' },
+        xAxis: { type: 'category', data: days },
+        yAxis: { type: 'value' },
+        series: [{ data: days.map(random), type: 'line' }]
+      } : type === 'bar' ? {
+        title: { text: 'Bar Chart' },
+        xAxis: { type: 'category', data: days },
+        yAxis: { type: 'value' },
+        series: [{ data: days.map(random), type: 'bar' }]
+      } : {
+        title: { text: 'Pie Chart' },
+        series: [{ type: 'pie', radius: '50%', data: ['Search', 'Direct', 'Email'].map(name => ({ name, value: Math.round(Math.random() * 1000) })) }]
+      };
+
+      chart.setOption(option);
+    }
+
+    function saveCharts() {
+      const data = $('.allsk-charts-dashboard-chart').map(function () {
+        const $box = $(this);
+        const $container = $box.find('.allsk-charts-chart-container');
+        const $select = $box.find('select');
+
+        return {
+          chartId: $container.attr('id'),
+          type: $container.data('type'),
+          position: {
+            left: $box.attr('data-left'),
+            top: $box.attr('data-top'),
+            width: $box.attr('data-width'),
+            height: $box.attr('data-height')
+          },
+          interval: $select.val()
+        };
+      }).get();
+
+      localStorage.setItem(chartStorageKey, JSON.stringify(data));
+    }
+
+    function loadCharts() {
+      const data = JSON.parse(localStorage.getItem(chartStorageKey) || '[]');
+      data.forEach(({ chartId, type, position, interval }) => {
+        const $box = $(createChartBox(chartId, type, position.left, position.top, position.width, position.height));
+        $('#allsk-charts-main').append($box);
+        renderChart(chartId, type);
+        $box.find('select').val(interval).trigger('change');
+      });
+      chartCount = data.reduce((max, c) => Math.max(max, parseInt(c.chartId.split('-')[1])), 0);
+    }
+
+    function positionChartBox(box) {
+      if (!box || !box.dataset) return;
+      const rect = $('#allsk-charts-main')[0].getBoundingClientRect();
+      const left = (parseFloat(box.dataset.left) / 100) * rect.width;
+      const top = (parseFloat(box.dataset.top) / 100) * rect.height;
+      const width = (parseFloat(box.dataset.width) / 100) * rect.width;
+      const height = (parseFloat(box.dataset.height) / 100) * rect.height;
+      $(box).css({ left, top, width, height });
+      const container = $(box).find('.allsk-charts-chart-container')[0];
+      if (container) echarts.getInstanceByDom(container)?.resize();
+    }
+
+    function makeDraggable($el) {
+      let isDragging = false, offsetX = 0, offsetY = 0;
+      $el.on('mousedown', function (e) {
+        if ($(e.target).is('select, button') || $(e.target).hasClass('allsk-charts-resizer')) return;
+        isDragging = true;
+        offsetX = e.offsetX;
+        offsetY = e.offsetY;
+      });
+      $(document).on('mousemove', function (e) {
+        if (!isDragging) return;
+        const rect = $('#allsk-charts-main')[0].getBoundingClientRect();
+        const x = ((e.clientX - rect.left - offsetX) / rect.width) * 100;
+        const y = ((e.clientY - rect.top - offsetY) / rect.height) * 100;
+        $el.attr('data-left', x).attr('data-top', y);
+        positionChartBox($el[0]);
+      }).on('mouseup', () => {
+        if (isDragging) saveCharts();
+        isDragging = false;
+      });
+    }
+
+    function makeResizable($box, $handle) {
+      let isResizing = false, startX, startY, startW, startH;
+      $handle.on('mousedown', function (e) {
+        e.preventDefault();
+        isResizing = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        startW = $box.width();
+        startH = $box.height();
+      });
+      $(document).on('mousemove', function (e) {
+        if (!isResizing) return;
+        const rect = $('#allsk-charts-main')[0].getBoundingClientRect();
+        const width = ((startW + (e.clientX - startX)) / rect.width) * 100;
+        const height = ((startH + (e.clientY - startY)) / rect.height) * 100;
+        $box.attr('data-width', width).attr('data-height', height);
+        positionChartBox($box[0]);
+      }).on('mouseup', function () {
+        if (isResizing) saveCharts();
+        isResizing = false;
+      });
+    }
+
+    $(function () {
+      let draggingSidebar = false, offsetX = 0, offsetY = 0;
+      $('#allsk-charts-sidebar').on('mousedown', function (e) {
+        if ($(e.target).closest('.allsk-charts-chart-menu-item').length) return;
+        draggingSidebar = true;
+        offsetX = e.clientX - this.offsetLeft;
+        offsetY = e.clientY - this.offsetTop;
+      });
+      $(document).on('mousemove', function (e) {
+        if (!draggingSidebar) return;
+        $('#allsk-charts-sidebar').css({ left: `${e.clientX - offsetX}px`, top: `${e.clientY - offsetY}px` });
+      }).on('mouseup', () => draggingSidebar = false);
+
+      $('.allsk-charts-chart-menu-item').attr('draggable', true).on('dragstart', function (e) {
+        e.originalEvent.dataTransfer.setData('type', $(this).data('type'));
+      });
+
+      $('#allsk-charts-main').on('dragover', e => e.preventDefault());
+      $('#allsk-charts-main').on('drop', function (e) {
+        e.preventDefault();
+        const type = e.originalEvent.dataTransfer.getData('type');
+        if (!type) return;
+        const rect = this.getBoundingClientRect();
+        const left = ((e.originalEvent.clientX - rect.left) / rect.width) * 100;
+        const top = ((e.originalEvent.clientY - rect.top) / rect.height) * 100;
+        const id = 'chart-' + (++chartCount);
+        const box = createChartBox(id, type, left, top, 30, 20);
+        if (box) {
+          this.appendChild(box);
+          renderChart(id, type);
+          saveCharts();
+        }
+      });
+
+      $(window).on('resize', () => $('.allsk-charts-dashboard-chart').each((_, el) => positionChartBox(el)));
+
+      loadCharts();
+    });
+  </script>
+</body>
+</html>

@@ -108,7 +108,7 @@ while [[ $# -gt 0 ]]; do
 			shift
 			;;
 		"--url")
-			URL="${2}"
+			URL="true"
 			shift
 			;;
 		-*)

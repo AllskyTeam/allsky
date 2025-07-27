@@ -46,6 +46,7 @@ function DisplayOverlay($image_name)
 
     <link rel='stylesheet' href='/js/jquery-ui-1.14.1.custom/jquery-ui.min.css?c=<?php echo ALLSKY_VERSION; ?>' />
     <script src="/js/jquery-ui-1.14.1.custom/jquery-ui.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+    <script src="/js/jquery-ui-sortable/jquery-ui-sortable.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
     <link rel='stylesheet' href='/js/spectrum/dist/spectrum.css?c=<?php echo ALLSKY_VERSION; ?>' />
     <script src="/js/spectrum/dist/spectrum.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
@@ -76,8 +77,6 @@ function DisplayOverlay($image_name)
 
     <link rel="stylesheet" href="/js/jquery-variable/jquery-variable.css">
     <script src="/js/jquery-variable/jquery-variable.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
-    <script src="/js/jquery-ui-1.13.1.custom/jquery-ui.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
     <script src="/js/jquery-datebuilder/jquery-datebuilder.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
     <link rel='stylesheet' href='/js/jquery-datebuilder/jquery-datebuilder.css?c=<?php echo ALLSKY_VERSION; ?>' />

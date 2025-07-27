@@ -173,9 +173,6 @@
 	z-index: 100;
 	border: 1px dotted black;
 }
-.ui-sortable-handle {
-	touch-action: none;
-}
 .ui-accordion .ui-accordion-header {
 	display: block;
 	cursor: pointer;

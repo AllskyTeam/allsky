@@ -21,8 +21,12 @@ class MODULESEDITOR {
 
         $('[data-toggle="tooltip"]').tooltip();
 
-        $('#modules-available').sortable('destroy');
-        $('#modules-selected').sortable('destroy');
+		if ($('#modules-available').data('ui-sortable')) {		
+        	$('#modules-available').sortable('destroy');
+		}
+		if ($('#modules-available').data('ui-sortable')) {		
+        	$('#modules-available').sortable('destroy');
+		}
         $('#modules-available').empty();
         $('#modules-selected').empty();
        
@@ -131,13 +135,20 @@ class MODULESEDITOR {
 
                 $(document).off('click', '.module-add-button')
 				$(document).on('click', '.module-add-button', (event) => {
-					let id = $(event.target).data('module')
+					let id = $(event.currentTarget).data('module')
 					if ($('#allskyloadimage').length) {
 						$('#allskyloadimage').after($('#'+id));
 					} else {
 						$('#modules-selected').prepend($('#'+id));
 					}
 					this.#moduleAdded($('#'+id))
+                });
+
+                $(document).off('click', '.module-remove-button')
+				$(document).on('click', '.module-remove-button', (event) => {
+					let id = $(event.currentTarget).data('module')
+					$('#modules-available').prepend($('#'+id));
+					this.#removeModule($('#'+id))
                 });
 
                 $(document).off('click', '.module-delete-button')				
@@ -181,17 +192,17 @@ class MODULESEDITOR {
 
                 $(document).on('click', '.module-settings-button', (event) => {
 
-					//var loadingTimer = setTimeout(() => {
-					//	$.LoadingOverlay('show', {text : 'Sorry this is taking longer than expected ...'});
-        			//}, 10);
-
-                    this.#createSettingsDialog(event.target);
-			
-					//$('#module-settings-dialog').off('shown.bs.modal').on('shown.bs.modal', () => {
-					//	clearTimeout(loadingTimer);
-					//	$.LoadingOverlay('hide');
-					//});
-
+					/*var loadingTimer = setTimeout(() => {
+						$.LoadingOverlay('show', {text : 'Sorry this is taking longer than expected ...'});
+        			}, 10);
+					*/
+                    this.#createSettingsDialog(event.currentTarget);
+					/*
+					$('#module-settings-dialog').off('shown.bs.modal').on('shown.bs.modal', () => {
+						clearTimeout(loadingTimer);
+						$.LoadingOverlay('hide');
+					});
+					*/
                     $('#module-settings-dialog').modal({
                         keyboard: false
                     });
@@ -221,21 +232,7 @@ class MODULESEDITOR {
                         $(document).trigger('module:dirty');
 
                         if ($(evt.to).is($('#modules-available'))) {
-                            let settingsButton = $('#' + $(evt.item).attr("id") + 'settings')
-                            let enabledButton = $('#' + $(evt.item).attr("id") + 'enabled')
-                            let enabledButtonWrapper = $('#' + $(evt.item).attr("id") + 'enablewrapper')
-                            let deleteButton = $('#' + $(evt.item).attr("id") + 'delete')
-							let addButton = $('#' + $(evt.item).attr("id") + 'add')
-							if (settingsButton.length) {
-                                settingsButton.css('display', 'none')
-                            }
-                            enabledButton.prop('disabled', true);
-                            enabledButton.prop('checked', false);  
-                            deleteButton.prop('disabled', false);
-							addButton.removeClass('hidden')
-							enabledButtonWrapper.css('display', 'none')
-
-							this.#checkDependencies()
+							this.#removeModule(evt.item);
                         }
                     }
                 });
@@ -329,6 +326,7 @@ class MODULESEDITOR {
 	#moduleAdded(item) {
 		$(document).trigger('module:dirty');
 		let settingsButton = $('#' + $(item).attr("id") + 'settings')
+		let removeButton = $('#' + $(item).attr("id") + 'remove')
 		let enabledButton = $('#' + $(item).attr("id") + 'enabled')
 		let enabledButtonWrapper = $('#' + $(item).attr("id") + 'enablewrapper')
 		let deleteButton = $('#' + $(item).attr("id") + 'delete')
@@ -336,6 +334,9 @@ class MODULESEDITOR {
 		if (settingsButton.length) {
 			settingsButton.css('display', 'inline-block')
 		}
+		if (removeButton.length) {
+			removeButton.css('display', 'inline-block')
+		}		
 		enabledButton.prop('disabled', false)
 		enabledButton.prop('checked', $.moduleeditor.settings.autoenable)
 		deleteButton.prop('disabled', true)
@@ -346,6 +347,28 @@ class MODULESEDITOR {
 		let moduleName = $(element).data('module')
 		let module = this.#findModuleData(moduleName)
 		module.data.enabled = checked
+
+		this.#checkDependencies()
+	}
+
+	#removeModule(item) {
+		let settingsButton = $('#' + $(item).attr("id") + 'settings')
+		let enabledButton = $('#' + $(item).attr("id") + 'enabled')
+		let removeButton = $('#' + $(item).attr("id") + 'remove')		
+		let enabledButtonWrapper = $('#' + $(item).attr("id") + 'enablewrapper')
+		let deleteButton = $('#' + $(item).attr("id") + 'delete')
+		let addButton = $('#' + $(item).attr("id") + 'add')
+		if (settingsButton.length) {
+			settingsButton.css('display', 'none')
+		}
+		if (removeButton.length) {
+			removeButton.css('display', 'none')
+		}			
+		enabledButton.prop('disabled', true);
+		enabledButton.prop('checked', false);  
+		deleteButton.prop('disabled', false);
+		addButton.removeClass('hidden')
+		enabledButtonWrapper.css('display', 'none')
 
 		this.#checkDependencies()
 	}
@@ -441,7 +464,8 @@ class MODULESEDITOR {
 						disabled = 'disabled="disabled"'					
 					}
 				}
-                settingsHtml = '<button type="button" class="btn btn-sm btn-primary module-settings-button" id="' + moduleKey + 'settings" data-module="' + data.module + '" ' + disabled + '>Settings</button>';
+                settingsHtml = '<button type="button" class="btn btn-sm btn-danger module-remove-button" id="' + moduleKey + 'remove" data-module="' + moduleKey+ '" ' + disabled + '><i class="fa-solid fa-trash"></i></button>';
+                settingsHtml += '<button type="button" class="btn btn-sm btn-primary module-settings-button ml-4" id="' + moduleKey + 'settings" data-module="' + data.module + '" ' + disabled + '><i class="fa-solid fa-gear"></i></button>';
             }
         }
 

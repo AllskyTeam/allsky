@@ -202,14 +202,17 @@ if __name__ == "__main__":
                 for module in disable:
                     moduleName = disable[module].replace('.py','')
                     method = moduleName.replace('allsky_','') + "_cleanup"
-                    _temp = importlib.import_module(moduleName)
-                    if hasattr(_temp, method):
-                        globals()[method] = getattr(_temp, method)
-                        result = globals()[method]()
-                        shared.log(4, f"INFO: Cleared module data for {moduleName}")
-                    else:
-                        shared.log(3, f"WARNING: Attempted to clear module data for {moduleName} but no function provided.")
-
+                    try:
+                        _temp = importlib.import_module(moduleName)
+                        if hasattr(_temp, method):
+                            globals()[method] = getattr(_temp, method)
+                            result = globals()[method]()
+                            shared.log(4, f"INFO: Cleared module data for {moduleName}")
+                        else:
+                            shared.log(3, f"WARNING: Attempted to clear module data for {moduleName} but no function provided.")
+                    except Exception as e:
+                        shared.log(0, f"ERROR: Attempted to clear module data for {moduleName} but error thrown.")
+                    
             os.remove(disableFile)
 
     results = {}

@@ -5,6 +5,7 @@
 
 // These tell the invoker to not try again with these images
 // since the next command will have the same problem.
+#define PARTIAL_OK			90		// Must match what's in variables.sh.
 #define NO_IMAGES			98
 #define BAD_SAMPLE_FILE		99
 
@@ -18,6 +19,7 @@ using namespace std;
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
+#include <fstream>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -39,6 +41,7 @@ using namespace std;
 struct config_t {
 	std::string img_src_dir;
 	std::string img_src_ext;
+	std::string images;
 	std::string dst_startrails;
 	bool startrails_enabled;
 	int num_threads;
@@ -233,24 +236,26 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 	cf->brightness_limit = 0.35;	// not terrible in the city
 	cf->nice_level = 10;
 	cf->num_threads = ncpu;
+	cf->images = "";
 
 	while (1) {		// getopt loop
 		int option_index = 0;
 		static struct option long_options[] = {
-			{"brightness", required_argument, 0, 'b'},
-			{"directory", required_argument, 0, 'd'},
-			{"extension", required_argument, 0, 'e'},
-			{"max-threads", required_argument, 0, 'Q'},
-			{"nice-level", required_argument, 0, 'q'},
-			{"output", required_argument, 0, 'o'},
-			{"image-size", required_argument, 0, 's'},
-			{"statistics", no_argument, 0, 'S'},
-			{"verbose", no_argument, 0, 'v'},
-			{"help", no_argument, 0, 'h'},
+			{"brightness",		required_argument, 0, 'b'},
+			{"directory",		required_argument, 0, 'd'},
+			{"images",			required_argument, 0, 'i'},
+			{"extension",		required_argument, 0, 'e'},
+			{"max-threads",		required_argument, 0, 'Q'},
+			{"nice-level",		required_argument, 0, 'q'},
+			{"output",			required_argument, 0, 'o'},
+			{"image-size",		required_argument, 0, 's'},
+			{"statistics",		no_argument, 0, 'S'},
+			{"verbose",			no_argument, 0, 'v'},
+			{"help",			no_argument, 0, 'h'},
 			{0, 0, 0, 0}
 		};
 
-		c = getopt_long(argc, argv, "hvSb:d:e:Q:q:o:s:", long_options, &option_index);
+		c = getopt_long(argc, argv, "hvSb:d:i:e:Q:q:o:s:", long_options, &option_index);
 		if (c == -1)
 			break;
 
@@ -296,6 +301,9 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 			case 'd':
 				cf->img_src_dir = optarg;
 				break;
+			case 'i':
+				cf->images = optarg;
+				break;
 			case 'e':
 				cf->img_src_ext = optarg;
 				break;
@@ -330,13 +338,13 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 }
 
 void usage_and_exit(int x) {
-	std::cerr << "Usage: " << ME << " [-v] -d <imagedir> -e <ext>"
+	std::cerr << "Usage: " << ME << " [-v] -i images | -d <imagedir> -e <ext>"
 		<< " [-b <brightness> -o <output> | -S] "
 		<< " [-s <WxH>] [-Q <max-threads>] [-q <nice>]" << std::endl;
 	if (x) {
 		std::cerr << KRED
-			<< "Source directory and file extension are always required." << std::endl
-			<< "Brightness threshold and output file are required to render startrails."
+			<< "Either a list of files OR a source directory and file extension are required." << std::endl
+			<< "An output file name is required to render startrails."
 			<< KNRM << std::endl;
 	}
 
@@ -344,13 +352,16 @@ void usage_and_exit(int x) {
 	std::cerr << "-h | --help : display this help, then exit" << std::endl;
 	std::cerr << "-v | --verbose : increase log verbosity" << std::endl;
 	std::cerr << "-S | --statistics : print image directory statistics without producing image" << std::endl;
+	std::cerr << "-i | --images <str> : file containing list of images" << std::endl;
 	std::cerr << "-d | --directory <str> : directory from which to read images" << std::endl;
+	std::cerr << "     If --images is specified then --directory is not needed unless";
+	std::cerr << "     one or more image names does not start with a '/'." << std::endl;
 	std::cerr << "-e | --extension <str> : filter images to just this extension" << std::endl;
 	std::cerr << "-Q | --max-threads <int> : limit maximum number of processing threads (all cpus)" << std::endl;
-	std::cerr << "-q | --nice <int> : nice(2) level of processing threads (10)" << std::endl;
-	std::cerr << "-o | --output-file <str> : output image filename" << std::endl;
+	std::cerr << "-q | --nice-level <int> : nice(2) level of processing threads (10)" << std::endl;
+	std::cerr << "-o | --output <str> : output image filename" << std::endl;
 	std::cerr << "-s | --image-size <int>x<int> : restrict processed images to this size" << std::endl;
-	std::cerr << "-b | --brightness-limit <float> : ranges from 0 (black) to 1 (white). (0.35)" << std::endl;
+	std::cerr << "-b | --brightness <float> : ranges from 0 (black) to 1 (white). (0.35)" << std::endl;
 	std::cerr << "\tA moonless sky may be as low as 0.05 while full moon can be as high as 0.4" << std::endl;
 
 	std::cerr << std::endl;
@@ -365,7 +376,7 @@ int main(int argc, char* argv[]) {
 
 	parse_args(argc, argv, &config);
 
-	if (config.img_src_dir.empty() || config.img_src_ext.empty())
+	if (config.images.empty() && (config.img_src_dir.empty() || config.img_src_ext.empty()))
 		usage_and_exit(3);
 
 	r = setpriority(PRIO_PROCESS, 0, config.nice_level);
@@ -380,8 +391,12 @@ int main(int argc, char* argv[]) {
 		std::transform(extcheck.begin(), extcheck.end(), extcheck.begin(),
 						 [](unsigned char c) { return std::tolower(c); });
 
+		if (config.dst_startrails.empty()) {
+			fprintf(stderr, KRED "Output file not specified.\n\n");
+			usage_and_exit(3);
+		}
 		if (extcheck.rfind(".png") == string::npos && extcheck.rfind(".jpg") == string::npos) {
-			fprintf(stderr, KRED "Output file '%s' is missing extension (.jpg or .png)\n\n",
+			fprintf(stderr, KRED "Output file '%s' is missing extension (.jpg or .png).\n\n",
 					config.dst_startrails.c_str());
 			usage_and_exit(3);
 		}
@@ -393,14 +408,64 @@ int main(int argc, char* argv[]) {
 
 	// Find files
 	glob_t files;
-	std::string wildcard = config.img_src_dir + "/*." + config.img_src_ext;
-	glob(wildcard.c_str(), 0, NULL, &files);
-	nfiles = files.gl_pathc;
-	if (nfiles == 0) {
-		globfree(&files);
-		std::cerr << ME << ": ERROR: No images found in " << config.img_src_dir;
-		std::cerr << ", exiting." << std::endl;
-		exit(NO_IMAGES);
+	if (config.images != "") {
+		// The images are specified in a file.
+		// So as not to redo the code that reads "files",
+		// set "files" to point to a vector of image names.
+		std::ifstream image_file(config.images);
+		if (! image_file.is_open()) {
+			std::cerr << ME << ": ERROR: Could not open image file '" << config.images << "'"
+			<< ", exiting." << std::endl;
+			exit(NO_IMAGES);
+		}
+
+		// Store the file names in a vector.
+		static std::vector<std::string> images;
+		std::string line;
+		while (std::getline(image_file, line)) {
+			images.push_back(line);
+		}
+		nfiles = files.gl_pathc = images.size();
+		image_file.close();
+		if (nfiles == 0) {
+			std::cerr << ME << ": ERROR: No images listed in '" << config.images << "'";
+			std::cerr << ", exiting." << std::endl;
+			exit(NO_IMAGES);
+		}
+
+		// Make file.gl_pathv point to the image names.
+		int dir_length = config.img_src_dir.length() + 1;		// + 1 for "/"
+		files.gl_pathv = new char*[images.size()];
+
+		for (size_t i = 0; i < nfiles; i++) {
+			std::string image = images[i];
+			int len = image.length() + 1;
+			// If the first character of a file name is NOT a "/" then
+			// prepend the input directory name.
+			if (image.c_str()[0] != '/') {
+				if(config.img_src_dir.empty()) {
+					std::cerr << ME << ": ERROR: image source directory not specified and"
+					<< " at least one image name is not a full pathname." << std::endl << std::endl;
+					usage_and_exit(3);
+				}
+				image = config.img_src_dir + "/" + image;
+				len += dir_length;
+			}
+			files.gl_pathv[i] = new char[len];
+			strcpy(files.gl_pathv[i], image.c_str());
+		}
+
+	} else {
+		// Look in the input directory for files matching the pattern.
+		std::string wildcard = config.img_src_dir + "/*." + config.img_src_ext;
+		glob(wildcard.c_str(), 0, NULL, &files);
+		nfiles = files.gl_pathc;
+		if (nfiles == 0) {
+			globfree(&files);
+			std::cerr << ME << ": ERROR: No images found in '" << config.img_src_dir << "'";
+			std::cerr << ", exiting." << std::endl;
+			exit(NO_IMAGES);
+		}
 	}
 	// Determine width of the number of files, e.g., "1234" is 4 characters wide.
 	sprintf(s_, "%d", (int)nfiles);
@@ -427,7 +492,7 @@ int main(int argc, char* argv[]) {
 	if (nchan == 0 || (config.img_width == 0 && config.img_height == 0)) {
 		char not_used[1];
 		if (! read_file(&config, sample_file, &temp, sample_file_num+1, not_used, 0)) {
-			fprintf(stderr, "%s: ERROR: Unable to read sample file '%s'; quitting\n", ME, sample_file);
+			fprintf(stderr, "%s: ERROR: Unable to read sample file '%s'; quitting.\n", ME, sample_file);
 			exit(BAD_SAMPLE_FILE);
 		}
 		if (config.verbose > 1) {
@@ -482,16 +547,20 @@ int main(int argc, char* argv[]) {
 	std::cout << ME << ": Minimum: " << ds_min << "   maximum: " << ds_max
 			<< "   mean: " << ds_mean << "   median: " << ds_median
 			<< "   numImagesUsed: " << numImagesUsed << "   numImagesNotUsed: " << (vec.size() - numImagesUsed)
+			<< "   threshold: " << config.brightness_limit
 			<< std::endl;
 
 	// If we still don't have an image (no images below threshold), copy the
 	// minimum mean image so we see why
+	int ret = 0;	// return code
 	if (config.startrails_enabled) {
 		if (accumulated.empty()) {
 			// Indent since this msg goes with the line above.
 			fprintf(stderr, "    No images below threshold %.3f, writing the minimum mean image only.\n",
 					config.brightness_limit);
 			accumulated = cv::imread(files.gl_pathv[min_loc.x], cv::IMREAD_UNCHANGED);
+			// PARTIAL_OK means we created something but it's not a startrails.
+			ret = PARTIAL_OK;
 		}
 
 		std::vector<int> compression_params;
@@ -517,7 +586,11 @@ int main(int argc, char* argv[]) {
 			exit(2);
 		}
 	}
-	globfree(&files);
 
-	exit(0);
+	
+	if (config.images == "") {
+		globfree(&files);
+	}
+
+	exit(ret);
 }

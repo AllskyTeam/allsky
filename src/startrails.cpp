@@ -41,8 +41,9 @@ using namespace std;
 struct config_t {
 	std::string img_src_dir;
 	std::string img_src_ext;
-	std::string images;
+	std::string images;				// List of images to process.  May also contain the mean brightness.
 	std::string dst_startrails;
+	std::string output_data_file;	// where per-image data goes
 	bool startrails_enabled;
 	int num_threads;
 	int nice_level;
@@ -58,6 +59,7 @@ unsigned long nfiles = 0;
 int s_len = 0;	// length in characters of nfiles, e.g. if nfiles == "1000", s_len = 4.
 const char *ME = "";
 int numImagesUsed = 0;
+FILE *dataIO = stderr;
 
 // Read a single file and return true on success and false on error.
 // On success, set "mat".
@@ -79,9 +81,10 @@ bool read_file(
 		return(false);
 	}
 
-	if (msg_size > 0 && cf->verbose > 1) {
-		snprintf(msg, msg_size, "[%*d/%lu] %s, channels=%d",
-			s_len, file_num, nfiles, filename, mat->channels());
+	if (msg_size > 0 && (cf->verbose > 1 || cf->output_data_file != "")) {
+		// tab-separate fields for easier parsing
+		snprintf(msg, msg_size, "%s\t[%*d/%lu]\tchannels=%d",
+			filename, s_len, file_num, nfiles, mat->channels());
 	}
 
 	if (mat->cols == 0 || mat->rows == 0) {
@@ -96,6 +99,7 @@ bool read_file(
 		(mat->cols != cf->img_width || mat->rows != cf->img_height)) {
 		if (cf->verbose) {
 			stdio_mutex.lock();
+// TODO: Convert image to expected size
 			fprintf(stderr, "%s: image size %dx%d does not match expected size %dx%d; ignoring\n",
 				filename, mat->cols, mat->rows, cf->img_width, cf->img_height);
 			stdio_mutex.unlock();
@@ -114,9 +118,9 @@ char s_[10];
 
 void startrail_worker(
 		int thread_num,				// thread num
-		struct config_t* cf,			// config
+		struct config_t* cf,		// config
 		glob_t* files,				// file list
-		std::mutex* mtx,				// mutex
+		std::mutex* mtx,			// mutex
 		cv::Mat* stats_ptr,			// statistics
 		cv::Mat* main_accumulator)	// accumulated
 {
@@ -165,6 +169,7 @@ void startrail_worker(
 				cv::cvtColor(imagesrc, imagesrc, cv::COLOR_BGR2GRAY, nchan);
 		}
 
+// TODO: read already-computed mean from a file into "image_mean" and use it instead of recomputing.
 		cv::Scalar mean_scalar = cv::mean(imagesrc);
 		double image_mean;
 		switch (imagesrc.channels()) {
@@ -185,10 +190,11 @@ void startrail_worker(
 				image_mean /= 65535.0;
 				break;
 		}
-		if (cf->verbose > 1) {
-			stdio_mutex.lock();
-			fprintf(stderr, "%s, mean=%.3f\n", msg, image_mean);
-			stdio_mutex.unlock();
+		if (cf->verbose > 1 || cf->output_data_file != "") {
+			// tab-separate fields for easier parsing.
+			char temp[100];
+			snprintf(temp, 100, "\tmean=%.3f", image_mean);
+			strcat(msg, temp);
 		}
 
 		// Want to print the message above before this one.
@@ -202,13 +208,35 @@ void startrail_worker(
 		// so we just update the entry once the image is successfully loaded
 		stats_ptr->col(f) = image_mean;
 
-		if (cf->startrails_enabled && image_mean <= cf->brightness_limit) {
-			numImagesUsed++;		// Keep track of the number of images used
-			if (thread_accumulator.empty()) {
-				imagesrc.copyTo(thread_accumulator);
+		if (cf->startrails_enabled) {
+			bool used;
+			if (image_mean <= cf->brightness_limit) {
+				used = true;
+				numImagesUsed++;		// Keep track of the number of images used
+				if (thread_accumulator.empty()) {
+					imagesrc.copyTo(thread_accumulator);
+				} else {
+					thread_accumulator = cv::max(thread_accumulator, imagesrc);
+				}
 			} else {
-				thread_accumulator = cv::max(thread_accumulator, imagesrc);
+				used = false;
 			}
+			if (cf->verbose > 1 || cf->output_data_file != "") {
+				char temp[100];
+				snprintf(temp, 100, "\tincluded=%s", used ? "yes" : "no");
+				strcat(msg, temp);
+			}
+		}
+
+		// Output msg if needed
+		if (cf->verbose > 1 || cf->output_data_file != "") {
+			// tab-separate fields for easier parsing.
+			char temp[100];
+			snprintf(temp, 100, "\tthreshold=%.3f", cf->brightness_limit);
+			strcat(msg, temp);
+			stdio_mutex.lock();
+			fprintf(dataIO, "%s\n", msg);
+			stdio_mutex.unlock();
 		}
 	}
 
@@ -237,6 +265,7 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 	cf->nice_level = 10;
 	cf->num_threads = ncpu;
 	cf->images = "";
+	cf->output_data_file = "";
 
 	while (1) {		// getopt loop
 		int option_index = 0;
@@ -249,13 +278,14 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 			{"nice-level",		required_argument, 0, 'q'},
 			{"output",			required_argument, 0, 'o'},
 			{"image-size",		required_argument, 0, 's'},
+			{"output-data",		required_argument, 0, 'D'},
 			{"statistics",		no_argument, 0, 'S'},
 			{"verbose",			no_argument, 0, 'v'},
 			{"help",			no_argument, 0, 'h'},
 			{0, 0, 0, 0}
 		};
 
-		c = getopt_long(argc, argv, "hvSb:d:i:e:Q:q:o:s:", long_options, &option_index);
+		c = getopt_long(argc, argv, "hvSb:d:D:i:e:Q:q:o:s:", long_options, &option_index);
 		if (c == -1)
 			break;
 
@@ -301,6 +331,9 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 			case 'd':
 				cf->img_src_dir = optarg;
 				break;
+			case 'D':
+				cf->output_data_file = optarg;
+				break;
 			case 'i':
 				cf->images = optarg;
 				break;
@@ -338,8 +371,8 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 }
 
 void usage_and_exit(int x) {
-	std::cerr << "Usage: " << ME << " [-v] -i images | -d <imagedir> -e <ext>"
-		<< " [-b <brightness> -o <output> | -S] "
+	std::cerr << "Usage: " << ME << " [-v] -i <images-file> | -d <imagedir> -e <ext>"
+		<< " [-b <brightness> -o <output> | -S] [-D <output-data-file>] "
 		<< " [-s <WxH>] [-Q <max-threads>] [-q <nice>]" << std::endl;
 	if (x) {
 		std::cerr << KRED
@@ -352,10 +385,12 @@ void usage_and_exit(int x) {
 	std::cerr << "-h | --help : display this help, then exit" << std::endl;
 	std::cerr << "-v | --verbose : increase log verbosity" << std::endl;
 	std::cerr << "-S | --statistics : print image directory statistics without producing image" << std::endl;
-	std::cerr << "-i | --images <str> : file containing list of images" << std::endl;
+	std::cerr << "-i | --images <str> : file containing list of images to process" << std::endl;
+	std::cerr << "     If the file also contains the mean brightness for an image, it will be used" << std::endl;
 	std::cerr << "-d | --directory <str> : directory from which to read images" << std::endl;
 	std::cerr << "     If --images is specified then --directory is not needed unless";
 	std::cerr << "     one or more image names does not start with a '/'." << std::endl;
+	std::cerr << "-D | --output-data <str> : save per-image summary data to the specified file" << std::endl;
 	std::cerr << "-e | --extension <str> : filter images to just this extension" << std::endl;
 	std::cerr << "-Q | --max-threads <int> : limit maximum number of processing threads (all cpus)" << std::endl;
 	std::cerr << "-q | --nice-level <int> : nice(2) level of processing threads (10)" << std::endl;
@@ -404,6 +439,15 @@ int main(int argc, char* argv[]) {
 	} else {
 		config.brightness_limit = 0;
 		config.dst_startrails = "/dev/null";
+	}
+
+	if (config.output_data_file != "") {
+		dataIO = fopen(config.output_data_file.c_str(), "w");
+		if (dataIO == NULL) {
+			fprintf(stderr, KRED "%s: Data output file '%s' could not be opened: %s\n\n",
+				ME, config.output_data_file.c_str(), strerror(errno));
+			exit(4);
+		}
 	}
 
 	// Find files

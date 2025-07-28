@@ -240,7 +240,7 @@
                         dataType: 'json',
                         cache: false				
                     },
-                    order: [[1, 'asc']],
+                    order: [[1, 'asc'], [0, 'asc']],
                     paging: false,
                     scrollY: '50vh',
                     scrollCollapse: true,

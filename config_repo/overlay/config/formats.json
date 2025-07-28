@@ -172,56 +172,42 @@
             "format": "int",
             "description": "Elevation integered",
             "example": "123",
-            "function": "int",
+            "attribute": [
+                "dp0",
+                "deg"
+            ],            
             "stackable": false,
             "type": "elevation"
-        },
+        },      
         {
-            "format": "1dp",
-            "description": "Elevation to 1 decimal place",
-            "example": "123.1",
-            "function": "dp-1",            
-            "stackable": false,
+            "format": "float",            
+            "description": "Floating Point Number",
+            "example": "52.12",
+            "attribute": [
+                "dp",
+                "deg"
+            ],
             "type": "elevation"
-        },
-        {
-            "format": "2dp",
-            "description": "Elevation to 2 decimal places",
-            "example": "123.12",
-            "function": "dp-2",             
-            "stackable": false,
-            "type": "elevation"
-        },				
+        },			
         {
             "format": "int",
             "description": "Azimuth integered",
             "example": "123",
-            "function": "int",
+            "attribute": [
+                "dp0",
+                "deg"
+            ],            
             "stackable": false,
             "type": "azimuth"
-        },
+        },      
         {
-            "format": "intd",
-            "description": "Azimuth integered with Deg symbol",
-            "example": "123°",
-            "function": "intd",
-            "stackable": false,
-            "type": "azimuth"
-        },        
-        {
-            "format": "1dp",
-            "description": "Azimuth to 1 decimal place",
-            "example": "123.1",
-            "function": "dp-1",            
-            "stackable": false,
-            "type": "azimuth"
-        },
-        {
-            "format": "2dp",
-            "description": "Azimuth to 2 decimal places",
-            "example": "123.12",
-            "function": "dp-2",             
-            "stackable": false,
+            "format": "float",            
+            "description": "Floating Point Number",
+            "example": "52.12",
+            "attribute": [
+                "dp",
+                "deg"
+            ],
             "type": "azimuth"
         },
         {

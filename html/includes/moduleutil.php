@@ -1439,7 +1439,7 @@ class MODULEUTIL
         $moduleData = $this->findModule($group . '.py');
 
         foreach ($result['fields'] as &$row) {
-            foreach ($row as &$rowData) {
+            foreach ($row as &$rowData) {            
                 if (isset($rowData["text"])) {
                     $format = "";
                     $font = "";                    
@@ -1448,7 +1448,8 @@ class MODULEUTIL
                         if (isset($moduleData->extradata)) {
                             if (isset($moduleData->extradata->values)) {
                                 foreach ($moduleData->extradata->values as $key=>$value) {
-                                    if ($key == $variable || $key == $variable . "\${COUNT}" ) {
+                                    $clean = preg_replace('/\d+$/', '', $variable);
+                                    if ($key == $clean || $key == $clean . "\${COUNT}" ) {
                                         if (isset($value->format)) {
                                             $format = $value->format;
                                         }
@@ -1463,11 +1464,11 @@ class MODULEUTIL
                     //$format = $this->getAllskySetting($format);
                     $rowData['format'] = $format;
                     $rowData['font'] = $font;                    
-                } else {
+                } else {                   
                     foreach ($rowData as &$colData) {
                         if (isset($colData["text"])) {
                             $format = "";
-                            $font = "";                            
+                            $font = "";                                              
                             if (preg_match('/\$\{([^}]+)\}/', $colData["text"], $matches)) {
                                 $variable = $matches[1];
                                 if (isset($moduleData->extradata)) {

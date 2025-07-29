@@ -202,8 +202,8 @@ class AllskyFormatters:
 					timeStamp = datetime.fromtimestamp(value)
 					value = timeStamp.strftime(internalFormat)
 
-			tempDate = datetime.strptime(value, internalFormat)
-			if format is not None:
+			if format is not None and format != "allsky":
+				tempDate = datetime.strptime(value, internalFormat)
 				try:
 					value = tempDate.strftime(format)
 				except Exception:

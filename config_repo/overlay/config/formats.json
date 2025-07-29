@@ -1,6 +1,13 @@
 {
     "data": [
         {
+            "format": "allsky",
+            "description": "Use the default Allsky format",
+            "example": "25-12-23 23:20",
+            "stackable": false,
+            "type": "date"
+        },
+        {
             "format": "%d-%m-%y %H:%M",
             "description": "Short date/time UK format",
             "example": "25-12-23 23:20",

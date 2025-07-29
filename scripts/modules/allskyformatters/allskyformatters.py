@@ -1,14 +1,30 @@
 import time
 import locale
+import re
 import allsky_shared as allsky_shared
 from datetime import date, datetime
 from allskyexceptions import AllskyFormatError
 
+allsky_locale = allsky_shared.getSetting('locale')
+try:
+	if allsky_locale is not None:
+		locale.setlocale(locale.LC_ALL, allsky_locale)
+	else:
+		locale.setlocale(locale.LC_ALL, '')
+except:
+    pass
 
 class AllskyFormatters:
+    
+	debug_mode = False
+
 	def __init__(self):
 		pass
 
+	def _debug(self, message):
+		if self.debug_mode:
+			print(message)
+   
 	def _isUnixTimestamp(self, value):
 		isUnixTimestamp = False
 		isFloat = False
@@ -35,7 +51,7 @@ class AllskyFormatters:
 
 		return isUnixTimestamp, value
 
-	def _format_size(self, size_bytes, unit=None):
+	def _format_size(self, size_bytes, unit=None, add_units=False):
 		"""
 		Convert a file size in bytes to a human-readable format.
 		
@@ -55,17 +71,20 @@ class AllskyFormatters:
 				raise ValueError(f"Invalid unit '{unit}'. Choose from {units[1:]} or 'AUTO'.")
 			if unit != 'AUTO':
 				idx = units.index(unit)
-				#return f"{size_bytes / (factor ** idx):.2f} {unit}"
-				return f"{size_bytes / (factor ** idx):.2f}"
+				if add_units:
+					unit_text = unit
+				else:
+					unit_text = ''
+				return f"{size_bytes / (factor ** idx):.2f} {unit_text}"
 		
-		# Automatic scaling
+		unit_text = ''
 		for u in units:
 			if size_bytes < factor:
-				#return f"{size_bytes:.2f} {u}"
-				return f"{size_bytes:.2f}"
+				if add_units:
+					unit_text = u
+				return f"{size_bytes:.2f} {unit_text}"
 			size_bytes /= factor
 
-		#return f"{size_bytes:.2f} {units[-1]}"
 		return f"{size_bytes:.2f}"
 
 	def _string_to_boolean(self, value):
@@ -80,7 +99,42 @@ class AllskyFormatters:
 		"""
 		return str(value).strip().lower() in ('true', '1', 'yes', 'y', 'on')
 
-	def as_bool(self, value, variable_name, format, variable_type):
+	def _split_format(self, format):
+		formats = format.split('|')
+		return formats
+
+	def _parse_dp(self, formats):
+		"""
+		If string starts with 'dp' and ends with an integer, return the integer.
+		Otherwise, return False.
+		"""
+		for index, format in enumerate(formats):  
+			if format.startswith('dp'):
+				num_part = format[2:]
+				if num_part.isdigit():
+					return int(num_part)
+
+		return False
+
+	def _format_number(self, value, dp, use_locale):
+		if use_locale:
+			if dp is False:
+				self._debug(f'INFO: Formatting {value} as integer with locale')
+				value = locale.format_string('%d', value, grouping=True)
+			else:
+				self._debug(f'INFO: Formatting {value} as float with locale')
+				value = locale.format_string(f'%.{dp}f', value, grouping=True) 
+		else:
+			if dp is False:
+				self._debug(f'INFO: Formatting {value} as integer without locale')
+				value = f'{value:d}'
+			else:
+				self._debug(f'INFO: Formatting {value} as float without locale')
+				value = f'{value:.{dp}f}'
+    
+		return value
+
+	def as_bool(self, value, variable_name, format, variable_type, debug=False):
 		
 		if format == '%yes' or format == 'yesno':
 			if type(value) is bool:
@@ -112,7 +166,7 @@ class AllskyFormatters:
                 
 		return value
 
-	def as_timestamp(self, value, variable_name, format, variable_type):
+	def as_timestamp(self, value, variable_name, format, variable_type, debug=False):
 		try:
 			internalFormat = allsky_shared.getSetting('timeformat')
 			if variable_name == 'DATE' or variable_name == 'AS_DATE':
@@ -136,7 +190,7 @@ class AllskyFormatters:
 		
 		return value
 
-	def as_date(self, value, variable_name, format, variable_type):
+	def as_date(self, value, variable_name, format, variable_type, debug=False):
 		try:
 			internalFormat = allsky_shared.getSetting('timeformat')
 			if variable_name == 'DATE' or variable_name == 'AS_DATE':
@@ -160,63 +214,53 @@ class AllskyFormatters:
 		
 		return value
 
-	def as_time(self, value, variable_name, format, variable_type):
+	def as_time(self, value, variable_name, format, variable_type, debug=False):
 		timeStamp = time.localtime(value)
 		if format is None:
 			value = time.strftime('%H:%M:%S', timeStamp)
 		else:
-# TODO: Check for bad format?
+			# TODO: Check for bad format?
 			value = time.strftime(format, timeStamp)     
 		
 		return value
 
-	def as_number(self, value, variable_name, format, variable_type):
+	def as_number(self, value, variable_name, format, variable_type, debug=False):
 
 		processed = False
-		if format == 'int':
-			value = int(value)
-			processed = True
+		self.debug_mode = debug
+  
+		formats = self._split_format(format)
 
-		if format == 'intlocale':
-			value = locale.format_string('%d', value, grouping=True)
-			processed = True 
+		if 'int' in formats:
+			dp = 0
+			processed = True    
    
-		if format == '1dp':
-			value = float(value)
-			value = round(value,1)
-			processed = True
-   
-		if format == '1dplocale':
-			value = locale.format_string('%.1f', value, grouping=True)
-			processed = True   
+		if 'float' in formats:
+			dp = 2
+			processed = True    
 
-		if format == '2dp':
-			value = float(value)
-			value = round(value,2)
+		use_locale = False
+		if 'locale' in formats:
+			use_locale = True
+			processed = True      
+	
+		match = re.search(r'\bdp(\d+)\b', format)
+		if match:
+			dp = self._parse_dp(formats)
 			processed = True
    
-		if format == '2dplocale':
-			value = locale.format_string('%.2f', value, grouping=True)
-			processed = True  
-      
-		if format == '3dp':
-			value = float(value)
-			value = round(value,3)
-			processed = True
-
-		if format == '3dplocale':
-			value = locale.format_string('%.3f', value, grouping=True)
-			processed = True  
+		if processed:
+			value = self._format_number(value, dp, use_locale)
    
-		if format == '4dp':
-			value = float(value)
-			value = round(value,4)
+		if 'per' in formats:
+			value = f'{value}%'
 			processed = True
-
-		if format == '4dplocale':
-			value = locale.format_string('%.4f', value, grouping=True)
-			processed = True  
-      
+   
+		if 'deg' in formats:
+			value = f'{value}°'
+			processed = True    
+        
+        # If we havn't processed the value yet, we will try to format it using the lgeacy formats
 		if not processed:
 			if format is not None and format != "":
 				original_format = format
@@ -253,7 +297,7 @@ class AllskyFormatters:
   
 		return value
 
-	def as_int(self, value, variable_name, format, variable_type):
+	def as_int(self, value, variable_name, format, variable_type, debug=False):
 		""" Formats a number as an integer
 
 		Args:
@@ -267,7 +311,7 @@ class AllskyFormatters:
 		"""		
 		return str(int(value))
 
-	def as_temperature(self, value, variable_name, format, variable_type):
+	def as_temperature(self, value, variable_name, format, variable_type, debug=False):
 		""" Formats a value in temperature units
 			Not using match is deliberate
    
@@ -290,40 +334,40 @@ class AllskyFormatters:
 			(string): The formatted value
 		"""
 		try:
-			float_value = float(value)
-
+			formats = self._split_format(format)
 			temp_units = allsky_shared.getSetting('temptype')
-			old_format = format
-			if format == 'allsky' or format == 'allskyfull':
-				if temp_units == 'F':
-					format = 'degctof'
-
-			if format == 'deg':
-				value = f'{float_value:.2f}'
-
-			if format == 'degint':
-				value = int(float_value)
-    
-			if format == 'degctof':
+      
+			value = float(value)
+			if 'degctof' in formats:
 				value = value * 9 / 5 + 32
-				value = f'{value:.2f}'
+				value = round(value, 2) 
 
-			if format == 'degctofint':
-				value = value * 9 / 5 + 32
-				value = int(value)
-    
-			if format == 'degftoc':
+			if 'degftoc' in formats:
 				value = (value - 32) * 5 / 9
-				value = f'{value:.2f}'
-    
-			if format == 'degftocint':
-				value = int(value)
+				value = round(value, 2) 
 
-			if old_format == 'allskyfull':
+			if 'allsky' in formats:
 				if temp_units == 'C':
-					value = f'{value}°C'
-				else:
-					value = f'{value}°F'
+					value = round(value, 2)
+				elif temp_units == 'F':
+					value_c = value
+					value = round((value * (9/5)) + 32, 2)
+					self._debug(f'INFO: Converting temperature to F to match Allsky settings. ({value_c}C -> {value}F)')
+			else:
+				temp_units = 'C'
+				
+			match = re.search(r'\bdp(\d+)\b', format)
+			dp = 0
+			if match:
+				dp = self._parse_dp(formats)
+			
+			value = self._format_number(value, dp, False)
+         
+			if 'deg' in formats:
+				value = f'{value}°'
+	
+			if 'unit' in formats:
+				value = f'{value} {temp_units}'
 
 			value = str(value)
 		except ValueError:
@@ -333,7 +377,7 @@ class AllskyFormatters:
    
 		return value
 
-	def as_filesize(self, value, variable_name, format, variable_type):
+	def as_filesize(self, value, variable_name, format, variable_type, debug=False):
 		""" Converts a file size in bytes to a human readable format
 
 			Formatters
@@ -351,12 +395,19 @@ class AllskyFormatters:
 		"""
   
 		float_value = float(value)
-     
-		value = self._format_size(float_value, format.upper())
-      
+		formats = self._split_format(format)
+
+		add_unit = False
+		if 'fsunit' in formats:
+			add_unit = True
+
+		match = next((item for item in formats if item.upper() in ['AUTO', 'B', 'KB', 'MB', 'GB', 'TB']), None)
+		if match:
+			value = self._format_size(float_value, match.upper(), add_unit)
+		
 		return value
 
-	def as_azimuth(self, value, variable_name, format, variable_type):
+	def as_azimuth(self, value, variable_name, format, variable_type, debug=False):
 		""" Converts a value to various Azimuth formats
 
 			Formatters
@@ -378,30 +429,30 @@ class AllskyFormatters:
 		"""
 		float_value = float(value)
 		
-		if format == 'int':
-			value = int(float_value)
+		formats = self._split_format(format)
 
-		if format == 'intd':
-			value = f'{int(float_value)}°'
-   
-		if format == '1dp':
-			value = f'{float_value:.1f}'
-
-		if format == '2dp':
-			value = f'{float_value:.2f}'
-
-		if format == 'dms':
+		if 'dms' in formats:
 			degrees = int(float_value)
 			minutes_decimal = abs(float_value - degrees) * 60
 			minutes = int(minutes_decimal)
 			seconds = round((minutes_decimal - minutes) * 60, 2)
 			value = f"{degrees}° {minutes}' {seconds}\""
+		else:
+			match = re.search(r'\bdp(\d+)\b', format)
+			dp = 0
+			if match:
+				dp = self._parse_dp(formats)
+			
+			value = self._format_number(float_value, dp, False)
+			
+			if 'deg' in formats:
+				value = f'{value}°'
 
 		value = str(value)
 
 		return value
 
-	def as_elevation(self, value, variable_name, format, variable_type):
+	def as_elevation(self, value, variable_name, format, variable_type, debug=False):
 		""" Converts a value to various elevation formats
 
 			Formatters
@@ -422,28 +473,29 @@ class AllskyFormatters:
 		"""
 		float_value = float(value)
 		
-		if format == 'int':
-			value = int(float_value)
+		formats = self._split_format(format)
 
-		if format == 'intd':
-			value = f'{int(float_value)}°'
-   
-		if format == '1dp':
-			value = f'{float_value:.1f}'
-
-		if format == '2dp':
-			value = f'{float_value:.2f}'
-
+		match = re.search(r'\bdp(\d+)\b', format)
+		dp = 0
+		if match:
+			dp = self._parse_dp(formats)
+		
+		value = self._format_number(float_value, dp, False)
+		
+		if 'deg' in formats:
+			value = f'{value}°'
+    
 		value = str(value)
 
 		return value
 
-	def as_gpio(self, value, variable_name, format, variable_type):
+	def as_gpio(self, value, variable_name, format, variable_type, debug=False):
 		""" Converts a value to various elevation formats
 
 			Formatters
    
-			onoff		- Shows On or Off 
+			onoff		- Shows On or Off
+			yesno		- Shows Yes or No
 			bool		- Shows True or False
    
 		Args:
@@ -457,22 +509,9 @@ class AllskyFormatters:
 		"""
 		value = self._string_to_boolean(value)
 
-		if format == 'onoff':
-			if value:
-				value = 'On'
-			else:
-				value = 'Off'
+		return self.as_bool(value, variable_name, format, variable_type)
 
-		if format == 'bool':
-			if value:
-				value = 'True'
-			else:
-				value = 'False'
-    
-
-		return value
-
-	def as_string(self, value, variable_name, format, variable_type):
+	def as_string(self, value, variable_name, format, variable_type, debug=False):
 		""" Converts a string to various formats
 
 			Formatters
@@ -512,7 +551,7 @@ class AllskyFormatters:
 
 		return value
 
-	def as_altitude(self, value, variable_name, format, variable_type):
+	def as_altitude(self, value, variable_name, format, variable_type, debug=False):
 		''' Converts an altitude in meters to a flight level
 		'''
 		
@@ -525,7 +564,7 @@ class AllskyFormatters:
 			
 		return value
 
-	def as_flip(self, value, variable_name, format, variable_type):
+	def as_flip(self, value, variable_name, format, variable_type, debug=False):
 		''' Converts an altitude in meters to a flight level
 		'''
 		
@@ -534,7 +573,7 @@ class AllskyFormatters:
 			
 		return value
 
-	def as_deg(self, value, variable_name, format, variable_type):
+	def as_deg(self, value, variable_name, format, variable_type, debug=False):
 		""" Adds a degrees symbol
 		Args:
 			value (any): The input value 
@@ -550,7 +589,7 @@ class AllskyFormatters:
 
 		return value
 
-	def as_per(self, value, variable_name, format, variable_type):
+	def as_per(self, value, variable_name, format, variable_type, debug=False):
 		""" Adds a percent symbol
 		Args:
 			value (any): The input value 
@@ -566,7 +605,7 @@ class AllskyFormatters:
 
 		return value
 
-	def as_distance(self, value, variable_name, format, variable_type):
+	def as_distance(self, value, variable_name, format, variable_type, debug=False):
 		""" Converts a distance to various units
 		Args:
 			value (any): The input value 

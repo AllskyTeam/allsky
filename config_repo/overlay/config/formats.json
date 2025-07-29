@@ -72,10 +72,7 @@
                 "locale"
             ],
             "type": "number"
-        },
-
-
-                    
+        },     
         {
             "format": "{:.0f}",            
             "description": "Number to zero DP. (LEGACY DO NOT USE)",
@@ -221,7 +218,10 @@
         {
             "format": "Auto",
             "description": "Auto Filesize",
-            "example": "12",       
+            "example": "12",
+            "attribute": [
+                "fsunit"
+            ],                   
             "stackable": false,
             "type": "filesize"
         },        
@@ -229,6 +229,9 @@
             "format": "TB",
             "description": "Filesize in Tb",
             "example": "12",             
+            "attribute": [
+                "fsunit"
+            ],                   
             "stackable": false,
             "type": "filesize"
         },
@@ -236,6 +239,9 @@
             "format": "GB",
             "description": "Filesize in Gb",
             "example": "12",             
+            "attribute": [
+                "fsunit"
+            ],                   
             "stackable": false,
             "type": "filesize"
         },
@@ -243,6 +249,9 @@
             "format": "MB",
             "description": "Filesize in Mb",
             "example": "1.2",            
+            "attribute": [
+                "fsunit"
+            ],                   
             "stackable": false,
             "type": "filesize"
         },
@@ -250,6 +259,9 @@
             "format": "B",
             "description": "Filesize in B",
             "example": "102400",            
+            "attribute": [
+                "fsunit"
+            ],                   
             "stackable": false,
             "type": "filesize"
         },
@@ -263,13 +275,6 @@
                 "deg",
                 "unit"
             ],                      
-            "stackable": false,
-            "type": "temperature"
-        },
-        {
-            "format": "allskyfull",
-            "description": "Use Allsky setting with Deg unit",
-            "example": "23.50",          
             "stackable": false,
             "type": "temperature"
         },        

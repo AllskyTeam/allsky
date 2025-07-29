@@ -167,7 +167,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 			"values": {
 				"AS_CPUTEMP": {
 					"name": "${CPUTEMP}",
-					"format": "",
+					"format": "{dp2|deg|unit}",
 					"sample": "43.2",
 					"group": "Pi",
 					"description": "CPU Temperature (In C or F)",
@@ -191,7 +191,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 				},
 				"AS_PIMODEL": {
 					"name": "${PIMODEL}",
-					"format": "string",
+					"format": "",
 					"sample": "5B",              
 					"group": "Pi",
 					"description": "The model of Pi",
@@ -207,7 +207,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 				},
 				"AS_DISKSIZE": {
 					"name": "${DISKSIZE}",
-					"format": "{GB}",
+					"format": "{gb|fsunit}",
 					"sample": "100000",
 					"group": "Pi",
 					"description": "Storage size",
@@ -215,7 +215,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 				},
 				"AS_DISKUSAGE": {
 					"name": "${DISKUSAGE}",
-					"format": "{GB}",
+					"format": "{gb|fsunit}",
 					"sample": "100000",              
 					"group": "Pi",
 					"description": "Storage used size",
@@ -223,7 +223,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 				},
 				"AS_DISKFREE": {
 					"name": "${DISKFREE}",
-					"format": "{GB}",
+					"format": "{gb|fsunit}",
 					"sample": "100000",              
 					"group": "Pi",
 					"description": "Storage free size",
@@ -231,7 +231,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 				},
 				"AS_MEMORYTOTAL": {
 					"name": "${MEMORYTOTAL}",
-					"format": "{GB}",
+					"format": "{gb|fsunit}",
 					"sample": "100000",              
 					"group": "Pi",
 					"description": "Total Memory",
@@ -239,7 +239,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 				},
 				"AS_MEMORYUSED": {
 					"name": "${MEMORYUSED}",
-					"format": "{GB}",
+					"format": "{gb|fsunit}",
 					"sample": "100000",              
 					"group": "Pi",
 					"description": "Memory used",
@@ -247,7 +247,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 				},
 				"AS_MEMORYAVAILABLE": {
 					"name": "${MEMORYAVAILABLE}",
-					"format": "filesize",
+					"format": "{gb|fsunit}",
 					"sample": "100000",              
 					"group": "Pi",
 					"description": "Memory available",
@@ -346,19 +346,8 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 			temp = CPUTemperature().temperature
 			temp = round(temp,1)
 			
-			tempUnits = allsky_shared.getSetting('temptype')
-			if tempUnits == 'B':
-				extra_data['AS_CPUTEMP_C'] = temp
-				temp = (temp * (9/5)) + 32
-				temp = round(temp,1)
-				extra_data['AS_CPUTEMP_F'] = temp
-				allsky_shared.log(4, f"CPU Temp (C) {extra_data['AS_CPUTEMP_C']}, CPU Temp (F) {extra_data['AS_CPUTEMP_F']}")
-			else:
-				if tempUnits == 'F':
-					temp = (temp * (9/5)) + 32
-					temp = round(temp,1)
-				extra_data['AS_CPUTEMP'] = temp
-				allsky_shared.log(4, f"INFO: CPU Temp ({tempUnits}) {extra_data['AS_CPUTEMP']}")
+			extra_data['AS_CPUTEMP'] = temp   
+			extra_data['AS_CPUTEMP_C'] = temp   
 
 			Device.ensure_pin_factory()
 			board_info = Device.pin_factory.board_info
@@ -385,8 +374,6 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 			extra_data['AS_MEMORYUSED'] = used_memory
 			extra_data['AS_MEMORYAVAILABLE'] = available_memory
    
-    
-				
 			allsky_shared.setLastRun('pistatus')
 			allsky_shared.dbUpdate('pistatus', extra_data)
 			result = 'PI Status Data Written'

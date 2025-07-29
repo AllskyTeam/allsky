@@ -49,5 +49,12 @@
         "type": {
             "field": "boolean"
         }  
-    }      
+    },
+    "fsunit": {
+        "description": "Add filesize settings units symbol",
+        "example": "",
+        "type": {
+            "field": "boolean"
+        }  
+    }  
 }

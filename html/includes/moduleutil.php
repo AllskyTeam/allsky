@@ -16,7 +16,7 @@ class MODULEUTIL
 	private $myFiles;
     private $myFilesData;
     private $allsky_config = null;
-
+    private $extra_data = null;
     private $allskySettings = null;
 
     function __construct() {
@@ -28,6 +28,7 @@ class MODULEUTIL
         $this->allsky_home = ALLSKY_HOME;
         $this->allsky_scripts = ALLSKY_SCRIPTS;
         $this->allsky_config = ALLSKY_CONFIG;
+        $this->extra_data = ALLSKY_OVERLAY . "/extra";
     }
 
     public function run()
@@ -837,7 +838,7 @@ class MODULEUTIL
         $extraModulesDir = '/opt/allsky/modules';
 
 		$found = false;
-		$checkPath = $coreModuleDir . '/' . $module;
+		$checkPath = $coreModuleDir . '/' . $module;      
 		if (file_exists($checkPath)) {
 			$found = true;
 		} else {
@@ -1422,24 +1423,43 @@ class MODULEUTIL
         return $result;
     }
 
+    private function findVariableInExtraData($variable) {
+        $files = glob(rtrim($this->extra_data, '/') . '/*.json');
+
+        foreach ($files as $file) {
+            $json = file_get_contents($file);
+            $data = json_decode($json, true);
+
+            if (!is_array($data)) {
+                continue; 
+            }
+
+            if (array_key_exists($variable, $data)) {
+                return $data[$variable];
+            }
+        }
+
+        return null; 
+    }
+
     public function getTemplate() {
         $fileName = $_GET['filename'];
         $block = $_GET['block'];
         $group = $_GET['group'];
-
-        if ($group === 'allsky_allsky') {
-            $blockFilename = $this->allsky_config . '/overlay/config/blocks/allsky_allsky/' . $fileName;
-        } else {
+        
+        $blockFilename = $this->allsky_config . '/overlay/config/blocks/' . $group . "/" . $fileName;
+        $rawBlockData = @file_get_contents($blockFilename);
+        if ($rawBlockData === false) {
             $blockFilename = $this->myFilesData . DIRECTORY_SEPARATOR . 'blocks' . DIRECTORY_SEPARATOR . $group . DIRECTORY_SEPARATOR . $fileName;
+            $rawBlockData = file_get_contents($blockFilename);
         }
-        $rawBlockData = file_get_contents($blockFilename);
+
         $result = json_decode($rawBlockData, true);
         $result = $result[$block];
 
         $moduleData = $this->findModule($group . '.py');
-
         foreach ($result['fields'] as &$row) {
-            foreach ($row as &$rowData) {            
+            foreach ($row as &$rowData) {
                 if (isset($rowData["text"])) {
                     $format = "";
                     $font = "";                    
@@ -1447,6 +1467,7 @@ class MODULEUTIL
                         $variable = $matches[1];
                         if (isset($moduleData->extradata)) {
                             if (isset($moduleData->extradata->values)) {
+                                $found = false;
                                 foreach ($moduleData->extradata->values as $key=>$value) {
                                     $clean = preg_replace('/\d+$/', '', $variable);
                                     if ($key == $clean || $key == $clean . "\${COUNT}" ) {
@@ -1455,7 +1476,20 @@ class MODULEUTIL
                                         }
                                         if (isset($value->font)) {
                                             $font = $value->font;
-                                        }                                        
+                                        }
+                                        $found = true;
+                                        break;                                     
+                                    }
+                                }
+                                if (!$found) {
+                                    $extra_data = $this->findVariableInExtraData($variable);
+                                    if ($extra_data !== null) {
+                                        if (isset($extra_data["format"])) {
+                                            $format = $extra_data["format"];
+                                        }
+                                        if (isset($extra_data["font"])) {
+                                            $font = $extra_data["font"];
+                                        }
                                     }
                                 }
                             }
@@ -1481,6 +1515,7 @@ class MODULEUTIL
                                                 if (isset($value->font)) {
                                                     $font = $value->font;
                                                 }
+                                                break;
                                             }
                                         }
                                     }

@@ -414,7 +414,13 @@
         {
             "format": "mtok",
             "description": "Miles to Kilometres",
-            "example": "",           
+            "example": "",
+            "attribute": [
+                "mtok",
+                "allsky",
+                "dp",
+                "distunit"
+            ],                     
             "stackable": false,
             "type": "distance"
         },
@@ -423,6 +429,12 @@
             "description": "Kilometres to Miles",
             "example": "",           
             "stackable": false,
+            "attribute": [
+                "ktom",                
+                "allsky",
+                "dp",
+                "distunit"
+            ],                     
             "type": "distance"
         }  
     ]

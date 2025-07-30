@@ -109,12 +109,29 @@ class AllskyFormatters:
 		Otherwise, return False.
 		"""
 		for index, format in enumerate(formats):  
-			if format.startswith('dp'):
-				num_part = format[2:]
-				if num_part.isdigit():
-					return int(num_part)
+			if format.startswith('dp='):
+				try:
+					print(format.split('='))
+					return int(format.split('=')[1])
+				except (IndexError, ValueError):
+					return 0
+			elif format == 'dp':
+				return 0
 
-		return False
+			return 0
+
+	def _parse_format(self, formats, prefix, return_type=str):
+		for index, format in enumerate(formats):       
+			if format.startswith(f'{prefix}='):
+				if format == prefix:
+					return return_type()
+
+				try:
+					return return_type(format.split('=', 1)[1])
+				except (ValueError, IndexError):
+					return return_type()
+
+		return return_type()
 
 	def _format_number(self, value, dp, use_locale):
 		if use_locale:
@@ -246,7 +263,7 @@ class AllskyFormatters:
 	
 		match = re.search(r'\bdp(\d+)\b', format)
 		if match:
-			dp = self._parse_dp(formats)
+			dp = self._parse_format(formats, 'dp', int)
 			processed = True
    
 		if processed:
@@ -359,7 +376,7 @@ class AllskyFormatters:
 			match = re.search(r'\bdp(\d+)\b', format)
 			dp = 0
 			if match:
-				dp = self._parse_dp(formats)
+				dp = self._parse_format(formats, 'dp', int)
 			
 			value = self._format_number(value, dp, False)
          
@@ -439,9 +456,7 @@ class AllskyFormatters:
 			value = f"{degrees}° {minutes}' {seconds}\""
 		else:
 			match = re.search(r'\bdp(\d+)\b', format)
-			dp = 0
-			if match:
-				dp = self._parse_dp(formats)
+			dp = self._parse_format(formats, 'dp', int)
 			
 			value = self._format_number(float_value, dp, False)
 			
@@ -475,10 +490,7 @@ class AllskyFormatters:
 		
 		formats = self._split_format(format)
 
-		match = re.search(r'\bdp(\d+)\b', format)
-		dp = 0
-		if match:
-			dp = self._parse_dp(formats)
+		dp = self._parse_format(formats, 'dp', int)
 		
 		value = self._format_number(float_value, dp, False)
 		
@@ -619,16 +631,27 @@ class AllskyFormatters:
 
 		value = int(value)
   
-		if format == 'allsky':
+		formats = self._split_format(format)
+    
+		if 'allsky' in formats:
 			pass
 
-		if format == 'mtok':
+		if 'mtok' in formats:
 			value = int(value * 1.60934)
 
-		if format == 'ktom':
+		if 'ktom' in formats:
 			value = int(value * 0.621371)
-           
-		return value
+
+		use_locale = False
+		if 'locale' in formats:
+			use_locale = True    
+	
+		dp = self._parse_format(formats, 'dp', int)
+
+		value = self._format_number(value, dp, use_locale)
+		distunit = self._parse_format(formats, 'distunit', str)
+              
+		return f'{value}{distunit}'
 
 allsky_formatters = AllskyFormatters()
 

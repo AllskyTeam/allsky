@@ -371,37 +371,41 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 }
 
 void usage_and_exit(int x) {
-	std::cerr << "Usage: " << ME << " [-v] -i <images-file> | -d <imagedir> -e <ext>"
-		<< " [-b <brightness> -o <output> | -S] [-D <output-data-file>] "
-		<< " [-s <WxH>] [-Q <max-threads>] [-q <nice>]" << std::endl;
+#define NL		std::endl		// make the code easier to read
+
+	std::cerr << "\nUsage: " << ME << " [-v] -i <images-file> | -d <imagedir> -e <ext>" << " \\" << NL
+		<< "\t[-b <brightness> -o <output> | -S] [-D <output-data-file>] " << " \\" << NL
+		<< "\t[-s <WxH>] [-Q <max-threads>] [-q <nice>]" << NL;
 	if (x) {
-		std::cerr << KRED
-			<< "Either a list of files OR a source directory and file extension are required." << std::endl
+		std::cerr << "\n" << KRED
+			<< "Either a list of files OR a source directory and file extension are required." << NL
 			<< "An output file name is required to render startrails."
-			<< KNRM << std::endl;
+			<< KNRM << NL;
 	}
 
-	std::cerr << std::endl << "Arguments:" << std::endl;
-	std::cerr << "-h | --help : display this help, then exit" << std::endl;
-	std::cerr << "-v | --verbose : increase log verbosity" << std::endl;
-	std::cerr << "-S | --statistics : print image directory statistics without producing image" << std::endl;
-	std::cerr << "-i | --images <str> : file containing list of images to process" << std::endl;
-	std::cerr << "     If the file also contains the mean brightness for an image, it will be used" << std::endl;
-	std::cerr << "-d | --directory <str> : directory from which to read images" << std::endl;
-	std::cerr << "     If --images is specified then --directory is not needed unless";
-	std::cerr << "     one or more image names does not start with a '/'." << std::endl;
-	std::cerr << "-D | --output-data <str> : save per-image summary data to the specified file" << std::endl;
-	std::cerr << "-e | --extension <str> : filter images to just this extension" << std::endl;
-	std::cerr << "-Q | --max-threads <int> : limit maximum number of processing threads (all cpus)" << std::endl;
-	std::cerr << "-q | --nice-level <int> : nice(2) level of processing threads (10)" << std::endl;
-	std::cerr << "-o | --output <str> : output image filename" << std::endl;
-	std::cerr << "-s | --image-size <int>x<int> : restrict processed images to this size" << std::endl;
-	std::cerr << "-b | --brightness <float> : ranges from 0 (black) to 1 (white). (0.35)" << std::endl;
-	std::cerr << "\tA moonless sky may be as low as 0.05 while full moon can be as high as 0.4" << std::endl;
+	std::cerr << NL;
+	std::cerr << "Arguments:" << NL;
+	std::cerr << "   -h | --help : display this message, then exit." << NL;
+	std::cerr << "   -v | --verbose : increase log verbosity." << NL;
+	std::cerr << "   -S | --statistics : print image directory statistics without producing image." << NL;
+	std::cerr << "   -i | --images <str> : file containing list of images to process." << NL;
+	std::cerr << "        If the file also contains the mean brightness for an image, it will be used." << NL;
+	std::cerr << "   -d | --directory <str> : directory from which to read images." << NL;
+	std::cerr << "        If --images is specified then --directory is not needed unless." << NL;
+	std::cerr << "        one or more image names does not start with a '/'.." << NL;
+	std::cerr << "   -D | --output-data <str> : save per-image summary data to the specified file." << NL;
+	std::cerr << "   -e | --extension <str> : filter images to just this extension." << NL;
+	std::cerr << "   -Q | --max-threads <int> : limit maximum number of processing threads (all cpus)." << NL;
+	std::cerr << "   -q | --nice-level <int> : nice(2) level of processing threads (10)." << NL;
+	std::cerr << "   -o | --output <str> : output image filename." << NL;
+	std::cerr << "   -s | --image-size <int>x<int> : restrict processed images to this size." << NL;
+	std::cerr << "   -b | --brightness <float> : ranges from 0 (black) to 1 (white). (0.35)." << NL;
+	std::cerr << "\tA moonless sky may be as low as 0.05 while full moon can be as high as 0.4." << NL;
 
-	std::cerr << std::endl;
-	std::cerr << "ex: startrails -b 0.07 -d ../images/20240710/ -e jpg -o startrails.jpg" << std::endl;
+	std::cerr << NL;
+	std::cerr << "For example: startrails -b 0.07 -d ~/allsky/images/20250710/ -e jpg -o startrails.jpg" << NL;
 	exit(x);
+#undef END
 }
 
 int main(int argc, char* argv[]) {

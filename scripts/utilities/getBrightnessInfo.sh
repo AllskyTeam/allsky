@@ -62,12 +62,31 @@ grep --no-filename "startrails: Minimum" ${LOGS} 2> /dev/null |
 	nawk 'BEGIN {
 			print;
 			t_min=0; t_max=0; t_mean=0; t_median=0; t_num=0; t_used=0; t_notUsed=0;
-			numFmt = "%-20s   %.3f     %.3f     %.3f     %.3f     %-9d     %-d\n";
+			entries_not_used = 0;
+			headerFmt		= "%-20s   %-8s  %-8s  %-8s  %-8s  %-12s  %-9s  %-s\n",
+			headerFmt		= "%-20s   %-5s     %-5s     %-5s     %-5s     %-5s        %-9s  %-s\n",
+			numFmt			= "%-20s   %.3f     %.3f     %.3f     %.3f     %5d         %5d";
+			numFmtAverage	= numFmt "      -\n";			# theshold not averaged
+			numFmtData   	= numFmt "      %-.4f\n";		# threshold
 		}
 		{
+			date = substr($1, 0, 10) "  "  substr($1, 12, 8);
+			min = $3;			t_min += min;
+			max = $5;			t_max += max;
+			if (min == "nan" && max = "nan") {
+				entries_not_used++;
+				next;
+			}
+			mean = $7;			t_mean += mean;
+			median = $9;		t_median += median;
+			used = $11;			if (used != "") t_used += used;
+			notUsed = $13;		if (notUsed != "") t_notUsed += notUsed;
+			threshold = $15;	# does not make sense to average this
+
 			if (++num == 1) {
-				header = sprintf("%-20s   %-8s  %-8s  %-8s  %-8s  %-12s  %-s\n",
-					"Date", "Minimum", "Maximum", "Mean", "Median", "Images used", "Not used");
+				header = sprintf(headerFmt,
+					"Date", "Minimum", "Maximum", "Mean", "Median",
+					"Images used", "Not used", "Threshold");
 				printf(header);
 				dashes = "-";
 				l = length(header) - 2;
@@ -77,15 +96,7 @@ grep --no-filename "startrails: Minimum" ${LOGS} 2> /dev/null |
 				printf("%s\n", dashes);
 			}
 
-
-			date = substr($1, 0, 10) "  "  substr($1, 12, 8);
-			min = $3;		t_min += min;
-			max = $5;		t_max += max;
-			mean = $7;		t_mean += mean;
-			median = $9;	t_median += median;
-			used = $11;		t_used += used;
-			notUsed = $11;		t_notUsed += notUsed;
-			printf(numFmt, date, min, max, mean, median, used, notUsed);
+			printf(numFmtData, date, min, max, mean, median, used, notUsed, threshold);
 		}
 		END {
 			if (num == 0) {
@@ -96,8 +107,19 @@ grep --no-filename "startrails: Minimum" ${LOGS} 2> /dev/null |
 				printf("Consider running this command in a few days to get more information.\n");
 			} else {
 				printf("%s\n", dashes);
-				printf(numFmt, "Total average", t_min/num, t_max/num, t_mean/num, t_median/num, t_used/num, t_notUsed/num);
+				printf(numFmtAverage, "Averages", t_min/num, t_max/num, t_mean/num,
+					t_median/num, t_used/num, t_notUsed/num);
 			}
+
+			if (entries_not_used > 0) {
+				printf("\n%d entr", entries_not_used);
+				if (entries_not_used == 1)
+					printf("y");
+				else
+					printf("ies");
+				printf(" not used due to invalid data.\n");
+			}
+
 			exit 0;
 		}'
 if [[ $? -ne 0 ]]; then

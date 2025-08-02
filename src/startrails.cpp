@@ -15,6 +15,7 @@ using namespace std;
 #include <glob.h>
 #include <sys/resource.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <algorithm>
 #include <cstdlib>
@@ -71,11 +72,22 @@ bool read_file(
 		char *msg,
 		int msg_size)
 {
+	// cv::imread() gives a terrible message when it can't read the file,
+	// so check outselves.
+	struct stat sb;
+	if (stat(filename, &sb) == -1) {
+		if (cf->verbose) {
+			stdio_mutex.lock();
+			fprintf(stderr, KRED "ERROR reading file '%s': %s.\n" KNRM, filename, strerror(errno));
+			stdio_mutex.unlock();
+		}
+		return(false);
+	}
 	*mat = cv::imread(filename, cv::IMREAD_UNCHANGED);
 	if (! mat->data || mat->empty()) {
 		if (cf->verbose) {
 			stdio_mutex.lock();
-			fprintf(stderr, "Error reading file '%s': no data\n", filename);
+			fprintf(stderr, KRED "ERROR reading file '%s': no data\n" KNRM, filename);
 			stdio_mutex.unlock();
 		}
 		return(false);
@@ -90,7 +102,7 @@ bool read_file(
 	if (mat->cols == 0 || mat->rows == 0) {
 		if (cf->verbose) {
 			stdio_mutex.lock();
-			fprintf(stderr, "%s: invalid image size %dx%d; ignoring file\n", filename, mat->cols, mat->rows);
+			fprintf(stderr, "%s: WARNING: invalid image size %dx%d; ignoring file.\n", filename, mat->cols, mat->rows);
 			stdio_mutex.unlock();
 		}
 		return(false);
@@ -100,7 +112,7 @@ bool read_file(
 		if (cf->verbose) {
 			stdio_mutex.lock();
 // TODO: Convert image to expected size
-			fprintf(stderr, "%s: image size %dx%d does not match expected size %dx%d; ignoring\n",
+			fprintf(stderr, "%s: WARNING: image size %dx%d does not match expected size %dx%d; ignoring file.\n",
 				filename, mat->cols, mat->rows, cf->img_width, cf->img_height);
 			stdio_mutex.unlock();
 		}
@@ -327,7 +339,7 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 				if (b >= 0 && b <= 1.0)
 					cf->brightness_limit = b;
 				else {
-					fprintf(stderr, KRED "ERROR: Invalid brightness level %f. Must be from 0 to 1.0; exiting\n", b);
+					fprintf(stderr, KRED "%s: ERROR: Invalid brightness level %f. Must be from 0 to 1.0; exiting\n" KNRM, ME, b);
 					usage_and_exit(1);
 				}
 				break;
@@ -434,11 +446,11 @@ int main(int argc, char* argv[]) {
 						 [](unsigned char c) { return std::tolower(c); });
 
 		if (config.dst_startrails.empty()) {
-			fprintf(stderr, KRED "%s: ERROR: Output file not specified.\n\n", ME);
+			fprintf(stderr, KRED "%s: ERROR: Output file not specified.\n\n" KNRM, ME);
 			usage_and_exit(3);
 		}
 		if (extcheck.rfind(".png") == string::npos && extcheck.rfind(".jpg") == string::npos) {
-			fprintf(stderr, KRED "%s: ERROR: Output file '%s' is missing extension (.jpg or .png).\n\n",
+			fprintf(stderr, KRED "%s: ERROR: Output file '%s' is missing extension (.jpg or .png).\n\n" KNRM,
 					ME, config.dst_startrails.c_str());
 			usage_and_exit(3);
 		}
@@ -454,7 +466,7 @@ int main(int argc, char* argv[]) {
 		} else {
 			dataIO = fopen(config.output_data_file.c_str(), "w");
 			if (dataIO == NULL) {
-				fprintf(stderr, KRED "%s: ERROR: Data output file '%s' could not be opened: %s\n\n",
+				fprintf(stderr, KRED "%s: ERROR: Data output file '%s' could not be opened: %s\n\n" KNRM,
 					ME, config.output_data_file.c_str(), strerror(errno));
 				exit(4);
 			}
@@ -478,8 +490,8 @@ int main(int argc, char* argv[]) {
 		} else {
 			std::ifstream image_file(config.images);
 			if (! image_file.is_open()) {
-				std::cerr << ME << ": ERROR: Could not open image file '" << config.images << "'"
-				<< ", exiting." << std::endl;
+				std::cerr << KRED << ME << ": ERROR: Could not open image file '" << config.images << "'"
+				<< ", exiting." << KNRM << std::endl;
 				exit(NO_IMAGES);
 			}
 
@@ -490,8 +502,8 @@ int main(int argc, char* argv[]) {
 		}
 		nfiles = files.gl_pathc = images.size();
 		if (nfiles == 0) {
-			std::cerr << ME << ": ERROR: No images listed in '" << config.images << "'";
-			std::cerr << ", exiting." << std::endl;
+			std::cerr << KRED << ME << ": ERROR: No images listed in '" << config.images << "'";
+			std::cerr << ", exiting." << KNRM << std::endl;
 			exit(NO_IMAGES);
 		}
 
@@ -506,8 +518,8 @@ int main(int argc, char* argv[]) {
 			// prepend the input directory name.
 			if (image.c_str()[0] != '/') {
 				if(config.img_src_dir.empty()) {
-					std::cerr << ME << ": ERROR: image source directory not specified and"
-					<< " at least one image name is not a full pathname." << std::endl << std::endl;
+					std::cerr << KRED << ME << ": ERROR: image source directory not specified and"
+					<< " at least one image name is not a full pathname." << KNRM << std::endl << std::endl;
 					usage_and_exit(3);
 				}
 				image = config.img_src_dir + "/" + image;
@@ -524,8 +536,8 @@ int main(int argc, char* argv[]) {
 		nfiles = files.gl_pathc;
 		if (nfiles == 0) {
 			globfree(&files);
-			std::cerr << ME << ": ERROR: No images found in '" << config.img_src_dir << "'";
-			std::cerr << ", exiting." << std::endl;
+			std::cerr << KRED << ME << ": ERROR: No images found in '" << config.img_src_dir << "'";
+			std::cerr << ", exiting." << KNRM << std::endl;
 			exit(NO_IMAGES);
 		}
 	}
@@ -554,7 +566,7 @@ int main(int argc, char* argv[]) {
 	if (nchan == 0 || (config.img_width == 0 && config.img_height == 0)) {
 		char not_used[1];
 		if (! read_file(&config, sample_file, &temp, sample_file_num+1, not_used, 0)) {
-			fprintf(stderr, "%s: ERROR: Unable to read sample file '%s'; quitting.\n", ME, sample_file);
+			fprintf(stderr, KRED "%s: ERROR: Unable to read sample file '%s'; quitting.\n" KNRM, ME, sample_file);
 			exit(BAD_SAMPLE_FILE);
 		}
 		if (config.verbose > 1) {
@@ -647,11 +659,11 @@ int main(int argc, char* argv[]) {
 		} catch (cv::Exception& ex) {
 			// Use lowercase "s"tartrails here and uppercase below so we
 			// know what produced the error.
-			fprintf(stderr, "%s: ERROR: could not save startrails file: %s\n", ME, ex.what());
+			fprintf(stderr, KRED "%s: ERROR: could not save startrails file: %s\n" KNRM, ME, ex.what());
 			exit(2);
 		}
 		if (! result) {
-			fprintf(stderr, "%s: ERROR: could not save Startrails file: %s\n", ME, strerror(errno));
+			fprintf(stderr, KRED "%s: ERROR: could not save Startrails file: %s\n" KNRM, ME, strerror(errno));
 			exit(2);
 		}
 	}

@@ -60,7 +60,7 @@ function usage_and_exit()
 	echo "      change_tmp"
 	echo "      samba"
 	echo "      move_images"
-	echo "      bad_images_info"
+	echo "      bad_images_info [--show_bad_images]"
 	echo "      new_rpi_camera_info [--camera NUM]"
 	echo "      show_start_times [--zero] [angle [latitude [longitude]]]"
 	echo "      compare_paths --website | --server"

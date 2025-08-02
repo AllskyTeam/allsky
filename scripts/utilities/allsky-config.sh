@@ -65,6 +65,7 @@ function usage_and_exit()
 	echo "      show_start_times [--zero] [angle [latitude [longitude]]]"
 	echo "      compare_paths --website | --server"
 	echo "      get_startrails_info"
+	echo "      compare_startrails"
 	echo "      check_post_data"
 	echo "      get_filesystems"
 	echo "      encoders"
@@ -291,6 +292,15 @@ get_startrails_info()
 
 
 #####
+# Create multiple startrails with different thresholds.
+compare_startrails()
+{
+	# shellcheck disable=SC2068
+	compareStartrails.sh ${@}
+}
+
+
+#####
 # Help determine some timelapse settings.
 config_timelapse()
 {
@@ -302,7 +312,6 @@ config_timelapse()
 	# shellcheck disable=SC2068
 	configTimelapse.sh ${@}
 }
-
 
 
 #####
@@ -611,6 +620,8 @@ if [[ -z ${FUNTION_TO_EXECUTE} ]]; then
 	CMDS+=("${C}"			"$( L "Compare upload and Website paths                    (${C})" )"); ((N++))
 	C="get_startrails_info"
 	CMDS+=("${C}"			"$( L "Get information on startrails image brightness      (${C})" )"); ((N++))
+	C="compare_startrails"
+	CMDS+=("${C}"			"$( L "Create multiple startrails to compare settngs       (${C})" )"); ((N++))
 	C="check_post_data"
 	CMDS+=("${C}"			"$( L "Troubleshoot the 'data.json is X days old' message  (${C})" )"); ((N++))
 	C="get_filesystems"

@@ -27,6 +27,7 @@ import shlex
 import board
 import busio
 import importlib
+import requests
 
 from pathlib import Path
 from functools import reduce
@@ -93,6 +94,8 @@ DBDATA = {}
 PI_INFO_MODEL = 1
 Pi_INFO_CPU_TEMPERATURE = 2
 
+BASE_SERVER_URL = 'http://localhost:5000/gpio'
+    
 def get_secrets(keys: Union[str, List[str]]) -> Union[str, Dict[str, str], None]:
     """
     Retrieve secret(s) from the given JSON file.
@@ -983,70 +986,51 @@ def getGPIOPin(pin):
 
     return result
 
-def connect_pigpio(show_errors=False):
-    pi = pigpio.pi(show_errors)
-    
-    return pi
+def to_bool(value):
+    return str(value).strip().lower() == 'on' or str(value).strip() == '1'
+
+def normalise_on_off(value):
+    if str(value).strip().lower() == 'on' or str(value).strip() == '1':
+        return 'on'
+    return 'off'
 
 def read_gpio_pin(gpio_pin, pi=None, show_errors=False):
-    pin_state = None
-    try:
-        if pi is None:
-            pi = pigpio.pi(show_errors=show_errors)
-            
-        if pi.connected:        
-            pi.set_mode(gpio_pin, pigpio.INPUT)
-            pin_state = pi.read(gpio_pin)
-    except:
-        pass
-    
-    return pin_state
+        
+    response = requests.get(f'{BASE_SERVER_URL}/digital/{gpio_pin}')
+    response.raise_for_status()
+    data = response.json()
+
+    return data.get('value') == 'on'
 
 def set_gpio_pin(gpio_pin, state, pi=None, show_errors=False):
-    result = False
-    try:
-        if pi is None:
-            pi = pigpio.pi(show_errors=show_errors)
-            
-        if pi.connected:        
-            pi.set_mode(gpio_pin, pigpio.OUTPUT)
-            pi.write(gpio_pin, state)
-            result = True
-    except:
-        pass
-    
-    return result
+    state = normalise_on_off(state)
+    response = requests.post(f'{BASE_SERVER_URL}/digital', json={
+        'pin': str(gpio_pin),
+        'state': state.lower()
+    })
+    response.raise_for_status()
+    return response.json()
 
 def set_pwm(gpio_pin, duty_cycle, pi=None, show_errors=False):
-    result = False
-    try:
-        if pi is None:
-            pi = pigpio.pi(show_errors=False)
-            
-        if pi.connected:
-            pi.set_PWM_range(gpio_pin, 100)
-            pi.set_PWM_frequency(gpio_pin, 1_000)
-            pi.set_PWM_dutycycle(gpio_pin, duty_cycle)
-            result = True
-    except:
-        pass
-    
-    return result
+    frequency = 1000
+    response = requests.post(f'{BASE_SERVER_URL}/pwm', json={
+        'pin': str(gpio_pin),
+        'duty': duty_cycle,
+        'frequency': frequency
+    })
+    response.raise_for_status()
+    return response.json()
 
 def stop_pwm(gpio_pin):
-    result = False
-    try:
-        if pi is None:
-            pi = pigpio.pi(show_errors=False)
-            
-        if pi.connected:
-            pi.set_PWM_dutycycle(self._fan_pin, 0)
-            pi.stop()
-            result = True
-    except:
-        pass
-
-    return result
+    frequency = 1000
+    duty_cycle = 0
+    response = requests.post(f'{BASE_SERVER_URL}/pwm', json={
+        'pin': str(gpio_pin),
+        'duty': duty_cycle,
+        'frequency': frequency
+    })
+    response.raise_for_status()
+    return response.json()
     
 def _get_value_from_json_file(file_path, variable):
     """

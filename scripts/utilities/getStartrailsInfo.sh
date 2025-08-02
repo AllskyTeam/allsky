@@ -63,24 +63,31 @@ grep --no-filename "startrails: Minimum" ${LOGS} 2> /dev/null |
 			print;
 			t_min=0; t_max=0; t_mean=0; t_median=0; t_num=0; t_used=0; t_notUsed=0;
 			entries_not_used = 0;
-			headerFmt		= "%-20s  %-5s   %-5s    %-5s    %-5s     %-5s   %-9s  %-s\n";
-			numFmt			= "%-20s   %.3f     %.3f     %.3f     %.3f    %5d         %5d";
+			headerFmt		= "%-20s   %-5s   %-5s   %-5s     %-5s     %-5s   %-9s  %-s\n";
+			numFmt			= "%-20s   %.3f     %.3f     %.3f     %.3f     %5d         %5d";
 			numFmtAverage	= numFmt "       -\n";			# theshold not averaged
 			numFmtData   	= numFmt "       %-4s\n";		# threshold
 		}
 		{
 			date = substr($1, 0, 10) "  "  substr($1, 12, 8);
-			min = $3;			t_min += min;
-			max = $5;			t_max += max;
-			if (min == "nan" && max = "nan") {
+			min = $3;
+			max = $5;
+			if (min == -1.0 || min == "nan" || max == "nan") {
 				entries_not_used++;
 				next;
 			}
-			mean = $7;			t_mean += mean;
-			median = $9;		t_median += median;
-			used = $11;			if (used != "") t_used += used;
-			notUsed = $13;		if (notUsed != "") t_notUsed += notUsed;
-			threshold = $15;	# does not make sense to average this
+			mean = $7;
+			median = $9;
+			used = $11;
+			notUsed = $13;
+			threshold = $15;
+			t_min += min;
+			t_max += max;
+			t_mean += mean;
+			t_median += median;
+			if (used != "") t_used += used;
+			if (notUsed != "") t_notUsed += notUsed;
+			# does not make sense to average threshold
 
 			if (++num == 1) {
 				header = sprintf(headerFmt,

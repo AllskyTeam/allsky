@@ -1,8 +1,10 @@
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required
 import board
 import digitalio
 import pwmio
 import threading
+from modules.auth_utils import permission_required
 
 gpio_bp = Blueprint("gpio", __name__)
 
@@ -19,6 +21,8 @@ def get_board_pin(gpio_str):
 
 
 @gpio_bp.route("/all", methods=["GET"])
+@jwt_required(optional=True)
+@permission_required("gpio", "update")
 def all_gpio_status():
     try:
         with gpio_lock:

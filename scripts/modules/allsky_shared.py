@@ -84,7 +84,6 @@ SETTINGS_FILE = getEnvironmentVariable("SETTINGS_FILE", fatal=True)
 ALLSKY_OVERLAY = getEnvironmentVariable("ALLSKY_OVERLAY", fatal=True)
 ALLSKY_WEBUI = getEnvironmentVariable("ALLSKY_WEBUI", fatal=True)
 ALLSKY_MODULES = getEnvironmentVariable("ALLSKY_MODULES", fatal=True)
-SETTINGS_FILE = getEnvironmentVariable("SETTINGS_FILE", fatal=True)
 
 LOGLEVEL = 0
 SETTINGS = {}
@@ -384,7 +383,11 @@ def log(level, text, preventNewline = False, exitCode=None, sendToAllsky=False):
         else:
             print(text)
 
-    if sendToAllsky and level == 0:
+    if sendToAllsky or level == 0:
+        if level == 0:
+            type = "error"
+        else:
+            type = "warning"
         # Need to escape single quotes in {text}.
         doubleQuote = '"'
         text = text.replace("'", f"'{doubleQuote}'{doubleQuote}'")

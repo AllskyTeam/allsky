@@ -62,10 +62,27 @@
 				<ul>
 					<li>Updated to ZWO SDK v1.38 which supports the
 						ASI582MC and Seestar 585MC cameras.
-					<li>Added a
-						<a external="true" allsky="true"
-							href="/documentation/troubleshooting/troubleshootingTools.html">Troubleshooting Tools</a>
-						Documentation page to list tools to aid in troubleshooting.
+					<li>The <code>allsky-config &nbsp; get_startrails_info</code>
+						command (was called <code>get_brightness_info</code>)
+						now displays the
+						<span class="WebUISetting">Brightness Threshold</span>
+						in use when each startrails image was created.
+					<li>Startrails:
+						<ul>
+							<li>Accepts a file that contains the images to process,
+								which means a subset of the files in a directory
+								can be used (e.g., just the nighttime files) or
+								files from multiple nights can be used.
+								<br>
+								Example usage:
+								<code>generateForDay.sh --startrails --images file</code>.
+							<li>Can save per-image information to a file via the
+								<code>--output-data file</code> argument.
+								This is useful to see which file(s) were not included.
+<!--
+							<li>When called at end of night, startrails creates
+								saves information on the run in the Allsky database.
+-->
 				</ul>
 
 				<h4>Bug Fixes</h4>
@@ -111,6 +128,12 @@
 					<li>When 4 consecutive errors occur while capturing images
 						with an RPi camera, the last error is now shown
 						in the WebUI's "System Messages" section.
+					<li>The <code>allsky-config get_brightness_info</code> command
+						now outputs the number of images used and not used in the startrails.
+					<li>Added a
+						<a external="true" allsky="true"
+							href="/documentation/troubleshooting/troubleshootingTools.html">Troubleshooting Tools</a>
+						Documentation page to list tools to aid in troubleshooting.
 				</ul>
 
 				<h4>Bug Fixes</h4>

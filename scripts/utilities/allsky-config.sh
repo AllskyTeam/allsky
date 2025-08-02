@@ -64,7 +64,7 @@ function usage_and_exit()
 	echo "      new_rpi_camera_info [--camera NUM]"
 	echo "      show_start_times [--zero] [angle [latitude [longitude]]]"
 	echo "      compare_paths --website | --server"
-	echo "      get_brightness_info"
+	echo "      get_startrails_info"
 	echo "      check_post_data"
 	echo "      get_filesystems"
 	echo "      encoders"
@@ -283,10 +283,10 @@ function compare_paths()
 
 #####
 # Display brightness information from the startrails command.
-get_brightness_info()
+get_startrails_info()
 {
 	# shellcheck disable=SC2068
-	getBrightnessInfo.sh ${@}
+	getStartrailsInfo.sh ${@}
 }
 
 
@@ -609,8 +609,8 @@ if [[ -z ${FUNTION_TO_EXECUTE} ]]; then
 	CMDS+=("${C}"			"$( L "Show daytime and nighttime start times              (${C})" )"); ((N++))
 	C="compare_paths"
 	CMDS+=("${C}"			"$( L "Compare upload and Website paths                    (${C})" )"); ((N++))
-	C="get_brightness_info"
-	CMDS+=("${C}"			"$( L "Get information on image brightness                 (${C})" )"); ((N++))
+	C="get_startrails_info"
+	CMDS+=("${C}"			"$( L "Get information on startrails image brightness      (${C})" )"); ((N++))
 	C="check_post_data"
 	CMDS+=("${C}"			"$( L "Troubleshoot the 'data.json is X days old' message  (${C})" )"); ((N++))
 	C="get_filesystems"

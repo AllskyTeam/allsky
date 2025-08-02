@@ -569,6 +569,9 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 	fi
 
 	##### Startrails
+# TODO: run "allsky-config get_startrails_info" and see if there are images
+# not being used.
+
 	if [[ ${S_startrailsgenerate} == "true" && ${S_startrailsupload} == "false" && ${USE_SOMETHING} == "true" ]]; then
 		heading "Warning"
 		echo -n "Startrails are being created (${WSNs}${S_startrailsgenerate}${WSNe} = Yes)"
@@ -601,7 +604,7 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 		heading "Warning"
 		echo -n "${WSNs}${L}${WSNe} is 1.0 which means ALL images"
 		echo    " will be USED when creating startrails, even daytime images."
-		echo    "FIX: Increase the value; start off at 0.9 and adjust if needed."
+		echo    "FIX: Decrease the value; start off at 0.1 and adjust if needed."
 	elif [[ ${X} -eq 2 ]]; then
 		heading "Warning"
 		echo -n "${WSNs}${L}${WSNe} is an invalid value:"

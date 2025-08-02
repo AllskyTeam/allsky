@@ -49,5 +49,38 @@
         "type": {
             "field": "boolean"
         }  
+    },
+    "fsunit": {
+        "description": "Add filesize settings units symbol",
+        "example": "",
+        "type": {
+            "field": "boolean"
+        }  
+    },
+    "mtok": {
+        "description": "Miles to Kilometers",
+        "example": "",
+        "type": {
+            "field": "boolean"
+        }  
+    },
+    "ktom": {
+        "description": "Kilometers to Miles",
+        "example": "",
+        "type": {
+            "field": "boolean"
+        }  
+    },
+    "distunit": {
+        "description": "Distance Unit",
+        "example": "",
+        "type": {
+            "field": "select",
+            "values": {
+                "": "None",
+                "Mi": "Miles",
+                "Km": "Kilometeres"
+            }
+        }  
     }      
 }

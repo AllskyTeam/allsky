@@ -285,7 +285,32 @@ class ALLSKYOVERLAYDATA:
 					if 'type' in field_data:
 						variable_group = field_data['type']
           
-					self._debug(f'INFO: Formatting variable {variable}, value {self.extra_fields[variable]["value"]}, using format "{formats}"')
+					#self._debug(f'INFO: Formatting variable {variable}, value {self.extra_fields[variable]["value"]}, using format "{formats}"')
+     
+     
+					format = formats
+					if format in self.settings_file:
+						old_format = format
+						format = self.settings_file[format]
+						self._debug(f'INFO: swapped format {old_format} for {format}')     
+
+					format_function = 'as_' + variable_group.lower()
+					if hasattr(allskyformatters.allsky_formatters, format_function):
+						self._debug(f'INFO: Formatter "{format_function}" found for variable "{variable}". Value = "{value}", format = "{format}"')        
+						try:
+							if variable == 'DATE' or variable == 'AS_DATE' or variable == 'AS_TIME' or variable == 'TIME':
+								value = time.time()
+				
+							value = getattr(allskyformatters.allsky_formatters, format_function)(value, variable, format, '', self.debug_mode)
+						except AllskyFormatError as e:
+							self._log(e.log_level, e.message, send_to_allsky=e.send_to_allsky)
+					else:
+						self._log(4, f'Formatter {format_function} NOT found')	     
+	
+     
+     
+     
+					'''
 					format_list = formats.split('|')
 					for index, format in enumerate(format_list):
 						if index > 0:
@@ -309,8 +334,7 @@ class ALLSKYOVERLAYDATA:
 								self._log(e.log_level, e.message, send_to_allsky=e.send_to_allsky)
 						else:
 							self._log(4, f'Formatter {format_function} NOT found')	
-					#else:
-					#	self._debug(f'ERROR: No variable defintion found for {variable}')
+					'''
 				else:
 					self._debug(f'ERROR: Variable {variable} not found in extra fields')
         

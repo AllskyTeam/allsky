@@ -1,6 +1,13 @@
 {
     "data": [
         {
+            "format": "allsky",
+            "description": "Use the default Allsky format",
+            "example": "25-12-23 23:20",
+            "stackable": false,
+            "type": "date"
+        },
+        {
             "format": "%d-%m-%y %H:%M",
             "description": "Short date/time UK format",
             "example": "25-12-23 23:20",
@@ -72,10 +79,7 @@
                 "locale"
             ],
             "type": "number"
-        },
-
-
-                    
+        },     
         {
             "format": "{:.0f}",            
             "description": "Number to zero DP. (LEGACY DO NOT USE)",
@@ -221,7 +225,10 @@
         {
             "format": "Auto",
             "description": "Auto Filesize",
-            "example": "12",       
+            "example": "12",
+            "attribute": [
+                "fsunit"
+            ],                   
             "stackable": false,
             "type": "filesize"
         },        
@@ -229,6 +236,9 @@
             "format": "TB",
             "description": "Filesize in Tb",
             "example": "12",             
+            "attribute": [
+                "fsunit"
+            ],                   
             "stackable": false,
             "type": "filesize"
         },
@@ -236,6 +246,9 @@
             "format": "GB",
             "description": "Filesize in Gb",
             "example": "12",             
+            "attribute": [
+                "fsunit"
+            ],                   
             "stackable": false,
             "type": "filesize"
         },
@@ -243,6 +256,9 @@
             "format": "MB",
             "description": "Filesize in Mb",
             "example": "1.2",            
+            "attribute": [
+                "fsunit"
+            ],                   
             "stackable": false,
             "type": "filesize"
         },
@@ -250,6 +266,9 @@
             "format": "B",
             "description": "Filesize in B",
             "example": "102400",            
+            "attribute": [
+                "fsunit"
+            ],                   
             "stackable": false,
             "type": "filesize"
         },
@@ -263,13 +282,6 @@
                 "deg",
                 "unit"
             ],                      
-            "stackable": false,
-            "type": "temperature"
-        },
-        {
-            "format": "allskyfull",
-            "description": "Use Allsky setting with Deg unit",
-            "example": "23.50",          
             "stackable": false,
             "type": "temperature"
         },        
@@ -402,7 +414,13 @@
         {
             "format": "mtok",
             "description": "Miles to Kilometres",
-            "example": "",           
+            "example": "",
+            "attribute": [
+                "mtok",
+                "allsky",
+                "dp",
+                "distunit"
+            ],                     
             "stackable": false,
             "type": "distance"
         },
@@ -411,6 +429,12 @@
             "description": "Kilometres to Miles",
             "example": "",           
             "stackable": false,
+            "attribute": [
+                "ktom",                
+                "allsky",
+                "dp",
+                "distunit"
+            ],                     
             "type": "distance"
         }  
     ]

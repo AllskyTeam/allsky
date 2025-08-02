@@ -42,7 +42,7 @@ function usage_and_exit()
 			W_ "${MSG}"
 		fi
 		echo
-		echo "where:"
+		echo "Where:"
 		echo "   --help           Displays this message and exits."
 		echo "   --help command   Displays a help message for the specified command, then exits."
 		echo "   --debug          Displays debugging information."
@@ -65,7 +65,7 @@ function usage_and_exit()
 	echo "      show_start_times [--zero] [angle [latitude [longitude]]]"
 	echo "      compare_paths --website | --server"
 	echo "      get_startrails_info"
-	echo "      compare_startrails"
+	echo "      compare_startrails [--thresholds '1 2 3']"
 	echo "      check_post_data"
 	echo "      get_filesystems"
 	echo "      encoders"
@@ -88,7 +88,7 @@ function show_supported_cameras()
 {
 	local COMMAND_TO_EXECUTE="showSupportedCameras.sh"
 
-	if [[ $# -eq 0 && -n ${FUNTION_TO_EXECUTE} ]]; then
+	if [[ $# -eq 0 && -n ${FUNCTION_TO_EXECUTE} ]]; then
 		# Command to run specified on command line but required options not given.
 		E_ "${ME} ${ME_F}: Need to specify all arguments on command line." >&2
 		"${COMMAND_TO_EXECUTE}" --help
@@ -97,7 +97,7 @@ function show_supported_cameras()
 
 	local ARGS
 
-	if [[ $# -eq 0 && -z ${FUNTION_TO_EXECUTE} ]]; then
+	if [[ $# -eq 0 && -z ${FUNCTION_TO_EXECUTE} ]]; then
 		PROMPT="\nSelect the camera(s) to show:"
 		OPTS=()
 		OPTS+=("--RPi"			"RPi and compatible")
@@ -244,7 +244,7 @@ function compare_paths()
 {
 	local COMMAND_TO_EXECUTE="comparePaths.sh"
 
-	if [[ $# -eq 0 && -n ${FUNTION_TO_EXECUTE} ]]; then
+	if [[ $# -eq 0 && -n ${FUNCTION_TO_EXECUTE} ]]; then
 		# Command to run specified on command line but required options not given.
 		E_ "${ME} ${ME_F}: Need to specify all arguments on command line." >&2
 		"${COMMAND_TO_EXECUTE}" --help
@@ -253,7 +253,7 @@ function compare_paths()
 
 	local ARGS
 
-	if [[ $# -eq 0 && -z ${FUNTION_TO_EXECUTE} ]]; then
+	if [[ $# -eq 0 && -z ${FUNCTION_TO_EXECUTE} ]]; then
 		PROMPT="\nSelect the machine you want to check:"
 		OPTS=()
 		OPTS+=("--website"	\
@@ -539,8 +539,8 @@ function L()
 
 OK="true"
 DO_HELP="false"
-FUNTION_TO_EXECUTE=""
-FUNTION_TO_EXECUTE_ARGS=""
+FUNCTION_TO_EXECUTE=""
+FUNCTION_TO_EXECUTE_ARGS=""
 DEBUG="false"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
@@ -559,10 +559,10 @@ while [[ $# -gt 0 ]]; do
 			;;
 
 		*)
-			FUNTION_TO_EXECUTE="${ARG}"
+			FUNCTION_TO_EXECUTE="${ARG}"
 			shift
 			# shellcheck disable=SC2124
-			FUNTION_TO_EXECUTE_ARGS="${@}"
+			FUNCTION_TO_EXECUTE_ARGS="${@}"
 			break;
 			;;
 	esac
@@ -572,9 +572,9 @@ done
 PATH="${PATH}:${ALLSKY_UTILITIES}"
 
 if [[ ${DO_HELP} == "true" ]]; then
-	if [[ -n ${FUNTION_TO_EXECUTE} ]]; then
+	if [[ -n ${FUNCTION_TO_EXECUTE} ]]; then
 		echo
-		run_command "${FUNTION_TO_EXECUTE}" "--help"
+		run_command "${FUNCTION_TO_EXECUTE}" "--help"
 		echo
 		exit 0
 	else
@@ -583,7 +583,7 @@ if [[ ${DO_HELP} == "true" ]]; then
 fi
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
-if [[ -z ${FUNTION_TO_EXECUTE} ]]; then
+if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 	# No command given on command line so prompt for one.
 
 	if [[ ${ON_TTY} == "false" ]]; then
@@ -659,7 +659,7 @@ if [[ -z ${FUNTION_TO_EXECUTE} ]]; then
 
 else
 	#shellcheck disable=SC2086
-	run_command "${FUNTION_TO_EXECUTE}" ${FUNTION_TO_EXECUTE_ARGS}
+	run_command "${FUNCTION_TO_EXECUTE}" ${FUNCTION_TO_EXECUTE_ARGS}
 	exit $?
 fi
 

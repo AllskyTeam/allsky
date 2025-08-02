@@ -84,6 +84,13 @@
 							<li>Can save per-image information to a file via the
 								<code>--output-data file</code> argument.
 								This is useful to see which file(s) were not included.
+					<li>The <code>allsky-config &nbsp; bad_images_info</code>
+						command can now display the list of "bad" images when
+						the <code>--show_bad_images</code> argument is specified.
+						This command is very helpful in tuning the
+						Low and High
+						<span class="WebUISetting">Remove Bad Images Threshold</span>
+						settings.
 <!--
 							<li>When called at end of night, startrails creates
 								saves information on the run in the Allsky database.
@@ -492,7 +499,7 @@
 						<ul>
 							<li>If you are seeing a <b>Multiple consecutive bad images</b>
 								message in the WebUI, run
-								<code>allsky-config &nbsp;bad_image_info</code>.
+								<code>allsky-config &nbsp;bad_images_info</code>.
 								It will suggest how to fix the problem.
 							<li>If a local or remote Allsky Website has a problem reading
 								the <span class="fileName">data.json</span> file,

@@ -155,7 +155,10 @@ void startrail_worker(
 		char* filename = files->gl_pathv[f];
 		cv::Mat imagesrc;
 		msg[0] = '\0';
-		if (! read_file(cf, filename, &imagesrc, f+1, msg, msg_size)) continue;
+		if (! read_file(cf, filename, &imagesrc, f+1, msg, msg_size)) {
+			stats_ptr->col(f) = -1.0;	// Set to something to avoid "nan" entries.
+			continue;
+		}
 
 		repair_msg[0] = '\0';
 		if (imagesrc.channels() != nchan) {
@@ -324,7 +327,7 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 				if (b >= 0 && b <= 1.0)
 					cf->brightness_limit = b;
 				else {
-					fprintf(stderr, "ERROR: Invalid brightness level %f. Must be from 0 to 1.0; exiting\n", b);
+					fprintf(stderr, KRED "ERROR: Invalid brightness level %f. Must be from 0 to 1.0; exiting\n", b);
 					usage_and_exit(1);
 				}
 				break;
@@ -431,12 +434,12 @@ int main(int argc, char* argv[]) {
 						 [](unsigned char c) { return std::tolower(c); });
 
 		if (config.dst_startrails.empty()) {
-			fprintf(stderr, KRED "Output file not specified.\n\n");
+			fprintf(stderr, KRED "%s: ERROR: Output file not specified.\n\n", ME);
 			usage_and_exit(3);
 		}
 		if (extcheck.rfind(".png") == string::npos && extcheck.rfind(".jpg") == string::npos) {
-			fprintf(stderr, KRED "Output file '%s' is missing extension (.jpg or .png).\n\n",
-					config.dst_startrails.c_str());
+			fprintf(stderr, KRED "%s: ERROR: Output file '%s' is missing extension (.jpg or .png).\n\n",
+					ME, config.dst_startrails.c_str());
 			usage_and_exit(3);
 		}
 		ext = strrchr(config.dst_startrails.c_str(), '.') + 1;
@@ -446,35 +449,46 @@ int main(int argc, char* argv[]) {
 	}
 
 	if (config.output_data_file != "") {
-		dataIO = fopen(config.output_data_file.c_str(), "w");
-		if (dataIO == NULL) {
-			fprintf(stderr, KRED "%s: Data output file '%s' could not be opened: %s\n\n",
-				ME, config.output_data_file.c_str(), strerror(errno));
-			exit(4);
+		if (config.output_data_file == "-") {
+			dataIO = stderr;
+		} else {
+			dataIO = fopen(config.output_data_file.c_str(), "w");
+			if (dataIO == NULL) {
+				fprintf(stderr, KRED "%s: ERROR: Data output file '%s' could not be opened: %s\n\n",
+					ME, config.output_data_file.c_str(), strerror(errno));
+				exit(4);
+			}
 		}
 	}
 
 	// Find files
 	glob_t files;
 	if (config.images != "") {
-		// The images are specified in a file.
-		// So as not to redo the code that reads "files",
-		// set "files" to point to a vector of image names.
-		std::ifstream image_file(config.images);
-		if (! image_file.is_open()) {
-			std::cerr << ME << ": ERROR: Could not open image file '" << config.images << "'"
-			<< ", exiting." << std::endl;
-			exit(NO_IMAGES);
-		}
-
 		// Store the file names in a vector.
 		static std::vector<std::string> images;
 		std::string line;
-		while (std::getline(image_file, line)) {
-			images.push_back(line);
+
+		// The images are specified in a file or stdin in if "-".
+		// So as not to redo the code that reads "files",
+		// set "files" to point to a vector of image names.
+		if (config.images == "-") {
+			while (std::getline(std::cin, line)) {
+				images.push_back(line);
+			}
+		} else {
+			std::ifstream image_file(config.images);
+			if (! image_file.is_open()) {
+				std::cerr << ME << ": ERROR: Could not open image file '" << config.images << "'"
+				<< ", exiting." << std::endl;
+				exit(NO_IMAGES);
+			}
+
+			while (std::getline(image_file, line)) {
+				images.push_back(line);
+			}
+			image_file.close();
 		}
 		nfiles = files.gl_pathc = images.size();
-		image_file.close();
 		if (nfiles == 0) {
 			std::cerr << ME << ": ERROR: No images listed in '" << config.images << "'";
 			std::cerr << ", exiting." << std::endl;
@@ -580,6 +594,13 @@ int main(int argc, char* argv[]) {
 	// In OpenCV, NAN is unequal to everything including NAN which means we can
 	// filter out bogus entries by checking stats for element-wise equality
 	// with itself.
+
+// TODO: go through "stats" looking for "stats.col(i) == -1" and replace the -1 with the mean.
+// I don't know how to use stats.col(i) to do anything other than assign to it.
+// This works:	stats.col(i) = 1;
+// Not this:	if (stats.col(i) == 1)
+// It complains that stats.col(i) is a cv::Mat.
+
 	cv::Mat nan_mask = cv::Mat(stats == stats);
 	cv::Mat filtered_stats;
 	stats.copyTo(filtered_stats, nan_mask);

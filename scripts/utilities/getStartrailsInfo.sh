@@ -52,8 +52,8 @@ fi
 
 # Input format:
 # 2025-01-17T06:20:45.240112-06:00 \
-#	Minimum: 0.0840083   maximum: 0.145526   mean: 0.103463   median: 0.104839
-#	$2       $3          $4       $5         $6    $7         $8      $9
+#	Minimum: 0.0840083   maximum: 0.145526   mean: 0.103463   median: 0.104839 numImageUsed: 21 numImagesNotUsed: 18  threshold: 0.1
+#	$2       $3          $4       $5         $6    $7         $8      $9       $10          $11 $12              $13  $14        $15
 
 LOGS="$( ls -tr "${ALLSKY_LOG}"* )"
 #shellcheck disable=SC2086
@@ -63,11 +63,10 @@ grep --no-filename "startrails: Minimum" ${LOGS} 2> /dev/null |
 			print;
 			t_min=0; t_max=0; t_mean=0; t_median=0; t_num=0; t_used=0; t_notUsed=0;
 			entries_not_used = 0;
-			headerFmt		= "%-20s   %-8s  %-8s  %-8s  %-8s  %-12s  %-9s  %-s\n",
-			headerFmt		= "%-20s   %-5s     %-5s     %-5s     %-5s     %-5s        %-9s  %-s\n",
-			numFmt			= "%-20s   %.3f     %.3f     %.3f     %.3f     %5d         %5d";
-			numFmtAverage	= numFmt "      -\n";			# theshold not averaged
-			numFmtData   	= numFmt "      %-.4f\n";		# threshold
+			headerFmt		= "%-20s  %-5s   %-5s    %-5s    %-5s     %-5s   %-9s  %-s\n";
+			numFmt			= "%-20s   %.3f     %.3f     %.3f     %.3f    %5d         %5d";
+			numFmtAverage	= numFmt "       -\n";			# theshold not averaged
+			numFmtData   	= numFmt "       %-4s\n";		# threshold
 		}
 		{
 			date = substr($1, 0, 10) "  "  substr($1, 12, 8);
@@ -85,7 +84,7 @@ grep --no-filename "startrails: Minimum" ${LOGS} 2> /dev/null |
 
 			if (++num == 1) {
 				header = sprintf(headerFmt,
-					"Date", "Minimum", "Maximum", "Mean", "Median",
+					"Startrails date", "Minimum", "Maximum", "Mean", "Median",
 					"Images used", "Not used", "Threshold");
 				printf(header);
 				dashes = "-";
@@ -96,7 +95,11 @@ grep --no-filename "startrails: Minimum" ${LOGS} 2> /dev/null |
 				printf("%s\n", dashes);
 			}
 
-			printf(numFmtData, date, min, max, mean, median, used, notUsed, threshold);
+			if (threshold == "")
+				t = "-";
+			else
+				t  = sprintf("%-.4f", threshold)
+			printf(numFmtData, date, min, max, mean, median, used, notUsed, t);
 		}
 		END {
 			if (num == 0) {

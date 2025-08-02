@@ -128,17 +128,19 @@ To determine what number to use
 you need to know the typical <b>nighttime</b> sky brightness value.
 Do the following:
 <ol>
-	<li>Run <code>allsky-config &nbsp; get_brightness_info</code>
+	<li>Run <code>allsky-config &nbsp; get_startrails_info</code>
 		to see what your brightness values are.
 	<li>If there is no data yet a message will appear with a possible reason,
 		otherwise the output will look like:
 <pre>
-Date                   Minimum   Maximum   Mean      Median    Images used   Not used
--------------------------------------------------------------------------------------
-2025-01-17  06:20:45   0.084     0.146     0.103     0.105     250           3
-2025-01-18  06:16:18   0.045     0.135     0.102     0.106     247           6
--------------------------------------------------------------------------------------
-Total average          0.065     0.140     0.103     0.106     497           9
+Startrails date        Minimum   Maximum   Mean      Median    Images used   Not used  Threshold
+------------------------------------------------------------------------------------------------
+2025-01-17  06:20:45   0.084     0.146     0.103     0.105     250           3         0.15
+2025-01-18  06:16:18   0.045     0.135     0.102     0.106     247           6         0.15
+------------------------------------------------------------------------------------------------
+Averages               0.065     0.140     0.103     0.106     497           9         -
+
+1 entry not used due to invalid data.
 </pre>
 		<blockquote>
 		Note that the Mean brightness is determined by looking at the <em>whole</em> image,
@@ -153,7 +155,7 @@ Total average          0.065     0.140     0.103     0.106     497           9
 		</blockquote>
 	<li>Set the <span class="WebUISetting">Brightness Threshold</span>
 		to the <strong>Maximum</strong>, or slightly below it.
-		If you have a <code>Total average</code>, use its Maximum.
+		If you have an <code>Averages</code> line, use its Maximum.
 </ol>
 </p>
 <p>

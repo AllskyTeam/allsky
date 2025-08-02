@@ -30,7 +30,8 @@ def all_gpio_status():
             for attr in dir(board):
                 if not attr.startswith("D"):
                     continue
-                pin = attr[1:]  # 'D18' → '18'
+                hr_pin = attr
+                pin = hr_pin[1:]  # 'D18' → '18'
                 board_pin = getattr(board, attr)
 
                 status = {"mode": "unused"}
@@ -51,7 +52,7 @@ def all_gpio_status():
                     status["frequency"] = pwm.frequency
                     status["duty"] = pwm.duty_cycle
 
-                all_status[pin] = status
+                all_status[hr_pin] = status
 
         return jsonify(all_status)
 

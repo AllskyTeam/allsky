@@ -400,8 +400,14 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 		RET=$?
 
 		if [[ ${RET} -eq ${EXIT_PARTIAL_OK} ]]; then
-			MSG=""
-			"${ALLSKY_SCRIPTS}/addMessage.sh" --type "info" --msg "${MSG}"
+			MSG="The startrails file was created but has no trailed stars."
+			MSG+="\nTry running 'allsky-config compare_startrails' to determine"
+			MSG+=" what 'Brightness Threshold' to use."
+			if [[ ${ON_TTY} == "true" ]]; then
+				echo -e "${MSG}" >&2
+			else
+				"${ALLSKY_SCRIPTS}/addMessage.sh" --type "warning" --msg "${MSG}"
+			fi
 		elif [[ ${RET} -gt 90 && ${DO_TIMELAPSE} == "true" ]]; then
 			DO_TIMELAPSE="false"
 			# -gt 90 means either no files or unable to read initial file, and

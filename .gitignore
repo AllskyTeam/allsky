@@ -20,3 +20,14 @@ sunwait
 .vscode/configurationCache.log
 .vscode/targets.log
 .vscode/dryrun.log
+
+# Python
+
+# Ignore compiled Python files
+*.pyc
+__pycache__/
+
+# Ignore virtual environments
+venv/
+.env/
+

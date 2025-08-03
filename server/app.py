@@ -3,6 +3,7 @@ from flask_jwt_extended import JWTManager
 from modules.gpio import gpio_bp
 from modules.allsky import allsky_bp
 from modules.auth import auth_bp
+from modules.dashboard import dashboard_bp
 from modules.auth_utils import init_auth_db
 
 secret = init_auth_db()
@@ -20,6 +21,7 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 1800
 jwt = JWTManager(app)
 
 app.register_blueprint(auth_bp)
+app.register_blueprint(dashboard_bp)
 app.register_blueprint(gpio_bp, url_prefix='/gpio')
 app.register_blueprint(allsky_bp, url_prefix='/allsky')
 

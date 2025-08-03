@@ -19,40 +19,43 @@ def get_board_pin(gpio_str):
     except (AttributeError, ValueError):
         return None
 
+def get_gpio_status():
+    all_status = {}
+    for attr in dir(board):
+        if not attr.startswith("D"):
+            continue
+        hr_pin = attr
+        pin = hr_pin[1:]  # 'D18' → '18'
+        board_pin = getattr(board, attr)
 
+        status = {"mode": "unused"}
+
+        if pin in digital_pins:
+            dio = digital_pins[pin]
+            direction = (
+                "output"
+                if dio.direction == digitalio.Direction.OUTPUT
+                else "input"
+            )
+            status["mode"] = f"digital-{direction}"
+            status["value"] = "on" if dio.value else "off"
+
+        elif pin in pwm_pins:
+            pwm = pwm_pins[pin]
+            status["mode"] = "pwm"
+            status["frequency"] = pwm.frequency
+            status["duty"] = pwm.duty_cycle
+
+        all_status[hr_pin] = status
+    return all_status
+                    
 @gpio_bp.route("/all", methods=["GET"])
 @jwt_required(optional=True)
 @permission_required("gpio", "update")
 def all_gpio_status():
     try:
         with gpio_lock:
-            all_status = {}
-            for attr in dir(board):
-                if not attr.startswith("D"):
-                    continue
-                hr_pin = attr
-                pin = hr_pin[1:]  # 'D18' → '18'
-                board_pin = getattr(board, attr)
-
-                status = {"mode": "unused"}
-
-                if pin in digital_pins:
-                    dio = digital_pins[pin]
-                    direction = (
-                        "output"
-                        if dio.direction == digitalio.Direction.OUTPUT
-                        else "input"
-                    )
-                    status["mode"] = f"digital-{direction}"
-                    status["value"] = "on" if dio.value else "off"
-
-                elif pin in pwm_pins:
-                    pwm = pwm_pins[pin]
-                    status["mode"] = "pwm"
-                    status["frequency"] = pwm.frequency
-                    status["duty"] = pwm.duty_cycle
-
-                all_status[hr_pin] = status
+            all_status = get_gpio_status()
 
         return jsonify(all_status)
 

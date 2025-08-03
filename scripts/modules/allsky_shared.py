@@ -997,17 +997,26 @@ def normalise_on_off(value):
         return 'on'
     return 'off'
 
-def read_gpio_pin(gpio_pin, pi=None, show_errors=False):
+def get_api_url():
+    api_url = os.environ['ALLSKY_API_URL']
+    if api_url is None:
+        setupForCommandLine()
+        api_url = os.environ['ALLSKY_API_URL']
         
-    response = requests.get(f'{BASE_SERVER_URL}/digital/{gpio_pin}')
+    return api_url
+
+def read_gpio_pin(gpio_pin, pi=None, show_errors=False):
+    api_url = get_api_url()
+    response = requests.get(f'{api_url}gpio//digital/{gpio_pin}')
     response.raise_for_status()
     data = response.json()
 
     return data.get('value') == 'on'
 
 def set_gpio_pin(gpio_pin, state, pi=None, show_errors=False):
+    api_url = get_api_url()    
     state = normalise_on_off(state)
-    response = requests.post(f'{BASE_SERVER_URL}/digital', json={
+    response = requests.post(f'{api_url}/gpio/digital', json={
         'pin': str(gpio_pin),
         'state': state.lower()
     })
@@ -1015,8 +1024,9 @@ def set_gpio_pin(gpio_pin, state, pi=None, show_errors=False):
     return response.json()
 
 def set_pwm(gpio_pin, duty_cycle, pi=None, show_errors=False):
+    api_url = get_api_url()    
     frequency = 1000
-    response = requests.post(f'{BASE_SERVER_URL}/pwm', json={
+    response = requests.post(f'{api_url}/gpio/pwm', json={
         'pin': str(gpio_pin),
         'duty': duty_cycle,
         'frequency': frequency
@@ -1025,9 +1035,10 @@ def set_pwm(gpio_pin, duty_cycle, pi=None, show_errors=False):
     return response.json()
 
 def stop_pwm(gpio_pin):
+    api_url = get_api_url()    
     frequency = 1000
     duty_cycle = 0
-    response = requests.post(f'{BASE_SERVER_URL}/pwm', json={
+    response = requests.post(f'{api_url}/gpio/pwm', json={
         'pin': str(gpio_pin),
         'duty': duty_cycle,
         'frequency': frequency

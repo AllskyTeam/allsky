@@ -19,6 +19,7 @@ def get_board_pin(gpio_str):
     except (AttributeError, ValueError):
         return None
 
+
 def get_gpio_status():
     all_status = {}
     for attr in dir(board):
@@ -33,9 +34,7 @@ def get_gpio_status():
         if pin in digital_pins:
             dio = digital_pins[pin]
             direction = (
-                "output"
-                if dio.direction == digitalio.Direction.OUTPUT
-                else "input"
+                "output" if dio.direction == digitalio.Direction.OUTPUT else "input"
             )
             status["mode"] = f"digital-{direction}"
             status["value"] = "on" if dio.value else "off"
@@ -48,7 +47,8 @@ def get_gpio_status():
 
         all_status[hr_pin] = status
     return all_status
-                    
+
+
 @gpio_bp.route("/all", methods=["GET"])
 @jwt_required(optional=True)
 @permission_required("gpio", "update")
@@ -171,7 +171,12 @@ def set_pwm():
                 pwm.frequency = frequency
                 pwm.duty_cycle = duty
 
-        return jsonify({"pin": pin, "frequency": frequency, "duty": duty})
+        return jsonify({
+            'pin': pin, 
+            'frequency': frequency, 
+            'duty': duty,
+            'duty_percent': round((duty / 65535) * 100,2)
+        })
 
     except Exception as e:
         return (

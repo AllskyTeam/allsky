@@ -26,4 +26,4 @@ app.register_blueprint(gpio_bp, url_prefix='/gpio')
 app.register_blueprint(allsky_bp, url_prefix='/allsky')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=8090, debug=True)

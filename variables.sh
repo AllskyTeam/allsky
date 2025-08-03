@@ -173,6 +173,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_MODULES="${ALLSKY_CONFIG}/modules"
 	ALLSKY_MODULE_LOCATION="/opt/allsky"
 	ALLSKY_EXTRA="${ALLSKY_OVERLAY}/extra"
+	ALLSKY_API_URL="http://localhost:8090"
 
 	# Directories and files for the flow timer function
 	ALLSKY_FLOWTIMINGS="${ALLSKY_TMP}/flowtimings"
@@ -196,9 +197,6 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 
 	# Holds all the Allsky documentation.
 	ALLSKY_DOCUMENTATION="${ALLSKY_WEBUI}/documentation"
-
-	# Holds the version of the Pi.
-	PI_VERSION_FILE="${ALLSKY_CONFIG}/piversion.txt"
 
 	# When the Pi was last rebooted.  If the file exists a reboot is needed.
 	# Put in ALLSKY_TMP so it'll be removed upon reboot.

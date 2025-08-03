@@ -6,8 +6,8 @@ from pprint import pprint
 dashboard_bp = Blueprint("dashboard", __name__)
 
 @dashboard_bp.route('/dashboard', methods=['GET'])
-@jwt_required(optional=True)
-@permission_required("allsky", "read")
+#@jwt_required(optional=True)
+#@permission_required("allsky", "read")
 def allsky_dashboard():
     from modules.gpio import get_gpio_status
     from services.allsky import get_allsky_status

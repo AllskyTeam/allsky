@@ -1545,10 +1545,11 @@ function processAndUploadImage()
 	local M="${ME:-${FUNCNAME[0]}}"
 
 	# Get all settings we're going to use.  Their bash names are prefixed by "S_".
-	#shellcheck disable=SC2119
+	# shellcheck disable=SC2119
 	getAllSettings --var "imageuploadfrequency imageresizeuploadswidth \
 		imageresizeuploadsheight" || return 1
 
+	# shellcheck disable=SC2154
 	if [[ ${S_imageuploadfrequency} -eq 0 ]]; then
 		# Not uploading images so we're done.
 		return 0
@@ -1556,6 +1557,7 @@ function processAndUploadImage()
 
 	# Upload the image, resizing first if needed.
 
+	# shellcheck disable=SC2154
 	if [[ ${S_imageresizeuploadswidth} -gt 0 ]]; then
 		# Don't overwrite IMAGE_FILE since the web server(s) may be looking at it.
 		TEMP_FILE="${CAPTURE_SAVE_DIR}/resize-${FULL_FILENAME}"
@@ -1565,6 +1567,7 @@ function processAndUploadImage()
 			E_ "*** ${M}: ERROR: Cannot copy to TEMP_FILE: '${IMAGE_FILE}' to '${TEMP_FILE}'."
 			return 1
 		fi
+		# shellcheck disable=SC2154
 		if ! convert "${TEMP_FILE}" \
 				-resize "${S_imageresizeuploadswidth}x${S_imageresizeuploadsheight}" \
 				-gravity East \

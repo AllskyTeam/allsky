@@ -1534,3 +1534,64 @@ function getAllSettings()
 	return 0
 }
 
+####
+# If uploads are enabled, upload the specified file which will
+# likely be a notification image.
+function processAndUploadImage()
+{
+	local IMAGE_FILE="${1}"
+	local NOTIFICATION_FILE="${2}"
+
+	local M="${ME:-${FUNCNAME[0]}}"
+
+	# Get all settings we're going to use.  Their bash names are prefixed by "S_".
+	#shellcheck disable=SC2119
+	getAllSettings --var "imageuploadfrequency imageresizeuploadswidth \
+		imageresizeuploadsheight" || return 1
+
+	if [[ ${S_imageuploadfrequency} -eq 0 ]]; then
+		# Not uploading images so we're done.
+		return 0
+	fi
+
+	# Upload the image, resizing first if needed.
+
+	if [[ ${S_imageresizeuploadswidth} -gt 0 ]]; then
+		# Don't overwrite IMAGE_FILE since the web server(s) may be looking at it.
+		TEMP_FILE="${CAPTURE_SAVE_DIR}/resize-${FULL_FILENAME}"
+	
+		# create temporary copy to resize
+		if ! cp "${IMAGE_FILE}" "${TEMP_FILE}" ; then
+			E_ "*** ${M}: ERROR: Cannot copy to TEMP_FILE: '${IMAGE_FILE}' to '${TEMP_FILE}'."
+			return 1
+		fi
+		if ! convert "${TEMP_FILE}" \
+				-resize "${S_imageresizeuploadswidth}x${S_imageresizeuploadsheight}" \
+				-gravity East \
+				-chop 2x0 "${TEMP_FILE}" ; then
+			E_ "*** ${M}: ERROR: Unable to resize '${TEMP_FILE}' - file left for debugging."
+			return 2
+		fi
+		UPLOAD_FILE="${TEMP_FILE}"
+	else
+		UPLOAD_FILE="${IMAGE_FILE}"
+		TEMP_FILE=""
+	fi
+
+	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
+		# We're actually uploading ${UPLOAD_FILE},
+		# but show ${NOTIFICATION_FILE} in the message since it's more descriptive.
+		echo -e "${M}: Uploading $( basename "${NOTIFICATION_FILE}" )"
+	fi
+
+	# If an existing notification is being uploaded,
+	# wait for it to finish then upload this one (--wait).
+	upload_all --local-web --remote-web --wait --silent \
+		"${UPLOAD_FILE}" "" "${FULL_FILENAME}" "NotificationImage"
+	RET=$?
+
+	# If we created a temporary copy, delete it.
+	[[ ${TEMP_FILE} != "" ]] && rm -f "${TEMP_FILE}"
+
+	return "${RET}"
+}

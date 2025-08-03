@@ -135,7 +135,9 @@ getAllSettings --var "imageresizewidth imageresizeheight \
 	imagecreatethumbnails thumbnailsizex thumbnailsizey" || exit 1
 
 # Resize the image if required
+#shellcheck disable=SC2154
 if [[ ${S_imageresizewidth} -gt 0 ]]; then
+	#shellcheck disable=SC2154
 	if ! convert "${CURRENT_IMAGE}" -resize "${S_imageresizewidth}x${S_imageresizeheight}" \
 			"${CURRENT_IMAGE}" ; then
 		E_ "*** ${ME}: ERROR: IMG_RESIZE failed."
@@ -148,8 +150,9 @@ fi
 # Don't save in main image directory because we don't want the notification image in timelapses.
 # If at nighttime, save them in (possibly) yesterday's directory.
 # If during day, save in today's directory.
-if [[ ${takedaytimeimages} == "true" && ${savedaytimeimages} == "true" && \
-	  ${imagecreatethumbnails} == "true" ]]; then
+#shellcheck disable=SC2154
+if [[ ${S_takedaytimeimages} == "true" && ${S_savedaytimeimages} == "true" && \
+	  ${S_imagecreatethumbnails} == "true" ]]; then
 	DATE_DIR="${ALLSKY_IMAGES}/$( date +'%Y%m%d' )"
 	# Use today's folder if it exists, otherwise yesterday's
 	[[ ! -d ${DATE_DIR} ]] && DATE_DIR="${ALLSKY_IMAGES}/$( date -d '12 hours ago' +'%Y%m%d' )"
@@ -159,6 +162,7 @@ if [[ ${takedaytimeimages} == "true" && ${savedaytimeimages} == "true" && \
 			echo -e "${YELLOW}*** ${ME}: WARNING: could not create '${THUMBNAILS_DIR}'; continuing.${NC}"
 	else
 		THUMB="${THUMBNAILS_DIR}/${FILENAME}-$( date +'%Y%m%d%H%M%S' ).${EXTENSION}"
+		#shellcheck disable=SC2154
 		if ! convert "${CURRENT_IMAGE}" -resize "${S_thumbnailsizex}x${S_thumbnailsizey}" "${THUMB}" ; then
 			W_ "*** ${ME}: WARNING: THUMBNAIL resize failed; continuing."
 		fi

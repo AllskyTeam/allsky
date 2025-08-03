@@ -1005,9 +1005,11 @@ def get_api_url():
         
     return api_url
 
+def get_gpio_pin(gpio_pin, pi=None, show_errors=False):
+    return read_gpio_pin(gpio_pin, pi=None, show_errors=False)
 def read_gpio_pin(gpio_pin, pi=None, show_errors=False):
     api_url = get_api_url()
-    response = requests.get(f'{api_url}gpio//digital/{gpio_pin}')
+    response = requests.get(f'{api_url}/gpio/digital/{gpio_pin}')
     response.raise_for_status()
     data = response.json()
 

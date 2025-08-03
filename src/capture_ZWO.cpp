@@ -373,6 +373,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 	}
 
 	ASI_ERROR_CODE status, ret;
+	int exitCode;
 
 	// ZWO recommends timeout_ms = (exposure*2) + 500 ms
 	// After some discussion, we're doing +5000ms to account for delays induced by
@@ -393,7 +394,9 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 		status = ASIStartVideoCapture(cg->cameraNumber);
 		if (status != ASI_SUCCESS) {
 			Log(0, "  > %s: ERROR: ASIStartVideoCapture() failed: %s.\n", cg->ME, getRetCode(status));
-			Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
+			if (! checkMaxErrors(&exitCode, maxErrors))
+				closeUp(exitCode);
+
 			return(status);
 		}
 		capturingVideo = true;
@@ -401,7 +404,6 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 
 	// Make sure the actual time to take the picture is "close" to the requested time.
 	auto tStart = std::chrono::high_resolution_clock::now();
-	int exitCode;
 
 	if (cg->ZWOexposureType == ZWOsnap)
 	{
@@ -409,9 +411,9 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 		if (status != ASI_SUCCESS)
 		{
 			Log(0, "  > %s: ERROR: ASIStartExposure() failed: %s.\n", cg->ME, getRetCode(status));
-			Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
 			if (! checkMaxErrors(&exitCode, maxErrors))
 				closeUp(exitCode);
+
 			return(status);
 		}
 
@@ -435,9 +437,9 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 			{
 				Log(0, "  > %s: ERROR: ASIGetExpStatus() failed after %d sleeps: %s.\n",
 					cg->ME, num_sleeps, getRetCode(status));
-				Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
 				if (! checkMaxErrors(&exitCode, maxErrors))
 					closeUp(exitCode);
+
 				return(status);
 			}
 			usleep(sleep_us);
@@ -452,9 +454,9 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 			// This error DOES happen sometimes.
 			// Unfortunately "s" is either success or failure - not much help.
 			Log(1, "    > ERROR: Exposure failed after %d sleeps, s=%d.\n", num_sleeps, s);
-			Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
 			if (! checkMaxErrors(&exitCode, maxErrors))
 				closeUp(exitCode);
+
 			return(ASI_ERROR_END);
 		}
 
@@ -465,9 +467,9 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 			// every failure appear in the WebUI message center, log with level 1.
 			Log(1, "  > ERROR: ASIGetDataAfterExp() failed after %d sleeps: %s.\n",
 				num_sleeps, getRetCode(status));
-			Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
 			if (! checkMaxErrors(&exitCode, maxErrors))
 				closeUp(exitCode);
+
 			return(status);
 		}
 
@@ -477,7 +479,6 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 		{
 			Log(0, "  > %s: ERROR: Failed getting image: %s.\n",
 				cg->ME, getRetCode(status));
-			Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
 	
 			// Check if we reached the maximum number of consective errors
 			if (! checkMaxErrors(&exitCode, maxErrors))
@@ -785,13 +786,13 @@ bool checkMaxErrors(int *e, int maxErrors)
 	// even with extremely large timeout values, so apparently ASI_ERROR_TIMEOUT doesn't
 	// necessarily mean it's timing out. Exit forcing us to be restarted.
 	numTotalErrors++;
+	Log(1, "  > Total errors=%'d\n", numTotalErrors);
 	numConsecutiveErrors++; sleep(2);
 	if (numConsecutiveErrors >= maxErrors)
 	{
 		*e = EXIT_RESET_USB;		// exit code. Need to reset USB bus
-		Log(0, "*** %s: ERROR: Maximum number of consecutive errors of %d reached; capture program exited.\n",
+		Log(0, "*** %s: ERROR: Maximum number of consecutive errors of %d reached; capture program exiting.\n",
 			CG.ME, maxErrors);
-		Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
 		return(false);	// gets us out of inner and outer loop
 	}
 	return(true);

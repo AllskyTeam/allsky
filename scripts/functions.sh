@@ -1589,7 +1589,7 @@ function processAndUploadImage()
 
 	# If an existing notification is being uploaded,
 	# wait for it to finish then upload this one (--wait).
-	upload_all --local-web --remote-web --wait --silent \
+	upload_all --remote-web --remote-server --wait --silent \
 		"${UPLOAD_FILE}" "" "${FULL_FILENAME}" "NotificationImage"
 	RET=$?
 

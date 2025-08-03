@@ -19,3 +19,4 @@ psutil
 flask
 gunicorn
 flask-jwt-extended
+bcrypt

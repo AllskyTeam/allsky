@@ -18,3 +18,4 @@ photutils
 psutil
 flask
 gunicorn
+flask-jwt-extended

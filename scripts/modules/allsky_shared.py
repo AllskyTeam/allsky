@@ -92,8 +92,6 @@ DBDATA = {}
 
 PI_INFO_MODEL = 1
 Pi_INFO_CPU_TEMPERATURE = 2
-
-BASE_SERVER_URL = 'http://localhost:5000/gpio'
     
 def get_secrets(keys: Union[str, List[str]]) -> Union[str, Dict[str, str], None]:
     """
@@ -312,23 +310,26 @@ def setEnvironmentVariable(name, value, logMessage='', logLevel=4):
 
     return result
 
+
 def setupForCommandLine():
     global ALLSKYPATH
+    
+    script_path = f"{ALLSKYPATH}/variables.sh"
+    bash_cmd = f"set -a && source '{script_path}' --force && env"
 
-    command = shlex.split("bash -c 'source " + ALLSKYPATH + "/variables.sh && env'")
-    proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    for line in proc.stdout:
-        line = line.decode(encoding='UTF-8')
-        line = line.strip("\n")
-        line = line.strip("\r")
-        try:
-            (key, _, value) = line.partition("=")
-            setEnvironmentVariable(key, value)
-        except Exception:
-            pass
-    proc.communicate()
+    result = subprocess.run(['bash', '-c', bash_cmd], capture_output=True, text=True)
 
+    env_vars = {}
+    for line in result.stdout.splitlines():
+        print(line)
+        if '=' in line:
+            key, value = line.split('=', 1)
+            env_vars[key] = value
+            os.environ[key] = value
+            
     readSettings()
+
+
 
 ####### settings file functions
 def readSettings():
@@ -998,8 +999,9 @@ def normalise_on_off(value):
     return 'off'
 
 def get_api_url():
-    api_url = os.environ['ALLSKY_API_URL']
-    if api_url is None:
+    try:
+        api_url = os.environ['ALLSKY_API_URL']
+    except KeyError:
         setupForCommandLine()
         api_url = os.environ['ALLSKY_API_URL']
         

@@ -164,7 +164,15 @@ void startrail_worker(
 	char repair_msg[repair_msg_size];
 
 	for (int f = start_num; f <= end_num; f++) {
-		char* filename = files->gl_pathv[f];
+		double image_mean = -1;		// an impossible value
+		char *filename = files->gl_pathv[f];
+		char *p = std::strstr(filename, "	");		// tab
+		if (p != nullptr) {
+			// Before the tab is the filename, after the tab is the mean.
+			*p = '\0';
+			image_mean = atof(++p);
+		}
+
 		cv::Mat imagesrc;
 		msg[0] = '\0';
 		if (! read_file(cf, filename, &imagesrc, f+1, msg, msg_size)) {
@@ -184,26 +192,27 @@ void startrail_worker(
 				cv::cvtColor(imagesrc, imagesrc, cv::COLOR_BGR2GRAY, nchan);
 		}
 
-// TODO: read already-computed mean from a file into "image_mean" and use it instead of recomputing.
-		cv::Scalar mean_scalar = cv::mean(imagesrc);
-		double image_mean;
-		switch (imagesrc.channels()) {
-			default:	// mono case
-				image_mean = mean_scalar.val[0];
+		if (image_mean == -1) {
+			// Don't recalculate the mean.
+			cv::Scalar mean_scalar = cv::mean(imagesrc);
+			switch (imagesrc.channels()) {
+				default:	// mono case
+					image_mean = mean_scalar.val[0];
+					break;
+				case 3:		// for color choose maximum channel
+				case 4:
+					image_mean = cv::max(mean_scalar[0], cv::max(mean_scalar[1], mean_scalar[2]));
 				break;
-			case 3:		// for color choose maximum channel
-			case 4:
-				image_mean = cv::max(mean_scalar[0], cv::max(mean_scalar[1], mean_scalar[2]));
-			break;
-		}
-		// Scale to 0-1 range
-		switch (imagesrc.depth()) {
-			case CV_8U:
-				image_mean /= 255.0;
-				break;
-			case CV_16U:
-				image_mean /= 65535.0;
-				break;
+			}
+			// Scale to 0-1 range
+			switch (imagesrc.depth()) {
+				case CV_8U:
+					image_mean /= 255.0;
+					break;
+				case CV_16U:
+					image_mean /= 65535.0;
+					break;
+			}
 		}
 		if (cf->verbose > 1 || cf->output_data_file != "") {
 			// tab-separate fields for easier parsing.
@@ -483,9 +492,11 @@ int main(int argc, char* argv[]) {
 		// The images are specified in a file or stdin in if "-".
 		// So as not to redo the code that reads "files",
 		// set "files" to point to a vector of image names.
+		// Ignore lines that begin with "#".
 		if (config.images == "-") {
 			while (std::getline(std::cin, line)) {
-				images.push_back(line);
+				if (line.c_str()[0] != '#')
+					images.push_back(line);
 			}
 		} else {
 			std::ifstream image_file(config.images);
@@ -496,7 +507,8 @@ int main(int argc, char* argv[]) {
 			}
 
 			while (std::getline(image_file, line)) {
-				images.push_back(line);
+				if (line.c_str()[0] != '#')
+					images.push_back(line);
 			}
 			image_file.close();
 		}
@@ -563,11 +575,20 @@ int main(int argc, char* argv[]) {
 	cv::Mat temp;
 	const int sample_file_num = 0;	// 1st file
 	char *sample_file = files.gl_pathv[sample_file_num];
+
 	if (nchan == 0 || (config.img_width == 0 && config.img_height == 0)) {
 		char not_used[1];
+		// KLUDGE: temporarily replace the tab.
+		char *p = std::strstr(sample_file, "	");		// tab
+		if (p != nullptr) {
+			*p = '\0';
+		}
 		if (! read_file(&config, sample_file, &temp, sample_file_num+1, not_used, 0)) {
 			fprintf(stderr, KRED "%s: ERROR: Unable to read sample file '%s'; quitting.\n" KNRM, ME, sample_file);
 			exit(BAD_SAMPLE_FILE);
+		}
+		if (p != nullptr) {
+			*p = '\t';
 		}
 		if (config.verbose > 1) {
 			fprintf(stderr, "Getting nchan and/or size from: '%s'\n", sample_file);
@@ -659,11 +680,13 @@ int main(int argc, char* argv[]) {
 		} catch (cv::Exception& ex) {
 			// Use lowercase "s"tartrails here and uppercase below so we
 			// know what produced the error.
-			fprintf(stderr, KRED "%s: ERROR: could not save startrails file: %s\n" KNRM, ME, ex.what());
+			fprintf(stderr, KRED "%s: ERROR: could not save startrails file '%s': %s\n" KNRM,
+				ME, config.dst_startrails.c_str(), ex.what());
 			exit(2);
 		}
 		if (! result) {
-			fprintf(stderr, KRED "%s: ERROR: could not save Startrails file: %s\n" KNRM, ME, strerror(errno));
+			fprintf(stderr, KRED "%s: ERROR: could not save Startrails file '%s': %s\n" KNRM,
+				ME, config.dst_startrails.c_str(), strerror(errno));
 			exit(2);
 		}
 	}

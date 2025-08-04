@@ -42,6 +42,10 @@ function DisplayOverlay($image_name)
     <script src="/js/bootbox/bootbox.all.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
     <script src="/js/bootbox/bootbox.locales.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
+    <link rel="stylesheet" href="/js/bootstrap-slider/dist/css/bootstrap-slider.css?c=<?php echo ALLSKY_VERSION; ?>">
+    <script src="/js/bootstrap-slider/dist/bootstrap-slider.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+    <script>$.fn.bootstrapSlider = $.fn.slider.noConflict();</script>
+
     <link rel='stylesheet' href='/css/checkbox.css?c=<?php echo ALLSKY_VERSION; ?>' />
 
     <link rel='stylesheet' href='/js/jquery-ui-1.14.1.custom/jquery-ui.min.css?c=<?php echo ALLSKY_VERSION; ?>' />
@@ -62,9 +66,6 @@ function DisplayOverlay($image_name)
 
     <link rel="stylesheet" href="/js/jquery-mask/jquery-mask.css?c=<?php echo ALLSKY_VERSION; ?>">
     <script src="/js/jquery-mask/jquery-mask.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
-    <link rel="stylesheet" href="/js/bootstrap-slider/dist/css/bootstrap-slider.css?c=<?php echo ALLSKY_VERSION; ?>">
-    <script src="/js/bootstrap-slider/dist/bootstrap-slider.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
     <script type="text/javascript" src="/js/jquery-overlaymanager/jquery-overlaymanager.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 

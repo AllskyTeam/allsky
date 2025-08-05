@@ -448,20 +448,17 @@ function run_command()
 	local COMMAND="${1}"
 	shift
 
-	# shellcheck disable=SC2124
-	local ARGUMENTS="${@}"
 	if ! type "${COMMAND}" > /dev/null 2>&1 ; then
 		E_ "\n${ME}: Unknown command '${COMMAND}'." >&2
 		usage_and_exit --commands-only 2
 	fi
 
 	if [[ ${DEBUG} == "true" ]]; then
-		D_ "Executing: ${COMMAND} ${ARGUMENTS}\n"
+		D_ "Executing: ${COMMAND} ${@}\n"
 	fi
 
 	ME_F="${COMMAND}"		# global
-	#shellcheck disable=SC2086
-	"${COMMAND}" ${ARGUMENTS}
+	"${COMMAND}" "${@}"
 }
 
 
@@ -540,7 +537,6 @@ function L()
 OK="true"
 DO_HELP="false"
 FUNCTION_TO_EXECUTE=""
-FUNCTION_TO_EXECUTE_ARGS=""
 DEBUG="false"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
@@ -561,8 +557,7 @@ while [[ $# -gt 0 ]]; do
 		*)
 			FUNCTION_TO_EXECUTE="${ARG}"
 			shift
-			# shellcheck disable=SC2124
-			FUNCTION_TO_EXECUTE_ARGS="${@}"
+			# The remaining arguments are in ${@}.
 			break;
 			;;
 	esac
@@ -592,44 +587,80 @@ if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 	fi
 
 	PROMPT="\nSelect a command to run:"
-	CMDS=(); N=1
+	CMDS=()
+	N=1
 
 	C="show_supported_cameras"
-	CMDS+=("${C}"			"$( L "Show supported cameras                              (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Show supported cameras                              (${C})" )")
+	((N++))
+
 	C="show_connected_cameras"
-	CMDS+=("${C}"			"$( L "Show connected cameras                              (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Show connected cameras                              (${C})" )")
+	((N++))
+
 	C="prepare_logs"
-	CMDS+=("${C}"			"$( L "Prepare log files for troubleshooting               (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Prepare log files for troubleshooting               (${C})" )")
+	((N++))
+
 	C="config_timelapse"
-	CMDS+=("${C}"			"$( L "Create timelapse videos with different settings     (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Create timelapse videos with different settings     (${C})" )")
+	((N++))
+
 	C="change_swap"
-	CMDS+=("${C}"			"$( L "Add swap space or change size                       (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Add swap space or change size                       (${C})" )")
+	((N++))
+
 	C="change_tmp"
-	CMDS+=("${C}" 			"$( L "Move ~/allsky/tmp to memory or change size          (${C})") "); ((N++))
+	CMDS+=("${C}" 			"$( L "Move ~/allsky/tmp to memory or change size          (${C})") ")
+	((N++))
+
 	C="samba"
-	CMDS+=("${C}" 			"$( L "Simplify copying files to/from the Pi               (${C})" )"); ((N++))
+	CMDS+=("${C}" 			"$( L "Simplify copying files to/from the Pi               (${C})" )")
+	((N++))
+
 	C="move_images"
-	CMDS+=("${C}"			"$( L "Move ~/allsky/images to a different location        (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Move ~/allsky/images to a different location        (${C})" )")
+	((N++))
+
 	C="bad_images_info"
-	CMDS+=("${C}"			"$( L "Display information on 'bad' images                 (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Display information on 'bad' images                 (${C})" )")
+	((N++))
+
 	C="new_rpi_camera_info"
-	CMDS+=("${C}"			"$( L "Collect information for new RPi camera              (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Collect information for new RPi camera              (${C})" )")
+	((N++))
+
 	C="show_start_times"
-	CMDS+=("${C}"			"$( L "Show daytime and nighttime start times              (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Show daytime and nighttime start times              (${C})" )")
+	((N++))
+
 	C="compare_paths"
-	CMDS+=("${C}"			"$( L "Compare upload and Website paths                    (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Compare upload and Website paths                    (${C})" )")
+	((N++))
+
 	C="get_startrails_info"
-	CMDS+=("${C}"			"$( L "Get information on startrails image brightness      (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Get information on startrails image brightness      (${C})" )")
+	((N++))
+
 	C="compare_startrails"
-	CMDS+=("${C}"			"$( L "Create multiple startrails to compare settngs       (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Create multiple startrails to compare settngs       (${C})" )")
+	((N++))
+
 	C="check_post_data"
-	CMDS+=("${C}"			"$( L "Troubleshoot the 'data.json is X days old' message  (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Troubleshoot the 'data.json is X days old' message  (${C})" )")
+	((N++))
+
 	C="get_filesystems"
-	CMDS+=("${C}"			"$( L "Determine where a secodary storage device is        (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Determine where a secodary storage device is        (${C})" )")
+	((N++))
+
 	C="encoders"
-	CMDS+=("${C}"			"$( L "Show list of timelapse encoders available           (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Show list of timelapse encoders available           (${C})" )")
+	((N++))
+
 	C="pix_fmts"
-	CMDS+=("${C}"			"$( L "Show list of timelapse pixel formats available      (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Show list of timelapse pixel formats available      (${C})" )")
+	((N++))
 
 	# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 	while COMMAND="$( prompt "${PROMPT}" "${CMDS[@]}" )"
@@ -659,7 +690,7 @@ if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 
 else
 	#shellcheck disable=SC2086
-	run_command "${FUNCTION_TO_EXECUTE}" ${FUNCTION_TO_EXECUTE_ARGS}
+	run_command "${FUNCTION_TO_EXECUTE}" "${@}"
 	exit $?
 fi
 

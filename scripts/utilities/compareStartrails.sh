@@ -1,9 +1,5 @@
 #!/bin/bash
 
-echo
-echo "THIS SCRIPT IS A WORK IN PROGRESS.  IT CURRENTLY ISN'T USEFUL."
-echo
-
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$(dirname "${BASH_ARGV0}")/../.." )"
 ME="$( basename "${BASH_ARGV0}" )"
 

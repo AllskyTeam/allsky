@@ -454,6 +454,7 @@ function run_command()
 	fi
 
 	if [[ ${DEBUG} == "true" ]]; then
+		# shellcheck disable=SC2145
 		D_ "Executing: ${COMMAND} ${@}\n"
 	fi
 

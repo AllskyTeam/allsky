@@ -542,40 +542,59 @@
 			return { x: pos.x / scale, y: pos.y / scale }
 		}
 
-		var saveImage = function () {
-			bootbox.prompt({
-				title: "Enter a valid filename:",
-				callback: (result) => {
-					if (result === null) {
-						console.log("User cancelled the prompt.");
-						return;
-					}
+		var askForValidFilename = function (callback) {
+			const validateFilename = (name) => /^[a-zA-Z0-9_.-]+$/.test(name);
 
-					// Example validation: filename must not be empty and can only contain
-					// letters, numbers, underscores, hyphens, and periods.
-					var validPattern = /^[a-zA-Z0-9_.-]+$/;
-					if (!result || !validPattern.test(result)) {
-						// Notify the user of the invalid entry and re-display the prompt.
-						bootbox.alert("Invalid filename. Please try again.", function () {
-							promptForFilename(); // Recursively call the function.
-						});
-					} else {
-						$.ajax({
-							type: 'POST',
-							url: plugin.settings.saveURL,
-							data: {
-								filename: result,
-								image: plugin.finalDataURL
-							},
-							success: (response) => {
-								$(`#${plugin.settings.modalId}`).modal('hide');
-								plugin.settings.onComplete.call(this, {});								
-							},
-							error: function (xhr, status, error) {
-								console.error('Error:', error);
-							}
-						});
+			function showPrompt() {
+				bootbox.prompt({
+					title: "Enter a filename",
+					centerVertical: true,
+					callback: function (result) {
+						if (result === null) {
+							if (typeof callback === "function") callback(null);
+							return;
+						}
+
+						result = result.trim();
+						if (!result) {
+							bootbox.alert("Filename must not be empty.", showPrompt);
+						} else if (!validateFilename(result)) {
+							bootbox.alert("Filename can only contain letters, numbers, underscores (_), hyphens (-), and periods (.)", showPrompt);
+						} else {
+							if (typeof callback === "function") callback(result);
+						}
 					}
+				});
+			}
+
+			showPrompt();
+		}
+
+
+		var saveImage = function () {
+			askForValidFilename((filename) => {
+				if (filename) {
+					console.log("Valid filename inside plugin:", filename);
+
+					$.ajax({
+						type: 'POST',
+						url: plugin.settings.saveURL,
+						data: {
+							filename: filename,
+							image: plugin.finalDataURL
+						},
+						success: (response) => {
+							$(`#${plugin.settings.modalId}`).modal('hide');
+							plugin.settings.onComplete.call(this, {});
+						},
+						error: function (xhr, status, error) {
+							console.error('Error:', error);
+						}
+					});
+
+
+				} else {
+					console.log("User cancelled inside plugin.");
 				}
 			});
 		}

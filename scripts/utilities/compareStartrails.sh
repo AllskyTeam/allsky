@@ -71,9 +71,12 @@ while [[ $# -gt 0 ]]; do
 			;;
 		--input)
 			IN_DIRECTORY="${2}"
+			if [[ ${IN_DIRECTORY:0:1} != "/" ]]; then
+				IN_DIRECTORY="${ALLSKY_IMAGES}/${IN_DIRECTORY}"
+			fi
 			shift
 			;;
-		--count)
+		--num-images)
 			COUNT="${2}"
 			shift
 			;;
@@ -180,6 +183,10 @@ sudo chown "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${OUT_DIRECTORY}"
 
 IMAGES="${OUT_DIRECTORY}/images.txt"
 find "${IN_DIRECTORY}" -type f -name "*.${EXTENSION}" 2>/dev/null | head -"${COUNT}" > "${IMAGES}"
+if [[ ! -s ${IMAGES} ]]; then
+	echo -e "${ME}: ERROR: no images found in '${IN_DIRECTORY}' with extension '.${EXTENSION}'." >&2
+	exit 1
+fi
 
 # Create the startrails.
 NUM_CREATED=0
@@ -199,7 +206,7 @@ do
 		fi
 	else
 		echo -e "ERROR: Unable to make startrails.  Quitting." >&2
-		echo -e "${MSG}" >&2
+		remove_colors "${MSG}" >&2
 		exit 3
 	fi
 done
@@ -207,8 +214,10 @@ done
 if [[ ${NUM_CREATED} -gt 0 ]]; then
 	if [[ ${HTML} == "true" ]]; then
 		echo "<p>"
-		echo "Click <a href='/helpers/show_images.php?day=$( basename "${OUT_DIRECTORY}" )'"
-		echo "here</a> to see the results."
+		DAY="day=$( basename "${OUT_DIRECTORY}" )"
+		echo -n "Click <a href='/helpers/show_images.php?${DAY}"
+		echo -n "&pre=startrails_&type=Test Startrails"
+		echo    "'>here</a> to see the results."
 	else
 		echo -e "\nThe ${NUM_CREATED} startrails image(s) are in '${OUT_DIRECTORY}'.\n"
 	fi

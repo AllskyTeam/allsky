@@ -49,7 +49,7 @@ OK="true"
 DO_HELP="false"
 VERBOSE="false"
 HTML="false"
-OUT_DIRECTORY="${ALLSKY_IMAGES}/startrails_test"
+OUT_DIRECTORY="${ALLSKY_IMAGES}/test_startrails"	# Must start with "test"
 IN_DIRECTORY="${ALLSKY_IMAGES}/$( date -d '12 hours ago' +'%Y%m%d' )"
 COUNT="20"
 THRESHOLDS="0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50"
@@ -78,7 +78,8 @@ while [[ $# -gt 0 ]]; do
 			shift
 			;;
 		--thresholds)
-			THRESHOLDS="${2}"
+			# To avoid having spaces in the argument the invoker may use "_" instead.
+			THRESHOLDS="${2//_/ }"
 			shift
 			;;
 		-*)
@@ -178,9 +179,10 @@ sudo chown "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${OUT_DIRECTORY}"
 ### TODO: replace with DB query.  Add intelligence to list, e.g., night only, ...
 
 IMAGES="${OUT_DIRECTORY}/images.txt"
-find "${IN_DIRECTORY}" -type f -name "*.${EXTENSION}" | head -"${COUNT}" > "${IMAGES}"
+find "${IN_DIRECTORY}" -type f -name "*.${EXTENSION}" 2>/dev/null | head -"${COUNT}" > "${IMAGES}"
 
 # Create the startrails.
+NUM_CREATED=0
 for THRESHOLD in ${THRESHOLDS}
 do
 	OUTPUT="${OUT_DIRECTORY}/startrails_${THRESHOLD}.jpg"
@@ -190,6 +192,7 @@ do
 		--brightness "${THRESHOLD}" 2>&1 )"
 	RET=$?
 	if [[ ${RET} -eq 0 || ${RET} -eq ${EXIT_PARTIAL_OK} ]]; then
+		(( NUM_CREATED++ ))
 		echo "Created '${OUTPUT}' with Brightness Threshold of ${THRESHOLD}."
 		if [[ ${VERBOSE} == "true" ]]; then
 			indent "${MSG}"
@@ -200,3 +203,15 @@ do
 		exit 3
 	fi
 done
+
+if [[ ${NUM_CREATED} -gt 0 ]]; then
+	if [[ ${HTML} == "true" ]]; then
+		echo "<p>"
+		echo "Click <a href='/helpers/show_images.php?day=$( basename "${OUT_DIRECTORY}" )'"
+		echo "here</a> to see the results."
+	else
+		echo -e "\nThe ${NUM_CREATED} startrails image(s) are in '${OUT_DIRECTORY}'.\n"
+	fi
+fi
+
+exit 0

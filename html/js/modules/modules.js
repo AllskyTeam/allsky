@@ -135,6 +135,8 @@ class MODULESEDITOR {
 
                 $(document).off('click', '.module-add-button')
 				$(document).on('click', '.module-add-button', (event) => {
+					$('.popover').remove();
+
 					let id = $(event.currentTarget).data('module')
 					if ($('#allskyloadimage').length) {
 						$('#allskyloadimage').after($('#'+id));

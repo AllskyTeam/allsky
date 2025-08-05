@@ -65,7 +65,8 @@ function usage_and_exit()
 	echo "      show_start_times [--zero] [angle [latitude [longitude]]]"
 	echo "      compare_paths --website | --server"
 	echo "      get_startrails_info"
-	echo "      compare_startrails [--thresholds '1 2 3']"
+	echo "      compare_startrails [see --help for arguments]"
+	echo "      compare_stretches [see --help for arguments]"
 	echo "      check_post_data"
 	echo "      get_filesystems"
 	echo "      encoders"
@@ -297,6 +298,15 @@ compare_startrails()
 {
 	# shellcheck disable=SC2068
 	compareStartrails.sh "${@}"
+}
+
+
+#####
+# Create multiple stretched images with different amounts and midpoints.
+compare_stretches()
+{
+	# shellcheck disable=SC2068
+	compareStretches.sh "${@}"
 }
 
 
@@ -592,75 +602,79 @@ if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 	N=1
 
 	C="show_supported_cameras"
-	CMDS+=("${C}"			"$( L "Show supported cameras                              (${C})" )")
+	CMDS+=("${C}"	"$( L "Show supported cameras                                (${C})" )")
 	((N++))
 
 	C="show_connected_cameras"
-	CMDS+=("${C}"			"$( L "Show connected cameras                              (${C})" )")
+	CMDS+=("${C}"	"$( L "Show connected cameras                                (${C})" )")
 	((N++))
 
 	C="prepare_logs"
-	CMDS+=("${C}"			"$( L "Prepare log files for troubleshooting               (${C})" )")
+	CMDS+=("${C}"	"$( L "Prepare log files for troubleshooting                 (${C})" )")
 	((N++))
 
 	C="config_timelapse"
-	CMDS+=("${C}"			"$( L "Create timelapse videos with different settings     (${C})" )")
+	CMDS+=("${C}"	"$( L "Create timelapse videos with different settings       (${C})" )")
 	((N++))
 
 	C="change_swap"
-	CMDS+=("${C}"			"$( L "Add swap space or change size                       (${C})" )")
+	CMDS+=("${C}"	"$( L "Add swap space or change size                         (${C})" )")
 	((N++))
 
 	C="change_tmp"
-	CMDS+=("${C}" 			"$( L "Move ~/allsky/tmp to memory or change size          (${C})") ")
+	CMDS+=("${C}" 	"$( L "Move ~/allsky/tmp to memory or change size            (${C})") ")
 	((N++))
 
 	C="samba"
-	CMDS+=("${C}" 			"$( L "Simplify copying files to/from the Pi               (${C})" )")
+	CMDS+=("${C}" 	"$( L "Simplify copying files to/from the Pi                 (${C})" )")
 	((N++))
 
 	C="move_images"
-	CMDS+=("${C}"			"$( L "Move ~/allsky/images to a different location        (${C})" )")
+	CMDS+=("${C}"	"$( L "Move ~/allsky/images to a different location          (${C})" )")
 	((N++))
 
 	C="bad_images_info"
-	CMDS+=("${C}"			"$( L "Display information on 'bad' images                 (${C})" )")
+	CMDS+=("${C}"	"$( L "Display information on 'bad' images                   (${C})" )")
 	((N++))
 
 	C="new_rpi_camera_info"
-	CMDS+=("${C}"			"$( L "Collect information for new RPi camera              (${C})" )")
+	CMDS+=("${C}"	"$( L "Collect information for new RPi camera                (${C})" )")
 	((N++))
 
 	C="show_start_times"
-	CMDS+=("${C}"			"$( L "Show daytime and nighttime start times              (${C})" )")
+	CMDS+=("${C}"	"$( L "Show daytime and nighttime start times                (${C})" )")
 	((N++))
 
 	C="compare_paths"
-	CMDS+=("${C}"			"$( L "Compare upload and Website paths                    (${C})" )")
+	CMDS+=("${C}"	"$( L "Compare upload and Website paths                      (${C})" )")
 	((N++))
 
 	C="get_startrails_info"
-	CMDS+=("${C}"			"$( L "Get information on startrails image brightness      (${C})" )")
+	CMDS+=("${C}"	"$( L "Get information on startrails image brightness        (${C})" )")
 	((N++))
 
 	C="compare_startrails"
-	CMDS+=("${C}"			"$( L "Create multiple startrails to compare settngs       (${C})" )")
+	CMDS+=("${C}"	"$( L "Create multiple startrails to compare settings        (${C})" )")
+	((N++))
+
+	C="compare_stretches"
+	CMDS+=("${C}"	"$( L "Create multiple stretched images to compare settings  (${C})" )")
 	((N++))
 
 	C="check_post_data"
-	CMDS+=("${C}"			"$( L "Troubleshoot the 'data.json is X days old' message  (${C})" )")
+	CMDS+=("${C}"	"$( L "Troubleshoot the 'data.json is X days old' message    (${C})" )")
 	((N++))
 
 	C="get_filesystems"
-	CMDS+=("${C}"			"$( L "Determine where a secodary storage device is        (${C})" )")
+	CMDS+=("${C}"	"$( L "Determine where a secodary storage device is          (${C})" )")
 	((N++))
 
 	C="encoders"
-	CMDS+=("${C}"			"$( L "Show list of timelapse encoders available           (${C})" )")
+	CMDS+=("${C}"	"$( L "Show list of timelapse encoders available             (${C})" )")
 	((N++))
 
 	C="pix_fmts"
-	CMDS+=("${C}"			"$( L "Show list of timelapse pixel formats available      (${C})" )")
+	CMDS+=("${C}"	"$( L "Show list of timelapse pixel formats available        (${C})" )")
 	((N++))
 
 	# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
@@ -674,7 +688,7 @@ if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 		[[ ${ALLOW_MORE_COMMANDS} == "false" ]] && exit "${RET}"
 		while true; do
 			echo -e "\n\n"
-			echo -e "${YELLOW}${BOLD}"
+			echo -e "${cYELLOW}${cBOLD}"
 			echo    "=========================================="
 			echo -n "Press RETURN to continue or 'q' to quit: "
 			read -r x

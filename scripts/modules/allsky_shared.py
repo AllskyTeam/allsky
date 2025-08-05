@@ -27,6 +27,7 @@ import shlex
 import board
 import busio
 import importlib
+import requests
 
 from pathlib import Path
 from functools import reduce
@@ -83,7 +84,6 @@ SETTINGS_FILE = getEnvironmentVariable("SETTINGS_FILE", fatal=True)
 ALLSKY_OVERLAY = getEnvironmentVariable("ALLSKY_OVERLAY", fatal=True)
 ALLSKY_WEBUI = getEnvironmentVariable("ALLSKY_WEBUI", fatal=True)
 ALLSKY_MODULES = getEnvironmentVariable("ALLSKY_MODULES", fatal=True)
-SETTINGS_FILE = getEnvironmentVariable("SETTINGS_FILE", fatal=True)
 
 LOGLEVEL = 0
 SETTINGS = {}
@@ -92,7 +92,7 @@ DBDATA = {}
 
 PI_INFO_MODEL = 1
 Pi_INFO_CPU_TEMPERATURE = 2
-
+    
 def get_secrets(keys: Union[str, List[str]]) -> Union[str, Dict[str, str], None]:
     """
     Retrieve secret(s) from the given JSON file.
@@ -310,23 +310,26 @@ def setEnvironmentVariable(name, value, logMessage='', logLevel=4):
 
     return result
 
+
 def setupForCommandLine():
     global ALLSKYPATH
+    
+    script_path = f"{ALLSKYPATH}/variables.sh"
+    bash_cmd = f"set -a && source '{script_path}' --force && env"
 
-    command = shlex.split("bash -c 'source " + ALLSKYPATH + "/variables.sh && env'")
-    proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    for line in proc.stdout:
-        line = line.decode(encoding='UTF-8')
-        line = line.strip("\n")
-        line = line.strip("\r")
-        try:
-            (key, _, value) = line.partition("=")
-            setEnvironmentVariable(key, value)
-        except Exception:
-            pass
-    proc.communicate()
+    result = subprocess.run(['bash', '-c', bash_cmd], capture_output=True, text=True)
 
+    env_vars = {}
+    for line in result.stdout.splitlines():
+        print(line)
+        if '=' in line:
+            key, value = line.split('=', 1)
+            env_vars[key] = value
+            os.environ[key] = value
+            
     readSettings()
+
+
 
 ####### settings file functions
 def readSettings():
@@ -381,7 +384,11 @@ def log(level, text, preventNewline = False, exitCode=None, sendToAllsky=False):
         else:
             print(text)
 
-    if sendToAllsky and level == 0:
+    if sendToAllsky or level == 0:
+        if level == 0:
+            type = "error"
+        else:
+            type = "warning"
         # Need to escape single quotes in {text}.
         doubleQuote = '"'
         text = text.replace("'", f"'{doubleQuote}'{doubleQuote}'")
@@ -983,70 +990,65 @@ def getGPIOPin(pin):
 
     return result
 
-def connect_pigpio(show_errors=False):
-    pi = pigpio.pi(show_errors)
-    
-    return pi
+def to_bool(value):
+    return str(value).strip().lower() == 'on' or str(value).strip() == '1'
 
-def read_gpio_pin(gpio_pin, pi=None, show_errors=False):
-    pin_state = None
+def normalise_on_off(value):
+    if str(value).strip().lower() == 'on' or str(value).strip() == '1':
+        return 'on'
+    return 'off'
+
+def get_api_url():
     try:
-        if pi is None:
-            pi = pigpio.pi(show_errors=show_errors)
-            
-        if pi.connected:        
-            pi.set_mode(gpio_pin, pigpio.INPUT)
-            pin_state = pi.read(gpio_pin)
-    except:
-        pass
-    
-    return pin_state
+        api_url = os.environ['ALLSKY_API_URL']
+    except KeyError:
+        setupForCommandLine()
+        api_url = os.environ['ALLSKY_API_URL']
+        
+    return api_url
+
+def get_gpio_pin(gpio_pin, pi=None, show_errors=False):
+    return read_gpio_pin(gpio_pin, pi=None, show_errors=False)
+def read_gpio_pin(gpio_pin, pi=None, show_errors=False):
+    api_url = get_api_url()
+    response = requests.get(f'{api_url}/gpio/digital/{gpio_pin}')
+    response.raise_for_status()
+    data = response.json()
+
+    return data.get('value') == 'on'
 
 def set_gpio_pin(gpio_pin, state, pi=None, show_errors=False):
-    result = False
-    try:
-        if pi is None:
-            pi = pigpio.pi(show_errors=show_errors)
-            
-        if pi.connected:        
-            pi.set_mode(gpio_pin, pigpio.OUTPUT)
-            pi.write(gpio_pin, state)
-            result = True
-    except:
-        pass
-    
-    return result
+    api_url = get_api_url()    
+    state = normalise_on_off(state)
+    response = requests.post(f'{api_url}/gpio/digital', json={
+        'pin': str(gpio_pin),
+        'state': state.lower()
+    })
+    response.raise_for_status()
+    return response.json()
 
 def set_pwm(gpio_pin, duty_cycle, pi=None, show_errors=False):
-    result = False
-    try:
-        if pi is None:
-            pi = pigpio.pi(show_errors=False)
-            
-        if pi.connected:
-            pi.set_PWM_range(gpio_pin, 100)
-            pi.set_PWM_frequency(gpio_pin, 1_000)
-            pi.set_PWM_dutycycle(gpio_pin, duty_cycle)
-            result = True
-    except:
-        pass
-    
-    return result
+    api_url = get_api_url()    
+    frequency = 1000
+    response = requests.post(f'{api_url}/gpio/pwm', json={
+        'pin': str(gpio_pin),
+        'duty': duty_cycle,
+        'frequency': frequency
+    })
+    response.raise_for_status()
+    return response.json()
 
 def stop_pwm(gpio_pin):
-    result = False
-    try:
-        if pi is None:
-            pi = pigpio.pi(show_errors=False)
-            
-        if pi.connected:
-            pi.set_PWM_dutycycle(self._fan_pin, 0)
-            pi.stop()
-            result = True
-    except:
-        pass
-
-    return result
+    api_url = get_api_url()    
+    frequency = 1000
+    duty_cycle = 0
+    response = requests.post(f'{api_url}/gpio/pwm', json={
+        'pin': str(gpio_pin),
+        'duty': duty_cycle,
+        'frequency': frequency
+    })
+    response.raise_for_status()
+    return response.json()
     
 def _get_value_from_json_file(file_path, variable):
     """

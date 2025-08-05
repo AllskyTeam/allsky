@@ -171,12 +171,12 @@
 
 		var createEditor = function () {
 
-			$('#allsky-mask-brushSizeSlider').slider({
+			$('#allsky-mask-brushSizeSlider').bootstrapSlider({
 				value: 10
 			}).on('slide', (e) => {
 				brushSize = parseInt(e.value, 10);
 			})
-			var brushSize = parseInt($("#allsky-mask-brushSizeSlider").slider('getValue'), 10);
+			var brushSize = parseInt($("#allsky-mask-brushSizeSlider").bootstrapSlider('getValue'), 10);
 
 
 			$("#drawingToolDropdown").next(".dropdown-menu").on("click", "a", function (e) {
@@ -357,7 +357,7 @@
 					plugin.stage.batchDraw()
 				})
 
-				$('#allsky-mask-zoomSlider').slider({
+				$('#allsky-mask-zoomSlider').bootstrapSlider({
 					value: 1
 				}).on('slide', (e) => {
 					var newScale = parseFloat(e.value);
@@ -375,7 +375,7 @@
 					plugin.stage.batchDraw()
 				})
 
-				$('#allsky-mask-brightnessSlider').slider({
+				$('#allsky-mask-brightnessSlider').bootstrapSlider({
 					value: 0
 				}).on('slide', (e) => {
 					var value = parseFloat(e.value);
@@ -388,7 +388,7 @@
 				})
 
 
-				$('#allsky-mask-opacitySlider').slider({
+				$('#allsky-mask-opacitySlider').bootstrapSlider({
 					value: 0
 				}).on('slide', (e) => {
 					var opac = parseFloat(e.value) / 100;

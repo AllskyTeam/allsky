@@ -1,1 +1,0 @@
-/home/pi/allsky/html/includes/functions.php

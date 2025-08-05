@@ -15,3 +15,7 @@ requests
 mysql-connector-python
 photutils
 psutil
+flask
+gunicorn
+flask-jwt-extended
+bcrypt

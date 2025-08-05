@@ -66,10 +66,10 @@ for the prior 24 hours.
 The easiest way to create and optionally upload a keogram is via the
 <code>generateForDay.sh</code> command.
 For example, to create and then upload a keogram to any Allsky Website and/or remote server 
-you have for July 10, 2024:
+you have for July 10, 2025:
 <pre>
-generateForDay.sh --keogram 20240710
-generateForDay.sh --upload --keogram 20240710
+generateForDay.sh --keogram 20250710
+generateForDay.sh --upload --keogram 20250710
 </pre>
 This will use the settings specified in the
 <span class="subSettingsHeader">Keograms</span> sub-section of the WebUI.
@@ -77,10 +77,12 @@ This will use the settings specified in the
 <p class="morePadding">
 If you want to experiment using other settings you can specify those settings as such:
 <pre>
-generateForDay.sh --keogram 20240710 --keogram-params "--font-color #ff00ff"
+generateForDay.sh --keogram --keogram-params "--font-color #ff0000" 20250710
 </pre>
-Make sure the parameters are enclosed in quotes.
+This will create a keogram with a red timeline for July 10, 2025,
+overwriting any keogram that may already exist.
 <br>
+Make sure the parameters are enclosed in quotes.
 <br>
 See the Advanced section below for the possible parameters you can specify.
 </p>
@@ -132,7 +134,7 @@ Example of running the <code>keogram</code> program manually:
 </p>
 <pre>
 cd ~/allsky/bin
-./keogram -d images/20240710 -e jpg -o images/20240710/keogram/keogram.jpg --rotate 42 --font-size 2
+./keogram -d images/20250710 -e jpg -o images/20250710/keogram/keogram.jpg --rotate 42 --font-size 2
 </pre>
 </details>
 

@@ -674,7 +674,7 @@ if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 		[[ ${ALLOW_MORE_COMMANDS} == "false" ]] && exit "${RET}"
 		while true; do
 			echo -e "\n\n"
-			echo -e "${YELLOW}${BOLD}"
+			echo -e "${cYELLOW}${cBOLD}"
 			echo    "=========================================="
 			echo -n "Press RETURN to continue or 'q' to quit: "
 			read -r x

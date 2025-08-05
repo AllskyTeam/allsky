@@ -764,7 +764,7 @@ class MODULEUTIL
 		if ($module !== '') {
 			$params .= ' --module ' . $module;
 		}
-		$pythonScript = '/home/pi/allsky/scripts/modules/allskyvariables/allskyvariables.py --print ' . $params . ' --allskyhome ' . ALLSKY_HOME;
+		$pythonScript = ALLSKY_HOME . '/scripts/modules/allskyvariables/allskyvariables.py --print ' . $params . ' --allskyhome ' . ALLSKY_HOME;
 		$output = [];
 		$returnValue = 0;
 		exec("python3 $pythonScript 2>&1", $output, $returnValue);

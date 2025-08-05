@@ -158,7 +158,7 @@ function get_number()
 				return 0
 			fi
 		elif echo "${NUM}" | grep --silent "\.,"; then
-			echo "\nYou must enter a number without a decimal point." >&2
+			echo -e "\nYou must enter a number without a decimal point." >&2
 		else
 			echo "${NUM}"
 			return 0

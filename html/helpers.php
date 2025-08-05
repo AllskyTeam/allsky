@@ -59,8 +59,8 @@ if ($useLogin) {
 	<link href="documentation/css/sb-admin-2.css" rel="stylesheet">
 
 	<!-- for Website constellation icon -->
+<!-- TODO: The constellation icon isn't displayed.
 	<link href="allsky/css/allsky.css" rel="stylesheet">
-<!-- not needed?
 	<link href="allsky/font-awesome/css/all.min.css" rel="stylesheet" type="text/css">
 -->
 
@@ -94,7 +94,10 @@ if ($useLogin) {
 	<!-- Custom Theme JavaScript -->
 	<script src="documentation/js/sb-admin-2.js"></script>
 
-	<style> body { color: black; } </style>
+	<style>
+		body { background-color: white; color: black; }
+		.form-group { margin-bottom: 30px; }
+	</style>
 </head>
 <body>
 <div id="wrapper">
@@ -119,36 +122,38 @@ if ($useLogin) {
 		<div class="navbar-default sidebar" role="navigation">
 			<div class="sidebar-nav navbar-collapse">
 				<ul class="nav" id="side-menu">
-					Help Determine:
+					<span style="color: blue; font-weight: bold">Help Determine:</span>
 					<li>
 						<a id="startrails_settings" href="helpers.php?page=startrails_settings">
 							<i class="fa fa-star fa-fw"></i>
-							<strong>Startrails Settings</strong></a>
+							Startrails Settings</a>
 					</li>
+<!-- TODO: uncomment when scripts are created
 					<li>
 						<a id="timelapse_settings" href="helpers.php?page=timelapse_settings">
 							<i class="fa fa-play-circle fa-fw"></i>
-							<strong>Timelapse Settings</strong></a>
+							Timelapse Settings</a>
 					</li>
 					<li>
 						<a id="bad_images_settings" href="helpers.php?page=bad_images_settings">
 							<i class="fa fa-image fa-fw"></i>
-							<strong>Bad Images Settings</strong></a>
+							Bad Images Settings</a>
 					</li>
+-->
 					<li>
 						<a id="stretch_settings" href="helpers.php?page=stretch_settings">
 <!-- TODO: update icon -->
-							<i class="fa fa-edit fa-fw"></i>
-							<strong>Image Stretch Settings</strong></a>
+							<i class="fa fa-arrows-left-right fa-fw"></i>
+							Image Stretch Settings</a>
 					</li>
 
-					Other:
+					<span style="color: blue; font-weight: bold">Other:</span>
 					<li>
 						<a id="constellation_overlay" href="helpers.php?page=constellation_overlay">
 							<i class="fa allsky-constellation fa-fw"></i>
 							Help Place the
-							<br> &nbsp; &nbsp; &nbsp; <strong>Allsky Website
-							<br> &nbsp; &nbsp; &nbsp; Constellation Overlay</strong></a>
+							<br> &nbsp; &nbsp; &nbsp; Allsky Website
+							<br> &nbsp; &nbsp; &nbsp; Constellation Overlay</a>
 					</li>
 				</ul>
 			</div><!-- /.navbar-collapse -->
@@ -179,7 +184,7 @@ if ($useLogin) {
 						break;
 					case "stretch_settings":
 						include_once("helpers/${page}.php");
-// TODO: add function name
+						stretchSettings();
 						break;
 				}
 				?>

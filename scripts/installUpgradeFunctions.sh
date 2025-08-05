@@ -173,45 +173,6 @@ function get_variable()
 
 
 #####
-# Strip out all color escape sequences.
-# The message may have an actual escape character or may have the
-# four characters "\033" which represent an escape character.
-
-# I don't know how to replace "\n" with an actual newline in sed,
-# and there HAS to be a better way to strip the escape sequences.
-# I simply replace actual escape characters in the input with "033" then
-# replace "033[" with "033X".
-# Feel free to improve...
-function remove_colors()
-{
-	local MSG="${1}"
-
-	local ESC="$( echo -en '\033' )"
-
-	# Ignore any initial "\" in the colors.
-	# In case a variable isn't defined, set it to a string that won't be found.
-	local G="${GREEN/\\/}"							; G="${G/033\[/033X}"
-	local Y="${YELLOW/\\/}"		; Y="${Y:-abcxyz}"	; Y="${Y/033\[/033X}"
-	local R="${RED/\\/}"		; R="${R:-abcxyz}"	; R="${R/033\[/033X}"
-	#shellcheck disable=SC2154
-	local D="${cDEBUG/\\/}"		; D="${D:-abcxyz}"	; D="${D/033\[/033X}"
-	local N="${NC/\\/}"			; N="${N:-abcxyz}"	; N="${N/033\[/033X}"
-
-	# Outer "echo -e" handles "\n" (2 characters) in input.
-	# No "-e" needed on inner "echo".
-	echo -e "$( echo "${MSG}" |
-		sed -e "s/${ESC}/033/g" \
-			-e "s/033\[/033X/g" \
-			-e "s/${G}//g" \
-			-e "s/${Y}//g" \
-			-e "s/${R}//g" \
-			-e "s/${D}//g" \
-			-e "s/${N}//g" \
-			-e "s/\\\Z.//g" \
-	)"
-}
-
-#####
 # Display a message of various types in appropriate colors.
 # Used primarily in installation scripts.
 function display_msg()

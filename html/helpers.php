@@ -9,10 +9,7 @@
 include_once('includes/functions.php');
 initialize_variables();		// sets some variables
 
-if (isset($_REQUEST['page']))
-	$page = $_POST['page'];
-else
-	$page = "";
+$page = getVariableOrDefault($_REQUEST, 'page', "");
 
 if ($useLogin) {
 	session_start();
@@ -45,6 +42,9 @@ if ($useLogin) {
 		default:						$Title = "Allsky WebUI Helper";				break;
 	}
 ?>
+
+<!-- TODO: which of these files are actually needed? -->
+
 	<!-- allows <a external="true" ...> -->
 	<script src="documentation/js/documentation.js" type="application/javascript"></script>
 

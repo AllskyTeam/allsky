@@ -52,8 +52,8 @@ fi
 
 # Input format:
 # 2025-01-17T06:20:45.240112-06:00 \
-#	Minimum: 0.0840083   maximum: 0.145526   mean: 0.103463   median: 0.104839
-#	$2       $3          $4       $5         $6    $7         $8      $9
+#	Minimum: 0.0840083   maximum: 0.145526   mean: 0.103463   median: 0.104839 numImageUsed: 21 numImagesNotUsed: 18  threshold: 0.1
+#	$2       $3          $4       $5         $6    $7         $8      $9       $10          $11 $12              $13  $14        $15
 
 LOGS="$( ls -tr "${ALLSKY_LOG}"* )"
 #shellcheck disable=SC2086
@@ -62,12 +62,37 @@ grep --no-filename "startrails: Minimum" ${LOGS} 2> /dev/null |
 	nawk 'BEGIN {
 			print;
 			t_min=0; t_max=0; t_mean=0; t_median=0; t_num=0; t_used=0; t_notUsed=0;
-			numFmt = "%-20s   %.3f     %.3f     %.3f     %.3f     %-9d     %-d\n";
+			entries_not_used = 0;
+			headerFmt		= "%-20s   %-5s   %-5s   %-5s     %-5s     %-5s   %-9s  %-s\n";
+			numFmt			= "%-20s   %.3f     %.3f     %.3f     %.3f     %5d         %5d";
+			numFmtAverage	= numFmt "       -\n";			# theshold not averaged
+			numFmtData   	= numFmt "       %-4s\n";		# threshold
 		}
 		{
+			date = substr($1, 0, 10) "  "  substr($1, 12, 8);
+			min = $3;
+			max = $5;
+			if (min == -1.0 || min == "nan" || max == "nan") {
+				entries_not_used++;
+				next;
+			}
+			mean = $7;
+			median = $9;
+			used = $11;
+			notUsed = $13;
+			threshold = $15;
+			t_min += min;
+			t_max += max;
+			t_mean += mean;
+			t_median += median;
+			if (used != "") t_used += used;
+			if (notUsed != "") t_notUsed += notUsed;
+			# does not make sense to average threshold
+
 			if (++num == 1) {
-				header = sprintf("%-20s   %-8s  %-8s  %-8s  %-8s  %-12s  %-s\n",
-					"Date", "Minimum", "Maximum", "Mean", "Median", "Images used", "Not used");
+				header = sprintf(headerFmt,
+					"Startrails date", "Minimum", "Maximum", "Mean", "Median",
+					"Images used", "Not used", "Threshold");
 				printf(header);
 				dashes = "-";
 				l = length(header) - 2;
@@ -77,15 +102,11 @@ grep --no-filename "startrails: Minimum" ${LOGS} 2> /dev/null |
 				printf("%s\n", dashes);
 			}
 
-
-			date = substr($1, 0, 10) "  "  substr($1, 12, 8);
-			min = $3;		t_min += min;
-			max = $5;		t_max += max;
-			mean = $7;		t_mean += mean;
-			median = $9;	t_median += median;
-			used = $11;		t_used += used;
-			notUsed = $11;		t_notUsed += notUsed;
-			printf(numFmt, date, min, max, mean, median, used, notUsed);
+			if (threshold == "")
+				t = "-";
+			else
+				t  = sprintf("%-.4f", threshold)
+			printf(numFmtData, date, min, max, mean, median, used, notUsed, t);
 		}
 		END {
 			if (num == 0) {
@@ -96,8 +117,19 @@ grep --no-filename "startrails: Minimum" ${LOGS} 2> /dev/null |
 				printf("Consider running this command in a few days to get more information.\n");
 			} else {
 				printf("%s\n", dashes);
-				printf(numFmt, "Total average", t_min/num, t_max/num, t_mean/num, t_median/num, t_used/num, t_notUsed/num);
+				printf(numFmtAverage, "Averages", t_min/num, t_max/num, t_mean/num,
+					t_median/num, t_used/num, t_notUsed/num);
 			}
+
+			if (entries_not_used > 0) {
+				printf("\n%d entr", entries_not_used);
+				if (entries_not_used == 1)
+					printf("y");
+				else
+					printf("ies");
+				printf(" not used due to invalid data.\n");
+			}
+
 			exit 0;
 		}'
 if [[ $? -ne 0 ]]; then

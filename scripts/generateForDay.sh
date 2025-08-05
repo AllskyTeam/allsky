@@ -23,8 +23,11 @@ UPLOAD_SILENT="--silent"
 NICE=""
 GOT=0
 DO_KEOGRAM="false"
+KEOGRAM_PARAMS=""
 DO_STARTRAILS="false"
+STARTRAILS_PARAMS=""
 DO_TIMELAPSE="false"
+TIMELAPSE_PARAMS=""
 THUMBNAIL_ONLY="false"
 THUMBNAIL_ONLY_ARG=""
 IMAGES_FILE=""
@@ -72,13 +75,25 @@ while [[ $# -gt 0 ]]; do
 				DO_KEOGRAM="true"
 				((GOT++))
 				;;
+			--keogram-params)
+				KEOGRAM_PARAMS="${2}"
+				shift
+				;;
 			-s | --startrails)
 				DO_STARTRAILS="true"
 				((GOT++))
 				;;
+			--startrails-params)
+				STARTRAILS_PARAMS="${2}"
+				shift
+				;;
 			-t | --timelapse)
 				DO_TIMELAPSE="true"
 				((GOT++))
+				;;
+			--timelapse-params)
+				TIMELAPSE_PARAMS="${2}"
+				shift
 				;;
 
 			-*)
@@ -98,29 +113,35 @@ usage_and_exit()
 	exec >&2
 	local USAGE="Usage: ${ME} [--help] [--silent] [--debug] [--nice n] [--upload] \\ \n"
 	USAGE+="    [--thumbnail-only] [--keogram] [--startrails] [--timelapse] \\ \n"
-	USAGE+="    [--output-dir <OUTPUT_DIR>] \\ \n"
-	USAGE+="    {--images file | <INPUT_DIR>}"
+	USAGE+="    [--output-dir <OUTPUT_DIR>] {--images file | <INPUT_DIR>} \\ \n"
+	USAGE+="    [--keogram [--keogram-params 'params']] \\ \n"
+	USAGE+="    [--startrails] [--startrails-params 'params']] \\ \n"
+	USAGE+="    [--timelapse [--timelapse-params 'params']]"
 	echo
 	if [[ ${RET} -ne 0 ]]; then
 		E_ "${USAGE}"
 	else
 		echo -e "${USAGE}"
 	fi
-	echo "where:"
-	echo "  --help             Displays this message and exits."
-	echo "  --debug            Runs upload.sh in debug mode."
-	echo "  --nice             Runs with nice level n."
-	echo "  --upload           Uploads previously-created files instead of creating them."
-	echo "  --thumbnail-only   Creates or uploads video thumbnails only."
-	echo "  --keogram          Will ${MSG1} a keogram."
-	echo "  --startrails       Will ${MSG1} a startrail."
-	echo "  --timelapse        Will ${MSG1} a timelapse."
-	echo "  --output-dir dir   Put the output file in 'dir'."
-	echo "  INPUT_DIR          Is the day in '${ALLSKY_IMAGES}' to process."
+	echo "Where:"
+	echo "   --help                          Displays this message and exits."
+	echo "   --debug                         Runs upload.sh in debug mode."
+	echo "   --nice n                        Runs with the specified nice level."
+	echo "   --upload                        Uploads previously-created files instead of creating them."
+	echo "   --thumbnail-only                Creates or uploads video thumbnails only."
+	echo "   --keogram                       Will ${MSG1} a keogram."
+	echo "   --keogram-params 'params'       Passes parameters 'params' to the keogram program."
+	echo "   --startrails                    Will ${MSG1} a startrail."
+	echo "   --startrails-params 'params'    Passes parameters 'params' to the startrails program."
+	echo "   --timelapse                     Will ${MSG1} a timelapse."
+	echo "   --timelapse-params 'params'     Passes parameters 'params' to the timelapse program."
+	echo "   --output-dir dir                Put the output file in 'dir'."
+	echo "   INPUT_DIR                       Is the day in '${ALLSKY_IMAGES}' to process."
 	echo
 	echo "If you don't specify --keogram, --startrails, or --timelapse, all three will be ${MSG2}."
 	echo
 	echo "The list of images to process is determined in one of two ways:"
+	echo
 	echo "1. Looking in '<INPUT_DIR>' for files with an extension of '${EXTENSION}'."
 	echo "   If <INPUT_DIR> does NOT begin with a '/' it is assumed to be in '${ALLSKY_IMAGES}',"
 	echo "   which allows using images on a USB stick, for example."
@@ -144,8 +165,8 @@ if [[ -n ${IMAGES_FILE} ]]; then
 	# If IMAGES_FILE is specified there should be no other arguments.
 	[[ $# -ne 0 ]] && usage_and_exit 1
 
-	if [[ ${DO_KEOGRAM} == "true" || ${DO_STARTRAILS} == "true" ]]; then
-		E_ "${ME}: The '--images' argument does not (yet) work with keograms or startrails." >&2
+	if [[ ${DO_KEOGRAM} == "true" ]]; then
+		E_ "${ME}: The '--images' argument does not (yet) work with keograms." >&2
 		exit 1
 	fi
 
@@ -165,7 +186,7 @@ getAllSettings --var "uselocalwebsite \
 
 if [[ -n ${IMAGES_FILE} ]]; then
 	if [[ ! -s ${IMAGES_FILE} ]]; then
-		E_ "*** ${ME} ERROR: '${IMAGES_FILE}' does not exist or is empty!" >&2
+		E_ "*** ${ME} ERROR: Images file '${IMAGES_FILE}' does not exist or is empty!" >&2
 		exit 3
 	fi
 	INPUT_DIR=""		# Not used
@@ -213,6 +234,7 @@ if [[ ${TYPE} == "GENERATE" ]]; then
 		GENERATING_WHAT="${1}"
 		DIRECTORY="${2}"
 		CMD="${3}"
+
 		[[ ${SILENT} == "false" ]] && echo "===== Generating ${GENERATING_WHAT}"
 		[[ -n ${DIRECTORY} ]] && mkdir -p "${OUTPUT_DIR}/${DIRECTORY}"
 
@@ -220,7 +242,7 @@ if [[ ${TYPE} == "GENERATE" ]]; then
 		# shellcheck disable=SC2086
 		eval ${CMD}
 		local RET=$?
-		if [[ ${RET} -ne 0 ]]; then
+		if [[ ${RET} -ne 0 && ${RET} -ne ${EXIT_PARTIAL_OK}  ]]; then
 			E_ "${ME}: Command Failed: ${CMD}" >&2
 		elif [[ ${SILENT} == "false" ]]; then
 			echo -e "\tDone"
@@ -307,8 +329,9 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 			[[ ${SIZE} != "" ]] && MORE+=" --font-size ${SIZE}"
 		THICKNESS="${S_keogramlinethickness}"
 			[[ ${THICKNESS} != "" ]] && MORE+=" --font-type ${THICKNESS}"
-		CMD="'${ALLSKY_BIN}/keogram' ${N} ${SIZE_FILTER} -d '${INPUT_DIR}' \
-			-e ${EXTENSION} -o '${UPLOAD_FILE}' ${MORE} ${KEOGRAM_EXTRA_PARAMETERS}"
+		CMD="'${ALLSKY_BIN}/keogram' ${N} ${SIZE_FILTER} -d '${INPUT_DIR}'"
+		CMD+=" -e ${EXTENSION} -o '${UPLOAD_FILE}' ${MORE} ${KEOGRAM_EXTRA_PARAMETERS}"
+		[[ -n ${KEOGRAM_PARAMS} ]] && CMD+=" ${KEOGRAM_PARAMS}"
 		generate "Keogram" "keogram" "${CMD}"
 
 		if [[ $? -gt 90 && (${DO_STARTRAILS} == "true" || ${DO_TIMELAPSE} == "true") ]]; then
@@ -364,12 +387,28 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 		fi
 		BRIGHTNESS_THRESHOLD="${S_startrailsbrightnessthreshold}"
 		STARTRAILS_EXTRA_PARAMETERS="${S_startrailsextraparameters}"
-		CMD="'${ALLSKY_BIN}/startrails' ${N} ${SIZE_FILTER} -d '${INPUT_DIR}' \
-			-e ${EXTENSION} -b ${BRIGHTNESS_THRESHOLD} -o '${UPLOAD_FILE}' \
-			${STARTRAILS_EXTRA_PARAMETERS}"
+		CMD="'${ALLSKY_BIN}/startrails' ${N} ${SIZE_FILTER} -o '${UPLOAD_FILE}'"
+		if [[ -n ${IMAGES_FILE} ]]; then
+			CMD+=" --images '${IMAGES_FILE}'"
+		else
+			CMD+=" -d '${INPUT_DIR}' -e ${EXTENSION}"
+		fi
+		CMD+=" -b ${BRIGHTNESS_THRESHOLD}"
+		CMD+=" ${STARTRAILS_EXTRA_PARAMETERS}"
+		[[ -n ${STARTRAILS_PARAMS} ]] && CMD+=" ${STARTRAILS_PARAMS}"
 		generate "Startrails, threshold=${BRIGHTNESS_THRESHOLD}" "startrails" "${CMD}"
+		RET=$?
 
-		if [[ $? -gt 90 && ${DO_TIMELAPSE} == "true" ]]; then
+		if [[ ${RET} -eq ${EXIT_PARTIAL_OK} ]]; then
+			MSG="The startrails file was created but has no trailed stars."
+			MSG+="\nTry running 'allsky-config compare_startrails' to determine"
+			MSG+=" what 'Brightness Threshold' to use."
+			if [[ ${ON_TTY} == "true" ]]; then
+				echo -e "${MSG}" >&2
+			else
+				"${ALLSKY_SCRIPTS}/addMessage.sh" --type "warning" --msg "${MSG}"
+			fi
+		elif [[ ${RET} -gt 90 && ${DO_TIMELAPSE} == "true" ]]; then
 			DO_TIMELAPSE="false"
 			# -gt 90 means either no files or unable to read initial file, and
 			# timelapse will have the same problem, so don't bother running.
@@ -445,6 +484,7 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 				X="--output '${UPLOAD_FILE}' '${INPUT_DIR}'"
 			fi
 			CMD="${N} '${ALLSKY_SCRIPTS}/timelapse.sh' ${DEBUG_ARG} ${X}"
+			[[ -n ${TIMELAPSE_PARAMS} ]] && CMD+=" ${TIMELAPSE_PARAMS}"
 			generate "Timelapse" "" "${CMD}"	# it creates the necessary directory
 			RET=$?
 		fi

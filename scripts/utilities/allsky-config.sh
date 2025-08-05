@@ -42,7 +42,7 @@ function usage_and_exit()
 			W_ "${MSG}"
 		fi
 		echo
-		echo "where:"
+		echo "Where:"
 		echo "   --help           Displays this message and exits."
 		echo "   --help command   Displays a help message for the specified command, then exits."
 		echo "   --debug          Displays debugging information."
@@ -60,11 +60,12 @@ function usage_and_exit()
 	echo "      change_tmp"
 	echo "      samba"
 	echo "      move_images"
-	echo "      bad_images_info"
+	echo "      bad_images_info [--show_bad_images]"
 	echo "      new_rpi_camera_info [--camera NUM]"
 	echo "      show_start_times [--zero] [angle [latitude [longitude]]]"
 	echo "      compare_paths --website | --server"
-	echo "      get_brightness_info"
+	echo "      get_startrails_info"
+	echo "      compare_startrails [--thresholds '1 2 3']"
 	echo "      check_post_data"
 	echo "      get_filesystems"
 	echo "      encoders"
@@ -87,7 +88,7 @@ function show_supported_cameras()
 {
 	local COMMAND_TO_EXECUTE="showSupportedCameras.sh"
 
-	if [[ $# -eq 0 && -n ${FUNTION_TO_EXECUTE} ]]; then
+	if [[ $# -eq 0 && -n ${FUNCTION_TO_EXECUTE} ]]; then
 		# Command to run specified on command line but required options not given.
 		E_ "${ME} ${ME_F}: Need to specify all arguments on command line." >&2
 		"${COMMAND_TO_EXECUTE}" --help
@@ -96,7 +97,7 @@ function show_supported_cameras()
 
 	local ARGS
 
-	if [[ $# -eq 0 && -z ${FUNTION_TO_EXECUTE} ]]; then
+	if [[ $# -eq 0 && -z ${FUNCTION_TO_EXECUTE} ]]; then
 		PROMPT="\nSelect the camera(s) to show:"
 		OPTS=()
 		OPTS+=("--RPi"			"RPi and compatible")
@@ -186,7 +187,7 @@ function show_installed_locales()
 function prepare_logs()
 {
 	# shellcheck disable=SC2068
-	prepareLogs.sh ${@}
+	prepareLogs.sh "${@}"
 }
 
 
@@ -195,7 +196,7 @@ function prepare_logs()
 function new_rpi_camera_info()
 {
 	# shellcheck disable=SC2068
-	getRPiCameraInfo.sh ${@}
+	getRPiCameraInfo.sh "${@}"
 }
 
 
@@ -209,7 +210,7 @@ function samba()
 	fi
 
 	# shellcheck disable=SC2068
-	installSamba.sh ${@}
+	installSamba.sh "${@}"
 }
 
 
@@ -223,7 +224,7 @@ function move_images()
 	fi
 
 	# shellcheck disable=SC2068
-	moveImages.sh ${@}
+	moveImages.sh "${@}"
 }
 
 
@@ -232,7 +233,7 @@ function move_images()
 function bad_images_info()
 {
 	# shellcheck disable=SC2068
-	badImagesInfo.sh ${@}
+	badImagesInfo.sh "${@}"
 }
 
 
@@ -243,7 +244,7 @@ function compare_paths()
 {
 	local COMMAND_TO_EXECUTE="comparePaths.sh"
 
-	if [[ $# -eq 0 && -n ${FUNTION_TO_EXECUTE} ]]; then
+	if [[ $# -eq 0 && -n ${FUNCTION_TO_EXECUTE} ]]; then
 		# Command to run specified on command line but required options not given.
 		E_ "${ME} ${ME_F}: Need to specify all arguments on command line." >&2
 		"${COMMAND_TO_EXECUTE}" --help
@@ -252,7 +253,7 @@ function compare_paths()
 
 	local ARGS
 
-	if [[ $# -eq 0 && -z ${FUNTION_TO_EXECUTE} ]]; then
+	if [[ $# -eq 0 && -z ${FUNCTION_TO_EXECUTE} ]]; then
 		PROMPT="\nSelect the machine you want to check:"
 		OPTS=()
 		OPTS+=("--website"	\
@@ -283,10 +284,19 @@ function compare_paths()
 
 #####
 # Display brightness information from the startrails command.
-get_brightness_info()
+get_startrails_info()
 {
 	# shellcheck disable=SC2068
-	getBrightnessInfo.sh ${@}
+	getStartrailsInfo.sh "${@}"
+}
+
+
+#####
+# Create multiple startrails with different thresholds.
+compare_startrails()
+{
+	# shellcheck disable=SC2068
+	compareStartrails.sh "${@}"
 }
 
 
@@ -300,9 +310,8 @@ config_timelapse()
 	fi
 
 	# shellcheck disable=SC2068
-	configTimelapse.sh ${@}
+	configTimelapse.sh "${@}"
 }
-
 
 
 #####
@@ -408,7 +417,7 @@ function pix_fmts()
 function show_start_times()
 {
 	# shellcheck disable=SC2068
-	showStartTimes.sh ${@}
+	showStartTimes.sh "${@}"
 }
 
 
@@ -418,7 +427,7 @@ function show_start_times()
 function check_post_data()
 {
 	# shellcheck disable=SC2068
-	checkPostData.sh ${@}
+	checkPostData.sh "${@}"
 }
 
 #####
@@ -426,7 +435,7 @@ function check_post_data()
 function get_filesystems()
 {
 	# shellcheck disable=SC2068
-	getFilesystems.sh ${@}
+	getFilesystems.sh "${@}"
 }
 
 
@@ -439,20 +448,18 @@ function run_command()
 	local COMMAND="${1}"
 	shift
 
-	# shellcheck disable=SC2124
-	local ARGUMENTS="${@}"
 	if ! type "${COMMAND}" > /dev/null 2>&1 ; then
 		E_ "\n${ME}: Unknown command '${COMMAND}'." >&2
 		usage_and_exit --commands-only 2
 	fi
 
 	if [[ ${DEBUG} == "true" ]]; then
-		D_ "Executing: ${COMMAND} ${ARGUMENTS}\n"
+		# shellcheck disable=SC2145
+		D_ "Executing: ${COMMAND} ${@}\n"
 	fi
 
 	ME_F="${COMMAND}"		# global
-	#shellcheck disable=SC2086
-	"${COMMAND}" ${ARGUMENTS}
+	"${COMMAND}" "${@}"
 }
 
 
@@ -530,8 +537,7 @@ function L()
 
 OK="true"
 DO_HELP="false"
-FUNTION_TO_EXECUTE=""
-FUNTION_TO_EXECUTE_ARGS=""
+FUNCTION_TO_EXECUTE=""
 DEBUG="false"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
@@ -550,10 +556,9 @@ while [[ $# -gt 0 ]]; do
 			;;
 
 		*)
-			FUNTION_TO_EXECUTE="${ARG}"
+			FUNCTION_TO_EXECUTE="${ARG}"
 			shift
-			# shellcheck disable=SC2124
-			FUNTION_TO_EXECUTE_ARGS="${@}"
+			# The remaining arguments are in ${@}.
 			break;
 			;;
 	esac
@@ -563,9 +568,9 @@ done
 PATH="${PATH}:${ALLSKY_UTILITIES}"
 
 if [[ ${DO_HELP} == "true" ]]; then
-	if [[ -n ${FUNTION_TO_EXECUTE} ]]; then
+	if [[ -n ${FUNCTION_TO_EXECUTE} ]]; then
 		echo
-		run_command "${FUNTION_TO_EXECUTE}" "--help"
+		run_command "${FUNCTION_TO_EXECUTE}" "--help"
 		echo
 		exit 0
 	else
@@ -574,7 +579,7 @@ if [[ ${DO_HELP} == "true" ]]; then
 fi
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
-if [[ -z ${FUNTION_TO_EXECUTE} ]]; then
+if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 	# No command given on command line so prompt for one.
 
 	if [[ ${ON_TTY} == "false" ]]; then
@@ -583,42 +588,80 @@ if [[ -z ${FUNTION_TO_EXECUTE} ]]; then
 	fi
 
 	PROMPT="\nSelect a command to run:"
-	CMDS=(); N=1
+	CMDS=()
+	N=1
 
 	C="show_supported_cameras"
-	CMDS+=("${C}"			"$( L "Show supported cameras                              (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Show supported cameras                              (${C})" )")
+	((N++))
+
 	C="show_connected_cameras"
-	CMDS+=("${C}"			"$( L "Show connected cameras                              (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Show connected cameras                              (${C})" )")
+	((N++))
+
 	C="prepare_logs"
-	CMDS+=("${C}"			"$( L "Prepare log files for troubleshooting               (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Prepare log files for troubleshooting               (${C})" )")
+	((N++))
+
 	C="config_timelapse"
-	CMDS+=("${C}"			"$( L "Create timelapse videos with different settings     (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Create timelapse videos with different settings     (${C})" )")
+	((N++))
+
 	C="change_swap"
-	CMDS+=("${C}"			"$( L "Add swap space or change size                       (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Add swap space or change size                       (${C})" )")
+	((N++))
+
 	C="change_tmp"
-	CMDS+=("${C}" 			"$( L "Move ~/allsky/tmp to memory or change size          (${C})") "); ((N++))
+	CMDS+=("${C}" 			"$( L "Move ~/allsky/tmp to memory or change size          (${C})") ")
+	((N++))
+
 	C="samba"
-	CMDS+=("${C}" 			"$( L "Simplify copying files to/from the Pi               (${C})" )"); ((N++))
+	CMDS+=("${C}" 			"$( L "Simplify copying files to/from the Pi               (${C})" )")
+	((N++))
+
 	C="move_images"
-	CMDS+=("${C}"			"$( L "Move ~/allsky/images to a different location        (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Move ~/allsky/images to a different location        (${C})" )")
+	((N++))
+
 	C="bad_images_info"
-	CMDS+=("${C}"			"$( L "Display information on 'bad' images                 (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Display information on 'bad' images                 (${C})" )")
+	((N++))
+
 	C="new_rpi_camera_info"
-	CMDS+=("${C}"			"$( L "Collect information for new RPi camera              (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Collect information for new RPi camera              (${C})" )")
+	((N++))
+
 	C="show_start_times"
-	CMDS+=("${C}"			"$( L "Show daytime and nighttime start times              (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Show daytime and nighttime start times              (${C})" )")
+	((N++))
+
 	C="compare_paths"
-	CMDS+=("${C}"			"$( L "Compare upload and Website paths                    (${C})" )"); ((N++))
-	C="get_brightness_info"
-	CMDS+=("${C}"			"$( L "Get information on image brightness                 (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Compare upload and Website paths                    (${C})" )")
+	((N++))
+
+	C="get_startrails_info"
+	CMDS+=("${C}"			"$( L "Get information on startrails image brightness      (${C})" )")
+	((N++))
+
+	C="compare_startrails"
+	CMDS+=("${C}"			"$( L "Create multiple startrails to compare settngs       (${C})" )")
+	((N++))
+
 	C="check_post_data"
-	CMDS+=("${C}"			"$( L "Troubleshoot the 'data.json is X days old' message  (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Troubleshoot the 'data.json is X days old' message  (${C})" )")
+	((N++))
+
 	C="get_filesystems"
-	CMDS+=("${C}"			"$( L "Determine where a secodary storage device is        (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Determine where a secodary storage device is        (${C})" )")
+	((N++))
+
 	C="encoders"
-	CMDS+=("${C}"			"$( L "Show list of timelapse encoders available           (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Show list of timelapse encoders available           (${C})" )")
+	((N++))
+
 	C="pix_fmts"
-	CMDS+=("${C}"			"$( L "Show list of timelapse pixel formats available      (${C})" )"); ((N++))
+	CMDS+=("${C}"			"$( L "Show list of timelapse pixel formats available      (${C})" )")
+	((N++))
 
 	# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 	while COMMAND="$( prompt "${PROMPT}" "${CMDS[@]}" )"
@@ -648,7 +691,7 @@ if [[ -z ${FUNTION_TO_EXECUTE} ]]; then
 
 else
 	#shellcheck disable=SC2086
-	run_command "${FUNTION_TO_EXECUTE}" ${FUNTION_TO_EXECUTE_ARGS}
+	run_command "${FUNCTION_TO_EXECUTE}" "${@}"
 	exit $?
 fi
 

@@ -15,6 +15,7 @@ using namespace std;
 #include <glob.h>
 #include <sys/resource.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <algorithm>
 #include <cstdlib>
@@ -41,8 +42,9 @@ using namespace std;
 struct config_t {
 	std::string img_src_dir;
 	std::string img_src_ext;
-	std::string images;
+	std::string images;				// List of images to process.  May also contain the mean brightness.
 	std::string dst_startrails;
+	std::string output_data_file;	// where per-image data goes
 	bool startrails_enabled;
 	int num_threads;
 	int nice_level;
@@ -58,6 +60,7 @@ unsigned long nfiles = 0;
 int s_len = 0;	// length in characters of nfiles, e.g. if nfiles == "1000", s_len = 4.
 const char *ME = "";
 int numImagesUsed = 0;
+FILE *dataIO = stderr;
 
 // Read a single file and return true on success and false on error.
 // On success, set "mat".
@@ -69,25 +72,37 @@ bool read_file(
 		char *msg,
 		int msg_size)
 {
+	// cv::imread() gives a terrible message when it can't read the file,
+	// so check outselves.
+	struct stat sb;
+	if (stat(filename, &sb) == -1) {
+		if (cf->verbose) {
+			stdio_mutex.lock();
+			fprintf(stderr, KRED "ERROR reading file '%s': %s.\n" KNRM, filename, strerror(errno));
+			stdio_mutex.unlock();
+		}
+		return(false);
+	}
 	*mat = cv::imread(filename, cv::IMREAD_UNCHANGED);
 	if (! mat->data || mat->empty()) {
 		if (cf->verbose) {
 			stdio_mutex.lock();
-			fprintf(stderr, "Error reading file '%s': no data\n", filename);
+			fprintf(stderr, KRED "ERROR reading file '%s': no data\n" KNRM, filename);
 			stdio_mutex.unlock();
 		}
 		return(false);
 	}
 
-	if (msg_size > 0 && cf->verbose > 1) {
-		snprintf(msg, msg_size, "[%*d/%lu] %s, channels=%d",
-			s_len, file_num, nfiles, filename, mat->channels());
+	if (msg_size > 0 && (cf->verbose > 1 || cf->output_data_file != "")) {
+		// tab-separate fields for easier parsing
+		snprintf(msg, msg_size, "%s\t[%*d/%lu]\tchannels=%d",
+			filename, s_len, file_num, nfiles, mat->channels());
 	}
 
 	if (mat->cols == 0 || mat->rows == 0) {
 		if (cf->verbose) {
 			stdio_mutex.lock();
-			fprintf(stderr, "%s: invalid image size %dx%d; ignoring file\n", filename, mat->cols, mat->rows);
+			fprintf(stderr, "%s: WARNING: invalid image size %dx%d; ignoring file.\n", filename, mat->cols, mat->rows);
 			stdio_mutex.unlock();
 		}
 		return(false);
@@ -96,7 +111,8 @@ bool read_file(
 		(mat->cols != cf->img_width || mat->rows != cf->img_height)) {
 		if (cf->verbose) {
 			stdio_mutex.lock();
-			fprintf(stderr, "%s: image size %dx%d does not match expected size %dx%d; ignoring\n",
+// TODO: Convert image to expected size
+			fprintf(stderr, "%s: WARNING: image size %dx%d does not match expected size %dx%d; ignoring file.\n",
 				filename, mat->cols, mat->rows, cf->img_width, cf->img_height);
 			stdio_mutex.unlock();
 		}
@@ -114,9 +130,9 @@ char s_[10];
 
 void startrail_worker(
 		int thread_num,				// thread num
-		struct config_t* cf,			// config
+		struct config_t* cf,		// config
 		glob_t* files,				// file list
-		std::mutex* mtx,				// mutex
+		std::mutex* mtx,			// mutex
 		cv::Mat* stats_ptr,			// statistics
 		cv::Mat* main_accumulator)	// accumulated
 {
@@ -148,10 +164,21 @@ void startrail_worker(
 	char repair_msg[repair_msg_size];
 
 	for (int f = start_num; f <= end_num; f++) {
-		char* filename = files->gl_pathv[f];
+		double image_mean = -1;		// an impossible value
+		char *filename = files->gl_pathv[f];
+		char *p = std::strstr(filename, "	");		// tab
+		if (p != nullptr) {
+			// Before the tab is the filename, after the tab is the mean.
+			*p = '\0';
+			image_mean = atof(++p);
+		}
+
 		cv::Mat imagesrc;
 		msg[0] = '\0';
-		if (! read_file(cf, filename, &imagesrc, f+1, msg, msg_size)) continue;
+		if (! read_file(cf, filename, &imagesrc, f+1, msg, msg_size)) {
+			stats_ptr->col(f) = -1.0;	// Set to something to avoid "nan" entries.
+			continue;
+		}
 
 		repair_msg[0] = '\0';
 		if (imagesrc.channels() != nchan) {
@@ -165,30 +192,33 @@ void startrail_worker(
 				cv::cvtColor(imagesrc, imagesrc, cv::COLOR_BGR2GRAY, nchan);
 		}
 
-		cv::Scalar mean_scalar = cv::mean(imagesrc);
-		double image_mean;
-		switch (imagesrc.channels()) {
-			default:	// mono case
-				image_mean = mean_scalar.val[0];
+		if (image_mean == -1) {
+			// Don't recalculate the mean.
+			cv::Scalar mean_scalar = cv::mean(imagesrc);
+			switch (imagesrc.channels()) {
+				default:	// mono case
+					image_mean = mean_scalar.val[0];
+					break;
+				case 3:		// for color choose maximum channel
+				case 4:
+					image_mean = cv::max(mean_scalar[0], cv::max(mean_scalar[1], mean_scalar[2]));
 				break;
-			case 3:		// for color choose maximum channel
-			case 4:
-				image_mean = cv::max(mean_scalar[0], cv::max(mean_scalar[1], mean_scalar[2]));
-			break;
+			}
+			// Scale to 0-1 range
+			switch (imagesrc.depth()) {
+				case CV_8U:
+					image_mean /= 255.0;
+					break;
+				case CV_16U:
+					image_mean /= 65535.0;
+					break;
+			}
 		}
-		// Scale to 0-1 range
-		switch (imagesrc.depth()) {
-			case CV_8U:
-				image_mean /= 255.0;
-				break;
-			case CV_16U:
-				image_mean /= 65535.0;
-				break;
-		}
-		if (cf->verbose > 1) {
-			stdio_mutex.lock();
-			fprintf(stderr, "%s, mean=%.3f\n", msg, image_mean);
-			stdio_mutex.unlock();
+		if (cf->verbose > 1 || cf->output_data_file != "") {
+			// tab-separate fields for easier parsing.
+			char temp[100];
+			snprintf(temp, 100, "\tmean=%.3f", image_mean);
+			strcat(msg, temp);
 		}
 
 		// Want to print the message above before this one.
@@ -202,13 +232,35 @@ void startrail_worker(
 		// so we just update the entry once the image is successfully loaded
 		stats_ptr->col(f) = image_mean;
 
-		if (cf->startrails_enabled && image_mean <= cf->brightness_limit) {
-			numImagesUsed++;		// Keep track of the number of images used
-			if (thread_accumulator.empty()) {
-				imagesrc.copyTo(thread_accumulator);
+		if (cf->startrails_enabled) {
+			bool used;
+			if (image_mean <= cf->brightness_limit) {
+				used = true;
+				numImagesUsed++;		// Keep track of the number of images used
+				if (thread_accumulator.empty()) {
+					imagesrc.copyTo(thread_accumulator);
+				} else {
+					thread_accumulator = cv::max(thread_accumulator, imagesrc);
+				}
 			} else {
-				thread_accumulator = cv::max(thread_accumulator, imagesrc);
+				used = false;
 			}
+			if (cf->verbose > 1 || cf->output_data_file != "") {
+				char temp[100];
+				snprintf(temp, 100, "\tincluded=%s", used ? "yes" : "no");
+				strcat(msg, temp);
+			}
+		}
+
+		// Output msg if needed
+		if (cf->verbose > 1 || cf->output_data_file != "") {
+			// tab-separate fields for easier parsing.
+			char temp[100];
+			snprintf(temp, 100, "\tthreshold=%.3f", cf->brightness_limit);
+			strcat(msg, temp);
+			stdio_mutex.lock();
+			fprintf(dataIO, "%s\n", msg);
+			stdio_mutex.unlock();
 		}
 	}
 
@@ -237,6 +289,7 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 	cf->nice_level = 10;
 	cf->num_threads = ncpu;
 	cf->images = "";
+	cf->output_data_file = "";
 
 	while (1) {		// getopt loop
 		int option_index = 0;
@@ -249,13 +302,14 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 			{"nice-level",		required_argument, 0, 'q'},
 			{"output",			required_argument, 0, 'o'},
 			{"image-size",		required_argument, 0, 's'},
+			{"output-data",		required_argument, 0, 'D'},
 			{"statistics",		no_argument, 0, 'S'},
 			{"verbose",			no_argument, 0, 'v'},
 			{"help",			no_argument, 0, 'h'},
 			{0, 0, 0, 0}
 		};
 
-		c = getopt_long(argc, argv, "hvSb:d:i:e:Q:q:o:s:", long_options, &option_index);
+		c = getopt_long(argc, argv, "hvSb:d:D:i:e:Q:q:o:s:", long_options, &option_index);
 		if (c == -1)
 			break;
 
@@ -294,12 +348,15 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 				if (b >= 0 && b <= 1.0)
 					cf->brightness_limit = b;
 				else {
-					fprintf(stderr, "ERROR: Invalid brightness level %f. Must be from 0 to 1.0; exiting\n", b);
+					fprintf(stderr, KRED "%s: ERROR: Invalid brightness level %f. Must be from 0 to 1.0; exiting\n" KNRM, ME, b);
 					usage_and_exit(1);
 				}
 				break;
 			case 'd':
 				cf->img_src_dir = optarg;
+				break;
+			case 'D':
+				cf->output_data_file = optarg;
 				break;
 			case 'i':
 				cf->images = optarg;
@@ -338,35 +395,41 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 }
 
 void usage_and_exit(int x) {
-	std::cerr << "Usage: " << ME << " [-v] -i images | -d <imagedir> -e <ext>"
-		<< " [-b <brightness> -o <output> | -S] "
-		<< " [-s <WxH>] [-Q <max-threads>] [-q <nice>]" << std::endl;
+#define NL		std::endl		// make the code easier to read
+
+	std::cerr << "\nUsage: " << ME << " [-v] -i <images-file> | -d <imagedir> -e <ext>" << " \\" << NL
+		<< "\t[-b <brightness> -o <output> | -S] [-D <output-data-file>] " << " \\" << NL
+		<< "\t[-s <WxH>] [-Q <max-threads>] [-q <nice>]" << NL;
 	if (x) {
-		std::cerr << KRED
-			<< "Either a list of files OR a source directory and file extension are required." << std::endl
+		std::cerr << "\n" << KRED
+			<< "Either a list of files OR a source directory and file extension are required." << NL
 			<< "An output file name is required to render startrails."
-			<< KNRM << std::endl;
+			<< KNRM << NL;
 	}
 
-	std::cerr << std::endl << "Arguments:" << std::endl;
-	std::cerr << "-h | --help : display this help, then exit" << std::endl;
-	std::cerr << "-v | --verbose : increase log verbosity" << std::endl;
-	std::cerr << "-S | --statistics : print image directory statistics without producing image" << std::endl;
-	std::cerr << "-i | --images <str> : file containing list of images" << std::endl;
-	std::cerr << "-d | --directory <str> : directory from which to read images" << std::endl;
-	std::cerr << "     If --images is specified then --directory is not needed unless";
-	std::cerr << "     one or more image names does not start with a '/'." << std::endl;
-	std::cerr << "-e | --extension <str> : filter images to just this extension" << std::endl;
-	std::cerr << "-Q | --max-threads <int> : limit maximum number of processing threads (all cpus)" << std::endl;
-	std::cerr << "-q | --nice-level <int> : nice(2) level of processing threads (10)" << std::endl;
-	std::cerr << "-o | --output <str> : output image filename" << std::endl;
-	std::cerr << "-s | --image-size <int>x<int> : restrict processed images to this size" << std::endl;
-	std::cerr << "-b | --brightness <float> : ranges from 0 (black) to 1 (white). (0.35)" << std::endl;
-	std::cerr << "\tA moonless sky may be as low as 0.05 while full moon can be as high as 0.4" << std::endl;
+	std::cerr << NL;
+	std::cerr << "Arguments:" << NL;
+	std::cerr << "   -h | --help : display this message, then exit." << NL;
+	std::cerr << "   -v | --verbose : increase log verbosity." << NL;
+	std::cerr << "   -S | --statistics : print image directory statistics without producing image." << NL;
+	std::cerr << "   -i | --images <str> : file containing list of images to process." << NL;
+	std::cerr << "        If the file also contains the mean brightness for an image, it will be used." << NL;
+	std::cerr << "   -d | --directory <str> : directory from which to read images." << NL;
+	std::cerr << "        If --images is specified then --directory is not needed unless." << NL;
+	std::cerr << "        one or more image names does not start with a '/'.." << NL;
+	std::cerr << "   -D | --output-data <str> : save per-image summary data to the specified file." << NL;
+	std::cerr << "   -e | --extension <str> : filter images to just this extension." << NL;
+	std::cerr << "   -Q | --max-threads <int> : limit maximum number of processing threads (all cpus)." << NL;
+	std::cerr << "   -q | --nice-level <int> : nice(2) level of processing threads (10)." << NL;
+	std::cerr << "   -o | --output <str> : output image filename." << NL;
+	std::cerr << "   -s | --image-size <int>x<int> : restrict processed images to this size." << NL;
+	std::cerr << "   -b | --brightness <float> : ranges from 0 (black) to 1 (white). (0.35)." << NL;
+	std::cerr << "\tA moonless sky may be as low as 0.05 while full moon can be as high as 0.4." << NL;
 
-	std::cerr << std::endl;
-	std::cerr << "ex: startrails -b 0.07 -d ../images/20240710/ -e jpg -o startrails.jpg" << std::endl;
+	std::cerr << NL;
+	std::cerr << "For example: startrails -b 0.07 -d ~/allsky/images/20250710/ -e jpg -o startrails.jpg" << NL;
 	exit(x);
+#undef END
 }
 
 int main(int argc, char* argv[]) {
@@ -392,12 +455,12 @@ int main(int argc, char* argv[]) {
 						 [](unsigned char c) { return std::tolower(c); });
 
 		if (config.dst_startrails.empty()) {
-			fprintf(stderr, KRED "Output file not specified.\n\n");
+			fprintf(stderr, KRED "%s: ERROR: Output file not specified.\n\n" KNRM, ME);
 			usage_and_exit(3);
 		}
 		if (extcheck.rfind(".png") == string::npos && extcheck.rfind(".jpg") == string::npos) {
-			fprintf(stderr, KRED "Output file '%s' is missing extension (.jpg or .png).\n\n",
-					config.dst_startrails.c_str());
+			fprintf(stderr, KRED "%s: ERROR: Output file '%s' is missing extension (.jpg or .png).\n\n" KNRM,
+					ME, config.dst_startrails.c_str());
 			usage_and_exit(3);
 		}
 		ext = strrchr(config.dst_startrails.c_str(), '.') + 1;
@@ -406,30 +469,53 @@ int main(int argc, char* argv[]) {
 		config.dst_startrails = "/dev/null";
 	}
 
+	if (config.output_data_file != "") {
+		if (config.output_data_file == "-") {
+			dataIO = stderr;
+		} else {
+			dataIO = fopen(config.output_data_file.c_str(), "w");
+			if (dataIO == NULL) {
+				fprintf(stderr, KRED "%s: ERROR: Data output file '%s' could not be opened: %s\n\n" KNRM,
+					ME, config.output_data_file.c_str(), strerror(errno));
+				exit(4);
+			}
+		}
+	}
+
 	// Find files
 	glob_t files;
 	if (config.images != "") {
-		// The images are specified in a file.
-		// So as not to redo the code that reads "files",
-		// set "files" to point to a vector of image names.
-		std::ifstream image_file(config.images);
-		if (! image_file.is_open()) {
-			std::cerr << ME << ": ERROR: Could not open image file '" << config.images << "'"
-			<< ", exiting." << std::endl;
-			exit(NO_IMAGES);
-		}
-
 		// Store the file names in a vector.
 		static std::vector<std::string> images;
 		std::string line;
-		while (std::getline(image_file, line)) {
-			images.push_back(line);
+
+		// The images are specified in a file or stdin in if "-".
+		// So as not to redo the code that reads "files",
+		// set "files" to point to a vector of image names.
+		// Ignore lines that begin with "#".
+		if (config.images == "-") {
+			while (std::getline(std::cin, line)) {
+				if (line.c_str()[0] != '#')
+					images.push_back(line);
+			}
+		} else {
+			std::ifstream image_file(config.images);
+			if (! image_file.is_open()) {
+				std::cerr << KRED << ME << ": ERROR: Could not open image file '" << config.images << "'"
+				<< ", exiting." << KNRM << std::endl;
+				exit(NO_IMAGES);
+			}
+
+			while (std::getline(image_file, line)) {
+				if (line.c_str()[0] != '#')
+					images.push_back(line);
+			}
+			image_file.close();
 		}
 		nfiles = files.gl_pathc = images.size();
-		image_file.close();
 		if (nfiles == 0) {
-			std::cerr << ME << ": ERROR: No images listed in '" << config.images << "'";
-			std::cerr << ", exiting." << std::endl;
+			std::cerr << KRED << ME << ": ERROR: No images listed in '" << config.images << "'";
+			std::cerr << ", exiting." << KNRM << std::endl;
 			exit(NO_IMAGES);
 		}
 
@@ -444,8 +530,8 @@ int main(int argc, char* argv[]) {
 			// prepend the input directory name.
 			if (image.c_str()[0] != '/') {
 				if(config.img_src_dir.empty()) {
-					std::cerr << ME << ": ERROR: image source directory not specified and"
-					<< " at least one image name is not a full pathname." << std::endl << std::endl;
+					std::cerr << KRED << ME << ": ERROR: image source directory not specified and"
+					<< " at least one image name is not a full pathname." << KNRM << std::endl << std::endl;
 					usage_and_exit(3);
 				}
 				image = config.img_src_dir + "/" + image;
@@ -462,8 +548,8 @@ int main(int argc, char* argv[]) {
 		nfiles = files.gl_pathc;
 		if (nfiles == 0) {
 			globfree(&files);
-			std::cerr << ME << ": ERROR: No images found in '" << config.img_src_dir << "'";
-			std::cerr << ", exiting." << std::endl;
+			std::cerr << KRED << ME << ": ERROR: No images found in '" << config.img_src_dir << "'";
+			std::cerr << ", exiting." << KNRM << std::endl;
 			exit(NO_IMAGES);
 		}
 	}
@@ -489,11 +575,20 @@ int main(int argc, char* argv[]) {
 	cv::Mat temp;
 	const int sample_file_num = 0;	// 1st file
 	char *sample_file = files.gl_pathv[sample_file_num];
+
 	if (nchan == 0 || (config.img_width == 0 && config.img_height == 0)) {
 		char not_used[1];
+		// KLUDGE: temporarily replace the tab.
+		char *p = std::strstr(sample_file, "	");		// tab
+		if (p != nullptr) {
+			*p = '\0';
+		}
 		if (! read_file(&config, sample_file, &temp, sample_file_num+1, not_used, 0)) {
-			fprintf(stderr, "%s: ERROR: Unable to read sample file '%s'; quitting.\n", ME, sample_file);
+			fprintf(stderr, KRED "%s: ERROR: Unable to read sample file '%s'; quitting.\n" KNRM, ME, sample_file);
 			exit(BAD_SAMPLE_FILE);
+		}
+		if (p != nullptr) {
+			*p = '\t';
 		}
 		if (config.verbose > 1) {
 			fprintf(stderr, "Getting nchan and/or size from: '%s'\n", sample_file);
@@ -532,6 +627,13 @@ int main(int argc, char* argv[]) {
 	// In OpenCV, NAN is unequal to everything including NAN which means we can
 	// filter out bogus entries by checking stats for element-wise equality
 	// with itself.
+
+// TODO: go through "stats" looking for "stats.col(i) == -1" and replace the -1 with the mean.
+// I don't know how to use stats.col(i) to do anything other than assign to it.
+// This works:	stats.col(i) = 1;
+// Not this:	if (stats.col(i) == 1)
+// It complains that stats.col(i) is a cv::Mat.
+
 	cv::Mat nan_mask = cv::Mat(stats == stats);
 	cv::Mat filtered_stats;
 	stats.copyTo(filtered_stats, nan_mask);
@@ -578,11 +680,13 @@ int main(int argc, char* argv[]) {
 		} catch (cv::Exception& ex) {
 			// Use lowercase "s"tartrails here and uppercase below so we
 			// know what produced the error.
-			fprintf(stderr, "%s: ERROR: could not save startrails file: %s\n", ME, ex.what());
+			fprintf(stderr, KRED "%s: ERROR: could not save startrails file '%s': %s\n" KNRM,
+				ME, config.dst_startrails.c_str(), ex.what());
 			exit(2);
 		}
 		if (! result) {
-			fprintf(stderr, "%s: ERROR: could not save Startrails file: %s\n", ME, strerror(errno));
+			fprintf(stderr, KRED "%s: ERROR: could not save Startrails file '%s': %s\n" KNRM,
+				ME, config.dst_startrails.c_str(), strerror(errno));
 			exit(2);
 		}
 	}

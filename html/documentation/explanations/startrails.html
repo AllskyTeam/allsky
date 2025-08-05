@@ -58,6 +58,19 @@ This will use the settings specified in the
 <span class="subSettingsHeader">Startrails</span> sub-section of the WebUI.
 </p>
 
+<p class="morePadding">
+If you want to experiment using other settings you can specify those settings as such:
+<pre>
+generateForDay.sh --startrails 20240710 --startrails-params "--brightness 0.15 -o ~/allsky/tmp/test.jpg"
+</pre>
+This will use a <span class="WebUISetting">Brightness Threshold</span> of <code>0.15</code>
+and put the resulting startrails in <span class="fileName">~/allsky/tmp/test.jpg</span>.
+<br>
+Make sure the parameters are enclosed in quotes.
+<br>
+See the Advanced section below for the possible parameters you can specify.
+</p>
+
 <h4>Advanced users: running the <code>startrails</code> program manually</h4>
 <details><summary></summary>
 <p>
@@ -69,22 +82,30 @@ plus any others you add to the
 </p>
 <p>
 Executing the <code>startrails</code> manually is possible, but not very useful.
-If run manually you need to specify at least all the required arguments.
 </p>
 
 <pre>
-Usage: startrails [-v] -d &lt;dir&gt; -e &lt;ext&gt; [-b &lt;brightness&gt;] [-o &lt;output&gt;] [-S] [-s &lt;width&gt;x&lt;height&gt;]
+Usage: startrails [-v] -i &lt;images-file&gt; | -d &lt;imagedir&gt; -e &lt;ext&gt; \
+	[-b &lt;brightness&gt; -o &lt;output&gt; | -S] [-D &lt;output-data-file&gt;]  \
+	[-s &lt;WxH&gt;] [-Q &lt;max-threads&gt;] [-q &lt;nice&gt;]
 
 Arguments:
--h : display this help, then exit
--v : increase log verbosity
--S : print image directory statistics without producing image.
--s &lt;int&gt;x&lt;int&gt; : restrict processed images to this size
-<u>-d &lt;str&gt;</u> : directory from which to read images (required)
-<u>-e &lt;str&gt;</u> : filter images to just this extension (required)
-<u>-o &lt;str&gt;</u> : output image filename
-<u>-b &lt;float&gt;</u> : ranges from 0.0 (black) to 1.0 (white).
-        A moonless sky may be as low as 0.05 while full moon can be as high as 0.4.
+   -h | --help : display this message, then exit.
+   -v | --verbose : increase log verbosity.
+   -S | --statistics : print image directory statistics without producing image.
+   -i | --images &lt;str&gt; : file containing list of images to process.
+        If the file also contains the mean brightness for an image, it will be used.
+   -d | --directory &lt;str&gt; : directory from which to read images.
+        If --images is specified then --directory is not needed unless.
+        one or more image names does not start with a '/'..
+   -D | --output-data &lt;str&gt; : save per-image summary data to the specified file.
+   -e | --extension &lt;str&gt; : filter images to just this extension.
+   -Q | --max-threads &lt;int&gt; : limit maximum number of processing threads (all cpus).
+   -q | --nice-level &lt;int&gt; : nice(2) level of processing threads (10).
+   -o | --output &lt;str&gt; : output image filename.
+   -s | --image-size &lt;int&gt;x&lt;int&gt; : restrict processed images to this size.
+   -b | --brightness &lt;float&gt; : ranges from 0 (black) to 1 (white). (0.35).
+	A moonless sky may be as low as 0.05 while full moon can be as high as 0.4.
 </pre>
 
 <br><p>
@@ -128,17 +149,19 @@ To determine what number to use
 you need to know the typical <b>nighttime</b> sky brightness value.
 Do the following:
 <ol>
-	<li>Run <code>allsky-config &nbsp; get_brightness_info</code>
+	<li>Run <code>allsky-config &nbsp; get_startrails_info</code>
 		to see what your brightness values are.
 	<li>If there is no data yet a message will appear with a possible reason,
 		otherwise the output will look like:
 <pre>
-Date                   Minimum   Maximum   Mean      Median    Images used   Not used
--------------------------------------------------------------------------------------
-2025-01-17  06:20:45   0.084     0.146     0.103     0.105     250           3
-2025-01-18  06:16:18   0.045     0.135     0.102     0.106     247           6
--------------------------------------------------------------------------------------
-Total average          0.065     0.140     0.103     0.106     497           9
+Startrails date        Minimum   Maximum   Mean      Median    Images used   Not used  Threshold
+------------------------------------------------------------------------------------------------
+2025-01-17  06:20:45   0.084     0.146     0.103     0.105     250           3         0.15
+2025-01-18  06:16:18   0.045     0.135     0.102     0.106     247           6         0.15
+------------------------------------------------------------------------------------------------
+Averages               0.065     0.140     0.103     0.106     497           9         -
+
+1 entry not used due to invalid data.
 </pre>
 		<blockquote>
 		Note that the Mean brightness is determined by looking at the <em>whole</em> image,
@@ -153,7 +176,7 @@ Total average          0.065     0.140     0.103     0.106     497           9
 		</blockquote>
 	<li>Set the <span class="WebUISetting">Brightness Threshold</span>
 		to the <strong>Maximum</strong>, or slightly below it.
-		If you have a <code>Total average</code>, use its Maximum.
+		If you have an <code>Averages</code> line, use its Maximum.
 </ol>
 </p>
 <p>

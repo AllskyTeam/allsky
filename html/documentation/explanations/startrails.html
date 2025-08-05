@@ -58,6 +58,19 @@ This will use the settings specified in the
 <span class="subSettingsHeader">Startrails</span> sub-section of the WebUI.
 </p>
 
+<p class="morePadding">
+If you want to experiment using other settings you can specify those settings as such:
+<pre>
+generateForDay.sh --startrails 20240710 --startrails-params "--brightness 0.15 -o ~/allsky/tmp/test.jpg"
+</pre>
+This will use a <span class="WebUISetting">Brightness Threshold</span> of <code>0.15</code>
+and put the resulting startrails in <span class="fileName">~/allsky/tmp/test.jpg</span>.
+<br>
+Make sure the parameters are enclosed in quotes.
+<br>
+See the Advanced section below for the possible parameters you can specify.
+</p>
+
 <h4>Advanced users: running the <code>startrails</code> program manually</h4>
 <details><summary></summary>
 <p>

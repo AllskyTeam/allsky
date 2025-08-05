@@ -764,23 +764,42 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 				$imageType_name = basename($imageType);
 				$fullFilename = "$images_dir/$chosen_day/$dir$imageType_name";
 				if ($listNames) {
-					echo "<br><span style='font-size: 125%'>";
-					echo basename($fullFilename);
-					echo "</span><br>";
+					$class = "left center-text";
+					$name = "<br><span style='font-size: 125%;'>";
+					$name .= basename($fullFilename);
+					$name .= "</span>";
+				} else {
+					$class = "left";
+					$name = "";
 				}
 				if ($type == "picture") {
-				    echo "<a href='$fullFilename'>
-					<div class='left'>
-					<img src='$fullFilename' style='max-width: 100%; max-height: 400px'/>
-					</div></a>\n";
+					$style = "max-width: 100%; max-height: 400px;";
+					if ($listNames) {
+						echo "<div class='$class' style='padding: 10px 10px 20px 10px;'>";
+						echo "<a href='$fullFilename'>
+						<img src='$fullFilename' style='$style'/>
+						</a>";
+						echo $name;
+						echo "</div>";
+					} else {
+						echo "<a href='$fullFilename'>";
+						echo "<div class='$class'>";
+						echo "<img src='$fullFilename' style='$style'/>";
+						echo "</div></a>";
+					}
+					echo "\n";
 				} else {	//video
 				    echo "<a href='$fullFilename'>";
-				    echo "<div class='left' style='width: 100%'>
-					<video width='85%' height='85%' controls>
+				    echo "<div class='$class' style='width: 100%'>";
+					echo "<video width='85%' height='85%' controls>
 						<source src='$fullFilename' type='video/mp4'>
 						Your browser does not support the video tag.
 					</video>
-					</div></a>\n";
+					</div></a>";
+					if ($listNames) {
+						echo $name;
+					}
+					echo "\n";
 				}
 			}
 		}

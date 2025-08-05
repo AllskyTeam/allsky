@@ -70,6 +70,12 @@ if ($useLogin) {
 	<!-- Custom CSS -->
 	<link href="documentation/css/custom.css" rel="stylesheet">
 
+	<link href="documentation/css/light.css" rel="stylesheet">
+
+<!-- TODO: this breaks the menu:
+	<link href="documentation/css/documentation.css" rel="stylesheet">
+-->
+
 	<link rel="shortcut icon" type="image/png" href="documentation/img/allsky-favicon.png">
 
 	<!-- RaspAP JavaScript -->
@@ -147,6 +153,7 @@ if ($useLogin) {
 							Image Stretch Settings</a>
 					</li>
 
+<!--
 					<span style="color: blue; font-weight: bold">Other:</span>
 					<li>
 						<a id="constellation_overlay" href="helpers.php?page=constellation_overlay">
@@ -155,6 +162,7 @@ if ($useLogin) {
 							<br> &nbsp; &nbsp; &nbsp; Allsky Website
 							<br> &nbsp; &nbsp; &nbsp; Constellation Overlay</a>
 					</li>
+-->
 				</ul>
 			</div><!-- /.navbar-collapse -->
 		</div><!-- /.navbar-default -->

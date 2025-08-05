@@ -79,6 +79,7 @@ function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=nul
 		$retMsg .= $div;
 		$retMsg .= "$errorMsg ";
 		$retMsg .= json_last_error_msg();
+# TODO: json_pp gives a generic "on line 59" message.
 		$cmd = "json_pp < $file 2>&1";
 		exec($cmd, $output);
 		$retMsg .= $br;
@@ -145,6 +146,9 @@ function readOptionsFile() {
 	return($contents);
 }
 
+$allsky_status = null;
+$allsky_status_timestamp = null;
+
 function update_allsky_status($newStatus) {
 	global $status, $allsky_status;
 
@@ -160,8 +164,6 @@ function update_allsky_status($newStatus) {
 	}
 }
 
-$allsky_status = null;
-$allsky_status_timestamp = null;
 function output_allsky_status() {
 	global $allsky_status, $allsky_status_timestamp;
 
@@ -185,7 +187,7 @@ function output_allsky_status() {
 		$class = "alert-danger";
 	} else {
 		$title = "title='Since $allsky_status_timestamp'";
-		if ($allsky_status == "Running") {
+		if ($allsky_status == ALLSKY_STATUS_RUNNING) {
 			$class = "alert-success";
 		} else {
 			$class = "alert-warning";
@@ -223,11 +225,10 @@ function initialize_variables($website_only=false) {
 
 	if ($website_only) return;
 
-	// $img_dir is an alias in the web server's config that points to where the current image is.
+	// IMG_DIR is an alias in the web server's config that points to where the current image is.
 	// It's the same as ${ALLSKY_TMP} which is the physical path name on the server.
-	$img_dir = get_variable(ALLSKY_HOME . '/variables.sh', 'IMG_DIR=', 'current/tmp');
 	$f = getVariableOrDefault($settings_array, 'filename', "image.jpg");
-	$image_name = "$img_dir/$f";
+	$image_name = IMG_DIR . "/$f";
 	$darkframe = toBool(getVariableOrDefault($settings_array, 'takedarkframes', "false"));
 	$imagesSortOrder = getVariableOrDefault($settings_array, 'imagessortorder', "ascending");
 	$useLogin = toBool(getVariableOrDefault($settings_array, 'uselogin', "true"));
@@ -623,6 +624,9 @@ function handle_interface_POST_and_status($interface, $input, &$myStatus) {
 * however, there can be optional spaces or tabs before the string.
 *
 */
+
+# TODO: As of v2024.12.06_04 this is no longer needed.  Remove it in the next release.
+
 function get_variable($file, $searchfor, $default)
 {
 	// get the file contents
@@ -672,11 +676,11 @@ function get_variable($file, $searchfor, $default)
 * List a type of file - either "All" (case sensitive) for all days, or only for the specified day.
 * If $dir is not null, it ends in "/".
 */
-function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
+function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNames=false) {
 	$num = 0;	// Let the user know when there are no images for the specified day
 	// "/images" is an alias in the web server for ALLSKY_IMAGES
 	$images_dir = "/images";
-	$chosen_day = getVariableOrDefault($_GET, 'day', null);
+	$chosen_day = getVariableOrDefault($_REQUEST, 'day', null);
 	if ($chosen_day === null) {
 		echo "<br><br><br>";
 		echo "<h2 class='alert-danger'>ERROR: No 'day' specified in URL.</h2>";
@@ -743,7 +747,13 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
 			}
 		}
 	} else {
-		foreach (glob(ALLSKY_IMAGES . "/$chosen_day/$dir$imageFileName-$chosen_day.*") as $imageType) {
+		$expr = ALLSKY_IMAGES . "/${chosen_day}/${dir}";
+		if (substr($imageFileName, 0, 1) == "X") {
+			$expr .= substr($imageFileName, 1) . "*";
+		} else {
+			$expr .= "$imageFileName-$chosen_day.*";
+		}
+		foreach (glob($expr) as $imageType) {
 			$imageTypes[] = $imageType;
 			$num += 1;
 		}
@@ -753,6 +763,11 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
 			foreach ($imageTypes as $imageType) {
 				$imageType_name = basename($imageType);
 				$fullFilename = "$images_dir/$chosen_day/$dir$imageType_name";
+				if ($listNames) {
+					echo "<br><span style='font-size: 125%'>";
+					echo basename($fullFilename);
+					echo "</span><br>";
+				}
 				if ($type == "picture") {
 				    echo "<a href='$fullFilename'>
 					<div class='left'>
@@ -895,19 +910,21 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 // Update a file.
 // Files should be writable by the web server, but if they aren't, use a temporary file.
 // Return any error message.
-function updateFile($file, $contents, $fileName, $toConsole) {
+function updateFile($file, $contents, $fileName, $toConsole, $silent=false) {
 	if (@file_put_contents($file, $contents) == false) {
 		$e = error_get_last()['message'];
 
-		// $toConsole tells us whether or not to use console.log() or just echo.
-		if ($toConsole) {
-			$cl1 = '<script>console.log("';
-			$cl2 = '");</script>';
-		} else {
-			$cl1 = "<br>";
-			$cl2 = "";
+		if (! $silent) {
+			// $toConsole tells us whether or not to use console.log() or just echo.
+			if ($toConsole) {
+				$cl1 = '<script>console.log("';
+				$cl2 = '");</script>';
+			} else {
+				$cl1 = "<br>";
+				$cl2 = "";
+			}
+			echo "${cl1}Note: Unable to update $file 1st time: ${e}${cl2}\n";
 		}
-		echo "${cl1}Note: Unable to update $file 1st time: ${e}${cl2}\n";
 
 		// Assumed it failed due to lack of permissions,
 		// usually because the file isn't grouped to the web server group.
@@ -923,15 +940,17 @@ function updateFile($file, $contents, $fileName, $toConsole) {
 			$c = 0;
 		if ($ret === false || $c > 0 || $retval !== 0) {
 			$err = implode("\n", $return);
-			return "Unable to update settings: $err";
+			return "Unable to update '$file': $err";
 		}
 
 		if (@file_put_contents($file, $contents) == false) {
-			$e = error_get_last()['message'];
-			$err = "Failed to save settings: $e";
-			echo "${cl1}Unable to update file for 2nd time: ${e}${cl2}";
-			$x = str_replace("\n", "", shell_exec("ls -l '$file'"));
-			echo "${cl1}ls -l returned: ${x}${cl2}";
+			if (! $silent) {
+				$e = error_get_last()['message'];
+				$err = "Failed to save '$file': $e";
+				echo "${cl1}Unable to update file for 2nd time: ${e}${cl2}";
+				$x = str_replace("\n", "", shell_exec("ls -l '$file'"));
+				echo "${cl1}ls -l returned: ${x}${cl2}";
+			}
 
 			// Save a temporary copy of the file in a place the webserver can write to,
 			// then use sudo to "cp" the file to the final place.
@@ -1086,9 +1105,9 @@ function haveMySQL($secretData) {
             $user = $secretData['databaseuser'];
             $pass = $secretData['databasepassword'];
             $charset = 'utf8mb4';
-            
+
             $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
-            
+
             $options = [
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -1099,7 +1118,7 @@ function haveMySQL($secretData) {
     } catch (PDOException $e) {
     } catch (Exception $e) {
     }
-    
+
     return $result;
 }
 
@@ -1139,19 +1158,19 @@ function getNewestAllskyVersion(&$changed=null)
 		$str = file_get_contents($versionFile, true);
 		$err = "";
 		if ($str === false) {
-			// TODO: should these errors set addMessage() ?
-			$err = "Error reading of $versionFile.";
+			$err = "Error reading $versionFile.";
 		} else if ($str === "") {
-			$err = "$versionFile is empty!";
+			$err = "$versionFile is empty.";
 		} else {
 			$version_array = json_decode($str, true);
 			if ($version_array === null) {
-				$err = "$versionFile has no json!";
+				$err = "$versionFile has no json.";
 			} else {
-				$priorVersion = $version_array['version'];
+				$priorVersion = getVariableOrDefault($version_array, 'version', null);
 			}
 		}
 		if ($err !== "") {
+			// TODO: should these errors set addMessage() ?
 			unlink($versionFile);
 			$exists = false;
 		}
@@ -1161,25 +1180,26 @@ function getNewestAllskyVersion(&$changed=null)
 		// Need to (re)get the data.
 
 		$cmd = ALLSKY_UTILITIES . "/getNewestAllskyVersion.sh";
-		exec("$cmd 2>&1", $newest, $return_val);
+		exec("$cmd 2>&1", $newestVersion, $return_val);
 
-		// 90 == newest is newer than current.
-		if (($return_val !== 0 && $return_val !== 90) || $newest === null) {
+		// 90 == newestVersion is newer than current.
+		if (($return_val !== 0 && $return_val !== 90) || $newestVersion === null) {
 			// some error
 			if ($exists) unlink($versionFile);
 			return($version_array);		// may be null...
 		}
 
 		$version_array = array();
-		$version_array['version'] = implode(" ", $newest);
-		$version_array['timestamp'] = date_format($date, "c");	// NOTE: Does not use timezone
+		$version_array['version'] = getVariableOrDefault($newestVersion, 0, "");
+		$version_array['versionNote'] = getVariableOrDefault($newestVersion, 1, "");
+		$version_array['timestamp'] = date(DATE_TIME_FORMAT);
 
 		// Has the version changed?
 		if ($priorVersion === null || $priorVersion !== $version_array['version']) {
 			$changed = true;
 		}
 
-		$msg = "[$cmd] returned $return_val, version=${version_array['version']}, changed=$changed";
+		$msg = "[$cmd] returned $return_val, version_array=" . json_encode($newestVersion) . ", changed=$changed";
 		echo "<script>console.log('$msg');</script>";
 
 		// Save new info.
@@ -1212,9 +1232,9 @@ function getUptime() {
 	return $uptime;
 }
 
-function getCPULoad() 
+function getCPULoad($secs=2) 
 {
-	$secs = 2; $q = '"';
+	$q = '"';
 	$cmd = "(grep -m 1 'cpu ' /proc/stat; sleep $secs; grep -m 1 'cpu ' /proc/stat)";
 	$cmd .= " | gawk '{u=$2+$4; t=$2+$4+$5; if (NR==1){u1=u; t1=t;} else printf($q%.0f$q, (($2+$4-u1) * 100 / (t-t1))); }'";
 	$cpuload = exec($cmd);
@@ -1405,4 +1425,5 @@ function getHTTPResponseCodeString($responseCode)
     }
 	return $result;
 }
+
 ?>

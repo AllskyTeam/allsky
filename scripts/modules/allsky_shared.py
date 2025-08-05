@@ -31,7 +31,7 @@ import requests
 
 from pathlib import Path
 from functools import reduce
-from allskyvariables import allskyvariables
+from allskyvariables.allskyvariables import ALLSKYVARIABLES
 import pigpio
 import numpy as np
 from typing import Union, List, Dict
@@ -321,14 +321,12 @@ def setupForCommandLine():
 
     env_vars = {}
     for line in result.stdout.splitlines():
-        print(line)
         if '=' in line:
             key, value = line.split('=', 1)
             env_vars[key] = value
             os.environ[key] = value
             
     readSettings()
-
 
 
 ####### settings file functions
@@ -1101,6 +1099,7 @@ def _get_value_from_text_file(file_path, variable):
     return result   
 
 def get_all_allsky_variables(show_empty=True, module='', indexed=False, raw=False):
+    allskyvariables = ALLSKYVARIABLES()
     return allskyvariables.get_variables(show_empty, module, indexed, raw)
     
 def get_allsky_variable(variable):

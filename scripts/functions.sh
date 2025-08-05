@@ -1617,17 +1617,21 @@ function remove_colors()
 
 	# Ignore any initial "\" in the colors.
 	# In case a variable isn't defined, set it to a string that won't be found.
-	local G="${GREEN/\\/}"							; G="${G/033\[/033X}"
-	local Y="${YELLOW/\\/}"		; Y="${Y:-abcxyz}"	; Y="${Y/033\[/033X}"
-	local R="${RED/\\/}"		; R="${R:-abcxyz}"	; R="${R/033\[/033X}"
+	local B="${cBOLD/\\/}"		; B="${B:-abcxyz}"	; B="${B/033\[/033X}"
+	local G="${cGREEN/\\/}"		; G="${G:-abcxyz}"	; G="${G/033\[/033X}"
+	local Y="${cYELLOW/\\/}"	; Y="${Y:-abcxyz}"	; Y="${Y/033\[/033X}"
+	local R="${cRED/\\/}"		; R="${R:-abcxyz}"	; R="${R/033\[/033X}"
 	#shellcheck disable=SC2154
 	local D="${cDEBUG/\\/}"		; D="${D:-abcxyz}"	; D="${D/033\[/033X}"
-	local N="${NC/\\/}"			; N="${N:-abcxyz}"	; N="${N/033\[/033X}"
+	local N="${cNC/\\/}"		; N="${N:-abcxyz}"	; N="${N/033\[/033X}"
 
 	# Outer "echo -e" handles "\n" (2 characters) in input.
 	# No "-e" needed on inner "echo".
+	# \Z. entries are dialog(1) colors.
 	echo -e "$( echo "${MSG}" |
 		sed -e "s/${ESC}/033/g" \
+			-e "s/033\[0m//g" \
+			-e "s/033\[31m//g" \
 			-e "s/033\[/033X/g" \
 			-e "s/${G}//g" \
 			-e "s/${Y}//g" \

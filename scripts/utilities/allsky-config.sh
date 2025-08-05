@@ -187,7 +187,7 @@ function show_installed_locales()
 function prepare_logs()
 {
 	# shellcheck disable=SC2068
-	prepareLogs.sh ${@}
+	prepareLogs.sh "${@}"
 }
 
 
@@ -196,7 +196,7 @@ function prepare_logs()
 function new_rpi_camera_info()
 {
 	# shellcheck disable=SC2068
-	getRPiCameraInfo.sh ${@}
+	getRPiCameraInfo.sh "${@}"
 }
 
 
@@ -210,7 +210,7 @@ function samba()
 	fi
 
 	# shellcheck disable=SC2068
-	installSamba.sh ${@}
+	installSamba.sh "${@}"
 }
 
 
@@ -224,7 +224,7 @@ function move_images()
 	fi
 
 	# shellcheck disable=SC2068
-	moveImages.sh ${@}
+	moveImages.sh "${@}"
 }
 
 
@@ -233,7 +233,7 @@ function move_images()
 function bad_images_info()
 {
 	# shellcheck disable=SC2068
-	badImagesInfo.sh ${@}
+	badImagesInfo.sh "${@}"
 }
 
 
@@ -287,7 +287,7 @@ function compare_paths()
 get_startrails_info()
 {
 	# shellcheck disable=SC2068
-	getStartrailsInfo.sh ${@}
+	getStartrailsInfo.sh "${@}"
 }
 
 
@@ -296,7 +296,7 @@ get_startrails_info()
 compare_startrails()
 {
 	# shellcheck disable=SC2068
-	compareStartrails.sh ${@}
+	compareStartrails.sh "${@}"
 }
 
 
@@ -310,7 +310,7 @@ config_timelapse()
 	fi
 
 	# shellcheck disable=SC2068
-	configTimelapse.sh ${@}
+	configTimelapse.sh "${@}"
 }
 
 
@@ -417,7 +417,7 @@ function pix_fmts()
 function show_start_times()
 {
 	# shellcheck disable=SC2068
-	showStartTimes.sh ${@}
+	showStartTimes.sh "${@}"
 }
 
 
@@ -427,7 +427,7 @@ function show_start_times()
 function check_post_data()
 {
 	# shellcheck disable=SC2068
-	checkPostData.sh ${@}
+	checkPostData.sh "${@}"
 }
 
 #####
@@ -435,7 +435,7 @@ function check_post_data()
 function get_filesystems()
 {
 	# shellcheck disable=SC2068
-	getFilesystems.sh ${@}
+	getFilesystems.sh "${@}"
 }
 
 

@@ -1426,6 +1426,7 @@ function get_model_from_sensor()
 {
 	local SENSOR="${1}"
 
+	# shellcheck disable=SC2154
 	gawk --field-separator '\t' -v sensor="${SENSOR}" '
 		BEGIN {
 			if (sensor == "") {

@@ -17,10 +17,10 @@ if [[ ${1} == "--branch" ]]; then
 	BRANCH="${2}"
 	shift 2
 else
-	BRANCH="${GITHUB_MAIN_BRANCH}"
+	BRANCH="${ALLSKY_GITHUB_MAIN_BRANCH}"
 fi
 
-GIT_FILE="${GITHUB_RAW_ROOT}/${GITHUB_ALLSKY_REPO}/${BRANCH}/version"
+GIT_FILE="${ALLSKY_GITHUB_RAW_ROOT}/${ALLSKY_GITHUB_ALLSKY_REPO}/${BRANCH}/version"
 if ! NEWEST_VERSION="$( curl --show-error --silent "${GIT_FILE}" 2>&1 )" ; then
 	echo "${ME}: ERROR: Unable to get newest Allsky version: ${NEWEST_VERSION}."
 	exit 1

@@ -193,7 +193,7 @@ if [[ -z ${COUNT_MIDPOINT} ]]; then
 fi
 
 # Create / empty the output directory.
-NUM="$( find "${OUT_DIRECTORY}" -type f -name "*.${EXTENSION}" -print 2>/dev/null | wc -l )"
+NUM="$( find "${OUT_DIRECTORY}" -type f -name "*.${ALLSKY_EXTENSION}" -print 2>/dev/null | wc -l )"
 if [[ ${NUM} -gt 0 ]]; then
 	# At least one item in the directory.
 	if [[ ${HTML} == "false" ]]; then

@@ -252,8 +252,8 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 
 		# Display a warning message
 		"${ALLSKY_SCRIPTS}/generateNotificationImages.sh" --directory "${ALLSKY_TMP}" \
-			"${FILENAME}" "yellow" "" "85" "" "" \
-			"" "5" "yellow" "${EXTENSION}" "" \
+			"${ALLSKY_FILENAME}" "yellow" "" "85" "" "" \
+			"" "5" "yellow" "${ALLSKY_EXTENSION}" "" \
 			"WARNING:\n\nResetting USB bus\n${REASON}.\nAttempt ${NUM_USB_RESETS}."
 
 		SEARCH="${ZWO_VENDOR}:${ZWO_CAMERA_ID}"
@@ -334,7 +334,7 @@ fi
 # Make directories that need to exist.
 if [[ -d ${ALLSKY_TMP} ]]; then
 	# remove any lingering old image files.
-	rm -f "${ALLSKY_TMP}/${FILENAME}"-20*."${EXTENSION}"	# "20" for 2000 and later
+	rm -f "${ALLSKY_TMP}/${ALLSKY_FILENAME}"-20*."${ALLSKY_EXTENSION}"	# "20" for 2000 and later
 else
 	# We should never get here since ${ALLSKY_TMP} is created during installation,
 	# but "just in case"...

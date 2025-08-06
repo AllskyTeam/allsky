@@ -326,7 +326,7 @@ if [[ ! ${CCM} =~ "${CAM}" ]]; then
 fi
 
 # Make sure the settings file is linked to the camera-specific file.
-if ! MSG="$( check_settings_link "${SETTINGS_FILE}" )" ; then
+if ! MSG="$( check_settings_link "${ALLSKY_SETTINGS_FILE}" )" ; then
 	"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --cmd "${MSG}"
 	E_ "ERROR: ${MSG}" >&2
 fi

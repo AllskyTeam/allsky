@@ -3,7 +3,7 @@
 Part of allsky postprocess.py modules.
 https://github.com/AllskyTeam/allsky
 
-This module will export all of the AllSky variables to a json file. 
+This module will export all of the Allsky variables to a json file. 
 The default json path is ${ALLSKY_TMP}/allskydata.json but this can be changed in the module settings
 """
 import allsky_shared as allsky_shared
@@ -16,8 +16,8 @@ import re
 class ALLSKYEXPORT(ALLSKYMODULEBASE):
 
 	meta_data = {
-		"name": "AllSKY Export",
-		"description": "Exports AllSKY data to json",
+		"name": "Allsky Export",
+		"description": "Exports Allsky data to json",
 		"module": "allsky_export",
 		"testable": "true",
 		"centersettings": "false",
@@ -28,7 +28,7 @@ class ALLSKYEXPORT(ALLSKYMODULEBASE):
 		],
 		"arguments":{
 			"filelocation": "${ALLSKY_TMP}/allskydata.json",
-			"extradata": "CAMERA_TYPE,DAY_OR_NIGHT,CURRENT_IMAGE,FULL_FILENAME,ALLSKY_VERSION"
+			"extradata": "CAMERA_TYPE,DAY_OR_NIGHT,CURRENT_IMAGE,ALLSKY_FULL_FILENAME,ALLSKY_VERSION"
 		},
 		"argumentdetails": {
 			"filelocation" : {

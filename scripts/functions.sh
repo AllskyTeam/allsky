@@ -906,7 +906,7 @@ function settings()
 		return 1
 	fi
 
-	local FILE="${2:-${SETTINGS_FILE}}"
+	local FILE="${2:-${ALLSKY_SETTINGS_FILE}}"
 	if [[ ! -f ${FILE} ]]; then
 		echo "${M}: File '${FILE}' does not exist!  Cannot get '${FIELD}'." >&2
 		return 2

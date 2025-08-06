@@ -122,7 +122,7 @@ if __name__ == "__main__":
         except (FileNotFoundError, KeyError):
             shared.log(0, f"ERROR: Unable to read {shared.ALLSKY_SETTINGS_FILE} - Aborting", exitCode=1)
 
-        shared.fullFilename = shared.getEnvironmentVariable("FULL_FILENAME", fatal=True)
+        shared.fullFilename = shared.getEnvironmentVariable("ALLSKY_FULL_FILENAME", fatal=True)
         shared.createThumbnails = bool(shared.getSetting("imagecreatethumbnails"))
         shared.thumbnailWidth = int(shared.getSetting("thumbnailsizex"))
         shared.thumbnailHeight = int(shared.getSetting("thumbnailsizey"))

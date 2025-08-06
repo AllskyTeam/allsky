@@ -524,6 +524,10 @@ done
 
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 
-check_allsky_version
-check_and_update_auth_method
-set_admin_password
+if [[ "${FROM_INSTALLER}" == "true" ]]; then
+    check_and_update_auth_method
+else
+    check_allsky_version
+    check_and_update_auth_method
+    set_admin_password
+fi

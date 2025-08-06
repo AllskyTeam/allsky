@@ -130,8 +130,8 @@ function collect_support_info()
 	CPU_TOTAL="$( nproc )"
 	MEMORY_INFO="$( free -h )"
 	MEM_TOTAL="$( echo "${MEMORY_INFO}" | grep Mem | gawk '{print $2}' )"
-	if [[ -s ${PI_VERSION_FILE} ]]; then
-		PI_MODEL="$( < "${PI_VERSION_FILE}" )"
+	if [[ -s ${ALLSKY_PI_VERSION_FILE} ]]; then
+		PI_MODEL="$( < "${ALLSKY_PI_VERSION_FILE}" )"
 	else
 		PI_MODEL="unknown"
 	fi

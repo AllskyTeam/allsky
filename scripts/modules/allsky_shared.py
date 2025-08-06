@@ -80,7 +80,7 @@ def getEnvironmentVariable(name, fatal=False, debug=False):
 ALLSKYPATH = getEnvironmentVariable("ALLSKY_HOME", fatal=True)
 ALLSKY_TMP = getEnvironmentVariable("ALLSKY_TMP", fatal=True)
 ALLSKY_SCRIPTS = getEnvironmentVariable("ALLSKY_SCRIPTS", fatal=True)
-SETTINGS_FILE = getEnvironmentVariable("SETTINGS_FILE", fatal=True)
+ALLSKY_SETTINGS_FILE = getEnvironmentVariable("ALLSKY_SETTINGS_FILE", fatal=True)
 ALLSKY_OVERLAY = getEnvironmentVariable("ALLSKY_OVERLAY", fatal=True)
 ALLSKY_WEBUI = getEnvironmentVariable("ALLSKY_WEBUI", fatal=True)
 ALLSKY_MODULES = getEnvironmentVariable("ALLSKY_MODULES", fatal=True)
@@ -331,9 +331,9 @@ def setupForCommandLine():
 
 ####### settings file functions
 def readSettings():
-    global SETTINGS, SETTINGS_FILE, LOGLEVEL
+    global SETTINGS, ALLSKY_SETTINGS_FILE, LOGLEVEL
 
-    with open(SETTINGS_FILE, "r") as fp:
+    with open(ALLSKY_SETTINGS_FILE, "r") as fp:
         SETTINGS = json.load(fp)
 
     LOGLEVEL = int(getSetting("debuglevel"))
@@ -355,9 +355,9 @@ def getSetting(settingName):
     return result
 
 def writeSettings():
-    global SETTINGS, SETTINGS_FILE
+    global SETTINGS, ALLSKY_SETTINGS_FILE
 
-    with open(SETTINGS_FILE, "w") as fp:
+    with open(ALLSKY_SETTINGS_FILE, "w") as fp:
         json.dump(SETTINGS, fp, indent=4)
 
 def updateSetting(values):
@@ -1251,7 +1251,7 @@ def get_rpi_meta_value(key):
     return result
 
 def get_rpi_metadata():
-    with open(SETTINGS_FILE) as file:
+    with open(ALLSKY_SETTINGS_FILE) as file:
         config = json.load(file)
 
     extraargs = config.get('extraargs', '')
@@ -1426,7 +1426,7 @@ def get_ecowitt_local_data(address, password=None):
     
     def parse_val(val, as_type=float, unit=None):
         """
-        Extract numeric part from a value string and optionally convert °F to °C.
+        Extract numeric part from a value string and optionally convert Â°F to Â°C.
         """
         if val is None:
             return None
@@ -1435,7 +1435,7 @@ def get_ecowitt_local_data(address, password=None):
             value = as_type(num_str)
             if unit:
                 unit = unit.lower()
-                if unit in ['f', '°f']:
+                if unit in ['f', 'Â°f']:
                     value = round((value - 32) * 5 / 9, 2)
             return value
         except (ValueError, TypeError):

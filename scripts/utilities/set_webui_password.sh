@@ -89,7 +89,7 @@ function check_password_match()
 ####
 # Simple check to ensure password is secure
 #
-function validate_password() 
+function validate_password()
 {
     local MESSAGE RESULT OPTION
 
@@ -142,7 +142,7 @@ function display_prompt()
                     echo -e "\nInvalid response. Please enter y/yes or n/no."
                 fi
             done
-        else 
+        else
             echo -e "${DIALOG_MESSAGE}"
             read -n 1 -s -r -p "Press any key to continue..."
             echo -e "\n\n"
@@ -181,14 +181,14 @@ function display_input()
     return "${STATUS}"
 }
 
-function get_input() 
+function get_input()
 {
     local DIALOG_TYPE DIALOG_MESSAGE DIALOG_HEIGHT DIALOG_WIDTH INPUT_VALUE PASSWORD CONFIRM_PASSWORD FORCE_DIALOG_TYPE
     DIALOG_TYPE="${1}"
     DIALOG_MESSAGE="${2}"
     DIALOG_HEIGHT="${3}"
     DIALOG_WIDTH="${4}"
-    INPUT_VALUE="${5}"    
+    INPUT_VALUE="${5}"
 
     if [[ -z "$3" ]]; then
         DIALOG_HEIGHT=10
@@ -242,7 +242,7 @@ function get_input()
             STATUS=$?
             if [[ "${STATUS}" -ne 0 ]]; then
                 return 1
-            fi            
+            fi
             if [[ "${DIALOG_TYPE}" == "--passwordbox" ]]; then
                 PASSWORD_STATUS=$(validate_password "${LAST_INPUT}")
                 if [[ $? -eq 0 ]]; then
@@ -264,15 +264,15 @@ function get_input()
 ####
 # Configures the WEBUI login details
 #
-set_admin_password() 
+set_admin_password()
 {
     local DEFAULT_ADMIN_USER ADMIN_USER ADMIN_PASSWORD USE_LOGIN
     local NEW_ADMIN_USER NEW_ADMIN_PASSWORD
 
-    DEFAULT_ADMIN_USER="admin"    
+    DEFAULT_ADMIN_USER="admin"
     ADMIN_USER="$( settings .WEBUI_USERNAME "${ALLSKY_ENV}" )"
     ADMIN_PASSWORD="$( settings .WEBUI_PASSWORD "${ALLSKY_ENV}" )"
-    USE_LOGIN="$( settings .uselogin "${SETTINGS_FILE}" )"
+    USE_LOGIN="$( settings .uselogin "${ALLSKY_SETTINGS_FILE}" )"
     PASSWORD_MATCH=$(check_password_match "secret" "${ADMIN_PASSWORD}")
 
     show_debug_message "Current WebUI User: (${ADMIN_USER})"
@@ -283,7 +283,7 @@ set_admin_password()
         display_prompt "--yesno" "${TITLE_LOGIN_DISABLED}" "${MSG_LOGIN_DISABLED}" 15
         if [[ $? -eq 0 ]]; then
             # shellcheck disable=SC2034
-            USE_WEBUI_LOGIN=true; doV "" "USE_WEBUI_LOGIN" "uselogin" "boolean" "${SETTINGS_FILE}"
+            USE_WEBUI_LOGIN=true; doV "" "USE_WEBUI_LOGIN" "uselogin" "boolean" "${ALLSKY_SETTINGS_FILE}"
         else
             display_msg --logonly info "User declined to enable WebUI login so aborted"
             exit 1
@@ -304,7 +304,7 @@ set_admin_password()
                 display_msg --logonly info "User has selected 'No' to having online access to the Pi"
                 display_msg --logonly info "Allowing insecure passwords"
                 NOSECURE="true"
-                PASSWORD_FORMAT=""                
+                PASSWORD_FORMAT=""
             fi
         fi
     fi
@@ -327,7 +327,7 @@ set_admin_password()
     fi
     get_input "--passwordbox" "${MSG_PASSWORD}" "${HEIGHT}" 50 "" false
     STATUS=$?
-    NEW_ADMIN_PASSWORD="${LAST_INPUT}"        
+    NEW_ADMIN_PASSWORD="${LAST_INPUT}"
     if [[ "${STATUS}" -ne 0 ]]; then
         display_msg --logonly info "User canceled at password prompt"
         exit 98
@@ -342,7 +342,7 @@ set_admin_password()
 
 	if [[ "${ENABLELOGIN}" == "true" ]]; then
         # shellcheck disable=SC2034	
-		USE_WEBUI_LOGIN=true; doV "" "USE_WEBUI_LOGIN" "uselogin" "boolean" "${SETTINGS_FILE}"
+		USE_WEBUI_LOGIN=true; doV "" "USE_WEBUI_LOGIN" "uselogin" "boolean" "${ALLSKY_SETTINGS_FILE}"
 	fi
 
     show_debug_message "Password details updated" "info"
@@ -437,7 +437,6 @@ function check_allsky_version()
     OK_TO_PROCEED=$?
 
     if [[ "${OK_TO_PROCEED}" == "1" ]]; then
-    
         MSG_INVALID_VERSION="This script requires Allsky version ${MIN_ALLSKY_VERSION} or greater, your version is ${CURRENT_VERSION}"
         show_debug_message "${MSG_INVALID_VERSION}"
         display_prompt "--msgbox" "${TITLE_INVALID_VERSION}" "${MSG_INVALID_VERSION}"
@@ -452,21 +451,20 @@ function check_allsky_version()
 function usage_and_exit()
 {
 	local RET=${1}
-	{
-		echo
-		[[ ${RET} -ne 0 ]] && echo -en "${RED}"
-		echo "Usage: ${ME} [--help] [--debug] [--nosecure] [--textmode] [--nodouble] [--ignoreonline]"
-		[[ ${RET} -ne 0 ]] && echo -en "${NC}"
-		echo -e "\n	where:"
-		echo -e "	'--help' displays this message and exits."
-		echo -e "	'--debug' displays debugging information."
-		echo -e "	'--nosecure' Do not enforce secure passwords."
-		echo -e "	'--text' Use text mode rather than dialogs."            
-		echo -e "	'--nodouble' Don't require password confirmation."            
-		echo -e "	'--ignoreonline' Don't ask question regarding online use."    
-        echo -e "   '--frominstaller' Forces certain operations to happen by default (DO NOT USE)."
-		echo -e "	'--enablelogin' Enable the webUI login if the password is set."				
-	} >&2
+	exec >&2
+	echo
+	[[ ${RET} -ne 0 ]] && echo -en "${RED}"
+	echo "Usage: ${ME} [--help] [--debug] [--nosecure] [--textmode] [--nodouble] [--ignoreonline]"
+	[[ ${RET} -ne 0 ]] && echo -en "${NC}"
+	echo -e "\nArguments:"
+	echo -e "   --help             Display this message and exit."
+	echo -e "   --debug            Display debugging information."
+	echo -e "   --nosecure         Do not enforce secure passwords."
+	echo -e "   --text             Use text mode rather than dialogs."
+	echo -e "   --nodouble         Don't require password confirmation."
+	echo -e "   --ignoreonline     Don't ask question regarding online use."
+	echo -e "   --frominstaller    Forces certain operations to happen by default (DO NOT USE)."
+	echo -e "   --enablelogin      Enable the webUI login if the password is set."				
 	exit "${RET}"
 }
 
@@ -502,7 +500,7 @@ while [[ $# -gt 0 ]]; do
 
 		--text)
 			TEXTMODE="true"
-			;;  
+			;;
 
 		--nodouble)
 			DOUBLE_ENTRY_PASSWORD="false"
@@ -514,7 +512,7 @@ while [[ $# -gt 0 ]]; do
 
 		--frominstaller)
 			FROM_INSTALLER="true"
-			;; 
+			;;
 
 	esac
 	shift

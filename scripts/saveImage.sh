@@ -415,12 +415,11 @@ IMG_UPLOAD_FREQUENCY="${S_imageuploadfrequency}"
 if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 	# First check if we should upload this image
 	if [[ ${IMG_UPLOAD_FREQUENCY} -ne 1 ]]; then
-		FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
-		if [[ ! -f ${FREQUENCY_FILE} ]]; then
+		if [[ ! -f ${ALLSKY_FREQUENCY_FILE} ]]; then		# global variable
 			# The file may have been deleted, or the user may have just changed the frequency.
 			LEFT=${IMG_UPLOAD_FREQUENCY}
 		else
-			LEFT=$( < "${FREQUENCY_FILE}" )
+			LEFT=$( < "${ALLSKY_FREQUENCY_FILE}" )
 		fi
 		if [[ ${LEFT} -le 1 ]]; then
 			# Reset the counter then upload this image below.
@@ -428,11 +427,11 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 				echo "${ME}: resetting LEFT counter to ${IMG_UPLOAD_FREQUENCY}, then uploading image."
 			fi
 
-			echo "${IMG_UPLOAD_FREQUENCY}" > "${FREQUENCY_FILE}"
+			echo "${IMG_UPLOAD_FREQUENCY}" > "${ALLSKY_FREQUENCY_FILE}"
 		else
 			# Not ready to upload yet, so decrement the counter
 			LEFT=$((LEFT - 1))
-			echo "${LEFT}" > "${FREQUENCY_FILE}"
+			echo "${LEFT}" > "${ALLSKY_FREQUENCY_FILE}"
 			# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
 			[[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "${ME}: Not uploading image: ${LEFT} images(s) left."
 

@@ -20,7 +20,7 @@ usage_and_exit()
 		echo -e "${USAGE}"
 	fi
 	echo
-	echo "Where:"
+	echo "Arguments:"
 	echo "   debug_level           Set the 'Debug Level' to this value."
 	echo "If you don't specify 'debug_level' an appropriate one will be used."
 	echo
@@ -80,7 +80,7 @@ sudo truncate -s 0 "${ALLSKY_PERIODIC_LOG}"
 
 MSG="\nAllsky restarted with empty log files"
 if [[ ${OLD_DEBUG} -lt ${NEW_DEBUG} ]]; then
-	update_json_file ".debuglevel"  "${NEW_DEBUG}"  "${SETTINGS_FILE}"  "number"
+	update_json_file ".debuglevel"  "${NEW_DEBUG}"  "${ALLSKY_SETTINGS_FILE}"  "number"
 	MSG+=" and Debug Level of ${NEW_DEBUG}."
 	MSG+="\nWhen done troubleshooting, set the Debug Level back to ${OLD_DEBUG}."
 else

@@ -36,7 +36,7 @@ COPIED_PRIOR_CONFIG_SH="false"			# prior config.sh's settings copied to settings
 COPIED_PRIOR_FTP_SH="false"				# prior ftp-settings.sh's settings copied to settings file?
 SUGGESTED_NEW_HOST_NAME="allsky"		# Suggested new host name
 NEW_HOST_NAME=""						# User-specified host name
-BRANCH="${GITHUB_MAIN_BRANCH}"			# default branch
+BRANCH="${ALLSKY_GITHUB_MAIN_BRANCH}"	# default branch
 
 PASSED_DISPLAY_MSG_LOG="${DISPLAY_MSG_LOG}"		# if set, we were given the log file name
 # shellcheck disable=SC2034
@@ -134,7 +134,7 @@ return		# Currently this is disabled - not sure it's worth doing.
 	local TOLD_FILE  MSG  A
 
 	# shellcheck disable=SC2119
-	if [[ $( get_branch ) != "${GITHUB_MAIN_BRANCH}" ]]; then
+	if [[ $( get_branch ) != "${ALLSKY_GITHUB_MAIN_BRANCH}" ]]; then
 		DEBUG=1; DEBUG_ARG="--debug"; LOG_TYPE="--log"
 
 		TOLD_FILE="${ALLSKY_HOME}/told"
@@ -826,9 +826,9 @@ update_php_defines()
 			-e "s;XX_WEBSERVER_OWNER_XX;${WEBSERVER_OWNER};g" \
 			-e "s;XX_WEBSERVER_GROUP_XX;${WEBSERVER_GROUP};g" \
 			-e "s;XX_ALLSKY_REPO_XX;${ALLSKY_REPO};g" \
-			-e "s;XX_GITHUB_ROOT_XX;${GITHUB_ROOT};g" \
-			-e "s;XX_GITHUB_ALLSKY_REPO_XX;${GITHUB_ALLSKY_REPO};g" \
-			-e "s;XX_GITHUB_ALLSKY_MODULES_REPO_XX;${GITHUB_ALLSKY_MODULES_REPO};g" \
+			-e "s;XX_ALLSKY_GITHUB_ROOT_XX;${ALLSKY_GITHUB_ROOT};g" \
+			-e "s;XX_ALLSKY_GITHUB_ALLSKY_REPO_XX;${ALLSKY_GITHUB_ALLSKY_REPO};g" \
+			-e "s;XX_ALLSKY_GITHUB_ALLSKY_MODULES_REPO_XX;${ALLSKY_GITHUB_ALLSKY_MODULES_REPO};g" \
 			-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};g" \
 			-e "s;XX_ALLSKY_STATUS_XX;${ALLSKY_STATUS};g" \
 			-e "s;XX_ALLSKY_STATUS_INSTALLING_XX;${ALLSKY_STATUS_INSTALLING};g" \

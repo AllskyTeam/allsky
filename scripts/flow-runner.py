@@ -117,10 +117,10 @@ if __name__ == "__main__":
         shared.args.tod = shared.getEnvironmentVariable("DAY_OR_NIGHT", fatal=True).lower()
 
         try:
-            with open(shared.SETTINGS_FILE, 'r') as settingsFile:
+            with open(shared.ALLSKY_SETTINGS_FILE, 'r') as settingsFile:
                 shared.settings = json.load(settingsFile)
         except (FileNotFoundError, KeyError):
-            shared.log(0, f"ERROR: Unable to read {shared.SETTINGS_FILE} - Aborting", exitCode=1)
+            shared.log(0, f"ERROR: Unable to read {shared.ALLSKY_SETTINGS_FILE} - Aborting", exitCode=1)
 
         shared.fullFilename = shared.getEnvironmentVariable("FULL_FILENAME", fatal=True)
         shared.createThumbnails = bool(shared.getSetting("imagecreatethumbnails"))
@@ -164,15 +164,15 @@ if __name__ == "__main__":
         #watchdog = False
 
     if not testMode:
-        shared.log(4, f"INFO: Loading {shared.SETTINGS_FILE}")
+        shared.log(4, f"INFO: Loading {shared.ALLSKY_SETTINGS_FILE}")
     try:
-        with open(shared.SETTINGS_FILE,'r') as config:
+        with open(shared.ALLSKY_SETTINGS_FILE,'r') as config:
             try:
                 shared.conf=json.load(config)
             except json.JSONDecodeError as err:
                 shared.log(0, f"ERROR: {err}", exitCode=1)
     except:
-        shared.log(0, f"ERROR: Failed to open {shared.SETTINGS_FILE}", exitCode=1)
+        shared.log(0, f"ERROR: Failed to open {shared.ALLSKY_SETTINGS_FILE}", exitCode=1)
 
     flowName = shared.args.tod if shared.args.event == "postcapture" else shared.args.event
     if not testMode:

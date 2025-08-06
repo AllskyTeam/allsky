@@ -131,7 +131,7 @@ function show_connected_cameras()
 		return
 	fi
 
-	get_connected_cameras_info "true" > "${CONNECTED_CAMERAS_INFO}"
+	get_connected_cameras_info "true" > "${ALLSKY_CONNECTED_CAMERAS_INFO}"
 
 	local CAMERAS="$( get_connected_camera_models --full "both" )"
 	if [[ -z ${CAMERAS} ]]; then

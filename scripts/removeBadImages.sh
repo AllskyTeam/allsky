@@ -132,7 +132,7 @@ fi
 if [[ -n ${FILE} ]]; then
 	IMAGE_FILES="${FILE}"
 else
-	IMAGE_FILES="$( find . -maxdepth 1 -type f -iname "${FILENAME}"-\*."${EXTENSION}" )"
+	IMAGE_FILES="$( find . -maxdepth 1 -type f -iname "${ALLSKY_FILENAME}"-\*."${ALLSKY_EXTENSION}" )"
 fi
 
 ERROR_WORDS="Huffman|Bogus|Corrupt|Invalid|Trunc|Missing"
@@ -270,8 +270,8 @@ else
 
 			"${ALLSKY_SCRIPTS}/generateNotificationImages.sh" \
 				--directory "${ALLSKY_TMP}" \
-				"${FILENAME}" "yellow" "" "85" "" "" \
-	 			"" "5" "yellow" "${EXTENSION}" "" \
+				"${ALLSKY_FILENAME}" "yellow" "" "85" "" "" \
+	 			"" "5" "yellow" "${ALLSKY_EXTENSION}" "" \
 				"WARNING:\n${BAD_COUNT} consecutive\nbad images. See:\n${DIR}/\n  ${FILE}" >&2
 		fi
 	fi

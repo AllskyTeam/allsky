@@ -272,7 +272,7 @@ set_admin_password()
     DEFAULT_ADMIN_USER="admin"    
     ADMIN_USER="$( settings .WEBUI_USERNAME "${ALLSKY_ENV}" )"
     ADMIN_PASSWORD="$( settings .WEBUI_PASSWORD "${ALLSKY_ENV}" )"
-    USE_LOGIN="$( settings .uselogin "${ALLSKY_SETTINGS_FILE}" )"
+    USE_LOGIN="$( settings .uselogin "${SETTINGS_FILE}" )"
     PASSWORD_MATCH=$(check_password_match "secret" "${ADMIN_PASSWORD}")
 
     show_debug_message "Current WebUI User: (${ADMIN_USER})"
@@ -283,7 +283,7 @@ set_admin_password()
         display_prompt "--yesno" "${TITLE_LOGIN_DISABLED}" "${MSG_LOGIN_DISABLED}" 15
         if [[ $? -eq 0 ]]; then
             # shellcheck disable=SC2034
-            USE_WEBUI_LOGIN=true; doV "" "USE_WEBUI_LOGIN" "uselogin" "boolean" "${ALLSKY_SETTINGS_FILE}"
+            USE_WEBUI_LOGIN=true; doV "" "USE_WEBUI_LOGIN" "uselogin" "boolean" "${SETTINGS_FILE}"
         else
             display_msg --logonly info "User declined to enable WebUI login so aborted"
             exit 1
@@ -342,7 +342,7 @@ set_admin_password()
 
 	if [[ "${ENABLELOGIN}" == "true" ]]; then
         # shellcheck disable=SC2034	
-		USE_WEBUI_LOGIN=true; doV "" "USE_WEBUI_LOGIN" "uselogin" "boolean" "${ALLSKY_SETTINGS_FILE}"
+		USE_WEBUI_LOGIN=true; doV "" "USE_WEBUI_LOGIN" "uselogin" "boolean" "${SETTINGS_FILE}"
 	fi
 
     show_debug_message "Password details updated" "info"

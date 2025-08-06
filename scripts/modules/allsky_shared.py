@@ -610,6 +610,7 @@ def get_database_config():
     return secret_data
 
 def update_database(structure, extra_data):
+    '''
     secret_data = get_database_config()
 
     if not re.fullmatch(r'[a-zA-Z_][a-zA-Z0-9_]*', secret_data['databasedatabase']):
@@ -621,11 +622,17 @@ def update_database(structure, extra_data):
             update_mysql_database(structure, extra_data, secret_data)
     
     if secret_data['databasetype'] == 'sqlite':
-        update_sqlite_database(structure, extra_data, secret_data)
+    '''    
+    update_sqlite_database(structure, extra_data)
 
-def update_sqlite_database(structure, extra_data, secret_data):
+def update_sqlite_database(structure, extra_data):
 
-    db_path = os.path.join(ALLSKYPATH, 'config', 'myFiles', 'allsky.db')
+    try:
+        db_path = os.environ['ALLSKY_DATABASES']
+    except KeyError:
+        setupForCommandLine()
+        db_path = os.environ['ALLSKY_DATABASES']
+
     try:
         if 'enabled' in structure['database']:
             if structure['database']['enabled']:

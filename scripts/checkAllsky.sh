@@ -33,12 +33,12 @@ usage_and_exit()
 	else
 		E_ "${MSG}"
 	fi
-	echo "Where:"
-	echo "   --help        Displays this message and exits."
-	echo "   --fromWebUI   Displays output to be displayed in the WebUI."
-	echo "   --no-info     Skips checking for Informational items."
-	echo "   --no-warn     Skips checking for Warning items."
-	echo "   --no-error    Skips checking for Error items."
+	echo "Arguments:"
+	echo "   --help        Display this message and exit."
+	echo "   --fromWebUI   Display output to be displayed in the WebUI."
+	echo "   --no-info     Skip checking for Informational items."
+	echo "   --no-warn     Skip checking for Warning items."
+	echo "   --no-error    Skip checking for Error items."
 	echo
 	exit "${RET}"
 }
@@ -706,7 +706,7 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 	fi
 
 	##### Make sure the settings file is properly linked.
-	if ! MSG="$( check_settings_link "${SETTINGS_FILE}" )" ; then
+	if ! MSG="$( check_settings_link "${ALLSKY_SETTINGS_FILE}" )" ; then
 		heading "Error"
 		echo -e "${MSG}"
 	fi

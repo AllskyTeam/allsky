@@ -380,7 +380,7 @@ do
 						# otherwise do it again in case the list of cameras changed.
 
 						# "false" means don't ignore errors (i.e., exit on error).
-						get_connected_cameras_info "false" > "${CONNECTED_CAMERAS_INFO}"
+						get_connected_cameras_info "false" > "${ALLSKY_CONNECTED_CAMERAS_INFO}"
 					fi
 
 					OTHER_ARGS="-cmd ${RPi_COMMAND_TO_USE}"

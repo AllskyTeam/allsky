@@ -741,7 +741,7 @@ function checkAndGetNewerFile()
 		local BRANCH="${2}"
 		shift 2
 	else
-		local BRANCH="${GITHUB_MAIN_BRANCH}"
+		local BRANCH="${ALLSKY_GITHUB_MAIN_BRANCH}"
 	fi
 
 	if [[ $# -ne 3 ]]; then
@@ -750,7 +750,7 @@ function checkAndGetNewerFile()
 	fi
 
 	local CURRENT_FILE="${1}"
-	local GIT_FILE="${GITHUB_RAW_ROOT}/${GITHUB_ALLSKY_REPO}/${BRANCH}/${2}"
+	local GIT_FILE="${ALLSKY_GITHUB_RAW_ROOT}/${ALLSKY_GITHUB_ALLSKY_REPO}/${BRANCH}/${2}"
 	local DOWNLOADED_FILE="${3}"
 	# Download the file and put in DOWNLOADED_FILE
 	X="$( curl --show-error --silent "${GIT_FILE}" )"

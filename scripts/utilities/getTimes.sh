@@ -157,5 +157,5 @@ gawk 'BEGIN {
 	echo
 	echo "Computer = $( settings ".computer" )"
 	echo "Camera = $( settings ".camera" )"
-	echo "PI_OS = ${PI_OS}"
+	echo "ALLSKY_PI_OS = ${ALLSKY_PI_OS}"
 	echo "Day AWB = $( settings --null ".dayawb" ), Night AWB = $( settings --null ".nightawb" )"

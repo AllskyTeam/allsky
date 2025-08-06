@@ -222,13 +222,17 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 			var = var.ljust(50, ' ')
 			env[var] = varValue
 
-		with open(debug_filename, 'w') as debug_file:
-			for var in sorted(env):
-				varValue = env[var]
-				debug_file.write(var + varValue + os.linesep)
+		try:
+			with open(debug_filename, 'w') as debug_file:
+				for var in sorted(env):
+					varValue = env[var]
+					debug_file.write(var + varValue + os.linesep)
 
-		allsky_shared.log(4, f"INFO: Debug information written to {debug_filename}")
-  
+			allsky_shared.log(4, f"INFO: Debug information written to {debug_filename}")
+		except Exception as e:
+			eType, eObject, eTraceback = sys.exc_info()
+			allsky_shared.log(0, f'ERROR: Unable to access {debug_filename}. {eTraceback.tb_lineno} - {e}')     
+     
 	def run(self):
 		result = f'Image {allsky_shared.CURRENTIMAGEPATH} Loaded'
 			

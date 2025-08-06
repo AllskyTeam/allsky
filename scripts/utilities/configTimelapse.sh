@@ -152,7 +152,7 @@ echo
 
 IMAGES_FILE="${ALLSKY_TMP}/config_timelapse_images.txt"
 
-find "${DIR}" -maxdepth 1 -type f -name "${FILENAME}-*.${EXTENSION}" > "${IMAGES_FILE}"
+find "${DIR}" -maxdepth 1 -type f -name "${ALLSKY_FILENAME}-*.${ALLSKY_EXTENSION}" > "${IMAGES_FILE}"
 if [[ $? -ne 0 || ! -s ${IMAGES_FILE} ]]; then
 	E_ "\nUnable to find images in '${DIR}\n"
 	rm -f "${IMAGES_FILE}"

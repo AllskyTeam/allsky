@@ -594,9 +594,9 @@ function replace_website_placeholders()
 
 	if [[ ${TYPE} == "local" ]]; then
 		#shellcheck disable=SC2153
-		IMAGE_NAME="/${IMG_DIR}/${FULL_FILENAME}"
+		IMAGE_NAME="/${IMG_DIR}/${ALLSKY_FULL_FILENAME}"
 	else
-		IMAGE_NAME="${FULL_FILENAME}"
+		IMAGE_NAME="${ALLSKY_FULL_FILENAME}"
 	fi
 
 	"${ALLSKY_SCRIPTS}/updateJsonFile.sh" --verbosity silent --file "${FILE}" \

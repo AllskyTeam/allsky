@@ -19,7 +19,7 @@ function usage_and_exit
 	else
 		echo -e "${MSG}"
 	fi
-	echo "Where:"
+	echo "Arguments:"
 	echo "   --expires seconds   Specifies how many seconds before the notification expires."
 	echo "  notification_type    If 'custom' then a custom message is created and 'custom_args'"
 	echo "                       must be given to specify arguments for the message."
@@ -84,7 +84,7 @@ if [[ ${NOTIFICATION_TYPE} == "custom" ]]; then
 	NOTIFICATION_FILE="${CAPTURE_SAVE_DIR}/${NOTIFICATION_NAME}"
 else
 	# Check if the user has a custom image.
-	NOTIFICATION_FILE="${USER_NOTIFICATION_IMAGES}/${NOTIFICATION_NAME}"
+	NOTIFICATION_FILE="${ALLSKY_USER_NOTIFICATION_IMAGES}/${NOTIFICATION_NAME}"
 	if [[ ! -e ${NOTIFICATION_FILE} ]]; then
 		NOTIFICATION_FILE="${ALLSKY_NOTIFICATION_IMAGES}/${NOTIFICATION_NAME}"
 	fi

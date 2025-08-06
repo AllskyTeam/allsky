@@ -823,11 +823,11 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 			echo    " directory does not exist."
 			echo    "FIX: Either disable the setting or take dark frames."
 		else
-			NUM_DARKS=$( find "${ALLSKY_DARKS}" -name "*.${EXTENSION}" 2>/dev/null | wc -l)
+			NUM_DARKS=$( find "${ALLSKY_DARKS}" -name "*.${ALLSKY_EXTENSION}" 2>/dev/null | wc -l)
 			if [[ ${NUM_DARKS} -eq 0 ]]; then
 				heading "Error"
 				echo -n "${WSNs}${S_usedarkframes_label}${WSNe} is set but there are no darks"
-				echo    " in '${ALLSKY_DARKS}' with extension of '${EXTENSION}'."
+				echo    " in '${ALLSKY_DARKS}' with extension of '${ALLSKY_EXTENSION}'."
 				echo    "FIX: Either disable the setting or take dark frames."
 			fi
 		fi

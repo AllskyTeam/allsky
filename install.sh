@@ -3980,7 +3980,10 @@ do_done()
 	display_msg progress "\nEnjoy Allsky!\n"
 }
 
-
+do_legacy_password_conversion()
+{
+	"${ALLSKY_UTILITIES}/setWebuiPassword.sh"
+}
 
 ############################################## Main part of program
 
@@ -4216,6 +4219,9 @@ set_permissions
 
 ##### Update the sudoers file
 do_sudoers
+
+##### Convert the legacy password format if required
+do_legacy_password_conversion
 
 ##### Check if there's an old WebUI and let the user know it's no longer used.
 # Prompt user to remove any prior old-style WebUI.

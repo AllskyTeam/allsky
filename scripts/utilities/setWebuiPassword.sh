@@ -356,7 +356,8 @@ set_admin_password()
 ####
 # Checks the current authentication method and upgrades it if required
 #
-check_and_update_auth_method() {
+check_and_update_auth_method() 
+{
     local PASSWORD_HASH
 
     RASPAP_FILE="${ALLSKY_CONFIG}/raspap.auth"
@@ -471,6 +472,7 @@ function usage_and_exit()
 }
 
 DEBUG="false"
+LEGACY="false"
 NOSECURE="false"
 HAVE_NO_SECURE="false"
 TEXTMODE="false"
@@ -478,7 +480,7 @@ DOUBLE_ENTRY_PASSWORD="true"
 IGNORE_ONLINE=false
 FROM_INSTALLER="false"
 ENABLELOGIN="false"
-PASSWORD_FORMAT=$(./validate_password.sh --getformat)
+PASSWORD_FORMAT=$(./validatePassword.sh --getformat)
 
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"

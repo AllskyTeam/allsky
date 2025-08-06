@@ -50,7 +50,7 @@ OK="true"
 DO_HELP="false"
 HTML="false"
 OUT_DIRECTORY="${ALLSKY_IMAGES}/test_stretches"	# Must start with "test"
-IMAGE="";			d_IMAGE="${ALLSKY_TMP}/${FULL_FILENAME}"
+IMAGE="";			d_IMAGE="${ALLSKY_TMP}/${ALLSKY_FULL_FILENAME}"
 START_AMOUNT="";	d_START_AMOUNT="5"
 STEP_AMOUNT="";		d_STEP_AMOUNT="5"		# increase by this amount
 COUNT_AMOUNT="";	d_COUNT_AMOUNT="4"

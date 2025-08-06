@@ -15,9 +15,9 @@
             "type": "date"
         },
         {
-            "format": "%m-%d-%y %H:%M",
+            "format": "%m-%d-%Y %I:%M %p",
             "description": "Short date/time US format",
-            "example": "25-12-23 23:20",
+            "example": "12-25-2023 11:20 AM",
             "stackable": false,
             "type": "date"
         },

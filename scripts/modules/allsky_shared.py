@@ -485,6 +485,47 @@ def writeDB():
     file.write(str(DBDATA))
     file.close()
 
+def create_file_web_server_access(file_name):
+    import grp
+    
+    #TODO: Change this to the real user once variables.json is working
+    web_server_group = 'www-data'
+    uid = os.getuid()
+    gid = grp.getgrnam(web_server_group).gr_gid
+            
+    return create_and_set_file_permissions(file_name, uid, gid, 0o660)      
+
+def create_sqlite_database(file_name):
+    import grp
+    
+    #TODO: Change this to the real user once variables.json is working
+    web_server_group = 'www-data'
+    uid = os.getuid()
+    gid = grp.getgrnam(web_server_group).gr_gid
+            
+    return create_and_set_file_permissions(file_name, uid, gid, 0o660, True)
+    
+    
+def create_and_set_file_permissions(file_name, uid, gid, permissions=None, is_sqlite=False):
+    result = True
+    if not os.path.exists(file_name):
+        try:
+            if is_sqlite:
+                with sqlite3.connect(file_name, timeout=10) as conn:
+                    pass
+            else:
+                with open(file_name, 'w') as debug_file:
+                    debug_file.write('')
+            os.chown(file_name, uid, gid)
+            if permissions:
+                os.chmod(file_name, permissions)
+        except Exception as e:
+            eType, eObject, eTraceback = sys.exc_info()
+            log(0, f'ERROR: Unable to create {file_name} with web server access. {eTraceback.tb_lineno} - {e}')
+            result = False
+
+    return result
+    
 def isFileWriteable(fileName):
     """ Check if a file exists and can be written to """
     if os.path.exists(fileName):
@@ -583,6 +624,7 @@ def update_database(structure, extra_data):
         update_sqlite_database(structure, extra_data, secret_data)
 
 def update_sqlite_database(structure, extra_data, secret_data):
+
     db_path = os.path.join(ALLSKYPATH, 'config', 'myFiles', 'allsky.db')
     try:
         if 'enabled' in structure['database']:
@@ -593,6 +635,8 @@ def update_sqlite_database(structure, extra_data, secret_data):
                     json_str = json.dumps(extra_data)
                     timestamp = math.floor(time.time())
 
+                    create_sqlite_database(db_path)
+                    
                     # Use a context manager to ensure safe connection handling
                     with sqlite3.connect(db_path, timeout=10) as conn:
                         #conn.execute('PRAGMA journal_mode = WAL')  # Enables safe concurrent access
@@ -609,7 +653,7 @@ def update_sqlite_database(structure, extra_data, secret_data):
                             VALUES (?, ?)
                         ''', (timestamp, json_str))
                         conn.commit()
-
+                        # Optional: Change group if allowed
     except Exception as e:
         eType, eObject, eTraceback = sys.exc_info()            
         log(0, f'ERROR: Module update_database failed on line {eTraceback.tb_lineno} - {e}')

@@ -211,7 +211,9 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 		allsky_shared.cleanup_extra_data()
 
 	def _dump_debug_data(self):
-		debugFilePath = os.path.join(allsky_shared.ALLSKY_TMP, 'overlaydebug.txt')
+		debug_filename = os.path.join(allsky_shared.ALLSKY_TMP, 'overlaydebug.txt')
+  
+		allsky_shared.create_file_web_server_access(debug_filename)
 		env = {}
 		for var in os.environ:
 			varValue = allsky_shared.getEnvironmentVariable(var, fatal=True)
@@ -220,12 +222,12 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 			var = var.ljust(50, ' ')
 			env[var] = varValue
 
-		with open(debugFilePath, 'w') as debugFile:
+		with open(debug_filename, 'w') as debug_file:
 			for var in sorted(env):
 				varValue = env[var]
-				debugFile.write(var + varValue + os.linesep)
+				debug_file.write(var + varValue + os.linesep)
 
-		allsky_shared.log(4, f"INFO: Debug information written to {debugFilePath}")
+		allsky_shared.log(4, f"INFO: Debug information written to {debug_filename}")
   
 	def run(self):
 		result = f'Image {allsky_shared.CURRENTIMAGEPATH} Loaded'

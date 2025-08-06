@@ -21,7 +21,7 @@ export ALLSKY_DEFINES_INC="allskyDefines.inc"
 export REPO_WEBUI_DEFINES_FILE="${ALLSKY_REPO}/${ALLSKY_DEFINES_INC}.repo"
 export REPO_LIGHTTPD_FILE="${ALLSKY_REPO}/lighttpd.conf.repo"
 export REPO_AVI_FILE="${ALLSKY_REPO}/avahi-daemon.conf.repo"
-export REPO_OPTIONS_FILE="${ALLSKY_REPO}/$( basename "${OPTIONS_FILE}" ).repo"
+export REPO_OPTIONS_FILE="${ALLSKY_REPO}/$( basename "${ALLSKY_OPTIONS_FILE}" ).repo"
 export REPO_ENV_FILE="${ALLSKY_REPO}/$( basename "${ALLSKY_ENV}" ).repo"
 export REPO_WEBSITE_CONFIGURATION_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
 
@@ -401,7 +401,7 @@ function update_json_file()		# [-d] field, new value, file, [type]
 		return 1
 	fi
 
-	FILE="${3:-${SETTINGS_FILE}}"
+	FILE="${3:-${ALLSKY_SETTINGS_FILE}}"
 	TEMP="/tmp/$$"
 
 	if [[ ${DELETE} == "true" ]]; then
@@ -1362,7 +1362,7 @@ function prompt_for_lat_long()
 			return
 
 		elif VALUE="$( convertLatLong "${VALUE}" "${SETTING_NAME}" 2>&1 )" ; then
-			update_json_file ".${SETTING_NAME}" "${VALUE}" "${SETTINGS_FILE}"
+			update_json_file ".${SETTING_NAME}" "${VALUE}" "${ALLSKY_SETTINGS_FILE}"
 			display_msg --log progress "${WEBUI_SETTING_LABEL} set to ${VALUE}."
 			echo "${VALUE}"
 			return
@@ -1378,11 +1378,11 @@ function prompt_for_lat_long()
 # If we can't, prompt for them.
 function get_lat_long()
 {
-	# Global: SETTINGS_FILE
+	# Global: ALLSKY_SETTINGS_FILE
 	local MSG  LATITUDE  LAT  LONGITUDE  LON  RAW_LOCATION  MY_LOCATION_PARTS  ERR  X
 
-	if [[ ! -f ${SETTINGS_FILE} ]]; then
-		display_msg --log error "INTERNAL ERROR: '${SETTINGS_FILE}' not found!"
+	if [[ ! -f ${ALLSKY_SETTINGS_FILE} ]]; then
+		display_msg --log error "INTERNAL ERROR: '${ALLSKY_SETTINGS_FILE}' not found!"
 		return 1
 	fi
 

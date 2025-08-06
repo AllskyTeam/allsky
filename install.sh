@@ -28,7 +28,7 @@ SHORT_TITLE="Allsky Installer"
 TITLE="${SHORT_TITLE} - ${ALLSKY_VERSION}"
 FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 OLD_RASPAP_DIR="/etc/raspap"			# used to contain WebUI configuration files
-SETTINGS_FILE_NAME="$( basename "${SETTINGS_FILE}" )"
+SETTINGS_FILE_NAME="$( basename "${ALLSKY_SETTINGS_FILE}" )"
 FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"	# should a default settings file be created?
 RESTORED_PRIOR_SETTINGS_FILE="false"
 PRIOR_SETTINGS_FILE=""					# Full pathname to the prior settings file, if it exists
@@ -702,7 +702,7 @@ do_save_camera_capabilities()
 	# the appropriate one can be used by makeChanges.sh.
 	[[ -n ${PRIOR_SETTINGS_FILE} ]] && restore_prior_settings_file
 
-	display_msg --logonly info "Making new settings file '${SETTINGS_FILE}'."
+	display_msg --logonly info "Making new settings file '${ALLSKY_SETTINGS_FILE}'."
 
 	CMD="makeChanges.sh${FORCE}${OPTIONSONLY}"
 	CMD+=" --cameraTypeOnly --from install --addNewSettings ${DEBUG_ARG}"
@@ -741,7 +741,7 @@ do_save_camera_capabilities()
 	else
 		[[ -n ${M} ]] && display_msg --logonly info "${M}"
 
-		if [[ ! -f ${SETTINGS_FILE} ]]; then
+		if [[ ! -f ${ALLSKY_SETTINGS_FILE} ]]; then
 			display_msg --log error "Settings file not created; cannot continue."
 			return 1
 		fi
@@ -752,7 +752,7 @@ do_save_camera_capabilities()
 	display_msg --logonly info "Settings files:\n${MSG}"
 
 	# Make sure the settings file is linked to the camera-specific one.
-	MSG="$( check_settings_link "${SETTINGS_FILE}" )"
+	MSG="$( check_settings_link "${ALLSKY_SETTINGS_FILE}" )"
 	RET=$?
 	if [[ ${RET} -ne 0 ]]; then
 		if [[ ${RET} -eq "${EXIT_ERROR_STOP}" ]]; then
@@ -765,7 +765,7 @@ do_save_camera_capabilities()
 
 	check_for_required_settings		# Make sure the required settings are there.
 
-	CAMERA_MODEL="$( settings ".cameramodel" "${SETTINGS_FILE}" )"
+	CAMERA_MODEL="$( settings ".cameramodel" "${ALLSKY_SETTINGS_FILE}" )"
 	if [[ -z ${CAMERA_MODEL} ]]; then
 		display_msg --log error "cameramodel not found in settings file."
 		return 1
@@ -1408,7 +1408,7 @@ set_locale()
 	if [[ ${CURRENT_LOCALE} == "${DESIRED_LOCALE}" ]]; then
 		display_msg --logonly info "Keeping '${DESIRED_LOCALE}' locale."
 		L="$( settings --null ".locale" )"
-		MSG="Settings file '${SETTINGS_FILE}'"
+		MSG="Settings file '${ALLSKY_SETTINGS_FILE}'"
 		if [[ -z ${L} || ${L} == "null" ]]; then
 			# Either a new install or an upgrade from an older Allsky.
 			if [[ -z ${L} ]]; then
@@ -1418,7 +1418,7 @@ set_locale()
 			fi
 			MSG+=" so adding it."
 			display_msg --logonly info "${MSG}"
-			doV "" "DESIRED_LOCALE" "locale" "text" "${SETTINGS_FILE}"
+			doV "" "DESIRED_LOCALE" "locale" "text" "${ALLSKY_SETTINGS_FILE}"
 		else
 			MSG+=" CONTAINED .locale:  ${L}"
 			display_msg --logonly info "${MSG}"
@@ -1428,7 +1428,7 @@ set_locale()
 	fi
 
 	display_msg --log progress "Setting locale to '${DESIRED_LOCALE}'."
-	doV "" "DESIRED_LOCALE" "locale" "text" "${SETTINGS_FILE}"
+	doV "" "DESIRED_LOCALE" "locale" "text" "${ALLSKY_SETTINGS_FILE}"
 
 	# This updates /etc/default/locale
 	sudo update-locale LC_ALL="${DESIRED_LOCALE}" LANGUAGE="${DESIRED_LOCALE}" LANG="${DESIRED_LOCALE}"
@@ -1928,7 +1928,7 @@ convert_settings_file()			# prior_file, new_file
 	# "1" and "0" for booleans and quotes around numbers. Change that.
 	# Don't modify the prior file, so make the changes to a temporary file.
 	# --settings-only  says only output settings that are in the settings file.
-	# The OPTIONS_FILE doesn't exist yet so use REPO_OPTIONS_FILE.
+	# The ALLSKY_OPTIONS_FILE doesn't exist yet so use REPO_OPTIONS_FILE.
 	"${ALLSKY_SCRIPTS}/convertJSON.php" \
 		--convert \
 		--settings-only \
@@ -2480,12 +2480,12 @@ restore_prior_settings_file()
 
 	else
 		# settings file is old style in ${OLD_RASPAP_DIR}.
-		if [[ -f ${SETTINGS_FILE} ]]; then
+		if [[ -f ${ALLSKY_SETTINGS_FILE} ]]; then
 			# Transfer prior settings to the new file.
 
 			case "${PRIOR_ALLSKY_VERSION}" in
 				"${FIRST_VERSION_VERSION}")
-					convert_settings_file "${PRIOR_SETTINGS_FILE}" "${SETTINGS_FILE}" "install"
+					convert_settings_file "${PRIOR_SETTINGS_FILE}" "${ALLSKY_SETTINGS_FILE}" "install"
 
 					MSG="Your old WebUI settings were transfered to the new release,"
 					MSG+="\n but note that there have been some changes to the settings file"
@@ -2506,12 +2506,12 @@ restore_prior_settings_file()
 					# so try to restore them so Allsky can restart automatically.
 					# shellcheck disable=SC2034
 					local LAT="$( settings .latitude "${PRIOR_SETTINGS_FILE}" )"
-					X="LAT"; doV "latitude" "X" "latitude" "text" "${SETTINGS_FILE}"
+					X="LAT"; doV "latitude" "X" "latitude" "text" "${ALLSKY_SETTINGS_FILE}"
 					# shellcheck disable=SC2034
 					local LONG="$( settings .longitude "${PRIOR_SETTINGS_FILE}" )"
-					X="LONG"; doV "longitude" "X" "longitude" "text" "${SETTINGS_FILE}"
+					X="LONG"; doV "longitude" "X" "longitude" "text" "${ALLSKY_SETTINGS_FILE}"
 					local ANGLE="$( settings .angle "${PRIOR_SETTINGS_FILE}" )"
-					X="ANGLE"; doV "angle" "X" "angle" "number" "${SETTINGS_FILE}"
+					X="ANGLE"; doV "angle" "X" "angle" "number" "${ALLSKY_SETTINGS_FILE}"
 					display_msg --log progress "Prior latitude, longitude, and angle restored."
 
 					MSG="You need to manually transfer your old settings to the WebUI.\n"
@@ -2528,12 +2528,12 @@ restore_prior_settings_file()
 			esac
 
 			# Set to null to force the user to look at the settings before Allsky will run.
-			update_json_file -d ".lastchanged" "" "${SETTINGS_FILE}"
+			update_json_file -d ".lastchanged" "" "${ALLSKY_SETTINGS_FILE}"
 
 			RESTORED_PRIOR_SETTINGS_FILE="true"
 			FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"
 		else
-			# First time through there often won't be SETTINGS_FILE.
+			# First time through there often won't be ALLSKY_SETTINGS_FILE.
 			display_msg --logonly info "No new settings file yet..."
 			FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
 		fi
@@ -2712,11 +2712,11 @@ restore_prior_files()
 
         for s in daytimeoverlay nighttimeoverlay
         do
-            doV "" "OVERLAY_NAME" "${s}" "text" "${SETTINGS_FILE}"
+            doV "" "OVERLAY_NAME" "${s}" "text" "${ALLSKY_SETTINGS_FILE}"
         done
     else
-		doV "" "DAYTIME_OVERLAY" "daytimeoverlay" "text" "${SETTINGS_FILE}"
-		doV "" "NIGHTTIME_OVERLAY" "nighttimeoverlay" "text" "${SETTINGS_FILE}"
+		doV "" "DAYTIME_OVERLAY" "daytimeoverlay" "text" "${ALLSKY_SETTINGS_FILE}"
+		doV "" "NIGHTTIME_OVERLAY" "nighttimeoverlay" "text" "${ALLSKY_SETTINGS_FILE}"
     fi
 
 	if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
@@ -2787,7 +2787,7 @@ restore_prior_files()
 	COPIED_PRIOR_CONFIG_SH="true"		# Global variable
 	if [[ -s ${PRIOR_CONFIG_FILE} ]]; then
 		# This copies the settings from the prior config file to the settings file.
-		convert_config_sh "${PRIOR_CONFIG_FILE}" "${SETTINGS_FILE}" "install" ||
+		convert_config_sh "${PRIOR_CONFIG_FILE}" "${ALLSKY_SETTINGS_FILE}" "install" ||
 			COPIED_PRIOR_CONFIG_SH="false"
 	fi
 	STATUS_VARIABLES+=( "COPIED_PRIOR_CONFIG_SH='${COPIED_PRIOR_CONFIG_SH}'\n" )
@@ -2811,7 +2811,7 @@ restore_prior_files()
 	fi
 	COPIED_PRIOR_FTP_SH="true"			# Global variable
 	if [[ -s ${PRIOR_FTP_FILE} ]]; then
-		convert_ftp_sh "${PRIOR_FTP_FILE}" "${SETTINGS_FILE}" "install" ||
+		convert_ftp_sh "${PRIOR_FTP_FILE}" "${ALLSKY_SETTINGS_FILE}" "install" ||
 			COPIED_PRIOR_FTP_SH="false"
 	fi
 	STATUS_VARIABLES+=( "COPIED_PRIOR_FTP_SH='${COPIED_PRIOR_FTP_SH}'\n" )
@@ -3002,7 +3002,7 @@ restore_prior_website_files()
 		else
 			# Prior Website config file doesn't exist.
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-			doV "uselocalwebsite" "false" "uselocalwebsite" "boolean" "${SETTINGS_FILE}"
+			doV "uselocalwebsite" "false" "uselocalwebsite" "boolean" "${ALLSKY_SETTINGS_FILE}"
 		fi
 	fi
 
@@ -3199,7 +3199,7 @@ do_restore()
 	display_image "ReviewNeeded"
 
 	# Force the user to look at the settings before Allsky will run.
-	update_json_file -d ".lastchanged" "" "${SETTINGS_FILE}"
+	update_json_file -d ".lastchanged" "" "${ALLSKY_SETTINGS_FILE}"
 	set_allsky_status "${ALLSKY_STATUS_NEEDS_REVIEW}"
 
 	exit_installation 0 "${STATUS_OK}" ""
@@ -3449,8 +3449,8 @@ install_overlay()
 #xx	sudo chmod 775 "${ALLSKY_MY_OVERLAY_TEMPLATES}"	
 
 	# Globals: SENSOR_WIDTH, SENSOR_HEIGHT, FULL_OVERLAY_NAME, SHORT_OVERLAY_NAME, OVERLAY_NAME
-	SENSOR_WIDTH="$( settings ".sensorWidth" "${CC_FILE}" )"
-	SENSOR_HEIGHT="$( settings ".sensorHeight" "${CC_FILE}" )"
+	SENSOR_WIDTH="$( settings ".sensorWidth" "${ALLSKY_CC_FILE}" )"
+	SENSOR_HEIGHT="$( settings ".sensorHeight" "${ALLSKY_CC_FILE}" )"
 	FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}_${CAMERA_MODEL}-${SENSOR_WIDTH}x${SENSOR_HEIGHT}-both.json"
 	SHORT_OVERLAY_NAME="overlay-${CAMERA_TYPE}.json"
 
@@ -3466,7 +3466,7 @@ install_overlay()
 		display_msg --log progress "Using overlay '${OVERLAY_NAME}'."
 		for s in daytimeoverlay nighttimeoverlay
 		do
-			local VALUE=""; doV "" "OVERLAY_NAME" "${s}" "text" "${SETTINGS_FILE}"
+			local VALUE=""; doV "" "OVERLAY_NAME" "${s}" "text" "${ALLSKY_SETTINGS_FILE}"
 		done
 	fi
 
@@ -3536,7 +3536,7 @@ display_image()
 	local IMAGE_OR_CUSTOM="${1}"
 	local FULL_FILENAME  FILENAME  EXTENSION  COLOR  CUSTOM_MESSAGE  MSG  X  I
 
-	if [[ -s ${SETTINGS_FILE} ]]; then		# The file may not exist yet.
+	if [[ -s ${ALLSKY_SETTINGS_FILE} ]]; then		# The file may not exist yet.
 		FULL_FILENAME="$( settings ".filename" )"
 		FILENAME="${FULL_FILENAME%.*}"
 		EXTENSION="${FULL_FILENAME##*.}"
@@ -3610,7 +3610,7 @@ sort_settings_file()
 		--convert \
 		--order \
 		--settings-file "${FILE}" \
-		--options-file "${OPTIONS_FILE}" \
+		--options-file "${ALLSKY_OPTIONS_FILE}" \
 		> "${TMP_FILE}" 2>&1
 	if [[ $? -ne 0 ]]; then
 		MSG="Unable to sort settings file '${FILE}': $( < "${TMP_FILE}" ); ignoring"
@@ -3955,7 +3955,7 @@ do_done()
 		"${ALLSKY_SCRIPTS}/addMessage.sh" --type info --msg "${MSG2}"
 
 		# Set it so the user isn't asked to review the Allsky settings.
-		set_now "lastchanged" "${SETTINGS_FILE}"
+		set_now "lastchanged" "${ALLSKY_SETTINGS_FILE}"
 
 	elif [[ ${CONFIGURATION_NEEDED} == "true" ]]; then
 		display_image "ConfigurationNeeded"

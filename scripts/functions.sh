@@ -433,7 +433,7 @@ function get_connected_camera_models()
 					print model;
 				}
 			}
-		}' "${CONNECTED_CAMERAS_INFO}"
+		}' "${ALLSKY_CONNECTED_CAMERAS_INFO}"
 }
 
 

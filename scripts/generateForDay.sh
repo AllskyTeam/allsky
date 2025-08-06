@@ -142,7 +142,7 @@ usage_and_exit()
 	echo
 	echo "The list of images to process is determined in one of two ways:"
 	echo
-	echo "1. Looking in '<INPUT_DIR>' for files with an extension of '${EXTENSION}'."
+	echo "1. Looking in '<INPUT_DIR>' for files with an extension of '${ALLSKY_EXTENSION}'."
 	echo "   If <INPUT_DIR> does NOT begin with a '/' it is assumed to be in '${ALLSKY_IMAGES}',"
 	echo "   which allows using images on a USB stick, for example."
 	echo "   The output file(s) are stored in <INPUT_DIR> unless '--output-dir' is specified."
@@ -308,7 +308,7 @@ if [[ ${DO_KEOGRAM} == "true" || ${DO_STARTRAILS} == "true" ]]; then
 fi
 
 if [[ ${DO_KEOGRAM} == "true" ]]; then
-	KEOGRAM_FILE="keogram-${DATE}.${EXTENSION}"
+	KEOGRAM_FILE="keogram-${DATE}.${ALLSKY_EXTENSION}"
 	UPLOAD_FILE="${OUTPUT_DIR}/keogram/${KEOGRAM_FILE}"
 
 	if [[ ${TYPE} == "GENERATE" ]]; then
@@ -330,7 +330,7 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 		THICKNESS="${S_keogramlinethickness}"
 			[[ ${THICKNESS} != "" ]] && MORE+=" --font-type ${THICKNESS}"
 		CMD="'${ALLSKY_BIN}/keogram' ${N} ${SIZE_FILTER} -d '${INPUT_DIR}'"
-		CMD+=" -e ${EXTENSION} -o '${UPLOAD_FILE}' ${MORE} ${KEOGRAM_EXTRA_PARAMETERS}"
+		CMD+=" -e ${ALLSKY_EXTENSION} -o '${UPLOAD_FILE}' ${MORE} ${KEOGRAM_EXTRA_PARAMETERS}"
 		[[ -n ${KEOGRAM_PARAMS} ]] && CMD+=" ${KEOGRAM_PARAMS}"
 		generate "Keogram" "keogram" "${CMD}"
 
@@ -377,7 +377,7 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 fi
 
 if [[ ${DO_STARTRAILS} == "true" ]]; then
-	STARTRAILS_FILE="startrails-${DATE}.${EXTENSION}"
+	STARTRAILS_FILE="startrails-${DATE}.${ALLSKY_EXTENSION}"
 	UPLOAD_FILE="${OUTPUT_DIR}/startrails/${STARTRAILS_FILE}"
 	if [[ ${TYPE} == "GENERATE" ]]; then
 		if [[ -z ${NICE} ]]; then
@@ -391,7 +391,7 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 		if [[ -n ${IMAGES_FILE} ]]; then
 			CMD+=" --images '${IMAGES_FILE}'"
 		else
-			CMD+=" -d '${INPUT_DIR}' -e ${EXTENSION}"
+			CMD+=" -d '${INPUT_DIR}' -e ${ALLSKY_EXTENSION}"
 		fi
 		CMD+=" -b ${BRIGHTNESS_THRESHOLD}"
 		CMD+=" ${STARTRAILS_EXTRA_PARAMETERS}"

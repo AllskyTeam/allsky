@@ -50,11 +50,10 @@ fi
 # Some cameras don't have a sensor temp, so don't attempt dark subtraction for them.
 [[ ${AS_TEMPERATURE_C} == "n/a" ]] && return
 
-DARKS_DIR="${ALLSKY_DARKS}"
 for EXT in "png" "jpg"
 do
 	# First check if we have an exact match.
-	DARK="${DARKS_DIR}/${AS_TEMPERATURE_C}.${EXT}"
+	DARK="${ALLSKY_DARKS}/${AS_TEMPERATURE_C}.${EXT}"
 	if [[ -s ${DARK} ]]; then
 		break
 	fi
@@ -70,12 +69,12 @@ do
 	# than ${AS_TEMPERATURE_C}, stop, then compare it to the previous file to
 	# determine which is closer to ${AS_TEMPERATURE_C}.
 	# Need "--general-numeric-sort" in case any files start with "-".
-	for FILE in $( find "${DARKS_DIR}" -maxdepth 1 -iname "*.${EXT}" |
+	for FILE in $( find "${ALLSKY_DARKS}" -maxdepth 1 -iname "*.${EXT}" |
 		sed 's;.*/;;' | sort --general-numeric-sort )
 	do
 		[[ ${TEST_MODE} == "true" ]] && echo "Looking at FILE='${FILE}'"
 		# Example file name for 21 degree dark: "21.png".
-		if [[ -s ${DARKS_DIR}/${FILE} ]]; then
+		if [[ -s ${ALLSKY_DARKS}/${FILE} ]]; then
 				FILE="$( basename -- "${FILE}" )"	# need "--" in case FILE starts with "-"
 			# Get name of FILE (which is the temp) without extension
 			DARK_TEMPERATURE=${FILE%.*}
@@ -89,19 +88,19 @@ do
 			CLOSEST_TEMPERATURE=${DARK_TEMPERATURE}
 			DIFF=$(( AS_TEMPERATURE_C - CLOSEST_TEMPERATURE ))
 		else
-			echo -n "${ME2}: INFORMATION: dark file '${DARKS_DIR}/${FILE}' " >&2
-			if [[ ! -f ${DARKS_DIR}/${FILE} ]]; then
+			echo -n "${ME2}: INFORMATION: dark file '${ALLSKY_DARKS}/${FILE}' " >&2
+			if [[ ! -f ${ALLSKY_DARKS}/${FILE} ]]; then
 				echo "${FILE} does not exist  Huh?."
 			else
 				echo "${FILE} zero-length; deleting."
-				ls -l "${DARKS_DIR}/${FILE}"
-				rm -f "${DARKS_DIR}/${FILE}"
+				ls -l "${ALLSKY_DARKS}/${FILE}"
+				rm -f "${ALLSKY_DARKS}/${FILE}"
 			fi >&2
 		fi
 	done
 
 	if [[ -n ${CLOSEST_TEMPERATURE} ]]; then
-		DARK="${DARKS_DIR}/${CLOSEST_TEMPERATURE}.${EXT}"
+		DARK="${ALLSKY_DARKS}/${CLOSEST_TEMPERATURE}.${EXT}"
 		[[ -f ${DARK} ]] && break
 		
 		echo "*** ${ME2}: ERROR: DARK file '${DARK}' not found.  Huh?" >&2

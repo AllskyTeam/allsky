@@ -19,7 +19,7 @@ function usage_and_exit
 	else
 		echo -e "${MSG}"
 	fi
-	echo "Where:"
+	echo "Arguments:"
 	echo "   --expires seconds   Specifies how many seconds before the notification expires."
 	echo "  notification_type    If 'custom' then a custom message is created and 'custom_args'"
 	echo "                       must be given to specify arguments for the message."
@@ -64,7 +64,7 @@ done
 
 NOTIFICATION_TYPE="${1}"	# filename, minus the extension, since the extension may vary
 [[ -z ${NOTIFICATION_TYPE} ]] && usage_and_exit 1
-NOTIFICATION_NAME="${NOTIFICATION_TYPE}.${EXTENSION}"
+NOTIFICATION_NAME="${NOTIFICATION_TYPE}.${ALLSKY_EXTENSION}"
 
 NUM_ARGS=12
 if [[ ${NOTIFICATION_TYPE} == "custom" ]]; then
@@ -76,15 +76,15 @@ if [[ ${NOTIFICATION_TYPE} == "custom" ]]; then
 	# Create a custom message.
 	# Extensions ($10) will normally be null since the invoker may not know what to use.
 	if ! "${ALLSKY_SCRIPTS}/generateNotificationImages.sh" \
-			--directory "${CAPTURE_SAVE_DIR}" "${NOTIFICATION_TYPE}" \
+			--directory "${ALLSKY_CAPTURE_SAVE_DIR}" "${NOTIFICATION_TYPE}" \
 			"${2}" "${3}" "${4}" "${5}" "${6}" \
-			"${7}" "${8}" "${9}" "${10:-${EXTENSION}}" "${11}" "${12}" ; then
+			"${7}" "${8}" "${9}" "${10:-${ALLSKY_EXTENSION}}" "${11}" "${12}" ; then
 		exit 2			# it output error messages
 	fi
-	NOTIFICATION_FILE="${CAPTURE_SAVE_DIR}/${NOTIFICATION_NAME}"
+	NOTIFICATION_FILE="${ALLSKY_CAPTURE_SAVE_DIR}/${NOTIFICATION_NAME}"
 else
 	# Check if the user has a custom image.
-	NOTIFICATION_FILE="${USER_NOTIFICATION_IMAGES}/${NOTIFICATION_NAME}"
+	NOTIFICATION_FILE="${ALLSKY_USER_NOTIFICATION_IMAGES}/${NOTIFICATION_NAME}"
 	if [[ ! -e ${NOTIFICATION_FILE} ]]; then
 		NOTIFICATION_FILE="${ALLSKY_NOTIFICATION_IMAGES}/${NOTIFICATION_NAME}"
 	fi
@@ -121,7 +121,7 @@ if [[ ${NOTIFICATION_TYPE} == "custom" ]]; then
 	CURRENT_IMAGE="${NOTIFICATION_FILE}"
 else
 	# Don't overwrite notification images so create a temporary copy and use that.
-	CURRENT_IMAGE="${CAPTURE_SAVE_DIR}/notification-${FULL_FILENAME}"
+	CURRENT_IMAGE="${ALLSKY_CAPTURE_SAVE_DIR}/notification-${ALLSKY_FULL_FILENAME}"
 	if ! cp "${NOTIFICATION_FILE}" "${CURRENT_IMAGE}" ; then
 		E_ "*** ${ME}: ERROR: Cannot copy '${NOTIFICATION_FILE}' to '${CURRENT_IMAGE}'."
 		exit 3
@@ -161,7 +161,7 @@ if [[ ${S_takedaytimeimages} == "true" && ${S_savedaytimeimages} == "true" && \
 	if ! mkdir -p "${THUMBNAILS_DIR}" ; then
 			echo -e "${YELLOW}*** ${ME}: WARNING: could not create '${THUMBNAILS_DIR}'; continuing.${NC}"
 	else
-		THUMB="${THUMBNAILS_DIR}/${FILENAME}-$( date +'%Y%m%d%H%M%S' ).${EXTENSION}"
+		THUMB="${THUMBNAILS_DIR}/${ALLSKY_FILENAME}-$( date +'%Y%m%d%H%M%S' ).${ALLSKY_EXTENSION}"
 		#shellcheck disable=SC2154
 		if ! convert "${CURRENT_IMAGE}" -resize "${S_thumbnailsizex}x${S_thumbnailsizey}" "${THUMB}" ; then
 			W_ "*** ${ME}: WARNING: THUMBNAIL resize failed; continuing."
@@ -172,7 +172,7 @@ fi
 # ${FINAL_IMAGE} is the final resting place of the image, and no more changes will be made to it.
 # It's also the name of the image that web severs look for.
 # The "mv" may be a rename or an actual move.
-FINAL_IMAGE="${CAPTURE_SAVE_DIR}/${FULL_FILENAME}"
+FINAL_IMAGE="${ALLSKY_CAPTURE_SAVE_DIR}/${ALLSKY_FULL_FILENAME}"
 if ! mv -f "${CURRENT_IMAGE}" "${FINAL_IMAGE}" ; then
 	MSG="*** ${ME}: ERROR: "
 	if [[ -f ${CURRENT_IMAGE} ]]; then

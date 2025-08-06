@@ -96,7 +96,7 @@ done
 
 # shellcheck disable=SC2119
 BRANCH="$( get_branch )"
-[[ -z ${BRANCH} ]] && BRANCH="${GITHUB_MAIN_BRANCH}"
+[[ -z ${BRANCH} ]] && BRANCH="${ALLSKY_GITHUB_MAIN_BRANCH}"
 
 # TODO: these are here to keep shellcheck quiet while this script is incomplete.
 DEBUG="${DEBUG}"

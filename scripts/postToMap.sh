@@ -26,7 +26,7 @@ function usage_and_exit()
 	else
 		E_ "${MSG}"
 	fi
-	echo "where:"
+	echo "Arguments:"
 	echo "   --help        Print this usage message and exit immediately."
 	echo "   --whisper     Be quiet with non-error related output - only display results."
 	echo "   --delete      Delete map data; all fields except machine_id are ignored."
@@ -333,7 +333,7 @@ else
 	generate_post_data()
 	{
 		# Need to escape single quotes.
-		local ALLSKY_SETTINGS="$( sed -e "s/'/'\"'\"'/g" "${SETTINGS_FILE}" )"
+		local ALLSKY_SETTINGS="$( sed -e "s/'/'\"'\"'/g" "${ALLSKY_SETTINGS_FILE}" )"
 
 		local WEBSITE_SETTINGS
 		if [[ ${S_uselocalwebsite} == "true" ]]; then

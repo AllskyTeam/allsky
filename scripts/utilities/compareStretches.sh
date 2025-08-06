@@ -50,7 +50,7 @@ OK="true"
 DO_HELP="false"
 HTML="false"
 OUT_DIRECTORY="${ALLSKY_IMAGES}/test_stretches"	# Must start with "test"
-IMAGE="";			d_IMAGE="${ALLSKY_TMP}/${FULL_FILENAME}"
+IMAGE="";			d_IMAGE="${ALLSKY_TMP}/${ALLSKY_FULL_FILENAME}"
 START_AMOUNT="";	d_START_AMOUNT="5"
 STEP_AMOUNT="";		d_STEP_AMOUNT="5"		# increase by this amount
 COUNT_AMOUNT="";	d_COUNT_AMOUNT="4"
@@ -193,7 +193,7 @@ if [[ -z ${COUNT_MIDPOINT} ]]; then
 fi
 
 # Create / empty the output directory.
-NUM="$( find "${OUT_DIRECTORY}" -type f -name "*.${EXTENSION}" -print 2>/dev/null | wc -l )"
+NUM="$( find "${OUT_DIRECTORY}" -type f -name "*.${ALLSKY_EXTENSION}" -print 2>/dev/null | wc -l )"
 if [[ ${NUM} -gt 0 ]]; then
 	# At least one item in the directory.
 	if [[ ${HTML} == "false" ]]; then

@@ -205,11 +205,11 @@ fi
 # This directory is in the root of the Allsky Website.
 # Assume if the first upload fails they all will, so exit.
 if [[ -n ${WEBS} ]]; then
-	upload_file "${WEBS}" "${SETTINGS_FILE}" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}" || exit $?
+	upload_file "${WEBS}" "${ALLSKY_SETTINGS_FILE}" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}" || exit $?
 
 	if [[ ${ALL_FILES} == "true" ]]; then
 		for file in \
-			"${OPTIONS_FILE}" \
+			"${ALLSKY_OPTIONS_FILE}" \
 			"${ALLSKY_WEBUI}/includes/allskySettings.php" \
 			"${ALLSKY_DOCUMENTATION}/css/custom.css" 
 		do

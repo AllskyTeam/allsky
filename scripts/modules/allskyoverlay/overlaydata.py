@@ -70,7 +70,7 @@ class ALLSKYOVERLAYDATA:
   
 		self.variable_class = ALLSKYVARIABLES(debug_mode)
   
-		with open(os.environ['SETTINGS_FILE'], 'r') as f:
+		with open(os.environ['ALLSKY_SETTINGS_FILE'], 'r') as f:
 			self.settings_file = json.load(f)
 
 	def _debug(self, message):

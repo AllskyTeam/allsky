@@ -28,7 +28,7 @@ SHORT_TITLE="Allsky Installer"
 TITLE="${SHORT_TITLE} - ${ALLSKY_VERSION}"
 FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 OLD_RASPAP_DIR="/etc/raspap"			# used to contain WebUI configuration files
-SETTINGS_FILE_NAME="$( basename "${SETTINGS_FILE}" )"
+SETTINGS_FILE_NAME="$( basename "${ALLSKY_SETTINGS_FILE}" )"
 FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"	# should a default settings file be created?
 RESTORED_PRIOR_SETTINGS_FILE="false"
 PRIOR_SETTINGS_FILE=""					# Full pathname to the prior settings file, if it exists
@@ -36,7 +36,7 @@ COPIED_PRIOR_CONFIG_SH="false"			# prior config.sh's settings copied to settings
 COPIED_PRIOR_FTP_SH="false"				# prior ftp-settings.sh's settings copied to settings file?
 SUGGESTED_NEW_HOST_NAME="allsky"		# Suggested new host name
 NEW_HOST_NAME=""						# User-specified host name
-BRANCH="${GITHUB_MAIN_BRANCH}"			# default branch
+BRANCH="${ALLSKY_GITHUB_MAIN_BRANCH}"	# default branch
 
 PASSED_DISPLAY_MSG_LOG="${DISPLAY_MSG_LOG}"		# if set, we were given the log file name
 # shellcheck disable=SC2034
@@ -134,7 +134,7 @@ return		# Currently this is disabled - not sure it's worth doing.
 	local TOLD_FILE  MSG  A
 
 	# shellcheck disable=SC2119
-	if [[ $( get_branch ) != "${GITHUB_MAIN_BRANCH}" ]]; then
+	if [[ $( get_branch ) != "${ALLSKY_GITHUB_MAIN_BRANCH}" ]]; then
 		DEBUG=1; DEBUG_ARG="--debug"; LOG_TYPE="--log"
 
 		TOLD_FILE="${ALLSKY_HOME}/told"
@@ -449,8 +449,8 @@ setup_rpi_supported_cameras()
 	local CMD="${1}"
 	local notCMD
 
-	if [[ ! -f ${RPi_SUPPORTED_CAMERAS} ]]; then
-		local B="$( basename "${RPi_SUPPORTED_CAMERAS}" )"
+	if [[ ! -f ${ALLSKY_RPi_SUPPORTED_CAMERAS} ]]; then
+		local B="$( basename "${ALLSKY_RPi_SUPPORTED_CAMERAS}" )"
 		if [[ -z ${CMD} ]]; then
 			notCMD="xxxxx"		# won't match anything
 			CMD="all"
@@ -460,11 +460,11 @@ setup_rpi_supported_cameras()
 			notCMD="raspistill"
 		fi
 
-		local MSG="Creating ${RPi_SUPPORTED_CAMERAS} with '${CMD}' entries."
+		local MSG="Creating ${ALLSKY_RPi_SUPPORTED_CAMERAS} with '${CMD}' entries."
 		display_msg --logonly info "${MSG}"
 
 		# Remove comment and blank lines and lines for the command we are NOT using.
-		grep -v -E "^\$|^#|^${notCMD}" "${ALLSKY_REPO}/${B}.repo" > "${RPi_SUPPORTED_CAMERAS}"
+		grep -v -E "^\$|^#|^${notCMD}" "${ALLSKY_REPO}/${B}.repo" > "${ALLSKY_RPi_SUPPORTED_CAMERAS}"
 	fi
 }
 
@@ -488,7 +488,7 @@ get_connected_cameras()
 	# RPi format:	RPi \t camera_number \t camera_sensor [\t optional_other_stuff]
 	# ZWO format:	ZWO \t camera_number \t camera_model
 	# "true" == ignore errors
-	get_connected_cameras_info --cmd "${CMD}" "true" > "${CONNECTED_CAMERAS_INFO}" 2>/dev/null
+	get_connected_cameras_info --cmd "${CMD}" "true" > "${ALLSKY_CONNECTED_CAMERAS_INFO}" 2>/dev/null
 
 	# Get the RPi connected cameras, if any.
 	CC=""
@@ -702,7 +702,7 @@ do_save_camera_capabilities()
 	# the appropriate one can be used by makeChanges.sh.
 	[[ -n ${PRIOR_SETTINGS_FILE} ]] && restore_prior_settings_file
 
-	display_msg --logonly info "Making new settings file '${SETTINGS_FILE}'."
+	display_msg --logonly info "Making new settings file '${ALLSKY_SETTINGS_FILE}'."
 
 	CMD="makeChanges.sh${FORCE}${OPTIONSONLY}"
 	CMD+=" --cameraTypeOnly --from install --addNewSettings ${DEBUG_ARG}"
@@ -741,7 +741,7 @@ do_save_camera_capabilities()
 	else
 		[[ -n ${M} ]] && display_msg --logonly info "${M}"
 
-		if [[ ! -f ${SETTINGS_FILE} ]]; then
+		if [[ ! -f ${ALLSKY_SETTINGS_FILE} ]]; then
 			display_msg --log error "Settings file not created; cannot continue."
 			return 1
 		fi
@@ -752,7 +752,7 @@ do_save_camera_capabilities()
 	display_msg --logonly info "Settings files:\n${MSG}"
 
 	# Make sure the settings file is linked to the camera-specific one.
-	MSG="$( check_settings_link "${SETTINGS_FILE}" )"
+	MSG="$( check_settings_link "${ALLSKY_SETTINGS_FILE}" )"
 	RET=$?
 	if [[ ${RET} -ne 0 ]]; then
 		if [[ ${RET} -eq "${EXIT_ERROR_STOP}" ]]; then
@@ -765,7 +765,7 @@ do_save_camera_capabilities()
 
 	check_for_required_settings		# Make sure the required settings are there.
 
-	CAMERA_MODEL="$( settings ".cameramodel" "${SETTINGS_FILE}" )"
+	CAMERA_MODEL="$( settings ".cameramodel" "${ALLSKY_SETTINGS_FILE}" )"
 	if [[ -z ${CAMERA_MODEL} ]]; then
 		display_msg --log error "cameramodel not found in settings file."
 		return 1
@@ -780,8 +780,8 @@ do_save_camera_capabilities()
 get_count()
 {
 	local DIR="${1}"
-	local FILENAME="${2}"
-	find "${DIR}" -maxdepth 1 -name "${FILENAME}" | wc -l
+	local FILE="${2}"
+	find "${DIR}" -maxdepth 1 -name "${FILE}" | wc -l
 }
 
 
@@ -816,9 +816,9 @@ update_php_defines()
 			-e "s;XX_ALLSKY_WEBSITE_REMOTE_CONFIG_XX;${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE};g" \
 			-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};g" \
 			-e "s;XX_ALLSKY_ENV_XX;${ALLSKY_ENV};g" \
-			-e "s;XX_IMG_DIR_XX;${IMG_DIR};g" \
+			-e "s;XX_ALLSKY_IMG_DIR_XX;${ALLSKY_IMG_DIR};g" \
 			-e "s;XX_ALLSKY_MYFILES_DIR_XX;${ALLSKY_MYFILES_DIR};g" \
-			-e "s;XX_MY_OVERLAY_TEMPLATES_XX;${MY_OVERLAY_TEMPLATES};g" \
+			-e "s;XX_ALLSKY_MY_OVERLAY_TEMPLATES_XX;${ALLSKY_MY_OVERLAY_TEMPLATES};g" \
 			-e "s;XX_ALLSKY_MODULES_XX;${ALLSKY_MODULES};g" \
 			-e "s;XX_ALLSKY_MODULE_LOCATION_XX;${ALLSKY_MODULE_LOCATION};g" \
 			-e "s;XX_ALLSKY_OWNER_XX;${ALLSKY_OWNER};g" \
@@ -826,9 +826,9 @@ update_php_defines()
 			-e "s;XX_WEBSERVER_OWNER_XX;${WEBSERVER_OWNER};g" \
 			-e "s;XX_WEBSERVER_GROUP_XX;${WEBSERVER_GROUP};g" \
 			-e "s;XX_ALLSKY_REPO_XX;${ALLSKY_REPO};g" \
-			-e "s;XX_GITHUB_ROOT_XX;${GITHUB_ROOT};g" \
-			-e "s;XX_GITHUB_ALLSKY_REPO_XX;${GITHUB_ALLSKY_REPO};g" \
-			-e "s;XX_GITHUB_ALLSKY_MODULES_REPO_XX;${GITHUB_ALLSKY_MODULES_REPO};g" \
+			-e "s;XX_ALLSKY_GITHUB_ROOT_XX;${ALLSKY_GITHUB_ROOT};g" \
+			-e "s;XX_ALLSKY_GITHUB_ALLSKY_REPO_XX;${ALLSKY_GITHUB_ALLSKY_REPO};g" \
+			-e "s;XX_ALLSKY_GITHUB_ALLSKY_MODULES_REPO_XX;${ALLSKY_GITHUB_ALLSKY_MODULES_REPO};g" \
 			-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};g" \
 			-e "s;XX_ALLSKY_STATUS_XX;${ALLSKY_STATUS};g" \
 			-e "s;XX_ALLSKY_STATUS_INSTALLING_XX;${ALLSKY_STATUS_INSTALLING};g" \
@@ -1408,7 +1408,7 @@ set_locale()
 	if [[ ${CURRENT_LOCALE} == "${DESIRED_LOCALE}" ]]; then
 		display_msg --logonly info "Keeping '${DESIRED_LOCALE}' locale."
 		L="$( settings --null ".locale" )"
-		MSG="Settings file '${SETTINGS_FILE}'"
+		MSG="Settings file '${ALLSKY_SETTINGS_FILE}'"
 		if [[ -z ${L} || ${L} == "null" ]]; then
 			# Either a new install or an upgrade from an older Allsky.
 			if [[ -z ${L} ]]; then
@@ -1418,7 +1418,7 @@ set_locale()
 			fi
 			MSG+=" so adding it."
 			display_msg --logonly info "${MSG}"
-			doV "" "DESIRED_LOCALE" "locale" "text" "${SETTINGS_FILE}"
+			doV "" "DESIRED_LOCALE" "locale" "text" "${ALLSKY_SETTINGS_FILE}"
 		else
 			MSG+=" CONTAINED .locale:  ${L}"
 			display_msg --logonly info "${MSG}"
@@ -1428,7 +1428,7 @@ set_locale()
 	fi
 
 	display_msg --log progress "Setting locale to '${DESIRED_LOCALE}'."
-	doV "" "DESIRED_LOCALE" "locale" "text" "${SETTINGS_FILE}"
+	doV "" "DESIRED_LOCALE" "locale" "text" "${ALLSKY_SETTINGS_FILE}"
 
 	# This updates /etc/default/locale
 	sudo update-locale LC_ALL="${DESIRED_LOCALE}" LANGUAGE="${DESIRED_LOCALE}" LANG="${DESIRED_LOCALE}"
@@ -1839,8 +1839,8 @@ install_dependencies_etc()
 	# those values overwrite the defaults.
 	sed \
 		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
-		-e "s;XX_CONNECTED_CAMERAS_FILE_XX;${CONNECTED_CAMERAS_INFO};" \
-		-e "s;XX_RPI_CAMERA_INFO_FILE_XX;${RPi_SUPPORTED_CAMERAS};" \
+		-e "s;XX_CONNECTED_CAMERAS_FILE_XX;${ALLSKY_CONNECTED_CAMERAS_INFO};" \
+		-e "s;XX_RPI_CAMERA_INFO_FILE_XX;${ALLSKY_RPi_SUPPORTED_CAMERAS};" \
 		"${ALLSKY_HOME}/src/include/allsky_common.h.repo" \
 	> "${ALLSKY_HOME}/src/include/allsky_common.h"
 
@@ -1928,7 +1928,7 @@ convert_settings_file()			# prior_file, new_file
 	# "1" and "0" for booleans and quotes around numbers. Change that.
 	# Don't modify the prior file, so make the changes to a temporary file.
 	# --settings-only  says only output settings that are in the settings file.
-	# The OPTIONS_FILE doesn't exist yet so use REPO_OPTIONS_FILE.
+	# The ALLSKY_OPTIONS_FILE doesn't exist yet so use REPO_OPTIONS_FILE.
 	"${ALLSKY_SCRIPTS}/convertJSON.php" \
 		--convert \
 		--settings-only \
@@ -2480,12 +2480,12 @@ restore_prior_settings_file()
 
 	else
 		# settings file is old style in ${OLD_RASPAP_DIR}.
-		if [[ -f ${SETTINGS_FILE} ]]; then
+		if [[ -f ${ALLSKY_SETTINGS_FILE} ]]; then
 			# Transfer prior settings to the new file.
 
 			case "${PRIOR_ALLSKY_VERSION}" in
 				"${FIRST_VERSION_VERSION}")
-					convert_settings_file "${PRIOR_SETTINGS_FILE}" "${SETTINGS_FILE}" "install"
+					convert_settings_file "${PRIOR_SETTINGS_FILE}" "${ALLSKY_SETTINGS_FILE}" "install"
 
 					MSG="Your old WebUI settings were transfered to the new release,"
 					MSG+="\n but note that there have been some changes to the settings file"
@@ -2506,12 +2506,12 @@ restore_prior_settings_file()
 					# so try to restore them so Allsky can restart automatically.
 					# shellcheck disable=SC2034
 					local LAT="$( settings .latitude "${PRIOR_SETTINGS_FILE}" )"
-					X="LAT"; doV "latitude" "X" "latitude" "text" "${SETTINGS_FILE}"
+					X="LAT"; doV "latitude" "X" "latitude" "text" "${ALLSKY_SETTINGS_FILE}"
 					# shellcheck disable=SC2034
 					local LONG="$( settings .longitude "${PRIOR_SETTINGS_FILE}" )"
-					X="LONG"; doV "longitude" "X" "longitude" "text" "${SETTINGS_FILE}"
+					X="LONG"; doV "longitude" "X" "longitude" "text" "${ALLSKY_SETTINGS_FILE}"
 					local ANGLE="$( settings .angle "${PRIOR_SETTINGS_FILE}" )"
-					X="ANGLE"; doV "angle" "X" "angle" "number" "${SETTINGS_FILE}"
+					X="ANGLE"; doV "angle" "X" "angle" "number" "${ALLSKY_SETTINGS_FILE}"
 					display_msg --log progress "Prior latitude, longitude, and angle restored."
 
 					MSG="You need to manually transfer your old settings to the WebUI.\n"
@@ -2528,12 +2528,12 @@ restore_prior_settings_file()
 			esac
 
 			# Set to null to force the user to look at the settings before Allsky will run.
-			update_json_file -d ".lastchanged" "" "${SETTINGS_FILE}"
+			update_json_file -d ".lastchanged" "" "${ALLSKY_SETTINGS_FILE}"
 
 			RESTORED_PRIOR_SETTINGS_FILE="true"
 			FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"
 		else
-			# First time through there often won't be SETTINGS_FILE.
+			# First time through there often won't be ALLSKY_SETTINGS_FILE.
 			display_msg --logonly info "No new settings file yet..."
 			FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
 		fi
@@ -2658,12 +2658,12 @@ restore_prior_files()
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-	X="${PRIOR_CONFIG_DIR}${MY_OVERLAY_TEMPLATES/${ALLSKY_CONFIG}/}"
-	local Z="$( dirname "${MY_OVERLAY_TEMPLATES}" )"
+	X="${PRIOR_CONFIG_DIR}${ALLSKY_MY_OVERLAY_TEMPLATES/${ALLSKY_CONFIG}/}"
+	local Z="$( dirname "${ALLSKY_MY_OVERLAY_TEMPLATES}" )"
 	ITEM="${SPACE}'config/$( basename "${Z}" )/$( basename "${X}" )' directory"
 	if [[ -d ${X} ]]; then
 		display_msg --log progress "${ITEM} (copying)"
-		cp -ar "${X}" "$( dirname "${MY_OVERLAY_TEMPLATES}" )"
+		cp -ar "${X}" "$( dirname "${ALLSKY_MY_OVERLAY_TEMPLATES}" )"
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
@@ -2696,7 +2696,7 @@ restore_prior_files()
             OVERLAY_NAME="${OVERLAY_NAME:-unknown.json}"
             display_msg --log progress "${ITEM} (renamed to '${OVERLAY_NAME}')"
 
-            DEST_FILE="${MY_OVERLAY_TEMPLATES}/${OVERLAY_NAME}"
+            DEST_FILE="${ALLSKY_MY_OVERLAY_TEMPLATES}/${OVERLAY_NAME}"
 
             # Add the metadata for the overlay manager
             # shellcheck disable=SC2086
@@ -2712,11 +2712,11 @@ restore_prior_files()
 
         for s in daytimeoverlay nighttimeoverlay
         do
-            doV "" "OVERLAY_NAME" "${s}" "text" "${SETTINGS_FILE}"
+            doV "" "OVERLAY_NAME" "${s}" "text" "${ALLSKY_SETTINGS_FILE}"
         done
     else
-		doV "" "DAYTIME_OVERLAY" "daytimeoverlay" "text" "${SETTINGS_FILE}"
-		doV "" "NIGHTTIME_OVERLAY" "nighttimeoverlay" "text" "${SETTINGS_FILE}"
+		doV "" "DAYTIME_OVERLAY" "daytimeoverlay" "text" "${ALLSKY_SETTINGS_FILE}"
+		doV "" "NIGHTTIME_OVERLAY" "nighttimeoverlay" "text" "${ALLSKY_SETTINGS_FILE}"
     fi
 
 	if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
@@ -2787,7 +2787,7 @@ restore_prior_files()
 	COPIED_PRIOR_CONFIG_SH="true"		# Global variable
 	if [[ -s ${PRIOR_CONFIG_FILE} ]]; then
 		# This copies the settings from the prior config file to the settings file.
-		convert_config_sh "${PRIOR_CONFIG_FILE}" "${SETTINGS_FILE}" "install" ||
+		convert_config_sh "${PRIOR_CONFIG_FILE}" "${ALLSKY_SETTINGS_FILE}" "install" ||
 			COPIED_PRIOR_CONFIG_SH="false"
 	fi
 	STATUS_VARIABLES+=( "COPIED_PRIOR_CONFIG_SH='${COPIED_PRIOR_CONFIG_SH}'\n" )
@@ -2811,7 +2811,7 @@ restore_prior_files()
 	fi
 	COPIED_PRIOR_FTP_SH="true"			# Global variable
 	if [[ -s ${PRIOR_FTP_FILE} ]]; then
-		convert_ftp_sh "${PRIOR_FTP_FILE}" "${SETTINGS_FILE}" "install" ||
+		convert_ftp_sh "${PRIOR_FTP_FILE}" "${ALLSKY_SETTINGS_FILE}" "install" ||
 			COPIED_PRIOR_FTP_SH="false"
 	fi
 	STATUS_VARIABLES+=( "COPIED_PRIOR_FTP_SH='${COPIED_PRIOR_FTP_SH}'\n" )
@@ -3002,7 +3002,7 @@ restore_prior_website_files()
 		else
 			# Prior Website config file doesn't exist.
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-			doV "uselocalwebsite" "false" "uselocalwebsite" "boolean" "${SETTINGS_FILE}"
+			doV "uselocalwebsite" "false" "uselocalwebsite" "boolean" "${ALLSKY_SETTINGS_FILE}"
 		fi
 	fi
 
@@ -3199,7 +3199,7 @@ do_restore()
 	display_image "ReviewNeeded"
 
 	# Force the user to look at the settings before Allsky will run.
-	update_json_file -d ".lastchanged" "" "${SETTINGS_FILE}"
+	update_json_file -d ".lastchanged" "" "${ALLSKY_SETTINGS_FILE}"
 	set_allsky_status "${ALLSKY_STATUS_NEEDS_REVIEW}"
 
 	exit_installation 0 "${STATUS_OK}" ""
@@ -3290,13 +3290,13 @@ install_Python()
 
 	# Doing all the python dependencies at once can run /tmp out of space, so do one at a time.
 	# This also allows us to display progress messages.
-	M=" for ${PI_OS^}"
-	R="-${PI_OS}"
-	if [[ ${PI_OS} == "buster" ]]; then
+	M=" for ${ALLSKY_PI_OS^}"
+	R="-${ALLSKY_PI_OS}"
+	if [[ ${ALLSKY_PI_OS} == "buster" ]]; then
 		# Force pip upgrade, without this installations on Buster fail.
 		pip3 install --upgrade pip > /dev/null 2>&1
-	elif [[ ${PI_OS} != "bullseye" && ${PI_OS} != "bookworm" ]]; then
-		display_msg --log warning "Unknown operating system: ${PI_OS}."
+	elif [[ ${ALLSKY_PI_OS} != "bullseye" && ${ALLSKY_PI_OS} != "bookworm" ]]; then
+		display_msg --log warning "Unknown operating system: ${ALLSKY_PI_OS}."
 		M=""
 		R=""
 	fi
@@ -3323,7 +3323,7 @@ install_Python()
 
 	NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
 
-	if [[ ${PI_OS} == "bookworm" ]]; then
+	if [[ ${ALLSKY_PI_OS} == "bookworm" ]]; then
 		PKGs="python3-full libgfortran5 libopenblas0-pthread"
 		display_msg --logonly progress "Installing ${PKGs}."
 		TMP="${ALLSKY_LOGS}/python3-full.log"
@@ -3346,9 +3346,9 @@ install_Python()
 	# Astropy is no longer supported on Buster due to its
 	# dependencies requiring later versions of Python.
 	# This *hack* will force the require version of Astropy onto Buster.
-	if [[ ${PI_OS} == "buster" ]]; then
+	if [[ ${ALLSKY_PI_OS} == "buster" ]]; then
 		NAME="Astrophy"
-		display_msg --log progress "Forcing build of ${NAME} on ${PI_OS}."
+		display_msg --log progress "Forcing build of ${NAME} on ${ALLSKY_PI_OS}."
 		TMP="${ALLSKY_LOGS}/${NAME}.log"
 		{ 
 			PKGs="setuptools setuptools_scm wheel cython==0.29.22"
@@ -3414,7 +3414,7 @@ install_Python()
 	CMD+="\nDevice.ensure_pin_factory()"
 	CMD+="\nprint(Device.pin_factory.board_info.model)"
 	pimodel="$( echo -e "${CMD}" | python3 2>/dev/null )"	# hide error since it only applies to Pi 5.
-	echo "${pimodel}" > "${PI_VERSION_FILE}"
+	echo "${pimodel}" > "${ALLSKY_PI_VERSION_FILE}"
 
 	# if we are on the pi 5 then uninstall rpi.gpio, using the virtual environment which will always
 	# exist on the pi 5. lgpio is installed globally so will be used after rpi.gpio is removed
@@ -3441,16 +3441,16 @@ install_overlay()
 	cp  "${ALLSKY_REPO}/allskyvariables.json.repo" "${ALLSKY_CONFIG}/allskyvariables.json"
 
 
-	# MY_OVERLAY_TEMPLATES is not in ALLSKY_REPI and we haven't restored
+	# ALLSKY_MY_OVERLAY_TEMPLATES is not in ALLSKY_REPI and we haven't restored
 	# anything yet, so create the directory.
-	mkdir -p "${MY_OVERLAY_TEMPLATES}"
+	mkdir -p "${ALLSKY_MY_OVERLAY_TEMPLATES}"
 #xx TODO: these are done in set_permissions, so remove from here:
-#xx	sudo chgrp "${WEBSERVER_GROUP}" "${MY_OVERLAY_TEMPLATES}"
-#xx	sudo chmod 775 "${MY_OVERLAY_TEMPLATES}"	
+#xx	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_MY_OVERLAY_TEMPLATES}"
+#xx	sudo chmod 775 "${ALLSKY_MY_OVERLAY_TEMPLATES}"	
 
 	# Globals: SENSOR_WIDTH, SENSOR_HEIGHT, FULL_OVERLAY_NAME, SHORT_OVERLAY_NAME, OVERLAY_NAME
-	SENSOR_WIDTH="$( settings ".sensorWidth" "${CC_FILE}" )"
-	SENSOR_HEIGHT="$( settings ".sensorHeight" "${CC_FILE}" )"
+	SENSOR_WIDTH="$( settings ".sensorWidth" "${ALLSKY_CC_FILE}" )"
+	SENSOR_HEIGHT="$( settings ".sensorHeight" "${ALLSKY_CC_FILE}" )"
 	FULL_OVERLAY_NAME="overlay-${CAMERA_TYPE}_${CAMERA_MODEL}-${SENSOR_WIDTH}x${SENSOR_HEIGHT}-both.json"
 	SHORT_OVERLAY_NAME="overlay-${CAMERA_TYPE}.json"
 
@@ -3466,7 +3466,7 @@ install_overlay()
 		display_msg --log progress "Using overlay '${OVERLAY_NAME}'."
 		for s in daytimeoverlay nighttimeoverlay
 		do
-			local VALUE=""; doV "" "OVERLAY_NAME" "${s}" "text" "${SETTINGS_FILE}"
+			local VALUE=""; doV "" "OVERLAY_NAME" "${s}" "text" "${ALLSKY_SETTINGS_FILE}"
 		done
 	fi
 
@@ -3479,7 +3479,7 @@ log_info()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 
-	display_msg --logonly info "PI_OS = ${PI_OS}"
+	display_msg --logonly info "ALLSKY_PI_OS = ${ALLSKY_PI_OS}"
 ##	display_msg --logonly info "/etc/os-release:\n$( indent "$( grep -v "URL" /etc/os-release )" )"
 	display_msg --logonly info "uname = $( uname -a )"
 	display_msg --logonly info "id = $( id )"
@@ -3496,8 +3496,8 @@ check_for_raspistill()
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 	local W
 
-	if W="$( which raspistill )" && [[ ${PI_OS} != "buster" ]]; then
-		display_msg --longonly info "Renaming 'raspistill' on ${PI_OS}."
+	if W="$( which raspistill )" && [[ ${ALLSKY_PI_OS} != "buster" ]]; then
+		display_msg --longonly info "Renaming 'raspistill' on ${ALLSKY_PI_OS}."
 		sudo mv "${W}" "${W}-OLD"
 	fi
 
@@ -3512,7 +3512,7 @@ check_if_buster()
 	[[ ${SKIP} == "true" ]] && return
 	local MSG
 
-	[[ ${PI_OS} != "buster" ]] && return
+	[[ ${ALLSKY_PI_OS} != "buster" ]] && return
 
 	MSG="WARNING: You are running the older Buster operating system."
 	MSG+="\n\n\n>>> This is the last Allsky release that will support Buster. <<<\n\n"
@@ -3534,18 +3534,19 @@ check_if_buster()
 display_image()
 {
 	local IMAGE_OR_CUSTOM="${1}"
-	local FULL_FILENAME  FILENAME  EXTENSION  COLOR  CUSTOM_MESSAGE  MSG  X  I
+	local ALLSKY_FULL_FILENAME  ALLSKY_FILENAME  ALLSKY_EXTENSION  COLOR  CUSTOM_MESSAGE  MSG  X  I
 
-	if [[ -s ${SETTINGS_FILE} ]]; then		# The file may not exist yet.
-		FULL_FILENAME="$( settings ".filename" )"
-		FILENAME="${FULL_FILENAME%.*}"
-		EXTENSION="${FULL_FILENAME##*.}"
+	if [[ -s ${ALLSKY_SETTINGS_FILE} ]]; then		# The file may not exist yet.
+		# These variables are defined in variables.sh, but require the settings file to exist.
+		ALLSKY_FULL_FILENAME="$( settings ".filename" )"
+		ALLSKY_FILENAME="${ALLSKY_FULL_FILENAME%.*}"
+		ALLSKY_EXTENSION="${ALLSKY_FULL_FILENAME##*.}"
 	else
-		FILENAME="image"
-		EXTENSION="jpg"
+		ALLSKY_FILENAME="image"
+		ALLSKY_EXTENSION="jpg"
 	fi
 
-	I="${ALLSKY_TMP}/${FILENAME}.${EXTENSION}"
+	I="${ALLSKY_TMP}/${ALLSKY_FILENAME}.${ALLSKY_EXTENSION}"
 	if [[ -z ${IMAGE_OR_CUSTOM} ]]; then		# No IMAGE_OR_CUSTOM means remove the image
 		display_msg --logonly info "Removing prior notification image."
 		rm -f "${I}"
@@ -3561,8 +3562,8 @@ display_image()
 		display_msg --logonly info "${MSG}"
 		MSG="$( "${ALLSKY_SCRIPTS}/generateNotificationImages.sh" \
 			--directory "${ALLSKY_TMP}" \
-			"${FILENAME}" "${COLOR}" "" "" "" "" \
-			"" "10" "${COLOR}" "${EXTENSION}" "" "${CUSTOM_MESSAGE}"  2>&1 >/dev/null )"
+			"${ALLSKY_FILENAME}" "${COLOR}" "" "" "" "" \
+			"" "10" "${COLOR}" "${ALLSKY_EXTENSION}" "" "${CUSTOM_MESSAGE}"  2>&1 >/dev/null )"
 		if [[ -n ${MSG} ]]; then
 			display_msg --logonly info "${MSG}"
 		fi
@@ -3577,7 +3578,7 @@ display_image()
 			touch "${ALLSKY_POST_INSTALL_ACTIONS}_initial_message"
 		fi
 
-		X="${IMAGE_OR_CUSTOM}.${EXTENSION}"
+		X="${IMAGE_OR_CUSTOM}.${ALLSKY_EXTENSION}"
 		display_msg --logonly info "Displaying notification image '${X}'"
 		cp "${ALLSKY_NOTIFICATION_IMAGES}/${X}" "${I}" ||
 			display_msg --log info "WARNING: unable to copy '${X}' to '${I}'"
@@ -3610,7 +3611,7 @@ sort_settings_file()
 		--convert \
 		--order \
 		--settings-file "${FILE}" \
-		--options-file "${OPTIONS_FILE}" \
+		--options-file "${ALLSKY_OPTIONS_FILE}" \
 		> "${TMP_FILE}" 2>&1
 	if [[ $? -ne 0 ]]; then
 		MSG="Unable to sort settings file '${FILE}': $( < "${TMP_FILE}" ); ignoring"
@@ -3955,7 +3956,7 @@ do_done()
 		"${ALLSKY_SCRIPTS}/addMessage.sh" --type info --msg "${MSG2}"
 
 		# Set it so the user isn't asked to review the Allsky settings.
-		set_now "lastchanged" "${SETTINGS_FILE}"
+		set_now "lastchanged" "${ALLSKY_SETTINGS_FILE}"
 
 	elif [[ ${CONFIGURATION_NEEDED} == "true" ]]; then
 		display_image "ConfigurationNeeded"

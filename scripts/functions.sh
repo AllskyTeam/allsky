@@ -122,11 +122,11 @@ function doExit()
 		if [[ -n ${CUSTOM_MESSAGE} ]]; then
 			# Create a custom error message.
 			# If we error out before variables.sh is sourced in,
-			# ${FILENAME} and ${EXTENSION} won't be set so guess at what they are.
+			# ${ALLSKY_FILENAME} and ${ALLSKY_EXTENSION} won't be set so guess what they are.
 			"${ALLSKY_SCRIPTS}/generateNotificationImages.sh" --directory "${ALLSKY_TMP}" \
-				"${FILENAME:-"image"}" \
+				"${ALLSKY_FILENAME:-"image"}" \
 				"${COLOR}" "" "85" "" "" \
-				"" "10" "${COLOR}" "${EXTENSION:-"jpg"}" "" "${CUSTOM_MESSAGE}"
+				"" "10" "${COLOR}" "${ALLSKY_EXTENSION:-"jpg"}" "" "${CUSTOM_MESSAGE}"
 			echo "Stopping Allsky: ${CUSTOM_MESSAGE}"
 
 		elif [[ ${TYPE} != "no-image" ]]; then
@@ -433,7 +433,7 @@ function get_connected_camera_models()
 					print model;
 				}
 			}
-		}' "${CONNECTED_CAMERAS_INFO}"
+		}' "${ALLSKY_CONNECTED_CAMERAS_INFO}"
 }
 
 
@@ -741,7 +741,7 @@ function checkAndGetNewerFile()
 		local BRANCH="${2}"
 		shift 2
 	else
-		local BRANCH="${GITHUB_MAIN_BRANCH}"
+		local BRANCH="${ALLSKY_GITHUB_MAIN_BRANCH}"
 	fi
 
 	if [[ $# -ne 3 ]]; then
@@ -750,7 +750,7 @@ function checkAndGetNewerFile()
 	fi
 
 	local CURRENT_FILE="${1}"
-	local GIT_FILE="${GITHUB_RAW_ROOT}/${GITHUB_ALLSKY_REPO}/${BRANCH}/${2}"
+	local GIT_FILE="${ALLSKY_GITHUB_RAW_ROOT}/${ALLSKY_GITHUB_ALLSKY_REPO}/${BRANCH}/${2}"
 	local DOWNLOADED_FILE="${3}"
 	# Download the file and put in DOWNLOADED_FILE
 	X="$( curl --show-error --silent "${GIT_FILE}" )"
@@ -906,7 +906,7 @@ function settings()
 		return 1
 	fi
 
-	local FILE="${2:-${SETTINGS_FILE}}"
+	local FILE="${2:-${ALLSKY_SETTINGS_FILE}}"
 	if [[ ! -f ${FILE} ]]; then
 		echo "${M}: File '${FILE}' does not exist!  Cannot get '${FIELD}'." >&2
 		return 2
@@ -1364,7 +1364,7 @@ function activate_python_venv()
 
 	local ACTIVATE="${ALLSKY_PYTHON_VENV}/bin/activate"
 
-	if [[ ${PI_OS} == "bookworm" && -s ${ACTIVATE} ]]; then
+	if [[ ${ALLSKY_PI_OS} == "bookworm" && -s ${ACTIVATE} ]]; then
 		#shellcheck disable=SC1090,SC1091
 		source "${ACTIVATE}" || exit 1
 		PYTHON_VENV_ACTIVATED="true"
@@ -1426,6 +1426,7 @@ function get_model_from_sensor()
 {
 	local SENSOR="${1}"
 
+	# shellcheck disable=SC2154
 	gawk --field-separator '\t' -v sensor="${SENSOR}" '
 		BEGIN {
 			if (sensor == "") {
@@ -1461,7 +1462,7 @@ function get_model_from_sensor()
 				printf("unknown_sensor_%s\n", sensor);
 				exit(1);
 			}
-		} ' "${RPi_SUPPORTED_CAMERAS}"
+		} ' "${ALLSKY_RPi_SUPPORTED_CAMERAS}"
 }
 
 
@@ -1560,7 +1561,7 @@ function processAndUploadImage()
 	# shellcheck disable=SC2154
 	if [[ ${S_imageresizeuploadswidth} -gt 0 ]]; then
 		# Don't overwrite IMAGE_FILE since the web server(s) may be looking at it.
-		TEMP_FILE="${CAPTURE_SAVE_DIR}/resize-${FULL_FILENAME}"
+		TEMP_FILE="${ALLSKY_CAPTURE_SAVE_DIR}/resize-${ALLSKY_FULL_FILENAME}"
 	
 		# create temporary copy to resize
 		if ! cp "${IMAGE_FILE}" "${TEMP_FILE}" ; then
@@ -1590,7 +1591,7 @@ function processAndUploadImage()
 	# If an existing notification is being uploaded,
 	# wait for it to finish then upload this one (--wait).
 	upload_all --remote-web --remote-server --wait --silent \
-		"${UPLOAD_FILE}" "" "${FULL_FILENAME}" "NotificationImage"
+		"${UPLOAD_FILE}" "" "${ALLSKY_FULL_FILENAME}" "NotificationImage"
 	RET=$?
 
 	# If we created a temporary copy, delete it.

@@ -252,8 +252,8 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 
 		# Display a warning message
 		"${ALLSKY_SCRIPTS}/generateNotificationImages.sh" --directory "${ALLSKY_TMP}" \
-			"${FILENAME}" "yellow" "" "85" "" "" \
-			"" "5" "yellow" "${EXTENSION}" "" \
+			"${ALLSKY_FILENAME}" "yellow" "" "85" "" "" \
+			"" "5" "yellow" "${ALLSKY_EXTENSION}" "" \
 			"WARNING:\n\nResetting USB bus\n${REASON}.\nAttempt ${NUM_USB_RESETS}."
 
 		SEARCH="${ZWO_VENDOR}:${ZWO_CAMERA_ID}"
@@ -283,8 +283,8 @@ else	# RPi
 fi
 
 # "true" means ignore errors
-get_connected_cameras_info "true" > "${CONNECTED_CAMERAS_INFO}"
-if grep --silent "^${CAMERA_TYPE}" "${CONNECTED_CAMERAS_INFO}" ; then
+get_connected_cameras_info "true" > "${ALLSKY_CONNECTED_CAMERAS_INFO}"
+if grep --silent "^${CAMERA_TYPE}" "${ALLSKY_CONNECTED_CAMERAS_INFO}" ; then
 	CAMERA_TYPE_FOUND="true"
 else
 	CAMERA_TYPE_FOUND="false"
@@ -326,7 +326,7 @@ if [[ ! ${CCM} =~ "${CAM}" ]]; then
 fi
 
 # Make sure the settings file is linked to the camera-specific file.
-if ! MSG="$( check_settings_link "${SETTINGS_FILE}" )" ; then
+if ! MSG="$( check_settings_link "${ALLSKY_SETTINGS_FILE}" )" ; then
 	"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --cmd "${MSG}"
 	E_ "ERROR: ${MSG}" >&2
 fi
@@ -334,7 +334,7 @@ fi
 # Make directories that need to exist.
 if [[ -d ${ALLSKY_TMP} ]]; then
 	# remove any lingering old image files.
-	rm -f "${ALLSKY_TMP}/${FILENAME}"-20*."${EXTENSION}"	# "20" for 2000 and later
+	rm -f "${ALLSKY_TMP}/${ALLSKY_FILENAME}"-20*."${ALLSKY_EXTENSION}"	# "20" for 2000 and later
 else
 	# We should never get here since ${ALLSKY_TMP} is created during installation,
 	# but "just in case"...
@@ -373,7 +373,7 @@ fi
 		grep -E -i -v "^config=|^debuglevel=^cmd=|^cameramodel|^cameranumber|^locale="
 
 	echo "version=${ALLSKY_VERSION}"
-	echo "save_dir=${CAPTURE_SAVE_DIR}"
+	echo "save_dir=${ALLSKY_CAPTURE_SAVE_DIR}"
 	[[ ${PREVIEW} == "true" ]] && echo "preview=true"
 } > "${ARGS_FILE}"
 
@@ -381,9 +381,9 @@ fi
 if [[ ${IMG_UPLOAD_FREQUENCY} -ne 1 ]]; then
 	# Save "1" so we upload the first image.
 	# saveImage.sh will write ${IMG_UPLOAD_FREQUENCY} to the file as needed.
-	echo "1" > "${FREQUENCY_FILE}"		# FREQUENCY_FILE is global
+	echo "1" > "${ALLSKY_FREQUENCY_FILE}"		# ALLSKY_FREQUENCY_FILE is global
 else
-	rm -f "${FREQUENCY_FILE}"
+	rm -f "${ALLSKY_FREQUENCY_FILE}"
 fi
 
 # Clear up any flow timings

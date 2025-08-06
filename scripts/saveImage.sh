@@ -34,7 +34,7 @@ export DAY_OR_NIGHT="${1}"
 # ${CURRENT_IMAGE} is the full path to a uniquely-named file created by the capture program.
 # The file name is its final name in the ${ALLSKY_IMAGES}/<date> directory.
 # Because it's a unique name we don't have to worry about another process overwritting it.
-# We modify the file as needed and ultimately save a link to it as ${FULL_FILENAME} since
+# We modify the file as needed and ultimately save a link to it as ${ALLSKY_FULL_FILENAME} since
 # that's what websites look for and what is uploaded.
 
 # Export so other scripts can use it.
@@ -160,7 +160,7 @@ function display_error_and_exit()	# error message, notification string
 	echo -e "${NC}"
 	# Create a custom error message.
 	"${ALLSKY_SCRIPTS}/copyNotificationImage.sh" --expires 15 "custom" \
-		"red" "" "85" "" "" "" "10" "red" "${EXTENSION}" "" \
+		"red" "" "85" "" "" "" "10" "red" "${ALLSKY_EXTENSION}" "" \
 		"*** ERROR ***\nAllsky Stopped!\nInvalid ${NOTIFICATION_STRING} settings\nSee\n/var/log/allsky.log"
 
 	# Don't let the service restart us because we will get the same error again.
@@ -269,8 +269,8 @@ deactivate_python_venv
 # in several places, remove our PID lock now.
 rm -f "${PID_FILE}"
 
-SAVED_FILE="${CURRENT_IMAGE}"						# The name of the file saved from the camera.
-WEBSITE_FILE="${WORKING_DIR}/${FULL_FILENAME}"		# The name of the file the websites look for
+SAVED_FILE="${CURRENT_IMAGE}"					# The name of the file saved from the camera.
+WEBSITE_FILE="${WORKING_DIR}/${ALLSKY_FULL_FILENAME}"	# The file name the websites look for
 
 TIMELAPSE_MINI_UPLOAD_VIDEO="${S_minitimelapseupload}"
 # If needed, save the current image in today's directory.
@@ -415,12 +415,11 @@ IMG_UPLOAD_FREQUENCY="${S_imageuploadfrequency}"
 if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 	# First check if we should upload this image
 	if [[ ${IMG_UPLOAD_FREQUENCY} -ne 1 ]]; then
-		FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
-		if [[ ! -f ${FREQUENCY_FILE} ]]; then
+		if [[ ! -f ${ALLSKY_FREQUENCY_FILE} ]]; then		# global variable
 			# The file may have been deleted, or the user may have just changed the frequency.
 			LEFT=${IMG_UPLOAD_FREQUENCY}
 		else
-			LEFT=$( < "${FREQUENCY_FILE}" )
+			LEFT=$( < "${ALLSKY_FREQUENCY_FILE}" )
 		fi
 		if [[ ${LEFT} -le 1 ]]; then
 			# Reset the counter then upload this image below.
@@ -428,11 +427,11 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 				echo "${ME}: resetting LEFT counter to ${IMG_UPLOAD_FREQUENCY}, then uploading image."
 			fi
 
-			echo "${IMG_UPLOAD_FREQUENCY}" > "${FREQUENCY_FILE}"
+			echo "${IMG_UPLOAD_FREQUENCY}" > "${ALLSKY_FREQUENCY_FILE}"
 		else
 			# Not ready to upload yet, so decrement the counter
 			LEFT=$((LEFT - 1))
-			echo "${LEFT}" > "${FREQUENCY_FILE}"
+			echo "${LEFT}" > "${ALLSKY_FREQUENCY_FILE}"
 			# This ALLSKY_DEBUG_LEVEL should be same as what's in upload.sh
 			[[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "${ME}: Not uploading image: ${LEFT} images(s) left."
 
@@ -475,7 +474,7 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 			if [[ ${S_remotewebsiteimageuploadoriginalname} == "true" ]]; then
 				DESTINATION_NAME=""
 			else
-				DESTINATION_NAME="${FULL_FILENAME}"
+				DESTINATION_NAME="${ALLSKY_FULL_FILENAME}"
 			fi
 			# Goes in root of Website so second arg is "".
 			upload_all --remote-web "${FILE_TO_UPLOAD}" "" "${DESTINATION_NAME}" "SaveImage"
@@ -486,7 +485,7 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 			if [[ ${S_remoteserverimageuploadoriginalname} == "true" ]]; then
 				DESTINATION_NAME=""
 			else
-				DESTINATION_NAME="${FULL_FILENAME}"
+				DESTINATION_NAME="${ALLSKY_FULL_FILENAME}"
 			fi
 			# Goes in root of Website so second arg is "".
 			upload_all --remote-server "${FILE_TO_UPLOAD}" "" "${DESTINATION_NAME}" "SaveImage"

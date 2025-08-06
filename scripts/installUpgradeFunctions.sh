@@ -21,7 +21,7 @@ export ALLSKY_DEFINES_INC="allskyDefines.inc"
 export REPO_WEBUI_DEFINES_FILE="${ALLSKY_REPO}/${ALLSKY_DEFINES_INC}.repo"
 export REPO_LIGHTTPD_FILE="${ALLSKY_REPO}/lighttpd.conf.repo"
 export REPO_AVI_FILE="${ALLSKY_REPO}/avahi-daemon.conf.repo"
-export REPO_OPTIONS_FILE="${ALLSKY_REPO}/$( basename "${OPTIONS_FILE}" ).repo"
+export REPO_OPTIONS_FILE="${ALLSKY_REPO}/$( basename "${ALLSKY_OPTIONS_FILE}" ).repo"
 export REPO_ENV_FILE="${ALLSKY_REPO}/$( basename "${ALLSKY_ENV}" ).repo"
 export REPO_WEBSITE_CONFIGURATION_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
 
@@ -94,7 +94,7 @@ function get_Git_version()
 	local BRANCH="${1}"
 	local PACKAGE="${2}"
 	local VF="$( basename "${ALLSKY_VERSION_FILE}" )"
-	local V="$( curl --show-error --silent "${GITHUB_RAW_ROOT}/${PACKAGE}/${BRANCH}/${VF}" | tr -d '\n\r' )"
+	local V="$( curl --show-error --silent "${ALLSKY_GITHUB_RAW_ROOT}/${PACKAGE}/${BRANCH}/${VF}" | tr -d '\n\r' )"
 	# "404" means the branch isn't found since all new branches have a version file.
 	[[ ${V} != "404: Not Found" ]] && echo -n "${V}"
 }
@@ -401,7 +401,7 @@ function update_json_file()		# [-d] field, new value, file, [type]
 		return 1
 	fi
 
-	FILE="${3:-${SETTINGS_FILE}}"
+	FILE="${3:-${ALLSKY_SETTINGS_FILE}}"
 	TEMP="/tmp/$$"
 
 	if [[ ${DELETE} == "true" ]]; then
@@ -503,7 +503,7 @@ function replace_website_placeholders()
 			MINI_TLAPSE_DISPLAY_VALUE="true"
 			if [[ ${TYPE} == "local" ]]; then
 				#shellcheck disable=SC2153
-				MINI_TLAPSE_URL_VALUE="/${IMG_DIR}/mini-timelapse.mp4"
+				MINI_TLAPSE_URL_VALUE="/${ALLSKY_IMG_DIR}/mini-timelapse.mp4"
 			else
 				MINI_TLAPSE_URL_VALUE="mini-timelapse.mp4"
 			fi
@@ -594,9 +594,9 @@ function replace_website_placeholders()
 
 	if [[ ${TYPE} == "local" ]]; then
 		#shellcheck disable=SC2153
-		IMAGE_NAME="/${IMG_DIR}/${FULL_FILENAME}"
+		IMAGE_NAME="/${ALLSKY_IMG_DIR}/${ALLSKY_FULL_FILENAME}"
 	else
-		IMAGE_NAME="${FULL_FILENAME}"
+		IMAGE_NAME="${ALLSKY_FULL_FILENAME}"
 	fi
 
 	"${ALLSKY_SCRIPTS}/updateJsonFile.sh" --verbosity silent --file "${FILE}" \
@@ -800,7 +800,7 @@ function create_lighttpd_config_file()
 		-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};g" \
 		-e "s;XX_ALLSKY_DOCUMENTATION_XX;${ALLSKY_DOCUMENTATION};g" \
 		-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};g" \
-		-e "s;XX_MY_OVERLAY_TEMPLATES_XX;${MY_OVERLAY_TEMPLATES};g" \
+		-e "s;XX_ALLSKY_MY_OVERLAY_TEMPLATES_XX;${ALLSKY_MY_OVERLAY_TEMPLATES};g" \
 			"${REPO_LIGHTTPD_FILE}"  >  "${TMP}"
 	sudo install -m 0644 "${TMP}" "${LIGHTTPD_CONFIG_FILE}" && rm -f "${TMP}"
 }
@@ -1362,7 +1362,7 @@ function prompt_for_lat_long()
 			return
 
 		elif VALUE="$( convertLatLong "${VALUE}" "${SETTING_NAME}" 2>&1 )" ; then
-			update_json_file ".${SETTING_NAME}" "${VALUE}" "${SETTINGS_FILE}"
+			update_json_file ".${SETTING_NAME}" "${VALUE}" "${ALLSKY_SETTINGS_FILE}"
 			display_msg --log progress "${WEBUI_SETTING_LABEL} set to ${VALUE}."
 			echo "${VALUE}"
 			return
@@ -1378,11 +1378,11 @@ function prompt_for_lat_long()
 # If we can't, prompt for them.
 function get_lat_long()
 {
-	# Global: SETTINGS_FILE
+	# Global: ALLSKY_SETTINGS_FILE
 	local MSG  LATITUDE  LAT  LONGITUDE  LON  RAW_LOCATION  MY_LOCATION_PARTS  ERR  X
 
-	if [[ ! -f ${SETTINGS_FILE} ]]; then
-		display_msg --log error "INTERNAL ERROR: '${SETTINGS_FILE}' not found!"
+	if [[ ! -f ${ALLSKY_SETTINGS_FILE} ]]; then
+		display_msg --log error "INTERNAL ERROR: '${ALLSKY_SETTINGS_FILE}' not found!"
 		return 1
 	fi
 

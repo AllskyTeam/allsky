@@ -33,12 +33,12 @@ usage_and_exit()
 	else
 		E_ "${MSG}"
 	fi
-	echo "Where:"
-	echo "   --help        Displays this message and exits."
-	echo "   --fromWebUI   Displays output to be displayed in the WebUI."
-	echo "   --no-info     Skips checking for Informational items."
-	echo "   --no-warn     Skips checking for Warning items."
-	echo "   --no-error    Skips checking for Error items."
+	echo "Arguments:"
+	echo "   --help        Display this message and exit."
+	echo "   --fromWebUI   Display output to be displayed in the WebUI."
+	echo "   --no-info     Skip checking for Informational items."
+	echo "   --no-warn     Skip checking for Warning items."
+	echo "   --no-error    Skip checking for Error items."
 	echo
 	exit "${RET}"
 }
@@ -377,7 +377,7 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 		echo "FIX: Reboot."
 	fi
 
-	if [[ ${PI_OS} == "buster" ]]; then
+	if [[ ${ALLSKY_PI_OS} == "buster" ]]; then
 		heading "Warning"
 		echo "Your Pi is running the old 'Buster' operating system;"
 		echo "this is the last release of Allsky that supports Buster."
@@ -409,7 +409,7 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 		# Check if timelapse size is "too big" and will likely cause an error.
 		# This is normally only an issue with the libx264 video codec which has
 		# a dimension limit that we put in PIXEL_LIMIT.
-		if [[ ${PI_OS} == "buster" ]]; then
+		if [[ ${ALLSKY_PI_OS} == "buster" ]]; then
 			PIXEL_LIMIT=$((4096 * 2304))		# Limit of libx264
 		else
 			PIXEL_LIMIT=$((8192 * 4320))
@@ -706,7 +706,7 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 	fi
 
 	##### Make sure the settings file is properly linked.
-	if ! MSG="$( check_settings_link "${SETTINGS_FILE}" )" ; then
+	if ! MSG="$( check_settings_link "${ALLSKY_SETTINGS_FILE}" )" ; then
 		heading "Error"
 		echo -e "${MSG}"
 	fi
@@ -823,11 +823,11 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 			echo    " directory does not exist."
 			echo    "FIX: Either disable the setting or take dark frames."
 		else
-			NUM_DARKS=$( find "${ALLSKY_DARKS}" -name "*.${EXTENSION}" 2>/dev/null | wc -l)
+			NUM_DARKS=$( find "${ALLSKY_DARKS}" -name "*.${ALLSKY_EXTENSION}" 2>/dev/null | wc -l)
 			if [[ ${NUM_DARKS} -eq 0 ]]; then
 				heading "Error"
 				echo -n "${WSNs}${S_usedarkframes_label}${WSNe} is set but there are no darks"
-				echo    " in '${ALLSKY_DARKS}' with extension of '${EXTENSION}'."
+				echo    " in '${ALLSKY_DARKS}' with extension of '${ALLSKY_EXTENSION}'."
 				echo    "FIX: Either disable the setting or take dark frames."
 			fi
 		fi

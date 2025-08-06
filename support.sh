@@ -55,7 +55,7 @@ function set_messages()
 	GITHUB_ERROR+="\n"
 	GITHUB_ERROR+="It can be found at the end of the Github URL, for example if the URL is:\n"
 	GITHUB_ERROR+="\n"
-	GITHUB_ERROR+="    ${DIALOG_BLUE}${GITHUB_ROOT}/${GITHUB_ALLSKY_REPO}/discussions/4119${DIALOG_NC}\n"
+	GITHUB_ERROR+="    ${DIALOG_BLUE}${ALLSKY_GITHUB_ROOT}/${ALLSKY_GITHUB_ALLSKY_REPO}/discussions/4119${DIALOG_NC}\n"
 	GITHUB_ERROR+="\n"
 	GITHUB_ERROR+="the post is a Discussion whose number is ${DIALOG_BLUE}4119${DIALOG_NC}."
 
@@ -130,8 +130,8 @@ function collect_support_info()
 	CPU_TOTAL="$( nproc )"
 	MEMORY_INFO="$( free -h )"
 	MEM_TOTAL="$( echo "${MEMORY_INFO}" | grep Mem | gawk '{print $2}' )"
-	if [[ -s ${PI_VERSION_FILE} ]]; then
-		PI_MODEL="$( < "${PI_VERSION_FILE}" )"
+	if [[ -s ${ALLSKY_PI_VERSION_FILE} ]]; then
+		PI_MODEL="$( < "${ALLSKY_PI_VERSION_FILE}" )"
 	else
 		PI_MODEL="unknown"
 	fi

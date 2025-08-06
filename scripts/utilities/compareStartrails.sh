@@ -145,7 +145,7 @@ if [[ -z ${COUNT} ]]; then
 fi
 
 # Create / empty the output directory.
-NUM="$( find "${OUT_DIRECTORY}" -type f -name "*.${EXTENSION}" -print 2>/dev/null | wc -l )"
+NUM="$( find "${OUT_DIRECTORY}" -type f -name "*.${ALLSKY_EXTENSION}" -print 2>/dev/null | wc -l )"
 if [[ ${NUM} -gt 0 ]]; then
 	# At least one item in the directory.
 	if [[ ${HTML} == "false" ]]; then
@@ -180,9 +180,9 @@ sudo chown "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${OUT_DIRECTORY}"
 ### TODO: replace with DB query.  Add intelligence to list, e.g., night only, ...
 
 IMAGES="${OUT_DIRECTORY}/images.txt"
-find "${IN_DIRECTORY}" -type f -name "*.${EXTENSION}" 2>/dev/null | head -"${COUNT}" > "${IMAGES}"
+find "${IN_DIRECTORY}" -type f -name "*.${ALLSKY_EXTENSION}" 2>/dev/null | head -"${COUNT}" > "${IMAGES}"
 if [[ ! -s ${IMAGES} ]]; then
-	echo -e "${ME}: ERROR: no images found in '${IN_DIRECTORY}' with extension '.${EXTENSION}'." >&2
+	echo -e "${ME}: ERROR: no images found in '${IN_DIRECTORY}' with extension '.${ALLSKY_EXTENSION}'." >&2
 	exit 1
 fi
 

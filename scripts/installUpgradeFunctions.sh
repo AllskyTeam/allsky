@@ -94,7 +94,7 @@ function get_Git_version()
 	local BRANCH="${1}"
 	local PACKAGE="${2}"
 	local VF="$( basename "${ALLSKY_VERSION_FILE}" )"
-	local V="$( curl --show-error --silent "${GITHUB_RAW_ROOT}/${PACKAGE}/${BRANCH}/${VF}" | tr -d '\n\r' )"
+	local V="$( curl --show-error --silent "${ALLSKY_GITHUB_RAW_ROOT}/${PACKAGE}/${BRANCH}/${VF}" | tr -d '\n\r' )"
 	# "404" means the branch isn't found since all new branches have a version file.
 	[[ ${V} != "404: Not Found" ]] && echo -n "${V}"
 }

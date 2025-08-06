@@ -34,7 +34,7 @@ export DAY_OR_NIGHT="${1}"
 # ${CURRENT_IMAGE} is the full path to a uniquely-named file created by the capture program.
 # The file name is its final name in the ${ALLSKY_IMAGES}/<date> directory.
 # Because it's a unique name we don't have to worry about another process overwritting it.
-# We modify the file as needed and ultimately save a link to it as ${FULL_FILENAME} since
+# We modify the file as needed and ultimately save a link to it as ${ALLSKY_FULL_FILENAME} since
 # that's what websites look for and what is uploaded.
 
 # Export so other scripts can use it.
@@ -269,8 +269,8 @@ deactivate_python_venv
 # in several places, remove our PID lock now.
 rm -f "${PID_FILE}"
 
-SAVED_FILE="${CURRENT_IMAGE}"						# The name of the file saved from the camera.
-WEBSITE_FILE="${WORKING_DIR}/${FULL_FILENAME}"		# The name of the file the websites look for
+SAVED_FILE="${CURRENT_IMAGE}"					# The name of the file saved from the camera.
+WEBSITE_FILE="${WORKING_DIR}/${ALLSKY_FULL_FILENAME}"	# The file name the websites look for
 
 TIMELAPSE_MINI_UPLOAD_VIDEO="${S_minitimelapseupload}"
 # If needed, save the current image in today's directory.
@@ -474,7 +474,7 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 			if [[ ${S_remotewebsiteimageuploadoriginalname} == "true" ]]; then
 				DESTINATION_NAME=""
 			else
-				DESTINATION_NAME="${FULL_FILENAME}"
+				DESTINATION_NAME="${ALLSKY_FULL_FILENAME}"
 			fi
 			# Goes in root of Website so second arg is "".
 			upload_all --remote-web "${FILE_TO_UPLOAD}" "" "${DESTINATION_NAME}" "SaveImage"
@@ -485,7 +485,7 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 			if [[ ${S_remoteserverimageuploadoriginalname} == "true" ]]; then
 				DESTINATION_NAME=""
 			else
-				DESTINATION_NAME="${FULL_FILENAME}"
+				DESTINATION_NAME="${ALLSKY_FULL_FILENAME}"
 			fi
 			# Goes in root of Website so second arg is "".
 			upload_all --remote-server "${FILE_TO_UPLOAD}" "" "${DESTINATION_NAME}" "SaveImage"

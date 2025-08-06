@@ -503,7 +503,7 @@ function replace_website_placeholders()
 			MINI_TLAPSE_DISPLAY_VALUE="true"
 			if [[ ${TYPE} == "local" ]]; then
 				#shellcheck disable=SC2153
-				MINI_TLAPSE_URL_VALUE="/${IMG_DIR}/mini-timelapse.mp4"
+				MINI_TLAPSE_URL_VALUE="/${ALLSKY_IMG_DIR}/mini-timelapse.mp4"
 			else
 				MINI_TLAPSE_URL_VALUE="mini-timelapse.mp4"
 			fi
@@ -594,7 +594,7 @@ function replace_website_placeholders()
 
 	if [[ ${TYPE} == "local" ]]; then
 		#shellcheck disable=SC2153
-		IMAGE_NAME="/${IMG_DIR}/${ALLSKY_FULL_FILENAME}"
+		IMAGE_NAME="/${ALLSKY_IMG_DIR}/${ALLSKY_FULL_FILENAME}"
 	else
 		IMAGE_NAME="${ALLSKY_FULL_FILENAME}"
 	fi

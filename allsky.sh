@@ -381,9 +381,9 @@ fi
 if [[ ${IMG_UPLOAD_FREQUENCY} -ne 1 ]]; then
 	# Save "1" so we upload the first image.
 	# saveImage.sh will write ${IMG_UPLOAD_FREQUENCY} to the file as needed.
-	echo "1" > "${FREQUENCY_FILE}"		# FREQUENCY_FILE is global
+	echo "1" > "${ALLSKY_FREQUENCY_FILE}"		# ALLSKY_FREQUENCY_FILE is global
 else
-	rm -f "${FREQUENCY_FILE}"
+	rm -f "${ALLSKY_FREQUENCY_FILE}"
 fi
 
 # Clear up any flow timings

@@ -210,7 +210,7 @@ class ALLSKYVARIABLES:
         ALLSKY_MODULE_LOCATION = self._get_environment_variable('ALLSKY_MODULE_LOCATION')
         ALLSKY_MY_FILES_FOLDER = self._get_environment_variable('ALLSKY_MYFILES_DIR')
 
-        base_allsky_variable_list = os.path.join(ALLSKY_CONFIG, 'variables.json')
+        base_allsky_variable_list = os.path.join(ALLSKY_CONFIG, 'allskyvariables.json')
         core_module_directory = os.path.join(ALLSKY_SCRIPTS, 'modules')
         extra_module_directory = os.path.join(ALLSKY_MODULE_LOCATION, 'modules')
         extra_files = os.path.join(ALLSKY_OVERLAY, 'extra')

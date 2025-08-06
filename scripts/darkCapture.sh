@@ -14,17 +14,16 @@ if [[ ! -f ${CURRENT_IMAGE} ]]; then
 	exit 2
 fi
 
-# The extension on ${CURRENT_IMAGE} may not be ${EXTENSION}.
+# The extension on ${CURRENT_IMAGE} may not be ${ALLSKY_EXTENSION}.
 DARK_EXTENSION="${CURRENT_IMAGE##*.}"
 
-DARKS_DIR="${ALLSKY_DARKS}"
-mkdir -p "${DARKS_DIR}"
+mkdir -p "${ALLSKY_DARKS}"
 if [[ -z ${AS_TEMPERATURE_C} ]]; then
 	# The camera doesn't support temperature so we'll keep overwriting the file until
 	# AS_TEMPERATURE_C is set.
 	# This allows users to continually look for a new dark file and rename it manually.
-	MOVE_TO_FILE="${DARKS_DIR}/$( basename "${CURRENT_IMAGE}" )"
+	MOVE_TO_FILE="${ALLSKY_DARKS}/$( basename "${CURRENT_IMAGE}" )"
 else
-	MOVE_TO_FILE="${DARKS_DIR}/${AS_TEMPERATURE_C}.${DARK_EXTENSION}"
+	MOVE_TO_FILE="${ALLSKY_DARKS}/${AS_TEMPERATURE_C}.${DARK_EXTENSION}"
 fi
 mv "${CURRENT_IMAGE}" "${MOVE_TO_FILE}" || exit 3

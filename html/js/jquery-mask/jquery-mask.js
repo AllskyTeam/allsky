@@ -392,7 +392,6 @@
 					value: 0
 				}).on('slide', (e) => {
 					var opac = parseFloat(e.value) / 100;
-					console.log(opac)
 					plugin.drawingLayer.opacity(opac);
 					plugin.drawingLayer.draw();
 				})

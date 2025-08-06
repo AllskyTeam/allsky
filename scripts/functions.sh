@@ -122,11 +122,11 @@ function doExit()
 		if [[ -n ${CUSTOM_MESSAGE} ]]; then
 			# Create a custom error message.
 			# If we error out before variables.sh is sourced in,
-			# ${FILENAME} and ${EXTENSION} won't be set so guess at what they are.
+			# ${ALLSKY_FILENAME} and ${ALLSKY_EXTENSION} won't be set so guess what they are.
 			"${ALLSKY_SCRIPTS}/generateNotificationImages.sh" --directory "${ALLSKY_TMP}" \
-				"${FILENAME:-"image"}" \
+				"${ALLSKY_FILENAME:-"image"}" \
 				"${COLOR}" "" "85" "" "" \
-				"" "10" "${COLOR}" "${EXTENSION:-"jpg"}" "" "${CUSTOM_MESSAGE}"
+				"" "10" "${COLOR}" "${ALLSKY_EXTENSION:-"jpg"}" "" "${CUSTOM_MESSAGE}"
 			echo "Stopping Allsky: ${CUSTOM_MESSAGE}"
 
 		elif [[ ${TYPE} != "no-image" ]]; then
@@ -1561,7 +1561,7 @@ function processAndUploadImage()
 	# shellcheck disable=SC2154
 	if [[ ${S_imageresizeuploadswidth} -gt 0 ]]; then
 		# Don't overwrite IMAGE_FILE since the web server(s) may be looking at it.
-		TEMP_FILE="${CAPTURE_SAVE_DIR}/resize-${FULL_FILENAME}"
+		TEMP_FILE="${CAPTURE_SAVE_DIR}/resize-${ALLSKY_FULL_FILENAME}"
 	
 		# create temporary copy to resize
 		if ! cp "${IMAGE_FILE}" "${TEMP_FILE}" ; then
@@ -1591,7 +1591,7 @@ function processAndUploadImage()
 	# If an existing notification is being uploaded,
 	# wait for it to finish then upload this one (--wait).
 	upload_all --remote-web --remote-server --wait --silent \
-		"${UPLOAD_FILE}" "" "${FULL_FILENAME}" "NotificationImage"
+		"${UPLOAD_FILE}" "" "${ALLSKY_FULL_FILENAME}" "NotificationImage"
 	RET=$?
 
 	# If we created a temporary copy, delete it.

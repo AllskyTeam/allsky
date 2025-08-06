@@ -1461,7 +1461,7 @@ function get_model_from_sensor()
 				printf("unknown_sensor_%s\n", sensor);
 				exit(1);
 			}
-		} ' "${RPi_SUPPORTED_CAMERAS}"
+		} ' "${ALLSKY_RPi_SUPPORTED_CAMERAS}"
 }
 
 

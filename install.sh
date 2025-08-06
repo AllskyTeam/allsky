@@ -449,8 +449,8 @@ setup_rpi_supported_cameras()
 	local CMD="${1}"
 	local notCMD
 
-	if [[ ! -f ${RPi_SUPPORTED_CAMERAS} ]]; then
-		local B="$( basename "${RPi_SUPPORTED_CAMERAS}" )"
+	if [[ ! -f ${ALLSKY_RPi_SUPPORTED_CAMERAS} ]]; then
+		local B="$( basename "${ALLSKY_RPi_SUPPORTED_CAMERAS}" )"
 		if [[ -z ${CMD} ]]; then
 			notCMD="xxxxx"		# won't match anything
 			CMD="all"
@@ -460,11 +460,11 @@ setup_rpi_supported_cameras()
 			notCMD="raspistill"
 		fi
 
-		local MSG="Creating ${RPi_SUPPORTED_CAMERAS} with '${CMD}' entries."
+		local MSG="Creating ${ALLSKY_RPi_SUPPORTED_CAMERAS} with '${CMD}' entries."
 		display_msg --logonly info "${MSG}"
 
 		# Remove comment and blank lines and lines for the command we are NOT using.
-		grep -v -E "^\$|^#|^${notCMD}" "${ALLSKY_REPO}/${B}.repo" > "${RPi_SUPPORTED_CAMERAS}"
+		grep -v -E "^\$|^#|^${notCMD}" "${ALLSKY_REPO}/${B}.repo" > "${ALLSKY_RPi_SUPPORTED_CAMERAS}"
 	fi
 }
 
@@ -488,7 +488,7 @@ get_connected_cameras()
 	# RPi format:	RPi \t camera_number \t camera_sensor [\t optional_other_stuff]
 	# ZWO format:	ZWO \t camera_number \t camera_model
 	# "true" == ignore errors
-	get_connected_cameras_info --cmd "${CMD}" "true" > "${CONNECTED_CAMERAS_INFO}" 2>/dev/null
+	get_connected_cameras_info --cmd "${CMD}" "true" > "${ALLSKY_CONNECTED_CAMERAS_INFO}" 2>/dev/null
 
 	# Get the RPi connected cameras, if any.
 	CC=""
@@ -1839,8 +1839,8 @@ install_dependencies_etc()
 	# those values overwrite the defaults.
 	sed \
 		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
-		-e "s;XX_CONNECTED_CAMERAS_FILE_XX;${CONNECTED_CAMERAS_INFO};" \
-		-e "s;XX_RPI_CAMERA_INFO_FILE_XX;${RPi_SUPPORTED_CAMERAS};" \
+		-e "s;XX_CONNECTED_CAMERAS_FILE_XX;${ALLSKY_CONNECTED_CAMERAS_INFO};" \
+		-e "s;XX_RPI_CAMERA_INFO_FILE_XX;${ALLSKY_RPi_SUPPORTED_CAMERAS};" \
 		"${ALLSKY_HOME}/src/include/allsky_common.h.repo" \
 	> "${ALLSKY_HOME}/src/include/allsky_common.h"
 

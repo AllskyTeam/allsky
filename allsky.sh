@@ -373,7 +373,7 @@ fi
 		grep -E -i -v "^config=|^debuglevel=^cmd=|^cameramodel|^cameranumber|^locale="
 
 	echo "version=${ALLSKY_VERSION}"
-	echo "save_dir=${CAPTURE_SAVE_DIR}"
+	echo "save_dir=${ALLSKY_CAPTURE_SAVE_DIR}"
 	[[ ${PREVIEW} == "true" ]] && echo "preview=true"
 } > "${ARGS_FILE}"
 

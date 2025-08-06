@@ -160,7 +160,7 @@ function display_error_and_exit()	# error message, notification string
 	echo -e "${NC}"
 	# Create a custom error message.
 	"${ALLSKY_SCRIPTS}/copyNotificationImage.sh" --expires 15 "custom" \
-		"red" "" "85" "" "" "" "10" "red" "${EXTENSION}" "" \
+		"red" "" "85" "" "" "" "10" "red" "${ALLSKY_EXTENSION}" "" \
 		"*** ERROR ***\nAllsky Stopped!\nInvalid ${NOTIFICATION_STRING} settings\nSee\n/var/log/allsky.log"
 
 	# Don't let the service restart us because we will get the same error again.

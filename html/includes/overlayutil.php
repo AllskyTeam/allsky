@@ -31,7 +31,7 @@ class OVERLAYUTIL
     {
         $this->overlayPath = ALLSKY_OVERLAY;
         $this->overlayConfigPath = $this->overlayPath . "/config";
-        $this->allskyOverlays = MY_OVERLAY_TEMPLATES . '/';
+        $this->allskyOverlays = ALLSKY_MY_OVERLAY_TEMPLATES . '/';
         $this->allskyTmp = ALLSKY_TMP;
         $this->allskyStatus = ALLSKY_STATUS;
         $this->allsky_scripts = ALLSKY_SCRIPTS;

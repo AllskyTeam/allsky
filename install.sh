@@ -3290,13 +3290,13 @@ install_Python()
 
 	# Doing all the python dependencies at once can run /tmp out of space, so do one at a time.
 	# This also allows us to display progress messages.
-	M=" for ${PI_OS^}"
-	R="-${PI_OS}"
-	if [[ ${PI_OS} == "buster" ]]; then
+	M=" for ${ALLSKY_PI_OS^}"
+	R="-${ALLSKY_PI_OS}"
+	if [[ ${ALLSKY_PI_OS} == "buster" ]]; then
 		# Force pip upgrade, without this installations on Buster fail.
 		pip3 install --upgrade pip > /dev/null 2>&1
-	elif [[ ${PI_OS} != "bullseye" && ${PI_OS} != "bookworm" ]]; then
-		display_msg --log warning "Unknown operating system: ${PI_OS}."
+	elif [[ ${ALLSKY_PI_OS} != "bullseye" && ${ALLSKY_PI_OS} != "bookworm" ]]; then
+		display_msg --log warning "Unknown operating system: ${ALLSKY_PI_OS}."
 		M=""
 		R=""
 	fi
@@ -3323,7 +3323,7 @@ install_Python()
 
 	NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
 
-	if [[ ${PI_OS} == "bookworm" ]]; then
+	if [[ ${ALLSKY_PI_OS} == "bookworm" ]]; then
 		PKGs="python3-full libgfortran5 libopenblas0-pthread"
 		display_msg --logonly progress "Installing ${PKGs}."
 		TMP="${ALLSKY_LOGS}/python3-full.log"
@@ -3346,9 +3346,9 @@ install_Python()
 	# Astropy is no longer supported on Buster due to its
 	# dependencies requiring later versions of Python.
 	# This *hack* will force the require version of Astropy onto Buster.
-	if [[ ${PI_OS} == "buster" ]]; then
+	if [[ ${ALLSKY_PI_OS} == "buster" ]]; then
 		NAME="Astrophy"
-		display_msg --log progress "Forcing build of ${NAME} on ${PI_OS}."
+		display_msg --log progress "Forcing build of ${NAME} on ${ALLSKY_PI_OS}."
 		TMP="${ALLSKY_LOGS}/${NAME}.log"
 		{ 
 			PKGs="setuptools setuptools_scm wheel cython==0.29.22"
@@ -3479,7 +3479,7 @@ log_info()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 
-	display_msg --logonly info "PI_OS = ${PI_OS}"
+	display_msg --logonly info "ALLSKY_PI_OS = ${ALLSKY_PI_OS}"
 ##	display_msg --logonly info "/etc/os-release:\n$( indent "$( grep -v "URL" /etc/os-release )" )"
 	display_msg --logonly info "uname = $( uname -a )"
 	display_msg --logonly info "id = $( id )"
@@ -3496,8 +3496,8 @@ check_for_raspistill()
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 	local W
 
-	if W="$( which raspistill )" && [[ ${PI_OS} != "buster" ]]; then
-		display_msg --longonly info "Renaming 'raspistill' on ${PI_OS}."
+	if W="$( which raspistill )" && [[ ${ALLSKY_PI_OS} != "buster" ]]; then
+		display_msg --longonly info "Renaming 'raspistill' on ${ALLSKY_PI_OS}."
 		sudo mv "${W}" "${W}-OLD"
 	fi
 
@@ -3512,7 +3512,7 @@ check_if_buster()
 	[[ ${SKIP} == "true" ]] && return
 	local MSG
 
-	[[ ${PI_OS} != "buster" ]] && return
+	[[ ${ALLSKY_PI_OS} != "buster" ]] && return
 
 	MSG="WARNING: You are running the older Buster operating system."
 	MSG+="\n\n\n>>> This is the last Allsky release that will support Buster. <<<\n\n"

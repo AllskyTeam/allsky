@@ -76,12 +76,12 @@ if [[ ${NOTIFICATION_TYPE} == "custom" ]]; then
 	# Create a custom message.
 	# Extensions ($10) will normally be null since the invoker may not know what to use.
 	if ! "${ALLSKY_SCRIPTS}/generateNotificationImages.sh" \
-			--directory "${CAPTURE_SAVE_DIR}" "${NOTIFICATION_TYPE}" \
+			--directory "${ALLSKY_CAPTURE_SAVE_DIR}" "${NOTIFICATION_TYPE}" \
 			"${2}" "${3}" "${4}" "${5}" "${6}" \
 			"${7}" "${8}" "${9}" "${10:-${ALLSKY_EXTENSION}}" "${11}" "${12}" ; then
 		exit 2			# it output error messages
 	fi
-	NOTIFICATION_FILE="${CAPTURE_SAVE_DIR}/${NOTIFICATION_NAME}"
+	NOTIFICATION_FILE="${ALLSKY_CAPTURE_SAVE_DIR}/${NOTIFICATION_NAME}"
 else
 	# Check if the user has a custom image.
 	NOTIFICATION_FILE="${ALLSKY_USER_NOTIFICATION_IMAGES}/${NOTIFICATION_NAME}"
@@ -121,7 +121,7 @@ if [[ ${NOTIFICATION_TYPE} == "custom" ]]; then
 	CURRENT_IMAGE="${NOTIFICATION_FILE}"
 else
 	# Don't overwrite notification images so create a temporary copy and use that.
-	CURRENT_IMAGE="${CAPTURE_SAVE_DIR}/notification-${ALLSKY_FULL_FILENAME}"
+	CURRENT_IMAGE="${ALLSKY_CAPTURE_SAVE_DIR}/notification-${ALLSKY_FULL_FILENAME}"
 	if ! cp "${NOTIFICATION_FILE}" "${CURRENT_IMAGE}" ; then
 		E_ "*** ${ME}: ERROR: Cannot copy '${NOTIFICATION_FILE}' to '${CURRENT_IMAGE}'."
 		exit 3
@@ -172,7 +172,7 @@ fi
 # ${FINAL_IMAGE} is the final resting place of the image, and no more changes will be made to it.
 # It's also the name of the image that web severs look for.
 # The "mv" may be a rename or an actual move.
-FINAL_IMAGE="${CAPTURE_SAVE_DIR}/${ALLSKY_FULL_FILENAME}"
+FINAL_IMAGE="${ALLSKY_CAPTURE_SAVE_DIR}/${ALLSKY_FULL_FILENAME}"
 if ! mv -f "${CURRENT_IMAGE}" "${FINAL_IMAGE}" ; then
 	MSG="*** ${ME}: ERROR: "
 	if [[ -f ${CURRENT_IMAGE} ]]; then

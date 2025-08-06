@@ -818,7 +818,7 @@ update_php_defines()
 			-e "s;XX_ALLSKY_ENV_XX;${ALLSKY_ENV};g" \
 			-e "s;XX_IMG_DIR_XX;${IMG_DIR};g" \
 			-e "s;XX_ALLSKY_MYFILES_DIR_XX;${ALLSKY_MYFILES_DIR};g" \
-			-e "s;XX_MY_OVERLAY_TEMPLATES_XX;${MY_OVERLAY_TEMPLATES};g" \
+			-e "s;XX_ALLSKY_MY_OVERLAY_TEMPLATES_XX;${ALLSKY_MY_OVERLAY_TEMPLATES};g" \
 			-e "s;XX_ALLSKY_MODULES_XX;${ALLSKY_MODULES};g" \
 			-e "s;XX_ALLSKY_MODULE_LOCATION_XX;${ALLSKY_MODULE_LOCATION};g" \
 			-e "s;XX_ALLSKY_OWNER_XX;${ALLSKY_OWNER};g" \
@@ -2658,12 +2658,12 @@ restore_prior_files()
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-	X="${PRIOR_CONFIG_DIR}${MY_OVERLAY_TEMPLATES/${ALLSKY_CONFIG}/}"
-	local Z="$( dirname "${MY_OVERLAY_TEMPLATES}" )"
+	X="${PRIOR_CONFIG_DIR}${ALLSKY_MY_OVERLAY_TEMPLATES/${ALLSKY_CONFIG}/}"
+	local Z="$( dirname "${ALLSKY_MY_OVERLAY_TEMPLATES}" )"
 	ITEM="${SPACE}'config/$( basename "${Z}" )/$( basename "${X}" )' directory"
 	if [[ -d ${X} ]]; then
 		display_msg --log progress "${ITEM} (copying)"
-		cp -ar "${X}" "$( dirname "${MY_OVERLAY_TEMPLATES}" )"
+		cp -ar "${X}" "$( dirname "${ALLSKY_MY_OVERLAY_TEMPLATES}" )"
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
@@ -2696,7 +2696,7 @@ restore_prior_files()
             OVERLAY_NAME="${OVERLAY_NAME:-unknown.json}"
             display_msg --log progress "${ITEM} (renamed to '${OVERLAY_NAME}')"
 
-            DEST_FILE="${MY_OVERLAY_TEMPLATES}/${OVERLAY_NAME}"
+            DEST_FILE="${ALLSKY_MY_OVERLAY_TEMPLATES}/${OVERLAY_NAME}"
 
             # Add the metadata for the overlay manager
             # shellcheck disable=SC2086
@@ -3441,12 +3441,12 @@ install_overlay()
 	cp  "${ALLSKY_REPO}/variables.json.repo" "${ALLSKY_CONFIG}/variables.json"
 
 
-	# MY_OVERLAY_TEMPLATES is not in ALLSKY_REPI and we haven't restored
+	# ALLSKY_MY_OVERLAY_TEMPLATES is not in ALLSKY_REPI and we haven't restored
 	# anything yet, so create the directory.
-	mkdir -p "${MY_OVERLAY_TEMPLATES}"
+	mkdir -p "${ALLSKY_MY_OVERLAY_TEMPLATES}"
 #xx TODO: these are done in set_permissions, so remove from here:
-#xx	sudo chgrp "${WEBSERVER_GROUP}" "${MY_OVERLAY_TEMPLATES}"
-#xx	sudo chmod 775 "${MY_OVERLAY_TEMPLATES}"	
+#xx	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_MY_OVERLAY_TEMPLATES}"
+#xx	sudo chmod 775 "${ALLSKY_MY_OVERLAY_TEMPLATES}"	
 
 	# Globals: SENSOR_WIDTH, SENSOR_HEIGHT, FULL_OVERLAY_NAME, SHORT_OVERLAY_NAME, OVERLAY_NAME
 	SENSOR_WIDTH="$( settings ".sensorWidth" "${CC_FILE}" )"

@@ -3982,7 +3982,7 @@ do_done()
 
 do_legacy_password_conversion()
 {
-	"${ALLSKY_UTILITIES}/setWebuiPassword.sh"
+	"${ALLSKY_UTILITIES}/setWebuiPassword.sh" --frominstaller
 }
 
 ############################################## Main part of program

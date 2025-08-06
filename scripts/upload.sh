@@ -24,20 +24,20 @@ usage_and_exit() {
 	[[ ${RET} -ne 0 ]] && echo -e "${NC}"
 
 	echo
-	echo "Where:"
-	echo "   '--help'           displays this message and exits."
-	echo "   '--wait'           waits for any upload of the same type to finish."
-	echo "   '--silent'         doesn't display any status messages."
-	echo "   '--output f'       saves the upload output in the specified file."
-	echo "   '--local-web'      copy to local Website."
-	echo "   '--remote-web'     upload to the remote Website."
-	echo "   '--remote-server'  upload to the remote server."
-	echo "   'file_to_upload'   is the path name of the file to upload."
-	echo "   'directory'        is the directory ON THE SERVER the file should be uploaded to."
-	echo "   'destination_name' is the name the file should be called ON THE SERVER."
-	echo "   'file_type'        is an optional, temporary name to use when uploading the file."
+	echo "Arguments:"
+	echo "   --help            Display this message and exits."
+	echo "   --wait            Wait for any upload of the same type to finish."
+	echo "   --silent          Don't display any status messages."
+	echo "   --output f        Save the upload output in the specified file."
+	echo "   --local-web       Copy to local Website."
+	echo "   --remote-web      Upload to the remote Website."
+	echo "   --remote-server   Upload to the remote server."
+	echo "   file_to_upload    Is the path name of the file to upload."
+	echo "   directory         Is the directory ON THE SERVER the file should be uploaded to."
+	echo "   destination_name  Is the name the file should be called ON THE SERVER."
+	echo "   file_type         Is an optional, temporary name to use when uploading the file."
 	echo
-	echo "For example: ${ME}  keogram-20240710.jpg  /keograms  keogram.jpg"
+	echo "For example: ${ME}  keogram-20250710.jpg  /keograms  keogram.jpg"
 
 	exit "${RET}"
 }
@@ -367,7 +367,7 @@ else # sftp/ftp/ftps
 		# lftp doesn't open the connection until the first command is executed,
 		# and if it fails the error message isn't always clear.
 		# So, do a simple command first so we get a better error message.
-		echo "cd . || exit 99"
+		echo "cd . || exit ${EXIT_ERROR_STOP}"
 
 		if [[ ${DEBUG} == "true" ]]; then
 			echo "debug 0"

@@ -139,7 +139,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 			"mask" : {
 				"required": "false",
 				"description": "Mask Path",
-				"help": "The name of the image mask. This mask is applied when counting stars bit not visible in the final image. <span class=\"text-danger\">NOTE: It is highly recommened you create a mask to improve the detection performance</span>",
+				"help": "The name of the image mask. This mask is applied when counting stars but not visible in the final image. <span class=\"text-danger\">NOTE: It is highly recommened you create a mask to improve the detection performance</span>",
 				"type": {
 					"fieldtype": "image"
 				}                
@@ -158,7 +158,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 			"useclearsky" : {
 				"required": "false",
 				"description": "Use Clear Sky",
-				"help": "If available use the results of the clear sky module. If the sky is not clear meteor detection will be skipped",         
+				"help": "If available, use the results of the Clear Sky Alarm module. If the sky is not clear star detection will be skipped",         
 				"type": {
 					"fieldtype": "checkbox"
 				}          
@@ -166,7 +166,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 			"annotate" : {
 				"required": "false",
 				"description": "Annotate Stars",
-				"help": "If selected the identified stars in the image will be highlighted",
+				"help": "If selected, the identified stars in the image will be highlighted",
 				"tab": "Debug",
 				"type": {
 					"fieldtype": "checkbox"

@@ -780,8 +780,8 @@ do_save_camera_capabilities()
 get_count()
 {
 	local DIR="${1}"
-	local FILENAME="${2}"
-	find "${DIR}" -maxdepth 1 -name "${FILENAME}" | wc -l
+	local FILE="${2}"
+	find "${DIR}" -maxdepth 1 -name "${FILE}" | wc -l
 }
 
 
@@ -3534,18 +3534,19 @@ check_if_buster()
 display_image()
 {
 	local IMAGE_OR_CUSTOM="${1}"
-	local FULL_FILENAME  FILENAME  EXTENSION  COLOR  CUSTOM_MESSAGE  MSG  X  I
+	local ALLSKY_FULL_FILENAME  ALLSKY_FILENAME  ALLSKY_EXTENSION  COLOR  CUSTOM_MESSAGE  MSG  X  I
 
 	if [[ -s ${ALLSKY_SETTINGS_FILE} ]]; then		# The file may not exist yet.
-		FULL_FILENAME="$( settings ".filename" )"
-		FILENAME="${FULL_FILENAME%.*}"
-		EXTENSION="${FULL_FILENAME##*.}"
+		# These variables are defined in variables.sh, but require the settings file to exist.
+		ALLSKY_FULL_FILENAME="$( settings ".filename" )"
+		ALLSKY_FILENAME="${ALLSKY_FULL_FILENAME%.*}"
+		ALLSKY_EXTENSION="${ALLSKY_FULL_FILENAME##*.}"
 	else
-		FILENAME="image"
-		EXTENSION="jpg"
+		ALLSKY_FILENAME="image"
+		ALLSKY_EXTENSION="jpg"
 	fi
 
-	I="${ALLSKY_TMP}/${FILENAME}.${EXTENSION}"
+	I="${ALLSKY_TMP}/${ALLSKY_FILENAME}.${ALLSKY_EXTENSION}"
 	if [[ -z ${IMAGE_OR_CUSTOM} ]]; then		# No IMAGE_OR_CUSTOM means remove the image
 		display_msg --logonly info "Removing prior notification image."
 		rm -f "${I}"
@@ -3561,8 +3562,8 @@ display_image()
 		display_msg --logonly info "${MSG}"
 		MSG="$( "${ALLSKY_SCRIPTS}/generateNotificationImages.sh" \
 			--directory "${ALLSKY_TMP}" \
-			"${FILENAME}" "${COLOR}" "" "" "" "" \
-			"" "10" "${COLOR}" "${EXTENSION}" "" "${CUSTOM_MESSAGE}"  2>&1 >/dev/null )"
+			"${ALLSKY_FILENAME}" "${COLOR}" "" "" "" "" \
+			"" "10" "${COLOR}" "${ALLSKY_EXTENSION}" "" "${CUSTOM_MESSAGE}"  2>&1 >/dev/null )"
 		if [[ -n ${MSG} ]]; then
 			display_msg --logonly info "${MSG}"
 		fi
@@ -3577,7 +3578,7 @@ display_image()
 			touch "${ALLSKY_POST_INSTALL_ACTIONS}_initial_message"
 		fi
 
-		X="${IMAGE_OR_CUSTOM}.${EXTENSION}"
+		X="${IMAGE_OR_CUSTOM}.${ALLSKY_EXTENSION}"
 		display_msg --logonly info "Displaying notification image '${X}'"
 		cp "${ALLSKY_NOTIFICATION_IMAGES}/${X}" "${I}" ||
 			display_msg --log info "WARNING: unable to copy '${X}' to '${I}'"

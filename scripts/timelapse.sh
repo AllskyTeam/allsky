@@ -16,7 +16,7 @@ IS_MINI="false"
 LOCK="false"
 IMAGES_FILE=""
 INPUT_DIR=""
-IMAGE_NAME="${FILENAME}"
+IMAGE_NAME="${ALLSKY_FILENAME}"
 OUTPUT=""			# shorthand for ${OUTPUT_DIR}/${OUTPUT_FILE}
 OUTPUT_DIR=""		# Used when more granularity is needed
 OUTPUT_FILE=""		# Used when more granularity is needed
@@ -100,21 +100,21 @@ usage_and_exit()
 	fi
 
 	echo
-	echo "where:"
-	echo "  --help             prints this message and exists."
-	echo "  --debug            outputs debugging information."
-	echo "  --lock             ensures only one instance of ${ME} runs at a time."
-	echo "  --output-dir dir   puts the output file in 'dir'."
-	echo "  --output file      overrides the default storage location and file name."
-	echo "                     Should not be used if --output-dir is also used."
-	echo "  --mini             uses the Mini-Timelapse settings and the timelapse file is"
-	echo "                     called 'mini-timelapse.mp4' (unless '--output' is used)."
-	echo "  --filename file    uses 'file' as the beginning of the file names." 
-	echo "                     This is useful if creating a timelapse of non-Allsky files."
+	echo "Arguments:"
+	echo "   --help             Display this message and exist."
+	echo "   --debug            Output debugging information."
+	echo "   --lock             Ensure only one instance of ${ME} runs at a time."
+	echo "   --output-dir dir   Put the output file in 'dir'."
+	echo "   --output file      Override the default storage location and file name."
+	echo "                      Should not be used if --output-dir is also used."
+	echo "   --mini             Use the Mini-Timelapse settings and the timelapse file is"
+	echo "                      called 'mini-timelapse.mp4' (unless '--output' is used)."
+	echo "   --filename file    Use 'file' as the beginning of the file names." 
+	echo "                      This is useful if creating a timelapse of non-Allsky files."
 	echo
 	echo "The list of images to process is determined in one of two ways:"
-	echo "1. Looking in '<INPUT_DIR>' for files with an extension of '${EXTENSION}'."
-	echo "   If <INPUT_DIR> is a full path name all files ending in '${EXTENSION}' are used,"
+	echo "1. Looking in '<INPUT_DIR>' for files with an extension of '${ALLSKY_EXTENSION}'."
+	echo "   If <INPUT_DIR> is a full path name all files ending in '${ALLSKY_EXTENSION}' are used,"
 	echo "   otherwise <INPUT_DIR> is assumed to be in '${ALLSKY_IMAGES}' and"
 	echo "   only files begining with '${IMAGE_NAME}' are use."
 	echo "   The timelapse is called 'allsky-<BASENAME_DIR>.mp4' where"
@@ -151,7 +151,7 @@ else
 	if [[ ${DIRNAME} == "." ]]; then
 		INPUT_DIR="${ALLSKY_IMAGES}/${INPUT_DIR}"	# Need full pathname for links
 	else
-		# Full path name - use all images with ${EXTENSION}.
+		# Full path name - use all images with ${ALLSKY_EXTENSION}.
 		IMAGE_NAME=""
 	fi
 	OUTPUT_DIR="${INPUT_DIR}"	# default location
@@ -260,7 +260,7 @@ if [[ ${KEEP_SEQUENCE} == "false" || ! -d ${SEQUENCE_DIR} ]]; then
 		# have thousands of images.
 		echo "[end]"		# signals end of the list
 	else
-		ls -rt "${INPUT_DIR}/${IMAGE_NAME}"*".${EXTENSION}" 2>/dev/null
+		ls -rt "${INPUT_DIR}/${IMAGE_NAME}"*".${ALLSKY_EXTENSION}" 2>/dev/null
 		echo "[end]"
 	fi | while read -r IMAGE
 		do
@@ -288,7 +288,7 @@ if [[ ${KEEP_SEQUENCE} == "false" || ! -d ${SEQUENCE_DIR} ]]; then
 
 				((NUM_IMAGES++))
 				NUM="$( printf "%04d" "${NUM_IMAGES}" )"
-				ln -s "${IMAGE}" "${SEQUENCE_DIR}/${NUM}.${EXTENSION}"
+				ln -s "${IMAGE}" "${SEQUENCE_DIR}/${NUM}.${ALLSKY_EXTENSION}"
 			fi
 	done
 	if [[ $? -ne 0 ]]; then
@@ -328,7 +328,7 @@ EXTRA="$( settings ".timelapseextraparameters" )"
 X="$( ffmpeg -y -f image2 \
 	-loglevel "${FFLOG}" \
 	-r "${FPS}" \
-	-i "${SEQUENCE_DIR}/%04d.${EXTENSION}" \
+	-i "${SEQUENCE_DIR}/%04d.${ALLSKY_EXTENSION}" \
 	-vcodec "${VCODEC}" \
 	-b:v "${TIMELAPSE_BITRATE}k" \
 	-pix_fmt "${PIX_FMT}" \

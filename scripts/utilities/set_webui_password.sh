@@ -472,7 +472,7 @@ function usage_and_exit()
 }
 
 DEBUG="false"
-LEGACY="false"
+# LEGACY="false"		# TODO: NOT USED
 NOSECURE="false"
 HAVE_NO_SECURE="false"
 TEXTMODE="false"

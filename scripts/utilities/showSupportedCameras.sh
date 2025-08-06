@@ -103,7 +103,7 @@ if [[ ${DO_RPI} == "true" ]]; then
 					other = "";
 				printf("%-25s %s%s\n", model, sensor, other);
 			}
-		}' "${RPi_SUPPORTED_CAMERAS}"
+		}' "${ALLSKY_RPi_SUPPORTED_CAMERAS}"
 fi
 
 if [[ ${DO_ZWO} == "true" ]]; then

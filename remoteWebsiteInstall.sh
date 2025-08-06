@@ -41,15 +41,15 @@ USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 calc_d_sizes
 
 # Remote connectivity variables
-REMOTE_WEBSITE_URL="$( settings ".remotewebsiteurl" "${SETTINGS_FILE}" )"
-REMOTE_WEBSITE_IMAGE_URL="$( settings ".remotewebsiteimageurl" "${SETTINGS_FILE}" )"
+REMOTE_WEBSITE_URL="$( settings ".remotewebsiteurl" "${ALLSKY_SETTINGS_FILE}" )"
+REMOTE_WEBSITE_IMAGE_URL="$( settings ".remotewebsiteimageurl" "${ALLSKY_SETTINGS_FILE}" )"
 REMOTE_USER="$( settings ".REMOTEWEBSITE_USER" "${ALLSKY_ENV}" )"
 REMOTE_HOST="$( settings ".REMOTEWEBSITE_HOST" "${ALLSKY_ENV}" )"
 REMOTE_PORT="$( settings ".REMOTEWEBSITE_PORT" "${ALLSKY_ENV}" )"
 [[ -n ${REMOTE_PORT} ]] && REMOTE_PORT="-p ${REMOTE_PORT}"
 REMOTE_PASSWORD="$( settings ".REMOTEWEBSITE_PASSWORD" "${ALLSKY_ENV}" )"
-REMOTE_DIR="$( settings ".remotewebsiteimagedir" "${SETTINGS_FILE}" )"
-REMOTE_PROTOCOL="$( settings ".remotewebsiteprotocol" "${SETTINGS_FILE}" )"
+REMOTE_DIR="$( settings ".remotewebsiteimagedir" "${ALLSKY_SETTINGS_FILE}" )"
+REMOTE_PROTOCOL="$( settings ".remotewebsiteprotocol" "${ALLSKY_SETTINGS_FILE}" )"
 REMOTE_PROTOCOL="${REMOTE_PROTOCOL,,}"		# convert to lowercase
 
 if [[ ${REMOTE_PROTOCOL} == "sftp" || ${REMOTE_PROTOCOL} == "ftp" || ${REMOTE_PROTOCOL} == "ftps" ]]; then
@@ -1009,14 +1009,14 @@ function usage_and_exit()
 # Disable the remote Website.
 function disable_remote_website()
 {
-	update_json_file ".useremotewebsite" "false" "${SETTINGS_FILE}"
+	update_json_file ".useremotewebsite" "false" "${ALLSKY_SETTINGS_FILE}"
 	display_msg --logonly info "Remote Website temporarily disabled."
 }
 ####
 # Enable the remote Website.
 function enable_remote_website()
 {
-	update_json_file ".useremotewebsite" "true" "${SETTINGS_FILE}"
+	update_json_file ".useremotewebsite" "true" "${ALLSKY_SETTINGS_FILE}"
 	display_msg --logonly info "Remote Website enabled."
 }
 

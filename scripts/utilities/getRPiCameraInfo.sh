@@ -88,7 +88,7 @@ SENSOR="$( grep "${CAMERA_NUMBER} :" "${CAMERA_DATA}" | gawk '{ print $3; }' )"
 
 # Determine if this sensor is supported.
 MODEL="$( get_model_from_sensor "${SENSOR}" )"
-if grep --silent "^camera.*${MODEL}" "${RPi_SUPPORTED_CAMERAS}" ; then
+if grep --silent "^camera.*${MODEL}" "${ALLSKY_RPi_SUPPORTED_CAMERAS}" ; then
 	SUPPORTED="true"
 else
 	SUPPORTED="false"

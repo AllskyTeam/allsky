@@ -12,7 +12,7 @@ $initializeErrorMessage = null;				// Invoker can check this.
 $webSettings_array = null;
 if (! isset($configFilePrefix)) $configFilePrefix = "";
 
-define('CONFIG_UPDATE_STRING', 'XX_NEED_TO_UPDATE_XX');
+define('ALLSKY_NEED_TO_UPDATE', 'XX_NEED_TO_UPDATE_XX');
 
 function initialize() {
 	global $webSettings_array;
@@ -33,11 +33,11 @@ function initialize() {
 		return($retMsg);
 	}
 	$webSettings_str = file_get_contents($configuration_file, true);
-	if (strpos($webSettings_str, CONFIG_UPDATE_STRING) !== false) {
+	if (strpos($webSettings_str, ALLSKY_NEED_TO_UPDATE) !== false) {
 		$retMsg .= "<p class='warning-msg'>";
 			$retMsg .= "The '$configurationFileName' file needs to be updated via";
 			$retMsg .= " the 'Editor' page in the WebUI.";
-			$retMsg .= "<br><br>Update fields with '".CONFIG_UPDATE_STRING."'";
+			$retMsg .= "<br><br>Update fields with '" . ALLSKY_NEED_TO_UPDATE . "'";
 			$retMsg .= " and check all other entries.";
 			$retMsg .= "<br><br>This Allsky Website will not work until updated.";
 		$retMsg .= "</p>";

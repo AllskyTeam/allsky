@@ -6,6 +6,10 @@
 ######################################### variables
 
 # export to keep shellcheck quiet
+
+	# This file is created during installation and used by PHP and Python scripts.
+export ALLSKY_VARIABLES_JSON_FILE="${ALLSKY_HOME}/variables.json"
+
 	# The login installing Allsky
 export ALLSKY_OWNER=$( id --group --name )
 export ALLSKY_GROUP=${ALLSKY_OWNER}

@@ -13,12 +13,12 @@ source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 # High-level view of tasks for upgrade:
-#	Check if ${PRIOR_ALLSKY_DIR} exists.
+#	Check if ${ALLSKY_PRIOR_DIR} exists.
 #		If so, warn user they won't be able to save current release.
 #	Prompt if user wants to carry current settings to new release.
 #		If so:
-#			If ${PRIOR_ALLSKY_DIR} exists, error out
-#		Rename ${ALLSKY_HOME} to ${PRIOR_ALLSKY_DIR}
+#			If ${ALLSKY_PRIOR_DIR} exists, error out
+#		Rename ${ALLSKY_HOME} to ${ALLSKY_PRIOR_DIR}
 #	Download new release (with optional branch) from GitHub.
 #	Execute new release's installation script telling it it's an upgrade.
 
@@ -123,19 +123,19 @@ if [[ ${ACTION} == "upgrade" ]]; then
 	#		Warn the user but let them continue (won't be able to restore from prior).
 
 	# Ask user if they want to upgrade in place (i.e., overwrite code),
-	# or move current code to ${PRIOR_ALLSKY_DIR}.
+	# or move current code to ${ALLSKY_PRIOR_DIR}.
 
 	# If move current code:
 	#	Check for prior Allsky versions:
-	#		If ${PRIOR_ALLSKY_DIR} exist:
-	#			If ${PRIOR_ALLSKY_DIR}-OLDEST exists
+	#		If ${ALLSKY_PRIOR_DIR} exist:
+	#			If ${ALLSKY_PRIOR_DIR}-OLDEST exists
 	#				Let user know both old versions exist
 	#				Exit
-	#			Let the user know ${PRIOR_ALLSKY_DIR} exists as FYI:
-	#				echo "Saving prior version in ${PRIOR_ALLSKY_DIR}-OLDEST"
-	#			Move ${PRIOR_ALLSKY_DIR} to ${PRIOR_ALLSKY_DIR}-OLDEST
+	#			Let the user know ${ALLSKY_PRIOR_DIR} exists as FYI:
+	#				echo "Saving prior version in ${ALLSKY_PRIOR_DIR}-OLDEST"
+	#			Move ${ALLSKY_PRIOR_DIR} to ${ALLSKY_PRIOR_DIR}-OLDEST
 	#	Stop allsky
-	#	Move ${ALLSKY_HOME} to ${PRIOR_ALLSKY_DIR}
+	#	Move ${ALLSKY_HOME} to ${ALLSKY_PRIOR_DIR}
 	#	cd
 	#	Git new code into ${ALLSKY_HOME}
 	#	cd ${ALLSKY_HOME}

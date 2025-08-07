@@ -55,36 +55,36 @@ $cmd = "AM_ALLSKY_CONFIG compare_stretches --html";
 			<form role="form" action="execute.php" method="POST" onsubmit="return add_args()">
 <script>
 function add_args() {
-	id = document.getElementById('id').value;
+	ID = document.getElementById('ID').value;
 
 	image = document.getElementById('image').value;
-	if (image != "") id += " --input " + image;
+	if (image != "") ID += " --input " + image;
 
 	count_amount = document.getElementById('count_amount').value;
-	if (count_amount != "") id += " --count-amount " + count_amount;
+	if (count_amount != "") ID += " --count-amount " + count_amount;
 
 	count_midpoint = document.getElementById('count_midpoint').value;
-	if (count_midpoint != "") id += " --count-midpoint " + count_midpoint;
+	if (count_midpoint != "") ID += " --count-midpoint " + count_midpoint;
 
 	start_amount = document.getElementById('start_amount').value;
-	if (start_amount != "") id += " --start-amount " + start_amount;
+	if (start_amount != "") ID += " --start-amount " + start_amount;
 
 	step_amount = document.getElementById('step_amount').value;
-	if (step_amount != "") id += " --step-amount " + step_amount;
+	if (step_amount != "") ID += " --step-amount " + step_amount;
 
 	start_midpoint = document.getElementById('start_midpoint').value;
-	if (start_midpoint != "") id += " --start-midpoint " + start_midpoint;
+	if (start_midpoint != "") ID += " --start-midpoint " + start_midpoint;
 
 	step_midpoint = document.getElementById('step_midpoint').value;
-	if (step_midpoint != "") id += " --step-midpoint " + step_midpoint;
+	if (step_midpoint != "") ID += " --step-midpoint " + step_midpoint;
 
-	document.getElementById('id').value = id;
+	document.getElementById('ID').value = ID;
 
 	return true;
 }
 </script>
 				<?php CSRFToken() ?>
-				<input type="hidden" name="id" id="id" value="<?php echo $cmd ?>">
+				<input type="hidden" name="ID" id="ID" value="<?php echo $cmd ?>">
 				<input type="hidden" name="day" value="test_stretches">
 
 				<div class="row">

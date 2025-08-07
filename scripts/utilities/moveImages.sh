@@ -146,7 +146,7 @@ chmod 775 "${NEW_ALLSKY_IMAGES}"
 
 # Make sure the web server can view the directory.
 DIR="${NEW_ALLSKY_IMAGES}"
-while ! sudo --user "${WEBSERVER_OWNER}" ls "${DIR}" > /dev/null 2>&1
+while ! sudo --user "${ALLSKY_WEBSERVER_OWNER}" ls "${DIR}" > /dev/null 2>&1
 do
 	display_msg --logonly info "  > Changing permissions of '${DIR}' so web server can view images."
 	sudo chmod o+rx "${DIR}"

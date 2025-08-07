@@ -6,12 +6,16 @@
 ######################################### variables
 
 # export to keep shellcheck quiet
+
+	# This file is created during installation and used by PHP and Python scripts.
+export ALLSKY_VARIABLES_JSON_FILE="${ALLSKY_HOME}/variables.json"
+
 	# The login installing Allsky
 export ALLSKY_OWNER=$( id --group --name )
 export ALLSKY_GROUP=${ALLSKY_OWNER}
-export WEBSERVER_OWNER="www-data"
-export WEBSERVER_GROUP="${WEBSERVER_OWNER}"
-export NEED_TO_UPDATE="XX_NEED_TO_UPDATE_XX"
+export ALLSKY_WEBSERVER_OWNER="www-data"
+export ALLSKY_WEBSERVER_GROUP="${ALLSKY_WEBSERVER_OWNER}"
+export ALLSKY_NEED_TO_UPDATE="XX_NEED_TO_UPDATE_XX"
 
 	# Central location for all master repository files.
 export ALLSKY_REPO="${ALLSKY_HOME}/config_repo"
@@ -32,14 +36,14 @@ export OLD_WEBUI_LOCATION="/var/www/html"
 export OLD_WEBSITE_LOCATION="${OLD_WEBUI_LOCATION}/allsky"
 
 	# Directory of prior version of Allsky, if it exists.
-export PRIOR_ALLSKY_DIR="$( dirname "${ALLSKY_HOME}" )/${ALLSKY_INSTALL_DIR}-OLD"
+export ALLSKY_PRIOR_DIR="$( dirname "${ALLSKY_HOME}" )/${ALLSKY_INSTALL_DIR}-OLD"
 	# Prior "config" directory, if it exists.
-export PRIOR_CONFIG_DIR="${PRIOR_ALLSKY_DIR}/$( basename "${ALLSKY_CONFIG}" )"
-export PRIOR_WEBSITE_DIR="${PRIOR_ALLSKY_DIR}${ALLSKY_WEBSITE/${ALLSKY_HOME}/}"
+export PRIOR_CONFIG_DIR="${ALLSKY_PRIOR_DIR}/$( basename "${ALLSKY_CONFIG}" )"
+export PRIOR_WEBSITE_DIR="${ALLSKY_PRIOR_DIR}${ALLSKY_WEBSITE/${ALLSKY_HOME}/}"
 export PRIOR_WEBSITE_CONFIG_FILE="${PRIOR_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 export PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE="${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
-export PRIOR_PYTHON_VENV="${PRIOR_ALLSKY_DIR}/venv/lib"
-export PRIOR_MYFILES_DIR="${ALLSKY_MYFILES_DIR/${ALLSKY_HOME}/${PRIOR_ALLSKY_DIR}}"
+export PRIOR_PYTHON_VENV="${ALLSKY_PRIOR_DIR}/venv/lib"
+export PRIOR_MYFILES_DIR="${ALLSKY_MYFILES_DIR/${ALLSKY_HOME}/${ALLSKY_PRIOR_DIR}}"
 
 	# Name of setting that determines version of Website config file.
 export WEBSITE_CONFIG_VERSION="ConfigVersion"
@@ -470,7 +474,7 @@ function update_array_field()
 
 
 ####
-# Replace all the ${NEED_TO_UPDATE} placeholders and
+# Replace all the ${ALLSKY_NEED_TO_UPDATE} placeholders and
 # update mini-timelapse URL.
 function replace_website_placeholders()
 {
@@ -514,7 +518,7 @@ function replace_website_placeholders()
 		return 1
 	fi
 
-	# For these setting, check if it's == ${NEED_TO_UPDATE}.
+	# For these setting, check if it's == ${ALLSKY_NEED_TO_UPDATE}.
 	# If so, and the settings file's value isn't null, update it in the config file.
 	# If the config file has a value, use it, even if it's "".
 
@@ -522,7 +526,7 @@ function replace_website_placeholders()
 	local LENS  COMPUTER  IMAGE_NAME
 
 	LATITUDE="$( settings ".config.latitude" "${FILE}" )"
-	if [[ ${LATITUDE} == "${NEED_TO_UPDATE}" ]]; then
+	if [[ ${LATITUDE} == "${ALLSKY_NEED_TO_UPDATE}" ]]; then
 		# Convert latitude and longitude to use N, S, E, W.
 		TEMP="$( settings ".latitude" )"
 		if [[ -n ${TEMP} ]]; then
@@ -532,7 +536,7 @@ function replace_website_placeholders()
 	[[ -z ${LATITUDE} ]] && display_msg --log warning "latitude is empty"
 
 	LONGITUDE="$( settings ".config.longitude" "${FILE}" )"
-	if [[ ${LONGITUDE} == "${NEED_TO_UPDATE}" ]]; then
+	if [[ ${LONGITUDE} == "${ALLSKY_NEED_TO_UPDATE}" ]]; then
 		TEMP="$( settings ".longitude" )"
 		if [[ -n ${TEMP} ]]; then
 			LONGITUDE="$( convertLatLong "${TEMP}" "longitude" )"
@@ -547,7 +551,7 @@ function replace_website_placeholders()
 	fi
 
 	LOCATION="$( settings ".config.location" "${FILE}" )"
-	if [[ ${LOCATION} == "${NEED_TO_UPDATE}" ]]; then
+	if [[ ${LOCATION} == "${ALLSKY_NEED_TO_UPDATE}" ]]; then
 		TEMP="$( settings ".location" )"
 		if [[ -n ${TEMP} ]]; then
 			LOCATION="${TEMP}"
@@ -555,7 +559,7 @@ function replace_website_placeholders()
 	fi
 
 	OWNER="$( settings ".config.owner" "${FILE}" )"
-	if [[ ${OWNER} == "${NEED_TO_UPDATE}" ]]; then
+	if [[ ${OWNER} == "${ALLSKY_NEED_TO_UPDATE}" ]]; then
 		TEMP="$( settings ".owner" )"
 		if [[ -n ${TEMP} ]]; then
 			OWNER="${TEMP}"
@@ -563,13 +567,13 @@ function replace_website_placeholders()
 	fi
 
 	CAMERA="$( settings ".config.camera" "${FILE}" )"
-	if [[ ${CAMERA} == "${NEED_TO_UPDATE}" ]]; then
+	if [[ ${CAMERA} == "${ALLSKY_NEED_TO_UPDATE}" ]]; then
 		# TYPE and MODEL are already in the environment.
 		CAMERA="${CAMERA_TYPE} ${CAMERA_MODEL}"
 	fi
 
 	LENS="$( settings ".config.lens" "${FILE}" )"
-	if [[ ${LENS} == "${NEED_TO_UPDATE}" ]]; then
+	if [[ ${LENS} == "${ALLSKY_NEED_TO_UPDATE}" ]]; then
 		TEMP="$( settings ".lens" )"
 		if [[ -n ${TEMP} ]]; then
 			LENS="${TEMP}"
@@ -577,7 +581,7 @@ function replace_website_placeholders()
 	fi
 
 	COMPUTER="$( settings ".config.computer" "${FILE}" )"
-	if [[ ${COMPUTER} == "${NEED_TO_UPDATE}" ]]; then
+	if [[ ${COMPUTER} == "${ALLSKY_NEED_TO_UPDATE}" ]]; then
 		TEMP="$( settings ".computer" )"
 		if [[ -n ${TEMP} ]]; then
 			COMPUTER="${TEMP}"
@@ -585,7 +589,7 @@ function replace_website_placeholders()
 	fi
 
 	EQUIPMENT="$( settings ".config.equipmentinfo" "${FILE}" )"
-	if [[ ${EQUIPMENT} == "${NEED_TO_UPDATE}" ]]; then
+	if [[ ${EQUIPMENT} == "${ALLSKY_NEED_TO_UPDATE}" ]]; then
 		TEMP="$( settings ".equipmentinfo" )"
 		if [[ -n ${TEMP} ]]; then
 			EQUIPMENT="${TEMP}"
@@ -792,8 +796,8 @@ function create_lighttpd_config_file()
 	sudo rm -f "${TMP}"
 	sed \
 		-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};g" \
-		-e "s;XX_WEBSERVER_OWNER_XX;${WEBSERVER_OWNER};g" \
-		-e "s;XX_WEBSERVER_GROUP_XX;${WEBSERVER_GROUP};g" \
+		-e "s;XX_ALLSKY_WEBSERVER_OWNER_XX;${ALLSKY_WEBSERVER_OWNER};g" \
+		-e "s;XX_ALLSKY_WEBSERVER_GROUP_XX;${ALLSKY_WEBSERVER_GROUP};g" \
 		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};g" \
 		-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};g" \
 		-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};g" \
@@ -1187,7 +1191,7 @@ function check_tmp()
 			# which isn't a problem since it'll be unmounted at the next reboot.
 			# We know from the grep above that ${FSTAB} has ${ALLSKY_TMP}
 			# but the mount point is currently in the PRIOR Allsky.
-			D="${PRIOR_ALLSKY_DIR}/tmp"
+			D="${ALLSKY_PRIOR_DIR}/tmp"
 			if [[ -d "${D}" ]] && is_mounted "${D}" ; then
 				if ! umount_dir "${D}" "${CALLED_FROM}" ; then
 					set_reboot_needed		# Will force the unmount

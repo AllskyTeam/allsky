@@ -34,7 +34,7 @@ if ((@include $defs) == false) {
 // If we're being run by the user it's likely on a tty so don't use html.
 function get_decoded_json_file($file, $associative, $errorMsg, &$returnedMsg=null) {
 	$retMsg = "";
-	$html = (get_current_user() == WEBSERVER_OWNER);
+	$html = (get_current_user() == ALLSKY_WEBSERVER_OWNER);
 	if ($html) {
 		$div = "<div class='errorMsgBig'>";
 		$end = "</div>";
@@ -949,7 +949,7 @@ function updateFile($file, $contents, $fileName, $toConsole, $silent=false) {
 		// usually because the file isn't grouped to the web server group.
 		// Set the permissions and try again.
 
-		$cmd = "sudo touch '$file' && sudo chgrp " . WEBSERVER_GROUP . " '$file' &&";
+		$cmd = "sudo touch '$file' && sudo chgrp " . ALLSKY_WEBSERVER_GROUP . " '$file' &&";
 		$cmd .= " sudo chmod g+w '$file'";
 		$return = null;
 		$ret = exec("( $cmd ) 2>&1", $return, $retval);
@@ -1003,12 +1003,12 @@ function getOptionsFile() {
 
 // Return the full path name of the local Website configuration file.
 function getLocalWebsiteConfigFile() {
-	return ALLSKY_WEBSITE_LOCAL_CONFIG;
+	return ALLSKY_WEBSITE_CONFIGURATION_FILE;
 }
 
 // Return the full path name of the remote Website configuration file.
 function getRemoteWebsiteConfigFile() {
-	return ALLSKY_WEBSITE_REMOTE_CONFIG;
+	return ALLSKY_WEBSITE_REMOTE_CONFIGURATION_FILE;
 }
 
 // Return the file name after accounting for any ${} variables.

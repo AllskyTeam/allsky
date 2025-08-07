@@ -150,7 +150,7 @@ ARGS_FILE="${ALLSKY_TMP}/capture_args.txt"
 
 # If a prior copy of Allsky exists, remind the user if we've never reminded before,
 # or it's been at least a week since the last reminder.
-if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
+if [[ -d ${ALLSKY_PRIOR_DIR} ]]; then
 	DO_MSG="true"
 	if [[ -f ${ALLSKY_OLD_REMINDER} ]]; then
 		CHECK_DATE="$( date -d '1 week ago' +'%Y%m%d%H%M.%S' )"
@@ -160,7 +160,7 @@ if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
 		rm -f "${CHECK_TMP_FILE}"
 	fi
 	if [[ ${DO_MSG} == "true" ]]; then
-		MSG="Reminder: your prior Allsky is still in '${PRIOR_ALLSKY_DIR}'."
+		MSG="Reminder: your prior Allsky is still in '${ALLSKY_PRIOR_DIR}'."
 		MSG+="\nIf you are no longer using it, it can be removed to save disk space."
 		"${ALLSKY_SCRIPTS}/addMessage.sh" --id AM_RM_PRIOR --type info --msg "${MSG}" \
 			--cmd "Click here to remove the directory and all its contents."

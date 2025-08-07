@@ -137,7 +137,7 @@ function DisplayEditor()
 				echo "let remoteOK = $remoteOK;";
 				echo "let envOK = $envOK;";
 			?>
-			let CONFIG_UPDATE_STRING = "<?php echo CONFIG_UPDATE_STRING ?>"
+			let ALLSKY_NEED_TO_UPDATE = "<?php echo ALLSKY_NEED_TO_UPDATE ?>"
 			$(document).ready(function () {
 				let clearTimer = null;
 				let currentMarks = [];
@@ -198,7 +198,7 @@ function DisplayEditor()
 					if (num == 0) {
 						document.getElementById("need-to-update").innerHTML = '';
 					} else {
-						let m = "NOTE: You must update all <span class='cm-string highlight'>" + CONFIG_UPDATE_STRING + "</span>";
+						let m = "NOTE: You must update all <span class='cm-string highlight'>" + ALLSKY_NEED_TO_UPDATE + "</span>";
 						m += " values below before the Website will work.";
 						let msg = '<div class="alert alert-warning" style="font-size: 125%">' + m + '</div>';
 						document.getElementById("need-to-update").innerHTML = msg;
@@ -246,10 +246,10 @@ function DisplayEditor()
 				doEditor(c);
 				editor.on("change", (instance, changeObj) => {
 // TODO: This is executed TWICE each time a file changes.  Why?
-					highlightText(CONFIG_UPDATE_STRING);
+					highlightText(ALLSKY_NEED_TO_UPDATE);
 					checkCorruption();
 				});
-				highlightText(CONFIG_UPDATE_STRING);
+				highlightText(ALLSKY_NEED_TO_UPDATE);
 				checkCorruption();
 
 				$("#save_file").click(function () {
@@ -384,7 +384,7 @@ function DisplayEditor()
 					$.get(fileName + "?_ts=" + new Date().getTime(), function (data) {
 						data = JSON.stringify(data, null, "\t");
 						editor.getDoc().setValue(data);
-						highlightText(CONFIG_UPDATE_STRING);
+						highlightText(ALLSKY_NEED_TO_UPDATE);
 					}).fail(function (x) {
 						if (x.status == 200) {	// json files can fail but actually work
 							editor.getDoc().setValue(x.responseText);

@@ -7,9 +7,9 @@ include_once('includes/authenticate.php');
 // Cause a command specified by "id" (with html output) or "ID" (with just text)
 // to be executed.
 $use_TEXT = false;
-$ID = getVariableOrDefault($_REQUEST, 'id', null);
+$ID = getVariableOrDefault($_REQUEST, 'ID', null);
 if ($ID === null) {
-	$ID = getVariableOrDefault($_REQUEST, 'ID', null);
+	$ID = getVariableOrDefault($_REQUEST, 'id', null);
 	if ($ID !== null) {
 		$use_TEXT = true;
 	}
@@ -58,7 +58,7 @@ if ($ID === null) {
 
 switch ($ID) {
 	case "AM_RM_PRIOR":		// Remove prior version of Allsky.
-		rm_object(PRIOR_ALLSKY_DIR, "Prior Allsky directory '" .PRIOR_ALLSKY_DIR. "' removed.");
+		rm_object(ALLSKY_PRIOR_DIR, "Prior Allsky directory '" . ALLSKY_PRIOR_DIR . "' removed.");
 		rm_object(ALLSKY_OLD_REMINDER);
 
 		rm_msg($ID);

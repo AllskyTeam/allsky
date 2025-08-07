@@ -905,7 +905,7 @@ do
 				MSG="WARNING: "
 				MSG+="Unknown VCODEC: '${NEW_VALUE}'; resetting to '${OLD_VALUE}'."
 				if [[ ${FROM} == "webui" ]]; then
-					HREF="execute.php?ID=AM_ALLSKY_CONFIG encoders'"
+					HREF="execute.php?ID=AM_ALLSKY_CONFIG encoders --html'"
 					MSG+="&nbsp; &nbsp; <a external='true' href='${HREF}'>Click here</a>"
 				else
 					MSG+="\nExecute:  allsky-config encoders"
@@ -928,7 +928,7 @@ do
 				MSG="WARNING: "
 				MSG+="Unknown Pixel Format: '${NEW_VALUE}'; resetting to '${OLD_VALUE}'."
 				if [[ ${FROM} == "webui" ]]; then
-					HREF="execute.php?ID=AM_ALLSKY_CONFIG pix_fmts'"
+					HREF="execute.php?ID=AM_ALLSKY_CONFIG pix_fmts --html'"
 					MSG+="&nbsp; &nbsp; <a external='true' href='${HREF}'>Click here</a>"
 				else
 					MSG+="\nExecute:  allsky-config pix_fmts"

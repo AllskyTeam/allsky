@@ -821,7 +821,7 @@ function create_lighttpd_log_file()
 	sudo rm -fr "${LIGHTTPD_LOG_DIR}"/*
 	sudo truncate -s 0 "${LIGHTTPD_LOG_FILE}"
 	sudo chmod 664 "${LIGHTTPD_LOG_FILE}"
-	sudo chown "${WEBSERVER_GROUP}:${ALLSKY_GROUP}" "${LIGHTTPD_LOG_FILE}"
+	sudo chown "${ALLSKY_WEBSERVER_GROUP}:${ALLSKY_GROUP}" "${LIGHTTPD_LOG_FILE}"
 }
 
 ####

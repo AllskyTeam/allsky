@@ -780,6 +780,9 @@ do_save_camera_capabilities()
 # Look for variables that begin with "ALLSKY_" and "EXIT_" (exit codes).
 create_variables_json()
 {
+	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
+	display_msg --logonly info "Creating '${ALLSKY_VARIABLES_JSON_FILE}."
+
 	{
 		echo "{"
 		(
@@ -798,6 +801,8 @@ create_variables_json()
 
 		echo "}"
 	} > "${ALLSKY_VARIABLES_JSON_FILE}"
+
+	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
 
 

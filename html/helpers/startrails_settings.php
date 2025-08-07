@@ -33,27 +33,27 @@ $cmd = "AM_ALLSKY_CONFIG compare_startrails --html";
 			<form role="form" action="execute.php" method="POST" onsubmit="return add_args()">
 <script>
 function add_args() {
-	id = document.getElementById('id').value;
+	ID = document.getElementById('ID').value;
 
 	input_directory = document.getElementById('input_directory').value;
-	if (input_directory != "") id += " --input " + input_directory;
+	if (input_directory != "") ID += " --input " + input_directory;
 
 	num_images = document.getElementById('num_images').value;
-	if (num_images != "") id += " --num-images " + num_images;
+	if (num_images != "") ID += " --num-images " + num_images;
 
 	thresholds = document.getElementById('thresholds').value;
-	if (thresholds != "") id += " --thresholds " + thresholds.replace(/ /g, "_");
+	if (thresholds != "") ID += " --thresholds " + thresholds.replace(/ /g, "_");
 
 	verbose = document.getElementById('verbose').value;
-	if (verbose != "") id += " --verbose " + verbose;
+	if (verbose != "") ID += " --verbose " + verbose;
 
-	document.getElementById('id').value = id;
+	document.getElementById('ID').value = ID;
 
 	return true;
 }
 </script>
 				<?php CSRFToken() ?>
-				<input type="hidden" name="id" id="id" value="<?php echo $cmd ?>">
+				<input type="hidden" name="ID" id="ID" value="<?php echo $cmd ?>">
 				<input type="hidden" name="day" value="test_startrails">
 
 				<div class="row">

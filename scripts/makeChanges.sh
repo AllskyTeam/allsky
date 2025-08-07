@@ -844,7 +844,7 @@ do
 			fi
 			;;
 
-		"imageresizeuploadwidth" | "imageresizeuploadheight")
+		"imageresizeuploadswidth" | "imageresizeuploadsheight")
 			if [[ ${KEY} == "imageresizeupladwidth" ]]; then
 				O="imageresizeuploadheight"
 			else

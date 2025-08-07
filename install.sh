@@ -109,7 +109,7 @@ declare -r STATUS_INT="Got interrupt"
 STATUS_VARIABLES=()								# Holds the variables and values to save
 
 ##### Set in installUpgradeFunctions.sh
-# PRIOR_ALLSKY_DIR
+# ALLSKY_PRIOR_DIR
 # PRIOR_CONFIG_DIR
 # PRIOR_WEBSITE_DIR
 # PRIOR_WEBSITE_CONFIG_FILE
@@ -302,7 +302,7 @@ do_initial_heading()
 			X="$( basename "${RENAMED_DIR}" )"
 			MSG+="\nYour current '${H}' directory will be renamed to"
 			MSG+="\n\n    ${X}"
-			X="$( basename "${PRIOR_ALLSKY_DIR}" )"
+			X="$( basename "${ALLSKY_PRIOR_DIR}" )"
 			MSG+="\n\nand the prior Allsky in '${X}' will be"
 			MSG+=" renamed to back to '${H}'."
 			MSG+="\n\nFiles that were moved from the old release to the current one"
@@ -353,7 +353,7 @@ usage_and_exit()
 	echo "'--debug' displays debugging information. Can be called multiple times to increase level."
 	echo "'--fix' should only be used when instructed to by the Allsky Website."
 	echo "'--update' should only be used when instructed to by the Allsky Website."
-	echo "'--restore' restores ${PRIOR_ALLSKY_DIR} to ${ALLSKY_HOME}."
+	echo "'--restore' restores ${ALLSKY_PRIOR_DIR} to ${ALLSKY_HOME}."
 	echo "'--function' executes the specified function and quits."
 	echo
 
@@ -803,17 +803,15 @@ update_php_defines()
 			-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};g" \
 			-e "s;XX_ALLSKY_MESSAGES_XX;${ALLSKY_MESSAGES};g" \
 			-e "s;XX_ALLSKY_CHECK_LOG_XX;${ALLSKY_CHECK_LOG};g" \
-			-e "s;XX_ALLSKY_PRIOR_DIR_XX;${PRIOR_ALLSKY_DIR};g" \
+			-e "s;XX_ALLSKY_PRIOR_DIR_XX;${ALLSKY_PRIOR_DIR};g" \
 			-e "s;XX_ALLSKY_OLD_REMINDER_XX;${ALLSKY_OLD_REMINDER};g" \
 			-e "s;XX_ALLSKY_POST_INSTALL_ACTIONS_XX;${ALLSKY_POST_INSTALL_ACTIONS};g" \
 			-e "s;XX_ALLSKY_ABORTS_DIR_XX;${ALLSKY_ABORTS_DIR};g" \
 			-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};g" \
 			-e "s;XX_ALLSKY_SUPPORT_DIR_XX;${ALLSKY_SUPPORT_DIR};g" \
 			-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};g" \
-			-e "s;XX_ALLSKY_WEBSITE_LOCAL_CONFIG_NAME_XX;${ALLSKY_WEBSITE_CONFIGURATION_NAME};g" \
-			-e "s;XX_ALLSKY_WEBSITE_REMOTE_CONFIG_NAME_XX;${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME};g" \
-			-e "s;XX_ALLSKY_WEBSITE_LOCAL_CONFIG_XX;${ALLSKY_WEBSITE_CONFIGURATION_FILE};g" \
-			-e "s;XX_ALLSKY_WEBSITE_REMOTE_CONFIG_XX;${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE};g" \
+			-e "s;XX_ALLSKY_WEBSITE_CONFIGURATION_FILE_XX;${ALLSKY_WEBSITE_CONFIGURATION_FILE};g" \
+			-e "s;XX_ALLSKY_WEBSITE_REMOTE_CONFIGURATION_FILE_XX;${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE};g" \
 			-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};g" \
 			-e "s;XX_ALLSKY_ENV_XX;${ALLSKY_ENV};g" \
 			-e "s;XX_ALLSKY_IMG_DIR_XX;${ALLSKY_IMG_DIR};g" \
@@ -823,8 +821,8 @@ update_php_defines()
 			-e "s;XX_ALLSKY_MODULE_LOCATION_XX;${ALLSKY_MODULE_LOCATION};g" \
 			-e "s;XX_ALLSKY_OWNER_XX;${ALLSKY_OWNER};g" \
 			-e "s;XX_ALLSKY_GROUP_XX;${ALLSKY_GROUP};g" \
-			-e "s;XX_WEBSERVER_OWNER_XX;${WEBSERVER_OWNER};g" \
-			-e "s;XX_WEBSERVER_GROUP_XX;${WEBSERVER_GROUP};g" \
+			-e "s;XX_ALLSKY_WEBSERVER_OWNER_XX;${ALLSKY_WEBSERVER_OWNER};g" \
+			-e "s;XX_ALLSKY_WEBSERVER_GROUP_XX;${ALLSKY_WEBSERVER_GROUP};g" \
 			-e "s;XX_ALLSKY_REPO_XX;${ALLSKY_REPO};g" \
 			-e "s;XX_ALLSKY_GITHUB_ROOT_XX;${ALLSKY_GITHUB_ROOT};g" \
 			-e "s;XX_ALLSKY_GITHUB_ALLSKY_REPO_XX;${ALLSKY_GITHUB_ALLSKY_REPO};g" \
@@ -836,7 +834,7 @@ update_php_defines()
 			-e "s;XX_ALLSKY_STATUS_RUNNING_XX;${ALLSKY_STATUS_RUNNING};g" \
 			-e "s;XX_ALLSKY_STATUS_NEEDS_CONFIGURATION_XX;${ALLSKY_STATUS_NEEDS_CONFIGURATION};g" \
 			-e "s;XX_ALLSKY_STATUS_NEEDS_REVIEW_XX;${ALLSKY_STATUS_NEEDS_REVIEW};g" \
-			-e "s;XX_RASPI_CONFIG_XX;${ALLSKY_CONFIG};g" \
+			-e "s;XX_ALLSKY_NEED_TO_UPDATE_XX;${ALLSKY_NEED_TO_UPDATE};g" \
 			-e "s;XX_EXIT_PARTIAL_OK_XX;${EXIT_PARTIAL_OK};g" \
 		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
 		chmod 644 "${FILE}"
@@ -1568,17 +1566,17 @@ does_prior_Allsky_exist()
 {
 	local MSG  DIR  CAPTURE  STRING
 
-	# ${PRIOR_ALLSKY_DIR} points to where the prior Allsky would be.
+	# ${ALLSKY_PRIOR_DIR} points to where the prior Allsky would be.
 	# Make sure it's there and is valid.
 
-	MSG="Prior Allsky directory found at '${PRIOR_ALLSKY_DIR}'"
+	MSG="Prior Allsky directory found at '${ALLSKY_PRIOR_DIR}'"
 	# If a prior config directory doesn't exist then there's no prior Allsky,
 	if [[ ! -d ${PRIOR_CONFIG_DIR} ]]; then
-		if [[ -d ${PRIOR_ALLSKY_DIR} ]]; then
+		if [[ -d ${ALLSKY_PRIOR_DIR} ]]; then
 			MSG+=" but it doesn't appear to have been installed; ignoring it."
 			display_msg --log warning "${MSG}"
 		else
-			display_msg --logonly info "No prior Allsky found at '${PRIOR_ALLSKY_DIR}'."
+			display_msg --logonly info "No prior Allsky found at '${ALLSKY_PRIOR_DIR}'."
 		fi
 		does_prior_Allsky_Website_exist ""
 		USE_PRIOR_ALLSKY="false"
@@ -1587,7 +1585,7 @@ does_prior_Allsky_exist()
 
 # TODO: Remove this check when only looking back 2 major releases.
 	# All versions back to v0.6 (never checked prior ones) have a "scripts" directory.
-	if [[ ! -d "${PRIOR_ALLSKY_DIR}/scripts" ]]; then
+	if [[ ! -d "${ALLSKY_PRIOR_DIR}/scripts" ]]; then
 		MSG+=" but it doesn't appear to be valid or it too old; ignoring it."
 		display_msg --log warning "${MSG}"
 		does_prior_Allsky_Website_exist ""
@@ -1595,11 +1593,11 @@ does_prior_Allsky_exist()
 		return 1
 	fi
 
-	display_msg --logonly info "Prior Allsky found at '${PRIOR_ALLSKY_DIR}'."
+	display_msg --logonly info "Prior Allsky found at '${ALLSKY_PRIOR_DIR}'."
 	USE_PRIOR_ALLSKY="true"		# may be set to false after user is prompted to use it
 
 	# Determine the prior Allsky version and set some PRIOR_* locations.
-	PRIOR_ALLSKY_VERSION="$( get_version "${PRIOR_ALLSKY_DIR}/" )"	# Returns "" if no version file.
+	PRIOR_ALLSKY_VERSION="$( get_version "${ALLSKY_PRIOR_DIR}/" )"	# Returns "" if no version file.
 	if [[ -n ${PRIOR_ALLSKY_VERSION} && (! ${PRIOR_ALLSKY_VERSION} < "${FIRST_CAMERA_TYPE_BASE_VERSION}") ]]; then
 		PRIOR_ALLSKY_STYLE="${NEW_STYLE_ALLSKY}"
 		if [[ ${RESTORE} == "true" ]]; then
@@ -1629,7 +1627,7 @@ does_prior_Allsky_exist()
 		fi
 
 		# Check for prior ALLSKY_USER_VARIABLES file.
-		local PRIOR_ALLSKY_USER_VARIABLES="${ALLSKY_USER_VARIABLES/${ALLSKY_HOME}/${PRIOR_ALLSKY_DIR}}"
+		local PRIOR_ALLSKY_USER_VARIABLES="${ALLSKY_USER_VARIABLES/${ALLSKY_HOME}/${ALLSKY_PRIOR_DIR}}"
 		if [[ -s ${PRIOR_ALLSKY_USER_VARIABLES} ]]; then
 			display_msg --logonly info "User has ${PRIOR_ALLSKY_USER_VARIABLES}"
 			# Check if ALLSKY_IMAGES was changed.
@@ -1666,10 +1664,10 @@ does_prior_Allsky_exist()
 		if [[ -z ${PRIOR_ALLSKY_VERSION} ]]; then
 			# No version file so try to determine version via .cpp file.
 			# sample:    printf("%s *** Allsky Camera Software v0.8.3 | 2021 ***\n", c(KGRN));
-			DIR="${PRIOR_ALLSKY_DIR}/src"
+			DIR="${ALLSKY_PRIOR_DIR}/src"
 			if [[ ! -d "${DIR}" ]]; then
 				# Really old versions had source in the top directory.
-				DIR="${PRIOR_ALLSKY_DIR}"
+				DIR="${ALLSKY_PRIOR_DIR}"
 			fi
 			CAPTURE="${DIR}/capture_${PRIOR_CAMERA_TYPE}.cpp"
 			if [[ ! -f ${CAPTURE} ]]; then
@@ -1731,7 +1729,7 @@ prompt_for_prior_Allsky()
 		local MSG  M
 
 		if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
-			MSG="You have a prior version of Allsky in ${PRIOR_ALLSKY_DIR}."
+			MSG="You have a prior version of Allsky in ${ALLSKY_PRIOR_DIR}."
 			if [[ ${ALLSKY_IMAGES_MOVED} == "true" ]]; then
 				M=""
 			else
@@ -1778,11 +1776,11 @@ prompt_for_prior_Allsky()
 			MSG="No prior version of Allsky found."
 			MSG+="\n\nIf you DO have a prior version and you want images, darks,"
 			MSG+=" and certain settings moved from the prior version to the new one,"
-			MSG+=" rename the prior version to ${PRIOR_ALLSKY_DIR} before running this installation."
+			MSG+=" rename the prior version to ${ALLSKY_PRIOR_DIR} before running this installation."
 			MSG+="\n\nDo you want to continue?"
 			if ! whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
 				MSG="Rename the directory with your prior version of Allsky to"
-				MSG+="\n '${PRIOR_ALLSKY_DIR}', then run the installation again."
+				MSG+="\n '${ALLSKY_PRIOR_DIR}', then run the installation again."
 				display_msg info "${MSG}"
 				display_msg --logonly info "User elected not to continue.  Exiting installation."
 				exit_installation 0 "${STATUS_NOT_CONTINUE}" "after no prior Allsky was found."
@@ -2559,7 +2557,7 @@ restore_prior_files()
 
 	# If the prior ${ALLSKY_TMP} is mounted, unmount it so users can
 	# remove the old Allsky.
-	D="${PRIOR_ALLSKY_DIR}/tmp"
+	D="${ALLSKY_PRIOR_DIR}/tmp"
 	if is_mounted "${D}" ; then
 		display_msg --logonly info "Unmounting '${D}'."
 		umount_dir "${D}" "install"
@@ -2573,7 +2571,7 @@ restore_prior_files()
 	local E  D  R  ITEM  X
 
 # TODO: delete in major release after v2024.12.06
-	if [[ -f ${PRIOR_ALLSKY_DIR}/scripts/endOfNight_additionalSteps.sh ]]; then
+	if [[ -f ${ALLSKY_PRIOR_DIR}/scripts/endOfNight_additionalSteps.sh ]]; then
 		MSG="The ${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh file is no longer supported."
 		MSG+="\nPlease move your code in that file to the 'Script' module in"
 		MSG+="\nthe 'Night to Day Transition Flow' of the Module Manager."
@@ -2586,9 +2584,9 @@ restore_prior_files()
 	if [[ ${ALLSKY_IMAGES} != "${ALLSKY_IMAGES_ORIGINAL}" ]]; then
 		display_msg --log progress "${ITEM} (leaving '${ALLSKY_IMAGES}' as is)"
 	else
-		if [[ -d ${PRIOR_ALLSKY_DIR}/images ]]; then
+		if [[ -d ${ALLSKY_PRIOR_DIR}/images ]]; then
 			display_msg --log progress "${ITEM} (moving)"
-			mv "${PRIOR_ALLSKY_DIR}/images" "${ALLSKY_HOME}"
+			mv "${ALLSKY_PRIOR_DIR}/images" "${ALLSKY_HOME}"
 		else
 			# This is probably very rare so let the user know
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}."  " This is unusual."
@@ -2596,9 +2594,9 @@ restore_prior_files()
 	fi
 
 	ITEM="${SPACE}'darks' directory"
-	if [[ -d ${PRIOR_ALLSKY_DIR}/darks ]]; then
+	if [[ -d ${ALLSKY_PRIOR_DIR}/darks ]]; then
 		display_msg --log progress "${ITEM} (moving)"
-		mv "${PRIOR_ALLSKY_DIR}/darks" "${ALLSKY_HOME}"
+		mv "${ALLSKY_PRIOR_DIR}/darks" "${ALLSKY_HOME}"
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
@@ -2673,7 +2671,7 @@ restore_prior_files()
 	# PRIOR_OVERLAY_FILE is no longer used, but if it exists,
 	# convert it to the new name/format.
 	PRIOR_OVERLAY_FILE="${PRIOR_CONFIG_DIR}/overlay/config/overlay.json"
-	PRIOR_OVERLAY_REPO_FILE="${PRIOR_ALLSKY_DIR}/config_repo/overlay/config/overlay-${PRIOR_CAMERA_TYPE}.json"
+	PRIOR_OVERLAY_REPO_FILE="${ALLSKY_PRIOR_DIR}/config_repo/overlay/config/overlay-${PRIOR_CAMERA_TYPE}.json"
 
 	# If no prior overlay.json exists or the user never changed it (i.e., it's the same
 	# as the prior confi_repo file), use the new format if its not been setup before.
@@ -2747,9 +2745,9 @@ restore_prior_files()
 	# Restore it now because it's potentially written to below.
 	E="$( basename "${ALLSKY_ENV}" )"
 	ITEM="${SPACE}'${E}' file"
-	if [[ -f ${PRIOR_ALLSKY_DIR}/${E} ]]; then
+	if [[ -f ${ALLSKY_PRIOR_DIR}/${E} ]]; then
 		display_msg --log progress "${ITEM} (copying)"
-		cp -ar "${PRIOR_ALLSKY_DIR}/${E}" "${ALLSKY_ENV}"
+		cp -ar "${ALLSKY_PRIOR_DIR}/${E}" "${ALLSKY_ENV}"
 	fi
 
 	# Restore the remote Allsky Website configuration file if it exists.
@@ -2799,9 +2797,9 @@ restore_prior_files()
 	if [[ -f ${PRIOR_FTP_FILE} ]]; then			# allsky/config version
 		# Version ${FIRST_VERSION_VERSION} and newer.
 		:
-	elif [[ -f ${PRIOR_ALLSKY_DIR}/scripts/ftp-settings.sh ]]; then
+	elif [[ -f ${ALLSKY_PRIOR_DIR}/scripts/ftp-settings.sh ]]; then
 		# pre ${FIRST_VERSION_VERSION}
-		PRIOR_FTP_FILE="${PRIOR_ALLSKY_DIR}/scripts/ftp-settings.sh"
+		PRIOR_FTP_FILE="${ALLSKY_PRIOR_DIR}/scripts/ftp-settings.sh"
 	else
 		if [[ -s ${PRIOR_CONFIG_FILE} ]]; then
 			# If there was a prior config file there should have been a prior ftp file.
@@ -3041,8 +3039,8 @@ do_restore()
 	if [[ ! -d ${ALLSKY_CONFIG} ]]; then
 		MSG+="Allsky isn't installed."
 		OK="false"
-	elif [[ ! -d ${PRIOR_ALLSKY_DIR} ]]; then
-		MSG+="No prior version exists in '${PRIOR_ALLSKY_DIR}'."
+	elif [[ ! -d ${ALLSKY_PRIOR_DIR} ]]; then
+		MSG+="No prior version exists in '${ALLSKY_PRIOR_DIR}'."
 		OK="false"
 	fi
 	if [[ ${OK} == "false" ]]; then
@@ -3067,7 +3065,7 @@ do_restore()
 	else
 		if [[ -d ${ALLSKY_IMAGES} ]]; then
 			display_msg --log progress "${ITEM} (moving back)"
-			mv "${ALLSKY_IMAGES}" "${PRIOR_ALLSKY_DIR}"
+			mv "${ALLSKY_IMAGES}" "${ALLSKY_PRIOR_DIR}"
 		else
 			# This is probably very rare so let the user know
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}." " This is unusual."
@@ -3077,7 +3075,7 @@ do_restore()
 	ITEM="${SPACE}'darks' directory"
 	if [[ -d ${ALLSKY_HOME}/darks ]]; then
 		display_msg --log progress "${ITEM} (moving back)"
-		mv "${ALLSKY_HOME}/darks" "${PRIOR_ALLSKY_DIR}"
+		mv "${ALLSKY_HOME}/darks" "${ALLSKY_PRIOR_DIR}"
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
@@ -3173,9 +3171,9 @@ do_restore()
 	STATUS_FILE="${STATUS_FILE/${ALLSKY_HOME}/${RENAMED_DIR}}"
 	ALLSKY_SCRIPTS="${ALLSKY_SCRIPTS/${ALLSKY_HOME}/${RENAMED_DIR}}"
 
-	display_msg --log progress "Renaming '${PRIOR_ALLSKY_DIR}' to '${ALLSKY_HOME}'"
-	if ! mv "${PRIOR_ALLSKY_DIR}" "${ALLSKY_HOME}" ; then
-		MSG="Unable to rename '${PRIOR_ALLSKY_DIR}' to '${ALLSKY_HOME}'"
+	display_msg --log progress "Renaming '${ALLSKY_PRIOR_DIR}' to '${ALLSKY_HOME}'"
+	if ! mv "${ALLSKY_PRIOR_DIR}" "${ALLSKY_HOME}" ; then
+		MSG="Unable to rename '${ALLSKY_PRIOR_DIR}' to '${ALLSKY_HOME}'"
 		exit_installation 1 "${STATUS_ERROR}" "${MSG}"
 	fi
 
@@ -3695,9 +3693,9 @@ remind_old_version()
 
 	if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
 		MSG="When you are sure everything is working with the new Allsky release,"
-		MSG+=" remove your old version in '${PRIOR_ALLSKY_DIR}' to save disk space."
+		MSG+=" remove your old version in '${ALLSKY_PRIOR_DIR}' to save disk space."
 		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
-		display_msg --logonly info "Displayed message about removing '${PRIOR_ALLSKY_DIR}'."
+		display_msg --logonly info "Displayed message about removing '${ALLSKY_PRIOR_DIR}'."
 	fi
 }
 
@@ -4051,15 +4049,15 @@ if [[ -n ${FUNCTION} || ${FIX} == "true" ]]; then
 	DISPLAY_MSG_LOG=""
 else
 	if [[ ${RESTORE} == "true" ]]; then
-		if [[ ! -d ${PRIOR_ALLSKY_DIR} ]]; then
+		if [[ ! -d ${ALLSKY_PRIOR_DIR} ]]; then
 			echo -en "\nERROR: You requested a restore," >&2
-			echo -e " but no prior Allsky found at '${PRIOR_ALLSKY_DIR}'.\n" >&2
+			echo -e " but no prior Allsky found at '${ALLSKY_PRIOR_DIR}'.\n" >&2
 			exit 1
 		fi
 		DISPLAY_MSG_LOG="${ALLSKY_LOGS}/restore.log"
 		STATUS_FILE="${ALLSKY_LOGS}/restore_status.txt"
 		IorR="RESTORATION"
-		V="$( get_version "${PRIOR_ALLSKY_DIR}/" )"		# Returns "" if no version file.
+		V="$( get_version "${ALLSKY_PRIOR_DIR}/" )"		# Returns "" if no version file.
 		V="${V:-prior version}"
 		SHORT_TITLE="Allsky Restorer"
 		TITLE="${SHORT_TITLE} - from ${ALLSKY_VERSION} back to ${V}"

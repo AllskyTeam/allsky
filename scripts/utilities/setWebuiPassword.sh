@@ -341,7 +341,7 @@ check_and_update_auth_method()
 
     WEBUI_USERNAME_EXISTS="true"
     TEMP="$( settings --null .WEBUI_USERNAME "${ALLSKY_ENV}" )"
-    if [[ ${TEMP}" == "null ]]; then
+    if [[ ${TEMP} == "null" ]]; then
         WEBUI_USERNAME_EXISTS="false"
     fi
     WEBUI_PASSWORD_EXISTS="true"

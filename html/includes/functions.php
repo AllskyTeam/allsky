@@ -1003,12 +1003,12 @@ function getOptionsFile() {
 
 // Return the full path name of the local Website configuration file.
 function getLocalWebsiteConfigFile() {
-	return ALLSKY_WEBSITE_LOCAL_CONFIG;
+	return ALLSKY_WEBSITE_CONFIGURATION_FILE;
 }
 
 // Return the full path name of the remote Website configuration file.
 function getRemoteWebsiteConfigFile() {
-	return ALLSKY_WEBSITE_REMOTE_CONFIG;
+	return ALLSKY_WEBSITE_REMOTE_CONFIGURATION_FILE;
 }
 
 // Return the file name after accounting for any ${} variables.

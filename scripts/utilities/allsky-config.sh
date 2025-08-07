@@ -51,26 +51,31 @@ function usage_and_exit()
 		echo "Valid commands are:"
 	fi
 
+	# Try to keep in same order as menu.
+	echo "      get_startrails_info"
+	echo "      show_start_times [--zero] [angle [latitude [longitude]]]"
 	echo "      show_supported_cameras  --RPi | --ZWO"
 	echo "      show_connected_cameras"
-	echo "      show_installed_locales"
-	echo "      prepare_logs [debug_level]"
-	echo "      config_timelapse"
-	echo "      change_swap"
-	echo "      change_tmp"
-	echo "      samba"
-	echo "      move_images"
-	echo "      bad_images_info [--show_bad_images]"
 	echo "      new_rpi_camera_info [--camera NUM]"
-	echo "      show_start_times [--zero] [angle [latitude [longitude]]]"
-	echo "      compare_paths --website | --server"
-	echo "      get_startrails_info"
-	echo "      compare_startrails [see --help for arguments]"
-	echo "      compare_stretches [see --help for arguments]"
-	echo "      check_post_data"
+	echo "      show_installed_locales"
 	echo "      get_filesystems"
 	echo "      encoders"
 	echo "      pix_fmts"
+
+	echo "      config_timelapse"
+	echo "      compare_startrails [see --help for arguments]"
+	echo "      compare_stretches [see --help for arguments]"
+
+	echo "      change_swap"
+	echo "      change_tmp"
+	echo "      samba"
+
+	echo "      bad_images_info [--show_bad_images]"
+	echo "      check_post_data"
+	echo "      compare_paths --website | --server"
+
+	echo "      move_images"
+	echo "      prepare_logs [debug_level]"
 
 	if [[ ${COMMANDS_ONLY} == "false" ]]; then
 		echo "  If no 'command' is specified you are prompted for one."
@@ -400,7 +405,9 @@ function encoders()
 		return
 	fi
 
+	[[ ${1} == "--html" ]] && echo "<pre>"
 	ffmpeg -loglevel error -encoders
+	[[ ${1} == "--html" ]] && echo "</pre>"
 }
 
 
@@ -418,7 +425,9 @@ function pix_fmts()
 		return
 	fi
 
+	[[ ${1} == "--html" ]] && echo "<pre>"
 	ffmpeg -loglevel error -pix_fmts
+	[[ ${1} == "--html" ]] && echo "</pre>"
 }
 
 
@@ -482,25 +491,26 @@ WT_LINES="${WT_LINES:-24}"
 
 function prompt()
 {
-	PROMPT="${1}"
+	local PROMPT="${1}"
 	shift
-	OPTIONS=("${@}")
-
+	local OPTIONS=("${@}")
 	local NUM_OPTIONS=$(( ${#OPTIONS[@]} / 2 ))
+
 # whiptail's menubox has:
-# 2 lines at top
+# 4 lines at top
 # then the menu (NUM_OPTIONS lines)
 # 2 blank lines
 # 1 "<Ok> / <Cancel>" line
 # 2 blank lines
 # If all that doesn't fit in the terminal windows, whiptail does NOT scroll.
-	local LINES=$(( 2 + NUM_OPTIONS + 2 + 1 + 2 ))
+	local LINES=$(( 4 + NUM_OPTIONS + 2 + 1 + 2 ))
 	if [[ ${LINES} -ge ${WT_LINES} ]]; then
 		echo "Please resize you window to at least $(( LINES + 1 )) lines."
 		echo "It is only ${WT_LINES} lines now."
 	fi >&2
 
 	local OPT="$( whiptail --title "${TITLE}" --notags --menu "${PROMPT}" \
+		--default-item "${DEFAULT_MENU_ITEM}" \
 		"${LINES}" "${WT_WIDTH:-100}" "${NUM_OPTIONS}" -- "${OPTIONS[@]}" 3>&1 1>&2 2>&3 )"
 	local RET=$?
 	if [[ ${RET} -eq 255 ]]; then
@@ -533,13 +543,13 @@ function getInput()
 
 
 # Output a list item.
-# Uses global ${N}.
+# Uses globals ${N} and ${C}.
 function L()
 {
 	local NAME="${1}"
 
 	local NUM="$( printf "%2d" "${N}" )"
-	echo -e "${NUM}.  ${NAME}"
+	echo -e "     ${NUM}.  ${NAME}"
 }
 
 
@@ -599,88 +609,107 @@ if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 
 	PROMPT="\nSelect a command to run:"
 	CMDS=()
-	N=1
+	N=0
 
-	C="show_supported_cameras"
-	CMDS+=("${C}"	"$( L "Show supported cameras                                (${C})" )")
-	((N++))
+#####
+	CMDS+=("header"	      "Commands to Display Information" )
 
-	C="show_connected_cameras"
-	CMDS+=("${C}"	"$( L "Show connected cameras                                (${C})" )")
-	((N++))
+	((N++));	C="get_startrails_info"
+	CMDS+=("${C}"	"$( L "Get information on startrails image brightness           (${C})" )")
 
-	C="prepare_logs"
-	CMDS+=("${C}"	"$( L "Prepare log files for troubleshooting                 (${C})" )")
-	((N++))
+	DEFAULT_MENU_ITEM="${C}"		# Must be 1st item
 
-	C="config_timelapse"
-	CMDS+=("${C}"	"$( L "Create timelapse videos with different settings       (${C})" )")
-	((N++))
+	((N++));	C="show_start_times"
+	CMDS+=("${C}"	"$( L "Show daytime and nighttime start times                   (${C})" )")
 
-	C="change_swap"
-	CMDS+=("${C}"	"$( L "Add swap space or change size                         (${C})" )")
-	((N++))
+	((N++));	C="show_supported_cameras"
+	CMDS+=("${C}"	"$( L "Show supported cameras                                   (${C})" )")
 
-	C="change_tmp"
-	CMDS+=("${C}" 	"$( L "Move ~/allsky/tmp to memory or change size            (${C})") ")
-	((N++))
+	((N++));	C="show_connected_cameras"
+	CMDS+=("${C}"	"$( L "Show connected cameras                                   (${C})" )")
 
-	C="samba"
-	CMDS+=("${C}" 	"$( L "Simplify copying files to/from the Pi                 (${C})" )")
-	((N++))
+	((N++));	C="new_rpi_camera_info"
+	CMDS+=("${C}"	"$( L "Collect information for new RPi camera                   (${C})" )")
 
-	C="move_images"
-	CMDS+=("${C}"	"$( L "Move ~/allsky/images to a different location          (${C})" )")
-	((N++))
+	((N++));	C="show_installed_locales"
+	CMDS+=("${C}"	"$( L "Show the locales installed on the Pi                     (${C})" )")
 
-	C="bad_images_info"
-	CMDS+=("${C}"	"$( L "Display information on 'bad' images                   (${C})" )")
-	((N++))
+	((N++));	C="get_filesystems"
+	CMDS+=("${C}"	"$( L "Determine where a secodary storage device is             (${C})" )")
 
-	C="new_rpi_camera_info"
-	CMDS+=("${C}"	"$( L "Collect information for new RPi camera                (${C})" )")
-	((N++))
+	((N++));	C="encoders"
+	CMDS+=("${C}"	"$( L "Show list of timelapse encoders available                (${C})" )")
 
-	C="show_start_times"
-	CMDS+=("${C}"	"$( L "Show daytime and nighttime start times                (${C})" )")
-	((N++))
+	((N++));	C="pix_fmts"
+	CMDS+=("${C}"	"$( L "Show list of timelapse pixel formats available           (${C})" )")
 
-	C="compare_paths"
-	CMDS+=("${C}"	"$( L "Compare upload and Website paths                      (${C})" )")
-	((N++))
 
-	C="get_startrails_info"
-	CMDS+=("${C}"	"$( L "Get information on startrails image brightness        (${C})" )")
-	((N++))
+#####
+	CMDS+=("header"	      "Commands to Create Test Images or Videos" )
 
-	C="compare_startrails"
-	CMDS+=("${C}"	"$( L "Create multiple startrails to compare settings        (${C})" )")
-	((N++))
+# TODO: Not sure if I like it better with, or without this phrase:
+X="with different settings"
+X="                       "
+	((N++));	C="config_timelapse"
+	CMDS+=("${C}"	"$( L "Create multiple timelapse videos ${X} (${C})" )")
 
-	C="compare_stretches"
-	CMDS+=("${C}"	"$( L "Create multiple stretched images to compare settings  (${C})" )")
-	((N++))
+	((N++));	C="compare_startrails"
+	CMDS+=("${C}"	"$( L "Create multiple startrails ${X}       (${C})" )")
 
-	C="check_post_data"
-	CMDS+=("${C}"	"$( L "Troubleshoot the 'data.json is X days old' message    (${C})" )")
-	((N++))
+	((N++));	C="compare_stretches"
+	CMDS+=("${C}"	"$( L "Create multiple stretched images ${X} (${C})" )")
 
-	C="get_filesystems"
-	CMDS+=("${C}"	"$( L "Determine where a secodary storage device is          (${C})" )")
-	((N++))
 
-	C="encoders"
-	CMDS+=("${C}"	"$( L "Show list of timelapse encoders available             (${C})" )")
-	((N++))
+#####
+	CMDS+=("header"	      "Commands to Change Pi Settings" )
 
-	C="pix_fmts"
-	CMDS+=("${C}"	"$( L "Show list of timelapse pixel formats available        (${C})" )")
-	((N++))
+	((N++));	C="change_swap"
+	CMDS+=("${C}"	"$( L "Add swap space or change size                            (${C})" )")
 
+	((N++));	C="change_tmp"
+	CMDS+=("${C}" 	"$( L "Move ~/allsky/tmp to memory or change size               (${C})") ")
+
+	((N++));	C="samba"
+	CMDS+=("${C}" 	"$( L "Simplify copying files to/from the Pi                    (${C})" )")
+
+
+#####
+	CMDS+=("header"	      "Troubleshooting Commands" )
+
+	((N++));	C="bad_images_info"
+	CMDS+=("${C}"	"$( L "Display information on 'bad' images                      (${C})" )")
+
+	((N++));	C="check_post_data"
+	CMDS+=("${C}"	"$( L "Troubleshoot the 'data.json is X days old' message       (${C})" )")
+
+	((N++));	C="compare_paths"
+	CMDS+=("${C}"	"$( L "Compare upload and Website paths                         (${C})" )")
+
+
+
+#####
+	CMDS+=("header"	      "Misc. Commands" )
+
+	((N++));	C="move_images"
+	CMDS+=("${C}"	"$( L "Move ~/allsky/images to a different location             (${C})" )")
+
+	((N++));	C="prepare_logs"
+	CMDS+=("${C}"	"$( L "Prepare log files for troubleshooting                    (${C})" )")
+
+	##### Prompt
 	# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
-	while COMMAND="$( prompt "${PROMPT}" "${CMDS[@]}" )"
+	P="${PROMPT}"
+	while COMMAND="$( prompt "${P}" "${CMDS[@]}" )"
 	do
 		[[ -z ${COMMAND} ]] && exit 0
+
+		if [[ ${COMMAND} == "header" ]]; then
+			# There isn't a way in whiptail to group items so we fake it.
+			P="\nYou selected a header.  Please select a command to run:"
+			continue
+		fi
+		P="${PROMPT}"	# restore prompt
+		
 
 		run_command "${COMMAND}"
 		RET=$?

@@ -904,8 +904,13 @@ do
 
 				MSG="WARNING: "
 				MSG+="Unknown VCODEC: '${NEW_VALUE}'; resetting to '${OLD_VALUE}'."
-				MSG+="${wBR}Execute: ffmpeg -encoders"
-				MSG+="${wBR}for a list of VCODECs."
+				if [[ ${FROM} == "webui" ]]; then
+					HREF="execute.php?ID=AM_ALLSKY_CONFIG encoders'"
+					MSG+="&nbsp; &nbsp; <a external='true' href='${HREF}'>Click here</a>"
+				else
+					MSG+="\nExecute:  allsky-config encoders"
+				fi
+				MSG+=" for a list of VCODECs."
 				wW_ "${MSG}"
 
 				# Restore to old value
@@ -922,8 +927,13 @@ do
 
 				MSG="WARNING: "
 				MSG+="Unknown Pixel Format: '${NEW_VALUE}'; resetting to '${OLD_VALUE}'."
-				MSG+="Execute: ffmpeg -pix_fmts"
-				MSG+="for a list of formats."
+				if [[ ${FROM} == "webui" ]]; then
+					HREF="execute.php?ID=AM_ALLSKY_CONFIG pix_fmts'"
+					MSG+="&nbsp; &nbsp; <a external='true' href='${HREF}'>Click here</a>"
+				else
+					MSG+="\nExecute:  allsky-config pix_fmts"
+				fi
+				MSG+=" for a list of formats."
 				wW_ "${MSG}"
 
 				# Restore to old value

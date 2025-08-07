@@ -176,7 +176,7 @@ last_installation_was_ok()
 		display_msg --log progress "Re-starting installation after successful install."
 		clear_status
 	else
-		display_msg --logonly progress "Not continuing after prior successful installation."
+		display_msg --logonly info "Not continuing after prior successful installation."
 		exit_installation 0 ""
 	fi
 }
@@ -1153,10 +1153,10 @@ set_permissions()
 
 	# Make sure the currently running user is in the right groups.
 	# "sudo" allows them to run sudo on anything.
-	# "${WEBSERVER_GROUP}" allows the web server to write files to Allsky directories.
+	# "${ALLSKY_WEBSERVER_GROUP}" allows the web server to write files to Allsky directories.
 	# "video" allows the user to access video devices
 	local G="$( id "${ALLSKY_OWNER}" )"
-	for g in "sudo" "${WEBSERVER_GROUP}" "video"
+	for g in "sudo" "${ALLSKY_WEBSERVER_GROUP}" "video"
 	do
 		#shellcheck disable=SC2076
 		if ! [[ ${G} =~ "(${g})" ]]; then
@@ -1174,11 +1174,11 @@ set_permissions()
 	# Not all, but go ahead and chgrp all of them so we don't miss any new ones.
 	sudo find "${ALLSKY_CONFIG}/" -type f -exec chmod 664 '{}' \;
 	sudo find "${ALLSKY_CONFIG}/" -type d -exec chmod 775 '{}' \;
-	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_CONFIG}"
+	sudo chgrp -R "${ALLSKY_WEBSERVER_GROUP}" "${ALLSKY_CONFIG}"
 
 	# Modules and overlays
 	sudo mkdir -p "${ALLSKY_MODULE_LOCATION}/modules"
-	sudo chgrp -R "${WEBSERVER_GROUP}" "${ALLSKY_MODULE_LOCATION}"
+	sudo chgrp -R "${ALLSKY_WEBSERVER_GROUP}" "${ALLSKY_MODULE_LOCATION}"
 	sudo chmod -R 775 "${ALLSKY_MODULE_LOCATION}"
 
 	# The files should already be the correct permissions/owners, but just in case, set them.
@@ -1187,13 +1187,13 @@ set_permissions()
 	sudo find "${ALLSKY_WEBUI}/" -type d -exec chmod 755 '{}' \;
 
 	chmod 775 "${ALLSKY_TMP}"
-	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_TMP}"
+	sudo chgrp "${ALLSKY_WEBSERVER_GROUP}" "${ALLSKY_TMP}"
 
 
 	########## Website files
 
 	chmod 664 "${ALLSKY_ENV}"
-	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_ENV}"
+	sudo chgrp "${ALLSKY_WEBSERVER_GROUP}" "${ALLSKY_ENV}"
 
 	# These directories aren't in GitHub so need to be manually created.
 	mkdir -p \
@@ -1206,7 +1206,7 @@ set_permissions()
 	# but make them all that way so we don't worry about missing something.
 	sudo find "${ALLSKY_WEBSITE}" -type d -exec chmod 775 '{}' \;
 	sudo find "${ALLSKY_WEBSITE}" -type f -exec chmod 664 '{}' \;
-	sudo chgrp --recursive "${WEBSERVER_GROUP}" "${ALLSKY_WEBSITE}"
+	sudo chgrp --recursive "${ALLSKY_WEBSERVER_GROUP}" "${ALLSKY_WEBSITE}"
 
 	# Get the session handler type from the php ini file
 	SESSION_HANDLER="$( get_php_setting "session.save_handler" )"
@@ -1221,9 +1221,9 @@ set_permissions()
 		sudo find "${SESSION_PATH}" -type f -print0 | while read -r -d $'\0' SESSION_FILE
 		do
 			OWNER="$( sudo stat -c '%U' "${SESSION_FILE}" )"
-			if [[ ${OWNER} != "${WEBSERVER_OWNER}" ]]; then
+			if [[ ${OWNER} != "${ALLSKY_WEBSERVER_OWNER}" ]]; then
 				display_msg --log info "Found php sessions with wrong owner - fixing them"
-				sudo chown -R "${WEBSERVER_OWNER}":"${WEBSERVER_OWNER}" "${SESSION_PATH}"
+				sudo chown -R "${ALLSKY_WEBSERVER_OWNER}":"${ALLSKY_WEBSERVER_OWNER}" "${SESSION_PATH}"
 				break        
 			fi
 		done
@@ -1231,7 +1231,7 @@ set_permissions()
 
 	# Ensure the support folder has the correct owner and group
 	[[ ! -d ${ALLSKY_SUPPORT_DIR} ]] && mkdir -p "${ALLSKY_SUPPORT_DIR}"
-	sudo chown "${ALLSKY_OWNER}":"${WEBSERVER_GROUP}" "${ALLSKY_SUPPORT_DIR}"
+	sudo chown "${ALLSKY_OWNER}":"${ALLSKY_WEBSERVER_GROUP}" "${ALLSKY_SUPPORT_DIR}"
 	sudo chmod 775 "${ALLSKY_SUPPORT_DIR}"
 }
 
@@ -3474,7 +3474,7 @@ install_overlay()
 	# anything yet, so create the directory.
 	mkdir -p "${ALLSKY_MY_OVERLAY_TEMPLATES}"
 #xx TODO: these are done in set_permissions, so remove from here:
-#xx	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_MY_OVERLAY_TEMPLATES}"
+#xx	sudo chgrp "${ALLSKY_WEBSERVER_GROUP}" "${ALLSKY_MY_OVERLAY_TEMPLATES}"
 #xx	sudo chmod 775 "${ALLSKY_MY_OVERLAY_TEMPLATES}"	
 
 	# Globals: SENSOR_WIDTH, SENSOR_HEIGHT, FULL_OVERLAY_NAME, SHORT_OVERLAY_NAME, OVERLAY_NAME
@@ -4012,6 +4012,7 @@ do_done()
 
 do_legacy_password_conversion()
 {
+	display_msg --logonly info "Calling setWebuiPassword.sh"
 	"${ALLSKY_UTILITIES}/setWebuiPassword.sh" --frominstaller
 }
 

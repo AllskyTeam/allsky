@@ -248,7 +248,7 @@ class MODULEUTIL
         $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($flow) . '.json';
         $backupConfigFileName = $configFileName . '-last';
         # File are created 644 which means the web server can't change them after
-        # they are created.  To get around this, remove backupFileName before copy over it.
+        # they are created.  To get around this, remove backupFilename before copy over it.
         @unlink($configFileName);
         copy($backupConfigFileName, $configFileName);
         $this->changeOwner($configFileName);
@@ -535,9 +535,9 @@ class MODULEUTIL
         $result = file_put_contents($configFileName, $configData);
         $this->changeOwner($configFileName);
         $backupFilename = $configFileName . '-last';
-        @unlink($backupFileName);
-        copy($configFileName, $backupFileName);
-        $this->changeOwner($backupFileName);
+        @unlink($backupFilename);
+        copy($configFileName, $backupFilename);
+        $this->changeOwner($backupFilename);
         if ($result !== false) {
             $newModules = json_decode($configData);
             $this->CheckForDisabledModules($newModules, $oldModules);

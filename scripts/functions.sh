@@ -1402,12 +1402,14 @@ function set_allsky_status()
 {
 	local STATUS="${1}"		# can be ""
 
-	local S=".status = \"${STATUS}\""
-	local T=".timestamp = \"$( date +'%Y-%m-%d %H:%M:%S' )\""
+	local TIMESTAMP="$( date +'%Y-%m-%d %H:%M:%S' )"
+
 	if which jq >/dev/null ; then
+		local S=".status = \"${STATUS}\""
+		local T=".timestamp = \"${TIMESTAMP}\""
 		echo "{ }" | jq --indent 4 "${S} | ${T}" > "${ALLSKY_STATUS}"
 	else
-		echo "{ \"status\" : \"${S}\", \"timestamp\" : \"${T}\" }" > "${ALLSKY_STATUS}"
+		echo "{ \"status\" : \"${STATUS}\", \"timestamp\" : \"${TIMESTAMP}\" }" > "${ALLSKY_STATUS}"
 	fi
 }
 function get_allsky_status()

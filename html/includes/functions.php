@@ -1059,11 +1059,7 @@ function getSecret($secret=false) {
     $secretData = json_decode($rawData, true);
 
     if ($secret !== false) {
-        $result = null;
-
-        if (isset($secretData[$secret])) {
-            $result = $secretData[$secret];
-        }
+    	$result = getVariableOrDefault($secretData, $secret, null);
     } else {
         $result = $secretData;
     }
@@ -1077,7 +1073,8 @@ function getSecret($secret=false) {
 function getDatabaseConfig() {
     $secretData = getSecret();
     $settings = readSettingsFile();
-    $secretData['databasetype'] = $settings['databasetype'];
+# TODO: ALEX: is 'none' the correct default if not set?
+    $secretData['databasetype'] = getVariableOrDefault($settings, 'databasetype', 'none');
 
     return $secretData;
 }
@@ -1085,10 +1082,7 @@ function getDatabaseConfig() {
 function haveDatabase() {
 
     $secretData = getDatabaseConfig();
-    $databaseType = 'none';
-    if (isset($secretData['databasetype'])) {
-        $databaseType = $secretData['databasetype'];
-    }
+    $databaseType = getVariableOrDefault($secretData, 'databasetype', 'none');
     switch ($databaseType) {
         case 'sqlite':
             return haveSQLite($secretData);
@@ -1119,10 +1113,11 @@ function haveMySQL($secretData) {
     try {
         if (in_array('mysql', PDO::getAvailableDrivers())) {
 
-            $host = $secretData['databasehost'];
-            $db   = $secretData['databasedatabase'];
-            $user = $secretData['databaseuser'];
-            $pass = $secretData['databasepassword'];
+    		$host = getVariableOrDefault($secretData, 'databasehost', "");
+    		$db   = getVariableOrDefault($secretData, 'databasedatabase', "");
+    		$user = getVariableOrDefault($secretData, 'databaseuser', "");
+    		$pass = getVariableOrDefault($secretData, 'databasepassword', "");
+# TODO: ALEX: what if any value is "" ?
             $charset = 'utf8mb4';
 
             $dsn = "mysql:host=$host;dbname=$db;charset=$charset";

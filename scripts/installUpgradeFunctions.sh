@@ -1274,7 +1274,7 @@ function check_tmp()
 
 	if [[ ${NEW_SIZE} -gt 0 ]]; then
 		STRING="tmpfs ${ALLSKY_TMP} tmpfs size=${NEW_SIZE}M,noatime,lazytime,nodev,"
-		STRING+="nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${WEBSERVER_GROUP}"
+		STRING+="nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${ALLSKY_WEBSERVER_GROUP}"
 
 		if [[ -n ${CURRENT_STRING} ]]; then
 			if ! sudo sed -i -e "s;${CURRENT_STRING};${STRING};" ${FSTAB} ; then
@@ -1320,7 +1320,7 @@ function check_tmp()
 
 			# in case it wasn't already
 			chmod 775 "${ALLSKY_TMP}"
-			sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_TMP}"
+			sudo chgrp "${ALLSKY_WEBSERVER_GROUP}" "${ALLSKY_TMP}"
 
 			restore_tmp
 		fi

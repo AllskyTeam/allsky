@@ -46,6 +46,14 @@ function ListDays(){
 	// Get list of directories.
 	$days = getValidImageDirectories();
 	if (count($days) > 0) arsort($days);
+
+	// What size font awesome icon to use
+	$fa_size = "lg";	// "lg" or "2x"
+	if ($fa_size == "lg")
+		$fa_size_px = 22;	// the rough width of the font awesome icon
+	else
+		$fa_size_px = 35;
+
 ?>
 <style>
 	table th {
@@ -81,18 +89,20 @@ function ListDays(){
 			<td style='font-weight:bold'>All</td>
 			<td><span title="There are too many total images to view on one page.">-</span></td>
 			<td><a href='index.php?page=list_videos&day=All'
-				title='All Timelapse (CAN BE SLOW TO LOAD)'><i class='fa fa-film fa-lg fa-fw'></i></a>
+				title='All Timelapse (CAN BE SLOW TO LOAD)'><i class='fa fa-film fa-<?php echo $fa_size ?> fa-fw'></i></a>
 			</td>
+
 			<td><a href='index.php?page=list_keograms&day=All'
-				title='All Keograms'><i class='fa fa-barcode fa-lg fa-fw'></i></a></td>
+				title='All Keograms'><i class='fa fa-barcode fa-<?php echo $fa_size ?> fa-fw'></i></a></td>
+
 			<td><a href='index.php?page=list_startrails&day=All'
-				title='All Startrails'><i class='fa fa-star fa-lg fa-fw'></i></a></td>
+				title='All Startrails'><i class='fa fa-star fa-<?php echo $fa_size ?> fa-fw'></i></a></td>
 			<td style='padding: 22px 0'></td><!-- don't allow deleting All directories - too risky -->
 		</tr>
 <?php
 
-// TODO: We're not sure if we like the font awesome icons or thumbnails of the video/startrails/keograms
-// so for now, disable it.
+// TODO: We're not sure if we like the font awesome icons or thumbnails of
+// the video/startrails/keograms so for now, disable it.
 $useThumbnailsIfExist = false;
 
 foreach ($days as $day) {
@@ -113,13 +123,12 @@ foreach ($days as $day) {
 		continue;
 	}
 
-
 	echo "\t\t<tr>\n";
 	echo "\t\t\t<td style='font-weight:bold'>$day</td>\n";
 
 	echo "\t\t\t<td>";
 	if ($has_images) {
-		$icon = "<i class='fa fa-image fa-lg fa-fw'></i>";
+		$icon = "<i class='fa fa-image fa-${fa_size} fa-fw'></i>";
 		echo "<a href='index.php?page=list_images&day=$day' title='Images'>$icon</a>";
 	} else {
 		echo "none";
@@ -128,7 +137,7 @@ foreach ($days as $day) {
 
 	echo "\t\t\t<td>";
 	if ($has_timelapse) {
-		$icon = "<i class='fa fa-film fa-lg fa-fw'></i>";
+		$icon = "<i class='fa fa-film fa-${fa_size} fa-fw'></i>";
 		if ($useThumbnailsIfExist) {
 			$t = ALLSKY_IMAGES . "/$day/thumbnail-$day.{jpg,png}";
 			$thumb = glob($t, GLOB_BRACE);
@@ -137,7 +146,7 @@ foreach ($days as $day) {
 				$images_dir = "/images";
 				$thumb = str_replace(ALLSKY_IMAGES, "/images", $thumb[0]);
 				// 22px is roughly the width of a "fa-lg fa-fw" icon.
-				$icon = "<img src='$thumb' width='22px'>";
+				$icon = "<img src='$thumb' width='${fa_size_px}px'>";
 			}
 		}
 		echo "<a href='index.php?page=list_videos&day=$day' title='Timelapse'>$icon</a>";
@@ -150,7 +159,7 @@ foreach ($days as $day) {
 	if ($has_keogram) {
 # TODO: create and use keogram thumbnails (they should probably be about 400px high because
 # a "regular" thumbnail is only 100 px wide so you can't see any details.
-		$icon = "<i class='fa fa-barcode fa-lg fa-fw'></i>";
+		$icon = "<i class='fa fa-barcode fa-${fa_size} fa-fw'></i>";
 		echo "<a href='index.php?page=list_keograms&day=$day' title='Keogram'>$icon</a>";
 	} else {
 		echo "none";
@@ -160,7 +169,7 @@ foreach ($days as $day) {
 	echo "\t\t\t<td>";
 	if ($has_startrails) {
 # TODO: create and use startrails thumbnails.
-		$icon = "<i class='fa fa-star fa-lg fa-fw'></i>";
+		$icon = "<i class='fa fa-star fa-${fa_size} fa-fw'></i>";
 		echo "<a href='index.php?page=list_startrails&day=$day' title='Startrails'>$icon</a>";
 	} else {
 		echo "none";

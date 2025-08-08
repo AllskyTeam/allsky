@@ -33,8 +33,6 @@ function ListDays(){
 		return;
 	}
 
-	$days = array();
-
 	$date = getVariableOrDefault($_POST, 'delete_directory', null);
 	if ($date !== null) {
 		$msg = delete_directory(ALLSKY_IMAGES . "/$date");
@@ -45,16 +43,16 @@ function ListDays(){
 		}
 	}
 
-	if ($handle = opendir(ALLSKY_IMAGES)) {
-		while (false !== ($day = readdir($handle))) {
-			if (is_valid_directory($day)) {
-				$days[] = $day;
-			}
-		}
-		closedir($handle);
-	}
+	// Get list of directories.
+	$days = getValidImageDirectories();
+	if (count($days) > 0) arsort($days);
 
-	arsort($days);
+	// What size font awesome icon to use
+	$fa_size = "lg";	// "lg" or "2x"
+	if ($fa_size == "lg")
+		$fa_size_px = 22;	// the rough width of the font awesome icon
+	else
+		$fa_size_px = 35;
 
 ?>
 <style>
@@ -69,7 +67,7 @@ function ListDays(){
 <div class="row">
 	<div class="col-lg-12">
 	<div class="panel panel-primary">
-	<div class="panel-heading"><i class="fa fa-image fa-fw" style="margin-right: 10px"></i>Images</div>
+	<div class="panel-heading"><i class="fa fa-image fa-fw"></i> Images</div>
 	<div class="panel-body">
 	<div class="row">
 	<form action="?page=<?php echo $page ?>" method="POST" onsubmit="return confirm('Are you sure you want to delete ALL images for that day?');">
@@ -81,52 +79,104 @@ function ListDays(){
 				<th style="text-align:center">Timelapse</th>
 				<th style="text-align:center">Keogram</th>
 				<th style="text-align:center">Startrails</th>
+<!-- TODO: Add icon for "Meteors" that displays just the images with meteors?
+	Need to query the DB for the list.
+-->
 			</tr>
 	  </thead>
 	  <tbody>
 		<tr>
 			<td style='font-weight:bold'>All</td>
-			<td>-</td>
-			<td><a href='index.php?page=list_videos&day=All' title='All Timelapse (CAN BE SLOW TO LOAD)'><i class='fa fa-film fa-lg fa-fw'></i></a></td>
-			<td><a href='index.php?page=list_keograms&day=All' title='All Keograms'><i class='fa fa-barcode fa-lg fa-fw'></i></a></td>
-			<td><a href='index.php?page=list_startrails&day=All' title='All Startrails'><i class='fa fa-star fa-lg fa-fw'></i></a></td>
-			<td style='padding: 22px 0'></td>
+			<td><span title="There are too many total images to view on one page.">-</span></td>
+			<td><a href='index.php?page=list_videos&day=All'
+				title='All Timelapse (CAN BE SLOW TO LOAD)'><i class='fa fa-film fa-<?php echo $fa_size ?> fa-fw'></i></a>
+			</td>
+
+			<td><a href='index.php?page=list_keograms&day=All'
+				title='All Keograms'><i class='fa fa-barcode fa-<?php echo $fa_size ?> fa-fw'></i></a></td>
+
+			<td><a href='index.php?page=list_startrails&day=All'
+				title='All Startrails'><i class='fa fa-star fa-<?php echo $fa_size ?> fa-fw'></i></a></td>
+			<td style='padding: 22px 0'></td><!-- don't allow deleting All directories - too risky -->
 		</tr>
 <?php
+
+// TODO: We're not sure if we like the font awesome icons or thumbnails of
+// the video/startrails/keograms so for now, disable it.
+$useThumbnailsIfExist = false;
+
 foreach ($days as $day) {
+	// See if this day has ANY valid images or videos.
+	$i = getValidImageNames(ALLSKY_IMAGES . "/$day", true);	// true == stop after 1
+	$has_images = (count($i) > 0);
+
+	$has_timelapse = (glob(ALLSKY_IMAGES . "/$day/*.mp4") != false);
+
+	// For keograms and startrails assume if the directory exists a file does too.
+
+	$has_keogram = is_dir(ALLSKY_IMAGES . "/$day/keogram");
+
+	$has_startrails = is_dir(ALLSKY_IMAGES . "/$day/startrails");
+
+	if (! $has_images && ! $has_timelapse && ! $has_keogram && ! $has_startrails) {
+		echo "<script>console.log('Directory \"$day\" has no images, timelapse, et.al.; ignoring.');</script>";
+		continue;
+	}
+
 	echo "\t\t<tr>\n";
 	echo "\t\t\t<td style='font-weight:bold'>$day</td>\n";
 
 	echo "\t\t\t<td>";
-	echo "<a href='index.php?page=list_images&day=$day' title='Images'><i class='fa fa-image fa-lg fa-fw'></i></a>";
-	echo "</td>\n";
-
-	echo "\t\t\t<td>";
-	if (glob(ALLSKY_IMAGES . "/$day/*.mp4") != false) {
-		echo "<a href='index.php?page=list_videos&day=$day' title='Timelapse'><i class='fa fa-film fa-lg fa-fw'></i></a>";
-	} else {
-		echo "none";
-	}
-	echo "</td>\n";
-
-	// For keograms and startrails assume if the directory exists a file does too.
-	echo "\t\t\t<td>";
-	$d = ALLSKY_IMAGES . "/$day/keogram";
-	if (is_dir($d)) {
-		echo "<a href='index.php?page=list_keograms&day=$day' title='Keogram'><i class='fa fa-barcode fa-lg fa-fw'></i></a>";
+	if ($has_images) {
+		$icon = "<i class='fa fa-image fa-${fa_size} fa-fw'></i>";
+		echo "<a href='index.php?page=list_images&day=$day' title='Images'>$icon</a>";
 	} else {
 		echo "none";
 	}
 	echo "</td>\n";
 
 	echo "\t\t\t<td>";
-	$d = ALLSKY_IMAGES . "/$day/startrails";
-	if (is_dir($d)) {
-		echo "<a href='index.php?page=list_startrails&day=$day' title='Startrails'><i class='fa fa-star fa-lg fa-fw'></i></a>";
+	if ($has_timelapse) {
+		$icon = "<i class='fa fa-film fa-${fa_size} fa-fw'></i>";
+		if ($useThumbnailsIfExist) {
+			$t = ALLSKY_IMAGES . "/$day/thumbnail-$day.{jpg,png}";
+			$thumb = glob($t, GLOB_BRACE);
+			if ($thumb != false) {
+				// "/images" is an alias in the web server for ALLSKY_IMAGES
+				$images_dir = "/images";
+				$thumb = str_replace(ALLSKY_IMAGES, "/images", $thumb[0]);
+				// 22px is roughly the width of a "fa-lg fa-fw" icon.
+				$icon = "<img src='$thumb' width='${fa_size_px}px'>";
+			}
+		}
+		echo "<a href='index.php?page=list_videos&day=$day' title='Timelapse'>$icon</a>";
 	} else {
 		echo "none";
 	}
 	echo "</td>\n";
+
+	echo "\t\t\t<td>";
+	if ($has_keogram) {
+# TODO: create and use keogram thumbnails (they should probably be about 400px high because
+# a "regular" thumbnail is only 100 px wide so you can't see any details.
+		$icon = "<i class='fa fa-barcode fa-${fa_size} fa-fw'></i>";
+		echo "<a href='index.php?page=list_keograms&day=$day' title='Keogram'>$icon</a>";
+	} else {
+		echo "none";
+	}
+	echo "</td>\n";
+
+	echo "\t\t\t<td>";
+	if ($has_startrails) {
+# TODO: create and use startrails thumbnails.
+		$icon = "<i class='fa fa-star fa-${fa_size} fa-fw'></i>";
+		echo "<a href='index.php?page=list_startrails&day=$day' title='Startrails'>$icon</a>";
+	} else {
+		echo "none";
+	}
+	echo "</td>\n";
+
+# TODO: Add meteors
 
 	echo "\t\t\t<td style='padding: 5px'>
 				<button type='submit' data-toggle='confirmation'

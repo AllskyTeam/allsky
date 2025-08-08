@@ -3,7 +3,6 @@
 function ListImages() {
 	global $imagesSortOrder;
 
-	$images = array();
 	$chosen_day = getVariableOrDefault($_GET, 'day', null);
 	if ($chosen_day === null) {
 		echo "<br><br><br>";
@@ -11,21 +10,9 @@ function ListImages() {
 		return;
 	}
 
-	$num = 0;	// Keep track of count so we can tell user when no files exist.
 	$dir = ALLSKY_IMAGES . "/$chosen_day";
-
-	if ($handle = opendir($dir)) {
-		while (false !== ($image = readdir($handle))) {
-			// Name format: "image-YYYYMMDDHHMMSS.jpg" or .jpe or .png
-			if (preg_match('/^\w+-.*\d{14}[.](jpe?g|png)$/i', $image)){
-				$images[] = $image;
-				$num += 1;
-			}
-		}
-		closedir($handle);
-	}
-
-	if ($num > 0) {
+	$images = getValidImageNames($dir, false);	// false == get whole list
+	if (count($images) > 0) {
 		if ($imagesSortOrder === "descending") {
 			arsort($images);
 			$sortOrder = "Sorted newest to oldest (descending)";
@@ -76,7 +63,7 @@ function getTimeStamp(url)
 <div class='row'>
 	<div id='images'>
 <?php
-	if ($num == 0) {
+	if (count($images) == 0) {
 		echo "<span class='alert-warning'>There are no images for this day.</span>";
 		echo "<br>Check <b>$dir</b>";
 	} else {

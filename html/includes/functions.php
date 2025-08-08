@@ -126,6 +126,13 @@ $saveChangesLabel = "Save changes";		// May be overwritten
 $forceRestart = false;					// Restart even if no changes?
 $hostname = null;
 
+// Regular expressions for preg_match().
+	// A directory in ${ALLSKY_IMAGES}.
+	// Either: 2YYYMMDD  or  test*.   "test" because some commands create test* directories.
+$re_image_directory = '/^(2\d{7}|test\w*)$/'; // Start with "2" for the 2000's.
+	// An image:  "image-YYYYMMDDHHMMSS.jpg" or .jpe or .png
+$re_image_name = '/^\w+-.*\d{14}[.](jpe?g|png)$/i';
+
 function readSettingsFile() {
 	$settings_file = getSettingsFile();
 	$errorMsg = "ERROR: Unable to process settings file '$settings_file'.";
@@ -365,12 +372,12 @@ function check_if_configured($page, $calledFrom) {
 *
 * We need to make sure we're only trying to display and delete image directories, not ones like /etc.
 * In this case "valid" means it's an image directory.
-* We allow "test*" in case the user created a directory for testing.
-* Example directory: 20210710.  They should start with "2" for the 2000's.
 *
 */
 function is_valid_directory($directory_name) {
-	return preg_match('/^(2\d{7}|test\w*)$/', basename($directory_name));
+	global $re_image_directory;
+
+	return preg_match($re_image_directory, basename($directory_name));
 }
 
 /**
@@ -672,12 +679,48 @@ function get_variable($file, $searchfor, $default)
 }
 
 /**
-* 
-* List a type of file - either "All" (case sensitive) for all days, or only for the specified day.
+* Get a list of valid image directories.
+*/
+function getValidImageDirectories() {
+	$days = array();
+
+	if ($handle = opendir(ALLSKY_IMAGES)) {
+	    while (false !== ($day = readdir($handle))) {
+			if (is_valid_directory($day)) {
+				$days[] = $day;
+			}
+	    }
+	    closedir($handle);
+	}
+	return $days;
+}
+
+/**
+* Get a list of valid image names
+*/
+function getValidImageNames($dir, $stopAfterOne=false) {
+	global $re_image_name;
+
+	$images = array();
+
+	if ($handle = opendir($dir)) {
+	    while (false !== ($image = readdir($handle))) {
+			if (preg_match($re_image_name, $image)){
+				$images[] = $image;
+				if ($stopAfterOne) break;
+			}
+	    }
+	    closedir($handle);
+	}
+	return $images;
+}
+
+/**
+* List a type of file - either "All" (case sensitive) for all days,
+* or only for the specified day.
 * If $dir is not null, it ends in "/".
 */
 function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNames=false) {
-	$num = 0;	// Let the user know when there are no images for the specified day
 	// "/images" is an alias in the web server for ALLSKY_IMAGES
 	$images_dir = "/images";
 	$chosen_day = getVariableOrDefault($_REQUEST, 'day', null);
@@ -697,17 +740,8 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 	echo "<h2>$formalImageTypeName - $chosen_day</h2>\n";
 	echo "<div class='row'>\n";
 	if ($chosen_day === 'All'){
-		if ($handle = opendir(ALLSKY_IMAGES)) {
-		    while (false !== ($day = readdir($handle))) {
-				if (is_valid_directory($day)) {
-					$days[] = $day;
-					$num += 1;
-				}
-		    }
-		    closedir($handle);
-		}
-
-		if ($num == 0) {
+		$days = getValidImageDirectories();
+		if (count($days) == 0) {
 			// This could indicate an error, or the user just installed allsky
 			echo "<span class='alert-warning'>There are no image directories.</span>";
 		} else {
@@ -729,7 +763,7 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 							echo "<img src='$fullFilename' class='functionsListTypeImg' />";
 							echo "</div></a>\n";
 						} else {	// is video
-							// TODO: Show a thumbnail since loading videos is bandwidth intensive.
+							// TODO: Show a thumbnail since loading videos is bandwidth intensive?
 							echo "<a href='$fullFilename'>";
 							echo "<div class='functionsListFileType'>";
 							echo "<label class='middleVerticalAlign'>$day &nbsp; &nbsp;</label>";
@@ -749,15 +783,18 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 	} else {
 		$expr = ALLSKY_IMAGES . "/${chosen_day}/${dir}";
 		if (substr($imageFileName, 0, 1) == "X") {
+			// If the file name begins with a "X" the look for files whose names
+			// begin with the filename (without the "X").
+			// This allows non-standard image names.
 			$expr .= substr($imageFileName, 1) . "*";
 		} else {
 			$expr .= "$imageFileName-$chosen_day.*";
 		}
+		$imageTypes = array();
 		foreach (glob($expr) as $imageType) {
 			$imageTypes[] = $imageType;
-			$num += 1;
 		}
-		if ($num == 0) {
+		if (count($imageTypes) == 0) {
 			echo "<span class='alert-warning'>There are no $formalImageTypeName for this day.</span>";
 		} else {
 			foreach ($imageTypes as $imageType) {

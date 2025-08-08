@@ -1367,6 +1367,11 @@ class MODULEUTIL
         $paths = [$corePath, $basePath];
 
         foreach($paths as $path) {
+			// Make sure $path exists, ignore if not.
+			if (! is_dir($path)) {
+				echo "<script>console.log('moduleutil.php: path \"$path\" does not exist.');</script>";
+				continue;
+			}
             $outer = new DirectoryIterator($path);
 
             foreach ($outer as $folder) {
@@ -1391,7 +1396,7 @@ class MODULEUTIL
                                 $result[] = [
                                     'name'        => $data['name'] ?? 'Unknown',
                                     'group'       => $folder->getFilename(),
-                                    'blockname'    => $blockKey,
+                                    'blockname'   => $blockKey,
                                     'filename'    => $file->getFilename(),
                                     'description' => $data['description'] ?? '',
                                 ];

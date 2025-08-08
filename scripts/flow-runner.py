@@ -242,15 +242,18 @@ if __name__ == "__main__":
             if 'arguments' in shared.flow[shared.step]['metadata']:
                 arguments = shared.flow[shared.step]['metadata']['arguments']
 
-            arguments['ALLSKYTESTMODE'] = testMode                
-            if shared.LOGLEVEL == 4:
-                result = globals()[method](arguments, shared.args.event)
+            if len(arguments) == 0:
+                shared.log(0, f"ERROR: No arguments in shared.flow[{shared.step}]['metadata']")
             else:
-                try:
+                arguments['ALLSKYTESTMODE'] = testMode                
+                if shared.LOGLEVEL == 4:
                     result = globals()[method](arguments, shared.args.event)
-                except Exception as e:
-                    eType, eObject, eTraceback = sys.exc_info()
-                    shared.log(0, f"ERROR: Module {fileName} failed on line {eTraceback.tb_lineno} - {e}")
+                else:
+                    try:
+                        result = globals()[method](arguments, shared.args.event)
+                    except Exception as e:
+                        eType, eObject, eTraceback = sys.exc_info()
+                        shared.log(0, f"ERROR: Module {fileName} failed on line {eTraceback.tb_lineno} - {e}")
 
             endTime = datetime.now()
             elapsedTime = (((endTime - startTime).total_seconds()) * 1000) / 1000

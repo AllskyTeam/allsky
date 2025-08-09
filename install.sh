@@ -117,7 +117,6 @@ STATUS_VARIABLES=()								# Holds the variables and values to save
 # PRIOR_CONFIG_FILE, PRIOR_FTP_FILE
 # PRIOR_PYTHON_VENV
 # WEBSITE_CONFIG_VERSION, WEBSITE_ALLSKY_VERSION
-# ALLSKY_DEFINES_INC, REPO_WEBUI_DEFINES_FILE
 # REPO_SUDOERS_FILE, REPO_LIGHTTPD_FILE, REPO_AVI_FILE, REPO_OPTIONS_FILE
 # LIGHTTPD_LOG_DIR, LIGHTTPD_LOG_FILE
 # INSTALLED_LOCALES
@@ -814,68 +813,6 @@ get_count()
 	local FILE="${2}"
 	find "${DIR}" -maxdepth 1 -name "${FILE}" | wc -l
 }
-
-
-####
-# Update various PHP define() variables.
-update_php_defines()
-{
-	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
-	[[ ${SKIP} == "true" ]] && return
-
-	display_msg --log progress "Modifying variables for WebUI and Website."
-	local FILE="${ALLSKY_WEBUI}/includes/${ALLSKY_DEFINES_INC}"
-	sed		-e "s;XX_HOME_XX;${HOME};g" \
-			-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};g" \
-			-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};g" \
-			-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};g" \
-			-e "s;XX_ALLSKY_UTILITIES_XX;${ALLSKY_UTILITIES};g" \
-			-e "s;XX_ALLSKY_TMP_XX;${ALLSKY_TMP};g" \
-			-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};g" \
-			-e "s;XX_ALLSKY_MESSAGES_XX;${ALLSKY_MESSAGES};g" \
-			-e "s;XX_ALLSKY_CHECK_LOG_XX;${ALLSKY_CHECK_LOG};g" \
-			-e "s;XX_ALLSKY_PRIOR_DIR_XX;${ALLSKY_PRIOR_DIR};g" \
-			-e "s;XX_ALLSKY_OLD_REMINDER_XX;${ALLSKY_OLD_REMINDER};g" \
-			-e "s;XX_ALLSKY_POST_INSTALL_ACTIONS_XX;${ALLSKY_POST_INSTALL_ACTIONS};g" \
-			-e "s;XX_ALLSKY_ABORTS_DIR_XX;${ALLSKY_ABORTS_DIR};g" \
-			-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};g" \
-			-e "s;XX_ALLSKY_SUPPORT_DIR_XX;${ALLSKY_SUPPORT_DIR};g" \
-			-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};g" \
-			-e "s;XX_ALLSKY_WEBSITE_CONFIGURATION_FILE_XX;${ALLSKY_WEBSITE_CONFIGURATION_FILE};g" \
-			-e "s;XX_ALLSKY_WEBSITE_REMOTE_CONFIGURATION_FILE_XX;${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE};g" \
-			-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};g" \
-			-e "s;XX_ALLSKY_ENV_XX;${ALLSKY_ENV};g" \
-			-e "s;XX_ALLSKY_IMG_DIR_XX;${ALLSKY_IMG_DIR};g" \
-			-e "s;XX_ALLSKY_MYFILES_DIR_XX;${ALLSKY_MYFILES_DIR};g" \
-			-e "s;XX_ALLSKY_MY_OVERLAY_TEMPLATES_XX;${ALLSKY_MY_OVERLAY_TEMPLATES};g" \
-			-e "s;XX_ALLSKY_MODULES_XX;${ALLSKY_MODULES};g" \
-			-e "s;XX_ALLSKY_MODULE_LOCATION_XX;${ALLSKY_MODULE_LOCATION};g" \
-			-e "s;XX_ALLSKY_OWNER_XX;${ALLSKY_OWNER};g" \
-			-e "s;XX_ALLSKY_GROUP_XX;${ALLSKY_GROUP};g" \
-			-e "s;XX_ALLSKY_WEBSERVER_OWNER_XX;${ALLSKY_WEBSERVER_OWNER};g" \
-			-e "s;XX_ALLSKY_WEBSERVER_GROUP_XX;${ALLSKY_WEBSERVER_GROUP};g" \
-			-e "s;XX_ALLSKY_REPO_XX;${ALLSKY_REPO};g" \
-			-e "s;XX_ALLSKY_GITHUB_ROOT_XX;${ALLSKY_GITHUB_ROOT};g" \
-			-e "s;XX_ALLSKY_GITHUB_ALLSKY_REPO_XX;${ALLSKY_GITHUB_ALLSKY_REPO};g" \
-			-e "s;XX_ALLSKY_GITHUB_ALLSKY_MODULES_REPO_XX;${ALLSKY_GITHUB_ALLSKY_MODULES_REPO};g" \
-			-e "s;XX_ALLSKY_VERSION_XX;${ALLSKY_VERSION};g" \
-			-e "s;XX_ALLSKY_STATUS_XX;${ALLSKY_STATUS};g" \
-			-e "s;XX_ALLSKY_STATUS_INSTALLING_XX;${ALLSKY_STATUS_INSTALLING};g" \
-			-e "s;XX_ALLSKY_STATUS_NOT_RUNNING_XX;${ALLSKY_STATUS_NOT_RUNNING};g" \
-			-e "s;XX_ALLSKY_STATUS_RUNNING_XX;${ALLSKY_STATUS_RUNNING};g" \
-			-e "s;XX_ALLSKY_STATUS_NEEDS_CONFIGURATION_XX;${ALLSKY_STATUS_NEEDS_CONFIGURATION};g" \
-			-e "s;XX_ALLSKY_STATUS_NEEDS_REVIEW_XX;${ALLSKY_STATUS_NEEDS_REVIEW};g" \
-			-e "s;XX_ALLSKY_NEED_TO_UPDATE_XX;${ALLSKY_NEED_TO_UPDATE};g" \
-			-e "s;XX_EXIT_PARTIAL_OK_XX;${EXIT_PARTIAL_OK};g" \
-		"${REPO_WEBUI_DEFINES_FILE}"  >  "${FILE}"
-		chmod 644 "${FILE}"
-
-	# Don't save status if we did a fix.
-	if [[ ${FIX} == "false" ]]; then
-		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
-	fi
-}
-
 
 ####
 # Recreate the options file.
@@ -3241,7 +3178,6 @@ do_restore()
 # It does no harm to call this when not needed.
 do_fix()
 {
-	update_php_defines
 	set_permissions
 	exit 0
 }
@@ -3256,8 +3192,6 @@ do_change_images()
 
 	# just update web server
 	install_webserver_et_al="true" install_webserver_et_al
-
-	update_php_defines
 
 	exit 0
 }
@@ -4212,9 +4146,6 @@ install_webserver_et_al
 ##### Install dependencies, then compile and install Allsky software
 # This will create the "config" directory and put default files in it.
 install_dependencies_etc
-
-##### Update PHP "define()" variables
-update_php_defines
 
 ##### Create the camera type/model-specific "options" file
 # This should come after the steps above that create ${ALLSKY_CONFIG}.

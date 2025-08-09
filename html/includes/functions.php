@@ -7,27 +7,6 @@
  *
 */
 
-// This file sets all the define() variables.
-$defs = 'allskyDefines.inc';
-if ((@include $defs) == false) {
-	echo "<br><div style='font-size: 200%; color: red;'>";
-	echo "The installation of Allsky is incomplete.<br>";
-	echo "File '$defs' not found.<br>";
-	echo "</div>";
-
-	echo "<br><br>";
-	echo "<div style='font-size: 125%;'>";
-	echo "If you have NOT installed Allsky please install it by running:";
-	echo "<br>";
-	echo "<pre>   cd ~/allsky; ./install.sh</pre>";
-	echo "The WebUI will not work until Allsky is installed.";
-
-	echo "<br><br><br>";
-	echo "If you HAVE successfully installed Allsky, run the following to fix this problem:";
-	echo "<pre>   cd ~/allsky; ./install.sh --function create_webui_defines</pre>";
-	echo "</div>";
-	exit(1);
-}
 
 // Read and decode a json file, returning the decoded results or null.
 // On error, display the specified error message.
@@ -214,6 +193,45 @@ function initialize_variables($website_only=false) {
 	global $useLocalWebsite, $useRemoteWebsite;
 	global $hasLocalWebsite, $hasRemoteWebsite;
 	global $hostname;
+
+
+	$variablesJsonOk = false;
+	$allskyHome = getenv('ALLSKY_HOME');
+	if ($allskyHome !== false) {
+		$variablesJsonfile = $allskyHome . DIRECTORY_SEPARATOR . 'variables.json';
+		if (file_exists($variablesJsonfile)) {
+			$data = json_decode(file_get_contents($variablesJsonfile), true);
+			if (json_last_error() === JSON_ERROR_NONE) {
+				$variablesJsonOk = true;
+				foreach ($data as $key => $value) {
+					if (!defined($key)) {
+						define($key, $value);
+					}
+				}
+			}
+		}
+	}
+
+	if ($variablesJsonOk === false) {
+		echo "<br><div style='font-size: 200%; color: red;'>";
+		echo "The installation of Allsky is incomplete.<br>";
+		echo "File '$variablesJsonfile' not found or corrupted.<br>";
+		echo "</div>";
+
+		echo "<br><br>";
+		echo "<div style='font-size: 125%;'>";
+		echo "If you have NOT installed Allsky please install it by running:";
+		echo "<br>";
+		echo "<pre>   cd ~/allsky; ./install.sh</pre>";
+		echo "The WebUI will not work until Allsky is installed.";
+
+		echo "<br><br><br>";
+		echo "If you HAVE successfully installed Allsky please contact the Allsky team on Github<br><br>";
+		echo 'Create a discussion <a href="https://github.com/AllskyTeam/allsky">here</a>';
+		echo "</div>";
+		die(1);
+	}
+
 
 	$settings_array = readSettingsFile();
 
@@ -1045,7 +1063,7 @@ function getLocalWebsiteConfigFile() {
 
 // Return the full path name of the remote Website configuration file.
 function getRemoteWebsiteConfigFile() {
-	return ALLSKY_WEBSITE_REMOTE_CONFIGURATION_FILE;
+	return ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE;
 }
 
 // Return the file name after accounting for any ${} variables.
@@ -1104,37 +1122,16 @@ function getSecret($secret=false) {
     return $result;
 }
 
-#
-## Create a single array with database settings
-#
-function getDatabaseConfig() {
-    $secretData = getSecret();
-    $settings = readSettingsFile();
-# TODO: ALEX: is 'none' the correct default if not set?
-    $secretData['databasetype'] = getVariableOrDefault($settings, 'databasetype', 'none');
-
-    return $secretData;
-}
 
 function haveDatabase() {
-
-    $secretData = getDatabaseConfig();
-    $databaseType = getVariableOrDefault($secretData, 'databasetype', 'none');
-    switch ($databaseType) {
-        case 'sqlite':
-            return haveSQLite($secretData);
-        case 'mysql':
-            return haveMySQL($secretData);
-        default:
-            return false;
-    }
+	return haveSQLite();
 }
 
-function haveSQLite($secretData) {
+function haveSQLite() {
     $result = true;
 
 	try {
-    	$db = new SQLite3(ALLSKY_MYFILES_DIR . '/allsky.db');
+    	$db = new SQLite3(ALLSKY_DATABASES);
 	} catch (Exception $e) {
 		$db = false;
 	}
@@ -1145,33 +1142,7 @@ function haveSQLite($secretData) {
     return $result;
 }
 
-function haveMySQL($secretData) {
-    $result = false;
-    try {
-        if (in_array('mysql', PDO::getAvailableDrivers())) {
 
-    		$host = getVariableOrDefault($secretData, 'databasehost', "");
-    		$db   = getVariableOrDefault($secretData, 'databasedatabase', "");
-    		$user = getVariableOrDefault($secretData, 'databaseuser', "");
-    		$pass = getVariableOrDefault($secretData, 'databasepassword', "");
-# TODO: ALEX: what if any value is "" ?
-            $charset = 'utf8mb4';
-
-            $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
-
-            $options = [
-                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            ];      
-            $pdo = new PDO($dsn, $user, $pass, $options);
-            $result = true;
-        }   
-    } catch (PDOException $e) {
-    } catch (Exception $e) {
-    }
-
-    return $result;
-}
 
 function getTOD() {
 	global $settings_array;

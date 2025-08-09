@@ -32,7 +32,7 @@ $cmd = "AM_ALLSKY_CONFIG compare_startrails --html";
 			for an explanation of this setting.
 			</p>
 
-			<p class="morePadding">
+			<p>
 			This page helps you determine what setting to use
 			to get the most number of images included in your startrails
 			and hence the longest trails possible.

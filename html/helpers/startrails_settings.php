@@ -1,3 +1,7 @@
+<style>
+	label { margin-top: 20px; font-size: 125%; }
+	.label_description { padding-left: 25px; padding-bottom: 5px; }
+</style>
 <?php
 
 function startrailsSettings() {
@@ -18,17 +22,24 @@ $cmd = "AM_ALLSKY_CONFIG compare_startrails --html";
 		</div>
 		<div class="panel-body">
 			<p>
-			This page helps you determine what startrails-related settings to use
+			If your startrails don't have trailed stars,
+			it means you need to adjust the
+			<span class="WebUISetting">Brightness Threshold</span> setting.
+			<br>
+			See the
+			<a external="true"
+				href="/documentation/explanations/startrails.html#brightnessthreshold">startrails settings</a>
+			for an explanation of this setting.
+			</p>
+
+			<p class="morePadding">
+			This page helps you determine what setting to use
 			to get the most number of images included in your startrails
 			and hence the longest trails possible.
 			<br>
 			Multiple startrails images will be created using the settings you enter
 			and you can then compare them to find the best image.
-			<p>
-			See the
-			<a external="true" allsky="true" href="/documentation/explanations/startrails.html#brightnessthreshold">startrails settings</a>
-			for an explanation of the startrails settings.
-			</p><br><br>
+			</p>
 
 			<form role="form" action="execute.php" method="POST" onsubmit="return add_args()">
 <script>
@@ -59,9 +70,12 @@ function add_args() {
 				<div class="row">
 					<div class="form-group col-md-8">
 						<label for="input_directory">Use images from</label>
-						<br>Enter the directory where the source images reside.
-						<br>This is typically a directory in '<?php echo ALLSKY_IMAGES ?>'.
-						<br>If you don't enter anything then yesterday's images are used.
+						<div class="label_description">
+						Enter the directory on the Pi where the source images reside,
+						typically in
+						<span class="fileName"><?php echo ALLSKY_IMAGES ?></span>.
+						<br>If you don't enter anything, then yesterday's images are used.
+						</div>
 						<input type="text" class="form-control" name="input_directory"
 							id="input_directory" value="<?php echo $input_directory; ?>"/>
 					</div>
@@ -69,7 +83,9 @@ function add_args() {
 				<div class="row">
 					<div class="form-group col-md-8">
 						<label for="num_images">Number of images to include in each startrail</label>
-						<br>More images take more time to process but produce longer trailed stars.
+						<div class="label_description">
+						More images take more time to process but produce longer trailed stars.
+						</div>
 						<input type="text" class="form-control" name="num_images"
 							id="num_images" value="<?php echo $num_images; ?>"/>
 					</div>
@@ -77,8 +93,11 @@ function add_args() {
 				<div class="row">
 					<div class="form-group col-md-8">
 						<label for="thresholds"><span class="WebUISetting">Brightness Threshold</span>s to use</label>
-						<br>Enter one or more space-separated Brightness Thresholds.
+						<div class="label_description">
+						Enter one or more space-separated
+						<span class="WebUISetting">Brightness Threshold</span>s.
 						<br>The more values you have the longer it will take to process.
+						</div>
 						<input type="text" class="form-control" name="thresholds"
 							id="thresholds" value="<?php echo $thresholds; ?>"/>
 					</div>
@@ -86,15 +105,17 @@ function add_args() {
 				<div class="row">
 					<div class="form-group col-md-8">
 						<label for="verbose">Verbose Output?</label>
-						<br>Check the box to output summary information for each startrails created.
-						<br><input type="checkbox" class="form-control" name="verbose"
+						<div class="label_description">
+						Check the box to output summary information for each startrails created.
+						</div>
+						<input type="checkbox" class="form-control" name="verbose"
 							id="verbose" value="<?php echo $verbose; ?>"
 							<?php if ($verbose == "true") echo "checked"; ?>
-							style="width: 10%"
-							/>
+							style="width: 10%" />
 					</div>
 				</div>
 
+				<br>
 				<input type="submit" class="btn btn-primary" name="startrails"
 							value="Create Startrails" />
 			</form>

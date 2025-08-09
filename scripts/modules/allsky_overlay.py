@@ -29,7 +29,7 @@ formatErrorPlaceholder = "??"
 missingTypePlaceholder = "???"
 
 class ALLSKYOVERLAY(ALLSKYMODULEBASE):
-    
+
 	meta_data = {
 		"name": "Overlays data on the image",
 		"description": "Overlays data fields on the image",
@@ -72,7 +72,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 			]
 		}
 	}
-    
+
 	_OVERLAYCONFIGFILE = 'overlay.json'
 	_OVERLAYOECONFIG = 'oe-config.json'
 	_OVERLAYTMPFOLDER = ''
@@ -209,7 +209,12 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		"""
 		result = True
 
-		self._image = allsky_shared.image
+		try:
+			self._image = allsky_shared.image
+		except:
+			allsky_shared.log(0, f'ERROR: allsky_shared.image does not exist; cannot continue.')
+			return False
+
 		if self._not_enabled != "":
 			allsky_shared.log(4, f'INFO: Not enabled: {self._not_enabled}')
 		return result
@@ -511,7 +516,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 
 		except Exception:
 			return 255, 255, 255
-    
+
 	def _convert_colour_old(self, value):
 		try:
 			r,g,b = ImageColor.getcolor(value, "RGB")
@@ -549,7 +554,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 
 		return (text_width, text_height)
 
-    
+
 	def _convert_RGB_to_BGR(self, colour, opacity):
 		r,g,b = ImageColor.getrgb(colour)
 		#colour =  '#{:02x}{:02x}{:02x}'.format(b,g,r)

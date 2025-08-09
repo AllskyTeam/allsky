@@ -1,5 +1,16 @@
 #!/bin/bash
 
+#### TODO: remove the "old" way of determining what settings to use. It was too confusing.
+
+
+
+
+
+
+
+
+
+
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$(dirname "${BASH_ARGV0}")/../.." )"
 ME="$( basename "${BASH_ARGV0}" )"
 
@@ -16,9 +27,10 @@ usage_and_exit()
 	exec >&2
 	echo
 	local USAGE="Usage: ${ME} [--help] --verbose] [--image i]"
-	USAGE+=" [--start-amount a] [--step-amount a] [--count-amount c]"
-	USAGE+=" [--start-midpoint m] [--step-midpoint m] [--count-midpoint m]"
-	USAGE+=" [--directory dir] [--num-images n]"
+	USAGE+=" [--amounts '1 2 3'] [--midpoints '4 5 6']"
+#	USAGE+=" [--start-amount a] [--step-amount a] [--count-amount c]"
+#	USAGE+=" [--start-midpoint m] [--step-midpoint m] [--count-midpoint m]"
+	USAGE+=" [--directory dir]"
 	if [[ ${RET} -ne 0 ]]; then
 		E_ "${USAGE}"
 	else
@@ -29,17 +41,22 @@ usage_and_exit()
 	echo "   --help              Displays this message and exits."
 	echo "   --verbose           Displays information about every startrails created."
 	echo "   --image i           Stretch the specified image."
-	echo "   --start-amount a    The initial Stretch Amount to use.  Default: ${START_AMOUNT}."
-	echo "   --step-amount a     The amount to increase the Stretch Amount.  Default: ${STEP_AMOUNT}."
-	echo "   --count-amount      The number of times to vary the Stretch Amount.  Default: ${COUNT_AMOUNT}."
-	echo "   --start-midpoint m  The initial Stretch Mid Point to use.  Default: ${START_MIDPOINT}."
-	echo "   --step-midpoint m   The maximum Stretch Mid Point to use.  Default: ${STEP_MIDPOINT}."
-	echo "   --count-midpoint    The number of times to vary the Stretch Mid Point.  Default: ${COUNT_MIDPOINT}."
+	echo "   --amounts '1 2 3'   Use the specified Stretch Amounts.  Must quote the numbers."
+	echo "                           Default: '${AMOUNTS}'."
+	echo "   --midpoints '1 2 3' Use the specified Stretch Amounts.  Must quote the numbers."
+	echo "                           Default: '${MIDPOINTS}'."
+#	echo "   --start-amount a    The initial Stretch Amount to use.  Default: ${START_AMOUNT}."
+#	echo "   --step-amount a     The amount to increase the Stretch Amount.  Default: ${STEP_AMOUNT}."
+#	echo "   --count-amount      The number of times to vary the Stretch Amount.  Default: ${COUNT_AMOUNT}."
+#	echo "   --start-midpoint m  The initial Stretch Mid Point to use.  Default: ${START_MIDPOINT}."
+#	echo "   --step-midpoint m   The maximum Stretch Mid Point to use.  Default: ${STEP_MIDPOINT}."
+#	echo "   --count-midpoint    The number of times to vary the Stretch Mid Point.  Default: ${COUNT_MIDPOINT}."
 	echo "   --directory dir     Put the stretched images in the specified directory."
 	echo "                       Default: '${OUT_DIRECTORY}'."
 
 	echo
-	echo "Creates multiple stretched images using different 'Stretch Amount' and 'Stretch Mid Point' values."
+	echo -n "Creates multiple stretched images using different 'Stretch Amount' and"
+	echo "'Stretch Mid Point' values."
 	echo "This is useful when trying to determine how much to brighten an image."
 	echo
 
@@ -51,12 +68,14 @@ DO_HELP="false"
 HTML="false"
 OUT_DIRECTORY="${ALLSKY_IMAGES}/test_stretches"	# Must start with "test"
 IMAGE="";			d_IMAGE="${ALLSKY_TMP}/${ALLSKY_FULL_FILENAME}"
-START_AMOUNT="";	d_START_AMOUNT="5"
-STEP_AMOUNT="";		d_STEP_AMOUNT="5"		# increase by this amount
-COUNT_AMOUNT="";	d_COUNT_AMOUNT="4"
-START_MIDPOINT="";	d_START_MIDPOINT="5"
-STEP_MIDPOINT="";	d_STEP_MIDPOINT="5"
-COUNT_MIDPOINT="";	d_COUNT_MIDPOINT="4"
+AMOUNTS="";			d_AMOUNTS="5  10  15  20"
+MIDPOINTS="";		d_MIDPOINTS="10  30  50"
+#START_AMOUNT="";	d_START_AMOUNT="5"
+#STEP_AMOUNT="";		d_STEP_AMOUNT="5"		# increase by this amount
+#COUNT_AMOUNT="";	d_COUNT_AMOUNT="4"
+#START_MIDPOINT="";	d_START_MIDPOINT="5"
+#STEP_MIDPOINT="";	d_STEP_MIDPOINT="5"
+#COUNT_MIDPOINT="";	d_COUNT_MIDPOINT="4"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in
@@ -74,6 +93,16 @@ while [[ $# -gt 0 ]]; do
 			IMAGE="${2}"
 			shift
 			;;
+		--amounts)
+			# To avoid having spaces in the argument the invoker may use "_" instead.
+			AMOUNTS="${2//_/ }"
+			shift
+			;;
+		--midpoints)
+			MIDPOINTS="${2//_/ }"
+			shift
+			;;
+###
 		--start-amount)
 			START_AMOUNT="${2}"
 			shift
@@ -109,17 +138,20 @@ done
 [[ ${OK} == "false" ]] && usage_and_exit 1
 if [[ ${HTML} == "true" &&
 		( -z ${IMAGE}
-			|| -z ${START_AMOUNT}   || -z ${STEP_AMOUNT}   || -z ${COUNT_AMOUNT}
-			|| -z ${START_MIDPOINT} || -z ${STEP_MIDPOINT} || -z ${COUNT_MIDPOINT} ) ]]; then
+			|| -z ${AMOUNTS}   || -z ${MIDPOINTS} ) ]]; then
+#			|| -z ${START_AMOUNT}   || -z ${STEP_AMOUNT}   || -z ${COUNT_AMOUNT}
+#			|| -z ${START_MIDPOINT} || -z ${STEP_MIDPOINT} || -z ${COUNT_MIDPOINT} ) ]]; then
 	echo "All settings must be specified on the command line." >&2
 	echo "You are missing:" >&2
 	[[ -z ${IMAGE} ]] && echo " --image" >&2
-	[[ -z ${START_AMOUNT} ]] && echo " --start-amount" >&2
-	[[ -z ${STEP_AMOUNT} ]] && echo " --step-amount" >&2
-	[[ -z ${COUNT_AMOUNT} ]] && echo " --count-amount" >&2
-	[[ -z ${START_MIDPOINT} ]] && echo " --start-midpoint" >&2
-	[[ -z ${STEP_MIDPOINT} ]] && echo " --step-midpoint" >&2
-	[[ -z ${COUNT_MIDPOINT} ]] && echo " --count-midpoint" >&2
+	[[ -z ${AMOUNTS} ]] && echo " --amounts" >&2
+	[[ -z ${MIDPOINTS} ]] && echo " --midpoints" >&2
+#	[[ -z ${START_AMOUNT} ]] && echo " --start-amount" >&2
+#	[[ -z ${STEP_AMOUNT} ]] && echo " --step-amount" >&2
+#	[[ -z ${COUNT_AMOUNT} ]] && echo " --count-amount" >&2
+#	[[ -z ${START_MIDPOINT} ]] && echo " --start-midpoint" >&2
+#	[[ -z ${STEP_MIDPOINT} ]] && echo " --step-midpoint" >&2
+#	[[ -z ${COUNT_MIDPOINT} ]] && echo " --count-midpoint" >&2
 	
 	usage_and_exit 2
 fi
@@ -146,6 +178,43 @@ if [[ -z ${IMAGE} ]]; then
 		echo "Enter image name: "
 	done
 fi
+
+function get_numbers()
+{
+	local PROMPT="${1}"
+	local DEFAULT="${2}"
+
+	while true
+	do
+		echo -en "${cYELLOW}${cBOLD}${PROMPT}" >&2
+		[[ -n ${DEFAULT} ]] && echo -n " or leave blank for ${DEFAULT}" >&2
+		echo -en ": ${cNC}" >&2
+
+		# shellcheck disable=SC2034
+		read -r NUMBERS
+		if [[ ${NUMBERS} == "q" ]]; then
+			return 1
+		elif [[ -z ${NUMBERS} ]]; then
+			if [[ -n ${DEFAULT} ]]; then
+				echo "${DEFAULT}"
+				return 0
+			fi
+		else
+			echo "${NUMBERS}"
+			return 0
+		fi
+	done
+}
+if [[ -z ${AMOUNTS} ]]; then
+	AMOUNTS="$( get_number "Enter the initial amount to stretch" "${d_AMOUNTS}" )"
+	[[ $? -ne 0 ]] && exit 0
+fi
+if [[ -z ${MIDPOINTS} ]]; then
+	MIDPOINTS="$( get_number "Enter the initial amount to stretch" "${d_MIDPOINTS}" )"
+	[[ $? -ne 0 ]] && exit 0
+fi
+
+if false; then		#############
 function get_number()
 {
 	local PROMPT="${1}"
@@ -200,6 +269,7 @@ if [[ -z ${COUNT_MIDPOINT} ]]; then
 	COUNT_MIDPOINT="$( get_number "Enter the number of times to vary the Mid Point" "${d_COUNT_MIDPOINT}" )"
 	[[ $? -ne 0 ]] && exit 0
 fi
+fi	####################
 
 # Create / empty the output directory.
 NUM="$( find "${OUT_DIRECTORY}" -type f -name "*.${ALLSKY_EXTENSION}" -print 2>/dev/null | wc -l )"
@@ -232,6 +302,7 @@ fi
 sudo chmod 775 "${OUT_DIRECTORY}"
 sudo chown "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${OUT_DIRECTORY}"
 
+if false; then #####################
 # Determine what values to use for Amount and Mid Point.
 A="${START_AMOUNT}"
 AMOUNTS="${A}"
@@ -252,6 +323,7 @@ do
 	MIDPOINTS+=" ${M}"
 	(( ON++ )) 
 done
+fi ######################
 
 # Create the stretches.
 HOW="-sigmoidal-contrast"	# the way to stretch

@@ -107,7 +107,7 @@ body {
 .markdown-body blockquote>:last-child {
 	margin-bottom: 0;
 }
-.markdown-body blockquote.warning {
+blockquote.warning, blockquote.warning {
 	color: var(--color-danger-fg);
 	background-color: var(--color-danger-subtle);
 	border-left: 1.0em solid var(--color-danger-emphasis);
@@ -787,7 +787,7 @@ b, strong {
 .markdown-body .minimalPadding li:not(:first-child) {
 	margin-top: 0em;
 }
-.markdown-body .morePadding {
+.morePadding {
 	margin-top: 1.75em !important;
 }
 .nowrap {

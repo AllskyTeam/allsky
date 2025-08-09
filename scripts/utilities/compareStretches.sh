@@ -112,6 +112,15 @@ if [[ ${HTML} == "true" &&
 			|| -z ${START_AMOUNT}   || -z ${STEP_AMOUNT}   || -z ${COUNT_AMOUNT}
 			|| -z ${START_MIDPOINT} || -z ${STEP_MIDPOINT} || -z ${COUNT_MIDPOINT} ) ]]; then
 	echo "All settings must be specified on the command line." >&2
+	echo "You are missing:" >&2
+	[[ -z ${IMAGE} ]] && echo " --image" >&2
+	[[ -z ${START_AMOUNT} ]] && echo " --start-amount" >&2
+	[[ -z ${STEP_AMOUNT} ]] && echo " --step-amount" >&2
+	[[ -z ${COUNT_AMOUNT} ]] && echo " --count-amount" >&2
+	[[ -z ${START_MIDPOINT} ]] && echo " --start-midpoint" >&2
+	[[ -z ${STEP_MIDPOINT} ]] && echo " --step-midpoint" >&2
+	[[ -z ${COUNT_MIDPOINT} ]] && echo " --count-midpoint" >&2
+	
 	usage_and_exit 2
 fi
 

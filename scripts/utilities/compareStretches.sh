@@ -70,12 +70,14 @@ OUT_DIRECTORY="${ALLSKY_IMAGES}/test_stretches"	# Must start with "test"
 IMAGE="";			d_IMAGE="${ALLSKY_TMP}/${ALLSKY_FULL_FILENAME}"
 AMOUNTS="";			d_AMOUNTS="5  10  15  20"
 MIDPOINTS="";		d_MIDPOINTS="10  30  50"
-#START_AMOUNT="";	d_START_AMOUNT="5"
-#STEP_AMOUNT="";		d_STEP_AMOUNT="5"		# increase by this amount
-#COUNT_AMOUNT="";	d_COUNT_AMOUNT="4"
-#START_MIDPOINT="";	d_START_MIDPOINT="5"
-#STEP_MIDPOINT="";	d_STEP_MIDPOINT="5"
-#COUNT_MIDPOINT="";	d_COUNT_MIDPOINT="4"
+if false; then		#############
+START_AMOUNT="";	d_START_AMOUNT="5"
+STEP_AMOUNT="";		d_STEP_AMOUNT="5"		# increase by this amount
+COUNT_AMOUNT="";	d_COUNT_AMOUNT="4"
+START_MIDPOINT="";	d_START_MIDPOINT="5"
+STEP_MIDPOINT="";	d_STEP_MIDPOINT="5"
+COUNT_MIDPOINT="";	d_COUNT_MIDPOINT="4"
+fi ############
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in

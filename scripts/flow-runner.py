@@ -257,9 +257,6 @@ if __name__ == "__main__":
                 arguments['ALLSKYTESTMODE'] = testMode                
 
                 if shared.LOGLEVEL == 4:
-                    # TODO: ALEX:
-                    # Not having this in a "try" statement means if it fails the log file will
-                    # contain (potentially lots) of python errors which are often misleading.
                     result = globals()[method](arguments, shared.args.event)
                 else:
                     try:

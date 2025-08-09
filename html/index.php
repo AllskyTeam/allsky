@@ -120,33 +120,39 @@ if ($useRemoteWebsite) {
 
 <?php	// Give each page its own <title> so they are easy to distinguish in the browser.
 	switch ($page) {
-		case "WLAN_info":			$Title = "WLAN Dashboard";		break;
-		case "LAN_info":			$Title = "LAN Dashboard";		break;
-		case "configuration":		$Title = "Allsky Settings";		break;
-		case "wifi":				$Title = "Configure Wi-Fi";		break;
-		case "dhcp_conf":			$Title = "Configure DHCP";		break;
-		case "hostapd_conf":		$Title = "Configure Hotspot";	break;
-		case "openvpn_conf":		$Title = "Configure OpenVPN";	break;
-		case "torproxy_conf":		$Title = "Configure TOR proxy";	break;
-		case "auth_conf":			$Title = "Change Password";		break;
-		case "system":				$Title = "System";				break;
-		case "list_days":			$Title = "Images";				break;
-		case "list_images":			$Title = "Images$day";			break;
-		case "list_videos":			$Title = "Timelapse$day";		break;
-		case "list_keograms":		$Title = "Keogram$day";			break;
-		case "list_startrails":		$Title = "Startrails$day";		break;
-		case "editor":				$Title = "Editor";				break;
-		case "overlay":				$Title = "Overlay Editor";		break;
-		case "module":				$Title = "Module Manager";		break;
-		case "live_view":			$Title = "Live View";			break;
-		case "support": 			$Title = "Getting Support";		break;
-		default:					$Title = "Allsky WebUI";		break;
+		case "WLAN_info":				$Title = "WLAN Dashboard";			break;
+		case "LAN_info":				$Title = "LAN Dashboard";			break;
+		case "configuration":			$Title = "Allsky Settings";			break;
+		case "wifi":					$Title = "Configure Wi-Fi";			break;
+		case "dhcp_conf":				$Title = "Configure DHCP";			break;
+		case "hostapd_conf":			$Title = "Configure Hotspot";		break;
+		case "openvpn_conf":			$Title = "Configure OpenVPN";		break;
+		case "torproxy_conf":			$Title = "Configure TOR proxy";		break;
+		case "auth_conf":				$Title = "Change Password";			break;
+		case "system":					$Title = "System";					break;
+		case "list_days":				$Title = "Images";					break;
+		case "list_images":				$Title = "Images$day";				break;
+		case "list_videos":				$Title = "Timelapse$day";			break;
+		case "list_keograms":			$Title = "Keogram$day";				break;
+		case "list_startrails":			$Title = "Startrails$day";			break;
+		case "editor":					$Title = "Editor";					break;
+		case "overlay":					$Title = "Overlay Editor";			break;
+		case "module":					$Title = "Module Manager";			break;
+		case "live_view":				$Title = "Live View";				break;
+		case "support": 				$Title = "Getting Support";			break;
+		case "startrails_settings": 	$Title = "Startrails Settings";		break;
+		case "stretch_settings":		$Title = "Image Stretch Settings";	break;
+		case "support": 				$Title = "Getting Support";			break;
+		default:						$Title = "Allsky WebUI";			break;
 	}
 ?>
 	<!-- allows <a external="true" ...> -->
 	<script src="documentation/js/documentation.js" type="application/javascript"></script>
 
 	<title><?php echo "$Title - WebUI"; ?></title>
+
+	<link href="documentation/css/light.css" rel="stylesheet">
+	<link href="documentation/css/documentation.css" rel="stylesheet">
 
 	<!-- Bootstrap Core CSS -->
 	<link href="documentation/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -280,73 +286,42 @@ if ($useRemoteWebsite) {
 		<div class="navbar-default sidebar" role="navigation">
 			<div class="sidebar-nav navbar-collapse">
 				<ul class="nav" id="side-menu">
-					<li>
-						<a id="live_view" href="index.php?page=live_view"><i class="fa fa-eye fa-fw"></i> Live View</a>
-					</li>
-					<li>
-						<a id="list_days" href="index.php?page=list_days"><i class="fa fa-image fa-fw"></i> Images</a>
-					</li>
-					<li>
-						<a id="configuration" href="index.php?page=configuration"><i class="fa fa-camera fa-fw"></i> Allsky Settings</a>
-					</li>
-					<li>
-						<a id="editor" href="index.php?page=editor"><i class="fa fa-code fa-fw"></i> Editor</a>
-					</li>
-					<li>
-						<a id="overlay" href="index.php?page=overlay"><i class="fa fa-edit fa-fw"></i> Overlay Editor</a>
-					</li>
+					<li> <a id="live_view" href="index.php?page=live_view"><i class="fa fa-eye fa-fw"></i> Live View</a> </li>
+					<li> <a id="list_days" href="index.php?page=list_days"><i class="fa fa-image fa-fw"></i> Images</a> </li>
+					<li> <a id="configuration" href="index.php?page=configuration"><i class="fa fa-camera fa-fw"></i> Allsky Settings</a> </li>
+					<li> <a id="editor" href="index.php?page=editor"><i class="fa fa-code fa-fw"></i> Editor</a> </li>
+					<li> <a id="overlay" href="index.php?page=overlay"><i class="fa fa-edit fa-fw"></i> Overlay Editor</a> </li>
                     <?php if (haveDatabase()) { ?>
-                    <li>
-                        <a id="charts" href="index.php?page=charts"><i class="fa-solid fa-chart-line"></i> Charts</a>
-                    </li>
+                    <li> <a id="charts" href="index.php?page=charts"><i class="fa-solid fa-chart-line"></i> Charts</a> </li>
                     <?php } ?>
-					<li>
-						<a id="module" href="index.php?page=module"><i class="fa fa-bars fa-fw"></i> Module Manager</a>
-					</li>
-					<li>
-						<a id="LAN" href="index.php?page=LAN_info"><i class="fa fa-network-wired fa-fw"></i> <b>LAN</b> Dashboard</a>
-					</li>
-					<li>
-						<a id="WLAN" href="index.php?page=WLAN_info"><i class="fa fa-tachometer-alt fa-fw"></i> <b>WLAN</b> Dashboard</a>
-					</li>
-					<li>
-						<a id="wifi" href="index.php?page=wifi"><i class="fa fa-wifi fa-fw"></i> Configure Wi-Fi</a>
-					</li>
+					<li> <a id="module" href="index.php?page=module"><i class="fa fa-bars fa-fw"></i> Module Manager</a> </li>
+					<li> <a id="LAN" href="index.php?page=LAN_info"><i class="fa fa-network-wired fa-fw"></i> <b>LAN</b> Dashboard</a> </li>
+					<li> <a id="WLAN" href="index.php?page=WLAN_info"><i class="fa fa-tachometer-alt fa-fw"></i> <b>WLAN</b> Dashboard</a> </li>
+					<li> <a id="wifi" href="index.php?page=wifi"><i class="fa fa-wifi fa-fw"></i> Configure Wi-Fi</a> </li>
 					<?php if (DHCP_ENABLED) : ?>
-						<li>
-							<a id="vpn" href="index.php?page=dhcp_conf"><i class="fa fa-exchange fa-fw"></i> Configure DHCP</a>
-						</li>
+						<li> <a id="vpn" href="index.php?page=dhcp_conf"><i class="fa fa-exchange fa-fw"></i> Configure DHCP</a> </li>
 					<?php endif; ?>
 					<?php if (APD_ENABLED) : ?>
-						<li>
-							<a id="vpn" href="index.php?page=hostapd_conf"><i class="fa fa-dot-circle fa-fw"></i> Configure Hotspot</a>
-						</li>
+						<li> <a id="vpn" href="index.php?page=hostapd_conf"><i class="fa fa-dot-circle fa-fw"></i> Configure Hotspot</a> </li>
 					<?php endif; ?>
 					<?php if (RASPI_OPENVPN_ENABLED) : ?>
-						<li>
-							<a id="vpn" href="index.php?page=openvpn_conf"><i class="fa fa-lock fa-fw"></i> Configure OpenVPN</a>
-						</li>
+						<li> <a id="vpn" href="index.php?page=openvpn_conf"><i class="fa fa-lock fa-fw"></i> Configure OpenVPN</a> </li>
 					<?php endif; ?>
 					<?php if (RASPI_TORPROXY_ENABLED) : ?>
-						<li>
-							<a id="tor" href="index.php?page=torproxy_conf"><i class="fa fa-eye-slash fa-fw"></i> Configure TOR proxy</a>
-						</li>
+						<li> <a id="tor" href="index.php?page=torproxy_conf"><i class="fa fa-eye-slash fa-fw"></i> Configure TOR proxy</a> </li>
 					<?php endif; ?>
-					<li>
-						<a id="auth_conf" href="index.php?page=auth_conf"><i class="fa fa-lock fa-fw"></i> Change Password</a>
-					</li>
-					<li>
-						<a id="system" href="index.php?page=system"><i class="fa fa-cube fa-fw"></i> System</a>
-					</li>
-					<li>
-						<a external="true" href="/documentation"><i class="fa fa-book fa-fw"></i> Allsky Documentation </a>
-					</li>
-					<li>
-						<a href="index.php?page=support"><i class="fa fa-question fa-fw"></i> Getting Support</a>
-					</li>
-					<li>
-						<span id="as-switch-theme"><i class="fa fa-moon fa-fw"></i> Light/Dark mode</span>
-					</li>
+					<li> <a id="auth_conf" href="index.php?page=auth_conf"><i class="fa fa-lock fa-fw"></i> Change Password</a> </li>
+					<li> <a id="system" href="index.php?page=system"><i class="fa fa-cube fa-fw"></i> System</a> </li>
+					<li> <a id="startrails_settings" href="index.php?page=startrails_settings"> <i class="fa fa-star fa-fw"></i> Startrails Settings</a> </li>
+					<li> <a id="stretch_settings" href="index.php?page=stretch_settings"> <i class="fa fa-arrows-left-right fa-fw"></i> Image Stretch Settings</a> </li>
+<!-- TODO: uncomment when scripts are created
+					<li> <a id="timelapse_settings" href="helpers.php?page=timelapse_settings"> <i class="fa fa-play-circle fa-fw"></i> Timelapse Settings</a> </li>
+					<li> <a id="bad_images_settings" href="helpers.php?page=bad_images_settings"> <i class="fa fa-image fa-fw"></i> Bad Images Settings</a> </li>
+					<li> <a id="constellation_overlay" href="helpers.php?page=constellation_overlay"> <i class="fa allsky-constellation fa-fw"></i> Configure Constellation Overlay</a> </li>
+-->
+					<li> <a external="true" href="/documentation"><i class="fa fa-book fa-fw"></i> Allsky Documentation </a> </li>
+					<li> <a href="index.php?page=support"><i class="fa fa-question fa-fw"></i> Getting Support</a> </li>
+					<li> <span id="as-switch-theme"><i class="fa fa-moon fa-fw"></i> Light/Dark mode</span> </li>
 
 				</ul>
 			</div><!-- /.navbar-collapse -->
@@ -524,6 +499,26 @@ if ($useRemoteWebsite) {
 					case "module":
 						include_once('includes/module.php');
 						DisplayModule();
+						break;
+					case "startrails_settings":
+						include_once("helpers/${page}.php");
+						startrailsSettings();
+						break;
+					case "timelapse_settings":
+						include_once("helpers/${page}.php");
+// TODO: add function name
+						break;
+					case "constellation_overlay":
+						include_once("helpers/${page}.php");
+// TODO: add function name
+						break;
+					case "bad_images_settings":
+						include_once("helpers/${page}.php");
+// TODO: add function name
+						break;
+					case "stretch_settings":
+						include_once("helpers/${page}.php");
+						stretchSettings();
 						break;
 					case "support":
 						include_once('includes/support.php');

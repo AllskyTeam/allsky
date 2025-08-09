@@ -58,7 +58,7 @@ function add_args() {
 	ID = document.getElementById('ID').value;
 
 	image = document.getElementById('image').value;
-	if (image != "") ID += " --input " + image;
+	if (image != "") ID += " --image " + image;
 
 	count_amount = document.getElementById('count_amount').value;
 	if (count_amount != "") ID += " --count-amount " + count_amount;
@@ -114,11 +114,11 @@ function add_args() {
 				</div>
 				<div class="row">
 					<div class="form-group col-md-8">
-						<label for="min_amount">Initial
+						<label for="start_amount">Initial
 							<span class="WebUISetting">Stretch Amount</span> to use</label>
 						<br>Enter the initial amount to stretch.
-						<input type="text" class="form-control" name="min_amount"
-							id="min_amount" value="<?php echo $min_amount; ?>"/>
+						<input type="text" class="form-control" name="start_amount"
+							id="start_amount" value="<?php echo $start_amount; ?>"/>
 					</div>
 				</div>
 				<div class="row">
@@ -132,16 +132,16 @@ function add_args() {
 				</div>
 				<div class="row">
 					<div class="form-group col-md-8">
-						<label for="min_midpoint">Initial
+						<label for="start_midpoint">Initial
 							<span class="WebUISetting">Stretch Mid Point</span> to use</label>
 						<br>Enter the inital mid point.
-						<input type="text" class="form-control" name="min_midpoint"
-							id="min_midpoint" value="<?php echo $min_midpoint; ?>"/>
+						<input type="text" class="form-control" name="start_midpoint"
+							id="start_midpoint" value="<?php echo $start_midpoint; ?>"/>
 					</div>
 				</div>
 				<div class="row">
 					<div class="form-group col-md-8">
-						<label for="min_midpoint">
+						<label for="step_midpoint">
 							<span class="WebUISetting">Stretch Mid Point</span> step size</label>
 						<br>Enter the how much to increase the Stretch Mid Point each time.
 						<input type="text" class="form-control" name="step_midpoint"

@@ -137,7 +137,7 @@ function checkRet($cmd, $return_code, $return_string)
 		if ($use_TEXT) {
 			echo $return_string;
 		} else {
-			echo "<pre style='font-size: 150%'>";
+			echo "<pre style='font-size: 125%'>";
 			echo $return_string;
 			echo "</pre>";
 		}
@@ -152,18 +152,19 @@ function execute($cmd, $args="", $outputToConsole=false)
 	global $use_TEXT, $sep;
 
 	// Do NOT quote $args since there may be multiple arguments.
-	$cmd = escapeshellcmd("sudo --user=" . ALLSKY_OWNER . " $cmd $args");
+	$cmd = "$cmd $args";
+	$full_cmd = escapeshellcmd("sudo --user=" . ALLSKY_OWNER . " $cmd");
 	$result = null;
-	exec("$cmd 2>&1", $result, $return_val);
+	exec("$full_cmd 2>&1", $result, $return_val);
 
 	if ($result !== null) {
 		$result = implode($sep, $result);
 	}
 	if (! $use_TEXT && $outputToConsole) {
 		// Writing to the console aids in debugging.
-		$cmd = str_replace("'", "&apos;", $cmd);
+		$full_cmd = str_replace("'", "&apos;", $full_cmd);
 		echo "<script>console.log(";
-		echo "'[$cmd] returned $return_val, result=$result'";
+		echo "'[$full_cmd] returned $return_val, result=$result'";
 		echo ");</script>\n";
 	}
 

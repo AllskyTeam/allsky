@@ -7,6 +7,43 @@
  *
 */
 
+// Read in all bash variables and create "define()" statements for them.
+$variablesJsonOk = false;
+$allskyHome = getenv('ALLSKY_HOME');
+if ($allskyHome !== false) {
+	$variablesJsonfile = $allskyHome . DIRECTORY_SEPARATOR . 'variables.json';
+	if (file_exists($variablesJsonfile)) {
+		$data = json_decode(file_get_contents($variablesJsonfile), true);
+		if (json_last_error() === JSON_ERROR_NONE) {
+			$variablesJsonOk = true;
+			foreach ($data as $key => $value) {
+				if (!defined($key)) {
+					define($key, $value);
+				}
+			}
+		}
+	}
+}
+if ($variablesJsonOk === false) {
+	echo "<br><div style='font-size: 200%; color: red;'>";
+	echo "The installation of Allsky is incomplete.<br>";
+	echo "File '$variablesJsonfile' not found or corrupted.<br>";
+	echo "</div>";
+
+	echo "<br><br>";
+	echo "<div style='font-size: 125%;'>";
+	echo "If you have NOT installed Allsky please install it by running:";
+	echo "<br>";
+	echo "<pre>   cd ~/allsky; ./install.sh</pre>";
+	echo "The WebUI will not work until Allsky is installed.";
+
+	echo "<br><br><br>";
+	echo "If you HAVE successfully installed Allsky please contact the Allsky team on Github<br><br>";
+	echo 'Create a discussion <a href="https://github.com/AllskyTeam/allsky">here</a>';
+	echo "</div>";
+	die(1);
+}
+
 
 // Read and decode a json file, returning the decoded results or null.
 // On error, display the specified error message.
@@ -193,45 +230,6 @@ function initialize_variables($website_only=false) {
 	global $useLocalWebsite, $useRemoteWebsite;
 	global $hasLocalWebsite, $hasRemoteWebsite;
 	global $hostname;
-
-
-	$variablesJsonOk = false;
-	$allskyHome = getenv('ALLSKY_HOME');
-	if ($allskyHome !== false) {
-		$variablesJsonfile = $allskyHome . DIRECTORY_SEPARATOR . 'variables.json';
-		if (file_exists($variablesJsonfile)) {
-			$data = json_decode(file_get_contents($variablesJsonfile), true);
-			if (json_last_error() === JSON_ERROR_NONE) {
-				$variablesJsonOk = true;
-				foreach ($data as $key => $value) {
-					if (!defined($key)) {
-						define($key, $value);
-					}
-				}
-			}
-		}
-	}
-
-	if ($variablesJsonOk === false) {
-		echo "<br><div style='font-size: 200%; color: red;'>";
-		echo "The installation of Allsky is incomplete.<br>";
-		echo "File '$variablesJsonfile' not found or corrupted.<br>";
-		echo "</div>";
-
-		echo "<br><br>";
-		echo "<div style='font-size: 125%;'>";
-		echo "If you have NOT installed Allsky please install it by running:";
-		echo "<br>";
-		echo "<pre>   cd ~/allsky; ./install.sh</pre>";
-		echo "The WebUI will not work until Allsky is installed.";
-
-		echo "<br><br><br>";
-		echo "If you HAVE successfully installed Allsky please contact the Allsky team on Github<br><br>";
-		echo 'Create a discussion <a href="https://github.com/AllskyTeam/allsky">here</a>';
-		echo "</div>";
-		die(1);
-	}
-
 
 	$settings_array = readSettingsFile();
 

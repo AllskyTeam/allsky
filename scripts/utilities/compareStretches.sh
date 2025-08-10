@@ -327,6 +327,36 @@ do
 done
 fi ######################
 
+# Check for input errors
+ERRORS=""
+AMOUNTS=" ${AMOUNTS} "		# makes easier to remove entries
+A="${AMOUNTS}"
+for AMOUNT in ${A}
+do
+	if ! is_number "${AMOUNT}" ; then
+		ERRORS+="* Amount '${AMOUNT}' is not a number so ignoring it.\n"
+		AMOUNTS="${AMOUNTS/ ${AMOUNT} /}"
+	fi
+done
+MIDPOINTS=" ${MIDPOINTS} "
+M="${MIDPOINTS}"
+for MIDPOINT in ${M}
+do
+	if ! is_number "${MIDPOINT}" ; then
+		ERRORS+="* Mid Point '${MIDPOINT}' is not a number so ignoring it.\n"
+		MIDPOINTS="${MIDPOINTS/ ${MIDPOINT} /}"
+	fi
+done
+if [[ -n ${ERRORS} ]]; then
+	{
+		[[ ${HTML} == "true" ]] && ERRORS="${ERRORS//\\n/<br>}"
+		[[ ${HTML} == "true" ]] && echo "<p style='color: red'>"
+		echo "WARNING:"
+		echo "${ERRORS}"
+		[[ ${HTML} == "true" ]] && echo "</p>"
+	} >&2
+fi
+
 # Create the stretches.
 HOW="-sigmoidal-contrast"	# the way to stretch
 NUM_CREATED=0

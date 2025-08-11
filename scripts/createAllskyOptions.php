@@ -335,6 +335,11 @@ if ($cameraModel === "") {
 	echo "ERROR: cameraModel empty in cc_array!\n";
 	$ok = false;
 }
+$cameraNumber = getVariableOrDefault($cc_array, "cameraNumber", "");
+if ($cameraNumber === "") {
+	echo "ERROR: cameraNumber empty in cc_array!\n";
+	$ok = false;
+}
 if (! $ok) exit(5);
 
 if ($debug > 0) echo "cameraType=$cameraType, cameraModel=$cameraModel\n";
@@ -439,12 +444,15 @@ foreach ($repo_array as $repo) {
 
 	// Have to handle camera type and model differently because the defaults
 	// might not be what we want.
-	if ($name === "cameratype")
+	if ($name === "cameratype") {
 			$repo["default"] = $cameraType;
-	elseif ($name === "cameramodel")
+	} elseif ($name === "cameramodel") {
 			$repo["default"] = $cameraModel;
-	elseif ($name === "camera")
+	} elseif ($name === "cameranumber") {
+			$repo["default"] = "$cameraNumber";
+	} elseif ($name === "camera") {
 			$repo["default"] = "$cameraType $cameraModel";
+	}
 
 	$options_str .= "{\n";
 		add_non_null_field($repo, "name", $name);
@@ -455,6 +463,7 @@ foreach ($repo_array as $repo) {
 			add_non_null_field($repo, "settingsonly", $name, "boolean");
 			add_non_null_field($repo, "label", $name);
 			add_non_null_field($repo, "label_prefix", $name);
+			add_non_null_field($repo, "default", $name, $type);
 			add_non_null_field($repo, "type", $name);
 		} else {
 			add_non_null_field($repo, "minimum", $name);

@@ -358,18 +358,25 @@ if [[ -n ${ERRORS} ]]; then
 fi
 
 # Create the stretches.
+# First do a "no stretch" version so the user can compare.
+FILE="stretch__NO_STRETCH.jpg"
+OUTPUT="${OUT_DIRECTORY}/${FILE}"
+cp "${IMAGE}" "${OUTPUT}"
+echo "Created '${FILE}' with NO STRETCH, for comparison."
+
 HOW="-sigmoidal-contrast"	# the way to stretch
 NUM_CREATED=0
 for AMOUNT in ${AMOUNTS}
 do
 	for MIDPOINT in ${MIDPOINTS}
 	do
-		OUTPUT="${OUT_DIRECTORY}/stretch_amount_${AMOUNT}_midpoint_${MIDPOINT}.jpg"
+		FILE="stretch_amount_${AMOUNT}_midpoint_${MIDPOINT}.jpg"
+		OUTPUT="${OUT_DIRECTORY}/${FILE}"
 		MSG="$( convert "${IMAGE}" "${HOW}" "${AMOUNT}x${MIDPOINT}" "${OUTPUT}" 2>&1 )"
 		RET=$?
 		if [[ ${RET} -eq 0 ]]; then
 			(( NUM_CREATED++ ))
-			echo "Created '${OUTPUT}' with Amount ${AMOUNT} and Midpoint ${MIDPOINT}."
+			echo "Created '${FILE}' with Amount ${AMOUNT} and Midpoint ${MIDPOINT}."
 		else
 			echo -e "ERROR: Unable to make stretched image.  Quitting." >&2
 			echo -e "${MSG}" >&2
@@ -380,6 +387,10 @@ done
 
 if [[ ${NUM_CREATED} -gt 0 ]]; then
 	if [[ ${HTML} == "true" ]]; then
+		echo "<p>"
+		echo "All images are in '${OUT_DIRECTORY}'."
+		echo "</p>"
+
 		echo "<p>"
 		DAY="$( basename "${OUT_DIRECTORY}" )"
 		echo -n "Click <a href='/helpers/show_images.php?_ts=${RANDOM}"

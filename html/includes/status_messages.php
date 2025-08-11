@@ -7,11 +7,7 @@ class StatusMessages {
 		$dismissablClass = '';
 		if ($dismissable) {
 			$dismissablClass = 'alert-dismissible';
-			$dismissableButton = "
-				<button type='button' class='close' data-dismiss='alert'>
-					<span aria-hidden='true'>&times;</span>
-				</button>			
-			";
+			$dismissableButton = "<button type='button' class='close' data-dismiss='alert'><span aria-hidden='true'>&times;</span></button>";
 		}		
 		$status = "<div class='alert alert-$level $dismissablClass' role='alert'>$dismissableButton <div class='alert-text truncated'>$message</div></div>";
 

@@ -70,113 +70,110 @@ function DisplayModule() {
 <script src="/js/jquery-devicemanager/jquery-devicemanager.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 <link rel="stylesheet" href="/js/jquery-devicemanager/jquery-devicemanager.css?c=<?php echo ALLSKY_VERSION; ?>">
 
-<div class="row">
-    <div class="col-lg-12">
-		<div class="panel panel-primary">
-			<div class="panel-heading"><i class="fa fa-bars fa-fw"></i> Module Manager</div>
-            <div class="panel-body">
-                <nav class="navbar navbar-default">
-                    <div class="container-fluid">
-                        <div class="navbar-header">
-                            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#oe-module-editor-navbar">
-                                <span class="sr-only">Toggle navigation</span>
-                                <span class="icon-bar"></span>
-                                <span class="icon-bar"></span>
-                                <span class="icon-bar"></span>                                            
-                            </button>
-                        </div>                        
-                        <div class="collapse navbar-collapse" id="oe-module-editor-navbar">
-                            <ul class="nav navbar-nav">
-                                <li>
-                                    <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Save The Module Configuration">
-                                        <div class="btn btn-lg navbar-btn" id="module-editor-save"><i class="fa-solid fa-floppy-disk"></i></div>
-                                    </div>
-                                </li>
-                                <li class="btn">
-                                    <form id="oe-item-list-edit-dialog-form" class="form-horizontal">
-                                        <div class="form-group">
-                                            <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Sselect the Flow to manage">
-                                                <select class="form-control navbar-form" id="module-editor-config" name="module-editor-config" width="200px">
-                                                    <option value="day">Daytime Configuration</option>
-                                                    <option value="night">Nighttime Configuration</option>
-                                                    <!-- <option value="endofnight">End Of Day Configuration</option> -->
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </form>
-                                </li>
-                            </ul>
-                            <ul class="nav navbar-nav navbar-right">
-                                <li>
-                                    <div class="btn btn-lg navbar-btn" id="device-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Device Manager"><i class="fa-solid fa-wrench"></i></div>
-                                </li>
-                                <li>
-                                    <div class="btn btn-lg navbar-btn" id="module-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Module Options"><i class="fa-solid fa-gear"></i></div>
-                                </li>
-                                <li id="oe-toolbar-debug" class="hidden">
-                                    <div id="module-toobar-debug-button" class="btn btn-lg navbar-btn" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"><i class="fa-solid fa-bug"></i></div>
-                                </li>                                
-                                <li>
-                                    <div class="btn btn-lg navbar-btn" id="module-editor-reset" data-toggle="tooltip" data-placement="top" data-container="body" title="Reset Config to default"><i class="fa-solid fa-rotate-right"></i></div>
-                                </li>
-                                <li>
-                                    <div class="btn btn-lg navbar-btn" id="module-editor-restore" data-toggle="tooltip" data-placement="top" data-container="body" title="Restore last good config"><i class="fa-solid fa-upload"></i></div>
-                                </li>
-                            </ul>                            
-                        </div>
-                    </div>
-                </nav>
-                <div class="row module-lists">
-                    <div class="col-sm-6 col-md-6 col-lg-6 module-column">
-                        <h4 class="text-center">Available Modules
-							<form class="form-horizontal mt-3">
-								<div class="form-group">
-									<label for="module-module-filter" class="col-sm-2 control-label">Search</label>
-									<div class="col-sm-4">
-										<input type="text" class="form-control" id="module-available-filter">
-									</div>
-									<div class="col-sm-2">
-										<button type="button" class="btn btn-primary btn-sm pull-left" id="module-available-filter-clear"><i class="fa-solid fa-xmark"></i></button>
-									</div>
-									<div class="col-sm-2">
-                                        <select name="cars" id="module-filters">
+<div class="panel panel-success">
+    <div class="panel-heading"><i class="fa fa-bars fa-fw"></i> Module Manager</div>
+    <div class="panel-body">
+        <nav class="navbar navbar-default">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#oe-module-editor-navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>                                            
+                    </button>
+                </div>                        
+                <div class="collapse navbar-collapse" id="oe-module-editor-navbar">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Save The Module Configuration">
+                                <div class="btn btn-lg navbar-btn" id="module-editor-save"><i class="fa-solid fa-floppy-disk"></i></div>
+                            </div>
+                        </li>
+                        <li class="btn">
+                            <form id="oe-item-list-edit-dialog-form" class="form-horizontal">
+                                <div class="form-group">
+                                    <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Sselect the Flow to manage">
+                                        <select class="form-control navbar-form" id="module-editor-config" name="module-editor-config" width="200px">
+                                            <option value="day">Daytime Configuration</option>
+                                            <option value="night">Nighttime Configuration</option>
+                                            <!-- <option value="endofnight">End Of Day Configuration</option> -->
                                         </select>
-									</div>                                    
-								</div>
-							</form>
-						</h4>
-
-
-                        <div class="module-container">
-                            <div id="modules-available" class="list-group"></div>
-                            <div id="modules-available-empty"><span>No modules available</span></div>
-                        </div>
-                    </div>
-                    <div class="col-sm-6 col-md-6 col-lg-6 module-column">
-                        <h4 class="text-center">Selected Modules
-							<form class="form-horizontal mt-3">
-								<div class="form-group">
-									<label for="module-module-filter" class="col-sm-2 control-label">Search</label>
-									<div class="col-sm-6">
-										<input type="text" class="form-control" id="module-selected-filter">
-									</div>
-									<div class="col-sm-4">
-										<button type="button" class="btn btn-primary btn-sm pull-left" id="module-selected-filter-clear"><i class="fa-solid fa-xmark"></i></button>
-									</div>
-								</div>
-							</form>
-						</h4>
-
-                        <div class="module-container">
-                            <div id="modules-selected" class="list-group"></div>
-                            <div id="modules-selected-empty"><span>Drag modules here to enable them</span></div>
-                        </div>
-                    </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </li>
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <div class="btn btn-lg navbar-btn" id="device-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Device Manager"><i class="fa-solid fa-wrench"></i></div>
+                        </li>
+                        <li>
+                            <div class="btn btn-lg navbar-btn" id="module-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Module Options"><i class="fa-solid fa-gear"></i></div>
+                        </li>
+                        <li id="oe-toolbar-debug" class="hidden">
+                            <div id="module-toobar-debug-button" class="btn btn-lg navbar-btn" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"><i class="fa-solid fa-bug"></i></div>
+                        </li>                                
+                        <li>
+                            <div class="btn btn-lg navbar-btn" id="module-editor-reset" data-toggle="tooltip" data-placement="top" data-container="body" title="Reset Config to default"><i class="fa-solid fa-rotate-right"></i></div>
+                        </li>
+                        <li>
+                            <div class="btn btn-lg navbar-btn" id="module-editor-restore" data-toggle="tooltip" data-placement="top" data-container="body" title="Restore last good config"><i class="fa-solid fa-upload"></i></div>
+                        </li>
+                    </ul>                            
                 </div>
             </div>
-		</div>
-	</div>
+        </nav>
+        <div class="row module-lists">
+            <div class="col-sm-6 col-md-6 col-lg-6 module-column">
+                <h4 class="text-center">Available Modules
+                    <form class="form-horizontal mt-3">
+                        <div class="form-group">
+                            <label for="module-module-filter" class="col-sm-2 control-label">Search</label>
+                            <div class="col-sm-4">
+                                <input type="text" class="form-control" id="module-available-filter">
+                            </div>
+                            <div class="col-sm-2">
+                                <button type="button" class="btn btn-primary btn-sm pull-left" id="module-available-filter-clear"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                            <div class="col-sm-2">
+                                <select name="cars" id="module-filters">
+                                </select>
+                            </div>                                    
+                        </div>
+                    </form>
+                </h4>
+
+
+                <div class="module-container">
+                    <div id="modules-available" class="list-group"></div>
+                    <div id="modules-available-empty"><span>No modules available</span></div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-6 col-lg-6 module-column">
+                <h4 class="text-center">Selected Modules
+                    <form class="form-horizontal mt-3">
+                        <div class="form-group">
+                            <label for="module-module-filter" class="col-sm-2 control-label">Search</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control" id="module-selected-filter">
+                            </div>
+                            <div class="col-sm-4">
+                                <button type="button" class="btn btn-primary btn-sm pull-left" id="module-selected-filter-clear"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                        </div>
+                    </form>
+                </h4>
+
+                <div class="module-container">
+                    <div id="modules-selected" class="list-group"></div>
+                    <div id="modules-selected-empty"><span>Drag modules here to enable them</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
 
 <div class="modal" role="dialog" id="module-upload-dialog">
     <form id="module-upload-dialog-form" class="form-horizontal">

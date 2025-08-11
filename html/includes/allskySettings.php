@@ -729,7 +729,7 @@ if ($debug) {
 	if ($formReadonly != "readonly") $settingsDescription = "";
 ?>
 
-<div class="row"> <div class="col-lg-12"> <div class="panel panel-primary">
+<div class="panel panel-success">
 <?php
 	if ($formReadonly == "readonly") {
 		$x = "(READ ONLY) &nbsp; &nbsp; ";
@@ -820,7 +820,8 @@ CSRFToken();
 
 			foreach($options_array as $option) {
 				$name = $option['name'];
-if (false && $debug) { echo "<br>Option $name"; }
+// ECC was false &&
+if ($debug) { echo "<br>Option <b>$name</b>"; }
 				if ($name === $endSetting) continue;
 
 				$type = getVariableOrDefault($option, 'type', null);
@@ -854,6 +855,7 @@ if (false && $debug) { echo "<br>Option $name"; }
 				if ($isHeader) {
 					$value = "";
 					$default = "";
+if ($debug) { echo "&nbsp; (<span style='color: blue;'>$logicalType</span>)"; }
 				} else {
 					$default = getVariableOrDefault($option, 'default', "");
 					if ($default !== "" && $logicalType === "text")
@@ -869,15 +871,16 @@ if (false && $debug) { echo "<br>Option $name"; }
 
 						$fileName = getFileName($s);
 						$source_array = &getSourceArray($fileName);
-if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; name=$name, fileName=$fileName"; }
+if ($debug) { echo ": &nbsp; from $fileName"; }
 						if ($source_array === null) {
 							continue;
 						}
 						$value = getVariableOrDefault($source_array, $name, null);
-if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 					} else {
+if ($debug) { echo ": &nbsp; from settings file"; }
 						$value = getVariableOrDefault($settings_array, $name, null);
 					}
+if ($debug) { echo ": &nbsp; value=$value"; }
 
 					// In read-only mode, getVariableOrDefault() returns booleans differently.
 					// A 0 or 1 is returned.
@@ -1075,6 +1078,9 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 					} elseif ($type == "select") {
 						foreach($option['options'] as $opt) {
 							$val = getVariableOrDefault($opt, 'value', "?");
+if ($debug && $val === "?") { echo "<br> &nbsp; &nbsp; &nbsp; (<span style='color: red;'>val = ?</span>)";
+echo "<pre>";var_dump($option);echo "</pre>";
+}
 							if ($val != $default) continue;
 							$default = $opt['label'];
 							break;
@@ -1145,7 +1151,9 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 							" $readonlyForm name='$name'>";
 						foreach($option['options'] as $opt){
 							$val = getVariableOrDefault($opt, 'value', "?");
+if ($debug && $val === "?") { echo "<br> &nbsp; &nbsp; &nbsp; (<span style='color: red;'>val = ?</span>)"; }
 							$lab = getVariableOrDefault($opt, 'label', "?");
+if ($debug && $lab === "?") { echo "<br> &nbsp; &nbsp; &nbsp; (<span style='color: red;'>lab = ?</span>)"; }
 							if ($value == $val){
 								echo "<option value='$val' selected>$lab</option>";
 							} else {
@@ -1227,7 +1235,10 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 				}
 			}
 			if ($numMissing > 0) {
-				$msg .= "<br><strong>$missingSettings</strong> is missing";
+				if ($numErrors > 0) {
+					$msg .= "<br>";
+				}
+				$msg .= "<strong>$missingSettings</strong> is missing";
 			}
 			if ($msg != "") {
 				// Combine invalid and missing fields since they are both errors.
@@ -1246,6 +1257,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 			if ($status->isMessage()) {
 				$status->addMessage("<strong>See the highlighted entries below.</strong>", 'info');
 			}
+
 ?>
 			<script>
 				var messages = document.getElementById("messages");
@@ -1253,7 +1265,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 				// Call showMessages() with the 2nd (escape) argument of "true" so
 				// it escapes single quotes and deletes newlines.
 				// We then have to restore them so the html is correct.
-				messages.innerHTML += '<?php $status->showMessages(true, true, true); ?>'
+				messages.innerHTML += `<?php $status->showMessages(true, true, true); ?>`
 					.replace(/&apos;/g, "'")
 					.replace(/&#10/g, "\n");
 			</script>
@@ -1261,7 +1273,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 
 	</form>
 </div><!-- ./ Panel body -->
-</div><!-- /.panel-primary --> </div><!-- /.col-lg-12 --> </div><!-- /.row -->
+</div><!-- /.panel-primary -->
 
 
 <?php

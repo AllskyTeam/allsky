@@ -9,7 +9,7 @@
 
 <div class="container">
     <div class="col-md-6 col-md-offset-2 panel-style">
-        <div class="panel panel-default">
+        <div class="panel panel-success">
             <div class="panel-heading">
                 <h3 class="panel-title">
                     <strong>

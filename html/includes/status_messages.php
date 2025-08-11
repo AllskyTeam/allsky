@@ -11,7 +11,20 @@ class StatusMessages {
 		} else {
 			$status .= "<td></td>";
 		}
-		$status .= "</tr>";
+		
+		$dismissableButton = '';
+		$dismissablClass = '';
+		if ($dismissable) {
+			$dismissablClass = 'alert-dismissible';
+			$dismissableButton = "
+				<button type='button' class='close' data-dismiss='alert'>
+					<span aria-hidden='true'>&times;</span>
+				</button>			
+			";
+		}		
+		$status = "
+			<div class='alert alert-$level $dismissablClass' role='alert'>$dismissableButton <div class='alert-text truncated'>$message</div></div>
+		";
 
 		array_push($this->messages, $status);
 	}
@@ -34,7 +47,9 @@ class StatusMessages {
 
 		$count = 0;
 		foreach($this->messages as $message) {
-			$count++;
+
+
+			/*$count++;
 			if ($count === 1) {
 				if ($highlight) {
 					$class = " class=${apos}highlightedBox${apos}";
@@ -45,21 +60,20 @@ class StatusMessages {
 			}
 
 			if ($count >= 2) {
-				// space between messages
 				echo "$nl$tab<tr><td style=${apos}padding-top: 5px${apos}></td></tr>";
 			}
 
 			if ($escape === true)
 				$message = str_replace("'", "&apos;", $message);
 
-
-			// Replace newlines with HTML breaks.
 			$message = str_replace("\n", "<br>", $message);
-			echo "$nl$tab$message";
+			echo "$nl$tab$message";*/
+
+			echo $message;
 		}
 
 		if ($count > 0) {
-			echo "$nl</table></div>$nl";
+			//echo "$nl</table></div>$nl";
 		}
 
 		if ( $clear ) $this->messages = array();

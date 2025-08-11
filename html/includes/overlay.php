@@ -83,127 +83,125 @@ function DisplayOverlay($image_name)
 
     <div id="oeeditor">
         <div id="oe-overlay-manager"></div>     
-        <div class="row">
-            <div id="oe-viewport" class="panel panel-primary">
-                <div id="oe-overlay-not-running" class="oe-not-running big hidden">
-                    <div class="center-full">
-                        <div class="center-paragraph">
-                            <h1>Allsky is not currently capturing images</h1>
-                            <p>Please wait for Allsky to begin capturing before using the Overlay Editor</p>
-                            <small>You can stay on this page and the Overlay Editor will start automatically once Allsky is running. <span id="oe-overlay-not-running-status"></span></small>
+        <div id="oe-viewport" class="panel panel-success">
+            <div id="oe-overlay-not-running" class="oe-not-running big hidden">
+                <div class="center-full">
+                    <div class="center-paragraph">
+                        <h1>Allsky is not currently capturing images</h1>
+                        <p>Please wait for Allsky to begin capturing before using the Overlay Editor</p>
+                        <small>You can stay on this page and the Overlay Editor will start automatically once Allsky is running. <span id="oe-overlay-not-running-status"></span></small>
+                    </div>
+                </div>
+            </div> 
+            <div class="panel-heading"><i class="fa fa-code fa-edit"></i> Overlay Editor</div>
+                <p id="editor-messages"><?php $myStatus->showMessages(); ?></p>
+                <nav class="navbar navbar-default">
+                    <div class="container-fluid">
+                        <div class="navbar-header">
+                            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#oe-main-navbar" aria-expanded="false">
+                                <span class="sr-only">Toggle navigation</span>
+                                <span class="icon-bar"></span>
+                                <span class="icon-bar"></span>
+                                <span class="icon-bar"></span>
+                            </button>
+                        </div>
+
+                        <div class="collapse navbar-collapse" id="oe-main-navbar">
+                            <ul class="nav navbar-nav" id="oe-editor-toolbar">
+                                <li>
+                                    <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Save The Current Configuration">
+                                        <div class="btn btn-lg navbar-btn oe-button disabled" id="oe-save"><i class="fa-solid fa-floppy-disk"></i></div>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="btn btn-lg navbar-btn oe-button" id="oe-add-text" data-toggle="tooltip" data-container="body" data-placement="top" title="Add New Text Field"><i class="fa-solid fa-font"></i></div>
+                                </li>
+                                <li>
+                                    <div class="btn btn-lg navbar-btn oe-button" id="oe-add-image" data-toggle="tooltip" data-container="body" data-placement="top" title="Add Existing Image Field"><i class="fa-regular fa-image"></i></div>
+                                </li>
+                                <li>
+                                    <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Delete The Selected Field">
+                                        <div class="btn btn-lg navbar-btn oe-button disabled" id="oe-delete"><i class="fa-solid fa-xmark"></i></div>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="btn btn-lg navbar-btn oe-button" id="oe-item-list" data-toggle="tooltip" data-container="body" data-placement="top" title="Variable Manager"><i class="fa-regular fa-rectangle-list"></i></div>
+                                </li>
+                                <li>
+                                    <div class="btn btn-lg navbar-btn oe-button" id="oe-test-mode" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Sample Data"><i class="fa-regular fa-square-check"></i></div>
+                                </li>
+
+
+
+                                <li>
+                                    <div class="btn btn-lg navbar-btn oe-zoom oe-button border-left" id="oe-group" data-toggle="tooltip" data-container="body" data-placement="top" title="Group Fields"><i class="fa-solid fa-object-group"></i></div>
+                                </li>
+                                <li>
+                                    <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-ungroup" data-toggle="tooltip" data-container="body" data-placement="top" title="Un Group Fields"><i class="fa-solid fa-object-ungroup"></i></div>
+                                </li>
+
+                                
+                                <li>
+                                    <div class="btn btn-lg navbar-btn oe-zoom oe-button border-left" id="oe-left-align" data-toggle="tooltip" data-container="body" data-placement="top" title="Left Align"><i class="fa-solid fa-align-left"></i></div>
+                                </li>
+                                <li>
+                                    <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-vertical-equal" data-toggle="tooltip" data-container="body" data-placement="top" title="Equal Spacing"><i class="fa-solid fa-arrows-up-down"></i></div>
+                                </li>
+                                <li>
+                                    <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-equal-width" data-toggle="tooltip" data-container="body" data-placement="top" title="Equal Width"><i class="fa-solid fa-rotate-90 fa-arrows-up-down"></i></div>
+                                </li>                                    
+
+                                <li>
+                                    <div class="btn btn-lg navbar-btn oe-zoom oe-button border-left" id="oe-zoom-in" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
+                                </li>
+                                <li>
+                                    <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-zoom-out" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></div>
+                                </li>
+                                <li>
+                                    <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-zoom-full" data-toggle="tooltip" data-container="body" data-placement="top" title="View Full Size"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></div>
+                                </li>
+                                <li>
+                                    <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-zoom-fit" data-toggle="tooltip" data-container="body" data-placement="top" title="Fit to Window"><i class="fa-solid fa-down-left-and-up-right-to-center"></i></div>
+                                </li>
+                                <li>
+                                    <div class="btn btn-lg navbar-btn border-left" id="oe-show-overlay-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Overlay Manager"><i class="fa-solid fa-gears"></i></div>
+                                </li>
+                                <li>
+                                    <div class="btn btn-lg navbar-btn oe-field-errors hidden" id="oe-field-errors" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Field Errors"><i class="fa-solid fa-circle-exclamation"></i></div>
+                                </li>
+                            </ul>
+                            <ul class="nav navbar-nav navbar-right">
+                                <li id="oe-toolbar-debug" class="hidden">
+                                    <div id="oe-toobar-debug-button" class="btn btn-lg navbar-btn oe-button" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"><i class="fa-solid fa-bug"></i></div>
+                                </li>
+                                <li>
+                                    <div id="oe-upload-font" class="btn btn-lg navbar-btn oe-button" data-toggle="tooltip" data-container="body" data-placement="top" title="Font Manager">
+                                        <i class="fa-solid fa-font"></i>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div id="oe-show-image-manager" class="btn btn-lg navbar-btn oe-button" data-toggle="tooltip" data-container="body" data-placement="top" title="Image Manager"><i class="fa-regular fa-images"></i></div>
+                                </li>
+                                <li>
+                                    <div class="btn btn-lg navbar-btn oe-button" id="oe-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Layout and App Options"><i class="fa-solid fa-gear"></i>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="btn btn-lg navbar-btn oe-button" id="oe-help" data-toggle="tooltip" data-container="body" data-placement="top" title="Help"><i class="fa-solid fa-question"></i>
+                                    </div>
+                                </li>
+                            </ul>
                         </div>
                     </div>
-                </div> 
-                <div class="panel-heading"><i class="fa fa-code fa-edit"></i> Overlay Editor</div>
-                    <p id="editor-messages"><?php $myStatus->showMessages(); ?></p>
-                    <nav class="navbar navbar-default">
-                        <div class="container-fluid">
-                            <div class="navbar-header">
-                                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#oe-main-navbar" aria-expanded="false">
-                                    <span class="sr-only">Toggle navigation</span>
-                                    <span class="icon-bar"></span>
-                                    <span class="icon-bar"></span>
-                                    <span class="icon-bar"></span>
-                                </button>
+                </nav>                        
+                <div class="oe-editor panel-body">
+                    <div id="overlay_container" style="background-color: black; position: relative">
+                        <div id="oe-overlay-disable" class="hidden">
+                            <div class="center">
+                                <div class="center-paragraph"><h2>You are using a default <?php echo(getTOD()); ?> time overlay.</h2> <p>To create a new overlay click <a href="#" id="oe-overlay-disable-new">here</a></p></div>
                             </div>
-
-                            <div class="collapse navbar-collapse" id="oe-main-navbar">
-                                <ul class="nav navbar-nav" id="oe-editor-toolbar">
-                                    <li>
-                                        <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Save The Current Configuration">
-                                            <div class="btn btn-lg navbar-btn oe-button disabled" id="oe-save"><i class="fa-solid fa-floppy-disk"></i></div>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="btn btn-lg navbar-btn oe-button" id="oe-add-text" data-toggle="tooltip" data-container="body" data-placement="top" title="Add New Text Field"><i class="fa-solid fa-font"></i></div>
-                                    </li>
-                                    <li>
-                                        <div class="btn btn-lg navbar-btn oe-button" id="oe-add-image" data-toggle="tooltip" data-container="body" data-placement="top" title="Add Existing Image Field"><i class="fa-regular fa-image"></i></div>
-                                    </li>
-                                    <li>
-                                        <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Delete The Selected Field">
-                                            <div class="btn btn-lg navbar-btn oe-button disabled" id="oe-delete"><i class="fa-solid fa-xmark"></i></div>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="btn btn-lg navbar-btn oe-button" id="oe-item-list" data-toggle="tooltip" data-container="body" data-placement="top" title="Variable Manager"><i class="fa-regular fa-rectangle-list"></i></div>
-                                    </li>
-                                    <li>
-                                        <div class="btn btn-lg navbar-btn oe-button" id="oe-test-mode" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Sample Data"><i class="fa-regular fa-square-check"></i></div>
-                                    </li>
-
-
-
-                                    <li>
-                                        <div class="btn btn-lg navbar-btn oe-zoom oe-button border-left" id="oe-group" data-toggle="tooltip" data-container="body" data-placement="top" title="Group Fields"><i class="fa-solid fa-object-group"></i></div>
-                                    </li>
-                                    <li>
-                                        <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-ungroup" data-toggle="tooltip" data-container="body" data-placement="top" title="Un Group Fields"><i class="fa-solid fa-object-ungroup"></i></div>
-                                    </li>
-
-                                    
-                                    <li>
-                                        <div class="btn btn-lg navbar-btn oe-zoom oe-button border-left" id="oe-left-align" data-toggle="tooltip" data-container="body" data-placement="top" title="Left Align"><i class="fa-solid fa-align-left"></i></div>
-                                    </li>
-                                    <li>
-                                        <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-vertical-equal" data-toggle="tooltip" data-container="body" data-placement="top" title="Equal Spacing"><i class="fa-solid fa-arrows-up-down"></i></div>
-                                    </li>
-                                    <li>
-                                        <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-equal-width" data-toggle="tooltip" data-container="body" data-placement="top" title="Equal Width"><i class="fa-solid fa-rotate-90 fa-arrows-up-down"></i></div>
-                                    </li>                                    
-
-                                    <li>
-                                        <div class="btn btn-lg navbar-btn oe-zoom oe-button border-left" id="oe-zoom-in" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
-                                    </li>
-                                    <li>
-                                        <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-zoom-out" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></div>
-                                    </li>
-                                    <li>
-                                        <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-zoom-full" data-toggle="tooltip" data-container="body" data-placement="top" title="View Full Size"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></div>
-                                    </li>
-                                    <li>
-                                        <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-zoom-fit" data-toggle="tooltip" data-container="body" data-placement="top" title="Fit to Window"><i class="fa-solid fa-down-left-and-up-right-to-center"></i></div>
-                                    </li>
-                                    <li>
-                                        <div class="btn btn-lg navbar-btn border-left" id="oe-show-overlay-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Overlay Manager"><i class="fa-solid fa-gears"></i></div>
-                                    </li>
-                                    <li>
-                                        <div class="btn btn-lg navbar-btn oe-field-errors hidden" id="oe-field-errors" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Field Errors"><i class="fa-solid fa-circle-exclamation"></i></div>
-                                    </li>
-                                </ul>
-                                <ul class="nav navbar-nav navbar-right">
-                                    <li id="oe-toolbar-debug" class="hidden">
-                                        <div id="oe-toobar-debug-button" class="btn btn-lg navbar-btn oe-button" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"><i class="fa-solid fa-bug"></i></div>
-                                    </li>
-                                    <li>
-                                        <div id="oe-upload-font" class="btn btn-lg navbar-btn oe-button" data-toggle="tooltip" data-container="body" data-placement="top" title="Font Manager">
-                                            <i class="fa-solid fa-font"></i>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div id="oe-show-image-manager" class="btn btn-lg navbar-btn oe-button" data-toggle="tooltip" data-container="body" data-placement="top" title="Image Manager"><i class="fa-regular fa-images"></i></div>
-                                    </li>
-                                    <li>
-                                        <div class="btn btn-lg navbar-btn oe-button" id="oe-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Layout and App Options"><i class="fa-solid fa-gear"></i>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="btn btn-lg navbar-btn oe-button" id="oe-help" data-toggle="tooltip" data-container="body" data-placement="top" title="Help"><i class="fa-solid fa-question"></i>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </nav>                        
-                    <div class="oe-editor panel-body">
-                        <div id="overlay_container" style="background-color: black; position: relative">
-                            <div id="oe-overlay-disable" class="hidden">
-                                <div class="center">
-                                    <div class="center-paragraph"><h2>You are using a default <?php echo(getTOD()); ?> time overlay.</h2> <p>To create a new overlay click <a href="#" id="oe-overlay-disable-new">here</a></p></div>
-                                </div>
-                            </div> 
-                            <div id="oe-editor-stage"></div>
-                        </div>
+                        </div> 
+                        <div id="oe-editor-stage"></div>
                     </div>
                 </div>
             </div>

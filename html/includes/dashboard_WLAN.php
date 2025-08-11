@@ -4,8 +4,7 @@ function DisplayDashboard_WLAN()
 {
 
 ?>
-<div class="col-lg-12">
-	<div class="panel panel-primary">
+	<div class="panel panel-success">
 		<div class="panel-heading"><i class="fa fa-tachometer-alt fa-fw"></i> WLAN Dashboard</div>
 <?php
 	$num_interfaces = 0;
@@ -27,9 +26,7 @@ function DisplayDashboard_WLAN()
 	}
 	if ($num_interfaces > 1) echo "<hr class='panel-primary'>";
 ?>
-	<div class="panel-footer">Information provided by ifconfig and iwconfig</div>
 	</div><!-- /.panel panel-primary -->
-</div><!-- /.col-lg-12 -->
 <?php
 }
 

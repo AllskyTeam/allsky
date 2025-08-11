@@ -39,11 +39,7 @@ $cmd = "AM_ALLSKY_CONFIG compare_startrails --html";
 			<br>
 			Multiple startrails images will be created using the settings you enter
 			and you can then compare them to find the best image.
-			<p>
-			See the
-			<a external="true" allsky="true" href="/documentation/explanations/startrails.html#brightnessthreshold">startrails settings</a>
-			for an explanation of the startrails settings.
-			</p><br><br>
+			</p>
 
 			<form role="form" action="execute.php" method="POST" onsubmit="return add_args()">
 <script>

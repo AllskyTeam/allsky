@@ -1,9 +1,9 @@
 <?php
 
-// Web page to display images in a directory.
+// Web page to display "special" images in a directory.
+// These are images that aren't produced by the Allsky "capture" programs.
 
 include_once('../includes/functions.php');
-// initialize_variables();		// sets some variables
 
 ?>
 <!DOCTYPE html>
@@ -13,7 +13,7 @@ include_once('../includes/functions.php');
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="description" content="WebUI 'helper' page to display images">
-	<title><?php echo "Display Images"; ?></title>
+	<title>Display Images</title>
 
 	<link href="../documentation/css/custom.css" rel="stylesheet">
 	<link href="../documentation/css/documentation.css" rel="stylesheet">
@@ -26,6 +26,8 @@ $day = getVariableOrDefault($_REQUEST, 'day', "");
 $pre = getVariableOrDefault($_REQUEST, 'pre', "");
 $type = getVariableOrDefault($_REQUEST, 'type', "");
 
+// Prepend "X" to the file name prefix so ListFileType() looks for files whose
+// names are "${pre}.*", rather than "${pre}-YYYYMMDD.*".
 // true == list the file names
 ListFileType("", "X${pre}", $type, "picture", true); 
 ?>

@@ -109,7 +109,6 @@ function add_args() {
 						Check the box to output summary information for each startrails created.
 						</div>
 						<input type="checkbox" class="form-control" name="verbose"
-						<br><input type="checkbox" class="form-control" name="verbose"
 							id="verbose" value="<?php echo $verbose; ?>"
 							<?php if ($verbose == "true") echo "checked"; ?>
 							style="width: 10%" />

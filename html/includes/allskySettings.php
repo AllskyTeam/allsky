@@ -729,7 +729,7 @@ if ($debug) {
 	if ($formReadonly != "readonly") $settingsDescription = "";
 ?>
 
-<div class="panel panel-success">
+<div class="panel panel-success" id="settingsPanel">
 <?php
 	if ($formReadonly == "readonly") {
 		$x = "(READ ONLY) &nbsp; &nbsp; ";
@@ -739,9 +739,9 @@ if ($debug) {
 	echo "<div class='panel-heading'>$x Allsky Settings for &nbsp;<b>$cameraType $cameraModel</b></div>";
 	echo "<div class='panel-body' style='padding: 5px;'>";
 	if ($formReadonly != "readonly") {
-		echo "<p id='messages'>";
-			if ($status->isMessage()) echo $status->showMessages();
-		echo "</p>";
+		echo "<div id='messages'>";
+			$status->showMessages();
+		echo "</div>";
 		$t = time();
 		echo "<form method='POST' action='${ME}?_ts=${t}' name='conf_form'>";
 ?>
@@ -1258,16 +1258,28 @@ if ($debug && $lab === "?") { echo "<br> &nbsp; &nbsp; &nbsp; (<span style='colo
 				$status->addMessage("<strong>See the highlighted entries below.</strong>", 'info');
 			}
 
+			//$status->reset();
+
 ?>
+
 			<script>
-				var messages = document.getElementById("messages");
-				var inner = messages.innerHTML;
+				var messages = $("#messages");
+				var messageHTML = messages.html();
 				// Call showMessages() with the 2nd (escape) argument of "true" so
 				// it escapes single quotes and deletes newlines.
 				// We then have to restore them so the html is correct.
-				messages.innerHTML += `<?php $status->showMessages(true, true, true); ?>`
+				messageHTML += `<?php $status->showMessages(true, true); ?>`
 					.replace(/&apos;/g, "'")
 					.replace(/&#10/g, "\n");
+				messages.html(messageHTML);
+
+				if ($('#messages div.noChanges').length !== 1) {
+					if ($('#messages > div').length > 1) {
+						$('#settingsPanel').removeClass('panel-success');
+						$('#settingsPanel').addClass('panel-danger');
+					}
+				}
+
 			</script>
 <?php	} ?>
 

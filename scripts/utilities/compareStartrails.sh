@@ -157,7 +157,7 @@ if [[ -z ${THRESHOLDS} ]]; then
 		if [[ ${THESHOLDS} == "q" ]]; then
 			exit 0
 		elif [[ -z ${THESHOLDS} ]]; then
-			COUNT="${d_THESHOLDS}"
+			COUNT="${d_THRESHOLDS}"
 			break
 		else
 			break

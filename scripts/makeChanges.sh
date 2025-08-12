@@ -464,6 +464,10 @@ do
 					fi
 				fi
 
+				# Recreate the variables.json file so PHP and Python scripts
+				# get the updated camera info.
+				create_variables_json "${FROM}"
+
 				# ${ALLSKY_CC_FILE} is a generic name defined in variables.sh.
 				# ${SPECIFIC_NAME} is specific to the camera type/model.
 				# It isn't really needed except debugging.

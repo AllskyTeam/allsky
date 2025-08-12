@@ -170,6 +170,11 @@ class ALLSKY {
 			data: JSON.stringify(postData),
 			dataType: dataType,
 			cache: false,
+  			contentType: 'application/json',
+  			cache: false,
+  			crossDomain: true,
+  			xhrFields: { withCredentials: false },
+			headers: { "X-Requested-With": "XMLHttpRequest" },
 			success: (response) => {
 				if (Array.isArray(updateElement)) {
 					timer.updateelement.forEach(updateData => {
@@ -184,7 +189,7 @@ class ALLSKY {
 				}
 			},
 			error: (a, b) => {
-				//$(elementSelector).html('Error loading ' + timerId + ' data');
+				console.log('Error loading ' + timerId + ' data')
 			}
 		});
 	}

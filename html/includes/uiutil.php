@@ -56,6 +56,17 @@ class UIUTIL
 
     private function sendResponse($response = 'ok', $isJson = false) {
 
+
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
+        $allow_origin = $origin ?: '*';
+
+        header('Vary: Origin');
+        header("Access-Control-Allow-Origin: $allow_origin");
+        header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type, X-Requested-With, Authorization');
+        header('Access-Control-Allow-Credentials: true');
+
+
         if ($isJson) {
             header('Content-Type: application/json');
             echo json_encode($response, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
@@ -192,6 +203,10 @@ class UIUTIL
     }
 }   
 
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
 
 $uiUtil = new UIUTIL();
 $uiUtil->run();

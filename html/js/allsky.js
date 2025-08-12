@@ -184,7 +184,7 @@ class ALLSKY {
 				}
 			},
 			error: (a, b) => {
-				$(elementSelector).html('Error loading ' + timerId + ' data');
+				//$(elementSelector).html('Error loading ' + timerId + ' data');
 			}
 		});
 	}

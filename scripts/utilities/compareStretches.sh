@@ -294,7 +294,7 @@ if [[ ${NUM_CREATED} -gt 0 ]]; then
 		echo "<p>"
 		DAY="$( basename "${OUT_DIRECTORY}" )"
 		echo -n "Click <a href='/helpers/show_images.php"
-		echo -n "&day=${DAY}&pre=stretch_&type=Test Stretch"
+		echo -n "?day=${DAY}&pre=stretch_&type=Test Stretch"
 		echo    "'>here</a> to see the results."
 	else
 		echo -e "\nThe ${NUM_CREATED} stretched image(s) are in '${OUT_DIRECTORY}'.\n"

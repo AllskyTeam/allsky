@@ -199,6 +199,9 @@ do
 	if ! is_number "${AMOUNT}" ; then
 		ERRORS+="* Amount '${AMOUNT}' is not a number so ignoring it.\n"
 		AMOUNTS="${AMOUNTS/ ${AMOUNT} /}"
+	elif [[ ${AMOUNT} -lt 10 && ${AMOUNT} -gt 0 ]]; then
+		# Make sure numbers are all 2-digit so they sort correctly.
+		AMOUNTS="${AMOUNTS/ ${AMOUNT} / 0${AMOUNT} }"
 	fi
 done
 MIDPOINTS=" ${MIDPOINTS} "
@@ -208,6 +211,8 @@ do
 	if ! is_number "${MIDPOINT}" ; then
 		ERRORS+="* Mid Point '${MIDPOINT}' is not a number so ignoring it.\n"
 		MIDPOINTS="${MIDPOINTS/ ${MIDPOINT} /}"
+	elif [[ ${MIDPOINT} -lt 10 ]]; then
+		MIDPOINTS="${MIDPOINTS/ ${MIDPOINT} / 0${MIDPOINT} }"
 	fi
 done
 if [[ -n ${ERRORS} ]]; then
@@ -293,8 +298,8 @@ if [[ ${NUM_CREATED} -gt 0 ]]; then
 
 		echo "<p>"
 		DAY="$( basename "${OUT_DIRECTORY}" )"
-		echo -n "Click <a href='/helpers/show_images.php"
-		echo -n "?day=${DAY}&pre=stretch_&type=Test Stretch"
+		echo -n "Click <a href='/helpers/show_images.php?_ts=${RANDOM}"
+		echo -n "&day=${DAY}&pre=stretch_&type=Test Stretch"
 		echo    "'>here</a> to see the results."
 	else
 		echo -e "\nThe ${NUM_CREATED} stretched image(s) are in '${OUT_DIRECTORY}'.\n"

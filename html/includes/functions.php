@@ -816,9 +816,13 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 			// If the file name begins with a "X" the look for files whose names
 			// begin with the filename (without the "X").
 			// This allows non-standard image names.
+			// These are often "test" images that may be recreated with the same
+			// file names, so force the browser to read them.
 			$expr .= substr($imageFileName, 1) . "*";
+			$ts = "?_ts=" . time();
 		} else {
 			$expr .= "$imageFileName-$chosen_day.*";
+			$ts = "";
 		}
 		$imageTypes = array();
 		foreach (glob($expr) as $imageType) {
@@ -844,14 +848,14 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 					if ($listNames) {
 						echo "<div class='$class' style='padding: 10px 10px 20px 10px;'>";
 						echo "<a href='$fullFilename'>
-						<img src='$fullFilename' style='$style'/>
+						<img src='$fullFilename$ts' style='$style'/>
 						</a>";
 						echo $name;
 						echo "</div>";
 					} else {
 						echo "<a href='$fullFilename'>";
 						echo "<div class='$class'>";
-						echo "<img src='$fullFilename' style='$style'/>";
+						echo "<img src='$fullFilename$ts' style='$style'/>";
 						echo "</div></a>";
 					}
 					echo "\n";
@@ -859,7 +863,7 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 				    echo "<a href='$fullFilename'>";
 				    echo "<div class='$class' style='width: 100%'>";
 					echo "<video width='85%' height='85%' controls>
-						<source src='$fullFilename' type='video/mp4'>
+						<source src='$fullFilename$ts' type='video/mp4'>
 						Your browser does not support the video tag.
 					</video>
 					</div></a>";

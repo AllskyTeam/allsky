@@ -1830,4 +1830,39 @@ function display_file()
 		--textbox "${FILENAME}" 22 77
 }
 
-#########
+####
+# Create the variables.json file based on variables.sh.
+# Source in the two files where variables we care about are defined.
+# Look for variables that begin with "ALLSKY_" and "EXIT_" (exit codes).
+create_variables_json()
+{
+	local CALLED_FROM="${1}"
+
+	if [[ ${CALLED_FROM} == "install" ]]; then
+		declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
+		display_msg --logonly info "Creating '${ALLSKY_VARIABLES_JSON_FILE}."
+	fi
+
+	{
+		echo "{"
+		(
+			# "env -i" clears the environment.
+			env -i bash -c "export ALLSKY_HOME='${ALLSKY_HOME}'; \
+				source '${ALLSKY_HOME}/variables.sh' --force; \
+				source '${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh'; \
+			   	env"
+		) | grep -E '^ALLSKY_|^EXIT_' |
+			sort |
+			sed -e 's/^/    "/' -e 's/=/" : "/' -e 's/$/",/' -e 's/"true",$/true,/' -e 's/"false",$/false,/'
+			# TODO: Remove quotes from around numbers and floats (with "." for decimal point).
+
+		# Add "special cases"
+		echo "    \"HOME\" : \"${HOME}\""
+
+		echo "}"
+	} > "${ALLSKY_VARIABLES_JSON_FILE}"
+
+	if [[ ${CALLED_FROM} == "install" ]]; then
+		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+	fi
+}

@@ -105,12 +105,17 @@ $saveChangesLabel = "Save changes";		// May be overwritten
 $forceRestart = false;					// Restart even if no changes?
 $hostname = null;
 
+$test_directory = "test";	// directories that start with this are "non-standard"
+
 // Regular expressions for preg_match().
 	// A directory in ${ALLSKY_IMAGES}.
-	// Either: 2YYYMMDD  or  test*.   "test" because some commands create test* directories.
-$re_image_directory = '/^(2\d{7}|test\w*)$/'; // Start with "2" for the 2000's.
+	// Either: 2YYYMMDD  or  $test_directory (which is used for non-standard images)
+	// Start with "2" for the 2000's.
+$re_image_directory = "/^(2\d{7}|${test_directory}\w*)$/";
 	// An image:  "image-YYYYMMDDHHMMSS.jpg" or .jpe or .png
 $re_image_name = '/^\w+-.*\d{14}[.](jpe?g|png)$/i';
+	// An image in a "test*" directory:  "*.jpg" or .jpe or .png
+$re_test_image_name = '/^.*[.](jpe?g|png)$/';
 
 function readSettingsFile() {
 	$settings_file = getSettingsFile();
@@ -717,13 +722,20 @@ function getValidImageDirectories() {
 * Get a list of valid image names
 */
 function getValidImageNames($dir, $stopAfterOne=false) {
-	global $re_image_name;
+	global $re_image_name, $re_test_image_name, $test_directory;
 
 	$images = array();
 
+	if (substr(basename($dir), 0, 4) === $test_directory) {
+		// Images in a "test" directory have different naming conventions.
+		$re = $re_test_image_name;
+	} else {
+		$re = $re_image_name;
+	}
+	
 	if ($handle = opendir($dir)) {
 	    while (false !== ($image = readdir($handle))) {
-			if (preg_match($re_image_name, $image)){
+			if (preg_match($re, $image)){
 				$images[] = $image;
 				if ($stopAfterOne) break;
 			}

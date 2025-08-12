@@ -111,7 +111,7 @@ function getRemoteWebsiteVersion() {
 
 }
 
-function getPageTitle($page) {
+function getPageTitle($page, $day) {
 	$titles = [
 		"WLAN_info"          => "WLAN Dashboard",
 		"LAN_info"           => "LAN Dashboard",
@@ -139,6 +139,7 @@ function getPageTitle($page) {
 }
 
 function insertPage($page) {
+	global $image_name, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg, $darkframe;
 
 	switch ($page) {
 		case "WLAN_info":
@@ -163,7 +164,6 @@ function insertPage($page) {
 			break;
 		case "auth_conf":
 			include_once('includes/admin.php');
-			DisplayAuthConfig($config['admin_user'], $config['admin_pass']);
 			break;
 		case "system":
 			include_once('includes/system.php');
@@ -202,23 +202,23 @@ function insertPage($page) {
 			DisplayModule();
 			break;
 		case "startrails_settings":
-			include_once("helpers/${page}.php");
+			include_once("helpers/$page.php");
 			startrailsSettings();
 			break;
 		case "timelapse_settings":
-			include_once("helpers/${page}.php");
+			include_once("helpers/$page.php");
 			// TODO: add function name						
 			break;
 		case "constellation_overlay":
-			include_once("helpers/${page}.php");
+			include_once("helpers/$page.php");
 			// TODO: add function name
 			break;
 		case "bad_images_settings":
-			include_once("helpers/${page}.php");
+			include_once("helpers/$page.php");
 			// TODO: add function name 
 			break;
 		case "stretch_settings":
-			include_once("helpers/${page}.php");
+			include_once("helpers/$page.php");
 			stretchSettings();
 			break;
 		case "support":
@@ -430,7 +430,7 @@ $page = getPage();
 $day = getDay();
 $csrf_token = useLogin();
 $remoteWebsiteVersion = getRemoteWebsiteVersion();
-$Title = getPageTitle($page);
+$Title = getPageTitle($page, $day);
 $allskyStatus = output_allsky_status();
 
 ?>

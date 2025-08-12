@@ -280,8 +280,8 @@ if [[ ${NUM_CREATED} -gt 0 ]]; then
 	if [[ ${HTML} == "true" ]]; then
 		echo "<p>"
 		DAY="$( basename "${OUT_DIRECTORY}" )"
-		echo -n "Click <a href='/helpers/show_images.php"
-		echo -n "?day=${DAY}&pre=startrails_&type=Test Startrails"
+		echo -n "Click <a href='/helpers/show_images.php?_ts=${RANDOM}"
+		echo -n "&day=${DAY}&pre=startrails_&type=Test Startrails"
 		echo    "'>here</a> to see the results."
 	else
 		echo -e "\nThe ${NUM_CREATED} startrails image(s) are in '${OUT_DIRECTORY}'.\n"

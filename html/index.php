@@ -417,9 +417,9 @@ function insertEditorCode($page) {
 			<script src="lib/codeMirror/searchcursor.js"></script>
 			<script src="lib/codeMirror/match-highlighter.js"></script>
 
-			<script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-			<script src="/js/bootbox/bootbox.all.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-			<script src="/js/bootbox/bootbox.locales.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+			<script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=' . ALLSKY_VERSION . '></script>
+			<script src="/js/bootbox/bootbox.all.js?c=' . ALLSKY_VERSION . '"></script>
+			<script src="/js/bootbox/bootbox.locales.min.js?c=' . ALLSKY_VERSION . '"></script>
 		';
 
 	}

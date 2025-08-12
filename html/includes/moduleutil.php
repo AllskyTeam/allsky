@@ -350,7 +350,7 @@ class MODULEUTIL
 							"description" => "Reads Pi Data",
 							"module" => "allsky_pistatus",    
 							"version" => "v1.0.0",							
-							"arguments" => {}
+							"arguments" => []
 						],
 						"corrupt" => true
 					];

@@ -15,7 +15,7 @@ usage_and_exit()
 	local RET=${1}
 	exec >&2
 	echo
-	local USAGE="Usage: ${ME} [--help] --verbose] [--directory dir]"
+	local USAGE="Usage: ${ME} [--help] [--verbose] [--directory dir]"
 	USAGE+=" [--input dir] [--num-images n] [--thresholds '1 2 3']"
 	if [[ ${RET} -ne 0 ]]; then
 		E_ "${USAGE}"
@@ -30,9 +30,9 @@ usage_and_exit()
 	echo "                           If the directory already exists you are prompted to first"
 	echo "                           delete its contents.  Default: '${OUT_DIRECTORY}'."
 	echo "   --input dir             The directory to get pictures from.  Default: '${IN_DIRECTORY}'."
-	echo "   --num-images n          The number of images to use in the startrails.  Default: ${COUNT}."
+	echo "   --num-images n          The number of images to use in the startrails.  Default: ${d_COUNT}."
 	echo "   --thresholds '1 2 3'    Use the specified Brightness Thresholds.  Must quote the numbers."
-	echo "                           Default: '${THRESHOLDS}'."
+	echo "                           Default: '${d_THRESHOLDS}'."
 
 	echo
 	echo "Creates multiple startrails files using different 'Brightness Threshold' values."
@@ -49,8 +49,8 @@ VERBOSE="false"
 HTML="false"
 OUT_DIRECTORY="${ALLSKY_IMAGES}/test_startrails"	# Must start with "test"
 IN_DIRECTORY="${ALLSKY_IMAGES}/$( date -d '12 hours ago' +'%Y%m%d' )"
-COUNT="20"
-THRESHOLDS="0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50"
+COUNT="";			d_COUNT="20"
+THRESHOLDS="";		d_THRESHOLDS="0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in
@@ -93,8 +93,8 @@ done
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 if [[ ${HTML} == "true" &&
-		( -z ${IN_DIRECTORY} || -z ${COUNT} ) ]]; then
-	echo "All settings must be specified on the command line." >&2
+		( -z ${IN_DIRECTORY} || -z ${COUNT} || -z ${THRESHOLDS} ) ]]; then
+	echo "<p style='color: red'>All settings must be specified on the command line.</p>" >&2
 	usage_and_exit 2
 fi
 
@@ -129,15 +129,36 @@ fi
 if [[ -z ${COUNT} ]]; then
 	while true
 	do
-		echo -en  "${cYELLOW}${cBOLD}"
-		echo -en  "Enter the number of images to include in the startrails: ${cNC}"
+		echo -en "${cYELLOW}${cBOLD}"
+		echo -n  "Enter the number of images to include in the startrails or leave blank for ${d_COUNT}"
+		echo -en ": ${NC}"
 
 		# shellcheck disable=SC2034
 		read -r COUNT
-		if [[ -z ${COUNT} ]]; then
-			echo -e "\nYou must enter a number.\n" >&2
-		elif [[ ${COUNT} == "q" ]]; then
+		if [[ ${COUNT} == "q" ]]; then
 			exit 0
+		elif [[ -z ${COUNT} ]]; then
+			COUNT="${d_COUNT}"
+			break
+		else
+			break
+		fi
+	done
+fi
+if [[ -z ${THRESHOLDS} ]]; then
+	while true
+	do
+		echo -en "${cYELLOW}${cBOLD}"
+		echo -n  "Enter one or more space-separated thresholds to use or leave blank for ${d_THRESHOLDS}"
+		echo -en ": ${NC}"
+
+		# shellcheck disable=SC2034
+		read -r THESHOLDS
+		if [[ ${THESHOLDS} == "q" ]]; then
+			exit 0
+		elif [[ -z ${THESHOLDS} ]]; then
+			COUNT="${d_THRESHOLDS}"
+			break
 		else
 			break
 		fi
@@ -175,6 +196,7 @@ fi
 sudo chmod 775 "${OUT_DIRECTORY}"
 sudo chown "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${OUT_DIRECTORY}"
 
+
 # Create the list of images.
 
 ### TODO: replace with DB query.  Add intelligence to list, e.g., night only, ...
@@ -185,6 +207,44 @@ if [[ ! -s ${IMAGES} ]]; then
 	echo -e "${ME}: ERROR: no images found in '${IN_DIRECTORY}' with extension '.${ALLSKY_EXTENSION}'." >&2
 	exit 1
 fi
+
+# Check for input errors
+ERRORS=""
+THRESHOLDS=" ${THRESHOLDS} "		# makes easier to remove entries
+T="${THRESHOLDS}"
+for THRESHOLD in ${T}
+do
+	if ! is_number "${THRESHOLD}" ; then
+		ERRORS+="* Brightness Threshold '${THRESHOLD}' is not a number so ignoring it.\n"
+		THRESHOLDS="${THRESHOLDS/ ${THRESHOLD} /}"
+	fi
+done
+if [[ -n ${ERRORS} ]]; then
+	{
+		[[ ${HTML} == "true" ]] && ERRORS="${ERRORS//\\n/<br>}"
+		[[ ${HTML} == "true" ]] && echo "<p style='color: red'>"
+		echo "WARNING:"
+		echo "${ERRORS}"
+		[[ ${HTML} == "true" ]] && echo "</p>"
+	} >&2
+fi
+
+# Determine resolution of the first image so we can write text to it.
+# Assume all images are the same resolution.
+# image.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.8263MiB 0.000u 0:00.000
+FIRST="$( head -1 "${IMAGES}" | sed 's/\t.*//' )"
+RESOLUTION="$( identify "${FIRST}" | gawk '{ print $3; }' )"
+WIDTH="${RESOLUTION%x*}"
+HEIGHT="${RESOLUTION##*x}"
+# Put text in bottom left.
+POINT_SIZE="$( echo "${WIDTH} / 33" | bc )"
+X="20"		# just need a little from left side
+Y=$(( HEIGHT - POINT_SIZE ))
+# echo "POINT_SIZE=$POINT_SIZE, X=$X, Y=$Y"
+
+FONT="${ALLSKY_OVERLAY}/system_fonts/Courier_New_Bold.ttf"
+STROKE="black"
+FILL="yellow"
 
 # Create the startrails.
 NUM_CREATED=0
@@ -202,6 +262,13 @@ do
 		if [[ ${VERBOSE} == "true" ]]; then
 			indent "${MSG}"
 		fi
+
+		# Add text
+		TEXT="Brightness Threshold: ${THRESHOLD}"
+		convert -font "${FONT}" -pointsize "${POINT_SIZE}" \
+			-fill "${FILL}" -stroke "${STROKE}" -strokewidth 3 \
+			-annotate "+${X}+${Y}" "${TEXT}" \
+			"${OUTPUT}" "${OUTPUT}" 2>&1
 	else
 		echo -e "ERROR: Unable to make startrails.  Quitting." >&2
 		remove_colors "${MSG}" >&2

@@ -1,16 +1,5 @@
 #!/bin/bash
 
-#### TODO: remove the "old" way of determining what settings to use. It was too confusing.
-
-
-
-
-
-
-
-
-
-
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$(dirname "${BASH_ARGV0}")/../.." )"
 ME="$( basename "${BASH_ARGV0}" )"
 
@@ -28,8 +17,6 @@ usage_and_exit()
 	echo
 	local USAGE="Usage: ${ME} [--help] --verbose] [--image i]"
 	USAGE+=" [--amounts '1 2 3'] [--midpoints '4 5 6']"
-#	USAGE+=" [--start-amount a] [--step-amount a] [--count-amount c]"
-#	USAGE+=" [--start-midpoint m] [--step-midpoint m] [--count-midpoint m]"
 	USAGE+=" [--directory dir]"
 	if [[ ${RET} -ne 0 ]]; then
 		E_ "${USAGE}"
@@ -45,12 +32,6 @@ usage_and_exit()
 	echo "                           Default: '${AMOUNTS}'."
 	echo "   --midpoints '1 2 3' Use the specified Stretch Amounts.  Must quote the numbers."
 	echo "                           Default: '${MIDPOINTS}'."
-#	echo "   --start-amount a    The initial Stretch Amount to use.  Default: ${START_AMOUNT}."
-#	echo "   --step-amount a     The amount to increase the Stretch Amount.  Default: ${STEP_AMOUNT}."
-#	echo "   --count-amount      The number of times to vary the Stretch Amount.  Default: ${COUNT_AMOUNT}."
-#	echo "   --start-midpoint m  The initial Stretch Mid Point to use.  Default: ${START_MIDPOINT}."
-#	echo "   --step-midpoint m   The maximum Stretch Mid Point to use.  Default: ${STEP_MIDPOINT}."
-#	echo "   --count-midpoint    The number of times to vary the Stretch Mid Point.  Default: ${COUNT_MIDPOINT}."
 	echo "   --directory dir     Put the stretched images in the specified directory."
 	echo "                       Default: '${OUT_DIRECTORY}'."
 
@@ -66,18 +47,11 @@ usage_and_exit()
 OK="true"
 DO_HELP="false"
 HTML="false"
+CREATE_NO_STRETCH_IMAGE="true"
 OUT_DIRECTORY="${ALLSKY_IMAGES}/test_stretches"	# Must start with "test"
 IMAGE="";			d_IMAGE="${ALLSKY_TMP}/${ALLSKY_FULL_FILENAME}"
 AMOUNTS="";			d_AMOUNTS="5  10  15  20"
 MIDPOINTS="";		d_MIDPOINTS="10  30  50"
-if false; then		#############
-START_AMOUNT="";	d_START_AMOUNT="5"
-STEP_AMOUNT="";		d_STEP_AMOUNT="5"		# increase by this amount
-COUNT_AMOUNT="";	d_COUNT_AMOUNT="4"
-START_MIDPOINT="";	d_START_MIDPOINT="5"
-STEP_MIDPOINT="";	d_STEP_MIDPOINT="5"
-COUNT_MIDPOINT="";	d_COUNT_MIDPOINT="4"
-fi ############
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in
@@ -104,31 +78,6 @@ while [[ $# -gt 0 ]]; do
 			MIDPOINTS="${2//_/ }"
 			shift
 			;;
-###
-		--start-amount)
-			START_AMOUNT="${2}"
-			shift
-			;;
-		--step-amount)
-			STEP_AMOUNT="${2}"
-			shift
-			;;
-		--count-amount)
-			COUNT_AMOUNT="${2}"
-			shift
-			;;
-		--start-midpoint)
-			START_MIDPOINT="${2}"
-			shift
-			;;
-		--step-midpoint)
-			STEP_MIDPOINT="${2}"
-			shift
-			;;
-		--count-midpoint)
-			COUNT_MIDPOINT="${2}"
-			shift
-			;;
 		-*)
 			E_ "Unknown argument '${ARG}'." >&2
 			OK="false"
@@ -141,19 +90,11 @@ done
 if [[ ${HTML} == "true" &&
 		( -z ${IMAGE}
 			|| -z ${AMOUNTS}   || -z ${MIDPOINTS} ) ]]; then
-#			|| -z ${START_AMOUNT}   || -z ${STEP_AMOUNT}   || -z ${COUNT_AMOUNT}
-#			|| -z ${START_MIDPOINT} || -z ${STEP_MIDPOINT} || -z ${COUNT_MIDPOINT} ) ]]; then
 	echo "All settings must be specified on the command line." >&2
 	echo "You are missing:" >&2
 	[[ -z ${IMAGE} ]] && echo " --image" >&2
 	[[ -z ${AMOUNTS} ]] && echo " --amounts" >&2
 	[[ -z ${MIDPOINTS} ]] && echo " --midpoints" >&2
-#	[[ -z ${START_AMOUNT} ]] && echo " --start-amount" >&2
-#	[[ -z ${STEP_AMOUNT} ]] && echo " --step-amount" >&2
-#	[[ -z ${COUNT_AMOUNT} ]] && echo " --count-amount" >&2
-#	[[ -z ${START_MIDPOINT} ]] && echo " --start-midpoint" >&2
-#	[[ -z ${STEP_MIDPOINT} ]] && echo " --step-midpoint" >&2
-#	[[ -z ${COUNT_MIDPOINT} ]] && echo " --count-midpoint" >&2
 	
 	usage_and_exit 2
 fi
@@ -170,7 +111,7 @@ if [[ -z ${IMAGE} ]]; then
 		if [[ ${IMAGE} == "q" ]]; then
 			exit 0
 		elif [[ -z ${IMAGE} ]]; then
-			IMAGE="${DEFAULT}"
+			IMAGE="${d_IMAGE}"
 			break;
 		elif [[ ! -f ${IMAGE} ]]; then
 			echo -e "\nFile '${IMAGE}' does not exist.\n" >&2
@@ -208,70 +149,14 @@ function get_numbers()
 	done
 }
 if [[ -z ${AMOUNTS} ]]; then
-	AMOUNTS="$( get_number "Enter the initial amount to stretch" "${d_AMOUNTS}" )"
+	AMOUNTS="$( get_numbers "Enter the initial amount to stretch" "${d_AMOUNTS}" )"
 	[[ $? -ne 0 ]] && exit 0
 fi
 if [[ -z ${MIDPOINTS} ]]; then
-	MIDPOINTS="$( get_number "Enter the initial amount to stretch" "${d_MIDPOINTS}" )"
+	MIDPOINTS="$( get_numbers "Enter the initial amount to stretch" "${d_MIDPOINTS}" )"
 	[[ $? -ne 0 ]] && exit 0
 fi
 
-if false; then		#############
-function get_number()
-{
-	local PROMPT="${1}"
-	local DEFAULT="${2}"
-
-	while true
-	do
-		echo -en "${cYELLOW}${cBOLD}${PROMPT}" >&2
-		[[ -n ${DEFAULT} ]] && echo -n " or leave blank for ${DEFAULT}" >&2
-		echo -en ": ${cNC}" >&2
-
-		# shellcheck disable=SC2034
-		read -r NUM
-		if [[ ${NUM} == "q" ]]; then
-			return 1
-		elif [[ -z ${NUM} ]]; then
-			if [[ -n ${DEFAULT} ]]; then
-				echo "${DEFAULT}"
-				return 0
-			fi
-		elif echo "${NUM}" | grep --silent "\.,"; then
-			echo -e "\nYou must enter a number without a decimal point." >&2
-		else
-			echo "${NUM}"
-			return 0
-		fi
-	done
-}
-
-if [[ -z ${START_AMOUNT} ]]; then
-	START_AMOUNT="$( get_number "Enter the initial amount to stretch" "${d_START_AMOUNT}" )"
-	[[ $? -ne 0 ]] && exit 0
-fi
-if [[ -z ${STEP_AMOUNT} ]]; then
-	STEP_AMOUNT="$( get_number "Enter the amount to change the stretch amount each time" "${d_STEP_AMOUNT}" )"
-	[[ $? -ne 0 ]] && exit 0
-fi
-if [[ -z ${COUNT_AMOUNT} ]]; then
-	COUNT_AMOUNT="$( get_number "Enter the number of times to vary the Amount" "${d_COUNT_AMOUNT}" )"
-	[[ $? -ne 0 ]] && exit 0
-fi
-
-if [[ -z ${START_MIDPOINT} ]]; then
-	START_MIDPOINT="$( get_number "Enter the initial midpoint" "${d_START_MIDPOINT}" )"
-	[[ $? -ne 0 ]] && exit 0
-fi
-if [[ -z ${STEP_MIDPOINT} ]]; then
-	STEP_MIDPOINT="$( get_number "Enter the amount to change the stretch midpoint each time" "${d_STEP_MIDPOINT}" )"
-	[[ $? -ne 0 ]] && exit 0
-fi
-if [[ -z ${COUNT_MIDPOINT} ]]; then
-	COUNT_MIDPOINT="$( get_number "Enter the number of times to vary the Mid Point" "${d_COUNT_MIDPOINT}" )"
-	[[ $? -ne 0 ]] && exit 0
-fi
-fi	####################
 
 # Create / empty the output directory.
 NUM="$( find "${OUT_DIRECTORY}" -type f -name "*.${ALLSKY_EXTENSION}" -print 2>/dev/null | wc -l )"
@@ -304,42 +189,99 @@ fi
 sudo chmod 775 "${OUT_DIRECTORY}"
 sudo chown "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${OUT_DIRECTORY}"
 
-if false; then #####################
-# Determine what values to use for Amount and Mid Point.
-A="${START_AMOUNT}"
-AMOUNTS="${A}"
-ON=1
-while [[ ${ON} -lt ${COUNT_AMOUNT} ]]
-do
-	(( A += STEP_AMOUNT ))
-	AMOUNTS+=" ${A}"
-	(( ON++ )) 
-done
 
-M="${START_MIDPOINT}"
-MIDPOINTS="${M}"
-ON=1
-while [[ ${ON} -lt ${COUNT_MIDPOINT} ]]
+# Check for input errors
+ERRORS=""
+AMOUNTS=" ${AMOUNTS} "		# Adding spaces makes easier to remove entries
+A="${AMOUNTS}"
+for AMOUNT in ${A}
 do
-	(( M += STEP_MIDPOINT ))
-	MIDPOINTS+=" ${M}"
-	(( ON++ )) 
+	if ! is_number "${AMOUNT}" ; then
+		ERRORS+="* Amount '${AMOUNT}' is not a number so ignoring it.\n"
+		AMOUNTS="${AMOUNTS/ ${AMOUNT} /}"
+	elif [[ ${AMOUNT} -lt 10 && ${AMOUNT} -gt 0 ]]; then
+		# Make sure numbers are all 2-digit so they sort correctly.
+		AMOUNTS="${AMOUNTS/ ${AMOUNT} / 0${AMOUNT} }"
+	fi
 done
-fi ######################
+MIDPOINTS=" ${MIDPOINTS} "
+M="${MIDPOINTS}"
+for MIDPOINT in ${M}
+do
+	if ! is_number "${MIDPOINT}" ; then
+		ERRORS+="* Mid Point '${MIDPOINT}' is not a number so ignoring it.\n"
+		MIDPOINTS="${MIDPOINTS/ ${MIDPOINT} /}"
+	elif [[ ${MIDPOINT} -lt 10 ]]; then
+		MIDPOINTS="${MIDPOINTS/ ${MIDPOINT} / 0${MIDPOINT} }"
+	fi
+done
+if [[ -n ${ERRORS} ]]; then
+	{
+		[[ ${HTML} == "true" ]] && ERRORS="${ERRORS//\\n/<br>}"
+		[[ ${HTML} == "true" ]] && echo "<p style='color: red'>"
+		echo "WARNING:"
+		echo "${ERRORS}"
+		[[ ${HTML} == "true" ]] && echo "</p>"
+	} >&2
+fi
+
+# Determine resolution of image so we can write text to it.
+# image.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.8263MiB 0.000u 0:00.000
+RESOLUTION="$( identify "${IMAGE}" | gawk '{ print $3; }' )"
+WIDTH="${RESOLUTION%x*}"
+HEIGHT="${RESOLUTION##*x}"
+# Put text in bottom left.
+POINT_SIZE="$( echo "${WIDTH} / 33" | bc )"
+X="20"		# just need a little from left side
+Y=$(( HEIGHT - (POINT_SIZE * 2) ))
+# echo "POINT_SIZE=$POINT_SIZE, X=$X, Y=$Y"
 
 # Create the stretches.
+
 HOW="-sigmoidal-contrast"	# the way to stretch
+FONT="${ALLSKY_OVERLAY}/system_fonts/Courier_New_Bold.ttf"
+STROKE="black"
+FILL="yellow"
+
+function doImage()
+{
+	local FROM_FILE="${1}"
+	local TO_FILE="${2}"
+	local A="${3}"
+	local M="${4}"
+	local TEXT
+
+	# Want fixed-width font so the data lines up.
+	if [[ -z ${TEXT} ]]; then
+		   TEXT="Stretch Amount: ${A}"
+		TEXT+="\nMid Point:      ${M}"
+	fi
+	convert "${HOW}" "${A}x${M}" -font "${FONT}" -pointsize "${POINT_SIZE}" \
+		-fill "${FILL}" -stroke "${STROKE}" -strokewidth 3 \
+		-annotate "+${X}+${Y}" "${TEXT}" \
+		"${FROM_FILE}" "${TO_FILE}" 2>&1
+}
+
+if [[ ${CREATE_NO_STRETCH_IMAGE} == "true" ]]; then
+	# Do a "no stretch" version so the user can compare.
+	FILE="stretch_NO_STRETCH.jpg"
+	OUTPUT="${OUT_DIRECTORY}/${FILE}"
+	doImage "${IMAGE}"  "${OUTPUT}" 0 0 "NO STRETCH"
+	echo "Created '${FILE}' with NO STRETCH, for comparison."
+fi
+
 NUM_CREATED=0
 for AMOUNT in ${AMOUNTS}
 do
 	for MIDPOINT in ${MIDPOINTS}
 	do
-		OUTPUT="${OUT_DIRECTORY}/stretch_amount_${AMOUNT}_midpoint_${MIDPOINT}.jpg"
-		MSG="$( convert "${IMAGE}" "${HOW}" "${AMOUNT}x${MIDPOINT}" "${OUTPUT}" 2>&1 )"
+		FILE="stretch_amount_${AMOUNT}_midpoint_${MIDPOINT}.jpg"
+		OUTPUT="${OUT_DIRECTORY}/${FILE}"
+		MSG="$( doImage "${IMAGE}" "${OUTPUT}" "${AMOUNT}" "${MIDPOINT}" "" 2>&1 )"
 		RET=$?
 		if [[ ${RET} -eq 0 ]]; then
 			(( NUM_CREATED++ ))
-			echo "Created '${OUTPUT}' with Amount ${AMOUNT} and Midpoint ${MIDPOINT}."
+			echo "Created '${FILE}' with Amount ${AMOUNT} and Midpoint ${MIDPOINT}."
 		else
 			echo -e "ERROR: Unable to make stretched image.  Quitting." >&2
 			echo -e "${MSG}" >&2
@@ -350,6 +292,10 @@ done
 
 if [[ ${NUM_CREATED} -gt 0 ]]; then
 	if [[ ${HTML} == "true" ]]; then
+		echo "<p>"
+		echo "All images are in '${OUT_DIRECTORY}'."
+		echo "</p>"
+
 		echo "<p>"
 		DAY="$( basename "${OUT_DIRECTORY}" )"
 		echo -n "Click <a href='/helpers/show_images.php?_ts=${RANDOM}"

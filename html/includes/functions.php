@@ -7,6 +7,7 @@
  *
 */
 
+// Read in all bash variables and create "define()" statements for them.
 $variablesJsonOk = false;
 $allskyHome = getenv('ALLSKY_HOME');
 if ($allskyHome !== false) {

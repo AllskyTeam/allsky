@@ -447,8 +447,8 @@ bool readMetadataFile(string file)
 		if (value == NULL)
 		{
 			// "line" ends with newline
-			Log(1, "%s: WARNING: skipping invalid line %d in '%s': [%s]",
-				CG.ME, on_line, file.c_str(), line);
+			Log(1, "%s: WARNING: skipping invalid line %d in '%s': [%s=%s]",
+				CG.ME, on_line, file.c_str(), name,value);
 			continue;
 		}
 
@@ -469,7 +469,7 @@ else Log(5, "  ExposureTime = %f ('%s')\n", x, value);
 			// [ float, float ]		red, blue
 			if (sscanf(value, "[ %lf, %lf ]", &CG.lastWBR, &CG.lastWBB) != 2)
 			{
-				Log(1, "*** %s: WARNING, WBR and WBB not on line: '%s'\n", CG.ME, line);
+				Log(1, "*** %s: WARNING, WBR and WBB not on line: '%s=%s'\n", CG.ME, name,value);
 			}
 else
 Log(5, "  ColourGains: Red: %lf, Blue: %lf\n", CG.lastWBR, CG.lastWBB);

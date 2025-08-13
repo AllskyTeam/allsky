@@ -516,16 +516,18 @@ class MODULEUTIL
 		$configDataJson = json_decode($configData);
 		$envData = null;
 		foreach ($configDataJson as $module=>&$moduleConfig) {
-			foreach ($moduleConfig->metadata->argumentdetails as $argument=>$argumentSettings) {
-				if (isset($argumentSettings->secret)) {
-					if ($envData === null) {
-						$envData = json_decode(file_get_contents(ALLSKY_ENV));
-					}
-					$secretKey = strtoupper($moduleConfig->metadata->module) . '.' . strtoupper($argument);
-					$envData->$secretKey = $moduleConfig->metadata->arguments->$argument;
-					$moduleConfig->metadata->arguments->$argument = '';
-				}
-			}
+            if (isset($moduleConfig->metadata->argumentdetails)) {
+                foreach ($moduleConfig->metadata->argumentdetails as $argument=>$argumentSettings) {
+                    if (isset($argumentSettings->secret)) {
+                        if ($envData === null) {
+                            $envData = json_decode(file_get_contents(ALLSKY_ENV));
+                        }
+                        $secretKey = strtoupper($moduleConfig->metadata->module) . '.' . strtoupper($argument);
+                        $envData->$secretKey = $moduleConfig->metadata->arguments->$argument;
+                        $moduleConfig->metadata->arguments->$argument = '';
+                    }
+                }
+            }
 		}
 		$configData = json_encode($configDataJson, JSON_PRETTY_PRINT);
 		if ($envData !== null) {

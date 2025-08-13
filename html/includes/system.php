@@ -293,9 +293,7 @@ function DisplaySystem()
 		$user_data_files_count = 0;
 	}
 	?>
-	<div class="row">
-		<div class="col-lg-12">
-			<div class="panel panel-primary">
+			<div class="panel panel-success">
 				<div class="panel-heading"><i class="fa fa-cube fa-fw"></i> System</div>
 				<div class="panel-body">
 
@@ -334,7 +332,7 @@ function DisplaySystem()
 					?>
 
 					<div class="row">
-						<div class="panel panel-default">
+						<div class="panel panel-success">
 							<div class="panel-body">
 								<h4>System Information</h4>
 								<?php if ($e !== "") echo "$e"; // display any error msg ?>
@@ -426,8 +424,7 @@ function DisplaySystem()
 
 				</div><!-- /.panel-body -->
 			</div><!-- /.panel-primary -->
-		</div><!-- /.col-lg-12 -->
-	</div><!-- /.row -->
+
 	<?php
 }
 ?>

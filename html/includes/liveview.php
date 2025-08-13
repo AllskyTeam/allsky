@@ -42,8 +42,7 @@ function DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nig
 		getImage();
 </script>
 
-<div class="row">
-	<div class="panel panel-primary">
+	<div class="panel panel-success">
 		<div class="panel-heading"><i class="fa fa-code fa-eye"></i> Live View</div>
 		<div class="panel-body">
 			<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
@@ -52,8 +51,6 @@ function DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nig
 			</div>
 		</div>
 	</div>
-</div>
-
 <?php 
 }
 ?>

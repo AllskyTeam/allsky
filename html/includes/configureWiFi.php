@@ -276,9 +276,7 @@ if ($debug) { echo "<br><pre>wpa_cli scan_results:<br>"; print_r($scan_return); 
 	}
 ?>
 
-	<div class="row"><!-- don't indent all <div> - there are too many of them -->
-	<div class="col-lg-12">
-		<div class="panel panel-primary">
+		<div class="panel panel-success">
 		<div class="panel-heading"><i class="fa fa-wifi fa-fw"></i> Configure Wi-Fi</div>
 		<!-- /.panel-heading -->
 		<div class="panel-body">
@@ -394,8 +392,6 @@ if ($debug) { echo "<br><pre>wpa_cli scan_results:<br>"; print_r($scan_return); 
 			?>
 		</div>
 		</div><!-- /.panel-primary -->
-	</div><!-- /.col-lg-12 -->
-	</div><!-- /.row -->
 <?php
 }
 ?>

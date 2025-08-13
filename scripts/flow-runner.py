@@ -230,7 +230,16 @@ if __name__ == "__main__":
                 _temp = importlib.import_module(moduleName)
                 globals()[method] = getattr(_temp, method)
             except Exception as e:
-                shared.log(0, f"ERROR: Failed to import module {moduleName}.py: {e}; ignoring.")
+                message = f"ERROR: Failed to import module '{fileName}': {e}"
+                # If some modules fail, like "Load Image" then we should stop
+                # the flow since nothing else will work.
+                # However, if other modules like "Star Count" fail we should continue the flow.
+                # Modules may need a flag that says "can continue" or "stop all processing".
+                if method == "loadimage":
+                    shared.log(0, f"{message}; stopping all module processing.")
+                    sys.exit(99)
+                else:
+                    shared.log(0, f"{message}; ignoring.")
         else:
             shared.log(4, f"INFO: Module {fileName} disabled; ignoring.")
 
@@ -243,6 +252,7 @@ if __name__ == "__main__":
                 arguments = shared.flow[shared.step]['metadata']['arguments']
 
             arguments['ALLSKYTESTMODE'] = testMode                
+
             if shared.LOGLEVEL == 4:
                 result = globals()[method](arguments, shared.args.event)
             else:
@@ -250,7 +260,12 @@ if __name__ == "__main__":
                     result = globals()[method](arguments, shared.args.event)
                 except Exception as e:
                     eType, eObject, eTraceback = sys.exc_info()
-                    shared.log(0, f"ERROR: Module {fileName} failed on line {eTraceback.tb_lineno} - {e}")
+                    message = f"ERROR: Module {fileName} failed on line {eTraceback.tb_lineno} - {e}"
+                    if method == "loadimage":
+                        shared.log(0, f"{message}; stopping all module processing.")
+                        sys.exit(99)
+                    else:
+                        shared.log(0, f"{message}; ignoring.")
 
             endTime = datetime.now()
             elapsedTime = (((endTime - startTime).total_seconds()) * 1000) / 1000

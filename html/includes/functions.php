@@ -24,6 +24,7 @@ if ($allskyHome !== false) {
 		}
 	}
 }
+
 if ($variablesJsonOk === false) {
 	echo "<br><div style='font-size: 200%; color: red;'>";
 	echo "The installation of Allsky is incomplete.<br>";
@@ -43,7 +44,6 @@ if ($variablesJsonOk === false) {
 	echo "</div>";
 	die(1);
 }
-
 
 // Read and decode a json file, returning the decoded results or null.
 // On error, display the specified error message.
@@ -142,12 +142,17 @@ $saveChangesLabel = "Save changes";		// May be overwritten
 $forceRestart = false;					// Restart even if no changes?
 $hostname = null;
 
+$test_directory = "test";	// directories that start with this are "non-standard"
+
 // Regular expressions for preg_match().
 	// A directory in ${ALLSKY_IMAGES}.
-	// Either: 2YYYMMDD  or  test*.   "test" because some commands create test* directories.
-$re_image_directory = '/^(2\d{7}|test\w*)$/'; // Start with "2" for the 2000's.
+	// Either: 2YYYMMDD  or  $test_directory (which is used for non-standard images)
+	// Start with "2" for the 2000's.
+$re_image_directory = "/^(2\d{7}|${test_directory}\w*)$/";
 	// An image:  "image-YYYYMMDDHHMMSS.jpg" or .jpe or .png
 $re_image_name = '/^\w+-.*\d{14}[.](jpe?g|png)$/i';
+	// An image in a "test*" directory:  "*.jpg" or .jpe or .png
+$re_test_image_name = '/^.*[.](jpe?g|png)$/';
 
 function readSettingsFile() {
 	$settings_file = getSettingsFile();
@@ -715,13 +720,20 @@ function getValidImageDirectories() {
 * Get a list of valid image names
 */
 function getValidImageNames($dir, $stopAfterOne=false) {
-	global $re_image_name;
+	global $re_image_name, $re_test_image_name, $test_directory;
 
 	$images = array();
 
+	if (substr(basename($dir), 0, 4) === $test_directory) {
+		// Images in a "test" directory have different naming conventions.
+		$re = $re_test_image_name;
+	} else {
+		$re = $re_image_name;
+	}
+	
 	if ($handle = opendir($dir)) {
 	    while (false !== ($image = readdir($handle))) {
-			if (preg_match($re_image_name, $image)){
+			if (preg_match($re, $image)){
 				$images[] = $image;
 				if ($stopAfterOne) break;
 			}
@@ -802,9 +814,13 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 			// If the file name begins with a "X" the look for files whose names
 			// begin with the filename (without the "X").
 			// This allows non-standard image names.
+			// These are often "test" images that may be recreated with the same
+			// file names, so force the browser to read them.
 			$expr .= substr($imageFileName, 1) . "*";
+			$ts = "?_ts=" . time();
 		} else {
 			$expr .= "$imageFileName-$chosen_day.*";
+			$ts = "";
 		}
 		$imageTypes = array();
 		foreach (glob($expr) as $imageType) {
@@ -830,14 +846,14 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 					if ($listNames) {
 						echo "<div class='$class' style='padding: 10px 10px 20px 10px;'>";
 						echo "<a href='$fullFilename'>
-						<img src='$fullFilename' style='$style'/>
+						<img src='$fullFilename$ts' style='$style'/>
 						</a>";
 						echo $name;
 						echo "</div>";
 					} else {
 						echo "<a href='$fullFilename'>";
 						echo "<div class='$class'>";
-						echo "<img src='$fullFilename' style='$style'/>";
+						echo "<img src='$fullFilename$ts' style='$style'/>";
 						echo "</div></a>";
 					}
 					echo "\n";
@@ -845,7 +861,7 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 				    echo "<a href='$fullFilename'>";
 				    echo "<div class='$class' style='width: 100%'>";
 					echo "<video width='85%' height='85%' controls>
-						<source src='$fullFilename' type='video/mp4'>
+						<source src='$fullFilename$ts' type='video/mp4'>
 						Your browser does not support the video tag.
 					</video>
 					</div></a>";

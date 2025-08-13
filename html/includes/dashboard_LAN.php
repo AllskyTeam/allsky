@@ -4,8 +4,7 @@ function DisplayDashboard_LAN()
 {
 
 ?>
-<div class="col-lg-12">
-	<div class="panel panel-primary">
+	<div class="panel panel-success">
 		<div class="panel-heading"><i class="fa fa-network-wired fa-fw"></i> LAN Dashboard</div>
 <?php
 	$num_interfaces = 0;
@@ -29,7 +28,6 @@ function DisplayDashboard_LAN()
 ?>
 		<div class="panel-footer">Information provided by ifconfig</div>
 	</div><!-- /.panel-primary -->
-</div><!-- /.col-lg-12 -->
 <?php
 }
 
@@ -53,7 +51,7 @@ function process_LAN_data($interface)
 		<div class="panel-body">
 			<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
 			<div class="row">
-				<div class="panel panel-default">
+				<div class="panel panel-success">
 					<div class="panel-body">
 						<h4>Interface Information</h4>
 						<div class="info-item">Interface Name</div> <?php echo $interface ?></br>

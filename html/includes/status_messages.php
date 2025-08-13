@@ -2,67 +2,36 @@
 class StatusMessages {
 	public $messages = array();
 
-	public function addMessage($message, $level='success', $dismissable=false) {
-		$status = "<tr class='alert alert-$level'><td>$message</td>";
+	public function addMessage($message, $level='success', $dismissable=false) {		
+		$dismissableButton = '';
+		$dismissablClass = '';
 		if ($dismissable) {
-			$status .= "<td class='alert-dismissable'>";
-			$status .= "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>x</button>";
-			$status .= "</td>";
-		} else {
-			$status .= "<td></td>";
-		}
-		$status .= "</tr>";
+			$dismissablClass = 'alert-dismissible';
+			$dismissableButton = "<button type='button' class='close' data-dismiss='alert'><span aria-hidden='true'>&times;</span></button>";
+		}		
+		$status = "<div class='alert alert-$level $dismissablClass' role='alert'>$dismissableButton <div class='alert-text truncated'>$message</div></div>";
 
 		array_push($this->messages, $status);
 	}
 
 
 	// If $escape is true, escape single quotes.
-	// If $highlight is true, hightlight the groups of messages (often only error message(s)).
+	public function showMessages($clear=true, $escape=false) {
 
-	public function showMessages($clear=true, $escape=false, $highlight=false) {
-		if ($escape === true) {
-			// We can't have any single quotes in the output.
-			$apos = "&apos;";
-			$nl = "";
-			$tab = "";
-		} else {
-			$apos = "'";
-			$nl = "\n";
-			$tab = "\t";
-		}
+		if ($this->isMessage()) {
+			foreach($this->messages as $message) {
+				if ($escape === true)
+					$message = str_replace("'", "&apos;", $message);
 
-		$count = 0;
-		foreach($this->messages as $message) {
-			$count++;
-			if ($count === 1) {
-				if ($highlight) {
-					$class = " class=${apos}highlightedBox${apos}";
-				} else {
-					$class = "";
-				}
-				echo "$nl<div$class><table width=${apos}100%${apos}>";
+				$message = str_replace("\n", "<br>", $message);
+
+				echo $message;
 			}
 
-			if ($count >= 2) {
-				// space between messages
-				echo "$nl$tab<tr><td style=${apos}padding-top: 5px${apos}></td></tr>";
+			if ($clear) {
+				$this->messages = array();
 			}
-
-			if ($escape === true)
-				$message = str_replace("'", "&apos;", $message);
-
-
-			// Replace newlines with HTML breaks.
-			$message = str_replace("\n", "<br>", $message);
-			echo "$nl$tab$message";
 		}
-
-		if ($count > 0) {
-			echo "$nl</table></div>$nl";
-		}
-
-		if ( $clear ) $this->messages = array();
 	}
 
 	public function isMessage() {
@@ -71,6 +40,18 @@ class StatusMessages {
 			return(false);
 		else
 			return(true);
+	}
+
+	public function reset() {
+		$this->messages = array();
+	}
+
+	public function count() {
+		return count($this->messages);
+	}
+
+	public function get() {
+		return $this->messages;
 	}
 }
 ?>

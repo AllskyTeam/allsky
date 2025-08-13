@@ -166,7 +166,7 @@ function DisplayDHCPConfig() {
 	$interval = "$mselected$hselected$dselected";
 ?>
 
-<div class="row"> <div class="col-lg-12"> <div class="panel panel-primary">
+<div class="panel panel-success">
 	<div class="panel-heading"><i class="fa fa-exchange fa-fw"></i> Configure DHCP</div>
 	<div class="panel-body">
 		<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
@@ -288,8 +288,7 @@ function DisplayDHCPConfig() {
 			</div><!-- /.tab-pane -->
 		</div><!-- /.tab-content -->
 	</div><!-- ./ Panel body -->
-	<div class="panel-footer"> Information provided by dnsmasq</div>
-</div><!-- /.panel-primary --> </div><!-- /.col-lg-12 --> </div><!-- /.row -->
+</div><!-- /.panel-primary -->
 <?php
 }
 ?>

@@ -15,8 +15,8 @@ $verbose = "false";
 $cmd = "AM_ALLSKY_CONFIG compare_startrails --html";
 
 ?>
-<div class="row">
-	<div class="panel panel-primary">
+
+	<div class="panel panel-success">
 		<div class="panel-heading"><i class="fa fa-code fa-star"></i>
 			Help Determine <strong>Startrails Settings</strong>
 		</div>
@@ -115,13 +115,12 @@ function add_args() {
 					</div>
 				</div>
 
-				<br>
 				<input type="submit" class="btn btn-primary" name="startrails"
 							value="Create Startrails" />
 			</form>
 		</div>
 	</div>
-</div>
+
 
 <?php 
 }

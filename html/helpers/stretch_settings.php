@@ -28,8 +28,7 @@ $stretch_amount_nighttime = getVariableOrDefault($settings_array, 'imagestretcha
 $cmd = "AM_ALLSKY_CONFIG compare_stretches --html";
 
 ?>
-<div class="row">
-	<div class="panel panel-primary">
+	<div class="panel panel-success">
 		<div class="panel-heading"><i class="fa fa-code fa-star"></i>
 			Help Determine <strong>Image Stretch Settings</strong>
 		</div>
@@ -248,7 +247,6 @@ function add_args() {
 			</form>
 		</div>
 	</div>
-</div>
 
 <?php 
 }

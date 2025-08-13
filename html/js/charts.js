@@ -805,6 +805,8 @@ class CHARTMANAGER {
 
             if (this.chartListVisible) {
                 $('#allsky-charts-sidebar').show()
+                $('#allsky-charts-sidebar').css('left', '225px');
+                $('#allsky-charts-sidebar').css('top', '150px');                
                 $('#allsky-charts-chart-list-toggle-label')
                     .removeClass('label-default')
                     .addClass('label-success')

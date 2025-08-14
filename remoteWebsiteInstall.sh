@@ -377,13 +377,7 @@ function prompt_to_upload()
 		fi
  		DIALOG_TEXT+="\n\n$( dU_ "Do you want to upload them to the remote server?" )"
 		DIALOG_TEXT+="\n\n\nThis will overwrite any files already there."
-		if [[ -n ${X} ]]; then
-			# Possibly old images - set default answer to "No".
-			DEFAULT="--defaultno"
-		else
-			# Current images - set default answer to "Yes" (which is the default).
-			DEFAULT=""
-		fi
+		DEFAULT="--defaultno"
 
 		# shellcheck disable=SC2086
 		if display_box "--yesno" "${DIALOG_WELCOME_TITLE}" "${DIALOG_TEXT}" ${DEFAULT} ; then

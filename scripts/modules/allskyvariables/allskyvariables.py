@@ -47,18 +47,12 @@ class ALLSKYVARIABLES:
         return result
 
     def setup_for_command_line(self, allsky_path):
-        command = shlex.split("bash -c 'export ALLSKY_HOME=" + allsky_path + "; source " + allsky_path + "/variables.sh && env'")
-        proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        for line in proc.stdout:
-            line = line.decode(encoding='UTF-8')
-            line = line.strip("\n")
-            line = line.strip("\r")
-            try:
-                (key, _, value) = line.partition("=")
-                self._set_environment_variable(key, value)
-            except Exception:
-                pass
-        proc.communicate()
+        json_variables = f"{allsky_path}/variables.json"
+        with open(json_variables, 'r') as file:
+            json_data = json.load(file)
+
+        for key, value in json_data.items():
+            self._set_environment_variable(str(key), str(value))
 
     def get_debug_variables(self):
         result = {}
@@ -161,8 +155,7 @@ class ALLSKYVARIABLES:
                                         "source": stem,
                                         "value": value
                                     }
-                            variables.update(data)                        
-                
+                            variables.update(data)                                 
                 else:
                     if entry.startswith('allsky_') and entry != 'allsky_shared.py' and entry != 'allsky_base.py':
                         include = True
@@ -173,13 +166,17 @@ class ALLSKYVARIABLES:
                         if include:
                             file_name = os.path.join(folder, entry)
                             meta_data = self._get_meta_data_from_file(file_name)
-                            decoded = json.loads(meta_data)
+                            meta_data = meta_data.replace("\t", "").strip()
+                            try:
+                                decoded = json.loads(meta_data)
 
-                            if 'extradata' in decoded:
-                                extra_vars = decoded['extradata']['values']
-                                for key, value in extra_vars.items():
-                                    extra_vars[key]['source'] = decoded['module']
-                                variables.update(extra_vars)
+                                if 'extradata' in decoded:
+                                    extra_vars = decoded['extradata']['values']
+                                    for key, value in extra_vars.items():
+                                        extra_vars[key]['source'] = decoded['module']
+                                    variables.update(extra_vars)
+                            except:
+                                pass
 
         return variables
 

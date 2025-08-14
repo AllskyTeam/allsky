@@ -88,7 +88,7 @@ function add_args() {
 						Image to stretch
 					</label>
 					<div class="col-xs-8">
-						<div class="input-group col-xs-6">
+						<div class="input-group col-xs-8">
 							<input type="text" class="form-control" name="image"
 								id="image" value="<?php echo $image; ?>"/>
 						</div>
@@ -106,7 +106,7 @@ function add_args() {
 						<span class="WebUISetting">Stretch Amount</span> values to use
 					</label>
 					<div class="col-xs-8">
-						<div class="input-group col-xs-6">
+						<div class="input-group col-xs-8">
 							<input type="text" class="form-control" name="amounts"
 								id="amounts" value="<?php echo $amounts; ?>"/>
 						</div>
@@ -126,7 +126,7 @@ function add_args() {
 						<span class="WebUISetting">Stretch Mid Point</span> values to use
 					</label>
 					<div class="col-xs-8">
-						<div class="input-group col-xs-6">
+						<div class="input-group col-xs-8">
 							<input type="text" class="form-control" name="midpoints"
 								id="midpoints" value="<?php echo $midpoints; ?>"/>
 						</div>

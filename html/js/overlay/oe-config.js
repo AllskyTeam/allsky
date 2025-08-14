@@ -175,8 +175,8 @@ class OECONFIG {
                 error: function(xHR, Status, error) {
                     if (xHR.responseText.length === 0) {
                         /**
-                         * Something has gone badly wrong - The active overlay doesnt exist so we will set the active
-                         * overlay to the defaulf for the camera then redirect the user back to the overlay manager
+                         * Something has gone badly wrong - The active overlay doesn't exist so we will set the active
+                         * overlay to the default for the camera then redirect the user back to the overlay manager
                          * which will hopefully fix that issue
                          */
                         alert(' The active overlay does not exist, was it deleted? The active overlay will be reset to the default for your camera.\n\nPlease click OK to continue');
@@ -199,12 +199,13 @@ class OECONFIG {
                             cache: false,
                             async: false
                         });
+                        // TODO: check for failure, i.e., ret != "ok".
                         location.reload();
                     }
                 }                
             });
         } catch (error) {
-            confirm('A fatal error has occureed loading the application configuration.')
+            confirm('A fatal error has occured loading the application configuration.')
             return false;
         }         
     }
@@ -340,8 +341,9 @@ class OECONFIG {
                 dataType: 'json',
                 cache: false
             });
+            // TODO: check for failure, i.e., ret != "ok".
         } catch (error) {
-            console.log(error); // TODO: Daal with corrupt config
+            console.log(error); // TODO: Deal with corrupt config
             return false;
         }
     }
@@ -433,8 +435,9 @@ class OECONFIG {
                 dataType: 'json',
                 cache: false
             });
+            // TODO: check for failure, i.e., ret != "ok".
         } catch (error) {
-            console.log(error); // TODO: Daal with corrupt config
+            console.log(error); // TODO: Deal with corrupt config
             return false;
         }
     }
@@ -450,7 +453,8 @@ class OECONFIG {
                 config: JSON.stringify(this.#config)
             },
             cache: false
-        }).done(function() {
+        }).done(function(ret) {
+            // TODO: check for failure, i.e., ret != "ok".
         }).fail(function(e) {
 			let msg = "Failed to save the overlay config.";
             msg += " Please check the permissions on the '~/allsky/config/overlay/config/" + fileName + "' file.";

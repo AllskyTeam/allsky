@@ -12,14 +12,6 @@ $settings_array = readSettingsFile();
 $image = ALLSKY_TMP . "/" . getVariableOrDefault($settings_array, 'filename', "");
 $amounts = "5  10  15  20";
 $midpoints = "10  30  50";
-/*
-$count_amount = 4;
-$count_midpoint = 4;	// The total number of stretches is $count_amount * $count_midpoint.
-$start_amount = 3;
-$step_amount = 10;
-$start_midpoint = 5;
-$step_midpoint = 10;
-*/
 $verbose = "false";
 
 $stretch_amount_daytime = getVariableOrDefault($settings_array, 'imagestretchamountdaytime', 0);
@@ -85,25 +77,6 @@ function add_args() {
 
 	midpoints = document.getElementById('midpoints').value;
 	if (midpoints != "") ID += " --midpoints " + midpoints.replace(/ /g, "_");
-/*
-	count_amount = document.getElementById('count_amount').value;
-	if (count_amount != "") ID += " --count-amount " + count_amount;
-
-	count_midpoint = document.getElementById('count_midpoint').value;
-	if (count_midpoint != "") ID += " --count-midpoint " + count_midpoint;
-
-	start_amount = document.getElementById('start_amount').value;
-	if (start_amount != "") ID += " --start-amount " + start_amount;
-
-	step_amount = document.getElementById('step_amount').value;
-	if (step_amount != "") ID += " --step-amount " + step_amount;
-
-	start_midpoint = document.getElementById('start_midpoint').value;
-	if (start_midpoint != "") ID += " --start-midpoint " + start_midpoint;
-
-	step_midpoint = document.getElementById('step_midpoint').value;
-	if (step_midpoint != "") ID += " --step-midpoint " + step_midpoint;
-*/
 
 	document.getElementById('ID').value = ID;
 
@@ -164,82 +137,6 @@ function add_args() {
 							id="midpoints" value="<?php echo $midpoints; ?>"/>
 					</div>
 				</div>
-<!-- OLD WAY:
-				<div class="row">
-					<div class="form-group col-md-8">
-						<label for="start_amount">Initial
-							<span class="WebUISetting">Stretch Amount</span></label>
-						<div class="label_description">
-						Enter the initial amount to stretch.
-						<br>
-						<code>3</code> is typical and <code>20</code> is a lot.
-						Higher numbers lighten the image more.
-						</div>
-						<input type="text" class="form-control" name="start_amount"
-							id="start_amount" value="<?php echo $start_amount; ?>"/>
-					</div>
-				</div>
-				<div class="row">
-					<div class="form-group col-md-8">
-						<label for="count_amount">Number of times to vary the
-						<span class="WebUISetting">Stretch Amount</span></label>
-						<div class="label_description">
-						The total number of stretches to perform will be
-						this number times the Mid Point count below,
-						so keep the number fairly small.
-						</div>
-						<input type="text" class="form-control" name="count_amount"
-							id="count_amount" value="<?php echo $count_amount; ?>"/>
-					</div>
-				</div>
-				<div class="row">
-					<div class="form-group col-md-8">
-						<label for="step_amount">
-							<span class="WebUISetting">Stretch Amount</span> step size</label>
-						<div class="label_description">
-						Enter the how much to increase the Stretch Amount each time.
-						</div>
-						<input type="text" class="form-control" name="step_amount"
-							id="step_amount" value="<?php echo $step_amount; ?>"/>
-					</div>
-				</div>
-
-				<div class="row">
-					<div class="form-group col-md-8">
-						<label for="start_midpoint">Initial
-							<span class="WebUISetting">Stretch Mid Point</span></label>
-						<div class="label_description">
-						Enter the inital mid point.
-						</div>
-						<input type="text" class="form-control" name="start_midpoint"
-							id="start_midpoint" value="<?php echo $start_midpoint; ?>"/>
-					</div>
-				</div>
-				<div class="row">
-					<div class="form-group col-md-8">
-						<label for="count_midpoint">Number of times to vary the
-						<span class="WebUISetting">Stretch Mid Point</span></label>
-						<div class="label_description">
-						The total number of stretches to perform will be
-						this number times the Amount count above,
-						so keep the number fairly small.
-						</div>
-						<input type="text" class="form-control" name="count_midpoint"
-							id="count_midpoint" value="<?php echo $count_midpoint; ?>"/>
-					</div>
-				</div>
-				<div class="row">
-					<div class="form-group col-md-8">
-						<label for="step_midpoint">
-							<span class="WebUISetting">Stretch Mid Point</span> step size</label>
-						<div class="label_description">
-						Enter the how much to increase the Stretch Mid Point each time.
-						</div>
-						<input type="text" class="form-control" name="step_midpoint"
-							id="step_midpoint" value="<?php echo $step_midpoint; ?>"/>
-					</div>
-				</div>
--->
 
 				<br>
 				<input type="submit" class="btn btn-primary" name="stretches"

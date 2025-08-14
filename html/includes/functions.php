@@ -1062,12 +1062,12 @@ function updateFile($file, $contents, $fileName, $toConsole, $silent=false) {
 
 // Return the settings file for the current camera.
 function getSettingsFile() {
-	return ALLSKY_CONFIG . "/settings.json";
+	return ALLSKY_SETTINGS_FILE;
 }
 
 // Return the options file for the current camera.
 function getOptionsFile() {
-	return ALLSKY_CONFIG . "/options.json";
+	return ALLSKY_OPTIONS_FILE;
 }
 
 // Return the full path name of the local Website configuration file.

@@ -1,7 +1,3 @@
-<style>
-	label { margin-top: 20px; font-size: 125%; }
-	.label_description { padding-left: 25px; padding-bottom: 5px; }
-</style>
 <?php
 
 function startrailsSettings() {
@@ -41,7 +37,8 @@ $cmd = "AM_ALLSKY_CONFIG compare_startrails --html";
 			and you can then compare them to find the best image.
 			</p>
 
-			<form role="form" action="execute.php" method="POST" onsubmit="return add_args()">
+			<br>
+			<form role="form" action="execute.php" method="POST" class="form-horizontal" onsubmit="return add_args()">
 <script>
 function add_args() {
 	ID = document.getElementById('ID').value;
@@ -55,8 +52,8 @@ function add_args() {
 	thresholds = document.getElementById('thresholds').value;
 	if (thresholds != "") ID += " --thresholds " + thresholds.replace(/ /g, "_");
 
-	verbose = document.getElementById('verbose').value;
-	if (verbose != "") ID += " --verbose " + verbose;
+	verbose = document.getElementById('verbose').checked;
+	if (verbose) ID += " --verbose "
 
 	document.getElementById('ID').value = ID;
 
@@ -67,56 +64,83 @@ function add_args() {
 				<input type="hidden" name="ID" id="ID" value="<?php echo $cmd ?>">
 				<input type="hidden" name="day" value="test_startrails">
 
-				<div class="row">
-					<div class="form-group col-md-8">
-						<label for="input_directory">Use images from</label>
-						<div class="label_description">
-						Enter the directory on the Pi where the source images reside,
-						typically in
-						<span class="fileName"><?php echo ALLSKY_IMAGES ?></span>.
-						<br>If you don't enter anything, then yesterday's images are used.
+				<div class="form-group" id="input_directory-wrapper">
+					<label for="input_directory" class="control-label col-xs-3">
+						Use images from
+					</label>
+					<div class="col-xs-8">
+						<div class="input-group col-xs-10">
+							<input type="text" class="form-control" name="input_directory"
+								id="input_directory" value="<?php echo $input_directory; ?>"/>
 						</div>
-						<input type="text" class="form-control" name="input_directory"
-							id="input_directory" value="<?php echo $input_directory; ?>"/>
-					</div>
-				</div>
-				<div class="row">
-					<div class="form-group col-md-8">
-						<label for="num_images">Number of images to include in each startrail</label>
-						<div class="label_description">
-						More images take more time to process but produce longer trailed stars.
-						</div>
-						<input type="text" class="form-control" name="num_images"
-							id="num_images" value="<?php echo $num_images; ?>"/>
-					</div>
-				</div>
-				<div class="row">
-					<div class="form-group col-md-8">
-						<label for="thresholds"><span class="WebUISetting">Brightness Threshold</span>s to use</label>
-						<div class="label_description">
-						Enter one or more space-separated
-						<span class="WebUISetting">Brightness Threshold</span>s.
-						<br>The more values you have the longer it will take to process.
-						</div>
-						<input type="text" class="form-control" name="thresholds"
-							id="thresholds" value="<?php echo $thresholds; ?>"/>
-					</div>
-				</div>
-				<div class="row">
-					<div class="form-group col-md-8">
-						<label for="verbose">Verbose Output?</label>
-						<div class="label_description">
-						Check the box to output summary information for each startrails created.
-						</div>
-						<input type="checkbox" class="form-control" name="verbose"
-							id="verbose" value="<?php echo $verbose; ?>"
-							<?php if ($verbose == "true") echo "checked"; ?>
-							style="width: 10%" />
+						<p class="help-block">
+							Enter the directory on the Pi where the source images reside,
+							typically in
+							<span class="fileName"><?php echo ALLSKY_IMAGES ?></span>.
+							<br>If you don't enter anything, then yesterday's images are used.
+						</p>
 					</div>
 				</div>
 
+				<div class="form-group" id="num_images-wrapper">
+					<label for="num_images" class="control-label col-xs-3">
+						Number of images to include in each startrail
+					</label>
+					<div class="col-xs-8">
+						<div class="input-group col-xs-2">
+							<input type="number" class="form-control"
+								id="num_images" name="num_images"
+								min="1" step="1"
+								data-description="Number of images to include in each startrail"
+								value="<?php echo $num_images; ?>"/>
+						</div>
+						<p class="help-block">
+							More images take more time to process but produce
+							longer trailed stars.
+						</p>
+					</div>
+				</div>
+
+				<div class="form-group" id="thresholds-wrapper">
+					<label for="thresholds" class="control-label col-xs-3">
+						<span class="WebUISetting"> Brightness Threshold</span>s to use
+					</label>
+					<div class="col-xs-8">
+						<div class="input-group col-xs-10">
+							<input type="text" class="form-control col-xs-8" name="thresholds"
+								id="thresholds" value="<?php echo $thresholds; ?>"/>
+						</div>
+						<p class="help-block">
+							Enter one or more space-separated
+							<span class="WebUISetting">Brightness Threshold</span>s.
+							<br>The more values you have the longer it will take to process.
+						</p>
+					</div>
+				</div>
+
+				<div class="form-group" id="verbose-wrapper">
+					<label for="verbose" class="control-label col-xs-3">
+						Verbose Output?
+					</label>
+					<div class="col-xs-8">
+						<div class="input-group">
+							<label class="el-switch el-switch-sm el-switch-green">
+								<input type="checkbox" class="form-control col-xs-8"
+									id="verbose" name="verbose" value="true"
+									<?php if ($verbose == "true") echo "checked"; ?> />
+								<span class="el-switch-style"></span>
+							</label>
+						</div>
+						<p class="help-block">
+							Check the box to output summary information for
+							each startrails created.
+						</p>
+					</div>
+				</div>
+
+
 				<input type="submit" class="btn btn-primary" name="startrails"
-							value="Create Startrails" />
+					value="Create Startrails" />
 			</form>
 		</div>
 	</div>

@@ -168,9 +168,10 @@ class OVERLAYUTIL
         }
         $config = $_POST['config'];
         $formattedJSON = json_encode(json_decode($config), JSON_PRETTY_PRINT);
-        $bytesWritten = file_put_contents($fileName, $formattedJSON);
-        if ($bytesWritten === false) {
-            $this->sendHTTPResponse(500);
+		// updateFile() only returns error messages.
+        $msg = updateFile($fileName, $formattedJSON, $fileName, false, true);
+		if ($msg !== "") {
+            $this->sendHTTPResponse(500, $msg);
         } else {
             $this->sendResponse();
         }
@@ -217,8 +218,12 @@ class OVERLAYUTIL
         $settings = $_POST["settings"];
         $formattedJSON = json_encode(json_decode($settings), JSON_PRETTY_PRINT);
 
-        file_put_contents($fileName, $formattedJSON);
-        $this->sendResponse();
+        $msg = updateFile($fileName, $formattedJSON, $fileName, false, true);
+		if ($msg === "") {
+            $this->sendResponse();
+        } else {
+            $this->sendHTTPResponse(500, $msg);
+        }
     }
 
     private function includeField($field) 
@@ -320,8 +325,12 @@ class OVERLAYUTIL
         );
         $formattedJSON = json_encode($fields, JSON_PRETTY_PRINT);
 
-        file_put_contents($fileName, $formattedJSON);
-        $this->sendResponse();
+        $msg = updateFile($fileName, $formattedJSON, $fileName, false, true);
+		if ($msg === "") {
+            $this->sendResponse();
+        } else {
+            $this->sendHTTPResponse(500, $msg);
+        }
     }
 
     public function getOverlayData($returnResult=false)  
@@ -384,7 +393,11 @@ class OVERLAYUTIL
         $data = json_decode($data);
         if ($data !== null) {
             $data = json_encode($data, JSON_PRETTY_PRINT);
-            file_put_contents($this->overlayConfigPath . "/autoexposure.json", $data);
+            $fileName = $this->overlayConfigPath . "/autoexposure.json";
+        	$msg = updateFile($fileName, $data, $fileName, false, true);
+			if ($msg !== "") {
+            	$this->sendResponse($msg);
+        	}
             $data = json_decode($data);
 
             $image = imagecreate($data->stagewidth, $data->stageheight);
@@ -397,7 +410,7 @@ class OVERLAYUTIL
             imagepng($image, "../autoexposure.png");
             $this->sendResponse();
         } else {
-            $this->sendHTTPResponse(500);
+            $this->sendHTTPResponse(500, "'data' is null in postAutoExposure");
         }
     }
 
@@ -557,16 +570,23 @@ class OVERLAYUTIL
 
         if (isset($_POST['fontURL'])) {
             $fontURL = strtolower($_POST['fontURL']);
-            if (substr($fontURL, 0, 23) === "https://www.dafont.com/") {
-                $fontName = str_replace("https://www.dafont.com/", "", $fontURL);
+			$URL = "https://www.dafont.com/";
+            if (substr($fontURL, 0, 23) === $URL) {
+                $fontName = str_replace($URL, "", $fontURL);
                 $fontName = str_replace(".font", "", $fontName);
                 $fileName = str_replace("-", "_", $fontName);
 
                 $downloadURL = "https://dl.dafont.com/dl/?f=" . $fileName;
                 $downloadPath = sys_get_temp_dir() . '/' . $fileName . '.zip';
 
-                if (!file_put_contents($downloadPath, file_get_contents($downloadURL))) {
-                    $this->sendHTTPResponse(422);
+                $contents = file_get_contents($downloadURL);
+                if ($contents === false) {
+                    $this->sendHTTPResponse(422, "Failed getting font from '$downloadURL'.");
+                }
+
+        		$msg = updateFile($downloadPath, $contents, $downloadPath, false, true);
+				if ($msg !== "") {
+                    $this->sendHTTPResponse(422, $msg);
                 }
             } else {
                 $this->sendHTTPResponse(404);
@@ -686,12 +706,13 @@ class OVERLAYUTIL
         $targetFile = $imageFolder . $filename;
 
         // Save the image to the server
-        if (file_put_contents($targetFile, $imageData)) {
+        $msg = updateFile($targetFile, $imageData, $targetFile, false, true);
+        if ($msg === "") {
             $thumbnailPath = $thumbnailFolder . $filename;
             $this->createThumbnail($targetFile, $thumbnailPath, 90);            
             echo "Image saved successfully as $filename";
         } else {
-            echo "Failed to save the image.";
+            echo "Failed to save the image: $msg.";
         }
     }
 
@@ -1047,9 +1068,13 @@ class OVERLAYUTIL
         $newOverlay = json_encode($newOverlay, JSON_PRETTY_PRINT);
 
         $overlayFile = $this->allskyOverlays . $_POST['data']['filename'] . '.json';
-        file_put_contents($overlayFile, $newOverlay);
-        chmod($overlayFile, 0775);
-        $this->sendResponse();
+        $msg = updateFile($overlayFile, $newOverlay, $overlayFile, false, true);
+		if ($msg === "") {
+        	chmod($overlayFile, 0775);
+            $this->sendResponse();
+        } else {
+            $this->sendResponse($msg);
+        }
     }
 
     public function getDeleteOverlay() 
@@ -1076,10 +1101,12 @@ class OVERLAYUTIL
         $mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
         $data = json_encode($settingsData, $mode);
 
-        $result = file_put_contents($settingsFile, $data);
-                
-        $this->sendResponse($result);
-
+        $msg = updateFile($settingsFile, $data, $settingsFile, false, true);
+		if ($msg === "") {
+            $this->sendResponse();
+        } else {
+            $this->sendResponse($msg);
+        }
     }
 
     private function fixMetaData(&$overlay) 
@@ -1235,8 +1262,12 @@ class OVERLAYUTIL
 
         $fileName = ALLSKY_TMP . '/test_overlay.json';
         file_put_contents($fileName,  $overlay);
+        $msg = updateFile($fileName, $overlay, $fileName, false, true);
+		if ($msg !== "") {
+            $this->sendHTTPResponse(500);
+        }
 
-        $command = 'sudo ' . $this->allsky_scripts  . '/test_overlay.sh --allsky_home ' . $this->allsky_home  . ' --allsky_scripts ' . $this->allsky_scripts  . ' --allsky_tmp ' . $this->allskyTmp . ' --overlay ' . $this->allskyTmp . '/test_overlay.json';
+        $command = 'sudo ' . $this->allsky_scripts  . '/test_overlay.sh --allsky_home ' . $this->allsky_home  . ' --allsky_scripts ' . $this->allsky_scripts  . ' --allsky_tmp ' . $this->allskyTmp . " --overlay '$fileName'";
 
         $result = $this->runShellCommand($command);
 

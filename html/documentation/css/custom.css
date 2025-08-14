@@ -1337,7 +1337,7 @@ div.sticky {
 	right: 0;
 	height: 75px;
 	padding: 10px 12px;
-	z-index: 4000;
+	z-index: 400;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
 }
 
@@ -1350,7 +1350,7 @@ div.sticky {
 	width: 220px;
 	/* IMPORTANT: let flyouts escape; we'll portal, but this helps too */
 	overflow: visible;
-	z-index: 3000;
+	z-index: 300;
 	transition: width .25s ease;
 	margin-top: 10px !important;
 }
@@ -1404,7 +1404,7 @@ div.sticky {
 	padding-left: 15px;
 	padding-right: 15px;
 	padding-top: 10px;
-	z-index: 1000;
+	z-index: 100;
 	transition: left .25s ease;
 	background-color: #ebeaea;	
 }
@@ -1425,7 +1425,7 @@ div.sticky {
 	border: 1px solid #1e1e1e;
 	border-radius: 0;
 	box-shadow: 0 6px 18px rgba(0, 0, 0, .45);
-	z-index: 5000;
+	z-index: 500;
 	/* above header/sidebar/content */
 	display: block !important;
 	/* ensure visible */

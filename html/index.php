@@ -446,6 +446,8 @@ $allskyStatus = output_allsky_status();
 		<meta name="author" content="Thomas Jacquin">
 
 		<script src="documentation/js/documentation.js" type="application/javascript"></script>
+		<link href="documentation/css/light.css" rel="stylesheet">
+		<link href="documentation/css/documentation.css" rel="stylesheet">
 		<link href="documentation/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 		<link href="documentation/bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
 		<link href="documentation/css/sb-admin-2.css" rel="stylesheet">

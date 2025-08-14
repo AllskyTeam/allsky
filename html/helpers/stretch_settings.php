@@ -1,7 +1,3 @@
-<style>
-	label { margin-top: 20px; font-size: 125%; }
-	.label_description { padding-left: 25px; padding-bottom: 5px; }
-</style>
 <?php
 
 function stretchSettings() {
@@ -12,7 +8,6 @@ $settings_array = readSettingsFile();
 $image = ALLSKY_TMP . "/" . getVariableOrDefault($settings_array, 'filename', "");
 $amounts = "5  10  15  20";
 $midpoints = "10  30  50";
-$verbose = "false";
 
 $stretch_amount_daytime = getVariableOrDefault($settings_array, 'imagestretchamountdaytime', 0);
 $stretch_amount_nighttime = getVariableOrDefault($settings_array, 'imagestretchamountnighttime', 0);
@@ -64,7 +59,8 @@ $cmd = "AM_ALLSKY_CONFIG compare_stretches --html";
 			You may then want to run the test again but with finer granularity.
 			</p>
 
-			<form role="form" action="execute.php" method="POST" onsubmit="return add_args()">
+			<br>
+			<form role="form" action="execute.php" method="POST" class="form-horizontal" onsubmit="return add_args()">
 <script>
 function add_args() {
 	ID = document.getElementById('ID').value;
@@ -87,54 +83,62 @@ function add_args() {
 				<input type="hidden" name="ID" id="ID" value="<?php echo $cmd ?>">
 				<input type="hidden" name="day" value="test_stretches">
 
-				<div class="row">
-					<div class="form-group col-md-8">
-						<label for="image">Image to stretch</label>
-						<div class="label_description">
-						Pick a typical image on the Pi.
-						<!--
-						The default is the current image in
-						<span class="fileName"><?php echo $image ?></span>.
-						-->
-						<br>
-						If you are stretching nighttime images and running the test
-						during the day, pick a different image.
+				<div class="form-group" id="image-wrapper">
+					<label for="image" class="control-label col-xs-3">
+						Image to stretch
+					</label>
+					<div class="col-xs-8">
+						<div class="input-group col-xs-6">
+							<input type="text" class="form-control" name="image"
+								id="image" value="<?php echo $image; ?>"/>
 						</div>
-						<input type="text" class="form-control" name="image"
-							id="image" value="<?php echo $image; ?>"/>
+						<p class="help-block">
+							Pick a typical image on the Pi.
+							<br>
+							If you are stretching nighttime images and running the test
+							during the day, pick a different image.
+						</p>
 					</div>
 				</div>
-				<div class="row">
-					<div class="form-group col-md-8">
-						<label for="amounts">
-							<span class="WebUISetting">Stretch Amount</span>s to use</label>
-						<div class="label_description">
-						Enter one or more space-seprated
-						<span class="WebUISetting">Stretch Amount</span>s.
-						The more values you have the longer it will take to process.
-						<br>
-						<code>20</code> is a lot.
-						Higher numbers lighten the image more.
+
+				<div class="form-group" id="amounts-wrapper">
+					<label for="amounts" class="control-label col-xs-3">
+						<span class="WebUISetting">Stretch Amount</span> values to use
+					</label>
+					<div class="col-xs-8">
+						<div class="input-group col-xs-6">
+							<input type="text" class="form-control" name="amounts"
+								id="amounts" value="<?php echo $amounts; ?>"/>
 						</div>
-						<input type="text" class="form-control" name="amounts"
-							id="amounts" value="<?php echo $amounts; ?>"/>
+						<p class="help-block">
+							Enter one or more space-seprated
+							<span class="WebUISetting">Stretch Amount</span> values.
+							The more values you have the longer it will take to process.
+							<br>
+							<code>20</code> is a lot.
+							Higher numbers lighten the image more.
+						</p>
 					</div>
 				</div>
-				<div class="row">
-					<div class="form-group col-md-8">
-						<label for="midpoints">
-							<span class="WebUISetting">Stretch Mid Point</span>s to use</label>
-						<div class="label_description">
-						Enter one or more space-seprated
-						<span class="WebUISetting">Stretch Mid Point</span>s.
-						The more values you have the longer it will take to process.
-						<br>
-						<code>0</code> lightens black items,
-						<code>50</code> lightens middle-gray items, and
-						<code>100</code> lightens white items.
+
+				<div class="form-group" id="midpoints-wrapper">
+					<label for="midpoints" class="control-label col-xs-3">
+						<span class="WebUISetting">Stretch Mid Point</span> values to use
+					</label>
+					<div class="col-xs-8">
+						<div class="input-group col-xs-6">
+							<input type="text" class="form-control" name="midpoints"
+								id="midpoints" value="<?php echo $midpoints; ?>"/>
 						</div>
-						<input type="text" class="form-control" name="midpoints"
-							id="midpoints" value="<?php echo $midpoints; ?>"/>
+						<p class="help-block">
+							Enter one or more space-seprated
+							<span class="WebUISetting">Stretch Mid Point</span> values.
+							The more values you have the longer it will take to process.
+							<br>
+							<code>0</code> lightens black items,
+							<code>50</code> lightens middle-gray items, and
+							<code>100</code> lightens white items.
+						</p>
 					</div>
 				</div>
 

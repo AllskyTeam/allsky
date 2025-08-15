@@ -2,11 +2,26 @@
 
 function startrailsSettings() {
 
+global $settings_array;
 // Defaults.  Ideally should match what's in compareStartrails.sh.
 $num_images = 20;
-$input_directory = "";
-$thresholds = "0.10  0.15  0.20  0.25  0.30  0.35  0.40  0.45  0.50";
+
+// Determine yesterday for the default input directory.
+$datetime = new DateTime('now');
+$datetime->modify('-12 hours');
+$input_directory = $datetime->format('Ymd');
+
+// Use the current threshold as the initial value,
+// then add some for the next few values.
+// People will rarely use a value SMALLER than the current value.
+$threshold = getVariableOrDefault($settings_array, 'startrailsbrightnessthreshold', 0.10);
+$thresholds = "$threshold";
+for ($i=1; $i<=7; $i++) {
+	$threshold += 0.03;
+	$thresholds .= "  $threshold";
+}
 $verbose = "false";
+
 
 $cmd = "AM_ALLSKY_CONFIG compare_startrails --html";
 
@@ -77,7 +92,7 @@ function add_args() {
 							Enter the directory on the Pi where the source images reside,
 							typically in
 							<span class="fileName"><?php echo ALLSKY_IMAGES ?></span>.
-							<br>If you don't enter anything, then yesterday's images are used.
+							<br>The default is yesterday.
 						</p>
 					</div>
 				</div>
@@ -103,7 +118,7 @@ function add_args() {
 
 				<div class="form-group" id="thresholds-wrapper">
 					<label for="thresholds" class="control-label col-xs-3">
-						<span class="WebUISetting"> Brightness Threshold</span>s to use
+						<span class="WebUISetting"> Brightness Threshold</span> values to use
 					</label>
 					<div class="col-xs-8">
 						<div class="input-group col-xs-10">
@@ -112,7 +127,7 @@ function add_args() {
 						</div>
 						<p class="help-block">
 							Enter one or more space-separated
-							<span class="WebUISetting">Brightness Threshold</span>s.
+							<span class="WebUISetting">Brightness Threshold</span> values.
 							<br>The more values you have the longer it will take to process.
 						</p>
 					</div>

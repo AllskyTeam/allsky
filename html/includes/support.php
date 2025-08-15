@@ -112,13 +112,15 @@ if (! is_dir(ALLSKY_SUPPORT_DIR)) {
   </div>
 </div>
 
-<div class="panel panel-primary">
+<div class="panel panel-allsky">
 	<div class="panel-heading"><i class="fa fa-code fa-question"></i> Getting Support</div>
 	<div class="panel-body as-support-loading">
 		<div class="panel panel-default">
+<!-- none of the other pages have this:
 			<div class="panel-heading">
 				<h3>Getting Support <small>&nbsp; &nbsp; how to ask for help</small></h3>
 			</div>
+-->
 			<div class="panel-body markdown-body">
 				<div class="alert alert-danger" role="alert">
 					<strong>NOTE:</strong> The Allsky Team does not actively monitor

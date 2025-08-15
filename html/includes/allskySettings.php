@@ -729,7 +729,7 @@ if ($debug) {
 	if ($formReadonly != "readonly") $settingsDescription = "";
 ?>
 
-<div class="panel panel-success" id="settingsPanel">
+<div class="panel panel-allsky" id="settingsPanel">
 <?php
 	if ($formReadonly == "readonly") {
 		$x = "(READ ONLY) &nbsp; &nbsp; ";
@@ -820,7 +820,6 @@ CSRFToken();
 
 			foreach($options_array as $option) {
 				$name = $option['name'];
-// ECC was false &&
 if ($debug) { echo "<br>Option <b>$name</b>"; }
 				if ($name === $endSetting) continue;
 
@@ -1078,9 +1077,6 @@ if ($debug) { echo ": &nbsp; value=$value"; }
 					} elseif ($type == "select") {
 						foreach($option['options'] as $opt) {
 							$val = getVariableOrDefault($opt, 'value', "?");
-if ($debug && $val === "?") { echo "<br> &nbsp; &nbsp; &nbsp; (<span style='color: red;'>val = ?</span>)";
-echo "<pre>";var_dump($option);echo "</pre>";
-}
 							if ($val != $default) continue;
 							$default = $opt['label'];
 							break;
@@ -1151,9 +1147,7 @@ echo "<pre>";var_dump($option);echo "</pre>";
 							" $readonlyForm name='$name'>";
 						foreach($option['options'] as $opt){
 							$val = getVariableOrDefault($opt, 'value', "?");
-if ($debug && $val === "?") { echo "<br> &nbsp; &nbsp; &nbsp; (<span style='color: red;'>val = ?</span>)"; }
 							$lab = getVariableOrDefault($opt, 'label', "?");
-if ($debug && $lab === "?") { echo "<br> &nbsp; &nbsp; &nbsp; (<span style='color: red;'>lab = ?</span>)"; }
 							if ($value == $val){
 								echo "<option value='$val' selected>$lab</option>";
 							} else {

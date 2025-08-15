@@ -10,18 +10,18 @@ global $useLogin, $adminUser;
 
 <div class="container">
     <div class="col-md-6 col-md-offset-2 panel-style">
-        <div class="panel panel-success">
+        <div class="panel panel-allsky">
             <div class="panel-heading">
-                <h3 class="panel-title">
-                    <strong>
-                        <i class="fa fa-lock fa-fw"></i> Update WebUI User/Password
-                    </strong>
-                </h3>
+                <i class="fa fa-lock fa-fw"></i> Update WebUI User / Password
             </div>
             <div class="panel-body">
                 <div class="row">
                     <div class="col-md-12">
-                        <div class="alert alert-success" role="alert">If you intend to allow access to this Pi from the internet please select the checkbox below. This will enusre that a more secure password is used for the WebUI.</div>
+                        <div class="alert alert-success" role="alert">
+							If you intend to allow access to this Pi from the Internet
+							please select the checkbox below.
+							This will enusre that a more secure password is used for the WebUI.
+						</div>
                     </div>
                 </div>
                 <form role="form" action="includes/adminutils.php?request=Validate" method="POST" id="as-admin-user-password">

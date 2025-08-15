@@ -4,7 +4,7 @@ function DisplayDashboard_LAN()
 {
 
 ?>
-	<div class="panel panel-success">
+	<div class="panel panel-allsky">
 		<div class="panel-heading"><i class="fa fa-network-wired fa-fw"></i> LAN Dashboard</div>
 <?php
 	$num_interfaces = 0;

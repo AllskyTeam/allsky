@@ -293,7 +293,7 @@ function DisplaySystem()
 		$user_data_files_count = 0;
 	}
 	?>
-			<div class="panel panel-success">
+			<div class="panel panel-allsky">
 				<div class="panel-heading"><i class="fa fa-cube fa-fw"></i> System</div>
 				<div class="panel-body">
 

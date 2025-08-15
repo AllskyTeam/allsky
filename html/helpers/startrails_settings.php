@@ -12,7 +12,7 @@ $cmd = "AM_ALLSKY_CONFIG compare_startrails --html";
 
 ?>
 
-	<div class="panel panel-success">
+	<div class="panel panel-allsky">
 		<div class="panel-heading"><i class="fa fa-code fa-star"></i>
 			Help Determine <strong>Startrails Settings</strong>
 		</div>

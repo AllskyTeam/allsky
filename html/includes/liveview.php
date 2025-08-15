@@ -17,7 +17,7 @@ function DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nig
 		$msg =  "Daytime images updated every $s seconds$daydelay_postMsg,";
 		$s =  number_format($nightdelay);
 		$msg .= " nighttime every $s seconds$nightdelay_postMsg";
-		$myStatus->addMessage("$msg", "message", true);
+		$myStatus->addMessage("$msg", "message", false);
 	}
 ?>
 
@@ -42,7 +42,7 @@ function DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nig
 		getImage();
 </script>
 
-	<div class="panel panel-success">
+	<div class="panel panel-allsky">
 		<div class="panel-heading"><i class="fa fa-code fa-eye"></i> Live View</div>
 		<div class="panel-body">
 			<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>

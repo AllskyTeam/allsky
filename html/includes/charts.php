@@ -19,6 +19,9 @@ function DisplayCharts() {
   </div>
 </div>
 
+<div class="panel panel-allsky">
+<div class="panel-heading"><i class="fa-solid fa-chart-line"></i> Charts</div>
+
 <nav class="navbar navbar-default allsky-charts-navbar">              
   <div class="collapse navbar-collapse" id="oe-module-editor-navbar">
       <ul class="nav navbar-nav">
@@ -52,3 +55,5 @@ function DisplayCharts() {
 </div>
 <div id="container"></div>
 <div id="allsky-charts-main"></div>
+
+</div><!-- panel -->

@@ -325,18 +325,20 @@ function displayStatusMessages($page) {
 	$size = @filesize(ALLSKY_MESSAGES);
 	if ($size !== false && $size > 0) {
 		$contents_array = file(ALLSKY_MESSAGES, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+?>
+		<div class="panel panel-danger" id="system-messages">
+			<div class="panel-heading">
+				<i class="fa-solid fa-message"></i> System Messages
+<!-- Closing the message(s) doesn't make them go away.
+				<button type="button" class="close pull-right" aria-label="Close" id="closePanel">
+					<span aria-hidden="true">&times;</span>
+				</button>
+-->
+			</div>
 
-
-		echo '<div class="panel panel-danger" id="system-messages">
-				<div class="panel-heading">
-					<i class="fa-solid fa-message"></i> System Messages					
-					<button type="button" class="close pull-right" aria-label="Close" id="closePanel">
-						<span aria-hidden="true">&times;</span>
-					</button>
-				</div>
-				<div class="panel-body">';
-
-			echo "<div class='row'>"; echo "<div class='system-message'>";
+			<div class="panel-body">
+			<div class='row'><div class='system-message'>
+<?php
 			foreach ($contents_array as $line) {
 				// Format: id, cmd_txt, level (i.e., CSS class), date, count, message [, url]
 				//         0   1        2                        3     4      5          6

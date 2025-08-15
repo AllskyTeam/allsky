@@ -15,8 +15,8 @@ import cv2
 class ALLSKYEXPOSURERECT(ALLSKYMODULEBASE):
 
     meta_data = {
-        "name": "Exposure Rect",
-        "description": "Displays the ZWO Exposure calculation area",
+        "name": "ZWO Exposure Box",
+        "description": "Displays the ZWO Exposure calculation area set by the <span class='WebUISetting'>Histogram Box</span> setting",
         "module": "allsky_exposurerect",
         "group": "Image Adjustments",
         "events": [

@@ -83,7 +83,7 @@ function DisplayOverlay($image_name)
 
     <div id="oeeditor">
         <div id="oe-overlay-manager"></div>     
-        <div id="oe-viewport" class="panel panel-success">
+        <div id="oe-viewport" class="panel panel-allsky">
             <div id="oe-overlay-not-running" class="oe-not-running big hidden">
                 <div class="center-full">
                     <div class="center-paragraph">

@@ -70,7 +70,7 @@ function DisplayModule() {
 <script src="/js/jquery-devicemanager/jquery-devicemanager.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 <link rel="stylesheet" href="/js/jquery-devicemanager/jquery-devicemanager.css?c=<?php echo ALLSKY_VERSION; ?>">
 
-<div class="panel panel-success">
+<div class="panel panel-allsky">
     <div class="panel-heading"><i class="fa fa-bars fa-fw"></i> Module Manager</div>
     <div class="panel-body">
         <nav class="navbar navbar-default">
@@ -134,7 +134,7 @@ function DisplayModule() {
                                 <input type="text" class="form-control" id="module-available-filter">
                             </div>
                             <div class="col-sm-2">
-                                <button type="button" class="btn btn-primary btn-sm pull-left" id="module-available-filter-clear"><i class="fa-solid fa-xmark"></i></button>
+                                <button type="button" class="btn btn-primary btn-sm pull-left" id="module-available-filter-clear" title="Clear filter"><i class="fa-solid fa-xmark"></i></button>
                             </div>
                             <div class="col-sm-2">
                                 <select name="cars" id="module-filters">
@@ -159,7 +159,7 @@ function DisplayModule() {
                                 <input type="text" class="form-control" id="module-selected-filter">
                             </div>
                             <div class="col-sm-4">
-                                <button type="button" class="btn btn-primary btn-sm pull-left" id="module-selected-filter-clear"><i class="fa-solid fa-xmark"></i></button>
+                                <button type="button" class="btn btn-primary btn-sm pull-left" id="module-selected-filter-clear" title="Clear filter"><i class="fa-solid fa-xmark"></i></button>
                             </div>
                         </div>
                     </form>

@@ -249,8 +249,7 @@ HEIGHT="${RESOLUTION##*x}"
 # Put text in bottom left.
 POINT_SIZE="$( echo "${WIDTH} / 33" | bc )"
 X="20"		# just need a little from left side
-Y=$(( HEIGHT - POINT_SIZE ))
-# echo "POINT_SIZE=$POINT_SIZE, X=$X, Y=$Y"
+Y=$(( HEIGHT - ( POINT_SIZE * 2) ))
 
 FONT="${ALLSKY_OVERLAY}/system_fonts/Courier_New_Bold.ttf"
 STROKE="black"
@@ -273,8 +272,17 @@ do
 			indent "${MSG}"
 		fi
 
+		# Get the number of images used.  Output:
+		# startrails: Minimum: 1.0   maximum: 2.0   mean: 3.0   median: 4.0 
+		#		numImagesUsed: 0   numImagesNotUsed: 15   threshold: 0.3
+		NUM_USED="$( echo "${MSG}" | gawk '{
+				if ($2 == "Minimum:") printf("%0.3f", $11);
+			}'
+		)"
+
 		# Add text
 		TEXT="Brightness Threshold: ${THRESHOLD}"
+		TEXT+="\n${NUM_USED} of ${COUNT} images used."
 		convert -font "${FONT}" -pointsize "${POINT_SIZE}" \
 			-fill "${FILL}" -stroke "${STROKE}" -strokewidth 3 \
 			-annotate "+${X}+${Y}" "${TEXT}" \

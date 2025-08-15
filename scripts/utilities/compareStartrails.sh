@@ -50,7 +50,17 @@ HTML="false"
 OUT_DIRECTORY="${ALLSKY_IMAGES}/test_startrails"	# Must start with "test"
 IN_DIRECTORY="${ALLSKY_IMAGES}/$( date -d '12 hours ago' +'%Y%m%d' )"
 COUNT="";			d_COUNT="20"
-THRESHOLDS="";		d_THRESHOLDS="0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50"
+THRESHOLDS=""
+# Calculate default based on the current value.
+THRESHOLD="$( settings ".startrailsbrightnessthreshold" )"
+d_THRESHOLDS="${THRESHOLD}"
+i=1
+while [[ ${i} -le 7 ]];
+do
+	THRESHOLD="$( gawk -v T="${THRESHOLD}" 'BEGIN { printf("%0.2f", T + 0.03); }' )"
+	d_THRESHOLDS+=" ${THRESHOLD}"
+	(( i++ ))
+done
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in

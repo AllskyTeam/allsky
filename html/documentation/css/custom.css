@@ -172,6 +172,15 @@ hr.panel-primary {
 	margin-bottom: 1em;
 }
 
+.panel-allsky {
+	border-color: var(--panel-heading-color);
+}
+.panel-allsky>.panel-heading {
+	color: #1a6184;
+	background-color: #a4d9f3;
+	border-color: #6f888e;
+	font-weight: bold;
+}
 
 .settingInput {
 	/* Input field in Allsky Settings page */

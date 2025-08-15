@@ -325,6 +325,16 @@ body.dark {
 .dark .panel-primary {
 	border-color: #333333;
 }
+.dark .panel-danger>.panel-heading {
+	color: #f2dede;
+	background-color: #a94442;
+	border-color: #ebccd1;
+}
+.dark .panel-allsky>.panel-heading {
+	color: #a4d9f3;
+	background-color: #1a6184;
+	border-color: #6f888e;
+}
 
 .highlightedBox {
 	border: 2px dashed red;

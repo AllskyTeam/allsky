@@ -4,7 +4,7 @@ function DisplayDashboard_WLAN()
 {
 
 ?>
-	<div class="panel panel-success">
+	<div class="panel panel-allsky">
 		<div class="panel-heading"><i class="fa fa-tachometer-alt fa-fw"></i> WLAN Dashboard</div>
 <?php
 	$num_interfaces = 0;

@@ -24,7 +24,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --overlay)
-            OVERLAY="${2}"
+            OVERLAY="${2}"	# TODO: OVERLAY isn't used
             shift 2
             ;;
         *)
@@ -35,7 +35,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # --- Validate Required Arguments ---
-if [[ -z ${ALLSKY_HOME} || -z ${ALLSKY_SCRIPTS} || -z ${ALLSKY_TMP} || -z $OVERL{AY} ]]; then
+if [[ -z ${ALLSKY_HOME} || -z ${ALLSKY_SCRIPTS} || -z ${ALLSKY_TMP} || -z ${OVERLAY} ]]; then
     exec >&2
     echo "Error: Missing required arguments."
     echo "Usage: ${0} [--allsky_home <path>] [--allsky_scripts <path>] --allsky_tmp <path> [--overlay <overlay path>]"

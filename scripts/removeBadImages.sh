@@ -267,7 +267,7 @@ else
 			FILE="$( basename "${ALLSKY_BAD_IMAGE_COUNT}" )"
 
 			"${ALLSKY_SCRIPTS}/generateNotificationImages.sh" \
-				--directory "${ALLSKY_TMP}" \
+				--directory "${ALLSKY_CURRENT_DIR}" \
 				"${ALLSKY_FILENAME}" "yellow" "" "85" "" "" \
 	 			"" "5" "yellow" "${ALLSKY_EXTENSION}" "" \
 				"WARNING:\n${BAD_COUNT} consecutive\nbad images. See:\n${DIR}/\n  ${FILE}" >&2

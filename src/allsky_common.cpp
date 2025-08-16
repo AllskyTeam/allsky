@@ -283,6 +283,11 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 		strcat(cmd, tmp);
 	}
 
+	snprintf(tmp, s, " RESOLUTION_X=%ld", cg.width);
+	strcat(cmd, tmp);
+	snprintf(tmp, s, " RESOLUTION_Y=%ld", cg.height);
+	strcat(cmd, tmp);
+
 	char const *f = getFlip(cg.flip);
 	if (f[0] != '\0') {
 		snprintf(tmp, s, " FLIP=%s", f);

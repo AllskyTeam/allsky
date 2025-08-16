@@ -2672,6 +2672,10 @@ restore_prior_files()
 	if [[ -f ${PRIOR_CONFIG_DIR}/uservariables.sh ]]; then
 		display_msg --log progress "${ITEM}: (copying)"
 		cp -a "${PRIOR_CONFIG_DIR}/uservariables.sh" "${ALLSKY_CONFIG}"
+
+		# Need to recreate variables.json since uservariables.sh changed
+		# at least one variable.
+		create_variables_json "install"
 	# Don't bother with the "else" part since this file is very rarely used.
 	fi
 

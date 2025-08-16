@@ -12,17 +12,17 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         *)
-            echo "Unknown option: $1"
+            echo "Unknown option: $1" >&2
             exit 1
             ;;
     esac
 done
 
 # --- Validate Required Arguments ---
-if [[ -z "$ALLSKY_HOME" ]]; then
-    echo "Error: Missing required arguments."
-    echo "Usage: $0 [--allsky_home <path>]"
-    echo "You may also set ALLSKY_HOME as environment variables."
+if [[ -z ${ALLSKY_HOME} ]]; then
+    echo "ERROR: Missing required arguments." >&2
+    echo "Usage: $0 [--allsky_home <path>]" >&2
+    echo "You may also set ALLSKY_HOME as environment variables." >&2
     exit 1
 fi
 
@@ -30,23 +30,23 @@ fi
 export ALLSKY_HOME
 
 # --- Validate and Source variables.sh ---
-VARS_FILE="$ALLSKY_HOME/variables.sh"
-if [[ -f "$VARS_FILE" ]]; then
+VARS_FILE="${ALLSKY_HOME}/variables.sh"
+if [[ -f ${VARS_FILE} ]]; then
     # shellcheck source=/dev/null
-    if ! source "$VARS_FILE"; then
-        echo "Failed to source $VARS_FILE"
+    if ! source "${VARS_FILE}"; then
+        echo "ERROR: Failed to source ${VARS_FILE}" >&2
         exit 1
     fi
 else
-    echo "Error: $VARS_FILE does not exist"
+    echo "ERROR: ${VARS_FILE} does not exist" >&2
     exit 1
 fi
 
 # --- Run Python Script ---
-PY_SCRIPT="$ALLSKY_SCRIPTS/devicemanager.py"
-if [[ ! -f "$PY_SCRIPT" ]]; then
-    echo "Error: devicemanager.py not found at $PY_SCRIPT"
+PY_SCRIPT="${ALLSKY_SCRIPTS}/devicemanager.py"
+if [[ ! -f ${PY_SCRIPT} ]]; then
+    echo "ERROR: devicemanager.py not found at ${PY_SCRIPT}" >&2
     exit 1
 fi
 
-python3 "$PY_SCRIPT"
+python3 "${PY_SCRIPT}"

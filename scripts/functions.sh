@@ -1563,7 +1563,7 @@ function processAndUploadImage()
 	# shellcheck disable=SC2154
 	if [[ ${S_imageresizeuploadswidth} -gt 0 ]]; then
 		# Don't overwrite IMAGE_FILE since the web server(s) may be looking at it.
-		TEMP_FILE="${ALLSKY_CAPTURE_SAVE_DIR}/resize-${ALLSKY_FULL_FILENAME}"
+		TEMP_FILE="${ALLSKY_CURRENT_DIR}/resize-${ALLSKY_FULL_FILENAME}"
 	
 		# create temporary copy to resize
 		if ! cp "${IMAGE_FILE}" "${TEMP_FILE}" ; then

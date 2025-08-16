@@ -37,28 +37,27 @@ Allsky calls <code>postData.sh</code> to upload a file called
 This file contains the sunset time and other information needed by the Website.
 </p>
 <p>
-If you are seeing the message above when you go to the Allsky Website,
-try running the command manually:
-<pre>postData.sh</pre>
+If you are seeing the message above when you go to the Allsky Website, run:
+<pre>allsky-config  check_post_data</pre>
 </p>
 <p>
-There will be no output on success.
-If you see an error message and it's not obvious what it means, run:
-<pre>postData.sh --debug</pre>
-which will produce many lines of debugging output which may help you determine
-where the problem is.
-At a minimum, it will provide something to attach to any GitHub Issue you enter.
+It will run the <code>postData.sh</code> command and if there is a problem
+it will suggest a fix.
 </p>
 
 <h2>ERROR: 'sunset' not defined in 'data.json' ...</h2>
 <p>
 Follow the instructions in the error message.
 If this message continues to appear,
-open a new <a external="true" href="https://github.com/AllskyTeam/allsky/issues">Issue</a>.
+follow the instructions on the WebUI's <span class="WebUILink">Getting Support</span>
+page and upload the support log it creates to a new GitHub
+<a external="true" href="https://github.com/AllskyTeam/allsky/discussions">Discussion</a>.
 </p>
 
 
-<h2>After changing the <span class="WebUISetting">Filename</span> in the WebUI you no longer see images on the Website</h2>
+<h2>After changing the <span class="WebUISetting">Filename</span>
+	in the WebUI you no longer see images on the Website
+</h2>
 <p>
 If you changed the <span class="WebUISetting">Filename</span> setting or its extension
 (for example, from <span class="fileName">image.jpg</span>
@@ -74,9 +73,10 @@ If that solved your problem, please follow
 </p>
 
 
-<h2>Can't access the Website from a browser</h2>
+<h2>Can't access the Allsky Website from a browser</h2>
 <p>
-If nothing appears when you go to the Website it's usually a settings issue.
+If nothing appears when you go to a local or remote
+Allsky Website it's usually a settings issue.
 If the Website is on your Pi, look in
 <span class="fileName">/var/log/lighttpd/error.log</span> for clues to the problem.
 If the Website is remote, ask your hosting provider if you can have access to the web server's

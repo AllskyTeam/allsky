@@ -147,77 +147,79 @@ ERROR: error message line 1
 
 			<h2 id="supportErrors">Errors when using the support system</h2>
 
-			<p>The support system may display various error messages. The following section details those errors and how
-				to fix them</p>
+			<p>The support system may display various error messages.
+				The following section details the most common errors and how to fix them.
+			</p>
 			<details>
 				<summary></summary>
 
-				<div class="row">
+				<div class="row morePadding" style="background-color: silver">
 					<div class="col-md-4"><strong>Error Message</strong></div>
 					<div class="col-md-8"><strong>Description</strong></div>
 				</div>
 				<div class="row">
-					<div class="col-md-4">Error downloading file
-						<br>Error updating the GitHub issue file
-						<br>Error deleting the support log
-						<br>Error unable to create the support directory
+					<div class="col-md-4">
+						<code>'some_file' does not exist or is not readable.</code>
+						<br><code>Unable to read from 'some_file'.</code>
+						<br><code>Could not unkink(some_file)</code>
 					</div>
-					<div class="col-md-8">All of these errors indicate an issue with the <span
-							class="fileName">~/allsky/html/support</span> directory, Please check that;
-						<ol>
-							<li>The <span class="fileName">~/allsky/html/support</span> directory exists. To check if
-								the directory exists enter the following
-								<br><code>cd ~/html/support</code>
-							</li>
-							<li>The directory has the correct permissions. You will need to know the user Allsky is
-								running under, this will most likely be pi
-								or the user you log in as. To check the permissions enter
+					<div class="col-md-8">All of these errors indicate an issue with the
+						<span class="fileName">~/allsky/html/support</span> directory.
+						Please check that the directory exists and has the correct permissions:
+						<br>Run: <code class="nowrap">ls -ld ~/allsky/html/support</code>.
+						<br>
+						It should return something like:
+						<br><code>drwxrwxr-x 2 pi www-data 4096 Aug 12 16:18 /home/pi/allsky/html/support</code>
+						<br>(this assumes you are running as 'pi' - if not, it should show your user name).
 
-								<br><br><code>ls -al ~/allsky/html/support</code>
-								<br><br>If this command fails then run the support script manually
+						<ol type="A">
+							<li>If this command fails then run the support script to fix the directory:
+								<code class="nowrap">~/allsky/support.sh</code>.
+								<br>At the first prompt select "No" and then return to the WebUI's
+								<span class="WebUIWebPage">
+									<a external="true" href="/?page=support">Getting Support</a>
+								</span>
+								page.
 
-								<br><code>~/allsky/support.sh</code>
-								<br>At the first prompt select no and then return to the webui and try the support
-								system again
-
-								<br><br>If this command succeeds then you have two options
+							<li>If this command succeeds you have two options:
 								<ol>
-									<li><strong>Delete all logs (easiest)</strong>. If you have any existing logs they
-										will be lost.
-
-										<blockquote class="warning">Warning: Any existing support logs will be removed.
-										</blockquote>
-
-										<code>sudo rm -rf ~/allsky/support</code>
-										<br><code>~/allsky/support.sh</code>
-										<br>Select no at the first prompt then return to the webui and try the support
-										system again
+									<li><strong>Delete all logs (easiest)</strong>.
+										<br>NOTE: If you have any existing logs they will be lost.
+										<br>Run:<br><code>sudo rm -rf ~/allsky/support/*</code>
 									</li>
-									<li><strong>Preserve logs (Advanced)</strong>. This requires you knwo the user
-										Allsky is running under</li>
-									So for example if you are running using the 'pi' user then enter the following
-
-									<blockquote class="info">Substitue pi with whichever user you are running Allsky as
-										in the following command</blockquote>
-
-									<code>sudo chown pi:www-data ~/allsky/html/support</code>
-									<br><code>sudo chmod -r 755 ~/allsky/html/support</code>
-									<br><code>sudo find ~/allsky/html/support -type f -exec chmod 644 {} \;</code>
+									<li><strong>Preserve logs (Advanced)</strong>.
+										<br>Run: <code class="nowrap">~/allsky/support.sh</code>.
+										<br>At the first prompt select "No", then run:
+										<br><code>sudo find ~/allsky/html/support -type f -exec chmod 644 {} \;</code>
+										<br>Return to the WebUI's
+										<span class="WebUIWebPage">
+											<a external="true" href="/?page=support">Getting Support</a>
+										</span>
+										page and try again.
+									</li>
 								</ol>
-							</li>
 							</li>
 						</ol>
 					</div>
 				</div>
 
 				<div class="row">
-					<div class="col-md-4">Error updating determining the support log
+					<div class="col-md-4">
+						Error updating determining the support log
 					</div>
-					<div class="col-md-8">Please create a <a external="true" href="https://github.com/AllskyTeam/allsky/discussions">Discussion</a> on Github
+					<div class="col-md-8">
+						Please create a
+						<a external="true" href="https://github.com/AllskyTeam/allsky/discussions">Discussion</a>
+						on Github
 					</div>
 				</div>
 				<br><br>
-				<blockquote class="info">If having tried the suggestions above the problem persists then please create a <a external="true" href="https://github.com/AllskyTeam/allsky/discussions">Discussion</a> on Github</blockquote>
+				<blockquote class="info">
+					If having tried the suggestions above the problem persists,
+					then please create a
+					<a external="true" href="https://github.com/AllskyTeam/allsky/discussions">Discussion</a>
+					on Github.
+				</blockquote>
 			</details>
 
 		</div><!-- Layout-main -->

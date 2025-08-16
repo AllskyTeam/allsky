@@ -49,7 +49,7 @@ DO_HELP="false"
 HTML="false"
 CREATE_NO_STRETCH_IMAGE="true"
 OUT_DIRECTORY="${ALLSKY_IMAGES}/test_stretches"	# Must start with "test"
-IMAGE="";			d_IMAGE="${ALLSKY_TMP}/${ALLSKY_FULL_FILENAME}"
+IMAGE="";			d_IMAGE="${ALLSKY_CURRENT_DIR}/${ALLSKY_FULL_FILENAME}"
 AMOUNTS="";			d_AMOUNTS="5  10  15  20"
 MIDPOINTS="";		d_MIDPOINTS="10  30  50"
 while [[ $# -gt 0 ]]; do

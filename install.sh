@@ -1094,6 +1094,9 @@ set_permissions()
 	chmod 775 "${ALLSKY_TMP}"
 	sudo chgrp "${ALLSKY_WEBSERVER_GROUP}" "${ALLSKY_TMP}"
 
+	[[ ! -d ${ALLSKY_CURRENT_DIR} ]] && mkdir -p "${ALLSKY_CURRENT_DIR}"
+	chmod 775 "${ALLSKY_CURRENT_DIR}"
+	sudo chgrp "${ALLSKY_WEBSERVER_GROUP}" "${ALLSKY_CURRENT_DIR}"
 
 	########## Website files
 

@@ -34,8 +34,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 # --- Validate Required Arguments ---
-if [[ -z "$ALLSKY_HOME" || -z "$ALLSKY_SCRIPTS" || -z "$DAY_NIGHT" ]]; then
-    echo "Error: Missing required arguments."
+if [[ -z ${ALLSKY_HOME} || -z ${ALLSKY_SCRIPTS} || -z ${DAY_NIGHT} ]]; then
+	exec >&2
+    echo "ERROR: Missing required arguments."
     echo "Usage: $0 [--allsky_home <path>] [--scripts <path>] --day_night <day|night> [--image <image_path>]"
     echo "You may also set ALLSKY_HOME and ALLSKY_SCRIPTS as environment variables."
     exit 1
@@ -44,27 +45,27 @@ fi
 # --- Export Variables ---
 export ALLSKY_HOME
 export ALLSKY_SCRIPTS
-export DAY_OR_NIGHT="$DAY_NIGHT"
+export DAY_OR_NIGHT="${DAY_NIGHT}"
 export CURRENT_IMAGE="${CURRENT_IMAGE:-}"
 
-# --- Validate and Source variables.sh ---
-VARS_FILE="$ALLSKY_HOME/variables.sh"
-if [[ -f "$VARS_FILE" ]]; then
+# --- Validate and source variables.sh ---
+VARS_FILE="${ALLSKY_HOME}/variables.sh"
+if [[ -f ${VARS_FILE} ]]; then
     # shellcheck source=/dev/null
-    if ! source "$VARS_FILE"; then
-        echo "Failed to source $VARS_FILE"
+    if ! source "${VARS_FILE}"; then
+        echo "ERROR: Failed to source ${VARS_FILE}" >&2
         exit 1
     fi
 else
-    echo "Error: $VARS_FILE does not exist"
+    echo "ERROR: ${VARS_FILE} does not exist" >&2
     exit 1
 fi
 
 # --- Run Python Script ---
-PY_SCRIPT="$ALLSKY_SCRIPTS/flow-runner.py"
-if [[ ! -f "$PY_SCRIPT" ]]; then
-    echo "Error: flow-runner.py not found at $PY_SCRIPT"
+PY_SCRIPT="${ALLSKY_SCRIPTS}/flow-runner.py"
+if [[ ! -f ${PY_SCRIPT} ]]; then
+    echo "ERROR:: flow-runner.py not found at ${PY_SCRIPT}" >&2
     exit 1
 fi
 
-python3 "$PY_SCRIPT" --test
+python3 "${PY_SCRIPT}" --test

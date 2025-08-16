@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="../js/documentation.js" type="application/javascript"></script>
+	<link href="../css/light.css" rel="stylesheet">
+	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<style>
+		#pageTitle::before {
+			content: "Helper Tools";
+		} 
+	</style>
+	<link href="../css/documentation.css" rel="stylesheet">
+	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<script src="../js/all.min.js" type="application/javascript"></script>
+	<title>Helper Tools</title>
+</head>
+<body>
+<div w3-include-html="/documentation/pageHeader.html" id="pageHeader"></div>
+<div class="Layout">
+<div class="Layout-sidebar" w3-include-html="/documentation/sidebar.html" id="sidebar"></div>
+<div class="Layout-main markdown-body" id="mainContents">
+
+<p>
+The WebUI <span class="WebUILink">Helper Tools</span> do what the name suggests -
+they "help" you do something, often helping determine what settings to use.
+</p>
+
+<h2>Startrails</h2>
+<p id="startrails">
+The <span class="WebUILink">Startrails</span> helper tool
+aids you in determining what <span class="WebUISetting">Brightness Threshold</span>
+setting to use.
+</p>
+
+<details><summary></summary>
+<p>
+Many people find the stars in their startrails images don't have trails.
+This can almost always be fixed by adjusting the
+startrails <span class="WebUISetting">Brightness Threshold</span> setting.
+<br>
+This helper tool allows you to specify multiple settings and then look at the results
+and pick the setting that gives you the best trails without including too many
+bright images.
+</p>
+<p>
+This is a typical Startrails Helper Tool page:
+</p>
+<p>
+<img src="startrails_helper.png" class="imgCenter"
+	loading="lazy" width="75%" title="Startrails Helper Tool">
+</p>
+<p>
+The following information is needed:
+<ul>
+	<li><strong>Use images from</strong><br>
+		This determines what images on the Pi will be used to create the test startrails.
+		Ideally you want to use images from a night whose startrails had no trails.
+		<ol class="minimalPadding" type="a">
+			<li>If you don't change it, images from last night are used.
+			<li>If you enter a directory name that begins with a
+				<span class="fileName">/</span> then that full path name will be used.
+			<li>Otherwise the directory you enter is assumed to be
+				in the same location as the daily images.
+		</ol>
+	<li><strong>Number of images in include in each startrail</strong><br>
+		Pick a number of images to include in each startrails that is
+		big enough that you'll be able to see trailed stars,
+		but small enough that you won't have to wait an extremely long time
+		to see the results.
+		<br>
+		Start with the default and adjust as needed.
+	<li><span class="WebUISetting">Brightness Threshold</span><strong> values to use</strong><br>
+		This is where you tell the command what settings to use.
+		Keep in mind that every number you enter will produce a separate startrails image
+		so don't add too many number or else you'll be waiting a long time for the results.
+		<br><br>
+		The first number in the default list is your CURRENT
+		<span class="WebUISetting">Brightness Threshold</span> value.
+		You will almost always have to <strong>increase</strong> your current value
+		so each subsequent number in the default is larger than the previous one.
+		The default values increase by <code>0.03</code>.
+		<br>
+		Once you are "close" you can run this tool
+		again with numbers that are much closer together, such as <code>0.01</code>.
+	<li><strong>Verbose output?</strong><br>
+		Enabling this option displays summary information on each test startrails,
+		including the number of images included and not included.
+</ul>
+</p>
+<hr>
+<p>
+A typical output is shown below.
+Note that no images were used in the first startrails with a
+<span class="WebUISetting">Brightness Threshold</span> of <code>0.30</code>.
+This is probably because the moon is out on the right side of the image
+so the overall brightness of the image is somewhat high.
+</p>
+<p>
+The second image has trails but only 13 of the 15 images were used
+so the ideal <span class="WebUISetting">Brightness Threshold</span>
+is probably a little higher than <code>0.35</code>.
+</p>
+<p>
+<img src="startrails_helper_output.png" class="imgCenter imgBorder"
+	loading="lazy" width="85%" title="Startrails Helper Tool output">
+</p>
+</details>
+
+<!-- =============================================================== -->
+<h2>Image Stretch</h2>
+<p id="imagestretch">
+The <span class="WebUILink">Image Stretch</span> helper tool
+aids you in determining the best settings to stretch an image.
+</p>
+
+<details OPEN><summary></summary>
+<p>
+If you want to lighten parts of your image to bring out details
+you can "stretch" your images.
+The <span class="WebUISetting">Stretch Amount</span> setting determines how
+much of a stretch is applied,
+and the <span class="WebUISetting">Stretch Mid Point</span> determines WHERE the
+stretch is applied - to the dark parts of an image, the mid-gray parts, the light parts,
+or anything in between.
+<br>
+This helper tool allows you to specify multiple settings and then
+look at the results.
+</p>
+<p>
+This is a typical Image Stretch Helper Tool page:
+</p>
+<p>
+<img src="stretch_helper.png" class="imgCenter"
+	loading="lazy" width="75%" title="Image Stretch Helper Tool">
+</p>
+<p>
+The following information is needed:
+<ul>
+	<li><strong>Image to stretch</strong><br>
+		By default the current image is used.
+		If you are running this tool during the day and want to stretch nighttime images,
+		find a "typical" nighttime image to use.
+		<blockquote class="warning">
+ 		If you are already stretching images the tool will display a warning.
+		Find a non-stretched image to use - you don't want to
+		stretch and already stretched image.
+		If you don't have any non-stretched images, temporarily turn stretching off
+		and wait until you have an image, then use it.
+		</blockquote>
+	<li><span class="WebUISetting">Stretch Amount</span><strong> values to use</strong><br>
+		This determines how much of a stretch to apply.
+		The default list is a good place to start.
+		<br>
+		Note that stretching images increases their noise,
+		which you can see in the 4th image below.
+	<li><span class="WebUISetting">Stretch Mid Point</span><strong> values to use</strong><br>
+		This determines what part of an image is modified.
+		Lower numbers modify darker parts of the image and
+		higher numbers modify lighter parts of the image.
+</ul>
+</p>
+<p>
+You'll probably want / need to run this tool multiple times.
+Changes to the Amount are fairly obvious but
+changes to the Mid Point can be very subtle and often need to be played with.
+</p>
+<hr>
+<p>
+A typical output is shown below.
+<br>
+Note that the first images has no stretch.
+This is so you can see what the different settings do.
+<br>
+The last image has a Stretch Amount of 20, which is way too much.
+</p>
+<p>
+<img src="stretch_helper_output.png" class="imgCenter imgBorder"
+	loading="lazy" width="85%" title="Image Stretch Helper Tool output">
+</p>
+</details>
+
+
+</div><!-- Layout-main -->
+</div><!-- Layout -->
+</body>
+</html>
+<script> includeHTML(); </script>
+

@@ -123,7 +123,7 @@ function doExit()
 			# Create a custom error message.
 			# If we error out before variables.sh is sourced in,
 			# ${ALLSKY_FILENAME} and ${ALLSKY_EXTENSION} won't be set so guess what they are.
-			"${ALLSKY_SCRIPTS}/generateNotificationImages.sh" --directory "${ALLSKY_TMP}" \
+			"${ALLSKY_SCRIPTS}/generateNotificationImages.sh" --directory "${ALLSKY_CURRENT_DIR}" \
 				"${ALLSKY_FILENAME:-"image"}" \
 				"${COLOR}" "" "85" "" "" \
 				"" "10" "${COLOR}" "${ALLSKY_EXTENSION:-"jpg"}" "" "${CUSTOM_MESSAGE}"

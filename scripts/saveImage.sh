@@ -267,16 +267,6 @@ else
 fi
 if [[ ${SAVE_IMAGE} == "true" ]]; then
 	# Determine what directory is the final resting place.
-if false;then	######## TODO FIX: this was already done on line 254
-	if [[ ${DAY_OR_NIGHT} == "NIGHT" ]]; then
-		# The 12 hours ago option ensures that we're always using today's date
-		# even at high latitudes where civil twilight can start after midnight.
-		DATE_NAME="$( date -d '12 hours ago' +'%Y%m%d' )"
-	else
-		# During the daytime we alway save the file in today's directory.
-		DATE_NAME="$( date +'%Y%m%d' )"
-	fi
-fi
 	DATE_DIR="${ALLSKY_IMAGES}/${DATE_NAME}"
 	[[ ! -d ${DATE_DIR} ]] && mkdir -p "${DATE_DIR}"
 

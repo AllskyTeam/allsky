@@ -251,7 +251,7 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 		echo "${NUM_USB_RESETS}" > "${RESETTING_USB_LOG}"
 
 		# Display a warning message
-		"${ALLSKY_SCRIPTS}/generateNotificationImages.sh" --directory "${ALLSKY_TMP}" \
+		"${ALLSKY_SCRIPTS}/generateNotificationImages.sh" --directory "${ALLSKY_CURRENT_DIR}" \
 			"${ALLSKY_FILENAME}" "yellow" "" "85" "" "" \
 			"" "5" "yellow" "${ALLSKY_EXTENSION}" "" \
 			"WARNING:\n\nResetting USB bus\n${REASON}.\nAttempt ${NUM_USB_RESETS}."
@@ -332,18 +332,18 @@ if ! MSG="$( check_settings_link "${ALLSKY_SETTINGS_FILE}" )" ; then
 fi
 
 # Make directories that need to exist.
-if [[ -d ${ALLSKY_TMP} ]]; then
+if [[ -d ${ALLSKY_CURRENT_DIR} ]]; then
 	# remove any lingering old image files.
-	rm -f "${ALLSKY_TMP}/${ALLSKY_FILENAME}"-20*."${ALLSKY_EXTENSION}"	# "20" for 2000 and later
+	rm -f "${ALLSKY_CURRENT_DIR}/${ALLSKY_FILENAME}"-20*."${ALLSKY_EXTENSION}"	# "20" for 2000 and later
 else
-	# We should never get here since ${ALLSKY_TMP} is created during installation,
+	# We should never get here since ${ALLSKY_CURRENT_DIR} is created during installation,
 	# but "just in case"...
-	mkdir -p "${ALLSKY_TMP}"
-	chmod 775 "${ALLSKY_TMP}"
-	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_TMP}"
-	MSG="Had to create '${ALLSKY_TMP}'."
+	mkdir -p "${ALLSKY_CURRENT_DIR}"
+	chmod 775 "${ALLSKY_CURRENT_DIR}"
+	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_CURRENT_DIR}"
+	MSG="Had to create '${ALLSKY_CURRENT_DIR}'."
 	MSG="${MSG}\nIf this happens again, contact the Allsky developers."
-	"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${ME}: ${MSG}"
+	"${ALLSKY_CURRENT_DIR}/addMessage.sh" --type warning --msg "${ME}: ${MSG}"
 fi
 
 rm -f "${ALLSKY_BAD_IMAGE_COUNT}"	# Start with no bad images

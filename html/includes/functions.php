@@ -254,7 +254,7 @@ function initialize_variables($website_only=false) {
 	if ($website_only) return;
 
 	// ALLSKY_IMG_DIR is an alias in the web server's config that points to where the current image is.
-	// It's the same as ${ALLSKY_TMP} which is the physical path name on the server.
+	// It's the same as ${ALLSKY_CURRENT_DIR} which is the physical path name on the server.
 	$f = getVariableOrDefault($settings_array, 'filename', "image.jpg");
 	$image_name = ALLSKY_IMG_DIR . "/$f";
 	$darkframe = toBool(getVariableOrDefault($settings_array, 'takedarkframes', "false"));

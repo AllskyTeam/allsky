@@ -126,7 +126,7 @@ if __name__ == "__main__":
         shared.createThumbnails = bool(shared.getSetting("imagecreatethumbnails"))
         shared.thumbnailWidth = int(shared.getSetting("thumbnailsizex"))
         shared.thumbnailHeight = int(shared.getSetting("thumbnailsizey"))
-        shared.websiteImageFile = os.path.join(shared.ALLSKY_TMP, shared.fullFilename)
+        shared.websiteImageFile = os.path.join(shared.ALLSKY_CURRENT_DIR, shared.fullFilename)
         shared.TOD = shared.args.tod
         date = datetime.now()
         if shared.args.tod == "night":

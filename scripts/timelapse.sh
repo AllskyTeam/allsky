@@ -222,7 +222,7 @@ if [[ -n ${OUTPUT_DIR} && -n ${OUTPUT_FILE} ]]; then
 	OUTPUT="${OUTPUT_DIR}/${OUTPUT_FILE}"
 elif [[ -z ${OUTPUT} ]]; then
 	if [[ ${IS_MINI} == "true" ]]; then
-		[[ -z ${OUTPUT_DIR} ]] && OUTPUT_DIR="${ALLSKY_TMP}"
+		[[ -z ${OUTPUT_DIR} ]] && OUTPUT_DIR="${ALLSKY_CURRENT_DIR}"
 		OUTPUT="${OUTPUT_DIR}/${OUTPUT_FILE:-mini-timelapse.mp4}"
 	else
 		if [[ -z ${OUTPUT_DIR} && -n ${IMAGES_FILE} ]]; then

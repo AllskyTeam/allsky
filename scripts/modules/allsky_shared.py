@@ -79,6 +79,7 @@ def getEnvironmentVariable(name, fatal=False, debug=False):
 # These must exist and are used in several places.
 ALLSKYPATH = getEnvironmentVariable("ALLSKY_HOME", fatal=True)
 ALLSKY_TMP = getEnvironmentVariable("ALLSKY_TMP", fatal=True)
+ALLSKY_CURRENT_DIR = getEnvironmentVariable("ALLSKY_CURRENT_DIR", fatal=True)
 ALLSKY_SCRIPTS = getEnvironmentVariable("ALLSKY_SCRIPTS", fatal=True)
 ALLSKY_SETTINGS_FILE = getEnvironmentVariable("ALLSKY_SETTINGS_FILE", fatal=True)
 ALLSKY_OVERLAY = getEnvironmentVariable("ALLSKY_OVERLAY", fatal=True)

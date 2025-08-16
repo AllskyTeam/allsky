@@ -268,8 +268,10 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	fi
 	ALLSKY_ENV="${ALLSKY_HOME}/env.json"	# holds private info like passwords
 
-	ALLSKY_IMG_DIR="current/tmp"			# Alias for web server - where current image is.
-	ALLSKY_CAPTURE_SAVE_DIR="${ALLSKY_TMP}"
+	# Where "current" image and mini-timelapse files are:
+	ALLSKY_IMG_DIR="current/tmp"			# Alias for web server
+	ALLSKY_CURRENT_DIR="${ALLSKY_TMP}"		# Equivalent location on Pi
+ALLSKY_CAPTURE_SAVE_DIR="${ALLSKY_CURRENT_DIR}"		OLD
 
 	# Python virtual environment
 	ALLSKY_PYTHON_VENV="${ALLSKY_HOME}/venv"

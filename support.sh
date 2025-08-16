@@ -22,9 +22,10 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP
 
 if [[ ! -d ${ALLSKY_SUPPORT_DIR} ]]; then
 	mkdir -p "${ALLSKY_SUPPORT_DIR}" || exit 2
-	sudo chown "${USER_NAME}:${WEBSERVER_OWNER}" "${ALLSKY_SUPPORT_DIR}"
-	sudo chmod 775 "${ALLSKY_SUPPORT_DIR}"
 fi
+# Always run these to make sure the permissions are correct.
+sudo chown "${USER_NAME}:${WEBSERVER_OWNER}" "${ALLSKY_SUPPORT_DIR}"
+sudo chmod 775 "${ALLSKY_SUPPORT_DIR}"
 
 ############################################## functions
 

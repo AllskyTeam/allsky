@@ -105,21 +105,6 @@ CROP_BOTTOM="${S_imagecropbottom}"
 CROP_LEFT="${S_imagecropleft}"
 CROP_IMAGE=$(( CROP_TOP + CROP_RIGHT + CROP_BOTTOM + CROP_LEFT ))		# > 0 if cropping
 
-# If we're cropping the image, get the image resolution.
-if [[ ${CROP_IMAGE} -gt 0 ]]; then
-	# Typical "identify" output:
-	#	image.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.19257MiB 0.000u 0:00.000
-	if ! x=$( identify "${CURRENT_IMAGE}" 2>/dev/null ) ; then
-		E_ "*** ${ME}: ERROR: '${CURRENT_IMAGE}' is corrupt; not saving."
-		exit 3
-	fi
-
-	RESOLUTION=$(echo "${x}" | awk '{ print $3 }')
-	# These are the resolution of the image (which may have been binned), not the sensor.
-	RESOLUTION_X=${RESOLUTION%x*}	# everything before the "x"
-	RESOLUTION_Y=${RESOLUTION##*x}	# everything after  the "x"
-fi
-
 # If ${AS_TEMPERATURE_C} is set, use it as the sensor temperature,
 # otherwise use the temperature in ${TEMPERATURE_FILE}.
 # The TEMPERATURE_FILE is manually created if needed.
@@ -197,8 +182,8 @@ if [[ ${AS_RESIZE_WIDTH} -gt 0 && ${AS_RESIZE_HEIGHT} -gt 0 ]]; then
 
 	if [[ ${CROP_IMAGE} -gt 0 ]]; then
 		# The image was just resized and the resolution changed, so reset the variables.
-		RESOLUTION_X=${AS_RESIZE_WIDTH}
-		RESOLUTION_Y=${AS_RESIZE_HEIGHT}
+		AS_RESOLUTION_X=${AS_RESIZE_WIDTH}
+		AS_RESOLUTION_Y=${AS_RESIZE_HEIGHT}
 	fi
 fi
 
@@ -206,11 +191,11 @@ fi
 if [[ ${CROP_IMAGE} -gt 0 ]]; then
 	# Perform basic checks on crop settings.
 	ERROR_MSG="$( checkCropValues "${CROP_TOP}" "${CROP_RIGHT}" "${CROP_BOTTOM}" "${CROP_LEFT}" \
-		"${RESOLUTION_X}" "${RESOLUTION_Y}" 2>&1 )"
+		"${AS_RESOLUTION_X}" "${AS_RESOLUTION_Y}" 2>&1 )"
 	if [[ -z ${ERROR_MSG} ]]; then
 		if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-			CROP_WIDTH=$(( RESOLUTION_X - CROP_RIGHT - CROP_LEFT ))
-			CROP_HEIGHT=$(( RESOLUTION_Y - CROP_TOP - CROP_BOTTOM ))
+			CROP_WIDTH=$(( AS_RESOLUTION_X - CROP_RIGHT - CROP_LEFT ))
+			CROP_HEIGHT=$(( AS_RESOLUTION_Y - CROP_TOP - CROP_BOTTOM ))
 			echo -e "${ME} Cropping '${CURRENT_IMAGE}' to ${CROP_WIDTH}x${CROP_HEIGHT}."
 		fi
 		C=""
@@ -282,6 +267,7 @@ else
 fi
 if [[ ${SAVE_IMAGE} == "true" ]]; then
 	# Determine what directory is the final resting place.
+if false;then	######## TODO FIX: this was already done on line 254
 	if [[ ${DAY_OR_NIGHT} == "NIGHT" ]]; then
 		# The 12 hours ago option ensures that we're always using today's date
 		# even at high latitudes where civil twilight can start after midnight.
@@ -290,6 +276,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 		# During the daytime we alway save the file in today's directory.
 		DATE_NAME="$( date +'%Y%m%d' )"
 	fi
+fi
 	DATE_DIR="${ALLSKY_IMAGES}/${DATE_NAME}"
 	[[ ! -d ${DATE_DIR} ]] && mkdir -p "${DATE_DIR}"
 
@@ -299,9 +286,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 		# Create a thumbnail of the image for faster load in the WebUI.
 		# If we resized above, this will be a resize of a resize,
 		# but for thumbnails that should be ok.
-		X="${S_thumbnailsizex}"
-		Y="${S_thumbnailsizey}"
-		S="${X}x${Y}!"
+		S="${S_thumbnailsizex}x${S_thumbnailsizey}!"
 		if ! convert "${CURRENT_IMAGE}" -resize "${S}" "${THUMBNAILS_DIR}/${IMAGE_NAME}" ; then
 			W_ "*** ${ME}: WARNING: THUMBNAIL resize failed; continuing."
 		fi
@@ -363,6 +348,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 				else
 					D="--no-debug"
 				fi
+# TODO: CURRENT
 				O="${ALLSKY_TMP}/mini-timelapse.mp4"
 
 				"${ALLSKY_SCRIPTS}/timelapse.sh" --Last "$( basename "${FINAL_FILE}" )" \

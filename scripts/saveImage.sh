@@ -2,7 +2,7 @@
 # shellcheck disable=SC2154		# referenced but not assigned - from convertJSON.php
 
 # Script to save a DAY or NIGHT image.
-# It goes in ${ALLSKY_TMP} where the WebUI and local Allsky Website can find it.
+# It goes in ${ALLSKY_CURRENT_DIR} where the WebUI and local Allsky Website can find it.
 
 ME="$( basename "${BASH_ARGV0}" )"
 [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "${ME} $*"
@@ -338,8 +338,7 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 				else
 					D="--no-debug"
 				fi
-# TODO: CURRENT
-				O="${ALLSKY_TMP}/mini-timelapse.mp4"
+				O="${ALLSKY_CURRENT_DIR}/mini-timelapse.mp4"
 
 				"${ALLSKY_SCRIPTS}/timelapse.sh" --Last "$( basename "${FINAL_FILE}" )" \
 					"${D}" --lock --output "${O}" --mini --images "${MINI_TIMELAPSE_FILES}"
@@ -475,13 +474,13 @@ fi
 # If needed, upload the mini timelapse.  If the upload failed above, it will likely fail below.
 if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${SAVE_IMAGE} == "true" && ${RET} -eq 0 ]] ; then
 	MINI="mini-timelapse.mp4"
-	FILE_TO_UPLOAD="${ALLSKY_TMP}/${MINI}"
+	FILE_TO_UPLOAD="${ALLSKY_CURRENT_DIR}/${MINI}"
 
 	upload_all --remote-web --remote-server "${FILE_TO_UPLOAD}" "" "${MINI}" "MiniTimelapse"
 	RET=$?
 	if [[ ${RET} -eq 0 && ${S_minitimelapseuploadthumbnail} == "true" ]]; then
 		UPLOAD_THUMBNAIL_NAME="mini-timelapse.jpg"
-		UPLOAD_THUMBNAIL="${ALLSKY_TMP}/${UPLOAD_THUMBNAIL_NAME}"
+		UPLOAD_THUMBNAIL="${ALLSKY_CURRENT_DIR}/${UPLOAD_THUMBNAIL_NAME}"
 		# Create the thumbnail for the mini timelapse, then upload it.
 		rm -f "${UPLOAD_THUMBNAIL}"
 		make_thumbnail "00" "${FILE_TO_UPLOAD}" "${UPLOAD_THUMBNAIL}"

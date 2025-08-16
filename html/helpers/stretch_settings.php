@@ -5,7 +5,8 @@ function stretchSettings() {
 $settings_array = readSettingsFile();
 
 // Defaults.  Ideally should match what's in compareStretches.sh.
-$image = ALLSKY_TMP . "/" . getVariableOrDefault($settings_array, 'filename', "");
+$filename = getVariableOrDefault($settings_array, 'filename', "");
+$image = ALLSKY_CURRENT_DIR . "/$filename";
 $amounts = "5  10  15  20";
 $midpoints = "10  30  50";
 
@@ -26,9 +27,14 @@ $cmd = "AM_ALLSKY_CONFIG compare_stretches --html";
 				echo "<blockquote style='max-width: 100%'>";
 				echo "You appear to already be stretching images.";
 				echo "<br>Those settings will NOT be used while running these tests.";
+				echo "<br>";
+				echo "<strong>";
+				echo "Do NOT use the current '$filename' image since it's already stretched";
+				echo "</strong>";
 				echo "</blockquote>";
 				echo "</div>";
 				echo "<br>";
+				$image = "";
 			}
 ?>
 			<p>

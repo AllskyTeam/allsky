@@ -47,8 +47,8 @@ function ListDays(){
 	$days = getValidImageDirectories();
 	if (count($days) > 0) arsort($days);
 
-	// What size font awesome icon to use
-	$fa_size = "lg";	// "lg" or "2x"
+	// What size Font Awesome icon to use?
+	$fa_size = "2x";	// "lg" or "2x"
 	if ($fa_size == "lg")
 		$fa_size_px = 22;	// the rough width of the font awesome icon
 	else
@@ -70,7 +70,8 @@ function ListDays(){
 	<div class="panel-heading"><i class="fa fa-image fa-fw"></i> Images</div>
 	<div class="panel-body">
 	<div class="row">
-	<form action="?page=<?php echo $page ?>" method="POST" onsubmit="return confirm('Are you sure you want to delete ALL images for that day?');">
+	<form action="?page=<?php echo $page ?>" method="POST"
+		onsubmit="return confirm('Are you sure you want to delete ALL images for that day?');">
 	<table style='margin-top: 15px; text-align:center'>
 	  <thead>
 			<tr style="border-bottom: 1px solid #888">

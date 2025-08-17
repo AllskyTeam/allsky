@@ -227,10 +227,28 @@ if [[ -n ${E} ]]; then
 	exit 1
 fi
 
-OK="true"
-LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" )" >&2 || OK="false"
-LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" )" >&2 || OK="false"
-[[ ${OK} == "false" ]] && exit 1	# convertLatLong output error message
+# Check for errors.  convertLatLong outputs error message.
+ERR_MSG=""
+if ! LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" 2>&1 )" ; then
+	ERR_MSG+="\n${LATITUDE}"
+fi
+if ! LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" 2>&1 )" ; then
+	ERR_MSG+="\n${LONGITUDE}"
+fi
+F="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+if [[ ${S_uselocalwebsite} == "true" && ! -s ${F} ]]; then
+	ERR_MSG+="\nLocal Website configuration file '${F}' not found."
+fi
+F="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
+if [[ ${S_useremotewebsite} == "true" && ! -s ${F} ]]; then
+	ERR_MSG+="\nRemote Website configuration file '${F}' not found."
+fi
+if [[ -n ${ERR_MSG} ]]; then
+	ERR_MSG+="\n\nDid not upload data to Allsky Map."
+	echo -e "${ME}: ${ERR_MSG}" >&2
+	"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${ERR_MSG}"
+	exit 1
+fi
 
 
 if false; then
@@ -335,14 +353,13 @@ else
 		# Need to escape single quotes.
 		local ALLSKY_SETTINGS="$( sed -e "s/'/'\"'\"'/g" "${ALLSKY_SETTINGS_FILE}" )"
 
-		local WEBSITE_SETTINGS
+		local WEBSITE_SETTINGS=""
 		if [[ ${S_uselocalwebsite} == "true" ]]; then
 			WEBSITE_SETTINGS="$( sed -e "s/'/'\"'\"'/g" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" )"
 		elif [[ ${S_useremotewebsite} == "true" ]]; then
 			WEBSITE_SETTINGS="$( sed -e "s/'/'\"'\"'/g" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
-		else
-			WEBSITE_SETTINGS="{ }"
 		fi
+		[[ -z ${WEBSITE_SETTINGS} ]] && WEBSITE_SETTINGS="{ }"
 
 		# Handle double quotes in fields that may have them.
 		cat <<-EOF

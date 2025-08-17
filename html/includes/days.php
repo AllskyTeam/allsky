@@ -98,7 +98,8 @@ function ListDays(){
 
 			<td><a href='index.php?page=list_startrails&day=All'
 				title='All Startrails'><i class='fa fa-star fa-<?php echo $fa_size ?> fa-fw'></i></a></td>
-			<td style='padding: 22px 0'></td><!-- don't allow deleting All directories - too risky -->
+			<!-- don't allow deleting All directories - too risky -->
+			<td style='padding: 22px 0'><span title="You cannot delete All files at once.">-</span></td>
 		</tr>
 <?php
 

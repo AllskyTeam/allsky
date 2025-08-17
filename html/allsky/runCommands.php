@@ -23,23 +23,12 @@ if (isset($_SERVER['HTTP_USER_AGENT']) &&
 	setHTML();
 }
 
-$test_mode = false;
-if (isset($_GET["t"])) {
-	$test_mode = true;
-} else if (isset($_POST["t"])) {
-	$test_mode = true;
-}
-if ($test_mode) {
+if (isset($_REQUEST["t"])) {
 	do_return("test", "", "test");
 	exit(0);
 }
 
-
-if (isset($_GET["debug"])) {
-	$debug = true;
-} else {
-	$debug = false;
-}
+$debug = isset($_REQUEST["debug"]);
 $debug2 = false;
 
 if (! file_exists($commandFile)) {
@@ -91,11 +80,12 @@ foreach ($lines AS $line) {
 				$last_error = error_get_last();
 				$err = $last_error["message"];
 				do_error($command, "Unable to scandir($dir): $err.");
+				break;
 			}
 
 			$files = array_diff($files, array(".", ".."));
 			foreach ($files as $file) {
-				do_info($command, "$file");
+				do_info($command, $file);
 			}
 
 			break;
@@ -132,6 +122,7 @@ foreach ($lines AS $line) {
 				$msg = "success";
 			else
 				$msg = "Created: $dirsCreated";
+
 			do_return($command, $args, $msg);
 			break;
 

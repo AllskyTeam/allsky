@@ -74,8 +74,12 @@ foreach ($lines AS $line) {
 
 
 		case "ls":
-			// List the files/directories in the current directory.
-			$files = @scandir(".");
+			// List the files/directories in the specified directory or the current directory.
+			if ($numArgs == 1)
+				$dir = $args[0];
+			else
+				$dir = ".";
+			$files = @scandir($dir);
 			if ($files === false) {
 				$last_error = error_get_last();
 				$err = $last_error["message"];
@@ -85,6 +89,7 @@ foreach ($lines AS $line) {
 
 			$files = array_diff($files, array(".", ".."));
 			foreach ($files as $file) {
+				// TODO: do an "ls -l" equivalent showing owner, group, size, date, permissions
 				do_info($command, $file);
 			}
 

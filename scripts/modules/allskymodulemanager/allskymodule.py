@@ -1,5 +1,12 @@
 #!/usr/bin/python3
 
+# TODO - Add deprectaed flag and use in installer
+# TODO - Save the migrated flows, ensure Allsky is stopped? Or add soemthing to the flow runner to suspend flows whilst the update happens
+# TODO - Do somehting with the messages in installer, i.e. have an invalid modules menu option
+# TODO - Should the git code be in here, or in a base class used by both this and the module installer - That way this class could do all of the work to install a module
+# TODO - Test broken modules, incorrect meta data
+# TODO - Test bad locations passed in. 
+
 import os
 import sys
 

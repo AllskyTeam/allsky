@@ -833,7 +833,7 @@ int main(int argc, char *argv[])
 	// or night version so the code doesn't always have to check if it's day or night.
 	// The settings have either "day" or "night" in the name.
 	// In theory, almost every setting could have both day and night versions (e.g., width & height),
-	// but the chances of someone wanting different versions.
+	// but the chances of someone wanting different versions are hopefully small.
 
 	int maxHistogramAttempts	= 15;	// max number of times we'll try for a better histogram mean
 

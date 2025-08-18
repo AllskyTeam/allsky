@@ -28,13 +28,13 @@ import board
 import busio
 import importlib
 import requests
-
+import grp
 from pathlib import Path
 from functools import reduce
 from allskyvariables.allskyvariables import ALLSKYVARIABLES
 import pigpio
 import numpy as np
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Any, Tuple
  
 try:
     locale.setlocale(locale.LC_ALL, '')
@@ -240,11 +240,13 @@ def raining():
 
     return raining, rainFlag
 
-def checkAndCreateDirectory(filePath):
-    os.makedirs(filePath, mode = 0o777, exist_ok = True)
+def check_and_create_directory(file_path):
+    checkAndCreateDirectory(file_path)
+def checkAndCreateDirectory(file_path):
+    os.makedirs(file_path, mode = 0o777, exist_ok = True)
 
-def checkAndCreatePath(filePath):
-    path = os.path.dirname(filePath)
+def checkAndCreatePath(file_path):
+    path = os.path.dirname(file_path)
     os.makedirs(path, mode = 0o777, exist_ok = True)
 
 def convertPath(path):
@@ -312,23 +314,20 @@ def setEnvironmentVariable(name, value, logMessage='', logLevel=4):
     return result
 
 
+def setup_for_command_line():
+    setupForCommandLine()
 def setupForCommandLine():
     global ALLSKYPATH
     
-    script_path = f"{ALLSKYPATH}/variables.sh"
-    bash_cmd = f"set -a && source '{script_path}' --force && env"
+    json_variables = f"{ALLSKYPATH}/variables.json"
+    with open(json_variables, 'r') as file:
+        json_data = json.load(file)
 
-    result = subprocess.run(['bash', '-c', bash_cmd], capture_output=True, text=True)
-
-    env_vars = {}
-    for line in result.stdout.splitlines():
-        if '=' in line:
-            key, value = line.split('=', 1)
-            env_vars[key] = value
-            os.environ[key] = value
-            
+    for key, value in json_data.items():
+        os.environ[str(key)] = str(value)
+    
+    VARIABLES = json_data
     readSettings()
-
 
 ####### settings file functions
 def readSettings():
@@ -496,37 +495,169 @@ def create_file_web_server_access(file_name):
             
     return create_and_set_file_permissions(file_name, uid, gid, 0o660)      
 
-def create_sqlite_database(file_name):
-    import grp
-    
+def create_sqlite_database(file_name):    
     #TODO: Change this to the real user once variables.json is working
     web_server_group = 'www-data'
     uid = os.getuid()
     gid = grp.getgrnam(web_server_group).gr_gid
             
     return create_and_set_file_permissions(file_name, uid, gid, 0o660, True)
+
+def run_script(script: str) -> Tuple[int, str]:
+    try:
+        result = subprocess.run(
+            [script],
+            capture_output=True,
+            text=True,
+            check=False
+        )
+        output = result.stdout + result.stderr
+        return result.returncode, output.strip()
+    except FileNotFoundError:
+        return 127, f"Script not found: {script}"
     
+def install_apt_packages(pkg_file: str | Path, log_file: str | Path) -> bool:
+    pkg_file = Path(pkg_file)
+    log_file = Path(log_file)
+
+    if not pkg_file.exists():
+        raise FileNotFoundError(f"Package file not found: {pkg_file}")
+
+    with pkg_file.open("r", encoding="utf-8") as f:
+        packages = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+
+    log_folder = os.path.dirname(log_file)
+    check_and_create_directory(log_folder)  
     
-def create_and_set_file_permissions(file_name, uid, gid, permissions=None, is_sqlite=False):
+    failures = []
+    with log_file.open("a", encoding="utf-8") as log:
+        for pkg in packages:
+            log.write(f"\n--- Installing {pkg} ---\n")
+            result = subprocess.run(
+                ["sudo", "apt-get", "install", "-y", pkg],
+                stdout=log,
+                stderr=log
+            )
+            if result.returncode != 0:
+                failures.append(pkg)
+                log.write(f"--- Failed {pkg} ---\n")
+            else:
+                log.write(f"--- Success {pkg} ---\n")
+
+    return len(failures) == 0
+
+def install_requirements(req_file: str | Path, log_file: str | Path) -> bool:
+
+    req_file = Path(req_file)
+    log_file = Path(log_file)
+
+    if not req_file.exists():
+        raise FileNotFoundError(f"Requirements file not found: {req_file}")
+
+    with req_file.open("r", encoding="utf-8") as f:
+        packages = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+
+    log_folder = os.path.dirname(log_file)
+    check_and_create_directory(log_folder)  
+        
+    failures = []
+    with log_file.open("a", encoding="utf-8") as log:
+        for pkg in packages:
+            log.write(f"\n--- Installing {pkg} ---\n")
+            result = subprocess.run(
+                [sys.executable, "-m", "pip", "install", pkg],
+                stdout=log,
+                stderr=log
+            )
+            if result.returncode != 0:
+                failures.append(pkg)
+                log.write(f"--- Failed {pkg} ---\n")
+            else:
+                log.write(f"--- Success {pkg} ---\n")
+
+    return len(failures) == 0
+
+def do_any_files_exist(base_folder: str | Path, filenames: list[str]) -> bool:
+    base_folder = Path(base_folder)
+
+    for name in filenames:
+        file_path = os.path.join(base_folder, name)
+        if is_file_readable(file_path):
+            return True
+    return False
+
+def copy_list(file_names: list, source: str, dest: str) -> bool:
+    result = True
+
+    for file_name in file_names:
+        source_file = os.path.join(source, file_name)
+        if is_file_readable(source_file):
+            copy_file(source_file, dest)
+                
+    return result
+
+def copy_folder(source, dest, uid=None, guid=None, dirs_exist_ok=True) -> bool:
+    result = False
+
+    try:
+        shutil.copytree(source, dest, dirs_exist_ok=dirs_exist_ok)
+        result = True
+    except FileExistsError:
+        result = False
+        
+    return result
+
+def copy_file(source, dest, uid=None, gid=None) -> bool:
+    result = False
+    
+    directory = os.path.dirname(dest)
+    check_and_create_directory(directory)
+    
+    if shutil.copy(source, dest) != "":
+        
+        dest_file = dest
+        if os.path.isdir(dest):
+            file_name = os.path.basename(source)
+            dest_file = os.path.join(dest, file_name)
+            
+        set_permissions(dest_file, uid, gid)
+        result = True
+    
+    return result
+
+def set_permissions(file_name, uid=None, gid=None):
+    if uid is None:
+        uid = os.getuid()
+    if gid is None:
+        if (group := get_environment_variable("ALLSKY_WEBSERVER_GROUP")) is None:
+            group = 'www-data'
+        gid = grp.getgrnam(group).gr_gid
+       
+    os.chown(file_name, uid, gid)
+    
+def create_and_set_file_permissions(file_name, uid=None, gid=None, permissions=None, is_sqlite=False, file_data = ''):
     result = True
     if not os.path.exists(file_name):
-        try:
-            if is_sqlite:
-                with sqlite3.connect(file_name, timeout=10) as conn:
-                    pass
-            else:
-                with open(file_name, 'w') as debug_file:
-                    debug_file.write('')
-            os.chown(file_name, uid, gid)
-            if permissions:
-                os.chmod(file_name, permissions)
-        except Exception as e:
-            eType, eObject, eTraceback = sys.exc_info()
-            log(0, f'ERROR: Unable to create {file_name} with web server access. {eTraceback.tb_lineno} - {e}')
-            result = False
+        directory = os.path.dirname(file_name)
+        check_and_create_directory(directory)
+
+    try:
+        if is_sqlite:
+            with sqlite3.connect(file_name, timeout=10) as conn:
+                pass
+        else:
+            with open(file_name, 'w') as debug_file:
+                debug_file.write(file_data)
+        set_permissions(file_name, uid, gid)
+        if permissions:
+            os.chmod(file_name, permissions)
+    except Exception as e:
+        eType, eObject, eTraceback = sys.exc_info()
+        log(0, f'ERROR: Unable to create {file_name} with web server access. {eTraceback.tb_lineno} - {e}')
+        result = False
 
     return result
-    
+
 def isFileWriteable(fileName):
     """ Check if a file exists and can be written to """
     if os.path.exists(fileName):
@@ -901,7 +1032,29 @@ def cleanup_extra_data_file(file_name, delete_age=600):
     else:
         log(4, f'ERROR: Cannot check extra data file {file_name} as it is not writeable')
             
-    
+def remove_path(path):
+    result = False
+    if os.path.isfile(path):
+        try:
+            os.remove(path)
+            result = True
+        except FileNotFoundError:
+            pass
+        except PermissionError:
+            pass
+        
+    if os.path.isdir(path):
+        folder = Path(path)
+        try:
+            shutil.rmtree(folder)
+            result = True
+        except FileNotFoundError:
+            pass
+        except PermissionError:
+            pass
+                
+    return result
+   
 def cleanup_module(moduleData):
     cleanupModule(moduleData)
 def cleanupModule(moduleData):
@@ -1629,3 +1782,22 @@ def create_device(import_name: str, class_name: str, bus_number: int, i2c_addres
         return cls(i2c, int(i2c_address, 0))
     else:
         return cls(i2c)
+
+def get_flows_with_module(module_name):
+
+    folder = Path(ALLSKY_MODULES)
+    found: Dict[str, Any] = {}
+
+    for file in folder.glob("*.json"):
+        if not file.name.endswith("-debug.json"):
+            try:
+                with file.open("r", encoding="utf-8") as f:
+                    data = json.load(f)
+
+                if module_name in data:
+                    found[file.name] = data
+
+            except (json.JSONDecodeError, OSError) as e:
+                pass
+
+    return found

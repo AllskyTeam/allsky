@@ -76,27 +76,27 @@
 								</div>
 								<div class="modal-body">
 									<div id="allsky-mask-toolbar">
-										<button class="allsky-mask-tool-button btn btn-default" id="allsky-mask-newBtn"><i class="fa-solid fa-file"></i></button>
+										<button class="allsky-mask-tool-button btn btn-default" id="allsky-mask-newBtn" title="Clear mask and start again"><i class="fa-solid fa-file"></i></button>
 										<div class="btn-group" role="group">
-											<button type="button" class="btn btn-default active" id="allsky-mask-easyModeBtn">Easy</button>
-											<button type="button" class="btn btn-default" id="allsky-mask-expertModeBtn">Expert</button>
+											<button type="button" class="btn btn-default active" id="allsky-mask-easyModeBtn" title="Easy mode - can only create a circle">Easy</button>
+											<button type="button" class="btn btn-default" id="allsky-mask-expertModeBtn" title="Expert mode">Expert</button>
 										</div>                
 										<div class="dropdown" style="display:inline-block;">
-										<button id="drawingToolDropdown" class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
+										<button id="drawingToolDropdown" class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" title="Pick how to create the mask">
 											<i class="fas fa-brush"></i> <span class="caret"></span>
 										</button>
 										<ul class="dropdown-menu">
-											<li><a href="#" data-tool="freehand"><i class="fas fa-brush"></i></a></li>
-											<li><a href="#" data-tool="feather"><i class="fa-solid fa-feather"></i></a></li>
-											<li><a href="#" data-tool="square"><i class="fa-solid fa-square"></i></a></li>
-											<li><a href="#" data-tool="filledPath"><i class="fa-solid fa-draw-polygon"></i></a></li>
-											<li><a href="#" data-tool="circle"><i class="fa-solid fa-circle"></i></a></li>
+											<li><a href="#" data-tool="freehand"><i class="fas fa-brush" title="Use a brush to draw"></i></a></li>
+											<li><a href="#" data-tool="feather"><i class="fa-solid fa-feather" title="Use a feather to draw"></i></a></li>
+											<li><a href="#" data-tool="square"><i class="fa-solid fa-square" title="Create a square"></i></a></li>
+											<li><a href="#" data-tool="filledPath"><i class="fa-solid fa-draw-polygon" title="Draw a shape"></i></a></li>
+											<li><a href="#" data-tool="circle"><i class="fa-solid fa-circle" title="Create a circle"></i></a></li>
 										</ul>
 									</div>
-									<button class="allsky-mask-tool-button btn btn-default mr-0" id="allsky-mask-undoBtn"><i class="fa-solid fa-rotate-left"></i></button>
-									<button class="allsky-mask-tool-button btn btn-default" id="allsky-mask-redoBtn"><i class="fa-solid fa-rotate-right"></i></button>
+									<button class="allsky-mask-tool-button btn btn-default mr-0" id="allsky-mask-undoBtn" title="Undo"><i class="fa-solid fa-rotate-left"></i></button>
+									<button class="allsky-mask-tool-button btn btn-default" id="allsky-mask-redoBtn" title="Redo"><i class="fa-solid fa-rotate-right"></i></button>
 									<div class="dropdown mr-0" style="display:inline-block;">
-										<button class="btn btn-default dropdown-toggle navbar-btn" type="button" data-toggle="dropdown">
+										<button class="btn btn-default dropdown-toggle navbar-btn" type="button" data-toggle="dropdown" title="Change mask opacity">
 											<i class="fa-solid fa-filter"></i>
 											<span class="caret"></span>
 										</button>
@@ -107,7 +107,7 @@
 										</ul>
 									</div>	
 									<div class="dropdown mr-0" style="display:inline-block;">
-										<button class="btn btn-default dropdown-toggle navbar-btn" type="button" data-toggle="dropdown">
+										<button class="btn btn-default dropdown-toggle navbar-btn" type="button" data-toggle="dropdown" title="Change image brightness">
 											<i class="fa-solid fa-lightbulb"></i>
 											<span class="caret"></span>
 										</button>
@@ -118,7 +118,7 @@
 										</ul>
 									</div>	                
 									<div class="dropdown mr-0" style="display:inline-block;">
-										<button class="btn btn-default dropdown-toggle navbar-btn" type="button" data-toggle="dropdown">
+										<button class="btn btn-default dropdown-toggle navbar-btn" type="button" data-toggle="dropdown" title="Adjust brush size">
 											<i class="fa-solid fa-expand"></i>
 											<span class="caret"></span>
 										</button>
@@ -129,7 +129,7 @@
 										</ul>
 									</div>	   
 									<div class="dropdown mr-0" style="display:inline-block;">
-										<button class="btn btn-default dropdown-toggle navbar-btn" type="button" data-toggle="dropdown">
+										<button class="btn btn-default dropdown-toggle navbar-btn" type="button" data-toggle="dropdown" title="Zoom image">
 											<i class="fa-solid fa-magnifying-glass"></i>
 											<span class="caret"></span>
 										</button>
@@ -143,8 +143,8 @@
 								<div id="allsky-mask-container"></div>
 								</div>
 								<div class="modal-footer">
-									<button type="button" class="btn btn-default" id="allsky-mask-saveBtn">Save</button>
-									<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+									<button type="button" class="btn btn-default" id="allsky-mask-saveBtn" title="Save mask and close">Save</button>
+									<button type="button" class="btn btn-default" data-dismiss="modal" title="Close this window">Close</button>
 								</div>
 							</div>
 						</div>

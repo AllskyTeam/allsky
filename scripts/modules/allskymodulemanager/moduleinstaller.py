@@ -197,45 +197,54 @@ class ALLSKYMODULEINSTALLER:
         return modules_to_install
     
     def cleanup_opt(self):
-        #try:
-        allsky_module_folder = shared.get_environment_variable("ALLSKY_MYFILES_DIR")
-        allsky_module_folder = os.path.join(allsky_module_folder, "modules")   
-        allsky_module_folder = Path(allsky_module_folder)
-        
-        opt_module_folder = os.path.join(self._module_repo_base_path, "modules")
-        opt_module_info_folder_base = os.path.join(opt_module_folder, "info")
-        opt_module_dependencies_folder_base = os.path.join(opt_module_folder, "dependencies")
-        opt_module_folder = Path(opt_module_folder)
+        try:
+            allsky_module_folder = shared.get_environment_variable("ALLSKY_MYFILES_DIR")
+            allsky_module_folder = os.path.join(allsky_module_folder, "modules")   
+            allsky_module_folder = Path(allsky_module_folder)
+            
+            opt_module_folder = os.path.join(self._module_repo_base_path, "modules")
+            opt_module_info_folder_base = os.path.join(opt_module_folder, "info")
+            opt_module_dependencies_folder_base = os.path.join(opt_module_folder, "dependencies")
+            opt_module_folder = Path(opt_module_folder)
 
-        if not allsky_module_folder.is_dir() or not opt_module_folder.is_dir():
-            return
+            if not allsky_module_folder.is_dir() or not opt_module_folder.is_dir():
+                return
 
-        for opt_module in opt_module_folder.iterdir():
-            if opt_module.is_file():
-                allsky_module = allsky_module_folder / opt_module.name
-                if allsky_module.exists():
-                    module_name = os.path.splitext(os.path.basename(opt_module))[0]
-                    os.remove(opt_module)
-                    opt_module_info_folder = os.path.join(opt_module_info_folder_base, module_name)
-                    opt_module_dependencies_folder = os.path.join(opt_module_dependencies_folder_base, module_name)
-                    shared.remove_path(opt_module_info_folder)
-                    shared.remove_path(opt_module_dependencies_folder)
+            for opt_module in opt_module_folder.iterdir():
+                if opt_module.is_file():
+                    allsky_module = allsky_module_folder / opt_module.name
+                    if allsky_module.exists():
+                        module_name = os.path.splitext(os.path.basename(opt_module))[0]
+                        shared.log(4, f"INFO: Removing {opt_module} and its info and dependencies folders")
+                        os.remove(opt_module)
+                        opt_module_info_folder = os.path.join(opt_module_info_folder_base, module_name)
+                        opt_module_dependencies_folder = os.path.join(opt_module_dependencies_folder_base, module_name)
+                        shared.remove_path(opt_module_info_folder)
+                        shared.remove_path(opt_module_dependencies_folder)
 
-        
-        if os.path.isdir(opt_module_info_folder_base):        
-            if not any(Path(opt_module_info_folder_base).iterdir()):
-                shared.remove_path(opt_module_info_folder_base)
-        if os.path.isdir(opt_module_dependencies_folder_base):                   
-            if not any(Path(opt_module_dependencies_folder_base).iterdir()):
-                shared.remove_path(opt_module_dependencies_folder_base)
+            
+            if os.path.isdir(opt_module_info_folder_base):        
+                if not any(Path(opt_module_info_folder_base).iterdir()):
+                    shared.log(4, f"INFO: Removing empty directory {opt_module_info_folder_base}")
+                    shared.remove_path(opt_module_info_folder_base)
+            if os.path.isdir(opt_module_dependencies_folder_base):                   
+                if not any(Path(opt_module_dependencies_folder_base).iterdir()):
+                    shared.log(4, f"INFO: Removing empty directory {opt_module_dependencies_folder_base}")                    
+                    shared.remove_path(opt_module_dependencies_folder_base)
 
-        py_cache_path = os.path.join(self._module_repo_base_path, "modules", "__pycache__")
-        if os.path.isdir(py_cache_path):
-            shared.remove_path(py_cache_path)
-                                    
-        #except Exception as e:  
-        #    tb = e.__traceback__
-        #    shared.log(4, f"ERROR: Function cleanup_opt on line {tb.tb_lineno}: {e}")
+            py_cache_path = os.path.join(self._module_repo_base_path, "modules", "__pycache__")
+            if os.path.isdir(py_cache_path):
+                shared.remove_path(py_cache_path)
+
+            if opt_module_folder.exists() and opt_module_folder.is_dir():     
+                for file in opt_module_folder.iterdir():
+                    if file.is_file() and file.name.startswith("allsky_"):
+                        target = allsky_module_folder / file.name
+                        shared.log(4, f"INFO: Moving {file} → {target}")
+                        shutil.move(str(file), str(target))                                        
+        except Exception as e:  
+            tb = e.__traceback__
+            shared.log(4, f"ERROR: Function cleanup_opt on line {tb.tb_lineno}: {e}")
             
     def run(self, args: argparse.Namespace) -> None:
         self._ensure_cloned_repo(self._module_repo, self._module_repo_path)

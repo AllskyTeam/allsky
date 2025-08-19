@@ -625,6 +625,18 @@ def copy_file(source, dest, uid=None, gid=None) -> bool:
     
     return result
 
+def remove_folder(path: str) -> bool:
+    result = False
+    try:
+        folder = Path(path)
+        if folder.exists() and folder.is_dir():
+            shutil.rmtree(folder)
+            result = True
+    except:
+        result = False
+        
+    return result
+
 def set_permissions(file_name, uid=None, gid=None):
     if uid is None:
         uid = os.getuid()

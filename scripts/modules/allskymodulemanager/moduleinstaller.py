@@ -185,12 +185,19 @@ class ALLSKYMODULEINSTALLER:
 
         for module_name in modules_to_install:
             module = self._find_module(module_name)
-            module.install_or_update_module(True)
+            try:
+                module.install_or_update_module(True)
+            except Exception as e:
+                print(e)
 
-        print("\n\nInstallation complete")
-        input("\nPress Enter to continue...")
+        if len(modules_to_install) > 0:
+            print("\n\nInstallation complete")
+            input("\nPress Enter to continue...")
             
         return modules_to_install
+    
+    def cleanup_opt(self):
+        pass
     
     def run(self, args: argparse.Namespace) -> None:
         self._ensure_cloned_repo(self._module_repo, self._module_repo_path)
@@ -239,11 +246,16 @@ if __name__ == "__main__":
     parser.add_argument("--debug", action="store_true", help="Enable debug mode, shows more detailed errors")
     parser.add_argument("--branch", action="store_true", help="Allow the remote branch to be selected, default is Master")
     parser.add_argument("--setbranch", type=str, help="Specify the remote branch to use")
+    parser.add_argument("--cleanupopt", action="store_true", help="Cleanup the legacy module folders")
     args = parser.parse_args()    
     
-    #try:
     module_installer = ALLSKYMODULEINSTALLER(args.debug)
-    module_installer.run(args)
-    #except Exception as e:
-    #    print(e)
+    if args.cleanupopt:
+        module_installer.cleanup_opt()
+    else:
+        #try:
+
+        module_installer.run(args)
+        #except Exception as e:
+        #    print(e)
             

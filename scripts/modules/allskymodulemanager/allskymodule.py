@@ -120,7 +120,7 @@ class ALLSKYMODULE:
     def ensure_valid(method):
         @wraps(method)
         def wrapper(self, *args, **kwargs): 
-            if self._valid:
+            if self._valid or (self._module_errors["installed"] and not self._module_errors["source"]):
                 return method(self, *args, **kwargs)
             else:
                 errors = ""
@@ -151,16 +151,28 @@ class ALLSKYMODULE:
     @ensure_valid
     def is_new_version_available(self):
         result = True
+        
         source_version, installed_version = self._get_versions()
-        result = version.parse(installed_version) < version.parse(source_version)     
+
+        if source_version is not None and installed_version is not None:
+            result = version.parse(installed_version) < version.parse(source_version)
+        else:
+            if self.installed and installed_version is None:
+                result = True
             
         return result
     
     def is_migration_required(self) -> bool:
         migrate_required = False
         if self._installed_info is not None:
-            if self._installed_info["meta_data"]["arguments"].keys() != self._source_info["meta_data"]["arguments"].keys():
-                migrate_required = True
+            installed_arguments = self._installed_info.get("meta_data", {}).get("arguments", {})
+            source_arguments = self._source_info.get("meta_data", {}).get("arguments", {})
+            if installed_arguments and source_arguments:
+                if installed_arguments.keys() != source_arguments.keys():
+                    migrate_required = True
+            else:
+                if source_arguments:
+                    migrate_required = True
                         
         return migrate_required
     
@@ -240,10 +252,10 @@ class ALLSKYMODULE:
         if meta_data is None:
             status["valid"] = False
             status["message"].append('No valid meta data found')
-        else:
-            if not "arguments" in meta_data:
-                status["valid"] = False
-                status["message"].append('No arguments found in meta data')
+        #else:
+        #    if not "arguments" in meta_data:
+        #        status["valid"] = False
+        #        status["message"].append('No arguments found in meta data')
                 
         callable = self._check_module_function_exists(installed_file_path)
         if not callable:
@@ -390,7 +402,8 @@ class ALLSKYMODULE:
               
     def _install_copy_module(self) -> bool:
         module_file = os.path.join(self._source_info["path"], self.name + ".py")
-        result = shared.copy_file(module_file, self._module_paths["module"])        
+        result = shared.copy_file(module_file, self._module_paths["module"])
+        print(f"Copied {module_file} to {self._module_paths['module']}")
         shared.log(1, f"INFO: {self.name} Copied module code - {'Successful' if result else 'Failed'}")
 
         return result
@@ -496,7 +509,26 @@ class ALLSKYMODULE:
                 result = False            
                     
         return result
-     
+    
+    def _cleanup_module(self) -> bool:
+        result = True
+        try:
+            if self._installed_info is not None:
+                if self._installed_info["path"]:
+                    installed_file_path = os.path.join(self._installed_info["path"], self.name + ".py")
+                    shared.remove_path(installed_file_path)
+                
+                    dependencies_path = os.path.join(self._installed_info["path"],'dependencies', self.name)
+                    info_path = os.path.join(self._installed_info["path"],'info', self.name)
+
+                    shared.remove_path(dependencies_path)
+                    shared.remove_path(info_path)
+        except Exception as e:
+            shared.log(4, f"ERROR: _cleanup_module -> Module {self.name} failed to remove - {e}")
+            result = False
+            
+        return result
+    
     @ensure_valid     
     def _install_module(self) -> bool:
         self._setup_module_paths()
@@ -510,7 +542,8 @@ class ALLSKYMODULE:
             ("installer info",        self._install_installer_info),
             ("apt dependencies",      self._install_apt_dependencies),
             ("python dependencies",   self._install_python_dependencies),
-            ("Post install",          self._post_install)
+            ("Post install",          self._post_install),
+            ("Cleanup module",        self._cleanup_module)
         ]
 
         for name, step in install_steps:
@@ -611,9 +644,9 @@ class ALLSKYMODULE:
         else:
             if self.is_new_version_available():
                 update_required = True
-            
+         
         migrate_required = self.is_migration_required()
-
+ 
         if not install_required and not update_required and not migrate_required:
             shared.log(4, f"INFO: install_or_update -> Module {self.name} Nothing to do module is uptodate and does not require migrating - Aborting")
         else:
@@ -658,6 +691,8 @@ class ALLSKYMODULE:
         print("             Installed         Available")
         print(f"Version:     {installed_version.ljust(15)}   {source_version.ljust(15)} {version_string}")
         
+        print(self._module_errors["source"])
+        print(self._module_errors["installed"])
         
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Allsky extra module")

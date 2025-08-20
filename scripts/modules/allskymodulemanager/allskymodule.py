@@ -259,9 +259,9 @@ class ALLSKYMODULE:
                 
         callable = self._check_module_function_exists(installed_file_path)
         if not callable:
-            shared.log(4, f"ERROR: {installed_file_path} Has no callable module function")
+            shared.log(4, f"ERROR: {installed_file_path} Has no callable module function. This module will NOT work")
             status["valid"] = False
-            status["message"].append('Module has no callable function')
+            status["message"].append('Module has no callable function. This module will NOT work')
 
         if meta_data is not None:
             status["meta_data"] = meta_data

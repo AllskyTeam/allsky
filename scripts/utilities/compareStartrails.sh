@@ -276,7 +276,7 @@ do
 		# startrails: Minimum: 1.0   maximum: 2.0   mean: 3.0   median: 4.0 
 		#		numImagesUsed: 0   numImagesNotUsed: 15   threshold: 0.3
 		NUM_USED="$( echo "${MSG}" | gawk '{
-				if ($2 == "Minimum:") printf("%0.3f", $11);
+				if ($2 == "Minimum:") printf("%d", $11);
 			}'
 		)"
 

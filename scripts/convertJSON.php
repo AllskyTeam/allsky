@@ -59,6 +59,7 @@ $default_delimiter = "=";
 // --variables "v1 v2..."
 //		Used with --shell to only output the specified variables.
 
+$no_html = true;	// in case there is an error in functions.php, don't use html in the output
 include_once("functions.php");
 
 function quoteIt($string, $type)

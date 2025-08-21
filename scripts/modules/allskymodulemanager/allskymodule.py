@@ -3,9 +3,9 @@
 # TODO - Add deprectaed flag and use in installer
 # TODO - Save the migrated flows, ensure Allsky is stopped? Or add soemthing to the flow runner to suspend flows whilst the update happens
 # TODO - Do somehting with the messages in installer, i.e. have an invalid modules menu option
-# TODO - Should the git code be in here, or in a base class used by both this and the module installer - That way this class could do all of the work to install a module
-# TODO - Test broken modules, incorrect meta data
-# TODO - Test bad locations passed in. 
+# TODO - Should the git code be in here, or in a base class used by both this and the module installer - That way this class could do all of the work to install a module - NO
+# TODO - Test broken modules, incorrect meta data - DONE
+# TODO - Test bad locations passed in. - DONE
 
 import os
 import sys
@@ -63,7 +63,8 @@ class ALLSKYMODULE:
         self._found_locations = []
         self._installed_info = None
         self._source_info = None
-        self._valid = True
+        self._valid = False
+        self._installed = False
         self._module_errors = {
             "source": [],
             "installed": []
@@ -106,11 +107,11 @@ class ALLSKYMODULE:
     
     @property
     def installed(self) -> bool:
-        result = False
-        if self._installed_info is not None:
-            result = True
+        #result = False
+        #if self._installed_info is not None:
+        #    result = True
         
-        return result
+        return self._installed
 
     @property
     def winstalled(self):
@@ -134,14 +135,16 @@ class ALLSKYMODULE:
         return wrapper
 
     def _get_meta_value(self, source, value) -> str | int | float | bool | list | dict | None:
-        meta_data = self._source_info["meta_data"]
+        result = None
+        meta_data = None        
+        
+        if self._source_info is not None:
+            meta_data = self._source_info["meta_data"]
+            
         if source == "installed":
             if self._installed_info is not None:
                 meta_data = self._installed_info["meta_data"]
-            else:
-                meta_data = None
         
-        result = None
         if meta_data is not None:
             if value in meta_data:
                 result = meta_data[value]
@@ -165,27 +168,28 @@ class ALLSKYMODULE:
     def is_migration_required(self) -> bool:
         migrate_required = False
         if self._installed_info is not None:
-            installed_arguments = self._installed_info.get("meta_data", {}).get("arguments", {})
-            source_arguments = self._source_info.get("meta_data", {}).get("arguments", {})
-            if installed_arguments and source_arguments:
-                if installed_arguments.keys() != source_arguments.keys():
-                    migrate_required = True
-            else:
-                if source_arguments:
-                    migrate_required = True
+            if "meta_data" in self._installed_info and "arguments" in self._installed_info["meta_data"]:
+                installed_arguments = self._installed_info.get("meta_data", {}).get("arguments", {})
+                if self._source_info is not None:
+                    source_arguments = self._source_info.get("meta_data", {}).get("arguments", {})
+                    if installed_arguments and source_arguments:
+                        if installed_arguments.keys() != source_arguments.keys():
+                            migrate_required = True
+                    else:
+                        if source_arguments:
+                            migrate_required = True
                         
         return migrate_required
     
     def _get_versions(self) -> Tuple[str, str]:
         source_version = None
-        if self._source_info is None:
-            raise NoSourceError()
                     
         installed_version = self._get_meta_value("installed", "version")
         if installed_version is not None:
-            source_version = self._get_meta_value("source", "version")
-            if source_version is None:
-                raise NoVersionError("ERROR: cannot locate version in source module")
+            if self._source_info is not None:
+                source_version = self._get_meta_value("source", "version")
+                if source_version is None:
+                    raise NoVersionError("ERROR: cannot locate version in source module")
 
         return source_version, installed_version  
 
@@ -252,10 +256,6 @@ class ALLSKYMODULE:
         if meta_data is None:
             status["valid"] = False
             status["message"].append('No valid meta data found')
-        #else:
-        #    if not "arguments" in meta_data:
-        #        status["valid"] = False
-        #        status["message"].append('No arguments found in meta data')
                 
         callable = self._check_module_function_exists(installed_file_path)
         if not callable:
@@ -275,12 +275,15 @@ class ALLSKYMODULE:
             installed_file_path = os.path.join(path, self.name + ".py")
 
             if os.path.exists(installed_file_path) and os.path.isfile(installed_file_path):
+                self._installed = True
                 status = self._validate_module(installed_file_path)
                 if status["valid"]:
                     self._installed_info = status
                     self._installed_info["path"] = path
-                                        
+                    self._valid = True
+                                                            
                 if status["message"]:
+                    self._installed_info = status                    
                     self._module_errors["installed"] += status["message"]
                     self._valid = False
                                         
@@ -612,6 +615,8 @@ class ALLSKYMODULE:
 
             flow_data[self.name_for_flow]["metadata"] = new_flow_data
 
+        shared.save_flows_with_module(flow_data)
+        
         shared.log(4, f"INFO: Deprecated Settings")          
         if deprecated:
             for item in deprecated:
@@ -678,9 +683,17 @@ class ALLSKYMODULE:
     def print_module_status(self) -> None:
         
         source_version, installed_version = self._get_versions()
-        version_string = "New version available" if self.is_new_version_available() else "Using latest version"
+        version_string = ""
+        if source_version is not None and installed_version is not None:
+            version_string = "New version available" if self.is_new_version_available() else "Using latest version"
         migration_string = "Migration required" if self.is_migration_required() else "No migration required"
         description = self._get_meta_value("installed", "description")
+        
+        installed_version = (installed_version or "None Available").ljust(15)
+        source_version = (source_version or "None Available").ljust(15)
+
+
+        
         message = f"Module {self.name} Status"
         underline = "=" * len(message)
         print(f"{message}\n{underline}\n")
@@ -689,10 +702,17 @@ class ALLSKYMODULE:
         print(f"Installed In:     {self._installed_info['path']}")
         print(f"Migration Status: {migration_string}\n")
         print("             Installed         Available")
-        print(f"Version:     {installed_version.ljust(15)}   {source_version.ljust(15)} {version_string}")
+        print(f"Version:     {installed_version}   {source_version} {version_string}")
         
-        print(self._module_errors["source"])
-        print(self._module_errors["installed"])
+        if self._module_errors["source"]:
+            print("\nSource Module Errors:")
+            for error in self._module_errors["source"]:
+                print(f"  - {error}")
+
+        if self._module_errors["installed"]:
+            print("\nInstalled Module Errors:")
+            for error in self._module_errors["installed"]:
+                print(f"  - {error}")
         
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Allsky extra module")
@@ -707,7 +727,10 @@ if __name__ == "__main__":
     
     if args.action == "status":
         #try:
-            module_installer.print_module_status()
+            if module_installer.installed:
+                module_installer.print_module_status()
+            else:
+                print(f"Module {args.module} is not installed.")
         #except Exception as e:
         #    print(e)
                 

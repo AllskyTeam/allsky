@@ -1813,3 +1813,12 @@ def get_flows_with_module(module_name):
                 pass
 
     return found
+
+def save_flows_with_module(flows):
+    #try:
+        for flow, flow_data in flows.items():        
+            file_path = os.path.join(ALLSKY_MODULES, f'{flow}.json')
+            with open(file_path, 'w', encoding='utf-8') as file:
+                json.dump(flow_data, file, indent=4)
+    #except Exception as e:
+    #    log(0, f'ERROR: Failed to save flows for {module_name} - {e}')

@@ -219,7 +219,6 @@ class ALLSKYMODULEINSTALLER:
         for module in self._module_list:
             try:
                 if module.installed:
-                    shared.log(4, f"INFO: Updating {module.name}")
                     if not args.dryrun:
                         module.install_or_update_module(True)
             except Exception as e:
@@ -362,7 +361,7 @@ if __name__ == "__main__":
         sys.exit(0)
                 
     if args.cleanupopt:
-        module_installer.cleanup_opt()
+        module_installer.cleanup_opt(args)
         sys.exit(0)
 
     #try:

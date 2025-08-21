@@ -42,17 +42,6 @@ if (DHCP_ENABLED) {
 	function DisplayDHCPConfig() {}
 }
 
-function getPage() {
-	if (isset($_POST['page']))
-		$page = $_POST['page'];
-	else if (isset($_GET['page']))
-		$page = $_GET['page'];
-	else
-		$page = "";
-
-	return $page;
-}
-
 function getDay() {
 	if (isset($_GET['day']))
 		$day = " - " . $_GET['day'];
@@ -431,7 +420,7 @@ function insertEditorCode($page) {
 
 }
 
-$page = getPage();
+$page = getVariableOrDefault($_REQUEST, 'page', "");
 $day = getDay();
 $csrf_token = useLogin();
 $remoteWebsiteVersion = getRemoteWebsiteVersion();

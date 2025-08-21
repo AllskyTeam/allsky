@@ -26,6 +26,13 @@ if ($allskyHome !== false) {
 }
 
 if ($variablesJsonOk === false) {
+	$from_install = (isset($from_install) && $from_install === true);
+	if ($from_install) {
+		// Called from the installation program, so don't use HTML or any quotes.
+		echo "File $variablesJsonfile not found or corrupted.";
+		die(1);
+	}
+
 	echo "<br><div style='font-size: 200%; color: red;'>";
 	echo "The installation of Allsky is incomplete.<br>";
 	echo "File '$variablesJsonfile' not found or corrupted.<br>";

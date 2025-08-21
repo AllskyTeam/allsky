@@ -303,11 +303,14 @@ function displayStatusMessages($page) {
 		if ($t != false) {
 			$newT = getVariableOrDefault($_POST, "filetime", 0);
 			if ($t == $newT) {
-				$cmd = "sudo rm -f " . ALLSKY_MESSAGES . " 2>/dev/null";
+				$cmd = "sudo rm -f " . ALLSKY_MESSAGES;
 				echo "<script>console.log('Executing [$cmd]');</script>";
 				exec($cmd, $result, $retcode);
 				if ($retcode !== 0) {
-					$result = $result[0];
+					if (count($result) > 0)
+						$result = $result[0];
+					else
+						$result = "[unknown reason]";
 					echo "<script>console.log('[$cmd] failed: $result');</script>";
 					$status->addMessage("Unable to clear messages: $result", 'danger');
 					$status->showMessages();

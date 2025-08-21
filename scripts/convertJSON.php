@@ -59,9 +59,6 @@ $default_delimiter = "=";
 // --variables "v1 v2..."
 //		Used with --shell to only output the specified variables.
 
-$no_html = true;	// in case there is an error in functions.php, don't use html in the output
-include_once("functions.php");
-
 function quoteIt($string, $type)
 {
 	if ($type === "boolean" || $type === "float" ||
@@ -79,6 +76,7 @@ function quoteIt($string, $type)
 }
 
 $debug = false;
+$from_install = false;
 $settings_file = null;
 $capture_only = false;
 $carryforward = false;
@@ -106,6 +104,7 @@ $longopts = array(
 	"variables:",
 
 	// no arguments:
+	"from-install",
 	"settings-only",
 	"capture-only",
 	"carryforward",
@@ -124,6 +123,9 @@ foreach ($options as $opt => $val) {
 
 	if ($opt === "debug") {
 		$debug = true;
+
+	} else if ($opt === "from-install") {
+		$from_install = true;
 
 	} else if ($opt === "settings-file") {
 		$settings_file = $val;
@@ -188,6 +190,8 @@ if (! $ok || ($convert && $capture_only))
 
 // =============================== main part of program =====================
 //
+include_once("functions.php");
+
 if ($settings_file === null) {
 	// use default
 	$settings_file = getSettingsFile();

@@ -1867,6 +1867,7 @@ convert_settings_file()			# prior_file, new_file
 	# --settings-only  says only output settings that are in the settings file.
 	# The ALLSKY_OPTIONS_FILE doesn't exist yet so use REPO_OPTIONS_FILE.
 	"${ALLSKY_SCRIPTS}/convertJSON.php" \
+		--from-install \
 		--convert \
 		--settings-only \
 		--settings-file "${PRIOR_FILE}" \
@@ -1885,6 +1886,7 @@ convert_settings_file()			# prior_file, new_file
 	# Output the field name and value as text separated by a tab.
 	# Field names are already lowercase from above.
 	"${ALLSKY_SCRIPTS}/convertJSON.php" \
+			--from-install \
 			--delimiter "${TAB}" \
 			--options-file "${REPO_OPTIONS_FILE}" \
 			--include-not-in-options \
@@ -3546,6 +3548,7 @@ sort_settings_file()
 	display_msg --logonly info "Sorting settings file '${FILE}'."
 
 	"${ALLSKY_SCRIPTS}/convertJSON.php" \
+		--from-install \
 		--convert \
 		--order \
 		--settings-file "${FILE}" \
@@ -4122,12 +4125,16 @@ install_webserver_et_al
 # This will create the "config" directory and put default files in it.
 install_dependencies_etc
 
+##### Create the variables.json file based on variables.sh.
+# The file may be needed by save_camera_capabilities.
+create_variables_json "install"
+
 ##### Create the camera type/model-specific "options" file
 # This should come after the steps above that create ${ALLSKY_CONFIG}.
 save_camera_capabilities "false"
 
-##### Create the variables.json file based on variables.sh.
-# This must come after the settings file is created.
+##### Re-create variables.json because some variables in variables.sh may have changed
+# as a result of the settings file being updated.
 create_variables_json "install"
 
 ##### Set locale.  May reboot instead of returning.

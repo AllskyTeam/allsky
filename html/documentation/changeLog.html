@@ -155,6 +155,15 @@
 								<span class="WebUISetting">Brightness Threshold</span>
 								in use when each startrails image was created.
 						</ul>
+					<li>The camera now saves initial images to
+						<span class="fileName">~/allsky/tmp/current_images</span>,
+						and that's where the WebUI
+						<span class="WebUILink">Live View</span> page looks for the image.
+						<br>
+						The current mini-timelapse file is also saved there.
+						<br>NOTE: the <span class="editorSetting">imageName</span>
+						field in the local Allsky Website configuration file is now
+						<span class="editorString">/current/image.jpg</span>.
 					<li>The <code>generateForDay.sh</code> command now accepts
 						arguments that can be passed to the keogram, startrails,
 						and timelapse creation programs.

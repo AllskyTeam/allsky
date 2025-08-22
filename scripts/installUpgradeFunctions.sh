@@ -677,8 +677,10 @@ function update_old_website_config_file()
 	# Version: 2 from v2024.12.06
 	# Version: 3 from v2024.12.06_01
 	#	Added "meteors/"
-	# Current version: 4 from v2024.12.06_03
+	# Version: 4 from v2024.12.06_03
 	#	Added "equipmentinfo" setting
+	# Current version: 5 from v2025.xx.xx
+	#	Changed "imageName" to "/current/image.jpg" in local config file.
 
 	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
 		# These steps bring version 1 up to 2.
@@ -778,6 +780,11 @@ function update_old_website_config_file()
 			# cp so it keeps ${FILE}'s attributes
 			cp "${TEMP}" "${FILE}" && rm -f "${TEMP}"
 		fi
+	fi
+
+	if [[ ${PRIOR_VERSION} -lt 5 ]] && ! grep --silent '"imageName".*/tmp/' "${FILE}" ; then
+		local NEW_NAME="${ALLSKY_IMG_DIR}/${ALLSKY_FULL_FILENAME}"
+		update_json_file ".config.imageName" "${NEW_NAME}" "${FILE}"
 	fi
 
 	# Set to current config and Allsky versions.

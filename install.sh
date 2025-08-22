@@ -3844,10 +3844,10 @@ display_wait_message()
 	local MSG
 
 	local HOW_LONG
-	if [[ ${PI_MODEL} >= "5" ]]; then
-		HOW_LONG="several minutes"
-	else
+	if [[ ${PI_MODEL} < "5" ]]; then
 		HOW_LONG="up to an hour"
+	else
+		HOW_LONG="several minutes"
 	fi
 	MSG="The following steps can take ${HOW_LONG} depending on the speed of"
 	MSG+="\nyour Pi and how many of the necessary dependencies are already installed."

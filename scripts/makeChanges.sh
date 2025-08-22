@@ -848,6 +848,54 @@ do
 			fi
 			;;
 
+		"minitimelapsenumimages")
+			if [[ ${NEW_VALUE} != "${OLD_VALUE}" &&
+				(${S_uselocalwebsite} == "true" || ${S_useremotewebsite} == "true" ) ]];
+			then
+				# Just look at local Website config file.  Assume remote is the same.
+				PARENT="homePage.leftSidebar"
+				FIELD="Mini-timelapse"
+				CONFIG="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+				INDEX=$( getJSONarrayIndex "${CONFIG}" "${PARENT}" "${FIELD}" )
+				if [[ ${INDEX} -ge 0 ]]; then
+					DISPLAY="$( settings ".${PARENT}[${INDEX}].display" "${CONFIG}" )"
+					[[ ${DISPLAY} != "true" ]] && NEW_VALUE="false"
+	
+					X=""
+					if [[ ${NEW_VALUE} -eq 0 ]]; then	# Turned OFF mini-timelapse creation.
+						[[ ${DISPLAY} == "true" ]] && X="false"
+					else								# Turned ON creation
+						[[ ${DISPLAY} == "false" ]] && X="true"
+						URL="$( settings ".${PARENT}[${INDEX}].url" "${CONFIG}" )"
+						if [[ -z ${URL} ]]; then
+							MSG="WARNING: "
+							MSG+="The ${STRONGs}url${STRONGe} field for ${FIELD} in the "
+							MSG+="Allsky Website's configuration file is empty."
+							MSG+="${NL}"
+							MSG+="See the Allsky Documentation for what it should be set to."
+							wW_ "${MSG}"
+						fi
+					fi
+					if [[ -n ${X} ]]; then
+						MSG="REMINDER: Don't forget to set the ${STRONGs}display${STRONGe}"
+						MSG+=" field for ${FIELD} to ${STRONGs}${X}${STRONGe} in the"
+						F=""
+						if [[ ${S_uselocalwebsite} == "true" ]]; then
+							F="${WSFs}${ALLSKY_WEBSITE_CONFIGURATION_NAME}${WSFe}"
+						fi
+						if [[ ${S_useremotewebsite} == "true" ]]; then
+							[[ -n ${F} ]] && F+=" and "
+							F+="${WSFs}${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}${WSFe}"
+						fi
+						wI_ "${MSG} ${F} file(s) in the WebUI's 'Editor' page."
+					fi
+				else
+					W="WARNING: Unable read '${FIELD}' in '${CONFIG}'."
+					wW_ "${W}"
+				fi
+			fi
+			;;
+
 		"imageresizeuploadswidth" | "imageresizeuploadsheight")
 			if [[ ${KEY} == "imageresizeupladwidth" ]]; then
 				O="imageresizeuploadheight"

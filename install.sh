@@ -48,8 +48,9 @@ CONFIGURATION_NEEDED="true"				# Does Allsky need configuring at end of installa
 ALLSKY_IMAGES_MOVED="false"				# Did the user move ALLSKY_IMAGES, e.g., to an SSD?
 SPACE="    "
 NOT_RESTORED="NO PRIOR VERSION"
+PI_MODEL=""								# The numeric model of Raspberry Pi
 
-declare -r TMP_FILE="/tmp/x"					# temporary file used by many functions
+declare -r TMP_FILE="/tmp/x"			# temporary file used by many functions
 declare -r TAB="$( echo -e '\t' )"
 declare -r NEW_STYLE_ALLSKY="newStyle"
 declare -r OLD_STYLE_ALLSKY="oldStyle"
@@ -336,7 +337,7 @@ do_initial_heading()
 ####
 usage_and_exit()
 {
-	local RET C MSG
+	local RET C USAGE
 
 	exec >&2
 	RET=${1}
@@ -345,15 +346,16 @@ usage_and_exit()
 	else
 		C="${RED}"
 	fi
-	MSG="Usage: ${ME} [--help] [--debug [...]] [--fix |--update | --restore | --function function]"
-	echo -e "\n${C}${MSG}${NC}"
+	USAGE="Usage: ${ME} [--help] [--debug [...]] [--fix |--update | --restore | --function function]"
+	echo -e "\n${C}${USAGE}${NC}"
 	echo
-	echo "'--help' displays this message and exits."
-	echo "'--debug' displays debugging information. Can be called multiple times to increase level."
-	echo "'--fix' should only be used when instructed to by the Allsky Website."
-	echo "'--update' should only be used when instructed to by the Allsky Website."
-	echo "'--restore' restores ${ALLSKY_PRIOR_DIR} to ${ALLSKY_HOME}."
-	echo "'--function' executes the specified function and quits."
+	echo "Arguments:"
+	echo "   --help       Displays this message and exits."
+	echo "   --debug	  Displays debugging information. Can be called multiple times to increase level."
+	echo "   --fix        Should only be used when instructed to by the Allsky Website."
+	echo "   --update     Should only be used when instructed to by the Allsky Website."
+	echo "   --restore    Restores ${ALLSKY_PRIOR_DIR} to ${ALLSKY_HOME}."
+	echo "   --function   Executes the specified function and quits."
 	echo
 
 	exit_installation "${RET}"
@@ -669,11 +671,6 @@ save_camera_capabilities()
 
 do_save_camera_capabilities()
 {
-	if [[ -z ${CAMERA_TYPE} ]]; then
-		display_msg --log error "INTERNAL ERROR: CAMERA_TYPE not set in save_camera_capabilities()."
-		return 1
-	fi
-
 	local OPTIONSFILEONLY="${1}"		# Set to "true" if we should ONLY create the options file.
 	local FORCE  MSG  OPTIONSONLY  ERR  M  RET
 	# CAMERA_MODEL is global
@@ -899,7 +896,7 @@ run_aptGet()
 
 	local OUTPUT="$( sudo apt-get --assume-yes install "${@}" 2>&1 )"
 	local RET=$?
-	if [[ $? -ne 0 && ${FIRST_CALL} == "true" ]]; then
+	if [[ ${RET} -ne 0 && ${FIRST_CALL} == "true" ]]; then
 		display_msg --logonly info "First call to apt-get failed; trying again."
 		sleep 3
 		sudo apt-get --assume-yes install "${@}"
@@ -1050,7 +1047,7 @@ prompt_for_hostname()
 
 
 ####
-# Set permissions on various web-related items.
+# Set permissions on various files.
 # Do every time - doesn't hurt to re-do them.
 set_permissions()
 {
@@ -1098,6 +1095,7 @@ set_permissions()
 	chmod 775 "${ALLSKY_CURRENT_DIR}"
 	sudo chgrp "${ALLSKY_WEBSERVER_GROUP}" "${ALLSKY_CURRENT_DIR}"
 
+
 	########## Website files
 
 	chmod 664 "${ALLSKY_ENV}"
@@ -1125,7 +1123,7 @@ set_permissions()
 
 		# Loop over all files in the session folder and if any are not owned by the
 		# web server user then changs ALL of the php sessions to be owned by the
-		# web server user
+		# web server user.
 		sudo find "${SESSION_PATH}" -type f -print0 | while read -r -d $'\0' SESSION_FILE
 		do
 			OWNER="$( sudo stat -c '%U' "${SESSION_FILE}" )"
@@ -1424,7 +1422,7 @@ is_reboot_needed()
 	if [[ ${NEW_BASE_VERSION} == "${OLD_BASE_VERSION}" ||
 		  ${OLD_BASE_VERSION} == "${NO_REBOOT_BASE_VERSION}" ]]; then
 		# Assume just bug fixes between point releases.
-# TODO: this may not always be true.
+# TODO: this is not always true.
 		REBOOT_NEEDED="false"
 		display_msg --logonly info "No reboot is needed."
 	else
@@ -2620,7 +2618,7 @@ restore_prior_files()
     local DAYTIME_OVERLAY="$( settings ".daytimeoverlay" "${PRIOR_SETTINGS_FILE}" )"
     local NIGHTTIME_OVERLAY="$( settings ".nighttimeoverlay" "${PRIOR_SETTINGS_FILE}" )"
 
-    if [[ -z "${DAYTIME_OVERLAY}" && -z "${NIGHTTIME_OVERLAY}" ]]; then
+    if [[ -z ${DAYTIME_OVERLAY} && -z ${NIGHTTIME_OVERLAY} ]]; then
         ITEM="${SPACE}Overlay configuration file"
         if [[ ! -f ${PRIOR_OVERLAY_FILE} ]] ||
                 cmp -s "${PRIOR_OVERLAY_FILE}" "${PRIOR_OVERLAY_REPO_FILE}" ; then
@@ -2932,14 +2930,14 @@ restore_prior_website_files()
 			if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
 				# If different versions, then update the current one.
 				MSG+="Updating version from ${PRIOR_WEB_CONFIG_VERSION} to ${NEW_WEB_CONFIG_VERSION}."
+				display_msg --logonly info "${MSG}"
 				update_old_website_config_file "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" \
 					"${PRIOR_WEB_CONFIG_VERSION}" "${NEW_WEB_CONFIG_VERSION}"
 			else
 				MSG+="Already current @ version ${NEW_WEB_CONFIG_VERSION}"
+				display_msg --logonly info "${MSG}"
 			fi
-			display_msg --logonly info "${MSG}"
 
-			# Since the config file already exists, this will just run postData.sh:
 			prepare_local_website "" "postData"
 
 		else
@@ -3353,13 +3351,20 @@ install_Python()
 	local CMD="from gpiozero import Device"
 	CMD+="\nDevice.ensure_pin_factory()"
 	CMD+="\nprint(Device.pin_factory.board_info.model)"
-	pimodel="$( echo -e "${CMD}" | python3 2>/dev/null )"	# hide error since it only applies to Pi 5.
+	# Hide error since it only applies to Pi 5.
+	local pimodel="$( echo -e "${CMD}" | python3 2>/dev/null )"
 	echo "${pimodel}" > "${ALLSKY_PI_VERSION_FILE}"
 
-	# if we are on the pi 5 then uninstall rpi.gpio, using the virtual environment which will always
-	# exist on the pi 5. lgpio is installed globally so will be used after rpi.gpio is removed
-	# Adafruits blinka reinstalls rpi.gpio so we need to ensure its removed
-	if [[ ${pimodel:0:1} == "5" ]]; then
+	# If we are on the pi 5 then uninstall rpi.gpio,
+	# using the virtual environment which will always exist on the pi 5.
+	# lgpio is installed globally so will be used after rpi.gpio is removed.
+	# Adafruits blinka reinstalls rpi.gpio so we need to ensure its removed.
+	if [[ -n ${pimodel} ]]; then
+		PI_MODEL="0"					# global
+	else
+		PI_MODEL="${pimodel:0:1}"
+	fi
+	if [[ ${PI_MODEL} == "5" ]]; then
 		display_msg --logonly info "Updating GPIO to lgpio"
 		activate_python_venv
 		pip3 uninstall -y rpi.gpio > /dev/null 2>&1
@@ -3486,7 +3491,7 @@ display_image()
 		ALLSKY_EXTENSION="jpg"
 	fi
 
-	I="${ALLSKY_TMP}/${ALLSKY_FILENAME}.${ALLSKY_EXTENSION}"
+	I="${ALLSKY_CURRENT_DIR}/${ALLSKY_FILENAME}.${ALLSKY_EXTENSION}"
 	if [[ -z ${IMAGE_OR_CUSTOM} ]]; then		# No IMAGE_OR_CUSTOM means remove the image
 		display_msg --logonly info "Removing prior notification image."
 		rm -f "${I}"
@@ -3501,7 +3506,7 @@ display_image()
 		MSG="Displaying custom notification image: $( echo -e "${CUSTOM_MESSAGE}" | tr '\n' ' ' )"
 		display_msg --logonly info "${MSG}"
 		MSG="$( "${ALLSKY_SCRIPTS}/generateNotificationImages.sh" \
-			--directory "${ALLSKY_TMP}" \
+			--directory "${ALLSKY_CURRENT_DIR}" \
 			"${ALLSKY_FILENAME}" "${COLOR}" "" "" "" "" \
 			"" "10" "${COLOR}" "${ALLSKY_EXTENSION}" "" "${CUSTOM_MESSAGE}"  2>&1 >/dev/null )"
 		if [[ -n ${MSG} ]]; then
@@ -3842,8 +3847,13 @@ display_wait_message()
 {
 	local MSG
 
-# TODO: adjust time based on Pi model
-	MSG="The following steps can take up to an hour depending on the speed of"
+	local HOW_LONG
+	if [[ ${PI_MODEL} -lt 5 ]]; then
+		HOW_LONG="up to an hour"
+	else
+		HOW_LONG="several minutes"
+	fi
+	MSG="The following steps can take ${HOW_LONG} depending on the speed of"
 	MSG+="\nyour Pi and how many of the necessary dependencies are already installed."
 	display_msg notice "${MSG}"
 }

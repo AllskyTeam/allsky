@@ -271,8 +271,6 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	# Where "current" image and mini-timelapse files are:
 	ALLSKY_IMG_DIR="current"							# Alias for web server
 	ALLSKY_CURRENT_DIR="${ALLSKY_TMP}/current_images"	# Equivalent location on Pi
-ALLSKY_IMG_DIR="current/tmp" # XXXXX TODO: delete
-ALLSKY_CURRENT_DIR="${ALLSKY_TMP}"		# XXXXX TODO: delete
 
 	# Python virtual environment
 	ALLSKY_PYTHON_VENV="${ALLSKY_HOME}/venv"

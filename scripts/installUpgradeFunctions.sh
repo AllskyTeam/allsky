@@ -681,6 +681,7 @@ function update_old_website_config_file()
 	#	Added "equipmentinfo" setting
 	# Current version: 5 from v2025.xx.xx
 	#	Changed "imageName" to "/current/image.jpg" in local config file.
+	#	imageName is updated in replace_website_placeholders() so not done here.
 
 	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
 		# These steps bring version 1 up to 2.
@@ -780,11 +781,6 @@ function update_old_website_config_file()
 			# cp so it keeps ${FILE}'s attributes
 			cp "${TEMP}" "${FILE}" && rm -f "${TEMP}"
 		fi
-	fi
-
-	if [[ ${PRIOR_VERSION} -lt 5 ]] && ! grep --silent '"imageName".*/tmp/' "${FILE}" ; then
-		local NEW_NAME="${ALLSKY_IMG_DIR}/${ALLSKY_FULL_FILENAME}"
-		update_json_file ".config.imageName" "${NEW_NAME}" "${FILE}"
 	fi
 
 	# Set to current config and Allsky versions.

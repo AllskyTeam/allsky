@@ -336,7 +336,7 @@ do_initial_heading()
 ####
 usage_and_exit()
 {
-	local RET C MSG
+	local RET C USAGE
 
 	exec >&2
 	RET=${1}
@@ -345,15 +345,16 @@ usage_and_exit()
 	else
 		C="${RED}"
 	fi
-	MSG="Usage: ${ME} [--help] [--debug [...]] [--fix |--update | --restore | --function function]"
-	echo -e "\n${C}${MSG}${NC}"
+	USAGE="Usage: ${ME} [--help] [--debug [...]] [--fix |--update | --restore | --function function]"
+	echo -e "\n${C}${USAGE}${NC}"
 	echo
-	echo "'--help' displays this message and exits."
-	echo "'--debug' displays debugging information. Can be called multiple times to increase level."
-	echo "'--fix' should only be used when instructed to by the Allsky Website."
-	echo "'--update' should only be used when instructed to by the Allsky Website."
-	echo "'--restore' restores ${ALLSKY_PRIOR_DIR} to ${ALLSKY_HOME}."
-	echo "'--function' executes the specified function and quits."
+	echo "Arguments:"
+	echo "   --help       Displays this message and exits."
+	echo "   --debug	  Displays debugging information. Can be called multiple times to increase level."
+	echo "   --fix        Should only be used when instructed to by the Allsky Website."
+	echo "   --update     Should only be used when instructed to by the Allsky Website."
+	echo "   --restore    Restores ${ALLSKY_PRIOR_DIR} to ${ALLSKY_HOME}."
+	echo "   --function   Executes the specified function and quits."
 	echo
 
 	exit_installation "${RET}"
@@ -669,11 +670,6 @@ save_camera_capabilities()
 
 do_save_camera_capabilities()
 {
-	if [[ -z ${CAMERA_TYPE} ]]; then
-		display_msg --log error "INTERNAL ERROR: CAMERA_TYPE not set in save_camera_capabilities()."
-		return 1
-	fi
-
 	local OPTIONSFILEONLY="${1}"		# Set to "true" if we should ONLY create the options file.
 	local FORCE  MSG  OPTIONSONLY  ERR  M  RET
 	# CAMERA_MODEL is global
@@ -899,7 +895,7 @@ run_aptGet()
 
 	local OUTPUT="$( sudo apt-get --assume-yes install "${@}" 2>&1 )"
 	local RET=$?
-	if [[ $? -ne 0 && ${FIRST_CALL} == "true" ]]; then
+	if [[ ${RET} -ne 0 && ${FIRST_CALL} == "true" ]]; then
 		display_msg --logonly info "First call to apt-get failed; trying again."
 		sleep 3
 		sudo apt-get --assume-yes install "${@}"
@@ -1050,7 +1046,7 @@ prompt_for_hostname()
 
 
 ####
-# Set permissions on various web-related items.
+# Set permissions on various files.
 # Do every time - doesn't hurt to re-do them.
 set_permissions()
 {
@@ -1098,6 +1094,7 @@ set_permissions()
 	chmod 775 "${ALLSKY_CURRENT_DIR}"
 	sudo chgrp "${ALLSKY_WEBSERVER_GROUP}" "${ALLSKY_CURRENT_DIR}"
 
+
 	########## Website files
 
 	chmod 664 "${ALLSKY_ENV}"
@@ -1125,7 +1122,7 @@ set_permissions()
 
 		# Loop over all files in the session folder and if any are not owned by the
 		# web server user then changs ALL of the php sessions to be owned by the
-		# web server user
+		# web server user.
 		sudo find "${SESSION_PATH}" -type f -print0 | while read -r -d $'\0' SESSION_FILE
 		do
 			OWNER="$( sudo stat -c '%U' "${SESSION_FILE}" )"
@@ -1424,7 +1421,7 @@ is_reboot_needed()
 	if [[ ${NEW_BASE_VERSION} == "${OLD_BASE_VERSION}" ||
 		  ${OLD_BASE_VERSION} == "${NO_REBOOT_BASE_VERSION}" ]]; then
 		# Assume just bug fixes between point releases.
-# TODO: this may not always be true.
+# TODO: this is not always true.
 		REBOOT_NEEDED="false"
 		display_msg --logonly info "No reboot is needed."
 	else
@@ -2620,7 +2617,7 @@ restore_prior_files()
     local DAYTIME_OVERLAY="$( settings ".daytimeoverlay" "${PRIOR_SETTINGS_FILE}" )"
     local NIGHTTIME_OVERLAY="$( settings ".nighttimeoverlay" "${PRIOR_SETTINGS_FILE}" )"
 
-    if [[ -z "${DAYTIME_OVERLAY}" && -z "${NIGHTTIME_OVERLAY}" ]]; then
+    if [[ -z ${DAYTIME_OVERLAY} && -z ${NIGHTTIME_OVERLAY} ]]; then
         ITEM="${SPACE}Overlay configuration file"
         if [[ ! -f ${PRIOR_OVERLAY_FILE} ]] ||
                 cmp -s "${PRIOR_OVERLAY_FILE}" "${PRIOR_OVERLAY_REPO_FILE}" ; then

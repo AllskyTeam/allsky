@@ -42,15 +42,6 @@ if (DHCP_ENABLED) {
 	function DisplayDHCPConfig() {}
 }
 
-function getDay() {
-	if (isset($_GET['day']))
-		$day = " - " . $_GET['day'];
-	else
-		$day = "";
-
-	return $day;
-}
-
 function useLogin() {
 	global $useLogin;
 
@@ -421,7 +412,7 @@ function insertEditorCode($page) {
 }
 
 $page = getVariableOrDefault($_REQUEST, 'page', "");
-$day = getDay();
+$day = getVariableOrDefault($_REQUEST, 'day', "");	if ($day !== "") $day = " - $day";
 $csrf_token = useLogin();
 $remoteWebsiteVersion = getRemoteWebsiteVersion();
 $Title = getPageTitle($page, $day);

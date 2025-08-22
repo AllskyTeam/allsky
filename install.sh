@@ -3483,7 +3483,7 @@ display_image()
 		ALLSKY_EXTENSION="jpg"
 	fi
 
-	I="${ALLSKY_TMP}/${ALLSKY_FILENAME}.${ALLSKY_EXTENSION}"
+	I="${ALLSKY_CURRENT_DIR}/${ALLSKY_FILENAME}.${ALLSKY_EXTENSION}"
 	if [[ -z ${IMAGE_OR_CUSTOM} ]]; then		# No IMAGE_OR_CUSTOM means remove the image
 		display_msg --logonly info "Removing prior notification image."
 		rm -f "${I}"
@@ -3498,7 +3498,7 @@ display_image()
 		MSG="Displaying custom notification image: $( echo -e "${CUSTOM_MESSAGE}" | tr '\n' ' ' )"
 		display_msg --logonly info "${MSG}"
 		MSG="$( "${ALLSKY_SCRIPTS}/generateNotificationImages.sh" \
-			--directory "${ALLSKY_TMP}" \
+			--directory "${ALLSKY_CURRENT_DIR}" \
 			"${ALLSKY_FILENAME}" "${COLOR}" "" "" "" "" \
 			"" "10" "${COLOR}" "${ALLSKY_EXTENSION}" "" "${CUSTOM_MESSAGE}"  2>&1 >/dev/null )"
 		if [[ -n ${MSG} ]]; then

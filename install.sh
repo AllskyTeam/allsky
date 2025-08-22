@@ -3359,7 +3359,11 @@ install_Python()
 	# using the virtual environment which will always exist on the pi 5.
 	# lgpio is installed globally so will be used after rpi.gpio is removed.
 	# Adafruits blinka reinstalls rpi.gpio so we need to ensure its removed.
-	PI_MODEL="${pimodel:0:1}"		# global
+	if [[ -n ${pimodel} ]]; then
+		PI_MODEL="0"					# global
+	else
+		PI_MODEL="${pimodel:0:1}"
+	fi
 	if [[ ${PI_MODEL} == "5" ]]; then
 		display_msg --logonly info "Updating GPIO to lgpio"
 		activate_python_venv
@@ -3844,7 +3848,7 @@ display_wait_message()
 	local MSG
 
 	local HOW_LONG
-	if [[ ${PI_MODEL} < "5" ]]; then
+	if [[ ${PI_MODEL} -lt 5 ]]; then
 		HOW_LONG="up to an hour"
 	else
 		HOW_LONG="several minutes"

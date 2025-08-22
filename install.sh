@@ -48,8 +48,9 @@ CONFIGURATION_NEEDED="true"				# Does Allsky need configuring at end of installa
 ALLSKY_IMAGES_MOVED="false"				# Did the user move ALLSKY_IMAGES, e.g., to an SSD?
 SPACE="    "
 NOT_RESTORED="NO PRIOR VERSION"
+PI_MODEL=""								# The numeric model of Raspberry Pi
 
-declare -r TMP_FILE="/tmp/x"					# temporary file used by many functions
+declare -r TMP_FILE="/tmp/x"			# temporary file used by many functions
 declare -r TAB="$( echo -e '\t' )"
 declare -r NEW_STYLE_ALLSKY="newStyle"
 declare -r OLD_STYLE_ALLSKY="oldStyle"
@@ -2929,14 +2930,14 @@ restore_prior_website_files()
 			if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
 				# If different versions, then update the current one.
 				MSG+="Updating version from ${PRIOR_WEB_CONFIG_VERSION} to ${NEW_WEB_CONFIG_VERSION}."
+				display_msg --logonly info "${MSG}"
 				update_old_website_config_file "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" \
 					"${PRIOR_WEB_CONFIG_VERSION}" "${NEW_WEB_CONFIG_VERSION}"
 			else
 				MSG+="Already current @ version ${NEW_WEB_CONFIG_VERSION}"
+				display_msg --logonly info "${MSG}"
 			fi
-			display_msg --logonly info "${MSG}"
 
-			# Since the config file already exists, this will just run postData.sh:
 			prepare_local_website "" "postData"
 
 		else
@@ -3350,13 +3351,16 @@ install_Python()
 	local CMD="from gpiozero import Device"
 	CMD+="\nDevice.ensure_pin_factory()"
 	CMD+="\nprint(Device.pin_factory.board_info.model)"
-	pimodel="$( echo -e "${CMD}" | python3 2>/dev/null )"	# hide error since it only applies to Pi 5.
+	# Hide error since it only applies to Pi 5.
+	local pimodel="$( echo -e "${CMD}" | python3 2>/dev/null )"
 	echo "${pimodel}" > "${ALLSKY_PI_VERSION_FILE}"
 
-	# if we are on the pi 5 then uninstall rpi.gpio, using the virtual environment which will always
-	# exist on the pi 5. lgpio is installed globally so will be used after rpi.gpio is removed
-	# Adafruits blinka reinstalls rpi.gpio so we need to ensure its removed
-	if [[ ${pimodel:0:1} == "5" ]]; then
+	# If we are on the pi 5 then uninstall rpi.gpio,
+	# using the virtual environment which will always exist on the pi 5.
+	# lgpio is installed globally so will be used after rpi.gpio is removed.
+	# Adafruits blinka reinstalls rpi.gpio so we need to ensure its removed.
+	PI_MODEL="${pimodel:0:1}"		# global
+	if [[ ${PI_MODEL} == "5" ]]; then
 		display_msg --logonly info "Updating GPIO to lgpio"
 		activate_python_venv
 		pip3 uninstall -y rpi.gpio > /dev/null 2>&1
@@ -3839,8 +3843,13 @@ display_wait_message()
 {
 	local MSG
 
-# TODO: adjust time based on Pi model
-	MSG="The following steps can take up to an hour depending on the speed of"
+	local HOW_LONG
+	if [[ ${PI_MODEL} >= "5" ]]; then
+		HOW_LONG="several minutes"
+	else
+		HOW_LONG="up to an hour"
+	fi
+	MSG="The following steps can take ${HOW_LONG} depending on the speed of"
 	MSG+="\nyour Pi and how many of the necessary dependencies are already installed."
 	display_msg notice "${MSG}"
 }

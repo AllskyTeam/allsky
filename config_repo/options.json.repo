@@ -1429,6 +1429,7 @@
 "label_prefix" : "Mini-Timelapse",
 "type" : "integer",
 "carryforward" : true,
+"checkchanges" : true,
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {

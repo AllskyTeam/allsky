@@ -2,7 +2,7 @@
     "comment": "See the 'Settings -> Allsky Website' documentation page for a description of these settings.",
     "config": {
         "comment": "These settings impact what appears in the popout and the constellation overlay",
-        "imageName": "/current/tmp/image.jpg",
+        "imageName": "/current/image.jpg",
         "location": "XX_NEED_TO_UPDATE_XX",
         "latitude": "XX_NEED_TO_UPDATE_XX",
         "longitude": "XX_NEED_TO_UPDATE_XX",

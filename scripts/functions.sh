@@ -20,15 +20,19 @@ if [[ ${ON_TTY} == "true" ]]; then
 	export WSNe="'"
 	export WSVs="'"
 	export WSVe="'"
+	export WSFs="'"
+	export WSFe="'"
 else
 	export NL="<br>"
 	export SPACES="&nbsp; &nbsp; &nbsp;"
 	export STRONGs="<strong>"
 	export STRONGe="</strong>"
-	export WSNs="<span class='WebUISetting'>"		# Web Setting Name start
+	export WSNs="<span class='WebUISetting'>"	# Web Setting Name start
 	export WSNe="</span>"
 	export WSVs="<span class='WebUIValue'>"		# Web Setting Value start
 	export WSVe="</span>"
+	export WSFs="<span class='fileName'>"		# Web Setting Filename start
+	export WSFe="</span>"
 fi
 
 ##### output messages with appropriate color strings

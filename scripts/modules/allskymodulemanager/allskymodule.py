@@ -192,7 +192,7 @@ class ALLSKYMODULE:
         allsky_modules_location  = Path(self._getenv_or_exit("ALLSKY_MODULE_LOCATION")) / "modules"
         allsky_scripts_dir   = Path(self._getenv_or_exit("ALLSKY_SCRIPTS")) / "modules"
         
-        self._module_paths = [allsky_my_files_folder, allsky_modules_location, allsky_scripts_dir]  
+        self._module_install_paths = [allsky_my_files_folder, allsky_modules_location, allsky_scripts_dir]  
               
     def _check_module_function_exists(self, full_module_path: str) -> bool:
 
@@ -256,11 +256,16 @@ class ALLSKYMODULE:
         return status
     
     def _init_module(self):
-        for path in self._module_paths:
+        
+        self._installed_info = []
+        self._source_info = []
+        self._installed = False
+        self._valid = False
+        
+        for path in self._module_install_paths:
             if not os.path.exists(path):
                 continue
             installed_file_path = os.path.join(path, self.name + ".py")
-
             if os.path.exists(installed_file_path) and os.path.isfile(installed_file_path):
                 self._installed = True
                 status = self._validate_module(installed_file_path)
@@ -301,6 +306,7 @@ class ALLSKYMODULE:
             for flow, flow_data in flows.items():
                 flow_module_data = flow_data[self.name_for_flow]["metadata"]["argumentdetails"]
                 code_module_data = self._get_meta_data_from_file(self._installed_info["full_path"])
+                print(self._installed_info["full_path"])
                 code_module_data = code_module_data["argumentdetails"]
                 
                 if shared.compare_flow_and_module(flow_module_data, code_module_data):
@@ -623,7 +629,7 @@ class ALLSKYMODULE:
             secrets_changed = False
             for setting, value in new_flow_data["argumentdetails"].items():
                 if shared.to_bool(value.get("secret", False)):
-                    secrets_key = f"{self.name_for_flow}.{setting}"
+                    secrets_key = f"{self.name.upper()}.{setting.upper()}"
                     if not secrets_key in secrets:
                         secrets[secrets_key] = new_flow_data["arguments"].get(setting, "")
                         new_flow_data["arguments"][setting] =  ""

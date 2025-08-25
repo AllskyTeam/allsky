@@ -103,7 +103,10 @@ class ALLSKYMODULEINSTALLER:
                 return False
         else:
             if dest_path.exists():
-                shared.log(4, f"INFO: {dest_path} exists but is not a repo. Removing...")
+                if re_checkout:
+                    shared.log(4, f"INFO: In auto mode so re-checking out the module repo")
+                else:
+                    shared.log(4, f"INFO: {dest_path} exists but is not a repo. Removing...")
                 shutil.rmtree(dest_path)
 
             dest_path.parent.mkdir(parents=True, exist_ok=True)
@@ -217,13 +220,13 @@ class ALLSKYMODULEINSTALLER:
         shared.log(4, f"================\n")
                 
         for module in self._module_list:
-            try:
-                if module.installed:
-                    if not args.dryrun:
-                        module.install_or_update_module(True)
-            except Exception as e:
-                tb = e.__traceback__
-                shared.log(4, f"ERROR: Function auto_upgrade_modules on line {tb.tb_lineno}: {e}")
+            #try:
+            if module.installed:
+                if not args.dryrun:
+                    module.install_or_update_module(True)
+            #except Exception as e:
+            #    tb = e.__traceback__
+            #    shared.log(4, f"ERROR: Function auto_upgrade_modules on line {tb.tb_lineno}: {e}")
         
         shared.log(4, "INFO: Auto upgrade modules completed\n\n")
     
@@ -353,11 +356,11 @@ if __name__ == "__main__":
     module_installer = ALLSKYMODULEINSTALLER(args.debug)
     
     if args.auto:
-        try:
-            module_installer.auto_upgrade_modules(args)
-        except Exception as e:
-            tb = e.__traceback__
-            print(f"ERROR: Function auto_upgrade_modules on line {tb.tb_lineno}: {e}")
+        #try:
+        module_installer.auto_upgrade_modules(args)
+        #except Exception as e:
+        #    tb = e.__traceback__
+        #    print(f"ERROR: Function auto_upgrade_modules on line {tb.tb_lineno}: {e}")
         sys.exit(0)
                 
     if args.cleanupopt:

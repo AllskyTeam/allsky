@@ -165,21 +165,8 @@ class ALLSKYMODULE:
             
         return result
     
-    def is_migration_required(self) -> bool:
-        migrate_required = False
-        if self._installed_info is not None:
-            if "meta_data" in self._installed_info and "arguments" in self._installed_info["meta_data"]:
-                installed_arguments = self._installed_info.get("meta_data", {}).get("arguments", {})
-                if self._source_info is not None:
-                    source_arguments = self._source_info.get("meta_data", {}).get("arguments", {})
-                    if installed_arguments and source_arguments:
-                        if installed_arguments.keys() != source_arguments.keys():
-                            migrate_required = True
-                    else:
-                        if source_arguments:
-                            migrate_required = True
-                        
-        return migrate_required
+    def is_migration_required(self) -> bool:                        
+        return self._flows_differ
     
     def _get_versions(self) -> Tuple[str, str]:
         source_version = None
@@ -280,8 +267,9 @@ class ALLSKYMODULE:
                 if status["valid"]:
                     self._installed_info = status
                     self._installed_info["path"] = path
+                    self._installed_info["full_path"] = installed_file_path
                     self._valid = True
-                                                            
+                                                           
                 if status["message"]:
                     self._installed_info = status                    
                     self._module_errors["installed"] += status["message"]
@@ -297,6 +285,7 @@ class ALLSKYMODULE:
                     if status["valid"]:
                         self._source_info = status
                         self._source_info["path"] = os.path.join(self._install_source, self.name)
+                        self._valid = True                        
  
                     if status["message"]:
                         self._module_errors["source"] += status["message"]
@@ -304,7 +293,20 @@ class ALLSKYMODULE:
                 else:
                     self._module_errors["source"] += [f"Unable to locate module file to install - ({source_file_path})"]
                     self._valid = False
-                    
+
+        self._flows_differ = False
+        self._differing_flows = []
+        if self.installed:
+            flows = shared.get_flows_with_module(self.name_for_flow)
+            for flow, flow_data in flows.items():
+                flow_module_data = flow_data[self.name_for_flow]["metadata"]["argumentdetails"]
+                code_module_data = self._get_meta_data_from_file(self._installed_info["full_path"])
+                code_module_data = code_module_data["argumentdetails"]
+                
+                if shared.compare_flow_and_module(flow_module_data, code_module_data):
+                    self._flows_differ = True
+                    self._differing_flows.append(flow)
+        
     def _get_meta_data_from_file(self, file_path:str) -> dict | list | None:
         meta_data = None
 
@@ -584,21 +586,25 @@ class ALLSKYMODULE:
     def migrate_module(self) -> bool:
         deprecated = []
         additional = []
+        
+        self._log(4, f"\nINFO: Starting module migration")
+        self._log(4, f"-------------------------------")
+                    
+        self._init_module() #Need to reload the source info as it will have changed if a new version was installed
+                            
         flows = shared.get_flows_with_module(self.name_for_flow)
         for flow, flow_data in flows.items():
-            shared.log(4, f"INFO: Analysing flow {flow}")
+            self._log(4, f"INFO: Analysing flow {flow}")
             old_flow_data = flow_data[self.name_for_flow]["metadata"]
             new_flow_data = self._installed_info["meta_data"]
-
+            
             if not "arguments" in old_flow_data:
                 raise ModuleError(f"{flow} has corrupted meta data for module {self.name}, arguments is missing")
             
             for setting, value in old_flow_data["arguments"].items():
                 if setting in new_flow_data["arguments"]:
                     new_flow_data["arguments"][setting] = value
-                    #shared.log(4, f"INFO: Migrating {setting} - {value} from old to new flow")
                 else:
-                    #shared.log(4, f"INFO: Deprecated {setting} - {value} not available in new flow")
                     deprecated.append({
                         "setting": setting,
                         "value": value
@@ -607,29 +613,45 @@ class ALLSKYMODULE:
             for setting, value in new_flow_data["arguments"].items():
                 if setting not in old_flow_data["arguments"]:
                     new_flow_data["arguments"][setting] = value
-                    #shared.log(4, f"INFO: Additional {setting} - {value} added to flow")
+                    self._log(4, f"INFO: Additional {setting} - {value} added to flow")
                     additional.append({
                         "setting": setting,
                         "value": value
                     })                    
 
+            secrets = shared.load_secrets_file()
+            secrets_changed = False
+            for setting, value in new_flow_data["argumentdetails"].items():
+                if shared.to_bool(value.get("secret", False)):
+                    secrets_key = f"{self.name_for_flow}.{setting}"
+                    if not secrets_key in secrets:
+                        secrets[secrets_key] = new_flow_data["arguments"].get(setting, "")
+                        new_flow_data["arguments"][setting] =  ""
+                        secrets_changed = True
+                        self._log(4, f"INFO: Setting {setting} migrated to env.json file")
+
+                    
+            if secrets_changed:
+                shared.save_secrets_file(secrets)
+            
             flow_data[self.name_for_flow]["metadata"] = new_flow_data
 
-        shared.save_flows_with_module(flow_data)
+        self._log(4, f"INFO: Migrating flows containing module {self.name}")  
+        shared.save_flows_with_module(flows, self.name)
         
-        shared.log(4, f"INFO: Deprecated Settings")          
+        self._log(4, f"INFO: Deprecated Settings")          
         if deprecated:
             for item in deprecated:
-                shared.log(4, f"  Setting: {item['setting']}, Value: {item['value']}")
+                self._log(4, f"  Setting: {item['setting']}, Value: {item['value']}")
         else:
-            shared.log(4, "  No settings were deprecated")
+            self._log(4, "  No settings were deprecated")
     
-        shared.log(4, f"INFO: New Settings")
+        self._log(4, f"INFO: New Settings")
         if additional:
             for item in additional:
-                print(f"  Setting: {item['setting']}, Value: {item['value']}")
+                self._log(4, f"  Setting: {item['setting']}, Value: {item['value']}")
         else:
-            shared.log(4, "  No additional settings were found")
+            self._log(4, "  No additional settings were found")
                 
     @ensure_valid
     def install_or_update_module(self, force:bool = False) -> bool:
@@ -674,7 +696,7 @@ class ALLSKYMODULE:
             if install_required or update_required:
                 self._install_module()
 
-            if migrate_required:
+            if migrate_required or force:
                 self.migrate_module()
                 
         return result
@@ -686,21 +708,16 @@ class ALLSKYMODULE:
         version_string = ""
         if source_version is not None and installed_version is not None:
             version_string = "New version available" if self.is_new_version_available() else "Using latest version"
-        migration_string = "Migration required" if self.is_migration_required() else "No migration required"
+        migration_string = "Migration required, see below for affected flows" if self.is_migration_required() else "No migration required"
         description = self._get_meta_value("installed", "description")
         
         installed_version = (installed_version or "None Available").ljust(15)
         source_version = (source_version or "None Available").ljust(15)
 
-
-        
         message = f"Module {self.name} Status"
         underline = "=" * len(message)
         print(f"{message}\n{underline}\n")
-        
-        print(f"Description:      {description}")
-        print(f"Installed In:     {self._installed_info['path']}")
-        print(f"Migration Status: {migration_string}\n")
+
         print("             Installed         Available")
         print(f"Version:     {installed_version}   {source_version} {version_string}")
         
@@ -708,17 +725,31 @@ class ALLSKYMODULE:
             print("\nSource Module Errors:")
             for error in self._module_errors["source"]:
                 print(f"  - {error}")
+                        
+        print(f"\nDescription:      {description}")
+        print(f"Installed In:     {self._installed_info['path']}")
+        print(f"Migration Status: {migration_string}\n")
+
 
         if self._module_errors["installed"]:
             print("\nInstalled Module Errors:")
             for error in self._module_errors["installed"]:
                 print(f"  - {error}")
-        
+
+        if self._flows_differ:
+            print("The following flows have differing settings to the installed module")
+            print("-------------------------------------------------------------------")
+            for flow in self._differing_flows:
+                print(f"  - {flow}")
+            print("Run this script with --action migrate to update these flows")
+                
+                                            
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Allsky extra module")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode, shows more detailed errors")
     parser.add_argument("--module", required=True, type=str, help="The module to install")
     parser.add_argument("--source", type=str, help="Source folder containing modules")
+    parser.add_argument("--force", action="store_true", help="If migrating and/or installing a module then force the install/migration logic to run")
     parser.add_argument("--action", required=True, choices=["install", "reinstall", "remove", "migrate", "status"], help="Choose action to perform")
 
     args = parser.parse_args()    
@@ -742,7 +773,7 @@ if __name__ == "__main__":
         
     if args.action == "remove":
         try:
-            module_installer.uninstall_module()
+            module_installer.uninstall_module(args.force)
         except Exception as e:
             print(e)
 

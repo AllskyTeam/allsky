@@ -116,7 +116,7 @@ function heading()
 			DISPLAY_HEADER="true"
 			;;
 		*)
-			echo "INTERNAL ERROR in heading(): Unknown HEADER '${HEADER}'."
+			echo "INTERNAL ERROR in heading(): Unknown HEADER '${HEADER}'." >&2
 			;;
 	esac
 
@@ -164,7 +164,7 @@ function check_for_env_file()
 	else
 		echo "'${ALLSKY_ENV}' is empty!"
 	fi
-	echo "Unable to check any remote Website or server settings."
+	echo "Unable to check any remote Website or server settings." >&2
 	return 1
 }
 if check_for_env_file ; then
@@ -174,9 +174,8 @@ else
 fi
 
 # Get all settings.  Give each set a different prefix to avoid name conflicts.
-X="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix S_ --shell )"
-if [[ $? -ne 0 ]]; then
-	echo "${X}"
+if ! X="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix S_ --shell )" ; then
+	echo "${X}" >&2
 	exit 1
 fi
 eval "${X}"
@@ -856,7 +855,7 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 		elif [[ ${MIDPOINT: -1} == "%" ]]; then
 			heading "Error"
 			echo -n "${WSNs}${TYPE} ${LABEL_MIDPOINT}${WSNe} (${MIDPOINT})"
-			echo    " no longer accepts a ${WSVs}%${WSVe}."
+			echo    " must be a number without a ${WSVs}%${WSVe}."
 			echo    "FIX: remove the ${WSVs}%${WSVe}."
 		fi
 	}
@@ -885,7 +884,7 @@ else
 		heading "Summary"
 		[[ ${NUM_INFOS} -gt 0 ]] && echo "Informational messages: ${NUM_INFOS}"
 		[[ ${NUM_WARNINGS} -gt 0 ]] && echo "Warnings: ${NUM_WARNINGS}" && RET=1
-		[[ ${NUM_ERRORS} -gt 0 ]] && echo "Errors: ${NUM_ERRORS}" && RET=2
+		[[ ${NUM_ERRORS} -gt 0 ]] && echo "Errors: ${NUM_ERRORS}" && RET="${EXIT_ERROR_STOP}"
 	fi
 fi
 

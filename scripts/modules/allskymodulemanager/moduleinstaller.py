@@ -200,20 +200,20 @@ class ALLSKYMODULEINSTALLER:
         return modules_to_install
     
     def auto_upgrade_modules(self, args):
-        shared.log(4, f"Auto upgrade modules started")
-        shared.log(4, f"============================\n")
+        shared.log(1, f"Auto upgrade modules started")
+        shared.log(1, f"============================\n")
 
         if args.dryrun:
             shared.log(4, f"WARNING: Using dry run mode, no changes will be made\n")
             
-        shared.log(4, f"Initialising Allsky Module repository")
-        shared.log(4, f"=====================================\n")            
+        shared.log(1, f"Initialising Allsky Module repository")
+        shared.log(1, f"=====================================\n")            
         self._ensure_cloned_repo(self._module_repo, self._module_repo_path, self._branch, True)
         self._branches = self._get_remote_branches(self._module_repo_path)
         self._select_git_branch(args)
 
-        shared.log(4, f"\nReading Installed modules")
-        shared.log(4, f"=========================\n")
+        shared.log(1, f"\nReading Installed modules")
+        shared.log(1, f"=========================\n")
         self._read_modules()
         
         shared.log(4, f"\nUpdating modules")
@@ -228,7 +228,7 @@ class ALLSKYMODULEINSTALLER:
             #    tb = e.__traceback__
             #    shared.log(4, f"ERROR: Function auto_upgrade_modules on line {tb.tb_lineno}: {e}")
         
-        shared.log(4, "INFO: Auto upgrade modules completed\n\n")
+        shared.log(1, "INFO: Auto upgrade modules completed\n\n")
     
         self.cleanup_opt(args)
         

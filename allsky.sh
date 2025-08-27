@@ -41,14 +41,15 @@ fi
 usage_and_exit()
 {
 	local RET=${1}
-	local MSG="\nUsage: ${ME} [--help] [--preview]"
-	MSG+="\nWhere:"
-	MSG+="\n    '--help' displays this message and the help message from the capture program, then exits."
-	MSG+="\n    '--preview' displays images on your screen as they are taken."
+	local USAGE="\nUsage: ${ME} [--help] [--preview]"
+	USAGE+="\nArgumens:"
+	USAGE+="\n   --help      Displays this message and the help message from the capture program, then exits."
+	USAGE+="\n   --preview   Displays images on your screen as they are taken."
 	if [[ ${RET} -eq 0 ]]; then
-		W_ "${MSG}" >&2
+		W_ "${USAGE}" >&2
+		# Do NOT exit yet.
 	else
-		E_ "${MSG}" >&2
+		E_ "${USAGE}" >&2
 		exit "${RET}"
 	fi
 }
@@ -333,7 +334,7 @@ fi
 
 # Make directories that need to exist.
 if [[ -d ${ALLSKY_CURRENT_DIR} ]]; then
-	# remove any lingering old image files.
+	# Remove any lingering temporary old image files.
 	rm -f "${ALLSKY_CURRENT_DIR}/${ALLSKY_FILENAME}"-20*."${ALLSKY_EXTENSION}"	# "20" for 2000 and later
 else
 	# We should never get here since ${ALLSKY_CURRENT_DIR} is created during installation,
@@ -367,11 +368,13 @@ if ! ARGS="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --capture-only )" ; then
 fi
 
 # We must pass "-config ${ARGS_FILE}" on the command line and
-# other settings needed at the start of the capture program.
+# other settings needed at the start of the capture program,
+# so don't include them in the ARGS_FILE.
 {
 	echo "${ARGS}" |
-		grep -E -i -v "^config=|^debuglevel=^cmd=|^cameramodel|^cameranumber|^locale="
+		grep -E -i -v "^debuglevel=|^cameramodel=|^cameranumber=|^locale=|^config="
 
+	# These aren't settings but are needed by the capture programs.
 	echo "version=${ALLSKY_VERSION}"
 	echo "save_dir=${ALLSKY_CURRENT_DIR}"
 	[[ ${PREVIEW} == "true" ]] && echo "preview=true"

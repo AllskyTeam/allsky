@@ -1315,7 +1315,7 @@ def get_rpi_metadata():
             metadata_path = args[i + 1]
             break
     if metadata_path is None:
-        metadata_path = os.path.join(ALLSKY_TMP,'metadata.txt')
+        metadata_path = os.path.join(ALLSKY_CURRENT_DIR, 'metadata.txt')
 
     return metadata_path
 

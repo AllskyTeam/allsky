@@ -611,7 +611,7 @@ do
 			do
 				CHANGES+=( "${s}" "${s}" "${OVERLAY_NAME}" )
 			done
-			COMPUTER="$( get_computer )"
+			COMPUTER="$( get_computer "" )"
 			CHANGES+=( "computer" "Computer" "${COMPUTER}" )
 			CHANGES+=( "camera" "Camera" "${CAMERA_TYPE} ${CAMERA_MODEL}" )
 

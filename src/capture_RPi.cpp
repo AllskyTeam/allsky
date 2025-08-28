@@ -45,7 +45,6 @@ bool bDisplay					= false;
 std::string dayOrNight;
 int numTotalErrors				= 0;				// Total number of errors, fyi
 int numConsecutiveErrors		= 0;				// Number of consecutive errors
-int maxErrors					= 4;				// Max number of errors in a row before we exit
 
 bool gotSignal					= false;			// Did we get signal?
 int iNumOfCtrl					= NOT_SET;			// Number of camera control capabilities
@@ -79,6 +78,7 @@ std::string showDebugFile(string debugFile)
 // Build capture command to capture the image from the camera.
 // If an argument is IS_DEFAULT, the user didn't set it so don't pass to the program and
 // the default will be used.
+string savedImage = "";
 int RPicapture(config cg, cv::Mat *image)
 {
 	stringstream ss, ss2, ss_cmd;		// temporary variables
@@ -112,7 +112,9 @@ int RPicapture(config cg, cv::Mat *image)
 	ss.str("");
 	ss << cg.fullFilename;
 
-	command += " --thumb none --output '" + ss.str() + "'";		// don't include a thumbnail in the file
+	command += " --thumb none";		// don't include a thumbnail in the file
+	savedImage = ss.str();
+	command += " --output '" + savedImage + "'";
 
 	if (cg.isLibcamera)
 	{
@@ -715,7 +717,7 @@ int main(int argc, char *argv[])
 			{
 				// Just transitioned from night to day, so execute end of night script
 				Log(1, "Processing end of night data\n");
-				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/scripts/endOfNight.sh &", CG.allskyHome);
+				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/endOfNight.sh &", CG.allskyScripts);
 				// Not too useful to check return code for commands run in the background.
 				system(bufTemp);
 				justTransitioned = false;
@@ -766,7 +768,7 @@ int main(int argc, char *argv[])
 			{
 				// Just transitioned from day to night, so execute end of day script
 				Log(1, "Processing end of day data\n");
-				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/scripts/endOfDay.sh &", CG.allskyHome);
+				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/endOfDay.sh &", CG.allskyScripts);
 				// Not too useful to check return code for commands run in the background.
 				system(bufTemp);
 				justTransitioned = false;
@@ -904,6 +906,8 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				numExposures++;
 				numConsecutiveErrors = 0;
 
+				CG.lastMean = aegCalcMean(pRgb, true);
+
 // TODO: NEW: use current values if manual mode or using raspistill
 // Otherwise use the value from metadata.
 				if (CG.currentAutoAWB || ! CG.isLibcamera)
@@ -912,11 +916,11 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					CG.lastWBB = CG.currentWBB;
 				}
 
-				CG.lastFocusMetric = CG.determineFocus ? (int)round(get_focus_metric(pRgb)) : -1;
-
 				// If takeDarkFrames is off, add overlay text to the image
 				if (! CG.takeDarkFrames)
 				{
+					CG.lastFocusMetric = CG.determineFocus ? (int)round(get_focus_metric(pRgb)) : -1;
+
 					CG.lastExposure_us = myRaspistillSetting.shutter_us;
 					if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 					{
@@ -927,19 +931,10 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 						CG.lastGain = CG.currentGain;	// ZWO gain=0.1 dB , RPi gain=factor
 					}
 
-					CG.lastMean = aegCalcMean(pRgb, true);
 					if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 					{
 						// set myRaspistillSetting.shutter_us and myRaspistillSetting.analoggain
 						aegGetNextExposureSettings(&CG, myRaspistillSetting, myModeMeanSetting);
-
-						if (CG.lastMean == -1)
-						{
-							Log(-1, "*** %s: ERROR: aegCalcMean() returned mean of -1.\n", CG.ME);
-							Log(2, "  > Sleeping from failed exposure: %.1f seconds\n", (float)CG.currentDelay_ms / MS_IN_SEC);
-							usleep(CG.currentDelay_ms * US_IN_MS);
-							continue;
-						}
 					}
 					else {
 						myRaspistillSetting.shutter_us = CG.currentExposure_us;
@@ -969,22 +964,27 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					CG.currentSkipFrames--;
 					Log(2, "  >>>> Skipping this frame.  %d left to skip\n", CG.currentSkipFrames);
 					// Do not save this frame or sleep after it.
-					// We just started taking images so no need to check if DAY or NIGHT changed
+					// We just started taking images so no need to check if DAY or NIGHT changed.
 					if (remove(CG.fullFilename) != 0)
 						Log(0, "*** %s: ERROR: Unable to remove '%s': %s\n",
 							CG.ME, CG.fullFilename, strerror(errno));
 					continue;
 				}
-				else
+				else if (meanIsOK(&CG, exposureStartDateTime))	// meanIsOK() outputs messages
 				{
 					char cmd[1100+strlen(CG.allskyHome)];
-					Log(1, "  > Saving %s image '%s'\n", CG.takeDarkFrames ? "dark" : dayOrNight.c_str(), CG.finalFileName);
-					snprintf(cmd, sizeof(cmd), "%s/scripts/saveImage.sh %s '%s'", CG.allskyHome, dayOrNight.c_str(), CG.fullFilename);
+					const char *t = CG.takeDarkFrames ? "dark" : dayOrNight.c_str();
+					Log(1, "  > Saving %s image '%s'\n", t, CG.finalFileName);
+					snprintf(cmd, sizeof(cmd), "%s/saveImage.sh %s '%s'",
+						CG.allskyScripts, dayOrNight.c_str(), CG.fullFilename);
 
 					add_variables_to_command(CG, cmd, exposureStartDateTime);
 					strcat(cmd, " &");
 					// Not too useful to check return code for commands run in the background.
 					system(cmd);
+				} else {
+					// We're not using the image so delete it.
+					unlink(savedImage.c_str());
 				}
 
 				std::string s;
@@ -999,9 +999,9 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				// Unable to take picture.
 				numTotalErrors++;
 				numConsecutiveErrors++;
-				if ((numConsecutiveErrors % maxErrors) == 0)
+				if ((numConsecutiveErrors % CG.maxErrors) == 0)
 				{
-					Log(0, "*** %s: ERROR: maximum number of consecutive errors of %d reached; capture program stopped. Total errors=%'d.\n", CG.ME, maxErrors, numTotalErrors);
+					Log(0, "*** %s: ERROR: maximum number of consecutive errors of %d reached; capture program stopped. Total errors=%'d.\n", CG.ME, CG.maxErrors, numTotalErrors);
 					Log(0, "Make sure cable between camera and Pi is all the way in.\n");
 					Log(0, "The last error was: %s", showDebugFile(errorOutput).c_str());
 					closeUp(EXIT_ERROR_STOP);

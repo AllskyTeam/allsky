@@ -83,10 +83,10 @@ sunwait:
 	@cp sunwait-src/sunwait .
 	@echo `date +%F\ %R:%S` Done.
 
-# This is only needed for GitHub to compile
+# This is only needed for GitHub to compile.  install.sh will fail on GitHub.
 include/allsky_common.h: include/allsky_common.h.repo
 	@echo creating fake $@ ...
-	@cp include/allsky_common.h.repo $@
+	@../install.sh --function update_allsky_common >/dev/null 2>&1 || sed -e 's/XX.*XX/1/' include/allsky_common.h.repo > $@
 
 allsky_common.o: allsky_common.cpp include/allsky_common.h
 	@echo Building $@ ...

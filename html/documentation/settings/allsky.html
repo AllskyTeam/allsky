@@ -237,7 +237,7 @@ A typical page is below.
 
 <tr><td id="nighttimesettings" class="settingsHeader" colspan="3">Nighttime Settings</td></tr>
 <tr><td class="settingsHeader settingsHeaderNote" colspan="3">
-	Unless otherwise specified, these setttings are the same as the daytime ones.</td>
+	Unless otherwise specified, these setttings are the same as the Daytime ones.</td>
 </tr>
 
 <tr><td id="nightautoexposure"><span class="WebUISetting">Auto-Exposure</span></td>
@@ -518,6 +518,16 @@ A typical page is below.
 	of dark frames, including how to take and use them.
 	</td>
 </tr>
+<tr><td id="imageremovebadhighdarkframe"><span class="WebUISetting">Dark Frame Upper Threshold</span></td>
+	<td>0.05</td>
+	<td>Any dark frame that has a mean brightness higher than this number is not saved.
+		<br>If you're getting messages about "bad images" while taking dark frames,
+		first make sure your lens is FULLY covered and NO light is getting in.
+		<br>If you are POSITIVE no light is getting in and your camera is noisy,
+		then increase this to <code>0.1</code> and see if it helps.
+		If not, then increase it more.
+	</td>
+</tr>
 <tr><td id="usedarkframes"><span class="WebUISetting">Use Dark Frames</span></td>
 	<td>No</td>
 	<td>Enable to perform dark frame subtraction at night.
@@ -736,6 +746,14 @@ A typical page is below.
 	<td>Images whose mean brightness is above this will be removed.
 	Useful values range from <code>0.8</code> to around <code>0.95</code>.
 	<br>Set to <code>0</code> to disable this check.
+	</td>
+</tr>
+<tr><td id="imeagesremovebadcount"><span class="WebUISetting">Remove Bad Images Threshold Count</span></td>
+	<td>5</td>
+	<td>Display a System Message when this many consecutive "bad images" are taken.
+		<br>A notification image will also be displayed telling you how many consecutive bad images
+		there are.
+		Once a "good" image is taken, the notification image will be replaced by the good image.
 	</td>
 </tr>
 <tr><td id="imagecreatethumbnails"><span class="WebUISetting">Create Image Thumbnails</span></td>

@@ -1529,11 +1529,22 @@ function get_RAM()
 # Return the "computer" - the Pi model and amount of memory in GB
 function get_computer()
 {
+	local PI_MODEL_ONLY="false"
+	if [[ ${1} == "--pi-model-only" ]]; then
+		PI_MODEL_ONLY="true"
+		shift
+	fi
 	# The file has a NULL at the end so to avoid a bash warning, ignore it.
-	local MODEL="$( tr --delete '\0' < /sys/firmware/devicetree/base/model |
-			sed 's/Raspberry Pi/RPi/')"
-	local GB="$( get_RAM "GB" )"
-	echo "${MODEL}, ${GB} GB"
+	# Contents example:
+	#	Raspberry Pi 5 Model B Rev 1.0p
+	local MODEL="$( tr --delete '\0' < /sys/firmware/devicetree/base/model )"
+
+	if [[ ${PI_MODEL_ONLY} == "true" ]]; then
+		echo "${MODEL}" | gawk '{ printf("%s", $3); }'
+	else
+		local GB="$( get_RAM "GB" )"
+		echo "${MODEL/Raspberry Pi/RPi}, ${GB} GB"
+	fi
 }
 
 

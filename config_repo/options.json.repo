@@ -808,7 +808,7 @@
 },
 {
 "name" : "angle",
-"default" : "-6",
+"default" : -6,
 "description" : "Altitude of the Sun in degrees relative to the horizon at which to switch between day and night.",
 "label" : "Angle",
 "type" : "float",
@@ -825,6 +825,18 @@
 "type" : "boolean",
 "usage" : "capture",
 "action" : "stop"
+},
+{
+"name" : "imageremovebadhighdarkframe",
+"minimum" : 0,
+"maximum" : 0.25,
+"default" : 0.05,
+"description" : "Delete dark frames whose mean is above this value.  Increase if your camera is very noisy and you are SURE the lens is fully covered.",
+"label" : "Dark Frame Upper Threshold",
+"type" : "float",
+"usage" : "capture",
+"carryforward" : true,
+"checkchanges" : true
 },
 {
 "name" : "usedarkframes",
@@ -1191,6 +1203,7 @@
 "description" : "Delete images whose mean is below this value.<br><span class='WebUIValue'>0</span> disables this check.",
 "label" : "Remove Bad Images Threshold Low",
 "type" : "float",
+"usage" : "capture",
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
@@ -1201,6 +1214,18 @@
 "description" : "Delete images whose mean is above this value.<br><span class='WebUIValue'>0</span> disables this check.",
 "label" : "Remove Bad Images Threshold High",
 "type" : "float",
+"usage" : "capture",
+"booldependson" : "savedaytimeimages OR savenighttimeimages"
+},
+{
+"name" : "imageremovebadcount",
+"minimum" : 1,
+"maximum" : 20,
+"default" : 5,
+"description" : "Display a System Message when this many consecutive 'bad' images are found.",
+"label" : "Remove Bad Images Threshold Count",
+"type" : "integer",
+"usage" : "capture",
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
@@ -1429,7 +1454,6 @@
 "label_prefix" : "Mini-Timelapse",
 "type" : "integer",
 "carryforward" : true,
-"checkchanges" : true,
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {

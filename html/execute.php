@@ -44,6 +44,8 @@ if ($use_TEXT) {
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
 	<link href="documentation/css/custom.css" rel="stylesheet">
+	<link href="documentation/css/light.css" rel="stylesheet">
+	<link href="documentation/css/documentation.css" rel="stylesheet">
 	<link rel="shortcut icon" type="image/png" href="documentation/img/allsky-favicon.png">
 	<title>Execute <?php echo "$ID"; ?></title>
 </head>
@@ -137,7 +139,7 @@ function checkRet($cmd, $return_code, $return_string)
 		if ($use_TEXT) {
 			echo $return_string;
 		} else {
-			echo "<pre style='font-size: 125%'>";
+			echo "<pre style='font-size: 115%'>";
 			echo $return_string;
 			echo "</pre>";
 		}

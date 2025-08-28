@@ -611,7 +611,7 @@ do
 			do
 				CHANGES+=( "${s}" "${s}" "${OVERLAY_NAME}" )
 			done
-			COMPUTER="$( get_computer )"
+			COMPUTER="$( get_computer "" )"
 			CHANGES+=( "computer" "Computer" "${COMPUTER}" )
 			CHANGES+=( "camera" "Camera" "${CAMERA_TYPE} ${CAMERA_MODEL}" )
 
@@ -660,8 +660,7 @@ do
 			;;
 
 		"filename")
-# TODO: Use  ${S_type}  ??
-			if check_filename_type "${NEW_VALUE}" "$( settings '.type' )" ; then
+			if check_filename_type "${NEW_VALUE}" "${S_type}" ; then
 				check_website && WEBSITE_CONFIG+=("config.imageName" "${LABEL}" "${NEW_VALUE}")
 				WEBSITE_VALUE_CHANGED="true"
 			else
@@ -686,6 +685,15 @@ do
 						echo "${wBR}FIX: Either disable the setting or take dark frames."
 					fi
 				fi
+			fi
+			;;
+
+		"imageremovebadhighdarkframe")
+			if [[ $( echo "${NEW_VALUE} > ${OLD_VALUE}" | bc ) -eq 1 ]] ; then
+				MSG="Having to increase ${WSNs}${LABEL}${WSNe} is often a"
+				MSG+=" sign that the lens is not fully covered"
+				MSG+=" or your cameras is VERY noisy."
+				wI_ "${MSG}"
 			fi
 			;;
 

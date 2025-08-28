@@ -73,8 +73,7 @@ void Log(int required_level, const char *fmt, ...)
 			}
 
 			char command[sizeof(msg) + 100];
-			snprintf(command, sizeof(command)-1, "%s/scripts/addMessage.sh --type %s --msg '%s'",
-				CG.allskyHome, severity, msg);
+			snprintf(command, sizeof(command)-1, "%s/addMessage.sh --type %s --msg '%s'", CG.allskyScripts, severity, msg);
 			Log(4, "Executing %s\n", command);
 			(void) system(command);
 		}
@@ -789,7 +788,7 @@ int displayNotificationImage(char const *arg)
 {
 	char cmd[1024];
 
-	snprintf(cmd, sizeof(cmd)-1, "%s/scripts/copyNotificationImage.sh %s", CG.allskyHome, arg);
+	snprintf(cmd, sizeof(cmd)-1, "%s/copyNotificationImage.sh %s", CG.allskyScripts, arg);
 	Log(4, "Calling system(%s)\n", cmd);
 	return(system(cmd));
 }
@@ -1067,6 +1066,7 @@ void displayHelp(config cg)
 	printf(" -%-*s - Optional configuration file to use instead of,\n", n, "config s");
 	printf("  %-*s   or in addition to, command-line arguments.\n", n, "");
 	printf("  %-*s   The file is read when seen on the command line [none].\n", n, "");
+	printf(" -%-*s - Maximum consecutive errors before exiting [%d].\n", n, "maxcaptureerrors n", cg.maxErrors);
 	if (cg.ct == ctRPi) {
 		printf(" -%-*s - Image saturation.\n", n, "saturation n");
 		printf(" -%-*s - Image contrast.\n", n, "contrast n");
@@ -1103,7 +1103,8 @@ void displayHelp(config cg)
 		printf("  %-*s      -6 = civil twilight\n", n, "");
 		printf("  %-*s     -12 = nautical twilight\n", n, "");
 		printf("  %-*s     -18 = astronomical twilight.\n", n, "");
-	printf(" -%-*s - 'true' takes dark frames [%s].\n", n, "takeDarkFrames b", yesNo(cg.takeDarkFrames));
+	printf(" -%-*s - 'true' takes dark frames [%s].\n", n, "takedarkframes b", yesNo(cg.takeDarkFrames));
+	printf(" -%-*s - Delete dark frames higher than this value [%.4f].\n", n, "imageremovebadhighdarkframe n", cg.darkFrameTooHigh);
 	printf(" -%-*s - Your locale; determines thousands separator and decimal point [%s].\n", n, "locale s", "locale on Pi");
 	printf("  %-*s   Type 'locale' at a command prompt to determine yours.\n", n, "");
 	if (cg.ct == ctZWO) {
@@ -1149,6 +1150,12 @@ void displayHelp(config cg)
 	printf(" -%-*s - Text font size [%.2f].\n", n, "fontsize n", cg.overlay.fontsize);
 	printf(" -%-*s - Text font line Thickness [%ld].\n", n, "fontline n", cg.overlay.linewidth);
 	printf(" -%-*s - 'true' enables outline font [%s].\n", n, "outlinefont b", yesNo(cg.overlay.outlinefont));
+
+	printf("\nPost capture settings:\n");
+	printf(" -%-*s - Remove bad images threshold low [%.4f].\n", n, "imageremovebadlow n", cg.imageTooLow);
+	printf(" -%-*s - Remove bad images threshold high [%.4f].\n", n, "imageremovebadhigh n", cg.imageTooHigh);
+	printf(" -%-*s - Remove bad images threshold count [%d].\n", n, "imageremovebadcount n", cg.imageTooCount);
+	printf(" -%-*s - Remove bad images count file.\n", n, "bad_image_count_file s");
 
 	printf("\nMisc. settings:\n");
 	printf(" -%-*s - Last camera model [no default].\n", n, "cameramodel s");
@@ -1287,6 +1294,12 @@ void displaySettings(config cg)
 	printf("   Preview: %s\n", yesNo(cg.preview));
 	printf("   Focus mode: %s\n", yesNo(cg.determineFocus));
 	printf("   Taking Dark Frames: %s\n", yesNo(cg.takeDarkFrames));
+	printf("   Delete Dark Frames higher than: %.4f\n", cg.darkFrameTooHigh);
+	printf("   Remove Bad Images Threshold Low: %.4f\n", cg.imageTooLow);
+	printf("   Remove Bad Images Threshold High: %.4f\n", cg.imageTooHigh);
+	printf("   Remove Bad Images Threshold Count: %d\n", cg.imageTooCount);
+	printf("   Remove Bad Images Threshold Count File: %s\n", cg.imageTooCountFile);
+	printf("   Maximum errors before exiting: %d\n", cg.maxErrors);
 	printf("   Debug Level: %ld\n", cg.debugLevel);
 	printf("   On TTY: %s\n", yesNo(cg.tty));
 	if (cg.ct == ctRPi && cg.isLibcamera) {
@@ -1805,6 +1818,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 		}
 
 		// daytime and nighttime settings
+		else if (strcmp(a, "maxcaptureerrors") == 0)
+		{
+			cg->maxErrors = atoi(argv[++i]);
+		}
 		else if (strcmp(a, "saturation") == 0)
 		{
 			cg->saturation = atof(argv[++i]);
@@ -1897,6 +1914,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 		{
 			cg->takeDarkFrames = getBoolean(argv[++i]);
 		}
+		else if (strcmp(a, "imageremovebadhighdarkframe") == 0)
+		{
+			cg->darkFrameTooHigh = atof(argv[++i]);
+		}
 		else if (strcmp(a, "locale") == 0)
 		{
 			cg->locale = argv[++i];
@@ -1916,6 +1937,24 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 		else if (strcmp(a, "extraargs") == 0)
 		{
 			cg->extraArgs = argv[++i];
+		}
+
+		// post capture settings
+		else if (strcmp(a, "imageremovebadlow") == 0)
+		{
+			cg->imageTooLow = atof(argv[++i]);
+		}
+		else if (strcmp(a, "imageremovebadhigh") == 0)
+		{
+			cg->imageTooHigh = atof(argv[++i]);
+		}
+		else if (strcmp(a, "imageremovebadcount") == 0)
+		{
+			cg->imageTooCount = atoi(argv[++i]);
+		}
+		else if (strcmp(a, "bad_image_count_file") == 0)
+		{
+			cg->imageTooCountFile = argv[++i];
 		}
 
 		// overlay settings
@@ -2154,3 +2193,79 @@ void doLocale(config *cg)
 	}
 }
 
+
+// Save a "bad" file name.
+#define BAD_MSG_SIZE	200
+bool saveBadFileName(config *cg, char *msg)
+{
+	Log(1, "    >> %s\n", msg);
+
+	cg->imageTooConsecutiveCount++;
+	if (cg->imageTooConsecutiveCount % cg->imageTooCount == 0) {
+		char command[BAD_MSG_SIZE + 100];
+		snprintf(command, sizeof(command)-1, "%s/addMessage.sh --type warning --msg \"%s\n%s\" &",
+			cg->allskyScripts,
+			// Don't add a number since that causes multiple System Messages.
+			"Multiple consecutive bad images.",
+			"Click <a external='true' href='/execute.php?ID=AM_ALLSKY_CONFIG bad_images_info --html'>here</a> to see a summary.");
+		Log(4, "Executing %s\n", command);
+		(void) system(command);
+	}
+	if (cg->imageTooConsecutiveCount >= cg->imageTooCount) {
+		char command[BAD_MSG_SIZE + 100];
+		snprintf(command, sizeof(command)-1, "%s/generateNotificationImages.sh "
+				"--directory '%s' '%s' "
+				"%s '%s' %d '%s' '%s' '%s' %d %s %s '%s' "
+				"'WARNING:\\n\\n%d consecutive\\nbad images.\\nSee the WebUI.' >&2",
+			cg->allskyScripts, cg->saveDir, cg->fileNameOnly,
+			"yellow", "", 85, "", "", "", 5, "yellow", cg->imageExt, "",
+			cg->imageTooConsecutiveCount);
+		Log(4, "Executing %s\n", command);
+		(void) system(command);
+	}
+
+	FILE *fp = fopen(cg->imageTooCountFile, "a");
+	if (fp == NULL) {
+		Log(1, "  > *** %s: WARNING: Failed To Open '%s': %s\n", cg->ME, cg->imageTooCountFile, strerror(errno));
+		return false;
+	}
+
+	fprintf(fp, "%s\n", msg);
+	fclose(fp);
+	return true;
+}
+
+// Check the mean against the low and high thresholds.
+bool meanIsOK(config *cg, timeval startTime)
+{
+	static 
+	float high;
+
+	if (cg->takeDarkFrames) {
+		high = cg->darkFrameTooHigh;
+	} else {
+		high = cg->imageTooHigh;
+	}
+
+	if (high != 0.0 && cg->lastMean > high) {
+		char msg[BAD_MSG_SIZE];
+		// If this message is changed scripts/utilities/badImagesInfo.sh also needs changing.
+		sprintf(msg, "Bad Image at %s has MEAN of %0.4f and is above high threshold of %0.4f",
+			formatTime(startTime, "%Y%m%d%H%M%S"),
+			cg->lastMean, high);
+		saveBadFileName(cg, msg);
+		return false;
+
+	} else if (cg->imageTooLow != 0.0 && cg->lastMean < cg->imageTooLow) {
+		char msg[BAD_MSG_SIZE];
+		// If this message is changed scripts/utilities/badImagesInfo.sh also needs changing.
+		sprintf(msg, "Bad Image at %s has MEAN of %0.4f and is below low threshold of %0.4f",
+			formatTime(startTime, "%Y%m%d%H%M%S"),
+			cg->lastMean, cg->imageTooLow);
+		saveBadFileName(cg, msg);
+		return false;
+	}
+
+	cg->imageTooConsecutiveCount = 0;
+	return true;
+}

@@ -1740,6 +1740,27 @@ prompt_for_prior_Allsky()
 
 
 ####
+# Make separate function so it can be called from command line for testing.
+update_allsky_common()
+{
+	# Set some default locations needed by the capture programs so we
+	# don't need to pass them in on the command line - if they are passed in,
+	# those values overwrite the defaults.
+	sed \
+		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+		-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
+		-e "s;XX_CONNECTED_CAMERAS_FILE_XX;${ALLSKY_CONNECTED_CAMERAS_INFO};" \
+		-e "s;XX_RPI_CAMERA_INFO_FILE_XX;${ALLSKY_RPi_SUPPORTED_CAMERAS};" \
+		-e "s;XX_EXIT_OK_XX;${EXIT_OK};" \
+		-e "s;XX_EXIT_RESTARTING_XX;${EXIT_RESTARTING};" \
+		-e "s;XX_EXIT_RESET_USB_XX;${EXIT_RESET_USB};" \
+		-e "s;XX_EXIT_ERROR_STOP_XX;${EXIT_ERROR_STOP};" \
+		-e "s;XX_EXIT_NO_CAMERA_XX;${EXIT_NO_CAMERA};" \
+		"${ALLSKY_HOME}/src/include/allsky_common.h.repo" \
+	> "${ALLSKY_HOME}/src/include/allsky_common.h"
+}
+
+####
 install_dependencies_etc()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
@@ -1769,15 +1790,7 @@ install_dependencies_etc()
 	check_success $? "Allsky dependency installation failed" "${TMP}" "${DEBUG}" ||
 		exit_with_image 1 "${STATUS_ERROR}" "dependency installation failed"
 
-	# Set some default locations needed by the capture programs so we
-	# don't need to pass them in on the command line - if they are passed in,
-	# those values overwrite the defaults.
-	sed \
-		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
-		-e "s;XX_CONNECTED_CAMERAS_FILE_XX;${ALLSKY_CONNECTED_CAMERAS_INFO};" \
-		-e "s;XX_RPI_CAMERA_INFO_FILE_XX;${ALLSKY_RPi_SUPPORTED_CAMERAS};" \
-		"${ALLSKY_HOME}/src/include/allsky_common.h.repo" \
-	> "${ALLSKY_HOME}/src/include/allsky_common.h"
+	update_allsky_common
 
 	# "make -C src deps" may need to install some packages, so needs "sudo".
 	display_msg --log progress "Creating Allsky commands."
@@ -1899,7 +1912,7 @@ convert_settings_file()			# prior_file, new_file
 
 				"computer")
 					# As of ${COMBINED_BASE_VERSION}, we compute the value.
-					VALUE="$( get_computer )"
+					VALUE="$( get_computer "" )"
 					doV "${FIELD}" "VALUE" "${FIELD}" "text" "${NEW_FILE}"
 					;;
 
@@ -3845,10 +3858,10 @@ check_for_required_settings()
 # Display a message informing the user the following steps can take a while.
 display_wait_message()
 {
-	local MSG
+	local MSG  HOW_LONG  M
 
-	local HOW_LONG
-	if [[ ${PI_MODEL} -lt 5 ]]; then
+	M="$( get_computer --pi-model-only )"
+	if [[ ${M:-0} -lt 5 ]]; then
 		HOW_LONG="up to an hour"
 	else
 		HOW_LONG="several minutes"
@@ -3965,7 +3978,6 @@ while [ $# -gt 0 ]; do
 			DEBUG_ARG="${ARG}"		# we can pass this to other scripts
 			LOG_TYPE="--log"
 			;;
-#XXX TODO: is --update still needed?
 		--update)
 			UPDATE="true"
 			;;

@@ -179,6 +179,7 @@ struct config {			// for configuration variables
 	// Some of these variables aren't settings, but are temporary variables that need to be
 	// passed around.
 	char const *ME						= "";			// name of program running
+	int maxErrors						= 5;			// Max number of consecutive errors before we exit
 
 	// Camera number, type and model
 	int numCameras						= 0;			// Number of cameras physically connected

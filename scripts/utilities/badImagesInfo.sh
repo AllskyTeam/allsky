@@ -27,7 +27,7 @@ usage_and_exit()
 	echo "   --show_bad_images   Displays a list of 'bad' images that were removed."
 	echo
 	echo "This command displays information on the 'bad' images, that is,"
-	echo "ones that were too dark or too light and so were deleted."
+	echo "ones that were too dark or too light and so were not saved."
 	echo "The settings to determine 'too dark' and 'too light' are"
 	echo "'${SETTING_NAME} Low' and '${SETTING_NAME} High'."
 	echo
@@ -66,17 +66,17 @@ done
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
 # Log entry format:
-#	2025-02-09T10:44:17.594698-07:00 new-allsky allsky[905780]: removeBadImages.sh: File is bad: \
-#		removed 'image-20250209104345.jpg' (MEAN of 0.167969 is below low threshold of 0.5)
-INFO="$( grep "File is bad:.*MEAN of" "${ALLSKY_LOG}" "${ALLSKY_LOG}.1" 2>/dev/null |
-	sed -e 's/.* removed //' -e 's/(MEAN/MEAN/' -e 's/)//' )"
+#	2025-02-09T10:44:17.594698-07:00 new-allsky allsky[905780]: \
+#		Bad Image at 20250209104345 has MEAN of 0.167969 and is below low threshold of 0.5
+INFO="$( grep "Bad Image at [0-9]* has MEAN of" "${ALLSKY_LOG}" "${ALLSKY_LOG}.1" 2>/dev/null |
+	sed -e 's/.* Bad Image at //' -e 's/ has MEAN of//' -e 's/ and is//' )"
 if [[ -z ${INFO} ]]; then
 	W_ "\nCongratulations - no bad file information found in the Allsky log.\n" >&2
 	exit 1
 fi
 
-#	'image-20250209104345' MEAN of 0.167969 is below low threshold of 0.5
-#	$1                     $2   $3 $4       $5 $6    $7  $8        $9 $10
+#	20250209104345 0.167969 below low threshold of 0.5
+#	$1             $2       $3    $4  $5        $6 $7
 
 if [[ ${HTML} == "true" ]]; then
 	echo -e "<div style='font-size: 125%'>\n";
@@ -95,13 +95,13 @@ echo "$INFO" | gawk -v showBadImages="${SHOW_BAD_IMAGES}" \
 		high_settingName = BON settingName " High" BOFF;
 	}
 	{
-		fileName = $1; gsub(singleQuote, "", fileName);
-		mean = $4;
-		below_above = $6;
-		threshold = $10;
+		fileName = $1;
+		mean = $2;
+		below_above = $3;
+		threshold = $7;
 
 		if (showBadImages) {
-			printf("%s: mean of %0.4f is %s threshold of %0.4f.%s",
+			printf("Image started at %s: mean of %0.4f is %s threshold of %0.4f.%s",
 				fileName, mean, below_above, threshold, BR);
 		}
 
@@ -140,7 +140,7 @@ echo "$INFO" | gawk -v showBadImages="${SHOW_BAD_IMAGES}" \
 	END {
 		if (low_count > 0) {
 			printf("%s%d%s image%s", HLON, low_count, HLOFF, low_count > 1 ? "s" : "");
-			printf(" had a mean brightness below the %s setting of %0.4f so were deleted.%s",
+			printf(" had a mean brightness below the %s setting of %0.4f so were not saved.%s",
 				low_settingName, low_threshold, BR);
 
 			if (low_min == low_max) {
@@ -162,7 +162,7 @@ echo "$INFO" | gawk -v showBadImages="${SHOW_BAD_IMAGES}" \
 			if (low_count > 0) printf("%s", BR);	# Separator
 
 			printf("%s%d%s image%s", HLON, high_count, HLOFF, high_count > 1 ? "s" : "");
-			printf(" had a mean brightness above the %s%s High%s of %0.4f so were deleted.%s",
+			printf(" had a mean brightness above the %s%s High%s of %0.4f so were not saved.%s",
 				BON, settingName, BOFF, high_threshold, BR);
 
 			if (high_min == high_max) {

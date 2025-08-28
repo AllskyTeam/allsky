@@ -1912,7 +1912,7 @@ convert_settings_file()			# prior_file, new_file
 
 				"computer")
 					# As of ${COMBINED_BASE_VERSION}, we compute the value.
-					VALUE="$( get_computer )"
+					VALUE="$( get_computer "" )"
 					doV "${FIELD}" "VALUE" "${FIELD}" "text" "${NEW_FILE}"
 					;;
 

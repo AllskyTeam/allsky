@@ -558,19 +558,18 @@ bool checkForValidExtension(config *cg)
 		strncpy(cg->finalFileName, cg->fileName, sizeof(cg->finalFileName)-1);
 		snprintf(cg->fullFilename, sizeof(cg->fullFilename), "%s/%s", cg->saveDir, cg->finalFileName);
 	}
-	else
-	{
-		// There shouldn't be any "/" in fileName; if there is, only get the file name portion.
-		char const *slash = strrchr(cg->fileName, '/');
-		if (slash == NULL)
-			strncpy(cg->fileNameOnly, cg->fileName, sizeof(cg->fileNameOnly)-1);
-		else
-			strncpy(cg->fileNameOnly, slash + 1, sizeof(cg->fileNameOnly)-1);
 
-		// Keep track of the filename without the extension, which we know is there.
-		char *dot = strrchr(cg->fileNameOnly, '.');
-		*dot = '\0';
-	}
+	// There shouldn't be any "/" in fileName; if there is, only get the file name portion.
+	char const *slash = strrchr(cg->fileName, '/');
+	if (slash == NULL)
+		strncpy(cg->fileNameOnly, cg->fileName, sizeof(cg->fileNameOnly)-1);
+	else
+		strncpy(cg->fileNameOnly, slash + 1, sizeof(cg->fileNameOnly)-1);
+
+	// Keep track of the filename without the extension, which we know is there.
+	char *dot = strrchr(cg->fileNameOnly, '.');
+	if (dot != NULL) *dot = '\0';
+
 	Log(4, "fileName=[%s], fileNameOnly=[%s], finalFileName=[%s]\n", cg->fileName, cg->fileNameOnly, cg->finalFileName);
 
 	return(true);
@@ -2213,13 +2212,14 @@ bool saveBadFileName(config *cg, char *msg)
 	}
 	if (cg->imageTooConsecutiveCount >= cg->imageTooCount) {
 		char command[BAD_MSG_SIZE + 100];
+		// "-" means use the Filename setting's info.
 		snprintf(command, sizeof(command)-1, "%s/generateNotificationImages.sh "
 				"--directory '%s' '%s' "
-				"%s '%s' %d '%s' '%s' '%s' %d %s %s '%s' "
-				"'WARNING:\\n\\n%d consecutive\\nbad images.\\nSee the WebUI.' >&2",
-			cg->allskyScripts, cg->saveDir, cg->fileNameOnly,
-			"yellow", "", 85, "", "", "", 5, "yellow", cg->imageExt, "",
-			cg->imageTooConsecutiveCount);
+				"'%s' '%s' %d '%s' '%s' '%s' %d %s '%s' '%s' "
+				"'WARNING:\\n\\n%d consecutive\\nbad %s.\\nSee the WebUI.' >&2",
+			cg->allskyScripts, cg->saveDir, "+",
+			"yellow", "", 85, "", "", "", 5, "yellow", "+", "",
+			cg->imageTooConsecutiveCount, cg->takeDarkFrames ? "dark frames" : "images");
 		Log(4, "Executing %s\n", command);
 		(void) system(command);
 	}

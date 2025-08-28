@@ -1542,9 +1542,8 @@ function get_computer()
 	if [[ ${PI_MODEL_ONLY} == "true" ]]; then
 		echo "${MODEL}" | gawk '{ printf("%s", $3); }'
 	else
-		MODEL="$( echo "${MODEL}" | sed 's/Raspberry Pi/RPi/')"
 		local GB="$( get_RAM "GB" )"
-		echo "${MODEL}, ${GB} GB"
+		echo "${MODEL/Raspberry Pi/RPi}, ${GB} GB"
 	fi
 }
 

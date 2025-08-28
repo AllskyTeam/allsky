@@ -2194,11 +2194,40 @@ void doLocale(config *cg)
 	}
 }
 
-// Check the mean against the low and high thresholds.
-bool meanIsOK(config *cg)
+
+// Save a "bad" file name.
+#define BAD_MSG_SIZE	200
+bool saveBadFileName(config *cg, char *msg)
 {
+	Log(1, "    >> %s\n", msg);
+
+	cg->imageTooConsecutiveCount++;
+	if (cg->imageTooConsecutiveCount % cg->imageTooCount == 0) {
+		char command[BAD_MSG_SIZE + 100];
+		snprintf(command, sizeof(command)-1, "%s/scripts/addMessage.sh --type warning --msg \"%d %s\n%s\" &",
+			cg->allskyHome,
+			cg->imageTooConsecutiveCount, " consecutive bad images.",
+			"Click <a external='true' href='/execute.php?ID=AM_ALLSKY_CONFIG bad_images_info --html'>here</a> to see a summary.");
+		Log(4, "Executing %s\n", command);
+		(void) system(command);
+	}
+
+	FILE *fp = fopen(cg->imageTooCountFile, "a");
+	if (fp == NULL) {
+		Log(1, "  > *** %s: WARNING: Failed To Open '%s': %s\n", cg->ME, cg->imageTooCountFile, strerror(errno));
+		return false;
+	}
+
+	fprintf(fp, "%s\n", msg);
+	fclose(fp);
+	return true;
+}
+
+// Check the mean against the low and high thresholds.
+bool meanIsOK(config *cg, timeval startTime)
+{
+	static 
 	float high;
-	int currentBad = cg->imageTooConsecutiveCount;
 
 	if (cg->takeDarkFrames) {
 		high = cg->darkFrameTooHigh;
@@ -2207,12 +2236,24 @@ bool meanIsOK(config *cg)
 	}
 
 	if (high != 0.0 && cg->lastMean > high) {
-		Log(1, "\"%s\" (MEAN of %0.4f is above high threshold of %0.4f)",
-			"", cg->lastmean, high);
+		char msg[BAD_MSG_SIZE];
+		// If this message is changed scripts/utilities/badImagesInfo.sh also needs changing.
+		sprintf(msg, "Bad Image at %s has MEAN of %0.4f and is above high threshold of %0.4f",
+			formatTime(startTime, "%Y%m%d%H%M%S"),
+			cg->lastMean, high);
+		saveBadFileName(cg, msg);
+		return false;
+
 	} else if (cg->imageTooLow != 0.0 && cg->lastMean < cg->imageTooLow) {
-		Log(1, "\"%s\" (MEAN of %0.4f is below low threshold of %0.4f)",
-			"", cg->lastmean, low);
+		char msg[BAD_MSG_SIZE];
+		// If this message is changed scripts/utilities/badImagesInfo.sh also needs changing.
+		sprintf(msg, "Bad Image at %s has MEAN of %0.4f and is below low threshold of %0.4f",
+			formatTime(startTime, "%Y%m%d%H%M%S"),
+			cg->lastMean, cg->imageTooLow);
+		saveBadFileName(cg, msg);
+		return false;
 	}
 
+	cg->imageTooConsecutiveCount = 0;
 	return true;
 }

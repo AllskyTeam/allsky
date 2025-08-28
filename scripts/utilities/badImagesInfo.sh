@@ -38,7 +38,7 @@ usage_and_exit()
 OK="true"
 DO_HELP="false"
 HTML="false"
-SHOW_BAD_IMAGES="0"
+SHOW_BAD_IMAGES=0
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in
@@ -65,12 +65,15 @@ done
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
+BAD_IMAGES_LIST="${ALLSKY_TMP}/bad_images_list.txt"
+
 # Log entry format:
 #	2025-02-09T10:44:17.594698-07:00 new-allsky allsky[905780]: \
 #		Bad Image at 20250209104345 has MEAN of 0.167969 and is below low threshold of 0.5
-INFO="$( grep "Bad Image at [0-9]* has MEAN of" "${ALLSKY_LOG}" "${ALLSKY_LOG}.1" 2>/dev/null |
-	sed -e 's/.* Bad Image at //' -e 's/ has MEAN of//' -e 's/ and is//' )"
-if [[ -z ${INFO} ]]; then
+grep "Bad Image at [0-9]* has MEAN of" "${ALLSKY_LOG}" "${ALLSKY_LOG}.1" 2>/dev/null |
+	sed -e 's/.* Bad Image at //' -e 's/ has MEAN of//' -e 's/ and is//' > "${BAD_IMAGES_LIST}"
+if [[ ! -s ${BAD_IMAGES_LIST} ]]; then
+	rm -f "${BAD_IMAGES_LIST}"
 	W_ "\nCongratulations - no bad file information found in the Allsky log.\n" >&2
 	exit 1
 fi
@@ -79,13 +82,13 @@ fi
 #	$1             $2       $3    $4  $5        $6 $7
 
 if [[ ${HTML} == "true" ]]; then
-	echo -e "<div style='font-size: 125%'>\n";
+	echo -e "<div style='font-size: 115%'>\n";
 else
 	echo		# adds space at top to make it easier to read on a terminal
 fi
 
 # Pass in Bold ON, Bold Off, Highlight ON, Highlight Off
-echo "$INFO" | gawk -v showBadImages="${SHOW_BAD_IMAGES}" \
+gawk -v showBadImages="${SHOW_BAD_IMAGES}" \
 		-v BR="${wBR}" -v BON="${wBOLD}" -v BOFF="${wNBOLD}" -v HLON="${wINFO}" -v HLOFF="${wNC}" \
 		-v singleQuote="'" -v settingName="${SETTING_NAME}" '
 	BEGIN {
@@ -138,6 +141,10 @@ echo "$INFO" | gawk -v showBadImages="${SHOW_BAD_IMAGES}" \
 		}
 	}
 	END {
+		if (low_count == 0 && high_count == 0) {
+			exit(0);
+		}
+
 		if (low_count > 0) {
 			printf("%s%d%s image%s", HLON, low_count, HLOFF, low_count > 1 ? "s" : "");
 			printf(" had a mean brightness below the %s setting of %0.4f so were not saved.%s",
@@ -178,7 +185,16 @@ echo "$INFO" | gawk -v showBadImages="${SHOW_BAD_IMAGES}" \
 					HLON, high_settingName, ave, HLOFF, BR);
 			}
 		}
-	}'
+		exit(1);
+	}' "${BAD_IMAGES_LIST}"
+if [[ $? -ne 0 && ${SHOW_BAD_IMAGES} -eq 0 ]]; then
+	if [[ ${HTML} == "true" ]]; then
+		echo "<br><br>"
+	else
+		echo -e "\n"
+	fi
+	echo "Look in '${BAD_IMAGES_LIST}' for the list of bad images."
+fi
 
 if [[ ${HTML} == "true" ]]; then
 	echo -e "</div>\n";

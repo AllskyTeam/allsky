@@ -86,7 +86,7 @@ sunwait:
 # This is only needed for GitHub to compile
 include/allsky_common.h: include/allsky_common.h.repo
 	@echo creating fake $@ ...
-	@cp include/allsky_common.h.repo $@
+	@sed -e 's/XX.*XX/1/' include/allsky_common.h.repo > $@
 
 allsky_common.o: allsky_common.cpp include/allsky_common.h
 	@echo Building $@ ...

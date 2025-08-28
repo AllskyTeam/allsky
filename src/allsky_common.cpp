@@ -1294,6 +1294,11 @@ void displaySettings(config cg)
 	printf("   Preview: %s\n", yesNo(cg.preview));
 	printf("   Focus mode: %s\n", yesNo(cg.determineFocus));
 	printf("   Taking Dark Frames: %s\n", yesNo(cg.takeDarkFrames));
+	printf("   Delete Dark Frames higher than: %.4f\n", cg.darkFrameTooHigh);
+	printf("   Remove Bad Images Threshold Low: %.4f\n", cg.imageTooLow);
+	printf("   Remove Bad Images Threshold High: %.4f\n", cg.imageTooHigh);
+	printf("   Remove Bad Images Threshold Count: %d\n", cg.imageTooCount);
+	printf("   Remove Bad Images Threshold Count File: %s\n", cg.imageTooCountFile);
 	printf("   Debug Level: %ld\n", cg.debugLevel);
 	printf("   On TTY: %s\n", yesNo(cg.tty));
 	if (cg.ct == ctRPi && cg.isLibcamera) {

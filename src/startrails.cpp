@@ -134,7 +134,8 @@ void usage_and_exit(int);
 
 // Keep track of number of digits in nfiles so file numbers will be consistent width.
 char s_[10];
-void output_msg(struct config_t *cf, char *msg)
+
+void output_msg(char *msg)
 {
 	stdio_mutex.lock();
 	fprintf(dataIO, "%s\n", msg);
@@ -192,7 +193,7 @@ void startrail_worker(
 			// msg contains the error message.
 			stats_ptr->col(f) = -1.0;	// Set to something to avoid "nan" entries.
 			if (*msg != '\0' && (cf->verbose || cf->output_data_file != "")) {
-				output_msg(cf, msg);
+				output_msg(msg);
 			}
 			continue;
 		}

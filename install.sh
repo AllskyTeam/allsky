@@ -1740,6 +1740,26 @@ prompt_for_prior_Allsky()
 
 
 ####
+# Make separate function so it can be called from command line for testing.
+update_allsky_common()
+{
+	# Set some default locations needed by the capture programs so we
+	# don't need to pass them in on the command line - if they are passed in,
+	# those values overwrite the defaults.
+	sed \
+		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+		-e "s;XX_CONNECTED_CAMERAS_FILE_XX;${ALLSKY_CONNECTED_CAMERAS_INFO};" \
+		-e "s;XX_RPI_CAMERA_INFO_FILE_XX;${ALLSKY_RPi_SUPPORTED_CAMERAS};" \
+		-e "s;XX_EXIT_OK_XX;${EXIT_OK};" \
+		-e "s;XX_EXIT_RESTARTING_XX;${EXIT_RESTARTING};" \
+		-e "s;XX_EXIT_RESET_USB_XX;${EXIT_RESET_USB};" \
+		-e "s;XX_EXIT_ERROR_STOP_XX;${EXIT_ERROR_STOP};" \
+		-e "s;XX_EXIT_NO_CAMERA_XX;${EXIT_NO_CAMERA};" \
+		"${ALLSKY_HOME}/src/include/allsky_common.h.repo" \
+	> "${ALLSKY_HOME}/src/include/allsky_common.h"
+}
+
+####
 install_dependencies_etc()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
@@ -1769,15 +1789,7 @@ install_dependencies_etc()
 	check_success $? "Allsky dependency installation failed" "${TMP}" "${DEBUG}" ||
 		exit_with_image 1 "${STATUS_ERROR}" "dependency installation failed"
 
-	# Set some default locations needed by the capture programs so we
-	# don't need to pass them in on the command line - if they are passed in,
-	# those values overwrite the defaults.
-	sed \
-		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
-		-e "s;XX_CONNECTED_CAMERAS_FILE_XX;${ALLSKY_CONNECTED_CAMERAS_INFO};" \
-		-e "s;XX_RPI_CAMERA_INFO_FILE_XX;${ALLSKY_RPi_SUPPORTED_CAMERAS};" \
-		"${ALLSKY_HOME}/src/include/allsky_common.h.repo" \
-	> "${ALLSKY_HOME}/src/include/allsky_common.h"
+	update_allsky_common
 
 	# "make -C src deps" may need to install some packages, so needs "sudo".
 	display_msg --log progress "Creating Allsky commands."

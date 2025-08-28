@@ -167,8 +167,8 @@ void *SaveImgThd(void *para)
 			char cmd[1100+strlen(CG.allskyHome)];
 			Log(4, "  > Saving %s image '%s'\n",
 				CG.takeDarkFrames ? "dark" : dayOrNight.c_str(), CG.finalFileName);
-			snprintf(cmd, sizeof(cmd), "%s/scripts/saveImage.sh %s '%s'",
-				CG.allskyHome, dayOrNight.c_str(), CG.fullFilename);
+			snprintf(cmd, sizeof(cmd), "%s/saveImage.sh %s '%s'",
+				CG.allskyScripts, dayOrNight.c_str(), CG.fullFilename);
 			add_variables_to_command(CG, cmd, exposureStartDateTime);
 			strcat(cmd, " &");
 
@@ -1178,7 +1178,7 @@ int main(int argc, char *argv[])
 			{
 				// Just transitioned from night to day, so execute end of night script
 				Log(1, "Processing end of night data\n");
-				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/scripts/endOfNight.sh &", CG.allskyHome);
+				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/endOfNight.sh &", CG.allskyScripts);
 				system(bufTemp);
 				justTransitioned = false;
 				displayedNoDaytimeMsg = false;
@@ -1277,7 +1277,7 @@ int main(int argc, char *argv[])
 			{
 				// Just transitioned from day to night, so execute end of day script
 				Log(1, "Processing end of day data\n");
-				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/scripts/endOfDay.sh &", CG.allskyHome);
+				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/endOfDay.sh &", CG.allskyScripts);
 				system(bufTemp);
 				justTransitioned = false;
 			}

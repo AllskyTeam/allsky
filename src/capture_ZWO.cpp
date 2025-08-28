@@ -582,7 +582,8 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 	// When in auto-exposure mode the returned exposure length is what the driver thinks the
 	// next exposure should be, and will eventually converge on the correct exposure.
 
-	Log(1, "  > GOT IMAGE%s.", tb);
+	Log(1, "  > GOT IMAGE%s.\n", tb);
+
 	ret = ASIGetControlValue(cg->cameraNumber, ASI_EXPOSURE, &suggestedNextExposure_us, &wasAutoExposure);
 	if (ret != ASI_SUCCESS)
 	{
@@ -591,10 +592,15 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 	}
 	else if (cg->ZWOexposureType != ZWOsnap)
 	{
-		Log(3, cg->HB.useHistogram ? " Ignoring suggested next exposure of %s." : "  Suggested next exposure: %s.",
-			length_in_units(suggestedNextExposure_us, true));
+		const char *m;
+		if (cg->HB.useHistogram) {
+			m = " Ignoring suggested next exposure of %s.";
+		} else {
+			m = "  Suggested next exposure: %s.";
+		}
+		Log(3, "  >>> ");
+		Log(3, m, length_in_units(suggestedNextExposure_us, true));
 	}
-	Log(1, "\n");
 
 	long temp;
 	ret = ASIGetControlValue(cg->cameraNumber, ASI_TEMPERATURE, &temp, &bAuto);
@@ -1826,80 +1832,83 @@ long saved_newExposure_us = newExposure_us;
 					}
 				}
 
-				// If takeDarkFrames is off, add overlay text to the image
-				if (! CG.takeDarkFrames)
-				{
-					if (CG.overlay.overlayMethod == OVERLAY_METHOD_LEGACY)
-					{
-						(void) doOverlay(pRgb, CG, bufTime, gainChange);
-						if (CG.overlay.showHistogramBox)
-						{
-							// Draw a rectangle where the histogram box is.
-							// Put a black and white line one next to each other so they
-							// can be seen in light and dark images.
-							int lt = cv::LINE_AA, thickness = 2;
-							int X1 = (CG.width * CG.HB.histogramBoxPercentFromLeft) - (CG.HB.histogramBoxSizeX / 2);
-							int X2 = X1 + CG.HB.histogramBoxSizeX;
-							int Y1 = (CG.height * CG.HB.histogramBoxPercentFromTop) - (CG.HB.histogramBoxSizeY / 2);
-							int Y2 = Y1 + CG.HB.histogramBoxSizeY;
-							cv::Scalar outerLine, innerLine;
-							outerLine = cv::Scalar(0,0,0);
-							innerLine = cv::Scalar(255,255,255);
-							cv::rectangle(pRgb, cv::Point(X1, Y1), cv::Point(X2, Y2), outerLine, thickness, lt, 0);
-							cv::rectangle(pRgb, cv::Point(X1+thickness, Y1+thickness), cv::Point(X2-thickness, Y2-thickness), innerLine, thickness, lt, 0);
-						}
-					}
-					if (currentAdjustGain)
-					{
-						// Determine if we need to change the gain on the next image.
-						// This must come AFTER the "showGain" above.
-						gainChange = determineGainChange(CG);
-						setControl(CG.cameraNumber, ASI_GAIN, CG.currentGain + gainChange, CG.currentAutoGain ? ASI_TRUE : ASI_FALSE);
-					}
-				}
+				if (meanIsOK(&CG, exposureStartDateTime)) {		// meanIsOK() outputs any error message
 
-				// Save the image
-				if (! bSavingImg)
-				{
-					// For dark frames we already know the finalFilename.
+					// If takeDarkFrames is off, add overlay text to the image
 					if (! CG.takeDarkFrames)
 					{
-						// Create the name of the file that goes in the images/<date> directory.
-						snprintf(CG.finalFileName, sizeof(CG.finalFileName), "%s-%s.%s",
-							CG.fileNameOnly, formatTime(exposureStartDateTime, "%Y%m%d%H%M%S"), CG.imageExt);
-						snprintf(CG.fullFilename, sizeof(CG.fullFilename), "%s/%s", CG.saveDir, CG.finalFileName);
+						if (CG.overlay.overlayMethod == OVERLAY_METHOD_LEGACY)
+						{
+							(void) doOverlay(pRgb, CG, bufTime, gainChange);
+							if (CG.overlay.showHistogramBox)
+							{
+								// Draw a rectangle where the histogram box is.
+								// Put a black and white line one next to each other so they
+								// can be seen in light and dark images.
+								int lt = cv::LINE_AA, thickness = 2;
+								int X1 = (CG.width * CG.HB.histogramBoxPercentFromLeft) - (CG.HB.histogramBoxSizeX / 2);
+								int X2 = X1 + CG.HB.histogramBoxSizeX;
+								int Y1 = (CG.height * CG.HB.histogramBoxPercentFromTop) - (CG.HB.histogramBoxSizeY / 2);
+								int Y2 = Y1 + CG.HB.histogramBoxSizeY;
+								cv::Scalar outerLine, innerLine;
+								outerLine = cv::Scalar(0,0,0);
+								innerLine = cv::Scalar(255,255,255);
+								cv::rectangle(pRgb, cv::Point(X1, Y1), cv::Point(X2, Y2), outerLine, thickness, lt, 0);
+								cv::rectangle(pRgb, cv::Point(X1+thickness, Y1+thickness), cv::Point(X2-thickness, Y2-thickness), innerLine, thickness, lt, 0);
+							}
+						}
+						if (currentAdjustGain)
+						{
+							// Determine if we need to change the gain on the next image.
+							// This must come AFTER the "showGain" above.
+							gainChange = determineGainChange(CG);
+							setControl(CG.cameraNumber, ASI_GAIN, CG.currentGain + gainChange, CG.currentAutoGain ? ASI_TRUE : ASI_FALSE);
+						}
 					}
 
-					pthread_mutex_lock(&mtxSaveImg);
-					pthread_cond_signal(&condStartSave);
-					pthread_mutex_unlock(&mtxSaveImg);
-				}
-				else
-				{
-					// Hopefully the user can use the time it took to save a file to disk
-					// to help determine why they are getting this warning.
-					// Perhaps their disk is very slow or their delay is too short.
-					Log(-1, "  > WARNING: currently saving an image; cannot save new one at %s.\n", exposureStart);
+					// Save the image
+					if (! bSavingImg)
+					{
+						// For dark frames we already know the finalFilename.
+						if (! CG.takeDarkFrames)
+						{
+							// Create the name of the file that goes in the images/<date> directory.
+							snprintf(CG.finalFileName, sizeof(CG.finalFileName), "%s-%s.%s",
+								CG.fileNameOnly, formatTime(exposureStartDateTime, "%Y%m%d%H%M%S"), CG.imageExt);
+							snprintf(CG.fullFilename, sizeof(CG.fullFilename), "%s/%s", CG.saveDir, CG.finalFileName);
+						}
 
-					// TODO: wait for the prior image to finish saving.
-				}
+						pthread_mutex_lock(&mtxSaveImg);
+						pthread_cond_signal(&condStartSave);
+						pthread_mutex_unlock(&mtxSaveImg);
+					}
+					else
+					{
+						// Hopefully the user can use the time it took to save a file to disk
+						// to help determine why they are getting this warning.
+						// Perhaps their disk is very slow or their delay is too short.
+						Log(-1, "  > WARNING: currently saving an image; cannot save new one at %s.\n", exposureStart);
 
-				std::string s;
-				if (CG.currentAutoExposure)
-				{
-					s = "auto";
+						// TODO: wait for the prior image to finish saving.
+					}
 				}
-				else if (CG.HB.useHistogram)
-				{
-					s = "histogram";
-				} else {
-					s = "manual";
-				}
-				// Delay applied before next exposure
-				delayBetweenImages(CG, CG.lastExposure_us, s);
-
-				dayOrNight = calculateDayOrNight(CG.latitude, CG.longitude, CG.angle);
 			}
+
+			std::string s;
+			if (CG.currentAutoExposure)
+			{
+				s = "auto";
+			}
+			else if (CG.HB.useHistogram)
+			{
+				s = "histogram";
+			} else {
+				s = "manual";
+			}
+			// Delay applied before next exposure
+			delayBetweenImages(CG, CG.lastExposure_us, s);
+
+			dayOrNight = calculateDayOrNight(CG.latitude, CG.longitude, CG.angle);
 		}
 
 		if (lastDayOrNight != dayOrNight)

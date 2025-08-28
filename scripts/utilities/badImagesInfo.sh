@@ -81,21 +81,20 @@ fi
 #	20250209104345 0.167969 below low threshold of 0.5
 #	$1             $2       $3    $4  $5        $6 $7
 
-if [[ ${HTML} == "true" ]]; then
-	echo -e "<div style='font-size: 115%'>\n";
-else
+if [[ ${HTML} == "false" ]]; then
 	echo		# adds space at top to make it easier to read on a terminal
 fi
 
 # Pass in Bold ON, Bold Off, Highlight ON, Highlight Off
 gawk -v showBadImages="${SHOW_BAD_IMAGES}" \
-		-v BR="${wBR}" -v BON="${wBOLD}" -v BOFF="${wNBOLD}" -v HLON="${wINFO}" -v HLOFF="${wNC}" \
+		-v BR="${wBR}" -v HLON="${wINFO}" -v HLOFF="${wNC}" \
+		-v WSNs="${WSNs}" -v WSNe="${WSNe}" \
 		-v singleQuote="'" -v settingName="${SETTING_NAME}" '
 	BEGIN {
 		low_count = 0; low_min = 1; low_max = 0; low_threshold = 0; low_mean_total = 0;
 		high_count = 0; high_min = 0; high_max = 0; high_threshold = 0; high_mean_total = 0;
-		low_settingName = BON settingName " Low" BOFF;
-		high_settingName = BON settingName " High" BOFF;
+		low_settingName = WSNs settingName " Low" WSNe;
+		high_settingName = WSNs settingName " High" WSNe;
 	}
 	{
 		fileName = $1;
@@ -147,12 +146,12 @@ gawk -v showBadImages="${SHOW_BAD_IMAGES}" \
 
 		if (low_count > 0) {
 			printf("%s%d%s image%s", HLON, low_count, HLOFF, low_count > 1 ? "s" : "");
-			printf(" had a mean brightness below the %s setting of %0.4f so were not saved.%s",
+			printf(" had a mean brightness below the %s setting of %0.4f\nso were not saved.%s",
 				low_settingName, low_threshold, BR);
 
 			if (low_min == low_max) {
 				printf("The lowest mean was %0.4f.%s", low_min, BR);
-				printf("%sFIX: Consider lowering your %s to less than %0.4f%s",
+				printf("\n%sFIX: Consider lowering your %s setting to less than %0.4f%s",
 					HLON, low_settingName, low_min, HLOFF, BR);
 				printf("or increasing your exposure and/or gain.%s", BR);
 
@@ -160,7 +159,7 @@ gawk -v showBadImages="${SHOW_BAD_IMAGES}" \
 				ave = low_mean_total / low_count;
 				printf("The lowest mean was %0.4f and the highest %0.4f with an average of %0.4f.%s",
 					low_min, low_max, ave, BR);
-				printf("%sFIX: Consider lowering your %s to around %0.4f.%s%s",
+				printf("\n%sFIX: Consider lowering your %s setting to around %0.4f.%s%s",
 					HLON, low_settingName, ave, HLOFF, BR);
 			}
 		}
@@ -169,19 +168,19 @@ gawk -v showBadImages="${SHOW_BAD_IMAGES}" \
 			if (low_count > 0) printf("%s", BR);	# Separator
 
 			printf("%s%d%s image%s", HLON, high_count, HLOFF, high_count > 1 ? "s" : "");
-			printf(" had a mean brightness above the %s%s High%s of %0.4f so were not saved.%s",
-				BON, settingName, BOFF, high_threshold, BR);
+			printf(" had a mean brightness above the %s setting of %0.4f\nso were not saved.%s",
+				high_settingName, high_threshold, BR);
 
 			if (high_min == high_max) {
 				printf("The highest mean was %0.4f.%s", high_min, BR);
-				printf("%sFIX: Consider raising your %s to more than %0.4f%s",
+				printf("\n%sFIX: Consider raising your %s setting to more than %0.4f%s",
 					HLON, high_settingName high_min, HLOFF, BR);
 				printf("or decreasing your exposure and/or gain.%s", BR);
 			} else {
 				ave = high_mean_total / high_count;
 				printf("The lowest mean was %0.4f and the highest %0.4f with and average of %0.4f.%s",
 					high_min, high_max, ave, BR);
-				printf("%sFIX: Consider raising your %s to around %0.4f.%s%s",
+				printf("\n%sFIX: Consider raising your %s setting to around %0.4f.%s%s",
 					HLON, high_settingName, ave, HLOFF, BR);
 			}
 		}
@@ -193,11 +192,9 @@ if [[ $? -ne 0 && ${SHOW_BAD_IMAGES} -eq 0 ]]; then
 	else
 		echo -e "\n"
 	fi
-	echo "Look in '${BAD_IMAGES_LIST}' for the list of bad images."
+	echo "Look in ${WSFs}${BAD_IMAGES_LIST}${WSFe} for the list of bad images."
 fi
 
-if [[ ${HTML} == "true" ]]; then
-	echo -e "</div>\n";
-else
+if [[ ${HTML} == "false" ]]; then
 	echo		# adds space at bottom to make it easier to read on a terminal
 fi

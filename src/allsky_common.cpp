@@ -1067,6 +1067,7 @@ void displayHelp(config cg)
 	printf(" -%-*s - Optional configuration file to use instead of,\n", n, "config s");
 	printf("  %-*s   or in addition to, command-line arguments.\n", n, "");
 	printf("  %-*s   The file is read when seen on the command line [none].\n", n, "");
+	printf(" -%-*s - Maximum consecutive errors before exiting [%d].\n", n, "maxcaptureerrors n", cg.maxErrors);
 	if (cg.ct == ctRPi) {
 		printf(" -%-*s - Image saturation.\n", n, "saturation n");
 		printf(" -%-*s - Image contrast.\n", n, "contrast n");
@@ -1299,6 +1300,7 @@ void displaySettings(config cg)
 	printf("   Remove Bad Images Threshold High: %.4f\n", cg.imageTooHigh);
 	printf("   Remove Bad Images Threshold Count: %d\n", cg.imageTooCount);
 	printf("   Remove Bad Images Threshold Count File: %s\n", cg.imageTooCountFile);
+	printf("   Maximum errors before exiting: %d\n", cg.maxErrors);
 	printf("   Debug Level: %ld\n", cg.debugLevel);
 	printf("   On TTY: %s\n", yesNo(cg.tty));
 	if (cg.ct == ctRPi && cg.isLibcamera) {

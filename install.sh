@@ -1748,6 +1748,7 @@ update_allsky_common()
 	# those values overwrite the defaults.
 	sed \
 		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+		-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
 		-e "s;XX_CONNECTED_CAMERAS_FILE_XX;${ALLSKY_CONNECTED_CAMERAS_INFO};" \
 		-e "s;XX_RPI_CAMERA_INFO_FILE_XX;${ALLSKY_RPi_SUPPORTED_CAMERAS};" \
 		-e "s;XX_EXIT_OK_XX;${EXIT_OK};" \

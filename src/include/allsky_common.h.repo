@@ -411,4 +411,4 @@ void doLocale(config *);
 char const *getZWOexposureType(ZWOexposure);
 char *getLine(char *);
 char *readFileIntoBuffer(config *, const char *);
-bool meanIsOK(config *);
+bool meanIsOK(config *, timeval);

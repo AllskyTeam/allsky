@@ -93,14 +93,19 @@ fi
 getAllSettings --var "imageremovebadlow imageremovebadhigh imageremovebadhighdarkframe \
 	takedarkframes imageremovebadcount " || exit 1
 
+#shellcheck disable=SC2154
 HIGH="${S_imageremovebadhigh}"
+#shellcheck disable=SC2154
 LOW="${S_imageremovebadlow}"
+#shellcheck disable=SC2154
 if [[ ${S_takedarkframes} == "true" ]]; then
 	# Disable low brightness check since darks will have extremely low brightness.
 	# Set the high value to something a dark frame should never get to.
 	LOW=0.00000
+	#shellcheck disable=SC2154
 	HIGH="${S_imageremovebadhighdarkframe}"
 fi
+#shellcheck disable=SC2154
 BAD_LIMIT="${S_imageremovebadcount}"
 
 # Find the full size image-*jpg and image-*png files (not the thumbnails) and

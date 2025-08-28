@@ -1817,6 +1817,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 		}
 
 		// daytime and nighttime settings
+		else if (strcmp(a, "maxcaptureerrors") == 0)
+		{
+			cg->maxErrors = atoi(argv[++i]);
+		}
 		else if (strcmp(a, "saturation") == 0)
 		{
 			cg->saturation = atof(argv[++i]);

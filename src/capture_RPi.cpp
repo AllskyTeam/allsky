@@ -904,10 +904,6 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				numConsecutiveErrors = 0;
 
 				CG.lastMean = aegCalcMean(pRgb, true);
-				if (! meanIsOK(&CG, exposureStartDateTime)) {
-					usleep(CG.currentDelay_ms * US_IN_MS);
-					continue;
-				}
 
 // TODO: NEW: use current values if manual mode or using raspistill
 // Otherwise use the value from metadata.
@@ -917,11 +913,11 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					CG.lastWBB = CG.currentWBB;
 				}
 
-				CG.lastFocusMetric = CG.determineFocus ? (int)round(get_focus_metric(pRgb)) : -1;
-
 				// If takeDarkFrames is off, add overlay text to the image
 				if (! CG.takeDarkFrames)
 				{
+					CG.lastFocusMetric = CG.determineFocus ? (int)round(get_focus_metric(pRgb)) : -1;
+
 					CG.lastExposure_us = myRaspistillSetting.shutter_us;
 					if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 					{
@@ -971,11 +967,13 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 							CG.ME, CG.fullFilename, strerror(errno));
 					continue;
 				}
-				else
+				else if (meanIsOK(&CG, exposureStartDateTime))	// meanIsOK() outputs messages
 				{
 					char cmd[1100+strlen(CG.allskyHome)];
-					Log(1, "  > Saving %s image '%s'\n", CG.takeDarkFrames ? "dark" : dayOrNight.c_str(), CG.finalFileName);
-					snprintf(cmd, sizeof(cmd), "%s/scripts/saveImage.sh %s '%s'", CG.allskyHome, dayOrNight.c_str(), CG.fullFilename);
+					const char *t = CG.takeDarkFrames ? "dark" : dayOrNight.c_str();
+					Log(1, "  > Saving %s image '%s'\n", t, CG.finalFileName);
+					snprintf(cmd, sizeof(cmd), "%s/scripts/saveImage.sh %s '%s'",
+						CG.allskyHome, dayOrNight.c_str(), CG.fullFilename);
 
 					add_variables_to_command(CG, cmd, exposureStartDateTime);
 					strcat(cmd, " &");

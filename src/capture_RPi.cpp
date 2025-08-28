@@ -78,6 +78,7 @@ std::string showDebugFile(string debugFile)
 // Build capture command to capture the image from the camera.
 // If an argument is IS_DEFAULT, the user didn't set it so don't pass to the program and
 // the default will be used.
+string savedImage = "";
 int RPicapture(config cg, cv::Mat *image)
 {
 	stringstream ss, ss2, ss_cmd;		// temporary variables
@@ -111,7 +112,9 @@ int RPicapture(config cg, cv::Mat *image)
 	ss.str("");
 	ss << cg.fullFilename;
 
-	command += " --thumb none --output '" + ss.str() + "'";		// don't include a thumbnail in the file
+	command += " --thumb none";		// don't include a thumbnail in the file
+	savedImage = ss.str();
+	command += " --output '" + savedImage + "'";
 
 	if (cg.isLibcamera)
 	{
@@ -979,6 +982,9 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					strcat(cmd, " &");
 					// Not too useful to check return code for commands run in the background.
 					system(cmd);
+				} else {
+					// We're not using the image so delete it.
+					unlink(savedImage.c_str());
 				}
 
 				std::string s;

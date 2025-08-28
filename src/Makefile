@@ -86,7 +86,7 @@ sunwait:
 # This is only needed for GitHub to compile
 include/allsky_common.h: include/allsky_common.h.repo
 	@echo creating fake $@ ...
-	@sed -e 's/XX.*XX/1/' include/allsky_common.h.repo > $@
+	@../install.sh --function update_allsky_common || sed -e 's/XX.*XX/1/' include/allsky_common.h.repo > $@
 
 allsky_common.o: allsky_common.cpp include/allsky_common.h
 	@echo Building $@ ...

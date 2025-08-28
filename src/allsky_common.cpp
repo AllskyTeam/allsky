@@ -2208,8 +2208,10 @@ bool meanIsOK(config *cg)
 
 	if (high != 0.0 && cg->lastMean > high) {
 		Log(1, "\"%s\" (MEAN of %0.4f is above high threshold of %0.4f)",
-							f, MEAN, HIGH);
+			"", cg->lastmean, high);
 	} else if (cg->imageTooLow != 0.0 && cg->lastMean < cg->imageTooLow) {
+		Log(1, "\"%s\" (MEAN of %0.4f is below low threshold of %0.4f)",
+			"", cg->lastmean, low);
 	}
 
 	return true;

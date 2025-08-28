@@ -3815,6 +3815,9 @@ install_installer_dependencies()
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 	[[ ${SKIP} == "true" ]] && return
 
+	# Needed to put notification images there.
+	[[ ! -d ${ALLSKY_CURRENT_DIR} ]] && mkdir -p "${ALLSKY_CURRENT_DIR}"
+
 	display_msg --log progress "Installing initial dependencies."
 	TMP="${ALLSKY_LOGS}/installer.dependencies.log"
 	{

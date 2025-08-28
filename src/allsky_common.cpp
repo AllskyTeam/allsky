@@ -73,8 +73,7 @@ void Log(int required_level, const char *fmt, ...)
 			}
 
 			char command[sizeof(msg) + 100];
-			snprintf(command, sizeof(command)-1, "%s/scripts/addMessage.sh --type %s --msg '%s'",
-				CG.allskyHome, severity, msg);
+			snprintf(command, sizeof(command)-1, "%s/addMessage.sh --type %s --msg '%s'", CG.allskyScripts, severity, msg);
 			Log(4, "Executing %s\n", command);
 			(void) system(command);
 		}
@@ -789,7 +788,7 @@ int displayNotificationImage(char const *arg)
 {
 	char cmd[1024];
 
-	snprintf(cmd, sizeof(cmd)-1, "%s/scripts/copyNotificationImage.sh %s", CG.allskyHome, arg);
+	snprintf(cmd, sizeof(cmd)-1, "%s/copyNotificationImage.sh %s", CG.allskyScripts, arg);
 	Log(4, "Calling system(%s)\n", cmd);
 	return(system(cmd));
 }
@@ -2204,10 +2203,23 @@ bool saveBadFileName(config *cg, char *msg)
 	cg->imageTooConsecutiveCount++;
 	if (cg->imageTooConsecutiveCount % cg->imageTooCount == 0) {
 		char command[BAD_MSG_SIZE + 100];
-		snprintf(command, sizeof(command)-1, "%s/scripts/addMessage.sh --type warning --msg \"%d %s\n%s\" &",
-			cg->allskyHome,
-			cg->imageTooConsecutiveCount, " consecutive bad images.",
+		snprintf(command, sizeof(command)-1, "%s/addMessage.sh --type warning --msg \"%s\n%s\" &",
+			cg->allskyScripts,
+			// Don't add a number since that causes multiple System Messages.
+			"Multiple consecutive bad images.",
 			"Click <a external='true' href='/execute.php?ID=AM_ALLSKY_CONFIG bad_images_info --html'>here</a> to see a summary.");
+		Log(4, "Executing %s\n", command);
+		(void) system(command);
+	}
+	if (cg->imageTooConsecutiveCount >= cg->imageTooCount) {
+		char command[BAD_MSG_SIZE + 100];
+		snprintf(command, sizeof(command)-1, "%s/generateNotificationImages.sh "
+				"--directory '%s' '%s' "
+				"%s '%s' %d '%s' '%s' '%s' %d %s %s '%s' "
+				"'WARNING:\\n\\n%d consecutive\\nbad images.\\nSee the WebUI.' >&2",
+			cg->allskyScripts, cg->saveDir, cg->fileNameOnly,
+			"yellow", "", 85, "", "", "", 5, "yellow", cg->imageExt, "",
+			cg->imageTooConsecutiveCount);
 		Log(4, "Executing %s\n", command);
 		(void) system(command);
 	}

@@ -377,6 +377,7 @@ fi
 	# These aren't settings but are needed by the capture programs.
 	echo "version=${ALLSKY_VERSION}"
 	echo "save_dir=${ALLSKY_CURRENT_DIR}"
+	echo "bad_image_count_file=${ALLSKY_BAD_IMAGE_COUNT}"
 	[[ ${PREVIEW} == "true" ]] && echo "preview=true"
 } > "${ARGS_FILE}"
 

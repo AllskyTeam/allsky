@@ -241,9 +241,7 @@ void startrail_worker(
 
 		// Want to print the message above before this one.
 		if (repair_msg[0] != '\0' && cf->verbose) {
-			stdio_mutex.lock();
-			fprintf(stderr, "%s", repair_msg);
-			stdio_mutex.unlock();
+			output_msg(repair_msg);
 		}
 
 		// the matrix pointed to by stats_ptr has already been initialized to NAN
@@ -276,7 +274,7 @@ void startrail_worker(
 			char temp[100];
 			snprintf(temp, 100, "\tthreshold=%.3f", cf->brightness_limit);
 			strcat(msg, temp);
-			output_msg(cf, msg);
+			output_msg(msg);
 		}
 	}
 

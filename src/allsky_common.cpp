@@ -1103,7 +1103,8 @@ void displayHelp(config cg)
 		printf("  %-*s      -6 = civil twilight\n", n, "");
 		printf("  %-*s     -12 = nautical twilight\n", n, "");
 		printf("  %-*s     -18 = astronomical twilight.\n", n, "");
-	printf(" -%-*s - 'true' takes dark frames [%s].\n", n, "takeDarkFrames b", yesNo(cg.takeDarkFrames));
+	printf(" -%-*s - 'true' takes dark frames [%s].\n", n, "takedarkframes b", yesNo(cg.takeDarkFrames));
+	printf(" -%-*s - Delete dark frames higher than this value [%.4f].\n", n, "imageremovebadhighdarkframe n", cg.darkFrameTooHigh);
 	printf(" -%-*s - Your locale; determines thousands separator and decimal point [%s].\n", n, "locale s", "locale on Pi");
 	printf("  %-*s   Type 'locale' at a command prompt to determine yours.\n", n, "");
 	if (cg.ct == ctZWO) {
@@ -1149,6 +1150,12 @@ void displayHelp(config cg)
 	printf(" -%-*s - Text font size [%.2f].\n", n, "fontsize n", cg.overlay.fontsize);
 	printf(" -%-*s - Text font line Thickness [%ld].\n", n, "fontline n", cg.overlay.linewidth);
 	printf(" -%-*s - 'true' enables outline font [%s].\n", n, "outlinefont b", yesNo(cg.overlay.outlinefont));
+
+	printf("\nPost capture settings:\n");
+	printf(" -%-*s - Remove bad images threshold low [%.4f].\n", n, "imageremovebadlow n", cg.imageTooLow);
+	printf(" -%-*s - Remove bad images threshold high [%.4f].\n", n, "imageremovebadhigh n", cg.imageTooHigh);
+	printf(" -%-*s - Remove bad images threshold count [%d].\n", n, "imageremovebadcount n", cg.imageTooCount);
+	printf(" -%-*s - Remove bad images count file.\n", n, "bad_image_count_file s");
 
 	printf("\nMisc. settings:\n");
 	printf(" -%-*s - Last camera model [no default].\n", n, "cameramodel s");

@@ -231,6 +231,7 @@ double computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogram
 	unsigned char *buf = imageBuffer;
 	const int histogramEntries = 256;
 	int histogram[histogramEntries];
+	long widthInBytes;
 
 	// Clear the histogram array.
 	for (int i = 0; i < histogramEntries; i++) {
@@ -238,13 +239,14 @@ double computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogram
 	}
 
 	// Different image types have a different number of bytes per pixel.
-	cg.width *= currentBpp;
-	int roiX1, roiX2, roiY1, roiY2;
+	widthInBytes = (int)cg.width * currentBpp;
+//x printf(">>>>>>>>>>>> 0 cg.width=%ld, cg.height=%ld, widthInBytes=%ld\n", cg.width, cg.height, widthInBytes);
+	int roiX1, roiX2, roiY1, roiY2;		// X values are in bytes
 	if (useHistogramBox)
 	{
-		roiX1 = (cg.width * cg.HB.histogramBoxPercentFromLeft) - (cg.HB.currentHistogramBoxSizeX * currentBpp / 2);
+		roiX1 = (widthInBytes * cg.HB.histogramBoxPercentFromLeft) - (cg.HB.currentHistogramBoxSizeX * currentBpp / 2);
 		roiX2 = roiX1 + (currentBpp * cg.HB.currentHistogramBoxSizeX);
-		roiY1 = (cg.height * cg.HB.histogramBoxPercentFromTop) - (cg.HB.currentHistogramBoxSizeY / 2);
+		roiY1 = ((int)cg.height * cg.HB.histogramBoxPercentFromTop) - (cg.HB.currentHistogramBoxSizeY / 2);
 		roiY2 = roiY1 + cg.HB.currentHistogramBoxSizeY;
 
 		// Start off and end on a logical pixel boundries.
@@ -252,21 +254,26 @@ double computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogram
 		roiX2 = (roiX2 / currentBpp) * currentBpp;
 	} else {
 		roiX1 = 0;
-		roiX2 = cg.width;
+		roiX2 = widthInBytes;
 		roiY1 = 0;
 		roiY2 = cg.height;
 	}
+//x printf(">>>>>>>>>>>> 1 roiX1=%d, roiY1=%d, roiX2=%d, roiY2=%d\n", roiX1, roiY1, roiX2, roiY2);
 
 	// For RGB24, data for each pixel is stored in 3 consecutive bytes: blue, green, red.
 	// For all image types, each row in the image contains one row of pixels.
 	// currentBpp doesn't apply to rows, just columns.
+
+// this debugging code is to prove to myself that we're not overwriting buf[].
+int numOver = 0;
+int totalBytes = cg.width * cg.height;
 	switch (cg.imageType) {
 	case IMG_RGB24:
 	case IMG_RAW8:
 	case IMG_Y8:
 		for (int y = roiY1; y < roiY2; y++) {
 			for (int x = roiX1; x < roiX2; x += currentBpp) {
-				int i = (cg.width * y) + x;
+				int i = (widthInBytes * y) + x;
 				int avg = buf[i];
 				if (cg.imageType == IMG_RGB24) {
 					// For RGB24 this averages the blue, green, and red pixels.
@@ -279,16 +286,22 @@ double computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogram
 		}
 		break;
 	case IMG_RAW16:
+totalBytes *= 2;
 		for (int y = roiY1; y < roiY2; y++) {
 			for (int x = roiX1; x < roiX2; x+=currentBpp) {
-				int i = (cg.width * y) + x;
+				int i = (widthInBytes * y) + x;
 				int pixelValue;
 				// Use the least significant byte.
 				// This assumes the image data is laid out in big endian format.
+if (i >= totalBytes-1) numOver++;
 				pixelValue = buf[i+1];
-				histogram[pixelValue]++;
+				if (pixelValue < histogramEntries)
+				{
+					histogram[pixelValue]++;
+				}
 			}
 		}
+if (numOver) printf(">>>>>> ERROR: OVERFLOW: numOver=%d, totalBytes=%'d\n", numOver, totalBytes);
 		break;
 	case ASI_IMG_END:
 		break;
@@ -571,7 +584,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 	char tempBuf[500] = { 0 };
 	char *tb = tempBuf;
 
-	cg->lastMean = computeHistogram(imageBuffer, *cg, true);
+	cg->lastMean = computeHistogram(imageBuffer, *cg, cg->takeDarkFrames ? false : true);
 	sprintf(tb, " @ mean %.3f, %sgain %ld",
 		cg->lastMean, cg->currentAutoGain ? "(auto) " : "", (long) cg->lastGain);
 	cg->lastExposure_us = cg->currentExposure_us;
@@ -1342,7 +1355,11 @@ int main(int argc, char *argv[])
 		CG.myModeMeanSetting.minMean = CG.myModeMeanSetting.currentMean - CG.myModeMeanSetting.currentMean_threshold;
 		CG.myModeMeanSetting.maxMean = CG.myModeMeanSetting.currentMean + CG.myModeMeanSetting.currentMean_threshold;
 
-		Log(3, "minMean=%.3f, maxMean=%.3f\n", CG.myModeMeanSetting.minMean, CG.myModeMeanSetting.maxMean);
+		if (! CG.takeDarkFrames)
+		{
+			// We don't adjust exposure for dark frames.
+			Log(3, "minMean=%.3f, maxMean=%.3f\n", CG.myModeMeanSetting.minMean, CG.myModeMeanSetting.maxMean);
+		}
 
 
 		if (CG.myModeMeanSetting.currentMean > 0.0)
@@ -1474,6 +1491,7 @@ int main(int argc, char *argv[])
 				sprintf(bufTime, "%s", formatTime(exposureStartDateTime, CG.timeFormat));
 			}
 
+//x printf(">>>>>>>>>>>> pRgb columns=%d, rows=%d, channels=%d, depth=%d, elemSize=%ld\n", pRgb.cols, pRgb.rows, pRgb.channels(), pRgb.depth(), pRgb.elemSize());
 			asiRetCode = takeOneExposure(&CG, pRgb.data);
 			if (asiRetCode == ASI_SUCCESS)
 			{

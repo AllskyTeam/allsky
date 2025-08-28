@@ -301,10 +301,11 @@ struct config {			// for configuration variables
 	char const *longitude				= NULL;
 	float angle							= -6.0;
 	bool takeDarkFrames					= false;
-	float imageremovebadhighdarkframe	= 0.05;				// Any dark over this amount is too bright
-	float imageremovebadlow				= 0.1;				// Don't save images darker than this
-	float imageremovebadhigh			= 0.9;				// Don't save images brighter than this
-	int	imageremovebadcount				= 5;				// Stop Allsky on this many consecutive errors
+	float darkFrameTooHigh				= 0.05;				// Any dark over this amount is too bright
+	float imageTooLow					= 0.1;				// Don't save images darker than this
+	float imageTooHigh					= 0.9;				// Don't save images brighter than this
+	int	imageTooCount					= 5;				// Stop Allsky on this many consecutive errors
+	char const *imageTooCountFile		= NULL;				// File containing list of bad files.
 	char const *locale					= NULL;
 	long debugLevel						= 1;
 	bool consistentDelays				= true;

@@ -189,10 +189,11 @@ void startrail_worker(
 
 		cv::Mat imagesrc;
 		msg[0] = '\0';
-		if (! read_file(cf, filename, &imagesrc, f+1, msg, msg_size)) {
+		bool doMsg = (cf->verbose || cf->output_data_file != "");
+		if (! read_file(cf, filename, &imagesrc, f+1, msg, doMsg ? msg_size : 0)) {
 			// msg contains the error message.
 			stats_ptr->col(f) = -1.0;	// Set to something to avoid "nan" entries.
-			if (*msg != '\0' && (cf->verbose || cf->output_data_file != "")) {
+			if (*msg != '\0' && doMsg) {
 				output_msg(msg);
 			}
 			continue;

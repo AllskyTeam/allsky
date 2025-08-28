@@ -1222,7 +1222,7 @@
 "minimum" : 1,
 "maximum" : 20,
 "default" : 5,
-"description" : "Stop Allsky if this many consecutive 'bad' images are found.",
+"description" : "Display a System Message when this many consecutive 'bad' images are found.",
 "label" : "Remove Bad Images Threshold Count",
 "type" : "integer",
 "usage" : "capture",

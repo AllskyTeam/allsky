@@ -45,7 +45,6 @@ bool bDisplay					= false;
 std::string dayOrNight;
 int numTotalErrors				= 0;				// Total number of errors, fyi
 int numConsecutiveErrors		= 0;				// Number of consecutive errors
-int maxErrors					= 4;				// Max number of errors in a row before we exit
 
 bool gotSignal					= false;			// Did we get signal?
 int iNumOfCtrl					= NOT_SET;			// Number of camera control capabilities
@@ -999,9 +998,9 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				// Unable to take picture.
 				numTotalErrors++;
 				numConsecutiveErrors++;
-				if ((numConsecutiveErrors % maxErrors) == 0)
+				if ((numConsecutiveErrors % CG.maxErrors) == 0)
 				{
-					Log(0, "*** %s: ERROR: maximum number of consecutive errors of %d reached; capture program stopped. Total errors=%'d.\n", CG.ME, maxErrors, numTotalErrors);
+					Log(0, "*** %s: ERROR: maximum number of consecutive errors of %d reached; capture program stopped. Total errors=%'d.\n", CG.ME, CG.maxErrors, numTotalErrors);
 					Log(0, "Make sure cable between camera and Pi is all the way in.\n");
 					Log(0, "The last error was: %s", showDebugFile(errorOutput).c_str());
 					closeUp(EXIT_ERROR_STOP);

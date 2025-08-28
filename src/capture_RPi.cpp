@@ -714,7 +714,7 @@ int main(int argc, char *argv[])
 			{
 				// Just transitioned from night to day, so execute end of night script
 				Log(1, "Processing end of night data\n");
-				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/scripts/endOfNight.sh &", CG.allskyHome);
+				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/endOfNight.sh &", CG.allskyScripts);
 				// Not too useful to check return code for commands run in the background.
 				system(bufTemp);
 				justTransitioned = false;
@@ -765,7 +765,7 @@ int main(int argc, char *argv[])
 			{
 				// Just transitioned from day to night, so execute end of day script
 				Log(1, "Processing end of day data\n");
-				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/scripts/endOfDay.sh &", CG.allskyHome);
+				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/endOfDay.sh &", CG.allskyScripts);
 				// Not too useful to check return code for commands run in the background.
 				system(bufTemp);
 				justTransitioned = false;
@@ -961,7 +961,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					CG.currentSkipFrames--;
 					Log(2, "  >>>> Skipping this frame.  %d left to skip\n", CG.currentSkipFrames);
 					// Do not save this frame or sleep after it.
-					// We just started taking images so no need to check if DAY or NIGHT changed
+					// We just started taking images so no need to check if DAY or NIGHT changed.
 					if (remove(CG.fullFilename) != 0)
 						Log(0, "*** %s: ERROR: Unable to remove '%s': %s\n",
 							CG.ME, CG.fullFilename, strerror(errno));
@@ -972,8 +972,8 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					char cmd[1100+strlen(CG.allskyHome)];
 					const char *t = CG.takeDarkFrames ? "dark" : dayOrNight.c_str();
 					Log(1, "  > Saving %s image '%s'\n", t, CG.finalFileName);
-					snprintf(cmd, sizeof(cmd), "%s/scripts/saveImage.sh %s '%s'",
-						CG.allskyHome, dayOrNight.c_str(), CG.fullFilename);
+					snprintf(cmd, sizeof(cmd), "%s/saveImage.sh %s '%s'",
+						CG.allskyScripts, dayOrNight.c_str(), CG.fullFilename);
 
 					add_variables_to_command(CG, cmd, exposureStartDateTime);
 					strcat(cmd, " &");

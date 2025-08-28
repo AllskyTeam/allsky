@@ -689,7 +689,7 @@ do
 			;;
 
 		"imageremovebadhighdarkframe")
-			if [[ $( echo "${NEW_VALUE} > ${OLD_VALUE}" | bc ) -eq 1 ]] ; then
+			if [[ -n ${OLD_VALUE} && $( echo "${NEW_VALUE} > ${OLD_VALUE}" | bc ) -eq 1 ]] ; then
 				MSG="Having to increase ${WSNs}${LABEL}${WSNe} is often a"
 				MSG+=" sign that the lens is not fully covered"
 				MSG+=" or your cameras is VERY noisy."

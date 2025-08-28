@@ -93,12 +93,6 @@ export AS_CAMERA_NUMBER="${CAMERA_NUMBER}"
 IMAGE_NAME=$( basename "${CURRENT_IMAGE}" )		# just the file name
 WORKING_DIR=$( dirname "${CURRENT_IMAGE}" )		# the directory the image is currently in
 
-# Check for bad images.
-# Return code ${EXIT_PARTIAL_OK} means the image was bad and deleted and an error message
-# displayed so don't continue.
-"${ALLSKY_SCRIPTS}/removeBadImages.sh" "${WORKING_DIR}" "${IMAGE_NAME}"
-[[ $? -eq ${EXIT_PARTIAL_OK} ]] && exit 1
-
 CROP_TOP="${S_imagecroptop}"
 CROP_RIGHT="${S_imagecropright}"
 CROP_BOTTOM="${S_imagecropbottom}"

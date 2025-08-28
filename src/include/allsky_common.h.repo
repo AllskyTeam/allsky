@@ -71,12 +71,12 @@
 // Default overlay values - will go away once external overlay program is implemented
 #define SMALLFONTSIZE_MULTIPLIER	0.08
 
-// Exit codes.  Need to match what's in allsky.sh
-#define EXIT_OK						0
-#define EXIT_RESTARTING				98		// Process is restarting, i.e., stop, then start
-#define EXIT_RESET_USB				99		// Need to reset USB bus; cannot continue
-#define EXIT_ERROR_STOP				100		// Got an unrecoverable ERROR
-#define EXIT_NO_CAMERA				101		// Could not find a camera - is unrecoverable
+// Exit codes.  Values replaced during installation.
+#define EXIT_OK						XX_EXIT_OK_XX
+#define EXIT_RESTARTING				XX_EXIT_RESTARTING_XX	// Process is restarting, i.e., stop, then start
+#define EXIT_RESET_USB				XX_EXIT_RESET_USB_XX	// Need to reset USB bus; cannot continue
+#define EXIT_ERROR_STOP				XX_EXIT_ERROR_STOP_XX	// Got an unrecoverable ERROR
+#define EXIT_NO_CAMERA				XX_EXIT_NO_CAMERA_XX	// Could not find a camera - is unrecoverable
 
 enum extType {
 	isJPG,
@@ -301,6 +301,10 @@ struct config {			// for configuration variables
 	char const *longitude				= NULL;
 	float angle							= -6.0;
 	bool takeDarkFrames					= false;
+	float imageremovebadhighdarkframe	= 0.05;				// Any dark over this amount is too bright
+	float imageremovebadlow				= 0.1;				// Don't save images darker than this
+	float imageremovebadhigh			= 0.9;				// Don't save images brighter than this
+	int	imageremovebadcount				= 5;				// Stop Allsky on this many consecutive errors
 	char const *locale					= NULL;
 	long debugLevel						= 1;
 	bool consistentDelays				= true;

@@ -903,6 +903,12 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				numExposures++;
 				numConsecutiveErrors = 0;
 
+				CG.lastMean = aegCalcMean(pRgb, true);
+				if (! meanIsOK(&CG, exposureStartDateTime)) {
+					usleep(CG.currentDelay_ms * US_IN_MS);
+					continue;
+				}
+
 // TODO: NEW: use current values if manual mode or using raspistill
 // Otherwise use the value from metadata.
 				if (CG.currentAutoAWB || ! CG.isLibcamera)
@@ -926,19 +932,10 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 						CG.lastGain = CG.currentGain;	// ZWO gain=0.1 dB , RPi gain=factor
 					}
 
-					CG.lastMean = aegCalcMean(pRgb, true);
 					if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 					{
 						// set myRaspistillSetting.shutter_us and myRaspistillSetting.analoggain
 						aegGetNextExposureSettings(&CG, myRaspistillSetting, myModeMeanSetting);
-
-						if (CG.lastMean == -1)
-						{
-							Log(-1, "*** %s: ERROR: aegCalcMean() returned mean of -1.\n", CG.ME);
-							Log(2, "  > Sleeping from failed exposure: %.1f seconds\n", (float)CG.currentDelay_ms / MS_IN_SEC);
-							usleep(CG.currentDelay_ms * US_IN_MS);
-							continue;
-						}
 					}
 					else {
 						myRaspistillSetting.shutter_us = CG.currentExposure_us;

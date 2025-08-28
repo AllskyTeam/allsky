@@ -906,7 +906,8 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				numExposures++;
 				numConsecutiveErrors = 0;
 
-				CG.lastMean = aegCalcMean(pRgb, true);
+				// Don't use mask for dark frames.
+				CG.lastMean = aegCalcMean(pRgb, CG.takeDarkFrames ? false : true);
 
 // TODO: NEW: use current values if manual mode or using raspistill
 // Otherwise use the value from metadata.

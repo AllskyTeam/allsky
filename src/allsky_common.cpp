@@ -2194,3 +2194,23 @@ void doLocale(config *cg)
 	}
 }
 
+// Check the mean against the low and high thresholds.
+bool meanIsOK(config *cg)
+{
+	float high;
+	int currentBad = cg->imageTooConsecutiveCount;
+
+	if (cg->takeDarkFrames) {
+		high = cg->darkFrameTooHigh;
+	} else {
+		high = cg->imageTooHigh;
+	}
+
+	if (high != 0.0 && cg->lastMean > high) {
+		Log(1, "\"%s\" (MEAN of %0.4f is above high threshold of %0.4f)",
+							f, MEAN, HIGH);
+	} else if (cg->imageTooLow != 0.0 && cg->lastMean < cg->imageTooLow) {
+	}
+
+	return true;
+}

@@ -3858,10 +3858,10 @@ check_for_required_settings()
 # Display a message informing the user the following steps can take a while.
 display_wait_message()
 {
-	local MSG
+	local MSG  HOW_LONG  M
 
-	local HOW_LONG
-	if [[ ${PI_MODEL} -lt 5 ]]; then
+	M="$( get_computer --pi-model-only )"
+	if [[ ${M:-0} -lt 5 ]]; then
 		HOW_LONG="up to an hour"
 	else
 		HOW_LONG="several minutes"
@@ -3978,7 +3978,6 @@ while [ $# -gt 0 ]; do
 			DEBUG_ARG="${ARG}"		# we can pass this to other scripts
 			LOG_TYPE="--log"
 			;;
-#XXX TODO: is --update still needed?
 		--update)
 			UPDATE="true"
 			;;

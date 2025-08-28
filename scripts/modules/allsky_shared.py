@@ -1287,7 +1287,7 @@ def get_camera_type():
 def get_rpi_meta_value(key):
     result = None
     metadata_path = get_rpi_metadata()
-    
+
     if metadata_path is not None:
         try:
             with open(metadata_path, 'r') as file:
@@ -1299,6 +1299,10 @@ def get_rpi_meta_value(key):
                 for line in f:
                     if line.startswith(key + "="):
                         result = line.split("=", 1)[1].strip()
+        except FileNotFoundError as e:
+            result = 0
+        except Exception as e:
+            result = 0
             
     return result
 

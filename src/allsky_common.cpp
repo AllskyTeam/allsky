@@ -1897,6 +1897,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 		{
 			cg->takeDarkFrames = getBoolean(argv[++i]);
 		}
+		else if (strcmp(a, "imageremovebadhighdarkframe") == 0)
+		{
+			cg->darkFrameTooHigh = atof(argv[++i]);
+		}
 		else if (strcmp(a, "locale") == 0)
 		{
 			cg->locale = argv[++i];
@@ -1916,6 +1920,24 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 		else if (strcmp(a, "extraargs") == 0)
 		{
 			cg->extraArgs = argv[++i];
+		}
+
+		// post capture settings
+		else if (strcmp(a, "imageremovebadlow") == 0)
+		{
+			cg->imageTooLow = atof(argv[++i]);
+		}
+		else if (strcmp(a, "imageremovebadhigh") == 0)
+		{
+			cg->imageTooHigh = atof(argv[++i]);
+		}
+		else if (strcmp(a, "imageremovebadcount") == 0)
+		{
+			cg->imageTooCount = atoi(argv[++i]);
+		}
+		else if (strcmp(a, "bad_image_count_file") == 0)
+		{
+			cg->imageTooCountFile = argv[++i];
 		}
 
 		// overlay settings

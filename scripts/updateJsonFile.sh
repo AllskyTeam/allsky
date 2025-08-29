@@ -86,14 +86,16 @@ fi
 
 # Initialize JQ_STRING with a command that doesn't change anything.
 # This is needed because each addition to JQ_STRING starts with "|".
-JQ_STRING=( ".${1} = .${1}" )
+X="${1/#./}"	# Delete any leading ".".
+JQ_STRING=( ".${X} = .${X}" )
 OUTPUT_MESSAGE=""
 NUMRE="^[+-]?[0-9]+([.][0-9]+)?$"
 
 while [[ $# -gt 0 ]]; do
-	FIELD="${1}"
+	FIELD="${1/#./}"	# Delete any leading ".".
 	LABEL="${2}"
 	NEW_VALUE="${3}"
+	shift 3
 
 	# Convert HTML code for apostrophy back to character.
 	apos="&#x27"
@@ -101,7 +103,13 @@ while [[ $# -gt 0 ]]; do
 	NEW="${NEW_VALUE}"
 	NEW_VALUE="${NEW_VALUE//\"/\\\"}"	# Handle double quotes
 
-	[[ ${DEBUG} == "true" ]] && D_ "Update '${LABEL}' to [${NEW_VALUE}]."
+	if [[ ${DEBUG} == "true" ]]; then
+		if [[ ${NEW_VALUE} == "--delete" ]]; then
+			D_ "Deleting '${LABEL}'."
+		else
+			D_ "Update '${LABEL}' to [${NEW_VALUE}]."
+		fi
+	fi
 
 	# Only put quotes around ${NEW_VALUE} if it's a string,
 	# i.e., not a number or a special name.
@@ -111,14 +119,12 @@ while [[ $# -gt 0 ]]; do
 		NEW_VALUE="${Q}${NEW_VALUE}${Q}"
 	fi
 	if [[ ${NEW_VALUE} == "--delete" ]]; then
-		JQ_STRING+=( "| del(${FIELD})" )
+		JQ_STRING+=( "| del(.${FIELD})" )
 		OUTPUT_MESSAGE+="'${LABEL}' deleted."
 	else
 		JQ_STRING+=( "| .${FIELD} = ${NEW_VALUE}" )
 		OUTPUT_MESSAGE+="'${LABEL}' updated to ${wBOLD}${NEW}${wNBOLD}."
 	fi
-
-	shift 3
 
 	[ $# -gt 0 ] && OUTPUT_MESSAGE+="${wBR}"
 done
@@ -135,7 +141,7 @@ S="${JQ_STRING[@]}"
 # Need to use "jq", not "settings".
 if ! NEW="$( jq "${S}" "${FILE}" 2>&1 )" ; then
 	E_ "ERROR: unable to create new data for '${FILE}':" >&2
-	echo "   ${OUTPUT}" >&2
+	echo "   ${NEW}" >&2
 	exit 1
 fi
 

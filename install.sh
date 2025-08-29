@@ -2033,7 +2033,7 @@ convert_settings_file()			# prior_file, new_file
 	# Delete obsolete settings.
 	if [[ -s "${DELETED_SETTINGS}" ]]; then
 		display_msg --logonly info "List of settings deleted from '${NEW_FILE}' is in '${DELETED_SETTINGS}'."
-		# shellcheck disable=SC2086
+		# shellcheck disable=SC2046
 		"${ALLSKY_SCRIPTS}/updateJsonFile.sh" --file "${NEW_FILE}" $( < "${DELETED_SETTINGS}" )
 	fi
 }

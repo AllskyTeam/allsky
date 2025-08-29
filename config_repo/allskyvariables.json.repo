@@ -193,15 +193,6 @@
 		"group": "Allsky",
 		"description": "Whitebalance Red component"
 	},
-	"AS_eOVERLAY": {
-		"name": "${eOVERLAY}",
-		"format": "",
-		"sample": "",
-		"source": "Allsky",			
-		"type": "bool",
-		"group": "Allsky",
-		"description": "Use new overlay"
-	},
 	"AS_sAUTOAWB": {
 		"name": "${sAUTOAWB}",
 		"format": "",

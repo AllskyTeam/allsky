@@ -49,6 +49,7 @@ ALLSKY_IMAGES_MOVED="false"				# Did the user move ALLSKY_IMAGES, e.g., to an SS
 SPACE="    "
 NOT_RESTORED="NO PRIOR VERSION"
 PI_MODEL=""								# The numeric model of Raspberry Pi
+THIS_PI_MODEL=""						# The model of this Raspberry Pi
 
 declare -r TMP_FILE="/tmp/x"			# temporary file used by many functions
 declare -r TAB="$( echo -e '\t' )"
@@ -66,7 +67,7 @@ OVERLAY_NAME=""
 #xxx currently not used:    ALLSKY_BASE_VERSION="$( remove_point_release "${ALLSKY_VERSION}" )"
 
 	# Base of first version without Buster support or "legacy" overlay method.
-#declare -r NO_BUSTER_BASE_VERSION="v2025.xx.xx"		# TODO: Change xxxxxx not used yet
+# declare -r NO_BUSTER_BASE_VERSION="v2025.xx.xx"		# TODO: Change xxxxxx not used yet
 	# Base of first version with combined configuration files and all lowercase setting names.
 declare -r COMBINED_BASE_VERSION="v2024.12.06"
 	# Base of first version with CAMERA_TYPE instead of CAMERA in config.sh and
@@ -1857,20 +1858,18 @@ convert_settings_file()			# prior_file, new_file
 	local NEW_FILE="${2}"
 	local CALLED_FROM="${3}"
 
-	if [[ ${ALLSKY_VERSION} == "${PRIOR_ALLSKY_VERSION}" ]]; then
-		display_msg --logonly info "Not converting '${PRIOR_FILE}'; same ALLSKY_VERSION."
-		return
-	fi
-
 # TODO: Keep track somehow of which upgrades added, deleted, and/or changed names of
 # settings so we know if the settings file needs to be updated.
 
-	local MSG="Converting '$( basename "${PRIOR_FILE}" )' to new format if needed:"
+	local MSG="Converting '$( basename "${PRIOR_FILE}" )'"
+	MSG+=" to new format in '$( basename "${NEW_FILE}" )' if needed."
 	display_msg --log progress "${MSG}"
 
 	DIR="/tmp/converted_settings"
 	mkdir -p "${DIR}"
-	local TEMP_PRIOR="${DIR}/old-${PRIOR_CAMERA_TYPE}_${PRIOR_CAMERA_MODEL}.json"
+	local TEMP_PRIOR="${DIR}/PRIOR-${PRIOR_CAMERA_TYPE}_${PRIOR_CAMERA_MODEL// /_}.json"
+	local DELETED_SETTINGS="${DIR}/deleted_settings.txt"
+	rm -f "${DELETED_SETTINGS}"
 
 	# Pre-v2024.12.06 version had uppercase letters in setting names and
 	# "1" and "0" for booleans and quotes around numbers. Change that.
@@ -1878,12 +1877,12 @@ convert_settings_file()			# prior_file, new_file
 	# --settings-only  says only output settings that are in the settings file.
 	# The ALLSKY_OPTIONS_FILE doesn't exist yet so use REPO_OPTIONS_FILE.
 	"${ALLSKY_SCRIPTS}/convertJSON.php" \
-		--from-install \
-		--convert \
-		--settings-only \
-		--settings-file "${PRIOR_FILE}" \
-		--options-file "${REPO_OPTIONS_FILE}" \
-		--include-not-in-options \
+			--from-install \
+			--convert \
+			--settings-only \
+			--settings-file "${PRIOR_FILE}" \
+			--options-file "${REPO_OPTIONS_FILE}" \
+			--include-not-in-options \
 		> "${TEMP_PRIOR}" 2>&1
 	if [[ $? -ne 0 ]]; then
 		MSG="Unable to convert old settings file: $( < "${TEMP_PRIOR}" )"
@@ -1899,9 +1898,9 @@ convert_settings_file()			# prior_file, new_file
 	"${ALLSKY_SCRIPTS}/convertJSON.php" \
 			--from-install \
 			--delimiter "${TAB}" \
+			--settings-file "${TEMP_PRIOR}" \
 			--options-file "${REPO_OPTIONS_FILE}" \
-			--include-not-in-options \
-			--settings-file "${TEMP_PRIOR}" |
+			--include-not-in-options |
 		while read -r FIELD VALUE
 		do
 			case "${FIELD}" in
@@ -1912,24 +1911,39 @@ convert_settings_file()			# prior_file, new_file
 
 				"computer")
 					# As of ${COMBINED_BASE_VERSION}, we compute the value.
-					VALUE="$( get_computer "" )"
+					VALUE="${THIS_PI_MODEL}"
 					doV "${FIELD}" "VALUE" "${FIELD}" "text" "${NEW_FILE}"
 					;;
 
 				# Don't carry this forward:
 				"XX_END_XX")
-					;;
-
-				# ===== Deleted in ${NO_BUSTER_BASE_VERSION}
-				"notificationimages")
+					echo -e "\t${FIELD}=${VALUE}" >> "${DELETED_SETTINGS}"
 					;;
 
 				# ===== Deleted in ${COMBINED_BASE_VERSION}.
-				"autofocus" | "background" | "alwaysshowadvanced" | \
+				"autofocus" | "background" | "alwaysshowadvanced" | "notificationimages" | \
 				"newexposure" | "experimentalexposure" | "showbrightness")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
+					;;
+
+				# ===== Deleted in ${NO_BUSTER_BASE_VERSION}.
+				"overlaymethod")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
+					if [[ ${VALUE} -eq 0 ]]; then
+						MSG="The legacy Overlay Method is no longer available."
+						MSG+="\nUse the WebUI's 'Overlay Editor' instead."
+						display_msg --log notice "${MSG}"
+					fi
+					;;
+				"showtime" | "showexposure" | "showgain" | "showusb" | "showtemp" | \
+				"showmean" | "showhistogrambox" | "showfocus" | "text" | "textarea" | \
+				"extratext" | "extratextage" | "textlineheight" | "textx" | "texty" | "fontname" | \
+				"fontcolor" | "smallfontcolor" | "fonttype" | "fontsize" | "fontline" | "outlinefont")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
 					;;
 
 				"brightness" | "daybrightness" | "nightbrightness")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
 					if [[ ! -f ${DISPLAYED_BRIGHTNESS_MSG} ]]; then
 						touch "${DISPLAYED_BRIGHTNESS_MSG}"
 						MSG="The 'Brightness' settings were removed. Use 'Target Mean' instead."
@@ -1937,6 +1951,7 @@ convert_settings_file()			# prior_file, new_file
 					fi
 					;;
 				"offset")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
 					if [[ ${VALUE} -gt 1 && ! -f ${DISPLAYED_OFFSET_MSG} ]]; then
 						touch "${DISPLAYED_OFFSET_MSG}"
 						# 1 is default.  > 1 means they changed it, which is rare.
@@ -1950,6 +1965,7 @@ convert_settings_file()			# prior_file, new_file
 				"remotewebsitevideodestinationname" | \
 				"remotewebsitekeogramdestinationname" | \
 				"remotewebsitestartrailsdestinationname")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
 					if [[ -n ${VALUE} && ! -f ${DISPLAYED_CHANGE_NAMES_MSG} ]]; then
 						touch "${DISPLAYED_CHANGE_NAMES_MSG}"
 						MSG="Changing timelapse, keogram, and/or startrails names"
@@ -2007,13 +2023,20 @@ convert_settings_file()			# prior_file, new_file
 					;;
 
 				*)
-					# don't know the type
+					# Since we don't know the setting name, we don't know its type.
+					# Any setting that's not new, old, or changed (most of them), comes here.
 					doV "${FIELD}" "VALUE" "${FIELD}" "" "${NEW_FILE}"
 					;;
 			esac
 		done
-}
 
+	# Delete obsolete settings.
+	if [[ -s "${DELETED_SETTINGS}" ]]; then
+		display_msg --logonly info "List of settings deleted from '${NEW_FILE}' is in '${DELETED_SETTINGS}'."
+		# shellcheck disable=SC2086
+		"${ALLSKY_SCRIPTS}/updateJsonFile.sh" --file "${NEW_FILE}" $( < "${DELETED_SETTINGS}" )
+	fi
+}
 
 
 ####
@@ -2346,15 +2369,15 @@ restore_prior_settings_file()
 		# The prior settings file SHOULD be a link to a camera-specific file.
 		# Make sure that's true; if not, fix it.
 
-		MSG="Checking link for ${NEW_STYLE_ALLSKY} PRIOR_SETTINGS_FILE '${PRIOR_SETTINGS_FILE}'"
-		display_msg --logonly info "${MSG}"
-
 		# Do we need to check for upperCase or lowercase setting names?
 		if [[ ${PRIOR_ALLSKY_BASE_VERSION} < "${COMBINED_BASE_VERSION}" ]]; then
 			CHECK_UPPER="--uppercase"
 		else
 			CHECK_UPPER=""
 		fi
+
+		MSG="Checking link for ${NEW_STYLE_ALLSKY} PRIOR_SETTINGS_FILE '${PRIOR_SETTINGS_FILE}'"
+		display_msg --logonly info "${MSG}"
 
 		# shellcheck disable=SC2086
 		MSG="$( check_settings_link ${CHECK_UPPER} "${PRIOR_SETTINGS_FILE}" )"
@@ -2414,8 +2437,9 @@ restore_prior_settings_file()
 		fi
 
 		# Make any changes to the settings files based on the old and new Allsky versions.
+		# If we're not using the standard branch we're probably testing and want to convert the settings file.
 		if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" &&
-			  ${PRIOR_ALLSKY_VERSION} != "${ALLSKY_VERSION}" ]]; then
+			( ${BRANCH} != "${ALLSKY_GITHUB_MAIN_BRANCH}" || ${PRIOR_ALLSKY_VERSION} != "${ALLSKY_VERSION}" ) ]]; then
 			for S in ${PRIOR_SPECIFIC_FILES}
 			do
 				# Update all the prior camera-specific files (which are now in ${ALLSKY_CONFIG}).
@@ -2424,7 +2448,7 @@ restore_prior_settings_file()
 				convert_settings_file "${S}" "${S}" "install"
 			done
 		else
-			MSG="No need to update prior settings files - same Allsky version."
+			MSG="No need to update prior settings files - same Allsky version and branch."
 			display_msg --logonly info "${MSG}"
 		fi
 
@@ -2521,16 +2545,6 @@ restore_prior_files()
 	display_msg --log progress "Restoring prior:"
 
 	local E  D  R  ITEM  X
-
-# TODO: delete in major release after v2024.12.06
-	if [[ -f ${ALLSKY_PRIOR_DIR}/scripts/endOfNight_additionalSteps.sh ]]; then
-		MSG="The ${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh file is no longer supported."
-		MSG+="\nPlease move your code in that file to the 'Script' module in"
-		MSG+="\nthe 'Night to Day Transition Flow' of the Module Manager."
-		MSG+="\nSee the 'Explanations --> Module' documentation for more details."
-		display_msg --log warning "\n${MSG}\n"
-		add_to_post_actions "${MSG}"
-	fi
 
 	ITEM="${SPACE}'images' directory"
 	if [[ ${ALLSKY_IMAGES} != "${ALLSKY_IMAGES_ORIGINAL}" ]]; then
@@ -2884,24 +2898,6 @@ restore_prior_website_files()
 		fi
 	else
 		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
-	fi
-
-	# This is the old name.
-# TODO: remove this check in the next release.
-	ITEM="${SPACE}${SPACE}'myImages' directory"
-	D="${PRIOR_WEBSITE_DIR}/myImages"
-	if [[ -d ${D} ]]; then
-		count=$( get_count "${D}" '*' )
-		if [[ ${count} -gt 1 ]]; then
-			local MSG2="  Please use '${ALLSKY_WEBSITE_MYFILES_DIR}' going forward."
-			display_msg --log progress "${ITEM} (copying to '${ALLSKY_WEBSITE_MYFILES_DIR}')" "${MSG2}"
-			(shopt -s dotglob
-			 cp "${D}"/*   "${ALLSKY_WEBSITE_MYFILES_DIR}" 2>/dev/null
-	 		)
-		fi
-	else
-		# Since this is obsolete only add to log file.
-		display_msg --logonly progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
 	# Now deal with the local Website configuration file.
@@ -3438,7 +3434,8 @@ log_info()
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 
 	display_msg --logonly info "ALLSKY_PI_OS = ${ALLSKY_PI_OS}"
-##	display_msg --logonly info "/etc/os-release:\n$( indent "$( grep -v "URL" /etc/os-release )" )"
+	THIS_PI_MODEL="$( get_computer "" )"
+	display_msg --logonly info "Pi Model = ${THIS_PI_MODEL}"
 	display_msg --logonly info "uname = $( uname -a )"
 	display_msg --logonly info "id = $( id )"
 
@@ -3864,13 +3861,14 @@ display_wait_message()
 	local MSG  HOW_LONG  M
 
 	M="$( get_computer --pi-model-only )"
-	if [[ ${M:-0} -lt 5 ]]; then
+	M="${M:-0}"
+	if [[ ${M} -lt 5 ]]; then
 		HOW_LONG="up to an hour"
 	else
 		HOW_LONG="several minutes"
 	fi
 	MSG="The following steps can take ${HOW_LONG} depending on the speed of"
-	MSG+="\nyour Pi and how many of the necessary dependencies are already installed."
+	MSG+="\nyour Pi ${M/0/} and how many of the necessary dependencies are already installed."
 	display_msg notice "${MSG}"
 }
 

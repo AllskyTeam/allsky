@@ -32,34 +32,13 @@
 				This often includes the time the image was taken, the sensor temperature,
 				and the exposure length, but can include any other text or images you want.
 			</p>
-			<p>Allsky has always had the ability to add <em>text</em>
-				to the captured image but in a very limited way.
-				There a new method to add an overlay.
-				You choose the method via the <span class="WebUISetting">Overlay Method</span>
-				setting in the WebUI's <span class="WebUILink">Allsky Settings</span> page.
-			<ol>
-				<li>The <span class="WebUIValue">module</span> method has many new
-					features and is significantly more flexible than the older method.
-					For example, you can add an overlay ONLY to the live image but not to saved images.
-					You can also easily add images and text using a drag-and-drop method.
-				<li>The <span class="WebUIValue">legacy</span> method allows only text
-					text to be placed in a single location on an image with limited formatting.
-					<br>This page focuses on the <span class="WebUIValue">module</span> method.
-			</ol>
-			<blockquote>
-				The <span class="WebUIValue">module</span> method is the default
-				and will be the ONLY method in the next version of Allsky.
-				<br>We suggest you start using this method now.
-			</blockquote>
-			</p>
 
 			<h2>Features</h2>
 			<details>
 				<summary></summary>
 				<p class="morePadding">
-					The <span class="WebUIValue">module</span> method allows almost any
-					information to be added to the captured Allsky image.
-					Some of the key features of this method include:
+					Almost any information can be added to a captured Allsky image.
+					Some of the key features of Allsky's overlays include:
 				</p>
 				<ul>
 					<li><span class="editorName">Overlay Editor</span> - this is the web page for creating
@@ -82,7 +61,7 @@
 								you wish to add to the image.</li>
 						</ul>
 					</li>
-					<li><strong>Text Fields</strong> - This allows text to be added to the image.:
+					<li><strong>Text Fields</strong> - This allows text to be added to the image.
 						Key features include:
 						<ul class="minimalPadding">
 							<li>Ability to add any data from Allsky to the image</li>
@@ -106,7 +85,9 @@
 			<details>
 				<summary></summary>
 				<p>
-				<blockquote>The <span class="editorName">Overlay Editor</span> web page is used to define what
+				<blockquote>The <span class="editorName">Overlay Editor</span>,
+					which is accessed via the <span class="WebUILink">Overlay Editor</span> WebUI page,
+					is used to define what
 					information you want on the captured images and where it should go.
 					Once you have specified that information, you won't use the editor again until
 					you want to change something in the overlay, which typically isn't done very often.
@@ -120,16 +101,8 @@
 				</blockquote>
 				</p>
 
-				<p>In order to use the the <span class="moduleName">Overlay Module</span> you must enable it by
-					going to the WebUI and clicking on the <span class="WebUILink">Allsky Settings</span> link,
-					then selecting <span class="WebUIValue">module</span> in the
-					<span class="WebUISetting">Image Overlay</span> setting.
-					This disables all the remaining settings in the <strong>Image overlay settings</strong> section;
-					you will specify those items in the <span class="editorName">Overlay Editor</span> instead.
-				</p>
-				<p>In the <span class="editorName">Overlay Editor</span> you specify what information you want to go
-					where,
-					and what it should look like.
+				<p>In the <span class="editorName">Overlay Editor</span> you specify what information
+					you want to go where, and what it should look like.
 					For example, you want the date and time the image was taken to be in blue, 12 point font
 					in the upper left of the image and a compass rotated 20 degrees so it's pointing north
 					in the upper right of the image.
@@ -138,7 +111,8 @@
 				</p>
 				<p>After Allsky captures an image it passes that image as well as information
 					about the image to the <span class="moduleName">Overlay Module</span>,
-					including the time the image was taken, the exposure length, and the gain.
+					including the time the image was taken, the exposure length, the gain,
+					and a lot more.
 					This information is put into <strong>System Variables</strong> that can be used
 					per you configuration in the <span class="editorName">Overlay Editor</span>, which then:
 				</p>
@@ -189,7 +163,8 @@
 							or the underscore character <code>_</code>.
 						<li>Should be prefixed with a string that's unique to you like your initials,
 							to avoid conflicting with the names of Allsky system variables.
-							This prefix can be anything except <code>AS_</code> and <code>ALLSKY_</code>.
+							This prefix can be anything except <code>AS_</code> and <code>ALLSKY_</code>,
+							which are reserved for the Allsky development team.
 						<li>Should make sense to you.
 							You are more likely to remember what <code>${MY_AMBIENT_TEMP}</code>
 							means than <code>${MY_AT}</code>.
@@ -239,7 +214,7 @@
 						<tbody>
 							<tr>
 								<td><code>${DATE}</code></td>
-								<td>24/10/2023</td>
+								<td>24/10/2025</td>
 								<td>Displays the date from the DATE system variable.
 									The date can be
 									<a href="#formattingVariables">formatted in a variety of ways</a>.
@@ -248,7 +223,7 @@
 							</tr>
 							<tr>
 								<td><code>Date: ${DATE}</code></td>
-								<td>Date: 24/10/2023</td>
+								<td>Date: 24/10/2025</td>
 								<td>Displays the text "Date: " then the date the image was taken
 									from the DATE system variable.
 									As above, the date can be formatted in a variety of ways.
@@ -257,7 +232,7 @@
 							</tr>
 							<tr>
 								<td><code class="nowrap">Date: ${DATE} ${TIME}</code></td>
-								<td>Date: 24/10/2023 23:12:34</td>
+								<td>Date: 24/10/2025 23:12:34</td>
 								<td>Displays the date and time the image was taken from the DATE and TIME system
 									variables,
 									respectively.
@@ -303,7 +278,7 @@
 							<tbody>
 								<tr>
 									<td><code>${DATE}</code></td>
-									<td>20230228</td>
+									<td>20250228</td>
 									<td>The date the image was taken.</td>
 								</tr>
 								<tr>
@@ -377,9 +352,8 @@
 								<tr>
 									<td><code>${MEAN}</code></td>
 									<td>0.108564</td>
-									<td>The mean brightness value for the image.
-										Values for ZWO cameras are from 0 (pure black) to 255 (pure white).
-										Values for RPi cameras are from 0.0 (pure black) to 1.0 (pure white).
+									<td>The mean brightness value for the image,
+										from 0.0 (pure black) to 1.0 (pure white).
 									</td>
 								</tr>
 							</tbody>
@@ -922,9 +896,12 @@
 					
 					<p>The Overlay Manager comes pre installed with several overlays for common cameras. The Allsky team maintain these overlays. During installation the most appropriate overlay for your camera will have been selected, the Overlay Manager allows you to use these overlays or create a new one.</p>
 					
-					<blockquote>The Allsky maintained overlays cannot be edited, you must create a new overlay if you wish to edit it. The new overlay can be copied from any exising overlay</blockquote>
+					<blockquote>The Allsky maintained overlays cannot be edited,
+					you must create a new overlay if you wish to edit it.
+					The new overlay can be copied from any exising overlay.</blockquote>
 					
-					<blockquote>During an upgrade from a previous version of Allsky the Module Manager will attempt to convert any of your customised overlays into the module manager format</blockquote>
+					<p>During an upgrade from a previous version of Allsky the Module Manager
+					will attempt to convert any of your customised overlays into the module manager format.</p>
 					
 					<table class="morePadding">
 						<tbody>
@@ -1364,13 +1341,13 @@
 								NOTE: If you receive an error when uploading a font
 								please check the php max file upload size.
 								By default this is 2 MB which may be too small for some font zip
-								files</p>
+								files.</p>
 								<p>The php configuration file is normally
 								<span class="fileName">/etc/php/8.2/cgi/php.ini</span> but will vary depending upon the version of php you have install. Edit this file and locate the line containing
 								<code>upload_max_filesize =</code> and change the value.
 								So if the exiting line says
 								<code>upload_max_filesize = 2MB</code> change it to
-								<code>upload_max_filesize = 20MB</code></p>
+								<code>upload_max_filesize = 20MB</code>.</p>
 								Following this change restart the web server:
 								<pre>sudo systemctl restart lighttpd</pre>
 								</blockquote>
@@ -1477,7 +1454,11 @@
 								uploaded via the <span class="managerName">Image Manager</span> as described above.
 							</li>
 						</ol>
-						<blockquote>Before a field can be displayed it <strong>MUST</strong> be defined in the 'Allsky Variables' tab. If the field is not defined in this tab then it will not be displayed by the overlay manager</blockquote>
+						<blockquote>Before a field can be displayed it <strong>MUST</strong>
+							be defined in the 'Allsky Variables' tab.
+							If the field is not defined in this tab then it will not be displayed
+							by the overlay manager.
+						</blockquote>
 						<hr class="separatorMinor">
 					</details>
 
@@ -1962,8 +1943,14 @@
 						</table>
 						
 						<h4>Checking the Allsky debug log</h4>
-						<p>If you need to look for issue in the Allsky log then first set the debug level to 4 in the main Allsky settings. After Allsky has restrted the logfile can be found in /var/log/allsky.log</p>
-						<blockquote>Its is not recommend to leave the debug level set to 4 for any extended period of time unlessed asked to do so by the Allsky Team</blockquote>
+						<p>If you need to look for issue in the Allsky log then first set the
+						<span class="WebUISetting">Debug Level</span>
+						to 4 in the main Allsky settings.
+						After Allsky has restarted the logfile can be found in
+						<span class="fileName">/var/log/allsky.log</span>.</p>
+						<blockquote>It's is not recommend to leave the
+						<span class="WebUISetting">Debug Level</span>
+						set to 4 for any extended period of time unlessed asked to do so by the Allsky Team.</blockquote>
 					</details>
 				</div>
 				<hr class="separator">

@@ -5,21 +5,6 @@ function DisplayOverlay($image_name)
 	$displayMaskTab = false;		// Should the "Mask" tab appear?
 	$numTabs = 1 + ($displayMaskTab ? 1 : 0);
 	$myStatus = new StatusMessages();
-
-	// TODO: can remove in next major release when Overlay Method is deleted
-	if (getVariableOrDefault($settings_array, 'overlaymethod', 0) === 0) {
-		$msg = "<br>The <span class='WebUISetting'>Overlay Method</span>";
-		$msg .= " on the <span class='WebUILink'>Allsky Settings</span> page is set to";
-		$msg .= " <span class='WebUIValue'>legacy</span>";
-		$msg .=" so the overlay below will NOT be used.";
-		$msg .= " To change that, change the setting to";
-		$msg .= " <span class='WebUIValue'>module</span>.";
-		$msg .= "<br>Also, the &nbsp;";
-		$msg .= " <i class='fa-regular fa-square-check navbar-default btn btn-lg navbar-btn'";
-		$msg .=	" style='color: black; padding: 0 !important; margin: 0; border: 0;'></i>";
-		$msg .= "  &nbsp; icon below will not work until you change the setting.<br><br>";
-		$myStatus->addMessage($msg, 'danger');
-	}
 ?>
 
     <script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>

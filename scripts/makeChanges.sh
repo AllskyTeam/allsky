@@ -820,20 +820,6 @@ do
 			CHECK_REMOTE_SERVER_UPLOAD="true"
 			;;
 
-
-		"overlaymethod")
-			if [[ ${NEW_VALUE} -eq 1 ]]; then		# 1 == "overlay" method
-				W="NOTE: You must enable the ${WSNs}Overlay Module${WSNe} in the"
-				W+="\n ${WSNs}Daytime Capture${WSNe} and/or"
-				W+="\n ${WSNs}Nighttime Capture${WSNe} flows of the"
-				W+="\n ${WSNs}Module Manager${WSNe}"
-				W+="\n for the ${WSNs}${LABEL}${WSNe} to take effect."
-				W_ "${W}"
-			else
-				rm -f "${ALLSKY_TMP}/overlaydebug.txt"
-			fi
-			;;
-
 		"takedaytimeimages" | "takenighttimeimages")
 :	###### TODO anything to do for these?
 			;;

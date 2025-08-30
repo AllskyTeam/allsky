@@ -27,6 +27,7 @@ function ListDays(){
 	global $page;
 	global $pageHeaderTitle, $pageIcon;
 	global $fa_size, $fa_size_px;
+	global $useMeteors;
 
 	if (! is_dir(ALLSKY_IMAGES)) {
 		echo "<br><div class='errorMsgBig'>";
@@ -75,9 +76,9 @@ function ListDays(){
 				<th style="text-align:center">Timelapse</th>
 				<th style="text-align:center">Keogram</th>
 				<th style="text-align:center">Startrails</th>
-<!-- TODO: Add icon for "Meteors" that displays just the images with meteors?
-	Need to query the DB for the list.
--->
+<?php if ($useMeteors) {
+				echo '<th style="text-align:center">Meteors</th>';
+} ?>
 			</tr>
 	  </thead>
 	  <tbody>
@@ -93,6 +94,12 @@ function ListDays(){
 
 			<td><a href='index.php?page=list_startrails&day=All'
 				title='All Startrails'><i class='fa fa-star fa-<?php echo $fa_size ?> fa-fw'></i></a></td>
+
+<?php if ($useMeteors) { ?>
+			<td><a href='index.php?page=list_meteors&day=All'
+				title='All Meteors'><i class='fa fa-meteor fa-$fa_size fa-fw'></i></a></td>
+<?php } ?>
+
 			<!-- don't allow deleting All directories - too risky -->
 			<td style='padding: 22px 0'><span title="You cannot delete All files at once.">-</span></td>
 		</tr>
@@ -115,7 +122,14 @@ foreach ($days as $day) {
 
 	$has_startrails = is_dir(ALLSKY_IMAGES . "/$day/startrails");
 
-	if (! $has_images && ! $has_timelapse && ! $has_keogram && ! $has_startrails) {
+	// It's very possible there will be no meteor files
+	$has_meteors = is_dir(ALLSKY_IMAGES . "/$day/meteors");
+	if ($has_meteors) {
+		$i = getValidImageNames(ALLSKY_IMAGES . "/$day/meteors", true);	// true == stop after 1
+		$has_meteors = (count($i) > 0);
+	}
+
+	if (! $has_images && ! $has_timelapse && ! $has_keogram && ! $has_startrails && ! $has_meteors) {
 		echo "<script>console.log('Directory \"$day\" has no images, timelapse, et.al.; ignoring.');</script>";
 		continue;
 	}
@@ -171,7 +185,16 @@ foreach ($days as $day) {
 	}
 	echo "</td>\n";
 
-# TODO: Add meteors
+if ($useMeteors) {
+	echo "\t\t\t<td>";
+	if ($has_meteors) {
+# TODO: create and use meteors thumbnails.
+		insertHref("list_meteors", $day);
+	} else {
+		echo "none";
+	}
+	echo "</td>\n";
+}
 
 	echo "\t\t\t<td style='padding: 5px'>
 				<button type='submit' data-toggle='confirmation'

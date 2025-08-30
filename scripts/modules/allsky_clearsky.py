@@ -272,7 +272,7 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 			self.log(f'INFO: {result}')
 		except Exception as e:
 			eType, eObject, eTraceback = sys.exc_info()
-			result = f'Module allsky_clearsky failed on line {eTraceback.tb_lineno} - {e}'
+			result = f'Module Clear Sky Alarm failed on line {eTraceback.tb_lineno} - {e}'
 			allsky_shared.log(0,f'ERROR: {result}')
    
 		return result

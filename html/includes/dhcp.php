@@ -7,6 +7,8 @@
 */
 function DisplayDHCPConfig() {
 	global $page;
+	global $pageHeaderTitle, $pageIcon;
+
 	$myStatus = new StatusMessages();
 
 	$interface = null;
@@ -167,7 +169,7 @@ function DisplayDHCPConfig() {
 ?>
 
 <div class="panel panel-success">
-	<div class="panel-heading"><i class="fa fa-exchange fa-fw"></i> Configure DHCP</div>
+	<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
 	<div class="panel-body">
 		<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
 

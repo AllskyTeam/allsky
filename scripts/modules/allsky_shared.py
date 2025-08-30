@@ -516,67 +516,6 @@ def run_script(script: str) -> Tuple[int, str]:
     except FileNotFoundError:
         return 127, f"Script not found: {script}"
     
-def install_apt_packages(pkg_file: str | Path, log_file: str | Path) -> bool:
-    pkg_file = Path(pkg_file)
-    log_file = Path(log_file)
-
-    if not pkg_file.exists():
-        raise FileNotFoundError(f"Package file not found: {pkg_file}")
-
-    with pkg_file.open("r", encoding="utf-8") as f:
-        packages = [line.strip() for line in f if line.strip() and not line.startswith("#")]
-
-    log_folder = os.path.dirname(log_file)
-    check_and_create_directory(log_folder)  
-    
-    failures = []
-    with log_file.open("a", encoding="utf-8") as log:
-        for pkg in packages:
-            log.write(f"\n--- Installing {pkg} ---\n")
-            result = subprocess.run(
-                ["sudo", "apt-get", "install", "-y", pkg],
-                stdout=log,
-                stderr=log
-            )
-            if result.returncode != 0:
-                failures.append(pkg)
-                log.write(f"--- Failed {pkg} ---\n")
-            else:
-                log.write(f"--- Success {pkg} ---\n")
-
-    return len(failures) == 0
-
-def install_requirements(req_file: str | Path, log_file: str | Path) -> bool:
-
-    req_file = Path(req_file)
-    log_file = Path(log_file)
-
-    if not req_file.exists():
-        raise FileNotFoundError(f"Requirements file not found: {req_file}")
-
-    with req_file.open("r", encoding="utf-8") as f:
-        packages = [line.strip() for line in f if line.strip() and not line.startswith("#")]
-
-    log_folder = os.path.dirname(log_file)
-    check_and_create_directory(log_folder)  
-        
-    failures = []
-    with log_file.open("a", encoding="utf-8") as log:
-        for pkg in packages:
-            log.write(f"\n--- Installing {pkg} ---\n")
-            result = subprocess.run(
-                [sys.executable, "-m", "pip", "install", pkg],
-                stdout=log,
-                stderr=log
-            )
-            if result.returncode != 0:
-                failures.append(pkg)
-                log.write(f"--- Failed {pkg} ---\n")
-            else:
-                log.write(f"--- Success {pkg} ---\n")
-
-    return len(failures) == 0
-
 def do_any_files_exist(base_folder: str | Path, filenames: list[str]) -> bool:
     base_folder = Path(base_folder)
 
@@ -729,6 +668,68 @@ def validateExtraFileName(params, module, fileKey):
     extraDataFilename = fileName + fileExtension
                     
     params[fileKey] = extraDataFilename
+
+def install_apt_packages(pkg_file: str | Path, log_file: str | Path) -> bool:
+    pkg_file = Path(pkg_file)
+    log_file = Path(log_file)
+
+    if not pkg_file.exists():
+        raise FileNotFoundError(f"Package file not found: {pkg_file}")
+
+    with pkg_file.open("r", encoding="utf-8") as f:
+        packages = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+
+    log_folder = os.path.dirname(log_file)
+    check_and_create_directory(log_folder)  
+    
+    failures = []
+    with log_file.open("a", encoding="utf-8") as log:
+        for pkg in packages:
+            log.write(f"\n--- Installing {pkg} ---\n")
+            result = subprocess.run(
+                ["sudo", "apt-get", "install", "-y", pkg],
+                stdout=log,
+                stderr=log
+            )
+            if result.returncode != 0:
+                failures.append(pkg)
+                log.write(f"--- Failed {pkg} ---\n")
+            else:
+                log.write(f"--- Success {pkg} ---\n")
+
+    return len(failures) == 0
+
+def install_requirements(req_file: str | Path, log_file: str | Path) -> bool:
+
+    req_file = Path(req_file)
+    log_file = Path(log_file)
+
+    if not req_file.exists():
+        raise FileNotFoundError(f"Requirements file not found: {req_file}")
+
+    with req_file.open("r", encoding="utf-8") as f:
+        packages = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+
+    log_folder = os.path.dirname(log_file)
+    check_and_create_directory(log_folder)  
+        
+    failures = []
+    with log_file.open("a", encoding="utf-8") as log:
+        for pkg in packages:
+            log.write(f"\n--- Installing {pkg} ---\n")
+            result = subprocess.run(
+                [sys.executable, "-m", "pip", "install", pkg],
+                stdout=log,
+                stderr=log
+            )
+            if result.returncode != 0:
+                failures.append(pkg)
+                log.write(f"--- Failed {pkg} ---\n")
+            else:
+                log.write(f"--- Success {pkg} ---\n")
+
+    return len(failures) == 0
+
 
 def check_mysql_connection(host, user, password, database=None, port=3306):
     try:
@@ -1802,23 +1803,79 @@ def get_flows_with_module(module_name):
 
     for file in folder.glob("*.json"):
         if not file.name.endswith("-debug.json"):
-            try:
-                with file.open("r", encoding="utf-8") as f:
-                    data = json.load(f)
+            if file.name.startswith("postprocessing_"):
+                try:
+                    with file.open("r", encoding="utf-8") as f:
+                        data = json.load(f)
 
-                if module_name in data:
-                    found[file.name] = data
+                    if module_name in data:
+                        found[file.name] = data
 
-            except (json.JSONDecodeError, OSError) as e:
-                pass
+                except (json.JSONDecodeError, OSError) as e:
+                    pass
 
     return found
 
-def save_flows_with_module(flows):
+def to_bool(v: bool | str) -> bool:
+    if isinstance(v, bool):
+        return v
+    if v is None:
+        return False
+    return str(v).strip().lower() in ("true", "1", "yes", "y")
+
+def _to_list(v: str | list | None) -> list | str | None:
+    if isinstance(v, str) and "," in v:
+        return [x.strip() for x in v.split(",")]
+    return v
+
+def atomic_write_json(path: Path, data: Dict[str, Any]) -> None:
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with tmp.open("w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
+        f.write("\n")
+    os.replace(tmp, path)
+
+def save_secrets_file(env_data: Dict[str, Any]) -> None:
+    file_path = Path(os.path.join(ALLSKYPATH, 'env.json'))
+    atomic_write_json(file_path, env_data)
+    
+def load_secrets_file() -> Dict[str, Any]:
+    file_path = Path(os.path.join(ALLSKYPATH, 'env.json'))
+    env_data: Dict[str, Any] = {}
+    if file_path.is_file():
+        with file_path.open("r", encoding="utf-8") as f:
+            try:
+                env_data = json.load(f) or {}
+            except json.JSONDecodeError:
+                env_data = {}
+                
+    return env_data
+                        
+def save_flows_with_module(flows: Dict[str, Any], module_name: str, debug:bool = False, log_level:int = 4) -> None:
+    log_level = LOGLEVEL
+    if debug:
+        log_level = 4    
     #try:
-        for flow, flow_data in flows.items():        
-            file_path = os.path.join(ALLSKY_MODULES, f'{flow}.json')
-            with open(file_path, 'w', encoding='utf-8') as file:
-                json.dump(flow_data, file, indent=4)
-    #except Exception as e:
+    for flow, flow_data in flows.items():
+        file_path = os.path.join(ALLSKY_MODULES, flow)
+        with open(file_path, 'w', encoding='utf-8') as file:
+            json.dump(flow_data, file, indent=4)
+#except Exception as e:
     #    log(0, f'ERROR: Failed to save flows for {module_name} - {e}')
+    
+
+def normalize_argdetails(ad):
+    norm = {}
+    for key, details in (ad or {}).items():
+        norm[key] = {}
+        for k, v in (details or {}).items():
+            if k in ("required", "secret"):
+                norm[key][k] = to_bool(v)
+            elif k == "type" and isinstance(v, dict):
+                norm[key][k] = {kk: _to_list(vv) for kk, vv in v.items()}
+            else:
+                norm[key][k] = v
+    return norm
+
+def compare_flow_and_module(flow_ad, code_ad):
+    return  normalize_argdetails(flow_ad) != normalize_argdetails(code_ad)    

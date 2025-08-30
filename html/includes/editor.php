@@ -4,6 +4,8 @@ function DisplayEditor()
 {
 	global $useLocalWebsite, $useRemoteWebsite;
 	global $hasLocalWebsite, $hasRemoteWebsite;
+	global $pageHeaderTitle, $pageIcon;
+
 	$myStatus = new StatusMessages();
 	$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
 
@@ -401,7 +403,7 @@ function DisplayEditor()
 	<div class="row">
 		<div class="col-lg-12">
 			<div class="panel panel-allsky">
-				<div class="panel-heading"><i class="fa fa-code fa-fw"></i> Editor</div>
+				<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
 				<div class="panel-body">
 					<p id="editor-messages"><?php $myStatus->showMessages(); ?></p>
 					<p id="need-to-update"></p> <p id="file-corruption"></p>

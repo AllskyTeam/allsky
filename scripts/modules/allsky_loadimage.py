@@ -231,7 +231,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 			allsky_shared.log(4, f"INFO: Debug information written to {debug_filename}")
 		except Exception as e:
 			eType, eObject, eTraceback = sys.exc_info()
-			allsky_shared.log(0, f'ERROR: Unable to access {debug_filename}. {eTraceback.tb_lineno} - {e}')     
+			allsky_shared.log(0, f'ERROR: Unable to access {debug_filename} in allsky_loadimage.py on line {eTraceback.tb_lineno} - {e}')     
      
 	def run(self):
 		result = f'Image {allsky_shared.CURRENTIMAGEPATH} Loaded'
@@ -261,7 +261,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 			self._cleanup_module_data()
 		except Exception as e:
 			eType, eObject, eTraceback = sys.exc_info()
-			result = f'Cannot cleanup extra module data {eTraceback.tb_lineno} - {e}'
+			result = f'Cannot cleanup extra module data in allsky_loadimage.py on line {eTraceback.tb_lineno} - {e}'
 			allsky_shared.log(0,f'ERROR: {result}')  
 
 		self._dump_debug_data()

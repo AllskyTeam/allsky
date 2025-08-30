@@ -48,8 +48,10 @@ CONFIGURATION_NEEDED="true"				# Does Allsky need configuring at end of installa
 ALLSKY_IMAGES_MOVED="false"				# Did the user move ALLSKY_IMAGES, e.g., to an SSD?
 SPACE="    "
 NOT_RESTORED="NO PRIOR VERSION"
+PI_MODEL=""								# The numeric model of Raspberry Pi
+THIS_PI_MODEL=""						# The model of this Raspberry Pi
 
-declare -r TMP_FILE="/tmp/x"					# temporary file used by many functions
+declare -r TMP_FILE="/tmp/x"			# temporary file used by many functions
 declare -r TAB="$( echo -e '\t' )"
 declare -r NEW_STYLE_ALLSKY="newStyle"
 declare -r OLD_STYLE_ALLSKY="oldStyle"
@@ -65,7 +67,7 @@ OVERLAY_NAME=""
 #xxx currently not used:    ALLSKY_BASE_VERSION="$( remove_point_release "${ALLSKY_VERSION}" )"
 
 	# Base of first version without Buster support or "legacy" overlay method.
-#declare -r NO_BUSTER_BASE_VERSION="v2025.xx.xx"		# TODO: Change xxxxxx not used yet
+# declare -r NO_BUSTER_BASE_VERSION="v2025.xx.xx"		# TODO: Change xxxxxx not used yet
 	# Base of first version with combined configuration files and all lowercase setting names.
 declare -r COMBINED_BASE_VERSION="v2024.12.06"
 	# Base of first version with CAMERA_TYPE instead of CAMERA in config.sh and
@@ -336,7 +338,7 @@ do_initial_heading()
 ####
 usage_and_exit()
 {
-	local RET C MSG
+	local RET C USAGE
 
 	exec >&2
 	RET=${1}
@@ -345,15 +347,16 @@ usage_and_exit()
 	else
 		C="${RED}"
 	fi
-	MSG="Usage: ${ME} [--help] [--debug [...]] [--fix |--update | --restore | --function function]"
-	echo -e "\n${C}${MSG}${NC}"
+	USAGE="Usage: ${ME} [--help] [--debug [...]] [--fix |--update | --restore | --function function]"
+	echo -e "\n${C}${USAGE}${NC}"
 	echo
-	echo "'--help' displays this message and exits."
-	echo "'--debug' displays debugging information. Can be called multiple times to increase level."
-	echo "'--fix' should only be used when instructed to by the Allsky Website."
-	echo "'--update' should only be used when instructed to by the Allsky Website."
-	echo "'--restore' restores ${ALLSKY_PRIOR_DIR} to ${ALLSKY_HOME}."
-	echo "'--function' executes the specified function and quits."
+	echo "Arguments:"
+	echo "   --help       Displays this message and exits."
+	echo "   --debug	  Displays debugging information. Can be called multiple times to increase level."
+	echo "   --fix        Should only be used when instructed to by the Allsky Website."
+	echo "   --update     Should only be used when instructed to by the Allsky Website."
+	echo "   --restore    Restores ${ALLSKY_PRIOR_DIR} to ${ALLSKY_HOME}."
+	echo "   --function   Executes the specified function and quits."
 	echo
 
 	exit_installation "${RET}"
@@ -669,11 +672,6 @@ save_camera_capabilities()
 
 do_save_camera_capabilities()
 {
-	if [[ -z ${CAMERA_TYPE} ]]; then
-		display_msg --log error "INTERNAL ERROR: CAMERA_TYPE not set in save_camera_capabilities()."
-		return 1
-	fi
-
 	local OPTIONSFILEONLY="${1}"		# Set to "true" if we should ONLY create the options file.
 	local FORCE  MSG  OPTIONSONLY  ERR  M  RET
 	# CAMERA_MODEL is global
@@ -899,7 +897,7 @@ run_aptGet()
 
 	local OUTPUT="$( sudo apt-get --assume-yes install "${@}" 2>&1 )"
 	local RET=$?
-	if [[ $? -ne 0 && ${FIRST_CALL} == "true" ]]; then
+	if [[ ${RET} -ne 0 && ${FIRST_CALL} == "true" ]]; then
 		display_msg --logonly info "First call to apt-get failed; trying again."
 		sleep 3
 		sudo apt-get --assume-yes install "${@}"
@@ -1050,7 +1048,7 @@ prompt_for_hostname()
 
 
 ####
-# Set permissions on various web-related items.
+# Set permissions on various files.
 # Do every time - doesn't hurt to re-do them.
 set_permissions()
 {
@@ -1098,6 +1096,7 @@ set_permissions()
 	chmod 775 "${ALLSKY_CURRENT_DIR}"
 	sudo chgrp "${ALLSKY_WEBSERVER_GROUP}" "${ALLSKY_CURRENT_DIR}"
 
+
 	########## Website files
 
 	chmod 664 "${ALLSKY_ENV}"
@@ -1125,7 +1124,7 @@ set_permissions()
 
 		# Loop over all files in the session folder and if any are not owned by the
 		# web server user then changs ALL of the php sessions to be owned by the
-		# web server user
+		# web server user.
 		sudo find "${SESSION_PATH}" -type f -print0 | while read -r -d $'\0' SESSION_FILE
 		do
 			OWNER="$( sudo stat -c '%U' "${SESSION_FILE}" )"
@@ -1424,7 +1423,7 @@ is_reboot_needed()
 	if [[ ${NEW_BASE_VERSION} == "${OLD_BASE_VERSION}" ||
 		  ${OLD_BASE_VERSION} == "${NO_REBOOT_BASE_VERSION}" ]]; then
 		# Assume just bug fixes between point releases.
-# TODO: this may not always be true.
+# TODO: this is not always true.
 		REBOOT_NEEDED="false"
 		display_msg --logonly info "No reboot is needed."
 	else
@@ -1742,6 +1741,27 @@ prompt_for_prior_Allsky()
 
 
 ####
+# Make separate function so it can be called from command line for testing.
+update_allsky_common()
+{
+	# Set some default locations needed by the capture programs so we
+	# don't need to pass them in on the command line - if they are passed in,
+	# those values overwrite the defaults.
+	sed \
+		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+		-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
+		-e "s;XX_CONNECTED_CAMERAS_FILE_XX;${ALLSKY_CONNECTED_CAMERAS_INFO};" \
+		-e "s;XX_RPI_CAMERA_INFO_FILE_XX;${ALLSKY_RPi_SUPPORTED_CAMERAS};" \
+		-e "s;XX_EXIT_OK_XX;${EXIT_OK};" \
+		-e "s;XX_EXIT_RESTARTING_XX;${EXIT_RESTARTING};" \
+		-e "s;XX_EXIT_RESET_USB_XX;${EXIT_RESET_USB};" \
+		-e "s;XX_EXIT_ERROR_STOP_XX;${EXIT_ERROR_STOP};" \
+		-e "s;XX_EXIT_NO_CAMERA_XX;${EXIT_NO_CAMERA};" \
+		"${ALLSKY_HOME}/src/include/allsky_common.h.repo" \
+	> "${ALLSKY_HOME}/src/include/allsky_common.h"
+}
+
+####
 install_dependencies_etc()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
@@ -1771,15 +1791,7 @@ install_dependencies_etc()
 	check_success $? "Allsky dependency installation failed" "${TMP}" "${DEBUG}" ||
 		exit_with_image 1 "${STATUS_ERROR}" "dependency installation failed"
 
-	# Set some default locations needed by the capture programs so we
-	# don't need to pass them in on the command line - if they are passed in,
-	# those values overwrite the defaults.
-	sed \
-		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
-		-e "s;XX_CONNECTED_CAMERAS_FILE_XX;${ALLSKY_CONNECTED_CAMERAS_INFO};" \
-		-e "s;XX_RPI_CAMERA_INFO_FILE_XX;${ALLSKY_RPi_SUPPORTED_CAMERAS};" \
-		"${ALLSKY_HOME}/src/include/allsky_common.h.repo" \
-	> "${ALLSKY_HOME}/src/include/allsky_common.h"
+	update_allsky_common
 
 	# "make -C src deps" may need to install some packages, so needs "sudo".
 	display_msg --log progress "Creating Allsky commands."
@@ -1846,20 +1858,18 @@ convert_settings_file()			# prior_file, new_file
 	local NEW_FILE="${2}"
 	local CALLED_FROM="${3}"
 
-	if [[ ${ALLSKY_VERSION} == "${PRIOR_ALLSKY_VERSION}" ]]; then
-		display_msg --logonly info "Not converting '${PRIOR_FILE}'; same ALLSKY_VERSION."
-		return
-	fi
-
 # TODO: Keep track somehow of which upgrades added, deleted, and/or changed names of
 # settings so we know if the settings file needs to be updated.
 
-	local MSG="Converting '$( basename "${PRIOR_FILE}" )' to new format if needed:"
+	local MSG="Converting '$( basename "${PRIOR_FILE}" )'"
+	MSG+=" to new format in '$( basename "${NEW_FILE}" )' if needed."
 	display_msg --log progress "${MSG}"
 
 	DIR="/tmp/converted_settings"
 	mkdir -p "${DIR}"
-	local TEMP_PRIOR="${DIR}/old-${PRIOR_CAMERA_TYPE}_${PRIOR_CAMERA_MODEL}.json"
+	local TEMP_PRIOR="${DIR}/PRIOR-${PRIOR_CAMERA_TYPE}_${PRIOR_CAMERA_MODEL// /_}.json"
+	local DELETED_SETTINGS="${DIR}/deleted_settings.txt"
+	rm -f "${DELETED_SETTINGS}"
 
 	# Pre-v2024.12.06 version had uppercase letters in setting names and
 	# "1" and "0" for booleans and quotes around numbers. Change that.
@@ -1867,11 +1877,12 @@ convert_settings_file()			# prior_file, new_file
 	# --settings-only  says only output settings that are in the settings file.
 	# The ALLSKY_OPTIONS_FILE doesn't exist yet so use REPO_OPTIONS_FILE.
 	"${ALLSKY_SCRIPTS}/convertJSON.php" \
-		--convert \
-		--settings-only \
-		--settings-file "${PRIOR_FILE}" \
-		--options-file "${REPO_OPTIONS_FILE}" \
-		--include-not-in-options \
+			--from-install \
+			--convert \
+			--settings-only \
+			--settings-file "${PRIOR_FILE}" \
+			--options-file "${REPO_OPTIONS_FILE}" \
+			--include-not-in-options \
 		> "${TEMP_PRIOR}" 2>&1
 	if [[ $? -ne 0 ]]; then
 		MSG="Unable to convert old settings file: $( < "${TEMP_PRIOR}" )"
@@ -1885,10 +1896,11 @@ convert_settings_file()			# prior_file, new_file
 	# Output the field name and value as text separated by a tab.
 	# Field names are already lowercase from above.
 	"${ALLSKY_SCRIPTS}/convertJSON.php" \
+			--from-install \
 			--delimiter "${TAB}" \
+			--settings-file "${TEMP_PRIOR}" \
 			--options-file "${REPO_OPTIONS_FILE}" \
-			--include-not-in-options \
-			--settings-file "${TEMP_PRIOR}" |
+			--include-not-in-options |
 		while read -r FIELD VALUE
 		do
 			case "${FIELD}" in
@@ -1899,24 +1911,39 @@ convert_settings_file()			# prior_file, new_file
 
 				"computer")
 					# As of ${COMBINED_BASE_VERSION}, we compute the value.
-					VALUE="$( get_computer )"
+					VALUE="${THIS_PI_MODEL}"
 					doV "${FIELD}" "VALUE" "${FIELD}" "text" "${NEW_FILE}"
 					;;
 
 				# Don't carry this forward:
 				"XX_END_XX")
-					;;
-
-				# ===== Deleted in ${NO_BUSTER_BASE_VERSION}
-				"notificationimages")
+					echo -e "\t${FIELD}=${VALUE}" >> "${DELETED_SETTINGS}"
 					;;
 
 				# ===== Deleted in ${COMBINED_BASE_VERSION}.
-				"autofocus" | "background" | "alwaysshowadvanced" | \
+				"autofocus" | "background" | "alwaysshowadvanced" | "notificationimages" | \
 				"newexposure" | "experimentalexposure" | "showbrightness")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
+					;;
+
+				# ===== Deleted in ${NO_BUSTER_BASE_VERSION}.
+				"overlaymethod")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
+					if [[ ${VALUE} -eq 0 ]]; then
+						MSG="The legacy Overlay Method is no longer available."
+						MSG+="\nUse the WebUI's 'Overlay Editor' instead."
+						display_msg --log notice "${MSG}"
+					fi
+					;;
+				"showtime" | "showexposure" | "showgain" | "showusb" | "showtemp" | \
+				"showmean" | "showhistogrambox" | "showfocus" | "text" | "textarea" | \
+				"extratext" | "extratextage" | "textlineheight" | "textx" | "texty" | "fontname" | \
+				"fontcolor" | "smallfontcolor" | "fonttype" | "fontsize" | "fontline" | "outlinefont")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
 					;;
 
 				"brightness" | "daybrightness" | "nightbrightness")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
 					if [[ ! -f ${DISPLAYED_BRIGHTNESS_MSG} ]]; then
 						touch "${DISPLAYED_BRIGHTNESS_MSG}"
 						MSG="The 'Brightness' settings were removed. Use 'Target Mean' instead."
@@ -1924,6 +1951,7 @@ convert_settings_file()			# prior_file, new_file
 					fi
 					;;
 				"offset")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
 					if [[ ${VALUE} -gt 1 && ! -f ${DISPLAYED_OFFSET_MSG} ]]; then
 						touch "${DISPLAYED_OFFSET_MSG}"
 						# 1 is default.  > 1 means they changed it, which is rare.
@@ -1937,6 +1965,7 @@ convert_settings_file()			# prior_file, new_file
 				"remotewebsitevideodestinationname" | \
 				"remotewebsitekeogramdestinationname" | \
 				"remotewebsitestartrailsdestinationname")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
 					if [[ -n ${VALUE} && ! -f ${DISPLAYED_CHANGE_NAMES_MSG} ]]; then
 						touch "${DISPLAYED_CHANGE_NAMES_MSG}"
 						MSG="Changing timelapse, keogram, and/or startrails names"
@@ -1994,13 +2023,20 @@ convert_settings_file()			# prior_file, new_file
 					;;
 
 				*)
-					# don't know the type
+					# Since we don't know the setting name, we don't know its type.
+					# Any setting that's not new, old, or changed (most of them), comes here.
 					doV "${FIELD}" "VALUE" "${FIELD}" "" "${NEW_FILE}"
 					;;
 			esac
 		done
-}
 
+	# Delete obsolete settings.
+	if [[ -s "${DELETED_SETTINGS}" ]]; then
+		display_msg --logonly info "List of settings deleted from '${NEW_FILE}' is in '${DELETED_SETTINGS}'."
+		# shellcheck disable=SC2046
+		"${ALLSKY_SCRIPTS}/updateJsonFile.sh" --file "${NEW_FILE}" $( < "${DELETED_SETTINGS}" )
+	fi
+}
 
 
 ####
@@ -2333,15 +2369,15 @@ restore_prior_settings_file()
 		# The prior settings file SHOULD be a link to a camera-specific file.
 		# Make sure that's true; if not, fix it.
 
-		MSG="Checking link for ${NEW_STYLE_ALLSKY} PRIOR_SETTINGS_FILE '${PRIOR_SETTINGS_FILE}'"
-		display_msg --logonly info "${MSG}"
-
 		# Do we need to check for upperCase or lowercase setting names?
 		if [[ ${PRIOR_ALLSKY_BASE_VERSION} < "${COMBINED_BASE_VERSION}" ]]; then
 			CHECK_UPPER="--uppercase"
 		else
 			CHECK_UPPER=""
 		fi
+
+		MSG="Checking link for ${NEW_STYLE_ALLSKY} PRIOR_SETTINGS_FILE '${PRIOR_SETTINGS_FILE}'"
+		display_msg --logonly info "${MSG}"
 
 		# shellcheck disable=SC2086
 		MSG="$( check_settings_link ${CHECK_UPPER} "${PRIOR_SETTINGS_FILE}" )"
@@ -2401,8 +2437,9 @@ restore_prior_settings_file()
 		fi
 
 		# Make any changes to the settings files based on the old and new Allsky versions.
+		# If we're not using the standard branch we're probably testing and want to convert the settings file.
 		if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" &&
-			  ${PRIOR_ALLSKY_VERSION} != "${ALLSKY_VERSION}" ]]; then
+			( ${BRANCH} != "${ALLSKY_GITHUB_MAIN_BRANCH}" || ${PRIOR_ALLSKY_VERSION} != "${ALLSKY_VERSION}" ) ]]; then
 			for S in ${PRIOR_SPECIFIC_FILES}
 			do
 				# Update all the prior camera-specific files (which are now in ${ALLSKY_CONFIG}).
@@ -2411,7 +2448,7 @@ restore_prior_settings_file()
 				convert_settings_file "${S}" "${S}" "install"
 			done
 		else
-			MSG="No need to update prior settings files - same Allsky version."
+			MSG="No need to update prior settings files - same Allsky version and branch."
 			display_msg --logonly info "${MSG}"
 		fi
 
@@ -2508,16 +2545,6 @@ restore_prior_files()
 	display_msg --log progress "Restoring prior:"
 
 	local E  D  R  ITEM  X
-
-# TODO: delete in major release after v2024.12.06
-	if [[ -f ${ALLSKY_PRIOR_DIR}/scripts/endOfNight_additionalSteps.sh ]]; then
-		MSG="The ${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh file is no longer supported."
-		MSG+="\nPlease move your code in that file to the 'Script' module in"
-		MSG+="\nthe 'Night to Day Transition Flow' of the Module Manager."
-		MSG+="\nSee the 'Explanations --> Module' documentation for more details."
-		display_msg --log warning "\n${MSG}\n"
-		add_to_post_actions "${MSG}"
-	fi
 
 	ITEM="${SPACE}'images' directory"
 	if [[ ${ALLSKY_IMAGES} != "${ALLSKY_IMAGES_ORIGINAL}" ]]; then
@@ -2618,7 +2645,7 @@ restore_prior_files()
     local DAYTIME_OVERLAY="$( settings ".daytimeoverlay" "${PRIOR_SETTINGS_FILE}" )"
     local NIGHTTIME_OVERLAY="$( settings ".nighttimeoverlay" "${PRIOR_SETTINGS_FILE}" )"
 
-    if [[ -z "${DAYTIME_OVERLAY}" && -z "${NIGHTTIME_OVERLAY}" ]]; then
+    if [[ -z ${DAYTIME_OVERLAY} && -z ${NIGHTTIME_OVERLAY} ]]; then
         ITEM="${SPACE}Overlay configuration file"
         if [[ ! -f ${PRIOR_OVERLAY_FILE} ]] ||
                 cmp -s "${PRIOR_OVERLAY_FILE}" "${PRIOR_OVERLAY_REPO_FILE}" ; then
@@ -2873,24 +2900,6 @@ restore_prior_website_files()
 		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-	# This is the old name.
-# TODO: remove this check in the next release.
-	ITEM="${SPACE}${SPACE}'myImages' directory"
-	D="${PRIOR_WEBSITE_DIR}/myImages"
-	if [[ -d ${D} ]]; then
-		count=$( get_count "${D}" '*' )
-		if [[ ${count} -gt 1 ]]; then
-			local MSG2="  Please use '${ALLSKY_WEBSITE_MYFILES_DIR}' going forward."
-			display_msg --log progress "${ITEM} (copying to '${ALLSKY_WEBSITE_MYFILES_DIR}')" "${MSG2}"
-			(shopt -s dotglob
-			 cp "${D}"/*   "${ALLSKY_WEBSITE_MYFILES_DIR}" 2>/dev/null
-	 		)
-		fi
-	else
-		# Since this is obsolete only add to log file.
-		display_msg --logonly progress "${ITEM}: ${NOT_RESTORED}"
-	fi
-
 	# Now deal with the local Website configuration file.
 	if [[ ${PRIOR_WEBSITE_STYLE} == "${OLD_STYLE_ALLSKY}" ]]; then
 		# The format of the old files is too different from the new file,
@@ -2930,14 +2939,14 @@ restore_prior_website_files()
 			if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
 				# If different versions, then update the current one.
 				MSG+="Updating version from ${PRIOR_WEB_CONFIG_VERSION} to ${NEW_WEB_CONFIG_VERSION}."
+				display_msg --logonly info "${MSG}"
 				update_old_website_config_file "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" \
 					"${PRIOR_WEB_CONFIG_VERSION}" "${NEW_WEB_CONFIG_VERSION}"
 			else
 				MSG+="Already current @ version ${NEW_WEB_CONFIG_VERSION}"
+				display_msg --logonly info "${MSG}"
 			fi
-			display_msg --logonly info "${MSG}"
 
-			# Since the config file already exists, this will just run postData.sh:
 			prepare_local_website "" "postData"
 
 		else
@@ -3351,13 +3360,20 @@ install_Python()
 	local CMD="from gpiozero import Device"
 	CMD+="\nDevice.ensure_pin_factory()"
 	CMD+="\nprint(Device.pin_factory.board_info.model)"
-	pimodel="$( echo -e "${CMD}" | python3 2>/dev/null )"	# hide error since it only applies to Pi 5.
+	# Hide error since it only applies to Pi 5.
+	local pimodel="$( echo -e "${CMD}" | python3 2>/dev/null )"
 	echo "${pimodel}" > "${ALLSKY_PI_VERSION_FILE}"
 
-	# if we are on the pi 5 then uninstall rpi.gpio, using the virtual environment which will always
-	# exist on the pi 5. lgpio is installed globally so will be used after rpi.gpio is removed
-	# Adafruits blinka reinstalls rpi.gpio so we need to ensure its removed
-	if [[ ${pimodel:0:1} == "5" ]]; then
+	# If we are on the pi 5 then uninstall rpi.gpio,
+	# using the virtual environment which will always exist on the pi 5.
+	# lgpio is installed globally so will be used after rpi.gpio is removed.
+	# Adafruits blinka reinstalls rpi.gpio so we need to ensure its removed.
+	if [[ -n ${pimodel} ]]; then
+		PI_MODEL="0"					# global
+	else
+		PI_MODEL="${pimodel:0:1}"
+	fi
+	if [[ ${PI_MODEL} == "5" ]]; then
 		display_msg --logonly info "Updating GPIO to lgpio"
 		activate_python_venv
 		pip3 uninstall -y rpi.gpio > /dev/null 2>&1
@@ -3418,7 +3434,8 @@ log_info()
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 
 	display_msg --logonly info "ALLSKY_PI_OS = ${ALLSKY_PI_OS}"
-##	display_msg --logonly info "/etc/os-release:\n$( indent "$( grep -v "URL" /etc/os-release )" )"
+	THIS_PI_MODEL="$( get_computer "" )"
+	display_msg --logonly info "Pi Model = ${THIS_PI_MODEL}"
 	display_msg --logonly info "uname = $( uname -a )"
 	display_msg --logonly info "id = $( id )"
 
@@ -3484,7 +3501,7 @@ display_image()
 		ALLSKY_EXTENSION="jpg"
 	fi
 
-	I="${ALLSKY_TMP}/${ALLSKY_FILENAME}.${ALLSKY_EXTENSION}"
+	I="${ALLSKY_CURRENT_DIR}/${ALLSKY_FILENAME}.${ALLSKY_EXTENSION}"
 	if [[ -z ${IMAGE_OR_CUSTOM} ]]; then		# No IMAGE_OR_CUSTOM means remove the image
 		display_msg --logonly info "Removing prior notification image."
 		rm -f "${I}"
@@ -3499,7 +3516,7 @@ display_image()
 		MSG="Displaying custom notification image: $( echo -e "${CUSTOM_MESSAGE}" | tr '\n' ' ' )"
 		display_msg --logonly info "${MSG}"
 		MSG="$( "${ALLSKY_SCRIPTS}/generateNotificationImages.sh" \
-			--directory "${ALLSKY_TMP}" \
+			--directory "${ALLSKY_CURRENT_DIR}" \
 			"${ALLSKY_FILENAME}" "${COLOR}" "" "" "" "" \
 			"" "10" "${COLOR}" "${ALLSKY_EXTENSION}" "" "${CUSTOM_MESSAGE}"  2>&1 >/dev/null )"
 		if [[ -n ${MSG} ]]; then
@@ -3546,6 +3563,7 @@ sort_settings_file()
 	display_msg --logonly info "Sorting settings file '${FILE}'."
 
 	"${ALLSKY_SCRIPTS}/convertJSON.php" \
+		--from-install \
 		--convert \
 		--order \
 		--settings-file "${FILE}" \
@@ -3794,6 +3812,9 @@ install_installer_dependencies()
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 	[[ ${SKIP} == "true" ]] && return
 
+	# Needed to put notification images there.
+	[[ ! -d ${ALLSKY_CURRENT_DIR} ]] && mkdir -p "${ALLSKY_CURRENT_DIR}"
+
 	display_msg --log progress "Installing initial dependencies."
 	TMP="${ALLSKY_LOGS}/installer.dependencies.log"
 	{
@@ -3837,11 +3858,17 @@ check_for_required_settings()
 # Display a message informing the user the following steps can take a while.
 display_wait_message()
 {
-	local MSG
+	local MSG  HOW_LONG  M
 
-# TODO: adjust time based on Pi model
-	MSG="The following steps can take up to an hour depending on the speed of"
-	MSG+="\nyour Pi and how many of the necessary dependencies are already installed."
+	M="$( get_computer --pi-model-only )"
+	M="${M:-0}"
+	if [[ ${M} -lt 5 ]]; then
+		HOW_LONG="up to an hour"
+	else
+		HOW_LONG="several minutes"
+	fi
+	MSG="The following steps can take ${HOW_LONG} depending on the speed of"
+	MSG+="\nyour Pi ${M/0/} and how many of the necessary dependencies are already installed."
 	display_msg notice "${MSG}"
 }
 
@@ -3952,7 +3979,6 @@ while [ $# -gt 0 ]; do
 			DEBUG_ARG="${ARG}"		# we can pass this to other scripts
 			LOG_TYPE="--log"
 			;;
-#XXX TODO: is --update still needed?
 		--update)
 			UPDATE="true"
 			;;
@@ -4122,12 +4148,16 @@ install_webserver_et_al
 # This will create the "config" directory and put default files in it.
 install_dependencies_etc
 
+##### Create the variables.json file based on variables.sh.
+# The file may be needed by save_camera_capabilities.
+create_variables_json "install"
+
 ##### Create the camera type/model-specific "options" file
 # This should come after the steps above that create ${ALLSKY_CONFIG}.
 save_camera_capabilities "false"
 
-##### Create the variables.json file based on variables.sh.
-# This must come after the settings file is created.
+##### Re-create variables.json because some variables in variables.sh may have changed
+# as a result of the settings file being updated.
 create_variables_json "install"
 
 ##### Set locale.  May reboot instead of returning.

@@ -5,7 +5,7 @@
 
 // These tell the invoker to not try again with these images
 // since the next command will have the same problem.
-#define PARTIAL_OK			90		// Must match what's in variables.sh.
+#define EXIT_PARTIAL_OK		90		// Must match what's in variables.sh.
 #define NO_IMAGES			98
 #define BAD_SAMPLE_FILE		99
 
@@ -72,51 +72,58 @@ bool read_file(
 		char *msg,
 		int msg_size)
 {
+	if (msg_size > 0) {
+		snprintf(msg, msg_size, "%s\t[%*d/%lu]", filename, s_len, file_num, nfiles);
+	}
+
 	// cv::imread() gives a terrible message when it can't read the file,
 	// so check outselves.
 	struct stat sb;
-	if (stat(filename, &sb) == -1) {
-		if (cf->verbose) {
-			stdio_mutex.lock();
-			fprintf(stderr, KRED "ERROR reading file '%s': %s.\n" KNRM, filename, strerror(errno));
-			stdio_mutex.unlock();
-		}
-		return(false);
-	}
-	*mat = cv::imread(filename, cv::IMREAD_UNCHANGED);
-	if (! mat->data || mat->empty()) {
-		if (cf->verbose) {
-			stdio_mutex.lock();
-			fprintf(stderr, KRED "ERROR reading file '%s': no data\n" KNRM, filename);
-			stdio_mutex.unlock();
+	if (stat(filename, &sb) == -1 || sb.st_size == 0) {
+		if (msg_size > 0) {
+			if (sb.st_size == 0) {
+				snprintf(msg, msg_size,  "ERROR: '%s' is empty.", filename);
+			} else {
+				snprintf(msg, msg_size,  "ERROR reading '%s': %s.", filename, strerror(errno));
+			}
 		}
 		return(false);
 	}
 
-	if (msg_size > 0 && (cf->verbose > 1 || cf->output_data_file != "")) {
-		// tab-separate fields for easier parsing
-		snprintf(msg, msg_size, "%s\t[%*d/%lu]\tchannels=%d",
-			filename, s_len, file_num, nfiles, mat->channels());
+	*mat = cv::imread(filename, cv::IMREAD_UNCHANGED);
+	if (! mat->data || mat->empty()) {
+		if (msg_size > 0) {
+			if (! mat->data) {
+				snprintf(msg, msg_size,  "ERROR: '%s' is corrupted.", filename);
+			} else {
+				snprintf(msg, msg_size,  "ERROR: no data in '%s'.", filename);
+			}
+		}
+		return(false);
 	}
 
 	if (mat->cols == 0 || mat->rows == 0) {
-		if (cf->verbose) {
-			stdio_mutex.lock();
-			fprintf(stderr, "%s: WARNING: invalid image size %dx%d; ignoring file.\n", filename, mat->cols, mat->rows);
-			stdio_mutex.unlock();
+		if (msg_size > 0) {
+			snprintf(msg, msg_size, "WARNING: '%s' has invalid image size %dx%d; ignoring file.",
+				filename, mat->cols, mat->rows);
 		}
 		return(false);
 	}
+
 	if (cf->img_height && cf->img_width &&
 		(mat->cols != cf->img_width || mat->rows != cf->img_height)) {
-		if (cf->verbose) {
-			stdio_mutex.lock();
+		if (msg_size > 0) {
 // TODO: Convert image to expected size
-			fprintf(stderr, "%s: WARNING: image size %dx%d does not match expected size %dx%d; ignoring file.\n",
+			snprintf(msg, msg_size, "WARNING: '%s' image size %dx%d does not match expected size %dx%d; ignoring file.\n",
 				filename, mat->cols, mat->rows, cf->img_width, cf->img_height);
-			stdio_mutex.unlock();
 		}
 		return(false);
+	}
+
+	if (msg_size > 0) {
+		char m[100];
+		snprintf(m, sizeof(m)-1, "\tchannels=%d", mat->channels());
+		strcat(msg, m);
 	}
 
 	return(true);
@@ -127,6 +134,13 @@ void usage_and_exit(int);
 
 // Keep track of number of digits in nfiles so file numbers will be consistent width.
 char s_[10];
+
+void output_msg(char *msg)
+{
+	stdio_mutex.lock();
+	fprintf(dataIO, "%s\n", msg);
+	stdio_mutex.unlock();
+}
 
 void startrail_worker(
 		int thread_num,				// thread num
@@ -175,8 +189,13 @@ void startrail_worker(
 
 		cv::Mat imagesrc;
 		msg[0] = '\0';
-		if (! read_file(cf, filename, &imagesrc, f+1, msg, msg_size)) {
+		bool doMsg = (cf->verbose || cf->output_data_file != "");
+		if (! read_file(cf, filename, &imagesrc, f+1, msg, doMsg ? msg_size : 0)) {
+			// msg contains the error message.
 			stats_ptr->col(f) = -1.0;	// Set to something to avoid "nan" entries.
+			if (*msg != '\0' && doMsg) {
+				output_msg(msg);
+			}
 			continue;
 		}
 
@@ -223,9 +242,7 @@ void startrail_worker(
 
 		// Want to print the message above before this one.
 		if (repair_msg[0] != '\0' && cf->verbose) {
-			stdio_mutex.lock();
-			fprintf(stderr, "%s", repair_msg);
-			stdio_mutex.unlock();
+			output_msg(repair_msg);
 		}
 
 		// the matrix pointed to by stats_ptr has already been initialized to NAN
@@ -258,9 +275,7 @@ void startrail_worker(
 			char temp[100];
 			snprintf(temp, 100, "\tthreshold=%.3f", cf->brightness_limit);
 			strcat(msg, temp);
-			stdio_mutex.lock();
-			fprintf(dataIO, "%s\n", msg);
-			stdio_mutex.unlock();
+			output_msg(msg);
 		}
 	}
 
@@ -661,8 +676,8 @@ int main(int argc, char* argv[]) {
 			fprintf(stderr, "    No images below threshold %.3f, writing the minimum mean image only.\n",
 					config.brightness_limit);
 			accumulated = cv::imread(files.gl_pathv[min_loc.x], cv::IMREAD_UNCHANGED);
-			// PARTIAL_OK means we created something but it's not a startrails.
-			ret = PARTIAL_OK;
+			// EXIT_PARTIAL_OK means we created something but it's not a startrails.
+			ret = EXIT_PARTIAL_OK;
 		}
 
 		std::vector<int> compression_params;

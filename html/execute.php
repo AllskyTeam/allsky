@@ -42,8 +42,13 @@ if ($use_TEXT) {
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+	<meta http-equiv="Pragma" content="no-cache" />
+	<meta http-equiv="Expires" content="0" />
 
 	<link href="documentation/css/custom.css" rel="stylesheet">
+	<link href="documentation/css/light.css" rel="stylesheet">
+	<link href="documentation/css/documentation.css" rel="stylesheet">
 	<link rel="shortcut icon" type="image/png" href="documentation/img/allsky-favicon.png">
 	<title>Execute <?php echo "$ID"; ?></title>
 </head>
@@ -137,7 +142,7 @@ function checkRet($cmd, $return_code, $return_string)
 		if ($use_TEXT) {
 			echo $return_string;
 		} else {
-			echo "<pre style='font-size: 125%'>";
+			echo "<pre style='font-size: 115%'>";
 			echo $return_string;
 			echo "</pre>";
 		}

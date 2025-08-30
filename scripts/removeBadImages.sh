@@ -88,16 +88,25 @@ if [[ ${FILE} != "" && ! -f ${DIRECTORY}/${FILE} ]]; then
 	exit 2
 fi
 
-HIGH="$( settings ".imageremovebadhigh" )"
-LOW="$( settings ".imageremovebadlow" )"
-if [[ $( settings ".takedarkframes" ) == "true" ]]; then
+# Get all settings we're going to use.  Their bash names are prefixed by "S_".
+#shellcheck disable=SC2119
+getAllSettings --var "imageremovebadlow imageremovebadhigh imageremovebadhighdarkframe \
+	takedarkframes imageremovebadcount " || exit 1
+
+#shellcheck disable=SC2154
+HIGH="${S_imageremovebadhigh}"
+#shellcheck disable=SC2154
+LOW="${S_imageremovebadlow}"
+#shellcheck disable=SC2154
+if [[ ${S_takedarkframes} == "true" ]]; then
 	# Disable low brightness check since darks will have extremely low brightness.
 	# Set the high value to something a dark frame should never get to.
 	LOW=0.00000
-	HIGH=0.10000	# 10%
+	#shellcheck disable=SC2154
+	HIGH="${S_imageremovebadhighdarkframe}"
 fi
-# TODO: make BAD_LIMIT a WebUI setting.
-BAD_LIMIT=5
+#shellcheck disable=SC2154
+BAD_LIMIT="${S_imageremovebadcount}"
 
 # Find the full size image-*jpg and image-*png files (not the thumbnails) and
 # have "convert" compute a histogram in order to capture any error messages and determine
@@ -132,7 +141,10 @@ fi
 if [[ -n ${FILE} ]]; then
 	IMAGE_FILES="${FILE}"
 else
-	IMAGE_FILES="$( find . -maxdepth 1 -type f -iname "${ALLSKY_FILENAME}"-\*."${ALLSKY_EXTENSION}" )"
+	IMAGE_FILES="$(
+		find . -maxdepth 1 -type f -iname "${ALLSKY_FILENAME}-*.${ALLSKY_EXTENSION}" |
+			sed -e 's;^./;;'
+	)"
 fi
 
 ERROR_WORDS="Huffman|Bogus|Corrupt|Invalid|Trunc|Missing"
@@ -187,40 +199,34 @@ for f in ${IMAGE_FILES} ; do
 			continue
 
 		else
+			MSG=""
+
 			# MEAN is a number between 0.0 and 1.0, but it may have format:
 			#	6.90319e-06
 			# which "bc" doesn't accept so use gawk.
 			# LOW and HIGH are also between 0.0 and 1.0.
 
-			# Since the shell doesn't do floating point math and we want up to
-			# 5 digits precision, multiple everything by 100000 and convert to integer.
-			# We can then use bash math with the *_CHECK values.
-			# Awk handles the "e-" format.
-			MEAN_CHECK=$( gawk -v x="${MEAN}" 'BEGIN { printf("%d", x * 100000); }' )
-			HIGH_CHECK=$( gawk -v x="${HIGH}" 'BEGIN { printf("%d", x * 100000); }' )
-			LOW_CHECK=$(  gawk -v x="${LOW}"  'BEGIN { printf("%d", x * 100000); }' )
+			BAD="$(
+				gawk -v f="${f}" -v MEAN="${MEAN}" -v LOW="${LOW}" -v HIGH="${HIGH}" \
+					 -v DEBUG="${HIGH}" \
+				'BEGIN {
+					if (HIGH != 0 && MEAN > HIGH) {
+						printf("\"%s\" (MEAN of %0.4f is above high threshold of %0.4f)",
+							f, MEAN, HIGH);
+					} else if (LOW != 0 && MEAN < LOW) {
+						printf("\"%s\" (MEAN of %0.4f is below low threshold of %0.4f)",
+							f, MEAN, LOW);
+					}
+				}'
+			)"
 
 			if [[ ${DEBUG} == "true" ]]; then
-				MSG="${ME} ${FILE}: MEAN=${MEAN}, MEAN_CHECK=${MEAN_CHECK},"
-				MSG+=" LOW_CHECK=${LOW_CHECK}, HIGH_CHECK=${HIGH_CHECK}"
+				MSG="${ME} ${f}: MEAN=${MEAN}, LOW=${LOW}, HIGH=${HIGH}"
 				D_ "${MSG}"
 			fi
-			MSG=""
-			if [[ ${HIGH_CHECK} -ne 0 ]]; then
-				if [[ ${MEAN_CHECK} -gt ${HIGH_CHECK} ]]; then
-					BAD="'${f}' (MEAN of ${MEAN} is above high threshold of ${HIGH})"
-				elif [[ ${DEBUG} == "true" ]]; then
-					MSG="===== OK: ${f}, MEAN=${MEAN}, HIGH=${HIGH}, LOW=${LOW}"
-				fi
-			fi
 
-			# An image can't be both HIGH and LOW so if it was HIGH don't check for LOW.
-			if [[ -z ${BAD} && ${LOW_CHECK} -ne 0 ]]; then
-				if [[ ${MEAN_CHECK} -lt ${LOW_CHECK} ]]; then
-					BAD="'${f}' (MEAN of ${MEAN} is below low threshold of ${LOW})"
-				elif [[ ${DEBUG} == "true" && -z ${MSG} ]]; then
-					MSG="===== OK: ${f}, MEAN=${MEAN}, HIGH=${HIGH}, LOW=${LOW}"
-				fi
+			if [[ -z ${BAD} && ${DEBUG} == "true" ]]; then
+				MSG="===== OK: ${f}, MEAN=${MEAN}, HIGH=${HIGH}, LOW=${LOW}"
 			fi
 
 			if [[ ${DEBUG} == "true" && -z ${BAD} && -n ${MSG} ]]; then
@@ -243,41 +249,38 @@ done
 if [[ ${num_bad} -eq 0 ]]; then
 	# If only one file, "no news is good news".
 	if [[ -z ${FILE} ]]; then
-		O_ "\n${ME} N}No bad files found." >&2
+		O_ "\n${ME} No bad files found." >&2
 		rm -f "${OUTPUT}"
 	else
 		rm -f "${ALLSKY_BAD_IMAGE_COUNT}"
 	fi
-else
-	if [[ -z ${FILE} ]]; then
-		echo "${ME} ${num_bad} bad file(s) found and ${r}. See ${OUTPUT}." >&2
-		# Do NOT remove ${OUTPUT} in case the user wants to look at it.
-	else	# only 1 file so show it
-		echo "${ME} File is bad: ${OUTPUT}" >&2
-		echo -e "${OUTPUT}" >> "${ALLSKY_BAD_IMAGE_COUNT}"
-		BAD_COUNT="$( wc -l < "${ALLSKY_BAD_IMAGE_COUNT}" )"
-		if [[ $((BAD_COUNT % BAD_LIMIT)) -eq 0 ]]; then
-			MSG="Multiple consecutive bad images."
-			MSG+="\nClick <a external='true' href='/execute.php?ID=AM_ALLSKY_CONFIG bad_images_info --html'>here</a> to see a summary."
-			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${MSG}" >&2
-		fi
-		if [[ ${BAD_COUNT} -ge "${BAD_LIMIT}" ]]; then
-			# Split the long file name so it fits in the message.
-			DIR="$( dirname "${ALLSKY_BAD_IMAGE_COUNT}" )"
-			FILE="$( basename "${ALLSKY_BAD_IMAGE_COUNT}" )"
 
-			"${ALLSKY_SCRIPTS}/generateNotificationImages.sh" \
-				--directory "${ALLSKY_CURRENT_DIR}" \
-				"${ALLSKY_FILENAME}" "yellow" "" "85" "" "" \
-	 			"" "5" "yellow" "${ALLSKY_EXTENSION}" "" \
-				"WARNING:\n${BAD_COUNT} consecutive\nbad images. See:\n${DIR}/\n  ${FILE}" >&2
-		fi
+	exit 0
+fi
+
+if [[ -z ${FILE} ]]; then
+	echo "${ME} ${num_bad} bad file(s) found and ${r}. See ${OUTPUT}." >&2
+	# Do NOT remove ${OUTPUT} in case the user wants to look at it.
+else	# only 1 file so show it
+	echo "${ME} File is bad: ${OUTPUT}" >&2
+	echo -e "${OUTPUT}" >> "${ALLSKY_BAD_IMAGE_COUNT}"
+	BAD_COUNT="$( wc -l < "${ALLSKY_BAD_IMAGE_COUNT}" )"
+	if [[ $((BAD_COUNT % BAD_LIMIT)) -eq 0 ]]; then
+		MSG="Multiple consecutive bad images."
+		MSG+="\nClick <a external='true' href='/execute.php?ID=AM_ALLSKY_CONFIG bad_images_info --html'>here</a> to see a summary."
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${MSG}" >&2
+	fi
+	if [[ ${BAD_COUNT} -ge "${BAD_LIMIT}" ]]; then
+		# Split the long file name so it fits in the message.
+		DIR="$( dirname "${ALLSKY_BAD_IMAGE_COUNT}" )"
+		FILE="$( basename "${ALLSKY_BAD_IMAGE_COUNT}" )"
+
+		"${ALLSKY_SCRIPTS}/generateNotificationImages.sh" \
+			--directory "${ALLSKY_CURRENT_DIR}" \
+			"${ALLSKY_FILENAME}" "yellow" "" "85" "" "" \
+ 			"" "5" "yellow" "${ALLSKY_EXTENSION}" "" \
+			"WARNING:\n${BAD_COUNT} consecutive\nbad images. See:\n${DIR}/\n  ${FILE}" >&2
 	fi
 fi
 
-if [[ ${num_bad} -eq 0 ]]; then
-	exit 0
-else
-	exit "${EXIT_PARTIAL_OK}"		# partially ok because we deleted at least one file.
-fi
-
+exit "${EXIT_PARTIAL_OK}"		# partially ok because we deleted at least one file.

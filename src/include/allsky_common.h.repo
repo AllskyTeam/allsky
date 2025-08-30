@@ -68,15 +68,12 @@
 #define DEFAULT_MINMEAN_THRESHOLD_ZWO	DEFAULT_MINMEAN_THRESHOLD_RPi
 #define DEFAULT_MAXMEAN_THRESHOLD_ZWO	DEFAULT_MAXMEAN_THRESHOLD_RPi
 
-// Default overlay values - will go away once external overlay program is implemented
-#define SMALLFONTSIZE_MULTIPLIER	0.08
-
-// Exit codes.  Need to match what's in allsky.sh
-#define EXIT_OK						0
-#define EXIT_RESTARTING				98		// Process is restarting, i.e., stop, then start
-#define EXIT_RESET_USB				99		// Need to reset USB bus; cannot continue
-#define EXIT_ERROR_STOP				100		// Got an unrecoverable ERROR
-#define EXIT_NO_CAMERA				101		// Could not find a camera - is unrecoverable
+// Exit codes.  Values replaced during installation.
+#define EXIT_OK						XX_EXIT_OK_XX
+#define EXIT_RESTARTING				XX_EXIT_RESTARTING_XX	// Process is restarting, i.e., stop, then start
+#define EXIT_RESET_USB				XX_EXIT_RESET_USB_XX	// Need to reset USB bus; cannot continue
+#define EXIT_ERROR_STOP				XX_EXIT_ERROR_STOP_XX	// Got an unrecoverable ERROR
+#define EXIT_NO_CAMERA				XX_EXIT_NO_CAMERA_XX	// Could not find a camera - is unrecoverable
 
 enum extType {
 	isJPG,
@@ -99,38 +96,6 @@ enum ZWOexposure {
 	ZWOvideo,		// video mode with video on all the time (original method)
 	ZWOend
 };
-
-// Use long instead of int so we can use validateLong() without creating validateInt().
-struct overlay {
-	char const *ImgText					= "";
-	char const *ImgExtraText			= "";
-	long extraFileAge					= 0;
-	long iTextLineHeight				= 30;
-	long iTextX							= 15;
-	long iTextY							= 25;
-	long fontnumber						= 0;
-	// fontcolor / fc, and smallfontcolor / sfc should match
-	int fontcolor[3]					= { 255, 0, 0 };
-	char const *fc						= "0 0 255"; 		// string version of fontcolor[]
-	int smallFontcolor[3]				= { 0, 0, 255 };
-	char const *sfc						= "0 0 255";		// string version of smallfontcolor[]
-	int linetype[3]						= { cv::LINE_AA, 8, 4 };
-	long linenumber						= 0;
-	double fontsize						= 10;
-	long linewidth						= 1;
-	bool outlinefont					= false;
-	bool showTime						= true;
-	bool showExposure					= false;
-	bool showTemp						= false;
-	bool showGain						= false;
-	bool showMean						= false;
-	bool showFocus						= false;
-	bool showHistogramBox				= false;
-	bool showUSB						= false;
-	int overlayMethod					= NOT_SET;
-};
-#define OVERLAY_METHOD_LEGACY			0
-#define OVERLAY_METHOD_MODULE			1
 
 // Histogram Box, ZWO only
 struct HB {
@@ -179,6 +144,7 @@ struct config {			// for configuration variables
 	// Some of these variables aren't settings, but are temporary variables that need to be
 	// passed around.
 	char const *ME						= "";			// name of program running
+	int maxErrors						= 5;			// Max number of consecutive errors before we exit
 
 	// Camera number, type and model
 	int numCameras						= 0;			// Number of cameras physically connected
@@ -187,7 +153,8 @@ struct config {			// for configuration variables
 	int cameraNumber					= 0;			// camera number index (starts at 0)
 
 	// Settings can be in the config file and/or command-line.
-	char const *allskyHome				= "XX_ALLSKY_HOME_XX";	// full pathname to home of Allsky
+	char const *allskyHome				= "XX_ALLSKY_HOME_XX";		// full pathname to ALLSKY_HOME
+	char const *allskyScripts			= "XX_ALLSKY_SCRIPTS_XX";	// full pathname to ALLSKY_SCRIPTS
 	char const *configFile				= "";
 	// File with list of connected cameras
 	char const *connectedCamerasFile	= "XX_CONNECTED_CAMERAS_FILE_XX";
@@ -301,6 +268,12 @@ struct config {			// for configuration variables
 	char const *longitude				= NULL;
 	float angle							= -6.0;
 	bool takeDarkFrames					= false;
+	float darkFrameTooHigh				= 0.05;				// Any dark over this amount is too bright
+	float imageTooLow					= 0.1;				// Don't save images darker than this
+	float imageTooHigh					= 0.9;				// Don't save images brighter than this
+	int	imageTooCount					= 5;				// Stop Allsky on this many consecutive errors
+	int imageTooConsecutiveCount		= 0;				// How many consecutive "image bad"s so far?
+	char const *imageTooCountFile		= NULL;				// File containing list of bad files.
 	char const *locale					= NULL;
 	long debugLevel						= 1;
 	bool consistentDelays				= true;
@@ -308,7 +281,6 @@ struct config {			// for configuration variables
 	bool videoOffBetweenImages			= true;
 	ZWOexposure ZWOexposureType			= ZWOsnap;
 
-	struct overlay overlay;
 	struct myModeMeanSetting myModeMeanSetting;
 	struct HB HB;							// Histogram Box, ZWO only
 
@@ -379,7 +351,6 @@ char const *c(char const *);
 void closeUp(int);
 char const *yesNo(bool);
 char *length_in_units(long, bool);
-int doOverlay(cv::Mat, config, char *, int);
 bool getBoolean(const char *);
 double get_focus_metric(cv::Mat);
 char const *getFlip(int);
@@ -404,3 +375,4 @@ void doLocale(config *);
 char const *getZWOexposureType(ZWOexposure);
 char *getLine(char *);
 char *readFileIntoBuffer(config *, const char *);
+bool meanIsOK(config *, timeval);

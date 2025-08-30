@@ -2,6 +2,7 @@
 
 import os
 import sys
+import traceback
 import subprocess
 
 # Ensure the script is running in the correct Python environment
@@ -253,19 +254,19 @@ if __name__ == "__main__":
 
             arguments['ALLSKYTESTMODE'] = testMode                
 
-            if shared.LOGLEVEL == 4:
+            try:
                 result = globals()[method](arguments, shared.args.event)
-            else:
-                try:
-                    result = globals()[method](arguments, shared.args.event)
-                except Exception as e:
-                    eType, eObject, eTraceback = sys.exc_info()
-                    message = f"ERROR: Module {fileName} failed on line {eTraceback.tb_lineno} - {e}"
-                    if method == "loadimage":
-                        shared.log(0, f"{message}; stopping all module processing.")
-                        sys.exit(99)
-                    else:
-                        shared.log(0, f"{message}; ignoring.")
+            except Exception as e:
+                eType, eObject, eTraceback = sys.exc_info()
+                L = eTraceback.tb_lineno
+                nextL = eTraceback.tb_next.tb_lineno
+                message = f"ERROR: Module '{fileName}' failed on line {nextL} called from flow-runner.py line {L} - {e}"
+                shared.log(0, f"{message}.")
+                if shared.LOGLEVEL == 4:
+                    traceback.print_tb(eTraceback)
+                if method == "loadimage":
+                    shared.log(0, f"***** Stopping all module processing.")
+                    sys.exit(99)
 
             endTime = datetime.now()
             elapsedTime = (((endTime - startTime).total_seconds()) * 1000) / 1000

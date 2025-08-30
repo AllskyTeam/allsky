@@ -21,7 +21,6 @@ import re
 import sys
 import time
 import locale
-import locale
 import tempfile
 import shlex
 import board
@@ -807,8 +806,9 @@ def update_sqlite_database(structure, extra_data):
                         conn.commit()
                         # Optional: Change group if allowed
     except Exception as e:
+        me = os.path.basename(__file__)
         eType, eObject, eTraceback = sys.exc_info()            
-        log(0, f'ERROR: Module update_database failed on line {eTraceback.tb_lineno} - {e}')
+        log(0, f'ERROR: update_sqlite_database failed on line {eTraceback.tb_lineno} in {me} - {e}')
         
 def update_mysql_database(structure, extra_data, secret_data):
     try:
@@ -837,8 +837,9 @@ def update_mysql_database(structure, extra_data, secret_data):
                     conn.close()
 
     except Exception as e:
+        me = os.path.basename(__file__)
         eType, eObject, eTraceback = sys.exc_info()            
-        log(0, f'ERROR: Module update_database failed on line {eTraceback.tb_lineno} - {e}')
+        log(0, f'ERROR: update_mysql_database failed on line {eTraceback.tb_lineno} in {me} - {e}')
 
 def save_extra_data(file_name, extra_data, source='', structure={}, custom_fields={}):
     saveExtraData(file_name, extra_data, source, structure, custom_fields)
@@ -876,8 +877,9 @@ def saveExtraData(file_name, extra_data, source='', structure={}, custom_fields=
 				if 'database' in structure:
 					update_database(structure, extra_data)
 	except Exception as e:
+        me = os.path.basename(__file__)
 		eType, eObject, eTraceback = sys.exc_info()            
-		log(0, f'ERROR: Module saveExtraData failed on line {eTraceback.tb_lineno} - {e}')
+		log(0, f'ERROR: saveExtraData failed on line {eTraceback.tb_lineno} in {me} - {e}')
 
 def format_extra_data_json(extra_data, structure, source):
     result = extra_data
@@ -946,7 +948,7 @@ def load_extra_data_file(file_name, type=''):
                     with open(extra_data_filename, 'r') as file:
                         result = json.load(file)
                 except json.JSONDecodeError:
-                    log(0, f'Error reading extra_data_filename')
+                    log(0, f'ERROR: cannot read {extra_data_filename}.')
             
             if file_extension == '.txt':
                 pass
@@ -1385,9 +1387,9 @@ def mask_image(image, mask_file_name=''):
             log(4, f'INFO: Mask {mask_file_name} applied')
                 
     except Exception as e:
+        me = os.path.basename(__file__)
         eType, eObject, eTraceback = sys.exc_info()
-        result = f'mask_image failed on line {eTraceback.tb_lineno} - {e}'
-        log(0,f'ERROR: {result}')
+        log(0, f'ERROR: mask_image failed on line {eTraceback.tb_lineno} in {me} - {e}')
 
        
     return output
@@ -1453,7 +1455,7 @@ def get_camera_type():
 def get_rpi_meta_value(key):
     result = None
     metadata_path = get_rpi_metadata()
-    
+
     if metadata_path is not None:
         try:
             with open(metadata_path, 'r') as file:
@@ -1465,6 +1467,10 @@ def get_rpi_meta_value(key):
                 for line in f:
                     if line.startswith(key + "="):
                         result = line.split("=", 1)[1].strip()
+        except FileNotFoundError as e:
+            result = 0
+        except Exception as e:
+            result = 0
             
     return result
 
@@ -1481,7 +1487,7 @@ def get_rpi_metadata():
             metadata_path = args[i + 1]
             break
     if metadata_path is None:
-        metadata_path = os.path.join(ALLSKY_TMP,'metadata.txt')
+        metadata_path = os.path.join(ALLSKY_CURRENT_DIR, 'metadata.txt')
 
     return metadata_path
 
@@ -1583,12 +1589,11 @@ def get_ecowitt_data(api_key, app_key, mac_address, temp_unitid=1, pressure_unit
                 result = f'Got error from the Ecowitt API. Response code {response.status_code}'
                 log(0,f'ERROR: {result}')
         except Exception as e:
+            me = os.path.basename(__file__)
             eType, eObject, eTraceback = sys.exc_info()
-            result = f'ERROR: Failed to read data from Ecowitt {eTraceback.tb_lineno} - {e}'
-            log(0, result)
+            log(0, f'ERROR: Failed to read data from Ecowitt on line {eTraceback.tb_lineno} in {me} - {e}')
     else:
-        result = 'Missing Ecowitt Application Key, API Key or MAC Address'
-        log(0, f'ERROR: {result}')    
+        log(0, 'ERROR: Missing Ecowitt Application Key, API Key or MAC Address')
     
     return result
 
@@ -1728,9 +1733,9 @@ def get_ecowitt_local_data(address, password=None):
             result['lightning']['count'] = parse_val(lightning.get("count"), int)
 
     except Exception as e:
+        me = os.path.basename(__file__)
         eType, eObject, eTraceback = sys.exc_info()
-        result = f'ERROR: Failed to read live data from the local Ecowitt gateway {eTraceback.tb_lineno} - {e}'
-        log(0, result)
+        log(0, f'ERROR: Failed to read live data from the local Ecowitt gateway on line {eTraceback.tb_lineno} in {me} - {e}')
 
     return result
 
@@ -1757,9 +1762,9 @@ def get_hass_sensor_value(ha_url, ha_ltt, ha_sensor):
                     log(0, f'ERROR: Unable to read {ha_sensor} from {ha_url}. Error code {response.status_code}')
                 
     except Exception as e:
+        me = os.path.basename(__file__)
         eType, eObject, eTraceback = sys.exc_info()
-        error = f'ERROR: Failed to read data from Homeassistant {eTraceback.tb_lineno} - {e}'
-        log(0, error)
+        log(0, f'ERROR: Failed to read data from Homeassistant {eTraceback.tb_lineno} in {me} - {e}')
         result = None
 
     return result

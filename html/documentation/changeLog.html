@@ -48,15 +48,32 @@
 			<h3>v2025.xx.xx - Base Release</h3>
 			-->
 
-				<h4>Deleted capabilities</h4>
+				<h4>Changes that may require action (upgrades only)</h4>
 				<ul>
+					<li><blockquote class="warning">
+						The changes in this section may require settings changes;
+						after upgrading, check that your settings and images look right.
+						</blockquote>
+					</li>
 					<li>The Buster operating system is no longer supported.
 					<li>The "legacy" overlay method and the
 						<span class="settingsHeader">Image Overlay Settings</span>
 						section of the WebUI no longer exist.
 						All overlays are now done via the
 						<span class="WebUILink">Overlay Editor</span> in the WebUI.
+					<li>If your camera is very noisy it may create dark frames
+						that are brighter than the new
+						<span class="WebUISetting">Dark Frame Upper Threshold</span>
+						threshold, which is <code>0.05</code>.
+						This threshold was <code>0.10</code> in the prior release.
 				</ul>
+
+<!--
+				<h4>Deleted capabilities</h4>
+				<ul>
+					<li>
+				</ul>
+-->
 
 				<h4>Enhancements / Changes</h4>
 				<ul>
@@ -155,6 +172,15 @@
 								<span class="WebUISetting">Brightness Threshold</span>
 								in use when each startrails image was created.
 						</ul>
+					<li>The camera now saves initial images to
+						<span class="fileName">~/allsky/tmp/current_images</span>,
+						and that's where the WebUI
+						<span class="WebUILink">Live View</span> page looks for the image.
+						<br>
+						The current mini-timelapse file is also saved there.
+						<br>NOTE: the <span class="editorSetting">imageName</span>
+						field in the local Allsky Website configuration file is now
+						<span class="editorString">/current/image.jpg</span>.
 					<li>The <code>generateForDay.sh</code> command now accepts
 						arguments that can be passed to the keogram, startrails,
 						and timelapse creation programs.
@@ -200,7 +226,13 @@
 				</ul>
 				<h4>New Settings</h4>
 				<ul>
-					<li><span class="WebUISetting">None</span>
+					<li>The <span class="WebUISetting">Dark Frame Upper Threshold</span>
+						setting specifies when a dark frame is "too bright",
+						usually because the lens isn't fully covered when taking darks.
+						It can also happen if your camera is very noisy.
+					<li>The <span class="WebUISetting">Remove Bad Images Threshold Count</span>
+						setting determines after how many "bad" images a System Message
+						and notification image will be displayed.
 				</ul>
 
 			<hr class="separator">
@@ -262,12 +294,6 @@
 
 			<h3>v2024.12.06_05  - Point Release # 5</h3>
 			<details sub> <summary></summary>
-				<h4 style="color: red">IMPORTANT NOTES:</h4>
-				<ul>
-					<li>This is the LAST major release that supports Buster.
-					<li>This is the LAST major release that contains the "legacy"
-						overlay method.
-				</ul>
 
 				<h4>Changes that may require action (upgrades only)</h4>
 				<ul>
@@ -338,13 +364,6 @@
 			<h3>v2024.12.06_04  - Point Release # 4</h3>
 			<details sub> <summary></summary>
 
-				<h4 style="color: red">IMPORTANT NOTES:</h4>
-				<ul>
-					<li>This is the LAST major release that supports Buster.
-					<li>This is the LAST major release that contains the "legacy"
-						overlay method.
-				</ul>
-
 				<h4>Changes that may require action (upgrades only)</h4>
 				<ul>
 					<li><blockquote class="warning">
@@ -411,12 +430,6 @@
 
 			<h3>v2024.12.06_04  - Point Release # 4</h3>
 			<details sub> <summary></summary>
-				<h4 style="color: red">IMPORTANT NOTES:</h4>
-				<ul>
-					<li>This is the LAST major release that supports Buster.
-					<li>This is the LAST major release that contains the "legacy"
-						overlay method.
-				</ul>
 
 				<h4>Enhancements / Changes</h4>
 				<ul>

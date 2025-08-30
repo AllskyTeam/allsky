@@ -9,7 +9,7 @@ class StatusMessages {
 			$dismissablClass = 'alert-dismissible';
 			$dismissableButton = "<button type='button' class='close' data-dismiss='alert'><span aria-hidden='true'>&times;</span></button>";
 		}		
-		$status = "<div class='alert alert-$level $dismissablClass' role='alert'>$dismissableButton <div class='alert-text truncated'>$message</div></div>";
+		$status = "<div class='alert alert-$level $dismissablClass' role='alert'>$dismissableButton <div class='alert-text'>$message</div></div>";
 
 		array_push($this->messages, $status);
 	}

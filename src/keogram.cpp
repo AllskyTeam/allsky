@@ -80,40 +80,58 @@ bool read_file(
 		char *msg,
 		int msg_size)
 {
-	*mat = cv::imread(filename, cv::IMREAD_UNCHANGED);
+	if (msg_size > 0) {
+		snprintf(msg, msg_size, "%s\t[%*d/%lu]", filename, s_len, file_num, nfiles);
+	}
 
-	if (! mat->data || mat->empty()) {
-		if (cf->verbose) {
-			stdio_mutex.lock();
-			std::cerr << "Error reading file " << filename << ": no data" << std::endl;
-			stdio_mutex.unlock();
+	// cv::imread() gives a terrible message when it can't read the file,
+	// so check outselves.
+	struct stat sb;
+	if (stat(filename, &sb) == -1 || sb.st_size == 0) {
+		if (msg_size > 0) {
+			if (sb.st_size == 0) {
+				snprintf(msg, msg_size,  "ERROR: '%s' is empty.", filename);
+			} else {
+				snprintf(msg, msg_size,  "ERROR reading '%s': %s.", filename, strerror(errno));
+			}
 		}
 		return(false);
 	}
 
-	if (msg_size > 0 && cf->verbose > 1) {
-		snprintf(msg, msg_size, "[%*d/%lu] %s, channels=%d",
-			s_len, file_num, nfiles, filename, mat->channels());
+	*mat = cv::imread(filename, cv::IMREAD_UNCHANGED);
+	if (! mat->data || mat->empty()) {
+		if (msg_size > 0) {
+			if (! mat->data) {
+				snprintf(msg, msg_size,  "ERROR: '%s' is corrupted.", filename);
+			} else {
+				snprintf(msg, msg_size,  "ERROR: no data in '%s'.", filename);
+			}
+		}
+		return(false);
 	}
 
 	if (mat->cols == 0 || mat->rows == 0) {
-		if (cf->verbose) {
-			stdio_mutex.lock();
-			fprintf(stderr, "%s invalid image size %dx%d; ignoring file\n", filename, mat->rows, mat->cols);
-			stdio_mutex.unlock();
+		if (msg_size > 0) {
+			snprintf(msg, msg_size, "WARNING: '%s' has invalid image size %dx%d; ignoring file.",
+				filename, mat->cols, mat->rows);
 		}
 		return(false);
 	}
 
 	if (cf->img_height && cf->img_width &&
 			(mat->cols != cf->img_width || mat->rows != cf->img_height)) {
-		if (cf->verbose) {
-			stdio_mutex.lock();
-			fprintf(stderr, "%s: image size %dx%d does not match expected size %dx%d; ignoring\n",
+		if (msg_size > 0) {
+// TODO: Convert image to expected size
+			snprintf(msg, msg_size, "WARNING: '%s' image size %dx%d does not match expected size %dx%d; ignoring file.\n",
 				filename, mat->cols, mat->rows, cf->img_width, cf->img_height);
-			stdio_mutex.unlock();
 		}
 		return(false);
+	}
+
+	if (msg_size > 0) {
+		char m[100];
+		snprintf(m, sizeof(m)-1, "\tchannels=%d", mat->channels());
+		strcat(msg, m);
 	}
 
 	return(true);
@@ -121,13 +139,20 @@ bool read_file(
 
 void parse_args(int, char**, struct config_t*);
 void usage_and_exit(int, bool);
-int get_font_by_name(char*);
 
 // Keep track of number of digits in nfiles so file numbers will be consistent width.
 char s_[10];
 
+int get_font_by_name(char*);
 const int num_hours = 24;
 bool hours[num_hours];
+
+void output_msg(char *msg)
+{
+	stdio_mutex.lock();
+	fprintf(stderr, "%s\n", msg);
+	stdio_mutex.unlock();
+}
 
 void keogram_worker(
 		int thread_num,			// thread num
@@ -155,30 +180,40 @@ void keogram_worker(
 	if (cf->verbose > 2 && cf->num_threads > 1) {
 		stdio_mutex.lock();
 		fprintf(stderr, "thread %d/%d processing files %*d-%d (%d/%lu)\n",
-		thread_num, cf->num_threads, s_len, start_num +1, end_num + 1,
-		end_num - start_num + 1, nfiles);
+			thread_num, cf->num_threads, s_len, start_num +1, end_num + 1,
+			end_num - start_num + 1, nfiles);
 		stdio_mutex.unlock();
 	}
 
 	const int msg_size = 500;
 	char msg[msg_size];
+	const int repair_msg_size = 500;
+	char repair_msg[repair_msg_size];
 
 	for (int f = start_num; f <= end_num; f++) {
-		char* filename = files->gl_pathv[f];
+		char *filename = files->gl_pathv[f];
+
 		cv::Mat imagesrc;
 		msg[0] = '\0';
-		if (! read_file(cf, filename, &imagesrc, f+1, msg, msg_size)) continue;
-		if (cf->verbose > 1) {
-			stdio_mutex.lock();
-			fprintf(stderr, "%s\n", msg);
-			stdio_mutex.unlock();
+		bool doMsg = cf->verbose;
+		if (! read_file(cf, filename, &imagesrc, f+1, msg, doMsg ? msg_size : 0)) {
+			// msg contains the error message.
+			if (*msg != '\0' && doMsg) {
+				output_msg(msg);
+			}
+			continue;
 		}
 
+		if (cf->verbose > 1) {
+			output_msg(msg);
+		}
+
+		repair_msg[0] = '\0';
 		if (imagesrc.channels() != nchan) {
 			if (cf->verbose) {
-				stdio_mutex.lock();
-				fprintf(stderr, "%s: repairing channel mismatch from %d to %d\n", filename, imagesrc.channels(), nchan);
-				stdio_mutex.unlock();
+				snprintf(repair_msg, repair_msg_size, "%s: repairing channel mismatch from %d to %d\n",
+					filename, imagesrc.channels(), nchan);
+				output_msg(repair_msg);
 			}
 			if (imagesrc.channels() < nchan)
 				cv::cvtColor(imagesrc, imagesrc, cv::COLOR_GRAY2BGR, nchan);
@@ -231,8 +266,8 @@ void keogram_worker(
 			mtx->unlock();
 		}
 
-		// Copy middle column to destination
-		// locking not required - we have absolute index into the accumulator
+		// Copy middle column to destination.
+		// Locking not required - we have absolute index into the accumulator.
 		int destCol = f * cf->num_img_expand;
 		for (int i=0; i < cf->num_img_expand; i++) {
 			try {

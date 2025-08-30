@@ -26,6 +26,13 @@ if ($allskyHome !== false) {
 }
 
 if ($variablesJsonOk === false) {
+	$from_install = (isset($from_install) && $from_install === true);
+	if ($from_install) {
+		// Called from the installation program, so don't use HTML or any quotes.
+		echo "File $variablesJsonfile not found or corrupted.";
+		die(1);
+	}
+
 	echo "<br><div style='font-size: 200%; color: red;'>";
 	echo "The installation of Allsky is incomplete.<br>";
 	echo "File '$variablesJsonfile' not found or corrupted.<br>";
@@ -1329,9 +1336,9 @@ function getThrottleStatus()
 	$x = exec("sudo vcgencmd get_throttled 2>&1");	// Output: throttled=0x12345...
 	if (preg_match("/^throttled=/", $x) == false) {
 			$throttle_status = "danger";
-			$throttle = "Not able to get throttle status:<br>$x";
-			$throttle .= "<br><span class='errorMsgBig'>";
-			$throttle .= "Run '~/allsky/install.sh --update' to try and resolve.</span>";
+			$throttle = "<span class='errorMsgBig'>";
+			$throttle .= "Not able to get throttle status:<br>$x";
+			$throttle .= "</span>";
 	} else {
 		$x = explode("x", $x);	// Output: throttled=0x12345...
 		if ($x[1] == "0") {

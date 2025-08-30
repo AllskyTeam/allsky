@@ -72,11 +72,11 @@ while [[ $# -gt 0 ]]; do
 		--debug)
 			DEBUG="true"
 			;;
-		--local-web | --local-website)
+		--local-web)
 			LOCAL="true"
 			(( NUM++ ))
 			;;
-		--remote-web | --remote-website)
+		--remote-web)
 			REMOTE_WEB="true"
 			(( NUM++ ))
 			;;

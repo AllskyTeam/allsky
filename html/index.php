@@ -42,26 +42,6 @@ if (DHCP_ENABLED) {
 	function DisplayDHCPConfig() {}
 }
 
-function getPage() {
-	if (isset($_POST['page']))
-		$page = $_POST['page'];
-	else if (isset($_GET['page']))
-		$page = $_GET['page'];
-	else
-		$page = "";
-
-	return $page;
-}
-
-function getDay() {
-	if (isset($_GET['day']))
-		$day = " - " . $_GET['day'];
-	else
-		$day = "";
-
-	return $day;
-}
-
 function useLogin() {
 	global $useLogin;
 
@@ -113,22 +93,23 @@ function getRemoteWebsiteVersion() {
 
 function getPageTitle($page, $day) {
 	$titles = [
-		"WLAN_info"          => "WLAN Dashboard",
-		"LAN_info"           => "LAN Dashboard",
-		"configuration"      => "Allsky Settings",
-		"wifi"               => "Configure Wi-Fi",
-		"dhcp_conf"          => "Configure DHCP",
-		"auth_conf"          => "Change Password",
-		"system"             => "System",
+		"live_view"          => "Live View",
 		"list_days"          => "Images",
 		"list_images"        => "Images$day",
 		"list_videos"        => "Timelapse$day",
 		"list_keograms"      => "Keogram$day",
 		"list_startrails"    => "Startrails$day",
+		"configuration"      => "Allsky Settings",
 		"editor"             => "Editor",
 		"overlay"            => "Overlay Editor",
 		"module"             => "Module Manager",
-		"live_view"          => "Live View",
+		"charts"             => "Charts",
+		"LAN_info"           => "LAN Dashboard",
+		"WLAN_info"          => "WLAN Dashboard",
+		"wifi"               => "Configure Wi-Fi",
+	"dhcp_conf"          => "Configure DHCP",
+		"system"             => "System",
+		"auth_conf"          => "Change Password",
 		"support"            => "Getting Support",
 		"startrails_settings"=> "Startrails Settings",
 		"stretch_settings"   => "Image Stretch Settings"
@@ -142,33 +123,6 @@ function insertPage($page) {
 	global $image_name, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg, $darkframe;
 
 	switch ($page) {
-		case "WLAN_info":
-			include_once('includes/dashboard_WLAN.php');
-			DisplayDashboard_WLAN();
-			break;
-		case "LAN_info":
-			include_once('includes/dashboard_LAN.php');
-			DisplayDashboard_LAN();
-			break;
-		case "configuration":
-			include_once('includes/allskySettings.php');
-			DisplayAllskyConfig();
-			break;
-		case "wifi":
-			include_once('includes/configureWiFi.php');
-			DisplayWPAConfig();
-			break;
-		case "dhcp_conf":
-			include_once('includes/dhcp.php');
-			DisplayDHCPConfig();
-			break;
-		case "auth_conf":
-			include_once('includes/admin.php');
-			break;
-		case "system":
-			include_once('includes/system.php');
-			DisplaySystem();
-			break;
 		case "list_days":
 			include_once('includes/days.php');
 			ListDays();
@@ -189,6 +143,10 @@ function insertPage($page) {
 			// directory, file name prefix, formal name, type of file
 			ListFileType("startrails/", "startrails", "Startrails", "picture");
 			break;
+		case "configuration":
+			include_once('includes/allskySettings.php');
+			DisplayAllskyConfig();
+			break;
 		case "editor":
 			include_once('includes/editor.php');
 			DisplayEditor();
@@ -201,9 +159,43 @@ function insertPage($page) {
 			include_once('includes/module.php');
 			DisplayModule();
 			break;
+		case "charts":
+			include_once('includes/charts.php');
+			DisplayCharts();
+			break;
+		case "LAN_info":
+			include_once('includes/dashboard_LAN.php');
+			DisplayDashboard_LAN();
+			break;
+		case "WLAN_info":
+			include_once('includes/dashboard_WLAN.php');
+			DisplayDashboard_WLAN();
+			break;
+		case "wifi":
+			include_once('includes/configureWiFi.php');
+			DisplayWPAConfig();
+			break;
+case "dhcp_conf":
+	include_once('includes/dhcp.php');
+	DisplayDHCPConfig();
+	break;
+		case "system":
+			include_once('includes/system.php');
+			DisplaySystem();
+			break;
+		case "auth_conf":
+			include_once('includes/admin.php');
+			break;
+		case "support":
+			include_once('includes/support.php');
+			break;
 		case "startrails_settings":
 			include_once("helpers/$page.php");
 			startrailsSettings();
+			break;
+		case "stretch_settings":
+			include_once("helpers/$page.php");
+			stretchSettings();
 			break;
 		case "timelapse_settings":
 			include_once("helpers/$page.php");
@@ -216,17 +208,6 @@ function insertPage($page) {
 		case "bad_images_settings":
 			include_once("helpers/$page.php");
 			// TODO: add function name 
-			break;
-		case "stretch_settings":
-			include_once("helpers/$page.php");
-			stretchSettings();
-			break;
-		case "support":
-			include_once('includes/support.php');
-			break;
-		case "charts":
-			include_once('includes/charts.php');
-			DisplayCharts();
 			break;
 			
 		case "live_view":
@@ -303,11 +284,14 @@ function displayStatusMessages($page) {
 		if ($t != false) {
 			$newT = getVariableOrDefault($_POST, "filetime", 0);
 			if ($t == $newT) {
-				$cmd = "sudo rm -f " . ALLSKY_MESSAGES . " 2>/dev/null";
+				$cmd = "sudo rm -f " . ALLSKY_MESSAGES;
 				echo "<script>console.log('Executing [$cmd]');</script>";
 				exec($cmd, $result, $retcode);
 				if ($retcode !== 0) {
-					$result = $result[0];
+					if (count($result) > 0)
+						$result = $result[0];
+					else
+						$result = "[unknown reason]";
 					echo "<script>console.log('[$cmd] failed: $result');</script>";
 					$status->addMessage("Unable to clear messages: $result", 'danger');
 					$status->showMessages();
@@ -428,8 +412,8 @@ function insertEditorCode($page) {
 
 }
 
-$page = getPage();
-$day = getDay();
+$page = getVariableOrDefault($_REQUEST, 'page', "");
+$day = getVariableOrDefault($_REQUEST, 'day', "");	if ($day !== "") $day = " - $day";
 $csrf_token = useLogin();
 $remoteWebsiteVersion = getRemoteWebsiteVersion();
 $Title = getPageTitle($page, $day);
@@ -549,9 +533,6 @@ $allskyStatus = output_allsky_status();
 				<li>
 					<a href="index.php?page=support"><i class="fa fa-question fa-fw"></i><span class="menu-text"> Getting Support</span></a>
 				</li>
-				<li>
-					<a href="/documentation"><i class="fa fa-book fa-fw"></i><span class="menu-text"> Allsky Documentation</span></a>
-				</li>
 				<li class="sidebar-dropdown has-flyout">
 					<a href="#" class="submenu-toggle"><i class="fa-solid fa-hammer"></i><span class="menu-text"> Helper Tools</span></a>
 					<ul class="dropdown-menu">
@@ -574,6 +555,9 @@ $allskyStatus = output_allsky_status();
 						-->
 					</ul>
 				</li>	
+				<li>
+					<a href="/documentation" external="true"><i class="fa fa-book fa-fw"></i><span class="menu-text"> Allsky Documentation</span></a>
+				</li>
 				<li>
 					<span id="as-switch-theme">
 						<i class="fa fa-moon fa-fw"></i>

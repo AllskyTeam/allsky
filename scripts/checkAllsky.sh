@@ -116,7 +116,7 @@ function heading()
 			DISPLAY_HEADER="true"
 			;;
 		*)
-			echo "INTERNAL ERROR in heading(): Unknown HEADER '${HEADER}'."
+			echo "INTERNAL ERROR in heading(): Unknown HEADER '${HEADER}'." >&2
 			;;
 	esac
 
@@ -164,7 +164,7 @@ function check_for_env_file()
 	else
 		echo "'${ALLSKY_ENV}' is empty!"
 	fi
-	echo "Unable to check any remote Website or server settings."
+	echo "Unable to check any remote Website or server settings." >&2
 	return 1
 }
 if check_for_env_file ; then
@@ -174,9 +174,8 @@ else
 fi
 
 # Get all settings.  Give each set a different prefix to avoid name conflicts.
-X="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix S_ --shell )"
-if [[ $? -ne 0 ]]; then
-	echo "${X}"
+if ! X="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix S_ --shell )" ; then
+	echo "${X}" >&2
 	exit 1
 fi
 eval "${X}"
@@ -231,16 +230,9 @@ function check_delay()
 		MIN_MS="${NIGHT_MIN_IMAGE_TIME_MS}"
 	fi
 
-# TODO: use the module average flow times for day and night when using "module" method.
-# TODO: overlaymethod goes away in next release
-
-	# With the legacy overlay method it might take up to a couple seconds to save an image.
-	# With the module method it can take up to 5 seconds.
-	if [[ ${S_overlaymethod} -eq 1 ]]; then
-		MAX_TIME_TO_PROCESS_MS=5000
-	else
-		MAX_TIME_TO_PROCESS_MS=2000
-	fi
+# TODO: use the module average flow times for day and night.
+	# It can take up to 5 seconds to save an image
+	MAX_TIME_TO_PROCESS_MS=5000
 	if [[ ${MIN_MS} -lt ${MAX_TIME_TO_PROCESS_MS} ]]; then
 		heading "Warning"
 		echo "The ${WSNs}${L}${WSNe} of ${DELAY_MS} ms may be too short given the"
@@ -347,7 +339,8 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 			echo "FIX: These are now separate settings so move them to their own settings."
 		fi
 	fi
-	if [[ -n ${S_keogramfontcolor} && ${S_keogramfontcolor:0:1} == "#" && ${#S_keogramfontcolor} -ne 7 ]]; then
+	if [[ -n ${S_keogramfontcolor} && ${S_keogramfontcolor:0:1} == "#" &&
+			${#S_keogramfontcolor} -ne 7 && ${#S_keogramfontcolor} -ne 4 ]]; then
 		heading "Information"
 		echo -n "${WSNs}${S_keogramfontcolor_label}${WSNe} should have a '#' followed by 6 hex digits; "
 		echo "yours has $(( ${#S_keogramfontcolor} - 1)): ${WSVs}${S_keogramfontcolor}${WSVe}."
@@ -856,7 +849,7 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 		elif [[ ${MIDPOINT: -1} == "%" ]]; then
 			heading "Error"
 			echo -n "${WSNs}${TYPE} ${LABEL_MIDPOINT}${WSNe} (${MIDPOINT})"
-			echo    " no longer accepts a ${WSVs}%${WSVe}."
+			echo    " must be a number without a ${WSVs}%${WSVe}."
 			echo    "FIX: remove the ${WSVs}%${WSVe}."
 		fi
 	}
@@ -885,7 +878,7 @@ else
 		heading "Summary"
 		[[ ${NUM_INFOS} -gt 0 ]] && echo "Informational messages: ${NUM_INFOS}"
 		[[ ${NUM_WARNINGS} -gt 0 ]] && echo "Warnings: ${NUM_WARNINGS}" && RET=1
-		[[ ${NUM_ERRORS} -gt 0 ]] && echo "Errors: ${NUM_ERRORS}" && RET=2
+		[[ ${NUM_ERRORS} -gt 0 ]] && echo "Errors: ${NUM_ERRORS}" && RET="${EXIT_ERROR_STOP}"
 	fi
 fi
 

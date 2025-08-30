@@ -839,7 +839,6 @@ int main(int argc, char *argv[])
 	pthread_mutex_init(&mtxSaveImg, 0);
 	pthread_cond_init(&condStartSave, 0);
 
-	char bufTime[128]			= { 0 };
 	char bufTemp[1024]			= { 0 };
 	char const *bayer[]			= { "RG", "BG", "GR", "GB" };
 	bool justTransitioned		= false;
@@ -949,12 +948,6 @@ int main(int argc, char *argv[])
 
 	long originalWidth  = CG.width;
 	long originalHeight = CG.height;
-	// Limit these to a reasonable value based on the size of the sensor.
-	validateLong(&CG.overlay.iTextLineHeight, 0, (long)(iMaxHeight / 2), "Line Height", true);
-	validateLong(&CG.overlay.iTextX, 0, (long)iMaxWidth - 10, "Text X", true);
-	validateLong(&CG.overlay.iTextY, 0, (long)iMaxHeight - 10, "Text Y", true);
-	validateFloat(&CG.overlay.fontsize, 0.1, iMaxHeight / 2, "Font Size", true);
-	validateLong(&CG.overlay.linewidth, 0, (long)(iMaxWidth / 2), "Font Weight", true);
 
 	if (CG.saveCC)
 	{
@@ -1099,10 +1092,6 @@ int main(int argc, char *argv[])
 	}
 
 	// Initialization
-	int originalITextX		= CG.overlay.iTextX;
-	int originalITextY		= CG.overlay.iTextY;
-	int originalFontsize	= CG.overlay.fontsize;
-	int originalLinewidth	= CG.overlay.linewidth;
 	// Have we displayed "not taking picture during day/night" message, if applicable?
 	bool displayedNoDaytimeMsg		= false;
 	bool displayedNoNighttimeMsg	= false;
@@ -1123,10 +1112,6 @@ int main(int argc, char *argv[])
 	{
 		adjustGain = true;
 		Log(4, "Will adjust gain at transitions\n");
-	}
-
-	if (CG.overlay.ImgExtraText[0] != '\0' && CG.overlay.extraFileAge > 0) {
-		Log(4, "Extra Text File Age Disabled So Displaying Anyway\n");
 	}
 
 	if (CG.ZWOexposureType == ZWOvideo && ! capturingVideo)
@@ -1417,10 +1402,6 @@ int main(int argc, char *argv[])
 			// Only need to do at the beginning and if bin changes.
 			CG.height						= originalHeight / CG.currentBin;
 			CG.width						= originalWidth / CG.currentBin;
-			CG.overlay.iTextX				= originalITextX / CG.currentBin;
-			CG.overlay.iTextY				= originalITextY / CG.currentBin;
-			CG.overlay.fontsize				= originalFontsize / CG.currentBin;
-			CG.overlay.linewidth			= originalLinewidth / CG.currentBin;
 			CG.HB.currentHistogramBoxSizeX	= CG.HB.histogramBoxSizeX / CG.currentBin;
 			CG.HB.currentHistogramBoxSizeY	= CG.HB.histogramBoxSizeY / CG.currentBin;
 
@@ -1484,12 +1465,6 @@ int main(int argc, char *argv[])
 			Log(2, "-----\n");
 			Log(1, "STARTING EXPOSURE at: %s   @ %s\n",
 				exposureStart, length_in_units(CG.currentExposure_us, true));
-
-			// Get start time for overlay. Make sure it has the same time as exposureStart.
-			if (CG.overlay.showTime)
-			{
-				sprintf(bufTime, "%s", formatTime(exposureStartDateTime, CG.timeFormat));
-			}
 
 //x printf(">>>>>>>>>>>> pRgb columns=%d, rows=%d, channels=%d, depth=%d, elemSize=%ld\n", pRgb.cols, pRgb.rows, pRgb.channels(), pRgb.depth(), pRgb.elemSize());
 			asiRetCode = takeOneExposure(&CG, pRgb.data);
@@ -1852,29 +1827,8 @@ long saved_newExposure_us = newExposure_us;
 
 				if (meanIsOK(&CG, exposureStartDateTime)) {		// meanIsOK() outputs any error message
 
-					// If takeDarkFrames is off, add overlay text to the image
 					if (! CG.takeDarkFrames)
 					{
-						if (CG.overlay.overlayMethod == OVERLAY_METHOD_LEGACY)
-						{
-							(void) doOverlay(pRgb, CG, bufTime, gainChange);
-							if (CG.overlay.showHistogramBox)
-							{
-								// Draw a rectangle where the histogram box is.
-								// Put a black and white line one next to each other so they
-								// can be seen in light and dark images.
-								int lt = cv::LINE_AA, thickness = 2;
-								int X1 = (CG.width * CG.HB.histogramBoxPercentFromLeft) - (CG.HB.histogramBoxSizeX / 2);
-								int X2 = X1 + CG.HB.histogramBoxSizeX;
-								int Y1 = (CG.height * CG.HB.histogramBoxPercentFromTop) - (CG.HB.histogramBoxSizeY / 2);
-								int Y2 = Y1 + CG.HB.histogramBoxSizeY;
-								cv::Scalar outerLine, innerLine;
-								outerLine = cv::Scalar(0,0,0);
-								innerLine = cv::Scalar(255,255,255);
-								cv::rectangle(pRgb, cv::Point(X1, Y1), cv::Point(X2, Y2), outerLine, thickness, lt, 0);
-								cv::rectangle(pRgb, cv::Point(X1+thickness, Y1+thickness), cv::Point(X2-thickness, Y2-thickness), innerLine, thickness, lt, 0);
-							}
-						}
 						if (currentAdjustGain)
 						{
 							// Determine if we need to change the gain on the next image.

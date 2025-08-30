@@ -230,16 +230,9 @@ function check_delay()
 		MIN_MS="${NIGHT_MIN_IMAGE_TIME_MS}"
 	fi
 
-# TODO: use the module average flow times for day and night when using "module" method.
-# TODO: overlaymethod goes away in next release
-
-	# With the legacy overlay method it might take up to a couple seconds to save an image.
-	# With the module method it can take up to 5 seconds.
-	if [[ ${S_overlaymethod} -eq 1 ]]; then
-		MAX_TIME_TO_PROCESS_MS=5000
-	else
-		MAX_TIME_TO_PROCESS_MS=2000
-	fi
+# TODO: use the module average flow times for day and night.
+	# It can take up to 5 seconds to save an image
+	MAX_TIME_TO_PROCESS_MS=5000
 	if [[ ${MIN_MS} -lt ${MAX_TIME_TO_PROCESS_MS} ]]; then
 		heading "Warning"
 		echo "The ${WSNs}${L}${WSNe} of ${DELAY_MS} ms may be too short given the"

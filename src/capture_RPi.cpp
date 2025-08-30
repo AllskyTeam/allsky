@@ -517,7 +517,6 @@ int main(int argc, char *argv[])
 		exit(EXIT_ERROR_STOP);
 	}
 
-	char bufTime[128]			= { 0 };
 	char bufTemp[1024]			= { 0 };
 	char const *bayer[]			= { "RG", "BG", "GR", "GB" };
 	bool justTransitioned		= false;
@@ -606,12 +605,6 @@ int main(int argc, char *argv[])
 
 	long originalWidth  = CG.width;
 	long originalHeight = CG.height;
-	// Limit these to a reasonable value based on the size of the sensor.
-	validateLong(&CG.overlay.iTextLineHeight, 0, (long)(iMaxHeight / 2), "Line Height", true);
-	validateLong(&CG.overlay.iTextX, 0, (long)iMaxWidth - 10, "Text X", true);
-	validateLong(&CG.overlay.iTextY, 0, (long)iMaxHeight - 10, "Text Y", true);
-	validateFloat(&CG.overlay.fontsize, 0.1, iMaxHeight / 2, "Font Size", true);
-	validateLong(&CG.overlay.linewidth, 0, (long)(iMaxWidth / 2), "Font Weight", true);
 
 	if (CG.saveCC)
 	{
@@ -660,10 +653,6 @@ int main(int argc, char *argv[])
 	displaySettings(CG);
 
 	// Initialization
-	int originalITextX		= CG.overlay.iTextX;
-	int originalITextY		= CG.overlay.iTextY;
-	int originalFontsize	= CG.overlay.fontsize;
-	int originalLinewidth	= CG.overlay.linewidth;
 	// Have we displayed "not taking picture during day/night" messages, if applicable?
 	bool displayedNoDaytimeMsg = false;
 	bool displayedNoNighttimeMsg = false;
@@ -845,10 +834,6 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 			// Only need to do at the beginning and if bin changes.
 			CG.height				= originalHeight / CG.currentBin;
 			CG.width				= originalWidth / CG.currentBin;
-			CG.overlay.iTextX		= originalITextX / CG.currentBin;
-			CG.overlay.iTextY		= originalITextY / CG.currentBin;
-			CG.overlay.fontsize		= originalFontsize / CG.currentBin;
-			CG.overlay.linewidth	= originalLinewidth / CG.currentBin;
 
 			if (numExposures > 0)
 			{
@@ -884,12 +869,6 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 			Log(2, "-----\n");
 			Log(1, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(myRaspistillSetting.shutter_us, true));
 
-			// Get start time for overlay. Make sure it has the same time as exposureStart.
-			if (CG.overlay.showTime)
-			{
-				sprintf(bufTime, "%s", formatTime(exposureStartDateTime, CG.timeFormat));
-			}
-
 			// For dark frames we already know the finalFilename.
 			if (! CG.takeDarkFrames)
 			{
@@ -917,7 +896,6 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					CG.lastWBB = CG.currentWBB;
 				}
 
-				// If takeDarkFrames is off, add overlay text to the image
 				if (! CG.takeDarkFrames)
 				{
 					CG.lastFocusMetric = CG.determineFocus ? (int)round(get_focus_metric(pRgb)) : -1;
@@ -940,15 +918,6 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					else {
 						myRaspistillSetting.shutter_us = CG.currentExposure_us;
 						myRaspistillSetting.analoggain = CG.currentGain;
-					}
-
-					if (CG.currentSkipFrames == 0 &&
-						CG.overlay.overlayMethod == OVERLAY_METHOD_LEGACY &&
-						doOverlay(pRgb, CG, bufTime, 0) > 0)
-					{
-						// if we added anything to overlay, write the file out
-						bool result = cv::imwrite(CG.fullFilename, pRgb, compressionParameters);
-						if (! result) fprintf(stderr, "*** ERROR: Unable to write to '%s'\n", CG.fullFilename);
 					}
 				}
 

@@ -1720,13 +1720,6 @@ void saveCameraInfo(
 		fprintf(f, "\t\t\t\"DefaultValue\" : false\n");
 		fprintf(f, "\t\t},\n");
 	}
-	if (CG.supportsTemperature) {
-		fprintf(f, "\t\t{\n");	// TODO This will go away when the legacy overlay is removed
-		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showTemp");
-		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showtemp");
-		fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.overlay.showTemp ? "true" : "false");
-		fprintf(f, "\t\t},\n");
-	}
 	if (CG.supportsAggression) {
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "aggression");
@@ -1753,21 +1746,9 @@ void saveCameraInfo(
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showUSB");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showusb");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.overlay.showUSB ? "true" : "false");
-	fprintf(f, "\t\t},\n");
-
-	fprintf(f, "\t\t{\n");
 	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "histogrambox");
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "histogrambox");
 	fprintf(f, "\t\t\t\"DefaultValue\" : \"%s\"\n", CG.HB.sArgs);
-	fprintf(f, "\t\t},\n");
-
-	fprintf(f, "\t\t{\n");
-	fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "showhistogrambox");
-	fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "showhistogrambox");
-	fprintf(f, "\t\t\t\"DefaultValue\" : %s\n", CG.overlay.showHistogramBox ? "true" : "false");
 	fprintf(f, "\t\t},\n");
 
 	fprintf(f, "\t\t{\n");
@@ -2343,17 +2324,6 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 	}
 
 	validateLong(&cg->debugLevel, 0, 5, "Debug Level", true);
-
-	// Overlay-related arguments
-	validateLong(&cg->overlay.extraFileAge, 0, NO_MAX_VALUE, "Max Age Of Extra", true);
-	validateLong(&cg->overlay.fontnumber, 0, 8-1, "Font Name", true);
-	validateLong(&cg->overlay.linenumber, 0, sizeof(cg->overlay.linetype)-1, "Font Smoothness", true);
-	if (cg->overlay.fc != NULL && sscanf(cg->overlay.fc, "%d %d %d",
-			&cg->overlay.fontcolor[0], &cg->overlay.fontcolor[1], &cg->overlay.fontcolor[2]) != 3)
-		Log(-1, "*** %s: WARNING: Not enough font color parameters: '%s'\n", cg->ME, cg->overlay.fc);
-	if (cg->overlay.sfc != NULL && sscanf(cg->overlay.sfc, "%d %d %d",
-			&cg->overlay.smallFontcolor[0], &cg->overlay.smallFontcolor[1], &cg->overlay.smallFontcolor[2]) != 3)
-		Log(-1, "*** %s: WARNING: Not enough small font color parameters: '%s'%s\n", cg->ME, cg->overlay.sfc);
 
 	cg->defaultBin = 1;
 	if (! checkBin(cg->dayBin, ci, "Daytime Binning"))

@@ -76,28 +76,20 @@ function ListDays(){
 				<th style="text-align:center">Timelapse</th>
 				<th style="text-align:center">Keogram</th>
 				<th style="text-align:center">Startrails</th>
-<?php if ($useMeteors) {
-				echo '<th style="text-align:center">Meteors</th>';
-} ?>
+<?php if ($useMeteors) { ?>
+				<th style="text-align:center">Meteors</th>
+<?php } ?>
 			</tr>
 	  </thead>
 	  <tbody>
 		<tr>
 			<td style='font-weight:bold'>All</td>
 			<td><span title="There are too many total images to view on one page.">-</span></td>
-			<td><a href='index.php?page=list_videos&day=All'
-				title='All Timelapse (CAN BE SLOW TO LOAD)'><i class='fa fa-film fa-<?php echo $fa_size ?> fa-fw'></i></a>
-			</td>
-
-			<td><a href='index.php?page=list_keograms&day=All'
-				title='All Keograms'><i class='fa fa-barcode fa-<?php echo $fa_size ?> fa-fw'></i></a></td>
-
-			<td><a href='index.php?page=list_startrails&day=All'
-				title='All Startrails'><i class='fa fa-star fa-<?php echo $fa_size ?> fa-fw'></i></a></td>
-
+			<td><?php insertHref("list_videos", "All"); ?></td>
+			<td><?php insertHref("list_keograms", "All"); ?></td>
+			<td><?php insertHref("list_startrails", "All"); ?></td>
 <?php if ($useMeteors) { ?>
-			<td><a href='index.php?page=list_meteors&day=All'
-				title='All Meteors'><i class='fa fa-meteor fa-$fa_size fa-fw'></i></a></td>
+			<td><?php insertHref("list_meteors", "All"); ?></td>
 <?php } ?>
 
 			<!-- don't allow deleting All directories - too risky -->
@@ -117,9 +109,7 @@ foreach ($days as $day) {
 	$has_timelapse = (glob(ALLSKY_IMAGES . "/$day/*.mp4") != false);
 
 	// For keograms and startrails assume if the directory exists a file does too.
-
 	$has_keogram = is_dir(ALLSKY_IMAGES . "/$day/keogram");
-
 	$has_startrails = is_dir(ALLSKY_IMAGES . "/$day/startrails");
 
 	// It's very possible there will be no meteor files

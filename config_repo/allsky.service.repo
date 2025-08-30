@@ -1,7 +1,7 @@
 [Unit]
 Description=AllSky Camera Service
 After=multi-user.target
-Wants=allskyperiodic.service allskyserver.service
+Wants=allskyperiodic.service
 
 [Service]
 User=XX_ALLSKY_OWNER_XX

@@ -532,9 +532,6 @@ $allskyStatus = output_allsky_status();
 				<li>
 					<a href="index.php?page=support"><i class="fa fa-question fa-fw"></i><span class="menu-text"> Getting Support</span></a>
 				</li>
-				<li>
-					<a href="/documentation"><i class="fa fa-book fa-fw"></i><span class="menu-text"> Allsky Documentation</span></a>
-				</li>
 				<li class="sidebar-dropdown has-flyout">
 					<a href="#" class="submenu-toggle"><i class="fa-solid fa-hammer"></i><span class="menu-text"> Helper Tools</span></a>
 					<ul class="dropdown-menu">
@@ -557,6 +554,9 @@ $allskyStatus = output_allsky_status();
 						-->
 					</ul>
 				</li>	
+				<li>
+					<a href="/documentation" external="true"><i class="fa fa-book fa-fw"></i><span class="menu-text"> Allsky Documentation</span></a>
+				</li>
 				<li>
 					<span id="as-switch-theme">
 						<i class="fa fa-moon fa-fw"></i>

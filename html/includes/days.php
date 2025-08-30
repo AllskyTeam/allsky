@@ -160,7 +160,7 @@ foreach ($days as $day) {
 	if ($has_keogram) {
 # TODO: create and use keogram thumbnails (they should probably be about 400px high because
 # a "regular" thumbnail is only 100 px wide so you can't see any details.
-		insertHref("list_keogram", $day);
+		insertHref("list_keograms", $day);
 	} else {
 		echo "none";
 	}

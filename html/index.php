@@ -93,22 +93,23 @@ function getRemoteWebsiteVersion() {
 
 function getPageTitle($page, $day) {
 	$titles = [
-		"WLAN_info"          => "WLAN Dashboard",
-		"LAN_info"           => "LAN Dashboard",
-		"configuration"      => "Allsky Settings",
-		"wifi"               => "Configure Wi-Fi",
-		"dhcp_conf"          => "Configure DHCP",
-		"auth_conf"          => "Change Password",
-		"system"             => "System",
+		"live_view"          => "Live View",
 		"list_days"          => "Images",
 		"list_images"        => "Images$day",
 		"list_videos"        => "Timelapse$day",
 		"list_keograms"      => "Keogram$day",
 		"list_startrails"    => "Startrails$day",
+		"configuration"      => "Allsky Settings",
 		"editor"             => "Editor",
 		"overlay"            => "Overlay Editor",
 		"module"             => "Module Manager",
-		"live_view"          => "Live View",
+		"charts"             => "Charts",
+		"LAN_info"           => "LAN Dashboard",
+		"WLAN_info"          => "WLAN Dashboard",
+		"wifi"               => "Configure Wi-Fi",
+	"dhcp_conf"          => "Configure DHCP",
+		"system"             => "System",
+		"auth_conf"          => "Change Password",
 		"support"            => "Getting Support",
 		"startrails_settings"=> "Startrails Settings",
 		"stretch_settings"   => "Image Stretch Settings"
@@ -122,33 +123,6 @@ function insertPage($page) {
 	global $image_name, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg, $darkframe;
 
 	switch ($page) {
-		case "WLAN_info":
-			include_once('includes/dashboard_WLAN.php');
-			DisplayDashboard_WLAN();
-			break;
-		case "LAN_info":
-			include_once('includes/dashboard_LAN.php');
-			DisplayDashboard_LAN();
-			break;
-		case "configuration":
-			include_once('includes/allskySettings.php');
-			DisplayAllskyConfig();
-			break;
-		case "wifi":
-			include_once('includes/configureWiFi.php');
-			DisplayWPAConfig();
-			break;
-		case "dhcp_conf":
-			include_once('includes/dhcp.php');
-			DisplayDHCPConfig();
-			break;
-		case "auth_conf":
-			include_once('includes/admin.php');
-			break;
-		case "system":
-			include_once('includes/system.php');
-			DisplaySystem();
-			break;
 		case "list_days":
 			include_once('includes/days.php');
 			ListDays();
@@ -169,6 +143,10 @@ function insertPage($page) {
 			// directory, file name prefix, formal name, type of file
 			ListFileType("startrails/", "startrails", "Startrails", "picture");
 			break;
+		case "configuration":
+			include_once('includes/allskySettings.php');
+			DisplayAllskyConfig();
+			break;
 		case "editor":
 			include_once('includes/editor.php');
 			DisplayEditor();
@@ -181,9 +159,43 @@ function insertPage($page) {
 			include_once('includes/module.php');
 			DisplayModule();
 			break;
+		case "charts":
+			include_once('includes/charts.php');
+			DisplayCharts();
+			break;
+		case "LAN_info":
+			include_once('includes/dashboard_LAN.php');
+			DisplayDashboard_LAN();
+			break;
+		case "WLAN_info":
+			include_once('includes/dashboard_WLAN.php');
+			DisplayDashboard_WLAN();
+			break;
+		case "wifi":
+			include_once('includes/configureWiFi.php');
+			DisplayWPAConfig();
+			break;
+case "dhcp_conf":
+	include_once('includes/dhcp.php');
+	DisplayDHCPConfig();
+	break;
+		case "system":
+			include_once('includes/system.php');
+			DisplaySystem();
+			break;
+		case "auth_conf":
+			include_once('includes/admin.php');
+			break;
+		case "support":
+			include_once('includes/support.php');
+			break;
 		case "startrails_settings":
 			include_once("helpers/$page.php");
 			startrailsSettings();
+			break;
+		case "stretch_settings":
+			include_once("helpers/$page.php");
+			stretchSettings();
 			break;
 		case "timelapse_settings":
 			include_once("helpers/$page.php");
@@ -196,17 +208,6 @@ function insertPage($page) {
 		case "bad_images_settings":
 			include_once("helpers/$page.php");
 			// TODO: add function name 
-			break;
-		case "stretch_settings":
-			include_once("helpers/$page.php");
-			stretchSettings();
-			break;
-		case "support":
-			include_once('includes/support.php');
-			break;
-		case "charts":
-			include_once('includes/charts.php');
-			DisplayCharts();
 			break;
 			
 		case "live_view":

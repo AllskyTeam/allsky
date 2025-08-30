@@ -25,6 +25,7 @@ function delete_directory($directory_name) {
 
 function ListDays(){
 	global $page;
+	global $pageHeaderTitle, $pageIcon;
 
 	if (! is_dir(ALLSKY_IMAGES)) {
 		echo "<br><div class='errorMsgBig'>";
@@ -67,7 +68,7 @@ function ListDays(){
 <div class="row">
 	<div class="col-lg-12">
 	<div class="panel panel-allsky">
-	<div class="panel-heading"><i class="fa fa-image fa-fw"></i> Images</div>
+	<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
 	<div class="panel-body">
 	<div class="row">
 	<form action="?page=<?php echo $page ?>" method="POST"

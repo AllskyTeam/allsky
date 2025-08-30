@@ -21,7 +21,6 @@ import re
 import sys
 import time
 import locale
-import locale
 import tempfile
 import shlex
 import board

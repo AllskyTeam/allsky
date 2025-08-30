@@ -113,7 +113,7 @@ if (! is_dir(ALLSKY_SUPPORT_DIR)) {
 </div>
 
 <div class="panel panel-allsky">
-	<div class="panel-heading"><i class="fa fa-code fa-question"></i> Getting Support</div>
+	<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
 	<div class="panel-body as-support-loading">
 		<div class="panel panel-default">
 <!-- none of the other pages have this:

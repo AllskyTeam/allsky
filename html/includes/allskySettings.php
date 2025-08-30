@@ -144,6 +144,7 @@ function DisplayAllskyConfig() {
 	global $endSetting;
 	global $saveChangesLabel;
 	global $forceRestart;
+	global $pageHeaderTitle, $pageIcon;
 
 	$cameraTypeName = "cameratype";			// json setting name
 	$cameraModelName = "cameramodel";		// json setting name
@@ -734,9 +735,9 @@ if ($debug) {
 	if ($formReadonly == "readonly") {
 		$x = "(READ ONLY) &nbsp; &nbsp; ";
 	} else {
-		$x = "<i class='fa fa-camera fa-fw'></i> ";
+		$x = "<i class='$pageIcon'></i> ";
 	}
-	echo "<div class='panel-heading'>$x Allsky Settings for &nbsp;<b>$cameraType $cameraModel</b></div>";
+	echo "<div class='panel-heading'>$x $pageHeaderTitle for &nbsp;<b>$cameraType $cameraModel</b></div>";
 	echo "<div class='panel-body' style='padding: 5px;'>";
 	if ($formReadonly != "readonly") {
 		echo "<div id='messages'>";

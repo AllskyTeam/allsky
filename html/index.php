@@ -20,6 +20,9 @@ $lastChangedName = "lastchanged";	// json setting name
 $formReadonly = false;				// The WebUI isn't readonly
 $ME = htmlspecialchars($_SERVER["PHP_SELF"]);
 
+// TODO: Implement
+$useMeteors = false;
+
 // functions.php sets a bunch of constants and variables.
 // It needs to be at the top of this file since code below uses the items it sets.
 include_once('includes/functions.php');
@@ -115,14 +118,22 @@ $pageInfo = [
 	"list_videos" => [
 		"title" => "Timelapse",
 		"icon" => "fa fa-film fa-${fa_size} fa-fw",
+		"AllTitle" => "All Timelapse (CAN BE SLOW TO LOAD)",
 	],
 	"list_keograms" => [
 		"title" => "Keogram",
 		"icon" => "fa fa-barcode fa-${fa_size} fa-fw",
+		"AllTitle" => "All Keograms",
 	],
 	"list_startrails" => [
 		"title" => "Startrails",
 		"icon" => "fa fa-star fa-${fa_size} fa-fw",
+		"AllTitle" => "All Startrails",
+	],
+	"list_meteors" => [
+		"title" => "Meteors",
+		"icon" => "fa fa-meteor fa-${fa_size} fa-fw",
+		"AllTitle" => "All Meteors",
 	],
 	"configuration" => [
 		"title" => "Allsky Settings",
@@ -249,7 +260,13 @@ function insertHref($p, $day) {
 		$p = "notFound";
 		$t = getVariableOrDefault($pageInfo, $p, null);
 	}
+
 	$title = getPageHeaderTitle($p, "");
+	if ($day == "All") {
+		$AllTitle = getVariableOrDefault($t, "AllTitle", null);
+		if ($AllTitle !== null)
+			$title = $AllTitle;
+	}
 	$icon = getPageIcon($p);
 	$href = getVariableOrDefault($t, "href", "index.php?page=$p");
 	if ($day !== "") $href .= "&day=$day";
@@ -307,6 +324,10 @@ function insertPage($p) {
 		case "list_startrails":
 			// directory, file name prefix, formal name, type of file
 			ListFileType("startrails/", "startrails", "Startrails", "picture");
+			break;
+		case "list_meteors":
+			// directory, file name prefix, formal name, type of file
+			ListFileType("meteors/", "meteors", "Meteors", "picture");
 			break;
 		case "configuration":
 			include_once("includes/allskySettings.php");

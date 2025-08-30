@@ -826,7 +826,7 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 			$expr .= substr($imageFileName, 1) . "*";
 			$ts = "?_ts=" . time();
 		} else {
-			$expr .= "$imageFileName-$chosen_day.*";
+			$expr .= "${imageFileName}-${chosen_day}*";
 			$ts = "";
 		}
 		$imageTypes = array();

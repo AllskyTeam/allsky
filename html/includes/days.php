@@ -26,6 +26,7 @@ function delete_directory($directory_name) {
 function ListDays(){
 	global $page;
 	global $pageHeaderTitle, $pageIcon;
+	global $fa_size, $fa_size_px;
 
 	if (! is_dir(ALLSKY_IMAGES)) {
 		echo "<br><div class='errorMsgBig'>";
@@ -47,15 +48,8 @@ function ListDays(){
 	// Get list of directories.
 	$days = getValidImageDirectories();
 	if (count($days) > 0) arsort($days);
-
-	// What size Font Awesome icon to use?
-	$fa_size = "2x";	// "lg" or "2x"
-	if ($fa_size == "lg")
-		$fa_size_px = 22;	// the rough width of the font awesome icon
-	else
-		$fa_size_px = 35;
-
 ?>
+
 <style>
 	table th {
 		text-align:center;
@@ -152,7 +146,7 @@ foreach ($days as $day) {
 				$icon = "<img src='$thumb' width='${fa_size_px}px'>";
 			}
 		}
-		echo "<a href='index.php?page=list_videos&day=$day' title='Timelapse'>$icon</a>";
+		insertHref("list_videos", $day);
 	} else {
 		echo "none";
 	}
@@ -162,8 +156,7 @@ foreach ($days as $day) {
 	if ($has_keogram) {
 # TODO: create and use keogram thumbnails (they should probably be about 400px high because
 # a "regular" thumbnail is only 100 px wide so you can't see any details.
-		$icon = "<i class='fa fa-barcode fa-${fa_size} fa-fw'></i>";
-		echo "<a href='index.php?page=list_keograms&day=$day' title='Keogram'>$icon</a>";
+		insertHref("list_keogram", $day);
 	} else {
 		echo "none";
 	}
@@ -172,8 +165,7 @@ foreach ($days as $day) {
 	echo "\t\t\t<td>";
 	if ($has_startrails) {
 # TODO: create and use startrails thumbnails.
-		$icon = "<i class='fa fa-star fa-${fa_size} fa-fw'></i>";
-		echo "<a href='index.php?page=list_startrails&day=$day' title='Startrails'>$icon</a>";
+		insertHref("list_startrails", $day);
 	} else {
 		echo "none";
 	}

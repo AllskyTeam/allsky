@@ -844,42 +844,42 @@ def update_mysql_database(structure, extra_data, secret_data):
 def save_extra_data(file_name, extra_data, source='', structure={}, custom_fields={}):
     saveExtraData(file_name, extra_data, source, structure, custom_fields)
 def saveExtraData(file_name, extra_data, source='', structure={}, custom_fields={}):
-	"""
-	Save extra data to allows the overlay module to display it.
+    """
+    Save extra data to allows the overlay module to display it.
 
-	Args:
-		file_name (string): The name of the file to save.
-		extra_data (object): The data to save.
+    Args:
+        file_name (string): The name of the file to save.
+        extra_data (object): The data to save.
 
-	Returns:
-		Nothing
-	"""
-	try:
-		extra_data_path = getExtraDir()
-		if extra_data_path is not None:        
-			checkAndCreateDirectory(extra_data_path)
+    Returns:
+        Nothing
+    """
+    try:
+        extra_data_path = getExtraDir()
+        if extra_data_path is not None:        
+            checkAndCreateDirectory(extra_data_path)
 
-			file_extension = Path(file_name).suffix
-			extra_data_filename = os.path.join(extra_data_path, file_name)
-			with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
-				if file_extension == '.json':
-					extra_data = format_extra_data_json(extra_data, structure, source)
-				if len(custom_fields) > 0:
-					for key, value in custom_fields.items():
-						extra_data[key] = value
-				extra_data = json.dumps(extra_data, indent=4)
-				temp_file.write(extra_data)
-				temp_file_name = temp_file.name
-				os.chmod(temp_file_name, 0o644)
+            file_extension = Path(file_name).suffix
+            extra_data_filename = os.path.join(extra_data_path, file_name)
+            with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
+                if file_extension == '.json':
+                    extra_data = format_extra_data_json(extra_data, structure, source)
+                if len(custom_fields) > 0:
+                    for key, value in custom_fields.items():
+                        extra_data[key] = value
+                extra_data = json.dumps(extra_data, indent=4)
+                temp_file.write(extra_data)
+                temp_file_name = temp_file.name
+                os.chmod(temp_file_name, 0o644)
 
-				shutil.move(temp_file_name, extra_data_filename)
+                shutil.move(temp_file_name, extra_data_filename)
 
-				if 'database' in structure:
-					update_database(structure, extra_data)
-	except Exception as e:
+                if 'database' in structure:
+                    update_database(structure, extra_data)
+    except Exception as e:
         me = os.path.basename(__file__)
-		eType, eObject, eTraceback = sys.exc_info()            
-		log(0, f'ERROR: saveExtraData failed on line {eTraceback.tb_lineno} in {me} - {e}')
+        eType, eObject, eTraceback = sys.exc_info()            
+        log(0, f'ERROR: saveExtraData failed on line {eTraceback.tb_lineno} in {me} - {e}')
 
 def format_extra_data_json(extra_data, structure, source):
     result = extra_data

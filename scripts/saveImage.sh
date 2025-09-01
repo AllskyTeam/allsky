@@ -332,10 +332,10 @@ if [[ ${SAVE_IMAGE} == "true" ]]; then
 				else
 					D="--no-debug"
 				fi
-				O="${ALLSKY_CURRENT_DIR}/mini-timelapse.mp4"
 
 				"${ALLSKY_SCRIPTS}/timelapse.sh" --Last "$( basename "${FINAL_FILE}" )" \
-					"${D}" --lock --output "${O}" --mini --images "${MINI_TIMELAPSE_FILES}"
+					"${D}" --lock --output "${ALLSKY_MINITIMELAPSE_FILE}" --mini \
+					--images "${MINI_TIMELAPSE_FILES}"
 				if [[ $? -ne 0 ]]; then
 					# failed so don't try to upload
 					TIMELAPSE_MINI_UPLOAD_VIDEO="false"
@@ -467,13 +467,12 @@ fi
 
 # If needed, upload the mini timelapse.  If the upload failed above, it will likely fail below.
 if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${SAVE_IMAGE} == "true" && ${RET} -eq 0 ]] ; then
-	MINI="mini-timelapse.mp4"
-	FILE_TO_UPLOAD="${ALLSKY_CURRENT_DIR}/${MINI}"
+	FILE_TO_UPLOAD="${ALLSKY_MINITIMELAPSE_FILE}"
 
-	upload_all --remote-web --remote-server "${FILE_TO_UPLOAD}" "" "${MINI}" "MiniTimelapse"
+	upload_all --remote-web --remote-server "${FILE_TO_UPLOAD}" "" "${ALLSKY_MINITIMELAPSE_NAME}" "MiniTimelapse"
 	RET=$?
 	if [[ ${RET} -eq 0 && ${S_minitimelapseuploadthumbnail} == "true" ]]; then
-		UPLOAD_THUMBNAIL_NAME="mini-timelapse.jpg"
+		UPLOAD_THUMBNAIL_NAME="{ALLSKY_MINITIMELAPSE_NAME/.mp4/.jpg}"
 		UPLOAD_THUMBNAIL="${ALLSKY_CURRENT_DIR}/${UPLOAD_THUMBNAIL_NAME}"
 		# Create the thumbnail for the mini timelapse, then upload it.
 		rm -f "${UPLOAD_THUMBNAIL}"

@@ -132,3 +132,19 @@ function _check_locale()
 	echo "See the 'Settings -> Allsky' Documentation page for how to install locales."
 	return 1
 }
+
+
+###
+# Check if the user specified --immediate; it's on by default.
+function _check_immediate()
+{
+	local SETTING_NAME="${1}"
+	local SETTING_LABEL="${2}"
+
+	if [[ -n ${SETTING_NAME} && ${SETTING_NAME} =~ --immediate ]]; then
+		echo -n "${WSVs}--immediate${WSVe} is no longer needed in the ${WSNs}${SETTING_LABEL}${WSNe}"
+		echo " setting since Allsky uses that option by default."
+		return 1
+	fi
+	return 0
+}

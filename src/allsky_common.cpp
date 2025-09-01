@@ -771,7 +771,7 @@ void displayHelp(config cg)
 		printf(" -%-*s - 'true' enables cooler (cooled cameras only) [%s].\n", n, "dayenablecooler b", yesNo(cg.dayEnableCooler));
 		printf(" -%-*s - Target temperature in degrees C (cooled cameras only).\n", n, "daytargettemp n");
 	}
-	if (cg.ct == ctRPi && cg.isLibcamera) {
+	if (cg.ct == ctRPi) {
 		printf(" -%-*s - Name of the daytime camera tuning file to use [%s].\n", n, "daytuningfile s", "none");
 	}
 
@@ -800,7 +800,7 @@ void displayHelp(config cg)
 		printf(" -%-*s - 'true' enables cooler (cooled cameras only) [%s]\n", n, "nightenablecooler b", yesNo(cg.nightEnableCooler));
 		printf(" -%-*s - Target temperature in degrees C (cooled cameras only).\n", n, "nighttargettemp n");
 	}
-	if (cg.ct == ctRPi && cg.isLibcamera) {
+	if (cg.ct == ctRPi) {
 		printf(" -%-*s - Name of the night camera tuning file to use [%s].\n", n, "nighttuningfile s", "none");
 	}
 
@@ -830,10 +830,7 @@ void displayHelp(config cg)
 		printf("  %-*s                     PNG (compression), 0-9 [PNG=%ld].\n", n, "", cg.qualityPNG);
 	printf(" -%-*s - Name of image file to create [%s].\n", n, "filename s", cg.fileName);
 	if (cg.ct == ctRPi) {
-		if (cg.isLibcamera)
-			printf(" -%-*s - Amount to rotate image in degrees - 0 or 180 [%ld].\n", n, "rotation n", cg.rotation);
-		else
-			printf(" -%-*s - Amount to rotate image in degrees - 0, 90, 180, or 270 [%ld].\n", n, "rotation n", cg.rotation);
+		printf(" -%-*s - Amount to rotate image in degrees - 0 or 180 [%ld].\n", n, "rotation n", cg.rotation);
 	}
 	printf(" -%-*s - 0 = No flip, 1 = Horizontal, 2 = Vertical, 3 = Both [%ld].\n", n, "flip n", cg.flip);
 	printf(" -%-*s - 'true' enables focus mode [%s].\n", n, "determinefocus b", yesNo(cg.determineFocus));
@@ -878,9 +875,8 @@ void displayHelp(config cg)
 	printf(" -%-*s - Outputs the camera's capabilities to the specified file and exits.\n", n, "cc_file s");
 	if (cg.ct == ctRPi) {
 		printf(" -%-*s - Command to take pictures [\"\"]:\n", n, "cmd s");
-		printf("  %-*s     Buster: raspistill\n", n, "");
-		printf("  %-*s     Bullseye: libcamera-still\n", n, "");
-		printf("  %-*s     Bookworm: rpicam-still\n", n, "");
+		printf("  %-*s     Bullseye:           libcamera-still\n", n, "");
+		printf("  %-*s     Bookworm and newer: rpicam-still\n", n, "");
 	}
 /* These are too advanced for anyone other than developers.
 	printf(" -%-*s - Be careful changing these values, ExposureChange (Steps) = p0 + (p1*diff) + (p2*diff)^2 [%.1f].\n", n, "mean-p0 n", cg.myModeMeanSetting.dayMean_threshold);
@@ -1014,7 +1010,7 @@ void displaySettings(config cg)
 	printf("   Maximum errors before exiting: %d\n", cg.maxErrors);
 	printf("   Debug Level: %ld\n", cg.debugLevel);
 	printf("   On TTY: %s\n", yesNo(cg.tty));
-	if (cg.ct == ctRPi && cg.isLibcamera) {
+	if (cg.ct == ctRPi) {
 		printf("   Tuning File (day): %s\n", stringORnone(cg.dayTuningFile));
 		printf("   Tuning File (night): %s\n", stringORnone(cg.nightTuningFile));
 	}
@@ -1326,17 +1322,6 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 			if (cg->cmdToUse[0] == '\0')
 			{
 				cg->cmdToUse = NULL;		// usually with ZWO, which doesn't use this
-			}
-			else
-			{
-				if (strcmp(cg->cmdToUse, "raspistill") == 0)
-				{
-					cg->isLibcamera = false;
-				}
-				else
-				{
-					cg->isLibcamera = true;
-				}
 			}
 		}
 		else if (strcmp(a, "tty") == 0)	// overrides what was automatically determined

@@ -82,9 +82,6 @@ if [[ ${DO_RPI} == "true" ]]; then
 	#	libcamera libcamera_camera_capability_line_1
 	#	libcamera libcamera_camera_capability_line_2
 	#	libcamera End
-	#	raspistill raspistill_camera_capability_line_1
-	#	raspistill raspistill_camera_capability_line_2
-	#	raspistill End
 	#	camera  sensor  compare_length  model  other_info_for_camera_2
 	#	...
 	gawk -F'\t' '

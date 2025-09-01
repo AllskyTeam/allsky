@@ -347,6 +347,12 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 		echo "FIX: Make sure there are 6 digits after the '#', for example: '#ffffff' for white."
 	fi
 
+	if ! MSG="$( _check_immediate "${S_extraargs}" "${S_extraargs_label}" )" ; then
+		heading "Information"
+		echo -e "${MSG}"
+		echo "FIX: Remove ${WSVs}--immediate${WSVe} from ${WSNs}${S_extraargs_label}${WSNe}."
+	fi
+
 fi		# end of checking for informational items
 
 
@@ -368,13 +374,6 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 		heading "Warning"
 		echo "The Pi needs to be rebooted before Allsky will start."
 		echo "FIX: Reboot."
-	fi
-
-	if [[ ${ALLSKY_PI_OS} == "buster" ]]; then
-		heading "Warning"
-		echo "Your Pi is running the old 'Buster' operating system;"
-		echo "this is the last release of Allsky that supports Buster."
-		echo "FIX: Upgrade your Pi to Bookworm, 64-bit if possible."
 	fi
 
 	check_delay "Daytime"
@@ -402,11 +401,7 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 		# Check if timelapse size is "too big" and will likely cause an error.
 		# This is normally only an issue with the libx264 video codec which has
 		# a dimension limit that we put in PIXEL_LIMIT.
-		if [[ ${ALLSKY_PI_OS} == "buster" ]]; then
-			PIXEL_LIMIT=$((4096 * 2304))		# Limit of libx264
-		else
-			PIXEL_LIMIT=$((8192 * 4320))
-		fi
+		PIXEL_LIMIT=$((8192 * 4320))		# Limit of libx264
 
 		function check_timelapse_size()
 		{

@@ -1891,7 +1891,7 @@ convert_settings_file()			# prior_file, new_file
 					echo -e "\t${FIELD}=${VALUE}" >> "${DELETED_SETTINGS}"
 					;;
 
-				# ===== Deleted in ${NO_BUSTER_BASE_VERSION}.
+				# ===== Deleted/changed in ${NO_BUSTER_BASE_VERSION}.
 				"overlaymethod")
 					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
 					if [[ ${VALUE} -eq 0 ]]; then
@@ -1905,6 +1905,11 @@ convert_settings_file()			# prior_file, new_file
 				"extratext" | "extratextage" | "textlineheight" | "textx" | "texty" | "fontname" | \
 				"fontcolor" | "smallfontcolor" | "fonttype" | "fontsize" | "fontline" | "outlinefont")
 					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
+					;;
+				"extraargs")
+					if ! MSG="$( _check_immediate "${VALUE}" "Extra Arguments" )" ; then
+						display_msg --log notice "${MSG}"
+					fi
 					;;
 
 				# ===== Deleted in ${COMBINED_BASE_VERSION}.

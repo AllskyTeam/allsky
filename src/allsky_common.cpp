@@ -833,7 +833,7 @@ void displayHelp(config cg)
 		if (cg.isLibcamera)
 			printf(" -%-*s - Amount to rotate image in degrees - 0 or 180 [%ld].\n", n, "rotation n", cg.rotation);
 		else
-			printf(" -%-*s - Amount to rotate image in degrees - 0, 90, 180, or 270 [%ld].\n", n, "rotation n", cg.rotation);
+			printf(" -%-*s - Amount to rotate image in degrees - UNKNOWN - FIX CODE [%ld].\n", n, "rotation n", cg.rotation);
 	}
 	printf(" -%-*s - 0 = No flip, 1 = Horizontal, 2 = Vertical, 3 = Both [%ld].\n", n, "flip n", cg.flip);
 	printf(" -%-*s - 'true' enables focus mode [%s].\n", n, "determinefocus b", yesNo(cg.determineFocus));
@@ -878,9 +878,8 @@ void displayHelp(config cg)
 	printf(" -%-*s - Outputs the camera's capabilities to the specified file and exits.\n", n, "cc_file s");
 	if (cg.ct == ctRPi) {
 		printf(" -%-*s - Command to take pictures [\"\"]:\n", n, "cmd s");
-		printf("  %-*s     Buster: raspistill\n", n, "");
-		printf("  %-*s     Bullseye: libcamera-still\n", n, "");
-		printf("  %-*s     Bookworm: rpicam-still\n", n, "");
+		printf("  %-*s     Bullseye:           libcamera-still\n", n, "");
+		printf("  %-*s     Bookworm and newer: rpicam-still\n", n, "");
 	}
 /* These are too advanced for anyone other than developers.
 	printf(" -%-*s - Be careful changing these values, ExposureChange (Steps) = p0 + (p1*diff) + (p2*diff)^2 [%.1f].\n", n, "mean-p0 n", cg.myModeMeanSetting.dayMean_threshold);
@@ -1329,14 +1328,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 			}
 			else
 			{
-				if (strcmp(cg->cmdToUse, "raspistill") == 0)
-				{
-					cg->isLibcamera = false;
-				}
-				else
-				{
-					cg->isLibcamera = true;
-				}
+				cg->isLibcamera = true;
 			}
 		}
 		else if (strcmp(a, "tty") == 0)	// overrides what was automatically determined

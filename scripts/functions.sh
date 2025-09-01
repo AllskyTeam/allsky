@@ -338,6 +338,7 @@ function get_connected_cameras_info()
 					printf("ZWO\t%d\t%s\n", num++, model);
 					model = "<found>";		# This camera was output
 				}
+			}
 		}'
 }
 

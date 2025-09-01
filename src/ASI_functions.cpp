@@ -670,7 +670,7 @@ int getCameraNumber()
 	int num_RPiCameras = 0;
 
 	enum LINE_TYPE {
-		LT_camera, LT_libcamera, LT_NEW_SOFTWARE
+		LT_camera, LT_libcamera
 	} lineType;
 
 if (0) {
@@ -729,20 +729,7 @@ if (0) {
 		}
 		else if (strcmp(lt, "libcamera") == 0)
 		{
-			// Ignore lines not for this command.
-			if (! CG.isLibcamera)
-				continue;
-
 			lineType = LT_libcamera;
-			max_tokens = controlCapsTokens;
-		}
-		else if (strcmp(lt, "NEW_SOFTWARE") == 0)
-		{
-			// Ignore lines not for this command.
-			if (CG.isLibcamera)
-				continue;
-
-			lineType = LT_NEW_SOFTWARE;
 			max_tokens = controlCapsTokens;
 		}
 		else
@@ -813,11 +800,6 @@ if (0) {
 					else if (lineType == LT_libcamera)
 					{
 						inLibcamera = true;
-						inControlCaps = true;
-					}
-					else if (lineType == LT_NEW_SOFTWARE)
-					{
-						inLibcamera = false;
 						inControlCaps = true;
 					}
 				}
@@ -925,13 +907,14 @@ if (numTokens > 1) Log(5, ", inCamera=%s, inControlCaps=%s, inLibcamera=%s\n", y
 
 				strncpy(p->Sensor, sensor, SENSOR_SIZE);
 				RPiCameras[thisIndex].CameraInfo = &ASICameraInfoArray[actualIndex];
-				// There are TWO entries in ControlCapsArray[] for every
-				// entry in ASICameraInfoArray[].
-				// The first of each pair is for libcamera, the second is for NEW_SOFTWARE.
-				// We need to return the index into ControlCapsArray[].
+// TODO: remove after testing
+// There are TWO entries in ControlCapsArray[] for every
+// entry in ASICameraInfoArray[].
+// The first of each pair is for libcamera, the second is for NEW_SOFTWARE.
+// We need to return the index into ControlCapsArray[].
 				Log(4, "Saving sensor [%s] from ASICameraInfoArray[%d] to RPiCameras[%d],",
 					sensor, actualIndex, thisIndex);
-				actualIndex = (actualIndex * 2) + (CG.isLibcamera ? 0 : 1);
+//	actualIndex = (actualIndex * 2) + (CG.isLibcamera ? 0 : 1);
 				RPiCameras[thisIndex].ControlCaps = &ControlCapsArray[actualIndex][0];
 				Log(4, " ControlCapsArray[%d]", actualIndex);
 
@@ -1494,9 +1477,7 @@ void saveCameraInfo(
 		}
 	fprintf(f, "\n\t],\n");
 
-	// RPi only supports sensor temp with libcamera.
-	if (CG.ct == ctZWO || CG.isLibcamera)
-		fprintf(f, "\t\"hasSensorTemperature\" : %s,\n", CG.supportsTemperature ? "true" : "false");
+	fprintf(f, "\t\"hasSensorTemperature\" : %s,\n", CG.supportsTemperature ? "true" : "false");
 	fprintf(f, "\t\"colorCamera\" : %s,\n", cameraInfo.IsColorCam ? "true" : "false");
 	if (cameraInfo.IsColorCam)
 		fprintf(f, "\t\"bayerPattern\" : \"%s\",\n", bayer);
@@ -1508,17 +1489,7 @@ void saveCameraInfo(
 	fprintf(f, "\t\"autoFocus\" : %s,\n", cameraInfo.SupportsAutoFocus ? "true" : "false");
 	fprintf(f, "\t\"supportedRotations\": [\n");
 		fprintf(f, "\t\t{ \"value\" : 0, \"label\" : \"None\" },\n");
-		if (CG.ct == ctRPi && CG.isLibcamera)
-		{
-			// libcamera only supports 0 and 180 degree rotation
-			fprintf(f, "\t\t{ \"value\" : 180, \"label\" : \"180 degrees\" }\n");
-		}
-		else
-		{
-			fprintf(f, "\t\t{ \"value\" : 90, \"label\" : \"90 degrees\" },\n");
-			fprintf(f, "\t\t{ \"value\" : 180, \"label\" : \"180 degrees\" },\n");
-			fprintf(f, "\t\t{ \"value\" : 270, \"label\" : \"270 degrees\" }\n");
-		}
+		fprintf(f, "\t\t{ \"value\" : 180, \"label\" : \"180 degrees\" }\n");
 	fprintf(f, "\t],\n");
 #endif
 
@@ -1762,7 +1733,7 @@ void saveCameraInfo(
 	fprintf(f, "\t\t\t\"argumentName\" : \"%s\"\n", "extraargs");
 	fprintf(f, "\t\t},\n");
 
-	if (CG.ct == ctRPi && CG.isLibcamera) {
+	if (CG.ct == ctRPi) {
 		fprintf(f, "\t\t{\n");
 		fprintf(f, "\t\t\t\"Name\" : \"%s\",\n", "TuningFile");
 		fprintf(f, "\t\t\t\"argumentName\" : \"%s\",\n", "tuningfile");
@@ -2280,12 +2251,12 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 		ok = false;
 	}
 
-	// libcamera only supports 0 and 180 degree rotation
 	cg->defaultRotation = 0;
 	if (cg->rotation != 0)
 	{
-		if (cg->ct == ctRPi && cg->isLibcamera)
+		if (cg->ct == ctRPi)
 		{
+			// libcamera only supports 0 and 180 degree rotation
 			if (cg->rotation != 180)
 			{
 				Log(0, "*** %s: ERROR: Only 0 and 180 degrees are supported for rotation; you entered %ld.\n", cg->ME, cg->rotation);

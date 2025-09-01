@@ -45,7 +45,17 @@ function DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nig
 </script>
 
 	<div class="panel panel-allsky">
-		<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
+		<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?>
+<?php
+		if (file_exists(ALLSKY_MINITIMELAPSE_FILE)) {
+?>
+
+			<span class='nowrap'>&nbsp; &nbsp;&nbsp; &nbsp;
+			<?php echo insertHref("mini_timelapse", "", true); ?></span>
+<?php
+		}
+?>
+		</div>
 		<div class="panel-body">
 			<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
 			<div id="live_container" class="cursorPointer live_container" title="Click to make full-screen">

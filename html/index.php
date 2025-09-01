@@ -117,7 +117,7 @@ $pageInfo = [
 	],
 	"list_videos" => [
 		"title" => "Timelapse",
-		"icon" => "fa fa-film fa-${fa_size} fa-fw",
+		"icon" => "fa fa-video fa-${fa_size} fa-fw",
 		"AllTitle" => "All Timelapse (CAN BE SLOW TO LOAD)",
 	],
 	"list_keograms" => [
@@ -167,7 +167,7 @@ $pageInfo = [
 		"title" => "Configure Wi-Fi",
 		"icon" => "fa fa-wifi fa-fw",
 	],
-"dhcp_conf" => [
+	"dhcp_conf" => [
 		"title" => "Configure DHCP",
 		"icon" => "fa fa-exchange fa-fw",
 	],
@@ -201,7 +201,7 @@ $pageInfo = [
 	],
 	"timelapse_settings" => [
 		"title" => "Timelapse Settings",
-		"icon" => "fa fa-play-circle fa-fw",
+		"icon" => "fa fa-video fa-fw",
 		"headerTitle" => "Help Determine Timelapse Settings",
 	],
 	"bad_images_settings" => [
@@ -218,6 +218,11 @@ $pageInfo = [
 		"title" => "Allsky Documentation",
 		"icon" => "fa fa-book fa-fw",
 		"href" => "/documentation' external='true",
+	],
+	"mini_timelapse" => [
+		"title" => "View Mini-Timelapse",
+		"icon" => "fa fa-file-video fa-fw",
+		"href" => ALLSKY_MINITIMELAPSE_URL . "' external='true'",
 	],
 	"notFound" => [
 		"headerTitle" => "Unknown page - contact Allsky support",
@@ -248,7 +253,7 @@ function getPageHeaderTitle($p) {
 	if ($t === null) {
 		return null;
 	}
-	return $t['headerTitle'] ?? $pageTitle;
+	return $t['headerTitle'] ?? getPageTitle($p, "");
 }
 function getPageIcon($p) {
 	global $pageInfo;
@@ -257,7 +262,7 @@ function getPageIcon($p) {
 }
 
 // Insert just an "<a href=''..>" with an icon.
-function insertHref($p, $day) {
+function insertHref($p, $day, $displayTitle=false) {
 	global $pageInfo;
 
 	$t = getVariableOrDefault($pageInfo, $p, null);
@@ -280,6 +285,7 @@ function insertHref($p, $day) {
 	} else {
 		echo "<a id='$p' href='$href' title='$title'>";
 		echo "<i class='$icon'></i>";
+		if ($displayTitle) echo " $title";
 		echo "</a>";
 	}
 }
@@ -630,7 +636,8 @@ $allskyStatus = output_allsky_status();
 		<link href="documentation/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 		<link href="documentation/bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
 		<link href="documentation/css/sb-admin-2.css" rel="stylesheet">
-		<script defer src="documentation/js/all.min.js"></script>
+		<link rel="stylesheet" href="allsky/font-awesome/css/all.min.css" type="text/css">
+		<!-- OLD: <script defer src="documentation/js/all.min.js"></script> -->
 		<link href="documentation/css/custom.css" rel="stylesheet">
 		<link rel="shortcut icon" type="image/png" href="documentation/img/allsky-favicon.png">
 		<script src="documentation/js/functions.js"></script>

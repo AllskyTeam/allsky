@@ -681,7 +681,8 @@ function update_old_website_config_file()
 	#	Added "equipmentinfo" setting
 	# Current version: 5 from v2025.xx.xx
 	#	Changed "imageName" to "/current/image.jpg" in local config file.
-	#	imageName is updated in replace_website_placeholders() so not done here.
+	#		imageName is updated in replace_website_placeholders() so not done here.
+	#	timelapse and mini-timelapse icons changed.
 
 	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
 		# These steps bring version 1 up to 2.
@@ -701,6 +702,12 @@ function update_old_website_config_file()
 		for i in "videos" "keograms" "startrails"; do
 			update_array_field "${FILE}" "homePage.leftSidebar" "url" "${i}" "${i}/"
 		done
+
+		# Update timelapse icons
+		update_array_field "${FILE}" "homePage.leftSidebar" "icon" \
+			"fa fa-2x fa-fw fa-play-circle" "fa fa-2x fa-fw fa-video"
+		update_array_field "${FILE}" "homePage.leftSidebar" "icon" \
+			"fa fa-2x fa-fw icon-mini-timelapse" "fa fa-2x fa-fw fa-file-video"
 	fi
 
 	# Try to determine what future changes are needed,

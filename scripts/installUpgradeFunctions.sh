@@ -505,9 +505,9 @@ function replace_website_placeholders()
 			MINI_TLAPSE_DISPLAY_VALUE="true"
 			if [[ ${TYPE} == "local" ]]; then
 				#shellcheck disable=SC2153
-				MINI_TLAPSE_URL_VALUE="/${ALLSKY_IMG_DIR}/mini-timelapse.mp4"
+				MINI_TLAPSE_URL_VALUE="/${ALLSKY_MINITIMELAPSE_URL}"
 			else
-				MINI_TLAPSE_URL_VALUE="mini-timelapse.mp4"
+				MINI_TLAPSE_URL_VALUE="${ALLSKY_MINITIMELAPSE_NAME}"
 			fi
 		fi
 	else

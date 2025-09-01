@@ -128,42 +128,6 @@ STATUS_VARIABLES=()								# Holds the variables and values to save
 ############################################## functions
 
 ####
-check_for_tester()
-{
-return		# Currently this is disabled - not sure it's worth doing.
-
-	local TOLD_FILE  MSG  A
-
-	# shellcheck disable=SC2119
-	if [[ $( get_branch ) != "${ALLSKY_GITHUB_MAIN_BRANCH}" ]]; then
-		DEBUG=1; DEBUG_ARG="--debug"; LOG_TYPE="--log"
-
-		TOLD_FILE="${ALLSKY_HOME}/told"
-		if [[ ! -f ${TOLD_FILE} ]]; then
-			MSG="\nTesters, until we go-live with this release, debugging is automatically on."
-			MSG+="\n\nPlease set Debug Level to 3 during testing."
-			MSG+="\n"
-
-			MSG+="\nMajor changes from prior release:"
-			MSG+="\n * xxxxxx."
-
-			MSG+="\n\nIf you want to continue with the installation, enter:    yes"
-			title="*** MESSAGE FOR TESTERS ***"
-			A=$( whiptail --title "${title}" --inputbox "${MSG}" 26 "${WT_WIDTH}" \
-				3>&1 1>&2 2>&3 )
-			if [[ $? -ne 0 || ${A} != "yes" ]]; then
-				MSG="\nYou must type 'yes' to continue the installation."
-				MSG+="\nThis is to make sure you read it.\n"
-				display_msg info "${MSG}"
-				exit 0
-			fi
-			touch "${TOLD_FILE}"
-		fi
-	fi
-}
-
-
-####
 # The last installation succeeded.
 # See what the user wants to do.
 last_installation_was_ok()
@@ -3461,26 +3425,32 @@ check_for_raspistill()
 
 
 ####
-check_if_buster()
+check_if_supported_OS()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
-	[[ ${SKIP} == "true" ]] && return
-	local MSG
 
-	[[ ${ALLSKY_PI_OS} != "buster" ]] && return
+	local SUPPORTED_OSES="bullseye bookworm"
+	[[ ${SUPPORTED_OSES} =~ "${ALLSKY_PI_OS}" ]] && return
 
-	MSG="WARNING: You are running the older Buster operating system."
-	MSG+="\n\n\n>>> This is the last Allsky release that will support Buster. <<<\n\n"
-	MSG+="\nWe recommend doing a fresh install of Bookworm 64-bit on a clean SD card now."
-	MSG+="\n\nDo you want to continue anyhow?"
-	if ! whiptail --title "${TITLE}" --yesno --defaultno "${MSG}" 20 "${WT_WIDTH}" \
-			3>&1 1>&2 2>&3; then
-		display_msg --logonly info "User running Buster and elected not to continue."
-		exit_installation 0 "${STATUS_NOT_CONTINUE}" "After Buster check."
-	fi
-	display_msg --logonly info "User running Buster and elected to continue."
+	local OS="${ALLSKY_PI_OS^}"		# uppercase 1st letter for looks
+	local MSG="ERROR: Allsky does not support the ${OS} operating system."
+	MSG+="\n\nSupported operating systems include:"
+	for i in ${SUPPORTED_OSES}; do
+		MSG+="\n  ${i^}"
+	done
+	MSG+="\n\nIf you are running an operating system that is NEWER than Bookworm,"
+	MSG+=" please run 'cat /etc/os-release' and copy/paste the results into"
+	MSG+=" a new GitHub Discussion item."
+	MSG+="  The Allsky team will need to test Allsky with the new operating system."
+	MSG+="\n\nIf you are running an older operating system we recommend doing"
+	MSG+=" a fresh install of the Desktop version of Bookworm 64-bit on a clean SD card."
+	whiptail --title "${TITLE}" --msgbox --ok-button "Exit" "${MSG}" 20 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+
+	MSG="Unsupported OS: ${LLSKY_PI_OS}."
+	display_msg --logonly info "${MSG}  Exiting."
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
+	exit_installation 0 "${STATUS_NOT_CONTINUE}" "${MSG}"
 }
 
 
@@ -4041,24 +4011,23 @@ fi
 
 [[ ${FIX} == "true" ]] && do_fix				# does not return
 
-# If an Allsky tester is running this, display a message for the user.
-check_for_tester
-
 
 trap "handle_interrupts" SIGTERM SIGINT
 
-if [[ -z ${FUNCTION} && -s ${STATUS_FILE} && ${RESTORE} == "false" ]]; then
-	# Since there's an installation STATUS_FILE that means this isn't
-	# the first installation of Allsky so we may be able to skip some steps.
-	# Ask the user what they want to do.
-
-	# When most function are called they add a variable
-	# with the function's name set to "true".
-
-	handle_prior_installation
-fi
-
 if [[ -z ${FUNCTION} && ${RESTORE} == "false" ]]; then
+
+	check_if_supported_OS
+
+	if [[ -s ${STATUS_FILE} ]]; then
+		# Since there's an installation STATUS_FILE that means this isn't
+		# the first installation of Allsky so we may be able to skip some steps.
+		# Ask the user what they want to do.
+
+		# When most function are called they add a variable
+		# with the function's name set to "true".
+
+		handle_prior_installation
+	fi
 
 	##### Keep track of current Allsky status
 	mkdir -p "$( dirname "${ALLSKY_STATUS}" )"		# location of status file
@@ -4066,9 +4035,6 @@ if [[ -z ${FUNCTION} && ${RESTORE} == "false" ]]; then
 
 	##### Log some info to help in troubleshooting.
 	log_info
-
-	##### Display a message to Buster users.
-	check_if_buster
 fi
 
 ##### Does a prior Allsky exist? If so, set PRIOR_ALLSKY_STYLE and other PRIOR_* variables.

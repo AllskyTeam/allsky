@@ -2686,7 +2686,7 @@ restore_prior_files()
 
 
 	########## Website files
-	# ALLSKY_ENV is for a remote Website and/or server.
+	# ALLSKY_ENV is for a remote Website and/or server and any private information.
 	# Restore it now because it's potentially written to below.
 	E="$( basename "${ALLSKY_ENV}" )"
 	ITEM="${SPACE}'${E}' file"

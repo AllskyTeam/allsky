@@ -70,14 +70,18 @@ OVERLAY_NAME=""
 # declare -r NO_BUSTER_BASE_VERSION="v2025.xx.xx"		# TODO: Change xxxxxx not used yet
 	# Base of first version with combined configuration files and all lowercase setting names.
 declare -r COMBINED_BASE_VERSION="v2024.12.06"
+
 	# Base of first version with CAMERA_TYPE instead of CAMERA in config.sh and
 	# "cameratype" in the settings file.
 declare -r FIRST_CAMERA_TYPE_BASE_VERSION="v2023.05.01"
+
 	# First Allsky version that used the "version" file.
 	# It's also when ftp-settings.sh moved to the ${ALLSKY_CONFIG} directory.
 declare -r FIRST_VERSION_VERSION="v2022.03.01"
+
 	# Versions before ${FIRST_VERSION_VERSION} didn't have version numbers.
 declare -r PRE_FIRST_VERSION_VERSION="old"
+
 	# A reboot isn't needed if upgrading from this base release.  This changes every release.
 declare -r NO_REBOOT_BASE_VERSION="v2024.12.06"
 
@@ -1884,12 +1888,6 @@ convert_settings_file()			# prior_file, new_file
 					echo -e "\t${FIELD}=${VALUE}" >> "${DELETED_SETTINGS}"
 					;;
 
-				# ===== Deleted in ${COMBINED_BASE_VERSION}.
-				"autofocus" | "background" | "alwaysshowadvanced" | "notificationimages" | \
-				"newexposure" | "experimentalexposure" | "showbrightness")
-					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
-					;;
-
 				# ===== Deleted in ${NO_BUSTER_BASE_VERSION}.
 				"overlaymethod")
 					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
@@ -1906,6 +1904,11 @@ convert_settings_file()			# prior_file, new_file
 					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
 					;;
 
+				# ===== Deleted in ${COMBINED_BASE_VERSION}.
+				"autofocus" | "background" | "alwaysshowadvanced" | "notificationimages" | \
+				"newexposure" | "experimentalexposure" | "showbrightness")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
+					;;
 				"brightness" | "daybrightness" | "nightbrightness")
 					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
 					if [[ ! -f ${DISPLAYED_BRIGHTNESS_MSG} ]]; then
@@ -3203,14 +3206,6 @@ install_Python()
 	# This also allows us to display progress messages.
 	M=" for ${ALLSKY_PI_OS^}"
 	R="-${ALLSKY_PI_OS}"
-	if [[ ${ALLSKY_PI_OS} == "buster" ]]; then
-		# Force pip upgrade, without this installations on Buster fail.
-		pip3 install --upgrade pip > /dev/null 2>&1
-	elif [[ ${ALLSKY_PI_OS} != "bullseye" && ${ALLSKY_PI_OS} != "bookworm" ]]; then
-		display_msg --log warning "Unknown operating system: ${ALLSKY_PI_OS}."
-		M=""
-		R=""
-	fi
 
     display_msg --logonly info "Locating Python dependency file"
 	PREFIX="${ALLSKY_REPO}/requirements"
@@ -3252,23 +3247,6 @@ install_Python()
 	if [[ -d "${ALLSKY_PYTHON_VENV}" && -d "${PRIOR_PYTHON_VENV}" ]]; then
 		display_msg --logonly info "Copying '${PRIOR_PYTHON_VENV}' to '${ALLSKY_PYTHON_VENV}'"
 		cp -arn "${PRIOR_PYTHON_VENV}" "${ALLSKY_PYTHON_VENV}/"
-	fi
-
-	# Astropy is no longer supported on Buster due to its
-	# dependencies requiring later versions of Python.
-	# This *hack* will force the require version of Astropy onto Buster.
-	if [[ ${ALLSKY_PI_OS} == "buster" ]]; then
-		NAME="Astrophy"
-		display_msg --log progress "Forcing build of ${NAME} on ${ALLSKY_PI_OS}."
-		TMP="${ALLSKY_LOGS}/${NAME}.log"
-		{ 
-			PKGs="setuptools setuptools_scm wheel cython==0.29.22"
-			PKGs+=" jinja2==2.10.3 numpy markupsafe==2.0.1 extension-helpers"
-			# shellcheck disable=SC2086
-			pip3 install ${PKGs} && pip3 install --no-build-isolation astropy==4.3.1	
-		} > "${TMP}" 2>&1
-		check_success $? "${NAME} install failed" "${TMP}" "${DEBUG}" ||
-			exit_with_image 1 "${STATUS_ERROR}" "${NAME} install failed."
 	fi
 
 	NAME="Python_dependencies"
@@ -3404,23 +3382,6 @@ log_info()
 	display_msg --logonly info "id = $( id )"
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
-}
-
-
-####
-# If the raspistill command exists on post-Buster releases,
-# rename it so it's not used.
-check_for_raspistill()
-{
-	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
-	local W
-
-	if W="$( which raspistill )" && [[ ${ALLSKY_PI_OS} != "buster" ]]; then
-		display_msg --longonly info "Renaming 'raspistill' on ${ALLSKY_PI_OS}."
-		sudo mv "${W}" "${W}-OLD"
-	fi
-
-	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
 
 
@@ -4090,9 +4051,6 @@ get_desired_locale
 
 ##### Prompt for the camera type
 [[ ${select_camera_type} != "true" ]] && select_camera_type
-
-##### If raspistill exists on post-Buster OS, rename it.
-check_for_raspistill
 
 ##### Get the new host name
 prompt_for_hostname

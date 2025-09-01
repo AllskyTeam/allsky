@@ -181,7 +181,6 @@ struct config {			// for configuration variables
 	bool help							= false;		// User wants usage message displayed
 	bool quietExit						= false;		// Exit without any messages
 	const char *version					= "UNKNOWN";	// Allsky version
-	bool isLibcamera					= true;			// RPi only
 	char const *cmdToUse				= NULL;			// RPi command to us to take images
 	char const *saveDir					= NULL;			// Directory to save images
 	char const *CC_saveFile				= NULL;			// File to save camera controls to

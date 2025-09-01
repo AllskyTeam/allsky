@@ -184,6 +184,11 @@ $pageInfo = [
 		"title" => "Getting Support",
 		"icon" => "fa fa-question fa-fw",
 	],
+	"check_allsky" => [
+		"title" => "Check Allsky",
+		"icon" => "fa fa-check fa-fw",
+		"headerTitle" => "Check Allsky Settings For Issues",
+	],
 	"startrails_settings" => [
 		"title" => "Startrails Settings",
 		"icon" => "fa fa-star fa-fw",
@@ -374,6 +379,10 @@ function insertPage($p) {
 			break;
 		case "support":
 			include_once("includes/$p.php");
+			break;
+		case "check_allsky":
+			include_once("helpers/allsky_config.php");
+			runAllskyConfig("check_allsky", "--fromWebUI");
 			break;
 		case "startrails_settings":
 			include_once("helpers/$p.php");
@@ -705,6 +714,7 @@ $allskyStatus = output_allsky_status();
 					<a href="#" class="submenu-toggle"><i class="fa-solid fa-hammer"></i><span class="menu-text"> Helper Tools</span></a>
 					<ul class="dropdown-menu">
 <?php
+						insertMenuItem('check_allsky', "", "dropdown");
 						insertMenuItem('startrails_settings', "", "dropdown");
 						insertMenuItem('stretch_settings', "", "dropdown");
 						// TODO: uncomment when scripts are created

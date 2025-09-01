@@ -2779,7 +2779,7 @@ restore_prior_files()
 restore_prior_website_files()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
-	local ITEM  D  count  A  MSG
+	local ITEM  D  count  MSG
 
 	# Do this even if we're not restoring Website files.
 	if [[ ! -f ${ALLSKY_ENV} ]]; then
@@ -3430,7 +3430,7 @@ check_if_supported_OS()
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 
 	local SUPPORTED_OSES="bullseye bookworm"
-	[[ ${SUPPORTED_OSES} =~ "${ALLSKY_PI_OS}" ]] && return
+	[[ ${SUPPORTED_OSES} =~ ${ALLSKY_PI_OS} ]] && return
 
 	local OS="${ALLSKY_PI_OS^}"		# uppercase 1st letter for looks
 	local MSG="ERROR: Allsky does not support the ${OS} operating system."
@@ -3446,7 +3446,7 @@ check_if_supported_OS()
 	MSG+=" a fresh install of the Desktop version of Bookworm 64-bit on a clean SD card."
 	whiptail --title "${TITLE}" --msgbox --ok-button "Exit" "${MSG}" 20 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 
-	MSG="Unsupported OS: ${LLSKY_PI_OS}."
+	MSG="Unsupported OS: ${ALLSKY_PI_OS}."
 	display_msg --logonly info "${MSG}  Exiting."
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )

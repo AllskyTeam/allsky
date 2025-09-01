@@ -100,14 +100,14 @@
                 "display": true,
                 "url": "videos/",
                 "title": "Archived Timelapes",
-                "icon": "fa fa-2x fa-fw fa-play-circle",
+                "icon": "fa fa-2x fa-fw fa-video",
                 "style": ""
             },
             {
                 "display": false,
                 "url": "/current/mini-timelapse.mp4",
                 "title": "Mini-timelapse",
-                "icon": "fa fa-2x fa-fw icon-mini-timelapse",
+                "icon": "fa fa-2x fa-fw fa-file-video",
                 "style": ""
             },
             {

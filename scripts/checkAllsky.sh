@@ -347,6 +347,12 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 		echo "FIX: Make sure there are 6 digits after the '#', for example: '#ffffff' for white."
 	fi
 
+	if ! MSG="$( _check_immediate "${S_extraargs}" "${S_extraargs_label}" )" ; then
+		heading "Information"
+		echo -e "${MSG}"
+		echo "FIX: Remove ${WSVs}--immediate${WSVe} from ${WSNs}${S_extraargs_label}${WSNe}."
+	fi
+
 fi		# end of checking for informational items
 
 

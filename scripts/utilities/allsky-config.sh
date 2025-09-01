@@ -73,6 +73,7 @@ function usage_and_exit()
 	echo "      bad_images_info [--show_bad_images]"
 	echo "      check_post_data"
 	echo "      compare_paths --website | --server"
+	echo "      test_upload --website | --server"
 
 	echo "      move_images"
 	echo "      prepare_logs [debug_level]"
@@ -244,36 +245,38 @@ function bad_images_info()
 
 
 #####
-# Display the path on the server of an Allsky Website and
-# display the path on the server give a URL.
-function compare_paths()
+# Generic command to test something about a remote Website or server.
+function website_server_cmd()
 {
-	local COMMAND_TO_EXECUTE="comparePaths.sh"
+	local COMMAND_TO_EXECUTE="${1}"
+	local PROMPT="${2}"
+	local MSG1="${3}"
+	local MSG2="${4}"
+	shift 4
 
 	if [[ $# -eq 0 && -n ${FUNCTION_TO_EXECUTE} ]]; then
 		# Command to run specified on command line but required options not given.
-		E_ "${ME} ${ME_F}: Need to specify all arguments on command line." >&2
-		"${COMMAND_TO_EXECUTE}" --help
+		E_ "${ME} ${ME_F}: Need to specify all arguments on command line.\n" >&2
+#		"${COMMAND_TO_EXECUTE}" --help
 		exit 2
 	fi
 
-	local ARGS
+	local ARGS  P
 
 	if [[ $# -eq 0 && -z ${FUNCTION_TO_EXECUTE} ]]; then
-		PROMPT="\nSelect the machine you want to check:"
 		OPTS=()
 		OPTS+=("--website"	\
-			"check the remote Allsky Website specified in its 'Website URL' setting.")
+			"${MSG1}")
 		OPTS+=("--server"	\
-			"check the remote server specified in its 'Website URL' setting.")
+			"${MSG2}")
 
 		# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
-		ARGS="$( prompt "${PROMPT}" "${OPTS[@]}" )"
+		ARGS="$( prompt "\n${PROMPT}" "${OPTS[@]}" )"
 
 # TODO: Remove this check once "remoteserverurl" is implemented.
 		if [[ ${ARGS} == "--server" ]]; then
-			PROMPT="\nEnter the URL of the server (must begin with 'http' or 'https'):"
-			while ! A="$( getInput "${PROMPT}" )" ; do
+			P="\nEnter the URL of the server (must begin with 'http' or 'https'):"
+			while ! A="$( getInput "${P}" )" ; do
 				echo -e "\nYou must enter a URL."
 			done
 			ARGS+=" ${A}"
@@ -285,6 +288,40 @@ function compare_paths()
 
 	# shellcheck disable=SC2086
 	"${COMMAND_TO_EXECUTE}" ${ARGS}
+}
+
+
+#####
+# Display the path on the server of an Allsky Website and
+# display the path on the server give a URL.
+function compare_paths()
+{
+	website_server_cmd "comparePaths.sh" \
+		"Select the machine you want to check:" \
+		"check the remote Allsky Website specified in its 'Website URL' setting" \
+		"check the remote server specified in its 'Website URL' setting" \
+		"${@}"
+}
+
+
+#####
+# Test a file upload.
+function test_upload()
+{
+	if [[ ${1} == "--help" ]]; then
+		echo
+		W_ "Usage: ${ME}  ${ME_F} --website | --server"
+		echo
+		echo "Test uploading a file to the remote Website or remote server."
+		echo "Any errors will be displayed and (usually) a fix specified."
+		return
+	fi
+
+	website_server_cmd "${ALLSKY_SCRIPTS}/testUpload.sh" \
+		"Select the machine you want to test an upload to:" \
+		"Remote Allsky Website" \
+		"Remote server" \
+		"${@}"
 }
 
 
@@ -684,6 +721,9 @@ X="                       "
 
 	((N++));	C="compare_paths"
 	CMDS+=("${C}"	"$( L "Compare upload and Website paths                         (${C})" )")
+
+	((N++));	C="test_upload"
+	CMDS+=("${C}"	"$( L "Test uploading a file                                    (${C})" )")
 
 
 

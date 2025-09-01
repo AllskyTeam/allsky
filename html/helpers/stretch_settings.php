@@ -1,25 +1,23 @@
 <?php
 
-function stretchSettings() {
+function stretchSettings()
+{
+	global $settings_array;
+	global $pageHeaderTitle, $pageIcon;
 
-$settings_array = readSettingsFile();
+	// Defaults.  Ideally should match what's in compareStretches.sh.
+	$filename = getVariableOrDefault($settings_array, 'filename', "");
+	$image = ALLSKY_CURRENT_DIR . "/$filename";
+	$amounts = "5  10  15  20";
+	$midpoints = "10  30  50";
 
-// Defaults.  Ideally should match what's in compareStretches.sh.
-$filename = getVariableOrDefault($settings_array, 'filename', "");
-$image = ALLSKY_CURRENT_DIR . "/$filename";
-$amounts = "5  10  15  20";
-$midpoints = "10  30  50";
+	$stretch_amount_daytime = getVariableOrDefault($settings_array, 'imagestretchamountdaytime', 0);
+	$stretch_amount_nighttime = getVariableOrDefault($settings_array, 'imagestretchamountnighttime', 0);
 
-$stretch_amount_daytime = getVariableOrDefault($settings_array, 'imagestretchamountdaytime', 0);
-$stretch_amount_nighttime = getVariableOrDefault($settings_array, 'imagestretchamountnighttime', 0);
-
-$cmd = "AM_ALLSKY_CONFIG compare_stretches --html";
-
+	$cmd = "AM_ALLSKY_CONFIG compare_stretches --html";
 ?>
 	<div class="panel panel-allsky">
-		<div class="panel-heading"><i class="fa fa-code fa-star"></i>
-			Help Determine <strong>Image Stretch Settings</strong>
-		</div>
+		<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
 		<div class="panel-body">
 <?php
 			if ($stretch_amount_daytime > 0 || $stretch_amount_nighttime > 0) {

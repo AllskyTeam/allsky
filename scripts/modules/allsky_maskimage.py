@@ -72,7 +72,7 @@ class ALLSKYMASKIMAGE(ALLSKYMODULEBASE):
 
 		except Exception as e:
 			eType, eObject, eTraceback = sys.exc_info()
-			result = f'Module mask image failed on line {eTraceback.tb_lineno} - {e}'
+			result = f'Module Mask Image failed on line {eTraceback.tb_lineno} - {e}'
 			allsky_shared.log(0, f'ERROR: {result}')
            
 		return result

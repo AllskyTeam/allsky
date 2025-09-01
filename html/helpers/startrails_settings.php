@@ -1,36 +1,34 @@
 <?php
 
-function startrailsSettings() {
+function startrailsSettings()
+{
+	global $settings_array;
+	global $pageHeaderTitle, $pageIcon;
 
-global $settings_array;
-// Defaults.  Ideally should match what's in compareStartrails.sh.
-$num_images = 20;
+	// Defaults.  Ideally should match what's in compareStartrails.sh.
+	$num_images = 20;
 
-// Determine yesterday for the default input directory.
-$datetime = new DateTime('now');
-$datetime->modify('-12 hours');
-$input_directory = $datetime->format('Ymd');
+	// Determine yesterday for the default input directory.
+	$datetime = new DateTime('now');
+	$datetime->modify('-12 hours');
+	$input_directory = $datetime->format('Ymd');
 
-// Use the current threshold as the initial value,
-// then add some for the next few values.
-// People will rarely use a value SMALLER than the current value.
-$threshold = getVariableOrDefault($settings_array, 'startrailsbrightnessthreshold', 0.10);
-$thresholds = "$threshold";
-for ($i=1; $i<=7; $i++) {
-	$threshold += 0.03;
-	$thresholds .= "  $threshold";
-}
-$verbose = "false";
+	// Use the current threshold as the initial value,
+	// then add some for the next few values.
+	// People will rarely use a value SMALLER than the current value.
+	$threshold = getVariableOrDefault($settings_array, 'startrailsbrightnessthreshold', 0.10);
+	$thresholds = "$threshold";
+	for ($i=1; $i<=7; $i++) {
+		$threshold += 0.03;
+		$thresholds .= "  $threshold";
+	}
+	$verbose = "false";
 
-
-$cmd = "AM_ALLSKY_CONFIG compare_startrails --html";
-
+	$cmd = "AM_ALLSKY_CONFIG compare_startrails --html";
 ?>
 
 	<div class="panel panel-allsky">
-		<div class="panel-heading"><i class="fa fa-code fa-star"></i>
-			Help Determine <strong>Startrails Settings</strong>
-		</div>
+		<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
 		<div class="panel-body">
 			<p>
 			If your startrails don't have trailed stars,

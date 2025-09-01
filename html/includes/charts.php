@@ -1,7 +1,7 @@
 <?php
 
 function DisplayCharts() {
-
+	global $pageHeaderTitle, $pageIcon;
 }
 
 ?>
@@ -20,7 +20,7 @@ function DisplayCharts() {
 </div>
 
 <div class="panel panel-allsky">
-<div class="panel-heading"><i class="fa-solid fa-chart-line"></i> Charts</div>
+<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
 
 <nav class="navbar navbar-default allsky-charts-navbar">              
   <div class="collapse navbar-collapse" id="oe-module-editor-navbar">

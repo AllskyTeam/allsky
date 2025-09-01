@@ -21,20 +21,19 @@ import re
 import sys
 import time
 import locale
-import locale
 import tempfile
 import shlex
 import board
 import busio
 import importlib
 import requests
-
+import grp
 from pathlib import Path
 from functools import reduce
 from allskyvariables.allskyvariables import ALLSKYVARIABLES
 import pigpio
 import numpy as np
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Any, Tuple
  
 try:
     locale.setlocale(locale.LC_ALL, '')
@@ -240,11 +239,13 @@ def raining():
 
     return raining, rainFlag
 
-def checkAndCreateDirectory(filePath):
-    os.makedirs(filePath, mode = 0o777, exist_ok = True)
+def check_and_create_directory(file_path):
+    checkAndCreateDirectory(file_path)
+def checkAndCreateDirectory(file_path):
+    os.makedirs(file_path, mode = 0o777, exist_ok = True)
 
-def checkAndCreatePath(filePath):
-    path = os.path.dirname(filePath)
+def checkAndCreatePath(file_path):
+    path = os.path.dirname(file_path)
     os.makedirs(path, mode = 0o777, exist_ok = True)
 
 def convertPath(path):
@@ -312,23 +313,20 @@ def setEnvironmentVariable(name, value, logMessage='', logLevel=4):
     return result
 
 
+def setup_for_command_line():
+    setupForCommandLine()
 def setupForCommandLine():
     global ALLSKYPATH
     
-    script_path = f"{ALLSKYPATH}/variables.sh"
-    bash_cmd = f"set -a && source '{script_path}' --force && env"
+    json_variables = f"{ALLSKYPATH}/variables.json"
+    with open(json_variables, 'r') as file:
+        json_data = json.load(file)
 
-    result = subprocess.run(['bash', '-c', bash_cmd], capture_output=True, text=True)
-
-    env_vars = {}
-    for line in result.stdout.splitlines():
-        if '=' in line:
-            key, value = line.split('=', 1)
-            env_vars[key] = value
-            os.environ[key] = value
-            
+    for key, value in json_data.items():
+        os.environ[str(key)] = str(value)
+    
+    VARIABLES = json_data
     readSettings()
-
 
 ####### settings file functions
 def readSettings():
@@ -496,37 +494,120 @@ def create_file_web_server_access(file_name):
             
     return create_and_set_file_permissions(file_name, uid, gid, 0o660)      
 
-def create_sqlite_database(file_name):
-    import grp
-    
+def create_sqlite_database(file_name):    
     #TODO: Change this to the real user once variables.json is working
     web_server_group = 'www-data'
     uid = os.getuid()
     gid = grp.getgrnam(web_server_group).gr_gid
             
     return create_and_set_file_permissions(file_name, uid, gid, 0o660, True)
+
+def run_script(script: str) -> Tuple[int, str]:
+    try:
+        result = subprocess.run(
+            [script],
+            capture_output=True,
+            text=True,
+            check=False
+        )
+        output = result.stdout + result.stderr
+        return result.returncode, output.strip()
+    except FileNotFoundError:
+        return 127, f"Script not found: {script}"
     
+def do_any_files_exist(base_folder: str | Path, filenames: list[str]) -> bool:
+    base_folder = Path(base_folder)
+
+    for name in filenames:
+        file_path = os.path.join(base_folder, name)
+        if is_file_readable(file_path):
+            return True
+    return False
+
+def copy_list(file_names: list, source: str, dest: str) -> bool:
+    result = True
+
+    for file_name in file_names:
+        source_file = os.path.join(source, file_name)
+        if is_file_readable(source_file):
+            copy_file(source_file, dest)
+                
+    return result
+
+def copy_folder(source, dest, uid=None, guid=None, dirs_exist_ok=True) -> bool:
+    result = False
+
+    try:
+        shutil.copytree(source, dest, dirs_exist_ok=dirs_exist_ok)
+        result = True
+    except FileExistsError:
+        result = False
+        
+    return result
+
+def copy_file(source, dest, uid=None, gid=None) -> bool:
+    result = False
     
-def create_and_set_file_permissions(file_name, uid, gid, permissions=None, is_sqlite=False):
+    directory = os.path.dirname(dest)
+    check_and_create_directory(directory)
+    
+    if shutil.copy(source, dest) != "":
+        
+        dest_file = dest
+        if os.path.isdir(dest):
+            file_name = os.path.basename(source)
+            dest_file = os.path.join(dest, file_name)
+            
+        set_permissions(dest_file, uid, gid)
+        result = True
+    
+    return result
+
+def remove_folder(path: str) -> bool:
+    result = False
+    try:
+        folder = Path(path)
+        if folder.exists() and folder.is_dir():
+            shutil.rmtree(folder)
+            result = True
+    except:
+        result = False
+        
+    return result
+
+def set_permissions(file_name, uid=None, gid=None):
+    if uid is None:
+        uid = os.getuid()
+    if gid is None:
+        if (group := get_environment_variable("ALLSKY_WEBSERVER_GROUP")) is None:
+            group = 'www-data'
+        gid = grp.getgrnam(group).gr_gid
+       
+    os.chown(file_name, uid, gid)
+    
+def create_and_set_file_permissions(file_name, uid=None, gid=None, permissions=None, is_sqlite=False, file_data = ''):
     result = True
     if not os.path.exists(file_name):
-        try:
-            if is_sqlite:
-                with sqlite3.connect(file_name, timeout=10) as conn:
-                    pass
-            else:
-                with open(file_name, 'w') as debug_file:
-                    debug_file.write('')
-            os.chown(file_name, uid, gid)
-            if permissions:
-                os.chmod(file_name, permissions)
-        except Exception as e:
-            eType, eObject, eTraceback = sys.exc_info()
-            log(0, f'ERROR: Unable to create {file_name} with web server access. {eTraceback.tb_lineno} - {e}')
-            result = False
+        directory = os.path.dirname(file_name)
+        check_and_create_directory(directory)
+
+    try:
+        if is_sqlite:
+            with sqlite3.connect(file_name, timeout=10) as conn:
+                pass
+        else:
+            with open(file_name, 'w') as debug_file:
+                debug_file.write(file_data)
+        set_permissions(file_name, uid, gid)
+        if permissions:
+            os.chmod(file_name, permissions)
+    except Exception as e:
+        eType, eObject, eTraceback = sys.exc_info()
+        log(0, f'ERROR: Unable to create {file_name} with web server access. {eTraceback.tb_lineno} - {e}')
+        result = False
 
     return result
-    
+
 def isFileWriteable(fileName):
     """ Check if a file exists and can be written to """
     if os.path.exists(fileName):
@@ -586,6 +667,68 @@ def validateExtraFileName(params, module, fileKey):
     extraDataFilename = fileName + fileExtension
                     
     params[fileKey] = extraDataFilename
+
+def install_apt_packages(pkg_file: str | Path, log_file: str | Path) -> bool:
+    pkg_file = Path(pkg_file)
+    log_file = Path(log_file)
+
+    if not pkg_file.exists():
+        raise FileNotFoundError(f"Package file not found: {pkg_file}")
+
+    with pkg_file.open("r", encoding="utf-8") as f:
+        packages = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+
+    log_folder = os.path.dirname(log_file)
+    check_and_create_directory(log_folder)  
+    
+    failures = []
+    with log_file.open("a", encoding="utf-8") as log:
+        for pkg in packages:
+            log.write(f"\n--- Installing {pkg} ---\n")
+            result = subprocess.run(
+                ["sudo", "apt-get", "install", "-y", pkg],
+                stdout=log,
+                stderr=log
+            )
+            if result.returncode != 0:
+                failures.append(pkg)
+                log.write(f"--- Failed {pkg} ---\n")
+            else:
+                log.write(f"--- Success {pkg} ---\n")
+
+    return len(failures) == 0
+
+def install_requirements(req_file: str | Path, log_file: str | Path) -> bool:
+
+    req_file = Path(req_file)
+    log_file = Path(log_file)
+
+    if not req_file.exists():
+        raise FileNotFoundError(f"Requirements file not found: {req_file}")
+
+    with req_file.open("r", encoding="utf-8") as f:
+        packages = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+
+    log_folder = os.path.dirname(log_file)
+    check_and_create_directory(log_folder)  
+        
+    failures = []
+    with log_file.open("a", encoding="utf-8") as log:
+        for pkg in packages:
+            log.write(f"\n--- Installing {pkg} ---\n")
+            result = subprocess.run(
+                [sys.executable, "-m", "pip", "install", pkg],
+                stdout=log,
+                stderr=log
+            )
+            if result.returncode != 0:
+                failures.append(pkg)
+                log.write(f"--- Failed {pkg} ---\n")
+            else:
+                log.write(f"--- Success {pkg} ---\n")
+
+    return len(failures) == 0
+
 
 def check_mysql_connection(host, user, password, database=None, port=3306):
     try:
@@ -663,8 +806,9 @@ def update_sqlite_database(structure, extra_data):
                         conn.commit()
                         # Optional: Change group if allowed
     except Exception as e:
+        me = os.path.basename(__file__)
         eType, eObject, eTraceback = sys.exc_info()            
-        log(0, f'ERROR: Module update_database failed on line {eTraceback.tb_lineno} - {e}')
+        log(0, f'ERROR: update_sqlite_database failed on line {eTraceback.tb_lineno} in {me} - {e}')
         
 def update_mysql_database(structure, extra_data, secret_data):
     try:
@@ -693,47 +837,49 @@ def update_mysql_database(structure, extra_data, secret_data):
                     conn.close()
 
     except Exception as e:
+        me = os.path.basename(__file__)
         eType, eObject, eTraceback = sys.exc_info()            
-        log(0, f'ERROR: Module update_database failed on line {eTraceback.tb_lineno} - {e}')
+        log(0, f'ERROR: update_mysql_database failed on line {eTraceback.tb_lineno} in {me} - {e}')
 
 def save_extra_data(file_name, extra_data, source='', structure={}, custom_fields={}):
     saveExtraData(file_name, extra_data, source, structure, custom_fields)
 def saveExtraData(file_name, extra_data, source='', structure={}, custom_fields={}):
-	"""
-	Save extra data to allows the overlay module to display it.
+    """
+    Save extra data to allows the overlay module to display it.
 
-	Args:
-		file_name (string): The name of the file to save.
-		extra_data (object): The data to save.
+    Args:
+        file_name (string): The name of the file to save.
+        extra_data (object): The data to save.
 
-	Returns:
-		Nothing
-	"""
-	try:
-		extra_data_path = getExtraDir()
-		if extra_data_path is not None:        
-			checkAndCreateDirectory(extra_data_path)
+    Returns:
+        Nothing
+    """
+    try:
+        extra_data_path = getExtraDir()
+        if extra_data_path is not None:        
+            checkAndCreateDirectory(extra_data_path)
 
-			file_extension = Path(file_name).suffix
-			extra_data_filename = os.path.join(extra_data_path, file_name)
-			with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
-				if file_extension == '.json':
-					extra_data = format_extra_data_json(extra_data, structure, source)
-				if len(custom_fields) > 0:
-					for key, value in custom_fields.items():
-						extra_data[key] = value
-				extra_data = json.dumps(extra_data, indent=4)
-				temp_file.write(extra_data)
-				temp_file_name = temp_file.name
-				os.chmod(temp_file_name, 0o644)
+            file_extension = Path(file_name).suffix
+            extra_data_filename = os.path.join(extra_data_path, file_name)
+            with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
+                if file_extension == '.json':
+                    extra_data = format_extra_data_json(extra_data, structure, source)
+                if len(custom_fields) > 0:
+                    for key, value in custom_fields.items():
+                        extra_data[key] = value
+                extra_data = json.dumps(extra_data, indent=4)
+                temp_file.write(extra_data)
+                temp_file_name = temp_file.name
+                os.chmod(temp_file_name, 0o644)
 
-				shutil.move(temp_file_name, extra_data_filename)
+                shutil.move(temp_file_name, extra_data_filename)
 
-				if 'database' in structure:
-					update_database(structure, extra_data)
-	except Exception as e:
-		eType, eObject, eTraceback = sys.exc_info()            
-		log(0, f'ERROR: Module saveExtraData failed on line {eTraceback.tb_lineno} - {e}')
+                if 'database' in structure:
+                    update_database(structure, extra_data)
+    except Exception as e:
+        me = os.path.basename(__file__)
+        eType, eObject, eTraceback = sys.exc_info()            
+        log(0, f'ERROR: saveExtraData failed on line {eTraceback.tb_lineno} in {me} - {e}')
 
 def format_extra_data_json(extra_data, structure, source):
     result = extra_data
@@ -802,7 +948,7 @@ def load_extra_data_file(file_name, type=''):
                     with open(extra_data_filename, 'r') as file:
                         result = json.load(file)
                 except json.JSONDecodeError:
-                    log(0, f'Error reading extra_data_filename')
+                    log(0, f'ERROR: cannot read {extra_data_filename}.')
             
             if file_extension == '.txt':
                 pass
@@ -901,7 +1047,29 @@ def cleanup_extra_data_file(file_name, delete_age=600):
     else:
         log(4, f'ERROR: Cannot check extra data file {file_name} as it is not writeable')
             
-    
+def remove_path(path):
+    result = False
+    if os.path.isfile(path):
+        try:
+            os.remove(path)
+            result = True
+        except FileNotFoundError:
+            pass
+        except PermissionError:
+            pass
+        
+    if os.path.isdir(path):
+        folder = Path(path)
+        try:
+            shutil.rmtree(folder)
+            result = True
+        except FileNotFoundError:
+            pass
+        except PermissionError:
+            pass
+                
+    return result
+   
 def cleanup_module(moduleData):
     cleanupModule(moduleData)
 def cleanupModule(moduleData):
@@ -1219,9 +1387,9 @@ def mask_image(image, mask_file_name=''):
             log(4, f'INFO: Mask {mask_file_name} applied')
                 
     except Exception as e:
+        me = os.path.basename(__file__)
         eType, eObject, eTraceback = sys.exc_info()
-        result = f'mask_image failed on line {eTraceback.tb_lineno} - {e}'
-        log(0,f'ERROR: {result}')
+        log(0, f'ERROR: mask_image failed on line {eTraceback.tb_lineno} in {me} - {e}')
 
        
     return output
@@ -1421,12 +1589,11 @@ def get_ecowitt_data(api_key, app_key, mac_address, temp_unitid=1, pressure_unit
                 result = f'Got error from the Ecowitt API. Response code {response.status_code}'
                 log(0,f'ERROR: {result}')
         except Exception as e:
+            me = os.path.basename(__file__)
             eType, eObject, eTraceback = sys.exc_info()
-            result = f'ERROR: Failed to read data from Ecowitt {eTraceback.tb_lineno} - {e}'
-            log(0, result)
+            log(0, f'ERROR: Failed to read data from Ecowitt on line {eTraceback.tb_lineno} in {me} - {e}')
     else:
-        result = 'Missing Ecowitt Application Key, API Key or MAC Address'
-        log(0, f'ERROR: {result}')    
+        log(0, 'ERROR: Missing Ecowitt Application Key, API Key or MAC Address')
     
     return result
 
@@ -1566,9 +1733,9 @@ def get_ecowitt_local_data(address, password=None):
             result['lightning']['count'] = parse_val(lightning.get("count"), int)
 
     except Exception as e:
+        me = os.path.basename(__file__)
         eType, eObject, eTraceback = sys.exc_info()
-        result = f'ERROR: Failed to read live data from the local Ecowitt gateway {eTraceback.tb_lineno} - {e}'
-        log(0, result)
+        log(0, f'ERROR: Failed to read live data from the local Ecowitt gateway on line {eTraceback.tb_lineno} in {me} - {e}')
 
     return result
 
@@ -1595,9 +1762,9 @@ def get_hass_sensor_value(ha_url, ha_ltt, ha_sensor):
                     log(0, f'ERROR: Unable to read {ha_sensor} from {ha_url}. Error code {response.status_code}')
                 
     except Exception as e:
+        me = os.path.basename(__file__)
         eType, eObject, eTraceback = sys.exc_info()
-        error = f'ERROR: Failed to read data from Homeassistant {eTraceback.tb_lineno} - {e}'
-        log(0, error)
+        log(0, f'ERROR: Failed to read data from Homeassistant {eTraceback.tb_lineno} in {me} - {e}')
         result = None
 
     return result
@@ -1633,3 +1800,87 @@ def create_device(import_name: str, class_name: str, bus_number: int, i2c_addres
         return cls(i2c, int(i2c_address, 0))
     else:
         return cls(i2c)
+
+def get_flows_with_module(module_name):
+
+    folder = Path(ALLSKY_MODULES)
+    found: Dict[str, Any] = {}
+
+    for file in folder.glob("*.json"):
+        if not file.name.endswith("-debug.json"):
+            if file.name.startswith("postprocessing_"):
+                try:
+                    with file.open("r", encoding="utf-8") as f:
+                        data = json.load(f)
+
+                    if module_name in data:
+                        found[file.name] = data
+
+                except (json.JSONDecodeError, OSError) as e:
+                    pass
+
+    return found
+
+def to_bool(v: bool | str) -> bool:
+    if isinstance(v, bool):
+        return v
+    if v is None:
+        return False
+    return str(v).strip().lower() in ("true", "1", "yes", "y")
+
+def _to_list(v: str | list | None) -> list | str | None:
+    if isinstance(v, str) and "," in v:
+        return [x.strip() for x in v.split(",")]
+    return v
+
+def atomic_write_json(path: Path, data: Dict[str, Any]) -> None:
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with tmp.open("w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
+        f.write("\n")
+    os.replace(tmp, path)
+
+def save_secrets_file(env_data: Dict[str, Any]) -> None:
+    file_path = Path(os.path.join(ALLSKYPATH, 'env.json'))
+    atomic_write_json(file_path, env_data)
+    
+def load_secrets_file() -> Dict[str, Any]:
+    file_path = Path(os.path.join(ALLSKYPATH, 'env.json'))
+    env_data: Dict[str, Any] = {}
+    if file_path.is_file():
+        with file_path.open("r", encoding="utf-8") as f:
+            try:
+                env_data = json.load(f) or {}
+            except json.JSONDecodeError:
+                env_data = {}
+                
+    return env_data
+                        
+def save_flows_with_module(flows: Dict[str, Any], module_name: str, debug:bool = False, log_level:int = 4) -> None:
+    log_level = LOGLEVEL
+    if debug:
+        log_level = 4    
+    #try:
+    for flow, flow_data in flows.items():
+        file_path = os.path.join(ALLSKY_MODULES, flow)
+        with open(file_path, 'w', encoding='utf-8') as file:
+            json.dump(flow_data, file, indent=4)
+#except Exception as e:
+    #    log(0, f'ERROR: Failed to save flows for {module_name} - {e}')
+    
+
+def normalize_argdetails(ad):
+    norm = {}
+    for key, details in (ad or {}).items():
+        norm[key] = {}
+        for k, v in (details or {}).items():
+            if k in ("required", "secret"):
+                norm[key][k] = to_bool(v)
+            elif k == "type" and isinstance(v, dict):
+                norm[key][k] = {kk: _to_list(vv) for kk, vv in v.items()}
+            else:
+                norm[key][k] = v
+    return norm
+
+def compare_flow_and_module(flow_ad, code_ad):
+    return  normalize_argdetails(flow_ad) != normalize_argdetails(code_ad)    

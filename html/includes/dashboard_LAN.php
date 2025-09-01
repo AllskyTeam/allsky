@@ -2,10 +2,10 @@
 
 function DisplayDashboard_LAN()
 {
-
+	global $pageHeaderTitle, $pageIcon;
 ?>
 	<div class="panel panel-allsky">
-		<div class="panel-heading"><i class="fa fa-network-wired fa-fw"></i> LAN Dashboard</div>
+		<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
 <?php
 	$num_interfaces = 0;
 

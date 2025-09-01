@@ -2,6 +2,8 @@
 function DisplayOverlay($image_name)
 {
 	global $settings_array;
+	global $pageHeaderTitle, $pageIcon;
+
 	$displayMaskTab = false;		// Should the "Mask" tab appear?
 	$numTabs = 1 + ($displayMaskTab ? 1 : 0);
 	$myStatus = new StatusMessages();
@@ -78,7 +80,7 @@ function DisplayOverlay($image_name)
                     </div>
                 </div>
             </div> 
-            <div class="panel-heading"><i class="fa fa-code fa-edit"></i> Overlay Editor</div>
+			<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
                 <p id="editor-messages"><?php $myStatus->showMessages(); ?></p>
                 <nav class="navbar navbar-default">
                     <div class="container-fluid">

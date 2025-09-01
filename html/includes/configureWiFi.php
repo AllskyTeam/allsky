@@ -2,6 +2,8 @@
 
 function DisplayWPAConfig(){
 	global $page;
+	global $pageHeaderTitle, $pageIcon;
+
 	$debug = false;
 	$allowOpen = true;		// allow connecting to "open" SSIDs?  TODO: Any reason NOT to?
 	$myStatus = new StatusMessages();
@@ -277,7 +279,7 @@ if ($debug) { echo "<br><pre>wpa_cli scan_results:<br>"; print_r($scan_return); 
 ?>
 
 		<div class="panel panel-allsky">
-		<div class="panel-heading"><i class="fa fa-wifi fa-fw"></i> Configure Wi-Fi</div>
+		<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
 		<div class="panel-body">
 			<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
 			<h4>Wi-Fi SSIDs</h4>

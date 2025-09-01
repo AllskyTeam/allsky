@@ -11,6 +11,7 @@
 	<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
 	<link rel="stylesheet" type="text/css" href="css/animate.min.css">
 	<link rel="stylesheet" type="text/css" href="css/allsky.css">
+	<link rel="stylesheet" type="text/css" href="css/allsky_font_icons.css">
 	<!-- From: https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js -->
 	<script src="js/jquery.min.js"></script>
 	<!-- From: https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js -->

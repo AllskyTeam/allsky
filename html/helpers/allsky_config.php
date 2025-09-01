@@ -9,7 +9,7 @@ function runAllskyConfig($cmd, $args="")
 		<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
 		<div class="panel-body">
 <?php
-			$cmd = "'" . ALLSKY_SCRIPTS . "/allsky-config' $cmd";
+			$cmd = ALLSKY_SCRIPTS .  "/allsky-config $cmd";
 			exec("$cmd $args 2>&1", $result, $return_val);
 			echo "<script>console.log('[$cmd] returned $return_val')</script>";
 			echo implode("\n", $result);

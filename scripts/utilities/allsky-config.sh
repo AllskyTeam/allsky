@@ -75,6 +75,7 @@ function usage_and_exit()
 	echo "      compare_paths --website | --server"
 	echo "      test_upload --website | --server"
 
+	echo "      check_allsky [see --help for arguments]"
 	echo "      move_images"
 	echo "      prepare_logs [debug_level]"
 
@@ -234,6 +235,14 @@ function move_images()
 	moveImages.sh "${@}"
 }
 
+
+#####
+# Check Allsky
+function check_allsky()
+{
+	# shellcheck disable=SC2068
+	"${ALLSKY_SCRIPTS}/checkAllsky.sh" "${@}"
+}
 
 #####
 # Move ALLSKY_IMAGES to a new location.
@@ -729,6 +738,9 @@ X="                       "
 
 #####
 	CMDS+=("header"	      "Misc. Commands" )
+
+	((N++));	C="check_allsky"
+	CMDS+=("${C}"	"$( L "Check Allsky for setting errors and warnings             (${C})" )")
 
 	((N++));	C="move_images"
 	CMDS+=("${C}"	"$( L "Move ~/allsky/images to a different location             (${C})" )")

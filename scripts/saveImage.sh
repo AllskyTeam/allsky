@@ -472,7 +472,7 @@ if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${SAVE_IMAGE} == "true" && ${R
 	upload_all --remote-web --remote-server "${FILE_TO_UPLOAD}" "" "${ALLSKY_MINITIMELAPSE_NAME}" "MiniTimelapse"
 	RET=$?
 	if [[ ${RET} -eq 0 && ${S_minitimelapseuploadthumbnail} == "true" ]]; then
-		UPLOAD_THUMBNAIL_NAME="{ALLSKY_MINITIMELAPSE_NAME/.mp4/.jpg}"
+		UPLOAD_THUMBNAIL_NAME="${ALLSKY_MINITIMELAPSE_NAME/.mp4/.jpg}"
 		UPLOAD_THUMBNAIL="${ALLSKY_CURRENT_DIR}/${UPLOAD_THUMBNAIL_NAME}"
 		# Create the thumbnail for the mini timelapse, then upload it.
 		rm -f "${UPLOAD_THUMBNAIL}"

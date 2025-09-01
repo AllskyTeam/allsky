@@ -220,7 +220,7 @@ function determineCommandToUse()
 	local PREFIX="${2}"					# Only used if calling doExit().
 	local IGNORE_ERRORS="${3:-false}"	# True if just checking
 
-	local CRET  RET  MSG  EXIT_MSG   CMD_FOUND="false"
+	local RET  MSG  EXIT_MSG   CMD_FOUND="false"
 	local NO_CMD_FOUND="Can't determine what command to use for RPi camera;"
 
 	CMD_TO_USE_="rpicam-still"
@@ -308,10 +308,7 @@ function get_connected_cameras_info()
 	# Keep output similar to RPi:
 	#		ZWO  camera_number camera_model
 	# for each camera found.
-# TODO: Is the order they appear from lsusb the same as the camera number?
 	# lsusb output:
-	#	Bus 002 Device 002: ID 03c3:290b				(Buster)
-	#		iProduct 2 ASI290MM
 	#	Bus 002 Device 002: ID 03c3:290b ZWO ASI290MM	(newer OS)
 	#	1   2   3       4   5  6         7   8
 	# or, for really old cameras:
@@ -341,14 +338,6 @@ function get_connected_cameras_info()
 					printf("ZWO\t%d\t%s\n", num++, model);
 					model = "<found>";		# This camera was output
 				}
-			} else if ($1 == "iProduct" && $3 != "(error)") {
-				if (model != "<found>") {
-					model = $3;
-					for (i=4; i<= NF; i++) model = model " " $i
-					printf("ZWO\t%d\t%s\n", num++, model);
-				}
-				model = "";		# This camera was output
-			}
 		}'
 }
 
@@ -1328,9 +1317,8 @@ function indent()
 PYTHON_VENV_ACTIVATED="false"
 function activate_python_venv()
 {
-
-# TODO: will need to change when the OS after bookworm is released
-# If our next release is out, it won't support buster so may be check  != bullseye  ?
+	# TODO: will need to change when the OS after Bookworm is released.
+	# Maybe check for != bullseye  ?
 
 	local ACTIVATE="${ALLSKY_PYTHON_VENV}/bin/activate"
 

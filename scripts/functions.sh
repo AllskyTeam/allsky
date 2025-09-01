@@ -220,7 +220,7 @@ function determineCommandToUse()
 	local PREFIX="${2}"					# Only used if calling doExit().
 	local IGNORE_ERRORS="${3:-false}"	# True if just checking
 
-	local RET  MSG  EXIT_MSG   CMD_FOUND="false"
+	local RET  MSG  EXIT_MSG
 	local NO_CMD_FOUND="Can't determine what command to use for RPi camera;"
 
 	CMD_TO_USE_="rpicam-still"

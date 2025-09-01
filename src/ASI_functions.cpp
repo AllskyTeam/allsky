@@ -22,7 +22,7 @@ char *skipType(char *);
 struct CONNECTED_CAMERAS
 {
 	int cameraID;
-	char Type[CC_TYPE_SIZE];				// ZWO or RPi
+	char Type[CC_TYPE_SIZE];			// ZWO or RPi
 	char Name[CAMERA_NAME_SIZE];		// camera name, e.g., "ASI290MC", "HQ"
 	char Sensor[FULL_SENSOR_SIZE];		// full sensor name (what --list-cameras returns)
 
@@ -324,7 +324,6 @@ typedef ASI_ID ASI_SN;
 
 // We vary somewhat from ZWO here:
 //	* We must hard-code the values since we can't query the camera.
-//	* Some values differ between raspistill and libcamera.
 
 ASI_CAMERA_INFO ASICameraInfoArray[] =
 {
@@ -429,7 +428,8 @@ int const argumentNamesSize =  sizeof(argumentNames) / sizeof(argumentNames[0]);
 #define MAX_NUM_CONTROL_CAPS (CONTROL_TYPE_END)
 ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 {
-	// Each camera model has 2 entries, one for libcamera and one for raspistill.
+	// Each camera model has 1 entry for libcamera.
+	// If a newer camera package is ever release an entry for it needs to be added.
 	// They need to be in that order and in the same order as in ASICameraInfoArray[].
 
 	// The "Name" must match what ZWO uses; "" names means not supported.
@@ -451,19 +451,8 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },	// Signals end of list
 	},
-	{ // raspistill
-		{ "Gain", "Gain", 16.0, 1.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
-		{ "Exposure", "Exposure Time (us)", 230 * US_IN_SEC, 1, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
-		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
-		{ "WB_B", "White balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
-		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
-		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1.0, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
-		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 230 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
-		{ "ExposureCompensation", "Exposure Compensation", 10, -10, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
-		{ "Saturation", "Saturation", 100, -100, 0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
-		{ "Contrast", "Contrast", 100, -100, 0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
-		{ "Sharpness", "Sharpness", 100, -100, 0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
-
+	{
+		// Future new software lines go here...
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
 
@@ -482,7 +471,8 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
-	{ // raspistill.  Not supported.
+	{
+		// Future new software lines go here...
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
 
@@ -501,7 +491,8 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
-	{ // raspistill.  Not supported.
+	{
+		// Future new software lines go here...
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
 
@@ -520,7 +511,8 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
-	{ // raspistill.  Not supported.
+	{
+		// Future new software lines go here...
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
 
@@ -539,7 +531,8 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
-	{ // raspistill.  Not supported.
+	{
+		// Future new software lines go here...
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
 
@@ -559,7 +552,8 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
-	{ // raspistill.  Not supported.
+	{
+		// Future new software lines go here...
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
 
@@ -579,7 +573,8 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
-	{ // raspistill.  Not supported.
+	{
+		// Future new software lines go here...
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
 
@@ -600,7 +595,8 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
-	{ // raspistill.  Not supported.
+	{
+		// Future new software lines go here...
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
 
@@ -620,7 +616,8 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
-	{ // raspistill.  Not supported.
+	{
+		// Future new software lines go here...
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
 
@@ -641,7 +638,8 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
-	{ // OneInchEye IMX283, raspistill.  Not supported.
+	{
+		// Future new software lines go here...
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
 
@@ -672,7 +670,7 @@ int getCameraNumber()
 	int num_RPiCameras = 0;
 
 	enum LINE_TYPE {
-		LT_camera, LT_libcamera, LT_raspistill
+		LT_camera, LT_libcamera, LT_NEW_SOFTWARE
 	} lineType;
 
 if (0) {
@@ -738,13 +736,13 @@ if (0) {
 			lineType = LT_libcamera;
 			max_tokens = controlCapsTokens;
 		}
-		else if (strcmp(lt, "raspistill") == 0)
+		else if (strcmp(lt, "NEW_SOFTWARE") == 0)
 		{
 			// Ignore lines not for this command.
 			if (CG.isLibcamera)
 				continue;
 
-			lineType = LT_raspistill;
+			lineType = LT_NEW_SOFTWARE;
 			max_tokens = controlCapsTokens;
 		}
 		else
@@ -817,7 +815,7 @@ if (0) {
 						inLibcamera = true;
 						inControlCaps = true;
 					}
-					else if (lineType == LT_raspistill)
+					else if (lineType == LT_NEW_SOFTWARE)
 					{
 						inLibcamera = false;
 						inControlCaps = true;
@@ -929,7 +927,7 @@ if (numTokens > 1) Log(5, ", inCamera=%s, inControlCaps=%s, inLibcamera=%s\n", y
 				RPiCameras[thisIndex].CameraInfo = &ASICameraInfoArray[actualIndex];
 				// There are TWO entries in ControlCapsArray[] for every
 				// entry in ASICameraInfoArray[].
-				// The first of each pair is for libcamera, the second is for raspistill.
+				// The first of each pair is for libcamera, the second is for NEW_SOFTWARE.
 				// We need to return the index into ControlCapsArray[].
 				Log(4, "Saving sensor [%s] from ASICameraInfoArray[%d] to RPiCameras[%d],",
 					sensor, actualIndex, thisIndex);

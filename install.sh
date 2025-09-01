@@ -421,13 +421,16 @@ setup_rpi_supported_cameras()
 
 	if [[ ! -f ${ALLSKY_RPi_SUPPORTED_CAMERAS} ]]; then
 		local B="$( basename "${ALLSKY_RPi_SUPPORTED_CAMERAS}" )"
+
+		# "libcamera" is the only software packages supported as of 2025,
+		# but leave the code to check for any future new software.
 		if [[ -z ${CMD} ]]; then
 			notCMD="xxxxx"		# won't match anything
 			CMD="all"
-		elif [[ ${CMD} == "raspistill" ]]; then
+		elif [[ ${CMD} == "NEW-TBD-SOFTWARE" ]]; then
 			notCMD="libcamera"
 		else
-			notCMD="raspistill"
+			notCMD="NEW-TBD-SOFTWARE"
 		fi
 
 		local MSG="Creating ${ALLSKY_RPi_SUPPORTED_CAMERAS} with '${CMD}' entries."

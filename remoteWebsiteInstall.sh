@@ -52,26 +52,7 @@ REMOTE_DIR="$( settings ".remotewebsiteimagedir" "${ALLSKY_SETTINGS_FILE}" )"
 REMOTE_PROTOCOL="$( settings ".remotewebsiteprotocol" "${ALLSKY_SETTINGS_FILE}" )"
 REMOTE_PROTOCOL="${REMOTE_PROTOCOL,,}"		# convert to lowercase
 
-if [[ ${REMOTE_PROTOCOL} == "sftp" || ${REMOTE_PROTOCOL} == "ftp" || ${REMOTE_PROTOCOL} == "ftps" ]]; then
-	LFTP_CMDS="set dns:fatal-timeout 10; set net:max-retries 2; set net:timeout 10"
-	X="$( settings ".REMOTEWEBSITE_LFTP_COMMANDS" "${ALLSKY_ENV}" )"
-	[[ -n ${X} ]] && LFTP_CMDS+="; ${X}"
-else
-	#### TODO: this script needs to support ALL protocols, not just *ftp*.
-	# When it does, remove this code.
-	exec >&2
-	echo -e "\n\n"
-	echo    "************* NOTICE *************"
-	echo    "This script currently only supports ftp protocols."
-	echo    "Support for the '${REMOTE_PROTOCOL}' protocol will be added in"
-	echo    "a future release."
-	echo -e "\n"
-	echo    "In the meantime, if you have an existing remote Allsky Website,"
-	echo    "it should continue to work."
-	echo -e "\n"
 
-	exit 0
-fi
 
 # Titles for various dialogs
 # don't use:  DIALOG_BACK_TITLE="Allsky Remote Website Installer"
@@ -1080,6 +1061,43 @@ done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
+if [[ ${REMOTE_PROTOCOL} == "sftp" || ${REMOTE_PROTOCOL} == "ftp" || ${REMOTE_PROTOCOL} == "ftps" ]]; then
+	LFTP_CMDS="set dns:fatal-timeout 10; set net:max-retries 2; set net:timeout 10"
+	X="$( settings ".REMOTEWEBSITE_LFTP_COMMANDS" "${ALLSKY_ENV}" )"
+	[[ -n ${X} ]] && LFTP_CMDS+="; ${X}"
+
+elif [[ ${SKIP_UPLOAD} == "false" ]]; then
+	#### TODO: this script needs to support ALL protocols, not just *ftp*.
+	# When it does, remove this code and add "mirror" code to other protocols.
+	exec >&2
+	echo
+	echo
+	echo    "************* NOTICE *************"
+	echo    "This script currently only supports ftp protocols."
+	echo    "Support for the '${REMOTE_PROTOCOL}' protocol will be added in the future."
+	echo
+	echo
+
+	echo    "***** WORKAROUND:"
+	echo    "If you are able to manually copy the files and directories in"
+	echo    "'${ALLSKY_WEBSITE}' to the remote Website, do that, then run this on the Pi:"
+	echo    "   cd ~/allsky"
+	echo    "   ./${ME} --skipupload"
+	echo
+	echo    "If that is successful and you can access the remote Website,"
+	echo	"remove these files from the server:"
+	for i in "${OLD_FILES_TO_REMOVE[@]}"; do
+		[[ ${i} != "${ALLSKY_WEBSITE_CONFIGURATION_NAME}" ]] && echo "   ${i}"
+	done
+	echo
+	echo    "*****"
+	echo
+	echo    "If you are unable to perform the WORKAROUND and"
+	echo    "you have an existing remote Allsky Website, it should continue to work."
+	echo
+
+	exit 0
+fi
 display_msg --logonly info "STARTING INSTALLATION.\n"
 
 pre_install_checks

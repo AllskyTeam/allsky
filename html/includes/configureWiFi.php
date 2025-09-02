@@ -1,6 +1,10 @@
 <?php
 
-function DisplayWPAConfig(){
+define('RASPI_WPA_SUPPLICANT_CONFIG', '/etc/wpa_supplicant/wpa_supplicant.conf');
+define('RASPI_WPA_CTRL_INTERFACE', '/var/run/wpa_supplicant');
+
+function DisplayWPAConfig()
+{
 	global $page;
 	global $pageHeaderTitle, $pageIcon;
 
@@ -196,78 +200,87 @@ if ($debug) { echo "<br>tmp_networks=<pre>"; print_r($tmp_networks); echo "</pre
 		}
 	}
 
-	// Scan for all networks.
-	exec( 'sudo wpa_cli scan' );
-	sleep(2);
-	$cmd = 'sudo wpa_cli scan_results';
-	exec( $cmd, $scan_return );
-if ($debug) { echo "<br><pre>wpa_cli scan_results:<br>"; print_r($scan_return); echo "</pre>"; }
-	for( $shift = 0; $shift < 2; $shift++ ) {
-		// Skip first two header lines
-		array_shift($scan_return);
-	}
-	// display output
 	$have_multiple = false;
-	static $note = " <span style='color: red; font-weight: 900; font-size: 110%;'>*</span>";
-	// $networks contains the prior-configured SSID(s).
-	// New SSIDs are added to $networks.
-	if (! isset($networks)) $networks = [];	// eliminates warning messages in log file
 
-	// Walk through each scanned network.
-	$numScannedNetworks = 0;
-	$noSSID = "";
-	$onLine = 0;
-	foreach( $scan_return as $network ) {
-		$onLine++;
-		$arrNetwork = preg_split("/[\t]+/",$network);
-		// fields:		bssid,   frequency, signal level, flags,    ssid 
-		// fields:		         channel                  protocol
-		// field #:		0        1          2             3         4
-		$ssid = getVariableOrDefault($arrNetwork, 4, null);
-		if ($ssid !== null) {
-			$numScannedNetworks += 1;
-			$channel = ConvertToChannel($arrNetwork[1]);
-			if (substr($ssid, 0, 4) == "\\x00") $ssid = "Unknown (\\x00)";
-			if (array_key_exists($ssid, $networks)) {
-				// Already configured SSID.
-				$is_new = false;
-				$networks[$ssid]['visible'] = true;
+	// Scan for all networks.
+	$cmd = 'sudo wpa_cli scan';
+	exec( $cmd, $not_used, $return_code );
+	if ($return_code !== 0) {
+		$msg = "<strong>Check that Wi-Fi is turned on</strong> - '$cmd' failed.";
+		$msg .= "<br><br>Try running <code>iwconfig</code> to check.";
+		$myStatus->addMessage($msg, 'danger');
+	} else {
+		sleep(2);
+		$cmd = 'sudo wpa_cli scan_results';
+		exec( $cmd, $scan_return, $return_code );
 
-				// Some SSIDs may be on multiple channels in multiple bands
-				if (! isset($networks[$ssid]['channel'])) {
-					// This is the SSID that's in use.
-					$networks[$ssid]['channel'] = $channel;
-					$networks[$ssid]['times'] = 1;
+if ($debug) { echo "<br><pre>wpa_cli scan_results:<br>"; print_r($scan_return); echo "</pre>"; }
+		for( $shift = 0; $shift < 2; $shift++ ) {
+			// Skip first two header lines
+			array_shift($scan_return);
+		}
+		// display output
+		static $note = " <span style='color: red; font-weight: 900; font-size: 110%;'>*</span>";
+		// $networks contains the prior-configured SSID(s).
+		// New SSIDs are added to $networks.
+		if (! isset($networks)) $networks = [];	// eliminates warning messages in log file
+
+		// Walk through each scanned network.
+		$numScannedNetworks = 0;
+		$noSSID = "";
+		$onLine = 0;
+		foreach( $scan_return as $network ) {
+			$onLine++;
+			$arrNetwork = preg_split("/[\t]+/",$network);
+			// fields:		bssid,   frequency, signal level, flags,    ssid 
+			// fields:		         channel                  protocol
+			// field #:		0        1          2             3         4
+			$ssid = getVariableOrDefault($arrNetwork, 4, null);
+			if ($ssid !== null) {
+				$numScannedNetworks += 1;
+				$channel = ConvertToChannel($arrNetwork[1]);
+				if (substr($ssid, 0, 4) == "\\x00") $ssid = "Unknown (\\x00)";
+				if (array_key_exists($ssid, $networks)) {
+					// Already configured SSID.
+					$is_new = false;
+					$networks[$ssid]['visible'] = true;
+
+					// Some SSIDs may be on multiple channels in multiple bands
+					if (! isset($networks[$ssid]['channel'])) {
+						// This is the SSID that's in use.
+						$networks[$ssid]['channel'] = $channel;
+						$networks[$ssid]['times'] = 1;
+					} else {
+						$have_multiple = true;
+						// $networks[$ssid]['channel'] .= "<br>$channel";
+						$networks[$ssid]['times']++;
+					}
 				} else {
-					$have_multiple = true;
-					// $networks[$ssid]['channel'] .= "<br>$channel";
-					$networks[$ssid]['times']++;
+					// New SSID
+					$networks[$ssid] = array(
+						'configured' => false,
+						'protocol' => ConvertToSecurity($arrNetwork[3]),
+						'channel' => $channel,
+						'times' => 1,
+						'passphrase' => '',
+						'visible' => true,
+						'connected' => false
+					);
 				}
 			} else {
-				// New SSID
-				$networks[$ssid] = array(
-					'configured' => false,
-					'protocol' => ConvertToSecurity($arrNetwork[3]),
-					'channel' => $channel,
-					'times' => 1,
-					'passphrase' => '',
-					'visible' => true,
-					'connected' => false
-				);
+				if ($noSSID === "") {
+					$noSSID = "[$cmd] Returned no SSD on:";
+				}
+				$noSSID .= "\n line $onLine: $network";
 			}
-		} else {
-			if ($noSSID === "") {
-				$noSSID = "[$cmd] Returned no SSD on:";
-			}
-			$noSSID .= "\n line $onLine: $network";
 		}
-	}
-	if ($numScannedNetworks == 0) {
-		$myStatus->addMessage("No scanned networks found", 'warning');
-	} else if ($noSSID !== "") {
-		// It's common for multiple lines to not have an SSID,
-		// so don't use addMessage().
-		echo "<script>console.log(`$noSSID`)</script>";
+		if ($numScannedNetworks == 0) {
+			$myStatus->addMessage("No scanned networks found", 'warning');
+		} else if ($noSSID !== "") {
+			// It's common for multiple lines to not have an SSID,
+			// so don't use addMessage().
+			echo "<script>console.log(`$noSSID`)</script>";
+		}
 	}
 
 	exec( 'iwconfig wlan0', $iwconfig_return );
@@ -394,5 +407,56 @@ if ($debug) { echo "<br><pre>wpa_cli scan_results:<br>"; print_r($scan_return); 
 		</div>
 		</div><!-- /.panel-primary -->
 <?php
+}
+
+// Helper functions
+/**
+*
+* @param string $freq
+* @return $channel
+*/
+function ConvertToChannel( $freq ) {
+  $channel = ($freq - 2407)/5;	// check for 2.4 GHz
+  if ($channel > 0 && $channel <= 14) {
+    return $channel . " / 2.4GHz";
+  } else {	// check for 5 GHz
+    $channel = ($freq - 5030)/5;
+    if ($channel >= 7 && $channel <= 165) {
+      // There are also some channels in the 4915 - 4980 range...
+      return $channel . " / 5GHz";
+    } else {
+      return 'Invalid&nbsp;Channel, Hz=' . $freq;
+    }
+  }
+}
+
+/**
+* Converts WPA security string to readable format
+* @param string $security
+* @return string
+*/
+function ConvertToSecurity( $security ) {
+  $options = array();
+  preg_match_all('/\[([^\]]+)\]/s', $security, $matches);
+  foreach($matches[1] as $match) {
+    if (preg_match('/^(WPA\d?)/', $match, $protocol_match)) {
+      $protocol = $protocol_match[1];
+      $matchArr = explode('-', $match);
+      if (count($matchArr) > 2) {
+        $options[] = $protocol . ' ('. $matchArr[2] .')';
+      } else {
+        $options[] = $protocol;
+      }
+    }
+  }
+
+  if (count($options) === 0) {
+    // This could also be WEP but wpa_supplicant doesn't have a way to determine
+    // this.
+    // And you shouldn't be using WEP these days anyway.
+    return 'Open';
+  } else {
+    return implode('<br />', $options);
+  }
 }
 ?>

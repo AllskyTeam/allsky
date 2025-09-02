@@ -928,7 +928,6 @@ install_webserver_et_al()
 	declare -n v="${FUNCNAME[0]}"
 	[[ ${SKIP} == "true" ]] && return
 
-	sudo systemctl stop hostapd 2>/dev/null
 	sudo systemctl stop lighttpd 2>/dev/null
 
 	if [[ ${v} == "true" ]]; then
@@ -938,8 +937,9 @@ install_webserver_et_al()
 		display_msg --log progress "Installing the web server."
 		TMP="${ALLSKY_LOGS}/lighttpd.install.log"
 		run_aptGet \
-			lighttpd  php-cgi  php-gd  hostapd  dnsmasq  avahi-daemon  hwinfo tree i2c-tools \
+			lighttpd  php-cgi  php-gd  avahi-daemon  hwinfo tree i2c-tools \
 			> "${TMP}" 2>&1
+# TODO: Remove in next major release: Used to install: dnsmasq
 		check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" \
 			|| exit_with_image 1 "${STATUS_ERROR}" "lighttpd installation failed"
 	fi

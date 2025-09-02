@@ -24,26 +24,17 @@ $ME = htmlspecialchars($_SERVER["PHP_SELF"]);
 $useMeteors = false;
 
 // functions.php sets a bunch of constants and variables.
-// It needs to be at the top of this file since code below uses the items it sets.
 include_once('includes/functions.php');
+include_once('includes/authenticate.php');
 include_once('includes/status_messages.php');
 $status = new StatusMessages();
 initialize_variables();		// sets some variables
 
-// Constants for configuration file paths.
-// These are typical for default RPi installs. Modify if needed.
-include_once('includes/authenticate.php');
-define('RASPI_WPA_SUPPLICANT_CONFIG', '/etc/wpa_supplicant/wpa_supplicant.conf');
-define('RASPI_WPA_CTRL_INTERFACE', '/var/run/wpa_supplicant');
-
-define('DHCP_ENABLED', true);
-
-if (DHCP_ENABLED) {
-	define('RASPI_DNSMASQ_CONFIG', '/etc/dnsmasq.conf');
-	define('RASPI_DNSMASQ_LEASES', '/var/lib/misc/dnsmasq.leases');
-} else {
-	function DisplayDHCPConfig() {}
-}
+// TODO in major release after v2025.xx.xx:
+// We want to remove the "DHCP" page from Allsky but aren't sure if anyone's using it.
+// To be save, leave all the DHCP code but don't display the link to the page.
+// If no one complains we can remove everything DHCP related.
+define('DHCP_ENABLED', false);
 
 function useLogin() {
 	global $useLogin;
@@ -701,7 +692,9 @@ $allskyStatus = output_allsky_status();
 						insertMenuItem('LAN_info', "", "dropdown");
 						insertMenuItem('WLAN_info', "", "dropdown");
 						insertMenuItem('wifi', "", "dropdown");
+if (DHCP_ENABLED) {
 						insertMenuItem('dhcp_conf', "", "dropdown");
+}
 ?>
 					</ul>
 				</li>

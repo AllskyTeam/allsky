@@ -438,115 +438,6 @@ function CSRFValidate() {
 }
 
 /**
-* Test whether array is associative
-*/
-function isAssoc($arr) {
-  return array_keys($arr) !== range(0, count($arr) - 1);
-}
-
-/**
-*
-* Display a selector field for a form. Arguments are:
-*   $name:     Field name
-*   $options:  Array of options
-*   $selected: Selected option (optional)
-*       If $options is an associative array this should be the key
-*
-*/
-function SelectorOptions($name, $options, $selected = null) {
-  echo "<select class=\"form-control\" name=\"$name\">";
-  foreach ( $options as $opt => $label) {
-    $select = '';
-    $key = isAssoc($options) ? $opt : $label;
-    if( $key == $selected ) {
-      $select = " selected";
-    }
-    echo "<option value=\"$key\"$select>$label</options>";
-  }
-  echo "</select>";
-}
-
-/**
-*
-* @param string $input
-* @param string $string
-* @param int $offset
-* @param string $separator
-* @return $string
-*/
-function GetDistString( $input,$string,$offset,$separator ) {
-	$string = substr( $input,strpos( $input,$string )+$offset,strpos( substr( $input,strpos( $input,$string )+$offset ), $separator ) );
-	return $string;
-}
-
-/**
-*
-* @param array $arrConfig
-* @return $config
-*/
-function ParseConfig( $arrConfig ) {
-	$config = array();
-	foreach( $arrConfig as $line ) {
-		$line = trim($line);
-		if( $line != "" && $line[0] != "#" ) {
-			$arrLine = explode( "=", $line );
-			$config[$arrLine[0]] = ( count($arrLine) > 1 ? $arrLine[1] : true );
-		}
-	}
-	return $config;
-}
-
-/**
-*
-* @param string $freq
-* @return $channel
-*/
-function ConvertToChannel( $freq ) {
-  $channel = ($freq - 2407)/5;	// check for 2.4 GHz
-  if ($channel > 0 && $channel <= 14) {
-    return $channel . " / 2.4GHz";
-  } else {	// check for 5 GHz
-    $channel = ($freq - 5030)/5;
-    if ($channel >= 7 && $channel <= 165) {
-      // There are also some channels in the 4915 - 4980 range...
-      return $channel . " / 5GHz";
-    } else {
-      return 'Invalid&nbsp;Channel, Hz=' . $freq;
-    }
-  }
-}
-
-/**
-* Converts WPA security string to readable format
-* @param string $security
-* @return string
-*/
-function ConvertToSecurity( $security ) {
-  $options = array();
-  preg_match_all('/\[([^\]]+)\]/s', $security, $matches);
-  foreach($matches[1] as $match) {
-    if (preg_match('/^(WPA\d?)/', $match, $protocol_match)) {
-      $protocol = $protocol_match[1];
-      $matchArr = explode('-', $match);
-      if (count($matchArr) > 2) {
-        $options[] = $protocol . ' ('. $matchArr[2] .')';
-      } else {
-        $options[] = $protocol;
-      }
-    }
-  }
-
-  if (count($options) === 0) {
-    // This could also be WEP but wpa_supplicant doesn't have a way to determine
-    // this.
-    // And you shouldn't be using WEP these days anyway.
-    return 'Open';
-  } else {
-    return implode('<br />', $options);
-  }
-}
-
-/**
 *
 * Functions to get the status output of an interface determine if it's up or down and
 * to parse "ifconfig" output and return results.
@@ -648,62 +539,6 @@ function handle_interface_POST_and_status($interface, $input, &$myStatus) {
 	}
 
 	return($interface_up);
-}
-
-/**
-*
-* Get the last occurence of a variable from a file and return its value; if not there,
-* return the default.
-* NOTE: The variable's value is anything after the equal sign,
-* so there shouldn't be a comment on the line,
-* however, there can be optional spaces or tabs before the string.
-*
-*/
-
-# TODO: As of v2024.12.06_04 this is no longer needed.  Remove it in the next release.
-
-function get_variable($file, $searchfor, $default)
-{
-	// get the file contents
-	if (! file_exists($file)) {
-		$msg  = "<div class='error-msg'>";
-		$msg .= "<br>File '$file' not found!";
-		$msg .= "</div>";
-		echo $msg;
-		return($default);
-	}
-	$contents = file_get_contents($file);
-	if ($contents == "") return($default);	// file not found or not readable
-
-	// escape special characters in the query
-	$pattern = preg_quote($searchfor, '/');
-	// finalise the regular expression, matching the whole line
-	$pattern = "/^[ 	]*$pattern.*\$/m";
-
-	// search, and store all matching occurences in $matches
-	$num_matches = preg_match_all($pattern, $contents, $matches);
-	if ($num_matches) {
-		$double_quote = '"';
-
-		// Format: [stuff]$searchfor=$value   or   [stuff]$searchfor="$value"
-		// Need to delete  [stuff]$searchfor=  and optional double quotes
-		// If more than 1 match, get the last match that matches $searchfor EXACTLY.
-		if ($num_matches === 1) {
-			$match = $matches[0][$num_matches - 1];	// get the last one
-		} else {
-			for ($i=$num_matches-1; $i>=0; $i--) {
-				$match = $matches[0][$i];
-				if ($match === $searchfor) {
-					break;
-				}
-			}
-		}
-		$match = explode( '=', $match)[1];	// get everything after equal sign
-		$match = str_replace($double_quote, "", $match);
-		return($match);
-	} else {
-   		return($default);
-	}
 }
 
 /**
@@ -1085,25 +920,6 @@ function getLocalWebsiteConfigFile() {
 // Return the full path name of the remote Website configuration file.
 function getRemoteWebsiteConfigFile() {
 	return ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE;
-}
-
-// Return the file name after accounting for any ${} variables.
-// Since there will often only be one file used by multiple settings,
-// as an optimization save the last name.
-$lastFileName = null;
-function getFileName($file) {
-	global $lastFileName;
-
-	if ($lastFileName === $file) return $lastFileName;
-
-	if (strpos('${HOME}', $file) !== false) {
-		$lastFileName = str_replace('${HOME}', HOME, $file);
-	} else if (strpos('${ALLSKY_ENV}', $file) !== false) {
-		$lastFileName = str_replace('${ALLSKY_ENV}', ALLSKY_ENV, $file);
-	} else if (strpos('${ALLSKY_HOME}', $file) !== false) {
-		$lastFileName = str_replace('${ALLSKY_HOME}', ALLSKY_HOME, $lastFileName);
-	}
-	return $lastFileName;
 }
 
 // Check if the specified variable is in the specified array.

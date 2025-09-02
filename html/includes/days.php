@@ -1,29 +1,12 @@
 <?php
 
-function delete_directory($directory_name) {
-	global $page;
+function ListDays()
+{
 
-	// First make sure this is a valid directory.
-	if (! is_valid_directory($directory_name)) {
-		return "Invalid directory name.";
-	}
+	// TODO: We're not sure if we like the font awesome icons or thumbnails of
+	// the video/startrails/keograms so for now, disable it.
+	$useThumbnailsIfExist = false;
 
-	// If there is any output it's from an error message.
-	$output = null;
-	$retval = null;
-	exec("sudo rm -r '$directory_name' 2>&1", $output, $retval);
-	if ($output == null) {
-		if ($retval != 0)
-			$output = "Unknown error, retval=$retval.";
-		else
-			$output = "";
-	} else {
-		$output = $output[0];	// exec() return output as an array
-	}
-	return $output;
-}
-
-function ListDays(){
 	global $page;
 	global $pageHeaderTitle, $pageIcon;
 	global $fa_size, $fa_size_px;
@@ -97,10 +80,6 @@ function ListDays(){
 		</tr>
 <?php
 
-// TODO: We're not sure if we like the font awesome icons or thumbnails of
-// the video/startrails/keograms so for now, disable it.
-$useThumbnailsIfExist = false;
-
 foreach ($days as $day) {
 	// See if this day has ANY valid images or videos.
 	$i = getValidImageNames(ALLSKY_IMAGES . "/$day", true);	// true == stop after 1
@@ -138,11 +117,11 @@ foreach ($days as $day) {
 
 	echo "\t\t\t<td>";
 	if ($has_timelapse) {
-		$icon = "<i class='fa fa-film fa-${fa_size} fa-fw'></i>";
+		$icon = "";
 		if ($useThumbnailsIfExist) {
 			$t = ALLSKY_IMAGES . "/$day/thumbnail-$day.{jpg,png}";
 			$thumb = glob($t, GLOB_BRACE);
-			if ($thumb != false) {
+			if ($thumb !== false) {
 				// "/images" is an alias in the web server for ALLSKY_IMAGES
 				$images_dir = "/images";
 				$thumb = str_replace(ALLSKY_IMAGES, "/images", $thumb[0]);
@@ -150,7 +129,7 @@ foreach ($days as $day) {
 				$icon = "<img src='$thumb' width='${fa_size_px}px'>";
 			}
 		}
-		insertHref("list_videos", $day);
+		insertHref("list_videos", $day, false, $icon);
 	} else {
 		echo "none";
 	}
@@ -204,5 +183,30 @@ if ($useMeteors) {
 	</div><!-- /.col-lg-12 -->
 </div><!-- /.row -->
 <?php
+}
+
+// Helper functions
+function delete_directory($directory_name)
+{
+	global $page;
+
+	// First make sure this is a valid directory.
+	if (! is_valid_directory($directory_name)) {
+		return "Invalid directory name.";
+	}
+
+	// If there is any output it's from an error message.
+	$output = null;
+	$retval = null;
+	exec("sudo rm -r '$directory_name' 2>&1", $output, $retval);
+	if ($output == null) {
+		if ($retval != 0)
+			$output = "Unknown error, retval=$retval.";
+		else
+			$output = "";
+	} else {
+		$output = $output[0];	// exec() return output as an array
+	}
+	return $output;
 }
 ?>

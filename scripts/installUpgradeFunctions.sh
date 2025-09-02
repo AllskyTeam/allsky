@@ -462,10 +462,14 @@ function update_array_field()
 	if [[ ${NEW_VALUE} == "--delete" ]]; then
 		update_json_file -d ".${ARRAY}[${I}]" "" "${FILE}"
 	else
-		local URL=".${ARRAY}[${I}].${FIELD}"
-		local V="$( settings "${URL}" "${FILE}" )"
+		local F=".${ARRAY}[${I}].${FIELD}"
+		local V="$( settings "${F}" "${FILE}" )"
 		if [[ ${V} != "${NEW_VALUE}" ]]; then
-			update_json_file "${URL}" "${NEW_VALUE}" "${FILE}"
+			update_json_file "${F}" "${NEW_VALUE}" "${FILE}"
+			if [[ $? -ne 0 ]]; then
+				echo "WARNING: Unable to update '${VALUE}' to '${NEW_VALUE} in '${FILE}'." >&2
+else echo "Updated '${VALUE}' to '${NEW_VALUE} in '${FILE}'." >&2
+			fi
 		fi
 	fi
 }
@@ -702,12 +706,6 @@ function update_old_website_config_file()
 		for i in "videos" "keograms" "startrails"; do
 			update_array_field "${FILE}" "homePage.leftSidebar" "url" "${i}" "${i}/"
 		done
-
-		# Update timelapse icons
-		update_array_field "${FILE}" "homePage.leftSidebar" "icon" \
-			"fa fa-2x fa-fw fa-play-circle" "fa fa-2x fa-fw fa-video"
-		update_array_field "${FILE}" "homePage.leftSidebar" "icon" \
-			"fa fa-2x fa-fw icon-mini-timelapse" "fa fa-2x fa-fw fa-file-video"
 	fi
 
 	# Try to determine what future changes are needed,
@@ -788,6 +786,14 @@ function update_old_website_config_file()
 			# cp so it keeps ${FILE}'s attributes
 			cp "${TEMP}" "${FILE}" && rm -f "${TEMP}"
 		fi
+	fi
+
+	if [[ ${PRIOR_VERSION} -le 5 ]] ; then	# use -le so testers get updated.
+		# Update timelapse icons
+		update_array_field "${FILE}" "homePage.leftSidebar" "icon" \
+			"fa fa-2x fa-fw fa-play-circle" "fa fa-2x fa-fw fa-video"
+		update_array_field "${FILE}" "homePage.leftSidebar" "icon" \
+			"fa fa-2x fa-fw icon-mini-timelapse" "fa fa-2x fa-fw fa-file-video"
 	fi
 
 	# Set to current config and Allsky versions.
@@ -1888,3 +1894,4 @@ create_variables_json()
 		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 	fi
 }
+

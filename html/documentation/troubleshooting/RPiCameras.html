@@ -16,6 +16,7 @@
 	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../documentation-favicon.ico" rel="shortcut icon" type="image/png">
+	<script src="../js/all.min.js" type="application/javascript"></script>
 	<title>RPi Camera Troubleshooting</title>
 </head>
 <body>
@@ -26,6 +27,16 @@
 
 <p>
 This page describes known issues with RPi and RPi-compatible cameras.
+</p>
+<p>
+<blockquote>
+The first step in diagnosing problems with RPi cameras is to run
+<pre>
+rpicam-still --timeout 1 --nopreview
+</pre>
+If it gives an error (usually one of the errors described below),
+then the problem is with the camera and NOT with Allsky.
+</blockquote>
 </p>
 
 <h2>RPi camera not found or not working</h2>
@@ -39,38 +50,81 @@ Here are some steps to try:
 	This is an easy mistake to make since the cable will go in backwards.
 	See the camera documentation for details on how to correctly plug the camera in.
 <li>If you have access to another Pi, try plugging the camera in it to see if it works.
-<li>Check for the correct camera driver.
+<li>If you are running the Bullseye operating system, check for the correct camera driver.
+	<pre>rpicam-still --timeout 1 --nopreview</pre>
 	<br>
-	On Bullseye, execute:
-	<pre>libcamera-hello</pre>
-	If you get an error like this:
+	Ignoring all the INFO and WARN messages, if you get an error like this:
 	<pre>terminate called after throwing an instance of 'std::runtime_error'
   	what():  failed to import fd 22</pre>
-	run <code>sudo raspi-config</code>, navigate to
-	<code>Advanced Options</code> and enable <code>Glamor</code> graphic acceleration.
-	Then reboot your Pi.
-	Now, try <code>libcamera-hello</code> again.
-	You should get a <code>Hello world!</code> message in a new window.
-	<br><strong>This is not needed on Bookworm.</strong>
-<li>Check for under voltage (Bullseye and Bookworm only)
+	run:
+	<ol>
+		<li><code>sudo raspi-config</code>.
+		<li>Navigate to <code>Advanced Options</code>.
+		<li>Enable <code>Glamor</code> graphic acceleration.
+		<li>Reboot your Pi.
+		<li>Try <code>rpicam-still --timeout 1 --nopreview</code> again.
+			It should work.
+	</ol>
+<li>Check for under voltage.
 	<br>
 	Execute:
-	<pre>libcamera-hello</pre>
-	If you get an error that contains
+	<pre>rpicam-still --timeout 1 --nopreview</pre>
+	<br>
+	Ignoring all the INFO and WARN messages, if you get an error that contains
 	<pre>Unable to request 0 buffers: Device or resource busy</pre>
 	your Pi may be under voltaged.
 	<ul>
 	<li>If you have another power supply try it.
 	<li>Using <code>sudo</code>, add <code>over_voltage=4</code>
-		to <span class="fileName">/boot/config.txt</span> then reboot your Pi.
+		to <span class="fileName">/boot/firmware/config.txt</span> then reboot your Pi.
 		If you are still having the problem, add <code>arm_freq=700</code>
-		to <span class="fileName">/boot/config.txt</span> then reboot your Pi.
+		to <span class="fileName">/boot/firmware/config.txt</span> then reboot your Pi.
 		Note that this decreases the speed of your Pi so should be a last resort.
 		<br>See
 		<a external="true"
 			href="https://github.com/raspberrypi/libcamera-apps/issues/246">more information</a>.
 	</ul>
 </ol>
+</details>
+
+
+<h2>ERROR: Unable to request 4 buffers: Cannot allocate memory</h2>
+<details><summary></summary>
+<p>
+If you see this message, either in the WebUI or from running <code>rpicam-still</code>,
+that means that the camera is detected but it can't take a picture.
+<pre>
+ERROR V4L2 v4l2_videodevice.cpp:1241 /dev/video14[15:cap]: Unable to request 4 buffers: Cannot allocate memory
+ERROR: *** failed to allocate capture buffers ***
+</pre>
+</p>
+<p class="morePadding">
+The following will <em>usually</em> fix it:
+<ol class="minimalPadding">
+	<li>Using your favorite text editor, use <code>sudo</code> to edit the
+		<span class="fileName">/boot/firmware/config.txt</span> file
+		(if that file doesn't exist try <span class="fileName">/boot/config.txt</span>).
+	<li>Add the following line to the bottom of the file:<br>
+		<pre>cma=256M</pre>
+	<li>Reboot the Pi.</li>
+</ol>
+</p>
+<p>
+If it does NOT fix the problem:
+<ol class="minimalPadding">
+	<li>Run <code>allsky-config  prepare_logs</code>.
+	<li>Wait for the error to occur.
+		This may take minutes or hours.
+	<li>Run <code>grep "Running:" /var/log/allsky.log | tail -1</code>.
+	<li>Run <code>rpicam-still --timeout 1 --nopreview</code>.
+	<li>Create a new Issue on the
+		<a external="true" href="https://github.com/raspberrypi/rpicam-apps">
+		rpicam-apps GitHub page</a>.
+	<li>Attach the output from the last two commands to the new Issue.
+		<br>
+		Do not attach any Allsky files - this is NOT an Allsky problem.
+</ol>
+</p>
 </details>
 
 
@@ -99,7 +153,7 @@ they print an error message then exit with a non-zero code.
 </p>
 <p>
 An exit code of <b>137</b> usually means the command was forcefully killed by an outside source,
-often the Linux kernel.
+often the Linux operating system.
 When this happens to an Allsky command, the log file will usually contain a message
 with <code>Killed</code> in it, and often with <code>RETCODE=137</code> in it.
 </p>
@@ -108,8 +162,7 @@ If you are using a RPi camera and get a notification message saying
 <code>ERROR  See /var/log/allsky.log for details</code>
 and the log file contains entries similar to these:
 <pre>
-Jan 20 18:45:50 allsky allsky.sh[4480]: /home/pi/allsky/allsky.sh: line 372:
-     4562 Killed "${ALLSKY_HOME}/${CAPTURE}" "${ARGUMENTS[@]}"
+Jan 20 18:45:50 allsky allsky.sh[4480]: /home/pi/allsky/allsky.sh: line 372: 4562 Killed "${ALLSKY_HOME}/${CAPTURE}" "${ARGUMENTS[@]}"
 Jan 20 18:45:50 allsky allsky.sh[4480]: 'capture_RPi' exited with RETCODE=137
 </pre>
 that usually means the Linux kernel killed the command because it was using

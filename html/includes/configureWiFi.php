@@ -1,6 +1,10 @@
 <?php
 
-function DisplayWPAConfig(){
+define('RASPI_WPA_SUPPLICANT_CONFIG', '/etc/wpa_supplicant/wpa_supplicant.conf');
+define('RASPI_WPA_CTRL_INTERFACE', '/var/run/wpa_supplicant');
+
+function DisplayWPAConfig()
+{
 	global $page;
 	global $pageHeaderTitle, $pageIcon;
 
@@ -394,5 +398,56 @@ if ($debug) { echo "<br><pre>wpa_cli scan_results:<br>"; print_r($scan_return); 
 		</div>
 		</div><!-- /.panel-primary -->
 <?php
+}
+
+// Helper functions
+/**
+*
+* @param string $freq
+* @return $channel
+*/
+function ConvertToChannel( $freq ) {
+  $channel = ($freq - 2407)/5;	// check for 2.4 GHz
+  if ($channel > 0 && $channel <= 14) {
+    return $channel . " / 2.4GHz";
+  } else {	// check for 5 GHz
+    $channel = ($freq - 5030)/5;
+    if ($channel >= 7 && $channel <= 165) {
+      // There are also some channels in the 4915 - 4980 range...
+      return $channel . " / 5GHz";
+    } else {
+      return 'Invalid&nbsp;Channel, Hz=' . $freq;
+    }
+  }
+}
+
+/**
+* Converts WPA security string to readable format
+* @param string $security
+* @return string
+*/
+function ConvertToSecurity( $security ) {
+  $options = array();
+  preg_match_all('/\[([^\]]+)\]/s', $security, $matches);
+  foreach($matches[1] as $match) {
+    if (preg_match('/^(WPA\d?)/', $match, $protocol_match)) {
+      $protocol = $protocol_match[1];
+      $matchArr = explode('-', $match);
+      if (count($matchArr) > 2) {
+        $options[] = $protocol . ' ('. $matchArr[2] .')';
+      } else {
+        $options[] = $protocol;
+      }
+    }
+  }
+
+  if (count($options) === 0) {
+    // This could also be WEP but wpa_supplicant doesn't have a way to determine
+    // this.
+    // And you shouldn't be using WEP these days anyway.
+    return 'Open';
+  } else {
+    return implode('<br />', $options);
+  }
 }
 ?>

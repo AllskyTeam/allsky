@@ -253,7 +253,7 @@ function getPageIcon($p) {
 }
 
 // Insert just an "<a href=''..>" with an icon.
-function insertHref($p, $day, $displayTitle=false) {
+function insertHref($p, $day, $displayTitle=false, $iconImage="") {
 	global $pageInfo;
 
 	$t = getVariableOrDefault($pageInfo, $p, null);
@@ -268,14 +268,22 @@ function insertHref($p, $day, $displayTitle=false) {
 		if ($AllTitle !== null)
 			$title = $AllTitle;
 	}
-	$icon = getPageIcon($p);
 	$href = getVariableOrDefault($t, "href", "index.php?page=$p");
 	if ($day !== "") $href .= "&day=$day";
+	if ($iconImage === "") {
+		$icon = getPageIcon($p);
+	} else {
+		$icon = $iconImage;
+	}
 	if ($icon === "") {
 		echo "<span style='color: red' title='$title'>???</span>";
 	} else {
 		echo "<a id='$p' href='$href' title='$title'>";
-		echo "<i class='$icon'></i>";
+		if ($iconImage === "") {
+			echo "<i class='$icon'></i>";
+		} else {
+			echo $iconImage;
+		}
 		if ($displayTitle) echo " $title";
 		echo "</a>";
 	}

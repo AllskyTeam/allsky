@@ -74,7 +74,7 @@ function getTimeStamp(url)
 				$t = "/thumbnails";
 			else
 				$t = "";
-			echo "<img src='/images/$chosen_day$t/$image' title='$image' class='thumb thumbBorder'/>";
+			echo "<img src='/images/$chosen_day$t/$image' title='$image' class='thumb thumbBorder'/ loading='lazy'>";
 			echo "</div>\n";
 		}
 	}

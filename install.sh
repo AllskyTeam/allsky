@@ -3754,13 +3754,25 @@ install_installer_dependencies()
 	# Needed to put notification images there.
 	[[ ! -d ${ALLSKY_CURRENT_DIR} ]] && mkdir -p "${ALLSKY_CURRENT_DIR}"
 
-	display_msg --log progress "Installing initial dependencies."
-	TMP="${ALLSKY_LOGS}/installer.dependencies.log"
-	{
-		sudo apt-get update && run_aptGet gawk jq dialog
-	} > "${TMP}" 2>&1
-	check_success $? "gawk,jq,dialog installation failed" "${TMP}" "${DEBUG}" ||
-		exit_with_image 1 "${STATUS_ERROR}" "gawk,jq,dialog install failed."
+
+	local PACKAGES=""
+	# Any version is ok so if the command exists, don't reinstall it.
+	which dialog > /dev/null || PACKAGES+="dialog "
+	which jq > /dev/null || PACKAGES+="jq "
+	which gawk > /dev/null || PACKAGES+="gawk "
+	if [[ -n ${PACKAGES} ]]; then
+		display_msg --log progress "Installing initial dependencies: ${PACKAGES}"
+
+		TMP="${ALLSKY_LOGS}/installer.dependencies.log"
+		{
+			#shellcheck disable=SC2086
+			sudo apt-get update && run_aptGet ${PACKAGES}
+		} > "${TMP}" 2>&1
+		check_success $? "${PACKAGES/ /,} installation failed" "${TMP}" "${DEBUG}" ||
+			exit_with_image 1 "${STATUS_ERROR}" "${PACKAGES/ /,} install failed."
+	else
+		display_msg --logonly info "Initial dependencies already installed."
+	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }
@@ -3983,6 +3995,9 @@ fi
 
 trap "handle_interrupts" SIGTERM SIGINT
 
+# Install packages that may be needed very early in installation.
+[[ -z ${FUNCTION} ]] && install_installer_dependencies
+
 if [[ -z ${FUNCTION} && ${RESTORE} == "false" ]]; then
 
 	check_if_supported_OS
@@ -4025,8 +4040,6 @@ set_what_can_be_skipped "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
 
 ##### Stop Allsky
 stop_Allsky
-
-[[ -z ${FUNCTION} ]] && install_installer_dependencies
 
 ##### Determine what camera(s) are connected
 get_connected_cameras

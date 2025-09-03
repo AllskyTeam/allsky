@@ -5,8 +5,9 @@ import sys
 import re
 import argparse
 import subprocess
+import shutil
 
-from typing import Tuple
+from typing import Tuple, Literal, Optional
 
 # We must run as root since we are potentially going to need to access MySQL via the root
 # user and this is ONLY possible when runas root.
@@ -89,8 +90,15 @@ class ALLSKYDATABASEMANAGER:
         This feature is optional. Would you like to enable this feature?\
         "
     _low_performance = "\nSince you are running on a PI with reduced CPU and RAM it is recommended that you use sqlite"
-    _high_performance = "\nSince you are running a PI with sufficient CPU and RAM it is recommended that you use MySQL (MariaDB) althoug you may select sqlite if you wish"
+    _high_performance = "\nSince you are running a PI with sufficient CPU and RAM it is recommended that you use MySQL (MariaDB) although you may select sqlite if you wish"
     _enable_database = "\n\nWould you like to enable this feature? If you select No then you can rerun this script at any time and enable the database"
+    _mysql_warning = "This script can only configure MySQL on the local Pi. If you wish to use MySQL on a remote server then please consult the Allsky documentation\
+        \n\nDo you wish to configure MySQL on this Pi?"
+    _show_mysql_warning = True
+    
+    _back_title= "Allsky Database Manager"
+    _whiptail_title_select_database = "Select Database"
+    _whiptail_message = "Message"
     
     def __init__(self, args):
         self._debug_mode = args.debug
@@ -146,20 +154,27 @@ class ALLSKYDATABASEMANAGER:
             
         return result
     
-    def _mysql_service_installed(self) -> Tuple[bool, str]:
-        for service in ("mariadb", "mysql"):
+    def _mysql_service_installed(self) -> Tuple[bool, Optional[str]]:
+        # Check explicit unit names
+        for unit in ("mariadb.service", "mysql.service"):
             try:
-                subprocess.run(
-                    ["systemctl", "status", service],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    check=True
+                res = subprocess.run(
+                    ["systemctl", "show", "-p", "LoadState", unit],
+                    capture_output=True, text=True, check=False
                 )
-                return True, service
-            except subprocess.CalledProcessError:
-                return True, service
+                # Loaded => unit file exists (installed), regardless of active state
+                if res.returncode == 0 and "LoadState=loaded" in res.stdout:
+                    return True, unit.removesuffix(".service")
             except FileNotFoundError:
-                continue
+                # systemctl not available (very rare on Pi OS)
+                break
+
+        # Fallback: if the server binary exists, consider it "installed" even if the unit isn't
+        for bin_name in ("mariadbd", "mysqld"):
+            if shutil.which(bin_name):
+                # Guess a likely service name
+                return True, "mariadb" if bin_name == "mariadbd" else "mysql"
+
         return False, None
 
     def _display_welcome(self) -> bool:
@@ -193,13 +208,13 @@ class ALLSKYDATABASEMANAGER:
     def _select_database_server(self) -> (bool | str):
         options = []
         if self._mysql_installed:
-            options.append(("MySQL", "Installed ",  ""))
+            options.append(("MySQL", "Installed ",  "ON" if self.is_fast_pi else ""))
         else:
-            options.append(("MySQL", "",  ""))
+            options.append(("MySQL", "Not Installed",  "ON" if self.is_fast_pi else ""))
 
-        options.append(("SQLite", "Installed ",  ""))
+        options.append(("SQLite", "Installed ",  "ON" if not self.is_fast_pi else ""))
             
-        w = Whiptail(title="Select Database", backtitle=f"Allsky Database Manager", height=15, width=30)
+        w = Whiptail(title=self._whiptail_title_select_database, backtitle=self._back_title, height=15, width=40)
         database_to_use = w.radiolist('Select the database to use', options)[0]
         
         result = None
@@ -208,62 +223,50 @@ class ALLSKYDATABASEMANAGER:
             
         return result
 
-    def _get_mysql_users(self, host="localhost", user="root", password="", port=3306):
-        import mysql.connector
+    def _get_mysql_users(self):
         from mysql.connector import Error  
 
         ignore = {"mariadb.sys", "mysql", "root"}
                 
-        """Fetch all usernames from mysql.user (skip system accounts)."""
         try:
-            conn = mysql.connector.connect(user=user, unix_socket="/run/mysqld/mysqld.sock")
-            cur = conn.cursor()
-            cur.execute("SELECT user, host FROM mysql.user WHERE user != '' ORDER BY user, host;")
+            command = "SELECT user, host FROM mysql.user WHERE user != '' ORDER BY user, host;"
+            user_list = self._run_mysql_command(root_user=True, command=command, command_type="fetchall")
             users = []
-            for u, h in cur.fetchall():
+            for u, h in user_list:                
                 if u not in ignore:
                     users.append({"user": u, "host": h, "display": f"{u}@{h}"})
-            cur.close()
-            conn.close()
             return users
         except Error as e:
             print("Error fetching users:", e)
             return []
     
-    def _test_mysql_login(self, user: str, password: str, host: str = "localhost", port: int = 3306) -> tuple[bool, str]:
-        import mysql.connector
+    def _test_mysql_login(self, user_name: str, password: str, host: str = "localhost") -> tuple[bool, str]:
         from mysql.connector import Error        
         
         try:
-            conn = mysql.connector.connect(host=host, user=user, password=password, port=port)
-            if conn.is_connected():
-                conn.close()
+            if self._run_mysql_command(host=host, user_name=user_name, password=password, command_type="login"):
                 return True, "Login successful."
             return False, "Unable to establish connection."
         except Error as e:
             return False, str(e)
 
     def _create_mysql_user(self, new_user: str, new_pw: str, root_user="root", port=3306):
-        import mysql.connector
         from mysql.connector import Error  
                 
-        """Create a new MySQL user with access to all databases (*.*)."""
         try:
-            conn = mysql.connector.connect(user=root_user, unix_socket="/run/mysqld/mysqld.sock")
-            cur = conn.cursor()
-            cur.execute(f"CREATE USER IF NOT EXISTS '{new_user}'@'%' IDENTIFIED BY %s;", (new_pw,))
-            cur.execute(f"GRANT ALL PRIVILEGES ON *.* TO '{new_user}'@'%' WITH GRANT OPTION;")
-            cur.execute("FLUSH PRIVILEGES;")
-            conn.commit()
-            cur.close()
-            conn.close()
+            commands = []
+            commands.append(f"CREATE USER IF NOT EXISTS '{new_user}'@'%' IDENTIFIED BY '{new_pw}';")
+            commands.append(f"GRANT ALL PRIVILEGES ON *.* TO '{new_user}'@'%' WITH GRANT OPTION;")
+            commands.append("FLUSH PRIVILEGES;")
+            self._run_mysql_command(command=commands, root_user=True)
             return True, f"MySQL user '{new_user}' created with full access."
         except Error as e:
             return False, str(e)
             
-    def _select_database_user(self) -> str:
+    def _select_mysql_database_user(self) -> str:
 
-        w = Whiptail(title="MySQL User Setup", backtitle="Allsky Installer", height=20, width=70)
+        w = Whiptail(title="MySQL User Setup", backtitle="Allsky Database Manager", height=25, width=50)
+        w_prompt = Whiptail(title="MySQL User Setup", backtitle="Allsky Database Manager", height=9, width=50)
 
         existing_users = self._get_mysql_users()
 
@@ -277,108 +280,173 @@ class ALLSKYDATABASEMANAGER:
         if code != 0:
             return ("cancel", None, None)
 
-        # Create new user flow
         if selected[0] == "NEW":
-            # Username
             while True:
-                username, code = w.inputbox("Enter a new username:")
+                username, code = w_prompt.inputbox("Enter a new username:")
                 if code != 0:
                     return ("cancel", None, None)
                 username = (username or "").strip()
                 if not username:
-                    w.msgbox("Username cannot be empty.")
+                    w_prompt.msgbox("Username cannot be empty.")
                     continue
                 if " " in username:
-                    w.msgbox("Username cannot contain spaces.")
+                    w_prompt.msgbox("Username cannot contain spaces.")
                     continue
                 if username in existing_users:
-                    w.msgbox(f"User '{username}' already exists. Pick another name.")
+                    w_prompt.msgbox(f"User '{username}' already exists. Pick another name.")
                     continue
                 break
 
-            # Password (twice)
             while True:
                 try:
-                    pwd1, code = w.passwordbox(f"Set password for '{username}':")
+                    pwd1, code = w_prompt.passwordbox(f"Set password for '{username}':")
                 except AttributeError:
-                    pwd1, code = w.inputbox(f"Set password for '{username}':")
+                    pwd1, code = w_prompt.inputbox(f"Set password for '{username}':")
                 if code != 0:
                     return ("cancel", None, None)
 
                 try:
-                    pwd2, code = w.passwordbox("Confirm password:")
+                    pwd2, code = w_prompt.passwordbox("Confirm password:")
                 except AttributeError:
-                    pwd2, code = w.inputbox("Confirm password:")
+                    pwd2, code = w_prompt.inputbox("Confirm password:")
                 if code != 0:
                     return ("cancel", None, None)
 
                 if not pwd1:
-                    w.msgbox("Password cannot be empty.")
+                    w_prompt.msgbox("Password cannot be empty.")
                     continue
                 if pwd1 != pwd2:
-                    w.msgbox("Passwords do not match. Try again.")
+                    w_prompt.msgbox("Passwords do not match. Try again.")
                     continue
                 break
 
             ok, msg = self._create_mysql_user(username, pwd1)
             if ok:
-                w.msgbox(msg)
+                w_prompt.msgbox(msg)
                 return ("create", username, pwd1)
             else:
-                w.msgbox(f"Failed to create user: {msg}")
+                w_prompt.msgbox(f"Failed to create user: {msg}")
                 return ("cancel", None, None)
 
-        # Existing user: prompt for password and test MySQL login
         user = selected[0]
         while True:
             try:
-                pw, code = w.passwordbox(f"Enter password for MySQL user '{user}':")
+                pw, code = w_prompt.passwordbox(f"Enter password for MySQL user '{user}':")
             except AttributeError:
-                pw, code = w.inputbox(f"Enter password for MySQL user '{user}':")
+                pw, code = w_prompt.inputbox(f"Enter password for MySQL user '{user}':")
             if code != 0:
                 return ("cancel", None, None)
 
-            ok, msg = self._test_mysql_login(user, pw, host="localhost", port=3306)
+            ok, msg = self._test_mysql_login(user, pw, host="localhost")
             if ok:
-                w.msgbox(f"Login OK for '{user}'.")
+                w_prompt.msgbox(f"Login OK for '{user}'.")
                 return ("select", user, pw)
             else:
-                # Show error and let user retry or cancel
-                choice = w.menu(
+                choice = w_prompt.menu(
                     f"Login failed: {msg}\n\nTry again?",
                     [("retry", "Enter password again"), ("cancel", "Cancel selection")]
                 )[0]
                 if choice != "retry":
                     return ("cancel", None, None)
 
-    def _sanitize_dbname(self, name: str) -> bool:
-        # simple safe-name rule: letters, digits, underscore only
-        return bool(re.fullmatch(r"[A-Za-z0-9_]+", name))
-
-    def _select_database(self, host:str="localhost", user_name:str="", password:str="", database_name: str | None = None) -> tuple[bool, str | None]:
+    def _run_mysql_command(self, host:str="", user_name:str="", password:str="", command:str|list="", database:str="", command_type: Literal["none", "fetchone", "fetchall", "login"]="", root_user:bool=False) -> str:
         import mysql.connector
         from mysql.connector import Error  
 
-        def can_access(db: str) -> tuple[bool, str | None]:
+        def is_update(command):
+            update_command = False
+            if command.strip().split()[0].upper() in (
+                "INSERT", "UPDATE", "DELETE",
+                "CREATE", "DROP", "ALTER", "REPLACE", "GRANT", "REVOKE"
+            ):
+                update_command = True
+            
+            return update_command
+           
+        def safe_close(cur):
             try:
-                conn = mysql.connector.connect(host=host, port=3306, user=user_name, password=password, database=db)
-                cur = conn.cursor()
-                cur.execute("SELECT 1")
-                cur.fetchone()
+                # Consume current result set if any
+                if getattr(cur, "with_rows", False):
+                    cur.fetchall()
+                # If the statement produced multiple result sets, consume them too
+                nxt = getattr(cur, "nextset", None)
+                while callable(nxt) and cur.nextset():
+                    if getattr(cur, "with_rows", False):
+                        cur.fetchall()
+            finally:
                 cur.close()
-                conn.close()
+                   
+        result = None
+        
+        if root_user:
+            conn = mysql.connector.connect(user="root", unix_socket="/run/mysqld/mysqld.sock")
+        else:
+            if database:
+                conn = mysql.connector.connect(host=host, port=3306, user=user_name, password=password, database=database)
+            else:
+                conn = mysql.connector.connect(host=host, port=3306, user=user_name, password=password)
+        
+        cur = conn.cursor()
+        
+        if command:
+            do_commit = False
+            if isinstance(command, str):
+                cur.execute(command)
+                do_commit = is_update(command)
+            elif isinstance(command, (list, tuple)):
+                for cmd in command:
+                    cur.execute(cmd)
+                    if not do_commit:
+                        do_commit = is_update(cmd)
+            else:
+                raise TypeError(f"Unsupported command type: {type(command)}")
+            
+            if do_commit:
+                conn.commit()
+            
+            if command_type == "fetchone":
+                result = cur.fetchone()
+
+            if command_type == "fetchall":
+                result = cur.fetchall()
+                                
+        if command_type == "login":
+            result = conn.is_connected()              
+                                
+        safe_close(cur)
+        conn.close()
+        
+        return result
+
+    def _show_mysql_warning_message(self)-> None:
+        result = False
+        
+        if self._show_mysql_warning:
+            w_prompt = Whiptail(title=self._whiptail_message, backtitle=self._back_title, height=12, width=60)
+            result = w_prompt.yesno(self._mysql_warning)
+        else:
+            result = True
+                        
+        return result
+                                
+    def _sanitise_dbname(self, name: str) -> bool:
+        return bool(re.fullmatch(r"[A-Za-z0-9_]+", name))
+
+    def _select_mysql_database(self, host:str="localhost", user_name:str="", password:str="", database_name: str | None = None) -> tuple[bool, str | None]:
+        from mysql.connector import Error  
+
+        def can_access(database: str) -> tuple[bool, str | None]:
+            try:
+                command="SELECT 1"
+                self._run_mysql_command(host=host, user_name=user_name, password=password, database=database, command_type="selectone", command=command)
                 return True, None
             except Error as e:
                 return False, str(e)
 
-        def create_db(db: str) -> tuple[bool, str | None]:
+        def create_db(database: str) -> tuple[bool, str | None]:
             try:
-                conn = mysql.connector.connect(host=host, port=3306, user=user_name, password=password)
-                cur = conn.cursor()
-                cur.execute(f"CREATE DATABASE IF NOT EXISTS `{db}`")
-                conn.commit()
-                cur.close()
-                conn.close()
+                command = f"CREATE DATABASE IF NOT EXISTS `{database}`"
+                self._run_mysql_command(host=host, user_name=user_name, password=password, command_type="selectone", command=command)
                 return True, None
             except Error as e:
                 return False, str(e)
@@ -389,12 +457,7 @@ class ALLSKYDATABASEMANAGER:
                 self._database = database_name
                 return True, database_name
 
-        w = Whiptail(
-            title="Select Database",
-            backtitle="Allsky Installer",
-            height=12,
-            width=70
-        )
+        w = Whiptail(title=self._whiptail_title_select_database, backtitle=self._back_title, height=12, width=70)
 
         while True:
             default = "allsky"
@@ -406,11 +469,10 @@ class ALLSKYDATABASEMANAGER:
             if not db_name:
                 w.msgbox("Database name cannot be empty.")
                 continue
-            if not self._sanitize_dbname(db_name):
+            if not self._sanitise_dbname(db_name):
                 w.msgbox("Invalid name. Use letters, numbers, and underscore only.")
                 continue
 
-            # Create (if needed)
             ok, err = create_db(db_name)
             if not ok:
                 choice = w.menu(
@@ -421,7 +483,6 @@ class ALLSKYDATABASEMANAGER:
                     return False, None
                 continue
 
-            # Verify access
             ok, err = can_access(db_name)
             if ok:
                 w.msgbox(f"Database '{db_name}' is ready and accessible.")
@@ -446,28 +507,71 @@ class ALLSKYDATABASEMANAGER:
             if self._display_welcome():
                 database_to_use = self._select_database_server()
                 if (database_to_use == "mysql" and not self._mysql_installed):
-                    if not self._install_database_server(database_to_use):
-                        #TODO install failed
-                        pass
+                    if self._show_mysql_warning_message():
+                        if not self._install_database_server(database_to_use):
+                            #TODO install failed
+                            pass
+                    else:
+                        sys.exit(1)
                     
                 if (database_to_use == "mysql"):
-                    action, user_name, password = self._select_database_user()
+                    
+                    
+                    action, user_name, password = self._select_mysql_database_user()
 
                     if action == "create" or action == "select":
-                        self._select_database("localhost", user_name, password,"allsky")
+                        self._select_mysql_database("localhost", user_name, password,"allsky")
                         result = self._set_allsky_options("localhot", user_name, password, "allsky")
 
+    def remove_mysql(self, remove_data: bool = False):
 
+        def run(cmd):
+            print(">>>", " ".join(cmd))
+            subprocess.run(cmd, check=True)
+            
+        # 1. Stop and disable the service
+        run(["sudo", "systemctl", "stop", "mariadb"])
+        run(["sudo", "systemctl", "disable", "mariadb"])
+
+        # 2. Purge packages
+        run(["sudo", "apt-get", "purge", "-y",
+            "mariadb-server", "mariadb-client", "mariadb-common"])
+
+        # 3. Autoremove unused packages
+        run(["sudo", "apt-get", "autoremove", "-y"])
+
+        if remove_data:
+            # 4. Delete leftover data and configs
+            if os.path.exists("/var/lib/mysql"):
+                print(">>> Removing /var/lib/mysql")
+                shutil.rmtree("/var/lib/mysql", ignore_errors=True)
+            if os.path.exists("/etc/mysql"):
+                print(">>> Removing /etc/mysql")
+                shutil.rmtree("/etc/mysql", ignore_errors=True)
+
+        # 5. Verify service gone
+        result = subprocess.run(
+            ["systemctl", "status", "mariadb"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        print(result.stderr or result.stdout)
+    
 if __name__ == "__main__":    
     parser = argparse.ArgumentParser(description="Allsky database manager")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode, shows more detailed errors")  
     parser.add_argument("--auto", action="store_true", help="Step through installing / configuring the database")  
+    parser.add_argument("--removemysql", action="store_true", help="For testign only remove mysql")  
     args = parser.parse_args()    
     
     database_manager = ALLSKYDATABASEMANAGER(args)
 
-    try:
-        database_manager.run()
-    except Exception as e:
-        print(e)
+    if args.removemysql:
+        database_manager.remove_mysql()
+        sys.exit(0)
+    #try:
+    database_manager.run()
+    #except Exception as e:
+    #    print(e)
             

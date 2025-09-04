@@ -1061,7 +1061,7 @@
 {
 "name" : "timelapsegenerate",
 "default" : true,
-"description" : "Enable to generate a timelapse video at the end of night.<br>See the <span class='WebUIValue'>Websites and Remote Server Settings</span> section for upload settings.",
+"description" : "Enable to generate a timelapse video at the end of night.<br>See the <span class='settingsHeaderWebUIValue'>Websites and Remote Server Settings</span> section for upload settings.",
 "label" : "Generate",
 "label_prefix" : "Daily Timelapse",
 "type" : "boolean",
@@ -1145,7 +1145,7 @@
 "minimum" : 0,
 "maximum" : "none",
 "default" : 0,
-"description" : "Number of images in a mini-timelapse. <span class='WebUIValue'>0</span> disables mini-timelapse creation.<br>See the <span class='WebUIValue'>Websites and Remote Server Settings</span> section for upload settings.",
+"description" : "Number of images in a mini-timelapse. <span class='WebUIValue'>0</span> disables mini-timelapse creation.<br>See the <span class='settingsHeaderWebUIValue'>Websites and Remote Server Settings</span> section for upload settings.",
 "label" : "Number Of Images",
 "label_prefix" : "Mini-Timelapse",
 "type" : "integer",
@@ -1286,7 +1286,7 @@
 {
 "name" : "keogramgenerate",
 "default" : true,
-"description" : "Enable to generate a keogram at the end of night.<br>See the <span class='WebUIValue'>Websites and Remote Server Settings</span> section for upload settings.",
+"description" : "Enable to generate a keogram at the end of night.<br>See the <span class='settingsHeaderWebUIValue'>Websites and Remote Server Settings</span> section for upload settings.",
 "label" : "Generate",
 "label_prefix" : "Keograms",
 "type" : "boolean",
@@ -1372,7 +1372,7 @@
 {
 "name" : "startrailsgenerate",
 "default" : true,
-"description" : "Enable to generate a startrails at the end of night.<br>See the <span class='WebUIValue'>Websites and Remote Server Settings</span> section for upload settings.",
+"description" : "Enable to generate a startrails at the end of night.<br>See the <span class='settingsHeaderWebUIValue'>Websites and Remote Server Settings</span> section for upload settings.",
 "label" : "Generate",
 "label_prefix" : "Startrails",
 "type" : "boolean",

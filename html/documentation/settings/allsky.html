@@ -702,22 +702,6 @@ A typical page is below.
 	<td>Yes</td>
 	<td>Enable to generate a timelapse video at the end of the night.</td>
 </tr>
-<tr><td id="timelapseupload"><span class="WebUISetting">Upload</span></td>
-	<td>Yes</td>
-	<td>Upload the timelapse video to an Allsky Website and/or remote server?
-	If not set, the timelapse videos can still be viewed via the
-	<span class="WebUIWebPage">Images</span> link on the WebUI.
-	<br>Ignored if you you do not have an Allsky Website or remote server.
-	</td>
-</tr>
-<tr><td id="timelapseuploadthumbnail"><span class="WebUISetting">Upload Thumbnail</span></td>
-	<td>Yes</td>
-	<td>Upload the timelapse video's thumbnail to your Allsky Website?
-	Many remote servers don't support thumbnail creation so the thumbnail needs to be
-	created on the Pi and uploaded.
-	<br>Not needed if your only Allsky Website is on your Pi.
-	</td>
-</tr>
 <tr><td id="timelapsewidth"><span class="WebUISetting">Width</span></td>
 	<td>0</td>
 	<td>Changes the width of the generated timelapse; must be an even number.
@@ -816,14 +800,6 @@ A typical page is below.
 	</p>
 	</td>
 </tr>
-<tr><td id="minitimelapseupload"><span class="WebUISetting">Upload</span></td>
-	<td>Yes</td>
-	<td></td>
-</tr>
-<tr><td id="minitimelapseuploadthumbnails"><span class="WebUISetting">Upload Thumbnail</span></td>
-	<td>Yes</td>
-	<td></td>
-</tr>
 <tr><td id="minitimelapsewidth"><span class="WebUISetting">Width</span></td>
 	<td>0</td>
 	<td></td>
@@ -873,10 +849,6 @@ A typical page is below.
 <tr><td id="keogramgenerate"><span class="WebUISetting">Generate</span></td>
 	<td>Yes</td>
 	<td>Enable to generat a keogram image at the end of the night.</td>
-</tr>
-<tr><td id="keogramupload"><span class="WebUISetting">Upload</span></td>
-	<td>Yes</td>
-	<td>Upload the keogram image to an Allsky Website and/or remote server?</td>
 </tr>
 <tr><td id="keogramexpand"><span class="WebUISetting">Expand</span></td>
 	<td>Yes</td>
@@ -955,10 +927,6 @@ A typical page is below.
 	to 1.0 (pure white, uses every image).
 	</td>
 </tr>
-<tr><td id="startrailsupload"><span class="WebUISetting">Upload</span></td>
-	<td>Yes</td>
-	<td>Enable to upload the startrails image to an Allsky Website and/or remote server.</td>
-</tr>
 <tr><td id="startrailsextraparameters"><span class="WebUISetting">Extra Parameters</span></td>
 	<td></td>
 	<td>Optional additional startrails creation parameters.
@@ -996,6 +964,39 @@ A typical page is below.
 	Note that startrails, keograms, and timelapse videos have their own "upload" settings.
 	</td>
 </tr>
+<tr><td id="timelapseupload"><span class="WebUISetting">Upload Daily Timelapse</span></td>
+	<td>Yes</td>
+	<td>Enable to upload the timelapse video to an Allsky Website and/or remote server.
+	If not set, the timelapse videos can still be viewed via the
+	<span class="WebUIWebPage">Images</span> link on the WebUI.
+	<br>Ignored if you you do not have an Allsky Website or remote server.
+	</td>
+</tr>
+<tr><td id="timelapseuploadthumbnail"><span class="WebUISetting">Upload Daily Timelapse Thumbnail</span></td>
+	<td>Yes</td>
+	<td>Enable to upload the timelapse video's thumbnail to your Allsky Website.
+	Many remote servers don't support thumbnail creation so the thumbnail needs to be
+	created on the Pi and uploaded.
+	<br>Not needed if your only Allsky Website is on your Pi.
+	</td>
+</tr>
+<tr><td id="keogramupload"><span class="WebUISetting">Upload Keogram</span></td>
+	<td>Yes</td>
+	<td>Enable to upload the keogram image to an Allsky Website and/or remote server.</td>
+</tr>
+<tr><td id="startrailsupload"><span class="WebUISetting">Upload Startrails</span></td>
+	<td>Yes</td>
+	<td>Enable to upload the startrails image to an Allsky Website and/or remote server.</td>
+</tr>
+<tr><td id="minitimelapseupload"><span class="WebUISetting">Upload Mini-Timelapse</span></td>
+	<td>Yes</td>
+	<td></td>
+</tr>
+<tr><td id="minitimelapseuploadthumbnails"><span class="WebUISetting">Upload Mini-Timelapse Thumbnail</span></td>
+	<td>Yes</td>
+	<td></td>
+</tr>
+
 <tr><td id="displaysettings"><span class="WebUISetting">Display Settings</span></td>
 	<td>No</td>
 	<td>People sometimes ask others what settings they are using.

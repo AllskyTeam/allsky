@@ -451,10 +451,6 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },	// Signals end of list
 	},
-	{
-		// Future new software lines go here...
-		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
-	},
 
 	{ // imx708*, libcamera
 		{ "Gain", "Gain", 16.0, 1.122807, 1.122807, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
@@ -469,10 +465,6 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 		{ "Contrast", "Contrast", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
 		{ "Sharpness", "Sharpness", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
 
-		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
-	},
-	{
-		// Future new software lines go here...
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
 
@@ -491,10 +483,6 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
-	{
-		// Future new software lines go here...
-		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
-	},
 
 	{ // imx290, libcamera
 		{ "Gain", "Gain", 16.0, 1.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
@@ -509,10 +497,6 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 		{ "Contrast", "Contrast", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
 		{ "Sharpness", "Sharpness", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
 
-		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
-	},
-	{
-		// Future new software lines go here...
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
 
@@ -531,11 +515,6 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
-	{
-		// Future new software lines go here...
-		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
-	},
-
 
 	{ // arducam_64mp, libcamera
 		{ "Gain", "Gain", 16.0, 1.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
@@ -552,11 +531,6 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
-	{
-		// Future new software lines go here...
-		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
-	},
-
 
 	{ // arducam-pivariety, libcamera
 		{ "Gain", "Gain", 200.0, 1.0, 1.33, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
@@ -573,11 +547,6 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
-	{
-		// Future new software lines go here...
-		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
-	},
-
 
 	{ // Waveshare imx219, libcamera
 		{ "Gain", "Gain", 10.666667, 1.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
@@ -595,11 +564,6 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
-	{
-		// Future new software lines go here...
-		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
-	},
-
 
 	{	// Arducam ov64a40, libcamera
 		{ "Gain", "Gain", 15.992188, 1.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
@@ -616,11 +580,6 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
-	{
-		// Future new software lines go here...
-		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
-	},
-
 
 	{ // OneInchEye IMX283, libcamera
 		{ "Gain", "Gain", 22.505495, 1.0, 4.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
@@ -636,10 +595,6 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 		{ "Contrast", "Contrast", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
 		{ "Sharpness", "Sharpness", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
 
-		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
-	},
-	{
-		// Future new software lines go here...
 		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
 	},
 

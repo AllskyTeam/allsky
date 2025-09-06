@@ -729,23 +729,37 @@ def install_requirements(req_file: str | Path, log_file: str | Path) -> bool:
 
     return len(failures) == 0
 
-
 def check_mysql_connection(host, user, password, database=None, port=3306):
     try:
         conn = mysql.connector.connect(
             host=host,
             user=user,
             password=password,
-            database=database,
             port=port
         )
-        if conn.is_connected():
-            conn.close()
-            return True
+
+        if not conn.is_connected():
+            return False
+
+        cur = conn.cursor()
+
+        if database:
+            cur.execute(f"CREATE DATABASE IF NOT EXISTS {database};")
+            cur.execute("SHOW DATABASES LIKE %s", (database,))
+            if not cur.fetchone():
+                cur.close()
+                conn.close()
+                return False
+            cur.execute(f"USE `{database}`")
+
+        cur.close()
+        conn.close()
+
+        return True
+
     except Exception as e:
-        log(0, f'ERROR: Database is configured as mysql but cannot connect')
-        pass
-    return False
+        log(0, f'ERROR: Database is configured as mysql but cannot connect: {e}')
+        return False
 
 def get_database_config():
     secret_data = get_secrets(['databasehost', 'databaseuser', 'databasepassword', 'databasedatabase'])
@@ -763,11 +777,20 @@ def update_database(structure, extra_data):
             return
 
         if secret_data['databasetype'] == 'mysql':
-            if check_mysql_connection(secret_data['databasehost'],secret_data['databaseuser'],secret_data['databasepassword']):
+            if check_mysql_connection(secret_data['databasehost'],secret_data['databaseuser'],secret_data['databasepassword'], secret_data['databasedatabase']):
                 update_mysql_database(structure, extra_data)
+            else:
+                log(0, f"ERROR: Failed to connect to MySQL database. Please run the database manager utility.")
         
         if secret_data['databasetype'] == 'sqlite':
             update_sqlite_database(structure, extra_data)
+
+def obfuscate_password(password: str) -> str:
+    if not password:
+        return ""
+    if len(password) <= 2:
+        return "*" * len(password)
+    return password[0] + "*" * (len(password) - 2) + password[-1]
 
 def get_database_row_key(structure):
     row_key = get_environment_variable('AS_TIMESTAMP')
@@ -791,6 +814,9 @@ def update_sqlite_database(structure, extra_data):
                 if structure['database']['enabled']:
                     if 'table' in structure['database']:
                         database_table = structure['database']['table']
+                        row_type = "VARCHAR(100)"
+                        if "row_type" in structure['database']:
+                            row_type = "INTEGER"
                         
                         json_str = json.dumps(extra_data)
                         timestamp = math.floor(time.time())
@@ -801,7 +827,7 @@ def update_sqlite_database(structure, extra_data):
                         with sqlite3.connect(db_path, timeout=10) as conn:
                             #conn.execute('PRAGMA journal_mode = WAL')  # Enables safe concurrent access
                             #conn.execute('PRAGMA synchronous = NORMAL')  # Balance between speed and safety
-                            create_sql = get_sql_create(database_table)
+                            create_sql = get_sql_create(database_table, row_type)
                             conn.execute(create_sql)
                             
                             row_key = get_database_row_key(structure["database"])
@@ -837,8 +863,8 @@ def update_sqlite_database(structure, extra_data):
         eType, eObject, eTraceback = sys.exc_info()            
         log(0, f'ERROR: update_sqlite_database failed on line {eTraceback.tb_lineno} in {me} - {e}')
 
-def get_sql_create(database_table):
-    create_sql = f'CREATE TABLE IF NOT EXISTS {database_table} (row_key VARCHAR(1024), entity VARCHAR(1024), value VARCHAR(2048))'
+def get_sql_create(database_table, row_key_type="INT"):
+    create_sql = f'CREATE TABLE IF NOT EXISTS {database_table} (row_key {row_key_type}, timestamp {row_key_type}, entity VARCHAR(1024), value VARCHAR(2048))'
     return create_sql
             
 def update_mysql_database(structure, extra_data): 
@@ -856,8 +882,12 @@ def update_mysql_database(structure, extra_data):
                             database=secret_data['databasedatabase']
                         )
 
+                        row_type = "VARCHAR(100)"
+                        if "row_type" in structure['database']:
+                            row_type = "INT"
+                            
                         cursor = conn.cursor()
-                        create_sql = get_sql_create(database_table)
+                        create_sql = get_sql_create(database_table, row_type)
                         cursor.execute(create_sql)
 
                         row_key = get_database_row_key(structure["database"])
@@ -906,32 +936,32 @@ def saveExtraData(file_name, extra_data, source='', structure={}, custom_fields=
     Returns:
         Nothing
     """
-    #try:
-    extra_data_path = getExtraDir()
-    if extra_data_path is not None:        
-        checkAndCreateDirectory(extra_data_path)
+    try:
+        extra_data_path = getExtraDir()
+        if extra_data_path is not None:        
+            checkAndCreateDirectory(extra_data_path)
 
-        file_extension = Path(file_name).suffix
-        extra_data_filename = os.path.join(extra_data_path, file_name)
-        with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
-            if file_extension == '.json':
-                extra_data = format_extra_data_json(extra_data, structure, source)
-            if len(custom_fields) > 0:
-                for key, value in custom_fields.items():
-                    extra_data[key] = value
-            extra_data = json.dumps(extra_data, indent=4)
-            temp_file.write(extra_data)
-            temp_file_name = temp_file.name
-            os.chmod(temp_file_name, 0o644)
+            file_extension = Path(file_name).suffix
+            extra_data_filename = os.path.join(extra_data_path, file_name)
+            with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
+                if file_extension == '.json':
+                    extra_data = format_extra_data_json(extra_data, structure, source)
+                if len(custom_fields) > 0:
+                    for key, value in custom_fields.items():
+                        extra_data[key] = value
+                extra_data = json.dumps(extra_data, indent=4)
+                temp_file.write(extra_data)
+                temp_file_name = temp_file.name
+                os.chmod(temp_file_name, 0o644)
 
-            shutil.move(temp_file_name, extra_data_filename)
+                shutil.move(temp_file_name, extra_data_filename)
 
-            if 'database' in structure:
-                update_database(structure, extra_data)
-    #except Exception as e:
-    #    me = os.path.basename(__file__)
-    #    eType, eObject, eTraceback = sys.exc_info()            
-    #    log(0, f'ERROR: saveExtraData failed on line {eTraceback.tb_lineno} in {me} - {e}')
+                if 'database' in structure:
+                    update_database(structure, extra_data)
+    except Exception as e:
+        me = os.path.basename(__file__)
+        eType, eObject, eTraceback = sys.exc_info()            
+        log(0, f'ERROR: saveExtraData failed on line {eTraceback.tb_lineno} in {me} - {e}')
 
 def format_extra_data_json(extra_data, structure, source):
     result = extra_data

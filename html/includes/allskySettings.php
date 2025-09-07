@@ -658,7 +658,8 @@ if ($debug) {
 							$cmd = "${CMD}/checkAllsky.sh --fromWebUI";
 							echo '<script>console.log("Running: ' . $cmd . '");</script>';
 							exec("$cmd 2>&1", $result, $return_val);
-							if ($result != null) {
+							// Only 1 line is just an "ok" line so don't record.
+							if ($result != null && count($result) > 1) {
 								$result = implode("<br>", $result);
 								// Not worth checking if the update worked.
 								updateFile(ALLSKY_CHECK_LOG, $result, "checkAllsky", true);

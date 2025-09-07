@@ -366,9 +366,12 @@ int RPicapture(config cg, cv::Mat *image)
 		}
 
 		// Add errorOutput to the log file.
-		Log(1, "********************\n");		// 1 so it doesn't go to WebUI.
-		Log(l, "%s\n", showDebugFile(errorOutput).c_str());
-		Log(1, "********************\n");
+		std::string m = showDebugFile(errorOutput).c_str();
+		if (m != "") {
+			Log(1, "********************\n");		// 1 so it doesn't go to WebUI.
+			Log(l, "%s\n", m.c_str());
+			Log(1, "********************\n");
+		}
 	}
 
 	return(ret);

@@ -49,6 +49,8 @@ if [[ ! -s ${CURRENT_IMAGE} ]] ; then
 	exit 2
 fi
 
+WEBSITE_FILE="${WORKING_DIR}/${ALLSKY_FULL_FILENAME}"	# The file name the websites look for
+
 # Make sure only one save happens at once.
 # Multiple concurrent saves (which can happen if the delay is short or post-processing
 # is long) causes read and write errors.
@@ -252,8 +254,6 @@ deactivate_python_venv
 # Since only one mini-timelapse can run at once and that code is embeded in this code
 # in several places, remove our PID lock now.
 rm -f "${PID_FILE}"
-
-WEBSITE_FILE="${WORKING_DIR}/${ALLSKY_FULL_FILENAME}"	# The file name the websites look for
 
 TIMELAPSE_MINI_UPLOAD_VIDEO="${S_minitimelapseupload}"
 # If needed, save the current image in today's directory.

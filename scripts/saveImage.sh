@@ -253,7 +253,6 @@ deactivate_python_venv
 # in several places, remove our PID lock now.
 rm -f "${PID_FILE}"
 
-SAVED_FILE="${CURRENT_IMAGE}"					# The name of the file saved from the camera.
 WEBSITE_FILE="${WORKING_DIR}/${ALLSKY_FULL_FILENAME}"	# The file name the websites look for
 
 TIMELAPSE_MINI_UPLOAD_VIDEO="${S_minitimelapseupload}"
@@ -499,7 +498,7 @@ fi
 [[ -n ${ALLSKY_TIMELAPSE_PID_FILE} ]] && rm -f "${ALLSKY_TIMELAPSE_PID_FILE}"
 
 # We create ${WEBSITE_FILE} as late as possible to avoid it being overwritten.
-mv "${SAVED_FILE}" "${WEBSITE_FILE}"
+mv "${CURRENT_IMAGE}" "${WEBSITE_FILE}"
 
 # Only update if different so we don't loose original timestamp
 STATUS="$( get_allsky_status )"

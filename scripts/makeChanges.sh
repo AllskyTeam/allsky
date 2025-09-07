@@ -914,7 +914,7 @@ do
 			else
 				O="imageresizewidth"
 			fi
-			if ! ERR="$( checkWidthHeight "Image Resize" "image" \
+			if ! ERR="$( _checkWidthHeight "Image Resize" "image" \
 				"${S_imageresizewidth}" "${S_imageresizeheight}" \
 	 			"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )" ; then
 

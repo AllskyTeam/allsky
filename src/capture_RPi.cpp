@@ -927,7 +927,10 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				{
 					Log(0, "*** %s: ERROR: maximum number of consecutive errors of %d reached; capture program stopped. Total errors=%'d.\n", CG.ME, CG.maxErrors, numTotalErrors);
 					Log(0, "Make sure cable between camera and Pi is all the way in.\n");
-					Log(0, "The last error was: %s", showDebugFile(errorOutput).c_str());
+					std::string m = showDebugFile(errorOutput).c_str();
+					if (m != "") {
+						Log(0, "The last error was: %s", showDebugFile(errorOutput).c_str());
+					}
 					closeUp(EXIT_ERROR_STOP);
 				}
 	

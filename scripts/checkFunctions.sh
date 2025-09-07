@@ -155,7 +155,6 @@ function _check_immediate()
 # Assume each number has already been checked, e.g., it's not a string.
 function _checkWidthHeight()
 {
-set -x
 	local NAME_PREFIX="${1}"
 	local ITEM="${2}"
 	local WIDTH="${3}"

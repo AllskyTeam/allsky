@@ -896,7 +896,7 @@ do
 			else
 				O="imageresizeuploadwidth"
 			fi
-			if ! ERR="$( checkWidthHeight "Resize Uploaded Images" "uploaded image" \
+			if ! ERR="$( _checkWidthHeight "Resize Uploaded Images" "uploaded image" \
 				"${S_imageresizeuploadwidth}" "${S_imageresizeuploadheight}" \
 	 			"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )" ; then
 

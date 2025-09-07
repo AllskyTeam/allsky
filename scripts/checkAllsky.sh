@@ -178,9 +178,9 @@ if [[ ${ENV_EXISTS} == "true" ]]; then
 	eval "${X}"
 fi
 
-# "convertJSON.php" won't work with the CC_FILE since it has arrays.
-C_sensorWidth="$( settings ".sensorWidth" "${CC_FILE}" )"	# Physical sensor size.
-C_sensorHeight="$( settings ".sensorHeight" "${CC_FILE}" )"
+# "convertJSON.php" won't work with the ALLSKY_CC_FILE since it has arrays.
+C_sensorWidth="$( settings ".sensorWidth" "${ALLSKY_CC_FILE}" )"	# Physical sensor size.
+C_sensorHeight="$( settings ".sensorHeight" "${ALLSKY_CC_FILE}" )"
 
 # Return 0 if the number is 0.0, else return 1.
 function is_zero()
@@ -300,12 +300,13 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 		echo -ne "${FIX}: If this is not what you want, change the setting.${wBR}"
 	fi
 
-	ERR="$( checkWidthHeight "Resize Image" "image" \
+	ERR="$( _checkWidthHeight "Resize Image" "image" \
 		"${S_imageresizewidth}" "${S_imageresizeheight}" \
 	 	"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )"
 	if [[ $? -ne 0 || -n ${ERR} ]]; then
 		heading "Information"
 		echo -ne "${ERR}${wBR}"
+		echo -ne "${FIX}: Change the ${WSNs}${S_imageresizewidth_label}${WSNe} and ${WSNs}${S_imageresizeheight_label}${WSNe} settings.${wBR}"
 	fi
 
 	if [[ $((S_imagecroptop + S_imagecropright + S_imagecropbottom + S_imagecropleft)) -gt 0 ]]; then

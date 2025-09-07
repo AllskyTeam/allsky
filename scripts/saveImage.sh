@@ -165,13 +165,18 @@ if [[ ${AS_RESIZE_WIDTH} -gt 0 && ${AS_RESIZE_HEIGHT} -gt 0 ]]; then
 		display_error_and_exit "${ERROR_MSG}" "Image Resize"
 	fi
 
-	S="${AS_RESIZE_WIDTH}x${AS_RESIZE_HEIGHT}!"
-	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		echo "${ME}: Resizing '${CURRENT_IMAGE}' to ${S/!/}"
-	fi
-	if ! convert "${CURRENT_IMAGE}" -resize "${S}" "${CURRENT_IMAGE}" ; then
-		E_ "*** ${ME}: ERROR: image resize failed; not saving."
-		exit 4
+	S="${AS_RESIZE_WIDTH}x${AS_RESIZE_HEIGHT}"
+	# Check if resizing to same size.
+	if [[ "${AS_RESOLUTION_X}x${AS_RESOLUTION_Y}" != "${S}" ]]; then
+		if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+			echo "${ME}: Resizing '${CURRENT_IMAGE}' to ${S}"
+		fi
+		if ! convert "${CURRENT_IMAGE}" -resize "${S}!" "${CURRENT_IMAGE}" ; then
+			E_ "*** ${ME}: ERROR: image resize failed; not saving."
+			exit 4
+		fi
+	elif [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+		echo "${ME}: NOT resizing '${CURRENT_IMAGE}' to same size (${S})"
 	fi
 
 	if [[ ${CROP_IMAGE} -gt 0 ]]; then

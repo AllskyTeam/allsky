@@ -773,37 +773,6 @@ function checkPixelValue()
 }
 
 
-#####
-# Make sure the specified width and height are valid.
-# Assume each number has already been checked, e.g., it's not a string.
-function checkWidthHeight()
-{
-	local NAME_PREFIX="${1}"
-	local ITEM="${2}"
-	local WIDTH="${3}"
-	local HEIGHT="${4}"
-	local SENSOR_WIDTH="${5}"
-	local SENSOR_HEIGHT="${6}"
-	local ERR
-
-	# Width and height must both be 0 or non-zero.
-	if [[ (${WIDTH} -gt 0 && ${HEIGHT} -eq 0) || (${WIDTH} -eq 0 && ${HEIGHT} -gt 0) ]]; then
-		ERR="${WSNs}${NAME_PREFIX} Width${WSNe} (${WSVs}${WIDTH}${WSVe})"
-		ERR+=" and ${WSNs}Height${WSNe} (${WSVs}${HEIGHT}${WSVe})"
-		ERR+=" must both be either 0 or non-zero.${wBR}"
-		ERR+="The ${ITEM} will NOT be resized since it would look unnatural."
-
-	elif [[ ${WIDTH} -gt 0 && ${HEIGHT} -gt 0 &&
-			${SENSOR_WIDTH} -eq ${WIDTH} && ${SENSOR_HEIGHT} -eq ${HEIGHT} ]]; then
-		ERR="Resizing a ${ITEM} to the same size as the sensor does nothing useful."
-	fi
-
-	[[ -z ${ERR} ]] && return 0
-
-	echo -e "${ERR}" >&2
-	return 1
-}
-
 
 #####
 # The crop rectangle needs to fit within the image and the numbers be even.

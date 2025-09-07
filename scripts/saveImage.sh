@@ -49,6 +49,7 @@ if [[ ! -s ${CURRENT_IMAGE} ]] ; then
 	exit 2
 fi
 
+WORKING_DIR=$( dirname "${CURRENT_IMAGE}" )		# the directory the image is currently in
 WEBSITE_FILE="${WORKING_DIR}/${ALLSKY_FULL_FILENAME}"	# The file name the websites look for
 
 # Make sure only one save happens at once.
@@ -93,7 +94,6 @@ export AS_CAMERA_NUMBER="${CAMERA_NUMBER}"
 # The image may be in a memory filesystem, so do all the processing there and
 # leave the image used by the website(s) in that directory.
 IMAGE_NAME=$( basename "${CURRENT_IMAGE}" )		# just the file name
-WORKING_DIR=$( dirname "${CURRENT_IMAGE}" )		# the directory the image is currently in
 
 # If ${AS_TEMPERATURE_C} is set, use it as the sensor temperature,
 # otherwise use the temperature in ${TEMPERATURE_FILE}.
@@ -498,7 +498,7 @@ fi
 [[ -n ${ALLSKY_TIMELAPSE_PID_FILE} ]] && rm -f "${ALLSKY_TIMELAPSE_PID_FILE}"
 
 # We create ${WEBSITE_FILE} as late as possible to avoid it being overwritten.
-mv "${CURRENT_IMAGE}" "${WEBSITE_FILE}"
+mv "${CURRENT_IMAGE}" "${WEBSITE_FILE}" || echo "ERROR: ${ME} Unable to rename current image to final name." >&2
 
 # Only update if different so we don't loose original timestamp
 STATUS="$( get_allsky_status )"

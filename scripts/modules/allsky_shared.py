@@ -803,6 +803,11 @@ def get_database_row_key(structure):
 def update_sqlite_database(structure, extra_data):
 
     try:
+        time_stamp = os.environ["AS_TIMESTAMP"]
+    except:
+        time_stamp = int(time.time())
+
+    try:
         db_path = os.environ['ALLSKY_DATABASES']
     except KeyError:
         setupForCommandLine()
@@ -853,8 +858,8 @@ def update_sqlite_database(structure, extra_data):
                                 val = value.get("value")
                                          
                                 conn.execute(
-                                    f"INSERT INTO {row_database_table} (row_key, entity, value) VALUES (?, ?, ?)",
-                                    (row_key, entity, str(val))
+                                    f"INSERT INTO {row_database_table} (row_key, entity, value, timestamp) VALUES (?, ?, ?, ?)",
+                                    (row_key, entity, str(val), time_stamp)
                                 )
                                 conn.commit()
 
@@ -869,6 +874,12 @@ def get_sql_create(database_table, row_key_type="INT"):
             
 def update_mysql_database(structure, extra_data): 
     secret_data = get_database_config()
+    
+    try:
+        time_stamp = os.environ["AS_TIMESTAMP"]
+    except:
+        time_stamp = int(time.time())
+        
     try:
         if "database" in structure:
             if 'enabled' in structure['database']:
@@ -912,8 +923,8 @@ def update_mysql_database(structure, extra_data):
                                     
                             val = value.get("value")
                             cursor.execute(
-                                f"INSERT INTO {row_database_table} (row_key, entity, value) VALUES (%s, %s, %s)",
-                                (row_key, entity, str(val))
+                                f"INSERT INTO {row_database_table} (row_key, entity, value, timestamp) VALUES (%s, %s, %s, %s)",
+                                (row_key, entity, str(val), time_stamp)
                             )
                         conn.commit()
                         cursor.close()

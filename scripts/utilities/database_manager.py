@@ -106,6 +106,8 @@ class ALLSKYDATABASEMANAGER:
     
     _whiptail_database_disabled = "No database is configured or enabled. Please check the database configuration"
     
+    _whiptail_add_remote_user = "Creating a user for remote access will require changing the MySQL server to be accessible outside of this pi. This may pose a security risk if the pi is exposed to the internet.\n\nAre you sure you wish to proceed?"
+    
     _back_title= "Allsky Database Manager"
     _whiptail_title_select_database = "Select Database"
     _whiptail_title_main_menu = "Main Menu"    
@@ -124,7 +126,7 @@ class ALLSKYDATABASEMANAGER:
         self._pi_version = self._get_pi_version()
         
         self._database_config = shared.get_database_config()
-
+        
     @property
     def all_databases_installed(self) -> bool:
         result = False
@@ -154,7 +156,7 @@ class ALLSKYDATABASEMANAGER:
             else:
                 self._info_prompt(self._whiptail_error, self._back_title, self._whiptail_database_disabled, 11, 50)
         return wrapper
-                    
+                                            
     def _log(self, log_level, message) -> None:
         if self._debug_mode:
             print(message)
@@ -559,8 +561,44 @@ class ALLSKYDATABASEMANAGER:
     def _test_database(self):
         pass
     
-    def _set_allsky_options(self, host: str="localhost", user_name: str="", password: str="", database: str="", enabled: bool=True) -> bool:
-        pass
+    def _set_allsky_options(self, database_type:str="mysq;", host: str="localhost", user_name: str="", password: str="", database: str="", enabled: bool=True) -> bool:
+        
+        try:
+            settings_file = os.environ["ALLSKY_SETTINGS_FILE"]
+            if os.path.exists(settings_file):
+                with open(settings_file, "r") as f:
+                    settings = json.load(f)
+            else:
+                settings = {}
+
+            settings["enabledatabase"] = enabled
+            settings["databasetype"] = database_type.lower()
+
+            with open(settings_file, "w") as f:
+                json.dump(settings, f, indent=4)
+
+            env_file = os.environ["ALLSKY_ENV"]
+            if os.path.exists(env_file):
+                with open(env_file, "r") as f:
+                    env = json.load(f)
+            else:
+                env = {}
+
+            env.update({
+                "databasehost": host,
+                "databaseuser": user_name,
+                "databasedatabase": database,
+                "databasepassword": password,
+            })
+
+            with open(env_file, "w") as f:
+                json.dump(env, f, indent=4)
+
+            return True
+
+        except Exception as e:
+            self._log(4, f"ERROR: _set_allsky_options failed -> {e}")
+            return False
 
     def _info_prompt(self, title:str, back_title:str, message:str, height:int=12, width:int=60):
 
@@ -574,8 +612,59 @@ class ALLSKYDATABASEMANAGER:
 
         return result
     
+    def _restart_mysql_service(self):
+
+        try:
+            subprocess.run(
+                ["sudo", "systemctl", "restart", "mysql"],
+                check=True
+            )
+            return True
+        except subprocess.CalledProcessError:
+            pass
+
+        return False
+    
+    def _set_mysql_bind_all(self, config_file:str="/etc/mysql/mariadb.conf.d/50-server.cnf") -> bool:
+        if not os.path.exists(config_file):
+            return False
+
+        backup_file = config_file + ".bak"
+        shared.copy_file(config_file, backup_file)
+
+        new_lines = []
+        changed = False
+
+        with open(config_file, "r") as f:
+            for line in f:
+                if line.strip().startswith("bind-address"):
+                    new_lines.append("bind-address = 0.0.0.0\n")
+                    changed = True
+                else:
+                    new_lines.append(line)
+
+        if not changed:
+            new_content = []
+            inserted = False
+            for line in new_lines:
+                new_content.append(line)
+                if not inserted and line.strip().lower().startswith("[mysqld]"):
+                    new_content.append("bind-address = 0.0.0.0\n")
+                    inserted = True
+            new_lines = new_content
+
+        with open(config_file, "w") as f:
+            f.writelines(new_lines)
+
+        return True
+    
     @warn_no_database
     def _reset_database(self):
+        
+        if self._database_config["databasetype"] == "mysql" and not self._mysql_installed:
+            self._info_prompt("Warning", self._back_title, "MySQL is enabled in the Allsky config but its not currently installed. Please install MySQL")
+            return
+                    
         ok_to_clear = self._confirm_prompt(self._whiptail_confirm, self._back_title, self._reset_database_message)
         if ok_to_clear:
             if self._database_config["databasetype"] == "mysql":
@@ -615,6 +704,11 @@ class ALLSKYDATABASEMANAGER:
         purge_result = []
         purged_something = False
         
+        if self._database_config["databasetype"] == "mysql" and not self._mysql_installed:
+            self._info_prompt("Warning", self._back_title, "MySQL is enabled in the Allsky config but its not currently installed. Please install MySQL")
+            return
+                    
+                            
         w = Whiptail(
             title=self._whiptail_message,
             backtitle=self._back_title,
@@ -744,45 +838,49 @@ class ALLSKYDATABASEMANAGER:
         self._database_config = shared.get_database_config()
 
         if self._database_config["databasetype"] == "mysql":
-            command = 'SELECT VERSION();'
-            version = self._run_mysql_command(
-                self._database_config["databasehost"],
-                self._database_config["databaseuser"],
-                self._database_config["databasepassword"],
-                command,
-                command_type="fetchone"
-            )
-                            
-            command = f"""
-                SELECT
-                    table_name,
-                    ROUND((data_length + index_length) / 1024 / 1024, 2) AS size_mb
-                FROM information_schema.tables
-                    WHERE table_schema = '{self._database_config['databasedatabase']}'
-                    ORDER BY size_mb DESC, table_name;
-                """
-            table_sizes = self._run_mysql_command(
-                self._database_config["databasehost"],
-                self._database_config["databaseuser"],
-                self._database_config["databasepassword"],
-                command,
-                command_type="fetchall"
-            )
-            
-            lines = []
-            for table_name, size in table_sizes:
-                lines.append(f"{table_name.ljust(30)} {size:.2f} MB")
-            
-            table_info = "\n".join(lines)                
+            if self._mysql_installed:
+                command = 'SELECT VERSION();'
+                version = self._run_mysql_command(
+                    self._database_config["databasehost"],
+                    self._database_config["databaseuser"],
+                    self._database_config["databasepassword"],
+                    command,
+                    command_type="fetchone"
+                )
+                                
+                command = f"""
+                    SELECT
+                        table_name,
+                        ROUND((data_length + index_length) / 1024 / 1024, 2) AS size_mb
+                    FROM information_schema.tables
+                        WHERE table_schema = '{self._database_config['databasedatabase']}'
+                        ORDER BY size_mb DESC, table_name;
+                    """
+                table_sizes = self._run_mysql_command(
+                    self._database_config["databasehost"],
+                    self._database_config["databaseuser"],
+                    self._database_config["databasepassword"],
+                    command,
+                    command_type="fetchall"
+                )
                 
-            text =  f"Database   : MySQL {version[0]}\n"
-            text += f'Server Host: {self._database_config["databasehost"]}\n'
-            text += f'Username   : {self._database_config["databaseuser"]}\n'
-            text += f'Password   : {shared.obfuscate_password(self._database_config["databaseuser"])}\n'
-            text += f'Database   : {self._database_config["databasedatabase"]}\n\n'
-            text += "TABLE INFORMATION\n"
-            text += table_info
-            
+                lines = []
+                for table_name, size in table_sizes:
+                    lines.append(f"{table_name.ljust(30)} {size:.2f} MB")
+                
+                table_info = "\n".join(lines)                
+                    
+                text =  f"Database   : MySQL {version[0]}\n"
+                text += f'Server Host: {self._database_config["databasehost"]}\n'
+                text += f'Username   : {self._database_config["databaseuser"]}\n'
+                text += f'Password   : {shared.obfuscate_password(self._database_config["databaseuser"])}\n'
+                text += f'Database   : {self._database_config["databasedatabase"]}\n\n'
+                text += "TABLE INFORMATION\n"
+                text += table_info
+            else:
+                self._info_prompt("Warning", self._back_title, "MySQL is enabled in the Allsky config but its not currently installed. Please install MySQL")
+                return
+                
         if self._database_config["databasetype"] == "sqlite":
             
             page_size = self._run_sqlite_command("PRAGMA page_size;", "fetchone")
@@ -812,63 +910,73 @@ class ALLSKYDATABASEMANAGER:
         import mysql.connector
         from mysql.connector import errorcode
         
-        w = Whiptail(title=self._whiptail_remote_user, backtitle=self._back_title, height=15, width=60)
+        if self._mysql_installed:
+            
+            ok_to_proceed = self._confirm_prompt(self._whiptail_confirm, self._back_title, self._whiptail_add_remote_user)
 
-        username, code = w.inputbox("Enter a new MySQL username:")
-        if code != 0 or not username.strip():
-            w.msgbox("Cancelled or invalid username.")
-            return False
+            if ok_to_proceed:
+                w = Whiptail(title=self._whiptail_remote_user, backtitle=self._back_title, height=15, width=60)
 
-        while True:
-            try:
-                pw1, code = w.passwordbox(f"Enter password for '{username}':")
-            except AttributeError:
-                pw1, code = w.inputbox(f"Enter password for '{username}':")
-            if code != 0:
-                w.msgbox("Cancelled.")
-                return False
+                username, code = w.inputbox("Enter a new MySQL username:")
+                if code != 0 or not username.strip():
+                    return False
 
-            try:
-                pw2, code = w.passwordbox("Confirm password:")
-            except AttributeError:
-                pw2, code = w.inputbox("Confirm password:")
-            if code != 0:
-                w.msgbox("Cancelled.")
-                return False
+                while True:
+                    try:
+                        pw1, code = w.passwordbox(f"Enter password for '{username}':")
+                    except AttributeError:
+                        pw1, code = w.inputbox(f"Enter password for '{username}':")
+                    if code != 0:
+                        w.msgbox("Cancelled.")
+                        return False
 
-            if pw1 != pw2:
-                w.msgbox("Passwords do not match. Try again.")
-                continue
-            if not pw1:
-                w.msgbox("Password cannot be empty.")
-                continue
-            break
+                    try:
+                        pw2, code = w.passwordbox("Confirm password:")
+                    except AttributeError:
+                        pw2, code = w.inputbox("Confirm password:")
+                    if code != 0:
+                        w.msgbox("Cancelled.")
+                        return False
 
-        try:
+                    if pw1 != pw2:
+                        w.msgbox("Passwords do not match. Please Try again.")
+                        continue
+                    if not pw1:
+                        w.msgbox("Password cannot be empty.")
+                        continue
+                    break
 
-            commands = [
-                f'CREATE USER IF NOT EXISTS "{username}"@"%%" IDENTIFIED BY "{pw1}"',
-                f'GRANT ALL PRIVILEGES ON *.* TO "{username}"@"%%" WITH GRANT OPTION',
-                "FLUSH PRIVILEGES;"
-            ]
-            self._run_mysql_command(root_user=True, command=commands)
+                try:
 
-            w.msgbox(f"User '{username}'@'%' created with full remote access.")
+                    commands = [
+                        f'CREATE USER IF NOT EXISTS "{username}"@"%" IDENTIFIED BY "{pw1}"',
+                        f'GRANT ALL PRIVILEGES ON *.* TO "{username}"@"%" WITH GRANT OPTION',
+                        "FLUSH PRIVILEGES;"
+                    ]
+                    self._run_mysql_command(root_user=True, command=commands)
 
-            return True
+                    self._set_mysql_bind_all()
+                    self._restart_mysql_service()
+                    
+                    w.msgbox(f"User '{username}'@'%' created with full remote access.")
 
-        except mysql.connector.Error as err:
-            if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-                w.msgbox("Access denied: wrong root credentials?")
-            else:
-                w.msgbox(f"MySQL Error: {err}")
-            return False
-                   
+                    return True
+
+                except mysql.connector.Error as err:
+                    if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+                        w.msgbox("Access denied: wrong root credentials?")
+                    else:
+                        w.msgbox(f"MySQL Error: {err}")
+                    return False
+        else:
+            self._info_prompt("Warning", self._back_title, "MySQL is enabled in the Allsky config but its not currently installed. Please install MySQL")
+            return
+                                       
     def run_auto(self) -> None:
         if not self.is_database_configured:
             if self._display_welcome():
                 database_to_use = self._select_database_server()
-                if (database_to_use == "mysql" and not self._mysql_installed):
+                if database_to_use == "mysql" and not self._mysql_installed:
                     if self._show_mysql_warning_message():
                         if not self._install_database_server(database_to_use):
                             #TODO install failed
@@ -876,14 +984,17 @@ class ALLSKYDATABASEMANAGER:
                     else:
                         sys.exit(1)
                     
-                if (database_to_use == "mysql"):
-                    
-                    
+                if database_to_use == "mysql":
                     action, user_name, password = self._select_mysql_database_user()
-
                     if action == "create" or action == "select":
-                        self._select_mysql_database("localhost", user_name, password,"allsky")
-                        result = self._set_allsky_options("localhot", user_name, password, "allsky")
+                        result, db_name = self._select_mysql_database("localhost", user_name, password,"allsky")
+                        if result:
+                            result = self._set_allsky_options("mysql", "localhost", user_name, password, db_name)
+                            self._mysql_installed, self._mysql_type = self._mysql_service_installed()
+
+                if database_to_use == "sqlite":
+                    result = self._set_allsky_options("sqlite", "", "", "", "")
+                    
 
     def run(self):
         w = Whiptail(
@@ -897,16 +1008,15 @@ class ALLSKYDATABASEMANAGER:
             options = [
                 ("1", "Show Database Information"),
                 ("2", "Run Setup Wizard"),
-                ("3", "Test Database Access"),
-                ("4", "Create Remote MySQL User"),
-                ("5", "Reset ALL Data"),
-                ("6", "Purge Database"),
-                ("7", "Exit"),
+                ("3", "Create Remote MySQL User"),
+                ("4", "Reset ALL Data"),
+                ("5", "Purge Database"),
+                ("6", "Exit"),
             ]
 
             choice, code = w.menu("Select an option:", options)
 
-            if code != 0 or choice == "7":
+            if code != 0 or choice == "6":
                 break
             
             if choice == "1":
@@ -915,13 +1025,13 @@ class ALLSKYDATABASEMANAGER:
             if choice == "2":
                 self.run_auto()
 
-            if choice == "4":
+            if choice == "3":
                 self.create_remote_mysql_user()
                           
-            if choice == "5":
+            if choice == "4":
                 self._reset_database()
 
-            if choice == "6":
+            if choice == "5":
                 self._purge_database()
                                             
     def remove_mysql(self, remove_data: bool = False):

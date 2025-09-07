@@ -747,7 +747,7 @@
 "label" : "Record Focus",
 "type" : "boolean",
 "usage" : "capture",
-"action" : "stop"
+"action" : "reload"
 },
 {
 "name" : "consistentdelays",

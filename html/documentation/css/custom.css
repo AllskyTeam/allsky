@@ -1071,7 +1071,6 @@ div.sticky {
 	position: -webkit-sticky;
 	position: sticky;
 	top: -10px;
-	lmargin-top: 10px;
 	padding: 10px 0 10px 0;
 	background: rgba(187, 187, 187, 1);
 	border: 2px solid var(--sticky-border-color);
@@ -1342,12 +1341,6 @@ div.sticky {
 	margin-bottom: 10px !important;
 }
 
-
-
-
-
-
-
 /* Header */
 .header {
 	position: fixed;
@@ -1434,6 +1427,30 @@ div.sticky {
 
 .sidebar.collapsed~.content {
 	left: 60px;
+}
+
+@media screen and (max-width: 385px) {
+	.settings-buttons .expand-collapse-button {
+		margin-top: 3px;
+		left: 200px;
+	}
+}
+@media screen and (max-width: 550px) {
+	.settings-buttons .buttons, .settings-buttons .save-settings-text {
+		padding-left: 5px;
+		padding-right: 5px;
+	}
+	.content {
+		padding-left: 5px;
+		padding-right: 5px;
+	}
+	/* Totally hide sidebar on really narrow screens to give more room to "content". */
+	.sidebar.collapsed {
+		display: none;
+	}
+	.sidebar.collapsed~.content {
+		left: 0px;
+	}
 }
 
 /* Styles for the portaled (floating) submenu */

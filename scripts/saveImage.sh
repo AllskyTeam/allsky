@@ -93,12 +93,6 @@ export AS_CAMERA_NUMBER="${CAMERA_NUMBER}"
 IMAGE_NAME=$( basename "${CURRENT_IMAGE}" )		# just the file name
 WORKING_DIR=$( dirname "${CURRENT_IMAGE}" )		# the directory the image is currently in
 
-CROP_TOP="${S_imagecroptop}"
-CROP_RIGHT="${S_imagecropright}"
-CROP_BOTTOM="${S_imagecropbottom}"
-CROP_LEFT="${S_imagecropleft}"
-CROP_IMAGE=$(( CROP_TOP + CROP_RIGHT + CROP_BOTTOM + CROP_LEFT ))		# > 0 if cropping
-
 # If ${AS_TEMPERATURE_C} is set, use it as the sensor temperature,
 # otherwise use the temperature in ${TEMPERATURE_FILE}.
 # The TEMPERATURE_FILE is manually created if needed.
@@ -175,18 +169,22 @@ if [[ ${AS_RESIZE_WIDTH} -gt 0 && ${AS_RESIZE_HEIGHT} -gt 0 ]]; then
 			E_ "*** ${ME}: ERROR: image resize failed; not saving."
 			exit 4
 		fi
-	elif [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		echo "${ME}: NOT resizing '${CURRENT_IMAGE}' to same size (${S})"
-	fi
 
-	if [[ ${CROP_IMAGE} -gt 0 ]]; then
 		# The image was just resized and the resolution changed, so reset the variables.
 		AS_RESOLUTION_X=${AS_RESIZE_WIDTH}
 		AS_RESOLUTION_Y=${AS_RESIZE_HEIGHT}
+
+	elif [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+		echo "${ME}: NOT resizing '${CURRENT_IMAGE}' to same size (${S})"
 	fi
 fi
 
 # Crop the image if required
+CROP_TOP="${S_imagecroptop}"
+CROP_RIGHT="${S_imagecropright}"
+CROP_BOTTOM="${S_imagecropbottom}"
+CROP_LEFT="${S_imagecropleft}"
+CROP_IMAGE=$(( CROP_TOP + CROP_RIGHT + CROP_BOTTOM + CROP_LEFT ))		# > 0 if cropping
 if [[ ${CROP_IMAGE} -gt 0 ]]; then
 	# Perform basic checks on crop settings.
 	ERROR_MSG="$( checkCropValues "${CROP_TOP}" "${CROP_RIGHT}" "${CROP_BOTTOM}" "${CROP_LEFT}" \
@@ -204,11 +202,13 @@ if [[ ${CROP_IMAGE} -gt 0 ]]; then
 		[[ ${CROP_LEFT} -ne 0 ]] && C+=" -gravity West -chop ${CROP_LEFT}x0"
 
 		# shellcheck disable=SC2086
-		convert "${CURRENT_IMAGE}" ${C} "${CURRENT_IMAGE}"
-		if [[ $? -ne 0 ]] ; then
-			E_ "*** ${ME}: ERROR: CROP_IMAGE failed; not saving."
+		if ! convert "${CURRENT_IMAGE}" ${C} "${CURRENT_IMAGE}" ; then
+			E_ "*** ${ME}: ERROR: Unable to crop image; not saving."
 			exit 4
 		fi
+		# The image was just resized and the resolution changed, so reset the variables.
+		AS_RESOLUTION_X=${CROP_WIDTH}
+		AS_RESOLUTION_Y=${CROP_HEIGHT}
 	else
 		E_ "*** ${ME}: ERROR: Crop number(s) invalid; not cropping image."
 		display_error_and_exit "${ERROR_MSG}" "CROP"
@@ -230,7 +230,7 @@ if [[ ${AS_STRETCH_AMOUNT} -gt 0 ]]; then
  	convert "${CURRENT_IMAGE}" -sigmoidal-contrast \
 		"${AS_STRETCH_AMOUNT}x${AS_STRETCH_MIDPOINT}%" "${CURRENT_IMAGE}"
 	if [[ $? -ne 0 ]]; then
-		E_ "*** ${ME}: ERROR: AUTO_STRETCH failed; not saving."
+		E_ "*** ${ME}: ERROR: Unable to stretch image; not saving."
 		exit 4
 	fi
 fi

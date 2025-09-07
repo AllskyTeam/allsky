@@ -74,6 +74,7 @@ TYPE=""
 MESSAGE=""
 ESCAPED_MESSAGE=""
 URL=""
+MSG_SPECIFIED="false"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in
@@ -100,6 +101,7 @@ while [[ $# -gt 0 ]]; do
 			shift
 			;;
 		"--msg")
+			MSG_SPECIFIED="true"
 			MESSAGE="$( convert_string "${2}" )"
 			# If ${MESSAGE} contains "*" or "[" it hoses up the grep and sed regular expression,
 			# so escape them.
@@ -126,7 +128,8 @@ done
 [[ ${OK} == "false" ]] && usage_and_exit 1
 if [[ ${DELETE} == "false" && (-z ${TYPE} || -z ${MESSAGE}) ]]; then
 	[[ -z ${TYPE} ]] && wE_ "--type not specified" >&2
-	[[ -z ${MESSAGE} ]] && wE_ "--msg not specified" >&2
+	[[ ${MSG_SPECIFIED} == "false" ]] && wE_ "--msg not specified" >&2
+	[[ -z ${MESSAGE} ]] && wE_ "Empty message" >&2
 	echo "Command line: ${ARGS}" >&2
 	usage_and_exit 1
 fi

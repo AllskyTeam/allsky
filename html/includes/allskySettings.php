@@ -769,7 +769,7 @@ if ($debug) {
 		<div class="sticky settings-nav">
 			<div class="settings-buttons container-fluid">
 				<div class="row">
-					<div class="col-md-11 col-sm-11 col-xs-11 nowrap">
+					<div class="col-md-11 col-sm-11 col-xs-11 nowrap buttons">
 						<button type="submit" class="btn btn-primary"
 								id="save_settings" name="save_settings"
 								title="Save changes">
@@ -782,7 +782,7 @@ if ($debug) {
 						</button>
 					</div>
 					
-					<div class="col-md-1 col-sm-1 col-xs-1">
+					<div class="col-md-1 col-sm-1 col-xs-1 expand-collapse-button">
 						<button type="button" class="<?php if (!$hideHeaderBodies) { echo("hidden ") ;}?>btn btn-primary ml-5 settings-expand pull-right"
 								id="settings-all-control" title="Expand/Collapse all settings">
 							<?php echo $showIcon ?>
@@ -790,7 +790,7 @@ if ($debug) {
 					</div>
 				</div>
 				<div class="row">
-					<div class="col-md-12">
+					<div class="col-md-12 save-settings-text">
 						<div title="Uncheck to only save settings without restarting Allsky" class="mt-4">
 							<input type="checkbox" name="restart" value="true" checked>
 							<span class="ml-2">Restart Allsky after saving changes, if needed?</span>

@@ -860,18 +860,21 @@ RET=0
 if [[ ${NUM_FINDINGS} -eq 0 ]]; then
 	echo -en "No issues found.${wBR}"
 else
-	echo
-	heading "Summary"
-	if [[ ${NUM_INFOS} -gt 0 ]]; then
-		echo -ne "${wINFO}Informational messages: ${NUM_INFOS}${wNC}${wBR}"
-	fi
-	if [[ ${NUM_WARNINGS} -gt 0 ]]; then
-		echo -ne "${wWARNING}Warnings: ${NUM_WARNINGS}${wNC}${wBR}"
-		RET=1
-	fi
-	if [[ ${NUM_ERRORS} -gt 0 ]]; then
-		echo -ne "${wERROR}Errors: ${NUM_ERRORS}${wNC}${wBR}"
-		RET="${EXIT_ERROR_STOP}"
+	# Don't display summary if only 1 item.
+	if [[ ${NUM_FINDINGS} -gt 1 ]]; then
+		echo
+		heading "Summary"
+		if [[ ${NUM_INFOS} -gt 0 ]]; then
+			echo -ne "${wINFO}Informational messages: ${NUM_INFOS}${wNC}${wBR}"
+		fi
+		if [[ ${NUM_WARNINGS} -gt 0 ]]; then
+			echo -ne "${wWARNING}Warnings: ${NUM_WARNINGS}${wNC}${wBR}"
+			RET=1
+		fi
+		if [[ ${NUM_ERRORS} -gt 0 ]]; then
+			echo -ne "${wERROR}Errors: ${NUM_ERRORS}${wNC}${wBR}"
+			RET="${EXIT_ERROR_STOP}"
+		fi
 	fi
 
 	# If called from WebUI, only return error number if the script itself failed.

@@ -1482,8 +1482,17 @@ does_prior_Allsky_exist()
 	# If a prior config directory doesn't exist then there's no prior Allsky,
 	if [[ ! -d ${PRIOR_CONFIG_DIR} ]]; then
 		if [[ -d ${ALLSKY_PRIOR_DIR} ]]; then
-			MSG+=" but it doesn't appear to have been installed; ignoring it."
-			display_msg --log warning "${MSG}"
+			MSG+=" but it doesn't appear to have been installed."
+			display_msg --logonly info "${MSG}"
+			MSG+="\n\nDo you want to continue and ignore that directory"
+			MSG+=" (note that you'll need to re-enter all your settings)?"
+			if ! whiptail --title "${TITLE}" --yesno "${MSG}" 20 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
+				MSG="Check the contents of '${ALLSKY_PRIOR_DIR}' and delete it as needed,"
+				MSG+=" then run the installation again."
+				display_msg info "${MSG}"
+				display_msg --logonly info "User elected not to continue.  Exiting installation."
+				exit_installation 0 "${STATUS_NOT_CONTINUE}" "after no prior valid Allsky was found."
+			fi
 		else
 			display_msg --logonly info "No prior Allsky found at '${ALLSKY_PRIOR_DIR}'."
 		fi

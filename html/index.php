@@ -691,9 +691,7 @@ $allskyStatus = output_allsky_status();
 <?php
 				insertMenuItem('overlay', "");
 				insertMenuItem('module', "");
-				if (haveDatabase()) {				
-					insertMenuItem('charts', "");
-				}
+				insertMenuItem('charts', "");
 ?>
 				<li class="sidebar-dropdown has-flyout">
 					<a href="#" class="submenu-toggle"><i class="fa-solid fa-network-wired"></i><span class="menu-text"> Networking</span></a>

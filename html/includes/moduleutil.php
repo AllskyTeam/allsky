@@ -997,9 +997,6 @@ class MODULEUTIL
             ]);
         }
         if ($secretData['databasetype'] === 'sqlite') {
-            if (empty($ds['sqlite'])) {
-                throw new RuntimeException('SQLite path not provided');
-            }
             $dsn = 'sqlite:' . ALLSKY_DATABASES;
             $pdo = new PDO($dsn, null, null, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

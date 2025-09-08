@@ -171,7 +171,10 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 					"sample": "43.2",
 					"group": "Pi",
 					"description": "CPU Temperature (In C or F)",
-					"type": "temperature"
+					"type": "temperature",
+					"database": {
+						"include" : "true"
+					}
 				},              
 				"AS_CPUTEMP_C": {
 					"name": "${CPUTEMP_C}",
@@ -179,7 +182,10 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 					"sample": "43.2",              
 					"group": "Pi",
 					"description": "CPU Temperature (In Centigrade)",
-					"type": "temperature"
+					"type": "temperature",
+					"database": {
+						"include" : "true"
+					}
 				},
 				"AS_CPUTEMP_F": {
 					"name": "${CPUTEMP_F}",
@@ -187,7 +193,10 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 					"sample": "76.2",              
 					"group": "Pi",
 					"description": "CPU Temperature (In Farenheight)",
-					"type": "temperature"
+					"type": "temperature",
+					"database": {
+						"include" : "true"
+					}
 				},
 				"AS_PIMODEL": {
 					"name": "${PIMODEL}",
@@ -211,7 +220,10 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 					"sample": "100000",
 					"group": "Pi",
 					"description": "Storage size",
-					"type": "filesize"
+					"type": "filesize",
+					"database": {
+						"include" : "true"
+					}
 				},
 				"AS_DISKUSAGE": {
 					"name": "${DISKUSAGE}",
@@ -219,7 +231,10 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 					"sample": "100000",              
 					"group": "Pi",
 					"description": "Storage used size",
-					"type": "filesize"
+					"type": "filesize",
+					"database": {
+						"include" : "true"
+					}
 				},
 				"AS_DISKFREE": {
 					"name": "${DISKFREE}",
@@ -227,7 +242,10 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 					"sample": "100000",              
 					"group": "Pi",
 					"description": "Storage free size",
-					"type": "filesize"
+					"type": "filesize",
+					"database": {
+						"include" : "true"
+					}
 				},
 				"AS_MEMORYTOTAL": {
 					"name": "${MEMORYTOTAL}",
@@ -235,7 +253,10 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 					"sample": "100000",              
 					"group": "Pi",
 					"description": "Total Memory",
-					"type": "filesize"
+					"type": "filesize",
+					"database": {
+						"include" : "true"
+					}
 				},
 				"AS_MEMORYUSED": {
 					"name": "${MEMORYUSED}",
@@ -243,7 +264,10 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 					"sample": "100000",              
 					"group": "Pi",
 					"description": "Memory used",
-					"type": "filesize"
+					"type": "filesize",
+					"database": {
+						"include" : "true"
+					}
 				},
 				"AS_MEMORYAVAILABLE": {
 					"name": "${MEMORYAVAILABLE}",
@@ -251,7 +275,10 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 					"sample": "100000",              
 					"group": "Pi",
 					"description": "Memory available",
-					"type": "filesize"
+					"type": "filesize",
+					"database": {
+						"include" : "true"
+					}
 				}
 			}
 		},

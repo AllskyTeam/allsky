@@ -874,9 +874,14 @@ def update_sqlite_database(structure, extra_data):
                             create_sql = get_sql_create(database_table, row_type)
                             conn.execute(create_sql)
                             
+                            include_all = False
+                            if "include_all" in structure['database']:
+                                include_all = True if structure["database"]["include_all"].lower() == 'true' else False
+                                                 
                             row_key = get_database_row_key(structure["database"])
                             data = json.loads(extra_data)
                             for entity, value in data.items():
+                                include_row = False
                                 row_database_table = database_table
                                 key = entity
                                 key1 = entity + "${COUNT}"
@@ -893,14 +898,17 @@ def update_sqlite_database(structure, extra_data):
                                         create_sql = get_sql_create(row_database_table)
                                         conn.execute(create_sql)
                                         row_key = get_database_row_key(structure["values"][found_key]["database"])
-                                        
-                                val = value.get("value")
-                                         
-                                conn.execute(
-                                    f"INSERT INTO {row_database_table} (row_key, entity, value, timestamp) VALUES (?, ?, ?, ?)",
-                                    (row_key, entity, str(val), time_stamp)
-                                )
-                                conn.commit()
+                                    if "include" in structure["values"][found_key]["database"]:
+                                        if "include" in structure["values"][found_key]["database"]:
+                                            include_row = True if structure["values"][found_key]["database"]["include"].lower() == 'true' else False
+                                                                                
+                                if include_row or include_all:                                         
+                                    val = value.get("value")   
+                                    conn.execute(
+                                        f"INSERT INTO {row_database_table} (row_key, entity, value, timestamp) VALUES (?, ?, ?, ?)",
+                                        (row_key, entity, str(val), time_stamp)
+                                    )
+                                    conn.commit()
 
     except Exception as e:
         me = os.path.basename(__file__)
@@ -936,6 +944,10 @@ def update_mysql_database(structure, extra_data):
                         if "row_type" in structure['database']:
                             row_type = "INT"
                             
+                        include_all = False
+                        if "include_all" in structure['database']:
+                            include_all = True if structure["database"]["include_all"].lower() == 'true' else False
+                            
                         cursor = conn.cursor()
                         create_sql = get_sql_create(database_table, row_type)
                         cursor.execute(create_sql)
@@ -943,9 +955,10 @@ def update_mysql_database(structure, extra_data):
                         row_key = get_database_row_key(structure["database"])
                         data = json.loads(extra_data)
                         for entity, value in data.items():
+                            include_row = False
                             row_database_table = database_table
-                            key = entity
-                            key1 = entity + "${COUNT}"
+                            key = entity                            
+                            key1 = re.sub(r'\d+$', '', entity) + "${COUNT}" # Strip trailing numbers
                             found_key = None
                             if key in structure["values"]:
                                 if 'database' in structure["values"][key]:
@@ -959,12 +972,16 @@ def update_mysql_database(structure, extra_data):
                                     create_sql = get_sql_create(row_database_table)
                                     cursor.execute(create_sql)
                                     row_key = get_database_row_key(structure["values"][found_key]["database"])
+                                if "include" in structure["values"][found_key]["database"]:
+                                    if "include" in structure["values"][found_key]["database"]:
+                                        include_row = True if structure["values"][found_key]["database"]["include"].lower() == 'true' else False
                                     
-                            val = value.get("value")
-                            cursor.execute(
-                                f"INSERT INTO {row_database_table} (row_key, entity, value, timestamp) VALUES (%s, %s, %s, %s)",
-                                (row_key, entity, str(val), time_stamp)
-                            )
+                            if include_row or include_all:                                
+                                val = value.get("value")
+                                cursor.execute(
+                                    f"INSERT INTO {row_database_table} (row_key, entity, value, timestamp) VALUES (%s, %s, %s, %s)",
+                                    (row_key, entity, str(val), time_stamp)
+                                )
                         conn.commit()
                         cursor.close()
                         conn.close()

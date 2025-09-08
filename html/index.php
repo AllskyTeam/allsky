@@ -691,7 +691,7 @@ $allskyStatus = output_allsky_status();
 <?php
 				insertMenuItem('overlay', "");
 				insertMenuItem('module', "");
-				if (haveDatabase()) {
+				if (haveDatabase()) {				
 					insertMenuItem('charts', "");
 				}
 ?>

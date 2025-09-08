@@ -1,4 +1,77 @@
 [
+	{
+		"name": "databasesettingsheader",
+		"label": "Database Settings",
+		"type": "header"
+	},
+	{
+		"name": "enabledatabase",
+		"default": true,
+		"description": "Enable the Allsky database.",
+		"label": "Enable Database",
+		"type": "boolean",
+		"carryforward": true,
+		"checkchanges": true
+	},
+	{
+		"name": "databasetype",
+		"default": "none",
+		"description": "The database to use to store data.",
+		"label": "Database Tyoe",
+		"type": "select_text",
+		"carryforward": true,
+		"optional": true,
+		"options": [
+			{
+				"value": "mysql",
+				"label": "MySQL"
+			},
+			{
+				"value": "sqlite",
+				"label": "SQLite"
+			}
+		]
+	},
+	{
+		"name": "databasehost",
+		"default": "",
+		"description": "The ip / hostname of the server running the database.",
+		"label": "Database Host",
+		"type": "text",
+		"carryforward": true,
+		"optional": true,
+		"source": "${ALLSKY_ENV}"
+	},
+	{
+		"name": "databaseuser",
+		"default": "",
+		"description": "The username used to connect to the database.",
+		"label": "Database User",
+		"type": "text",
+		"carryforward": true,
+		"optional": true,
+		"source": "${ALLSKY_ENV}"
+	},
+	{
+		"name": "databasepassword",
+		"default": "",
+		"description": "The password used to connect to the database.",
+		"label": "User Password",
+		"type": "text",
+		"carryforward": true,
+		"optional": true,
+		"source": "${ALLSKY_ENV}"
+	},
+	{
+		"name": "databasedatabase",
+		"default": "allsky",
+		"description": "The database to use.",
+		"label": "Database",
+		"type": "text",
+		"carryforward": true,
+		"optional": false,
+		"source": "${ALLSKY_ENV}"
+	},
 {
 "name" : "daynighttab========================================",
 "display" : false,
@@ -1061,32 +1134,12 @@
 {
 "name" : "timelapsegenerate",
 "default" : true,
-"description" : "Enable to generate a timelapse video at the end of night.",
+"description" : "Enable to generate a timelapse video at the end of night.<br>See the <span class='settingsHeader'>Websites and Remote Server Settings</span> section for upload settings.",
 "label" : "Generate",
 "label_prefix" : "Daily Timelapse",
 "type" : "boolean",
 "carryforward" : true,
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
-},
-{
-"name" : "timelapseupload",
-"default" : true,
-"description" : "Enable to upload the timelapse video to an Allsky Website and/or remote server.",
-"label" : "Upload",
-"label_prefix" : "Daily Timelapse",
-"type" : "boolean",
-"carryforward" : true,
-"booldependson" : "timelapsegenerate"
-},
-{
-"name" : "timelapseuploadthumbnail",
-"default" : true,
-"description" : "Enable to upload the timelapse video thumbnail.",
-"label" : "Upload Thumbnail",
-"label_prefix" : "Daily Timelapse",
-"type" : "boolean",
-"carryforward" : true,
-"booldependson" : "timelapsegenerate AND timelapseupload AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
 },
 {
 "name" : "timelapsewidth",
@@ -1155,7 +1208,6 @@
 "optional" : true,
 "booldependson" : "timelapsegenerate"
 },
-
 {
 "name" : "minitimelapseheader",
 "label" : "Mini-Timelapse",
@@ -1166,11 +1218,12 @@
 "minimum" : 0,
 "maximum" : "none",
 "default" : 0,
-"description" : "Number of images in a mini-timelapse. <span class='WebUIValue'>0</span> disables mini-timelapse creation.",
+"description" : "Number of images in a mini-timelapse. <span class='WebUIValue'>0</span> disables mini-timelapse creation.<br>See the <span class='settingsHeader'>Websites and Remote Server Settings</span> section for upload settings.",
 "label" : "Number Of Images",
 "label_prefix" : "Mini-Timelapse",
 "type" : "integer",
 "carryforward" : true,
+"checkchanges" : true,
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
@@ -1193,27 +1246,6 @@
 "label_prefix" : "Mini-Timelapse",
 "type" : "integer",
 "carryforward" : true,
-"valuedependson" : "minitimelapsenumimages=[1-9]*"
-},
-{
-"name" : "minitimelapseupload",
-"default" : false,
-"description" : "Enable to upload the mini-timelapse video to an Allsky Website and/or remote server.",
-"label" : "Upload",
-"label_prefix" : "Mini-Timelapse",
-"type" : "boolean",
-"carryforward" : true,
-"valuedependson" : "minitimelapsenumimages=[1-9]*"
-},
-{
-"name" : "minitimelapseuploadthumbnail",
-"default" : true,
-"description" : "Enable to upload the mini-timelapse video thumbnail.",
-"label" : "Upload Thumbnail",
-"label_prefix" : "Mini-Timelapse",
-"type" : "boolean",
-"carryforward" : true,
-"booldependson" : "minitimelapseupload AND (uselocalwebsite OR useremotewebsite OR useremoteserver)",
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 {
@@ -1327,24 +1359,13 @@
 {
 "name" : "keogramgenerate",
 "default" : true,
-"description" : "Enable to generate a keogram at the end of night.",
+"description" : "Enable to generate a keogram at the end of night.<br>See the <span class='settingsHeader'>Websites and Remote Server Settings</span> section for upload settings.",
 "label" : "Generate",
 "label_prefix" : "Keograms",
 "type" : "boolean",
 "carryforward" : true,
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
-{
-"name" : "keogramupload",
-"default" : true,
-"description" : "Enable to upload the keogram to an Allsky Website and/or remote server.",
-"label" : "Upload",
-"label_prefix" : "Keograms",
-"type" : "boolean",
-"carryforward" : true,
-"booldependson" : "keogramgenerate AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
-},
-
 {
 "name" : "keogramexpand",
 "default" : true,
@@ -1416,7 +1437,6 @@
 "optional" : true,
 "booldependson" : "keogramgenerate"
 },
-
 {
 "name" : "startrailssubheader",
 "label" : "Startrails",
@@ -1425,7 +1445,7 @@
 {
 "name" : "startrailsgenerate",
 "default" : true,
-"description" : "Enable to generate a startrails at the end of night.",
+"description" : "Enable to generate a startrails at the end of night.<br>See the <span class='settingsHeader'>Websites and Remote Server Settings</span> section for upload settings.",
 "label" : "Generate",
 "label_prefix" : "Startrails",
 "type" : "boolean",
@@ -1444,16 +1464,6 @@
 "booldependson" : "startrailsgenerate"
 },
 {
-"name" : "startrailsupload",
-"default" : true,
-"description" : "Enable to upload the startrails to an Allsky Website and/or remote server.",
-"label" : "Upload",
-"label_prefix" : "Startrails",
-"type" : "boolean",
-"carryforward" : true,
-"booldependson" : "startrailsgenerate AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
-},
-{
 "name" : "startrailsextraparameters",
 "default" : "",
 "description" : "Optional additional startrails creation parameters.<br>Run <code>~/allsky/bin/startrails --help</code> for a list of options.",
@@ -1463,7 +1473,6 @@
 "optional" : true,
 "booldependson" : "startrailsgenerate"
 },
-
 {
 "name" : "websitetab========================================",
 "label" : "Website",
@@ -1506,6 +1515,67 @@
 "type" : "integer",
 "carryforward" : true,
 "booldependson" : "uselocalwebsite OR useremotewebsite OR useremoteserver"
+},
+{
+"name" : "timelapseupload",
+"default" : true,
+"description" : "Enable to upload the timelapse video to an Allsky Website and/or remote server.",
+"label" : "Upload Daily Timelapse",
+"label_prefix" : "Daily Timelapse",
+"type" : "boolean",
+"carryforward" : true,
+"booldependson" : "timelapsegenerate"
+},
+{
+"name" : "timelapseuploadthumbnail",
+"default" : true,
+"description" : "Enable to upload the timelapse video thumbnail.",
+"label" : "Upload Daily Timelapse Thumbnail",
+"label_prefix" : "Daily Timelapse",
+"type" : "boolean",
+"carryforward" : true,
+"booldependson" : "timelapsegenerate AND timelapseupload AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
+},
+{
+"name" : "keogramupload",
+"default" : true,
+"description" : "Enable to upload the keogram to an Allsky Website and/or remote server.",
+"label" : "Upload Keogram",
+"label_prefix" : "Keograms",
+"type" : "boolean",
+"carryforward" : true,
+"booldependson" : "keogramgenerate AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
+},
+{
+"name" : "startrailsupload",
+"default" : true,
+"description" : "Enable to upload the startrails to an Allsky Website and/or remote server.",
+"label" : "Upload Startrails",
+"label_prefix" : "Startrails",
+"type" : "boolean",
+"carryforward" : true,
+"booldependson" : "startrailsgenerate AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
+},
+{
+"name" : "minitimelapseupload",
+"default" : false,
+"description" : "Enable to upload the mini-timelapse video to an Allsky Website and/or remote server.",
+"label" : "Upload Mini-Timelapse",
+"label_prefix" : "Mini-Timelapse",
+"type" : "boolean",
+"carryforward" : true,
+"valuedependson" : "minitimelapsenumimages=[1-9]*"
+},
+{
+"name" : "minitimelapseuploadthumbnail",
+"default" : true,
+"description" : "Enable to upload the mini-timelapse video thumbnail.",
+"label" : "Upload Mini-Timelapse Thumbnail",
+"label_prefix" : "Mini-Timelapse",
+"type" : "boolean",
+"carryforward" : true,
+"booldependson" : "minitimelapseupload AND (uselocalwebsite OR useremotewebsite OR useremoteserver)",
+"valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 {
 "name" : "displaysettings",

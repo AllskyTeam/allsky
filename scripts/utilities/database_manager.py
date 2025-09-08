@@ -101,18 +101,17 @@ class ALLSKYDATABASEMANAGER:
     
     _reset_database_message = "This will remove ALL data from the database. This CANNOT be undone.\n\nAre you sure you wish to proceed?"
     _reset_complete = "All data has been removed from the database"
-
     _purge_database_time = "Enter a number of hours to keep, or a number followed by 'd' for days to keep:"
-    
     _whiptail_database_disabled = "No database is configured or enabled. Please check the database configuration"
-    
-    _whiptail_add_remote_user = "Creating a user for remote access will require changing the MySQL server to be accessible outside of this pi. This may pose a security risk if the pi is exposed to the internet.\n\nAre you sure you wish to proceed?"
+    _whiptail_add_remote_user = "Creating a user for remote access will require changing the MySQL server to be accessible outside of this pi. This may pose a security risk if the pi is exposed to the internet.\n\nAre you sure you wish to proceed?"    
+    _whiptail_purge_missing = "You are using a database but the purge module is NOT installed. Please install the purge module in the periodic flow.\n\nFailure to run the purge module will result in degraded performance of Allsky and potential disk space issues."
     
     _back_title= "Allsky Database Manager"
     _whiptail_title_select_database = "Select Database"
     _whiptail_title_main_menu = "Main Menu"    
     _whiptail_message = "Message"
-    _whiptail_error = "Error"    
+    _whiptail_error = "Error"
+    _whiptail_warning = "Warning"    
     _whiptail_confirm = "Please Confirm"
     _whiptail_database_info = "Database Information"
     _whiptail_remote_user = "Create Remote MySQL User"
@@ -558,9 +557,6 @@ class ALLSKYDATABASEMANAGER:
             if choice != "retry":
                 return False, None
 
-    def _test_database(self):
-        pass
-    
     def _set_allsky_options(self, database_type:str="mysq;", host: str="localhost", user_name: str="", password: str="", database: str="", enabled: bool=True) -> bool:
         
         try:
@@ -995,8 +991,8 @@ class ALLSKYDATABASEMANAGER:
                 if database_to_use == "sqlite":
                     result = self._set_allsky_options("sqlite", "", "", "", "")
                     
-
     def run(self):
+        self.preflight_checks()
         w = Whiptail(
             title=self._whiptail_title_main_menu,
             backtitle=self._back_title,
@@ -1033,7 +1029,18 @@ class ALLSKYDATABASEMANAGER:
 
             if choice == "5":
                 self._purge_database()
-                                            
+
+    def preflight_checks(self) -> bool:
+        result = True
+        database_config = shared.get_database_config()
+        if "databaseenabled" in database_config:
+            if database_config["databaseenabled"]:
+                flows = shared.get_flows_with_module("purgedb")
+                if not flows:
+                    self._info_prompt(self._whiptail_warning, self._back_title, self._whiptail_purge_missing)
+            
+        return result
+                                                
     def remove_mysql(self, remove_data: bool = False):
 
         def run(cmd):

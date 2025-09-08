@@ -981,240 +981,125 @@ class MODULEUTIL
 		$this->sendResponse(json_encode($result));
 	}
 
-    private function insertNullsOnGap(array $data, int $thresholdSeconds = 7200): array {
-        $result = [];
-
-        $thresholdSeconds = $thresholdSeconds * 1000;
-
-        for ($i = 0; $i < count($data) - 1; $i++) {
-            $current = $data[$i];
-            $next = $data[$i + 1];
-    
-            $result[] = $current;
-    
-            $gap = $next[0] - $current[0];
-            if ($gap > $thresholdSeconds) {
-                $result[] = [null, null];
-            }
-        }
-    
-        $result[] = end($data);
-    
-        return $result;
-    }
-
-    private function convertChartObject($data) {
-        if (is_array($data)) {
-            foreach ($data as $key => $value) {
-                $data[$key] = $this->convertChartObject($value);
-            }
-        } elseif (is_object($data)) {
-            foreach ($data as $key => $value) {
-                $data->$key = $this->convertChartObject($value);
-            }
-        } elseif (is_string($data)) {
-            if (strtolower($data) === 'true') {
-                return true;
-            } elseif (strtolower($data) === 'false') {
-                return false;
-            }
-        }
-    
-        return $data;
-    }
-
-    private function getDatabaseConfig() {
+    /**
+     * Start Graph Code
+     */
+    private function make_pdo(): PDO {
+        // TODO: sudo apt-get install -y php-mysql
         $secretData = getDatabaseConfig();
 
-        return $secretData;
-    }
-
-    private function getChartDataFromMySQL($databaseConfig, $table) {
-        $chartData = [];
-
-        $host = $databaseConfig['databasehost'];
-        $db   = $databaseConfig['databasedatabase'];
-        $user = $databaseConfig['databaseuser'];
-        $pass = $databaseConfig['databasepassword'];
-        $charset = 'utf8mb4';
-        
-        // IMPORTANT: validate $table to prevent SQL injection
-        if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $table)) {
-            die("Invalid table name.");
+        if ($secretData['databasetype'] === 'mysql') {
+            $dsn = sprintf('mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4',
+                $secretData['databasehost'], (int)($secretData['databaseport'] ?? 3306), $secretData['databasedatabase']);
+            return new PDO($dsn, $secretData['databaseuser'], $secretData['databasepassword'], [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            ]);
         }
-
-        $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
-        
-        $options = [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        ];
-        $pdo = new PDO($dsn, $user, $pass, $options);
-
-        $query = "SELECT json_data, timestamp FROM " . $table . " WHERE timestamp >= UNIX_TIMESTAMP() - 3600 ORDER BY timestamp ASC";
-        $stmt = $pdo->query($query);
-
-        while ($row = $stmt->fetch()) {
-            $jsonString = json_decode($row['json_data']);
-            $timestamp = intval($row['timestamp'])*1000;
-            $chartData[$timestamp] = $jsonString;
-        }
-
-        return $chartData;
-    }
-
-    private function getChartDataFromPostgreSQL($databaseConfig, $table) {
-        $chartData = [];
-
-        $host = $databaseConfig['databasehost'];
-        $db   = $databaseConfig['databasedatabase'];
-        $user = $databaseConfig['databaseuser'];
-        $pass = $databaseConfig['databasepassword'];
-
-        $dbconn = pg_connect("host=$host dbname=$db user=$user password=$pass");
-        
-        if ($dbconn) {
-            $now = time();
-            $since = $now - 3600;
-            
-            // IMPORTANT: validate $table to prevent SQL injection
-            if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $table)) {
-                die("Invalid table name.");
+        if ($secretData['databasetype'] === 'sqlite') {
+            if (empty($ds['sqlite'])) {
+                throw new RuntimeException('SQLite path not provided');
             }
-            
-            $query = "SELECT json_data, timestamp FROM $table WHERE timestamp >= $1 ORDER BY timestamp ASC";
-            $result = pg_query_params($dbconn, $query, [$since]);
-            
-            if ($result) {
-                while ($row = pg_fetch_assoc($result)) {
-                    $jsonString = json_decode($row['json_data']);
-                    $timestamp = intval($row['timestamp'])*1000;
-                    $chartData[$timestamp] = $jsonString;
-                }
-            }
-            
-            pg_free_result($result);
-            pg_close($dbconn);
+            $dsn = 'sqlite:' . ALLSKY_DATABASES;
+            $pdo = new PDO($dsn, null, null, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            ]);
+            // Enable WAL: $pdo->exec('PRAGMA journal_mode = WAL;');
+            return $pdo;
         }
-
-        return $chartData;  
+        throw new RuntimeException('Unsupported datasource type');
     }
 
-    private function doesSqliteTableExist($table) {
-        $db = new SQLite3(ALLSKY_MYFILES_DIR . '/allsky.db', SQLITE3_OPEN_READONLY);
-        $db->busyTimeout(5000);
-
-        $stmt = $db->prepare("SELECT name FROM sqlite_master WHERE type='table' AND name = :name");
-        $stmt->bindValue(':name', $table, SQLITE3_TEXT);
-        $result = $stmt->execute();
-
-        if ($result->fetchArray(SQLITE3_ASSOC)) {
-            $result = true;
-        } else {
-            $result = false;
-        }
-
-        return $result;
+    private function parse_variables($v): array {
+        if ($v === null) return [];
+        $s = is_string($v) ? $v : strval($v);
+        $parts = array_map('trim', explode('|', $s));
+        return array_values(array_filter($parts, fn($x) => $x !== ''));
     }
 
-    private function getChartDataFromSQLite($databaseConfig, $table) {
-        $chartData = [];
+    private function fetch_time_series(PDO $pdo, array $entities, string $table='allsky_camera'): array {
+        if (!$entities) return [];   
+        $in  = implode(',', array_fill(0, count($entities), '?'));
+        $sql = "SELECT `timestamp`,`entity`,`value` FROM `$table` WHERE `entity` IN ($in) ORDER BY `timestamp` ASC";
+        $st = $pdo->prepare($sql);
+        $st->execute($entities);
 
-        // IMPORTANT: validate $table to prevent SQL injection
-        if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $table)) {
-            die("Invalid table name.");
+        $byEntity = [];
+        while ($r = $st->fetch()) {
+            $ts = (int)$r['timestamp'];
+            $en = (string)$r['entity'];
+            $val = $r['value'];
+            $byEntity[$en][$ts] = $val;
         }
-
-        if ($this->doesSqliteTableExist($table)) {
-            $db = new SQLite3(ALLSKY_MYFILES_DIR . '/allsky.db', SQLITE3_OPEN_READONLY);
-            $db->busyTimeout(5000);
-
-            $now = time();
-            $since = $now - 86400;
-            
-            $stmt = $db->prepare('SELECT json_data, timestamp FROM ' . $table . ' WHERE timestamp >= :since');
-            $stmt->bindValue(':since', $since, SQLITE3_INTEGER);
-            
-            $result = $stmt->execute();
-            
-            while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-                $jsonString = json_decode($row['json_data']);
-                $timestamp = intval($row['timestamp'])*1000;
-                $chartData[$timestamp] = $jsonString;
+        if (count($entities) === 1) {
+            $out = [];
+            foreach ($byEntity[$entities[0]] ?? [] as $ts => $val) {
+                if (is_numeric($val)) $out[] = [ $ts * 1000, (float)$val ];
             }
-            
-            $db->close();
+            return $out;
         }
 
-        return $chartData;
+        [$primary, $aux] = $entities;
+        $out = [];
+        foreach ($byEntity[$primary] ?? [] as $ts => $val) {
+            if (!is_numeric($val)) continue;
+            $pt = ['x' => $ts * 1000, 'y' => (float)$val];
+            if (isset($byEntity[$aux][$ts])) $pt['url'] = $byEntity[$aux][$ts];
+            $out[] = $pt;
+        }
+    
+        return $out;
     }
 
-    private function getChartDataForChart($chart, $table) {
-        $seriesData = [];
-        $chartData = [];
-
-        if (haveDatabase()) {
-            $databaseConfig = $this->getDatabaseConfig();
-            $databaseType = $databaseConfig['databasetype'];
-
-            switch($databaseType) {
-                case 'mysql':
-                    $chartData = $this->getChartDataFromMySQL($databaseConfig, $table);
-                    break;
-                
-                case 'postgresql':
-                    $chartData = $this->getChartDataFromPostgreSQL($databaseConfig, $table);
-                    break;
-
-                case 'sqlite':
-                    $chartData = $this->getChartDataFromSQLite($databaseConfig, $table);
-                    break;
-            }
-        }
-
-        foreach ($chartData as $timestamp=>$jsonString) {
-            $dataArray = json_decode($jsonString, true);   
-            if ($dataArray) {
-                foreach ($chart->series as $key => $seriesConfig) {
-                    $variableData = explode("|", $seriesConfig->variable);
-                    $variable = $variableData[0];
-                    
-                    if (isset($dataArray[$variable])) {
-                        if (!isset($seriesData[$key])) {
-                            $seriesData[$key] = [
-                                "data" => []
-                            ];
-
-                            foreach ($seriesConfig as $seriesKey=>$seriesValue) {
-                                if ($seriesKey !== 'variable') {
-                                    $seriesData[$key][$seriesKey] = $seriesValue;
-                                }
-                            }
-                        }
-
-                        $value = $dataArray[$variable]['value'];
-                        if (is_array($value)) {
-                            $value = $dataArray[$variable]['value']['value'];
-                        }
-                        $dataPoint = [
-                            "x" => $timestamp,
-                            "y" => $value
-                        ]; 
-
-                        if (count($variableData) > 1) {
-                            $dataPoint["data"] = $dataArray[$variableData[1]]['value'];
-                        }
-
-                        $seriesData[$key]['data'][] = $dataPoint;
-                    }
-                }
-            }
-        }
-        
-        $seriesData = array_values($seriesData);
-
-        return $seriesData;
+    private function fetch_gauge_value(PDO $pdo, string $entity, string $table='allsky_camera'): array {
+        $st = $pdo->prepare("SELECT `value` FROM `$table` WHERE `entity` = ? ORDER BY `timestamp` DESC LIMIT 1");
+        $st->execute([$entity]);
+        $v = $st->fetchColumn();
+        return is_numeric($v) ? [ (float)$v ] : [];
     }
+
+    /* string "true"/"false" -> bool */
+    private function to_boolish($v) {
+        if ($v === true || $v === false) return $v;
+        if (is_string($v)) {
+            $s = strtolower(trim($v));
+            if ($s === 'true')  return true;
+            if ($s === 'false') return false;
+        }
+        return $v;
+    }
+
+    /* deep convert any "true"/"false" strings */
+    private function deep_boolify($node) {
+        if (is_array($node)) {
+            foreach ($node as $k => $v) $node[$k] = $this->deep_boolify($v);
+            return $node;
+        }
+        if (is_object($node)) {
+            foreach (get_object_vars($node) as $k => $v) $node->$k = $this->deep_boolify($v);
+            return $node;
+        }
+        return $this->to_boolish($node);
+    }
+
+    /* convert series stdClass map -> array */
+    function series_object_to_array($series) {
+        if (is_array($series)) return $series;
+        if (is_object($series)) return array_values(get_object_vars($series));
+        return [];
+    }
+
+
+
+
+
+
+
+
+
+
+
 
     public function postGraphData() {
         $chartData = null;
@@ -1235,28 +1120,83 @@ class MODULEUTIL
                         if (isset($metaData->extradata->database->table)) {
                             $table = $metaData->extradata->database->table;
                             $graphs = $metaData->graphs;
-                            foreach($graphs as $key=>$graph) {
+                            foreach($graphs as $key=>$chart) {
                                 if ($key === $chartKey) {
-                                    $chartData = $graph->config;
+                                    $pdo = $this->make_pdo();
 
-                                    $chartType = "line";
-                                    if (isset($graph->type)) {
-                                        $chartType = $graph->type;
+
+                                    // Ensure booleans are real
+                                    $chart = $this->deep_boolify($chart);
+
+                                    // Determine chart type
+                                    $type = 'line';
+                                    if (isset($chart->config->chart->type)) {
+                                        $type = strtolower((string)$chart->config->chart->type);
                                     }
 
-                                    if ($chartType == "line") {
-                                        $seriesData = $this->getChartDataForChart($graph, $table);
-                                        $chartData->series = $seriesData;
+                                    // Ensure series exists
+                                    if (!isset($chart->series)) {
+                                        $chart->series = new stdClass();
                                     }
 
-                                    if ($chartType == "gauge") {                                    
-                                        $variable = $chartData->series[0]->data;  
-                                        $value = $this->getAllskyVariable($variable);
-                                        if (is_object($value)) {
-                                            $value = $value->value;
+                                    // If series is an object (exposure, gain, ...), iterate its properties
+                                    if (is_object($chart->series)) {
+                                        foreach (get_object_vars($chart->series) as $sName => $sObj) {
+                                            if (!is_object($sObj)) continue;
+                                            $vars = isset($sObj->variable) ? $this->parse_variables($sObj->variable) : [];
+
+                                            if ($type === 'gauge') {
+                                                $sObj->data = $vars ? $this->fetch_gauge_value($pdo, $vars[0], $table) : [];
+                                            } else {
+                                                $sObj->data = $this->fetch_time_series($pdo, $vars, $table);
+                                                if ($sObj->data && is_array($sObj->data[0]) && array_key_exists('url', $sObj->data[0])) {
+                                                    $sObj->hasUrl = true;
+                                                }
+                                            }
                                         }
-                                        $chartData->series[0]->data = array($value);
+                                    } elseif (is_array($chart->series)) {
+                                        // already an array of series (rare in your case)
+                                        foreach ($chart->series as &$sObj) {
+                                            if (!is_object($sObj)) continue;
+                                            $vars = isset($sObj->variable) ? $this->parse_variables($sObj->variable) : [];
+                                            if ($type === 'gauge') {
+                                                $sObj->data = $vars ? $this->fetch_gauge_value($pdo, $vars[0]) : [];
+                                            } else {
+                                                $sObj->data = $this->fetch_time_series($pdo, $vars);
+                                            }
+                                        }
+                                        unset($sObj);
                                     }
+
+                                    // series must be an ARRAY
+                                    $seriesArr = $this->series_object_to_array($chart->series);
+
+                                    // options = {...config, series: [...]}
+                                    $options = [];
+                                    if (isset($chart->config) && is_object($chart->config)) {
+                                        $options = json_decode(json_encode($chart->config), true); // stdClass -> array
+                                    }
+                                    $options['series'] = $seriesArr;
+
+                                    // clean edge cases
+                                    if (isset($options['tooltip']) && $options['tooltip'] === true) {
+                                        // let Highcharts use default tooltip
+                                        unset($options['tooltip']);
+                                    }
+                                    if (!empty($options['yAxis']) && is_array($options['yAxis'])) {
+                                        foreach ($options['yAxis'] as &$ax) {
+                                            if (isset($ax['opposite'])) $ax['opposite'] = $this->to_boolish($ax['opposite']);
+                                        }
+                                        unset($ax);
+                                    }
+                                    if (isset($options['plotOptions']['series']['animation'])) {
+                                        $options['plotOptions']['series']['animation'] =
+                                            $this->to_boolish($options['plotOptions']['series']['animation']);
+                                    }
+
+                                    $this->sendResponse(json_encode($options));
+                                    die();    
+
                                 }
                             }
                         }
@@ -1264,9 +1204,7 @@ class MODULEUTIL
                 }
             }
         }
-        $chartData = $this->convertChartObject($chartData);
-
-        $this->sendResponse(json_encode($chartData));
+        $this->sendResponse(json_encode(""));
     }
 
     public function getAvailableGraphs() {
@@ -1313,6 +1251,10 @@ class MODULEUTIL
         asort($graphList);
         $this->sendResponse(json_encode($graphList));
     }
+
+    /**
+     * End Graph Code
+     */
 
     public function postHassSensors() {
         $hassUrl = $_POST['hassurl'];

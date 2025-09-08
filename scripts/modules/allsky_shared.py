@@ -28,6 +28,7 @@ import busio
 import importlib
 import requests
 import grp
+import builtins
 from pathlib import Path
 from functools import reduce
 from allskyvariables.allskyvariables import ALLSKYVARIABLES
@@ -668,6 +669,28 @@ def validateExtraFileName(params, module, fileKey):
                     
     params[fileKey] = extraDataFilename
 
+def get_value_from_debug_data(key: str) -> str | None:
+    setup_for_command_line()
+    
+    try:
+        allsky_tmp = os.environ["ALLSKY_TMP"]
+        file_path = os.path.join(allsky_tmp, "overlaydebug.txt")
+        
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    if not line.strip() or line.strip().startswith("#"):
+                        continue
+
+                    parts = line.split(maxsplit=1)
+                    if len(parts) == 2 and parts[0] == key:
+                        return "".join(parts[1].split())
+        except FileNotFoundError:
+            return None
+    except:
+        return None
+    return None
+
 def install_apt_packages(pkg_file: str | Path, log_file: str | Path) -> bool:
     pkg_file = Path(pkg_file)
     log_file = Path(log_file)
@@ -792,12 +815,28 @@ def obfuscate_password(password: str) -> str:
         return "*" * len(password)
     return password[0] + "*" * (len(password) - 2) + password[-1]
 
-def get_database_row_key(structure):
+def get_database_row_key(structure: dict):
+    
+    # Assume we have access to AS_TIMESTAMP in the env
     row_key = get_environment_variable('AS_TIMESTAMP')
 
-    if 'row_key' in structure:
-        row_key =  structure['row_key']    
+    # Possibly running in the periodic flow so get the value from the overlay debug data
+    if row_key == None:
+        row_key = get_value_from_debug_data("AS_TIMESTAMP")
         
+    # Final fallback to use current time
+    if row_key == None:
+        row_key = builtins.int(time.time()) 
+
+    # Get the row key.        
+    if 'row_key' in structure:
+        row_key =  structure['row_key']
+        temp_row_key = get_environment_variable(row_key)  
+        if temp_row_key == None:
+            temp_row_key = get_value_from_debug_data(row_key)
+            if temp_row_key is not None:
+                row_key = temp_row_key
+                
     return row_key
 
 def update_sqlite_database(structure, extra_data):
@@ -805,7 +844,7 @@ def update_sqlite_database(structure, extra_data):
     try:
         time_stamp = os.environ["AS_TIMESTAMP"]
     except:
-        time_stamp = int(time.time())
+        time_stamp = builtins.int(time.time()) # We have overidden int for locale so call builtin function here
 
     try:
         db_path = os.environ['ALLSKY_DATABASES']
@@ -878,7 +917,7 @@ def update_mysql_database(structure, extra_data):
     try:
         time_stamp = os.environ["AS_TIMESTAMP"]
     except:
-        time_stamp = int(time.time())
+        time_stamp = builtins.int(time.time()) # We have overidden int for locale so call builtin function here
         
     try:
         if "database" in structure:

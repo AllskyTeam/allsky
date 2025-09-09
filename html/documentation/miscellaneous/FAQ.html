@@ -185,54 +185,51 @@ You should accept the defaults.
 
 
 <h2>How do I focus my allsky camera?</h2>
-<details><summary></summary>
+<p>
+Almost all allsky lenses can focus - either manually (i.e., you focus them)
+or automatically via a motor on the lens that focuses.
+</p>
+<details open><summary></summary>
 <h3>Manual-focus cameras</h3>
 <p>
-Almost all lenses have a focus ring that you turn to change the focus.
+Manual-focus lenses have a ring that you turn to change the focus.
 If your lens does NOT have a focus ring or some other focusing mechanism,
-you can skip this page.
+it's called a "fixed focus" lens and you can skip this FAQ item.
 <p>
-Try to get your camera at least roughly focused during the day.
-It'll be easier to see the focus ring on your lens,
+Try to get your camera at least roughly focused during the day -
+it'll be easier to see the focus ring on your lens,
 and exposure duration will be much shorter so you'll get more instant feedback.
 Focusing on slow-moving clouds works well.
 </p>
 <p>
-Make the following temporary changes in the WebUI:
-<ul class="minimalPadding topPadding">
-	<li>Turn off the <span class="WebUISetting">Save</span>
-		setting for the part of the day you are focusing (daytime or nighttime).
-	<li>Set the corresonding <span class="WebUISetting">Delay</span> to
-		<span class="WebUIValue">500</span> ms (1/2 second).
-	<li>If focusing during the day, also set the <span class="WebUISetting">Max Auto-Exposure</span>
-		to <span class="WebUIValue">500</span> ms.
-		<br>
-		These changes will give a short time between images and the WebUI's
-		<span class="WebUILink">Live View</span> will automatically refresh the screen every second.
-	<li>If you are using the <span class="WebUIValue">module</span>
-		<span class="WebUISetting">Overlay Method</span>,
-		enable the <span class="WebUISetting">Show Focus Metric</span>,
-		and in the <span class="WebUILink">Overlay Editor</span> page add the <strong>${FOCUS}</strong>
-		variable to the image anywhere you want.
-		Use a large font to make it easier to see.
-</ul>
+Most lenses have a screw to lock the focus ring - if your's does, loosen the screw.
+In the WebUI, enable the <span class="WebUISetting">Focus Mode</span> setting.
+It will set up Allsky to take and display pictures as fast as possible by
+disabling all processing except adding the focus metric to each image.
+The images are not permanetly saved (so won't appear in timelapse) and are not uploaded.
 </p>
 <p>
-Most lenses have a screw to lock the focus ring - if your's does, loosen the screw.
+Go to the WebUI's <span class="WebUILink">Live View</span> page.
+If you were already on that page, refresh it via SHIFT-F5 so it knows to reload the
+images very quickly.
+<br>
 A focus number will appear on the images - the higher the number, the better focus.
 The number can change depending on the brightness, so focus when the brightness isn't changing.
-Look at the image and the focus number then turn the lens' focus ring.
+While looking at the focus number, turn the lens' focus ring a very small amount.
 If the image and focus number get worse, turn the ring the other way.
 At some point the image will get worse - that means you've past the best focus,
 so turn the focus ring in very small increments the other direction.
 <p>
-This method is often "good enough" but the most accurate (and slowest) way to focus is at night using stars.
+This method is often "good enough" but the most accurate
+(and slowest) way to focus is at night using stars.
 Zoom in on the image and look for stars that are bright but not saturated.
 Keep focusing until the stars are as small as possible.
 </p>
 <p>
-When done focusing tighten the focus lock screw (be careful not to move the focus ring)
-and revert all settings back to their original values.
+When done focusing tighten the focus lock screw
+Look at the focus metric to make sure it's not worse - if it is,
+you probably moved the focus ring when tightening it; it's easy to do.
+In the WebUI, disable <span class="WebUISettings">Focus Mode</span>.
 </p>
 
 <h3>Auto-focus cameras</h3>
@@ -248,7 +245,8 @@ find the best focus:
 <pre>
 libcamera-still --timeout 1 -shutter 5000 --lens-position 0.0
 </pre>
-You will likely need to adjust the shutter speed to get a good exposure.
+You will likely need to adjust the shutter speed to get a good exposure
+(5000 is 5 seconds).
 </p>
 <p>
 Once the camera is focused we suggest <strong>disabling</strong> auto focus

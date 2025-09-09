@@ -1,4 +1,34 @@
 #!/usr/bin/python3
+"""
+Allsky Database Manager
+
+This script configures and manages Allsky's local data storage. It supports
+SQLite (recommended for low-resource Pis) and MySQL/MariaDB (recommended for
+more capable Pis), and provides a TUI (via `whiptail`) to:
+
+- Run a setup wizard to choose and configure the database engine.
+- Show database information (engine, size, table breakdown).
+- Create a remote MySQL user (and open bind-address if requested).
+- Reset ALL data (drops DB or deletes SQLite database file).
+- Purge old rows across all Allsky tables by age threshold.
+
+It must be run as root, because certain MySQL/MariaDB administrative tasks
+(e.g., socket auth to root) require it. It also ensures it runs inside the
+Allsky virtualenv.
+
+Environment variables:
+- ALLSKY_HOME (resolved automatically if missing)
+- ALLSKY_MYFILES_DIR
+- ALLSKY_MODULE_LOCATION
+- ALLSKY_SCRIPTS
+- ALLSKY_DATABASES (path to SQLite DB)
+- ALLSKY_SETTINGS_FILE (JSON)
+- ALLSKY_ENV (JSON holding env-style configuration for Allsky)
+
+Notes:
+- Uses `gpiozero.Device` to detect Pi model and guide recommendations.
+- Uses `mysql-connector-python` when talking to MySQL/MariaDB.
+"""
 
 import os
 import sys
@@ -88,7 +118,32 @@ shared.setup_for_command_line()
 
         
 class ALLSKYDATABASEMANAGER:
-    
+    """
+    Interactive manager for Allsky database configuration and maintenance.
+
+    This class wraps all user interaction and DB operations, including engine
+    detection, setup wizard, status display, purging, data reset, and remote
+    MySQL user creation.
+
+    Parameters
+    ----------
+    args : argparse.Namespace
+        Parsed command-line arguments (e.g., --debug, --auto).
+
+    Attributes
+    ----------
+    _debug_mode : bool
+        If True, logs are printed to stdout instead of `shared.log`.
+    _mysql_installed : bool
+        True if a MySQL/MariaDB service or server binary is detected.
+    _mysql_type : Optional[str]
+        Service name guessed/detected (e.g., 'mariadb' or 'mysql').
+    _database_config : dict
+        The current Allsky database config (from shared.get_database_config()).
+    _pi_version : int
+        Detected Raspberry Pi version number (e.g., 3, 4, 5).
+    """
+
     _welcome = "Allsky allows data be stored in a local database for various functions, such as graphs and other analytics.\
         This feature is optional. Would you like to enable this feature?\
         "
@@ -117,6 +172,17 @@ class ALLSKYDATABASEMANAGER:
     _whiptail_remote_user = "Create Remote MySQL User"
         
     def __init__(self, args):
+        """
+        Initialize the manager and detect environment.
+
+        Detects MySQL/MariaDB availability, validates SQLite availability,
+        reads Allsky DB config, and detects Pi model.
+
+        Parameters
+        ----------
+        args : argparse.Namespace
+            Namespace with `debug` and other flags.
+        """
         self._debug_mode = args.debug
         
         self._mysql_installed, self._mysql_type = self._mysql_service_installed()
@@ -128,6 +194,13 @@ class ALLSKYDATABASEMANAGER:
         
     @property
     def all_databases_installed(self) -> bool:
+        """
+        Whether both SQLite and MySQL/MariaDB are available.
+
+        Returns
+        -------
+        bool
+        """
         result = False
         if self._sqlite_installed and self._mysql_installed:
             result = True
@@ -135,11 +208,28 @@ class ALLSKYDATABASEMANAGER:
         return result
 
     @property
-    def is_database_configured(self) -> bool:        
+    def is_database_configured(self) -> bool:
+        """
+        Whether a database is configured/enabled in Allsky.
+
+        Returns
+        -------
+        bool
+            Currently returns False (placeholder). Implementation may be
+            provided in future to check config content.
+        """
         return False
 
     @property
     def is_fast_pi(self) -> bool:
+        """
+        Heuristic indicating if the Pi is sufficiently powerful.
+
+        Returns
+        -------
+        bool
+            True if Pi version > 3.
+        """
         result = False
         if self._pi_version > 3:
             result = True
@@ -148,6 +238,21 @@ class ALLSKYDATABASEMANAGER:
 
     @staticmethod
     def warn_no_database(method):
+        """
+        Decorator to guard actions that require a configured database.
+
+        If no database is enabled in the Allsky config, show an info prompt
+        and do not call the wrapped method.
+
+        Parameters
+        ----------
+        method : Callable
+            Method that requires a configured database.
+
+        Returns
+        -------
+        Callable
+        """
         @wraps(method)
         def wrapper(self, *args, **kwargs): 
             if "databaseenabled" in self._database_config and self._database_config["databaseenabled"]:
@@ -157,12 +262,30 @@ class ALLSKYDATABASEMANAGER:
         return wrapper
                                             
     def _log(self, log_level, message) -> None:
+        """
+        Log a message via Allsky or stdout (debug).
+
+        Parameters
+        ----------
+        log_level : int
+            Allsky log level.
+        message : str
+            Message to log.
+        """
         if self._debug_mode:
             print(message)
         else:
             shared.log(log_level, message)
 
     def _get_pi_version(self) -> int:
+        """
+        Detect Raspberry Pi version using gpiozero Device info.
+
+        Returns
+        -------
+        int
+            Major version number parsed from model string; 0 if unknown.
+        """
         Device.ensure_pin_factory()
         pi_full_version = Device.pin_factory.board_info.model
 
@@ -172,10 +295,23 @@ class ALLSKYDATABASEMANAGER:
         return pi_version
     
     def _is_sqlite3_installed(self) -> bool:
+        """
+        Ensure sqlite3 module is available.
+
+        Returns
+        -------
+        bool
+
+        Exits
+        -----
+        SystemExit
+            If sqlite3 cannot be imported.
+        """
         result = False
         try:
-            import sqlite3
+            import sqlite3  # noqa: F401
             result = True
+            self._sqlite_installed = True
         except ImportError:
             self._log(1,"ERROR: Unable to use SQLite on this pi. Please contact the Allsky support team via GitHub")
             sys.exit(1)
@@ -183,6 +319,15 @@ class ALLSKYDATABASEMANAGER:
         return result
     
     def _mysql_service_installed(self) -> Tuple[bool, Optional[str]]:
+        """
+        Check whether MySQL/MariaDB is installed, and determine service name.
+
+        Returns
+        -------
+        (bool, Optional[str])
+            Tuple of (installed, service_name), where service_name is
+            'mariadb' or 'mysql' if detectable, else None.
+        """
         # Check explicit unit names
         for unit in ("mariadb.service", "mysql.service"):
             try:
@@ -206,7 +351,14 @@ class ALLSKYDATABASEMANAGER:
         return False, None
 
     def _display_welcome(self) -> bool:
+        """
+        Show initial explanation and ask whether to enable database support.
 
+        Returns
+        -------
+        bool
+            True if user selected "Yes".
+        """
         _message = self._welcome
         
         if self.is_fast_pi:
@@ -217,15 +369,39 @@ class ALLSKYDATABASEMANAGER:
         _message += self._enable_database
         
         w = Whiptail(title="Welcome", backtitle="Allsky Database Manager", height=20, width=60)
-
         result = w.yesno(_message)
-
         return result
         
     def _get_allsky_database_config(self):
+        """
+        Placeholder for fetching Allsky DB configuration.
+
+        Returns
+        -------
+        Any
+            Currently unused (config is loaded from `shared.get_database_config()`).
+        """
         pass
     
     def _install_database_server(self, database_to_use: str) -> bool:
+        """
+        Install the chosen database server on this Pi (if needed).
+
+        Parameters
+        ----------
+        database_to_use : str
+            'mysql' or 'sqlite' (only 'mysql' leads to package install).
+
+        Returns
+        -------
+        bool
+            True if installation (or no-op) succeeded.
+
+        Raises
+        ------
+        subprocess.CalledProcessError
+            If apt install/ update fails.
+        """
         if database_to_use == "mysql":
             subprocess.run(["sudo", "apt-get", "update"], check=True)
             subprocess.run(["sudo", "apt-get", "install", "-y", "mariadb-server"], check=True)
@@ -234,6 +410,16 @@ class ALLSKYDATABASEMANAGER:
         return True
     
     def _select_database_server(self) -> (bool | str):
+        """
+        Prompt user to choose database engine (MySQL or SQLite).
+
+        Preference toggles based on device capability.
+
+        Returns
+        -------
+        str | None
+            'mysql' or 'sqlite' if selected; None if cancelled.
+        """
         options = []
         if self._mysql_installed:
             options.append(("MySQL", "Installed ",  "ON" if self.is_fast_pi else ""))
@@ -248,10 +434,17 @@ class ALLSKYDATABASEMANAGER:
         result = None
         if len(database_to_use) > 0:
             result = database_to_use[0].lower()
-            
         return result
 
     def _get_mysql_users(self):
+        """
+        Retrieve non-system MySQL users.
+
+        Returns
+        -------
+        list[dict]
+            List of dicts: {'user': str, 'host': str, 'display': 'user@host'}
+        """
         from mysql.connector import Error  
 
         ignore = {"mariadb.sys", "mysql", "root"}
@@ -269,6 +462,20 @@ class ALLSKYDATABASEMANAGER:
             return []
     
     def _test_mysql_login(self, user_name: str, password: str, host: str = "localhost") -> tuple[bool, str]:
+        """
+        Attempt to log into MySQL with provided credentials.
+
+        Parameters
+        ----------
+        user_name : str
+        password : str
+        host : str, optional
+
+        Returns
+        -------
+        tuple[bool, str]
+            (success, message)
+        """
         from mysql.connector import Error        
         
         try:
@@ -279,6 +486,21 @@ class ALLSKYDATABASEMANAGER:
             return False, str(e)
 
     def _create_mysql_user(self, new_user: str, new_pw: str, root_user="root", port=3306):
+        """
+        Create a new MySQL user with full privileges (for local server).
+
+        Parameters
+        ----------
+        new_user : str
+        new_pw : str
+        root_user : str, optional
+        port : int, optional
+
+        Returns
+        -------
+        tuple[bool, str]
+            (success, message)
+        """
         from mysql.connector import Error  
                 
         try:
@@ -292,7 +514,14 @@ class ALLSKYDATABASEMANAGER:
             return False, str(e)
             
     def _select_mysql_database_user(self) -> str:
+        """
+        Choose an existing MySQL user or create a new one (interactive).
 
+        Returns
+        -------
+        tuple[str, Optional[str], Optional[str]]
+            ("create"|"select"|"cancel", username or None, password or None)
+        """
         w = Whiptail(title="MySQL User Setup", backtitle="Allsky Database Manager", height=25, width=50)
         w_prompt = Whiptail(title="MySQL User Setup", backtitle="Allsky Database Manager", height=9, width=50)
 
@@ -377,7 +606,47 @@ class ALLSKYDATABASEMANAGER:
                 if choice != "retry":
                     return ("cancel", None, None)
 
-    def _run_mysql_command(self, host:str="", user_name:str="", password:str="", command:str|list="", database:str="", command_type: Literal["none", "fetchone", "fetchall", "login"]="", root_user:bool=False) -> str:
+    def _run_mysql_command(
+        self,
+        host:str="",
+        user_name:str="",
+        password:str="",
+        command:str|list="",
+        database:str="",
+        command_type: Literal["none", "fetchone", "fetchall", "login"]="",
+        root_user:bool=False
+    ) -> str:
+        """
+        Execute a MySQL command using mysql-connector.
+
+        Parameters
+        ----------
+        host : str
+        user_name : str
+        password : str
+        command : str | list
+            SQL string or list of SQL strings to execute.
+        database : str
+            Database name to `USE` before running commands (optional).
+        command_type : {'none','fetchone','fetchall','login'}
+            Controls whether to fetch results or check login status.
+        root_user : bool
+            If True, connect as root via local UNIX socket.
+
+        Returns
+        -------
+        Any
+            Depends on `command_type`:
+              - 'fetchone' -> tuple | None
+              - 'fetchall' -> list[tuple] | None
+              - 'login' -> bool
+              - default -> None
+
+        Raises
+        ------
+        TypeError
+            If command is not str or list/tuple.
+        """
         import mysql.connector
         from mysql.connector import Error  
 
@@ -388,15 +657,13 @@ class ALLSKYDATABASEMANAGER:
                 "CREATE", "DROP", "ALTER", "REPLACE", "GRANT", "REVOKE"
             ):
                 update_command = True
-            
             return update_command
            
         def safe_close(cur):
+            """Consume pending result sets to avoid 'Unread result' errors, then close."""
             try:
-                # Consume current result set if any
                 if getattr(cur, "with_rows", False):
                     cur.fetchall()
-                # If the statement produced multiple result sets, consume them too
                 nxt = getattr(cur, "nextset", None)
                 while callable(nxt) and cur.nextset():
                     if getattr(cur, "with_rows", False):
@@ -450,7 +717,20 @@ class ALLSKYDATABASEMANAGER:
         return result
 
     def _run_sqlite_command(self, command: str, command_type: Literal["none", "fetchone", "fetchall", "login"]="")-> str:
-        
+        """
+        Execute a SQLite command against the Allsky database.
+
+        Parameters
+        ----------
+        command : str
+            SQL command (single statement).
+        command_type : {'none','fetchone','fetchall','login'}
+
+        Returns
+        -------
+        Any
+            Result depends on `command_type` (see `_run_mysql_command`).
+        """
         def is_update(command):
             update_command = False
             if command.strip().split()[0].upper() in (
@@ -458,14 +738,12 @@ class ALLSKYDATABASEMANAGER:
                 "CREATE", "DROP", "ALTER", "REPLACE", "GRANT", "REVOKE"
             ):
                 update_command = True
-            
             return update_command
                 
         result = None
         db_path = os.environ['ALLSKY_DATABASES']
         with sqlite3.connect(db_path, timeout=10) as conn:
             cursor = conn.cursor()
-            
             cursor.execute(command)
             
             if command_type == "fetchall":
@@ -476,10 +754,17 @@ class ALLSKYDATABASEMANAGER:
             
             if is_update(command):
                 conn.commit()
-                
         return result
     
     def _show_mysql_warning_message(self)-> None:
+        """
+        Optionally warn user that remote MySQL config exposes the service.
+
+        Returns
+        -------
+        bool
+            True if user acknowledges and wishes to proceed.
+        """
         result = False
         
         if self._show_mysql_warning:
@@ -487,13 +772,41 @@ class ALLSKYDATABASEMANAGER:
             result = w_prompt.yesno(self._mysql_warning)
         else:
             result = True
-                        
         return result
                                 
     def _sanitise_dbname(self, name: str) -> bool:
+        """
+        Validate MySQL database name for basic safety.
+
+        Parameters
+        ----------
+        name : str
+
+        Returns
+        -------
+        bool
+            True if name matches [A-Za-z0-9_]+
+        """
         return bool(re.fullmatch(r"[A-Za-z0-9_]+", name))
 
     def _select_mysql_database(self, host:str="localhost", user_name:str="", password:str="", database_name: str | None = None) -> tuple[bool, str | None]:
+        """
+        Create/Select a MySQL database, verifying access.
+
+        If `database_name` is provided, attempts to use it; otherwise prompts.
+
+        Parameters
+        ----------
+        host : str
+        user_name : str
+        password : str
+        database_name : str | None
+
+        Returns
+        -------
+        tuple[bool, str | None]
+            (True, name) on success; (False, None) on cancel/failure.
+        """
         from mysql.connector import Error  
 
         def can_access(database: str) -> tuple[bool, str | None]:
@@ -558,7 +871,24 @@ class ALLSKYDATABASEMANAGER:
                 return False, None
 
     def _set_allsky_options(self, database_type:str="mysq;", host: str="localhost", user_name: str="", password: str="", database: str="", enabled: bool=True) -> bool:
-        
+        """
+        Persist selected DB options to Allsky settings and env JSONs.
+
+        Parameters
+        ----------
+        database_type : str
+            'mysql' or 'sqlite'
+        host : str
+        user_name : str
+        password : str
+        database : str
+        enabled : bool
+
+        Returns
+        -------
+        bool
+            True on success; False on failure.
+        """
         try:
             settings_file = os.environ["ALLSKY_SETTINGS_FILE"]
             if os.path.exists(settings_file):
@@ -597,19 +927,42 @@ class ALLSKYDATABASEMANAGER:
             return False
 
     def _info_prompt(self, title:str, back_title:str, message:str, height:int=12, width:int=60):
+        """
+        Show an informational dialog box.
 
+        Parameters
+        ----------
+        title : str
+        back_title : str
+        message : str
+        height : int
+        width : int
+        """
         w = Whiptail(title=title, backtitle=back_title, height=height, width=width)
         w.msgbox(message)
         
     def _confirm_prompt(self, title:str, back_title:str, message:str, height:int=12, width:int=60) -> bool:
-        
+        """
+        Show a Yes/No confirmation dialog.
+
+        Returns
+        -------
+        bool
+            True if user selects Yes.
+        """
         w = Whiptail(title=title, backtitle=back_title, height=height, width=width)
         result = w.yesno(message)
-
         return result
     
     def _restart_mysql_service(self):
+        """
+        Restart the detected MySQL/MariaDB service.
 
+        Returns
+        -------
+        bool
+            True if restart command succeeded.
+        """
         try:
             subprocess.run(
                 ["sudo", "systemctl", "restart", "mysql"],
@@ -618,10 +971,24 @@ class ALLSKYDATABASEMANAGER:
             return True
         except subprocess.CalledProcessError:
             pass
-
         return False
     
     def _set_mysql_bind_all(self, config_file:str="/etc/mysql/mariadb.conf.d/50-server.cnf") -> bool:
+        """
+        Ensure MySQL binds to all interfaces (0.0.0.0) for remote access.
+
+        Backs up the original config to `*.bak` and edits/creates a
+        'bind-address = 0.0.0.0' under [mysqld].
+
+        Parameters
+        ----------
+        config_file : str
+
+        Returns
+        -------
+        bool
+            False if config file doesn't exist; True after writing changes.
+        """
         if not os.path.exists(config_file):
             return False
 
@@ -656,7 +1023,11 @@ class ALLSKYDATABASEMANAGER:
     
     @warn_no_database
     def _reset_database(self):
-        
+        """
+        Drop and recreate the database (MySQL) or delete the SQLite file.
+
+        Prompts user for confirmation. Irreversible.
+        """
         if self._database_config["databasetype"] == "mysql" and not self._mysql_installed:
             self._info_prompt("Warning", self._back_title, "MySQL is enabled in the Allsky config but its not currently installed. Please install MySQL")
             return
@@ -697,13 +1068,23 @@ class ALLSKYDATABASEMANAGER:
 
     @warn_no_database
     def _purge_database(self):
+        """
+        Purge rows older than a specified age across all Allsky tables.
+
+        For MySQL: enumerates tables matching 'allsky_%' that have a 'timestamp'
+        column and deletes rows with timestamp < cutoff.
+
+        For SQLite: enumerates tables, checks for 'timestamp', and deletes rows
+        older than cutoff.
+
+        Prompts user for the age threshold in hours or 'Xd' for days.
+        """
         purge_result = []
         purged_something = False
         
         if self._database_config["databasetype"] == "mysql" and not self._mysql_installed:
             self._info_prompt("Warning", self._back_title, "MySQL is enabled in the Allsky config but its not currently installed. Please install MySQL")
             return
-                    
                             
         w = Whiptail(
             title=self._whiptail_message,
@@ -732,7 +1113,6 @@ class ALLSKYDATABASEMANAGER:
                 w.msgbox("Invalid input. Please enter a number (e.g. 12) or number+d (e.g. 7d).")
         
         if code == 0:
-            
             cutoff = int(time.time()) - (hours * 60 * 60)
             
             if self._database_config["databasetype"] == "mysql":
@@ -794,7 +1174,6 @@ class ALLSKYDATABASEMANAGER:
                             purged_something = True
                         else:
                             purge_result.append(f"{table_name} has no rows requiring deletion")
-                            
                     else:
                         purge_result.append(f"{table_name} has no timestamp so data cannot be purged")
                         
@@ -804,8 +1183,6 @@ class ALLSKYDATABASEMANAGER:
                 for table in tables:
                     table_name = table[0]                    
                     if table_name.startswith("allsky_"):
-                        
-
                         command = f"PRAGMA table_info({table_name})"
                         columns = self._run_sqlite_command(command, "fetchall")
                         column_names = [col[1] for col in columns]                        
@@ -830,6 +1207,12 @@ class ALLSKYDATABASEMANAGER:
 
     @warn_no_database    
     def _show_mysql_status(self):
+        """
+        Display database engine details and table sizes.
+
+        For MySQL/MariaDB: shows server version and each table's size (MB).
+        For SQLite: estimates size per table relative to DB file size.
+        """
         text = ""
         self._database_config = shared.get_database_config()
 
@@ -878,7 +1261,6 @@ class ALLSKYDATABASEMANAGER:
                 return
                 
         if self._database_config["databasetype"] == "sqlite":
-            
             page_size = self._run_sqlite_command("PRAGMA page_size;", "fetchone")
             page_count = self._run_sqlite_command("PRAGMA page_count;", "fetchone")
             db_size = page_size * page_count
@@ -903,6 +1285,19 @@ class ALLSKYDATABASEMANAGER:
 
     @warn_no_database             
     def create_remote_mysql_user(self):
+        """
+        Create a remote MySQL user with full privileges and enable remote bind.
+
+        Warns user about exposure risk, then:
+        - Creates user 'username'@'%' with password.
+        - Grants ALL PRIVILEGES.
+        - Sets bind-address=0.0.0.0 and restarts mysqld.
+
+        Returns
+        -------
+        bool
+            True on success; False on failure or cancel.
+        """
         import mysql.connector
         from mysql.connector import errorcode
         
@@ -943,7 +1338,6 @@ class ALLSKYDATABASEMANAGER:
                     break
 
                 try:
-
                     commands = [
                         f'CREATE USER IF NOT EXISTS "{username}"@"%" IDENTIFIED BY "{pw1}"',
                         f'GRANT ALL PRIVILEGES ON *.* TO "{username}"@"%" WITH GRANT OPTION',
@@ -955,7 +1349,6 @@ class ALLSKYDATABASEMANAGER:
                     self._restart_mysql_service()
                     
                     w.msgbox(f"User '{username}'@'%' created with full remote access.")
-
                     return True
 
                 except mysql.connector.Error as err:
@@ -969,13 +1362,21 @@ class ALLSKYDATABASEMANAGER:
             return
                                        
     def run_auto(self) -> None:
+        """
+        Guided setup flow:
+
+        - Offer to enable DB
+        - Select engine (MySQL vs SQLite), installing MySQL if chosen
+        - For MySQL: pick or create user, then create/select database
+        - Persist configuration to settings/env files
+        """
         if not self.is_database_configured:
             if self._display_welcome():
                 database_to_use = self._select_database_server()
                 if database_to_use == "mysql" and not self._mysql_installed:
                     if self._show_mysql_warning_message():
                         if not self._install_database_server(database_to_use):
-                            #TODO install failed
+                            # TODO: install failed handling
                             pass
                     else:
                         sys.exit(1)
@@ -992,6 +1393,17 @@ class ALLSKYDATABASEMANAGER:
                     result = self._set_allsky_options("sqlite", "", "", "", "")
                     
     def run(self):
+        """
+        Main interactive menu loop.
+
+        Options:
+          1) Show Database Information
+          2) Run Setup Wizard
+          3) Create Remote MySQL User
+          4) Reset ALL Data
+          5) Purge Database
+          6) Exit
+        """
         self.preflight_checks()
         w = Whiptail(
             title=self._whiptail_title_main_menu,
@@ -1031,6 +1443,16 @@ class ALLSKYDATABASEMANAGER:
                 self._purge_database()
 
     def preflight_checks(self) -> bool:
+        """
+        Pre-run checks and warnings.
+
+        Currently warns if DB is enabled but purge flow isn't installed.
+
+        Returns
+        -------
+        bool
+            True (always), reserved for future gating.
+        """
         result = True
         database_config = shared.get_database_config()
         if "databaseenabled" in database_config:
@@ -1038,11 +1460,17 @@ class ALLSKYDATABASEMANAGER:
                 flows = shared.get_flows_with_module("purgedb")
                 if not flows:
                     self._info_prompt(self._whiptail_warning, self._back_title, self._whiptail_purge_missing)
-            
         return result
                                                 
     def remove_mysql(self, remove_data: bool = False):
+        """
+        Uninstall MariaDB packages and optionally remove data/config.
 
+        Parameters
+        ----------
+        remove_data : bool
+            If True, remove /var/lib/mysql and /etc/mysql.
+        """
         def run(cmd):
             print(">>>", " ".join(cmd))
             subprocess.run(cmd, check=True)
@@ -1079,4 +1507,3 @@ if __name__ == "__main__":
         sys.exit(0)
         
     database_manager.run()
-            

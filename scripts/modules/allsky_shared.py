@@ -501,9 +501,10 @@ def create_file_web_server_access(file_name):
     return create_and_set_file_permissions(file_name, uid, gid, 0o660)      
 
 def create_sqlite_database(file_name:str)-> bool:
-    result = False
+    result = True
     
     if not os.path.exists(file_name):
+        result = False
         web_server_group = get_environment_variable("ALLSKY_WEBSERVER_GROUP")
         allsky_owner = get_environment_variable("ALLSKY_OWNER")
         try:

@@ -29,6 +29,7 @@ import importlib
 import requests
 import grp
 import builtins
+import pwd
 from pathlib import Path
 from functools import reduce
 from allskyvariables.allskyvariables import ALLSKYVARIABLES
@@ -43,38 +44,42 @@ except:
 
 ABORT = True
 
-def get_environment_variable(name, fatal=False, debug=False):
+def get_environment_variable(name, fatal=False, debug=False, try_allsky_debug_file=False):
     return getEnvironmentVariable(name, fatal, debug)
-def getEnvironmentVariable(name, fatal=False, debug=False):
-	global ALLSKY_TMP
+def getEnvironmentVariable(name, fatal=False, debug=False, try_allsky_debug_file=False):
+    global ALLSKY_TMP
 
-	result = None
+    result = None
 
-	if not debug:
-		try:
-			result = os.environ[name]
-		except KeyError:
-			if fatal:
-				log(0, f"ERROR: Environment variable '{name}' not found.", exitCode=98)
-	else:
-		db_file = os.path.join(ALLSKY_TMP, 'allskydebugdb.py')
-		if not os.path.isfile(db_file):
-			file = open(db_file, 'w+')
-			file.write('DataBase = {}')
-			file.close()
+    if not debug:
+        try:
+            result = os.environ[name]
+        except KeyError:       
+            result = None
+            if try_allsky_debug_file:
+                result = get_value_from_debug_data(name)
+                
+            if result == None and fatal:
+                log(0, f"ERROR: Environment variable '{name}' not found.", exitCode=98)
+    else:
+        db_file = os.path.join(ALLSKY_TMP, 'allskydebugdb.py')
+        if not os.path.isfile(db_file):
+            file = open(db_file, 'w+')
+            file.write('DataBase = {}')
+            file.close()
 
-		try:
-			sys.path.insert(1, ALLSKY_TMP)
-			database = __import__('allskydebugdb')
-			DBDEBUGDATA = database.DataBase
-		except:
-			DBDEBUGDATA = {}
-			log(0, f"ERROR: Resetting corrupted Allsky database '{db_file}'")
+        try:
+            sys.path.insert(1, ALLSKY_TMP)
+            database = __import__('allskydebugdb')
+            DBDEBUGDATA = database.DataBase
+        except:
+            DBDEBUGDATA = {}
+            log(0, f"ERROR: Resetting corrupted Allsky database '{db_file}'")
 
-		if name in DBDEBUGDATA['os']:
-			result = DBDEBUGDATA['os'][name]
+        if name in DBDEBUGDATA['os']:
+            result = DBDEBUGDATA['os'][name]
 
-	return result
+    return result
 
 # These must exist and are used in several places.
 ALLSKYPATH = getEnvironmentVariable("ALLSKY_HOME", fatal=True)
@@ -495,13 +500,26 @@ def create_file_web_server_access(file_name):
             
     return create_and_set_file_permissions(file_name, uid, gid, 0o660)      
 
-def create_sqlite_database(file_name):    
-    #TODO: Change this to the real user once variables.json is working
-    web_server_group = 'www-data'
-    uid = os.getuid()
-    gid = grp.getgrnam(web_server_group).gr_gid
+def create_sqlite_database(file_name:str)-> bool:
+    result = False
+    
+    if not os.path.exists(file_name):
+        web_server_group = get_environment_variable("ALLSKY_WEBSERVER_GROUP")
+        allsky_owner = get_environment_variable("ALLSKY_OWNER")
+        try:
+            uid = pwd.getpwnam(allsky_owner).pw_uid
+        except KeyError:
+            uid = None
+
+        try:
+            gid = grp.getgrnam(web_server_group).gr_gid
+        except:
+            gid = None
             
-    return create_and_set_file_permissions(file_name, uid, gid, 0o660, True)
+        if uid is not None and gid is not None:
+            result = create_and_set_file_permissions(file_name, uid, gid, 0o660, True)
+
+    return result
 
 def run_script(script: str) -> Tuple[int, str]:
     try:
@@ -586,7 +604,7 @@ def set_permissions(file_name, uid=None, gid=None):
        
     os.chown(file_name, uid, gid)
     
-def create_and_set_file_permissions(file_name, uid=None, gid=None, permissions=None, is_sqlite=False, file_data = ''):
+def create_and_set_file_permissions(file_name, uid=None, gid=None, permissions=None, is_sqlite=False, file_data = '')-> bool:
     result = True
     if not os.path.exists(file_name):
         directory = os.path.dirname(file_name)
@@ -865,7 +883,8 @@ def update_sqlite_database(structure, extra_data):
                         json_str = json.dumps(extra_data)
                         timestamp = math.floor(time.time())
 
-                        create_sqlite_database(db_path)
+                        if not create_sqlite_database(db_path):
+                            return False
                         
                         # Use a context manager to ensure safe connection handling
                         with sqlite3.connect(db_path, timeout=10) as conn:
@@ -877,7 +896,7 @@ def update_sqlite_database(structure, extra_data):
                             include_all = False
                             if "include_all" in structure['database']:
                                 include_all = True if structure["database"]["include_all"].lower() == 'true' else False
-                                                 
+                                                    
                             row_key = get_database_row_key(structure["database"])
                             data = json.loads(extra_data)
                             for entity, value in data.items():

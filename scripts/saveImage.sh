@@ -61,7 +61,7 @@ WEBSITE_FILE="${WORKING_DIR}/${ALLSKY_FULL_FILENAME}"	# The file name the websit
 
 # If in focus mode, add the metric to the image, rename it, and exit.
 if [[ -n ${FOCUS_METRIC} ]]; then
-	TEXT="Focus Mode, metric = ${FOCUS_METRIC}
+	TEXT="Focus Mode, metric = ${FOCUS_METRIC}"
 	# Use defaults for everything but Y location - put near top.
 	addTextToImage --y 50 "${CURRENT_IMAGE}" "${CURRENT_IMAGE}" "${TEXT}"
 	mv "${CURRENT_IMAGE}" "${WEBSITE_FILE}"

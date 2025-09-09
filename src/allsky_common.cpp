@@ -135,6 +135,12 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 	int const s = 100;
 	char tmp[s];
 
+	if (cg.focusMode) {
+		// This must come first.
+		snprintf(tmp, s, " --focus-mode %ld", cg.lastFocusMetric);
+		strcat(cmd, tmp);
+	}
+
 	snprintf(tmp, s, " TIMESTAMP=%ld", startDateTime.tv_sec);
 	strcat(cmd, tmp);
 	snprintf(tmp, s, " DATE=%s", formatTime(startDateTime, "%Y%m%d"));

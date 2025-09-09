@@ -1074,6 +1074,8 @@ bool day_night_timeSleep(bool displayedMsg, config cg, bool isDaytime)
 
 void delayBetweenImages(config cg, long lastExposure_us, std::string sleepType)
 {
+	if (cg.currentDelay_ms == 0) return;	// will be 0 in Focus Mode
+
 	if (cg.takeDarkFrames) {
 		// Need to sleep a little since saving .png files takes a while.
 		usleep(5 * US_IN_SEC);

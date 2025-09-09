@@ -1584,6 +1584,7 @@ addTextToImage()
 	local FILL="yellow"
 	local X="20"
 	local Y=""
+	local EXTRA_ARGS=""
 
 	while [[ $# -gt 0 ]]; do
 		ARG="${1}"
@@ -1612,6 +1613,12 @@ addTextToImage()
 				Y="${2}"
 				shift
 				;;
+			--extra-args)
+				# An additional step, like stretch an image, to perform at
+				# same time to avoid calling "convert" twice.
+				EXTRA_ARGS="${2}"
+				shift
+				;;
 			*)
 				break;
 				;;
@@ -1633,7 +1640,8 @@ addTextToImage()
 	[[ -z ${POINT_SIZE} ]] && POINT_SIZE="$( echo "${WIDTH} / 33" | bc )"
 	[[ -z ${Y} ]] && Y=$(( HEIGHT - ( POINT_SIZE * 2) ))
 
-	convert -font "${FONT}" -pointsize "${POINT_SIZE}" \
+	#shellcheck disable=SC2086
+	convert ${EXTRA_ARGS} -font "${FONT}" -pointsize "${POINT_SIZE}" \
 		-fill "${FILL}" -stroke "${STROKE}" -strokewidth 3 \
 		-annotate "+${X}+${Y}" "${TEXT}" \
 		"${IN_IMAGE}" "${OUT_IMAGE}" 2>&1

@@ -833,7 +833,8 @@ void displayHelp(config cg)
 		printf(" -%-*s - Amount to rotate image in degrees - 0 or 180 [%ld].\n", n, "rotation n", cg.rotation);
 	}
 	printf(" -%-*s - 0 = No flip, 1 = Horizontal, 2 = Vertical, 3 = Both [%ld].\n", n, "flip n", cg.flip);
-	printf(" -%-*s - 'true' enables focus mode [%s].\n", n, "determinefocus b", yesNo(cg.determineFocus));
+	printf(" -%-*s - 'true' enables focus mode [%s].\n", n, "focusmode b", yesNo(cg.focusMode));
+	printf(" -%-*s - 'true' calculates focus metric [%s].\n", n, "determinefocus b", yesNo(cg.determineFocus));
 	printf(" -%-*s - 'true' enables consistent delays between images [%s].\n", n, "consistentdelays b", yesNo(cg.consistentDelays));
 	printf(" -%-*s - Format the time is displayed in [%s].\n", n, "timeformat s", cg.timeFormat);
 	printf(" -%-*s - Latitude of the camera [no default - you must set it].\n", n, "latitude s");
@@ -1000,7 +1001,8 @@ void displaySettings(config cg)
 		printf("   ZWO Exposure Type: %s\n", getZWOexposureType(cg.ZWOexposureType));
 	}
 	printf("   Preview: %s\n", yesNo(cg.preview));
-	printf("   Focus mode: %s\n", yesNo(cg.determineFocus));
+	printf("   Focus mode: %s\n", yesNo(cg.focusMode));
+	printf("   Calculate focus metric: %s\n", yesNo(cg.determineFocus));
 	printf("   Taking Dark Frames: %s\n", yesNo(cg.takeDarkFrames));
 	printf("   Delete Dark Frames higher than: %.4f\n", cg.darkFrameTooHigh);
 	printf("   Remove Bad Images Threshold Low: %.4f\n", cg.imageTooLow);
@@ -1561,6 +1563,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 		else if (strcmp(a, "flip") == 0)
 		{
 			cg->flip = atol(argv[++i]);
+		}
+		else if (strcmp(a, "focusmode") == 0)
+		{
+			cg->focusMode = getBoolean(argv[++i]);
 		}
 		else if (strcmp(a, "determinefocus") == 0)
 		{

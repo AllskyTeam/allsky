@@ -1625,7 +1625,7 @@ addTextToImage()
 
 	# "identify" output:
 	#	image.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.8263MiB 0.000u 0:00.000
-	local RESOLUTION="$( identify "${IMAGE}" | gawk '{ print $3; }' )"
+	local RESOLUTION="$( identify "${IN_IMAGE}" | gawk '{ print $3; }' )"
 	local WIDTH="${RESOLUTION%x*}"
 	local HEIGHT="${RESOLUTION##*x}"
 
@@ -1636,5 +1636,5 @@ addTextToImage()
 	convert -font "${FONT}" -pointsize "${POINT_SIZE}" \
 		-fill "${FILL}" -stroke "${STROKE}" -strokewidth 3 \
 		-annotate "+${X}+${Y}" "${TEXT}" \
-		"${IMAGE}" "${IMAGE}" 2>&1
+		"${IN_IMAGE}" "${OUT_IMAGE}" 2>&1
 }

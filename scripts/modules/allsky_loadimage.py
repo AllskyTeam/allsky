@@ -151,7 +151,9 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 		"extradata": {
 			"database": {
 				"enabled": "True",
-				"table": "allsky_camera"
+				"table": "allsky_camera",
+				"row_type": "int",
+    			"include_all": "true"
 			},
 			"values": {
 				"AS_CAMERAIMAGE": {

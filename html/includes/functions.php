@@ -960,8 +960,29 @@ function getSecret($secret=false) {
 }
 
 
+function getDatabaseConfig() {
+    $secretData = getSecret();
+    $settings = readSettingsFile();
+    $secretData['databasetype'] = $settings['databasetype'];
+
+    return $secretData;
+}
+
 function haveDatabase() {
-	return haveSQLite();
+
+    $secretData = getDatabaseConfig();
+    $databaseType = 'none';
+    if (isset($secretData['databasetype'])) {
+        $databaseType = $secretData['databasetype'];
+    }
+    switch ($databaseType) {
+        case 'sqlite':
+            return haveSQLite($secretData);
+        case 'mysql':
+            return haveMySQL($secretData);
+        default:
+            return false;
+    }
 }
 
 function haveSQLite() {
@@ -979,7 +1000,32 @@ function haveSQLite() {
     return $result;
 }
 
+function haveMySQL($secretData) {
+    $result = false;
+    try {
+        if (in_array('mysql', PDO::getAvailableDrivers())) {
 
+            $host = $secretData['databasehost'];
+            $db   = $secretData['databasedatabase'];
+            $user = $secretData['databaseuser'];
+            $pass = $secretData['databasepassword'];
+            $charset = 'utf8mb4';
+            
+            $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+            
+            $options = [
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            ];      
+            $pdo = new PDO($dsn, $user, $pass, $options);
+            $result = true;
+        }   
+    } catch (PDOException $e) {
+    } catch (Exception $e) {
+    }
+    
+    return $result;
+}
 
 function getTOD() {
 	global $settings_array;

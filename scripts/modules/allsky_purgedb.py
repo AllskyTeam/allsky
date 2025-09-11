@@ -128,6 +128,7 @@ class ALLSKYPURGEDB(ALLSKYMODULEBASE):
                     else:
                         print(f'No records found for deletion from {table_name}')
 
+            cursor.execute(f'VACUUM;')
             conn.close()
             
             result = 'SQLite purged'

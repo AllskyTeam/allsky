@@ -6,7 +6,7 @@
 			dirty: false,
 			id: 'mask',
 			modalId: 'allsky-mask-drawingModal',
-			image: '/current/tmp/image.jpg',
+			image: '/current/image.jpg',
 			saveURL: 'includes/overlayutil.php?request=Base64Image',
 			onComplete: function (latlon) { }
 		}
@@ -346,7 +346,7 @@
 					}, 100)
 				}
 				imageObj.onerror = function () {
-					console.error("Error loading image at /current/tmp/i.jpg")
+					console.error("Error loading image at /current/i.jpg")
 				}
 				//imageObj.src = "/current/tmp/i.jpg?noCache=" + new Date().getTime()
 				imageObj.src = `${plugin.settings.image}?noCache=` + new Date().getTime()

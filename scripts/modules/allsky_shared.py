@@ -21,20 +21,21 @@ import re
 import sys
 import time
 import locale
-import locale
 import tempfile
 import shlex
 import board
 import busio
 import importlib
 import requests
-
+import grp
+import builtins
+import pwd
 from pathlib import Path
 from functools import reduce
 from allskyvariables.allskyvariables import ALLSKYVARIABLES
 import pigpio
 import numpy as np
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Any, Tuple
  
 try:
     locale.setlocale(locale.LC_ALL, '')
@@ -43,38 +44,42 @@ except:
 
 ABORT = True
 
-def get_environment_variable(name, fatal=False, debug=False):
+def get_environment_variable(name, fatal=False, debug=False, try_allsky_debug_file=False):
     return getEnvironmentVariable(name, fatal, debug)
-def getEnvironmentVariable(name, fatal=False, debug=False):
-	global ALLSKY_TMP
+def getEnvironmentVariable(name, fatal=False, debug=False, try_allsky_debug_file=False):
+    global ALLSKY_TMP
 
-	result = None
+    result = None
 
-	if not debug:
-		try:
-			result = os.environ[name]
-		except KeyError:
-			if fatal:
-				log(0, f"ERROR: Environment variable '{name}' not found.", exitCode=98)
-	else:
-		db_file = os.path.join(ALLSKY_TMP, 'allskydebugdb.py')
-		if not os.path.isfile(db_file):
-			file = open(db_file, 'w+')
-			file.write('DataBase = {}')
-			file.close()
+    if not debug:
+        try:
+            result = os.environ[name]
+        except KeyError:       
+            result = None
+            if try_allsky_debug_file:
+                result = get_value_from_debug_data(name)
+                
+            if result == None and fatal:
+                log(0, f"ERROR: Environment variable '{name}' not found.", exitCode=98)
+    else:
+        db_file = os.path.join(ALLSKY_TMP, 'allskydebugdb.py')
+        if not os.path.isfile(db_file):
+            file = open(db_file, 'w+')
+            file.write('DataBase = {}')
+            file.close()
 
-		try:
-			sys.path.insert(1, ALLSKY_TMP)
-			database = __import__('allskydebugdb')
-			DBDEBUGDATA = database.DataBase
-		except:
-			DBDEBUGDATA = {}
-			log(0, f"ERROR: Resetting corrupted Allsky database '{db_file}'")
+        try:
+            sys.path.insert(1, ALLSKY_TMP)
+            database = __import__('allskydebugdb')
+            DBDEBUGDATA = database.DataBase
+        except:
+            DBDEBUGDATA = {}
+            log(0, f"ERROR: Resetting corrupted Allsky database '{db_file}'")
 
-		if name in DBDEBUGDATA['os']:
-			result = DBDEBUGDATA['os'][name]
+        if name in DBDEBUGDATA['os']:
+            result = DBDEBUGDATA['os'][name]
 
-	return result
+    return result
 
 # These must exist and are used in several places.
 ALLSKYPATH = getEnvironmentVariable("ALLSKY_HOME", fatal=True)
@@ -240,11 +245,13 @@ def raining():
 
     return raining, rainFlag
 
-def checkAndCreateDirectory(filePath):
-    os.makedirs(filePath, mode = 0o777, exist_ok = True)
+def check_and_create_directory(file_path):
+    checkAndCreateDirectory(file_path)
+def checkAndCreateDirectory(file_path):
+    os.makedirs(file_path, mode = 0o777, exist_ok = True)
 
-def checkAndCreatePath(filePath):
-    path = os.path.dirname(filePath)
+def checkAndCreatePath(file_path):
+    path = os.path.dirname(file_path)
     os.makedirs(path, mode = 0o777, exist_ok = True)
 
 def convertPath(path):
@@ -312,23 +319,20 @@ def setEnvironmentVariable(name, value, logMessage='', logLevel=4):
     return result
 
 
+def setup_for_command_line():
+    setupForCommandLine()
 def setupForCommandLine():
     global ALLSKYPATH
     
-    script_path = f"{ALLSKYPATH}/variables.sh"
-    bash_cmd = f"set -a && source '{script_path}' --force && env"
+    json_variables = f"{ALLSKYPATH}/variables.json"
+    with open(json_variables, 'r') as file:
+        json_data = json.load(file)
 
-    result = subprocess.run(['bash', '-c', bash_cmd], capture_output=True, text=True)
-
-    env_vars = {}
-    for line in result.stdout.splitlines():
-        if '=' in line:
-            key, value = line.split('=', 1)
-            env_vars[key] = value
-            os.environ[key] = value
-            
+    for key, value in json_data.items():
+        os.environ[str(key)] = str(value)
+    
+    VARIABLES = json_data
     readSettings()
-
 
 ####### settings file functions
 def readSettings():
@@ -355,12 +359,23 @@ def getSetting(settingName):
 
     return result
 
+
 def writeSettings():
     global SETTINGS, ALLSKY_SETTINGS_FILE
 
     with open(ALLSKY_SETTINGS_FILE, "w") as fp:
         json.dump(SETTINGS, fp, indent=4)
 
+def update_settings(values):
+    global SETTINGS
+
+    readSettings()
+    SETTINGS.update(values)
+
+    writeSettings()    
+    
+def update_setting(values):
+    updateSetting(values)
 def updateSetting(values):
     global SETTINGS
 
@@ -496,37 +511,134 @@ def create_file_web_server_access(file_name):
             
     return create_and_set_file_permissions(file_name, uid, gid, 0o660)      
 
-def create_sqlite_database(file_name):
-    import grp
-    
-    #TODO: Change this to the real user once variables.json is working
-    web_server_group = 'www-data'
-    uid = os.getuid()
-    gid = grp.getgrnam(web_server_group).gr_gid
-            
-    return create_and_set_file_permissions(file_name, uid, gid, 0o660, True)
-    
-    
-def create_and_set_file_permissions(file_name, uid, gid, permissions=None, is_sqlite=False):
+def create_sqlite_database(file_name:str)-> bool:
     result = True
+    
     if not os.path.exists(file_name):
+        result = False
+        web_server_group = get_environment_variable("ALLSKY_WEBSERVER_GROUP")
+        allsky_owner = get_environment_variable("ALLSKY_OWNER")
         try:
-            if is_sqlite:
-                with sqlite3.connect(file_name, timeout=10) as conn:
-                    pass
-            else:
-                with open(file_name, 'w') as debug_file:
-                    debug_file.write('')
-            os.chown(file_name, uid, gid)
-            if permissions:
-                os.chmod(file_name, permissions)
-        except Exception as e:
-            eType, eObject, eTraceback = sys.exc_info()
-            log(0, f'ERROR: Unable to create {file_name} with web server access. {eTraceback.tb_lineno} - {e}')
-            result = False
+            uid = pwd.getpwnam(allsky_owner).pw_uid
+        except KeyError:
+            uid = None
+
+        try:
+            gid = grp.getgrnam(web_server_group).gr_gid
+        except:
+            gid = None
+            
+        if uid is not None and gid is not None:
+            result = create_and_set_file_permissions(file_name, uid, gid, 0o660, True)
 
     return result
+
+def run_script(script: str) -> Tuple[int, str]:
+    try:
+        result = subprocess.run(
+            [script],
+            capture_output=True,
+            text=True,
+            check=False
+        )
+        output = result.stdout + result.stderr
+        return result.returncode, output.strip()
+    except FileNotFoundError:
+        return 127, f"Script not found: {script}"
     
+def do_any_files_exist(base_folder: str | Path, filenames: list[str]) -> bool:
+    base_folder = Path(base_folder)
+
+    for name in filenames:
+        file_path = os.path.join(base_folder, name)
+        if is_file_readable(file_path):
+            return True
+    return False
+
+def copy_list(file_names: list, source: str, dest: str) -> bool:
+    result = True
+
+    for file_name in file_names:
+        source_file = os.path.join(source, file_name)
+        if is_file_readable(source_file):
+            copy_file(source_file, dest)
+                
+    return result
+
+def copy_folder(source, dest, uid=None, guid=None, dirs_exist_ok=True) -> bool:
+    result = False
+
+    try:
+        shutil.copytree(source, dest, dirs_exist_ok=dirs_exist_ok)
+        result = True
+    except FileExistsError:
+        result = False
+        
+    return result
+
+def copy_file(source, dest, uid=None, gid=None) -> bool:
+    result = False
+    
+    directory = os.path.dirname(dest)
+    check_and_create_directory(directory)
+    
+    if shutil.copy(source, dest) != "":
+        
+        dest_file = dest
+        if os.path.isdir(dest):
+            file_name = os.path.basename(source)
+            dest_file = os.path.join(dest, file_name)
+            
+        set_permissions(dest_file, uid, gid)
+        result = True
+    
+    return result
+
+def remove_folder(path: str) -> bool:
+    result = False
+    try:
+        folder = Path(path)
+        if folder.exists() and folder.is_dir():
+            shutil.rmtree(folder)
+            result = True
+    except:
+        result = False
+        
+    return result
+
+def set_permissions(file_name, uid=None, gid=None):
+    if uid is None:
+        uid = os.getuid()
+    if gid is None:
+        if (group := get_environment_variable("ALLSKY_WEBSERVER_GROUP")) is None:
+            group = 'www-data'
+        gid = grp.getgrnam(group).gr_gid
+       
+    os.chown(file_name, uid, gid)
+    
+def create_and_set_file_permissions(file_name, uid=None, gid=None, permissions=None, is_sqlite=False, file_data = '')-> bool:
+    result = True
+    if not os.path.exists(file_name):
+        directory = os.path.dirname(file_name)
+        check_and_create_directory(directory)
+
+    try:
+        if is_sqlite:
+            with sqlite3.connect(file_name, timeout=10) as conn:
+                pass
+        else:
+            with open(file_name, 'w') as debug_file:
+                debug_file.write(file_data)
+        set_permissions(file_name, uid, gid)
+        if permissions:
+            os.chmod(file_name, permissions)
+    except Exception as e:
+        eType, eObject, eTraceback = sys.exc_info()
+        log(0, f'ERROR: Unable to create {file_name} with web server access. {eTraceback.tb_lineno} - {e}')
+        result = False
+
+    return result
+
 def isFileWriteable(fileName):
     """ Check if a file exists and can be written to """
     if os.path.exists(fileName):
@@ -587,46 +699,182 @@ def validateExtraFileName(params, module, fileKey):
                     
     params[fileKey] = extraDataFilename
 
+def get_value_from_debug_data(key: str) -> str | None:
+    setup_for_command_line()
+    
+    try:
+        allsky_tmp = os.environ["ALLSKY_TMP"]
+        file_path = os.path.join(allsky_tmp, "overlaydebug.txt")
+        
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    if not line.strip() or line.strip().startswith("#"):
+                        continue
+
+                    parts = line.split(maxsplit=1)
+                    if len(parts) == 2 and parts[0] == key:
+                        return "".join(parts[1].split())
+        except FileNotFoundError:
+            return None
+    except:
+        return None
+    return None
+
+def install_apt_packages(pkg_file: str | Path, log_file: str | Path) -> bool:
+    pkg_file = Path(pkg_file)
+    log_file = Path(log_file)
+
+    if not pkg_file.exists():
+        raise FileNotFoundError(f"Package file not found: {pkg_file}")
+
+    with pkg_file.open("r", encoding="utf-8") as f:
+        packages = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+
+    log_folder = os.path.dirname(log_file)
+    check_and_create_directory(log_folder)  
+    
+    failures = []
+    with log_file.open("a", encoding="utf-8") as log:
+        for pkg in packages:
+            log.write(f"\n--- Installing {pkg} ---\n")
+            result = subprocess.run(
+                ["sudo", "apt-get", "install", "-y", pkg],
+                stdout=log,
+                stderr=log
+            )
+            if result.returncode != 0:
+                failures.append(pkg)
+                log.write(f"--- Failed {pkg} ---\n")
+            else:
+                log.write(f"--- Success {pkg} ---\n")
+
+    return len(failures) == 0
+
+def install_requirements(req_file: str | Path, log_file: str | Path) -> bool:
+
+    req_file = Path(req_file)
+    log_file = Path(log_file)
+
+    if not req_file.exists():
+        raise FileNotFoundError(f"Requirements file not found: {req_file}")
+
+    with req_file.open("r", encoding="utf-8") as f:
+        packages = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+
+    log_folder = os.path.dirname(log_file)
+    check_and_create_directory(log_folder)  
+        
+    failures = []
+    with log_file.open("a", encoding="utf-8") as log:
+        for pkg in packages:
+            log.write(f"\n--- Installing {pkg} ---\n")
+            result = subprocess.run(
+                [sys.executable, "-m", "pip", "install", pkg],
+                stdout=log,
+                stderr=log
+            )
+            if result.returncode != 0:
+                failures.append(pkg)
+                log.write(f"--- Failed {pkg} ---\n")
+            else:
+                log.write(f"--- Success {pkg} ---\n")
+
+    return len(failures) == 0
+
 def check_mysql_connection(host, user, password, database=None, port=3306):
     try:
         conn = mysql.connector.connect(
             host=host,
             user=user,
             password=password,
-            database=database,
             port=port
         )
-        if conn.is_connected():
-            conn.close()
-            return True
+
+        if not conn.is_connected():
+            return False
+
+        cur = conn.cursor()
+
+        if database:
+            cur.execute(f"CREATE DATABASE IF NOT EXISTS {database};")
+            cur.execute("SHOW DATABASES LIKE %s", (database,))
+            if not cur.fetchone():
+                cur.close()
+                conn.close()
+                return False
+            cur.execute(f"USE `{database}`")
+
+        cur.close()
+        conn.close()
+
+        return True
+
     except Exception as e:
-        log(0, f'ERROR: Database is configured as mysql but cannot connect')
-        pass
-    return False
+        log(0, f'ERROR: Database is configured as mysql but cannot connect: {e}')
+        return False
 
 def get_database_config():
     secret_data = get_secrets(['databasehost', 'databaseuser', 'databasepassword', 'databasedatabase'])
     secret_data['databasetype'] = get_setting('databasetype')
+    secret_data['databaseenabled'] = get_setting('enabledatabase')
     
     return secret_data
 
 def update_database(structure, extra_data):
-    '''
     secret_data = get_database_config()
 
-    if not re.fullmatch(r'[a-zA-Z_][a-zA-Z0-9_]*', secret_data['databasedatabase']):
-        log(0, f"ERROR: Database table name {secret_data['databasedatabase']} is invalid")
-        return
+    if secret_data['databaseenabled']:
+        if not re.fullmatch(r'[a-zA-Z_][a-zA-Z0-9_]*', secret_data['databasedatabase']):
+            log(0, f"ERROR: Database table name {secret_data['databasedatabase']} is invalid")
+            return
 
-    if secret_data['databasetype'] == 'mysql':
-        if check_mysql_connection(secret_data['databasehost'],secret_data['databaseuser'],secret_data['databasepassword']):
-            update_mysql_database(structure, extra_data, secret_data)
+        if secret_data['databasetype'] == 'mysql':
+            if check_mysql_connection(secret_data['databasehost'],secret_data['databaseuser'],secret_data['databasepassword'], secret_data['databasedatabase']):
+                update_mysql_database(structure, extra_data)
+            else:
+                log(0, f"ERROR: Failed to connect to MySQL database. Please run the database manager utility.")
+        
+        if secret_data['databasetype'] == 'sqlite':
+            update_sqlite_database(structure, extra_data)
+
+def obfuscate_password(password: str) -> str:
+    if not password:
+        return ""
+    if len(password) <= 2:
+        return "*" * len(password)
+    return password[0] + "*" * (len(password) - 2) + password[-1]
+
+def get_database_row_key(structure: dict):
     
-    if secret_data['databasetype'] == 'sqlite':
-    '''    
-    update_sqlite_database(structure, extra_data)
+    # Assume we have access to AS_TIMESTAMP in the env
+    row_key = get_environment_variable('AS_TIMESTAMP')
+
+    # Possibly running in the periodic flow so get the value from the overlay debug data
+    if row_key == None:
+        row_key = get_value_from_debug_data("AS_TIMESTAMP")
+        
+    # Final fallback to use current time
+    if row_key == None:
+        row_key = builtins.int(time.time()) 
+
+    # Get the row key.        
+    if 'row_key' in structure:
+        row_key =  structure['row_key']
+        temp_row_key = get_environment_variable(row_key)  
+        if temp_row_key == None:
+            temp_row_key = get_value_from_debug_data(row_key)
+            if temp_row_key is not None:
+                row_key = temp_row_key
+                
+    return row_key
 
 def update_sqlite_database(structure, extra_data):
+
+    try:
+        time_stamp = os.environ["AS_TIMESTAMP"]
+    except:
+        time_stamp = builtins.int(time.time()) # We have overidden int for locale so call builtin function here
 
     try:
         db_path = os.environ['ALLSKY_DATABASES']
@@ -635,105 +883,183 @@ def update_sqlite_database(structure, extra_data):
         db_path = os.environ['ALLSKY_DATABASES']
 
     try:
-        if 'enabled' in structure['database']:
-            if structure['database']['enabled']:
-                if 'table' in structure['database']:
-                    database_table = structure['database']['table']
-                    
-                    json_str = json.dumps(extra_data)
-                    timestamp = math.floor(time.time())
+        if "database" in structure:        
+            if 'enabled' in structure['database']:
+                if structure['database']['enabled']:
+                    if 'table' in structure['database']:
+                        database_table = structure['database']['table']
+                        row_type = "VARCHAR(100)"
+                        if "row_type" in structure['database']:
+                            row_type = "INTEGER"
+                        
+                        json_str = json.dumps(extra_data)
+                        timestamp = math.floor(time.time())
 
-                    create_sqlite_database(db_path)
-                    
-                    # Use a context manager to ensure safe connection handling
-                    with sqlite3.connect(db_path, timeout=10) as conn:
-                        #conn.execute('PRAGMA journal_mode = WAL')  # Enables safe concurrent access
-                        #conn.execute('PRAGMA synchronous = NORMAL')  # Balance between speed and safety
-                        conn.execute(f'''
-                            CREATE TABLE IF NOT EXISTS {database_table} (
-                                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                timestamp INTEGER NOT NULL,
-                                json_data TEXT NOT NULL
-                            )
-                        ''')
-                        conn.execute(f'''
-                            INSERT INTO {database_table} (timestamp, json_data)
-                            VALUES (?, ?)
-                        ''', (timestamp, json_str))
-                        conn.commit()
-                        # Optional: Change group if allowed
+                        if not create_sqlite_database(db_path):
+                            return False
+                        
+                        # Use a context manager to ensure safe connection handling
+                        with sqlite3.connect(db_path, timeout=10) as conn:
+                            #conn.execute('PRAGMA journal_mode = WAL')  # Enables safe concurrent access
+                            #conn.execute('PRAGMA synchronous = NORMAL')  # Balance between speed and safety
+                            create_sql = get_sql_create(database_table, row_type)
+                            conn.execute(create_sql)
+                            
+                            include_all = False
+                            if "include_all" in structure['database']:
+                                include_all = True if structure["database"]["include_all"].lower() == 'true' else False
+                                                    
+                            row_key = get_database_row_key(structure["database"])
+                            data = json.loads(extra_data)
+                            for entity, value in data.items():
+                                include_row = False
+                                row_database_table = database_table
+                                key = entity
+                                key1 = entity + "${COUNT}"
+                                found_key = None
+                                if key in structure["values"]:
+                                    if 'database' in structure["values"][key]:
+                                        found_key = key
+                                if key1 in structure["values"]:
+                                    if 'database' in structure["values"][key1]:
+                                        found_key = key1
+                                if found_key is not None:
+                                    if 'table' in structure["values"][found_key]["database"]:
+                                        row_database_table = value["database"]["table"]
+                                        create_sql = get_sql_create(row_database_table)
+                                        conn.execute(create_sql)
+                                        row_key = get_database_row_key(structure["values"][found_key]["database"])
+                                    if "include" in structure["values"][found_key]["database"]:
+                                        if "include" in structure["values"][found_key]["database"]:
+                                            include_row = True if structure["values"][found_key]["database"]["include"].lower() == 'true' else False
+                                                                                
+                                if include_row or include_all:                                         
+                                    val = value.get("value")   
+                                    conn.execute(
+                                        f"INSERT INTO {row_database_table} (row_key, entity, value, timestamp) VALUES (?, ?, ?, ?)",
+                                        (row_key, entity, str(val), time_stamp)
+                                    )
+                                    conn.commit()
+
     except Exception as e:
+        me = os.path.basename(__file__)
         eType, eObject, eTraceback = sys.exc_info()            
-        log(0, f'ERROR: Module update_database failed on line {eTraceback.tb_lineno} - {e}')
-        
-def update_mysql_database(structure, extra_data, secret_data):
+        log(0, f'ERROR: update_sqlite_database failed on line {eTraceback.tb_lineno} in {me} - {e}')
+
+def get_sql_create(database_table, row_key_type="INT"):
+    create_sql = f'CREATE TABLE IF NOT EXISTS {database_table} (row_key {row_key_type}, timestamp {row_key_type}, entity VARCHAR(1024), value VARCHAR(2048))'
+    return create_sql
+            
+def update_mysql_database(structure, extra_data): 
+    secret_data = get_database_config()
+    
     try:
-        if 'enabled' in structure['database']:
-            if structure['database']['enabled']:
-                if 'table' in structure['database']:
-                    database_table = structure['database']['table']
-                    conn = mysql.connector.connect(
-                        host=secret_data['databasehost'],
-                        user=secret_data['databaseuser'],
-                        password=secret_data['databasepassword'],
-                        database=secret_data['databasedatabase']
-                    )
-                    
-                    cursor = conn.cursor()
-                    cursor.execute(f'CREATE TABLE IF NOT EXISTS {database_table} (id INT AUTO_INCREMENT PRIMARY KEY, timestamp BIGINT, json_data JSON)')
-                    unix_timestamp = math.floor(time.time())
-                    json_string = json.dumps(extra_data, separators=(",", ":"), ensure_ascii=True).replace("\n", "").replace("\r", "")
-                    json_string = json_string.replace("\\n","").replace("\\r","").replace("\\","")
-                    json_string = json.dumps(extra_data)
-                    insert_query = f"INSERT INTO {database_table} (timestamp, json_data) VALUES (%s, %s)"
-                    cursor.execute(insert_query, (unix_timestamp, json_string))
+        time_stamp = os.environ["AS_TIMESTAMP"]
+    except:
+        time_stamp = builtins.int(time.time()) # We have overidden int for locale so call builtin function here
+        
+    try:
+        if "database" in structure:
+            if 'enabled' in structure['database']:
+                if structure['database']['enabled']:
+                    if 'table' in structure['database']:
+                        database_table = structure['database']['table']
+                        conn = mysql.connector.connect(
+                            host=secret_data['databasehost'],
+                            user=secret_data['databaseuser'],
+                            password=secret_data['databasepassword'],
+                            database=secret_data['databasedatabase']
+                        )
 
-                    conn.commit()
-                    cursor.close()
-                    conn.close()
+                        row_type = "VARCHAR(100)"
+                        if "row_type" in structure['database']:
+                            row_type = "INT"
+                            
+                        include_all = False
+                        if "include_all" in structure['database']:
+                            include_all = True if structure["database"]["include_all"].lower() == 'true' else False
+                            
+                        cursor = conn.cursor()
+                        create_sql = get_sql_create(database_table, row_type)
+                        cursor.execute(create_sql)
 
+                        row_key = get_database_row_key(structure["database"])
+                        data = json.loads(extra_data)
+                        for entity, value in data.items():
+                            include_row = False
+                            row_database_table = database_table
+                            key = entity                            
+                            key1 = re.sub(r'\d+$', '', entity) + "${COUNT}" # Strip trailing numbers
+                            found_key = None
+                            if key in structure["values"]:
+                                if 'database' in structure["values"][key]:
+                                    found_key = key
+                            if key1 in structure["values"]:
+                                if 'database' in structure["values"][key1]:
+                                    found_key = key1
+                            if found_key is not None:
+                                if 'table' in structure["values"][found_key]["database"]:
+                                    row_database_table = value["database"]["table"]
+                                    create_sql = get_sql_create(row_database_table)
+                                    cursor.execute(create_sql)
+                                    row_key = get_database_row_key(structure["values"][found_key]["database"])
+                                if "include" in structure["values"][found_key]["database"]:
+                                    if "include" in structure["values"][found_key]["database"]:
+                                        include_row = True if structure["values"][found_key]["database"]["include"].lower() == 'true' else False
+                                    
+                            if include_row or include_all:                                
+                                val = value.get("value")
+                                cursor.execute(
+                                    f"INSERT INTO {row_database_table} (row_key, entity, value, timestamp) VALUES (%s, %s, %s, %s)",
+                                    (row_key, entity, str(val), time_stamp)
+                                )
+                        conn.commit()
+                        cursor.close()
+                        conn.close()
     except Exception as e:
+        me = os.path.basename(__file__)
         eType, eObject, eTraceback = sys.exc_info()            
-        log(0, f'ERROR: Module update_database failed on line {eTraceback.tb_lineno} - {e}')
+        log(0, f'ERROR: update_mysql_database failed on line {eTraceback.tb_lineno} in {me} - {e}')
 
 def save_extra_data(file_name, extra_data, source='', structure={}, custom_fields={}):
     saveExtraData(file_name, extra_data, source, structure, custom_fields)
 def saveExtraData(file_name, extra_data, source='', structure={}, custom_fields={}):
-	"""
-	Save extra data to allows the overlay module to display it.
+    """
+    Save extra data to allows the overlay module to display it.
 
-	Args:
-		file_name (string): The name of the file to save.
-		extra_data (object): The data to save.
+    Args:
+        file_name (string): The name of the file to save.
+        extra_data (object): The data to save.
 
-	Returns:
-		Nothing
-	"""
-	try:
-		extra_data_path = getExtraDir()
-		if extra_data_path is not None:        
-			checkAndCreateDirectory(extra_data_path)
+    Returns:
+        Nothing
+    """
+    try:
+        extra_data_path = getExtraDir()
+        if extra_data_path is not None:        
+            checkAndCreateDirectory(extra_data_path)
 
-			file_extension = Path(file_name).suffix
-			extra_data_filename = os.path.join(extra_data_path, file_name)
-			with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
-				if file_extension == '.json':
-					extra_data = format_extra_data_json(extra_data, structure, source)
-				if len(custom_fields) > 0:
-					for key, value in custom_fields.items():
-						extra_data[key] = value
-				extra_data = json.dumps(extra_data, indent=4)
-				temp_file.write(extra_data)
-				temp_file_name = temp_file.name
-				os.chmod(temp_file_name, 0o644)
+            file_extension = Path(file_name).suffix
+            extra_data_filename = os.path.join(extra_data_path, file_name)
+            with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
+                if file_extension == '.json':
+                    extra_data = format_extra_data_json(extra_data, structure, source)
+                if len(custom_fields) > 0:
+                    for key, value in custom_fields.items():
+                        extra_data[key] = value
+                extra_data = json.dumps(extra_data, indent=4)
+                temp_file.write(extra_data)
+                temp_file_name = temp_file.name
+                os.chmod(temp_file_name, 0o644)
 
-				shutil.move(temp_file_name, extra_data_filename)
+                shutil.move(temp_file_name, extra_data_filename)
 
-				if 'database' in structure:
-					update_database(structure, extra_data)
-	except Exception as e:
-		eType, eObject, eTraceback = sys.exc_info()            
-		log(0, f'ERROR: Module saveExtraData failed on line {eTraceback.tb_lineno} - {e}')
+                if 'database' in structure:
+                    update_database(structure, extra_data)
+    except Exception as e:
+        me = os.path.basename(__file__)
+        eType, eObject, eTraceback = sys.exc_info()            
+        log(0, f'ERROR: saveExtraData failed on line {eTraceback.tb_lineno} in {me} - {e}')
 
 def format_extra_data_json(extra_data, structure, source):
     result = extra_data
@@ -802,7 +1128,7 @@ def load_extra_data_file(file_name, type=''):
                     with open(extra_data_filename, 'r') as file:
                         result = json.load(file)
                 except json.JSONDecodeError:
-                    log(0, f'Error reading extra_data_filename')
+                    log(0, f'ERROR: cannot read {extra_data_filename}.')
             
             if file_extension == '.txt':
                 pass
@@ -901,7 +1227,29 @@ def cleanup_extra_data_file(file_name, delete_age=600):
     else:
         log(4, f'ERROR: Cannot check extra data file {file_name} as it is not writeable')
             
-    
+def remove_path(path):
+    result = False
+    if os.path.isfile(path):
+        try:
+            os.remove(path)
+            result = True
+        except FileNotFoundError:
+            pass
+        except PermissionError:
+            pass
+        
+    if os.path.isdir(path):
+        folder = Path(path)
+        try:
+            shutil.rmtree(folder)
+            result = True
+        except FileNotFoundError:
+            pass
+        except PermissionError:
+            pass
+                
+    return result
+   
 def cleanup_module(moduleData):
     cleanupModule(moduleData)
 def cleanupModule(moduleData):
@@ -1219,9 +1567,9 @@ def mask_image(image, mask_file_name=''):
             log(4, f'INFO: Mask {mask_file_name} applied')
                 
     except Exception as e:
+        me = os.path.basename(__file__)
         eType, eObject, eTraceback = sys.exc_info()
-        result = f'mask_image failed on line {eTraceback.tb_lineno} - {e}'
-        log(0,f'ERROR: {result}')
+        log(0, f'ERROR: mask_image failed on line {eTraceback.tb_lineno} in {me} - {e}')
 
        
     return output
@@ -1421,12 +1769,11 @@ def get_ecowitt_data(api_key, app_key, mac_address, temp_unitid=1, pressure_unit
                 result = f'Got error from the Ecowitt API. Response code {response.status_code}'
                 log(0,f'ERROR: {result}')
         except Exception as e:
+            me = os.path.basename(__file__)
             eType, eObject, eTraceback = sys.exc_info()
-            result = f'ERROR: Failed to read data from Ecowitt {eTraceback.tb_lineno} - {e}'
-            log(0, result)
+            log(0, f'ERROR: Failed to read data from Ecowitt on line {eTraceback.tb_lineno} in {me} - {e}')
     else:
-        result = 'Missing Ecowitt Application Key, API Key or MAC Address'
-        log(0, f'ERROR: {result}')    
+        log(0, 'ERROR: Missing Ecowitt Application Key, API Key or MAC Address')
     
     return result
 
@@ -1566,9 +1913,9 @@ def get_ecowitt_local_data(address, password=None):
             result['lightning']['count'] = parse_val(lightning.get("count"), int)
 
     except Exception as e:
+        me = os.path.basename(__file__)
         eType, eObject, eTraceback = sys.exc_info()
-        result = f'ERROR: Failed to read live data from the local Ecowitt gateway {eTraceback.tb_lineno} - {e}'
-        log(0, result)
+        log(0, f'ERROR: Failed to read live data from the local Ecowitt gateway on line {eTraceback.tb_lineno} in {me} - {e}')
 
     return result
 
@@ -1595,9 +1942,9 @@ def get_hass_sensor_value(ha_url, ha_ltt, ha_sensor):
                     log(0, f'ERROR: Unable to read {ha_sensor} from {ha_url}. Error code {response.status_code}')
                 
     except Exception as e:
+        me = os.path.basename(__file__)
         eType, eObject, eTraceback = sys.exc_info()
-        error = f'ERROR: Failed to read data from Homeassistant {eTraceback.tb_lineno} - {e}'
-        log(0, error)
+        log(0, f'ERROR: Failed to read data from Homeassistant {eTraceback.tb_lineno} in {me} - {e}')
         result = None
 
     return result
@@ -1633,3 +1980,103 @@ def create_device(import_name: str, class_name: str, bus_number: int, i2c_addres
         return cls(i2c, int(i2c_address, 0))
     else:
         return cls(i2c)
+
+def get_flows_with_module(module_name):
+
+    folder = Path(ALLSKY_MODULES)
+    found: Dict[str, Any] = {}
+
+    for file in folder.glob("*.json"):
+        if not file.name.endswith("-debug.json"):
+            if file.name.startswith("postprocessing_"):
+                try:
+                    with file.open("r", encoding="utf-8") as f:
+                        data = json.load(f)
+
+                    if module_name in data:
+                        found[file.name] = data
+
+                except (json.JSONDecodeError, OSError) as e:
+                    pass
+
+    return found
+
+def to_bool(v: bool | str) -> bool:
+    if isinstance(v, bool):
+        return v
+    if v is None:
+        return False
+    return str(v).strip().lower() in ("true", "1", "yes", "y")
+
+def _to_list(v: str | list | None) -> list | str | None:
+    if isinstance(v, str) and "," in v:
+        return [x.strip() for x in v.split(",")]
+    return v
+
+def atomic_write_json(path: Path, data: Dict[str, Any]) -> None:
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with tmp.open("w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
+        f.write("\n")
+    os.replace(tmp, path)
+
+def save_secrets_file(env_data: Dict[str, Any]) -> None:
+    file_path = Path(os.path.join(ALLSKYPATH, 'env.json'))
+    atomic_write_json(file_path, env_data)
+    
+def load_secrets_file() -> Dict[str, Any]:
+    file_path = Path(os.path.join(ALLSKYPATH, 'env.json'))
+    env_data: Dict[str, Any] = {}
+    if file_path.is_file():
+        with file_path.open("r", encoding="utf-8") as f:
+            try:
+                env_data = json.load(f) or {}
+            except json.JSONDecodeError:
+                env_data = {}
+                
+    return env_data
+                        
+def save_flows_with_module(flows: Dict[str, Any], module_name: str, debug:bool = False, log_level:int = 4) -> None:
+    log_level = LOGLEVEL
+    if debug:
+        log_level = 4    
+    #try:
+    for flow, flow_data in flows.items():
+        file_path = os.path.join(ALLSKY_MODULES, flow)
+        with open(file_path, 'w', encoding='utf-8') as file:
+            json.dump(flow_data, file, indent=4)
+#except Exception as e:
+    #    log(0, f'ERROR: Failed to save flows for {module_name} - {e}')
+    
+
+def normalize_argdetails(ad):
+    norm = {}
+    for key, details in (ad or {}).items():
+        norm[key] = {}
+        for k, v in (details or {}).items():
+            if k in ("required", "secret"):
+                norm[key][k] = to_bool(v)
+            elif k == "type" and isinstance(v, dict):
+                norm[key][k] = {kk: _to_list(vv) for kk, vv in v.items()}
+            else:
+                norm[key][k] = v
+    return norm
+
+def compare_flow_and_module(flow_ad, code_ad):
+    return  normalize_argdetails(flow_ad) != normalize_argdetails(code_ad)
+
+def parse_version(file_path: str) -> dict:
+    with open(file_path, "r", encoding="utf-8") as f:
+        first_line = f.readline().strip()
+
+    parts = first_line.lstrip("v").split(".")
+    return {
+        "raw": first_line,
+        "year": parts[0],
+        "major": parts[1] if len(parts) > 1 else None,
+        "minor": parts[2] if len(parts) > 2 else None
+    }
+    
+def get_allsky_version():
+    version_file = os.path.join(os.environ['ALLSKY_HOME'], 'version')
+    version_info = parse_version(version_file) 

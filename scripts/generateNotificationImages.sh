@@ -43,7 +43,10 @@ function usage_and_exit()
 	echo -n "   --size XxY          Creates images that are X by Y pixels."
 	echo " Default: ${DEFAULT_IMAGE_SIZE} pixels."
 	echo "   Basename            The name of the file to create, not including the extension."
+	echo "                       If '+' the current 'Filename' setting is used."
 	echo "   TextColor, et. al.  Attributes of the message (color, size, etc.)."
+	echo "   Extensions          One or more space-separated list of file extensions to create."
+	echo "                       If '+' the current 'Filename' setting is used."
 	echo "   Message             The message to add to the image."
 	echo
 
@@ -115,6 +118,7 @@ if [[ $# -eq ${MAX_ARGS} ]]; then
 	[[ ${OK} == "false" ]] && usage_and_exit 1
 fi
 
+IMAGE_NAME=""
 function make_image()
 {
 	BASENAME="${1}"
@@ -131,10 +135,17 @@ function make_image()
 	IM_SIZE="${11:-${IMAGE_SIZE}}"
 	MSG="${12}"
 
-	echo "${BASENAME}" | grep -qEi "[.](${ALL_EXTS/ /|})"
-	if [[ $? -ne 1 ]]; then
-		E_ "ERROR: Do not add an extension to the 'Basename' argument." >&2
-		usage_and_exit 1
+	if [[ ${BASENAME} == "+" ]]; then
+		BASENAME="${ALLSKY_FILENAME}"
+	else
+		echo "${BASENAME}" | grep -qEi "[.](${ALL_EXTS/ /|})"
+		if [[ $? -ne 1 ]]; then
+			E_ "ERROR: Do not add an extension to the 'Basename' argument." >&2
+			usage_and_exit 1
+		fi
+	fi
+	if [[ ${EXTS} == "+" ]]; then
+		EXTS="${ALLSKY_EXTENSION}"
 	fi
 
 	if [[ ${BORDER_WIDTH} -ne 0 ]]; then
@@ -156,6 +167,9 @@ function make_image()
 		else
 			Q=9
 		fi
+
+		IMAGE_NAME="${BASENAME}.${EXT}"		# Global
+
 		# shellcheck disable=SC2086
 		convert \
 			-quality "${Q}" \
@@ -171,7 +185,7 @@ function make_image()
 			-depth 8 \
 			-size "${IM_SIZE}" \
 			label:"${MSG}" \
-			"${BASENAME}.${EXT}" || echo "${ME}: Unable to create image for '${MSG}'" >&2
+			"${IMAGE_NAME}" || echo "${ME}: Unable to create image for '${MSG}'" >&2
 	done
 
 	return 0
@@ -199,7 +213,6 @@ fi
 # If the arguments were specified on the command line, use them instead of the list below.
 if [[ $# -eq ${MAX_ARGS} ]]; then
 	make_image "${@}"
-	IMAGE_NAME="${1}.${EXT}"
 	FILE_NAME="${PWD}/${IMAGE_NAME}"		# Need full pathname
 	export ME
 	processAndUploadImage "${FILE_NAME}" "${IMAGE_NAME}"

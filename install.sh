@@ -49,6 +49,7 @@ ALLSKY_IMAGES_MOVED="false"				# Did the user move ALLSKY_IMAGES, e.g., to an SS
 SPACE="    "
 NOT_RESTORED="NO PRIOR VERSION"
 PI_MODEL=""								# The numeric model of Raspberry Pi
+THIS_PI_MODEL=""						# The model of this Raspberry Pi
 
 declare -r TMP_FILE="/tmp/x"			# temporary file used by many functions
 declare -r TAB="$( echo -e '\t' )"
@@ -66,17 +67,21 @@ OVERLAY_NAME=""
 #xxx currently not used:    ALLSKY_BASE_VERSION="$( remove_point_release "${ALLSKY_VERSION}" )"
 
 	# Base of first version without Buster support or "legacy" overlay method.
-#declare -r NO_BUSTER_BASE_VERSION="v2025.xx.xx"		# TODO: Change xxxxxx not used yet
+# declare -r NO_BUSTER_BASE_VERSION="v2025.xx.xx"		# TODO: Change xxxxxx not used yet
 	# Base of first version with combined configuration files and all lowercase setting names.
 declare -r COMBINED_BASE_VERSION="v2024.12.06"
+
 	# Base of first version with CAMERA_TYPE instead of CAMERA in config.sh and
 	# "cameratype" in the settings file.
 declare -r FIRST_CAMERA_TYPE_BASE_VERSION="v2023.05.01"
+
 	# First Allsky version that used the "version" file.
 	# It's also when ftp-settings.sh moved to the ${ALLSKY_CONFIG} directory.
 declare -r FIRST_VERSION_VERSION="v2022.03.01"
+
 	# Versions before ${FIRST_VERSION_VERSION} didn't have version numbers.
 declare -r PRE_FIRST_VERSION_VERSION="old"
+
 	# A reboot isn't needed if upgrading from this base release.  This changes every release.
 declare -r NO_REBOOT_BASE_VERSION="v2024.12.06"
 
@@ -125,42 +130,6 @@ STATUS_VARIABLES=()								# Holds the variables and values to save
 
 
 ############################################## functions
-
-####
-check_for_tester()
-{
-return		# Currently this is disabled - not sure it's worth doing.
-
-	local TOLD_FILE  MSG  A
-
-	# shellcheck disable=SC2119
-	if [[ $( get_branch ) != "${ALLSKY_GITHUB_MAIN_BRANCH}" ]]; then
-		DEBUG=1; DEBUG_ARG="--debug"; LOG_TYPE="--log"
-
-		TOLD_FILE="${ALLSKY_HOME}/told"
-		if [[ ! -f ${TOLD_FILE} ]]; then
-			MSG="\nTesters, until we go-live with this release, debugging is automatically on."
-			MSG+="\n\nPlease set Debug Level to 3 during testing."
-			MSG+="\n"
-
-			MSG+="\nMajor changes from prior release:"
-			MSG+="\n * xxxxxx."
-
-			MSG+="\n\nIf you want to continue with the installation, enter:    yes"
-			title="*** MESSAGE FOR TESTERS ***"
-			A=$( whiptail --title "${title}" --inputbox "${MSG}" 26 "${WT_WIDTH}" \
-				3>&1 1>&2 2>&3 )
-			if [[ $? -ne 0 || ${A} != "yes" ]]; then
-				MSG="\nYou must type 'yes' to continue the installation."
-				MSG+="\nThis is to make sure you read it.\n"
-				display_msg info "${MSG}"
-				exit 0
-			fi
-			touch "${TOLD_FILE}"
-		fi
-	fi
-}
-
 
 ####
 # The last installation succeeded.
@@ -452,13 +421,16 @@ setup_rpi_supported_cameras()
 
 	if [[ ! -f ${ALLSKY_RPi_SUPPORTED_CAMERAS} ]]; then
 		local B="$( basename "${ALLSKY_RPi_SUPPORTED_CAMERAS}" )"
+
+		# "libcamera" is the only software packages supported as of 2025,
+		# but leave the code to check for any future new software.
 		if [[ -z ${CMD} ]]; then
 			notCMD="xxxxx"		# won't match anything
 			CMD="all"
-		elif [[ ${CMD} == "raspistill" ]]; then
+		elif [[ ${CMD} == "NEW-TBD-SOFTWARE" ]]; then
 			notCMD="libcamera"
 		else
-			notCMD="raspistill"
+			notCMD="NEW-TBD-SOFTWARE"
 		fi
 
 		local MSG="Creating ${ALLSKY_RPi_SUPPORTED_CAMERAS} with '${CMD}' entries."
@@ -956,7 +928,6 @@ install_webserver_et_al()
 	declare -n v="${FUNCNAME[0]}"
 	[[ ${SKIP} == "true" ]] && return
 
-	sudo systemctl stop hostapd 2>/dev/null
 	sudo systemctl stop lighttpd 2>/dev/null
 
 	if [[ ${v} == "true" ]]; then
@@ -966,8 +937,9 @@ install_webserver_et_al()
 		display_msg --log progress "Installing the web server."
 		TMP="${ALLSKY_LOGS}/lighttpd.install.log"
 		run_aptGet \
-			lighttpd  php-cgi  php-gd  hostapd  dnsmasq  avahi-daemon  hwinfo tree i2c-tools \
+			lighttpd  php-cgi  php-gd  avahi-daemon  hwinfo tree i2c-tools \
 			> "${TMP}" 2>&1
+# TODO: Remove in next major release: Used to install: dnsmasq
 		check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" \
 			|| exit_with_image 1 "${STATUS_ERROR}" "lighttpd installation failed"
 	fi
@@ -1510,8 +1482,17 @@ does_prior_Allsky_exist()
 	# If a prior config directory doesn't exist then there's no prior Allsky,
 	if [[ ! -d ${PRIOR_CONFIG_DIR} ]]; then
 		if [[ -d ${ALLSKY_PRIOR_DIR} ]]; then
-			MSG+=" but it doesn't appear to have been installed; ignoring it."
-			display_msg --log warning "${MSG}"
+			MSG+=" but it doesn't appear to have been installed."
+			display_msg --logonly info "${MSG}"
+			MSG+="\n\nDo you want to continue and ignore that directory"
+			MSG+=" (note that you'll need to re-enter all your settings)?"
+			if ! whiptail --title "${TITLE}" --yesno "${MSG}" 20 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
+				MSG="Check the contents of '${ALLSKY_PRIOR_DIR}' and delete it as needed,"
+				MSG+=" then run the installation again."
+				display_msg info "${MSG}"
+				display_msg --logonly info "User elected not to continue.  Exiting installation."
+				exit_installation 0 "${STATUS_NOT_CONTINUE}" "after no prior valid Allsky was found."
+			fi
 		else
 			display_msg --logonly info "No prior Allsky found at '${ALLSKY_PRIOR_DIR}'."
 		fi
@@ -1857,20 +1838,18 @@ convert_settings_file()			# prior_file, new_file
 	local NEW_FILE="${2}"
 	local CALLED_FROM="${3}"
 
-	if [[ ${ALLSKY_VERSION} == "${PRIOR_ALLSKY_VERSION}" ]]; then
-		display_msg --logonly info "Not converting '${PRIOR_FILE}'; same ALLSKY_VERSION."
-		return
-	fi
-
 # TODO: Keep track somehow of which upgrades added, deleted, and/or changed names of
 # settings so we know if the settings file needs to be updated.
 
-	local MSG="Converting '$( basename "${PRIOR_FILE}" )' to new format if needed:"
+	local MSG="Converting '$( basename "${PRIOR_FILE}" )'"
+	MSG+=" to new format in '$( basename "${NEW_FILE}" )' if needed."
 	display_msg --log progress "${MSG}"
 
 	DIR="/tmp/converted_settings"
 	mkdir -p "${DIR}"
-	local TEMP_PRIOR="${DIR}/old-${PRIOR_CAMERA_TYPE}_${PRIOR_CAMERA_MODEL}.json"
+	local TEMP_PRIOR="${DIR}/PRIOR-${PRIOR_CAMERA_TYPE}_${PRIOR_CAMERA_MODEL// /_}.json"
+	local DELETED_SETTINGS="${DIR}/deleted_settings.txt"
+	rm -f "${DELETED_SETTINGS}"
 
 	# Pre-v2024.12.06 version had uppercase letters in setting names and
 	# "1" and "0" for booleans and quotes around numbers. Change that.
@@ -1878,12 +1857,12 @@ convert_settings_file()			# prior_file, new_file
 	# --settings-only  says only output settings that are in the settings file.
 	# The ALLSKY_OPTIONS_FILE doesn't exist yet so use REPO_OPTIONS_FILE.
 	"${ALLSKY_SCRIPTS}/convertJSON.php" \
-		--from-install \
-		--convert \
-		--settings-only \
-		--settings-file "${PRIOR_FILE}" \
-		--options-file "${REPO_OPTIONS_FILE}" \
-		--include-not-in-options \
+			--from-install \
+			--convert \
+			--settings-only \
+			--settings-file "${PRIOR_FILE}" \
+			--options-file "${REPO_OPTIONS_FILE}" \
+			--include-not-in-options \
 		> "${TEMP_PRIOR}" 2>&1
 	if [[ $? -ne 0 ]]; then
 		MSG="Unable to convert old settings file: $( < "${TEMP_PRIOR}" )"
@@ -1899,9 +1878,9 @@ convert_settings_file()			# prior_file, new_file
 	"${ALLSKY_SCRIPTS}/convertJSON.php" \
 			--from-install \
 			--delimiter "${TAB}" \
+			--settings-file "${TEMP_PRIOR}" \
 			--options-file "${REPO_OPTIONS_FILE}" \
-			--include-not-in-options \
-			--settings-file "${TEMP_PRIOR}" |
+			--include-not-in-options |
 		while read -r FIELD VALUE
 		do
 			case "${FIELD}" in
@@ -1912,24 +1891,43 @@ convert_settings_file()			# prior_file, new_file
 
 				"computer")
 					# As of ${COMBINED_BASE_VERSION}, we compute the value.
-					VALUE="$( get_computer "" )"
+					VALUE="${THIS_PI_MODEL}"
 					doV "${FIELD}" "VALUE" "${FIELD}" "text" "${NEW_FILE}"
 					;;
 
 				# Don't carry this forward:
 				"XX_END_XX")
+					echo -e "\t${FIELD}=${VALUE}" >> "${DELETED_SETTINGS}"
 					;;
 
-				# ===== Deleted in ${NO_BUSTER_BASE_VERSION}
-				"notificationimages")
+				# ===== Deleted/changed in ${NO_BUSTER_BASE_VERSION}.
+				"overlaymethod")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
+					if [[ ${VALUE} -eq 0 ]]; then
+						MSG="The legacy Overlay Method is no longer available."
+						MSG+="\nUse the WebUI's 'Overlay Editor' instead."
+						display_msg --log notice "${MSG}"
+					fi
+					;;
+				"showtime" | "showexposure" | "showgain" | "showusb" | "showtemp" | \
+				"showmean" | "showhistogrambox" | "showfocus" | "text" | "textarea" | \
+				"extratext" | "extratextage" | "textlineheight" | "textx" | "texty" | "fontname" | \
+				"fontcolor" | "smallfontcolor" | "fonttype" | "fontsize" | "fontline" | "outlinefont")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
+					;;
+				"extraargs")
+					if ! MSG="$( _check_immediate "${VALUE}" "Extra Arguments" )" ; then
+						display_msg --log notice "${MSG}"
+					fi
 					;;
 
 				# ===== Deleted in ${COMBINED_BASE_VERSION}.
-				"autofocus" | "background" | "alwaysshowadvanced" | \
+				"autofocus" | "background" | "alwaysshowadvanced" | "notificationimages" | \
 				"newexposure" | "experimentalexposure" | "showbrightness")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
 					;;
-
 				"brightness" | "daybrightness" | "nightbrightness")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
 					if [[ ! -f ${DISPLAYED_BRIGHTNESS_MSG} ]]; then
 						touch "${DISPLAYED_BRIGHTNESS_MSG}"
 						MSG="The 'Brightness' settings were removed. Use 'Target Mean' instead."
@@ -1937,6 +1935,7 @@ convert_settings_file()			# prior_file, new_file
 					fi
 					;;
 				"offset")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
 					if [[ ${VALUE} -gt 1 && ! -f ${DISPLAYED_OFFSET_MSG} ]]; then
 						touch "${DISPLAYED_OFFSET_MSG}"
 						# 1 is default.  > 1 means they changed it, which is rare.
@@ -1950,6 +1949,7 @@ convert_settings_file()			# prior_file, new_file
 				"remotewebsitevideodestinationname" | \
 				"remotewebsitekeogramdestinationname" | \
 				"remotewebsitestartrailsdestinationname")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
 					if [[ -n ${VALUE} && ! -f ${DISPLAYED_CHANGE_NAMES_MSG} ]]; then
 						touch "${DISPLAYED_CHANGE_NAMES_MSG}"
 						MSG="Changing timelapse, keogram, and/or startrails names"
@@ -2007,13 +2007,20 @@ convert_settings_file()			# prior_file, new_file
 					;;
 
 				*)
-					# don't know the type
+					# Since we don't know the setting name, we don't know its type.
+					# Any setting that's not new, old, or changed (most of them), comes here.
 					doV "${FIELD}" "VALUE" "${FIELD}" "" "${NEW_FILE}"
 					;;
 			esac
 		done
-}
 
+	# Delete obsolete settings.
+	if [[ -s "${DELETED_SETTINGS}" ]]; then
+		display_msg --logonly info "List of settings deleted from '${NEW_FILE}' is in '${DELETED_SETTINGS}'."
+		# shellcheck disable=SC2046
+		"${ALLSKY_SCRIPTS}/updateJsonFile.sh" --file "${NEW_FILE}" $( < "${DELETED_SETTINGS}" )
+	fi
+}
 
 
 ####
@@ -2346,15 +2353,15 @@ restore_prior_settings_file()
 		# The prior settings file SHOULD be a link to a camera-specific file.
 		# Make sure that's true; if not, fix it.
 
-		MSG="Checking link for ${NEW_STYLE_ALLSKY} PRIOR_SETTINGS_FILE '${PRIOR_SETTINGS_FILE}'"
-		display_msg --logonly info "${MSG}"
-
 		# Do we need to check for upperCase or lowercase setting names?
 		if [[ ${PRIOR_ALLSKY_BASE_VERSION} < "${COMBINED_BASE_VERSION}" ]]; then
 			CHECK_UPPER="--uppercase"
 		else
 			CHECK_UPPER=""
 		fi
+
+		MSG="Checking link for ${NEW_STYLE_ALLSKY} PRIOR_SETTINGS_FILE '${PRIOR_SETTINGS_FILE}'"
+		display_msg --logonly info "${MSG}"
 
 		# shellcheck disable=SC2086
 		MSG="$( check_settings_link ${CHECK_UPPER} "${PRIOR_SETTINGS_FILE}" )"
@@ -2414,8 +2421,9 @@ restore_prior_settings_file()
 		fi
 
 		# Make any changes to the settings files based on the old and new Allsky versions.
+		# If we're not using the standard branch we're probably testing and want to convert the settings file.
 		if [[ ${RESTORED_PRIOR_SETTINGS_FILE} == "true" &&
-			  ${PRIOR_ALLSKY_VERSION} != "${ALLSKY_VERSION}" ]]; then
+			( ${BRANCH} != "${ALLSKY_GITHUB_MAIN_BRANCH}" || ${PRIOR_ALLSKY_VERSION} != "${ALLSKY_VERSION}" ) ]]; then
 			for S in ${PRIOR_SPECIFIC_FILES}
 			do
 				# Update all the prior camera-specific files (which are now in ${ALLSKY_CONFIG}).
@@ -2424,7 +2432,7 @@ restore_prior_settings_file()
 				convert_settings_file "${S}" "${S}" "install"
 			done
 		else
-			MSG="No need to update prior settings files - same Allsky version."
+			MSG="No need to update prior settings files - same Allsky version and branch."
 			display_msg --logonly info "${MSG}"
 		fi
 
@@ -2521,16 +2529,6 @@ restore_prior_files()
 	display_msg --log progress "Restoring prior:"
 
 	local E  D  R  ITEM  X
-
-# TODO: delete in major release after v2024.12.06
-	if [[ -f ${ALLSKY_PRIOR_DIR}/scripts/endOfNight_additionalSteps.sh ]]; then
-		MSG="The ${ALLSKY_SCRIPTS}/endOfNight_additionalSteps.sh file is no longer supported."
-		MSG+="\nPlease move your code in that file to the 'Script' module in"
-		MSG+="\nthe 'Night to Day Transition Flow' of the Module Manager."
-		MSG+="\nSee the 'Explanations --> Module' documentation for more details."
-		display_msg --log warning "\n${MSG}\n"
-		add_to_post_actions "${MSG}"
-	fi
 
 	ITEM="${SPACE}'images' directory"
 	if [[ ${ALLSKY_IMAGES} != "${ALLSKY_IMAGES_ORIGINAL}" ]]; then
@@ -2697,7 +2695,7 @@ restore_prior_files()
 
 
 	########## Website files
-	# ALLSKY_ENV is for a remote Website and/or server.
+	# ALLSKY_ENV is for a remote Website and/or server and any private information.
 	# Restore it now because it's potentially written to below.
 	E="$( basename "${ALLSKY_ENV}" )"
 	ITEM="${SPACE}'${E}' file"
@@ -2801,7 +2799,7 @@ restore_prior_files()
 restore_prior_website_files()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
-	local ITEM  D  count  A  MSG
+	local ITEM  D  count  MSG
 
 	# Do this even if we're not restoring Website files.
 	if [[ ! -f ${ALLSKY_ENV} ]]; then
@@ -2884,24 +2882,6 @@ restore_prior_website_files()
 		fi
 	else
 		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
-	fi
-
-	# This is the old name.
-# TODO: remove this check in the next release.
-	ITEM="${SPACE}${SPACE}'myImages' directory"
-	D="${PRIOR_WEBSITE_DIR}/myImages"
-	if [[ -d ${D} ]]; then
-		count=$( get_count "${D}" '*' )
-		if [[ ${count} -gt 1 ]]; then
-			local MSG2="  Please use '${ALLSKY_WEBSITE_MYFILES_DIR}' going forward."
-			display_msg --log progress "${ITEM} (copying to '${ALLSKY_WEBSITE_MYFILES_DIR}')" "${MSG2}"
-			(shopt -s dotglob
-			 cp "${D}"/*   "${ALLSKY_WEBSITE_MYFILES_DIR}" 2>/dev/null
-	 		)
-		fi
-	else
-		# Since this is obsolete only add to log file.
-		display_msg --logonly progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
 	# Now deal with the local Website configuration file.
@@ -3243,14 +3223,6 @@ install_Python()
 	# This also allows us to display progress messages.
 	M=" for ${ALLSKY_PI_OS^}"
 	R="-${ALLSKY_PI_OS}"
-	if [[ ${ALLSKY_PI_OS} == "buster" ]]; then
-		# Force pip upgrade, without this installations on Buster fail.
-		pip3 install --upgrade pip > /dev/null 2>&1
-	elif [[ ${ALLSKY_PI_OS} != "bullseye" && ${ALLSKY_PI_OS} != "bookworm" ]]; then
-		display_msg --log warning "Unknown operating system: ${ALLSKY_PI_OS}."
-		M=""
-		R=""
-	fi
 
     display_msg --logonly info "Locating Python dependency file"
 	PREFIX="${ALLSKY_REPO}/requirements"
@@ -3292,23 +3264,6 @@ install_Python()
 	if [[ -d "${ALLSKY_PYTHON_VENV}" && -d "${PRIOR_PYTHON_VENV}" ]]; then
 		display_msg --logonly info "Copying '${PRIOR_PYTHON_VENV}' to '${ALLSKY_PYTHON_VENV}'"
 		cp -arn "${PRIOR_PYTHON_VENV}" "${ALLSKY_PYTHON_VENV}/"
-	fi
-
-	# Astropy is no longer supported on Buster due to its
-	# dependencies requiring later versions of Python.
-	# This *hack* will force the require version of Astropy onto Buster.
-	if [[ ${ALLSKY_PI_OS} == "buster" ]]; then
-		NAME="Astrophy"
-		display_msg --log progress "Forcing build of ${NAME} on ${ALLSKY_PI_OS}."
-		TMP="${ALLSKY_LOGS}/${NAME}.log"
-		{ 
-			PKGs="setuptools setuptools_scm wheel cython==0.29.22"
-			PKGs+=" jinja2==2.10.3 numpy markupsafe==2.0.1 extension-helpers"
-			# shellcheck disable=SC2086
-			pip3 install ${PKGs} && pip3 install --no-build-isolation astropy==4.3.1	
-		} > "${TMP}" 2>&1
-		check_success $? "${NAME} install failed" "${TMP}" "${DEBUG}" ||
-			exit_with_image 1 "${STATUS_ERROR}" "${NAME} install failed."
 	fi
 
 	NAME="Python_dependencies"
@@ -3438,7 +3393,8 @@ log_info()
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 
 	display_msg --logonly info "ALLSKY_PI_OS = ${ALLSKY_PI_OS}"
-##	display_msg --logonly info "/etc/os-release:\n$( indent "$( grep -v "URL" /etc/os-release )" )"
+	THIS_PI_MODEL="$( get_computer "" )"
+	display_msg --logonly info "Pi Model = ${THIS_PI_MODEL}"
 	display_msg --logonly info "uname = $( uname -a )"
 	display_msg --logonly info "id = $( id )"
 
@@ -3447,43 +3403,32 @@ log_info()
 
 
 ####
-# If the raspistill command exists on post-Buster releases,
-# rename it so it's not used.
-check_for_raspistill()
+check_if_supported_OS()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
-	local W
 
-	if W="$( which raspistill )" && [[ ${ALLSKY_PI_OS} != "buster" ]]; then
-		display_msg --longonly info "Renaming 'raspistill' on ${ALLSKY_PI_OS}."
-		sudo mv "${W}" "${W}-OLD"
-	fi
+	local SUPPORTED_OSES="bullseye bookworm"
+	[[ ${SUPPORTED_OSES} =~ ${ALLSKY_PI_OS} ]] && return
 
-	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
-}
+	local OS="${ALLSKY_PI_OS^}"		# uppercase 1st letter for looks
+	local MSG="ERROR: Allsky does not support the ${OS} operating system."
+	MSG+="\n\nSupported operating systems include:"
+	for i in ${SUPPORTED_OSES}; do
+		MSG+="\n  ${i^}"
+	done
+	MSG+="\n\nIf you are running an operating system that is NEWER than Bookworm,"
+	MSG+=" please run 'cat /etc/os-release' and copy/paste the results into"
+	MSG+=" a new GitHub Discussion item."
+	MSG+="  The Allsky team will need to test Allsky with the new operating system."
+	MSG+="\n\nIf you are running an older operating system we recommend doing"
+	MSG+=" a fresh install of the Desktop version of Bookworm 64-bit on a clean SD card."
+	whiptail --title "${TITLE}" --msgbox --ok-button "Exit" "${MSG}" 20 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 
-
-####
-check_if_buster()
-{
-	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
-	[[ ${SKIP} == "true" ]] && return
-	local MSG
-
-	[[ ${ALLSKY_PI_OS} != "buster" ]] && return
-
-	MSG="WARNING: You are running the older Buster operating system."
-	MSG+="\n\n\n>>> This is the last Allsky release that will support Buster. <<<\n\n"
-	MSG+="\nWe recommend doing a fresh install of Bookworm 64-bit on a clean SD card now."
-	MSG+="\n\nDo you want to continue anyhow?"
-	if ! whiptail --title "${TITLE}" --yesno --defaultno "${MSG}" 20 "${WT_WIDTH}" \
-			3>&1 1>&2 2>&3; then
-		display_msg --logonly info "User running Buster and elected not to continue."
-		exit_installation 0 "${STATUS_NOT_CONTINUE}" "After Buster check."
-	fi
-	display_msg --logonly info "User running Buster and elected to continue."
+	MSG="Unsupported OS: ${ALLSKY_PI_OS}."
+	display_msg --logonly info "${MSG}  Exiting."
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
+	exit_installation 0 "${STATUS_NOT_CONTINUE}" "${MSG}"
 }
 
 
@@ -3818,13 +3763,25 @@ install_installer_dependencies()
 	# Needed to put notification images there.
 	[[ ! -d ${ALLSKY_CURRENT_DIR} ]] && mkdir -p "${ALLSKY_CURRENT_DIR}"
 
-	display_msg --log progress "Installing initial dependencies."
-	TMP="${ALLSKY_LOGS}/installer.dependencies.log"
-	{
-		sudo apt-get update && run_aptGet gawk jq dialog
-	} > "${TMP}" 2>&1
-	check_success $? "gawk,jq,dialog installation failed" "${TMP}" "${DEBUG}" ||
-		exit_with_image 1 "${STATUS_ERROR}" "gawk,jq,dialog install failed."
+
+	local PACKAGES=""
+	# Any version is ok so if the command exists, don't reinstall it.
+	which dialog > /dev/null || PACKAGES+="dialog "
+	which jq > /dev/null || PACKAGES+="jq "
+	which gawk > /dev/null || PACKAGES+="gawk "
+	if [[ -n ${PACKAGES} ]]; then
+		display_msg --log progress "Installing initial dependencies: ${PACKAGES}"
+
+		TMP="${ALLSKY_LOGS}/installer.dependencies.log"
+		{
+			#shellcheck disable=SC2086
+			sudo apt-get update && run_aptGet ${PACKAGES}
+		} > "${TMP}" 2>&1
+		check_success $? "${PACKAGES/ /,} installation failed" "${TMP}" "${DEBUG}" ||
+			exit_with_image 1 "${STATUS_ERROR}" "${PACKAGES/ /,} install failed."
+	else
+		display_msg --logonly info "Initial dependencies already installed."
+	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }
@@ -3864,13 +3821,14 @@ display_wait_message()
 	local MSG  HOW_LONG  M
 
 	M="$( get_computer --pi-model-only )"
-	if [[ ${M:-0} -lt 5 ]]; then
+	M="${M:-0}"
+	if [[ ${M} -lt 5 ]]; then
 		HOW_LONG="up to an hour"
 	else
 		HOW_LONG="several minutes"
 	fi
 	MSG="The following steps can take ${HOW_LONG} depending on the speed of"
-	MSG+="\nyour Pi and how many of the necessary dependencies are already installed."
+	MSG+="\nyour Pi ${M/0/} and how many of the necessary dependencies are already installed."
 	display_msg notice "${MSG}"
 }
 
@@ -4043,24 +4001,26 @@ fi
 
 [[ ${FIX} == "true" ]] && do_fix				# does not return
 
-# If an Allsky tester is running this, display a message for the user.
-check_for_tester
-
 
 trap "handle_interrupts" SIGTERM SIGINT
 
-if [[ -z ${FUNCTION} && -s ${STATUS_FILE} && ${RESTORE} == "false" ]]; then
-	# Since there's an installation STATUS_FILE that means this isn't
-	# the first installation of Allsky so we may be able to skip some steps.
-	# Ask the user what they want to do.
-
-	# When most function are called they add a variable
-	# with the function's name set to "true".
-
-	handle_prior_installation
-fi
+# Install packages that may be needed very early in installation.
+[[ -z ${FUNCTION} ]] && install_installer_dependencies
 
 if [[ -z ${FUNCTION} && ${RESTORE} == "false" ]]; then
+
+	check_if_supported_OS
+
+	if [[ -s ${STATUS_FILE} ]]; then
+		# Since there's an installation STATUS_FILE that means this isn't
+		# the first installation of Allsky so we may be able to skip some steps.
+		# Ask the user what they want to do.
+
+		# When most function are called they add a variable
+		# with the function's name set to "true".
+
+		handle_prior_installation
+	fi
 
 	##### Keep track of current Allsky status
 	mkdir -p "$( dirname "${ALLSKY_STATUS}" )"		# location of status file
@@ -4068,9 +4028,6 @@ if [[ -z ${FUNCTION} && ${RESTORE} == "false" ]]; then
 
 	##### Log some info to help in troubleshooting.
 	log_info
-
-	##### Display a message to Buster users.
-	check_if_buster
 fi
 
 ##### Does a prior Allsky exist? If so, set PRIOR_ALLSKY_STYLE and other PRIOR_* variables.
@@ -4092,8 +4049,6 @@ set_what_can_be_skipped "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
 
 ##### Stop Allsky
 stop_Allsky
-
-[[ -z ${FUNCTION} ]] && install_installer_dependencies
 
 ##### Determine what camera(s) are connected
 get_connected_cameras
@@ -4126,9 +4081,6 @@ get_desired_locale
 
 ##### Prompt for the camera type
 [[ ${select_camera_type} != "true" ]] && select_camera_type
-
-##### If raspistill exists on post-Buster OS, rename it.
-check_for_raspistill
 
 ##### Get the new host name
 prompt_for_hostname

@@ -608,131 +608,6 @@ A typical page is below.
 	</td>
 </tr>
 
-<tr><td class="settingsHeader" colspan="3">Image Overlay Settings</td></tr>
-<tr><td class="settingsHeader settingsHeaderNote" colspan="3">See the
-	<a allsky="true" external="true" href="/documentation/overlays/overlays.html">overlay page</a>
-	for details on the image overlay.
-	<br><b>Note, the <u>image overlay</u> is what's embedded in every image;
-	the <u>constellation overlay</u> is what's optionally overlayed
-	on top of images in the Allsky Website.</b>
-	This page only deals with the <u>image overlay</u>.
-</td></tr>
-<tr><td id="overlaymethod"><span class="WebUISetting">Overlay Method</span></td>
-	<td>module</td>
-	<td>The default now uses the new, enhanced
-	<a allsky="true" external="true" href="/documentation/overlays/overlays.html">overlay</a>
-	system to add overlays onto your images.
-	<br><b>In <span class="WebUIValue">module</span> mode,
-	the overlay settings below do NOT apply</b>.
-	<blockquote>
-	The legacy mode and this whole "Image overlay Settings"
-	section will be removed in the next Allsky release.
-	</blockquote>
-	<p>
-	When setting to <span class="WebUIValue">module</span>, don't forget to enable the
-	daytime and/or nighttime <span class="moduleName">Overlay Modules</span> in the
-	<span class="managerName">Overlay Manager</span>.
-	</p>
-	</td>
-</tr>
-<tr><td id="showtime"><span class="WebUISetting">Show Time</span></td>
-	<td>Yes</td>
-	<td>Display the time the picture was taken in the overlay?</td>
-</tr>
-<tr><td id="showtemp"><span class="WebUISetting">Show Temperature</span></td>
-	<td>Yes</td>
-	<td>(ZWO only) Display the camera sensor temperature in the overlay?</td>
-</tr>
-<tr><td id="showexposure"><span class="WebUISetting">Show Exposure</span></td>
-	<td>Yes</td>
-	<td>Display the exposure time in the overlay? If <span class="WebUISetting">Auto-Exposure</span> is enabled,
-	"(auto)" will appear after the exposure.</td>
-</tr>
-<tr><td id="showgain"><span class="WebUISetting">Show Gain</span></td>
-	<td>Yes</td>
-	<td>Display the gain in the overlay? If <span class="WebUISetting">Auto-Gain</span> is enabled,
-	"(auto)" will appear after the gain.</td>
-</tr>
-<tr><td id="showusb"><span class="WebUISetting">Show USB</span></td>
-	<td>No</td>
-	<td>(ZWO only) Display the USB Bandwidth in the overlay? This is primarily for debugging.</td>
-</tr>
-<tr><td id="showmean"><span class="WebUISetting">Show Mean Brightness</span></td>
-	<td>No</td>
-	<td>Display the mean (average) brightness in the overlay?
-	This value is used to determine the correct auto-exposure and auto-gain levels.</td>
-</tr>
-<tr><td id="showhistogrambox"><span class="WebUISetting">Show Histogram Box</span></td>
-	<td>No</td>
-	<td>(ZWO only) Show the histogram box on the image?</td>
-</tr>
-<tr><td id="showfocus"><span class="WebUISetting">Show Focus Metric</span></td>
-	<td>No</td>
-	<td>Display a focus metric in the overlay to help you focus the camera?
-		Higher numbers are better, but only use when the brightness isn't changing.
-	</td>
-</tr>
-<tr><td id="text"><span class="WebUISetting">Text Overlay</span></td>
-	<td></td>
-	<td>Text overlay that appears below the time, in the same font.</td>
-</tr>
-<tr><td id="extratext"><span class="WebUISetting">Extra Text File</span></td>
-	<td></td>
-	<td>The full path name to a text file which will be displayed under other information.
-	The file can contain multiple lines which will be displayed underneath each other.</td>
-</tr>
-<tr><td id="extratextage"><span class="WebUISetting">Max Age Of Extra</span></td>
-	<td>0</td>
-	<td>If you specified an <span class="WebUISetting">Extra Text File</span>
-	then it must be updated within this number of seconds;
-	if not it's contents will not be displayed.
-	Set to <span class="WebUIValue">0</span> to ignore this check and always display the contents of the file.</td>
-</tr>
-<tr><td id="textlineheight"><span class="WebUISetting">Line Height</span></td>
-	<td>30</td>
-	<td>The line height of the text displayed in the image.
-	If you change the font size then adjust this value if required.</td>
-</tr>
-<tr><td id="textx"><span class="WebUISetting">Text X</span></td>
-	<td>15</td>
-	<td>Start of text from the left side, in pixels.</td>
-</tr>
-<tr><td id="texty"><span class="WebUISetting">Text Y</span></td>
-	<td>35</td>
-	<td>Start of text from the top, in pixels.</td>
-</tr>
-<tr><td id="fontname"><span class="WebUISetting">Font Name</span></td>
-	<td>Simplex</td>
-	<td>Font type for the overlay.</td>
-</tr>
-<tr><td id="fontcolor"><span class="WebUISetting">Font Color</span></td>
-	<td>255 0 0</td>
-	<td>Font color in Blue, Green, and Red (BGR).
-	NOTE: When using RAW 16 only the first two values are used, i.e., 255 128 0.</td>
-</tr>
-<tr><td id="smallfontcolor"><span class="WebUISetting">Small Font Color</span></td>
-	<td>0 0 255</td>
-	<td>Small font color in BGR.
-	NOTE: When using RAW 16 only the first two values are used, i.e., 255 128 0.</td>
-</tr>
-<tr><td id="fonttype"><span class="WebUISetting">Font Smoothness</span></td>
-	<td>Antialiased</td>
-	<td>Controls the smoothness of the fonts.</td>
-</tr>
-<tr><td id="fontsize"><span class="WebUISetting">Font Size</span></td>
-	<td>7</td>
-	<td>Font size.
-	This is impacted by the sensor size so you'll need to experiment with this.</td>
-</tr>
-<tr><td id="fontline"><span class="WebUISetting">Font Weight</span></td>
-	<td>1</td>
-	<td>Font line thickness.</td>
-</tr>
-<tr><td id="outlinefont"><span class="WebUISetting">Use Outline Font</span></td>
-	<td>No</td>
-	<td>Should an outline to the text overlay be added to improve contrast?</td>
-</tr>
-
 <tr><td class="settingsHeader" colspan="3">Post Capture Settings</td></tr>
 <tr><td id="imeagesremovebadlow"><span class="WebUISetting">Remove Bad Images Threshold Low</span></td>
 	<td>0.1</td>
@@ -826,22 +701,6 @@ A typical page is below.
 <tr><td id="timelapsegenerate"><span class="WebUISetting">Generate</span></td>
 	<td>Yes</td>
 	<td>Enable to generate a timelapse video at the end of the night.</td>
-</tr>
-<tr><td id="timelapseupload"><span class="WebUISetting">Upload</span></td>
-	<td>Yes</td>
-	<td>Upload the timelapse video to an Allsky Website and/or remote server?
-	If not set, the timelapse videos can still be viewed via the
-	<span class="WebUIWebPage">Images</span> link on the WebUI.
-	<br>Ignored if you you do not have an Allsky Website or remote server.
-	</td>
-</tr>
-<tr><td id="timelapseuploadthumbnail"><span class="WebUISetting">Upload Thumbnail</span></td>
-	<td>Yes</td>
-	<td>Upload the timelapse video's thumbnail to your Allsky Website?
-	Many remote servers don't support thumbnail creation so the thumbnail needs to be
-	created on the Pi and uploaded.
-	<br>Not needed if your only Allsky Website is on your Pi.
-	</td>
 </tr>
 <tr><td id="timelapsewidth"><span class="WebUISetting">Width</span></td>
 	<td>0</td>
@@ -941,14 +800,6 @@ A typical page is below.
 	</p>
 	</td>
 </tr>
-<tr><td id="minitimelapseupload"><span class="WebUISetting">Upload</span></td>
-	<td>Yes</td>
-	<td></td>
-</tr>
-<tr><td id="minitimelapseuploadthumbnails"><span class="WebUISetting">Upload Thumbnail</span></td>
-	<td>Yes</td>
-	<td></td>
-</tr>
 <tr><td id="minitimelapsewidth"><span class="WebUISetting">Width</span></td>
 	<td>0</td>
 	<td></td>
@@ -998,10 +849,6 @@ A typical page is below.
 <tr><td id="keogramgenerate"><span class="WebUISetting">Generate</span></td>
 	<td>Yes</td>
 	<td>Enable to generat a keogram image at the end of the night.</td>
-</tr>
-<tr><td id="keogramupload"><span class="WebUISetting">Upload</span></td>
-	<td>Yes</td>
-	<td>Upload the keogram image to an Allsky Website and/or remote server?</td>
 </tr>
 <tr><td id="keogramexpand"><span class="WebUISetting">Expand</span></td>
 	<td>Yes</td>
@@ -1080,10 +927,6 @@ A typical page is below.
 	to 1.0 (pure white, uses every image).
 	</td>
 </tr>
-<tr><td id="startrailsupload"><span class="WebUISetting">Upload</span></td>
-	<td>Yes</td>
-	<td>Enable to upload the startrails image to an Allsky Website and/or remote server.</td>
-</tr>
 <tr><td id="startrailsextraparameters"><span class="WebUISetting">Extra Parameters</span></td>
 	<td></td>
 	<td>Optional additional startrails creation parameters.
@@ -1121,6 +964,39 @@ A typical page is below.
 	Note that startrails, keograms, and timelapse videos have their own "upload" settings.
 	</td>
 </tr>
+<tr><td id="timelapseupload"><span class="WebUISetting">Upload Daily Timelapse</span></td>
+	<td>Yes</td>
+	<td>Enable to upload the timelapse video to an Allsky Website and/or remote server.
+	If not set, the timelapse videos can still be viewed via the
+	<span class="WebUIWebPage">Images</span> link on the WebUI.
+	<br>Ignored if you you do not have an Allsky Website or remote server.
+	</td>
+</tr>
+<tr><td id="timelapseuploadthumbnail"><span class="WebUISetting">Upload Daily Timelapse Thumbnail</span></td>
+	<td>Yes</td>
+	<td>Enable to upload the timelapse video's thumbnail to your Allsky Website.
+	Many remote servers don't support thumbnail creation so the thumbnail needs to be
+	created on the Pi and uploaded.
+	<br>Not needed if your only Allsky Website is on your Pi.
+	</td>
+</tr>
+<tr><td id="keogramupload"><span class="WebUISetting">Upload Keogram</span></td>
+	<td>Yes</td>
+	<td>Enable to upload the keogram image to an Allsky Website and/or remote server.</td>
+</tr>
+<tr><td id="startrailsupload"><span class="WebUISetting">Upload Startrails</span></td>
+	<td>Yes</td>
+	<td>Enable to upload the startrails image to an Allsky Website and/or remote server.</td>
+</tr>
+<tr><td id="minitimelapseupload"><span class="WebUISetting">Upload Mini-Timelapse</span></td>
+	<td>Yes</td>
+	<td></td>
+</tr>
+<tr><td id="minitimelapseuploadthumbnails"><span class="WebUISetting">Upload Mini-Timelapse Thumbnail</span></td>
+	<td>Yes</td>
+	<td></td>
+</tr>
+
 <tr><td id="displaysettings"><span class="WebUISetting">Display Settings</span></td>
 	<td>No</td>
 	<td>People sometimes ask others what settings they are using.

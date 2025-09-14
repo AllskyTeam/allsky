@@ -55,6 +55,12 @@
 						after upgrading, check that your settings and images look right.
 						</blockquote>
 					</li>
+					<li>The Buster operating system is no longer supported.
+					<li>The "legacy" overlay method and the
+						<span class="settingsHeader">Image Overlay Settings</span>
+						section of the WebUI no longer exist.
+						All overlays are now done via the
+						<span class="WebUILink">Overlay Editor</span> in the WebUI.
 					<li>If your camera is very noisy it may create dark frames
 						that are brighter than the new
 						<span class="WebUISetting">Dark Frame Upper Threshold</span>
@@ -62,15 +68,12 @@
 						This threshold was <code>0.10</code> in the prior release.
 				</ul>
 
+<!--
 				<h4>Deleted capabilities</h4>
 				<ul>
-					<li>The Buster operating system is no longer supported.
-					<li>The "legacy" overlay method and the
-						<span class="settingsHeader">Image Overlay Settings</span>
-						section of the WebUI no longer exist.
-						All overlays are now done via the
-						<span class="WebUILink">Overlay Editor</span> in the WebUI.
+					<li>
 				</ul>
+-->
 
 				<h4>Enhancements / Changes</h4>
 				<ul>
@@ -91,6 +94,12 @@
 										<a href="" style="pointer-events: none;"><i class="fa fa-image fa-fw"></i></a>
 										icon if there is at least one image for the day
 										otherwise "none" is displayed.
+									<li>The timelapse and mini-timelapse icons on this page
+										as well as on the Allsky Website home page on the left side changed to
+										<a href="" style="pointer-events: none"><i class="fa fa-fw fa-video"></i></a>
+										and
+										<a href="" style="pointer-events: none"><i class="fa fa-fw fa-file-video"></i></a>
+										respectively.
 									<li>If there are no images, startrails, keogram, or timelapse
 										for a given day, that day is no longer included in the list.
 									<li>Directories in the <span class="fileName">images</span>
@@ -114,6 +123,8 @@
 										generic icon.
 -->
 								</ul>
+							<li>You can now view the mini-timelapse (if it exists) via the link at the top
+								of the <span class="WebUILink">Live View</span> page.
 							<li><span class="WebUILink">Overlay Editor</span> page:
 								<ul>
 									<li><span style="color: red">Alex to add changes...</span>
@@ -129,6 +140,9 @@
 							<li>The new <span class="WebUILink">Helper Tools</span>
 								pages "helps" you do something:
 								<ul>
+								<li><span class="WebUILink">Check Allsky</span>
+									runs the <code>checkAllsky.sh</code> command to identify
+									Allsky settings that have errors or may cause problems.
 								<li><span class="WebUILink">Startrails</span>
 									helps you determine what
 									<span class="WebUISetting">Brightness Threshold</span>
@@ -195,13 +209,16 @@
 							<li>When called at end of night, startrails creates
 								saves information on the run in the Allsky database.
 -->
-					<li>Updated to ZWO SDK v1.38 which supports the
-						ASI582MC and Seestar 585MC cameras.
+					<li>Updated to ZWO SDK v1.39 which adds supports for the
+						ASI582MC, Seestar 585MC, 4400MC Pro, 585MM Mini, 662MM Mini, and 992MM Pro cameras.
+						It drops support for the 366MC Pro camera.
 				</ul>
 
 				<h4>Bug Fixes</h4>
 				<ul>
-					<li>Fix issue with notification images (e.g., "Allsky is Starting")
+					<li>Fix an issue with not all thumbnails being displayed when
+						viewing a day that has thousands of images.
+					<li>Fix an issue with notification images (e.g., "Allsky is Starting")
 						not being sent to a remote server.
 					<li>Fixed an issue with updates to the Allsky Map server failing
 						because of a missing file.

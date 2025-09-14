@@ -68,9 +68,6 @@
 #define DEFAULT_MINMEAN_THRESHOLD_ZWO	DEFAULT_MINMEAN_THRESHOLD_RPi
 #define DEFAULT_MAXMEAN_THRESHOLD_ZWO	DEFAULT_MAXMEAN_THRESHOLD_RPi
 
-// Default overlay values - will go away once external overlay program is implemented
-#define SMALLFONTSIZE_MULTIPLIER	0.08
-
 // Exit codes.  Values replaced during installation.
 #define EXIT_OK						XX_EXIT_OK_XX
 #define EXIT_RESTARTING				XX_EXIT_RESTARTING_XX	// Process is restarting, i.e., stop, then start
@@ -99,38 +96,6 @@ enum ZWOexposure {
 	ZWOvideo,		// video mode with video on all the time (original method)
 	ZWOend
 };
-
-// Use long instead of int so we can use validateLong() without creating validateInt().
-struct overlay {
-	char const *ImgText					= "";
-	char const *ImgExtraText			= "";
-	long extraFileAge					= 0;
-	long iTextLineHeight				= 30;
-	long iTextX							= 15;
-	long iTextY							= 25;
-	long fontnumber						= 0;
-	// fontcolor / fc, and smallfontcolor / sfc should match
-	int fontcolor[3]					= { 255, 0, 0 };
-	char const *fc						= "0 0 255"; 		// string version of fontcolor[]
-	int smallFontcolor[3]				= { 0, 0, 255 };
-	char const *sfc						= "0 0 255";		// string version of smallfontcolor[]
-	int linetype[3]						= { cv::LINE_AA, 8, 4 };
-	long linenumber						= 0;
-	double fontsize						= 10;
-	long linewidth						= 1;
-	bool outlinefont					= false;
-	bool showTime						= true;
-	bool showExposure					= false;
-	bool showTemp						= false;
-	bool showGain						= false;
-	bool showMean						= false;
-	bool showFocus						= false;
-	bool showHistogramBox				= false;
-	bool showUSB						= false;
-	int overlayMethod					= NOT_SET;
-};
-#define OVERLAY_METHOD_LEGACY			0
-#define OVERLAY_METHOD_MODULE			1
 
 // Histogram Box, ZWO only
 struct HB {
@@ -216,7 +181,6 @@ struct config {			// for configuration variables
 	bool help							= false;		// User wants usage message displayed
 	bool quietExit						= false;		// Exit without any messages
 	const char *version					= "UNKNOWN";	// Allsky version
-	bool isLibcamera					= true;			// RPi only
 	char const *cmdToUse				= NULL;			// RPi command to us to take images
 	char const *saveDir					= NULL;			// Directory to save images
 	char const *CC_saveFile				= NULL;			// File to save camera controls to
@@ -316,7 +280,6 @@ struct config {			// for configuration variables
 	bool videoOffBetweenImages			= true;
 	ZWOexposure ZWOexposureType			= ZWOsnap;
 
-	struct overlay overlay;
 	struct myModeMeanSetting myModeMeanSetting;
 	struct HB HB;							// Histogram Box, ZWO only
 
@@ -387,7 +350,6 @@ char const *c(char const *);
 void closeUp(int);
 char const *yesNo(bool);
 char *length_in_units(long, bool);
-int doOverlay(cv::Mat, config, char *, int);
 bool getBoolean(const char *);
 double get_focus_metric(cv::Mat);
 char const *getFlip(int);

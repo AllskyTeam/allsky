@@ -820,20 +820,6 @@ do
 			CHECK_REMOTE_SERVER_UPLOAD="true"
 			;;
 
-
-		"overlaymethod")
-			if [[ ${NEW_VALUE} -eq 1 ]]; then		# 1 == "overlay" method
-				W="NOTE: You must enable the ${WSNs}Overlay Module${WSNe} in the"
-				W+="\n ${WSNs}Daytime Capture${WSNe} and/or"
-				W+="\n ${WSNs}Nighttime Capture${WSNe} flows of the"
-				W+="\n ${WSNs}Module Manager${WSNe}"
-				W+="\n for the ${WSNs}${LABEL}${WSNe} to take effect."
-				W_ "${W}"
-			else
-				rm -f "${ALLSKY_TMP}/overlaydebug.txt"
-			fi
-			;;
-
 		"takedaytimeimages" | "takenighttimeimages")
 :	###### TODO anything to do for these?
 			;;
@@ -910,7 +896,7 @@ do
 			else
 				O="imageresizeuploadwidth"
 			fi
-			if ! ERR="$( checkWidthHeight "Resize Uploaded Images" "uploaded image" \
+			if ! ERR="$( _checkWidthHeight "Resize Uploaded Images" "uploaded image" \
 				"${S_imageresizeuploadwidth}" "${S_imageresizeuploadheight}" \
 	 			"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )" ; then
 
@@ -928,7 +914,7 @@ do
 			else
 				O="imageresizewidth"
 			fi
-			if ! ERR="$( checkWidthHeight "Image Resize" "image" \
+			if ! ERR="$( _checkWidthHeight "Image Resize" "image" \
 				"${S_imageresizewidth}" "${S_imageresizeheight}" \
 	 			"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )" ; then
 

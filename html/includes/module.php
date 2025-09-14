@@ -1,7 +1,8 @@
 <?php
 
-function DisplayModule() {
-
+function DisplayModule()
+{
+	global $pageHeaderTitle, $pageIcon;
 ?>
 
 <script src="/documentation/js/all.min.js?c=<?php echo ALLSKY_VERSION; ?>" type="application/javascript"></script>
@@ -71,7 +72,7 @@ function DisplayModule() {
 <link rel="stylesheet" href="/js/jquery-devicemanager/jquery-devicemanager.css?c=<?php echo ALLSKY_VERSION; ?>">
 
 <div class="panel panel-allsky">
-    <div class="panel-heading"><i class="fa fa-bars fa-fw"></i> Module Manager</div>
+	<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
     <div class="panel-body">
         <nav class="navbar navbar-default">
             <div class="container-fluid">

@@ -1,12 +1,18 @@
 <?php
 
+define('RASPI_DNSMASQ_CONFIG', '/etc/dnsmasq.conf');
+define('RASPI_DNSMASQ_LEASES', '/var/lib/misc/dnsmasq.leases');
+
 /**
-*
 * Manage DHCP configuration
-*
 */
-function DisplayDHCPConfig() {
+
+// Main function
+function DisplayDHCPConfig()
+{
 	global $page;
+	global $pageHeaderTitle, $pageIcon;
+
 	$myStatus = new StatusMessages();
 
 	$interface = null;
@@ -118,47 +124,49 @@ function DisplayDHCPConfig() {
 		if (count($return) == 0) {
 			$return = null;
 			$myStatus->addMessage(RASPI_DNSMASQ_CONFIG . ' appears empty', 'warning');
-		}
-	}
-
-	if ($return !== null) {
-		$conf = ParseConfig($return);
-		$interface = getVariableOrDefault($conf, 'interface', null);
-		$range = getVariableOrDefault($conf, 'dhcp-range', null);
-		if ($interface === null) {
-			$return = null;
-			$myStatus->addMessage(RASPI_DNSMASQ_CONFIG . ' has no interface', 'warning');
-		}
-		if ($range === null) {
-			$return = null;
-			$myStatus->addMessage(RASPI_DNSMASQ_CONFIG . ' has no dhcp-range', 'warning');
-		}
-	}
-
-	if ($return !== null) {
-		// $range:	start_ip, end_ip, mask [, lease]
-		// index:	0				 1			 2				3
-		// count:	1				 2			 3				4
-		$arrRange = explode( ",", $range );
-		if (count($arrRange) < 3) {
-			$myStatus->addMessage("dhcp-range in '" . RASPI_DNSMASQ_CONFIG . " missing fields: $range", "danger");
 		} else {
-			$RangeStart = $arrRange[0];
-			$RangeEnd = $arrRange[1];
-			$RangeMask = $arrRange[2];
-			if (count($arrRange) == 4) {
-				preg_match( '/([0-9]*)([a-z])/i', $arrRange[3], $arrRangeLeaseTime );
-				$RangeLeaseTime = $arrRangeLeaseTime[1];
-				switch( $arrRangeLeaseTime[2] ) {
-				case "h":
-					$hselected = " selected";
-					break;
-				case "m":
-					$mselected = " selected";
-					break;
-				case "d":
-					$dselected = " selected";
-					break;
+			$conf = ParseConfig($return);
+			$interface = getVariableOrDefault($conf, 'interface', null);
+			$range = getVariableOrDefault($conf, 'dhcp-range', null);
+			$msg = "";
+			if ($interface === null) {
+				$msg = RASPI_DNSMASQ_CONFIG . ' has no interface';
+			}
+			if ($range === null) {
+				if ($msg !== "") $msg .= "<br>";
+				$msg .= RASPI_DNSMASQ_CONFIG . ' has no dhcp-range';
+			}
+			if ($msg !== "") {
+				$return = null;
+				$myStatus->addMessage($msg, 'warning');
+			}
+
+			if ($return !== null) {
+				// $range:	start_ip, end_ip, mask [, lease]
+				// index:	0				 1			 2				3
+				// count:	1				 2			 3				4
+				$arrRange = explode( ",", $range );
+				if (count($arrRange) < 3) {
+					$myStatus->addMessage("dhcp-range in '" . RASPI_DNSMASQ_CONFIG . " missing fields: $range", "danger");
+				} else {
+					$RangeStart = $arrRange[0];
+					$RangeEnd = $arrRange[1];
+					$RangeMask = $arrRange[2];
+					if (count($arrRange) == 4) {
+						preg_match( '/([0-9]*)([a-z])/i', $arrRange[3], $arrRangeLeaseTime );
+						$RangeLeaseTime = $arrRangeLeaseTime[1];
+						switch( $arrRangeLeaseTime[2] ) {
+						case "h":
+							$hselected = " selected";
+							break;
+						case "m":
+							$mselected = " selected";
+							break;
+						case "d":
+							$dselected = " selected";
+							break;
+						}
+					}
 				}
 			}
 		}
@@ -167,7 +175,7 @@ function DisplayDHCPConfig() {
 ?>
 
 <div class="panel panel-success">
-	<div class="panel-heading"><i class="fa fa-exchange fa-fw"></i> Configure DHCP</div>
+	<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
 	<div class="panel-body">
 		<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
 
@@ -291,4 +299,17 @@ function DisplayDHCPConfig() {
 </div><!-- /.panel-primary -->
 <?php
 }
+
+function ParseConfig( $arrConfig ) {
+	$config = array();
+	foreach( $arrConfig as $line ) {
+		$line = trim($line);
+		if( $line != "" && $line[0] != "#" ) {
+			$arrLine = explode( "=", $line );
+			$config[$arrLine[0]] = ( count($arrLine) > 1 ? $arrLine[1] : true );
+		}
+	}
+	return $config;
+}
+
 ?>

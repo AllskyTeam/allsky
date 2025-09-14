@@ -1,5 +1,6 @@
 <?php
-global $useLogin, $adminUser;
+	global $useLogin, $adminUser;
+	global $pageHeaderTitle, $pageIcon;
 ?>
 
 <style>
@@ -11,9 +12,7 @@ global $useLogin, $adminUser;
 <div class="container">
     <div class="col-md-6 col-md-offset-2 panel-style">
         <div class="panel panel-allsky">
-            <div class="panel-heading">
-                <i class="fa fa-lock fa-fw"></i> Update WebUI User / Password
-            </div>
+			<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
             <div class="panel-body">
                 <div class="row">
                     <div class="col-md-12">

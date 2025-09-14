@@ -20,3 +20,5 @@ flask
 gunicorn
 flask-jwt-extended
 bcrypt
+gitpython
+whiptail-dialogs

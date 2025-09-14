@@ -113,25 +113,19 @@ int RPicapture(config cg, cv::Mat *image)
 	ss << cg.fullFilename;
 
 	command += " --thumb none";		// don't include a thumbnail in the file
+	command += " --immediate";		// speed up image taking
 	savedImage = ss.str();
 	command += " --output '" + savedImage + "'";
 
-	if (cg.isLibcamera)
-	{
-		// libcamera tuning file
-		if (cg.currentTuningFile != NULL && *cg.currentTuningFile != '\0') {
-			ss.str("");
-			ss << cg.currentTuningFile;
-			command += " --tuning-file '" + ss.str() + "'";
-		}
+	// libcamera tuning file
+	if (cg.currentTuningFile != NULL && *cg.currentTuningFile != '\0') {
+		ss.str("");
+		ss << cg.currentTuningFile;
+		command += " --tuning-file '" + ss.str() + "'";
+	}
 
-		if (strcmp(cg.imageExt, "png") == 0)
-			command += " --encoding png";
-	}
-	else
-	{
-		command += " --burst -st";
-	}
+	if (strcmp(cg.imageExt, "png") == 0)
+		command += " --encoding png";
 
 	// --timeout (in MS) determines how long the video will run before it takes a picture.
 	// Value of 0 runs forever.
@@ -152,9 +146,6 @@ int RPicapture(config cg, cv::Mat *image)
 			if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF)
 			{
 				// We do our own auto-exposure so no need to wait at all.
-// TODO: --immediate 0   works fine on Bookworm.
-// If it also works on Bullseye then use it when we no longer support Buster.
-				// Tried --immediate, but on Buster (don't know about Bullseye), it hung exposures.
 				ss << 1;
 			}
 			else if (dayOrNight == "DAY")
@@ -184,29 +175,17 @@ int RPicapture(config cg, cv::Mat *image)
 
 	ss.str("");
 	ss2.str("");
-	if (cg.isLibcamera)
+	// Ideally for bin 2 we'd use information from below,
+	// but that's pretty hard to do.
+	//	'SRGGB10_CSI2P' : 1332x990 
+	//	'SRGGB12_CSI2P' : 2028x1080 2028x1520 4056x3040 
+	//								bin 2x2   bin 1x1
+	// cg.width and cg.height are already reduced for binning as needed.
+	if (cg.currentBin == 1 || cg.currentBin == 2)
 	{
-		// Ideally for bin 2 we'd use information from below,
-		// but that's pretty hard to do.
-		//	'SRGGB10_CSI2P' : 1332x990 
-		//	'SRGGB12_CSI2P' : 2028x1080 2028x1520 4056x3040 
-		//								bin 2x2   bin 1x1
-		// cg.width and cg.height are already reduced for binning as needed.
-		if (cg.currentBin == 1 || cg.currentBin == 2)
-		{
-			ss << cg.width;
-			ss2 << cg.height;
-			command += " --width " + ss.str() + " --height " + ss2.str();
-		}
-	}
-	else
-	{
-		if (cg.currentBin == 1)
-			command += " --mode 3";
-		else if (cg.currentBin == 2)
-		{
-			command += " --mode 2";
-		}
+		ss << cg.width;
+		ss2 << cg.height;
+		command += " --width " + ss.str() + " --height " + ss2.str();
 	}
 
 	// Check if automatic determined exposure time is selected
@@ -215,22 +194,14 @@ int RPicapture(config cg, cv::Mat *image)
 		if (myModeMeanSetting.meanAuto != MEAN_AUTO_OFF) {
 			ss.str("");
 			ss << cg.currentExposure_us;
-			if (! cg.isLibcamera)
-				command += " --exposure off";
 			command += " --shutter " + ss.str();
 		} else {
 			// libcamera doesn't use "exposure off/auto".  For auto-exposure set shutter to 0.
-			if (cg.isLibcamera)
-				command += " --shutter 0";
-			else
-				command += " --exposure auto";
+			command += " --shutter 0";
 		}
 	}
 	else if (cg.currentExposure_us)		// manual exposure
 	{
-		if (! cg.isLibcamera)
-			command += " --exposure off";
-
 		ss.str("");
 		ss << cg.currentExposure_us;
 		command += " --shutter " + ss.str();
@@ -245,13 +216,9 @@ int RPicapture(config cg, cv::Mat *image)
 			ss << myRaspistillSetting.analoggain;
 			command += " --analoggain " + ss.str();
 		}
-		else if (cg.isLibcamera)
-		{
-			command += " --analoggain 0";	// 0 makes it autogain
-		}
 		else
 		{
-			command += " --analoggain 1";	// 1 makes it autogain
+			command += " --analoggain 0";	// 0 makes it autogain
 		}
 	}
 	else 	// Is manual gain
@@ -278,9 +245,6 @@ int RPicapture(config cg, cv::Mat *image)
 		command += " --awb auto";
 	}
 	else {
-		if (! cg.isLibcamera)
-			command += " --awb off";		// raspistill requires explicitly turning off
-
 		// If we don't specify when they are the default then auto mode is enabled.
 		ss.str("");
 		ss << cg.currentWBR << "," << cg.currentWBB;
@@ -341,12 +305,8 @@ int RPicapture(config cg, cv::Mat *image)
 	char const *s1 = "LIBCAMERA_LOG_LEVELS=ERROR,FATAL ";
 
 	string s2 = "";
-	if (cg.isLibcamera)
-	{
-		command += metadataArgs;
-
-		s2 = " > " + errorOutput + " 2>&1";
-	}
+	command += metadataArgs;
+	s2 = " > " + errorOutput + " 2>&1";
 
 	// Create the command we'll actually run.
 	// It needs to include the current size plus future strings s1 and s2.
@@ -355,11 +315,8 @@ int RPicapture(config cg, cv::Mat *image)
 	strncpy(cmd, command.c_str(), size-1);
 	Log(2, " > Running: %s\n", cmd);
 
-	if (cg.isLibcamera)
-	{
-		command = s1 + command + s2;
-		strncpy(cmd, command.c_str(), size-1);
-	}
+	command = s1 + command + s2;
+	strncpy(cmd, command.c_str(), size-1);
 
 	// Execute the command.
 	int ret = system(cmd);
@@ -372,10 +329,7 @@ int RPicapture(config cg, cv::Mat *image)
 		}
 		ret = 0;	// Makes it easier for caller to determine if there was an error.
 
-		if (cg.isLibcamera)
-		{
-			readMetadataFile(metadataFile);
-		}
+		readMetadataFile(metadataFile);
 	}
 	else
 	{
@@ -412,9 +366,12 @@ int RPicapture(config cg, cv::Mat *image)
 		}
 
 		// Add errorOutput to the log file.
-		Log(1, "********************\n");		// 1 so it doesn't go to WebUI.
-		Log(l, "%s\n", showDebugFile(errorOutput).c_str());
-		Log(1, "********************\n");
+		std::string m = showDebugFile(errorOutput).c_str();
+		if (m != "") {
+			Log(1, "********************\n");		// 1 so it doesn't go to WebUI.
+			Log(l, "%s\n", m.c_str());
+			Log(1, "********************\n");
+		}
 	}
 
 	return(ret);
@@ -517,7 +474,6 @@ int main(int argc, char *argv[])
 		exit(EXIT_ERROR_STOP);
 	}
 
-	char bufTime[128]			= { 0 };
 	char bufTemp[1024]			= { 0 };
 	char const *bayer[]			= { "RG", "BG", "GR", "GB" };
 	bool justTransitioned		= false;
@@ -582,11 +538,9 @@ int main(int argc, char *argv[])
 
 	errorOutput  = CG.saveDir;
 	errorOutput += "/capture_RPi_debug.txt";
-	if (CG.isLibcamera) {
-		metadataFile = CG.saveDir;
-		metadataFile += "/metadata.txt";
-		metadataArgs = " --metadata '" + metadataFile + "' --metadata-format txt";
-	}
+	metadataFile = CG.saveDir;
+	metadataFile += "/metadata.txt";
+	metadataArgs = " --metadata '" + metadataFile + "' --metadata-format txt";
 
 	int iMaxWidth, iMaxHeight;
 	double pixelSize;
@@ -606,12 +560,6 @@ int main(int argc, char *argv[])
 
 	long originalWidth  = CG.width;
 	long originalHeight = CG.height;
-	// Limit these to a reasonable value based on the size of the sensor.
-	validateLong(&CG.overlay.iTextLineHeight, 0, (long)(iMaxHeight / 2), "Line Height", true);
-	validateLong(&CG.overlay.iTextX, 0, (long)iMaxWidth - 10, "Text X", true);
-	validateLong(&CG.overlay.iTextY, 0, (long)iMaxHeight - 10, "Text Y", true);
-	validateFloat(&CG.overlay.fontsize, 0.1, iMaxHeight / 2, "Font Size", true);
-	validateLong(&CG.overlay.linewidth, 0, (long)(iMaxWidth / 2), "Font Weight", true);
 
 	if (CG.saveCC)
 	{
@@ -660,10 +608,6 @@ int main(int argc, char *argv[])
 	displaySettings(CG);
 
 	// Initialization
-	int originalITextX		= CG.overlay.iTextX;
-	int originalITextY		= CG.overlay.iTextY;
-	int originalFontsize	= CG.overlay.fontsize;
-	int originalLinewidth	= CG.overlay.linewidth;
 	// Have we displayed "not taking picture during day/night" messages, if applicable?
 	bool displayedNoDaytimeMsg = false;
 	bool displayedNoNighttimeMsg = false;
@@ -845,10 +789,6 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 			// Only need to do at the beginning and if bin changes.
 			CG.height				= originalHeight / CG.currentBin;
 			CG.width				= originalWidth / CG.currentBin;
-			CG.overlay.iTextX		= originalITextX / CG.currentBin;
-			CG.overlay.iTextY		= originalITextY / CG.currentBin;
-			CG.overlay.fontsize		= originalFontsize / CG.currentBin;
-			CG.overlay.linewidth	= originalLinewidth / CG.currentBin;
 
 			if (numExposures > 0)
 			{
@@ -884,12 +824,6 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 			Log(2, "-----\n");
 			Log(1, "STARTING EXPOSURE at: %s   @ %s\n", exposureStart, length_in_units(myRaspistillSetting.shutter_us, true));
 
-			// Get start time for overlay. Make sure it has the same time as exposureStart.
-			if (CG.overlay.showTime)
-			{
-				sprintf(bufTime, "%s", formatTime(exposureStartDateTime, CG.timeFormat));
-			}
-
 			// For dark frames we already know the finalFilename.
 			if (! CG.takeDarkFrames)
 			{
@@ -906,17 +840,16 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				numExposures++;
 				numConsecutiveErrors = 0;
 
-				CG.lastMean = aegCalcMean(pRgb, true);
+				// Don't use mask for dark frames.
+				CG.lastMean = aegCalcMean(pRgb, CG.takeDarkFrames ? false : true);
 
-// TODO: NEW: use current values if manual mode or using raspistill
-// Otherwise use the value from metadata.
-				if (CG.currentAutoAWB || ! CG.isLibcamera)
+// TODO: NEW: use current values if manual mode, otherwise use the value from metadata.
+				if (CG.currentAutoAWB)
 				{
 					CG.lastWBR = CG.currentWBR;
 					CG.lastWBB = CG.currentWBB;
 				}
 
-				// If takeDarkFrames is off, add overlay text to the image
 				if (! CG.takeDarkFrames)
 				{
 					CG.lastFocusMetric = CG.determineFocus ? (int)round(get_focus_metric(pRgb)) : -1;
@@ -939,15 +872,6 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 					else {
 						myRaspistillSetting.shutter_us = CG.currentExposure_us;
 						myRaspistillSetting.analoggain = CG.currentGain;
-					}
-
-					if (CG.currentSkipFrames == 0 &&
-						CG.overlay.overlayMethod == OVERLAY_METHOD_LEGACY &&
-						doOverlay(pRgb, CG, bufTime, 0) > 0)
-					{
-						// if we added anything to overlay, write the file out
-						bool result = cv::imwrite(CG.fullFilename, pRgb, compressionParameters);
-						if (! result) fprintf(stderr, "*** ERROR: Unable to write to '%s'\n", CG.fullFilename);
 					}
 				}
 
@@ -1003,7 +927,10 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				{
 					Log(0, "*** %s: ERROR: maximum number of consecutive errors of %d reached; capture program stopped. Total errors=%'d.\n", CG.ME, CG.maxErrors, numTotalErrors);
 					Log(0, "Make sure cable between camera and Pi is all the way in.\n");
-					Log(0, "The last error was: %s", showDebugFile(errorOutput).c_str());
+					std::string m = showDebugFile(errorOutput).c_str();
+					if (m != "") {
+						Log(0, "The last error was: %s", showDebugFile(errorOutput).c_str());
+					}
 					closeUp(EXIT_ERROR_STOP);
 				}
 	

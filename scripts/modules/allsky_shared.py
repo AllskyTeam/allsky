@@ -36,6 +36,7 @@ from allskyvariables.allskyvariables import ALLSKYVARIABLES
 import pigpio
 import numpy as np
 from typing import Union, List, Dict, Any, Tuple, Sequence
+
  
 try:
     locale.setlocale(locale.LC_ALL, '')
@@ -527,6 +528,7 @@ def create_sqlite_database(file_name:str)-> bool:
             gid = grp.getgrnam(web_server_group).gr_gid
         except:
             gid = None
+
             
         if uid is not None and gid is not None:
             result = create_and_set_file_permissions(file_name, uid, gid, 0o660, True)
@@ -828,7 +830,7 @@ def update_database(structure, extra_data):
         if not re.fullmatch(r'[a-zA-Z_][a-zA-Z0-9_]*', secret_data['databasedatabase']):
             log(0, f"ERROR: Database table name {secret_data['databasedatabase']} is invalid")
             return
-
+          
         if secret_data['databasetype'] == 'mysql':
             if check_mysql_connection(secret_data['databasehost'],secret_data['databaseuser'],secret_data['databasepassword'], secret_data['databasedatabase']):
                 update_mysql_database(structure, extra_data)

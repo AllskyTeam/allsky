@@ -201,8 +201,9 @@ function test_determineCommandToUse()
 }
 
 #####
-# RPi cameras can use either "raspistill" on Buster or "{rpicam|libcamera}-still" on newer
-# OS's to actually take pictures.
+# RPi cameras can use either libcamera-still or rpicam-still to actually take pictures.
+# (libcamera-still was removed from Pi OS mid-2025, but continue checking for
+# Pi's that haven't been updated.
 # Determine which to use.
 # On success, return 0 and the command to use.
 # On failure, return non-0 and an error message.
@@ -219,88 +220,58 @@ function determineCommandToUse()
 	local PREFIX="${2}"					# Only used if calling doExit().
 	local IGNORE_ERRORS="${3:-false}"	# True if just checking
 
-	local CRET  RET  MSG  EXIT_MSG   CMD_FOUND="false"
+	local RET  MSG  EXIT_MSG
+	local NO_CMD_FOUND="Can't determine what command to use for RPi camera;"
 
-	# If libcamera is installed and works, use it.
-	# If it's not installed, or IS installed but doesn't work (the user may not have it configured),
-	# use raspistill.
-
-	RET=1
 	CMD_TO_USE_="rpicam-still"
-	command -v "${CMD_TO_USE_}" > /dev/null
-	CRET=$?
-	if [[ ${CRET} -ne 0 ]]; then
+	if ! command -v "${CMD_TO_USE_}" > /dev/null ; then
 		CMD_TO_USE_="libcamera-still"
-		command -v "${CMD_TO_USE_}" > /dev/null
-		CRET=$?
-	fi
-	if [[ ${CRET} -eq 0 ]]; then
-		CMD_FOUND="true"	# one of the commands were found.
-
-		# Found a command - see if it works.
-		# If the cable is bad the camera might be found but not work,
-		# and the command can hang.
-		timeout 10 "${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1
-		RET=$?
-		if [[ ${RET} -eq 124 ]]; then
-			# Time out.  Let invoker know
-			echo "'${CMD_TO_USE_}' timed out." >&2
-			return "${EXIT_ERROR_STOP}"
-
-		elif [[ ${RET} -eq 137 ]]; then
-			# If another of these commands is running ours will hang for
-			# about a minute then be killed with RET=137.
-			# If that happens, assume this is the command to use.
-			RET=0
-		fi
-	fi
-
-	if [[ ${RET} -ne 0 ]]; then
-		# Didn't find libcamera-based command, or it didn't work.
-		CMD_TO_USE_="raspistill"
-		if ! command -v "${CMD_TO_USE_}" > /dev/null; then
-			CMD_TO_USE_=""
-
+		if ! command -v "${CMD_TO_USE_}" > /dev/null ; then
 			if [[ ${IGNORE_ERRORS} == "false" ]]; then
-				MSG="Can't determine what command to use for RPi camera."
-				echo "${MSG}" >&2
-
+				MSG="'rpicam-still' and 'libcamera-still' were not found."
+				echo "${NO_CMD_FOUND} ${MSG}" >&2
 				if [[ ${USE_doExit} == "true" ]]; then
 					EXIT_MSG="${PREFIX}\nRPi camera command\nnot found!."
 					doExit "${EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
 				fi
+			# else don't echo anything
 			fi
 
-			if [[ ${CMD_FOUND} == "true" ]]; then
-				return 1
-			else
-				return 2		# no command was found
-			fi
-		fi
-
-		CMD_FOUND="true"	# some command was found.
-
-		# On Buster, raspistill sometimes hangs if no camera is found,
-		# so work around that.
-		if ! timeout 4 "${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1 ; then
-			CMD_TO_USE_=""
-
-			if [[ ${IGNORE_ERRORS} == "false" ]]; then
-				MSG="RPi camera not found.  Make sure it's enabled."
-				echo "${MSG}" >&2
-
-				if [[ ${USE_doExit} == "true" ]]; then
-					EXIT_MSG="${PREFIX}\nRPi camera\nnot found!\nMake sure it's enabled."
-					doExit "${EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
-				fi
-			fi
-
-			return "${EXIT_NO_CAMERA}"
+			# No command was found.  This is ok if the user doesn't have an RPi camera.
+			# Let the invoker determine what to do.
+			return 2
 		fi
 	fi
 
-	echo "${CMD_TO_USE_}"
-	return 0
+	# Found a command - see if it works.
+	# If the cable is bad the camera might be found but not work,
+	# and the command can hang.
+
+	timeout 120 "${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1
+	RET=$?
+	if [[ ${RET} -eq 0 || ${RET} -eq 137 ]]; then
+		# If another of these commands is running ours will hang for
+		# about a minute then be killed with RET=137.
+		# If that happens, assume this is the command to use.
+		echo "${CMD_TO_USE_}"
+		return 0
+
+	elif [[ ${RET} -eq 124 ]]; then
+		# Time out.
+		# This usually means a camera exists but there's a problem connecting to it.
+		echo "'${CMD_TO_USE_}' timed out." >&2
+		return "${EXIT_ERROR_STOP}"
+
+	else
+		if [[ ${IGNORE_ERRORS} == "false" ]]; then
+			echo "'${CMD_TO_USE_}' failed with return code ${RET}." >&2
+			if [[ ${USE_doExit} == "true" ]]; then
+				EXIT_MSG="${PREFIX}\n${CMD_TO_USE_} failed!"
+				doExit "${EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
+			fi
+		fi
+		return 1
+	fi
 }
 
 #####
@@ -322,30 +293,22 @@ function get_connected_cameras_info()
 	# for each camera found.
 	# camera_sensor will be one word.
 	# Only run determineCommandToUse() if it wasn't already run.
+
 	if [[ -z ${CMD_TO_USE_} && ${RUN_dCTU} == "true" ]]; then
 		determineCommandToUse "false" "" "${IGNORE_ERRORS}" > /dev/null
 	fi
 	if [[ -n ${CMD_TO_USE_} ]]; then
-		if [[ ${CMD_TO_USE_} == "raspistill" ]]; then
-			# Only supported camera with raspistill
-			echo -e "RPi\t0\timx477\t[4056x3040]"
-
-		else
-			# Input:
-			#	camera_number  : sensor  [other stuff]
-			LIBCAMERA_LOG_LEVELS=FATAL "${CMD_TO_USE_}" --list-cameras 2>&1 |
-				gawk '/^[0-9]/ { printf("%s\t%d\t%s\n", "RPi", $1, $3); }'
-		fi
+		# Input:
+		#	camera_number  : sensor  [other stuff]
+		LIBCAMERA_LOG_LEVELS=FATAL "${CMD_TO_USE_}" --list-cameras 2>&1 |
+			gawk '/^[0-9]/ { printf("%s\t%d\t%s\n", "RPi", $1, $3); }'
 	fi
 
 	####### Check for ZWO
 	# Keep output similar to RPi:
 	#		ZWO  camera_number camera_model
 	# for each camera found.
-# TODO: Is the order they appear from lsusb the same as the camera number?
 	# lsusb output:
-	#	Bus 002 Device 002: ID 03c3:290b				(Buster)
-	#		iProduct 2 ASI290MM
 	#	Bus 002 Device 002: ID 03c3:290b ZWO ASI290MM	(newer OS)
 	#	1   2   3       4   5  6         7   8
 	# or, for really old cameras:
@@ -375,13 +338,6 @@ function get_connected_cameras_info()
 					printf("ZWO\t%d\t%s\n", num++, model);
 					model = "<found>";		# This camera was output
 				}
-			} else if ($1 == "iProduct" && $3 != "(error)") {
-				if (model != "<found>") {
-					model = $3;
-					for (i=4; i<= NF; i++) model = model " " $i
-					printf("ZWO\t%d\t%s\n", num++, model);
-				}
-				model = "";		# This camera was output
 			}
 		}'
 }
@@ -816,37 +772,6 @@ function checkPixelValue()
 	return 0
 }
 
-
-#####
-# Make sure the specified width and height are valid.
-# Assume each number has already been checked, e.g., it's not a string.
-function checkWidthHeight()
-{
-	local NAME_PREFIX="${1}"
-	local ITEM="${2}"
-	local WIDTH="${3}"
-	local HEIGHT="${4}"
-	local SENSOR_WIDTH="${5}"
-	local SENSOR_HEIGHT="${6}"
-	local ERR
-
-	# Width and height must both be 0 or non-zero.
-	if [[ (${WIDTH} -gt 0 && ${HEIGHT} -eq 0) || (${WIDTH} -eq 0 && ${HEIGHT} -gt 0) ]]; then
-		ERR="${WSNs}${NAME_PREFIX} Width${WSNe} (${WSVs}${WIDTH}${WSVe})"
-		ERR+=" and ${WSNs}Height${WSNe} (${WSVs}${HEIGHT}${WSVe})"
-		ERR+=" must both be either 0 or non-zero.${wBR}"
-		ERR+="The ${ITEM} will NOT be resized since it would look unnatural."
-
-	elif [[ ${WIDTH} -gt 0 && ${HEIGHT} -gt 0 &&
-			${SENSOR_WIDTH} -eq ${WIDTH} && ${SENSOR_HEIGHT} -eq ${HEIGHT} ]]; then
-		ERR="Resizing a ${ITEM} to the same size as the sensor does nothing useful."
-	fi
-
-	[[ -z ${ERR} ]] && return 0
-
-	echo -e "${ERR}" >&2
-	return 1
-}
 
 
 #####
@@ -1362,9 +1287,8 @@ function indent()
 PYTHON_VENV_ACTIVATED="false"
 function activate_python_venv()
 {
-
-# TODO: will need to change when the OS after bookworm is released
-# If our next release is out, it won't support buster so may be check  != bullseye  ?
+	# TODO: will need to change when the OS after Bookworm is released.
+	# Maybe check for != bullseye  ?
 
 	local ACTIVATE="${ALLSKY_PYTHON_VENV}/bin/activate"
 

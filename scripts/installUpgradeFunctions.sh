@@ -462,10 +462,14 @@ function update_array_field()
 	if [[ ${NEW_VALUE} == "--delete" ]]; then
 		update_json_file -d ".${ARRAY}[${I}]" "" "${FILE}"
 	else
-		local URL=".${ARRAY}[${I}].${FIELD}"
-		local V="$( settings "${URL}" "${FILE}" )"
+		local F=".${ARRAY}[${I}].${FIELD}"
+		local V="$( settings "${F}" "${FILE}" )"
 		if [[ ${V} != "${NEW_VALUE}" ]]; then
-			update_json_file "${URL}" "${NEW_VALUE}" "${FILE}"
+			update_json_file "${F}" "${NEW_VALUE}" "${FILE}"
+			if [[ $? -ne 0 ]]; then
+				echo "WARNING: Unable to update '${VALUE}' to '${NEW_VALUE} in '${FILE}'." >&2
+else echo "Updated '${VALUE}' to '${NEW_VALUE} in '${FILE}'." >&2
+			fi
 		fi
 	fi
 }
@@ -505,9 +509,9 @@ function replace_website_placeholders()
 			MINI_TLAPSE_DISPLAY_VALUE="true"
 			if [[ ${TYPE} == "local" ]]; then
 				#shellcheck disable=SC2153
-				MINI_TLAPSE_URL_VALUE="/${ALLSKY_IMG_DIR}/mini-timelapse.mp4"
+				MINI_TLAPSE_URL_VALUE="/${ALLSKY_MINITIMELAPSE_URL}"
 			else
-				MINI_TLAPSE_URL_VALUE="mini-timelapse.mp4"
+				MINI_TLAPSE_URL_VALUE="${ALLSKY_MINITIMELAPSE_NAME}"
 			fi
 		fi
 	else
@@ -681,7 +685,8 @@ function update_old_website_config_file()
 	#	Added "equipmentinfo" setting
 	# Current version: 5 from v2025.xx.xx
 	#	Changed "imageName" to "/current/image.jpg" in local config file.
-	#	imageName is updated in replace_website_placeholders() so not done here.
+	#		imageName is updated in replace_website_placeholders() so not done here.
+	#	timelapse and mini-timelapse icons changed.
 
 	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
 		# These steps bring version 1 up to 2.
@@ -781,6 +786,14 @@ function update_old_website_config_file()
 			# cp so it keeps ${FILE}'s attributes
 			cp "${TEMP}" "${FILE}" && rm -f "${TEMP}"
 		fi
+	fi
+
+	if [[ ${PRIOR_VERSION} -le 5 ]] ; then	# use -le so testers get updated.
+		# Update timelapse icons
+		update_array_field "${FILE}" "homePage.leftSidebar" "icon" \
+			"fa fa-2x fa-fw fa-play-circle" "fa fa-2x fa-fw fa-video"
+		update_array_field "${FILE}" "homePage.leftSidebar" "icon" \
+			"fa fa-2x fa-fw icon-mini-timelapse" "fa fa-2x fa-fw fa-file-video"
 	fi
 
 	# Set to current config and Allsky versions.
@@ -1881,3 +1894,4 @@ create_variables_json()
 		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 	fi
 }
+

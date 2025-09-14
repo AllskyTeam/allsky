@@ -12,7 +12,7 @@ source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 
-usage_and_exit()
+function usage_and_exit()
 {
 	exec >&2
 	local RET=${1}
@@ -89,10 +89,12 @@ done
 [[ ${DO_WEBSITE} == "false" && ${DO_SERVER} == "false" ]] && usage_and_exit 2
 
 
+FIX="FIX"
 if [[ ${FROM_INSTALL} == "true" ]]; then
-	function error_type() { return 0; }
+	function bold_it() { return 0; }
 else
-	function error_type() { echo -e "${BOLD:-${wBOLD}}${1}${NC:-${wNBOLD}}"; }
+	function bold_it() { echo -e "${BOLD:-${wBOLD}}${1}${NC:-${wNBOLD}}"; }
+	FIX="${BOLD:-${wBOLD}}${FIX}${NC:-${wNBOLD}}"
 fi
 
 # Display a "FIX" message.
@@ -109,14 +111,14 @@ function fix()
 }
 
 # Parse the output file and provide fixes when possible.
-parse_output()
+function parse_output()
 {
 	local FILE="${1}"
 	local TYPE="${2}"
 
 	[[ ! -s ${FILE} ]] && return	# empty file - shouldn't happen...
 
-	local STRING  S  CMD  FIX
+	local STRING  S  CMD  F
 
 	if [[ ${TYPE} == "REMOTEWEBSITE" ]]; then
 		S="Remote Website Settings"
@@ -127,22 +129,22 @@ parse_output()
 	# Parse output.
 	STRING="host name resolve timeout"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
-		error_type "* ${WSNs}Server Name${WSNe} ${WSVs}${HOST}${WSVe} not found."
-		echo "  FIX: Check the spelling of the server."
-	   	echo "       Make sure your network is up."
-	   	echo "       Make sure the network the server is on is up."
+		bold_it "\n* ${WSNs}Server Name${WSNe} ${WSVs}${HOST}${WSVe} not found."
+		echo -e "  ${FIX}: Check the spelling of the server."
+	   	echo    "       Make sure your network is up."
+	   	echo    "       Make sure the network the server is on is up."
 	fi >&2
 
 	STRING="User cannot log in|Login failed|Login incorrect"
 	if grep -E --ignore-case --silent "${STRING}" "${FILE}" ; then
-		error_type "* Unable to log in."
-		echo "  FIX: Make sure the ${WSNs}User Name${WSNe} and ${WSNs}Password${WSNe} are correct."
+		bold_it "\n* Unable to log in."
+		echo -e "  ${FIX}: Make sure the ${WSNs}User Name${WSNe} and ${WSNs}Password${WSNe} are correct."
 	fi >&2
 
 	STRING="max-retries exceeded"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
-		error_type "* Unable to log: max-retries exceeded."
-		echo "  FIX: Make sure the ${WSNs}Port${WSNe} is correct and your network is working."
+		bold_it "\n* Unable to log: max-retries exceeded."
+		echo -e "  ${FIX}: Make sure the ${WSNs}Port${WSNe} is correct and your network is working."
 		if [[ ${PROTOCOL} == "sftp" ]]; then
 			echo "       On your Pi, run:  ssh ${USER}@${HOST}"
 			echo "       When prompted to enter 'yes' or 'no', enter 'yes'."
@@ -154,19 +156,19 @@ parse_output()
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
 		STRING="is current directory"
 		if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
-			error_type "* Login succeeded but unknown location found."
+			bold_it "\n* Login succeeded but unknown location found."
 		else
 			# This should never happen.
 			# If we can't login we wouldn't know if the location was there.
-			error_type "* Login failed and unknown location found."
+			bold_it "\n* Login failed and unknown location found."
 		fi
 		if [[ -n ${DIR} && ${DIR} != "null" ]]; then
 			echo "  The ${WSNs}Image Directory${WSNe} in the WebUI's '${S}' section is ${WSVs}${DIR}${WSVe}."
-			FIX="  FIX: Make sure the ${WSVs}${DIR}${WSVe} directory exists on the server."
+			F="  ${FIX}: Make sure the ${WSVs}${DIR}${WSVe} directory exists on the server."
 		else
 			echo "  The ${WSNs}Image Directory${WSNe} in the WebUI's '${S}' section is empty."
 			# TODO: can this ever happen?
-			FIX="  FIX: unknown - not sure why this failed."
+			F="  ${FIX}: unknown - not sure why this failed."
 		fi
 
 		local CONTENTS="$( get_ls_contents "${FILE}" )"
@@ -174,30 +176,31 @@ parse_output()
 			echo "  There appears to be no files or directories in the server's root directory."
 		else
 			echo "  The following files and/or directories are in the server's root directory:"
-			indent --spaces "${CONTENTS}"
+			# "<DIR>" breaks html output
+			indent --spaces "${CONTENTS}" | sed 's/<DIR>/ DIR /g'
 		fi
-		echo "${FIX}"
+		echo -e "\n${F}"
 	fi >&2
 
 	STRING="An unexpected TLS packet was received"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
 		CMD="set ftp:ssl-force true"
-		error_type "* Authentication protocol issue."
-		MSG="FIX: Change ${WSNs}Protocol${WSNe} to ${WSVs}ftp${WSVe}, then\n  "
+		bold_it "\n* Authentication protocol issue."
+		MSG="${FIX}: Change ${WSNs}Protocol${WSNe} to ${WSVs}ftp${WSVe}, then\n  "
 		fix "${CMD}" "${S}" "${MSG}"
 	fi >&2
 
 	# Certificate-related issues
 	STRING="The authenticity of host"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
-		error_type "* The remote machine doesn't know about your Pi."
+		bold_it "\n* The remote machine doesn't know about your Pi."
 		if [[ ${PROTOCOL} == "sftp" ]]; then
-			echo "  This happens the first time you use ${WSNs}Protocol${WSNe} 'sftp' on a new Pi."
-			echo "  FIX: On your Pi, run:  ssh ${USER}@${HOST}"
-			echo "       When prompted to enter 'yes' or 'no', enter 'yes'."
-			echo "       You may need to do this if the IP address of your Pi changed."
+			echo    "  This happens the first time you use ${WSNs}Protocol${WSNe} ${WSVs}sftp${WSVe} on a new Pi."
+			echo -e "  ${FIX}: On your Pi, run:  ssh ${USER}@${HOST}"
+			echo    "       When prompted to enter 'yes' or 'no', enter 'yes'."
+			echo    "       You may need to do this if the IP address of your Pi changed."
 		else
-			echo "  This error usually only happens when using Protocol 'sftp' on a new Pi."
+			echo "  This error usually only happens when using Protocol ${WSVs}sftp${WSVe} on a new Pi."
 			echo "  You are using ${WSNs}Protocol${WSNe} '${PROTOCOL}', so no known fix exists."
 		fi
 	fi >&2
@@ -205,33 +208,33 @@ parse_output()
 	STRING="certificate common name doesn't match requested host name"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
 		CMD="set ssl:check-hostname false"
-		error_type "* Certificate host verification issue."
-		fix "${CMD}" "${S}" "FIX: "
+		bold_it "\n* Certificate host verification issue."
+		fix "${CMD}" "${S}" "${FIX}: "
 	fi >&2
 
 	# Ignore the WARNING messages for this; it continues to work.
 	STRING="ERROR.*NOT trusted"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
 		CMD="set ssl:verify-certificate no"
-		error_type "* Certificate verification issue."
-		fix "${CMD}" "${S}" "FIX: "
+		bold_it "\n* Certificate verification issue."
+		fix "${CMD}" "${S}" "${FIX}: "
 	fi >&2
 
 	STRING="No space left on device"
 	if grep --ignore-case --silent "${STRING}" "${FILE}" ; then
-		error_type "* Server is out of disk space."
-		echo "  FIX: Remove unused files on server."
+		bold_it "\n* Server is out of disk space."
+		echo -e "  ${FIX}: Remove unused files on server."
 	fi >&2
 
 	# Output already displayed in DEBUG mode.
 	if [[ ${DEBUG} == "false" && -z ${OUT_FILE} ]]; then
-		echo; wD_ "Raw output is in '${FILE}'.\n\n" >&2
+		echo; wI_ "Raw output is in ${WSFs}${FILE}${WSFe}.\n\n" >&2
 	fi
 }
 
 
 # Test an upload.
-do_test()
+function do_test()
 {
 	local TYPE="${1}"
 	local bTEST_FILE  HUMAN_TYPE  REMOTE  CMD  D

@@ -257,7 +257,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 
 		except Exception as e:
 			eType, eObject, eTraceback = sys.exc_info()
-			result = f'Module allsky_starcount failed on line {eTraceback.tb_lineno} - {e}'
+			result = f'Module Star Count failed on line {eTraceback.tb_lineno} - {e}'
 			allsky_shared.log(0,f'ERROR: {result}')
 
 		return result

@@ -4,7 +4,7 @@ include_once('includes/functions.php');
 initialize_variables();
 include_once('includes/authenticate.php');
 
-// Cause a command specified by "id" (with html output) or "ID" (with just text)
+// Cause a command specified by "ID" (with html output) or "id" (with just text)
 // to be executed.
 $use_TEXT = false;
 $ID = getVariableOrDefault($_REQUEST, 'ID', null);

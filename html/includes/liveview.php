@@ -2,6 +2,8 @@
 
 function DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg, $darkframe) {
 	global $showUpdatedMessage;
+	global $pageHeaderTitle, $pageIcon;
+
 	$myStatus = new StatusMessages();
 
 	// Note: if liveview is left open during a day/night transition the delay will become wrong.
@@ -43,7 +45,17 @@ function DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nig
 </script>
 
 	<div class="panel panel-allsky">
-		<div class="panel-heading"><i class="fa fa-code fa-eye"></i> Live View</div>
+		<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?>
+<?php
+		if (file_exists(ALLSKY_MINITIMELAPSE_FILE)) {
+?>
+
+			<span class='nowrap'>&nbsp; &nbsp;&nbsp; &nbsp;
+			<?php echo insertHref("mini_timelapse", "", true); ?></span>
+<?php
+		}
+?>
+		</div>
 		<div class="panel-body">
 			<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
 			<div id="live_container" class="cursorPointer live_container" title="Click to make full-screen">

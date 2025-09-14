@@ -20,27 +20,21 @@ $lastChangedName = "lastchanged";	// json setting name
 $formReadonly = false;				// The WebUI isn't readonly
 $ME = htmlspecialchars($_SERVER["PHP_SELF"]);
 
+// TODO: Implement
+$useMeteors = false;
+
 // functions.php sets a bunch of constants and variables.
-// It needs to be at the top of this file since code below uses the items it sets.
 include_once('includes/functions.php');
+include_once('includes/authenticate.php');
 include_once('includes/status_messages.php');
 $status = new StatusMessages();
 initialize_variables();		// sets some variables
 
-// Constants for configuration file paths.
-// These are typical for default RPi installs. Modify if needed.
-include_once('includes/authenticate.php');
-define('RASPI_WPA_SUPPLICANT_CONFIG', '/etc/wpa_supplicant/wpa_supplicant.conf');
-define('RASPI_WPA_CTRL_INTERFACE', '/var/run/wpa_supplicant');
-
-define('DHCP_ENABLED', true);
-
-if (DHCP_ENABLED) {
-	define('RASPI_DNSMASQ_CONFIG', '/etc/dnsmasq.conf');
-	define('RASPI_DNSMASQ_LEASES', '/var/lib/misc/dnsmasq.leases');
-} else {
-	function DisplayDHCPConfig() {}
-}
+// TODO in major release after v2025.xx.xx:
+// We want to remove the "DHCP" page from Allsky but aren't sure if anyone's using it.
+// To be save, leave all the DHCP code but don't display the link to the page.
+// If no one complains we can remove everything DHCP related.
+define('DHCP_ENABLED', false);
 
 function useLogin() {
 	global $useLogin;
@@ -91,70 +85,242 @@ function getRemoteWebsiteVersion() {
 
 }
 
-function getPageTitle($page, $day) {
-	$titles = [
-		"WLAN_info"          => "WLAN Dashboard",
-		"LAN_info"           => "LAN Dashboard",
-		"configuration"      => "Allsky Settings",
-		"wifi"               => "Configure Wi-Fi",
-		"dhcp_conf"          => "Configure DHCP",
-		"auth_conf"          => "Change Password",
-		"system"             => "System",
-		"list_days"          => "Images",
-		"list_images"        => "Images$day",
-		"list_videos"        => "Timelapse$day",
-		"list_keograms"      => "Keogram$day",
-		"list_startrails"    => "Startrails$day",
-		"editor"             => "Editor",
-		"overlay"            => "Overlay Editor",
-		"module"             => "Module Manager",
-		"live_view"          => "Live View",
-		"support"            => "Getting Support",
-		"startrails_settings"=> "Startrails Settings",
-		"stretch_settings"   => "Image Stretch Settings"
-	];
-
-	$pageTitle = $titles[$page] ?? "Allsky WebUI";
-	return $pageTitle;
+// What size Font Awesome icon to use on "list_days" page?
+$fa_size = "2x";	// "lg" or "2x"
+if ($fa_size == "lg") {
+	$fa_size_px = 22;	// the rough width of the font awesome icon
+} else {
+	$fa_size_px = 35;
 }
 
-function insertPage($page) {
+$pageInfo = [
+	"live_view" => [
+		"title" => "Live View",
+		"icon" => "fa fa-eye fa-fw",
+	],
+	"list_days" => [
+		"title" => "Images",
+		"icon" => "fa fa-image fa-fw",
+	],
+	"list_images" => [
+		"title" => "Images",
+		"icon" => "",
+	],
+	"list_videos" => [
+		"title" => "Timelapse",
+		"icon" => "fa fa-video fa-${fa_size} fa-fw",
+		"AllTitle" => "All Timelapse (CAN BE SLOW TO LOAD)",
+	],
+	"list_keograms" => [
+		"title" => "Keogram",
+		"icon" => "fa fa-barcode fa-${fa_size} fa-fw",
+		"AllTitle" => "All Keograms",
+	],
+	"list_startrails" => [
+		"title" => "Startrails",
+		"icon" => "fa fa-star fa-${fa_size} fa-fw",
+		"AllTitle" => "All Startrails",
+	],
+	"list_meteors" => [
+		"title" => "Meteors",
+		"icon" => "fa fa-meteor fa-${fa_size} fa-fw",
+		"AllTitle" => "All Meteors",
+	],
+	"configuration" => [
+		"title" => "Allsky Settings",
+		"icon" => "fa fa-camera fa-fw",
+	],
+	"editor" => [
+		"title" => "Editor",
+		"icon" => "fa fa-code fa-fw",
+	],
+	"overlay" => [
+		"title" => "Overlay Editor",
+		"icon" => "fa fa-edit fa-fw",
+	],
+	"module" => [
+		"title" => "Module Manager",
+		"icon" => "fa fa-bars fa-fw",
+	],
+	"charts" => [
+		"title" => "Charts",
+		"icon" => "fa-solid fa-chart-line",
+	],
+	"LAN_info" => [
+		"title" => "<b>LAN</b> Dashboard",
+		"icon" => "fa fa-network-wired fa-fw",
+	],
+	"WLAN_info" => [
+		"title" => "<b>WLAN</b> Dashboard",
+		"icon" => "fa fa-tachometer-alt fa-fw",
+	],
+	"wifi" => [
+		"title" => "Configure Wi-Fi",
+		"icon" => "fa fa-wifi fa-fw",
+	],
+	"dhcp_conf" => [
+		"title" => "Configure DHCP",
+		"icon" => "fa fa-exchange fa-fw",
+	],
+	"system" => [
+		"title" => "System",
+		"icon" => "fa fa-cube fa-fw",
+	],
+	"auth_conf" => [
+		"title" => "Change Password",
+		"icon" => "fa fa-lock fa-fw",
+		"headerTitle" => "Update WebUI User / Password",
+	],
+	"support" => [
+		"title" => "Getting Support",
+		"icon" => "fa fa-question fa-fw",
+	],
+	"check_allsky" => [
+		"title" => "Check Allsky",
+		"icon" => "fa fa-check fa-fw",
+		"headerTitle" => "Check Allsky Settings For Issues",
+	],
+	"startrails_settings" => [
+		"title" => "Startrails Settings",
+		"icon" => "fa fa-star fa-fw",
+		"headerTitle" => "Help Determine Startrails Settings",
+	],
+	"stretch_settings" => [
+		"title" => "Image Stretch Settings",
+		"icon" => "fa fa-arrows-left-right fa-fw",
+		"headerTitle" => "Help Determine Image Stretch Settings",
+	],
+	"timelapse_settings" => [
+		"title" => "Timelapse Settings",
+		"icon" => "fa fa-video fa-fw",
+		"headerTitle" => "Help Determine Timelapse Settings",
+	],
+	"bad_images_settings" => [
+		"title" => "Bad Images",
+		"icon" => "fa fa-image fa-fw",
+		"headerTitle" => "Help Determine Bad Images Settings",
+	],
+	"constellation_overlay" => [
+		"title" => "Constellation Overlay",
+		"icon" => "fa allsky-constellation fa-fw",
+		"headerTitle" => "Help Configure Constellation Overlay",
+	],
+	"documentation" => [
+		"title" => "Allsky Documentation",
+		"icon" => "fa fa-book fa-fw",
+		"href" => "/documentation' external='true",
+	],
+	"mini_timelapse" => [
+		"title" => "View Mini-Timelapse",
+		"icon" => "fa fa-file-video fa-fw",
+		"href" => ALLSKY_MINITIMELAPSE_URL . "' external='true'",
+	],
+	"notFound" => [
+		"headerTitle" => "Unknown page - contact Allsky support",
+		"title" => "Unknown page",
+		"icon" => "",
+		"href" => "",
+	],
+];
+
+function getPageTitle($p, $day) {
+	global $pageInfo;
+
+	$t = getVariableOrDefault($pageInfo, $p, null);
+	if ($t === null) {
+		return null;
+	}
+	$title = $t['title'] ?? "Allsky";
+
+	if ($day !== "") $title .= $day;
+
+	return str_replace("<b>", "", str_replace("</b>", "", $title));
+}
+function getPageHeaderTitle($p) {
+	global $pageInfo;
+	global $pageTitle;
+
+	$t = getVariableOrDefault($pageInfo, $p, null);
+	if ($t === null) {
+		return null;
+	}
+	return $t['headerTitle'] ?? getPageTitle($p, "");
+}
+function getPageIcon($p) {
+	global $pageInfo;
+
+	return $pageInfo[$p]['icon'] ?? "";
+}
+
+// Insert just an "<a href=''..>" with an icon.
+function insertHref($p, $day, $displayTitle=false, $iconImage="") {
+	global $pageInfo;
+
+	$t = getVariableOrDefault($pageInfo, $p, null);
+	if ($t === null) {
+		$p = "notFound";
+		$t = getVariableOrDefault($pageInfo, $p, null);
+	}
+
+	$title = getPageHeaderTitle($p, "");
+	if ($day == "All") {
+		$AllTitle = getVariableOrDefault($t, "AllTitle", null);
+		if ($AllTitle !== null)
+			$title = $AllTitle;
+	}
+	$href = getVariableOrDefault($t, "href", "index.php?page=$p");
+	if ($day !== "") $href .= "&day=$day";
+	if ($iconImage === "") {
+		$icon = getPageIcon($p);
+	} else {
+		$icon = $iconImage;
+	}
+	if ($icon === "") {
+		echo "<span style='color: red' title='$title'>???</span>";
+	} else {
+		echo "<a id='$p' href='$href' title='$title'>";
+		if ($iconImage === "") {
+			echo "<i class='$icon'></i>";
+		} else {
+			echo $iconImage;
+		}
+		if ($displayTitle) echo " $title";
+		echo "</a>";
+	}
+}
+
+function insertMenuItem($p, $day, $type="", $href_only=false) {
+	global $pageInfo;
+
+	$t = getVariableOrDefault($pageInfo, $p, null);
+	if ($t === null) {
+		$p = "notFound";
+		$t = getVariableOrDefault($pageInfo, $p, null);
+	}
+
+	$title = getPageTitle($p, $day);
+	$icon = getPageIcon($p);
+	$href = getVariableOrDefault($t, "href", "index.php?page=$p");
+
+	echo "<li>";
+	echo "<a id='$p' href='$href'><i class='$icon'></i>";
+	if ($type !== "dropdown") echo "<span class='menu-text'>";
+	echo " $title";
+	if ($type !== "dropdown") echo "</span>";
+	echo "</a>";
+	echo "</li>\n";
+}
+
+function insertPage($p) {
 	global $image_name, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg, $darkframe;
 
-	switch ($page) {
-		case "WLAN_info":
-			include_once('includes/dashboard_WLAN.php');
-			DisplayDashboard_WLAN();
-			break;
-		case "LAN_info":
-			include_once('includes/dashboard_LAN.php');
-			DisplayDashboard_LAN();
-			break;
-		case "configuration":
-			include_once('includes/allskySettings.php');
-			DisplayAllskyConfig();
-			break;
-		case "wifi":
-			include_once('includes/configureWiFi.php');
-			DisplayWPAConfig();
-			break;
-		case "dhcp_conf":
-			include_once('includes/dhcp.php');
-			DisplayDHCPConfig();
-			break;
-		case "auth_conf":
-			include_once('includes/admin.php');
-			break;
-		case "system":
-			include_once('includes/system.php');
-			DisplaySystem();
-			break;
+	switch ($p) {
 		case "list_days":
-			include_once('includes/days.php');
+			include_once("includes/days.php");
 			ListDays();
 			break;
 		case "list_images":
-			include_once('includes/images.php');
+			include_once("includes/images.php");
 			ListImages();
 			break;
 		case "list_videos":
@@ -169,44 +335,79 @@ function insertPage($page) {
 			// directory, file name prefix, formal name, type of file
 			ListFileType("startrails/", "startrails", "Startrails", "picture");
 			break;
+		case "list_meteors":
+			// directory, file name prefix, formal name, type of file
+			ListFileType("meteors/", "meteors", "Meteors", "picture");
+			break;
+		case "configuration":
+			include_once("includes/allskySettings.php");
+			DisplayAllskyConfig();
+			break;
 		case "editor":
-			include_once('includes/editor.php');
+			include_once("includes/$p.php");
 			DisplayEditor();
 			break;
 		case "overlay":
-			include_once('includes/overlay.php');
+			include_once("includes/$p.php");
 			DisplayOverlay($image_name);
 			break;
 		case "module":
-			include_once('includes/module.php');
+			include_once("includes/$p.php");
 			DisplayModule();
 			break;
+		case "charts":
+			include_once("includes/$p.php");
+			DisplayCharts();
+			break;
+		case "LAN_info":
+			include_once("includes/dashboard_LAN.php");
+			DisplayDashboard_LAN();
+			break;
+		case "WLAN_info":
+			include_once("includes/dashboard_WLAN.php");
+			DisplayDashboard_WLAN();
+			break;
+		case "wifi":
+			include_once("includes/configureWiFi.php");
+			DisplayWPAConfig();
+			break;
+		case "dhcp_conf":
+			include_once("includes/dhcp.php");
+			DisplayDHCPConfig();
+			break;
+		case "system":
+			include_once("includes/$p.php");
+			DisplaySystem();
+			break;
+		case "auth_conf":
+			include_once("includes/admin.php");
+			break;
+		case "support":
+			include_once("includes/$p.php");
+			break;
+		case "check_allsky":
+			include_once("helpers/allsky_config.php");
+			runAllskyConfig("check_allsky", "--fromWebUI");
+			break;
 		case "startrails_settings":
-			include_once("helpers/$page.php");
+			include_once("helpers/$p.php");
 			startrailsSettings();
 			break;
+		case "stretch_settings":
+			include_once("helpers/$p.php");
+			stretchSettings();
+			break;
 		case "timelapse_settings":
-			include_once("helpers/$page.php");
+			include_once("helpers/$p.php");
 			// TODO: add function name						
 			break;
 		case "constellation_overlay":
-			include_once("helpers/$page.php");
+			include_once("helpers/$p.php");
 			// TODO: add function name
 			break;
 		case "bad_images_settings":
-			include_once("helpers/$page.php");
+			include_once("helpers/$p.php");
 			// TODO: add function name 
-			break;
-		case "stretch_settings":
-			include_once("helpers/$page.php");
-			stretchSettings();
-			break;
-		case "support":
-			include_once('includes/support.php');
-			break;
-		case "charts":
-			include_once('includes/charts.php');
-			DisplayCharts();
 			break;
 			
 		case "live_view":
@@ -271,10 +472,10 @@ function insertVersions() {
 	}
 }
 
-function displayStatusMessages($page) {
+function displayStatusMessages($p) {
 	global $status, $ME;
 
-	check_if_configured($page, "main");	// It calls addMessage() on error.
+	check_if_configured($p, "main");	// It calls addMessage() on error.
 
 	if (isset($_POST['clear'])) {
 		$t = @filemtime(ALLSKY_MESSAGES);
@@ -370,7 +571,7 @@ function displayStatusMessages($page) {
 			echo "<div class='message-button'>";
 				$ts = time();
 				echo "<form action='$ME?_ts=$ts' method='POST'>";
-				echo "<input type='hidden' name='page' value='$page'>";
+				echo "<input type='hidden' name='page' value='$p'>";
 				echo "<input type='hidden' name='clear' value='true'>";
 				$t = @filemtime(ALLSKY_MESSAGES);
 				echo "<input type='hidden' name='filetime' value='$t'>";
@@ -381,13 +582,11 @@ function displayStatusMessages($page) {
 
 		echo '</div></div>'; // panel 
 	}
-
 }
 
-function insertEditorCode($page) {
+function insertEditorCode($p) {
 
-	if ($page === "editor") {
-
+	if ($p === "editor") {
 		echo '
 			<link rel="stylesheet" href="lib/codeMirror/codemirror.css">
 			<link rel="stylesheet" href="lib/codeMirror/monokai.min.css">
@@ -406,16 +605,16 @@ function insertEditorCode($page) {
 			<script src="/js/bootbox/bootbox.all.js?c=' . ALLSKY_VERSION . '"></script>
 			<script src="/js/bootbox/bootbox.locales.min.js?c=' . ALLSKY_VERSION . '"></script>
 		';
-
 	}
-
 }
 
-$page = getVariableOrDefault($_REQUEST, 'page', "");
+$page = getVariableOrDefault($_REQUEST, 'page', "live_view");
 $day = getVariableOrDefault($_REQUEST, 'day', "");	if ($day !== "") $day = " - $day";
 $csrf_token = useLogin();
 $remoteWebsiteVersion = getRemoteWebsiteVersion();
-$Title = getPageTitle($page, $day);
+$pageTitle = getPageTitle($page, $day);
+$pageHeaderTitle = getPageHeaderTitle($page, $day);
+$pageIcon = getPageIcon($page);
 $allskyStatus = output_allsky_status();
 
 ?>
@@ -423,7 +622,7 @@ $allskyStatus = output_allsky_status();
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title><?php echo "$Title - WebUI"; ?></title>	
+		<title><?php echo "$pageTitle - WebUI"; ?></title>	
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -436,7 +635,8 @@ $allskyStatus = output_allsky_status();
 		<link href="documentation/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 		<link href="documentation/bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
 		<link href="documentation/css/sb-admin-2.css" rel="stylesheet">
-		<script defer src="documentation/js/all.min.js"></script>
+		<link rel="stylesheet" href="allsky/font-awesome/css/all.min.css" type="text/css">
+		<!-- OLD: <script defer src="documentation/js/all.min.js"></script> -->
 		<link href="documentation/css/custom.css" rel="stylesheet">
 		<link rel="shortcut icon" type="image/png" href="documentation/img/allsky-favicon.png">
 		<script src="documentation/js/functions.js"></script>
@@ -475,88 +675,66 @@ $allskyStatus = output_allsky_status();
 		<!-- Navigation -->
 		<div class="sidebar" id="sidebar">
 			<ul class="nav nav-pills nav-stacked">
-				<li>
-					<a id="live_view" href="index.php?page=live_view"><i class="fa fa-eye fa-fw"></i><span class="menu-text"> Live View</span></a>
-				</li>
-				<li>
-					<a id="list_days" href="index.php?page=list_days"><i class="fa fa-image fa-fw"></i><span class="menu-text"> Images</span></a>
-				</li>
+<?php
+				insertMenuItem('live_view', "");
+				insertMenuItem('list_days', "");
+?>
 				<li class="sidebar-dropdown has-flyout">
 					<a href="index.php?page=configuration" class="submenu-toggle"><i class="fa-solid fa-gears"></i><span class="menu-text"> Settings</span></a>
 					<ul class="dropdown-menu">
-						<li>
-							<a id="configuration" href="index.php?page=configuration"><i class="fa fa-camera fa-fw"></i> Allsky Settings</a>
-						</li>
-						<li>
-							<a id="editor" href="index.php?page=editor"><i class="fa fa-code fa-fw"></i> Editor</a>
-						</li>
+<?php
+						insertMenuItem('configuration', "", "dropdown");
+						insertMenuItem('editor', "", "dropdown");
+?>
 					</ul>
 				</li>
-				<li>
-					<a id="overlay" href="index.php?page=overlay"><i class="fa fa-edit fa-fw"></i><span class="menu-text"> Overlay Editor</span></a>
-				</li>
-				<li>
-					<a id="module" href="index.php?page=module"><i class="fa fa-bars fa-fw"></i><span class="menu-text"> Module Manager</span></a>
-				</li>
-				<li>
-					<a id="charts" href="index.php?page=charts"><i class="fa-solid fa-chart-line"></i><span class="menu-text"> Charts</span></a>
-				</li>
+<?php
+				insertMenuItem('overlay', "");
+				insertMenuItem('module', "");
+				insertMenuItem('charts', "");
+?>
 				<li class="sidebar-dropdown has-flyout">
 					<a href="#" class="submenu-toggle"><i class="fa-solid fa-network-wired"></i><span class="menu-text"> Networking</span></a>
 					<ul class="dropdown-menu">
-						<li>
-							<a id="LAN" href="index.php?page=LAN_info"><i class="fa fa-network-wired fa-fw"></i> <b>LAN</b> Dashboard</a>
-						</li>
-						<li>
-							<a id="WLAN" href="index.php?page=WLAN_info"><i class="fa fa-tachometer-alt fa-fw"></i> <b>WLAN</b> Dashboard</a>
-						</li>
-						<li>
-							<a id="wifi" href="index.php?page=wifi"><i class="fa fa-wifi fa-fw"></i> Configure Wi-Fi</a>
-						</li>
-						<li>
-							<a id="vpn" href="index.php?page=dhcp_conf"><i class="fa fa-exchange fa-fw"></i> Configure DHCP</a>
-						</li>
+<?php
+						insertMenuItem('LAN_info', "", "dropdown");
+						insertMenuItem('WLAN_info', "", "dropdown");
+						insertMenuItem('wifi', "", "dropdown");
+if (DHCP_ENABLED) {
+						insertMenuItem('dhcp_conf', "", "dropdown");
+}
+?>
 					</ul>
 				</li>
 				<li class="sidebar-dropdown has-flyout">
 					<a href="index.php?page=system" class="submenu-toggle"><i class="fa-brands fa-ubuntu"></i><span class="menu-text"> System</span></a>
 					<ul class="dropdown-menu">
-						<li>
-							<a id="system" href="index.php?page=system"><i class="fa fa-cube fa-fw"></i><span class="menu-text"> System</a>
-						</li>
-						<li>
-							<a id="auth_conf" href="index.php?page=auth_conf"><i class="fa fa-lock fa-fw"></i><span class="menu-text"> Change Password</a>
-						</li>
+<?php
+						insertMenuItem('system', "", "dropdown");
+						insertMenuItem('auth_conf', "", "dropdown");
+?>
 					</ul>
 				</li>
-				<li>
-					<a href="index.php?page=support"><i class="fa fa-question fa-fw"></i><span class="menu-text"> Getting Support</span></a>
-				</li>
-				<li>
-					<a href="/documentation"><i class="fa fa-book fa-fw"></i><span class="menu-text"> Allsky Documentation</span></a>
-				</li>
+<?php
+				insertMenuItem('support', "");
+?>
 				<li class="sidebar-dropdown has-flyout">
 					<a href="#" class="submenu-toggle"><i class="fa-solid fa-hammer"></i><span class="menu-text"> Helper Tools</span></a>
 					<ul class="dropdown-menu">
-						<li>
-							<a id="startrails_settings" href="index.php?page=startrails_settings" data-toggle="popover" data-placement="top" data-trigger="hover" title="Startrails Helper" data-content="Test multiple startrails settings."><i class="fa fa-star fa-fw"></i> Startrails</a>
-						</li>
-						<li>
-							<a id="stretch_settings" href="index.php?page=stretch_settings"> <i class="fa fa-arrows-left-right fa-fw"></i> Image Stretch</a>
-						</li>
-						<!-- TODO: uncomment when scripts are created
-						<li>
-							<a id="timelapse_settings" href="helpers.php?page=timelapse_settings"> <i class="fa fa-play-circle fa-fw"></i> Timelapse</a>
-						</li>
-						<li>
-							<a id="bad_images_settings" href="helpers.php?page=bad_images_settings"> <i class="fa fa-image fa-fw"></i> Bad Images</a>
-						</li>
-						<li>
-							<a id="constellation_overlay" href="helpers.php?page=constellation_overlay"> <i class="fa allsky-constellation fa-fw"></i> Constellation Overlay</a>
-						</li>
-						-->
+<?php
+						insertMenuItem('check_allsky', "", "dropdown");
+						insertMenuItem('startrails_settings', "", "dropdown");
+						insertMenuItem('stretch_settings', "", "dropdown");
+						// TODO: uncomment when scripts are created
+						// insertMenuItem('timelapse_settings', "", "dropdown");
+						// insertMenuItem('bad_images_settings', "", "dropdown");
+						// insertMenuItem('constellation_overlay', "", "dropdown");
+?>
 					</ul>
 				</li>	
+<?php
+				insertMenuItem('documentation', "");
+?>
 				<li>
 					<span id="as-switch-theme">
 						<i class="fa fa-moon fa-fw"></i>

@@ -125,11 +125,13 @@ class ALLSKY {
 		this.#addTimestamp('editor');
 		this.#addTimestamp('overlay');
 		this.#addTimestamp('module');
-		this.#addTimestamp('LAN');
-		this.#addTimestamp('WLAN');
+		this.#addTimestamp('charts');
+		this.#addTimestamp('LAN_info');
+		this.#addTimestamp('WLAN_info');
 		this.#addTimestamp('wifi');
-		this.#addTimestamp('auth_conf');
 		this.#addTimestamp('system');
+		this.#addTimestamp('auth_conf');
+		this.#addTimestamp('support');
 	}
 
 	#initTimers(page) {
@@ -293,7 +295,7 @@ class ALLSKY {
 		// move submenu back under its owner
 		function hideFlyout() {
 			clearHideTimer();
-			// DO NOT clearOpenTimer() here – we might be opening the neighbor
+			// DO NOT clearOpenTimer() here - we might be opening the neighbor
 			if ($activeFlyout && flyoutOwner) {
 				$activeFlyout.removeClass('floating-flyout').appendTo(flyoutOwner).hide();
 			}

@@ -715,17 +715,12 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 def overlay(params, event):
 	global formatErrorPlaceholder
 
-	enabled = allsky_shared.int(allsky_shared.getEnvironmentVariable("AS_eOVERLAY"))
-	if enabled == 1:
-		if "formaterrortext" in params:
-			formaterrortext = params["formaterrortext"]
-		else:
-			formaterrortext = formatErrorPlaceholder
-		annotater = ALLSKYOVERLAY(params, event, formaterrortext)
-		annotater.annotate()
-		result = ""
+	if "formaterrortext" in params:
+		formaterrortext = params["formaterrortext"]
 	else:
-		result = "Module Overlay Method Disabled"
-		allsky_shared.log(4, f"INFO: {result}.")
+		formaterrortext = formatErrorPlaceholder
+	annotater = ALLSKYOVERLAY(params, event, formaterrortext)
+	annotater.annotate()
+	result = ""
 
 	return result

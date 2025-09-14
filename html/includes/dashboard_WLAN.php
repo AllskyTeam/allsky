@@ -2,10 +2,10 @@
 
 function DisplayDashboard_WLAN()
 {
-
+	global $pageHeaderTitle, $pageIcon;
 ?>
 	<div class="panel panel-allsky">
-		<div class="panel-heading"><i class="fa fa-tachometer-alt fa-fw"></i> WLAN Dashboard</div>
+		<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
 <?php
 	$num_interfaces = 0;
 

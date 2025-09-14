@@ -130,6 +130,26 @@ function setValue($name, $value, $type) {
 	}
 }
 
+// Return the file name after accounting for any ${} variables.
+// Since there will often only be one file used by multiple settings,
+// as an optimization save the last name.
+$lastFileName = null;
+function getFileName($file) {
+	global $lastFileName;
+
+	if ($lastFileName === $file) return $lastFileName;
+
+	if (strpos('${HOME}', $file) !== false) {
+		$lastFileName = str_replace('${HOME}', HOME, $file);
+	} else if (strpos('${ALLSKY_ENV}', $file) !== false) {
+		$lastFileName = str_replace('${ALLSKY_ENV}', ALLSKY_ENV, $file);
+	} else if (strpos('${ALLSKY_HOME}', $file) !== false) {
+		$lastFileName = str_replace('${ALLSKY_HOME}', ALLSKY_HOME, $lastFileName);
+	}
+	return $lastFileName;
+}
+
+
 // ============================================= The main function.
 function DisplayAllskyConfig() {
 	global $formReadonly, $settings_array;
@@ -144,6 +164,7 @@ function DisplayAllskyConfig() {
 	global $endSetting;
 	global $saveChangesLabel;
 	global $forceRestart;
+	global $pageHeaderTitle, $pageIcon;
 
 	$cameraTypeName = "cameratype";			// json setting name
 	$cameraModelName = "cameramodel";		// json setting name
@@ -637,7 +658,8 @@ if ($debug) {
 							$cmd = "${CMD}/checkAllsky.sh --fromWebUI";
 							echo '<script>console.log("Running: ' . $cmd . '");</script>';
 							exec("$cmd 2>&1", $result, $return_val);
-							if ($result != null) {
+							// Only 1 line is just an "ok" line so don't record.
+							if ($result != null && count($result) > 1) {
 								$result = implode("<br>", $result);
 								// Not worth checking if the update worked.
 								updateFile(ALLSKY_CHECK_LOG, $result, "checkAllsky", true);
@@ -734,9 +756,9 @@ if ($debug) {
 	if ($formReadonly == "readonly") {
 		$x = "(READ ONLY) &nbsp; &nbsp; ";
 	} else {
-		$x = "<i class='fa fa-camera fa-fw'></i> ";
+		$x = "<i class='$pageIcon'></i> ";
 	}
-	echo "<div class='panel-heading'>$x Allsky Settings for &nbsp;<b>$cameraType $cameraModel</b></div>";
+	echo "<div class='panel-heading'>$x $pageHeaderTitle for &nbsp;<b>$cameraType $cameraModel</b></div>";
 	echo "<div class='panel-body' style='padding: 5px;'>";
 	if ($formReadonly != "readonly") {
 		echo "<div id='messages'>";
@@ -748,7 +770,7 @@ if ($debug) {
 		<div class="sticky settings-nav">
 			<div class="settings-buttons container-fluid">
 				<div class="row">
-					<div class="col-md-11 col-sm-11 col-xs-11 nowrap">
+					<div class="col-md-11 col-sm-11 col-xs-11 nowrap buttons">
 						<button type="submit" class="btn btn-primary"
 								id="save_settings" name="save_settings"
 								title="Save changes">
@@ -761,7 +783,7 @@ if ($debug) {
 						</button>
 					</div>
 					
-					<div class="col-md-1 col-sm-1 col-xs-1">
+					<div class="col-md-1 col-sm-1 col-xs-1 expand-collapse-button">
 						<button type="button" class="<?php if (!$hideHeaderBodies) { echo("hidden ") ;}?>btn btn-primary ml-5 settings-expand pull-right"
 								id="settings-all-control" title="Expand/Collapse all settings">
 							<?php echo $showIcon ?>
@@ -769,7 +791,7 @@ if ($debug) {
 					</div>
 				</div>
 				<div class="row">
-					<div class="col-md-12">
+					<div class="col-md-12 save-settings-text">
 						<div title="Uncheck to only save settings without restarting Allsky" class="mt-4">
 							<input type="checkbox" name="restart" value="true" checked>
 							<span class="ml-2">Restart Allsky after saving changes, if needed?</span>

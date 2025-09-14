@@ -31,11 +31,11 @@ usage_and_exit()
 	if [[ ${RET} -eq 0 ]]; then
 		echo -e "${MSG}"
 	else
-		E_ "${MSG}"
+		wE_ "${MSG}"
 	fi
 	echo "Arguments:"
 	echo "   --help        Display this message and exit."
-	echo "   --fromWebUI   Display output to be displayed in the WebUI."
+	echo "   --fromWebUI   Format output to be displayed in the WebUI."
 	echo "   --no-info     Skip checking for Informational items."
 	echo "   --no-warn     Skip checking for Warning items."
 	echo "   --no-error    Skip checking for Error items."
@@ -69,7 +69,7 @@ while [[ $# -gt 0 ]]; do
 			CHECK_ERRORS="false"
 			;;
 		*)
-			E_ "Unknown argument: '${ARG}'." >&2
+			wE_ "Unknown argument: '${ARG}'." >&2
 			OK="false"
 			;;
 	esac
@@ -116,30 +116,23 @@ function heading()
 			DISPLAY_HEADER="true"
 			;;
 		*)
-			echo "INTERNAL ERROR in heading(): Unknown HEADER '${HEADER}'." >&2
+			wE_ "INTERNAL ERROR in heading(): Unknown HEADER '${HEADER}'." >&2
 			;;
 	esac
 
-	if [[ ${FROM_WEBUI} == "true" ]]; then
-		# Don't display the header when run from the WebUI.
-		DISPLAY_HEADER="false"
-	fi
-
 	if [[ ${DISPLAY_HEADER} == "true" ]]; then
-		[[ ${NUM_HEADER_CALLS} -gt 1 ]] && echo -e "${NL}"
-		echo -e "${STRONGs}---------- ${HEADER}${SUB_HEADER} ----------${STRONGe}${NL}"
+		[[ ${NUM_HEADER_CALLS} -gt 1 ]] && echo -e "${wBR}"
+		echo -ne "${STRONGs}---------- ${HEADER}${SUB_HEADER} ----------${STRONGe}${wBR}"
 	else
-		# Separate entries within a header group
-		if [[ ${FROM_WEBUI} == "true" ]]; then
-			echo
-		else
-			echo "${STRONGs}-----${STRONGe}"
-		fi
+		echo -ne "${STRONGs}-----${STRONGe}${wBR}"
 	fi
 }
 
 
 # =================================================== FUNCTIONS
+
+FIX="${wBOLD}FIX${wNBOLD}"
+[[ ${FROM_WEBUI} == "false" ]] && wBR="\n"		# May not be defined elsewhere
 
 # Return the min of two numbers.
 function min()
@@ -160,11 +153,11 @@ function check_for_env_file()
 
 	heading "Error"
 	if [[ ! -f ${ALLSKY_ENV} ]]; then
-		echo "'${ALLSKY_ENV}' not found!"
+		echo -ne "'${ALLSKY_ENV}' not found!${wBR}"
 	else
-		echo "'${ALLSKY_ENV}' is empty!"
+		echo -ne "'${ALLSKY_ENV}' is empty!${wBR}"
 	fi
-	echo "Unable to check any remote Website or server settings." >&2
+	echo -ne "Unable to check any remote Website or server settings.${wBR}" >&2
 	return 1
 }
 if check_for_env_file ; then
@@ -175,7 +168,7 @@ fi
 
 # Get all settings.  Give each set a different prefix to avoid name conflicts.
 if ! X="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --prefix S_ --shell )" ; then
-	echo "${X}" >&2
+	echo -en "${X}${wBR}" >&2
 	exit 1
 fi
 eval "${X}"
@@ -185,9 +178,9 @@ if [[ ${ENV_EXISTS} == "true" ]]; then
 	eval "${X}"
 fi
 
-# "convertJSON.php" won't work with the CC_FILE since it has arrays.
-C_sensorWidth="$( settings ".sensorWidth" "${CC_FILE}" )"	# Physical sensor size.
-C_sensorHeight="$( settings ".sensorHeight" "${CC_FILE}" )"
+# "convertJSON.php" won't work with the ALLSKY_CC_FILE since it has arrays.
+C_sensorWidth="$( settings ".sensorWidth" "${ALLSKY_CC_FILE}" )"	# Physical sensor size.
+C_sensorHeight="$( settings ".sensorHeight" "${ALLSKY_CC_FILE}" )"
 
 # Return 0 if the number is 0.0, else return 1.
 function is_zero()
@@ -230,22 +223,15 @@ function check_delay()
 		MIN_MS="${NIGHT_MIN_IMAGE_TIME_MS}"
 	fi
 
-# TODO: use the module average flow times for day and night when using "module" method.
-# TODO: overlaymethod goes away in next release
-
-	# With the legacy overlay method it might take up to a couple seconds to save an image.
-	# With the module method it can take up to 5 seconds.
-	if [[ ${S_overlaymethod} -eq 1 ]]; then
-		MAX_TIME_TO_PROCESS_MS=5000
-	else
-		MAX_TIME_TO_PROCESS_MS=2000
-	fi
+# TODO: use the module average flow times for day and night.
+	# It can take up to 5 seconds to save an image
+	MAX_TIME_TO_PROCESS_MS=5000
 	if [[ ${MIN_MS} -lt ${MAX_TIME_TO_PROCESS_MS} ]]; then
 		heading "Warning"
 		echo "The ${WSNs}${L}${WSNe} of ${DELAY_MS} ms may be too short given the"
-		echo "maximum expected time to save and process an image (${MAX_TIME_TO_PROCESS_MS} ms)."
-		echo "A new image may appear before the prior one has finished processing."
-		echo "FIX: Consider increasing ${L}."
+		echo -ne "maximum expected time to save and process an image (${MAX_TIME_TO_PROCESS_MS} ms).${wBR}"
+		echo -ne "A new image may appear before the prior one has finished processing.${wBR}"
+		echo -ne "${FIX}: Consider increasing ${L}.${wBR}"
 	fi
 }
 
@@ -272,54 +258,55 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 	# Is Allsky set up to take dark frames?  This isn't done often, so if it is, inform the user.
 	if [[ ${S_takedarkframes} == "true" ]]; then
 		heading "Information"
-		echo "${WSNs}${S_takedarkframes_label}${WSNe} is enabled."
-		echo "FIX: Unset when you are done taking dark frames."
+		echo -ne "${WSNs}${S_takedarkframes_label}${WSNe} is enabled.${wBR}"
+		echo -ne "${FIX}: Unset when you are done taking dark frames.${wBR}"
 	fi
 
 	if [[ ${S_timelapsekeepsequence} == "true" ]]; then
 		heading "Information"
-		echo    "${WSNs}${S_timelapsekeepsequence_label}${WSNe} in enabled."
-		echo -n "FIX: If you are not debugging timelapse videos consider disabling this"
-		echo    " to save disk space."
+		echo -ne "${WSNs}${S_timelapsekeepsequence_label}${WSNe} in enabled.${wBR}"
+		echo -ne "${FIX}: If you are not debugging timelapse videos consider disabling this"
+		echo -ne " to save disk space.${wBR}"
 	fi
 
 	if [[ ${S_thumbnailsizex} -ne 100 || ${S_thumbnailsizey} -ne 75 ]]; then
 		heading "Information"
-		echo "You are using a non-standard thumbnail size of ${S_thumbnailsizex}x${S_thumbnailsizey}."
-		echo "Please note non-standard sizes have not been thoroughly tested and"
-		echo "FIX: You may need to modify some code to get your thumbnail sizes working."
+		echo -ne "You are using a non-standard thumbnail size of ${S_thumbnailsizex}x${S_thumbnailsizey}.${wBR}"
+		echo -ne "Please note non-standard sizes have not been thoroughly tested.${wBR}"
+		echo -ne "${FIX}: You may need to modify some code to get your thumbnail sizes working.${wBR}"
 	fi
 
 	FOREVER="be kept forever or until you manually delete them"
 	if [[ ${S_daystokeep} -eq 0 ]]; then
 		heading "Information"
-		echo -n "${WSNs}${S_daystokeep_label}${WSNe} is ${WSVs}0${WSVe}"
-		echo    " which means images and videos will ${FOREVER}."
-		echo    "FIX: If this is not what you want, change the setting."
+		echo -ne  "${WSNs}${S_daystokeep_label}${WSNe} is ${WSVs}0${WSVe}"
+		echo -ne " which means images and videos will ${FOREVER}.${wBR}"
+		echo -ne "${FIX}: If this is not what you want, change the setting.${wBR}"
 	fi
 
 	if [[ (${WEBSITES} == "both" || ${WEBSITES} == "local") &&
 			${S_daystokeeplocalwebsite} -eq 0 ]]; then
 		heading "Information"
-		echo -n "${WSNs}${S_daystokeeplocalwebsite_label}${WSNe} is ${WSVs}0${WSVe}"
-		echo    " which means local web images and videos will ${FOREVER}."
-		echo    "FIX: If this is not what you want, change the setting."
+		echo -ne "${WSNs}${S_daystokeeplocalwebsite_label}${WSNe} is ${WSVs}0${WSVe}"
+		echo -ne " which means local web images and videos will ${FOREVER}.${wBR}"
+		echo -ne "${FIX}: If this is not what you want, change the setting.${wBR}"
 	fi
 	# S_daystokeepremotewebsite may not be implemented; if so, ignore.
 	if [[ (${WEBSITES} == "both" || ${WEBSITES} == "remote") &&
 			-n ${S_daystokeepremotewebsite} && ${S_daystokeepremotewebsite} -eq 0 ]]; then
 		heading "Information"
-		echo -n "${WSNs}${S_daystokeepremotewebsite_label}${WSNe} is ${WSVs}0${WSVe}"
-		echo    " which means remote web images and videos will ${FOREVER}."
-		echo    "FIX: If this is not what you want, change the setting."
+		echo -ne "${WSNs}${S_daystokeepremotewebsite_label}${WSNe} is ${WSVs}0${WSVe}"
+		echo -ne " which means remote web images and videos will ${FOREVER}.${wBR}"
+		echo -ne "${FIX}: If this is not what you want, change the setting.${wBR}"
 	fi
 
-	ERR="$( checkWidthHeight "Resize Image" "image" \
+	ERR="$( _checkWidthHeight "Resize Image" "image" \
 		"${S_imageresizewidth}" "${S_imageresizeheight}" \
 	 	"${C_sensorWidth}" "${C_sensorHeight}" 2>&1 )"
 	if [[ $? -ne 0 || -n ${ERR} ]]; then
 		heading "Information"
-		echo "${ERR}"
+		echo -ne "${ERR}${wBR}"
+		echo -ne "${FIX}: Change the ${WSNs}${S_imageresizewidth_label}${WSNe} and ${WSNs}${S_imageresizeheight_label}${WSNe} settings.${wBR}"
 	fi
 
 	if [[ $((S_imagecroptop + S_imagecropright + S_imagecropbottom + S_imagecropleft)) -gt 0 ]]; then
@@ -328,8 +315,8 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 				"${C_sensorWidth}" "${C_sensorHeight}" )"
 		if [[ $? -ne 0 || -n ${ERR} ]]; then
 			heading "Information"
-			echo "${ERR}"
-			echo "FIX: Check the ${WSNs}Image Crop Top/Right/Bottom/Left${WSNe} settings."
+			echo -ne "${ERR}${wBR}"
+			echo -ne "${FIX}: Check the ${WSNs}Image Crop Top/Right/Bottom/Left${WSNe} settings.${wBR}"
 		fi
 	fi
 
@@ -338,20 +325,26 @@ if [[ ${CHECK_INFORMATIONAL} == "true" ]]; then
 		if echo "${S_keogramextraparameters}" |
 				grep -E --silent "image-expand|-x|font-size|-S|font-line|-L|font-color|-C" ; then
 			heading "Information"
-			echo "${WSNs}${S_keogramextraparameters_label}${WSNe} contains one or more of:"
-			echo "${SPACES}${WSVs}--image-expand${WSVe} or ${WSVs}-x${WSVe}"
-			echo "${SPACES}${WSVs}--font-size${WSVe} or ${WSVs}-S${WSVe}"
-			echo "${SPACES}${WSVs}--font-line${WSVe} or ${WSVs}-L${WSVe}"
-			echo "${SPACES}${WSVs}--font-color${WSVe} or ${WSVs}-C${WSVe}"
-			echo "FIX: These are now separate settings so move them to their own settings."
+			echo -ne "${WSNs}${S_keogramextraparameters_label}${WSNe} contains one or more of:${wBR}"
+			echo -ne "${SPACES}${WSVs}--image-expand${WSVe} or ${WSVs}-x${WSVe}${wBR}"
+			echo -ne "${SPACES}${WSVs}--font-size${WSVe} or ${WSVs}-S${WSVe}${wBR}"
+			echo -ne "${SPACES}${WSVs}--font-line${WSVe} or ${WSVs}-L${WSVe}${wBR}"
+			echo -ne "${SPACES}${WSVs}--font-color${WSVe} or ${WSVs}-C${WSVe}${wBR}"
+			echo -ne "${FIX}: These are now separate settings so move them to their own settings.${wBR}"
 		fi
 	fi
 	if [[ -n ${S_keogramfontcolor} && ${S_keogramfontcolor:0:1} == "#" &&
 			${#S_keogramfontcolor} -ne 7 && ${#S_keogramfontcolor} -ne 4 ]]; then
 		heading "Information"
-		echo -n "${WSNs}${S_keogramfontcolor_label}${WSNe} should have a '#' followed by 6 hex digits; "
-		echo "yours has $(( ${#S_keogramfontcolor} - 1)): ${WSVs}${S_keogramfontcolor}${WSVe}."
-		echo "FIX: Make sure there are 6 digits after the '#', for example: '#ffffff' for white."
+		echo -ne "${WSNs}${S_keogramfontcolor_label}${WSNe} should have a '#' followed by 6 hex digits; "
+		echo -ne "yours has $(( ${#S_keogramfontcolor} - 1)): ${WSVs}${S_keogramfontcolor}${WSVe}.${wBR}"
+		echo -ne "${FIX}: Make sure there are 6 digits after the '#', for example: '#ffffff' for white.${wBR}"
+	fi
+
+	if ! MSG="$( _check_immediate "${S_extraargs}" "${S_extraargs_label}" )" ; then
+		heading "Information"
+		echo -ne "${MSG}${wBR}"
+		echo -ne "${FIX}: Remove ${WSVs}--immediate${WSVe} from ${WSNs}${S_extraargs_label}${WSNe}.${wBR}"
 	fi
 
 fi		# end of checking for informational items
@@ -367,21 +360,14 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 
 	if [[ -z ${S_lastchanged} ]]; then
 		heading "Warning"
-		echo "Allsky needs to be configured before it will run."
-		echo "FIX: Go to the ${STRONGs}Allsky Settings${STRONGe} page in the WebUI."
+		echo -ne "Allsky needs to be configured before it will run.${wBR}"
+		echo -ne "${FIX}: Go to the ${STRONGs}Allsky Settings${STRONGe} page in the WebUI.${wBR}"
 	fi
 
 	if reboot_needed ; then
 		heading "Warning"
-		echo "The Pi needs to be rebooted before Allsky will start."
-		echo "FIX: Reboot."
-	fi
-
-	if [[ ${ALLSKY_PI_OS} == "buster" ]]; then
-		heading "Warning"
-		echo "Your Pi is running the old 'Buster' operating system;"
-		echo "this is the last release of Allsky that supports Buster."
-		echo "FIX: Upgrade your Pi to Bookworm, 64-bit if possible."
+		echo -ne "The Pi needs to be rebooted before Allsky will start.${wBR}"
+		echo -ne "${FIX}: Reboot.${wBR}"
 	fi
 
 	check_delay "Daytime"
@@ -390,17 +376,17 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 	if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 		if [[ ${S_dayautoexposure} == "true" && ${S_dayautogain} == "true" ]]; then
 			heading "Warning"
-			echo -n "For ZWO cameras we suggest NOT using both '${S_dayautoexposure_label}'"
-			echo    " and '${S_dayautogain_label}' at the same time."
-			echo -n "FIX: Disable '${S_dayautogain_label}' and set '${S_daygain_label}' to"
-			echo    " '${S_daymaxautogain_label}'."
+			echo -ne "For ZWO cameras we suggest NOT using both '${S_dayautoexposure_label}'"
+			echo -ne " and '${S_dayautogain_label}' at the same time.${wBR}"
+			echo -ne "${FIX}: Disable '${S_dayautogain_label}' and set '${S_daygain_label}' to"
+			echo -ne " '${S_daymaxautogain_label}'.${wBR}"
 		fi
 		if [[ ${S_nightautoexposure} == "true" && ${S_nightautogain} == "true" ]]; then
 			heading "Warning"
-			echo -n "For ZWO cameras we suggest NOT using both '${S_nightautoexposure_label}'"
-			echo    " and '${S_nightautogain_label}' at the same time."
-			echo -n "FIX: Disable '${S_nightautogain_label}' and set '${S_nightgain_label}' to"
-			echo    " '${S_nightmaxautogain_label}'."
+			echo -ne "For ZWO cameras we suggest NOT using both '${S_nightautoexposure_label}'"
+			echo -ne " and '${S_nightautogain_label}' at the same time.${wBR}"
+			echo -ne "${FIX}: Disable '${S_nightautogain_label}' and set '${S_nightgain_label}' to"
+			echo -ne " '${S_nightmaxautogain_label}'.${wBR}"
 		fi
 	fi
 
@@ -409,11 +395,7 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 		# Check if timelapse size is "too big" and will likely cause an error.
 		# This is normally only an issue with the libx264 video codec which has
 		# a dimension limit that we put in PIXEL_LIMIT.
-		if [[ ${ALLSKY_PI_OS} == "buster" ]]; then
-			PIXEL_LIMIT=$((4096 * 2304))		# Limit of libx264
-		else
-			PIXEL_LIMIT=$((8192 * 4320))
-		fi
+		PIXEL_LIMIT=$((8192 * 4320))		# Limit of libx264
 
 		function check_timelapse_size()
 		{
@@ -444,11 +426,11 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 			# W * H == total pixels in timelapse
 			if [[ $(( W * H )) -gt ${PIXEL_LIMIT} ]]; then
 				heading "Warning"
-				echo -n "The ${WSNs}${RESIZED_WIDTH_LABEL}${WSNe} of ${WSVs}${W}${WSVe}"
-				echo -n " and ${WSNs}${RESIZED_HEIGHT_LABEL}${WSNe} of ${WSVs}${H}${WSVe}"
-				echo    " may cause errors while creating the video."
-				echo -n "FIX: Consider either decreasing the video size or decreasing"
-				echo    " each captured image via resizing and/or cropping."
+				echo -ne "The ${WSNs}${RESIZED_WIDTH_LABEL}${WSNe} of ${WSVs}${W}${WSVe}"
+				echo -ne " and ${WSNs}${RESIZED_HEIGHT_LABEL}${WSNe} of ${WSVs}${H}${WSVe}"
+				echo -ne " may cause errors while creating the video.${wBR}"
+				echo -ne "${FIX}: Consider either decreasing the video size or decreasing"
+				echo -ne " each captured image via resizing and/or cropping.${wBR}"
 			fi
 		}
 
@@ -473,19 +455,19 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 			heading "Warning"
 			echo -n "${TYPE} videos are being created"
 			if [[ ${TYPE} == "Daily Timelapse" ]]; then
-				echo -n " (${WSNs}${S_timelapsegenerate_label}${WSNe} = Yes)"
+				echo -ne " (${WSNs}${S_timelapsegenerate_label}${WSNe} = Yes)"
 			else
-				echo -n " (${WSNs}${S_minitimelapsenumimages_label}${WSNe} is greater than 0)"
+				echo -ne " (${WSNs}${S_minitimelapsenumimages_label}${WSNe} is greater than 0)"
 :
 			fi
-			echo    " but not uploaded anywhere (${WSNs}${UPLOAD_LABEL}${WSNe} = No)"
-			echo    "FIX: Either disable timelapse generation or (more likely) enable upload."
+			echo -ne " but not uploaded anywhere (${WSNs}${UPLOAD_LABEL}${WSNe} = No)${wBR}"
+			echo -ne "${FIX}: Either disable timelapse generation or (more likely) enable upload.${wBR}"
 		fi
 
 		if [[ ${BITRATE: -1} == "k" ]]; then
 			heading "Warning"
-			echo "${WSNs}${BITRATE_LABEL}${WSNe} should be a number with OUT ${WSVs}k${WSVe}."
-			echo "FIX: Remove the ${WSVs}k${WSVe} from the bitrate."
+			echo -ne "${WSNs}${BITRATE_LABEL}${WSNe} should be a number with OUT ${WSVs}k${WSVe}.${wBR}"
+			echo -ne "${FIX}: Remove the ${WSVs}k${WSVe} from the bitrate.${wBR}"
 		fi
 	}
 
@@ -497,10 +479,10 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 
 	elif [[ ${S_timelapseupload} == "true" ]]; then
 		heading "Warning"
-		echo -n "Daily Timelapse videos are not being created"
-		echo -n " (${WSNs}${S_timelapsegenerate_label}${WSNe} = No)"
-		echo    " but ${WSNs}${S_timelapseupload_label}${WSNe} = Yes."
-		echo    "FIX: Either create daily timelapse videos or disable upload."
+		echo -ne "Daily Timelapse videos are not being created"
+		echo -ne " (${WSNs}${S_timelapsegenerate_label}${WSNe} = No)"
+		echo -ne " but ${WSNs}${S_timelapseupload_label}${WSNe} = Yes.${wBR}"
+		echo -ne "${FIX}: Either create daily timelapse videos or disable upload.${wBR}"
 	fi
 
 	# Mini-timelapse
@@ -535,37 +517,37 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 		EXPECTED_TIME=$( echo "scale=0; (${S_minitimelapsenumimages} / ${TYPICAL_T}) * ${S}" | bc -l )
 		if [[ ${EXPECTED_TIME} -gt ${MIN_TIME_BETWEEN_TIMELAPSE_SEC} ]]; then
 			heading "Warning"
-			echo -n "Your mini-timelapse settings may cause multiple timelapse to"
-			echo    " be created simultaneously."
-			echo    "FIX: Consider increasing the ${WSNs}Delay${WSNe} between pictures,"
-			echo    "${SPACES}increasing ${WSNs}${S_minitimelapsefrequency_label}${WSNe},"
-			echo    "${SPACES}decreasing ${WSNs}${S_minitimelapsenumimages_label}${WSNe},"
-			echo    "${SPACES}or a combination of those changes."
-			echo    "${SPACES}Expected time to create a mini-timelapse on a Pi 4 is"
-			echo    "${SPACES}${EXPECTED_TIME} seconds but with your settings one could be created"
-			echo    "${SPACES}as short as every ${MIN_TIME_BETWEEN_TIMELAPSE_SEC} seconds."
+			echo -n  "Your mini-timelapse settings may cause multiple timelapse to"
+			echo -ne " be created simultaneously.${wBR}"
+			echo -ne "${FIX}: Consider increasing the ${WSNs}Delay${WSNe} between pictures,${wBR}"
+			echo -ne "${SPACES}increasing ${WSNs}${S_minitimelapsefrequency_label}${WSNe},${wBR}"
+			echo -ne "${SPACES}decreasing ${WSNs}${S_minitimelapsenumimages_label}${WSNe},${wBR}"
+			echo -ne "${SPACES}or a combination of those changes.${wBR}"
+			echo -n  "Expected time to create a mini-timelapse on a Pi 4 is"
+			echo -n  " ${EXPECTED_TIME} seconds but with your settings one could be created"
+			echo -ne " as short as every ${MIN_TIME_BETWEEN_TIMELAPSE_SEC} seconds.${wBR}"
 		fi
 
 	elif [[ ${S_minitimelapseupload} == "true" ]]; then
 		heading "Warning"
-		echo -n "Mini-timelapse videos are not being created"
-		echo -n " (${WSNs}${S_minitimelapsenumimages_label}${WSNe} = 0)"
-		echo    " but ${WSNs}${S_minitimelapseupload_label}${WSNe} = Yes"
-		echo    "FIX: Either create videos or disable upload."
+		echo -ne "Mini-timelapse videos are not being created"
+		echo -ne " (${WSNs}${S_minitimelapsenumimages_label}${WSNe} = 0)"
+		echo -ne " but ${WSNs}${S_minitimelapseupload_label}${WSNe} = Yes${wBR}"
+		echo -ne "${FIX}: Either create videos or disable upload.${wBR}"
 	fi
 
 	##### Keograms
 	if [[ ${S_keogramgenerate} == "true" && ${S_keogramupload} == "false" && ${USE_SOMETHING} == "true" ]]; then
 		heading "Warning"
-		echo -n "Keograms are being created (${WSNs}${S_keogramgenerate_label}${WSNe} = Yes)"
-		echo    " but not uploaded (${WSNs}${S_keogramupload_label}${WSNe} = No)"
-		echo    "FIX: Either disable keogram generation or (more likely) enable upload."
+		echo -ne "Keograms are being created (${WSNs}${S_keogramgenerate_label}${WSNe} = Yes)"
+		echo -ne " but not uploaded (${WSNs}${S_keogramupload_label}${WSNe} = No)${wBR}"
+		echo -ne "${FIX}: Either disable keogram generation or (more likely) enable upload.${wBR}"
 	fi
 	if [[ ${S_keogramgenerate} == "false" && ${S_keogramupload} == "true" ]]; then
 		heading "Warning"
-		echo -n "Keograms are not being created (${WSNs}${S_keogramgenerate_label}${WSNe} = No)"
-		echo    " but ${WSNs}${S_keogramupload_label}${WSNe} = Yes"
-		echo    "FIX: Either enable keogram generation or disable upload."
+		echo -ne  "Keograms are not being created (${WSNs}${S_keogramgenerate_label}${WSNe} = No)"
+		echo -ne " but ${WSNs}${S_keogramupload_label}${WSNe} = Yes${wBR}"
+		echo -ne "${FIX}: Either enable keogram generation or disable upload.${wBR}"
 	fi
 
 	##### Startrails
@@ -574,15 +556,15 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 
 	if [[ ${S_startrailsgenerate} == "true" && ${S_startrailsupload} == "false" && ${USE_SOMETHING} == "true" ]]; then
 		heading "Warning"
-		echo -n "Startrails are being created (${WSNs}${S_startrailsgenerate}${WSNe} = Yes)"
-		echo    " but not uploaded (${WSNs}${S_startrailsupload_label}${WSNe} = No)"
-		echo    "FIX: Either disable startrails generation or (more likely) enable upload."
+		echo -ne "Startrails are being created (${WSNs}${S_startrailsgenerate}${WSNe} = Yes)"
+		echo -ne " but not uploaded (${WSNs}${S_startrailsupload_label}${WSNe} = No)${wBR}"
+		echo -ne "${FIX}: Either disable startrails generation or (more likely) enable upload.${wBR}"
 	fi
 	if [[ ${S_startrailsgenerate} == "false" && ${S_startrailsupload} == "true" ]]; then
 		heading "Warning"
-		echo -n "Startrails are not being created (${WSNs}${S_startrailsgenerate}${WSNe} = No)"
-		echo    " but ${WSNs}${S_startrailsupload_label}${WSNe} = Yes"
-		echo    "FIX: Either enable startrails generation or disable upload."
+		echo -ne "Startrails are not being created (${WSNs}${S_startrailsgenerate}${WSNe} = No)"
+		echo -ne " but ${WSNs}${S_startrailsupload_label}${WSNe} = Yes${wBR}"
+		echo -ne "${FIX}: Either enable startrails generation or disable upload.${wBR}"
 	fi
 
 	if is_number "${S_startrailsbrightnessthreshold}" ; then
@@ -597,74 +579,74 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 	L="${S_startrailsbrightnessthreshold_label}"
 	if [[ ${X} -eq 0 ]]; then
 		heading "Warning"
-		echo -n "${WSNs}${L}${WSNe} is 0.0 which means ALL images"
-		echo    " will be IGNORED when creating startrails."
-		echo    "FIX: Increase the value; start off at 0.1 and adjust if needed."
+		echo -ne "${WSNs}${L}${WSNe} is 0.0 which means ALL images"
+		echo -ne " will be IGNORED when creating startrails.${wBR}"
+		echo -ne "${FIX}: Increase the value; start off at 0.1 and adjust if needed.${wBR}"
 	elif [[ ${X} -eq 1 ]]; then
 		heading "Warning"
-		echo -n "${WSNs}${L}${WSNe} is 1.0 which means ALL images"
-		echo    " will be USED when creating startrails, even daytime images."
-		echo    "FIX: Decrease the value; start off at 0.1 and adjust if needed."
+		echo -ne "${WSNs}${L}${WSNe} is 1.0 which means ALL images"
+		echo -ne " will be USED when creating startrails, even daytime images.${wBR}"
+		echo -ne "${FIX}: Decrease the value; start off at 0.1 and adjust if needed.${wBR}"
 	elif [[ ${X} -eq 2 ]]; then
 		heading "Warning"
-		echo -n "${WSNs}${L}${WSNe} is an invalid value:"
-		echo    " ${WSVs}${S_startrailsbrightnessthreshold}${WSVe}."
-		echo    "FIX: The value should be between 0.0 and 1.0."
+		echo -ne "${WSNs}${L}${WSNe} is an invalid value:"
+		echo -ne " ${WSVs}${S_startrailsbrightnessthreshold}${WSVe}.${wBR}"
+		echo -ne "${FIX}: The value should be between 0.0 and 1.0.${wBR}"
 	fi
 
 	##### Images
 	if [[ ${S_takedaytimeimages} == "false" && ${S_savedaytimeimages} == "true" ]]; then
 		heading "Warning"
-		echo -n "${WSNs}${S_takedaytimeimages_label}${WSNe} of images is off"
-		echo    " but ${WSNs}${S_savedaytimeimages_label}${WSNe} is on in the WebUI."
-		echo    "FIX: Either enable capture or disable saving."
+		echo -ne "${WSNs}${S_takedaytimeimages_label}${WSNe} of images is off"
+		echo -ne " but ${WSNs}${S_savedaytimeimages_label}${WSNe} is on in the WebUI.${wBR}"
+		echo -ne "${FIX}: Either enable capture or disable saving.${wBR}"
 	fi
 
 	# These are floats which bash doesn't support, so use gawk to compare.
 	if ! is_number "${S_imageremovebadlow}" || ! is_within_range "${S_imageremovebadlow}" ; then
 		heading "Error"
-		echo -n "${WSNs}${S_imageremovebadlow_label}${WSNe} (${S_imageremovebadlow})"
-		echo    " must be 0.0 - 1.0, although it's normally around ${WSVs}0.1${WSVe}."
-		echo    "FIX: Set to a vaild number.  ${WSVs}0${WSVe} disables the low threshold check."
+		echo -ne "${WSNs}${S_imageremovebadlow_label}${WSNe} (${S_imageremovebadlow})"
+		echo -ne " must be 0.0 - 1.0, although it's normally around ${WSVs}0.1${WSVe}.${wBR}"
+		echo -ne "${FIX}: Set to a vaild number.  ${WSVs}0${WSVe} disables the low threshold check.${wBR}"
 	elif is_zero "${S_imageremovebadlow}" ; then
 		heading "Warning"
-		echo "${WSNs}${S_imageremovebadlow_label}${WSNe} is 0 (disabled)."
-		echo "FIX: Set to a value greater than 0 unless you are debugging issues."
-		echo "${SPACES}Try 0.1 and adjust if needed."
+		echo -ne "${WSNs}${S_imageremovebadlow_label}${WSNe} is 0 (disabled).${wBR}"
+		echo -ne "${FIX}: Set to a value greater than 0 unless you are debugging issues.${wBR}"
+		echo -ne "${SPACES}Try 0.1 and adjust if needed.${wBR}"
 	fi
 	if ! is_number "${S_imageremovebadhigh}" || ! is_within_range "${S_imageremovebadhigh}" ; then
 		heading "Error"
-		echo -n "${WSNs}${S_imageremovebadhigh_label}${WSNe} (${S_imageremovebadhigh})"
-		echo    " must be 0.0 - 1.0, although it's normally around ${WSVs}0.9${WSVe}."
-		echo    "FIX: Set to a valid number.  ${WSVs}0${WSVe} disables the high threshold check."
+		echo -ne "${WSNs}${S_imageremovebadhigh_label}${WSNe} (${S_imageremovebadhigh})"
+		echo -ne " must be 0.0 - 1.0, although it's normally around ${WSVs}0.9${WSVe}.${wBR}"
+		echo -ne "${FIX}: Set to a valid number.  ${WSVs}0${WSVe} disables the high threshold check.${wBR}"
 	elif is_zero "${S_imageremovebadhigh}" ; then
 		heading "Warning"
-		echo "${WSNs}${S_imageremovebadhigh_label}${WSNe} is 0 (disabled)."
-		echo "FIX: Set to a value greater than 0 unless you are debugging issues."
-		echo "${SPACES}Try 0.9 and adjust if needed."
+		echo -ne "${WSNs}${S_imageremovebadhigh_label}${WSNe} is 0 (disabled).${wBR}"
+		echo -ne "${FIX}: Set to a value greater than 0 unless you are debugging issues.${wBR}"
+		echo -ne "${SPACES}Try 0.9 and adjust if needed.${wBR}"
 	fi
 
 	##### Uploads
 	if [[ ${S_imageresizeuploadswidth} -ne 0 || ${S_imageresizeuploadswidth} -ne 0 ]]; then
 		if [[ ${S_imageuploadfrequency} -eq 0 ]]; then
 			heading "Warning"
-			echo -n "${WSNs}${S_imageresizeuploadswidth_label}${WSNe} and / or "
-			echo -n "${WSNs}${S_imageresizeuploadsheight_label}${WSNe} are set"
-			echo    " but you aren't uploading images (${WSNs}${S_imageuploadfrequency_label}${WSNe} = 0)."
-			echo    "FIX: Either don't resize uploaded images or enable upload."
+			echo -ne "${WSNs}${S_imageresizeuploadswidth_label}${WSNe} and / or "
+			echo -ne "${WSNs}${S_imageresizeuploadsheight_label}${WSNe} are set"
+			echo -ne " but you aren't uploading images (${WSNs}${S_imageuploadfrequency_label}${WSNe} = 0).${wBR}"
+			echo -ne "${FIX}: Either don't resize uploaded images or enable upload.${wBR}"
 		fi
 		if [[ ${S_imageresizeuploadswidth} -eq 0 && ${S_imageresizeuploadsheight} -ne 0 ]]; then
 			heading "Warning"
-			echo -n "${WSNs}${S_imageresizeuploadswidth_label}${WSNe} = 0"
-			echo    " but ${WSNs}${S_imageresizeuploadsheight_label}${WSNe} is greater than 0."
-			echo    "If one is set the other one must also be set."
-			echo    "FIX: Set both to 0 to disable resizing uploads or both to some value."
+			echo -ne "${WSNs}${S_imageresizeuploadswidth_label}${WSNe} = 0"
+			echo -ne " but ${WSNs}${S_imageresizeuploadsheight_label}${WSNe} is greater than 0.${wBR}"
+			echo -ne "If one is set the other one must also be set.${wBR}"
+			echo -ne "${FIX}: Set both to 0 to disable resizing uploads or both to some value.${wBR}"
 		elif [[ ${S_imageresizeuploadswidth} -ne 0 && ${S_imageresizeuploadsheight} -eq 0 ]]; then
 			heading "Warning"
-			echo -n "${WSNs}${S_imageresizeuploadsheight_label}${WSNe} > 0"
-			echo    " but ${WSNs}${S_imageresizeuploadswidth_label}${WSNe} = 0."
-			echo    "If one is set the other one must also be set."
-			echo    "FIX: Set both to 0 to disable resizing uploads or both to some value."
+			echo -ne "${WSNs}${S_imageresizeuploadsheight_label}${WSNe} > 0"
+			echo -ne " but ${WSNs}${S_imageresizeuploadswidth_label}${WSNe} = 0.${wBR}"
+			echo -ne "If one is set the other one must also be set.${wBR}"
+			echo -ne "${FIX}: Set both to 0 to disable resizing uploads or both to some value.${wBR}"
 		fi
 	fi
 
@@ -672,20 +654,20 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 	RET=$?
 	if [[ ${RET} -eq 1 ]]; then
 		heading "Warning"
-		echo -e "${X}"
+		echo -ne "${X}{$wBR}"
 	elif [[ ${RET} -eq 2 ]]; then
 		heading "Error"
-		echo -e "${X}"
+		echo -ne "${X}{$wBR}"
 	fi
 
 	X="$( check_remote_server "REMOTESERVER" )"
 	RET=$?
 	if [[ ${RET} -eq 1 ]]; then
 		heading "Warning"
-		echo -e "${X}"
+		echo -ne "${X}{$wBR}"
 	elif [[ ${RET} -eq 2 ]]; then
 		heading "Error"
-		echo -e "${X}"
+		echo -ne "${X}{$wBR}"
 	fi
 
 fi		# end of checking for warning items
@@ -701,14 +683,14 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 	##### Make sure it's a know camera type.
 	if [[ ${CAMERA_TYPE} != "ZWO" && ${CAMERA_TYPE} != "RPi" ]]; then
 		heading "Error"
-		echo "INTERNAL ERROR: CAMERA_TYPE (${CAMERA_TYPE}) not valid."
-		echo "Fix: Re-install Allsky."
+		echo -ne "CAMERA_TYPE (${CAMERA_TYPE}) not valid.${wBR}"
+		echo -ne "${FIX}: Contact Allsky Team and re-install Allsky.${wBR}"
 	fi
 
 	##### Make sure the settings file is properly linked.
 	if ! MSG="$( check_settings_link "${ALLSKY_SETTINGS_FILE}" )" ; then
 		heading "Error"
-		echo -e "${MSG}"
+		echo -ne "${MSG}${wBR}"
 	fi
 
 	function check_bool()
@@ -720,13 +702,13 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 		if [[ ${B,,} != "true" && ${B,,} != "false" ]]; then
 			heading "Error"
 			local L="${WSNs}${LABEL}${WSNe} (${SETTING_NAME})."
-			echo "INTERNAL ERROR: ${L} must be either 'true' or 'false'."
+			echo -ne "${L} must be either 'true' or 'false'.${wBR}"
 			if [[ -z ${B} ]]; then
-				echo "It is empty."
+				echo -ne "It is empty.${wBR}"
 			else
-				echo "It is '${B}'."
+				echo -ne "It is '${B}'.${wBR}"
 			fi
-			echo "Fix: Re-install Allsky."
+			echo -ne "${FIX}: Contact Allsky Team and re-install Allsky.${wBR}"
 		fi
 	}
 
@@ -758,8 +740,8 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 			else
 				v="${WSVs}${v}${WSVe}"
 			fi
-			echo "${WSNs}${l}${WSNe} (${i}) must be ${T_} number.  It is ${v}."
-			echo "FIX: See the documenation for valid numbers."
+			echo -ne "${WSNs}${l}${WSNe} (${i}) must be ${T_} number.  It is ${v}.${wBR}"
+			echo -ne "${FIX}: See the documenation for valid numbers.${wBR}"
 		fi
 	done
 
@@ -771,64 +753,64 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 		if [[ -z ${v} ]]; then
 			heading "Error"
 			declare -n l="S_${i}_label"
-			echo "${l} must be set."
-			echo "FIX: Set it in the WebUI then rerun ${ME}."
+			echo -ne "${l} must be set.${wBR}"
+			echo -ne "${FIX}: Set it in the WebUI then rerun ${ME}.${wBR}"
 		fi
 	done
 
 	##### Check that the required settings' values are valid.
 	if [[ -n ${S_angle} ]] && ! is_number "${S_angle}" ; then
 		heading "Error"
-		echo "${WSNs}${S_angle_label}${WSNe} (${S_angle}) must be a number."
-		echo "FIX: Set to a number in the WebUI then rerun ${ME}."
+		echo -ne "${WSNs}${S_angle_label}${WSNe} (${S_angle}) must be a number.${wBR}"
+		echo -ne "${FIX}: Set to a number in the WebUI then rerun ${ME}.${wBR}"
 	fi
 	if [[ -n ${S_latitude} ]] && 
 			! LAT="$( convertLatLong "${S_latitude}" "latitude" 2>&1 )" ; then
 		heading "Error"
-		echo -e "${LAT}"		# ${LAT} contains the error message
-		echo    "FIX: Correct the ${S_latitude_label} then rerun ${ME}."
+		echo -ne "${LAT}${wBR}"		# ${LAT} contains the error message
+		echo -ne "${FIX}: Correct the ${S_latitude_label} then rerun ${ME}.${wBR}"
 	fi
 	if [[ -n ${S_longitude} ]] &&
 			! LONG="$( convertLatLong "${S_longitude}" "longitude" 2>&1 )" ; then
 		heading "Error"
-		echo -e "${LONG}"
-		echo    "FIX: Correct the ${S_longitude_label} then rerun ${ME}."
+		echo -ne "${LONG}${wBR}"
+		echo -ne "${FIX}: Correct the ${S_longitude_label} then rerun ${ME}.${wBR}"
 	fi
 	if [[ -n ${S_locale} ]] &&
 			! MSG="$( _check_locale "${S_locale}" "${S_locale_label}" )" ; then
 		heading "Error"
-		echo -e "${MSG}"
+		echo -ne "${MSG}${wBR}"
 	fi
 
 	##### Make sure required files exist
 	f="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 	if [[ ${S_uselocalwebsite} == "true" && ! -f ${f} ]]; then
 		heading "Error"
-		echo "${WSNs}${S_uselocalwebsite_label}${WSNe} is enabled but '${f}' does not exist."
-		echo "FIX: Either disable ${WSNs}${S_uselocalwebsite_label}${WSNe} or create '${f}."
+		echo -ne "${WSNs}${S_uselocalwebsite_label}${WSNe} is enabled but '${f}' does not exist.${wBR}"
+		echo -ne "${FIX}: Either disable ${WSNs}${S_uselocalwebsite_label}${WSNe} or create '${f}.${wBR}"
 	fi
 	f="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 	if [[ ${S_useremotewebsite} == "true" && ! -f ${f} ]]; then
 		heading "Error"
-		echo "${WSNs}${S_useremotewebsite_label}${WSNe} is enabled but '${f}' does not exist."
-		echo -n "FIX: Either disable ${WSNs}${S_useremotewebsite_label}${WSNe}"
-		echo " or run 'cd ~/allsky; ./remoteWebsiteInstall.sh'."
+		echo -ne "${WSNs}${S_useremotewebsite_label}${WSNe} is enabled but '${f}' does not exist.${wBR}"
+		echo -ne "${FIX}: Either disable ${WSNs}${S_useremotewebsite_label}${WSNe}"
+		echo -ne " or run 'cd ~/allsky; ./remoteWebsiteInstall.sh'.${wBR}"
 	fi
 
 	##### Check dark frames
 	if [[ ${S_usedarkframes} == "true" ]]; then
 		if [[ ! -d ${ALLSKY_DARKS} ]]; then
 			heading "Error"
-			echo -n "${WSNs}${S_usedarkframes_label}${WSNe} is set but the '${ALLSKY_DARKS}'"
-			echo    " directory does not exist."
-			echo    "FIX: Either disable the setting or take dark frames."
+			echo -ne "${WSNs}${S_usedarkframes_label}${WSNe} is set but the '${ALLSKY_DARKS}'"
+			echo -ne " directory does not exist.${wBR}"
+			echo -ne "${FIX}: Either disable the setting or take dark frames.${wBR}"
 		else
 			NUM_DARKS=$( find "${ALLSKY_DARKS}" -name "*.${ALLSKY_EXTENSION}" 2>/dev/null | wc -l)
 			if [[ ${NUM_DARKS} -eq 0 ]]; then
 				heading "Error"
-				echo -n "${WSNs}${S_usedarkframes_label}${WSNe} is set but there are no darks"
-				echo    " in '${ALLSKY_DARKS}' with extension of '${ALLSKY_EXTENSION}'."
-				echo    "FIX: Either disable the setting or take dark frames."
+				echo -ne "${WSNs}${S_usedarkframes_label}${WSNe} is set but there are no darks"
+				echo -ne " in '${ALLSKY_DARKS}' with extension of '${ALLSKY_EXTENSION}'.${wBR}"
+				echo -ne "${FIX}: Either disable the setting or take dark frames.${wBR}"
 			fi
 		fi
 	fi
@@ -836,8 +818,8 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 	##### Check for valid numbers.
 	if ! is_number "${S_imageuploadfrequency}" || [[ ${S_imageuploadfrequency} -lt 0 ]]; then
 		heading "Error"
-		echo "${WSNs}${S_imageuploadfrequency_label}${WSNe} (${S_imageuploadfrequency}) must be 0 or greater."
-		echo "FIX: Set to ${WSVs}0${WSVe} to disable image uploads or set to a positive number."
+		echo -ne "${WSNs}${S_imageuploadfrequency_label}${WSNe} (${S_imageuploadfrequency}) must be 0 or greater.${wBR}"
+		echo -ne "${FIX}: Set to ${WSVs}0${WSVe} to disable image uploads or set to a positive number.${wBR}"
 	fi
 
 	function check_stretch_numbers()
@@ -850,14 +832,14 @@ if [[ ${CHECK_ERRORS} == "true" ]]; then
 
 		if ! is_number "${AMOUNT}" || ! is_within_range "${AMOUNT}" 0 100 ; then
 			heading "Error"
-			echo "${WSNs}${TYPE} ${LABEL_AMOUNT}${WSNe} (${AMOUNT}) must be 0 - 100."
-			echo "It is '${AMOUNT}'."
-			echo "FIX: Set to a vaild number.  ${WSVs}0${WSVe} disables stretching."
+			echo -ne "${WSNs}${TYPE} ${LABEL_AMOUNT}${WSNe} (${AMOUNT}) must be 0 - 100.${wBR}"
+			echo -ne "It is '${AMOUNT}'.${wBR}"
+			echo -ne "${FIX}: Set to a vaild number.  ${WSVs}0${WSVe} disables stretching.${wBR}"
 		elif [[ ${MIDPOINT: -1} == "%" ]]; then
 			heading "Error"
-			echo -n "${WSNs}${TYPE} ${LABEL_MIDPOINT}${WSNe} (${MIDPOINT})"
-			echo    " must be a number without a ${WSVs}%${WSVe}."
-			echo    "FIX: remove the ${WSVs}%${WSVe}."
+			echo -ne "${WSNs}${TYPE} ${LABEL_MIDPOINT}${WSNe} (${MIDPOINT})"
+			echo -ne " must be a number without a ${WSVs}%${WSVe}.${wBR}"
+			echo -ne "${FIX}: remove the ${WSVs}%${WSVe}.${wBR}"
 		fi
 	}
 	check_stretch_numbers "Daytime" \
@@ -874,19 +856,29 @@ fi		# end of checking for error items
 # ================= Summary (not displayed if called from WebUI)
 NUM_FINDINGS=$((NUM_INFOS + NUM_WARNINGS + NUM_ERRORS))
 
-if [[ ${FROM_WEBUI} == "true" ]]; then
-	RET=${NUM_FINDINGS}
+RET=0
+if [[ ${NUM_FINDINGS} -eq 0 ]]; then
+	echo -en "No issues found.${wBR}"
 else
-	RET=0
-	if [[ ${NUM_FINDINGS} -eq 0 ]]; then
-		echo "No issues found."
-	else
+	# Don't display summary if only 1 item.
+	if [[ ${NUM_FINDINGS} -gt 1 ]]; then
 		echo
 		heading "Summary"
-		[[ ${NUM_INFOS} -gt 0 ]] && echo "Informational messages: ${NUM_INFOS}"
-		[[ ${NUM_WARNINGS} -gt 0 ]] && echo "Warnings: ${NUM_WARNINGS}" && RET=1
-		[[ ${NUM_ERRORS} -gt 0 ]] && echo "Errors: ${NUM_ERRORS}" && RET="${EXIT_ERROR_STOP}"
+		if [[ ${NUM_INFOS} -gt 0 ]]; then
+			echo -ne "${wINFO}Informational messages: ${NUM_INFOS}${wNC}${wBR}"
+		fi
+		if [[ ${NUM_WARNINGS} -gt 0 ]]; then
+			echo -ne "${wWARNING}Warnings: ${NUM_WARNINGS}${wNC}${wBR}"
+			RET=1
+		fi
+		if [[ ${NUM_ERRORS} -gt 0 ]]; then
+			echo -ne "${wERROR}Errors: ${NUM_ERRORS}${wNC}${wBR}"
+			RET="${EXIT_ERROR_STOP}"
+		fi
 	fi
+
+	# If called from WebUI, only return error number if the script itself failed.
+	[[ ${FROM_WEBUI} == "true" ]] && RET=0
 fi
 
 exit "${RET}"

@@ -221,11 +221,10 @@ function displayUserData($file, $displayType)
 function DisplaySystem()
 {
 	global $temptype, $page, $settings_array, $status, $hostname;
+	global $pageHeaderTitle, $pageIcon;
 
-	// uptime
 	$uptime = getUptime();
 
-	// mem used
 	$memused = getMemoryUsed();
 
 	// Disk and File usage.
@@ -294,7 +293,7 @@ function DisplaySystem()
 	}
 	?>
 			<div class="panel panel-allsky">
-				<div class="panel-heading"><i class="fa fa-cube fa-fw"></i> System</div>
+				<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
 				<div class="panel-body">
 
 					<?php

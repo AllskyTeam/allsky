@@ -35,7 +35,7 @@ from functools import reduce
 from allskyvariables.allskyvariables import ALLSKYVARIABLES
 import pigpio
 import numpy as np
-from typing import Union, List, Dict, Any, Tuple
+from typing import Union, List, Dict, Any, Tuple, Sequence
  
 try:
     locale.setlocale(locale.LC_ALL, '')
@@ -2079,4 +2079,110 @@ def parse_version(file_path: str) -> dict:
     
 def get_allsky_version():
     version_file = os.path.join(os.environ['ALLSKY_HOME'], 'version')
-    version_info = parse_version(version_file) 
+    version_info = parse_version(version_file)
+
+### Generic Whiptail stuff ###
+def _menu_choice(ret: Union[tuple[str, int], str, None]) -> Union[str, None]:
+    """Normalize Whiptail.menu return: -> str choice or None on cancel."""
+    if isinstance(ret, tuple):      # (choice, exit_code)
+        choice, code = ret
+        return choice if code == 0 else None
+    return ret
+### End Generic Whiptail stuff ###
+    
+### List selection using Whiptail
+def select_from_list(
+    items: Sequence[Union[str, Tuple[str, str]]],
+    prompt: str = "",
+    title: str = "Select Item",
+    back_title: str = "Select Item"
+) -> Union[str, None]:
+    from whiptail import Whiptail
+    """
+    Display a whiptail menu to select from a list of items.
+
+    Args:
+        title (str): Dialog title
+        prompt (str): Message shown above the list
+        items (list[str] | list[tuple]): List of items (strings or (tag, desc) tuples)
+
+    Returns:
+        str | None: Selected item tag, or None if cancelled
+    """
+    wt = Whiptail(title=title, backtitle=back_title, height=20, width=70, auto_exit=False)
+
+    # Convert simple strings into (tag, desc)
+    options = []
+    for item in items:
+        if isinstance(item, tuple):
+            options.append(item)
+        else:
+            options.append((item, ""))
+
+    ret = wt.menu(prompt, options)
+    return _menu_choice(ret)
+### End List selection using Whiptail
+    
+### Folder Selection using Whpiptail
+def select_folder(
+    start: str = "/home/pi",
+    title: str = "Select Folder",
+    back_title: str = "Select Folder",
+    hide_hidden: bool = True
+) -> Union[str, None]:
+    from whiptail import Whiptail    
+    """
+    A drill-down folder selector using python-whiptail.
+
+    Args:
+        start (str): starting directory.
+        hide_hidden (bool): ignore entries that start with '.' (except '..').
+
+    Returns:
+        str | None: selected folder path, or None if cancelled.
+    """
+    wt = Whiptail(
+        title=title,
+        backtitle=back_title,
+        height=20,
+        width=70,
+        auto_exit=False
+    )
+
+    current = os.path.abspath(start)
+
+    while True:
+        # List subdirectories
+        try:
+            dirs = sorted(
+                d for d in os.listdir(current)
+                if os.path.isdir(os.path.join(current, d))
+                and (not hide_hidden or not d.startswith("."))
+            )
+        except OSError as e:
+            wt.msgbox(f"Error reading {current}:\n{e}")
+            return None
+
+        # Build menu options
+        options = [("SELECT", "Use this folder")]
+        if current != "/":
+            options.append(("..", "Go up one level"))
+        for d in dirs:
+            options.append((d, "Directory"))
+
+        # Show menu
+        ret = wt.menu(f"Current: {current}", options)
+        choice = _menu_choice(ret)
+
+        if choice is None:     # Cancel/Esc
+            return None
+        if choice == "SELECT":
+            return current
+        if choice == "..":
+            current = os.path.dirname(current)
+            continue
+
+        # Drill down into chosen dir
+        current = os.path.join(current, choice)
+
+### End folder selection

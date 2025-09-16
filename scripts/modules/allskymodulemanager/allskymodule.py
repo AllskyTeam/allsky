@@ -519,22 +519,24 @@ class ALLSKYMODULE:
                     
         return result
     
-    def _cleanup_module(self) -> bool:
+    def _cleanup_module(self) -> bool:        
         result = True
-        try:
-            if self._installed_info is not None:
-                if self._installed_info["path"]:
-                    installed_file_path = os.path.join(self._installed_info["path"], self.name + ".py")
-                    shared.remove_path(installed_file_path)
-                
-                    dependencies_path = os.path.join(self._installed_info["path"],'dependencies', self.name)
-                    info_path = os.path.join(self._installed_info["path"],'info', self.name)
+        
+        if str(self._installed_info["path"]) != str(self._module_paths["module"]):
+            try:
+                if self._installed_info is not None:
+                    if self._installed_info["path"]:
+                        installed_file_path = os.path.join(self._installed_info["path"], self.name + ".py")
+                        shared.remove_path(installed_file_path)
+                    
+                        dependencies_path = os.path.join(self._installed_info["path"],'dependencies', self.name)
+                        info_path = os.path.join(self._installed_info["path"],'info', self.name)
 
-                    shared.remove_path(dependencies_path)
-                    shared.remove_path(info_path)
-        except Exception as e:
-            self._log(4, f"ERROR: _cleanup_module -> Module {self.name} failed to remove - {e}")
-            result = False
+                        shared.remove_path(dependencies_path)
+                        shared.remove_path(info_path)
+            except Exception as e:
+                self._log(4, f"ERROR: _cleanup_module -> Module {self.name} failed to remove - {e}")
+                result = False
             
         return result
     

@@ -79,12 +79,11 @@ class ALLSKYMODULE:
     def __repr__(self) -> str:
         return self.__str__()
     
-    def _log(self, log_level, message):
+    def _log(self, debug_only, message):
 
-        if self._debug_mode:
+        if debug_only and self._debug_mode or not debug_only:
             print(message)
-        else:
-            shared.log(log_level, message)        
+    
     
     @property
     def name(self) -> str:
@@ -246,7 +245,7 @@ class ALLSKYMODULE:
                 
         callable = self._check_module_function_exists(installed_file_path)
         if not callable:
-            self._log(4, f"ERROR: {installed_file_path} Has no callable module function. This module will NOT work")
+            self._log(False, f"ERROR: {installed_file_path} Has no callable module function. This module will NOT work")
             status["valid"] = False
             status["message"].append('Module has no callable function. This module will NOT work')
 
@@ -381,10 +380,10 @@ class ALLSKYMODULE:
         
         if shared.is_file_readable(packages_file):
             result = shared.install_apt_packages(packages_file, log_file)
-            self._log(4, f"INFO: {self.name} Installed apt dependencies - {'Successful' if result else 'Failed'}")            
+            self._log(True, f"INFO: {self.name} Installed apt dependencies - {'Successful' if result else 'Failed'}")            
             
         else:
-            self._log(4, f"INFO: {self.name} No apt packages required")
+            self._log(True, f"INFO: {self.name} No apt packages required")
             
         return result
             
@@ -397,10 +396,10 @@ class ALLSKYMODULE:
         
         if shared.is_file_readable(requirements_file):        
             result = shared.install_requirements(requirements_file, log_file)
-            self._log(4, f"INFO: {self.name} Installed python dependencies - {'Successful' if result else 'Failed'}")            
+            self._log(True, f"INFO: {self.name} Installed python dependencies - {'Successful' if result else 'Failed'}")            
             
         else:
-            self._log(4, f"INFO: {self.name} No python modules required")
+            self._log(True, f"INFO: {self.name} No python modules required")
             
         return result
 
@@ -414,8 +413,8 @@ class ALLSKYMODULE:
     def _install_copy_module(self) -> bool:
         module_file = os.path.join(self._source_info["path"], self.name + ".py")
         result = shared.copy_file(module_file, self._module_paths["module"])
-        self._log(4, f"Copied {module_file} to {self._module_paths['module']}")
-        self._log(4, f"INFO: {self.name} Copied module code - {'Successful' if result else 'Failed'}")
+        self._log(True, f"Copied {module_file} to {self._module_paths['module']}")
+        self._log(True, f"INFO: {self.name} Copied module code - {'Successful' if result else 'Failed'}")
 
         return result
 
@@ -424,9 +423,9 @@ class ALLSKYMODULE:
         source = os.path.join(self._source_info["path"], "blocks")
         if os.path.isdir(source):
             result = shared.copy_folder(source, self._module_paths["blocks"])
-            self._log(4, f"INFO: {self.name} Copied module blocks - {'Successful' if result else 'Failed'}")            
+            self._log(True, f"INFO: {self.name} Copied module blocks - {'Successful' if result else 'Failed'}")            
         else:
-            self._log(4, f"INFO: {self.name} No blocks required")
+            self._log(True, f"INFO: {self.name} No blocks required")
             result = True
         
 
@@ -437,9 +436,9 @@ class ALLSKYMODULE:
         source = os.path.join(self._source_info["path"], self.name)
         if os.path.isdir(source):
             result = shared.copy_folder(source, self._module_paths["data"])
-            self._log(4, f"INFO: {self.name} Copied module data - {'Successful' if result else 'Failed'}")
+            self._log(True, f"INFO: {self.name} Copied module data - {'Successful' if result else 'Failed'}")
         else:
-            self._log(4, f"INFO: {self.name} No data required")
+            self._log(True, f"INFO: {self.name} No data required")
             result = True
         
         
@@ -451,10 +450,10 @@ class ALLSKYMODULE:
         
         if shared.do_any_files_exist(self._source_info["path"], info_files):
             result = shared.copy_list(info_files, self._source_info["path"], self._module_paths["info"])
-            self._log(4, f"INFO: {self.name} Copied module info - {'Successful' if result else 'Failed'}")
+            self._log(True, f"INFO: {self.name} Copied module info - {'Successful' if result else 'Failed'}")
         else:
             result = True
-            self._log(4, f"INFO: {self.name} No info files required")
+            self._log(True, f"INFO: {self.name} No info files required")
             
         return result
 
@@ -496,7 +495,7 @@ class ALLSKYMODULE:
             shared.create_and_set_file_permissions(installer_filename, None, None, None, False, file_data)
             
             result = True            
-            self._log(4, f"INFO: {self.name} Copied installer data - {'Successful' if result else 'Failed'}")            
+            self._log(True, f"INFO: {self.name} Copied installer data - {'Successful' if result else 'Failed'}")            
         except Exception as e:
             print(e)
             result = False
@@ -508,13 +507,17 @@ class ALLSKYMODULE:
         post_run_script = self._installer_data.get("post-install", {}).get("run", None)
         if post_run_script:
             post_run_script = post_run_script.replace("{install_data_dir}", self._module_paths["data"])
-            result, text = shared.run_script(post_run_script)
+            
+            if post_run_script.endswith(".py"):
+                result, text = shared.run_python_script(post_run_script)
+            else:
+                result, text = shared.run_script(post_run_script)
             
             if result == 0:
-                self._log(4, f"INFO: _post_install -> Module {self.name} Post install routines run")
+                self._log(False, f"INFO: _post_install -> Module {self.name} Post install routines run")
                 result = True
             else:
-                self._log(4, f"ERROR: _post_install -> Module {self.name} Post install routines failed")
+                self._log(False, f"ERROR: _post_install -> Module {self.name} Post install routines failed. {text}")
                 result = False            
                     
         return result
@@ -535,7 +538,7 @@ class ALLSKYMODULE:
                         shared.remove_path(dependencies_path)
                         shared.remove_path(info_path)
             except Exception as e:
-                self._log(4, f"ERROR: _cleanup_module -> Module {self.name} failed to remove - {e}")
+                self._log(False, f"ERROR: _cleanup_module -> Module {self.name} failed to remove - {e}")
                 result = False
             
         return result
@@ -560,10 +563,10 @@ class ALLSKYMODULE:
         for name, step in install_steps:
             result = step()
             if not result:
-                self._log(4, f"ERROR: '{name}' process failed - Aborting installation")
+                self._log(False, f"ERROR: '{name}' process failed - Aborting installation")
                 return False
             
-        self._log(1, f"INFO: Installation complete")            
+        self._log(False, f"INFO: Installation complete")            
         return True
 
     @ensure_valid
@@ -584,7 +587,7 @@ class ALLSKYMODULE:
                 shared.remove_path(self._module_paths["logfiles"])
                 result = True
             else:
-                self._log(4, f"ERROR: uninstall_module -> Module {self.name} Is not installed so cannot remove")
+                self._log(True, f"ERROR: uninstall_module -> Module {self.name} Is not installed so cannot remove")
         except Exception:
             result = False
 
@@ -595,13 +598,13 @@ class ALLSKYMODULE:
         deprecated = []
         additional = []
         
-        self._log(1, f"INFO: Starting module migration")
+        self._log(False, f"INFO: Starting module migration")
                     
         self._init_module() #Need to reload the source info as it will have changed if a new version was installed
                             
         flows = shared.get_flows_with_module(self.name_for_flow)
         for flow, flow_data in flows.items():
-            self._log(4, f"INFO: Analysing flow {flow}")
+            self._log(True, f"INFO: Analysing flow {flow}")
             old_flow_data = flow_data[self.name_for_flow]["metadata"]
             new_flow_data = self._installed_info["meta_data"]
             
@@ -620,7 +623,7 @@ class ALLSKYMODULE:
             for setting, value in new_flow_data["arguments"].items():
                 if setting not in old_flow_data["arguments"]:
                     new_flow_data["arguments"][setting] = value
-                    self._log(4, f"INFO: Additional {setting} - {value} added to flow")
+                    self._log(True, f"INFO: Additional {setting} - {value} added to flow")
                     additional.append({
                         "setting": setting,
                         "value": value
@@ -635,7 +638,7 @@ class ALLSKYMODULE:
                         secrets[secrets_key] = new_flow_data["arguments"].get(setting, "")
                         new_flow_data["arguments"][setting] =  ""
                         secrets_changed = True
-                        self._log(4, f"INFO: Setting {setting} migrated to env.json file")
+                        self._log(True, f"INFO: Setting {setting} migrated to env.json file")
 
                     
             if secrets_changed:
@@ -643,24 +646,24 @@ class ALLSKYMODULE:
             
             flow_data[self.name_for_flow]["metadata"] = new_flow_data
 
-        self._log(4, f"INFO: Migrating flows containing module {self.name}")  
+        self._log(False, f"INFO: Migrating flows containing module {self.name}")  
         shared.save_flows_with_module(flows, self.name)
         
-        self._log(4, f"INFO: Deprecated Settings")          
+        self._log(True, f"INFO: Deprecated Settings")          
         if deprecated:
             for item in deprecated:
-                self._log(4, f"  Setting: {item['setting']}, Value: {item['value']}")
+                self._log(True, f"  Setting: {item['setting']}, Value: {item['value']}")
         else:
-            self._log(4, "  No settings were deprecated")
+            self._log(True, "  No settings were deprecated")
     
-        self._log(4, f"INFO: New Settings")
+        self._log(True, f"INFO: New Settings")
         if additional:
             for item in additional:
-                self._log(4, f"  Setting: {item['setting']}, Value: {item['value']}")
+                self._log(True, f"  Setting: {item['setting']}, Value: {item['value']}")
         else:
-            self._log(4, "  No additional settings were found")
+            self._log(True, "  No additional settings were found")
                 
-        self._log(1, f"INFO: Module migration complete")
+        self._log(True, f"INFO: Module migration complete")
                         
     @ensure_valid
     def install_or_update_module(self, force:bool = False) -> bool:
@@ -668,7 +671,7 @@ class ALLSKYMODULE:
         
         message = f"Installing Module {self.name}"
         underline = "=" * len(message)
-        self._log(1, f"\n\n{message}\n{underline}\n")
+        self._log(False, f"\n\n{message}\n{underline}\n")
                 
         if self._source_info is None:
             raise NoSourceError("ERROR: No source module provided to install from")
@@ -684,7 +687,7 @@ class ALLSKYMODULE:
         migrate_required = self.is_migration_required()
  
         if not install_required and not update_required and not migrate_required:
-            self._log(4, f"INFO: install_or_update -> Module {self.name} Nothing to do module is uptodate and does not require migrating - Aborting")
+            self._log(False, f"INFO: install_or_update -> Module {self.name} Nothing to do module is uptodate and does not require migrating - Aborting")
         else:
             actions = []
             if install_required:
@@ -699,7 +702,7 @@ class ALLSKYMODULE:
             else:
                 action_str = "nothing"
 
-            self._log(4, f"INFO: install_or_update -> Module {self.name} requires {action_str}")
+            self._log(True, f"INFO: install_or_update -> Module {self.name} requires {action_str}")
 
             
             if install_required or update_required:

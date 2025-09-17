@@ -43,7 +43,7 @@ import allsky_shared as shared
 
 shared.setup_for_command_line()
 
-from exceptions import ConfigError
+from exceptions import ConfigError, ModuleError, NoVersionError
         
 class ALLSKYMODULEINSTALLER:
     
@@ -60,7 +60,12 @@ class ALLSKYMODULEINSTALLER:
         self._module_repo = f"{repo_base}/{modules_repo}"
         
         self._pre_checks()
-            
+
+    def _log(self, debug_only, message):
+
+        if debug_only and self._debug_mode or not debug_only:
+            print(message)
+                        
     def _pre_checks(self):
         result = True
 
@@ -93,20 +98,20 @@ class ALLSKYMODULEINSTALLER:
         if dest_path.exists() and dest_path.is_dir() and self._is_git_repo(dest_path) and not re_checkout:
             try:
                 repo = Repo(dest_path)
-                shared.log(4,f"INFO: Updating existing repo in {dest_path}...")
+                self._log(True,f"INFO: Updating existing repo in {dest_path}...")
                 repo.git.checkout(branch, force=True)
                 repo.remotes.origin.pull()
                 return True
             except GitCommandError as e:
                 tb = e.__traceback__
-                shared.log(4, f"ERROR: Function _ensure_cloned_repo on line {tb.tb_lineno}: {e}")
+                self._log(False, f"ERROR: Function _ensure_cloned_repo on line {tb.tb_lineno}: {e}")
                 return False
         else:
             if dest_path.exists():
                 if re_checkout:
-                    shared.log(4, f"INFO: In auto mode so re-checking out the module repo")
+                    self._log(True, f"INFO: In auto mode so re-checking out the module repo")
                 else:
-                    shared.log(4, f"INFO: {dest_path} exists but is not a repo. Removing...")
+                    self._log(True, f"INFO: {dest_path} exists but is not a repo. Removing...")
                 shutil.rmtree(dest_path)
 
             dest_path.parent.mkdir(parents=True, exist_ok=True)
@@ -117,7 +122,7 @@ class ALLSKYMODULEINSTALLER:
                     str(dest_path),
                     branch=branch
                 )
-                shared.log(4, f"INFO: Cloned {repo_url} into {dest_path}")
+                self._log(True, f"INFO: Cloned {repo_url} into {dest_path}")
                 return True
             except GitCommandError as e:
                 print(f"INFO: Error cloning {repo_url}: {e}")
@@ -147,6 +152,17 @@ class ALLSKYMODULEINSTALLER:
         repo = Repo(self._module_repo_path)
         repo.git.checkout(self._branch, force=True)
 
+    def _get_checkedout_branch(self) -> str:
+        branch = "Unknown"
+        
+        try:
+            repo = Repo(self._module_repo_path)
+            branch = repo.active_branch
+        except:
+            pass
+        
+        return branch
+                
     def _read_modules(self) -> None:
         self._module_list = []
         dirs = os.listdir(self._module_repo_path)
@@ -177,6 +193,8 @@ class ALLSKYMODULEINSTALLER:
                         status = "Update Available"
                         
                 module_list.append((module.name, status,  ""))
+            except (ModuleError, NoVersionError) as e:
+                pass
             except Exception as e:
                 tb = e.__traceback__
                 print(f"Error {module.name} on line {tb.tb_lineno}: {e}")
@@ -200,24 +218,27 @@ class ALLSKYMODULEINSTALLER:
         return modules_to_install
     
     def auto_upgrade_modules(self, args):
-        shared.log(1, f"Auto upgrade modules started")
-        shared.log(1, f"============================\n")
+        self._log(False, f"Auto upgrade modules started")
+        self._log(False, f"============================\n")
 
         if args.dryrun:
-            shared.log(4, f"WARNING: Using dry run mode, no changes will be made\n")
+            self._log(False, f"WARNING: Using dry run mode, no changes will be made\n")
             
-        shared.log(1, f"Initialising Allsky Module repository")
-        shared.log(1, f"=====================================\n")            
+        self._log(True, f"Initialising Allsky Module repository")
+        self._log(True, f"=====================================\n")            
         self._ensure_cloned_repo(self._module_repo, self._module_repo_path, self._branch, True)
         self._branches = self._get_remote_branches(self._module_repo_path)
         self._select_git_branch(args)
 
-        shared.log(1, f"\nReading Installed modules")
-        shared.log(1, f"=========================\n")
+        branch = self._get_checkedout_branch()
+        print(f"INFO: Using branch {branch}")
+        
+        self._log(True, f"\nReading Installed modules")
+        self._log(True, f"=========================\n")
         self._read_modules()
         
-        shared.log(4, f"\nUpdating modules")
-        shared.log(4, f"================\n")
+        self._log(True, f"\nUpdating modules")
+        self._log(True, f"================\n")
                 
         for module in self._module_list:
             #try:
@@ -226,17 +247,17 @@ class ALLSKYMODULEINSTALLER:
                     module.install_or_update_module(True)
             #except Exception as e:
             #    tb = e.__traceback__
-            #    shared.log(4, f"ERROR: Function auto_upgrade_modules on line {tb.tb_lineno}: {e}")
+            #    self._log(False, f"ERROR: Function auto_upgrade_modules on line {tb.tb_lineno}: {e}")
         
-        shared.log(1, "INFO: Auto upgrade modules completed\n\n")
+        self._log(False, "INFO: Auto upgrade modules completed\n\n")
     
         self.cleanup_opt(args)
         
     def cleanup_opt(self, args):
         
         did_something = False
-        shared.log(4, f"Starting cleanup of /opt/allsky/modules")
-        shared.log(4, f"=======================================\n")
+        self._log(False, f"Starting cleanup of /opt/allsky/modules")
+        self._log(False, f"=======================================\n")
         
         try:
             allsky_module_folder = shared.get_environment_variable("ALLSKY_MYFILES_DIR")
@@ -253,7 +274,7 @@ class ALLSKYMODULEINSTALLER:
                     allsky_module = allsky_module_folder / opt_module.name
                     if allsky_module.exists():
                         module_name = os.path.splitext(os.path.basename(opt_module))[0]
-                        shared.log(4, f"INFO: Removing {opt_module} and its info and dependencies folders")
+                        self._log(True, f"INFO: Removing {opt_module} and its info and dependencies folders")
                         if not args.dryrun:
                             os.remove(opt_module)
                             opt_module_info_folder = os.path.join(opt_module_info_folder_base, module_name)
@@ -265,20 +286,20 @@ class ALLSKYMODULEINSTALLER:
             
             if os.path.isdir(opt_module_info_folder_base):        
                 if not any(Path(opt_module_info_folder_base).iterdir()):
-                    shared.log(4, f"INFO: Removing empty directory {opt_module_info_folder_base}")
+                    self._log(True, f"INFO: Removing empty directory {opt_module_info_folder_base}")
                     if not args.dryrun:
                         shared.remove_path(opt_module_info_folder_base)
                     did_something = True
             if os.path.isdir(opt_module_dependencies_folder_base):                   
                 if not any(Path(opt_module_dependencies_folder_base).iterdir()):
-                    shared.log(4, f"INFO: Removing empty directory {opt_module_dependencies_folder_base}")                    
+                    self._log(True, f"INFO: Removing empty directory {opt_module_dependencies_folder_base}")                    
                     if not args.dryrun:
                         shared.remove_path(opt_module_dependencies_folder_base)
                     did_something = True
 
             py_cache_path = os.path.join(self._module_repo_base_path, "modules", "__pycache__")
             if os.path.isdir(py_cache_path):
-                shared.log(4, f"INFO: Removing python cache directory {py_cache_path}") 
+                self._log(True, f"INFO: Removing python cache directory {py_cache_path}") 
                 if not args.dryrun:
                     shared.remove_path(py_cache_path)
                 did_something = True
@@ -287,17 +308,17 @@ class ALLSKYMODULEINSTALLER:
                 for file in opt_module_folder.iterdir():
                     if file.is_file() and file.name.startswith("allsky_"):
                         target = allsky_module_folder / file.name
-                        shared.log(4, f"INFO: Moving non Allsky module {file.name} from {os.path.dirname(file)} to Allsky module folder")
+                        self._log(True, f"INFO: Moving non Allsky module {file.name} from {os.path.dirname(file)} to Allsky module folder")
                         if not args.dryrun:
                             shutil.move(str(file), str(target))
                         did_something = True                                    
         except Exception as e:  
             tb = e.__traceback__
-            shared.log(4, f"ERROR: Function cleanup_opt on line {tb.tb_lineno}: {e}")
+            self._log(False, f"ERROR: Function cleanup_opt on line {tb.tb_lineno}: {e}")
 
         if not did_something:
-            shared.log(4, "INFO: No cleanup required")
-        shared.log(4, f"INFO: Completed cleanup of /opt/allsky/modules")
+            self._log(False, "INFO: No cleanup required")
+        self._log(False, f"INFO: Completed cleanup of /opt/allsky/modules")
                     
     def run(self, args: argparse.Namespace) -> None:
         self._ensure_cloned_repo(self._module_repo, self._module_repo_path)
@@ -307,8 +328,6 @@ class ALLSKYMODULEINSTALLER:
             self._select_git_branch(args)
     
         self._read_modules()
-
-        shared.log(4, f"INFO: Using branch {self._branch}")
 
         done = False
         while not done:

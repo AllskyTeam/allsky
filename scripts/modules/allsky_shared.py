@@ -35,7 +35,7 @@ from functools import reduce
 from allskyvariables.allskyvariables import ALLSKYVARIABLES
 import pigpio
 import numpy as np
-from typing import Union, List, Dict, Any, Tuple, Sequence
+from typing import Union, List, Dict, Any, Tuple, Sequence, Optional
 
  
 try:
@@ -547,7 +547,43 @@ def run_script(script: str) -> Tuple[int, str]:
         return result.returncode, output.strip()
     except FileNotFoundError:
         return 127, f"Script not found: {script}"
-    
+
+def run_python_script(script: str, args: Optional[List[str]] = None, cwd: Optional[str] = None) -> Tuple[int, str]:
+    """
+    Run a Python script using the same interpreter as the current process (e.g., inside a venv).
+
+    This function ensures the target script is executed with the current Python interpreter
+    (`sys.executable`), so that packages installed in the active virtual environment are available.
+
+    Args:
+        script (str): Path to the Python script to execute.
+        args (Optional[List[str]]): Additional arguments to pass to the script. Defaults to None.
+        cwd (Optional[str]): Working directory in which to run the script. If None, uses the current directory.
+
+    Returns:
+        Tuple[int, str]: A tuple containing:
+            - return code (int): The process's exit code, or 127 if the script is not found.
+            - output (str): Combined standard output and standard error from the script, stripped of trailing whitespace.
+
+    Example:
+        >>> code, output = run_python_script("myscript.py", ["--option", "value"])
+        >>> print(code, output)
+        0 Script ran successfully
+    """
+    args = args or []
+    try:
+        proc = subprocess.run(
+            [sys.executable, script, *args],
+            capture_output=True,
+            text=True,
+            check=False,
+            cwd=cwd,
+        )
+        output = (proc.stdout or "") + (proc.stderr or "")
+        return proc.returncode, output.strip()
+    except FileNotFoundError:
+        return 127, f"Script not found: {script}"
+        
 def do_any_files_exist(base_folder: str | Path, filenames: list[str]) -> bool:
     base_folder = Path(base_folder)
 

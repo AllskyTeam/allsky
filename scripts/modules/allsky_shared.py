@@ -2109,7 +2109,7 @@ def parse_version(file_path: str) -> dict:
 		# 2nd line is short description of release.
 
     # Example:  v2025.12.01
-	parts = first_line.lstrip("v").split(".")
+    parts = first_line.lstrip("v").split(".")
     return {
         "raw": first_line,
         "year": parts[0],

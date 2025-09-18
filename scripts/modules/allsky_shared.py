@@ -2106,8 +2106,10 @@ def compare_flow_and_module(flow_ad, code_ad):
 def parse_version(file_path: str) -> dict:
     with open(file_path, "r", encoding="utf-8") as f:
         first_line = f.readline().strip()
+		# 2nd line is short description of release.
 
-    parts = first_line.lstrip("v").split(".")
+    # Example:  v2025.12.01
+	parts = first_line.lstrip("v").split(".")
     return {
         "raw": first_line,
         "year": parts[0],
@@ -2116,7 +2118,7 @@ def parse_version(file_path: str) -> dict:
     }
     
 def get_allsky_version():
-    version_file = os.path.join(os.environ['ALLSKY_HOME'], 'version')
+    version_file = os.environ['ALLSKY_VERSION_FILE']
     version_info = parse_version(version_file)
 
 ### Generic Whiptail stuff ###

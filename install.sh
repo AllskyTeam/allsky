@@ -2575,97 +2575,97 @@ restore_prior_files()
 		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-	ITEM="${SPACE}'config/modules' directory"
-	if [[ -d ${PRIOR_CONFIG_DIR}/modules ]]; then
-		display_msg --log progress "${ITEM} (merging)"
+	#ITEM="${SPACE}'config/modules' directory"
+	#if [[ -d ${PRIOR_CONFIG_DIR}/modules ]]; then
+	#	display_msg --log progress "${ITEM} (merging)"
 
-		# Copy the user's prior data to the new file which may contain new fields.
-		activate_python_venv
-		local MSG="$( python3 "${ALLSKY_SCRIPTS}"/flowupgrade.py \
-				--prior "${PRIOR_CONFIG_DIR}" --config "${ALLSKY_CONFIG}" )"
-		if [[ $? -ne 0 ]]; then
-			display_msg --log error "Copying 'modules' directory failed: ${RET}"
-		fi
-	else
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-	fi
+	#	# Copy the user's prior data to the new file which may contain new fields.
+	#	activate_python_venv
+	#	local MSG="$( python3 "${ALLSKY_SCRIPTS}"/flowupgrade.py \
+	#			--prior "${PRIOR_CONFIG_DIR}" --config "${ALLSKY_CONFIG}" )"
+	#	if [[ $? -ne 0 ]]; then
+	#		display_msg --log error "Copying 'modules' directory failed: ${RET}"
+	#	fi
+	#else
+	#	display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+	#fi
 
-	ITEM="${SPACE}'config/overlay' directory"
-	if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
-		display_msg --log progress "${ITEM} (copying)"
+	#ITEM="${SPACE}'config/overlay' directory"
+	#if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
+	#	display_msg --log progress "${ITEM} (copying)"
 # TODO: ALEX: FIX:
 # Copying everying in these 3 directories means we can never release new versions, correct?
 
-		cp -a -r "${PRIOR_CONFIG_DIR}/overlay/fonts" "${ALLSKY_OVERLAY}"
-		cp -a -r "${PRIOR_CONFIG_DIR}/overlay/images" "${ALLSKY_OVERLAY}"
-		cp -a -r "${PRIOR_CONFIG_DIR}/overlay/imagethumbnails" "${ALLSKY_OVERLAY}"
+	#	cp -a -r "${PRIOR_CONFIG_DIR}/overlay/fonts" "${ALLSKY_OVERLAY}"
+	#	cp -a -r "${PRIOR_CONFIG_DIR}/overlay/images" "${ALLSKY_OVERLAY}"
+	#	cp -a -r "${PRIOR_CONFIG_DIR}/overlay/imagethumbnails" "${ALLSKY_OVERLAY}"
 
-		cp -a    "${PRIOR_CONFIG_DIR}/overlay/config/userfields.json" "${ALLSKY_OVERLAY}/config"
-		cp -a    "${PRIOR_CONFIG_DIR}/overlay/config/oe-config.json" "${ALLSKY_OVERLAY}/config"
-	else
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-	fi
+	#	cp -a    "${PRIOR_CONFIG_DIR}/overlay/config/userfields.json" "${ALLSKY_OVERLAY}/config"
+	#	cp -a    "${PRIOR_CONFIG_DIR}/overlay/config/oe-config.json" "${ALLSKY_OVERLAY}/config"
+	#else
+	#	display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+	#fi
 
-	X="${PRIOR_CONFIG_DIR}${ALLSKY_MY_OVERLAY_TEMPLATES/${ALLSKY_CONFIG}/}"
-	local Z="$( dirname "${ALLSKY_MY_OVERLAY_TEMPLATES}" )"
-	ITEM="${SPACE}'config/$( basename "${Z}" )/$( basename "${X}" )' directory"
-	if [[ -d ${X} ]]; then
-		display_msg --log progress "${ITEM} (copying)"
-		cp -ar "${X}" "$( dirname "${ALLSKY_MY_OVERLAY_TEMPLATES}" )"
-	else
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-	fi
+	#X="${PRIOR_CONFIG_DIR}${ALLSKY_MY_OVERLAY_TEMPLATES/${ALLSKY_CONFIG}/}"
+	#local Z="$( dirname "${ALLSKY_MY_OVERLAY_TEMPLATES}" )"
+	#ITEM="${SPACE}'config/$( basename "${Z}" )/$( basename "${X}" )' directory"
+	#if [[ -d ${X} ]]; then
+	#	display_msg --log progress "${ITEM} (copying)"
+	#	cp -ar "${X}" "$( dirname "${ALLSKY_MY_OVERLAY_TEMPLATES}" )"
+	#else
+	#	display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+	#fi
 
  	# Globals: SENSOR_WIDTH, SENSOR_HEIGHT, FULL_OVERLAY_NAME, SHORT_OVERLAY_NAME, OVERLAY_NAME, PRIOR_CAMERA_TYPE
 
 	# PRIOR_OVERLAY_FILE is no longer used, but if it exists,
 	# convert it to the new name/format.
-	PRIOR_OVERLAY_FILE="${PRIOR_CONFIG_DIR}/overlay/config/overlay.json"
-	PRIOR_OVERLAY_REPO_FILE="${ALLSKY_PRIOR_DIR}/config_repo/overlay/config/overlay-${PRIOR_CAMERA_TYPE}.json"
+	#PRIOR_OVERLAY_FILE="${PRIOR_CONFIG_DIR}/overlay/config/overlay.json"
+	#PRIOR_OVERLAY_REPO_FILE="${ALLSKY_PRIOR_DIR}/config_repo/overlay/config/overlay-${PRIOR_CAMERA_TYPE}.json"
 
 	# If no prior overlay.json exists or the user never changed it (i.e., it's the same
 	# as the prior confi_repo file), use the new format if its not been setup before.
 
-    local DAYTIME_OVERLAY="$( settings ".daytimeoverlay" "${PRIOR_SETTINGS_FILE}" )"
-    local NIGHTTIME_OVERLAY="$( settings ".nighttimeoverlay" "${PRIOR_SETTINGS_FILE}" )"
+    #local DAYTIME_OVERLAY="$( settings ".daytimeoverlay" "${PRIOR_SETTINGS_FILE}" )"
+    #local NIGHTTIME_OVERLAY="$( settings ".nighttimeoverlay" "${PRIOR_SETTINGS_FILE}" )"
 
-    if [[ -z ${DAYTIME_OVERLAY} && -z ${NIGHTTIME_OVERLAY} ]]; then
-        ITEM="${SPACE}Overlay configuration file"
-        if [[ ! -f ${PRIOR_OVERLAY_FILE} ]] ||
-                cmp -s "${PRIOR_OVERLAY_FILE}" "${PRIOR_OVERLAY_REPO_FILE}" ; then
-            MSG="${SPACE}User didn't change prior overlay file; using new '${OVERLAY_NAME}'"
-            display_msg --logonly info "${MSG}"
-        else
+    #if [[ -z ${DAYTIME_OVERLAY} && -z ${NIGHTTIME_OVERLAY} ]]; then
+    #    ITEM="${SPACE}Overlay configuration file"
+    #    if [[ ! -f ${PRIOR_OVERLAY_FILE} ]] ||
+    #            cmp -s "${PRIOR_OVERLAY_FILE}" "${PRIOR_OVERLAY_REPO_FILE}" ; then
+    #        MSG="${SPACE}User didn't change prior overlay file; using new '${OVERLAY_NAME}'"
+    #        display_msg --logonly info "${MSG}"
+    #    else
             # The user changed the old overlay file so copy it to the new format and
             # save its location in the settings file.
             # NOTE: we add a 1 to the overlay name here so that the overay manager can
             # pick it up and increment it as new overlays are created.
-            OVERLAY_NAME="${FULL_OVERLAY_NAME/overlay/overlay1}"
-            OVERLAY_NAME="${OVERLAY_NAME:-unknown.json}"
-            display_msg --log progress "${ITEM} (renamed to '${OVERLAY_NAME}')"
+    #        OVERLAY_NAME="${FULL_OVERLAY_NAME/overlay/overlay1}"
+    #        OVERLAY_NAME="${OVERLAY_NAME:-unknown.json}"
+    #        display_msg --log progress "${ITEM} (renamed to '${OVERLAY_NAME}')"
 
-            DEST_FILE="${ALLSKY_MY_OVERLAY_TEMPLATES}/${OVERLAY_NAME}"
+    #        DEST_FILE="${ALLSKY_MY_OVERLAY_TEMPLATES}/${OVERLAY_NAME}"
 
             # Add the metadata for the overlay manager
             # shellcheck disable=SC2086
-            jq '. += {"metadata": {
-                "camerabrand": "'${CAMERA_TYPE}'",
-                "cameramodel": "'${CAMERA_MODEL}'",
-                "cameraresolutionwidth": "'${SENSOR_WIDTH}'",
-                "cameraresolutionheight": "'${SENSOR_HEIGHT}'",
-                "tod": "both",
-                "name": "'${CAMERA_TYPE}' '${CAMERA_MODEL}'"
-            }}' "${PRIOR_OVERLAY_FILE}"  > "${DEST_FILE}"
-        fi
+    #        jq '. += {"metadata": {
+    #            "camerabrand": "'${CAMERA_TYPE}'",
+    #            "cameramodel": "'${CAMERA_MODEL}'",
+    #            "cameraresolutionwidth": "'${SENSOR_WIDTH}'",
+    #            "cameraresolutionheight": "'${SENSOR_HEIGHT}'",
+    #            "tod": "both",
+    #            "name": "'${CAMERA_TYPE}' '${CAMERA_MODEL}'"
+    #        }}' "${PRIOR_OVERLAY_FILE}"  > "${DEST_FILE}"
+    #    fi
 
-        for s in daytimeoverlay nighttimeoverlay
-        do
-            doV "" "OVERLAY_NAME" "${s}" "text" "${ALLSKY_SETTINGS_FILE}"
-        done
-    else
-		doV "" "DAYTIME_OVERLAY" "daytimeoverlay" "text" "${ALLSKY_SETTINGS_FILE}"
-		doV "" "NIGHTTIME_OVERLAY" "nighttimeoverlay" "text" "${ALLSKY_SETTINGS_FILE}"
-    fi
+    #    for s in daytimeoverlay nighttimeoverlay
+    #    do
+    #        doV "" "OVERLAY_NAME" "${s}" "text" "${ALLSKY_SETTINGS_FILE}"
+    #    done
+    #else
+	#	doV "" "DAYTIME_OVERLAY" "daytimeoverlay" "text" "${ALLSKY_SETTINGS_FILE}"
+	#	doV "" "NIGHTTIME_OVERLAY" "nighttimeoverlay" "text" "${ALLSKY_SETTINGS_FILE}"
+    #fi
 
 	if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
 		D="${PRIOR_CONFIG_DIR}"
@@ -3605,33 +3605,46 @@ remind_old_version()
 	fi
 }
 
+####
+# Manage overlay installation or updating
+update_overlays()
+{
+	if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
+		"$ALLSKY_SCRIPTS/modules/allskyoverlaymanager/allskyoverlaymanager.py" --auto --oldpath ${ALLSKY_PRIOR_DIR} --oldcamera ${PRIOR_CAMERA_TYPE}
+	else
+		"$ALLSKY_SCRIPTS/modules/allskyoverlaymanager/allskyoverlaymanager.py" --install
+	fi
+}
 
 ####
 # Check if the extra modules need to be reinstalled.
 # Do every time as a reminder.
 update_modules()
 {
-	local X  MSG
+
+	"$ALLSKY_SCRIPTS/modules/allskymodulemanager/moduleinstaller.py" --auto
+
+#	local X  MSG
 
 	# Nothing to do if the extra modules aren't installed.
-	X="$( find "${ALLSKY_MODULE_LOCATION}/modules" -type f -name "*.py" -print -quit 2> /dev/null )"
-	[[ -z ${X} ]] && return
+#	X="$( find "${ALLSKY_MODULE_LOCATION}/modules" -type f -name "*.py" -print -quit 2> /dev/null )"
+#	[[ -z ${X} ]] && return
 
 # xxxxxx    ALEX TODO: check the CURRENT ${ALLSKY_PYTHON_VENV} or ${PRIOR_PYTHON_VENV} ?
 
 	# If a venv isn't already installed then the install/update will create it,
 	# but warn the user to reinstall the extra modules.
-	if [[ -d ${ALLSKY_PYTHON_VENV} && ! -d ${PRIOR_PYTHON_VENV} ]]; then
-		MSG="You appear to have the Allsky Extra modules installed."
-		MSG+="\nPlease reinstall these using the normal instructions at"
-		MSG+="\n   https://github.com/AllskyTeam/allsky-modules"
-		MSG+="\nThe extra modules will not function until you have reinstalled them."
-		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
+#	if [[ -d ${ALLSKY_PYTHON_VENV} && ! -d ${PRIOR_PYTHON_VENV} ]]; then
+#		MSG="You appear to have the Allsky Extra modules installed."
+#		MSG+="\nPlease reinstall these using the normal instructions at"
+#		MSG+="\n   https://github.com/AllskyTeam/allsky-modules"
+#		MSG+="\nThe extra modules will not function until you have reinstalled them."
+#		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 
-		display_msg info "Don't forget to re-install your Allsky extra modules."
-		display_msg --logonly info "Reminded user to re-install the extra modules."
-		add_to_post_actions "${MSG}"
-	fi
+#		display_msg info "Don't forget to re-install your Allsky extra modules."
+#		display_msg --logonly info "Reminded user to re-install the extra modules."
+#		add_to_post_actions "${MSG}"
+#	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }
@@ -4162,7 +4175,10 @@ fi
 # Re-run every time to possibly remind them to update their settings.
 check_restored_settings
 
-##### Check if extra modules need to be reinstalled.
+##### Migrate Overlays
+update_overlays
+
+##### Update any installed modules
 update_modules
 
 ##### If needed, remind the user to remove any old Allsky version

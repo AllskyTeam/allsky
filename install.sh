@@ -3610,7 +3610,7 @@ remind_old_version()
 update_overlays()
 {
 	if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
-		"$ALLSKY_SCRIPTS/modules/allskyoverlaymanager/allskyoverlaymanager.py" --auto --oldpath ${ALLSKY_PRIOR_DIR} --oldcamera ${PRIOR_CAMERA_TYPE}
+		"$ALLSKY_SCRIPTS/modules/allskyoverlaymanager/allskyoverlaymanager.py" --auto --oldpath "${ALLSKY_PRIOR_DIR}" --oldcamera "${PRIOR_CAMERA_TYPE}"
 	else
 		"$ALLSKY_SCRIPTS/modules/allskyoverlaymanager/allskyoverlaymanager.py" --install
 	fi

@@ -15,7 +15,7 @@ Environment Variables:
     ALLSKY_CC_FILE (str): Path to camera configuration JSON.
 
 Usage:
-    python3 overlay_manager.py --auto --oldpath /path/to/old/allsky --oldcamera RPi
+    python3 overlay_manager.py --auto --oldpath /path/to/old/allsky --camera RPi
     python3 overlay_manager.py --debug
 """
 
@@ -26,8 +26,9 @@ import filecmp
 import json
 import subprocess
 from pathlib import Path
+from typing import Optional
 
-# Ensure the script is running in the correct Python environment
+# Ensure the script is running in the correct Python environment (the Allsky venv)
 allsky_home = os.environ['ALLSKY_HOME']
 here = os.path.dirname(os.path.abspath(__file__))
 venv_dir = os.path.join(allsky_home, 'venv')
@@ -63,59 +64,63 @@ shared.setup_for_command_line()
 
 class ALLSKYOVERLAYMANAGER:
     """
-    Manager for migrating and converting overlay configurations in Allsky.
+    Manage migration and conversion of overlay configurations in Allsky.
+
+    This class encapsulates operations to migrate overlay assets/templates from an
+    older Allsky installation, convert legacy overlay formats into `myTemplates`,
+    and update Allsky settings accordingly. It supports both automatic and
+    interactive (Whiptail) modes.
 
     Attributes:
         _args (argparse.Namespace): Parsed command-line arguments.
         _debug_mode (bool): If True, print debug logs instead of using shared.log.
         _overlay_folder (Path): Path to the overlay storage folder.
-        _old_allsky_path (Path): Path to the old Allsky installation.
-        _old_allsky_overlay_path (Path): Path to overlay directory in old Allsky installation.
-        _allsky_version (str): Detected Allsky version.
-        _overlay_info (dict): Overlay configuration info.
-        _overlay_method (int): Overlay rendering method.
-        _daytime_overlay (str): Current daytime overlay filename.
-        _nighttime_overlay (str): Current nighttime overlay filename.
+        _old_allsky_path (Path | None): Path to the old Allsky installation.
+        _old_allsky_overlay_path (Path | None): Overlay directory in old installation.
+        _allsky_version (str | None): Detected Allsky version.
+        _overlay_info (dict | None): Overlay configuration info (if used later).
+        _overlay_method (int | None): Overlay rendering method.
+        _daytime_overlay (str | None): Current daytime overlay filename.
+        _nighttime_overlay (str | None): Current nighttime overlay filename.
     """
 
     _whiptail_title_main_menu = "Select an option"
     _back_title = "Allsky Overlay Manager"
-    _contact_allsky = "- Please comtact Allsky support at https://github.com/AllskyTeam/allsky"
+    _contact_allsky = "- Please contact Allsky support at https://github.com/AllskyTeam/allsky"
                 
-    def __init__(self, args):
-        """
-        Initialize the overlay manager.
+    def __init__(self, args: argparse.Namespace) -> None:
+        """Initialize the overlay manager with parsed CLI arguments.
 
         Args:
-            args (argparse.Namespace): Command-line arguments.
+            args: Command-line arguments parsed by :mod:`argparse`.
         """
         self._args = args
         self._debug_mode = args.debug
         self._overlay_folder = Path(shared.get_environment_variable("ALLSKY_OVERLAY"))
-        self._old_allsky_path = None
-        self._old_allsky_overlay_path = None
-        self._allsky_version = None
-        self._overlay_info = None
-        self._overlay_method  = None
-        self._daytime_overlay = None
-        self._nighttime_overlay = None
+        self._old_allsky_path: Optional[Path] = None
+        self._old_allsky_overlay_path: Optional[Path] = None
+        self._allsky_version: Optional[str] = None
+        self._overlay_info: Optional[dict] = None
+        self._overlay_method: Optional[int] = None
+        self._daytime_overlay: Optional[str] = None
+        self._nighttime_overlay: Optional[str] = None
 
-    def _log(self, log_level, message):
-        """
-        Log a message. If debug mode is enabled, print to stdout.
+    def _log(self, debug_only: bool, message: str) -> None:
+        """Log a message using :func:`shared.log` or print in debug mode.
 
         Args:
-            log_level (int): Severity level for shared.log.
-            message (str): The log message.
+            debug_only: Only log when debug mode is set on command line.
+            message: The log message to emit.
         """                    
-        if self._debug_mode:
+        if debug_only and self._debug_mode or not debug_only:
             print(message)
-        else:
-            shared.log(log_level, message) 
+    
 
-    def setup_overlay_info(self):
-        """
-        Load overlay configuration and settings from Allsky environment.
+    def setup_overlay_info(self) -> None:
+        """Populate basic overlay settings from the Allsky environment.
+
+        Sets internal attributes like the current Allsky version, overlay method,
+        and the configured daytime/nighttime overlays.
         """
         self._allsky_version = shared.get_allsky_version()
         self._overlay_method = shared.get_setting("overlaymethod") or 1
@@ -123,74 +128,75 @@ class ALLSKYOVERLAYMANAGER:
         self._nighttime_overlay = shared.get_setting("nighttimeoverlay")
                 
     def _migrate_overlay_assets(self) -> bool:
-        """
-        Copy overlay assets (fonts, images, config files) from the old Allsky installation.
+        """Copy overlay assets (fonts, images, config files) from the old installation.
 
         Returns:
-            bool: True if migration succeeded, False otherwise.
+            True if all applicable assets were copied successfully; False otherwise.
         """
-        if self._old_allsky_overlay_path.exists():
+        if self._old_allsky_overlay_path and self._old_allsky_overlay_path.exists():
             folders = ["fonts", "images", "imagethumbnails"]
             files = ["config/userfields.json", "config/oe-config.json"]
 
             for name in folders:
                 if not shared.copy_folder(str(self._old_allsky_overlay_path / name), str(self._overlay_folder / name)):
-                    self._log(1, f"ERROR: Failed to copy overlay folder: {name} {self._contact_allsky}")
+                    self._log(False, f"ERROR: Failed to copy overlay folder: {name} {self._contact_allsky}")
                     return False
 
             for rel in files:
                 if not shared.copy_file(str(self._old_allsky_overlay_path / rel), str(self._overlay_folder / rel)):
-                    self._log(1, f"ERROR: Failed to copy overlay file: {rel} {self._contact_allsky}")
+                    self._log(False, f"ERROR: Failed to copy overlay file: {rel} {self._contact_allsky}")
                     return False
         else:
-            self._log(1, f"WARNING: No overlay assets found in old Allsky installation at {self._old_allsky_overlay_path}")
+            self._log(False, f"WARNING: No overlay assets found in old Allsky installation at {self._old_allsky_overlay_path}")
             
         return True
 
     def _migrate_overlay_templates(self) -> bool:
-        """
-        Copy overlay templates from the old installation.
+        """Copy overlay templates from the old installation into the new location.
 
         Returns:
-            bool: True if migration succeeded, False otherwise.
+            True if the templates were copied successfully or did not need copying;
+            False on failure.
         """
-        old_templates_path = self._old_allsky_path / "config" / "overlay" / "myTemplates"
+        old_templates_path = self._old_allsky_path / "config" / "overlay" / "myTemplates"  # type: ignore[operator]
         templates_path = self._overlay_folder / "myTemplates"
         
         if old_templates_path.exists():
             if not shared.copy_folder(str(old_templates_path), str(templates_path)):
-                self._log(1, f"ERROR: Failed to copy overlay templates from {old_templates_path} to {templates_path} {self._contact_allsky}")
+                self._log(False, f"ERROR: Failed to copy overlay templates from {old_templates_path} to {templates_path} {self._contact_allsky}")
                 return False
         
         return True
 
     def _create_overlay_templates(self) -> bool:        
-        """
-        Migrate old overlay.json to new myTemplates-based overlays.
+        """Migrate legacy ``overlay.json`` into a template under ``myTemplates``.
+
+        If an old-format overlay exists, copy or synthesize a template in the new
+        format and update Allsky settings to reference it.
 
         Returns:
-            bool: True if migration succeeded, False otherwise.
+            True if migration succeeded or was not required; False on failure.
         """
-        old_format_overlay_file = self._old_allsky_overlay_path / "config" / "overlay.json"
+        old_format_overlay_file = self._old_allsky_overlay_path / "config" / "overlay.json"  # type: ignore[operator]
         if Path(old_format_overlay_file).exists():
-            self._log(1, "INFO: Old overlay system detected - Attempting to migrate overlay")
-            old_camera_type = self._args.oldcamera
+            self._log(False, "INFO: Old overlay system detected - Attempting to migrate overlay")
+            old_camera_type = self._args.camera
             camera_type = shared.get_setting("cameratype")
             camera_model = shared.get_setting("cameramodel")
             cc_file = shared.get_environment_variable("ALLSKY_CC_FILE")
             sensor_width = shared._get_value_from_json_file(cc_file, "sensorWidth")
             sensor_height = shared._get_value_from_json_file(cc_file, "sensorHeight")
                                                 
-            old_repo_overlay_file = self._old_allsky_path / "config_repo" / "overlay" / "config" / f"overlay-{old_camera_type}.json"
+            old_repo_overlay_file = self._old_allsky_path / "config_repo" / "overlay" / "config" / f"overlay-{old_camera_type}.json"  # type: ignore[operator]
             overlay_changed = not filecmp.cmp(old_format_overlay_file, old_repo_overlay_file, shallow=False)
-            self._log(1, f"INFO: Comparing {str(old_format_overlay_file)} with {str(old_repo_overlay_file)}")
+            self._log(True, f"INFO: Comparing {str(old_format_overlay_file)} with {str(old_repo_overlay_file)}")
             if overlay_changed:
                 overlay_name = self._overlay_folder / "myTemplates" / "overlay1.json"
                 if not shared.copy_file(old_format_overlay_file, str(overlay_name)):
-                    self._log(1, f"ERROR: Failed to copy '{str(old_format_overlay_file)}' to '{str(overlay_name)}'  {self._contact_allsky}")
+                    self._log(False, f"ERROR: Failed to copy '{str(old_format_overlay_file)}' to '{str(overlay_name)}'  {self._contact_allsky}")
                     return False
                 
-                self._log(1, f"INFO: Overlay has been changed. Copied {str(old_format_overlay_file)} to {str(overlay_name)}")
+                self._log(True, f"INFO: Overlay has been changed. Copied {str(old_format_overlay_file)} to {str(overlay_name)}")
                 old_overlay_name = self._overlay_folder / "config" / "overlay.json"
                 shared.remove_path(old_overlay_name)
                 
@@ -208,7 +214,7 @@ class ALLSKYOVERLAYMANAGER:
                         "name": f"{camera_type} {camera_model}"
                     }
                 })
-                self._log(1, f"INFO: Added metadata to {str(overlay_name)}")
+                self._log(True, f"INFO: Added metadata to {str(overlay_name)}")
                 with open(str(overlay_name), "w", encoding="utf-8") as file:
                     json.dump(json_data, file, indent=4, ensure_ascii=False)
 
@@ -229,9 +235,9 @@ class ALLSKYOVERLAYMANAGER:
                     overlay_name = Path(short_overlay_name)                   
                     shared.copy_file(short_overlay_path, str(dest))
 
-                self._log(1, f"INFO: Overlay not changed - Using default overlay {overlay_name.name}")
+                self._log(True, f"INFO: Overlay not changed - Using default overlay {overlay_name.name}")
 
-            self._log(1, f"INFO: Setting 'daytimeoverlay' to {overlay_name.name}, 'nighttimeoverlay' to {overlay_name.name}")
+            self._log(True, f"INFO: Setting 'daytimeoverlay' to {overlay_name.name}, 'nighttimeoverlay' to {overlay_name.name}")
             new_settings = {
                 "daytimeoverlay": overlay_name.name,
                 "nighttimeoverlay": overlay_name.name
@@ -239,16 +245,15 @@ class ALLSKYOVERLAYMANAGER:
             shared.update_settings(new_settings)
             
         else:
-            self._log(1, "INFO: Using new overlay system so ignoring any migrations")
+            self._log(False, "INFO: Using new overlay system so ignoring any migrations")
             
         return True
     
-    def _convert_overlay(self, overlay_name):
-        """
-        Load and convert a single overlay by name.
+    def _convert_overlay(self, overlay_name: str) -> None:
+        """Convert a single overlay referenced by a setting name.
 
         Args:
-            overlay_name (str): Name of the overlay setting (e.g., 'daytimeoverlay').
+            overlay_name: Name of the overlay setting, e.g. ``"daytimeoverlay"``.
         """
         overlay_name = shared.get_setting(overlay_name)
         template_path = self._overlay_folder / "myTemplates" / overlay_name
@@ -256,18 +261,69 @@ class ALLSKYOVERLAYMANAGER:
         if template_path.exists():
             with open(template_path, encoding='utf-8') as file:
                 json_data = json.load(file)
+                # Placeholder: add conversion logic as needed.
+                _ = json_data
                 
-    def _convert_overlays(self):
-        """
-        Convert both daytime and nighttime overlays.
-        """
+    def _convert_overlays(self) -> None:
+        """Convert both daytime and nighttime overlays (if present)."""
         for overlay_name in ["daytimeoverlay", "nighttimeoverlay"]:        
             self._convert_overlay(overlay_name)
-        
-    def run_auto(self):
+
+    def install(self) -> None:
+        """Install or select an overlay template based on detected camera settings.
+
+        Determines the most specific overlay filename (including camera model and
+        sensor resolution when available) falling back to a generic camera-type
+        overlay, then updates the Allsky settings accordingly.
         """
-        Run in automatic upgrade mode, migrating and converting overlays
-        without showing the Whiptail menu.
+        self._log(False, "INFO: Starting overlay install")
+        camera_type = shared.get_setting("cameratype")
+        camera_model = shared.get_setting("cameramodel")
+        camera_model = camera_model.replace(" ", "_")
+        cc_file = shared.get_environment_variable("ALLSKY_CC_FILE")
+        sensor_width = shared._get_value_from_json_file(cc_file, "sensorWidth")
+        sensor_height = shared._get_value_from_json_file(cc_file, "sensorHeight")
+
+        self._log(True, f"INFO: Camera Info. Camera {camera_type}, Model {camera_model}")
+        self._log(True, f"INFO: Sensor Info. Width {sensor_width}, Height {sensor_height}")
+        self._log(True, f"INFO: Using cc file {cc_file}")
+
+        overlay_name = "overlay-RPi.json"
+        
+        overlay_config = self._overlay_folder / "config"
+        full_filename = f"overlay-{camera_type}_{camera_model}-{sensor_width}x{sensor_height}-both.json"
+        full_file_path = overlay_config / full_filename
+
+        short_filename = f"overlay-{camera_type}.json"
+        short_file_path = overlay_config / short_filename
+        
+        self._log(True, f"INFO: Full Filename  {full_filename}")
+        self._log(True, f"INFO: Short Filename {short_filename}")
+                
+        if full_file_path.exists():
+            overlay_name = full_filename
+            self._log(True, f"INFO: Found {str(full_file_path)} so using this as the overlay")
+        elif short_file_path.exists():
+            overlay_name = short_filename
+            self._log(True, f"INFO: Found {str(short_filename)} so using this as the overlay")
+            
+        new_settings = {
+            "daytimeoverlay": overlay_name,
+            "nighttimeoverlay": overlay_name
+        }                        
+        shared.update_settings(new_settings)
+        self._log(False, f"INFO: Set daytimeoverlay and nighttimeoverlay to {overlay_name}")
+
+        self._log(False, "INFO: Completed overlay install")
+                    
+        
+        
+    def run_auto(self) -> None:
+        """Run automatic upgrade: migrate assets/templates and convert overlays.
+
+        Uses the provided ``--oldpath`` and ``--camera`` arguments to locate the
+        old Allsky installation, then migrates assets and templates, converts
+        overlays, and updates settings without interactive prompts.
         """                    
         self._old_allsky_path = Path(self._args.oldpath)
         self._old_allsky_overlay_path = self._old_allsky_path / "config" / "overlay"        
@@ -277,10 +333,8 @@ class ALLSKYOVERLAYMANAGER:
                 if self._create_overlay_templates():
                     self._convert_overlays()
     
-    def run(self):
-        """
-        Run in interactive mode with Whiptail menu.
-        """
+    def run(self) -> None:
+        """Run the interactive Whiptail menu-based workflow."""
         self.setup_overlay_info()
         
         w = Whiptail(
@@ -306,13 +360,13 @@ class ALLSKYOVERLAYMANAGER:
                 self._show_overlay_status()
     
             if choice == "2":                
-                previous_camera = shared.select_from_list([("RPi", "Pi Camera"), ("ZWO","ZWO Camera")], "Select Previous Camera", "Select Camera", "Allsky Overlay manager")
+                previous_camera = shared.select_from_list([( "RPi", "Pi Camera" ), ( "ZWO", "ZWO Camera" )], "Select Previous Camera", "Select Camera", "Allsky Overlay manager")
                 if previous_camera is not None:
                     folder = shared.select_folder("/home/pi")
                     if folder is not None:
                         os.system("clear")
                         self._args.oldpath = folder
-                        self._args.oldcamera = previous_camera
+                        self._args.camera = previous_camera
                         self.run_auto()
                         print("\n\nPress Enter to continue...")
                         sys.stdin.read(1)                 
@@ -322,11 +376,16 @@ if __name__ == "__main__":
     parser.add_argument("--debug", action="store_true", help="Enable debug mode, shows more detailed errors")  
     parser.add_argument("--auto", action="store_true", help="Enable upgrade mode, requires --oldpath to be set")  
     parser.add_argument("--oldpath", type=str, help="Path to old Allsky installation for upgrade")
-    parser.add_argument("--oldcamera", type=str, help="Old camera type")
+    parser.add_argument("--camera", type=str, help="Camera type")
+    parser.add_argument("--install", action="store_true", help="Initial Install of overlay system")
     args = parser.parse_args()    
 
     overlay_manager = ALLSKYOVERLAYMANAGER(args)
-        
+
+    if args.install:
+        overlay_manager.install()
+        sys.exit(1)
+                
     if args.auto:
         overlay_manager.run_auto()
         sys.exit(1)

@@ -50,7 +50,17 @@ class ALLSKYMODULEINSTALLER:
     _module_repo_base_path = "/opt/allsky"
     _module_repo_path = "/opt/allsky/allsky-modules"
 
-    
+    _back_title= "Allsky Module Manager"
+    _welcome_message = "The Allsky modules are a collection of extensions developed both by the Allsky team and the wider community. They allow you to expand the functionality of your Allsky system beyond basic image capture.\n\
+Modules can:\n\n\
+ • Perform additional image processing to enhance captured frames.\n\
+ • Integrate with external hardware such as sensors or I/O devices.\n\
+ • Export data from Allsky to services such as mqtt, redis ...\n\
+ • Add extra information to overlays using external services.\n\n\
+The official Allsky documentation provides detailed information on each module, including setup instructions and usage examples, so you can easily discover which modules suit your installation and how to get the most from them.\n\n\
+Would you like to review and install the available modules now?\
+"
+                
     def __init__(self, debug_mode): 
         self._debug_mode = debug_mode
         self._allsky_path = shared.get_environment_variable("ALLSKY_HOME")
@@ -319,48 +329,61 @@ class ALLSKYMODULEINSTALLER:
         if not did_something:
             self._log(False, "INFO: No cleanup required")
         self._log(False, f"INFO: Completed cleanup of /opt/allsky/modules")
-                    
+
+    def welcome_message(self):
+
+        w = Whiptail(title="Welcome", backtitle=self._back_title, height=25, width=80)
+        result = w.yesno(self._welcome_message)        
+        return result
+                            
     def run(self, args: argparse.Namespace) -> None:
-        self._ensure_cloned_repo(self._module_repo, self._module_repo_path)
-        self._branches = self._get_remote_branches(self._module_repo_path)
         
-        if args.branch or args.setbranch:
-            self._select_git_branch(args)
-    
-        self._read_modules()
+        if args.welcome:
+            go_for_it = self.welcome_message()
+        else:
+            go_for_it = True
+            
+        if go_for_it:
+            self._ensure_cloned_repo(self._module_repo, self._module_repo_path)
+            self._branches = self._get_remote_branches(self._module_repo_path)
+            
+            if args.branch or args.setbranch:
+                self._select_git_branch(args)
+        
+            self._read_modules()
 
-        done = False
-        while not done:
-            w = Whiptail(title="Main Menu", backtitle=f"Allsky Module Manager. Using branch {self._branch}", height=20, width=40)
-            menu_options = ['Install Modules', 'Uninstall Modules', 'Exit']
-            if self._debug_mode:
-                menu_options = ['Install Modules', 'Uninstall Modules', 'Switch Branch', 'Clean Opt', 'Exit']
-                
-            menu_option, return_code = w.menu('', menu_options)
+            done = False
+            while not done:
+                w = Whiptail(title="Main Menu", backtitle=f"Allsky Module Manager. Using branch {self._branch}", height=20, width=40)
+                menu_options = ['Install Modules', 'Uninstall Modules', 'Exit']
+                if self._debug_mode:
+                    menu_options = ['Install Modules', 'Uninstall Modules', 'Switch Branch', 'Clean Opt', 'Exit']
+                    
+                menu_option, return_code = w.menu('', menu_options)
 
-            if return_code == 0:
-                if menu_option == 'Exit':
-                    done = True
-                if menu_option == 'Clean Opt':
-                    self.cleanup_opt()
-                if menu_option == 'Switch Branch':
-                    self._select_git_branch(args, True)
-                    self._read_modules()
-                if menu_option == 'Install Modules':
-                    modules_to_install = self._display_install_dialog()
-                if menu_option == 'Uninstall Modules':
-                    if self._pre_checks():
+                if return_code == 0:
+                    if menu_option == 'Exit':
+                        done = True
+                    if menu_option == 'Clean Opt':
+                        self.cleanup_opt()
+                    if menu_option == 'Switch Branch':
+                        self._select_git_branch(args, True)
                         self._read_modules()
-                        modules_to_uninstall = self._display_uninstall_dialog()
-                        if modules_to_uninstall is not None:
-                            self._do_uninstall(modules_to_uninstall)
+                    if menu_option == 'Install Modules':
+                        modules_to_install = self._display_install_dialog()
+                    if menu_option == 'Uninstall Modules':
+                        if self._pre_checks():
+                            self._read_modules()
+                            modules_to_uninstall = self._display_uninstall_dialog()
+                            if modules_to_uninstall is not None:
+                                self._do_uninstall(modules_to_uninstall)
+                            else:
+                                w = Whiptail(title='Uninstall Modules', backtitle='AllSky Module Manager', height=8, width=50)
+                                w.msgbox("There are no modules available for uninstall.")
                         else:
-                            w = Whiptail(title='Uninstall Modules', backtitle='AllSky Module Manager', height=8, width=50)
-                            w.msgbox("There are no modules available for uninstall.")
-                    else:
-                        sys.exit(0)
-            else:
-                done = True
+                            sys.exit(0)
+                else:
+                    done = True
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Allsky extra module installer")
@@ -370,25 +393,25 @@ if __name__ == "__main__":
     parser.add_argument("--cleanupopt", action="store_true", help="Cleanup the legacy module folders")
     parser.add_argument("--auto", action="store_true", help="Auto upgrade modules, will migrate if required")    
     parser.add_argument("--dryrun", action="store_true", help="For auto mode do a dry run only, no changes will be made")    
+    parser.add_argument("--welcome", action="store_true", help="Show the welcome message")    
     args = parser.parse_args()    
     
     module_installer = ALLSKYMODULEINSTALLER(args.debug)
     
     if args.auto:
-        #try:
-        module_installer.auto_upgrade_modules(args)
-        #except Exception as e:
-        #    tb = e.__traceback__
-        #    print(f"ERROR: Function auto_upgrade_modules on line {tb.tb_lineno}: {e}")
+        try:
+            module_installer.auto_upgrade_modules(args)
+        except Exception as e:
+            tb = e.__traceback__
+            print(f"ERROR: Function auto_upgrade_modules on line {tb.tb_lineno}: {e}")
         sys.exit(0)
                 
     if args.cleanupopt:
         module_installer.cleanup_opt(args)
         sys.exit(0)
 
-    #try:
-
-    module_installer.run(args)
-    #except Exception as e:
-    #    print(e)
+    try:
+        module_installer.run(args)
+    except Exception as e:
+        print(e)
             

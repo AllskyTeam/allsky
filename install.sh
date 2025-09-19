@@ -3624,6 +3624,13 @@ update_overlays()
 }
 
 ####
+# Allow the user to install extra modules.
+install_modules()
+{
+	"$ALLSKY_SCRIPTS/modules/allskymodulemanager/moduleinstaller.py" --welcome
+}
+
+####
 # Check if the extra modules need to be reinstalled.
 # Do every time as a reminder.
 update_modules()
@@ -4187,6 +4194,9 @@ update_overlays
 
 ##### Update any installed modules
 update_modules
+
+##### Allow the user to install modules
+install_modules
 
 ##### Setup Database (If required)
 setup_database

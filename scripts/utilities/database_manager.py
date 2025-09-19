@@ -1384,7 +1384,8 @@ class ALLSKYDATABASEMANAGER:
                 if database_to_use == "mysql":
                     action, user_name, password = self._select_mysql_database_user()
                     if action == "create" or action == "select":
-                        result, db_name = self._select_mysql_database("localhost", user_name, password, self._database_config["databasedatabase"])
+                        database_name = self._database_config["databasedatabase"] if "databasedatabase" in self._database_config else ""
+                        result, db_name = self._select_mysql_database("localhost", user_name, password, database_name)
                         if result:
                             result = self._set_allsky_options("mysql", "localhost", user_name, password, db_name)
                             self._mysql_installed, self._mysql_type = self._mysql_service_installed()

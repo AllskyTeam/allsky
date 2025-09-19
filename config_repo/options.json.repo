@@ -6,7 +6,7 @@
 	},
 	{
 		"name": "enabledatabase",
-		"default": true,
+		"default": false,
 		"description": "Enable the Allsky database.",
 		"label": "Enable Database",
 		"type": "boolean",

@@ -3606,6 +3606,13 @@ remind_old_version()
 }
 
 ####
+# Manage installation and setup of the Allsky database
+setup_database()
+{
+	sudo "$ALLSKY_SCRIPTS/utilities/database_manager.py" --auto
+}
+
+####
 # Manage overlay installation or updating
 update_overlays()
 {
@@ -4180,6 +4187,9 @@ update_overlays
 
 ##### Update any installed modules
 update_modules
+
+##### Setup Database (If required)
+setup_database
 
 ##### If needed, remind the user to remove any old Allsky version
 # Re-run every time to remind the user again.

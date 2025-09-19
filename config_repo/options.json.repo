@@ -64,12 +64,12 @@
 	},
 	{
 		"name": "databasedatabase",
-		"default": "allsky",
+		"default": "",
 		"description": "The database to use.",
 		"label": "Database",
 		"type": "text",
 		"carryforward": true,
-		"optional": false,
+		"optional": true,
 		"source": "${ALLSKY_ENV}"
 	},
 {

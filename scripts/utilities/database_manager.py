@@ -191,7 +191,7 @@ class ALLSKYDATABASEMANAGER:
         self._pi_version = self._get_pi_version()
         
         self._database_config = shared.get_database_config()
-        
+
     @property
     def all_databases_installed(self) -> bool:
         """
@@ -1384,7 +1384,7 @@ class ALLSKYDATABASEMANAGER:
                 if database_to_use == "mysql":
                     action, user_name, password = self._select_mysql_database_user()
                     if action == "create" or action == "select":
-                        result, db_name = self._select_mysql_database("localhost", user_name, password,"allsky")
+                        result, db_name = self._select_mysql_database("localhost", user_name, password, self._database_config["databasedatabase"])
                         if result:
                             result = self._set_allsky_options("mysql", "localhost", user_name, password, db_name)
                             self._mysql_installed, self._mysql_type = self._mysql_service_installed()

@@ -383,9 +383,14 @@ function generate_support_info()
 	X="${TEMP_DIR}/config/overlay/system_fonts"
 	[[ -d ${X} ]] && find "${TEMP_DIR}/config/overlay/system_fonts" -type f -exec truncate -s 0 {} +
 
-	# Truncate all of the module configs until we can obfuscate any sensitive data.
-	X="${TEMP_DIR}/config/modules"
-	[[ -d ${X} ]] && find "${TEMP_DIR}/config/modules" -type f -exec truncate -s 0 {} +
+	# If we have any sensitive data in the flows the truncate them. If the variables.json file exists
+	# then there will be no sensitive data in the flows since this data was moved to the env.json file
+	# in the same release that created variables.json.
+	# This could do a version comparison but this is a much simpler check
+	if [[ ! -f "${ALLSKY_HOME}/variables.json" ]]; then
+		X="${TEMP_DIR}/config/modules"
+		[[ -d ${X} ]] && find "${TEMP_DIR}/config/modules" -type f -exec truncate -s 0 {} +
+	fi
 
 	local ZIP_NAME="support"
 	ZIP_NAME+="-${GITHUB_REPO:-repo}"

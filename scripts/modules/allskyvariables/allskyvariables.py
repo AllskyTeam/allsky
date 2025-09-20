@@ -287,11 +287,11 @@ class ALLSKYVARIABLES:
                         'format': config.get('format', ''),
                         'sample': config.get('sample', ''),
                         'variable': variable,
-                        'group': config.get('group', 'Unknown'),
+                        'group': config.get('group', 'user'),
                         'description': config.get('description', ''),
                         'value': value,
-                        'type': config.get('type', 'Unknown'),
-                        'source': config.get('source', 'Unknown')
+                        'type': config.get('type', 'user'),
+                        'source': config.get('source', 'user')
                     })
             else:
                 result.append({

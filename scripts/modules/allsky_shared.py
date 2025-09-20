@@ -505,12 +505,13 @@ def writeDB():
 def create_file_web_server_access(file_name):
     import grp
     
-    #TODO: Change this to the real user once variables.json is working
-    web_server_group = 'www-data'
-    uid = os.getuid()
+    allsky_owner = get_environment_variable("ALLSKY_OWNER")
+    web_server_group = get_environment_variable("ALLSKY_WEBSERVER_GROUP")
+    
+    uid = pwd.getpwnam(allsky_owner).pw_uid
     gid = grp.getgrnam(web_server_group).gr_gid
             
-    return create_and_set_file_permissions(file_name, uid, gid, 0o660)      
+    return create_and_set_file_permissions(file_name, uid, gid, 0o770)      
 
 def create_sqlite_database(file_name:str)-> bool:
     result = True
@@ -644,14 +645,18 @@ def remove_folder(path: str) -> bool:
         
     return result
 
-def set_permissions(file_name, uid=None, gid=None):
+def set_permissions(file_name, uid=None, gid=None):                
     if uid is None:
-        uid = os.getuid()
+        allsky_owner = get_environment_variable("ALLSKY_OWNER")
+        try:
+            uid = pwd.getpwnam(allsky_owner).pw_uid
+        except KeyError:
+            uid = os.getuid()
     if gid is None:
         if (group := get_environment_variable("ALLSKY_WEBSERVER_GROUP")) is None:
             group = 'www-data'
         gid = grp.getgrnam(group).gr_gid
-       
+
     os.chown(file_name, uid, gid)
     
 def create_and_set_file_permissions(file_name, uid=None, gid=None, permissions=None, is_sqlite=False, file_data = '')-> bool:
@@ -665,8 +670,9 @@ def create_and_set_file_permissions(file_name, uid=None, gid=None, permissions=N
             with sqlite3.connect(file_name, timeout=10) as conn:
                 pass
         else:
-            with open(file_name, 'w') as debug_file:
-                debug_file.write(file_data)
+            if not os.path.isdir(file_name):
+                with open(file_name, 'w') as debug_file:
+                    debug_file.write(file_data)
         set_permissions(file_name, uid, gid)
         if permissions:
             os.chmod(file_name, permissions)
@@ -718,8 +724,48 @@ def asfloat(val):
 
     return val
 
-def getExtraDir():
-    return getEnvironmentVariable("ALLSKY_EXTRA", fatal=True)
+def get_extra_dir(current_only:bool = False) -> list[str] | str:
+    return getExtraDir(current_only)
+def getExtraDir(current_only: bool = False) -> list[str] | str:
+    """
+    Get the extra directory paths to use for Allsky.
+
+    Args:
+        current_only (bool): 
+            - If True, return only the current ALLSKY_EXTRA directory as a string.
+            - If False (default), return a list of directories including the
+              current directory and, if it exists, the legacy directory.
+
+    Returns:
+        list[str] | str: 
+            - A string (path) if current_only is True.
+            - A list of one or more directory paths if current_only is False.
+    """
+    
+    # Get the current extra directory from the environment.
+    # This is required, so fatal=True ensures the program exits if it's not set.
+    extra_dir = get_environment_variable("ALLSKY_EXTRA", fatal=True)
+    
+    if current_only:
+        # If only the current directory is requested, return it directly as a string.
+        result = extra_dir
+    else:
+        # Try to get the legacy directory path from the environment.
+        # This one is optional, so fatal=False means it can be missing.
+        legacy_extra_dir = get_environment_variable("ALLSKY_EXTRA_LEGACY", fatal=False)    
+
+        # If a legacy directory is defined and physically exists on disk,
+        # include both the current and legacy directories.
+        if legacy_extra_dir is not None and os.path.exists(legacy_extra_dir):
+            result = [
+                extra_dir,
+                legacy_extra_dir
+            ]
+        else:
+            # Otherwise, return only the current directory in a list.
+            result = [extra_dir]
+
+    return result
 
 def validateExtraFileName(params, module, fileKey):
     
@@ -1061,25 +1107,72 @@ def update_mysql_database(structure, extra_data):
 
 def save_extra_data(file_name, extra_data, source='', structure={}, custom_fields={}):
     saveExtraData(file_name, extra_data, source, structure, custom_fields)
-def saveExtraData(file_name, extra_data, source='', structure={}, custom_fields={}):
+def saveExtraData(file_name, extra_data, source: str = '', structure: dict = {}, custom_fields: dict = {}):
     """
-    Save extra data to allows the overlay module to display it.
+    Persist "extra data" for use by Allsky overlay modules.
+
+    This function writes the provided data to a file inside the current
+    ALLSKY_EXTRA directory (resolved via `get_extra_dir(True)`), using a
+    temporary file in ALLSKY_TMP and an atomic move to avoid partial writes.
+    It ensures the destination directory exists and is web-server accessible,
+    applies final permissions, and (optionally) updates a database when the
+    `structure` indicates one is in use.
+
+    Behavior:
+      1) Ensure extra data directory exists (`checkAndCreateDirectory`) and
+         enable web access (`create_file_web_server_access`).
+      2) If the target filename ends with `.json`, normalize/shape the payload
+         via `format_extra_data_json(extra_data, structure, source)`.
+      3) Merge any `custom_fields` into the payload (overrides existing keys).
+      4) Serialize to JSON (pretty-printed) and write to a temp file created in
+         `ALLSKY_TMP`, then atomically move it to the final path.
+      5) Set mode 0o770 and call `set_permissions()` for owner/group alignment.
+      6) If `structure` contains a `"database"` key, call `update_database()`.
 
     Args:
-        file_name (string): The name of the file to save.
-        extra_data (object): The data to save.
+        file_name (str):
+            File name (with extension) to write into the extra data directory.
+        extra_data (Any):
+            Data to persist. If `file_name` ends with `.json`, this should be
+            JSON-serializable. Non-JSON targets are written as the JSON string.
+        source (str, optional):
+            Context or origin tag passed to the JSON formatter. Default: ''.
+        structure (dict, optional):
+            Schema/metadata guiding JSON formatting and optional DB updates.
+            If it contains `"database"`, `update_database()` will be invoked.
+            Default: {}.
+        custom_fields (dict, optional):
+            Extra key/values to inject into the payload before serialization.
+            Keys here override the same keys in `extra_data`. Default: {}.
 
     Returns:
-        Nothing
+        None
+
+    Side Effects:
+        - Creates/updates a file in ALLSKY_EXTRA.
+        - Applies filesystem permissions to the output file.
+        - May perform a database update if requested by `structure`.
+
+    Error Handling:
+        Any exception is caught and logged with line number and filename via
+        `log(0, ...)`; the function does not re-raise.
+
+    Notes:
+        - Uses an atomic `shutil.move()` from ALLSKY_TMP → ALLSKY_EXTRA to
+          avoid readers seeing partial files.
+        - Final mode is set to `0o770`; ownership is delegated to
+          `set_permissions()`.
     """
     try:
-        extra_data_path = getExtraDir()
-        if extra_data_path is not None:        
+        extra_data_path = get_extra_dir(True)
+        if extra_data_path is not None:
             checkAndCreateDirectory(extra_data_path)
+            create_file_web_server_access(extra_data_path)
 
             file_extension = Path(file_name).suffix
             extra_data_filename = os.path.join(extra_data_path, file_name)
-            with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
+            allsky_tmp = get_environment_variable("ALLSKY_TMP")
+            with tempfile.NamedTemporaryFile(mode="w", dir=allsky_tmp, delete=False) as temp_file:
                 if file_extension == '.json':
                     extra_data = format_extra_data_json(extra_data, structure, source)
                 if len(custom_fields) > 0:
@@ -1088,15 +1181,16 @@ def saveExtraData(file_name, extra_data, source='', structure={}, custom_fields=
                 extra_data = json.dumps(extra_data, indent=4)
                 temp_file.write(extra_data)
                 temp_file_name = temp_file.name
-                os.chmod(temp_file_name, 0o644)
 
-                shutil.move(temp_file_name, extra_data_filename)
+            shutil.move(temp_file_name, extra_data_filename)
+            os.chmod(extra_data_filename, 0o770)
+            set_permissions(extra_data_filename)
 
-                if 'database' in structure:
-                    update_database(structure, extra_data)
+            if 'database' in structure:
+                update_database(structure, extra_data)
     except Exception as e:
         me = os.path.basename(__file__)
-        eType, eObject, eTraceback = sys.exc_info()            
+        eType, eObject, eTraceback = sys.exc_info()
         log(0, f'ERROR: saveExtraData failed on line {eTraceback.tb_lineno} in {me} - {e}')
 
 def format_extra_data_json(extra_data, structure, source):
@@ -1154,34 +1248,36 @@ def format_extra_data_json(extra_data, structure, source):
 
 def load_extra_data_file(file_name, type=''):
     result = {}
-    extra_data_path = getExtraDir()
-    if extra_data_path is not None:               # it should never be None
-        extra_data_filename = os.path.join(extra_data_path, file_name)
-        file_path = Path(extra_data_filename)
-        if file_path.is_file() and isFileReadable(file_path):
-            file_extension = Path(file_path).suffix
+    extra_data_paths = get_extra_dir()
+    for extra_data_path in extra_data_paths:
+        if extra_data_path is not None:               # it should never be None
+            extra_data_filename = os.path.join(extra_data_path, file_name)
+            file_path = Path(extra_data_filename)
+            if file_path.is_file() and isFileReadable(file_path):
+                file_extension = Path(file_path).suffix
 
-            if file_extension == '.json' or type == 'json':
-                try:
-                    with open(extra_data_filename, 'r') as file:
-                        result = json.load(file)
-                except json.JSONDecodeError:
-                    log(0, f'ERROR: cannot read {extra_data_filename}.')
-            
-            if file_extension == '.txt':
-                pass
+                if file_extension == '.json' or type == 'json':
+                    try:
+                        with open(extra_data_filename, 'r') as file:
+                            result = json.load(file)
+                    except json.JSONDecodeError:
+                        log(0, f'ERROR: cannot read {extra_data_filename}.')
+                
+                if file_extension == '.txt':
+                    pass
             
     return result
 
 def delete_extra_data(fileName):
 	deleteExtraData(fileName)
 def deleteExtraData(fileName):
-    extraDataPath = getExtraDir()
-    if extraDataPath is not None:               # it should never be None
-        extraDataFilename = os.path.join(extraDataPath, fileName)
-        if os.path.exists(extraDataFilename):
-            if isFileWriteable(extraDataFilename):
-                os.remove(extraDataFilename)
+    extra_data_paths = get_extra_dir()
+    for extra_data_path in extra_data_paths:    
+        if extra_data_path is not None:               # it should never be None
+            extra_data_filename = os.path.join(extra_data_path, fileName)
+            if os.path.exists(extra_data_filename):
+                if isFileWriteable(extra_data_filename):
+                    os.remove(extra_data_filename)
 
 def is_just_filename(path):
     return os.path.basename(path) == path
@@ -1239,18 +1335,19 @@ def cleanup_extra_data():
     flows = _load_flows_for_cleanup()
     module_settings = _load_module_settings()
     tod = getEnvironmentVariable('DAY_OR_NIGHT', fatal=True).lower()
-
-    extra_data_path = getExtraDir()
-    with os.scandir(extra_data_path) as entries:
-        for entry in entries: 
-            if entry.is_file():
-                delete_age = _get_expiry_time_for_module(flows, entry.name, module_settings, tod)
-                cleanup_extra_data_file(entry.path, delete_age)
+    
+    extra_data_paths = get_extra_dir()
+    for extra_data_path in extra_data_paths:            
+        with os.scandir(extra_data_path) as entries:
+            for entry in entries: 
+                if entry.is_file():
+                    delete_age = _get_expiry_time_for_module(flows, entry.name, module_settings, tod)
+                    cleanup_extra_data_file(entry.path, delete_age)
             
 def cleanup_extra_data_file(file_name, delete_age=600):
     
     if (is_just_filename(file_name)):    
-        extra_data_path = getExtraDir()
+        extra_data_path = get_extra_dir(True)
         if extra_data_path is not None:
             file_name = os.path.join(extra_data_path, file_name)
 
@@ -1552,22 +1649,24 @@ def get_allsky_variable(variable):
     """
     result = getEnvironmentVariable(variable)
     if result is None:
-        extra_data_path = getExtraDir()
-        directory = Path(extra_data_path)
+        
+        extra_data_paths = get_extra_dir()
+        for extra_data_path in extra_data_paths:         
+            directory = Path(extra_data_path)
 
-        for file_path in directory.iterdir():
-            if file_path.is_file() and isFileReadable(file_path):
+            for file_path in directory.iterdir():
+                if file_path.is_file() and isFileReadable(file_path):
 
-                file_extension = Path(file_path).suffix
+                    file_extension = Path(file_path).suffix
 
-                if file_extension == '.json':
-                    result = _get_value_from_json_file(file_path, variable)
+                    if file_extension == '.json':
+                        result = _get_value_from_json_file(file_path, variable)
 
-                if file_extension == '.txt':
-                    result = _get_value_from_text_file(file_path, variable)
+                    if file_extension == '.txt':
+                        result = _get_value_from_text_file(file_path, variable)
 
-            if result is not None:
-                break
+                if result is not None:
+                    break
 
     return result
 

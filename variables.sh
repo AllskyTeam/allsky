@@ -172,7 +172,8 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_MY_OVERLAY_TEMPLATES="${ALLSKY_OVERLAY}/myTemplates"
 	ALLSKY_MODULES="${ALLSKY_CONFIG}/modules"
 	ALLSKY_MODULE_LOCATION="/opt/allsky"
-	ALLSKY_EXTRA="${ALLSKY_OVERLAY}/extra"
+	ALLSKY_EXTRA_LEGACY="${ALLSKY_OVERLAY}/extra"
+	ALLSKY_EXTRA="${ALLSKY_TMP}/extra"
 	
 	# URL for the Allsy API
 	ALLSKY_API_URL="http://localhost:8090"

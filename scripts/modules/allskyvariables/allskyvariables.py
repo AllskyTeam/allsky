@@ -202,15 +202,17 @@ class ALLSKYVARIABLES:
 
     def get_variables(self, show_empty=True, module='', indexed=False, raw_index=False):
         ALLSKY_CONFIG = self._get_environment_variable('ALLSKY_CONFIG')
+        ALLSKY_EXTRA = self._get_environment_variable('ALLSKY_EXTRA')
+        ALLSKY_EXTRA_LEGACY = self._get_environment_variable('ALLSKY_EXTRA_LEGACY')        
         ALLSKY_SCRIPTS = self._get_environment_variable('ALLSKY_SCRIPTS')
-        ALLSKY_OVERLAY = self._get_environment_variable('ALLSKY_OVERLAY')
         ALLSKY_MODULE_LOCATION = self._get_environment_variable('ALLSKY_MODULE_LOCATION')
         ALLSKY_MY_FILES_FOLDER = self._get_environment_variable('ALLSKY_MYFILES_DIR')
 
         base_allsky_variable_list = os.path.join(ALLSKY_CONFIG, 'allskyvariables.json')
         core_module_directory = os.path.join(ALLSKY_SCRIPTS, 'modules')
         extra_module_directory = os.path.join(ALLSKY_MODULE_LOCATION, 'modules')
-        extra_files = os.path.join(ALLSKY_OVERLAY, 'extra')
+        extra_files = ALLSKY_EXTRA
+        extra_legacy_files = ALLSKY_EXTRA_LEGACY
         my_files_path = os.path.join(ALLSKY_MY_FILES_FOLDER, 'modules')
 
         valid_module_paths = [my_files_path, extra_module_directory, core_module_directory]
@@ -235,6 +237,9 @@ class ALLSKYVARIABLES:
 
         if module == '':
             variables = self._get_module_variable_list(extra_files, '', True)
+            temp_variable_list = temp_variable_list | variables
+
+            variables = self._get_module_variable_list(extra_legacy_files, '', True)
             temp_variable_list = temp_variable_list | variables
 
         variableList = {}

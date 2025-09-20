@@ -129,7 +129,7 @@ class ALLSKYOVERLAYDATA:
 		else:
 			field_data = copy.copy(self.extra_field_definition)
 
-		try:
+		try:          
 			for field_key, field_value in field_data.items():
 				if field_key in raw_field_data:
 					field_data[field_key] = raw_field_data[field_key]
@@ -142,6 +142,9 @@ class ALLSKYOVERLAYDATA:
 
 				if 'value' in field_data['value']:
 					field_data['value'] = field_data['value']['value']
+			else:
+				if not isinstance(raw_field_data, dict):
+					field_data['value'] = raw_field_data
 		except Exception as e:
 			eType, eObject, eTraceback = sys.exc_info()
 			self._log(0, f'ERROR: _parse_extra_data_field failed on line {eTraceback.tb_lineno} - {e}')
@@ -224,16 +227,23 @@ class ALLSKYOVERLAYDATA:
 				field_data['value'] = debug_variables[debug_variable]
 				self.extra_fields[debug_variable] = field_data
 		
-	def load(self, extra_expiry_time, extra_folder):
+	def load(self, extra_expiry_time, extra_folder, extra_legacy_folder):
 		self.extra_expiry_time = extra_expiry_time
 		self.extra_folder = extra_folder
-
+		self.extra_legacy_folder = extra_legacy_folder
+  
 		for (dirPath, dirNames, file_names) in os.walk(self.extra_folder):
 			for file_name in file_names:
 				extra_data_file_name = os.path.join(self.extra_folder, file_name)
 				self._debug(f'INFO: Loading Data File {extra_data_file_name}')
 				self._read_data(extra_data_file_name)
 
+		for (dirPath, dirNames, file_names) in os.walk(self.extra_legacy_folder):
+			for file_name in file_names:
+				extra_data_file_name = os.path.join(self.extra_legacy_folder, file_name)
+				self._debug(f'INFO: Loading Legacy Data File {extra_data_file_name}')
+				self._read_data(extra_data_file_name)
+    
 		self._add_core_allsky_variables()
 
 		return self.format()
@@ -263,7 +273,7 @@ class ALLSKYOVERLAYDATA:
 				variable = raw_variable.replace('${','').replace('}', '')
 				if variable in self.extra_fields:
 					value = self.extra_fields[variable]['value']
-       
+			self._debug(f'INFO: Using Value "{value}"')
 			pre_formatted_value = value
 
 			variable_definition = self.variable_class.get_variable(self.variables, variable)
@@ -440,8 +450,9 @@ if __name__ == '__main__':
 		shared.LOGLEVEL = 0
   
 	extra_folder = allsky_data.get_environment_variable('ALLSKY_EXTRA')
+	extra_legacy_folder = allsky_data.get_environment_variable('ALLSKY_EXTRA_LEGACY')
  
-	result = allsky_data.load(10000, extra_folder)
+	result = allsky_data.load(10000, extra_folder, extra_legacy_folder)
 
 	if args.print:
 		print(json.dumps(result))

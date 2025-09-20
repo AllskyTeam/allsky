@@ -1,5 +1,5 @@
 <?php
-// TODO: Ensure XHR check
+
 include_once('functions.php');
 initialize_variables();		// sets some variables
 
@@ -12,28 +12,30 @@ class MODULEUTIL
     private $jsonResponse = false;
     private $allskyModules;
     private $userModules;
-	private $extraDataFolder;
 	private $myFiles;
     private $myFilesData;
     private $allsky_config = null;
     private $extra_data = null;
+    private $extra_legacy_data = null;
     private $allskySettings = null;
+    private $allsky_home = null;
+    private $allsky_scripts = null;
 
     function __construct() {
         $this->allskyModules = ALLSKY_SCRIPTS . '/modules';
         $this->userModules = ALLSKY_MODULE_LOCATION . '/modules';
-		$this->extraDataFolder = ALLSKY_OVERLAY . '/extra';
 		$this->myFiles = ALLSKY_MYFILES_DIR . '/modules';
 		$this->myFilesData = ALLSKY_MYFILES_DIR . '/modules/moduledata';        
         $this->allsky_home = ALLSKY_HOME;
         $this->allsky_scripts = ALLSKY_SCRIPTS;
         $this->allsky_config = ALLSKY_CONFIG;
-        $this->extra_data = ALLSKY_OVERLAY . "/extra";
+        $this->extra_data = ALLSKY_EXTRA;
+        $this->extra_legacy_data = ALLSKY_EXTRA_LEGACY;
     }
 
     public function run()
     {
-        //$this->checkXHRRequest();
+        $this->checkXHRRequest();
         $this->sanitizeRequest();
         $this->runRequest();
     }
@@ -679,7 +681,7 @@ class MODULEUTIL
 		$extraData = '';
 		$moduleKey = array_key_first($jsonFlow);
 		if (isset($jsonFlow[$moduleKey]['metadata']['extradatafilename'])) {
-			$filePath = $this->extraDataFolder . '/' . $jsonFlow[$moduleKey]['metadata']['extradatafilename'];
+			$filePath = $this->extra_data . '/' . $jsonFlow[$moduleKey]['metadata']['extradatafilename'];
 			if (file_exists($filePath)) {
 				$extraData = file_get_contents($filePath);
 			}			
@@ -961,7 +963,7 @@ class MODULEUTIL
 
 	public function postGetExtraDataFile() {
 		$extraDataFilename = basename($_POST['extradatafilename']);
-		$filePath = $this->extraDataFolder . '/' . $extraDataFilename;
+		$filePath = $this->extra_data . '/' . $extraDataFilename;
 		$result = [];
 		if (file_exists($filePath)) {
 			$result = file_get_contents($filePath);
@@ -1368,9 +1370,7 @@ class MODULEUTIL
         return $result;
     }
 
-    private function findVariableInExtraData($variable) {
-        $files = glob(rtrim($this->extra_data, '/') . '/*.json');
-
+    private function findVariableInExtraDataFiles($files, $variable) {
         foreach ($files as $file) {
             $json = file_get_contents($file);
             $data = json_decode($json, true);
@@ -1384,7 +1384,21 @@ class MODULEUTIL
             }
         }
 
-        return null; 
+        return null;         
+    }
+
+    private function findVariableInExtraData($variable) {
+        $result = null;
+
+        $files = glob(rtrim($this->extra_data, '/') . '/*.json');
+        $result = $this->findVariableInExtraDataFiles($files, $variable);
+
+        if ($result === null) {
+            $files = glob(rtrim($this->extra_legacy_data, '/') .  '/*.json');
+            $result = $this->findVariableInExtraDataFiles($files, $variable);
+        }
+
+        return $result;
     }
 
     public function getTemplate() {

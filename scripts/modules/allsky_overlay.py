@@ -190,8 +190,9 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 				self._overlay_config = json.load(file)
 
 			allsky_data_class = ALLSKYOVERLAYDATA(True, False, False, self._overlay_config_file)
-			extra_folder = os.path.join(allsky_shared.ALLSKY_OVERLAY, 'extra')
-			self._overlay_fields = allsky_data_class.load(10000, extra_folder)
+			extra_folder = allsky_shared.get_environment_variable('ALLSKY_EXTRA')
+			extra_legacy_folder = allsky_shared.get_environment_variable('ALLSKY_EXTRA_LEGACY')
+			self._overlay_fields = allsky_data_class.load(10000, extra_folder, extra_legacy_folder)
 
 			#if len(self._overlay_config["fields"]) == 0 and len(self._overlay_config["images"]) == 0:
 			#	allsky_shared.log(1, f"WARNING: Config file '{self._overlay_config_file}' is empty.")

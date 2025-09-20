@@ -38,10 +38,23 @@
 			plugin.drawnObjects = []
 			plugin.undoneObjects = []
 
-			createUI()
-			addFilters()
-			createEditor()
-			showMaskEditor()
+			$.ajax({
+				url: "includes/overlayutil.php?request=ImageDetails",
+				type: "GET",
+				dataType: "json",
+				cache: false,
+  				context: this,		
+				success: function(response) {
+					plugin.settings.image = response;
+					createUI()
+					addFilters()
+					createEditor()
+					showMaskEditor()
+				},
+				error: function(xhr, status, error) {
+					alert("Error fetching image details, cannot start Mask Editor: " + error);
+				}
+			});
 
 		}
 
@@ -266,9 +279,11 @@
 				drawingImg.onload = function () {
 					ctx.drawImage(drawingImg, 0, 0, plugin.originalImageWidth, plugin.originalImageHeight)
 					var finalDataURL = tempCanvas.toDataURL()
-					$("<img>").attr("src", finalDataURL).css({
+					$("<img>").attr("src", finalDataURL)
+					.addClass("mask-tmp-image")
+					.css({
 						"max-width": "100%",
-						"display": "block",
+						"display": "none",
 						"margin": "10px auto"
 					}).appendTo("body")
 					plugin.finalDataURL = finalDataURL
@@ -583,10 +598,12 @@
 							image: plugin.finalDataURL
 						},
 						success: (response) => {
+							$(".mask-tmp-image").remove();
 							$(`#${plugin.settings.modalId}`).modal('hide');
 							plugin.settings.onComplete.call(this, {});
 						},
 						error: function (xhr, status, error) {
+							$(".mask-tmp-image").remove();
 							console.error('Error:', error);
 						}
 					});

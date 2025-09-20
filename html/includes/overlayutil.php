@@ -675,6 +675,13 @@ class OVERLAYUTIL
         }
     }
 
+    public function getImageDetails() {
+        $fileName = $this->getSetting("filename");
+        $imagePath = "current/" . $fileName;
+
+        $this->sendResponse(json_encode($imagePath));
+    }
+
     public function postBase64Image() 
     {
         $base64Image = $_POST['image'];

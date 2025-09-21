@@ -167,9 +167,8 @@ function execute($cmd, $args="", $outputToConsole=false)
 	}
 	if (! $use_TEXT && $outputToConsole) {
 		// Writing to the console aids in debugging.
-		$full_cmd = str_replace("'", "&apos;", $full_cmd);
 		echo "<script>console.log(";
-		echo "'[$full_cmd] returned $return_val, result=$result'";
+		echo "`[$full_cmd] returned $return_val, result=$result`";
 		echo ");</script>\n";
 	}
 

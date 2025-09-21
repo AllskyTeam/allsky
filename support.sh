@@ -66,7 +66,7 @@ function set_messages()
 	SUPPORT_TCS+="- Basic system information\n"
 	SUPPORT_TCS+="- Filesystem, memory, and network information\n"
 	SUPPORT_TCS+="- Installed system and python packages\n"
-	SUPPORT_TCS+="- Allsky and web logs\n"
+	SUPPORT_TCS+="- Allsky and web log files\n"
 	SUPPORT_TCS+="- Connected camera details\n"
 	SUPPORT_TCS+="- i2c bus details\n"
 	SUPPORT_TCS+="- Running processes\n"
@@ -74,12 +74,14 @@ function set_messages()
 	SUPPORT_TCS+="\n"
 }
 
+H_WIDTH="%-20s"
+
 function print_info()
 {
 	local LABEL="${1}"
 	local VALUE="${2}"
 
-	printf "%-20s : %-20s\n" "${LABEL}" "${VALUE}"
+	printf "${H_WIDTH} : ${H_WIDTH}\n" "${LABEL}" "${VALUE}"
 }
 
 function print()
@@ -93,16 +95,9 @@ function print_heading()
 {
 	local LABEL="${1}"
 
-	printf "\n\n%-20s\n" "${LABEL}  - $( date )"
-	printf "%-20s\n" "============================"
-}
-
-function print_sub_heading()
-{
-	local LABEL="${1}"
-
-	printf "\n%-20s\n" "${LABEL}"
-	printf "%-20s\n" "----------------------------"
+	printf "${H_WIDTH}\n" "${LABEL}  - $( date )"
+	printf "${H_WIDTH}\n" "============================"
+	echo	# Separate header from content
 }
 
 function collect_support_info()
@@ -113,16 +108,13 @@ function collect_support_info()
 	OS_ID="${ID,,}"
 	OS_VERSION_ID="${VERSION_ID}"
 	OS_VERSION_CODENAME="${VERSION_CODENAME,,}"
-	###
 
 	### Misc information
 	UPTIME="$( uptime )"
-	###
 
 	### User information
 	USER_NAME="$( id -un )"
 	USER_ID="$( id -u )"
-	###
 
 	### Hardware Information
 	PI_REVISION="$( grep -m 1 'Revision' /proc/cpuinfo | gawk '{print $3}' )"
@@ -136,7 +128,6 @@ function collect_support_info()
 	else
 		PI_MODEL="unknown"
 	fi
-	###
 
 	### Network Info
 	# obfuscate IP, MAC and ipv6 addresses
@@ -149,35 +140,35 @@ function collect_support_info()
 	### File system information
 	FILE_SYSTEMS="$( df -h )"
 	# TODO: GET AS image dir sizes
-	###
 
 	activate_python_venv
 	PYTHON_VERSION="$( python3 -V )"
 	PYTHON_VERSION="${PYTHON_VERSION:-unknown}"
-	###
 
 	### Devices
-	DEV="$( sudo ls -alh  /dev )"
-	USB="$( sudo lsusb -v )"
+	DEV_DEVICES="$( sudo ls -alh  /dev )"
+	USB_DEVICES="$( sudo lsusb -v )"
 	I2C_ENABLED="$( sudo raspi-config nonint get_i2c )"
 	if [[ ${I2C_ENABLED} == "0" ]]; then
 		I2C_DEVICES="$( sudo i2cdetect -y -a 1 )"
 	else
 		I2C_DEVICES="i2c interface is disabled"
 	fi
-	###
 
 	### Process information
 	PS="$( ps -efw )"
-	###
 
-	### pi Camera stuff
-	RPI_CAMERAS="$( libcamera-still --list-cameras 2> /dev/null )"
-	###
+	### Pi Camera stuff
+	if which rpicam-still > /dev/null ; then
+		RPI_CAMERAS="$( rpicam-still --list-cameras 2> /dev/null )"
+	elif which libcamera-still > /dev/null ; then
+		RPI_CAMERAS="$( libcamera-still --list-cameras 2> /dev/null )"
+	else
+		RPI_CAMERAS=""
+	fi
 
-	### get installed package information
+	### Get installed package information
 	# REPOS="$( grep -r '^deb' /etc/apt/sources.list /etc/apt/sources.list.d/ )"
-	###
 }
 
 function generate_support_info()
@@ -266,20 +257,14 @@ function generate_support_info()
 	local DEVICES_FILE="${TEMP_DIR}/devices.txt"
 	{
 		print_heading "Devices"
-		print "${DEV}"
+		print "${DEV_DEVICES}"
 	} > "${DEVICES_FILE}"
 
 	local USB_FILE="${TEMP_DIR}/usb.txt"
 	{
 		print_heading "USB Devices"
-		print "${USB}"
+		print "${USB_DEVICES}"
 	} > "${USB_FILE}"
-
-	local LIBCAMERA_FILE="${TEMP_DIR}/libcamera.txt"
-	{
-		print_heading "Libcamera Cameras"
-		print "${RPI_CAMERAS}"
-	} > "${LIBCAMERA_FILE}"
 
 	local i2C_FILE="${TEMP_DIR}/i2c.txt"
 	{
@@ -303,6 +288,8 @@ function generate_support_info()
 		print_info "Python Version:" "${PYTHON_VERSION}"
 		# This produces too much output to hold in a variable.
 		pip list
+
+		echo -e "\n"
 		print_heading "Package Information"
 		# This produces too much output to hold in a variable.
 		dpkg -l | grep python
@@ -331,6 +318,9 @@ function generate_support_info()
 		fi
 	fi
 
+	if [[ -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
+		cp "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" "${TEMP_DIR}/local_$( basename "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" )"
+	fi
 
 	local SUPPORTED_CAMERAS_FILE="${TEMP_DIR}/supported_cameras.txt"
 	{
@@ -338,58 +328,59 @@ function generate_support_info()
 		"${ALLSKY_UTILITIES}/showSupportedCameras.sh" --rpi --zwo
 	} > "${SUPPORTED_CAMERAS_FILE}"
 
-	local ALLSKY_LOG_FILE
- 	for L in "${ALLSKY_LOG}" "${ALLSKY_LOG}.1"; do
+	local LIBCAMERA_FILE="${TEMP_DIR}/pi_cameras.txt"
+	{
+		print_heading "Pi Cameras"
+		print "${RPI_CAMERAS}"
+	} > "${LIBCAMERA_FILE}"
+
+	local LOG_FILE
+ 	for L in "${ALLSKY_LOG}" "${ALLSKY_LOG}.1" "${ALLSKY_PERIODIC_LOG}" ; do
 		if [[ -f ${L} ]]; then
-  			ALLSKY_LOG_FILE="${TEMP_DIR}/$( basename "${L}" ).txt"
+  			LOG_FILE="${TEMP_DIR}/$( basename "${L}" ).txt"
 			if [[ ${LOG_LINES} == "all" ]]; then
-				cp "${L}" "${ALLSKY_LOG_FILE}"
+				cp "${L}" "${LOG_FILE}"
 			else
-				tail -n "${LOG_LINES}" "${L}" > "${ALLSKY_LOG_FILE}"
+				tail -n "${LOG_LINES}" "${L}" > "${LOG_FILE}"
 			fi
 		fi
   	done
-
-	local PERIODIC_LOG_FILE="${TEMP_DIR}/allskyperiodic_log.txt"
-	if [[ -f ${ALLSKY_PERIODIC_LOG} ]]; then
-		if [[ ${LOG_LINES} == "all" ]]; then
-			cp "${ALLSKY_PERIODIC_LOG}" "${PERIODIC_LOG_FILE}"
-		else
-			tail -n "${LOG_LINES}" "${ALLSKY_PERIODIC_LOG}" > "${PERIODIC_LOG_FILE}"
-		fi
-	fi
 
 	local CONF_FILE="/etc/lighttpd/lighttpd.conf"
 	if [[ -f ${CONF_FILE} ]]; then
 		cp "${CONF_FILE}" "${TEMP_DIR}/etc-$( basename "${CONF_FILE}" ).txt"
 	fi
 
-	local INC_FILE="${ALLSKY_WEBUI}/includes/${ALLSKY_DEFINES_INC}"
-	if [[ -f ${INC_FILE} ]]; then
-		cp "${INC_FILE}" "${TEMP_DIR}.txt"
-	fi
-	
-	[[ -d ${ALLSKY_CONFIG} ]] && cp -ar "${ALLSKY_CONFIG}" "${TEMP_DIR}"
+	cp "${ALLSKY_HOME}/variables.json" "${TEMP_DIR}"
 
 	if [[ -d ${ALLSKY_TMP} ]]; then
 		cp -ar "${ALLSKY_TMP}" "${TEMP_DIR}"
-		# The cache files aren't needed
-		rm -fr "${TEMP_DIR}/$( basename "${ALLSKY_CONFIG}" )/__pycache__"
+		# The cache files aren't needed.
+		rm -fr "${TEMP_DIR}/$( basename "${ALLSKY_TMP}" )/__pycache__"
 	fi
 
-	# Truncate large files not needed for support.
-	local X="${TEMP_DIR}/config/overlay/config/tmp/overlay/de421.bsp"
-	[[ -s ${X} ]] && truncate -s 0 "${X}"
-	X="${TEMP_DIR}/config/overlay/system_fonts"
-	[[ -d ${X} ]] && find "${TEMP_DIR}/config/overlay/system_fonts" -type f -exec truncate -s 0 {} +
+	# Copy the whole ${ALLSKY_CONFIG} directory, then delete or truncate files we don't want.
+# TODO: use "find ! -name xxx" to not copy file we don't want.
 
-	# If we have any sensitive data in the flows the truncate them. If the variables.json file exists
-	# then there will be no sensitive data in the flows since this data was moved to the env.json file
-	# in the same release that created variables.json.
-	# This could do a version comparison but this is a much simpler check
+	# The directory should exists unless installation failed.
+	[[ -d ${ALLSKY_CONFIG} ]] && cp -ar "${ALLSKY_CONFIG}" "${TEMP_DIR}"
+
+	local TEMP_DIR_MODULES="${TEMP_DIR}/${ALLSKY_MODULES/${ALLSKY_HOME}}"
+	local TEMP_DIR_OVERLAY="${TEMP_DIR}/${ALLSKY_OVERLAY/${ALLSKY_HOME}}"
+
+	# Truncate large files not needed for support.
+	local X="${TEMP_DIR_OVERLAY}/config/tmp/overlay/de421.bsp"
+	[[ -s ${X} ]] && truncate -s 0 "${X}"
+	X="${TEMP_DIR_OVERLAY}/system_fonts"
+	[[ -d ${X} ]] && find "${X}" -type f -exec truncate -s 0 {} +
+
+	# If we have any sensitive data in the flows then truncate them.
+	# If the variables.json file exists then there will be no sensitive data in the flows since
+	# this data was moved to the env.json file in the same release that created variables.json.
+	# This could do a version comparison but this is a much simpler check.
 	if [[ ! -f "${ALLSKY_HOME}/variables.json" ]]; then
-		X="${TEMP_DIR}/config/modules"
-		[[ -d ${X} ]] && find "${TEMP_DIR}/config/modules" -type f -exec truncate -s 0 {} +
+		X="${TEMP_DIR_MODULES}"
+		[[ -d ${X} ]] && find "${X}" -type f -exec truncate -s 0 {} +
 	fi
 
 	local ZIP_NAME="support"

@@ -1312,7 +1312,7 @@ class MODULEUTIL
         foreach($paths as $path) {
 			// Make sure $path exists, ignore if not.
 			if (! is_dir($path)) {
-				echo "<script>console.log('moduleutil.php: path \"$path\" does not exist.');</script>";
+				echo "<script>console.log(`moduleutil.php: path '$path' does not exist.`);</script>";
 				continue;
 			}
             $outer = new DirectoryIterator($path);

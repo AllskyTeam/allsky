@@ -99,22 +99,12 @@ switch ($ID) {
 		rm_msg($ID);
 		break;
 
-	case "AM_ALLSKY_CONFIG":
+	case "AM_ALLSKY_CONFIG | allsky-config":
 		if ($ARGS === "") {
 			echo "${eS}ERROR: Argument not given to command ID: '${ID}'.${eE}";
 			exit(1);
 		}
 		$CMD = ALLSKY_SCRIPTS . "/allsky-config";
-		execute($CMD, $ARGS);
-
-		break;
-
-	case "allsky-config":
-		if ($ARGS === "") {
-			echo "${eS}ERROR: Argument not given to command ID: '${ID}'.${eE}";
-			exit(1);
-		}
-		$CMD = ALLSKY_SCRIPTS . "/$ID";
 		execute($CMD, $ARGS);
 		break;
 
@@ -167,9 +157,8 @@ function execute($cmd, $args="", $outputToConsole=false)
 	}
 	if (! $use_TEXT && $outputToConsole) {
 		// Writing to the console aids in debugging.
-		$full_cmd = str_replace("'", "&apos;", $full_cmd);
 		echo "<script>console.log(";
-		echo "'[$full_cmd] returned $return_val, result=$result'";
+		echo "`[$full_cmd] returned $return_val, result=$result`";
 		echo ");</script>\n";
 	}
 

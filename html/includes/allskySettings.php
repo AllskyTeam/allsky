@@ -482,9 +482,9 @@ if ($remove0) {
 }
 							// updateFile() only returns error messages.
 							$msg = updateFile($settings_file, $content, "settings", true);
-							echo '<script>console.log("Updated ' . "$settings_file";
+							echo "<script>console.log(`Updated '$settings_file'";
 							if ($msg !== "") echo " msg=$msg";
-							echo '");</script>';
+							echo "`);</script>";
 							if ($msg === "") {
 								if ($numSettingsChanges > 0) {
 									$msg = "$numSettingsChanges setting";
@@ -627,7 +627,7 @@ if ($debug) {
 							if (! $restartRequired && $changesMade) {
 								$consoleMsg .= " - no changes required it";
 							}
-							echo "<script>console.log('$consoleMsg');</script>";
+							echo "<script>console.log(`$consoleMsg`);</script>";
 						}
 
 						if ($restartRequired) {
@@ -656,7 +656,7 @@ if ($debug) {
 
 						if ($fromConfiguration) {
 							$cmd = "${CMD}/checkAllsky.sh --fromWebUI";
-							echo '<script>console.log("Running: ' . $cmd . '");</script>';
+							echo '<script>console.log(`Running: ' . $cmd . '`);</script>';
 							exec("$cmd 2>&1", $result, $return_val);
 							// Only 1 line is just an "ok" line so don't record.
 							if ($result != null && count($result) > 1) {

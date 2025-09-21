@@ -247,7 +247,7 @@ function determineCommandToUse()
 	# If the cable is bad the camera might be found but not work,
 	# and the command can hang.
 
-	timeout 120 "${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1
+	local ERR="$( timeout 120 "${CMD_TO_USE_}" --timeout 1 --nopreview 2>&1 )"
 	RET=$?
 	if [[ ${RET} -eq 0 || ${RET} -eq 137 ]]; then
 		# If another of these commands is running ours will hang for
@@ -265,6 +265,7 @@ function determineCommandToUse()
 	else
 		if [[ ${IGNORE_ERRORS} == "false" ]]; then
 			echo "'${CMD_TO_USE_}' failed with return code ${RET}." >&2
+			[[ -n ${ERR} ]] && indent "${ERR}" >&2
 			if [[ ${USE_doExit} == "true" ]]; then
 				EXIT_MSG="${PREFIX}\n${CMD_TO_USE_} failed!"
 				doExit "${EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"

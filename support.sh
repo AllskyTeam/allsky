@@ -74,14 +74,15 @@ function set_messages()
 	SUPPORT_TCS+="\n"
 }
 
-H_WIDTH="%-20s"
+H_WIDTH="-20s"
 
 function print_info()
 {
 	local LABEL="${1}"
 	local VALUE="${2}"
 
-	printf "${H_WIDTH} : ${H_WIDTH}\n" "${LABEL}" "${VALUE}"
+	# shellcheck disable=SC2059
+	printf "%${H_WIDTH} : %${H_WIDTH}\n" "${LABEL}" "${VALUE}"
 }
 
 function print()
@@ -95,8 +96,10 @@ function print_heading()
 {
 	local LABEL="${1}"
 
-	printf "${H_WIDTH}\n" "${LABEL}  - $( date )"
-	printf "${H_WIDTH}\n" "============================"
+	# shellcheck disable=SC2059
+	printf "%${H_WIDTH}\n" "${LABEL}  - $( date )"
+	# shellcheck disable=SC2059
+	printf "%${H_WIDTH}\n" "============================"
 	echo	# Separate header from content
 }
 
